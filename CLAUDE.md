@@ -72,3 +72,15 @@ One stage per branch, merged when green. Each phase ends with a review by Paul b
 ## Build and test
 
 Build presets, commands and the continuous integration setup are created in phase P0. The build engineer records them in this section when they exist.
+
+### Build output lives outside the source tree
+
+Paul's checkout is inside a Dropbox folder, so nothing generated may be written into the repository directory. This is a requirement on the presets, not a habit to remember:
+
+- Every CMake preset sets `binaryDir` outside the tree. The default root is `$HOME/.cache/the-unmapped/` (`%LOCALAPPDATA%\the-unmapped\` on Windows), overridable with the `UNMAPPED_BUILD_ROOT` environment variable. Layout under the root: `build/<preset>/` for build trees, `out/` for generated worlds, map images, reports and seed-sweep results, `tools/` for downloaded tools such as the pinned Godot editor.
+- The top-level `CMakeLists.txt` refuses an in-source build with an error.
+- `worldgen-cli`, tests and sweep scripts take explicit output paths and default to `out/` under the build root, never the current directory.
+- Compiled GDExtension libraries are produced under the build root and placed where the Godot project loads them by a symlink or by a path in the `.gdextension` file, not by copying binaries into `game/`.
+- `.gitignore` covers the usual in-tree build directories and Godot's `.godot/` cache as a backstop only.
+
+Anything meant to be kept in the repository (golden hashes, review images attached to `docs/reviews/`) is copied in deliberately and kept small.

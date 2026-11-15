@@ -1,0 +1,30 @@
+# Build output belongs outside the source tree (see "Build and test" in CLAUDE.md).
+# These entries are a backstop in case something lands here anyway.
+/build/
+/build-*/
+/out/
+/cmake-build-*/
+CMakeCache.txt
+CMakeFiles/
+CMakeUserPresets.json
+compile_commands.json
+Testing/
+
+# Godot
+.godot/
+*.import.tmp
+
+# Generated worlds and exports
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+
+# Editors and OS
+.vscode/
+.idea/
+*.swp
+.DS_Store
+
+# Claude Code local settings
+.claude/settings.local.json
