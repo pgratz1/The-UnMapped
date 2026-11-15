@@ -24,26 +24,13 @@ Terrain3D is not integrated now; it only decides the version (milestone 2 confir
 
 ## Getting the pinned editor
 
-The build never downloads anything. Install the editor once into the tools folder under the build root (Paul approved this location):
-
-Linux:
+The build never downloads anything. Install the editor once into the tools folder under the build root (Paul approved this location) with the fetch script, from the repository root (on Windows, from Git Bash):
 
 ```
-mkdir -p ~/.cache/the-unmapped/tools/godot-4.7.2-stable && cd ~/.cache/the-unmapped/tools/godot-4.7.2-stable
-curl -fLO https://github.com/godotengine/godot/releases/download/4.7.2-stable/Godot_v4.7.2-stable_linux.x86_64.zip
-curl -fLO https://github.com/godotengine/godot/releases/download/4.7.2-stable/SHA512-SUMS.txt
-grep ' Godot_v4.7.2-stable_linux.x86_64.zip$' SHA512-SUMS.txt | sha512sum -c
-unzip Godot_v4.7.2-stable_linux.x86_64.zip
+tools/ci/fetch-godot.sh
 ```
 
-Expected checksums (from `SHA512-SUMS.txt` of the release; the SHA-256 is GitHub's asset digest):
-
-| File | SHA-512 | SHA-256 |
-| --- | --- | --- |
-| `Godot_v4.7.2-stable_linux.x86_64.zip` | `9aa00f7a605200940bce3027a567b782f49bd8e940dd06ae9e987bd65aee1b1467edd56ed84fcdcbdd44354bf613bdbb4e5d2913e925850368e150c59ed54c65` | `cadd3204e728a35d3f13adb7fd0d7902636b79f6b95c40c265eb73b6c35329e4` |
-| `Godot_v4.7.2-stable_win64.exe.zip` | `83decd58fdf67b9d657958a1ae6bf1929c20785315a81effe245874cdc57acb709bf868e00778a96984338c1b29dafdb453c6847747694621c6ecf5da2259993` | `731980f9608d61333e5baf54a2ef17210acc7a538446c0cb9969f002aca1e953` |
-
-Windows: download `Godot_v4.7.2-stable_win64.exe.zip` from the same release, check it with `certutil -hashfile Godot_v4.7.2-stable_win64.exe.zip SHA512`, and unzip it into `%LOCALAPPDATA%\the-unmapped\tools\godot-4.7.2-stable\`. The zip holds `Godot_v4.7.2-stable_win64.exe` and `Godot_v4.7.2-stable_win64_console.exe`; the console one prints to the terminal and is the one the headless check uses.
+It installs into `~/.cache/the-unmapped/tools/godot-4.7.2-stable/` on Linux and `%LOCALAPPDATA%\the-unmapped\tools\godot-4.7.2-stable\` on Windows, after checking the downloaded archive and each extracted file against the SHA-512 digests pinned in `tools/ci/godot-4.7.2-stable.sha512` (the archive digests are the release's `SHA512-SUMS.txt`; the GitHub asset SHA-256 digests are `cadd3204e728a35d3f13adb7fd0d7902636b79f6b95c40c265eb73b6c35329e4` for `Godot_v4.7.2-stable_linux.x86_64.zip` and `731980f9608d61333e5baf54a2ef17210acc7a538446c0cb9969f002aca1e953` for `Godot_v4.7.2-stable_win64.exe.zip`). An installed, matching copy is left alone. CI uses the same script (CLAUDE.md, "Continuous integration"). The Windows zip holds `Godot_v4.7.2-stable_win64.exe` and `Godot_v4.7.2-stable_win64_console.exe`; the console one prints to the terminal and is the one the headless check uses.
 
 CMake looks for the editor there, then on `PATH`; `-DUNMAPPED_GODOT=<path>` or the environment variable `UNMAPPED_GODOT` names another copy. It must report version `4.7.2.stable`, or the headless check is not registered.
 

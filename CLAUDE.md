@@ -210,7 +210,7 @@ All flags are set in `cmake/UnmappedCompilerFlags.cmake`:
 
 ### Godot extension and viewer
 
-Pinned versions (evidence in `gdext/README.md`):
+Pinned versions, in summary. The record, with the evidence for the choice, is `gdext/README.md` ("Pinned versions"); the editor's SHA-512 digests are kept only in `tools/ci/godot-4.7.2-stable.sha512`:
 
 | What | Version |
 | --- | --- |
@@ -219,14 +219,16 @@ Pinned versions (evidence in `gdext/README.md`):
 
 The extension is the CMake option `UNMAPPED_BUILD_GDEXT`, OFF by default; with it off nothing in the build changes. It builds with every preset except `linux-clang-asan`, where configure refuses it (a sanitized library cannot be loaded into the stock editor).
 
-Install the pinned editor once (never done by the build; checksums and the Windows steps in `gdext/README.md`):
+Install the pinned editor once with the fetch script (never done by the build; CI runs the same script):
 
 ```
-mkdir -p ~/.cache/the-unmapped/tools/godot-4.7.2-stable && cd ~/.cache/the-unmapped/tools/godot-4.7.2-stable
-curl -fLO https://github.com/godotengine/godot/releases/download/4.7.2-stable/Godot_v4.7.2-stable_linux.x86_64.zip
-curl -fLO https://github.com/godotengine/godot/releases/download/4.7.2-stable/SHA512-SUMS.txt
-grep ' Godot_v4.7.2-stable_linux.x86_64.zip$' SHA512-SUMS.txt | sha512sum -c && unzip Godot_v4.7.2-stable_linux.x86_64.zip
+tools/ci/fetch-godot.sh                       # Linux; on Windows run it from Git Bash
+tools/ci/fetch-godot.sh --tools-dir DIR       # somewhere else; then configure with -DUNMAPPED_GODOT=<printed path>
 ```
+
+It downloads the editor archive from the Godot release on GitHub, checks it and every extracted file against the SHA-512 digests in `tools/ci/godot-4.7.2-stable.sha512` (the archive digests are those of the release's `SHA512-SUMS.txt`), and installs into `~/.cache/the-unmapped/tools/godot-4.7.2-stable/` (`%LOCALAPPDATA%\the-unmapped\tools\godot-4.7.2-stable\` on Windows, with both `Godot_v4.7.2-stable_win64.exe` and the `_console.exe` the check runs), the folder CMake searches. It prints the editor's path. When the files are already there and match, it does nothing; when an installed file does not match, it stops and touches nothing. Needs curl, and unzip or Python 3. It ignores `UNMAPPED_BUILD_ROOT`, since CMake's lookup does.
+
+Changing the Godot version means changing, together: the table above, `VERSION` in `tools/ci/fetch-godot.sh`, the digests file (renamed for the version), `UNMAPPED_GODOT_VERSION` and the editor names in `gdext/CMakeLists.txt`, and `gdext/README.md`.
 
 Build the extension and run every test, including the headless check:
 
@@ -237,7 +239,7 @@ ctest --preset linux-gcc-debug
 ctest --preset linux-gcc-debug -R gdext-headless-check -V    # the headless check alone
 ```
 
-`gdext-headless-check` is registered only when the pinned editor is found (in the tools folder above, on `PATH`, or named by `-DUNMAPPED_GODOT=<path>`). It generates `--seed 42 --test-pattern`, imports the project headless, runs the real viewer scene on that world and checks that it lists three layers and shows, for each, the same pixels as `worldgen-cli render`. It takes about 4 seconds. A clean build with the extension takes about 3 minutes on 6 cores without ccache (godot-cpp is about 1,100 files), against under a minute without it; ccache makes later clean builds much faster.
+`gdext-headless-check` is registered only when the pinned editor is found (in the tools folder above, on `PATH`, or named by `-DUNMAPPED_GODOT=<path>`). It generates `--seed 42 --test-pattern`, imports the project headless, runs the real viewer scene on that world and checks that it lists three layers and shows, for each, the same pixels as `worldgen-cli render`. It takes about 4 seconds. A clean build with the extension takes about 3.5 minutes on 6 cores with an empty ccache (godot-cpp is about 1,100 files; `linux-gcc-release`, measured 2026-11-15), against under a minute without it; with a warm ccache a clean build of the same tree takes about 3 seconds.
 
 Open the viewer on a test world (Linux; the path after `--` must be absolute):
 
@@ -257,6 +259,10 @@ GODOT=~/.cache/the-unmapped/tools/godot-4.7.2-stable/Godot_v4.7.2-stable_linux.x
 - `determinism-lint` (one Linux job): the three lint commands above.
 - `build` (one job per preset, all seven, on `ubuntu-latest` and `windows-latest`): configure, build and `ctest` under `$RUNNER_TEMP/unmapped`; then `world-hashes.sh generate` and `expect` (a warning, not a failure, while `p0-worlds.txt` is absent); upload the case files as artifact `world-hashes-<preset>`; finally fail if the checkout holds any generated file.
 - `compare-hashes` (Linux, after every `build` job, also when some failed, not when the run is cancelled): downloads every `world-hashes-*` artifact and runs `world-hashes.sh compare` over every build preset in `CMakePresets.json`. A difference, or a preset with no artifact, fails it. This job is the P0 exit check: the empty worlds are byte-identical across GCC, Clang and MSVC.
+- `gdext` (two jobs, `gdext-linux` with `linux-gcc-release` and `gdext-windows` with `windows-msvc-release`): the extension. Fetches the pinned editor with `tools/ci/fetch-godot.sh --tools-dir "$RUNNER_TEMP/unmapped/tools"` (cached per Godot version and digests file; a restored copy is re-verified), configures with `-DUNMAPPED_BUILD_GDEXT=ON -DUNMAPPED_GODOT=<editor>` into `build/<preset>-gdext`, fails straight after configure if `ctest -N` does not list `gdext-headless-check`, builds, runs `ctest`, prints the headless check's full log, then `world-hashes.sh generate` and `expect` under the label `<preset>-gdext` (artifact `gdext-world-hashes-<preset>`, a name `compare-hashes` does not download), and ends with the clean-checkout check. On failure it also lists the run copy of the project and uploads the headless check's files.
+- `compare-gdext-hashes` (Linux, after `build` and `gdext`): `world-hashes.sh compare <preset> <preset>-gdext` for both presets, which proves that building `worldgen` position independent for the extension changes no output byte. A separate job, so that `compare-hashes` does not wait for the extension builds.
+
+Compiler cache: `gdext-linux` uses ccache (cache key: preset, GCC version, hash of `extern/godot-cpp/`; saved once per key), so a run with an unchanged godot-cpp mostly hits. `gdext-windows` uses none, and configures with `-DUNMAPPED_USE_CCACHE=OFF`: neither ccache nor sccache has been tried with this build (godot-cpp adds a public `/MP` flag to every MSVC compile), and a cache that cannot be checked here is a risk the job does not need. The release preset has no debug information, so `/Zi` against `/Z7` is not what rules it out. A cold Windows extension build is expected to take 10 to 20 minutes. The seven `build` jobs use no compiler cache.
 
 Third-party actions are pinned to full commit SHAs.
 
