@@ -68,3 +68,13 @@ target_sources(worldgen-tests PRIVATE
 
 # Output-location handling after the P0-04 audit (dangling symbolic links).
 target_sources(worldgen-tests PRIVATE generate_output_test.cpp)
+
+# P1 inspection tools before any geography stage (spec P1-00 section 10.2
+# and 10.3 with appendix C, P0-04 amendment 16): the render palettes, the
+# composite map, report v2 [geography], codec_name and the render_rgb
+# buffer overload. Reference worlds in p1_00_geography_reference.hpp.
+target_sources(worldgen-tests PRIVATE
+    inspect_palette_test.cpp
+    inspect_composite_test.cpp
+    inspect_geography_test.cpp
+)
