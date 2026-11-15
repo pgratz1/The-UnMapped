@@ -37,11 +37,20 @@ struct DataRoot {
 // empty if the build recorded none.
 [[nodiscard]] std::string_view configured_data_root() noexcept;
 
-// Resolves the data root (P0-03 7.6): flag_utf8 if given (even if empty:
-// the caller passes what the user typed); otherwise env_utf8 if set and
-// non-empty; otherwise configured_data_root() if non-empty; otherwise none.
-// The caller reads the environment (so this stays a pure function of its
-// arguments and the build).
+// Resolves the data root (P0-03 7.6; P1-00 appendix C item 16):
+//   - flag_utf8 given and non-empty: that path, source flag;
+//   - flag_utf8 given but empty: no data root (path empty, source none). An
+//     explicit flag never falls back to the environment or the configured
+//     root; the CLI rejects an empty --data as a usage error before calling
+//     this, so this case is reached only from other callers;
+//   - otherwise env_utf8 if set and non-empty (an empty value counts as
+//     unset), source environment;
+//   - otherwise configured_data_root() if non-empty, source configured;
+//   - otherwise none.
+// So path is empty exactly when source is none. A relative path is
+// returned as given and resolves against the current directory. The caller
+// reads the environment, so this stays a pure function of its arguments
+// and the build.
 [[nodiscard]] DataRoot resolve_data_root(std::optional<std::string_view> flag_utf8,
                                          std::optional<std::string_view> env_utf8);
 

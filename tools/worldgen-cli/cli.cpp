@@ -404,7 +404,7 @@ std::uint32_t parse_threads_option(const Options& options) {
 worldgen::data::DataRoot data_root_option(const Options& options) {
     std::optional<std::string_view> flag;
     if (const std::string* dir = options.value("data")) {
-        flag = *dir;
+        flag = *dir;  // non-empty: checked with the other flag values in run_generate
     }
     std::optional<std::string> env;
     if (!flag) {
@@ -447,6 +447,9 @@ Exit run_generate(const Options& options) {
     }
     std::optional<std::string> until = parse_until_option(options);
     const std::uint32_t threads = parse_threads_option(options);
+    if (const std::string* dir = options.value("data"); dir != nullptr && dir->empty()) {
+        usage_error("--data needs a directory; an empty value names no data root");
+    }
 #if defined(WORLDGEN_CLI_TEST_HOOKS)
     if (options.flag("test-fatal-in-stage") && !options.flag("test-pattern")) {
         usage_error("--test-fatal-in-stage needs --test-pattern");

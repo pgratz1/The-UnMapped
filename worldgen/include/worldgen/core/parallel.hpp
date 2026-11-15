@@ -18,6 +18,10 @@
 // P0-01 4.1, or anything else), the exception rethrown to the caller is the
 // one raised by the lowest-numbered failing block. Blocks above a failed
 // block may be skipped; every block below it runs to completion.
+//
+// Calls are not nested (P1-00 appendix C item 14): a block function must not
+// itself call run_blocks, map_blocks, for_each_row_block or
+// map_row_blocks.
 
 #include <cstdint>
 #include <memory>
@@ -43,9 +47,10 @@ void run_blocks_impl(std::uint32_t block_count, std::uint32_t threads, void* con
 // first exception stops the loop. Otherwise blocks are handed out in
 // ascending order to the workers (the calling thread is one of them) and the
 // exception of the lowest failing block is rethrown after every worker has
-// stopped. Fatal (FatalError) if threads is 0 or above MAX_THREADS. If the
-// system refuses to start a thread, the remaining workers (at least the
-// calling thread) do all the blocks; the result is the same.
+// stopped. Fatal (FatalError) if threads is 0 or above MAX_THREADS. If a
+// thread cannot be started for any reason (P1-00 appendix C item 14), the
+// workers that did start (at least the calling thread) do all the blocks;
+// the result is the same. Every started thread is joined before return.
 template <typename Fn>
 void run_blocks(std::uint32_t block_count, std::uint32_t threads, Fn&& fn) {
     using F = std::remove_reference_t<Fn>;  // possibly const

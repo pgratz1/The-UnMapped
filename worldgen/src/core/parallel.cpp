@@ -6,7 +6,6 @@
 #include <atomic>
 #include <cstddef>
 #include <exception>
-#include <system_error>
 #include <thread>
 #include <vector>
 
@@ -82,18 +81,29 @@ void run_blocks_impl(std::uint32_t block_count, std::uint32_t threads, void* con
     }
 
     BlockRun run(block_count, context, call);
+    // Fixed storage, sized before any thread starts, so starting a thread
+    // never reallocates and no joinable std::thread is ever moved or
+    // destroyed. `started` counts the threads that did start.
     std::vector<std::thread> pool;
-    pool.reserve(static_cast<std::size_t>(workers - 1U));
-    for (std::uint32_t i = 1; i < workers; ++i) {
-        try {
-            pool.emplace_back([&run] { run.work(); });
-        } catch (const std::system_error&) {
-            break;  // no more threads: the workers already started, and this one, do every block
-        }
+    try {
+        pool.resize(static_cast<std::size_t>(workers - 1U));
+    } catch (...) {
+        pool.clear();  // no storage for threads: the calling thread does every block
     }
-    run.work();
-    for (std::thread& t : pool) {
-        t.join();
+    std::size_t started = 0;
+    for (std::thread& slot : pool) {
+        try {
+            slot = std::thread([&run] { run.work(); });
+        } catch (...) {
+            break;  // std::system_error, std::bad_alloc, ...: the threads already started, and this one, do every block
+        }
+        ++started;
+    }
+    run.work();  // noexcept: block exceptions are stored
+    // Join every started thread before `run` (which they use) goes out of
+    // scope. join() of a joinable thread on another thread cannot fail.
+    for (std::size_t i = 0; i < started; ++i) {
+        pool[i].join();
     }
     run.rethrow_first();
 }

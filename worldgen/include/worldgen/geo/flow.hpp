@@ -86,7 +86,10 @@ void routing_flood(Grid grid, std::span<const std::int64_t> keys, std::span<cons
 // slope: with drop d = level[c] - level[m], score w * d^2 with w = 2 for an
 // orthogonal and 1 for a diagonal neighbour, compared exactly (in U128); a
 // candidate replaces the best only if its score is strictly greater, so ties
-// go to the lowest code. If no neighbour has a strictly smaller level,
+// go to the lowest code. With integer drops an exact tie between an
+// orthogonal and a diagonal neighbour cannot occur (2 d_o^2 = d_d^2 has no
+// solution in positive integers, since sqrt(2) is irrational), so the
+// lowest-code rule only decides among neighbours of the same kind. If no neighbour has a strictly smaller level,
 // rcv[c] = parent[c]. A per-cell function (rule D1), computed in G6 row
 // blocks on `threads` threads; the result does not depend on threads.
 // Fatal if the grid or an array length is invalid, threads is outside

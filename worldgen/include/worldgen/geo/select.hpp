@@ -17,8 +17,12 @@ namespace worldgen::geo {
 // input is not modified (the function works on a copy).
 [[nodiscard]] std::int64_t kth(std::span<const std::int64_t> values, std::uint64_t k);
 
-// As kth, but may reorder `values` (it partitions them in place), saving the
-// copy. The multiset is unchanged.
+// As kth, but works in the caller's array, saving the copy. After the call
+// `values` holds the same multiset in an unspecified arrangement that
+// differs between standard libraries (and so between platforms): it may be
+// used only as a multiset, never by position (P1-00 appendix C item 11). A
+// caller that needs the array afterwards in a defined order sorts it with
+// a strict total order, or uses kth.
 [[nodiscard]] std::int64_t kth_in_place(std::span<std::int64_t> values, std::uint64_t k);
 
 // kth(values, ks[j]) for every j, returned in the order of ks (any order,
