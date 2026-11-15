@@ -116,7 +116,9 @@ Choices made in phase P0, specified exactly in `docs/specs/p0-01` to `p0-04`:
 - **Deferred to P1.** Sine, cosine, exponential and similar functions, written in fixed point when geography needs them.
 - **Writing the file.** The world is built in memory and written with SQLite `VACUUM INTO`, which makes the file's bytes independent of write order.
 - **No floating point in the database.** Enforced by never binding a floating-point value and by a `typeof` check. STRICT tables alone are not enough, since they accept a lossless real value.
-- **Seed phrases.** A phrase is trimmed of ASCII whitespace, taken as UTF-8 bytes and hashed with a domain tag. Case and Unicode form are significant for now, and the phrase is stored in `meta`.
+- **Seed phrases.** A phrase is scrubbed before use: ASCII capitals become lowercase, every character other than a to z and 0 to 9 becomes a space, runs of spaces collapse to one, and leading and trailing spaces are dropped. The scrubbed text is hashed with a domain tag, so "Ashen Marches!", "ashen-marches" and "ASHEN  MARCHES" all give the same world. A phrase that scrubs to nothing is rejected. The scrubbed phrase is what is stored in `meta`.
+
+A seed can also be given directly as a 64-bit number, in decimal or in hexadecimal with a `0x` prefix and up to 16 hex digits. Numbers and phrases are separate inputs everywhere a seed is accepted (command line, settings file, create-world screen), so a phrase made of digits is never mistaken for a number.
 
 ## 5. History simulation
 
@@ -170,7 +172,7 @@ The "create world" screen exposes these, each with a default. All are stored in 
 
 | Setting | Default | Range for the first version |
 | --- | --- | --- |
-| Seed | Random | Any 64-bit value or a text phrase |
+| Seed | Random | A 64-bit number in decimal or hexadecimal (0x prefix), or a text phrase |
 | Map size | 16 km on a side | 8, 16 or 32 km |
 | History span | 6,000 years | 2,000 to 12,000 years |
 | History detail | About 1,200 simulated years | Sparse, normal, dense (sets active-phase length and flare-up threshold) |
@@ -678,7 +680,7 @@ Still open:
 - [ ] **Mana recovery.** Regeneration over time is assumed. Daggerfall restored spell points mainly by resting, which makes each cast a bigger decision. (Milestone 7)
 - [ ] **Fast travel.** Only the recall spell is assumed. Should non-casters get an alternative, such as paid carriage between settlements? (Milestone 7)
 
-* [ ] **Seed phrases.** Should a typed seed phrase ignore case and Unicode form, so "Ashen Marches" and "ashen marches" give the same world? Both are significant for now. Decide before the create-world screen exists. (Milestone 2)
+* [x] **Seed phrases.** Should a typed seed phrase ignore case and Unicode form, so "Ashen Marches" and "ashen marches" give the same world? Decided: yes. Phrases are lowercased, and everything except letters and digits becomes a space, as section 4 describes. (Milestone 2)
 
 ## 13. World generator prototype: phases and agent roles
 
