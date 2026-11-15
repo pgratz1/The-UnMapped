@@ -94,7 +94,7 @@ Determinism rules for every stage:
 - One 64-bit world seed. Each stage derives its own stream by hashing the seed with a stage name.
 - Anything keyed by location hashes the seed with the coordinates, so results never depend on evaluation order.
 - The same seed, parameters and generator version must give a byte-identical world file on every supported platform and compiler.
-- The database records the generator version. A world is only guaranteed reproducible under the same version.
+- The database records the generator version. A world is only guaranteed reproducible under the same version. The version is a hand-bumped MAJOR.MINOR.PATCH constant, raised by any change to output bytes, with golden hashes re-recorded in the same change. Upgrading the vendored SQLite counts as such a change.
 
 Rules that make bit-identical output achievable:
 
@@ -105,6 +105,18 @@ Rules that make bit-identical output achievable:
 - **Controlled compilation.** No fast-math flags, and floating point is kept out of generator results.
 - **Reproducible database file.** SQLite is vendored at a pinned version with fixed page size and settings, rows are written in a defined order, and no timestamps are stored.
 - **Tested continuously.** Golden-seed hashes are compared on Linux and Windows, with GCC, Clang and MSVC, in continuous integration.
+
+Choices made in phase P0, specified exactly in `docs/specs/p0-01` to `p0-04`:
+
+- **Fixed point.** One Q32.32 type, rounding half away from zero, with overflow treated as a fatal error.
+- **Random numbers.** xoshiro256\*\* seeded through SplitMix64.
+- **Streams and location keys.** SplitMix64-based hashing with domain tags.
+- **Noise.** 2D integer gradient noise.
+- **Hashes.** A project SHA-256 for file and content hashes.
+- **Deferred to P1.** Sine, cosine, exponential and similar functions, written in fixed point when geography needs them.
+- **Writing the file.** The world is built in memory and written with SQLite `VACUUM INTO`, which makes the file's bytes independent of write order.
+- **No floating point in the database.** Enforced by never binding a floating-point value and by a `typeof` check. STRICT tables alone are not enough, since they accept a lossless real value.
+- **Seed phrases.** A phrase is trimmed of ASCII whitespace, taken as UTF-8 bytes and hashed with a domain tag. Case and Unicode form are significant for now, and the phrase is stored in `meta`.
 
 ## 5. History simulation
 
@@ -254,6 +266,16 @@ Rules:
 - Text shown to players is generated at runtime from records and templates. The database stores facts and names.
 - Schema changes bump `schema_version`. The game refuses a world it cannot read and says why.
 - The save file stores player state, discovered locations, and per-site deltas such as looted containers, moved objects and killed inhabitants.
+
+**Schema growth during the prototype.** The table above is the target. The schema starts small and each phase adds what it needs.
+
+- Schema version 1, from phase P0, has `meta` and `layer` only. Each later phase adds its tables in its stage specs.
+- One schema version bump per merged branch that changes the schema, and one proposals entry per phase listing that phase's changes.
+- A schema reference lives at `docs/specs/schema.md` from phase P1 on.
+- No migrations during the prototype. Readers accept exactly the current version, and older worlds are regenerated.
+- Every table is STRICT and has no REAL columns.
+- `layer` has an integer `id` primary key with a unique `name`, so large blobs are stored efficiently.
+- Layer blobs use a project codec: delta, zigzag and variable-length integers with zero runs, defined in `docs/specs/p0-02-world-db.md`. Raw storage is also supported. A general-purpose compressor may be added later only if it is single-threaded, pinned and proven byte-identical, with a schema bump.
 
 ## 7. Runtime world realization
 
@@ -505,7 +527,7 @@ Rules:
 
 Implementation: llama.cpp linked into the C++ GDExtension, loading quantized GGUF models. The default model should be small, in the 1 to 4 billion parameter range, and chosen by test at milestone 8. One model instance serves all NPCs; only the fact sheet changes.
 
-**Voice, later.** Voice is a separate milestone after the first playable version. Speech-to-text turns the player's speech into the same free-text input, and text-to-speech reads the NPC's reply with a voice picked per NPC from race, sex and age. Candidates to evaluate are whisper.cpp for speech-to-text and a local neural text-to-speech engine such as Piper, subject to a license check. Voice matters most in VR, where typing is awkward.
+**Voice, later.** Voice is a separate milestone after the first playable version. Speech-to-text turns the player's speech into the same free-text input, and text-to-speech reads the NPC's reply with a voice picked per NPC from race, sex and age. Candidates to evaluate are whisper.cpp for speech-to-text and a local neural text-to-speech engine such as Piper. Newer Piper and espeak-ng are GPL-3: a distributed build that links them becomes GPL-3 as a whole, while the project's own source stays MIT. Running the voice engine as a separate process avoids that. Voice matters most in VR, where typing is awkward.
 
 ## 10. Tech stack and repository layout
 
@@ -520,11 +542,11 @@ All code is C++20. The generator is a library with a command-line front end, and
 | Terrain | Terrain3D plugin, to be confirmed in milestone 2 | Fallback: custom chunk meshes |
 | Tests | doctest for the generator and the game library; headless Godot runs for scene tests | Golden-seed tests for determinism |
 | Build and CI | CMake presets; GitHub Actions on Linux and Windows | Linux is the primary development platform |
-| License | To be decided | Godot and Terrain3D are MIT, so any choice is open |
+| License | MIT | Open source with no plan to sell; the repository is public. Godot and Terrain3D are MIT as well |
 | NPC dialogue | llama.cpp linked in C++, small quantized GGUF model | Grammar-constrained output; template fallback; voice engines evaluated at milestone 9 |
 | Physics | Jolt, built into Godot 4 | Many sleeping rigid bodies per interior; awake-body cap tuned for VR |
 | Data files | TOML | Hand-edited definitions for races, beasts, monsters, cultures, biomes and event rules; SQLite is for generated output only |
-| Dependencies | Vendored in extern/ at pinned versions | SQLite, doctest, a TOML parser, an image writer; builds work offline and stay reproducible |
+| Dependencies | Vendored in extern/ at pinned versions | SQLite 3.54.1, doctest 2.5.3, toml++ 3.4.0 and stb\_image\_write 1.18, with checksums in extern/README.md; builds work offline. Changing the SQLite version or its compile options is treated like a schema change |
 | World viewer | Built in Godot through the C++ extension | Map layers, timeline, entity and event browser; later the create-world screen and in-game map |
 
 ```
@@ -537,7 +559,7 @@ the-unmapped/
     src/db/            schema, writers, readers
     tests/
   tools/
-    worldgen-cli/      generate, inspect, export map images
+    worldgen-cli/      generate, render, report, hash
     (the world viewer lives in the Godot project, under game/viewer/)
   gdext/               C++ GDExtension: world readers, runtime generators, gameplay, LLM dialogue
   game/                Godot project: scenes, assets and data, no scripts
@@ -559,6 +581,15 @@ Conventions for the handoff:
 - `worldgen-cli generate --seed N --out world.db` must work before any game code depends on it.
 - `worldgen-cli render --db world.db --layer biome --out biome.png` gives a quick visual check of any layer.
 - Every generator stage has a golden-seed test that compares a hash of its output.
+
+**Build output stays outside the source tree.** The working checkout may sit in a synced folder, so nothing generated is written into the repository.
+
+- Build trees, generated worlds, images and reports go under a build root: `$HOME/.cache/the-unmapped/` by default, and `%LOCALAPPDATA%\the-unmapped\` on Windows.
+- Build trees are at `build/<source directory name>/<preset>/` under that root, so each git worktree gets its own.
+- `UNMAPPED_BUILD_ROOT` overrides the root. CMake presets cannot read an optional variable, so it is applied with `cmake --preset P -B "$UNMAPPED_BUILD_ROOT/build/P"`.
+- In-source builds are refused by the top-level CMake file.
+
+**Numbers in data files.** The TOML loader rejects floating-point literals. Fractions are written as quoted decimal strings such as "0.35" and parsed by project code into fixed point; integers stay plain TOML integers. Further loader and command-line details are in `docs/specs/p0-03` and `p0-04`.
 
 **World viewer.** A viewer for generated worlds is built in Godot as the first thing in the C++ extension. It proves the extension build, the `world.db` reader binding and the pinned engine version long before gameplay work starts.
 
@@ -610,6 +641,9 @@ Decided so far:
 * **Dependencies:** vendored in `extern/` at pinned versions.
 * **Also decided:** any of the six races is playable; first person only; physical object interaction and swing-driven VR melee; PC VR only; semi-realistic art direction with generated assets wherever possible.
 
+- **License:** MIT, open source, with a public repository.
+- **Phase P0 outcomes:** the numeric core, schema approach, data-file number format, pinned dependency versions and build-output rule are recorded in sections 4, 6 and 10.
+
 Still open:
 
 - [x] **Name collision check.** Search Steam and itch.io for "The Unmapped". (Before any public repo)
@@ -621,7 +655,7 @@ Still open:
 - [ ] **Terrain approach.** Terrain3D is the starting choice. The fly-across test in section 7 confirms it or triggers the switch to custom chunk meshes. (Milestones 2 and 3)
 - [ ] **Art direction and asset sources.** The direction is decided: grounded, semi-realistic fantasy in the manner of Oblivion and Skyrim. Assets are generated wherever possible, as section 7 describes. Still open: how far generation can carry characters and animation, and which base meshes and rigs must be made or sourced. (Milestone 4)
 - [ ] **Magic.** The six schools, the component lists and the cost formula in section 9 are a starting proposal that needs tuning. (Milestone 7)
-- [ ] **License and distribution.** Open source or closed, and where it ships. (Any time)
+- [x] **License and distribution.** Decided: open source under the MIT license, with no plan to sell. The repository is public. (Any time)
 
 * [ ] **Dialogue model.** Which small model ships as the default, and what is the minimum hardware that runs it alongside VR rendering? (Milestone 8)
 * [ ] **Free-text input.** Typed free text on flat screen is assumed, with topic picking always available. Should VR get an on-screen keyboard before voice arrives? (Milestone 8)
@@ -644,9 +678,11 @@ Still open:
 - [ ] **Mana recovery.** Regeneration over time is assumed. Daggerfall restored spell points mainly by resting, which makes each cast a bigger decision. (Milestone 7)
 - [ ] **Fast travel.** Only the recall spell is assumed. Should non-casters get an alternative, such as paid carriage between settlements? (Milestone 7)
 
+* [ ] **Seed phrases.** Should a typed seed phrase ignore case and Unicode form, so "Ashen Marches" and "ashen marches" give the same world? Both are significant for now. Decide before the create-world screen exists. (Milestone 2)
+
 ## 13. World generator prototype: phases and agent roles
 
-The first block of work delivers milestones 0 and 1 plus the Godot viewer, in seven phases. Each phase ends with a check that can be run, and with a review by Paul in the viewer or the exported images.
+The first block of work delivers milestones 0 and 1 plus the Godot viewer, in seven phases. Each phase ends with a check that can be run, and with a review by Paul in the viewer or the exported images. Status on November 15, 2026: P0 is complete, and P1 and P2 are next.
 
 ### Phases
 
