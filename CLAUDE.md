@@ -6,7 +6,8 @@ A single-player, first-person, open-world RPG whose world and history are genera
 
 - **Design doc:** `docs/design/design.md`. It is the specification for the whole project. Read the sections relevant to your task before starting.
 - **Current work:** the world generator prototype, section 13 of the design doc (phases P0 to P6).
-- **Current phase:** P0 Foundation. The build scaffold exists; the deterministic core, database layer and CLI commands are next.
+- **Current phase:** P0 Foundation is implemented (deterministic core, world database layer, TOML loader, `worldgen-cli`, cross-compiler hash check in CI) and awaits Paul's review.
+- **Next phase:** P1 Geography, once Paul has reviewed P0.
 
 ## The design doc is read-only
 
@@ -16,7 +17,7 @@ When the design is wrong, unclear or missing something, add an entry to `docs/de
 
 ## Repository state
 
-The repository follows the layout in section 10 of the design doc. Phase P0 has the build scaffold in place: a `worldgen` library that only reports its version, a `worldgen-cli` that prints version and usage, and a doctest test executable. Stage code is still to come.
+The repository follows the layout in section 10 of the design doc. Phase P0 is in place: the `worldgen` library holds the deterministic core, the world database layer, the TOML loader, the P0 test-pattern stage and the inspection code behind `report` and `hash`; `worldgen-cli` has `generate`, `render`, `report` and `hash`. No geography or history stage exists yet.
 
 ```
 CMakeLists.txt        top-level build; refuses in-tree builds
@@ -24,10 +25,11 @@ CMakePresets.json     configure, build and test presets
 cmake/                build modules; UnmappedCompilerFlags.cmake holds every compiler flag
 worldgen/             C++ library, no engine dependencies
   include/worldgen/   public API
-  src/                geo/, history/, derive/, db/ (created with their first file)
+  src/                core/, db/, data/, stages/, inspect/; geo/, history/, derive/ come with their first file
   tests/              doctest tests
-tools/worldgen-cli/   command-line front end: generate, render, report, hash (to be written)
-tools/lint/           banned-construct lint (determinism auditor, to come)
+tools/worldgen-cli/   command-line front end: generate, render, report, hash
+tools/lint/           banned-construct lint (owned by the determinism auditor)
+tools/ci/             world-hashes.sh, the cross-compiler world hash check
 gdext/                C++ GDExtension (phase P2, viewer engineer)
 game/                 Godot project; the viewer lives in game/viewer/ (phase P2)
 extern/               vendored third-party libraries at pinned versions, see extern/README.md
@@ -105,7 +107,7 @@ cmake --build --preset linux-gcc-debug
 ctest --preset linux-gcc-debug
 ```
 
-Replace `linux-gcc-debug` with any preset above. The build tree is `$HOME/.cache/the-unmapped/build/<source dir name>/<preset>/`; the executables are `tools/worldgen-cli/worldgen-cli` and `worldgen/tests/worldgen-tests` inside it. `ctest` runs the doctest executable and the CLI checks; run `worldgen-tests` directly for doctest options such as `-tc="<name>"`.
+Replace `linux-gcc-debug` with any preset above. The build tree is `$HOME/.cache/the-unmapped/build/<source dir name>/<preset>/`; the executables below are inside it.
 
 Windows, from an "x64 Native Tools Command Prompt for VS" (or after running `vcvars64.bat`), so that `cl` and Ninja are on the path:
 
@@ -116,6 +118,60 @@ ctest --preset windows-msvc-debug
 ```
 
 The build tree is `%LOCALAPPDATA%\the-unmapped\build\<source dir name>\<preset>\`.
+
+### Executables and tests
+
+| Path in the build tree | What it is |
+| --- | --- |
+| `tools/worldgen-cli/worldgen-cli` | The command-line tool: `generate`, `render`, `report`, `hash` (spec P0-04) |
+| `worldgen/tests/worldgen-tests` | doctest tests of the library: core, database layer, TOML loader, test-pattern stage, render, report and hashes |
+| `tools/worldgen-cli/tests/worldgen-cli-tests` | doctest integration tests that run `worldgen-cli` as a child process |
+| `tools/worldgen-cli/worldgen-cli-test-hooks` | `worldgen-cli` with a test-only fault hook, used by `worldgen-cli-tests`; never shipped |
+
+`ctest` runs `worldgen-tests`, `worldgen-cli-tests` and two quick `worldgen-cli` checks (`--version`, unknown command). Run a doctest executable directly for options such as `-tc="<name>"` or `-s`. Tests write scratch files under the build tree or the system temp directory, never into the source tree.
+
+Approximate full `ctest` time on a 6-core Linux machine:
+
+| Preset | `ctest` |
+| --- | --- |
+| `linux-gcc-release`, `linux-clang-release` | about 20 seconds |
+| `linux-gcc-debug`, `linux-clang-debug` | about one minute |
+| `linux-clang-asan` | two to four minutes (`worldgen-tests` alone about three) |
+
+Windows times are not measured yet. `worldgen-tests` takes most of it; use a release preset for quick iteration and run the sanitizer preset before handing work on.
+
+### Determinism lint
+
+`tools/lint/determinism_lint.py` (owned by the determinism auditor; see `tools/lint/README.md`) reports constructs banned in the output path. Python 3 only, no build needed. From the repository root:
+
+```
+python3 -B tools/lint/determinism_lint.py --self-test
+python3 -B tools/lint/determinism_lint.py
+python3 -B tools/lint/determinism_lint.py tools/worldgen-cli/*.cpp tools/worldgen-cli/*.hpp
+```
+
+The second command scans `worldgen/` without `worldgen/tests/`; the third scans the CLI sources without their `tests/` directory, because `report` and `hash` text is part of the cross-platform contract. Exit status 1 means findings. CI runs all three. On Windows use `py -3 -B`.
+
+### Cross-compiler world hashes
+
+`tools/ci/world-hashes.sh` (POSIX shell; Git Bash on Windows) holds the case list of spec P0-04 section 9 and is what CI runs. For one built preset it generates the eight cases and saves, per case, `<preset>-<case>.db`, `<preset>-<case>.txt` (`hash --db <file> --detail`) and `<preset>-<case>.report.txt` (`report --db <file>`) into `out/<source dir name>/world-hashes/` under the build root (`out/world-hashes/` when `UNMAPPED_BUILD_ROOT` is set). It refuses an output directory inside the source tree.
+
+```
+tools/ci/world-hashes.sh local linux-gcc-release linux-clang-debug   # generate for each built preset, then compare
+tools/ci/world-hashes.sh generate linux-gcc-release                  # one preset
+tools/ci/world-hashes.sh expect linux-gcc-release                    # hash --expect against the golden file
+tools/ci/world-hashes.sh compare linux-gcc-release linux-clang-debug # compare saved results
+tools/ci/world-hashes.sh cases
+```
+
+Each preset must be built first (default build tree, or `--build-dir DIR` for `generate` and `expect`). `compare` fails when any preset's text for any case differs from the others or is missing, names the case and the presets of each variant, and prints a `diff -u` of the detail lines, so the differing table or layer is visible. Generating all eight cases takes a few seconds. It is not part of `ctest`, since one build tree cannot compare compilers.
+
+### Golden values
+
+- `worldgen/tests/golden/core_vectors.txt`: reference outputs of the deterministic core (spec P0-01 13.8), read by `worldgen-tests`.
+- `worldgen/tests/golden/p0-worlds.txt`: SHA-256 of the world file for each P0 case, lines `<case> <hex>` sorted by case name, LF. Read by `worldgen-cli-tests` (skipped while the file is absent) and by `world-hashes.sh expect` in CI. Recorded by the validation specialist.
+
+Golden values describe the generator's output contract. A change that alters the bytes of any world file or golden vector must bump `GENERATOR_VERSION` (`worldgen/include/worldgen/version.hpp`) and re-record the golden values in the same change; the comparison across presets must pass before they are recorded. A schema change also needs a schema version bump, a spec update and a proposals entry (hard rule 7). Golden files are LF on every platform (`.gitattributes`).
 
 ### Choosing another build root
 
@@ -146,18 +202,24 @@ All flags are set in `cmake/UnmappedCompilerFlags.cmake`:
 
 ### Adding code
 
-- Library sources go in `worldgen/CMakeLists.txt`, tests in `worldgen/tests/CMakeLists.txt` (one doctest executable, `worldgen-tests`), CLI sources in `tools/worldgen-cli/CMakeLists.txt`. Every new project target calls `unmapped_project_target()`.
+- Library sources go in `worldgen/CMakeLists.txt`, library tests in `worldgen/tests/CMakeLists.txt` (`worldgen-tests`), CLI sources in `tools/worldgen-cli/CMakeLists.txt` and CLI integration tests in `tools/worldgen-cli/tests/CMakeLists.txt` (`worldgen-cli-tests`). Every new project target calls `unmapped_project_target()`.
 - Vendored libraries are linked as `unmapped::sqlite3`, `unmapped::doctest`, `unmapped::tomlplusplus` and `unmapped::stb_image_write`.
 
 ### Continuous integration
 
-`.github/workflows/ci.yml` builds and tests every preset on `ubuntu-latest` (GCC, Clang, Clang with sanitizers) and `windows-latest` (MSVC), on pushes to `main` and on pull requests. Each job builds under `$RUNNER_TEMP/unmapped` and fails if the checkout holds any generated file afterwards. The cross-compiler `world.db` hash comparison is added once `worldgen-cli generate` and `hash` exist.
+`.github/workflows/ci.yml` runs on pushes to `main`, on pull requests and by hand (`workflow_dispatch`):
+
+- `determinism-lint` (one Linux job): the three lint commands above.
+- `build` (one job per preset, all seven, on `ubuntu-latest` and `windows-latest`): configure, build and `ctest` under `$RUNNER_TEMP/unmapped`; then `world-hashes.sh generate` and `expect` (a warning, not a failure, while `p0-worlds.txt` is absent); upload the case files as artifact `world-hashes-<preset>`; finally fail if the checkout holds any generated file.
+- `compare-hashes` (Linux, after every `build` job, also when some failed, not when the run is cancelled): downloads every `world-hashes-*` artifact and runs `world-hashes.sh compare` over every build preset in `CMakePresets.json`. A difference, or a preset with no artifact, fails it. This job is the P0 exit check: the empty worlds are byte-identical across GCC, Clang and MSVC.
+
+Third-party actions are pinned to full commit SHAs.
 
 ### Build output lives outside the source tree
 
 Paul's checkout is inside a Dropbox folder, so nothing generated may be written into the repository directory. This is a requirement on the presets, not a habit to remember:
 
-- Every CMake preset sets `binaryDir` outside the tree. The default root is `$HOME/.cache/the-unmapped/` (`%LOCALAPPDATA%\the-unmapped\` on Windows), overridable with the `UNMAPPED_BUILD_ROOT` environment variable through `-B` (see "Choosing another build root" above). Layout under the root: `build/<source dir name>/<preset>/` for build trees (see "Several worktrees" above), `out/` for generated worlds, map images, reports and seed-sweep results, `tools/` for downloaded tools such as the pinned Godot editor.
+- Every CMake preset sets `binaryDir` outside the tree. The default root is `$HOME/.cache/the-unmapped/` (`%LOCALAPPDATA%\the-unmapped\` on Windows), overridable with the `UNMAPPED_BUILD_ROOT` environment variable through `-B` (see "Choosing another build root" above). Layout under the root: `build/<source dir name>/<preset>/` for build trees (see "Several worktrees" above), `out/` for generated worlds, map images, reports and seed-sweep results (`worldgen-cli`'s default; `world-hashes.sh` uses `out/<source dir name>/world-hashes/`), `tools/` for downloaded tools such as the pinned Godot editor.
 - The top-level `CMakeLists.txt` refuses a build directory that is the source tree or inside it. CMake still writes `CMakeCache.txt` and `CMakeFiles/` into the refused directory before stopping; delete them.
 - `worldgen-cli`, tests and sweep scripts take explicit output paths and default to `out/` under the build root, never the current directory.
 - Compiled GDExtension libraries are produced under the build root and placed where the Godot project loads them by a symlink or by a path in the `.gdextension` file, not by copying binaries into `game/`.
