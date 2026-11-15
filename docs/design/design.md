@@ -643,3 +643,60 @@ Still open:
 
 - [ ] **Mana recovery.** Regeneration over time is assumed. Daggerfall restored spell points mainly by resting, which makes each cast a bigger decision. (Milestone 7)
 - [ ] **Fast travel.** Only the recall spell is assumed. Should non-casters get an alternative, such as paid carriage between settlements? (Milestone 7)
+
+## 13. World generator prototype: phases and agent roles
+
+The first block of work delivers milestones 0 and 1 plus the Godot viewer, in seven phases. Each phase ends with a check that can be run, and with a review by Paul in the viewer or the exported images.
+
+### Phases
+
+| Phase | Delivers | Depends on | Exit check |
+| --- | --- | --- | --- |
+| P0 Foundation | Repository restructured to section 10; CMake presets; vendored dependencies; continuous integration on Linux (GCC, Clang) and Windows (MSVC); the deterministic core (fixed-point type, random generator, seed-stream hashing, integer noise); reproducible SQLite layer; TOML loader; `worldgen-cli` with `generate`, `render`, `report` and `hash` commands | Nothing | An empty world file is byte-identical across all three compilers, and the `hash` command proves it in continuous integration |
+| P1 Geography | Elevation, erosion, hydrology, climate, biomes, resources and regions, each writing its layer; image export per layer | P0 | Milestone 0 criteria: plausible maps, identical file hash on every platform, golden-seed tests per stage |
+| P2 Godot bring-up and viewer v0 | Godot version pinned; C++ extension building on Linux and Windows; `world.db` reader bound into Godot; 2D map with switchable layers | P0; runs alongside P1 | The viewer opens a world file from P1 and shows every layer |
+| P3 History core | TOML definitions for the six races and their cultures; ages and the awakening schedule; active phases, quiet intervals and flare-ups; civilizations, settlements, wars, ruin; the event log with causes; text history report | P1 | Default world generates in under 2 minutes; races appear in the fixed order at the scheduled times; golden-seed tests pass |
+| P4 Viewer v1 | Timeline scrubber, territory overlay by year, settlement and site markers, browser for civilizations and events with cause links | P2, P3 | Paul can follow one civilization from awakening to the present without leaving the viewer |
+| P5 History depth | God interventions; beast populations; named monsters; figures and factions; race relations and mixed settlements; casters, invented spells and spellbooks | P3 | Across a sweep of seeds, every race, god camp and monster kind takes part, and no world is empty or runaway |
+| P6 Derivation and polish | Sites, dungeon records, quest hooks and spellbook placement derived from history; world-creation settings wired to the command line; 3D heightmap preview in the viewer | P4, P5 | Milestone 1 criteria complete; every quest hook points at real entities; history reads as coherent in the viewer |
+
+P1 and P2 run in parallel once P0 is done, as do P4 and P5 once P3 is done. P0 deserves care: every later phase inherits its determinism rules, and retrofitting them is expensive.
+
+### Agent roles
+
+Work is done by Claude Code subagents with narrow roles, coordinated by a lead session. Separating the people who write code from the people who test and judge it keeps a stage from grading itself.
+
+| Role | Owns | Does | Stays out of |
+| --- | --- | --- | --- |
+| Lead | Task assignment, merges, `docs/design/proposals.md` | Reads the design doc, breaks each phase into stage tasks, hands them to the other roles, merges finished work | Writing stage code itself |
+| Spec writer | `docs/specs/` | Turns a design-doc section into a stage spec: inputs, outputs, algorithm in integer terms, invariants, database rows written, and the tests that must exist | Code |
+| Generator engineer | `worldgen/` | Implements one stage at a time from its spec | Tests for its own stage; the Godot side |
+| Test writer | `worldgen/tests/` | Writes unit, property and golden-seed tests from the spec, without reading the implementation first | Implementation code |
+| Validation specialist | Test runs, seed sweeps, defect reports | Builds every preset, runs the tests, sweeps a few hundred seeds, collects statistics and images, debugs failures back to a cause | New features |
+| Determinism auditor | The banned-construct lint and its rule list | Reviews every change to `worldgen/` for floating point in the output path, unordered iteration, platform math and timing dependence | Everything else; it reviews and reports |
+| World critic | Review notes under `docs/reviews/` | Reads history reports and maps from many seeds and judges them against the design: is the order right, are the old civilizations old, is anything dull, empty or absurd. Cites seeds and event ids | Code |
+| Viewer engineer | `gdext/`, `game/viewer/` | Builds the Godot extension, the `world.db` binding and the viewer | `worldgen/` internals |
+| Build engineer | CMake, `extern/`, continuous integration | Keeps all presets building and the cross-platform hash check running | Stage logic |
+
+### How a stage moves through the roles
+
+1. The lead picks the next stage from the phase table and asks the spec writer for its spec.
+2. Paul or the lead approves the spec. Open design questions go to `docs/design/proposals.md`.
+3. The generator engineer and the test writer work from the spec separately.
+4. The determinism auditor reviews the change.
+5. The validation specialist builds all presets, runs the tests and a seed sweep, and records the golden hashes.
+6. The world critic reviews the output once a stage changes what a world looks like or how its history reads.
+7. The lead merges when every check passes. A failed check returns to the engineer with the defect report.
+
+### Rules for all agents
+
+- **The design doc is read-only.** `docs/design/design.md` is exported from the working doc and is overwritten on each update. Proposed changes go in `docs/design/proposals.md` and are brought back to the design conversation.
+- **Spec before code.** No stage is implemented without an approved spec.
+- **The schema is a contract.** Changes to the database schema need a version bump, a spec update and a proposal entry.
+- **Merge gate.** Tests pass on every preset, golden hashes are recorded, the determinism audit passes, and images or a report are attached.
+- **Small steps.** One stage per branch, merged when green.
+- **Human checkpoint.** Each phase ends with Paul reviewing the result before the next phase starts.
+
+### What the prototype leaves out
+
+Runtime terrain, cities, dungeons as playable spaces, gameplay, dialogue and VR all wait for milestone 2 onward. The prototype ends with a world file, a viewer, and confidence that generated history is worth playing in.
