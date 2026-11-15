@@ -1,0 +1,184 @@
+#pragma once
+
+// World database writer (spec P0-02 sections 4.2, 5, 6).
+//
+// Typical use (P0-04 section 5.1):
+//
+//     worldgen::db::WorldWriter writer;              // steps 1-2
+//     writer.set_seed(seed);                         // or set_seed_phrase(trimmed)
+//     writer.set_content_hash(content_hash);
+//     writer.set_param_integer("map_size", 1024);
+//     {
+//         auto stage = writer.begin_stage("test_pattern");   // step 3: BEGIN
+//         stage.write_layer(1, "test.ramp", ramp);
+//         stage.write_layer(2, "test.hash", hash);
+//         stage.commit();                                     // COMMIT
+//     }
+//     worldgen::db::Status status =
+//         writer.finalize(out_utf8, worldgen::db::Overwrite::refuse);  // steps 4-9
+//
+// Contract violations (an invalid layer, a layer id out of order, a missing
+// required value, SQLite rejecting a statement the writer built, an
+// integrity_check or header verification failure) raise FatalError
+// (P0-01 4.1). Problems with the output location, which are the user's and
+// not a bug, are returned by finalize() as error values. Either way, nothing
+// but the finished output file is left behind (P0-02 section 3).
+
+#include <cstdint>
+#include <memory>
+#include <span>
+#include <string>
+#include <string_view>
+#include <vector>
+
+#include "worldgen/core/sha256.hpp"
+#include "worldgen/db/layer_blob.hpp"
+#include "worldgen/db/result.hpp"
+
+namespace worldgen::db {
+
+namespace testing {
+struct WriterAccess;  // test hooks, worldgen/db/testing.hpp
+}
+
+namespace detail {
+struct WriterState;  // the working database and pending meta values
+}
+
+// Whether finalize() may replace an existing output file (P0-02 6 step 9,
+// P0-04 4.4 --force).
+enum class Overwrite : std::uint8_t {
+    refuse,   // an existing <out> is an output_exists error
+    replace,  // an existing <out> is replaced by the final rename
+};
+
+// The suffix of the temporary output file, <out>.partial (P0-02 6).
+inline constexpr std::string_view PARTIAL_SUFFIX = ".partial";
+
+// One stage's transaction on the working database (P0-02 6 step 3).
+// Obtained from WorldWriter::begin_stage; at most one is open at a time.
+// Destroying it without commit() rolls the transaction back and the stage
+// is not recorded in meta.stages. Movable, not copyable; it must not
+// outlive its WorldWriter.
+class StageWriter {
+public:
+    StageWriter(StageWriter&& other) noexcept;
+    StageWriter& operator=(StageWriter&&) = delete;
+    StageWriter(const StageWriter&) = delete;
+    StageWriter& operator=(const StageWriter&) = delete;
+    ~StageWriter();
+
+    // Encodes grid with codec (P0-02 7) and inserts it as layer row `id`
+    // (P0-02 5.6). Ids are explicit and must be 1, 2, 3, ... in the order
+    // layers are written across all stages, i.e. id must equal
+    // WorldWriter::next_layer_id(). FatalError if the stage is closed, the
+    // id is out of order, layer_name is not a valid layer name
+    // (is_valid_layer_name), the grid is invalid (is_valid_layer_grid), or
+    // SQLite rejects the row (for example a duplicate name).
+    void write_layer(std::int64_t id, std::string_view layer_name, const LayerGrid& grid,
+                     Codec codec = Codec::delta_varint);
+
+    // COMMIT, and append the stage name to meta.stages (P0-02 5.5, 6 step 3).
+    // FatalError if already committed or SQLite fails.
+    void commit();
+
+    // The stage name given to begin_stage.
+    [[nodiscard]] const std::string& name() const noexcept { return name_; }
+
+private:
+    friend class WorldWriter;
+    friend struct testing::WriterAccess;
+    StageWriter(detail::WriterState& state, std::string stage_name);
+
+    detail::WriterState* state_;  // nullptr once committed, rolled back or moved from
+    std::string name_;
+};
+
+// The writer: an in-memory working database plus the meta values the caller
+// supplies (P0-02 4.2, 5.5, 6). Move-only. One writer produces one file.
+class WorldWriter {
+public:
+    // Steps 1-2 of P0-02 section 6: opens the in-memory working database,
+    // applies the pragmas of 4.2 in order, and creates the schema of 5.4 in
+    // one transaction. FatalError if SQLite fails.
+    WorldWriter();
+    ~WorldWriter();
+    WorldWriter(WorldWriter&& other) noexcept;
+    WorldWriter& operator=(WorldWriter&& other) noexcept;
+    WorldWriter(const WorldWriter&) = delete;
+    WorldWriter& operator=(const WorldWriter&) = delete;
+
+    // --- meta values (P0-02 5.5); each may be set again, the last value wins
+
+    // A numeric world seed: meta.seed = canonical decimal, meta.seed_phrase
+    // empty. Required (this or set_seed_phrase) before finalize().
+    void set_seed(std::uint64_t value);
+
+    // A text-phrase seed: phrase must already be trimmed and valid, i.e.
+    // seed_from_phrase(phrase) succeeds and returns phrase unchanged
+    // (P0-01 7.3); otherwise FatalError. Sets meta.seed_phrase = phrase and
+    // meta.seed = phrase_seed(phrase).
+    void set_seed_phrase(std::string_view phrase);
+
+    // meta.content_hash = 64 lowercase hex digits of digest (P0-03 8).
+    // Required before finalize().
+    void set_content_hash(const Sha256Digest& digest);
+
+    // meta.param.<name> = value in canonical decimal. FatalError if
+    // "param." + name is not a valid meta key (is_valid_meta_key), or if
+    // name is "map_size" and value is not in ALLOWED_MAP_SIZES.
+    // param.map_size is required before finalize().
+    void set_param_integer(std::string_view name, std::int64_t value);
+
+    // meta.param.<name> = canonical_decimal(decimal_text) (P0-01 5.6), for
+    // fixed-point parameters. FatalError if the name is invalid as above,
+    // or the text fails the decimal grammar.
+    void set_param_decimal(std::string_view name, std::string_view decimal_text);
+
+    // The seed set so far, or 0 if none (stages derive their streams from it).
+    [[nodiscard]] std::uint64_t seed() const noexcept;
+
+    // --- stages (P0-02 6 step 3)
+
+    // BEGIN a stage's transaction. FatalError if another stage is open, the
+    // writer is finalized, stage_name is not a valid stage name
+    // (is_valid_stage_name), or a stage of that name already committed.
+    [[nodiscard]] StageWriter begin_stage(std::string_view stage_name);
+
+    // The id the next layer must have: 1 + the number of layers written.
+    [[nodiscard]] std::int64_t next_layer_id() const noexcept;
+
+    // Names of the committed stages, in run order (becomes meta.stages).
+    [[nodiscard]] const std::vector<std::string>& stages() const noexcept;
+
+    // --- output (P0-02 6 steps 4-9)
+
+    // Checks the output location without writing anything: output_exists if
+    // out_utf8 exists and overwrite is refuse; output_parent_missing if its
+    // parent directory does not exist. finalize() runs the same checks
+    // first; a caller may run them before generating to fail early.
+    [[nodiscard]] static Status check_output(std::string_view out_utf8, Overwrite overwrite);
+
+    // Steps 4-9 of P0-02 section 6: writes meta (ascending key order), runs
+    // integrity_check, removes any old <out>.partial, VACUUM INTO
+    // <out>.partial, closes the working database, verifies the header (6.1)
+    // and meta of <out>.partial, and renames it to <out>. out_utf8 is a
+    // UTF-8 path, relative paths resolving against the current directory.
+    //
+    // Returns output_exists, output_parent_missing, output_write_failed or
+    // output_rename_failed for problems with the output location. Raises
+    // FatalError for contract violations: a stage still open, seed /
+    // content hash / param.map_size not set, finalize() called twice, a
+    // failed integrity_check or header verification. On every failure path,
+    // returned or thrown, the working database is closed and <out>.partial
+    // is deleted; an existing <out> is never touched unless the final
+    // rename replaces it. After finalize(), the writer accepts no further
+    // calls except destruction.
+    [[nodiscard]] Status finalize(std::string_view out_utf8, Overwrite overwrite);
+
+private:
+    friend struct testing::WriterAccess;
+    std::unique_ptr<detail::WriterState> state_;
+};
+
+}  // namespace worldgen::db
