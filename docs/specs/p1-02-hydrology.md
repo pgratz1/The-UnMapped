@@ -1,6 +1,6 @@
 # P1-02 Hydrology
 
-Status: draft for approval, 2026-11-15. Phase P1 Geography, stage 2 (`hydrology`). Design doc section 4 (stage 2: "flow accumulation gives rivers and lakes; sea level sets the coast"), 6, 7 (rivers carved into chunk heightmaps). Depends on P0-01 to P0-04, P1-00 (shared algorithms G1 to G6, rules D1 to D10) and P1-01 (the `elevation` layer and its postconditions).
+Status: approved by the lead, 2026-11-15 (tuning values marked "guess" and the statistics ranges are starting points, to be revised against the first seed sweep); originally a draft, 2026-11-15. Phase P1 Geography, stage 2 (`hydrology`). Design doc section 4 (stage 2: "flow accumulation gives rivers and lakes; sea level sets the coast"), 6, 7 (rivers carved into chunk heightmaps). Depends on P0-01 to P0-04, P1-00 (shared algorithms G1 to G6, rules D1 to D10) and P1-01 (the `elevation` layer and its postconditions).
 
 ## 1. Purpose
 

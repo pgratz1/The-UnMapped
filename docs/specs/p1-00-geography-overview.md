@@ -1,6 +1,6 @@
 # P1-00 Geography overview
 
-Status: draft for approval, 2026-11-15. Phase P1 Geography. Design doc sections 2, 4, 6, 7, 10, 11 (milestone 0), 13. Depends on P0-01 to P0-04 including their amendments. First pass: this overview, P1-01 elevation, P1-02 hydrology. Second pass (written after elevation and hydrology have been implemented and looked at): climate, biomes, resources and habitability, regions.
+Status: approved by the lead, 2026-11-15 (tuning values marked "guess" and the statistics ranges are starting points, to be revised against the first seed sweep); originally a draft, 2026-11-15. Phase P1 Geography. Design doc sections 2, 4, 6, 7, 10, 11 (milestone 0), 13. Depends on P0-01 to P0-04 including their amendments. First pass: this overview, P1-01 elevation, P1-02 hydrology. Second pass (written after elevation and hydrology have been implemented and looked at): climate, biomes, resources and habitability, regions.
 
 This document fixes everything the six geography stage specs share: scale and coordinates, the stage list, the layer catalogue, the representation rule, tuning as data, shared algorithms, determinism rules, schema, command-line changes, the performance budget, math functions and how results are judged. A stage spec cites the sections here instead of repeating them. Where this document and a stage spec disagree, the stage spec is wrong and must be fixed.
 

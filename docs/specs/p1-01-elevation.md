@@ -1,6 +1,6 @@
 # P1-01 Elevation
 
-Status: draft for approval, 2026-11-15. Phase P1 Geography, stage 1 (`elevation`). Design doc section 4 (stage 1: "layered noise shaped by a continent mask, then hydraulic erosion"). Depends on P0-01 to P0-04 and P1-00, whose sections are cited as "P1-00 n" and whose shared algorithms G1 to G6 and determinism rules D1 to D10 are used by name.
+Status: approved by the lead, 2026-11-15 (tuning values marked "guess" and the statistics ranges are starting points, to be revised against the first seed sweep); originally a draft, 2026-11-15. Phase P1 Geography, stage 1 (`elevation`). Design doc section 4 (stage 1: "layered noise shaped by a continent mask, then hydraulic erosion"). Depends on P0-01 to P0-04 and P1-00, whose sections are cited as "P1-00 n" and whose shared algorithms G1 to G6 and determinism rules D1 to D10 are used by name.
 
 ## 1. Purpose
 
