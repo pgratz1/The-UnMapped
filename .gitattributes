@@ -1,0 +1,7 @@
+# LF line endings in every checkout, Windows included, so that source text
+# (raw string literals, embedded SQL, TOML data) is identical on every
+# platform and compiler.
+* text=auto eol=lf
+
+# Vendored code is kept byte-for-byte as downloaded (see extern/README.md).
+extern/** -text
