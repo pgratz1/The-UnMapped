@@ -201,7 +201,7 @@ SplitMix64 outputs are a bijection of distinct counter values, so at most one of
 
 `Rng::from_state(s0, s1, s2, s3)` sets the state directly (fatal if all four are zero). It exists for tests and test vectors.
 
-`Rng` is movable and **not copyable** (copy constructor and copy assignment deleted), because copying a generator silently duplicates a stream. Two generators with the same stream are made by constructing both from the same key. A moved-from `Rng` must not be used again.
+`Rng` is movable and **not copyable** (copy constructor and copy assignment deleted), because copying a generator silently duplicates a stream. Two generators with the same stream are made by constructing both from the same key. Moving an `Rng` transfers the stream: the move constructor and move assignment set the source's four state words to zero, and `next()` (and so every sampling function) raises the fatal error when the state is all zero. A moved-from `Rng` therefore cannot silently repeat the stream it gave away; it may be assigned a new generator and used again.
 
 Keys come from section 7. A stage never seeds an `Rng` with the raw world seed.
 
@@ -479,6 +479,7 @@ Property: for 10^5 raw values from a fixed stream (plus MIN, MAX, ±1, 0), `pars
 - `chance(0)` false and `chance(ONE)` true for 10^4 draws each; each consumes one draw.
 - `weighted_index([])`, `weighted_index([0, 0])`, weights summing past 2^64 - 1: fatal.
 - Compile-time: `std::is_copy_constructible_v<Rng>` is false.
+- Move: after `Rng b = std::move(a)`, `b` continues the stream `a` had (same outputs as a twin), `a.next()` is fatal, and after `a = Rng(key)` it works again. The same holds for move assignment.
 
 Property tests (fixed streams, so they are deterministic):
 - `uniform_u64(s)` for s in {1, 2, 3, 7, 10, 1000, 2^32+1, 2^63+1, 2^64-1}: every result < s.
