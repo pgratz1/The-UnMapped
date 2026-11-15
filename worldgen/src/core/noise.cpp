@@ -75,7 +75,9 @@ Fx fbm2(std::uint64_t key, Fx x, Fx y, std::int32_t octaves, Fx base_freq, Fx la
     Fx f = base_freq;
     for (std::int32_t o = 0; o < octaves; ++o) {
         const std::uint64_t ko = substream(key, static_cast<std::uint64_t>(o));
-        const Fx n = noise2(ko, mul(x, f), mul(y, f));
+        const Fx xs = mul(x, f);
+        const Fx ys = mul(y, f);
+        const Fx n = noise2(ko, xs, ys);
         sum = sum + mul(amp, n);
         norm = norm + amp;
         amp = mul(amp, gain);

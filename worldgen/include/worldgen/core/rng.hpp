@@ -23,7 +23,10 @@ namespace worldgen {
 
 // xoshiro256** generator (P0-01 6.1). Movable, not copyable (6.2): two
 // generators with the same stream are made by constructing both from the
-// same key. A moved-from Rng keeps its state (implementation note).
+// same key. Moving transfers the stream: the source's four state words are
+// set to zero, and next() (so every sampling function) is fatal on an
+// all-zero state. A moved-from Rng may be assigned a new generator and used
+// again.
 class Rng {
 public:
     // Seeds from SplitMix64 started at x = key; its first four outputs are
@@ -37,18 +40,22 @@ public:
 
     Rng(const Rng&) = delete;
     Rng& operator=(const Rng&) = delete;
-    Rng(Rng&&) noexcept = default;
-    Rng& operator=(Rng&&) noexcept = default;
+    // Takes other's state and sets other's state to all zero (P0-01 6.2).
+    Rng(Rng&& other) noexcept;
+    // Takes other's state and sets other's state to all zero (P0-01 6.2).
+    // Self-move-assignment leaves the object unchanged.
+    Rng& operator=(Rng&& other) noexcept;
     ~Rng() = default;
 
     // The current state {s0, s1, s2, s3} (for tests and vectors).
     [[nodiscard]] std::array<std::uint64_t, 4> state() const noexcept;
 
-    // xoshiro256** step (P0-01 6.1). 1 draw.
-    [[nodiscard]] std::uint64_t next() noexcept;
+    // xoshiro256** step (P0-01 6.1). 1 draw. Fatal if the state is all zero
+    // (a moved-from Rng, 6.2).
+    [[nodiscard]] std::uint64_t next();
 
     // next() >> 32 (P0-01 6.3). 1 draw.
-    [[nodiscard]] std::uint32_t next_u32() noexcept;
+    [[nodiscard]] std::uint32_t next_u32();
 
     // Unbiased integer in [0, s), Lemire's method (P0-01 6.3). At least one
     // draw, also for s = 1. Fatal if s = 0.
@@ -59,7 +66,7 @@ public:
     [[nodiscard]] std::int64_t uniform_i64(std::int64_t lo, std::int64_t hi);
 
     // Fx in [0, ONE): raw = next() >> 32 (P0-01 6.3). 1 draw.
-    [[nodiscard]] Fx uniform_fx01() noexcept;
+    [[nodiscard]] Fx uniform_fx01();
 
     // Fx in [lo, hi): raw = lo.raw + uniform_u64(hi.raw - lo.raw), the
     // difference taken in uint64 (P0-01 6.3). Fatal if lo >= hi.
