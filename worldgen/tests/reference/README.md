@@ -108,17 +108,19 @@ result types.
 against `docs/specs/p0-02-world-db.md` and `docs/specs/p0-04-worldgen-cli.md`
 without any of the project's C++. It reads the file with the standard-library
 `sqlite3` module (read-only, immutable) and imports `core_reference.py` for
-`stream_key`, `hash_at`, `fbm2`, `mul_div` and `phrase_seed_text` (the seed
-of `seed_from_phrase`). It has not yet been updated for the scrubbed phrase
-rule: it computes the seed under the new rule but still expects the stored
-`seed_phrase` to be the trimmed text, so `--phrase` checks of 0.2.0 worlds
-will report that row until it is. It was used
+`stream_key`, `hash_at`, `fbm2`, `mul_div` and `seed_from_phrase`. `--phrase`
+takes the argument bytes exactly as passed to `generate --seed-phrase` (any
+bytes, not only UTF-8); the expected `seed_phrase` row is the scrubbed phrase
+and the expected seed its `phrase_seed` (P0-01 7.3, P0-02 amendment 12). The
+expected `generator_version` is the constant `GENERATOR_VERSION` at the top of
+the script (`0.2.0`), overridable with `--generator-version`. It was used
 to confirm the golden values in `worldgen/tests/golden/p0-worlds.txt` and the
 `GOLDEN_RGB_*` constants of `worldgen/tests/inspect_render_test.cpp`.
 
 ```
 python3 -B worldgen/tests/reference/p0_world_check.py check WORLD (--seed N | --phrase TEXT)
         [--map-size N] [--test-pattern] [--detail FILE] [--report FILE]
+        [--generator-version V]
 python3 -B worldgen/tests/reference/p0_world_check.py stats WORLD...
 ```
 

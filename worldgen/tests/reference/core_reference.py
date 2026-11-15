@@ -642,11 +642,6 @@ def phrase_seed(b):
     return hash_words(TAG_PHRASE, pack_bytes(b))
 
 
-# Legacy (generator 0.1.0 trim set). Not used by the phrase rules any more;
-# kept only because p0_world_check.py still imports it until it is updated
-# for the scrubbed rule.
-PHRASE_WS = b" \t\r\n"
-
 PHRASE_MAX = 256
 
 
