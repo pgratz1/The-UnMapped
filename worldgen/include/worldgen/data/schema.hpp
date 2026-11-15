@@ -196,12 +196,48 @@ private:
 
 // --- Kinds and the registry (P0-03 section 7.1) -----------------------------
 
+// One id of a fixed-id kind and the schema of its definition (P0-03
+// amendment 15, P1-00 appendix A3 and section 6.1).
+struct IdSchema {
+    std::string id;  // id grammar [a-z][a-z0-9_]*, 1 to 64 bytes
+    Schema schema;
+};
+
 // A kind of definition (P0-03 7.1).
+//
+// Two forms. An open kind (id_schemas empty) accepts any id, every
+// definition validated against `schema`. A fixed-id kind (P0-03 amendment
+// 15, P1-00 appendix A3) has a fixed, non-empty set of ids in id_schemas,
+// each with its own schema, and `schema` must have no fields and no checks.
+// For a fixed-id kind the loader reports:
+//   - a definition whose id is not in the set, at its header:
+//     "unknown id '<id>' for kind '<kind>'; expected one of '<a>', '<b>', ..."
+//     (ids in ascending byte order); that definition is not validated;
+//   - for each id of the set with no definition, when the kind's directory
+//     exists, an error against the directory with no position:
+//     "missing definition '<kind>.<id>'". When the directory is missing,
+//     a required kind reports only the missing directory (as for an open
+//     kind) and a kind that is not required loads with no definitions.
+// Each definition is validated against its id's schema, named checks
+// included. The canonical encoding (P0-03 8) is unchanged.
 struct Kind {
     std::string name;       // grammar [a-z][a-z0-9_]*, unique
     std::string directory;  // one path segment under the data root, same grammar, unique
     bool required = false;  // missing directory or zero definitions is an error
-    Schema schema;
+    Schema schema;          // the schema of every definition of an open kind
+    std::vector<IdSchema> id_schemas{};  // fixed-id kinds only: one entry per id ({} so that Kind{name, dir, req, schema} needs no fifth initializer)
+
+    // A fixed-id kind (P0-03 amendment 15); `schema` stays empty.
+    [[nodiscard]] static Kind with_fixed_ids(std::string name, std::string directory, bool required,
+                                             std::vector<IdSchema> id_schemas);
+
+    // True if id_schemas is not empty.
+    [[nodiscard]] bool has_fixed_ids() const noexcept { return !id_schemas.empty(); }
+
+    // The schema a definition with this id is validated against: `schema`
+    // for an open kind; for a fixed-id kind the id's schema, or nullptr if
+    // the id is not in the set.
+    [[nodiscard]] const Schema* schema_for(std::string_view id) const noexcept;
 };
 
 // The set of registered kinds (P0-03 7.1), kept in ascending name order
@@ -209,7 +245,11 @@ struct Kind {
 class KindRegistry {
 public:
     // Registers a kind. Fatal if its name or directory is not a valid name,
-    // or either is already used by a registered kind.
+    // or either is already used by a registered kind. For a fixed-id kind
+    // (P0-03 amendment 15) also fatal if an id does not match the id
+    // grammar, an id is listed twice, or `schema` has fields or checks. Each
+    // id's schema was already validated when it was built (Schema and Field
+    // constructors). id_schemas is stored in ascending id order.
     void add(Kind kind);
 
     // All kinds, ascending name.
@@ -222,7 +262,10 @@ private:
 };
 
 // The production registry: the fixed list of every kind the generator uses
-// (P0-03 7.1, defined in one source file, src/data/kinds.cpp). Empty in P0.
+// (P0-03 7.1, defined in one source file, src/data/kinds.cpp). Still empty:
+// the `worldgen` kind of P1-00 6.1 is registered together with the
+// elevation stage, since registering any kind changes content_hash and so
+// every world.
 [[nodiscard]] KindRegistry builtin_kinds();
 
 }  // namespace worldgen::data

@@ -43,6 +43,18 @@ add_library(worldgen STATIC
     src/inspect/hashes.cpp
     src/inspect/render.cpp
     src/inspect/report.cpp
+    # P1 foundation (P1-00): parallel blocks (P0-01 4.2 as amended), the
+    # stage pipeline (P1-00 3, 5.1, 10.1), the data root (P0-03 7.6) and the
+    # shared geography algorithms (P1-00 7, P1-01 4.1).
+    src/core/parallel.cpp
+    src/stages/stage.cpp
+    src/data/data_root.cpp
+    src/geo/components.cpp
+    src/geo/flow.cpp
+    src/geo/grid.cpp
+    src/geo/noise.cpp
+    src/geo/noise_schema.cpp
+    src/geo/select.cpp
 )
 add_library(worldgen::worldgen ALIAS worldgen)
 target_include_directories(worldgen
@@ -63,6 +75,19 @@ target_link_libraries(worldgen PRIVATE unmapped::sqlite3)
 target_sources(worldgen PRIVATE
     src/inspect/geography.cpp
 )
+
+# Parallel blocks (src/core/parallel.cpp) use std::thread.
+find_package(Threads REQUIRED)
+target_link_libraries(worldgen PUBLIC Threads::Threads)
+
+# The default data root of P0-03 7.6: game/data/ in the source tree, recorded
+# at configure time into a header in the build tree (never the source tree).
+# Only src/data/data_root.cpp includes it; the path locates data files and
+# never reaches a world file or a hash.
+cmake_path(SET UNMAPPED_CONFIGURED_DATA_ROOT NORMALIZE "${CMAKE_CURRENT_SOURCE_DIR}/../game/data")
+configure_file(src/data/data_root_config.hpp.in
+               "${CMAKE_CURRENT_BINARY_DIR}/generated/data_root_config.hpp" @ONLY)
+target_include_directories(worldgen PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/generated")
 
 if(UNMAPPED_BUILD_TESTS)
     add_subdirectory(tests)
