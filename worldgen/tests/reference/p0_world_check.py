@@ -18,14 +18,20 @@ Usage (from the repository root; -B keeps __pycache__ out of the tree):
 
     python3 -B worldgen/tests/reference/p0_world_check.py check WORLD
             (--seed N | --phrase TEXT) [--map-size N] [--test-pattern]
-            [--detail FILE] [--report FILE]
+            [--detail FILE] [--report FILE] [--generator-version V]
 
         Checks WORLD against the expected content for those generate
         arguments. --detail and --report name files holding the output of
         `worldgen-cli hash --detail` and `worldgen-cli report` for WORLD;
         they are compared byte for byte with the text computed here.
         Prints the computed detail lines and render hashes; exit 1 on any
-        disagreement.
+        disagreement. --phrase is the phrase as given to `generate
+        --seed-phrase`, taken as the raw argument bytes (any bytes, not only
+        UTF-8); the expected seed_phrase row is its scrubbed form and the
+        seed is seed_from_phrase of it (P0-01 7.3, P0-02 amendment 12).
+        Write --phrase=TEXT for a phrase that starts with '-'.
+        --generator-version is the expected meta.generator_version
+        (default GENERATOR_VERSION below).
 
     python3 -B worldgen/tests/reference/p0_world_check.py stats WORLD...
 
@@ -53,6 +59,9 @@ TYPE_CODE = {v[0]: k for k, v in TYPES.items()}
 DDL_META = b"CREATE TABLE meta (key TEXT PRIMARY KEY, value TEXT NOT NULL) STRICT, WITHOUT ROWID"
 DDL_LAYER = (b"CREATE TABLE layer (id INTEGER PRIMARY KEY, name TEXT NOT NULL UNIQUE, width INTEGER NOT NULL, "
              b"height INTEGER NOT NULL, format TEXT NOT NULL, data BLOB NOT NULL) STRICT")
+# The generator version the checked worlds are expected to carry (P0-02 5.5,
+# amendment 12). One edit per version bump; --generator-version overrides it.
+GENERATOR_VERSION = "0.2.0"
 EMPTY_SHA = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
 
 
@@ -344,8 +353,12 @@ def check_world(args):
     data = w["bytes"]
     hdr = header_checks(f, data)
     if args.phrase is not None:
-        phrase = args.phrase.encode("utf-8").strip(ref.PHRASE_WS)
-        seed = ref.phrase_seed_text(args.phrase.encode("utf-8"))
+        raw = os.fsencode(args.phrase)   # the argument bytes as passed
+        try:
+            phrase, seed = ref.seed_from_phrase(raw)
+        except ref.ParseError as e:
+            print("FAIL phrase rejected by seed_from_phrase (%s); generate exits 2 for it" % e)
+            return 1
     else:
         phrase = b""
         seed = int(args.seed, 0)
@@ -358,7 +371,7 @@ def check_world(args):
     expected_meta = [
         (b"content_hash", EMPTY_SHA.encode()),
         (b"format", b"the-unmapped-world"),
-        (b"generator_version", b"0.1.0"),
+        (b"generator_version", args.generator_version.encode()),
         (b"param.map_size", str(args.map_size).encode()),
         (b"schema_version", b"1"),
         (b"seed", str(seed).encode()),
@@ -439,6 +452,7 @@ def main(argv):
     c.add_argument("--test-pattern", action="store_true")
     c.add_argument("--detail")
     c.add_argument("--report")
+    c.add_argument("--generator-version", default=GENERATOR_VERSION)
     s = sub.add_parser("stats")
     s.add_argument("worlds", nargs="+")
     a = p.parse_args(argv[1:])

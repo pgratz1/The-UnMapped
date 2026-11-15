@@ -74,20 +74,27 @@ void parse_phrase(const Node& node, std::string_view path, ErrorList& errors, Se
                    "'world.seed_phrase' is " + std::string(detail::kind_phrase(node)) + "; expected a string");
         return;
     }
+    // Deliberately not read as a schema string(max_bytes) field: the default
+    // 4096-byte limit of P0-03 section 4 does not apply to the raw phrase.
+    // Only the scrubbed phrase is limited (PHRASE_MAX_BYTES, by
+    // seed_from_phrase), so a long text that scrubs short is accepted; the
+    // 1 MiB file limit bounds the raw text. The string rule (forbidden
+    // control characters) was applied by is_rejected_scalar above.
     const PhraseSeed ps = seed_from_phrase(node.text);
     switch (ps.error) {
         case PhraseError::none:
             out.seed = ps.seed;
             out.seed_phrase = ps.phrase;
             return;
-        case PhraseError::invalid_utf8:
-            errors.add(path, node.position, "'world.seed_phrase' is not valid UTF-8");
-            return;
         case PhraseError::empty:
-            errors.add(path, node.position, "'world.seed_phrase' is empty after trimming whitespace");
+            errors.add(path, node.position,
+                       "'world.seed_phrase' has no letter a-z or digit 0-9; a phrase keeps only those, other "
+                       "characters become spaces");
             return;
         case PhraseError::too_long:
-            errors.add(path, node.position, "'world.seed_phrase' is longer than 256 bytes after trimming whitespace");
+            errors.add(path, node.position,
+                       "'world.seed_phrase' is longer than 256 bytes after scrubbing (letters a-z, digits 0-9 and "
+                       "single spaces)");
             return;
     }
 }

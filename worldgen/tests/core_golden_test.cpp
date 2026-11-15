@@ -8,7 +8,9 @@
 // value) and requires the token list to equal the expected one.
 //
 // An unknown kind, a malformed token, a wrong argument count or a blank line
-// fails the test: no vector is skipped silently.
+// fails the test: no vector is skipped silently. The whole file is read into
+// memory and split on LF, so there is no line-length limit (some phrase
+// vectors are longer than 16 KB).
 
 #include <charconv>
 #include <fstream>
@@ -31,7 +33,7 @@ namespace {
 
 // Number of vector lines in core_vectors.txt. Update it deliberately when
 // the reference regenerates the file with a different vector set.
-constexpr std::size_t EXPECTED_VECTOR_COUNT = 1458;
+constexpr std::size_t EXPECTED_VECTOR_COUNT = 2201;
 
 struct ParseError : std::runtime_error {
     using std::runtime_error::runtime_error;
@@ -595,12 +597,23 @@ Tokens evaluate(const Vector& v) {
         if (a != b) return {"phrase_seed overloads differ"};
         return {hx(a)};
     }
+    if (k == "hash.phrase_scrub") {
+        // scrub_phrase alone (P0-01 7.3 steps 1-4): no emptiness or length
+        // check, so the expected text may be "" or longer than 256 bytes.
+        need_args(v, 1);
+        const std::string bytes = parse_bytes(v.args[0]);
+        return {str_token(scrub_phrase(bytes))};
+    }
     if (k == "hash.phrase_text") {
         need_args(v, 1);
         const std::string bytes = parse_bytes(v.args[0]);
         const PhraseSeed p = seed_from_phrase(bytes);
-        if (!p.ok()) return {"ERROR"};
+        if (!p.ok()) {
+            if (!p.phrase.empty() || p.seed != 0) return {"error result with a phrase or seed"};
+            return {"ERROR"};
+        }
         if (p.seed != phrase_seed(p.phrase)) return {"seed is not phrase_seed(phrase)"};
+        if (p.phrase != scrub_phrase(bytes)) return {"phrase is not scrub_phrase(text)"};
         return {hx(p.seed)};
     }
 

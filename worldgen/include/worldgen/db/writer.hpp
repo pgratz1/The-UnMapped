@@ -5,7 +5,7 @@
 // Typical use (P0-04 section 5.1):
 //
 //     worldgen::db::WorldWriter writer;              // steps 1-2
-//     writer.set_seed(seed);                         // or set_seed_phrase(trimmed)
+//     writer.set_seed(seed);                         // or set_seed_phrase(scrubbed)
 //     writer.set_content_hash(content_hash);
 //     writer.set_param_integer("map_size", 1024);
 //     {
@@ -116,9 +116,9 @@ public:
     // empty. Required (this or set_seed_phrase) before finalize().
     void set_seed(std::uint64_t value);
 
-    // A text-phrase seed: phrase must already be trimmed and valid, i.e.
-    // seed_from_phrase(phrase) succeeds and returns phrase unchanged
-    // (P0-01 7.3); otherwise FatalError. Sets meta.seed_phrase = phrase and
+    // A text-phrase seed: phrase must already be scrubbed, i.e. 1 to 256
+    // bytes and scrub_phrase(phrase) == phrase (P0-01 7.3, P0-02 amendment
+    // 12); otherwise FatalError. Sets meta.seed_phrase = phrase and
     // meta.seed = phrase_seed(phrase).
     void set_seed_phrase(std::string_view phrase);
 

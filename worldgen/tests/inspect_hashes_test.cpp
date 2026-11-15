@@ -162,6 +162,7 @@ TEST_CASE("hashes 8: table meta by hand for other meta contents") {
     dbtest::TempDir dir("p004-detail-meta");
     const worldgen::PhraseSeed ps = worldgen::seed_from_phrase("\xC3\x9Cnmapped W\xC3\xB6rld");
     REQUIRE(ps.ok());
+    CHECK(ps.phrase == "nmapped w rld");  // scrubbed (P0-01 7.3)
     worldgen::WorldParams p = params_for(ps.seed, true);
     p.seed_phrase = ps.phrase;
     p.map_size = 512;

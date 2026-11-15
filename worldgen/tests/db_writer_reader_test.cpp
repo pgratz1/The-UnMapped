@@ -79,7 +79,7 @@ Rows expected_empty_meta(const std::string& seed_text, const std::string& phrase
     return {
         {"content_hash", EMPTY_SHA256},
         {"format", "the-unmapped-world"},
-        {"generator_version", "0.1.0"},
+        {"generator_version", "0.2.0"},
         {"param.map_size", "1024"},
         {"schema_version", "1"},
         {"seed", seed_text},
@@ -227,7 +227,7 @@ TEST_CASE("empty world through the reader (9)") {
     const WorldReader& reader = opened.value();
     CHECK(reader.seed() == 0);
     CHECK(reader.schema_version() == 1);
-    CHECK(reader.generator_version() == "0.1.0");
+    CHECK(reader.generator_version() == "0.2.0");
     CHECK(reader.seed_phrase().empty());
     CHECK(reader.map_size() == 1024);
     CHECK(reader.stages().empty());
@@ -295,9 +295,10 @@ TEST_CASE("seed canonical text (5.5, 12.2)") {
     CHECK_FALSE(worldgen::db::parse_canonical_u64("+1").has_value());
 }
 
-TEST_CASE("phrase seed: seed_phrase holds the trimmed phrase, seed holds phrase_seed of it (12.2, 14.5)") {
+TEST_CASE("phrase seed: seed_phrase holds the scrubbed phrase, seed holds phrase_seed of it (12.2, amendment 12)") {
     dbtest::TempDir dir("phrase");
-    const std::string phrases[] = {"The Unmapped", "\xC3\x9Cnmapped W\xC3\xB6rld"};  // second: "Ünmapped Wörld"
+    // Scrubbed phrases (P0-01 7.3): "Ünmapped Wörld" scrubs to "nmapped w rld".
+    const std::string phrases[] = {"the unmapped", "nmapped w rld", "42", "a", std::string(256, 'z')};
     int index = 0;
     for (const std::string& phrase : phrases) {
         CAPTURE(phrase);
@@ -311,7 +312,7 @@ TEST_CASE("phrase seed: seed_phrase holds the trimmed phrase, seed holds phrase_
             REQUIRE(writer.finalize(path, Overwrite::refuse).ok());
         }
         const std::uint64_t seed = worldgen::phrase_seed(phrase);
-        CHECK(worldgen::seed_from_phrase("  " + phrase + "\t\n").seed == seed);
+        CHECK(worldgen::seed_from_phrase(phrase).seed == seed);
         dbtest::SqliteFile db(path);
         REQUIRE(db.ok());
         CHECK(db.rows("SELECT key, value FROM meta ORDER BY key") ==
@@ -321,12 +322,53 @@ TEST_CASE("phrase seed: seed_phrase holds the trimmed phrase, seed holds phrase_
         CHECK(reader.value().seed() == seed);
         CHECK(reader.value().seed_phrase() == phrase);
     }
-    // The writer takes an already trimmed, valid phrase only (14.5).
+    // The phrase as typed scrubs to what the writer takes: same file bytes.
+    {
+        const worldgen::PhraseSeed ps = worldgen::seed_from_phrase("\xC3\x9Cnmapped W\xC3\xB6rld");
+        REQUIRE(ps.ok());
+        CHECK(ps.phrase == "nmapped w rld");
+        const std::string path = dir.file("typed.db");
+        WorldWriter writer;
+        writer.set_seed_phrase(ps.phrase);
+        CHECK(writer.seed() == ps.seed);
+        writer.set_content_hash(dbtest::empty_content_hash());
+        writer.set_param_integer("map_size", 1024);
+        REQUIRE(writer.finalize(path, Overwrite::refuse).ok());
+        CHECK(dbtest::read_file(path) == dbtest::read_file(dir.file("p1.db")));
+    }
+}
+
+TEST_CASE("phrase seed: the writer takes only an already scrubbed phrase (amendment 12)") {
+    const std::string bad[] = {
+        "The Unmapped",           // capitals
+        "THE UNMAPPED",
+        "the-unmapped",           // punctuation
+        "the unmapped!",
+        "the  unmapped",          // double space
+        " the unmapped",          // edge spaces
+        "the unmapped ",
+        "the\tunmapped",          // whitespace other than a single space
+        "the unmapped\n",
+        std::string("a\0b", 3),   // NUL
+        "\xC3\x9Cnmapped",        // non-ASCII bytes
+        "nmapped w\xC3\xB6rld",
+        "",                       // empty
+        " ",
+        std::string(257, 'a'),    // over 256 bytes
+        std::string(128, 'a') + " " + std::string(128, 'b'),
+    };
+    for (const std::string& phrase : bad) {
+        CAPTURE(phrase);
+        CAPTURE(phrase.size());
+        WorldWriter writer;
+        CHECK_THROWS_AS(writer.set_seed_phrase(phrase), FatalError);
+    }
+    // Boundary: 256 bytes with interior spaces is accepted.
     WorldWriter writer;
-    CHECK_THROWS_AS(writer.set_seed_phrase(" The Unmapped"), FatalError);
-    CHECK_THROWS_AS(writer.set_seed_phrase("The Unmapped\n"), FatalError);
-    CHECK_THROWS_AS(writer.set_seed_phrase(""), FatalError);
-    CHECK_THROWS_AS(writer.set_seed_phrase("\xC3"), FatalError);
+    const std::string ok256 = std::string(127, 'a') + " " + std::string(128, 'b');
+    REQUIRE(ok256.size() == 256);
+    writer.set_seed_phrase(ok256);
+    CHECK(writer.seed() == worldgen::phrase_seed(ok256));
 }
 
 TEST_CASE("map size must be 512, 1024 or 2048 (5.5, 14.5)") {
@@ -751,6 +793,44 @@ TEST_CASE("reader errors are distinct and in the order of section 9 (12.2, 14.2)
             CHECK(open_code(variant("inv" + std::to_string(i++) + ".db",
                                     std::string("UPDATE meta SET value = '") + value + "' WHERE key = '" + key + "'")) ==
                   name(ErrorCode::meta_value_invalid));
+        }
+    }
+    SUBCASE("a seed_phrase that is not a scrubbed phrase of at most 256 bytes (amendment 12)") {
+        // Each value is an SQL expression, so that control and non-ASCII
+        // bytes can be written with char() and X'..'.
+        const std::string bad[] = {
+            "'The Unmapped'",                         // capitals
+            "'the-unmapped'",                         // punctuation
+            "'the unmapped!'",
+            "'the  unmapped'",                        // double space
+            "' the unmapped'",                        // leading space
+            "'the unmapped '",                        // trailing space
+            "' '",
+            "'the' || char(9) || 'unmapped'",         // TAB
+            "'the unmapped' || char(10)",             // LF
+            "'a' || char(0) || 'b'",                  // NUL
+            "CAST(X'C39C6E6D6170706564' AS TEXT)",    // "Ünmapped"
+            "'" + std::string(257, 'a') + "'",        // 257 bytes, scrubbed form
+            "'" + std::string(128, 'a') + " " + std::string(128, 'b') + "'",
+        };
+        int i = 0;
+        for (const std::string& value : bad) {
+            CAPTURE(value);
+            CHECK(open_code(variant("phr" + std::to_string(i++) + ".db",
+                                    "UPDATE meta SET value = " + value + " WHERE key = 'seed_phrase'")) ==
+                  name(ErrorCode::meta_value_invalid));
+        }
+        // Scrubbed phrases are accepted; the reader does not recompute the
+        // seed, so the numeric seed of the base world is kept as it is.
+        const std::string good[] = {"the unmapped", "42", "a", "nmapped w rld", std::string(256, 'a'),
+                                    std::string(127, 'a') + " " + std::string(128, 'b')};
+        for (const std::string& phrase : good) {
+            CAPTURE(phrase);
+            const std::string path = variant("phr" + std::to_string(i++) + ".db",
+                                             "UPDATE meta SET value = '" + phrase + "' WHERE key = 'seed_phrase'");
+            auto r = WorldReader::open(path);
+            REQUIRE(r.ok());
+            CHECK(r.value().seed_phrase() == phrase);
         }
     }
     SUBCASE("unknown meta keys are tolerated (5.5)") {

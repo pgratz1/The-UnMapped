@@ -84,6 +84,11 @@ TEST_CASE("cli 9: the golden cases are deterministic and distinct") {
     }
     CHECK(distinct.size() == golden_cases().size());
     MESSAGE("observed world hashes (p0-worlds.txt format):\n", listing);
+    // Case empty-phrase keeps its arguments and stores the scrubbed phrase
+    // (amendment 15).
+    const ProcessResult r = sb.cli({"report", "--db", u8(sb.file("a-empty-phrase.db"))});
+    REQUIRE(r.exit_code == EXIT_OK);
+    CHECK(contains(r.out, "\nseed_phrase = the unmapped\n"));
 }
 
 TEST_CASE("cli 9, 12.6: golden world hashes from p0-worlds.txt" * doctest::skip(!golden_file_present())) {

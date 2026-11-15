@@ -80,7 +80,7 @@ worldgen-cli generate (--seed N | --seed-phrase TEXT) [--out PATH] [--map-size 5
 | Option | Default | Meaning |
 | --- | --- | --- |
 | `--seed N` | from settings | The 64-bit world seed (4.2). |
-| `--seed-phrase TEXT` | from settings | A text phrase; seed = `phrase_seed` (P0-01 section 7.3). Exclusive with `--seed`. |
+| `--seed-phrase TEXT` | from settings | A text phrase, scrubbed and hashed by `seed_from_phrase` (P0-01 section 7.3; amendment 15). Exclusive with `--seed`. |
 | `--out PATH` | `<build root>/out/world-<seed>.db`, seed in canonical decimal | Output world file. |
 | `--map-size` | from settings, else 1024 | Map side in cells, stored as `param.map_size`. No P0 stage uses it. |
 | `--settings FILE` | none | Settings file (P0-03 section 6). Flags override it key by key. |
@@ -163,7 +163,7 @@ Expected output for `generate --seed 0` (empty world):
 [meta]
 content_hash = e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
 format = the-unmapped-world
-generator_version = 0.1.0
+generator_version = 0.2.0
 param.map_size = 1024
 schema_version = 1
 seed = 0
@@ -256,7 +256,7 @@ Integration tests run the built binary (CTest), each with `UNMAPPED_BUILD_ROOT` 
 ### 12.1 Conventions
 
 - Exit codes: no command → 2; unknown command → 2; unknown option → 2; repeated `--seed` → 2; `--seed` and `--seed-phrase` together → 2; `--seed -1`, `--seed 042`, `--seed 18446744073709551616`, `--seed 0x` → 2; no seed → 2; `--map-size 1000` → 2; invalid settings file → 3 with the P0-03 error lines; missing `--db` file → 3; output exists without `--force` → 4; `--out` into a missing directory → 4.
-- `--version` prints one line matching `worldgen-cli 0.1.0 schema 1 sqlite <version>`.
+- `--version` prints one line matching `worldgen-cli 0.2.0 schema 1 sqlite <version>`.
 - After every test, the current directory is still empty and no `.partial` file exists anywhere under the temporary build root.
 - On Windows, stdout of `hash` and `report` contains no CR byte.
 
@@ -312,7 +312,7 @@ The validation specialist records `p0-worlds.txt` (section 9) and the `render_rg
 
 Decisions by the lead on points raised by the generator engineer. Where these differ from the text above, these win.
 
-1. **Phrases.** Wherever this spec says the seed of a text phrase is `phrase_seed`, the function called is `seed_from_phrase` (P0-01 section 7.3), which validates and trims before hashing.
+1. **Phrases.** Wherever this spec says the seed of a text phrase is `phrase_seed`, the function called is `seed_from_phrase` (P0-01 section 7.3), which scrubs the phrase before hashing (amendment 15).
 2. **`--help` (4.1).** Options are tokenized first, so an unknown or repeated option or a positional argument is still a usage error (exit 2); then `--help` wins before any value is validated. `--help` and `--version` as the top-level argument must be alone. The hint line is `worldgen-cli: run 'worldgen-cli [<command>] --help' for usage`.
 3. **Seeds and integers (4.2).** The hex prefix is lower-case `0x` only, as in P0-03 amendment 6; `--seed` and `world.seed` share one parser.
 4. **Build root (4.3).** On Windows the order is `UNMAPPED_BUILD_ROOT`, then `LOCALAPPDATA`, then a usage error; elsewhere `UNMAPPED_BUILD_ROOT`, then `HOME`, then a usage error. A relative build root is a usage error, since a default output could otherwise land under the current directory. Printed absolute paths are made absolute and lexically normalized; symbolic links are not resolved.
@@ -326,3 +326,4 @@ Decisions by the lead on points raised by the generator engineer. Where these di
 12. **Library placement.** The test-pattern stage, `render_rgb`, the report builder and the logical hashes live in the `worldgen` library (`worldgen/stages/`, `worldgen/inspect/`), and raw row access is part of the reader (P0-02 amendment 10); the executable only parses arguments, calls them and writes files.
 13. **Recorded for the golden file.** The first implementation produced, identically on five Linux builds, the eight case hashes that the validation specialist is to confirm independently before they become golden values in `worldgen/tests/golden/p0-worlds.txt`.
 14. **After the determinism audit.** (a) Any failed or short write to stdout makes the command exit 4 with `worldgen-cli: error: writing to stdout failed`, for every command and for `--help` and `--version`, whatever the output size; this also replaces exit 5 when the hash output itself was lost. A world or image already written completely stays in place. (b) Anything at an output path counts as existing, including a dangling symbolic link: without `--force` the command exits 4 and leaves the link; with `--force` the link is replaced by a regular file and its target is not created. The database writer follows the same rule. (c) On Windows an environment variable or argument that is not valid UTF-16 is a usage error (exit 2). (d) The hint line of amendment 2 is a template: it names the command when one was given (`worldgen-cli: run 'worldgen-cli generate --help' for usage`) and otherwise reads `worldgen-cli: run 'worldgen-cli --help' for usage`. (e) The image size limit of amendment 7 is on 3 × width × height bytes after scaling. (f) A table hash covers the table's stored columns in declared order; generated and hidden columns are not included. No P0 table has any.
+15. **Seed phrases are scrubbed (design doc section 4).** `--seed-phrase TEXT` is scrubbed with `seed_from_phrase` (P0-01 section 7.3): the stored `seed_phrase`, the seed and the default output file name all come from the scrubbed phrase, so `--seed-phrase "Ashen Marches!"`, `"ashen-marches"` and `"ASHEN  MARCHES"` write byte-identical files. A phrase that scrubs to nothing (for example `"!!!"` or one written only in a non-Latin script) or to more than 256 bytes is a usage error (exit 2). `--seed` and `--seed-phrase` stay separate inputs: `--seed-phrase 42` is the phrase `42`, a different world from `--seed 42`. Consequences for section 12: the non-ASCII phrase test becomes "`Ünmapped Wörld` stores `seed_phrase = nmapped w rld` and gives the same seed on all presets, equal to that of `nmapped w rld`"; the `report` escaping test in 12.4 can no longer use a phrase (a scrubbed phrase has no backslash or tab) and uses a test-only world with such a meta value instead; case `empty-phrase` keeps its arguments and now stores `seed_phrase = the unmapped`. The generator version is `0.2.0`, so `--version`, the expected `report` text in section 7 and all eight golden hashes change.

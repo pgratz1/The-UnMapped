@@ -45,7 +45,7 @@ inline constexpr std::string_view META_GENERATOR_VERSION = "generator_version"; 
 inline constexpr std::string_view META_PARAM_MAP_SIZE = "param.map_size";    // 512, 1024 or 2048
 inline constexpr std::string_view META_SCHEMA_VERSION = "schema_version";    // decimal, = user_version
 inline constexpr std::string_view META_SEED = "seed";                        // unsigned decimal
-inline constexpr std::string_view META_SEED_PHRASE = "seed_phrase";          // trimmed phrase or empty
+inline constexpr std::string_view META_SEED_PHRASE = "seed_phrase";          // scrubbed phrase or empty
 inline constexpr std::string_view META_STAGES = "stages";                    // comma-separated stage names
 
 // Prefix of every parameter key (P0-02 5.5, "Rules for parameters").

@@ -462,12 +462,12 @@ void WorldWriter::set_seed(std::uint64_t value) {
 
 void WorldWriter::set_seed_phrase(std::string_view phrase) {
     WriterState& s = detail::live_state(state_.get(), "set_seed_phrase");
-    const PhraseSeed r = seed_from_phrase(phrase);
-    if (!r.ok() || r.phrase != phrase) {
-        fatal("WorldWriter::set_seed_phrase: phrase must be valid UTF-8, already trimmed, 1 to 256 bytes");
+    if (phrase.empty() || phrase.size() > PHRASE_MAX_BYTES || scrub_phrase(phrase) != phrase) {
+        fatal("WorldWriter::set_seed_phrase: phrase must be already scrubbed (a-z, 0-9 and single interior "
+              "spaces), 1 to 256 bytes");
     }
-    s.seed = r.seed;
-    s.seed_phrase = r.phrase;
+    s.seed = phrase_seed(phrase);
+    s.seed_phrase = std::string(phrase);
 }
 
 void WorldWriter::set_content_hash(const Sha256Digest& digest) {

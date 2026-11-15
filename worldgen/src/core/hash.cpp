@@ -3,6 +3,7 @@
 #include "worldgen/core/hash.hpp"
 
 #include <cstddef>
+#include <utility>
 
 #include "worldgen/core/error.hpp"
 
@@ -11,7 +12,6 @@ namespace worldgen {
 namespace {
 
 constexpr std::size_t kMaxStreamName = 64;
-constexpr std::size_t kMaxPhrase = 256;
 
 bool is_lower(char c) noexcept {
     return c >= 'a' && c <= 'z';
@@ -21,59 +21,20 @@ bool is_digit(char c) noexcept {
     return c >= '0' && c <= '9';
 }
 
-bool is_ascii_space(std::uint8_t b) noexcept {
-    return b == 0x20 || b == 0x09 || b == 0x0D || b == 0x0A;
-}
+constexpr std::uint8_t kSpace = 0x20U;
 
-// Strict UTF-8 validation (RFC 3629): shortest form only, no surrogates,
-// nothing above U+10FFFF.
-bool is_valid_utf8(std::string_view text) noexcept {
-    const std::size_t n = text.size();
-    std::size_t i = 0;
-    while (i < n) {
-        const auto b0 = static_cast<std::uint8_t>(text[i]);
-        if (b0 < 0x80U) {
-            ++i;
-            continue;
-        }
-        std::size_t len = 0;
-        std::uint8_t lo = 0x80U;  // allowed range of the second byte
-        std::uint8_t hi = 0xBFU;
-        if (b0 >= 0xC2U && b0 <= 0xDFU) {
-            len = 2;
-        } else if (b0 >= 0xE0U && b0 <= 0xEFU) {
-            len = 3;
-            if (b0 == 0xE0U) {
-                lo = 0xA0U;  // no overlong 3-byte forms
-            } else if (b0 == 0xEDU) {
-                hi = 0x9FU;  // no surrogates
-            }
-        } else if (b0 >= 0xF0U && b0 <= 0xF4U) {
-            len = 4;
-            if (b0 == 0xF0U) {
-                lo = 0x90U;  // no overlong 4-byte forms
-            } else if (b0 == 0xF4U) {
-                hi = 0x8FU;  // nothing above U+10FFFF
-            }
-        } else {
-            return false;  // continuation byte, C0, C1 or F5..FF as a lead
-        }
-        if (n - i < len) {
-            return false;
-        }
-        const auto b1 = static_cast<std::uint8_t>(text[i + 1]);
-        if (b1 < lo || b1 > hi) {
-            return false;
-        }
-        for (std::size_t k = 2; k < len; ++k) {
-            const auto bk = static_cast<std::uint8_t>(text[i + k]);
-            if (bk < 0x80U || bk > 0xBFU) {
-                return false;
-            }
-        }
-        i += len;
+// Scrub steps 1 and 2 for one byte (P0-01 7.3): A-Z (0x41-0x5A) to a-z,
+// a-z (0x61-0x7A) and 0-9 (0x30-0x39) kept, every other byte to a space.
+// Classified on the unsigned byte value only: no char signedness, no
+// locale, no <cctype>.
+std::uint8_t scrub_byte(std::uint8_t b) noexcept {
+    if (b >= 0x41U && b <= 0x5AU) {
+        return static_cast<std::uint8_t>(b + 0x20U);
     }
-    return true;
+    if ((b >= 0x61U && b <= 0x7AU) || (b >= 0x30U && b <= 0x39U)) {
+        return b;
+    }
+    return kSpace;
 }
 
 }  // namespace
@@ -181,31 +142,38 @@ std::uint64_t phrase_seed(std::string_view bytes) {
     return hash_words(TAG_PHRASE, encode_bytes(bytes));
 }
 
-PhraseSeed seed_from_phrase(std::string_view phrase) {
+std::string scrub_phrase(std::string_view text) {
+    std::string out;
+    out.reserve(text.size());
+    bool pending_space = false;  // a run of spaces seen since the last kept byte
+    for (const char c : text) {
+        const std::uint8_t s = scrub_byte(static_cast<std::uint8_t>(c));
+        if (s == kSpace) {
+            pending_space = true;
+            continue;
+        }
+        if (pending_space && !out.empty()) {
+            out.push_back(static_cast<char>(kSpace));  // one per interior run; none leading
+        }
+        pending_space = false;
+        out.push_back(static_cast<char>(s));
+    }
+    return out;  // a trailing run is never written
+}
+
+PhraseSeed seed_from_phrase(std::string_view text) {
     PhraseSeed result;
-    if (!is_valid_utf8(phrase)) {
-        result.error = PhraseError::invalid_utf8;
-        return result;
-    }
-    std::size_t begin = 0;
-    std::size_t end = phrase.size();
-    while (begin < end && is_ascii_space(static_cast<std::uint8_t>(phrase[begin]))) {
-        ++begin;
-    }
-    while (end > begin && is_ascii_space(static_cast<std::uint8_t>(phrase[end - 1U]))) {
-        --end;
-    }
-    const std::string_view trimmed = phrase.substr(begin, end - begin);
-    if (trimmed.empty()) {
+    std::string scrubbed = scrub_phrase(text);
+    if (scrubbed.empty()) {
         result.error = PhraseError::empty;
         return result;
     }
-    if (trimmed.size() > kMaxPhrase) {
+    if (scrubbed.size() > PHRASE_MAX_BYTES) {
         result.error = PhraseError::too_long;
         return result;
     }
-    result.phrase = std::string(trimmed);
-    result.seed = phrase_seed(trimmed);
+    result.seed = phrase_seed(scrubbed);
+    result.phrase = std::move(scrubbed);
     return result;
 }
 

@@ -24,8 +24,9 @@ int in [0, 2^64). FatalError stands for the project fatal error (spec 4.1);
 ParseError for the error value returned by parse_decimal and phrase checks.
 """
 
-import sys
 import os
+import re
+import sys
 
 # ---------------------------------------------------------------------------
 # Basics
@@ -641,21 +642,59 @@ def phrase_seed(b):
     return hash_words(TAG_PHRASE, pack_bytes(b))
 
 
-PHRASE_WS = b" \t\r\n"
+PHRASE_MAX = 256
+
+
+def phrase_scrub(b):
+    """7.3 'Text phrases', steps 1 to 4, byte by byte, no encoding knowledge.
+
+    No emptiness or length check (that is seed_from_phrase's job), so the
+    hash.phrase_scrub vectors can test the scrub on its own.
+    """
+    if isinstance(b, str):
+        b = b.encode("utf-8")
+    # Steps 1 and 2, in the spec's order: lower-case A-Z first, then every
+    # byte that is not a-z or 0-9 becomes a space.
+    step2 = bytearray()
+    for c in b:
+        if 0x41 <= c <= 0x5A:
+            c += 0x20
+        if not (0x61 <= c <= 0x7A or 0x30 <= c <= 0x39):
+            c = 0x20
+        step2.append(c)
+    # Step 3: each run of spaces becomes one space.
+    step3 = bytearray()
+    for c in step2:
+        if c == 0x20 and step3 and step3[-1] == 0x20:
+            continue
+        step3.append(c)
+    # Step 4: a leading space and a trailing space are removed. After step 3
+    # there is at most one of each; a text that is a single space is both, and
+    # becomes empty.
+    if step3[:1] == b" ":
+        del step3[0]
+    if step3[-1:] == b" ":
+        del step3[-1]
+    return bytes(step3)
+
+
+def seed_from_phrase(b):
+    """7.3 seed_from_phrase: (scrubbed phrase, seed), or ParseError.
+
+    The 256-byte limit applies to the scrubbed result (after step 4); the
+    input length is not limited. No UTF-8 validation.
+    """
+    t = phrase_scrub(b)
+    if len(t) == 0:
+        raise ParseError("phrase scrubs to nothing")
+    if len(t) > PHRASE_MAX:
+        raise ParseError("scrubbed phrase longer than 256 bytes")
+    return t, phrase_seed(t)
 
 
 def phrase_seed_text(b):
-    """7.3 'Text phrases': validate UTF-8, trim ASCII whitespace, 1..256."""
-    if isinstance(b, str):
-        b = b.encode("utf-8")
-    try:
-        b.decode("utf-8", "strict")
-    except UnicodeDecodeError:
-        raise ParseError("invalid UTF-8")
-    t = b.strip(PHRASE_WS)
-    if not (1 <= len(t) <= 256):
-        raise ParseError("phrase length")
-    return phrase_seed(t)
+    """The seed of seed_from_phrase (the hash.phrase_text vector kind)."""
+    return seed_from_phrase(b)[1]
 
 
 # ---------------------------------------------------------------------------
@@ -799,6 +838,69 @@ class Checker:
             self.fails += 1
         print(("PASS " if ok else "FAIL ") + label
               + ("" if ok else f"  got={got!r} want={want!r}"))
+
+
+def phrase_scrub_alt(b):
+    """A second, differently written scrub, used only to cross-check."""
+    return re.sub(rb"[^a-z0-9]+", b" ", bytes(b).lower()).strip(b" ")
+
+
+def check_phrases(c):
+    """13.5 'seed_from_phrase scrubs' and the 7.3 prose claims."""
+    F = lambda fn, *a: outcome(fn, *a)
+    ash = phrase_seed(b"ashen marches")
+    for b in [b"Ashen Marches!", b"ashen-marches", b"ASHEN  MARCHES", b"  ashen\tmarches\n",
+              b"ashen marches"]:
+        c.eq(f"scrub {b!r} -> ashen marches", seed_from_phrase(b), (b"ashen marches", ash))
+    c.eq("The Unmapped -> the unmapped", seed_from_phrase(b"The Unmapped")[0], b"the unmapped")
+    c.eq("phrase_text(The Unmapped) = phrase_seed(the unmapped) = 0xd8e618797fddc668",
+         (phrase_seed_text(b"The Unmapped"), phrase_seed(b"the unmapped")),
+         (0xD8E618797FDDC668, 0xD8E618797FDDC668))
+    c.eq("Unmapped World (UTF-8) -> nmapped w rld",
+         seed_from_phrase("Ünmapped Wörld".encode("utf-8"))[0], b"nmapped w rld")
+    c.eq("a1B2 -> a1b2", seed_from_phrase(b"a1B2")[0], b"a1b2")
+    for sep in [b"\x00", b"\x7f", b"\xff", b"\xc0\xaf", b"\xed\xa0\x80", b"\x80"]:
+        c.eq(f"{sep!r} inside a phrase acts as a space", seed_from_phrase(b"ab" + sep + b"cd")[0], b"ab cd")
+    for b in [b"", b" \t\r\n", b"!!!", "Москва".encode("utf-8"),
+              bytes(range(0x80, 0x100)), b"a" * 257, b"abc " * 64 + b"d e"]:
+        c.eq(f"phrase error {b[:16]!r}... ({len(b)} bytes)", F(seed_from_phrase, b), "ERROR")
+    c.eq("scrubbed 256 accepted", seed_from_phrase(b"a" * 256)[0], b"a" * 256)
+    c.eq("long input that scrubs to 256 accepted",
+         seed_from_phrase(b"-" * 1000 + b"A" * 256 + b"\xff" * 1000)[0], b"a" * 256)
+    c.eq("phrase 42 is not the number 42", phrase_seed_text(b"42") != 42, True)
+    c.eq("phrase_seed(' x') != phrase_seed('x')", phrase_seed(b" x") != phrase_seed(b"x"), True)
+    c.eq("phrase_seed('X') != phrase_seed('x')", phrase_seed(b"X") != phrase_seed(b"x"), True)
+    # Every single byte, alone and between two letters.
+    ok = True
+    for v in range(256):
+        if 0x41 <= v <= 0x5A:
+            want = bytes([v + 0x20])
+        elif 0x61 <= v <= 0x7A or 0x30 <= v <= 0x39:
+            want = bytes([v])
+        else:
+            want = b""
+        ok = ok and phrase_scrub(bytes([v])) == want
+        ok = ok and phrase_scrub(b"q" + bytes([v]) + b"q") == (b"q" + want + b"q" if want else b"q q")
+    c.eq("scrub of each of the 256 byte values", ok, True)
+    # Property test over random byte strings (fixed stream, deterministic).
+    g = Rng(stream_key(0, "test.phrase"))
+    alphabet = [b"A", b"z", b"5", b" ", b"-", b"\x00", b"\xc3", b"\x9c", b"\xff", b"\t"]
+    ok_idem = ok_alt = ok_form = True
+    for i in range(4000):
+        n = g.uniform_u64(80)
+        if i % 2:
+            b = bytes(g.uniform_u64(256) for _ in range(n))
+        else:
+            b = b"".join(alphabet[g.uniform_u64(len(alphabet))] for _ in range(n))
+        t = phrase_scrub(b)
+        ok_idem = ok_idem and phrase_scrub(t) == t
+        ok_alt = ok_alt and phrase_scrub_alt(b) == t
+        ok_form = ok_form and (t == b"" or (t[:1] != b" " and t[-1:] != b" " and b"  " not in t
+                                            and all(0x61 <= x <= 0x7A or 0x30 <= x <= 0x39 or x == 0x20
+                                                    for x in t)))
+    c.eq("scrub is idempotent (4000 random byte strings)", ok_idem, True)
+    c.eq("scrub agrees with a regex scrub (4000 random byte strings)", ok_alt, True)
+    c.eq("scrub output is [a-z0-9] with single interior spaces", ok_form, True)
 
 
 def run_checks():
@@ -975,10 +1077,7 @@ def run_checks():
     c.eq("pack empty", pack_bytes(""), [0])
     for name, asc, val in TAGS:
         c.eq(f"{name} = ASCII {asc}", tag_value(asc), val)
-    c.eq("phrase trims", phrase_seed_text(b"  The Unmapped\n"), phrase_seed_text(b"The Unmapped"))
-    c.eq("phrase case matters", phrase_seed_text(b"the unmapped") != phrase_seed_text(b"The Unmapped"), True)
-    c.eq("phrase invalid utf-8 error", F(phrase_seed_text, b"\xff"), "ERROR")
-    c.eq("phrase whitespace-only error", F(phrase_seed_text, b" \t\r\n"), "ERROR")
+    check_phrases(c)
     c.eq("stream_key(s,a) != stream_key(s,a.b)", stream_key(7, "a") != stream_key(7, "a.b"), True)
     for n in ["test.hash", "test.noise", "test.wide"]:
         c.eq(f"stream name {n} valid", stream_name_valid(n), True)
@@ -1199,7 +1298,14 @@ HEADER = """\
 #   hash.at key x y = h                        (hash_at; x, y decimal int64)
 #   hash.at3 key x y z = h                     (hash_at3; x, y, z decimal)
 #   hash.phrase_seed "bytes" = seed            (exact bytes, no trimming)
-#   hash.phrase_text "bytes" = seed|ERROR      (UTF-8 check, trim, 1..256)
+#   hash.phrase_scrub "bytes" = "scrubbed"     (spec 7.3 steps 1-4 only: A-Z to
+#                a-z, every other byte not a-z/0-9 to a space, runs of spaces
+#                to one, one leading and one trailing space removed; no
+#                emptiness or length check, so the result may be "" or longer
+#                than 256 bytes)
+#   hash.phrase_text "bytes" = seed|ERROR      (seed_from_phrase: phrase_seed of
+#                the scrubbed bytes; ERROR if the scrubbed text is empty or
+#                longer than 256 bytes; no UTF-8 check)
 #   noise.noise2 key x y = raw                 (x, y raw decimal)
 #   noise.fbm2 key x y octaves base_freq lacunarity gain = raw|FATAL
 #   sha256 "bytes" = hex                       (hex digest, lowercase, no 0x)
@@ -1268,6 +1374,71 @@ def vec_rng_call(o, kind, st, extra_args, call, fmt):
         o.vec(kind, S(st) + extra_args, [fmt(r), tok_i(g.draws)])
     except FatalError:
         o.vec(kind, S(st) + extra_args, ["FATAL"])
+
+
+def phrase_vector_groups():
+    """Inputs for hash.phrase_scrub and hash.phrase_text, in groups."""
+    u = lambda t: t.encode("utf-8")
+    words64 = b" ".join([b"abc"] * 64)              # scrubs to 255 bytes
+    return [
+        ("spec 7.3 / 13.5 examples and their equivalence classes", [
+            b"Ashen Marches!", b"ashen-marches", b"ASHEN  MARCHES", b"  ashen\tmarches\n",
+            b"ashen marches", b"ashen_marches", b"Ashen.Marches", b"...ASHEN---marches???",
+            b"The Unmapped", b"the unmapped", b"THE UNMAPPED", b"  The Unmapped\n",
+            b"\t\r\nThe Unmapped \t", b"The  Unmapped", b"The-Unmapped!!", b"\x0bThe Unmapped",
+            u("Ünmapped Wörld"), b"nmapped w rld", u("ünmapped wörld"),
+            b"a1B2", b"A1b2", b"a1b2"]),
+        ("case and digits; a phrase is never a number", [
+            b"ABCDEFGHIJKLMNOPQRSTUVWXYZ", b"abcdefghijklmnopqrstuvwxyz", b"0123456789",
+            b"A", b"Z", b"a", b"z", b"0", b"9", b"42", b" 42 ", b"042", b"0x2A", b"-1", b"3.14",
+            b"Year 1066 AE"]),
+        ("each byte value 0x00..0xff between two letters: q<byte>q", [
+            b"q" + bytes([v]) + b"q" for v in range(256)]),
+        ("whole strings of one separator class (all scrub to nothing)", [
+            bytes(range(0x21, 0x30)) + bytes(range(0x3a, 0x41)) + bytes(range(0x5b, 0x61))
+            + bytes(range(0x7b, 0x7f)),
+            bytes(range(0x00, 0x21)) + b"\x7f", bytes(range(0x80, 0x100)), b"@[`{/:",
+            b"\x00", b"\x7f", b"\x80", b"\xff"]),
+        ("valid UTF-8: every byte of a multi-byte character is a separator; no normalization", [
+            u("Café Noir"), u("Café Noir"), u("naïve"), u("Straße"),
+            u("ÀÉÎÕÜ x"), u("Œuvre"), u("a€b"), u("a\U0001d518b"),
+            u("a\U0001f30db"), u("東京 2024"), u("Москва1"),
+            u("ＡＢＣ abc"), u("﻿The Unmapped"), u("a b"), u("a b"),
+            u("a—b")]),
+        ("non-Latin scripts and symbols only: errors", [
+            u("Москва"), u("日本語"),
+            u("Ἀθῆναι"), u("العربية"),
+            u("\U0001f30d\U0001f30d"), u("ＡＢＣ"), u("Ü")]),
+        ("invalid UTF-8 (accepted: every non-ASCII byte is a separator)", [
+            b"\xff", b"\xc0\xaf", b"\xed\xa0\x80", b"ab\xffcd", b"ab\xc0\xafcd", b"ab\xed\xa0\x80cd",
+            b"ab\xf4\x90\x80\x80cd", b"ab\x80cd", b"abcd\xe2\x82", b"\xe2\x82abcd", b"\xfe\xffab",
+            b"T\x00h\x00e\x00 \x00U\x00n\x00m\x00a\x00p\x00p\x00e\x00d\x00"]),
+        ("runs, and leading and trailing separators", [
+            b" a", b"a ", b" a ", b"  a  ", b"--a--", b"a - b", b"a \t-\n b", b"a.b.c",
+            b"...a...b...", b"\x00\x00a\x00\x00", b"a\x00", b"\x00a", b"a\r\n\r\nb",
+            b"a" + b"!" * 300 + b"b"]),
+        ("errors: empty and all-separator strings", [
+            b"", b" ", b"  ", b"\t", b"\n", b"\r\n", b" \t\r\n", b"!!!", b"-_-", b"\x00\x00",
+            b". . ."]),
+        ("scrubbed lengths 255, 256 and 257 (the limit applies after scrubbing)", [
+            b"a" * 255, b"a" * 256, b"a" * 257, b"A" * 256, b" " + b"a" * 256 + b" ",
+            b"!" + b"a" * 256 + b"!", b" " + b"a" * 257, b"\xff" * 300 + b"a" * 256 + b"\xff" * 300,
+            words64, words64 + b"d", words64 + b" e", words64 + b"!", words64 + b"!E",
+            b"--".join([b"ABC"] * 64) + b"D", b"a" * 128 + b" " * 1000 + b"a" * 127,
+            b"a" * 128 + b" " * 1000 + b"a" * 128]),
+        ("a long input that scrubs to something short", [
+            b"-=" * 300 + b"Hello" + u("—") * 200 + b"World" + b"\x00" * 300]),
+    ]
+
+
+def gen_phrase_vectors(o):
+    o.comment("--- seed phrases (spec 7.3): hash.phrase_scrub gives the scrubbed text,")
+    o.comment("hash.phrase_text the seed of seed_from_phrase, for the same inputs")
+    for title, inputs in phrase_vector_groups():
+        o.comment(title)
+        for b in inputs:
+            o.vec("hash.phrase_scrub", [tok_s(b)], [tok_s(phrase_scrub(b))])
+            o.vec("hash.phrase_text", [tok_s(b)], [tok_res(outcome(phrase_seed_text, b), tok_u)])
 
 
 def gen_vectors():
@@ -1608,10 +1779,7 @@ def gen_vectors():
         o.vec("hash.at3", [tok_u(k), tok_i(x), tok_i(y), tok_i(z)], [tok_u(hash_at3(k, x, y, z))])
     for b in [b"", b"x", b"the unmapped", b"abcdefgh", "Ünmapped".encode("utf-8")]:
         o.vec("hash.phrase_seed", [tok_s(b)], [tok_u(phrase_seed(b))])
-    for b in [b"The Unmapped", b"  The Unmapped\n", b"\t\r\nThe Unmapped \t", b"the unmapped", b"",
-              b" \t\r\n", b"\xff", b"\xc0\xaf", b"\xed\xa0\x80", "Ünmapped".encode("utf-8"),
-              b"\x0bThe Unmapped", b"a" * 256, b"a" * 257, b" " + b"a" * 256 + b" ", b"The  Unmapped"]:
-        o.vec("hash.phrase_text", [tok_s(b)], [tok_res(outcome(phrase_seed_text, b), tok_u)])
+    gen_phrase_vectors(o)
 
     # ---------------- noise
     o.comment("--- noise2 (spec 8.1); keys: stream_key(0,test.noise) and substream(that, 3)")

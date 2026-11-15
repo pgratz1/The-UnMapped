@@ -14,6 +14,7 @@
 #include <vector>
 
 #include "db_test_support.hpp"
+#include "worldgen/core/hash.hpp"
 #include "worldgen/core/rng.hpp"
 #include "worldgen/db/db.hpp"
 #include "worldgen/db/testing.hpp"
@@ -326,16 +327,16 @@ constexpr std::string_view GOLDEN_PLACEHOLDER = "PLACEHOLDER-TO-BE-RECORDED-BY-V
 struct GoldenCase {
     const char* name;
     std::uint64_t seed;
-    const char* phrase;  // nullptr for a numeric seed
+    const char* phrase;  // the phrase as typed (P0-04 9); nullptr for a numeric seed
     std::string_view sha256;
 };
 
 constexpr std::array<GoldenCase, 5> GOLDEN_CASES = {{
-    {"empty-phrase", 0, "The Unmapped", "538cd2ae07948da5fb28e09297e2136f1b534163d6bdcf50bace1c7b0759d48b"},
-    {"empty-seed-0", 0, nullptr, "3325ebb7229993d4c26862e368d45eeb3d739fb4d3cbe099a7aa22bf4dc22b80"},
-    {"empty-seed-1", 1, nullptr, "76dbf7a81535a01e15d01050d6287aaae0858a4b663728aa4b2432b361e8bbba"},
-    {"empty-seed-42", 42, nullptr, "e5aec1ac46d45fca684d9c15c7bc9134cae508cdbd94eba158e1aca2320e2a63"},
-    {"empty-seed-max", 18446744073709551615ULL, nullptr, "06307a95c200331cf41a2646aee550a814c325ed2f995d541b16380706433633"},
+    {"empty-phrase", 0, "The Unmapped", "86a03102857070c1771c8c7a6c2fc744603aec63836f9dfaf6f36fb959af19c0"},
+    {"empty-seed-0", 0, nullptr, "7163111e6bf444d3ad5fb9bf5a92faef0ebc09d18db0ef74553d8f4744a80a89"},
+    {"empty-seed-1", 1, nullptr, "c5e8f9705d667784347970218ae1fe767499d6cf82d2264b89781148ab8b9363"},
+    {"empty-seed-42", 42, nullptr, "eb9a2926e9b6c7780cf68f618426beabdfcd498dd9352b0bdd3be945d2683511"},
+    {"empty-seed-max", 18446744073709551615ULL, nullptr, "d477b49e8fd55624bffeb6b1ee298dc7a70f6fa4b62c796659693d0c7be7b393"},
 }};
 
 constexpr bool golden_pending() {
@@ -353,7 +354,12 @@ std::string golden_world_hash(const dbtest::TempDir& dir, const GoldenCase& c) {
     const std::string out = dir.file(std::string(c.name) + ".db");
     WorldWriter writer;
     if (c.phrase != nullptr) {
-        writer.set_seed_phrase(c.phrase);
+        // As the CLI does: the writer takes the scrubbed phrase (P0-02
+        // amendment 12), so "The Unmapped" is stored as "the unmapped".
+        const worldgen::PhraseSeed ps = worldgen::seed_from_phrase(c.phrase);
+        REQUIRE(ps.ok());
+        CHECK(ps.phrase == "the unmapped");
+        writer.set_seed_phrase(ps.phrase);
     } else {
         writer.set_seed(c.seed);
     }

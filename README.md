@@ -46,20 +46,20 @@ The full design is in [`docs/design/design.md`](docs/design/design.md).
 
 | | |
 | --- | --- |
-| **Current phase** | P0 Foundation: implemented and merged, awaiting Paul's end-of-phase review |
-| **Next phase** | P1 Geography, in parallel with P2 Godot bring-up and viewer |
-| **Current milestone** | Milestone 0, Geography generator: not yet reached (needs P1 and P2) |
-| **Work in flight** | None. No agents are running and no branches are unmerged. |
+| **Current phase** | P1 Geography and P2 Godot bring-up and viewer, running in parallel. P0 Foundation is complete |
+| **Next phase** | P3 History core, after P1 |
+| **Current milestone** | Milestone 0, Geography generator: in progress (P1 and P2) |
+| **Work in flight** | P1: the geography stage specs are being written; no geography code yet. P2: Godot version pinning, the C++ extension and viewer v0 are in progress on branch `p2/viewer`. |
 | **`main`** | Builds and passes all tests on Linux (GCC, Clang, Clang with sanitizers) and Windows (MSVC), in debug and release |
 
 **What "P0 done" means.** The phase's exit check is that an empty world file is byte-identical across all three compilers and that `worldgen-cli hash` proves it in continuous integration. It does: eight test worlds, six empty and two holding test layers, are identical across all seven build configurations, and each matches its recorded golden hash. CI repeats the comparison on every push.
 
-**Open before P1 starts**
+**Since P0 was first completed**
 
-- Paul's review of P0 (each phase ends with one).
-- Fourteen entries in [`docs/design/proposals.md`](docs/design/proposals.md) recording decisions and findings from P0 are waiting to be carried back into the design document. All are marked open; none blocks P1.
+- Paul reviewed P0 and merged its fourteen proposals into the design document.
+- Seed phrases are now scrubbed, a design change made at that review. This changed the bytes of phrase worlds, so the generator version went from 0.1.0 to 0.2.0 and all golden hashes were re-recorded: the first use of the version rule.
 
-**Known gaps and notes from P0**
+**Known gaps and notes**
 
 - No geography of any kind exists yet. `--map-size` is recorded in the world file but nothing generates at that size.
 - The TOML loader's machinery is complete and tested, but no real data kinds (biomes, races and so on) are registered, so `--data` reads nothing.
@@ -76,24 +76,25 @@ The first block of work is the world generator prototype: seven phases, P0 to P6
 
 | Phase | Delivers | Depends on | Status |
 | --- | --- | --- | --- |
-| **P0 Foundation** | Repository layout, CMake presets, vendored dependencies, CI on three compilers, the deterministic core, the reproducible SQLite layer, the TOML loader, `worldgen-cli` | — | **Done** 2026-11-15, awaiting review |
-| **P1 Geography** | Elevation, erosion, hydrology, climate, biomes, resources and regions, each writing its layer; image export per layer | P0 | **Next.** Not started |
-| **P2 Godot bring-up and viewer v0** | Godot version pinned, C++ extension building on Linux and Windows, `world.db` reader bound into Godot, 2D map with switchable layers | P0; parallel with P1 | Not started |
+| **P0 Foundation** | Repository layout, CMake presets, vendored dependencies, CI on three compilers, the deterministic core, the reproducible SQLite layer, the TOML loader, `worldgen-cli` | — | **Done** 2026-11-15, reviewed |
+| **P1 Geography** | Elevation, erosion, hydrology, climate, biomes, resources and regions, each writing its layer; image export per layer | P0 | **In progress** since 2026-11-15: specs being written |
+| **P2 Godot bring-up and viewer v0** | Godot version pinned, C++ extension building on Linux and Windows, `world.db` reader bound into Godot, 2D map with switchable layers | P0; parallel with P1 | **In progress** since 2026-11-15 |
 | **P3 History core** | Race and culture definitions, ages and the awakening schedule, active phases and quiet intervals, civilizations, settlements, wars, ruin, the event log, a text history report | P1 | Not started |
 | **P4 Viewer v1** | Timeline scrubber, territory by year, settlement and site markers, browser for civilizations and events | P2, P3; parallel with P5 | Not started |
 | **P5 History depth** | God interventions, beast populations, named monsters, figures and factions, race relations, casters and spellbooks | P3 | Not started |
 | **P6 Derivation and polish** | Sites, dungeon records, quest hooks and spellbook placement derived from history; world-creation settings on the command line; 3D heightmap preview | P4, P5 | Not started |
 
 ```
-P0 ██████████ done ──┬─► P1 Geography ──► P3 History core ──┬─► P5 History depth ──┬─► P6 Derivation
-   (you are here)    └─► P2 Viewer v0 ─────────────────────┴─► P4 Viewer v1 ──────┘
+P0 ██████████ done ──┬─► P1 Geography ░░ in progress ──► P3 History core ──┬─► P5 History depth ──┬─► P6 Derivation
+                     └─► P2 Viewer v0 ░░ in progress ─────────────────────┴─► P4 Viewer v1 ──────┘
+                         (you are here)
 ```
 
 ### Milestones
 
 | # | Milestone | Reached when | Status |
 | --- | --- | --- | --- |
-| 0 | Geography generator | `worldgen-cli` writes a world with all geography layers; maps look plausible in image export and in the viewer; identical file hash on Linux and Windows | In progress: foundation done (P0); needs P1 and P2 |
+| 0 | Geography generator | `worldgen-cli` writes a world with all geography layers; maps look plausible in image export and in the viewer; identical file hash on Linux and Windows | In progress: foundation done (P0); P1 and P2 under way |
 | 1 | History generator | Default history generates in under two minutes; races appear in order; the event log reads as coherent history; sites and quest hooks derived | Not started (P3 to P6) |
 | 2 | Walkable terrain | Godot streams terrain from a world file; the player can cross the map on flat screen without hitches | Not started |
 | 3 | VR parity | The same build starts in VR or flat; the fly-across test holds 90 Hz in VR | Not started |
@@ -116,7 +117,7 @@ Milestones 0 and 1 carry the most design risk, since they decide whether generat
 | TOML loader | [`p0-03`](docs/specs/p0-03-toml-loader.md) | Settings file, data-file discovery and validation in a fixed order, a content hash, and no floating point on the path to the generator |
 | `worldgen-cli` | [`p0-04`](docs/specs/p0-04-worldgen-cli.md) | `generate`, `render`, `report` and `hash` |
 
-Around them: about 290 automated test cases, 1,458 golden vectors for the core produced by an independent Python reference, a second independent Python check of world-file contents, a lint for constructs that break determinism, and a CI job that compares world hashes across every compiler.
+Around them: about 300 automated test cases, 2,201 golden vectors for the core produced by an independent Python reference, a second independent Python check of world-file contents, a lint for constructs that break determinism, and a CI job that compares world hashes across every compiler.
 
 ## What works today
 
@@ -124,41 +125,41 @@ Around them: about 290 automated test cases, 1,458 golden vectors for the core p
 
 ```
 $ worldgen-cli generate --seed-phrase "The Unmapped" --test-pattern
-/home/you/.cache/the-unmapped/out/world-8180607403873905586.db
+/home/you/.cache/the-unmapped/out/world-15629206466951235176.db
 
-$ worldgen-cli report --db ~/.cache/the-unmapped/out/world-8180607403873905586.db
+$ worldgen-cli report --db ~/.cache/the-unmapped/out/world-15629206466951235176.db
 # worldgen report v1
 [meta]
 content_hash = e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
 format = the-unmapped-world
-generator_version = 0.1.0
+generator_version = 0.2.0
 param.map_size = 1024
 schema_version = 1
-seed = 8180607403873905586
-seed_phrase = The Unmapped
+seed = 15629206466951235176
+seed_phrase = the unmapped
 stages = test_pattern
 [tables]
 layer = 3
 meta = 8
 [layers]
 test.ramp u8 256x256 codec=1 bytes=65818 min=0 max=255
-test.hash u8 256x256 codec=1 bytes=102422 min=0 max=255
-test.noise i16 256x256 codec=1 bytes=127532 min=-15532 max=18925
+test.hash u8 256x256 codec=1 bytes=102697 min=0 max=255
+test.noise i16 256x256 codec=1 bytes=127365 min=-18503 max=16378
 
-$ worldgen-cli hash --db ~/.cache/the-unmapped/out/world-8180607403873905586.db
-a8b3564285525c648c92290fd1d500602c6ad06cc591b62fb833aa52c9f31c10
+$ worldgen-cli hash --db ~/.cache/the-unmapped/out/world-15629206466951235176.db
+0435fc23ef1bd6ae7cc55f3a93dbf3c0d84fe6e07aa3b9c2737cff62762aaa9f
 
-$ worldgen-cli render --db ~/.cache/the-unmapped/out/world-8180607403873905586.db --layer test.noise --scale 2
-/home/you/.cache/the-unmapped/out/world-8180607403873905586.test.noise.png
+$ worldgen-cli render --db ~/.cache/the-unmapped/out/world-15629206466951235176.db --layer test.noise --scale 2
+/home/you/.cache/the-unmapped/out/world-15629206466951235176.test.noise.png
 ```
 
-That hash is the same on every supported compiler and platform. The rendered noise layer, the raw material P1's elevation stage will shape into a continent:
+That hash is the same on every supported compiler and platform. A seed phrase is scrubbed before use (lower-cased, with everything other than a to z and 0 to 9 treated as a space), so `"the-unmapped!"` and `"THE  UNMAPPED"` give this same world. The rendered noise layer, the raw material P1's elevation stage will shape into a continent:
 
 ![The test.noise layer of the world generated from the phrase "The Unmapped"](docs/images/p0-test-noise.png)
 
 | Command | Does |
 | --- | --- |
-| `generate` | Writes a world file from `--seed N` (decimal or `0x` hex) or `--seed-phrase TEXT`. Options: `--out`, `--map-size 512\|1024\|2048`, `--settings FILE`, `--data DIR`, `--test-pattern`, `--force` |
+| `generate` | Writes a world file from `--seed N` (decimal or `0x` hex) or `--seed-phrase TEXT` (scrubbed; a phrase is never read as a number). Options: `--out`, `--map-size 512\|1024\|2048`, `--settings FILE`, `--data DIR`, `--test-pattern`, `--force` |
 | `report` | Prints the metadata, row counts per table, and each layer's type, size and value range |
 | `render` | Exports a layer as a grayscale PNG, with `--scale 1..16` |
 | `hash` | Prints the SHA-256 of the file (equal to `sha256sum`). `--detail` adds separate hashes of the schema, each table and each layer, to locate a difference; `--expect HEX` checks against a known value |

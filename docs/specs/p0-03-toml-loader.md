@@ -81,7 +81,7 @@ map_size = 1024                 # 512, 1024 or 2048 cells
 | Key | Type | Default | Rule |
 | --- | --- | --- | --- |
 | `world.seed` | TOML integer ≥ 0, or string: decimal `0\|[1-9][0-9]*` up to 18446744073709551615, or `0x` followed by 1–16 hex digits (either case) | none | at most one of `seed`, `seed_phrase` |
-| `world.seed_phrase` | string, trimmed and validated as in P0-01 section 7.3 | none | |
+| `world.seed_phrase` | string, scrubbed as in P0-01 section 7.3 (amendment 14) | none | |
 | `world.map_size` | int, one of 512, 1024, 2048 | 1024 | |
 
 Anything else in the file (another key in `[world]`, another top-level table) is an error. Later phases add keys (history span, detail, civilizations per race, races present, monster pressure, divine activity, event intensity) with their defaults from design doc section 5; each is stored in `meta` as `param.<key without "world.">`.
@@ -272,3 +272,4 @@ Decisions by the lead on points raised by the generator engineer. Where these di
 11. **Parser messages (section 5).** The text of a syntax-error message comes from the parser and may differ between platforms. Tests assert the path, line and column of a syntax error and that it is an error, not the message text. No world can differ because of this.
 12. **Registration errors.** Mistakes in registering a kind (bad names, duplicates, minimum above maximum, a default that fails its own type) are fatal errors, as is a `ref` to an unregistered kind at load time.
 13. **In-memory loading.** The loader can load from an in-memory description of a data root with the same discovery rules, so every discovery case in section 13 can be tested without the filesystem; at least the symbolic-link and case-sensitivity cases are also tested on disk.
+14. **Seed phrases are scrubbed (design doc section 4; replaces the phrase parts of section 6 and amendment 4).** `world.seed_phrase` is any TOML string; after the string rule of section 4 it is scrubbed with `seed_from_phrase` (P0-01 section 7.3). `Settings` carries the scrubbed phrase and its seed. A phrase that scrubs to nothing, or to more than 256 bytes, is an error at the value's position. The default 4096-byte limit of the `string` type does not apply to the raw phrase: only the scrubbed phrase is limited, and the 1 MiB file limit bounds the raw text. The string rule still applies first, so a control character other than TAB or LF in a settings file is an error there even though the command line would scrub it to a space. `world.seed` is unchanged: a number in decimal or lower-case-`0x` hexadecimal, as an integer or a string, and never treated as a phrase; `seed_phrase = "42"` is the phrase `42`, not the number.

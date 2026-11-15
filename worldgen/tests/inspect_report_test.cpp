@@ -53,6 +53,10 @@ worldgen::WorldParams params_for(std::uint64_t seed, bool pattern) {
     return p;
 }
 
+bool contains_text(const std::string& haystack, const std::string& needle) {
+    return haystack.find(needle) != std::string::npos;
+}
+
 }  // namespace
 
 TEST_CASE("report 7: escaping") {
@@ -92,27 +96,55 @@ TEST_CASE("report 7, 12.4: empty world, seed 0, exact text") {
     CHECK(report_of(out) == p004::REPORT_SEED_0);
 }
 
-TEST_CASE("report 12.4: a phrase with a backslash and a tab") {
-    dbtest::TempDir dir("p004-report-phrase");
-    const worldgen::PhraseSeed ps = worldgen::seed_from_phrase("a\\b\tc");
-    REQUIRE(ps.ok());
-    worldgen::WorldParams p = params_for(ps.seed, false);
-    p.seed_phrase = ps.phrase;
-    const std::string out = dir.file("w.db");
-    REQUIRE(worldgen::generate_world(p, out, Overwrite::refuse).ok());
-    const std::string expected = "# worldgen report v1\n[meta]\n"
-                                 "content_hash = e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\n"
-                                 "format = the-unmapped-world\n"
-                                 "generator_version = 0.1.0\n"
-                                 "param.map_size = 1024\n"
-                                 "schema_version = 1\n"
-                                 "seed = " +
-                                 std::to_string(ps.seed) +
-                                 "\n"
-                                 "seed_phrase = a\\\\b\\x09c\n"
-                                 "stages =\n"
-                                 "[tables]\nlayer = 0\nmeta = 8\n[layers]\n(none)\n";
-    CHECK(report_of(out) == expected);
+// P0-04 12.4 and amendment 15: a scrubbed phrase holds no backslash or
+// control byte, so the escaping is checked on a test-only world: the empty
+// seed-0 world with one extra meta row added through the test hook. The
+// reader tolerates unknown meta keys (P0-02 5.5), and the report prints every
+// meta row in key order (P0-04 7).
+namespace {
+
+std::string report_with_extra_meta(const dbtest::TempDir& dir, const std::string& name, const std::string& sql_value) {
+    const std::string out = dir.file(name);
+    REQUIRE(worldgen::generate_world(params_for(0, false), out, Overwrite::refuse).ok());
+    const auto s = worldgen::db::testing::execute_on_file(
+        out, "INSERT INTO meta (key, value) VALUES ('zz.test_value', " + sql_value + ")");
+    REQUIRE_MESSAGE(s.ok(), (s.ok() ? std::string() : s.error().message));
+    return report_of(out);
+}
+
+std::string seed_0_report_with_line(const std::string& line) {
+    return "# worldgen report v1\n[meta]\n"
+           "content_hash = e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\n"
+           "format = the-unmapped-world\n"
+           "generator_version = 0.2.0\n"
+           "param.map_size = 1024\n"
+           "schema_version = 1\n"
+           "seed = 0\n"
+           "seed_phrase =\n"
+           "stages =\n" +
+           line +
+           "[tables]\nlayer = 0\nmeta = 9\n[layers]\n(none)\n";
+}
+
+}  // namespace
+
+TEST_CASE("report 12.4: a meta value with a backslash and a tab (test-only world, amendment 15)") {
+    dbtest::TempDir dir("p004-report-escape");
+    const std::string r = report_with_extra_meta(dir, "w.db", "'a\\b' || char(9) || 'c'");
+    CHECK(contains_text(r, "\nzz.test_value = a\\\\b\\x09c\n"));
+    CHECK(r == seed_0_report_with_line("zz.test_value = a\\\\b\\x09c\n"));
+}
+
+TEST_CASE("report 12.4: other control bytes and UTF-8 in a meta value (test-only world, amendment 15)") {
+    dbtest::TempDir dir("p004-report-escape2");
+    // x 0x01 y 0x1F 0x7F "Ünmapped Wörld" LF z CR
+    const std::string r = report_with_extra_meta(
+        dir, "w.db",
+        "'x' || char(1) || 'y' || char(31) || char(127) || CAST(X'C39C6E6D61707065642057C3B6726C64' AS TEXT) || "
+        "char(10) || 'z' || char(13)");
+    const std::string escaped = "x\\x01y\\x1F\\x7F\xC3\x9Cnmapped W\xC3\xB6rld\\x0Az\\x0D";
+    CHECK(r == seed_0_report_with_line("zz.test_value = " + escaped + "\n"));
+    CHECK(r.find('\r') == std::string::npos);
 }
 
 TEST_CASE("report 7: test-pattern world") {
@@ -133,7 +165,7 @@ TEST_CASE("report 7: test-pattern world") {
         "# worldgen report v1\n[meta]\n"
         "content_hash = e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\n"
         "format = the-unmapped-world\n"
-        "generator_version = 0.1.0\n"
+        "generator_version = 0.2.0\n"
         "param.map_size = 1024\n"
         "schema_version = 1\n"
         "seed = 42\n"

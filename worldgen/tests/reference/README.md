@@ -13,7 +13,7 @@ the plain-integer helpers, `U128` multiply and divide, decimal parse, canonical
 text and format, `isqrt`, `sqrt`, `hypot`, SplitMix64, xoshiro256** and its
 seeding, every sampling function with its draw count, `mix64`, `absorb`,
 `hash_words`, byte-string packing, the domain tags, `stream_key`, `substream`,
-`hash_at`, `hash_at3`, `phrase_seed` and the phrase text rules, `noise2`,
+`hash_at`, `hash_at3`, `phrase_seed`, the phrase scrub and `seed_from_phrase`, `noise2`,
 `fbm2`, and SHA-256 (written out from FIPS 180-4; `hashlib` is used only to
 cross-check it).
 
@@ -55,7 +55,7 @@ with tokens separated by single spaces:
 | `[a,b,...]` | list of integer tokens, no spaces; `[]` is empty |
 | `"..."` | byte string; bytes 0x21 to 0x7e other than `"` and `\` are literal, every other byte (space included) is `\xHH`, so a string token never holds a space |
 | `FATAL` | the call raises `worldgen::FatalError` |
-| `ERROR` | the call returns its error value (`parse_decimal`, phrase checks) |
+| `ERROR` | the call returns its error value (`parse_decimal`, `seed_from_phrase`) |
 
 Sampling vectors start from `Rng::from_state(S0, S1, S2, S3)` given as four
 `0x` tokens, and give the result followed by the number of `next()` calls
@@ -66,9 +66,32 @@ result types.
 
 - 7.3 `stream_key`: one length word, the one that the byte-string encoding
   of 7.2 already holds: `[seed, len, packed words...]`.
-- 7.3 / 13.5 `phrase_seed`: `hash.phrase_seed` vectors hash the bytes exactly
-  as given; `hash.phrase_text` vectors apply the text rules first (strict UTF-8,
-  trim space/tab/CR/LF only, then 1 to 256 bytes).
+- 7.3 / 13.5 phrases (scrubbed rule, generator 0.2.0). Three kinds:
+  `hash.phrase_seed "bytes" = seed` hashes the bytes exactly as given (no
+  scrub); `hash.phrase_scrub "bytes" = "scrubbed"` is the scrub alone, with no
+  emptiness or length check, so its result may be `""` or longer than 256
+  bytes; `hash.phrase_text "bytes" = seed|ERROR` is `seed_from_phrase`, that is
+  `phrase_seed` of the scrubbed bytes, or `ERROR` when the scrubbed text is
+  empty or longer than 256 bytes. Both phrase kinds are given for the same
+  inputs (the 7.3 and 13.5 examples, every byte value 0x00 to 0xff between two
+  letters, valid and invalid UTF-8, runs and edge separators, error cases,
+  scrubbed lengths 255 to 257). `ERROR` does not say which of the two errors;
+  the matching `hash.phrase_scrub` line does (`""` for empty, more than 256
+  bytes for too long). Readings:
+  - The steps run in the order written: `A`-`Z` are lower-cased first, then
+    every byte that is not `a`-`z` or `0`-`9` becomes a space. So `@` (0x40),
+    `[` (0x5b), `` ` `` (0x60), `{` (0x7b), 0x7f and all of 0x80 to 0xff are
+    separators; nothing outside 0x41 to 0x5a is case-mapped (no Latin-1 or
+    Unicode case folding, and no `& 0x7f` folding of high bytes).
+  - Purely byte-wise: no UTF-8 decoding or validation, no Unicode
+    normalization, so a precomposed `é` (two separator bytes) and `e` plus a
+    combining accent (`e`, then separators) scrub differently: `caf noir` and
+    `cafe noir`. A UTF-8 byte order mark and NUL are separators like any other.
+  - Step 4 removes at most one space at each end, which after step 3 is all of
+    them; a text that is a single space after step 3 becomes empty and is the
+    empty error.
+  - The 256-byte limit is on the final scrubbed text (after collapsing and
+    trimming); the input length is not limited. Interior spaces count.
 - 5.4 `lerp`: overflow of `mul(b - a, t)` is fatal, as `mul` defines, even
   though the table lists only `b - a` and the sum. `t` is not range-checked.
 - 5.4 `mul_div`: arguments equal to INT64_MIN are accepted; only the result is
@@ -85,14 +108,19 @@ result types.
 against `docs/specs/p0-02-world-db.md` and `docs/specs/p0-04-worldgen-cli.md`
 without any of the project's C++. It reads the file with the standard-library
 `sqlite3` module (read-only, immutable) and imports `core_reference.py` for
-`stream_key`, `hash_at`, `fbm2`, `mul_div` and `phrase_seed_text` (the text
-rules of `seed_from_phrase`). It was used
+`stream_key`, `hash_at`, `fbm2`, `mul_div` and `seed_from_phrase`. `--phrase`
+takes the argument bytes exactly as passed to `generate --seed-phrase` (any
+bytes, not only UTF-8); the expected `seed_phrase` row is the scrubbed phrase
+and the expected seed its `phrase_seed` (P0-01 7.3, P0-02 amendment 12). The
+expected `generator_version` is the constant `GENERATOR_VERSION` at the top of
+the script (`0.2.0`), overridable with `--generator-version`. It was used
 to confirm the golden values in `worldgen/tests/golden/p0-worlds.txt` and the
 `GOLDEN_RGB_*` constants of `worldgen/tests/inspect_render_test.cpp`.
 
 ```
 python3 -B worldgen/tests/reference/p0_world_check.py check WORLD (--seed N | --phrase TEXT)
         [--map-size N] [--test-pattern] [--detail FILE] [--report FILE]
+        [--generator-version V]
 python3 -B worldgen/tests/reference/p0_world_check.py stats WORLD...
 ```
 
