@@ -151,3 +151,73 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
 - Proposal: note in the design doc, or leave to the specs with a pointer to `docs/specs/`: (1) the world file is built in memory and written with SQLite `VACUUM INTO`, which makes its bytes independent of write order; confirmed with SQLite 3.54.1. (2) STRICT tables coerce a lossless REAL instead of rejecting it, so "no floating point in the database" is enforced by never binding one and by a `typeof` check, not by STRICT alone. (3) The TOML parser's number conversion is pinned to `std::from_chars` on every compiler so that malformed or extreme float literals are reported identically everywhere. (4) A seed phrase in a settings file may not contain control characters other than TAB and LF, although one given on the command line may. (5) `worldgen-cli` reads its arguments as UTF-16 on Windows and writes text output in binary mode.
 - Interim choice: recorded in the amendments sections of `docs/specs/p0-01` to `p0-04`.
 - Status: accepted (merged into design.md, 2026-11-15)
+
+## Phase P1 Geography, first pass (2026-11-15)
+
+### Map size means more land at the same scale
+
+- Date: 2026-11-15
+- Raised by: spec-writer
+- Design doc section: 4 (16 m cells, map size a setting), 5 (map size "8, 16 or 32 km")
+- Problem: the design does not say whether a larger map shows more land at the same scale or the same land in finer detail, nor which features keep their physical size.
+- Proposal: cells are 16 m at every size, so 512, 1024 and 2048 cells are 8.2, 16.4 and 32.8 km. A larger map is more land at the same scale. The continent's outline, its large bays and the layout of mountain belts are specified in fractions of the map, so one continent fills every map; hills, ridges, erosion, rivers, lakes and region sizes are specified in metres and keep their size. State the nominal sizes as 8, 16 and 32 km with 16 m cells.
+- Interim choice: as proposed, in `docs/specs/p1-00-geography-overview.md` section 2.2.
+- Status: open
+
+### Climate's latitude span is a fraction of the map
+
+- Date: 2026-11-15
+- Raised by: spec-writer
+- Design doc section: 4 (Climate: "temperature from latitude"; "scale is compressed")
+- Problem: a 16 km map spans no real latitude. A gradient per kilometre would give an 8 km world almost no climate variety and a 32 km world four times as much.
+- Proposal: the north-to-south temperature difference is a tuning value per map (a map-fraction quantity), the same at every map size, standing for the larger land the map represents.
+- Interim choice: recorded in p1-00 section 2.2 for the climate spec (second pass).
+- Status: open
+
+### Generator tuning is data, and shipped tuning changes bump the version
+
+- Date: 2026-11-15
+- Raised by: spec-writer
+- Design doc section: 10 ("Content rules live in TOML data files under game/data/ and worldgen config"), 4 (generator version)
+- Problem: the design says tuning lives in TOML but not where, how it is identified in a world, or whether changing it is a version change.
+- Proposal: tuning is a data kind `worldgen` in `game/data/worldgen/`, one definition per stage, every field required, covered by `content_hash`. A change to the shipped data bumps the PATCH version and re-records the shipped-data golden hashes; algorithm golden tests use a frozen fixture copy so tuning work does not churn them.
+- Interim choice: as proposed, in p1-00 section 6 (needs P0-03 amendment 16 for kinds with a schema per id).
+- Status: open
+
+### Rivers are rasters in P1; a river table later if history needs one
+
+- See P1-02 section 9 (the entry is written there in full).
+
+### Elevation is final after the elevation stage; hydrology does not carve
+
+- See P1-02 section 9.
+
+### Biome categories and the biome table
+
+- Date: 2026-11-15
+- Raised by: spec-writer
+- Design doc section: 4 (six starting biomes; special cases for coast, river and high peaks), 6 (`region.biome`)
+- Problem: the biome layer needs codes for water cells; the design does not say whether coast, river and peak special cases are separate biomes; a world file does not say what its biome codes mean.
+- Proposal: biome definitions carry a fixed integer `code` and a colour. Categories: the six land biomes plus `ocean` and `lake`. River cells take the biome of their land; coast and peak special cases choose among the six. `blighted_waste` is assigned only by history. The biome stage writes a `biome` table (code, key, name, colour, water) into the world (schema version 2).
+- Interim choice: as proposed, in p1-00 section 6.6 and 9.2.
+- Status: open
+
+### The layer catalogue is part of the schema contract
+
+- Date: 2026-11-15
+- Raised by: spec-writer
+- Design doc section: 6 (schema rules; "a schema reference lives at docs/specs/schema.md")
+- Problem: layers are rows of the `layer` table, so the DDL does not change when a layer is added, yet a reader depends on each layer's type and units.
+- Proposal: the layer catalogue (name, type, units, meaning) is part of the contract recorded in `schema.md`. Adding a layer needs no schema version bump; changing a catalogued layer does.
+- Interim choice: as proposed, in p1-00 section 4 rule 3.
+- Status: open
+
+### P1 schema changes (one entry per phase)
+
+- Date: 2026-11-15
+- Raised by: spec-writer
+- Design doc section: 6 (schema growth)
+- Problem: the phase's schema changes need one proposals entry (P0-02 5.2 rule 3).
+- Proposal: first pass (elevation, hydrology): none; schema stays at version 1. Second pass: version 2 adds table `biome`; version 3 (or the same bump, if in one branch) adds table `region`. This entry is updated when the second-pass specs fix the DDL.
+- Interim choice: as proposed, in p1-00 section 9.
+- Status: open

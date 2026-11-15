@@ -531,3 +531,7 @@ FIPS 180-4 vectors: "" → e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca4959
 4. **RNG.** xoshiro256** seeded by SplitMix64. Approve.
 5. **Phrase normalization.** Decided in the design doc (section 4, 2026-11-15): phrases are scrubbed as in 7.3. This changed the seed of every phrase containing a capital letter or punctuation, so the generator version was bumped to 0.2.0.
 6. **Noise.** 2D gradient noise with 8 gradients and quintic fade. Simplex or value noise were the alternatives. P1 may need 3D noise (for example time-varying fields); it would be added here.
+
+## 15. Amendment for phase P1 (2026-11-15)
+
+P1-00 appendix A1 is adopted as part of this spec: the constants `SQRT2` and `INV_SQRT2`, the integer helper `bit_length(uint64)` with its tests, the two additions to the parallel-work rule 4.2 (the thread count is supplied by the caller and never affects a result; work may be split into parts defined by the data), and the note that ridged noise and domain warping are composed from `noise2` and `fbm2` in P1-01 section 4.1. The first-pass geography stages need none of the functions deferred in 9.2.
