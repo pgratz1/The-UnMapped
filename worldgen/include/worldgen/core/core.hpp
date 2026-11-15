@@ -6,7 +6,7 @@
 #include "worldgen/core/decimal.hpp"   // parse_decimal, canonical_decimal (5.6)
 #include "worldgen/core/error.hpp"     // FatalError (4.1)
 #include "worldgen/core/fx.hpp"        // Fx, arithmetic, fade, to_decimal (5)
-#include "worldgen/core/hash.hpp"      // mix64, hash_words, stream_key, hash_at, phrase_seed (7)
+#include "worldgen/core/hash.hpp"      // mix64, hash_words, stream_key, hash_at, phrase_seed, seed_from_phrase (7)
 #include "worldgen/core/math.hpp"      // isqrt_u64, isqrt_u128, sqrt, hypot (9.1)
 #include "worldgen/core/noise.hpp"     // noise2, fbm2 (8)
 #include "worldgen/core/rng.hpp"       // splitmix64_next, Rng (6)

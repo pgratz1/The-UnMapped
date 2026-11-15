@@ -173,7 +173,15 @@ std::uint64_t hash_at3(std::uint64_t key, std::int64_t x, std::int64_t y, std::i
     return hash_words(TAG_CELL3, {key, encode_i64(x), encode_i64(y), encode_i64(z)});
 }
 
-PhraseSeed phrase_seed(std::string_view phrase) {
+std::uint64_t phrase_seed(std::span<const std::uint8_t> bytes) {
+    return hash_words(TAG_PHRASE, encode_bytes(bytes));
+}
+
+std::uint64_t phrase_seed(std::string_view bytes) {
+    return hash_words(TAG_PHRASE, encode_bytes(bytes));
+}
+
+PhraseSeed seed_from_phrase(std::string_view phrase) {
     PhraseSeed result;
     if (!is_valid_utf8(phrase)) {
         result.error = PhraseError::invalid_utf8;
@@ -197,7 +205,7 @@ PhraseSeed phrase_seed(std::string_view phrase) {
         return result;
     }
     result.phrase = std::string(trimmed);
-    result.seed = hash_words(TAG_PHRASE, encode_bytes(trimmed));
+    result.seed = phrase_seed(trimmed);
     return result;
 }
 

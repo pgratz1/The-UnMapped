@@ -59,8 +59,8 @@ inline constexpr std::uint64_t TAG_PHRASE = 0x535248503A4D4E55ULL;  // "UNM:PHRS
 // bytes (P0-01 7.3, stream names).
 [[nodiscard]] bool is_valid_stream_name(std::string_view name) noexcept;
 
-// hash_words(TAG_STREAM, [seed, len(name), packed name words...])
-// (P0-01 7.3). Fatal if name is not a valid stream name.
+// hash_words(TAG_STREAM, [seed, len(name), packed name words...]); the
+// length word appears once (P0-01 7.3). Fatal if name is not a valid stream name.
 [[nodiscard]] std::uint64_t stream_key(std::uint64_t seed, std::string_view name);
 
 // hash_words(TAG_SUB, [key, index]) (P0-01 7.3).
@@ -76,17 +76,24 @@ inline constexpr std::uint64_t TAG_PHRASE = 0x535248503A4D4E55ULL;  // "UNM:PHRS
 
 // --- Text phrases (P0-01 7.3) -----------------------------------------------
 
-// Why a text phrase was rejected (P0-01 7.3).
+// hash_words(TAG_PHRASE, [len, packed words...]) (P0-01 7.3): a pure hash of
+// exactly the bytes given. No validation and no trimming, so
+// phrase_seed(" x") != phrase_seed("x"). Use seed_from_phrase for user text.
+[[nodiscard]] std::uint64_t phrase_seed(std::span<const std::uint8_t> bytes);
+// Same, for text (each char reinterpreted as a uint8 byte).
+[[nodiscard]] std::uint64_t phrase_seed(std::string_view bytes);
+
+// Why a text phrase was rejected by seed_from_phrase (P0-01 7.3).
 enum class PhraseError : std::uint8_t {
     none = 0,      // success
-    invalid_utf8,  // not valid UTF-8 (strict: no overlong forms, no
+    invalid_utf8,  // not valid UTF-8 (strict RFC 3629: no overlong forms, no
                    // surrogates U+D800..U+DFFF, nothing above U+10FFFF)
     empty,         // nothing left after trimming
     too_long,      // more than 256 bytes after trimming
 };
 
-// Result of phrase_seed. When ok(), phrase holds the trimmed phrase (to be
-// recorded in meta) and seed the derived world seed; otherwise phrase is
+// Result of seed_from_phrase. When ok(), phrase holds the trimmed phrase (to
+// be recorded in meta) and seed the derived world seed; otherwise phrase is
 // empty and seed is 0.
 struct PhraseSeed {
     std::string phrase;
@@ -96,12 +103,11 @@ struct PhraseSeed {
     [[nodiscard]] bool ok() const noexcept { return error == PhraseError::none; }
 };
 
-// Text phrase to world seed (P0-01 7.3). Validates UTF-8, removes leading and
+// Text phrase to world seed (P0-01 7.3). Validates UTF-8 (strict RFC 3629;
+// NUL and other control characters inside are accepted), removes leading and
 // trailing ASCII whitespace (space, tab, CR, LF) and nothing else, requires
-// 1 to 256 bytes after trimming, then
-//   seed = hash_words(TAG_PHRASE, encode_bytes(trimmed))
-//        = hash_words(TAG_PHRASE, [len, packed words...]).
+// 1 to 256 bytes after trimming, then seed = phrase_seed(trimmed bytes).
 // The phrase is user data, so errors are returned, never thrown.
-[[nodiscard]] PhraseSeed phrase_seed(std::string_view phrase);
+[[nodiscard]] PhraseSeed seed_from_phrase(std::string_view text);
 
 }  // namespace worldgen
