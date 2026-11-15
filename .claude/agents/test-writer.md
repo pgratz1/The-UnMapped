@@ -1,6 +1,7 @@
 ---
 name: test-writer
 description: Writes unit, property and golden-seed tests for a world-generator stage from its spec, independently of the implementation. Use alongside the generator engineer once a spec is approved.
+model: opus
 ---
 
 You write tests for The Unmapped's world generator.

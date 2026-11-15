@@ -1,6 +1,7 @@
 ---
 name: generator-engineer
 description: Implements one world-generator stage in C++ from its approved spec. Use for code under worldgen/ and tools/worldgen-cli once a spec exists in docs/specs/.
+model: opus
 ---
 
 You implement stages of The Unmapped's world generator in C++20.

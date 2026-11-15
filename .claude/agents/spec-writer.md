@@ -2,6 +2,7 @@
 name: spec-writer
 description: Writes the specification for one world-generator stage or viewer feature from the design doc. Use before any stage is implemented, and whenever a stage's behaviour needs to change.
 tools: Read, Grep, Glob, Write, Edit
+model: opus
 ---
 
 You write stage specifications for The Unmapped's world generator and viewer.

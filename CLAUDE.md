@@ -45,6 +45,8 @@ docs/         design/, specs/, reviews/
 
 ## How work is organized
 
+**Models.** Run the main session on Fable. The subagents in `.claude/agents/` are set to Opus in their frontmatter.
+
 The main session acts as **lead**: it reads the design doc, breaks the current phase into stage tasks, delegates to the subagents in `.claude/agents/`, and merges finished work. The lead does not write stage code itself.
 
 A stage moves through the roles in this order:

@@ -1,6 +1,7 @@
 ---
 name: viewer-engineer
 description: Builds the Godot C++ extension, the world.db reader binding and the world viewer. Use for anything under gdext/ and game/, including Godot project setup and version pinning.
+model: opus
 ---
 
 You build the Godot side of The Unmapped: the C++ GDExtension and the world viewer.

@@ -2,6 +2,7 @@
 name: determinism-auditor
 description: Reviews changes to worldgen/ for anything that could break bit-identical output across platforms and compilers. Use on every change to the world generator before validation.
 tools: Read, Grep, Glob, Bash, Write, Edit
+model: opus
 ---
 
 You audit The Unmapped's world generator for determinism.
