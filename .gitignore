@@ -10,9 +10,14 @@ CMakeUserPresets.json
 compile_commands.json
 Testing/
 
-# Godot
+# Godot. The project is run from a copy under the build tree (gdext/README.md),
+# so none of these should appear in game/.
 .godot/
 *.import.tmp
+/game/bin/
+
+# Python bytecode (godot-cpp's generator is run with PYTHONDONTWRITEBYTECODE)
+__pycache__/
 
 # Generated worlds and exports
 *.db

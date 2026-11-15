@@ -1,0 +1,83 @@
+[gd_scene format=3]
+
+[node name="Viewer" type="ViewerScreen"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Split" type="HSplitContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Sidebar" type="VBoxContainer" parent="Split"]
+custom_minimum_size = Vector2(340, 0)
+layout_mode = 2
+
+[node name="OpenButton" type="Button" parent="Split/Sidebar"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Open world..."
+
+[node name="FileLabel" type="Label" parent="Split/Sidebar"]
+unique_name_in_owner = true
+layout_mode = 2
+mouse_filter = 1
+text = "No world open"
+autowrap_mode = 1
+
+[node name="LayersHeading" type="Label" parent="Split/Sidebar"]
+layout_mode = 2
+text = "Layers"
+
+[node name="LayerList" type="ItemList" parent="Split/Sidebar"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+size_flags_stretch_ratio = 0.6
+
+[node name="MetaHeading" type="Label" parent="Split/Sidebar"]
+layout_mode = 2
+text = "Meta"
+
+[node name="MetaTree" type="Tree" parent="Split/Sidebar"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+columns = 2
+column_titles_visible = true
+hide_root = true
+select_mode = 1
+
+[node name="MapArea" type="VBoxContainer" parent="Split"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="MapView" type="LayerMapView" parent="Split/MapArea"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(256, 256)
+texture_filter = 1
+clip_contents = true
+layout_mode = 2
+size_flags_vertical = 3
+focus_mode = 2
+
+[node name="StatusLabel" type="Label" parent="Split/MapArea"]
+unique_name_in_owner = true
+layout_mode = 2
+text = " "
+text_overrun_behavior = 3
+
+[node name="OpenDialog" type="FileDialog" parent="."]
+unique_name_in_owner = true
+title = "Open a world file"
+size = Vector2i(900, 600)
+ok_button_text = "Open"
+file_mode = 0
+access = 2
+filters = PackedStringArray("*.db ; World files")
