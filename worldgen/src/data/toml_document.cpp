@@ -16,14 +16,28 @@
 #if !defined(TOML_EXCEPTIONS) || TOML_EXCEPTIONS != 1 || !defined(TOML_HEADER_ONLY) || TOML_HEADER_ONLY != 1 \
     || !defined(TOML_ENABLE_FORMATTERS) || TOML_ENABLE_FORMATTERS != 0                                        \
     || !defined(TOML_ENABLE_WINDOWS_COMPAT) || TOML_ENABLE_WINDOWS_COMPAT != 0                                \
-    || !defined(TOML_ENABLE_UNRELEASED_FEATURES) || TOML_ENABLE_UNRELEASED_FEATURES != 0
+    || !defined(TOML_ENABLE_UNRELEASED_FEATURES) || TOML_ENABLE_UNRELEASED_FEATURES != 0                      \
+    || !defined(TOML_FLOAT_CHARCONV) || TOML_FLOAT_CHARCONV != 1                                              \
+    || !defined(TOML_INT_CHARCONV) || TOML_INT_CHARCONV != 1                                                  \
+    || !defined(TOML_ENABLE_SIMD) || TOML_ENABLE_SIMD != 0                                                    \
+    || !defined(TOML_ENABLE_FLOAT16) || TOML_ENABLE_FLOAT16 != 0                                              \
+    || !defined(TOML_MAX_NESTED_VALUES) || TOML_MAX_NESTED_VALUES != 256
 #error "toml++ must be configured by unmapped::tomlplusplus (see extern/CMakeLists.txt)"
+#endif
+
+// toml++ silently falls back to string streams when <charconv> is missing,
+// so check here that floating-point std::from_chars exists (GCC 11+,
+// MSVC 2019 16.4+): TOML_FLOAT_CHARCONV=1 must really mean from_chars.
+#include <charconv>
+#if !defined(__cpp_lib_to_chars) || __cpp_lib_to_chars < 201611L
+#error "the TOML loader needs floating-point std::from_chars (TOML_FLOAT_CHARCONV=1)"
 #endif
 
 #include "data/document.hpp"
 
 #include <algorithm>
 #include <cstddef>
+#include <cstdint>
 #include <string>
 #include <string_view>
 #include <toml.hpp>
@@ -115,6 +129,7 @@ private:
         for (auto&& [key, value] : in) {
             entries.emplace_back(std::string(key.str()), &value);
         }
+        // determinism-lint: allow(unstable-sort) -- keys of one TOML table are unique (duplicates are a parse error, and toml::table is a map), so bytes_less on the key is a strict total order on the entries
         std::sort(entries.begin(), entries.end(),
                   [](const auto& a, const auto& b) { return bytes_less(a.first, b.first); });
         out.keys.reserve(entries.size());

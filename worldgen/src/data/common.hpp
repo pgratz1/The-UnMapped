@@ -1,6 +1,7 @@
 #pragma once
 // Internal: pieces shared by the settings loader and the content loader
 // (P0-03 sections 4, 5, 9).
+#include <cstddef>
 #include <cstdint>
 #include <filesystem>
 #include <optional>

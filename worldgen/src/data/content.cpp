@@ -4,13 +4,18 @@
 #include "worldgen/data/content.hpp"
 
 #include <algorithm>
+#include <cstddef>
+#include <cstdint>
+#include <filesystem>
 #include <map>
 #include <memory>
 #include <optional>
 #include <set>
 #include <string>
+#include <string_view>
 #include <system_error>
 #include <utility>
+#include <vector>
 
 #include "data/common.hpp"
 #include "data/text.hpp"

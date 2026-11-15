@@ -1,7 +1,11 @@
 // Canonical encoding and content hash (P0-03 section 8).
 
+#include <cstddef>
 #include <cstdint>
+#include <span>
+#include <string>
 #include <string_view>
+#include <utility>
 #include <vector>
 
 #include "worldgen/core/sha256.hpp"
