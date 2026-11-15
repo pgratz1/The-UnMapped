@@ -11,6 +11,7 @@
 #include <sqlite3.h>
 
 #include <cstddef>
+#include <ostream>  // doctest needs the full type to print strings with the MSVC STL
 #include <cstdint>
 #include <filesystem>
 #include <fstream>

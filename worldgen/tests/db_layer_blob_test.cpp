@@ -2,6 +2,8 @@
 // amendments of 14.4).
 
 #include <doctest/doctest.h>
+// <ostream> is needed for doctest to print strings with the MSVC STL.
+#include <ostream>
 
 #include <cstddef>
 #include <cstdint>
