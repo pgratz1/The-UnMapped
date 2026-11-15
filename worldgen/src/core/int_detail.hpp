@@ -24,13 +24,13 @@ inline constexpr std::uint64_t kInt64MaxU = 0x7FFFFFFFFFFFFFFFULL;  // 2^63 - 1
     return negative ? -s : s;
 }
 
-// RHA(n / d) for unsigned n, d with d != 0: floor quotient, plus one if
-// 2r >= d. Returns the rounded magnitude as U128. d <= 2^63 is required so
-// that 2r fits in uint64 (r < d).
+// RHA(n / d) for unsigned n, d with d != 0 (any uint64 d): floor quotient,
+// plus one if 2r >= d. Returns the rounded magnitude as U128. The test is
+// written r >= d - r, which is exact for every d because r < d, so 2r is
+// never formed and nothing can wrap.
 [[nodiscard]] inline U128 rha_divide(U128 n, std::uint64_t d) {
     const U128DivMod qr = divmod_u128_u64(n, d);
     U128 q = qr.quotient;
-    // r < d <= 2^63, so 2r < 2^64; compare r >= d - r to avoid any doubt.
     if (qr.remainder >= d - qr.remainder) {
         q = q + U128{0, 1};
     }

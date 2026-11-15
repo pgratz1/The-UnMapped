@@ -33,6 +33,27 @@ Rng::Rng(std::uint64_t key) noexcept {
 Rng::Rng(std::uint64_t s0, std::uint64_t s1, std::uint64_t s2, std::uint64_t s3) noexcept
     : s0_(s0), s1_(s1), s2_(s2), s3_(s3) {}
 
+Rng::Rng(Rng&& other) noexcept : s0_(other.s0_), s1_(other.s1_), s2_(other.s2_), s3_(other.s3_) {
+    other.s0_ = 0;
+    other.s1_ = 0;
+    other.s2_ = 0;
+    other.s3_ = 0;
+}
+
+Rng& Rng::operator=(Rng&& other) noexcept {
+    if (this != &other) {
+        s0_ = other.s0_;
+        s1_ = other.s1_;
+        s2_ = other.s2_;
+        s3_ = other.s3_;
+        other.s0_ = 0;
+        other.s1_ = 0;
+        other.s2_ = 0;
+        other.s3_ = 0;
+    }
+    return *this;
+}
+
 Rng Rng::from_state(std::uint64_t s0, std::uint64_t s1, std::uint64_t s2, std::uint64_t s3) {
     if ((s0 | s1 | s2 | s3) == 0) {
         fatal("Rng::from_state: all-zero state");
@@ -44,7 +65,10 @@ std::array<std::uint64_t, 4> Rng::state() const noexcept {
     return {s0_, s1_, s2_, s3_};
 }
 
-std::uint64_t Rng::next() noexcept {
+std::uint64_t Rng::next() {
+    if ((s0_ | s1_ | s2_ | s3_) == 0) {
+        fatal("Rng::next: all-zero state (moved-from generator)");
+    }
     const std::uint64_t result = rotl(s1_ * 5U, 7U) * 9U;
     const std::uint64_t t = s1_ << 17U;
     s2_ ^= s0_;
@@ -56,7 +80,7 @@ std::uint64_t Rng::next() noexcept {
     return result;
 }
 
-std::uint32_t Rng::next_u32() noexcept {
+std::uint32_t Rng::next_u32() {
     return static_cast<std::uint32_t>(next() >> 32U);
 }
 
@@ -88,7 +112,7 @@ std::int64_t Rng::uniform_i64(std::int64_t lo, std::int64_t hi) {
     return static_cast<std::int64_t>(static_cast<std::uint64_t>(lo) + offset);
 }
 
-Fx Rng::uniform_fx01() noexcept {
+Fx Rng::uniform_fx01() {
     return Fx::from_raw(static_cast<std::int64_t>(next() >> 32U));
 }
 
