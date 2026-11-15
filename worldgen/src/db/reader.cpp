@@ -217,7 +217,12 @@ Result<WorldReader> WorldReader::open(std::string_view path_utf8) {
         state->path = std::string(path_utf8);
         const std::string& shown = state->path;
 
-        // 1. File missing or unreadable.
+        // 1. File missing or unreadable (a path that cannot be named is
+        // unreadable; converting it on MSVC would throw).
+        if (!is_valid_utf8_path(path_utf8)) {
+            return make_error(ErrorCode::file_unreadable,
+                              "cannot read '" + shown + "': the path is empty, not valid UTF-8, or contains a NUL byte");
+        }
         const detail::HeaderRead h = detail::read_header(path_from_utf8(path_utf8));
         if (!h.readable) {
             return make_error(ErrorCode::file_unreadable,

@@ -259,13 +259,15 @@ std::optional<Error> forced_failure(const WriterState& s, testing::FailurePoint 
     return Error{ErrorCode::output_write_failed, m};
 }
 
-// Deletes <out>.partial and closes the working database unless dismissed:
-// the cleanup of P0-02 6 "On any failure", for returned errors and for
-// exceptions alike.
+// Deletes <out>.partial and <out>.partial-journal and closes the working
+// database unless dismissed: the cleanup of P0-02 6 "On any failure", for
+// returned errors and for exceptions alike. SQLite journals the VACUUM INTO
+// target, so <out>.partial-journal exists while the vacuum runs and could
+// survive a failure.
 class FinalizeCleanup {
 public:
-    FinalizeCleanup(WriterState& state, std::filesystem::path partial) noexcept
-        : state_(state), partial_(std::move(partial)) {}
+    FinalizeCleanup(WriterState& state, std::filesystem::path partial, std::filesystem::path journal) noexcept
+        : state_(state), partial_(std::move(partial)), journal_(std::move(journal)) {}
     FinalizeCleanup(const FinalizeCleanup&) = delete;
     FinalizeCleanup& operator=(const FinalizeCleanup&) = delete;
     ~FinalizeCleanup() {
@@ -274,15 +276,106 @@ public:
         }
         state_.db.close();
         std::error_code ec;
-        std::filesystem::remove(partial_, ec);  // nothing more can be done if this fails
+        std::filesystem::remove(partial_, ec);  // nothing more can be done if these fail
+        std::filesystem::remove(journal_, ec);
     }
     void dismiss() noexcept { dismissed_ = true; }
 
 private:
     WriterState& state_;
     std::filesystem::path partial_;
+    std::filesystem::path journal_;
     bool dismissed_ = false;
 };
+
+// Removes path if it exists; an error value if it exists and cannot be removed.
+std::optional<Error> remove_stale(const std::filesystem::path& path, const std::string& shown) {
+    std::error_code ec;
+    std::filesystem::remove(path, ec);
+    if (ec) {
+        return Error{ErrorCode::output_write_failed, "cannot remove old '" + shown + "': " + ec.message()};
+    }
+    return std::nullopt;
+}
+
+// rename(from, to), or a simulated failure while the test hook asks for one.
+void rename_file(WriterState& s, const std::filesystem::path& from, const std::filesystem::path& to,
+                 std::error_code& ec) {
+    if (s.fs_faults.failing_renames > 0) {
+        --s.fs_faults.failing_renames;
+        ec = std::make_error_code(std::errc::permission_denied);
+        return;
+    }
+    std::filesystem::rename(from, to, ec);
+}
+
+// Step 9: moves <out>.partial to <out>. Returns std::nullopt only when a
+// rename call has succeeded, i.e. the new file is at <out>; every other path
+// returns an error (and the caller's cleanup removes <out>.partial).
+std::optional<Error> rename_into_place(WriterState& s, const std::filesystem::path& partial,
+                                       const std::string& partial_utf8, const std::filesystem::path& out,
+                                       const std::string& shown, Overwrite overwrite) {
+    if (overwrite == Overwrite::refuse) {
+        // Checked again here (also at the start of finalize); the window
+        // between this check and the rename is accepted (P0-02 14.7).
+        std::error_code status_ec;
+        const std::filesystem::file_status status = std::filesystem::status(out, status_ec);
+        // status() reports "not found" as an error code on some
+        // implementations; only a missing file counts as "does not exist".
+        if (s.fs_faults.output_status_error ||
+            (status_ec && status.type() != std::filesystem::file_type::not_found)) {
+            if (s.fs_faults.output_status_error) {
+                status_ec = std::make_error_code(std::errc::permission_denied);  // simulated
+            }
+            return Error{ErrorCode::output_write_failed,
+                         "cannot check whether output '" + shown + "' exists: " + status_ec.message()};
+        }
+        if (std::filesystem::exists(status)) {
+            return Error{ErrorCode::output_exists,
+                         "output '" + shown + "' already exists; allow overwriting to replace it"};
+        }
+    }
+    // While the test hook simulates faults, the fallback is used on every
+    // platform (captured before the first rename consumes a fault).
+    const bool simulating = s.fs_faults.failing_renames > 0 || s.fs_faults.remove_output_error;
+    std::error_code rename_ec;
+    rename_file(s, partial, out, rename_ec);
+    if (!rename_ec) {
+        return std::nullopt;
+    }
+    // Replace fallback. std::filesystem::rename replaces an existing regular
+    // file on POSIX (rename(2), atomic) and is expected to on MSVC (MoveFileExW
+    // with MOVEFILE_REPLACE_EXISTING). Should it fail on Windows with an
+    // existing target anyway, remove the target and rename once more. Not
+    // atomic: if the second rename fails, the old <out> is gone. Used on
+    // every platform while the test hook simulates rename failures.
+#ifdef _WIN32
+    const bool fallback_enabled = true;
+    static_cast<void>(simulating);
+#else
+    const bool fallback_enabled = simulating;
+#endif
+    const std::string first = "cannot rename '" + partial_utf8 + "' to '" + shown + "': " + rename_ec.message();
+    if (overwrite != Overwrite::replace || !fallback_enabled) {
+        return Error{ErrorCode::output_rename_failed, first};
+    }
+    std::error_code type_ec;
+    if (!std::filesystem::is_regular_file(out, type_ec) || type_ec) {
+        return Error{ErrorCode::output_rename_failed, first};  // nothing to remove, or cannot tell
+    }
+    std::error_code remove_ec;
+    const bool removed = !s.fs_faults.remove_output_error && std::filesystem::remove(out, remove_ec) && !remove_ec;
+    if (!removed) {
+        return Error{ErrorCode::output_rename_failed, first + "; removing the existing file also failed"};
+    }
+    std::error_code retry_ec;
+    rename_file(s, partial, out, retry_ec);
+    if (retry_ec) {
+        return Error{ErrorCode::output_rename_failed,
+                     first + "; the existing file was removed but the retry failed: " + retry_ec.message()};
+    }
+    return std::nullopt;
+}
 
 Error output_error(ErrorCode code, std::string message) {
     return Error{code, std::move(message)};
@@ -434,8 +527,9 @@ const std::vector<std::string>& WorldWriter::stages() const noexcept {
 }
 
 Status WorldWriter::check_output(std::string_view out_utf8, Overwrite overwrite) {
-    if (out_utf8.empty()) {
-        return output_error(ErrorCode::output_write_failed, "output path is empty");
+    if (!is_valid_utf8_path(out_utf8)) {
+        return output_error(ErrorCode::output_write_failed,
+                            "output path is empty, not valid UTF-8, or contains a NUL byte");
     }
     const std::string shown(out_utf8);
     const std::filesystem::path out = path_from_utf8(out_utf8);
@@ -474,10 +568,18 @@ Status WorldWriter::finalize(std::string_view out_utf8, Overwrite overwrite) {
     }
     s.finalized = true;
 
+    if (!is_valid_utf8_path(out_utf8)) {
+        // Nothing can have been written under a path that cannot be named.
+        s.db.close();
+        return output_error(ErrorCode::output_write_failed,
+                            "output path is empty, not valid UTF-8, or contains a NUL byte");
+    }
     const std::string partial_utf8 = std::string(out_utf8) + std::string(PARTIAL_SUFFIX);
+    const std::string journal_utf8 = partial_utf8 + "-journal";
     const std::filesystem::path partial = path_from_utf8(partial_utf8);
+    const std::filesystem::path journal = path_from_utf8(journal_utf8);
     const std::filesystem::path out = path_from_utf8(out_utf8);
-    FinalizeCleanup cleanup(s, partial);  // from here on, every exit cleans up unless dismissed
+    FinalizeCleanup cleanup(s, partial, journal);  // from here on, every exit cleans up unless dismissed
 
     if (Status pre = check_output(out_utf8, overwrite); !pre.ok()) {
         // Nothing was written; the cleanup closes the working database and
@@ -494,13 +596,9 @@ Status WorldWriter::finalize(std::string_view out_utf8, Overwrite overwrite) {
     integrity_check(s.db.get());
     if (auto e = forced_failure(s, testing::FailurePoint::after_integrity_check)) return *e;
 
-    // Step 6.
-    std::error_code ec;
-    std::filesystem::remove(partial, ec);
-    if (ec) {
-        return output_error(ErrorCode::output_write_failed,
-                            "cannot remove old '" + partial_utf8 + "': " + ec.message());
-    }
+    // Step 6: remove a stale <out>.partial and its journal, then vacuum.
+    if (auto e = remove_stale(partial, partial_utf8)) return *e;
+    if (auto e = remove_stale(journal, journal_utf8)) return *e;
     {
         Statement vacuum;
         int rc = vacuum.prepare(s.db.get(), "VACUUM INTO ?1");
@@ -523,33 +621,8 @@ Status WorldWriter::finalize(std::string_view out_utf8, Overwrite overwrite) {
     verify_partial(partial, partial_utf8, meta);
     if (auto e = forced_failure(s, testing::FailurePoint::after_verify)) return *e;
 
-    // Step 9. std::filesystem::rename replaces an existing regular file on
-    // POSIX (rename(2), atomic). The refuse case is checked again here; the
-    // window between this check and the rename is accepted (P0-04 is a
-    // single-user command-line tool).
-    const std::string shown(out_utf8);
-    if (overwrite == Overwrite::refuse && std::filesystem::exists(out, ec)) {
-        return output_error(ErrorCode::output_exists,
-                            "output '" + shown + "' already exists; allow overwriting to replace it");
-    }
-    std::filesystem::rename(partial, out, ec);
-#ifdef _WIN32
-    // MSVC's std::filesystem::rename is expected to replace an existing file
-    // (MoveFileExW with MOVEFILE_REPLACE_EXISTING). Should it fail on an
-    // existing target anyway, remove the target and retry once; that is not
-    // atomic, but it is only reached when the caller allowed replacement.
-    if (ec && overwrite == Overwrite::replace && std::filesystem::is_regular_file(out, ec)) {
-        std::error_code remove_ec;
-        if (std::filesystem::remove(out, remove_ec) && !remove_ec) {
-            ec.clear();
-            std::filesystem::rename(partial, out, ec);
-        }
-    }
-#endif
-    if (ec) {
-        return output_error(ErrorCode::output_rename_failed,
-                            "cannot rename '" + partial_utf8 + "' to '" + shown + "': " + ec.message());
-    }
+    // Step 9.
+    if (auto e = rename_into_place(s, partial, partial_utf8, out, std::string(out_utf8), overwrite)) return *e;
     cleanup.dismiss();
     return Ok{};
 }

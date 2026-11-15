@@ -39,7 +39,28 @@ enum class MetaOrder : std::uint8_t {
     descending,     // reverse key order
 };
 
+// Simulated filesystem faults in step 9 of WorldWriter::finalize (the
+// rename into place). A simulated call does not touch the filesystem and
+// reports an error, exactly as a failing real call would.
+struct FsFaults {
+    // The existence check of <out> made just before the rename (refuse
+    // mode) reports an error, e.g. permission denied.
+    bool output_status_error = false;
+    // The first failing_renames rename attempts fail. While this is
+    // non-zero, the replace fallback (remove <out>, rename again), which is
+    // otherwise used on Windows only, is used on every platform so that its
+    // paths can be tested anywhere.
+    std::uint32_t failing_renames = 0;
+    // The fallback's removal of the existing <out> fails.
+    bool remove_output_error = false;
+};
+
 struct WriterAccess {
+    // Installs simulated faults for the rename step (P0-02 6 step 9). In
+    // every case finalize() must either return Ok with the new file at <out>
+    // or return an error with <out>.partial removed.
+    static void set_fs_faults(WorldWriter& writer, const FsFaults& faults);
+
     // Makes finalize() fail at point in the given mode. In both modes the
     // writer's cleanup runs: no <out>.partial remains.
     static void set_failure_point(WorldWriter& writer, FailurePoint point,
