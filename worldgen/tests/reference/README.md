@@ -78,3 +78,48 @@ result types.
 - 8.2 `fbm2`: the loop is followed literally, so the `f` and `amp` updates after
   the last octave are evaluated and can be fatal.
 - 8.1 `noise2`: no argument check beyond what `Fx` guarantees.
+
+## Independent check of P0 world files
+
+`p0_world_check.py` checks a world file written by `worldgen-cli generate`
+against `docs/specs/p0-02-world-db.md` and `docs/specs/p0-04-worldgen-cli.md`
+without any of the project's C++. It reads the file with the standard-library
+`sqlite3` module (read-only, immutable) and imports `core_reference.py` for
+`stream_key`, `hash_at`, `fbm2`, `mul_div` and `phrase_seed_text` (the text
+rules of `seed_from_phrase`). It was used
+to confirm the golden values in `worldgen/tests/golden/p0-worlds.txt` and the
+`GOLDEN_RGB_*` constants of `worldgen/tests/inspect_render_test.cpp`.
+
+```
+python3 -B worldgen/tests/reference/p0_world_check.py check WORLD (--seed N | --phrase TEXT)
+        [--map-size N] [--test-pattern] [--detail FILE] [--report FILE]
+python3 -B worldgen/tests/reference/p0_world_check.py stats WORLD...
+```
+
+`check` verifies the SQLite header fields (P0-02 6.1), the `sqlite_schema`
+rows and DDL text, the eight `meta` rows (P0-02 8), each layer blob (header,
+strict codec decode, canonical re-encoding to the same bytes) and, with
+`--test-pattern`, every cell of the three layers against P0-04 5.2. It
+computes the `hash --detail` lines (P0-04 8) and the `report` text (P0-04 7),
+compares them byte for byte with the files given by `--detail` and `--report`
+(the CLI's output saved to a file), and prints the detail lines and the
+SHA-256 of the gray `render_rgb` buffer of each layer (P0-04 6). Exit status 1
+on any disagreement. A test-pattern world takes about half a minute, almost
+all of it `fbm2`.
+
+`stats` decodes the layers of each world and prints
+`<path> <file sha256> <layer> <min> <max> <sum> <cells>` per layer, for seed
+sweeps.
+
+Example, from a build of any preset (worlds go under the build root, never the
+repository):
+
+```
+CLI=$HOME/.cache/the-unmapped/build/The_UnMapped/linux-gcc-release/tools/worldgen-cli/worldgen-cli
+O=$HOME/.cache/the-unmapped/out
+$CLI generate --seed 42 --test-pattern --out $O/p42.db
+$CLI hash --db $O/p42.db --detail > $O/p42.detail.txt
+$CLI report --db $O/p42.db > $O/p42.report.txt
+python3 -B worldgen/tests/reference/p0_world_check.py check $O/p42.db --seed 42 --test-pattern \
+    --detail $O/p42.detail.txt --report $O/p42.report.txt
+```
