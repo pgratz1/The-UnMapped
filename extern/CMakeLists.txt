@@ -58,6 +58,28 @@ target_include_directories(unmapped_doctest SYSTEM INTERFACE "${CMAKE_CURRENT_SO
 add_library(unmapped_tomlplusplus INTERFACE)
 add_library(unmapped::tomlplusplus ALIAS unmapped_tomlplusplus)
 target_include_directories(unmapped_tomlplusplus SYSTEM INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/tomlplusplus")
+# ==========================================================================
+# TOML++ CONFIGURATION: SINGLE POINT OF CONFIGURATION
+#
+# INTERFACE, so every translation unit that includes toml.hpp (worldgen's
+# src/data/toml_document.cpp and the tests) sees the same settings; the
+# loader refuses to compile with any other values (spec P0-03).
+#   TOML_EXCEPTIONS=1              parse errors are thrown as toml::parse_error
+#                                  and caught in one place in the loader.
+#   TOML_HEADER_ONLY=1             the default; no separate implementation TU.
+#   TOML_ENABLE_FORMATTERS=0       the loader never formats parsed values.
+#   TOML_ENABLE_WINDOWS_COMPAT=0   no wide-string overloads: the same API on
+#                                  every platform (the loader reads files
+#                                  itself and passes bytes).
+#   TOML_ENABLE_UNRELEASED_FEATURES=0  TOML 1.0.0 only.
+# ==========================================================================
+target_compile_definitions(unmapped_tomlplusplus INTERFACE
+    TOML_EXCEPTIONS=1
+    TOML_HEADER_ONLY=1
+    TOML_ENABLE_FORMATTERS=0
+    TOML_ENABLE_WINDOWS_COMPAT=0
+    TOML_ENABLE_UNRELEASED_FEATURES=0
+)
 
 # --------------------------------------------------------------------------
 # stb_image_write (single header; implementation compiled once here)
