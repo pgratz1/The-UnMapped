@@ -74,6 +74,12 @@ void parse_phrase(const Node& node, std::string_view path, ErrorList& errors, Se
                    "'world.seed_phrase' is " + std::string(detail::kind_phrase(node)) + "; expected a string");
         return;
     }
+    // Deliberately not read as a schema string(max_bytes) field: the default
+    // 4096-byte limit of P0-03 section 4 does not apply to the raw phrase.
+    // Only the scrubbed phrase is limited (PHRASE_MAX_BYTES, by
+    // seed_from_phrase), so a long text that scrubs short is accepted; the
+    // 1 MiB file limit bounds the raw text. The string rule (forbidden
+    // control characters) was applied by is_rejected_scalar above.
     const PhraseSeed ps = seed_from_phrase(node.text);
     switch (ps.error) {
         case PhraseError::none:
@@ -90,10 +96,7 @@ void parse_phrase(const Node& node, std::string_view path, ErrorList& errors, Se
                        "'world.seed_phrase' is longer than 256 bytes after scrubbing (letters a-z, digits 0-9 and "
                        "single spaces)");
             return;
-        case PhraseError::invalid_utf8:  // never returned (hash.hpp)
-            break;
     }
-    errors.add(path, node.position, "'world.seed_phrase' is not a valid phrase");
 }
 
 void parse_map_size(const Node& node, std::string_view path, ErrorList& errors, Settings& out) {

@@ -103,10 +103,6 @@ enum class PhraseError : std::uint8_t {
     none = 0,  // success
     empty,     // the phrase scrubs to nothing
     too_long,  // the scrubbed phrase is longer than PHRASE_MAX_BYTES (256)
-    // Never returned since generator version 0.2.0 (scrubbing accepts any
-    // bytes). Kept only so that the pre-0.2.0 phrase tests still compile;
-    // remove it when those tests are updated.
-    invalid_utf8,
 };
 
 // Result of seed_from_phrase. When ok(), phrase holds the scrubbed phrase (to

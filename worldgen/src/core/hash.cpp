@@ -21,17 +21,20 @@ bool is_digit(char c) noexcept {
     return c >= '0' && c <= '9';
 }
 
-// Scrub step 1 and 2 for one byte (P0-01 7.3): A-Z to a-z, a-z and 0-9
-// kept, every other byte to a space.
-char scrub_byte(char c) noexcept {
-    const auto b = static_cast<std::uint8_t>(c);
+constexpr std::uint8_t kSpace = 0x20U;
+
+// Scrub steps 1 and 2 for one byte (P0-01 7.3): A-Z (0x41-0x5A) to a-z,
+// a-z (0x61-0x7A) and 0-9 (0x30-0x39) kept, every other byte to a space.
+// Classified on the unsigned byte value only: no char signedness, no
+// locale, no <cctype>.
+std::uint8_t scrub_byte(std::uint8_t b) noexcept {
     if (b >= 0x41U && b <= 0x5AU) {
-        return static_cast<char>(b + 0x20U);
+        return static_cast<std::uint8_t>(b + 0x20U);
     }
-    if (is_lower(c) || is_digit(c)) {
-        return c;
+    if ((b >= 0x61U && b <= 0x7AU) || (b >= 0x30U && b <= 0x39U)) {
+        return b;
     }
-    return ' ';
+    return kSpace;
 }
 
 }  // namespace
@@ -144,16 +147,16 @@ std::string scrub_phrase(std::string_view text) {
     out.reserve(text.size());
     bool pending_space = false;  // a run of spaces seen since the last kept byte
     for (const char c : text) {
-        const char s = scrub_byte(c);
-        if (s == ' ') {
+        const std::uint8_t s = scrub_byte(static_cast<std::uint8_t>(c));
+        if (s == kSpace) {
             pending_space = true;
             continue;
         }
         if (pending_space && !out.empty()) {
-            out.push_back(' ');  // one space per interior run; none leading
+            out.push_back(static_cast<char>(kSpace));  // one per interior run; none leading
         }
         pending_space = false;
-        out.push_back(s);
+        out.push_back(static_cast<char>(s));
     }
     return out;  // a trailing run is never written
 }

@@ -297,10 +297,9 @@ std::string phrase_error_text(worldgen::PhraseError error) {
         case worldgen::PhraseError::too_long:
             return "it is longer than 256 bytes after scrubbing to letters a-z, digits 0-9 and single spaces";
         case worldgen::PhraseError::none:
-        case worldgen::PhraseError::invalid_utf8:  // never returned (hash.hpp)
             break;
     }
-    return "it is not a valid phrase";
+    return std::string();  // not reached: called only for an error value
 }
 
 std::vector<std::string> load_error_lines(const std::vector<worldgen::data::LoadError>& errors) {
