@@ -67,7 +67,15 @@ With the option on:
 
 Requirements in addition to the usual ones: Python 3.8 or newer (to generate the bindings).
 
-Times on a 6-core Linux machine, no ccache: godot-cpp and the extension add about 1,180 compile steps; a clean `linux-gcc-debug` build with the extension takes about 3 minutes against about 25 seconds without. A rebuild after changing only `gdext/` takes seconds. With ccache (used automatically when installed), a clean rebuild of an unchanged godot-cpp is fast.
+Clean build times measured on a 6-core Linux machine without ccache (2026-11-15). godot-cpp adds about 1,100 compile steps (its generated bindings) to the build's roughly 90:
+
+| Build | Extension off | Extension on |
+| --- | --- | --- |
+| `linux-gcc-release` | 48 s | |
+| `linux-clang-release` | 32 s | 189 s |
+| `linux-gcc-debug` | | 165 s |
+
+Configure takes about a second more (the binding generator lists its files). A rebuild after changing only `gdext/` takes seconds. ccache, used automatically when installed, caches godot-cpp like everything else, so a later clean build of an unchanged godot-cpp is much faster.
 
 The sanitizer preset `linux-clang-asan` can build the extension, but the headless check is not registered there: an instrumented library cannot be loaded into the uninstrumented editor.
 
