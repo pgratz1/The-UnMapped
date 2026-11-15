@@ -1,47 +1,46 @@
-// worldgen-cli: scaffold. Prints the version and usage; the subcommands are
-// implemented by the generator engineer from the specs in docs/specs/.
+// worldgen-cli entry point (spec P0-04 section 4.1). Arguments are taken as
+// UTF-8: argv on POSIX, the UTF-16 arguments of wmain on Windows, where the
+// narrow argv would be in the ANSI code page.
 
-#include <cstdio>
-#include <string_view>
+#include <string>
+#include <vector>
 
-#include "worldgen/version.hpp"
+#include "cli.hpp"
+#include "platform.hpp"
 
-namespace {
+#if defined(_WIN32)
 
-void print_usage(std::FILE* out) {
-    std::fputs(
-        "usage: worldgen-cli <command> [options]\n"
-        "\n"
-        "commands (not implemented yet):\n"
-        "  generate   generate a world file\n"
-        "  render     export a map layer as an image\n"
-        "  report     write a text history report\n"
-        "  hash       print the hash of a world file\n"
-        "\n"
-        "options:\n"
-        "  --version  print the generator version\n"
-        "  --help     print this message\n",
-        out);
+// determinism-lint: allow(wchar-type) -- Windows UTF-16 API boundary, converted to UTF-8 at once (P0-04 4.1)
+int wmain(int argc, wchar_t** argv) {
+    cli::platform::prepare_stdio();
+    try {
+        int bad_index = 0;
+        const auto args = cli::platform::utf8_arguments(argc, argv, bad_index);
+        if (!args) {
+            cli::print_error("argument " + std::to_string(bad_index) + " is not valid UTF-16");
+            return 2;
+        }
+        return cli::run(*args);
+    } catch (...) {
+        cli::print_error("internal error: out of memory reading the arguments");
+        return 1;
+    }
 }
 
-}  // namespace
+#else
 
 int main(int argc, char** argv) {
-    if (argc < 2) {
-        print_usage(stderr);
-        return 2;
+    cli::platform::prepare_stdio();
+    try {
+        std::vector<std::string> args;
+        for (int i = 1; i < argc; ++i) {
+            args.emplace_back(argv[i]);
+        }
+        return cli::run(args);
+    } catch (...) {
+        cli::print_error("internal error: out of memory reading the arguments");
+        return 1;
     }
-    const std::string_view arg{argv[1]};
-    if (arg == "--version") {
-        const std::string_view version = worldgen::generator_version();
-        std::printf("worldgen-cli %.*s\n", static_cast<int>(version.size()), version.data());
-        return 0;
-    }
-    if (arg == "--help" || arg == "-h") {
-        print_usage(stdout);
-        return 0;
-    }
-    std::fprintf(stderr, "worldgen-cli: unknown command '%.*s'\n\n", static_cast<int>(arg.size()), arg.data());
-    print_usage(stderr);
-    return 2;
 }
+
+#endif
