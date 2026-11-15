@@ -81,7 +81,7 @@ map_size = 1024                 # 512, 1024 or 2048 cells
 | Key | Type | Default | Rule |
 | --- | --- | --- | --- |
 | `world.seed` | TOML integer ≥ 0, or string: decimal `0\|[1-9][0-9]*` up to 18446744073709551615, or `0x` followed by 1–16 hex digits (either case) | none | at most one of `seed`, `seed_phrase` |
-| `world.seed_phrase` | string, trimmed and validated as in P0-01 section 7.3 | none | |
+| `world.seed_phrase` | string, scrubbed as in P0-01 section 7.3 (amendment 14) | none | |
 | `world.map_size` | int, one of 512, 1024, 2048 | 1024 | |
 
 Anything else in the file (another key in `[world]`, another top-level table) is an error. Later phases add keys (history span, detail, civilizations per race, races present, monster pressure, divine activity, event intensity) with their defaults from design doc section 5; each is stored in `meta` as `param.<key without "world.">`.

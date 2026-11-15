@@ -131,7 +131,7 @@ $ worldgen-cli report --db ~/.cache/the-unmapped/out/world-8180607403873905586.d
 [meta]
 content_hash = e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
 format = the-unmapped-world
-generator_version = 0.1.0
+generator_version = 0.2.0
 param.map_size = 1024
 schema_version = 1
 seed = 8180607403873905586

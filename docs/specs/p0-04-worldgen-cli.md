@@ -80,7 +80,7 @@ worldgen-cli generate (--seed N | --seed-phrase TEXT) [--out PATH] [--map-size 5
 | Option | Default | Meaning |
 | --- | --- | --- |
 | `--seed N` | from settings | The 64-bit world seed (4.2). |
-| `--seed-phrase TEXT` | from settings | A text phrase; seed = `phrase_seed` (P0-01 section 7.3). Exclusive with `--seed`. |
+| `--seed-phrase TEXT` | from settings | A text phrase, scrubbed and hashed by `seed_from_phrase` (P0-01 section 7.3; amendment 15). Exclusive with `--seed`. |
 | `--out PATH` | `<build root>/out/world-<seed>.db`, seed in canonical decimal | Output world file. |
 | `--map-size` | from settings, else 1024 | Map side in cells, stored as `param.map_size`. No P0 stage uses it. |
 | `--settings FILE` | none | Settings file (P0-03 section 6). Flags override it key by key. |
@@ -312,7 +312,7 @@ The validation specialist records `p0-worlds.txt` (section 9) and the `render_rg
 
 Decisions by the lead on points raised by the generator engineer. Where these differ from the text above, these win.
 
-1. **Phrases.** Wherever this spec says the seed of a text phrase is `phrase_seed`, the function called is `seed_from_phrase` (P0-01 section 7.3), which validates and trims before hashing.
+1. **Phrases.** Wherever this spec says the seed of a text phrase is `phrase_seed`, the function called is `seed_from_phrase` (P0-01 section 7.3), which scrubs the phrase before hashing (amendment 15).
 2. **`--help` (4.1).** Options are tokenized first, so an unknown or repeated option or a positional argument is still a usage error (exit 2); then `--help` wins before any value is validated. `--help` and `--version` as the top-level argument must be alone. The hint line is `worldgen-cli: run 'worldgen-cli [<command>] --help' for usage`.
 3. **Seeds and integers (4.2).** The hex prefix is lower-case `0x` only, as in P0-03 amendment 6; `--seed` and `world.seed` share one parser.
 4. **Build root (4.3).** On Windows the order is `UNMAPPED_BUILD_ROOT`, then `LOCALAPPDATA`, then a usage error; elsewhere `UNMAPPED_BUILD_ROOT`, then `HOME`, then a usage error. A relative build root is a usage error, since a default output could otherwise land under the current directory. Printed absolute paths are made absolute and lexically normalized; symbolic links are not resolved.

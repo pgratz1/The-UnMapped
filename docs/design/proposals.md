@@ -129,7 +129,7 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
 - Design doc section: 4 ("The database records the generator version")
 - Problem: The design doesn't say what the version is. A git-derived version would change every world file on every commit and break golden hashes.
 - Proposal: A hand-bumped MAJOR.MINOR.PATCH constant, bumped by any change to output bytes, with golden hashes updated in the same branch. Upgrading the vendored SQLite counts as such a change.
-- Interim choice: 0.1.0 for P0.
+- Interim choice: 0.1.0 for P0; 0.2.0 from the scrubbed seed phrases (first use of the bump rule).
 - Status: accepted (merged into design.md, 2026-11-15)
 
 ### P0 core numeric choices
