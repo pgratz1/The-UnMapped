@@ -141,3 +141,13 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
 - Proposal: record the choices in docs/specs/p0-01-deterministic-core.md: one Q32.32 fixed-point type with round-half-away-from-zero and overflow as a fatal error; xoshiro256** seeded by SplitMix64; SplitMix64-based hashing with domain tags for streams and location keys; 2D integer gradient noise; project SHA-256 for file and content hashes. Sine, cosine, exp and similar are deferred to P1.
 - Interim choice: approved by the lead for P0 so work can proceed; open to change at Paul's P0 review.
 - Status: open
+
+### P0 implementation findings for the design doc
+
+- Date: 2026-11-15
+- Raised by: lead, from the P0 engineers, test writers and determinism auditor
+- Design doc section: 4, 6, 10
+- Problem: implementing P0 settled details the design doc does not record.
+- Proposal: note in the design doc, or leave to the specs with a pointer to `docs/specs/`: (1) the world file is built in memory and written with SQLite `VACUUM INTO`, which makes its bytes independent of write order; confirmed with SQLite 3.54.1. (2) STRICT tables coerce a lossless REAL instead of rejecting it, so "no floating point in the database" is enforced by never binding one and by a `typeof` check, not by STRICT alone. (3) The TOML parser's number conversion is pinned to `std::from_chars` on every compiler so that malformed or extreme float literals are reported identically everywhere. (4) A seed phrase in a settings file may not contain control characters other than TAB and LF, although one given on the command line may. (5) `worldgen-cli` reads its arguments as UTF-16 on Windows and writes text output in binary mode.
+- Interim choice: recorded in the amendments sections of `docs/specs/p0-01` to `p0-04`.
+- Status: open
