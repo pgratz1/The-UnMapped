@@ -68,3 +68,26 @@ target_sources(worldgen-tests PRIVATE
 
 # Output-location handling after the P0-04 audit (dangling symbolic links).
 target_sources(worldgen-tests PRIVATE generate_output_test.cpp)
+
+# P1 foundation (spec P1-00 sections 2.3, 3, 5.1, 6, 7, 8, 10.1 and appendix
+# A; P1-01 4.1; P1-02 5.1; P0-01 15; P0-03 amendment 15): core additions,
+# the block-parallel facility, the shared geography algorithms G1 to G6,
+# noise compositions, fixed-id kinds, data-root resolution and the stage
+# pipeline.
+target_sources(worldgen-tests PRIVATE
+    core_p1_additions_test.cpp
+    core_parallel_test.cpp
+    geo_grid_test.cpp
+    geo_select_test.cpp
+    geo_components_test.cpp
+    geo_flow_test.cpp
+    geo_noise_test.cpp
+    data_fixed_id_test.cpp
+    data_root_test.cpp
+    stages_pipeline_test.cpp
+)
+# The repository root, so the data-root test can name the configured
+# game/data directory (P0-03 7.6) independently of the library.
+target_compile_definitions(worldgen-tests PRIVATE
+    UNMAPPED_TEST_SOURCE_ROOT="${PROJECT_SOURCE_DIR}"
+)

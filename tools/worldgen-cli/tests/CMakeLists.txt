@@ -34,3 +34,7 @@ add_test(NAME worldgen-cli-tests COMMAND worldgen-cli-tests)
 # Behaviour fixed after the P0-04 determinism audit: stdout write errors,
 # dangling symbolic links at --out, the render size limit, UTF-16 input.
 target_sources(worldgen-cli-tests PRIVATE cli_audit_test.cpp)
+
+# P1 foundation: generate --until and --threads (spec P1-00 section 10.1,
+# P0-04 amendment 16 (a)); the P0 worlds unchanged.
+target_sources(worldgen-cli-tests PRIVATE cli_p1_generate_test.cpp)
