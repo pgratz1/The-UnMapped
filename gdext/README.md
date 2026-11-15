@@ -77,7 +77,7 @@ Clean build times measured on a 6-core Linux machine without ccache (2026-11-15)
 
 Configure takes about a second more (the binding generator lists its files). A rebuild after changing only `gdext/` takes seconds. ccache, used automatically when installed, caches godot-cpp like everything else, so a later clean build of an unchanged godot-cpp is much faster.
 
-The sanitizer preset `linux-clang-asan` can build the extension, but the headless check is not registered there: an instrumented library cannot be loaded into the uninstrumented editor.
+The sanitizer preset `linux-clang-asan` refuses the option at configure time: an instrumented library cannot be loaded into the uninstrumented editor, Clang does not link the sanitizer runtime into a shared library (the link fails on `__asan_*` symbols), and godot-cpp's `defs.hpp` refuses sanitizer builds unless Godot's own `ASAN_ENABLED`/`UBSAN_ENABLED` macros are set. Sanitizing the extension would need a sanitized Godot build; not planned.
 
 ## How the project finds the extension
 
@@ -132,7 +132,7 @@ Without a path after `--`, use "Open world..." to pick a file. The path must be 
 
 ## Headless check
 
-CTest test `gdext-headless-check`, registered when the option is on, tests are built, the build is not a sanitizer build and the pinned editor is found. It runs `gdext/cmake/headless_check.cmake`:
+CTest test `gdext-headless-check`, registered when the option is on, tests are built and the pinned editor is found. It runs `gdext/cmake/headless_check.cmake`:
 
 1. `worldgen-cli generate --seed 42 --test-pattern` into `<build>/gdext/headless-check/`, and `worldgen-cli render` of each of its three layers to PNG.
 2. `godot --headless --path <build>/game --import`: the editor loads the project and the extension.

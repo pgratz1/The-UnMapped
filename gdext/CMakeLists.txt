@@ -88,9 +88,6 @@ if(UNMAPPED_BUILD_TESTS)
     if(NOT UNMAPPED_GODOT)
         message(STATUS "gdext: no Godot ${UNMAPPED_GODOT_VERSION} editor found; the headless check is not registered "
             "(see gdext/README.md to install it under ${_unmapped_tools_root})")
-    elseif(UNMAPPED_SANITIZE)
-        message(STATUS "gdext: sanitizer build; the headless check is not registered "
-            "(an instrumented library cannot be loaded into the uninstrumented editor)")
     else()
         execute_process(COMMAND "${UNMAPPED_GODOT}" --version
             OUTPUT_VARIABLE _unmapped_godot_version OUTPUT_STRIP_TRAILING_WHITESPACE
