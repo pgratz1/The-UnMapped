@@ -19,17 +19,6 @@ namespace {
 
 using namespace clitest;
 
-// The report of an empty world with the given meta rows (escaping done by
-// the caller).
-std::string empty_report(const p004::MetaRows& rows) {
-    std::string s = "# worldgen report v1\n[meta]\n";
-    for (const auto& [k, v] : rows) {
-        s += v.empty() ? k + " =\n" : k + " = " + v + "\n";
-    }
-    s += "[tables]\nlayer = 0\nmeta = 8\n[layers]\n(none)\n";
-    return s;
-}
-
 template <class T>
 std::string layer_line(const std::string& name, const char* format, const std::vector<T>& cells) {
     const auto blob = worldgen::db::encode_layer_blob(p004::grid_of<T>(256, 256, cells), worldgen::db::Codec::delta_varint);
@@ -56,25 +45,45 @@ TEST_CASE("cli 12.4: empty world, seed 0, exact text of section 7") {
     CHECK(f.out == p004::REPORT_SEED_0);
 }
 
-TEST_CASE("cli 12.4: escaping in meta values") {
+// Amendment 15: a scrubbed phrase has no backslash or control byte, so the
+// escaping of 12.4 is checked on a test-only world: the seed-0 empty world
+// with one extra meta row written through the test hook. The reader tolerates
+// unknown meta keys (P0-02 5.5); the report prints every meta row (section 7).
+TEST_CASE("cli 12.4: escaping in meta values (test-only world)") {
     Sandbox sb;
+    auto world_with = [&](const std::string& name, const std::string& sql_value) {
+        const fs::path world = sb.generate({"--seed", "0", "--out", u8(sb.file(name))});
+        const auto s = worldgen::db::testing::execute_on_file(
+            u8(world), "INSERT INTO meta (key, value) VALUES ('zz.test_value', " + sql_value + ")");
+        REQUIRE(s.ok());
+        return world;
+    };
+    auto report_with_line = [](const std::string& line) {
+        std::string s = "# worldgen report v1\n[meta]\n";
+        for (const auto& [k, v] : p004::meta_rows(0)) {
+            s += v.empty() ? k + " =\n" : k + " = " + v + "\n";
+        }
+        s += line;
+        s += "[tables]\nlayer = 0\nmeta = 9\n[layers]\n(none)\n";
+        return s;
+    };
     SUBCASE("backslash and tab") {
-        const fs::path world = sb.generate({"--seed-phrase", "a\\b\tc", "--out", u8(sb.file("w.db"))});
+        const fs::path world = world_with("w.db", "'a\\b' || char(9) || 'c'");
         const ProcessResult r = sb.cli({"report", "--db", u8(world)});
+        INFO("stderr: ", r.err);
         REQUIRE(r.exit_code == EXIT_OK);
-        CHECK(contains(r.out, "\nseed_phrase = a\\\\b\\x09c\n"));
-        p004::MetaRows rows = p004::meta_rows(worldgen::seed_from_phrase("a\\b\tc").seed);
-        rows[6].second = "a\\\\b\\x09c";
-        CHECK(r.out == empty_report(rows));
+        CHECK(contains(r.out, "\nzz.test_value = a\\\\b\\x09c\n"));
+        CHECK(r.out == report_with_line("zz.test_value = a\\\\b\\x09c\n"));
     }
     SUBCASE("other control characters and UTF-8") {
-        // P0-01 7.3 accepts control characters inside a phrase given on the
-        // command line; trailing ASCII whitespace is trimmed.
-        const std::string phrase = std::string("x\x01y\x1F") + "\x7F" + std::string(PHRASE_NON_ASCII) + "\nz\r";
-        const fs::path world = sb.generate({"--seed-phrase", phrase, "--out", u8(sb.file("w.db"))});
+        // x 0x01 y 0x1F 0x7F "Ünmapped Wörld" LF z CR
+        const fs::path world = world_with(
+            "w.db", "'x' || char(1) || 'y' || char(31) || char(127) || CAST(X'C39C6E6D61707065642057C3B6726C64' AS TEXT) || "
+                    "char(10) || 'z' || char(13)");
         const ProcessResult r = sb.cli({"report", "--db", u8(world)});
+        INFO("stderr: ", r.err);
         REQUIRE(r.exit_code == EXIT_OK);
-        CHECK(contains(r.out, "\nseed_phrase = x\\x01y\\x1F\\x7F" + std::string(PHRASE_NON_ASCII) + "\\x0Az\n"));
+        CHECK(contains(r.out, "\nzz.test_value = x\\x01y\\x1F\\x7F" + std::string(PHRASE_NON_ASCII) + "\\x0Az\\x0D\n"));
         CHECK(r.out.find('\r') == std::string::npos);
     }
 }

@@ -194,7 +194,8 @@ TEST_CASE("generate 5.1: generate_world writes the empty and the test-pattern wo
         REQUIRE(worldgen::generate_world(p, out, Overwrite::refuse).ok());
         const WorldReader w = open_world(out);
         CHECK(w.seed() == ps.seed);
-        CHECK(w.seed_phrase() == "The Unmapped");
+        CHECK(ps.phrase == "the unmapped");  // scrubbed (P0-01 7.3)
+        CHECK(w.seed_phrase() == "the unmapped");
         CHECK(w.map_size() == 2048U);
         CHECK(w.stages() == std::vector<std::string>{"test_pattern"});
         CHECK(*w.read_layer("test.hash").value().grid.get_if<std::uint8_t>() == p004::hash_cells(ps.seed));
@@ -213,10 +214,18 @@ TEST_CASE("generate 5.1: generate_world writes the empty and the test-pattern wo
     }
     SUBCASE("a seed that does not match the phrase is a contract violation") {
         worldgen::WorldParams p = params_for(1, false);
-        p.seed_phrase = "The Unmapped";
+        p.seed_phrase = "the unmapped";
         CHECK_THROWS_AS((void)worldgen::generate_world(p, dir.file("bad.db"), Overwrite::refuse), FatalError);
         CHECK(!dbtest::exists(dir.file("bad.db")));
         CHECK(!dbtest::exists(dir.file("bad.db.partial")));
+    }
+    SUBCASE("a phrase that is not scrubbed is a contract violation (P0-02 amendment 12)") {
+        worldgen::WorldParams p = params_for(1, false);
+        p.seed_phrase = "The Unmapped";
+        p.seed = worldgen::phrase_seed("The Unmapped");  // matches the bytes, but they are not scrubbed
+        CHECK_THROWS_AS((void)worldgen::generate_world(p, dir.file("raw.db"), Overwrite::refuse), FatalError);
+        CHECK(!dbtest::exists(dir.file("raw.db")));
+        CHECK(!dbtest::exists(dir.file("raw.db.partial")));
     }
 }
 

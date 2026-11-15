@@ -1,6 +1,9 @@
 // Spec P0-01 section 13.5: mixing primitives, byte packing, stream keys,
 // location hashes, text phrases and the stream-name registry (section 7).
 
+#include <cstddef>
+#include <cstdint>
+#include <initializer_list>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -122,89 +125,302 @@ TEST_CASE("P0-01 13.5: the six named hash values (golden, from the reference)") 
     CHECK(phrase_seed("The Unmapped") == 0x71875b1752d5abb2ULL);
 }
 
-TEST_CASE("P0-01 13.5: seed_from_phrase trims and validates") {
-    const PhraseSeed base = seed_from_phrase("The Unmapped");
-    REQUIRE(base.ok());
-    CHECK(base.phrase == "The Unmapped");
-    CHECK(base.seed == phrase_seed("The Unmapped"));
+// --- Text phrases (P0-01 7.3 "Text phrases", 13.5) ---------------------------
 
-    const PhraseSeed padded = seed_from_phrase("  The Unmapped\n");
-    REQUIRE(padded.ok());
-    CHECK(padded.seed == base.seed);
-    CHECK(padded.phrase == "The Unmapped");
+namespace {
 
-    const PhraseSeed tabs = seed_from_phrase("\t\r\nThe Unmapped \t");
-    REQUIRE(tabs.ok());
-    CHECK(tabs.seed == base.seed);
+// Fixed key for the phrase property test ("1HRPTSET"); seeds Rng directly.
+constexpr std::uint64_t KEY_PHRASE_PROPS = 0x5445535450524831ULL;
 
-    const PhraseSeed lower = seed_from_phrase("the unmapped");
-    REQUIRE(lower.ok());
-    CHECK(lower.seed != base.seed);
-
-    // Only space, tab, CR, LF are trimmed: vertical tab is kept.
-    const PhraseSeed vt = seed_from_phrase("\vThe Unmapped");
-    REQUIRE(vt.ok());
-    CHECK(vt.seed != base.seed);
-    CHECK(vt.phrase == "\vThe Unmapped");
-
-    // Interior whitespace is kept.
-    const PhraseSeed inner = seed_from_phrase("The  Unmapped");
-    REQUIRE(inner.ok());
-    CHECK(inner.seed != base.seed);
-
-    // NUL and other control characters inside are accepted.
-    const std::string with_nul("a\0b", 3);
-    const PhraseSeed nul = seed_from_phrase(with_nul);
-    REQUIRE(nul.ok());
-    CHECK(nul.phrase == with_nul);
-    CHECK(nul.seed == phrase_seed(with_nul));
-
-    // Valid multi-byte UTF-8 is accepted.
-    CHECK(seed_from_phrase("\xC3\x9Cnmapped").ok());
-    CHECK(seed_from_phrase("\xF0\x9F\x97\xBA").ok());      // U+1F5FA
-    CHECK(seed_from_phrase("\xF4\x8F\xBF\xBF").ok());      // U+10FFFF
-    CHECK(seed_from_phrase("\xED\x9F\xBF").ok());          // U+D7FF
-    CHECK(seed_from_phrase("\xEE\x80\x80").ok());          // U+E000
+// The scrub of P0-01 7.3 written out step by step from the spec, as an
+// oracle for the property tests (not a copy of the implementation).
+std::string spec_scrub(std::string_view text) {
+    // Steps 1 and 2: byte by byte.
+    std::string mapped;
+    for (const char ch : text) {
+        auto b = static_cast<std::uint8_t>(ch);
+        if (b >= 0x41 && b <= 0x5A) {
+            b = static_cast<std::uint8_t>(b + 0x20);
+        }
+        const bool keep = (b >= 0x61 && b <= 0x7A) || (b >= 0x30 && b <= 0x39);
+        mapped.push_back(keep ? static_cast<char>(b) : ' ');
+    }
+    // Step 3: runs of spaces become one space.
+    std::string collapsed;
+    for (const char c : mapped) {
+        if (c == ' ' && !collapsed.empty() && collapsed.back() == ' ') {
+            continue;
+        }
+        collapsed.push_back(c);
+    }
+    // Step 4: one leading and one trailing space removed.
+    if (!collapsed.empty() && collapsed.front() == ' ') {
+        collapsed.erase(0, 1);
+    }
+    if (!collapsed.empty() && collapsed.back() == ' ') {
+        collapsed.pop_back();
+    }
+    return collapsed;
 }
 
-TEST_CASE("P0-01 13.5: seed_from_phrase errors") {
-    auto expect_error = [](std::string_view text, PhraseError e) {
-        const PhraseSeed p = seed_from_phrase(text);
-        INFO("phrase of " << text.size() << " bytes");
-        CHECK_FALSE(p.ok());
-        CHECK(p.error == e);
-        CHECK(p.seed == 0);
-        CHECK(p.phrase.empty());
-    };
-    expect_error("", PhraseError::empty);
-    expect_error("   ", PhraseError::empty);
-    expect_error(" \t\r\n", PhraseError::empty);
-    expect_error("\xFF", PhraseError::invalid_utf8);
-    expect_error("\xC0\xAF", PhraseError::invalid_utf8);          // overlong '/'
-    expect_error("\xE0\x80\xAF", PhraseError::invalid_utf8);      // overlong 3-byte
-    expect_error("\xF0\x80\x80\xAF", PhraseError::invalid_utf8);  // overlong 4-byte
-    expect_error("\xED\xA0\x80", PhraseError::invalid_utf8);      // surrogate U+D800
-    expect_error("\xED\xBF\xBF", PhraseError::invalid_utf8);      // surrogate U+DFFF
-    expect_error("\xF4\x90\x80\x80", PhraseError::invalid_utf8);  // U+110000
-    expect_error("\xF5\x80\x80\x80", PhraseError::invalid_utf8);
-    expect_error("a\x80", PhraseError::invalid_utf8);             // stray continuation
-    expect_error("\xC3", PhraseError::invalid_utf8);              // truncated
-    expect_error("\xE2\x82", PhraseError::invalid_utf8);          // truncated
-    expect_error("  \xC3 ", PhraseError::invalid_utf8);
+// The output alphabet of 7.3: only a-z, 0-9 and single interior spaces.
+bool is_scrubbed_form(std::string_view s) {
+    for (std::size_t i = 0; i < s.size(); ++i) {
+        const auto b = static_cast<std::uint8_t>(s[i]);
+        const bool alnum = (b >= 0x61 && b <= 0x7A) || (b >= 0x30 && b <= 0x39);
+        if (alnum) {
+            continue;
+        }
+        if (b != 0x20 || i == 0 || i + 1 == s.size() || s[i - 1] == ' ') {
+            return false;
+        }
+    }
+    return true;
+}
 
-    const std::string max_len(256, 'a');
-    const PhraseSeed ok256 = seed_from_phrase(max_len);
-    CHECK(ok256.ok());
-    expect_error(std::string(257, 'a'), PhraseError::too_long);
-    // Length is counted after trimming.
-    CHECK(seed_from_phrase(" " + max_len + "\n").ok());
-    CHECK(seed_from_phrase(" " + max_len + "\n").seed == ok256.seed);
+std::string bytes_of(std::initializer_list<std::uint8_t> bytes) {
+    std::string out;
+    for (const std::uint8_t b : bytes) {
+        out.push_back(static_cast<char>(b));
+    }
+    return out;
+}
+
+void check_phrase(std::string_view text, std::string_view expected) {
+    INFO("phrase of " << text.size() << " bytes, expected \"" << std::string(expected) << "\"");
+    const PhraseSeed p = seed_from_phrase(text);
+    REQUIRE(p.ok());
+    CHECK(p.error == PhraseError::none);
+    CHECK(p.phrase == expected);
+    CHECK(p.seed == phrase_seed(expected));
+    CHECK(scrub_phrase(text) == expected);
+}
+
+void check_phrase_error(std::string_view text, PhraseError e) {
+    INFO("phrase of " << text.size() << " bytes");
+    const PhraseSeed p = seed_from_phrase(text);
+    CHECK_FALSE(p.ok());
+    CHECK(p.error == e);
+    CHECK(p.seed == 0);
+    CHECK(p.phrase.empty());
+}
+
+}  // namespace
+
+TEST_CASE("P0-01 13.5: seed_from_phrase scrubs: the examples of 7.3 and 13.5") {
+    CHECK(PHRASE_MAX_BYTES == 256);
+
+    // Five spellings of one world.
+    const PhraseSeed base = seed_from_phrase("ashen marches");
+    REQUIRE(base.ok());
+    CHECK(base.phrase == "ashen marches");
+    CHECK(base.seed == phrase_seed("ashen marches"));
+    // Value from worldgen/tests/golden/core_vectors.txt (independent reference).
+    CHECK(base.seed == 0xdfd13228861bdf55ULL);
+    for (const std::string_view spelling :
+         {std::string_view{"Ashen Marches!"}, std::string_view{"ashen-marches"}, std::string_view{"ASHEN  MARCHES"},
+          std::string_view{"  ashen\tmarches\n"}, std::string_view{"ashen marches"}}) {
+        INFO("spelling \"" << std::string(spelling) << "\"");
+        check_phrase(spelling, "ashen marches");
+        CHECK(seed_from_phrase(spelling).seed == base.seed);
+    }
+
+    check_phrase("The Unmapped", "the unmapped");
+    CHECK(seed_from_phrase("The Unmapped").seed != phrase_seed("The Unmapped"));
+    check_phrase("a1B2", "a1b2");
+
+    // "Ünmapped Wörld": every byte of a multi-byte UTF-8 character is a space.
+    const std::string unmapped_world = "\xC3\x9Cnmapped W\xC3\xB6rld";
+    check_phrase(unmapped_world, "nmapped w rld");
+    CHECK(seed_from_phrase(unmapped_world).seed == seed_from_phrase("nmapped w rld").seed);
+
+    // Bytes 0x00, 0x7F, 0xFF and an invalid UTF-8 sequence inside a phrase
+    // each act as a space. NUL is a separator, never a terminator.
+    check_phrase(bytes_of({'a', 0x00, 'b'}), "a b");
+    check_phrase(bytes_of({'a', 0x7F, 'b'}), "a b");
+    check_phrase(bytes_of({'a', 0xFF, 'b'}), "a b");
+    check_phrase(bytes_of({'a', 0xC0, 0xAF, 'b'}), "a b");        // overlong '/'
+    check_phrase(bytes_of({'a', 0xED, 0xA0, 0x80, 'b'}), "a b");  // surrogate U+D800
+    check_phrase(bytes_of({'a', 0xC3, 'b'}), "a b");              // truncated sequence
+    check_phrase(bytes_of({0x00, 'x', 0x00}), "x");
+
+    // No normalization or accent folding.
+    check_phrase("Caf\xC3\xA9", "caf");       // precomposed U+00E9
+    check_phrase("Cafe\xCC\x81", "cafe");     // e + combining U+0301
+    CHECK(seed_from_phrase("Caf\xC3\xA9").seed != seed_from_phrase("Cafe\xCC\x81").seed);
+
+    // A non-Latin phrase keeps only its ASCII letters and digits.
+    check_phrase("\xE6\x9D\xB1\xE4\xBA\xAC 2024", "2024");  // "東京 2024"
+
+    // A phrase is never a number.
+    check_phrase("42", "42");
+    CHECK(seed_from_phrase("42").seed != 42);
+    CHECK(seed_from_phrase("0").seed != 0);
+}
+
+TEST_CASE("P0-01 13.5: seed_from_phrase errors: empty and too long only") {
+    // Scrubs to nothing.
+    check_phrase_error("", PhraseError::empty);
+    check_phrase_error("   ", PhraseError::empty);
+    check_phrase_error(" \t\r\n", PhraseError::empty);  // all whitespace
+    check_phrase_error("!!!", PhraseError::empty);      // all punctuation
+    check_phrase_error("-_.,;:'\"?/\\|", PhraseError::empty);
+    check_phrase_error(bytes_of({0x00}), PhraseError::empty);
+    check_phrase_error(bytes_of({0x00, 0x7F, 0x00}), PhraseError::empty);
+    check_phrase_error(bytes_of({0x80, 0xFF, 0xC3}), PhraseError::empty);  // only non-ASCII bytes
+    check_phrase_error("\xE6\x9D\xB1\xE4\xBA\xAC", PhraseError::empty);     // "東京"
+    check_phrase_error("\xD0\x9C\xD0\xB8\xD1\x80", PhraseError::empty);     // "Мир"
+    check_phrase_error("\xF0\x9F\x97\xBA", PhraseError::empty);             // U+1F5FA
+    check_phrase_error("\xFF", PhraseError::empty);  // invalid UTF-8 is not an error of its own
+
+    // Scrubbed form of 257 bytes.
+    check_phrase_error(std::string(257, 'a'), PhraseError::too_long);
+    check_phrase_error(std::string(257, 'A'), PhraseError::too_long);
+    check_phrase_error(std::string(100000, 'z'), PhraseError::too_long);
+}
+
+TEST_CASE("P0-01 13.5: the 256-byte limit applies to the scrubbed phrase") {
+    const std::string a256(256, 'a');
+    const PhraseSeed ok256 = seed_from_phrase(a256);
+    REQUIRE(ok256.ok());
+    CHECK(ok256.phrase == a256);
+    CHECK(ok256.seed == phrase_seed(a256));
+    check_phrase_error(std::string(257, 'a'), PhraseError::too_long);
+
+    // Padding is removed before the length is counted.
+    check_phrase(" " + a256 + "\n", a256);
+    check_phrase(std::string(1000, '!') + a256 + std::string(1000, ' '), a256);
+
+    // A scrubbed phrase with interior spaces of exactly 256 and 257 bytes, from
+    // inputs that are much longer: "x" words separated by runs of separators.
+    auto spaced = [](std::size_t words, std::string_view separator) {
+        std::string text;
+        for (std::size_t i = 0; i < words; ++i) {
+            if (i > 0) {
+                text += separator;
+            }
+            text += (i % 2 == 0) ? "X" : "y";
+        }
+        return text;
+    };
+    // n words give n + (n - 1) bytes: 128 words -> 255, 129 words -> 257.
+    const std::string in255 = spaced(128, "--  \t");
+    const std::string s255 = scrub_phrase(in255);
+    CHECK(s255.size() == 255);
+    CHECK(seed_from_phrase(in255).ok());
+    const std::string in257 = spaced(129, "!?\n");
+    CHECK(scrub_phrase(in257).size() == 257);
+    CHECK(in257.size() == 129 + 128 * 3);
+    check_phrase_error(in257, PhraseError::too_long);
+    // 256: 128 words then one more digit glued to the last word.
+    const std::string in256 = in255 + "7";
+    REQUIRE(scrub_phrase(in256).size() == 256);
+    check_phrase(in256, s255 + "7");
+    check_phrase_error(in256 + "-8", PhraseError::too_long);  // 256 + " 8" = 258
+
+    // The length of the text before scrubbing is not limited.
+    std::string long_input(200000, '.');
+    long_input.replace(100000, 5, "Short");
+    check_phrase(long_input, "short");
+}
+
+TEST_CASE("P0-01 13.5: scrub_phrase on its own: no emptiness or length check") {
+    CHECK(scrub_phrase("") == "");
+    CHECK(scrub_phrase("!!!") == "");
+    CHECK(scrub_phrase("   ") == "");
+    CHECK(scrub_phrase(bytes_of({0x00, 0x00})) == "");
+    CHECK(scrub_phrase(std::string(300, 'Q')) == std::string(300, 'q'));
+    CHECK(scrub_phrase(std::string(5000, 'b')).size() == 5000);
+    CHECK(scrub_phrase("  A  B  ") == "a b");
+    CHECK(scrub_phrase("a\t\r\n\v\fb") == "a b");
+    CHECK(scrub_phrase("Hello, World!") == "hello world");
+    CHECK(scrub_phrase("x") == "x");
+    CHECK(scrub_phrase(" x") == "x");
+    CHECK(scrub_phrase("x ") == "x");
+    CHECK(scrub_phrase("0123456789") == "0123456789");
+    CHECK(scrub_phrase("ABCDEFGHIJKLMNOPQRSTUVWXYZ") == "abcdefghijklmnopqrstuvwxyz");
+    // The bytes just outside the kept ranges: '/' ':' '@' '[' '`' '{'.
+    CHECK(scrub_phrase("a/b:c@d[e`f{g") == "a b c d e f g");
+
+    // Every byte value between two letters (step 1 and 2 per byte).
+    for (unsigned v = 0; v < 256; ++v) {
+        const auto b = static_cast<std::uint8_t>(v);
+        const std::string text = bytes_of({'q', b, 'q'});
+        std::string expected;
+        if (b >= 0x41 && b <= 0x5A) {
+            expected = bytes_of({'q', static_cast<std::uint8_t>(b + 0x20), 'q'});
+        } else if ((b >= 0x61 && b <= 0x7A) || (b >= 0x30 && b <= 0x39)) {
+            expected = text;
+        } else {
+            expected = "q q";
+        }
+        INFO("byte " << v);
+        CHECK(scrub_phrase(text) == expected);
+    }
+}
+
+TEST_CASE("P0-01 13.5: scrubbing properties over random byte strings") {
+    // Fixed stream, so the test is deterministic. Half of the strings draw
+    // from all 256 byte values, half mostly from letters, digits and a few
+    // separators, so that long words and long runs both occur.
+    Rng rng(KEY_PHRASE_PROPS);
+    static constexpr char common_bytes[] = "aZ09 -!\t\n\x00\xC3\xBF";  // includes a NUL
+    const std::string_view common(common_bytes, sizeof(common_bytes) - 1);
+    std::size_t ok_count = 0;
+    std::size_t empty_count = 0;
+    std::size_t long_count = 0;
+    for (int i = 0; i < 2000; ++i) {
+        const std::uint64_t len = (i % 25 == 0) ? 250 + rng.uniform_u64(400) : rng.uniform_u64(64);
+        std::string text;
+        for (std::uint64_t j = 0; j < len; ++j) {
+            std::uint8_t b = 0;
+            if (i % 2 == 0) {
+                b = static_cast<std::uint8_t>(rng.uniform_u64(256));
+            } else {
+                const std::uint64_t pick = rng.uniform_u64(common.size() + 26);
+                b = pick < common.size() ? static_cast<std::uint8_t>(common[static_cast<std::size_t>(pick)])
+                                         : static_cast<std::uint8_t>('a' + (pick - common.size()));
+            }
+            text.push_back(static_cast<char>(b));
+        }
+        INFO("string " << i << " of " << len << " bytes");
+        const std::string s = scrub_phrase(text);
+        CHECK(s == spec_scrub(text));
+        CHECK(is_scrubbed_form(s));
+        CHECK(scrub_phrase(s) == s);  // idempotent
+        const PhraseSeed p = seed_from_phrase(text);
+        if (s.empty()) {
+            ++empty_count;
+            CHECK(p.error == PhraseError::empty);
+        } else if (s.size() > PHRASE_MAX_BYTES) {
+            ++long_count;
+            CHECK(p.error == PhraseError::too_long);
+        } else {
+            ++ok_count;
+            REQUIRE(p.ok());
+            CHECK(p.phrase == s);
+            CHECK(p.seed == phrase_seed(s));
+            const PhraseSeed again = seed_from_phrase(s);
+            REQUIRE(again.ok());
+            CHECK(again.phrase == s);
+            CHECK(again.seed == p.seed);
+        }
+        if (!p.ok()) {
+            CHECK(p.phrase.empty());
+            CHECK(p.seed == 0);
+        }
+    }
+    // The stream exercises all three outcomes.
+    CHECK(ok_count > 0);
+    CHECK(empty_count > 0);
+    CHECK(long_count > 0);
 }
 
 TEST_CASE("P0-01 13.5: phrase_seed hashes exactly the bytes given") {
     CHECK(phrase_seed(" x") != phrase_seed("x"));
     CHECK(phrase_seed("x ") != phrase_seed("x"));
-    // No validation either: invalid UTF-8 and empty input are hashed.
+    CHECK(phrase_seed("X") != phrase_seed("x"));
+    // No scrubbing or validation either: invalid UTF-8 and empty input are hashed.
     CHECK(phrase_seed("") == hash_words(TAG_PHRASE, {0}));
     const std::vector<std::uint8_t> bad = {0xFF};
     CHECK(phrase_seed(std::span<const std::uint8_t>(bad)) == phrase_seed("\xFF"));

@@ -14,6 +14,7 @@
 #include <vector>
 
 #include "db_test_support.hpp"
+#include "worldgen/core/hash.hpp"
 #include "worldgen/core/rng.hpp"
 #include "worldgen/db/db.hpp"
 #include "worldgen/db/testing.hpp"
@@ -326,7 +327,7 @@ constexpr std::string_view GOLDEN_PLACEHOLDER = "PLACEHOLDER-TO-BE-RECORDED-BY-V
 struct GoldenCase {
     const char* name;
     std::uint64_t seed;
-    const char* phrase;  // nullptr for a numeric seed
+    const char* phrase;  // the phrase as typed (P0-04 9); nullptr for a numeric seed
     std::string_view sha256;
 };
 
@@ -353,7 +354,12 @@ std::string golden_world_hash(const dbtest::TempDir& dir, const GoldenCase& c) {
     const std::string out = dir.file(std::string(c.name) + ".db");
     WorldWriter writer;
     if (c.phrase != nullptr) {
-        writer.set_seed_phrase(c.phrase);
+        // As the CLI does: the writer takes the scrubbed phrase (P0-02
+        // amendment 12), so "The Unmapped" is stored as "the unmapped".
+        const worldgen::PhraseSeed ps = worldgen::seed_from_phrase(c.phrase);
+        REQUIRE(ps.ok());
+        CHECK(ps.phrase == "the unmapped");
+        writer.set_seed_phrase(ps.phrase);
     } else {
         writer.set_seed(c.seed);
     }

@@ -4,6 +4,7 @@
 #include <doctest/doctest.h>
 
 #include <cstdint>
+#include <optional>
 #include <ostream>
 #include <string>
 #include <vector>
@@ -58,15 +59,29 @@ TEST_CASE("cli 12.2: default output path") {
         CHECK(sb.cli({"generate", "--seed", "0xFFFF"}).out == printed_path(sb.out_dir() / "world-65535.db"));
         CHECK(sb.cli({"generate", "--seed", "0x0"}).out == printed_path(sb.out_dir() / "world-0.db"));
     }
-    SUBCASE("--seed-phrase \"The Unmapped\"") {
-        const std::uint64_t seed = phrase_to_seed("The Unmapped");
+    SUBCASE("--seed-phrase \"The Unmapped\": the name uses the scrubbed phrase's seed (amendment 15)") {
+        const std::uint64_t seed = worldgen::phrase_seed("the unmapped");
+        CHECK(phrase_to_seed("The Unmapped") == seed);
+        CHECK(seed != worldgen::phrase_seed("The Unmapped"));
         const ProcessResult r = sb.cli({"generate", "--seed-phrase", "The Unmapped"});
         CHECK(r.exit_code == EXIT_OK);
         const fs::path expected = sb.out_dir() / ("world-" + std::to_string(seed) + ".db");
         CHECK(r.out == printed_path(expected));
         const WorldReader w = open_world(expected);
         CHECK(w.seed() == seed);
-        CHECK(w.seed_phrase() == "The Unmapped");
+        CHECK(w.seed_phrase() == "the unmapped");
+    }
+    SUBCASE("--seed-phrase \"Ashen Marches!\" and its other spellings share one default name") {
+        const std::uint64_t seed = worldgen::phrase_seed("ashen marches");
+        const fs::path expected = sb.out_dir() / ("world-" + std::to_string(seed) + ".db");
+        const ProcessResult r = sb.cli({"generate", "--seed-phrase", "Ashen Marches!"});
+        CHECK(r.exit_code == EXIT_OK);
+        CHECK(r.out == printed_path(expected));
+        // Same default path, so a second spelling meets the existing file.
+        CHECK(sb.cli({"generate", "--seed-phrase", "ASHEN  MARCHES"}).exit_code == EXIT_OUTPUT);
+        const ProcessResult f = sb.cli({"generate", "--seed-phrase", "ashen-marches", "--force"});
+        CHECK(f.exit_code == EXIT_OK);
+        CHECK(f.out == printed_path(expected));
     }
     SUBCASE("the default output directory is created with its parents") {
         RunOptions o;
@@ -151,10 +166,42 @@ TEST_CASE("cli 12.2: equivalent ways of giving seed and map size give identical 
         const Bytes reference = gen("a.db", {"--seed-phrase", "The Unmapped"});
         CHECK(gen("b.db", {"--settings", settings("s1.toml", "[world]\nseed_phrase = \"The Unmapped\"\n")}) ==
               reference);
-        // The trimmed phrase is what is stored and hashed (P0-01 7.3).
+        // The scrubbed phrase is what is stored and hashed (P0-01 7.3).
         CHECK(gen("c.db", {"--seed-phrase", "  The Unmapped\t\n"}) == reference);
+        CHECK(gen("c2.db", {"--seed-phrase", "the unmapped"}) == reference);
         CHECK(gen("d.db", {"--seed-phrase", "The Unmapped", "--settings",
                            settings("s2.toml", "[world]\nseed = 9\n")}) == reference);
+        CHECK(open_world(sb.file("a.db")).seed_phrase() == "the unmapped");
+    }
+    SUBCASE("three spellings of \"ashen marches\", by flag and by settings file (amendment 15)") {
+        const Bytes reference = gen("ref.db", {"--seed-phrase", "ashen marches"});
+        const char* spellings[] = {"Ashen Marches!", "ashen-marches", "ASHEN  MARCHES"};
+        int i = 0;
+        for (const char* spelling : spellings) {
+            CAPTURE(spelling);
+            const std::string n = std::to_string(i++);
+            CHECK(gen("flag" + n + ".db", {"--seed-phrase", spelling}) == reference);
+            CHECK(gen("file" + n + ".db", {"--settings", settings("p" + n + ".toml", std::string("[world]\nseed_phrase = \"") +
+                                                                                       spelling + "\"\n")}) == reference);
+        }
+        const WorldReader w = open_world(sb.file("flag0.db"));
+        CHECK(w.seed_phrase() == "ashen marches");
+        CHECK(w.meta("seed_phrase") == std::optional<std::string>("ashen marches"));
+        CHECK(w.seed() == worldgen::phrase_seed("ashen marches"));
+        CHECK(gen("other.db", {"--seed-phrase", "ashen marchez"}) != reference);
+    }
+    SUBCASE("--seed-phrase 42 is a phrase, a different world from --seed 42 (amendment 15)") {
+        const Bytes by_phrase = gen("p.db", {"--seed-phrase", "42"});
+        const Bytes by_seed = gen("s.db", {"--seed", "42"});
+        CHECK(by_phrase != by_seed);
+        const WorldReader wp = open_world(sb.file("p.db"));
+        CHECK(wp.seed_phrase() == "42");
+        CHECK(wp.seed() == worldgen::phrase_seed("42"));
+        CHECK(wp.seed() != 42);
+        const WorldReader ws = open_world(sb.file("s.db"));
+        CHECK(ws.seed_phrase().empty());
+        CHECK(ws.seed() == 42);
+        CHECK(gen("f.db", {"--settings", settings("p42.toml", "[world]\nseed_phrase = \"42\"\n")}) == by_phrase);
     }
     SUBCASE("an empty data directory changes nothing in P0") {
         fs::create_directories(sb.file("data"));
@@ -245,7 +292,9 @@ TEST_CASE("cli 12.2: environment and locale variables do not reach the file") {
 
 TEST_CASE("cli 12.2: a non-ASCII seed phrase and output path survive on every platform") {
     Sandbox sb;
+    // "Ünmapped Wörld" scrubs to "nmapped w rld" (amendment 15).
     const std::uint64_t seed = phrase_to_seed(PHRASE_NON_ASCII);
+    CHECK(seed == worldgen::phrase_seed("nmapped w rld"));
     MESSAGE("seed of \"\xC3\x9Cnmapped W\xC3\xB6rld\" = ", seed, " (golden value for the validation specialist)");
 
     const ProcessResult r = sb.cli({"generate", "--seed-phrase", std::string(PHRASE_NON_ASCII)});
@@ -255,7 +304,11 @@ TEST_CASE("cli 12.2: a non-ASCII seed phrase and output path survive on every pl
     CHECK(r.out == printed_path(expected));
     const WorldReader w = open_world(expected);
     CHECK(w.seed() == seed);
-    CHECK(w.meta("seed_phrase") == std::optional<std::string>(std::string(PHRASE_NON_ASCII)));
+    CHECK(w.meta("seed_phrase") == std::optional<std::string>("nmapped w rld"));
+    // The same world as the scrubbed phrase typed directly.
+    const fs::path plain = sb.file("plain.db");
+    REQUIRE(sb.cli({"generate", "--seed-phrase", "nmapped w rld", "--out", u8(plain)}).exit_code == EXIT_OK);
+    CHECK(read_bytes(plain) == read_bytes(expected));
 
     // A UTF-8 output path ("wörld Ü.db") in a UTF-8 directory.
     const std::string dir_name = "d\xC3\xAFr";

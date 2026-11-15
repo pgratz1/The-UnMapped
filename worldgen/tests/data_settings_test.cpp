@@ -1,11 +1,14 @@
 // P0-03 settings file (spec P0-03 sections 4 to 6, 13 test 9, amendments 1,
-// 4 and 6; seed phrases per P0-01 section 7.3).
+// 4, 6 and 14; seed phrases are scrubbed per P0-01 section 7.3).
 
 #include <doctest/doctest.h>
 
 #include <cstdint>
 #include <limits>
+#include <optional>
+#include <ostream>
 #include <string>
+#include <vector>
 
 #include "data_loader_support.hpp"
 #include "worldgen/core/hash.hpp"
@@ -97,38 +100,109 @@ TEST_CASE("settings: parse_seed_text") {
     }
 }
 
-TEST_CASE("settings: seed_phrase is trimmed and gives the P0-01 phrase seed") {
+TEST_CASE("settings: seed_phrase is scrubbed and gives the P0-01 phrase seed (amendment 14)") {
     const auto s = parsed("[world]\nseed_phrase = \"  The Unmapped\\t \"\n");
     REQUIRE(s.seed_phrase.has_value());
-    CHECK(*s.seed_phrase == "The Unmapped");
+    CHECK(*s.seed_phrase == "the unmapped");
     const auto expected = worldgen::seed_from_phrase("The Unmapped");
     REQUIRE(expected.ok());
     REQUIRE(s.seed.has_value());
     CHECK(*s.seed == expected.seed);
-    CHECK(*s.seed == worldgen::phrase_seed("The Unmapped"));
+    CHECK(*s.seed == worldgen::phrase_seed("the unmapped"));
 
-    // Inner TAB and LF are kept; CR LF becomes LF first.
+    // Inner TAB and LF (and CR LF, which becomes LF first) are separators.
     const auto inner = parsed("[world]\nseed_phrase = \"a\\tb\\r\\nc\"\n");
     REQUIRE(inner.seed_phrase.has_value());
-    CHECK(*inner.seed_phrase == "a\tb\nc");
-    CHECK(*inner.seed == worldgen::phrase_seed("a\tb\nc"));
+    CHECK(*inner.seed_phrase == "a b c");
+    CHECK(*inner.seed == worldgen::phrase_seed("a b c"));
 
-    // 256 bytes after trimming is fine; 257 is not.
-    const auto long_ok = parsed("[world]\nseed_phrase = \" " + std::string(256, 'p') + " \"\n");
-    CHECK(long_ok.seed_phrase->size() == 256);
-    only_error("[world]\nseed_phrase = \"" + std::string(257, 'p') + "\"\n", 2);
-    // Empty after trimming.
-    only_error("[world]\nseed_phrase = \" \\t\\n \"\n", 2);
-    only_error("[world]\nseed_phrase = \"\"\n", 2);
-    // Not a string.
-    only_error("[world]\nseed_phrase = 5\n", 2);
+    // UTF-8 in a TOML string: each byte of a multi-byte character is a space.
+    const auto utf8 = parsed("[world]\nseed_phrase = \"\xC3\x9Cnmapped W\xC3\xB6rld\"\n");
+    REQUIRE(utf8.seed_phrase.has_value());
+    CHECK(*utf8.seed_phrase == "nmapped w rld");
+    CHECK(utf8 == parsed("[world]\nseed_phrase = \"nmapped w rld\"\n"));
+    // The same through \u escapes.
+    CHECK(parsed("[world]\nseed_phrase = \"\\u00DCnmapped W\\u00F6rld\"\n") == utf8);
 }
 
-TEST_CASE("settings: control characters in seed_phrase are errors in a file (amendment 4)") {
-    for (const char* lit : {"\"a\\u0001b\"", "\"\\u0000x\"", "\"a\\rb\"", "\"a\\u007Fb\""}) {
+TEST_CASE("settings: spellings that scrub alike give equal Settings (amendment 14)") {
+    const auto base = parsed("[world]\nseed_phrase = \"ashen marches\"\nmap_size = 2048\n");
+    REQUIRE(base.seed_phrase.has_value());
+    CHECK(*base.seed_phrase == "ashen marches");
+    REQUIRE(base.seed.has_value());
+    CHECK(*base.seed == worldgen::phrase_seed("ashen marches"));
+    CHECK(base.map_size == 2048);
+    for (const char* lit : {"\"Ashen Marches!\"", "\"ashen-marches\"", "\"ASHEN  MARCHES\"", "'Ashen Marches!'",
+                            "\"  ashen\\tmarches\\n\"", "\"\"\"\nAshen\nMarches\n\"\"\"",
+                            "'''...ASHEN marches'''"}) {
+        INFO(std::string(lit));
+        const auto s = parsed(std::string("[world]\nseed_phrase = ") + lit + "\nmap_size = 2048\n");
+        CHECK(s.seed_phrase == base.seed_phrase);
+        CHECK(s.seed == base.seed);
+        CHECK(s == base);
+    }
+    // A different scrubbed phrase is a different world.
+    CHECK_FALSE(parsed("[world]\nseed_phrase = \"ashen marche\"\nmap_size = 2048\n") == base);
+}
+
+TEST_CASE("settings: seed_phrase = \"42\" is the phrase 42, not the number (amendment 14)") {
+    const auto p = parsed("[world]\nseed_phrase = \"42\"\n");
+    REQUIRE(p.seed_phrase.has_value());
+    CHECK(*p.seed_phrase == "42");
+    REQUIRE(p.seed.has_value());
+    CHECK(*p.seed == worldgen::phrase_seed("42"));
+    CHECK(*p.seed != 42);
+    const auto n = parsed("[world]\nseed = \"42\"\n");
+    CHECK_FALSE(n.seed_phrase.has_value());
+    CHECK(n.seed == std::optional<std::uint64_t>{42});
+    CHECK_FALSE(p == n);
+    // A hex-looking phrase is scrubbed text too.
+    const auto h = parsed("[world]\nseed_phrase = \"0x2A\"\n");
+    CHECK(h.seed_phrase == std::optional<std::string>{"0x2a"});
+    CHECK(h.seed == std::optional<std::uint64_t>{worldgen::phrase_seed("0x2a")});
+}
+
+TEST_CASE("settings: a phrase that scrubs to nothing or to more than 256 bytes is an error at the value") {
+    // "seed_phrase = " is 14 bytes, so the value is at column 15.
+    const std::vector<std::string> literals = {
+        "\"\"",
+        "\" \\t\\n \"",
+        "\"!!!\"",
+        "'-_-'",
+        "\"\xE6\x9D\xB1\xE4\xBA\xAC\"",  // only a non-Latin script ("東京")
+        "\"\\u00E9\\u00E8\"",            // only accented letters
+        "\"" + std::string(257, 'p') + "\"",
+        "\"" + std::string(257, 'P') + "\"",
+        "\"a" + std::string(254, 'b') + "-c!\"",  // "ab...b c": 257 bytes after scrubbing
+    };
+    for (const std::string& lit : literals) {
+        INFO(lit);
+        const auto e = only_error("[world]\nseed_phrase = " + lit + "\n", 2);
+        CHECK(e.column == 15);
+    }
+    // The limit is on the scrubbed phrase: 256 bytes are fine, also when the
+    // text as written is longer.
+    const auto long_ok = parsed("[world]\nseed_phrase = \" " + std::string(256, 'p') + " \"\n");
+    REQUIRE(long_ok.seed_phrase.has_value());
+    CHECK(*long_ok.seed_phrase == std::string(256, 'p'));
+    const auto padded =
+        parsed("[world]\nseed_phrase = \"" + std::string(1000, '!') + "Short" + std::string(1000, '.') + "\"\n");
+    CHECK(padded.seed_phrase == std::optional<std::string>{"short"});
+    // Not a string.
+    only_error("[world]\nseed_phrase = 5\n", 2);
+    only_error("[world]\nseed_phrase = 42\n", 2);
+}
+
+TEST_CASE("settings: the string rule applies before scrubbing (amendments 4 and 14)") {
+    // A control character other than TAB or LF is an error in a settings file,
+    // though the command line would scrub it to a space.
+    for (const char* lit : {"\"a\\u0001b\"", "\"\\u0000x\"", "\"a\\rb\"", "\"a\\u007Fb\"", "\"a\\u001Fb\"",
+                            "\"a\\bb\"", "\"a\\fb\""}) {
         INFO(std::string(lit));
         only_error(std::string("[world]\nseed_phrase = ") + lit + "\n", 2);
     }
+    // TAB and LF are allowed and scrub to spaces.
+    CHECK(parsed("[world]\nseed_phrase = \"a\\tb\\nc\"\n").seed_phrase == std::optional<std::string>{"a b c"});
 }
 
 TEST_CASE("settings: seed and seed_phrase together are an error at seed_phrase (amendment 6)") {

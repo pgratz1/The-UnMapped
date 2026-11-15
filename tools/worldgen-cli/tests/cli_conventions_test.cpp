@@ -102,11 +102,43 @@ TEST_CASE("cli 12.1: seed values") {
     const fs::path out = sb.file("dash.db");
     const ProcessResult r = sb.cli({"generate", "--seed-phrase", "-dash", "--out", u8(out)});
     CHECK(r.exit_code == EXIT_OK);
-    // Phrase errors (P0-01 7.3) are usage errors: empty after trimming,
-    // longer than 256 bytes, not UTF-8.
-    check_generate_usage_error(sb, {"--seed-phrase", "   "});
-    check_generate_usage_error(sb, {"--seed-phrase", ""});
-    check_generate_usage_error(sb, {"--seed-phrase", std::string(257, 'a')});
+}
+
+TEST_CASE("cli 12.1, amendment 15: a phrase that scrubs to nothing or to more than 256 bytes is a usage error") {
+    Sandbox sb;
+    const std::vector<std::string> bad = {
+        "   ",
+        "",
+        "!!!",
+        "?! .,;",
+        "\xE6\x9D\xB1\xE4\xBA\xAC",          // only a non-Latin script ("東京")
+        "\xD0\x9C\xD0\xB8\xD1\x80",          // "Мир"
+        "\xC3\xA9\xC3\xA8",                  // only accented letters
+        "\xF0\x9F\x97\xBA",                  // U+1F5FA
+        std::string(257, 'a'),
+        std::string(257, 'A'),
+        std::string(128, 'a') + "!" + std::string(128, 'b'),  // scrubs to 257 bytes
+    };
+    for (const std::string& phrase : bad) {
+        CAPTURE(phrase.size());
+        check_generate_usage_error(sb, {"--seed-phrase", phrase});
+        // The message says what a phrase may contain (stable fragments only).
+        const ProcessResult r = sb.cli({"generate", "--seed-phrase", phrase});
+        const std::vector<std::string> lines = lines_of(r.err);
+        REQUIRE(!lines.empty());
+        INFO("stderr: ", r.err);
+        CHECK(contains(lines.front(), "--seed-phrase"));
+        CHECK(contains(lines.front(), "a-z"));
+        CHECK(contains(lines.front(), "0-9"));
+    }
+    // The limit is on the scrubbed phrase: 256 bytes are accepted, and so is
+    // a much longer input that scrubs short.
+    CHECK(sb.cli({"generate", "--seed-phrase", std::string(128, 'a') + " " + std::string(127, 'b'), "--out",
+                  u8(sb.file("p256.db"))})
+              .exit_code == EXIT_OK);
+    CHECK(sb.cli({"generate", "--seed-phrase", std::string(2000, '!') + "Short" + std::string(2000, '?'), "--out",
+                  u8(sb.file("short.db"))})
+              .exit_code == EXIT_OK);
 }
 
 TEST_CASE("cli 12.1: no seed and bad map size are usage errors") {
@@ -207,7 +239,7 @@ TEST_CASE("cli 4.1: --version and --help") {
     const ProcessResult v = sb.cli({"--version"});
     CHECK(v.exit_code == EXIT_OK);
     CHECK(v.err.empty());
-    CHECK(v.out == std::string("worldgen-cli 0.1.0 schema 1 sqlite ") + worldgen::db::sqlite_library_version() + "\n");
+    CHECK(v.out == std::string("worldgen-cli 0.2.0 schema 1 sqlite ") + worldgen::db::sqlite_library_version() + "\n");
 
     const ProcessResult h = sb.cli({"--help"});
     CHECK(h.exit_code == EXIT_OK);
