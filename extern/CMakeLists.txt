@@ -72,6 +72,26 @@ target_include_directories(unmapped_tomlplusplus SYSTEM INTERFACE "${CMAKE_CURRE
 #                                  every platform (the loader reads files
 #                                  itself and passes bytes).
 #   TOML_ENABLE_UNRELEASED_FEATURES=0  TOML 1.0.0 only.
+#   TOML_FLOAT_CHARCONV=1          float literals are converted with
+#                                  std::from_chars on every compiler. toml++
+#                                  defaults to an istringstream on GCC/Clang
+#                                  and from_chars on MSVC; the two disagree on
+#                                  literals that underflow (1e-400 is a float
+#                                  node with the stream on libstdc++, a parse
+#                                  error with from_chars), which would change
+#                                  the error list between platforms. from_chars
+#                                  is locale-free and its range rule is fixed
+#                                  by the standard; needs GCC 11 or newer.
+#   TOML_INT_CHARCONV=1            integers are formatted (only in parser
+#                                  messages) with std::to_chars everywhere;
+#                                  integer parsing is toml++'s own code and
+#                                  does not depend on this.
+#   TOML_ENABLE_SIMD=0             no SSE code paths chosen by target ISA, so
+#                                  x86-64 and arm64 compile the same code.
+#   TOML_ENABLE_FLOAT16=0          the default; stated so it cannot change.
+#   TOML_MAX_NESTED_VALUES=256     the default parser recursion limit; stated
+#                                  so it cannot change (the loader's own limit
+#                                  of 8 applies after parsing).
 # ==========================================================================
 target_compile_definitions(unmapped_tomlplusplus INTERFACE
     TOML_EXCEPTIONS=1
@@ -79,6 +99,11 @@ target_compile_definitions(unmapped_tomlplusplus INTERFACE
     TOML_ENABLE_FORMATTERS=0
     TOML_ENABLE_WINDOWS_COMPAT=0
     TOML_ENABLE_UNRELEASED_FEATURES=0
+    TOML_FLOAT_CHARCONV=1
+    TOML_INT_CHARCONV=1
+    TOML_ENABLE_SIMD=0
+    TOML_ENABLE_FLOAT16=0
+    TOML_MAX_NESTED_VALUES=256
 )
 
 # --------------------------------------------------------------------------

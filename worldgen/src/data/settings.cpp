@@ -2,7 +2,12 @@
 
 #include "worldgen/data/settings.hpp"
 
+#include <cstddef>
+#include <cstdint>
+#include <filesystem>
+#include <optional>
 #include <string>
+#include <string_view>
 #include <utility>
 
 #include "data/common.hpp"

@@ -5,7 +5,9 @@
 #include <array>
 #include <charconv>
 #include <cstddef>
+#include <cstdint>
 #include <string>
+#include <string_view>
 #include <system_error>
 
 #include "worldgen/core/decimal.hpp"

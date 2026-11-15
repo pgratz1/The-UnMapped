@@ -2,10 +2,16 @@
 
 #include "data/common.hpp"
 
+#include <cstddef>
+#include <cstdint>
+#include <filesystem>
 #include <fstream>
 #include <ios>
+#include <optional>
 #include <string>
+#include <string_view>
 #include <utility>
+#include <vector>
 
 #include "data/text.hpp"
 

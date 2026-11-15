@@ -3,6 +3,8 @@
 #include "worldgen/data/load_error.hpp"
 
 #include <algorithm>
+#include <string>
+#include <vector>
 
 #include "data/text.hpp"
 

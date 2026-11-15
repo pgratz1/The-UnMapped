@@ -3,7 +3,14 @@
 #include "worldgen/data/schema.hpp"
 
 #include <algorithm>
+#include <cstddef>
+#include <cstdint>
+#include <memory>
+#include <optional>
+#include <string>
+#include <string_view>
 #include <utility>
+#include <vector>
 
 #include "data/text.hpp"
 #include "worldgen/core/decimal.hpp"

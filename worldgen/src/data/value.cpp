@@ -2,8 +2,12 @@
 
 #include "worldgen/data/value.hpp"
 
+#include <cstddef>
+#include <cstdint>
 #include <string>
+#include <string_view>
 #include <utility>
+#include <vector>
 
 #include "worldgen/core/error.hpp"
 
