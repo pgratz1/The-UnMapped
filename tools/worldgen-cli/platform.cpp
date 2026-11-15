@@ -93,30 +93,34 @@ std::optional<std::vector<std::string>> utf8_arguments(int argc, wchar_t** argv,
     return out;
 }
 
-std::optional<std::string> environment_utf8(const char* name) {
+EnvironmentValue environment_utf8(const char* name) {
     const std::wstring wide_name = to_wide_ascii(name);
     const DWORD needed = GetEnvironmentVariableW(wide_name.c_str(), nullptr, 0);
     if (needed == 0) {
-        return std::nullopt;  // not set (or empty: GetLastError distinguishes, both mean "no value" here)
+        return {};  // not set (or empty: both mean "no value" here)
     }
     std::wstring value(static_cast<std::size_t>(needed), L'\0');
     const DWORD got = GetEnvironmentVariableW(wide_name.c_str(), value.data(), needed);
     if (got == 0 || got >= needed) {
-        return std::nullopt;
+        return {};  // removed or grown in between: not possible in this single-threaded process
     }
-    return to_utf8(value.data(), static_cast<std::size_t>(got));
+    std::optional<std::string> utf8 = to_utf8(value.data(), static_cast<std::size_t>(got));
+    if (!utf8) {
+        return EnvironmentValue{std::nullopt, true};  // a lone surrogate: not silently "unset"
+    }
+    return EnvironmentValue{std::move(utf8), false};
 }
 
 #else
 
 void prepare_stdio() noexcept {}
 
-std::optional<std::string> environment_utf8(const char* name) {
+EnvironmentValue environment_utf8(const char* name) {
     const char* value = std::getenv(name);  // NOLINT(concurrency-mt-unsafe): single-threaded
     if (value == nullptr) {
-        return std::nullopt;
+        return {};
     }
-    return std::string(value);
+    return EnvironmentValue{std::string(value), false};
 }
 
 #endif

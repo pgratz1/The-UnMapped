@@ -169,7 +169,9 @@ public:
     // tables, ascending name by bytes, with its row count (P0-04 7, 8).
     [[nodiscard]] Result<std::vector<TableSummary>> tables() const;
 
-    // The column names of a table, in declared order (P0-04 8).
+    // The column names of a table, in declared order (P0-04 8). Stored
+    // columns only: generated and hidden columns are not listed, nor
+    // visited by visit_table_rows.
     [[nodiscard]] Result<std::vector<std::string>> table_columns(std::string_view table) const;
 
     // The primary-key column names of a table, in key order (P0-04 8).

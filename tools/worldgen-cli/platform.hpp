@@ -21,8 +21,14 @@ void prepare_stdio() noexcept;
 [[nodiscard]] std::optional<std::vector<std::string>> utf8_arguments(int argc, wchar_t** argv, int& bad_index);
 #endif
 
-// The value of an environment variable as UTF-8 (read as UTF-16 on Windows),
-// or std::nullopt if it is not set (P0-04 4.3).
-[[nodiscard]] std::optional<std::string> environment_utf8(const char* name);
+// An environment variable read as UTF-8 (P0-04 4.3).
+struct EnvironmentValue {
+    std::optional<std::string> value;  // std::nullopt: not set (or empty on Windows)
+    bool invalid = false;              // set but not valid UTF-16 (Windows only); value is then empty
+};
+
+// The value of an environment variable as UTF-8 (read as UTF-16 on Windows
+// and converted, so that a non-ASCII path survives) (P0-04 4.3).
+[[nodiscard]] EnvironmentValue environment_utf8(const char* name);
 
 }  // namespace cli::platform

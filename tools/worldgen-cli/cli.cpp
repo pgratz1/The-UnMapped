@@ -58,19 +58,30 @@ using db::format_u64;
 
 // --- stdout and stderr (P0-04 4.4, 4.5) --------------------------------------
 
-void write_stream(std::FILE* stream, std::string_view text) noexcept {
-    if (!text.empty()) {
-        static_cast<void>(std::fwrite(text.data(), 1, text.size(), stream));
+// True if every byte was written. A short count means the write failed;
+// stdio may also only set the stream's error flag, so run() checks ferror
+// after the final flush as well (P0-04 4.6: a failed write is exit 4).
+bool write_stream(std::FILE* stream, std::string_view text) noexcept {
+    if (text.empty()) {
+        return true;
+    }
+    return std::fwrite(text.data(), 1, text.size(), stream) == text.size();
+}
+
+// Set once any write to stdout has failed; checked by run(). The CLI is
+// single-threaded.
+bool stdout_failed = false;
+
+void print_out(std::string_view text) noexcept {
+    if (!write_stream(stdout, text)) {
+        stdout_failed = true;
     }
 }
 
-void print_out(std::string_view text) noexcept {
-    write_stream(stdout, text);
-}
-
+// stderr failures are ignored: there is nowhere left to report them.
 void print_line_err(std::string_view text) noexcept {
-    write_stream(stderr, text);
-    write_stream(stderr, "\n");
+    static_cast<void>(write_stream(stderr, text));
+    static_cast<void>(write_stream(stderr, "\n"));
 }
 
 // --- --verbose (P0-04 4.5): progress and timings on stderr only -------------
@@ -483,8 +494,9 @@ std::string layer_name_list(const db::WorldReader& world) {
     return names;
 }
 
-// Most raw RGB bytes handed to the PNG writer: stb_image_write sizes its
-// buffers with int, so stay well below 2^31.
+// Most raw RGB bytes (3 x width x height) handed to the PNG writer
+// (P0-04 amendment 7). stb_image_write sizes its buffers with int; its
+// filtered copy adds one byte per row, still far below 2^31.
 constexpr std::uint64_t MAX_PNG_RAW_BYTES = std::uint64_t{1} << 30U;
 
 Exit run_render(const Options& options) {
@@ -522,7 +534,7 @@ Exit run_render(const Options& options) {
 
     const std::uint64_t width = static_cast<std::uint64_t>(grid.width) * scale;
     const std::uint64_t height = static_cast<std::uint64_t>(grid.height) * scale;
-    if ((width * 3U + 1U) * height > MAX_PNG_RAW_BYTES) {
+    if (width * height * 3U > MAX_PNG_RAW_BYTES) {
         usage_error("an image of " + format_u64(width) + " x " + format_u64(height) +
                     " pixels is too large to write; use a smaller --scale");
     }
@@ -690,16 +702,6 @@ void print_failure(const Failure& failure) {
     }
 }
 
-void print_hint(std::string_view command) {
-    std::string hint = "worldgen-cli: run 'worldgen-cli ";
-    if (!command.empty()) {
-        hint += command;
-        hint += ' ';
-    }
-    hint += "--help' for usage";
-    print_line_err(hint);
-}
-
 Exit dispatch(const std::vector<std::string>& args, std::string& command_name) {
     if (args.empty()) {
         usage_error("no command given");
@@ -734,7 +736,21 @@ void print_error(const std::string& message) noexcept {
     try {
         print_line_err("worldgen-cli: error: " + message);
     } catch (...) {
-        write_stream(stderr, "worldgen-cli: error: (message lost: out of memory)\n");
+        static_cast<void>(write_stream(stderr, "worldgen-cli: error: (message lost: out of memory)\n"));
+    }
+}
+
+void print_hint(std::string_view command) noexcept {
+    try {
+        std::string hint = "worldgen-cli: run 'worldgen-cli ";
+        if (!command.empty()) {
+            hint += command;
+            hint += ' ';
+        }
+        hint += "--help' for usage";
+        print_line_err(hint);
+    } catch (...) {
+        // out of memory: the error line has been printed already
     }
 }
 
@@ -766,9 +782,16 @@ int run(const std::vector<std::string>& args) noexcept {
         print_error("internal error: unexpected exception");
         exit = Exit::internal;
     }
-    if (std::fflush(stdout) != 0 && exit == Exit::success) {
+    // Every write to stdout is checked: a short fwrite, a failed final
+    // flush, or the stream's error flag (set by a write-through that failed)
+    // turns success, or a hash mismatch whose output was lost, into an
+    // output error (P0-04 4.6). An earlier error keeps its own exit code.
+    const bool flush_failed = std::fflush(stdout) != 0;
+    if (stdout_failed || flush_failed || std::ferror(stdout) != 0) {
         print_error("writing to stdout failed");
-        exit = Exit::output;
+        if (exit == Exit::success || exit == Exit::mismatch) {
+            exit = Exit::output;
+        }
     }
     return static_cast<int>(exit);
 }

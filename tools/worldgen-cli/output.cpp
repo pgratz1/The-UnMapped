@@ -56,16 +56,23 @@ namespace {
 
 constexpr std::string_view ROOT_VARIABLE = "UNMAPPED_BUILD_ROOT";
 
-std::optional<std::string> non_empty(std::optional<std::string> value) {
-    if (value && value->empty()) {
+// The variable's value, or std::nullopt if it is unset or empty. A value
+// that is not valid UTF-16 (Windows) is a usage error, never "unset", so a
+// malformed UNMAPPED_BUILD_ROOT cannot silently fall back to another root.
+std::optional<std::string> variable(const char* name) {
+    platform::EnvironmentValue env = platform::environment_utf8(name);
+    if (env.invalid) {
+        throw Failure(Exit::usage, std::string(name) + " is not valid UTF-16; fix it or pass --out");
+    }
+    if (env.value && env.value->empty()) {
         return std::nullopt;
     }
-    return value;
+    return std::move(env.value);
 }
 
 // The build root (P0-04 4.3), or a usage error.
 fs::path build_root() {
-    if (const std::optional<std::string> root = non_empty(platform::environment_utf8(ROOT_VARIABLE.data()))) {
+    if (const std::optional<std::string> root = variable(ROOT_VARIABLE.data())) {
         const fs::path p = path_from_utf8(*root);
         if (!p.is_absolute()) {
             throw Failure(Exit::usage, "UNMAPPED_BUILD_ROOT is '" + *root +
@@ -75,11 +82,11 @@ fs::path build_root() {
     }
 #if defined(_WIN32)
     const char* const fallback = "LOCALAPPDATA";
-    const std::optional<std::string> base = non_empty(platform::environment_utf8(fallback));
+    const std::optional<std::string> base = variable(fallback);
     const fs::path suffix = path_from_utf8("the-unmapped");
 #else
     const char* const fallback = "HOME";
-    const std::optional<std::string> base = non_empty(platform::environment_utf8(fallback));
+    const std::optional<std::string> base = variable(fallback);
     const fs::path suffix = path_from_utf8(".cache/the-unmapped");
 #endif
     if (!base) {
@@ -146,7 +153,9 @@ void check_output_location(std::string_view path_utf8, bool force) {
     const fs::path out = path_from_utf8(path_utf8);
     const std::string name(path_utf8);
     std::error_code ec;
-    const fs::file_status status = fs::status(out, ec);
+    // symlink_status: anything at the path, a dangling symbolic link
+    // included, counts as existing; a link is never followed.
+    const fs::file_status status = fs::symlink_status(out, ec);
     if (fs::exists(status)) {
         if (fs::is_directory(status)) {
             throw Failure(Exit::output, "output '" + name + "' is a directory");
@@ -193,12 +202,12 @@ void write_file_atomically(std::string_view path_utf8, std::span<const std::uint
     }
     // Checked again just before the rename; the window in between is
     // accepted, as for world files (P0-02 14.7).
-    if (!force && fs::exists(out, ec)) {
+    if (!force && fs::exists(fs::symlink_status(out, ec))) {
         throw Failure(Exit::output, "output '" + name + "' already exists (pass --force to replace it)");
     }
     fs::rename(partial, out, ec);
     std::error_code exists_ec;
-    if (ec && force && fs::exists(out, exists_ec)) {
+    if (ec && force && fs::exists(fs::symlink_status(out, exists_ec))) {
         // Should std::filesystem::rename refuse to replace an existing file
         // on some platform, remove the target and retry once.
         std::error_code remove_ec;

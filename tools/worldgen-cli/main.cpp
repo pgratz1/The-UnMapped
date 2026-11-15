@@ -18,6 +18,7 @@ int wmain(int argc, wchar_t** argv) {
         const auto args = cli::platform::utf8_arguments(argc, argv, bad_index);
         if (!args) {
             cli::print_error("argument " + std::to_string(bad_index) + " is not valid UTF-16");
+            cli::print_hint("");  // a usage error: the hint line of P0-04 4.1
             return 2;
         }
         return cli::run(*args);

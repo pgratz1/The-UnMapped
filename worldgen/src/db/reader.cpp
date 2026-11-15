@@ -518,6 +518,10 @@ Error table_not_found_error(const ReaderState& s, std::string_view table) {
 
 // Column names in declared order and primary-key columns in key order, from
 // pragma_table_info. The table must exist.
+//
+// pragma_table_info lists the stored columns only: generated columns and
+// hidden columns (table_xinfo) are omitted, so table hashes (P0-04 8) cover
+// stored columns only. This is intended (lead decision on the P0-04 audit).
 struct TableShape {
     std::vector<std::string> columns;
     std::vector<std::string> key;  // empty: no primary key

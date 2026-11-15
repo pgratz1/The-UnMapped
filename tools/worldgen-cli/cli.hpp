@@ -3,6 +3,7 @@
 // worldgen-cli command dispatch (spec P0-04).
 
 #include <string>
+#include <string_view>
 #include <vector>
 
 namespace cli {
@@ -13,5 +14,9 @@ namespace cli {
 
 // Prints "worldgen-cli: error: <message>" to stderr (P0-04 4.5).
 void print_error(const std::string& message) noexcept;
+
+// Prints the usage-error hint "worldgen-cli: run 'worldgen-cli [<command>]
+// --help' for usage" to stderr (P0-04 4.1, amendment 2); command may be empty.
+void print_hint(std::string_view command) noexcept;
 
 }  // namespace cli
