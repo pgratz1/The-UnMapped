@@ -1,8 +1,10 @@
-# Continuous integration: build and test every preset on Linux and Windows.
+# Continuous integration: lint, build and test every preset on Linux and
+# Windows, and prove that the P0 worlds are byte-identical across compilers
+# (spec P0-04 section 9).
 #
-# Build trees go under UNMAPPED_BUILD_ROOT (the runner's temp directory),
-# never into the checkout. The build itself makes no network access; only the
-# runner setup below installs tools.
+# Build trees and generated worlds go under UNMAPPED_BUILD_ROOT (the runner's
+# temp directory), never into the checkout. The build itself makes no network
+# access; only the runner setup below installs tools.
 #
 # Third-party actions are pinned to full commit SHAs.
 
@@ -22,6 +24,30 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # Banned-construct lint (tools/lint/README.md). It scans source text only,
+  # so one Linux job covers every platform.
+  lint:
+    name: determinism-lint
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Check out
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Lint self-test
+        run: python3 -B tools/lint/determinism_lint.py --self-test
+
+      - name: Lint the generator output path (default scope)
+        run: python3 -B tools/lint/determinism_lint.py
+
+      # report and hash text is part of the cross-platform contract, so the
+      # CLI sources are scanned too; its tests/ directory is not (the glob
+      # names only the top-level files).
+      - name: Lint worldgen-cli (excluding its tests)
+        run: python3 -B tools/lint/determinism_lint.py tools/worldgen-cli/*.cpp tools/worldgen-cli/*.hpp
+
   build:
     name: ${{ matrix.preset }}
     runs-on: ${{ matrix.os }}
@@ -81,7 +107,31 @@ jobs:
       - name: Test
         run: ctest --preset "${{ matrix.preset }}" --test-dir "$UNMAPPED_BUILD_ROOT/build/${{ matrix.preset }}"
 
+      # P0-04 section 9: generate the eight cases and save hash --detail and
+      # report text per case under $UNMAPPED_BUILD_ROOT/out/world-hashes/.
+      - name: Generate the P0 world cases
+        id: cases
+        run: bash tools/ci/world-hashes.sh generate "${{ matrix.preset }}" --build-dir "$UNMAPPED_BUILD_ROOT/build/${{ matrix.preset }}"
+
+      # Checks hash --expect against worldgen/tests/golden/p0-worlds.txt; while
+      # that file does not exist it prints a warning and passes.
+      - name: Check the golden world hashes
+        run: bash tools/ci/world-hashes.sh expect "${{ matrix.preset }}" --build-dir "$UNMAPPED_BUILD_ROOT/build/${{ matrix.preset }}"
+
+      # Uploaded even when generation or the golden check failed, so that
+      # compare-hashes and a reader can see what was produced. A preset whose
+      # job failed earlier uploads nothing, which compare-hashes reports.
+      - name: Upload the world hashes
+        if: always() && steps.cases.outcome != 'skipped'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: world-hashes-${{ matrix.preset }}
+          path: ${{ env.UNMAPPED_BUILD_ROOT }}/out/world-hashes/${{ matrix.preset }}-*
+          if-no-files-found: error
+          retention-days: 30
+
       - name: Check that the checkout holds no generated files
+        if: always()
         run: |
           leftovers="$(git status --porcelain --ignored)"
           if [ -n "$leftovers" ]; then
@@ -90,9 +140,39 @@ jobs:
             exit 1
           fi
 
-      # Cross-compiler hash check (added once worldgen-cli has `generate` and
-      # `hash`): here each matrix entry generates the golden seeds into
-      # $UNMAPPED_BUILD_ROOT/out/, writes one "<seed> <hash>" line per seed to
-      # hashes-<preset>.txt and uploads it with actions/upload-artifact. A
-      # separate `compare-hashes` job with `needs: build` downloads every
-      # hashes-*.txt and fails if any two differ.
+  # Cross-compiler identity: every preset's hash --detail and report text for
+  # every case must be identical. Runs even when matrix jobs failed (but not
+  # when the run was cancelled); a preset without an artifact is a failure.
+  compare-hashes:
+    name: compare-hashes
+    needs: build
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Check out
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      # Artifacts of failed presets are absent; the comparison below names
+      # them, so a download problem must not stop it from running.
+      - name: Download every preset's world hashes
+        continue-on-error: true
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          pattern: world-hashes-*
+          merge-multiple: true
+          path: ${{ runner.temp }}/world-hashes
+
+      # Every build preset in CMakePresets.json takes part, so a preset that
+      # is missing from the build matrix fails here too.
+      - name: Compare across presets
+        run: |
+          echo "build matrix result: ${{ needs.build.result }}"
+          presets="$(python3 -I -B -c 'import json; print(" ".join(p["name"] for p in json.load(open("CMakePresets.json"))["buildPresets"] if not p.get("hidden")))')"
+          echo "presets: $presets"
+          mkdir -p "$RUNNER_TEMP/world-hashes"
+          ls -l "$RUNNER_TEMP/world-hashes"
+          # shellcheck disable=SC2086
+          bash tools/ci/world-hashes.sh compare $presets --out-dir "$RUNNER_TEMP/world-hashes"
