@@ -1,0 +1,6 @@
+# The canonical fixture again, with comments, blank lines, another file
+# name, an inline table and defaults written out. Same content hash.
+
+[alpha]
+
+a1 = {   partner = "b1",   count = 3,  ratio = "0.50", mode = "fast" }   # inline
