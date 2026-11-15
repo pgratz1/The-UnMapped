@@ -79,6 +79,8 @@ A stage moves through the roles in this order:
 
 One stage per branch, merged when green. Each phase ends with a review by Paul before the next phase starts.
 
+`README.md` carries the public status and the phase timeline. The lead updates its Status and Timeline sections whenever a stage merges to `main`, a phase starts or ends, or work in flight changes, in the same push.
+
 ## Build and test
 
 Requirements: CMake 3.25 or newer, Ninja, and GCC, Clang or MSVC (Visual Studio 2022 or newer) with C++20. Everything else is vendored in `extern/`; the build never uses the network.
