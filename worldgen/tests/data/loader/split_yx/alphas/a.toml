@@ -1,0 +1,7 @@
+# The same definitions as split_xy, in the other files, keys reordered.
+[alpha.y]
+partner = "b2"
+mode = "slow"
+enabled = false
+ratio = "0.250"
+count = 20

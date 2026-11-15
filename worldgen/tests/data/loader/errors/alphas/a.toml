@@ -1,0 +1,9 @@
+[alpha.a_one]
+count = 101
+partner = "b1"
+
+[alpha.a_two]
+count = 5
+partner = "b1"
+mode = "fast"
+enabled = "yes"
