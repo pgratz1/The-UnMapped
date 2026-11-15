@@ -3,7 +3,7 @@
 namespace worldgen {
 
 std::string_view generator_version() noexcept {
-    return "0.0.0-dev";
+    return GENERATOR_VERSION;
 }
 
 }  // namespace worldgen

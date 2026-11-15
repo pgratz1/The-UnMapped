@@ -16,9 +16,12 @@
 # Every SQLite compile-time option for the whole project is listed here and
 # nowhere else. These options can change the bytes of world.db, so they are
 # part of the reproducibility contract (design doc section 4, CLAUDE.md hard
-# rule 1). The authoritative values come from the database-layer spec in
-# docs/specs/; until it is approved this list holds only options that do not
-# affect the file format.
+# rule 1). The authoritative values are the table in
+# docs/specs/p0-02-world-db.md section 4.1.
+#
+# Not allowed (P0-02 4.1): SQLITE_ENABLE_STAT3/4 or anything else that makes
+# SQLite write statistics tables, and any option that makes WAL the default
+# journal mode.
 #
 # Runtime settings (page_size, journal_mode, encoding, auto_vacuum and other
 # pragmas) are not compile options. They belong in one place in
@@ -28,11 +31,28 @@
 # update and a proposals entry, like a schema change.
 # ==========================================================================
 set(UNMAPPED_SQLITE_COMPILE_DEFINITIONS
+    # Fixed page size (P0-02 4.1).
+    SQLITE_DEFAULT_PAGE_SIZE=4096
+    # Stops SQLite choosing a larger default page size from the device's
+    # sector size.
+    SQLITE_MAX_DEFAULT_PAGE_SIZE=4096
+    # Fixed schema format number.
+    SQLITE_DEFAULT_FILE_FORMAT=4
+    # No auto-vacuum pointer-map pages.
+    SQLITE_DEFAULT_AUTOVACUUM=0
+    # Deleted content is zeroed; no stale bytes survive in a page.
+    SQLITE_SECURE_DELETE=1
+    # Temporary data always in memory; no temp files.
+    SQLITE_TEMP_STORE=3
     # Reject double-quoted string literals (SQLite's recommended setting).
     # Affects SQL parsing only, not the file format.
     SQLITE_DQS=0
     # The generator and the game never load SQLite extensions.
     SQLITE_OMIT_LOAD_EXTENSION=1
+    # The viewer may read from several threads. No effect on the file.
+    SQLITE_THREADSAFE=1
+    # Performance only.
+    SQLITE_DEFAULT_MEMSTATUS=0
 )
 
 add_library(unmapped_sqlite3 STATIC sqlite/sqlite3.c)
