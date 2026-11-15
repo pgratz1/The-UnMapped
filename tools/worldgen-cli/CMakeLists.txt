@@ -19,3 +19,8 @@ if(UNMAPPED_BUILD_TESTS)
     add_test(NAME worldgen-cli-unknown-command COMMAND worldgen-cli no-such-command)
     set_tests_properties(worldgen-cli-unknown-command PROPERTIES WILL_FAIL TRUE)
 endif()
+
+if(UNMAPPED_BUILD_TESTS)
+    # Integration tests that run the built binaries (spec P0-04 section 12).
+    add_subdirectory(tests)
+endif()

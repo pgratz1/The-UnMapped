@@ -54,3 +54,13 @@ target_compile_definitions(worldgen-tests PRIVATE
 target_compile_definitions(worldgen-tests PRIVATE
     UNMAPPED_LOADER_FIXTURE_DIR="${CMAKE_CURRENT_SOURCE_DIR}/data/loader"
 )
+
+# worldgen-cli library parts (spec P0-04 section 12, amendment 12): the
+# test-pattern stage, the generation pipeline, render_rgb, the report
+# builder, the logical hashes and the reader's raw row access.
+target_sources(worldgen-tests PRIVATE
+    stages_test_pattern_test.cpp
+    inspect_render_test.cpp
+    inspect_report_test.cpp
+    inspect_hashes_test.cpp
+)

@@ -1,0 +1,206 @@
+// The text report builder, format v1, spec P0-04 sections 7 and 12.4, with
+// the amendments of section 14.
+
+#include <doctest/doctest.h>
+
+#include <algorithm>
+#include <cstdint>
+#include <limits>
+#include <ostream>
+#include <string>
+#include <string_view>
+#include <vector>
+
+#include "db_test_support.hpp"
+#include "p0_04_reference.hpp"
+#include "worldgen/core/hash.hpp"
+#include "worldgen/db/layer_blob.hpp"
+#include "worldgen/db/reader.hpp"
+#include "worldgen/db/testing.hpp"
+#include "worldgen/generate.hpp"
+#include "worldgen/inspect/report.hpp"
+#include "worldgen/stages/testing.hpp"
+
+namespace {
+
+using worldgen::db::Codec;
+using worldgen::db::ErrorCode;
+using worldgen::db::Overwrite;
+using worldgen::db::WorldReader;
+using worldgen::inspect::build_report;
+using worldgen::inspect::escape_report_text;
+
+WorldReader open_world(const std::string& path) {
+    auto r = WorldReader::open(path);
+    INFO("open: ", r.ok() ? std::string() : r.error().message);
+    REQUIRE(r.ok());
+    return std::move(r).value();
+}
+
+std::string report_of(const std::string& path) {
+    const WorldReader w = open_world(path);
+    auto r = build_report(w);
+    INFO("report: ", r.ok() ? std::string() : r.error().message);
+    REQUIRE(r.ok());
+    return r.value();
+}
+
+worldgen::WorldParams params_for(std::uint64_t seed, bool pattern) {
+    worldgen::WorldParams p;
+    p.seed = seed;
+    p.content_hash = worldgen::sha256(std::string_view{});
+    p.test_pattern = pattern;
+    return p;
+}
+
+}  // namespace
+
+TEST_CASE("report 7: escaping") {
+    using namespace std::string_view_literals;
+    CHECK(worldgen::inspect::REPORT_HEADER_V1 == "# worldgen report v1");
+    CHECK(escape_report_text("") == "");
+    CHECK(escape_report_text("plain text 123") == "plain text 123");
+    CHECK(escape_report_text("\\") == "\\\\");
+    CHECK(escape_report_text("a\\b\tc") == "a\\\\b\\x09c");
+    CHECK(escape_report_text("\x00"sv) == "\\x00");
+    CHECK(escape_report_text("\n\r\x1F") == "\\x0A\\x0D\\x1F");
+    CHECK(escape_report_text("\x7F") == "\\x7F");
+    CHECK(escape_report_text("\x1B[0m") == "\\x1B[0m");
+    // Every other byte, including UTF-8 sequences and lone high bytes, is
+    // copied unchanged.
+    CHECK(escape_report_text("\xC3\x9Cnmapped W\xC3\xB6rld") == "\xC3\x9Cnmapped W\xC3\xB6rld");
+    CHECK(escape_report_text("\x80\xFF ~") == "\x80\xFF ~");
+    // Every control byte, exhaustively.
+    for (int b = 0; b < 256; ++b) {
+        const std::string in(1, static_cast<char>(b));
+        const std::string out = escape_report_text(in);
+        if (b < 0x20 || b == 0x7F) {
+            static constexpr char HEX[] = "0123456789ABCDEF";
+            CHECK(out == std::string("\\x") + HEX[b >> 4] + HEX[b & 15]);
+        } else if (b == '\\') {
+            CHECK(out == "\\\\");
+        } else {
+            CHECK(out == in);
+        }
+    }
+}
+
+TEST_CASE("report 7, 12.4: empty world, seed 0, exact text") {
+    dbtest::TempDir dir("p004-report-empty");
+    const std::string out = dir.file("w.db");
+    REQUIRE(worldgen::generate_world(params_for(0, false), out, Overwrite::refuse).ok());
+    CHECK(report_of(out) == p004::REPORT_SEED_0);
+}
+
+TEST_CASE("report 12.4: a phrase with a backslash and a tab") {
+    dbtest::TempDir dir("p004-report-phrase");
+    const worldgen::PhraseSeed ps = worldgen::seed_from_phrase("a\\b\tc");
+    REQUIRE(ps.ok());
+    worldgen::WorldParams p = params_for(ps.seed, false);
+    p.seed_phrase = ps.phrase;
+    const std::string out = dir.file("w.db");
+    REQUIRE(worldgen::generate_world(p, out, Overwrite::refuse).ok());
+    const std::string expected = "# worldgen report v1\n[meta]\n"
+                                 "content_hash = e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\n"
+                                 "format = the-unmapped-world\n"
+                                 "generator_version = 0.1.0\n"
+                                 "param.map_size = 1024\n"
+                                 "schema_version = 1\n"
+                                 "seed = " +
+                                 std::to_string(ps.seed) +
+                                 "\n"
+                                 "seed_phrase = a\\\\b\\x09c\n"
+                                 "stages =\n"
+                                 "[tables]\nlayer = 0\nmeta = 8\n[layers]\n(none)\n";
+    CHECK(report_of(out) == expected);
+}
+
+TEST_CASE("report 7: test-pattern world") {
+    dbtest::TempDir dir("p004-report-pattern");
+    const std::string out = dir.file("w.db");
+    REQUIRE(worldgen::generate_world(params_for(42, true), out, Overwrite::refuse).ok());
+    auto line = [](const std::string& name, const char* format, const worldgen::db::LayerGrid& grid,
+                   const std::string& lo, const std::string& hi) {
+        return name + " " + format + " 256x256 codec=1 bytes=" +
+               std::to_string(worldgen::db::encode_layer_blob(grid, Codec::delta_varint).size()) + " min=" + lo +
+               " max=" + hi + "\n";
+    };
+    const auto hash = p004::hash_cells(42);
+    const auto noise = p004::noise_cells(42);
+    const auto [hlo, hhi] = std::minmax_element(hash.begin(), hash.end());
+    const auto [nlo, nhi] = std::minmax_element(noise.begin(), noise.end());
+    const std::string expected =
+        "# worldgen report v1\n[meta]\n"
+        "content_hash = e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\n"
+        "format = the-unmapped-world\n"
+        "generator_version = 0.1.0\n"
+        "param.map_size = 1024\n"
+        "schema_version = 1\n"
+        "seed = 42\n"
+        "seed_phrase =\n"
+        "stages = test_pattern\n"
+        "[tables]\nlayer = 3\nmeta = 8\n[layers]\n" +
+        line("test.ramp", "u8", p004::grid_of(256, 256, p004::ramp_cells()), "0", "255") +
+        line("test.hash", "u8", p004::grid_of(256, 256, hash), std::to_string(int{*hlo}), std::to_string(int{*hhi})) +
+        line("test.noise", "i16", p004::grid_of(256, 256, noise), std::to_string(int{*nlo}), std::to_string(int{*nhi}));
+    CHECK(report_of(out) == expected);
+}
+
+TEST_CASE("report 7: layer lines for every element type, codec 0, extreme values") {
+    dbtest::TempDir dir("p004-report-types");
+    using worldgen::stages::testing::FixtureLayer;
+    std::vector<FixtureLayer> layers;
+    layers.push_back({"test.u64", p004::grid_of<std::uint64_t>(2, 1, {0, std::numeric_limits<std::uint64_t>::max()}),
+                      Codec::raw});
+    layers.push_back({"test.i64",
+                      p004::grid_of<std::int64_t>(1, 2, {std::numeric_limits<std::int64_t>::min(),
+                                                         std::numeric_limits<std::int64_t>::max()}),
+                      Codec::raw});
+    layers.push_back({"test.i8", p004::grid_of<std::int8_t>(3, 1, {-5, -5, -5}), Codec::raw});
+    layers.push_back({"test.u32", p004::grid_of<std::uint32_t>(1, 1, {4000000000U}), Codec::delta_varint});
+    const std::string out = dir.file("w.db");
+    REQUIRE(worldgen::stages::testing::write_fixture_world(out, 3, layers).ok());
+    const std::string report = report_of(out);
+    const std::string expected_tail = "[tables]\nlayer = 4\nmeta = 8\n[layers]\n"
+                                      "test.u64 u64 2x1 codec=0 bytes=40 min=0 max=18446744073709551615\n"
+                                      "test.i64 i64 1x2 codec=0 bytes=40 min=-9223372036854775808 "
+                                      "max=9223372036854775807\n"
+                                      "test.i8 i8 3x1 codec=0 bytes=27 min=-5 max=-5\n"
+                                      "test.u32 u32 1x1 codec=1 bytes=" +
+                                      std::to_string(worldgen::db::encode_layer_blob(layers[3].grid).size()) +
+                                      " min=4000000000 max=4000000000\n";
+    REQUIRE(report.size() > expected_tail.size());
+    CHECK(report.substr(report.size() - expected_tail.size()) == expected_tail);
+    CHECK(report.find("\nstages = test_fixture\n") != std::string::npos);
+}
+
+TEST_CASE("report 7: sqlite_* tables are excluded, other tables listed by name") {
+    dbtest::TempDir dir("p004-report-tables");
+    const std::string out = dir.file("w.db");
+    REQUIRE(worldgen::generate_world(params_for(0, false), out, Overwrite::refuse).ok());
+    REQUIRE(worldgen::db::testing::execute_on_file(out, "ANALYZE").ok());
+    CHECK(report_of(out) == p004::REPORT_SEED_0);
+    REQUIRE(worldgen::db::testing::execute_on_file(
+                out, "CREATE TABLE aaa (id INTEGER PRIMARY KEY) STRICT; INSERT INTO aaa VALUES (1), (2), (3)")
+                .ok());
+    const std::string report = report_of(out);
+    CHECK(report.find("[tables]\naaa = 3\nlayer = 0\nmeta = 8\n[layers]\n") != std::string::npos);
+}
+
+TEST_CASE("report 7: a corrupt layer is a corrupt_layer error") {
+    dbtest::TempDir dir("p004-report-corrupt");
+    worldgen::db::WorldWriter writer;
+    dbtest::set_standard_meta(writer, 0);
+    {
+        worldgen::db::StageWriter s = writer.begin_stage("broken");
+        const std::vector<std::uint8_t> junk = {1, 2, 3};
+        worldgen::db::testing::WriterAccess::insert_layer_row(s, 1, "test.junk", 1, 1, "u8", junk);
+        s.commit();
+    }
+    const std::string out = dir.file("w.db");
+    REQUIRE(writer.finalize(out, Overwrite::refuse).ok());
+    const WorldReader w = open_world(out);
+    const auto r = build_report(w);
+    REQUIRE(!r.ok());
+    CHECK(r.code() == ErrorCode::corrupt_layer);
+}
