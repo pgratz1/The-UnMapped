@@ -1,0 +1,99 @@
+{
+  "version": 6,
+  "cmakeMinimumRequired": { "major": 3, "minor": 25, "patch": 0 },
+  "configurePresets": [
+    {
+      "name": "base",
+      "hidden": true,
+      "generator": "Ninja",
+      "cacheVariables": {
+        "FETCHCONTENT_FULLY_DISCONNECTED": "ON"
+      }
+    },
+    {
+      "name": "linux-base",
+      "hidden": true,
+      "inherits": "base",
+      "description": "Build tree outside the source tree, keyed by source directory name so that worktrees never share a cache",
+      "binaryDir": "$env{HOME}/.cache/the-unmapped/build/${sourceDirName}/${presetName}",
+      "condition": { "type": "equals", "lhs": "${hostSystemName}", "rhs": "Linux" }
+    },
+    {
+      "name": "windows-base",
+      "hidden": true,
+      "inherits": "base",
+      "description": "Build tree outside the source tree, keyed by source directory name so that worktrees never share a cache. Run from an x64 Native Tools prompt (vcvars64).",
+      "binaryDir": "$env{LOCALAPPDATA}/the-unmapped/build/${sourceDirName}/${presetName}",
+      "architecture": { "value": "x64", "strategy": "external" },
+      "cacheVariables": {
+        "CMAKE_C_COMPILER": "cl",
+        "CMAKE_CXX_COMPILER": "cl"
+      },
+      "condition": { "type": "equals", "lhs": "${hostSystemName}", "rhs": "Windows" }
+    },
+    {
+      "name": "gcc",
+      "hidden": true,
+      "cacheVariables": { "CMAKE_C_COMPILER": "gcc", "CMAKE_CXX_COMPILER": "g++" }
+    },
+    {
+      "name": "clang",
+      "hidden": true,
+      "cacheVariables": { "CMAKE_C_COMPILER": "clang", "CMAKE_CXX_COMPILER": "clang++" }
+    },
+    {
+      "name": "debug",
+      "hidden": true,
+      "cacheVariables": { "CMAKE_BUILD_TYPE": "Debug" }
+    },
+    {
+      "name": "release",
+      "hidden": true,
+      "cacheVariables": { "CMAKE_BUILD_TYPE": "Release" }
+    },
+    { "name": "linux-gcc-debug", "displayName": "Linux GCC Debug", "inherits": ["linux-base", "gcc", "debug"] },
+    { "name": "linux-gcc-release", "displayName": "Linux GCC Release", "inherits": ["linux-base", "gcc", "release"] },
+    { "name": "linux-clang-debug", "displayName": "Linux Clang Debug", "inherits": ["linux-base", "clang", "debug"] },
+    { "name": "linux-clang-release", "displayName": "Linux Clang Release", "inherits": ["linux-base", "clang", "release"] },
+    {
+      "name": "linux-clang-asan",
+      "displayName": "Linux Clang Debug with AddressSanitizer and UndefinedBehaviorSanitizer",
+      "inherits": ["linux-base", "clang", "debug"],
+      "cacheVariables": { "UNMAPPED_SANITIZE": "address,undefined" }
+    },
+    { "name": "windows-msvc-debug", "displayName": "Windows MSVC Debug", "inherits": ["windows-base", "debug"] },
+    { "name": "windows-msvc-release", "displayName": "Windows MSVC Release", "inherits": ["windows-base", "release"] }
+  ],
+  "buildPresets": [
+    { "name": "linux-gcc-debug", "configurePreset": "linux-gcc-debug" },
+    { "name": "linux-gcc-release", "configurePreset": "linux-gcc-release" },
+    { "name": "linux-clang-debug", "configurePreset": "linux-clang-debug" },
+    { "name": "linux-clang-release", "configurePreset": "linux-clang-release" },
+    { "name": "linux-clang-asan", "configurePreset": "linux-clang-asan" },
+    { "name": "windows-msvc-debug", "configurePreset": "windows-msvc-debug" },
+    { "name": "windows-msvc-release", "configurePreset": "windows-msvc-release" }
+  ],
+  "testPresets": [
+    {
+      "name": "test-base",
+      "hidden": true,
+      "output": { "outputOnFailure": true },
+      "execution": { "noTestsAction": "error" }
+    },
+    { "name": "linux-gcc-debug", "inherits": "test-base", "configurePreset": "linux-gcc-debug" },
+    { "name": "linux-gcc-release", "inherits": "test-base", "configurePreset": "linux-gcc-release" },
+    { "name": "linux-clang-debug", "inherits": "test-base", "configurePreset": "linux-clang-debug" },
+    { "name": "linux-clang-release", "inherits": "test-base", "configurePreset": "linux-clang-release" },
+    {
+      "name": "linux-clang-asan",
+      "inherits": "test-base",
+      "configurePreset": "linux-clang-asan",
+      "environment": {
+        "ASAN_OPTIONS": "detect_leaks=1:abort_on_error=1",
+        "UBSAN_OPTIONS": "print_stacktrace=1:halt_on_error=1"
+      }
+    },
+    { "name": "windows-msvc-debug", "inherits": "test-base", "configurePreset": "windows-msvc-debug" },
+    { "name": "windows-msvc-release", "inherits": "test-base", "configurePreset": "windows-msvc-release" }
+  ]
+}

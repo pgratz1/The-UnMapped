@@ -1,0 +1,98 @@
+# Continuous integration: build and test every preset on Linux and Windows.
+#
+# Build trees go under UNMAPPED_BUILD_ROOT (the runner's temp directory),
+# never into the checkout. The build itself makes no network access; only the
+# runner setup below installs tools.
+#
+# Third-party actions are pinned to full commit SHAs.
+
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: ${{ matrix.preset }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { os: ubuntu-latest, preset: linux-gcc-debug }
+          - { os: ubuntu-latest, preset: linux-gcc-release }
+          - { os: ubuntu-latest, preset: linux-clang-debug }
+          - { os: ubuntu-latest, preset: linux-clang-release }
+          - { os: ubuntu-latest, preset: linux-clang-asan }
+          - { os: windows-latest, preset: windows-msvc-debug }
+          - { os: windows-latest, preset: windows-msvc-release }
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Check out
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      # The runner context is not available in job-level env, so the build
+      # root is exported here for all later steps.
+      - name: Set the build root outside the checkout
+        run: echo "UNMAPPED_BUILD_ROOT=$RUNNER_TEMP/unmapped" >> "$GITHUB_ENV"
+
+      - name: Install Ninja (Linux)
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y ninja-build
+
+      - name: Allow AddressSanitizer with high-entropy ASLR (Linux)
+        if: runner.os == 'Linux' && contains(matrix.preset, 'asan')
+        run: sudo sysctl vm.mmap_rnd_bits=28
+
+      - name: Set up the MSVC developer environment (Windows)
+        if: runner.os == 'Windows'
+        uses: ilammy/msvc-dev-cmd@0b201ec74fa43914dc39ae48a89fd1d8cb592756 # v1.13.0
+        with:
+          arch: x64
+
+      - name: Tool versions
+        run: |
+          cmake --version
+          ninja --version
+          case "${{ matrix.preset }}" in
+            *gcc*)   g++ --version ;;
+            *clang*) clang++ --version ;;
+            *msvc*)  cl 2>&1 | head -n 1 || true ;;
+          esac
+
+      - name: Configure
+        run: cmake --preset "${{ matrix.preset }}" -B "$UNMAPPED_BUILD_ROOT/build/${{ matrix.preset }}"
+
+      - name: Build
+        run: cmake --build "$UNMAPPED_BUILD_ROOT/build/${{ matrix.preset }}"
+
+      - name: Test
+        run: ctest --preset "${{ matrix.preset }}" --test-dir "$UNMAPPED_BUILD_ROOT/build/${{ matrix.preset }}"
+
+      - name: Check that the checkout holds no generated files
+        run: |
+          leftovers="$(git status --porcelain --ignored)"
+          if [ -n "$leftovers" ]; then
+            echo "Generated files found in the source tree:"
+            echo "$leftovers"
+            exit 1
+          fi
+
+      # Cross-compiler hash check (added once worldgen-cli has `generate` and
+      # `hash`): here each matrix entry generates the golden seeds into
+      # $UNMAPPED_BUILD_ROOT/out/, writes one "<seed> <hash>" line per seed to
+      # hashes-<preset>.txt and uploads it with actions/upload-artifact. A
+      # separate `compare-hashes` job with `needs: build` downloads every
+      # hashes-*.txt and fails if any two differ.
