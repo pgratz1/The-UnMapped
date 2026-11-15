@@ -5,6 +5,8 @@
 #include "process.hpp"
 
 #include <cstddef>
+#include <cstdint>
+#include <optional>
 #include <filesystem>
 #include <fstream>
 #include <iterator>
@@ -127,7 +129,15 @@ int compare_names(const std::wstring& a, const std::wstring& b) {
     return CompareStringOrdinal(a.data(), static_cast<int>(a.size()), b.data(), static_cast<int>(b.size()), TRUE);
 }
 
-std::vector<wchar_t> environment_block(const std::vector<EnvChange>& changes) {
+void apply_wide_change(std::vector<std::wstring>& entries, const std::wstring& name,
+                       const std::optional<std::wstring>& value) {
+    std::erase_if(entries, [&](const std::wstring& e) { return compare_names(env_name(e), name) == CSTR_EQUAL; });
+    if (value.has_value()) {
+        entries.push_back(name + L"=" + *value);
+    }
+}
+
+std::vector<wchar_t> environment_block(const std::vector<EnvChange>& changes, const ProcessOptions& options) {
     std::vector<std::wstring> entries;
     if (wchar_t* block = GetEnvironmentStringsW(); block != nullptr) {
         for (const wchar_t* p = block; *p != L'\0';) {
@@ -138,11 +148,11 @@ std::vector<wchar_t> environment_block(const std::vector<EnvChange>& changes) {
         FreeEnvironmentStringsW(block);
     }
     for (const EnvChange& change : changes) {
-        const std::wstring name = widen(change.name);
-        std::erase_if(entries, [&](const std::wstring& e) { return compare_names(env_name(e), name) == CSTR_EQUAL; });
-        if (change.value.has_value()) {
-            entries.push_back(name + L"=" + widen(*change.value));
-        }
+        apply_wide_change(entries, widen(change.name),
+                          change.value.has_value() ? std::optional<std::wstring>(widen(*change.value)) : std::nullopt);
+    }
+    for (const auto& [name, value] : options.wide_env) {
+        apply_wide_change(entries, name, value);
     }
     // CreateProcessW expects the block sorted by name, case-insensitively.
     std::stable_sort(entries.begin(), entries.end(), [](const std::wstring& a, const std::wstring& b) {
@@ -174,7 +184,7 @@ HANDLE open_inheritable(const std::wstring& path, DWORD access, DWORD dispositio
 
 ProcessResult run_platform(const std::string& program, const std::vector<std::string>& args, const std::string& cwd,
                            const std::vector<EnvChange>& env, const std::string& out_path,
-                           const std::string& err_path, bool search_path) {
+                           const std::string& err_path, bool search_path, const ProcessOptions& options) {
     const std::wstring wprogram = backslashes(widen(program));
     std::wstring line;
     append_quoted(line, wprogram);
@@ -182,12 +192,17 @@ ProcessResult run_platform(const std::string& program, const std::vector<std::st
         line += L' ';
         append_quoted(line, widen(a));
     }
+    for (const std::wstring& a : options.wide_args) {
+        line += L' ';
+        append_quoted(line, a);
+    }
     std::vector<wchar_t> line_buffer(line.begin(), line.end());
     line_buffer.push_back(L'\0');
-    std::vector<wchar_t> env_block = environment_block(env);
+    std::vector<wchar_t> env_block = environment_block(env, options);
     const std::wstring wcwd = backslashes(widen(cwd));
 
-    HANDLE h_out = open_inheritable(widen(out_path), GENERIC_WRITE, CREATE_ALWAYS);
+    HANDLE h_out = open_inheritable(widen(options.stdout_path.value_or(out_path)), GENERIC_WRITE,
+                                    options.stdout_path ? OPEN_ALWAYS : CREATE_ALWAYS);
     HANDLE h_err = open_inheritable(widen(err_path), GENERIC_WRITE, CREATE_ALWAYS);
     HANDLE h_in = open_inheritable(L"NUL", GENERIC_READ, OPEN_EXISTING);
 
@@ -237,7 +252,7 @@ std::vector<std::string> child_environment(const std::vector<EnvChange>& changes
 
 ProcessResult run_platform(const std::string& program, const std::vector<std::string>& args, const std::string& cwd,
                            const std::vector<EnvChange>& env, const std::string& out_path,
-                           const std::string& err_path, bool search_path) {
+                           const std::string& err_path, bool search_path, const ProcessOptions& options) {
     // Everything the child needs is prepared before fork, so that the child
     // only calls async-signal-safe functions.
     std::vector<std::string> arg_strings;
@@ -255,7 +270,9 @@ ProcessResult run_platform(const std::string& program, const std::vector<std::st
     }
     envp.push_back(nullptr);
 
-    const int fd_out = open(out_path.c_str(), O_WRONLY | O_CREAT | O_TRUNC | O_CLOEXEC, 0644);
+    const int fd_out = options.stdout_path
+                           ? open(options.stdout_path->c_str(), O_WRONLY | O_CREAT | O_CLOEXEC, 0644)
+                           : open(out_path.c_str(), O_WRONLY | O_CREAT | O_TRUNC | O_CLOEXEC, 0644);
     const int fd_err = open(err_path.c_str(), O_WRONLY | O_CREAT | O_TRUNC | O_CLOEXEC, 0644);
     const int fd_in = open("/dev/null", O_RDONLY | O_CLOEXEC);
     if (fd_out < 0 || fd_err < 0 || fd_in < 0) {
@@ -305,21 +322,24 @@ ProcessResult run_platform(const std::string& program, const std::vector<std::st
 
 }  // namespace
 
-long current_process_id() {
+std::int64_t current_process_id() {
 #if defined(_WIN32)
-    return static_cast<long>(GetCurrentProcessId());
+    return static_cast<std::int64_t>(GetCurrentProcessId());
 #else
-    return static_cast<long>(getpid());
+    return static_cast<std::int64_t>(getpid());
 #endif
 }
 
 ProcessResult run_process(const std::string& program, const std::vector<std::string>& args, const std::string& cwd,
-                          const std::vector<EnvChange>& env, const std::string& capture_dir, bool search_path) {
+                          const std::vector<EnvChange>& env, const std::string& capture_dir, bool search_path,
+                          const ProcessOptions& options) {
     const unsigned long long id = next_capture_id();
     const std::string out_path = capture_path(capture_dir, id, ".out");
     const std::string err_path = capture_path(capture_dir, id, ".err");
-    ProcessResult result = run_platform(program, args, cwd, env, out_path, err_path, search_path);
-    result.out = read_and_remove(out_path);
+    ProcessResult result = run_platform(program, args, cwd, env, out_path, err_path, search_path, options);
+    if (!options.stdout_path) {
+        result.out = read_and_remove(out_path);
+    }
     result.err = read_and_remove(err_path);
     return result;
 }

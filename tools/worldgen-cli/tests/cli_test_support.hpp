@@ -187,6 +187,7 @@ inline std::vector<std::string> png_chunk_types(const Bytes& b) {
 struct RunOptions {
     std::vector<EnvChange> env;   // applied after UNMAPPED_BUILD_ROOT is set
     std::optional<fs::path> cwd;  // default: the sandbox's empty cwd/
+    ProcessOptions process;       // stdout redirection, raw UTF-16 (Windows)
 };
 
 class Sandbox {
@@ -267,7 +268,7 @@ private:
         env.push_back({"UNMAPPED_BUILD_ROOT", u8(root_)});
         env.insert(env.end(), options.env.begin(), options.env.end());
         const fs::path& dir = options.cwd ? *options.cwd : cwd_;
-        return run_process(program, args, u8(dir), env, u8(io_));
+        return run_process(program, args, u8(dir), env, u8(io_), false, options.process);
     }
 
     fs::path base_;

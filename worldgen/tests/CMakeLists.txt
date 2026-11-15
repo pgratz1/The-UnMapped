@@ -65,3 +65,6 @@ target_sources(worldgen-tests PRIVATE
     inspect_report_test.cpp
     inspect_hashes_test.cpp
 )
+
+# Output-location handling after the P0-04 audit (dangling symbolic links).
+target_sources(worldgen-tests PRIVATE generate_output_test.cpp)
