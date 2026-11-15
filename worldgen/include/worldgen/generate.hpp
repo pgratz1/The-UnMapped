@@ -8,19 +8,22 @@
 // are the caller's part (P0-04 5.1 step 1); this takes their results.
 
 #include <cstdint>
+#include <optional>
 #include <string>
 #include <string_view>
 #include <vector>
 
 #include "worldgen/core/sha256.hpp"
+#include "worldgen/data/content.hpp"
 #include "worldgen/db/result.hpp"
 #include "worldgen/db/writer.hpp"
 
 namespace worldgen {
 
 // Everything a world depends on (P0-04 section 10): seed or phrase, world
-// parameters, the content hash of the loaded data, and which optional
-// stages run. Never paths, time or environment.
+// parameters, the content hash of the loaded data, and which stages run;
+// plus the thread count, which is not part of what a world depends on
+// (P1-00 D10, P0-04 amendment 16 (a)). Never paths, time or environment.
 struct WorldParams {
     // The world seed (meta.seed). When seed_phrase is non-empty it must equal
     // phrase_seed(seed_phrase) (P0-01 7.3); generate_world checks this.
@@ -32,12 +35,26 @@ struct WorldParams {
     std::int64_t map_size = 1024;
     // meta.content_hash: content_hash() of the loaded data (P0-03 8).
     Sha256Digest content_hash{};
-    // Run the P0 test-pattern stage (P0-04 5.2, --test-pattern).
+    // Run the P0 test-pattern stage only, and no geography stage (P0-04
+    // 5.2, --test-pattern; P1-00 10.1). Exclusive with `until`.
     bool test_pattern = false;
+    // The stage limit (P1-00 10.1, --until): std::nullopt runs every
+    // implemented geography stage in the order of P1-00 section 3;
+    // stages::UNTIL_NONE ("none") runs none (the P0 empty world); a stage
+    // name runs the stages up to and including it. It must be accepted by
+    // stages::check_stage_limit.
+    std::optional<std::string> until;
+    // Threads for parallel steps, 1 to 256 (P1-00 D10). Used only to
+    // schedule work: it is never recorded in the world and never changes
+    // a byte of it.
+    std::uint32_t threads = 1;
 };
 
 // The names of the stages generate_world runs for params, in run order
-// (P0-04 5.1 step 3). P0: empty, or {"test_pattern"}.
+// (P0-04 5.1 step 3, P1-00 10.1): {"test_pattern"} with test_pattern;
+// otherwise the implemented geography stages up to params.until (none
+// while no geography stage is implemented). FatalError if test_pattern is
+// combined with until, or until is not accepted by check_stage_limit.
 [[nodiscard]] std::vector<std::string_view> planned_stages(const WorldParams& params);
 
 // Generates a world and writes it to out_utf8 (P0-04 5.1, P0-02 section 6).
@@ -48,5 +65,13 @@ struct WorldParams {
 // <out> remains: no <out>.partial (P0-02 section 3).
 [[nodiscard]] db::Status generate_world(const WorldParams& params, std::string_view out_utf8,
                                         db::Overwrite overwrite);
+
+// As above, with the loaded content handed to the stages (P1-00 5.1, 6.1).
+// params.content_hash must equal data::content_hash(content) (FatalError
+// otherwise). The overload without content uses an empty ContentSet and
+// does not check the hash; a geography stage run with it fails for lack
+// of its tuning.
+[[nodiscard]] db::Status generate_world(const WorldParams& params, const data::ContentSet& content,
+                                        std::string_view out_utf8, db::Overwrite overwrite);
 
 }  // namespace worldgen

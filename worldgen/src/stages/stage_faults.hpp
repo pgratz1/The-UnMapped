@@ -2,6 +2,7 @@
 
 // Private: the stage entry points with a test fault (worldgen/stages/testing.hpp).
 
+#include <span>
 #include <string_view>
 
 #include "worldgen/db/writer.hpp"
@@ -18,8 +19,11 @@ namespace detail {
 void run_test_pattern(db::WorldWriter& world, StageFault fault);
 
 // generate_world with a fault (generate.cpp).
-[[nodiscard]] db::Status generate_world(const WorldParams& params, std::string_view out_utf8,
-                                        db::Overwrite overwrite, StageFault fault);
+// stages_override, when not null, replaces the geography stages (test hook
+// generate_world_with_stages).
+[[nodiscard]] db::Status generate_world(const WorldParams& params, const data::ContentSet& content,
+                                        std::string_view out_utf8, db::Overwrite overwrite, StageFault fault,
+                                        const std::span<const StageInfo>* stages_override = nullptr);
 
 }  // namespace detail
 

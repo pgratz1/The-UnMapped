@@ -13,7 +13,9 @@
 #include "worldgen/db/layer_blob.hpp"
 #include "worldgen/db/result.hpp"
 #include "worldgen/db/writer.hpp"
+#include "worldgen/data/content.hpp"
 #include "worldgen/generate.hpp"
+#include "worldgen/stages/stage.hpp"
 
 namespace worldgen::stages::testing {
 
@@ -32,6 +34,17 @@ enum class StageFault : std::uint8_t {
 // --test-fatal-in-stage.
 [[nodiscard]] db::Status generate_world_with_fault(const WorldParams& params, std::string_view out_utf8,
                                                    db::Overwrite overwrite, StageFault fault);
+
+// generate_world with the given stages in place of the implemented
+// geography stages (P1-00 3, 5.1), so the pipeline can be tested before any
+// geography stage exists: each StageInfo runs in its own transaction, in
+// the order given, with a StageContext that sees the stages before it. The
+// names must be valid stage names; params.test_pattern must be false and
+// params.until std::nullopt (FatalError otherwise); params.content_hash must
+// equal data::content_hash(content). Output errors as generate_world.
+[[nodiscard]] db::Status generate_world_with_stages(const WorldParams& params, const data::ContentSet& content,
+                                                    std::span<const StageInfo> stages, std::string_view out_utf8,
+                                                    db::Overwrite overwrite = db::Overwrite::refuse);
 
 // One layer of a fixture world (P0-04 12.3, 12.5).
 struct FixtureLayer {

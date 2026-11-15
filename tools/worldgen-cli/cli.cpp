@@ -24,14 +24,18 @@
 #include <span>
 #include <string>
 #include <string_view>
+#include <thread>
 #include <utility>
 #include <vector>
 
 #include "output.hpp"
+#include "platform.hpp"
 #include "worldgen/core/error.hpp"
 #include "worldgen/core/hash.hpp"
+#include "worldgen/core/parallel.hpp"
 #include "worldgen/core/sha256.hpp"
 #include "worldgen/data/content.hpp"
+#include "worldgen/data/data_root.hpp"
 #include "worldgen/data/schema.hpp"
 #include "worldgen/data/settings.hpp"
 #include "worldgen/db/reader.hpp"
@@ -42,6 +46,7 @@
 #include "worldgen/inspect/hashes.hpp"
 #include "worldgen/inspect/render.hpp"
 #include "worldgen/inspect/report.hpp"
+#include "worldgen/stages/stage.hpp"
 #include "worldgen/version.hpp"
 
 #if defined(WORLDGEN_CLI_TEST_HOOKS)
@@ -131,7 +136,8 @@ constexpr std::string_view TOP_USAGE =
 constexpr std::string_view GENERATE_USAGE =
     "usage: worldgen-cli generate (--seed N | --seed-phrase TEXT) [--out PATH]\n"
     "                             [--map-size 512|1024|2048] [--settings FILE] [--data DIR]\n"
-    "                             [--test-pattern] [--force] [--verbose]\n"
+    "                             [--until STAGE|none | --test-pattern] [--threads N]\n"
+    "                             [--force] [--verbose]\n"
     "\n"
     "  --seed N            the 64-bit world seed: decimal, or 0x and 1 to 16 hex digits\n"
     "  --seed-phrase TEXT  a text phrase from which the seed is derived; letters are\n"
@@ -139,8 +145,12 @@ constexpr std::string_view GENERATE_USAGE =
     "  --out PATH          output world file (default <build root>/out/world-<seed>.db)\n"
     "  --map-size N        map side in cells: 512, 1024 or 2048 (default from settings, else 1024)\n"
     "  --settings FILE     world settings file; flags override it key by key\n"
-    "  --data DIR          data root\n"
-    "  --test-pattern      run the P0 test-pattern stage\n"
+    "  --data DIR          data root (default UNMAPPED_DATA_DIR, else the source tree's game/data)\n"
+    "  --until STAGE       run the geography stages up to and including STAGE;\n"
+    "                      'none' runs no stage (default: every implemented stage)\n"
+    "  --test-pattern      run only the P0 test-pattern stage, no geography\n"
+    "  --threads N         threads for parallel steps, 1 to 256 (default: hardware threads);\n"
+    "                      never changes the output\n"
     "  --force             replace an existing output file\n"
     "  --verbose           print progress and timings to stderr\n"
     "\n"
@@ -333,6 +343,8 @@ const CommandSpec GENERATE{
         {"settings", true},
         {"data", true},
         {"test-pattern", false},
+        {"until", true},
+        {"threads", true},
         {"force", false},
 #if defined(WORLDGEN_CLI_TEST_HOOKS)
         // Test-hook build only (P0-04 12.2): a fatal error inside the
@@ -341,6 +353,69 @@ const CommandSpec GENERATE{
 #endif
     },
 };
+
+// --until STAGE|none (P1-00 10.1, P0-04 amendment 16 (a)): an unknown or
+// not-yet-implemented stage name is a usage error, as is combining it with
+// --test-pattern.
+std::optional<std::string> parse_until_option(const Options& options) {
+    const std::string* text = options.value("until");
+    if (text == nullptr) {
+        return std::nullopt;
+    }
+    if (options.flag("test-pattern")) {
+        usage_error("--until and --test-pattern are exclusive; --test-pattern runs no geography stage");
+    }
+    switch (worldgen::stages::check_stage_limit(*text)) {
+        case worldgen::stages::StageLimitError::none:
+            return *text;
+        case worldgen::stages::StageLimitError::not_implemented:
+            usage_error("stage '" + *text + "' given to --until is not implemented yet");
+        case worldgen::stages::StageLimitError::unknown:
+            break;
+    }
+    std::string names;
+    for (const std::string_view name : worldgen::stages::GEOGRAPHY_STAGE_NAMES) {
+        names += names.empty() ? "" : ", ";
+        names += name;
+    }
+    usage_error("unknown stage '" + *text + "' given to --until; expected none or a stage name (" + names + ")");
+}
+
+// --threads N (P1-00 10.1, rule D10): decimal 1 to 256 (P0-04 4.2). Default:
+// the hardware thread count, or 1 if unknown, at most 256. The count only
+// schedules work; it never reaches the world.
+std::uint32_t parse_threads_option(const Options& options) {
+    if (const std::string* text = options.value("threads")) {
+        const std::uint64_t v = parse_integer_option("threads", *text);
+        if (v < 1U || v > worldgen::MAX_THREADS) {
+            usage_error("invalid --threads '" + *text + "'; expected 1 to 256");
+        }
+        return static_cast<std::uint32_t>(v);
+    }
+    const unsigned int hardware = std::thread::hardware_concurrency();  // the --threads default only
+    if (hardware == 0U) {
+        return 1U;
+    }
+    return hardware > worldgen::MAX_THREADS ? worldgen::MAX_THREADS : static_cast<std::uint32_t>(hardware);
+}
+
+// The data root (P0-03 7.6 and amendment 15, P1-00 6.3): --data, else
+// UNMAPPED_DATA_DIR if set and non-empty, else the configure-time game/data/.
+worldgen::data::DataRoot data_root_option(const Options& options) {
+    std::optional<std::string_view> flag;
+    if (const std::string* dir = options.value("data")) {
+        flag = *dir;
+    }
+    std::optional<std::string> env;
+    if (!flag) {
+        platform::EnvironmentValue v = platform::environment_utf8(worldgen::data::DATA_DIR_ENV.data());
+        if (v.invalid) {
+            usage_error(std::string(worldgen::data::DATA_DIR_ENV) + " is not valid UTF-16; fix it or pass --data");
+        }
+        env = std::move(v.value);
+    }
+    return worldgen::data::resolve_data_root(flag, env ? std::optional<std::string_view>(*env) : std::nullopt);
+}
 
 Exit run_generate(const Options& options) {
     const Progress progress(options.flag("verbose"));
@@ -370,6 +445,8 @@ Exit run_generate(const Options& options) {
         }
         flag_map_size = static_cast<std::int64_t>(v);
     }
+    std::optional<std::string> until = parse_until_option(options);
+    const std::uint32_t threads = parse_threads_option(options);
 #if defined(WORLDGEN_CLI_TEST_HOOKS)
     if (options.flag("test-fatal-in-stage") && !options.flag("test-pattern")) {
         usage_error("--test-fatal-in-stage needs --test-pattern");
@@ -389,11 +466,14 @@ Exit run_generate(const Options& options) {
     }
     const worldgen::data::KindRegistry registry = worldgen::data::builtin_kinds();
     worldgen::data::LoadResult<worldgen::data::ContentSet> content;
-    if (const std::string* dir = options.value("data")) {
-        progress.note("loading data '" + *dir + "'");
-        content = worldgen::data::load_content(registry, db::path_from_utf8(*dir));
+    const worldgen::data::DataRoot data_root = data_root_option(options);
+    if (data_root.source != worldgen::data::DataRootSource::none) {
+        // With no kind registered the root is not opened (P0-03 amendment 9).
+        progress.note(registry.kinds().empty() ? "data root '" + data_root.path + "' (not read: no kind is registered)"
+                                               : "loading data '" + data_root.path + "'");
+        content = worldgen::data::load_content(registry, db::path_from_utf8(data_root.path));
         if (!content.ok()) {
-            throw Failure(Exit::input, "invalid data in '" + *dir + "'", load_error_lines(content.errors));
+            throw Failure(Exit::input, "invalid data in '" + data_root.path + "'", load_error_lines(content.errors));
         }
     } else {
         content = worldgen::data::load_content_without_data(registry);
@@ -417,6 +497,8 @@ Exit run_generate(const Options& options) {
     params.map_size = flag_map_size.value_or(settings.map_size);
     params.content_hash = worldgen::data::content_hash(*content.value);
     params.test_pattern = options.flag("test-pattern");
+    params.until = std::move(until);
+    params.threads = threads;
 
     // Output path (P0-04 4.3).
     std::string out;
@@ -443,10 +525,10 @@ Exit run_generate(const Options& options) {
         status = worldgen::stages::testing::generate_world_with_fault(
             params, out, overwrite, worldgen::stages::testing::StageFault::fatal_inside_test_pattern);
     } else {
-        status = worldgen::generate_world(params, out, overwrite);
+        status = worldgen::generate_world(params, *content.value, out, overwrite);
     }
 #else
-    status = worldgen::generate_world(params, out, overwrite);
+    status = worldgen::generate_world(params, *content.value, out, overwrite);
 #endif
     if (!status.ok()) {
         fail_with(status.error());

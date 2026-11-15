@@ -663,6 +663,19 @@ KindContent load_kind(const Kind& kind, const Listing& listing, ErrorList& error
                                    "; ids match [a-z][a-z0-9_]* and are 1 to 64 bytes");
                     continue;
                 }
+                if (kind.schema_for(id) == nullptr) {
+                    // A fixed-id kind and an id outside its set (P0-03
+                    // amendment 15): an error at the definition's header.
+                    std::string expected;
+                    for (const IdSchema& s : kind.id_schemas) {  // ascending id
+                        expected += expected.empty() ? "" : ", ";
+                        expected += in_quotes(s.id);
+                    }
+                    errors.add(file.path, def.position,
+                               "unknown id " + in_quotes(id) + " for kind " + in_quotes(kind.name) + "; expected one of " +
+                                   expected);
+                    continue;
+                }
                 if (def.kind != NodeKind::table) {
                     errors.add(file.path, def.position,
                                "definition " + in_quotes(full) + " is " + std::string(detail::kind_phrase(def)) +
@@ -689,7 +702,8 @@ KindContent load_kind(const Kind& kind, const Listing& listing, ErrorList& error
     Validator validator(errors, refs);
     for (const Candidate& c : candidates) {
         Record record;
-        const bool ok = validator.record(kind.schema, *c.node, detail::child_key(kind.name, c.id), *c.path, record);
+        const bool ok =
+            validator.record(*kind.schema_for(c.id), *c.node, detail::child_key(kind.name, c.id), *c.path, record);
         if (ok && !c.duplicate) {
             out.definitions.push_back(Definition{c.id, std::move(record)});
         }
@@ -697,7 +711,16 @@ KindContent load_kind(const Kind& kind, const Listing& listing, ErrorList& error
     for (const auto& [id, location] : first_seen) {
         ids.insert(id);
     }
-    if (kind.required && first_seen.empty()) {
+    if (kind.has_fixed_ids()) {
+        // Every id of the set must be defined (P0-03 amendment 15). This
+        // replaces the "no definitions" error of a required kind, which it
+        // implies.
+        for (const IdSchema& s : kind.id_schemas) {
+            if (first_seen.find(s.id) == first_seen.end()) {
+                errors.add(kind.directory, Position{}, "missing definition " + in_quotes(detail::child_key(kind.name, s.id)));
+            }
+        }
+    } else if (kind.required && first_seen.empty()) {
         errors.add(kind.directory, Position{},
                    "required kind " + in_quotes(kind.name) + " has no definitions in '" + kind.directory + "/'");
     }
@@ -709,6 +732,11 @@ LoadResult<ContentSet> load_from(const KindRegistry& registry, Source& source) {
     for (const Kind& kind : registry.kinds()) {
         for (const Field& f : kind.schema.fields()) {
             check_ref_targets(registry, f.type);
+        }
+        for (const IdSchema& s : kind.id_schemas) {
+            for (const Field& f : s.schema.fields()) {
+                check_ref_targets(registry, f.type);
+            }
         }
     }
     ErrorList errors;

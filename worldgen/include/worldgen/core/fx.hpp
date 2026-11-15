@@ -32,6 +32,10 @@ public:
     static const Fx MAX;   // raw 2^63 - 1
     static const Fx MIN;   // raw -(2^63 - 1)
     static const Fx PI;    // raw 13493037705 = round(pi * 2^32)
+    // P0-01 section 15 (P1-00 appendix A1 (a), section 12): sqrt(2) and
+    // 1/sqrt(2); mul(SQRT2, INV_SQRT2) is exactly ONE.
+    static const Fx SQRT2;      // raw 6074001000 = round(sqrt(2) * 2^32)
+    static const Fx INV_SQRT2;  // raw 3037000500 = round(2^32 / sqrt(2))
 
     // raw = r (P0-01 5.2). Fatal if r = INT64_MIN.
     [[nodiscard]] static Fx from_raw(std::int64_t r);
@@ -74,6 +78,8 @@ inline constexpr Fx Fx::HALF{std::int64_t{2147483648}, Fx::RawTag{}};
 inline constexpr Fx Fx::MAX{std::int64_t{9223372036854775807}, Fx::RawTag{}};
 inline constexpr Fx Fx::MIN{std::int64_t{-9223372036854775807}, Fx::RawTag{}};
 inline constexpr Fx Fx::PI{std::int64_t{13493037705}, Fx::RawTag{}};
+inline constexpr Fx Fx::SQRT2{std::int64_t{6074001000}, Fx::RawTag{}};
+inline constexpr Fx Fx::INV_SQRT2{std::int64_t{3037000500}, Fx::RawTag{}};
 
 // --- Arithmetic (P0-01 5.4) -------------------------------------------------
 

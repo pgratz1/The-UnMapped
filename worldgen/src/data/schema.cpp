@@ -302,6 +302,32 @@ const Field* Schema::find(std::string_view name) const noexcept {
     return nullptr;
 }
 
+// --- Kind (fixed ids, P0-03 amendment 15) ---------------------------------------
+
+Kind Kind::with_fixed_ids(std::string name, std::string directory, bool required, std::vector<IdSchema> id_schemas) {
+    if (id_schemas.empty()) {
+        fatal("Kind::with_fixed_ids: the id set is empty");
+    }
+    Kind kind;
+    kind.name = std::move(name);
+    kind.directory = std::move(directory);
+    kind.required = required;
+    kind.id_schemas = std::move(id_schemas);
+    return kind;
+}
+
+const Schema* Kind::schema_for(std::string_view id) const noexcept {
+    if (id_schemas.empty()) {
+        return &schema;
+    }
+    for (const IdSchema& s : id_schemas) {
+        if (s.id == id) {
+            return &s.schema;
+        }
+    }
+    return nullptr;
+}
+
 // --- KindRegistry -------------------------------------------------------------
 
 void KindRegistry::add(Kind kind) {
@@ -310,6 +336,23 @@ void KindRegistry::add(Kind kind) {
     }
     if (!is_valid_name(kind.directory)) {
         fatal("KindRegistry::add: invalid directory name");
+    }
+    if (kind.has_fixed_ids()) {
+        if (!kind.schema.fields().empty() || !kind.schema.checks().empty()) {
+            fatal("KindRegistry::add: a fixed-id kind has a schema per id; its common schema must be empty");
+        }
+        for (const IdSchema& s : kind.id_schemas) {
+            if (!is_valid_id(s.id)) {
+                fatal("KindRegistry::add: a fixed id does not match the id grammar");
+            }
+        }
+        std::stable_sort(kind.id_schemas.begin(), kind.id_schemas.end(),
+                         [](const IdSchema& a, const IdSchema& b) { return detail::bytes_less(a.id, b.id); });
+        for (std::size_t i = 1; i < kind.id_schemas.size(); ++i) {
+            if (kind.id_schemas[i - 1].id == kind.id_schemas[i].id) {
+                fatal("KindRegistry::add: a fixed id is listed twice");
+            }
+        }
     }
     for (const Kind& k : kinds_) {
         if (k.name == kind.name) {
