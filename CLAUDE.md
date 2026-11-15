@@ -30,8 +30,8 @@ worldgen/             C++ library, no engine dependencies
 tools/worldgen-cli/   command-line front end: generate, render, report, hash
 tools/lint/           banned-construct lint (owned by the determinism auditor)
 tools/ci/             world-hashes.sh, the cross-compiler world hash check
-gdext/                C++ GDExtension (phase P2, viewer engineer)
-game/                 Godot project; the viewer lives in game/viewer/ (phase P2)
+gdext/                C++ GDExtension: world.db binding and viewer logic (phase P2, viewer engineer)
+game/                 Godot project, layout only; the viewer scene is game/viewer/viewer.tscn (phase P2)
 extern/               vendored third-party libraries at pinned versions, see extern/README.md
 docs/                 design/, specs/, reviews/
 .github/workflows/    continuous integration
@@ -83,7 +83,7 @@ One stage per branch, merged when green. Each phase ends with a review by Paul b
 
 ## Build and test
 
-Requirements: CMake 3.25 or newer, Ninja, and GCC, Clang or MSVC (Visual Studio 2022 or newer) with C++20. Everything else is vendored in `extern/`; the build never uses the network.
+Requirements: CMake 3.25 or newer, Ninja, and GCC, Clang or MSVC (Visual Studio 2022 or newer) with C++20. Everything else is vendored in `extern/`; the build never uses the network. The optional Godot extension also needs Python 3.8 or newer, and the pinned Godot editor to run it (see "Godot extension and viewer" below).
 
 ### Presets
 
@@ -205,7 +205,52 @@ All flags are set in `cmake/UnmappedCompilerFlags.cmake`:
 ### Adding code
 
 - Library sources go in `worldgen/CMakeLists.txt`, library tests in `worldgen/tests/CMakeLists.txt` (`worldgen-tests`), CLI sources in `tools/worldgen-cli/CMakeLists.txt` and CLI integration tests in `tools/worldgen-cli/tests/CMakeLists.txt` (`worldgen-cli-tests`). Every new project target calls `unmapped_project_target()`.
-- Vendored libraries are linked as `unmapped::sqlite3`, `unmapped::doctest`, `unmapped::tomlplusplus` and `unmapped::stb_image_write`.
+- Vendored libraries are linked as `unmapped::sqlite3`, `unmapped::doctest`, `unmapped::tomlplusplus` and `unmapped::stb_image_write`; with `UNMAPPED_BUILD_GDEXT=ON` also `unmapped::godot-cpp`.
+- Extension sources go in `gdext/CMakeLists.txt` (`unmapped_gdext`); scenes and resources in `game/`. See `gdext/README.md`.
+
+### Godot extension and viewer
+
+Pinned versions, in summary. The record, with the evidence for the choice, is `gdext/README.md` ("Pinned versions"); the editor's SHA-512 digests are kept only in `tools/ci/godot-4.7.2-stable.sha512`:
+
+| What | Version |
+| --- | --- |
+| Godot | **4.7.2-stable**, the newest stable Godot that Terrain3D supports: Terrain3D v1.1.0-stable (newest release, 2026-10-30) states "Supports Godot 4.5-4.8+", and Godot 4.8 is still in beta (checked 2026-11-15) |
+| godot-cpp | **10.0.0-stable**, vendored in `extern/godot-cpp/`, built for GDExtension API **4.7** |
+
+The extension is the CMake option `UNMAPPED_BUILD_GDEXT`, OFF by default; with it off nothing in the build changes. It builds with every preset except `linux-clang-asan`, where configure refuses it (a sanitized library cannot be loaded into the stock editor).
+
+Install the pinned editor once with the fetch script (never done by the build; CI runs the same script):
+
+```
+tools/ci/fetch-godot.sh                       # Linux; on Windows run it from Git Bash
+tools/ci/fetch-godot.sh --tools-dir DIR       # somewhere else; then configure with -DUNMAPPED_GODOT=<printed path>
+```
+
+It downloads the editor archive from the Godot release on GitHub, checks it and every extracted file against the SHA-512 digests in `tools/ci/godot-4.7.2-stable.sha512` (the archive digests are those of the release's `SHA512-SUMS.txt`), and installs into `~/.cache/the-unmapped/tools/godot-4.7.2-stable/` (`%LOCALAPPDATA%\the-unmapped\tools\godot-4.7.2-stable\` on Windows, with both `Godot_v4.7.2-stable_win64.exe` and the `_console.exe` the check runs), the folder CMake searches. It prints the editor's path. When the files are already there and match, it does nothing; when an installed file does not match, it stops and touches nothing. Needs curl, and unzip or Python 3. It ignores `UNMAPPED_BUILD_ROOT`, since CMake's lookup does.
+
+Changing the Godot version means changing, together: the table above, `VERSION` in `tools/ci/fetch-godot.sh`, the digests file (renamed for the version), `UNMAPPED_GODOT_VERSION` and the editor names in `gdext/CMakeLists.txt`, and `gdext/README.md`.
+
+Build the extension and run every test, including the headless check:
+
+```
+cmake --preset linux-gcc-debug -DUNMAPPED_BUILD_GDEXT=ON
+cmake --build --preset linux-gcc-debug
+ctest --preset linux-gcc-debug
+ctest --preset linux-gcc-debug -R gdext-headless-check -V    # the headless check alone
+```
+
+`gdext-headless-check` is registered only when the pinned editor is found (in the tools folder above, on `PATH`, or named by `-DUNMAPPED_GODOT=<path>`). It generates `--seed 42 --test-pattern`, imports the project headless, runs the real viewer scene on that world and checks that it lists three layers and shows, for each, the same pixels as `worldgen-cli render`. It takes about 4 seconds. A clean build with the extension takes about 3.5 minutes on 6 cores with an empty ccache (godot-cpp is about 1,100 files; `linux-gcc-release`, measured 2026-11-15), against under a minute without it; with a warm ccache a clean build of the same tree takes about 3 seconds.
+
+Open the viewer on a test world (Linux; the path after `--` must be absolute):
+
+```
+B=~/.cache/the-unmapped/build/$(basename "$PWD")/linux-gcc-debug
+GODOT=~/.cache/the-unmapped/tools/godot-4.7.2-stable/Godot_v4.7.2-stable_linux.x86_64
+"$B/tools/worldgen-cli/worldgen-cli" generate --seed 42 --test-pattern --out ~/.cache/the-unmapped/out/seed42.db
+"$GODOT" --path "$B/game" -- ~/.cache/the-unmapped/out/seed42.db
+```
+
+`"$GODOT" --editor --path "$B/game"` opens the project in the editor. Never open `game/` itself: Godot always runs on the run copy `<build>/game/` (see below).
 
 ### Continuous integration
 
@@ -214,6 +259,10 @@ All flags are set in `cmake/UnmappedCompilerFlags.cmake`:
 - `determinism-lint` (one Linux job): the three lint commands above.
 - `build` (one job per preset, all seven, on `ubuntu-latest` and `windows-latest`): configure, build and `ctest` under `$RUNNER_TEMP/unmapped`; then `world-hashes.sh generate` and `expect` (a warning, not a failure, while `p0-worlds.txt` is absent); upload the case files as artifact `world-hashes-<preset>`; finally fail if the checkout holds any generated file.
 - `compare-hashes` (Linux, after every `build` job, also when some failed, not when the run is cancelled): downloads every `world-hashes-*` artifact and runs `world-hashes.sh compare` over every build preset in `CMakePresets.json`. A difference, or a preset with no artifact, fails it. This job is the P0 exit check: the empty worlds are byte-identical across GCC, Clang and MSVC.
+- `gdext` (two jobs, `gdext-linux` with `linux-gcc-release` and `gdext-windows` with `windows-msvc-release`): the extension. Fetches the pinned editor with `tools/ci/fetch-godot.sh --tools-dir "$RUNNER_TEMP/unmapped/tools"` (cached per Godot version and digests file; a restored copy is re-verified), configures with `-DUNMAPPED_BUILD_GDEXT=ON -DUNMAPPED_GODOT=<editor>` into `build/<preset>-gdext`, fails straight after configure if `ctest -N` does not list `gdext-headless-check`, builds, runs `ctest`, prints the headless check's full log, then `world-hashes.sh generate` and `expect` under the label `<preset>-gdext` (artifact `gdext-world-hashes-<preset>`, a name `compare-hashes` does not download), and ends with the clean-checkout check. On failure it also lists the run copy of the project and uploads the headless check's files.
+- `compare-gdext-hashes` (Linux, after `build` and `gdext`): `world-hashes.sh compare <preset> <preset>-gdext` for both presets, which proves that building `worldgen` position independent for the extension changes no output byte. A separate job, so that `compare-hashes` does not wait for the extension builds.
+
+Compiler cache: `gdext-linux` uses ccache (cache key: preset, GCC version, hash of `extern/godot-cpp/`; saved once per key), so a run with an unchanged godot-cpp mostly hits. `gdext-windows` uses none, and configures with `-DUNMAPPED_USE_CCACHE=OFF`: neither ccache nor sccache has been tried with this build (godot-cpp adds a public `/MP` flag to every MSVC compile), and a cache that cannot be checked here is a risk the job does not need. The release preset has no debug information, so `/Zi` against `/Z7` is not what rules it out. A cold Windows extension build is expected to take 10 to 20 minutes. The seven `build` jobs use no compiler cache.
 
 Third-party actions are pinned to full commit SHAs.
 
@@ -224,7 +273,7 @@ Paul's checkout is inside a Dropbox folder, so nothing generated may be written 
 - Every CMake preset sets `binaryDir` outside the tree. The default root is `$HOME/.cache/the-unmapped/` (`%LOCALAPPDATA%\the-unmapped\` on Windows), overridable with the `UNMAPPED_BUILD_ROOT` environment variable through `-B` (see "Choosing another build root" above). Layout under the root: `build/<source dir name>/<preset>/` for build trees (see "Several worktrees" above), `out/` for generated worlds, map images, reports and seed-sweep results (`worldgen-cli`'s default; `world-hashes.sh` uses `out/<source dir name>/world-hashes/`), `tools/` for downloaded tools such as the pinned Godot editor.
 - The top-level `CMakeLists.txt` refuses a build directory that is the source tree or inside it. CMake still writes `CMakeCache.txt` and `CMakeFiles/` into the refused directory before stopping; delete them.
 - `worldgen-cli`, tests and sweep scripts take explicit output paths and default to `out/` under the build root, never the current directory.
-- Compiled GDExtension libraries are produced under the build root and placed where the Godot project loads them by a symlink or by a path in the `.gdextension` file, not by copying binaries into `game/`.
+- Compiled GDExtension libraries are produced under the build root and placed where the Godot project loads them by a symlink or by a path in the `.gdextension` file, not by copying binaries into `game/`. The build does this by assembling a run copy of the project in the build tree, `<build>/game/`: one link per entry of `game/`, a real `bin/` that is the extension's output directory, and Godot's own `.godot/` cache. Godot is always run on that copy, so neither the library nor the cache is written into the repository (`gdext/README.md`).
 - `.gitignore` covers the usual in-tree build directories and Godot's `.godot/` cache as a backstop only.
 
 Anything meant to be kept in the repository (golden hashes, review images attached to `docs/reviews/`) is copied in deliberately and kept small.

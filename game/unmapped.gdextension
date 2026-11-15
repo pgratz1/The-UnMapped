@@ -1,0 +1,16 @@
+; The Unmapped GDExtension (gdext/). The library is built under the build
+; tree into <build>/game/bin/, the bin/ folder of the run copy of this project
+; (gdext/README.md); it is never copied into the repository.
+
+[configuration]
+
+entry_symbol = "unmapped_gdext_init"
+compatibility_minimum = "4.7"
+reloadable = false
+
+[libraries]
+
+linux.debug.x86_64 = "res://bin/libunmapped_gdext.so"
+linux.release.x86_64 = "res://bin/libunmapped_gdext.so"
+windows.debug.x86_64 = "res://bin/unmapped_gdext.dll"
+windows.release.x86_64 = "res://bin/unmapped_gdext.dll"

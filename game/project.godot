@@ -1,0 +1,23 @@
+; The Unmapped: Godot project settings (game/README.md).
+; All logic is C++ in the GDExtension (gdext/); this project holds layout only.
+; Do not open this folder directly in the editor: open the run copy under the
+; build tree, <build>/game/project.godot (see gdext/README.md).
+
+config_version=5
+
+[application]
+
+config/name="The Unmapped"
+config/description="World viewer (phase P2)"
+run/main_scene="res://viewer/viewer.tscn"
+config/features=PackedStringArray("4.7")
+
+[display]
+
+window/size/viewport_width=1600
+window/size/viewport_height=900
+window/stretch/aspect="expand"
+
+[rendering]
+
+renderer/rendering_method="forward_plus"

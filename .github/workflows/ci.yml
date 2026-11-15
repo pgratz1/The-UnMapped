@@ -2,9 +2,15 @@
 # Windows, and prove that the P0 worlds are byte-identical across compilers
 # (spec P0-04 section 9).
 #
+# Two more jobs build the Godot extension (gdext/, -DUNMAPPED_BUILD_GDEXT=ON)
+# on one preset per platform and run its headless check against the pinned
+# Godot editor, which a workflow step downloads and verifies with
+# tools/ci/fetch-godot.sh.
+#
 # Build trees and generated worlds go under UNMAPPED_BUILD_ROOT (the runner's
 # temp directory), never into the checkout. The build itself makes no network
-# access; only the runner setup below installs tools.
+# access; only the runner setup below installs tools, and the Godot editor is
+# checked against the SHA-512 digests in tools/ci/godot-<version>.sha512.
 #
 # Third-party actions are pinned to full commit SHAs.
 
@@ -140,6 +146,182 @@ jobs:
             exit 1
           fi
 
+  # The Godot extension (P2): one release preset per platform with
+  # -DUNMAPPED_BUILD_GDEXT=ON. Separate from the build matrix so that those
+  # seven jobs and compare-hashes keep their speed and their preset list.
+  # Fails if the headless check is not registered (e.g. the editor was not
+  # found), since an unregistered test would otherwise pass silently.
+  gdext:
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { name: gdext-linux, os: ubuntu-latest, preset: linux-gcc-release }
+          - { name: gdext-windows, os: windows-latest, preset: windows-msvc-release }
+    defaults:
+      run:
+        shell: bash
+    env:
+      # Build tree name and world-hashes label of this job: <preset>-gdext.
+      LABEL: ${{ matrix.preset }}-gdext
+    steps:
+      - name: Check out
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Set the build root and tools folder outside the checkout
+        run: |
+          echo "UNMAPPED_BUILD_ROOT=$RUNNER_TEMP/unmapped" >> "$GITHUB_ENV"
+          echo "BUILD_DIR=$RUNNER_TEMP/unmapped/build/$LABEL" >> "$GITHUB_ENV"
+          echo "TOOLS_DIR=$RUNNER_TEMP/unmapped/tools" >> "$GITHUB_ENV"
+
+      # ccache only on Linux; see CLAUDE.md "Continuous integration" for why
+      # the Windows job builds without a compiler cache.
+      - name: Install Ninja and ccache (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update && sudo apt-get install -y ninja-build ccache
+          echo "CCACHE_DIR=$RUNNER_TEMP/ccache" >> "$GITHUB_ENV"
+          echo "CCACHE_MAXSIZE=2G" >> "$GITHUB_ENV"
+
+      - name: Set up the MSVC developer environment (Windows)
+        if: runner.os == 'Windows'
+        uses: ilammy/msvc-dev-cmd@0b201ec74fa43914dc39ae48a89fd1d8cb592756 # v1.13.0
+        with:
+          arch: x64
+
+      - name: Tool versions
+        id: versions
+        run: |
+          cmake --version
+          ninja --version
+          python3 --version 2>/dev/null || python --version
+          case "${{ matrix.preset }}" in
+            *gcc*)
+              g++ --version
+              ccache --version | head -n 1
+              echo "compiler=gcc-$(g++ -dumpfullversion)" >> "$GITHUB_OUTPUT" ;;
+            *msvc*)
+              cl 2>&1 | head -n 1 || true
+              echo "compiler=msvc-$(cl 2>&1 | head -n 1 | sed -n 's/.*Version \([0-9.]*\).*/\1/p')" >> "$GITHUB_OUTPUT" ;;
+          esac
+          echo "godot=$(bash tools/ci/fetch-godot.sh --version)" >> "$GITHUB_OUTPUT"
+
+      # The verified editor is cached per version and per pinned digests; the
+      # fetch step below re-verifies a restored copy and downloads only on a
+      # cache miss.
+      - name: Restore the Godot editor
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ env.TOOLS_DIR }}/godot-${{ steps.versions.outputs.godot }}
+          key: godot-${{ steps.versions.outputs.godot }}-${{ runner.os }}-${{ hashFiles('tools/ci/godot-*.sha512') }}
+
+      - name: Fetch and verify the Godot editor
+        run: |
+          godot="$(bash tools/ci/fetch-godot.sh --tools-dir "$TOOLS_DIR")"
+          echo "UNMAPPED_GODOT_PATH=$godot" >> "$GITHUB_ENV"
+          "$godot" --headless --version
+
+      # One cache per preset, compiler version and godot-cpp tree. It is
+      # saved once per key (keys are immutable); later runs restore it, and a
+      # changed godot-cpp or compiler starts from the newest older cache.
+      - name: Restore the compiler cache (Linux)
+        if: runner.os == 'Linux'
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ runner.temp }}/ccache
+          key: ccache-${{ matrix.preset }}-${{ steps.versions.outputs.compiler }}-${{ hashFiles('extern/godot-cpp/**') }}
+          restore-keys: |
+            ccache-${{ matrix.preset }}-${{ steps.versions.outputs.compiler }}-
+
+      - name: Configure
+        run: |
+          # Windows: no compiler cache, even if a runner image ships one.
+          ccache_opt=
+          if [ "$RUNNER_OS" = Windows ]; then ccache_opt=-DUNMAPPED_USE_CCACHE=OFF; fi
+          cmake --preset "${{ matrix.preset }}" -B "$BUILD_DIR" \
+            -DUNMAPPED_BUILD_GDEXT=ON "-DUNMAPPED_GODOT=$UNMAPPED_GODOT_PATH" $ccache_opt
+
+      # Checked before the long build: configure registers the test only
+      # when it finds an editor of the pinned version.
+      - name: Check that the headless check is registered
+        run: |
+          ctest --test-dir "$BUILD_DIR" -N | tr -d '\r' | tee "$RUNNER_TEMP/test-list.txt"
+          if ! grep -Eq '^ *Test +#[0-9]+: gdext-headless-check$' "$RUNNER_TEMP/test-list.txt"; then
+            echo "::error title=gdext-headless-check missing::configure did not register gdext-headless-check (see the configure log for the gdext: lines)"
+            exit 1
+          fi
+
+      - name: Build
+        id: build
+        run: |
+          if command -v ccache >/dev/null 2>&1; then ccache -z; fi
+          cmake --build "$BUILD_DIR"
+          if command -v ccache >/dev/null 2>&1; then ccache -s; fi
+
+      # Every test, including gdext-headless-check (shown in full by the next
+      # step as well).
+      - name: Test
+        run: ctest --preset "${{ matrix.preset }}" --test-dir "$BUILD_DIR"
+
+      - name: Headless check log
+        if: always() && steps.build.outcome == 'success'
+        run: ctest --preset "${{ matrix.preset }}" --test-dir "$BUILD_DIR" -R '^gdext-headless-check$' -V --no-tests=error
+
+      - name: Show the run copy of the Godot project
+        if: failure() && steps.build.outcome != 'skipped'
+        run: ls -la "$BUILD_DIR/game" "$BUILD_DIR/game/bin" "$BUILD_DIR/game/.godot" || true
+
+      # Shows whether each entry is a junction, a symbolic link or a copy.
+      - name: Show the links of the run copy (Windows)
+        if: failure() && steps.build.outcome != 'skipped' && runner.os == 'Windows'
+        shell: pwsh
+        run: Get-ChildItem -Force "$env:BUILD_DIR/game" | Format-Table -AutoSize Mode, Name, LinkType, Target, Length
+
+      # The extension builds worldgen position independent; the eight P0
+      # cases must still match the golden hashes, and compare-gdext-hashes
+      # checks that they equal the same preset's option-OFF output.
+      # Run even when a test failed, so a failing first run still shows them.
+      - name: Generate the P0 world cases
+        id: cases
+        if: always() && steps.build.outcome == 'success'
+        run: bash tools/ci/world-hashes.sh generate "$LABEL" --build-dir "$BUILD_DIR"
+
+      - name: Check the golden world hashes
+        if: always() && steps.cases.outcome == 'success'
+        run: bash tools/ci/world-hashes.sh expect "$LABEL" --build-dir "$BUILD_DIR"
+
+      # Not named world-hashes-*, so compare-hashes never downloads it.
+      - name: Upload the world hashes
+        if: always() && steps.cases.outcome != 'skipped'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: gdext-world-hashes-${{ matrix.preset }}
+          path: ${{ env.UNMAPPED_BUILD_ROOT }}/out/world-hashes/${{ env.LABEL }}-*
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Upload the headless check files
+        if: failure() && steps.build.outcome == 'success'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: gdext-headless-check-${{ matrix.preset }}
+          path: ${{ env.BUILD_DIR }}/gdext/headless-check
+          if-no-files-found: ignore
+          retention-days: 14
+
+      - name: Check that the checkout holds no generated files
+        if: always()
+        run: |
+          leftovers="$(git status --porcelain --ignored)"
+          if [ -n "$leftovers" ]; then
+            echo "Generated files found in the source tree:"
+            echo "$leftovers"
+            exit 1
+          fi
+
   # Cross-compiler identity: every preset's hash --detail and report text for
   # every case must be identical. Runs even when matrix jobs failed (but not
   # when the run was cancelled); a preset without an artifact is a failure.
@@ -176,3 +358,37 @@ jobs:
           ls -l "$RUNNER_TEMP/world-hashes"
           # shellcheck disable=SC2086
           bash tools/ci/world-hashes.sh compare $presets --out-dir "$RUNNER_TEMP/world-hashes"
+
+  # Building worldgen position independent for the extension must not change
+  # a byte: each gdext job's hash --detail and report text must equal those
+  # of the same preset built with the option OFF. A separate job, so that
+  # compare-hashes does not wait for the slow extension builds.
+  compare-gdext-hashes:
+    name: compare-gdext-hashes
+    needs: [build, gdext]
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Check out
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Download the world hashes
+        continue-on-error: true
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          pattern: "*world-hashes-*"
+          merge-multiple: true
+          path: ${{ runner.temp }}/world-hashes
+
+      - name: Compare each extension build with its preset
+        run: |
+          echo "build: ${{ needs.build.result }}, gdext: ${{ needs.gdext.result }}"
+          mkdir -p "$RUNNER_TEMP/world-hashes"
+          failed=0
+          for preset in linux-gcc-release windows-msvc-release; do
+            bash tools/ci/world-hashes.sh compare "$preset" "$preset-gdext" --out-dir "$RUNNER_TEMP/world-hashes" || failed=1
+          done
+          exit "$failed"

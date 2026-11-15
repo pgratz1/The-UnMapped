@@ -133,3 +133,62 @@ add_library(unmapped_stb_image_write STATIC stb/stb_image_write_impl.c)
 add_library(unmapped::stb_image_write ALIAS unmapped_stb_image_write)
 target_include_directories(unmapped_stb_image_write SYSTEM PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/stb")
 unmapped_vendored_target(unmapped_stb_image_write)
+
+# --------------------------------------------------------------------------
+# godot-cpp (C++ bindings for GDExtension), only with UNMAPPED_BUILD_GDEXT
+# --------------------------------------------------------------------------
+if(UNMAPPED_BUILD_GDEXT)
+    # ======================================================================
+    # GODOT-CPP CONFIGURATION: SINGLE POINT OF CONFIGURATION
+    #
+    # godot-cpp generates its bindings at configure time with Python 3 from
+    # the vendored gdextension/extension_api-4-7.json; nothing is fetched.
+    #   GODOTCPP_API_VERSION 4.7        the API of the pinned engine (4.7.2:
+    #                                   its --dump-extension-api equals this
+    #                                   file apart from the version header,
+    #                                   see extern/README.md).
+    #   GODOTCPP_TARGET template_debug  loaded by the editor and by debug
+    #                                   runs; release exports come later.
+    #   GODOTCPP_DISABLE_EXCEPTIONS OFF godot-cpp defaults to -fno-exceptions
+    #                                   and, on MSVC, a PUBLIC _HAS_EXCEPTIONS=0
+    #                                   that would reach the extension's
+    #                                   translation units while worldgen is
+    #                                   built with exceptions: one standard
+    #                                   library configuration everywhere.
+    #   GODOTCPP_SYSTEM_HEADERS ON      SYSTEM includes, so the project's
+    #                                   warnings-as-errors never fire inside.
+    #   GODOTCPP_PRECISION single       Godot's official builds.
+    #   CMAKE_MSVC_RUNTIME_LIBRARY      godot-cpp would cache the static CRT
+    #                                   (/MT), which cannot link with worldgen
+    #                                   (/MD). Cached here first with CMake's
+    #                                   own default, which is what worldgen
+    #                                   already uses.
+    # The determinism flags (no fast-math, no contraction) reach godot-cpp
+    # through add_compile_options like every other target.
+    # ======================================================================
+    set(GODOTCPP_API_VERSION "4.7" CACHE STRING "GDExtension API version (pinned engine 4.7.2)" FORCE)
+    set(GODOTCPP_TARGET "template_debug" CACHE STRING "godot-cpp target" FORCE)
+    set(GODOTCPP_DISABLE_EXCEPTIONS OFF CACHE BOOL "Keep C++ exceptions as in worldgen" FORCE)
+    set(GODOTCPP_SYSTEM_HEADERS ON CACHE BOOL "Expose godot-cpp headers as SYSTEM" FORCE)
+    set(GODOTCPP_PRECISION "single" CACHE STRING "Godot real_t precision" FORCE)
+    set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL" CACHE STRING
+        "MSVC runtime library, the same for worldgen, godot-cpp and the extension")
+
+    find_package(Python3 3.8 REQUIRED COMPONENTS Interpreter)
+    # godot-cpp runs its Python generator from its own source folder, at
+    # configure time (file list) and at build time (bindings). Without this,
+    # Python writes __pycache__/ into extern/godot-cpp/, i.e. into the
+    # repository. The environment covers configure; RULE_LAUNCH_CUSTOM (Ninja
+    # and Makefile generators, which every preset uses) covers the build.
+    set(ENV{PYTHONDONTWRITEBYTECODE} 1)
+    add_subdirectory(godot-cpp)
+    set_property(DIRECTORY godot-cpp PROPERTY RULE_LAUNCH_CUSTOM
+        "\"${CMAKE_COMMAND}\" -E env PYTHONDONTWRITEBYTECODE=1")
+    unmapped_vendored_target(godot-cpp)
+    # godot-cpp puts its Windows PDB under ${CMAKE_SOURCE_DIR}/bin, which is
+    # the repository; keep it in the build tree.
+    set_target_properties(godot-cpp PROPERTIES
+        PDB_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/godot-cpp/pdb"
+        COMPILE_PDB_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/godot-cpp/pdb")
+    add_library(unmapped::godot-cpp ALIAS godot-cpp)
+endif()
