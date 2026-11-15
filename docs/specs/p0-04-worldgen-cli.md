@@ -307,3 +307,21 @@ The validation specialist records `p0-worlds.txt` (section 9) and the `render_rg
 3. **`--test-pattern` stage in P0.** Not required by the design doc, but it moves the cross-platform proof of hashing, noise and the codec into P0. Approve.
 4. **`render` contract is the pixel buffer, not PNG bytes.** Approve.
 5. **Design doc section 10 describes `worldgen-cli` as "generate, inspect, export map images"**, while section 13 and CLAUDE.md list `generate`, `render`, `report`, `hash`. This spec follows section 13. Proposals entry in the report to align section 10.
+
+## 14. Amendments after the first implementation (2026-11-15)
+
+Decisions by the lead on points raised by the generator engineer. Where these differ from the text above, these win.
+
+1. **Phrases.** Wherever this spec says the seed of a text phrase is `phrase_seed`, the function called is `seed_from_phrase` (P0-01 section 7.3), which validates and trims before hashing.
+2. **`--help` (4.1).** Options are tokenized first, so an unknown or repeated option or a positional argument is still a usage error (exit 2); then `--help` wins before any value is validated. `--help` and `--version` as the top-level argument must be alone. The hint line is `worldgen-cli: run 'worldgen-cli [<command>] --help' for usage`.
+3. **Seeds and integers (4.2).** The hex prefix is lower-case `0x` only, as in P0-03 amendment 6; `--seed` and `world.seed` share one parser.
+4. **Build root (4.3).** On Windows the order is `UNMAPPED_BUILD_ROOT`, then `LOCALAPPDATA`, then a usage error; elsewhere `UNMAPPED_BUILD_ROOT`, then `HOME`, then a usage error. A relative build root is a usage error, since a default output could otherwise land under the current directory. Printed absolute paths are made absolute and lexically normalized; symbolic links are not resolved.
+5. **Output paths (4.3, 4.6).** An empty `--out`, or an `--out` that names a directory, is an output error (exit 4).
+6. **Exit codes for reader failures (4.6).** An SQLite I/O or corruption failure while reading is an input error (3); running out of memory is an internal error (1).
+7. **Image size (section 6).** `render` refuses an image whose raw RGB data would exceed 1 GiB with a usage error asking for a smaller `--scale`. No P0 layer reaches this at any scale.
+8. **Escaping (sections 7 and 8).** The escaping rule for meta values also applies to keys, table names and layer names in `report` lines and in `hash --detail` lines. Valid names are unaffected.
+9. **`report --out` (section 7).** Prints nothing on stdout. `--force` without `--out` is accepted and has no effect.
+10. **`hash` (section 8).** The expected value in the mismatch message is printed in lower case. Tables are excluded when their name starts with `sqlite_` in any letter case. The schema rows are ordered by `type`, then `name`, with `BINARY` collation, and a NULL `sql` is hashed as NULL. Table rows are read with SQL `ORDER BY` on the primary-key columns in key order with `BINARY` collation. A table with no primary key, or any REAL value, is an input error (3).
+11. **Fatal-path test hook (12.2).** The hook lives in a separate executable, `worldgen-cli-test-hooks`, built only with tests from the same sources; it accepts `--test-fatal-in-stage` together with `--test-pattern`. The production binary rejects that option as unknown.
+12. **Library placement.** The test-pattern stage, `render_rgb`, the report builder and the logical hashes live in the `worldgen` library (`worldgen/stages/`, `worldgen/inspect/`), and raw row access is part of the reader (P0-02 amendment 10); the executable only parses arguments, calls them and writes files.
+13. **Recorded for the golden file.** The first implementation produced, identically on five Linux builds, the eight case hashes that the validation specialist is to confirm independently before they become golden values in `worldgen/tests/golden/p0-worlds.txt`.
