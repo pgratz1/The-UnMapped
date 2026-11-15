@@ -115,6 +115,7 @@ private:
         for (auto&& [key, value] : in) {
             entries.emplace_back(std::string(key.str()), &value);
         }
+        // determinism-lint: allow(unstable-sort) -- keys of one TOML table are unique (duplicates are a parse error, and toml::table is a map), so bytes_less on the key is a strict total order on the entries
         std::sort(entries.begin(), entries.end(),
                   [](const auto& a, const auto& b) { return bytes_less(a.first, b.first); });
         out.keys.reserve(entries.size());

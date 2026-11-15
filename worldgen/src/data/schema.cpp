@@ -98,10 +98,13 @@ Type Type::enumeration(std::vector<std::string> values) {
     if (values.empty()) {
         fatal("Type::enumeration: no values");
     }
-    std::vector<std::string> sorted = values;
-    std::sort(sorted.begin(), sorted.end(), detail::BytesLess{});
-    if (std::adjacent_find(sorted.begin(), sorted.end()) != sorted.end()) {
-        fatal("Type::enumeration: duplicate value");
+    // Pairwise comparison: no sorting, and the values keep the order given.
+    for (std::size_t i = 0; i < values.size(); ++i) {
+        for (std::size_t j = i + 1; j < values.size(); ++j) {
+            if (values[i] == values[j]) {
+                fatal("Type::enumeration: duplicate value");
+            }
+        }
     }
     Type t;
     t.kind_ = TypeKind::enumeration;

@@ -35,9 +35,13 @@ bool error_less(const LoadError& a, const LoadError& b) noexcept {
 }
 
 void sort_errors(std::vector<LoadError>& errors) {
-    // error_less compares every field, so it is a strict total order on
-    // distinct errors (P0-01 section 4, sorting); equal errors are removed.
-    std::sort(errors.begin(), errors.end(), error_less);
+    // Identical errors can occur before deduplication, so the order is made
+    // independent of the standard library with a stable sort (P0-01 section
+    // 4, sorting). error_less compares exactly the fields that operator==
+    // compares (path, line, column, message), so two errors are equivalent
+    // under error_less exactly when they are equal, every run of equal errors
+    // is adjacent after sorting, and std::unique removes all duplicates.
+    std::stable_sort(errors.begin(), errors.end(), error_less);
     errors.erase(std::unique(errors.begin(), errors.end()), errors.end());
 }
 
