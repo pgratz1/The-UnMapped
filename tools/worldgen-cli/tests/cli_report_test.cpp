@@ -59,7 +59,7 @@ TEST_CASE("cli 12.4: escaping in meta values (test-only world)") {
         return world;
     };
     auto report_with_line = [](const std::string& line) {
-        std::string s = "# worldgen report v1\n[meta]\n";
+        std::string s = "# worldgen report v2\n[meta]\n";
         for (const auto& [k, v] : p004::meta_rows(0)) {
             s += v.empty() ? k + " =\n" : k + " = " + v + "\n";
         }
@@ -96,7 +96,7 @@ TEST_CASE("cli 12.4: test-pattern world") {
     const std::vector<std::string> lines = lines_of(r.out);
     REQUIRE(lines.size() == 17);
     CHECK(r.out.back() == '\n');
-    CHECK(lines[0] == "# worldgen report v1");
+    CHECK(lines[0] == "# worldgen report v2");
     CHECK(lines[1] == "[meta]");
     CHECK(lines[9] == "stages = test_pattern");
     CHECK(lines[10] == "[tables]");

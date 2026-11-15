@@ -1,5 +1,6 @@
-// The text report builder, format v1, spec P0-04 sections 7 and 12.4, with
-// the amendments of section 14.
+// The text report builder, spec P0-04 sections 7 and 12.4, with the
+// amendments of section 14. Format v2 (P0-04 amendment 16, P1-00 10.3):
+// the header line is "# worldgen report v2"; the v1 sections are unchanged.
 
 #include <doctest/doctest.h>
 
@@ -62,6 +63,7 @@ bool contains_text(const std::string& haystack, const std::string& needle) {
 TEST_CASE("report 7: escaping") {
     using namespace std::string_view_literals;
     CHECK(worldgen::inspect::REPORT_HEADER_V1 == "# worldgen report v1");
+    CHECK(worldgen::inspect::REPORT_HEADER_V2 == "# worldgen report v2");
     CHECK(escape_report_text("") == "");
     CHECK(escape_report_text("plain text 123") == "plain text 123");
     CHECK(escape_report_text("\\") == "\\\\");
@@ -113,7 +115,7 @@ std::string report_with_extra_meta(const dbtest::TempDir& dir, const std::string
 }
 
 std::string seed_0_report_with_line(const std::string& line) {
-    return "# worldgen report v1\n[meta]\n"
+    return "# worldgen report v2\n[meta]\n"
            "content_hash = e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\n"
            "format = the-unmapped-world\n"
            "generator_version = 0.2.0\n"
@@ -162,7 +164,7 @@ TEST_CASE("report 7: test-pattern world") {
     const auto [hlo, hhi] = std::minmax_element(hash.begin(), hash.end());
     const auto [nlo, nhi] = std::minmax_element(noise.begin(), noise.end());
     const std::string expected =
-        "# worldgen report v1\n[meta]\n"
+        "# worldgen report v2\n[meta]\n"
         "content_hash = e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\n"
         "format = the-unmapped-world\n"
         "generator_version = 0.2.0\n"

@@ -230,11 +230,13 @@ inline worldgen::Sha256Digest layer_hash_i16(std::uint32_t w, std::uint32_t h, c
     return e.digest();
 }
 
-// --- Section 7 report, format v1 -----------------------------------------------
+// --- Section 7 report -------------------------------------------------------------
 
-// The exact report of section 7 for generate --seed 0.
+// The exact report of section 7 for generate --seed 0, in format v2 (P0-04
+// amendment 16, P1-00 10.3): the header line is "# worldgen report v2"; the
+// v1 sections follow unchanged, and an empty world has no [geography].
 inline constexpr std::string_view REPORT_SEED_0 =
-    "# worldgen report v1\n"
+    "# worldgen report v2\n"
     "[meta]\n"
     "content_hash = e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\n"
     "format = the-unmapped-world\n"

@@ -81,10 +81,12 @@ TEST_CASE("render 6: palette names") {
     CHECK(!worldgen::inspect::palette_from_name("Gray").has_value());
     CHECK(!worldgen::inspect::palette_from_name("").has_value());
     CHECK(!worldgen::inspect::palette_from_name("rainbow").has_value());
-    // In P0 every layer's registered palette is gray.
-    for (const char* layer : {"test.ramp", "test.hash", "test.noise", "elevation", "anything"}) {
+    // Layers without a registered palette (P1-00 10.2) render gray under
+    // auto; elevation is now hypsometric (P0-04 amendment 16).
+    for (const char* layer : {"test.ramp", "test.hash", "test.noise", "anything"}) {
         CHECK(worldgen::inspect::registered_palette(layer) == Palette::gray);
     }
+    CHECK(worldgen::inspect::registered_palette("elevation") == Palette::hypsometric);
     CHECK(worldgen::inspect::MIN_RENDER_SCALE == 1U);
     CHECK(worldgen::inspect::MAX_RENDER_SCALE == 16U);
 }
