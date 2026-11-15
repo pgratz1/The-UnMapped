@@ -36,6 +36,13 @@ add_library(worldgen STATIC
     src/data/text.cpp
     src/data/toml_document.cpp
     src/data/value.cpp
+    # worldgen-cli support, spec P0-04: generation pipeline, the P0
+    # test-pattern stage, and render / report / hash.
+    src/generate.cpp
+    src/stages/test_pattern.cpp
+    src/inspect/hashes.cpp
+    src/inspect/render.cpp
+    src/inspect/report.cpp
 )
 add_library(worldgen::worldgen ALIAS worldgen)
 target_include_directories(worldgen
