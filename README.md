@@ -49,7 +49,7 @@ The full design is in [`docs/design/design.md`](docs/design/design.md).
 | **Current phase** | P1 Geography. P0 Foundation and P2 Godot bring-up and viewer v0 are complete |
 | **Next phase** | P3 History core, after P1 |
 | **Current milestone** | Milestone 0, Geography generator: in progress (P1 and P2) |
-| **Work in flight** | P1: the overview, elevation and hydrology specs are approved; the shared foundation (branch `p1/foundation`) and the render and report tools (branch `p1/inspect`) are being implemented. No geography stage exists yet. |
+| **Work in flight** | P1: the shared foundation is merged (flood, components, accumulation, deterministic row-block threads, stage pipeline, `generate --until` and `--threads`). The elevation stage is implemented and deterministic but its first terrain is not acceptable (round islands, worm-shaped ranges), so its design is being reworked on an experimental branch before the spec is revised. The render palettes, composite map and `report` v2 are implemented on branch `p1/inspect` and being tested. |
 | **`main`** | Builds and passes all tests on Linux (GCC, Clang, Clang with sanitizers) and Windows (MSVC), in debug and release |
 
 **What "P0 done" means.** The phase's exit check is that an empty world file is byte-identical across all three compilers and that `worldgen-cli hash` proves it in continuous integration. It does: eight test worlds, six empty and two holding test layers, are identical across all seven build configurations, and each matches its recorded golden hash. CI repeats the comparison on every push.
@@ -77,7 +77,7 @@ The first block of work is the world generator prototype: seven phases, P0 to P6
 | Phase | Delivers | Depends on | Status |
 | --- | --- | --- | --- |
 | **P0 Foundation** | Repository layout, CMake presets, vendored dependencies, CI on three compilers, the deterministic core, the reproducible SQLite layer, the TOML loader, `worldgen-cli` | — | **Done** 2026-11-15, reviewed |
-| **P1 Geography** | Elevation, erosion, hydrology, climate, biomes, resources and regions, each writing its layer; image export per layer | P0 | **In progress** since 2026-11-15: first three specs approved, shared foundation being implemented |
+| **P1 Geography** | Elevation, erosion, hydrology, climate, biomes, resources and regions, each writing its layer; image export per layer | P0 | **In progress** since 2026-11-15: first three specs approved, shared foundation merged, elevation design being reworked after its first terrain |
 | **P2 Godot bring-up and viewer v0** | Godot version pinned, C++ extension building on Linux and Windows, `world.db` reader bound into Godot, 2D map with switchable layers | P0; parallel with P1 | **Done** 2026-11-15, awaiting Paul's hands-on review. Godot 4.7.2 and godot-cpp 10.0.0 pinned; the extension builds and its headless check passes on Linux and Windows |
 | **P3 History core** | Race and culture definitions, ages and the awakening schedule, active phases and quiet intervals, civilizations, settlements, wars, ruin, the event log, a text history report | P1 | Not started |
 | **P4 Viewer v1** | Timeline scrubber, territory by year, settlement and site markers, browser for civilizations and events | P2, P3; parallel with P5 | Not started |
