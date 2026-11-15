@@ -76,6 +76,8 @@ Why the split:
 
 Geography is generated first, as a stack of coarse raster maps that later stages read. The default world map is 1024 x 1024 cells at 16 m per cell, about 16.4 km on a side. Map size is a world-creation setting.
 
+**Scale is compressed.** The map stands for a larger land, in the manner of the Elder Scrolls games. The history simulation counts abstract populations and armies (a city of 20,000, a host of 3,000), and the playable world shows a scaled-down version of each (a few dozen buildings, a few dozen soldiers). Distances are symbolic: a day's walk in play may stand for a week's march in history. The database stores the simulated figures; the runtime applies a per-settlement-kind scale rule.
+
 Stages run in a fixed order, and each writes its layer to the world database:
 
 1. **Elevation.** Layered noise shaped by a continent mask, then hydraulic erosion.
@@ -91,8 +93,18 @@ Determinism rules for every stage:
 
 - One 64-bit world seed. Each stage derives its own stream by hashing the seed with a stage name.
 - Anything keyed by location hashes the seed with the coordinates, so results never depend on evaluation order.
-- Values stored in the database are integers or fixed-point. Floating-point results are quantized before they are stored.
+- The same seed, parameters and generator version must give a byte-identical world file on every supported platform and compiler.
 - The database records the generator version. A world is only guaranteed reproducible under the same version.
+
+Rules that make bit-identical output achievable:
+
+- **Integer and fixed-point math** for everything that reaches the database, in both geography and history. Noise, erosion and climate use fixed-point or integer formulations.
+- **No platform math in the output path.** Standard-library transcendental functions and random distributions differ between platforms, so the generator carries its own.
+- **Own random generator.** One specified integer algorithm, with all sampling written in the project.
+- **Fixed order everywhere.** No iteration over unordered containers, no dependence on pointer values or thread timing. Parallel work is split and merged in a fixed order.
+- **Controlled compilation.** No fast-math flags, and floating point is kept out of generator results.
+- **Reproducible database file.** SQLite is vendored at a pinned version with fixed page size and settings, rows are written in a defined order, and no timestamps are stored.
+- **Tested continuously.** Golden-seed hashes are compared on Linux and Windows, with GCC, Clang and MSVC, in continuous integration.
 
 ## 5. History simulation
 
@@ -121,6 +133,17 @@ A pantheon of gods in three camps (good, neutral, evil) creates the races and ke
 | 4 | Faeries | Good gods | Small, pixie-like humanoids; long-lived | Hidden communities in wild places; allies of the elves by origin |
 | 5 | Humans | Neutral gods | Short-lived, adaptable, fast-growing | Spread quickly over land left open or ruined by older wars |
 | 6 | Orcs | Evil gods | Strong, warlike | The last arrivals; their coming opens the most recent age of conflict |
+
+The timing is uneven by design. The elves have the world to themselves for about the first third of history, and each later race arrives sooner after the one before. The seed shifts each date by a small amount and never changes the order.
+
+| Race | Awakening, as a share of the span | With the 6,000-year default |
+| --- | --- | --- |
+| Elves | 0% | Year 0 |
+| Goblins | About 35% | Around year 2,100 |
+| Dwarves | About 55% | Around year 3,300 |
+| Faeries | About 70% | Around year 4,200 |
+| Humans | About 83% | Around year 5,000 |
+| Orcs | About 93% | Around year 5,600 |
 
 How the gods act:
 
@@ -500,6 +523,9 @@ All code is C++20. The generator is a library with a command-line front end, and
 | License | To be decided | Godot and Terrain3D are MIT, so any choice is open |
 | NPC dialogue | llama.cpp linked in C++, small quantized GGUF model | Grammar-constrained output; template fallback; voice engines evaluated at milestone 9 |
 | Physics | Jolt, built into Godot 4 | Many sleeping rigid bodies per interior; awake-body cap tuned for VR |
+| Data files | TOML | Hand-edited definitions for races, beasts, monsters, cultures, biomes and event rules; SQLite is for generated output only |
+| Dependencies | Vendored in extern/ at pinned versions | SQLite, doctest, a TOML parser, an image writer; builds work offline and stay reproducible |
+| World viewer | Built in Godot through the C++ extension | Map layers, timeline, entity and event browser; later the create-world screen and in-game map |
 
 ```
 the-unmapped/
@@ -512,7 +538,7 @@ the-unmapped/
     tests/
   tools/
     worldgen-cli/      generate, inspect, export map images
-    history-viewer/    browse a world.db timeline (later)
+    (the world viewer lives in the Godot project, under game/viewer/)
   gdext/               C++ GDExtension: world readers, runtime generators, gameplay, LLM dialogue
   game/                Godot project: scenes, assets and data, no scripts
     core/              actions, entities, save system
@@ -529,19 +555,27 @@ the-unmapped/
 
 Conventions for the handoff:
 
-- Content rules live in data files under `game/data/` and `worldgen` config, so tuning does not need a rebuild.
+- Content rules live in TOML data files under `game/data/` and `worldgen` config, so tuning does not need a rebuild.
 - `worldgen-cli generate --seed N --out world.db` must work before any game code depends on it.
 - `worldgen-cli render --db world.db --layer biome --out biome.png` gives a quick visual check of any layer.
 - Every generator stage has a golden-seed test that compares a hash of its output.
 
+**World viewer.** A viewer for generated worlds is built in Godot as the first thing in the C++ extension. It proves the extension build, the `world.db` reader binding and the pinned engine version long before gameplay work starts.
+
+- **First version:** 2D map with switchable layers (elevation, rivers, climate, biomes, regions, territory), settlements and sites as markers, a timeline scrubber that shows the world at any year, and a browser for civilizations, figures and events with their causes.
+- **Later:** a 3D heightmap preview, which leads into terrain streaming; then the create-world screen and the in-game map grow out of it.
+- **Guardrails:** `worldgen` and `worldgen-cli` never depend on Godot. The command-line tool exports map images and a text history report from the start, for automated tests and for use before the viewer exists.
+
+**Existing repository skeleton.** The repository currently holds a custom-engine style skeleton (`src/engine`, `src/render`, `src/platform` and similar). It is to be replaced with the layout above before code is added.
+
 ## 11. Milestones
 
-Milestones run in order, and each ends with something that can be checked. Milestones 0 and 1 need no game engine at all.
+Milestones run in order, and each ends with something that can be checked. The generator in milestones 0 and 1 needs no game engine. The Godot viewer is built alongside it as the first use of the C++ extension.
 
 | # | Milestone | Exit criterion |
 | --- | --- | --- |
-| 0 | Geography generator | `worldgen-cli` writes a `world.db` with all geography layers; rendered maps look plausible; the same seed gives an identical file hash on Linux and Windows |
-| 1 | History generator | Default settings (6,000 years, about 1,200 simulated) generate in under 2 minutes; races appear in the fixed order; all six races, the gods, beasts and monsters take part; the event log reads as coherent history; sites and quest hooks are derived; golden-seed tests pass |
+| 0 | Geography generator | `worldgen-cli` writes a `world.db` with all geography layers; maps look plausible in image export and in the Godot viewer; the same seed gives an identical file hash on Linux and Windows |
+| 1 | History generator | Default settings (6,000 years, about 1,200 simulated) generate in under 2 minutes; races appear in the fixed order; all six races, the gods, beasts and monsters take part; the event log reads as coherent history in the viewer's timeline and browser; sites and quest hooks are derived; golden-seed tests pass |
 | 2 | Walkable terrain | Godot streams chunks from a `world.db`; the player can cross the map on flat screen without hitches; terrain sits behind its interface and the fly-across test passes on flat screen |
 | 3 | VR parity | The same build starts in VR or flat; the fly-across test holds 90 Hz in VR, which confirms the terrain approach or triggers the switch; action layer and both rigs in place |
 | 4 | Biomes and wilderness | Six biomes with generated materials, rocks and vegetation, plus scatter, rivers, lakes and roads; settlements appear as placeholder markers at correct locations |
@@ -567,6 +601,15 @@ Decided so far:
 - **Inhabitants:** six races created by the gods in a fixed order (elves, goblins, dwarves, faeries, humans, orcs), plus beasts and monsters, all active in history and in play.
 - **Living world:** frozen during play. History mode is a later feature, and the save format keeps it possible.
 
+* **Repository layout:** the layout in section 10 replaces the existing skeleton.
+* **World viewer:** built in Godot through the C++ extension, with image and report export from the command-line tool.
+* **Scale:** compressed, with abstract simulated populations and a scaled-down playable world.
+* **Determinism:** byte-identical world files on every supported platform and compiler.
+* **Race timing:** a long elven age, then races arriving progressively closer together.
+* **Data files:** TOML.
+* **Dependencies:** vendored in `extern/` at pinned versions.
+* **Also decided:** any of the six races is playable; first person only; physical object interaction and swing-driven VR melee; PC VR only; semi-realistic art direction with generated assets wherever possible.
+
 Still open:
 
 - [x] **Name collision check.** Search Steam and itch.io for "The Unmapped". (Before any public repo)
@@ -590,7 +633,7 @@ Still open:
 
 * [ ] **Gods during play.** Do gods act in the present day (shrines, blessings, curses), or only in history? History only is assumed. (Milestone 8)
 * [ ] **Faeries in play.** Small flying NPCs need their own scale of settlement and movement. Are faeries meetable everywhere or only at hidden sites? A faerie player character also raises scale and flight questions, most of all in VR. (Milestone 5)
-* [ ] **Awakening spacing.** Even spacing across the span with seeded variation is assumed. Should some gaps be much longer, such as a long elven age before goblins? (Milestone 1)
+* [x] **Awakening spacing.** Decided: a long elven age, with later races arriving progressively closer together, as tabled in section 5. (Milestone 1)
 
 - [ ] **Object budgets.** 1,000 objects per interior with about 100 awake is a working target. Measure in VR and set real limits. (Milestone 6)
 - [ ] **Hand presence in VR.** Do held objects collide with the world and resist the hand, or snap to the hand and pass through? Full collision is more convincing and harder to tune. (Milestone 3)
