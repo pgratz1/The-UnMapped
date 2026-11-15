@@ -331,11 +331,11 @@ struct GoldenCase {
 };
 
 constexpr std::array<GoldenCase, 5> GOLDEN_CASES = {{
-    {"empty-phrase", 0, "The Unmapped", GOLDEN_PLACEHOLDER},
-    {"empty-seed-0", 0, nullptr, GOLDEN_PLACEHOLDER},
-    {"empty-seed-1", 1, nullptr, GOLDEN_PLACEHOLDER},
-    {"empty-seed-42", 42, nullptr, GOLDEN_PLACEHOLDER},
-    {"empty-seed-max", 18446744073709551615ULL, nullptr, GOLDEN_PLACEHOLDER},
+    {"empty-phrase", 0, "The Unmapped", "538cd2ae07948da5fb28e09297e2136f1b534163d6bdcf50bace1c7b0759d48b"},
+    {"empty-seed-0", 0, nullptr, "3325ebb7229993d4c26862e368d45eeb3d739fb4d3cbe099a7aa22bf4dc22b80"},
+    {"empty-seed-1", 1, nullptr, "76dbf7a81535a01e15d01050d6287aaae0858a4b663728aa4b2432b361e8bbba"},
+    {"empty-seed-42", 42, nullptr, "e5aec1ac46d45fca684d9c15c7bc9134cae508cdbd94eba158e1aca2320e2a63"},
+    {"empty-seed-max", 18446744073709551615ULL, nullptr, "06307a95c200331cf41a2646aee550a814c325ed2f995d541b16380706433633"},
 }};
 
 constexpr bool golden_pending() {

@@ -36,9 +36,9 @@ constexpr std::int64_t I64_MAX = std::numeric_limits<std::int64_t>::max();
 // Golden SHA-256 of render_rgb(<layer of the seed-0 test-pattern world>,
 // gray, 1) (P0-04 12.3, 12.6). PLACEHOLDERS: the validation specialist
 // records the values. While any is empty the golden test is skipped.
-constexpr std::string_view GOLDEN_RGB_RAMP = "";   // PLACEHOLDER
-constexpr std::string_view GOLDEN_RGB_HASH = "";   // PLACEHOLDER
-constexpr std::string_view GOLDEN_RGB_NOISE = "";  // PLACEHOLDER
+constexpr std::string_view GOLDEN_RGB_RAMP = "bb739f8740afff2f8fef18d9bfa18b267ad15ace01dd1e28e4ee951b2018aaa0";
+constexpr std::string_view GOLDEN_RGB_HASH = "e9ba1cadd82dfafb1fa7ecfc3cbeaf01438e6a03ab6b4661c4f0ab8fe7ad71f7";
+constexpr std::string_view GOLDEN_RGB_NOISE = "626e58cc782e85658fdb28b8494b7010e2fc9661cbb4e8f3b315d900e24a10d5";
 constexpr bool RGB_GOLDEN_RECORDED = !GOLDEN_RGB_RAMP.empty() && !GOLDEN_RGB_HASH.empty() && !GOLDEN_RGB_NOISE.empty();
 
 // The gray buffer of a grid computed here, independently: values widened to
