@@ -4,6 +4,7 @@
 // encoding rules, domain tags, derivations, stream-name grammar and text
 // phrase seeds.
 
+#include <cstddef>
 #include <cstdint>
 #include <initializer_list>
 #include <span>
@@ -77,22 +78,38 @@ inline constexpr std::uint64_t TAG_PHRASE = 0x535248503A4D4E55ULL;  // "UNM:PHRS
 // --- Text phrases (P0-01 7.3) -----------------------------------------------
 
 // hash_words(TAG_PHRASE, [len, packed words...]) (P0-01 7.3): a pure hash of
-// exactly the bytes given. No validation and no trimming, so
-// phrase_seed(" x") != phrase_seed("x"). Use seed_from_phrase for user text.
+// exactly the bytes given. No scrubbing and no validation, so
+// phrase_seed(" x") != phrase_seed("x") and phrase_seed("X") !=
+// phrase_seed("x"). Use seed_from_phrase for user text.
 [[nodiscard]] std::uint64_t phrase_seed(std::span<const std::uint8_t> bytes);
 // Same, for text (each char reinterpreted as a uint8 byte).
 [[nodiscard]] std::uint64_t phrase_seed(std::string_view bytes);
 
+// The longest scrubbed phrase seed_from_phrase accepts, in bytes (P0-01 7.3).
+inline constexpr std::size_t PHRASE_MAX_BYTES = 256;
+
+// Scrubs a text phrase (P0-01 7.3), byte by byte with no knowledge of any
+// encoding: A-Z becomes a-z; every byte that is then not a-z or 0-9 becomes
+// a space (every byte of a multi-byte UTF-8 character, control characters,
+// NUL, punctuation, whitespace); each run of spaces becomes one space; a
+// leading and a trailing space are removed. The result holds only a-z, 0-9
+// and single interior spaces. No length or emptiness check: the result may
+// be empty or longer than PHRASE_MAX_BYTES. Idempotent:
+// scrub_phrase(scrub_phrase(t)) == scrub_phrase(t).
+[[nodiscard]] std::string scrub_phrase(std::string_view text);
+
 // Why a text phrase was rejected by seed_from_phrase (P0-01 7.3).
 enum class PhraseError : std::uint8_t {
-    none = 0,      // success
-    invalid_utf8,  // not valid UTF-8 (strict RFC 3629: no overlong forms, no
-                   // surrogates U+D800..U+DFFF, nothing above U+10FFFF)
-    empty,         // nothing left after trimming
-    too_long,      // more than 256 bytes after trimming
+    none = 0,  // success
+    empty,     // the phrase scrubs to nothing
+    too_long,  // the scrubbed phrase is longer than PHRASE_MAX_BYTES (256)
+    // Never returned since generator version 0.2.0 (scrubbing accepts any
+    // bytes). Kept only so that the pre-0.2.0 phrase tests still compile;
+    // remove it when those tests are updated.
+    invalid_utf8,
 };
 
-// Result of seed_from_phrase. When ok(), phrase holds the trimmed phrase (to
+// Result of seed_from_phrase. When ok(), phrase holds the scrubbed phrase (to
 // be recorded in meta) and seed the derived world seed; otherwise phrase is
 // empty and seed is 0.
 struct PhraseSeed {
@@ -103,11 +120,11 @@ struct PhraseSeed {
     [[nodiscard]] bool ok() const noexcept { return error == PhraseError::none; }
 };
 
-// Text phrase to world seed (P0-01 7.3). Validates UTF-8 (strict RFC 3629;
-// NUL and other control characters inside are accepted), removes leading and
-// trailing ASCII whitespace (space, tab, CR, LF) and nothing else, requires
-// 1 to 256 bytes after trimming, then seed = phrase_seed(trimmed bytes).
-// The phrase is user data, so errors are returned, never thrown.
+// Text phrase to world seed (P0-01 7.3): scrubs the text (scrub_phrase), so
+// any byte string is accepted as input whatever its length or encoding;
+// requires the scrubbed phrase to be 1 to PHRASE_MAX_BYTES bytes; then
+// seed = phrase_seed(scrubbed bytes). The phrase is user data, so errors are
+// returned, never thrown.
 [[nodiscard]] PhraseSeed seed_from_phrase(std::string_view text);
 
 }  // namespace worldgen

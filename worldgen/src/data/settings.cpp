@@ -80,16 +80,20 @@ void parse_phrase(const Node& node, std::string_view path, ErrorList& errors, Se
             out.seed = ps.seed;
             out.seed_phrase = ps.phrase;
             return;
-        case PhraseError::invalid_utf8:
-            errors.add(path, node.position, "'world.seed_phrase' is not valid UTF-8");
-            return;
         case PhraseError::empty:
-            errors.add(path, node.position, "'world.seed_phrase' is empty after trimming whitespace");
+            errors.add(path, node.position,
+                       "'world.seed_phrase' has no letter a-z or digit 0-9; a phrase keeps only those, other "
+                       "characters become spaces");
             return;
         case PhraseError::too_long:
-            errors.add(path, node.position, "'world.seed_phrase' is longer than 256 bytes after trimming whitespace");
+            errors.add(path, node.position,
+                       "'world.seed_phrase' is longer than 256 bytes after scrubbing (letters a-z, digits 0-9 and "
+                       "single spaces)");
             return;
+        case PhraseError::invalid_utf8:  // never returned (hash.hpp)
+            break;
     }
+    errors.add(path, node.position, "'world.seed_phrase' is not a valid phrase");
 }
 
 void parse_map_size(const Node& node, std::string_view path, ErrorList& errors, Settings& out) {

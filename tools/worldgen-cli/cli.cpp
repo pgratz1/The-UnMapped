@@ -134,7 +134,8 @@ constexpr std::string_view GENERATE_USAGE =
     "                             [--test-pattern] [--force] [--verbose]\n"
     "\n"
     "  --seed N            the 64-bit world seed: decimal, or 0x and 1 to 16 hex digits\n"
-    "  --seed-phrase TEXT  a text phrase from which the seed is derived\n"
+    "  --seed-phrase TEXT  a text phrase from which the seed is derived; letters are\n"
+    "                      lower-cased, anything but a-z and 0-9 counts as a space\n"
     "  --out PATH          output world file (default <build root>/out/world-<seed>.db)\n"
     "  --map-size N        map side in cells: 512, 1024 or 2048 (default from settings, else 1024)\n"
     "  --settings FILE     world settings file; flags override it key by key\n"
@@ -290,10 +291,14 @@ std::uint64_t parse_integer_option(std::string_view option, const std::string& t
 
 std::string phrase_error_text(worldgen::PhraseError error) {
     switch (error) {
-        case worldgen::PhraseError::invalid_utf8: return "it is not valid UTF-8";
-        case worldgen::PhraseError::empty: return "it is empty after trimming whitespace";
-        case worldgen::PhraseError::too_long: return "it is longer than 256 bytes after trimming whitespace";
-        case worldgen::PhraseError::none: break;
+        case worldgen::PhraseError::empty:
+            return "it has no letter a-z or digit 0-9; a phrase keeps only letters and digits, "
+                   "other characters become spaces";
+        case worldgen::PhraseError::too_long:
+            return "it is longer than 256 bytes after scrubbing to letters a-z, digits 0-9 and single spaces";
+        case worldgen::PhraseError::none:
+        case worldgen::PhraseError::invalid_utf8:  // never returned (hash.hpp)
+            break;
     }
     return "it is not a valid phrase";
 }

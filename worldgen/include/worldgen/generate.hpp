@@ -25,7 +25,7 @@ struct WorldParams {
     // The world seed (meta.seed). When seed_phrase is non-empty it must equal
     // phrase_seed(seed_phrase) (P0-01 7.3); generate_world checks this.
     std::uint64_t seed = 0;
-    // The trimmed, valid phrase the seed came from (seed_from_phrase), or
+    // The scrubbed phrase the seed came from (seed_from_phrase), or
     // empty for a numeric seed (meta.seed_phrase, P0-02 5.5).
     std::string seed_phrase;
     // param.map_size: 512, 1024 or 2048 (P0-02 5.5, P0-03 6).

@@ -46,7 +46,7 @@ db::Status generate_world(const WorldParams& params, std::string_view out_utf8, 
         if (phrase_seed(params.seed_phrase) != params.seed) {
             fatal("generate_world: seed does not match phrase_seed(seed_phrase)");
         }
-        writer.set_seed_phrase(params.seed_phrase);  // FatalError unless trimmed and valid
+        writer.set_seed_phrase(params.seed_phrase);  // FatalError unless already scrubbed
     }
     writer.set_content_hash(params.content_hash);
     writer.set_param_integer("map_size", params.map_size);  // FatalError unless 512, 1024, 2048

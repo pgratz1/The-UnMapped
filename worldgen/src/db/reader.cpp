@@ -104,10 +104,11 @@ std::string_view validate_meta_values(ReaderState& s) {
     s.seed = *seed;
     const std::string& phrase = m.at(std::string(META_SEED_PHRASE));
     if (!phrase.empty()) {
-        // Must be a phrase as seed_from_phrase leaves it: valid UTF-8,
-        // trimmed, 1 to 256 bytes.
-        const PhraseSeed p = seed_from_phrase(phrase);
-        if (!p.ok() || p.phrase != phrase) {
+        // Must be a phrase as seed_from_phrase leaves it: scrubbing it
+        // returns it unchanged (a-z, 0-9 and single interior spaces), and
+        // it is 1 to 256 bytes (P0-02 amendment 12). The seed is not
+        // recomputed.
+        if (phrase.size() > PHRASE_MAX_BYTES || scrub_phrase(phrase) != phrase) {
             return META_SEED_PHRASE;
         }
     }

@@ -26,8 +26,8 @@ struct Settings {
     // The world seed. Set from world.seed, or derived from world.seed_phrase
     // (seed_from_phrase, P0-01 7.3). Empty when neither key is given.
     std::optional<std::uint64_t> seed;
-    // The trimmed phrase when the seed came from world.seed_phrase; empty
-    // otherwise.
+    // The scrubbed phrase (scrub_phrase, P0-01 7.3) when the seed came from
+    // world.seed_phrase; empty otherwise.
     std::optional<std::string> seed_phrase;
     // world.map_size: 512, 1024 or 2048; DEFAULT_MAP_SIZE when absent.
     std::int64_t map_size = DEFAULT_MAP_SIZE;
