@@ -110,7 +110,7 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
 - Problem: The design does not say how a phrase becomes 64 bits, or whether case and Unicode form matter.
 - Proposal: Decide whether phrases are case-insensitive or Unicode-normalized before the create-world screen exists.
 - Interim choice: UTF-8 bytes after trimming ASCII whitespace, hashed with a domain tag. Case and normalization are significant. The phrase is stored in meta.seed_phrase, so the same seed entered as a number and as its phrase gives different files.
-- Status: accepted as the interim choice (recorded in design.md section 4; the case and Unicode question is now an open question in section 12)
+- Status: superseded (design.md section 4 now specifies scrubbed phrases; implemented in generator version 0.2.0)
 
 ### worldgen-cli command list in section 10
 

@@ -109,7 +109,7 @@ Required keys at schema version 1:
 | --- | --- | --- |
 | `content_hash` | SHA-256 of the canonical encoding of the loaded data definitions (P0-03 section 8) | 64 lowercase hex digits |
 | `format` | `the-unmapped-world` | literal |
-| `generator_version` | the generator version constant, e.g. `0.1.0` | `MAJOR.MINOR.PATCH`, decimal, no leading zeros |
+| `generator_version` | the generator version constant, e.g. `0.2.0` | `MAJOR.MINOR.PATCH`, decimal, no leading zeros |
 | `param.map_size` | map side in cells: 512, 1024 or 2048 | decimal integer |
 | `schema_version` | `1` | decimal integer; equals `PRAGMA user_version` |
 | `seed` | the 64-bit world seed | unsigned decimal, no leading zeros, `0` for zero |
@@ -118,7 +118,7 @@ Required keys at schema version 1:
 
 Rules for parameters: every world-creation setting and every generator parameter not loaded from data files is stored as `param.<name>`, with integers in decimal and fixed-point values in the canonical decimal text of P0-01 section 5.6. Later phases add `param.*` keys (history span, detail, races present, …) and `end_year`; each addition is a schema change under 5.2.
 
-**Generator version.** `GENERATOR_VERSION` is a string constant in `worldgen/include/worldgen/version.hpp`, changed by hand. Rule: any merged change that alters output bytes for any input bumps it, and the golden hashes are updated in the same branch. It is never derived from git, the build date or the compiler, because that would change every world file on every commit. P0 value: `0.1.0` (interim).
+**Generator version.** `GENERATOR_VERSION` is a string constant in `worldgen/include/worldgen/version.hpp`, changed by hand. Rule: any merged change that alters output bytes for any input bumps it, and the golden hashes are updated in the same branch. It is never derived from git, the build date or the compiler, because that would change every world file on every commit. Value: `0.2.0` (0.1.0 until seed phrases were scrubbed, amendment 12).
 
 ### 5.6 `layer`
 
@@ -257,7 +257,7 @@ The design doc calls layer blobs "compressed". Codec 1 is a light compressor (ro
 | --- | --- |
 | `content_hash` | `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855` (SHA-256 of the empty encoding: P0 registers no data kinds) |
 | `format` | `the-unmapped-world` |
-| `generator_version` | `0.1.0` |
+| `generator_version` | `0.2.0` |
 | `param.map_size` | `1024` (default) |
 | `schema_version` | `1` |
 | `seed` | N in canonical decimal |
@@ -364,3 +364,4 @@ Decisions by the lead on points raised by the generator engineer. Where these di
 9. **`VACUUM INTO` (section 6).** Confirmed: the vendored SQLite 3.54.1 preserves `application_id` and `user_version`; the fallback is not used. The empty world is 4 pages, 16384 bytes.
 10. **Raw row access for `hash --detail`.** The read API gains one capability, implemented with P0-04: the rows of `sqlite_schema` and of any table in primary-key order, each column as a typed value (NULL, INTEGER, TEXT, BLOB, or REAL reported as an error), so that the CLI does not use SQLite directly.
 11. **Test hooks.** The test-support hooks (`worldgen/db/testing.hpp`) are compiled into the library for P0. They are not part of the API that stages or the viewer may use.
+12. **Seed phrases are scrubbed (design doc section 4; replaces the phrase parts of 5.5, section 8, 12.2 and amendment 5).** `meta.seed_phrase` holds the scrubbed phrase of P0-01 section 7.3 (only `a`–`z`, `0`–`9` and single interior spaces, 1 to 256 bytes), or is empty when the seed was given as a number. The writer takes a phrase that is already scrubbed (passing one that is not is a fatal error) and computes `seed` from it with `phrase_seed`. The reader accepts a non-empty `seed_phrase` only if scrubbing it returns it unchanged; otherwise the value is invalid ("meta value invalid"). The reader still does not recompute the seed. Because this changes the bytes of phrase worlds, `GENERATOR_VERSION` is `0.2.0`, which changes `meta.generator_version` and therefore every golden world hash.

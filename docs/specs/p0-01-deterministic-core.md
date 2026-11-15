@@ -1,6 +1,6 @@
 # P0-01 Deterministic core
 
-Status: approved by the lead, 2026-11-15; amended the same day after the first implementation and the independent reference (edge cases in 5.4, 5.6, 6.2, 7.3, 8.1, 8.2, 13.3, 13.5, 13.8). Phase P0 Foundation. Design doc sections 4 (determinism rules), 10, 13.
+Status: approved by the lead, 2026-11-15; amended the same day after the first implementation and the independent reference (edge cases in 5.4, 5.6, 6.2, 7.3, 8.1, 8.2, 13.3, 13.5, 13.8). Seed phrases are scrubbed (7.3, 13.5) from generator version 0.2.0, per the design doc. Phase P0 Foundation. Design doc sections 4 (determinism rules), 10, 13.
 
 ## 1. Purpose
 
@@ -290,11 +290,18 @@ Domain tags (8 ASCII bytes packed little-endian, so they read as text in a hex d
 | `hash_at(uint64 key, int64 x, int64 y)` | hash_words(TAG_CELL2, [key, x, y]) | Location-keyed values: independent of evaluation order. |
 | `hash_at3(uint64 key, int64 x, int64 y, int64 z)` | hash_words(TAG_CELL3, [key, x, y, z]) | Location plus a third index (layer, year, octave). |
 | `phrase_seed(bytes)` | hash_words(TAG_PHRASE, [len, packed words…]). A pure hash of exactly the bytes given: no validation and no trimming. | The hashing step of a text-phrase seed. |
-| `seed_from_phrase(text)` | Applies the text-phrase rules below (UTF-8 check, trim, length), then `phrase_seed` of the trimmed bytes. Returns the trimmed phrase and the seed, or an error value (invalid UTF-8; empty after trimming; longer than 256 bytes after trimming). Not fatal, because the phrase is user data. | Text-phrase world seed → 64 bits. This is what the settings loader and the command line call. |
+| `seed_from_phrase(text)` | Scrubs the text by the text-phrase rules below, then `phrase_seed` of the scrubbed bytes. Returns the scrubbed phrase and the seed, or an error value (the phrase scrubs to nothing; the scrubbed phrase is longer than 256 bytes). Not fatal, because the phrase is user data. | Text-phrase world seed → 64 bits. This is what the settings loader and the command line call. |
 
 **Stream names.** Grammar `[a-z][a-z0-9_]*(\.[a-z][a-z0-9_]*)*`, 1 to 64 bytes, ASCII. Convention: `<area>.<stage>[.<purpose>]`, e.g. `geo.elevation`, `geo.elevation.continent`, `hist.awakening`. Every name used anywhere is listed as a constant in one source file (`worldgen/include/worldgen/core/streams.hpp`, interim), and a test checks that the list has no duplicates. P0 names: `test.hash`, `test.noise` (used by the test pattern in P0-04).
 
-**Text phrases.** A phrase must be valid UTF-8 in the strict sense of RFC 3629: no overlong forms, no surrogates, nothing above U+10FFFF. NUL and other control characters inside a phrase are accepted and are not trimmed. Leading and trailing ASCII whitespace (space, tab, CR, LF) is removed; nothing else is changed (no case folding, no Unicode normalization, interim choice, see open questions). After trimming it must be 1 to 256 bytes. seed = phrase_seed(trimmed bytes); `seed_from_phrase` does all of this in one call. The phrase and the derived numeric seed are both recorded in `meta` (P0-02).
+**Text phrases.** (Design doc section 4; this replaces the earlier trim-only rule.) A phrase is **scrubbed** before it is hashed, byte by byte, with no knowledge of any character encoding:
+
+1. Each byte `A`–`Z` (0x41–0x5A) becomes the corresponding lower-case byte `a`–`z` (add 0x20).
+2. Each byte that is then not `a`–`z` (0x61–0x7A) and not `0`–`9` (0x30–0x39) becomes a space (0x20). This includes every byte of a multi-byte UTF-8 character, every control character, NUL, punctuation and whitespace.
+3. Each run of spaces becomes one space.
+4. A leading space and a trailing space are removed.
+
+The result contains only `a`–`z`, `0`–`9` and single interior spaces. If it is empty the phrase is rejected (error value: empty). If it is longer than 256 bytes it is rejected (error value: too long); the length of the text before scrubbing is not limited. The input need not be valid UTF-8, since every non-ASCII byte becomes a space. seed = phrase_seed(scrubbed bytes); `seed_from_phrase` does all of this in one call. So "Ashen Marches!", "ashen-marches" and "ASHEN  MARCHES" all scrub to `ashen marches` and give the same seed, and "Ünmapped Wörld" scrubs to `nmapped w rld`. A phrase made only of other characters, such as one written entirely in a non-Latin script, scrubs to nothing and is rejected. Scrubbing is idempotent. The scrubbed phrase and the derived numeric seed are both recorded in `meta` (P0-02); the text as typed is not stored. A phrase is never interpreted as a number: the phrase `42` and the numeric seed 42 are different worlds.
 
 ## 8. Integer gradient noise
 
@@ -493,7 +500,7 @@ Property tests (fixed streams, so they are deterministic):
 - Byte packing: "test.noise" → words [10, 0x696F6E2E74736574, 0x0000000000006573]. "The Unmapped" → [12, 0x616D6E5520656854, 0x0000000064657070]. "" → [0].
 - `stream_key(seed, name)` equals `hash_words(TAG_STREAM, [seed, len(name), packed name words…])` computed with the primitives (structural test). `stream_key` with a name outside the grammar is fatal.
 - `stream_key(0, "test.noise")`, `stream_key(0xFFFFFFFFFFFFFFFF, "geo.elevation")`, `substream(1, 0)`, `hash_at(1, -1, 2)`, `hash_at3(1, 0, 0, 0)`, `phrase_seed("The Unmapped")`: values to be generated by the validation specialist with an independent reference implementation (see 13.6) and recorded as golden vectors.
-- `seed_from_phrase` trims: "  The Unmapped\n" gives the same seed as "The Unmapped"; "the unmapped" gives a different one; invalid UTF-8 and an all-whitespace phrase are errors. `phrase_seed` itself hashes exactly the bytes it is given, so `phrase_seed(" x")` differs from `phrase_seed("x")`.
+- `seed_from_phrase` scrubs: "Ashen Marches!", "ashen-marches", "ASHEN  MARCHES", "  ashen\tmarches\n" and "ashen marches" all return the phrase `ashen marches` and the same seed, equal to `phrase_seed("ashen marches")`; "The Unmapped" returns `the unmapped`; "Ünmapped Wörld" returns `nmapped w rld`; "a1B2" returns `a1b2`; bytes 0x00, 0x7F, 0xFF and an invalid UTF-8 sequence inside a phrase each act as a space. Errors: the empty string, all-whitespace, all-punctuation, a phrase of only non-ASCII bytes, and a phrase whose scrubbed form is 257 bytes; a scrubbed form of exactly 256 bytes is accepted, and so is a much longer input that scrubs to 256 bytes or fewer. Scrubbing a scrubbed phrase returns it unchanged (property test over random byte strings). `phrase_seed` itself hashes exactly the bytes it is given, so `phrase_seed(" x")` differs from `phrase_seed("x")` and `phrase_seed("X")` differs from `phrase_seed("x")`.
 - Sensitivity: over 10^4 keys, `hash_at(k, x, y)` for (x, y) and (y, x) with x ≠ y never coincide; `stream_key(s, "a")` ≠ `stream_key(s, "a.b")`.
 - Registry: all stream names match the grammar and are unique.
 
@@ -513,7 +520,7 @@ FIPS 180-4 vectors: "" → e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca4959
 ### 13.8 Golden vectors and cross-platform check
 
 - The validation specialist computes the tbc vectors above, plus a fixed list of hash, stream and noise outputs (at least: the six hash values in 13.5, the first 8 outputs of `Rng(stream_key(0, "test.noise"))`, `noise2` and `fbm2` at 16 fixed points), with an **independent reference implementation** written from this spec (a short Python script with arbitrary-precision integers is recommended) and commits them under `worldgen/tests/golden/core_vectors.*`. The C++ tests compare against that file on every preset, which turns each vector into a cross-platform check.
-- **The golden file exists:** `worldgen/tests/golden/core_vectors.txt`, generated by `worldgen/tests/reference/core_reference.py` (see the README beside it; the file's header documents every vector kind). A C++ test parses the file and checks every line against the implementation; a kind the test does not recognise is a test failure, so no vector is skipped silently. Kind `hash.phrase_seed` maps to `phrase_seed` and `hash.phrase_text` to `seed_from_phrase`.
+- **The golden file exists:** `worldgen/tests/golden/core_vectors.txt`, generated by `worldgen/tests/reference/core_reference.py` (see the README beside it; the file's header documents every vector kind). A C++ test parses the file and checks every line against the implementation; a kind the test does not recognise is a test failure, so no vector is skipped silently. Kind `hash.phrase_seed` maps to `phrase_seed` and `hash.phrase_text` to `seed_from_phrase` (its result is the seed; a kind `hash.phrase_scrub` gives the scrubbed text).
 - A golden-seed test for the core is the P0-04 test-pattern world, whose layers exercise hashing and noise end to end.
 
 ## 14. Open questions
@@ -522,5 +529,5 @@ FIPS 180-4 vectors: "" → e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca4959
 2. **Rounding rule.** Round half away from zero everywhere (symmetric). The alternative, add-half-then-shift (round half up), is one instruction cheaper but not odd-symmetric. Approve RHA.
 3. **Overflow policy.** Fatal error, never saturate silently. Approve.
 4. **RNG.** xoshiro256** seeded by SplitMix64. Approve.
-5. **Phrase normalization.** Interim: trim ASCII whitespace only; case and Unicode normalization are significant. A create-world screen may want case-insensitive phrases; that would be a change to `phrase_seed` and therefore a generator version bump. Proposals entry suggested.
+5. **Phrase normalization.** Decided in the design doc (section 4, 2026-11-15): phrases are scrubbed as in 7.3. This changed the seed of every phrase containing a capital letter or punctuation, so the generator version was bumped to 0.2.0.
 6. **Noise.** 2D gradient noise with 8 gradients and quintic fade. Simplex or value noise were the alternatives. P1 may need 3D noise (for example time-varying fields); it would be added here.
