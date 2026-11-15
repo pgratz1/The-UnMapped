@@ -6,7 +6,7 @@ A single-player, first-person, open-world RPG whose world and history are genera
 
 - **Design doc:** `docs/design/design.md`. It is the specification for the whole project. Read the sections relevant to your task before starting.
 - **Current work:** the world generator prototype, section 13 of the design doc (phases P0 to P6).
-- **Next phase:** P0 Foundation. Nothing in `worldgen/` exists yet.
+- **Current phase:** P0 Foundation. The build scaffold exists; the deterministic core, database layer and CLI commands are next.
 
 ## The design doc is read-only
 
@@ -16,15 +16,23 @@ When the design is wrong, unclear or missing something, add an entry to `docs/de
 
 ## Repository state
 
-The repository currently holds a custom-engine style skeleton (`src/engine`, `src/render`, `src/platform` and similar). Phase P0 replaces it with the layout in section 10 of the design doc:
+The repository follows the layout in section 10 of the design doc. Phase P0 has the build scaffold in place: a `worldgen` library that only reports its version, a `worldgen-cli` that prints version and usage, and a doctest test executable. Stage code is still to come.
 
 ```
-worldgen/     C++ library, no engine dependencies (geo, history, derive, db)
-tools/        worldgen-cli: generate, render, report, hash
-gdext/        C++ GDExtension: world readers, runtime generators, gameplay
-game/         Godot project: scenes, assets, data; the viewer lives in game/viewer/
-extern/       vendored third-party libraries at pinned versions
-docs/         design/, specs/, reviews/
+CMakeLists.txt        top-level build; refuses in-tree builds
+CMakePresets.json     configure, build and test presets
+cmake/                build modules; UnmappedCompilerFlags.cmake holds every compiler flag
+worldgen/             C++ library, no engine dependencies
+  include/worldgen/   public API
+  src/                geo/, history/, derive/, db/ (created with their first file)
+  tests/              doctest tests
+tools/worldgen-cli/   command-line front end: generate, render, report, hash (to be written)
+tools/lint/           banned-construct lint (determinism auditor, to come)
+gdext/                C++ GDExtension (phase P2, viewer engineer)
+game/                 Godot project; the viewer lives in game/viewer/ (phase P2)
+extern/               vendored third-party libraries at pinned versions, see extern/README.md
+docs/                 design/, specs/, reviews/
+.github/workflows/    continuous integration
 ```
 
 ## Hard rules
@@ -71,14 +79,86 @@ One stage per branch, merged when green. Each phase ends with a review by Paul b
 
 ## Build and test
 
-Build presets, commands and the continuous integration setup are created in phase P0. The build engineer records them in this section when they exist.
+Requirements: CMake 3.25 or newer, Ninja, and GCC, Clang or MSVC (Visual Studio 2022 or newer) with C++20. Everything else is vendored in `extern/`; the build never uses the network.
+
+### Presets
+
+| Preset | Compiler | Build type |
+| --- | --- | --- |
+| `linux-gcc-debug` | GCC | Debug |
+| `linux-gcc-release` | GCC | Release |
+| `linux-clang-debug` | Clang | Debug |
+| `linux-clang-release` | Clang | Release |
+| `linux-clang-asan` | Clang | Debug with AddressSanitizer and UndefinedBehaviorSanitizer |
+| `windows-msvc-debug` | MSVC | Debug |
+| `windows-msvc-release` | MSVC | Release |
+
+Each preset has a configure, a build and a test preset of the same name. Linux presets are hidden on Windows and the reverse.
+
+### Commands
+
+Linux, from the repository root:
+
+```
+cmake --preset linux-gcc-debug
+cmake --build --preset linux-gcc-debug
+ctest --preset linux-gcc-debug
+```
+
+Replace `linux-gcc-debug` with any preset above. The build tree is `$HOME/.cache/the-unmapped/build/<source dir name>/<preset>/`; the executables are `tools/worldgen-cli/worldgen-cli` and `worldgen/tests/worldgen-tests` inside it. `ctest` runs the doctest executable and the CLI checks; run `worldgen-tests` directly for doctest options such as `-tc="<name>"`.
+
+Windows, from an "x64 Native Tools Command Prompt for VS" (or after running `vcvars64.bat`), so that `cl` and Ninja are on the path:
+
+```
+cmake --preset windows-msvc-debug
+cmake --build --preset windows-msvc-debug
+ctest --preset windows-msvc-debug
+```
+
+The build tree is `%LOCALAPPDATA%\the-unmapped\build\<source dir name>\<preset>\`.
+
+### Choosing another build root
+
+Presets cannot read an optional environment variable with a fallback, so `UNMAPPED_BUILD_ROOT` is applied with `-B` and the build and test steps name the directory:
+
+```
+export UNMAPPED_BUILD_ROOT=/some/fast/disk/the-unmapped
+cmake --preset linux-gcc-debug -B "$UNMAPPED_BUILD_ROOT/build/linux-gcc-debug"
+cmake --build "$UNMAPPED_BUILD_ROOT/build/linux-gcc-debug"
+ctest --preset linux-gcc-debug --test-dir "$UNMAPPED_BUILD_ROOT/build/linux-gcc-debug"
+```
+
+Configure warns when `UNMAPPED_BUILD_ROOT` is set but the build directory is not under it. Continuous integration uses this form.
+
+### Several worktrees
+
+The default build tree includes the source directory name, so the main checkout and each git worktree get their own build trees and CMake caches. Two checkouts with the same directory name would collide; give one of them its own `UNMAPPED_BUILD_ROOT` with the `-B` form above.
+
+### Compiler flags
+
+All flags are set in `cmake/UnmappedCompilerFlags.cmake`:
+
+- No fast-math on any compiler, and floating-point contraction off (`-fno-fast-math -ffp-contract=off` on GCC and Clang, `/fp:precise` on MSVC), for every target including vendored code. Never add `-ffast-math`, `-Ofast`, `/fp:fast` or `/fp:contract`.
+- Project targets call `unmapped_project_target()`: `-Wall -Wextra -Wpedantic -Wshadow -Wconversion -Wsign-conversion -Wdouble-promotion` and more, or `/W4`, as errors. `-DUNMAPPED_WARNINGS_AS_ERRORS=OFF` turns off the error part for local experiments only.
+- Vendored targets call `unmapped_vendored_target()`: warnings suppressed. Their headers are `SYSTEM` includes.
+- SQLite compile options are set in one place only: the block marked `SQLITE CONFIGURATION` in `extern/CMakeLists.txt`. Runtime settings (page size, pragmas) belong in one place in `worldgen/src/db/`.
+- ccache is used automatically when installed (`-DUNMAPPED_USE_CCACHE=OFF` to disable).
+
+### Adding code
+
+- Library sources go in `worldgen/CMakeLists.txt`, tests in `worldgen/tests/CMakeLists.txt` (one doctest executable, `worldgen-tests`), CLI sources in `tools/worldgen-cli/CMakeLists.txt`. Every new project target calls `unmapped_project_target()`.
+- Vendored libraries are linked as `unmapped::sqlite3`, `unmapped::doctest`, `unmapped::tomlplusplus` and `unmapped::stb_image_write`.
+
+### Continuous integration
+
+`.github/workflows/ci.yml` builds and tests every preset on `ubuntu-latest` (GCC, Clang, Clang with sanitizers) and `windows-latest` (MSVC), on pushes to `main` and on pull requests. Each job builds under `$RUNNER_TEMP/unmapped` and fails if the checkout holds any generated file afterwards. The cross-compiler `world.db` hash comparison is added once `worldgen-cli generate` and `hash` exist.
 
 ### Build output lives outside the source tree
 
 Paul's checkout is inside a Dropbox folder, so nothing generated may be written into the repository directory. This is a requirement on the presets, not a habit to remember:
 
-- Every CMake preset sets `binaryDir` outside the tree. The default root is `$HOME/.cache/the-unmapped/` (`%LOCALAPPDATA%\the-unmapped\` on Windows), overridable with the `UNMAPPED_BUILD_ROOT` environment variable. Layout under the root: `build/<preset>/` for build trees, `out/` for generated worlds, map images, reports and seed-sweep results, `tools/` for downloaded tools such as the pinned Godot editor.
-- The top-level `CMakeLists.txt` refuses an in-source build with an error.
+- Every CMake preset sets `binaryDir` outside the tree. The default root is `$HOME/.cache/the-unmapped/` (`%LOCALAPPDATA%\the-unmapped\` on Windows), overridable with the `UNMAPPED_BUILD_ROOT` environment variable through `-B` (see "Choosing another build root" above). Layout under the root: `build/<source dir name>/<preset>/` for build trees (see "Several worktrees" above), `out/` for generated worlds, map images, reports and seed-sweep results, `tools/` for downloaded tools such as the pinned Godot editor.
+- The top-level `CMakeLists.txt` refuses a build directory that is the source tree or inside it. CMake still writes `CMakeCache.txt` and `CMakeFiles/` into the refused directory before stopping; delete them.
 - `worldgen-cli`, tests and sweep scripts take explicit output paths and default to `out/` under the build root, never the current directory.
 - Compiled GDExtension libraries are produced under the build root and placed where the Godot project loads them by a symlink or by a path in the `.gdextension` file, not by copying binaries into `game/`.
 - `.gitignore` covers the usual in-tree build directories and Godot's `.godot/` cache as a backstop only.
