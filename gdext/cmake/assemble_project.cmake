@@ -36,6 +36,30 @@ file(GLOB _entries LIST_DIRECTORIES true RELATIVE "${SOURCE_DIR}" "${SOURCE_DIR}
 list(REMOVE_DUPLICATES _entries)
 list(SORT _entries)
 
+# Windows: the command interpreter for mklink and rmdir.
+if(WIN32)
+    set(_cmd "$ENV{ComSpec}")
+    if(NOT _cmd)
+        set(_cmd cmd)
+    endif()
+endif()
+
+# Removes the link ${dst}: a symbolic link, or on Windows a junction or a
+# directory symbolic link. On Windows "rmdir" without /s removes only the
+# link itself, never the folder it points to, and fails on a real folder
+# that holds anything.
+function(_unmapped_remove_link dst)
+    if(WIN32 AND IS_DIRECTORY "${dst}")
+        file(TO_NATIVE_PATH "${dst}" _ndst)
+        execute_process(COMMAND "${_cmd}" /c rmdir "${_ndst}" RESULT_VARIABLE _rc ERROR_VARIABLE _err OUTPUT_QUIET)
+        if(NOT _rc EQUAL 0)
+            message(FATAL_ERROR "assemble_project.cmake: cannot remove the link ${dst}: ${_err}")
+        endif()
+    else()
+        file(REMOVE "${dst}")
+    endif()
+endfunction()
+
 foreach(_name IN LISTS _entries)
     if(_name IN_LIST _reserved OR _name STREQUAL "." OR _name STREQUAL "..")
         continue()
@@ -43,22 +67,32 @@ foreach(_name IN LISTS _entries)
     set(_src "${SOURCE_DIR}/${_name}")
     set(_dst "${PROJECT_DIR}/${_name}")
 
-    if(IS_SYMLINK "${_dst}")
-        file(READ_SYMLINK "${_dst}" _target)
-        if(_target STREQUAL _src)
+    # A link that resolves to the source entry is up to date. This covers
+    # symbolic links and Windows junctions alike: both sides are resolved
+    # with REAL_PATH, so separators, drive-letter case and the form in
+    # which the link stores its target do not matter (comparing the text
+    # of READ_SYMLINK would, on Windows).
+    if(EXISTS "${_dst}")
+        file(REAL_PATH "${_dst}" _real)
+        if(_real STREQUAL _src)
             continue()
         endif()
-        file(REMOVE "${_dst}")
+    endif()
+
+    if(IS_SYMLINK "${_dst}")
+        # A link to somewhere else, or dangling (e.g. the checkout moved).
+        _unmapped_remove_link("${_dst}")
     elseif(EXISTS "${_dst}")
+        if(IS_DIRECTORY "${_dst}")
+            # A real folder, or a Windows junction that CMake does not
+            # report as a link and that points elsewhere.
+            message(FATAL_ERROR "assemble_project.cmake: ${_dst} is a folder that does not resolve to ${_src}. "
+                "If it is a link (junction), remove the link only (Windows: rmdir \"${_dst}\"); if it is a "
+                "real folder, move its contents to the repository if wanted and delete it. Then build again.")
+        endif()
         if(IS_DIRECTORY "${_src}")
-            # A junction (Windows) is not reported as a symlink; a folder that
-            # resolves to the source folder is already linked.
-            file(REAL_PATH "${_dst}" _real)
-            if(_real STREQUAL _src)
-                continue()
-            endif()
-            message(FATAL_ERROR "assemble_project.cmake: ${_dst} is a real folder, not a link to ${_src}. "
-                "Delete it and build again.")
+            message(FATAL_ERROR "assemble_project.cmake: ${_dst} is a file but ${_src} is a folder. "
+                "Delete ${_dst} and build again.")
         endif()
         # A file: a hard link or copy from an earlier run, or a file the
         # editor replaced when saving (safe save renames a temporary file
@@ -78,10 +112,12 @@ foreach(_name IN LISTS _entries)
         file(REMOVE "${_dst}")
     endif()
 
+    # Windows: native paths (backslashes) for mklink and for the target
+    # stored in a symbolic link.
+    file(TO_NATIVE_PATH "${_dst}" _ndst)
+    file(TO_NATIVE_PATH "${_src}" _nsrc)
     if(IS_DIRECTORY "${_src}" AND WIN32)
-        file(TO_NATIVE_PATH "${_dst}" _ndst)
-        file(TO_NATIVE_PATH "${_src}" _nsrc)
-        execute_process(COMMAND cmd /c mklink /J "${_ndst}" "${_nsrc}"
+        execute_process(COMMAND "${_cmd}" /c mklink /J "${_ndst}" "${_nsrc}"
             RESULT_VARIABLE _rc OUTPUT_QUIET ERROR_VARIABLE _err)
         if(NOT _rc EQUAL 0)
             message(FATAL_ERROR "assemble_project.cmake: cannot create the junction ${_dst} -> ${_src}: ${_err}")
@@ -89,7 +125,11 @@ foreach(_name IN LISTS _entries)
     elseif(IS_DIRECTORY "${_src}")
         file(CREATE_LINK "${_src}" "${_dst}" SYMBOLIC)
     else()
-        file(CREATE_LINK "${_src}" "${_dst}" SYMBOLIC RESULT _rc)
+        if(WIN32)
+            file(CREATE_LINK "${_nsrc}" "${_dst}" SYMBOLIC RESULT _rc)
+        else()
+            file(CREATE_LINK "${_src}" "${_dst}" SYMBOLIC RESULT _rc)
+        endif()
         if(NOT _rc EQUAL 0)
             file(CREATE_LINK "${_src}" "${_dst}" RESULT _rc)
         endif()
@@ -101,14 +141,17 @@ foreach(_name IN LISTS _entries)
     endif()
 endforeach()
 
-# Remove links whose source entry no longer exists.
+# Remove links whose source entry no longer exists. On Windows a junction
+# may not be reported as a symbolic link; any folder there that is not
+# reserved is a junction from an earlier run, and _unmapped_remove_link
+# cannot remove a real folder that holds anything.
 file(GLOB _existing LIST_DIRECTORIES true RELATIVE "${PROJECT_DIR}" "${PROJECT_DIR}/*" "${PROJECT_DIR}/.*")
 foreach(_name IN LISTS _existing)
-    if(_name IN_LIST _reserved OR _name IN_LIST _entries)
+    if(_name IN_LIST _reserved OR _name IN_LIST _entries OR _name STREQUAL "." OR _name STREQUAL "..")
         continue()
     endif()
-    if(IS_SYMLINK "${PROJECT_DIR}/${_name}")
-        file(REMOVE "${PROJECT_DIR}/${_name}")
+    if(IS_SYMLINK "${PROJECT_DIR}/${_name}" OR (WIN32 AND IS_DIRECTORY "${PROJECT_DIR}/${_name}"))
+        _unmapped_remove_link("${PROJECT_DIR}/${_name}")
     endif()
 endforeach()
 
