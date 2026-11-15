@@ -46,10 +46,10 @@ The full design is in [`docs/design/design.md`](docs/design/design.md).
 
 | | |
 | --- | --- |
-| **Current phase** | P1 Geography and P2 Godot bring-up and viewer, running in parallel. P0 Foundation is complete |
+| **Current phase** | P1 Geography. P0 Foundation and P2 Godot bring-up and viewer v0 are complete |
 | **Next phase** | P3 History core, after P1 |
 | **Current milestone** | Milestone 0, Geography generator: in progress (P1 and P2) |
-| **Work in flight** | P1: the geography stage specs are being written; no geography code yet. P2: Godot version pinning, the C++ extension and viewer v0 are in progress on branch `p2/viewer`. |
+| **Work in flight** | P1: the overview, elevation and hydrology specs are approved; the shared foundation (branch `p1/foundation`) and the render and report tools (branch `p1/inspect`) are being implemented. No geography stage exists yet. |
 | **`main`** | Builds and passes all tests on Linux (GCC, Clang, Clang with sanitizers) and Windows (MSVC), in debug and release |
 
 **What "P0 done" means.** The phase's exit check is that an empty world file is byte-identical across all three compilers and that `worldgen-cli hash` proves it in continuous integration. It does: eight test worlds, six empty and two holding test layers, are identical across all seven build configurations, and each matches its recorded golden hash. CI repeats the comparison on every push.
@@ -77,8 +77,8 @@ The first block of work is the world generator prototype: seven phases, P0 to P6
 | Phase | Delivers | Depends on | Status |
 | --- | --- | --- | --- |
 | **P0 Foundation** | Repository layout, CMake presets, vendored dependencies, CI on three compilers, the deterministic core, the reproducible SQLite layer, the TOML loader, `worldgen-cli` | — | **Done** 2026-11-15, reviewed |
-| **P1 Geography** | Elevation, erosion, hydrology, climate, biomes, resources and regions, each writing its layer; image export per layer | P0 | **In progress** since 2026-11-15: specs being written |
-| **P2 Godot bring-up and viewer v0** | Godot version pinned, C++ extension building on Linux and Windows, `world.db` reader bound into Godot, 2D map with switchable layers | P0; parallel with P1 | **In progress** since 2026-11-15 |
+| **P1 Geography** | Elevation, erosion, hydrology, climate, biomes, resources and regions, each writing its layer; image export per layer | P0 | **In progress** since 2026-11-15: first three specs approved, shared foundation being implemented |
+| **P2 Godot bring-up and viewer v0** | Godot version pinned, C++ extension building on Linux and Windows, `world.db` reader bound into Godot, 2D map with switchable layers | P0; parallel with P1 | **Done** 2026-11-15, awaiting Paul's hands-on review. Godot 4.7.2 and godot-cpp 10.0.0 pinned; the extension builds and its headless check passes on Linux and Windows |
 | **P3 History core** | Race and culture definitions, ages and the awakening schedule, active phases and quiet intervals, civilizations, settlements, wars, ruin, the event log, a text history report | P1 | Not started |
 | **P4 Viewer v1** | Timeline scrubber, territory by year, settlement and site markers, browser for civilizations and events | P2, P3; parallel with P5 | Not started |
 | **P5 History depth** | God interventions, beast populations, named monsters, figures and factions, race relations, casters and spellbooks | P3 | Not started |
@@ -86,15 +86,15 @@ The first block of work is the world generator prototype: seven phases, P0 to P6
 
 ```
 P0 ██████████ done ──┬─► P1 Geography ░░ in progress ──► P3 History core ──┬─► P5 History depth ──┬─► P6 Derivation
-                     └─► P2 Viewer v0 ░░ in progress ─────────────────────┴─► P4 Viewer v1 ──────┘
-                         (you are here)
+                     │      (you are here)                                 │                      │
+                     └─► P2 Viewer v0 ██ done ─────────────────────────────┴─► P4 Viewer v1 ──────┘
 ```
 
 ### Milestones
 
 | # | Milestone | Reached when | Status |
 | --- | --- | --- | --- |
-| 0 | Geography generator | `worldgen-cli` writes a world with all geography layers; maps look plausible in image export and in the viewer; identical file hash on Linux and Windows | In progress: foundation done (P0); P1 and P2 under way |
+| 0 | Geography generator | `worldgen-cli` writes a world with all geography layers; maps look plausible in image export and in the viewer; identical file hash on Linux and Windows | In progress: foundation (P0) and viewer v0 (P2) done; geography (P1) under way |
 | 1 | History generator | Default history generates in under two minutes; races appear in order; the event log reads as coherent history; sites and quest hooks derived | Not started (P3 to P6) |
 | 2 | Walkable terrain | Godot streams terrain from a world file; the player can cross the map on flat screen without hitches | Not started |
 | 3 | VR parity | The same build starts in VR or flat; the fly-across test holds 90 Hz in VR | Not started |
@@ -187,6 +187,19 @@ python3 -B tools/lint/determinism_lint.py                              # banned-
 tools/ci/world-hashes.sh local linux-gcc-release linux-clang-release   # compare world hashes across built presets
 ```
 
+**The world viewer (optional).** The Godot extension is off by default, so nothing above needs Godot. To build it and open a world in the viewer:
+
+```
+tools/ci/fetch-godot.sh                                   # downloads and verifies the pinned Godot 4.7.2 editor into ~/.cache/the-unmapped/tools/
+cmake --preset linux-gcc-release -DUNMAPPED_BUILD_GDEXT=ON
+cmake --build --preset linux-gcc-release
+B=~/.cache/the-unmapped/build/$(basename "$PWD")/linux-gcc-release
+"$B/tools/worldgen-cli/worldgen-cli" generate --seed 42 --test-pattern --out ~/.cache/the-unmapped/out/seed42.db --force
+~/.cache/the-unmapped/tools/godot-4.7.2-stable/Godot_v4.7.2-stable_linux.x86_64 --path "$B/game" -- ~/.cache/the-unmapped/out/seed42.db
+```
+
+The viewer lists every layer in the file, shows the selected one as a map with pan and zoom, and lists the metadata. Godot always runs on a copy of the project assembled in the build tree, never on `game/` itself.
+
 [`CLAUDE.md`](CLAUDE.md) has the full build and test reference: every preset, the test executables and their run times, the lint, the hash comparison script and where golden values live.
 
 ## How it is built to be reproducible
@@ -212,8 +225,8 @@ tools/
   worldgen-cli/   the command-line tool and its integration tests
   lint/           the determinism lint
   ci/             the cross-compiler world hash script
-gdext/        C++ GDExtension for Godot (placeholder until P2)
-game/         Godot project (placeholder until P2)
+gdext/        C++ GDExtension for Godot: world reader binding and the viewer's logic
+game/         Godot project: the world viewer scene (layout only, no scripts)
 extern/       vendored third-party libraries at pinned versions
 docs/
   design/     the design document and proposals for changing it
@@ -221,7 +234,7 @@ docs/
   reviews/    world critic reviews (from P1 on)
 ```
 
-Vendored libraries: SQLite 3.54.1, doctest 2.5.3, toml++ 3.4.0 and stb_image_write 1.18. Versions, sources, licenses and checksums are in [`extern/README.md`](extern/README.md).
+Vendored libraries: SQLite 3.54.1, doctest 2.5.3, toml++ 3.4.0, stb_image_write 1.18 and godot-cpp 10.0.0 (used only when the Godot extension is built). Versions, sources, licenses and checksums are in [`extern/README.md`](extern/README.md).
 
 ## How the project is developed
 

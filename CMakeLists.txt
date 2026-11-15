@@ -69,9 +69,32 @@ if(UNMAPPED_BUILD_TESTS)
     enable_testing()
 endif()
 
+# The Godot GDExtension (gdext/) and the vendored godot-cpp it needs. OFF by
+# default: godot-cpp is large and slow to build, and worldgen and
+# worldgen-cli never depend on it (hard rule 2). With it OFF, nothing below
+# differs from a build without gdext/. Turn it on for a preset with
+#   cmake --preset linux-gcc-debug -DUNMAPPED_BUILD_GDEXT=ON
+option(UNMAPPED_BUILD_GDEXT "Build the Godot GDExtension (gdext/) and the vendored godot-cpp" OFF)
+if(UNMAPPED_BUILD_GDEXT AND UNMAPPED_SANITIZE)
+    # A sanitized shared library cannot be loaded into the stock Godot
+    # editor, Clang leaves the sanitizer runtime unlinked in it, and
+    # godot-cpp refuses sanitizer builds without engine-side macros.
+    message(FATAL_ERROR "UNMAPPED_BUILD_GDEXT cannot be combined with UNMAPPED_SANITIZE "
+        "(e.g. the linux-clang-asan preset): the extension is loaded into the uninstrumented "
+        "Godot editor. Configure the sanitizer preset with -DUNMAPPED_BUILD_GDEXT=OFF.")
+endif()
+if(UNMAPPED_BUILD_GDEXT)
+    # The extension is a shared library that links the static worldgen and
+    # SQLite libraries, so those must be position independent. This changes
+    # code generation only (no effect on integer results); the world hash
+    # check is run with the option on as well (CLAUDE.md, "Build and test").
+    set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+endif()
+
 add_subdirectory(extern)
 add_subdirectory(worldgen)
 add_subdirectory(tools/worldgen-cli)
 
-# The GDExtension (gdext/) is added in phase P2 as a separate, optional target.
-# worldgen and worldgen-cli must keep building without it.
+if(UNMAPPED_BUILD_GDEXT)
+    add_subdirectory(gdext)
+endif()

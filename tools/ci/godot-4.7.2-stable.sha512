@@ -1,0 +1,15 @@
+# Pinned Godot 4.7.2-stable editor, checked by tools/ci/fetch-godot.sh.
+# Format: sha512sum (two spaces, file name). Lines starting with # are notes.
+#
+# Release archives. SHA-512 as published in the release's SHA512-SUMS.txt,
+# https://github.com/godotengine/godot/releases/download/4.7.2-stable/SHA512-SUMS.txt
+# (checked against it on 2026-11-15).
+9aa00f7a605200940bce3027a567b782f49bd8e940dd06ae9e987bd65aee1b1467edd56ed84fcdcbdd44354bf613bdbb4e5d2913e925850368e150c59ed54c65  Godot_v4.7.2-stable_linux.x86_64.zip
+83decd58fdf67b9d657958a1ae6bf1929c20785315a81effe245874cdc57acb709bf868e00778a96984338c1b29dafdb453c6847747694621c6ecf5da2259993  Godot_v4.7.2-stable_win64.exe.zip
+#
+# Files extracted from those archives. SHA-512 computed on 2026-11-15 from
+# the archives verified above; used to recognise an installed copy without
+# keeping the archive.
+ac9f3af3d8b62237694bc03e7422b8f7b1a39095cf4eeaa8361b7465f13bc9dbaad47f60ac0ac217c9f0b2b3712be207039cd83953f4c72087214bd0357cabbc  Godot_v4.7.2-stable_linux.x86_64
+d8b2af35920c2e3421ff37a364a0ec3d8959a06f7e33ccb9aa365f87e4aa656ce5888eba1a1a62652e6f4d69b9829ff6ac226f33758ca723d149d380de5b5199  Godot_v4.7.2-stable_win64.exe
+06617d7b8b081f7ae865e65579af94740e5acf76421bb4b58e46bec943044029410ab51ef99d14c66bd03049568e8275e9fa445b4145413577706bbc2fde8992  Godot_v4.7.2-stable_win64_console.exe

@@ -221,3 +221,35 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
 - Proposal: first pass (elevation, hydrology): none; schema stays at version 1. Second pass: version 2 adds table `biome`; version 3 (or the same bump, if in one branch) adds table `region`. This entry is updated when the second-pass specs fix the DDL.
 - Interim choice: as proposed, in p1-00 section 9.
 - Status: open
+
+## Phase P2 Godot bring-up and viewer v0 (2026-11-15)
+
+### Godot extension runs from a copy of the project in the build tree
+
+- Date: 2026-11-15
+- Raised by: viewer-engineer
+- Design doc section: 10 (build output stays outside the source tree; repository layout)
+- Problem: Godot writes its cache (`.godot/`) inside the project and loads a GDExtension from a path relative to the project; the cache location cannot be configured. With `game/` in a synced folder, opening it directly writes `.godot/` into the repository, and a link from `game/` to the build tree would be machine-specific and trip CI's clean-checkout check.
+- Proposal: state in section 10 that Godot is always run on a copy of the project assembled under the build tree (`<build>/game/`: links to `game/`'s entries, the extension's output in `bin/`, Godot's `.godot/` cache), and that `game/` is never opened directly.
+- Interim choice: implemented (`gdext/cmake/assemble_project.cmake`); `CLAUDE.md` and `gdext/README.md` describe it. Saving `project.godot` from the editor with safe save breaks its link; the build warns.
+- Status: open
+
+### Pinned engine: Godot 4.7.2 and godot-cpp 10.0.0
+
+- Date: 2026-11-15
+- Raised by: viewer-engineer
+- Design doc section: 10 (Engine row: "pinned in the repo to the newest stable version that Terrain3D supports")
+- Problem: the design gives the rule but not the version.
+- Proposal: record Godot 4.7.2-stable (Terrain3D 1.1.0 states "Supports Godot 4.5-4.8+"; 4.8 was at beta when pinned) and godot-cpp 10.0.0-stable targeting GDExtension API 4.7, vendored in `extern/godot-cpp/`. The extension is an optional part of the build (`UNMAPPED_BUILD_GDEXT`, off by default) so `worldgen` and `worldgen-cli` never need Godot.
+- Interim choice: as proposed; evidence and checksums in `gdext/README.md`, `extern/README.md` and `tools/ci/godot-4.7.2-stable.sha512`.
+- Status: open
+
+### Friction writing Godot code purely in C++ (P2 findings)
+
+- Date: 2026-11-15
+- Raised by: viewer-engineer
+- Design doc section: 3, 8, 10 (C++ only, no GDScript)
+- Problem: observed while building viewer v0 with godot-cpp 10 and Godot 4.7.2: (1) every method, signal and property visible to Godot needs hand-written registration, and scene-to-code wiring is by node name, checked only at run time; (2) iteration is rebuild then restart, with no hot reload, and godot-cpp adds about 1,100 files and three minutes to a clean build; (3) godot-cpp's defaults clash with a normal C++ library (exceptions off, static MSVC runtime, files written into the source tree) and each needed an override; (4) headless testing has traps: Godot idles instead of exiting if the extension fails to load, and the headless display has no window size, so layouts collapse; (5) Godot changes the working directory to the project, so relative command-line paths break; (6) Godot's integer is 64-bit signed, so unsigned 64-bit layer cells are shown as text; (7) a layout bug was invisible to a headless pixel check and found only in a windowed run; (8) sanitizer builds of the extension are impossible against the stock editor.
+- Proposal: keep C++ only, and plan for it: every screen gets a headless check scene from the start, as the viewer has; section 10's "headless Godot runs for scene tests" becomes one CTest per screen, run where the pinned editor is available; budget CI time and a compiler cache for godot-cpp; revisit hot reload when gameplay iteration starts.
+- Interim choice: all handled in `gdext/` and `extern/CMakeLists.txt`.
+- Status: open

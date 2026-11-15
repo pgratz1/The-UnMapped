@@ -594,3 +594,32 @@ In the format of `docs/design/proposals.md`, for the lead to add.
 - Proposal: first pass (elevation, hydrology): none; schema stays at version 1. Second pass: version 2 adds table `biome`; version 3 (or the same bump, if in one branch) adds table `region`. This entry is updated when the second-pass specs fix the DDL.
 - Interim choice: as proposed, in p1-00 section 9.
 - Status: open
+
+## Appendix C. Amendments after the first implementation (2026-11-15)
+
+Decisions by the lead on points raised by the engineers and the determinism auditor. Where these differ from the text above, these win.
+
+**Render (10.2)**
+
+1. **Which layers a palette suits.** `hypsometric`: `i16`. `water` and `direction`: `u8`. `river`: `u8` with every value at most 15. `log2` and `ids`: any unsigned type. `signed`: any signed type. `gray`: any layer. Naming a palette that does not suit the layer is a usage error (exit 2) whose message says what the palette needs. Under `auto`, a registered palette that does not suit the layer falls back to `gray`.
+2. **Out-of-range category values.** A `water` or `river` value outside the catalogue's range is drawn (255, 0, 255), so a bad layer is obvious.
+3. **Elevation 0.** No finished `elevation` layer contains 0 (catalogue rule 4). On a hand-made layer that does, `hypsometric` draws it as ocean at depth 0, and the composite and the report statistics count it as neither land nor ocean.
+4. **`--palette` with `--composite`** is a usage error. The composite needs an `i16` `elevation` layer; without one, or with an optional layer of the wrong type or size, `render` exits 3 and lists the layers present.
+5. **Biome palette.** Deferred to the biome stage, with the `biome` table it reads.
+
+**Report (10.3)**
+
+6. **Empty sets.** Percentiles over no values print `n/a` for the key. `ratio4` with a zero denominator prints `n/a`. `coast_ratio` is `n/a` with no land and `0.0000` with land and no ocean. Maxima over nothing are 0.
+7. **Ocean in the hydrology statistics** means `elevation` < 0.
+8. **`longest_river_m`** is the largest downstream path length D over all river cells (`water` = 1), not only over river sources, so a river that begins at a lake outlet is measured from the outlet. `river_sources` keeps its definition (a river cell with no upstream river or lake cell), so a lake-fed river has no source and the count of sources can be 0 while rivers exist.
+9. **Bad layers.** A `flow_dir` that does not lead every non-ocean cell to the ocean (a code above 7 on a non-ocean cell, a step off the map, or a cycle), an `elevation` layer that is not `i16`, or a hydrology layer of the wrong type or size when all five are present makes `report` exit 3, naming the layer and, for a flow fault, the lowest such cell. When any of the five hydrology layers is absent the hydrology lines are omitted and the others are not checked.
+10. **`coast_ratio`** is computed in 128-bit arithmetic; the value is as defined.
+
+**Shared algorithms and parallel work (7, 8)**
+
+11. **G1 in place.** A selection helper that works in the caller's array leaves that array in an unspecified arrangement, which differs between standard libraries. After such a call the array may be used only as a multiset. No stage may read positions from it.
+12. **G2.** The optional equivalence is "the two cells' keys are equal", given as a key array. BFS parents are stored as the direction code back to the parent, as in G3.
+13. **G3 to G5 preconditions.** A non-ocean key below 1, no ocean cell at all, a negative level, or an `order` that is not a topological permutation for G5 is a fatal error.
+14. **Thread start failure (D10).** If the system cannot start a thread for any reason, the work is done by the threads that did start, and the result is the same. A thread count outside 1 to 256 given to the library is a fatal error; the command line's default is capped at 256. Parallel calls are not nested.
+15. **Fixed-id kinds.** When the kind's directory exists, every id in the set must be defined, whether or not the kind is required; a missing directory is an error only for a required kind, reported once against the directory.
+16. **Data root.** An empty `UNMAPPED_DATA_DIR` counts as unset; a relative value resolves against the current directory.
