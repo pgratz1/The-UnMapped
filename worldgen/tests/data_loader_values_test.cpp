@@ -841,3 +841,55 @@ TEST_CASE("loader grammars: names and ids") {
     CHECK_FALSE(wd::is_valid_id(""));
     CHECK_FALSE(wd::is_valid_id("a.b"));
 }
+
+// --- Extreme float literals in an fx field (determinism audit; toml++
+// number conversion pinned to std::from_chars). Line 2 holds the literal,
+// line 3 an unknown key. Out of double range: a syntax error that stops the
+// file (amendment 11). A float that converts: the floating-point error and
+// the unknown key.
+
+namespace {
+
+std::string extreme_alpha(std::string_view literal) {
+    return "[alpha.x]\nratio = " + std::string(literal) + "\nsize = 1\ncount = 1\npartner = \"b1\"\n";
+}
+
+void check_extreme_alpha_float(std::string_view literal) {
+    const auto r = load_alpha_text(extreme_alpha(literal));
+    check_content_result(r);
+    INFO(std::string(literal) << "\n" << error_dump(r));
+    REQUIRE(r.errors.size() == 2);
+    check_at(r.errors[0], 2, 9);
+    CHECK(contains(r.errors[0].message, "floating-point"));
+    check_at(r.errors[1], 3, 8);
+    CHECK(contains(r.errors[1].message, "alpha.x.size"));
+}
+
+}  // namespace
+
+TEST_CASE("loader numeric rule: float literals out of double range are syntax errors that stop the file") {
+    for (const char* lit : {"1e999", "1e-400"}) {
+        const std::string literal = lit;
+        const auto r = load_alpha_text(extreme_alpha(literal));
+        check_content_result(r);
+        INFO(literal << "\n" << error_dump(r));
+        REQUIRE(r.errors.size() == 1);
+        CHECK(r.errors[0].path == "alphas/a.toml");
+        CHECK(r.errors[0].line == 2);
+        CHECK(r.errors[0].column >= 1);
+        CHECK(r.errors[0].column <= 9 + literal.size());  // "ratio = " + literal, plus one
+        CHECK_FALSE(contains(r.errors[0].message, "alpha.x.size"));
+    }
+}
+
+TEST_CASE("loader numeric rule: an ordinary float in an fx field is the floating-point error, then the unknown key") {
+    check_extreme_alpha_float("0.5");
+}
+
+// Probes whether MSVC's std::from_chars treats a subnormal literal the way
+// libstdc++'s does (converted, so the loader reports it as a float rather
+// than the parser rejecting it). If Windows CI disagrees, the lead decides
+// whether to drop this case or amend the spec.
+TEST_CASE("loader numeric rule: a subnormal float in an fx field (1e-310) is the floating-point error, then the unknown key") {
+    check_extreme_alpha_float("1e-310");
+}

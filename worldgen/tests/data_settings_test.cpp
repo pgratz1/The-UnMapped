@@ -260,3 +260,58 @@ TEST_CASE("settings: files on disk") {
         CHECK(r.errors.size() == 1);
     }
 }
+
+// --- Extreme float literals (determinism audit; toml++ number conversion
+// pinned to std::from_chars). Line 2 holds the literal, line 3 an unknown
+// key. An overflowing or underflowing literal is a syntax error, which stops
+// the file (amendment 11: path, line, sole error, column within the line;
+// never the parser's text). A float that converts is the floating-point
+// error, and validation continues to the unknown key.
+
+namespace {
+
+std::string extreme_settings(std::string_view literal) {
+    return "[world]\nmap_size = " + std::string(literal) + "\nsize = 1\n";
+}
+
+void check_extreme_settings_float(std::string_view literal) {
+    const auto r = parse(extreme_settings(literal));
+    INFO(std::string(literal) << "\n" << error_dump(r));
+    REQUIRE(r.errors.size() == 2);
+    CHECK(r.errors[0].path == PATH);
+    CHECK(r.errors[0].line == 2);
+    CHECK(r.errors[0].column == 12);
+    CHECK(contains(r.errors[0].message, "floating-point"));
+    CHECK(r.errors[1].path == PATH);
+    CHECK(r.errors[1].line == 3);
+    CHECK(r.errors[1].column == 8);
+    CHECK(contains(r.errors[1].message, "world.size"));
+}
+
+}  // namespace
+
+TEST_CASE("settings: float literals out of double range are syntax errors that stop the file") {
+    for (const char* lit : {"1e999", "1e-400"}) {
+        const std::string literal = lit;
+        const auto r = parse(extreme_settings(literal));
+        INFO(literal << "\n" << error_dump(r));
+        REQUIRE(r.errors.size() == 1);
+        CHECK(r.errors[0].path == PATH);
+        CHECK(r.errors[0].line == 2);
+        CHECK(r.errors[0].column >= 1);
+        CHECK(r.errors[0].column <= 12 + literal.size());  // "map_size = " + literal, plus one
+        CHECK_FALSE(contains(r.errors[0].message, "world.size"));
+    }
+}
+
+TEST_CASE("settings: an ordinary float literal is the floating-point error, then the unknown key") {
+    check_extreme_settings_float("0.5");
+}
+
+// Probes whether MSVC's std::from_chars treats a subnormal literal the way
+// libstdc++'s does (converted, so the loader reports it as a float rather
+// than the parser rejecting it). If Windows CI disagrees, the lead decides
+// whether to drop this case or amend the spec.
+TEST_CASE("settings: a subnormal float literal (1e-310) is the floating-point error, then the unknown key") {
+    check_extreme_settings_float("1e-310");
+}
