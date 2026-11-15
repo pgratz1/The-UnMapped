@@ -470,4 +470,304 @@ Result<Layer> WorldReader::read_layer(std::string_view name) const {
     }
 }
 
+// --- tables and raw rows (P0-02 14.10; P0-04 sections 7, 8) ----------------
+
+const char* sqlite_library_version() noexcept {
+    return sqlite3_libversion();
+}
+
+namespace {
+
+// An SQL identifier in double quotes, inner quotes doubled.
+std::string quote_identifier(std::string_view name) {
+    std::string out = "\"";
+    for (const char c : name) {
+        out += c;
+        if (c == '"') {
+            out += '"';
+        }
+    }
+    out += '"';
+    return out;
+}
+
+Error closed_error() {
+    return make_error(ErrorCode::sqlite_error, "the world reader is closed");
+}
+
+// True if a table of exactly that name exists; std::nullopt on an SQLite error.
+std::optional<bool> table_exists(const ReaderState& s, std::string_view table) {
+    Statement stmt;
+    if (stmt.prepare(s.db.get(), "SELECT count(*) FROM sqlite_schema WHERE type = 'table' AND name = ?1") !=
+            SQLITE_OK ||
+        stmt.bind_text(1, table) != SQLITE_OK || stmt.step() != SQLITE_ROW) {
+        return std::nullopt;
+    }
+    return stmt.column_int64(0) > 0;
+}
+
+Error table_not_found_error(const ReaderState& s, std::string_view table) {
+    return make_error(ErrorCode::table_not_found,
+                      "world file '" + s.path + "' has no table '" + std::string(table) + "'");
+}
+
+// Column names in declared order and primary-key columns in key order, from
+// pragma_table_info. The table must exist.
+struct TableShape {
+    std::vector<std::string> columns;
+    std::vector<std::string> key;  // empty: no primary key
+};
+
+Result<TableShape> table_shape(const ReaderState& s, std::string_view table) {
+    const std::optional<bool> exists = table_exists(s, table);
+    if (!exists) {
+        return sqlite_failure(s, "table list");
+    }
+    if (!*exists) {
+        return table_not_found_error(s, table);
+    }
+    Statement stmt;
+    if (stmt.prepare(s.db.get(), "SELECT name, pk FROM pragma_table_info(?1) ORDER BY cid") != SQLITE_OK ||
+        stmt.bind_text(1, table) != SQLITE_OK) {
+        return sqlite_failure(s, "table columns");
+    }
+    TableShape shape;
+    std::vector<std::pair<std::int64_t, std::string>> key;  // (position in key, name)
+    int step = SQLITE_ROW;
+    while ((step = stmt.step()) == SQLITE_ROW) {
+        std::string name = stmt.column_text(0);
+        const std::int64_t pk = stmt.column_int64(1);
+        if (pk > 0) {
+            key.emplace_back(pk, name);
+        }
+        shape.columns.push_back(std::move(name));
+    }
+    if (step != SQLITE_DONE) {
+        return sqlite_failure(s, "table columns");
+    }
+    // pk positions are 1..n, each once: place each name at its position.
+    shape.key.resize(key.size());
+    for (auto& [position, name] : key) {
+        if (position < 1 || static_cast<std::uint64_t>(position) > key.size()) {
+            return sqlite_failure(s, "table columns");
+        }
+        shape.key[static_cast<std::size_t>(position - 1)] = std::move(name);
+    }
+    return shape;
+}
+
+Error no_primary_key_error(const ReaderState& s, std::string_view table) {
+    return make_error(ErrorCode::no_primary_key, "table '" + std::string(table) + "' of world file '" + s.path +
+                                                     "' has no primary key, so its rows have no defined order");
+}
+
+// Runs a prepared SELECT and passes each row, converted to column values,
+// to visit. `what` names the table for messages, `columns` the column names.
+Status visit_statement(const ReaderState& s, Statement& stmt, std::string_view what,
+                       const std::vector<std::string>& columns, const RowVisitor& visit) {
+    const int count = sqlite3_column_count(stmt.get());
+    std::vector<ColumnValue> row(static_cast<std::size_t>(count));
+    std::uint64_t row_number = 0;
+    int step = SQLITE_ROW;
+    while ((step = stmt.step()) == SQLITE_ROW) {
+        ++row_number;
+        for (int c = 0; c < count; ++c) {
+            ColumnValue& v = row[static_cast<std::size_t>(c)];
+            v.integer = 0;
+            v.bytes.clear();
+            switch (stmt.column_type(c)) {
+                case SQLITE_NULL:
+                    v.type = ValueType::null;
+                    break;
+                case SQLITE_INTEGER:
+                    v.type = ValueType::integer;
+                    v.integer = stmt.column_int64(c);
+                    break;
+                case SQLITE_TEXT:
+                    v.type = ValueType::text;
+                    v.bytes = stmt.column_text(c);
+                    break;
+                case SQLITE_BLOB: {
+                    v.type = ValueType::blob;
+                    const std::span<const std::uint8_t> blob = stmt.column_blob(c);
+                    v.bytes.assign(reinterpret_cast<const char*>(blob.data()), blob.size());
+                    break;
+                }
+                default: {  // SQLITE_FLOAT
+                    const std::string column =
+                        static_cast<std::size_t>(c) < columns.size() ? columns[static_cast<std::size_t>(c)] : "?";
+                    return make_error(ErrorCode::real_value,
+                                      "world file '" + s.path + "' holds a REAL value in " + std::string(what) +
+                                          ", column '" + column + "', row " + format_u64(row_number) +
+                                          "; world files store integers, text and blobs only");
+                }
+            }
+        }
+        visit(std::span<const ColumnValue>(row));
+    }
+    if (step != SQLITE_DONE) {
+        return sqlite_failure(s, what);
+    }
+    return Ok{};
+}
+
+}  // namespace
+
+Result<std::vector<TableSummary>> WorldReader::tables() const {
+    try {
+        if (state_ == nullptr || !state_->db.is_open()) {
+            return closed_error();
+        }
+        const ReaderState& s = *state_;
+        std::vector<TableSummary> out;
+        {
+            // SQLite reserves every name starting with "sqlite_" in any case.
+            Statement stmt;
+            if (stmt.prepare(s.db.get(),
+                             "SELECT name FROM sqlite_schema WHERE type = 'table' AND "
+                             "lower(substr(name, 1, 7)) <> 'sqlite_' ORDER BY name COLLATE BINARY") != SQLITE_OK) {
+                return sqlite_failure(s, "table list");
+            }
+            int step = SQLITE_ROW;
+            while ((step = stmt.step()) == SQLITE_ROW) {
+                out.push_back(TableSummary{stmt.column_text(0), 0});
+            }
+            if (step != SQLITE_DONE) {
+                return sqlite_failure(s, "table list");
+            }
+        }
+        for (TableSummary& t : out) {
+            Statement stmt;
+            if (stmt.prepare(s.db.get(), "SELECT count(*) FROM " + quote_identifier(t.name)) != SQLITE_OK ||
+                stmt.step() != SQLITE_ROW) {
+                return sqlite_failure(s, "row count");
+            }
+            t.row_count = static_cast<std::uint64_t>(stmt.column_int64(0));
+        }
+        return out;
+    } catch (const std::bad_alloc&) {
+        return out_of_memory_error();
+    }
+}
+
+Result<std::vector<std::string>> WorldReader::table_columns(std::string_view table) const {
+    try {
+        if (state_ == nullptr || !state_->db.is_open()) {
+            return closed_error();
+        }
+        Result<TableShape> shape = table_shape(*state_, table);
+        if (!shape.ok()) {
+            return shape.error();
+        }
+        return std::move(shape.value().columns);
+    } catch (const std::bad_alloc&) {
+        return out_of_memory_error();
+    }
+}
+
+Result<std::vector<std::string>> WorldReader::primary_key_columns(std::string_view table) const {
+    try {
+        if (state_ == nullptr || !state_->db.is_open()) {
+            return closed_error();
+        }
+        Result<TableShape> shape = table_shape(*state_, table);
+        if (!shape.ok()) {
+            return shape.error();
+        }
+        if (shape.value().key.empty()) {
+            return no_primary_key_error(*state_, table);
+        }
+        return std::move(shape.value().key);
+    } catch (const std::bad_alloc&) {
+        return out_of_memory_error();
+    }
+}
+
+Status WorldReader::visit_table_rows(std::string_view table, const RowVisitor& visit) const {
+    try {
+        if (state_ == nullptr || !state_->db.is_open()) {
+            return closed_error();
+        }
+        const ReaderState& s = *state_;
+        Result<TableShape> shape = table_shape(s, table);
+        if (!shape.ok()) {
+            return shape.error();
+        }
+        const TableShape& t = shape.value();
+        if (t.key.empty()) {
+            return no_primary_key_error(s, table);
+        }
+        std::string sql = "SELECT ";
+        for (std::size_t i = 0; i < t.columns.size(); ++i) {
+            if (i > 0) {
+                sql += ", ";
+            }
+            sql += quote_identifier(t.columns[i]);
+        }
+        sql += " FROM " + quote_identifier(table) + " ORDER BY ";
+        for (std::size_t i = 0; i < t.key.size(); ++i) {
+            if (i > 0) {
+                sql += ", ";
+            }
+            sql += quote_identifier(t.key[i]) + " COLLATE BINARY";
+        }
+        Statement stmt;
+        if (stmt.prepare(s.db.get(), sql) != SQLITE_OK) {
+            return sqlite_failure(s, "table rows");
+        }
+        return visit_statement(s, stmt, "table '" + std::string(table) + "'", t.columns, visit);
+    } catch (const std::bad_alloc&) {
+        return out_of_memory_error();
+    }
+}
+
+Result<std::vector<std::vector<ColumnValue>>> WorldReader::table_rows(std::string_view table) const {
+    try {
+        std::vector<std::vector<ColumnValue>> rows;
+        Status status = visit_table_rows(table, [&rows](std::span<const ColumnValue> row) {
+            rows.emplace_back(row.begin(), row.end());
+        });
+        if (!status.ok()) {
+            return status.error();
+        }
+        return rows;
+    } catch (const std::bad_alloc&) {
+        return out_of_memory_error();
+    }
+}
+
+Status WorldReader::visit_schema_rows(const RowVisitor& visit) const {
+    try {
+        if (state_ == nullptr || !state_->db.is_open()) {
+            return closed_error();
+        }
+        const ReaderState& s = *state_;
+        Statement stmt;
+        if (stmt.prepare(s.db.get(),
+                         "SELECT type, name, tbl_name, sql FROM sqlite_schema "
+                         "ORDER BY type COLLATE BINARY, name COLLATE BINARY") != SQLITE_OK) {
+            return sqlite_failure(s, "schema rows");
+        }
+        const std::vector<std::string> columns(SCHEMA_ROW_COLUMNS.begin(), SCHEMA_ROW_COLUMNS.end());
+        return visit_statement(s, stmt, "sqlite_schema", columns, visit);
+    } catch (const std::bad_alloc&) {
+        return out_of_memory_error();
+    }
+}
+
+Result<std::vector<std::vector<ColumnValue>>> WorldReader::schema_rows() const {
+    try {
+        std::vector<std::vector<ColumnValue>> rows;
+        Status status = visit_schema_rows([&rows](std::span<const ColumnValue> row) {
+            rows.emplace_back(row.begin(), row.end());
+        });
+        if (!status.ok()) {
+            return status.error();
+        }
+        return rows;
+    } catch (const std::bad_alloc&) {
+        return out_of_memory_error();
+    }
+}
+
 }  // namespace worldgen::db

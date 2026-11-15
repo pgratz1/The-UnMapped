@@ -42,6 +42,10 @@ enum class ErrorCode : std::uint8_t {
     sqlite_error,   // an unexpected SQLite failure while reading (I/O error, corruption)
     out_of_memory,  // an allocation failed while reading
     sql_rejected,   // testing::execute only: SQLite rejected the statement
+    // --- WorldReader raw row access (P0-02 14.10; P0-04 sections 7, 8) ------
+    table_not_found,  // no table of that name in sqlite_schema
+    no_primary_key,   // the table has no primary key, so it has no defined row order (P0-02 5.3)
+    real_value,       // a REAL value was found (P0-02 5.3 forbids them; P0-04 8, exit 3)
 };
 
 // Short stable name of a code, e.g. "not_world" (for logs and tests).

@@ -19,6 +19,9 @@ const char* error_code_name(ErrorCode code) noexcept {
         case ErrorCode::sqlite_error: return "sqlite_error";
         case ErrorCode::out_of_memory: return "out_of_memory";
         case ErrorCode::sql_rejected: return "sql_rejected";
+        case ErrorCode::table_not_found: return "table_not_found";
+        case ErrorCode::no_primary_key: return "no_primary_key";
+        case ErrorCode::real_value: return "real_value";
     }
     return "unknown";
 }
