@@ -34,3 +34,7 @@ add_test(NAME worldgen-cli-tests COMMAND worldgen-cli-tests)
 # Behaviour fixed after the P0-04 determinism audit: stdout write errors,
 # dangling symbolic links at --out, the render size limit, UTF-16 input.
 target_sources(worldgen-cli-tests PRIVATE cli_audit_test.cpp)
+
+# render palettes and --composite map, report v2 [geography] (P1-00 10.2,
+# 10.3 with appendix C; P0-04 amendment 16), on fixture worlds.
+target_sources(worldgen-cli-tests PRIVATE cli_geography_test.cpp)
