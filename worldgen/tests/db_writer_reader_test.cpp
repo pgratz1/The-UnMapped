@@ -845,6 +845,10 @@ TEST_CASE("failure cleanup: a run forced to fail leaves no .partial and no outpu
                     CHECK(status.code() == ErrorCode::output_write_failed);
                 }
             }
+            CHECK_FALSE(dbtest::exists(out));
+            CHECK_FALSE(dbtest::exists(out + ".partial"));
+        CHECK_FALSE(dbtest::exists(out + ".partial-journal"));
+            CHECK_FALSE(dbtest::exists(out + ".partial-journal"));
             check_only(dir.path() / sub, {});
         }
     }

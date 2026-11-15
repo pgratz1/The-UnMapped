@@ -11,7 +11,17 @@
 
 namespace worldgen::db {
 
-// UTF-8 bytes to a filesystem path (P0-04 4.1). The bytes are not validated.
+// True if utf8 is usable as a path: non-empty, strict UTF-8 (RFC 3629: no
+// overlong forms, no surrogates, nothing above U+10FFFF) and no NUL byte
+// (SQLite takes paths as NUL-terminated strings). The writer and the reader
+// check this before converting, so that a bad path is an error value:
+// output_write_failed from WorldWriter::finalize and check_output,
+// file_unreadable from WorldReader::open.
+[[nodiscard]] bool is_valid_utf8_path(std::string_view utf8) noexcept;
+
+// UTF-8 bytes to a filesystem path (P0-04 4.1). Precondition:
+// is_valid_utf8_path(utf8); on MSVC invalid UTF-8 makes the conversion
+// throw std::system_error.
 [[nodiscard]] std::filesystem::path path_from_utf8(std::string_view utf8);
 
 // A filesystem path to UTF-8 bytes (P0-04 4.1).

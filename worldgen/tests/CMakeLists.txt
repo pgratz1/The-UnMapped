@@ -44,6 +44,7 @@ target_sources(worldgen-tests PRIVATE
     db_layer_blob_test.cpp
     db_writer_reader_test.cpp
     db_determinism_test.cpp
+    db_finalize_test.cpp
 )
 target_compile_definitions(worldgen-tests PRIVATE
     UNMAPPED_DB_TEST_TMP_ROOT="${CMAKE_CURRENT_BINARY_DIR}/db-test-tmp"

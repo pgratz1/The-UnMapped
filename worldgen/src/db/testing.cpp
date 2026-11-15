@@ -31,6 +31,10 @@ void WriterAccess::set_failure_point(WorldWriter& writer, FailurePoint point, Fa
     s.failure_mode = mode;
 }
 
+void WriterAccess::set_fs_faults(WorldWriter& writer, const FsFaults& faults) {
+    detail::live_state(writer.state_.get(), "set_fs_faults").fs_faults = faults;
+}
+
 void WriterAccess::set_meta_order(WorldWriter& writer, MetaOrder order) {
     detail::live_state(writer.state_.get(), "set_meta_order").meta_order = order;
 }

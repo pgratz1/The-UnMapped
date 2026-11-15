@@ -21,7 +21,8 @@ namespace worldgen::db {
 // code. The open checks are listed in the order the reader applies them.
 enum class ErrorCode : std::uint8_t {
     // --- WorldReader::open, in validation order (P0-02 9, "Open") ---------
-    file_unreadable = 1,         // file missing, not a regular file, or unreadable
+    file_unreadable = 1,         // invalid path (is_valid_utf8_path), file missing,
+                                 // not a regular file, or unreadable
     not_sqlite,                  // shorter than 100 bytes or no "SQLite format 3\0" magic
     not_world,                   // application_id != APPLICATION_ID, the file is in WAL mode,
                                  // meta table missing, meta.format missing or wrong, or the
@@ -34,10 +35,14 @@ enum class ErrorCode : std::uint8_t {
     layer_not_found,  // no layer with that name
     corrupt_layer,    // blob header or payload invalid (7), or header disagrees with the row
     // --- WorldWriter::finalize file output (P0-02 6; P0-04 4.4, exit 4) -----
-    output_exists,          // <out> exists and overwrite was not allowed
+    output_exists,          // <out> is a directory, or exists and overwrite was not allowed
     output_parent_missing,  // the parent directory of <out> does not exist
-    output_write_failed,    // removing an old <out>.partial or VACUUM INTO failed
-    output_rename_failed,   // renaming <out>.partial to <out> failed
+    output_write_failed,    // invalid output path (is_valid_utf8_path); an old <out>.partial
+                            // or <out>.partial-journal cannot be removed; VACUUM INTO failed;
+                            // the existence check of <out> before the rename failed (refuse);
+                            // or a testing::FailureMode::return_error forced failure
+    output_rename_failed,   // renaming <out>.partial to <out> did not succeed, including the
+                            // replace fallback (see WorldWriter::finalize)
     // --- Any operation ----------------------------------------------------
     sqlite_error,   // an unexpected SQLite failure while reading (I/O error, corruption)
     out_of_memory,  // an allocation failed while reading

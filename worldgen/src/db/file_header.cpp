@@ -7,6 +7,12 @@
 
 #include "worldgen/db/schema.hpp"
 
+// The SQLite version is written into every file header (offset 96) and
+// fixes the B-tree layout, so it is part of the output (P0-02 4.1). Changing
+// the vendored SQLite means a generator version bump, new golden hashes and
+// a proposals entry; update this assertion only together with those.
+static_assert(SQLITE_VERSION_NUMBER == 3054001, "vendored SQLite must be 3.54.1 (P0-02 4.1, version pinning)");
+
 namespace worldgen::db::detail {
 
 namespace {

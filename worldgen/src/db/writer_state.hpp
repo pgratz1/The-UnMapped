@@ -29,6 +29,7 @@ struct WriterState {
     testing::FailurePoint failure_point = testing::FailurePoint::none;
     testing::FailureMode failure_mode = testing::FailureMode::throw_fatal;
     testing::MetaOrder meta_order = testing::MetaOrder::ascending;
+    testing::FsFaults fs_faults;
 };
 
 // FatalError unless the writer is usable (not moved from, not finalized).
