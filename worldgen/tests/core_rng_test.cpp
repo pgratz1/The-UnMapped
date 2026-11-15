@@ -174,12 +174,116 @@ TEST_CASE("P0-01 13.4: Rng is movable and not copyable") {
     static_assert(!std::is_copy_assignable_v<Rng>);
     static_assert(std::is_move_constructible_v<Rng>);
     static_assert(std::is_move_assignable_v<Rng>);
-    Rng a(77);
-    Rng twin(77);
+    static_assert(std::is_nothrow_move_constructible_v<Rng>);
+    static_assert(std::is_nothrow_move_assignable_v<Rng>);
+}
+
+namespace {
+
+constexpr std::array<std::uint64_t, 4> ZERO_STATE = {0, 0, 0, 0};
+
+// Every draw function on a moved-from (all-zero) generator is fatal (6.2).
+void check_every_draw_is_fatal(Rng& r) {
+    REQUIRE(r.state() == ZERO_STATE);
+    CHECK_FATAL(r.next());
+    CHECK_FATAL(r.next_u32());
+    CHECK_FATAL(r.uniform_u64(10));
+    CHECK_FATAL(r.uniform_u64(1));
+    CHECK_FATAL(r.uniform_i64(-5, 5));
+    CHECK_FATAL(r.uniform_i64(I64_MIN, I64_MAX));
+    CHECK_FATAL(r.uniform_fx01());
+    CHECK_FATAL(r.uniform_fx(Fx{}, Fx::ONE));
+    CHECK_FATAL(r.chance(Fx::HALF));
+    CHECK_FATAL(r.chance(Fx{}));
+    CHECK_FATAL(r.chance_ratio(1, 2));
+    const std::array<std::uint64_t, 3> w = {1, 2, 3};
+    CHECK_FATAL(r.weighted_index(w));
+    std::array<int, 2> two = {1, 2};
+    CHECK_FATAL(r.shuffle(two));
+    std::vector<int> many = {1, 2, 3, 4, 5};
+    CHECK_FATAL(r.shuffle(many));
+    // Still all zero: a fatal draw never substitutes a state.
+    CHECK(r.state() == ZERO_STATE);
+}
+
+// Move assignment through references, so the self-move case below is not
+// visible to -Wself-move.
+void move_assign(Rng& dst, Rng& src) { dst = std::move(src); }
+
+}  // namespace
+
+TEST_CASE("P0-01 13.4: move construction transfers the stream and zeroes the source") {
+    const std::uint64_t key = 0x5EED0000000000A1ULL;
+    Rng a(key);
+    Rng twin(key);
     advance(a, 5);
     advance(twin, 5);
     Rng b = std::move(a);
-    CHECK(b.next() == twin.next());
+    for (int i = 0; i < 100; ++i) {
+        const std::uint64_t got = b.next();
+        const std::uint64_t want = twin.next();
+        REQUIRE(got == want);
+    }
+    check_every_draw_is_fatal(a);
+    // A shuffle of fewer than two elements makes no draws, so it is not fatal.
+    std::array<int, 1> one = {7};
+    a.shuffle(one);
+    CHECK(one[0] == 7);
+
+    // After a = Rng(key) it works again, from the start of that stream.
+    a = Rng(key);
+    Rng fresh(key);
+    for (int i = 0; i < 10; ++i) {
+        const std::uint64_t got = a.next();
+        const std::uint64_t want = fresh.next();
+        REQUIRE(got == want);
+    }
+}
+
+TEST_CASE("P0-01 13.4: move assignment transfers the stream and zeroes the source") {
+    const std::uint64_t key = 0x5EED0000000000B2ULL;
+    Rng a(key);
+    Rng twin(key);
+    advance(a, 3);
+    advance(twin, 3);
+    Rng b(0x0BADC0FFEEULL);
+    b = std::move(a);
+    CHECK(b.state() == twin.state());
+    for (int i = 0; i < 100; ++i) {
+        const std::uint64_t got = b.next();
+        const std::uint64_t want = twin.next();
+        REQUIRE(got == want);
+    }
+    check_every_draw_is_fatal(a);
+
+    a = Rng(key);
+    Rng fresh(key);
+    CHECK(a.state() == fresh.state());
+    CHECK(a.next() == fresh.next());
+
+    // Moving into a moved-from generator also works.
+    Rng c(key ^ 1U);
+    Rng c_twin(key ^ 1U);
+    Rng empty = std::move(c);
+    check_every_draw_is_fatal(c);
+    move_assign(c, empty);
+    check_every_draw_is_fatal(empty);
+    CHECK(c.next() == c_twin.next());
+}
+
+TEST_CASE("P0-01 13.4: self-move-assignment leaves the generator intact") {
+    const std::uint64_t key = 0x5EED0000000000C3ULL;
+    Rng a(key);
+    Rng twin(key);
+    advance(a, 4);
+    advance(twin, 4);
+    move_assign(a, a);
+    CHECK(a.state() == twin.state());
+    for (int i = 0; i < 10; ++i) {
+        const std::uint64_t got = a.next();
+        const std::uint64_t want = twin.next();
+        REQUIRE(got == want);
+    }
 }
 
 // --- Property tests (fixed streams) -----------------------------------------

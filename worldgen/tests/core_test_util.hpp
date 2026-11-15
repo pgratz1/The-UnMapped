@@ -7,9 +7,17 @@
 
 #include <doctest/doctest.h>
 
+// <ostream>, <string> and <string_view> are included explicitly: doctest
+// stringifies std::string / std::string_view operands of failed assertions
+// (and INFO / MESSAGE streams them) through operator<<(std::ostream&, ...),
+// which needs the full std::basic_ostream definition. libstdc++ and libc++
+// provide it transitively; the MSVC STL does not.
 #include <array>
 #include <cstdint>
 #include <limits>
+#include <ostream>
+#include <string>
+#include <string_view>
 
 #include "worldgen/core/core.hpp"
 

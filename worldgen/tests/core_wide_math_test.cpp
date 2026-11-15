@@ -70,6 +70,13 @@ TEST_CASE("P0-01 5.3: U128 add, sub, shifts, comparison") {
     CHECK(U128{1, 0} > U128{0, U64_MAX});
     CHECK(U128{1, 2} < U128{1, 3});
     CHECK(u128_from_u64(7) == U128{0, 7});
+    // Aggregate order is {hi, lo}, and ordering compares hi first.
+    const U128 agg{1, 2};
+    CHECK(agg.hi == 1);
+    CHECK(agg.lo == 2);
+    CHECK(U128{1, 0} > U128{0, ~0ULL});
+    CHECK(U128{0, ~0ULL} < U128{1, 0});
+    CHECK(U128{2, 0} > U128{1, ~0ULL});
 }
 
 TEST_CASE("P0-01 13.3: wide arithmetic agrees with an independent product over test.wide") {
