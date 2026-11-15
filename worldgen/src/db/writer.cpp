@@ -319,7 +319,9 @@ std::optional<Error> rename_into_place(WriterState& s, const std::filesystem::pa
         // Checked again here (also at the start of finalize); the window
         // between this check and the rename is accepted (P0-02 14.7).
         std::error_code status_ec;
-        const std::filesystem::file_status status = std::filesystem::status(out, status_ec);
+        // symlink_status: anything at the path, a dangling link included,
+        // counts as existing (a link is not followed).
+        const std::filesystem::file_status status = std::filesystem::symlink_status(out, status_ec);
         // status() reports "not found" as an error code on some
         // implementations; only a missing file counts as "does not exist".
         if (s.fs_faults.output_status_error ||
@@ -534,7 +536,9 @@ Status WorldWriter::check_output(std::string_view out_utf8, Overwrite overwrite)
     const std::string shown(out_utf8);
     const std::filesystem::path out = path_from_utf8(out_utf8);
     std::error_code ec;
-    const std::filesystem::file_status status = std::filesystem::status(out, ec);
+    // symlink_status: anything at the path, a dangling symbolic link
+    // included, counts as existing; a link is never followed.
+    const std::filesystem::file_status status = std::filesystem::symlink_status(out, ec);
     if (std::filesystem::exists(status)) {
         if (std::filesystem::is_directory(status)) {
             return output_error(ErrorCode::output_exists, "output '" + shown + "' is a directory");
