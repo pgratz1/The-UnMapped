@@ -6,6 +6,8 @@
 // the committed fixture directory, and a scratch directory outside the
 // source tree for the on-disk cases that must not be committed.
 #include <doctest/doctest.h>
+// <ostream> is needed for doctest to print strings with the MSVC STL.
+#include <ostream>
 
 #include <algorithm>
 #include <cstddef>
