@@ -253,6 +253,14 @@ std::optional<ElementType> element_type_from_name(std::string_view name) noexcep
     return std::nullopt;
 }
 
+std::string_view codec_name(Codec codec) noexcept {
+    switch (codec) {
+        case Codec::raw: return "raw";
+        case Codec::delta_varint: return "delta_varint";
+    }
+    return "";
+}
+
 std::uint32_t element_size(ElementType type) noexcept {
     switch (type) {
         case ElementType::u8:

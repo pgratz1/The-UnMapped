@@ -167,8 +167,11 @@ inline constexpr std::int64_t DIAGONAL_STEP_RAW = 16 * SQRT2_RAW;
 //                        down(u) = c
 //   river_mouths         river cells whose down(c) is ocean
 //   major_rivers         river mouths with river >= 4
-//   longest_river_raw    largest D (flow_path_lengths) over river sources, 0
-//                        if none; longest_river_m = round_int of it
+//   longest_river_raw    largest D (flow_path_lengths) over all river cells
+//                        (water = 1), 0 if none, so a river that begins at
+//                        a lake outlet is measured from there (P1-00
+//                        appendix C item 8); longest_river_m = round_int
+//                        of it
 //   largest_basin_cells  largest flow_accum over non-ocean cells whose
 //                        down(c) is ocean, 0 if none
 struct HydrologyStats {

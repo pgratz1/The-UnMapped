@@ -11,6 +11,7 @@
 // range).
 
 #include <array>
+#include <cstddef>
 #include <cstdint>
 #include <optional>
 #include <span>
@@ -214,6 +215,18 @@ struct ValueRange {
 // in std::size_t.
 [[nodiscard]] std::vector<std::uint8_t> render_rgb(const db::LayerGrid& grid, Palette palette,
                                                    std::uint32_t scale);
+
+// The byte size of render_rgb's buffer: 3 (width scale) (height scale).
+// FatalError if the grid is invalid, scale is outside 1..16, or the size
+// does not fit in std::size_t.
+[[nodiscard]] std::size_t render_rgb_size(const db::LayerGrid& grid, std::uint32_t scale);
+
+// render_rgb into a caller-supplied buffer of exactly render_rgb_size(grid,
+// scale) bytes, so that a caller holding its own image memory (the viewer)
+// avoids a second copy. Every byte of out is written, with the same content
+// as the returning overload. FatalError in the same cases, and if out.size()
+// is not render_rgb_size(grid, scale).
+void render_rgb(const db::LayerGrid& grid, Palette palette, std::uint32_t scale, std::span<std::uint8_t> out);
 
 // --- Composites (P1-00 10.2, P0-04 amendment 16b) ----------------------------
 

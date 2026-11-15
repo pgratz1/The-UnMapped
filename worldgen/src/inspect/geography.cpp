@@ -55,14 +55,22 @@ std::vector<std::uint64_t> i16_histogram(std::span<const std::int16_t> e) {
 // indices 0..bins-1. Exact: a value-only result (G1).
 template <class ValueOf, class CountOf>
 std::int64_t kth_in_bins(std::size_t bins, std::uint64_t k, const ValueOf& value_of, const CountOf& count_of) {
+    // One return at the end, after the check, so that no compiler sees a
+    // path without a return value (MSVC C4715) or code after the
+    // [[noreturn]] fatal (C4702).
     std::uint64_t seen = 0;
-    for (std::size_t b = 0; b < bins; ++b) {
+    std::size_t b = 0;
+    while (b < bins) {
         seen += count_of(b);
         if (k < seen) {
-            return value_of(b);
+            break;
         }
+        ++b;
     }
-    fatal("kth_in_bins: rank beyond the values");
+    if (b == bins) {
+        fatal("kth_in_bins: rank beyond the values");
+    }
+    return value_of(b);
 }
 
 }  // namespace
@@ -479,9 +487,11 @@ HydrologyResult hydrology_stats(std::span<const std::int16_t> e, const Hydrology
         if (hydro.water[c] != 1U) {
             continue;
         }
+        // P1-00 appendix C item 8: over every river cell, so a river that
+        // begins at a lake outlet is measured from there.
+        if (paths.d[c] > s.longest_river_raw) s.longest_river_raw = paths.d[c];
         if (wet_upstream[c] == 0U) {
             ++s.river_sources;
-            if (paths.d[c] > s.longest_river_raw) s.longest_river_raw = paths.d[c];
         }
         if (m && e[*m] < 0) {
             ++s.river_mouths;
@@ -495,6 +505,13 @@ HydrologyResult hydrology_stats(std::span<const std::int16_t> e, const Hydrology
 // --- The section ------------------------------------------------------------------
 
 namespace {
+
+// One hydrology layer [geography] reads and its catalogue type.
+struct HydrologyLayerSpec {
+    const db::LayerGrid* grid = nullptr;
+    std::string_view name;
+    db::ElementType type = db::ElementType::u8;
+};
 
 std::optional<std::string> layer_problem(const db::LayerGrid* grid, std::string_view name, db::ElementType type,
                                          const db::LayerGrid& elevation) {
@@ -547,11 +564,7 @@ std::optional<std::string> geography_layers_problem(const GeographyLayers& layer
     if (!layers.has_hydrology()) {
         return std::nullopt;
     }
-    const struct {
-        const db::LayerGrid* grid;
-        std::string_view name;
-        db::ElementType type;
-    } hydro[] = {
+    const HydrologyLayerSpec hydro[] = {
         {layers.water, "water", db::ElementType::u8},
         {layers.flow_dir, "flow_dir", db::ElementType::u8},
         {layers.flow_accum, "flow_accum", db::ElementType::u32},

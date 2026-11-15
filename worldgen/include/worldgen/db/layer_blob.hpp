@@ -112,6 +112,11 @@ enum class Codec : std::uint8_t {
     delta_varint = 1,  // 7.3, the default
 };
 
+// Short stable name of a codec: "raw" or "delta_varint" (the enumerator
+// names), for messages and the viewer; "" for a value that is not a codec.
+// Not used in report text, which prints the codec number (P0-04 7).
+[[nodiscard]] std::string_view codec_name(Codec codec) noexcept;
+
 inline constexpr std::size_t BLOB_HEADER_SIZE = 24;                                     // 7.1
 inline constexpr std::array<std::uint8_t, 4> BLOB_MAGIC = {0x55U, 0x4DU, 0x4CU, 0x59U};  // "UMLY"
 inline constexpr std::uint16_t BLOB_FORMAT_VERSION = 1;                                 // 7.1 offset 4

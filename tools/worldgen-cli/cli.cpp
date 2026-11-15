@@ -596,7 +596,7 @@ Exit run_render(const Options& options) {
         river = read_optional_layer(world, "river", progress);
         if (const std::optional<std::string> problem =
                 inspect::composite_map_problem(grid, water ? &*water : nullptr, river ? &*river : nullptr)) {
-            throw Failure(Exit::input, "cannot render the composite map: " + *problem);
+            throw Failure(Exit::input, "cannot render the composite map: " + *problem + "; " + layer_name_list(world));
         }
     } else if (palette && !inspect::palette_suits(*palette, grid)) {
         usage_error("palette '" + std::string(inspect::palette_name(*palette)) + "' does not suit layer '" +

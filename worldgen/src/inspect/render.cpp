@@ -315,9 +315,10 @@ void min_max(const std::vector<T>& cells, T& lo, T& hi) noexcept {
     }
 }
 
-// The zero-filled buffer of a w x h grid at the given scale. FatalError if
-// scale is outside 1..16 or the size does not fit in std::size_t.
-std::vector<std::uint8_t> make_buffer(std::uint32_t w, std::uint32_t h, std::uint32_t scale, const char* what) {
+// The byte size of the RGB buffer of a w x h grid at the given scale.
+// FatalError if scale is outside 1..16 or the size does not fit in
+// std::size_t.
+std::size_t buffer_size(std::uint32_t w, std::uint32_t h, std::uint32_t scale, const char* what) {
     if (scale < MIN_RENDER_SCALE || scale > MAX_RENDER_SCALE) {
         fatal(what);
     }
@@ -329,13 +330,13 @@ std::vector<std::uint8_t> make_buffer(std::uint32_t w, std::uint32_t h, std::uin
     if (bytes > static_cast<std::uint64_t>(std::numeric_limits<std::size_t>::max())) {
         fatal("render: image too large");
     }
-    return std::vector<std::uint8_t>(static_cast<std::size_t>(bytes));
+    return static_cast<std::size_t>(bytes);
 }
 
-// Fills rgb (from make_buffer) with colour_of(index) for each cell, each
-// cell a scale x scale block, in index order.
+// Fills rgb (of buffer_size bytes) with colour_of(index) for each cell,
+// each cell a scale x scale block, in index order. Every byte is written.
 template <class ColourOf>
-void fill_buffer(std::vector<std::uint8_t>& rgb, std::uint32_t width, std::uint32_t height, std::uint32_t scale,
+void fill_buffer(std::span<std::uint8_t> rgb, std::uint32_t width, std::uint32_t height, std::uint32_t scale,
                  const ColourOf& colour_of) {
     const std::size_t w = width;
     const std::size_t h = height;
@@ -409,7 +410,12 @@ std::uint8_t gray_level(std::uint64_t d, std::uint64_t r) {
     return static_cast<std::uint8_t>(q.quotient.lo >> 1U);
 }
 
-std::vector<std::uint8_t> render_rgb(const db::LayerGrid& grid, Palette palette, std::uint32_t scale) {
+std::size_t render_rgb_size(const db::LayerGrid& grid, std::uint32_t scale) {
+    require_valid(grid, "render_rgb_size: invalid layer grid");
+    return buffer_size(grid.width, grid.height, scale, "render_rgb_size: scale must be 1 to 16");
+}
+
+void render_rgb(const db::LayerGrid& grid, Palette palette, std::uint32_t scale, std::span<std::uint8_t> rgb) {
     require_valid(grid, "render_rgb: invalid layer grid");
     if (scale < MIN_RENDER_SCALE || scale > MAX_RENDER_SCALE) {
         fatal("render_rgb: scale must be 1 to 16");
@@ -417,7 +423,9 @@ std::vector<std::uint8_t> render_rgb(const db::LayerGrid& grid, Palette palette,
     if (!palette_suits(palette, grid)) {
         fatal("render_rgb: the palette does not suit the layer");
     }
-    std::vector<std::uint8_t> rgb = make_buffer(grid.width, grid.height, scale, "render_rgb: scale must be 1 to 16");
+    if (rgb.size() != buffer_size(grid.width, grid.height, scale, "render_rgb: scale must be 1 to 16")) {
+        fatal("render_rgb: output buffer has the wrong size");
+    }
 
     std::visit(
         [&](const auto& cells) {
@@ -457,11 +465,18 @@ std::vector<std::uint8_t> render_rgb(const db::LayerGrid& grid, Palette palette,
                 case Palette::direction:
                 case Palette::ids: {
                     if constexpr (!std::is_signed_v<T>) {
-                        Rgb (*colour)(std::uint64_t) noexcept = &water_colour;
-                        if (palette == Palette::river) colour = &river_colour;
-                        if (palette == Palette::log2) colour = &log2_colour;
-                        if (palette == Palette::direction) colour = &direction_colour;
-                        if (palette == Palette::ids) colour = &ids_colour;
+                        // A switch per cell rather than a function pointer, so
+                        // no compiler has to reason about pointers to noexcept
+                        // functions.
+                        const auto colour = [palette](std::uint64_t v) {
+                            switch (palette) {
+                                case Palette::river: return river_colour(v);
+                                case Palette::log2: return log2_colour(v);
+                                case Palette::direction: return direction_colour(v);
+                                case Palette::ids: return ids_colour(v);
+                                default: return water_colour(v);
+                            }
+                        };
                         fill_buffer(rgb, grid.width, grid.height, scale,
                                     [&](std::size_t i) { return colour(as_u64(cells[i])); });
                     }
@@ -470,6 +485,11 @@ std::vector<std::uint8_t> render_rgb(const db::LayerGrid& grid, Palette palette,
             }
         },
         grid.values);
+}
+
+std::vector<std::uint8_t> render_rgb(const db::LayerGrid& grid, Palette palette, std::uint32_t scale) {
+    std::vector<std::uint8_t> rgb(render_rgb_size(grid, scale));
+    render_rgb(grid, palette, scale, rgb);
     return rgb;
 }
 
@@ -559,8 +579,8 @@ std::vector<std::uint8_t> render_composite_map(const db::LayerGrid& elevation, c
     if (composite_map_problem(elevation, water, river)) {
         fatal("render_composite_map: unsuitable layers");
     }
-    std::vector<std::uint8_t> rgb =
-        make_buffer(elevation.width, elevation.height, scale, "render_composite_map: scale must be 1 to 16");
+    std::vector<std::uint8_t> rgb(
+        buffer_size(elevation.width, elevation.height, scale, "render_composite_map: scale must be 1 to 16"));
     const std::vector<std::int16_t>& e = *elevation.get_if<std::int16_t>();
     const std::vector<std::uint8_t>* wcells = water == nullptr ? nullptr : water->get_if<std::uint8_t>();
     const std::vector<std::uint8_t>* rcells = river == nullptr ? nullptr : river->get_if<std::uint8_t>();
