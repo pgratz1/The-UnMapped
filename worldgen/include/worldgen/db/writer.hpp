@@ -57,8 +57,10 @@ inline constexpr std::string_view PARTIAL_SUFFIX = ".partial";
 
 // One stage's transaction on the working database (P0-02 6 step 3).
 // Obtained from WorldWriter::begin_stage; at most one is open at a time.
-// Destroying it without commit() rolls the transaction back and the stage
-// is not recorded in meta.stages. Movable, not copyable; it must not
+// Destroying it without commit() rolls the transaction back and leaves no
+// trace (P0-02 14.6): its rows are gone (their layer names can be used
+// again), the stage is not recorded in meta.stages (its name can be used
+// again), and next_layer_id() returns to its value at begin_stage. Movable, not copyable; it must not
 // outlive its WorldWriter.
 class StageWriter {
 public:

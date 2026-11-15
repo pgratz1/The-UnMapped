@@ -310,11 +310,15 @@ StageWriter::~StageWriter() {
     if (state_ == nullptr) {
         return;
     }
-    // Not committed: roll back; the stage is not recorded.
+    // Not committed: roll back and leave no trace (P0-02 14.6). The rows go
+    // with the transaction (so their layer names are free again), the stage
+    // name was never recorded (that happens in commit), and the layer id
+    // counter returns to its value at begin_stage, so ids stay gap-free.
     if (state_->db.is_open()) {
         std::string ignored;
         detail::exec(state_->db.get(), "ROLLBACK", ignored);
     }
+    state_->next_layer_id = state_->stage_start_layer_id;
     state_->stage_open = false;
 }
 
@@ -416,6 +420,7 @@ StageWriter WorldWriter::begin_stage(std::string_view stage_name) {
     }
     detail::exec_or_fatal(s.db.get(), "BEGIN", "BEGIN (stage " + std::string(stage_name) + ")");
     s.stage_open = true;
+    s.stage_start_layer_id = s.next_layer_id;
     return StageWriter(s, std::string(stage_name));
 }
 

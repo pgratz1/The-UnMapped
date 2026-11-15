@@ -22,10 +22,10 @@ namespace worldgen::db {
 enum class ErrorCode : std::uint8_t {
     // --- WorldReader::open, in validation order (P0-02 9, "Open") ---------
     file_unreadable = 1,         // file missing, not a regular file, or unreadable
-    not_sqlite,                  // shorter than 100 bytes or no "SQLite format 3\0" magic,
-                                 // or SQLite reports SQLITE_NOTADB
-    not_world,                   // application_id != APPLICATION_ID, meta table missing,
-                                 // meta.format missing or wrong, or the file is in WAL mode
+    not_sqlite,                  // shorter than 100 bytes or no "SQLite format 3\0" magic
+    not_world,                   // application_id != APPLICATION_ID, the file is in WAL mode,
+                                 // meta table missing, meta.format missing or wrong, or the
+                                 // SQLite magic followed by garbage (SQLITE_NOTADB) (14.2)
     unsupported_schema_version,  // user_version or meta.schema_version != SCHEMA_VERSION
     meta_key_missing,            // a key of REQUIRED_META_KEYS is absent
     meta_value_invalid,          // a required key's value is not in its canonical form (5.5);

@@ -60,7 +60,8 @@ public:
     //   1. file_unreadable: missing, not a regular file, or unreadable;
     //   2. not_sqlite: no SQLite header;
     //   3. not_world: application_id != APPLICATION_ID, the file is in WAL
-    //      mode, no meta table, or meta.format missing or wrong;
+    //      mode, the SQLite header is followed by garbage, no meta table,
+    //      or meta.format missing or wrong (P0-02 14.2);
     //   4. unsupported_schema_version: user_version or meta.schema_version
     //      != SCHEMA_VERSION ("world schema version X, this build reads Y");
     //   5. meta_key_missing: a key of REQUIRED_META_KEYS absent;

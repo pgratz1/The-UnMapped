@@ -255,7 +255,8 @@ Result<WorldReader> WorldReader::open(std::string_view path_utf8) {
             if (stmt.prepare(state->db.get(), "SELECT key, value FROM meta ORDER BY key") != SQLITE_OK) {
                 const int code = sqlite3_errcode(state->db.get());
                 if (code == SQLITE_NOTADB) {
-                    return make_error(ErrorCode::not_sqlite, "'" + shown + "' is not an SQLite database");
+                    return make_error(ErrorCode::not_world,
+                                      "'" + shown + "' is not a world file (SQLite header followed by garbage)");
                 }
                 if (code == SQLITE_ERROR) {  // no meta table, or not the expected columns
                     return make_error(ErrorCode::not_world, "'" + shown + "' is not a world file (no meta table)");
@@ -268,7 +269,8 @@ Result<WorldReader> WorldReader::open(std::string_view path_utf8) {
             }
             if (step != SQLITE_DONE) {
                 if (sqlite3_errcode(state->db.get()) == SQLITE_NOTADB) {
-                    return make_error(ErrorCode::not_sqlite, "'" + shown + "' is not an SQLite database");
+                    return make_error(ErrorCode::not_world,
+                                      "'" + shown + "' is not a world file (SQLite header followed by garbage)");
                 }
                 return sqlite_failure(*state, "meta");
             }
