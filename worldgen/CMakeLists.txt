@@ -3,6 +3,17 @@
 
 add_library(worldgen STATIC
     src/version.cpp
+    # Deterministic core, spec P0-01.
+    src/core/checked.cpp
+    src/core/decimal.cpp
+    src/core/error.cpp
+    src/core/fx.cpp
+    src/core/hash.cpp
+    src/core/math.cpp
+    src/core/noise.cpp
+    src/core/rng.cpp
+    src/core/sha256.cpp
+    src/core/wide.cpp
 )
 add_library(worldgen::worldgen ALIAS worldgen)
 target_include_directories(worldgen
