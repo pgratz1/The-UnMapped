@@ -57,7 +57,9 @@ public:
     // Opens a world file read-only (SQLITE_OPEN_READONLY): never writes,
     // never creates a file, never leaves a journal (P0-02 9, "Open").
     // Validates in this order, returning the first failure:
-    //   1. file_unreadable: missing, not a regular file, or unreadable;
+    //   1. file_unreadable: the path is empty, not strict UTF-8 or holds a
+    //      NUL byte (is_valid_utf8_path), or the file is missing, not a
+    //      regular file, or unreadable;
     //   2. not_sqlite: no SQLite header;
     //   3. not_world: application_id != APPLICATION_ID, the file is in WAL
     //      mode, the SQLite header is followed by garbage, no meta table,

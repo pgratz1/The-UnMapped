@@ -155,27 +155,52 @@ public:
 
     // --- output (P0-02 6 steps 4-9)
 
-    // Checks the output location without writing anything: output_exists if
-    // out_utf8 exists and overwrite is refuse; output_parent_missing if its
-    // parent directory does not exist. finalize() runs the same checks
-    // first; a caller may run them before generating to fail early.
+    // Checks the output location without writing anything, in this order:
+    //   - output_write_failed if out_utf8 is empty, not strict UTF-8, or
+    //     contains a NUL byte (is_valid_utf8_path);
+    //   - output_exists if out_utf8 is a directory (whatever overwrite says),
+    //     or exists and overwrite is refuse;
+    //   - output_parent_missing if its parent directory does not exist.
+    // finalize() runs the same checks first; a caller may run them before
+    // generating to fail early.
     [[nodiscard]] static Status check_output(std::string_view out_utf8, Overwrite overwrite);
 
-    // Steps 4-9 of P0-02 section 6: writes meta (ascending key order), runs
-    // integrity_check, removes any old <out>.partial, VACUUM INTO
-    // <out>.partial, closes the working database, verifies the header (6.1)
-    // and meta of <out>.partial, and renames it to <out>. out_utf8 is a
-    // UTF-8 path, relative paths resolving against the current directory.
+    // Steps 4-9 of P0-02 section 6: checks the output location as
+    // check_output does; writes meta (ascending key order); runs
+    // integrity_check; removes any old <out>.partial and
+    // <out>.partial-journal; VACUUM INTO <out>.partial; closes the working
+    // database; verifies the header (6.1) and meta of <out>.partial; and
+    // renames it to <out>. out_utf8 is a UTF-8 path, relative paths
+    // resolving against the current directory.
     //
-    // Returns output_exists, output_parent_missing, output_write_failed or
-    // output_rename_failed for problems with the output location. Raises
-    // FatalError for contract violations: a stage still open, seed /
+    // Errors returned for problems with the output location:
+    //   - output_write_failed: the path is empty, not strict UTF-8 or holds
+    //     a NUL byte (nothing is written); an old <out>.partial or
+    //     <out>.partial-journal cannot be removed; VACUUM INTO fails; or,
+    //     under refuse, the existence check of <out> just before the rename
+    //     reports an error (for example permission denied);
+    //   - output_exists: <out> is a directory, or exists under refuse
+    //     (checked at the start and again just before the rename);
+    //   - output_parent_missing: the parent directory does not exist;
+    //   - output_rename_failed: the rename into place did not succeed.
+    // Raises FatalError for contract violations: a stage still open, seed /
     // content hash / param.map_size not set, finalize() called twice, a
-    // failed integrity_check or header verification. On every failure path,
-    // returned or thrown, the working database is closed and <out>.partial
-    // is deleted; an existing <out> is never touched unless the final
-    // rename replaces it. After finalize(), the writer accepts no further
-    // calls except destruction.
+    // failed integrity_check or header verification.
+    //
+    // Rename and the existing <out>. Ok is returned only when a rename call
+    // succeeded, so the new file is at <out>. On POSIX the rename replaces
+    // an existing <out> atomically. Under replace, if the first rename
+    // fails and the replace fallback is enabled (always on Windows; on
+    // other platforms only while testing::FsFaults are set), an existing
+    // regular-file <out> is removed and the rename is tried once more. The
+    // fallback is not atomic: if that retry fails, the old <out> is gone
+    // and output_rename_failed is returned. If removing <out> fails, the
+    // old <out> is left untouched. Apart from this fallback, an existing
+    // <out> is only ever replaced by a successful rename.
+    //
+    // On every failure path, returned or thrown, the working database is
+    // closed and <out>.partial and <out>.partial-journal are deleted. After
+    // finalize(), the writer accepts no further calls except destruction.
     [[nodiscard]] Status finalize(std::string_view out_utf8, Overwrite overwrite);
 
 private:

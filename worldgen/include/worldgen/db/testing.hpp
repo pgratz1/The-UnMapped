@@ -41,24 +41,30 @@ enum class MetaOrder : std::uint8_t {
 
 // Simulated filesystem faults in step 9 of WorldWriter::finalize (the
 // rename into place). A simulated call does not touch the filesystem and
-// reports an error, exactly as a failing real call would.
+// reports permission denied, as a failing real call would.
+//
+// Enabling the replace fallback: the fallback (remove an existing
+// regular-file <out>, rename once more; see WorldWriter::finalize) is
+// always enabled on Windows. On other platforms it is enabled for a
+// finalize() call when, on reaching step 9, failing_renames is non-zero or
+// remove_output_error is set, so that its paths can be tested anywhere.
 struct FsFaults {
-    // The existence check of <out> made just before the rename (refuse
-    // mode) reports an error, e.g. permission denied.
+    // Under Overwrite::refuse, the existence check of <out> made just
+    // before the rename reports an error whether or not <out> exists;
+    // finalize() returns output_write_failed. No effect under replace.
     bool output_status_error = false;
-    // The first failing_renames rename attempts fail. While this is
-    // non-zero, the replace fallback (remove <out>, rename again), which is
-    // otherwise used on Windows only, is used on every platform so that its
-    // paths can be tested anywhere.
+    // The first failing_renames rename attempts (first rename, then the
+    // fallback's retry) fail; each simulated failure uses up one.
     std::uint32_t failing_renames = 0;
-    // The fallback's removal of the existing <out> fails.
+    // The fallback's removal of the existing <out> fails; the old <out> is
+    // left untouched and finalize() returns output_rename_failed.
     bool remove_output_error = false;
 };
 
 struct WriterAccess {
     // Installs simulated faults for the rename step (P0-02 6 step 9). In
-    // every case finalize() must either return Ok with the new file at <out>
-    // or return an error with <out>.partial removed.
+    // every case finalize() either returns Ok with the new file at <out> or
+    // returns an error with <out>.partial and <out>.partial-journal removed.
     static void set_fs_faults(WorldWriter& writer, const FsFaults& faults);
 
     // Makes finalize() fail at point in the given mode. In both modes the
