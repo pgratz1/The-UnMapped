@@ -355,12 +355,12 @@ struct GoldenHash {
 };
 
 constexpr GoldenHash GOLDEN_HASHES[] = {
-    {"canonical", GOLDEN_PLACEHOLDER},
-    {"canonical_reformatted", GOLDEN_PLACEHOLDER},
-    {"canonical_count4", GOLDEN_PLACEHOLDER},
-    {"split_xy", GOLDEN_PLACEHOLDER},
-    {"split_yx", GOLDEN_PLACEHOLDER},
-    {"discovery", GOLDEN_PLACEHOLDER},
+    {"canonical", "a6db197309cab5080de27c8ef8a446ea4d7aff1c63b36a50afe2dff066ac8586"},
+    {"canonical_reformatted", "a6db197309cab5080de27c8ef8a446ea4d7aff1c63b36a50afe2dff066ac8586"},
+    {"canonical_count4", "7195a8d9c5f78fbdb80c814f2e3a745b0be33a0bbabe0dd8c788454ecc6c80b0"},
+    {"split_xy", "bb0bf3c1e772b1cd9a52f03147e8eb94307e012f7b2e5b05f40d3f30b253a6ea"},
+    {"split_yx", "bb0bf3c1e772b1cd9a52f03147e8eb94307e012f7b2e5b05f40d3f30b253a6ea"},
+    {"discovery", "b1598fb16a884cec6000ab97bcece90d686b7f2e3d8020cea7abfcd750061ea6"},
 };
 
 constexpr bool golden_pending() {
