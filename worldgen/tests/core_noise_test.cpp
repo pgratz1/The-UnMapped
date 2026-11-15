@@ -21,19 +21,14 @@ std::array<std::uint64_t, 10> noise_keys() {
     return keys;
 }
 
-// dot(g, u, v) from the gradient table of 8.1, on raw values.
+// dot(g, u, v) from the gradient table of 8.1, on raw values: the gradient
+// (gx, gy) of row g, dot = gx * u + gy * v.
 std::int64_t dot(std::uint64_t g, std::int64_t u, std::int64_t v) {
-    switch (g) {
-        case 0: return u + v;
-        case 1: return -u + v;
-        case 2: return u - v;
-        case 3: return -u - v;
-        case 4: return u;
-        case 5: return -u;
-        case 6: return v;
-        case 7: return -v;
-        default: FAIL("gradient index out of range"); return 0;
-    }
+    static constexpr std::array<std::array<std::int64_t, 2>, 8> table = {
+        {{1, 1}, {-1, 1}, {1, -1}, {-1, -1}, {1, 0}, {-1, 0}, {0, 1}, {0, -1}}};
+    REQUIRE(g < 8);
+    const auto& grad = table[static_cast<std::size_t>(g)];
+    return grad[0] * u + grad[1] * v;
 }
 
 // Test pattern fbm2 parameters (golden file, P0-04): 5 octaves, 1/32, 2, 1/2.
