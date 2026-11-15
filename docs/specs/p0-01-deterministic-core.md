@@ -1,6 +1,6 @@
 # P0-01 Deterministic core
 
-Status: approved by the lead, 2026-11-15. Phase P0 Foundation. Design doc sections 4 (determinism rules), 10, 13.
+Status: approved by the lead, 2026-11-15; amended the same day after the first implementation and the independent reference (edge cases in 5.4, 5.6, 6.2, 7.3, 8.1, 8.2, 13.3, 13.5, 13.8). Phase P0 Foundation. Design doc sections 4 (determinism rules), 10, 13.
 
 ## 1. Purpose
 
@@ -66,7 +66,7 @@ P0 code is single-threaded. When a later stage runs in parallel, it must follow 
 
 Why Q32.32: geography needs range (elevation in metres, distances in cells up to 2048, squared distances, sums over neighbourhoods) and precision (noise accumulated over octaves, erosion increments). Q16.16 in 32 bits overflows at 32768 and squares overflow beyond 181; Q32.32 in 64 bits removes most of that pain at the cost of 128-bit intermediates for multiply and divide (section 5.3). Layers stored in the database are quantized to narrower integer types by each stage's spec; `Fx` itself is an in-memory computation type and, where a column holds one, it is stored as its raw `int64`.
 
-`Fx` is a value type with no implicit conversions from or to any arithmetic type. Construction is only by the named functions below. Comparison (`==`, `<`, etc.) compares raw values.
+`Fx` is a value type with no implicit conversions from or to any arithmetic type. Construction is only by the named functions below, plus a default constructor that gives raw 0 so that `Fx` can be held in arrays and vectors. Comparison (`==`, `<`, etc.) compares raw values.
 
 ### 5.2 Conversions
 
@@ -81,7 +81,7 @@ Why Q32.32: geography needs range (elevation in metres, distances in cells up to
 | `ceil_int()` | -((-raw) >> 32) | never |
 | `round_int()` | RHA(raw / 2^32) | never |
 | `trunc_int()` | toward zero: sign(raw) × (\|raw\| >> 32) | never |
-| `to_decimal(int d)` | section 5.7, 0 ≤ d ≤ 18 | d out of range |
+| `to_decimal(int d)` | section 5.7, 0 ≤ d ≤ 18. Provided both as a member, `x.to_decimal(d)`, and as a free function, `to_decimal(x, d)`. | d out of range |
 
 **RHA** (round half away from zero) of an exact rational n/d: q = floor(\|n\| / \|d\|), r = \|n\| - q·\|d\|; if 2r ≥ \|d\| then q = q + 1; result = q with the sign of n/d. This is the only rounding mode used for multiply, divide, `mul_div`, `from_ratio` and decimal conversion. It makes every operation odd-symmetric: `mul(-a, b) == -mul(a, b)`.
 
@@ -115,14 +115,14 @@ All operations are on raw values, exact before rounding, checked after.
 | `div_int(a, int64 n)` | RHA(raw / n) | RHA | n = 0 |
 | `mul_div(int64 a, int64 b, int64 c)` | RHA(a × b / c) with a 128-bit product; a plain integer helper used by `Fx` and by stages | RHA | c = 0; result outside int64 or = INT64_MIN |
 | `min`, `max`, `clamp(x, lo, hi)` | on raw; clamp requires lo ≤ hi | exact | lo > hi |
-| `lerp(a, b, t)` | a + mul(b - a, t) | one RHA in mul | b - a or the sum overflows |
+| `lerp(a, b, t)` | a + mul(b - a, t), evaluated exactly in that order | one RHA in mul | b - a, the product or the sum overflows, even when the exact final value would fit. `t` is not range-checked. |
 | `sat_add`, `sat_sub` | as `+`/`-`, but clamp to MIN/MAX instead of failing | exact | never |
 
 Implementation of `mul` (reference): sign = sign(a) × sign(b); P = mul_u64_wide(\|a.raw\|, \|b.raw\|); q = P >> 32; r = P mod 2^32; if r ≥ 2^31 then q = q + 1; fail if q > 2^63 - 1; result = sign × q.
 
 Implementation of `div` (reference): sign as above; N = \|a.raw\| × 2^32 as U128; (q, r) = divmod(N, \|b.raw\|); if 2r ≥ \|b.raw\| then q = q + 1 (compute 2r in uint64: r < \|b\| ≤ 2^63 so 2r < 2^64); fail if q > 2^63 - 1; result = sign × q.
 
-Plain-integer equivalents in the same file: `checked_add/sub/mul(int64, int64)`, `floor_div(int64, int64)`, `floor_mod(int64, int64)` (result has the sign of the divisor), defined exactly as their names say.
+Plain-integer equivalents in the same file: `checked_add/sub/mul(int64, int64)`, `floor_div(int64, int64)`, `floor_mod(int64, int64)` (result has the sign of the divisor), defined exactly as their names say. Edge cases: the `checked_*` helpers may return INT64_MIN (only `Fx` excludes it). `floor_div(a, 0)` and `floor_mod(a, 0)` are fatal. `floor_div(INT64_MIN, -1)` is fatal (overflow) and `floor_mod(INT64_MIN, -1)` is 0. `mul_div` accepts INT64_MIN as an argument (magnitudes are taken in uint64); only its result is range-checked.
 
 ### 5.5 `fade` (quintic smoothstep)
 
@@ -157,7 +157,7 @@ Value: let N be the integer formed by all digits of int-part and frac-part conca
 
 Note: with f ≤ 18 a tie (exact .5 remainder) is impossible, because a tie would need 2^33 to divide the denominator, which takes f ≥ 33. The rounding rule is still stated so that the definition is complete.
 
-**Canonical text** (used when a value is stored in `meta`, P0-02): remove a leading `+`; if a fraction is present, remove trailing zeros from it and then remove the `.` if the fraction is empty; "-0" becomes "0". Canonical text parses to the same raw value as the original.
+**Canonical text** (used when a value is stored in `meta`, P0-02): remove a leading `+`; if a fraction is present, remove trailing zeros from it and then remove the `.` if the fraction is empty; "-0" becomes "0". Canonical text parses to the same raw value as the original. It is a normalization of the text of a valid decimal, not a unique name for a value: "0.000000000000000001" and "0" both parse to raw 0 and each is canonical, and "-0.000000000000000001" keeps its sign. Only text whose digits are all zero loses its sign ("-0", "-0.000" and "+0" give "0"). Text that fails the grammar has no canonical form; the function returns an error value.
 
 ### 5.7 Decimal formatting `to_decimal(d)`
 
@@ -201,7 +201,7 @@ SplitMix64 outputs are a bijection of distinct counter values, so at most one of
 
 `Rng::from_state(s0, s1, s2, s3)` sets the state directly (fatal if all four are zero). It exists for tests and test vectors.
 
-`Rng` is movable and **not copyable** (copy constructor and copy assignment deleted), because copying a generator silently duplicates a stream. Two generators with the same stream are made by constructing both from the same key.
+`Rng` is movable and **not copyable** (copy constructor and copy assignment deleted), because copying a generator silently duplicates a stream. Two generators with the same stream are made by constructing both from the same key. A moved-from `Rng` must not be used again.
 
 Keys come from section 7. A stage never seeds an `Rng` with the raw world seed.
 
@@ -285,15 +285,16 @@ Domain tags (8 ASCII bytes packed little-endian, so they read as text in a hex d
 
 | Function | Definition | Use |
 | --- | --- | --- |
-| `stream_key(uint64 seed, name)` | hash_words(TAG_STREAM, [seed, len(name), packed name words…]) | One per stage or purpose, e.g. `stream_key(seed, "geo.elevation")`. `Rng(stream_key(...))` is the stage's stream. |
+| `stream_key(uint64 seed, name)` | hash_words(TAG_STREAM, [seed, encoded name…]), where the encoded name is the byte-string encoding of 7.2: its length word followed by its packed words. The length appears once. A name that fails the stream-name grammar below is fatal. | One per stage or purpose, e.g. `stream_key(seed, "geo.elevation")`. `Rng(stream_key(...))` is the stage's stream. |
 | `substream(uint64 key, uint64 index)` | hash_words(TAG_SUB, [key, index]) | Per octave, per chunk, per entity, per iteration. |
 | `hash_at(uint64 key, int64 x, int64 y)` | hash_words(TAG_CELL2, [key, x, y]) | Location-keyed values: independent of evaluation order. |
 | `hash_at3(uint64 key, int64 x, int64 y, int64 z)` | hash_words(TAG_CELL3, [key, x, y, z]) | Location plus a third index (layer, year, octave). |
-| `phrase_seed(bytes)` | hash_words(TAG_PHRASE, [len, packed words…]) | Text-phrase world seed → 64 bits. |
+| `phrase_seed(bytes)` | hash_words(TAG_PHRASE, [len, packed words…]). A pure hash of exactly the bytes given: no validation and no trimming. | The hashing step of a text-phrase seed. |
+| `seed_from_phrase(text)` | Applies the text-phrase rules below (UTF-8 check, trim, length), then `phrase_seed` of the trimmed bytes. Returns the trimmed phrase and the seed, or an error value (invalid UTF-8; empty after trimming; longer than 256 bytes after trimming). Not fatal, because the phrase is user data. | Text-phrase world seed → 64 bits. This is what the settings loader and the command line call. |
 
 **Stream names.** Grammar `[a-z][a-z0-9_]*(\.[a-z][a-z0-9_]*)*`, 1 to 64 bytes, ASCII. Convention: `<area>.<stage>[.<purpose>]`, e.g. `geo.elevation`, `geo.elevation.continent`, `hist.awakening`. Every name used anywhere is listed as a constant in one source file (`worldgen/include/worldgen/core/streams.hpp`, interim), and a test checks that the list has no duplicates. P0 names: `test.hash`, `test.noise` (used by the test pattern in P0-04).
 
-**Text phrases.** A phrase must be valid UTF-8. Leading and trailing ASCII whitespace (space, tab, CR, LF) is removed; nothing else is changed (no case folding, no Unicode normalization, interim choice, see open questions). After trimming it must be 1 to 256 bytes. seed = phrase_seed(trimmed bytes). The phrase and the derived numeric seed are both recorded in `meta` (P0-02).
+**Text phrases.** A phrase must be valid UTF-8 in the strict sense of RFC 3629: no overlong forms, no surrogates, nothing above U+10FFFF. NUL and other control characters inside a phrase are accepted and are not trimmed. Leading and trailing ASCII whitespace (space, tab, CR, LF) is removed; nothing else is changed (no case folding, no Unicode normalization, interim choice, see open questions). After trimming it must be 1 to 256 bytes. seed = phrase_seed(trimmed bytes); `seed_from_phrase` does all of this in one call. The phrase and the derived numeric seed are both recorded in `meta` (P0-02).
 
 ## 8. Integer gradient noise
 
@@ -330,7 +331,7 @@ Gradient table (the improved-Perlin 2D set):
 
 Properties: noise2 is exactly 0 at every integer lattice point. At a cell centre (xi + ½, yi + ½), su = sv = HALF exactly and every product is exact, so the result is exactly (d00 + d10 + d01 + d11) / 4, each d being one of {-1, -½, 0, ½, 1}. The mathematical range is [-1, 1] (reached at cell centres); the clamp guards against rounding.
 
-Range of inputs: \|x\|, \|y\| < 2^31 - 1 so that xi + 1 cannot overflow the lattice coordinates; the `Fx` range already ensures this.
+Range of inputs: every `Fx` value of x and y is valid. xi + 1 is computed in int64 and cannot overflow, so `noise2` makes no argument check.
 
 ### 8.2 `fbm2(key, x, y, octaves, base_freq, lacunarity, gain) → Fx in [-ONE, ONE]`
 
@@ -346,7 +347,7 @@ for o in 0 .. octaves-1:
 return clamp(div(sum, norm), -ONE, ONE)
 ```
 
-Requirements (fatal otherwise): 1 ≤ octaves ≤ 16; base_freq > 0; lacunarity > 0; 0 < gain ≤ ONE. Each octave uses its own lattice hash (`substream(key, o)`), which removes the shared-origin artefact of octaves that share one lattice. Overflow of `mul(x, f)` is fatal, so a stage must choose frequencies that keep sample coordinates below 2^31.
+Requirements (fatal otherwise): 1 ≤ octaves ≤ 16; base_freq > 0; lacunarity > 0; 0 < gain ≤ ONE. Each octave uses its own lattice hash (`substream(key, o)`), which removes the shared-origin artefact of octaves that share one lattice. Overflow of `mul(x, f)` is fatal, so a stage must choose frequencies that keep sample coordinates below 2^31. The loop is followed literally: `amp` and `f` are also updated after the last octave, so an overflow in that final update is fatal even though its result is unused.
 
 Domain warping, ridged noise and other variants are composed from `noise2` by the P1 elevation spec.
 
@@ -461,7 +462,7 @@ Property: for 10^5 raw values from a fixed stream (plus MIN, MAX, ±1, 0), `pars
 - `isqrt_u64`: 0→0, 1→1, 2→1, 3→1, 4→2, 15→3, 16→4, 2^64-1 → 4294967295.
 - `sqrt(Fx)`: sqrt(0) = 0; sqrt(raw 1) = 65536; sqrt(from_ratio(1,4)) = 2147483648; sqrt(from_int(4)) = 8589934592; sqrt(from_int(2)) = 6074001000; sqrt(from_int(3)) = 7439101574; sqrt(from_int(5)) = 9603838835; sqrt(raw -1) fatal. (The √2, √3, √5 values follow from the SHA-256 initial hash words, which are the first 32 fractional bits of √2, √3, √5, rounded with the next hex digit; checked by hand, still listed for confirmation.)
 - `hypot(from_int(3), from_int(4))` = from_int(5).
-- Property: for 10^5 random non-negative x, r = sqrt(x).raw satisfies (r - ½)² ≤ x.raw·2^32 < (r + ½)², checked in U128 as (2r-1)² ≤ 4N < (2r+1)².
+- Property: for 10^5 random x > 0, r = sqrt(x).raw satisfies (r - ½)² ≤ x.raw·2^32 < (r + ½)², checked in U128 as (2r-1)² ≤ 4N < (2r+1)². (x = 0 is excluded: sqrt(0) = 0 and the lower bound does not hold for r = 0.)
 
 ### 13.4 Unit tests: `Rng` and sampling
 
@@ -489,9 +490,9 @@ Property tests (fixed streams, so they are deterministic):
 
 - `mix64(0)` = 0. `absorb(0, 0)` = 0xE220A8397B1DCDAF (equals SplitMix64(0) first output; tbc with that vector). `absorb(0, GOLDEN)` = 0x6E789E6AA1B965F4 (second SplitMix64(0) output; tbc).
 - Byte packing: "test.noise" → words [10, 0x696F6E2E74736574, 0x0000000000006573]. "The Unmapped" → [12, 0x616D6E5520656854, 0x0000000064657070]. "" → [0].
-- `stream_key(seed, name)` equals `hash_words(TAG_STREAM, [seed, packed name…])` computed with the primitives (structural test).
+- `stream_key(seed, name)` equals `hash_words(TAG_STREAM, [seed, len(name), packed name words…])` computed with the primitives (structural test). `stream_key` with a name outside the grammar is fatal.
 - `stream_key(0, "test.noise")`, `stream_key(0xFFFFFFFFFFFFFFFF, "geo.elevation")`, `substream(1, 0)`, `hash_at(1, -1, 2)`, `hash_at3(1, 0, 0, 0)`, `phrase_seed("The Unmapped")`: values to be generated by the validation specialist with an independent reference implementation (see 13.6) and recorded as golden vectors.
-- `phrase_seed` trims: "  The Unmapped\n" gives the same seed as "The Unmapped"; "the unmapped" gives a different one; invalid UTF-8 and an all-whitespace phrase are errors.
+- `seed_from_phrase` trims: "  The Unmapped\n" gives the same seed as "The Unmapped"; "the unmapped" gives a different one; invalid UTF-8 and an all-whitespace phrase are errors. `phrase_seed` itself hashes exactly the bytes it is given, so `phrase_seed(" x")` differs from `phrase_seed("x")`.
 - Sensitivity: over 10^4 keys, `hash_at(k, x, y)` for (x, y) and (y, x) with x ≠ y never coincide; `stream_key(s, "a")` ≠ `stream_key(s, "a.b")`.
 - Registry: all stream names match the grammar and are unique.
 
@@ -511,6 +512,7 @@ FIPS 180-4 vectors: "" → e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca4959
 ### 13.8 Golden vectors and cross-platform check
 
 - The validation specialist computes the tbc vectors above, plus a fixed list of hash, stream and noise outputs (at least: the six hash values in 13.5, the first 8 outputs of `Rng(stream_key(0, "test.noise"))`, `noise2` and `fbm2` at 16 fixed points), with an **independent reference implementation** written from this spec (a short Python script with arbitrary-precision integers is recommended) and commits them under `worldgen/tests/golden/core_vectors.*`. The C++ tests compare against that file on every preset, which turns each vector into a cross-platform check.
+- **The golden file exists:** `worldgen/tests/golden/core_vectors.txt`, generated by `worldgen/tests/reference/core_reference.py` (see the README beside it; the file's header documents every vector kind). A C++ test parses the file and checks every line against the implementation; a kind the test does not recognise is a test failure, so no vector is skipped silently. Kind `hash.phrase_seed` maps to `phrase_seed` and `hash.phrase_text` to `seed_from_phrase`.
 - A golden-seed test for the core is the P0-04 test-pattern world, whose layers exercise hashing and noise end to end.
 
 ## 14. Open questions
