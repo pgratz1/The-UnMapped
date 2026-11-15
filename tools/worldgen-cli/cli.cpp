@@ -147,13 +147,16 @@ constexpr std::string_view GENERATE_USAGE =
     "Prints the absolute path of the written file.\n";
 
 constexpr std::string_view RENDER_USAGE =
-    "usage: worldgen-cli render --db PATH --layer NAME [--out PATH] [--palette auto|gray]\n"
+    "usage: worldgen-cli render --db PATH (--layer NAME [--palette P] | --composite map) [--out PATH]\n"
     "                           [--scale N] [--force] [--verbose]\n"
     "\n"
     "  --db PATH           world file\n"
     "  --layer NAME        layer to render\n"
-    "  --out PATH          output PNG (default <build root>/out/<db file stem>.<layer>.png)\n"
-    "  --palette P         auto (the layer's registered palette) or gray (default auto)\n"
+    "  --composite map     shaded relief from elevation, with water and river when present\n"
+    "  --out PATH          output PNG (default <build root>/out/<db file stem>.<layer>.png,\n"
+    "                      or <db file stem>.map.png for --composite map)\n"
+    "  --palette P         auto (the layer's registered palette, default), gray, hypsometric,\n"
+    "                      water, river, log2, direction, ids or signed; --layer only\n"
     "  --scale N           each cell becomes an N x N block, 1 to 16 (default 1)\n"
     "  --force             replace an existing output file\n"
     "  --verbose           print progress and timings to stderr\n"
@@ -464,6 +467,7 @@ const CommandSpec RENDER{
     {
         {"db", true},
         {"layer", true},
+        {"composite", true},
         {"out", true},
         {"palette", true},
         {"scale", true},
@@ -503,16 +507,70 @@ std::string layer_name_list(const db::WorldReader& world) {
 // filtered copy adds one byte per row, still far below 2^31.
 constexpr std::uint64_t MAX_PNG_RAW_BYTES = std::uint64_t{1} << 30U;
 
+// The names --palette accepts, for its usage message: "auto, gray, ...".
+std::string palette_name_list() {
+    std::string names = "auto";
+    for (const inspect::Palette p : inspect::ALL_PALETTES) {
+        names += ", ";
+        names += inspect::palette_name(p);
+    }
+    return names;
+}
+
+// A layer for render: its grid, or exit 3 listing the layer names when it
+// is missing (P0-04 6).
+db::LayerGrid read_render_layer(const db::WorldReader& world, const std::string& name, const Progress& progress) {
+    progress.note("reading layer '" + name + "'");
+    db::Result<db::Layer> layer = world.read_layer(name);
+    if (!layer.ok()) {
+        if (layer.code() == db::ErrorCode::layer_not_found) {
+            throw Failure(Exit::input, layer.error().message + "; " + layer_name_list(world));
+        }
+        fail_with(layer.error());
+    }
+    return std::move(layer.value().grid);
+}
+
+// An optional layer of a composite: its grid, or std::nullopt when absent.
+std::optional<db::LayerGrid> read_optional_layer(const db::WorldReader& world, const std::string& name,
+                                                 const Progress& progress) {
+    db::Result<db::Layer> layer = world.read_layer(name);
+    if (!layer.ok()) {
+        if (layer.code() == db::ErrorCode::layer_not_found) {
+            progress.note("layer '" + name + "' is absent");
+            return std::nullopt;
+        }
+        fail_with(layer.error());
+    }
+    progress.note("read layer '" + name + "'");
+    return std::move(layer.value().grid);
+}
+
 Exit run_render(const Options& options) {
     const Progress progress(options.flag("verbose"));
     const std::string& db_path = required(options, "render", "db");
-    const std::string& layer_name = required(options, "render", "layer");
+    // Exactly one of --layer and --composite (P0-04 amendment 16b).
+    const std::string* layer_option = options.value("layer");
+    const std::string* composite_option = options.value("composite");
+    if ((layer_option == nullptr) == (composite_option == nullptr)) {
+        usage_error("render needs exactly one of --layer and --composite");
+    }
+    std::optional<inspect::Composite> composite;
+    if (composite_option != nullptr) {
+        composite = inspect::composite_from_name(*composite_option);
+        if (!composite) {
+            usage_error("invalid --composite '" + *composite_option + "'; expected map");
+        }
+        if (options.value("palette") != nullptr) {
+            usage_error("--palette applies to --layer only");
+        }
+    }
     std::optional<inspect::Palette> palette;  // empty: auto
     if (const std::string* text = options.value("palette")) {
         if (*text != "auto") {
             palette = inspect::palette_from_name(*text);
             if (!palette) {
-                usage_error("invalid --palette '" + *text + "'; expected auto or gray");
+                usage_error("invalid --palette '" + *text + "'; expected " + palette_name_list());
             }
         }
     }
@@ -526,15 +584,25 @@ Exit run_render(const Options& options) {
     }
 
     const db::WorldReader world = open_world(db_path, progress);
-    progress.note("reading layer '" + layer_name + "'");
-    db::Result<db::Layer> layer = world.read_layer(layer_name);
-    if (!layer.ok()) {
-        if (layer.code() == db::ErrorCode::layer_not_found) {
-            throw Failure(Exit::input, layer.error().message + "; " + layer_name_list(world));
+    // The image name: the layer name, or the composite name (P0-04
+    // amendment 16b: <db file stem>.map.png).
+    const std::string image_name =
+        composite ? std::string(inspect::composite_name(*composite)) : *layer_option;
+    const db::LayerGrid grid = read_render_layer(world, composite ? std::string("elevation") : *layer_option, progress);
+    std::optional<db::LayerGrid> water;
+    std::optional<db::LayerGrid> river;
+    if (composite) {
+        water = read_optional_layer(world, "water", progress);
+        river = read_optional_layer(world, "river", progress);
+        if (const std::optional<std::string> problem =
+                inspect::composite_map_problem(grid, water ? &*water : nullptr, river ? &*river : nullptr)) {
+            throw Failure(Exit::input, "cannot render the composite map: " + *problem);
         }
-        fail_with(layer.error());
+    } else if (palette && !inspect::palette_suits(*palette, grid)) {
+        usage_error("palette '" + std::string(inspect::palette_name(*palette)) + "' does not suit layer '" +
+                    *layer_option + "' (" + std::string(db::element_type_name(grid.type())) + "); it needs " +
+                    std::string(inspect::palette_requirement(*palette)));
     }
-    const db::LayerGrid& grid = layer.value().grid;
 
     const std::uint64_t width = static_cast<std::uint64_t>(grid.width) * scale;
     const std::uint64_t height = static_cast<std::uint64_t>(grid.height) * scale;
@@ -549,15 +617,25 @@ Exit run_render(const Options& options) {
     } else {
         const std::string stem = db::path_to_utf8(db::path_from_utf8(db_path).stem());
         out = db::path_to_utf8(db::path_from_utf8(default_output_dir()) /
-                               db::path_from_utf8(stem + "." + layer_name + ".png"));
+                               db::path_from_utf8(stem + "." + image_name + ".png"));
     }
     const bool force = options.flag("force");
     check_output_location(out, force);  // fail before rendering
 
-    const inspect::Palette chosen = palette.value_or(inspect::registered_palette(layer_name));
-    progress.note("rendering " + format_u64(width) + " x " + format_u64(height) + " pixels, palette " +
-                  std::string(inspect::palette_name(chosen)));
-    const std::vector<std::uint8_t> rgb = inspect::render_rgb(grid, chosen, scale);
+    std::vector<std::uint8_t> rgb;
+    if (composite) {
+        progress.note("rendering " + format_u64(width) + " x " + format_u64(height) + " pixels, composite " +
+                      image_name);
+        rgb = inspect::render_composite_map(grid, water ? &*water : nullptr, river ? &*river : nullptr, scale);
+    } else {
+        const inspect::Palette chosen = palette.value_or(inspect::auto_palette(*layer_option, grid));
+        if (!palette && chosen != inspect::registered_palette(*layer_option)) {
+            progress.note("the registered palette does not suit this layer; using gray");
+        }
+        progress.note("rendering " + format_u64(width) + " x " + format_u64(height) + " pixels, palette " +
+                      std::string(inspect::palette_name(chosen)));
+        rgb = inspect::render_rgb(grid, chosen, scale);
+    }
 
     std::vector<std::uint8_t> png;
     const int w = static_cast<int>(width);

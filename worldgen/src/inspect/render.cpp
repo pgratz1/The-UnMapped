@@ -1,4 +1,4 @@
-// Layer rendering (spec P0-04 section 6).
+// Layer rendering (spec P0-04 section 6, P1-00 section 10.2).
 
 #include "worldgen/inspect/render.hpp"
 
@@ -7,28 +7,283 @@
 #include <type_traits>
 #include <variant>
 
+#include "worldgen/core/checked.hpp"
 #include "worldgen/core/error.hpp"
+#include "worldgen/core/hash.hpp"
 #include "worldgen/core/wide.hpp"
 
 namespace worldgen::inspect {
 
+namespace {
+
+// bit_length(v): 0 for 0, otherwise floor(log2 v) + 1 (P1-00 amendment A1).
+// MERGE (p1/foundation): replace with worldgen::bit_length from the core once
+// amendment A1 is merged; the definitions are the same.
+std::uint32_t inspect_bit_length(std::uint64_t v) noexcept {
+    std::uint32_t n = 0;
+    while (v != 0U) {
+        ++n;
+        v >>= 1U;
+    }
+    return n;
+}
+
+constexpr Rgb MAGENTA{255, 0, 255};
+
+bool is_unsigned_type(db::ElementType t) noexcept {
+    return t == db::ElementType::u8 || t == db::ElementType::u16 || t == db::ElementType::u32 ||
+           t == db::ElementType::u64;
+}
+
+}  // namespace
+
+// --- Palette names and suitability ---------------------------------------------
+
 std::string_view palette_name(Palette palette) noexcept {
     switch (palette) {
         case Palette::gray: return "gray";
+        case Palette::hypsometric: return "hypsometric";
+        case Palette::water: return "water";
+        case Palette::river: return "river";
+        case Palette::log2: return "log2";
+        case Palette::direction: return "direction";
+        case Palette::ids: return "ids";
+        case Palette::signed_distance: return "signed";
     }
     return "gray";
 }
 
 std::optional<Palette> palette_from_name(std::string_view name) noexcept {
-    if (name == "gray") {
-        return Palette::gray;
+    for (const Palette p : ALL_PALETTES) {
+        if (name == palette_name(p)) {
+            return p;
+        }
     }
     return std::nullopt;
 }
 
-Palette registered_palette(std::string_view /*layer_name*/) noexcept {
-    return Palette::gray;  // P0: every layer (P0-04 6)
+Palette registered_palette(std::string_view layer_name) noexcept {
+    if (layer_name == "elevation") return Palette::hypsometric;
+    if (layer_name == "water") return Palette::water;
+    if (layer_name == "river") return Palette::river;
+    if (layer_name == "flow_accum") return Palette::log2;
+    if (layer_name == "flow_dir") return Palette::direction;
+    if (layer_name == "lake") return Palette::ids;
+    if (layer_name == "coast_dist") return Palette::signed_distance;
+    return Palette::gray;  // P1-00 10.2: every other layer, water_depth included
 }
+
+bool palette_suits(Palette palette, const db::LayerGrid& grid) noexcept {
+    if (!db::is_valid_layer_grid(grid)) {
+        return false;
+    }
+    const db::ElementType t = grid.type();
+    switch (palette) {
+        case Palette::gray: return true;
+        case Palette::hypsometric: return t == db::ElementType::i16;
+        case Palette::water: return t == db::ElementType::u8;
+        case Palette::direction: return t == db::ElementType::u8;
+        case Palette::river: {
+            const std::vector<std::uint8_t>* cells = grid.get_if<std::uint8_t>();
+            if (cells == nullptr) {
+                return false;
+            }
+            for (const std::uint8_t v : *cells) {
+                if (v > 15U) {
+                    return false;
+                }
+            }
+            return true;
+        }
+        case Palette::log2:
+        case Palette::ids: return is_unsigned_type(t);
+        case Palette::signed_distance: return !is_unsigned_type(t);
+    }
+    return false;
+}
+
+std::string_view palette_requirement(Palette palette) noexcept {
+    switch (palette) {
+        case Palette::gray: return "any layer";
+        case Palette::hypsometric: return "an i16 layer";
+        case Palette::water: return "a u8 layer";
+        case Palette::river: return "a u8 layer with values 0 to 15";
+        case Palette::log2: return "a layer of an unsigned type (u8, u16, u32, u64)";
+        case Palette::direction: return "a u8 layer";
+        case Palette::ids: return "a layer of an unsigned type (u8, u16, u32, u64)";
+        case Palette::signed_distance: return "a layer of a signed type (i8, i16, i32, i64)";
+    }
+    return "any layer";
+}
+
+Palette auto_palette(std::string_view layer_name, const db::LayerGrid& grid) noexcept {
+    const Palette p = registered_palette(layer_name);
+    return palette_suits(p, grid) ? p : Palette::gray;
+}
+
+// --- Colour functions ------------------------------------------------------------
+
+namespace {
+
+// The interpolation of ramp_colour on stops already known to be valid.
+Rgb ramp_unchecked(std::span<const RampStop> stops, std::int64_t t) {
+    if (t < stops.front().t) {
+        return stops.front().colour;
+    }
+    if (t >= stops.back().t) {
+        return stops.back().colour;
+    }
+    std::size_t k = 0;
+    while (!(t < stops[k + 1].t)) {
+        ++k;
+    }
+    const std::int64_t span = stops[k + 1].t - stops[k].t;  // 1 .. 2^40 - 1
+    const std::int64_t off = t - stops[k].t;                 // 0 .. span - 1
+    // |2 dc off + span| < 511 * 2^40 < 2^49: no overflow.
+    const auto channel = [span, off](std::uint8_t c0, std::uint8_t c1) {
+        const std::int64_t dc = static_cast<std::int64_t>(c1) - static_cast<std::int64_t>(c0);
+        const std::int64_t step = floor_div(2 * dc * off + span, 2 * span);
+        return static_cast<std::uint8_t>(static_cast<std::int64_t>(c0) + step);
+    };
+    const Rgb a = stops[k].colour;
+    const Rgb b = stops[k + 1].colour;
+    return Rgb{channel(a.r, b.r), channel(a.g, b.g), channel(a.b, b.b)};
+}
+
+}  // namespace
+
+Rgb ramp_colour(std::span<const RampStop> stops, std::int64_t t) {
+    if (stops.empty()) {
+        fatal("ramp_colour: no stops");
+    }
+    constexpr std::int64_t MAX_STOP_GAP = std::int64_t{1} << 40;
+    for (std::size_t k = 1; k < stops.size(); ++k) {
+        if (stops[k].t <= stops[k - 1].t) {
+            fatal("ramp_colour: stops not strictly ascending");
+        }
+        if (checked_sub(stops[k].t, stops[k - 1].t) >= MAX_STOP_GAP) {
+            fatal("ramp_colour: stops too far apart");
+        }
+    }
+    return ramp_unchecked(stops, t);
+}
+
+// The two hypsometric ramps are valid constants (ascending, gaps below
+// 2^40), so they skip ramp_colour's per-call validation.
+Rgb hypsometric_land_colour(std::int64_t t) {
+    return ramp_unchecked(HYPSOMETRIC_LAND_STOPS, t);
+}
+
+Rgb hypsometric_ocean_colour(std::int64_t depth) {
+    return ramp_unchecked(HYPSOMETRIC_OCEAN_STOPS, depth);
+}
+
+Rgb hypsometric_colour(std::int64_t e) {
+    if (e > 0) {
+        return hypsometric_land_colour(e);
+    }
+    // -e overflows only for INT64_MIN, which is far beyond the last stop.
+    const std::int64_t depth = e == std::numeric_limits<std::int64_t>::min() ? std::numeric_limits<std::int64_t>::max()
+                                                                             : -e;
+    return hypsometric_ocean_colour(depth);
+}
+
+Rgb water_colour(std::uint64_t v) noexcept {
+    switch (v) {
+        case 0U: return Rgb{214, 200, 160};
+        case 1U: return Rgb{52, 100, 200};
+        case 2U: return Rgb{64, 128, 204};
+        case 3U: return Rgb{24, 56, 120};
+        default: return MAGENTA;
+    }
+}
+
+Rgb river_colour(std::uint64_t v) noexcept {
+    switch (v) {
+        case 0U: return Rgb{16, 16, 16};
+        case 1U: return Rgb{120, 170, 230};
+        case 2U: return Rgb{100, 150, 225};
+        case 3U: return Rgb{80, 130, 220};
+        case 4U: return Rgb{60, 110, 210};
+        case 5U: return Rgb{45, 90, 200};
+        default: break;
+    }
+    if (v <= 15U) {
+        return Rgb{30, 70, 190};
+    }
+    return MAGENTA;  // above 15: not defined by P1-00 10.2 (reading chosen)
+}
+
+Rgb log2_colour(std::uint64_t v) noexcept {
+    const std::uint32_t n = 11U * inspect_bit_length(v);
+    const auto g = static_cast<std::uint8_t>(n > 255U ? 255U : n);
+    return Rgb{g, g, g};
+}
+
+Rgb direction_colour(std::uint64_t v) noexcept {
+    switch (v) {
+        case 0U: return Rgb{230, 25, 75};
+        case 1U: return Rgb{245, 130, 48};
+        case 2U: return Rgb{255, 225, 25};
+        case 3U: return Rgb{210, 245, 60};
+        case 4U: return Rgb{60, 180, 75};
+        case 5U: return Rgb{70, 240, 240};
+        case 6U: return Rgb{0, 130, 200};
+        case 7U: return Rgb{145, 30, 180};
+        case 8U: return Rgb{0, 0, 0};
+        default: return Rgb{255, 255, 255};
+    }
+}
+
+Rgb ids_colour(std::uint64_t v) noexcept {
+    if (v == 0U) {
+        return Rgb{0, 0, 0};
+    }
+    const std::uint64_t h = mix64(v);
+    const auto channel = [h](unsigned int j) {
+        const std::uint64_t byte = (h >> (8U * j)) & 0xFFU;
+        return static_cast<std::uint8_t>(64U + byte * 191U / 255U);
+    };
+    return Rgb{channel(0U), channel(1U), channel(2U)};
+}
+
+SignedScale signed_scale(const db::LayerGrid& grid) {
+    if (!db::is_valid_layer_grid(grid) || is_unsigned_type(grid.type())) {
+        fatal("signed_scale: not a valid grid of a signed type");
+    }
+    SignedScale s;
+    std::visit(
+        [&s](const auto& cells) {
+            using T = typename std::decay_t<decltype(cells)>::value_type;
+            if constexpr (std::is_signed_v<T>) {
+                for (const T v : cells) {
+                    const auto w = static_cast<std::int64_t>(v);
+                    if (w > 0) {
+                        const auto pos = static_cast<std::uint64_t>(w);
+                        if (pos > s.p) s.p = pos;
+                    } else if (w < 0) {
+                        // -w as uint64, exact for INT64_MIN too.
+                        const std::uint64_t neg = 0U - static_cast<std::uint64_t>(w);
+                        if (neg > s.m) s.m = neg;
+                    }
+                }
+            }
+        },
+        grid.values);
+    return s;
+}
+
+Rgb signed_colour(std::int64_t v, SignedScale scale) {
+    if (v >= 0) {
+        const std::uint8_t g = gray_level(static_cast<std::uint64_t>(v), scale.p);
+        return Rgb{g, g, g};
+    }
+    const std::uint64_t neg = 0U - static_cast<std::uint64_t>(v);
+    const std::uint32_t level = gray_level(neg, scale.m);
+    return Rgb{0, 0, static_cast<std::uint8_t>(255U - (3U * level) / 4U)};
+}
+
+// --- Gray and the buffer ---------------------------------------------------------
 
 namespace {
 
@@ -58,6 +313,60 @@ void min_max(const std::vector<T>& cells, T& lo, T& hi) noexcept {
         if (v < lo) lo = v;
         if (v > hi) hi = v;
     }
+}
+
+// The zero-filled buffer of a w x h grid at the given scale. FatalError if
+// scale is outside 1..16 or the size does not fit in std::size_t.
+std::vector<std::uint8_t> make_buffer(std::uint32_t w, std::uint32_t h, std::uint32_t scale, const char* what) {
+    if (scale < MIN_RENDER_SCALE || scale > MAX_RENDER_SCALE) {
+        fatal(what);
+    }
+    // At most 65536 * 16 = 2^20 pixels per side, so the pixel count is at
+    // most 2^40 and the byte count 3 * 2^40: fits a 64-bit size_t.
+    const std::uint64_t out_w = static_cast<std::uint64_t>(w) * scale;
+    const std::uint64_t out_h = static_cast<std::uint64_t>(h) * scale;
+    const std::uint64_t bytes = out_w * out_h * 3U;
+    if (bytes > static_cast<std::uint64_t>(std::numeric_limits<std::size_t>::max())) {
+        fatal("render: image too large");
+    }
+    return std::vector<std::uint8_t>(static_cast<std::size_t>(bytes));
+}
+
+// Fills rgb (from make_buffer) with colour_of(index) for each cell, each
+// cell a scale x scale block, in index order.
+template <class ColourOf>
+void fill_buffer(std::vector<std::uint8_t>& rgb, std::uint32_t width, std::uint32_t height, std::uint32_t scale,
+                 const ColourOf& colour_of) {
+    const std::size_t w = width;
+    const std::size_t h = height;
+    const std::size_t s = scale;
+    const std::size_t row_bytes = w * s * 3U;
+    for (std::size_t y = 0; y < h; ++y) {
+        // Fill the first pixel row of this cell row, then copy it to the
+        // other scale - 1 rows.
+        std::uint8_t* row = rgb.data() + (y * s) * row_bytes;
+        for (std::size_t x = 0; x < w; ++x) {
+            const Rgb c = colour_of(y * w + x);
+            std::uint8_t* px = row + x * s * 3U;
+            for (std::size_t i = 0; i < s; ++i) {
+                px[3U * i] = c.r;
+                px[3U * i + 1U] = c.g;
+                px[3U * i + 2U] = c.b;
+            }
+        }
+        for (std::size_t j = 1; j < s; ++j) {
+            std::uint8_t* dst = row + j * row_bytes;
+            for (std::size_t b = 0; b < row_bytes; ++b) {
+                dst[b] = row[b];
+            }
+        }
+    }
+}
+
+// A cell value as uint64 for the per-value palettes (unsigned types only).
+template <class T>
+std::uint64_t as_u64(T v) noexcept {
+    return static_cast<std::uint64_t>(v);
 }
 
 }  // namespace
@@ -105,52 +414,176 @@ std::vector<std::uint8_t> render_rgb(const db::LayerGrid& grid, Palette palette,
     if (scale < MIN_RENDER_SCALE || scale > MAX_RENDER_SCALE) {
         fatal("render_rgb: scale must be 1 to 16");
     }
-    if (palette != Palette::gray) {
-        fatal("render_rgb: unknown palette");
+    if (!palette_suits(palette, grid)) {
+        fatal("render_rgb: the palette does not suit the layer");
     }
-    // At most 65536 * 16 = 2^20 pixels per side, so the pixel count is at
-    // most 2^40 and the byte count 3 * 2^40: fits a 64-bit size_t.
-    const std::uint64_t out_w = static_cast<std::uint64_t>(grid.width) * scale;
-    const std::uint64_t out_h = static_cast<std::uint64_t>(grid.height) * scale;
-    const std::uint64_t bytes = out_w * out_h * 3U;
-    if (bytes > static_cast<std::uint64_t>(std::numeric_limits<std::size_t>::max())) {
-        fatal("render_rgb: image too large");
-    }
-    std::vector<std::uint8_t> rgb(static_cast<std::size_t>(bytes));
-    const std::size_t row_bytes = static_cast<std::size_t>(out_w) * 3U;
+    std::vector<std::uint8_t> rgb = make_buffer(grid.width, grid.height, scale, "render_rgb: scale must be 1 to 16");
 
     std::visit(
         [&](const auto& cells) {
             using T = typename std::decay_t<decltype(cells)>::value_type;
-            T lo{};
-            T hi{};
-            min_max(cells, lo, hi);
-            const std::uint64_t r = distance(hi, lo);
-            const std::size_t w = grid.width;
-            const std::size_t h = grid.height;
-            const std::size_t s = scale;
-            for (std::size_t y = 0; y < h; ++y) {
-                // Fill the first pixel row of this cell row, then copy it
-                // to the other scale - 1 rows.
-                std::uint8_t* row = rgb.data() + (y * s) * row_bytes;
-                for (std::size_t x = 0; x < w; ++x) {
-                    const std::uint8_t g = gray_level(distance(cells[y * w + x], lo), r);
-                    std::uint8_t* px = row + x * s * 3U;
-                    for (std::size_t i = 0; i < s; ++i) {
-                        px[3U * i] = g;
-                        px[3U * i + 1U] = g;
-                        px[3U * i + 2U] = g;
-                    }
+            switch (palette) {
+                case Palette::gray: {
+                    T lo{};
+                    T hi{};
+                    min_max(cells, lo, hi);
+                    const std::uint64_t r = distance(hi, lo);
+                    fill_buffer(rgb, grid.width, grid.height, scale, [&](std::size_t i) {
+                        const std::uint8_t g = gray_level(distance(cells[i], lo), r);
+                        return Rgb{g, g, g};
+                    });
+                    return;
                 }
-                for (std::size_t j = 1; j < s; ++j) {
-                    std::uint8_t* dst = row + j * row_bytes;
-                    for (std::size_t b = 0; b < row_bytes; ++b) {
-                        dst[b] = row[b];
+                case Palette::signed_distance: {
+                    if constexpr (std::is_signed_v<T>) {
+                        const SignedScale s = signed_scale(grid);
+                        fill_buffer(rgb, grid.width, grid.height, scale, [&](std::size_t i) {
+                            return signed_colour(static_cast<std::int64_t>(cells[i]), s);
+                        });
                     }
+                    return;
+                }
+                case Palette::hypsometric: {
+                    if constexpr (std::is_signed_v<T>) {
+                        fill_buffer(rgb, grid.width, grid.height, scale, [&](std::size_t i) {
+                            return hypsometric_colour(static_cast<std::int64_t>(cells[i]));
+                        });
+                    }
+                    return;
+                }
+                case Palette::water:
+                case Palette::river:
+                case Palette::log2:
+                case Palette::direction:
+                case Palette::ids: {
+                    if constexpr (!std::is_signed_v<T>) {
+                        Rgb (*colour)(std::uint64_t) noexcept = &water_colour;
+                        if (palette == Palette::river) colour = &river_colour;
+                        if (palette == Palette::log2) colour = &log2_colour;
+                        if (palette == Palette::direction) colour = &direction_colour;
+                        if (palette == Palette::ids) colour = &ids_colour;
+                        fill_buffer(rgb, grid.width, grid.height, scale,
+                                    [&](std::size_t i) { return colour(as_u64(cells[i])); });
+                    }
+                    return;
                 }
             }
         },
         grid.values);
+    return rgb;
+}
+
+// --- Composite map ---------------------------------------------------------------
+
+std::string_view composite_name(Composite composite) noexcept {
+    switch (composite) {
+        case Composite::map: return "map";
+    }
+    return "map";
+}
+
+std::optional<Composite> composite_from_name(std::string_view name) noexcept {
+    if (name == "map") {
+        return Composite::map;
+    }
+    return std::nullopt;
+}
+
+std::uint32_t hillshade_factor(std::span<const std::int16_t> cells, std::uint32_t w, std::uint32_t h,
+                               std::uint32_t x, std::uint32_t y) {
+    if (static_cast<std::uint64_t>(cells.size()) != static_cast<std::uint64_t>(w) * h || x >= w || y >= h) {
+        fatal("hillshade_factor: cell outside the grid");
+    }
+    const auto e = [&](std::uint32_t cx, std::uint32_t cy) {
+        const std::int64_t v = cells[static_cast<std::size_t>(cy) * w + cx];
+        return v > 0 ? v : std::int64_t{0};
+    };
+    const std::uint32_t xl = x == 0U ? 0U : x - 1U;
+    const std::uint32_t xr = x + 1U >= w ? w - 1U : x + 1U;
+    const std::uint32_t yu = y == 0U ? 0U : y - 1U;
+    const std::uint32_t yd = y + 1U >= h ? h - 1U : y + 1U;
+    const std::int64_t gx = e(xr, y) - e(xl, y);
+    const std::int64_t gy = e(x, yd) - e(x, yu);
+    std::int64_t f = 256 + floor_div(gx + gy, 2);
+    if (f < 160) f = 160;
+    if (f > 352) f = 352;
+    return static_cast<std::uint32_t>(f);
+}
+
+Rgb shade_colour(Rgb c, std::uint32_t f) noexcept {
+    const auto channel = [f](std::uint8_t v) {
+        const std::uint64_t s = (static_cast<std::uint64_t>(v) * f + 128U) >> 8U;
+        return static_cast<std::uint8_t>(s > 255U ? 255U : s);
+    };
+    return Rgb{channel(c.r), channel(c.g), channel(c.b)};
+}
+
+namespace {
+
+std::optional<std::string> u8_companion_problem(const db::LayerGrid* grid, std::string_view name,
+                                                const db::LayerGrid& elevation) {
+    if (grid == nullptr) {
+        return std::nullopt;
+    }
+    if (!db::is_valid_layer_grid(*grid)) {
+        return "layer '" + std::string(name) + "' is not a valid grid";
+    }
+    if (grid->type() != db::ElementType::u8) {
+        return "layer '" + std::string(name) + "' is " + std::string(db::element_type_name(grid->type())) +
+               ", expected u8";
+    }
+    if (grid->width != elevation.width || grid->height != elevation.height) {
+        return "layer '" + std::string(name) + "' is not the size of layer 'elevation'";
+    }
+    return std::nullopt;
+}
+
+}  // namespace
+
+std::optional<std::string> composite_map_problem(const db::LayerGrid& elevation, const db::LayerGrid* water,
+                                                 const db::LayerGrid* river) {
+    if (!db::is_valid_layer_grid(elevation)) {
+        return std::string("layer 'elevation' is not a valid grid");
+    }
+    if (elevation.type() != db::ElementType::i16) {
+        return "layer 'elevation' is " + std::string(db::element_type_name(elevation.type())) + ", expected i16";
+    }
+    if (std::optional<std::string> p = u8_companion_problem(water, "water", elevation)) {
+        return p;
+    }
+    return u8_companion_problem(river, "river", elevation);
+}
+
+std::vector<std::uint8_t> render_composite_map(const db::LayerGrid& elevation, const db::LayerGrid* water,
+                                               const db::LayerGrid* river, std::uint32_t scale) {
+    if (composite_map_problem(elevation, water, river)) {
+        fatal("render_composite_map: unsuitable layers");
+    }
+    std::vector<std::uint8_t> rgb =
+        make_buffer(elevation.width, elevation.height, scale, "render_composite_map: scale must be 1 to 16");
+    const std::vector<std::int16_t>& e = *elevation.get_if<std::int16_t>();
+    const std::vector<std::uint8_t>* wcells = water == nullptr ? nullptr : water->get_if<std::uint8_t>();
+    const std::vector<std::uint8_t>* rcells = river == nullptr ? nullptr : river->get_if<std::uint8_t>();
+    const std::uint32_t w = elevation.width;
+    const std::uint32_t h = elevation.height;
+    fill_buffer(rgb, w, h, scale, [&](std::size_t i) {
+        if (wcells != nullptr) {
+            const std::uint8_t cat = (*wcells)[i];
+            if (cat == 2U) {
+                return Rgb{64, 128, 204};
+            }
+            if (cat == 1U) {
+                return rcells == nullptr ? Rgb{52, 100, 200} : river_colour((*rcells)[i]);
+            }
+        }
+        const std::int64_t v = e[i];
+        if (v < 0) {
+            return hypsometric_ocean_colour(-v);
+        }
+        const auto x = static_cast<std::uint32_t>(i % w);
+        const auto y = static_cast<std::uint32_t>(i / w);
+        return shade_colour(hypsometric_land_colour(v), hillshade_factor(e, w, h, x, y));
+    });
     return rgb;
 }
 

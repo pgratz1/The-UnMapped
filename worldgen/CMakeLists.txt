@@ -57,6 +57,13 @@ unmapped_project_target(worldgen)
 # SQLite is used by src/db/ only; no public header includes sqlite3.h.
 target_link_libraries(worldgen PRIVATE unmapped::sqlite3)
 
+# Inspection additions of P1 (spec P1-00 10.3): the [geography] statistics
+# of report v2. Kept in its own target_sources call so that branches adding
+# other sources merge cleanly.
+target_sources(worldgen PRIVATE
+    src/inspect/geography.cpp
+)
+
 if(UNMAPPED_BUILD_TESTS)
     add_subdirectory(tests)
 endif()

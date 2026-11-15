@@ -1,12 +1,17 @@
-// The text report, format v1 (spec P0-04 section 7).
+// The text report, format v2 (spec P0-04 section 7 and amendment 16c,
+// P1-00 section 10.3).
 
 #include "worldgen/inspect/report.hpp"
 
+#include <cstddef>
 #include <cstdint>
 #include <new>
+#include <optional>
+#include <utility>
 #include <vector>
 
 #include "worldgen/db/schema.hpp"
+#include "worldgen/inspect/geography.hpp"
 #include "worldgen/inspect/render.hpp"
 
 namespace worldgen::inspect {
@@ -44,7 +49,7 @@ std::string format_range(const ValueRange& range) {
 db::Result<std::string> build_report(const db::WorldReader& world) {
     try {
         std::string out;
-        out += REPORT_HEADER_V1;
+        out += REPORT_HEADER_V2;
         out += '\n';
 
         out += "[meta]\n";
@@ -78,6 +83,11 @@ db::Result<std::string> build_report(const db::WorldReader& world) {
         if (layers.value().empty()) {
             out += "(none)\n";
         }
+        // The grids [geography] reads, kept from this pass so that no layer
+        // is decoded twice. Layer names are unique (P0-02 5.6).
+        std::optional<db::LayerGrid> geo_grids[6];
+        static constexpr std::string_view GEO_NAMES[6] = {"elevation", "water", "flow_dir",
+                                                          "flow_accum", "river", "lake"};
         for (const db::LayerInfo& info : layers.value()) {
             db::Result<db::Layer> layer = world.read_layer(info.name);
             if (!layer.ok()) {
@@ -97,6 +107,29 @@ db::Result<std::string> build_report(const db::WorldReader& world) {
             out += ' ';
             out += format_range(value_range(layer.value().grid));
             out += '\n';
+            for (std::size_t k = 0; k < 6U; ++k) {
+                if (info.name == GEO_NAMES[k]) {
+                    geo_grids[k] = std::move(layer.value().grid);
+                }
+            }
+        }
+
+        // [geography] (P1-00 10.3), when the world has an elevation layer.
+        if (geo_grids[0]) {
+            const auto ptr = [&geo_grids](std::size_t k) { return geo_grids[k] ? &*geo_grids[k] : nullptr; };
+            GeographyLayers geo;
+            geo.elevation = ptr(0);
+            geo.water = ptr(1);
+            geo.flow_dir = ptr(2);
+            geo.flow_accum = ptr(3);
+            geo.river = ptr(4);
+            geo.lake = ptr(5);
+            std::string problem;
+            std::optional<std::string> section = geography_section(geo, &problem);
+            if (!section) {
+                return db::Error{db::ErrorCode::corrupt_layer, "cannot report geography: " + problem};
+            }
+            out += *section;
         }
         return out;
     } catch (const std::bad_alloc&) {
