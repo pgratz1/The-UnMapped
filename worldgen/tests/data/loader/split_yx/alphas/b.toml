@@ -1,0 +1,5 @@
+[alpha.x]
+tags = ["one", "two"]
+label = "the x"
+partner = "b1"
+count = 0xA

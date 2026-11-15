@@ -1,0 +1,4 @@
+# b.toml sorts after a.toml, so the duplicate is reported here.
+[alpha.dup]
+count = 2
+partner = "b1"

@@ -1,0 +1,6 @@
+[alpha.y]
+count = 20
+ratio = "0.25"
+enabled = false
+mode = "slow"
+partner = "b2"
