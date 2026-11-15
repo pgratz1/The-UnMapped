@@ -28,3 +28,6 @@ Testing/
 
 # Claude Code local settings
 .claude/settings.local.json
+
+# Agent worktrees
+.claude/worktrees/
