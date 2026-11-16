@@ -46,3 +46,10 @@ target_sources(worldgen-cli-tests PRIVATE cli_p1_generate_test.cpp)
 target_sources(worldgen-cli-tests PRIVATE cli_slope_report_test.cpp)
 # generate --until elevation (P1-00 14 X1, X3 for the elevation stage; P1-01).
 target_sources(worldgen-cli-tests PRIVATE cli_elevation_test.cpp)
+# generate --until hydrology, report and render with the hydrology layers
+# (P1-02 H9; P1-00 10.1 to 10.3, 14 X1 to X3), checked against the hydrology
+# golden vectors. Slow checks in the doctest suite "hydrology-slow".
+target_sources(worldgen-cli-tests PRIVATE cli_hydrology_test.cpp)
+target_compile_definitions(worldgen-cli-tests PRIVATE
+    UNMAPPED_P1_02_GOLDEN_PATH="${PROJECT_SOURCE_DIR}/worldgen/tests/golden/p1-02-hydrology.txt"
+)

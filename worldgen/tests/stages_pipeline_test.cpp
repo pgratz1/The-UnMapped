@@ -347,18 +347,21 @@ TEST_CASE("stages P1-00 3: the geography stage names, in run order") {
     const std::vector<std::string_view> names(st::GEOGRAPHY_STAGE_NAMES.begin(), st::GEOGRAPHY_STAGE_NAMES.end());
     CHECK(names == std::vector<std::string_view>{"elevation", "hydrology", "climate", "biomes", "resources", "regions"});
     CHECK(st::UNTIL_NONE == "none");
-    // Implemented so far: elevation (P1-01).
+    // Implemented so far: elevation (P1-01) and hydrology (P1-02).
     const auto implemented = st::implemented_geography_stages();
-    REQUIRE(implemented.size() == 1U);
+    REQUIRE(implemented.size() == 2U);
     CHECK(implemented[0].name == "elevation");
     CHECK(implemented[0].run != nullptr);
+    CHECK(implemented[1].name == "hydrology");
+    CHECK(implemented[1].run != nullptr);
 }
 
 TEST_CASE("stages P1-00 10.1: check_stage_limit") {
     CHECK(st::check_stage_limit("none") == st::StageLimitError::none);
     CHECK(st::check_stage_limit("elevation") == st::StageLimitError::none);
+    CHECK(st::check_stage_limit("hydrology") == st::StageLimitError::none);
     for (const std::string_view name : st::GEOGRAPHY_STAGE_NAMES) {
-        if (name == "elevation") {
+        if (name == "elevation" || name == "hydrology") {
             continue;
         }
         CAPTURE(std::string(name));
@@ -374,13 +377,18 @@ TEST_CASE("stages P1-00 10.1: check_stage_limit") {
 
 TEST_CASE("stages P1-00 10.1: geography_stages_until") {
     const auto all = st::geography_stages_until(std::nullopt);
-    REQUIRE(all.size() == 1U);
+    REQUIRE(all.size() == 2U);
     CHECK(all[0].name == "elevation");
+    CHECK(all[1].name == "hydrology");
     CHECK(st::geography_stages_until(std::string("none")).empty());
     const auto upto = st::geography_stages_until(std::string("elevation"));
     REQUIRE(upto.size() == 1U);
     CHECK(upto[0].name == "elevation");
-    CHECK_THROWS_AS(static_cast<void>(st::geography_stages_until(std::string("hydrology"))), worldgen::FatalError);
+    const auto both = st::geography_stages_until(std::string("hydrology"));
+    REQUIRE(both.size() == 2U);
+    CHECK(both[0].name == "elevation");
+    CHECK(both[1].name == "hydrology");
+    CHECK_THROWS_AS(static_cast<void>(st::geography_stages_until(std::string("climate"))), worldgen::FatalError);
     CHECK_THROWS_AS(static_cast<void>(st::geography_stages_until(std::string("regions"))), worldgen::FatalError);
     CHECK_THROWS_AS(static_cast<void>(st::geography_stages_until(std::string("bogus"))), worldgen::FatalError);
 }
@@ -388,7 +396,9 @@ TEST_CASE("stages P1-00 10.1: geography_stages_until") {
 TEST_CASE("generate P0-04 5.1, P1-00 10.1: planned_stages") {
     worldgen::WorldParams p;
     p.content_hash = worldgen::sha256(std::string_view{});
-    CHECK(worldgen::planned_stages(p) == std::vector<std::string_view>{"elevation"});  // every implemented stage
+    CHECK(worldgen::planned_stages(p) == std::vector<std::string_view>{"elevation", "hydrology"});  // every implemented stage
+    p.until = std::string("hydrology");
+    CHECK(worldgen::planned_stages(p) == std::vector<std::string_view>{"elevation", "hydrology"});
     p.until = std::string("elevation");
     CHECK(worldgen::planned_stages(p) == std::vector<std::string_view>{"elevation"});
     p.until = std::string("none");
@@ -403,7 +413,7 @@ TEST_CASE("generate P0-04 5.1, P1-00 10.1: planned_stages") {
         CHECK_THROWS_AS(static_cast<void>(worldgen::planned_stages(p)), worldgen::FatalError);
     }
     p.test_pattern = false;
-    p.until = std::string("hydrology");
+    p.until = std::string("climate");
     CHECK_THROWS_AS(static_cast<void>(worldgen::planned_stages(p)), worldgen::FatalError);
     p.until = std::string("bogus");
     CHECK_THROWS_AS(static_cast<void>(worldgen::planned_stages(p)), worldgen::FatalError);
@@ -452,7 +462,7 @@ TEST_CASE("generate: an unusable stage limit, or a content hash that does not ma
     worldgen::WorldParams p;
     p.seed = 0;
     p.content_hash = worldgen::sha256(std::string_view{});
-    for (const char* until : {"hydrology", "climate", "bogus"}) {
+    for (const char* until : {"climate", "regions", "bogus"}) {
         CAPTURE(until);
         p.until = std::string(until);
         CHECK_THROWS_AS(static_cast<void>(worldgen::generate_world(p, dir.file("w.db"), wdb::Overwrite::refuse)),
