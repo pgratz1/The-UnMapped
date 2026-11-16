@@ -253,3 +253,23 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
 - Proposal: keep C++ only, and plan for it: every screen gets a headless check scene from the start, as the viewer has; section 10's "headless Godot runs for scene tests" becomes one CTest per screen, run where the pinned editor is available; budget CI time and a compiler cache for godot-cpp; revisit hot reload when gameplay iteration starts.
 - Interim choice: all handled in `gdext/` and `extern/CMakeLists.txt`.
 - Status: open
+
+### Walkable terrain: slope and flatness as acceptance criteria
+
+- Date: 2026-11-15
+- Raised by: world critic and spec-writer, via the lead
+- Design doc section: 4 (geography), 7 (runtime terrain), 8 (first person in both modes)
+- Problem: the design gives no target for how steep terrain may be. The first accepted-looking elevation candidate had mountain land with a median slope of 45 to 60 degrees: every range was a wall a first-person player cannot walk up, and neither the images nor the existing step statistics showed it.
+- Proposal: state in section 4 that terrain must be walkable at 16 m cells: cliffs and crags are features, not whole mountainsides. Acceptance is by slope statistics in `report` (share of land steeper than 35 and 45 degrees, median slope of high ground, share of flat lowland), with bounds set from real terrain. Consequence: on a 16 km continent peaks are about 900 to 1,500 m, not 2,000 m and more, in keeping with the compressed scale of section 4.
+- Interim choice: the elevation design is being reworked to these targets (P1-00 13.1, P1-01); the review is in docs/reviews/p1-01-elevation-v13.md.
+- Status: open
+
+### Every world has real uplands
+
+- Date: 2026-11-15
+- Raised by: world critic, via the lead
+- Design doc section: 4, 5
+- Problem: about a quarter of generated continents had almost no mountains (one small massif on an undivided plain), which leaves dwarves nowhere to live and history no natural borders or passes.
+- Proposal: require, by construction in the elevation stage, that every world has a minimum share of high ground forming at least one range. Do not relax the statistics to admit mountain-light worlds.
+- Interim choice: adopted as a requirement for the elevation redesign.
+- Status: open
