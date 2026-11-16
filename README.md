@@ -42,17 +42,17 @@ The full design is in [`docs/design/design.md`](docs/design/design.md).
 
 ## Status
 
-*Last updated: 2026-11-15.*
+*Last updated: 2026-11-16.*
 
 | | |
 | --- | --- |
 | **Current phase** | P1 Geography. P0 Foundation and P2 Godot bring-up and viewer v0 are complete |
 | **Next phase** | P3 History core, after P1 |
 | **Current milestone** | Milestone 0, Geography generator: in progress (P1 and P2) |
-| **Work in flight** | P1: the shared foundation and the inspection tools are merged (`render` palettes and `--composite map`, `report` v2 with geography statistics, `generate --until` and `--threads`). The elevation design is settled after five rounds of exploration and two world-critic reviews (`docs/reviews/`): irregular continents, long segmented ranges with 2,000 to 2,500 m peaks, valleys cut by erosion, lakes, and a guaranteed share of mountains in every world. High peaks may be too steep to walk; passes are left for the history simulation to open. The elevation spec (`docs/specs/p1-01-elevation.md`) is approved, and the stage and its independent tests are being written on branches. No geography stage is on `main` yet. |
+| **Work in flight** | P1: the elevation stage is merged (2026-11-16), so `generate` now writes a continent. It followed five rounds of design exploration and two world-critic reviews (`docs/reviews/`): irregular continents, long segmented ranges with 2,000 to 2,500 m peaks, valleys cut by erosion, lakes, and a guaranteed share of mountains in every world. High peaks may be too steep to walk; passes are left for the history simulation to open. Next: hydrology (spec approved), then climate, biomes, resources and regions (specs to write). |
 | **`main`** | Builds and passes all tests on Linux (GCC, Clang, Clang with sanitizers) and Windows (MSVC), in debug and release |
 
-**What "P0 done" means.** The phase's exit check is that an empty world file is byte-identical across all three compilers and that `worldgen-cli hash` proves it in continuous integration. It does: eight test worlds, six empty and two holding test layers, are identical across all seven build configurations, and each matches its recorded golden hash. CI repeats the comparison on every push.
+**What "P0 done" means.** The phase's exit check is that an empty world file is byte-identical across all three compilers and that `worldgen-cli hash` proves it in continuous integration. It does: eight test worlds, six empty and two holding test layers, are identical across all seven build configurations, and each matches its recorded golden hash. CI repeats the comparison on every push. With elevation merged the comparison covers twelve worlds, four of them full elevation maps at 512 and 1024.
 
 **Since P0 was first completed**
 
@@ -61,8 +61,9 @@ The full design is in [`docs/design/design.md`](docs/design/design.md).
 
 **Known gaps and notes**
 
-- No geography of any kind exists yet. `--map-size` is recorded in the world file but nothing generates at that size.
-- The TOML loader's machinery is complete and tested, but no real data kinds (biomes, races and so on) are registered, so `--data` reads nothing.
+- Geography so far is elevation only: no rivers, climate, biomes or regions yet.
+- Known elevation limitations are listed in section 11 of the elevation spec. The main ones: ranges have no natural passes; on a rare small map a range drops into the sea as a very steep smooth face (512, seed 41); filled basins among peaks can look smooth; a few worlds get ring-shaped ranges.
+- The only registered data kind is generator tuning (`game/data/worldgen/`); biomes, races and the rest come with their phases.
 - The noise primitive's output stays within about two thirds of its nominal range, which is normal for this kind of noise; the P1 elevation spec needs to account for it.
 - The `render` image-size limit is tested only on the "too large" side.
 - The sanitizer build's test suite takes about four minutes, mostly one noise range test.
@@ -77,7 +78,7 @@ The first block of work is the world generator prototype: seven phases, P0 to P6
 | Phase | Delivers | Depends on | Status |
 | --- | --- | --- | --- |
 | **P0 Foundation** | Repository layout, CMake presets, vendored dependencies, CI on three compilers, the deterministic core, the reproducible SQLite layer, the TOML loader, `worldgen-cli` | — | **Done** 2026-11-15, reviewed |
-| **P1 Geography** | Elevation, erosion, hydrology, climate, biomes, resources and regions, each writing its layer; image export per layer | P0 | **In progress** since 2026-11-15: first three specs approved, shared foundation merged, elevation design settled and spec approved 2026-11-16, implementation under way |
+| **P1 Geography** | Elevation, erosion, hydrology, climate, biomes, resources and regions, each writing its layer; image export per layer | P0 | **In progress** since 2026-11-15: first three specs approved, shared foundation merged; elevation merged 2026-11-16; hydrology next |
 | **P2 Godot bring-up and viewer v0** | Godot version pinned, C++ extension building on Linux and Windows, `world.db` reader bound into Godot, 2D map with switchable layers | P0; parallel with P1 | **Done** 2026-11-15, awaiting Paul's hands-on review. Godot 4.7.2 and godot-cpp 10.0.0 pinned; the extension builds and its headless check passes on Linux and Windows |
 | **P3 History core** | Race and culture definitions, ages and the awakening schedule, active phases and quiet intervals, civilizations, settlements, wars, ruin, the event log, a text history report | P1 | Not started |
 | **P4 Viewer v1** | Timeline scrubber, territory by year, settlement and site markers, browser for civilizations and events | P2, P3; parallel with P5 | Not started |
@@ -121,47 +122,66 @@ Around them: about 300 automated test cases, 2,201 golden vectors for the core p
 
 ## What works today
 
-`worldgen-cli` writes world files and inspects them. A world is currently either empty (metadata only) or, with `--test-pattern`, holds three 256 × 256 test layers that exercise hashing, noise and the layer codec.
+`worldgen-cli` writes world files and inspects them. A generated world currently holds one geography layer, elevation, on a 512, 1024 or 2048 cell map at 16 m per cell.
 
 ```
-$ worldgen-cli generate --seed-phrase "The Unmapped" --test-pattern
+$ worldgen-cli generate --seed-phrase "The Unmapped"
 /home/you/.cache/the-unmapped/out/world-15629206466951235176.db
 
 $ worldgen-cli report --db ~/.cache/the-unmapped/out/world-15629206466951235176.db
 # worldgen report v2
 [meta]
-content_hash = e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+content_hash = 93b32f51e51e2c28365c5a7f0de437eaf20a6124a6f5c53b1b468381268eb7ad
 format = the-unmapped-world
-generator_version = 0.2.0
+generator_version = 0.3.0
 param.map_size = 1024
 schema_version = 1
 seed = 15629206466951235176
 seed_phrase = the unmapped
-stages = test_pattern
+stages = elevation
 [tables]
-layer = 3
+layer = 1
 meta = 8
 [layers]
-test.ramp u8 256x256 codec=1 bytes=65818 min=0 max=255
-test.hash u8 256x256 codec=1 bytes=102697 min=0 max=255
-test.noise i16 256x256 codec=1 bytes=127365 min=-18503 max=16378
+elevation i16 1024x1024 codec=1 bytes=1175914 min=-2306 max=19802
+[geography]
+cells = 1048576
+land_cells = 419430
+ocean_cells = 629146
+land_fraction = 0.4000
+landmasses = 1
+largest_landmass_share = 1.0000
+coastline_m = 60320
+coast_ratio = 1.6421
+land_solidity = 0.8933
+elevation_m = 0.1 4.2 41.8 64.2 116.3 565.0 954.1 1531.6 1980.2
+depth_m = 2.9 140.8 230.6
+land_above_m = 50:0.8348 500:0.2826 1000:0.0869 1500:0.0119 2000:0.0000
+max_step_m = 77.2
+step_p999_m = 59.6
+slope_over = 35:0.3160 45:0.2190
+slope_p50_above_500m = 1.1419
+lowland_flat_share = 0.0161
+edge_parallel_run_m = 2288
 
 $ worldgen-cli hash --db ~/.cache/the-unmapped/out/world-15629206466951235176.db
-0435fc23ef1bd6ae7cc55f3a93dbf3c0d84fe6e07aa3b9c2737cff62762aaa9f
+79b31dfb25685f2acde1f0930e11f649ac41fa28ad97d39823c91ef7baa0e9b3
 
-$ worldgen-cli render --db ~/.cache/the-unmapped/out/world-15629206466951235176.db --layer test.noise --scale 2
-/home/you/.cache/the-unmapped/out/world-15629206466951235176.test.noise.png
+$ worldgen-cli render --db ~/.cache/the-unmapped/out/world-15629206466951235176.db --composite map
+/home/you/.cache/the-unmapped/out/world-15629206466951235176.map.png
 ```
 
-That hash is the same on every supported compiler and platform. A seed phrase is scrubbed before use (lower-cased, with everything other than a to z and 0 to 9 treated as a space), so `"the-unmapped!"` and `"THE  UNMAPPED"` give this same world. The rendered noise layer, the raw material P1's elevation stage will shape into a continent:
+That hash is the same on every supported compiler and platform, and with any number of threads. A seed phrase is scrubbed before use (lower-cased, with everything other than a to z and 0 to 9 treated as a space), so `"the-unmapped!"` and `"THE  UNMAPPED"` give this same world. The rendered map, about 16 km across with peaks near 2,000 m:
 
-![The test.noise layer of the world generated from the phrase "The Unmapped"](docs/images/p0-test-noise.png)
+![Shaded relief map of the world generated from the phrase "The Unmapped"](docs/images/p1-elevation-map.jpg)
+
+A 1024 world takes about 7 seconds on six cores. `--until none` writes an empty world, and `--test-pattern` writes three small test layers that exercise hashing, noise and the layer codec.
 
 | Command | Does |
 | --- | --- |
-| `generate` | Writes a world file from `--seed N` (decimal or `0x` hex) or `--seed-phrase TEXT` (scrubbed; a phrase is never read as a number). Options: `--out`, `--map-size 512\|1024\|2048`, `--settings FILE`, `--data DIR`, `--test-pattern`, `--force` |
-| `report` | Prints the metadata, row counts per table, and each layer's type, size and value range |
-| `render` | Exports a layer as a grayscale PNG, with `--scale 1..16` |
+| `generate` | Writes a world file from `--seed N` (decimal or `0x` hex) or `--seed-phrase TEXT` (scrubbed; a phrase is never read as a number). Options: `--out`, `--map-size 512\|1024\|2048`, `--settings FILE`, `--data DIR`, `--until STAGE\|none`, `--threads N`, `--test-pattern`, `--force` |
+| `report` | Prints the metadata, row counts per table, each layer's type, size and value range, and geography statistics |
+| `render` | Exports a layer as a PNG with `--layer NAME` and a palette, or a shaded relief map with `--composite map`; `--scale 1..16` |
 | `hash` | Prints the SHA-256 of the file (equal to `sha256sum`). `--detail` adds separate hashes of the schema, each table and each layer, to locate a difference; `--expect HEX` checks against a known value |
 
 Output goes under `~/.cache/the-unmapped/out/` unless `--out` says otherwise, never into the current directory. `worldgen-cli <command> --help` lists every option.
