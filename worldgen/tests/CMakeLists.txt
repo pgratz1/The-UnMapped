@@ -101,3 +101,6 @@ target_sources(worldgen-tests PRIVATE
 target_compile_definitions(worldgen-tests PRIVATE
     UNMAPPED_TEST_SOURCE_ROOT="${PROJECT_SOURCE_DIR}"
 )
+# The step, slope and edge-run statistics of [geography] (spec P1-00 10.3,
+# the five keys added 2026-11-15), and the slope reference world.
+target_sources(worldgen-tests PRIVATE inspect_geography_slope_test.cpp)

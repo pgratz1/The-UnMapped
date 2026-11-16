@@ -41,3 +41,6 @@ target_sources(worldgen-cli-tests PRIVATE cli_geography_test.cpp)
 # P1 foundation: generate --until and --threads (spec P1-00 section 10.1,
 # P0-04 amendment 16 (a)); the P0 worlds unchanged.
 target_sources(worldgen-cli-tests PRIVATE cli_p1_generate_test.cpp)
+# report with the step, slope and edge-run statistics (P1-00 10.3, keys of
+# 2026-11-15); generate --data "" (P0-03 7.6); the composite size limit.
+target_sources(worldgen-cli-tests PRIVATE cli_slope_report_test.cpp)

@@ -72,14 +72,30 @@ TEST_CASE("data root 7.6: otherwise the configured root") {
     CHECK(r.path == expected_configured_root());
 }
 
-TEST_CASE("data root 7.6: an empty --data value") {
-    // The header says the flag is used "even if empty", and also that the
-    // path is empty exactly when the source is none: the two statements
-    // cannot both hold for --data "". Recorded, not asserted beyond the
-    // flag winning.
-    const wd::DataRoot r = wd::resolve_data_root(std::string_view(""), std::string_view("/from/env"));
-    MESSAGE("resolve_data_root(\"\", env): path '", r.path, "', source ", static_cast<int>(r.source));
-    CHECK(r.source != DataRootSource::environment);
+TEST_CASE("data root 7.6, appendix C 16: an empty --data value is no data root") {
+    // data_root.hpp: a flag given but empty resolves to no data root (path
+    // empty, source none), never falling back to the environment or the
+    // configured root, whether or not the environment value is set.
+    for (const std::optional<std::string_view> env :
+         {std::optional<std::string_view>(std::string_view("/from/env")),
+          std::optional<std::string_view>(std::string_view("")), std::optional<std::string_view>()}) {
+        CAPTURE(env.has_value());
+        const wd::DataRoot r = wd::resolve_data_root(std::string_view(""), env);
+        CHECK(r.source == DataRootSource::none);
+        CHECK(r.path.empty());
+    }
+}
+
+TEST_CASE("data root 7.6: the path is empty exactly when the source is none") {
+    using O = std::optional<std::string_view>;
+    for (const O flag : {O(), O(std::string_view("")), O(std::string_view("/f")), O(std::string_view("rel"))}) {
+        for (const O env : {O(), O(std::string_view("")), O(std::string_view("/e"))}) {
+            const wd::DataRoot r = wd::resolve_data_root(flag, env);
+            CAPTURE(flag.has_value());
+            CAPTURE(env.has_value());
+            CHECK(r.path.empty() == (r.source == DataRootSource::none));
+        }
+    }
 }
 
 TEST_CASE("data root, amendment 9: with no kind registered a nonexistent root is not opened and changes nothing") {
