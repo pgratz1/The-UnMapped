@@ -2,6 +2,7 @@
 
 #include "worldgen/inspect/render.hpp"
 
+#include <algorithm>
 #include <cstddef>
 #include <limits>
 #include <type_traits>
@@ -552,6 +553,11 @@ std::optional<std::string> u8_companion_problem(const db::LayerGrid* grid, std::
 
 std::optional<std::string> composite_map_problem(const db::LayerGrid& elevation, const db::LayerGrid* water,
                                                  const db::LayerGrid* river) {
+    return composite_map_problem(elevation, water, river, nullptr);
+}
+
+std::optional<std::string> composite_map_problem(const db::LayerGrid& elevation, const db::LayerGrid* water,
+                                                 const db::LayerGrid* river, const db::LayerGrid* flow_dir) {
     if (!db::is_valid_layer_grid(elevation)) {
         return std::string("layer 'elevation' is not a valid grid");
     }
@@ -561,12 +567,93 @@ std::optional<std::string> composite_map_problem(const db::LayerGrid& elevation,
     if (std::optional<std::string> p = u8_companion_problem(water, "water", elevation)) {
         return p;
     }
-    return u8_companion_problem(river, "river", elevation);
+    if (std::optional<std::string> p = u8_companion_problem(river, "river", elevation)) {
+        return p;
+    }
+    return u8_companion_problem(flow_dir, "flow_dir", elevation);
 }
+
+Rgb composite_river_colour(std::uint64_t k) noexcept {
+    switch (k) {
+        case 0U: return MAGENTA;
+        case 1U: return Rgb{70, 125, 215};
+        case 2U: return Rgb{55, 110, 210};
+        case 3U: return Rgb{40, 95, 200};
+        case 4U: return Rgb{30, 80, 190};
+        case 5U: return Rgb{25, 65, 175};
+        default: return Rgb{20, 50, 160};
+    }
+}
+
+namespace {
+
+// One entry of the river paint list of P1-00 10.2 composite step 4.
+struct RiverPaint {
+    std::int64_t x;
+    std::int64_t y;
+    std::uint8_t k;
+};
+
+// D8 x offsets (P1-00 2.3): 0 E, 1 SE, 2 S, 3 SW, 4 W, 5 NW, 6 N, 7 NE.
+constexpr std::int64_t RIVER_D8_DX[8] = {1, 1, 0, -1, -1, -1, 0, 1};
+
+// Step 4 of the composite map: rivers drawn over the cell colours of steps
+// 1 to 3.
+void paint_rivers(std::vector<Rgb>& colour, std::uint32_t w, std::uint32_t h, const std::vector<std::uint8_t>& wc,
+                  const std::vector<std::uint8_t>& rc, const std::vector<std::uint8_t>* fd) {
+    // The paint list, built by scanning the river cells in index order.
+    std::vector<RiverPaint> list;
+    for (std::size_t i = 0; i < wc.size(); ++i) {
+        if (wc[i] != 1U) {
+            continue;
+        }
+        const auto x = static_cast<std::int64_t>(i % w);
+        const auto y = static_cast<std::int64_t>(i / w);
+        const std::uint8_t k = rc[i];
+        if (k == 0U) {
+            continue;  // class 0 (a hand-made layer only): no entry, not painted
+        }
+        list.push_back(RiverPaint{x, y, k});
+        if (fd != nullptr) {
+            const std::uint8_t d = (*fd)[i];
+            // Odd codes 1, 3, 5, 7 are diagonal steps; 8 (or an invalid
+            // code above 7) is not.
+            if (d <= 7U && (d & 1U) != 0U) {
+                list.push_back(RiverPaint{x + RIVER_D8_DX[d], y, k});
+            }
+        }
+        if (k >= 4U) {
+            list.push_back(RiverPaint{x + 1, y, k});
+            list.push_back(RiverPaint{x, y + 1, k});
+        }
+    }
+    // Ascending k; equal k in list order (stable), a later entry overwrites.
+    std::stable_sort(list.begin(), list.end(), [](const RiverPaint& a, const RiverPaint& b) { return a.k < b.k; });
+    const auto wi = static_cast<std::int64_t>(w);
+    const auto hi = static_cast<std::int64_t>(h);
+    for (const RiverPaint& p : list) {
+        if (p.x < 0 || p.y < 0 || p.x >= wi || p.y >= hi) {
+            continue;  // never off the map
+        }
+        const auto j = static_cast<std::size_t>(p.y * wi + p.x);
+        if (wc[j] > 1U) {
+            continue;  // never over a lake or ocean cell
+        }
+        colour[j] = composite_river_colour(p.k);
+    }
+}
+
+}  // namespace
 
 std::vector<std::uint8_t> render_composite_map(const db::LayerGrid& elevation, const db::LayerGrid* water,
                                                const db::LayerGrid* river, std::uint32_t scale) {
-    if (composite_map_problem(elevation, water, river)) {
+    return render_composite_map(elevation, water, river, nullptr, scale);
+}
+
+std::vector<std::uint8_t> render_composite_map(const db::LayerGrid& elevation, const db::LayerGrid* water,
+                                               const db::LayerGrid* river, const db::LayerGrid* flow_dir,
+                                               std::uint32_t scale) {
+    if (composite_map_problem(elevation, water, river, flow_dir)) {
         fatal("render_composite_map: unsuitable layers");
     }
     std::vector<std::uint8_t> rgb(
@@ -574,26 +661,36 @@ std::vector<std::uint8_t> render_composite_map(const db::LayerGrid& elevation, c
     const std::vector<std::int16_t>& e = *elevation.get_if<std::int16_t>();
     const std::vector<std::uint8_t>* wcells = water == nullptr ? nullptr : water->get_if<std::uint8_t>();
     const std::vector<std::uint8_t>* rcells = river == nullptr ? nullptr : river->get_if<std::uint8_t>();
+    const std::vector<std::uint8_t>* fcells = flow_dir == nullptr ? nullptr : flow_dir->get_if<std::uint8_t>();
     const std::uint32_t w = elevation.width;
     const std::uint32_t h = elevation.height;
-    fill_buffer(rgb, w, h, scale, [&](std::size_t i) {
+    // Steps 1 to 3 per cell (and step 4 without `river`), then step 4.
+    std::vector<Rgb> colour(e.size());
+    for (std::size_t i = 0; i < e.size(); ++i) {
         if (wcells != nullptr) {
             const std::uint8_t cat = (*wcells)[i];
             if (cat == 2U) {
-                return Rgb{64, 128, 204};
+                colour[i] = Rgb{64, 128, 204};
+                continue;
             }
-            if (cat == 1U) {
-                return rcells == nullptr ? Rgb{52, 100, 200} : river_colour((*rcells)[i]);
+            if (cat == 1U && rcells == nullptr) {
+                colour[i] = Rgb{52, 100, 200};
+                continue;
             }
         }
         const std::int64_t v = e[i];
         if (v < 0) {
-            return hypsometric_ocean_colour(-v);
+            colour[i] = hypsometric_ocean_colour(-v);
+            continue;
         }
         const auto x = static_cast<std::uint32_t>(i % w);
         const auto y = static_cast<std::uint32_t>(i / w);
-        return shade_colour(hypsometric_land_colour(v), hillshade_factor(e, w, h, x, y));
-    });
+        colour[i] = shade_colour(hypsometric_land_colour(v), hillshade_factor(e, w, h, x, y));
+    }
+    if (wcells != nullptr && rcells != nullptr) {
+        paint_rivers(colour, w, h, *wcells, *rcells, fcells);
+    }
+    fill_buffer(rgb, w, h, scale, [&](std::size_t i) { return colour[i]; });
     return rgb;
 }
 

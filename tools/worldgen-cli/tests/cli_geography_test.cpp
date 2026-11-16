@@ -211,9 +211,21 @@ TEST_CASE("cli 10.2: render --composite map") {
             REQUIRE(render(sb, world, {"--composite", "map"}).exit_code == EXIT_OK);
             return read_bytes(sb.out_dir() / "worked.map.png");
         }();
+        // Without flow_dir, no corner closing (P1-00 10.2 step 4): the worked
+        // example's river cell (3, 4) steps SE, so the full world paints
+        // (4, 4) as well.
+        std::vector<FixtureLayer> no_dir;
+        for (const FixtureLayer& l : all) {
+            if (l.name != "flow_dir") {
+                no_dir.push_back(l);
+            }
+        }
+        const fs::path w3 = world_of(sb, "nd.db", no_dir);
+        REQUIRE(render(sb, w3, {"--composite", "map"}).exit_code == EXIT_OK);
         CHECK(e != ew);    // water draws the lake and the rivers
         CHECK(ew != full); // river gives the rivers their class colour
         CHECK(er == e);    // river without water is not used
+        CHECK(read_bytes(sb.out_dir() / "nd.map.png") != full);  // flow_dir closes the diagonal's corner
     }
 }
 

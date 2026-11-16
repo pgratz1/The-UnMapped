@@ -677,11 +677,13 @@ Exit run_render(const Options& options) {
     const db::LayerGrid grid = read_render_layer(world, composite ? std::string("elevation") : *layer_option, progress);
     std::optional<db::LayerGrid> water;
     std::optional<db::LayerGrid> river;
+    std::optional<db::LayerGrid> flow_dir;
     if (composite) {
         water = read_optional_layer(world, "water", progress);
         river = read_optional_layer(world, "river", progress);
-        if (const std::optional<std::string> problem =
-                inspect::composite_map_problem(grid, water ? &*water : nullptr, river ? &*river : nullptr)) {
+        flow_dir = read_optional_layer(world, "flow_dir", progress);
+        if (const std::optional<std::string> problem = inspect::composite_map_problem(
+                grid, water ? &*water : nullptr, river ? &*river : nullptr, flow_dir ? &*flow_dir : nullptr)) {
             throw Failure(Exit::input, "cannot render the composite map: " + *problem + "; " + layer_name_list(world));
         }
     } else if (palette && !inspect::palette_suits(*palette, grid)) {
@@ -712,7 +714,8 @@ Exit run_render(const Options& options) {
     if (composite) {
         progress.note("rendering " + format_u64(width) + " x " + format_u64(height) + " pixels, composite " +
                       image_name);
-        rgb = inspect::render_composite_map(grid, water ? &*water : nullptr, river ? &*river : nullptr, scale);
+        rgb = inspect::render_composite_map(grid, water ? &*water : nullptr, river ? &*river : nullptr,
+                                            flow_dir ? &*flow_dir : nullptr, scale);
     } else {
         const inspect::Palette chosen = palette.value_or(inspect::auto_palette(*layer_option, grid));
         if (!palette && chosen != inspect::registered_palette(*layer_option)) {

@@ -113,7 +113,7 @@ takes the argument bytes exactly as passed to `generate --seed-phrase` (any
 bytes, not only UTF-8); the expected `seed_phrase` row is the scrubbed phrase
 and the expected seed its `phrase_seed` (P0-01 7.3, P0-02 amendment 12). The
 expected `generator_version` is the constant `GENERATOR_VERSION` at the top of
-the script (`0.4.0`), overridable with `--generator-version`; the expected
+the script (`0.5.0`), overridable with `--generator-version`; the expected
 `content_hash` is that of no data unless `--content-hash` gives another (worlds
 written by `worldgen-cli` carry the hash of the loaded data, P0-03 amendment
 17). It was used
@@ -198,7 +198,7 @@ Dijkstra chamfer) through the invariants of P1-02 section 6.
 ```
 python3 -B worldgen/tests/reference/p1_hydrology_reference.py check [--quick]
 python3 -B worldgen/tests/reference/p1_hydrology_reference.py case shipped|small N SEED [AREA]
-python3 -B worldgen/tests/reference/p1_hydrology_reference.py golden [PATH|-] [--large]
+python3 -B worldgen/tests/reference/p1_hydrology_reference.py golden [PATH|-] [--large] [--legacy]
 python3 -B worldgen/tests/reference/p1_hydrology_reference.py fixtures
 ```
 
@@ -223,3 +223,21 @@ The random fixtures of 8.2: fixture f is a 34 x 34 grid drawn in index order
 from `Rng(substream(stream_key(0, "test.hydro"), f))`, `uniform_i64(-50, -1)`
 on the border and `uniform_i64(1, 200)` inside; the golden file holds
 fixtures 0 to 3 with `river_min_area_m2` 2048 (T = 8).
+
+The H2 tie-break (P1-02 H2, amended 2026-11-16 and re-specified the same day
+as variant B, generator 0.5.0): hydrology's own flood with L[m] = max(e[m],
+L[c]), cells visited when pushed, pushed with key L[m] × 2^16 + t[m] and
+popped by the smallest (key, seq) (a binary heap; `check` compares it with a
+sorted-list queue, and at t = 0 with the bucket-queue G3); G4 runs on the
+decimetre levels with the flood parent as fallback. `check` reproduces worked
+example 5.2 for both tie settings. t is `flat_tie`
+(`fbm_m` of stream `geo.hydrology.flat` with `flat_noise`, shipped wavelength
+400, octaves 1, gain 0.5) for the world cases, the random ties of 8.2
+(`uniform_i64(0, 65535)` per land cell from `Rng(substream(stream_key(0,
+"test.hydro"), 1000 + f))`) for the random fixtures, and 0 for the case marked
+`zero`. `golden --legacy` writes every case with t = 0 in the item list of the
+0.4.0 file; it reproduces that file byte for byte, which shows that t = 0 is
+the stage without the tie-break (P1-02 H2, "t = 0"). `check` also tests
+invariant 11 (equal `water_depth`, `lake`, `coast_dist`, lake and ocean cells
+and decimetre levels with and without t) on the random fixtures with random t
+and on the golden worlds with `flat_tie`.

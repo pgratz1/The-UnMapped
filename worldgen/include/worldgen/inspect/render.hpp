@@ -262,20 +262,44 @@ enum class Composite : std::uint8_t {
 [[nodiscard]] std::optional<std::string> composite_map_problem(const db::LayerGrid& elevation,
                                                                const db::LayerGrid* water,
                                                                const db::LayerGrid* river);
+// As above, with flow_dir, when given, also a valid u8 grid of that size.
+[[nodiscard]] std::optional<std::string> composite_map_problem(const db::LayerGrid& elevation,
+                                                               const db::LayerGrid* water,
+                                                               const db::LayerGrid* river,
+                                                               const db::LayerGrid* flow_dir);
+
+// The river colour of class k in the composite map (P1-00 10.2 step 4):
+// 1 (70, 125, 215), 2 (55, 110, 210), 3 (40, 95, 200), 4 (30, 80, 190),
+// 5 (25, 65, 175), 6 and above (20, 50, 160); 0 is not a river class and
+// gives magenta (255, 0, 255). Not the `river` palette of --layer river.
+[[nodiscard]] Rgb composite_river_colour(std::uint64_t k) noexcept;
 
 // The RGB buffer of the composite map (P1-00 10.2), laid out as render_rgb.
 // Per cell, with e the elevation:
 //   1. e < 0: hypsometric_ocean_colour(-e);
 //   2. otherwise (e = 0 included): shade_colour(hypsometric_land_colour(e),
 //      hillshade_factor(...));
-//   3. if water is given: a cell with water 2 is (64, 128, 204); a cell with
-//      water 1 is river_colour of its river class, or (52, 100, 200) when
-//      river is not given. Step 3 replaces the colour of steps 1 and 2
-//      whatever e is. river without water is not used.
-// FatalError if composite_map_problem reports a problem or scale is outside
-// 1..16 or the buffer size does not fit in std::size_t.
+//   3. if water is given: a cell with water 2 is (64, 128, 204), replacing
+//      the colour of steps 1 and 2 whatever e is;
+//   4. rivers, if water is given (amended 2026-11-16): without river, every
+//      cell with water 1 is (52, 100, 200). With river, a paint list is built
+//      by scanning the cells with water 1 in index order; for (x, y) of class
+//      k: (x, y, k); if flow_dir is given and its code d at the cell is odd
+//      (a diagonal step), (x + dx(d), y, k), closing the corner; if k >= 4,
+//      (x + 1, y, k) then (x, y + 1, k). Entries are painted in ascending k,
+//      equal k in list order (later overwrites), each only if its cell is
+//      inside the map and has water 0 or 1, in composite_river_colour(k),
+//      unshaded. river without water is not used; a flow_dir code above 7
+//      is not diagonal; a river cell of class 0 adds no entry.
+// The four-layer form is the five-layer form without flow_dir. FatalError if
+// composite_map_problem reports a problem or scale is outside 1..16 or the
+// buffer size does not fit in std::size_t.
 [[nodiscard]] std::vector<std::uint8_t> render_composite_map(const db::LayerGrid& elevation,
                                                              const db::LayerGrid* water,
                                                              const db::LayerGrid* river, std::uint32_t scale);
+[[nodiscard]] std::vector<std::uint8_t> render_composite_map(const db::LayerGrid& elevation,
+                                                             const db::LayerGrid* water,
+                                                             const db::LayerGrid* river,
+                                                             const db::LayerGrid* flow_dir, std::uint32_t scale);
 
 }  // namespace worldgen::inspect

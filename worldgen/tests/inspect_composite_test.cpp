@@ -14,6 +14,8 @@
 #include <vector>
 
 #include "p0_04_reference.hpp"
+#include "p1_00_composite_api.hpp"
+#include "p1_00_composite_reference.hpp"
 #include "worldgen/core/error.hpp"
 #include "worldgen/db/layer_blob.hpp"
 #include "worldgen/inspect/render.hpp"
@@ -23,7 +25,6 @@ namespace {
 using worldgen::FatalError;
 using worldgen::db::LayerGrid;
 using worldgen::inspect::hillshade_factor;
-using worldgen::inspect::render_composite_map;
 using worldgen::inspect::Rgb;
 using worldgen::inspect::shade_colour;
 using Pixels = std::vector<std::uint8_t>;
@@ -221,8 +222,8 @@ TEST_CASE("composite 10.2: elevation only, and each optional layer added") {
     const LayerGrid rg = p004::grid_of<std::uint8_t>(w, h, river);
 
     SUBCASE("elevation only") {
-        CHECK(!worldgen::inspect::composite_map_problem(elev, nullptr, nullptr).has_value());
-        const Pixels px = render_composite_map(elev, nullptr, nullptr, 1);
+        CHECK(!comp_api::problem(elev, nullptr, nullptr, nullptr).has_value());
+        const Pixels px = comp_api::render_map(elev, nullptr, nullptr, nullptr, 1);
         REQUIRE(px.size() == 3U * w * h);
         for (std::uint32_t y = 0; y < h; ++y) {
             for (std::uint32_t x = 0; x < w; ++x) {
@@ -242,8 +243,8 @@ TEST_CASE("composite 10.2: elevation only, and each optional layer added") {
         CHECK(pixel_at(px, w, 3, 0) == Rgb{96, 165, 88});
     }
     SUBCASE("with water: lakes and rivers without classes") {
-        CHECK(!worldgen::inspect::composite_map_problem(elev, &wg, nullptr).has_value());
-        const Pixels px = render_composite_map(elev, &wg, nullptr, 1);
+        CHECK(!comp_api::problem(elev, &wg, nullptr, nullptr).has_value());
+        const Pixels px = comp_api::render_map(elev, &wg, nullptr, nullptr, 1);
         for (std::uint32_t y = 0; y < h; ++y) {
             for (std::uint32_t x = 0; x < w; ++x) {
                 const std::uint8_t v = water[y * w + x];
@@ -253,33 +254,43 @@ TEST_CASE("composite 10.2: elevation only, and each optional layer added") {
             }
         }
     }
-    SUBCASE("with water and river: rivers take the river palette") {
-        CHECK(!worldgen::inspect::composite_map_problem(elev, &wg, &rg).has_value());
-        const Pixels px = render_composite_map(elev, &wg, &rg, 1);
+    SUBCASE("with water and river: rivers drawn by step 4 (amended 2026-11-16), no flow_dir") {
+        CHECK(!comp_api::problem(elev, &wg, &rg, nullptr).has_value());
+        const Pixels px = comp_api::render_map(elev, &wg, &rg, nullptr, 1);
+        std::vector<Rgb> base;
         for (std::uint32_t y = 0; y < h; ++y) {
             for (std::uint32_t x = 0; x < w; ++x) {
-                const std::size_t i = y * w + x;
-                const Rgb want = water[i] == 2   ? LAKE
-                                 : water[i] == 1 ? worldgen::inspect::river_colour(river[i])
-                                                 : ref_base(e, w, h, x, y);
-                INFO("cell ", x, ",", y);
-                CHECK(pixel_at(px, w, x, y) == want);
+                base.push_back(ref_base(e, w, h, x, y));
             }
         }
-        // Classes 1, 7, 15, 4 (P1-00 10.2 river palette, written out).
-        CHECK(pixel_at(px, w, 3, 0) == Rgb{120, 170, 230});
-        CHECK(pixel_at(px, w, 0, 1) == Rgb{30, 70, 190});
-        CHECK(pixel_at(px, w, 3, 1) == Rgb{30, 70, 190});
-        CHECK(pixel_at(px, w, 2, 2) == Rgb{60, 110, 210});
-        // A lake cell keeps the lake colour whatever its river value.
+        const std::vector<Rgb> want = comp_ref::overlay(w, h, base, &water, &river, nullptr);
+        for (std::uint32_t y = 0; y < h; ++y) {
+            for (std::uint32_t x = 0; x < w; ++x) {
+                INFO("cell ", x, ",", y);
+                CHECK(pixel_at(px, w, x, y) == want[y * w + x]);
+            }
+        }
+        // By hand: (3, 0) class 1 (70, 125, 215); (0, 1) class 7 and (3, 1)
+        // class 15 (20, 50, 160); (2, 2) class 4 (30, 80, 190); class 7 at
+        // (0, 1) thickens east onto dry (1, 1); class 15 at (3, 1) thickens
+        // south onto (3, 2), painted after class 4's east step there.
+        CHECK(pixel_at(px, w, 3, 0) == Rgb{70, 125, 215});
+        CHECK(pixel_at(px, w, 0, 1) == Rgb{20, 50, 160});
+        CHECK(pixel_at(px, w, 3, 1) == Rgb{20, 50, 160});
+        CHECK(pixel_at(px, w, 2, 2) == Rgb{30, 80, 190});
+        CHECK(pixel_at(px, w, 1, 1) == Rgb{20, 50, 160});
+        CHECK(pixel_at(px, w, 3, 2) == Rgb{20, 50, 160});
+        // A lake cell keeps the lake colour; (0, 2) is ocean (water 3) below
+        // the class-7 cell and keeps its ocean colour.
         CHECK(pixel_at(px, w, 1, 0) == LAKE);
+        CHECK(pixel_at(px, w, 0, 2) == ref_base(e, w, h, 0, 2));
     }
     SUBCASE("river without water is not used") {
-        CHECK(render_composite_map(elev, nullptr, &rg, 1) == render_composite_map(elev, nullptr, nullptr, 1));
+        CHECK(comp_api::render_map(elev, nullptr, &rg, nullptr, 1) == comp_api::render_map(elev, nullptr, nullptr, nullptr, 1));
     }
     SUBCASE("scale 2 repeats each cell's colour in a 2 x 2 block") {
-        const Pixels one = render_composite_map(elev, &wg, &rg, 1);
-        const Pixels two = render_composite_map(elev, &wg, &rg, 2);
+        const Pixels one = comp_api::render_map(elev, &wg, &rg, nullptr, 1);
+        const Pixels two = comp_api::render_map(elev, &wg, &rg, nullptr, 2);
         REQUIRE(two.size() == 4U * one.size());
         for (std::uint32_t y = 0; y < 2 * h; ++y) {
             for (std::uint32_t x = 0; x < 2 * w; ++x) {
@@ -295,7 +306,7 @@ TEST_CASE("composite 10.2, appendix C 3: elevation 0 in the composite") {
     // (Appendix C item 3 says the composite counts 0 as neither land nor
     // ocean, without giving a colour; this test follows the step order of
     // 10.2, which is also what the header documents.)
-    const Pixels px = render_composite_map(p004::grid_of<std::int16_t>(2, 1, {0, 0}), nullptr, nullptr, 1);
+    const Pixels px = comp_api::render_map(p004::grid_of<std::int16_t>(2, 1, {0, 0}), nullptr, nullptr, nullptr, 1);
     CHECK(pixel_at(px, 2, 0, 0) == Rgb{70, 120, 64});
     CHECK(pixel_at(px, 2, 1, 0) == Rgb{70, 120, 64});
     // And it differs from what --layer elevation (hypsometric) draws for 0.
@@ -303,7 +314,6 @@ TEST_CASE("composite 10.2, appendix C 3: elevation 0 in the composite") {
 }
 
 TEST_CASE("composite appendix C 4: layers that stop the composite") {
-    using worldgen::inspect::composite_map_problem;
     const LayerGrid elev = p004::grid_of<std::int16_t>(2, 2, {1, 2, -1, -2});
     const LayerGrid water = p004::grid_of<std::uint8_t>(2, 2, {0, 0, 3, 3});
     const LayerGrid river = p004::grid_of<std::uint8_t>(2, 2, {0, 0, 0, 0});
@@ -313,31 +323,31 @@ TEST_CASE("composite appendix C 4: layers that stop the composite") {
     // Elevation of the wrong type.
     const LayerGrid elev_u16 = p004::grid_of<std::uint16_t>(2, 2, {1, 2, 3, 4});
     const LayerGrid elev_i32 = p004::grid_of<std::int32_t>(2, 2, {1, 2, -1, -2});
-    CHECK(names(composite_map_problem(elev_u16, nullptr, nullptr), "elevation"));
-    CHECK(names(composite_map_problem(elev_i32, &water, &river), "elevation"));
+    CHECK(names(comp_api::problem(elev_u16, nullptr, nullptr, nullptr), "elevation"));
+    CHECK(names(comp_api::problem(elev_i32, &water, &river, nullptr), "elevation"));
     // Invalid elevation grid.
-    CHECK(composite_map_problem(p004::grid_of<std::int16_t>(2, 2, {1}), nullptr, nullptr).has_value());
+    CHECK(comp_api::problem(p004::grid_of<std::int16_t>(2, 2, {1}), nullptr, nullptr, nullptr).has_value());
     // Optional layers of the wrong type.
     const LayerGrid water_i16 = p004::grid_of<std::int16_t>(2, 2, {0, 0, 3, 3});
     const LayerGrid river_u16 = p004::grid_of<std::uint16_t>(2, 2, {0, 0, 0, 0});
-    CHECK(names(composite_map_problem(elev, &water_i16, nullptr), "water"));
-    CHECK(names(composite_map_problem(elev, &water, &river_u16), "river"));
+    CHECK(names(comp_api::problem(elev, &water_i16, nullptr, nullptr), "water"));
+    CHECK(names(comp_api::problem(elev, &water, &river_u16, nullptr), "river"));
     // Optional layers of the wrong size.
     const LayerGrid water_small = p004::grid_of<std::uint8_t>(2, 1, {0, 0});
     const LayerGrid river_wide = p004::grid_of<std::uint8_t>(4, 1, {0, 0, 0, 0});
-    CHECK(names(composite_map_problem(elev, &water_small, nullptr), "water"));
-    CHECK(names(composite_map_problem(elev, &water, &river_wide), "river"));
+    CHECK(names(comp_api::problem(elev, &water_small, nullptr, nullptr), "water"));
+    CHECK(names(comp_api::problem(elev, &water, &river_wide, nullptr), "river"));
     // An optional layer of the wrong type is a failure (appendix C item 4),
     // also river when water is absent and river would not be drawn.
-    CHECK(names(composite_map_problem(elev, nullptr, &river_u16), "river"));
+    CHECK(names(comp_api::problem(elev, nullptr, &river_u16, nullptr), "river"));
     // All good.
-    CHECK(!composite_map_problem(elev, &water, &river).has_value());
+    CHECK(!comp_api::problem(elev, &water, &river, nullptr).has_value());
     // render_composite_map refuses the same.
-    CHECK_THROWS_AS((void)render_composite_map(elev_u16, nullptr, nullptr, 1), FatalError);
-    CHECK_THROWS_AS((void)render_composite_map(elev, &water_small, nullptr, 1), FatalError);
-    CHECK_THROWS_AS((void)render_composite_map(elev, &water, &river_u16, 1), FatalError);
-    CHECK_THROWS_AS((void)render_composite_map(elev, nullptr, nullptr, 0), FatalError);
-    CHECK_THROWS_AS((void)render_composite_map(elev, nullptr, nullptr, 17), FatalError);
+    CHECK_THROWS_AS((void)comp_api::render_map(elev_u16, nullptr, nullptr, nullptr, 1), FatalError);
+    CHECK_THROWS_AS((void)comp_api::render_map(elev, &water_small, nullptr, nullptr, 1), FatalError);
+    CHECK_THROWS_AS((void)comp_api::render_map(elev, &water, &river_u16, nullptr, 1), FatalError);
+    CHECK_THROWS_AS((void)comp_api::render_map(elev, nullptr, nullptr, nullptr, 0), FatalError);
+    CHECK_THROWS_AS((void)comp_api::render_map(elev, nullptr, nullptr, nullptr, 17), FatalError);
 }
 
 TEST_CASE("composite: names") {

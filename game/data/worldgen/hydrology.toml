@@ -1,2 +1,3 @@
 [worldgen.hydrology]
 river_min_area_m2 = 125000
+flat_noise = { wavelength_m = 400, octaves = 1, gain = "0.5" }

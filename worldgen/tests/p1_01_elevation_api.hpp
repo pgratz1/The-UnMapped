@@ -32,7 +32,7 @@ using worldgen::geo::Grid;
 
 // The hydrology fixture of P1-02 section 4 (needed beside elevation.toml
 // when the `worldgen` kind's id set includes `hydrology`, P1-00 6.1).
-inline constexpr std::string_view HYDROLOGY_TOML = "[worldgen.hydrology]\nriver_min_area_m2 = 125000\n";
+inline constexpr std::string_view HYDROLOGY_TOML = "[worldgen.hydrology]\nriver_min_area_m2 = 125000\nflat_noise = { wavelength_m = 400, octaves = 1, gain = \"0.5\" }\n";
 
 // The result of loading a data root that holds the given elevation.toml
 // text, through the production registry (P0-03, P1-00 6.1).
