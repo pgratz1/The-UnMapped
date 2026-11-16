@@ -24,7 +24,7 @@
 #include <span>
 #include <string>
 #include <string_view>
-#include <thread>
+#include <thread>  // determinism-lint: allow(thread) -- only for std::thread::hardware_concurrency, the --threads default; the CLI starts no thread
 #include <utility>
 #include <vector>
 
@@ -395,6 +395,7 @@ std::uint32_t parse_threads_option(const Options& options) {
         }
         return static_cast<std::uint32_t>(v);
     }
+    // determinism-lint: allow(hardware-concurrency) -- only the --threads default, capped at 256; the count schedules blocks and never reaches a world, report or hash (P1-00 D10)
     const unsigned int hardware = std::thread::hardware_concurrency();  // the --threads default only
     if (hardware == 0U) {
         return 1U;

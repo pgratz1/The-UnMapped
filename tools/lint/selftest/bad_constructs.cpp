@@ -43,7 +43,7 @@ void f(std::vector<int>& v, Gen& g, Obj& o) {
     auto now = std::chrono::steady_clock::now();  // expect: wall-clock
     std::unordered_map<int, int> m;  // expect: unordered-container
     setlocale(LC_ALL, "");  // expect: locale
-    std::cout.imbue(std::locale(""));  // expect: locale
+    std::cout.imbue(std::locale(""));  // expect: locale, stream-format
     auto s = std::sqrt(2);  // expect: std-math
     auto p = std::pow(2, 3);  // expect: std-math
     std::sort(v.begin(), v.end());  // expect: unstable-sort

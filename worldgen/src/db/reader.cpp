@@ -434,6 +434,7 @@ Result<Layer> WorldReader::read_layer(std::string_view name) const {
         }
         const ReaderState& s = *state_;
         Statement stmt;
+        // determinism-lint: allow(sql-unordered-select) -- layer.name is UNIQUE (P0-02 5.4), so at most one row; only the first step is read
         if (stmt.prepare(s.db.get(), "SELECT id, width, height, format, data FROM layer WHERE name = ?1") !=
                 SQLITE_OK ||
             stmt.bind_text(1, name) != SQLITE_OK) {
@@ -504,6 +505,7 @@ Error closed_error() {
 // True if a table of exactly that name exists; std::nullopt on an SQLite error.
 std::optional<bool> table_exists(const ReaderState& s, std::string_view table) {
     Statement stmt;
+    // determinism-lint: allow(sql-unordered-select) -- count(*) with no GROUP BY returns exactly one row
     if (stmt.prepare(s.db.get(), "SELECT count(*) FROM sqlite_schema WHERE type = 'table' AND name = ?1") !=
             SQLITE_OK ||
         stmt.bind_text(1, table) != SQLITE_OK || stmt.step() != SQLITE_ROW) {
@@ -648,6 +650,7 @@ Result<std::vector<TableSummary>> WorldReader::tables() const {
         }
         for (TableSummary& t : out) {
             Statement stmt;
+            // determinism-lint: allow(sql-unordered-select) -- count(*) with no GROUP BY returns exactly one row
             if (stmt.prepare(s.db.get(), "SELECT count(*) FROM " + quote_identifier(t.name)) != SQLITE_OK ||
                 stmt.step() != SQLITE_ROW) {
                 return sqlite_failure(s, "row count");
@@ -707,6 +710,7 @@ Status WorldReader::visit_table_rows(std::string_view table, const RowVisitor& v
         if (t.key.empty()) {
             return no_primary_key_error(s, table);
         }
+        // determinism-lint: allow(sql-unordered-select) -- ORDER BY every primary-key column COLLATE BINARY is appended below, before prepare
         std::string sql = "SELECT ";
         for (std::size_t i = 0; i < t.columns.size(); ++i) {
             if (i > 0) {

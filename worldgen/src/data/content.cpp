@@ -141,11 +141,13 @@ EntryType entry_type(const std::filesystem::directory_entry& entry) {
 // be converted to UTF-8.
 bool list_directory(const std::filesystem::path& dir, std::vector<RawEntry>& out) {
     std::error_code ec;
+    // determinism-lint: allow(directory-iteration) -- listing order is never used: accept_entries stable_sorts the accepted names by bytes_less (unique in one directory), load errors are sorted by error_less, and the root lookup is an exact match on a unique name
     std::filesystem::directory_iterator it(dir, ec);
     if (ec) {
         return false;
     }
     try {
+        // determinism-lint: allow(directory-iteration) -- the end sentinel of the listing above, whose order is discarded (see the suppression above)
         for (const std::filesystem::directory_iterator end; it != end; it.increment(ec)) {
             if (ec) {
                 return false;

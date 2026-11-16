@@ -1,3 +1,4 @@
+// lint-selftest-path: worldgen/src/core/wide.cpp
 // Self-test snippet: scanned as if it were the allow-listed file
 // worldgen/src/core/wide.cpp (spec P0-01 5.3 fast path), so the 128-bit
 // types below are not reported. Other rules still apply there. Not compiled.

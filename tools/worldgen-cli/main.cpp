@@ -17,6 +17,7 @@ int wmain(int argc, wchar_t** argv) {
         int bad_index = 0;
         const auto args = cli::platform::utf8_arguments(argc, argv, bad_index);
         if (!args) {
+            // determinism-lint: allow(number-text) -- int argument index in a stderr diagnostic; integer to_string has no locale or platform variation
             cli::print_error("argument " + std::to_string(bad_index) + " is not valid UTF-16");
             cli::print_hint("");  // a usage error: the hint line of P0-04 4.1
             return 2;
