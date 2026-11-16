@@ -6,6 +6,7 @@
 #include <array>
 #include <cstddef>
 #include <limits>
+#include <utility>
 
 #include "worldgen/core/checked.hpp"
 #include "worldgen/core/error.hpp"
@@ -14,6 +15,7 @@
 #include "worldgen/db/schema.hpp"
 #include "worldgen/geo/components.hpp"
 #include "worldgen/geo/grid.hpp"
+#include "worldgen/geo/select.hpp"
 
 namespace worldgen::inspect {
 
@@ -75,6 +77,15 @@ std::int64_t kth_in_bins(std::size_t bins, std::uint64_t k, const ValueOf& value
     return value_of(b);
 }
 
+// v / 10^4 printed as its integer part, '.', and four digits (ratio4, tan4).
+std::string fixed4(std::uint64_t v) {
+    std::string frac = db::format_u64(v % 10000U);
+    while (frac.size() < 4U) {
+        frac.insert(frac.begin(), '0');
+    }
+    return db::format_u64(v / 10000U) + "." + frac;
+}
+
 }  // namespace
 
 // --- Number formats ---------------------------------------------------------------
@@ -93,12 +104,7 @@ std::string ratio4(std::uint64_t a, std::uint64_t b) {
     if (q.hi != 0U) {
         fatal("ratio4: result too large");
     }
-    const std::uint64_t r = q.lo;
-    std::string frac = db::format_u64(r % SCALE);
-    while (frac.size() < 4U) {
-        frac.insert(frac.begin(), '0');
-    }
-    return db::format_u64(r / SCALE) + "." + frac;
+    return fixed4(q.lo);
 }
 
 std::string metres1(std::int64_t v) {
@@ -111,14 +117,31 @@ std::string metres1(std::int64_t v) {
     return out;
 }
 
+namespace {
+
+// min(n - 1, floor(p n / den)) for 0 <= p <= den, n >= 1: the percentile
+// rank rule of P1-00 10.3 with den = 100 (percent) or 1000 (per mille).
+std::uint64_t fraction_rank(std::uint64_t n, std::uint32_t p, std::uint32_t den) {
+    // floor(p n / den) on U128: p n < 2^74.
+    const U128DivMod q = divmod_u128_u64(mul_u64_wide(p, n), den);
+    const std::uint64_t k = q.quotient.lo;  // <= n
+    return k < n - 1U ? k : n - 1U;
+}
+
+}  // namespace
+
 std::uint64_t percentile_rank(std::uint64_t n, std::uint32_t p) {
     if (n == 0U || p > 100U) {
         fatal("percentile_rank: no values or p above 100");
     }
-    // floor(p n / 100) on U128: p n < 2^71.
-    const U128DivMod q = divmod_u128_u64(mul_u64_wide(p, n), 100U);
-    const std::uint64_t k = q.quotient.lo;  // <= n
-    return k < n - 1U ? k : n - 1U;
+    return fraction_rank(n, p, 100U);
+}
+
+std::uint64_t permille_rank(std::uint64_t n, std::uint32_t p) {
+    if (n == 0U || p > 1000U) {
+        fatal("permille_rank: no values or p above 1000");
+    }
+    return fraction_rank(n, p, 1000U);
 }
 
 // --- Elevation statistics ---------------------------------------------------------
@@ -348,6 +371,304 @@ std::uint64_t max_land_step(std::span<const std::int16_t> e, std::uint32_t w, st
         }
     }
     return static_cast<std::uint64_t>(best);
+}
+
+// --- Step, slope and edge statistics ------------------------------------------------
+
+namespace {
+
+// m(c) of land cell i = y w + x (P1-00 10.3 "Cell step"), 4-neighbours in
+// the order E, S, W, N; at most 32766.
+std::int64_t cell_step_at(std::span<const std::int16_t> e, std::size_t w, std::size_t h, std::size_t x,
+                          std::size_t y) {
+    const std::size_t i = y * w + x;
+    const std::int64_t c = e[i];
+    std::int64_t m = 0;
+    const auto consider = [&m, c](std::int16_t v) {
+        if (v > 0) {
+            const std::int64_t d = c - static_cast<std::int64_t>(v);
+            const std::int64_t a = d < 0 ? -d : d;
+            if (a > m) m = a;
+        }
+    };
+    if (x + 1U < w) consider(e[i + 1U]);
+    if (y + 1U < h) consider(e[i + w]);
+    if (x > 0U) consider(e[i - 1U]);
+    if (y > 0U) consider(e[i - w]);
+    return m;
+}
+
+// e'(p) = max(e(p), 0) (P1-00 10.3 "Cell slope").
+constexpr std::int64_t sea_surface(std::int16_t v) noexcept {
+    return v > 0 ? static_cast<std::int64_t>(v) : 0;
+}
+
+// S2 of cell (x, y), written as in P1-00 10.3: xa, xb, ya, yb clamped to the
+// grid and the difference multiplied by 2 div (xb - xa). |gx|, |gy| <=
+// 2 x 32767, so S2 <= 2 x 65534^2 < 2^33.
+std::int64_t slope_s2_at(std::span<const std::int16_t> e, std::size_t w, std::size_t h, std::size_t x,
+                         std::size_t y) {
+    const std::size_t xa = x > 0U ? x - 1U : 0U;
+    const std::size_t xb = x + 1U < w ? x + 1U : w - 1U;
+    const std::size_t ya = y > 0U ? y - 1U : 0U;
+    const std::size_t yb = y + 1U < h ? y + 1U : h - 1U;
+    std::int64_t gx = 0;
+    std::int64_t gy = 0;
+    if (xb > xa) {
+        const auto factor = static_cast<std::int64_t>(2U / (xb - xa));
+        gx = (sea_surface(e[y * w + xb]) - sea_surface(e[y * w + xa])) * factor;
+    }
+    if (yb > ya) {
+        const auto factor = static_cast<std::int64_t>(2U / (yb - ya));
+        gy = (sea_surface(e[yb * w + x]) - sea_surface(e[ya * w + x])) * factor;
+    }
+    return gx * gx + gy * gy;
+}
+
+// S2 accepted by the tangent functions: 0 <= S2 < 2^34, so 10^8 S2 < 2^61.
+void require_s2(std::int64_t s2, const char* what) {
+    if (s2 < 0 || s2 >= (std::int64_t{1} << 34)) {
+        fatal(what);
+    }
+}
+
+// (320 t)^2 for a threshold t / 10^4, 0 <= t <= 10^5: at most 1.024 x 10^15.
+std::int64_t tangent_bound(std::int64_t tan4_value, const char* what) {
+    if (tan4_value < 0 || tan4_value > 100000) {
+        fatal(what);
+    }
+    const std::int64_t s = 320 * tan4_value;
+    return s * s;
+}
+
+constexpr std::int64_t TAN_SCALE2 = 100000000;  // 10^8
+
+// The thresholds in S2 terms quoted by P1-00 10.3, checked against the
+// definition so that the constants and the text cannot drift apart.
+static_assert(TAN_SCALE2 * 50205 > (320 * SLOPE_TAN4_35_DEG) * (320 * SLOPE_TAN4_35_DEG));
+static_assert(TAN_SCALE2 * 50204 <= (320 * SLOPE_TAN4_35_DEG) * (320 * SLOPE_TAN4_35_DEG));
+static_assert(TAN_SCALE2 * 102401 > (320 * SLOPE_TAN4_45_DEG) * (320 * SLOPE_TAN4_45_DEG));
+static_assert(TAN_SCALE2 * 102400 <= (320 * SLOPE_TAN4_45_DEG) * (320 * SLOPE_TAN4_45_DEG));
+static_assert(TAN_SCALE2 * 7 < (320 * SLOPE_TAN4_HALF_DEG) * (320 * SLOPE_TAN4_HALF_DEG));
+static_assert(TAN_SCALE2 * 8 >= (320 * SLOPE_TAN4_HALF_DEG) * (320 * SLOPE_TAN4_HALF_DEG));
+
+std::string format_slope_over(const SlopeStats& s) {
+    return "35:" + ratio4(s.steeper_35, s.land) + " 45:" + ratio4(s.steeper_45, s.land);
+}
+
+// t for all four sides in one pass over the grid (P1-00 10.3).
+struct EdgeDistanceSet {
+    std::vector<std::int64_t> west, east, north, south;
+};
+
+EdgeDistanceSet all_edge_distances(std::span<const std::int16_t> e, std::uint32_t w, std::uint32_t h) {
+    EdgeDistanceSet t;
+    t.west.assign(h, EDGE_UNDEFINED);
+    t.east.assign(h, EDGE_UNDEFINED);
+    t.north.assign(w, EDGE_UNDEFINED);
+    t.south.assign(w, EDGE_UNDEFINED);
+    for (std::size_t y = 0; y < h; ++y) {
+        for (std::size_t x = 0; x < w; ++x) {
+            if (e[y * w + x] <= 0) {
+                continue;
+            }
+            const auto xi = static_cast<std::int64_t>(x);
+            const auto yi = static_cast<std::int64_t>(y);
+            if (t.west[y] == EDGE_UNDEFINED) t.west[y] = xi;
+            t.east[y] = static_cast<std::int64_t>(w) - 1 - xi;  // the last land cell of the row wins
+            if (t.north[x] == EDGE_UNDEFINED) t.north[x] = yi;
+            t.south[x] = static_cast<std::int64_t>(h) - 1 - yi;  // the last land cell of the column wins
+        }
+    }
+    return t;
+}
+
+}  // namespace
+
+std::vector<std::int64_t> land_cell_steps(std::span<const std::int16_t> e, std::uint32_t w, std::uint32_t h) {
+    require_grid(e.size(), w, h, "land_cell_steps: grid size");
+    std::vector<std::int64_t> out;
+    for (std::size_t y = 0; y < h; ++y) {
+        for (std::size_t x = 0; x < w; ++x) {
+            if (e[y * w + x] > 0) out.push_back(cell_step_at(e, w, h, x, y));
+        }
+    }
+    return out;
+}
+
+std::optional<std::int64_t> land_step_p999(std::span<const std::int16_t> e, std::uint32_t w, std::uint32_t h) {
+    require_grid(e.size(), w, h, "land_step_p999: grid size");
+    // m(c) is in 0..32766 (two land values in 1..32767).
+    constexpr std::size_t BINS = 32767U;
+    std::vector<std::uint64_t> count(BINS, 0U);
+    std::uint64_t n = 0;
+    for (std::size_t y = 0; y < h; ++y) {
+        for (std::size_t x = 0; x < w; ++x) {
+            if (e[y * w + x] > 0) {
+                ++count[static_cast<std::size_t>(cell_step_at(e, w, h, x, y))];
+                ++n;
+            }
+        }
+    }
+    if (n == 0U) {
+        return std::nullopt;
+    }
+    return kth_in_bins(
+        BINS, permille_rank(n, 999U), [](std::size_t b) { return static_cast<std::int64_t>(b); },
+        [&count](std::size_t b) { return count[b]; });
+}
+
+std::int64_t cell_slope_s2(std::span<const std::int16_t> e, std::uint32_t w, std::uint32_t h, std::uint32_t x,
+                           std::uint32_t y) {
+    require_grid(e.size(), w, h, "cell_slope_s2: grid size");
+    if (x >= w || y >= h) {
+        fatal("cell_slope_s2: cell outside the grid");
+    }
+    return slope_s2_at(e, w, h, x, y);
+}
+
+bool slope_steeper_than(std::int64_t s2, std::int64_t tan4_value) {
+    require_s2(s2, "slope_steeper_than: S2 out of range");
+    return TAN_SCALE2 * s2 > tangent_bound(tan4_value, "slope_steeper_than: threshold out of range");
+}
+
+bool slope_flatter_than(std::int64_t s2, std::int64_t tan4_value) {
+    require_s2(s2, "slope_flatter_than: S2 out of range");
+    return TAN_SCALE2 * s2 < tangent_bound(tan4_value, "slope_flatter_than: threshold out of range");
+}
+
+std::string tan4(std::int64_t s2) {
+    require_s2(s2, "tan4: S2 out of range");
+    // r = floor(10^4 sqrt(S2)) < 2^31; T = round(r / 320), halves up.
+    const std::uint64_t r = isqrt_u64(static_cast<std::uint64_t>(TAN_SCALE2 * s2));
+    return fixed4((r + 160U) / 320U);
+}
+
+SlopeStats slope_stats(std::span<const std::int16_t> e, std::uint32_t w, std::uint32_t h) {
+    require_grid(e.size(), w, h, "slope_stats: grid size");
+    // The bounds in S2 terms, from the exact definitions (P1-00 10.3).
+    const std::int64_t bound_35 = tangent_bound(SLOPE_TAN4_35_DEG, "slope_stats");
+    const std::int64_t bound_45 = tangent_bound(SLOPE_TAN4_45_DEG, "slope_stats");
+    const std::int64_t bound_flat = tangent_bound(SLOPE_TAN4_HALF_DEG, "slope_stats");
+    SlopeStats s;
+    std::vector<std::int64_t> high;
+    for (std::size_t y = 0; y < h; ++y) {
+        for (std::size_t x = 0; x < w; ++x) {
+            const std::int64_t v = e[y * w + x];
+            if (v <= 0) {
+                continue;
+            }
+            const std::int64_t s2 = slope_s2_at(e, w, h, x, y);
+            const std::int64_t scaled = TAN_SCALE2 * s2;  // < 2^60
+            ++s.land;
+            if (scaled > bound_35) ++s.steeper_35;
+            if (scaled > bound_45) ++s.steeper_45;
+            if (v >= SLOPE_HIGH_DM) high.push_back(s2);
+            if (v < SLOPE_LOWLAND_DM) {
+                ++s.lowland;
+                if (scaled < bound_flat) ++s.lowland_flat;
+            }
+        }
+    }
+    s.high = static_cast<std::uint64_t>(high.size());
+    if (!high.empty()) {
+        // G1 in the scratch array: only the value is read (P1-00 7.1).
+        s.median_high_s2 = geo::kth_in_place(high, percentile_rank(s.high, 50U));
+    }
+    return s;
+}
+
+std::string slope_over(std::span<const std::int16_t> e, std::uint32_t w, std::uint32_t h) {
+    return format_slope_over(slope_stats(e, w, h));
+}
+
+std::string slope_p50_above_500m(std::span<const std::int16_t> e, std::uint32_t w, std::uint32_t h) {
+    const SlopeStats s = slope_stats(e, w, h);
+    return s.median_high_s2 ? tan4(*s.median_high_s2) : std::string(NOT_AVAILABLE);
+}
+
+std::string lowland_flat_share(std::span<const std::int16_t> e, std::uint32_t w, std::uint32_t h) {
+    const SlopeStats s = slope_stats(e, w, h);
+    return ratio4(s.lowland_flat, s.lowland);
+}
+
+std::vector<std::int64_t> edge_distances(std::span<const std::int16_t> e, std::uint32_t w, std::uint32_t h,
+                                         MapSide side) {
+    require_grid(e.size(), w, h, "edge_distances: grid size");
+    EdgeDistanceSet t = all_edge_distances(e, w, h);
+    switch (side) {
+        case MapSide::west:
+            return std::move(t.west);
+        case MapSide::east:
+            return std::move(t.east);
+        case MapSide::north:
+            return std::move(t.north);
+        case MapSide::south:
+            break;
+    }
+    return std::move(t.south);
+}
+
+std::uint64_t longest_edge_run(std::span<const std::int64_t> t, std::int64_t tolerance) {
+    constexpr std::int64_t LIMIT = std::int64_t{1} << 32;
+    if (tolerance < 0 || tolerance > LIMIT) {
+        fatal("longest_edge_run: tolerance out of range");
+    }
+    for (const std::int64_t v : t) {
+        if (v < EDGE_UNDEFINED || v > LIMIT) {
+            fatal("longest_edge_run: entry out of range");
+        }
+    }
+    // Every sub-interval of a valid run is valid, so the largest run over
+    // all starts is the longest valid window. Two pointers: for each end r,
+    // the smallest start `left` whose window is valid, with the window's
+    // maximum and minimum kept in monotone queues of indices (vectors with
+    // a head position). An undefined entry empties the window.
+    std::vector<std::size_t> maxq;
+    std::vector<std::size_t> minq;
+    std::size_t max_head = 0;
+    std::size_t min_head = 0;
+    std::size_t left = 0;
+    std::uint64_t best = 0;
+    for (std::size_t r = 0; r < t.size(); ++r) {
+        if (t[r] == EDGE_UNDEFINED) {
+            maxq.clear();
+            minq.clear();
+            max_head = 0;
+            min_head = 0;
+            left = r + 1U;
+            continue;
+        }
+        while (maxq.size() > max_head && t[maxq.back()] <= t[r]) maxq.pop_back();
+        maxq.push_back(r);
+        while (minq.size() > min_head && t[minq.back()] >= t[r]) minq.pop_back();
+        minq.push_back(r);
+        while (t[maxq[max_head]] - t[minq[min_head]] > tolerance) {
+            ++left;
+            if (maxq[max_head] < left) ++max_head;
+            if (minq[min_head] < left) ++min_head;
+        }
+        const auto run = static_cast<std::uint64_t>(r + 1U - left);
+        if (run > best) best = run;
+    }
+    return best;
+}
+
+EdgeRuns edge_parallel_runs(std::span<const std::int16_t> e, std::uint32_t w, std::uint32_t h) {
+    require_grid(e.size(), w, h, "edge_parallel_runs: grid size");
+    const EdgeDistanceSet t = all_edge_distances(e, w, h);
+    EdgeRuns runs;
+    runs.west = longest_edge_run(t.west, EDGE_RUN_TOLERANCE);
+    runs.east = longest_edge_run(t.east, EDGE_RUN_TOLERANCE);
+    runs.north = longest_edge_run(t.north, EDGE_RUN_TOLERANCE);
+    runs.south = longest_edge_run(t.south, EDGE_RUN_TOLERANCE);
+    return runs;
+}
+
+std::uint64_t edge_parallel_run_m(std::span<const std::int16_t> e, std::uint32_t w, std::uint32_t h) {
+    const EdgeRuns r = edge_parallel_runs(e, w, h);
+    const std::uint64_t best = std::max(std::max(r.west, r.east), std::max(r.north, r.south));
+    return static_cast<std::uint64_t>(geo::CELL_M) * best;
 }
 
 // --- Hydrology statistics ---------------------------------------------------------
@@ -613,6 +934,14 @@ std::optional<std::string> geography_section(const GeographyLayers& layers, std:
     }
     line(out, "land_above_m", above);
     line(out, "max_step_m", metres1(static_cast<std::int64_t>(max_land_step(e, w, h))));
+    const std::optional<std::int64_t> step999 = land_step_p999(e, w, h);
+    line(out, "step_p999_m", step999 ? metres1(*step999) : std::string(NOT_AVAILABLE));
+    const SlopeStats slopes = slope_stats(e, w, h);
+    line(out, "slope_over", format_slope_over(slopes));
+    line(out, "slope_p50_above_500m",
+         slopes.median_high_s2 ? tan4(*slopes.median_high_s2) : std::string(NOT_AVAILABLE));
+    line(out, "lowland_flat_share", ratio4(slopes.lowland_flat, slopes.lowland));
+    line(out, "edge_parallel_run_m", db::format_u64(edge_parallel_run_m(e, w, h)));
 
     if (!layers.has_hydrology()) {
         return out;

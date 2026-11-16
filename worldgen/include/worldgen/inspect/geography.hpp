@@ -133,6 +133,125 @@ struct HullPoint {
 // (reading chosen).
 [[nodiscard]] std::uint64_t max_land_step(std::span<const std::int16_t> e, std::uint32_t w, std::uint32_t h);
 
+// --- Step, slope and edge statistics (P1-00 10.3, added 2026-11-15) ----------------
+
+// The rank of the per-mille p of n values, the percentile rank rule of
+// P1-00 10.3 in thousandths (the "Cell step" paragraph): min(n - 1,
+// floor(p n / 1000)). FatalError if n = 0 or p > 1000.
+[[nodiscard]] std::uint64_t permille_rank(std::uint64_t n, std::uint32_t p);
+
+// The cell step m(c) of every land cell, in index order (P1-00 10.3 "Cell
+// step"): the largest |e(c) - e(n)| over the 4-neighbours n of c that exist
+// and are land, 0 if there are none. In decimetres, at most 32766.
+[[nodiscard]] std::vector<std::int64_t> land_cell_steps(std::span<const std::int16_t> e, std::uint32_t w,
+                                                        std::uint32_t h);
+
+// step_p999_m in decimetres (P1-00 10.3): kth(m over land,
+// permille_rank(land_cells, 999)); std::nullopt if there is no land (n/a).
+// Equals max_land_step when there are fewer than 1000 land cells. Computed
+// on an exact histogram of m, which gives the value of G1.
+[[nodiscard]] std::optional<std::int64_t> land_step_p999(std::span<const std::int16_t> e, std::uint32_t w,
+                                                         std::uint32_t h);
+
+// The slope thresholds of [geography] as exact decimal tangents t / 10^4,
+// constants of the report (P1-00 10.3 "Cell slope"): 35 degrees is 7002,
+// 45 degrees 10000, 0.5 degrees 87.
+inline constexpr std::int64_t SLOPE_TAN4_35_DEG = 7002;
+inline constexpr std::int64_t SLOPE_TAN4_45_DEG = 10000;
+inline constexpr std::int64_t SLOPE_TAN4_HALF_DEG = 87;
+// Elevation bounds of slope_p50_above_500m (e >= 5000 dm) and
+// lowland_flat_share (e < 1000 dm), P1-00 10.3.
+inline constexpr std::int64_t SLOPE_HIGH_DM = 5000;
+inline constexpr std::int64_t SLOPE_LOWLAND_DM = 1000;
+
+// S2 = gx^2 + gy^2 of cell (x, y) by central differences (P1-00 10.3 "Cell
+// slope"): with e'(p) = max(e(p), 0), xa = max(x - 1, 0), xb = min(x + 1,
+// w - 1) (ya, yb likewise), gx = (e'(xb, y) - e'(xa, y)) (2 div (xb - xa)),
+// 0 if xb = xa, and gy likewise; so a one-sided difference at a grid edge is
+// doubled and both are in decimetres per 32 m. The slope's tangent is
+// sqrt(S2) / 320. Defined for any cell (the statistics use land cells);
+// S2 < 2^33. FatalError if (x, y) is outside the grid.
+[[nodiscard]] std::int64_t cell_slope_s2(std::span<const std::int16_t> e, std::uint32_t w, std::uint32_t h,
+                                         std::uint32_t x, std::uint32_t y);
+
+// Exact tangent comparisons of P1-00 10.3, for S2 as above and the
+// threshold t / 10^4 given as tan4_value = t (0 <= t <= 10^5, FatalError
+// otherwise):
+// steeper: 10^8 S2 > (320 t)^2; flatter: 10^8 S2 < (320 t)^2.
+// (Steeper than 35 degrees is S2 >= 50205, than 45 degrees S2 > 102400,
+// flatter than 0.5 degrees S2 <= 7.) FatalError if S2 < 0 or S2 >= 2^34.
+[[nodiscard]] bool slope_steeper_than(std::int64_t s2, std::int64_t tan4_value);
+[[nodiscard]] bool slope_flatter_than(std::int64_t s2, std::int64_t tan4_value);
+
+// tan4(S2) (P1-00 10.3): r = isqrt_u64(S2 10^8), T = (r + 160) div 320,
+// printed as T div 10^4, '.', and T mod 10^4 in four digits, e.g. "0.5039".
+// FatalError if S2 < 0 or S2 >= 2^34.
+[[nodiscard]] std::string tan4(std::int64_t s2);
+
+// The counts behind the three slope keys of [geography] (P1-00 10.3), from
+// one pass over the land cells:
+//   slope_over            = 35: ratio4(steeper_35, land) 45: ratio4(steeper_45, land)
+//   slope_p50_above_500m  = tan4(median_high_s2), n/a when it is nullopt
+//   lowland_flat_share    = ratio4(lowland_flat, lowland)
+// median_high_s2 is kth over the S2 of land cells with e >= SLOPE_HIGH_DM at
+// percentile_rank(n, 50) (G1, value only), nullopt if there are none.
+struct SlopeStats {
+    std::uint64_t land = 0;          // land cells (e > 0)
+    std::uint64_t steeper_35 = 0;    // land cells steeper than 35 degrees
+    std::uint64_t steeper_45 = 0;    // land cells steeper than 45 degrees
+    std::uint64_t high = 0;          // land cells with e >= SLOPE_HIGH_DM
+    std::optional<std::int64_t> median_high_s2;
+    std::uint64_t lowland = 0;       // land cells with e < SLOPE_LOWLAND_DM
+    std::uint64_t lowland_flat = 0;  // of those, flatter than 0.5 degrees
+};
+[[nodiscard]] SlopeStats slope_stats(std::span<const std::int16_t> e, std::uint32_t w, std::uint32_t h);
+
+// The value of each slope key as printed in [geography] (P1-00 10.3); each
+// computes slope_stats.
+[[nodiscard]] std::string slope_over(std::span<const std::int16_t> e, std::uint32_t w, std::uint32_t h);
+[[nodiscard]] std::string slope_p50_above_500m(std::span<const std::int16_t> e, std::uint32_t w,
+                                               std::uint32_t h);
+[[nodiscard]] std::string lowland_flat_share(std::span<const std::int16_t> e, std::uint32_t w, std::uint32_t h);
+
+// The sides of the map for edge_parallel_run_m (P1-00 10.3 "Edge-parallel
+// run").
+enum class MapSide : std::uint8_t { west, east, north, south };
+
+// The tolerance of an edge-parallel run, in cells: a constant of the report
+// (P1-00 10.3).
+inline constexpr std::int64_t EDGE_RUN_TOLERANCE = 8;
+
+// A line with no land in edge_distances.
+inline constexpr std::int64_t EDGE_UNDEFINED = -1;
+
+// The sequence t of P1-00 10.3 for one side, one entry per line parallel to
+// it: west, for each row a = 0..h-1, the smallest x with land in the row;
+// east, w - 1 - the largest such x; north, for each column a = 0..w-1, the
+// smallest y with land in the column; south, h - 1 - the largest such y.
+// EDGE_UNDEFINED for a line with no land.
+[[nodiscard]] std::vector<std::int64_t> edge_distances(std::span<const std::int16_t> e, std::uint32_t w,
+                                                       std::uint32_t h, MapSide side);
+
+// The largest run of P1-00 10.3 over all starts of t: the most consecutive
+// entries, all defined (>= 0), whose max - min is <= tolerance; 0 if no entry
+// is defined. FatalError if tolerance or an entry is outside [0, 2^32]
+// (EDGE_UNDEFINED apart).
+[[nodiscard]] std::uint64_t longest_edge_run(std::span<const std::int64_t> t, std::int64_t tolerance);
+
+// longest_edge_run(edge_distances(side), EDGE_RUN_TOLERANCE) for each side.
+struct EdgeRuns {
+    std::uint64_t west = 0;
+    std::uint64_t east = 0;
+    std::uint64_t north = 0;
+    std::uint64_t south = 0;
+};
+[[nodiscard]] EdgeRuns edge_parallel_runs(std::span<const std::int16_t> e, std::uint32_t w, std::uint32_t h);
+
+// edge_parallel_run_m (P1-00 10.3): 16 x the largest side value of
+// edge_parallel_runs, in metres; 0 if there is no land.
+[[nodiscard]] std::uint64_t edge_parallel_run_m(std::span<const std::int16_t> e, std::uint32_t w,
+                                                std::uint32_t h);
+
 // --- Hydrology statistics (P1-00 10.3, P1-02 3 and H6) ---------------------------
 
 // Path lengths to the ocean along flow_dir (P1-00 10.3 longest_river_m): for
