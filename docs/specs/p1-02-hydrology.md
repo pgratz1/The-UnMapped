@@ -1,6 +1,6 @@
 # P1-02 Hydrology
 
-Status: approved by the lead, 2026-11-15 (tuning values marked "guess" and the statistics ranges are starting points, to be revised against the first seed sweep); originally a draft, 2026-11-15. Amended by the spec writer, 2026-11-16 (draft, awaiting approval), for the follow-up of the critic's review (`docs/reviews/p1-02-hydrology-critic.md`): a sub-decimetre tie-break in H2 (S2, new stream and tuning field, `GENERATOR_VERSION` 0.5.0), known limitations 2 to 5, measured river sources; the river drawing (S1) is in P1-00 10.2. Phase P1 Geography, stage 2 (`hydrology`). Design doc section 4 (stage 2: "flow accumulation gives rivers and lakes; sea level sets the coast"), 6, 7 (rivers carved into chunk heightmaps). Depends on P0-01 to P0-04, P1-00 (shared algorithms G1 to G6, rules D1 to D10) and P1-01 (the `elevation` layer and its postconditions).
+Status: approved by the lead, 2026-11-15 (tuning values marked "guess" and the statistics ranges are starting points, to be revised against the first seed sweep); originally a draft, 2026-11-15. Amended by the spec writer, 2026-11-16 (draft, awaiting approval), for the follow-up of the critic's review (`docs/reviews/p1-02-hydrology-critic.md`): a tie-break on flats in H2 (S2, new stream and tuning field, `GENERATOR_VERSION` 0.5.0; re-specified the same day as the engineer's "variant B" after the first form, a G3 flood on fine keys, was found not to break the bundles), known limitations 2 to 5, measured river sources; the river drawing (S1) is in P1-00 10.2. Phase P1 Geography, stage 2 (`hydrology`). Design doc section 4 (stage 2: "flow accumulation gives rivers and lakes; sea level sets the coast"), 6, 7 (rivers carved into chunk heightmaps). Depends on P0-01 to P0-04, P1-00 (shared algorithms G1 to G6, rules D1 to D10) and P1-01 (the `elevation` layer and its postconditions).
 
 ## 1. Purpose
 
@@ -65,9 +65,9 @@ Notation: e[i] the elevation in decimetres as `int64`; O the ocean, {e < 0}; "la
 
 Check section 2. The connectivity check is a 4-connected flood from the ocean cells on the map edge (G2 style); every ocean cell must be reached.
 
-### H2. Routing flood with a sub-decimetre tie-break (D1, then D6, G3)
+### H2. Routing flood with a tie-break on flats (D1, then D6)
 
-On a decimetre flat every cell has the same key, so a flood on e alone pops the flat in FIFO order and G4 falls back to flood parents everywhere on it: rays leave the flat's exit in the eight directions and neighbouring catchments draw parallel straight 45° rivers one cell apart (critic's S2, 1024 seed 9 at x 546–610, y 762–834). H2 therefore floods on a finer key whose low 16 bits are a smooth coordinate noise, which orders cells inside a flat without ever reordering cells of different decimetre heights.
+On a decimetre flat every cell has the same flood level, so a flood ordered by level alone pops the flat in FIFO order, and G4 falls back to flood parents everywhere on it: rays leave the flat's exit in the eight directions and neighbouring catchments draw parallel straight 45° rivers one cell apart (critic's S2, 1024 seed 9 at x 546–610, y 762–834). H2 therefore orders the cells of one level by a smooth coordinate noise t, so the flood tree on a flat grows lowest-t first and merges flows into trunks, while the decimetre levels themselves are those of a plain priority flood.
 
 1. **Tie value** t[i] (`int64`), a per-cell function (D1, G6 row blocks):
    ```
@@ -77,13 +77,29 @@ On a decimetre flat every cell has the same key, so a flood on e alone pops the 
            t  = min(65535, (nz.raw + 2^32) >> 17)                    // int64, in [0, 65535]
    ```
    (nz.raw + 2^32 ∈ [0, 2^33], so the shift gives [0, 65536] before the `min`.) Noise coordinates are bounded as in P1-01 7 (X, Y ≤ 32760, wavelength ≥ 64).
-2. **Keys** k[i] = 0 on ocean; e[i] × 2^16 + t[i] on land (`int64`). Land e ∈ [1, 32767] by the preconditions, so k ∈ [65536, 32767 × 2^16 + 65535] ⊂ [1, 2^31); every land key is ≥ 1 as G3 requires.
-3. `(Lk, parent, order)` = G3 on keys k with ocean mask O.
-4. **Flood level in decimetres** L[i] = Lk[i] >> 16 (floor; Lk ≥ 0). L is the water surface a cell would have if every depression were full; H3, H6 and invariants 3, 6 and 7 use L, and H4 step 1 uses Lk.
+2. **Flood** (D6, single-threaded; a function of hydrology, not the shared G3, which is unchanged). Outputs: the flood level L[i] in decimetres (`int64`), the flood parent `parent[i]` (a D8 code, 8 on ocean) and `order`, the cells in pop order.
+   ```
+   seq = 0; Q = empty                                   // entries (key, seq, cell)
+   for i in 0 .. n − 1 (index order):
+       if i in O: L[i] = 0; parent[i] = 8; visited[i] = true; push (0, seq, i); seq += 1
+   while Q not empty:
+       pop the entry (key, s, c) with the smallest (key, s)
+       append c to order
+       for code in 0 .. 7 (8-neighbour order):
+           m = neighbour of c in direction code; skip if outside the map or visited[m]
+           visited[m] = true                            // a cell is visited when it is pushed, once
+           L[m] = max(e[m], L[c]); parent[m] = (code + 4) mod 8
+           push (L[m] × 2^16 + t[m], seq, m); seq += 1
+   ```
+   A cell is marked visited when it is pushed, so it is pushed once, from the first popped neighbour that reaches it, and that neighbour is its parent. Keys: ocean 0; land L × 2^16 + t with L ∈ [1, 32767] (the preconditions), so keys lie in [65536, 2^31). **Queue contract:** any priority queue that pops the entry with the smallest (key, seq), seq being the global push counter from 0; (key, seq) pairs are unique, so the pop order is defined by this text alone. Keys are *not* non-decreasing over the pops (a cell pushed with a smaller t than the cell just popped has a smaller key), so the monotone radix heap or bucket queue of G3 does not apply; a binary heap with this comparison does (O(n log n)).
 
-**What the tie-break cannot change.** Write φ(v) = v >> 16, a non-decreasing function. φ(k[i]) = e[i] on land (0 ≤ t < 2^16) and 0 on ocean. Lk[i] is the minimum over all paths from i to the ocean of the maximum key on the path (P1-00 7.3); a non-decreasing φ commutes with both max and min, so L[i] = φ(Lk[i]) is the minimum over paths of the maximum e, which is exactly the flood level of G3 on keys e. Hence the lake cells (L > e), the lake components and their ids (G2 keyed on L), the lake levels, `water_depth`, `lake`, the cells with `water` 2 and 3, `coast_dist` and invariant 3's surface W are the same as without the tie-break. What may change: `parent`, `order`, the G4 receivers, which lake cell is the outlet, and so `flow_dir`, `flow_accum`, `river` and which land cells have `water` 1 (and the statistics built on them).
+**Pops are non-decreasing in L.** Because 0 ≤ t < 2^16, key order refines L order: L[a] < L[b] implies key(a) < key(b). Claim: when c is popped, every entry in the queue has L ≥ L[c]. Initially all entries are ocean cells with L = 0. When c is popped it has the smallest key, so the smallest L, of all entries; every entry pushed while c is processed has L[m] = max(e[m], L[c]) ≥ L[c]. So the L of successive pops never decreases. All ocean cells (key 0) are popped before any land cell (key ≥ 65536).
 
-**t = 0.** With t = 0 everywhere, k = e × 2^16: G3 pops in the same (key, seq) order as on keys e (keys are scaled, seq is unchanged), Lk = 2^16 L, and G4's scores are all scaled by 2^32, so every output equals that of the stage without the tie-break. The worked example of 5.1 and the unit tests of 8.1 are given for t = 0 (the seams take t as a parameter, section 8) and are unchanged.
+**L is the minimax level, whatever t is.** Write M(i) for the minimum over all 8-paths from i to an ocean cell of the largest e on the path, ocean cells counting 0. Claim: L[i] = M(i) for every cell. First, L[i] ≥ M(i): following parents from i reaches the ocean, and L[i] = max(e[i], L[parent]) is by induction the largest e on that path. Second, L[c] ≤ M(c), by induction over the pop order: ocean cells have L = 0 = M. Let c be popped, assume the claim for every cell popped before c, and suppose L[c] > λ = M(c). Take a path P from c to the ocean whose largest e is λ, and let y be the first cell of P, counted from its ocean end, that has not been popped yet (y exists, since c is on P and not yet popped). Its predecessor x on P has been popped, with L[x] = M(x) ≤ λ (the rest of P from x is a path with largest e ≤ λ). When x was popped, y was pushed by x if it was not visited yet; otherwise it had been pushed by a cell z popped before x. Either way y's pusher was popped no later than x, so it has L ≤ L[x] ≤ λ (pops are non-decreasing in L), and L[y] = max(e[y], L[pusher]) ≤ λ, since e[y] ≤ λ. If y = c this contradicts L[c] > λ. Otherwise y is in the queue when c is popped, with L[y] ≤ λ < L[c], so key(y) < key(c): a contradiction, since c had the smallest key. Hence L = M.
+
+So L, the lake cells (L > e), the lake components and ids (H3, keyed on L), the lake levels, `water_depth`, `lake`, the cells with `water` 2 and 3, `coast_dist` and invariant 3's surface W do not depend on t (invariant 11). What t does change: `parent`, `order`, which lake cell is the outlet, and so `flow_dir`, `flow_accum`, `river` and which land cells are river cells (`water` 1), with the statistics built on them.
+
+**t = 0 is the stage before the tie-break, byte for byte.** With t = 0 every key is L × 2^16, and L[m] = max(e[m], L[c]) is exactly G3's L[m] = max(h[m], L[c]) for keys h = e; the pushes happen in the same order with the same seq, and scaling all keys by 2^16 does not change the (key, seq) order, so `order`, `parent` and L equal G3's on keys e. H3 to H9 are unchanged. Hence with t = 0 every layer equals that of `GENERATOR_VERSION` 0.4.0, and the worked example of 5.1 and the unit tests of 8.1, given for t = 0 (the seams take t as a parameter, section 8), stand. A worked example where t decides the route is in 5.2.
 
 ### H3. Lakes (D5, G2)
 
@@ -93,14 +109,14 @@ Every neighbour of a lake cell has L at least the lake level (for adjacent u, v:
 
 ### H4. Receivers (D1 then D4, D5)
 
-1. `rcv` = G4 on Lk, parent, O for every land cell (steepest descent on the fine flood surface; scores w·d² with d = Lk[c] − Lk[m] < 2^31 compared in `U128`). (Parallel by G6 row blocks.)
-2. **One outlet per lake.** For each lake, in id order: the outlet is the lake cell that comes first in `order`. Its receiver is its flood parent, `rcv[outlet] = parent[outlet]`, which is a rim cell: a land cell outside the lake whose e and L both equal the lake level. Argument: the parent p was popped before the outlet, and the outlet is the first lake cell popped, so p is not in this lake. G3 set Lk[outlet] = max(k[outlet], Lk[p]); the outlet is a lake cell, so L[outlet] > e[outlet], hence Lk[outlet] ≥ (e[outlet] + 1) × 2^16 > k[outlet] and Lk[outlet] = Lk[p]; so L[p] = L[outlet], the lake level ≥ 1, and p is not ocean (ocean L is 0). If p were depressed (L[p] > e[p]) it would be an adjacent depressed cell with equal L and so in the same lake (H3); hence e[p] = L[p], the lake level. The implementation checks this and treats a violation as the fatal error "hydrology: a lake outlet's flood parent is not a rim cell at the lake level"; by the argument it cannot occur on input that meets the preconditions, so it guards the implementation, not the input. Every other cell of the lake gets as receiver its parent in a FIFO breadth-first search over the lake's cells starting at the outlet, visiting neighbours in the 8-neighbour order: when the search reaches cell m from cell c through direction code k, `rcv[m] = (k + 4) mod 8`.
+1. `rcv` = G4 on L (decimetres), parent, O for every land cell, exactly as in 0.4.0: the neighbour with the steepest strictly lower L, else the flood parent of H2. (Parallel by G6 row blocks.) On a decimetre flat no neighbour is strictly lower, so the flood tree H2 grew lowest-t first decides the route.
+2. **One outlet per lake.** For each lake, in id order: the outlet is the lake cell that comes first in `order`. Its receiver is its flood parent, `rcv[outlet] = parent[outlet]`, which is a rim cell: a land cell outside the lake whose e and L both equal the lake level. Argument: the parent p was popped before the outlet, and the outlet is the first lake cell popped, so p is not in this lake. H2 set L[outlet] = max(e[outlet], L[p]) when p pushed it; the outlet is a lake cell, so L[outlet] > e[outlet], hence L[p] = L[outlet], the lake level ≥ 1, and p is not ocean (ocean L is 0). If p were depressed (L[p] > e[p]) it would be an adjacent depressed cell with equal L and so in the same lake (H3); hence e[p] = L[p], the lake level. The implementation checks this and treats a violation as the fatal error "hydrology: a lake outlet's flood parent is not a rim cell at the lake level"; by the argument it cannot occur on input that meets the preconditions, so it guards the implementation, not the input. Every other cell of the lake gets as receiver its parent in a FIFO breadth-first search over the lake's cells starting at the outlet, visiting neighbours in the 8-neighbour order: when the search reaches cell m from cell c through direction code k, `rcv[m] = (k + 4) mod 8`.
 
 Without step 2, a lake reached from several rim cells at the same level would have several exits (G4 gives every lake cell its flood parent, and several lake cells can have rim parents). Step 2 makes the lake one node of the drainage network with one outflow, which history and the runtime need.
 
 ### H5. Accumulation (D4)
 
-A[c] for land cells as defined by G5. After H4 step 2, G3's `order` is no longer a topological order of `rcv` inside lakes, so the reference computes it by Kahn's method: indeg[c] = number of land cells u whose receiver is c; a FIFO queue starts with every land cell with indeg 0 in index order; popping u, if its receiver m is land: A[m] += A[u], indeg[m] −= 1, push m when it reaches 0. A is a sum of integers, so every topological order gives the same values. A ≤ N² ≤ 2^22 (`uint32`).
+A[c] for land cells as defined by G5. After H4 step 2, H2's `order` is no longer a topological order of `rcv` inside lakes, so the reference computes it by Kahn's method: indeg[c] = number of land cells u whose receiver is c; a FIFO queue starts with every land cell with indeg 0 in index order; popping u, if its receiver m is land: A[m] += A[u], indeg[m] −= 1, push m when it reaches 0. A is a sum of integers, so every topological order gives the same values. A ≤ N² ≤ 2^22 (`uint32`).
 
 ### H6. Classification (D1)
 
@@ -237,13 +253,28 @@ For example (3, 3): three orthogonal steps to the sea, chamfer 15, 15 × 16 / 5 
 
 More river class values with T = 3: A = 3, 5 → class 1; A = 6, 11 → 2; A = 12 → 3; A = 3 × 2^14 = 49152 → 15; A = 3 × 2^20 → 15 (capped).
 
+### 5.2 Worked example: the tie-break on a flat
+
+A 5 × 4 test grid: column x = 0 ocean (−5), every other cell 10 dm, a flat with one exit side. Tie values t (row y = 0 to 3; ocean 0):
+
+```
+  0  900  800  700  600
+  0  500   50  400  300
+  0  200  100   60  650
+  0  990  950  980  970
+```
+
+Cell indices i = 5y + x. With **t = 0** (0.4.0): land pop order 1, 6, 11, 16, 2, 7, 12, 17, 3, 8, 13, 18, 4, 9, 14, 19 (FIFO by push order); `flow_dir` rows `8 4 4 4 4`, `8 4 5 5 5`, `8 4 5 5 5`, `8 4 5 5 5` (column 1 drains west to the sea; the other cells take their flood parents, west on row 0 and north-west below it: parallel rays); `flow_accum` rows `0 10 6 3 1`, `0 3 3 2 1`, `0 2 2 2 1`, `0 1 1 1 1`.
+
+With **the t above**: the four column-1 cells are pushed from the ocean (seq 4 to 7: cells 1, 6, 11, 16) and popped lowest-t first, so 11 (t 200) goes first and its neighbours are claimed from it. Land pop order: 11, 7, 13, 12, 9, 8, 6, 4, 14, 3, 2, 1, 17, 19, 18, 16. `flow_dir` rows `8 4 2 3 2`, `8 4 3 4 3`, `8 4 4 5 4`, `8 4 5 6 5`; `flow_accum` rows `0 1 1 1 1`, `0 1 10 1 2`, `0 13 1 6 1`, `0 1 1 1 1`. The flow that t = 0 spreads over four parallel exits gathers into one trunk through (2, 1) and (1, 2), which carries 13 of the 16 land cells to the sea. L = 10 on every land cell and there is no lake in either case (invariant 11).
+
 ## 6. Invariants
 
 For every input satisfying the preconditions (and so for every world):
 
 1. `flow_dir` = 8 exactly on ocean cells; elsewhere it is 0 to 7 and points to a cell inside the map.
 2. **Every land cell drains to the sea.** Following `flow_dir` from any land cell reaches an ocean cell in fewer than N² steps (no cycles). Every lake drains through exactly one outlet; there are no endorheic basins in P1 (open question 1).
-3. **No river flows uphill.** With the surface W = e + `water_depth` on land (e on dry land and rivers, the lake level on lakes) and W = 0 on ocean: W[down(c)] ≤ W[c] for every land cell c. W equals the flood level L on every land cell. It holds with the H2 tie-break: a G4 receiver m has Lk[m] < Lk[c] and a flood-parent receiver was popped first, so Lk[m] ≤ Lk[c]; L = Lk >> 16 is non-decreasing in Lk, so L[m] ≤ L[c]; inside a lake every receiver joins cells of the one lake level, and the outlet's receiver is a rim cell at that level (H4).
+3. **No river flows uphill.** With the surface W = e + `water_depth` on land (e on dry land and rivers, the lake level on lakes) and W = 0 on ocean: W[down(c)] ≤ W[c] for every land cell c. W equals the flood level L on every land cell. It holds with the H2 tie-break: a G4 receiver has strictly smaller L; a flood-parent receiver p has L[p] ≤ max(e[c], L[p]) = L[c]; inside a lake every receiver joins cells of the one lake level, and the outlet's receiver is a rim cell at that level (H4). No cycles: P1-00 7.4's argument holds, since a parent step goes to an earlier-popped cell with L no greater.
 4. **Accumulation is local.** For every land cell, `flow_accum` = 1 + the sum of `flow_accum` over the cells whose `flow_dir` points to it; 0 on ocean.
 5. **Rivers.** `river` > 0 ⟺ `water` = 1 ⟺ (land, not lake, `flow_accum` ≥ T), and then `river` = min(15, bit_length(`flow_accum` div T)). The downstream cell of a river cell is a river, lake or ocean cell, and along a river the class never decreases downstream.
 6. **Lakes.** Each lake id 1 to K occurs; its cells form one 8-connected set with one common W (the lake level) and positive depth; exactly one of its cells (the outlet) has a downstream cell outside the lake, and that cell is a land cell with e equal to the lake level. Lake cells are exactly the land cells with L > e (every depression of the stored terrain is a lake). Lake ids increase with each lake's smallest index.
@@ -251,7 +282,7 @@ For every input satisfying the preconditions (and so for every world):
 8. **The ocean is one connected region touching the map edge** (4-connected), re-checked on the output `water` layer.
 9. **Coast distance.** `coast_dist` > 0 on every land cell and < 0 on every ocean cell; a land cell 4-adjacent to the ocean has 16; an ocean cell 4-adjacent to land has −16; |`coast_dist`| equals the chamfer path minimum (checked by Dijkstra on small grids).
 10. Pure function of `elevation`, the world seed (through the tie noise only) and `worldgen.hydrology`. The layers `water_depth`, `lake` and `coast_dist`, and the cells with `water` 2 or 3, do not depend on the seed or on `flat_noise` (H2).
-11. **Tie-break invariance.** Running the stage with t = 0 instead of the noise gives the same `water_depth`, `lake` and `coast_dist` layers and the same lake and ocean cells.
+11. **Tie-break invariance.** For any tie values t, the flood level L, the lake cells, lake ids and levels, and the layers `water_depth`, `lake` and `coast_dist` equal those for t = 0 (H2's proof that L is the minimax level). In `water` only the values 2 (lake) and 3 (ocean) are invariant: river cells (1) and dry land (0) may trade places. With t = 0 the stage output is that of 0.4.0 byte for byte.
 
 ## 7. Determinism notes
 
@@ -259,16 +290,16 @@ For every input satisfying the preconditions (and so for every world):
 | --- | --- | --- |
 | H1, H3 | D5 | FIFO, index-order seeds, neighbour orders of P1-00 2.3 |
 | H2 tie value | D1, parallel | location-keyed noise only (D9); one `fbm_m` per land cell |
-| H2 flood | D6 | keys k in [0, 2^31) for any `i16` input; any queue that pops in (key, seq) order is correct (the shared G3 uses a radix heap on `int64` keys; a bucket queue over levels is no longer practical) |
+| H2 flood | D6 | hydrology's own flood (not G3); keys L × 2^16 + t in [0, 2^31); any priority queue popping the smallest (key, seq) is correct; keys are not monotone over pops, so not G3's radix heap |
 | H4 step 1 | D1, parallel | |
 | H4 step 2 | D5 | outlet by pop position; BFS parents depend on the stated neighbour order |
 | H5 | D4 | integer sums; result order-independent |
 | H6 | D1, parallel | |
 | H7 | D4 | each pass is an in-place sweep in a stated order; not parallel |
 
-No `Rng`, no floating point; the only seed-dependent value is the tie noise of H2. Overflow: keys k < 2^31, Lk < 2^31, G4 scores < 2^63; A ≤ 2^22; finite chamfer values are below 7 × 2 × 2048 < 2^15, so 32 × d < 2^20; INF = 2^40 plus a weight, and 32 × INF, still fit `int64`; an INF left over (only on a test grid with no land) saturates to ∓32767.
+No `Rng`, no floating point; the only seed-dependent value is the tie noise of H2. Overflow: flood keys < 2^31; G4 on decimetre levels (drops ≤ 32767); A ≤ 2^22; finite chamfer values are below 7 × 2 × 2048 < 2^15, so 32 × d < 2^20; INF = 2^40 plus a weight, and 32 × INF, still fit `int64`; an INF left over (only on a test grid with no land) saturates to ∓32767.
 
-Performance (P1-00 11): 0.3 / 1.2 / 5 s at 512 / 1024 / 2048. The tie noise (one octave per land cell, parallel), the flood (radix heap on keys below 2^31) and the two chamfer transforms are linear in N²; the cost is memory traffic.
+Performance (P1-00 11): 0.3 / 1.2 / 5 s at 512 / 1024 / 2048. The tie noise (one octave per land cell, parallel) and the two chamfer transforms are linear in N²; the flood uses a comparison heap, O(N² log N²) (about 22 comparisons per push at 2048), single-threaded. The budget is unchanged; the validation specialist measures the stage after the change.
 
 ## 8. Tests required
 
@@ -282,8 +313,9 @@ std::uint8_t river_class(std::int64_t a, std::int64_t t);               // min(1
 void check_hydrology_preconditions(geo::Grid, std::span<const std::int16_t> e);   // H1, fatal on violation
 struct HydrologyNetwork {
     std::vector<std::uint8_t> ocean;          // O
-    geo::RoutingFlood flood;                  // H2: Lk (on keys k), parent, order
-    std::vector<std::int64_t> level_dm;       // S2: L = Lk >> 16
+    std::vector<std::int64_t> level_dm;       // H2: L, decimetres (no fine-unit level is kept)
+    std::vector<geo::Direction> parent;       // H2: flood parent, 8 on ocean
+    std::vector<geo::CellIndex> order;        // H2: pop order
     std::vector<geo::Direction> g4;           // H4 step 1, before rerouting (8 on ocean)
     geo::Components lakes;                    // H3, label = lake id
     std::vector<std::int64_t> lake_level;     // [k - 1]
@@ -306,8 +338,8 @@ HydrologyLayers hydrology_layers(geo::Grid, std::span<const std::int16_t> e, std
 
 ### 8.1 Unit tests
 
-1. **Worked example 5.1** exactly: L, parent, `order`, every output grid. Also the pre-rerouting receivers (lake cells with their flood parents) from G4 alone.
-2. **G3 properties on the example:** pops are in non-decreasing key order; each cell's parent and each strictly lower neighbour precede it in `order`.
+1. **Worked example 5.1** exactly, with t = 0: L, parent, `order`, every output grid. **Worked example 5.2** exactly: `order`, `flow_dir` and `flow_accum` for both tie settings. Also the pre-rerouting receivers (lake cells with their flood parents) from G4 alone.
+2. **Flood properties on the examples:** pops are non-decreasing in L (and, with t = 0, in key); each cell's parent and each strictly lower neighbour precede it in `order`.
 3. **Score ties.** A 6 × 3 grid: rows 0 and 2 ocean (−1); row 1 is ocean (−1) at x = 0, then 10 at x = 1 to 5 (land touching the east edge is allowed on test grids). Every land cell has ocean neighbours: orthogonal ones score 2 × 10² = 200, diagonal ones 100, and among equal scores the lowest code wins, so S (2) beats W (4) and N (6). Expected `flow_dir` row 1: 8, 2, 2, 2, 2, 2.
 4. **A plateau.** 7 × 5, border −1, all 15 interior cells 10. Expected `flow_dir`, rows 1 to 3: `8 4 6 6 6 0 8`, `8 4 5 5 5 0 8`, `8 2 2 2 2 0 8`. The three cells (2..4, 2) have no lower neighbour and take their flood parents (NW, code 5); (1, 1) takes W (score 200, the first 200 in code order after the diagonal SW at 100); (2, 1) to (4, 1) take N. `flow_accum` rows 1 to 3: `0 2 2 2 1 1 0`, `0 1 1 1 1 1 0`, `0 1 1 1 1 1 0`.
 5. **Two lakes at different levels draining one into the other** (a terraced fixture designed by the test writer, at least 9 × 9): the upper lake's outlet drains over its rim into a path that enters the lower lake; ids follow the smallest index; each lake has one outlet.
@@ -324,7 +356,7 @@ Over seeds 0 to 63 at N = 128 and 0 to 3 at N = 512 (fixture tuning, elevation f
 
 - Threads (D10): 1, 2 and 5 threads give identical layers for seeds 0 and 42 at N = 128 and 512.
 - Resume (P1-00 X2): hydrology on the `elevation` read back from a written world equals the uninterrupted pipeline.
-- Queue independence: the flood computed with a binary heap and with a bucket queue (both in the test) gives identical `order` on the random fixtures. This checks that nothing depends on the queue structure, only on (key, seq).
+- Queue independence: the H2 flood computed with two different priority-queue implementations in the test (a binary heap and a sorted-set or pairing heap, both ordered by (key, seq)) gives identical `order` and `parent` on the random fixtures with random t; with t = 0 a bucket queue over decimetre levels also gives the same order, and equals G3 on keys e.
 
 ### 8.4 Golden values
 
@@ -338,7 +370,7 @@ Layer hashes (P0-04 8) of all seven layers, fixture tuning, compared on every pr
 
 The final elevation is `elevation`, written once by the elevation stage. Hydrology does not carve valleys or fill pits in it:
 
-- Valleys are cut by the elevation stage's erosion (P1-01 E8), which routes water with the same G3 flood and G4 receivers, then draws each cell's receiver at random among its lower neighbours (weighted by slope²) so that incision spreads over a slope instead of cutting straight gullies. Hydrology's own `flow_dir` is plain G4 on the stored terrain, so a river need not follow the exact cells erosion last used; it runs down the valleys erosion cut.
+- Valleys are cut by the elevation stage's erosion (P1-01 E8), which routes water with the same G3 flood and G4 receivers, then draws each cell's receiver at random among its lower neighbours (weighted by slope²) so that incision spreads over a slope instead of cutting straight gullies. Hydrology's own `flow_dir` is plain G4 (with H2's flood parents on flats) on the stored terrain, so a river need not follow the exact cells erosion last used; it runs down the valleys erosion cut.
 - Depressions that do not become lakes (too small, too shallow, too large for the map, or beyond the lake share of land) are filled by the elevation stage's last step (P1-01 E10), so the stored terrain drains everywhere except into the kept lakes, and hydrology finds exactly those lakes.
 - The river channel itself (metres wide, below the 16 m cell) is carved by the runtime when it builds chunk heightmaps (design doc section 7), from `river`, `flow_dir` and `water_depth`.
 
