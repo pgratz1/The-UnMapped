@@ -154,6 +154,32 @@ inline std::vector<worldgen::stages::testing::FixtureLayer> worked_example_layer
 //   land_above_m: the highest land is 80 dm < 500 dm, so every share is 0.
 //   max_step_m: largest |e(a) - e(b)| over 4-adjacent land pairs is (3, 1) 80
 //   against (3, 2) 22 = 58 dm (next: (2, 1) 70 / (2, 2) 20 = 50) -> 5.8.
+//   The five keys of 2026-11-15 (10.3 "Cell step", "Cell slope", "Edge-
+//   parallel run"):
+//   step_p999_m: n_L = 30 < 1000, rank min(29, floor(999 x 30 / 1000) = 29)
+//   = 29, the largest cell step, which is the largest pair step: 5.8.
+//   Slopes: every land cell is inside the 8 x 7 grid, so all differences are
+//   central; ocean neighbours count as e' = 0. Per cell (gx, gy) S2, row by
+//   row (x = 1..6):
+//     y 1: (70,50) 7400, (20,20) 800, (0,22) 484, (-20,60) 4000,
+//          (-20,40) 2000, (-60,30) 4500
+//     y 2: (20,-15) 625, (-28,-49) 3185, (40,-57) 4849, (18,-15) 549,
+//          (-30,-25) 1525, (-40,-25) 2225
+//     y 3: (21,-10) 541, (-22,10) 584, (34,6) 1192, (12,-20) 544,
+//          (-30,-10) 1000, (-35,-10) 1325
+//     y 4: (30,-10) 1000, (-12,12) 288, (10,8) 164, (2,-30) 904,
+//          (-20,-15) 625, (-30,-15) 1125
+//     y 5: (33,-40) 2689, (-4,-30) 916, (-8,-28) 848, (-11,-40) 1721,
+//          (-15,-30) 1125, (-20,-20) 800
+//   so every S2 lies in [164, 7400]: none is steeper than 35 degrees (S2 >=
+//   50205) or 45 degrees: slope_over 35:0.0000 45:0.0000; none is flatter
+//   than 0.5 degrees (S2 <= 7). Every land cell is below 1000 dm, so the
+//   lowland is all 30 cells, 0 flat: lowland_flat_share 0.0000. No cell is
+//   >= 5000 dm: slope_p50_above_500m n/a.
+//   edge_parallel_run_m: land is the rectangle x 1..6, y 1..5. West: t = 1
+//   on rows 1..5 (rows 0 and 6 undefined): 5. East: 7 - 6 = 1 on rows 1..5:
+//   5. North: t = 1 on columns 1..6: 6. South: 6 - 5 = 1 on columns 1..6: 6.
+//   Largest 6, 16 x 6 = 96.
 inline constexpr std::string_view WORKED_GEOGRAPHY_ELEVATION_LINES =
     "[geography]\n"
     "cells = 56\n"
@@ -168,7 +194,12 @@ inline constexpr std::string_view WORKED_GEOGRAPHY_ELEVATION_LINES =
     "elevation_m = 1.0 1.0 2.0 2.5 3.5 5.0 7.0 8.0 8.0\n"
     "depth_m = 0.5 0.5 0.5\n"
     "land_above_m = 50:0.0000 500:0.0000 1000:0.0000 1500:0.0000 2000:0.0000\n"
-    "max_step_m = 5.8\n";
+    "max_step_m = 5.8\n"
+    "step_p999_m = 5.8\n"
+    "slope_over = 35:0.0000 45:0.0000\n"
+    "slope_p50_above_500m = n/a\n"
+    "lowland_flat_share = 0.0000\n"
+    "edge_parallel_run_m = 96\n";
 
 // The hydrology lines for the worked example, derived by hand:
 //   lakes: the largest lake value is 1.
@@ -239,6 +270,27 @@ inline const std::vector<std::int16_t> SQUARE_ELEVATION = {
 //   >= 15000: 2 -> 0.2222; >= 20000: 1 -> 0.1111.
 //   max_step_m: 4-adjacent land pairs; the largest is (2,2) 20000 against
 //   (2,3) 499 = 19501 dm -> 1950.1 (next: (2,1) 600 / (2,2) 20000 = 19400).
+//   step_p999_m: cell steps m(c) over land 4-neighbours: (1,1) 14900,
+//   (2,1) 19400, (3,1) 4999, (1,2) 14999, (2,2) 19501, (3,2) 10001,
+//   (1,3) 14999, (2,3) 19501, (3,3) 9499; n_L = 9, rank min(8,
+//   floor(8991 / 1000) = 8) = 8, the largest: 19501 -> 1950.1.
+//   Slopes (all central; e' = 0 on the ocean ring), (gx, gy) S2:
+//     (1,1) (600, 15000) 225360000      (2,1) (4900, 20000) 424010000
+//     (3,1) (-600, 9999) 100340001      (1,2) (20000, -99) 400009801
+//     (2,2) (-5001, -101) 25020202      (3,2) (-20000, -4500) 420250000
+//     (1,3) (499, -15000) 225249001     (2,3) (499, -20000) 400249001
+//     (3,3) (-499, -9999) 100229002
+//   all > 102400: slope_over 35:1.0000 45:1.0000.
+//   slope_p50_above_500m: cells with e >= 5000 are (3,1) 5000 (the
+//   threshold itself is included), (1,2), (2,2), (3,2): S2 sorted 25020202,
+//   100340001, 400009801, 420250000; rank min(3, floor(200 / 100)) = 2:
+//   400009801; r = isqrt(400009801 x 10^8) = 200002450 (200002450^2 =
+//   40000980006002500 <= 40000980100000000 < 200002451^2), T = (200002450 +
+//   160) div 320 = 625008: 62.5008.
+//   lowland_flat_share: e < 1000 are 100, 600, 1, 499, 500 (5 cells), none
+//   flat: 0.0000.
+//   edge_parallel_run_m: land x 1..3, y 1..3; each side's t is 1 on three
+//   lines: 3 on every side, 48.
 inline constexpr std::string_view SQUARE_GEOGRAPHY =
     "[geography]\n"
     "cells = 25\n"
@@ -253,6 +305,98 @@ inline constexpr std::string_view SQUARE_GEOGRAPHY =
     "elevation_m = 0.1 0.1 0.1 49.9 60.0 999.9 2000.0 2000.0 2000.0\n"
     "depth_m = 0.1 10.0 30.0\n"
     "land_above_m = 50:0.6667 500:0.4444 1000:0.2222 1500:0.2222 2000:0.1111\n"
-    "max_step_m = 1950.1\n";
+    "max_step_m = 1950.1\n"
+    "step_p999_m = 1950.1\n"
+    "slope_over = 35:1.0000 45:1.0000\n"
+    "slope_p50_above_500m = 62.5008\n"
+    "lowland_flat_share = 0.0000\n"
+    "edge_parallel_run_m = 48\n";
+
+// --- A world built for the slope statistics (7 x 6) ---------------------------
+//
+// Ocean -40 on the west column and the north row only; the land touches the
+// east and south grid edges (test layers only), so one-sided differences are
+// doubled there. A coastal plain in the west, a highland in the south-east.
+
+inline constexpr std::uint32_t SLW = 7;
+inline constexpr std::uint32_t SLH = 6;
+
+inline const std::vector<std::int16_t> SLOPE_ELEVATION = {
+    -40, -40, -40, -40,  -40,  -40,  -40,   //
+    -40, 2,   3,   3,    40,   400,  700,   //
+    -40, 2,   3,   4,    999,  3000, 5000,  //
+    -40, 3,   3,   600,  4800, 5000, 5100,  //
+    -40, 2,   4,   1500, 5150, 5300, 5250,  //
+    -40, 2,   10,  3000, 5200, 5350, 5400,  //
+};
+
+// Derived by hand from 10.3:
+//   cells 42, land 30 (x 1..6, y 1..5), ocean 12; land_fraction RHA(300000 /
+//   42) = 7142.86 -> 0.7143. One landmass, share 1.0000.
+//   coastline: row 1 against row 0 (6 pairs) and column 1 against column 0
+//   (5 pairs): 11 pairs, 176 m. coast_ratio: A = 7680 m^2 as in the worked
+//   example, Pq = 1334275167302; RHA(176 x 2^64 / Pq) = 2433251429 raw
+//   (0.56653), to_decimal(4) 0.5665.
+//   land_solidity: every land row spans x 1..6: hull [1,7] x [1,6], 2H = 60,
+//   ratio4(60, 60) = 1.0000.
+//   elevation_m: land sorted 2 2 2 2 3 3 3 3 3 4 4 10 40 400 600 700 999 1500
+//   3000 3000 4800 5000 5000 5100 5150 5200 5250 5300 5350 5400; ranks
+//   min(29, floor(30 p / 100)) for p 0 1 10 25 50 75 90 99 100 = 0 0 3 7 15
+//   22 27 29 29: 2 2 2 3 700 5000 5300 5400 5400 dm.
+//   depth_m: 12 ocean cells, all 40 dm: 4.0 4.0 4.0.
+//   land_above_m: >= 500: 600 700 999 1500 3000 3000 4800 and the nine
+//   >= 5000 = 16 -> 0.5333; >= 5000: 9 -> 0.3000; >= 10000: 0.
+//   max_step_m: the largest pair step is (6,1) 700 / (6,2) 5000 = 4300 dm
+//   (next (3,3) 600 / (4,3) 4800 = 4200): 430.0.
+//   step_p999_m: n_L = 30, rank 29, the largest cell step: 430.0.
+//   Slopes, (gx, gy) S2 per land cell (x = 1..6; at x = 6 and y = 5 the
+//   one-sided difference is doubled, e.g. (6,1): gx = (700 - 400) x 2 = 600):
+//     y 1: (3,2) 13, (1,3) 10, (37,4) 1385, (397,999) 1155610,
+//          (660,3000) 9435600, (600,5000) 25360000
+//     y 2: (3,1) 10, (2,0) 4, (996,597) 1348425, (2996,4760) 31633616,
+//          (4001,4600) 37168001, (4000,4400) 35360000
+//     y 3: (3,0) 9, (597,1) 356410, (4797,1496) 25249225,
+//          (4400,4151) 36590801, (300,2300) 5380000, (200,250) 102500
+//     y 4: (4,-1) 17, (1498,7) 2244053, (5146,2400) 32241316,
+//          (3800,400) 14600000, (100,350) 132500, (-100,300) 100000
+//     y 5: (10,0) 100, (2998,12) 8988148, (5190,3000) 35936100,
+//          (2350,100) 5532500, (200,100) 50000, (100,300) 100000
+//   Steeper than 35 degrees (S2 >= 50205): every S2 from 102500 up, plus
+//   the two 100000 = 21 cells; (5,5) at 50000 (34.94 degrees) is not:
+//   ratio4(21, 30) = 0.7000. Steeper than 45 degrees (S2 > 102400): the same
+//   less (6,4) and (6,5) at 100000 = 19 -> 0.6333. (6,3) at 102500 is
+//   45.01 degrees and counts in both.
+//   slope_p50_above_500m: e >= 5000 are (6,2) 5000, (5,3) 5000, (6,3),
+//   (4,4), (5,4), (6,4), (4,5), (5,5), (6,5): S2 sorted 50000 100000 100000
+//   102500 132500 5380000 5532500 14600000 35360000 (n 9); rank floor(450 /
+//   100) = 4: 132500; r = isqrt(132500 x 10^8) = 3640054, T = (3640054 +
+//   160) div 320 = 11375: 1.1375 (48.7 degrees). (Without the two cells at
+//   exactly 5000, n 7, rank 3: 102500, 1.0005.)
+//   lowland_flat_share: e < 1000 are the 17 cells of columns 1 and 2, (3,1)
+//   (3,2) (3,3), (4,1) and (4,2) 999, (5,1) and (6,1); flat (S2 <= 7)
+//   only (2,2), S2 4: ratio4(1, 17) = 0.0588.
+//   edge_parallel_run_m: west t = 1 on rows 1..5: 5; east t = 6 - 6 = 0 on
+//   rows 1..5: 5; north t = 1 on columns 1..6: 6; south t = 5 - 5 = 0 on
+//   columns 1..6: 6. Largest 6: 96.
+inline constexpr std::string_view SLOPE_GEOGRAPHY =
+    "[geography]\n"
+    "cells = 42\n"
+    "land_cells = 30\n"
+    "ocean_cells = 12\n"
+    "land_fraction = 0.7143\n"
+    "landmasses = 1\n"
+    "largest_landmass_share = 1.0000\n"
+    "coastline_m = 176\n"
+    "coast_ratio = 0.5665\n"
+    "land_solidity = 1.0000\n"
+    "elevation_m = 0.2 0.2 0.2 0.3 70.0 500.0 530.0 540.0 540.0\n"
+    "depth_m = 4.0 4.0 4.0\n"
+    "land_above_m = 50:0.5333 500:0.3000 1000:0.0000 1500:0.0000 2000:0.0000\n"
+    "max_step_m = 430.0\n"
+    "step_p999_m = 430.0\n"
+    "slope_over = 35:0.7000 45:0.6333\n"
+    "slope_p50_above_500m = 1.1375\n"
+    "lowland_flat_share = 0.0588\n"
+    "edge_parallel_run_m = 96\n";
 
 }  // namespace p100

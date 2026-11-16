@@ -177,6 +177,13 @@ SectionResult section_of(const Hydro& hy) {
 
 bool has(std::string_view text, std::string_view part) { return text.find(part) != std::string_view::npos; }
 
+// The five lines that follow max_step_m (P1-00 10.3, added 2026-11-15).
+std::string slope_lines(std::string_view p999, std::string_view over, std::string_view p50, std::string_view flat,
+                        std::string_view run) {
+    return line("step_p999_m", p999) + line("slope_over", over) + line("slope_p50_above_500m", p50) +
+           line("lowland_flat_share", flat) + line("edge_parallel_run_m", run);
+}
+
 }  // namespace
 
 // --- Number formats (10.3) -------------------------------------------------------------
@@ -278,6 +285,15 @@ TEST_CASE("geography 10.3: a ring has solidity below 1") {
     // 24 pairs, 384 m. coast_ratio: Pq for A = 256 x 24, value 384 x 2^64 /
     // Pq = 1.38197 -> 1.3820. Hull: the rows span x 1..5, so the hull is the
     // square [1, 6] x [1, 6], 2H = 50, solidity ratio4(48, 50) = 0.9600.
+    // Five keys of 2026-11-15: every land cell is 10, so every cell step is
+    // 0 (step_p999 0.0, rank 23 of 24). Slopes with e' = 0 on the ocean:
+    // corners (1,1) (5,1) (1,5) (5,5) have (gx, gy) = (+-10, +-10), S2 200;
+    // the other border cells and the four cells beside the hole (3,2) (2,3)
+    // (4,3) (3,4) have one difference of 10, S2 100; (2,2) (4,2) (2,4) (4,4)
+    // have all four neighbours land, S2 0, flat. All 24 cells are lowland:
+    // ratio4(4, 24) = 0.1667; nothing steep; nothing >= 500 m. Edge runs:
+    // land rows 1..5 span x 1..5 (the hole does not change the outermost
+    // land), so every side has t = 1 on 5 lines: 80.
     CHECK(worldgen::inspect::coastline_m(e, 7, 7) == 384U);
     CHECK(worldgen::inspect::land_hull_area2(e, 7, 7) == 50U);
     CHECK(worldgen::inspect::coast_ratio(384, 24)->raw() == ref_coast_ratio_raw(384, 24));
@@ -289,7 +305,8 @@ TEST_CASE("geography 10.3: a ring has solidity below 1") {
                                  line("elevation_m", "1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0") +
                                  line("depth_m", "1.0 1.0 1.0") +
                                  line("land_above_m", "50:0.0000 500:0.0000 1000:0.0000 1500:0.0000 2000:0.0000") +
-                                 line("max_step_m", "0.0");
+                                 line("max_step_m", "0.0") +
+                                 slope_lines("0.0", "35:0.0000 45:0.0000", "n/a", "0.1667", "80");
     CHECK(section_of(7, 7, e) == expected);
 }
 
@@ -302,6 +319,14 @@ TEST_CASE("geography 10.3: two islands") {
     // give x 1 and 4, row 3 gives x 6 and 7; hull (1,1) (4,1) (7,3) (7,4)
     // (6,4) (1,3); shoelace: -3 + 5 + 7 + 4 + 14 - 2 = 25 = 2H; solidity
     // ratio4(14, 25) = 0.5600.
+    // Five keys: all land 30, cell steps 0 (rank 6 of 7). Slopes: the six
+    // cells of the 3 x 2 island have (gx, gy) (+-30, +-30) S2 1800 at its
+    // corners and (0, +-30) S2 900 at (2,1), (2,2); the islet (6,3) has
+    // ocean on all four sides, gx = gy = 0 - 0, S2 0: flat. Lowland 7, flat 1:
+    // ratio4(1, 7) = 0.1429. Edge runs: west t = (-, 1, 1, 6, -): range 5,
+    // run 3; east 7 - x_r = (-, 4, 4, 1, -): 3; north t on columns 1, 2, 3 =
+    // 1 (columns 4, 5 empty), column 6 = 3: 3; south 4 - 2 = 2 on columns
+    // 1..3: 3. 16 x 3 = 48.
     const auto m = worldgen::inspect::count_landmasses(e, 8, 5);
     CHECK(m.count == 2U);
     CHECK(m.largest_cells == 6U);
@@ -314,7 +339,8 @@ TEST_CASE("geography 10.3: two islands") {
                                  line("elevation_m", "3.0 3.0 3.0 3.0 3.0 3.0 3.0 3.0 3.0") +
                                  line("depth_m", "1.0 1.0 1.0") +
                                  line("land_above_m", "50:0.0000 500:0.0000 1000:0.0000 1500:0.0000 2000:0.0000") +
-                                 line("max_step_m", "0.0");
+                                 line("max_step_m", "0.0") +
+                                 slope_lines("0.0", "35:0.0000 45:0.0000", "n/a", "0.1429", "48");
     CHECK(section_of(8, 5, e) == expected);
 }
 
@@ -357,6 +383,12 @@ TEST_CASE("geography 10.3: diagonal-only contact, 8-connected land and 4-connect
     // = 0.6667. coast_ratio 128 / (2 sqrt(pi 512)) = 1.59577 -> 1.5958.
     CHECK(worldgen::inspect::land_hull_area2(e, 4, 4) == 6U);
     // elevation_m over {10, 500}: ranks 0 0 0 0 1 1 1 1 1.
+    // Five keys: no 4-adjacent land pair, so both cell steps are 0 (rank
+    // min(1, floor(1998 / 1000)) = 1): 0.0. Slopes: each land cell's four
+    // neighbours are ocean (e' 0), so gx = gy = 0 and S2 = 0 for both, even
+    // the 50 m spike (central differences do not see the cell itself): both
+    // lowland and flat, 1.0000. Edge runs: west t = (-, 1, 2, -): 2; east
+    // (-, 2, 1, -): 2; north t(1) = 1, t(2) = 2: 2; south 2, 1: 2. 32.
     const std::string expected = "[geography]\n" + line("cells", "16") + line("land_cells", "2") +
                                  line("ocean_cells", "14") + line("land_fraction", "0.1250") +
                                  line("landmasses", "1") + line("largest_landmass_share", "1.0000") +
@@ -365,7 +397,8 @@ TEST_CASE("geography 10.3: diagonal-only contact, 8-connected land and 4-connect
                                  line("elevation_m", "1.0 1.0 1.0 1.0 50.0 50.0 50.0 50.0 50.0") +
                                  line("depth_m", "1.0 1.0 1.0") +
                                  line("land_above_m", "50:0.5000 500:0.0000 1000:0.0000 1500:0.0000 2000:0.0000") +
-                                 line("max_step_m", "0.0");
+                                 line("max_step_m", "0.0") +
+                                 slope_lines("0.0", "35:0.0000 45:0.0000", "n/a", "1.0000", "32");
     CHECK(section_of(4, 4, e) == expected);
     // The anti-diagonal and a 4-connected pair for comparison.
     const Cells anti = shape({"....", "..#.", ".#..", "...."});
@@ -493,7 +526,11 @@ TEST_CASE("geography appendix C 6: no land") {
                                  line("land_solidity", "n/a") + line("elevation_m", "n/a") +
                                  line("depth_m", "0.5 0.5 0.5") +
                                  line("land_above_m", "50:n/a 500:n/a 1000:n/a 1500:n/a 2000:n/a") +
-                                 line("max_step_m", "0.0");
+                                 line("max_step_m", "0.0") +
+                                 // No land: step_p999_m is n/a (10.3 "Cell step"); slope_over
+                                 // is "35:" ratio4(0, 0) and "45:" ratio4(0, 0), each n/a (C 6);
+                                 // no cell >= 500 m; lowland denominator 0; no land, run 0.
+                                 slope_lines("n/a", "35:n/a 45:n/a", "n/a", "n/a", "0");
     CHECK(section_of(3, 3, Cells(9, -5)) == expected);
     const auto m = worldgen::inspect::count_landmasses(Cells(9, -5), 3, 3);
     CHECK(m.count == 0U);
@@ -512,7 +549,11 @@ TEST_CASE("geography appendix C 6: no ocean") {
                                  line("elevation_m", "1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0") +
                                  line("depth_m", "n/a") +
                                  line("land_above_m", "50:0.0000 500:0.0000 1000:0.0000 1500:0.0000 2000:0.0000") +
-                                 line("max_step_m", "0.0");
+                                 line("max_step_m", "0.0") +
+                                 // Steps 0. Slopes: 2 x 2, xa = 0, xb = 1 for every cell, gx =
+                                 // (10 - 10) x 2 = 0, gy likewise: S2 0, 4 of 4 lowland cells
+                                 // flat. Each side has t = 0 on 2 lines: 32.
+                                 slope_lines("0.0", "35:0.0000 45:0.0000", "n/a", "1.0000", "32");
     CHECK(section_of(2, 2, Cells(4, 10)) == expected);
 }
 
@@ -527,7 +568,10 @@ TEST_CASE("geography appendix C 6: a single cell") {
                                      line("elevation_m", "0.7 0.7 0.7 0.7 0.7 0.7 0.7 0.7 0.7") +
                                      line("depth_m", "n/a") +
                                      line("land_above_m", "50:0.0000 500:0.0000 1000:0.0000 1500:0.0000 2000:0.0000") +
-                                     line("max_step_m", "0.0");
+                                     line("max_step_m", "0.0") +
+                                     // n_L 1: step 0. xa = xb, ya = yb: gx = gy = 0, S2 0, flat
+                                     // lowland 1 of 1. Each side t = (0): run 1, 16 m.
+                                     slope_lines("0.0", "35:0.0000 45:0.0000", "n/a", "1.0000", "16");
         CHECK(section_of(1, 1, Cells{7}) == expected);
         CHECK(worldgen::inspect::land_hull_area2(Cells{7}, 1, 1) == 2U);
     }
@@ -539,7 +583,8 @@ TEST_CASE("geography appendix C 6: a single cell") {
                                      line("land_solidity", "n/a") + line("elevation_m", "n/a") +
                                      line("depth_m", "0.7 0.7 0.7") +
                                      line("land_above_m", "50:n/a 500:n/a 1000:n/a 1500:n/a 2000:n/a") +
-                                     line("max_step_m", "0.0");
+                                     line("max_step_m", "0.0") +
+                                     slope_lines("n/a", "35:n/a 45:n/a", "n/a", "n/a", "0");
         CHECK(section_of(1, 1, Cells{-7}) == expected);
     }
     SUBCASE("elevation 0: neither land nor ocean (appendix C item 3)") {
@@ -550,7 +595,9 @@ TEST_CASE("geography appendix C 6: a single cell") {
                                      line("land_solidity", "n/a") + line("elevation_m", "n/a") +
                                      line("depth_m", "n/a") +
                                      line("land_above_m", "50:n/a 500:n/a 1000:n/a 1500:n/a 2000:n/a") +
-                                     line("max_step_m", "0.0");
+                                     line("max_step_m", "0.0") +
+                                     // Elevation 0 is not land: as with no land.
+                                     slope_lines("n/a", "35:n/a 45:n/a", "n/a", "n/a", "0");
         CHECK(section_of(1, 1, Cells{0}) == expected);
     }
 }
@@ -663,7 +710,14 @@ TEST_CASE("geography 10.3: a single river") {
                                  line("river_share_of_land", "0.6667") + line("river_sources", "1") +
                                  line("river_mouths", "1") + line("major_rivers", "0") +
                                  line("longest_river_m", "32") + line("largest_basin_share", "1.0000");
-        CHECK(has(*sec.text, "\nmax_step_m = 1.0\n" + want));
+        // Five keys: steps 10 for all three land cells (rank 2 of 3): 1.0.
+        // Slopes on the 5 x 3 grid (e' 0 on the ocean): (1,1) gx 20 - 0,
+        // (2,1) 30 - 10, (3,1) 0 - 20, gy 0 - 0: S2 400 each, not flat,
+        // lowland 3: 0.0000. Edge runs: west t = (-, 1, -): 1; east (-, 1,
+        // -): 1; north t = 1 on columns 1..3: 3; south 2 - 1 = 1 on them: 3.
+        // 48.
+        CHECK(has(*sec.text, "\nmax_step_m = 1.0\n" +
+                                 slope_lines("1.0", "35:0.0000 45:0.0000", "n/a", "0.0000", "48") + want));
         CHECK(sec.text->size() >= want.size());
         CHECK(sec.text->substr(sec.text->size() - want.size()) == want);
     }
