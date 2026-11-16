@@ -291,7 +291,7 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
 - Design doc section: 4 (geography), 5 (history)
 - Problem: in the adopted elevation candidate the ranges are closed walls with open ends. Measured at 1024, a median of 1.3% of land above 500 m can be reached on foot, no walkable route climbs above about 250 m, and walkers go round a range (detours of 1.5 to 3 times, up to 10 times). There are no saddle passes, so history has no natural crossing to fortify, tax or fight over; every crossing must be a built road.
 - Proposal: decide whether ranges should have a few natural passes. A cheap way: one more low-frequency noise lowers the mountains only where its zero line crosses a belt, giving one to three cols 500 to 800 m wide per range and leaving crests elsewhere alone. It changes every world's bytes but no outline or range layout.
-- Interim choice: no passes in P1-01 as first merged. Low coastal cliffs also seal off a few lowland pockets (for example 12 km² on 1024 seed 18); they are left as they are.
+- Interim choice: Paul decided on 2026-11-17 to add natural passes, together with the deferred fix for very steep smooth faces where a range meets the sea (P1-01 limitation 11), as one elevation revision. Until it merges: no passes in P1-01 as first merged. Low coastal cliffs also seal off a few lowland pockets (for example 12 km² on 1024 seed 18); they are left as they are.
 - Status: open
 
 ### Every world's hash depends on the shipped tuning files
