@@ -224,8 +224,13 @@ from `Rng(substream(stream_key(0, "test.hydro"), f))`, `uniform_i64(-50, -1)`
 on the border and `uniform_i64(1, 200)` inside; the golden file holds
 fixtures 0 to 3 with `river_min_area_m2` 2048 (T = 8).
 
-The H2 tie-break (P1-02 H2, amended 2026-11-16, generator 0.5.0): the flood
-runs on keys k = e × 2^16 + t, L = Lk >> 16, and G4 on Lk. t is `flat_tie`
+The H2 tie-break (P1-02 H2, amended 2026-11-16 and re-specified the same day
+as variant B, generator 0.5.0): hydrology's own flood with L[m] = max(e[m],
+L[c]), cells visited when pushed, pushed with key L[m] × 2^16 + t[m] and
+popped by the smallest (key, seq) (a binary heap; `check` compares it with a
+sorted-list queue, and at t = 0 with the bucket-queue G3); G4 runs on the
+decimetre levels with the flood parent as fallback. `check` reproduces worked
+example 5.2 for both tie settings. t is `flat_tie`
 (`fbm_m` of stream `geo.hydrology.flat` with `flat_noise`, shipped wavelength
 400, octaves 1, gain 0.5) for the world cases, the random ties of 8.2
 (`uniform_i64(0, 65535)` per land cell from `Rng(substream(stream_key(0,

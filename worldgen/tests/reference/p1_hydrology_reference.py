@@ -29,7 +29,7 @@ Usage (from the repository root; -B keeps __pycache__ out of the tree):
         p1-02-hydrology.txt); "-" writes it to standard output. --large adds
         the N = 512 and 1024 cases of P1-02 8.4 (about half an hour, almost
         all of it the elevation reference). --legacy writes the 0.4.0 file
-        (t = 0 everywhere, no tie and Lk items), which must equal the file of
+        (t = 0 everywhere, no tie item), which must equal the file of
         generator 0.4.0 byte for byte.
 
     python3 -B worldgen/tests/reference/p1_hydrology_reference.py fixtures
@@ -419,6 +419,56 @@ def random_tie(f, w, h, e):
     return [0 if v < 0 else rng.uniform_i64(0, TIE_MAX) for v in e]
 
 
+def flood_tie(w, h, e, ocean, tie, queue="heap"):
+    """H2 step 2 (P1-02, re-specified 2026-11-16, "variant B"): L[m] =
+    max(e[m], L[c]); push key L[m] * 2^16 + t[m]; a cell is visited when it
+    is pushed; pop the smallest (key, seq). queue: "heap" (heapq) or
+    "sorted" (a list kept sorted with bisect), two independent queues."""
+    import bisect
+    n = w * h
+    L = [0] * n
+    parent = [8] * n
+    visited = bytearray(n)
+    q = []
+    seq = 0
+
+    def push(item):
+        if queue == "heap":
+            heapq.heappush(q, item)
+        else:
+            bisect.insort(q, item)
+
+    def pop():
+        if queue == "heap":
+            return heapq.heappop(q)
+        return q.pop(0)
+
+    for i in range(n):
+        if ocean[i]:
+            visited[i] = 1
+            push((0, seq, i))
+            seq += 1
+    if seq == 0:
+        fatal("H2: no ocean")
+    tab = nbt(w, h)
+    order = []
+    while q:
+        _, _, c = pop()
+        order.append(c)
+        lc = L[c]
+        for code, m in tab[c]:
+            if visited[m]:
+                continue
+            visited[m] = 1
+            em = e[m]
+            lm = em if em > lc else lc
+            L[m] = lm
+            parent[m] = (code + 4) & 7
+            push(((lm << TIE_SHIFT) + tie[m], seq, m))
+            seq += 1
+    return L, parent, order
+
+
 def hydrology(w, h, e, area_m2, tie=None):
     """Every intermediate of H1 to H8, as a dict. tie: the t grid of H2 (None
     or empty: t = 0 everywhere)."""
@@ -434,13 +484,13 @@ def hydrology(w, h, e, area_m2, tie=None):
             fatal("tie: non-zero on ocean")
         if not 0 <= tie[i] <= TIE_MAX:
             fatal("tie: outside [0, 65535]")
-    # H2: keys k = e * 2^16 + t on land (0 on ocean), G3, L = Lk >> 16.
-    keys = [0 if ocean[i] else (e[i] << TIE_SHIFT) + tie[i] for i in range(n)]
-    Lk, parent, order = flood_bucket(w, h, keys, ocean)
-    L = [v >> TIE_SHIFT for v in Lk]
+    # H2: the decimetre flood ordered by (L * 2^16 + t, seq), for every t
+    # (t = 0 included: golden --legacy checks it against the 0.4.0 file, which
+    # the bucket-queue G3 flood produced).
+    L, parent, order = flood_tie(w, h, e, ocean, tie)
     label, comps, levels = lakes_of(w, h, e, L, ocean)
-    # H4 step 1 on the fine surface Lk.
-    rcv_g4 = receivers_g4(w, h, Lk, parent, ocean)
+    # H4 step 1: G4 on the decimetre levels, flood parent fallback.
+    rcv_g4 = receivers_g4(w, h, L, parent, ocean)
     rcv, outlets = reroute_lakes(w, h, rcv_g4, parent, order, label, comps)
     A = accumulate_kahn(w, h, rcv, ocean)
     water = [0] * n
@@ -471,8 +521,8 @@ def hydrology(w, h, e, area_m2, tie=None):
         if v > 65535:
             fatal("water_depth above the u16 bound")
     return {
-        "w": w, "h": h, "e": list(e), "T": T, "ocean": ocean, "tie": list(tie), "Lk": Lk, "L": L,
-        "keys": keys, "parent": parent, "order": order,
+        "w": w, "h": h, "e": list(e), "T": T, "ocean": ocean, "tie": list(tie), "L": L,
+        "parent": parent, "order": order,
         "label": label, "comps": comps, "levels": levels, "rcv_g4": rcv_g4, "rcv": rcv, "outlets": outlets,
         "A": A, "dl": dl, "do": do,
         "layers": [("water", 1, water), ("water_depth", 3, depth), ("flow_dir", 1, flow_dir),
@@ -812,12 +862,12 @@ def h_u16(values):
 
 def world_items(r, elev_layer, legacy=False):
     """The golden items of one result. legacy: the item list of the 0.4.0 file
-    (no tie, no Lk), used to prove that t = 0 reproduces it."""
+    (no tie), used to prove that t = 0 reproduces it."""
     w, h = r["w"], r["h"]
     lv = r["levels"]
     head = [("elevation", elev_layer)]
     if not legacy:
-        head += [("tie", h_u16(r["tie"])), ("Lk", h_i64(r["Lk"]))]
+        head += [("tie", h_u16(r["tie"]))]
     items = head + [
         ("L", h_i64(r["L"])),
         ("parent", h_u8(r["parent"])),
@@ -1198,9 +1248,16 @@ def check_random(c, count=200):
             L2, p2, o2 = flood_heap(w, h, e, ocean)
             c.eq("8.3 queue independence fixture %d" % f, (L2, p2, o2), (r["L"], r["parent"], r["order"]))
             rt = hydrology(w, h, e, area, tie)
-            k2, p3, o3 = flood_heap(w, h, rt["keys"], ocean)
-            c.eq("8.3 queue independence with t, fixture %d" % f, (k2, p3, o3), (rt["Lk"], rt["parent"], rt["order"]))
-            c.eq("H2: L = Lk >> 16 is the minimax level on e, fixture %d" % f, rt["L"], minimax_levels(w, h, e, ocean))
+            if area == 256 * 8:
+                l2, p3, o3 = flood_tie(w, h, e, ocean, tie, queue="sorted")
+                c.eq("8.3 queue independence with t (heap vs sorted list), fixture %d" % f, (l2, p3, o3),
+                     (rt["L"], rt["parent"], rt["order"]))
+                l0, p0, o0 = flood_tie(w, h, e, ocean, [0] * (w * h))
+                c.eq("8.3 t = 0: H2 flood = G3 bucket queue, fixture %d" % f, (l0, p0, o0),
+                     (r["L"], r["parent"], r["order"]))
+            c.eq("H2: L is the minimax level, fixture %d" % f, rt["L"], minimax_levels(w, h, e, ocean))
+            Ls = [rt["L"][x] for x in rt["order"]]
+            c.ok("H2: pops non-decreasing in L, fixture %d" % f, all(Ls[i] <= Ls[i + 1] for i in range(len(Ls) - 1)))
             same_lakes(c, "inv 11 fixture %d area %d" % (f, area), r, rt)
             for res, lab in ((r, "t=0"), (rt, "random t")):
                 if not check_invariants(res, c, "random fixture %d %s area %d" % (f, lab, area)):
@@ -1293,11 +1350,12 @@ GOLDEN_HEADER = """\
 #   elevation    P0-04 8 layer hash of the input elevation layer (equal to the
 #                elevation golden `layer` item of the same case)
 #   tie          SHA-256 of the tie values t as uint16, little-endian (H2 step 1)
-#   Lk           SHA-256 of the int64 fine flood levels (H2 step 3, G3 on k)
-#   L            SHA-256 of the int64 flood levels in decimetres, Lk >> 16
+#   (the H2 flood of the re-specified tie-break, variant B: L[m] = max(e[m],
+#   L[c]), pushed with key L[m] * 2^16 + t[m], popped by (key, seq))
+#   L            SHA-256 of the int64 flood levels in decimetres (H2)
 #   parent       SHA-256 of one byte per cell, the flood parent (8 on ocean)
 #   order        SHA-256 of the pop order as uint32 cell indices
-#   rcv_g4       SHA-256 of one byte per cell, G4 receivers on Lk before H4 step 2
+#   rcv_g4       SHA-256 of one byte per cell, G4 receivers before H4 step 2
 #   lakes        number of lakes K (H3)
 #   lake_levels  lake level of each lake in id order, decimetres, or -
 #   lake_cells   cell count of each lake in id order, or -
@@ -1348,6 +1406,40 @@ def golden_text(large=False, legacy=False):
         for item, v in world_items(r, layer_hash(w, h, 4, e), legacy):
             out.append("%s %s %s\n" % (name, item, v))
     return "".join(out)
+
+
+EX52_TIE = [
+    [0, 900, 800, 700, 600],
+    [0, 500, 50, 400, 300],
+    [0, 200, 100, 60, 650],
+    [0, 990, 950, 980, 970],
+]
+
+
+def check_example_52(c):
+    w, h = 5, 4
+    e = [-5 if i % 5 == 0 else 10 for i in range(20)]
+    r0 = hydrology(w, h, e, 256)
+    c.eq("5.2 t = 0 land pop order", [x for x in r0["order"] if e[x] > 0],
+         [1, 6, 11, 16, 2, 7, 12, 17, 3, 8, 13, 18, 4, 9, 14, 19])
+    c.eq("5.2 t = 0 flow_dir", rows_of(w, layer(r0, "flow_dir")),
+         [[8, 4, 4, 4, 4], [8, 4, 5, 5, 5], [8, 4, 5, 5, 5], [8, 4, 5, 5, 5]])
+    c.eq("5.2 t = 0 flow_accum", rows_of(w, layer(r0, "flow_accum")),
+         [[0, 10, 6, 3, 1], [0, 3, 3, 2, 1], [0, 2, 2, 2, 1], [0, 1, 1, 1, 1]])
+    tie = flat(EX52_TIE)
+    rt = hydrology(w, h, e, 256, tie)
+    c.eq("5.2 land pop order", [x for x in rt["order"] if e[x] > 0],
+         [11, 7, 13, 12, 9, 8, 6, 4, 14, 3, 2, 1, 17, 19, 18, 16])
+    c.eq("5.2 flow_dir", rows_of(w, layer(rt, "flow_dir")),
+         [[8, 4, 2, 3, 2], [8, 4, 3, 4, 3], [8, 4, 4, 5, 4], [8, 4, 5, 6, 5]])
+    c.eq("5.2 flow_accum", rows_of(w, layer(rt, "flow_accum")),
+         [[0, 1, 1, 1, 1], [0, 1, 10, 1, 2], [0, 13, 1, 6, 1], [0, 1, 1, 1, 1]])
+    c.eq("5.2 L = 10 on land", [rt["L"][i] for i in range(20) if e[i] > 0], [10] * 16)
+    c.eq("5.2 no lake", (r0["comps"], rt["comps"]), ([], []))
+    c.ok("5.2 invariants", check_invariants(rt, c, "5.2"))
+    same_lakes(c, "5.2 inv 11", r0, rt)
+    l2, p2, o2 = flood_tie(w, h, e, r0["ocean"], tie, queue="sorted")
+    c.eq("5.2 sorted-list queue", (l2, p2, o2), (rt["L"], rt["parent"], rt["order"]))
 
 
 def check_flat_tie(c):
@@ -1424,6 +1516,7 @@ def main(argv):
         check_units(c)
         check_random(c)
         check_flat_tie(c)
+        check_example_52(c)
         if "--quick" not in argv:
             check_worlds(c)
         sys.stderr.write("check: %d passed, %d failed\n" % (c.passes, c.fails))

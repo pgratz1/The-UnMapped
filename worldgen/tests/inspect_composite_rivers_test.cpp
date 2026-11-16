@@ -8,6 +8,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <optional>
 #include <ostream>
 #include <string>
 #include <vector>
@@ -15,6 +16,7 @@
 #include "p0_04_reference.hpp"
 #include "p1_00_composite_api.hpp"
 #include "p1_00_composite_reference.hpp"
+#include "worldgen/core/error.hpp"
 #include "worldgen/core/hash.hpp"
 #include "worldgen/core/rng.hpp"
 #include "worldgen/db/layer_blob.hpp"
@@ -267,5 +269,106 @@ TEST_CASE("P1-00 10.2 step 4: random layers against the test's own painter, scal
                 REQUIRE(same(pixel_at(p3, 3 * w, x, y), want[(y / 3) * w + x / 3]));
             }
         }
+    }
+}
+
+TEST_CASE("P1-00 10.2: composite_river_colour is the step 4 ramp; class 0 is (255, 0, 255)") {
+    CHECK(same(comp_api::river_colour(0), Rgb{255, 0, 255}));
+    for (std::uint64_t k = 1; k <= 20; ++k) {
+        CAPTURE(k);
+        CHECK(same(comp_api::river_colour(k), comp_ref::river_class_colour(static_cast<std::uint8_t>(k))));
+    }
+    CHECK(same(comp_api::river_colour(1), Rgb{70, 125, 215}));
+    CHECK(same(comp_api::river_colour(5), Rgb{25, 65, 175}));
+    CHECK(same(comp_api::river_colour(6), Rgb{20, 50, 160}));
+    CHECK(same(comp_api::river_colour(255), Rgb{20, 50, 160}));
+    CHECK(same(comp_api::river_colour(std::uint64_t{1} << 40), Rgb{20, 50, 160}));
+}
+
+TEST_CASE("P1-00 10.2 step 4: a flow_dir code above 7 is not diagonal; a class-0 river cell is not painted") {
+    const std::uint32_t w = 5;
+    const std::uint32_t h = 3;
+    const std::vector<std::int16_t> e(15, 100);
+    const LayerGrid eg = p004::grid_of<std::int16_t>(w, h, e);
+    const std::vector<Rgb> base = base_of(eg, w, h);
+    for (const std::uint8_t d : {std::uint8_t{8}, std::uint8_t{9}, std::uint8_t{11}, std::uint8_t{255}}) {
+        CAPTURE(int{d});
+        U8 water(15, 0), river(15, 0), dir(15, 0);
+        water[7] = 1;  // (2, 1)
+        river[7] = 2;
+        dir[7] = d;
+        const LayerGrid wg = p004::grid_of<std::uint8_t>(w, h, water);
+        const LayerGrid rg = p004::grid_of<std::uint8_t>(w, h, river);
+        const LayerGrid dg = p004::grid_of<std::uint8_t>(w, h, dir);
+        REQUIRE(!comp_api::problem(eg, &wg, &rg, &dg).has_value());
+        const Pixels px = comp_api::render_map(eg, &wg, &rg, &dg, 1);
+        for (std::uint32_t y = 0; y < h; ++y) {
+            for (std::uint32_t x = 0; x < w; ++x) {
+                INFO("cell ", x, ",", y);
+                CHECK(same(pixel_at(px, w, x, y), x == 2 && y == 1 ? Rgb{55, 110, 210} : base[y * w + x]));
+            }
+        }
+    }
+    // Class 0 on a water-1 cell: no entry, so the cell keeps its land colour
+    // and neither corner closing nor thickening happens.
+    U8 water(15, 0), river(15, 0), dir(15, 0);
+    water[7] = 1;
+    dir[7] = 1;
+    const LayerGrid wg = p004::grid_of<std::uint8_t>(w, h, water);
+    const LayerGrid rg = p004::grid_of<std::uint8_t>(w, h, river);
+    const LayerGrid dg = p004::grid_of<std::uint8_t>(w, h, dir);
+    CHECK(comp_api::render_map(eg, &wg, &rg, &dg, 1) == comp_api::render_map(eg, nullptr, nullptr, nullptr, 1));
+    CHECK(comp_ref::paint_list(w, h, water, river, &dir).empty());
+}
+
+TEST_CASE("P1-00 10.2: flow_dir validation: a u8 grid of the elevation's size, else a problem naming it") {
+    const std::uint32_t w = 3;
+    const std::uint32_t h = 2;
+    const LayerGrid eg = p004::grid_of<std::int16_t>(w, h, std::vector<std::int16_t>(6, 100));
+    const LayerGrid wg = p004::grid_of<std::uint8_t>(w, h, U8(6, 0));
+    const LayerGrid rg = p004::grid_of<std::uint8_t>(w, h, U8(6, 0));
+    const LayerGrid dir_ok = p004::grid_of<std::uint8_t>(w, h, U8(6, 0));
+    const LayerGrid dir_i16 = p004::grid_of<std::int16_t>(w, h, std::vector<std::int16_t>(6, 0));
+    const LayerGrid dir_u32 = p004::grid_of<std::uint32_t>(w, h, std::vector<std::uint32_t>(6, 0));
+    const LayerGrid dir_wide = p004::grid_of<std::uint8_t>(w + 1, h, U8(8, 0));
+    const LayerGrid dir_tall = p004::grid_of<std::uint8_t>(w, h + 1, U8(9, 0));
+    auto names_flow_dir = [](const std::optional<std::string>& p) {
+        return p.has_value() && p->find("flow_dir") != std::string::npos;
+    };
+    CHECK(!comp_api::problem(eg, &wg, &rg, &dir_ok).has_value());
+    CHECK(!comp_api::problem(eg, &wg, nullptr, &dir_ok).has_value());
+    for (const LayerGrid* bad : {&dir_i16, &dir_u32, &dir_wide, &dir_tall}) {
+        CHECK(names_flow_dir(comp_api::problem(eg, &wg, &rg, bad)));
+        CHECK(names_flow_dir(comp_api::problem(eg, &wg, nullptr, bad)));
+        // Given without water it is unused, but still validated ("each
+        // optional layer that is given").
+        CHECK(names_flow_dir(comp_api::problem(eg, nullptr, nullptr, bad)));
+        CHECK_THROWS_AS(static_cast<void>(comp_api::render_map(eg, &wg, &rg, bad, 1)), worldgen::FatalError);
+    }
+    const std::optional<std::string> p16 = comp_api::problem(eg, &wg, &rg, &dir_i16);
+    REQUIRE(p16.has_value());
+    CHECK(p16->find("i16") != std::string::npos);
+    CHECK(p16->find("u8") != std::string::npos);
+}
+
+TEST_CASE("P1-00 10.2: the forms without flow_dir equal the long forms with flow_dir null") {
+    worldgen::Rng rng(worldgen::stream_key(6, "test.hydro"));
+    for (int k = 0; k < 10; ++k) {
+        const std::uint32_t w = 3 + static_cast<std::uint32_t>(rng.uniform_u64(12));
+        const std::uint32_t h = 3 + static_cast<std::uint32_t>(rng.uniform_u64(12));
+        const std::size_t n = std::size_t{w} * h;
+        std::vector<std::int16_t> e(n);
+        U8 water(n), river(n);
+        for (std::size_t i = 0; i < n; ++i) {
+            e[i] = static_cast<std::int16_t>(rng.uniform_i64(1, 2000));
+            water[i] = rng.uniform_u64(3) == 0 ? 1 : 0;
+            river[i] = water[i] == 1U ? static_cast<std::uint8_t>(1 + rng.uniform_u64(9)) : 0;
+        }
+        const LayerGrid eg = p004::grid_of<std::int16_t>(w, h, e);
+        const LayerGrid wg = p004::grid_of<std::uint8_t>(w, h, water);
+        const LayerGrid rg = p004::grid_of<std::uint8_t>(w, h, river);
+        CHECK(comp_api::render_map3(eg, &wg, &rg, 2) == comp_api::render_map(eg, &wg, &rg, nullptr, 2));
+        CHECK(comp_api::render_map3(eg, &wg, nullptr, 1) == comp_api::render_map(eg, &wg, nullptr, nullptr, 1));
+        CHECK(comp_api::problem3(eg, &wg, &rg) == comp_api::problem(eg, &wg, &rg, nullptr));
     }
 }

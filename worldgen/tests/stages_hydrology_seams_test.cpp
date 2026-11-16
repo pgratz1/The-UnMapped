@@ -109,10 +109,6 @@ TEST_CASE("P1-02 5.1, 8.1 item 1: hydrology_network gives L, parent, order, G4, 
                            {0, 35, 33, 31, 25, 20, 10, 0},
                            {0, 0, 0, 0, 0, 0, 0, 0},
                        }));
-    // t = 0: Lk = L x 2^16 (P1-02 H2, "t = 0").
-    for (std::size_t i = 0; i < net.level.size(); ++i) {
-        CHECK(net.level[i] == net.level_dm[i] * 65536);
-    }
     CHECK(net.parent == flat_rows<std::uint8_t>({
                             {8, 8, 8, 8, 8, 8, 8, 8},
                             {8, 5, 5, 5, 5, 5, 5, 8},
@@ -260,7 +256,7 @@ TEST_CASE("P1-02 H2, H6 (lead 2026-11-16): the full i16 range, land at 32767 and
     CHECK(l.flow_dir[g.index(1, 3)] == 4);
     CHECK(l.flow_dir[g.index(5, 3)] == 0);
     CHECK(l.flow_dir[g.index(3, 5)] == 2);
-    // With the largest tie values the fine keys reach 32767 x 2^16 + 65535 <
+    // With the largest tie values the flood keys reach 32767 x 2^16 + 65535 <
     // 2^31 (P1-02 H2 step 2); invariant 11 holds.
     std::vector<std::uint16_t> tmax(f.e.size(), 0);
     for (std::size_t i = 0; i < f.e.size(); ++i) {
@@ -270,8 +266,8 @@ TEST_CASE("P1-02 H2, H6 (lead 2026-11-16): the full i16 range, land at 32767 and
     CHECK(invariant_violation(g, f.e, lt, 1).empty());
     CHECK(tie_invariance_violation(l, lt).empty());
     const hydro_api::Network nt = hydro_api::network(g, f.e, tmax, 1);
-    CHECK(nt.level[c] == std::int64_t{32767} * 65536 + 65535);
     CHECK(nt.level_dm[c] == 32767);
+    CHECK(nt.order == own_flood_tie(g, f.e, tmax, false).order);
     // Threads do not matter here either.
     CHECK(hydro_api::layers(g, f.e, tuning(256), 1) == l);
     CHECK(hydro_api::layers(g, f.e, tuning(256), 5) == l);

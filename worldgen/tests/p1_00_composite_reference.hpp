@@ -50,10 +50,13 @@ inline std::vector<Entry> paint_list(std::uint32_t w, std::uint32_t h, const std
                 continue;
             }
             const std::uint8_t k = river[i];
+            if (k == 0U) {
+                continue;  // class 0 adds no entry (P1-00 10.2 step 4)
+            }
             list.push_back({x, y, k});
             if (flow_dir != nullptr) {
                 const std::uint8_t d = (*flow_dir)[i];
-                if (d <= 7U && (d & 1U) != 0U) {
+                if (d <= 7U && (d & 1U) != 0U) {  // a code above 7 is not diagonal
                     list.push_back({std::int64_t{x} + DX[d], y, k});
                 }
             }

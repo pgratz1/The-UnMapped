@@ -27,6 +27,7 @@
 #include <ostream>
 #include <queue>
 #include <span>
+#include <set>
 #include <sstream>
 #include <string>
 #include <string_view>
@@ -292,18 +293,6 @@ template <typename T>
     return worldgen::to_hex(h.final());
 }
 
-// The H2 keys of the test: k = e * 2^16 + t on land, 0 on ocean (an empty
-// tie span means t = 0).
-inline std::vector<std::int64_t> fine_keys(std::span<const std::int16_t> e, std::span<const std::uint16_t> tie) {
-    std::vector<std::int64_t> k(e.size(), 0);
-    for (std::size_t i = 0; i < e.size(); ++i) {
-        if (e[i] > 0) {
-            k[i] = std::int64_t{e[i]} * 65536 + (tie.empty() ? 0 : std::int64_t{tie[i]});
-        }
-    }
-    return k;
-}
-
 [[nodiscard]] inline std::string hash_u32(std::span<const std::uint32_t> v) {
     worldgen::Sha256 h;
     for (const std::uint32_t x : v) {
@@ -409,6 +398,62 @@ inline OwnFlood own_flood(Grid g, std::span<const std::int64_t> keys, std::span<
             f.level[m] = std::max(keys[m], f.level[c]);
             f.parent[m] = static_cast<std::uint8_t>((code + 4U) % 8U);
             push(f.level[m], m);
+        });
+    }
+    return f;
+}
+
+// The H2 flood of P1-02 (re-specified 2026-11-16, variant B), the test's own:
+// L[m] = max(e[m], L[c]); a cell is visited when it is pushed; it is pushed
+// with key L[m] * 2^16 + t[m]; the entry with the smallest (key, seq) is
+// popped. Two independent queues: a binary heap (std::priority_queue) or an
+// ordered set (std::set). An empty tie span means t = 0.
+inline OwnFlood own_flood_tie(Grid g, std::span<const std::int16_t> e, std::span<const std::uint16_t> tie,
+                              bool use_set) {
+    const std::size_t n = elev_test::cells(g);
+    OwnFlood f{std::vector<std::int64_t>(n, 0), std::vector<std::uint8_t>(n, 8), {}};
+    std::vector<std::uint8_t> visited(n, 0);
+    using Item = std::tuple<std::int64_t, std::uint64_t, std::size_t>;
+    std::priority_queue<Item, std::vector<Item>, std::greater<>> heap;
+    std::set<Item> set;
+    std::uint64_t seq = 0;
+    auto push = [&](std::int64_t k, std::size_t c) {
+        if (use_set) {
+            set.emplace(k, seq++, c);
+        } else {
+            heap.emplace(k, seq++, c);
+        }
+    };
+    for (std::size_t i = 0; i < n; ++i) {
+        if (e[i] < 0) {
+            visited[i] = 1;
+            push(0, i);
+        }
+    }
+    for (;;) {
+        std::size_t c = 0;
+        if (use_set) {
+            if (set.empty()) {
+                break;
+            }
+            c = std::get<2>(*set.begin());
+            set.erase(set.begin());
+        } else {
+            if (heap.empty()) {
+                break;
+            }
+            c = std::get<2>(heap.top());
+            heap.pop();
+        }
+        f.order.push_back(static_cast<std::uint32_t>(c));
+        elev_test::each_neighbour8(g, c, [&](std::uint8_t code, std::size_t m) {
+            if (visited[m] != 0U) {
+                return;
+            }
+            visited[m] = 1;
+            f.level[m] = std::max(std::int64_t{e[m]}, f.level[c]);
+            f.parent[m] = static_cast<std::uint8_t>((code + 4U) % 8U);
+            push(f.level[m] * 65536 + (tie.empty() ? 0 : std::int64_t{tie[m]}), m);
         });
     }
     return f;

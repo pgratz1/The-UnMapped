@@ -170,11 +170,17 @@ TEST_CASE("P1-02 6 invariants 1 to 11, 8.2: the random fixtures with random tie 
         REQUIRE(nt.level_dm == n0.level_dm);
         REQUIRE(nt.lake_level == n0.lake_level);
         REQUIRE(nt.lake == n0.lake);
-        // L = Lk >> 16, and Lk is the minimax level of the fine keys.
-        for (std::size_t i = 0; i < nt.level.size(); ++i) {
-            REQUIRE(nt.level_dm[i] == (nt.level[i] >> 16));
+        // L is the minimax level on e whatever t is (H2), and pops are
+        // non-decreasing in L.
+        REQUIRE(nt.level_dm == elev_test::minimax_levels(fx.grid, keys_of(fx.e), ocean_of(fx.e)));
+        for (std::size_t i = 1; i < nt.order.size(); ++i) {
+            REQUIRE(nt.level_dm[nt.order[i - 1]] <= nt.level_dm[nt.order[i]]);
         }
-        REQUIRE(nt.level == elev_test::minimax_levels(fx.grid, fine_keys(fx.e, tie), ocean_of(fx.e)));
+        // The stage's flood is the test's (key, seq) flood.
+        const OwnFlood own = own_flood_tie(fx.grid, fx.e, tie, false);
+        REQUIRE(nt.order == own.order);
+        REQUIRE(nt.parent == own.parent);
+        REQUIRE(nt.level_dm == own.level);
     }
     // The tie values do reroute flats.
     CHECK(changed >= 100);
@@ -189,32 +195,55 @@ TEST_CASE("P1-02 H2: t = 0 given explicitly equals the empty tie span, and equal
     }
 }
 
-TEST_CASE("P1-02 H2: a tie value only orders cells of equal height (a crafted flat)") {
-    // A 1-row flat of 10 at x = 1 .. 6 between ocean at both ends. The two
-    // end cells drain straight to the sea; with t rising to the east the
-    // inner cells drain west (to the lower fine level), with t rising to the
-    // west they drain east.
-    const Fixture f = fixture({{-1, 10, 10, 10, 10, 10, 10, -1}});
-    std::vector<std::uint16_t> east(8, 0), west(8, 0);
-    for (std::int32_t x = 1; x <= 6; ++x) {
-        east[static_cast<std::size_t>(x)] = static_cast<std::uint16_t>(1000 * x);
-        west[static_cast<std::size_t>(x)] = static_cast<std::uint16_t>(1000 * (7 - x));
+TEST_CASE("P1-02 5.2, 8.1 item 1: the worked example of the tie-break on a flat, both tie settings") {
+    // 5 x 4: column x = 0 ocean (-5), every other cell 10 dm.
+    Fixture f;
+    f.grid = Grid{5, 4};
+    for (std::int32_t i = 0; i < 20; ++i) {
+        f.e.push_back(static_cast<std::int16_t>(i % 5 == 0 ? -5 : 10));
     }
-    const hydro_api::Layers le = hydro_api::layers_tie(f.grid, f.e, east, tuning(256), 1);
-    const hydro_api::Layers lw = hydro_api::layers_tie(f.grid, f.e, west, tuning(256), 1);
-    CHECK(le.flow_dir == std::vector<std::uint8_t>{8, 4, 4, 4, 4, 4, 0, 8});
-    CHECK(lw.flow_dir == std::vector<std::uint8_t>{8, 4, 0, 0, 0, 0, 0, 8});
-    CHECK(le.flow_accum == std::vector<std::uint32_t>{0, 5, 4, 3, 2, 1, 1, 0});
-    CHECK(lw.flow_accum == std::vector<std::uint32_t>{0, 1, 1, 2, 3, 4, 5, 0});
-    CHECK(invariant_violation(f.grid, f.e, le, 1).empty());
-    CHECK(invariant_violation(f.grid, f.e, lw, 1).empty());
-    // A tie never lets a higher decimetre cell drain before a lower one: a
-    // step of 1 dm beats the largest tie difference.
-    const Fixture s = fixture({{-1, 11, 10, -1}});
-    const std::vector<std::uint16_t> t = {0, 0, 65535, 0};
-    const hydro_api::Layers ls = hydro_api::layers_tie(s.grid, s.e, t, tuning(256), 1);
-    CHECK(ls.flow_dir[2] == 0);  // 10 dm drains to the sea at x = 3, not to 11 dm
-    CHECK(invariant_violation(s.grid, s.e, ls, 1).empty());
+    const std::vector<std::uint16_t> tie = {0, 900, 800, 700, 600, 0, 500, 50,  400, 300,
+                                            0, 200, 100, 60,  650, 0, 990, 950, 980, 970};
+    auto land_order = [&](const std::vector<std::uint32_t>& order) {
+        std::vector<std::uint32_t> out;
+        for (const std::uint32_t c : order) {
+            if (f.e[c] > 0) {
+                out.push_back(c);
+            }
+        }
+        return out;
+    };
+    // t = 0 (0.4.0).
+    const hydro_api::Network n0 = hydro_api::network(f.grid, f.e, {}, 1);
+    CHECK(land_order(n0.order) == std::vector<std::uint32_t>{1, 6, 11, 16, 2, 7, 12, 17, 3, 8, 13, 18, 4, 9, 14, 19});
+    const hydro_api::Layers l0 = hydro_api::layers(f.grid, f.e, tuning(256), 1);
+    CHECK(l0.flow_dir == std::vector<std::uint8_t>{8, 4, 4, 4, 4, 8, 4, 5, 5, 5, 8, 4, 5, 5, 5, 8, 4, 5, 5, 5});
+    CHECK(l0.flow_accum == std::vector<std::uint32_t>{0, 10, 6, 3, 1, 0, 3, 3, 2, 1, 0, 2, 2, 2, 1, 0, 1, 1, 1, 1});
+    // The t above.
+    const hydro_api::Network nt = hydro_api::network(f.grid, f.e, tie, 1);
+    CHECK(land_order(nt.order) ==
+          std::vector<std::uint32_t>{11, 7, 13, 12, 9, 8, 6, 4, 14, 3, 2, 1, 17, 19, 18, 16});
+    const hydro_api::Layers lt = hydro_api::layers_tie(f.grid, f.e, tie, tuning(256), 1);
+    CHECK(lt.flow_dir == std::vector<std::uint8_t>{8, 4, 2, 3, 2, 8, 4, 3, 4, 3, 8, 4, 4, 5, 4, 8, 4, 5, 6, 5});
+    CHECK(lt.flow_accum == std::vector<std::uint32_t>{0, 1, 1, 1, 1, 0, 1, 10, 1, 2, 0, 13, 1, 6, 1, 0, 1, 1, 1, 1});
+    // L = 10 on every land cell, no lake, in both cases (invariant 11).
+    for (std::size_t i = 0; i < 20; ++i) {
+        CHECK(nt.level_dm[i] == (f.e[i] > 0 ? 10 : 0));
+    }
+    CHECK(nt.level_dm == n0.level_dm);
+    CHECK(nt.lake_level.empty());
+    CHECK(tie_invariance_violation(l0, lt).empty());
+    CHECK(invariant_violation(f.grid, f.e, lt, 1).empty());
+    // Both of the test's queues give the stage's flood.
+    for (const bool use_set : {false, true}) {
+        const OwnFlood own = own_flood_tie(f.grid, f.e, tie, use_set);
+        CHECK(own.order == nt.order);
+        CHECK(own.parent == nt.parent);
+    }
+    // Pops non-decreasing in L; with t = 0 also in key.
+    for (std::size_t i = 1; i < nt.order.size(); ++i) {
+        CHECK(nt.level_dm[nt.order[i - 1]] <= nt.level_dm[nt.order[i]]);
+    }
 }
 
 TEST_CASE("P1-02 6, 8.2: invariants 1 to 9 on 200 random fixtures (34 x 34, e in [1, 200], ocean border)") {
@@ -278,7 +307,38 @@ TEST_CASE("P1-02 6 invariant 10, 8.3: pure function; 1, 2 and 5 threads; random 
     }
 }
 
-TEST_CASE("P1-02 8.3: queue independence: a binary heap and a bucket queue give the same flood as G3") {
+TEST_CASE("P1-02 8.3: queue independence under random t: a binary heap and an ordered set give the same flood") {
+    for (std::uint64_t f = 0; f < 200; ++f) {
+        CAPTURE(f);
+        const Fixture fx = random_fixture(f);
+        const std::vector<std::uint16_t> tie = random_tie(f, fx.e);
+        const OwnFlood heap = own_flood_tie(fx.grid, fx.e, tie, false);
+        const OwnFlood set = own_flood_tie(fx.grid, fx.e, tie, true);
+        REQUIRE(heap.order == set.order);
+        REQUIRE(heap.parent == set.parent);
+        REQUIRE(heap.level == set.level);
+        const hydro_api::Network net = hydro_api::network(fx.grid, fx.e, tie, THREADS);
+        REQUIRE(net.order == heap.order);
+        REQUIRE(net.parent == heap.parent);
+        REQUIRE(net.level_dm == heap.level);
+    }
+}
+
+TEST_CASE("P1-02 8.3: at t = 0 the H2 flood equals a bucket queue and G3 on keys e") {
+    for (std::uint64_t f = 0; f < 200; ++f) {
+        CAPTURE(f);
+        const Fixture fx = random_fixture(f);
+        const OwnFlood h2 = own_flood_tie(fx.grid, fx.e, {}, false);
+        const OwnFlood bucket = own_flood(fx.grid, keys_of(fx.e), ocean_of(fx.e), true);
+        REQUIRE(h2.order == bucket.order);
+        REQUIRE(h2.parent == bucket.parent);
+        REQUIRE(h2.level == bucket.level);
+        const hydro_api::Network net = hydro_api::network(fx.grid, fx.e, {}, THREADS);
+        REQUIRE(net.order == h2.order);
+    }
+}
+
+TEST_CASE("P1-02 8.3: queue independence at t = 0: a binary heap and a bucket queue give the same flood as G3") {
     for (std::uint64_t f = 0; f < 200; ++f) {
         CAPTURE(f);
         const Fixture fx = random_fixture(f);

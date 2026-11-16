@@ -19,7 +19,7 @@
 //                 A precondition violation throws worldgen::FatalError whose message
 //                 starts "hydrology: elevation precondition: " (P1-02 section 2).
 //   steps         check_hydrology_preconditions (H1), hydrology_network(grid, e, tie, threads) (H2 to
-//                 H5; flood.level is Lk, level_dm is L = Lk >> 16),
+//                 H5; HydrologyNetwork has level_dm, parent and order of the H2 flood),
 //                 river_threshold_cells (section 4), river_class (H6), coast_distance (H7)
 //   H7 chamfer    stages::chamfer_distance (elevation.hpp, shared with P1-01 E5.3)
 //   G3 to G5      geo::routing_flood, receivers, accumulate_topological
@@ -150,8 +150,7 @@ inline std::vector<std::int16_t> coast_distance(Grid grid, std::span<const std::
 
 // H2 to H5 (seam hydrology_network): the intermediates as plain arrays.
 struct Network {
-    std::vector<std::int64_t> level;      // Lk, the fine flood level on keys k (H2 step 3)
-    std::vector<std::int64_t> level_dm;   // L = Lk >> 16, decimetres (H2 step 4)
+    std::vector<std::int64_t> level_dm;   // L, decimetres (H2)
     std::vector<std::uint8_t> parent;     // flood parent, 8 on ocean
     std::vector<std::uint32_t> order;     // pop order
     std::vector<std::uint8_t> g4;         // G4 receivers before rerouting, 8 on ocean
@@ -166,10 +165,9 @@ inline Network network(Grid grid, std::span<const std::int16_t> e, std::span<con
                        std::uint32_t threads) {
     worldgen::stages::HydrologyNetwork r = worldgen::stages::hydrology_network(grid, e, tie, threads);
     Network out;
-    out.level = std::move(r.flood.level);
     out.level_dm = std::move(r.level_dm);
-    out.parent.assign(r.flood.parent.begin(), r.flood.parent.end());
-    out.order.assign(r.flood.order.begin(), r.flood.order.end());
+    out.parent.assign(r.parent.begin(), r.parent.end());
+    out.order.assign(r.order.begin(), r.order.end());
     out.g4.assign(r.g4.begin(), r.g4.end());
     out.lake = std::move(r.lakes.label);
     out.lake_level = std::move(r.lake_level);

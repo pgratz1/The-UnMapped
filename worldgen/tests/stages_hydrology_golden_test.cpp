@@ -75,15 +75,11 @@ std::vector<std::pair<std::string, std::string>> items_of(Grid g, std::span<cons
     std::vector<std::pair<std::string, std::string>> out;
     out.emplace_back("elevation", layer_hash<std::int16_t>(g, 4, e));
     out.emplace_back("tie", hash_u16(tie));
-    // H2: the test's own keys k = e * 2^16 + t (0 on ocean), the shared G3,
-    // L = Lk >> 16.
-    const hydro_api::Flood fl = hydro_api::flood(g, fine_keys(e, tie), ocean);
-    out.emplace_back("Lk", elev_test::hash_i64(fl.level));
-    std::vector<std::int64_t> dm(fl.level.size());
-    for (std::size_t i = 0; i < dm.size(); ++i) {
-        dm[i] = fl.level[i] >> 16;
-    }
-    out.emplace_back("L", elev_test::hash_i64(dm));
+    // H2: the test's own flood (binary heap on (L * 2^16 + t, seq)), then the
+    // shared G4 on its decimetre levels and parents.
+    const OwnFlood own = own_flood_tie(g, e, tie, false);
+    const hydro_api::Flood fl{own.level, own.parent, own.order};
+    out.emplace_back("L", elev_test::hash_i64(fl.level));
     out.emplace_back("parent", elev_test::hash_u8(fl.parent));
     out.emplace_back("order", hash_u32(fl.order));
     out.emplace_back("rcv_g4", elev_test::hash_u8(hydro_api::receivers(g, fl, ocean, threads)));
@@ -186,9 +182,8 @@ void run_case(const GoldenCase& c) {
         REQUIRE(got[i].second == c.items[i].second);
     }
     // The stage's own intermediates (seam hydrology_network) give the same
-    // steps as the shared G3 / G4 above.
+    // steps as the test's flood and the shared G4 above.
     const hydro_api::Network net = hydro_api::network(f.grid, f.e, tie, THREADS);
-    CHECK(elev_test::hash_i64(net.level) == c.get("Lk"));
     CHECK(elev_test::hash_i64(net.level_dm) == c.get("L"));
     CHECK(elev_test::hash_u8(net.parent) == c.get("parent"));
     CHECK(hash_u32(net.order) == c.get("order"));
