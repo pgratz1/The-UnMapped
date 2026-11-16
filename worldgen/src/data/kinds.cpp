@@ -59,7 +59,7 @@ Schema worldgen_elevation_schema() {
         Field::required("edge_falloff_frac", Type::fixed("0.01", "0.5")),
         Field::required("edge_falloff_depth", Type::fixed("0", "8")),
         Field::required("edge_noise_amp", Type::fixed("0", "0.25")),
-        Field::required("edge_radial_start", Type::fixed("0", "2")),
+        Field::required("edge_radial_start", Type::fixed("0", "1.99")),
         Field::required("edge_radial_end", Type::fixed("0.01", "2")),
         Field::required("coast_noise", geo::fbm_m_type()),
         Field::required("coast_noise_amp", Type::fixed("0", "2")),
