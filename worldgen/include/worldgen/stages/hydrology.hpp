@@ -7,7 +7,8 @@
 // changed. Its only seed-dependent input is the tie-break noise of H2
 // (stream geo.hydrology.flat), which orders cells inside a decimetre flat
 // and never changes a lake or a water level. Steps H1 to H9: preconditions
-// (H1), the G3 routing flood on keys e x 2^16 + t (H2), lakes as the G2 components of
+// (H1), the routing flood on decimetre levels with cells of one level popped
+// lowest t first (H2; hydrology's own flood, not the shared G3), lakes as the G2 components of
 // the cells below their flood level (H3), G4 receivers with one outlet per
 // lake (H4), accumulation by Kahn's method (H5), per-cell classification
 // (H6), the chamfer coast distance (H7), and the seven layers written in one
@@ -121,8 +122,9 @@ inline constexpr std::int32_t FLAT_TIE_BITS = 16;
 // The intermediate results of H2 to H5 (P1-02 8.1 test 1).
 struct HydrologyNetwork {
     std::vector<std::uint8_t> ocean;   // 1 where e < 0 (the mask O)
-    geo::RoutingFlood flood;           // H2: Lk (G3 on keys k = e x 2^16 + t), parent, order
-    std::vector<std::int64_t> level_dm;  // H2 step 4: L = Lk >> 16, decimetres
+    std::vector<std::int64_t> level_dm;   // H2: flood level L, decimetres (the minimax level)
+    std::vector<geo::Direction> parent;   // H2: flood parent, 8 on ocean
+    std::vector<geo::CellIndex> order;    // H2: every cell in pop order (smallest (L x 2^16 + t, seq))
     std::vector<geo::Direction> g4;    // H4 step 1: G4 receivers before rerouting (8 on ocean)
     geo::Components lakes;             // H3: lake components (G2, 8-connected, equal L); label = lake id
     std::vector<std::int64_t> lake_level;     // lake_level[k - 1]: the common L (decimetres) of lake k

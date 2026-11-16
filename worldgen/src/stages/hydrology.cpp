@@ -44,6 +44,72 @@ BlockCells block_cells(Grid grid, const geo::RowBlock& block) {
                       grid.index(0, block.y_end - 1) + static_cast<CellIndex>(grid.width)};
 }
 
+// One entry of the H2 flood queue.
+struct FloodEntry {
+    std::int64_t key;
+    std::uint64_t seq;
+    CellIndex cell;
+};
+
+// The heap comparison of the H2 flood: true when a pops after b, so the
+// std heap functions keep the smallest (key, seq) on top. (key, seq) pairs
+// are unique (seq is the global push counter), so this is a strict total
+// order and the pop order is defined by it alone, whatever the heap layout.
+bool pops_after(const FloodEntry& a, const FloodEntry& b) noexcept {
+    return a.key != b.key ? a.key > b.key : a.seq > b.seq;
+}
+
+// H2 step 2 (D6): hydrology's own routing flood (P1-02 H2; not the shared
+// G3). Pushes neighbour m of the popped cell c with L[m] = max(e[m], L[c])
+// and key L[m] x 2^16 + t[m]; pops the smallest (key, seq). Keys are not
+// monotone over the pops, so a binary heap is used (G3's radix heap would
+// be wrong here). Writes L (decimetres), parent and order.
+void tie_flood(Grid grid, std::span<const std::int16_t> e, std::span<const std::uint16_t> tie,
+               std::span<const std::uint8_t> ocean, HydrologyNetwork& net) {
+    const std::uint32_t n = grid.cells();
+    net.level_dm.assign(n, 0);
+    net.parent.assign(n, geo::NO_DIRECTION);
+    net.order.clear();
+    net.order.reserve(n);
+    std::vector<std::uint8_t> visited(n, 0U);
+    std::vector<FloodEntry> heap;
+    heap.reserve(n);
+    std::uint64_t seq = 0;
+    for (CellIndex i = 0; i < n; ++i) {  // ocean seeds in index order, key 0
+        if (ocean[i] != 0U) {
+            visited[i] = 1U;
+            heap.push_back(FloodEntry{0, seq++, i});
+        }
+    }
+    // determinism-lint: allow(heap-order) -- pops_after orders by (key, seq), seq the unique global push counter: a strict total order (P1-00 D6, P1-02 H2)
+    std::make_heap(heap.begin(), heap.end(), pops_after);
+    while (!heap.empty()) {
+        // determinism-lint: allow(heap-order) -- pops_after orders by (key, seq), seq the unique global push counter: a strict total order (P1-00 D6, P1-02 H2)
+        std::pop_heap(heap.begin(), heap.end(), pops_after);
+        const CellIndex c = heap.back().cell;
+        heap.pop_back();
+        net.order.push_back(c);
+        const std::int64_t lc = net.level_dm[c];
+        for (const Direction code : geo::NEIGHBOURS_8) {
+            CellIndex m = 0;
+            if (!geo::neighbour(grid, c, code, m) || visited[m] != 0U) {
+                continue;
+            }
+            visited[m] = 1U;  // pushed once, by the first popped neighbour
+            const std::int64_t lm = std::max<std::int64_t>(e[m], lc);
+            net.level_dm[m] = lm;
+            net.parent[m] = static_cast<Direction>((code + 4U) % 8U);
+            const std::int64_t t = tie.empty() ? 0 : std::int64_t{tie[m]};
+            heap.push_back(FloodEntry{lm * (std::int64_t{1} << FLAT_TIE_BITS) + t, seq++, m});
+            // determinism-lint: allow(heap-order) -- pops_after orders by (key, seq), seq the unique global push counter: a strict total order (P1-00 D6, P1-02 H2)
+            std::push_heap(heap.begin(), heap.end(), pops_after);
+        }
+    }
+    if (net.order.size() != n) {
+        fatal("hydrology: the flood did not reach every cell");
+    }
+}
+
 // The neighbour of c in direction code; fatal if it does not exist (a
 // receiver must point inside the grid).
 CellIndex downstream(Grid grid, CellIndex c, Direction code) {
@@ -190,26 +256,13 @@ HydrologyNetwork hydrology_network(Grid grid, std::span<const std::int16_t> e, s
     }
     HydrologyNetwork net;
 
-    // H2 (D6): G3 on keys k = e x 2^16 + t with ocean mask O; ocean keys 0.
-    // Land e is in [1, 32767] (H1), so land keys are in [2^16, 2^31).
+    // H2 step 2 (D6): the flood ordered by (L x 2^16 + t, seq). Land L is
+    // in [1, 32767] (H1), so land keys are in [2^16, 2^31).
     net.ocean.assign(n, 0U);
-    {
-        std::vector<std::int64_t> keys(n, 0);
-        for (CellIndex i = 0; i < n; ++i) {
-            if (e[i] < 0) {
-                net.ocean[i] = 1U;
-                continue;
-            }
-            const std::int64_t t = tie.empty() ? 0 : std::int64_t{tie[i]};
-            keys[i] = std::int64_t{e[i]} * (std::int64_t{1} << FLAT_TIE_BITS) + t;
-        }
-        net.flood = geo::routing_flood(grid, keys, net.ocean);
-    }
-    // H2 step 4: L = Lk >> 16 (Lk >= 0), the flood level in decimetres.
-    net.level_dm.assign(n, 0);
     for (CellIndex i = 0; i < n; ++i) {
-        net.level_dm[i] = net.flood.level[i] >> FLAT_TIE_BITS;
+        net.ocean[i] = e[i] < 0 ? 1U : 0U;
     }
+    tie_flood(grid, e, tie, net.ocean, net);
     const std::vector<std::int64_t>& level = net.level_dm;
 
     // H3 (D5, G2): lake cells are land cells with L > e; components with
@@ -227,9 +280,9 @@ HydrologyNetwork hydrology_network(Grid grid, std::span<const std::int16_t> e, s
         net.lake_level[k - 1U] = level[net.lakes.order[net.lakes.start[k - 1U]]];
     }
 
-    // H4 step 1 (D1, G6 row blocks): G4 receivers on the fine flood
-    // surface Lk (drops below 2^31, scores below 2^63).
-    net.g4 = geo::receivers(grid, net.flood.level, net.flood.parent, net.ocean, threads);
+    // H4 step 1 (D1, G6 row blocks): G4 receivers on the decimetre levels,
+    // the flood parent where no neighbour is strictly lower.
+    net.g4 = geo::receivers(grid, level, net.parent, net.ocean, threads);
     net.rcv = net.g4;
 
     // H4 step 2 (D5): the outlet of each lake is its first cell in `order`.
@@ -237,7 +290,7 @@ HydrologyNetwork hydrology_network(Grid grid, std::span<const std::int16_t> e, s
     net.lake_outlet.assign(lake_count, NONE);
     {
         std::uint32_t found = 0;
-        for (const CellIndex c : net.flood.order) {
+        for (const CellIndex c : net.order) {
             if (found == lake_count) {
                 break;
             }
@@ -256,7 +309,7 @@ HydrologyNetwork hydrology_network(Grid grid, std::span<const std::int16_t> e, s
         std::vector<CellIndex> bfs_order;
         for (std::uint32_t k = 1; k <= lake_count; ++k) {
             const CellIndex outlet = net.lake_outlet[k - 1U];
-            const Direction p = net.flood.parent[outlet];
+            const Direction p = net.parent[outlet];
             // The outlet's flood parent is a rim cell outside the lake (H3, H4).
             const CellIndex rim = downstream(grid, outlet, p);
             if (net.lakes.label[rim] == k || net.ocean[rim] != 0U || level[rim] != net.lake_level[k - 1U]) {

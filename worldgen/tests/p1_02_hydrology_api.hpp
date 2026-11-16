@@ -135,8 +135,8 @@ inline Network network(Grid grid, std::span<const std::int16_t> e, std::uint32_t
     worldgen::stages::HydrologyNetwork r = worldgen::stages::hydrology_network(grid, e, {}, threads);
     Network out;
     out.level = std::move(r.level_dm);
-    out.parent.assign(r.flood.parent.begin(), r.flood.parent.end());
-    out.order.assign(r.flood.order.begin(), r.flood.order.end());
+    out.parent.assign(r.parent.begin(), r.parent.end());
+    out.order.assign(r.order.begin(), r.order.end());
     out.g4.assign(r.g4.begin(), r.g4.end());
     out.lake = std::move(r.lakes.label);
     out.lake_level = std::move(r.lake_level);

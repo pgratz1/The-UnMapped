@@ -610,6 +610,9 @@ void paint_rivers(std::vector<Rgb>& colour, std::uint32_t w, std::uint32_t h, co
         const auto x = static_cast<std::int64_t>(i % w);
         const auto y = static_cast<std::int64_t>(i / w);
         const std::uint8_t k = rc[i];
+        if (k == 0U) {
+            continue;  // class 0 (a hand-made layer only): no entry, not painted
+        }
         list.push_back(RiverPaint{x, y, k});
         if (fd != nullptr) {
             const std::uint8_t d = (*fd)[i];

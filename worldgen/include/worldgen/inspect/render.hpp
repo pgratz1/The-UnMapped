@@ -290,7 +290,7 @@ enum class Composite : std::uint8_t {
 //      equal k in list order (later overwrites), each only if its cell is
 //      inside the map and has water 0 or 1, in composite_river_colour(k),
 //      unshaded. river without water is not used; a flow_dir code above 7
-//      is not diagonal.
+//      is not diagonal; a river cell of class 0 adds no entry.
 // The four-layer form is the five-layer form without flow_dir. FatalError if
 // composite_map_problem reports a problem or scale is outside 1..16 or the
 // buffer size does not fit in std::size_t.
