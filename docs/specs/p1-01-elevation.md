@@ -15,9 +15,11 @@ The stage builds a continent field from warped map-scale noise, a radial and squ
 | Input | Source |
 | --- | --- |
 | World seed (`uint64`) | `meta.seed` |
-| Map side N | `param.map_size` (512, 1024, 2048); library and tests: any 16 ≤ N ≤ 2048 |
+| Map side N | `param.map_size` (512, 1024, 2048); library and tests: any 16 ≤ N ≤ 2048 (see below for small N) |
 | Tuning | definition `worldgen.elevation` (section 4) |
 | Earlier layers | none |
+
+**Small N.** The algorithm is defined for every 16 ≤ N ≤ 2048, but whether a world exists depends on the tuning: when no 8-connected land component after E4 reaches I_min cells, the defined result is the fatal error "elevation: no land" (E4 step 3). With the shipped values (I_min = 196) this happens for every seed at N ≤ 21 (seeds 0–255 and 0–63 checked), for most seeds at N = 22 (208 of 256), for one of 256 at N = 23, and for none at N = 24 to 26 (seeds 0–255) or N = 28 to 64 (seeds 0–63), measured on the exploration build. Library tests therefore use N ≥ 64 with the shipped values; a test of the fatal error may use N = 16.
 
 Streams. Each gives a key K_name = `stream_key(seed, "geo.elevation.<name>")`, used only as a noise key (`noise2`, `fbm2`) or a location-hash key (`hash_at`). No `Rng` is used anywhere in this stage.
 
@@ -101,7 +103,7 @@ In schema declaration order (this order fixes the canonical encoding, P0-03 8).
 | `edge_falloff_frac` | fx(0.01, 0.5) | "0.12" | guess | width of the square guard band, map fraction |
 | `edge_falloff_depth` | fx(0, 8) | 2 | guess | strength of the edge falloff, units of the continent field |
 | `edge_noise_amp` | fx(0, 0.25) | "0.15" | guess | perturbation of both falloff distances by the shape noise |
-| `edge_radial_start` | fx(0, 2) | "0.8" | guess | radial distance (1 = an edge midpoint) where the radial falloff starts |
+| `edge_radial_start` | fx(0, 1.99) | "0.8" | guess | radial distance (1 = an edge midpoint) where the radial falloff starts |
 | `edge_radial_end` | fx(0.01, 2) | "1.0" | guess | radial distance where it is complete |
 | `coast_noise` | `fbm_m` | wavelength 2000, octaves 5, gain "0.5" | guess | metre-scale coastline detail, unwarped |
 | `coast_noise_amp` | fx(0, 2) | "0.1" | guess | its weight in the continent field |
@@ -161,9 +163,11 @@ No field of the second version's stable table is removed. Added: `segment_on_sha
 
 Required loader validation: each check is evaluated when the definition is loaded, and a failure is a configuration error (a P0-03 load error at the definition's header), so a file that fails one is rejected and no world is generated.
 
-1. `edge_radial_end − edge_radial_start ≥ 0.01`. Keeps the E2 divisor positive and bounded away from 0 (section 7).
-2. `mountain_cover_rank ≤ mountain_peak_rank`.
-3. `lake_min_area_m2 ≤ lake_max_area_m2`.
+1. `edge_radial_span`: `edge_radial_end − edge_radial_start ≥ 0.01`. Keeps the E2 divisor positive and bounded away from 0 (section 7). (With `edge_radial_end` ≤ 2 this needs `edge_radial_start` ≤ 1.99, hence that field's upper bound.)
+2. `mountain_ranks`: `mountain_cover_rank ≤ mountain_peak_rank`.
+3. `lake_areas`: `lake_min_area_m2 ≤ lake_max_area_m2`.
+
+Error shape (P0-03 9 and the loader's existing check errors): one error per failing check, at the position of the definition's header (`[worldgen.elevation]`), in the form `<path>:<line>:<column>: error: check '<name>' failed for 'worldgen.elevation': <message>`, with the messages `edge_radial_end - edge_radial_start must be at least 0.01`, `mountain_cover_rank must not exceed mountain_peak_rank` and `lake_min_area_m2 must not exceed lake_max_area_m2`. `<path>` is the file relative to the data root (for example `worldgen/elevation.toml`). Checks run only when the definition passed type validation; several failing checks give several errors, sorted as P0-03 9 sorts all errors. Tests assert path, line, column and the full text.
 
 (The exploration code checks none of them; its values satisfy all three, so adding the checks changes no world.)
 
@@ -765,7 +769,95 @@ One `layer` row: `name` = `elevation`, `width` = `height` = N, `format` = `i16`,
 
 ## 10. Tests required
 
-Library seams (interim names, as on the exploration branch): `elevation_fields(seed, N, tuning, threads)` returning c, nb, ns as raw grids and c_sea, w_b, s_land (E1 to E3); `elevation_ocean_from_provisional(grid, P, I_min)` (E4 steps 2 and 3 on any W × H grid); `elevation_classify(fields, tuning)` (E4 on the map); a floor seam returning (trigger, target, o*, β*) for given land cells' (nb, ns, gm) lists and w_b (E5.1); `elevation_heights(seed, fields, ocean, tuning, threads)` (E5 to E7); `erode(grid, h, ocean, params, threads)` with its parts (E8 on any W × H grid with at least one ocean cell); `quantize_elevation` (E9); a conditioning seam taking (grid, e, ocean, cost, bump, lake_min_cells, lake_max_cells, lake_min_depth_dm, max_share_cells, fine_slope) (E10.1 to E10.5 on any W × H grid); `elevation_grid(seed, N, tuning, threads)` for the whole stage.
+Library seams, as declared on the implementation branch `p1/01-elevation` (`worldgen/include/worldgen/stages/elevation.hpp`; all in `worldgen::stages`, `threads` defaults to 1). Tests use these; the engineer may add helpers but should not change these signatures without a spec note.
+
+```cpp
+ElevationTuning elevation_tuning_from(const data::ContentSet& content);   // and (const data::Record&)
+// Derived integers (4.5)
+std::int32_t  elevation_margin(Fx edge_margin_frac, std::int32_t n);
+std::int64_t  island_min_cells(std::int64_t island_min_area_m2);
+std::int64_t  lake_min_cells(std::int64_t lake_min_area_m2);
+std::int64_t  lake_max_cells(std::int64_t lake_max_area_m2, std::int32_t lake_area_ref_n, std::int32_t n);
+std::int64_t  lake_min_depth_dm(Fx lake_min_depth_m);
+std::int64_t  fill_fine_slope(Fx fill_slope_dm);
+Fx            belt_halfwidth(Fx belt_halfwidth_m, Fx belt_halfwidth_frac, std::int32_t n);
+std::int64_t  mountain_floor_target(std::int64_t land_cells, Fx segment_on_share);
+std::int64_t  lake_max_share_cells(std::int64_t land_cells, Fx lake_max_share);   // max(1, ...)
+// E1 to E3
+Fx elevation_map_fraction(std::int32_t k, std::int32_t n);  Fx elevation_metres(std::int32_t k);
+struct ContinentCentre { Fx cx, cy; };
+ContinentCentre continent_centre(std::uint64_t seed, Fx continent_center_jitter);
+struct ElevationFields { std::int32_t n; std::vector<std::int64_t> c, nb, ns; ContinentCentre centre;
+                         Fx c_sea, g_med, hw, w_b, s_land; };
+ElevationFields elevation_fields(std::uint64_t seed, std::int32_t n, const ElevationTuning&, std::uint32_t threads);
+std::vector<std::int64_t> belt_gradient(geo::Grid, std::span<const std::int64_t> nb, std::uint32_t threads);
+Fx belt_width(Fx g_med, Fx hw);
+// E4
+std::vector<std::uint8_t> elevation_ocean_from_provisional(geo::Grid, std::span<const std::uint8_t> p,
+                                                           std::int64_t island_min);
+std::vector<std::uint8_t> elevation_classify(const ElevationFields&, const ElevationTuning&);
+// E5, E5.1
+struct LandProfile { Fx tl, gm, co; };
+LandProfile land_profile(Fx s, Fx s_land, Fx mountain_coast_t);
+Fx ratio_capped(Fx a, Fx b);                                  // rc
+Fx belt_profile(Fx nb, Fx offset, Fx w_b);                    // b_o
+Fx segment_factor(Fx ns, Fx bias, Fx segment_contrast);       // sg_beta
+Fx mountain_mask(Fx nb, Fx ns, Fx gm, Fx offset, Fx bias, Fx w_b, Fx segment_contrast);
+struct FloorCell { Fx nb, ns, gm; };                          // one land cell
+struct MountainFloor { std::int64_t target; bool triggered; Fx offset, bias;
+                       std::vector<Fx> bisection; };          // every mid, in order; empty if none ran
+MountainFloor mountain_floor(std::span<const FloorCell> land_cells, Fx w_b, const ElevationTuning&);
+// E5 to E7
+struct ElevationHeights { std::vector<std::int64_t> h, unit; MountainFloor floor;
+                          std::int64_t land_cells; Fx q, qc, scale; };
+ElevationHeights elevation_heights(std::uint64_t seed, const ElevationFields&, std::span<const std::uint8_t> ocean,
+                                   const ElevationTuning&, std::uint32_t threads);
+std::vector<std::int64_t> chamfer_distance(geo::Grid, std::span<const std::uint8_t> source);
+Fx ocean_depth(std::int64_t dl, Fx ocean_shelf_m, Fx ocean_depth_m);
+struct MountainScale { Fx q, qc, scale; };
+MountainScale mountain_scale(std::span<const std::int64_t> land_units, const ElevationTuning&);
+// E8
+struct ErosionParams { std::int32_t iterations, route_interval; Fx k, diffusion, floor,
+                       talus_drop_o, talus_drop_d, talus_rate; std::uint64_t key; };
+ErosionParams erosion_params(const ElevationTuning&, std::uint64_t seed);   // key = K_erosion
+void erosion_random_receivers(geo::Grid, std::span<const std::int64_t> level, std::span<const std::uint8_t> ocean,
+                              std::uint64_t key, std::int32_t it, std::span<geo::Direction> rcv, std::uint32_t threads);
+void erosion_factors(geo::Grid, std::span<const std::uint32_t> accum, std::span<const geo::Direction> rcv,
+                     std::span<const std::uint8_t> ocean, Fx k, std::span<std::int64_t> f, std::uint32_t threads);
+void erosion_solve(geo::Grid, std::span<const std::int64_t> h, std::span<const std::uint8_t> ocean,
+                   std::span<const geo::Direction> rcv, std::span<const std::int64_t> f,
+                   std::span<const geo::CellIndex> order, Fx floor, std::span<std::int64_t> hn);
+void erosion_diffuse(geo::Grid, std::span<const std::int64_t> hn, std::span<const std::uint8_t> ocean,
+                     Fx diffusion, Fx floor, std::span<std::int64_t> h, std::uint32_t threads);
+void erosion_talus(geo::Grid, std::span<const std::int64_t> h, std::span<const std::uint8_t> ocean,
+                   Fx drop_o, Fx drop_d, Fx rate, Fx floor, std::span<std::int64_t> t, std::uint32_t threads);
+void erode(geo::Grid, std::span<std::int64_t> h, std::span<const std::uint8_t> ocean, const ErosionParams&,
+           std::uint32_t threads);
+// E9
+std::int16_t quantize_elevation_cell(std::int64_t h_raw, bool ocean);
+std::vector<std::int16_t> quantize_elevation(geo::Grid, std::span<const std::int64_t> h,
+                                             std::span<const std::uint8_t> ocean, std::uint32_t threads);
+// E10
+Fx fill_cost(Fx nz, Fx fill_cost_amp);  std::int64_t fill_bump(Fx dn, Fx fill_detail_m);
+std::int64_t fill_slope_eps(std::int64_t fine_slope, Fx cost, bool diagonal);
+struct FillGrids { std::vector<std::int64_t> cost, bump; };
+FillGrids fill_grids(std::uint64_t seed, std::int32_t n, std::span<const std::uint8_t> ocean,
+                     const ElevationTuning&, std::uint32_t threads);
+struct DepressionComponent { std::uint32_t label; std::int64_t size, depth, volume; };
+struct ConditionParams { std::int64_t lake_min_cells, lake_max_cells, lake_min_depth_dm,
+                         max_share_cells /* >= 1 */, fine_slope; };
+std::vector<std::uint32_t> select_lakes(std::span<const DepressionComponent>, const ConditionParams&);  // E10.3, kept labels in selection order
+struct Conditioned { std::vector<std::int16_t> e; std::vector<DepressionComponent> components;
+                     std::vector<std::uint32_t> kept; };
+Conditioned condition_depressions(geo::Grid, std::span<const std::int16_t> e, std::span<const std::uint8_t> ocean,
+                                  std::span<const std::int64_t> cost, std::span<const std::int64_t> bump,
+                                  const ConditionParams&);                   // E10.1 to E10.5, any W x H grid
+// Whole stage
+std::vector<std::int16_t> elevation_grid(std::uint64_t seed, std::int32_t n, const ElevationTuning&,
+                                         std::uint32_t threads);
+```
+
+E8.2 is testable through `erosion_random_receivers` (given L, ocean, key and it) and E10.2/E10.3 through `condition_depressions(...).components` and `select_lakes`; the worked examples of 10.1 map onto these seams (F1 and F2 onto `mountain_floor`, whose `bisection` list gives F1's mid sequence).
 
 ### 10.1 Unit tests with worked examples
 
@@ -773,7 +865,7 @@ Every figure below was computed by the spec writer's exact-integer reference of 
 
 **Derived integers.** margin M for N = 512, 1024, 2048 with "0.03" (raw 128849019) is 15, 30, 61; with "0" it is 1. I_min for 50000 m² is 196; for 0, 0; for 256, 1; for 257, 2. `land_floor_m` "0.1" is raw 429496730. lake_max_cells with the shipped values at N = 128, 256, 512, 1024, 2048: 184, 733, 2930, 11719, 46875 (at 2048: a = 12000000, (12000000 + 255) div 256 = 46875). lake_min_cells 391; lake_min_depth_dm 20; fine_slope 65536; D_o raw 206158430208, D_d raw 291552048000 (67.882 m). target and max_share_cells for L_O = 6517: 521 and 196; for L_O = 26261: 2101 and 788.
 
-**Coordinates.** N = 1024: U at x = 0 is raw 4194304 (1/2048), at x = 1023 raw 4290772992; N = 16: U at x = 3 is `from_ratio(7, 32)` = raw 939524096. X at x = 2047 is `from_int(32760)`.
+**Coordinates.** N = 1024: U at x = 0 is raw 2097152 (1/2048), at x = 1023 raw 4292870144 (2047/2048); N = 512: raw 4194304 and 4290772992; N = 16: U at x = 3 is `from_ratio(7, 32)` = raw 939524096. X at x = 2047 is `from_int(32760)`.
 
 **Continent centre.** With `continent_center_jitter` "0.06" (raw 257698038): hv = 2^31 gives J = HALF exactly; hv = 0 gives J = raw 1889785610; hv = 2^32 − 1 gives J = raw 2405181686. For seed 0 the test computes hv_0 and hv_1 from `hash_at` and checks cx, cy returned by the seam.
 
@@ -880,7 +972,7 @@ cost = ONE everywhere except (2, 2) from_int(2) and (2, 3) ONE + HALF; bump = 0 
 
 *Case 2: lake_min_depth_dm 4* (kept). The same pushes up to (3, 2); then (2, 3) and (2, 2) take the kept branch: kf = base, P = max(base, 917504) = 917504. Output: (2, 2) 10 and (2, 3) 12 unchanged (the lake, level 14), (4, 3) → 4.
 
-**Tuning validation.** Named check 1 fails on `edge_radial_start` "1.0", `edge_radial_end` "1.005" and on end below start; check 2 on `mountain_cover_rank` "0.999" with `mountain_peak_rank` "0.998"; check 3 on `lake_min_area_m2` 200000 with `lake_max_area_m2` 100000; a float literal in any field is a P0-03 error; a missing field is an error; each bound of 4.2 rejects a value one step outside it (including `lake_area_ref_n` 15 and `lake_max_share` "0.0009"). Each named-check failure is a load error and no world is written.
+**Tuning validation.** Named check 1 fails on `edge_radial_start` "1.0", `edge_radial_end` "1.005" and on end below start; check 2 on `mountain_cover_rank` "0.999" with `mountain_peak_rank` "0.998"; check 3 on `lake_min_area_m2` 200000 with `lake_max_area_m2` 100000; a float literal in any field is a P0-03 error; a missing field is an error; each bound of 4.2 rejects a value one step outside it (including `edge_radial_start` "1.991", `lake_area_ref_n` 15 and `lake_max_share` "0.0009"). Each named-check failure is a load error and no world is written.
 
 ### 10.2 Property tests
 
@@ -891,7 +983,7 @@ Over seeds 0 to 63 at N = 128 with both fixtures (4.4), and seeds 0 to 3 at N = 
 - E3 values equal those found by sorting a copy.
 - E5.1: for seeds where the floor triggers (with the shipped values at N = 128, among seeds 0 to 15: seeds 9, 10, 12 and 13; at seed 13 the chosen offset is the last one tried, o* = −4d = −2 w_b), the seam's (o*, β*) equals the test's own implementation of the search; for the others it is (0, `segment_bias`).
 - E8 alone, on any input meeting the contract of E7: no land cell is raised by the solve; every land cell after the loop is ≥ floor; ocean cells are unchanged; the largest land height does not increase; every random receiver points to a neighbour with strictly smaller L.
-- E10 alone, on the E9 grids above and on 200 random fixtures (random keys in [1, 200] on a 32 × 32 interior with an ocean border, test stream `test.elevation.fill`, test-chosen thresholds, cost in [ONE, 4 ONE] and bump in [0, 2^20]): e' = e on ocean and kept cells; e' ≥ e on land; the depression components of e' are exactly the kept components; kept cells ≤ max_share_cells; every non-kept land cell reaches the ocean along a path on which e' never increases.
+- E10 alone, on the E9 grids above and on 200 random fixtures (random keys in [1, 200] on a 32 × 32 interior with an ocean border, test-chosen thresholds, cost in [ONE, 4 ONE] and bump in [0, 2^20], all drawn from `Rng(substream(stream_key(0, "test.noise"), 1))`, a fixed key derived from the registered P0 test stream, so no new stream name is needed): e' = e on ocean and kept cells; e' ≥ e on land; the depression components of e' are exactly the kept components (so no non-kept land cell is depressed); kept cells ≤ max_share_cells; and for every non-kept land cell there is an 8-path to the ocean on which the surface W' never increases, where W' = e' on non-kept land, W' = L'(c) (the cell's flood level on e', its lake level) on kept-lake cells and W' = 0 on ocean. (The path through a kept lake is monotone only at the lake level, not on the lake bed, which is lower than the slope draining into it; section 6.3 proves exactly this.)
 
 ### 10.3 Determinism tests
 

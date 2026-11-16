@@ -293,3 +293,13 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
 - Proposal: decide whether ranges should have a few natural passes. A cheap way: one more low-frequency noise lowers the mountains only where its zero line crosses a belt, giving one to three cols 500 to 800 m wide per range and leaving crests elsewhere alone. It changes every world's bytes but no outline or range layout.
 - Interim choice: no passes in P1-01 as first merged. Low coastal cliffs also seal off a few lowland pockets (for example 12 km² on 1024 seed 18); they are left as they are.
 - Status: open
+
+### Every world's hash depends on the shipped tuning files
+
+- Date: 2026-11-16
+- Raised by: generator-engineer, via the lead
+- Design doc section: 10, 13 (determinism, golden hashes)
+- Problem: once the `worldgen` tuning kind is registered (P1-01), the content hash of the loaded data is written into every world, including worlds generated with no geography stage. Any change to a shipped tuning file therefore changes every golden hash, the P0 ones included.
+- Proposal: accept it and say so in section 13: a shipped tuning change is an output change, bumps the generator version and re-records all golden hashes (already the rule in "Generator tuning is data, and shipped tuning changes bump the version").
+- Interim choice: as proposed; `p0-worlds.txt` was re-recorded with generator version 0.3.0.
+- Status: open
