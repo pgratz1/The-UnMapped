@@ -261,7 +261,7 @@ Layer hash of `region` and logical hashes of `region` and `region_border` for th
 
 1. **Calibration** from the float prototype only (P1-03 section 11): regions followed range flanks and spanned single ranges well; on open lowland, borders were Voronoi-like straight lines, which the cost noise (not in the prototype) is meant to break up.
 2. **Regions are compact, not watersheds.** A long river valley is split across several regions along its length; ridges become borders, valley floors are inside regions. That suits settlement (a village and its valley), but a "river basin" is a set of regions, not one.
-3. **Only rivers of class ≥ 4 are borders** (≥ 8 × 0.5 km² = 4 km² upstream); with the hydrology tuning of P1-02 many worlds have only a few such rivers per map.
+3. **Only rivers of class ≥ 4 are borders** (upstream area ≥ 8 T cells: with the shipped threshold T = 489, 3912 cells, about 1 km²; it was 4 km² at the former 0.5 km² threshold). Since the change of 2026-11-16 there are more such rivers per map than when the regions were calibrated; whether class 4 is still the right border class needs re-measuring (open for recalibration).
 4. **Placeholder names** are English, compass-based and repetitive (`East Wood II`); see open question 1.
 5. **No sea regions**: history needs sea areas only for naval events; not in P1.
 

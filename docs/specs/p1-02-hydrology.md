@@ -42,14 +42,14 @@ Fields of `worldgen.hydrology`, all required (P1-00 6.1):
 
 | Field | Type and bounds | Default | Status | Meaning |
 | --- | --- | --- | --- | --- |
-| `river_min_area_m2` | int(256, 1000000000) | 500000 | guess, to be tuned against the seed sweep | upstream area at which a cell becomes a river |
+| `river_min_area_m2` | int(256, 1000000000) | 125000 | designed (lead's decision, 2026-11-16, after the first measurements; was 500000) | upstream area at which a cell becomes a river |
 
-Derived: T = ceil(`river_min_area_m2` / 256) = (a + 255) div 256 cells; 1954 with the default (0.5 km²). At 1024 with about 440,000 land cells this gives on the order of 200 river heads.
+Derived: T = ceil(`river_min_area_m2` / 256) = (a + 255) div 256 cells; with the default 125000 m² (0.125 km²), T = (125000 + 255) div 256 = 489 (489 cells are 125184 m²). Measured with the implementation at 1024, seeds 0–9: `river_share_of_land` 1.8% to 2.1%. At the former default (500000 m², T = 1954) the share was 0.6% to 0.9% and the 1024 worlds had 45 to 52 river sources; the source count at the shipped value has not been measured yet.
 
 ```toml
 # game/data/worldgen/hydrology.toml (and the fixture worldgen/tests/data/geo/worldgen/hydrology.toml)
 [worldgen.hydrology]
-river_min_area_m2 = 500000
+river_min_area_m2 = 125000
 ```
 
 Fixed constants (not tuning): river class cap 15; chamfer weights 5 (orthogonal) and 7 (diagonal); 16 m per cell.
@@ -75,7 +75,7 @@ Every neighbour of a lake cell has L at least the lake level (for adjacent u, v:
 ### H4. Receivers (D1 then D4, D5)
 
 1. `rcv` = G4 on L, parent, O for every land cell. (Parallel by G6 row blocks.)
-2. **One outlet per lake.** For each lake, in id order: the outlet is the lake cell that comes first in `order`. Its receiver is its flood parent, `rcv[outlet] = parent[outlet]`, which is a rim cell (H3: the parent was popped earlier, so it is not in the lake, and its L equals the lake level). Every other cell of the lake gets as receiver its parent in a FIFO breadth-first search over the lake's cells starting at the outlet, visiting neighbours in the 8-neighbour order: when the search reaches cell m from cell c through direction code k, `rcv[m] = (k + 4) mod 8`.
+2. **One outlet per lake.** For each lake, in id order: the outlet is the lake cell that comes first in `order`. Its receiver is its flood parent, `rcv[outlet] = parent[outlet]`, which is a rim cell: a land cell outside the lake whose e and L both equal the lake level. Argument: the parent p was popped before the outlet, and the outlet is the first lake cell popped, so p is not in this lake. G3 set L[outlet] = max(e[outlet], L[p]); the outlet is a lake cell, so L[outlet] > e[outlet], hence L[p] = L[outlet], the lake level ≥ 1, so p is not ocean (ocean L is 0). If p were depressed (L[p] > e[p]) it would be an adjacent depressed cell with equal L and so in the same lake (H3); hence e[p] = L[p], the lake level. The implementation checks this and treats a violation as the fatal error "hydrology: a lake outlet's flood parent is not a rim cell at the lake level"; by the argument it cannot occur on input that meets the preconditions, so it guards the implementation, not the input. Every other cell of the lake gets as receiver its parent in a FIFO breadth-first search over the lake's cells starting at the outlet, visiting neighbours in the 8-neighbour order: when the search reaches cell m from cell c through direction code k, `rcv[m] = (k + 4) mod 8`.
 
 Without step 2, a lake reached from several rim cells at the same level would have several exits (G4 gives every lake cell its flood parent, and several lake cells can have rim parents). Step 2 makes the lake one node of the drainage network with one outflow, which history and the runtime need.
 
@@ -94,7 +94,7 @@ For each cell:
 | other land, A ≥ T | 1 | min(15, bit_length(A div T)) | 0 | 0 | `rcv` | A |
 | other land, A < T | 0 | 0 | 0 | 0 | `rcv` | A |
 
-`bit_length` is amendment A1 of P1-00. Class k ≥ 1 means A in [T·2^(k−1), T·2^k), so each class step is a doubling of upstream area (roughly a 40% wider river under the usual width ∝ √area rule). Bounds: −e ≤ 30000 and L − e ≤ 30000 fit `u16`.
+`bit_length` is amendment A1 of P1-00. Class k ≥ 1 means A in [T·2^(k−1), T·2^k), so each class step is a doubling of upstream area (roughly a 40% wider river under the usual width ∝ √area rule). Bounds, for any `i16` elevation that meets the preconditions: on ocean −e ∈ [1, 32768] (e = −32768 gives 32768); on a lake L ≤ 32767 (the largest land key) and e ≥ 1, so L − e ∈ [1, 32766]. Both fit `u16`. On layers written by the elevation stage (land ≤ 29990, ocean ≥ −29005, P1-01 6.1) both are below 30000.
 
 ### H7. Coast distance (D4)
 
@@ -238,20 +238,46 @@ For every input satisfying the preconditions (and so for every world):
 | Step | Rule | Notes |
 | --- | --- | --- |
 | H1, H3 | D5 | FIFO, index-order seeds, neighbour orders of P1-00 2.3 |
-| H2 | D6 | keys are integer decimetres, so a bucket queue (FIFO per level, levels 0 to 30000) gives exactly the (key, seq) order |
+| H2 | D6 | keys are integer decimetres in [0, 32767] for any `i16` input (ocean seeds 0, land keys e ≥ 1); any queue that pops in (key, seq) order is correct: the shared G3 uses a radix heap on `int64` keys, and a bucket queue with FIFO buckets for levels 0 to 32767 gives the same order |
 | H4 step 1 | D1, parallel | |
 | H4 step 2 | D5 | outlet by pop position; BFS parents depend on the stated neighbour order |
 | H5 | D4 | integer sums; result order-independent |
 | H6 | D1, parallel | |
 | H7 | D4 | each pass is an in-place sweep in a stated order; not parallel |
 
-No randomness, no floating point. Overflow: keys ≤ 30000; A ≤ 2^22; finite chamfer values are below 7 × 2 × 2048 < 2^15, so 32 × d < 2^20; INF = 2^40 plus a weight, and 32 × INF, still fit `int64`; an INF left over (only on a test grid with no land) saturates to ∓32767.
+No randomness, no floating point. Overflow: keys ≤ 32767; A ≤ 2^22; finite chamfer values are below 7 × 2 × 2048 < 2^15, so 32 × d < 2^20; INF = 2^40 plus a weight, and 32 × INF, still fit `int64`; an INF left over (only on a test grid with no land) saturates to ∓32767.
 
-Performance (P1-00 11): 0.3 / 1.2 / 5 s at 512 / 1024 / 2048. The flood with a bucket queue and the two chamfer transforms are linear in N²; the cost is memory traffic.
+Performance (P1-00 11): 0.3 / 1.2 / 5 s at 512 / 1024 / 2048. The flood (radix heap, near-linear for keys bounded by 32767) and the two chamfer transforms are linear in N²; the cost is memory traffic.
 
 ## 8. Tests required
 
-Library seams (interim names): `hydrology_layers(elevation grid, tuning, threads)` returning the seven grids; and the shared G3, G4, G5 functions on any W × H grid.
+Library seams, as declared on the implementation branch `p1/02-hydrology` (`worldgen/include/worldgen/stages/hydrology.hpp`, namespace `worldgen::stages`, `threads` defaults to 1), plus the shared G3, G4, G5 functions of `worldgen/geo/flow.hpp` on any W × H grid:
+
+```cpp
+struct HydrologyTuning { std::int64_t river_min_area_m2; };
+HydrologyTuning hydrology_tuning_from(const data::ContentSet&);          // and (const data::Record&)
+std::int64_t river_threshold_cells(std::int64_t river_min_area_m2);      // T
+std::uint8_t river_class(std::int64_t a, std::int64_t t);               // min(15, bit_length(a div t)), 0 if a < t
+void check_hydrology_preconditions(geo::Grid, std::span<const std::int16_t> e);   // H1, fatal on violation
+struct HydrologyNetwork {
+    std::vector<std::uint8_t> ocean;          // O
+    geo::RoutingFlood flood;                  // H2: L, parent, order
+    std::vector<geo::Direction> g4;           // H4 step 1, before rerouting (8 on ocean)
+    geo::Components lakes;                    // H3, label = lake id
+    std::vector<std::int64_t> lake_level;     // [k - 1]
+    std::vector<geo::CellIndex> lake_outlet;  // [k - 1]
+    std::vector<geo::Direction> rcv;          // H4 final receivers (flow_dir)
+    std::vector<std::uint32_t> accum;         // H5
+};
+HydrologyNetwork hydrology_network(geo::Grid, std::span<const std::int16_t> e, std::uint32_t threads);
+std::vector<std::int16_t> coast_distance(geo::Grid, std::span<const std::uint8_t> ocean);   // H7
+struct HydrologyLayers { std::vector<std::uint8_t> water; std::vector<std::uint16_t> water_depth;
+                         std::vector<std::uint8_t> flow_dir; std::vector<std::uint32_t> flow_accum;
+                         std::vector<std::uint8_t> river; std::vector<std::uint32_t> lake;
+                         std::vector<std::int16_t> coast_dist; };
+HydrologyLayers hydrology_layers(geo::Grid, std::span<const std::int16_t> e, const HydrologyTuning&,
+                                 std::uint32_t threads);
+```
 
 ### 8.1 Unit tests
 
@@ -261,13 +287,13 @@ Library seams (interim names): `hydrology_layers(elevation grid, tuning, threads
 4. **A plateau.** 7 × 5, border −1, all 15 interior cells 10. Expected `flow_dir`, rows 1 to 3: `8 4 6 6 6 0 8`, `8 4 5 5 5 0 8`, `8 2 2 2 2 0 8`. The three cells (2..4, 2) have no lower neighbour and take their flood parents (NW, code 5); (1, 1) takes W (score 200, the first 200 in code order after the diagonal SW at 100); (2, 1) to (4, 1) take N. `flow_accum` rows 1 to 3: `0 2 2 2 1 1 0`, `0 1 1 1 1 1 0`, `0 1 1 1 1 1 0`.
 5. **Two lakes at different levels draining one into the other** (a terraced fixture designed by the test writer, at least 9 × 9): the upper lake's outlet drains over its rim into a path that enters the lower lake; ids follow the smallest index; each lake has one outlet.
 6. **A lake reached from several rim cells:** a fixture where two rim cells at the lake level touch the lake; exactly one cell (the first popped) exits.
-7. **River classes** of 5.1's list; `river_min_area_m2` 256 gives T = 1, 257 gives T = 2, 500000 gives 1954.
+7. **River classes** of 5.1's list; `river_min_area_m2` 256 gives T = 1, 257 gives T = 2, 2048 gives 8, 125000 (shipped) gives 489, 500000 gives 1954.
 8. **Chamfer** (the H7 function alone; this grid does not meet the stage preconditions) on 5.1 and on a 9 × 9 grid that is land except one ocean cell at (4, 4): (4, 4) → −16; (5, 4) chamfer 5 → 16 m; (5, 5) 7 → 22 m; (6, 5) 12 → 38 m; (8, 8) 28 → 90 m; (8, 4) 20 → 64 m; (0, 0) 28 → 90 m.
 9. **Preconditions:** a grid with a 0 cell, with no ocean, and with an ocean pocket not connected to the edge each raise the fatal error.
 
 ### 8.2 Property tests
 
-Over seeds 0 to 63 at N = 128 and 0 to 3 at N = 512 (fixture tuning, elevation from P1-01; with the shipped elevation values a map smaller than 187 cells has no lake, P1-01 4.4, so the N = 128 seeds also run with the small-map fixture `worldgen/tests/data/geo-small/`), and over 200 random fixtures (a test-chosen `Rng` stream, `test.hydro`, registered as a test-only stream name): random e in [1, 200] on a 32 × 32 interior with an ocean border of −1 to −50, which makes many depressions, flats and lakes. Check invariants 1 to 10 with code written independently of the stage: flood levels by a Dijkstra-style minimax search, accumulation by recursion over upstream cells, components by a union–find, chamfer by Dijkstra.
+Over seeds 0 to 63 at N = 128 and 0 to 3 at N = 512 (fixture tuning, elevation from P1-01; with the shipped elevation values a map smaller than 187 cells has no lake, P1-01 4.4, so the N = 128 seeds also run with the small-map fixture `worldgen/tests/data/geo-small/`), and over 200 random fixtures, which make many depressions, flats and lakes. Fixture f (f = 0 … 199) is a 34 × 34 grid drawn from `Rng(substream(stream_key(0, "test.hydro"), f))` (`test.hydro` registered in `streams.hpp` as a test-only stream name), one draw per cell in index order: a border cell (x or y equal to 0 or 33) gets `uniform_i64(-50, -1)`, an interior cell `uniform_i64(1, 200)`. Each fixture is run twice, with river threshold 2048 m² (T = 8) and with T = 1 (256 m², every land cell not in a lake is a river). Check invariants 1 to 10 with code written independently of the stage: flood levels by a Dijkstra-style minimax search, accumulation by recursion over upstream cells, components by a union–find, chamfer by Dijkstra.
 
 ### 8.3 Determinism tests
 
@@ -328,5 +354,9 @@ Proposals entry (B5 of P1-00):
 
 1. **No endorheic lakes.** Every lake spills to the sea, because hydrology runs before climate and cannot know where evaporation exceeds inflow. A closed basin (a salt lake in a rain shadow) would need climate first, or a later pass after climate that lowers the levels of lakes whose catchment rainfall is below evaporation. Interim: none in P1.
 2. **Uniform rain.** `flow_accum` counts cells, as if every cell got the same rain. Rivers in a rain shadow are therefore as large as rivers on the wet side. Options for the second pass: a `discharge` layer written by the climate stage (rainfall-weighted accumulation, using these `flow_dir` values unchanged), used by biomes and resources instead of `flow_accum`; or leave it. Decide in the climate spec.
-3. **River threshold.** 0.5 km² is a guess; the sweep decides. The river class definition does not depend on it.
+3. **River threshold.** Decided by the lead: 0.125 km² (T = 489), replacing the first guess of 0.5 km², which gave a river share of 0.4% to 0.9% of land on the v16 terrain. The validation sweep confirms or revises it. The river class definition does not depend on it; statistics and second-pass calibration that do are marked provisional (P1-00 13.1, P1-04, P1-05, P1-06).
+
+## 11. Known limitations
+
+1. **Small lakes may show no outflow.** Every lake has exactly one outlet (H4), but its outflow is drawn as a river only where the accumulation reaches T. A lake whose catchment, itself included, is smaller than T cells (0.125 km² with the shipped threshold) drains through dry-land cells (`water` = 0) to the next river, lake or the sea, so on the composite map it looks closed. `flow_dir` still records the outflow; the runtime and history can use it. P1-00 13.2 checklist item 7 is read accordingly.
 4. **Coast distance metric.** Chamfer 5-7 (error up to about 4%) is chosen over exact Euclidean distance for simplicity and exactness of definition. Climate and biomes need "near the coast", not survey accuracy.

@@ -315,7 +315,7 @@ Layer hashes of the six layers for the cases of P1-03 10.4.
 
 1. **Calibration** is the floating-point prototype of P1-03 section 11. Its habitability was zero on 17–60% of land (slopes) and the main walk area held 55–83% of land; scores are otherwise unmeasured.
 2. **One generic habitability.** It suits a farming people. Race preferences (dwarves in ore-rich, steep, walled-off ground; elves in forest) are history's, computed from the component layers.
-3. **Fresh water ignores streams below the river threshold**, except through the rain term.
+3. **Fresh water ignores streams below the river threshold**, except through the rain term. The threshold is 0.125 km² as shipped since 2026-11-16 (it was 0.5 km² when the prototype of P1-03 section 11 calibrated `fresh_reach_m` and the provisional statistics); with about four times as many river cells `fresh_water` and habitability are higher near streams, and the calibration needs re-doing.
 4. **Walk areas are coarse about passes.** A range is a barrier if its flanks are steeper than 35° everywhere along it; a single walkable gully through it joins two areas. P1-01 has no natural passes, so in practice the main lowland is one area and high valleys and cliff-bound pockets are others (P1-01 limitation 1, proposals "Natural passes through the ranges").
 5. **No ore kinds.** One `ore` score; iron, copper, silver or gold would be history's or the runtime's draw from it.
 
