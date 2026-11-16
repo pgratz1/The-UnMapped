@@ -314,8 +314,11 @@ TEST_CASE("layout independence: reverse order, insert-then-delete, rolled-back s
 
 // --- Golden hashes (P0-02 12.4, P0-04 9) ------------------------------------
 //
-// SHA-256 of the file bytes of the empty world, the value `worldgen-cli hash`
-// prints. The case names are those of P0-04 section 9. The values are
+// SHA-256 of the file bytes of the empty world with the content hash of no
+// data, as `worldgen-cli generate` wrote it until the `worldgen` kind was
+// registered (generator 0.3.0; since then the CLI writes the content hash of
+// the loaded data, P0-03 amendment 17, so the CLI goldens in p0-worlds.txt
+// differ from these). The case names are those of P0-04 section 9. The values are
 // recorded by the validation specialist: until then each is the placeholder
 // below, and the comparison test is SKIPPED (doctest reports it as skipped),
 // never silently passed. The test-pattern cases belong to P0-04.
@@ -332,11 +335,11 @@ struct GoldenCase {
 };
 
 constexpr std::array<GoldenCase, 5> GOLDEN_CASES = {{
-    {"empty-phrase", 0, "The Unmapped", "86a03102857070c1771c8c7a6c2fc744603aec63836f9dfaf6f36fb959af19c0"},
-    {"empty-seed-0", 0, nullptr, "7163111e6bf444d3ad5fb9bf5a92faef0ebc09d18db0ef74553d8f4744a80a89"},
-    {"empty-seed-1", 1, nullptr, "c5e8f9705d667784347970218ae1fe767499d6cf82d2264b89781148ab8b9363"},
-    {"empty-seed-42", 42, nullptr, "eb9a2926e9b6c7780cf68f618426beabdfcd498dd9352b0bdd3be945d2683511"},
-    {"empty-seed-max", 18446744073709551615ULL, nullptr, "d477b49e8fd55624bffeb6b1ee298dc7a70f6fa4b62c796659693d0c7be7b393"},
+    {"empty-phrase", 0, "The Unmapped", "c7a3756dc7bbf1decbd5a894e10dd2fdc1ddc0ac4a514d5b94cb87fd86c66b6b"},
+    {"empty-seed-0", 0, nullptr, "821ec2bb35e35900943c38bd7314bb43a7cef5659d8845358121a7fb2f9ae706"},
+    {"empty-seed-1", 1, nullptr, "a2b8229f78b07e8c3f6f98d32a04c66e1d14bf0ad6c3c9f7875eb217c6ddeb6e"},
+    {"empty-seed-42", 42, nullptr, "202b2a92a54da5267937ae23c8d90ee9f1651e4b3e80c7fd02d0d264daa2a964"},
+    {"empty-seed-max", 18446744073709551615ULL, nullptr, "41b53c7a26363816e3a97f54d9eaaa455a641e892aa0d4fa05dc3db0d7219071"},
 }};
 
 constexpr bool golden_pending() {
@@ -348,8 +351,8 @@ constexpr bool golden_pending() {
     return false;
 }
 
-// The empty world exactly as `worldgen-cli generate` writes it (P0-02 8):
-// map size 1024, empty content hash, no stages.
+// The empty world as `worldgen-cli generate --until none` writes it (P0-02
+// 8), but with the content hash of no data: map size 1024, no stages.
 std::string golden_world_hash(const dbtest::TempDir& dir, const GoldenCase& c) {
     const std::string out = dir.file(std::string(c.name) + ".db");
     WorldWriter writer;

@@ -52,4 +52,14 @@ void f(std::vector<int>& v, Gen& g, Obj& o) {
     std::partition(v.begin(), v.end(), pred);  // expect: unstable-sort
     std::  // expect: unstable-sort
         sort(v.begin(), v.end());  // split across lines: reported where it starts
+    auto a1 = std::abs(i64);  // expect: int-abs
+    auto a2 = ::abs(i64);  // expect: int-abs
+    auto a3 = std :: llabs(i64);  // expect: int-abs
+    auto a4 = labs(i64) + llabs(i64);  // expect: int-abs
+    auto a5 = std::imaxabs(i64);  // expect: int-abs
 }
+
+#include <bitset>  // expect: packed-bool
+std::vector<bool> flags1;  // expect: packed-bool
+std::pmr::vector< bool > flags2;  // expect: packed-bool
+std::bitset<64> flags3;  // expect: packed-bool

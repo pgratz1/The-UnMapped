@@ -1,13 +1,14 @@
 #!/bin/sh
-# Cross-compiler world hash check (spec P0-04 section 9).
+# Cross-compiler world hash check (spec P0-04 section 9 with amendment 16 (d);
+# P1-00 section 14, X5).
 #
-# Generates the P0 golden cases with one preset's worldgen-cli, saves each
+# Generates the golden cases with one preset's worldgen-cli, saves each
 # world's `hash --detail` and `report` text, checks them against the golden
 # file, and compares the saved text of several presets. Used by continuous
 # integration (.github/workflows/ci.yml) and by developers locally:
 #
 #   tools/ci/world-hashes.sh generate PRESET [--build-dir DIR] [--out-dir DIR]
-#   tools/ci/world-hashes.sh expect   PRESET [--build-dir DIR] [--out-dir DIR] [--golden FILE]
+#   tools/ci/world-hashes.sh expect   PRESET [--build-dir DIR] [--out-dir DIR] [--golden FILE] [--golden-geo FILE]
 #   tools/ci/world-hashes.sh compare  PRESET PRESET... [--out-dir DIR]
 #   tools/ci/world-hashes.sh local    PRESET PRESET... [--out-dir DIR]
 #   tools/ci/world-hashes.sh cases
@@ -17,9 +18,11 @@
 #             <preset>-<case>.txt          worldgen-cli hash --db <file> --detail
 #             <preset>-<case>.report.txt   worldgen-cli report --db <file>
 #           A .txt file exists only if its command succeeded.
-# expect    runs hash --expect for every case against the golden file
-#           (default worldgen/tests/golden/p0-worlds.txt). If that file does
-#           not exist it says so and succeeds.
+# expect    runs hash --expect for every case against its golden file: the
+#           P0 cases against worldgen/tests/golden/p0-worlds.txt (--golden),
+#           the geography cases against worldgen/tests/golden/p1-worlds.txt
+#           (--golden-geo). A golden file that does not exist is reported
+#           and its cases are skipped.
 # compare   fails if any preset's .txt or .report.txt for any case differs
 #           from the others, or is missing, and prints a diff.
 # local     generate for each preset (each must already be built), then
@@ -39,21 +42,32 @@
 
 set -u
 
-# The case table of P0-04 section 9, in case-name order (the order of the
-# golden file). Arguments are given in run_generate below.
-CASES='empty-phrase empty-seed-0 empty-seed-0-512 empty-seed-1 empty-seed-42 empty-seed-max pattern-seed-0 pattern-seed-42'
+# The case table of P0-04 section 9 (with amendment 16 (d): the empty-*
+# cases pass --until none) and the geography cases of P1-00 section 14 X5
+# that the implemented stages allow, each list in case-name order (the order
+# of its golden file). Arguments are given in run_generate below.
+P0_CASES='empty-phrase empty-seed-0 empty-seed-0-512 empty-seed-1 empty-seed-42 empty-seed-max pattern-seed-0 pattern-seed-42'
+GEO_CASES='geo-phrase-512 geo-seed-0-512 geo-seed-1-1024 geo-seed-42-512'
+CASES="$P0_CASES $GEO_CASES"
 
-# Run "worldgen-cli generate" for case $1 writing world file $2.
+# Run "worldgen-cli generate" for case $1 writing world file $2. Every case
+# reads the shipped data of this checkout (--data, so that UNMAPPED_DATA_DIR
+# in the environment cannot change a golden world; P1-00 6.4).
 run_generate() {
     case $1 in
-        empty-seed-0)     "$cli" generate --out "$2" --seed 0 ;;
-        empty-seed-1)     "$cli" generate --out "$2" --seed 1 ;;
-        empty-seed-42)    "$cli" generate --out "$2" --seed 42 ;;
-        empty-seed-max)   "$cli" generate --out "$2" --seed 18446744073709551615 ;;
-        empty-seed-0-512) "$cli" generate --out "$2" --seed 0 --map-size 512 ;;
-        empty-phrase)     "$cli" generate --out "$2" --seed-phrase "The Unmapped" ;;
-        pattern-seed-0)   "$cli" generate --out "$2" --seed 0 --test-pattern ;;
-        pattern-seed-42)  "$cli" generate --out "$2" --seed 42 --test-pattern ;;
+        empty-seed-0)     "$cli" generate --out "$2" --data "$data_dir" --until none --seed 0 ;;
+        empty-seed-1)     "$cli" generate --out "$2" --data "$data_dir" --until none --seed 1 ;;
+        empty-seed-42)    "$cli" generate --out "$2" --data "$data_dir" --until none --seed 42 ;;
+        empty-seed-max)   "$cli" generate --out "$2" --data "$data_dir" --until none --seed 18446744073709551615 ;;
+        empty-seed-0-512) "$cli" generate --out "$2" --data "$data_dir" --until none --seed 0 --map-size 512 ;;
+        empty-phrase)     "$cli" generate --out "$2" --data "$data_dir" --until none --seed-phrase "The Unmapped" ;;
+        pattern-seed-0)   "$cli" generate --out "$2" --data "$data_dir" --seed 0 --test-pattern ;;
+        pattern-seed-42)  "$cli" generate --out "$2" --data "$data_dir" --seed 42 --test-pattern ;;
+        # P1-00 14 X5. Default stages (elevation; hydrology once implemented).
+        geo-seed-0-512)   "$cli" generate --out "$2" --data "$data_dir" --seed 0 --map-size 512 ;;
+        geo-seed-42-512)  "$cli" generate --out "$2" --data "$data_dir" --seed 42 --map-size 512 ;;
+        geo-phrase-512)   "$cli" generate --out "$2" --data "$data_dir" --seed-phrase "The Unmapped" --map-size 512 ;;
+        geo-seed-1-1024)  "$cli" generate --out "$2" --data "$data_dir" --seed 1 ;;
         *) echo "world-hashes: internal error: unknown case $1" >&2; return 1 ;;
     esac
 }
@@ -61,7 +75,7 @@ run_generate() {
 me=world-hashes
 
 usage() {
-    sed -n '9,13p' "$0" | sed 's/^# *//' >&2
+    sed -n '10,14p' "$0" | sed 's/^# *//' >&2
     exit 2
 }
 
@@ -114,6 +128,7 @@ physical_path() {
 script_dir=$(cd "$(dirname "$0")" && pwd -P) || exit 2
 source_dir=$(cd "$script_dir/../.." && pwd -P) || exit 2
 source_name=${source_dir##*/}
+data_dir=$(native_path "$source_dir/game/data")
 
 [ $# -ge 1 ] || usage
 command=$1
@@ -123,11 +138,13 @@ presets=
 build_dir=
 out_dir=
 golden=
+golden_geo=
 while [ $# -gt 0 ]; do
     case $1 in
         --build-dir) [ $# -ge 2 ] || die "--build-dir needs a value"; build_dir=$2; shift 2 ;;
         --out-dir)   [ $# -ge 2 ] || die "--out-dir needs a value"; out_dir=$2; shift 2 ;;
         --golden)    [ $# -ge 2 ] || die "--golden needs a value"; golden=$2; shift 2 ;;
+        --golden-geo) [ $# -ge 2 ] || die "--golden-geo needs a value"; golden_geo=$2; shift 2 ;;
         --help | -h) usage ;;
         -*) die "unknown option $1" ;;
         *) presets="$presets $1"; shift ;;
@@ -227,55 +244,66 @@ generate() {
     return "$failed"
 }
 
-expect() {
+# Checks the cases $3 (a space-separated list) of preset $1 against golden
+# file $2. Returns 0 when the file does not exist (reported, cases skipped).
+expect_file() {
     preset=$1
-    file=${golden:-$source_dir/worldgen/tests/golden/p0-worlds.txt}
+    file=$2
+    file_cases=$3
     if [ ! -f "$file" ]; then
-        echo "$me: NOTE: no golden file at $file; golden hashes are not checked yet (P0-04 section 9)."
+        echo "$me: NOTE: no golden file at $file; golden hashes of$(printf ' %s' $file_cases) are not checked yet."
         if [ "${GITHUB_ACTIONS:-}" = true ]; then
-            echo "::warning title=No golden world hashes::worldgen/tests/golden/p0-worlds.txt does not exist yet; hash --expect was not run."
+            echo "::warning title=No golden world hashes::${file#"$source_dir"/} does not exist yet; hash --expect was not run for its cases."
         fi
         return 0
     fi
-    find_cli "$preset" "$build_dir" || return 1
     if grep -q "$(printf '\r')" "$file"; then
         echo "$me: FAIL: $file has CR line endings" >&2
         return 1
     fi
-    failed=0
-    # Every golden line must name a known case.
+    file_failed=0
+    # Every golden line must name a case of this file.
     while read -r name hex rest; do
-        case " $CASES " in
+        case " $file_cases " in
             *" $name "*) ;;
-            *) echo "$me: FAIL: $file: unknown case '$name'" >&2; failed=1 ;;
+            *) echo "$me: FAIL: $file: unknown case '$name'" >&2; file_failed=1 ;;
         esac
         if [ -z "${hex:-}" ] || [ -n "${rest:-}" ]; then
             echo "$me: FAIL: $file: malformed line for '$name'" >&2
-            failed=1
+            file_failed=1
         fi
     done <"$file"
-    for c in $CASES; do
+    for c in $file_cases; do
         lines=$(grep -c "^$c " "$file")
         if [ "$lines" -ne 1 ]; then
             echo "$me: FAIL $preset $c: expected one line in $file, found $lines" >&2
-            failed=1
+            file_failed=1
             continue
         fi
         hex=$(sed -n "s/^$c \([^ ]*\)\$/\1/p" "$file")
         db=$out_dir/$preset-$c.db
         if [ ! -f "$db" ]; then
             echo "$me: FAIL $preset $c: $db missing (run generate first)" >&2
-            failed=1
+            file_failed=1
             continue
         fi
         "$cli" hash --db "$db" --expect "$hex" >/dev/null
         status=$?
         case $status in
             0) echo "$me: ok   $preset $c $hex" ;;
-            5) echo "$me: FAIL $preset $c: hash differs from the golden value (exit 5)" >&2; failed=1 ;;
-            *) echo "$me: FAIL $preset $c: hash --expect exited $status" >&2; failed=1 ;;
+            5) echo "$me: FAIL $preset $c: hash differs from the golden value (exit 5)" >&2; file_failed=1 ;;
+            *) echo "$me: FAIL $preset $c: hash --expect exited $status" >&2; file_failed=1 ;;
         esac
     done
+    return "$file_failed"
+}
+
+expect() {
+    preset=$1
+    find_cli "$preset" "$build_dir" || return 1
+    failed=0
+    expect_file "$preset" "${golden:-$source_dir/worldgen/tests/golden/p0-worlds.txt}" "$P0_CASES" || failed=1
+    expect_file "$preset" "${golden_geo:-$source_dir/worldgen/tests/golden/p1-worlds.txt}" "$GEO_CASES" || failed=1
     return "$failed"
 }
 

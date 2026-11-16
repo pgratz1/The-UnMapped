@@ -100,7 +100,7 @@ TEST_CASE("cli 12.1: seed values") {
     // An option value may start with '-' (4.1): "-1" above is a value, so the
     // error is the bad seed, not a missing value; a phrase may start with '-'.
     const fs::path out = sb.file("dash.db");
-    const ProcessResult r = sb.cli({"generate", "--seed-phrase", "-dash", "--out", u8(out)});
+    const ProcessResult r = sb.cli({"generate", "--until", "none", "--seed-phrase", "-dash", "--out", u8(out)});
     CHECK(r.exit_code == EXIT_OK);
 }
 
@@ -123,7 +123,7 @@ TEST_CASE("cli 12.1, amendment 15: a phrase that scrubs to nothing or to more th
         CAPTURE(phrase.size());
         check_generate_usage_error(sb, {"--seed-phrase", phrase});
         // The message says what a phrase may contain (stable fragments only).
-        const ProcessResult r = sb.cli({"generate", "--seed-phrase", phrase});
+        const ProcessResult r = sb.cli({"generate", "--until", "none", "--seed-phrase", phrase});
         const std::vector<std::string> lines = lines_of(r.err);
         REQUIRE(!lines.empty());
         INFO("stderr: ", r.err);
@@ -133,10 +133,10 @@ TEST_CASE("cli 12.1, amendment 15: a phrase that scrubs to nothing or to more th
     }
     // The limit is on the scrubbed phrase: 256 bytes are accepted, and so is
     // a much longer input that scrubs short.
-    CHECK(sb.cli({"generate", "--seed-phrase", std::string(128, 'a') + " " + std::string(127, 'b'), "--out",
+    CHECK(sb.cli({"generate", "--until", "none", "--seed-phrase", std::string(128, 'a') + " " + std::string(127, 'b'), "--out",
                   u8(sb.file("p256.db"))})
               .exit_code == EXIT_OK);
-    CHECK(sb.cli({"generate", "--seed-phrase", std::string(2000, '!') + "Short" + std::string(2000, '?'), "--out",
+    CHECK(sb.cli({"generate", "--until", "none", "--seed-phrase", std::string(2000, '!') + "Short" + std::string(2000, '?'), "--out",
                   u8(sb.file("short.db"))})
               .exit_code == EXIT_OK);
 }
@@ -161,7 +161,7 @@ TEST_CASE("cli 12.1: invalid settings file is an input error with P0-03 error li
     SUBCASE("unknown key") {
         const fs::path settings = sb.file("bad.toml");
         write_text(settings, "[world]\nseed = 42\nbogus = 1\n");
-        const ProcessResult r = sb.cli({"generate", "--settings", u8(settings)});
+        const ProcessResult r = sb.cli({"generate", "--until", "none", "--settings", u8(settings)});
         INFO("stderr: ", r.err);
         CHECK(r.exit_code == EXIT_INPUT);
         CHECK(r.out.empty());
@@ -177,7 +177,7 @@ TEST_CASE("cli 12.1: invalid settings file is an input error with P0-03 error li
     SUBCASE("floating-point value") {
         const fs::path settings = sb.file("float.toml");
         write_text(settings, "[world]\nseed = 1\nmap_size = 1024.0\n");
-        const ProcessResult r = sb.cli({"generate", "--settings", u8(settings)});
+        const ProcessResult r = sb.cli({"generate", "--until", "none", "--settings", u8(settings)});
         INFO("stderr: ", r.err);
         CHECK(r.exit_code == EXIT_INPUT);
         const std::vector<std::string> lines = lines_of(r.err);
@@ -187,7 +187,7 @@ TEST_CASE("cli 12.1: invalid settings file is an input error with P0-03 error li
         CHECK(contains(lines[1], "floating-point"));
     }
     SUBCASE("missing settings file") {
-        const ProcessResult r = sb.cli({"generate", "--seed", "1", "--settings", u8(sb.file("none.toml"))});
+        const ProcessResult r = sb.cli({"generate", "--until", "none", "--seed", "1", "--settings", u8(sb.file("none.toml"))});
         CHECK(r.exit_code == EXIT_INPUT);
         CHECK(starts_with(r.err, "worldgen-cli: error: "));
     }
@@ -211,24 +211,24 @@ TEST_CASE("cli 12.1: missing --db file is an input error") {
 TEST_CASE("cli 12.1: output errors") {
     Sandbox sb;
     const fs::path out = sb.file("w.db");
-    REQUIRE(sb.cli({"generate", "--seed", "1", "--out", u8(out)}).exit_code == EXIT_OK);
+    REQUIRE(sb.cli({"generate", "--until", "none", "--seed", "1", "--out", u8(out)}).exit_code == EXIT_OK);
     SUBCASE("output exists without --force") {
-        const ProcessResult r = sb.cli({"generate", "--seed", "1", "--out", u8(out)});
+        const ProcessResult r = sb.cli({"generate", "--until", "none", "--seed", "1", "--out", u8(out)});
         CHECK(r.exit_code == EXIT_OUTPUT);
         CHECK(r.out.empty());
         CHECK(starts_with(r.err, "worldgen-cli: error: "));
     }
     SUBCASE("--out into a missing directory") {
         const fs::path deep = sb.file("no/such/dir/w.db");
-        const ProcessResult r = sb.cli({"generate", "--seed", "1", "--out", u8(deep)});
+        const ProcessResult r = sb.cli({"generate", "--until", "none", "--seed", "1", "--out", u8(deep)});
         CHECK(r.exit_code == EXIT_OUTPUT);
         CHECK(!file_exists(sb.file("no")));  // the CLI never creates that directory (4.3)
         CHECK(r.out.empty());
     }
     SUBCASE("empty --out and a directory as --out (amendment 5)") {
-        CHECK(sb.cli({"generate", "--seed", "1", "--out", ""}).exit_code == EXIT_OUTPUT);
-        CHECK(sb.cli({"generate", "--seed", "1", "--out", u8(sb.files())}).exit_code == EXIT_OUTPUT);
-        CHECK(sb.cli({"generate", "--seed", "1", "--out", u8(sb.files()), "--force"}).exit_code == EXIT_OUTPUT);
+        CHECK(sb.cli({"generate", "--until", "none", "--seed", "1", "--out", ""}).exit_code == EXIT_OUTPUT);
+        CHECK(sb.cli({"generate", "--until", "none", "--seed", "1", "--out", u8(sb.files())}).exit_code == EXIT_OUTPUT);
+        CHECK(sb.cli({"generate", "--until", "none", "--seed", "1", "--out", u8(sb.files()), "--force"}).exit_code == EXIT_OUTPUT);
         CHECK(sb.cli({"report", "--db", u8(out), "--out", u8(sb.files())}).exit_code == EXIT_OUTPUT);
         CHECK(sb.cli({"report", "--db", u8(out), "--out", ""}).exit_code == EXIT_OUTPUT);
     }
@@ -239,7 +239,7 @@ TEST_CASE("cli 4.1: --version and --help") {
     const ProcessResult v = sb.cli({"--version"});
     CHECK(v.exit_code == EXIT_OK);
     CHECK(v.err.empty());
-    CHECK(v.out == std::string("worldgen-cli 0.2.0 schema 1 sqlite ") + worldgen::db::sqlite_library_version() + "\n");
+    CHECK(v.out == std::string("worldgen-cli 0.3.0 schema 1 sqlite ") + worldgen::db::sqlite_library_version() + "\n");
 
     const ProcessResult h = sb.cli({"--help"});
     CHECK(h.exit_code == EXIT_OK);
@@ -284,12 +284,12 @@ TEST_CASE("cli 4.3: build root resolution (amendment 4)") {
     SUBCASE("relative UNMAPPED_BUILD_ROOT is a usage error") {
         RunOptions o;
         o.env = {{"UNMAPPED_BUILD_ROOT", "relative/root"}};
-        check_usage_error(sb, {"generate", "--seed", "7"}, Hint::optional, o);
+        check_usage_error(sb, {"generate", "--until", "none", "--seed", "7"}, Hint::optional, o);
     }
     SUBCASE("empty UNMAPPED_BUILD_ROOT falls back to the platform location") {
         RunOptions o;
         o.env = {{"UNMAPPED_BUILD_ROOT", ""}, {fallback, u8(fallback_dir)}};
-        const ProcessResult r = sb.cli({"generate", "--seed", "7"}, o);
+        const ProcessResult r = sb.cli({"generate", "--until", "none", "--seed", "7"}, o);
         INFO("stderr: ", r.err);
         CHECK(r.exit_code == EXIT_OK);
         CHECK(r.out == printed_path(fallback_out));
@@ -298,17 +298,17 @@ TEST_CASE("cli 4.3: build root resolution (amendment 4)") {
     SUBCASE("unset UNMAPPED_BUILD_ROOT falls back to the platform location") {
         RunOptions o;
         o.env = {{"UNMAPPED_BUILD_ROOT", std::nullopt}, {fallback, u8(fallback_dir)}};
-        const ProcessResult r = sb.cli({"generate", "--seed", "7"}, o);
+        const ProcessResult r = sb.cli({"generate", "--until", "none", "--seed", "7"}, o);
         CHECK(r.exit_code == EXIT_OK);
         CHECK(r.out == printed_path(fallback_out));
     }
     SUBCASE("no build root and no --out is a usage error") {
         RunOptions o;
         o.env = {{"UNMAPPED_BUILD_ROOT", std::nullopt}, {fallback, std::nullopt}};
-        check_usage_error(sb, {"generate", "--seed", "7"}, Hint::optional, o);
+        check_usage_error(sb, {"generate", "--until", "none", "--seed", "7"}, Hint::optional, o);
         // With --out no build root is needed.
         const fs::path out = sb.file("explicit.db");
-        const ProcessResult r = sb.cli({"generate", "--seed", "7", "--out", u8(out)}, o);
+        const ProcessResult r = sb.cli({"generate", "--until", "none", "--seed", "7", "--out", u8(out)}, o);
         CHECK(r.exit_code == EXIT_OK);
         CHECK(file_exists(out));
     }

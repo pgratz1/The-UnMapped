@@ -1,6 +1,6 @@
 // worldgen-cli generate in phase P1 (spec P1-00 section 10.1 and 14 X1, X3;
 // P0-04 amendment 16 (a), adopting P1-00 appendix A4): --until, --threads,
-// and the P0 worlds unchanged on a branch with no geography stage.
+// and the P0 worlds under --until none.
 //
 // Written from the specs and `worldgen-cli generate --help` only.
 
@@ -85,10 +85,9 @@ std::string first_line_without(const std::string& err, const std::string& name) 
 
 }  // namespace
 
-TEST_CASE("cli P1-00 10.1: --until none and the default both write the P0 empty world, byte for byte") {
+TEST_CASE("cli P1-00 10.1: --until none writes the P0 empty world, byte for byte") {
     Sandbox sb;
     const std::string expected = golden("empty-seed-0");
-    CHECK(generate_hash(sb, "default.db", {"--seed", "0"}) == expected);
     CHECK(generate_hash(sb, "none.db", {"--seed", "0", "--until", "none"}) == expected);
     CHECK(generate_hash(sb, "none-t3.db", {"--seed", "0", "--until", "none", "--threads", "3"}) == expected);
     CHECK(generate_hash(sb, "phrase.db", {"--seed-phrase", "The Unmapped", "--until", "none"}) == golden("empty-phrase"));
@@ -96,24 +95,32 @@ TEST_CASE("cli P1-00 10.1: --until none and the default both write the P0 empty 
           golden("empty-seed-0-512"));
 }
 
-TEST_CASE("cli P0-03 7.6, amendment 9: a nonexistent data root changes nothing while no kind is registered") {
+TEST_CASE("cli P0-03 7.6, amendment 17: with the required kind worldgen, a nonexistent data root is an input error") {
     Sandbox sb;
     const std::string expected = golden("empty-seed-0");
     const std::string missing = u8(sb.file("no-such-data-dir"));
-    CHECK(generate_hash(sb, "flag.db", {"--seed", "0", "--until", "none", "--data", missing}) == expected);
+    const ProcessResult flag =
+        sb.cli({"generate", "--seed", "0", "--until", "none", "--data", missing, "--out", u8(sb.file("flag.db"))});
+    CHECK(flag.exit_code == EXIT_INPUT);
+    CHECK_FALSE(file_exists(sb.file("flag.db")));
     RunOptions env;
     env.env.push_back({"UNMAPPED_DATA_DIR", missing});
-    CHECK(generate_hash(sb, "env.db", {"--seed", "0", "--until", "none"}, env) == expected);
+    const ProcessResult from_env = sb.cli({"generate", "--seed", "0", "--until", "none", "--out", u8(sb.file("env.db"))}, env);
+    CHECK(from_env.exit_code == EXIT_INPUT);
+    CHECK_FALSE(file_exists(sb.file("env.db")));
+    // Without UNMAPPED_DATA_DIR the configured root (the shipped game/data)
+    // is read: the golden empty world.
     RunOptions unset;
     unset.env.push_back({"UNMAPPED_DATA_DIR", std::nullopt});
-    CHECK(generate_hash(sb, "unset.db", {"--seed", "0"}, unset) == expected);
+    CHECK(generate_hash(sb, "unset.db", {"--seed", "0", "--until", "none"}, unset) == expected);
 }
 
-TEST_CASE("cli P1-00 10.1, X1: every stage name is a usage error today, unknown and unimplemented names differ") {
+TEST_CASE("cli P1-00 10.1, X1: every unimplemented stage name is a usage error, unknown and unimplemented names differ") {
     Sandbox sb;
     const std::string bogus = usage_error(sb, {"--until", "bogus"});
     CHECK(contains(bogus, "bogus"));
-    for (const char* name : {"elevation", "hydrology", "climate", "biomes", "resources", "regions"}) {
+    // elevation is implemented (P1-01); the later stages are not yet.
+    for (const char* name : {"hydrology", "climate", "biomes", "resources", "regions"}) {
         CAPTURE(name);
         const std::string err = usage_error(sb, {"--until", name});
         CHECK(contains(err, name));
@@ -146,7 +153,8 @@ TEST_CASE("cli P1-00 10.1: --threads accepts 1 to 256 in decimal without leading
     const std::string expected = golden("empty-seed-0");
     for (const char* n : {"1", "2", "9", "10", "100", "255", "256"}) {
         CAPTURE(n);
-        CHECK(generate_hash(sb, std::string("t") + n + ".db", {"--seed", "0", "--threads", n}) == expected);
+        CHECK(generate_hash(sb, std::string("t") + n + ".db", {"--seed", "0", "--until", "none", "--threads", n}) ==
+              expected);
     }
     for (const char* bad : {"0", "257", "1000", "01", "001", "-1", "+1", "", " 1", "1 ", "abc", "1.5", "0x10", "4294967297",
                             "18446744073709551617", "1e2"}) {

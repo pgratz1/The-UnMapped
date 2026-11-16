@@ -19,6 +19,7 @@ Usage (from the repository root; -B keeps __pycache__ out of the tree):
     python3 -B worldgen/tests/reference/p0_world_check.py check WORLD
             (--seed N | --phrase TEXT) [--map-size N] [--test-pattern]
             [--detail FILE] [--report FILE] [--generator-version V]
+            [--content-hash HEX]
 
         Checks WORLD against the expected content for those generate
         arguments. --detail and --report name files holding the output of
@@ -31,7 +32,11 @@ Usage (from the repository root; -B keeps __pycache__ out of the tree):
         seed is seed_from_phrase of it (P0-01 7.3, P0-02 amendment 12).
         Write --phrase=TEXT for a phrase that starts with '-'.
         --generator-version is the expected meta.generator_version
-        (default GENERATOR_VERSION below).
+        (default GENERATOR_VERSION below). --content-hash is the expected
+        meta.content_hash (default the hash of no data, e3b0c442...b855);
+        a world written by worldgen-cli since the `worldgen` kind was
+        registered carries the hash of the loaded data (P0-03 amendment 17),
+        which `worldgen-cli report` prints.
 
     python3 -B worldgen/tests/reference/p0_world_check.py stats WORLD...
 
@@ -61,7 +66,7 @@ DDL_LAYER = (b"CREATE TABLE layer (id INTEGER PRIMARY KEY, name TEXT NOT NULL UN
              b"height INTEGER NOT NULL, format TEXT NOT NULL, data BLOB NOT NULL) STRICT")
 # The generator version the checked worlds are expected to carry (P0-02 5.5,
 # amendment 12). One edit per version bump; --generator-version overrides it.
-GENERATOR_VERSION = "0.2.0"
+GENERATOR_VERSION = "0.3.0"
 EMPTY_SHA = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
 
 
@@ -369,7 +374,7 @@ def check_world(args):
                     (b"table", b"meta", b"meta", DDL_META)], "sqlite_schema rows: %r" % (sch,))
     # meta (P0-02 5.5, 8)
     expected_meta = [
-        (b"content_hash", EMPTY_SHA.encode()),
+        (b"content_hash", args.content_hash.encode()),
         (b"format", b"the-unmapped-world"),
         (b"generator_version", args.generator_version.encode()),
         (b"param.map_size", str(args.map_size).encode()),
@@ -453,6 +458,7 @@ def main(argv):
     c.add_argument("--detail")
     c.add_argument("--report")
     c.add_argument("--generator-version", default=GENERATOR_VERSION)
+    c.add_argument("--content-hash", default=EMPTY_SHA)
     s = sub.add_parser("stats")
     s.add_argument("worlds", nargs="+")
     a = p.parse_args(argv[1:])

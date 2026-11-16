@@ -51,6 +51,9 @@ worldgen::WorldParams params_for(std::uint64_t seed, bool pattern) {
     p.seed = seed;
     p.content_hash = worldgen::sha256(std::string_view{});
     p.test_pattern = pattern;
+    if (!pattern) {
+        p.until = std::string("none");  // the P0 empty world (P1-00 10.1)
+    }
     return p;
 }
 

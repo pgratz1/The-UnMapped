@@ -36,12 +36,13 @@ struct GoldenCase {
 // Section 9, in table order.
 const std::vector<GoldenCase>& golden_cases() {
     static const std::vector<GoldenCase> cases = {
-        {"empty-seed-0", {"--seed", "0"}},
-        {"empty-seed-1", {"--seed", "1"}},
-        {"empty-seed-42", {"--seed", "42"}},
-        {"empty-seed-max", {"--seed", "18446744073709551615"}},
-        {"empty-seed-0-512", {"--seed", "0", "--map-size", "512"}},
-        {"empty-phrase", {"--seed-phrase", "The Unmapped"}},
+        // Amendment 16 (d): the empty-* cases pass --until none.
+        {"empty-seed-0", {"--until", "none", "--seed", "0"}},
+        {"empty-seed-1", {"--until", "none", "--seed", "1"}},
+        {"empty-seed-42", {"--until", "none", "--seed", "42"}},
+        {"empty-seed-max", {"--until", "none", "--seed", "18446744073709551615"}},
+        {"empty-seed-0-512", {"--until", "none", "--seed", "0", "--map-size", "512"}},
+        {"empty-phrase", {"--until", "none", "--seed-phrase", "The Unmapped"}},
         {"pattern-seed-0", {"--seed", "0", "--test-pattern"}},
         {"pattern-seed-42", {"--seed", "42", "--test-pattern"}},
     };

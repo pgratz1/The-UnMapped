@@ -31,18 +31,18 @@ std::string layer_line(const std::string& name, const char* format, const std::v
 
 TEST_CASE("cli 12.4: empty world, seed 0, exact text of section 7") {
     Sandbox sb;
-    const fs::path world = sb.generate({"--seed", "0"});
+    const fs::path world = sb.generate({"--until", "none", "--seed", "0"});
     const ProcessResult r = sb.cli({"report", "--db", u8(world)});
     INFO("stderr: ", r.err);
     CHECK(r.exit_code == EXIT_OK);
-    CHECK(r.out == p004::REPORT_SEED_0);
+    CHECK(r.out == cli_report_seed_0());
     CHECK(r.err.empty());
     // On Windows in particular: no CR byte (4.4, 12.1).
     CHECK(r.out.find('\r') == std::string::npos);
     // --force without --out is accepted and has no effect (amendment 9).
     const ProcessResult f = sb.cli({"report", "--db", u8(world), "--force"});
     CHECK(f.exit_code == EXIT_OK);
-    CHECK(f.out == p004::REPORT_SEED_0);
+    CHECK(f.out == cli_report_seed_0());
 }
 
 // Amendment 15: a scrubbed phrase has no backslash or control byte, so the
@@ -52,7 +52,7 @@ TEST_CASE("cli 12.4: empty world, seed 0, exact text of section 7") {
 TEST_CASE("cli 12.4: escaping in meta values (test-only world)") {
     Sandbox sb;
     auto world_with = [&](const std::string& name, const std::string& sql_value) {
-        const fs::path world = sb.generate({"--seed", "0", "--out", u8(sb.file(name))});
+        const fs::path world = sb.generate({"--until", "none", "--seed", "0", "--out", u8(sb.file(name))});
         const auto s = worldgen::db::testing::execute_on_file(
             u8(world), "INSERT INTO meta (key, value) VALUES ('zz.test_value', " + sql_value + ")");
         REQUIRE(s.ok());
@@ -60,7 +60,7 @@ TEST_CASE("cli 12.4: escaping in meta values (test-only world)") {
     };
     auto report_with_line = [](const std::string& line) {
         std::string s = "# worldgen report v2\n[meta]\n";
-        for (const auto& [k, v] : p004::meta_rows(0)) {
+        for (const auto& [k, v] : cli_meta_rows(0)) {
             s += v.empty() ? k + " =\n" : k + " = " + v + "\n";
         }
         s += line;
@@ -140,9 +140,9 @@ TEST_CASE("cli 12.4: report errors and excluded tables") {
     CHECK(sb.cli({"report", "--db", u8(sb.files())}).exit_code == EXIT_INPUT);  // a directory
 
     // sqlite_* tables (here sqlite_stat1, made by ANALYZE) are not listed.
-    const fs::path world = sb.generate({"--seed", "0", "--out", u8(sb.file("w.db"))});
+    const fs::path world = sb.generate({"--until", "none", "--seed", "0", "--out", u8(sb.file("w.db"))});
     REQUIRE(worldgen::db::testing::execute_on_file(u8(world), "ANALYZE").ok());
     const ProcessResult r = sb.cli({"report", "--db", u8(world)});
     CHECK(r.exit_code == EXIT_OK);
-    CHECK(r.out == p004::REPORT_SEED_0);
+    CHECK(r.out == cli_report_seed_0());
 }

@@ -182,6 +182,20 @@ def _free_call(code: str, m: re.Match) -> bool:
     return _free_call_at(code, m.start("fn"))
 
 
+def _int_abs_filter(code: str, m: re.Match) -> bool:
+    """For int-abs: keep std::abs( / ::abs( and free calls of labs( and the
+    other C-only names; drop other namespaces' functions (worldgen::abs on Fx)
+    and members. Unqualified abs( is not reported: it is the project's Fx abs
+    found by argument-dependent lookup."""
+    if m.start("fn") >= 0:
+        return _free_call_at(code, m.start("fn"))
+    q = m.group("q")
+    if q is None:
+        before = code[max(0, m.start() - 64):m.start()].rstrip()
+        return not (before.endswith(".") or before.endswith("->"))
+    return q.strip() == "std"
+
+
 def _std_thread_filter(code: str, m: re.Match) -> bool:
     """std::thread::hardware_concurrency and std::thread::id belong to their
     own rules; everything else that the thread rule matches is kept."""
@@ -355,7 +369,27 @@ RULES: tuple = (
         _rx(STD_R + r"(?:sort|partial_sort|partial_sort_copy|nth_element|partition)\b"),
         review=True,
     ),
+    Rule(
+        "int-abs",
+        "std::abs, std::labs, std::llabs, std::imaxabs, ::abs (and the other ::-qualified forms); "
+        "calls of labs(, llabs(, imaxabs(",
+        "library integer abs: abs of the most negative value is undefined, and which integer overloads "
+        "the global namespace holds differs between standard libraries, so an int64 can bind to "
+        "int abs(int) and be truncated on one platform only; write v < 0 ? -v : v with a stated bound, "
+        "or the project's Fx abs (P0-01 4, 5)",
+        _rx(r"(?P<q>\b\w+\s*)?::\s*(?:abs|labs|llabs|imaxabs)\s*\(|\b(?P<fn>labs|llabs|imaxabs)\s*\("),
+        filter=_int_abs_filter,
+    ),
     # Threads and shared state (P0-01 4.2 as amended, P1-00 D10).
+    Rule(
+        "packed-bool",
+        "std::vector<bool> (also std::pmr::), std::bitset; #include <bitset>",
+        "bit-packed container: writing different elements from different threads (run_blocks, "
+        "for_each_row_block) is a data race on the shared word, so a result could depend on scheduling; "
+        "use std::vector<std::uint8_t> (P0-01 4.2, P1-00 D1, D2, D8)",
+        _rx(STD + r"(?:pmr\s*::\s*)?vector\s*<\s*bool\s*>|" + STD + r"bitset\b"),
+        includes=("bitset",),
+    ),
     Rule(
         "thread",
         "std::thread, std::jthread, std::async, std::packaged_task, std::promise, std::future, std::execution::, "

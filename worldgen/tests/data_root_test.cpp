@@ -121,6 +121,7 @@ TEST_CASE("data root, amendment 9: with no kind registered a nonexistent root is
     worldgen::WorldParams q;
     q.seed = 0;
     q.content_hash = worldgen::sha256(std::string_view{});
+    q.until = std::string("none");
     REQUIRE(worldgen::generate_world(q, dir.file("without.db"), worldgen::db::Overwrite::refuse).ok());
     CHECK(dbtest::read_file(dir.file("with.db")) == dbtest::read_file(dir.file("without.db")));
 }

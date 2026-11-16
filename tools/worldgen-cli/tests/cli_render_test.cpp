@@ -116,7 +116,7 @@ TEST_CASE("cli 12.3: unknown layer is an input error listing the layer names") {
     CHECK(!file_exists(sb.out_dir() / "pattern.test.nothing.png"));
 
     // An empty world has no layers at all.
-    const fs::path empty = sb.generate({"--seed", "0", "--out", u8(sb.file("empty.db"))});
+    const fs::path empty = sb.generate({"--until", "none", "--seed", "0", "--out", u8(sb.file("empty.db"))});
     CHECK(sb.cli({"render", "--db", u8(empty), "--layer", "test.ramp"}).exit_code == EXIT_INPUT);
     // A file that is not a world.
     write_text(sb.file("text.db"), "not a world\n");

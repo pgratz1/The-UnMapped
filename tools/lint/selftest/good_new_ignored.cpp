@@ -84,6 +84,18 @@ std::uint64_t draws(Rng& rng) {
     return a ^ b;
 }
 
+// The project's Fx abs, unqualified (argument-dependent lookup) or in its
+// namespace, members and other namespaces' functions named abs/labs are not
+// int-abs; nor are bool vectors of other kinds or the word in identifiers.
+Fx abs_values(Fx s, Fx n, const Obj& o) {
+    const Fx a = abs(s) + worldgen::abs(n) + geo::abs(n);
+    const auto b = o.abs() + o->labs(1) + other::llabs(2);
+    std::vector<std::uint8_t> flags(8, 0U);
+    my::vector<bool> packed;
+    const bool bitset_like = flags.empty() || abs_bound > 0;
+    return a;
+}
+
 // Thread identity of other kinds of objects is not matched by name alone.
 std::uint64_t ident = node.id + layer.id;
 

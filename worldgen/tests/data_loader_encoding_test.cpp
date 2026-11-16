@@ -213,10 +213,9 @@ TEST_CASE("loader canonical encoding: the empty registry gives the empty stream"
     CHECK(wd::canonical_encoding(*r.value).empty());
     CHECK(wd::content_hash_hex(*r.value) == EMPTY_SHA256);
     CHECK(wd::content_hash_hex(wd::ContentSet{}) == EMPTY_SHA256);
-    const auto b = wd::load_content_without_data(wd::builtin_kinds());
-    REQUIRE(b.ok());
-    CHECK(wd::content_hash_hex(*b.value) == EMPTY_SHA256);
-    CHECK(worldgen::to_hex(wd::content_hash(*b.value)) == EMPTY_SHA256);
+    // The production registry holds the required kind `worldgen` (P0-03
+    // amendment 17): without data it is an error, not the empty stream.
+    CHECK_FALSE(wd::load_content_without_data(wd::builtin_kinds()).ok());
 }
 
 TEST_CASE("loader canonical encoding: comments and formatting do not change the hash; values do") {

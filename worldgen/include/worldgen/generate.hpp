@@ -52,8 +52,8 @@ struct WorldParams {
 
 // The names of the stages generate_world runs for params, in run order
 // (P0-04 5.1 step 3, P1-00 10.1): {"test_pattern"} with test_pattern;
-// otherwise the implemented geography stages up to params.until (none
-// while no geography stage is implemented). FatalError if test_pattern is
+// otherwise the implemented geography stages up to params.until (by
+// default every implemented stage: "elevation"). FatalError if test_pattern is
 // combined with until, or until is not accepted by check_stage_limit.
 [[nodiscard]] std::vector<std::string_view> planned_stages(const WorldParams& params);
 
