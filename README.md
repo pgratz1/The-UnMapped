@@ -49,7 +49,7 @@ The full design is in [`docs/design/design.md`](docs/design/design.md).
 | **Current phase** | P1 Geography. P0 Foundation and P2 Godot bring-up and viewer v0 are complete |
 | **Next phase** | P3 History core, after P1 |
 | **Current milestone** | Milestone 0, Geography generator: in progress (P1 and P2) |
-| **Work in flight** | P1: elevation and hydrology are merged (2026-11-16), so `generate` writes a continent with rivers and lakes. Elevation followed five rounds of design exploration and two world-critic reviews (`docs/reviews/`): irregular continents, long segmented ranges with 2,000 to 2,500 m peaks, valleys cut by erosion, and a guaranteed share of mountains in every world. High peaks may be too steep to walk; passes are left for the history simulation to open. Next: a small hydrology follow-up from the critic's review (clearer river drawing; merging parallel rivers on flats), then climate, biomes, resources and habitability, and regions, whose specs are approved. |
+| **Work in flight** | P1: elevation and hydrology are merged (2026-11-16), so `generate` writes a continent with rivers and lakes. Elevation followed five rounds of design exploration and two world-critic reviews (`docs/reviews/`): irregular continents, long segmented ranges with 2,000 to 2,500 m peaks, valleys cut by erosion, and a guaranteed share of mountains in every world. High peaks may be too steep to walk; passes are left for the history simulation to open. A hydrology follow-up (generator 0.5.0) merged rivers that ran side by side across flats and made the map draw rivers by size. In progress: an elevation revision that adds natural passes through the ranges and tames very steep faces where a range meets the sea (Paul's decision of 2026-11-17; design exploration under way). After it: climate, biomes, resources and habitability, and regions, whose specs are approved. |
 | **`main`** | Builds and passes all tests on Linux (GCC, Clang, Clang with sanitizers) and Windows (MSVC), in debug and release |
 
 **What "P0 done" means.** The phase's exit check is that an empty world file is byte-identical across all three compilers and that `worldgen-cli hash` proves it in continuous integration. It does: eight test worlds, six empty and two holding test layers, are identical across all seven build configurations, and each matches its recorded golden hash. CI repeats the comparison on every push. With geography stages merged the comparison covers twelve worlds, four of them full maps with elevation and hydrology at 512 and 1024.
@@ -62,7 +62,7 @@ The full design is in [`docs/design/design.md`](docs/design/design.md).
 **Known gaps and notes**
 
 - Geography so far is elevation and hydrology: no climate, biomes or regions yet.
-- Known elevation limitations are listed in section 11 of the elevation spec. The main ones: ranges have no natural passes; on a rare small map a range drops into the sea as a very steep smooth face (512, seed 41); filled basins among peaks can look smooth; a few worlds get ring-shaped ranges. Rivers on low flat ground run in angular steps, and the map drawing shows every river at the same faint width (`docs/reviews/p1-02-hydrology-critic.md`).
+- Known elevation limitations are listed in section 11 of the elevation spec. The main ones: ranges have no natural passes yet (being added); on a rare small map a range drops into the sea as a very steep smooth face (512, seed 41); filled basins among peaks can look smooth; a few worlds get ring-shaped ranges. Rivers on gently sloping lowland run in angular steps (`docs/reviews/p1-02-hydrology-critic.md`).
 - The only registered data kind is generator tuning (`game/data/worldgen/`); biomes, races and the rest come with their phases.
 - The noise primitive's output stays within about two thirds of its nominal range, which is normal for this kind of noise; the P1 elevation spec needs to account for it.
 - The `render` image-size limit is tested only on the "too large" side.
@@ -78,7 +78,7 @@ The first block of work is the world generator prototype: seven phases, P0 to P6
 | Phase | Delivers | Depends on | Status |
 | --- | --- | --- | --- |
 | **P0 Foundation** | Repository layout, CMake presets, vendored dependencies, CI on three compilers, the deterministic core, the reproducible SQLite layer, the TOML loader, `worldgen-cli` | — | **Done** 2026-11-15, reviewed |
-| **P1 Geography** | Elevation, erosion, hydrology, climate, biomes, resources and regions, each writing its layer; image export per layer | P0 | **In progress** since 2026-11-15: first three specs approved, shared foundation, elevation and hydrology merged (2026-11-16); specs for the remaining four stages approved; climate next |
+| **P1 Geography** | Elevation, erosion, hydrology, climate, biomes, resources and regions, each writing its layer; image export per layer | P0 | **In progress** since 2026-11-15: first three specs approved, shared foundation, elevation and hydrology merged (2026-11-16); specs for the remaining four stages approved; elevation revision for natural passes in exploration; climate after it |
 | **P2 Godot bring-up and viewer v0** | Godot version pinned, C++ extension building on Linux and Windows, `world.db` reader bound into Godot, 2D map with switchable layers | P0; parallel with P1 | **Done** 2026-11-15, awaiting Paul's hands-on review. Godot 4.7.2 and godot-cpp 10.0.0 pinned; the extension builds and its headless check passes on Linux and Windows |
 | **P3 History core** | Race and culture definitions, ages and the awakening schedule, active phases and quiet intervals, civilizations, settlements, wars, ruin, the event log, a text history report | P1 | Not started |
 | **P4 Viewer v1** | Timeline scrubber, territory by year, settlement and site markers, browser for civilizations and events | P2, P3; parallel with P5 | Not started |
@@ -131,9 +131,9 @@ $ worldgen-cli generate --seed-phrase "The Unmapped"
 $ worldgen-cli report --db ~/.cache/the-unmapped/out/world-15629206466951235176.db
 # worldgen report v2
 [meta]
-content_hash = 3fa05f6f25fd005adf279ab025f3962735aacb80ad994e95a4013b3302085aea
+content_hash = c361c4d438ff8ef82744fddc365e8ba1f91246f402f7a73d6fdb3e08a3784d8e
 format = the-unmapped-world
-generator_version = 0.4.0
+generator_version = 0.5.0
 param.map_size = 1024
 schema_version = 1
 seed = 15629206466951235176
@@ -144,11 +144,11 @@ layer = 8
 meta = 8
 [layers]
 elevation i16 1024x1024 codec=1 bytes=1175914 min=-2306 max=19802
-water u8 1024x1024 codec=1 bytes=34981 min=0 max=3
+water u8 1024x1024 codec=1 bytes=35061 min=0 max=3
 water_depth u16 1024x1024 codec=1 bytes=640148 min=0 max=2306
-flow_dir u8 1024x1024 codec=1 bytes=238106 min=0 max=8
-flow_accum u32 1024x1024 codec=1 bytes=469472 min=0 max=120612
-river u8 1024x1024 codec=1 bytes=27523 min=0 max=8
+flow_dir u8 1024x1024 codec=1 bytes=238099 min=0 max=8
+flow_accum u32 1024x1024 codec=1 bytes=469626 min=0 max=120346
+river u8 1024x1024 codec=1 bytes=27581 min=0 max=8
 lake u32 1024x1024 codec=1 bytes=2234 min=0 max=4
 coast_dist i16 1024x1024 codec=1 bytes=1022256 min=-6579 max=5008
 [geography]
@@ -174,22 +174,22 @@ lakes = 4
 lake_cells = 12434
 lake_share_of_land = 0.0296
 largest_lake_cells = 7815
-river_cells = 8546
+river_cells = 8577
 river_share_of_land = 0.0204
-river_sources = 203
+river_sources = 200
 river_mouths = 51
 major_rivers = 15
-longest_river_m = 11588
-largest_basin_share = 0.2876
+longest_river_m = 12006
+largest_basin_share = 0.2869
 
 $ worldgen-cli hash --db ~/.cache/the-unmapped/out/world-15629206466951235176.db
-d93c2bd334b6b79348b0a4fc4738362a29cb06a71ebf1b8f09a0f70b02647c6b
+9759cd87fdcb4f4ec8ac46b7173adc636cdd09b50cbc3ddc22b63678d6cb881a
 
 $ worldgen-cli render --db ~/.cache/the-unmapped/out/world-15629206466951235176.db --composite map
 /home/you/.cache/the-unmapped/out/world-15629206466951235176.map.png
 ```
 
-That hash is the same on every supported compiler and platform, and with any number of threads. A seed phrase is scrubbed before use (lower-cased, with everything other than a to z and 0 to 9 treated as a space), so `"the-unmapped!"` and `"THE  UNMAPPED"` give this same world. The rendered map, about 16 km across with peaks near 2,000 m, four lakes and about 200 river sources (rivers are one 16 m cell wide, so they are faint at this size):
+That hash is the same on every supported compiler and platform, and with any number of threads. A seed phrase is scrubbed before use (lower-cased, with everything other than a to z and 0 to 9 treated as a space), so `"the-unmapped!"` and `"THE  UNMAPPED"` give this same world. The rendered map, about 16 km across with peaks near 2,000 m, four lakes and about 200 river sources:
 
 ![Shaded relief map of the world generated from the phrase "The Unmapped"](docs/images/p1-elevation-map.jpg)
 
