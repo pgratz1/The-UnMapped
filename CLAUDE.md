@@ -149,10 +149,9 @@ Windows times are not measured yet. `worldgen-tests` takes most of it; use a rel
 ```
 python3 -B tools/lint/determinism_lint.py --self-test
 python3 -B tools/lint/determinism_lint.py
-python3 -B tools/lint/determinism_lint.py tools/worldgen-cli/*.cpp tools/worldgen-cli/*.hpp
 ```
 
-The second command scans `worldgen/` without `worldgen/tests/`; the third scans the CLI sources without their `tests/` directory, because `report` and `hash` text is part of the cross-platform contract. Exit status 1 means findings. CI runs all three. On Windows use `py -3 -B`.
+The second command scans `worldgen/` without `worldgen/tests/` and `tools/worldgen-cli/` without its `tests/` directory (`report` and `hash` text is part of the cross-platform contract), the project's CMake files for floating-point flags, and the pinned toml++ configuration. Exit status 1 means findings. CI runs both. On Windows use `py -3 -B`. The rule list and the suppression syntax are in `tools/lint/README.md`.
 
 ### Cross-compiler world hashes
 
@@ -256,7 +255,7 @@ GODOT=~/.cache/the-unmapped/tools/godot-4.7.2-stable/Godot_v4.7.2-stable_linux.x
 
 `.github/workflows/ci.yml` runs on pushes to `main`, on pull requests and by hand (`workflow_dispatch`):
 
-- `determinism-lint` (one Linux job): the three lint commands above.
+- `determinism-lint` (one Linux job): the two lint commands above.
 - `build` (one job per preset, all seven, on `ubuntu-latest` and `windows-latest`): configure, build and `ctest` under `$RUNNER_TEMP/unmapped`; then `world-hashes.sh generate` and `expect` (a warning, not a failure, while `p0-worlds.txt` is absent); upload the case files as artifact `world-hashes-<preset>`; finally fail if the checkout holds any generated file.
 - `compare-hashes` (Linux, after every `build` job, also when some failed, not when the run is cancelled): downloads every `world-hashes-*` artifact and runs `world-hashes.sh compare` over every build preset in `CMakePresets.json`. A difference, or a preset with no artifact, fails it. This job is the P0 exit check: the empty worlds are byte-identical across GCC, Clang and MSVC.
 - `gdext` (two jobs, `gdext-linux` with `linux-gcc-release` and `gdext-windows` with `windows-msvc-release`): the extension. Fetches the pinned editor with `tools/ci/fetch-godot.sh --tools-dir "$RUNNER_TEMP/unmapped/tools"` (cached per Godot version and digests file; a restored copy is re-verified), configures with `-DUNMAPPED_BUILD_GDEXT=ON -DUNMAPPED_GODOT=<editor>` into `build/<preset>-gdext`, fails straight after configure if `ctest -N` does not list `gdext-headless-check`, builds, runs `ctest`, prints the headless check's full log, then `world-hashes.sh generate` and `expect` under the label `<preset>-gdext` (artifact `gdext-world-hashes-<preset>`, a name `compare-hashes` does not download), and ends with the clean-checkout check. On failure it also lists the run copy of the project and uploads the headless check's files.

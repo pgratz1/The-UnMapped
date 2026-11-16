@@ -48,11 +48,6 @@ jobs:
       - name: Lint the generator output path (default scope)
         run: python3 -B tools/lint/determinism_lint.py
 
-      # report and hash text is part of the cross-platform contract, so the
-      # CLI sources are scanned too; its tests/ directory is not (the glob
-      # names only the top-level files).
-      - name: Lint worldgen-cli (excluding its tests)
-        run: python3 -B tools/lint/determinism_lint.py tools/worldgen-cli/*.cpp tools/worldgen-cli/*.hpp
 
   build:
     name: ${{ matrix.preset }}
