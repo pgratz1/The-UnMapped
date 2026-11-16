@@ -151,3 +151,30 @@ $CLI report --db $O/p42.db > $O/p42.report.txt
 python3 -B worldgen/tests/reference/p0_world_check.py check $O/p42.db --seed 42 --test-pattern \
     --detail $O/p42.detail.txt --report $O/p42.report.txt
 ```
+
+## Reference of the P1-01 elevation stage
+
+`p1_elevation_reference.py` is an independent exact-integer implementation of
+`docs/specs/p1-01-elevation.md` (design v16), written by the test writer from
+the spec text and P1-00 alone, without the stage's implementation. It imports
+`core_reference.py` for the P0-01 primitives and re-implements the hot `Fx`
+operations and `noise2` (with a lattice cache) for speed; `check`
+cross-checks those against `core_reference.py`.
+
+```
+python3 -B worldgen/tests/reference/p1_elevation_reference.py check [--large]
+python3 -B worldgen/tests/reference/p1_elevation_reference.py case shipped|small N SEED
+python3 -B worldgen/tests/reference/p1_elevation_reference.py golden [PATH|-]
+```
+
+`check` runs every worked example of P1-01 10.1 and the reference values of
+10.4 at N = 64, 128 and 256 (a few minutes); `--large` adds the N = 512 floor
+results and the N = 1024 seed 0 layer hash (about twenty minutes in all).
+`case` prints the per-step values of one world. `golden` writes
+`worldgen/tests/golden/p1-01-elevation.txt` (format in its header), which
+`stages_elevation_golden_test.cpp` reads; it takes a few minutes.
+
+Readings chosen where the spec is open are listed in the test writer's report
+of the stage; the one that changes a checked number is 10.1 "Coordinates":
+the values printed for N = 1024 are those of N = 512, and the script checks
+the correct ones.
