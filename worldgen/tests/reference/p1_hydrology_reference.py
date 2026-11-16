@@ -22,7 +22,7 @@ Usage (from the repository root; -B keeps __pycache__ out of the tree):
 
     python3 -B worldgen/tests/reference/p1_hydrology_reference.py case FIXTURE N SEED [AREA]
         Print the per-step values of one world (FIXTURE shipped or small;
-        AREA the river_min_area_m2, default 500000).
+        AREA the river_min_area_m2, default 125000, the shipped value).
 
     python3 -B worldgen/tests/reference/p1_hydrology_reference.py golden [PATH|-] [--large]
         Write the golden vector file (default worldgen/tests/golden/
@@ -1070,6 +1070,7 @@ def check_units(c):
     c.eq("8.1.7 T(256)", tuning_threshold(256), 1)
     c.eq("8.1.7 T(257)", tuning_threshold(257), 2)
     c.eq("8.1.7 T(500000)", tuning_threshold(500000), 1954)
+    c.eq("4 T(125000), the shipped value since 2026-11-16", tuning_threshold(125000), 489)
     c.eq("4 T(513)", tuning_threshold(513), 3)
     c.eq("4 T(768)", tuning_threshold(768), 3)
     c.eq("4 T(769)", tuning_threshold(769), 4)
@@ -1131,24 +1132,24 @@ def check_random(c, count=200):
 
 GOLDEN_CASES = [
     # (name, fixture, N, seed, river_min_area_m2, why)
-    ("shipped-64-s0", "shipped", 64, 0, 500000, "small shipped world, no river"),
-    ("shipped-48-s3", "shipped", 48, 3, 500000, "N not a power of two"),
-    ("shipped-128-s0", "shipped", 128, 0, 500000, "P1-02 8.4 library case"),
-    ("shipped-128-s9", "shipped", 128, 9, 500000, "mountain floor world (P1-01 E5.1 triggers)"),
-    ("shipped-128-s42", "shipped", 128, 42, 500000, "seed 42"),
-    ("small-128-s0", "small", 128, 0, 500000, "one lake"),
-    ("small-128-s1", "small", 128, 1, 500000, "mountain floor, small-map fixture"),
-    ("small-128-s2", "small", 128, 2, 500000, "two lakes"),
+    ("shipped-64-s0", "shipped", 64, 0, 125000, "small shipped world"),
+    ("shipped-48-s3", "shipped", 48, 3, 125000, "N not a power of two"),
+    ("shipped-128-s0", "shipped", 128, 0, 125000, "P1-02 8.4 library case"),
+    ("shipped-128-s9", "shipped", 128, 9, 125000, "mountain floor world (P1-01 E5.1 triggers)"),
+    ("shipped-128-s42", "shipped", 128, 42, 125000, "seed 42"),
+    ("small-128-s0", "small", 128, 0, 125000, "one lake"),
+    ("small-128-s1", "small", 128, 1, 125000, "mountain floor, small-map fixture"),
+    ("small-128-s2", "small", 128, 2, 125000, "two lakes"),
     ("small-128-s2-t100", "small", 128, 2, 25600, "T = 100: lake outlets feed rivers, rivers reach the sea"),
     ("shipped-128-s0-t20", "shipped", 128, 0, 5120, "T = 20: dense river network"),
-    ("shipped-256-s0", "shipped", 256, 0, 500000, "N = 256"),
+    ("shipped-256-s0", "shipped", 256, 0, 125000, "N = 256"),
 ]
 
 LARGE_CASES = [
-    ("shipped-512-s0", "shipped", 512, 0, 500000, "P1-02 8.4"),
-    ("shipped-512-s42", "shipped", 512, 42, 500000, "P1-02 8.4"),
-    ("shipped-512-phrase", "shipped", 512, None, 500000, "P1-02 8.4, seed phrase \"The Unmapped\""),
-    ("shipped-1024-s1", "shipped", 1024, 1, 500000, "P1-02 8.4"),
+    ("shipped-512-s0", "shipped", 512, 0, 125000, "P1-02 8.4"),
+    ("shipped-512-s42", "shipped", 512, 42, 125000, "P1-02 8.4"),
+    ("shipped-512-phrase", "shipped", 512, None, 125000, "P1-02 8.4, seed phrase \"The Unmapped\""),
+    ("shipped-1024-s1", "shipped", 1024, 1, 125000, "P1-02 8.4"),
 ]
 
 RANDOM_GOLDEN = [(f, 256 * 8) for f in range(4)]
@@ -1260,7 +1261,7 @@ def main(argv):
         sys.stderr.write("check: %d passed, %d failed\n" % (c.passes, c.fails))
         return 1 if c.fails else 0
     if len(argv) in (5, 6) and argv[1] == "case":
-        area = int(argv[5]) if len(argv) == 6 else 500000
+        area = int(argv[5]) if len(argv) == 6 else 125000
         print_case(argv[2], int(argv[3]), int(argv[4]), area)
         return 0
     if len(argv) >= 2 and argv[1] == "golden":

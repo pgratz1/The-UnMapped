@@ -27,8 +27,8 @@
 #   dl do        SHA-256 of the int64 chamfer grids to the ocean and to land (H7)
 #   water water_depth flow_dir flow_accum river lake coast_dist
 #                P0-04 8 layer hash of each output layer (H9)
-# small shipped world, no river
-case shipped-64-s0 shipped 64 0 500000
+# small shipped world
+case shipped-64-s0 shipped 64 0 125000
 shipped-64-s0 elevation 4adc347172241077037b573efe645967a7b64fbb86e45af24cda1de4278b5fdc
 shipped-64-s0 L 496729a759c65d41b8b455554fc4d0dd2c7251d1483b92ca0d56de9335c74fcc
 shipped-64-s0 parent 666afe4c8d9dcd445cea5cbe57c110e37befef3443425f0d4fe008db634b3d99
@@ -51,7 +51,7 @@ shipped-64-s0 river a97060167a5e0b46eaf8dfc7a00adbf0a244731c1823494aa6acc8ab8873
 shipped-64-s0 lake 23da7f669ce0306412482bcac6aa348598b522678ac7398ea690c83c0deaacc7
 shipped-64-s0 coast_dist 6093447c5cfcbd1d310fee372d94756e3f30c881404a746211e4d7e3137ec0c1
 # N not a power of two
-case shipped-48-s3 shipped 48 3 500000
+case shipped-48-s3 shipped 48 3 125000
 shipped-48-s3 elevation 0542903823f57c435c7b47a5dda9fd27775f52dec19be041aeda9d48865265e3
 shipped-48-s3 L 34892924506fb18ab7f8442dfa5397a9ba2f2fea690d3a43d5c22c475651cd33
 shipped-48-s3 parent 1b785e6c2511dced8e7c223d9eab65940f13e3986595cc74e77af466d480e00e
@@ -74,7 +74,7 @@ shipped-48-s3 river 9b9d4b99c2b1852d973eec61fc5188c09d75e839e76e443dec208576aec9
 shipped-48-s3 lake e028ae038acafbe1de690bf5897c5d5dc0b626fe6fead658df1f463ecd027483
 shipped-48-s3 coast_dist 12097075aefcc01b3231caa58051eaad53a5489e88e845653646273f37afc17b
 # P1-02 8.4 library case
-case shipped-128-s0 shipped 128 0 500000
+case shipped-128-s0 shipped 128 0 125000
 shipped-128-s0 elevation ccbf793522d6eae22f935cb9296e31ffb6568222065d507f66385831c0e51acd
 shipped-128-s0 L 9d0e7e26ee8474c2bd5a5b057577c5cfb4187454060316053d81a82ac47ca4fb
 shipped-128-s0 parent d7d28fd2c8784ff7facf85c868a97ef6c66b0e772dbbeeb5890b79cbdb21c8d9
@@ -85,19 +85,19 @@ shipped-128-s0 lake_levels -
 shipped-128-s0 lake_cells -
 shipped-128-s0 outlets -
 shipped-128-s0 max_accum 535
-shipped-128-s0 river_cells 0
-shipped-128-s0 max_class 0
+shipped-128-s0 river_cells 7
+shipped-128-s0 max_class 1
 shipped-128-s0 dl 73ae850e4126e21e3db7f95ac695422dde82da51d3c2c05f59f73571ad8683ae
 shipped-128-s0 do 1ba868a87c32a823e893c8b17a42c58948e2c03e2c191ebbc1c1fb8ee3c6a9db
-shipped-128-s0 water f673e9742b9eb2996de7e9b5f14ee90476f301efa2ef2681eda35fd6b3bbbd08
+shipped-128-s0 water b65542fb026e3dceefbac2e5a9cc4a440959f44c438fe36d42e039db57da27fa
 shipped-128-s0 water_depth bb57dc0838d97bcfc61a2f83c3bb02bf2fb730a530f3fe489fd71d8bf560db54
 shipped-128-s0 flow_dir eb5bf7dda98fa5cb34d0b6ae0735e9b07a045696c5e3658d61264494c0e9935e
 shipped-128-s0 flow_accum a0779bcb553005e87988f65dded86dd0dfe7646b63d279d7fa86be384cf00d1e
-shipped-128-s0 river dbb919cac781e558b70990f81a7ce4dd6edab38e27e905572dbc782bedfd7a7a
+shipped-128-s0 river 1c8b69b62b9f34b7efeec9aabcad61321928f9e42e2d7b2bab2903d87590b8bc
 shipped-128-s0 lake a7957dadb6950392654dd3860532ccc561833d463592620ef1e194b1dc46099d
 shipped-128-s0 coast_dist c4eb82033e2d300425aab8099b17bc17506c3809b433df9bb4ccd62c271af897
 # mountain floor world (P1-01 E5.1 triggers)
-case shipped-128-s9 shipped 128 9 500000
+case shipped-128-s9 shipped 128 9 125000
 shipped-128-s9 elevation 04e34d76f319514916084c5a45b4274f7edfa29d6d5d6928b3c944473cce509c
 shipped-128-s9 L 0c9258bbda8e93aa28b8caf0b4f5040841d8310e027b1c1b35424fd6f43a99ea
 shipped-128-s9 parent ea4d05043a476bb64d3bd0ea0f6c9698e68ce266e37b5f3457579cf053686966
@@ -108,19 +108,19 @@ shipped-128-s9 lake_levels -
 shipped-128-s9 lake_cells -
 shipped-128-s9 outlets -
 shipped-128-s9 max_accum 1630
-shipped-128-s9 river_cells 0
-shipped-128-s9 max_class 0
+shipped-128-s9 river_cells 58
+shipped-128-s9 max_class 2
 shipped-128-s9 dl 0b19b5d66d2226aceeef728cac11ab60c7ba85cc8f4c5a4c8c307f692dadfd5e
 shipped-128-s9 do 3869310c3a740f7ef799fee88fd0eeadf3cf786235e7966d7f18af9d3579a765
-shipped-128-s9 water 1efad7b9f8d88a09054b7df73d138276386e4ea1b4aa614f8fdc110a66dc438e
+shipped-128-s9 water 52a3bd779413231920cf80ecbf852a858aeda7fbe66e3b581034f8f822b48f64
 shipped-128-s9 water_depth 9028641daf0684ae9c7888f9a93d520d9dd248d38eb0af0541fe2f9d2c7e2146
 shipped-128-s9 flow_dir 4fc03582b9a2ea65abd4705c8669ba792025c011e0941e8e835972f49a53ec43
 shipped-128-s9 flow_accum 5fe4d26bb294e4703964ad1be1098bbc9f28a2346a400cc3dab9287f5e27f424
-shipped-128-s9 river dbb919cac781e558b70990f81a7ce4dd6edab38e27e905572dbc782bedfd7a7a
+shipped-128-s9 river 28d1d247351b0c36844d02219401e1a4558433dee78ed5313aa0f89b2f26fe15
 shipped-128-s9 lake a7957dadb6950392654dd3860532ccc561833d463592620ef1e194b1dc46099d
 shipped-128-s9 coast_dist d781df5197500642f7f0cec4e38a7c9a8d98d64100daf43079cce4e667ea784a
 # seed 42
-case shipped-128-s42 shipped 128 42 500000
+case shipped-128-s42 shipped 128 42 125000
 shipped-128-s42 elevation b882e0205871580d3cac46bc587f45ad110370514542266e2aa6924a4e2085fd
 shipped-128-s42 L a7da1238e9dc915094c6bc2725e20d750853d756e4d0a73bfbb6cd41c7a1160f
 shipped-128-s42 parent 3223add0c21cffd3ded3085bd18428a2c406043b832c48a724caacdee874afe3
@@ -131,19 +131,19 @@ shipped-128-s42 lake_levels -
 shipped-128-s42 lake_cells -
 shipped-128-s42 outlets -
 shipped-128-s42 max_accum 1038
-shipped-128-s42 river_cells 0
-shipped-128-s42 max_class 0
+shipped-128-s42 river_cells 60
+shipped-128-s42 max_class 2
 shipped-128-s42 dl 92a4a3687b23b467ea606b6697dadcc1c49c7123e35c8e23b481abcc39992423
 shipped-128-s42 do 8a50fb21c13f090ed367118d1e38e215b821039675ab306d9c20223bbad13178
-shipped-128-s42 water 0d17f249aaf97ff17ade17131e8e4eb13039eb652747887d8b32724f8a66c93c
+shipped-128-s42 water b22cd7084f9a7e0427b717590391ccc5d77430a423e2aa0b75c85689224d8df4
 shipped-128-s42 water_depth 81fb2ae66e914752be6ce5ea9f9f08a442a2ce3b551090fc52c38df0d99ae53e
 shipped-128-s42 flow_dir 61e69df5df3a5e6aeee130ed0c76405a12fc05f26745aa6a0f03fbe12f489cd9
 shipped-128-s42 flow_accum dda8f9baa39a2885ce0b8ab2ebf987f3229b0867043e02e9993c1aba3b8362d1
-shipped-128-s42 river dbb919cac781e558b70990f81a7ce4dd6edab38e27e905572dbc782bedfd7a7a
+shipped-128-s42 river b38d40326cf55d97f54a082d28bea3583ae7bc89405600673c0f0a08c064c8c4
 shipped-128-s42 lake a7957dadb6950392654dd3860532ccc561833d463592620ef1e194b1dc46099d
 shipped-128-s42 coast_dist 04bc4cb6a866a629446c3b58d64fa0b414aea97dcbb0af8602c63426e7bf10cf
 # one lake
-case small-128-s0 small 128 0 500000
+case small-128-s0 small 128 0 125000
 small-128-s0 elevation 35829c03890351f3df0726bbb88b7910a1721685f9763f39a38256e1951f7965
 small-128-s0 L 586eb4e27b1bb768de295b850d00c1bf2d489a8b42bc4849305a702587a4ccc4
 small-128-s0 parent aa564f259503fc908ee3225a1f44fcdad68cffa8d6fb9abda9a7f1546f593d43
@@ -154,19 +154,19 @@ small-128-s0 lake_levels 173
 small-128-s0 lake_cells 48
 small-128-s0 outlets 6175
 small-128-s0 max_accum 535
-small-128-s0 river_cells 0
-small-128-s0 max_class 0
+small-128-s0 river_cells 7
+small-128-s0 max_class 1
 small-128-s0 dl 73ae850e4126e21e3db7f95ac695422dde82da51d3c2c05f59f73571ad8683ae
 small-128-s0 do 1ba868a87c32a823e893c8b17a42c58948e2c03e2c191ebbc1c1fb8ee3c6a9db
-small-128-s0 water 5a456902251bfedcb865f20b44850648cf76dc6edf6a84850d96ecd00c396fd9
+small-128-s0 water a8c6ed2f1bd3485b71ae7abc6bc222f4d71ae09473fa4b7f2e1a59bbb21dab22
 small-128-s0 water_depth 52863fa712af591bcd661524a743937095a8b176e179861d605920da148ce6fb
 small-128-s0 flow_dir f1fe5d90dbe75e1657748df4f61ff922503f4a3d2230be7e82699b9df3d6bf61
 small-128-s0 flow_accum f2778a66d9d50881dc5a5619020fae913c0a9ba2be19062d9489f2193fe85667
-small-128-s0 river dbb919cac781e558b70990f81a7ce4dd6edab38e27e905572dbc782bedfd7a7a
+small-128-s0 river 1c8b69b62b9f34b7efeec9aabcad61321928f9e42e2d7b2bab2903d87590b8bc
 small-128-s0 lake d238eaabf8a8fa5ade401e86b1212eca803564423c22ccbd0e96ff031cb6b679
 small-128-s0 coast_dist c4eb82033e2d300425aab8099b17bc17506c3809b433df9bb4ccd62c271af897
 # mountain floor, small-map fixture
-case small-128-s1 small 128 1 500000
+case small-128-s1 small 128 1 125000
 small-128-s1 elevation 1b8e01fa5e289fa021ee585e93860819e7d49fff63a22c2b08c73c99cfb3a010
 small-128-s1 L 9d43c3a57adb67c56195a68e888dfd07d0ea128b6d5e5d20fd4cf96a46e675e1
 small-128-s1 parent 99080ade73967ce0e16b74db801079626c7c5d765ba32b0541292aa997accbd4
@@ -177,19 +177,19 @@ small-128-s1 lake_levels 517
 small-128-s1 lake_cells 141
 small-128-s1 outlets 4449
 small-128-s1 max_accum 1430
-small-128-s1 river_cells 0
-small-128-s1 max_class 0
+small-128-s1 river_cells 48
+small-128-s1 max_class 2
 small-128-s1 dl 210c50564142d86cfd80c41e5312269e4a6675d95f8c5b490ec146eae722f3cb
 small-128-s1 do 2fefa7ec878a5691ecedaf96ded104f85abd512a5230ba3e971fad8e8327aef3
-small-128-s1 water 412509c68a72b3b971fedf8cd8877286ebc84e58cda6da81e893cd01619817f6
+small-128-s1 water 662f0822bc4273ec41782741151cf2f92c9927295b11d570386ad4b4dcb22129
 small-128-s1 water_depth 82b17553e373784e53b54be02e3424c145bc916a5d38c47ee439271150869f23
 small-128-s1 flow_dir 6dd54c1b163c8bdc5f063875845d8a8a21e77a4d8d2ef34180c02081c42d5efe
 small-128-s1 flow_accum d5c2bb480692a75e74c75098cdc5641b6ca8a09b8cd499c86a51d054d4165f24
-small-128-s1 river dbb919cac781e558b70990f81a7ce4dd6edab38e27e905572dbc782bedfd7a7a
+small-128-s1 river 0f121f9c1c1df998596715459013dc90192650ff011d01a68bffda8a3d707d11
 small-128-s1 lake 5463807189a3cf57fe8cd5b71e3d236fc8f7f7002925fedac3a40c4b02a1ec5e
 small-128-s1 coast_dist 7e67efedc2bb092f5450a0f794ac92e40d67a0ee8e03a55a1ae28abbe5a3a63d
 # two lakes
-case small-128-s2 small 128 2 500000
+case small-128-s2 small 128 2 125000
 small-128-s2 elevation 686c589a630b7c5691bf0278bc2027f274e8f73cce05bf56c603dab06fe471cf
 small-128-s2 L 50d936b9a50caa6cdeadf0a8510248ba24b5dd16737704b4d94aa4da953847be
 small-128-s2 parent cbfd8e9211c83087dbe5c5d49df5ecaaad3bb8f98ddc1de7d045a78c7fa5eaf3
@@ -200,15 +200,15 @@ small-128-s2 lake_levels 84,7155
 small-128-s2 lake_cells 49,46
 small-128-s2 outlets 3534,9147
 small-128-s2 max_accum 1070
-small-128-s2 river_cells 0
-small-128-s2 max_class 0
+small-128-s2 river_cells 5
+small-128-s2 max_class 2
 small-128-s2 dl ed34ed8357bd87557fa7c45f29ba2e5883a08c79faea81717063cb95690986c9
 small-128-s2 do 08dd8285ac3fc4be8544a4b75c3e4151b891c98d456eddd17defb18207fb960e
-small-128-s2 water 3a454063ba9e15d504aab7207502607c934b98ce28e3d22a17edcb8062be3c33
+small-128-s2 water 3f54b207fc1083ff6dcef34c0fbf99864eecaaf6c97969a6697a4c9374a28cbb
 small-128-s2 water_depth 9ea0169871d9e4f248e17be1e044021a015599161c7e27e08f3ffec1f2701bf9
 small-128-s2 flow_dir 42bcc7f54afbec615c5348af934144e9af0867dacedca4ce8e32c9b173deae21
 small-128-s2 flow_accum ce0fc9c5c1e402999442a7d3ae091eaf81557fc49e52a86728dcee38c000524c
-small-128-s2 river dbb919cac781e558b70990f81a7ce4dd6edab38e27e905572dbc782bedfd7a7a
+small-128-s2 river cd12c58b2365e0fe69c5c48c721b685eab16f0eb9a51bcba8e89e5b519a3bb62
 small-128-s2 lake bb77dc0efc96624a3814baa76790a6a25d46a9e6df7bfef81715d01839a5aa09
 small-128-s2 coast_dist 854bd0d9fba28d2d65d4ac0dd4bac03b3290b4d0f95553c3eb9b4903af3d6825
 # T = 100: lake outlets feed rivers, rivers reach the sea
@@ -258,7 +258,7 @@ shipped-128-s0-t20 river 9b0057665a72218b7e71e8edeedb181ad17b53fc4e6da1736dc55d5
 shipped-128-s0-t20 lake a7957dadb6950392654dd3860532ccc561833d463592620ef1e194b1dc46099d
 shipped-128-s0-t20 coast_dist c4eb82033e2d300425aab8099b17bc17506c3809b433df9bb4ccd62c271af897
 # N = 256
-case shipped-256-s0 shipped 256 0 500000
+case shipped-256-s0 shipped 256 0 125000
 shipped-256-s0 elevation da71dd297ce6fdb90e564918e7be5cf840cb31c323945eccaadc1a6081933271
 shipped-256-s0 L 8c89dd826f735b4bc9ea1b803df17e5e0c45d87be1ca9ed4cfa31d2bdde50464
 shipped-256-s0 parent 05d08c751948523d4aca997c79d714a3869b8b94972dc388eb274237478d67d5
@@ -269,19 +269,19 @@ shipped-256-s0 lake_levels -
 shipped-256-s0 lake_cells -
 shipped-256-s0 outlets -
 shipped-256-s0 max_accum 2026
-shipped-256-s0 river_cells 13
-shipped-256-s0 max_class 1
+shipped-256-s0 river_cells 242
+shipped-256-s0 max_class 3
 shipped-256-s0 dl 32b5861822a3a2589661b01287bf25fb888bc64fb079bc8ffa67392b240a30c6
 shipped-256-s0 do 6d6d17600d868ac3f8f375cb2b39b7056b6390ab6b82d21959ad2fca09d5109a
-shipped-256-s0 water 5f6fe98b5ef5aa6707ad97af619e764bd0c764eeb4a7d2f955b1a31d14b7c1fb
+shipped-256-s0 water 43ef4459de3a408fa3394f33217ecd7ec004c716d49590fe75357726f54ef7ec
 shipped-256-s0 water_depth 6cb0481aea5da2cc367d515ec21669c06bbd62c625162cc33565972683d7ff05
 shipped-256-s0 flow_dir dbfdf14ea26f207bc1ae957b69a8440bf17772eb0d52d0624337d6baa64007a0
 shipped-256-s0 flow_accum e966f8f499ff089c16200717c13819cd1bb2c10b1baad34d3bd3c88b4a41c923
-shipped-256-s0 river 4b5dbb099ebe39f0dfb46d217abf9ee66cfa35f7c535dbbd365212b20444cc94
+shipped-256-s0 river 528bcdf7feacca5a873e3076c9e3591c957e4aa2e2d0a82ee74714f6a6f0c815
 shipped-256-s0 lake cb4a60ee5c2c1acdb6a5ce7a0b108b4920a425e7107e28c74a6b7627b11f4e68
 shipped-256-s0 coast_dist a346e7604bf3dab1a358d883f3072d508b9e61ad3603d3af5a8c3ad3fcabab61
 # P1-02 8.4
-case shipped-512-s0 shipped 512 0 500000
+case shipped-512-s0 shipped 512 0 125000
 shipped-512-s0 elevation b1e02da163b1e0c20261a0acab59532f76acdfbc2f81020e4d8dd599a588b64c
 shipped-512-s0 L 64aca15ea7c3c5fc01b055c93896e44465dc48b5806301f66292d508e7a3dfbc
 shipped-512-s0 parent 08317c2dc4237168e9918387dd9d8dc9aded81a16fbe95412c753c60d9ecb24b
@@ -292,19 +292,19 @@ shipped-512-s0 lake_levels 708,6924
 shipped-512-s0 lake_cells 519,416
 shipped-512-s0 outlets 57689,149757
 shipped-512-s0 max_accum 10759
-shipped-512-s0 river_cells 456
-shipped-512-s0 max_class 3
+shipped-512-s0 river_cells 1435
+shipped-512-s0 max_class 5
 shipped-512-s0 dl 60274270c85e0799a32e27fbd28d1588115e00334da9408e2d6bbc8ca9be418c
 shipped-512-s0 do b074e2095c00a805cc74da6e316ef60065d3cd657cca0f699c42bfc886fbee45
-shipped-512-s0 water 370ed43aaf071f090f9781db5d7d3259467c1d444101633e7eb5060ce366f27d
+shipped-512-s0 water 6db0bf30c4b991f8bc1cfc219dd88a66414ad99cc262fca63f372f81a8bb9504
 shipped-512-s0 water_depth de292b5c156fb17da9a27462e426e2241718ba506848b763b65800a8c4c41e20
 shipped-512-s0 flow_dir 44f8cfd2620b7fcd194ffd9444d7461a4b155be926c39dc9dde43062cd9190a6
 shipped-512-s0 flow_accum a94b1fe8adb681a11dcf3cd5339e6a20977c562384d5543b7cfed8b9dd319917
-shipped-512-s0 river a18ad2a2ddc50a63052cb877ec81486bf175dbbee832f2ac5066e7c6dc5f5550
+shipped-512-s0 river aae1cde79025057f92410e23a20e956cd0c6079588cfa2a3a0984d8d77b20afe
 shipped-512-s0 lake a58559382c3b735e6dbd704e4328fcd43bbe82e2849a2c70ad4422dea77f90e2
 shipped-512-s0 coast_dist 3bf7bf40d9f5a31d633a5bb7a98b3f11398783e3155ecf34ce890994ce931ed3
 # P1-02 8.4
-case shipped-512-s42 shipped 512 42 500000
+case shipped-512-s42 shipped 512 42 125000
 shipped-512-s42 elevation cff0cce9bc268713621744ed378744897f4f030edf891b3bcfe822936dd33757
 shipped-512-s42 L ee3d77c796bb2fdc5d8c9a3f837399fd37b2510c7b709f11444405b708df9904
 shipped-512-s42 parent d9055017a52892bb93454c7ffa3959a71fcae20e0215b36717fa804820a24514
@@ -315,19 +315,19 @@ shipped-512-s42 lake_levels 735
 shipped-512-s42 lake_cells 2336
 shipped-512-s42 outlets 156840
 shipped-512-s42 max_accum 16421
-shipped-512-s42 river_cells 527
-shipped-512-s42 max_class 4
+shipped-512-s42 river_cells 1514
+shipped-512-s42 max_class 6
 shipped-512-s42 dl a9d640d8cf373ba05ceab6d9b0ee0459df9c24583079029567bf16562bdf70ab
 shipped-512-s42 do 097ba3a08c925b32370b3db596fa04867fc7bb724d3137f9c33724e3871432ba
-shipped-512-s42 water 8b5175ec82918acdc297e275444c6103f6a20af205d4ca085f9a6269f944989d
+shipped-512-s42 water e94af391a2a44e58fabc770cdc791837de149baa23690d576d0dbb56148f1d7c
 shipped-512-s42 water_depth bef2d7aa811ada6d712b29f8878c2cda0d728617a4743c7538c8d5a5d403a273
 shipped-512-s42 flow_dir 649bc591a7e0a32ca848f7219e93fc71e3407af424b5f91c8b4775289ac6ed34
 shipped-512-s42 flow_accum 4671c8dcc66dbc9d72d6d585a5df56ef3c00e7bcbf5be14587b1bd6fb11049ef
-shipped-512-s42 river 42b88789a6fe1c812f92e7cff002e8daf2d60278765b6127bcae958f046aad47
+shipped-512-s42 river 935d5357a1858f7595c7a97ab9c2a075155b10c6ed07d5b3b82d58d1f49c5d25
 shipped-512-s42 lake f61da367365a336136cc8adad74ac855f981d456a69719e43112091941dda3e7
 shipped-512-s42 coast_dist 1d662608fc647159e53b268b06dfecd125c0af6d1bd271838780211f9ef0690b
 # P1-02 8.4, seed phrase "The Unmapped"
-case shipped-512-phrase shipped 512 15629206466951235176 500000
+case shipped-512-phrase shipped 512 15629206466951235176 125000
 shipped-512-phrase elevation c3d1c354a36eecfc4c6a9758704dd960fac0fda927c6cd27ad19bfdb45b8aa03
 shipped-512-phrase L b58cd5cffc0cb212e5eaa2f27704f77af5ee62c7a867fb4280b5a2b384f28ffb
 shipped-512-phrase parent 9e70b415f1f4273d63537893c9e0964ef313239071f57d468dd6f78fae5ea386
@@ -338,19 +338,19 @@ shipped-512-phrase lake_levels 6866,287,6495
 shipped-512-phrase lake_cells 694,1183,908
 shipped-512-phrase outlets 92966,95877,132958
 shipped-512-phrase max_accum 22450
-shipped-512-phrase river_cells 701
-shipped-512-phrase max_class 4
+shipped-512-phrase river_cells 1631
+shipped-512-phrase max_class 6
 shipped-512-phrase dl 869b4fa2f7563bb165cda908d3d8199b92286a71e817d9960b6264ae4e3f7644
 shipped-512-phrase do 18ad3422d99cda28c31435ddcf6a8c10a136bc7661583817caf8a187ea0963c4
-shipped-512-phrase water 31ab6d768ccdaaad08a5a9c8cd8d0a459d6c08c8370de676a8fcb768c06b28b8
+shipped-512-phrase water 3dab0a6a00569fe37d6d14b71caa3bd17959c8cfb6b57d3245a193da429fd3e8
 shipped-512-phrase water_depth a208f3d24b268beadd076899f0b986e594a21adc58b0b94128560e2d28c05e0a
 shipped-512-phrase flow_dir 391b7583fe25bad96b157743769d555711f608c82e545c08bea596b4ad0ca239
 shipped-512-phrase flow_accum fa2142427bcb702460635fe47717dc8a2ca896e4cedc76a2415ec5ac96af5da0
-shipped-512-phrase river 18638a02ee9e31d3f5c00de1cdff363f12b5b2a443ac4484b715090898e14421
+shipped-512-phrase river b8b227c8de396bd7b77cf303a2a505efac78f435345e4ed2e887adf2807934cb
 shipped-512-phrase lake 60843730436b0a1d06601ebe1bc90a954b48dfd70c31ada5863e07fd7be3cbdb
 shipped-512-phrase coast_dist e81f5a3b657eb814233a8bba52ccc0af601029a8853a196f7ca01fa46bf264c1
 # P1-02 8.4
-case shipped-1024-s1 shipped 1024 1 500000
+case shipped-1024-s1 shipped 1024 1 125000
 shipped-1024-s1 elevation 0cc4f2c15156aa89424cee960d9e434e8fe3a018b855d6a4a2e703cf314a31d2
 shipped-1024-s1 L a5180531f5dbb8365ca8c86e3931bc74a5aeccc8783fda5b13f73b8506b6336d
 shipped-1024-s1 parent 2e08d919f03ce4cb3327bf9355890a556aa719b579f2c8c9e43d71f99732f82b
@@ -361,15 +361,15 @@ shipped-1024-s1 lake_levels 374,786,882,892,1421,7809
 shipped-1024-s1 lake_cells 3646,479,2944,3582,859,628
 shipped-1024-s1 outlets 401235,476769,541286,720532,882220,847485
 shipped-1024-s1 max_accum 132332
-shipped-1024-s1 river_cells 3496
-shipped-1024-s1 max_class 7
+shipped-1024-s1 river_cells 8296
+shipped-1024-s1 max_class 9
 shipped-1024-s1 dl 4d9fadfcdfc787d4ff22ebd2fca71131f754299cde919f4973e42902e55062c1
 shipped-1024-s1 do 55c2045a8a92da146998a793c0aaf52aa1ebb679badd132770230b987a5d83be
-shipped-1024-s1 water d1eae23633435e8c61c06bc62e45e7560df981ca00932c77eb46bb1b684e112f
+shipped-1024-s1 water 1e2c003eaccd57ff78b1b3a1d98736acb13ded67a841c4d974cd0f841aef6602
 shipped-1024-s1 water_depth 82db2e6ba37b5635fbc6613beaea8377aca216e259661c6596eab49c585d3321
 shipped-1024-s1 flow_dir d1a13fb66fc0e31671b290329100471ff6cee288480b58404591ebfd7d267265
 shipped-1024-s1 flow_accum c21c85ece19d41f3e83f8fac15fff5398c8c3847c783cb5accee69140628306a
-shipped-1024-s1 river a61e91bcbab82dd3d79d0be8d9744fb2c47958f9062fe996de2ad7d525b3597b
+shipped-1024-s1 river 26b603881637a85b46e5d61518279c6b0e8d6b05479bd22802584fc6ac516318
 shipped-1024-s1 lake e63e633ff13865dadf7047217ee95b8b3fc01515cbf1d4d84e12bc9795e18f30
 shipped-1024-s1 coast_dist 2402125f0341a1095b7d0bfd4cea46cd28578d989d18d83708af900e6c11d1de
 # random fixture 0 of P1-02 8.2

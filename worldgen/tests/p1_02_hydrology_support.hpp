@@ -63,8 +63,10 @@ inline std::string hydrology_toml(std::int64_t river_min_area_m2) {
     return (river_min_area_m2 + 255) / 256;
 }
 
-// The shipped value, which is also the `geo` and `geo-small` fixture value.
-inline constexpr std::int64_t SHIPPED_AREA = 500000;
+// The shipped value, which is also the `geo` and `geo-small` fixture value:
+// 125000 m^2 (T = 489) by the lead's tuning decision of 2026-11-16; the spec's
+// starting value was 500000 (T = 1954).
+inline constexpr std::int64_t SHIPPED_AREA = 125000;
 
 // Hydrology tuning with the given river_min_area_m2, loaded through the
 // production loader beside the shipped elevation fixture.

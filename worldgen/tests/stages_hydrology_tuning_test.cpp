@@ -56,7 +56,7 @@ std::string read_text(const std::filesystem::path& p) {
 }  // namespace
 
 TEST_CASE("P1-02 4: the shipped value loads; the bounds 256 and 1000000000 are inclusive") {
-    for (const std::int64_t v : {std::int64_t{256}, std::int64_t{257}, std::int64_t{500000}, std::int64_t{1000000000}}) {
+    for (const std::int64_t v : {std::int64_t{256}, std::int64_t{257}, std::int64_t{125000}, std::int64_t{500000}, std::int64_t{1000000000}}) {
         CAPTURE(v);
         const hydro_api::TuningLoad l = load(hydrology_toml(v));
         CHECK_MESSAGE(l.ok(), all_errors(l));
@@ -100,14 +100,14 @@ TEST_CASE("P1-00 6.1: the hydrology definition is required beside elevation") {
     CHECK(text.find("hydrology") != std::string::npos);
 }
 
-TEST_CASE("P1-02 4, P1-00 6.4: the shipped file and both fixture files hold river_min_area_m2 = 500000") {
+TEST_CASE("P1-02 4, P1-00 6.4: the shipped file and both fixture files hold river_min_area_m2 = 125000 (lead, 2026-11-16)") {
     const std::filesystem::path root(UNMAPPED_TEST_SOURCE_ROOT);
     for (const char* rel : {"game/data/worldgen/hydrology.toml", "worldgen/tests/data/geo/worldgen/hydrology.toml",
                             "worldgen/tests/data/geo-small/worldgen/hydrology.toml"}) {
         CAPTURE(rel);
         const std::string text = read_text(root / rel);
         CHECK(text.find("[worldgen.hydrology]") != std::string::npos);
-        CHECK(text.find("river_min_area_m2 = 500000") != std::string::npos);
+        CHECK(text.find("river_min_area_m2 = 125000") != std::string::npos);
         const hydro_api::TuningLoad l = load(text);
         CHECK_MESSAGE(l.ok(), all_errors(l));
     }

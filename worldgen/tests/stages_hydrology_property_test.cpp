@@ -159,9 +159,9 @@ TEST_CASE("P1-02 6, 8.2: invariants on worlds from the elevation stage, N = 128,
 }
 
 TEST_CASE("P1-02 6, 8.2: invariants with a low river threshold (T = 100), rivers and lake outlets") {
-    // With the fixture threshold T = 1954 a 128 map has almost no river; T =
-    // 100 exercises the river invariants: rivers reach the sea, lakes feed
-    // rivers.
+    // With the fixture threshold (T = 489) a 128 map has few river cells;
+    // T = 100 exercises the river invariants more: rivers reach the sea,
+    // lakes feed rivers.
     WorldStats total;
     for (std::uint64_t seed = 0; seed < 3; ++seed) {
         const WorldStats s = check_world(seed, 128, true, 25600);
