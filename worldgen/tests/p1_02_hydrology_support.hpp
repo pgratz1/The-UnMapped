@@ -27,6 +27,7 @@
 #include <ostream>
 #include <queue>
 #include <span>
+#include <set>
 #include <sstream>
 #include <string>
 #include <string_view>
@@ -54,9 +55,12 @@ inline constexpr std::uint32_t THREADS = 4;
 
 // --- Tuning (P1-02 section 4) ----------------------------------------------------------
 
-inline std::string hydrology_toml(std::int64_t river_min_area_m2) {
+// The shipped flat_noise record of P1-02 4 (value text of the TOML field).
+inline constexpr std::string_view SHIPPED_FLAT_NOISE = "{ wavelength_m = 400, octaves = 1, gain = \"0.5\" }";
+
+inline std::string hydrology_toml(std::int64_t river_min_area_m2, std::string_view flat_noise = SHIPPED_FLAT_NOISE) {
     return "[worldgen.hydrology]\nriver_min_area_m2 = " + std::to_string(river_min_area_m2) +
-           "\nflat_noise = { wavelength_m = 400, octaves = 1, gain = \"0.5\" }\n";
+           "\nflat_noise = " + std::string(flat_noise) + "\n";
 }
 
 // T = ceil(river_min_area_m2 / 256), the test's own (section 4).
@@ -75,6 +79,14 @@ inline hydro_api::Tuning tuning(std::int64_t river_min_area_m2) {
     const hydro_api::TuningLoad l =
         hydro_api::load_tuning_text(elev_test::elevation_toml(), hydrology_toml(river_min_area_m2));
     REQUIRE_MESSAGE(l.ok(), "hydrology.toml with river_min_area_m2 = " << river_min_area_m2 << " does not load");
+    return hydro_api::tuning_from(*l.content);
+}
+
+// Hydrology tuning with a given flat_noise value text (shipped area).
+inline hydro_api::Tuning tuning_noise(std::string_view flat_noise) {
+    const hydro_api::TuningLoad l =
+        hydro_api::load_tuning_text(elev_test::elevation_toml(), hydrology_toml(SHIPPED_AREA, flat_noise));
+    REQUIRE_MESSAGE(l.ok(), "hydrology.toml with flat_noise = " << std::string(flat_noise) << " does not load");
     return hydro_api::tuning_from(*l.content);
 }
 
@@ -229,6 +241,20 @@ inline Fixture random_fixture(std::uint64_t f) {
     return out;
 }
 
+// The random tie values of 8.2 for fixture f: uniform_i64(0, 65535) on each
+// land cell in index order from Rng(substream(stream_key(0, "test.hydro"),
+// 1000 + f)), 0 on ocean.
+inline std::vector<std::uint16_t> random_tie(std::uint64_t f, std::span<const std::int16_t> e) {
+    worldgen::Rng rng(worldgen::substream(worldgen::stream_key(0, RANDOM_STREAM), 1000 + f));
+    std::vector<std::uint16_t> t(e.size(), 0);
+    for (std::size_t i = 0; i < e.size(); ++i) {
+        if (e[i] > 0) {
+            t[i] = static_cast<std::uint16_t>(rng.uniform_i64(0, 65535));
+        }
+    }
+    return t;
+}
+
 // river_min_area_m2 for the random fixtures: T = 8.
 inline constexpr std::int64_t RANDOM_AREA = 2048;
 
@@ -257,6 +283,14 @@ template <typename T>
         elev_test::put_le(s, static_cast<std::uint64_t>(static_cast<U>(x)), static_cast<int>(sizeof(T)));
     }
     return worldgen::to_hex(s.final());
+}
+
+[[nodiscard]] inline std::string hash_u16(std::span<const std::uint16_t> v) {
+    worldgen::Sha256 h;
+    for (const std::uint16_t x : v) {
+        elev_test::put_le(h, x, 2);
+    }
+    return worldgen::to_hex(h.final());
 }
 
 [[nodiscard]] inline std::string hash_u32(std::span<const std::uint32_t> v) {
@@ -364,6 +398,62 @@ inline OwnFlood own_flood(Grid g, std::span<const std::int64_t> keys, std::span<
             f.level[m] = std::max(keys[m], f.level[c]);
             f.parent[m] = static_cast<std::uint8_t>((code + 4U) % 8U);
             push(f.level[m], m);
+        });
+    }
+    return f;
+}
+
+// The H2 flood of P1-02 (re-specified 2026-11-16, variant B), the test's own:
+// L[m] = max(e[m], L[c]); a cell is visited when it is pushed; it is pushed
+// with key L[m] * 2^16 + t[m]; the entry with the smallest (key, seq) is
+// popped. Two independent queues: a binary heap (std::priority_queue) or an
+// ordered set (std::set). An empty tie span means t = 0.
+inline OwnFlood own_flood_tie(Grid g, std::span<const std::int16_t> e, std::span<const std::uint16_t> tie,
+                              bool use_set) {
+    const std::size_t n = elev_test::cells(g);
+    OwnFlood f{std::vector<std::int64_t>(n, 0), std::vector<std::uint8_t>(n, 8), {}};
+    std::vector<std::uint8_t> visited(n, 0);
+    using Item = std::tuple<std::int64_t, std::uint64_t, std::size_t>;
+    std::priority_queue<Item, std::vector<Item>, std::greater<>> heap;
+    std::set<Item> set;
+    std::uint64_t seq = 0;
+    auto push = [&](std::int64_t k, std::size_t c) {
+        if (use_set) {
+            set.emplace(k, seq++, c);
+        } else {
+            heap.emplace(k, seq++, c);
+        }
+    };
+    for (std::size_t i = 0; i < n; ++i) {
+        if (e[i] < 0) {
+            visited[i] = 1;
+            push(0, i);
+        }
+    }
+    for (;;) {
+        std::size_t c = 0;
+        if (use_set) {
+            if (set.empty()) {
+                break;
+            }
+            c = std::get<2>(*set.begin());
+            set.erase(set.begin());
+        } else {
+            if (heap.empty()) {
+                break;
+            }
+            c = std::get<2>(heap.top());
+            heap.pop();
+        }
+        f.order.push_back(static_cast<std::uint32_t>(c));
+        elev_test::each_neighbour8(g, c, [&](std::uint8_t code, std::size_t m) {
+            if (visited[m] != 0U) {
+                return;
+            }
+            visited[m] = 1;
+            f.level[m] = std::max(std::int64_t{e[m]}, f.level[c]);
+            f.parent[m] = static_cast<std::uint8_t>((code + 4U) % 8U);
+            push(f.level[m] * 65536 + (tie.empty() ? 0 : std::int64_t{tie[m]}), m);
         });
     }
     return f;
@@ -644,6 +734,27 @@ inline std::string invariant_violation(Grid g, std::span<const std::int16_t> e, 
     return {};
 }
 
+// Invariant 11 (P1-02 6): the run with tie values t and the run with t = 0
+// have the same water_depth, lake and coast_dist layers and the same lake
+// and ocean cells. Returns "" or the first difference.
+inline std::string tie_invariance_violation(const hydro_api::Layers& zero, const hydro_api::Layers& tie) {
+    if (zero.water_depth != tie.water_depth) {
+        return "inv 11: water_depth differs from the t = 0 run";
+    }
+    if (zero.lake != tie.lake) {
+        return "inv 11: lake differs from the t = 0 run";
+    }
+    if (zero.coast_dist != tie.coast_dist) {
+        return "inv 11: coast_dist differs from the t = 0 run";
+    }
+    for (std::size_t i = 0; i < zero.water.size(); ++i) {
+        if ((zero.water[i] >= 2U || tie.water[i] >= 2U) && zero.water[i] != tie.water[i]) {
+            return "inv 11: lake or ocean cell " + std::to_string(i) + " differs from the t = 0 run";
+        }
+    }
+    return {};
+}
+
 // --- Golden file (worldgen/tests/golden/p1-02-hydrology.txt) -----------------------
 
 struct GoldenCase {
@@ -652,6 +763,7 @@ struct GoldenCase {
     std::int32_t n = 0;
     std::uint64_t seed = 0;
     std::int64_t area = 0;
+    std::string tie;  // flat | random | zero
     std::vector<std::pair<std::string, std::string>> items;  // in file (step) order
 
     [[nodiscard]] std::string get(std::string_view item) const {
@@ -683,7 +795,7 @@ inline std::vector<GoldenCase> read_golden(const std::string& path) {
             gc.name = b;
             gc.fixture = c;
             std::int64_t n = 0;
-            ss >> n >> gc.seed >> gc.area;
+            ss >> n >> gc.seed >> gc.area >> gc.tie;
             gc.n = static_cast<std::int32_t>(n);
             REQUIRE_MESSAGE(!ss.fail(), "bad case line: " << line);
             out.push_back(gc);

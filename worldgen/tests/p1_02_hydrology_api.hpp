@@ -11,11 +11,15 @@
 // any W x H grid"), as declared in worldgen/stages/hydrology.hpp:
 //
 //   tuning        HydrologyTuning, hydrology_tuning_from(const data::ContentSet&)
-//   stage         hydrology_layers(geo::Grid, std::span<const std::int16_t>, const HydrologyTuning&,
-//                     std::uint32_t threads) -> HydrologyLayers (the seven layers of section 3)
+//   stage         hydrology_layers(geo::Grid, std::span<const std::int16_t> e, std::span<const std::uint16_t> tie,
+//                     const HydrologyTuning&, std::uint32_t threads) -> HydrologyLayers (the seven layers
+//                     of section 3; an empty tie span means t = 0, P1-02 8 as amended 2026-11-16)
+//   tie           flat_tie(seed, geo::Grid, std::span<const std::uint8_t> ocean, const HydrologyTuning&,
+//                     std::uint32_t threads) -> std::vector<std::uint16_t> (H2 step 1)
 //                 A precondition violation throws worldgen::FatalError whose message
 //                 starts "hydrology: elevation precondition: " (P1-02 section 2).
-//   steps         check_hydrology_preconditions (H1), hydrology_network (H2 to H5),
+//   steps         check_hydrology_preconditions (H1), hydrology_network(grid, e, tie, threads) (H2 to
+//                 H5; HydrologyNetwork has level_dm, parent and order of the H2 flood),
 //                 river_threshold_cells (section 4), river_class (H6), coast_distance (H7)
 //   H7 chamfer    stages::chamfer_distance (elevation.hpp, shared with P1-01 E5.3)
 //   G3 to G5      geo::routing_flood, receivers, accumulate_topological
@@ -86,9 +90,11 @@ inline Tuning tuning_from(const worldgen::data::ContentSet& content) {
     return worldgen::stages::hydrology_tuning_from(content);
 }
 
-// The whole stage on any W x H grid (seam hydrology_layers).
-inline Layers layers(Grid grid, std::span<const std::int16_t> elevation, const Tuning& t, std::uint32_t threads) {
-    worldgen::stages::HydrologyLayers r = worldgen::stages::hydrology_layers(grid, elevation, {}, t, threads);
+// The whole stage on any W x H grid (seam hydrology_layers) with the given
+// tie values (empty: t = 0 everywhere).
+inline Layers layers_tie(Grid grid, std::span<const std::int16_t> elevation, std::span<const std::uint16_t> tie,
+                         const Tuning& t, std::uint32_t threads) {
+    worldgen::stages::HydrologyLayers r = worldgen::stages::hydrology_layers(grid, elevation, tie, t, threads);
     Layers out;
     out.water = std::move(r.water);
     out.water_depth = std::move(r.water_depth);
@@ -98,6 +104,30 @@ inline Layers layers(Grid grid, std::span<const std::int16_t> elevation, const T
     out.lake = std::move(r.lake);
     out.coast_dist = std::move(r.coast_dist);
     return out;
+}
+
+// The whole stage with t = 0 (the worked example and the unit fixtures of
+// 8.1 are given for t = 0).
+inline Layers layers(Grid grid, std::span<const std::int16_t> elevation, const Tuning& t, std::uint32_t threads) {
+    return layers_tie(grid, elevation, {}, t, threads);
+}
+
+// H2 step 1 (seam flat_tie): the tie values of a world seed, 0 on ocean.
+inline std::vector<std::uint16_t> flat_tie(std::uint64_t seed, Grid grid, std::span<const std::uint8_t> ocean,
+                                           const Tuning& t, std::uint32_t threads) {
+    return worldgen::stages::flat_tie(seed, grid, ocean, t, threads);
+}
+
+// The stage as run on a world: the tie values of the seed (what run_hydrology
+// passes, P1-02 8).
+inline Layers world_layers(std::uint64_t seed, Grid grid, std::span<const std::int16_t> elevation, const Tuning& t,
+                           std::uint32_t threads) {
+    std::vector<std::uint8_t> ocean(elevation.size());
+    for (std::size_t i = 0; i < ocean.size(); ++i) {
+        ocean[i] = elevation[i] < 0 ? 1 : 0;
+    }
+    const std::vector<std::uint16_t> tie = hydro_api::flat_tie(seed, grid, ocean, t, threads);
+    return layers_tie(grid, elevation, tie, t, threads);
 }
 
 // Section 4: T = ceil(river_min_area_m2 / 256) (the stage's function).
@@ -120,7 +150,7 @@ inline std::vector<std::int16_t> coast_distance(Grid grid, std::span<const std::
 
 // H2 to H5 (seam hydrology_network): the intermediates as plain arrays.
 struct Network {
-    std::vector<std::int64_t> level;      // L (H2)
+    std::vector<std::int64_t> level_dm;   // L, decimetres (H2)
     std::vector<std::uint8_t> parent;     // flood parent, 8 on ocean
     std::vector<std::uint32_t> order;     // pop order
     std::vector<std::uint8_t> g4;         // G4 receivers before rerouting, 8 on ocean
@@ -131,10 +161,11 @@ struct Network {
     std::vector<std::uint32_t> accum;     // A (H5), 0 on ocean
 };
 
-inline Network network(Grid grid, std::span<const std::int16_t> e, std::uint32_t threads) {
-    worldgen::stages::HydrologyNetwork r = worldgen::stages::hydrology_network(grid, e, {}, threads);
+inline Network network(Grid grid, std::span<const std::int16_t> e, std::span<const std::uint16_t> tie,
+                       std::uint32_t threads) {
+    worldgen::stages::HydrologyNetwork r = worldgen::stages::hydrology_network(grid, e, tie, threads);
     Network out;
-    out.level = std::move(r.level_dm);
+    out.level_dm = std::move(r.level_dm);
     out.parent.assign(r.parent.begin(), r.parent.end());
     out.order.assign(r.order.begin(), r.order.end());
     out.g4.assign(r.g4.begin(), r.g4.end());

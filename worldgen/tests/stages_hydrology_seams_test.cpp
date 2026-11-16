@@ -99,8 +99,8 @@ TEST_CASE("P1-02 H1: check_hydrology_preconditions") {
 TEST_CASE("P1-02 5.1, 8.1 item 1: hydrology_network gives L, parent, order, G4, lakes, the outlet, rcv and A") {
     const Fixture f = example_51();
     const Grid g = f.grid;
-    const hydro_api::Network net = hydro_api::network(g, f.e, 1);
-    CHECK(net.level == flat_rows<std::int64_t>({
+    const hydro_api::Network net = hydro_api::network(g, f.e, {}, 1);
+    CHECK(net.level_dm == flat_rows<std::int64_t>({
                            {0, 0, 0, 0, 0, 0, 0, 0},
                            {0, 60, 70, 80, 70, 60, 50, 0},
                            {0, 50, 28, 28, 60, 40, 30, 0},
@@ -138,9 +138,9 @@ TEST_CASE("P1-02 H2 to H5: hydrology_network agrees with the test's floods and t
     for (std::uint64_t k = 0; k < 40; ++k) {
         CAPTURE(k);
         const Fixture f = random_fixture(k);
-        const hydro_api::Network net = hydro_api::network(f.grid, f.e, 1 + static_cast<std::uint32_t>(k % 5));
+        const hydro_api::Network net = hydro_api::network(f.grid, f.e, {}, 1 + static_cast<std::uint32_t>(k % 5));
         const OwnFlood own = own_flood(f.grid, keys_of(f.e), ocean_of(f.e), true);
-        REQUIRE(net.level == own.level);
+        REQUIRE(net.level_dm == own.level);
         REQUIRE(net.parent == own.parent);
         REQUIRE(net.order == own.order);
         const hydro_api::Layers l = hydro_api::layers(f.grid, f.e, tuning(RANDOM_AREA), THREADS);
@@ -164,11 +164,11 @@ TEST_CASE("P1-02 H2 to H5: hydrology_network agrees with the test's floods and t
 
 TEST_CASE("P1-02 8.1 items 5 and 6: outlets and levels of the designed fixtures from hydrology_network") {
     const Fixture t = terrace_fixture();
-    const hydro_api::Network nt = hydro_api::network(t.grid, t.e, 1);
+    const hydro_api::Network nt = hydro_api::network(t.grid, t.e, {}, 1);
     CHECK(nt.lake_level == std::vector<std::int64_t>{150, 80});
     CHECK(nt.outlet == std::vector<std::uint32_t>{t.grid.index(5, 3), t.grid.index(2, 8)});
     const Fixture r = rims_fixture();
-    const hydro_api::Network nr = hydro_api::network(r.grid, r.e, 1);
+    const hydro_api::Network nr = hydro_api::network(r.grid, r.e, {}, 1);
     CHECK(nr.lake_level == std::vector<std::int64_t>{40});
     CHECK(nr.outlet == std::vector<std::uint32_t>{r.grid.index(5, 3)});
 }
@@ -250,12 +250,24 @@ TEST_CASE("P1-02 H2, H6 (lead 2026-11-16): the full i16 range, land at 32767 and
     CHECK(*std::max_element(l.lake.begin(), l.lake.end()) == 1U);
     // Drops of 32767 dm to the sea (L = 0 on ocean): every land cell beside
     // the sea drains straight to it.
-    const hydro_api::Network net = hydro_api::network(g, f.e, 1);
-    CHECK(net.level[c] == 32767);
+    const hydro_api::Network net = hydro_api::network(g, f.e, {}, 1);
+    CHECK(net.level_dm[c] == 32767);
     CHECK(net.lake_level == std::vector<std::int64_t>{32767});
     CHECK(l.flow_dir[g.index(1, 3)] == 4);
     CHECK(l.flow_dir[g.index(5, 3)] == 0);
     CHECK(l.flow_dir[g.index(3, 5)] == 2);
+    // With the largest tie values the flood keys reach 32767 x 2^16 + 65535 <
+    // 2^31 (P1-02 H2 step 2); invariant 11 holds.
+    std::vector<std::uint16_t> tmax(f.e.size(), 0);
+    for (std::size_t i = 0; i < f.e.size(); ++i) {
+        tmax[i] = f.e[i] > 0 ? 65535 : 0;
+    }
+    const hydro_api::Layers lt = hydro_api::layers_tie(g, f.e, tmax, tuning(256), THREADS);
+    CHECK(invariant_violation(g, f.e, lt, 1).empty());
+    CHECK(tie_invariance_violation(l, lt).empty());
+    const hydro_api::Network nt = hydro_api::network(g, f.e, tmax, 1);
+    CHECK(nt.level_dm[c] == 32767);
+    CHECK(nt.order == own_flood_tie(g, f.e, tmax, false).order);
     // Threads do not matter here either.
     CHECK(hydro_api::layers(g, f.e, tuning(256), 1) == l);
     CHECK(hydro_api::layers(g, f.e, tuning(256), 5) == l);
