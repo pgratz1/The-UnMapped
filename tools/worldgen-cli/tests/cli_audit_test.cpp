@@ -79,7 +79,7 @@ TEST_CASE("cli audit: a failed write to stdout is exit 4 (small output, Linux /d
     }
     Sandbox sb;
     const fs::path world = sb.generate({"--seed", "0", "--test-pattern", "--out", u8(sb.file("w.db"))});
-    const fs::path empty = sb.generate({"--seed", "0", "--out", u8(sb.file("empty.db"))});
+    const fs::path empty = sb.generate({"--until", "none", "--seed", "0", "--out", u8(sb.file("empty.db"))});
 
     for (const std::vector<std::string>& args :
          {std::vector<std::string>{"--version"},
@@ -106,12 +106,12 @@ TEST_CASE("cli audit: a failed write to stdout is exit 4 (small output, Linux /d
         // line is lost. Chosen assertion: no .partial (Sandbox), and a file
         // left at the output path is byte-identical to a normal run.
         const fs::path out = sb.file("g.db");
-        check_stdout_failed(sb.cli({"generate", "--seed", "3", "--out", u8(out)}, to_dev_full()));
-        REQUIRE(sb.cli({"generate", "--seed", "3", "--out", u8(sb.file("ref.db"))}).exit_code == EXIT_OK);
+        check_stdout_failed(sb.cli({"generate", "--until", "none", "--seed", "3", "--out", u8(out)}, to_dev_full()));
+        REQUIRE(sb.cli({"generate", "--until", "none", "--seed", "3", "--out", u8(sb.file("ref.db"))}).exit_code == EXIT_OK);
         if (file_exists(out)) {
             CHECK(read_bytes(out) == read_bytes(sb.file("ref.db")));
         }
-        check_stdout_failed(sb.cli({"generate", "--seed", "3"}, to_dev_full()));
+        check_stdout_failed(sb.cli({"generate", "--until", "none", "--seed", "3"}, to_dev_full()));
         if (file_exists(sb.out_dir() / "world-3.db")) {
             CHECK(read_bytes(sb.out_dir() / "world-3.db") == read_bytes(sb.file("ref.db")));
         }
@@ -128,7 +128,7 @@ TEST_CASE("cli audit: a failed write to stdout is exit 4 (small output, Linux /d
     SUBCASE("report --out writes nothing on stdout, so /dev/full does not matter") {
         const ProcessResult r = sb.cli({"report", "--db", u8(empty), "--out", u8(sb.file("rep.txt"))}, to_dev_full());
         CHECK(r.exit_code == EXIT_OK);
-        CHECK(read_text(sb.file("rep.txt")) == p004::REPORT_SEED_0);
+        CHECK(read_text(sb.file("rep.txt")) == cli_report_seed_0());
     }
 }
 
@@ -138,7 +138,7 @@ TEST_CASE("cli audit: a failed write to stdout is exit 4 (large output, Linux /d
         return;
     }
     Sandbox sb;
-    const fs::path world = sb.generate({"--seed", "0", "--out", u8(sb.file("big.db"))});
+    const fs::path world = sb.generate({"--until", "none", "--seed", "0", "--out", u8(sb.file("big.db"))});
     // 300 extra tables with long names: report and hash --detail print
     // well over 16 KiB, far above any stdio buffer.
     std::string sql = "BEGIN;";
@@ -187,7 +187,7 @@ TEST_CASE("cli audit: a dangling symbolic link at --out counts as existing") {
         std::vector<std::string> args;  // without --out
     };
     const std::vector<Case> cases = {
-        {"generate", {"generate", "--seed", "5"}},
+        {"generate", {"generate", "--until", "none", "--seed", "5"}},
         {"render", {"render", "--db", u8(world), "--layer", "test.ramp"}},
         {"report", {"report", "--db", u8(world)}},
     };
@@ -220,7 +220,7 @@ TEST_CASE("cli audit: a dangling symbolic link at --out counts as existing") {
     // The replaced files hold what a normal run writes.
     REQUIRE(sb.cli({"report", "--db", u8(world), "--out", u8(sb.file("report-ref"))}).exit_code == EXIT_OK);
     CHECK(read_bytes(sb.file("report-link")) == read_bytes(sb.file("report-ref")));
-    REQUIRE(sb.cli({"generate", "--seed", "5", "--out", u8(sb.file("generate-ref"))}).exit_code == EXIT_OK);
+    REQUIRE(sb.cli({"generate", "--until", "none", "--seed", "5", "--out", u8(sb.file("generate-ref"))}).exit_code == EXIT_OK);
     CHECK(read_bytes(sb.file("generate-link")) == read_bytes(sb.file("generate-ref")));
 
     // The default output path too.
@@ -228,9 +228,9 @@ TEST_CASE("cli audit: a dangling symbolic link at --out counts as existing") {
     const fs::path default_link = sb.out_dir() / "world-6.db";
     const fs::path default_target = sb.file("default-target");
     REQUIRE(make_symlink(default_target, default_link));
-    CHECK(sb.cli({"generate", "--seed", "6"}).exit_code == EXIT_OUTPUT);
+    CHECK(sb.cli({"generate", "--until", "none", "--seed", "6"}).exit_code == EXIT_OUTPUT);
     CHECK(fs::is_symlink(fs::symlink_status(default_link)));
-    CHECK(sb.cli({"generate", "--seed", "6", "--force"}).exit_code == EXIT_OK);
+    CHECK(sb.cli({"generate", "--until", "none", "--seed", "6", "--force"}).exit_code == EXIT_OK);
     CHECK(fs::is_regular_file(fs::symlink_status(default_link)));
     CHECK(!file_exists(default_target));
 }
@@ -286,7 +286,7 @@ TEST_CASE("cli audit: an environment variable that is not valid UTF-16 is a usag
     std::wstring root = L"C:\\the-unmapped-";
     root += static_cast<wchar_t>(0xD800);  // lone high surrogate
     o.process.wide_env.emplace_back(L"UNMAPPED_BUILD_ROOT", root);
-    const ProcessResult r = sb.cli({"generate", "--seed", "1"}, o);
+    const ProcessResult r = sb.cli({"generate", "--until", "none", "--seed", "1"}, o);
     INFO("stderr: ", r.err);
     CHECK(r.exit_code == EXIT_USAGE);
     CHECK(r.out.empty());

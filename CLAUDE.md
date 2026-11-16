@@ -17,7 +17,7 @@ When the design is wrong, unclear or missing something, add an entry to `docs/de
 
 ## Repository state
 
-The repository follows the layout in section 10 of the design doc. Phase P0 is in place: the `worldgen` library holds the deterministic core, the world database layer, the TOML loader, the P0 test-pattern stage and the inspection code behind `report` and `hash`; `worldgen-cli` has `generate`, `render`, `report` and `hash`. No geography or history stage exists yet.
+The repository follows the layout in section 10 of the design doc. Phase P0 is in place: the `worldgen` library holds the deterministic core, the world database layer, the TOML loader, the P0 test-pattern stage and the inspection code behind `report` and `hash`; `worldgen-cli` has `generate`, `render`, `report` and `hash`. Of phase P1 the shared geography algorithms (`src/geo/`), the stage pipeline and the first geography stage, `elevation` (spec P1-01, `src/stages/elevation.cpp`), are in place, with the required tuning kind `worldgen` (ids `elevation` and `hydrology`) read from `game/data/worldgen/`. `generate` runs the implemented geography stages by default; `--until none` writes the P0 empty world. No hydrology, later geography or history stage exists yet.
 
 ```
 CMakeLists.txt        top-level build; refuses in-tree builds
@@ -31,7 +31,7 @@ tools/worldgen-cli/   command-line front end: generate, render, report, hash
 tools/lint/           banned-construct lint (owned by the determinism auditor)
 tools/ci/             world-hashes.sh, the cross-compiler world hash check
 gdext/                C++ GDExtension: world.db binding and viewer logic (phase P2, viewer engineer)
-game/                 Godot project, layout only; the viewer scene is game/viewer/viewer.tscn (phase P2)
+game/                 Godot project, layout only; the viewer scene is game/viewer/viewer.tscn (phase P2); data/worldgen/ holds the shipped generator tuning
 extern/               vendored third-party libraries at pinned versions, see extern/README.md
 docs/                 design/, specs/, reviews/
 .github/workflows/    continuous integration
@@ -155,22 +155,23 @@ The second command scans `worldgen/` without `worldgen/tests/` and `tools/worldg
 
 ### Cross-compiler world hashes
 
-`tools/ci/world-hashes.sh` (POSIX shell; Git Bash on Windows) holds the case list of spec P0-04 section 9 and is what CI runs. For one built preset it generates the eight cases and saves, per case, `<preset>-<case>.db`, `<preset>-<case>.txt` (`hash --db <file> --detail`) and `<preset>-<case>.report.txt` (`report --db <file>`) into `out/<source dir name>/world-hashes/` under the build root (`out/world-hashes/` when `UNMAPPED_BUILD_ROOT` is set). It refuses an output directory inside the source tree.
+`tools/ci/world-hashes.sh` (POSIX shell; Git Bash on Windows) holds the case list of spec P0-04 section 9 (the `empty-*` cases with `--until none`, amendment 16 (d)) and the geography cases of spec P1-00 section 14 X5 (`geo-seed-0-512`, `geo-seed-42-512`, `geo-phrase-512`, `geo-seed-1-1024`), and is what CI runs. Every case reads the checkout's `game/data` through `--data`. For one built preset it generates the twelve cases and saves, per case, `<preset>-<case>.db`, `<preset>-<case>.txt` (`hash --db <file> --detail`) and `<preset>-<case>.report.txt` (`report --db <file>`) into `out/<source dir name>/world-hashes/` under the build root (`out/world-hashes/` when `UNMAPPED_BUILD_ROOT` is set). It refuses an output directory inside the source tree.
 
 ```
 tools/ci/world-hashes.sh local linux-gcc-release linux-clang-debug   # generate for each built preset, then compare
 tools/ci/world-hashes.sh generate linux-gcc-release                  # one preset
-tools/ci/world-hashes.sh expect linux-gcc-release                    # hash --expect against the golden file
+tools/ci/world-hashes.sh expect linux-gcc-release                    # hash --expect against the golden files
 tools/ci/world-hashes.sh compare linux-gcc-release linux-clang-debug # compare saved results
 tools/ci/world-hashes.sh cases
 ```
 
-Each preset must be built first (default build tree, or `--build-dir DIR` for `generate` and `expect`). `compare` fails when any preset's text for any case differs from the others or is missing, names the case and the presets of each variant, and prints a `diff -u` of the detail lines, so the differing table or layer is visible. Generating all eight cases takes a few seconds. It is not part of `ctest`, since one build tree cannot compare compilers.
+Each preset must be built first (default build tree, or `--build-dir DIR` for `generate` and `expect`). `compare` fails when any preset's text for any case differs from the others or is missing, names the case and the presets of each variant, and prints a `diff -u` of the detail lines, so the differing table or layer is visible. Generating all twelve cases takes about 15 seconds with a release preset, about two minutes with a debug preset and about six minutes with `linux-clang-asan` (the geography cases run the elevation stage). It is not part of `ctest`, since one build tree cannot compare compilers.
 
 ### Golden values
 
 - `worldgen/tests/golden/core_vectors.txt`: reference outputs of the deterministic core (spec P0-01 13.8), read by `worldgen-tests`.
-- `worldgen/tests/golden/p0-worlds.txt`: SHA-256 of the world file for each P0 case, lines `<case> <hex>` sorted by case name, LF. Read by `worldgen-cli-tests` (skipped while the file is absent) and by `world-hashes.sh expect` in CI. Recorded by the validation specialist.
+- `worldgen/tests/golden/p0-worlds.txt`: SHA-256 of the world file for each P0 case, lines `<case> <hex>` sorted by case name, LF. Read by `worldgen-cli-tests` (skipped while the file is absent) and by `world-hashes.sh expect` in CI. Recorded by the validation specialist. Since the `worldgen` kind is registered, these worlds carry the content hash of the shipped `game/data`, so a change to the shipped tuning changes them too (P1-00 6.4).
+- `worldgen/tests/golden/p1-worlds.txt`: the same for the geography cases of P1-00 14 X5, read by `world-hashes.sh expect` (a note, not a failure, while the file is absent). Recorded by the validation specialist.
 
 Golden values describe the generator's output contract. A change that alters the bytes of any world file or golden vector must bump `GENERATOR_VERSION` (`worldgen/include/worldgen/version.hpp`) and re-record the golden values in the same change; the comparison across presets must pass before they are recorded. A schema change also needs a schema version bump, a spec update and a proposals entry (hard rule 7). Golden files are LF on every platform (`.gitattributes`).
 

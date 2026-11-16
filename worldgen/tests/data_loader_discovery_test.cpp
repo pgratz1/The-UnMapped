@@ -265,13 +265,13 @@ TEST_CASE("loader data root: no kinds registered means nothing is read") {
     REQUIRE(r.ok());
     CHECK(r.value->kinds.empty());
 
+    // The production registry holds the required kind `worldgen` (P1-00 6.1,
+    // P0-03 amendment 17), so a missing root or no root is an error.
     const auto rb = wd::load_content(wd::builtin_kinds(), utf8_path("this/data/root/does/not/exist"));
-    REQUIRE(rb.ok());
-    CHECK(rb.value->kinds.empty());
+    CHECK_FALSE(rb.ok());
 
     const auto rn = wd::load_content_without_data(wd::builtin_kinds());
-    REQUIRE(rn.ok());
-    CHECK(rn.value->kinds.empty());
+    CHECK_FALSE(rn.ok());
 }
 
 TEST_CASE("loader data root: without a data root, required kinds are errors") {

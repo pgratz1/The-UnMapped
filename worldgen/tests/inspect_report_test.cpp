@@ -51,6 +51,9 @@ worldgen::WorldParams params_for(std::uint64_t seed, bool pattern) {
     p.seed = seed;
     p.content_hash = worldgen::sha256(std::string_view{});
     p.test_pattern = pattern;
+    if (!pattern) {
+        p.until = std::string("none");  // the P0 empty world (P1-00 10.1)
+    }
     return p;
 }
 
@@ -118,7 +121,7 @@ std::string seed_0_report_with_line(const std::string& line) {
     return "# worldgen report v2\n[meta]\n"
            "content_hash = e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\n"
            "format = the-unmapped-world\n"
-           "generator_version = 0.2.0\n"
+           "generator_version = 0.3.0\n"
            "param.map_size = 1024\n"
            "schema_version = 1\n"
            "seed = 0\n"
@@ -167,7 +170,7 @@ TEST_CASE("report 7: test-pattern world") {
         "# worldgen report v2\n[meta]\n"
         "content_hash = e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\n"
         "format = the-unmapped-world\n"
-        "generator_version = 0.2.0\n"
+        "generator_version = 0.3.0\n"
         "param.map_size = 1024\n"
         "schema_version = 1\n"
         "seed = 42\n"

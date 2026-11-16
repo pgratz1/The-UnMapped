@@ -113,14 +113,17 @@ takes the argument bytes exactly as passed to `generate --seed-phrase` (any
 bytes, not only UTF-8); the expected `seed_phrase` row is the scrubbed phrase
 and the expected seed its `phrase_seed` (P0-01 7.3, P0-02 amendment 12). The
 expected `generator_version` is the constant `GENERATOR_VERSION` at the top of
-the script (`0.2.0`), overridable with `--generator-version`. It was used
+the script (`0.3.0`), overridable with `--generator-version`; the expected
+`content_hash` is that of no data unless `--content-hash` gives another (worlds
+written by `worldgen-cli` carry the hash of the loaded data, P0-03 amendment
+17). It was used
 to confirm the golden values in `worldgen/tests/golden/p0-worlds.txt` and the
 `GOLDEN_RGB_*` constants of `worldgen/tests/inspect_render_test.cpp`.
 
 ```
 python3 -B worldgen/tests/reference/p0_world_check.py check WORLD (--seed N | --phrase TEXT)
         [--map-size N] [--test-pattern] [--detail FILE] [--report FILE]
-        [--generator-version V]
+        [--generator-version V] [--content-hash HEX]
 python3 -B worldgen/tests/reference/p0_world_check.py stats WORLD...
 ```
 

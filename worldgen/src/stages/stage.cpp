@@ -5,6 +5,7 @@
 #include "stages/pipeline.hpp"
 #include "worldgen/core/error.hpp"
 #include "worldgen/core/parallel.hpp"
+#include "worldgen/stages/elevation.hpp"
 
 namespace worldgen::stages {
 
@@ -93,9 +94,12 @@ void Pipeline::run(const StageInfo& stage) {
 // --- Stage catalogue and limit (P1-00 3, 10.1) ------------------------------------------
 
 std::span<const StageInfo> implemented_geography_stages() noexcept {
-    // P1 adds each geography stage here as it is merged, in the order of
-    // GEOGRAPHY_STAGE_NAMES, e.g. StageInfo{"elevation", &run_elevation}.
-    return {};
+    // Each geography stage is added here as it is implemented, in the order
+    // of GEOGRAPHY_STAGE_NAMES (P1-00 3).
+    static constexpr std::array<StageInfo, 1> STAGES = {
+        StageInfo{ELEVATION_STAGE, &run_elevation},  // P1-01
+    };
+    return STAGES;
 }
 
 StageLimitError check_stage_limit(std::string_view until) noexcept {

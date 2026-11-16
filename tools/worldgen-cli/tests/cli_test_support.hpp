@@ -28,8 +28,12 @@
 #include <utility>
 #include <vector>
 
+#include "p0_04_reference.hpp"
 #include "process.hpp"
 #include "worldgen/core/sha256.hpp"
+#include "worldgen/data/content.hpp"
+#include "worldgen/data/data_root.hpp"
+#include "worldgen/data/schema.hpp"
 #include "worldgen/db/utf8_path.hpp"
 
 #ifndef UNMAPPED_CLI_TEST_TMP_ROOT
@@ -118,6 +122,44 @@ inline bool contains(std::string_view text, std::string_view part) { return text
 // The text a command prints for an output path: the absolute, lexically
 // normalized path and a line feed (P0-04 5, 6, amendment 4).
 inline std::string printed_path(const fs::path& absolute) { return u8(absolute.lexically_normal()) + "\n"; }
+
+// The content hash (hex) of the data the CLI reads by default: the data root
+// recorded at configure time (the shipped game/data). Since the required
+// kind `worldgen` is registered (P1-00 6.1, P0-03 amendment 17), every world
+// worldgen-cli writes carries it, including --until none worlds.
+inline std::string shipped_content_hash() {
+    static const std::string hash = [] {
+        const auto loaded = worldgen::data::load_content(
+            worldgen::data::builtin_kinds(), worldgen::db::path_from_utf8(worldgen::data::configured_data_root()));
+        REQUIRE_MESSAGE(loaded.ok(), "the configured data root does not load");
+        return worldgen::data::content_hash_hex(*loaded.value);
+    }();
+    return hash;
+}
+
+// p004::meta_rows with the content hash of the shipped data, as worldgen-cli
+// writes them.
+inline p004::MetaRows cli_meta_rows(std::uint64_t seed, std::string_view phrase = {}, std::string_view stages = {},
+                                    std::string_view map_size = "1024") {
+    p004::MetaRows rows = p004::meta_rows(seed, phrase, stages, map_size);
+    for (auto& [key, value] : rows) {
+        if (key == "content_hash") {
+            value = shipped_content_hash();
+        }
+    }
+    return rows;
+}
+
+// p004::REPORT_SEED_0 with the content hash of the shipped data: the report
+// of `generate --until none --seed 0`.
+inline std::string cli_report_seed_0() {
+    std::string text(p004::REPORT_SEED_0);
+    const std::string empty = "content_hash = " + std::string(p004::EMPTY_CONTENT_HASH) + "\n";
+    const std::size_t at = text.find(empty);
+    REQUIRE(at != std::string::npos);
+    text.replace(at, empty.size(), "content_hash = " + shipped_content_hash() + "\n");
+    return text;
+}
 
 // Every *.partial file under dir (P0-04 4.4, 10).
 inline std::vector<std::string> partial_files(const fs::path& dir) {

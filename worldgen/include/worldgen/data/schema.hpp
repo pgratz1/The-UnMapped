@@ -4,9 +4,9 @@
 //
 // A kind (for example `biome`) is registered in code with a name, a data
 // directory, a required flag and a schema: a list of typed fields, each
-// required or with a default, plus optional named checks. P0 registers no
-// production kinds (builtin_kinds() is empty); tests build their own
-// KindRegistry.
+// required or with a default, plus optional named checks. The production
+// registry (builtin_kinds()) holds the fixed-id kind `worldgen` of P1-00
+// 6.1; tests may build their own KindRegistry.
 //
 // Registration mistakes (bad names, a default that does not satisfy its own
 // type, min > max, duplicate names) are programming errors and raise
@@ -262,10 +262,33 @@ private:
 };
 
 // The production registry: the fixed list of every kind the generator uses
-// (P0-03 7.1, defined in one source file, src/data/kinds.cpp). Still empty:
-// the `worldgen` kind of P1-00 6.1 is registered together with the
-// elevation stage, since registering any kind changes content_hash and so
-// every world.
+// (P0-03 7.1, defined in one source file, src/data/kinds.cpp). It holds the
+// fixed-id kind `worldgen` (P1-00 6.1, P0-03 amendment 16: directory
+// `worldgen`, required) with the ids of the first pass, `elevation`
+// (P1-01 4.2) and `hydrology` (P1-02 4). Because a required kind is
+// registered, every world needs a data root and its content_hash is the
+// hash of the loaded data (P0-03 amendment 17).
 [[nodiscard]] KindRegistry builtin_kinds();
+
+// --- The `worldgen` kind (P1-00 section 6.1) ---------------------------------
+
+// Kind name, directory and ids (P1-00 6.1).
+inline constexpr std::string_view WORLDGEN_KIND = "worldgen";
+inline constexpr std::string_view WORLDGEN_DIRECTORY = "worldgen";
+inline constexpr std::string_view WORLDGEN_ELEVATION_ID = "elevation";
+inline constexpr std::string_view WORLDGEN_HYDROLOGY_ID = "hydrology";
+
+// The schema of definition worldgen.elevation (P1-01 4.2): every field of
+// the table of 4.2 in its order, all required, with the shared noise record
+// types of P1-01 4.1 (worldgen/geo/noise_schema.hpp). Named checks of P1-01
+// 4.3, each a load error at the definition's header (P0-03 7.5):
+//   edge_radial_span   edge_radial_end - edge_radial_start >= 0.01;
+//   mountain_ranks     mountain_cover_rank <= mountain_peak_rank;
+//   lake_areas         lake_min_area_m2 <= lake_max_area_m2.
+[[nodiscard]] Schema worldgen_elevation_schema();
+
+// The schema of definition worldgen.hydrology (P1-02 4): river_min_area_m2
+// int(256, 10^9), required.
+[[nodiscard]] Schema worldgen_hydrology_schema();
 
 }  // namespace worldgen::data

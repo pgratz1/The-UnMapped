@@ -38,7 +38,7 @@ p004::LayerRow layer_row(std::int64_t id, const std::string& name, const char* f
 
 TEST_CASE("cli 12.5: hash equals SHA-256 of the file bytes") {
     Sandbox sb;
-    const fs::path empty_world = sb.generate({"--seed", "0", "--out", u8(sb.file("empty.db"))});
+    const fs::path empty_world = sb.generate({"--until", "none", "--seed", "0", "--out", u8(sb.file("empty.db"))});
     const fs::path pattern_world = sb.generate({"--seed", "42", "--test-pattern", "--out", u8(sb.file("p.db"))});
     write_text(sb.file("zero.bin"), "");
     write_text(sb.file("abc.txt"), "abc");
@@ -82,7 +82,7 @@ TEST_CASE("cli 12.5: a non-world file hashes without --detail and fails with it"
 
 TEST_CASE("cli 12.5: --detail of the empty world") {
     Sandbox sb;
-    const fs::path world = sb.generate({"--seed", "0"});
+    const fs::path world = sb.generate({"--until", "none", "--seed", "0"});
     const ProcessResult r = sb.cli({"hash", "--db", u8(world), "--detail"});
     INFO("stderr: ", r.err);
     REQUIRE(r.exit_code == EXIT_OK);
@@ -92,7 +92,7 @@ TEST_CASE("cli 12.5: --detail of the empty world") {
     CHECK(lines[0] == "file " + file_sha256_hex(world));
     CHECK(lines[1] == "schema " + to_hex(p004::p0_schema_hash()));
     CHECK(lines[2] == "table layer " + to_hex(p004::layer_table_hash({})));
-    CHECK(lines[3] == "table meta " + to_hex(p004::meta_table_hash(p004::meta_rows(0))));
+    CHECK(lines[3] == "table meta " + to_hex(p004::meta_table_hash(cli_meta_rows(0))));
     CHECK(r.out == lines[0] + "\n" + lines[1] + "\n" + lines[2] + "\n" + lines[3] + "\n");
     MESSAGE("empty seed-0 --detail:\n", r.out);
 }
@@ -115,7 +115,7 @@ TEST_CASE("cli 12.5: --detail of a test-pattern world") {
         layer_row(3, "test.noise", "i16", p004::grid_of(256, 256, noise)),
     };
     CHECK(lines[2] == "table layer " + to_hex(p004::layer_table_hash(rows)));
-    CHECK(lines[3] == "table meta " + to_hex(p004::meta_table_hash(p004::meta_rows(42, "", "test_pattern"))));
+    CHECK(lines[3] == "table meta " + to_hex(p004::meta_table_hash(cli_meta_rows(42, "", "test_pattern"))));
     CHECK(lines[4] == "layer test.ramp " + to_hex(p004::layer_hash_u8(256, 256, ramp)));
     CHECK(lines[5] == "layer test.hash " + to_hex(p004::layer_hash_u8(256, 256, hash)));
     CHECK(lines[6] == "layer test.noise " + to_hex(p004::layer_hash_i16(256, 256, noise)));
@@ -145,7 +145,7 @@ TEST_CASE("cli 12.5: layer hash is codec-independent") {
 
 TEST_CASE("cli 12.5: --expect") {
     Sandbox sb;
-    const fs::path world = sb.generate({"--seed", "1"});
+    const fs::path world = sb.generate({"--until", "none", "--seed", "1"});
     const std::string hex = file_sha256_hex(world);
     const std::string plain = hex + "\n";
 
@@ -192,7 +192,7 @@ TEST_CASE("cli 12.5: --expect") {
 TEST_CASE("cli 12.5: --detail refuses REAL values and tables without a primary key") {
     Sandbox sb;
     SUBCASE("REAL value") {
-        const fs::path world = sb.generate({"--seed", "0", "--out", u8(sb.file("real.db"))});
+        const fs::path world = sb.generate({"--until", "none", "--seed", "0", "--out", u8(sb.file("real.db"))});
         REQUIRE(worldgen::db::testing::execute_on_file(
                     u8(world), "CREATE TABLE extra (id INTEGER PRIMARY KEY, v ANY) STRICT; INSERT INTO extra VALUES (1, 1.5)")
                     .ok());
@@ -202,7 +202,7 @@ TEST_CASE("cli 12.5: --detail refuses REAL values and tables without a primary k
         CHECK(starts_with(r.err, "worldgen-cli: error: "));
     }
     SUBCASE("no primary key") {
-        const fs::path world = sb.generate({"--seed", "0", "--out", u8(sb.file("nopk.db"))});
+        const fs::path world = sb.generate({"--until", "none", "--seed", "0", "--out", u8(sb.file("nopk.db"))});
         REQUIRE(worldgen::db::testing::execute_on_file(u8(world), "CREATE TABLE extra (v INTEGER NOT NULL) STRICT; "
                                                                   "INSERT INTO extra VALUES (1)")
                     .ok());
@@ -210,13 +210,13 @@ TEST_CASE("cli 12.5: --detail refuses REAL values and tables without a primary k
         CHECK(r.exit_code == EXIT_INPUT);
     }
     SUBCASE("sqlite_* tables are excluded") {
-        const fs::path world = sb.generate({"--seed", "0", "--out", u8(sb.file("stat.db"))});
+        const fs::path world = sb.generate({"--until", "none", "--seed", "0", "--out", u8(sb.file("stat.db"))});
         REQUIRE(worldgen::db::testing::execute_on_file(u8(world), "ANALYZE").ok());
         const ProcessResult r = sb.cli({"hash", "--db", u8(world), "--detail"});
         REQUIRE(r.exit_code == EXIT_OK);
         const std::vector<std::string> lines = lines_of(r.out);
         REQUIRE(lines.size() == 4);
         CHECK(lines[2] == "table layer " + to_hex(p004::layer_table_hash({})));
-        CHECK(lines[3] == "table meta " + to_hex(p004::meta_table_hash(p004::meta_rows(0))));
+        CHECK(lines[3] == "table meta " + to_hex(p004::meta_table_hash(cli_meta_rows(0))));
     }
 }

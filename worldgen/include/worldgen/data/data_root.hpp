@@ -6,8 +6,9 @@
 // variable if set, otherwise game/data/ in the source tree as recorded by
 // CMake at configure time. The path only locates the files: it is never
 // written into a world, and content_hash depends only on the validated
-// values (P0-03 8). While no kind is registered the data root is not even
-// opened (P0-03 amendment 9), so the choice has no effect on any output.
+// values (P0-03 8). Since the required kind `worldgen` is registered
+// (P1-00 6.1, P0-03 amendment 17), every world needs a data root, and the
+// data found there decides content_hash and the geography stages' tuning.
 #include <optional>
 #include <string>
 #include <string_view>

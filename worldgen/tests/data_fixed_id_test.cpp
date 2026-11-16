@@ -447,8 +447,18 @@ TEST_CASE("fixed-id kinds: loading from disk") {
     CHECK(contains(bad.errors[0].message, "unknown id 'delta' for kind 'tune'"));
 }
 
-TEST_CASE("fixed-id kinds: the production registry is still empty") {
-    // P1-00 6.1 registers `worldgen` with the elevation stage; until then
-    // builtin_kinds() is empty (schema.hpp), so no world bytes change.
-    CHECK(wd::builtin_kinds().kinds().empty());
+TEST_CASE("fixed-id kinds: the production registry holds worldgen with the first-pass ids") {
+    // P1-00 6.1: `worldgen`, directory `worldgen`, required, fixed ids
+    // `elevation` (P1-01 4.2) and `hydrology` (P1-02 4), registered with the
+    // elevation stage.
+    const wd::KindRegistry builtin = wd::builtin_kinds();
+    REQUIRE(builtin.kinds().size() == 1U);
+    const wd::Kind& k = builtin.kinds()[0];
+    CHECK(k.name == "worldgen");
+    CHECK(k.directory == "worldgen");
+    CHECK(k.required);
+    REQUIRE(k.has_fixed_ids());
+    REQUIRE(k.id_schemas.size() == 2U);
+    CHECK(k.id_schemas[0].id == "elevation");
+    CHECK(k.id_schemas[1].id == "hydrology");
 }

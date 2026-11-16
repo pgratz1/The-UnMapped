@@ -1,0 +1,64 @@
+[worldgen.elevation]
+land_fraction = "0.40"
+edge_margin_frac = "0.03"
+continent_warp = { cycles = "1.5", octaves = 3, gain = "0.5" }
+continent_warp_amp_frac = "0.2"
+continent_noise = { cycles = "3", octaves = 4, gain = "0.55" }
+continent_noise_amp = "1.0"
+continent_center_jitter = "0.06"
+edge_falloff_frac = "0.12"
+edge_falloff_depth = 2
+edge_noise_amp = "0.15"
+edge_radial_start = "0.8"
+edge_radial_end = "1.0"
+coast_noise = { wavelength_m = 2000, octaves = 5, gain = "0.5" }
+coast_noise_amp = "0.1"
+island_min_area_m2 = 50000
+belt_noise = { cycles = "1.25", octaves = 2, gain = "0.5" }
+belt_halfwidth_m = 2000
+belt_halfwidth_frac = "0.15"
+segment_noise = { cycles = "2.5", octaves = 2, gain = "0.5" }
+segment_contrast = "0.75"
+segment_bias = "0.25"
+segment_on_share = "0.12"
+segment_floor_mask = "0.25"
+belt_offset_steps = 4
+floor_inland_gm = "0.9"
+mountain_coast_t = 2
+relief_warp = { wavelength_m = 3000, octaves = 3, gain = "0.5" }
+relief_warp_amp_m = 150
+ridge_noise = { wavelength_m = 2000, octaves = 6, gain = "0.5" }
+ridge_weight = 2
+foothill_fraction = "0.15"
+mountain_height_m = 1900
+mountain_peak_rank = "0.998"
+mountain_cover_height_m = 700
+mountain_cover_rank = "0.85"
+lowland_height_m = 160
+basin_noise = { wavelength_m = 12000, octaves = 3, gain = "0.5" }
+basin_amp_m = 12
+hill_noise = { wavelength_m = 1500, octaves = 6, gain = "0.5" }
+roughness_noise = { wavelength_m = 8000, octaves = 2, gain = "0.5" }
+roughness_min = "0.25"
+hill_height_m = 90
+hill_coast_min = "0.6"
+detail_noise = { wavelength_m = 250, octaves = 3, gain = "0.5" }
+detail_amp_m = 6
+ocean_depth_m = 300
+ocean_shelf_m = 2000
+erosion_iterations = 24
+erosion_route_interval = 1
+erosion_k = "0.008"
+erosion_diffusion = "0.0333"
+talus_slope = 3
+talus_rate = "0.0625"
+land_floor_m = "0.1"
+lake_min_area_m2 = 10240
+lake_max_area_m2 = 160000
+lake_area_ref_n = 128
+lake_min_depth_m = 1
+lake_max_share = "0.03"
+fill_slope_dm = 1
+fill_noise = { wavelength_m = 400, octaves = 3, gain = "0.5" }
+fill_cost_amp = 3
+fill_detail_m = 3

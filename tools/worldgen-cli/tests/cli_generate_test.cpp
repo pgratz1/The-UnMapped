@@ -39,7 +39,7 @@ WorldReader open_world(const fs::path& path) {
 TEST_CASE("cli 12.2: default output path") {
     Sandbox sb;
     SUBCASE("--seed 42") {
-        const ProcessResult r = sb.cli({"generate", "--seed", "42"});
+        const ProcessResult r = sb.cli({"generate", "--until", "none", "--seed", "42"});
         INFO("stderr: ", r.err);
         CHECK(r.exit_code == EXIT_OK);
         const fs::path expected = sb.out_dir() / "world-42.db";
@@ -54,16 +54,16 @@ TEST_CASE("cli 12.2: default output path") {
         CHECK(names == std::vector<std::string>{"world-42.db"});
     }
     SUBCASE("--seed 18446744073709551615 and hex seeds use the canonical decimal name") {
-        CHECK(sb.cli({"generate", "--seed", "18446744073709551615"}).out ==
+        CHECK(sb.cli({"generate", "--until", "none", "--seed", "18446744073709551615"}).out ==
               printed_path(sb.out_dir() / "world-18446744073709551615.db"));
-        CHECK(sb.cli({"generate", "--seed", "0xFFFF"}).out == printed_path(sb.out_dir() / "world-65535.db"));
-        CHECK(sb.cli({"generate", "--seed", "0x0"}).out == printed_path(sb.out_dir() / "world-0.db"));
+        CHECK(sb.cli({"generate", "--until", "none", "--seed", "0xFFFF"}).out == printed_path(sb.out_dir() / "world-65535.db"));
+        CHECK(sb.cli({"generate", "--until", "none", "--seed", "0x0"}).out == printed_path(sb.out_dir() / "world-0.db"));
     }
     SUBCASE("--seed-phrase \"The Unmapped\": the name uses the scrubbed phrase's seed (amendment 15)") {
         const std::uint64_t seed = worldgen::phrase_seed("the unmapped");
         CHECK(phrase_to_seed("The Unmapped") == seed);
         CHECK(seed != worldgen::phrase_seed("The Unmapped"));
-        const ProcessResult r = sb.cli({"generate", "--seed-phrase", "The Unmapped"});
+        const ProcessResult r = sb.cli({"generate", "--until", "none", "--seed-phrase", "The Unmapped"});
         CHECK(r.exit_code == EXIT_OK);
         const fs::path expected = sb.out_dir() / ("world-" + std::to_string(seed) + ".db");
         CHECK(r.out == printed_path(expected));
@@ -74,12 +74,12 @@ TEST_CASE("cli 12.2: default output path") {
     SUBCASE("--seed-phrase \"Ashen Marches!\" and its other spellings share one default name") {
         const std::uint64_t seed = worldgen::phrase_seed("ashen marches");
         const fs::path expected = sb.out_dir() / ("world-" + std::to_string(seed) + ".db");
-        const ProcessResult r = sb.cli({"generate", "--seed-phrase", "Ashen Marches!"});
+        const ProcessResult r = sb.cli({"generate", "--until", "none", "--seed-phrase", "Ashen Marches!"});
         CHECK(r.exit_code == EXIT_OK);
         CHECK(r.out == printed_path(expected));
         // Same default path, so a second spelling meets the existing file.
-        CHECK(sb.cli({"generate", "--seed-phrase", "ASHEN  MARCHES"}).exit_code == EXIT_OUTPUT);
-        const ProcessResult f = sb.cli({"generate", "--seed-phrase", "ashen-marches", "--force"});
+        CHECK(sb.cli({"generate", "--until", "none", "--seed-phrase", "ASHEN  MARCHES"}).exit_code == EXIT_OUTPUT);
+        const ProcessResult f = sb.cli({"generate", "--until", "none", "--seed-phrase", "ashen-marches", "--force"});
         CHECK(f.exit_code == EXIT_OK);
         CHECK(f.out == printed_path(expected));
     }
@@ -87,7 +87,7 @@ TEST_CASE("cli 12.2: default output path") {
         RunOptions o;
         const fs::path deep_root = sb.file("not/yet/there");
         o.env = {{"UNMAPPED_BUILD_ROOT", u8(deep_root)}};
-        const ProcessResult r = sb.cli({"generate", "--seed", "3"}, o);
+        const ProcessResult r = sb.cli({"generate", "--until", "none", "--seed", "3"}, o);
         CHECK(r.exit_code == EXIT_OK);
         CHECK(r.out == printed_path(deep_root / "out" / "world-3.db"));
     }
@@ -97,31 +97,31 @@ TEST_CASE("cli 12.2: --force replaces an existing file, without it the old file 
     Sandbox sb;
     const fs::path out = sb.file("w.db");
     const fs::path seed2 = sb.file("seed2.db");
-    REQUIRE(sb.cli({"generate", "--seed", "1", "--out", u8(out)}).exit_code == EXIT_OK);
-    REQUIRE(sb.cli({"generate", "--seed", "2", "--out", u8(seed2)}).exit_code == EXIT_OK);
+    REQUIRE(sb.cli({"generate", "--until", "none", "--seed", "1", "--out", u8(out)}).exit_code == EXIT_OK);
+    REQUIRE(sb.cli({"generate", "--until", "none", "--seed", "2", "--out", u8(seed2)}).exit_code == EXIT_OK);
     const Bytes first = read_bytes(out);
     REQUIRE(read_bytes(seed2) != first);
 
-    const ProcessResult refused = sb.cli({"generate", "--seed", "2", "--out", u8(out)});
+    const ProcessResult refused = sb.cli({"generate", "--until", "none", "--seed", "2", "--out", u8(out)});
     CHECK(refused.exit_code == EXIT_OUTPUT);
     CHECK(read_bytes(out) == first);
 
-    const ProcessResult forced = sb.cli({"generate", "--seed", "2", "--out", u8(out), "--force"});
+    const ProcessResult forced = sb.cli({"generate", "--until", "none", "--seed", "2", "--out", u8(out), "--force"});
     CHECK(forced.exit_code == EXIT_OK);
     CHECK(forced.out == printed_path(out));
     CHECK(read_bytes(out) == read_bytes(seed2));
 
     // Default path too.
-    REQUIRE(sb.cli({"generate", "--seed", "1"}).exit_code == EXIT_OK);
-    CHECK(sb.cli({"generate", "--seed", "1"}).exit_code == EXIT_OUTPUT);
-    CHECK(sb.cli({"generate", "--seed", "1", "--force"}).exit_code == EXIT_OK);
+    REQUIRE(sb.cli({"generate", "--until", "none", "--seed", "1"}).exit_code == EXIT_OK);
+    CHECK(sb.cli({"generate", "--until", "none", "--seed", "1"}).exit_code == EXIT_OUTPUT);
+    CHECK(sb.cli({"generate", "--until", "none", "--seed", "1", "--force"}).exit_code == EXIT_OK);
 }
 
 TEST_CASE("cli 12.2: equivalent ways of giving seed and map size give identical files") {
     Sandbox sb;
     auto gen = [&](const std::string& name, std::vector<std::string> args) {
         const fs::path out = sb.file(name);
-        args.insert(args.begin(), {"generate", "--out", u8(out)});
+        args.insert(args.begin(), {"generate", "--until", "none", "--out", u8(out)});
         const ProcessResult r = sb.cli(args);
         INFO(name, " stderr: ", r.err);
         REQUIRE(r.exit_code == EXIT_OK);
@@ -203,9 +203,12 @@ TEST_CASE("cli 12.2: equivalent ways of giving seed and map size give identical 
         CHECK(ws.seed() == 42);
         CHECK(gen("f.db", {"--settings", settings("p42.toml", "[world]\nseed_phrase = \"42\"\n")}) == by_phrase);
     }
-    SUBCASE("an empty data directory changes nothing in P0") {
+    SUBCASE("an empty data directory is an input error: the worldgen kind is required (P0-03 amendment 17)") {
         fs::create_directories(sb.file("data"));
-        CHECK(gen("a.db", {"--seed", "5", "--data", u8(sb.file("data"))}) == gen("b.db", {"--seed", "5"}));
+        const ProcessResult r =
+            sb.cli({"generate", "--until", "none", "--seed", "5", "--data", u8(sb.file("data")), "--out", u8(sb.file("a.db"))});
+        CHECK(r.exit_code == EXIT_INPUT);
+        CHECK_FALSE(file_exists(sb.file("a.db")));
     }
 }
 
@@ -219,6 +222,8 @@ TEST_CASE("cli 12.2: output path and current directory do not reach the file") {
         std::vector<std::string> extra = {"--seed", "42"};
         if (pattern) {
             extra.emplace_back("--test-pattern");
+        } else {
+            extra.insert(extra.end(), {"--until", "none"});
         }
         const std::string tag = pattern ? "p" : "e";
         auto args = [&](const std::string& out) {
@@ -241,7 +246,7 @@ TEST_CASE("cli 12.2: output path and current directory do not reach the file") {
         const ProcessResult r3 = sb.cli(args(u8(sb.file("b/third" + tag + ".db"))));
         REQUIRE(r3.exit_code == EXIT_OK);
         const ProcessResult r4 = sb.cli(pattern ? std::vector<std::string>{"generate", "--seed", "42", "--test-pattern"}
-                                                : std::vector<std::string>{"generate", "--seed", "42"});
+                                                : std::vector<std::string>{"generate", "--until", "none", "--seed", "42"});
         REQUIRE(r4.exit_code == EXIT_OK);
         const Bytes reference = read_bytes(sb.file("a/w" + tag + ".db"));
         REQUIRE(!reference.empty());
@@ -273,10 +278,11 @@ TEST_CASE("cli 12.2: environment and locale variables do not reach the file") {
             const fs::path out = sb.file("env-" + std::string(pattern ? "p" : "e") + "-" + std::to_string(index++) + ".db");
             RunOptions o;
             o.env = env;
-            std::vector<std::string> args = {"generate", "--seed-phrase", std::string(PHRASE_NON_ASCII), "--out",
-                                             u8(out)};
+            std::vector<std::string> args = {"generate", "--seed-phrase", std::string(PHRASE_NON_ASCII), "--out", u8(out)};
             if (pattern) {
                 args.emplace_back("--test-pattern");
+            } else {
+                args.insert(args.end(), {"--until", "none"});
             }
             const ProcessResult r = sb.cli(args, o);
             INFO("stderr: ", r.err);
@@ -297,7 +303,7 @@ TEST_CASE("cli 12.2: a non-ASCII seed phrase and output path survive on every pl
     CHECK(seed == worldgen::phrase_seed("nmapped w rld"));
     MESSAGE("seed of \"\xC3\x9Cnmapped W\xC3\xB6rld\" = ", seed, " (golden value for the validation specialist)");
 
-    const ProcessResult r = sb.cli({"generate", "--seed-phrase", std::string(PHRASE_NON_ASCII)});
+    const ProcessResult r = sb.cli({"generate", "--until", "none", "--seed-phrase", std::string(PHRASE_NON_ASCII)});
     INFO("stderr: ", r.err);
     REQUIRE(r.exit_code == EXIT_OK);
     const fs::path expected = sb.out_dir() / ("world-" + std::to_string(seed) + ".db");
@@ -307,14 +313,14 @@ TEST_CASE("cli 12.2: a non-ASCII seed phrase and output path survive on every pl
     CHECK(w.meta("seed_phrase") == std::optional<std::string>("nmapped w rld"));
     // The same world as the scrubbed phrase typed directly.
     const fs::path plain = sb.file("plain.db");
-    REQUIRE(sb.cli({"generate", "--seed-phrase", "nmapped w rld", "--out", u8(plain)}).exit_code == EXIT_OK);
+    REQUIRE(sb.cli({"generate", "--until", "none", "--seed-phrase", "nmapped w rld", "--out", u8(plain)}).exit_code == EXIT_OK);
     CHECK(read_bytes(plain) == read_bytes(expected));
 
     // A UTF-8 output path ("wörld Ü.db") in a UTF-8 directory.
     const std::string dir_name = "d\xC3\xAFr";
     fs::create_directories(sb.file(dir_name));
     const fs::path out = sb.file(dir_name + "/w\xC3\xB6rld \xC3\x9C.db");
-    const ProcessResult r2 = sb.cli({"generate", "--seed-phrase", std::string(PHRASE_NON_ASCII), "--out", u8(out)});
+    const ProcessResult r2 = sb.cli({"generate", "--until", "none", "--seed-phrase", std::string(PHRASE_NON_ASCII), "--out", u8(out)});
     INFO("stderr: ", r2.err);
     REQUIRE(r2.exit_code == EXIT_OK);
     CHECK(r2.out == printed_path(out));
@@ -327,10 +333,10 @@ TEST_CASE("cli 12.2: a non-ASCII seed phrase and output path survive on every pl
 
 TEST_CASE("cli 12.2: empty world contents (P0-02 8)") {
     Sandbox sb;
-    const fs::path out = sb.generate({"--seed", "0"});
+    const fs::path out = sb.generate({"--until", "none", "--seed", "0"});
     const WorldReader w = open_world(out);
     const std::vector<worldgen::db::MetaEntry> meta = w.meta_entries();
-    const p004::MetaRows expected = p004::meta_rows(0);
+    const p004::MetaRows expected = cli_meta_rows(0);
     REQUIRE(meta.size() == expected.size());
     for (std::size_t i = 0; i < meta.size(); ++i) {
         CHECK(meta[i].key == expected[i].first);
@@ -422,7 +428,7 @@ TEST_CASE("cli 12.2: a fatal error inside a stage gives exit 1 and leaves nothin
     }
     SUBCASE("an existing output survives with --force") {
         const fs::path out = sb.file("w.db");
-        REQUIRE(sb.cli({"generate", "--seed", "1", "--out", u8(out)}).exit_code == EXIT_OK);
+        REQUIRE(sb.cli({"generate", "--until", "none", "--seed", "1", "--out", u8(out)}).exit_code == EXIT_OK);
         const Bytes before = read_bytes(out);
         const ProcessResult r = sb.hooks(
             {"generate", "--seed", "0", "--test-pattern", "--test-fatal-in-stage", "--out", u8(out), "--force"});
