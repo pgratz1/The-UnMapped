@@ -865,7 +865,8 @@ void erosion_factors(Grid grid, std::span<const std::uint32_t> accum, std::span<
             if (rcv[c] > 7U) {
                 fatal("erosion_factors: a land cell has no receiver");
             }
-            // A <= 2^24 (MAX_GRID_CELLS), so A << 32 < 2^57 and the root < 2^29.
+            // A <= N^2 <= 2^22 on the map (P1-01 7: A << 32 <= 2^54, root << 16 <= 2^43);
+            // on any test grid A <= MAX_GRID_CELLS = 2^24, still A << 32 < 2^57.
             const std::uint64_t root = isqrt_u64(std::uint64_t{accum[c]} << 32U);
             Fx fc = mul(k, Fx::from_raw(static_cast<std::int64_t>(root << 16U)));
             if (geo::is_diagonal(rcv[c])) {
@@ -1079,9 +1080,10 @@ std::vector<std::uint32_t> select_lakes(std::span<const DepressionComponent> com
             cand.push_back(c);
         }
     }
-    // D7: (volume descending, label ascending), a strict total order.
-    // determinism-lint: allow(unstable-sort) -- labels are unique, so (volume descending, label ascending) is a strict total order and no two elements compare equal
-    std::sort(cand.begin(), cand.end(), [](const DepressionComponent& a, const DepressionComponent& b) {
+    // D7: (volume descending, label ascending), a strict total order for the
+    // unique labels of E10.2. stable_sort keeps the input order of equal
+    // elements, so the result is defined even for a caller's duplicate labels.
+    std::stable_sort(cand.begin(), cand.end(), [](const DepressionComponent& a, const DepressionComponent& b) {
         return a.volume != b.volume ? a.volume > b.volume : a.label < b.label;
     });
     std::vector<std::uint32_t> kept;

@@ -19,9 +19,6 @@ inline constexpr std::string_view test_noise = "test.noise";
 // Test-only stream for comparing wide-arithmetic paths (P0-01 13.3).
 inline constexpr std::string_view test_wide = "test.wide";
 
-// Test-only stream of the random conditioning fixtures of P1-01 10.2.
-inline constexpr std::string_view test_elevation_fill = "test.elevation.fill";
-
 // Keys of stage elevation (P1-00 section 3, P1-01 section 2), in the order
 // of P1-01 section 2. Each is used only as a noise key (noise2 / fbm2
 // through the compositions of P1-01 4.1) or a location-hash key (hash_at:
@@ -49,11 +46,10 @@ inline constexpr std::string_view geo_elevation_fill = "geo.elevation.fill";
 // Stage hydrology uses no stream (P1-00 section 3).
 
 // Every registered name, in registration order.
-inline constexpr std::array<std::string_view, 19> all_stream_names = {
+inline constexpr std::array<std::string_view, 18> all_stream_names = {
     test_hash,
     test_noise,
     test_wide,
-    test_elevation_fill,
     geo_elevation_continent_warp_x,
     geo_elevation_continent_warp_y,
     geo_elevation_continent,
