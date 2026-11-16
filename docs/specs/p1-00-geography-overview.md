@@ -60,7 +60,7 @@ Stages run in this order. Each is recorded in `meta.stages` (P0-02 5.5) under it
 | # | Stage name | Spec | Reads | Writes (in this order) | Streams |
 | --- | --- | --- | --- | --- | --- |
 | 1 | `elevation` | P1-01 | seed, N, `worldgen.elevation` | `elevation` | fifteen: `geo.elevation.continent_warp_x`, `geo.elevation.continent_warp_y`, `geo.elevation.continent`, `geo.elevation.belt`, `geo.elevation.coast`, `geo.elevation.segment`, `geo.elevation.relief_warp_x`, `geo.elevation.relief_warp_y`, `geo.elevation.ridge`, `geo.elevation.hills`, `geo.elevation.roughness`, `geo.elevation.basin`, `geo.elevation.detail`, `geo.elevation.erosion` (random erosion receivers, a `hash_at` key), `geo.elevation.fill` (fill cost noise); P1-01 section 2 |
-| 2 | `hydrology` | P1-02 | `elevation`, `worldgen.hydrology` | `water`, `water_depth`, `flow_dir`, `flow_accum`, `river`, `lake`, `coast_dist` | one: `geo.hydrology.flat` (noise key of the H2 tie-break on flats; P1-02 2) |
+| 2 | `hydrology` | P1-02 | `elevation`, `worldgen.hydrology` | `water`, `water_depth`, `flow_dir`, `flow_accum`, `river`, `lake`, `coast_dist` | one noise key, `geo.hydrology.flat`; no `Rng`. Hydrology is deterministic analysis except for this coordinate noise, which only orders cells of equal height on flats and never changes a lake, a level or a depth (P1-02 H2) |
 | 3 | `climate` | P1-03 | `elevation`, `water`, `water_depth`, `coast_dist`, `worldgen.climate` | `temperature`, `rainfall` | three: `geo.climate.wind` (one `Rng`, sequential), `geo.climate.temperature`, `geo.climate.rainfall` (noise) |
 | 4 | `biomes` | P1-04 | `elevation`, `water`, `water_depth`, `flow_dir`, `coast_dist`, `temperature`, `rainfall`, `biome` definitions, `worldgen.biomes` | `biome`; table `biome` | two: `geo.biomes.temp_jitter`, `geo.biomes.rain_jitter` (noise) |
 | 5 | `resources` | P1-05 | `elevation`, `water`, `water_depth`, `flow_dir`, `coast_dist`, `rainfall`, `biome`, `biome` definitions, `worldgen.resources` | `fertility`, `ore`, `timber`, `fresh_water`, `habitability`, `walk_area` | one: `geo.resources.ore` (noise) |
@@ -380,6 +380,23 @@ Example: e = 250 (25 m) between stops 0 and 500: R = 70 + floor((2·34·250 + 50
    Paint the entries in ascending k, and entries of equal k in list order (a later entry overwrites an earlier one). An entry is painted only if its cell is inside the map and has `water` 0 or 1: never over a lake or ocean cell, never off the map. The colour replaces the shaded land colour (rivers are not shaded): class 1 (70, 125, 215), 2 (55, 110, 210), 3 (40, 95, 200), 4 (30, 80, 190), 5 (25, 65, 175), 6 and above (20, 50, 160).
 
    Example: a 4 × 3 layer of dry land with river cells (1, 1) class 4, `flow_dir` 1 (SE), and (2, 2) class 1, `flow_dir` 0. The list is (1, 1, 4), (2, 1, 4) (diagonal closing), (2, 1, 4), (1, 2, 4) (thickening), (2, 2, 1); painted in class order: (2, 2) is (70, 125, 215); (1, 1), (2, 1) and (1, 2) are (30, 80, 190). If (1, 2) were a lake cell it would stay (64, 128, 204).
+
+   Layers: `water`, `river` and `flow_dir` are optional; `river` and `flow_dir` are used only with `water`. Validation (`composite_map_problem`): `elevation` must be an `i16` grid; each optional layer that is given must be a `u8` grid of the elevation's width and height, otherwise the composite is refused with a problem naming the layer (for example "layer 'flow_dir' is i16, expected u8"), as for `water` and `river`. A `flow_dir` code above 7 on a river cell is not diagonal (no corner closing); a river cell of class 0 (possible only in a hand-made layer) adds no entry and is not painted. Seams (`worldgen/include/worldgen/inspect/render.hpp`, branch `p1/02b-hydrology-flats`; namespace `worldgen::inspect`):
+
+   ```cpp
+   std::optional<std::string> composite_map_problem(const db::LayerGrid& elevation, const db::LayerGrid* water,
+                                                    const db::LayerGrid* river);
+   std::optional<std::string> composite_map_problem(const db::LayerGrid& elevation, const db::LayerGrid* water,
+                                                    const db::LayerGrid* river, const db::LayerGrid* flow_dir);
+   Rgb composite_river_colour(std::uint64_t k) noexcept;      // the ramp above; 0 gives (255, 0, 255)
+   std::vector<std::uint8_t> render_composite_map(const db::LayerGrid& elevation, const db::LayerGrid* water,
+                                                  const db::LayerGrid* river, std::uint32_t scale);
+   std::vector<std::uint8_t> render_composite_map(const db::LayerGrid& elevation, const db::LayerGrid* water,
+                                                  const db::LayerGrid* river, const db::LayerGrid* flow_dir,
+                                                  std::uint32_t scale);
+   ```
+
+   A null pointer means the layer is absent; the forms without `flow_dir` equal the five-argument form with `flow_dir` null. `render` passes `flow_dir` when the world has it.
 
    This is drawing only: no world byte, layer hash or `report` value changes, and the `river` palette of `--layer river` is unchanged. Expected render values that change: the composite pixels in the CLI render tests (P0-04 amendment 16 (b) and its tests), the composite cases of P1-00 14 X7 (which gains the example above), and the `biomes` and `regions` composites, which reuse steps 3 and 4 (P1-04 9, P1-06 9).
 
