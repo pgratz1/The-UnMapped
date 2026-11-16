@@ -384,7 +384,7 @@ P1-00 13.1 said "no natural biome exceeds 0.6"; the prototype's forest reached 0
 
 **Palette `biome`** (layer `biome`, `u8`): the colour of the `biome` table row whose `id` equals the value, as 0xRRGGBB; a value with no row, or a world without the table, (255, 0, 255). Registered under `auto`. (This implements P1-00 appendix C item 5.)
 
-**Composite `biomes`** (`--composite biomes`; default output `<stem>.biomes.png`). Needs `elevation`, `biome` and the table; uses `water` and `river` when present. Per cell: ocean (e < 0): the `hypsometric` ocean colour; otherwise the biome colour, shaded exactly as step 2 of the composite `map` (P1-00 10.2); then step 3 of `map` (lake and river colours) when `water` is present. P0-04 amendment for the lead: `--composite` accepts `map`, `biomes` (and `regions`, P1-06).
+**Composite `biomes`** (`--composite biomes`; default output `<stem>.biomes.png`). Needs `elevation`, `biome` and the table; uses `water` and `river` when present. Per cell: ocean (e < 0): the `hypsometric` ocean colour; otherwise the biome colour, shaded exactly as step 2 of the composite `map` (P1-00 10.2); then steps 3 and 4 of `map` (lake colour and the river drawing) when `water` is present. P0-04 amendment for the lead: `--composite` accepts `map`, `biomes` (and `regions`, P1-06).
 
 ## 10. Tests required
 
