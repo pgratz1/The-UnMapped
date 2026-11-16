@@ -78,6 +78,7 @@ reason it is safe.
 | `wchar-type` | `wchar_t` | library, CLI |
 | `wide-int-type` | `__int128`, `__uint128_t`, `_umul128`, `_mul128`, `_udiv128`, `_div128`, `__umulh`, `__mulh` | library and CLI except `worldgen/src/core/wide.cpp` |
 | `unstable-sort` | **review**: `std::sort`, `std::partial_sort`, `std::partial_sort_copy`, `std::nth_element`, `std::partition` (and `std::ranges::` forms). Suppress with the reason the order is fully determined | library, CLI |
+| `int-abs` | `std::abs(`, `std::labs(`, `std::llabs(`, `std::imaxabs(`, the `::`-qualified forms, and free calls of `labs(`, `llabs(`, `imaxabs(`. Integer abs of the most negative value is undefined, and the integer overloads in the global namespace differ between standard libraries (an `int64` can bind to `int abs(int)`). Unqualified `abs(` is not reported: it is the project's `Fx` abs found by argument-dependent lookup. Added by the P1-01 elevation audit | library, CLI |
 
 ### Threads and shared state (P0-01 4.2, P1-00 D6, D8, D9, D10)
 
@@ -87,6 +88,7 @@ reason it is safe.
 | `shared-state` | `std::atomic*` (`atomic_ref`, `atomic_flag`, ...), `std::memory_order*`, every mutex, lock, condition variable, semaphore, latch and barrier, `std::call_once`/`once_flag`, `_Atomic`, `__atomic_*(`/`__sync_*(` builtins, `_Interlocked*(`; `#include` of `<atomic>`, `<mutex>`, `<shared_mutex>`, `<condition_variable>`, `<semaphore>`, `<latch>`, `<barrier>`, `<stdatomic.h>` | library and CLI except `parallel.cpp` |
 | `thread-identity` | `std::this_thread::` (also `sleep_for`, `yield`), `std::thread::id`, `.get_id(`, `thread_local`, `_Thread_local`, `__thread`, `__declspec(thread)`, `pthread_self(`, `GetCurrentThreadId(`, `gettid(` | library and CLI, `parallel.cpp` included |
 | `hardware-concurrency` | **review**: `hardware_concurrency`, `_SC_NPROCESSORS_*`, `get_nprocs(`, `GetSystemInfo(`, `GetActiveProcessorCount(`, ... | library (never: the caller supplies the count, D10) and CLI (only the `--threads` default, with a suppression) |
+| `packed-bool` | `std::vector<bool>` (also `std::pmr::`), `std::bitset`; `#include <bitset>`. Writing different elements from different blocks is a race on the shared word; use `std::vector<std::uint8_t>`. Added by the P1-01 elevation audit | library, CLI |
 | `unordered-reduction` | `std::reduce`, `std::transform_reduce`, `std::inclusive_scan`, `std::exclusive_scan`, `std::transform_inclusive_scan`, `std::transform_exclusive_scan` | library, CLI |
 | `heap-order` | **review**: `std::priority_queue`, `std::make_heap`, `std::push_heap`, `std::pop_heap`, `std::sort_heap` (and `std::ranges::` forms). The suppression must show the comparator is a strict total order ending in the push sequence number (D6) | library, CLI |
 | `two-draws` | two random draws on the same generator in one full expression: `.next(`, `.next_u32(`, `.uniform_*(`, `.chance(`, `.chance_ratio(`, `.weighted_index(`, `.shuffle(` on the same receiver text, or `splitmix64_next(` on the same argument (P0-01 4, D9) | library, CLI |
@@ -218,7 +220,7 @@ directories; other snippets get every rule.
 
 | File | Checks |
 | --- | --- |
-| `bad_constructs.cpp` | every P0-01 rule fires on its constructs |
+| `bad_constructs.cpp` | every P0-01 rule fires on its constructs; also `int-abs` and `packed-bool` |
 | `bad_suppressions.cpp` | valid suppressions silence; malformed, reasonless, unknown-rule and unused ones are reported |
 | `bad_concurrency.cpp` | `thread`, `shared-state`, `thread-identity`, `hardware-concurrency`, `unordered-reduction`, `heap-order` (and a suppressed heap) |
 | `bad_platform_io.cpp` | `fp-pragma`, `environment`, `directory-iteration`, `number-text`, `stream-format`, `sqlite-value-type`, `unchecked-write`, `two-draws` |
@@ -226,7 +228,7 @@ directories; other snippets get every rule.
 | `bad_flags.cmake` | `cmake-fp-flag`, with comments and allowed flags as near misses |
 | `toml_config/` | `toml-config`: a guard and a CMake fixture with one macro missing and one wrong (a source without a guard must also fail) |
 | `good_ignored.cpp` | comments, string/char/raw literals, digit separators, `long long`, identifiers containing banned words, member and other-namespace functions, declarations, the project's own functions |
-| `good_new_ignored.cpp` | the same for the P1 rules: banned names in comments and literals, identifiers that contain them, members, used write results, one draw per statement, sequenced draws and draws on two generators |
+| `good_new_ignored.cpp` | the same for the P1 rules: banned names in comments and literals, identifiers that contain them, members, used write results, one draw per statement, sequenced draws and draws on two generators; the project's `Fx` `abs` (unqualified and namespaced), members and other namespaces' `abs`/`labs`, `std::vector<std::uint8_t>` and other namespaces' `vector<bool>` |
 | `good_wide_allowlisted.cpp` | `__int128` is allowed in `wide.cpp`; other rules still apply |
 | `good_parallel_allowlisted.cpp` | threads and atomics are allowed in `parallel.cpp`; thread identity, `hardware_concurrency` and other rules still apply |
 | `good_cli_scope.cpp` | as CLI code: `getenv` and SQL text are not reported; threads, `number-text` and `unchecked-write` are; suppressed `<thread>` and `hardware_concurrency` |
