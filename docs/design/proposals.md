@@ -283,3 +283,13 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
 - Proposal: keep the dramatic ranges. Some areas of a map may be unwalkable, at least initially: high peaks and steep range flanks are barriers. Civilizations forge roads and passes through such regions over time, as part of the history simulation, so what the player can reach in the present day depends on what history built. Geography reports how much land is steep and whether natural passes exist; it does not require mountains to be walkable.
 - Interim choice: the elevation stage follows v13 with somewhat more erosion (P1-01); walkability statistics in `report` become descriptions, not limits. This supersedes the entry "Walkable terrain: slope and flatness as acceptance criteria" as a requirement; the statistics stay.
 - Status: open
+
+### Natural passes through the ranges
+
+- Date: 2026-11-15
+- Raised by: world critic, via the lead
+- Design doc section: 4 (geography), 5 (history)
+- Problem: in the adopted elevation candidate the ranges are closed walls with open ends. Measured at 1024, a median of 1.3% of land above 500 m can be reached on foot, no walkable route climbs above about 250 m, and walkers go round a range (detours of 1.5 to 3 times, up to 10 times). There are no saddle passes, so history has no natural crossing to fortify, tax or fight over; every crossing must be a built road.
+- Proposal: decide whether ranges should have a few natural passes. A cheap way: one more low-frequency noise lowers the mountains only where its zero line crosses a belt, giving one to three cols 500 to 800 m wide per range and leaving crests elsewhere alone. It changes every world's bytes but no outline or range layout.
+- Interim choice: no passes in P1-01 as first merged. Low coastal cliffs also seal off a few lowland pockets (for example 12 km² on 1024 seed 18); they are left as they are.
+- Status: open
