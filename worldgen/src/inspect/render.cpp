@@ -10,23 +10,12 @@
 #include "worldgen/core/checked.hpp"
 #include "worldgen/core/error.hpp"
 #include "worldgen/core/hash.hpp"
+#include "worldgen/core/math.hpp"
 #include "worldgen/core/wide.hpp"
 
 namespace worldgen::inspect {
 
 namespace {
-
-// bit_length(v): 0 for 0, otherwise floor(log2 v) + 1 (P1-00 amendment A1).
-// MERGE (p1/foundation): replace with worldgen::bit_length from the core once
-// amendment A1 is merged; the definitions are the same.
-std::uint32_t inspect_bit_length(std::uint64_t v) noexcept {
-    std::uint32_t n = 0;
-    while (v != 0U) {
-        ++n;
-        v >>= 1U;
-    }
-    return n;
-}
 
 constexpr Rgb MAGENTA{255, 0, 255};
 
@@ -215,7 +204,8 @@ Rgb river_colour(std::uint64_t v) noexcept {
 }
 
 Rgb log2_colour(std::uint64_t v) noexcept {
-    const std::uint32_t n = 11U * inspect_bit_length(v);
+    // bit_length (P1-00 amendment A1) is 0 .. 64.
+    const std::uint32_t n = 11U * static_cast<std::uint32_t>(bit_length(v));
     const auto g = static_cast<std::uint8_t>(n > 255U ? 255U : n);
     return Rgb{g, g, g};
 }

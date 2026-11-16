@@ -12,6 +12,8 @@
 #include "worldgen/core/math.hpp"
 #include "worldgen/core/wide.hpp"
 #include "worldgen/db/schema.hpp"
+#include "worldgen/geo/components.hpp"
+#include "worldgen/geo/grid.hpp"
 
 namespace worldgen::inspect {
 
@@ -134,31 +136,21 @@ LandOceanCounts count_land_ocean(std::span<const std::int16_t> e, std::uint32_t 
 
 Landmasses count_landmasses(std::span<const std::int16_t> e, std::uint32_t w, std::uint32_t h) {
     require_grid(e.size(), w, h, "count_landmasses: grid size");
-    // MERGE (p1/foundation): G2 (P1-00 7.2) with P = land, 8-connectivity.
-    // Labels are not needed, only the count and the sizes, which do not
-    // depend on the visit order; the BFS is FIFO in 8-neighbour order anyway.
+    if (static_cast<std::uint64_t>(e.size()) > geo::MAX_GRID_CELLS) {
+        fatal("count_landmasses: grid larger than geo::MAX_GRID_CELLS");
+    }
+    // G2 (P1-00 7.2) with P = land and 8-connectivity. Only the count and
+    // the component sizes are used.
+    std::vector<std::uint8_t> land(e.size());
+    for (std::size_t i = 0; i < e.size(); ++i) {
+        land[i] = e[i] > 0 ? 1U : 0U;
+    }
+    const geo::Grid grid{static_cast<std::int32_t>(w), static_cast<std::int32_t>(h)};
+    const geo::Components comps = geo::label_components(grid, land, geo::Connectivity::eight);
     Landmasses result;
-    std::vector<std::uint8_t> seen(e.size(), 0U);
-    std::vector<std::size_t> queue;
-    for (std::size_t start = 0; start < e.size(); ++start) {
-        if (e[start] <= 0 || seen[start] != 0U) {
-            continue;
-        }
-        ++result.count;
-        queue.clear();
-        queue.push_back(start);
-        seen[start] = 1U;
-        for (std::size_t head = 0; head < queue.size(); ++head) {
-            const std::size_t c = queue[head];
-            for (std::uint64_t code = 0; code < 8U; ++code) {
-                const std::optional<std::size_t> m = downstream(c, code, w, h);
-                if (m && e[*m] > 0 && seen[*m] == 0U) {
-                    seen[*m] = 1U;
-                    queue.push_back(*m);
-                }
-            }
-        }
-        const auto size = static_cast<std::uint64_t>(queue.size());
+    result.count = comps.count;
+    for (std::uint32_t k = 1; k <= comps.count; ++k) {
+        const std::uint64_t size = comps.size(k);
         if (size > result.largest_cells) {
             result.largest_cells = size;
         }
@@ -560,6 +552,10 @@ std::optional<std::string> geography_layers_problem(const GeographyLayers& layer
     }
     if (e.type() != db::ElementType::i16) {
         return "layer 'elevation' is " + std::string(db::element_type_name(e.type())) + ", expected i16";
+    }
+    if (e.cell_count() > geo::MAX_GRID_CELLS) {
+        return "layer 'elevation' has " + db::format_u64(e.cell_count()) + " cells, more than the " +
+               db::format_u64(geo::MAX_GRID_CELLS) + " the shared geography algorithms support";
     }
     if (!layers.has_hydrology()) {
         return std::nullopt;

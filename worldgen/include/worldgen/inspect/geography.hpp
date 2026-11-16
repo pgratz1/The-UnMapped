@@ -59,8 +59,9 @@ struct LandOceanCounts {
 
 // The 8-connected components of land (P1-00 2.3, labels as G2 7.2): how many
 // and the cell count of the largest (0 and 0 when there is no land).
-// MERGE (p1/foundation): G2 connected components of worldgen/geo/ can
-// replace the BFS in the implementation.
+// Computed with G2 (geo::label_components, 8-connectivity). FatalError if
+// w h exceeds geo::MAX_GRID_CELLS (2^24, 4096 x 4096), the limit of the
+// shared algorithms; geography_layers_problem reports such a layer first.
 struct Landmasses {
     std::uint64_t count = 0;
     std::uint64_t largest_cells = 0;
@@ -96,7 +97,6 @@ struct HullPoint {
 // three distinct points or all collinear. Coordinates must lie in
 // [-2^29, 2^29] (FatalError otherwise), so every cross product and the
 // area sum fit int64.
-// MERGE (p1/foundation): no shared hull exists in P1-00 section 7; keep.
 [[nodiscard]] std::uint64_t convex_hull_area2(std::span<const HullPoint> points);
 
 // The hull points of the land (P1-00 10.3, land_solidity): for each row y
@@ -113,8 +113,10 @@ struct HullPoint {
 // The land percentiles listed in ps (each 0..100) of e over land cells, in
 // decimetres, in the order of ps (P1-00 10.3 elevation_m: kth(values,
 // percentile_rank(n, p)), G1). Empty if there is no land.
-// MERGE (p1/foundation): G1 kth of worldgen/geo/ gives the same values; the
-// implementation uses an exact histogram over the i16 range instead.
+// The values are those of G1 (geo::kth); the implementation counts an exact
+// histogram over the i16 range instead, which gives the same values and was
+// measured faster on large layers than geo::kth_many on a copy (report at
+// 2048: 0.31 s against 0.37 s).
 [[nodiscard]] std::vector<std::int64_t> land_percentiles(std::span<const std::int16_t> e,
                                                          std::span<const std::uint32_t> ps);
 
@@ -148,12 +150,11 @@ struct FlowPaths {
                                           std::uint32_t w, std::uint32_t h);
 
 // Raw Fx lengths of one D8 step of 16 m (P1-00 10.3): 16 ONE.raw and
-// 16 SQRT2.raw, SQRT2.raw = 6074001000 (P1-00 amendment A1).
-// MERGE (p1/foundation): use Fx::SQRT2 from the core once amendment A1 is
-// merged.
-inline constexpr std::int64_t SQRT2_RAW = 6074001000;
-inline constexpr std::int64_t ORTHOGONAL_STEP_RAW = std::int64_t{16} << 32;
-inline constexpr std::int64_t DIAGONAL_STEP_RAW = 16 * SQRT2_RAW;
+// 16 SQRT2.raw, SQRT2.raw = 6074001000 (P1-00 amendment A1). SQRT2_RAW is
+// Fx::SQRT2.raw(), kept as a name for callers.
+inline constexpr std::int64_t SQRT2_RAW = Fx::SQRT2.raw();
+inline constexpr std::int64_t ORTHOGONAL_STEP_RAW = 16 * Fx::ONE.raw();
+inline constexpr std::int64_t DIAGONAL_STEP_RAW = 16 * Fx::SQRT2.raw();
 
 // The hydrology lines of [geography] (P1-00 10.3). Definitions, with "ocean"
 // e < 0 as for the elevation lines and down(c) the cell flow_dir[c] points
