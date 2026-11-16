@@ -1,6 +1,6 @@
 # P1-00 Geography overview
 
-Status: approved by the lead, 2026-11-15 (tuning values marked "guess" and the statistics ranges are starting points, to be revised against the first seed sweep); originally a draft, 2026-11-15. Updated by the spec writer for the elevation redesign, 2026-11-15 (draft, awaiting approval): stream list (3), appendix C items 11–16 and 19 folded into 6, 7 and 8, five `[geography]` statistics added (10.3), 13.1 marked for revision, 13.2 known defects. Phase P1 Geography. Design doc sections 2, 4, 6, 7, 10, 11 (milestone 0), 13. Depends on P0-01 to P0-04 including their amendments. First pass: this overview, P1-01 elevation, P1-02 hydrology. Second pass (written after elevation and hydrology have been implemented and looked at): climate, biomes, resources and habitability, regions.
+Status: approved by the lead, 2026-11-15 (tuning values marked "guess" and the statistics ranges are starting points, to be revised against the first seed sweep); originally a draft, 2026-11-15. Updated by the spec writer for the elevation redesign, 2026-11-15 (draft, awaiting approval): stream list (3), appendix C items 11–16 and 19 folded into 6, 7 and 8, five `[geography]` statistics added (10.3), 13.1 marked for revision, 13.2 known defects. Updated again for elevation candidate v16, 2026-11-16 (draft, awaiting approval): elevation streams (3), 13.1 ranges from the v16 sweeps, 13.2 known limitations and checklist item 10. Phase P1 Geography. Design doc sections 2, 4, 6, 7, 10, 11 (milestone 0), 13. Depends on P0-01 to P0-04 including their amendments. First pass: this overview, P1-01 elevation, P1-02 hydrology. Second pass (written after elevation and hydrology have been implemented and looked at): climate, biomes, resources and habitability, regions.
 
 This document fixes everything the six geography stage specs share: scale and coordinates, the stage list, the layer catalogue, the representation rule, tuning as data, shared algorithms, determinism rules, schema, command-line changes, the performance budget, math functions and how results are judged. A stage spec cites the sections here instead of repeating them. Where this document and a stage spec disagree, the stage spec is wrong and must be fixed.
 
@@ -59,7 +59,7 @@ Stages run in this order. Each is recorded in `meta.stages` (P0-02 5.5) under it
 
 | # | Stage name | Spec | Reads | Writes (in this order) | Streams |
 | --- | --- | --- | --- | --- | --- |
-| 1 | `elevation` | P1-01 | seed, N, `worldgen.elevation` | `elevation` | thirteen: `geo.elevation.continent_warp_x`, `geo.elevation.continent_warp_y`, `geo.elevation.continent`, `geo.elevation.belt`, `geo.elevation.coast`, `geo.elevation.segment` (stable); `geo.elevation.relief_warp_x`, `geo.elevation.relief_warp_y`, `geo.elevation.ridge`, `geo.elevation.hills`, `geo.elevation.roughness`, `geo.elevation.basin`, `geo.elevation.detail` (provisional, used by the relief steps under redesign; P1-01 section 2) |
+| 1 | `elevation` | P1-01 | seed, N, `worldgen.elevation` | `elevation` | fifteen: `geo.elevation.continent_warp_x`, `geo.elevation.continent_warp_y`, `geo.elevation.continent`, `geo.elevation.belt`, `geo.elevation.coast`, `geo.elevation.segment`, `geo.elevation.relief_warp_x`, `geo.elevation.relief_warp_y`, `geo.elevation.ridge`, `geo.elevation.hills`, `geo.elevation.roughness`, `geo.elevation.basin`, `geo.elevation.detail`, `geo.elevation.erosion` (random erosion receivers, a `hash_at` key), `geo.elevation.fill` (fill cost noise); P1-01 section 2 |
 | 2 | `hydrology` | P1-02 | `elevation`, `worldgen.hydrology` | `water`, `water_depth`, `flow_dir`, `flow_accum`, `river`, `lake`, `coast_dist` | none (hydrology is deterministic analysis) |
 | 3 | `climate` | P1-03 (second pass) | `elevation`, `water`, `coast_dist`, `worldgen.climate` | `temperature`, `rainfall` (at least) | `geo.climate.*` |
 | 4 | `biomes` | P1-04 (second pass) | `elevation`, `water`, `river`, `coast_dist`, `temperature`, `rainfall`, `biome` definitions, `worldgen.biomes` | `biome`; table `biome` | `geo.biomes.*` |
@@ -466,34 +466,36 @@ The validation specialist sweeps with shipped tuning: seeds 0 to 199 at 1024, 0 
 
 Fractions apply at every map size. Counts are given for 1024; at 512 divide by 4, at 2048 multiply by 4 (rounding the bounds outward).
 
-**Revision pending (2026-11-15).** The elevation ranges below are under revision with the relief redesign (P1-01 E5 to E7 and E10 are placeholders). The lead has withdrawn the proposal to relax the elevation bounds for mountain-light worlds: `elevation_m` p90 and `land_above_m` 500 keep their hard lower bounds, and the generator must meet them. `step_p999_m` replaces `max_step_m` as the tested step statistic, with `max_step_m` kept as a diagnostic; its bound, and the bounds of the new slope statistics, are set with the next design. Evidence for that design: v13 measured (512 seeds 0–19 / 1024 seeds 0–9 / 2048 seeds 0–2) `step_p999_m` 81–205 / 52–71 / 50–64 m and `max_step_m` 90–291 / 75–96 / 88–95 m; the critic measured the median slope of land above 500 m at 45° to 60° and 3% to 22% of land steeper than 45°, and proposes as starting bounds under 15% of land steeper than 35°, under 3% steeper than 45°, a median mountain slope of 25° to 35° (`slope_p50_above_500m` 0.4663 to 0.7002), `step_p999_m` ≤ 100 m at every size, and a real share of flat lowland (`lowland_flat_share`, perhaps 0.05 to 0.25). `edge_parallel_run_m` measured 0.99–2.13 / 1.20–2.24 / 1.98–3.04 km; it grows with the map side and gets per-size bounds. Rows marked "pending" have no bound yet; a sweep reports them.
+**Revised 2026-11-16 for elevation candidate v16** (P1-01, third version). Ranges are set from the v16 sweeps (512 seeds 0–19, 1024 seeds 0–19, 2048 seeds 0–4; `v16-{512,1024,2048}-stats.txt` in the exploration output) with margins for the larger sweep above; the measured min–max is given beside each. Following Paul's decision (proposals "High peaks may be inaccessible; history opens the passes"), the steepness and flatness statistics describe the terrain and are not limits, with one exception set by the lead: `step_p999_m` ≤ 150 m at 512. The lead's earlier decision stands that `elevation_m` p90 and `land_above_m` 500 keep hard lower bounds (proposals "Every world has real uplands"). "Descriptive" rows are reported by the sweep with their range; a value outside the measured range is worth a look but is not a defect. Per-size bounds are written 512 / 1024 / 2048 where the size matters; otherwise the count rule above applies.
 
-| Statistic | All seeds | Typical | What it checks |
-| --- | --- | --- | --- |
-| `land_fraction` | 0.34–0.50 | 0.38–0.46 | the coast threshold and clean-up |
-| `largest_landmass_share` | ≥ 0.85 | ≥ 0.95 | one continent |
-| `landmasses` | ≤ 40 | ≤ 15 | few islands |
-| `coast_ratio` | 1.5–6.0 | 2.0–4.5 | a coastline with bays and peninsulas, not a blob and not fractal dust |
-| `land_solidity` | 0.45–0.90 | 0.55–0.85 | large bays and peninsulas |
-| `elevation_m` p50 | 40–300 m | 60–200 m | lowlands exist |
-| `elevation_m` p90 | 300–1300 m | 450–1000 m | uplands exist |
-| `elevation_m` p100 | 1200–2400 m | 1600–2400 m | peaks for alpine |
-| `land_above_m` 1500 | 0.003–0.06 | 0.01–0.04 | alpine share |
-| `land_above_m` 500 | 0.06–0.35 | 0.10–0.25 | highland moor and forested uplands |
-| 1 − `land_above_m` 50 | 0.10–0.50 | 0.15–0.40 | coastal and river lowlands for marsh and grassland |
-| `max_step_m` | diagnostic | — | the worst single step; reported, not tested (one cell is a noisy statistic) |
-| `step_p999_m` | pending (proposed ≤ 100 m at every size) | pending | no cliffs from artefacts beyond one land cell in a thousand (80 m over 16 m is 79°) |
-| `slope_over` 35 | pending (proposed < 0.15) | pending | mountains can be walked |
-| `slope_over` 45 | pending (proposed < 0.03) | pending | crags, not whole mountainsides |
-| `slope_p50_above_500m` | pending (proposed 0.4663–0.7002, 25° to 35°) | pending | mountain slopes like real ranges on a 16 m grid |
-| `lowland_flat_share` | pending (proposed 0.05–0.25) | pending | floodplains and coastal flats exist (marsh) |
-| `edge_parallel_run_m` | pending, per map size | pending | no coast pressed along a map edge or the falloff (checklist item 2) |
-| `lakes` (1024) | 1–100 | 3–40 | |
-| `lake_share_of_land` | 0.0005–0.05 | 0.002–0.03 | |
-| `river_share_of_land` | 0.01–0.10 | 0.02–0.06 | |
-| `major_rivers` (1024) | 1–40 | 3–20 | |
-| `longest_river_m` | ≥ 0.25 × map side in m | ≥ 0.4 × map side | rivers cross the land |
-| `largest_basin_share` | 0.03–0.6 | 0.08–0.4 | neither one basin draining everything nor fragmentation |
+| Statistic | All seeds (hard) | Typical (≥ 90%) | v16 measured, 512 / 1024 / 2048 | What it checks |
+| --- | --- | --- | --- | --- |
+| `land_fraction` | 0.34–0.50 | 0.38–0.46 | 0.399–0.411 / 0.400–0.414 / 0.400–0.411 | the coast threshold and clean-up |
+| `largest_landmass_share` | ≥ 0.85 | ≥ 0.95 | 0.977–1 / 0.982–1 / 0.990–1 | one continent |
+| `landmasses` (1024) | ≤ 40 | ≤ 15 | 1–5 / 1–7 / 1–6 | few islands |
+| `coast_ratio` | 1.4–6.0 | 1.6–3.5 | 1.56–2.83 / 1.56–2.84 / 1.74–2.85 | a coastline with bays and peninsulas (little 100 m–1 km detail: P1-01 limitation 9) |
+| `land_solidity` | 0.45–0.93 | 0.70–0.90 | 0.741–0.900 / 0.736–0.890 / 0.755–0.888 | large bays and peninsulas |
+| `elevation_m` p50 | 40–300 m | 60–200 m | 82–207 / 86–147 / 87–95 m | lowlands exist |
+| `elevation_m` p90 | 300–1300 m | 400–1100 m (2048: 330–1100 m) | 520–1052 / 455–1140 / 342–1026 m | uplands exist |
+| `elevation_m` p100 | 1200–2800 m | 1500–2600 m (512: 1300–2400 m) | 1245–2260 / 1530–2584 / 2234–2434 m | peaks for alpine |
+| `land_above_m` 1500 | ≤ 0.08 | ≤ 0.05 | 0–0.044 / 0.0001–0.059 / 0.012–0.033 | alpine share; no lower bound (some 512 and 1024 worlds have no land above 1500 m; p100 checks the peaks) |
+| `land_above_m` 500 | 0.06–0.35 | 0.08–0.30 | 0.103–0.316 / 0.092–0.267 / 0.074–0.201 | highland moor and forested uplands |
+| 1 − `land_above_m` 50 | 0.10–0.50 | 0.15–0.40 | 0.160–0.225 / 0.164–0.228 / 0.175–0.238 | coastal and river lowlands for marsh and grassland |
+| `max_step_m` | diagnostic | — | 72–140 / 68–127 / 75–90 m | the worst single step; reported, not tested |
+| `step_p999_m` | ≤ 150 m at 512; descriptive at 1024 and 2048 | — | 65–130 / 54–87 / 52–61 m | no cliffs from artefacts beyond one land cell in a thousand (P1-01 open question 3) |
+| `slope_over` 35 | descriptive | — | 0.19–0.51 / 0.13–0.34 / 0.07–0.21 | how much land is too steep to walk |
+| `slope_over` 45 | descriptive | — | 0.15–0.39 / 0.10–0.23 / 0.05–0.16 | crags |
+| `slope_p50_above_500m` | descriptive | — | 1.18–2.94 / 1.02–1.88 / 1.20–1.43 (50° to 71°, 46° to 62°, 50° to 55°) | steepness of the high ground |
+| `lowland_flat_share` | descriptive | — | 0.002–0.014 / 0.010–0.023 / 0.020–0.039 | floodplains and coastal flats (rare: P1-01 limitation 9) |
+| `edge_parallel_run_m` | descriptive | — | 992–2128 / 1200–3200 / 1984–3040 m | coasts pressed along an edge or the falloff (checklist item 2) |
+| `lakes` | 512: ≤ 25; 1024: 1–100; 2048: 4–400 | 512: ≥ 1; 1024: 3–25; 2048: 6–60 | 1–3 / 4–12 / 8–15 | |
+| `lake_share_of_land` | ≤ 0.031 | 0.003–0.03 | 0.0038–0.0291 / 0.0113–0.0300 / 0.0298–0.0300 | at most `lake_max_share` (0.03) by construction; the cap binds in most worlds (P1-01 limitation 7) |
+| `river_share_of_land` | 0.003–0.10 | 0.004–0.06 | 0.0040–0.0093 / 0.0064–0.0093 / 0.0103–0.0121 | river density at the 0.5 km² threshold (P1-02 open question 3; P1-01 open question 4) |
+| `major_rivers` (1024) | 1–40 | 3–20 | 0–2 / 3–7 / 15–18 | |
+| `longest_river_m` | ≥ 0.15 × map side in m | ≥ 0.25 × map side | 0.18–0.86 / 0.39–1.50 / 0.54–0.85 × side | rivers cross the land |
+| `largest_basin_share` | 0.03–0.6 | 0.08–0.4 | 0.084–0.370 / 0.090–0.338 / 0.109–0.305 | neither one basin draining everything nor fragmentation |
+
+Changed against the first ranges: `coast_ratio` hard 1.5 → 1.4 and typical 2.0–4.5 → 1.6–3.5 (the v16 median is 1.9 to 2.0); `land_solidity` hard upper 0.90 → 0.93, typical 0.55–0.85 → 0.70–0.90; p90 typical 450–1000 → 400–1100 m (2048 from 330 m); p100 hard 1200–2400 → 1200–2800 m and typical 1600–2400 → 1500–2600 m (512: 1300–2400 m); `land_above_m` 1500 lower bounds removed, upper 0.06 → 0.08; `land_above_m` 500 typical 0.10–0.25 → 0.08–0.30; `step_p999_m`, the slope statistics, `lowland_flat_share` and `edge_parallel_run_m` settled as above; `lakes` per size; `lake_share_of_land` lower hard bound removed (a 512 world may have no lake), upper set by construction; `river_share_of_land` hard 0.01 → 0.003 and typical 0.02–0.06 → 0.004–0.06; `longest_river_m` hard 0.25 → 0.15 and typical 0.4 → 0.25 of the side (512 worlds are mountain-heavy and their rivers short).
 
 Second pass: the fraction of land in each of the five natural biomes is at least 0.02 in 90% of seeds and no natural biome exceeds 0.6; `blighted_waste` covers 0 cells in P1. The biome spec states these in its own terms.
 
@@ -510,11 +512,11 @@ For the world critic, on `render --composite map --scale 1` (and `--layer elevat
 7. Lakes sit in basins, including some in the mountains; each has a visible outflow; no rash of tiny lakes.
 8. No noise artefacts: no square lattice pattern, no repetition or tiling, no seams every 64 rows (G6 blocks) or at the map centre.
 9. The three map sizes look like the same kind of world.
-10. Places history needs exist on most maps: fertile river valleys and plains, hill and spur sites above them, passes between ranges.
+10. Places history needs exist on most maps: fertile river valleys and plains, hill and spur sites above them, gaps between the ends of ranges. (The first merged elevation has no natural saddle passes: ranges are barriers that history crosses with built roads; proposals "Natural passes through the ranges".)
 
 Images of a few seeds, chosen by the critic, go into `docs/reviews/` with the review (small, deliberately copied, per `CLAUDE.md`).
 
-**Known defects of the candidate under redesign.** The critic's review of elevation candidate v13 (`docs/reviews/p1-01-elevation-v13.md`) lists defects D1 to D11 with seeds. None is accepted as a limitation: D1 (steep mountains), D2 (fill plates), D3 (axis striping) and D4 (mountain-light worlds) block the spec, and the next design is judged against all of them. Until it lands, a critic's checklist answers items 3, 4, 5, 7, 8 and 10 against that list.
+**Known limitations of the first merged elevation.** P1-01 section 11 lists the limitations accepted for the first merge (closed ranges without passes, small filled pads among peaks, the floor's shapes in a few worlds, a few straight gullies, octagonal sea contours, coastal-cliff pockets, the lake cap, steep 512 worlds, v13's coasts and lowlands). A critic's checklist answers items 3, 4, 5, 7, 8 and 10 against that list and the reviews of v13 and v15 (`docs/reviews/p1-01-elevation-v13.md`, `docs/reviews/p1-01-elevation-v15.md`); a limitation on the list is reported with its seeds but is not a new defect.
 
 ## 14. Tests that span stages
 

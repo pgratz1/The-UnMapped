@@ -20,7 +20,7 @@ Preconditions, checked first (H1); a violation is the fatal error ("hydrology: e
 2. No cell is 0.
 3. At least one cell is ocean (e < 0), and the ocean is 4-connected and touches the map edge.
 
-The elevation postcondition "every depression is lake-sized" (P1-01 invariant 4) is not required: hydrology labels every depression it finds as a lake, whatever its size, so it is also correct on hand-made fixtures.
+The elevation postcondition "every depression is a kept lake" (P1-01 invariant 7) is not required: hydrology labels every depression it finds as a lake, whatever its size, so it is also correct on hand-made fixtures.
 
 ## 3. Outputs
 
@@ -267,7 +267,7 @@ Library seams (interim names): `hydrology_layers(elevation grid, tuning, threads
 
 ### 8.2 Property tests
 
-Over seeds 0 to 63 at N = 128 and 0 to 3 at N = 512 (fixture tuning, elevation from P1-01), and over 200 random fixtures (a test-chosen `Rng` stream, `test.hydro`, registered as a test-only stream name): random e in [1, 200] on a 32 × 32 interior with an ocean border of −1 to −50, which makes many depressions, flats and lakes. Check invariants 1 to 10 with code written independently of the stage: flood levels by a Dijkstra-style minimax search, accumulation by recursion over upstream cells, components by a union–find, chamfer by Dijkstra.
+Over seeds 0 to 63 at N = 128 and 0 to 3 at N = 512 (fixture tuning, elevation from P1-01; with the shipped elevation values a map smaller than 187 cells has no lake, P1-01 4.4, so the N = 128 seeds also run with the small-map fixture `worldgen/tests/data/geo-small/`), and over 200 random fixtures (a test-chosen `Rng` stream, `test.hydro`, registered as a test-only stream name): random e in [1, 200] on a 32 × 32 interior with an ocean border of −1 to −50, which makes many depressions, flats and lakes. Check invariants 1 to 10 with code written independently of the stage: flood levels by a Dijkstra-style minimax search, accumulation by recursion over upstream cells, components by a union–find, chamfer by Dijkstra.
 
 ### 8.3 Determinism tests
 
@@ -285,8 +285,8 @@ Layer hashes (P0-04 8) of all seven layers, fixture tuning, compared on every pr
 
 The final elevation is `elevation`, written once by the elevation stage. Hydrology does not carve valleys or fill pits in it:
 
-- Valleys are cut by the elevation stage's erosion (P1-01 E8), which already routes water with the same G3 and G4 algorithms.
-- Pits too small to be lakes are filled by the elevation stage's last step (P1-01 E10), so the stored terrain drains everywhere except into real lakes, and hydrology finds those lakes exactly.
+- Valleys are cut by the elevation stage's erosion (P1-01 E8), which routes water with the same G3 flood and G4 receivers, then draws each cell's receiver at random among its lower neighbours (weighted by slope²) so that incision spreads over a slope instead of cutting straight gullies. Hydrology's own `flow_dir` is plain G4 on the stored terrain, so a river need not follow the exact cells erosion last used; it runs down the valleys erosion cut.
+- Depressions that do not become lakes (too small, too shallow, too large for the map, or beyond the lake share of land) are filled by the elevation stage's last step (P1-01 E10), so the stored terrain drains everywhere except into the kept lakes, and hydrology finds exactly those lakes.
 - The river channel itself (metres wide, below the 16 m cell) is carved by the runtime when it builds chunk heightmaps (design doc section 7), from `river`, `flow_dir` and `water_depth`.
 
 So there is one terrain layer, and every stage and the game read the same one. The alternative (hydrology writes a second, carved elevation) would leave two candidate terrains and a question in every later spec about which to use.
@@ -320,7 +320,7 @@ Proposals entry (B5 of P1-00):
 > - Raised by: spec-writer
 > - Design doc section: 4 (stages 1 and 2)
 > - Problem: the design puts erosion in stage 1 and rivers and lakes in stage 2 but does not say whether stage 2 changes the terrain, so it is unclear which layer is the final elevation.
-> - Proposal: the elevation stage's output is the final terrain. It ends by filling depressions too small to be lakes, so every remaining depression is a lake. Hydrology only analyses the terrain; river channels narrower than a cell are carved at runtime.
+> - Proposal: the elevation stage's output is the final terrain. It ends by filling every depression that does not pass its lake test (size, depth and a cap on the lake share of land), so every remaining depression is a lake. Hydrology only analyses the terrain; river channels narrower than a cell are carved at runtime.
 > - Interim choice: as proposed, in p1-01 section 5 (E10) and p1-02 section 9.
 > - Status: open
 
