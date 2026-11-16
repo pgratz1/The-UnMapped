@@ -44,3 +44,5 @@ target_sources(worldgen-cli-tests PRIVATE cli_p1_generate_test.cpp)
 # report with the step, slope and edge-run statistics (P1-00 10.3, keys of
 # 2026-11-15); generate --data "" (P0-03 7.6); the composite size limit.
 target_sources(worldgen-cli-tests PRIVATE cli_slope_report_test.cpp)
+# generate --until elevation (P1-00 14 X1, X3 for the elevation stage; P1-01).
+target_sources(worldgen-cli-tests PRIVATE cli_elevation_test.cpp)
