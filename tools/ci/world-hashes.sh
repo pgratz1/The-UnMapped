@@ -63,7 +63,7 @@ run_generate() {
         empty-phrase)     "$cli" generate --out "$2" --data "$data_dir" --until none --seed-phrase "The Unmapped" ;;
         pattern-seed-0)   "$cli" generate --out "$2" --data "$data_dir" --seed 0 --test-pattern ;;
         pattern-seed-42)  "$cli" generate --out "$2" --data "$data_dir" --seed 42 --test-pattern ;;
-        # P1-00 14 X5. Default stages (elevation; hydrology once implemented).
+        # P1-00 14 X5. Default stages: elevation and hydrology.
         geo-seed-0-512)   "$cli" generate --out "$2" --data "$data_dir" --seed 0 --map-size 512 ;;
         geo-seed-42-512)  "$cli" generate --out "$2" --data "$data_dir" --seed 42 --map-size 512 ;;
         geo-phrase-512)   "$cli" generate --out "$2" --data "$data_dir" --seed-phrase "The Unmapped" --map-size 512 ;;
