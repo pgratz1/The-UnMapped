@@ -389,15 +389,15 @@ TEST_CASE("P1-01 10.2: the floor triggers at N = 128 among seeds 0 to 15 exactly
 
 namespace {
 
-// The E10 fixtures use the test stream of spec 10.2, `test.elevation.fill`
-// (registered in streams.hpp); the E8 fixtures a fixed Rng key, as
+// The E10 fixtures draw from Rng(substream(stream_key(0, "test.noise"), 1))
+// as spec 10.2 states; the E8 fixtures from a fixed Rng key, as
 // core_test_util does.
 constexpr std::uint64_t KEY_ERODE_FIXTURES = 0x45444F52452E5453ULL;
 
 }  // namespace
 
 TEST_CASE("P1-01 10.2: E10 alone on 200 random fixtures (32 x 32 interior, ocean border)") {
-    worldgen::Rng rng(worldgen::stream_key(0, worldgen::streams::test_elevation_fill));
+    worldgen::Rng rng(worldgen::substream(worldgen::stream_key(0, worldgen::streams::test_noise), 1));
     const Grid g{34, 34};
     const std::size_t n = cells(g);
     for (int fixture = 0; fixture < 200; ++fixture) {

@@ -428,6 +428,11 @@ TEST_CASE("P1-01 E4: the shipped tuning on a 16 x 16 map has no land component o
     // M = 1 leaves 14 x 14 = 196 cells; land_fraction 0.4 of 256 cells
     // leaves at most 103 above the threshold, fewer than I_min = 196.
     CHECK_THROWS_AS(static_cast<void>(elev_api::elevation_grid(0, 16, tuning(false), 1)), worldgen::FatalError);
+    // P1-01 2 "Small N": fatal for every seed at N <= 21 with the shipped values; N = 24 works.
+    for (const std::uint64_t seed : {std::uint64_t{0}, std::uint64_t{1}, std::uint64_t{2}}) {
+        CHECK_THROWS_AS(static_cast<void>(elev_api::elevation_grid(seed, 21, tuning(false), 1)), worldgen::FatalError);
+    }
+    CHECK(elev_api::elevation_grid(0, 24, tuning(false), 1).size() == 576U);
 }
 
 // --- Determinism (10.3, P1-00 D10) -------------------------------------------------

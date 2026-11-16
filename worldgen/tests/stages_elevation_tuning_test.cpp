@@ -71,7 +71,7 @@ const std::vector<Bound>& scalar_bounds() {
         {"edge_falloff_frac", false, "0.01", "0.5"},
         {"edge_falloff_depth", false, "0", "8"},
         {"edge_noise_amp", false, "0", "0.25"},
-        {"edge_radial_start", false, "0", "2"},
+        {"edge_radial_start", false, "0", "1.99"},
         {"edge_radial_end", false, "0.01", "2"},
         {"coast_noise_amp", false, "0", "2"},
         {"island_min_area_m2", true, "0", "1000000000"},
@@ -185,13 +185,37 @@ TEST_CASE("P1-01 4.3: named check 3, lake_min_area_m2 <= lake_max_area_m2") {
     CHECK(loads({{"lake_min_area_m2", "100000"}, {"lake_max_area_m2", "100000"}}));
 }
 
-TEST_CASE("P1-01 4.3: a named-check failure is a load error at the definition's header") {
-    const elev_api::TuningLoad l =
-        elev_api::load_tuning_text(elevation_toml({{"mountain_cover_rank", "\"0.999\""}}));
-    REQUIRE_FALSE(l.ok());
-    REQUIRE_FALSE(l.errors.empty());
-    CHECK(l.errors[0].path == "worldgen/elevation.toml");
-    CHECK(l.errors[0].line == 1U);  // [worldgen.elevation] is line 1
+TEST_CASE("P1-01 4.3: a named-check failure is a load error at the definition's header, with the stated text") {
+    struct Case {
+        Overrides o;
+        std::vector<std::string> want;
+    };
+    const std::string head = "worldgen/elevation.toml:1:1: error: check '";
+    const std::string tail = "' failed for 'worldgen.elevation': ";
+    const std::string span = head + "edge_radial_span" + tail + "edge_radial_end - edge_radial_start must be at least 0.01";
+    const std::string ranks = head + "mountain_ranks" + tail + "mountain_cover_rank must not exceed mountain_peak_rank";
+    const std::string areas = head + "lake_areas" + tail + "lake_min_area_m2 must not exceed lake_max_area_m2";
+    const std::vector<Case> cases = {
+        {{{"edge_radial_start", "\"1.0\""}, {"edge_radial_end", "\"1.005\""}}, {span}},
+        {{{"mountain_cover_rank", "\"0.999\""}}, {ranks}},
+        {{{"lake_min_area_m2", "200000"}, {"lake_max_area_m2", "100000"}}, {areas}},
+        // Several failing checks give several errors, sorted as P0-03 9 sorts them.
+        {{{"edge_radial_start", "\"1.0\""}, {"edge_radial_end", "\"1.0\""}, {"mountain_cover_rank", "\"0.999\""},
+          {"lake_min_area_m2", "200000"}, {"lake_max_area_m2", "100000"}},
+         {span, areas, ranks}},
+    };
+    for (const Case& c : cases) {
+        const elev_api::TuningLoad l = elev_api::load_tuning_text(elevation_toml(c.o));
+        REQUIRE_FALSE(l.ok());
+        std::vector<std::string> got;
+        for (const auto& e : l.errors) {
+            CHECK(e.path == "worldgen/elevation.toml");
+            CHECK(e.line == 1U);
+            CHECK(e.column == 1U);
+            got.push_back(e.to_string());
+        }
+        CHECK(got == c.want);
+    }
 }
 
 TEST_CASE("P1-01 10.1: a float literal in any field is an error") {
@@ -232,14 +256,14 @@ TEST_CASE("P1-01 10.1: each scalar bound of 4.2 rejects a value one step outside
             const std::int64_t lo = dec(b.lo);
             const std::int64_t hi = dec(b.hi);
             CHECK(loads(concat(companions(b.field, true), {{f, fx_text(lo)}})));
-            if (b.field != "edge_radial_start") {  // start = 2 cannot meet check 1 (end <= 2)
-                CHECK(loads(concat(companions(b.field, false), {{f, fx_text(hi)}})));
-            }
+            CHECK(loads(concat(companions(b.field, false), {{f, fx_text(hi)}})));
             check_rejected(concat(companions(b.field, true), {{f, fx_text(lo - 1)}}), f);
             check_rejected(concat(companions(b.field, false), {{f, fx_text(hi + 1)}}), f);
         }
     }
     // The examples named in 10.1.
+    check_rejected({{"edge_radial_end", "2"}, {"edge_radial_start", "\"1.991\""}}, "edge_radial_start");
+    CHECK(loads({{"edge_radial_end", "2"}, {"edge_radial_start", "\"1.99\""}}));
     check_rejected({{"lake_area_ref_n", "15"}}, "lake_area_ref_n");
     check_rejected({{"lake_max_share", "\"0.0009\""}}, "lake_max_share");
 }
