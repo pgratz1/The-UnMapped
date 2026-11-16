@@ -1,6 +1,6 @@
 # P1-00 Geography overview
 
-Status: approved by the lead, 2026-11-15 (tuning values marked "guess" and the statistics ranges are starting points, to be revised against the first seed sweep); originally a draft, 2026-11-15. Phase P1 Geography. Design doc sections 2, 4, 6, 7, 10, 11 (milestone 0), 13. Depends on P0-01 to P0-04 including their amendments. First pass: this overview, P1-01 elevation, P1-02 hydrology. Second pass (written after elevation and hydrology have been implemented and looked at): climate, biomes, resources and habitability, regions.
+Status: approved by the lead, 2026-11-15 (tuning values marked "guess" and the statistics ranges are starting points, to be revised against the first seed sweep); originally a draft, 2026-11-15. Updated by the spec writer for the elevation redesign, 2026-11-15 (draft, awaiting approval): stream list (3), appendix C items 11–16 and 19 folded into 6, 7 and 8, five `[geography]` statistics added (10.3), 13.1 marked for revision, 13.2 known defects. Phase P1 Geography. Design doc sections 2, 4, 6, 7, 10, 11 (milestone 0), 13. Depends on P0-01 to P0-04 including their amendments. First pass: this overview, P1-01 elevation, P1-02 hydrology. Second pass (written after elevation and hydrology have been implemented and looked at): climate, biomes, resources and habitability, regions.
 
 This document fixes everything the six geography stage specs share: scale and coordinates, the stage list, the layer catalogue, the representation rule, tuning as data, shared algorithms, determinism rules, schema, command-line changes, the performance budget, math functions and how results are judged. A stage spec cites the sections here instead of repeating them. Where this document and a stage spec disagree, the stage spec is wrong and must be fixed.
 
@@ -59,7 +59,7 @@ Stages run in this order. Each is recorded in `meta.stages` (P0-02 5.5) under it
 
 | # | Stage name | Spec | Reads | Writes (in this order) | Streams |
 | --- | --- | --- | --- | --- | --- |
-| 1 | `elevation` | P1-01 | seed, N, `worldgen.elevation` | `elevation` | `geo.elevation.continent_warp_x`, `geo.elevation.continent_warp_y`, `geo.elevation.continent`, `geo.elevation.belt`, `geo.elevation.relief_warp_x`, `geo.elevation.relief_warp_y`, `geo.elevation.ridge`, `geo.elevation.hills`, `geo.elevation.roughness` |
+| 1 | `elevation` | P1-01 | seed, N, `worldgen.elevation` | `elevation` | thirteen: `geo.elevation.continent_warp_x`, `geo.elevation.continent_warp_y`, `geo.elevation.continent`, `geo.elevation.belt`, `geo.elevation.coast`, `geo.elevation.segment` (stable); `geo.elevation.relief_warp_x`, `geo.elevation.relief_warp_y`, `geo.elevation.ridge`, `geo.elevation.hills`, `geo.elevation.roughness`, `geo.elevation.basin`, `geo.elevation.detail` (provisional, used by the relief steps under redesign; P1-01 section 2) |
 | 2 | `hydrology` | P1-02 | `elevation`, `worldgen.hydrology` | `water`, `water_depth`, `flow_dir`, `flow_accum`, `river`, `lake`, `coast_dist` | none (hydrology is deterministic analysis) |
 | 3 | `climate` | P1-03 (second pass) | `elevation`, `water`, `coast_dist`, `worldgen.climate` | `temperature`, `rainfall` (at least) | `geo.climate.*` |
 | 4 | `biomes` | P1-04 (second pass) | `elevation`, `water`, `river`, `coast_dist`, `temperature`, `rainfall`, `biome` definitions, `worldgen.biomes` | `biome`; table `biome` | `geo.biomes.*` |
@@ -132,7 +132,7 @@ Generator tuning is TOML data, so it is hand-edited without a rebuild and covere
 | Kind name | `worldgen` |
 | Directory | `worldgen` (so files live in `game/data/worldgen/`) |
 | Required | yes |
-| Ids | a fixed set, one per stage: `elevation`, `hydrology` in the first pass; `climate`, `biomes`, `resources`, `regions` added by the second-pass specs. Each id has its own schema. An id outside the set is an error; a missing id is an error |
+| Ids | a fixed set, one per stage: `elevation`, `hydrology` in the first pass; `climate`, `biomes`, `resources`, `regions` added by the second-pass specs. Each id has its own schema. An id outside the set is an error. When the kind's directory exists, every id in the set must be defined, whether or not the kind is required; a missing directory is an error only for a required kind, reported once against the directory |
 | Fields | all required, no code defaults. The values in the shipped files are the defaults of the stage specs |
 
 A kind with a fixed id set and a schema per id is new to the loader: amendment A3. The canonical encoding (P0-03 8) is unchanged: kind name, count, then each definition in ascending id order with its own schema's fields in declaration order.
@@ -151,7 +151,7 @@ Why all fields required: the shipped file is then the single place a value is wr
 
 ### 6.3 Data root
 
-From P1, P0-03 7.6 applies: without `--data`, the data root is `UNMAPPED_DATA_DIR` if set, otherwise `game/data/` in the source tree as recorded by CMake at configure time. The path is never stored in the world.
+From P1, P0-03 7.6 applies: without `--data`, the data root is `UNMAPPED_DATA_DIR` if set, otherwise `game/data/` in the source tree as recorded by CMake at configure time. An empty `UNMAPPED_DATA_DIR` counts as unset; a relative value resolves against the current directory. The path is never stored in the world.
 
 ### 6.4 Content hash and golden values when tuning changes
 
@@ -207,13 +207,15 @@ Defined once here; stage specs cite them by number. Each is a mathematical defin
 
 `kth(values, k)`: the k-th smallest element (0-based) of a multiset of `int64` values, 0 ≤ k < n. It is a value, so it does not depend on how ties are ordered: sorting, `std::nth_element` or a histogram refinement all give the same number.
 
-`quantile(values, q)` for `Fx` q with 0 ≤ q ≤ ONE: k = min(n − 1, (q.raw × n) >> 32), computed in `uint64` (q.raw ≤ 2^32 and n ≤ 2^22, so the product is below 2^55); result `kth(values, k)`. Fatal if n = 0.
+`quantile(values, q)` for `Fx` q with 0 ≤ q ≤ ONE: k = `quantile_rank(q, n)` = min(n − 1, (q.raw × n) >> 32), computed in `uint64`; result `kth(values, k)`. Fatal if n = 0 or q outside [0, ONE]. G1 accepts up to 2^31 values (fatal above), so the product q.raw × n ≤ 2^32 × 2^31 = 2^63 fits `uint64`; maps have at most 2^22.
+
+**In-place selection.** A selection helper that works in the caller's array leaves that array in an unspecified arrangement, which differs between standard libraries. After such a call the array may be used only as a multiset; no stage may read positions from it.
 
 Worked example: values 5, 3, 9, 1, 7, 3, 8, 2 (n = 8; sorted 1, 2, 3, 3, 5, 7, 8, 9). q = 0 → k 0 → 1. q = HALF → k 4 → 5. q = ONE → k = min(7, 8) = 7 → 9. q = 0.42 (raw 1803886264) → (1803886264 × 8) >> 32 = 3 → 3.
 
 ### 7.2 G2: connected components
 
-Input: a predicate P on cells, a connectivity (4 or 8) and optionally an equivalence E on adjacent cells (default: always true). A component is a maximal set of P-cells connected by steps between adjacent P-cells u, v with E(u, v). Labels: scan cells in index order; each P-cell not yet labelled starts a new component with the next label (1, 2, …), whose cells are collected by FIFO breadth-first search from it, visiting neighbours in the 4- or 8-neighbour order of 2.3. So components are labelled in order of their minimum index, and the BFS visit order (needed where a spec uses BFS parents) is unique.
+Input: a predicate P on cells, a connectivity (4 or 8) and optionally an equivalence E on adjacent cells (default: always true). The equivalence is always "the two cells' keys are equal", given as a key array (`int64` per cell). A component is a maximal set of P-cells connected by steps between adjacent P-cells u, v with E(u, v). Labels: scan cells in index order; each P-cell not yet labelled starts a new component with the next label (1, 2, …), whose cells are collected by FIFO breadth-first search from it, visiting neighbours in the 4- or 8-neighbour order of 2.3. So components are labelled in order of their minimum index, and the BFS visit order (needed where a spec uses BFS parents) is unique. BFS parents are stored as the D8 direction code from a cell back to its parent, as in G3.
 
 ### 7.3 G3: routing flood (priority flood)
 
@@ -233,7 +235,9 @@ while Q not empty:
         push (L[m], seq, m); seq += 1
 ```
 
-Pop order is ascending (key, seq) with `seq` the global push counter: a binary heap, a bucket queue (for small integer keys) or a radix heap all produce it, since (key, seq) pairs are unique. Every cell is pushed and popped exactly once (the map is connected and the ocean is not empty; fatal if no cell is ocean).
+Pop order is ascending (key, seq) with `seq` the global push counter: a binary heap, a bucket queue (for small integer keys) or a radix heap all produce it, since (key, seq) pairs are unique. Every cell is pushed and popped exactly once (the map is connected and the ocean is not empty).
+
+Preconditions, each a fatal error: a non-ocean key below 1; no ocean cell at all. G4 and G5 share them, and in addition G4 and G5 treat a negative level, or (for G5) an `order` that is not a permutation of the cells listing every receiver before its donors, as fatal.
 
 Properties used by the stages (each is a test in P1-02):
 
@@ -257,7 +261,7 @@ Input: `rcv` for non-ocean cells. A[c] for non-ocean c = the number of non-ocean
 
 ### 7.6 G6: row blocks
 
-Parallel per-cell work is split into blocks of 64 rows: block b covers rows 64b to min(64b + 64, N) − 1. The split depends only on N.
+Parallel per-cell work is split into blocks of 64 rows: block b covers rows 64b to min(64b + 64, N) − 1. The split depends only on N. On a W × H grid (tests only) the split is by rows of the grid's height H.
 
 ## 8. Determinism and parallelism
 
@@ -274,7 +278,7 @@ P0-01 4.2 applied to each kind of algorithm geography uses. A stage spec names t
 | **D7** | Sorting and selection | Sort only by a strict total order with the cell index (or another unique key) as the last tie-breaker, or use a value-only result such as G1. | Allowed, if the result is defined independently of the algorithm |
 | **D8** | Reductions | Integer sums, histograms and `Fx` sums (exact integer additions of raw values) may be combined in any order **if the spec shows no partial sum can overflow**; otherwise combine in ascending block order. Min and max are values; an argmin or argmax breaks ties by the lowest index. Lists from blocks are concatenated in block order. | Yes, by G6 row blocks |
 | **D9** | Randomness | Parallel code uses only location-keyed values (`hash_at`, `hash_at3`, noise). An `Rng` from a stage stream is used only in D4/D5/D6 code, or per block as `Rng(substream(key, b))`. One draw per statement (P0-01 4). | As above |
-| **D10** | Thread count | Comes from `--threads` (or the library caller); used only to schedule blocks; never recorded in the world or used in a result. If several blocks raise the fatal error, the one reported is the lowest block's. Every stage with a parallel step has a test comparing 1, 2 and 5 threads (5 does not divide the block count of any power-of-two map). | — |
+| **D10** | Thread count | Comes from `--threads` (or the library caller); used only to schedule blocks; never recorded in the world or used in a result. A count outside 1 to 256 given to the library is a fatal error; the command line's default (the hardware thread count) is capped at 256. If the system cannot start a thread for any reason, the work is done by the threads that did start, with the same result. Parallel calls are not nested. If several blocks raise the fatal error, the one reported is the lowest block's. Every stage with a parallel step has a test comparing 1, 2 and 5 threads (5 does not divide the block count of any power-of-two map). | — |
 
 One further allowance, added to P0-01 4.2 by amendment A1: work may be split into parts defined by the data (for example independent drainage basins) when each part writes only its own cells, reads only values fixed before the parallel step, and the combined result is defined without reference to the split. No first-pass step needs it; it is the sanctioned way to parallelize the erosion solve if measurement requires (P1-01 section 8).
 
@@ -360,7 +364,7 @@ Format version 2: the header becomes `# worldgen report v2`, sections `[meta]`, 
 - `metres1(v)` for a value v in decimetres: `-` if v < 0, then |v| div 10, `.`, |v| mod 10 (e.g. `-12.5`).
 - Percentile p (integer percent) of a multiset of n values: `kth(values, min(n − 1, floor(p·n/100)))`.
 
-`[geography]` lines, in this order (`land` means `elevation` > 0, including lakes; `ocean` means `elevation` < 0):
+`[geography]` lines, in this order (`land` means `elevation` > 0, including lakes; `ocean` means `elevation` < 0). Percentiles over no values print `n/a`; `ratio4` with a zero denominator prints `n/a`; maxima over nothing are 0 (appendix C 6). The keys `step_p999_m` to `edge_parallel_run_m` were added on 2026-11-15 for the elevation redesign; the report stays format v2 (open question 8).
 
 | Key | Value |
 | --- | --- |
@@ -376,6 +380,34 @@ Format version 2: the header becomes `# worldgen report v2`, sections `[meta]`, 
 | `depth_m` | ocean percentiles 0, 50, 100 of −`elevation`, as metres1 |
 | `land_above_m` | for thresholds 50, 500, 1000, 1500, 2000 m: `50:` ratio4(land cells with e ≥ 500, land_cells), then `500:` …, separated by spaces |
 | `max_step_m` | metres1 of the largest \|e(a) − e(b)\| over 4-adjacent land pairs |
+| `step_p999_m` | metres1 of the 99.9th percentile of the cell step m(c) over land (definition below) |
+| `slope_over` | `35:` ratio4(land cells steeper than 35°, land_cells), a space, `45:` ratio4(land cells steeper than 45°, land_cells) |
+| `slope_p50_above_500m` | tan4 of the median slope over land cells with e ≥ 5000 (500 m); `n/a` if there are none |
+| `lowland_flat_share` | ratio4(land cells with e < 1000 (below 100 m) flatter than 0.5°, land cells with e < 1000); `n/a` if the denominator is 0 |
+| `edge_parallel_run_m` | 16 × the longest edge-parallel coast run, in metres, an integer (definition below) |
+
+**Cell step** (for `step_p999_m`). For each land cell c, m(c) = the largest \|e(c) − e(n)\| over the 4-neighbours n of c that exist and are land; m(c) = 0 if there are none. With n_L = land_cells, the value is kth(m over land, min(n_L − 1, floor(999 × n_L / 1000))) (`n/a` if n_L = 0). So `max_step_m` is the largest m(c), and for n_L < 1000 the two are equal.
+
+**Cell slope** (for `slope_over`, `slope_p50_above_500m`, `lowland_flat_share`). Defined for land cells on the stored decimetre layer with 16 m cells, by central differences, the standard GIS gradient: it measures the surface over 32 m in each axis, so a single-cell spike counts in four cells but does not dominate as it would in a steepest-neighbour slope, and it is symmetric in direction. With e'(p) = max(e(p), 0) (the sea surface for ocean neighbours, as in the composite map) and, for cell (x, y) of a W × H layer:
+
+```
+xa = max(x − 1, 0); xb = min(x + 1, W − 1); ya = max(y − 1, 0); yb = min(y + 1, H − 1)
+gx = (xb > xa) ? (e'(xb, y) − e'(xa, y)) × (2 div (xb − xa)) : 0      // decimetres per 2 cells
+gy = (yb > ya) ? (e'(x, yb) − e'(x, ya)) × (2 div (yb − ya)) : 0
+S2 = gx² + gy²                                                       // int64
+```
+
+At the edge of a grid (test layers only; on a real map land never touches the edge) the one-sided difference is doubled, so every gx and gy is in decimetres per 32 m = 320 dm. The slope's tangent is √S2 / 320. A tangent threshold is written as an exact decimal T = t / 10^4 and compared without square roots: **steeper than T** means 10^8 × S2 > (320 × t)²; **flatter than T** means 10^8 × S2 < (320 × t)². Thresholds, constants of the report: 35° is t = 7002 (tan 35° = 0.70021; 7002 is 34.9997°); 45° is t = 10000 (exact); 0.5° is t = 87 (tan 0.5° = 0.0087269; 87 is 0.4985°). In S2 terms: steeper than 35° ⟺ S2 ≥ 50205; steeper than 45° ⟺ S2 > 102400; flatter than 0.5° ⟺ S2 ≤ 7. Bounds: \|gx\|, \|gy\| ≤ 2 × 32767, so S2 < 2^33 and 10^8 × S2 < 2^60 fits `int64`. Resolution: the smallest non-zero tangent is 1/320 (0.18°), so "flatter than 0.5°" means a change of at most 2 dm over 32 m in each axis.
+
+**tan4(S2)**: the tangent √S2 / 320 to four decimals: r = isqrt_u64(S2 × 10^8) (= floor(10^4 √S2)), T = (r + 160) div 320, printed as T div 10^4, `.`, and T mod 10^4 with four digits. The median is kth over the S2 values of the cells concerned at min(n − 1, floor(50 n / 100)) (the percentile rule above). For reading: tan 25° = 0.4663, 30° = 0.5774, 35° = 0.7002, 45° = 1.0000.
+
+**Edge-parallel run** (for `edge_parallel_run_m`; it measures coasts that run near-straight, within ±64 m, parallel to a map edge). For each of the four sides, a sequence t over the lines parallel to that side: for the west side, t_a for each row a = 0 … H − 1 is the smallest x with land in row a; east, W − 1 − the largest such x; north, for each column a = 0 … W − 1, the smallest y with land in column a; south, H − 1 − the largest such y. t_a is undefined when the line has no land. The run from a start a with t_a defined is the largest r such that t_a … t_{a+r−1} are all defined and max − min of them is ≤ 8 (cells); 0 if t_a is undefined. The side's value is the largest run over all starts; the key's value is 16 × the largest side value (0 if there is no land). The tolerance 8 is a constant of the report.
+
+Worked examples (each computed by the spec writer with an exact-integer script; X6 tests them):
+
+1. A 7 × 6 layer, ocean −50 on the border, land interior (rows y = 1 to 4, columns x = 1 to 5): `1 2 2 3 2`, `2 2 2 200 400`, `2 3 100 500 900`, `1 2 3 400 700`. Then (gx, gy, S2) at (1, 1) is (2, 2, 8); at (2, 1) (1, 2, 5); at (4, 1) (0, 200, 40000) (32.0°, not over 35°); at (3, 2) (198, 98, 48808) (34.6°); at (4, 2) (398, 497, 405413). Land 20 cells; steeper than 35° and than 45°: the same 9 cells, (5, 1), (4..5, 2), (3..5, 3), (3..5, 4), so `slope_over` is `35:0.4500 45:0.4500`. All 20 cells are below 100 m; flatter than 0.5° (S2 ≤ 7): (2, 1), (3, 1), (1, 2), (2, 2), so `lowland_flat_share` is `0.2000`. No cell is ≥ 500 m: `slope_p50_above_500m` is `n/a`. Cell steps sorted: eight 1s, then 97, 197, 198, 300, 300, 397, 397, 398, 400, 400, 500, 500; rank min(19, floor(19980/1000)) = 19, so `step_p999_m` is `50.0`, equal to `max_step_m`.
+2. A 4 × 3 layer, all land (rows `5000 5010 5040 5100`, `5000 5020 5080 5200`, `5010 5060 5150 5320`). One-sided differences at the edges are doubled: at (0, 0), gx = (5010 − 5000) × 2 = 20, gy = 0, S2 = 400. The twelve S2 values sorted: 400, 1700, 2000, 8900, 10400, 14500, 26000, 44500, 54400, 87200, 106000, 173200. Steeper than 35°: (3, 0), (3, 1), (2, 2), (3, 2): `35:0.3333`; steeper than 45° (S2 > 102400): (3, 1), (3, 2): `45:0.1667`. Median rank floor(600/100) = 6: S2 = 26000, r = isqrt(26000 × 10^8) = 1612451, T = (1612451 + 160) div 320 = 5039: `slope_p50_above_500m` is `0.5039` (26.7°). No lowland: `lowland_flat_share` is `n/a`.
+3. Edge run: a west-side sequence over 12 rows t = (undefined, 20, 21, 25, 28, 29, 30, 12, 13, 14, undefined, 15). From a = 1: 20, 21, 25, 28 (range 8), adding 29 makes 9, so the run is 4; from a = 3: 25, 28, 29, 30 (range 5), adding 12 breaks it: 4; from a = 7: 12, 13, 14, then undefined: 3; from a = 11: 1. The side's value is 4; if it is the largest side, `edge_parallel_run_m` is `64`.
 
 When `water`, `flow_dir`, `flow_accum`, `river` and `lake` are all present, these follow:
 
@@ -420,6 +452,7 @@ Geography needs none of the functions deferred in P0-01 9.2 (`sin`, `cos`, `atan
 | River size class | `bit_length` of an integer ratio (an integer log2) |
 | Mountain belts, warps | noise compositions; no rotation, so no trigonometry |
 | Hillshade | finite differences (10.2) |
+| Slope statistics of `report` (10.3) | central differences compared with exact decimal tangent thresholds by squared integer inequalities; `isqrt_u64` for the printed median tangent |
 
 Expected for the second pass, recorded so its specs do not reach for transcendentals by habit: temperature linear in latitude and elevation; prevailing wind on the 8 D8 directions (or 16, with a committed table of integer vectors); moisture decay along the wind as a repeated multiply by a factor, per cell step. If a second-pass spec still needs a deferred function, it adds it to P0-01 in the form 9.2 demands.
 
@@ -432,6 +465,8 @@ Amendment A1 adds two named constants and one integer helper to P0-01: `SQRT2` (
 The validation specialist sweeps with shipped tuning: seeds 0 to 199 at 1024, 0 to 49 at 512, 0 to 19 at 2048, and collects the `[geography]` lines of `report` (10.3). The table gives acceptable ranges. "All seeds" bounds are hard: a seed outside them is a defect report with the seed. "Typical" bounds should hold for at least 90% of seeds; missing them sends tuning back. **Every range is an initial guess, to be tuned against the first sweep;** the critic and the lead may revise them once real terrain has been seen, and the revision is recorded here.
 
 Fractions apply at every map size. Counts are given for 1024; at 512 divide by 4, at 2048 multiply by 4 (rounding the bounds outward).
+
+**Revision pending (2026-11-15).** The elevation ranges below are under revision with the relief redesign (P1-01 E5 to E7 and E10 are placeholders). The lead has withdrawn the proposal to relax the elevation bounds for mountain-light worlds: `elevation_m` p90 and `land_above_m` 500 keep their hard lower bounds, and the generator must meet them. `step_p999_m` replaces `max_step_m` as the tested step statistic, with `max_step_m` kept as a diagnostic; its bound, and the bounds of the new slope statistics, are set with the next design. Evidence for that design: v13 measured (512 seeds 0–19 / 1024 seeds 0–9 / 2048 seeds 0–2) `step_p999_m` 81–205 / 52–71 / 50–64 m and `max_step_m` 90–291 / 75–96 / 88–95 m; the critic measured the median slope of land above 500 m at 45° to 60° and 3% to 22% of land steeper than 45°, and proposes as starting bounds under 15% of land steeper than 35°, under 3% steeper than 45°, a median mountain slope of 25° to 35° (`slope_p50_above_500m` 0.4663 to 0.7002), `step_p999_m` ≤ 100 m at every size, and a real share of flat lowland (`lowland_flat_share`, perhaps 0.05 to 0.25). `edge_parallel_run_m` measured 0.99–2.13 / 1.20–2.24 / 1.98–3.04 km; it grows with the map side and gets per-size bounds. Rows marked "pending" have no bound yet; a sweep reports them.
 
 | Statistic | All seeds | Typical | What it checks |
 | --- | --- | --- | --- |
@@ -446,7 +481,13 @@ Fractions apply at every map size. Counts are given for 1024; at 512 divide by 4
 | `land_above_m` 1500 | 0.003–0.06 | 0.01–0.04 | alpine share |
 | `land_above_m` 500 | 0.06–0.35 | 0.10–0.25 | highland moor and forested uplands |
 | 1 − `land_above_m` 50 | 0.10–0.50 | 0.15–0.40 | coastal and river lowlands for marsh and grassland |
-| `max_step_m` | ≤ 150 m | ≤ 80 m | no cliffs from artefacts (80 m over 16 m is 79°) |
+| `max_step_m` | diagnostic | — | the worst single step; reported, not tested (one cell is a noisy statistic) |
+| `step_p999_m` | pending (proposed ≤ 100 m at every size) | pending | no cliffs from artefacts beyond one land cell in a thousand (80 m over 16 m is 79°) |
+| `slope_over` 35 | pending (proposed < 0.15) | pending | mountains can be walked |
+| `slope_over` 45 | pending (proposed < 0.03) | pending | crags, not whole mountainsides |
+| `slope_p50_above_500m` | pending (proposed 0.4663–0.7002, 25° to 35°) | pending | mountain slopes like real ranges on a 16 m grid |
+| `lowland_flat_share` | pending (proposed 0.05–0.25) | pending | floodplains and coastal flats exist (marsh) |
+| `edge_parallel_run_m` | pending, per map size | pending | no coast pressed along a map edge or the falloff (checklist item 2) |
 | `lakes` (1024) | 1–100 | 3–40 | |
 | `lake_share_of_land` | 0.0005–0.05 | 0.002–0.03 | |
 | `river_share_of_land` | 0.01–0.10 | 0.02–0.06 | |
@@ -472,6 +513,8 @@ For the world critic, on `render --composite map --scale 1` (and `--layer elevat
 10. Places history needs exist on most maps: fertile river valleys and plains, hill and spur sites above them, passes between ranges.
 
 Images of a few seeds, chosen by the critic, go into `docs/reviews/` with the review (small, deliberately copied, per `CLAUDE.md`).
+
+**Known defects of the candidate under redesign.** The critic's review of elevation candidate v13 (`docs/reviews/p1-01-elevation-v13.md`) lists defects D1 to D11 with seeds. None is accepted as a limitation: D1 (steep mountains), D2 (fill plates), D3 (axis striping) and D4 (mountain-light worlds) block the spec, and the next design is judged against all of them. Until it lands, a critic's checklist answers items 3, 4, 5, 7, 8 and 10 against that list.
 
 ## 14. Tests that span stages
 
@@ -500,6 +543,7 @@ Left open for the second pass: the climate model (wind directions, rain shadow, 
 5. **Layer catalogue additions are not schema changes; changes to fixed layers are** (4, rule 3). Approve. Proposal B7.
 6. **Budget** (section 11): 15 s for geography at 1024. Approve or set another split for milestone 1.
 7. **`--threads` default** is the hardware thread count. The alternative, default 1, is slower for every user for no determinism benefit, since rule D10 makes the count irrelevant to output.
+8. **Report format version.** The `[geography]` keys `step_p999_m`, `slope_over`, `slope_p50_above_500m`, `lowland_flat_share` and `edge_parallel_run_m` (10.3) change the report text of every geography world. Interim: the format stays v2, since no geography world is yet a released contract and the CI goldens of P1 are not recorded; if the lead prefers, the header becomes `# worldgen report v3`.
 
 ## Appendix A. Requested amendments to P0 specs
 
@@ -597,7 +641,7 @@ In the format of `docs/design/proposals.md`, for the lead to add.
 
 ## Appendix C. Amendments after the first implementation (2026-11-15)
 
-Decisions by the lead on points raised by the engineers and the determinism auditor. Where these differ from the text above, these win.
+Decisions by the lead on points raised by the engineers and the determinism auditor. Where these differ from the text above, these win. Items 11 to 16 and 19 have been folded into the body (6.1, 6.3, 7.1, 7.2, 7.3, 7.6 and rule D10, 2026-11-15); they stay here as the record.
 
 **Render (10.2)**
 
