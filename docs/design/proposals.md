@@ -261,8 +261,8 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
 - Design doc section: 4 (geography), 7 (runtime terrain), 8 (first person in both modes)
 - Problem: the design gives no target for how steep terrain may be. The first accepted-looking elevation candidate had mountain land with a median slope of 45 to 60 degrees: every range was a wall a first-person player cannot walk up, and neither the images nor the existing step statistics showed it.
 - Proposal: state in section 4 that terrain must be walkable at 16 m cells: cliffs and crags are features, not whole mountainsides. Acceptance is by slope statistics in `report` (share of land steeper than 35 and 45 degrees, median slope of high ground, share of flat lowland), with bounds set from real terrain. Consequence: on a 16 km continent peaks are about 900 to 1,500 m, not 2,000 m and more, in keeping with the compressed scale of section 4.
-- Interim choice: the elevation design is being reworked to these targets (P1-00 13.1, P1-01); the review is in docs/reviews/p1-01-elevation-v13.md.
-- Status: open
+- Interim choice: the elevation design was reworked to these targets (candidate v14) and Paul preferred the earlier, steeper candidate; see "High peaks may be inaccessible; history opens the passes" below. The review is in docs/reviews/p1-01-elevation-v13.md.
+- Status: superseded
 
 ### Every world has real uplands
 
@@ -272,4 +272,14 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
 - Problem: about a quarter of generated continents had almost no mountains (one small massif on an undivided plain), which leaves dwarves nowhere to live and history no natural borders or passes.
 - Proposal: require, by construction in the elevation stage, that every world has a minimum share of high ground forming at least one range. Do not relax the statistics to admit mountain-light worlds.
 - Interim choice: adopted as a requirement for the elevation redesign.
+- Status: open
+
+### High peaks may be inaccessible; history opens the passes
+
+- Date: 2026-11-15
+- Raised by: Paul, at the review of the elevation candidates
+- Design doc section: 4 (geography), 5 (history), 7 (runtime terrain)
+- Problem: making all mountain land walkable (candidate v14) turned every continent into one smooth central massif. The candidate with long, dramatic ranges (v13) has high ground too steep to walk.
+- Proposal: keep the dramatic ranges. Some areas of a map may be unwalkable, at least initially: high peaks and steep range flanks are barriers. Civilizations forge roads and passes through such regions over time, as part of the history simulation, so what the player can reach in the present day depends on what history built. Geography reports how much land is steep and whether natural passes exist; it does not require mountains to be walkable.
+- Interim choice: the elevation stage follows v13 with somewhat more erosion (P1-01); walkability statistics in `report` become descriptions, not limits. This supersedes the entry "Walkable terrain: slope and flatness as acceptance criteria" as a requirement; the statistics stay.
 - Status: open
