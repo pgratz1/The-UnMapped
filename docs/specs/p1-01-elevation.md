@@ -149,7 +149,7 @@ In schema declaration order (this order fixes the canonical encoding, P0-03 8).
 | `lake_max_area_m2` | int(0, 1000000000) | 3000000 | guess | largest lake on a map of side `lake_area_ref_n` |
 | `lake_area_ref_n` | int(16, 2048) | 1024 | designed | map side for which `lake_max_area_m2` is stated; the limit scales with map area |
 | `lake_min_depth_m` | fx(0, 100) | 2 | guess | shallowest lake (deepest cell below the spill level) |
-| `lake_max_share` | fx(0, 1) | "0.03" | guess | cap on kept lake cells, share of land |
+| `lake_max_share` | fx(0.001, 1) | "0.03" | guess | cap on kept lake cells, share of land; always applied |
 | `fill_slope_dm` | fx(0, 10) | 1 | guess | rise of a filled surface per unit cost, decimetres per cell |
 | `fill_noise` | `fbm_m` | wavelength 400, octaves 3, gain "0.5" | guess | noise of the fill cost |
 | `fill_cost_amp` | fx(0, 16) | 3 | guess | cost = 1 + amp × clamp(½ + noise, 0, 1) |
@@ -159,13 +159,13 @@ No field of the second version's stable table is removed. Added: `segment_on_sha
 
 ### 4.3 Named checks (P0-03 7.5)
 
-Each an error at the definition's header.
+Required loader validation: each check is evaluated when the definition is loaded, and a failure is a configuration error (a P0-03 load error at the definition's header), so a file that fails one is rejected and no world is generated.
 
 1. `edge_radial_end − edge_radial_start ≥ 0.01`. Keeps the E2 divisor positive and bounded away from 0 (section 7).
 2. `mountain_cover_rank ≤ mountain_peak_rank`.
 3. `lake_min_area_m2 ≤ lake_max_area_m2`.
 
-(The exploration code checks none of them; its values satisfy all three.)
+(The exploration code checks none of them; its values satisfy all three, so adding the checks changes no world.)
 
 ### 4.4 Tuning files
 
@@ -271,7 +271,7 @@ The `elevation` layer depends only on the values; `content_hash` and the world f
 | KEY_MAX | 29990, a constant of the code: the largest land key E10 writes | |
 | L_O | number of land cells after E4 | per world |
 | target | round_int(mul(from_int(L_O), segment_on_share)) | per world |
-| max_share_cells | round_int(mul(from_int(L_O), lake_max_share)) | per world |
+| max_share_cells | max(1, round_int(mul(from_int(L_O), lake_max_share))), `int64` | per world (≥ 6 with the shipped values, since L_O ≥ I_min = 196) |
 
 ## 5. Algorithm
 
@@ -612,11 +612,11 @@ C is a **candidate** if lake_min_cells ≤ size ≤ lake_max_cells and depth ≥
 ```
 total = 0                                   // int64
 for each candidate C in that order:
-    if max_share_cells > 0 and total + size(C) > max_share_cells: skip C
+    if total + size(C) > max_share_cells: skip C
     else: mark every cell of C kept; total = total + size(C)
 ```
 
-A skipped candidate does not stop the loop: a later, smaller one may still fit. When max_share_cells = 0 (`lake_max_share` = 0, or a land of fewer than 17 cells at 0.03) the cap does not apply; this is the exploration code's rule (open question 2). Ordering by volume keeps deep basins (crater lakes, mountain tarns) and fills shallow lowland basins first when the cap binds (critic's B1).
+A skipped candidate does not stop the loop: a later, smaller one may still fit. The cap always applies; max_share_cells ≥ 1. This deliberately differs from the exploration code, where max_share_cells = 0 meant no cap; with the shipped tuning the two cannot differ (section 12 item 2). Ordering by volume keeps deep basins (crater lakes, mountain tarns) and fills shallow lowland basins first when the cap binds (critic's B1).
 
 #### E10.4 Noisy priority flood (D6)
 
@@ -666,7 +666,7 @@ For every seed, N and tuning inside the bounds:
 4. The land/ocean classification after E4 equals the sign of the final layer.
 5. Land values are in [1, 29990]; ocean values in [−29005, −1].
 6. The layer is a pure function of (seed, N, `worldgen.elevation`): independent of thread count, platform and compiler.
-7. **Every depression of the layer is a kept lake.** The depression components of e' (G3 on e', components as in P1-02 H3) are exactly the components kept by E10.3, each with the same cells, size in [lake_min_cells, lake_max_cells], depth ≥ lake_min_depth_dm and its E9 values unchanged; together they hold at most max_share_cells cells when max_share_cells > 0. Every other land cell drains to the sea.
+7. **Every depression of the layer is a kept lake.** The depression components of e' (G3 on e', components as in P1-02 H3) are exactly the components kept by E10.3, each with the same cells, size in [lake_min_cells, lake_max_cells], depth ≥ lake_min_depth_dm and its E9 values unchanged; together they hold at most max_share_cells cells. Every other land cell drains to the sea.
 8. With `erosion_iterations` = 0, the layer equals E9 and E10 applied to the E7 output.
 9. Unless E5.1 triggers, (o*, β*) = (0, `segment_bias`). If it triggers, core(o*, β*) ≥ target or β* = 2, and β* ≥ `segment_bias`.
 
@@ -874,13 +874,13 @@ y4       -5   20   28   70    1    1   -5
 y5       -5   -5   -5   -5   -5   -5   -5
 ```
 
-cost = ONE everywhere except (2, 2) from_int(2) and (2, 3) ONE + HALF; bump = 0 everywhere except (2, 2) 30000, (4, 3) 200000, (5, 2) 70000; fine_slope 65536; lake_min_cells 2, lake_max_cells 10, max_share_cells 0. E10.1: L = k on every land cell except (2, 2) and (2, 3), whose L is 14 (they spill through (3, 2), which drains through the flat at (4, 3)); one component, label 1, cells (2, 2) and (2, 3), size 2, depth 4, volume 6.
+cost = ONE everywhere except (2, 2) from_int(2) and (2, 3) ONE + HALF; bump = 0 everywhere except (2, 2) 30000, (4, 3) 200000, (5, 2) 70000; fine_slope 65536; lake_min_cells 2, lake_max_cells 10, max_share_cells 100 (does not bind). E10.1: L = k on every land cell except (2, 2) and (2, 3), whose L is 14 (they spill through (3, 2), which drains through the flat at (4, 3)); one component, label 1, cells (2, 2) and (2, 3), size 2, depth 4, volume 6.
 
 *Case 1: lake_min_depth_dm 5* (not a candidate; filled). Land pushes in order (cell, from, code, lv, base, eps, kf): the 14 land cells next to the border are pushed first from ocean cells at lv 0 with eps 1, each kf = base (for example (5, 2) from (6, 1), code 3: base 65536, kf 65536 — its bump is not used, since base > lv); then (4, 3) from (5, 2), code 3, lv 65536, base 65536: a land-floor flat with base ≤ lv, eps = 1 + 200000, kf = 265537; (4, 2) from (5, 2), code 4, kf = base 3932160; (3, 3) from (4, 4), code 5, kf = base 1638400; (3, 2) from (4, 3), code 5, lv 265537, base 917504, eps 1, kf 917504; (2, 3) from (3, 2), code 3 (diagonal), lv 917504, base 786432, eps = mul_div(65536, mul(ONE + HALF, SQRT2).raw, 2^32) = 139023 (depressed, bump 0), kf = 1056527; (2, 2) from (3, 2), code 4, eps = 131072 + 30000 = 161072, kf = 1078576. Land pop order: (5, 2), (5, 3), (5, 4), (4, 4) at P 65536; (4, 3) 265537; (3, 2) 917504; (2, 3) 1056527; (2, 2) 1078576; then (1, 4), (3, 3), (2, 4), (1, 1), (3, 1), (1, 3), (2, 1), (5, 1), (1, 2), (4, 1), (4, 2), (3, 4). Output: (2, 2) → 1078576 >> 16 = 16, (2, 3) → 16, (4, 3) → 4; every other cell unchanged.
 
 *Case 2: lake_min_depth_dm 4* (kept). The same pushes up to (3, 2); then (2, 3) and (2, 2) take the kept branch: kf = base, P = max(base, 917504) = 917504. Output: (2, 2) 10 and (2, 3) 12 unchanged (the lake, level 14), (4, 3) → 4.
 
-**Tuning validation.** Named check 1 fails on `edge_radial_start` "1.0", `edge_radial_end` "1.005" and on end below start; check 2 on `mountain_cover_rank` "0.999" with `mountain_peak_rank` "0.998"; check 3 on `lake_min_area_m2` 200000 with `lake_max_area_m2` 100000; a float literal in any field is a P0-03 error; a missing field is an error; each bound of 4.2 rejects a value one step outside it (including `lake_area_ref_n` 15).
+**Tuning validation.** Named check 1 fails on `edge_radial_start` "1.0", `edge_radial_end` "1.005" and on end below start; check 2 on `mountain_cover_rank` "0.999" with `mountain_peak_rank` "0.998"; check 3 on `lake_min_area_m2` 200000 with `lake_max_area_m2` 100000; a float literal in any field is a P0-03 error; a missing field is an error; each bound of 4.2 rejects a value one step outside it (including `lake_area_ref_n` 15 and `lake_max_share` "0.0009"). Each named-check failure is a load error and no world is written.
 
 ### 10.2 Property tests
 
@@ -891,7 +891,7 @@ Over seeds 0 to 63 at N = 128 with both fixtures (4.4), and seeds 0 to 3 at N = 
 - E3 values equal those found by sorting a copy.
 - E5.1: for seeds where the floor triggers (with the shipped values at N = 128, among seeds 0 to 15: seeds 9, 10, 12 and 13; at seed 13 the chosen offset is the last one tried, o* = −4d = −2 w_b), the seam's (o*, β*) equals the test's own implementation of the search; for the others it is (0, `segment_bias`).
 - E8 alone, on any input meeting the contract of E7: no land cell is raised by the solve; every land cell after the loop is ≥ floor; ocean cells are unchanged; the largest land height does not increase; every random receiver points to a neighbour with strictly smaller L.
-- E10 alone, on the E9 grids above and on 200 random fixtures (random keys in [1, 200] on a 32 × 32 interior with an ocean border, test stream `test.elevation.fill`, test-chosen thresholds, cost in [ONE, 4 ONE] and bump in [0, 2^20]): e' = e on ocean and kept cells; e' ≥ e on land; the depression components of e' are exactly the kept components; kept cells ≤ max_share_cells when it is > 0; every non-kept land cell reaches the ocean along a path on which e' never increases.
+- E10 alone, on the E9 grids above and on 200 random fixtures (random keys in [1, 200] on a 32 × 32 interior with an ocean border, test stream `test.elevation.fill`, test-chosen thresholds, cost in [ONE, 4 ONE] and bump in [0, 2^20]): e' = e on ocean and kept cells; e' ≥ e on land; the depression components of e' are exactly the kept components; kept cells ≤ max_share_cells; every non-kept land cell reaches the ocean along a path on which e' never increases.
 
 ### 10.3 Determinism tests
 
@@ -920,7 +920,7 @@ Small-map fixture, N = 128 (for seed 0 the floor triggers under neither share, s
 | 1 | 37e519364e5bea8f1d448d2a787fdb918814f92ab2afee76f4579c7943b864a7 | 1b8e01fa5e289fa021ee585e93860819e7d49fff63a22c2b08c73c99cfb3a010 | floor triggers; 2 candidates; kept: label 1 (141 cells, volume 24065); the other skipped by the cap 197 |
 | 2 | b63af0ed000726beb6466ee87ec02dcc008d60ab4b39aa2f6d4afe5ed4ceb4d6 | 686c589a630b7c5691bf0278bc2027f274e8f73cce05bf56c603dab06fe471cf | 2 candidates, both kept in volume order: label 8 (46 cells, 25446), then label 1 (49 cells, 1183) |
 
-Mountain floor at N = 512, shipped values (spec writer's reference; seeds 0 to 19 of the sweep trigger only at these four): seed 9 o* raw 688414388 (+2d), seed 10 raw 653599488 (+2d), seed 12 raw −397564838 (−d), seed 13 raw −1530846568 (−4d), each with β* = `segment_bias`. In every triggering world checked (N = 128 seeds 9, 10, 12, 13 with both fixtures and seed 1 with the small one; N = 512 these four) an offset reaches the target at `segment_bias`, so the bisection is exercised only by worked example F1 and by seam tests.
+Mountain floor at N = 512, shipped values (spec writer's reference; seeds 0 to 19 of the sweep trigger only at these four): seed 9 o* raw 688414388 (+2d), seed 10 raw 653599488 (+2d), seed 12 raw −397564838 (−d), seed 13 raw −1530846568 (−4d), each with β* = `segment_bias`. In every triggering world checked (N = 128 seeds 9, 10, 12, 13 with both fixtures and seed 1 with the small one; N = 512 these four) an offset reaches the target at `segment_bias`, so no natural world reaches the bisection. **Required test:** the floor's bisection must be exercised by a constructed case, either a direct call of the floor seam with given land-cell lists (worked example F1, expecting β* = raw 1844380220 and the mid sequence given there) or a tuning fixture in which `core(o*, segment_bias)` < target, and the test checks β* against the test's own implementation of E5.1. A test suite in which every floor case ends with β* = `segment_bias` does not meet this requirement.
 
 Full-size layer hashes of the exploration build at N = 1024, seeds 0 to 9, shipped values (`v16-definition.md` section 10; seed 0 re-checked by the spec writer): 070dbf1206416efcbed64aa009b89e5e3f23fec990a4397d99675cfba9450786, 0cc4f2c15156aa89424cee960d9e434e8fe3a018b855d6a4a2e703cf314a31d2, c67f2aa09e7e73e96d151846bdc7b771ef55ebd1fac44bb726ba57863d7e79ee, e9fb8259e2813298306a12b7d3611405485dd144de7cc6ec6cb6d0daca3d1273, bafe937a342236d2e7565939f79a6ee40586a38b6f614217e5868ea24f04d37c, aae827ebf0a93b753d73d05a95bd83393ec803b9a7a46deed18c0a948d311eef, 91114f3ad92fa40ce007f9ffcced15c51efeca14af23252eb756eaee35bab2ac, 14e232deb39aa1e8f52b73ab2a627b61d0b27ab8c5c3a9d18cc7dbf12cc3dbad, c68fcc1ebbb517ae949d34fdcce6c73043c13b6bffe7e7ff522fa626dec5c8ed, df59c33313cf315232f028eb71c1d0da21e6ab64981bdee5d9b4563d7657745f.
 
@@ -928,7 +928,7 @@ These are reference values that the implementation must reproduce (they are what
 
 ### 10.5 Statistics
 
-The validation specialist's sweep (P1-00 13.1) checks the hard ranges there; the descriptive statistics (steepness, flats, edge runs) are reported, not tested. The ranges were set from the v16 sweeps (512 seeds 0–19, 1024 seeds 0–19, 2048 seeds 0–4, `v16-{512,1024,2048}-stats.txt`).
+The validation specialist's sweep (P1-00 13.1) checks the hard ranges there, including `step_p999_m` ≤ 150 m at every map size (lead's decision); the other steepness, flatness and edge-run statistics are descriptive: reported, not tested. The ranges were set from the v16 sweeps (512 seeds 0–19, 1024 seeds 0–19, 2048 seeds 0–4, `v16-{512,1024,2048}-stats.txt`).
 
 ## 11. Known limitations
 
@@ -947,9 +947,9 @@ Accepted for the first merge (lead's decision); each is a candidate for a later 
 
 ## 12. Open questions and findings for the lead
 
-1. **Code defect, not specified:** the exploration code narrows lake_max_cells to `uint32` (`static_cast<std::uint32_t>((a + 255) / 256)`), which truncates for extreme tuning (for example `lake_max_area_m2` 10^9 with `lake_area_ref_n` ≤ 64 at N = 2048). This spec keeps it `int64` (4.5); with every value the exploration has used the two agree. The code also accepts `lake_area_ref_n` = 0 (meaning "do not scale"); this spec bounds it to [16, 2048] since only the scaled rule is v16.
-2. **max_share_cells = 0 means "no cap"** in the code (E10.3). It occurs only with `lake_max_share` = 0 or a land of fewer than 17 cells; the spec follows the code. Interim: as written. Alternative: bound `lake_max_share` to [0.001, 1] and always apply the cap.
-3. **`step_p999_m` at 1024 and 2048.** The lead fixed `step_p999_m` ≤ 150 m at 512 as the only hard steepness bound. Interim: at 1024 and 2048 it is descriptive (measured at most 87 and 61 m). If a hard check is wanted there too, the same 150 m bound has a wide margin.
+1. **Code defect, not specified (decided by the lead: keep `int64`):** the exploration code narrows lake_max_cells to `uint32` (`static_cast<std::uint32_t>((a + 255) / 256)`), which truncates for extreme tuning (for example `lake_max_area_m2` 10^9 with `lake_area_ref_n` ≤ 64 at N = 2048). This spec keeps it `int64` (4.5); with every value the exploration has used the two agree. The code also accepts `lake_area_ref_n` = 0 (meaning "do not scale"); this spec bounds it to [16, 2048] since only the scaled rule is v16.
+2. **Decided (lead): the lake share cap always applies.** `lake_max_share` ≥ 0.001 and max_share_cells = max(1, round_int(…)); the exploration code's "0 = no cap" is not specified. This and the `int64` lake_max_cells of item 1 deliberately differ from the exploration code. Neither can change a world generated with the shipped tuning, at any N from 16 to 2048: the code's cap differs only when round_int(L_O × lake_max_share) = 0, i.e. L_O × lake_max_share < 0.5, while E4 guarantees L_O ≥ I_min = 196, so with 0.03 the value is at least round_int(5.88) = 6; and the `uint32` narrowing differs only when lake_max_cells ≥ 2^32, while the shipped values give at most 46875 (N = 2048).
+3. **Decided (lead): `step_p999_m` ≤ 150 m is a hard check at every map size** (512, 1024, 2048; measured maxima 130, 87 and 61 m). It is the only hard steepness bound.
 4. **River density.** With v16's terrain and hydrology's 0.5 km² threshold, `river_share_of_land` is 0.4% to 0.9% at 512 and 1024, below P1-00's former hard bound of 1%. P1-00 13.1 is revised to the measured range; whether to lower `river_min_area_m2` is a hydrology tuning question (P1-02 open question 3).
 5. **Pockets get mountains.** E5 uses |s| for pocket cells (land enclosed below the coast threshold), so a deep pocket gets the coast factor and lowland profile of high inland ground. This is v13's rule, kept; noted because it is not obvious.
 6. **No lakes on small maps** with the shipped values (N < 187). Accepted; library tests use the small-map fixture for lakes.
