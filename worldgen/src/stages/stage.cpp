@@ -6,6 +6,7 @@
 #include "worldgen/core/error.hpp"
 #include "worldgen/core/parallel.hpp"
 #include "worldgen/stages/elevation.hpp"
+#include "worldgen/stages/hydrology.hpp"
 
 namespace worldgen::stages {
 
@@ -96,8 +97,9 @@ void Pipeline::run(const StageInfo& stage) {
 std::span<const StageInfo> implemented_geography_stages() noexcept {
     // Each geography stage is added here as it is implemented, in the order
     // of GEOGRAPHY_STAGE_NAMES (P1-00 3).
-    static constexpr std::array<StageInfo, 1> STAGES = {
+    static constexpr std::array<StageInfo, 2> STAGES = {
         StageInfo{ELEVATION_STAGE, &run_elevation},  // P1-01
+        StageInfo{HYDROLOGY_STAGE, &run_hydrology},  // P1-02
     };
     return STAGES;
 }

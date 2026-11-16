@@ -57,6 +57,7 @@ add_library(worldgen STATIC
     src/geo/select.cpp
     # Geography stages (P1-01 onward).
     src/stages/elevation.cpp
+    src/stages/hydrology.cpp
 )
 add_library(worldgen::worldgen ALIAS worldgen)
 target_include_directories(worldgen
