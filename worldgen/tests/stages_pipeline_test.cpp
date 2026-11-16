@@ -384,9 +384,10 @@ TEST_CASE("stages P1-00 10.1: geography_stages_until") {
     const auto upto = st::geography_stages_until(std::string("elevation"));
     REQUIRE(upto.size() == 1U);
     CHECK(upto[0].name == "elevation");
-    const auto upto_h = st::geography_stages_until(std::string("hydrology"));
-    REQUIRE(upto_h.size() == 2U);
-    CHECK(upto_h[1].name == "hydrology");
+    const auto both = st::geography_stages_until(std::string("hydrology"));
+    REQUIRE(both.size() == 2U);
+    CHECK(both[0].name == "elevation");
+    CHECK(both[1].name == "hydrology");
     CHECK_THROWS_AS(static_cast<void>(st::geography_stages_until(std::string("climate"))), worldgen::FatalError);
     CHECK_THROWS_AS(static_cast<void>(st::geography_stages_until(std::string("regions"))), worldgen::FatalError);
     CHECK_THROWS_AS(static_cast<void>(st::geography_stages_until(std::string("bogus"))), worldgen::FatalError);
@@ -461,7 +462,7 @@ TEST_CASE("generate: an unusable stage limit, or a content hash that does not ma
     worldgen::WorldParams p;
     p.seed = 0;
     p.content_hash = worldgen::sha256(std::string_view{});
-    for (const char* until : {"hydrology", "climate", "bogus"}) {
+    for (const char* until : {"climate", "regions", "bogus"}) {
         CAPTURE(until);
         p.until = std::string(until);
         CHECK_THROWS_AS(static_cast<void>(worldgen::generate_world(p, dir.file("w.db"), wdb::Overwrite::refuse)),

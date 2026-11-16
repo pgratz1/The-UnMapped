@@ -181,3 +181,45 @@ Readings chosen where the spec is open are listed in the test writer's report
 of the stage; the one that changes a checked number is 10.1 "Coordinates":
 the values printed for N = 1024 are those of N = 512, and the script checks
 the correct ones.
+
+## Reference of the P1-02 hydrology stage
+
+`p1_hydrology_reference.py` is an independent exact-integer implementation of
+`docs/specs/p1-02-hydrology.md` (steps H1 to H9), written by the test writer
+from the spec text and P1-00 alone, without the stage's implementation. The
+elevation input of a world comes from `p1_elevation_reference.py`, so no
+hydrology golden value depends on the C++ elevation stage. The flood (G3) is
+its own bucket-queue implementation; `check` compares it with a binary-heap
+flood and with the elevation reference's `g3_flood`, `g4_receivers` and
+`chamfer`, and checks the results against independent second methods
+(Dijkstra minimax levels, accumulation by walking upstream, union-find lakes,
+Dijkstra chamfer) through the invariants of P1-02 section 6.
+
+```
+python3 -B worldgen/tests/reference/p1_hydrology_reference.py check [--quick]
+python3 -B worldgen/tests/reference/p1_hydrology_reference.py case shipped|small N SEED [AREA]
+python3 -B worldgen/tests/reference/p1_hydrology_reference.py golden [PATH|-] [--large]
+python3 -B worldgen/tests/reference/p1_hydrology_reference.py fixtures
+```
+
+`check` runs worked example 5.1 (every grid, `order` and the pre-rerouting
+receivers), every expected value of 8.1, the designed fixtures, the class cap
+on a one-row corridor, 200 random fixtures of 8.2 and the golden worlds up to
+N = 256 (about a minute and a half with a warm elevation cache; `--quick`
+skips the worlds). `case` prints the golden items of one world. `golden`
+writes `worldgen/tests/golden/p1-02-hydrology.txt` (format in its header),
+which `stages_hydrology_golden_test.cpp` and `cli_hydrology_test.cpp` read;
+`--large` adds the N = 512 and 1024 cases of P1-02 8.4, whose elevation takes
+the elevation reference about thirteen minutes. The committed file was written
+with `--large`. `fixtures` prints every grid of the hand-made fixtures, as the
+C++ tests hard-code them.
+
+`UNMAPPED_ELEVATION_CACHE=DIR` keeps the elevation grids of the reference
+worlds in DIR (outside the repository, e.g.
+`~/.cache/the-unmapped/out/hydro-elev-cache`), so later runs skip the
+elevation reference.
+
+The random fixtures of 8.2: fixture f is a 34 x 34 grid drawn in index order
+from `Rng(substream(stream_key(0, "test.hydro"), f))`, `uniform_i64(-50, -1)`
+on the border and `uniform_i64(1, 200)` inside; the golden file holds
+fixtures 0 to 3 with `river_min_area_m2` 2048 (T = 8).
