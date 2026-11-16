@@ -76,6 +76,7 @@ target_sources(worldgen-tests PRIVATE generate_output_test.cpp)
 target_sources(worldgen-tests PRIVATE
     inspect_palette_test.cpp
     inspect_composite_test.cpp
+    inspect_composite_rivers_test.cpp
     inspect_geography_test.cpp
 )
 
