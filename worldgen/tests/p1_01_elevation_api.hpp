@@ -1,39 +1,21 @@
 #pragma once
 
-// The one place where the P1-01 elevation tests touch the stage's API.
+// The one place where the P1-01 elevation tests touch the stage's API
+// (worldgen/stages/elevation.hpp).
 //
-// The spec (docs/specs/p1-01-elevation.md section 10) names the library
-// seams only by "interim names, as on the exploration branch":
-// elevation_fields, elevation_ocean_from_provisional, elevation_classify, a
-// floor seam, elevation_heights, erode, quantize_elevation, a conditioning
-// seam and elevation_grid, with their arguments, but not their C++ types.
-// The tests were written without the implementation (test-writer rule), so
-// every test calls the test-owned functions below, which take and return
-// plain integer arrays and raw Fx values; only the bodies of this file
-// assume a concrete header. When the stage's real header differs, adjust
-// this file and nothing else.
-//
-// Assumed engine API (worldgen/stages/elevation.hpp, namespace
-// worldgen::stages), written from section 10:
-//
-//   ElevationTuning elevation_tuning(const data::ContentSet&);   // reads worldgen.elevation
-//   ElevationFields elevation_fields(seed, N, tuning, threads);  // c, nb, ns, c_sea, w_b, s_land, cx, cy
-//   std::vector<uint8_t> elevation_ocean_from_provisional(Grid, P, I_min);
-//   ElevationOcean elevation_classify(fields, tuning);           // ocean mask, land_cells
-//   ElevationFloor elevation_floor(nb, ns, gm, w_b, tuning);     // triggered, target, o*, beta*
-//   ElevationHeights elevation_heights(seed, fields, ocean, tuning, threads);  // h7, scale, floor
-//   ErosionParams erosion_params(tuning, seed);
-//   void erode(Grid, h, ocean, params, threads);                 // in place
-//   std::vector<int16_t> quantize_elevation(h, ocean);
-//   ConditionParams condition_params(...);
-//   std::vector<int16_t> condition_elevation(Grid, e, ocean, cost, bump, params);
-//   std::vector<int16_t> elevation_grid(seed, N, tuning, threads);
+// The tests were written from the spec before the implementation existed
+// (test-writer rule), against the test-owned functions below, which take and
+// return plain integer arrays and raw Fx values. This file maps them onto
+// the stage's seams (P1-01 section 10). Tests that check one of the stage's
+// small helpers (land_profile, mountain_mask, ocean_depth, fill_cost, ...)
+// call worldgen::stages directly.
 
 #include <cstdint>
 #include <optional>
 #include <span>
 #include <string>
 #include <string_view>
+#include <utility>
 #include <vector>
 
 #include "worldgen/core/fx.hpp"
@@ -82,19 +64,19 @@ inline TuningLoad load_tuning_text(std::string_view elevation_toml) {
 
 // The stage's tuning from loaded content.
 inline Tuning tuning_from(const worldgen::data::ContentSet& content) {
-    return worldgen::stages::elevation_tuning(content);
+    return worldgen::stages::elevation_tuning_from(content);
 }
 
 // E1 to E3 (seam elevation_fields).
 struct Fields {
     std::int32_t n = 0;
-    std::vector<std::int64_t> c, nb, ns;  // raw Fx per cell
+    std::vector<std::int64_t> c, nb, ns;                         // raw Fx per cell
     std::int64_t c_sea = 0, w_b = 0, s_land = 0, cx = 0, cy = 0;  // raw
     worldgen::stages::ElevationFields engine;                    // the stage's own result, passed on
 };
 
 inline Fields fields(std::uint64_t seed, std::int32_t n, const Tuning& t, std::uint32_t threads) {
-    auto f = worldgen::stages::elevation_fields(seed, n, t, threads);
+    worldgen::stages::ElevationFields f = worldgen::stages::elevation_fields(seed, n, t, threads);
     Fields out;
     out.n = n;
     out.c = f.c;
@@ -103,8 +85,8 @@ inline Fields fields(std::uint64_t seed, std::int32_t n, const Tuning& t, std::u
     out.c_sea = f.c_sea.raw();
     out.w_b = f.w_b.raw();
     out.s_land = f.s_land.raw();
-    out.cx = f.cx.raw();
-    out.cy = f.cy.raw();
+    out.cx = f.centre.cx.raw();
+    out.cy = f.centre.cy.raw();
     out.engine = std::move(f);
     return out;
 }
@@ -120,15 +102,14 @@ inline std::vector<std::uint8_t> ocean_from_provisional(Grid grid, std::span<con
 struct Ocean {
     std::vector<std::uint8_t> mask;  // 1 = ocean
     std::int64_t land_cells = 0;     // L_O
-    worldgen::stages::ElevationOcean engine;
 };
 
 inline Ocean classify(const Fields& f, const Tuning& t) {
-    auto oc = worldgen::stages::elevation_classify(f.engine, t);
     Ocean out;
-    out.mask = oc.ocean;
-    out.land_cells = oc.land_cells;
-    out.engine = std::move(oc);
+    out.mask = worldgen::stages::elevation_classify(f.engine, t);
+    for (const std::uint8_t o : out.mask) {
+        out.land_cells += o != 0U ? 0 : 1;
+    }
     return out;
 }
 
@@ -136,14 +117,27 @@ inline Ocean classify(const Fields& f, const Tuning& t) {
 struct Floor {
     bool triggered = false;
     std::int64_t target = 0;
-    std::int64_t o_star = 0;     // raw
-    std::int64_t beta_star = 0;  // raw
+    std::int64_t o_star = 0;          // raw
+    std::int64_t beta_star = 0;       // raw
+    std::vector<std::int64_t> mids;   // bisection mids, raw (empty if none ran)
 };
+
+inline Floor floor_of(const worldgen::stages::MountainFloor& m) {
+    Floor f{m.triggered, m.target, m.offset.raw(), m.bias.raw(), {}};
+    for (const worldgen::Fx x : m.bisection) {
+        f.mids.push_back(x.raw());
+    }
+    return f;
+}
 
 inline Floor floor_search(std::span<const std::int64_t> nb, std::span<const std::int64_t> ns,
                           std::span<const std::int64_t> gm, std::int64_t w_b, const Tuning& t) {
-    const auto r = worldgen::stages::elevation_floor(nb, ns, gm, worldgen::Fx::from_raw(w_b), t);
-    return Floor{r.triggered, r.target, r.o_star.raw(), r.beta_star.raw()};
+    std::vector<worldgen::stages::FloorCell> cells;
+    for (std::size_t i = 0; i < nb.size(); ++i) {
+        cells.push_back(worldgen::stages::FloorCell{worldgen::Fx::from_raw(nb[i]), worldgen::Fx::from_raw(ns[i]),
+                                                   worldgen::Fx::from_raw(gm[i])});
+    }
+    return floor_of(worldgen::stages::mountain_floor(cells, worldgen::Fx::from_raw(w_b), t));
 }
 
 // E5 to E7 (seam elevation_heights).
@@ -155,16 +149,16 @@ struct Heights {
 
 inline Heights heights(std::uint64_t seed, const Fields& f, const Ocean& ocean, const Tuning& t,
                        std::uint32_t threads) {
-    const auto h = worldgen::stages::elevation_heights(seed, f.engine, ocean.engine, t, threads);
+    const auto h = worldgen::stages::elevation_heights(seed, f.engine, ocean.mask, t, threads);
     Heights out;
     out.h7 = h.h;
     out.scale = h.scale.raw();
-    out.floor = Floor{h.floor.triggered, h.floor.target, h.floor.o_star.raw(), h.floor.beta_star.raw()};
+    out.floor = floor_of(h.floor);
     return out;
 }
 
 // E8 on any W x H grid (seam erode). Values raw; talus_slope is the
-// tuning value (D_o = mul_int(talus_slope, 16) is derived by the stage).
+// tuning value (D_o = mul_int(talus_slope, 16), D_d = mul(D_o, SQRT2)).
 struct ErosionParams {
     std::int64_t iterations = 0;
     std::int64_t route_interval = 1;
@@ -183,7 +177,8 @@ inline std::vector<std::int64_t> erode(Grid grid, std::span<const std::int64_t> 
     ep.route_interval = static_cast<std::int32_t>(p.route_interval);
     ep.k = worldgen::Fx::from_raw(p.k);
     ep.diffusion = worldgen::Fx::from_raw(p.diffusion);
-    ep.talus_slope = worldgen::Fx::from_raw(p.talus_slope);
+    ep.talus_drop_o = worldgen::mul_int(worldgen::Fx::from_raw(p.talus_slope), 16);
+    ep.talus_drop_d = worldgen::mul(ep.talus_drop_o, worldgen::Fx::SQRT2);
     ep.talus_rate = worldgen::Fx::from_raw(p.talus_rate);
     ep.floor = worldgen::Fx::from_raw(p.floor);
     ep.key = p.key;
@@ -192,9 +187,10 @@ inline std::vector<std::int64_t> erode(Grid grid, std::span<const std::int64_t> 
     return out;
 }
 
-// E9 (seam quantize_elevation).
+// E9 (seam quantize_elevation), on a 1-row grid of h.size() cells.
 inline std::vector<std::int16_t> quantize(std::span<const std::int64_t> h, std::span<const std::uint8_t> ocean) {
-    return worldgen::stages::quantize_elevation(h, ocean);
+    const Grid g{static_cast<std::int32_t>(h.size()), 1};
+    return worldgen::stages::quantize_elevation(g, h, ocean, 1);
 }
 
 // E10.1 to E10.5 on any W x H grid (the conditioning seam).
@@ -206,16 +202,28 @@ struct ConditionParams {
     std::int64_t fine_slope = 65536;
 };
 
-inline std::vector<std::int16_t> condition(Grid grid, std::span<const std::int16_t> e,
-                                           std::span<const std::uint8_t> ocean, std::span<const std::int64_t> cost,
-                                           std::span<const std::int64_t> bump, const ConditionParams& p) {
+inline worldgen::stages::ConditionParams engine_params(const ConditionParams& p) {
     worldgen::stages::ConditionParams cp;
     cp.lake_min_cells = p.lake_min_cells;
     cp.lake_max_cells = p.lake_max_cells;
     cp.lake_min_depth_dm = p.lake_min_depth_dm;
     cp.max_share_cells = p.max_share_cells;
     cp.fine_slope = p.fine_slope;
-    return worldgen::stages::condition_elevation(grid, e, ocean, cost, bump, cp);
+    return cp;
+}
+
+// The full result: e', the E10.2 components and the kept labels.
+inline worldgen::stages::Conditioned condition_full(Grid grid, std::span<const std::int16_t> e,
+                                                   std::span<const std::uint8_t> ocean,
+                                                   std::span<const std::int64_t> cost,
+                                                   std::span<const std::int64_t> bump, const ConditionParams& p) {
+    return worldgen::stages::condition_depressions(grid, e, ocean, cost, bump, engine_params(p));
+}
+
+inline std::vector<std::int16_t> condition(Grid grid, std::span<const std::int16_t> e,
+                                           std::span<const std::uint8_t> ocean, std::span<const std::int64_t> cost,
+                                           std::span<const std::int64_t> bump, const ConditionParams& p) {
+    return condition_full(grid, e, ocean, cost, bump, p).e;
 }
 
 // The whole stage (seam elevation_grid): the elevation layer's values.

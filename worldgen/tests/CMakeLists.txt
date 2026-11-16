@@ -116,6 +116,7 @@ target_sources(worldgen-tests PRIVATE
     stages_elevation_tuning_test.cpp
     stages_elevation_golden_test.cpp
     stages_elevation_property_test.cpp
+    stages_elevation_seams_test.cpp
 )
 target_compile_definitions(worldgen-tests PRIVATE
     UNMAPPED_P1_01_GOLDEN_PATH="${CMAKE_CURRENT_SOURCE_DIR}/golden/p1-01-elevation.txt"

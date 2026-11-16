@@ -35,6 +35,7 @@
 #include "worldgen/generate.hpp"
 #include "worldgen/inspect/geography.hpp"
 #include "worldgen/inspect/hashes.hpp"
+#include "worldgen/stages/elevation.hpp"
 
 using namespace elev_test;
 using worldgen::Fx;
@@ -197,13 +198,23 @@ WorldRun run_steps(std::uint64_t seed, std::int32_t n, bool small, std::uint32_t
     put("e", hash_i16(e));
     const elev_api::ConditionParams cp = condition_of(v, n, oc.land_cells);
     put("max_share", std::to_string(cp.max_share_cells));
-    const Depressions d = depressions(g, e, oc.mask);
-    put("depressions", std::to_string(d.count));
-    const Selection sel = select_lakes(d, e, cp);
-    put("candidates", list_text(sel.candidates));
-    put("kept", list_text(sel.kept));
+    // E10.0: the stage's grids equal the test's own.
     const CostBump cb = cost_bump(seed, n, oc.mask, v);
-    r.e_final = elev_api::condition(g, e, oc.mask, cb.cost, cb.bump, cp);
+    const worldgen::stages::FillGrids fg = worldgen::stages::fill_grids(seed, n, oc.mask, t, threads);
+    CHECK(fg.cost == cb.cost);
+    CHECK(fg.bump == cb.bump);
+    const worldgen::stages::Conditioned cd = elev_api::condition_full(g, e, oc.mask, cb.cost, cb.bump, cp);
+    r.e_final = cd.e;
+    // E10.2 and E10.3 as the stage reports them, cross-checked against the
+    // test's own components (minimax levels, union-find) and selection.
+    const Depressions d = depressions(g, e, oc.mask);
+    const Selection sel = select_lakes(d, e, cp);
+    put("depressions", std::to_string(cd.components.size()));
+    CHECK(cd.components.size() == d.count);
+    put("candidates", list_text(sel.candidates));
+    put("kept", list_text(cd.kept));
+    CHECK(cd.kept == sel.kept);
+    CHECK(worldgen::stages::select_lakes(cd.components, elev_api::engine_params(cp)) == cd.kept);
     // kept_cells from the stage's output: by invariant 7 the depressed cells
     // of e' are exactly the kept cells.
     const Depressions d2 = depressions(g, r.e_final, oc.mask);

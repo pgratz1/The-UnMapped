@@ -23,7 +23,9 @@
 #include "p1_01_elevation_api.hpp"
 #include "p1_01_elevation_support.hpp"
 #include "worldgen/core/fx.hpp"
+#include "worldgen/core/hash.hpp"
 #include "worldgen/core/rng.hpp"
+#include "worldgen/core/streams.hpp"
 
 using namespace elev_test;
 using worldgen::Fx;
@@ -387,16 +389,15 @@ TEST_CASE("P1-01 10.2: the floor triggers at N = 128 among seeds 0 to 15 exactly
 
 namespace {
 
-// Fixed Rng keys for the random fixtures (not world streams; spec 10.2
-// names a test stream `test.elevation.fill`, which is not registered in
-// streams.hpp, so the generators are keyed directly as core_test_util does).
-constexpr std::uint64_t KEY_FILL_FIXTURES = 0x4C4C49462E54534BULL;
+// The E10 fixtures use the test stream of spec 10.2, `test.elevation.fill`
+// (registered in streams.hpp); the E8 fixtures a fixed Rng key, as
+// core_test_util does.
 constexpr std::uint64_t KEY_ERODE_FIXTURES = 0x45444F52452E5453ULL;
 
 }  // namespace
 
 TEST_CASE("P1-01 10.2: E10 alone on 200 random fixtures (32 x 32 interior, ocean border)") {
-    worldgen::Rng rng(KEY_FILL_FIXTURES);
+    worldgen::Rng rng(worldgen::stream_key(0, worldgen::streams::test_elevation_fill));
     const Grid g{34, 34};
     const std::size_t n = cells(g);
     for (int fixture = 0; fixture < 200; ++fixture) {
