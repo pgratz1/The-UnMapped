@@ -198,7 +198,7 @@ Dijkstra chamfer) through the invariants of P1-02 section 6.
 ```
 python3 -B worldgen/tests/reference/p1_hydrology_reference.py check [--quick]
 python3 -B worldgen/tests/reference/p1_hydrology_reference.py case shipped|small N SEED [AREA]
-python3 -B worldgen/tests/reference/p1_hydrology_reference.py golden [PATH|-] [--large]
+python3 -B worldgen/tests/reference/p1_hydrology_reference.py golden [PATH|-] [--large] [--legacy]
 python3 -B worldgen/tests/reference/p1_hydrology_reference.py fixtures
 ```
 
@@ -223,3 +223,16 @@ The random fixtures of 8.2: fixture f is a 34 x 34 grid drawn in index order
 from `Rng(substream(stream_key(0, "test.hydro"), f))`, `uniform_i64(-50, -1)`
 on the border and `uniform_i64(1, 200)` inside; the golden file holds
 fixtures 0 to 3 with `river_min_area_m2` 2048 (T = 8).
+
+The H2 tie-break (P1-02 H2, amended 2026-11-16, generator 0.5.0): the flood
+runs on keys k = e × 2^16 + t, L = Lk >> 16, and G4 on Lk. t is `flat_tie`
+(`fbm_m` of stream `geo.hydrology.flat` with `flat_noise`, shipped wavelength
+400, octaves 1, gain 0.5) for the world cases, the random ties of 8.2
+(`uniform_i64(0, 65535)` per land cell from `Rng(substream(stream_key(0,
+"test.hydro"), 1000 + f))`) for the random fixtures, and 0 for the case marked
+`zero`. `golden --legacy` writes every case with t = 0 in the item list of the
+0.4.0 file; it reproduces that file byte for byte, which shows that t = 0 is
+the stage without the tie-break (P1-02 H2, "t = 0"). `check` also tests
+invariant 11 (equal `water_depth`, `lake`, `coast_dist`, lake and ocean cells
+and decimetre levels with and without t) on the random fixtures with random t
+and on the golden worlds with `flat_tie`.

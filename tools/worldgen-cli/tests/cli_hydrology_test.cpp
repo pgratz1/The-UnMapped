@@ -32,7 +32,7 @@ fs::path write_data_root(const Sandbox& sb) {
     const fs::path root = sb.file("data");
     fs::create_directories(root / "worldgen");
     write_text(root / "worldgen" / "elevation.toml", elev_test::elevation_toml());
-    write_text(root / "worldgen" / "hydrology.toml", "[worldgen.hydrology]\nriver_min_area_m2 = 125000\n");
+    write_text(root / "worldgen" / "hydrology.toml", "[worldgen.hydrology]\nriver_min_area_m2 = 125000\nflat_noise = { wavelength_m = 400, octaves = 1, gain = \"0.5\" }\n");
     return root;
 }
 

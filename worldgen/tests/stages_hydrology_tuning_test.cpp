@@ -19,7 +19,9 @@
 
 #include "p1_02_hydrology_api.hpp"
 #include "p1_02_hydrology_support.hpp"
+#include "worldgen/core/fx.hpp"
 #include "worldgen/data/content.hpp"
+#include "worldgen/geo/noise.hpp"
 
 using namespace hydro_test;
 
@@ -74,12 +76,15 @@ TEST_CASE("P1-02 4: river_min_area_m2 outside int(256, 1000000000) is rejected")
     }
 }
 
-TEST_CASE("P1-02 4, P1-00 6.1: the field is required, typed int, and the only field") {
-    SUBCASE("missing") { check_rejected("[worldgen.hydrology]\n", "river_min_area_m2"); }
-    SUBCASE("a string") { check_rejected("[worldgen.hydrology]\nriver_min_area_m2 = \"500000\"\n", "river_min_area_m2"); }
-    SUBCASE("a float") { check_rejected("[worldgen.hydrology]\nriver_min_area_m2 = 500000.0\n", "river_min_area_m2"); }
+TEST_CASE("P1-02 4, P1-00 6.1: river_min_area_m2 is required and typed int; no unknown field") {
+    SUBCASE("missing") {
+        check_rejected("[worldgen.hydrology]\nflat_noise = " + std::string(SHIPPED_FLAT_NOISE) + "\n",
+                       "river_min_area_m2");
+    }
+    SUBCASE("a string") { check_rejected("[worldgen.hydrology]\nriver_min_area_m2 = \"500000\"\nflat_noise = { wavelength_m = 400, octaves = 1, gain = \"0.5\" }\n", "river_min_area_m2"); }
+    SUBCASE("a float") { check_rejected("[worldgen.hydrology]\nriver_min_area_m2 = 500000.0\nflat_noise = { wavelength_m = 400, octaves = 1, gain = \"0.5\" }\n", "river_min_area_m2"); }
     SUBCASE("an unknown field") {
-        check_rejected("[worldgen.hydrology]\nriver_min_area_m2 = 500000\nlake_min_area_m2 = 1\n", "lake_min_area_m2");
+        check_rejected("[worldgen.hydrology]\nriver_min_area_m2 = 500000\nlake_min_area_m2 = 1\nflat_noise = { wavelength_m = 400, octaves = 1, gain = \"0.5\" }\n", "lake_min_area_m2");
     }
 }
 
@@ -108,7 +113,41 @@ TEST_CASE("P1-02 4, P1-00 6.4: the shipped file and both fixture files hold rive
         const std::string text = read_text(root / rel);
         CHECK(text.find("[worldgen.hydrology]") != std::string::npos);
         CHECK(text.find("river_min_area_m2 = 125000") != std::string::npos);
+        CHECK(text.find("flat_noise = { wavelength_m = 400, octaves = 1, gain = \"0.5\" }") != std::string::npos);
         const hydro_api::TuningLoad l = load(text);
         CHECK_MESSAGE(l.ok(), all_errors(l));
     }
+}
+
+TEST_CASE("P1-02 4: flat_noise is a required fbm_m record; the shipped value loads as (400, 1, 0.5)") {
+    const hydro_api::TuningLoad l = load(hydrology_toml(SHIPPED_AREA));
+    REQUIRE_MESSAGE(l.ok(), all_errors(l));
+    const hydro_api::Tuning t = hydro_api::tuning_from(*l.content);
+    CHECK(t.river_min_area_m2 == SHIPPED_AREA);
+    CHECK(t.flat_noise == worldgen::geo::FbmM{400, 1, worldgen::Fx::HALF});
+    check_rejected("[worldgen.hydrology]\nriver_min_area_m2 = 125000\n", "flat_noise");
+    check_rejected(hydrology_toml(SHIPPED_AREA, "400"), "flat_noise");
+    check_rejected(hydrology_toml(SHIPPED_AREA, "\"400\""), "flat_noise");
+    check_rejected(hydrology_toml(SHIPPED_AREA, "{ wavelength_m = 400, octaves = 1 }"), "gain");
+    check_rejected(hydrology_toml(SHIPPED_AREA, "{ wavelength_m = 400, gain = \"0.5\" }"), "octaves");
+    check_rejected(hydrology_toml(SHIPPED_AREA, "{ octaves = 1, gain = \"0.5\" }"), "wavelength_m");
+    check_rejected(hydrology_toml(SHIPPED_AREA, "{ cycles = \"3\", octaves = 1, gain = \"0.5\" }"), "cycles");
+    check_rejected(hydrology_toml(SHIPPED_AREA, "{ wavelength_m = 400, octaves = 1, gain = 0.5 }"), "floating-point");
+}
+
+TEST_CASE("P1-02 4, P1-01 4.1: flat_noise bounds: wavelength_m int(64, 65536), octaves int(1, 10), gain fx(0.0625, 1)") {
+    for (const char* ok : {"{ wavelength_m = 64, octaves = 1, gain = \"0.5\" }",
+                           "{ wavelength_m = 65536, octaves = 10, gain = 1 }",
+                           "{ wavelength_m = 400, octaves = 1, gain = \"0.0625\" }"}) {
+        CAPTURE(ok);
+        const hydro_api::TuningLoad l = load(hydrology_toml(SHIPPED_AREA, ok));
+        CHECK_MESSAGE(l.ok(), all_errors(l));
+    }
+    check_rejected(hydrology_toml(SHIPPED_AREA, "{ wavelength_m = 63, octaves = 1, gain = \"0.5\" }"), "wavelength_m");
+    check_rejected(hydrology_toml(SHIPPED_AREA, "{ wavelength_m = 65537, octaves = 1, gain = \"0.5\" }"),
+                   "wavelength_m");
+    check_rejected(hydrology_toml(SHIPPED_AREA, "{ wavelength_m = 400, octaves = 0, gain = \"0.5\" }"), "octaves");
+    check_rejected(hydrology_toml(SHIPPED_AREA, "{ wavelength_m = 400, octaves = 11, gain = \"0.5\" }"), "octaves");
+    check_rejected(hydrology_toml(SHIPPED_AREA, "{ wavelength_m = 400, octaves = 1, gain = \"0.0624\" }"), "gain");
+    check_rejected(hydrology_toml(SHIPPED_AREA, "{ wavelength_m = 400, octaves = 1, gain = \"1.0001\" }"), "gain");
 }

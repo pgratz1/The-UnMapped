@@ -64,7 +64,8 @@ std::optional<std::string> elevation_golden_layer(const std::string& fixture, st
 
 // Every golden item of one world, computed through the seams, in the order
 // of the golden file.
-std::vector<std::pair<std::string, std::string>> items_of(Grid g, std::span<const std::int16_t> e, std::int64_t area,
+std::vector<std::pair<std::string, std::string>> items_of(Grid g, std::span<const std::int16_t> e,
+                                                          std::span<const std::uint16_t> tie, std::int64_t area,
                                                           std::uint32_t threads) {
     const std::vector<std::uint8_t> ocean = ocean_of(e);
     std::vector<std::uint8_t> land(ocean.size());
@@ -73,13 +74,21 @@ std::vector<std::pair<std::string, std::string>> items_of(Grid g, std::span<cons
     }
     std::vector<std::pair<std::string, std::string>> out;
     out.emplace_back("elevation", layer_hash<std::int16_t>(g, 4, e));
-    const hydro_api::Flood fl = hydro_api::flood(g, keys_of(e), ocean);
-    out.emplace_back("L", elev_test::hash_i64(fl.level));
+    out.emplace_back("tie", hash_u16(tie));
+    // H2: the test's own keys k = e * 2^16 + t (0 on ocean), the shared G3,
+    // L = Lk >> 16.
+    const hydro_api::Flood fl = hydro_api::flood(g, fine_keys(e, tie), ocean);
+    out.emplace_back("Lk", elev_test::hash_i64(fl.level));
+    std::vector<std::int64_t> dm(fl.level.size());
+    for (std::size_t i = 0; i < dm.size(); ++i) {
+        dm[i] = fl.level[i] >> 16;
+    }
+    out.emplace_back("L", elev_test::hash_i64(dm));
     out.emplace_back("parent", elev_test::hash_u8(fl.parent));
     out.emplace_back("order", hash_u32(fl.order));
     out.emplace_back("rcv_g4", elev_test::hash_u8(hydro_api::receivers(g, fl, ocean, threads)));
 
-    const hydro_api::Layers l = hydro_api::layers(g, e, tuning(area), threads);
+    const hydro_api::Layers l = hydro_api::layers_tie(g, e, tie, tuning(area), threads);
     // Lakes from the stage's layers: count, level, size and outlet (the one
     // cell whose downstream cell is outside the lake) per id.
     std::uint32_t k = 0;
@@ -139,9 +148,23 @@ Fixture input_of(const GoldenCase& c) {
     return f;
 }
 
+// The tie values of a golden case: flat_tie of the seed (shipped flat_noise),
+// the random ties of 8.2, or zeros.
+std::vector<std::uint16_t> tie_of(const GoldenCase& c, const Fixture& f) {
+    if (c.tie == "flat") {
+        return hydro_api::flat_tie(c.seed, f.grid, ocean_of(f.e), shipped_tuning(), THREADS);
+    }
+    if (c.tie == "random") {
+        return random_tie(c.seed, f.e);
+    }
+    REQUIRE_MESSAGE(c.tie == "zero", "unknown tie mode " << c.tie);
+    return std::vector<std::uint16_t>(f.e.size(), 0);
+}
+
 void run_case(const GoldenCase& c) {
     CAPTURE(c.name);
     const Fixture f = input_of(c);
+    const std::vector<std::uint16_t> tie = tie_of(c, f);
     // The input first: the case's elevation, and the elevation golden value.
     REQUIRE(c.items.size() >= 1U);
     REQUIRE(c.items[0].first == "elevation");
@@ -154,7 +177,7 @@ void run_case(const GoldenCase& c) {
         }
     }
     REQUIRE_MESSAGE(elev == c.items[0].second, "elevation input of " << c.name << " differs from the golden value");
-    const auto got = items_of(f.grid, f.e, c.area, THREADS);
+    const auto got = items_of(f.grid, f.e, tie, c.area, THREADS);
     REQUIRE(got.size() == c.items.size());
     for (std::size_t i = 0; i < got.size(); ++i) {
         REQUIRE(got[i].first == c.items[i].first);
@@ -164,8 +187,9 @@ void run_case(const GoldenCase& c) {
     }
     // The stage's own intermediates (seam hydrology_network) give the same
     // steps as the shared G3 / G4 above.
-    const hydro_api::Network net = hydro_api::network(f.grid, f.e, THREADS);
-    CHECK(elev_test::hash_i64(net.level) == c.get("L"));
+    const hydro_api::Network net = hydro_api::network(f.grid, f.e, tie, THREADS);
+    CHECK(elev_test::hash_i64(net.level) == c.get("Lk"));
+    CHECK(elev_test::hash_i64(net.level_dm) == c.get("L"));
     CHECK(elev_test::hash_u8(net.parent) == c.get("parent"));
     CHECK(hash_u32(net.order) == c.get("order"));
     CHECK(elev_test::hash_u8(net.g4) == c.get("rcv_g4"));
@@ -295,7 +319,7 @@ TEST_CASE("P1-02 8.4 golden: the file holds the 8.4 library case and the coverag
         names.push_back(c.name);
     }
     for (const char* want : {"shipped-128-s0", "shipped-128-s9", "small-128-s0", "small-128-s2", "small-128-s2-t100",
-                             "shipped-512-s0", "shipped-512-s42", "shipped-512-phrase", "shipped-1024-s1",
+                             "small-128-s2-tie0", "shipped-512-s0", "shipped-512-s42", "shipped-512-phrase", "shipped-1024-s1",
                              "random-0"}) {
         CAPTURE(want);
         CHECK(std::find(names.begin(), names.end(), want) != names.end());
@@ -333,20 +357,62 @@ TEST_CASE("P1-02 8.4 golden: the cases cover lakes, outlets feeding rivers, rive
     CHECK(dense);
 }
 
+TEST_CASE("P1-02 6 invariant 11, 8.4: golden cases of one world agree on the lake-related items whatever the tie") {
+    // small-128-s2 (flat_tie), small-128-s2-t100 (flat_tie, T = 100) and
+    // small-128-s2-tie0 (t = 0, T = 100): L, lakes, lake levels and sizes,
+    // the chamfer grids and the water_depth, lake and coast_dist layers are
+    // the same.
+    std::size_t groups = 0;
+    for (const auto& a : golden()) {
+        for (const auto& b : golden()) {
+            if (&a == &b || a.fixture != b.fixture || a.n != b.n || a.seed != b.seed || a.fixture == "random") {
+                continue;
+            }
+            CAPTURE(a.name);
+            CAPTURE(b.name);
+            ++groups;
+            for (const char* item : {"elevation", "L", "lakes", "lake_levels", "lake_cells", "dl", "do",
+                                     "water_depth", "lake", "coast_dist"}) {
+                CAPTURE(item);
+                CHECK(a.get(item) == b.get(item));
+            }
+        }
+    }
+    CHECK(groups >= 6U);
+    // The tie is in force: the flat_tie and t = 0 cases at the same T differ
+    // in their receivers.
+    const auto find = [](const char* name) -> const GoldenCase& {
+        for (const auto& c : golden()) {
+            if (c.name == name) {
+                return c;
+            }
+        }
+        FAIL("no golden case " << name);
+        return golden().front();
+    };
+    CHECK(find("small-128-s2-t100").get("flow_dir") != find("small-128-s2-tie0").get("flow_dir"));
+    CHECK(find("small-128-s2-tie0").get("tie") != find("small-128-s2-t100").get("tie"));
+}
+
 // --- Determinism (8.3, D10) ----------------------------------------------------------
 
-TEST_CASE("P1-02 8.3: 1, 2 and 5 threads give identical layers (N = 128, seeds 0 and 42)") {
+TEST_CASE("P1-02 8.3: 1, 2 and 5 threads give identical layers and flat_tie (N = 128, seeds 0 and 42)") {
     for (const std::uint64_t seed : {std::uint64_t{0}, std::uint64_t{42}}) {
         CAPTURE(seed);
         const std::vector<std::int16_t> e = hydro_api::elevation_grid(seed, 128, elevation_tuning(false), THREADS);
         const Grid g{128, 128};
-        const hydro_api::Layers a = hydro_api::layers(g, e, shipped_tuning(), 1);
-        CHECK(hydro_api::layers(g, e, shipped_tuning(), 2) == a);
-        CHECK(hydro_api::layers(g, e, shipped_tuning(), 5) == a);
+        const hydro_api::Layers a = hydro_api::world_layers(seed, g, e, shipped_tuning(), 1);
+        CHECK(hydro_api::world_layers(seed, g, e, shipped_tuning(), 2) == a);
+        CHECK(hydro_api::world_layers(seed, g, e, shipped_tuning(), 5) == a);
+        // flat_tie itself (H2 step 1, D1).
+        const std::vector<std::uint16_t> t1 = hydro_api::flat_tie(seed, g, ocean_of(e), shipped_tuning(), 1);
+        CHECK(hydro_api::flat_tie(seed, g, ocean_of(e), shipped_tuning(), 2) == t1);
+        CHECK(hydro_api::flat_tie(seed, g, ocean_of(e), shipped_tuning(), 5) == t1);
+        CHECK(hydro_api::flat_tie(seed, g, ocean_of(e), shipped_tuning(), 256) == t1);
         // With a low threshold too, where rivers exist.
-        const hydro_api::Layers b = hydro_api::layers(g, e, tuning(5120), 1);
-        CHECK(hydro_api::layers(g, e, tuning(5120), 2) == b);
-        CHECK(hydro_api::layers(g, e, tuning(5120), 5) == b);
+        const hydro_api::Layers b = hydro_api::world_layers(seed, g, e, tuning(5120), 1);
+        CHECK(hydro_api::world_layers(seed, g, e, tuning(5120), 2) == b);
+        CHECK(hydro_api::world_layers(seed, g, e, tuning(5120), 5) == b);
     }
 }
 
@@ -356,8 +422,8 @@ TEST_CASE("P1-02 8.3, P1-00 X2: hydrology on the stored elevation equals hydrolo
         const std::vector<std::int16_t> e = hydro_api::elevation_grid(seed, 128, elevation_tuning(true), THREADS);
         const std::vector<std::int16_t> back = stored_round_trip(128, e);
         REQUIRE(back == e);
-        CHECK(hydro_api::layers(Grid{128, 128}, back, shipped_tuning(), THREADS) ==
-              hydro_api::layers(Grid{128, 128}, e, shipped_tuning(), THREADS));
+        CHECK(hydro_api::world_layers(seed, Grid{128, 128}, back, shipped_tuning(), THREADS) ==
+              hydro_api::world_layers(seed, Grid{128, 128}, e, shipped_tuning(), THREADS));
     }
 }
 
@@ -427,7 +493,7 @@ TEST_CASE("P1-02 H9, P1-00 X1 and X2: generate writes elevation then the seven l
     // resume from the elevation-only world gives the same layers).
     const hydro_api::Layers stored = read_hydrology(rf.value());
     const hydro_api::Layers resumed =
-        hydro_api::layers(Grid{512, 512}, values_of<std::int16_t>(ee.value()), shipped_tuning(), THREADS);
+        hydro_api::world_layers(0, Grid{512, 512}, values_of<std::int16_t>(ee.value()), shipped_tuning(), THREADS);
     CHECK(stored == resumed);
     CHECK(invariant_violation(Grid{512, 512}, elev, stored, threshold(SHIPPED_AREA)).empty());
     // The logical hashes are those of the test's own definition.
@@ -456,9 +522,9 @@ TEST_CASE("P1-02 8.3 (slow): 1, 2 and 5 threads at N = 512, seeds 0 and 42") {
         CAPTURE(seed);
         const std::vector<std::int16_t> e = hydro_api::elevation_grid(seed, 512, elevation_tuning(false), THREADS);
         const Grid g{512, 512};
-        const hydro_api::Layers a = hydro_api::layers(g, e, shipped_tuning(), 1);
-        CHECK(hydro_api::layers(g, e, shipped_tuning(), 2) == a);
-        CHECK(hydro_api::layers(g, e, shipped_tuning(), 5) == a);
+        const hydro_api::Layers a = hydro_api::world_layers(seed, g, e, shipped_tuning(), 1);
+        CHECK(hydro_api::world_layers(seed, g, e, shipped_tuning(), 2) == a);
+        CHECK(hydro_api::world_layers(seed, g, e, shipped_tuning(), 5) == a);
     }
 }
 
@@ -478,7 +544,7 @@ TEST_CASE("P1-00 X2 (slow): resume equivalence at 512 for seed 42") {
     auto ee = re.value().read_layer("elevation");
     REQUIRE(ee.ok());
     CHECK(read_hydrology(rf.value()) ==
-          hydro_api::layers(Grid{512, 512}, values_of<std::int16_t>(ee.value()), shipped_tuning(), THREADS));
+          hydro_api::world_layers(42, Grid{512, 512}, values_of<std::int16_t>(ee.value()), shipped_tuning(), THREADS));
 }
 
 TEST_CASE("P1-00 13.1 (slow): hard bounds of the hydrology rows, N = 512 seeds 0 to 9 and 1024 seeds 0 to 3") {
@@ -487,7 +553,7 @@ TEST_CASE("P1-00 13.1 (slow): hard bounds of the hydrology rows, N = 512 seeds 0
             CAPTURE(n);
             CAPTURE(seed);
             const std::vector<std::int16_t> e = hydro_api::elevation_grid(seed, n, elevation_tuning(false), THREADS);
-            const hydro_api::Layers l = hydro_api::layers(Grid{n, n}, e, shipped_tuning(), THREADS);
+            const hydro_api::Layers l = hydro_api::world_layers(seed, Grid{n, n}, e, shipped_tuning(), THREADS);
             check_hydrology_hard_bounds(n, e, l);
         }
     }
