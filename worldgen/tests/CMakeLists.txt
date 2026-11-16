@@ -134,6 +134,7 @@ target_sources(worldgen-tests PRIVATE
     stages_hydrology_tuning_test.cpp
     stages_hydrology_golden_test.cpp
     stages_hydrology_property_test.cpp
+    stages_hydrology_seams_test.cpp
 )
 target_compile_definitions(worldgen-tests PRIVATE
     UNMAPPED_P1_02_GOLDEN_PATH="${CMAKE_CURRENT_SOURCE_DIR}/golden/p1-02-hydrology.txt"

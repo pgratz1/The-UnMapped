@@ -162,6 +162,17 @@ void run_case(const GoldenCase& c) {
         // The first differing step stops the case.
         REQUIRE(got[i].second == c.items[i].second);
     }
+    // The stage's own intermediates (seam hydrology_network) give the same
+    // steps as the shared G3 / G4 above.
+    const hydro_api::Network net = hydro_api::network(f.grid, f.e, THREADS);
+    CHECK(elev_test::hash_i64(net.level) == c.get("L"));
+    CHECK(elev_test::hash_u8(net.parent) == c.get("parent"));
+    CHECK(hash_u32(net.order) == c.get("order"));
+    CHECK(elev_test::hash_u8(net.g4) == c.get("rcv_g4"));
+    CHECK(std::to_string(net.lake_level.size()) == c.get("lakes"));
+    CHECK(net.lake_level == golden_list(c.get("lake_levels")));
+    const std::vector<std::int64_t> outlets(net.outlet.begin(), net.outlet.end());
+    CHECK(outlets == golden_list(c.get("outlets")));
 }
 
 bool is_slow(const GoldenCase& c) { return c.n >= 512; }

@@ -425,7 +425,9 @@ TEST_CASE("P1-02 4, 8.1 item 7: the stage derives T = ceil(area / 256) (a corrid
     const Fixture f = corridor_fixture(4000);
     for (const std::int64_t area : {std::int64_t{256}, std::int64_t{257}, std::int64_t{511}, std::int64_t{512},
                                     std::int64_t{513}, std::int64_t{499968}, std::int64_t{499969},
-                                    std::int64_t{500000}, std::int64_t{500224}, std::int64_t{500225}}) {
+                                    std::int64_t{500000}, std::int64_t{500224}, std::int64_t{500225},
+                                    std::int64_t{124928}, std::int64_t{124929}, std::int64_t{125000},
+                                    std::int64_t{125184}, std::int64_t{125185}}) {
         CAPTURE(area);
         const std::uint64_t t = static_cast<std::uint64_t>(threshold(area));
         const hydro_api::Layers l = run(f, area);
