@@ -218,7 +218,7 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
 - Raised by: spec-writer
 - Design doc section: 6 (schema growth)
 - Problem: the phase's schema changes need one proposals entry (P0-02 5.2 rule 3).
-- Proposal: first pass (elevation, hydrology): none; schema stays at version 1. Second pass: version 2 adds table `biome`; version 3 (or the same bump, if in one branch) adds table `region`. This entry is updated when the second-pass specs fix the DDL.
+- Proposal: first pass (elevation, hydrology): none; schema stays at version 1. Second pass: version 2 adds table `biome`; version 3 (or the same bump, if in one branch) adds table `region`. Updated 2026-11-16 with the second-pass specs: version 2 adds table `biome` (P1-04); version 3 adds table `region`, with `bounds` stored as four integer columns `x_min`, `y_min`, `x_max`, `y_max` because tables hold no blobs, and a new table `region_border` (border length, lowest crossing, walkable and river flags per pair of neighbouring regions; P1-06), which is how history finds where a pass or a bridge is worth building. The layer catalogue gains `walk_area` (connected walkable ground; P1-05).
 - Interim choice: as proposed, in p1-00 section 9.
 - Status: open
 
@@ -302,4 +302,14 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
 - Problem: once the `worldgen` tuning kind is registered (P1-01), the content hash of the loaded data is written into every world, including worlds generated with no geography stage. Any change to a shipped tuning file therefore changes every golden hash, the P0 ones included.
 - Proposal: accept it and say so in section 13: a shipped tuning change is an output change, bumps the generator version and re-records all golden hashes (already the rule in "Generator tuning is data, and shipped tuning changes bump the version").
 - Interim choice: as proposed; `p0-worlds.txt` was re-recorded with generator version 0.3.0.
+- Status: open
+
+### Second-pass geography: choices of taste for Paul
+
+- Date: 2026-11-16
+- Raised by: spec-writer, via the lead
+- Design doc section: 4 (geography), 5 (history)
+- Problem: the climate, biome, resource and region specs (P1-03 to P1-06) had to choose where the design is silent.
+- Proposal: confirm or change each. (1) One prevailing wind per world, drawn uniformly from eight directions, so rain shadows differ between worlds. (2) A cool climate: 5 to 9 °C at sea level north to south, 6.5 °C per km of height, so alpine ground starts near 1,000 m. (3) Five natural biomes only: alpine, highland moor, forest, grassland, marsh; blighted waste stays a history overlay. (4) Resource and habitability scores are absolute, not relative to each map, so a poor world is poor. (5) Habitability weights fertility 45, fresh water 30, timber 15, ore 10; history reweights by race. (6) Regions of about 2 km² (roughly 12, 45 and 180 per map at 512, 1024 and 2048), bordered on ridges and large rivers, with placeholder names such as "East Wood II"; history gives cultural names later. (7) No sea regions; lakes belong to land regions.
+- Interim choice: as listed; all numeric acceptance ranges in these specs are provisional until the first implementation sweep.
 - Status: open
