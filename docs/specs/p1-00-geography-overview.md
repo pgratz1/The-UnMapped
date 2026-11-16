@@ -1,6 +1,6 @@
 # P1-00 Geography overview
 
-Status: approved by the lead, 2026-11-15 (tuning values marked "guess" and the statistics ranges are starting points, to be revised against the first seed sweep); originally a draft, 2026-11-15. Updated by the spec writer for the elevation redesign, 2026-11-15 (draft, awaiting approval): stream list (3), appendix C items 11–16 and 19 folded into 6, 7 and 8, five `[geography]` statistics added (10.3), 13.1 marked for revision, 13.2 known defects. Updated again for elevation candidate v16, 2026-11-16 (draft, awaiting approval): elevation streams (3), 13.1 ranges from the v16 sweeps, 13.2 known limitations and checklist item 10. Phase P1 Geography. Design doc sections 2, 4, 6, 7, 10, 11 (milestone 0), 13. Depends on P0-01 to P0-04 including their amendments. First pass: this overview, P1-01 elevation, P1-02 hydrology. Second pass (written after elevation and hydrology have been implemented and looked at): climate, biomes, resources and habitability, regions.
+Status: approved by the lead, 2026-11-15 (tuning values marked "guess" and the statistics ranges are starting points, to be revised against the first seed sweep); originally a draft, 2026-11-15. Updated by the spec writer for the elevation redesign, 2026-11-15 (draft, awaiting approval): stream list (3), appendix C items 11–16 and 19 folded into 6, 7 and 8, five `[geography]` statistics added (10.3), 13.1 marked for revision, 13.2 known defects. Updated again for elevation candidate v16, 2026-11-16 (draft, awaiting approval): elevation streams (3), 13.1 ranges from the v16 sweeps, 13.2 known limitations and checklist item 10. Updated for the second-pass specs P1-03 to P1-06, 2026-11-16 (draft, awaiting approval; written before the hydrology stage was implemented): stage table and layer ids (3), catalogue (4: `walk_area` added, scores absolute, `region` definite), biome kind fields (6.6), shared algorithms G7 and G8 (7.7, 7.8), schema plan (9.2, appendix B8), palettes, composites and report keys (10), math (12), provisional second-pass statistics (13.1), checklist items 11 to 16 (13.2), X1 (14), sections 15 and 16. Phase P1 Geography. Design doc sections 2, 4, 6, 7, 10, 11 (milestone 0), 13. Depends on P0-01 to P0-04 including their amendments. First pass: this overview, P1-01 elevation, P1-02 hydrology. Second pass (written after elevation and hydrology have been implemented and looked at): climate, biomes, resources and habitability, regions.
 
 This document fixes everything the six geography stage specs share: scale and coordinates, the stage list, the layer catalogue, the representation rule, tuning as data, shared algorithms, determinism rules, schema, command-line changes, the performance budget, math functions and how results are judged. A stage spec cites the sections here instead of repeating them. Where this document and a stage spec disagree, the stage spec is wrong and must be fixed.
 
@@ -61,12 +61,14 @@ Stages run in this order. Each is recorded in `meta.stages` (P0-02 5.5) under it
 | --- | --- | --- | --- | --- | --- |
 | 1 | `elevation` | P1-01 | seed, N, `worldgen.elevation` | `elevation` | fifteen: `geo.elevation.continent_warp_x`, `geo.elevation.continent_warp_y`, `geo.elevation.continent`, `geo.elevation.belt`, `geo.elevation.coast`, `geo.elevation.segment`, `geo.elevation.relief_warp_x`, `geo.elevation.relief_warp_y`, `geo.elevation.ridge`, `geo.elevation.hills`, `geo.elevation.roughness`, `geo.elevation.basin`, `geo.elevation.detail`, `geo.elevation.erosion` (random erosion receivers, a `hash_at` key), `geo.elevation.fill` (fill cost noise); P1-01 section 2 |
 | 2 | `hydrology` | P1-02 | `elevation`, `worldgen.hydrology` | `water`, `water_depth`, `flow_dir`, `flow_accum`, `river`, `lake`, `coast_dist` | none (hydrology is deterministic analysis) |
-| 3 | `climate` | P1-03 (second pass) | `elevation`, `water`, `coast_dist`, `worldgen.climate` | `temperature`, `rainfall` (at least) | `geo.climate.*` |
-| 4 | `biomes` | P1-04 (second pass) | `elevation`, `water`, `river`, `coast_dist`, `temperature`, `rainfall`, `biome` definitions, `worldgen.biomes` | `biome`; table `biome` | `geo.biomes.*` |
-| 5 | `resources` | P1-05 (second pass) | the layers above, `worldgen.resources` | `fertility`, `ore`, `timber`, `fresh_water`, `habitability` | `geo.resources.*` |
-| 6 | `regions` | P1-06 (second pass) | the layers above, `worldgen.regions` | `region`; table `region` | `geo.regions.*` |
+| 3 | `climate` | P1-03 | `elevation`, `water`, `water_depth`, `coast_dist`, `worldgen.climate` | `temperature`, `rainfall` | three: `geo.climate.wind` (one `Rng`, sequential), `geo.climate.temperature`, `geo.climate.rainfall` (noise) |
+| 4 | `biomes` | P1-04 | `elevation`, `water`, `water_depth`, `flow_dir`, `coast_dist`, `temperature`, `rainfall`, `biome` definitions, `worldgen.biomes` | `biome`; table `biome` | two: `geo.biomes.temp_jitter`, `geo.biomes.rain_jitter` (noise) |
+| 5 | `resources` | P1-05 | `elevation`, `water`, `water_depth`, `flow_dir`, `coast_dist`, `rainfall`, `biome`, `biome` definitions, `worldgen.resources` | `fertility`, `ore`, `timber`, `fresh_water`, `habitability`, `walk_area` | one: `geo.resources.ore` (noise) |
+| 6 | `regions` | P1-06 | `elevation`, `water`, `water_depth`, `river`, `biome`, `habitability`, `walk_area`, `biome` definitions, `worldgen.regions` | `region`; tables `region`, `region_border` | two: `geo.regions.seed` (`hash_at`), `geo.regions.cost` (noise) |
 
-Stream names are registered in `worldgen/include/worldgen/core/streams.hpp` (P0-01 7.3). The prefixes `geo.climate.`, `geo.biomes.`, `geo.resources.` and `geo.regions.` are reserved for the second-pass stages. A stage uses its streams as noise keys (`stream_key(seed, name)` passed to `noise2`, `fbm2` or `hash_at`) or as `Rng` keys only in sequential code (rule D9).
+Stream names are registered in `worldgen/include/worldgen/core/streams.hpp` (P0-01 7.3). The prefixes `geo.climate.`, `geo.biomes.`, `geo.resources.` and `geo.regions.` belong to the second-pass stages; the names above are the complete list. A stage uses its streams as noise keys (`stream_key(seed, name)` passed to `noise2`, `fbm2` or `hash_at`) or as `Rng` keys only in sequential code (rule D9).
+
+With every stage run, the layer ids are 1 `elevation`; 2 to 8 the hydrology layers; 9 `temperature`, 10 `rainfall`; 11 `biome`; 12 `fertility`, 13 `ore`, 14 `timber`, 15 `fresh_water`, 16 `habitability`, 17 `walk_area`; 18 `region`.
 
 ## 4. Layer catalogue
 
@@ -82,12 +84,13 @@ Every geography layer. "Fixed" means name, element type, units and meaning are d
 | `river` | `u8` | river size class: class k ≥ 1 means `flow_accum` in [T·2^(k−1), T·2^k), T the river threshold in cells; class 15 is open-ended | 0 to 15 | 0 not a river (also every lake and ocean cell) | `hydrology` | fixed |
 | `lake` | `u32` | lake id, 1, 2, … in order of each lake's first cell in index order | [0, number of lakes] | 0 not a lake | `hydrology` | fixed |
 | `coast_dist` | `i16` | metres, chamfer distance to the sea coast (P1-02) | [-32767, 32767] | > 0 on non-ocean cells (distance to the nearest ocean cell), < 0 on ocean cells (minus the distance to the nearest non-ocean cell); saturates at ±32767 | `hydrology` | fixed |
-| `temperature` | `i16` | annual mean, tenths of a degree Celsius | [-600, 500] | none | `climate` | fixed; further climate layers (seasonality, wind) open |
-| `rainfall` | `u16` | annual precipitation, millimetres | [0, 10000] | none | `climate` | fixed |
+| `temperature` | `i16` | annual mean at the water or land surface, tenths of a degree Celsius | [-600, 500] | none | `climate` | fixed; P1-03 adds no further climate layer |
+| `rainfall` | `u16` | annual precipitation, millimetres | [0, 10000] | none (defined on ocean too) | `climate` | fixed |
 | `biome` | `u8` | biome code from the `biome` definitions (6.6) | 1 to 254 | 0 never present in a finished layer | `biomes` | fixed |
-| `fertility`, `ore`, `timber`, `fresh_water` | `u8` | score, 0 = none to 255 = best on this map's scale | [0, 255] | 0 on ocean | `resources` | names and type fixed; definitions open |
-| `habitability` | `u8` | score as above, combining the four | [0, 255] | 0 on ocean | `resources` | fixed; formula open |
-| `region` | `u16` | region id, a row of table `region` | [0, 65535] | 0 no region (ocean, if sea areas get no regions) | `regions` | type fixed; whether sea and lakes get regions open |
+| `fertility`, `ore`, `timber`, `fresh_water` | `u8` | score, 0 = none to 255 = the maximum of P1-05's scoring function: an absolute scale, the same on every map, not normalized per map | [0, 255] | 0 on ocean; on lakes 0, except `fresh_water` 255 | `resources` | fixed (definitions in P1-05) |
+| `habitability` | `u8` | score as above, combining the four with slope, flooding, coast and walk area | [0, 255] | 0 on ocean and lakes | `resources` | fixed (formula in P1-05) |
+| `walk_area` | `u16` | id of the connected walkable area (P1-05 R5), 1, 2, … in order of each area's smallest index | [0, 65535] | 0 on water, on cells steeper than the walk limit and in areas below the minimum size | `resources` | fixed (added by P1-05, 2026-11-16) |
+| `region` | `u16` | region id, a row of table `region` | [0, 65535] | 0 on ocean only; lakes belong to regions | `regions` | fixed (P1-06: no sea regions) |
 
 Rules:
 
@@ -182,7 +185,7 @@ Fixed now so that the second-pass specs, the render palette and the viewer agree
 | Kind name / directory | `biome` / `biomes` (files in `game/data/biomes/`) |
 | Required | yes, once registered |
 | Fields fixed now | `code` int(1, 254), unique across definitions (named check); `name` string(64), the display name; `colour` int(0, 16777215), 0xRRGGBB for maps; `water` bool, true for water categories |
-| Fields added later | the biome stage spec adds its lookup and special-case fields |
+| Fields added by P1-04 (4.1) | `water_body`, `priority`, `fallback`, `rules` (records `biome_rule` with temperature, rainfall, elevation, slope, drainage-height and coast-distance intervals), `fertility` and `timber` (read by P1-05), `region_noun` (read by P1-06); seven named checks |
 
 Definitions (ids, codes and colours fixed; names are the display defaults):
 
@@ -263,6 +266,22 @@ Input: `rcv` for non-ocean cells. A[c] for non-ocean c = the number of non-ocean
 
 Parallel per-cell work is split into blocks of 64 rows: block b covers rows 64b to min(64b + 64, N) − 1. The split depends only on N. On a W × H grid (tests only) the split is by rows of the grid's height H.
 
+### 7.7 G7: height above drainage (added for the second pass)
+
+Input: the stored `elevation`, `water`, `water_depth` and `flow_dir`. Output: hand[i] in decimetres, `int64`, for every cell. With S = `elevation` + `water_depth` (the water or land surface; 0 on ocean):
+
+```
+drain(c) = c                     if water[c] ∈ {1, 2, 3}   (river, lake, ocean: drain cells)
+         = drain(down(c))        otherwise, down(c) the neighbour that flow_dir[c] points to
+hand[c]  = S[c] − S[drain(c)]    (0 on drain cells)
+```
+
+The result is a function of the layers, so any order that visits a cell after its downstream cell gives it. Reference (D5): a FIFO queue starts with every drain cell in index order; popping c, each neighbour m in the 8-neighbour order with `water`[m] = 0 whose `flow_dir` points to c gets drain(m) = drain(c) and is pushed. Fatal ("G7: …") if a dry cell is not reached (a `flow_dir` that does not lead to water) or if some hand is negative (P1-02 invariant 3 makes both impossible on a hydrology output). Bounds: 0 ≤ hand ≤ 30000. Used by P1-04 (marsh) and P1-05 (floodplain, flooding). Worked example: P1-04 5.1.
+
+### 7.8 G8: cell slope (added for the second pass)
+
+S2 of a cell is the central-difference squared gradient of 10.3 ("Cell slope"), on the stored `elevation` with e' = max(e, 0) and the edge rule given there. Stages compare it with a tangent threshold t (`Fx`, t ≥ 0) exactly as "not steeper than t" ⟺ S2 × 2^64 ≤ (320 × t.raw)² (`U128`), and use the tangent itself as tan = div_int(from_raw(isqrt_u128(S2 × 2^64)), 320) (`Fx`; S2 < 2^33). Examples: S2 = 9216 gives tan raw 1288490189 (0.3); with t = "0.7002" the largest S2 not steeper is 50204, consistent with the report's "steeper than 35°" (S2 ≥ 50205). Used by P1-04 (rule slopes) and P1-05 (fertility, timber, ore, walkability, habitability).
+
 ## 8. Determinism and parallelism
 
 P0-01 4.2 applied to each kind of algorithm geography uses. A stage spec names the rule for each step (for example "E4 is D1; E8 step 4 is D4").
@@ -296,10 +315,10 @@ Planned here so the second-pass specs inherit them; each is made, with its versi
 
 | Version | Change | Branch |
 | --- | --- | --- |
-| 2 | `CREATE TABLE biome (id INTEGER PRIMARY KEY, key TEXT NOT NULL UNIQUE, name TEXT NOT NULL, colour INTEGER NOT NULL, water INTEGER NOT NULL) STRICT`. `id` is the biome `code`, `key` the definition id, `water` 0 or 1. One row per loaded biome definition. Lets the viewer and `render` show biomes from the world file alone. | biomes |
-| 3 | Table `region` (design doc section 6: `id`, `name`, `biome`, `bounds`, summary statistics), exact DDL in the regions spec. | regions |
+| 2 | `CREATE TABLE biome (id INTEGER PRIMARY KEY, key TEXT NOT NULL UNIQUE, name TEXT NOT NULL, colour INTEGER NOT NULL, water INTEGER NOT NULL) STRICT`. `id` is the biome `code`, `key` the definition id, `water` 0 or 1. One row per loaded biome definition. Lets the viewer and `render` show biomes from the world file alone. (P1-04 section 3.) | biomes |
+| 3 | Tables `region` (id, name, dominant biome, bounds as `x_min`, `y_min`, `x_max`, `y_max`, seed cell, cell counts, height and habitability summaries, walk area, landmass) and `region_border` (pairs of bordering regions with border length, lowest crossing height, walkable and river pairs). Exact DDL in P1-06 section 3. `region_border` was not in the first plan (proposals entry B8 to be updated). | regions |
 
-If both land in one branch they share one bump (P0-02 5.2 rule 1).
+If both land in one branch they share one bump (P0-02 5.2 rule 1). The second pass adds no `meta` key and no `param.*` key; the prevailing wind of P1-03 is not stored (P1-03 open question 4).
 
 ## 10. Command-line changes
 
@@ -309,7 +328,7 @@ Amendment A4 carries the exact text for P0-04. Summary:
 
 | Option | Meaning |
 | --- | --- |
-| (default) | Runs every implemented geography stage in the order of section 3. In the first pass: `elevation`, `hydrology`. |
+| (default) | Runs every implemented geography stage in the order of section 3. In the first pass: `elevation`, `hydrology`; with the second pass all six. |
 | `--until STAGE` | Runs the stages up to and including STAGE, a stage name from section 3. `--until none` runs no stage (the P0 "empty world"). An unknown or not-yet-implemented name is a usage error (exit 2). |
 | `--test-pattern` | Runs only the P0 test-pattern stage, as before; no geography. Combining it with `--until` is a usage error. |
 | `--threads N` | 1 to 256 threads for parallel steps (rule D10). Default: the number of hardware threads reported by the system, or 1 if unknown. Never affects the output. |
@@ -346,7 +365,7 @@ Example: e = 250 (25 m) between stops 0 and 500: R = 70 + floor((2·34·250 + 50
 
 **`signed`** (layer `coast_dist`): with P = max(1, largest positive value) and M = max(1, −smallest negative value): v ≥ 0 → (g, g, g) with g = gray_level(v, P) of P0-04 6 (d = v, r = P); v < 0 → (0, 0, 255 − floor(3·gray_level(−v, M)/4)).
 
-`water_depth` keeps `gray`. Second pass: `biome` → **`biome`** palette, colour from table `biome` (row with `id` = value; unknown value (255, 0, 255)); `temperature`, `rainfall` and the scores get ramps in their specs.
+`water_depth` keeps `gray`. Second pass, each defined in its stage spec and registered under `auto`: **`temperature`** and **`rainfall`** ramps (P1-03 9); **`biome`**, the colour of the table `biome` row with `id` = value, unknown (255, 0, 255) (P1-04 9); **`score`** ramp for `fertility`, `ore`, `timber`, `fresh_water`, `habitability` (P1-05 9); `ids` for `walk_area` and `region`.
 
 **Composite `map`** (`--composite map`; default output `<stem>.map.png`). Needs `elevation`; uses `water` and `river` when present. Per cell:
 
@@ -354,11 +373,11 @@ Example: e = 250 (25 m) between stops 0 and 500: R = 70 + floor((2·34·250 + 50
 2. Otherwise the hypsometric land colour, shaded: with e' = max(e, 0) of a neighbour and coordinates clamped to the map, gx = e'(x+1, y) − e'(x−1, y), gy = e'(x, y+1) − e'(x, y−1); f = clamp(256 + floor_div(gx + gy, 2), 160, 352); each channel c becomes min(255, (c·f + 128) >> 8). (Light from the north-west: slopes rising to the south-east are brighter.)
 3. If `water` is present: a lake cell (2) is (64, 128, 204); a river cell (1) takes the `river` palette colour of its class (if `river` is absent, (52, 100, 200)).
 
-The second pass may add composites (for example `biomes`: biome colour shaded as in step 2, water as in step 3).
+The second pass adds two composites: **`biomes`** (biome colour shaded as in step 2, ocean and water as in steps 1 and 3; P1-04 9) and **`regions`** (`biomes` with region borders in black; P1-06 9). `--composite` then accepts `map`, `biomes` and `regions` (a P0-04 amendment for the lead, with amendment A4's text extended).
 
 ### 10.3 `report`
 
-Format version 2: the header becomes `# worldgen report v2`, sections `[meta]`, `[tables]`, `[layers]` as in v1, followed by `[geography]` when the world has an `elevation` layer. The second pass appends lines to `[geography]` for its layers. All numbers are integers or exact decimals:
+Format version 2: the header becomes `# worldgen report v2`, sections `[meta]`, `[tables]`, `[layers]` as in v1, followed by `[geography]` when the world has an `elevation` layer. The second pass appends lines to `[geography]` for its layers, after the hydrology lines, in stage order, each group only when its layers (and tables) are present: climate (P1-03 9: `temperature_c`, `rainfall_mm`, `land_below_0c`, `rain_contrast`), biomes (P1-04 9: `biome_share`, `biome_patches`), resources (P1-05 9: `scores_p50`, `scores_p90`, `habitable_share`, `walk_areas`, `walk_main_share`, `walk_share`), regions (P1-06 9: `regions`, `region_area_km2`, `region_borders`, `region_borders_walkable`, `regions_isolated`). Whether these keep format v2 is open question 9. All numbers are integers or exact decimals:
 
 - `ratio4(a, b)`: RHA(a × 10^4 / b) printed as an integer part, `.`, and four digits (e.g. `0.4213`); `n/a` if b = 0.
 - `metres1(v)` for a value v in decimetres: `-` if v < 0, then |v| div 10, `.`, |v| mod 10 (e.g. `-12.5`).
@@ -456,6 +475,8 @@ Geography needs none of the functions deferred in P0-01 9.2 (`sin`, `cos`, `atan
 
 Expected for the second pass, recorded so its specs do not reach for transcendentals by habit: temperature linear in latitude and elevation; prevailing wind on the 8 D8 directions (or 16, with a committed table of integer vectors); moisture decay along the wind as a repeated multiply by a factor, per cell step. If a second-pass spec still needs a deferred function, it adds it to P0-01 in the form 9.2 demands.
 
+As written (2026-11-16), the second pass needs none of the deferred functions either: P1-03 uses exactly the formulation above (temperature linear in V and height; one wind on the D8 directions, diagonal steps scaled by `SQRT2`; moisture reduced by a linear loss per step); slopes are G8's exact squared comparisons or `isqrt_u128`; ramps are piecewise linear; region names use the integer sector test 29|dy| ≤ 12|dx| in place of an angle.
+
 Amendment A1 adds two named constants and one integer helper to P0-01: `SQRT2` (raw 6074001000, round(√2 · 2^32)), `INV_SQRT2` (raw 3037000500, round(2^32/√2)) and `bit_length(uint64)`.
 
 ## 13. How the result is judged
@@ -497,7 +518,22 @@ Fractions apply at every map size. Counts are given for 1024; at 512 divide by 4
 
 Changed against the first ranges: `coast_ratio` hard 1.5 → 1.4 and typical 2.0–4.5 → 1.6–3.5 (the v16 median is 1.9 to 2.0); `land_solidity` hard upper 0.90 → 0.93, typical 0.55–0.85 → 0.70–0.90; p90 typical 450–1000 → 400–1100 m (2048 from 330 m), hard minimum 300 m kept at 512 and 1024 and lowered to 200 m at 2048 after the validation sweep (its D2); p100 hard 1200–2400 → 1200–2800 m and typical 1600–2400 → 1500–2600 m (512: 1300–2400 m); `land_above_m` 1500 lower bounds removed, upper 0.06 → 0.08; `land_above_m` 500 typical 0.10–0.25 → 0.08–0.30; `step_p999_m` hard at every size, ≤ 200 m at 512 (after the validation sweep's D1, 512 seed 41) and ≤ 150 m at 1024 and 2048, with a typical ≤ 150 m at 512 for at least 95% of seeds; the slope statistics, `lowland_flat_share` and `edge_parallel_run_m` settled as above; `lakes` per size; `lake_share_of_land` lower hard bound removed (a 512 world may have no lake), upper set by construction (the cap always applies, P1-01 E10.3); `river_share_of_land` hard 0.01 → 0.003 and typical 0.02–0.06 → 0.004–0.06; `longest_river_m` hard 0.25 → 0.15 and typical 0.4 → 0.25 of the side (512 worlds are mountain-heavy and their rivers short).
 
-Second pass: the fraction of land in each of the five natural biomes is at least 0.02 in 90% of seeds and no natural biome exceeds 0.6; `blighted_waste` covers 0 cells in P1. The biome spec states these in its own terms.
+**Second pass (provisional, 2026-11-16).** The rows below come from the stage specs' section 9. None has been measured on an implementation: they were set from the spec writer's floating-point prototype of climate, biomes, walk areas and regions on 20 worlds of generator 0.3.0 (P1-03 section 11), with substitute noise and approximate hydrology. The validation specialist replaces each with the first implementation sweep: typical = the measured min–max widened by about 10% (must still contain at least 90% of seeds), hard = only where a value outside would mean a defect. Until then a miss is reported, not a defect.
+
+| Statistic | All seeds (hard) | Typical (≥ 90%) | Prototype | Spec |
+| --- | --- | --- | --- | --- |
+| `temperature_c` p50 | catalogue range (construction) | 3.0–9.0 °C | 4.6–6.2 °C | P1-03 |
+| `rainfall_mm` p50 | ≥ `rain_min_mm` (construction) | 600–1200 mm | 670–950 mm | P1-03 |
+| `rain_contrast` | descriptive | 1.5–10 | 2.5–7 | P1-03 |
+| `biome_share`, each of the five natural biomes | ≤ 0.80 | 0.02–0.65 | forest 0.35–0.66, grassland 0.11–0.43, marsh 0.017–0.098, moor 0.05–0.27, alpine 0.04–0.12 | P1-04 |
+| `biome_share` blighted_waste | 0 | — | 0 | P1-04 |
+| `walk_main_share` | ≥ 0.30 | ≥ 0.50 | 0.55–0.83 | P1-05 |
+| `walk_areas` (1024) | ≥ 1 | 1–20 | | P1-05 |
+| `scores_p90` ore | ≥ 1 | — | | P1-05 |
+| `regions` (1024; count rule above) | 10–200 | 25–70 | 43–46 (512: 12–13) | P1-06 |
+| `region_area_km2` p50 / p100 | — / ≤ 20 | 1.5–4.0 / ≤ 8 | 1.9–2.6 / 3.3–5.2 | P1-06 |
+
+This replaces the earlier sentence "each natural biome at least 0.02 in 90% of seeds and none above 0.6": the prototype's forest reached 0.66 in one world of twenty, so the typical upper bound is 0.65 until the sweep.
 
 ### 13.2 Visual checklist
 
@@ -514,6 +550,15 @@ For the world critic, on `render --composite map --scale 1` (and `--layer elevat
 9. The three map sizes look like the same kind of world.
 10. Places history needs exist on most maps: fertile river valleys and plains, hill and spur sites above them, gaps between the ends of ranges. (The first merged elevation has no natural saddle passes: ranges are barriers that history crosses with built roads; proposals "Natural passes through the ranges".)
 
+Second pass (on `render --composite biomes` and `--composite regions`, `--layer rainfall`, `--layer habitability`, `--layer walk_area`):
+
+11. Ranges cast rain shadows: the windward side is wetter and more forested than the lee, and the contrast is visible on every world with a range across the wind.
+12. Biomes form coherent patches with ragged edges (groves, clearings), not speckle and not smooth contour bands; alpine caps the high ranges, moor rings them, marsh lines valley floors, lake shores and low coasts.
+13. No wind streaks or seams in the rain field strong enough to show as straight biome edges.
+14. The best sites (high habitability) are on gentle, watered lowland, often by rivers and coasts; steep ground is 0.
+15. Walk areas: one main lowland plus separate high valleys and cliff-bound pockets where the terrain encloses them.
+16. Region borders follow ranges, ridges and major rivers where there are any; on open lowland they are irregular, not straight Voronoi lines; region names are readable and not absurd for their terrain.
+
 Images of a few seeds, chosen by the critic, go into `docs/reviews/` with the review (small, deliberately copied, per `CLAUDE.md`).
 
 **Known limitations of the first merged elevation.** P1-01 section 11 lists the limitations accepted for the first merge (closed ranges without passes, small filled pads among peaks, the floor's shapes in a few worlds, a few straight gullies, octagonal sea contours, coastal-cliff pockets, the lake cap, steep 512 worlds, v13's coasts and lowlands). A critic's checklist answers items 3, 4, 5, 7, 8 and 10 against that list and the reviews of v13 and v15 (`docs/reviews/p1-01-elevation-v13.md`, `docs/reviews/p1-01-elevation-v15.md`); a limitation on the list is reported with its seeds but is not a new defect.
@@ -522,7 +567,7 @@ Images of a few seeds, chosen by the critic, go into `docs/reviews/` with the re
 
 Each stage spec lists its own tests. These belong to no single stage:
 
-- **X1 Pipeline.** `generate` with default options writes `elevation` then the hydrology layers, with ids 1 to 8 in catalogue order, and `meta.stages` = `elevation,hydrology`. `--until elevation` writes only `elevation` and `stages` = `elevation`. `--until none` writes no layer and `stages` empty. `--until climate` (not yet implemented) and `--until bogus` exit 2. `--test-pattern --until elevation` exits 2.
+- **X1 Pipeline.** `generate` with default options writes `elevation` then the hydrology layers, with ids 1 to 8 in catalogue order, and `meta.stages` = `elevation,hydrology`. `--until elevation` writes only `elevation` and `stages` = `elevation`. `--until none` writes no layer and `stages` empty. `--until climate` (not yet implemented) and `--until bogus` exit 2. `--test-pattern --until elevation` exits 2. As each second-pass stage is implemented, the default run writes its layers with the ids of section 3 (all six stages: ids 1 to 18, `stages` = `elevation,hydrology,climate,biomes,resources,regions`), `--until <stage>` stops after it, and the first unimplemented stage name exits 2; the `biome`, `region` and `region_border` tables are empty unless their stage ran.
 - **X2 Resume equivalence.** For seeds 0 and 42 at N = 128 (library) and 512 (CLI): run `elevation`, write the world, open it with the reader, run `hydrology` on the decoded `elevation` grid alone; every hydrology layer equals the one from an uninterrupted run (layer hashes of P0-04 8).
 - **X3 Threads.** `generate` at 512 for seeds 0 and 42 with `--threads 1`, `2` and `5`: byte-identical files.
 - **X4 Map-size independence of the outline.** Not a hard test: the validation specialist reports, for 10 seeds, the share of cells on which the land mask at 1024, downsampled 2:1 by majority (land if at least 2 of 4), agrees with the land mask at 512. Expected well above 0.9.
@@ -536,6 +581,8 @@ Fixed by this overview and the first-pass specs: stage order and names; layer na
 
 Left open for the second pass: the climate model (wind directions, rain shadow, lapse rate, seasonality, any extra climate layers); whether river discharge should be re-weighted by rainfall after climate (hydrology's `flow_accum` assumes uniform rain, P1-02 open question 2); the biome lookup and special-case rules and their tuning; how resources and habitability are scored; the region algorithm, sizes, whether sea and lakes get regions, region names (possibly a P3 language system), and the `region` table's columns; a river or lake table if history needs named rivers (P1-02 section 9).
 
+Decided by the second-pass specs (drafts, 2026-11-16): one prevailing wind per world on the D8 directions, drawn from the seed; orographic rain with moisture depletion along the wind; no seasonality and no extra climate layer; no rainfall-weighted discharge (P1-03). Biome rules as data with priorities; marsh by height above drainage (G7); alpine by temperature (P1-04). Absolute scores; a `walk_area` layer for what the ranges separate (P1-05). Regions by a cost flood from habitability-ranked seeds, borders on ridges and major rivers, no sea regions, placeholder names, a `region_border` table (P1-06). Still open: a river or lake table for history (P1-02 section 9).
+
 ## 16. Open questions
 
 1. **The map-size convention** (2.2): more land at the same scale; continental layout in map fractions, relief in metres; climate latitude span in map fractions. Approve. Proposals B1, B2.
@@ -546,6 +593,8 @@ Left open for the second pass: the climate model (wind directions, rain shadow, 
 6. **Budget** (section 11): 15 s for geography at 1024. Approve or set another split for milestone 1.
 7. **`--threads` default** is the hardware thread count. The alternative, default 1, is slower for every user for no determinism benefit, since rule D10 makes the count irrelevant to output.
 8. **Report format version.** The `[geography]` keys `step_p999_m`, `slope_over`, `slope_p50_above_500m`, `lowland_flat_share` and `edge_parallel_run_m` (10.3) change the report text of every geography world. Interim: the format stays v2, since no geography world is yet a released contract and the CI goldens of P1 are not recorded; if the lead prefers, the header becomes `# worldgen report v3`.
+9. **Report format for the second-pass keys** (10.3). The P1 golden files record world-file hashes, not `report` text (`p1-worlds.txt`), so appending keys changes no recorded golden. Recommendation: keep v2 and append, by appendix C item 20's rule; the cross-preset comparison of report text in `world-hashes.sh` picks the new keys up automatically.
+10. **Second-pass catalogue and schema** (section 4, 9.2): the new layer `walk_area`, the absolute meaning of the scores, `region` 0 on ocean only, schema 2 (`biome`) and 3 (`region`, `region_border`). Approve; the proposals entry B8 and `docs/specs/schema.md` record them.
 
 ## Appendix A. Requested amendments to P0 specs
 
@@ -637,7 +686,7 @@ In the format of `docs/design/proposals.md`, for the lead to add.
 - Raised by: spec-writer
 - Design doc section: 6 (schema growth)
 - Problem: the phase's schema changes need one proposals entry (P0-02 5.2 rule 3).
-- Proposal: first pass (elevation, hydrology): none; schema stays at version 1. Second pass: version 2 adds table `biome`; version 3 (or the same bump, if in one branch) adds table `region`. This entry is updated when the second-pass specs fix the DDL.
+- Proposal: first pass (elevation, hydrology): none; schema stays at version 1. Second pass: version 2 adds table `biome` (P1-04 section 3); version 3 (or the same bump, if in one branch) adds tables `region` and `region_border` (P1-06 section 3; `region_border`, the region adjacency graph with border length, lowest crossing and walkable and river pairs, was not in the first plan). The design doc's `region.bounds` is stored as four integer columns. The layer catalogue gains `walk_area` (no version bump, P1-00 4 rule 3), and the score layers are defined on an absolute scale. Updated 2026-11-16 by the second-pass specs.
 - Interim choice: as proposed, in p1-00 section 9.
 - Status: open
 

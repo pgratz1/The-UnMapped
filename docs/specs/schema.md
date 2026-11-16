@@ -47,8 +47,9 @@ The authoritative catalogue, with value ranges and special values, is P1-00 sect
 | `temperature` | `i16` | annual mean, 0.1 °C | `climate` | planned (P1 second pass) |
 | `rainfall` | `u16` | mm per year | `climate` | planned |
 | `biome` | `u8` | biome code (table `biome`) | `biomes` | planned |
-| `fertility`, `ore`, `timber`, `fresh_water`, `habitability` | `u8` | score 0 to 255 | `resources` | planned |
-| `region` | `u16` | region id (table `region`) | `regions` | planned |
+| `fertility`, `ore`, `timber`, `fresh_water`, `habitability` | `u8` | score 0 to 255 on an absolute scale (P1-05) | `resources` | planned |
+| `walk_area` | `u16` | walkable-area id, 0 none (P1-05) | `resources` | planned (added 2026-11-16) |
+| `region` | `u16` | region id (table `region`), 0 on ocean | `regions` | planned |
 | `test.ramp`, `test.hash`, `test.noise` | `u8`, `u8`, `i16` | P0 test pattern, 256 × 256 (P0-04 5.2) | `test_pattern` | P0 (schema 1) |
 
 ## 4. Planned changes
@@ -58,7 +59,7 @@ From P1-00 section 9.2; the DDL becomes final in the spec of the branch that mak
 | Version | Change | Branch |
 | --- | --- | --- |
 | 2 | `CREATE TABLE biome (id INTEGER PRIMARY KEY, key TEXT NOT NULL UNIQUE, name TEXT NOT NULL, colour INTEGER NOT NULL, water INTEGER NOT NULL) STRICT` | biomes (P1 second pass) |
-| 3 | table `region` | regions (P1 second pass) |
+| 3 | tables `region` and `region_border` (DDL proposed in `p1-06-regions.md` section 3) | regions (P1 second pass) |
 
 ## 5. Changelog
 
