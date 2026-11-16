@@ -49,7 +49,7 @@ The full design is in [`docs/design/design.md`](docs/design/design.md).
 | **Current phase** | P1 Geography. P0 Foundation and P2 Godot bring-up and viewer v0 are complete |
 | **Next phase** | P3 History core, after P1 |
 | **Current milestone** | Milestone 0, Geography generator: in progress (P1 and P2) |
-| **Work in flight** | P1: the shared foundation is merged (flood, components, accumulation, deterministic row-block threads, stage pipeline, `generate --until` and `--threads`). The elevation stage is implemented and deterministic but its first terrain is not acceptable (round islands, worm-shaped ranges), so its design is being reworked on an experimental branch before the spec is revised. The render palettes, composite map and `report` v2 are implemented on branch `p1/inspect` and being tested. |
+| **Work in flight** | P1: the shared foundation and the inspection tools are merged (`render` palettes and `--composite map`, `report` v2 with geography statistics, `generate --until` and `--threads`). The elevation stage is implemented and deterministic; its first terrain was not acceptable, and a reworked design (irregular continents, segmented ranges, heights composed in metres) is in its second round of exploration on an experimental branch before the spec is revised. No geography stage is on `main` yet. |
 | **`main`** | Builds and passes all tests on Linux (GCC, Clang, Clang with sanitizers) and Windows (MSVC), in debug and release |
 
 **What "P0 done" means.** The phase's exit check is that an empty world file is byte-identical across all three compilers and that `worldgen-cli hash` proves it in continuous integration. It does: eight test worlds, six empty and two holding test layers, are identical across all seven build configurations, and each matches its recorded golden hash. CI repeats the comparison on every push.
@@ -128,7 +128,7 @@ $ worldgen-cli generate --seed-phrase "The Unmapped" --test-pattern
 /home/you/.cache/the-unmapped/out/world-15629206466951235176.db
 
 $ worldgen-cli report --db ~/.cache/the-unmapped/out/world-15629206466951235176.db
-# worldgen report v1
+# worldgen report v2
 [meta]
 content_hash = e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
 format = the-unmapped-world

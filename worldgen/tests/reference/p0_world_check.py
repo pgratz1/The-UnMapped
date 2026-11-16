@@ -297,7 +297,7 @@ def compute(path):
     w["layers"] = layers
     w["detail"] = b"\n".join(detail) + b"\n"
     meta = w["tables"].get(b"meta", ([], []))[1]
-    rep = [b"# worldgen report v1", b"[meta]"]
+    rep = [b"# worldgen report v2", b"[meta]"]
     for k, v in meta:
         line = escape(k[1]) + b" = " + escape(v[1])
         rep.append(line.rstrip(b" ") if v[1] == b"" else line)
