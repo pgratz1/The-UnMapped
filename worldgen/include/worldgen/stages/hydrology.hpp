@@ -3,9 +3,11 @@
 // Stage P1-02 hydrology (spec docs/specs/p1-02-hydrology.md; P1-00 sections
 // 3, 4, 7 and 8).
 //
-// Pure analysis of the stored `elevation` layer (P1-00 5.1): no randomness,
-// and `elevation` is not changed. Steps H1 to H9: preconditions (H1), the G3
-// routing flood on the decimetre heights (H2), lakes as the G2 components of
+// Analysis of the stored `elevation` layer (P1-00 5.1), which is not
+// changed. Its only seed-dependent input is the tie-break noise of H2
+// (stream geo.hydrology.flat), which orders cells inside a decimetre flat
+// and never changes a lake or a water level. Steps H1 to H9: preconditions
+// (H1), the G3 routing flood on keys e x 2^16 + t (H2), lakes as the G2 components of
 // the cells below their flood level (H3), G4 receivers with one outlet per
 // lake (H4), accumulation by Kahn's method (H5), per-cell classification
 // (H6), the chamfer coast distance (H7), and the seven layers written in one
@@ -31,6 +33,7 @@
 #include "worldgen/geo/components.hpp"
 #include "worldgen/geo/flow.hpp"
 #include "worldgen/geo/grid.hpp"
+#include "worldgen/geo/noise.hpp"
 #include "worldgen/stages/stage.hpp"
 
 namespace worldgen::stages {
@@ -66,6 +69,7 @@ inline constexpr std::int64_t RIVER_MIN_AREA_HI = 1000000000;
 // The fields of definition `worldgen.hydrology`.
 struct HydrologyTuning {
     std::int64_t river_min_area_m2 = 0;
+    geo::FbmM flat_noise;  // the tie-break noise of H2 (P1-02 4, S2)
 
     friend bool operator==(const HydrologyTuning&, const HydrologyTuning&) = default;
 };
@@ -95,21 +99,44 @@ void check_hydrology_preconditions(geo::Grid grid, std::span<const std::int16_t>
 
 // --- H2 to H5: the drainage network ----------------------------------------------------------
 
+// --- H2 step 1: tie values ---------------------------------------------------------------
+
+// The largest tie value t (P1-02 H2): t is in [0, 65535].
+inline constexpr std::int64_t FLAT_TIE_MAX = 65535;
+// Keys of the routing flood carry t in their low 16 bits (P1-02 H2).
+inline constexpr std::int32_t FLAT_TIE_BITS = 16;
+
+// H2 step 1 on a W x H grid (D1, G6 row blocks): 0 on ocean cells
+// (ocean[i] != 0); on land, with X = from_int(16x + 8), Y = from_int(16y +
+// 8) and nz = fbm_m(stream_key(seed, "geo.hydrology.flat"), X, Y,
+// tuning.flat_noise), t = min(65535, (nz.raw + 2^32) >> 17). Fatal if the
+// grid or the mask length is invalid, threads is outside [1, 256], or the
+// noise is (for example a coordinate beyond the P0-01 bounds).
+[[nodiscard]] std::vector<std::uint16_t> flat_tie(std::uint64_t seed, geo::Grid grid,
+                                                  std::span<const std::uint8_t> ocean, const HydrologyTuning& tuning,
+                                                  std::uint32_t threads = 1);
+
+// --- H2 to H5: the drainage network ----------------------------------------------------------
+
 // The intermediate results of H2 to H5 (P1-02 8.1 test 1).
 struct HydrologyNetwork {
     std::vector<std::uint8_t> ocean;   // 1 where e < 0 (the mask O)
-    geo::RoutingFlood flood;           // H2: L, parent, order (G3 on keys e)
+    geo::RoutingFlood flood;           // H2: Lk (G3 on keys k = e x 2^16 + t), parent, order
+    std::vector<std::int64_t> level_dm;  // H2 step 4: L = Lk >> 16, decimetres
     std::vector<geo::Direction> g4;    // H4 step 1: G4 receivers before rerouting (8 on ocean)
     geo::Components lakes;             // H3: lake components (G2, 8-connected, equal L); label = lake id
-    std::vector<std::int64_t> lake_level;     // lake_level[k - 1]: the common L of lake k
+    std::vector<std::int64_t> lake_level;     // lake_level[k - 1]: the common L (decimetres) of lake k
     std::vector<geo::CellIndex> lake_outlet;  // lake_outlet[k - 1]: the outlet of lake k (H4 step 2)
     std::vector<geo::Direction> rcv;   // H4: final receivers (flow_dir), 8 on ocean
     std::vector<std::uint32_t> accum;  // H5: A, 0 on ocean
 };
 
-// H1 then H2 to H5 on a W x H grid of decimetre heights.
+// H1 then H2 to H5 on a W x H grid of decimetre heights and tie values
+// (one per cell, ignored on ocean; an empty span means t = 0 everywhere,
+// which gives the routing of keys e alone, P1-02 H2 "t = 0"). Fatal if a
+// non-empty tie span has another length than grid.cells().
 [[nodiscard]] HydrologyNetwork hydrology_network(geo::Grid grid, std::span<const std::int16_t> e,
-                                                 std::uint32_t threads = 1);
+                                                 std::span<const std::uint16_t> tie, std::uint32_t threads = 1);
 
 // --- H7: coast distance ---------------------------------------------------------------------
 
@@ -132,15 +159,17 @@ struct HydrologyLayers {
     std::vector<std::int16_t> coast_dist;
 };
 
-// H1 to H8 on a W x H grid of decimetre heights (P1-02 8, the interim seam
-// `hydrology_layers`).
+// H1 to H8 on a W x H grid of decimetre heights and tie values (as
+// hydrology_network; P1-02 8). The stage passes flat_tie(seed, ...).
 [[nodiscard]] HydrologyLayers hydrology_layers(geo::Grid grid, std::span<const std::int16_t> e,
-                                               const HydrologyTuning& tuning, std::uint32_t threads = 1);
+                                               std::span<const std::uint16_t> tie, const HydrologyTuning& tuning,
+                                               std::uint32_t threads = 1);
 
 // The stage entry point (P1-02 H9, P1-00 3): reads worldgen.hydrology from
 // the context's content and the stored `elevation` layer (i16, N x N with N
 // = param.map_size; fatal otherwise), runs hydrology_layers and writes the
-// seven layers (codec 1) in the order of section 3.
+// seven layers (codec 1) in the order of section 3. The tie values are
+// flat_tie(meta.seed, ...).
 void run_hydrology(StageContext& context);
 
 }  // namespace worldgen::stages

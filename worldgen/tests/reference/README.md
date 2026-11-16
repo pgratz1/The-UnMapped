@@ -113,7 +113,7 @@ takes the argument bytes exactly as passed to `generate --seed-phrase` (any
 bytes, not only UTF-8); the expected `seed_phrase` row is the scrubbed phrase
 and the expected seed its `phrase_seed` (P0-01 7.3, P0-02 amendment 12). The
 expected `generator_version` is the constant `GENERATOR_VERSION` at the top of
-the script (`0.4.0`), overridable with `--generator-version`; the expected
+the script (`0.5.0`), overridable with `--generator-version`; the expected
 `content_hash` is that of no data unless `--content-hash` gives another (worlds
 written by `worldgen-cli` carry the hash of the loaded data, P0-03 amendment
 17). It was used

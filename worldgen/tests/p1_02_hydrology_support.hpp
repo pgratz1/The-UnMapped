@@ -55,7 +55,8 @@ inline constexpr std::uint32_t THREADS = 4;
 // --- Tuning (P1-02 section 4) ----------------------------------------------------------
 
 inline std::string hydrology_toml(std::int64_t river_min_area_m2) {
-    return "[worldgen.hydrology]\nriver_min_area_m2 = " + std::to_string(river_min_area_m2) + "\n";
+    return "[worldgen.hydrology]\nriver_min_area_m2 = " + std::to_string(river_min_area_m2) +
+           "\nflat_noise = { wavelength_m = 400, octaves = 1, gain = \"0.5\" }\n";
 }
 
 // T = ceil(river_min_area_m2 / 256), the test's own (section 4).

@@ -124,6 +124,7 @@ Schema worldgen_elevation_schema() {
 Schema worldgen_hydrology_schema() {
     return Schema(std::vector<Field>{
         Field::required("river_min_area_m2", Type::integer(256, 1000000000)),
+        Field::required("flat_noise", geo::fbm_m_type()),
     });
 }
 

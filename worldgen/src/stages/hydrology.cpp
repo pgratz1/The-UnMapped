@@ -9,11 +9,14 @@
 #include <utility>
 
 #include "worldgen/core/error.hpp"
+#include "worldgen/core/hash.hpp"
 #include "worldgen/core/math.hpp"
 #include "worldgen/core/parallel.hpp"
+#include "worldgen/core/streams.hpp"
 #include "worldgen/data/schema.hpp"
 #include "worldgen/db/layer_blob.hpp"
 #include "worldgen/geo/blocks.hpp"
+#include "worldgen/geo/noise_schema.hpp"
 #include "worldgen/stages/elevation.hpp"
 
 namespace worldgen::stages {
@@ -72,6 +75,7 @@ db::LayerGrid layer_of(Grid grid, std::vector<T> values) {
 HydrologyTuning hydrology_tuning_from(const data::Record& record) {
     HydrologyTuning t;
     t.river_min_area_m2 = record.get_int("river_min_area_m2");
+    t.flat_noise = geo::fbm_m_from(record.get("flat_noise"));
     return t;
 }
 
@@ -146,25 +150,67 @@ void check_hydrology_preconditions(Grid grid, std::span<const std::int16_t> e) {
     }
 }
 
+// --- H2 step 1: tie values (D1) -----------------------------------------------------------------
+
+std::vector<std::uint16_t> flat_tie(std::uint64_t seed, Grid grid, std::span<const std::uint8_t> ocean,
+                                    const HydrologyTuning& tuning, std::uint32_t threads) {
+    check_threads(threads);
+    geo::check_grid_array(grid, ocean.size(), "flat_tie: ocean");
+    const std::uint64_t key = stream_key(seed, streams::geo_hydrology_flat);
+    std::vector<std::uint16_t> tie(grid.cells(), 0U);
+    // Per-cell function in G6 row blocks: each block writes only its cells.
+    geo::for_each_row_block(grid.height, threads, [&](const geo::RowBlock& block) {
+        for (std::int32_t y = block.y_begin; y < block.y_end; ++y) {
+            const Fx ym = Fx::from_int(geo::CELL_M * y + geo::CELL_M / 2);
+            for (std::int32_t x = 0; x < grid.width; ++x) {
+                const CellIndex i = grid.index(x, y);
+                if (ocean[i] != 0U) {
+                    continue;  // t = 0 on ocean
+                }
+                const Fx xm = Fx::from_int(geo::CELL_M * x + geo::CELL_M / 2);
+                const Fx nz = geo::fbm_m(key, xm, ym, tuning.flat_noise);  // in [-ONE, ONE]
+                // nz.raw + 2^32 in [0, 2^33]; >> 17 gives [0, 65536].
+                const std::int64_t t = std::min(FLAT_TIE_MAX, (nz.raw() + (std::int64_t{1} << 32)) >> 17);
+                tie[i] = static_cast<std::uint16_t>(t);
+            }
+        }
+    });
+    return tie;
+}
+
 // --- H2 to H5 ----------------------------------------------------------------------------------
 
-HydrologyNetwork hydrology_network(Grid grid, std::span<const std::int16_t> e, std::uint32_t threads) {
+HydrologyNetwork hydrology_network(Grid grid, std::span<const std::int16_t> e, std::span<const std::uint16_t> tie,
+                                   std::uint32_t threads) {
     check_threads(threads);
     check_hydrology_preconditions(grid, e);  // H1
     const std::uint32_t n = grid.cells();
+    if (!tie.empty()) {
+        geo::check_grid_array(grid, tie.size(), "hydrology: tie values");
+    }
     HydrologyNetwork net;
 
-    // H2 (D6): G3 on keys e with ocean mask O. Land keys are >= 1 (H1).
+    // H2 (D6): G3 on keys k = e x 2^16 + t with ocean mask O; ocean keys 0.
+    // Land e is in [1, 32767] (H1), so land keys are in [2^16, 2^31).
     net.ocean.assign(n, 0U);
     {
         std::vector<std::int64_t> keys(n, 0);
         for (CellIndex i = 0; i < n; ++i) {
-            keys[i] = e[i];
-            net.ocean[i] = e[i] < 0 ? 1U : 0U;
+            if (e[i] < 0) {
+                net.ocean[i] = 1U;
+                continue;
+            }
+            const std::int64_t t = tie.empty() ? 0 : std::int64_t{tie[i]};
+            keys[i] = std::int64_t{e[i]} * (std::int64_t{1} << FLAT_TIE_BITS) + t;
         }
         net.flood = geo::routing_flood(grid, keys, net.ocean);
     }
-    const std::vector<std::int64_t>& level = net.flood.level;
+    // H2 step 4: L = Lk >> 16 (Lk >= 0), the flood level in decimetres.
+    net.level_dm.assign(n, 0);
+    for (CellIndex i = 0; i < n; ++i) {
+        net.level_dm[i] = net.flood.level[i] >> FLAT_TIE_BITS;
+    }
+    const std::vector<std::int64_t>& level = net.level_dm;
 
     // H3 (D5, G2): lake cells are land cells with L > e; components with
     // 8-connectivity and the equivalence "equal L".
@@ -181,8 +227,9 @@ HydrologyNetwork hydrology_network(Grid grid, std::span<const std::int16_t> e, s
         net.lake_level[k - 1U] = level[net.lakes.order[net.lakes.start[k - 1U]]];
     }
 
-    // H4 step 1 (D1, G6 row blocks): G4 receivers.
-    net.g4 = geo::receivers(grid, level, net.flood.parent, net.ocean, threads);
+    // H4 step 1 (D1, G6 row blocks): G4 receivers on the fine flood
+    // surface Lk (drops below 2^31, scores below 2^63).
+    net.g4 = geo::receivers(grid, net.flood.level, net.flood.parent, net.ocean, threads);
     net.rcv = net.g4;
 
     // H4 step 2 (D5): the outlet of each lake is its first cell in `order`.
@@ -250,11 +297,11 @@ std::vector<std::int16_t> coast_distance(Grid grid, std::span<const std::uint8_t
 
 // --- The whole stage ----------------------------------------------------------------------------
 
-HydrologyLayers hydrology_layers(Grid grid, std::span<const std::int16_t> e, const HydrologyTuning& tuning,
-                                 std::uint32_t threads) {
+HydrologyLayers hydrology_layers(Grid grid, std::span<const std::int16_t> e, std::span<const std::uint16_t> tie,
+                                 const HydrologyTuning& tuning, std::uint32_t threads) {
     check_threads(threads);
     const std::int64_t t = river_threshold_cells(tuning.river_min_area_m2);
-    HydrologyNetwork net = hydrology_network(grid, e, threads);  // H1 to H5
+    HydrologyNetwork net = hydrology_network(grid, e, tie, threads);  // H1 to H5
     const std::uint32_t n = grid.cells();
 
     HydrologyLayers out;
@@ -281,7 +328,7 @@ HydrologyLayers hydrology_layers(Grid grid, std::span<const std::int16_t> e, con
             const std::uint32_t k = net.lakes.label[i];
             if (k != 0U) {
                 out.water[i] = WATER_LAKE;
-                out.water_depth[i] = static_cast<std::uint16_t>(net.flood.level[i] - ei);  // L - e < 32767
+                out.water_depth[i] = static_cast<std::uint16_t>(net.level_dm[i] - ei);  // L - e < 32767
                 out.lake[i] = k;
                 continue;
             }
@@ -314,7 +361,13 @@ void run_hydrology(StageContext& context) {
     }
     const auto n = static_cast<std::int32_t>(map_size);
     const Grid grid = geo::square_grid(n);
-    HydrologyLayers layers = hydrology_layers(grid, *e, tuning, context.threads());
+    // H2 step 1: the tie values need only the ocean mask O = {e < 0}.
+    std::vector<std::uint8_t> ocean(grid.cells(), 0U);
+    for (CellIndex i = 0; i < grid.cells(); ++i) {
+        ocean[i] = (*e)[i] < 0 ? 1U : 0U;
+    }
+    const std::vector<std::uint16_t> tie = flat_tie(context.seed(), grid, ocean, tuning, context.threads());
+    HydrologyLayers layers = hydrology_layers(grid, *e, tie, tuning, context.threads());
     // H9: one transaction (the pipeline's), in the order of section 3.
     context.write_layer(WATER_LAYER, layer_of(grid, std::move(layers.water)));
     context.write_layer(WATER_DEPTH_LAYER, layer_of(grid, std::move(layers.water_depth)));

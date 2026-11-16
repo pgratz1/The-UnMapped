@@ -42,13 +42,16 @@ inline constexpr std::string_view geo_elevation_detail = "geo.elevation.detail";
 inline constexpr std::string_view geo_elevation_erosion = "geo.elevation.erosion";
 inline constexpr std::string_view geo_elevation_fill = "geo.elevation.fill";
 
+// Key of stage hydrology (P1-00 section 3, P1-02 section 2): the noise key
+// of the H2 tie-break on flats (fbm_m only, no Rng).
+inline constexpr std::string_view geo_hydrology_flat = "geo.hydrology.flat";
+
 // Reserved prefixes for the second-pass stages (P1-00 section 3): their
 // names are registered here by the stage that uses them.
 //   geo.climate.   geo.biomes.   geo.resources.   geo.regions.
-// Stage hydrology uses no stream (P1-00 section 3).
 
 // Every registered name, in registration order.
-inline constexpr std::array<std::string_view, 19> all_stream_names = {
+inline constexpr std::array<std::string_view, 20> all_stream_names = {
     test_hash,
     test_noise,
     test_wide,
@@ -68,6 +71,7 @@ inline constexpr std::array<std::string_view, 19> all_stream_names = {
     geo_elevation_erosion,
     geo_elevation_fill,
     test_hydro,
+    geo_hydrology_flat,
 };
 
 }  // namespace worldgen::streams

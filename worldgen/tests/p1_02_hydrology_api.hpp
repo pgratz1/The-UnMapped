@@ -88,7 +88,7 @@ inline Tuning tuning_from(const worldgen::data::ContentSet& content) {
 
 // The whole stage on any W x H grid (seam hydrology_layers).
 inline Layers layers(Grid grid, std::span<const std::int16_t> elevation, const Tuning& t, std::uint32_t threads) {
-    worldgen::stages::HydrologyLayers r = worldgen::stages::hydrology_layers(grid, elevation, t, threads);
+    worldgen::stages::HydrologyLayers r = worldgen::stages::hydrology_layers(grid, elevation, {}, t, threads);
     Layers out;
     out.water = std::move(r.water);
     out.water_depth = std::move(r.water_depth);
@@ -132,9 +132,9 @@ struct Network {
 };
 
 inline Network network(Grid grid, std::span<const std::int16_t> e, std::uint32_t threads) {
-    worldgen::stages::HydrologyNetwork r = worldgen::stages::hydrology_network(grid, e, threads);
+    worldgen::stages::HydrologyNetwork r = worldgen::stages::hydrology_network(grid, e, {}, threads);
     Network out;
-    out.level = std::move(r.flood.level);
+    out.level = std::move(r.level_dm);
     out.parent.assign(r.flood.parent.begin(), r.flood.parent.end());
     out.order.assign(r.flood.order.begin(), r.flood.order.end());
     out.g4.assign(r.g4.begin(), r.g4.end());
