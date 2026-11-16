@@ -17,7 +17,7 @@ When the design is wrong, unclear or missing something, add an entry to `docs/de
 
 ## Repository state
 
-The repository follows the layout in section 10 of the design doc. Phase P0 is in place: the `worldgen` library holds the deterministic core, the world database layer, the TOML loader, the P0 test-pattern stage and the inspection code behind `report` and `hash`; `worldgen-cli` has `generate`, `render`, `report` and `hash`. Of phase P1 the shared geography algorithms (`src/geo/`), the stage pipeline and the first geography stage, `elevation` (spec P1-01, `src/stages/elevation.cpp`), are in place, with the required tuning kind `worldgen` (ids `elevation` and `hydrology`) read from `game/data/worldgen/`. `generate` runs the implemented geography stages by default; `--until none` writes the P0 empty world. No hydrology, later geography or history stage exists yet.
+The repository follows the layout in section 10 of the design doc. Phase P0 is in place: the `worldgen` library holds the deterministic core, the world database layer, the TOML loader, the P0 test-pattern stage and the inspection code behind `report` and `hash`; `worldgen-cli` has `generate`, `render`, `report` and `hash`. Of phase P1 the shared geography algorithms (`src/geo/`), the stage pipeline and the first two geography stages, `elevation` (spec P1-01, `src/stages/elevation.cpp`) and `hydrology` (spec P1-02, `src/stages/hydrology.cpp`), are in place, with the required tuning kind `worldgen` (ids `elevation` and `hydrology`) read from `game/data/worldgen/`. `generate` runs the implemented geography stages by default; `--until none` writes the P0 empty world. No later geography stage (climate onward) or history stage exists yet.
 
 ```
 CMakeLists.txt        top-level build; refuses in-tree builds
@@ -165,7 +165,7 @@ tools/ci/world-hashes.sh compare linux-gcc-release linux-clang-debug # compare s
 tools/ci/world-hashes.sh cases
 ```
 
-Each preset must be built first (default build tree, or `--build-dir DIR` for `generate` and `expect`). `compare` fails when any preset's text for any case differs from the others or is missing, names the case and the presets of each variant, and prints a `diff -u` of the detail lines, so the differing table or layer is visible. Generating all twelve cases takes about 15 seconds with a release preset, about two minutes with a debug preset and about six minutes with `linux-clang-asan` (the geography cases run the elevation stage). It is not part of `ctest`, since one build tree cannot compare compilers.
+Each preset must be built first (default build tree, or `--build-dir DIR` for `generate` and `expect`). `compare` fails when any preset's text for any case differs from the others or is missing, names the case and the presets of each variant, and prints a `diff -u` of the detail lines, so the differing table or layer is visible. Generating all twelve cases takes about 15 seconds with a release preset, about two minutes with a debug preset and about six minutes with `linux-clang-asan` (the geography cases run the elevation and hydrology stages). It is not part of `ctest`, since one build tree cannot compare compilers.
 
 ### Golden values
 
