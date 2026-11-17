@@ -1,14 +1,23 @@
 # P1-01 Elevation
 
-Status: **third version, complete; awaiting approval.** Spec writer, 2026-11-16. Phase P1 Geography, stage 1 (`elevation`). Design doc section 4 (stage 1: "layered noise shaped by a continent mask, then hydraulic erosion"). Depends on P0-01 to P0-04 and P1-00, whose sections are cited as "P1-00 n" and whose shared algorithms G1 to G6 and determinism rules D1 to D10 are used by name.
+Status: **fourth version (revision "natural passes and final talus", `GENERATOR_VERSION` 0.6.0), complete; awaiting approval.** Spec writer, 2026-11-16. Phase P1 Geography, stage 1 (`elevation`). Design doc section 4 (stage 1: "layered noise shaped by a continent mask, then hydraulic erosion"). Depends on P0-01 to P0-04 and P1-00, whose sections are cited as "P1-00 n" and whose shared algorithms G1 to G6 and determinism rules D1 to D10 are used by name.
 
-This version specifies design candidate **v16** of the engineer's exploration exactly: branch `p1/elevation-explore`, commit `ef1f734`, file `worldgen/src/stages/elevation.cpp` with the v16 values of `game/data/worldgen/elevation.toml`, taking only the path that v16's values select. It replaces the second version, in which E5 to E7 and E10 were placeholders. The design decisions behind it are Paul's and the lead's (`docs/design/proposals.md`: "High peaks may be inaccessible; history opens the passes", "Every world has real uplands", "Natural passes through the ranges") and the world critic's reviews of v13 and v15 (`docs/reviews/p1-01-elevation-v13.md`, `docs/reviews/p1-01-elevation-v15.md`). The statements of section 5 were checked against the code by an independent exact-integer reference written from this text; it reproduces the exploration build's grids bit for bit (section 10.4).
+The third version specified design candidate **v16** of the engineer's exploration exactly (branch `p1/elevation-explore`, commit `ef1f734`); it is what `GENERATOR_VERSION` 0.5.0 implements. This fourth version adds two things to it, and changes nothing else:
+
+- **Natural passes** (new step E6.5 and a changed E7): in each mountain range, cols are placed at true saddles of the range's drainage divide, lowest natural saddle first, and the range's envelope is lowered along a crossing that follows the valleys draining from the col to each side, before erosion. The cut at the crossing's highest point is capped (`pass_max_cut_m`, 500 m), so a naturally low saddle becomes a low gate and a high one a high col.
+- **Final talus** (new step E8.7): 100 further talus steps at 5:1 after the erosion loop, which bound very steep faces (third version's limitation 11).
+
+It specifies **round five** of the passes exploration exactly: branch `p1/01b-elevation-passes-explore`, recorded commit `0991d74` (`3717dce` only adds an unused option), functions `elevation_pass_layout` and `divide_layout`, the E7 change and `final_talus` in `worldgen/src/stages/elevation.cpp`, with the field values of `~/.cache/the-unmapped/out/p1-01b-passes/tuning/r5c500-variant-fields.toml` (cap 500 m), taking only the path those values select. None of the exploration's switches exists (section 4.2). The design decisions are Paul's and the lead's (`docs/design/proposals.md`: "High peaks may be inaccessible; history opens the passes", "Every world has real uplands", "Natural passes through the ranges", decided 2026-11-17), the world critic's reviews of rounds two and four (`critic-review.md`, `critic-review-r4.md` in the exploration's output directory) and the engineer's round-four and round-five definitions (`passes-definition.md` sections 0 to 11). Where that definition and the code disagree, this text follows the code; the disagreements are listed in section 12.
+
+Land/ocean outlines are unchanged from 0.5.0 by construction (E1 to E4 are untouched, section 6.4). Everything after E5 can change, and with it every hydrology layer; a world in which no pass is placed and no final-talus step changes a cell keeps its 0.5.0 layer (1024 seed 3 is one). The 0.5.0 reference hashes of the third version no longer hold; section 10.4 gives the new ones.
+
+The statements of section 5 up to E6 and from E8.1 to E11 are the third version's, checked then by an independent exact-integer reference (`worldgen/tests/reference/p1_elevation_reference.py`). The new steps were checked by the spec writer's exact-integer extension of that reference, written from this text, against the exploration build (section 10.4).
 
 ## 1. Purpose
 
-Produce the `elevation` layer: one continent per world that reads as a continent. A coastline with bays and peninsulas; long mountain ranges laid out along curving belts, with peaks up to about 2,500 m whose high ground is mostly steeper than a walker can climb (ranges are barriers; history opens the passes); broad lowlands; lakes in basins, including tarns among the peaks; and drainage to the sea everywhere else. Every world has real uplands: where a world's belts carry less than 8% of its land in the mountain core, the ranges are lengthened along their belt, or the belt is moved to an inland level set, until they do, as far as the tried offsets allow (E5.1).
+Produce the `elevation` layer: one continent per world that reads as a continent. A coastline with bays and peninsulas; long mountain ranges laid out along curving belts, with peaks up to about 2,500 m whose high ground is mostly steeper than a walker can climb (ranges are barriers); natural passes at the lowest saddles of most long ranges, some of them walkable, most of them high cols that history may improve; broad lowlands; lakes in basins, including tarns among the peaks; and drainage to the sea everywhere else. Every world has real uplands: where a world's belts carry less than 8% of its land in the mountain core, the ranges are lengthened along their belt, or the belt is moved to an inland level set, until they do, as far as the tried offsets allow (E5.1).
 
-The stage builds a continent field from warped map-scale noise, a radial and square edge falloff and metre-scale coast noise; sets the coast so that a target share of the map is land; lays out mountain belts along a level set of a second map-scale noise, interrupted by a segmentation noise, and moves or lengthens them if a world has too little mountain core (E5.1); builds heights in metres (E5 to E7); deepens the sea with distance from land; carves the land with stream-power erosion along randomized steepest-descent receivers, hillslope diffusion and a talus step; quantizes to decimetres; and conditions depressions so that every remaining one is a lake and everything else drains to the sea (E10). Its output is the final terrain: no later stage changes it (P1-02 section 9).
+The stage builds a continent field from warped map-scale noise, a radial and square edge falloff and metre-scale coast noise; sets the coast so that a target share of the map is land; lays out mountain belts along a level set of a second map-scale noise, interrupted by a segmentation noise, and moves or lengthens them if a world has too little mountain core (E5.1); builds heights in metres (E5, E6); finds the ranges, their drainage divides and their saddles, and lowers the mountain envelope along a crossing at each chosen col (E6.5, E7); deepens the sea with distance from land; carves the land with stream-power erosion along randomized steepest-descent receivers, hillslope diffusion and a talus step, then bounds the steepest faces with a final talus (E8); quantizes to decimetres; and conditions depressions so that every remaining one is a lake and everything else drains to the sea (E10). Its output is the final terrain: no later stage changes it (P1-02 section 9).
 
 ## 2. Inputs
 
@@ -40,12 +49,15 @@ Streams. Each gives a key K_name = `stream_key(seed, "geo.elevation.<name>")`, u
 | K_detail | `geo.elevation.detail` | E5.2, E10.0 (bump) |
 | K_erosion | `geo.elevation.erosion` | E8.2 (random receivers) |
 | K_fill | `geo.elevation.fill` | E10.0 (cost) |
+| K_pass | `geo.elevation.pass` | E6.5.5 (`hash_at(K_pass, cell, slot)`), E6.5.6 (`hash_at(K_pass, col, 16)` and `(…, 17)`), E6.5.7 (`noise2(substream(K_pass, 3), …)`) |
 
-All fifteen are registered in `streams.hpp` (P0-01 7.3). Changing any of them changes every world. The exploration branch also registers `geo.elevation.lake`; v16 does not use it and it is not registered by the implementation.
+All sixteen are registered in `streams.hpp` (P0-01 7.3); `geo.elevation.pass` is new in this version and is appended to `all_stream_names` after `geo.hydrology.flat` (registration order changes no world). Changing any of them changes every world. The exploration branch's `substream(K_pass, 2)` (round three's bend noise) is not used.
 
 ## 3. Outputs
 
-One layer, `elevation`: `i16`, N × N, codec 1, decimetres above sea level (P1-00 4). Land values in [1, 29990], ocean values in [−29005, −1] for any tuning inside the bounds of section 4 ([−3005, −1] with the shipped `ocean_depth_m`), never 0. Negative cells are ocean, positive cells land (including lake beds). Postconditions in section 6. No schema change.
+One layer, `elevation`: `i16`, N × N, codec 1, decimetres above sea level (P1-00 4). Land values in [1, 29990], ocean values in [−29005, −1] for any tuning inside the bounds of section 4 ([−3005, −1] with the shipped `ocean_depth_m`), never 0. Negative cells are ocean, positive cells land (including lake beds). Postconditions in section 6.
+
+**Proposed, pending the lead's decision (schema change):** one row per pass site in a new table `pass` (section 9), schema version 2. The layer does not depend on it. If the lead declines the table, section 9's table, the `pass` keys of P1-00 10.3 and the tests that read them are dropped and nothing else changes.
 
 ## 4. Tuning
 
@@ -156,6 +168,44 @@ In schema declaration order (this order fixes the canonical encoding, P0-03 8).
 | `fill_noise` | `fbm_m` | wavelength 400, octaves 3, gain "0.5" | guess | noise of the fill cost |
 | `fill_cost_amp` | fx(0, 16) | 3 | guess | cost = 1 + amp × clamp(½ + noise, 0, 1) |
 | `fill_detail_m` | fx(0, 10) | 3 | guess | scale of the positive detail noise added to the fill increment |
+| `pass_count_max` | int(0, 3) | 3 | guess | at most this many pass sites per range (E6.5.2); 0: no passes |
+| `pass_core_mask` | fx(0.01, 1) | "0.25" | guess | crest cells: mask at least this (E6.5.2) |
+| `pass_crest_frac` | fx(0, 1) | "0.3" | guess | crest cells: \|nb − o*\| at most this × w_b |
+| `pass_min_length_m` | int(0, 100000) | 3000 | guess | a range shorter than this (crest geodesic length, scaled by map size) gets no pass |
+| `pass_spacing_m` | int(500, 100000) | 3000 | guess | one more pass site per this much crest length beyond the minimum |
+| `pass_size_ref_n` | int(16, 2048) | 1024 | designed | map side at which `pass_coast_clear_m`, `pass_min_length_m` and `pass_side_max_m` hold as stated; below it they shrink with N |
+| `pass_region_mask` | fx(0.005, 1) | "0.03" | guess | support (domain of the divide flood): land with mask at least this |
+| `pass_body_m` | fx(0, 2900) | 300 | guess | body: support cells whose mountain part is at least this |
+| `pass_basin_depth_m` | fx(1, 1000) | 40 | guess | a pre-erosion depression at least this deep is a tarn basin cell |
+| `pass_tarn_min_cells` | int(0, 1000000) | 300 | guess | a basin component this large on a crossing's body rejects it |
+| `pass_divide_reach_m` | fx(0, 20000) | 1000 | guess | a divide cell farther than this from every crest cell belongs to no range |
+| `pass_saddle_window_m` | fx(0, 20000) | 400 | guess | radius of the local-minimum test of a candidate col |
+| `pass_saddle_rise_m` | fx(0, 2900) | 150 | guess | the divide must rise at least this on both sides of a candidate col … |
+| `pass_saddle_rise_reach_m` | fx(0, 20000) | 1500 | guess | … within this radius; also the radius of the crest-axis direction |
+| `pass_min_spacing_m` | fx(0, 100000) | 2500 | guess | least straight-line distance between two cols of the world |
+| `pass_coast_clear_m` | fx(0, 20000) | 700 | guess | least chamfer distance from a col to the ocean (scaled by map size) |
+| `pass_barrier_m` | fx(0, 2900) | 600 | guess | least envelope (mask × scale) at a col; also the least shoulder height |
+| `pass_side_max_m` | fx(0, 100000) | 3000 | guess | longest crossing of the body on either side (scaled by map size) |
+| `pass_col_tarn_m` | fx(0, 5000) | 160 | guess | no basin cell within this radius of a lowered col |
+| `pass_grade` | fx(0, 2) | "0.9" | guess | saddle target per metre of the shorter reach, before the factor 8/15 |
+| `pass_grade_jitter` | fx(0, 1) | "0.3" | guess | relative jitter of `pass_grade` per site |
+| `pass_min_col_m` | fx(0, 2900) | 150 | guess | lower clamp of the saddle target; least col height above the higher foot |
+| `pass_saddle_max_m` | fx(0, 2900) | 600 | guess | upper clamp of the saddle target |
+| `pass_max_cut_m` | fx(1, 2900) | 500 | decided (Paul, provisional: 400 or 600 under review) | the crossing's highest point is lowered by at most this (the cut cap) |
+| `pass_peak_rise_m` | fx(0, 2900) | 150 | guess | shoulders: the divide on both sides of the col rises at least this above the saddle target |
+| `pass_halfwidth_m` | fx(0, 5000) | 450 | guess | half-width of the lowered band |
+| `pass_width_jitter` | fx(0, 0.9) | "0.3" | guess | relative jitter of the half-width per site |
+| `pass_width_var` | fx(0, 0.9) | "0.35" | guess | relative variation of the half-width along the crossing (noise) |
+| `pass_walk_grade` | fx(0.01, 4) | "0.55" | guess | uncapped sites: the lowered crossing rises at most this per metre over 3 cells |
+| `pass_texture_keep` | fx(0, 1) | "0.25" | designed | the relief above the foothill base keeps at least this share inside a pass |
+| `pass_drain_step_m` | fx(0.01, 10) | "0.1" | designed | floor drainage: the least fall per crossing cell (E6.5.8) |
+| `final_talus_iterations` | int(0, 1000) | 100 | designed (lead) | E8.7 steps; 0: none |
+| `final_talus_slope` | fx(0.05, 16) | 5 | designed (lead) | E8.7 talus tangent (5 is 78.7°; 80 m per orthogonal step) |
+| `final_talus_rate` | fx(0, 0.125) | "0.0625" | designed (lead) | E8.7 share of the excess moved per step and neighbour |
+
+The 34 new fields follow the third version's fields in this order. Every one is required. Their names are the exploration's. Where the exploration's bound allowed 0 as a "switch off" value whose meaning was not the formula's value at 0, the lower bound is raised so that the formula is the only meaning: `pass_size_ref_n` (0 meant "no size scaling"), `pass_basin_depth_m` (0 meant "no basins"), `pass_max_cut_m` (0 meant "no cap"), `pass_walk_grade` (0 meant "no walk-grade clamp") and `pass_drain_step_m` (0 meant "no floor drainage"). `pass_count_max` = 0 and `final_talus_iterations` = 0 keep their meaning, which is also the formula's (no range gets a site; no step runs).
+
+Dropped exploration fields and switches (their round-five values are the algorithm): `pass_r5`, `pass_divide`, `pass_across`, `pass_floor_mode`, `pass_keep_pits`, `pass_cut_rel`, `pass_high_col_frac`, `pass_mode`, `pass_depth`, `pass_depth_jitter`, `pass_wobble_m`, `pass_col_window_m`, `pass_cost_m`, `pass_monotone`, `pass_wander_m`, `pass_attempts`, `pass_trace_max_m`, `pass_bend_m`, `pass_cross_max_m`, `pass_body_mask`, `pass_end_margin`, `pass_wall_m`, `pass_open_end_m`, `coast_taper_m`. (The round-five data file sets `pass_attempts`, `pass_col_window_m`, `pass_trace_max_m`, `pass_bend_m` and `pass_cross_max_m`; the round-five path reads none of them.) Constants of the code, not fields: the 20th chain cell of the crossing line (E6.5.4), the 600 m (37-cell) divide-direction radius, the 45° across limit, the chord limits 1.5 and 35° (E6.5.6), the shoulder ring of 9 to 187 cells, the 300 m end taper, the width-noise frequency 1/1500 per metre (E6.5.7), and the `hash_at` second coordinates 16 and 17.
 
 No field of the second version's stable table is removed. Added: `segment_on_share`, `segment_floor_mask`, `belt_offset_steps`, `floor_inland_gm`, `ocean_shelf_m`, `talus_slope`, `talus_rate`, `lake_area_ref_n`, `lake_max_share`, `fill_noise`, `fill_cost_amp`, `fill_detail_m`. Dropped from the second version's placeholder table: `breach_max_depth_m`, `fill_relief`, `condition_passes`. None of the exploration branch's switches (`segment_floor`, `fill_mode`, `fill_depressed_only`, `lake_order_volume`, `fill_flats`, `erosion_random`, `height_remap`, `belt_height_scaling`, and the others listed in `v16-definition.md` section 11) exists: their v16 values are the only algorithm.
 
@@ -166,10 +216,12 @@ Required loader validation: each check is evaluated when the definition is loade
 1. `edge_radial_span`: `edge_radial_end − edge_radial_start ≥ 0.01`. Keeps the E2 divisor positive and bounded away from 0 (section 7). (With `edge_radial_end` ≤ 2 this needs `edge_radial_start` ≤ 1.99, hence that field's upper bound.)
 2. `mountain_ranks`: `mountain_cover_rank ≤ mountain_peak_rank`.
 3. `lake_areas`: `lake_min_area_m2 ≤ lake_max_area_m2`.
+4. `pass_masks` (new): `pass_region_mask ≤ pass_core_mask`. Makes every crest cell a support cell, so the range search of E6.5.3 starts inside its own domain.
+5. `pass_saddle_clamp` (new): `pass_min_col_m ≤ pass_saddle_max_m`. Keeps the clamp of E6.5.6 (g) well formed.
 
-Error shape (P0-03 9 and the loader's existing check errors): one error per failing check, at the position of the definition's header (`[worldgen.elevation]`), in the form `<path>:<line>:<column>: error: check '<name>' failed for 'worldgen.elevation': <message>`, with the messages `edge_radial_end - edge_radial_start must be at least 0.01`, `mountain_cover_rank must not exceed mountain_peak_rank` and `lake_min_area_m2 must not exceed lake_max_area_m2`. `<path>` is the file relative to the data root (for example `worldgen/elevation.toml`). Checks run only when the definition passed type validation; several failing checks give several errors, sorted as P0-03 9 sorts all errors. Tests assert path, line, column and the full text.
+Error shape (P0-03 9 and the loader's existing check errors): one error per failing check, at the position of the definition's header (`[worldgen.elevation]`), in the form `<path>:<line>:<column>: error: check '<name>' failed for 'worldgen.elevation': <message>`, with the messages `edge_radial_end - edge_radial_start must be at least 0.01`, `mountain_cover_rank must not exceed mountain_peak_rank`, `lake_min_area_m2 must not exceed lake_max_area_m2`, `pass_region_mask must not exceed pass_core_mask` and `pass_min_col_m must not exceed pass_saddle_max_m`. `<path>` is the file relative to the data root (for example `worldgen/elevation.toml`). Checks run only when the definition passed type validation; several failing checks give several errors, sorted as P0-03 9 sorts all errors. Tests assert path, line, column and the full text.
 
-(The exploration code checks none of them; its values satisfy all three, so adding the checks changes no world.)
+(The exploration code checks none of them; its values satisfy all five, so adding the checks changes no world.)
 
 ### 4.4 Tuning files
 
@@ -240,9 +292,45 @@ fill_slope_dm = 1
 fill_noise = { wavelength_m = 400, octaves = 3, gain = "0.5" }
 fill_cost_amp = 3
 fill_detail_m = 3
+pass_count_max = 3
+pass_core_mask = "0.25"
+pass_crest_frac = "0.3"
+pass_min_length_m = 3000
+pass_spacing_m = 3000
+pass_size_ref_n = 1024
+pass_region_mask = "0.03"
+pass_body_m = 300
+pass_basin_depth_m = 40
+pass_tarn_min_cells = 300
+pass_divide_reach_m = 1000
+pass_saddle_window_m = 400
+pass_saddle_rise_m = 150
+pass_saddle_rise_reach_m = 1500
+pass_min_spacing_m = 2500
+pass_coast_clear_m = 700
+pass_barrier_m = 600
+pass_side_max_m = 3000
+pass_col_tarn_m = 160
+pass_grade = "0.9"
+pass_grade_jitter = "0.3"
+pass_min_col_m = 150
+pass_saddle_max_m = 600
+pass_max_cut_m = 500
+pass_peak_rise_m = 150
+pass_halfwidth_m = 450
+pass_width_jitter = "0.3"
+pass_width_var = "0.35"
+pass_walk_grade = "0.55"
+pass_texture_keep = "0.25"
+pass_drain_step_m = "0.1"
+final_talus_iterations = 100
+final_talus_slope = 5
+final_talus_rate = "0.0625"
 ```
 
-**Small-map fixture** `worldgen/tests/data/geo-small/worldgen/elevation.toml`: the file above with exactly these five lines changed, so that library tests at N = 64 to 256 reach the lake test, the share cap and the mountain floor (with the shipped values, lake_max_cells < lake_min_cells for N < 187, so no small world has a lake):
+These are the values of `r5c500-variant-fields.toml` on top of the third version's file, with `pass_region_mask` and `pass_core_mask` at the exploration's defaults (the variant file does not set them).
+
+**Small-map fixture** `worldgen/tests/data/geo-small/worldgen/elevation.toml`: the file above with exactly these fourteen lines changed. The first five make library tests at N = 64 to 256 reach the lake test, the share cap and the mountain floor (with the shipped values, lake_max_cells < lake_min_cells for N < 187, so no small world has a lake):
 
 ```toml
 segment_on_share = "0.12"
@@ -250,7 +338,18 @@ lake_min_area_m2 = 10240
 lake_max_area_m2 = 160000
 lake_area_ref_n = 128
 lake_min_depth_m = 1
+pass_tarn_min_cells = 20
+pass_divide_reach_m = 400
+pass_saddle_window_m = 200
+pass_saddle_rise_m = 75
+pass_saddle_rise_reach_m = 600
+pass_min_spacing_m = 800
+pass_col_tarn_m = 64
+pass_halfwidth_m = 200
+pass_spacing_m = 1000
 ```
+
+The other nine shrink the pass rules' radii to the 2 km map of N = 128, where ranges are a few kilometres long and the shipped radii find almost no saddle (one pass in 64 worlds at N = 128). With them, N = 128 seeds 0 to 63 (spec writer, exploration build) give 20 lowered passes in 19 worlds, 18 of them capped and 2 uncapped (seeds 31 and 47), two passes on one range (seed 8), and at least one tried candidate failing each rule of E6.5.6 except the sea rule (c) and the natural gap (i), which the worked examples of 10.1 cover: coast (seeds 0, 1, 20, 30, 51), barrier (0, 3, 24, 25, …), tarn on the crossing (9), the chord (23, 28, 50), side length (30), across (2, 7, 9, 17, …), col tarn (11, 41, 44, 56), summit near a top (20, 62), zone above p90 (0, 18, 40, 53, 55), above the feet (10, 15, 22, 31), shoulders (38); ranges with slots and no candidate occur in most worlds. (The tarn rule needs `pass_tarn_min_cells` 20: basins on 2 km maps are small.)
 
 The directory also holds `worldgen/tests/data/geo-small/worldgen/hydrology.toml`, a copy of the hydrology fixture, because every id of the fixed-id kind must be defined where the kind's directory exists (P1-00 6.1). With these values at N = 128: lake_min_cells 40, lake_max_cells 625, lake_min_depth_dm 10.
 
@@ -276,6 +375,16 @@ The `elevation` layer depends only on the values; `content_hash` and the world f
 | L_O | number of land cells after E4 | per world |
 | target | round_int(mul(from_int(L_O), segment_on_share)) | per world |
 | max_share_cells | max(1, round_int(mul(from_int(L_O), lake_max_share))), `int64` | per world (≥ 6 with the shipped values, since L_O ≥ I_min = 196) |
+| num, den | num = min(W, `pass_size_ref_n`), den = `pass_size_ref_n` (W the grid width; N on the map) | 512/1024, 1024/1024, 1024/1024 |
+| coast_clear (fifths) | mul_div(`pass_coast_clear_m`.raw, 5 × num, 16 × 2^32 × den) | 109 / 219 / 219 (N = 128: 27) |
+| min_len (fifths) | (`pass_min_length_m` × 5 × num) div (16 × den) | 468 / 937 / 937 (128: 117) |
+| spacing (fifths) | (`pass_spacing_m` × 5) div 16, not scaled | 937 (small fixture: 312) |
+| side_max | from_raw(mul_div(`pass_side_max_m`.raw, num, den)), metres | 1500 / 3000 / 3000 m (128: 375 m) |
+| reach5 (fifths) | mul_div(`pass_divide_reach_m`.raw, 5, 16 × 2^32) | 313 (small fixture: 125) |
+| win, rise_b, spacing_b, tarn_b (cells) | floor_int(field) div 16 for `pass_saddle_window_m`, `pass_saddle_rise_reach_m`, `pass_min_spacing_m`, `pass_col_tarn_m` | 25, 93, 156, 10 (small fixture: 12, 37, 50, 4) |
+| rise_u, body_u (units) | `pass_saddle_rise_m`.raw >> 16, `pass_body_m`.raw >> 16 (units of 2^−16 m, E6.5.0) | 9830400, 19660800 |
+| crest_lim | mul(`pass_crest_frac`, w_b).raw | per world |
+| D_o^f, D_d^f | D_o^f = mul_int(`final_talus_slope`, 16), D_d^f = mul(D_o^f, SQRT2) | 80 m (raw 343597383680), 113.14 m (raw 485920080000) |
 
 ## 5. Algorithm
 
@@ -286,7 +395,7 @@ The `elevation` layer depends only on the values; `content_hash` and the world f
 - `rc(a, b)` ("ratio, capped", for a ≥ 0, b > 0) = `from_int(RATIO_CAP)` if a ≥ mul_int(b, RATIO_CAP), else div(a, b).
 - `quantile_rank(q, n)` = min(n − 1, (q.raw × n) >> 32) in `uint64`, fatal if n = 0 (P1-00 7.1).
 - Statements are evaluated exactly in the order written, one operation at a time with that operation's rounding. Parenthesised sums are evaluated as parenthesised; an unparenthesised chain `a + b + c` left to right.
-- Step order: E1, E2, E3, E4, E5 (E5.1, E5.2, E5.3), E6, E7, E8, E9, E10, E11. E10.0 depends only on the seed, the cell and O, so it may run at any point after E4 (the exploration code runs it before E8). Each step names its determinism rule (P1-00 8).
+- Step order: E1, E2, E3, E4, E5 (E5.1, E5.2, E5.3), E6, E6.5 (E6.5.1 to E6.5.8), E7, E8 (the iterations E8.1 to E8.6, then E8.7), E9, E10, E11. E10.0 depends only on the seed, the cell and O, so it may run at any point after E4 (the exploration code runs it after E7 and before E8). E5.3 and E6.5 are independent of each other (E6.5 reads no ocean depth). Each step names its determinism rule (P1-00 8).
 
 ### E1. Coordinates and continent centre (D1)
 
@@ -453,7 +562,7 @@ det   = mul(detail_amp_m, fbm_m(K_detail, X, Y, detail_noise))
 h0    = (base + hills) + det
 ```
 
-Keep h0 and unit per land cell. (The `if` only saves work: unit is 0 whenever mask is 0.)
+Keep h0 and unit per land cell, and for E6.5 also mask and profile: `mask[i]` = the value mask above (0 on ocean), `profile[i]` = profile where mask > 0, else 0. (The `if` only saves work: unit is 0 whenever mask is 0.) Since profile ≥ `foothill_fraction` whenever mask > 0 (ridge ≥ 0), `max(0, profile − foothill_fraction)` in E6.5 is profile − `foothill_fraction` there. After E5.2 the grids c and ns are no longer needed (section 8, memory).
 
 #### E5.3 Ocean depth (D4 chamfer, then D1)
 
@@ -481,9 +590,197 @@ scale = (qc > 0 and mul(ps, qc) > mountain_cover_height_m) ? div(mountain_cover_
 
 The unit at the 99.8th percentile of land maps to `mountain_height_m`, capped so that the unit at the 85th percentile maps to at most `mountain_cover_height_m`; if the 99.8th percentile is at most 1/3, the factor is 3 × `mountain_height_m`.
 
+### E6.5. Pass layout (single-threaded; D5, D6, D7, D8 as stated per part)
+
+Places the pass sites and computes, for E7, a pass factor P[c] (`Fx`, ONE where no pass reaches) and a floor adjustment adj[c] (`Fx` raw, 0 where none) for every land cell. Nothing in E6.5 changes h0, unit, mask, profile or O. With `pass_count_max` = 0 no range has a slot, so P = ONE and adj = 0 everywhere and E6.5.3 to E6.5.8 need not run (E6.5.1 and E6.5.2 produce nothing that reaches the output either; see section 8 for skipping them).
+
+#### E6.5.0 Notation
+
+All quantities of this step are exact integers or `Fx`, with the operations of 5.0.
+
+- **Units.** A height in *units* is an `int64` count of 2^−16 m. `mh(c) = mul(scale, unit[c]).raw >> 16` (the natural mountain part; ≥ 0) and `ter(c) = (h0[c].raw >> 16) + mh(c)` (the natural pre-erosion terrain; may be negative). `>>` on a signed value is the arithmetic shift (floor). `K(c) = max(0, ter(c))` is the flood key.
+- **Lowered mountain part.** For a land cell c and `Fx` p ∈ [0, ONE], with f = `foothill_fraction` and keep = `pass_texture_keep`:
+  ```
+  m'(c, p) = mul(scale, mul(mul(p, mask[c]), f) + mul(mul(max(p, keep), mask[c]), max(0, profile[c] − f)))
+  ```
+  evaluated in this order. The foothill base falls in proportion to p; the relief above it keeps at least the share keep. m'(c, ONE) is mul(scale, unit[c]) up to rounding (section 6.4).
+- **Cells and distances.** x(c), y(c) the coordinates of index c; `d2(a, b) = (x(a) − x(b))² + (y(a) − y(b))²` (cells², `int64`). A step between 8-adjacent cells has length 5 (orthogonal) or 7 (diagonal) **fifths**; fifths to metres is `fm(f) = from_ratio(16 × f, 5)` (`Fx`; f may be negative).
+- **Box query** `B(c, r)` (r ≥ 0 an integer): the cells (x, y) with |x − x(c)| ≤ r, |y − y(c)| ≤ r and (x − x(c))² + (y − y(c))² ≤ r², clipped to the grid, visited by rows (y ascending), each row by x ascending: that is, in index order. Every use below is a count, a sum, a maximum, a minimum or an "any"; where an argmin or argmax is taken, the first cell found wins, which is the cell with the smallest index among the tied ones.
+- **Cross product** of a vector a = (a_x, a_y) with the offset (dx, dy) of a cell q from a cell c: `cr = a_x × dy − a_y × dx`. cr > 0 is the *left* side of a, cr < 0 the *right* side; cr = 0 is neither.
+- **Dijkstra** (D6): a 5/7 shortest-path search from a set of source cells, each with distance 0 and a source value; a priority queue of pairs (distance, cell), popped in ascending order of the pair (unique, since a pair is pushed only when its distance is strictly smaller than the cell's current one); a popped pair whose distance is not the cell's current distance is skipped; for a popped cell c and each neighbour m in the 8-neighbour order that exists and is in the search's domain, nd = d(c) + (5 or 7); m is updated (distance nd, source of c) and pushed only if nd ≤ the search's limit and (m has no distance yet or nd < d(m)). So a cell keeps the source of the first strictly shortest relaxation. Distances are unique values; the sources depend on this order. Sources are pushed with distance 0 in index order; a cell listed twice as a source is pushed once, with its first source value.
+
+#### E6.5.1 World values (D6 for the flood, D1 otherwise)
+
+1. `world_top` = the land cell with the largest mh, ties: smallest index.
+2. **Tarn basins.** G3 on keys `kb[c] = max(1, (h0[c] + mul(scale, unit[c])).raw)` on land (ocean cells: key 0, ignored by G3) with the ocean mask O; with its flood level Lb, `basin[c]` = (c land) and Lb[c] − kb[c] ≥ `pass_basin_depth_m`.raw. These are depressions of the natural pre-erosion surface at least 40 m deep. Only the values Lb are used (the spill levels, a function of the keys; P1-00 7.3), so any method that gives G3's levels may be used.
+3. `bigbasin[c]` = c is in an 8-connected component of basin cells (G2) with at least `pass_tarn_min_cells` cells.
+4. `docean[c]` = the P1-02 H7 chamfer distance (fifths) from c to the nearest ocean cell, with the ocean cells as sources (0 on ocean). On an unobstructed grid the two-pass 5/7 transform equals the exact shortest 5/7 path length, so for any cell c, docean[c] = min over ocean cells o of 5 × max(|dx|, |dy|) + 2 × min(|dx|, |dy|) (dx, dy the offset of o from c). It is read only at candidate cols (E6.5.6 (a)), where either form may be used.
+5. Derived integers num, den, coast_clear, min_len, spacing and side_max of 4.5.
+
+#### E6.5.2 Ranges (D5 for the components; D6 or any method for the geodesic distances, which are values)
+
+1. `crest[c]` = c land, mask[c] ≥ `pass_core_mask`.raw and |nb[c] − o*.raw| ≤ crest_lim. The crest cells lie near the belt's centre level set in the mountain core.
+2. **Ranges** are the 8-connected components of crest cells (G2), labels k = 1, 2, … in G2 order. `label[c]` = k for a crest cell, 0 elsewhere.
+3. Per range k: s0 = its smallest cell index. `g_S` = the 5/7 geodesic distance (fifths) inside the range from s0 (paths through cells of range k only). **End A** = the range cell with the largest g_S, ties: smallest index. `dA` = the geodesic distance inside the range from A; **end B** = the range cell with the largest dA, ties: smallest index; `len_k = dA(B)`. dA is kept for every crest cell.
+4. Slots: `np_k = 0` if len_k < min_len, else `min(pass_count_max, 1 + (len_k − min_len) div spacing)`.
+5. `top_k` = the range cell with the largest mh, ties: smallest index. `p90_k = kth(mh over the range's cells, quantile_rank(from_ratio(9, 10), count))` (G1; from_ratio(9, 10) is raw 3865470566).
+
+If no range has np_k > 0, E6.5.3 to E6.5.8 produce no site: P = ONE and adj = 0.
+
+#### E6.5.3 Support, body and the drainage divide (D6)
+
+1. `support[c]` = c land and mask[c] ≥ `pass_region_mask`.raw. `body[c]` = support[c] and mh(c) ≥ body_u.
+2. **Divide flood** over the support, seeded just outside it. Arrays: level (units), parent (a cell), side (0, 1 or 2), all unset at first.
+   ```
+   seq = 0; Q = empty                                   // entries (level, seq, cell), popped in ascending (level, seq)
+   for c in 0 .. n−1 (index order):
+       if not support[c] and some 8-neighbour of c exists and is support:
+           level[c] = 0; parent[c] = c; side[c] = (nb[c] ≥ o*.raw) ? 2 : 1
+           push (0, seq, c); seq += 1
+   while Q is not empty:
+       pop (k, ·, c)
+       for code in 0 .. 7 (8-neighbour order):
+           m = the neighbour of c in direction code; skip if outside the grid, not support, or level[m] is set
+           level[m] = max(K(m), k); parent[m] = c; side[m] = side[c]
+           push (level[m], seq, m); seq += 1
+   ```
+   The seeds are lowland and ocean cells next to the support (`nb` is defined on every cell). `side` says on which flank of the belt (the sign of nb − o*) the cell's drainage, followed down the parents, leaves the mountains. Every support cell is reached on the N × N map (land never touches the map edge, so every support component has a non-support neighbour); on a test grid a support cell that is reached by no seed keeps side 0 and takes no part below.
+3. **Divide cells.** For each cell c in index order with body[c] and side[c] = 1: among its 4-neighbours m in the 4-neighbour order (E, S, W, N) that exist with body[m] and side[m] = 2, the **partner** of c is the first one with the smallest K(m) (a later one replaces it only with a strictly smaller K). If there is one, c is a divide cell with partner `pt(c)` and pair height `dh(c) = max(K(c), K(pt(c)))` (units). Only side-1 cells are divide cells; a partner may be the partner of several.
+4. **Range of a divide cell.** A Dijkstra (E6.5.0) over the domain "support cells", from every crest cell as a source (its source value is itself), with limit reach5. A divide cell c that is reached belongs to the range `label(source(c))`; an unreached one belongs to none. For each range k, `D_k` is the list of its divide cells in index order.
+
+#### E6.5.4 Candidate cols (per range, in label order; D7)
+
+The candidates of range k are computed, and its cols chosen (E6.5.5), before range k + 1 is looked at; ranges with np_k = 0 or an empty D_k are skipped. For each c in D_k, in order, c is a **candidate** when:
+
+1. **Local minimum.** No cell q ≠ c of D_k in B(c, win) has (dh(q), q) < (dh(c), c) in lexicographic order.
+2. **Crossing line.** `chainA(c)` = c, parent(c), parent(parent(c)), …, ending at the first cell whose parent is itself (a seed); `chainB(c)` = the same from pt(c). With pa = the cell at position min(20, |chainA| − 1) of chainA (position 0 is c) and pb likewise in chainB, the **across vector** is a(c) = (x(pb) − x(pa), y(pb) − y(pa)) (cells).
+3. **Rise on both sides.** Over the cells q of D_k in B(c, rise_b), with cr the cross product of a(c) with the offset of q from c: lmax = the largest dh(q) with cr > 0, rmax = the largest with cr < 0 (each −1 if there is none). c is a candidate if lmax ≥ dh(c) + rise_u and rmax ≥ dh(c) + rise_u: a saddle of the divide, not a shoulder or the end of a range.
+
+Every chain is finite and ends at a seed (a parent was popped before its child, so following parents strictly decreases the pop position), and all its cells have the same side, so chainA and chainB are disjoint. The candidates keep their order in D_k and their across vectors.
+
+#### E6.5.5 Choosing cols (per range; D7)
+
+`world_cols` is the list of every col placed so far in the world (lowered passes and natural gaps, all ranges), `cols_k` those of range k. For slot j = 0 .. np_k − 1:
+
+```
+repeat:
+    for each candidate c of range k not yet tried, with d2(c, w) ≥ spacing_b² for every w in world_cols:
+        dmin  = min(d2(c, A_k), d2(c, B_k), d2(c, w) for every w in cols_k)            // int64
+        hj    = hash_at(K_pass, c, j) >> 54                                             // in [0, 1024)
+        score = dmin × (1024 + (hj × 3) div 10)
+    if there is no such candidate: range k gets no further site; go to the next range
+    best = the one with the smallest dh, then the largest score, then the smallest index
+    mark best tried; run the crossing tests of E6.5.6 on it
+until it gives a pass or a natural gap
+append the col to cols_k and world_cols; the site fills slot j
+```
+
+`hash_at` takes the cell index and the slot index j as its two `int64` coordinates. The lowest natural saddle is tried first; the score only orders candidates of equal pair height, away from the ends and the range's other cols. A failed candidate is not tried again for a later slot. Sites are numbered s = 0, 1, … in the order they are found (all ranges, natural gaps included); `s` is the site index used in E6.5.7.
+
+#### E6.5.6 Crossing tests for a col c (in this order; the first failure ends the attempt)
+
+With p = pt(c), a = a(c) of E6.5.4, and k its range:
+
+- **(a) Coast.** Fail if docean[c] < coast_clear.
+- **(b) Barrier.** Fail if mul(mask[c], scale) < `pass_barrier_m`.
+- **(c) Crossing polyline and sea.** `axis` = chainA(c) reversed (from its seed up to c), followed by chainB(c) (from p down to its seed); `ci` = |chainA(c)| − 1, the position of c (p is at ci + 1). Fail if the last cell of chainA or of chainB is an ocean cell. Arc positions (fifths): arc[0] = 0, arc[q] = arc[q − 1] + (7 if axis[q − 1] and axis[q] differ in both coordinates, else 5). reach_A = fm(arc[ci]), reach_B = fm(arc[last] − arc[ci]).
+- **(d) Side length.** qA = the largest q < ci with body[axis[q]] false, qB = the smallest q > ci with body[axis[q]] false (both exist: a chain ends at a seed, which is not support); the **body exits** are e_A = axis[qA], e_B = axis[qB]; body5_A = arc[ci] − arc[qA], body5_B = arc[qB] − arc[ci]. Fail if max(fm(body5_A), fm(body5_B)) > side_max.
+- **(e) Across, not along.**
+  1. *Local divide.* Over the cells q of D_k in B(c, 37), with (dx, dy) the offset of q from c and cr the cross product of a with it: sum dx, dy and count separately for cr > 0 (sx_L, sy_L, n_L) and cr < 0 (sx_R, sy_R, n_R). If n_L > 0 and n_R > 0: t = (fdiv(sx_R, n_R) − fdiv(sx_L, n_L), fdiv(sy_R, n_R) − fdiv(sy_L, n_L)), fdiv the floor division (rounds toward −∞); for each exit e of (e_A, e_B), with v = (x(e) − x(c), y(e) − y(c)): fail if 2 (v·t)² > |v|² |t|² (the side leaves within 45° of the divide's direction). If either count is 0 the test passes.
+  2. *Crest axis.* Over the crest cells q of range k in B(c, rise_b): cmin = the first with the smallest dA, cmax = the first with the largest dA. If both exist and differ: t' = (x(cmax) − x(cmin), y(cmax) − y(cmin)); for each exit e as above: fail if 2 (v·t')² > |v|² |t'|².
+- **(f) Chord.** chord = (x(e_B) − x(e_A), y(e_B) − y(e_A)), chord2 = |chord|², arc5 = body5_A + body5_B. Fail if 4 arc5² > 225 chord2 (the body arc is more than 1.5 × the chord). Else, if t' of (e) 2 exists: fail if 100 (chord·t')² > 33 chord2 |t'|² (the chord is more than about 35° off the crest axis's perpendicular: cos² > 0.33).
+- **(g) Tarn on the crossing.** Fail if some axis cell q has body[q] and bigbasin[q].
+- **(h) Values.**
+  ```
+  maxm   = max over the axis of mh                                     // units; 0 for an empty max
+  M      = from_raw(maxm << 16)                                         // metres
+  vj     = from_raw((hash_at(K_pass, c, 16) >> 32) × 2) − ONE           // in [−1, 1)
+  wj     = from_raw((hash_at(K_pass, c, 17) >> 32) × 2) − ONE
+  grade  = max(0, mul(pass_grade, ONE + mul(pass_grade_jitter, vj)))
+  saddle = clamp(mul(mul(grade, min(reach_A, reach_B)), from_ratio(8, 15)), pass_min_col_m, pass_saddle_max_m)
+  capped = false
+  if M − pass_max_cut_m > saddle: saddle = M − pass_max_cut_m; capped = true
+  halfwidth = mul(pass_halfwidth_m, ONE + mul(pass_width_jitter, wj))
+  ```
+  from_ratio(8, 15) is raw 2290649225. The target saddle is a walkable grade from the nearer foot (0.9 × 8/15 = 0.48 m per metre, with jitter), clamped to [150, 600] m, unless that would cut the crossing's highest point by more than the cap: then the site is a **capped** (high) col whose target is M − cap.
+- **(i) Natural gap.** If M ≤ saddle the crossing is already below its target: the site is a **natural gap**. It fills the slot (E6.5.5) and is recorded, and nothing is lowered. (No further test runs for it.)
+- **(j) Tarn at the col.** Fail if some cell of B(c, tarn_b) is a basin cell.
+- **(k) Summits near the crossing.** hr = (floor_int(halfwidth) div 16) div 2 (cells; about where the bump falls to one half). Fail if d2(q, top_k) ≤ hr² or d2(q, world_top) ≤ hr² for some axis cell q.
+- **(l) Zone below the crest p90.** zmax = the largest mh over the land cells of B(axis[a], hr) for a = 0, 4, 8, … (every fourth axis position from the first). Fail if zmax > p90_k.
+- **(m) Above the feet.** Fail if (h0[c] + saddle) − max(h0[axis[0]], h0[axis[last]]) < `pass_min_col_m`. The col's target stands at least 150 m above the higher of the two lowland ends.
+- **(n) Shoulders.** need = max(`pass_barrier_m`.raw, (saddle + `pass_peak_rise_m`).raw) >> 16 (units). Over the cells q of D_k in B(c, 187) with d2(q, c) ≥ 81, with cr the cross product of a with the offset of q from c and tv = max(ter(q), ter(pt(q))): hl = the largest tv with cr > 0, hr' = the largest with cr < 0 (each −1 if none). Fail if hl < need or hr' < need. (187 = 3000 div 16 and 81 = (150 div 16)²: the divide 150 m to 3 km from the col.)
+- **(o) Depth.** With the axis cells c_0 … c_last:
+  ```
+  fits(p) = every axis cell has m'(c_q, p) ≤ saddle, and, unless capped,
+            |m'(c_q, p) − m'(c_{q−3}, p)| ≤ mul_int(pass_walk_grade, 48) for q = 3 .. last
+  if fits(ONE): lo = ONE
+  else: lo = 0; hi = ONE; repeat 32 times: mid = from_raw((lo.raw + hi.raw) >> 1); if fits(mid): lo = mid else hi = mid
+  top(p) = max over the axis of m'(c_q, p)                          // 0 for an empty max
+  floor_m = M − pass_max_cut_m
+  if top(lo) < floor_m:                                              // the walk grade asked for more than the cap
+      plo = lo; phi = ONE
+      repeat 32 times: mid = from_raw((plo.raw + phi.raw) >> 1); if top(mid) ≥ floor_m: phi = mid else plo = mid
+      lo = phi; capped = true
+  depth = ONE − lo
+  ```
+  The site is a **lowered pass**: it fills the slot, with its axis, ci, saddle, halfwidth, depth and capped flag. The walk-grade clamp asks that the lowered crossing rise at most `pass_walk_grade` × 48 m over every 3 cells; the cap bounds the depth the clamp may ask for. If nothing fits, lo stays 0 before the raise.
+
+A failure of (a) to (g) or (j) to (n) marks the candidate tried and moves on to the next candidate (E6.5.5). The tests use only values fixed before E6.5.5 started (the placed cols enter only through E6.5.5's spacing and score).
+
+#### E6.5.7 Pass factor (D6 per site, in site order)
+
+P[c] = ONE for every cell. For each lowered pass s, in site order (s counts natural gaps too):
+
+```
+hwmax = mul(halfwidth, ONE + pass_width_var)
+lim5  = mul_div(hwmax.raw, 5, 16 × 2^32) + 2                   // fifths
+Dijkstra over the domain "land cells" from every axis cell c_a (source value a), limit lim5
+for each reached cell c, in index order, with distance d and source a:
+    s_m  = fm(arc[a] − arc[ci])                                 // signed metres from the col along the crossing
+    dend = fm(min(arc[a], arc[last] − arc[a]))                  // metres to the nearer end
+    dist = fm(d)
+    nz   = noise2(substream(K_pass, 3), mul(s_m, from_ratio(1, 1500)), from_int(3s + 2))
+    hwv  = mul(halfwidth, ONE + mul(pass_width_var, nz))
+    if dist ≥ hwv: skip c
+    bump = mul(fade(ONE − div(dist, hwv)), fade(clamp(div(dend, from_int(300)), 0, ONE)))
+    P[c] = min(P[c], ONE − mul(depth, bump))
+    record (c, a, bump) for site s
+```
+
+The band is about one half-width on each side of the crossing, its width varying along the crossing with a noise of 1.5 km wavelength (`noise2` of P0-01, |nz| ≤ 1, so hwv ∈ [0.1, 1.9] × halfwidth); the bump falls smoothly to 0 at the band's edge and over the last 300 m before each end of the crossing. hwv ≥ 0, and dist ≥ hwv is tested first, so `div(dist, hwv)` is evaluated only for hwv > 0. P is the minimum over sites. Each site's recorded list (index order) is kept for E6.5.8.
+
+#### E6.5.8 Floor drainage (in site order)
+
+For each lowered pass s, with ε = `pass_drain_step_m`, along its axis (q = 0 .. last):
+
+```
+S[q] = h0[c_q] + m'(c_q, P[c_q])          // the lowered surface, P after every site of E6.5.7
+N[q] = h0[c_q] + m'(c_q, ONE)             // the natural surface
+U = copy of S;  for q = ci − 1 down to 0: U[q] = min(S[q], U[q + 1] − ε)
+                for q = ci + 1 up to last: U[q] = min(S[q], U[q − 1] − ε)
+L = copy of N;  for q = 1 up to ci: L[q] = L[q − 1] + ε
+                for q = last − 1 down to ci + 1: L[q] = L[q + 1] + ε
+Δ[q] = max(U[q], min(N[q], L[q])) − S[q]
+for each recorded (c, a, bump) of site s, in its order:
+    if bump.raw > best[c]: best[c] = bump.raw; adj[c] = −mul(Δ[a], bump).raw
+```
+
+`best` starts at −1 and `adj` at 0 for every cell, over all sites together. U falls from the col by at least ε per cell, so the lowered floor drains outward; L rises by ε per cell from each foot's natural height toward the col (side A up to ci, side B up to ci + 1). Δ < 0 is a cut that drains a pit of the lowered floor toward the feet; Δ > 0 lowers less where the lowered floor would fall below the rising line from its foot and hold water, but never to above the natural surface. A cell takes the adjustment of the site with the largest bump there; ties keep the lower site index.
+
+Natural gaps get no factor and no adjustment.
+
 ### E7. Compose (D1, G6 row blocks)
 
-Land: `h = clamp(h0 + mul(scale, unit), floor, H_MAX)`. Ocean: h from E5.3.
+Land:
+
+```
+m = mul(scale, unit)
+if P[c] < ONE:  m = m'(c, P[c])                                 // the lowered envelope
+if adj[c] ≠ 0:  m = min(m − from_raw(adj[c]), mul(scale, unit)) // floor drainage, never above natural
+h = clamp(h0 + m, floor, H_MAX)
+```
+
+Ocean: h from E5.3. Where no pass reaches (P = ONE, adj = 0) this is the third version's `clamp(h0 + mul(scale, unit), floor, H_MAX)`.
 
 **Contract before E8** (relied on by E8 and E9): every land h ∈ [floor, H_MAX]; every ocean h ∈ [−(0.5 + ocean_depth_m), −0.5] m, so ≥ −2900.5 m and < 0.
 
@@ -563,8 +860,22 @@ Notes:
 - The update base + (h − base)/(1 + F) is the exact implicit solution of one step of dh/dt = −K √A (h − h_receiver)/Δx; K, dt and Δx are folded into `erosion_k` (√(256 A)/16 = √A). Large rivers are cut nearly to their receiver's height in one step; ridges barely change. A cell whose receiver is not lower (a depression, where G4 fell back to the flood parent) is not incised, so depressions survive to E10.
 - With D_o = 48 m per 16 m cell (71.6°) the talus step touches only cliff-like steps, mostly the walls of one-cell gorges cut by the stronger incision. With `talus_rate` = 0 it changes nothing (δ = 0 and h ≥ floor), so it needs no switch.
 - When routing is not recomputed (`erosion_route_interval` > 1), rcv, order and F are reused; `order` still lists every receiver before its donors.
-- With `erosion_iterations` = 0 the step does nothing.
+- With `erosion_iterations` = 0 the iterations do nothing (E8.7 still runs).
 - **The contract is kept, and the largest land height does not grow** (section 6.2).
+
+**E8.7 Final talus** (D3 of D2 steps; new in this version). After the last iteration:
+
+```
+for it in 0 .. final_talus_iterations − 1:
+    t = E8.6's talus step on h with D_o^f, D_d^f (4.5) in place of D_o, D_d and final_talus_rate in place of talus_rate
+    h = t
+```
+
+That is, for every land cell c, δ = the sum over the existing 8-neighbours m (8-neighbour order) of −mul(rate, x − Dk) where x = h[c] − hm > Dk, and of +mul(rate, (−x) − Dk) where m is land and −x > Dk (hm = 0 for an ocean neighbour, Dk = D_d^f for odd codes, D_o^f for even); t[c] = max(floor, h[c] + δ); ocean cells unchanged. Each step reads the whole grid h of the previous step and writes a new one (Jacobi), so its result does not depend on the order in which cells are evaluated or on a split into row blocks (it may run on G6 row blocks in parallel).
+
+With the shipped values (80 m per orthogonal step, 78.7°; rate 1/16; 100 steps) it touches only faces steeper than the mountains' own talus limit of E8.6, mostly where a range meets the shore: the ocean counts as height 0, so a cliff above the sea is lowered toward a 5:1 face. Third version's limitation 11 (512 seed 41, `step_p999_m` 183.8 m) becomes 136.4 m (section 11).
+
+**Active set** (an allowed evaluation, used by the exploration code; it gives the same result). Step 0 evaluates every land cell. A cell's δ depends only on its own height and its neighbours'; so in step it + 1, δ can be non-zero only for a cell that changed in step it or has a neighbour that did, or whose δ was non-zero in step it. The exploration evaluates, in step it + 1, exactly the land cells that are, or are 8-adjacent to, a cell with δ ≠ 0 in step it (in index order), applies all new values of a step only after evaluating all of them, and stops early when that set is empty; this equals the full Jacobi step, because a cell outside the set has δ = 0 by the argument above and keeps its value (t = max(floor, h) = h, as h ≥ floor).
 
 ### E9. Quantization (D1, G6 row blocks)
 
@@ -573,7 +884,7 @@ q = mul_div(h.raw, 10, 2^32)                       // decimetres, RHA
 e = (c in O) ? min(−1, q) : max(1, q)              // int16
 ```
 
-Land e ∈ [1, 29900], ocean e ∈ [−29005, −1] (section 7); a value outside [−32768, 32767] would be fatal and cannot occur.
+E9 quantizes the grid after E8.7. Land e ∈ [1, 29900], ocean e ∈ [−29005, −1] (section 7); a value outside [−32768, 32767] would be fatal and cannot occur.
 
 ### E10. Depression conditioning
 
@@ -656,7 +967,7 @@ For ocean and kept cells e'[i] = k[i]; for every other land cell e'[i] = min(KEY
 
 ### E11. Write
 
-Write `elevation` (`i16`, codec 1) as the stage's only layer, in one stage transaction.
+Write `elevation` (`i16`, codec 1) as the stage's only layer, in one stage transaction; if the lead adopts the `pass` table (section 9), its rows are written in the same transaction, after the layer.
 
 ## 6. Invariants and arguments
 
