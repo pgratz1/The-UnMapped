@@ -64,6 +64,10 @@ void StageContext::write_layer(std::string_view name, db::LayerGrid grid) {
     state_->written.push_back(detail::StoredLayer{std::string(name), std::move(grid)});
 }
 
+void StageContext::write_pass(const db::PassRow& row) {
+    state_->stage.write_pass(row);
+}
+
 // --- Pipeline ------------------------------------------------------------------------
 
 namespace detail {

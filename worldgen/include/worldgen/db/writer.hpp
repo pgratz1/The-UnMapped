@@ -55,6 +55,20 @@ enum class Overwrite : std::uint8_t {
 // The suffix of the temporary output file, <out>.partial (P0-02 6).
 inline constexpr std::string_view PARTIAL_SUFFIX = ".partial";
 
+// One row of table `pass` (P1-01 9.1): a natural pass site. path is the
+// crossing polyline as u32 little-endian cell indices, 4 bytes per cell.
+struct PassRow {
+    std::int64_t id = 0;
+    std::int64_t range_id = 0;
+    std::int64_t kind = 0;    // 1 lowered pass, 0 natural gap
+    std::int64_t capped = 0;  // 0 or 1
+    std::int64_t col_x = 0;
+    std::int64_t col_y = 0;
+    std::int64_t saddle_dm = 0;
+    std::int64_t col_dm = 0;
+    std::vector<std::uint8_t> path;
+};
+
 // One stage's transaction on the working database (P0-02 6 step 3).
 // Obtained from WorldWriter::begin_stage; at most one is open at a time.
 // Destroying it without commit() rolls the transaction back and leaves no
@@ -79,6 +93,12 @@ public:
     // SQLite rejects the row (for example a duplicate name).
     void write_layer(std::int64_t id, std::string_view layer_name, const LayerGrid& grid,
                      Codec codec = Codec::delta_varint);
+
+    // Inserts one row of table `pass` (P1-01 9.1). Ids are 1, 2, 3, ... in
+    // the order rows are written across the world (ascending primary key,
+    // P0-02 6 step 3). FatalError if the stage is closed, the id is out of
+    // order, kind or capped is not 0 or 1, or SQLite rejects the row.
+    void write_pass(const PassRow& row);
 
     // COMMIT, and append the stage name to meta.stages (P0-02 5.5, 6 step 3).
     // FatalError if already committed or SQLite fails.

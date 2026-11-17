@@ -19,6 +19,8 @@ struct WriterState {
     bool stage_open = false;       // a StageWriter transaction is open
     std::int64_t next_layer_id = 1;
     std::int64_t stage_start_layer_id = 1;  // next_layer_id at begin_stage, restored on rollback
+    std::int64_t next_pass_id = 1;          // table pass (P1-01 9.1)
+    std::int64_t stage_start_pass_id = 1;   // next_pass_id at begin_stage, restored on rollback
     std::vector<std::string> stages;              // committed stages, run order
     std::optional<std::uint64_t> seed;
     std::string seed_phrase;                      // empty for a numeric seed

@@ -41,6 +41,10 @@ inline constexpr std::string_view geo_elevation_basin = "geo.elevation.basin";
 inline constexpr std::string_view geo_elevation_detail = "geo.elevation.detail";
 inline constexpr std::string_view geo_elevation_erosion = "geo.elevation.erosion";
 inline constexpr std::string_view geo_elevation_fill = "geo.elevation.fill";
+// Pass layout (P1-01 E6.5): hash_at for the col choice and the jitters,
+// noise2 of substream 3 for the band width. Registered after
+// geo.hydrology.flat (P1-01 section 2).
+inline constexpr std::string_view geo_elevation_pass = "geo.elevation.pass";
 
 // Key of stage hydrology (P1-00 section 3, P1-02 section 2): the noise key
 // of the H2 tie-break on flats (fbm_m only, no Rng).
@@ -51,7 +55,7 @@ inline constexpr std::string_view geo_hydrology_flat = "geo.hydrology.flat";
 //   geo.climate.   geo.biomes.   geo.resources.   geo.regions.
 
 // Every registered name, in registration order.
-inline constexpr std::array<std::string_view, 20> all_stream_names = {
+inline constexpr std::array<std::string_view, 21> all_stream_names = {
     test_hash,
     test_noise,
     test_wide,
@@ -72,6 +76,7 @@ inline constexpr std::array<std::string_view, 20> all_stream_names = {
     geo_elevation_fill,
     test_hydro,
     geo_hydrology_flat,
+    geo_elevation_pass,
 };
 
 }  // namespace worldgen::streams

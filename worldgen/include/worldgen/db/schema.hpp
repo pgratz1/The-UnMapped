@@ -1,6 +1,7 @@
 #pragma once
 
-// World database schema, version 1 (spec P0-02 sections 4.2, 5).
+// World database schema, version 2 (spec P0-02 sections 4.2, 5;
+// docs/specs/schema.md; table `pass` from P1-01 section 9.1).
 //
 // The DDL strings below are stored verbatim in sqlite_schema and are
 // therefore part of every world file. Each is one line with single spaces,
@@ -16,7 +17,7 @@ namespace worldgen::db {
 
 // The schema version (P0-02 5.2 rule 1). Written to PRAGMA user_version
 // and meta.schema_version; a reader supports exactly this version.
-inline constexpr std::int64_t SCHEMA_VERSION = 1;
+inline constexpr std::int64_t SCHEMA_VERSION = 2;
 
 // PRAGMA application_id of every world file: 0x554E4D50, ASCII "UNMP"
 // (P0-02 4.2, header offset 68 in 6.1).
@@ -34,8 +35,17 @@ inline constexpr std::string_view DDL_LAYER =
     "CREATE TABLE layer (id INTEGER PRIMARY KEY, name TEXT NOT NULL UNIQUE, width INTEGER NOT NULL, "
     "height INTEGER NOT NULL, format TEXT NOT NULL, data BLOB NOT NULL) STRICT";
 
+// DDL of the pass table (P1-01 9.1, schema version 2), executed third.
+inline constexpr std::string_view DDL_PASS =
+    "CREATE TABLE pass (id INTEGER PRIMARY KEY, range_id INTEGER NOT NULL, kind INTEGER NOT NULL, "
+    "capped INTEGER NOT NULL, col_x INTEGER NOT NULL, col_y INTEGER NOT NULL, saddle_dm INTEGER NOT NULL, "
+    "col_dm INTEGER NOT NULL, path BLOB NOT NULL) STRICT";
+
+// The name of the pass table (P1-01 9.1).
+inline constexpr std::string_view PASS_TABLE = "pass";
+
 // The DDL statements in execution order (P0-02 5.4, section 6 step 2).
-inline constexpr std::array<std::string_view, 2> DDL_STATEMENTS = {DDL_META, DDL_LAYER};
+inline constexpr std::array<std::string_view, 3> DDL_STATEMENTS = {DDL_META, DDL_LAYER, DDL_PASS};
 
 // --- meta keys (P0-02 5.5) --------------------------------------------------
 

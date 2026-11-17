@@ -43,6 +43,22 @@ std::optional<std::string> check_lake_areas(const Record& r) {
     return std::nullopt;
 }
 
+// P1-01 4.3 named check 4.
+std::optional<std::string> check_pass_masks(const Record& r) {
+    if (r.get_fx("pass_region_mask") > r.get_fx("pass_core_mask")) {
+        return std::string("pass_region_mask must not exceed pass_core_mask");
+    }
+    return std::nullopt;
+}
+
+// P1-01 4.3 named check 5.
+std::optional<std::string> check_pass_saddle_clamp(const Record& r) {
+    if (r.get_fx("pass_min_col_m") > r.get_fx("pass_saddle_max_m")) {
+        return std::string("pass_min_col_m must not exceed pass_saddle_max_m");
+    }
+    return std::nullopt;
+}
+
 }  // namespace
 
 Schema worldgen_elevation_schema() {
@@ -112,11 +128,47 @@ Schema worldgen_elevation_schema() {
         Field::required("fill_noise", geo::fbm_m_type()),
         Field::required("fill_cost_amp", Type::fixed("0", "16")),
         Field::required("fill_detail_m", Type::fixed("0", "10")),
+        Field::required("pass_count_max", Type::integer(0, 3)),
+        Field::required("pass_core_mask", Type::fixed("0.01", "1")),
+        Field::required("pass_crest_frac", Type::fixed("0", "1")),
+        Field::required("pass_min_length_m", Type::integer(0, 100000)),
+        Field::required("pass_spacing_m", Type::integer(500, 100000)),
+        Field::required("pass_size_ref_n", Type::integer(16, 2048)),
+        Field::required("pass_region_mask", Type::fixed("0.005", "1")),
+        Field::required("pass_body_m", Type::fixed("0", "2900")),
+        Field::required("pass_basin_depth_m", Type::fixed("1", "1000")),
+        Field::required("pass_tarn_min_cells", Type::integer(0, 1000000)),
+        Field::required("pass_divide_reach_m", Type::fixed("0", "20000")),
+        Field::required("pass_saddle_window_m", Type::fixed("0", "20000")),
+        Field::required("pass_saddle_rise_m", Type::fixed("0", "2900")),
+        Field::required("pass_saddle_rise_reach_m", Type::fixed("0", "20000")),
+        Field::required("pass_min_spacing_m", Type::fixed("0", "100000")),
+        Field::required("pass_coast_clear_m", Type::fixed("0", "20000")),
+        Field::required("pass_barrier_m", Type::fixed("0", "2900")),
+        Field::required("pass_side_max_m", Type::fixed("0", "100000")),
+        Field::required("pass_col_tarn_m", Type::fixed("0", "5000")),
+        Field::required("pass_grade", Type::fixed("0", "2")),
+        Field::required("pass_grade_jitter", Type::fixed("0", "1")),
+        Field::required("pass_min_col_m", Type::fixed("0", "2900")),
+        Field::required("pass_saddle_max_m", Type::fixed("0", "2900")),
+        Field::required("pass_max_cut_m", Type::fixed("1", "2900")),
+        Field::required("pass_peak_rise_m", Type::fixed("0", "2900")),
+        Field::required("pass_halfwidth_m", Type::fixed("0", "5000")),
+        Field::required("pass_width_jitter", Type::fixed("0", "0.9")),
+        Field::required("pass_width_var", Type::fixed("0", "0.9")),
+        Field::required("pass_walk_grade", Type::fixed("0.01", "4")),
+        Field::required("pass_texture_keep", Type::fixed("0", "1")),
+        Field::required("pass_drain_step_m", Type::fixed("0.01", "10")),
+        Field::required("final_talus_iterations", Type::integer(0, 1000)),
+        Field::required("final_talus_slope", Type::fixed("0.05", "16")),
+        Field::required("final_talus_rate", Type::fixed("0", "0.125")),
     };
     std::vector<Check> checks{
         Check{"edge_radial_span", [](const Record& r) { return check_edge_radial_span(r); }},
         Check{"mountain_ranks", [](const Record& r) { return check_mountain_ranks(r); }},
         Check{"lake_areas", [](const Record& r) { return check_lake_areas(r); }},
+        Check{"pass_masks", [](const Record& r) { return check_pass_masks(r); }},
+        Check{"pass_saddle_clamp", [](const Record& r) { return check_pass_saddle_clamp(r); }},
     };
     return Schema(std::move(fields), std::move(checks));
 }

@@ -191,6 +191,41 @@ ElevationTuning elevation_tuning_from(const data::Record& r) {
     t.fill_noise = geo::fbm_m_from(r.get("fill_noise"));
     t.fill_cost_amp = r.get_fx("fill_cost_amp");
     t.fill_detail_m = r.get_fx("fill_detail_m");
+    t.pass_count_max = to_i32(r.get_int("pass_count_max"), 0, 3, "elevation: pass_count_max outside [0, 3]");
+    t.pass_core_mask = r.get_fx("pass_core_mask");
+    t.pass_crest_frac = r.get_fx("pass_crest_frac");
+    t.pass_min_length_m = r.get_int("pass_min_length_m");
+    t.pass_spacing_m = r.get_int("pass_spacing_m");
+    t.pass_size_ref_n = to_i32(r.get_int("pass_size_ref_n"), 16, 2048, "elevation: pass_size_ref_n outside [16, 2048]");
+    t.pass_region_mask = r.get_fx("pass_region_mask");
+    t.pass_body_m = r.get_fx("pass_body_m");
+    t.pass_basin_depth_m = r.get_fx("pass_basin_depth_m");
+    t.pass_tarn_min_cells = r.get_int("pass_tarn_min_cells");
+    t.pass_divide_reach_m = r.get_fx("pass_divide_reach_m");
+    t.pass_saddle_window_m = r.get_fx("pass_saddle_window_m");
+    t.pass_saddle_rise_m = r.get_fx("pass_saddle_rise_m");
+    t.pass_saddle_rise_reach_m = r.get_fx("pass_saddle_rise_reach_m");
+    t.pass_min_spacing_m = r.get_fx("pass_min_spacing_m");
+    t.pass_coast_clear_m = r.get_fx("pass_coast_clear_m");
+    t.pass_barrier_m = r.get_fx("pass_barrier_m");
+    t.pass_side_max_m = r.get_fx("pass_side_max_m");
+    t.pass_col_tarn_m = r.get_fx("pass_col_tarn_m");
+    t.pass_grade = r.get_fx("pass_grade");
+    t.pass_grade_jitter = r.get_fx("pass_grade_jitter");
+    t.pass_min_col_m = r.get_fx("pass_min_col_m");
+    t.pass_saddle_max_m = r.get_fx("pass_saddle_max_m");
+    t.pass_max_cut_m = r.get_fx("pass_max_cut_m");
+    t.pass_peak_rise_m = r.get_fx("pass_peak_rise_m");
+    t.pass_halfwidth_m = r.get_fx("pass_halfwidth_m");
+    t.pass_width_jitter = r.get_fx("pass_width_jitter");
+    t.pass_width_var = r.get_fx("pass_width_var");
+    t.pass_walk_grade = r.get_fx("pass_walk_grade");
+    t.pass_texture_keep = r.get_fx("pass_texture_keep");
+    t.pass_drain_step_m = r.get_fx("pass_drain_step_m");
+    t.final_talus_iterations =
+        to_i32(r.get_int("final_talus_iterations"), 0, 1000, "elevation: final_talus_iterations outside [0, 1000]");
+    t.final_talus_slope = r.get_fx("final_talus_slope");
+    t.final_talus_rate = r.get_fx("final_talus_rate");
     return t;
 }
 
@@ -680,8 +715,12 @@ MountainScale mountain_scale(std::span<const std::int64_t> land_units, const Ele
 
 // --- E5.1, E5.2, E5.3, E6, E7 -----------------------------------------------------------------
 
-ElevationHeights elevation_heights(std::uint64_t seed, const ElevationFields& f, std::span<const std::uint8_t> ocean,
-                                   const ElevationTuning& t, std::uint32_t threads) {
+namespace {
+
+// E5 to E7. If owned is not null it is &f, and its grids c and ns are
+// released after E5.2, their last reader (P1-01 8.1).
+ElevationHeights heights_impl(std::uint64_t seed, const ElevationFields& f, std::span<const std::uint8_t> ocean,
+                              const ElevationTuning& t, std::uint32_t threads, ElevationFields* owned) {
     const std::int32_t n = f.n;
     check_n(n, "elevation_heights: N outside [16, 2048]");
     check_threads(threads);
@@ -695,6 +734,8 @@ ElevationHeights elevation_heights(std::uint64_t seed, const ElevationFields& f,
     ElevationHeights out;
     out.h.assign(cells, 0);
     out.unit.assign(cells, 0);
+    out.mask.assign(cells, 0);
+    out.profile.assign(cells, 0);
 
     // E5.1 mountain floor (D8 counts, fixed search order, D3 bisection).
     {
@@ -733,6 +774,7 @@ ElevationHeights elevation_heights(std::uint64_t seed, const ElevationFields& f,
                     const Fx ridge = geo::ridged_m(keys.ridge, qx, qy, t.ridge_noise, t.ridge_weight);
                     const Fx profile = t.foothill_fraction + mul(Fx::ONE - t.foothill_fraction, ridge);
                     unit = mul(mask, profile);
+                    out.profile[i] = profile.raw();
                 }
                 const Fx hh = geo::fbm_m(keys.hills, qx, qy, t.hill_noise);
                 const Fx rn = geo::fbm_m(keys.roughness, xm, ym, t.roughness_noise);
@@ -742,9 +784,14 @@ ElevationHeights elevation_heights(std::uint64_t seed, const ElevationFields& f,
                 const Fx det = mul(t.detail_amp_m, geo::fbm_m(keys.detail, xm, ym, t.detail_noise));
                 out.h[i] = ((base + hills) + det).raw();  // h0
                 out.unit[i] = unit.raw();
+                out.mask[i] = mask.raw();
             }
         }
     });
+    if (owned != nullptr) {
+        std::vector<std::int64_t>().swap(owned->c);
+        std::vector<std::int64_t>().swap(owned->ns);
+    }
 
     // E5.3 ocean depth (D4 chamfer from the land, then D1).
     {
@@ -778,19 +825,53 @@ ElevationHeights elevation_heights(std::uint64_t seed, const ElevationFields& f,
         out.scale = ms.scale;
     }
 
+    // E6.5 pass layout (single-threaded; reads h0 on land, never the ocean depth).
+    {
+        PassInputs in;
+        in.grid = grid;
+        in.h0 = out.h;
+        in.unit = out.unit;
+        in.mask = out.mask;
+        in.profile = out.profile;
+        in.nb = f.nb;
+        in.ocean = ocean;
+        in.scale = out.scale;
+        in.offset = o_star;
+        in.w_b = f.w_b;
+        out.passes = pass_layout(seed, in, t);
+    }
+
     // E7 compose (D1, G6 row blocks).
     const Fx h_max = Fx::from_int(ELEVATION_H_MAX_M);
     const Fx scale = out.scale;
+    const std::vector<std::int64_t>& factor = out.passes.factor;
+    const std::vector<std::int64_t>& adj = out.passes.adj;
     geo::for_each_row_block(n, threads, [&](const geo::RowBlock& block) {
         const BlockCells bc = block_cells(grid, block);
         for (CellIndex i = bc.first; i < bc.last; ++i) {
-            if (ocean[i] == 0U) {
-                out.h[i] = clamp(Fx::from_raw(out.h[i]) + mul(scale, Fx::from_raw(out.unit[i])), t.land_floor_m, h_max)
-                               .raw();
+            if (ocean[i] != 0U) {
+                continue;
             }
+            const Fx natural = mul(scale, Fx::from_raw(out.unit[i]));
+            Fx m = natural;
+            if (factor[i] < Fx::ONE.raw()) {  // the lowered envelope
+                m = pass_lowered(scale, Fx::from_raw(out.mask[i]), Fx::from_raw(out.profile[i]),
+                                 Fx::from_raw(factor[i]), t.foothill_fraction, t.pass_texture_keep);
+            }
+            if (adj[i] != 0) {  // floor drainage, never above natural
+                m = min(m - Fx::from_raw(adj[i]), natural);
+            }
+            out.h[i] = clamp(Fx::from_raw(out.h[i]) + m, t.land_floor_m, h_max).raw();
         }
     });
     return out;
+}
+
+}  // namespace
+
+ElevationHeights elevation_heights(std::uint64_t seed, const ElevationFields& f, std::span<const std::uint8_t> ocean,
+                                   const ElevationTuning& t, std::uint32_t threads) {
+    return heights_impl(seed, f, ocean, t, threads, nullptr);
 }
 
 // --- E8 --------------------------------------------------------------------------------------
@@ -1001,6 +1082,96 @@ void erode(Grid grid, std::span<std::int64_t> h, std::span<const std::uint8_t> o
     }
 }
 
+// E8.7 (D3 of D2 steps). Each step evaluates the active set (step 0: every
+// land cell; then the land cells that are, or are 8-adjacent to, a cell
+// whose delta was non-zero), in index order, in fixed blocks of that list
+// that read h and write only their own slots; the new values are applied
+// after the whole set is evaluated (Jacobi). A cell outside the set has
+// delta 0 and keeps its value, so this equals the full-grid step (E8.7).
+void final_talus(Grid grid, std::span<std::int64_t> h, std::span<const std::uint8_t> ocean, Fx drop_o, Fx drop_d,
+                 Fx rate, Fx floor, std::int32_t iterations, std::uint32_t threads) {
+    check_size(grid, h.size(), "final_talus: h");
+    check_size(grid, ocean.size(), "final_talus: ocean");
+    check_threads(threads);
+    if (iterations < 0) {
+        fatal("final_talus: negative iteration count");
+    }
+    if (iterations == 0) {
+        return;
+    }
+    constexpr std::size_t BLOCK = 4096;
+    const std::uint32_t cells = grid.cells();
+    std::vector<CellIndex> active;
+    for (CellIndex c = 0; c < cells; ++c) {
+        if (ocean[c] == 0U) {
+            active.push_back(c);
+        }
+    }
+    std::vector<std::int64_t> next_h;
+    std::vector<std::uint8_t> changed;
+    std::vector<std::uint8_t> flag(cells, 0);
+    std::vector<CellIndex> next;
+    for (std::int32_t it = 0; it < iterations && !active.empty(); ++it) {
+        next_h.assign(active.size(), 0);
+        changed.assign(active.size(), 0);
+        const auto blocks = static_cast<std::uint32_t>((active.size() + BLOCK - 1U) / BLOCK);
+        run_blocks(blocks, threads, [&](std::uint32_t b) {
+            const std::size_t first = std::size_t{b} * BLOCK;
+            const std::size_t last = std::min(active.size(), first + BLOCK);
+            for (std::size_t k = first; k < last; ++k) {
+                const CellIndex c = active[k];
+                const Fx hc = Fx::from_raw(h[c]);
+                Fx delta;
+                for (const Direction code : geo::NEIGHBOURS_8) {
+                    CellIndex m = 0;
+                    if (!geo::neighbour(grid, c, code, m)) {
+                        continue;
+                    }
+                    const bool land = ocean[m] == 0U;
+                    const Fx hm = land ? Fx::from_raw(h[m]) : Fx();
+                    const Fx dk = geo::is_diagonal(code) ? drop_d : drop_o;
+                    const Fx x = hc - hm;
+                    if (x > dk) {
+                        delta = delta - mul(rate, x - dk);
+                    } else if (land && -x > dk) {
+                        delta = delta + mul(rate, -x - dk);
+                    }
+                }
+                if (delta != Fx()) {
+                    changed[k] = 1;
+                    next_h[k] = max(floor, hc + delta).raw();
+                }
+            }
+        });
+        next.clear();
+        const auto mark = [&](CellIndex c) {
+            if (flag[c] == 0U) {
+                flag[c] = 1;
+                next.push_back(c);
+            }
+        };
+        for (std::size_t k = 0; k < active.size(); ++k) {
+            if (changed[k] == 0U) {
+                continue;
+            }
+            const CellIndex c = active[k];
+            h[c] = next_h[k];
+            mark(c);
+            for (const Direction code : geo::NEIGHBOURS_8) {
+                CellIndex m = 0;
+                if (geo::neighbour(grid, c, code, m) && ocean[m] == 0U) {
+                    mark(m);
+                }
+            }
+        }
+        for (const CellIndex c : next) {
+            flag[c] = 0;
+        }
+        std::sort(next.begin(), next.end());
+        active.swap(next);
+    }
+}
+
 // --- E9 --------------------------------------------------------------------------------------
 
 std::int16_t quantize_elevation_cell(std::int64_t h_raw, bool ocean) {
@@ -1200,32 +1371,50 @@ Conditioned condition_depressions(Grid grid, std::span<const std::int16_t> e, st
 
 // --- The whole stage ---------------------------------------------------------------------------
 
-std::vector<std::int16_t> elevation_grid(std::uint64_t seed, std::int32_t n, const ElevationTuning& tuning,
-                                         std::uint32_t threads) {
-    check_n(n, "elevation_grid: N outside [16, 2048]");
+ElevationResult elevation_run(std::uint64_t seed, std::int32_t n, const ElevationTuning& tuning,
+                              std::uint32_t threads) {
+    check_n(n, "elevation_run: N outside [16, 2048]");
     check_threads(threads);
     const Grid grid = geo::square_grid(n);
+    ElevationResult result;
     std::vector<std::uint8_t> ocean;
     std::vector<std::int64_t> h;
     std::int64_t land_cells = 0;
     {
-        const ElevationFields fields = elevation_fields(seed, n, tuning, threads);  // E1 to E3
-        ocean = elevation_classify(fields, tuning);                                 // E4
-        ElevationHeights heights = elevation_heights(seed, fields, ocean, tuning, threads);  // E5 to E7
+        ElevationFields fields = elevation_fields(seed, n, tuning, threads);  // E1 to E3
+        ocean = elevation_classify(fields, tuning);                           // E4
+        // E5 to E7; c and ns are released after E5.2 (P1-01 8.1).
+        ElevationHeights heights = heights_impl(seed, fields, ocean, tuning, threads, &fields);
         h = std::move(heights.h);
         land_cells = heights.land_cells;
-    }
+        result.sites = std::move(heights.passes.sites);
+        result.h7.reserve(result.sites.size());
+        for (const PassSite& site : result.sites) {
+            result.h7.push_back(h[site.col]);
+        }
+    }  // nb, unit, mask, profile, P and adj are released here
     const FillGrids fill = fill_grids(seed, n, ocean, tuning, threads);  // E10.0
     erode(grid, h, ocean, erosion_params(tuning, seed), threads);         // E8
+    {
+        const Fx drop_o = mul_int(tuning.final_talus_slope, geo::CELL_M);  // E8.7
+        final_talus(grid, h, ocean, drop_o, mul(drop_o, Fx::SQRT2), tuning.final_talus_rate, tuning.land_floor_m,
+                    tuning.final_talus_iterations, threads);
+    }
     const std::vector<std::int16_t> e = quantize_elevation(grid, h, ocean, threads);  // E9
-    h = {};
+    std::vector<std::int64_t>().swap(h);
     ConditionParams cp;
     cp.lake_min_cells = lake_min_cells(tuning.lake_min_area_m2);
     cp.lake_max_cells = lake_max_cells(tuning.lake_max_area_m2, tuning.lake_area_ref_n, n);
     cp.lake_min_depth_dm = lake_min_depth_dm(tuning.lake_min_depth_m);
     cp.max_share_cells = lake_max_share_cells(land_cells, tuning.lake_max_share);
     cp.fine_slope = fill_fine_slope(tuning.fill_slope_dm);
-    return condition_depressions(grid, e, ocean, fill.cost, fill.bump, cp).e;  // E10
+    result.e = condition_depressions(grid, e, ocean, fill.cost, fill.bump, cp).e;  // E10
+    return result;
+}
+
+std::vector<std::int16_t> elevation_grid(std::uint64_t seed, std::int32_t n, const ElevationTuning& tuning,
+                                         std::uint32_t threads) {
+    return elevation_run(seed, n, tuning, threads).e;
 }
 
 void run_elevation(StageContext& context) {
@@ -1235,13 +1424,33 @@ void run_elevation(StageContext& context) {
         fatal("elevation: map size outside [16, 2048]");
     }
     const auto n = static_cast<std::int32_t>(map_size);
-    std::vector<std::int16_t> cells = elevation_grid(context.seed(), n, tuning, context.threads());
-    // E11: the stage's only layer (P1-01 9).
+    ElevationResult result = elevation_run(context.seed(), n, tuning, context.threads());
+    // E11: the stage's layer (P1-01 9), then the pass rows in site order (9.1).
     db::LayerGrid grid;
     grid.width = static_cast<std::uint32_t>(n);
     grid.height = static_cast<std::uint32_t>(n);
-    grid.values = std::move(cells);
+    grid.values = std::move(result.e);
     context.write_layer(ELEVATION_LAYER, std::move(grid));
+    const Grid g = geo::square_grid(n);
+    for (std::size_t s = 0; s < result.sites.size(); ++s) {
+        const PassSite& site = result.sites[s];
+        db::PassRow row;
+        row.id = static_cast<std::int64_t>(s) + 1;
+        row.range_id = site.range;
+        row.kind = site.natural_gap ? 0 : 1;
+        row.capped = site.capped ? 1 : 0;
+        row.col_x = g.x_of(site.col);
+        row.col_y = g.y_of(site.col);
+        row.saddle_dm = mul_div(site.dh, 10, FINE_UNIT);
+        row.col_dm = mul_div(result.h7[s], 10, TWO_POW_32);
+        row.path.reserve(site.axis.size() * 4U);
+        for (const CellIndex c : site.axis) {
+            for (std::uint32_t b = 0; b < 4U; ++b) {
+                row.path.push_back(static_cast<std::uint8_t>((c >> (8U * b)) & 0xFFU));
+            }
+        }
+        context.write_pass(row);
+    }
 }
 
 }  // namespace worldgen::stages

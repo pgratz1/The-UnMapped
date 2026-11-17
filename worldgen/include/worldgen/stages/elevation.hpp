@@ -30,6 +30,7 @@
 // D10): no result depends on it.
 
 #include <cstdint>
+#include <optional>
 #include <span>
 #include <string_view>
 #include <vector>
@@ -126,6 +127,41 @@ struct ElevationTuning {
     geo::FbmM fill_noise;
     Fx fill_cost_amp;
     Fx fill_detail_m;
+    // E6.5 pass layout and E8.7 final talus (fourth version).
+    std::int32_t pass_count_max = 0;
+    Fx pass_core_mask;
+    Fx pass_crest_frac;
+    std::int64_t pass_min_length_m = 0;
+    std::int64_t pass_spacing_m = 500;
+    std::int32_t pass_size_ref_n = 1024;
+    Fx pass_region_mask;
+    Fx pass_body_m;
+    Fx pass_basin_depth_m;
+    std::int64_t pass_tarn_min_cells = 0;
+    Fx pass_divide_reach_m;
+    Fx pass_saddle_window_m;
+    Fx pass_saddle_rise_m;
+    Fx pass_saddle_rise_reach_m;
+    Fx pass_min_spacing_m;
+    Fx pass_coast_clear_m;
+    Fx pass_barrier_m;
+    Fx pass_side_max_m;
+    Fx pass_col_tarn_m;
+    Fx pass_grade;
+    Fx pass_grade_jitter;
+    Fx pass_min_col_m;
+    Fx pass_saddle_max_m;
+    Fx pass_max_cut_m;
+    Fx pass_peak_rise_m;
+    Fx pass_halfwidth_m;
+    Fx pass_width_jitter;
+    Fx pass_width_var;
+    Fx pass_walk_grade;
+    Fx pass_texture_keep;
+    Fx pass_drain_step_m;
+    std::int32_t final_talus_iterations = 0;
+    Fx final_talus_slope;
+    Fx final_talus_rate;
 
     friend bool operator==(const ElevationTuning&, const ElevationTuning&) = default;
 };
@@ -268,17 +304,151 @@ struct MountainFloor {
 // bisection are those of the spec.
 [[nodiscard]] MountainFloor mountain_floor(std::span<const FloorCell> cells, Fx w_b, const ElevationTuning& tuning);
 
+// --- E6.5: pass layout (fourth version) ---------------------------------------------------
+//
+// The seams of P1-01 section 10. Every grid is W x H (any test grid with an
+// ocean cell, or the N x N map), Fx values as raw int64. "Units" are int64
+// counts of 2^-16 m (E6.5.0); "fifths" are fifths of a cell (5/7 steps).
+
+// No cell: an unset parent or source (E6.5.3).
+inline constexpr geo::CellIndex PASS_NO_CELL = 0xFFFFFFFFU;
+
+// The grids E6.5 reads (E5.2, E5.3 before the ocean depth is used, E6).
+struct PassInputs {
+    geo::Grid grid;
+    std::span<const std::int64_t> h0;       // E5.2 h0 on land (ocean cells are not read)
+    std::span<const std::int64_t> unit;     // E5.2 unit, 0 on ocean
+    std::span<const std::int64_t> mask;     // E5.2 mask, 0 on ocean
+    std::span<const std::int64_t> profile;  // E5.2 profile where mask > 0, else 0
+    std::span<const std::int64_t> nb;       // E2 belt noise, every cell
+    std::span<const std::uint8_t> ocean;    // O (1 = ocean)
+    Fx scale;                               // E6
+    Fx offset;                              // o* of E5.1
+    Fx w_b;                                 // E3.5
+};
+
+// The rule of E6.5.6 that failed for a tried candidate.
+enum class PassReject : std::uint8_t {
+    coast,          // (a)
+    barrier,        // (b)
+    sea,            // (c)
+    side,           // (d)
+    along_divide,   // (e) 1
+    along_crest,    // (e) 2
+    chord,          // (f)
+    tarn_crossing,  // (g)
+    col_tarn,       // (j)
+    summit_top,     // (k)
+    zone_p90,       // (l)
+    feet,           // (m)
+    shoulders,      // (n)
+};
+
+// One range of E6.5.2 (a component of crest cells).
+struct PassRange {
+    std::int32_t label = 0;              // k, 1, 2, ... in G2 order
+    geo::CellIndex s0 = 0;               // smallest cell index of the range
+    geo::CellIndex end_a = 0;            // A
+    geo::CellIndex end_b = 0;            // B
+    geo::CellIndex top = 0;              // top_k: largest mh, ties smallest index
+    std::int64_t length = 0;             // len_k = dA(B), fifths
+    std::int64_t p90 = 0;                // p90_k of mh, units
+    std::int32_t slots = 0;              // np_k
+    std::vector<geo::CellIndex> divide;      // D_k in index order (empty when E6.5.3 did not run)
+    std::vector<geo::CellIndex> candidates;  // E6.5.4, in D_k order (only for ranges with slots)
+};
+
+// One pass site (E6.5.5, E6.5.6): a lowered pass or a natural gap.
+struct PassSite {
+    std::int32_t range = 0;                // the range label k
+    geo::CellIndex col = 0;                // the side-1 divide cell
+    geo::CellIndex partner = 0;            // pt(col)
+    bool natural_gap = false;              // (i)
+    bool capped = false;                   // the final capped flag of (h) or (o); false for a gap
+    std::vector<geo::CellIndex> axis;      // (c): side-1 seed .. col, partner .. side-2 seed
+    std::int32_t col_index = 0;            // ci, the position of col in axis
+    std::int64_t dh = 0;                   // pair height of the col, units
+    std::int64_t maxm = 0;                 // largest mh over the axis, units
+    Fx saddle;                             // (h) saddle target, metres
+    Fx halfwidth;                          // (h), metres
+    Fx depth;                              // (o) ONE - lo; 0 for a natural gap
+};
+
+// One tried candidate, in try order (E6.5.5): reject is the failed rule, or
+// std::nullopt for a candidate that became a site.
+struct PassTry {
+    geo::CellIndex col = 0;
+    std::int32_t range = 0;  // label k
+    std::int32_t slot = 0;   // j
+    std::optional<PassReject> reject;
+};
+
+// The result of E6.5.
+struct PassLayout {
+    std::vector<PassRange> ranges;     // every range, in label order
+    std::vector<PassSite> sites;       // in site order s = 0, 1, ...
+    std::vector<PassTry> tries;        // in try order
+    std::vector<std::int64_t> factor;  // P raw per cell, ONE where no pass reaches
+    std::vector<std::int64_t> adj;     // adj raw per cell, 0 where none
+};
+
+// E6.5 in full (E6.5.1 to E6.5.8) on any W x H grid with an ocean cell.
+// Single-threaded (D5, D6, D7). With pass_count_max = 0 no range has a slot:
+// factor = ONE and adj = 0 everywhere, and E6.5.3 to E6.5.8 do not run.
+[[nodiscard]] PassLayout pass_layout(std::uint64_t seed, const PassInputs& inputs, const ElevationTuning& tuning);
+
+// E6.5.3 step 2, the divide flood over the support on keys K (units),
+// seeded by the non-support cells with a support 8-neighbour (index order,
+// level 0, side 2 if nb >= offset.raw, else 1); pops by (level, seq).
+// parent = the cell itself on a seed, PASS_NO_CELL on a cell no seed
+// reaches (and on every other non-support cell); side 0 there.
+struct DivideFlood {
+    std::vector<geo::CellIndex> parent;
+    std::vector<std::uint8_t> side;
+};
+[[nodiscard]] DivideFlood divide_flood(geo::Grid grid, std::span<const std::uint8_t> support,
+                                       std::span<const std::int64_t> key, std::span<const std::int64_t> nb,
+                                       Fx offset);
+
+// m'(c, p) of E6.5.0: mul(scale, mul(mul(p, mask), f) + mul(mul(max(p,
+// keep), mask), max(0, profile - f))).
+[[nodiscard]] Fx pass_lowered(Fx scale, Fx mask, Fx profile, Fx p, Fx foothill_fraction, Fx texture_keep);
+
+// E6.5.6 (o) on the axis values mask[q], profile[q] (raw, in axis order):
+// lo, and the capped flag after the cap raise (capped is the flag of (h)).
+struct PassDepth {
+    Fx lo;
+    bool capped = false;
+};
+[[nodiscard]] PassDepth pass_depth(std::span<const std::int64_t> mask, std::span<const std::int64_t> profile,
+                                   Fx scale, Fx saddle, bool capped, std::int64_t maxm,
+                                   const ElevationTuning& tuning);
+
+// E6.5.7 for one reached cell: hwv = mul(halfwidth, ONE + mul(width_var,
+// nz)); 0 if dist >= hwv, else mul(fade(ONE - div(dist, hwv)),
+// fade(clamp(div(dend, 300), 0, ONE))).
+[[nodiscard]] Fx pass_bump(Fx dist, Fx dend, Fx halfwidth, Fx width_var, Fx nz);
+
+// E6.5.8 along one axis: Delta[q] (raw) from the lowered surface s and the
+// natural surface nat (raw metres, axis order), the col position and eps.
+[[nodiscard]] std::vector<std::int64_t> pass_drainage(std::span<const std::int64_t> s,
+                                                      std::span<const std::int64_t> nat, std::int32_t col_index,
+                                                      Fx eps);
+
 // --- E5.2 to E7: heights before erosion ------------------------------------------------
 
 // The results of E5 to E7 (P1-01 10, `elevation_heights`).
 struct ElevationHeights {
-    std::vector<std::int64_t> h;     // E7: Fx raw metres per cell (land and ocean)
-    std::vector<std::int64_t> unit;  // E5.2: mask x profile per cell (0 on ocean)
-    MountainFloor floor;             // E5.1
-    std::int64_t land_cells = 0;     // L_O
-    Fx q;                            // E6: quantile of unit at mountain_peak_rank
-    Fx qc;                           // E6: quantile of unit at mountain_cover_rank
-    Fx scale;                        // E6
+    std::vector<std::int64_t> h;        // E7: Fx raw metres per cell (land and ocean)
+    std::vector<std::int64_t> unit;     // E5.2: mask x profile per cell (0 on ocean)
+    std::vector<std::int64_t> mask;     // E5.2: mask per cell (0 on ocean)
+    std::vector<std::int64_t> profile;  // E5.2: profile where mask > 0, else 0
+    MountainFloor floor;                // E5.1
+    std::int64_t land_cells = 0;        // L_O
+    Fx q;                               // E6: quantile of unit at mountain_peak_rank
+    Fx qc;                              // E6: quantile of unit at mountain_cover_rank
+    Fx scale;                           // E6
+    PassLayout passes;                  // E6.5
 };
 
 [[nodiscard]] ElevationHeights elevation_heights(std::uint64_t seed, const ElevationFields& fields,
@@ -345,6 +515,13 @@ void erosion_talus(geo::Grid grid, std::span<const std::int64_t> h, std::span<co
 // (G3).
 void erode(geo::Grid grid, std::span<std::int64_t> h, std::span<const std::uint8_t> ocean,
            const ErosionParams& params, std::uint32_t threads = 1);
+
+// E8.7 final talus (D3 of D2 steps): `iterations` Jacobi steps of E8.6's
+// talus rule with drops drop_o, drop_d and rate. Evaluated on an active set
+// (P1-01 E8.7), in parallel blocks of that set; the result equals the full
+// Jacobi steps and does not depend on threads.
+void final_talus(geo::Grid grid, std::span<std::int64_t> h, std::span<const std::uint8_t> ocean, Fx drop_o,
+                 Fx drop_d, Fx rate, Fx floor, std::int32_t iterations, std::uint32_t threads = 1);
 
 // --- E9: quantization ------------------------------------------------------------------
 
@@ -421,9 +598,21 @@ struct Conditioned {
 [[nodiscard]] std::vector<std::int16_t> elevation_grid(std::uint64_t seed, std::int32_t n,
                                                        const ElevationTuning& tuning, std::uint32_t threads = 1);
 
+// E1 to E10 with the pass sites (P1-01 10, `elevation_run`): the layer, the
+// sites of E6.5 in site order, and h7[s] = E7's h (raw) at the col of site
+// s (the source of the `pass` table's col_dm, section 9.1).
+struct ElevationResult {
+    std::vector<std::int16_t> e;
+    std::vector<PassSite> sites;
+    std::vector<std::int64_t> h7;
+};
+[[nodiscard]] ElevationResult elevation_run(std::uint64_t seed, std::int32_t n, const ElevationTuning& tuning,
+                                            std::uint32_t threads = 1);
+
 // The stage entry point (P1-01 E11, P1-00 3): reads worldgen.elevation from
 // the context's content, runs elevation_grid with the context's seed, map
-// size and thread count, and writes layer `elevation` (i16, N x N, codec 1).
+// size and thread count, writes layer `elevation` (i16, N x N, codec 1) and
+// one `pass` row per site (P1-01 9.1).
 void run_elevation(StageContext& context);
 
 }  // namespace worldgen::stages

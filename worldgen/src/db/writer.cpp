@@ -414,6 +414,7 @@ StageWriter::~StageWriter() {
         detail::exec(state_->db.get(), "ROLLBACK", ignored);
     }
     state_->next_layer_id = state_->stage_start_layer_id;
+    state_->next_pass_id = state_->stage_start_pass_id;
     state_->stage_open = false;
 }
 
@@ -432,6 +433,36 @@ void StageWriter::write_layer(std::int64_t id, std::string_view layer_name, cons
     detail::insert_layer(*state_, id, layer_name, static_cast<std::int64_t>(grid.width),
                          static_cast<std::int64_t>(grid.height), element_type_name(grid.type()), blob);
     state_->next_layer_id = id + 1;
+}
+
+void StageWriter::write_pass(const PassRow& row) {
+    if (state_ == nullptr) {
+        fatal("StageWriter::write_pass: stage is not open");
+    }
+    if (row.id != state_->next_pass_id) {
+        fatal_text("StageWriter::write_pass: pass row has id " + format_i64(row.id) + ", expected " +
+                   format_i64(state_->next_pass_id) + " (ids are 1, 2, 3, ... in writing order)");
+    }
+    if ((row.kind != 0 && row.kind != 1) || (row.capped != 0 && row.capped != 1)) {
+        fatal("StageWriter::write_pass: kind and capped must be 0 or 1");
+    }
+    detail::Statement stmt;
+    sqlite3* db = state_->db.get();
+    int rc = stmt.prepare(db,
+                          "INSERT INTO pass (id, range_id, kind, capped, col_x, col_y, saddle_dm, col_dm, path) "
+                          "VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)");
+    const std::int64_t ints[8] = {row.id,    row.range_id, row.kind,      row.capped,
+                                  row.col_x, row.col_y,    row.saddle_dm, row.col_dm};
+    for (int k = 0; k < 8 && rc == SQLITE_OK; ++k) {
+        rc = stmt.bind_int64(k + 1, ints[k]);
+    }
+    if (rc == SQLITE_OK) rc = stmt.bind_blob(9, row.path);
+    if (rc == SQLITE_OK) rc = stmt.step() == SQLITE_DONE ? SQLITE_OK : SQLITE_ERROR;
+    if (rc != SQLITE_OK) {
+        fatal_text("world database: inserting pass row " + format_i64(row.id) + " failed: " +
+                   detail::error_message(db));
+    }
+    state_->next_pass_id = row.id + 1;
 }
 
 void StageWriter::commit() {
@@ -516,6 +547,7 @@ StageWriter WorldWriter::begin_stage(std::string_view stage_name) {
     detail::exec_or_fatal(s.db.get(), "BEGIN", "BEGIN (stage " + std::string(stage_name) + ")");
     s.stage_open = true;
     s.stage_start_layer_id = s.next_layer_id;
+    s.stage_start_pass_id = s.next_pass_id;
     return StageWriter(s, std::string(stage_name));
 }
 

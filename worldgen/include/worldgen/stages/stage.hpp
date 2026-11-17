@@ -72,6 +72,10 @@ public:
     // grid, a name already used), and if called after the stage returned.
     void write_layer(std::string_view name, db::LayerGrid grid);
 
+    // Writes one row of table `pass` (P1-01 9.1). Ids are 1, 2, 3, ... in
+    // the order of these calls. FatalError as StageWriter::write_pass.
+    void write_pass(const db::PassRow& row);
+
 private:
     friend class detail::Pipeline;
     struct State;
