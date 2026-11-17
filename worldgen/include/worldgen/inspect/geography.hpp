@@ -407,15 +407,25 @@ struct BiomeRecord {
     std::int64_t water = 0;   // 0 or 1
 };
 
-// The rows of table `biome`, checked (reading chosen, as for `pass`): five
-// columns, id, colour and water integers, key and name text, id in 1..254,
-// colour in 0..0xFFFFFF, water 0 or 1. Returns the records in table order,
-// or the reason the first bad row fails ("row <id>: ...").
+// The rows of table `biome`, checked (P1-04 9; rows in ascending id, as
+// read): five columns of the DDL's types, then in this order id in 1..254
+// ("id outside 1..254"), key non-empty ("empty key"), colour in
+// 0..16777215 ("colour outside 0..16777215"), water 0 or 1 ("water not 0 or
+// 1"). Returns the records, or the reason the first bad row fails
+// ("row <id>: <reason>").
 struct BiomeTableResult {
     std::vector<BiomeRecord> records;
     std::optional<std::string> problem;
 };
 [[nodiscard]] BiomeTableResult read_biome_rows(std::span<const std::vector<db::ColumnValue>> rows);
+
+// Why the biome layer cannot be reported (P1-04 9), or std::nullopt: "type
+// <t>, expected u8"; "size <W>x<H>, expected <N>x<N>" when it is not the
+// size of elevation (given, non-null); "value <v> at (<x>, <y>) has no row
+// in table 'biome'" for the lowest such cell index.
+[[nodiscard]] std::optional<std::string> biome_layer_problem(const db::LayerGrid& biome,
+                                                             const db::LayerGrid* elevation,
+                                                             std::span<const BiomeRecord> records);
 
 // The biome keys of P1-04 9 in their order, each "<key> = <value>\n", for a
 // biome layer of w x h cells (u8) and the biome table:

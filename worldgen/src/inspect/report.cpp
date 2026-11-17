@@ -228,6 +228,19 @@ db::Result<std::string> build_report(const db::WorldReader& world) {
             }
         }
 
+        // The biome layer (P1-04 9): u8, the size of elevation, every value
+        // with a row of table biome (an absent table counts as empty).
+        if (geo_grids[8]) {
+            const std::vector<BiomeRecord> none;
+            if (std::optional<std::string> why = biome_layer_problem(
+                    *geo_grids[8], geo_grids[0] ? &*geo_grids[0] : nullptr, biomes ? *biomes : none)) {
+                return db::Error{db::ErrorCode::corrupt_layer, "corrupt layer 'biome': " + *why};
+            }
+            if (!biomes) {
+                biomes.emplace();
+            }
+        }
+
         // [geography] (P1-00 10.3), when the world has an elevation layer.
         if (geo_grids[0]) {
             const auto ptr = [&geo_grids](std::size_t k) { return geo_grids[k] ? &*geo_grids[k] : nullptr; };

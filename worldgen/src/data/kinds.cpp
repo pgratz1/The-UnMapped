@@ -97,32 +97,43 @@ std::optional<std::string> check_biome_water_rules(const Record& r) {
     return std::nullopt;
 }
 
-// Named check 7: the first rule (array order) with a min above its max,
-// fields checked in the order temp, rain, elev.
-std::optional<std::string> check_biome_rule_ranges(const Record& r) {
-    const std::vector<Value>& rules = r.get_array("rules");
-    for (std::size_t i = 0; i < rules.size(); ++i) {
-        const Record& rule = rules[i].as_record();
-        const std::string at = "rules[" + detail::uint_text(i) + "]: ";
-        if (rule.get_fx("temp_min_c") > rule.get_fx("temp_max_c")) {
-            return at + "temp_min_c must not exceed temp_max_c";
-        }
-        if (rule.get_int("rain_min_mm") > rule.get_int("rain_max_mm")) {
-            return at + "rain_min_mm must not exceed rain_max_mm";
-        }
-        if (rule.get_int("elev_min_m") > rule.get_int("elev_max_m")) {
-            return at + "elev_min_m must not exceed elev_max_m";
+// Named check 7, as a kind-level check so that it can report one error per
+// failing pair: rules in array order, pairs in the order temp, rain, elev.
+std::vector<KindCheckFailure> check_biome_rule_ranges(std::span<const Definition> defs) {
+    std::vector<KindCheckFailure> out;
+    static constexpr std::array<std::array<const char*, 2>, 3> PAIRS = {{
+        {"temp_min_c", "temp_max_c"},
+        {"rain_min_mm", "rain_max_mm"},
+        {"elev_min_m", "elev_max_m"},
+    }};
+    for (std::size_t d = 0; d < defs.size(); ++d) {
+        const std::vector<Value>& rules = defs[d].record.get_array("rules");
+        for (std::size_t i = 0; i < rules.size(); ++i) {
+            const Record& rule = rules[i].as_record();
+            for (const auto& [lo, hi] : PAIRS) {
+                const Value& a = rule.get(lo);
+                const Value& b = rule.get(hi);
+                const bool bad = a.kind() == ValueKind::fixed ? a.as_fx() > b.as_fx() : a.as_int() > b.as_int();
+                if (bad) {
+                    out.push_back(KindCheckFailure{d, "rules[" + detail::uint_text(i) + "]: " + std::string(lo) +
+                                                          " must not exceed " + std::string(hi)});
+                }
+            }
         }
     }
-    return std::nullopt;
+    return out;
 }
 
 bool is_land_biome(const Definition& d) {
     return d.record.get_string("water_body") == "none";
 }
 
-// Kind-level check 1: a repeated code is reported at its second definition
-// in id order, naming the first.
+std::string earlier(const Definition& d) {
+    return "'" + std::string(BIOME_KIND) + "." + d.id + "'";
+}
+
+// Kind-level check 1: each later definition sharing a code is reported at
+// its header, naming the earliest (id order).
 std::vector<KindCheckFailure> check_biome_code_unique(std::span<const Definition> defs) {
     std::vector<KindCheckFailure> out;
     std::map<std::int64_t, std::size_t> first;
@@ -131,40 +142,38 @@ std::vector<KindCheckFailure> check_biome_code_unique(std::span<const Definition
         const auto [it, inserted] = first.try_emplace(code, i);
         if (!inserted) {
             out.push_back(
-                KindCheckFailure{i, "code " + detail::int_text(code) + " is also used by '" + defs[it->second].id + "'"});
+                KindCheckFailure{i, "code " + detail::int_text(code) + " is also used by " + earlier(defs[it->second])});
         }
     }
     return out;
 }
 
-// Kind-level check 3: exactly one "ocean" and exactly one "lake"; a second
-// one is reported at itself (the second in id order), a missing one against
-// the directory.
+// Kind-level check 3: exactly one "ocean" and exactly one "lake"; none is
+// reported against the directory, each later one at its header.
 std::vector<KindCheckFailure> check_biome_water_unique(std::span<const Definition> defs) {
     std::vector<KindCheckFailure> out;
     static constexpr std::array<std::string_view, 2> BODIES = {"ocean", "lake"};
     for (const std::string_view body : BODIES) {
-        const std::string message = "exactly one biome must have water_body \"" + std::string(body) + "\"";
         std::vector<std::size_t> found;
         for (std::size_t i = 0; i < defs.size(); ++i) {
             if (defs[i].record.get_string("water_body") == body) {
                 found.push_back(i);
             }
         }
+        const std::string quoted = "\"" + std::string(body) + "\"";
         if (found.empty()) {
-            out.push_back(KindCheckFailure{std::nullopt, message});
-        } else if (found.size() > 1U) {
-            out.push_back(KindCheckFailure{found[1], message});
+            out.push_back(KindCheckFailure{std::nullopt, "no biome has water_body " + quoted});
+        }
+        for (std::size_t k = 1; k < found.size(); ++k) {
+            out.push_back(
+                KindCheckFailure{found[k], "water_body " + quoted + " is also used by " + earlier(defs[found[0]])});
         }
     }
     return out;
 }
 
-// Kind-level check 4: exactly one fallback, and it is a land biome. A second
-// fallback is reported at itself, a missing one against the directory, a
-// water fallback at its definition.
+// Kind-level check 4: exactly one fallback, and it is a land biome.
 std::vector<KindCheckFailure> check_biome_fallback(std::span<const Definition> defs) {
-    const std::string message = "exactly one land biome must have fallback = true";
     std::vector<std::size_t> found;
     for (std::size_t i = 0; i < defs.size(); ++i) {
         if (defs[i].record.get_bool("fallback")) {
@@ -173,17 +182,21 @@ std::vector<KindCheckFailure> check_biome_fallback(std::span<const Definition> d
     }
     std::vector<KindCheckFailure> out;
     if (found.empty()) {
-        out.push_back(KindCheckFailure{std::nullopt, message});
-    } else if (found.size() > 1U) {
-        out.push_back(KindCheckFailure{found[1], message});
-    } else if (!is_land_biome(defs[found[0]])) {
-        out.push_back(KindCheckFailure{found[0], message});
+        out.push_back(KindCheckFailure{std::nullopt, "no biome has fallback = true"});
+    }
+    for (std::size_t k = 1; k < found.size(); ++k) {
+        out.push_back(KindCheckFailure{found[k], "fallback = true is also set by " + earlier(defs[found[0]])});
+    }
+    for (const std::size_t i : found) {
+        if (!is_land_biome(defs[i])) {
+            out.push_back(KindCheckFailure{i, "the fallback biome must have water_body \"none\""});
+        }
     }
     return out;
 }
 
 // Kind-level check 6: land biomes with priority > 0 have distinct
-// priorities; a repeat is reported at its second definition in id order.
+// priorities; each later one is reported at its header, naming the earliest.
 std::vector<KindCheckFailure> check_biome_priority_unique(std::span<const Definition> defs) {
     std::vector<KindCheckFailure> out;
     std::map<std::int64_t, std::size_t> first;
@@ -195,7 +208,7 @@ std::vector<KindCheckFailure> check_biome_priority_unique(std::span<const Defini
         const auto [it, inserted] = first.try_emplace(p, i);
         if (!inserted) {
             out.push_back(
-                KindCheckFailure{i, "priority " + detail::int_text(p) + " is also used by '" + defs[it->second].id + "'"});
+                KindCheckFailure{i, "priority " + detail::int_text(p) + " is also used by " + earlier(defs[it->second])});
         }
     }
     return out;
@@ -236,7 +249,6 @@ Schema biome_schema() {
     std::vector<Check> checks{
         Check{"biome_water_body", [](const Record& r) { return check_biome_water_body(r); }},
         Check{"biome_water_rules", [](const Record& r) { return check_biome_water_rules(r); }},
-        Check{"biome_rule_ranges", [](const Record& r) { return check_biome_rule_ranges(r); }},
     };
     return Schema(std::move(fields), std::move(checks));
 }
@@ -248,6 +260,7 @@ std::vector<KindCheck> biome_kind_checks() {
     out.push_back(KindCheck{"biome_fallback", [](std::span<const Definition> d) { return check_biome_fallback(d); }});
     out.push_back(
         KindCheck{"biome_priority_unique", [](std::span<const Definition> d) { return check_biome_priority_unique(d); }});
+    out.push_back(KindCheck{"biome_rule_ranges", [](std::span<const Definition> d) { return check_biome_rule_ranges(d); }});
     return out;
 }
 

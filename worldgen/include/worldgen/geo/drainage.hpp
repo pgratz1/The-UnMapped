@@ -46,7 +46,9 @@ inline constexpr std::int64_t RIVER_CLASS_MAX = 15;
 // order. Fatal, with the message beginning `message_prefix` (default "G7:
 // "), if k is outside [1, 15], a size is wrong, a non-drain cell is not
 // reached (its flow_dir does not lead to a drain cell: a code above 7, a
-// step off the map or a cycle), or some hand is negative. On a hydrology
+// step off the map or a cycle), or some hand is negative (each naming the
+// lowest such cell, "cell (x, y) does not reach a drain cell", "cell (x, y)
+// has a negative height above drainage"). On a hydrology
 // output 0 <= hand <= 30000.
 [[nodiscard]] std::vector<std::int64_t> height_above_drainage(Grid grid, std::span<const std::int64_t> surface,
                                                               std::span<const std::uint8_t> water,

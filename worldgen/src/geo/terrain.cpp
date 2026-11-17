@@ -14,10 +14,25 @@ namespace worldgen::geo {
 
 namespace {
 
-[[noreturn]] void fail(std::string_view prefix, const char* what) {
+[[noreturn]] void fail(std::string_view prefix, std::string_view what) {
     std::string message(prefix);
     message += what;
     throw FatalError(message);
+}
+
+// Decimal text of a non-negative coordinate (no locale, no C library).
+std::string coordinate_text(std::int32_t v) {
+    std::string digits;
+    std::uint32_t u = static_cast<std::uint32_t>(v);
+    do {
+        digits.insert(digits.begin(), static_cast<char>('0' + u % 10U));
+        u /= 10U;
+    } while (u != 0U);
+    return digits;
+}
+
+std::string cell_text(Grid grid, CellIndex i) {
+    return "cell (" + coordinate_text(grid.x_of(i)) + ", " + coordinate_text(grid.y_of(i)) + ")";
 }
 
 constexpr std::uint32_t UNREACHED = std::numeric_limits<std::uint32_t>::max();
@@ -85,11 +100,11 @@ std::vector<std::int64_t> height_above_drainage(Grid grid, std::span<const std::
     std::vector<std::int64_t> hand(n, 0);
     for (CellIndex i = 0; i < n; ++i) {
         if (drain[i] == UNREACHED) {
-            fail(message_prefix, "a cell does not reach a drain cell along flow_dir");
+            fail(message_prefix, cell_text(grid, i) + " does not reach a drain cell");
         }
         const std::int64_t h = surface[i] - surface[drain[i]];
         if (h < 0) {
-            fail(message_prefix, "a height above drainage is negative");
+            fail(message_prefix, cell_text(grid, i) + " has a negative height above drainage");
         }
         hand[i] = h;
     }

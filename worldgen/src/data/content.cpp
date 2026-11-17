@@ -310,7 +310,7 @@ public:
     // Validates a table against a schema (P0-03 7.5 steps 1 to 4, then the
     // named checks). Returns false if any error was reported.
     bool record(const Schema& schema, const Node& table, const std::string& key, const std::string& path,
-                Record& out) {
+                Record& out, bool* types_valid = nullptr) {
         bool ok = true;
         for (std::size_t i = 0; i < table.keys.size(); ++i) {
             if (schema.find(table.keys[i]) == nullptr) {
@@ -345,6 +345,9 @@ public:
                 default_refs(field.type, *field.default_value, field_key, path, table.position);
                 out.add(field.name, *field.default_value);
             }
+        }
+        if (types_valid != nullptr) {
+            *types_valid = ok;
         }
         if (ok) {
             for (const Check& check : schema.checks()) {
@@ -617,7 +620,6 @@ struct Location {
 KindContent load_kind(const Kind& kind, const Listing& listing, ErrorList& errors, std::vector<PendingRef>& refs,
                       IdSet& ids) {
     KindContent out{kind.name, {}};
-    const std::size_t errors_before = errors.size();
     if (!listing.present) {
         if (kind.required && !listing.failed) {
             errors.add(kind.directory, Position{},
@@ -703,26 +705,35 @@ KindContent load_kind(const Kind& kind, const Listing& listing, ErrorList& error
                      [](const Candidate& a, const Candidate& b) { return detail::bytes_less(a.id, b.id); });
 
     Validator validator(errors, refs);
-    std::vector<Location> locations;  // of out.definitions, for the kind-level checks
+    // The definitions that passed type validation (named checks aside), in
+    // id order, with their header positions: what the kind-level checks see
+    // (P1-04 4.1). Duplicate ids are left out (already an error).
+    std::vector<Definition> typed;
+    std::vector<Location> locations;
     for (const Candidate& c : candidates) {
         Record record;
-        const bool ok =
-            validator.record(*kind.schema_for(c.id), *c.node, detail::child_key(kind.name, c.id), *c.path, record);
-        if (ok && !c.duplicate) {
-            out.definitions.push_back(Definition{c.id, std::move(record)});
+        bool types_valid = false;
+        const bool ok = validator.record(*kind.schema_for(c.id), *c.node, detail::child_key(kind.name, c.id), *c.path,
+                                         record, &types_valid);
+        if (types_valid && !c.duplicate && !kind.kind_checks.empty()) {
+            typed.push_back(Definition{c.id, record});
             locations.push_back(Location{*c.path, c.node->position});
         }
+        if (ok && !c.duplicate) {
+            out.definitions.push_back(Definition{c.id, std::move(record)});
+        }
     }
-    // Kind-level checks (P1-04 4.1), only when the whole kind loaded cleanly.
-    if (errors.size() == errors_before) {
+    // Kind-level checks (P1-04 4.1): over the type-valid definitions, and
+    // only when there is at least one.
+    if (!typed.empty()) {
         for (const KindCheck& check : kind.kind_checks) {
-            for (const KindCheckFailure& f : check.rule(out.definitions)) {
-                if (f.definition && *f.definition < out.definitions.size()) {
+            for (const KindCheckFailure& f : check.rule(typed)) {
+                if (f.definition && *f.definition < typed.size()) {
                     const Location& at = locations[*f.definition];
                     errors.add(at.path, at.position,
                                "check " + in_quotes(check.name) + " failed for " +
-                                   in_quotes(detail::child_key(kind.name, out.definitions[*f.definition].id)) +
-                                   ": " + f.message);
+                                   in_quotes(detail::child_key(kind.name, typed[*f.definition].id)) + ": " +
+                                   f.message);
                 } else {
                     errors.add(kind.directory, Position{},
                                "check " + in_quotes(check.name) + " failed for kind " + in_quotes(kind.name) + ": " +

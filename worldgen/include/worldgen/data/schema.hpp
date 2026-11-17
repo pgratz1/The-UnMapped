@@ -208,12 +208,12 @@ struct KindCheckFailure {
 };
 
 // A named rule over all definitions of one kind (P1-04 4.1 named checks that
-// compare definitions, e.g. biome_code_unique). Run once, after every
-// definition of the kind passed type validation and its own named checks,
-// on the definitions in ascending id order; not run when any definition of
-// the kind (or any file of its directory) produced an error, so that one
-// broken file does not also report "missing" or "duplicate" findings. Each
-// failure becomes one load error: at the definition's header,
+// compare definitions, e.g. biome_code_unique, or that report more than one
+// error per definition). Run once, after every definition of the kind has
+// been validated, on the definitions that passed type validation (whether
+// or not they passed the per-definition checks; duplicate ids left out), in
+// ascending id order, and only when there is at least one such definition.
+// Each failure becomes one load error: at the definition's header,
 // "check '<name>' failed for '<kind>.<id>': <message>", or against the
 // directory, "check '<name>' failed for kind '<kind>': <message>". Must be a
 // pure function of the definitions.
@@ -347,12 +347,14 @@ inline constexpr std::string_view BIOME_DIRECTORY = "biomes";
 // temp_min_c, temp_max_c fx(-60, 50); rain_min_mm, rain_max_mm int(0,
 // 10000); elev_min_m, elev_max_m int(0, 3000); slope_max fx(0, 100);
 // hand_max_m fx(0, 3000); coast_max_m int(0, 32767). Named checks of one
-// definition: biome_water_body, biome_water_rules, biome_rule_ranges.
+// definition: biome_water_body, biome_water_rules (biome_rule_ranges is
+// kind-level, so that it reports every failing pair).
 [[nodiscard]] Schema biome_schema();
 
 // The kind-level named checks of P1-04 4.1, in this order:
 // biome_code_unique, biome_water_unique, biome_fallback,
-// biome_priority_unique.
+// biome_priority_unique, biome_rule_ranges (messages as in the table of
+// 4.1).
 [[nodiscard]] std::vector<KindCheck> biome_kind_checks();
 
 // The schema of definition worldgen.climate (P1-03 4): every field of the

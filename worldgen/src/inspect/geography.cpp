@@ -1198,21 +1198,54 @@ BiomeTableResult read_biome_rows(std::span<const std::vector<db::ColumnValue>> r
         b.name = row[2].bytes;
         b.colour = row[3].integer;
         b.water = row[4].integer;
+        // P1-04 9: the first failing check in this order.
         if (b.id < 1 || b.id > 254) {
-            r.problem = at + "id is not a biome code 1..254";
+            r.problem = at + "id outside 1..254";
+            return r;
+        }
+        if (b.key.empty()) {
+            r.problem = at + "empty key";
             return r;
         }
         if (b.colour < 0 || b.colour > 0xFFFFFF) {
-            r.problem = at + "colour " + db::format_i64(b.colour) + " is not 0xRRGGBB";
+            r.problem = at + "colour outside 0..16777215";
             return r;
         }
         if (b.water != 0 && b.water != 1) {
-            r.problem = at + "water " + db::format_i64(b.water) + " is not 0 or 1";
+            r.problem = at + "water not 0 or 1";
             return r;
         }
         r.records.push_back(std::move(b));
     }
     return r;
+}
+
+std::optional<std::string> biome_layer_problem(const db::LayerGrid& biome, const db::LayerGrid* elevation,
+                                               std::span<const BiomeRecord> records) {
+    if (!db::is_valid_layer_grid(biome)) {
+        return std::string("not a valid grid");
+    }
+    if (biome.type() != db::ElementType::u8) {
+        return "type " + std::string(db::element_type_name(biome.type())) + ", expected u8";
+    }
+    if (elevation != nullptr && (biome.width != elevation->width || biome.height != elevation->height)) {
+        return "size " + db::format_u64(biome.width) + "x" + db::format_u64(biome.height) + ", expected " +
+               db::format_u64(elevation->width) + "x" + db::format_u64(elevation->height);
+    }
+    std::array<std::uint8_t, 256> has_row{};
+    for (const BiomeRecord& r : records) {
+        if (r.id >= 0 && r.id <= 255) {
+            has_row[static_cast<std::size_t>(r.id)] = 1U;
+        }
+    }
+    const std::vector<std::uint8_t>& cells = *biome.get_if<std::uint8_t>();
+    for (std::size_t i = 0; i < cells.size(); ++i) {
+        if (has_row[cells[i]] == 0U) {
+            return "value " + db::format_u64(cells[i]) + " at (" + db::format_u64(i % biome.width) + ", " +
+                   db::format_u64(i / biome.width) + ") has no row in table 'biome'";
+        }
+    }
+    return std::nullopt;
 }
 
 std::string biome_lines(std::span<const std::uint8_t> biome, std::uint32_t w, std::uint32_t h,
