@@ -7,7 +7,6 @@
 #include <array>
 #include <cstddef>
 #include <functional>
-#include <limits>
 #include <queue>
 #include <tuple>
 #include <utility>
@@ -19,7 +18,6 @@
 #include "worldgen/core/noise.hpp"
 #include "worldgen/core/streams.hpp"
 #include "worldgen/geo/components.hpp"
-#include "worldgen/geo/flow.hpp"
 #include "worldgen/geo/select.hpp"
 #include "worldgen/stages/elevation.hpp"
 
