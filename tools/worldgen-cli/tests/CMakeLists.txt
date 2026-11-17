@@ -30,6 +30,10 @@ target_compile_definitions(worldgen-cli-tests PRIVATE
 )
 
 add_test(NAME worldgen-cli-tests COMMAND worldgen-cli-tests)
+# Explicit timeout, above CTest's default of 1500 s: under linux-clang-asan
+# this entry takes about 480 s on 6 cores and grows with every stage.
+# One value for every preset, so a hang is still caught within an hour.
+set_tests_properties(worldgen-cli-tests PROPERTIES TIMEOUT 3600)
 
 # Behaviour fixed after the P0-04 determinism audit: stdout write errors,
 # dangling symbolic links at --out, the render size limit, UTF-16 input.

@@ -37,6 +37,10 @@ target_compile_definitions(worldgen-tests PRIVATE
 )
 
 add_test(NAME worldgen-tests COMMAND worldgen-tests)
+# Explicit timeout, above CTest's default of 1500 s: under linux-clang-asan
+# this one entry takes about 1200 s on 6 cores and grows with every stage.
+# One value for every preset, so a hang is still caught within an hour.
+set_tests_properties(worldgen-tests PROPERTIES TIMEOUT 3600)
 
 # World database layer tests (spec P0-02 section 12). Files they write go
 # under a scratch directory in the build tree, never in the source tree.
