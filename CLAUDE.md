@@ -136,7 +136,7 @@ Approximate full `ctest` time on a 6-core Linux machine:
 
 | Preset | `ctest` |
 | --- | --- |
-| `linux-gcc-release`, `linux-clang-release` | about 65 seconds |
+| `linux-gcc-release`, `linux-clang-release` | about 90 seconds |
 | `linux-gcc-debug`, `linux-clang-debug` | about four and a half minutes |
 | `linux-clang-asan` | about 18 minutes (`worldgen-tests` alone about 12) |
 
