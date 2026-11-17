@@ -65,29 +65,58 @@ SweepGrid sweep_grid() {
     return sg;
 }
 
+// 5.1 (revised 2026-11-17), wind E.
 const std::vector<std::vector<std::int64_t>>& sweep_q() {
     static const std::vector<std::vector<std::int64_t>> q = {
-        {4294967296, 4288846968, 4280922232, 4270788875, 4271670939, 4276491274},
-        {4294967296, 4287504790, 4276053289, 4263755588, 4265212810, 4269935559},
-        {4294967296, 4290189145, 4283599746, 4276126894, 4274335696, 4277781016},
+        {4294967296, 4292578220, 4289950298, 4286870704, 4286633270, 4288375589},
+        {4294967296, 4292242676, 4288516008, 4284675152, 4284396886, 4285979494},
+        {4294967296, 4292913765, 4290620742, 4288210164, 4287302465, 4288699479},
     };
     return q;
 }
 
 const std::vector<std::vector<std::string>>& sweep_p() {
     static const std::vector<std::vector<std::string>> p = {
-        {"800.000", "1425.000", "2125.684", "2901.415", "796.295", "796.445"},
-        {"800.000", "1737.500", "2905.002", "3599.202", "795.090", "795.183"},
-        {"800.000", "1112.500", "1657.731", "1967.095", "796.792", "796.693"},
+        {"800.000", "1112.500", "1463.423", "1852.908", "798.767", "798.732"},
+        {"800.000", "1268.750", "1853.620", "2203.391", "798.350", "798.271"},
+        {"800.000", "956.250", "1229.199", "1384.716", "798.891", "798.794"},
     };
     return p;
 }
 
 const std::vector<std::vector<std::uint16_t>>& sweep_rainfall() {
     static const std::vector<std::vector<std::uint16_t>> r = {
-        {950, 1573, 2274, 3050, 945, 946},
-        {950, 1886, 3053, 3748, 943, 945},
-        {950, 1261, 1806, 2115, 945, 947},
+        {950, 1261, 1612, 2001, 947, 949},
+        {950, 1417, 2002, 2352, 947, 948},
+        {950, 1105, 1378, 1533, 947, 949},
+    };
+    return r;
+}
+
+// 5.1 (revised), wind SE, raster order.
+const std::vector<std::vector<std::int64_t>>& se_q() {
+    static const std::vector<std::vector<std::int64_t>> q = {
+        {4294967296, 4291866607, 4289918572, 4287755798, 4289060547, 4293557436},
+        {4294967296, 4290924843, 4286792934, 4283581311, 4284617726, 4289340761},
+        {4294967296, 4291444379, 4287597741, 4283771548, 4281470892, 4285462311},
+    };
+    return q;
+}
+
+const std::vector<std::vector<std::string>>& se_p() {
+    static const std::vector<std::vector<std::string>> p = {
+        {"800.000", "1020.971", "1407.416", "1959.521", "1351.859", "799.725"},
+        {"800.000", "1076.019", "1434.014", "1653.805", "798.523", "798.902"},
+        {"800.000", "827.427", "799.079", "798.365", "797.936", "798.146"},
+    };
+    return p;
+}
+
+const std::vector<std::vector<std::uint16_t>>& se_rainfall() {
+    static const std::vector<std::vector<std::uint16_t>> r = {
+        {950, 1169, 1556, 2108, 1500, 950},
+        {950, 1224, 1582, 1802, 947, 949},
+        {950, 976, 947, 947, 946, 948},
     };
     return r;
 }
@@ -266,68 +295,205 @@ TEST_CASE("P1-03 10.1 test 2: the C3 noise term, seed 0, N = 64, shipped tuning,
     CHECK(q.rainfall == l.rainfall);  // the temperature noise does not touch rainfall
 }
 
-// --- C4 (5.1 "C4 box mean", 10.1 test 3) ---------------------------------------------------
+// --- C4 (5.1 "One box pass", "C4 triangle", "edge clipping"; 10.1 test 3; section 7) -----------
 
-TEST_CASE("P1-03 5.1 C4: the box mean of the 4 x 3 example, r = 1") {
+namespace {
+
+const std::vector<std::int64_t>& box_s() {
+    static const std::vector<std::int64_t> s = {0, 10, 20, 30, 0, 40, 50, 60, 0, 0, 70, 80};
+    return s;
+}
+
+std::vector<std::int64_t> random_s(std::uint64_t key, Grid g, std::int64_t lo, std::int64_t hi) {
+    worldgen::Rng rng(worldgen::stream_key(key, STREAM_TEST));
+    std::vector<std::int64_t> s(g.cells());
+    for (auto& v : s) {
+        v = rng.uniform_i64(lo, hi);
+    }
+    return s;
+}
+
+}  // namespace
+
+TEST_CASE("P1-03 5.1: one box pass (climate_box_mean) of the 4 x 3 example, half-width 1") {
     const Grid g{4, 3};
-    const std::vector<std::int64_t> s = {0, 10, 20, 30, 0, 40, 50, 60, 0, 0, 70, 80};
     const std::vector<std::int64_t> want = {
         Fx::from_ratio(25, 2).raw(), Fx::from_int(20).raw(), Fx::from_int(35).raw(), Fx::from_int(40).raw(),
         35791394133,                 90671531804,            171798691840,           221906643627,
         Fx::from_int(10).raw(),      114532461227,           Fx::from_int(50).raw(), Fx::from_int(65).raw(),
     };
-    CHECK(own_box_mean(g, s, 1) == want);
+    CHECK(own_box_mean(g, box_s(), 1) == want);
     for (const std::uint32_t threads : {1U, 2U, 5U}) {
         CAPTURE(threads);
-        CHECK(climate_api::box_mean(g, s, 1, threads) == want);
+        CHECK(climate_api::box_mean(g, box_s(), 1, threads) == want);
     }
     // (0, 1): window x 0..1, y 0..2, sum 50 over 6 cells.
     CHECK(want[4] == Fx::from_ratio(50, 6).raw());
 }
 
-TEST_CASE("P1-03 C4, 10.1 test 3: r = 0 gives from_int(S); r at least the grid gives the grid mean everywhere") {
+TEST_CASE("P1-03 5.1 C4: the triangle of the 4 x 3 example, r = 2 (h = 1), raw; r = 3 the same") {
     const Grid g{4, 3};
-    const std::vector<std::int64_t> s = {0, 10, 20, 30, 0, 40, 50, 60, 0, 0, 70, 80};
-    std::vector<std::int64_t> exact;
-    for (const std::int64_t v : s) {
-        exact.push_back(Fx::from_int(v).raw());
+    const std::vector<std::int64_t> want = {
+        66512340764, 98028651710,  148733126732, 178956970667,  //
+        70588582874, 106711378805, 166761384518, 201624853618,  //
+        70986265031, 111748686127, 182138427923, 221906643627,
+    };
+    CHECK(own_triangle_mean(g, box_s(), 2) == want);
+    // By hand, (0, 0): window x 0..1, y 0..1 of hs1, sum2 266049363057, c_w 4.
+    const std::vector<std::int64_t> hs1 = own_box_mean(g, box_s(), 1);
+    CHECK(hs1[0] + hs1[1] + hs1[4] + hs1[5] == 266049363057);
+    CHECK(want[0] == worldgen::div_int(Fx::from_raw(266049363057), 4).raw());
+    for (const std::uint32_t threads : {1U, 2U, 5U}) {
+        CAPTURE(threads);
+        CHECK(climate_api::triangle_mean(g, box_s(), 2, threads) == want);
+        CHECK(climate_api::triangle_mean(g, box_s(), 3, threads) == want);
     }
-    CHECK(climate_api::box_mean(g, s, 0, THREADS) == exact);
-    for (const std::int32_t r : {3, 4, 100, 250}) {
-        CAPTURE(r);
-        CHECK(climate_api::box_mean(g, s, r, THREADS) == std::vector<std::int64_t>(12, Fx::from_ratio(360, 12).raw()));
+    // smooth_radius_m 32 to 47 give r = 2.
+    for (std::int64_t m = 32; m <= 47; ++m) {
+        CHECK(m / 16 == 2);
     }
-    // A larger random grid: every window the whole grid.
-    worldgen::Rng rng(worldgen::stream_key(3, STREAM_TEST));
-    const Grid big{37, 70};
-    std::vector<std::int64_t> sb(big.cells());
-    std::int64_t sum = 0;
-    for (auto& v : sb) {
-        v = rng.uniform_i64(0, 30000);
-        sum += v;
-    }
-    const std::int64_t mean = Fx::from_ratio(sum, big.cells()).raw();
-    CHECK(climate_api::box_mean(big, sb, 70, THREADS) == std::vector<std::int64_t>(big.cells(), mean));
-    CHECK(climate_api::box_mean(big, sb, 69, THREADS) != std::vector<std::int64_t>(big.cells(), mean));
 }
 
-TEST_CASE("P1-03 C4, D2: the box mean equals a 2-D prefix sum on ragged grids, any thread count") {
-    worldgen::Rng rng(worldgen::stream_key(4, STREAM_TEST));
-    for (const Grid g : {Grid{1, 1}, Grid{1, 130}, Grid{130, 1}, Grid{65, 129}, Grid{100, 200}}) {
-        std::vector<std::int64_t> s(g.cells());
-        for (auto& v : s) {
-            v = rng.uniform_i64(0, 30000);
+TEST_CASE("P1-03 5.1 C4: edge clipping, 9 x 9 with S = 900 at the centre, r = 4") {
+    const Grid g{9, 9};
+    std::vector<std::int64_t> s(81, 0);
+    s[g.index(4, 4)] = 900;
+    const std::vector<std::int64_t> hs = climate_api::triangle_mean(g, s, 4, THREADS);
+    CHECK(hs == own_triangle_mean(g, s, 4));
+    const std::vector<std::int64_t> row(hs.begin() + 36, hs.begin() + 45);
+    const std::vector<std::int64_t> head = {51539607552, 77309411328, 92771293594, 123695058125, 154618822656};
+    CHECK(std::vector<std::int64_t>(row.begin(), row.begin() + 5) == head);
+    CHECK(std::vector<std::int64_t>(row.rbegin(), row.rbegin() + 5) == head);  // symmetric
+    // dm 12 18 21.6 28.8 36: 21.6 and 28.8 are the RHA raws of 108/5 and 144/5.
+    CHECK(row[0] == Fx::from_int(12).raw());
+    CHECK(row[1] == Fx::from_int(18).raw());
+    CHECK(row[2] == Fx::from_ratio(108, 5).raw());
+    CHECK(row[3] == Fx::from_ratio(144, 5).raw());
+    CHECK(row[4] == Fx::from_int(36).raw());
+    // Unclipped for x = 2 to 6: 900 w(x) w(4), w = (1,2,3,4,5,4,3,2,1)/25.
+    const std::vector<std::int64_t> w = {1, 2, 3, 4, 5, 4, 3, 2, 1};
+    for (std::int32_t x = 2; x <= 6; ++x) {
+        CAPTURE(x);
+        CHECK(row[static_cast<std::size_t>(x)] == Fx::from_ratio(900 * w[static_cast<std::size_t>(x)] * 5, 625).raw());
+    }
+}
+
+TEST_CASE("P1-03 10.1 test 3: box and triangle at radii as large as the grid or larger; r 0 or 1; odd r") {
+    const Grid g{4, 3};
+    std::vector<std::int64_t> exact;
+    for (const std::int64_t v : box_s()) {
+        exact.push_back(Fx::from_int(v).raw());
+    }
+    const std::vector<std::int64_t> mean(12, Fx::from_ratio(360, 12).raw());
+    CHECK(mean[0] == 128849018880);
+    CHECK(climate_api::box_mean(g, box_s(), 0, THREADS) == exact);
+    for (const std::int64_t r : {3, 4, 100, 250}) {  // r >= max(W, H) - 1 = 3
+        CAPTURE(r);
+        CHECK(climate_api::box_mean(g, box_s(), r, THREADS) == mean);
+    }
+    CHECK(climate_api::box_mean(g, box_s(), 2, THREADS) != mean);
+    for (const std::int64_t r : {0, 1}) {
+        CAPTURE(r);
+        CHECK(climate_api::triangle_mean(g, box_s(), r, THREADS) == exact);
+    }
+    for (const std::int64_t r : {6, 7, 9, 40, 250}) {  // r div 2 >= 3
+        CAPTURE(r);
+        CHECK(climate_api::triangle_mean(g, box_s(), r, THREADS) == mean);
+    }
+    // Random grids, square and not: whole-grid windows, and odd r equals r - 1.
+    for (const Grid gr : {Grid{37, 70}, Grid{1, 40}, Grid{25, 1}, Grid{19, 19}}) {
+        CAPTURE(gr.width);
+        CAPTURE(gr.height);
+        const std::vector<std::int64_t> s = random_s(3, gr, 0, 32767);
+        std::int64_t sum = 0;
+        for (const std::int64_t v : s) {
+            sum += v;
         }
-        for (const std::int32_t r : {0, 1, 2, 20, 64}) {
+        const std::int64_t m = std::max(gr.width, gr.height) - 1;
+        const std::vector<std::int64_t> all(gr.cells(), Fx::from_ratio(sum, gr.cells()).raw());
+        CHECK(climate_api::box_mean(gr, s, m, THREADS) == all);
+        CHECK(climate_api::triangle_mean(gr, s, 2 * m, THREADS) == all);
+        CHECK(climate_api::triangle_mean(gr, s, 2 * m + 1, THREADS) == all);
+        for (const std::int64_t r : {1, 3, 5, 9, 21}) {
+            CAPTURE(r);
+            CHECK(climate_api::triangle_mean(gr, s, r, THREADS) == climate_api::triangle_mean(gr, s, r - 1, THREADS));
+        }
+    }
+}
+
+TEST_CASE("P1-03 C4, D2: both passes equal the test's own (2-D prefix sum, direct window sums) on ragged grids, any thread count") {
+    for (const Grid g : {Grid{1, 1}, Grid{1, 130}, Grid{130, 1}, Grid{65, 129}, Grid{100, 200}}) {
+        const std::vector<std::int64_t> s = random_s(4, g, 0, 32767);
+        for (const std::int64_t r : {0, 1, 2, 3, 4, 20, 21, 64}) {
             CAPTURE(g.width);
             CAPTURE(g.height);
             CAPTURE(r);
-            const std::vector<std::int64_t> want = own_box_mean(g, s, r);
-            CHECK(climate_api::box_mean(g, s, r, 1) == want);
-            CHECK(climate_api::box_mean(g, s, r, 2) == want);
-            CHECK(climate_api::box_mean(g, s, r, 5) == want);
+            const std::vector<std::int64_t> box = own_box_mean(g, s, r);
+            const std::vector<std::int64_t> tri = own_triangle_mean(g, s, r);
+            for (const std::uint32_t threads : {1U, 2U, 5U}) {
+                CHECK(climate_api::box_mean(g, s, r, threads) == box);
+                CHECK(climate_api::triangle_mean(g, s, r, threads) == tri);
+            }
+            const std::string bound = hs_bound_violation(g, s, r, tri);
+            CHECK_MESSAGE(bound.empty(), bound);
         }
     }
+}
+
+TEST_CASE("P1-03 7: the overflow margin of C4, S = 32767 with smooth_radius_m 4000 (r 250, h 125)") {
+    // Full 251 x 251 windows exist on a 260 x 255 grid: the largest pass-2
+    // sum is 63001 x 32767 x 2^32, just below 2^63 - 1. Every hs is exactly
+    // from_int(32767) (a mean of equal values) and nothing is fatal.
+    CHECK(std::int64_t{63001} * 32767 < (std::int64_t{1} << 31));
+    CHECK(static_cast<std::uint64_t>(63001) * 32767U * (std::uint64_t{1} << 32) < (std::uint64_t{1} << 63) - 1U);
+    for (const Grid g : {Grid{260, 255}, Grid{300, 1}, Grid{1, 300}}) {
+        CAPTURE(g.width);
+        CAPTURE(g.height);
+        const std::vector<std::int64_t> s(g.cells(), 32767);
+        const std::vector<std::int64_t> want(g.cells(), Fx::from_int(32767).raw());
+        CHECK(climate_api::triangle_mean(g, s, 250, THREADS) == want);
+        CHECK(climate_api::triangle_mean(g, s, 251, 5) == want);
+        CHECK(climate_api::box_mean(g, s, 250, THREADS) == want);
+    }
+    // Values near the top that differ, against the reference's exact
+    // integers (golden case "overflow" of p1-03-climate.txt).
+    const std::vector<GoldenCase> golden = read_golden(UNMAPPED_P1_03_GOLDEN_PATH);
+    bool found = false;
+    for (const GoldenCase& c : golden) {
+        if (c.fixture != "overflow") {
+            continue;
+        }
+        found = true;
+        const Grid g{c.n, c.n - 5};
+        std::vector<std::int64_t> s(g.cells());
+        for (std::int32_t y = 0; y < g.height; ++y) {
+            for (std::int32_t x = 0; x < g.width; ++x) {
+                s[g.index(x, y)] = 32767 - (7 * std::int64_t{x} + 13 * std::int64_t{y}) % 768;
+            }
+        }
+        CHECK(hash_i64(s) == c.get("S"));
+        const std::vector<std::int64_t> hs = climate_api::triangle_mean(g, s, 250, THREADS);
+        CHECK(hash_i64(hs) == c.get("hs"));
+        CHECK(hash_i64(own_triangle_mean(g, s, 250)) == c.get("hs"));
+        CHECK(hash_i64(climate_api::box_mean(g, s, 125, THREADS)) == c.get("hs1"));
+        CHECK(std::to_string(hs[0]) == c.get("hs_corner"));
+    }
+    CHECK(found);
+}
+
+TEST_CASE("P1-03 10: both C4 seams are fatal for r_cells < 0 and for any S outside [0, 32767]") {
+    const Grid g{3, 1};
+    CHECK_THROWS_AS(static_cast<void>(climate_api::box_mean(g, std::vector<std::int64_t>{1, 2, 3}, -1, THREADS)),
+                    worldgen::FatalError);
+    CHECK_THROWS_AS(static_cast<void>(climate_api::triangle_mean(g, std::vector<std::int64_t>{1, 2, 3}, -1, THREADS)),
+                    worldgen::FatalError);
+    for (const std::int64_t bad : {std::int64_t{-1}, std::int64_t{32768}}) {
+        CAPTURE(bad);
+        const std::vector<std::int64_t> s = {1, bad, 3};
+        CHECK_THROWS_AS(static_cast<void>(climate_api::box_mean(g, s, 1, THREADS)), worldgen::FatalError);
+        CHECK_THROWS_AS(static_cast<void>(climate_api::triangle_mean(g, s, 2, THREADS)), worldgen::FatalError);
+    }
+    CHECK_NOTHROW(static_cast<void>(climate_api::triangle_mean(g, std::vector<std::int64_t>{0, 32767, 0}, 2, THREADS)));
 }
 
 // --- C5 (5.1 "C5 sweep", "Diagonal step") ----------------------------------------------------
@@ -338,7 +504,7 @@ TEST_CASE("P1-03 5.1 C5: the wind-E sweep of the 6 x 3 grid, every q raw and eve
     const SweepConsts c = sweep_consts(0, v);
     CHECK(c.rec.raw() == 137438953);  // 16 / 500 = 0.032
     const OwnSweep own = own_sweep(sg.g, sg.hs, sg.water, 0, v);
-    const climate_api::Sweep st = climate_api::sweep(sg.g, sg.s, sg.water, sg.hs, 0, tuning(quiet_overrides()));
+    const climate_api::Sweep st = climate_api::sweep(sg.g, sg.water, sg.hs, 0, tuning(quiet_overrides()));
     CHECK(rows_of(6, own.q) == sweep_q());
     CHECK(rows_of(6, st.q) == sweep_q());
     std::vector<std::string> pm;
@@ -349,26 +515,28 @@ TEST_CASE("P1-03 5.1 C5: the wind-E sweep of the 6 x 3 grid, every q raw and eve
     CHECK(st.p == own.p);
 
     // (1, 0) by hand: the upwind column is off the map (q_up = ONE, hs_up = 0);
-    // rise 20 dm, g = 0.125, p = 1425 mm, lam = 0.001425, q = ONE - 6120328.
+    // rise 20 dm, g = 0.125, p = 800 + 2500 x 0.125 = 1112.5 mm,
+    // lam = 0.00055625 (raw 2389076), q = 4292578220.
     CHECK(own.q_up[1] == ONE);
     CHECK(own.hs_up[1] == 0);
     const CellStep s10 = own_cell(false, sg.hs[1], ONE, 0, c, v);
     CHECK(s10.rise == Fx::from_int(20).raw());
     CHECK(s10.g == 536870912);
-    CHECK(s10.p == Fx::from_int(1425).raw());
-    CHECK(s10.lam == 6120328);
-    CHECK(st.q[1] == 4294967296 - 6120328);
-    CHECK(st.p[1] == Fx::from_int(1425).raw());
-    // (2, 1) by hand: taps (1, 0), (1, 1), (1, 2); q_up = RHA(17154045693 / 4)
-    // = 4288511423; hs_up = 22.5 dm; rise 67.5, g = 0.421875; p raw
-    // 12476887921291 (2905.002 mm).
+    CHECK(s10.p == Fx::from_ratio(2225, 2).raw());
+    CHECK(s10.lam == 2389076);
+    CHECK(st.q[1] == 4294967296 - 2389076);
+    CHECK(st.q[1] == 4292578220);
+    CHECK(st.p[1] == Fx::from_ratio(2225, 2).raw());
+    // (2, 1) by hand: taps (1, 0), (1, 1), (1, 2); q_up = RHA(17169977337 / 4)
+    // = 4292494334; hs_up = 22.5 dm; rise 67.5, g = 0.421875; p raw
+    // 7961235585091 (1853.620 mm).
     const std::size_t i21 = sg.g.index(2, 1);
-    CHECK(st.q[1] + 2 * st.q[7] + st.q[13] == 17154045693);
-    CHECK(own.q_up[i21] == 4288511423);
+    CHECK(st.q[1] + 2 * st.q[7] + st.q[13] == 17169977337);
+    CHECK(own.q_up[i21] == 4292494334);
     CHECK(own.hs_up[i21] == Fx::from_ratio(45, 2).raw());
     CHECK(own.rise[i21] == Fx::from_ratio(135, 2).raw());
-    CHECK(own_cell(false, sg.hs[i21], 4288511423, Fx::from_ratio(45, 2).raw(), c, v).g == 1811939328);
-    CHECK(st.p[i21] == 12476887921291);
+    CHECK(own_cell(false, sg.hs[i21], 4292494334, Fx::from_ratio(45, 2).raw(), c, v).g == 1811939328);
+    CHECK(st.p[i21] == 7961235585091);
     // Column 4 descends (rise 0): base rain only, from the depleted air.
     // Column 5 is ocean: p from q_up, and q recharging.
     for (std::int32_t y = 0; y < 3; ++y) {
@@ -382,36 +550,65 @@ TEST_CASE("P1-03 5.1 C5: the wind-E sweep of the 6 x 3 grid, every q raw and eve
     }
 }
 
-TEST_CASE("P1-03 5.1 C5: the diagonal step, wind SE (k_w = 1), same grid") {
+TEST_CASE("P1-03 C5: the tap table of the diagonal winds and the orthogonal taps") {
+    using P = std::pair<std::int32_t, std::int32_t>;
+    using T = std::array<P, 3>;
+    // Diagonal: a = (x - dx, y), b = (x - dx, y - dy), c = (x, y - dy).
+    CHECK(taps(1, 5, 5) == T{P{4, 5}, P{4, 4}, P{5, 4}});  // SE
+    CHECK(taps(3, 5, 5) == T{P{6, 5}, P{6, 4}, P{5, 4}});  // SW
+    CHECK(taps(5, 5, 5) == T{P{6, 5}, P{6, 6}, P{5, 6}});  // NW
+    CHECK(taps(7, 5, 5) == T{P{4, 5}, P{4, 6}, P{5, 6}});  // NE
+    // Orthogonal: columns for E and W, rows for S and N.
+    CHECK(taps(0, 5, 5) == T{P{4, 4}, P{4, 5}, P{4, 6}});
+    CHECK(taps(4, 5, 5) == T{P{6, 4}, P{6, 5}, P{6, 6}});
+    CHECK(taps(2, 5, 5) == T{P{4, 4}, P{5, 4}, P{6, 4}});
+    CHECK(taps(6, 5, 5) == T{P{4, 6}, P{5, 6}, P{6, 6}});
+}
+
+TEST_CASE("P1-03 5.1 C5: the diagonal sweep, wind SE (k_w = 1), raster order, same grid") {
     const SweepGrid sg = sweep_grid();
     const Values v = values(quiet_overrides());
     const SweepConsts c = sweep_consts(1, v);
     CHECK(c.step_m == worldgen::mul_int(Fx::SQRT2, 16));
-    CHECK(c.step_dm == worldgen::mul_int(Fx::SQRT2, 160));
-    const climate_api::Sweep st = climate_api::sweep(sg.g, sg.s, sg.water, sg.hs, 1, tuning(quiet_overrides()));
+    CHECK(c.step_dm.raw() == 971840160000);
+    CHECK(c.rec.raw() == 194368032);
+    const climate_api::Sweep st = climate_api::sweep(sg.g, sg.water, sg.hs, 1, tuning(quiet_overrides()));
     const OwnSweep own = own_sweep(sg.g, sg.hs, sg.water, 1, v);
-    // (1, 0): taps (0, -2), (0, -1), (0, 0), the first two off the map.
-    const auto t10 = taps(1, 1, 0);
-    CHECK(t10[0] == std::pair<std::int32_t, std::int32_t>{0, -2});
-    CHECK(t10[1] == std::pair<std::int32_t, std::int32_t>{0, -1});
-    CHECK(t10[2] == std::pair<std::int32_t, std::int32_t>{0, 0});
+    CHECK(rows_of(6, own.q) == se_q());
+    CHECK(rows_of(6, st.q) == se_q());
+    std::vector<std::string> pm;
+    for (const std::int64_t p : st.p) {
+        pm.push_back(mm3(p));
+    }
+    CHECK(rows_of(6, pm) == se_p());
+    CHECK(st.p == own.p);
+    // (1, 0) by hand: a = (0, 0) ocean (q ONE, hs 0), b and c off the map.
     CHECK(own.q_up[1] == ONE);
     CHECK(own.hs_up[1] == 0);
     const CellStep s10 = own_cell(false, sg.hs[1], ONE, 0, c, v);
     CHECK(s10.g == 379625062);
     CHECK(s10.g == worldgen::div(Fx::from_int(20), worldgen::mul_int(Fx::SQRT2, 160)).raw());
-    CHECK(s10.p == 5334099146800);
-    CHECK(s10.lam == 7543555);
-    CHECK(st.p[1] == 5334099146800);
-    CHECK(mm3(st.p[1]) == "1241.942");
-    CHECK(st.q[1] == 4287423741);
-    // (3, 0): taps (2, -2), (2, -1), (2, 0): q_up 4291438217, hs_up 15 dm,
-    // p 3117.630 mm.
-    CHECK(own.q_up[3] == 4291438217);
-    CHECK(own.hs_up[3] == Fx::from_int(15).raw());
-    CHECK(mm3(st.p[3]) == "3117.630");
-    CHECK(st.q == own.q);
-    CHECK(st.p == own.p);
+    CHECK(s10.p == 4385036491800);
+    CHECK(s10.lam == 3100689);
+    CHECK(st.p[1] == 4385036491800);
+    CHECK(mm3(st.p[1]) == "1020.971");
+    CHECK(st.q[1] == 4291866607);
+    // (2, 1): a = (1, 1), b = (1, 0), c = (2, 0); q_up 4291144157, hs_up 32.5,
+    // rise 57.5, p raw 6159041656350, q 4286792934.
+    const std::size_t i21 = sg.g.index(2, 1);
+    CHECK(st.q[sg.g.index(1, 1)] == 4290924843);
+    CHECK(st.q[sg.g.index(2, 0)] == 4289918572);
+    CHECK(own.q_up[i21] == 4291144157);
+    CHECK(own.hs_up[i21] == Fx::from_ratio(65, 2).raw());
+    CHECK(own.rise[i21] == Fx::from_ratio(115, 2).raw());
+    CHECK(st.p[i21] == 6159041656350);
+    CHECK(st.q[i21] == 4286792934);
+    // (4, 0): a = (3, 0) (q 4287755798, hs 120), b and c off the map: q_up
+    // 4293164422, hs_up 30, rise 50, p 1351.859 mm (the off-map rule).
+    CHECK(own.q_up[4] == 4293164422);
+    CHECK(own.hs_up[4] == Fx::from_int(30).raw());
+    CHECK(own.rise[4] == Fx::from_int(50).raw());
+    CHECK(mm3(st.p[4]) == "1351.859");
 }
 
 TEST_CASE("P1-03 C5: every wind code on the 5.1 grid equals the test's own sweep") {
@@ -422,7 +619,7 @@ TEST_CASE("P1-03 C5: every wind code on the 5.1 grid equals the test's own sweep
         for (std::uint8_t k = 0; k < 8; ++k) {
             CAPTURE(int{k});
             const OwnSweep own = own_sweep(sg.g, sg.hs, sg.water, k, v);
-            const climate_api::Sweep st = climate_api::sweep(sg.g, sg.s, sg.water, sg.hs, k, t);
+            const climate_api::Sweep st = climate_api::sweep(sg.g, sg.water, sg.hs, k, t);
             CHECK(st.q == own.q);
             CHECK(st.p == own.p);
         }
@@ -481,31 +678,38 @@ TEST_CASE("P1-03 C6: the coast bonus falls linearly to 0 at coast_rain_reach_m; 
     CHECK(climate_api::rainfall_cell(Fx::from_int(20000).raw(), 5000, 0, floor0) == 10000);
 }
 
-TEST_CASE("P1-03 5.1 C6: the wind-E sweep through the whole stage gives the rainfall rows of 5.1") {
+TEST_CASE("P1-03 5.1 C6: both sweeps through the whole stage give the rainfall rows of 5.1") {
     // The 6 x 3 grid as layers: S = elevation on land, ocean elevation -5 with
-    // depth 5; coast_dist 16 on land and -16 on ocean; r = 0
-    // (smooth_radius_m 15, 15 div 16 = 0); wind forced to E; noise 0.
+    // depth 5; coast_dist 16 on land and -16 on ocean; h = 0 (smooth_radius_m
+    // 0, 15 and 31 give r = 0, 0, 1); wind forced; noise 0.
     const SweepGrid sg = sweep_grid();
     std::vector<std::int16_t> coast;
     for (const std::uint8_t w : sg.water) {
         coast.push_back(static_cast<std::int16_t>(w == WATER_OCEAN ? -16 : 16));
     }
     const Inputs in = inputs_of_surface(sg.g, sg.s, sg.water, coast);
-    Overrides o = quiet_overrides();
-    o.emplace_back("smooth_radius_m", "15");
-    o.emplace_back("wind_weights", weights_text(one_hot(0)));
-    for (const std::uint64_t seed : {std::uint64_t{0}, std::uint64_t{99}}) {
-        CAPTURE(seed);
-        const climate_api::Layers l = stage_layers(in, tuning(o), seed, THREADS);
-        CHECK(rows_of(6, l.rainfall) == sweep_rainfall());
-        CHECK(l.rainfall == own_climate(in, values(o), seed).rainfall);
-        // The sweep rainfall from the seam values directly.
-        const climate_api::Sweep st = climate_api::sweep(sg.g, sg.s, sg.water, sg.hs, 0, tuning(o));
-        std::vector<std::uint16_t> r;
-        for (std::size_t i = 0; i < st.p.size(); ++i) {
-            r.push_back(climate_api::rainfall_cell(st.p[i], coast[i], 0, tuning(o)));
+    for (const std::uint8_t k : {std::uint8_t{0}, std::uint8_t{1}}) {
+        const auto& want = k == 0 ? sweep_rainfall() : se_rainfall();
+        for (const char* radius : {"0", "15", "31"}) {
+            CAPTURE(int{k});
+            CAPTURE(std::string(radius));
+            Overrides o = quiet_overrides();
+            o.emplace_back("smooth_radius_m", radius);
+            o.emplace_back("wind_weights", weights_text(one_hot(k)));
+            for (const std::uint64_t seed : {std::uint64_t{0}, std::uint64_t{99}}) {
+                const climate_api::Layers l = stage_layers(in, tuning(o), seed, THREADS);
+                CHECK(rows_of(6, l.rainfall) == want);
+                CHECK(l.rainfall == own_climate(in, values(o), seed).rainfall);
+            }
+            // From the seam values: sweep, then climate_rainfall and the cell function.
+            const climate_api::Sweep st = climate_api::sweep(sg.g, sg.water, sg.hs, k, tuning(o));
+            std::vector<std::uint16_t> r;
+            for (std::size_t i = 0; i < st.p.size(); ++i) {
+                r.push_back(climate_api::rainfall_cell(st.p[i], coast[i], 0, tuning(o)));
+            }
+            CHECK(rows_of(6, r) == want);
+            CHECK(rows_of(6, climate_api::rainfall(5, sg.g, st.p, coast, tuning(o), THREADS)) == want);
         }
-        CHECK(rows_of(6, r) == sweep_rainfall());
     }
 }
 
@@ -547,33 +751,83 @@ Terrain random_terrain(std::uint64_t f, Grid g) {
     return t;
 }
 
-climate_api::Sweep sweep_of(const Terrain& t, std::uint8_t k, std::int32_t r, const climate_api::Tuning& tu) {
-    const std::vector<std::int64_t> hs = climate_api::box_mean(t.g, t.s, r, THREADS);
-    return climate_api::sweep(t.g, t.s, t.water, hs, k, tu);
+climate_api::Sweep sweep_of(const Terrain& t, std::uint8_t k, std::int64_t r, const climate_api::Tuning& tu) {
+    const std::vector<std::int64_t> hs = climate_api::triangle_mean(t.g, t.s, r, THREADS);
+    return climate_api::sweep(t.g, t.water, hs, k, tu);
 }
 
-// Sweeps the transformed terrain with the transformed wind and maps the
-// result back.
-climate_api::Sweep transformed_sweep(const Terrain& t, Transform tr, std::uint8_t k, std::int32_t r,
-                                     const climate_api::Tuning& tu) {
-    Terrain t2{transformed_grid(t.g, tr), transform<std::int64_t>(t.g, t.s, tr),
-               transform<std::uint8_t>(t.g, t.water, tr)};
-    const climate_api::Sweep s2 = sweep_of(t2, code_under(tr, k), r, tu);
-    // Back: the inverse of a mirror or transpose is itself; of a 90-degree
-    // clockwise rotation, three more rotations.
-    auto back = [&](const std::vector<std::int64_t>& v) {
-        if (tr != Transform::rotate) {
-            return transform<std::int64_t>(t2.g, v, tr);
+// Applies the transform's inverse to a grid of the transformed shape: the
+// inverse of a mirror or a transpose is itself; of a 90-degree clockwise
+// rotation, three more rotations.
+template <typename T>
+std::vector<T> inverse(Grid g2, const std::vector<T>& v, Transform tr) {
+    if (tr != Transform::rotate) {
+        return transform<T>(g2, v, tr);
+    }
+    std::vector<T> a = v;
+    Grid g = g2;
+    for (int i = 0; i < 3; ++i) {
+        a = transform<T>(g, a, Transform::rotate);
+        g = transformed_grid(g, Transform::rotate);
+    }
+    return a;
+}
+
+// Invariant 7 for C5: sweeps sigma(water) and sigma(hs) with sigma(k) and
+// maps q and p back (hs is transformed directly, as 10.1 test 4 states).
+climate_api::Sweep transformed_sweep(Grid g, std::span<const std::uint8_t> water, std::span<const std::int64_t> hs,
+                                     Transform tr, std::uint8_t k, const climate_api::Tuning& tu) {
+    const Grid g2 = transformed_grid(g, tr);
+    const climate_api::Sweep s2 = climate_api::sweep(g2, transform<std::uint8_t>(g, water, tr),
+                                                     transform<std::int64_t>(g, hs, tr), code_under(tr, k), tu);
+    return climate_api::Sweep{inverse(g2, s2.q, tr), inverse(g2, s2.p, tr)};
+}
+
+// The (transform, code) pairs of invariant 7 that fail on one grid, "" if none.
+std::string symmetry_failures(Grid g, std::span<const std::uint8_t> water, std::span<const std::int64_t> hs,
+                              const climate_api::Tuning& tu, bool with_rotation) {
+    std::string bad;
+    std::vector<Transform> trs = {Transform::mirror_x, Transform::mirror_y, Transform::transpose};
+    if (with_rotation) {
+        trs.push_back(Transform::rotate);
+    }
+    for (std::uint8_t k = 0; k < 8; ++k) {
+        const climate_api::Sweep base = climate_api::sweep(g, water, hs, k, tu);
+        for (const Transform tr : trs) {
+            if (transformed_sweep(g, water, hs, tr, k, tu) != base) {
+                bad += " (transform " + std::to_string(static_cast<int>(tr)) + ", code " + std::to_string(int{k}) + ")";
+            }
         }
-        std::vector<std::int64_t> a = v;
-        Grid g = t2.g;
-        for (int i = 0; i < 3; ++i) {
-            a = transform<std::int64_t>(g, a, Transform::rotate);
-            g = transformed_grid(g, Transform::rotate);
+    }
+    return bad;
+}
+
+// The triangle commutes with the transforms.
+std::string triangle_symmetry_failures(Grid g, std::span<const std::int64_t> s, std::int64_t r) {
+    std::string bad;
+    const std::vector<std::int64_t> base = climate_api::triangle_mean(g, s, r, THREADS);
+    for (const Transform tr : {Transform::mirror_x, Transform::mirror_y, Transform::transpose, Transform::rotate}) {
+        const Grid g2 = transformed_grid(g, tr);
+        const std::vector<std::int64_t> t2 = climate_api::triangle_mean(g2, transform<std::int64_t>(g, s, tr), r, THREADS);
+        if (inverse(g2, t2, tr) != base) {
+            bad += " (transform " + std::to_string(static_cast<int>(tr)) + ")";
         }
-        return a;
-    };
-    return climate_api::Sweep{back(s2.q), back(s2.p)};
+    }
+    return bad;
+}
+
+// Grids without an ocean border and with random water (lakes, rivers and
+// ocean anywhere; the off-map rule is symmetric too).
+Terrain random_water_terrain(std::uint64_t f) {
+    worldgen::Rng rng(worldgen::substream(worldgen::stream_key(2, STREAM_TEST), f));
+    const Grid g{static_cast<std::int32_t>(2 + rng.uniform_u64(9)), static_cast<std::int32_t>(2 + rng.uniform_u64(9))};
+    Terrain t{g, {}, {}};
+    for (std::uint32_t i = 0; i < g.cells(); ++i) {
+        const auto w = static_cast<std::uint8_t>(rng.uniform_u64(4));
+        t.water.push_back(w);
+        t.s.push_back(w == WATER_OCEAN ? 0 : rng.uniform_i64(1, 32767));
+    }
+    return t;
 }
 
 }  // namespace
@@ -588,70 +842,105 @@ TEST_CASE("P1-03 10.1 test 4: the test's grid transforms and wind mapping are co
         g = transformed_grid(g, Transform::rotate);
     }
     CHECK(a == t.s);
+    CHECK(inverse(transformed_grid(t.g, Transform::rotate), transform<std::int64_t>(t.g, t.s, Transform::rotate),
+                  Transform::rotate) == t.s);
     CHECK(code_under(Transform::rotate, 0) == 2);  // E -> S under a clockwise turn
     CHECK(code_under(Transform::rotate, 1) == 3);  // SE -> SW
     CHECK(code_under(Transform::mirror_x, 1) == 3);
     CHECK(code_under(Transform::mirror_y, 1) == 7);
     CHECK(code_under(Transform::transpose, 0) == 2);
+    CHECK(code_under(Transform::transpose, 1) == 1);  // SE and NW map onto themselves
+    CHECK(code_under(Transform::transpose, 5) == 5);
+    CHECK(code_under(Transform::transpose, 3) == 7);  // SW and NE swap
 }
 
-TEST_CASE("P1-03 10.1 test 4: orthogonal winds are the 90-degree rotations of code 0, diagonal winds the mirrors of code 1") {
-    // The 5 x 5 terrain of 10.1 test 4 and random terrains (square and not).
-    std::vector<Terrain> terrains = {symmetric_terrain(), random_terrain(1, Grid{9, 9}), random_terrain(2, Grid{11, 7})};
+TEST_CASE("P1-03 6 invariant 7, 10.1 test 4: all 24 (generator, code) pairs on the 200 random fixtures") {
     const climate_api::Tuning tu = tuning(quiet_overrides());
-    for (std::size_t ti = 0; ti < terrains.size(); ++ti) {
-        const Terrain& t = terrains[ti];
-        for (const std::int32_t r : {0, 1}) {
-            CAPTURE(ti);
-            CAPTURE(r);
-            // Orthogonal: rotation by 90 degrees maps E -> S -> W -> N, and
-            // rotating the terrain and the wind together rotates the result.
-            for (const std::uint8_t k : {std::uint8_t{0}, std::uint8_t{2}, std::uint8_t{4}, std::uint8_t{6}}) {
-                CAPTURE(int{k});
-                CHECK(transformed_sweep(t, Transform::rotate, k, r, tu) == sweep_of(t, k, r, tu));
-                CHECK(transformed_sweep(t, Transform::mirror_x, k, r, tu) == sweep_of(t, k, r, tu));
-                CHECK(transformed_sweep(t, Transform::mirror_y, k, r, tu) == sweep_of(t, k, r, tu));
-                CHECK(transformed_sweep(t, Transform::transpose, k, r, tu) == sweep_of(t, k, r, tu));
-            }
-            // Diagonal: the mirrors in x and in y map SE to SW and NE (and
-            // both to NW). The upwind taps of a diagonal wind are always a
-            // column triple (dx != 0, C5), so a transpose or a 90-degree
-            // rotation of a diagonal sweep is not a diagonal sweep of the
-            // turned grid; the spec does not make that exact and it is not
-            // asserted (see the test writer's report).
-            for (const std::uint8_t k : {std::uint8_t{1}, std::uint8_t{3}, std::uint8_t{5}, std::uint8_t{7}}) {
-                CAPTURE(int{k});
-                CHECK(transformed_sweep(t, Transform::mirror_x, k, r, tu) == sweep_of(t, k, r, tu));
-                CHECK(transformed_sweep(t, Transform::mirror_y, k, r, tu) == sweep_of(t, k, r, tu));
+    for (std::uint64_t f = 0; f < 200; ++f) {
+        CAPTURE(f);
+        const RandomFixture rf = random_fixture(f);
+        const std::vector<std::int64_t> s = surface(rf.in);
+        const std::vector<std::int64_t> hs = climate_api::triangle_mean(rf.in.grid, s, 20, THREADS);
+        const std::string bad = symmetry_failures(rf.in.grid, rf.in.water, hs, tu, f < 20);
+        CHECK_MESSAGE(bad.empty(), "failing:" << bad);
+        if (f < 20) {
+            const std::string tb = triangle_symmetry_failures(rf.in.grid, s, 20);
+            CHECK_MESSAGE(tb.empty(), "triangle failing:" << tb);
+        }
+    }
+}
+
+TEST_CASE("P1-03 6 invariant 7, 10.1 test 4: a non-square 7 x 5 grid, the 5 x 5 grid, and grids with random water") {
+    std::vector<Terrain> terrains = {random_terrain(1, Grid{7, 5}), symmetric_terrain(), random_terrain(2, Grid{5, 7}),
+                                     random_terrain(3, Grid{1, 6}), random_terrain(4, Grid{6, 1})};
+    for (std::uint64_t f = 0; f < 12; ++f) {
+        terrains.push_back(random_water_terrain(f));
+    }
+    for (const Overrides& o : {quiet_overrides(), Overrides{}}) {
+        const climate_api::Tuning tu = tuning(o);
+        for (std::size_t ti = 0; ti < terrains.size(); ++ti) {
+            const Terrain& t = terrains[ti];
+            for (const std::int64_t r : {0, 2, 3, 6}) {
+                CAPTURE(ti);
+                CAPTURE(t.g.width);
+                CAPTURE(t.g.height);
+                CAPTURE(r);
+                const std::vector<std::int64_t> hs = climate_api::triangle_mean(t.g, t.s, r, THREADS);
+                const std::string bad = symmetry_failures(t.g, t.water, hs, tu, true);
+                CHECK_MESSAGE(bad.empty(), "failing:" << bad);
+                const std::string tb = triangle_symmetry_failures(t.g, t.s, r);
+                CHECK_MESSAGE(tb.empty(), "triangle failing:" << tb);
+                const std::string bound = hs_bound_violation(t.g, t.s, r, hs);
+                CHECK_MESSAGE(bound.empty(), bound);
             }
         }
     }
-    // On the 5 x 5 terrain, every code's result is the image of code 0 or 1.
-    const Terrain& t = terrains[0];
-    const climate_api::Sweep e = sweep_of(t, 0, 0, tu), se = sweep_of(t, 1, 0, tu);
+}
+
+TEST_CASE("P1-03 C5 symmetry: on the symmetric 5 x 5 grid the orthogonal winds are rotations of E, the diagonal ones of SE") {
+    const Terrain t = symmetric_terrain();
+    const climate_api::Tuning tu = tuning(quiet_overrides());
     auto image = [&](const climate_api::Sweep& s, Transform tr) {
         return climate_api::Sweep{transform<std::int64_t>(t.g, s.q, tr), transform<std::int64_t>(t.g, s.p, tr)};
     };
-    auto rot = [&](const climate_api::Sweep& s, int times) {
-        climate_api::Sweep a = s;
+    auto rot = [&](climate_api::Sweep s, int times) {
         for (int i = 0; i < times; ++i) {
-            a = image(a, Transform::rotate);
+            s = image(s, Transform::rotate);
         }
-        return a;
+        return s;
     };
-    CHECK(sweep_of(t, 2, 0, tu) == rot(e, 1));
-    CHECK(sweep_of(t, 4, 0, tu) == rot(e, 2));
-    CHECK(sweep_of(t, 6, 0, tu) == rot(e, 3));
-    CHECK(sweep_of(t, 3, 0, tu) == image(se, Transform::mirror_x));
-    CHECK(sweep_of(t, 7, 0, tu) == image(se, Transform::mirror_y));
-    CHECK(sweep_of(t, 5, 0, tu) == image(image(se, Transform::mirror_x), Transform::mirror_y));
+    for (const std::int64_t r : {0, 2}) {
+        CAPTURE(r);
+        const climate_api::Sweep e = sweep_of(t, 0, r, tu), se = sweep_of(t, 1, r, tu);
+        CHECK(sweep_of(t, 2, r, tu) == rot(e, 1));
+        CHECK(sweep_of(t, 4, r, tu) == rot(e, 2));
+        CHECK(sweep_of(t, 6, r, tu) == rot(e, 3));
+        CHECK(sweep_of(t, 3, r, tu) == rot(se, 1));
+        CHECK(sweep_of(t, 5, r, tu) == rot(se, 2));
+        CHECK(sweep_of(t, 7, r, tu) == rot(se, 3));
+        CHECK(sweep_of(t, 3, r, tu) == image(se, Transform::mirror_x));
+        CHECK(sweep_of(t, 7, r, tu) == image(se, Transform::mirror_y));
+        CHECK(sweep_of(t, 1, r, tu) == image(se, Transform::transpose));
+    }
 }
 
-TEST_CASE("P1-03 10.1 test 4, C6: the whole stage's rainfall turns with the terrain and the wind (noise 0)") {
+TEST_CASE("P1-03 10.3: climate_triangle_mean is independent of the thread count on the random fixtures") {
+    for (std::uint64_t f = 0; f < 200; f += 7) {
+        CAPTURE(f);
+        const RandomFixture rf = random_fixture(f);
+        const std::vector<std::int64_t> s = surface(rf.in);
+        const std::vector<std::int64_t> a = climate_api::triangle_mean(rf.in.grid, s, 20, 1);
+        CHECK(climate_api::triangle_mean(rf.in.grid, s, 20, 2) == a);
+        CHECK(climate_api::triangle_mean(rf.in.grid, s, 20, 5) == a);
+        CHECK(a == own_triangle_mean(rf.in.grid, s, 20));
+    }
+}
+
+TEST_CASE("P1-03 10.1 test 4, C6: the whole stage's rainfall turns with the terrain and the wind (rain noise 0)") {
     // With rain_noise_amp 0, rainfall depends on p and coast_dist only, so a
-    // turned world gives the turned rainfall: rotations for orthogonal
-    // winds, mirrors for every wind. Temperature depends on the row (V), so
-    // only a mirror in x leaves it unchanged (temp_noise_amp_c 0).
+    // turned world gives the turned rainfall for every wind and every grid
+    // symmetry. Temperature depends on the row (V), so only a mirror in x
+    // leaves it unchanged (temp_noise_amp_c 0).
     const RandomFixture rf = random_fixture(3);
     const Inputs& in = rf.in;
     for (std::uint8_t k = 0; k < 8; ++k) {
@@ -659,12 +948,7 @@ TEST_CASE("P1-03 10.1 test 4, C6: the whole stage's rainfall turns with the terr
         Overrides o = quiet_overrides();
         o.emplace_back("wind_weights", weights_text(one_hot(k)));
         const climate_api::Layers base = stage_layers(in, tuning(o), 11, THREADS);
-        std::vector<Transform> trs = {Transform::mirror_x, Transform::mirror_y};
-        if (!diagonal(k)) {
-            trs.push_back(Transform::rotate);
-            trs.push_back(Transform::transpose);
-        }
-        for (const Transform tr : trs) {
+        for (const Transform tr : {Transform::mirror_x, Transform::mirror_y, Transform::transpose, Transform::rotate}) {
             CAPTURE(static_cast<int>(tr));
             Inputs t2;
             t2.grid = transformed_grid(in.grid, tr);
@@ -685,21 +969,53 @@ TEST_CASE("P1-03 10.1 test 4, C6: the whole stage's rainfall turns with the terr
 
 // --- C1 preconditions (section 2) -------------------------------------------------------------
 
-TEST_CASE("P1-03 2, C1: input preconditions are fatal with the climate prefix") {
+TEST_CASE("P1-03 2, C1, 10.1 test 7: input preconditions are fatal with the climate prefix (climate_layers and climate_surface)") {
     const SweepGrid sg = sweep_grid();
     std::vector<std::int16_t> coast(sg.s.size(), 16);
     const Inputs good = inputs_of_surface(sg.g, sg.s, sg.water, coast);
     const climate_api::Tuning t = tuning(quiet_overrides());
     CHECK_NOTHROW(static_cast<void>(stage_layers(good, t, 0, THREADS)));
+    CHECK(climate_api::surface(good.grid, good.elevation, good.water, good.water_depth) == surface(good));
+    auto prefixed = [](const worldgen::FatalError& e) {
+        return std::string_view(e.what()).substr(0, PRECONDITION.size()) == PRECONDITION;
+    };
     auto fatal_with_prefix = [&](const Inputs& in, const char* what) {
         CAPTURE(what);
         try {
             static_cast<void>(stage_layers(in, t, 0, THREADS));
-            FAIL("no fatal error");
+            FAIL("climate_layers: no fatal error");
         } catch (const worldgen::FatalError& e) {
-            CHECK(std::string_view(e.what()).substr(0, PRECONDITION.size()) == PRECONDITION);
+            CHECK(prefixed(e));
+        }
+        try {
+            static_cast<void>(climate_api::surface(in.grid, in.elevation, in.water, in.water_depth));
+            FAIL("climate_surface: no fatal error");
+        } catch (const worldgen::FatalError& e) {
+            CHECK(prefixed(e));
         }
     };
+    {
+        Inputs in = good;  // precondition 2: a water value of 4
+        in.water[1] = 4;
+        fatal_with_prefix(in, "water 4");
+        in.water[1] = 255;
+        fatal_with_prefix(in, "water 255");
+    }
+    {
+        Inputs in = good;  // precondition 3: S > 32767 on a land cell
+        in.elevation[1] = 32767;
+        in.water_depth[1] = 1;
+        fatal_with_prefix(in, "S = 32768");
+    }
+    {
+        Inputs in = good;  // S = 32767 exactly is allowed, on a lake or on land
+        in.water[1] = WATER_LAKE;
+        in.elevation[1] = 32000;
+        in.water_depth[1] = 767;
+        in.elevation[2] = 32767;
+        CHECK_NOTHROW(static_cast<void>(stage_layers(in, t, 0, THREADS)));
+        CHECK_NOTHROW(static_cast<void>(climate_api::surface(in.grid, in.elevation, in.water, in.water_depth)));
+    }
     {
         Inputs in = good;  // S = 4 on an ocean cell
         in.water_depth[0] = 4;
@@ -734,4 +1050,19 @@ TEST_CASE("P1-03 2, C1: input preconditions are fatal with the climate prefix") 
         }
         CHECK_THROWS_AS(static_cast<void>(stage_layers(in, t, 0, THREADS)), worldgen::FatalError);
     }
+}
+
+TEST_CASE("P1-03 C2, C5 seams: wind and sweep argument checks") {
+    // climate_wind: fatal unless 8 weights, none negative, sum >= 1.
+    const std::vector<std::int64_t> seven(7, 1), nine(9, 1), zeros(8, 0);
+    std::vector<std::int64_t> negative(8, 1);
+    negative[3] = -1;
+    const std::vector<const std::vector<std::int64_t>*> bad = {&seven, &nine, &zeros, &negative};
+    for (const std::vector<std::int64_t>* w : bad) {
+        CHECK_THROWS_AS(static_cast<void>(climate_api::wind(0, *w)), worldgen::FatalError);
+    }
+    // climate_sweep: wind > 7 is fatal.
+    const SweepGrid sg = sweep_grid();
+    CHECK_THROWS_AS(static_cast<void>(climate_api::sweep(sg.g, sg.water, sg.hs, 8, shipped_tuning())),
+                    worldgen::FatalError);
 }

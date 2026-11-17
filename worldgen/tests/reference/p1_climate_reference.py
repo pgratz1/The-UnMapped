@@ -1,7 +1,10 @@
 #!/usr/bin/env python3
 """Independent exact-integer reference of the P1-03 climate stage.
 
-Written by the test writer from docs/specs/p1-03-climate.md and
+Written by the test writer from docs/specs/p1-03-climate.md (revised
+2026-11-17: triangle kernel C4, diagonal taps across the wind in a raster
+sweep C5, preconditions in order with S <= 32767, shipped rain_oro_mm 2500
+and moisture_path_mm_km 32000) and
 docs/specs/p1-00-geography-overview.md (2.1 to 2.3, G6, D1 to D10, 10.2,
 10.3) only, without reading any implementation of the stage. Steps C1 to C6
 are implemented here from the spec text. The inputs of a world (elevation,
@@ -99,8 +102,8 @@ def shipped_tuning(**over):
         "wind_weights": [1, 1, 1, 1, 1, 1, 1, 1],
         "smooth_radius_m": 320,
         "rain_base_mm": 800,
-        "rain_oro_mm": 5000,
-        "moisture_path_mm_km": 16000,
+        "rain_oro_mm": 2500,
+        "moisture_path_mm_km": 32000,
         "loss_max": dec("0.25"),
         "ocean_recharge_m": 500,
         "coast_rain_mm": 150,
@@ -148,7 +151,13 @@ def surface(e, depth):
     return [e[i] + depth[i] for i in range(len(e))]
 
 
+S_MAX = 32767
+
+
 def preconditions(w, h, e, water, depth, coast):
+    """Section 2, in order: 1. the four layers, W x H, of their types;
+    2. every water value in 0..3; 3. S = 0 on ocean, 1 <= S elsewhere,
+    S <= 32767 everywhere. Returns S."""
     n = w * h
     for name, a, lo, hi in (("elevation", e, -32768, 32767), ("water", water, 0, 255),
                             ("water_depth", depth, 0, 65535), ("coast_dist", coast, -32768, 32767)):
@@ -157,6 +166,9 @@ def preconditions(w, h, e, water, depth, coast):
         for v in a:
             if not lo <= v <= hi:
                 fatal(PRE + "layer '%s' value outside its type" % name)
+    for i in range(n):
+        if water[i] > 3:
+            fatal(PRE + "water value %d at cell %d" % (water[i], i))
     S = surface(e, depth)
     for i in range(n):
         if water[i] == WATER_OCEAN:
@@ -164,6 +176,8 @@ def preconditions(w, h, e, water, depth, coast):
                 fatal(PRE + "surface is not 0 on ocean cell %d" % i)
         elif S[i] < 1:
             fatal(PRE + "surface below 1 on non-ocean cell %d" % i)
+        if S[i] > S_MAX:
+            fatal(PRE + "surface above 32767 at cell %d" % i)
     return S
 
 
@@ -197,20 +211,22 @@ def noise_grid(seed, stream, w, h, rec):
 # C4: smoothed surface
 # ---------------------------------------------------------------------------
 
-def box_mean(w, h, S, r):
-    """hs = from_ratio(sum of S over the clipped window, c_w), a row pass
-    then a column pass (both exact integer sums)."""
-    if r < 0:
-        fatal("box radius")
+INT64_MAX = (1 << 63) - 1
+
+
+def window_sums(w, h, V, r):
+    """(sum over the clipped (2r+1)^2 window, c_w) per cell, by a row pass
+    then a column pass of exact integer sums. Every partial sum is checked
+    against int64 (the bound of section 7)."""
     rows = [0] * (w * h)
     for y in range(h):
         pre = [0]
         for x in range(w):
-            pre.append(pre[-1] + S[y * w + x])
+            pre.append(pre[-1] + V[y * w + x])
         for x in range(w):
             lo, hi = max(0, x - r), min(w - 1, x + r)
             rows[y * w + x] = pre[hi + 1] - pre[lo]
-    hs = [0] * (w * h)
+    out = [None] * (w * h)
     for x in range(w):
         pre = [0]
         for y in range(h):
@@ -218,23 +234,61 @@ def box_mean(w, h, S, r):
         for y in range(h):
             lo, hi = max(0, y - r), min(h - 1, y + r)
             cw = (min(w - 1, x + r) - max(0, x - r) + 1) * (hi - lo + 1)
-            hs[y * w + x] = er.from_ratio(pre[hi + 1] - pre[lo], cw)
-    return hs
+            s = pre[hi + 1] - pre[lo]
+            if abs(s) > INT64_MAX:
+                fatal("C4: window sum overflows int64")
+            out[y * w + x] = (s, cw)
+    return out
 
 
-def box_mean_direct(w, h, S, r):
-    """The same by summing every window directly (second method)."""
-    hs = [0] * (w * h)
+def check_surface_range(S):
+    for v in S:
+        if not 0 <= v <= S_MAX:
+            fatal("C4: S outside [0, 32767]")
+
+
+def box_mean(w, h, S, r):
+    """One box pass of half-width r (seam climate_box_mean, pass 1 of C4):
+    hs1 = from_ratio(sum, c_w)."""
+    if r < 0:
+        fatal("box radius")
+    check_surface_range(S)
+    return [er.from_ratio(s, cw) for s, cw in window_sums(w, h, S, r)]
+
+
+def triangle_mean(w, h, S, r):
+    """C4 (seam climate_triangle_mean): h = r div 2; pass 1 = box_mean(S, h);
+    pass 2 on the raw values of hs1: hs = div_int(from_raw(sum2), c_w)."""
+    if r < 0:
+        fatal("triangle radius")
+    hh = r // 2
+    hs1 = box_mean(w, h, S, hh)
+    return [er.div_int(s, cw) for s, cw in window_sums(w, h, hs1, hh)]
+
+
+def box_direct(w, h, V, r, final):
+    """A box pass by summing every window directly (second method);
+    final(sum, c_w) gives the value."""
+    out = [0] * (w * h)
     for y in range(h):
         for x in range(w):
             s = 0
             c = 0
             for yy in range(max(0, y - r), min(h - 1, y + r) + 1):
                 for xx in range(max(0, x - r), min(w - 1, x + r) + 1):
-                    s += S[yy * w + xx]
+                    s += V[yy * w + xx]
                     c += 1
-            hs[y * w + x] = er.from_ratio(s, c)
-    return hs
+            out[y * w + x] = final(s, c)
+    return out
+
+
+def box_mean_direct(w, h, S, r):
+    return box_direct(w, h, S, r, er.from_ratio)
+
+
+def triangle_mean_direct(w, h, S, r):
+    hh = r // 2
+    return box_direct(w, h, box_mean_direct(w, h, S, hh), hh, er.div_int)
 
 
 # ---------------------------------------------------------------------------
@@ -250,10 +304,17 @@ def sweep_constants(code, t):
     return dx, dy, step_m, step_dm, rec
 
 
+def is_diagonal(code):
+    return DX[code] != 0 and DY[code] != 0
+
+
 def taps(code, x, y):
+    """Taps a, b (weight 2), c of C5."""
     dx, dy = DX[code], DY[code]
+    if dx != 0 and dy != 0:
+        return ((x - dx, y), (x - dx, y - dy), (x, y - dy))
     if dx != 0:
-        return ((x - dx, y - dy - 1), (x - dx, y - dy), (x - dx, y - dy + 1))
+        return ((x - dx, y - 1), (x - dx, y), (x - dx, y + 1))
     return ((x - 1, y - dy), (x, y - dy), (x + 1, y - dy))
 
 
@@ -287,8 +348,14 @@ def upwind(w, h, code, x, y, q, hs):
 
 
 def lines_of(w, h, code):
-    """The lines in processing order, each a list of cells (x, y)."""
+    """Processing order as a list of groups of cells (x, y). Orthogonal:
+    the lines (each reads only the previous line). Diagonal: the rows of the
+    raster order, whose cells are sequential (a reads the previous cell)."""
     dx, dy = DX[code], DY[code]
+    if dx != 0 and dy != 0:
+        ys = range(h) if dy == 1 else range(h - 1, -1, -1)
+        xs = list(range(w)) if dx == 1 else list(range(w - 1, -1, -1))
+        return [[(x, y) for x in xs] for y in ys]
     if dx != 0:
         xs = range(w) if dx == 1 else range(w - 1, -1, -1)
         return [[(x, y) for y in range(h)] for x in xs]
@@ -297,22 +364,30 @@ def lines_of(w, h, code):
 
 
 def sweep(w, h, hs, water, code, t, trace=None):
-    """C5 in line order. Returns (q, p) raw grids."""
+    """C5 in the stated order. Orthogonal lines are computed from a snapshot
+    of the previous line (a check that no cell reads its own line); the
+    diagonal raster is computed in place, cell after cell. Every tap read
+    must already be computed (asserted). Returns (q, p) raw grids."""
     consts = sweep_constants(code, t)
     n = w * h
     q = [None] * n
     p = [None] * n
+    diagonal = is_diagonal(code)
     for line in lines_of(w, h, code):
-        # Every cell of a line reads only the previous line: compute the
-        # line from a snapshot, then store it.
         new = []
         for (x, y) in line:
+            for (xx, yy) in taps(code, x, y):
+                if 0 <= xx < w and 0 <= yy < h and q[yy * w + xx] is None:
+                    raise AssertionError("C5 order: tap read before it is computed")
             q_up, hs_up = upwind(w, h, code, x, y, q, hs)
             i = y * w + x
             r = cell_step(water[i] == WATER_OCEAN, hs[i], q_up, hs_up, consts, t)
             if trace is not None:
                 trace[i] = (q_up, hs_up) + r
-            new.append((i, r[0], r[1]))
+            if diagonal:
+                q[i], p[i] = r[0], r[1]
+            else:
+                new.append((i, r[0], r[1]))
         for i, qi, pi in new:
             q[i] = qi
             p[i] = pi
@@ -382,7 +457,7 @@ def climate(w, h, e, water, depth, coast, t, seed):
         y = i // w
         _, _, _, T[i], temp[i] = temp_parts(y, h, S[i], tnoise[i], t)
     r = t["smooth_radius_m"] // 16
-    hs = box_mean(w, h, S, r)
+    hs = triangle_mean(w, h, S, r)
     q, p = sweep(w, h, hs, water, k, t)
     rnoise = noise_grid(seed, STREAM_RAIN, w, h, t["rain_noise"])
     rain = [rain_parts(p[i], coast[i], rnoise[i], t)[3] for i in range(n)]
@@ -734,39 +809,121 @@ def check_temperature(c):
     c.eq("C3 clamp low T", temp_parts(0, 16, 30000, -ONE, cold)[3], er.from_int(-80))
 
 
+BOX_S = [0, 10, 20, 30, 0, 40, 50, 60, 0, 0, 70, 80]
+TRIANGLE_R2 = [
+    [66512340764, 98028651710, 148733126732, 178956970667],
+    [70588582874, 106711378805, 166761384518, 201624853618],
+    [70986265031, 111748686127, 182138427923, 221906643627],
+]
+TRIANGLE_R2_DM = [["15.4861", "22.8241", "34.6296", "41.6667"], ["16.4352", "24.8457", "38.8272", "46.9444"],
+                  ["16.5278", "26.0185", "42.4074", "51.6667"]]
+
+
+def dm4(raw):
+    """A raw Fx value to four decimals (RHA), as 5.1 prints hs in dm."""
+    v = cr.rha(raw * 10000, ONE)
+    return "%s%d.%04d" % ("-" if v < 0 else "", abs(v) // 10000, abs(v) % 10000)
+
+
+def dm1(raw):
+    v = cr.rha(raw * 10, ONE)
+    return "%d.%d" % (v // 10, v % 10) if v % 10 else "%d" % (v // 10)
+
+
 def check_box(c):
-    S = [0, 10, 20, 30, 0, 40, 50, 60, 0, 0, 70, 80]
+    S = BOX_S
+    # One box pass (climate_box_mean), half-width 1.
     hs = box_mean(4, 3, S, 1)
-    c.eq("C4 row 0", hs[0:4], [er.from_ratio(25, 2), er.from_int(20), er.from_int(35), er.from_int(40)])
-    c.eq("C4 row 1 raw", hs[4:8], [35791394133, 90671531804, 171798691840, 221906643627])
-    c.eq("C4 row 2", hs[8:12], [er.from_int(10), 114532461227, er.from_int(50), er.from_int(65)])
-    c.eq("C4 (0, 1) = 50 / 6", hs[4], er.from_ratio(50, 6))
-    c.eq("C4 direct", box_mean_direct(4, 3, S, 1), hs)
-    c.eq("C4 r = 0", box_mean(4, 3, S, 0), [er.from_int(v) for v in S])
+    c.eq("box row 0", hs[0:4], [er.from_ratio(25, 2), er.from_int(20), er.from_int(35), er.from_int(40)])
+    c.eq("box row 1 raw", hs[4:8], [35791394133, 90671531804, 171798691840, 221906643627])
+    c.eq("box row 2", hs[8:12], [er.from_int(10), 114532461227, er.from_int(50), er.from_int(65)])
+    c.eq("box (0, 1) = 50 / 6", hs[4], er.from_ratio(50, 6))
+    c.eq("box direct", box_mean_direct(4, 3, S, 1), hs)
+    c.eq("box r = 0", box_mean(4, 3, S, 0), [er.from_int(v) for v in S])
     for r in (3, 4, 100):
-        c.eq("C4 r %d = grid mean" % r, box_mean(4, 3, S, r), [er.from_ratio(sum(S), 12)] * 12)
-    # smooth_radius_m div 16
-    c.eq("C4 r of 320 m", 320 // 16, 20)
-    c.eq("C4 r of 4000 m", 4000 // 16, 250)
-    c.eq("C4 r of 15 m", 15 // 16, 0)
+        c.eq("box r %d = grid mean" % r, box_mean(4, 3, S, r), [er.from_ratio(sum(S), 12)] * 12)
+    # C4 triangle, r = 2 (h = 1).
+    tri = triangle_mean(4, 3, S, 2)
+    c.eq("C4 triangle r 2 raw", rows(4, tri), TRIANGLE_R2)
+    c.eq("C4 triangle r 2 dm", [[dm4(v) for v in row] for row in rows(4, tri)], TRIANGLE_R2_DM)
+    c.eq("C4 triangle (0, 0) sum2", 53687091200 + 85899345920 + 35791394133 + 90671531804, 266049363057)
+    c.eq("C4 triangle (0, 0) hs1 window", [hs[0], hs[1], hs[4], hs[5]],
+         [53687091200, 85899345920, 35791394133, 90671531804])
+    c.eq("C4 triangle (0, 0) by hand", tri[0], cr.rha(266049363057, 4))
+    c.eq("C4 triangle direct", triangle_mean_direct(4, 3, S, 2), tri)
+    c.eq("C4 triangle r 3 = r 2", triangle_mean(4, 3, S, 3), tri)
+    for r in (0, 1):
+        c.eq("C4 triangle r %d = from_int(S)" % r, triangle_mean(4, 3, S, r), [er.from_int(v) for v in S])
+    for r in (6, 7, 9, 40):
+        c.eq("C4 triangle r %d = grid mean" % r, triangle_mean(4, 3, S, r), [128849018880] * 12)
+    c.eq("C4 from_ratio(360, 12)", er.from_ratio(360, 12), 128849018880)
+    # Edge clipping: 9 x 9, S = 900 at (4, 4), r = 4 (h = 2).
+    S9 = [900 if (x, y) == (4, 4) else 0 for y in range(9) for x in range(9)]
+    t9 = triangle_mean(9, 9, S9, 4)
+    row4 = t9[4 * 9:5 * 9]
+    c.eq("C4 clip row 4 dm", [dm1(v) for v in row4], ["12", "18", "21.6", "28.8", "36", "28.8", "21.6", "18", "12"])
+    c.eq("C4 clip row 4 raw", row4[:5], [51539607552, 77309411328, 92771293594, 123695058125, 154618822656])
+    c.eq("C4 clip row 4 symmetric", row4, row4[::-1])
+    c.eq("C4 clip direct", triangle_mean_direct(9, 9, S9, 4), t9)
+    # Unclipped x = 2..6: 900 w(x) w(4), w = (1,2,3,4,5,4,3,2,1)/25.
+    wts = [1, 2, 3, 4, 5, 4, 3, 2, 1]
+    for x in range(2, 7):
+        c.eq("C4 clip unclipped x %d" % x, row4[x], er.from_ratio(900 * wts[x] * 5, 625))
+    # smooth_radius_m div 16, then div 2
+    c.eq("C4 r of 320 m", (320 // 16, 320 // 16 // 2), (20, 10))
+    c.eq("C4 r of 4000 m", (4000 // 16, 4000 // 16 // 2), (250, 125))
+    c.eq("C4 r of 32..47 m", {v // 16 for v in range(32, 48)}, {2})
+    # Fatal arguments of both seams.
+    expect_fatal(c, "box r < 0", lambda: box_mean(4, 3, S, -1))
+    expect_fatal(c, "triangle r < 0", lambda: triangle_mean(4, 3, S, -1))
+    expect_fatal(c, "box S > 32767", lambda: box_mean(2, 1, [1, 32768], 1))
+    expect_fatal(c, "triangle S < 0", lambda: triangle_mean(2, 1, [-1, 5], 2))
+
+
+def check_overflow_margin(c):
+    """Section 7: S = 32767 everywhere with smooth_radius_m 4000 (h = 125)
+    must not overflow; every hs is exactly 32767. The largest pass-2 window
+    sum is 63001 x 32767 x 2^32 (< 2^63 - 1). Also on a grid where windows
+    are full (251 x 251 cells) and a corner where they are clipped."""
+    for (w, h) in ((260, 255), (300, 1)):
+        S = [S_MAX] * (w * h)
+        tri = triangle_mean(w, h, S, 250)
+        c.ok("overflow %d x %d hs = 32767" % (w, h), all(v == er.from_int(S_MAX) for v in tri))
+    full = 251 * 251 * S_MAX * ONE
+    c.ok("overflow bound below int64", full < INT64_MAX)
+    c.eq("overflow bound value", full, 63001 * 32767 << 32)
+    # The running-window bound of section 7 (252 x 251 rows) also fits.
+    c.ok("running window bound", 252 * 251 * S_MAX * ONE < INT64_MAX)
 
 
 SWEEP_Q = [
-    [4294967296, 4288846968, 4280922232, 4270788875, 4271670939, 4276491274],
-    [4294967296, 4287504790, 4276053289, 4263755588, 4265212810, 4269935559],
-    [4294967296, 4290189145, 4283599746, 4276126894, 4274335696, 4277781016],
+    [4294967296, 4292578220, 4289950298, 4286870704, 4286633270, 4288375589],
+    [4294967296, 4292242676, 4288516008, 4284675152, 4284396886, 4285979494],
+    [4294967296, 4292913765, 4290620742, 4288210164, 4287302465, 4288699479],
 ]
 SWEEP_P = [
-    ["800.000", "1425.000", "2125.684", "2901.415", "796.295", "796.445"],
-    ["800.000", "1737.500", "2905.002", "3599.202", "795.090", "795.183"],
-    ["800.000", "1112.500", "1657.731", "1967.095", "796.792", "796.693"],
+    ["800.000", "1112.500", "1463.423", "1852.908", "798.767", "798.732"],
+    ["800.000", "1268.750", "1853.620", "2203.391", "798.350", "798.271"],
+    ["800.000", "956.250", "1229.199", "1384.716", "798.891", "798.794"],
 ]
-SWEEP_RAIN = [[950, 1573, 2274, 3050, 945, 946], [950, 1886, 3053, 3748, 943, 945], [950, 1261, 1806, 2115, 945, 947]]
+SWEEP_RAIN = [[950, 1261, 1612, 2001, 947, 949], [950, 1417, 2002, 2352, 947, 948], [950, 1105, 1378, 1533, 947, 949]]
+SE_Q = [
+    [4294967296, 4291866607, 4289918572, 4287755798, 4289060547, 4293557436],
+    [4294967296, 4290924843, 4286792934, 4283581311, 4284617726, 4289340761],
+    [4294967296, 4291444379, 4287597741, 4283771548, 4281470892, 4285462311],
+]
+SE_P = [
+    ["800.000", "1020.971", "1407.416", "1959.521", "1351.859", "799.725"],
+    ["800.000", "1076.019", "1434.014", "1653.805", "798.523", "798.902"],
+    ["800.000", "827.427", "799.079", "798.365", "797.936", "798.146"],
+]
+SE_RAIN = [[950, 1169, 1556, 2108, 1500, 950], [950, 1224, 1582, 1802, 947, 949], [950, 976, 947, 947, 946, 948]]
 
 
 def check_sweep(c):
     t = quiet_tuning()
     w, h, S, water, hs = sweep_grid()
+    coast = [-16 if water[i] == WATER_OCEAN else 16 for i in range(w * h)]
     consts = sweep_constants(0, t)
     c.eq("C5 rec raw", consts[4], 137438953)
     c.eq("C5 rec = 0.032", consts[4], er.div(er.from_int(16), er.from_int(500)))
@@ -778,66 +935,93 @@ def check_sweep(c):
     c.eq("C5 E (1,0) hs_up", hs_up, 0)
     c.eq("C5 E (1,0) rise", rise, er.from_int(20))
     c.eq("C5 E (1,0) g", g, 536870912)
-    c.eq("C5 E (1,0) p", p10, er.from_int(1425))
-    c.eq("C5 E (1,0) lam", lam, 6120328)
-    c.eq("C5 E (1,0) q", q10, 4294967296 - 6120328)
+    c.eq("C5 E (1,0) p", p10, er.from_ratio(2225, 2))
+    c.eq("C5 E (1,0) lam", lam, 2389076)
+    c.eq("C5 E (1,0) q", q10, 4294967296 - 2389076)
+    c.eq("C5 E (1,0) q value", q10, 4292578220)
     # (2, 1) by hand
     i = 1 * w + 2
     q_up, hs_up, _, p21, rise, g, _ = trace[i]
-    c.eq("C5 E (2,1) taps q", [q[0 * w + 1], q[1 * w + 1], q[2 * w + 1]], [4288846968, 4287504790, 4290189145])
-    c.eq("C5 E (2,1) tap sum", 4288846968 + 2 * 4287504790 + 4290189145, 17154045693)
-    c.eq("C5 E (2,1) q_up", q_up, 4288511423)
+    c.eq("C5 E (2,1) taps", taps(0, 2, 1), ((1, 0), (1, 1), (1, 2)))
+    c.eq("C5 E (2,1) taps q", [q[0 * w + 1], q[1 * w + 1], q[2 * w + 1]], [4292578220, 4292242676, 4292913765])
+    c.eq("C5 E (2,1) tap sum", 4292578220 + 2 * 4292242676 + 4292913765, 17169977337)
+    c.eq("C5 E (2,1) q_up", q_up, 4292494334)
     c.eq("C5 E (2,1) hs_up", hs_up, er.from_ratio(45, 2))
     c.eq("C5 E (2,1) rise", rise, er.from_ratio(135, 2))
     c.eq("C5 E (2,1) g", g, 1811939328)
-    c.eq("C5 E (2,1) p", p21, 12476887921291)
+    c.eq("C5 E (2,1) p", p21, 7961235585091)
+    c.eq("C5 E (2,1) p mm", mm3(p21), "1853.620")
+    c.eq("C5 E (2,1) p = q_up x 1854.6875", p21, er.mul(4292494334, er.from_ratio(1854 * 16 + 11, 16)))
     c.eq("C5 E q grid", rows(w, q), SWEEP_Q)
     c.eq("C5 E p grid", [[mm3(v) for v in row] for row in rows(w, p)], SWEEP_P)
     c.eq("C5 E recursive", sweep_recursive(w, h, hs, water, 0, t), (q, p))
-    # Column 4 descends: base rain only, from the depleted air.
     for y in range(h):
         j = y * w + 4
         c.ok("C5 E column 4 row %d rise 0" % y, trace[j][4] == 0)
         c.eq("C5 E column 4 row %d p" % y, p[j], er.mul(trace[j][0], er.from_int(800)))
-    # Column 5 ocean: p from q_up, q recharging.
     for y in range(h):
         j = y * w + 5
         q_up = trace[j][0]
         c.eq("C5 E column 5 row %d" % y, (q[j], p[j]),
              (q_up + er.mul(ONE - q_up, 137438953), er.mul(q_up, er.from_int(800))))
-    # Rainfall of the sweep (coast_dist 16 on land, -16 on ocean).
-    coast = [-16 if water[i] == WATER_OCEAN else 16 for i in range(w * h)]
     rain = [rain_parts(p[i], coast[i], 0, t)[3] for i in range(w * h)]
-    c.eq("C6 sweep rainfall", rows(w, rain), SWEEP_RAIN)
-    # Through the whole stage (S = elevation, r = 0, wind forced E, noise 0).
+    c.eq("C6 E sweep rainfall", rows(w, rain), SWEEP_RAIN)
+    # Through the whole stage (S = elevation, r = 0, wind forced, noise 0).
     e = [v if v > 0 else -5 for v in S]
     depth = [5 if v == 0 else 0 for v in S]
-    tw = quiet_tuning(smooth_radius_m=15, wind_weights=one_hot(0))
-    r = climate(w, h, e, water, depth, coast, tw, 0)
-    c.eq("C5 E through the stage q", r["q"], q)
-    c.eq("C6 E through the stage rainfall", rows(w, r["rainfall"]), SWEEP_RAIN)
+    for sr in (0, 15, 31):  # r = 0, 0, 1: all h = 0
+        tw = quiet_tuning(smooth_radius_m=sr, wind_weights=one_hot(0))
+        r = climate(w, h, e, water, depth, coast, tw, 0)
+        c.eq("C5 E through the stage q (radius %d)" % sr, r["q"], q)
+        c.eq("C6 E through the stage rainfall (radius %d)" % sr, rows(w, r["rainfall"]), SWEEP_RAIN)
 
-    # Diagonal, wind SE (k_w = 1).
+    # Diagonal, wind SE (k_w = 1), raster order.
     consts = sweep_constants(1, t)
     c.eq("C5 SE step_m", consts[2], er.mul_int(SQRT2, 16))
-    c.eq("C5 SE step_dm", consts[3], er.mul_int(SQRT2, 160))
+    c.eq("C5 SE step_dm", consts[3], 971840160000)
+    c.eq("C5 SE step_dm = SQRT2 x 160", consts[3], er.mul_int(SQRT2, 160))
+    c.eq("C5 SE rec", consts[4], 194368032)
+    c.eq("C5 SE order", [cell for row in lines_of(w, h, 1) for cell in row][:7],
+         [(0, 0), (1, 0), (2, 0), (3, 0), (4, 0), (5, 0), (0, 1)])
+    for k, want in ((1, ((-1, 0), (-1, -1), (0, -1))), (3, ((1, 0), (1, -1), (0, -1))),
+                    (5, ((1, 0), (1, 1), (0, 1))), (7, ((-1, 0), (-1, 1), (0, 1)))):
+        c.eq("C5 taps table code %d" % k, tuple((a - 0, b - 0) for a, b in taps(k, 0, 0)), want)
     trace = {}
     q1, p1 = sweep(w, h, hs, water, 1, t, trace)
-    c.eq("C5 SE (1,0) taps", taps(1, 1, 0), ((0, -2), (0, -1), (0, 0)))
+    c.eq("C5 SE (1,0) taps", taps(1, 1, 0), ((0, 0), (0, -1), (1, -1)))
     q_up, hs_up, q10, p10, rise, g, lam = trace[1]
     c.eq("C5 SE (1,0) q_up hs_up", (q_up, hs_up), (ONE, 0))
     c.eq("C5 SE (1,0) g", g, 379625062)
     c.eq("C5 SE (1,0) g = div", g, er.div(er.from_int(20), er.mul_int(SQRT2, 160)))
-    c.eq("C5 SE (1,0) p", p10, 5334099146800)
-    c.eq("C5 SE (1,0) p mm", mm3(p10), "1241.942")
-    c.eq("C5 SE (1,0) lam", lam, 7543555)
-    c.eq("C5 SE (1,0) q", q10, 4287423741)
-    c.eq("C5 SE (3,0) taps", taps(1, 3, 0), ((2, -2), (2, -1), (2, 0)))
-    q_up, hs_up, _, p30, _, _, _ = trace[3]
-    c.eq("C5 SE (3,0) q_up", q_up, 4291438217)
-    c.eq("C5 SE (3,0) hs_up", hs_up, er.from_int(15))
-    c.eq("C5 SE (3,0) p mm", mm3(p30), "3117.630")
+    c.eq("C5 SE (1,0) p", p10, 4385036491800)
+    c.eq("C5 SE (1,0) p mm", mm3(p10), "1020.971")
+    c.eq("C5 SE (1,0) lam", lam, 3100689)
+    c.eq("C5 SE (1,0) q", q10, 4291866607)
+    i = 1 * w + 2
+    c.eq("C5 SE (2,1) taps", taps(1, 2, 1), ((1, 1), (1, 0), (2, 0)))
+    c.eq("C5 SE (2,1) taps q", [q1[1 * w + 1], q1[0 * w + 1], q1[0 * w + 2]], [4290924843, 4291866607, 4289918572])
+    q_up, hs_up, q21, p21, rise, _, _ = trace[i]
+    c.eq("C5 SE (2,1) q_up", q_up, 4291144157)
+    c.eq("C5 SE (2,1) hs_up", hs_up, er.from_ratio(65, 2))
+    c.eq("C5 SE (2,1) rise", rise, er.from_ratio(115, 2))
+    c.eq("C5 SE (2,1) p", p21, 6159041656350)
+    c.eq("C5 SE (2,1) p mm", mm3(p21), "1434.014")
+    c.eq("C5 SE (2,1) q", q21, 4286792934)
+    c.eq("C5 SE (4,0) taps", taps(1, 4, 0), ((3, 0), (3, -1), (4, -1)))
+    q_up, hs_up, _, p40, rise, _, _ = trace[4]
+    c.eq("C5 SE (4,0) a", (q1[3], hs[3]), (4287755798, er.from_int(120)))
+    c.eq("C5 SE (4,0) q_up", q_up, 4293164422)
+    c.eq("C5 SE (4,0) hs_up", hs_up, er.from_int(30))
+    c.eq("C5 SE (4,0) rise", rise, er.from_int(50))
+    c.eq("C5 SE (4,0) p mm", mm3(p40), "1351.859")
+    c.eq("C5 SE q grid", rows(w, q1), SE_Q)
+    c.eq("C5 SE p grid", [[mm3(v) for v in row] for row in rows(w, p1)], SE_P)
     c.eq("C5 SE recursive", sweep_recursive(w, h, hs, water, 1, t), (q1, p1))
+    rain = [rain_parts(p1[i], coast[i], 0, t)[3] for i in range(w * h)]
+    c.eq("C6 SE sweep rainfall", rows(w, rain), SE_RAIN)
+    tw = quiet_tuning(smooth_radius_m=0, wind_weights=one_hot(1))
+    r = climate(w, h, e, water, depth, coast, tw, 0)
+    c.eq("C6 SE through the stage rainfall", rows(w, r["rainfall"]), SE_RAIN)
 
 
 RAIN_TABLE = [
@@ -908,39 +1092,73 @@ def symmetry_fixture():
     return w, h, S, water
 
 
+def symmetric_sweep_ok(w, h, hs, water, t):
+    """Invariant 7 for C5 on one grid: for each code and each generator,
+    sweep(sigma(G), sigma(k)) == sigma(sweep(G, k)). Returns failures."""
+    bad = []
+    base = {k: sweep(w, h, hs, water, k, t) for k in range(8)}
+    for kind in ("mx", "my", "tr"):
+        w2, h2, hs2 = transform(w, h, hs, kind)
+        _, _, water2 = transform(w, h, water, kind)
+        for k in range(8):
+            q2, p2 = sweep(w2, h2, hs2, water2, code_under(kind, k), t)
+            if (transform(w2, h2, q2, kind)[2], transform(w2, h2, p2, kind)[2]) != base[k]:
+                bad.append((kind, k))
+    return bad
+
+
+def symmetric_triangle_ok(w, h, S, r):
+    base = triangle_mean(w, h, S, r)
+    bad = []
+    for kind in ("mx", "my", "tr"):
+        w2, h2, S2 = transform(w, h, S, kind)
+        if transform(w2, h2, triangle_mean(w2, h2, S2, r), kind)[2] != base:
+            bad.append(kind)
+    return bad
+
+
+def hs_bound_ok(w, h, S, r, hs):
+    """Invariant 7, second part: each hs lies between the smallest and the
+    largest S within (Chebyshev) distance 2h."""
+    hh = r // 2
+    for y in range(h):
+        for x in range(w):
+            vals = [S[yy * w + xx] for yy in range(max(0, y - 2 * hh), min(h - 1, y + 2 * hh) + 1)
+                    for xx in range(max(0, x - 2 * hh), min(w - 1, x + 2 * hh) + 1)]
+            v = hs[y * w + x]
+            if not er.from_int(min(vals)) <= v <= er.from_int(max(vals)):
+                return False
+    return True
+
+
 def check_symmetry(c):
     t = quiet_tuning()
     fixtures = [symmetry_fixture()]
-    # A less regular one: the 6 x 3 sweep grid, and a random 7 x 5 terrain.
     w, h, S, water, _ = sweep_grid()
     fixtures.append((w, h, S, water))
+    # 10.1 test 4: a non-square 7 x 5 grid of random S with a one-cell ocean border.
     rng = cr.Rng(cr.stream_key(1, STREAM_TEST))
-    w, h = 7, 5
-    water = [WATER_OCEAN if x in (0, w - 1) or y in (0, h - 1) else 0 for y in range(h) for x in range(w)]
-    S = [0 if v == WATER_OCEAN else rng.uniform_i64(1, 3000) for v in water]
-    fixtures.append((w, h, S, water))
+    for (w, h) in ((7, 5), (5, 7), (9, 4), (1, 6), (6, 1)):
+        water = [WATER_OCEAN if x in (0, w - 1) or y in (0, h - 1) else 0 for y in range(h) for x in range(w)]
+        S = [0 if v == WATER_OCEAN else rng.uniform_i64(1, 3000) for v in water]
+        fixtures.append((w, h, S, water))
+    # Grids without an ocean border and with random water (the off-map rule
+    # and lakes are symmetric too).
+    for _ in range(6):
+        w, h = 2 + rng.uniform_u64(9), 2 + rng.uniform_u64(9)
+        water = [rng.uniform_u64(4) for _ in range(w * h)]
+        S = [0 if v == WATER_OCEAN else rng.uniform_i64(1, 32767) for v in water]
+        fixtures.append((w, h, S, water))
     for fi, (w, h, S, water) in enumerate(fixtures):
-        hs = box_mean(w, h, S, 1)
-        base = {k: sweep(w, h, hs, water, k, t) for k in range(8)}
-        for kind in ("mx", "my", "tr"):
-            w2, h2, S2 = transform(w, h, S, kind)
-            _, _, water2 = transform(w, h, water, kind)
-            hs2 = box_mean(w2, h2, S2, 1)
-            for k in range(8):
-                k2 = code_under(kind, k)
-                q2, p2 = sweep(w2, h2, hs2, water2, k2, t)
-                bq = transform(w2, h2, q2, kind if kind != "tr" else "tr")[2]
-                bp = transform(w2, h2, p2, kind if kind != "tr" else "tr")[2]
-                same = (bq, bp) == base[k]
-                diagonal = DX[k] != 0 and DY[k] != 0
-                if kind == "tr" and diagonal:
-                    # Diagonal taps are always a vertical triple (dx != 0), so
-                    # the transpose of a diagonal sweep is not a diagonal
-                    # sweep. Record the fact; the C++ test does not assert it.
-                    sys.stderr.write("symmetry: fixture %d transpose of diagonal code %d: %s\n"
-                                     % (fi, k, "equal" if same else "differs"))
-                    continue
-                c.ok("symmetry fixture %d %s code %d -> %d" % (fi, kind, k, k2), same)
+        for r in (0, 2, 3, 6):
+            hs = triangle_mean(w, h, S, r)
+            c.eq("symmetry fixture %d (%d x %d) r %d: sweep pairs failing" % (fi, w, h, r),
+                 symmetric_sweep_ok(w, h, hs, water, t), [])
+            c.eq("symmetry fixture %d r %d: triangle" % (fi, r), symmetric_triangle_ok(w, h, S, r), [])
+            c.ok("inv 7 hs bound fixture %d r %d" % (fi, r), hs_bound_ok(w, h, S, r, hs))
+    # The shipped tuning (noise does not enter C4 and C5).
+    w, h, S, water = fixtures[2]
+    c.eq("symmetry shipped tuning", symmetric_sweep_ok(w, h, triangle_mean(w, h, S, 2), water, shipped_tuning()), [])
 
 
 # --- Random fixtures (10.2) ---------------------------------------------------
@@ -954,9 +1172,13 @@ def check_random(c, count=200):
         tw = shipped_tuning(wind_weights=one_hot(code))
         r = check_invariants(c, "random %d" % f, w, h, e, water, depth, coast, tw, f)
         c.eq("random %d wind" % f, r["wind"], code)
+        c.ok("random %d inv 7 hs bound" % f, hs_bound_ok(w, h, r["S"], r["r"], r["hs"]))
+        if f < 40:
+            c.eq("random %d inv 7 sweep" % f, symmetric_sweep_ok(w, h, r["hs"], water, tw), [])
+            c.eq("random %d inv 7 triangle" % f, symmetric_triangle_ok(w, h, r["S"], r["r"]), [])
         if f < 20:
             c.eq("random %d recursive sweep" % f, sweep_recursive(w, h, r["hs"], water, code, tw), (r["q"], r["p"]))
-            c.eq("random %d box direct" % f, box_mean_direct(w, h, r["S"], r["r"]), r["hs"])
+            c.eq("random %d triangle direct" % f, triangle_mean_direct(w, h, r["S"], r["r"]), r["hs"])
             # Invariant 2 with temp_noise_amp_c 0.
             r0 = climate(w, h, e, water, depth, coast, shipped_tuning(wind_weights=one_hot(code),
                                                                        temp_noise_amp_c=0), f)
@@ -987,13 +1209,38 @@ def check_preconditions(c):
     coast = [16] * (w * h)
     t = quiet_tuning()
     climate(w, h, e, water, depth, coast, t, 0)
-    bad = list(depth)
-    bad[0] = 4
-    expect_fatal(c, "C1 ocean S != 0", lambda: climate(w, h, e, water, bad, coast, t, 0), PRE)
+
+    def bad(label, ee=e, wa=water, de=depth, co=coast):
+        expect_fatal(c, "C1 " + label, lambda: climate(w, h, ee, wa, de, co, t, 0), PRE)
+
+    d = list(depth)
+    d[0] = 4
+    bad("ocean S != 0", de=d)
     e2 = list(e)
     e2[1] = 0
-    expect_fatal(c, "C1 land S < 1", lambda: climate(w, h, e2, water, depth, coast, t, 0), PRE)
-    expect_fatal(c, "C1 wrong size", lambda: climate(w, h, e[:-1], water, depth, coast, t, 0), PRE)
+    bad("land S < 1", ee=e2)
+    wa = list(water)
+    wa[1] = 4
+    bad("water 4", wa=wa)
+    d = list(depth)
+    d[1] = 32767 - e[1] + 1
+    bad("S > 32767 on land", de=d)
+    wa = list(water)
+    wa[2] = 2
+    d = list(depth)
+    d[2] = 32767 - e[2]
+    climate(w, h, e, wa, d, coast, t, 0)  # S = 32767 on a lake: allowed
+    bad("wrong size", ee=e[:-1])
+    # Precondition 2 is checked before 3: water 4 on a cell whose S is also bad.
+    wa = list(water)
+    wa[0] = 4
+    d = list(depth)
+    d[0] = 4
+    try:
+        climate(w, h, e, wa, d, coast, t, 0)
+        c.ok("C1 order", False)
+    except FatalError as ex:
+        c.ok("C1 order: water first", "water" in str(ex))
 
 
 # ---------------------------------------------------------------------------
@@ -1031,8 +1278,10 @@ LARGE_CASES = [
 RANDOM_GOLDEN = list(range(4))
 
 GOLDEN_HEADER = """\
-# P1-03 climate golden vectors (input layers of generator 0.6.0), generated
-# by worldgen/tests/reference/p1_climate_reference.py golden, an independent
+# P1-03 climate golden vectors (spec revised 2026-11-17: triangle kernel C4,
+# diagonal taps across the wind C5, rain_oro_mm 2500, moisture_path_mm_km
+# 32000; input layers of generator 0.6.0), generated by
+# worldgen/tests/reference/p1_climate_reference.py golden, an independent
 # exact-integer reference written from docs/specs/p1-03-climate.md, with the
 # input layers from worldgen/tests/reference/p1_hydrology_reference.py (and
 # its elevation from p1_elevation_reference.py).
@@ -1058,7 +1307,8 @@ GOLDEN_HEADER = """\
 #                int64 (C3, before temp_noise_amp_c)
 #   T            SHA-256 of T per cell, raw int64 (C3, before x 10)
 #   temperature  P0-04 8 layer hash (i16) (C3)
-#   hs           SHA-256 of hs per cell, raw int64 (C4)
+#   hs           SHA-256 of hs per cell, raw int64 (C4, the triangle kernel,
+#                r = smooth_radius_m div 16)
 #   q p          SHA-256 of the moisture q and precipitation p per cell, raw
 #                int64 (C5)
 #   rnoise       SHA-256 of fbm_m(K_rain, X, Y, rain_noise) per cell, raw
@@ -1069,6 +1319,10 @@ GOLDEN_HEADER = """\
 #   temperature_c rainfall_mm land_below_0c rain_contrast
 #                the report values of P1-03 9 (P1-00 10.3 rules), spaces
 #                written as "_"
+# One case of fixture overflow (the C4 overflow margin of P1-03 7): a grid
+# of N columns and N - 5 rows with S = 32767 - (7x + 13y) mod 768, items S
+# (SHA-256 of S as int64), hs1 (one box pass, half-width 125), hs (triangle,
+# r = 250) and hs_corner (raw hs at (0, 0)).
 """
 
 
@@ -1120,6 +1374,17 @@ def golden_text(large=False):
         for item, v in world_items(r):
             out.append("%s %s %s\n" % (name, item, v))
         sys.stderr.write("golden: %s done (wind %d)\n" % (name, r["wind"]))
+    # The C4 overflow margin (section 7): a 260 x 255 grid with S near the
+    # top, 32767 - (7x + 13y) mod 768, triangle r = 250 (h = 125, full
+    # 251 x 251 windows in the interior).
+    w, h = 260, 255
+    S = [S_MAX - (7 * x + 13 * y) % 768 for y in range(h) for x in range(w)]
+    hs1 = box_mean(w, h, S, 125)
+    hs = triangle_mean(w, h, S, 250)
+    out.append("# C4 overflow margin (P1-03 7): %d x %d, S = 32767 - (7x + 13y) mod 768, r = 250\n" % (w, h))
+    out.append("case overflow-260x255 overflow %d 0 %s\n" % (w, ",".join(str(v) for v in UNIFORM)))
+    for item, v in (("S", h_i64(S)), ("hs1", h_i64(hs1)), ("hs", h_i64(hs)), ("hs_corner", str(hs[0]))):
+        out.append("overflow-260x255 %s %s\n" % (item, v))
     for f in RANDOM_GOLDEN:
         w, h, e, water, depth, coast, code = random_fixture(f)
         weights = one_hot(code)
@@ -1160,6 +1425,7 @@ def main(argv):
         check_wind(c)
         check_temperature(c)
         check_box(c)
+        check_overflow_margin(c)
         check_sweep(c)
         check_rainfall(c)
         check_palette(c)

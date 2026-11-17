@@ -46,8 +46,8 @@ constexpr std::string_view CLIMATE_TOML =
     "wind_weights = [1, 1, 1, 1, 1, 1, 1, 1]\n"
     "smooth_radius_m = 320\n"
     "rain_base_mm = 800\n"
-    "rain_oro_mm = 5000\n"
-    "moisture_path_mm_km = 16000\n"
+    "rain_oro_mm = 2500\n"
+    "moisture_path_mm_km = 32000\n"
     "loss_max = \"0.25\"\n"
     "ocean_recharge_m = 500\n"
     "coast_rain_mm = 150\n"
@@ -267,9 +267,17 @@ TEST_CASE("cli P1-00 X1, P1-03 3 and 9: generate --until climate at 512; hash, r
         CHECK(read_bytes(n) == pa);
         CHECK(read_bytes(gr) != pa);
     }
-    // Which element types the climate palettes suit is not specified (P1-00
-    // appendix C 1 lists only the first-pass palettes), so no misuse is
-    // tested here.
+    // P1-03 9: temperature suits i16 layers only, rainfall u16 only; naming a
+    // palette that does not suit the layer is a usage error (appendix C 1).
+    CHECK(sb.cli({"render", "--db", u8(sb.file("c.db")), "--layer", "water", "--palette", "temperature"}).exit_code ==
+          EXIT_USAGE);
+    CHECK(sb.cli({"render", "--db", u8(sb.file("c.db")), "--layer", "rainfall", "--palette", "temperature"})
+              .exit_code == EXIT_USAGE);
+    CHECK(sb.cli({"render", "--db", u8(sb.file("c.db")), "--layer", "temperature", "--palette", "rainfall"})
+              .exit_code == EXIT_USAGE);
+    CHECK(sb.cli({"render", "--db", u8(sb.file("c.db")), "--layer", "water_depth", "--palette", "rainfall", "--out",
+                  u8(sb.file("wd.png"))})
+              .exit_code == EXIT_OK);  // water_depth is u16
 }
 
 TEST_CASE("cli P1-00 10.1: --until climate is accepted; the next stage is not implemented yet; tuning errors are input errors") {

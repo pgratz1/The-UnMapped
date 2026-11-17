@@ -8,11 +8,11 @@
 // from the spec's stop tables, copied below, by this file's own
 // implementation of the interpolation rule.
 //
-// Readings chosen where the spec is silent (see the test writer's report):
-// the palettes are named "temperature" and "rainfall" for --palette (P1-00
-// 10.2 calls them the temperature and rainfall ramps); the climate lines are
-// printed when both layers are present and are the last [geography] lines
-// of a world with no later stage.
+// As revised 2026-11-17 (P1-03 9, P1-00 10.2, 10.3): the palettes are named
+// "temperature" (i16 only) and "rainfall" (u16 only); the climate lines are
+// printed whenever both layers exist, with or without the hydrology lines,
+// and are the last [geography] lines of a world with no later stage; with
+// no land each key prints a single n/a.
 
 #include <doctest/doctest.h>
 
@@ -25,6 +25,7 @@
 #include <vector>
 
 #include "db_test_support.hpp"
+#include "worldgen/core/error.hpp"
 #include "p1_00_geography_reference.hpp"
 #include "worldgen/db/layer_blob.hpp"
 #include "worldgen/db/reader.hpp"
@@ -168,6 +169,23 @@ TEST_CASE("P1-03 9: the temperature and rainfall palettes are registered under a
     CHECK(worldgen::inspect::palette_suits(*rain, r));
     CHECK(worldgen::inspect::auto_palette("temperature", t) == *temp);
     CHECK(worldgen::inspect::auto_palette("rainfall", r) == *rain);
+    // P1-03 9: temperature suits i16 layers only, rainfall u16 layers only;
+    // under auto an unsuitable registered palette falls back to gray.
+    const LayerGrid u16 = p100::grid<std::uint16_t>(2, 1, {1, 2});
+    const LayerGrid i16 = p100::grid<std::int16_t>(2, 1, {1, 2});
+    const LayerGrid u8 = p100::grid<std::uint8_t>(2, 1, {1, 2});
+    const LayerGrid i32 = p100::grid<std::int32_t>(2, 1, {1, 2});
+    const LayerGrid u32 = p100::grid<std::uint32_t>(2, 1, {1, 2});
+    CHECK_FALSE(worldgen::inspect::palette_suits(*temp, u16));
+    CHECK_FALSE(worldgen::inspect::palette_suits(*temp, u8));
+    CHECK_FALSE(worldgen::inspect::palette_suits(*temp, i32));
+    CHECK_FALSE(worldgen::inspect::palette_suits(*rain, i16));
+    CHECK_FALSE(worldgen::inspect::palette_suits(*rain, u8));
+    CHECK_FALSE(worldgen::inspect::palette_suits(*rain, u32));
+    CHECK(worldgen::inspect::auto_palette("temperature", u16) == Palette::gray);
+    CHECK(worldgen::inspect::auto_palette("rainfall", i16) == Palette::gray);
+    CHECK_THROWS_AS(static_cast<void>(worldgen::inspect::render_rgb(u16, *temp, 1)), worldgen::FatalError);
+    CHECK_THROWS_AS(static_cast<void>(worldgen::inspect::render_rgb(i16, *rain, 1)), worldgen::FatalError);
 }
 
 TEST_CASE("P1-03 9: the temperature ramp, the spec's example 25 -> (213, 236, 212), every stop and between") {

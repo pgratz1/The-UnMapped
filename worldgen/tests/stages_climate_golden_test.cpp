@@ -54,8 +54,19 @@ using namespace climate_test;
 
 namespace {
 
+// The world cases of the golden file (the C4 overflow-margin case, fixture
+// "overflow", is read by stages_climate_examples_test.cpp).
 const std::vector<GoldenCase>& golden() {
-    static const std::vector<GoldenCase> g = read_golden(UNMAPPED_P1_03_GOLDEN_PATH);
+    static const std::vector<GoldenCase> g = [] {
+        std::vector<GoldenCase> all = read_golden(UNMAPPED_P1_03_GOLDEN_PATH);
+        std::vector<GoldenCase> out;
+        for (auto& c : all) {
+            if (c.fixture != "overflow") {
+                out.push_back(std::move(c));
+            }
+        }
+        return out;
+    }();
     return g;
 }
 
@@ -95,9 +106,9 @@ std::vector<std::pair<std::string, std::string>> items_of(const Inputs& in, cons
                                                       c.seed, threads);
     out.emplace_back("temperature", temperature_hash(g, l.temperature));
     const std::vector<std::int64_t> hs =
-        climate_api::box_mean(g, own.S, static_cast<std::int32_t>(v.smooth_radius_m / 16), threads);
+        climate_api::triangle_mean(g, own.S, v.smooth_radius_m / 16, threads);
     out.emplace_back("hs", hash_i64(hs));
-    const climate_api::Sweep sw = climate_api::sweep(g, own.S, in.water, hs, wind, t);
+    const climate_api::Sweep sw = climate_api::sweep(g, in.water, hs, wind, t);
     out.emplace_back("q", hash_i64(sw.q));
     out.emplace_back("p", hash_i64(sw.p));
     out.emplace_back("rnoise", hash_i64(own.rnoise));
@@ -280,9 +291,10 @@ TEST_CASE("P1-03 10.3: 1, 2 and 5 threads give identical layers (N = 128, seeds 
         CHECK(stage_layers(in, shipped_tuning(), seed, 5) == a);
         CHECK(stage_layers(in, shipped_tuning(), seed, 256) == a);
         const std::vector<std::int64_t> s = surface(in);
-        const std::vector<std::int64_t> h1 = climate_api::box_mean(in.grid, s, 20, 1);
-        CHECK(climate_api::box_mean(in.grid, s, 20, 2) == h1);
-        CHECK(climate_api::box_mean(in.grid, s, 20, 5) == h1);
+        const std::vector<std::int64_t> h1 = climate_api::triangle_mean(in.grid, s, 20, 1);
+        CHECK(climate_api::triangle_mean(in.grid, s, 20, 2) == h1);
+        CHECK(climate_api::triangle_mean(in.grid, s, 20, 5) == h1);
+        CHECK(climate_api::box_mean(in.grid, s, 10, 5) == climate_api::box_mean(in.grid, s, 10, 1));
     }
     // A grid whose height is not a multiple of 64 (G6 blocks of the grid's
     // height) and a random fixture.
@@ -554,7 +566,7 @@ TEST_CASE("P1-03 2, C7: the stage entry reads exactly elevation, water, water_de
     CHECK(climate_from_world(r.value()) == stage_layers(in, shipped_tuning(), 3, THREADS));
 }
 
-TEST_CASE("P1-03 2: a missing input layer, a wrong type or size, or a bad surface is fatal at the stage entry") {
+TEST_CASE("P1-03 2, 10.1 test 7: each precondition violation is fatal at the stage entry with the prefix, leaving no file") {
     dbtest::TempDir dir("climate-entry-bad");
     auto expect_fatal = [&](const char* what, bool prefix) {
         CAPTURE(what);
@@ -564,17 +576,38 @@ TEST_CASE("P1-03 2: a missing input layer, a wrong type or size, or a bad surfac
             CHECK(std::string_view(err).substr(0, PRECONDITION.size()) == PRECONDITION);
         }
         CHECK_FALSE(dbtest::fs::exists(dbtest::fs::path(worldgen::db::path_from_utf8(dir.file("bad.db")))));
+        CHECK_FALSE(dbtest::fs::exists(dbtest::fs::path(worldgen::db::path_from_utf8(dir.file("bad.db.partial")))));
+        CHECK(dbtest::fs::is_empty(dir.path()));
     };
     for (const char* missing : {"water", "water_depth", "coast_dist"}) {
         set_island();
         auto& h = entry_fixture().hydrology_stage;
         h.erase(std::remove_if(h.begin(), h.end(), [&](const auto& kv) { return kv.first == missing; }), h.end());
-        expect_fatal(missing, false);
+        expect_fatal(missing, true);
     }
     {
         set_island();
         entry_fixture().elevation_stage.clear();
-        expect_fatal("no elevation", false);
+        expect_fatal("no elevation", true);
+    }
+    {
+        set_island();  // precondition 2: a water value of 4
+        auto& h = entry_fixture().hydrology_stage;
+        std::vector<std::uint8_t> w = *h[0].second.get_if<std::uint8_t>();
+        w[512 * 100 + 100] = 4;
+        h[0].second = worldgen::db::LayerGrid{512, 512, w};
+        expect_fatal("water 4", true);
+    }
+    {
+        set_island();  // precondition 3: S = 32768 on a land cell
+        auto& h = entry_fixture().hydrology_stage;
+        std::vector<std::int16_t> e = *entry_fixture().elevation_stage[0].get_if<std::int16_t>();
+        std::vector<std::uint16_t> d = *h[1].second.get_if<std::uint16_t>();
+        e[512 * 100 + 100] = 32767;
+        d[512 * 100 + 100] = 1;
+        entry_fixture().elevation_stage[0] = worldgen::db::LayerGrid{512, 512, e};
+        h[1].second = worldgen::db::LayerGrid{512, 512, d};
+        expect_fatal("S above 32767", true);
     }
     {
         set_island();  // water_depth as u8: not the catalogue type

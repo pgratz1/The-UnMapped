@@ -262,17 +262,27 @@ python3 -B worldgen/tests/reference/p1_climate_reference.py golden [PATH|-] [--l
 python3 -B worldgen/tests/reference/p1_climate_reference.py winds FIRST LAST
 ```
 
+The spec was revised on 2026-11-17 (triangle kernel in C4, diagonal taps
+across the wind in a raster sweep in C5, preconditions in order with S ≤
+32767, shipped `rain_oro_mm` 2500 and `moisture_path_mm_km` 32000); the
+reference and the golden file follow the revision.
+
 `check` reproduces every worked example of P1-03 5.1 (the wind draws, the
-temperature table, the box mean, both sweeps cell by cell with every q raw
-and p to three decimals, the rainfall table and the sweep's rainfall rows,
-the palette example of section 9), checks the sweep against a second method
-(memoized per-cell recursion, no line order) and the box mean against a
-direct window sum, the symmetry of 10.1 test 4 (orthogonal winds under
-mirrors and transposes, diagonal winds under mirrors; it prints, without
-failing, that a transposed diagonal sweep differs), the preconditions, and
-invariants 1 to 5 of section 6 on the 200 random fixtures of 10.2 and
-(without `--quick`) on the golden worlds up to N = 128. About 25 seconds
-with `--quick`, a minute with a warm elevation cache. `golden` writes
+temperature table, the one-box pass, the triangle with r = 2 and its edge
+clipping example, both sweeps cell by cell with every q raw and p to three
+decimals, the rainfall table and both sweeps' rainfall rows, the palette
+example of section 9). It checks the sweep against a second method
+(memoized per-cell recursion, no line order; the line or raster order is
+also asserted to read only computed taps) and both C4 passes against direct
+window sums; invariant 7 (all 24 pairs of the three generators and eight
+codes, and the triangle, on the 7 x 5 and other bordered grids, grids with
+random water, and 40 random fixtures; the hs bound on all 200); the C4
+overflow margin (S = 32767 with r = 250 on 260 x 255 and 300 x 1 grids,
+every partial sum checked against int64); the preconditions in order; and
+invariants 1 to 5 on the 200 random fixtures of 10.2 and (without `--quick`)
+on the golden worlds up to N = 128. About 40 seconds with `--quick`. The
+golden file also holds one case of fixture `overflow` (format in its
+header). `golden` writes
 `worldgen/tests/golden/p1-03-climate.txt` (format in its header), read by
 `stages_climate_golden_test.cpp` and `cli_climate_test.cpp`; `--large` adds
 the N = 512 and 1024 worlds of P1-03 10.4 (two minutes with a warm cache;

@@ -41,10 +41,12 @@ void check_world(const Inputs& in, const Overrides& o, std::uint64_t seed) {
     const std::uint8_t wind = climate_api::wind(seed, v.wind_weights);
     const std::vector<std::int64_t> s = surface(in);
     const std::vector<std::int64_t> hs =
-        climate_api::box_mean(in.grid, s, static_cast<std::int32_t>(v.smooth_radius_m / 16), THREADS);
-    const climate_api::Sweep sw = climate_api::sweep(in.grid, s, in.water, hs, wind, t);
+        climate_api::triangle_mean(in.grid, s, v.smooth_radius_m / 16, THREADS);
+    const climate_api::Sweep sw = climate_api::sweep(in.grid, in.water, hs, wind, t);
     const std::string bad = invariant_violation(in, l, hs, sw, wind, v);
     CHECK_MESSAGE(bad.empty(), bad);
+    const std::string bound = hs_bound_violation(in.grid, s, v.smooth_radius_m / 16, hs);
+    CHECK_MESSAGE(bound.empty(), bound);
     const Own own = own_climate(in, v, seed);
     CHECK(own.wind == wind);
     CHECK(hs == own.hs);
@@ -225,8 +227,8 @@ TEST_CASE("P1-03 6: invariants at the extremes of the tuning bounds") {
     // ocean only recharges: every q stays at ONE.
     const Overrides dry0 = {{"loss_max", "0"}, {"wind_weights", weights_text(one_hot(1))}};
     const std::vector<std::int64_t> s = surface(rf.in);
-    const std::vector<std::int64_t> hs = climate_api::box_mean(rf.in.grid, s, 20, THREADS);
-    const climate_api::Sweep sw = climate_api::sweep(rf.in.grid, s, rf.in.water, hs, 1, tuning(dry0));
+    const std::vector<std::int64_t> hs = climate_api::triangle_mean(rf.in.grid, s, 20, THREADS);
+    const climate_api::Sweep sw = climate_api::sweep(rf.in.grid, rf.in.water, hs, 1, tuning(dry0));
     CHECK(std::all_of(sw.q.begin(), sw.q.end(), [](std::int64_t q) { return q == ONE; }));
 }
 
@@ -249,7 +251,7 @@ TEST_CASE("P1-03 C5, 6 invariant 4: a ridge across the wind casts a rain shadow"
     for (const std::int64_t v : s) {
         hs.push_back(Fx::from_int(v).raw());
     }
-    const climate_api::Sweep sw = climate_api::sweep(g, s, water, hs, 0, t);
+    const climate_api::Sweep sw = climate_api::sweep(g, water, hs, 0, t);
     const std::size_t y = 4;
     auto at = [&](std::int32_t x) { return g.index(x, static_cast<std::int32_t>(y)); };
     // Windward slope wetter than the lowland before it; the lee drier than both.
@@ -283,8 +285,10 @@ TEST_CASE("P1-03 10.2 (slow): invariants, N = 128 seeds 0 to 63 with both fixtur
 TEST_CASE("P1-03 9 (slow): statistics at N = 512 seeds 0 to 9 and N = 1024 seeds 0 to 3; hard bounds asserted, the rest reported") {
     // Hard (P1-03 9, P1-00 13.1 second pass): temperature_c p50 within the
     // catalogue range and rainfall_mm p50 >= rain_min_mm, both by
-    // construction. Typical ranges (3.0 to 9.0 C, 600 to 1200 mm,
-    // rain_contrast 1.5 to 10) are provisional: printed, not asserted.
+    // construction. Typical ranges (revised 2026-11-17: temperature_c p50
+    // 4.5 to 7.0 C; rainfall_mm p50 750 to 1100 / 690 to 940 / 620 to 780 mm
+    // at 512 / 1024 / 2048; rain_contrast 1.6 to 4.5) are provisional:
+    // printed, not asserted.
     struct Row {
         std::int32_t n;
         std::uint64_t seed;
@@ -306,8 +310,8 @@ TEST_CASE("P1-03 9 (slow): statistics at N = 512 seeds 0 to 9 and N = 1024 seeds
             rows.push_back(Row{n, seed, report_values(in.elevation, l)});
         }
     }
-    std::string text = "P1-03 9 statistics (provisional typical: temperature_c p50 3.0-9.0, rainfall_mm p50 600-1200, "
-                       "rain_contrast 1.5-10):\n";
+    std::string text = "P1-03 9 statistics (provisional typical: temperature_c p50 4.5-7.0, rainfall_mm p50 "
+                       "750-1100 at 512 and 690-940 at 1024, rain_contrast 1.6-4.5):\n";
     for (const Row& r : rows) {
         text += "  N " + std::to_string(r.n) + " seed " + std::to_string(r.seed) + ":";
         for (const auto& [k, v] : r.report) {

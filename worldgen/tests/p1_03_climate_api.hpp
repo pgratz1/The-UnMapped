@@ -7,35 +7,24 @@
 // return plain integer arrays (Fx values as raw int64). Integration adapts
 // this file only.
 //
-// Seams (P1-03 10, "interim names; the engineer may add helpers but should
-// not change these without a spec note"). The spec gives names and some
-// arguments; the signatures below are the test writer's assumption, as
-// declared in an assumed worldgen/stages/climate.hpp, namespace
-// worldgen::stages:
+// Seams (P1-03 section 10, revised 2026-11-17, "as implemented in
+// worldgen/include/worldgen/stages/climate.hpp", namespace worldgen::stages):
 //
-//   tuning        ClimateTuning, climate_tuning_from(const data::ContentSet&)
-//                     (as elevation_tuning_from and hydrology_tuning_from)
-//   C2            climate_wind(std::uint64_t seed, std::span<const std::int64_t> weights) -> std::uint8_t
-//                     (the eight wind_weights as loaded; k_w)
-//   C3            climate_temperature_cell(std::int32_t y, std::int32_t height, std::int64_t s_dm,
-//                     Fx noise, const ClimateTuning&) -> std::int16_t
-//                     (noise: the fbm_m value at the cell, before temp_noise_amp_c;
-//                     V = from_ratio(2y + 1, 2 height))
-//   C4            climate_box_mean(geo::Grid, std::span<const std::int64_t> s, std::int32_t r,
-//                     std::uint32_t threads) -> std::vector<Fx>
-//   C5            climate_sweep(geo::Grid, std::span<const std::int64_t> s, std::span<const std::uint8_t> water,
-//                     std::span<const Fx> hs, std::uint8_t wind, const ClimateTuning&) -> ClimateSweep {q, p}
-//                     (q and p as std::vector<Fx>, one per cell)
-//   C6            climate_rainfall_cell(Fx p, std::int16_t coast_dist, Fx rn, const ClimateTuning&)
-//                     -> std::uint16_t
-//   stage         climate_layers(geo::Grid, std::span<const std::int16_t> elevation,
-//                     std::span<const std::uint8_t> water, std::span<const std::uint16_t> water_depth,
-//                     std::span<const std::int16_t> coast_dist, const ClimateTuning&, std::uint64_t seed,
-//                     std::uint32_t threads) -> ClimateLayers {temperature (i16), rainfall (u16)}
-//                 A precondition violation throws worldgen::FatalError whose message starts
-//                 "climate: input precondition: " (P1-03 section 2).
-//   entry         the stage "climate" of stages::implemented_geography_stages() and
-//                 worldgen::generate_world with WorldParams::until = "climate" (P1-00 10.1)
+//   climate_tuning_from(const data::ContentSet&)
+//   climate_surface(Grid, elevation, water, water_depth) -> std::vector<std::int64_t>   (C1)
+//   climate_wind(seed, std::span<const std::int64_t> weights) -> geo::Direction        (C2)
+//   climate_temperature_cell(std::int64_t y, std::int64_t height, std::int64_t s_dm, Fx noise, tuning)
+//   climate_temperature(seed, Grid, surface, tuning, threads) -> std::vector<std::int16_t>   (C3)
+//   climate_box_mean(Grid, surface, std::int64_t r_cells, threads) -> std::vector<Fx>   (one box pass)
+//   climate_triangle_mean(Grid, surface, std::int64_t r_cells, threads) -> std::vector<Fx>   (C4)
+//   climate_sweep(Grid, water, std::span<const Fx> hs, geo::Direction wind, tuning) -> ClimateSweep {q, p}
+//   climate_rainfall_cell(Fx p, std::int64_t coast_dist, Fx rn, tuning) -> std::uint16_t
+//   climate_rainfall(seed, Grid, std::span<const Fx> p, coast_dist, tuning, threads)   (C6)
+//   climate_layers(Grid, elevation, water, water_depth, coast_dist, tuning, seed, threads)
+//   run_climate(StageContext&)    (reached through stages::implemented_geography_stages())
+//
+// A precondition violation throws worldgen::FatalError whose message starts
+// "climate: input precondition: " (P1-03 section 2).
 
 #include <cstdint>
 #include <optional>
@@ -105,52 +94,80 @@ inline Tuning tuning_from(const worldgen::data::ContentSet& content) {
     return worldgen::stages::climate_tuning_from(content);
 }
 
+namespace detail {
+inline std::vector<std::int64_t> raws(const std::vector<Fx>& v) {
+    std::vector<std::int64_t> out;
+    out.reserve(v.size());
+    for (const Fx x : v) {
+        out.push_back(x.raw());
+    }
+    return out;
+}
+inline std::vector<Fx> fxs(std::span<const std::int64_t> v) {
+    std::vector<Fx> out;
+    out.reserve(v.size());
+    for (const std::int64_t x : v) {
+        out.push_back(Fx::from_raw(x));
+    }
+    return out;
+}
+}  // namespace detail
+
+// C1 (seam climate_surface): S, or fatal on a violated precondition.
+inline std::vector<std::int64_t> surface(Grid g, std::span<const std::int16_t> elevation,
+                                         std::span<const std::uint8_t> water,
+                                         std::span<const std::uint16_t> water_depth) {
+    return worldgen::stages::climate_surface(g, elevation, water, water_depth);
+}
+
 // C2 (seam climate_wind).
 inline std::uint8_t wind(std::uint64_t seed, std::span<const std::int64_t> weights) {
     return worldgen::stages::climate_wind(seed, weights);
 }
 
-// C3 for one cell (seam climate_temperature_cell): row y of a map of the
-// given height, surface s_dm, noise = the raw fbm_m value at the cell.
-inline std::int16_t temperature_cell(std::int32_t y, std::int32_t height, std::int64_t s_dm, std::int64_t noise_raw,
+// C3 for one cell (seam climate_temperature_cell).
+inline std::int16_t temperature_cell(std::int64_t y, std::int64_t height, std::int64_t s_dm, std::int64_t noise_raw,
                                      const Tuning& t) {
     return worldgen::stages::climate_temperature_cell(y, height, s_dm, Fx::from_raw(noise_raw), t);
 }
 
-// C4 (seam climate_box_mean): hs per cell, raw.
-inline std::vector<std::int64_t> box_mean(Grid g, std::span<const std::int64_t> s, std::int32_t r,
+// C3 for a grid (seam climate_temperature).
+inline std::vector<std::int16_t> temperature(std::uint64_t seed, Grid g, std::span<const std::int64_t> s,
+                                             const Tuning& t, std::uint32_t threads) {
+    return worldgen::stages::climate_temperature(seed, g, s, t, threads);
+}
+
+// One box pass of half-width r_cells (seam climate_box_mean): hs1, raw.
+inline std::vector<std::int64_t> box_mean(Grid g, std::span<const std::int64_t> s, std::int64_t r_cells,
                                           std::uint32_t threads) {
-    const std::vector<Fx> hs = worldgen::stages::climate_box_mean(g, s, r, threads);
-    std::vector<std::int64_t> out;
-    out.reserve(hs.size());
-    for (const Fx v : hs) {
-        out.push_back(v.raw());
-    }
-    return out;
+    return detail::raws(worldgen::stages::climate_box_mean(g, s, r_cells, threads));
+}
+
+// C4 (seam climate_triangle_mean): hs, raw.
+inline std::vector<std::int64_t> triangle_mean(Grid g, std::span<const std::int64_t> s, std::int64_t r_cells,
+                                               std::uint32_t threads) {
+    return detail::raws(worldgen::stages::climate_triangle_mean(g, s, r_cells, threads));
 }
 
 // C5 (seam climate_sweep): q and p per cell, raw.
-inline Sweep sweep(Grid g, std::span<const std::int64_t> s, std::span<const std::uint8_t> water,
-                   std::span<const std::int64_t> hs_raw, std::uint8_t wind_code, const Tuning& t) {
-    std::vector<Fx> hs;
-    hs.reserve(hs_raw.size());
-    for (const std::int64_t v : hs_raw) {
-        hs.push_back(Fx::from_raw(v));
-    }
-    const worldgen::stages::ClimateSweep r = worldgen::stages::climate_sweep(g, s, water, hs, wind_code, t);
-    Sweep out;
-    for (const Fx v : r.q) {
-        out.q.push_back(v.raw());
-    }
-    for (const Fx v : r.p) {
-        out.p.push_back(v.raw());
-    }
-    return out;
+inline Sweep sweep(Grid g, std::span<const std::uint8_t> water, std::span<const std::int64_t> hs_raw,
+                   std::uint8_t wind_code, const Tuning& t) {
+    const std::vector<Fx> hs = detail::fxs(hs_raw);
+    const worldgen::stages::ClimateSweep r = worldgen::stages::climate_sweep(g, water, hs, wind_code, t);
+    return Sweep{detail::raws(r.q), detail::raws(r.p)};
 }
 
 // C6 for one cell (seam climate_rainfall_cell).
-inline std::uint16_t rainfall_cell(std::int64_t p_raw, std::int16_t coast_dist, std::int64_t rn_raw, const Tuning& t) {
+inline std::uint16_t rainfall_cell(std::int64_t p_raw, std::int64_t coast_dist, std::int64_t rn_raw, const Tuning& t) {
     return worldgen::stages::climate_rainfall_cell(Fx::from_raw(p_raw), coast_dist, Fx::from_raw(rn_raw), t);
+}
+
+// C6 for a grid (seam climate_rainfall).
+inline std::vector<std::uint16_t> rainfall(std::uint64_t seed, Grid g, std::span<const std::int64_t> p_raw,
+                                           std::span<const std::int16_t> coast_dist, const Tuning& t,
+                                           std::uint32_t threads) {
+    const std::vector<Fx> p = detail::fxs(p_raw);
+    return worldgen::stages::climate_rainfall(seed, g, p, coast_dist, t, threads);
 }
 
 // The whole stage on any W x H grid (seam climate_layers).

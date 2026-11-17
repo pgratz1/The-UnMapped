@@ -108,7 +108,8 @@ TEST_CASE("P1-03 4: the shipped file loads, every field in declaration order") {
     CHECK(def->record.get_fx("loss_max").raw() == std::int64_t{1} << 30);
     CHECK(def->record.get_fx("rain_noise_amp").raw() == 1717986918);
     CHECK(def->record.get_int("smooth_radius_m") == 320);
-    CHECK(def->record.get_int("moisture_path_mm_km") == 16000);
+    CHECK(def->record.get_int("moisture_path_mm_km") == 32000);
+    CHECK(def->record.get_int("rain_oro_mm") == 2500);
     CHECK(def->record.get_record("temp_noise").get_int("wavelength_m") == 6000);
     CHECK(def->record.get_record("rain_noise").get_int("wavelength_m") == 5000);
     static_cast<void>(climate_api::tuning_from(*l.content));

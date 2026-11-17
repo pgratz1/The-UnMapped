@@ -86,8 +86,8 @@ inline const std::vector<FieldText>& shipped_fields() {
         {"wind_weights", "[1, 1, 1, 1, 1, 1, 1, 1]"},
         {"smooth_radius_m", "320"},
         {"rain_base_mm", "800"},
-        {"rain_oro_mm", "5000"},
-        {"moisture_path_mm_km", "16000"},
+        {"rain_oro_mm", "2500"},
+        {"moisture_path_mm_km", "32000"},
         {"loss_max", "\"0.25\""},
         {"ocean_recharge_m", "500"},
         {"coast_rain_mm", "150"},
@@ -110,8 +110,8 @@ inline constexpr std::string_view SHIPPED_TOML =
     "wind_weights = [1, 1, 1, 1, 1, 1, 1, 1]\n"
     "smooth_radius_m = 320\n"
     "rain_base_mm = 800\n"
-    "rain_oro_mm = 5000\n"
-    "moisture_path_mm_km = 16000\n"
+    "rain_oro_mm = 2500\n"
+    "moisture_path_mm_km = 32000\n"
     "loss_max = \"0.25\"\n"
     "ocean_recharge_m = 500\n"
     "coast_rain_mm = 150\n"
@@ -335,7 +335,9 @@ inline std::vector<std::int64_t> noise_grid(std::uint64_t seed, std::string_view
     return out;
 }
 
-// C4 by a 2-D prefix sum (a second method to the spec's separable passes).
+// One box pass of half-width r on integers S (seam climate_box_mean, pass 1
+// of C4), by a 2-D prefix sum (a second method to the spec's separable
+// passes): hs1 = from_ratio(sum, c_w).
 inline std::vector<std::int64_t> own_box_mean(Grid g, std::span<const std::int64_t> s, std::int64_t r) {
     const std::size_t w = static_cast<std::size_t>(g.width), h = static_cast<std::size_t>(g.height);
     std::vector<std::int64_t> P((w + 1) * (h + 1), 0);
@@ -360,11 +362,49 @@ inline std::vector<std::int64_t> own_box_mean(Grid g, std::span<const std::int64
     return out;
 }
 
-// The three upwind taps of cell (x, y) for wind code k (C5), a, b, c.
+// C4, the triangle kernel: h = r div 2; pass 1 own_box_mean(S, h); pass 2
+// on the raw values of hs1, hs = div_int(from_raw(sum2), c_w). Pass 2 sums
+// each window directly, a column of row sums at a time, so every partial sum
+// is part of one window and stays under the bound of section 7 (a
+// whole-grid prefix sum of raw values could overflow int64).
+inline std::vector<std::int64_t> own_triangle_mean(Grid g, std::span<const std::int64_t> s, std::int64_t r) {
+    const std::int64_t h = r / 2;
+    const std::vector<std::int64_t> hs1 = own_box_mean(g, s, h);
+    const std::int64_t W = g.width, H = g.height;
+    std::vector<std::int64_t> rowsum(hs1.size());
+    for (std::int64_t y = 0; y < H; ++y) {
+        for (std::int64_t x = 0; x < W; ++x) {
+            std::int64_t sum = 0;
+            for (std::int64_t xx = std::max<std::int64_t>(0, x - h); xx <= std::min<std::int64_t>(W - 1, x + h); ++xx) {
+                sum += hs1[static_cast<std::size_t>(y * W + xx)];
+            }
+            rowsum[static_cast<std::size_t>(y * W + x)] = sum;
+        }
+    }
+    std::vector<std::int64_t> out(hs1.size());
+    for (std::int64_t y = 0; y < H; ++y) {
+        const std::int64_t y0 = std::max<std::int64_t>(0, y - h), y1 = std::min<std::int64_t>(H - 1, y + h);
+        for (std::int64_t x = 0; x < W; ++x) {
+            const std::int64_t x0 = std::max<std::int64_t>(0, x - h), x1 = std::min<std::int64_t>(W - 1, x + h);
+            std::int64_t sum = 0;
+            for (std::int64_t yy = y0; yy <= y1; ++yy) {
+                sum += rowsum[static_cast<std::size_t>(yy * W + x)];
+            }
+            out[static_cast<std::size_t>(y * W + x)] =
+                worldgen::div_int(Fx::from_raw(sum), (x1 - x0 + 1) * (y1 - y0 + 1)).raw();
+        }
+    }
+    return out;
+}
+
+// The taps a, b (weight 2), c of cell (x, y) for wind code k (C5).
 inline std::array<std::pair<std::int32_t, std::int32_t>, 3> taps(std::uint8_t k, std::int32_t x, std::int32_t y) {
     const std::int32_t dx = DX[k], dy = DY[k];
+    if (dx != 0 && dy != 0) {
+        return {{{x - dx, y}, {x - dx, y - dy}, {x, y - dy}}};
+    }
     if (dx != 0) {
-        return {{{x - dx, y - dy - 1}, {x - dx, y - dy}, {x - dx, y - dy + 1}}};
+        return {{{x - dx, y - 1}, {x - dx, y}, {x - dx, y + 1}}};
     }
     return {{{x - 1, y - dy}, {x, y - dy}, {x + 1, y - dy}}};
 }
@@ -433,35 +473,52 @@ struct OwnSweep {
     std::vector<std::int64_t> q, p, q_up, hs_up, rise;
 };
 
-// C5 over explicit lines (columns when dx != 0, rows otherwise), in the
-// stated order; each line from the previous line only.
+// C5 in the stated order: orthogonal winds by lines (columns when dx != 0,
+// rows otherwise), each line read from the previous line only; diagonal
+// winds in raster order (rows in the order of dy, cells in the order of
+// dx), in place. A tap is read only after it is computed (checked).
 inline OwnSweep own_sweep(Grid g, std::span<const std::int64_t> hs, std::span<const std::uint8_t> water,
                           std::uint8_t k, const Values& v) {
     const SweepConsts c = sweep_consts(k, v);
     OwnSweep out;
     const std::size_t n = g.cells();
-    out.q.assign(n, 0);
+    out.q.assign(n, -1);  // -1: not computed yet
     out.p.assign(n, 0);
     out.q_up.assign(n, 0);
     out.hs_up.assign(n, 0);
     out.rise.assign(n, 0);
     const std::int32_t dx = DX[k], dy = DY[k];
+    auto visit = [&](std::int32_t x, std::int32_t y) {
+        for (const auto& [xx, yy] : taps(k, x, y)) {
+            if (xx >= 0 && yy >= 0 && xx < g.width && yy < g.height && out.q[g.index(xx, yy)] < 0) {
+                FAIL("C5 order: a tap is read before it is computed");
+            }
+        }
+        const auto [q_up, hs_up] = upwind(g, k, x, y, out.q, hs);
+        const std::size_t i = g.index(x, y);
+        const CellStep st = own_cell(water[i] == WATER_OCEAN, hs[i], q_up, hs_up, c, v);
+        out.q[i] = st.q;
+        out.p[i] = st.p;
+        out.q_up[i] = q_up;
+        out.hs_up[i] = hs_up;
+        out.rise[i] = st.rise;
+    };
+    if (diagonal(k)) {
+        for (std::int32_t yi = 0; yi < g.height; ++yi) {
+            const std::int32_t y = dy == 1 ? yi : g.height - 1 - yi;
+            for (std::int32_t xi = 0; xi < g.width; ++xi) {
+                visit(dx == 1 ? xi : g.width - 1 - xi, y);
+            }
+        }
+        return out;
+    }
     const bool columns = dx != 0;
     const std::int32_t lines = columns ? g.width : g.height;
     const std::int32_t len = columns ? g.height : g.width;
     for (std::int32_t li = 0; li < lines; ++li) {
         const std::int32_t line = columns ? (dx == 1 ? li : g.width - 1 - li) : (dy == 1 ? li : g.height - 1 - li);
         for (std::int32_t j = 0; j < len; ++j) {
-            const std::int32_t x = columns ? line : j;
-            const std::int32_t y = columns ? j : line;
-            const auto [q_up, hs_up] = upwind(g, k, x, y, out.q, hs);
-            const std::size_t i = g.index(x, y);
-            const CellStep s = own_cell(water[i] == WATER_OCEAN, hs[i], q_up, hs_up, c, v);
-            out.q[i] = s.q;
-            out.p[i] = s.p;
-            out.q_up[i] = q_up;
-            out.hs_up[i] = hs_up;
-            out.rise[i] = s.rise;
+            visit(columns ? line : j, columns ? j : line);
         }
     }
     return out;
@@ -622,7 +679,7 @@ inline Own own_climate(const Inputs& in, const Values& v, std::uint64_t seed) {
         }
     }
     o.r = v.smooth_radius_m / 16;
-    o.hs = own_box_mean(g, o.S, o.r);
+    o.hs = own_triangle_mean(g, o.S, o.r);
     o.sweep = own_sweep(g, o.hs, in.water, o.wind, v);
     o.rnoise = noise_grid(seed, STREAM_RAIN, g, v.rain_noise);
     o.rainfall.resize(g.cells());
@@ -744,6 +801,31 @@ inline std::string invariant_violation(const Inputs& in, const climate_api::Laye
             if (hs[i] <= hs_up && sw.p[i] != worldgen::mul(R(q_up), base).raw()) {
                 err << "inv 4: lee cell (" << x << ", " << y << ") p " << sw.p[i] << " != mul(q_up, base)";
                 return err.str();
+            }
+        }
+    }
+    return {};
+}
+
+// Invariant 7, second part: each hs lies between the smallest and the
+// largest S of the cells within (Chebyshev) distance 2h, h = r div 2.
+inline std::string hs_bound_violation(Grid g, std::span<const std::int64_t> s, std::int64_t r,
+                                      std::span<const std::int64_t> hs) {
+    const std::int64_t d = 2 * (r / 2);
+    for (std::int32_t y = 0; y < g.height; ++y) {
+        for (std::int32_t x = 0; x < g.width; ++x) {
+            std::int64_t lo = s[g.index(x, y)], hi = lo;
+            for (std::int64_t yy = std::max<std::int64_t>(0, y - d); yy <= std::min<std::int64_t>(g.height - 1, y + d); ++yy) {
+                for (std::int64_t xx = std::max<std::int64_t>(0, x - d); xx <= std::min<std::int64_t>(g.width - 1, x + d); ++xx) {
+                    const std::int64_t v = s[static_cast<std::size_t>(yy * g.width + xx)];
+                    lo = std::min(lo, v);
+                    hi = std::max(hi, v);
+                }
+            }
+            const std::int64_t v = hs[g.index(x, y)];
+            if (v < Fx::from_int(lo).raw() || v > Fx::from_int(hi).raw()) {
+                return "inv 7: hs at (" + std::to_string(x) + ", " + std::to_string(y) + ") outside [" +
+                       std::to_string(lo) + ", " + std::to_string(hi) + "]";
             }
         }
     }
