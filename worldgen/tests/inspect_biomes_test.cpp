@@ -232,3 +232,14 @@ TEST_CASE("P1-04 9: the biome layer must be u8, of the elevation's size, and eve
         CHECK(text.find("biome_patches") == std::string::npos);
     }
 }
+
+TEST_CASE("P1-04 9 (lead's ruling 2026-11-17): biome_share with no water = 0 rows prints n/a") {
+    dbtest::TempDir dir("biomes-report-na");
+    std::vector<std::uint8_t> v(36, 1);
+    v[14] = 2;
+    const worldgen::db::LayerGrid g = p004::grid_of(6, 6, v);
+    const std::string sql = "INSERT INTO biome VALUES (1, 'ocean', 'Ocean', 1587320, 1);"
+                            "INSERT INTO biome VALUES (2, 'lake', 'Lake', 4227276, 1);";
+    const std::string text = report_of(world(dir, "na.db", sql, true, &g));
+    CHECK(ends_with(text, "\nbiome_share = n/a\nbiome_patches = 0\n"));
+}

@@ -435,6 +435,17 @@ TEST_CASE("cli P1-04 9, P1-00 10.2: render --composite biomes: biome colour shad
         bio[i] = palette(b[i], rows);
     }
     check_pixels(decode_png(co), composite(512, 512, e, bio, water, river, fd));
+    // An empty table: every land cell magenta, shaded (lead's ruling: only a
+    // missing layer is refused).
+    const fs::path empty = w.sb.file("empty-table.db");
+    fs::copy_file(w.full, empty);
+    REQUIRE(worldgen::db::testing::execute_on_file(u8(empty), "DELETE FROM biome").ok());
+    const fs::path eo = w.sb.file("empty-table.png");
+    REQUIRE(w.sb.cli({"render", "--db", u8(empty), "--composite", "biomes", "--out", u8(eo)}).exit_code == EXIT_OK);
+    for (std::size_t i = 0; i < e.size(); ++i) {
+        bio[i] = Rgb{255, 0, 255};
+    }
+    check_pixels(decode_png(eo), composite(512, 512, e, bio, water, river, fd));
 }
 
 TEST_CASE("cli P1-04 9, 10.1 test 11: --composite biomes without biome, without elevation, with biome i16: exit 3, no file") {
