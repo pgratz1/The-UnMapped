@@ -449,17 +449,21 @@ TEST_CASE("fixed-id kinds: loading from disk") {
 
 TEST_CASE("fixed-id kinds: the production registry holds worldgen with the implemented stages' ids") {
     // P1-00 6.1: `worldgen`, directory `worldgen`, required, fixed ids
-    // `elevation` (P1-01 4.2), `hydrology` (P1-02 4) and `climate` (P1-03
-    // 4), kept in ascending id order.
+    // `elevation` (P1-01 4.2), `hydrology` (P1-02 4), `climate` (P1-03 4)
+    // and `biomes` (P1-04 4.2), kept in ascending id order. Since P1-04 the
+    // registry also holds the open kind `biome` (P1-00 6.6), which sorts
+    // first.
     const wd::KindRegistry builtin = wd::builtin_kinds();
-    REQUIRE(builtin.kinds().size() == 1U);
-    const wd::Kind& k = builtin.kinds()[0];
+    REQUIRE(builtin.kinds().size() == 2U);
+    CHECK(builtin.kinds()[0].name == "biome");
+    const wd::Kind& k = builtin.kinds()[1];
     CHECK(k.name == "worldgen");
     CHECK(k.directory == "worldgen");
     CHECK(k.required);
     REQUIRE(k.has_fixed_ids());
-    REQUIRE(k.id_schemas.size() == 3U);
-    CHECK(k.id_schemas[0].id == "climate");
-    CHECK(k.id_schemas[1].id == "elevation");
-    CHECK(k.id_schemas[2].id == "hydrology");
+    REQUIRE(k.id_schemas.size() == 4U);
+    CHECK(k.id_schemas[0].id == "biomes");
+    CHECK(k.id_schemas[1].id == "climate");
+    CHECK(k.id_schemas[2].id == "elevation");
+    CHECK(k.id_schemas[3].id == "hydrology");
 }

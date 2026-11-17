@@ -81,6 +81,7 @@ inline TuningLoad load_tuning_text(std::string_view elevation_toml, std::string_
     }
     wd::MemoryDataRoot root;
     root.directories.push_back(dir);
+    elev_api::add_biome_fixtures(root);
     wd::LoadResult<wd::ContentSet> r = wd::load_content_from_memory(registry, root);
     TuningLoad out;
     out.errors = r.errors;

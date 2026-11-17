@@ -39,6 +39,9 @@ fs::path write_data_root(const Sandbox& sb) {
                "[worldgen.hydrology]\nriver_min_area_m2 = 125000\nflat_noise = { wavelength_m = 400, octaves = 1, gain = "
                "\"0.5\" }\n");
     write_text(root / "worldgen" / "climate.toml", std::string(elev_api::CLIMATE_TOML));  // P1-03 4
+    write_text(root / "worldgen" / "biomes.toml", std::string(elev_api::BIOMES_TOML));  // P1-04 4.2
+    fs::create_directories(root / "biomes");
+    write_text(root / "biomes" / "biomes.toml", std::string(elev_api::BIOME_DEFINITIONS_TOML));  // P1-04 4.1
     return root;
 }
 
@@ -86,7 +89,7 @@ TEST_CASE("cli P1-01 9.1, P1-00 10.3: a world with a pass (512, seed 42): rows, 
     auto opened = worldgen::db::WorldReader::open(u8(world));
     REQUIRE(opened.ok());
     const worldgen::db::WorldReader& w = opened.value();
-    CHECK(w.schema_version() == 2);
+    CHECK(w.schema_version() == 3);
     CHECK(w.table_columns("pass").value() == std::vector<std::string>{"id", "range_id", "kind", "capped", "col_x",
                                                                        "col_y", "saddle_dm", "col_dm", "path"});
     const auto raw = w.table_rows("pass");
@@ -160,22 +163,24 @@ TEST_CASE("cli P1-01 9.1, P1-00 10.3: a world with a pass (512, seed 42): rows, 
     const ProcessResult h = sb.cli({"hash", "--db", u8(world), "--detail"});
     REQUIRE(h.exit_code == EXIT_OK);
     const std::vector<std::string> hl = lines_of(h.out);
-    REQUIRE(hl.size() == 6U);
-    CHECK(starts_with(hl[2], "table layer "));
-    CHECK(starts_with(hl[3], "table meta "));
-    CHECK(hl[4] == "table pass " + worldgen::to_hex(p004::pass_table_hash(trows)));
-    CHECK(hl[5] == "layer elevation " + gold.at("layer"));
-    CHECK(hl[5] == "layer elevation 590569e0db4d6bc84fd8e955ef77ab49bec2c82b5d383fd75d212800e31a3b91");  // 10.4.1
+    REQUIRE(hl.size() == 8U);
+    CHECK(starts_with(hl[2], "table biome "));
+    CHECK(starts_with(hl[3], "table climate "));
+    CHECK(starts_with(hl[4], "table layer "));
+    CHECK(starts_with(hl[5], "table meta "));
+    CHECK(hl[6] == "table pass " + worldgen::to_hex(p004::pass_table_hash(trows)));
+    CHECK(hl[7] == "layer elevation " + gold.at("layer"));
+    CHECK(hl[7] == "layer elevation 590569e0db4d6bc84fd8e955ef77ab49bec2c82b5d383fd75d212800e31a3b91");  // 10.4.1
 
     // report: schema 2, the table, and the five pass keys right after
     // edge_parallel_run_m, equal to the test's own measure.
     const ProcessResult rep = sb.cli({"report", "--db", u8(world)});
     INFO("stderr: ", rep.err);
     REQUIRE(rep.exit_code == EXIT_OK);
-    CHECK(contains(rep.out, "\nschema_version = 2\n"));
+    CHECK(contains(rep.out, "\nschema_version = 3\n"));
     CHECK(contains(rep.out, "\ngenerator_version = " + std::string(worldgen::GENERATOR_VERSION) + "\n"));
-    CHECK(std::string(worldgen::GENERATOR_VERSION) == "0.7.0");
-    CHECK(contains(rep.out, "\n[tables]\nlayer = 1\nmeta = 8\npass = " + std::to_string(rows.size()) + "\n[layers]\n"));
+    CHECK(std::string(worldgen::GENERATOR_VERSION) == "0.8.0");
+    CHECK(contains(rep.out, "\n[tables]\nbiome = 0\nclimate = 0\nlayer = 1\nmeta = 8\npass = " + std::to_string(rows.size()) + "\n[layers]\n"));
     const std::vector<std::string> want =
         elev_test::report_pass_lines(worldgen::geo::Grid{512, 512}, *e, rows);
     std::string block;

@@ -34,6 +34,7 @@
 #include <utility>
 #include <vector>
 
+#include "p1_01_elevation_api.hpp"
 #include "worldgen/core/fx.hpp"
 #include "worldgen/data/content.hpp"
 #include "worldgen/data/load_error.hpp"
@@ -81,6 +82,7 @@ inline TuningLoad load_tuning_text(std::string_view elevation_toml, std::string_
     dir.entries.push_back(wd::MemoryEntry{"climate.toml", std::string(climate_toml), false});
     wd::MemoryDataRoot root;
     root.directories.push_back(dir);
+    elev_api::add_biome_fixtures(root);
     wd::LoadResult<wd::ContentSet> r = wd::load_content_from_memory(registry, root);
     TuningLoad out;
     out.errors = r.errors;

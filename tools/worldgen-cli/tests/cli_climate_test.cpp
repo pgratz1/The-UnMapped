@@ -25,6 +25,7 @@
 #include <vector>
 
 #include "cli_test_support.hpp"
+#include "p1_01_elevation_api.hpp"
 #include "p1_01_elevation_support.hpp"
 #include "worldgen/db/reader.hpp"
 
@@ -62,6 +63,9 @@ fs::path write_data_root(const Sandbox& sb, std::string_view climate = CLIMATE_T
     write_text(root / "worldgen" / "elevation.toml", elev_test::elevation_toml());
     write_text(root / "worldgen" / "hydrology.toml", HYDROLOGY_TOML);
     write_text(root / "worldgen" / "climate.toml", climate);
+    write_text(root / "worldgen" / "biomes.toml", std::string(elev_api::BIOMES_TOML));  // P1-04 4.2
+    fs::create_directories(root / "biomes");
+    write_text(root / "biomes" / "biomes.toml", std::string(elev_api::BIOME_DEFINITIONS_TOML));  // P1-04 4.1
     return root;
 }
 
@@ -107,7 +111,10 @@ std::vector<std::string> table_lines(const Sandbox& sb, const fs::path& db) {
     REQUIRE(h.exit_code == EXIT_OK);
     std::vector<std::string> out;
     for (const std::string& line : lines_of(h.out)) {
-        if (starts_with(line, "table ") && !starts_with(line, "table meta ") && !starts_with(line, "table layer ")) {
+        // Table climate is written by the climate stage itself (schema 3),
+        // so it is not among the tables an earlier stage left unchanged.
+        if (starts_with(line, "table ") && !starts_with(line, "table meta ") && !starts_with(line, "table layer ") &&
+            !starts_with(line, "table climate ")) {
             out.push_back(line);
         }
     }
@@ -285,7 +292,7 @@ TEST_CASE("cli P1-00 X1, P1-03 3 and 9: generate --until climate at 512; hash, r
 TEST_CASE("cli P1-00 10.1: --until climate is accepted; the next stage is not implemented yet; tuning errors are input errors") {
     Sandbox sb;
     const fs::path data = write_data_root(sb);
-    const ProcessResult b = sb.cli({"generate", "--seed", "0", "--map-size", "512", "--until", "biomes", "--data",
+    const ProcessResult b = sb.cli({"generate", "--seed", "0", "--map-size", "512", "--until", "resources", "--data",
                                     u8(data), "--out", u8(sb.file("b.db"))});
     CHECK(b.exit_code == EXIT_USAGE);
     CHECK_FALSE(file_exists(sb.file("b.db")));

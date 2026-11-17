@@ -56,6 +56,186 @@ inline constexpr std::string_view CLIMATE_TOML =
     "rain_noise_amp = \"0.4\"\n"
     "rain_min_mm = 250\n";
 
+// The worldgen.biomes fixture (P1-04 4.2, the shipped values; required once
+// the `worldgen` kind's id set includes `biomes`).
+inline constexpr std::string_view BIOMES_TOML =
+    "[worldgen.biomes]\n"
+    "jitter_noise = { wavelength_m = 500, octaves = 4, gain = \"0.5\" }\n"
+    "temp_jitter_c = 1\n"
+    "rain_jitter = \"0.2\"\n"
+    "rain_scale_512 = \"1.125\"\n"
+    "rain_scale_1024 = 1\n"
+    "rain_scale_2048 = \"0.875\"\n"
+    "drain_river_class_min = 3\n";
+
+// The biome definitions of P1-04 4.1 as one file (file names carry no
+// meaning, P0-03 7.4; required once the kind `biome` is registered).
+inline constexpr std::string_view BIOME_DEFINITIONS_TOML =
+    "[biome.ocean]\n"
+    "code = 1\n"
+    "name = \"Ocean\"\n"
+    "colour = 0x183878\n"
+    "water = true\n"
+    "water_body = \"ocean\"\n"
+    "priority = 0\n"
+    "fallback = false\n"
+    "rules = []\n"
+    "fertility = 0\n"
+    "timber = 0\n"
+    "region_noun = \"Sea\"\n"
+    "\n"
+    "[biome.lake]\n"
+    "code = 2\n"
+    "name = \"Lake\"\n"
+    "colour = 0x4080CC\n"
+    "water = true\n"
+    "water_body = \"lake\"\n"
+    "priority = 0\n"
+    "fallback = false\n"
+    "rules = []\n"
+    "fertility = 0\n"
+    "timber = 0\n"
+    "region_noun = \"Mere\"\n"
+    "\n"
+    "[biome.temperate_forest]\n"
+    "code = 3\n"
+    "name = \"Temperate forest\"\n"
+    "colour = 0x2E6034\n"
+    "water = false\n"
+    "water_body = \"none\"\n"
+    "priority = 20\n"
+    "fallback = false\n"
+    "fertility = \"0.7\"\n"
+    "timber = 1\n"
+    "region_noun = \"Wood\"\n"
+    "\n"
+    "[[biome.temperate_forest.rules]]\n"
+    "temp_min_c = -60\n"
+    "temp_max_c = 50\n"
+    "rain_min_mm = 720\n"
+    "rain_max_mm = 10000\n"
+    "elev_min_m = 0\n"
+    "elev_max_m = 3000\n"
+    "slope_max = 100\n"
+    "hand_max_m = 3000\n"
+    "coast_max_m = 32767\n"
+    "\n"
+    "[biome.grassland]\n"
+    "code = 4\n"
+    "name = \"Grassland\"\n"
+    "colour = 0x96AA5A\n"
+    "water = false\n"
+    "water_body = \"none\"\n"
+    "priority = 10\n"
+    "fallback = true\n"
+    "rules = []\n"
+    "fertility = 1\n"
+    "timber = \"0.15\"\n"
+    "region_noun = \"Downs\"\n"
+    "\n"
+    "[biome.marsh]\n"
+    "code = 5\n"
+    "name = \"Marsh\"\n"
+    "colour = 0x5C6E54\n"
+    "water = false\n"
+    "water_body = \"none\"\n"
+    "priority = 40\n"
+    "fallback = false\n"
+    "fertility = \"0.45\"\n"
+    "timber = \"0.3\"\n"
+    "region_noun = \"Fen\"\n"
+    "\n"
+    "[[biome.marsh.rules]]\n"
+    "temp_min_c = -60\n"
+    "temp_max_c = 50\n"
+    "rain_min_mm = 500\n"
+    "rain_max_mm = 10000\n"
+    "elev_min_m = 0\n"
+    "elev_max_m = 200\n"
+    "slope_max = \"0.05\"\n"
+    "hand_max_m = 1\n"
+    "coast_max_m = 32767\n"
+    "\n"
+    "[biome.highland_moor]\n"
+    "code = 6\n"
+    "name = \"Highland moor\"\n"
+    "colour = 0x786468\n"
+    "water = false\n"
+    "water_body = \"none\"\n"
+    "priority = 30\n"
+    "fallback = false\n"
+    "fertility = \"0.3\"\n"
+    "timber = \"0.1\"\n"
+    "region_noun = \"Moor\"\n"
+    "\n"
+    "[[biome.highland_moor.rules]]\n"
+    "temp_min_c = -60\n"
+    "temp_max_c = 4\n"
+    "rain_min_mm = 0\n"
+    "rain_max_mm = 10000\n"
+    "elev_min_m = 300\n"
+    "elev_max_m = 3000\n"
+    "slope_max = 100\n"
+    "hand_max_m = 3000\n"
+    "coast_max_m = 32767\n"
+    "\n"
+    "[biome.alpine]\n"
+    "code = 7\n"
+    "name = \"Alpine\"\n"
+    "colour = 0xBEBEB4\n"
+    "water = false\n"
+    "water_body = \"none\"\n"
+    "priority = 50\n"
+    "fallback = false\n"
+    "fertility = 0\n"
+    "timber = 0\n"
+    "region_noun = \"Peaks\"\n"
+    "\n"
+    "[[biome.alpine.rules]]\n"
+    "temp_min_c = -60\n"
+    "temp_max_c = \"0.5\"\n"
+    "rain_min_mm = 0\n"
+    "rain_max_mm = 10000\n"
+    "elev_min_m = 600\n"
+    "elev_max_m = 3000\n"
+    "slope_max = 100\n"
+    "hand_max_m = 3000\n"
+    "coast_max_m = 32767\n"
+    "\n"
+    "[biome.blighted_waste]\n"
+    "code = 8\n"
+    "name = \"Blighted waste\"\n"
+    "colour = 0x605446\n"
+    "water = false\n"
+    "water_body = \"none\"\n"
+    "priority = 0\n"
+    "fallback = false\n"
+    "rules = []\n"
+    "fertility = 0\n"
+    "timber = 0\n"
+    "region_noun = \"Waste\"\n";
+
+// Adds what the production registry requires besides the stage tunings
+// given by a test: worldgen/biomes.toml when the id `biomes` is registered
+// and the directory `biomes` with the eight definitions when the kind
+// `biome` is (P1-04 4). The `worldgen` directory must already be in root.
+inline void add_biome_fixtures(worldgen::data::MemoryDataRoot& root) {
+    namespace wd = worldgen::data;
+    const wd::KindRegistry registry = wd::builtin_kinds();
+    const wd::Kind* kind = registry.find("worldgen");
+    if (kind != nullptr && kind->schema_for("biomes") != nullptr) {
+        for (wd::MemoryDirectory& d : root.directories) {
+            if (d.name == "worldgen") {
+                d.entries.push_back(wd::MemoryEntry{"biomes.toml", std::string(BIOMES_TOML), false});
+            }
+        }
+    }
+    if (registry.find("biome") != nullptr) {
+        root.directories.push_back(
+            wd::MemoryDirectory{"biomes", {wd::MemoryEntry{"biomes.toml", std::string(BIOME_DEFINITIONS_TOML), false}}});
+    }
+}
+
 // True when the production registry's `worldgen` kind has the id (P1-00
 // 6.1: every id of the set must then be defined).
 inline bool worldgen_id_registered(std::string_view id) {
@@ -86,6 +266,7 @@ inline TuningLoad load_tuning_text(std::string_view elevation_toml) {
     }
     wd::MemoryDataRoot root;
     root.directories.push_back(dir);
+    add_biome_fixtures(root);
     wd::LoadResult<wd::ContentSet> r = wd::load_content_from_memory(registry, root);
     TuningLoad out;
     out.errors = r.errors;

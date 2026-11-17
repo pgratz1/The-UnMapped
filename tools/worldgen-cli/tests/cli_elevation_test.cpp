@@ -27,6 +27,9 @@ fs::path write_data_root(const Sandbox& sb) {
     write_text(root / "worldgen" / "elevation.toml", elev_test::elevation_toml());
     write_text(root / "worldgen" / "hydrology.toml", "[worldgen.hydrology]\nriver_min_area_m2 = 125000\nflat_noise = { wavelength_m = 400, octaves = 1, gain = \"0.5\" }\n");
     write_text(root / "worldgen" / "climate.toml", std::string(elev_api::CLIMATE_TOML));  // P1-03 4
+    write_text(root / "worldgen" / "biomes.toml", std::string(elev_api::BIOMES_TOML));  // P1-04 4.2
+    fs::create_directories(root / "biomes");
+    write_text(root / "biomes" / "biomes.toml", std::string(elev_api::BIOME_DEFINITIONS_TOML));  // P1-04 4.1
     return root;
 }
 

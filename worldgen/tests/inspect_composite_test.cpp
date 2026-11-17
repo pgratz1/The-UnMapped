@@ -355,6 +355,7 @@ TEST_CASE("composite: names") {
     CHECK(worldgen::inspect::composite_name(Composite::map) == "map");
     CHECK(worldgen::inspect::composite_from_name("map") == std::optional<Composite>(Composite::map));
     CHECK(!worldgen::inspect::composite_from_name("Map").has_value());
-    CHECK(!worldgen::inspect::composite_from_name("biomes").has_value());
+    CHECK(worldgen::inspect::composite_from_name("biomes") == std::optional<Composite>(Composite::biomes));  // P1-04 9
+    CHECK(!worldgen::inspect::composite_from_name("regions").has_value());
     CHECK(!worldgen::inspect::composite_from_name("").has_value());
 }
