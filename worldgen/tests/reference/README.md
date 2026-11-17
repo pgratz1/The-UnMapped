@@ -241,3 +241,59 @@ the stage without the tie-break (P1-02 H2, "t = 0"). `check` also tests
 invariant 11 (equal `water_depth`, `lake`, `coast_dist`, lake and ocean cells
 and decimetre levels with and without t) on the random fixtures with random t
 and on the golden worlds with `flat_tie`.
+
+## Reference of the P1-03 climate stage
+
+`p1_climate_reference.py` is an independent exact-integer implementation of
+`docs/specs/p1-03-climate.md` (steps C1 to C6, the report keys and palettes
+of section 9), written by the test writer from the spec text and P1-00
+alone, without the stage's implementation. The input layers of a world
+(`elevation`, `water`, `water_depth`, `coast_dist`) come from
+`p1_hydrology_reference.py` with the shipped threshold and `flat_tie` of the
+seed, and its elevation from `p1_elevation_reference.py`; each cached
+elevation grid is checked against the hydrology golden file's `elevation`
+item before use. It uses the elevation reference's fast `Fx` operations and
+`fbm_m`; `check` cross-checks them against `core_reference.py`.
+
+```
+python3 -B worldgen/tests/reference/p1_climate_reference.py check [--quick]
+python3 -B worldgen/tests/reference/p1_climate_reference.py case shipped|small N SEED [WEIGHTS]
+python3 -B worldgen/tests/reference/p1_climate_reference.py golden [PATH|-] [--large]
+python3 -B worldgen/tests/reference/p1_climate_reference.py winds FIRST LAST
+```
+
+The spec was revised on 2026-11-17 (triangle kernel in C4, diagonal taps
+across the wind in a raster sweep in C5, preconditions in order with S ≤
+32767, shipped `rain_oro_mm` 2500 and `moisture_path_mm_km` 32000); the
+reference and the golden file follow the revision.
+
+`check` reproduces every worked example of P1-03 5.1 (the wind draws, the
+temperature table, the one-box pass, the triangle with r = 2 and its edge
+clipping example, both sweeps cell by cell with every q raw and p to three
+decimals, the rainfall table and both sweeps' rainfall rows, the palette
+example of section 9). It checks the sweep against a second method
+(memoized per-cell recursion, no line order; the line or raster order is
+also asserted to read only computed taps) and both C4 passes against direct
+window sums; invariant 7 (all 24 pairs of the three generators and eight
+codes, and the triangle, on the 7 x 5 and other bordered grids, grids with
+random water, and 40 random fixtures; the hs bound on all 200); the C4
+overflow margin (S = 32767 with r = 250 on 260 x 255 and 300 x 1 grids,
+every partial sum checked against int64); the preconditions in order; and
+invariants 1 to 5 on the 200 random fixtures of 10.2 and (without `--quick`)
+on the golden worlds up to N = 128. About 40 seconds with `--quick`. The
+golden file also holds one case of fixture `overflow` (format in its
+header). `golden` writes
+`worldgen/tests/golden/p1-03-climate.txt` (format in its header), read by
+`stages_climate_golden_test.cpp` and `cli_climate_test.cpp`; `--large` adds
+the N = 512 and 1024 worlds of P1-03 10.4 (two minutes with a warm cache;
+the elevation reference takes about three minutes per 512 world and eight
+for the 1024 one). The committed file was written with `--large`.
+`UNMAPPED_ELEVATION_CACHE=DIR` works as for the hydrology reference.
+
+The random fixtures of 10.2 (the test writer's construction): fixture f is
+34 x 34; `Rng(substream(stream_key(0, "test.climate"), f))` draws the wind
+code `uniform_u64(8)` first, then `uniform_i64(1, 3000)` for each interior
+cell in index order (elevation = S, `water` 0, depth 0); the border is
+ocean with elevation -10 and depth 10; `coast_dist` is P1-02 H7 on the
+ocean mask; the climate tuning is shipped with `wind_weights` one-hot at the
+drawn code, and the world seed is f.

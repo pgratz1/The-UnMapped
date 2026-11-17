@@ -63,3 +63,11 @@ target_sources(worldgen-cli-tests PRIVATE cli_passes_test.cpp)
 target_compile_definitions(worldgen-cli-tests PRIVATE
     UNMAPPED_P1_01_GOLDEN_PATH="${PROJECT_SOURCE_DIR}/worldgen/tests/golden/p1-01-elevation.txt"
 )
+# generate --until climate, report keys and render palettes of the climate
+# layers (P1-03 3 and 9; P1-00 10.1 to 10.3, 14 X1 to X3), checked against
+# values recomputed from the layers and the climate golden vectors. Slow
+# checks in the doctest suite "climate-slow".
+target_sources(worldgen-cli-tests PRIVATE cli_climate_test.cpp)
+target_compile_definitions(worldgen-cli-tests PRIVATE
+    UNMAPPED_P1_03_GOLDEN_PATH="${PROJECT_SOURCE_DIR}/worldgen/tests/golden/p1-03-climate.txt"
+)
