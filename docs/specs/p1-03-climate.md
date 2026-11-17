@@ -1,6 +1,6 @@
 # P1-03 Climate
 
-Status: draft, spec writer, 2026-11-16, awaiting approval. Phase P1 Geography, stage 3 (`climate`). Design doc section 4 (stage 3: "temperature from latitude and elevation; rainfall from prevailing wind and rain shadow"; "scale is compressed"). Depends on P0-01 to P0-04, P1-00 (shared algorithms G1 to G8, rules D1 to D10, section 2.2 map-size convention), P1-01 (the `elevation` layer) and P1-02 (`water`, `water_depth`, `coast_dist`). Tuning values marked "guess" and every statistics range are starting points, calibrated only against a floating-point prototype (section 11), to be revised against the first implementation sweep.
+Status: approved by the lead, 2026-11-16; revised 2026-11-17 after the first implementation (branch `p1/03-climate`) and a tuning experiment (branch `p1/03-climate-experiment`, commit `2689076`): C4 becomes a triangle kernel, diagonal winds take their taps across the wind (C5), shipped `moisture_path_mm_km` 32000 and `rain_oro_mm` 2500, statistics ranges from the experiment, seams as implemented, corrections. Paul has provisionally accepted the choices of taste (open questions 1 and 2). Phase P1 Geography, stage 3 (`climate`). Design doc section 4 (stage 3: "temperature from latitude and elevation; rainfall from prevailing wind and rain shadow"; "scale is compressed"). Depends on P0-01 to P0-04, P1-00 (shared algorithms G1 to G8, rules D1 to D10, section 2.2 map-size convention), P1-01 (the `elevation` layer) and P1-02 (`water`, `water_depth`, `coast_dist`). The climate merge is `GENERATOR_VERSION` 0.7.0; this revision lands before that merge and needs no further bump. Tuning values marked "guess" and every statistics range are still provisional until the validation sweep (section 11).
 
 ## 1. Purpose
 
@@ -11,7 +11,7 @@ The map is small (8 to 33 km) and its terrain is one continent with steep ranges
 - **Temperature** falls from south to north by a fixed amount per map (the latitude span is a map fraction, P1-00 2.2, proposals "Climate's latitude span is a fraction of the map"), and falls with height at a lapse rate. The ranges are what make cold places.
 - **Rainfall** comes from one prevailing wind per world. Saturated air comes off the sea, rains more where it is forced up a slope, and loses moisture as it rains, so the far side of a range is dry (rain shadow) and inland air is drier than coastal air. A small bonus near every coast stands for sea breezes and fog.
 
-Every distance in this stage is in metres (P1-00 2.2): a 2048 map has a wider continent and so a drier interior, with the same rain shadow behind each range.
+Every distance in this stage is in metres (P1-00 2.2): a 2048 map has a wider continent and so a drier interior, with the same rain shadow behind each range (limitation 7).
 
 ## 2. Inputs
 
@@ -30,9 +30,15 @@ Streams (P0-01 7.3; registered in `streams.hpp`):
 | K_temp | `geo.climate.temperature` | noise key of `fbm_m` (C3) |
 | K_rain | `geo.climate.rainfall` | noise key of `fbm_m` (C6) |
 
+The test-only stream `test.climate` (section 10.2) is not registered in `streams.hpp` and is never used by the stage.
+
 **Surface.** S[i] = `elevation`[i] + `water_depth`[i], an `int64` in decimetres: 0 on ocean (P1-02 invariant 7: depth = −e), the lake level on lake cells, e on dry land and river cells. The air sees the water surface, not the lake bed.
 
-Preconditions, checked first (fatal "climate: input precondition: …"): the five layers exist, are N × N with the catalogue types; S = 0 on every ocean cell (`water` = 3) and S ≥ 1 elsewhere.
+**Preconditions**, checked first, in this order; each violation is fatal with a message that begins `climate: input precondition: ` and, because the stage fails inside `generate`, leaves no world file and no `.partial` (P0-04 4):
+
+1. The four input layers `elevation`, `water`, `water_depth` and `coast_dist` exist, each N × N with its catalogue type (`i16`, `u8`, `u16`, `i16`).
+2. Every `water` value is in 0..3.
+3. S = 0 on every ocean cell (`water` = 3); 1 ≤ S on every other cell; S ≤ 32767 on every cell (the bound behind C4's overflow argument, section 7; every finished world meets it, since lake levels are below the highest peak).
 
 ## 3. Outputs
 
@@ -51,16 +57,16 @@ Fields of `worldgen.climate`, all required (P1-00 6.1), in schema declaration or
 
 | Field | Type and bounds | Default | Status | Meaning |
 | --- | --- | --- | --- | --- |
-| `temp_north_c` | fx(−30, 40) | 5 | guess | sea-level annual mean at the north edge (v = 0) |
-| `temp_south_c` | fx(−30, 40) | 9 | guess | sea-level annual mean at the south edge (v = 1) |
+| `temp_north_c` | fx(−30, 40) | 5 | guess (accepted by Paul, provisionally) | sea-level annual mean at the north edge (v = 0) |
+| `temp_south_c` | fx(−30, 40) | 9 | guess (accepted by Paul, provisionally) | sea-level annual mean at the south edge (v = 1) |
 | `lapse_c_per_km` | fx(0, 15) | "6.5" | designed (standard atmosphere) | cooling per km of height |
 | `temp_noise` | `fbm_m` | wavelength 6000, octaves 3, gain "0.5" | guess | local temperature variation |
 | `temp_noise_amp_c` | fx(0, 5) | 1 | guess | its weight, °C per unit of noise |
-| `wind_weights` | array(int(0, 1000), 8, 8) | [1, 1, 1, 1, 1, 1, 1, 1] | guess (open question 1) | relative chance that the prevailing wind blows **toward** D8 code 0 (E) to 7 (NE) |
-| `smooth_radius_m` | int(0, 4000) | 320 | guess | half-width of the square window over which the air sees the terrain (C4) |
+| `wind_weights` | array(int(0, 1000), 8, 8) | [1, 1, 1, 1, 1, 1, 1, 1] | guess (open question 1; accepted by Paul, provisionally) | relative chance that the prevailing wind blows **toward** D8 code 0 (E) to 7 (NE) |
+| `smooth_radius_m` | int(0, 4000) | 320 | guess | half-width of the support of the triangle kernel through which the air sees the terrain (C4); each of its two box passes has half-width (`smooth_radius_m` div 16) div 2 cells |
 | `rain_base_mm` | int(0, 5000) | 800 | guess | precipitation from saturated air over level ground |
-| `rain_oro_mm` | int(0, 100000) | 5000 | guess | extra precipitation per unit of upslope gradient along the wind (rise per metre of path) |
-| `moisture_path_mm_km` | int(100, 2000000) | 16000 | guess | rain integrated along the path (mm × km) that would use up saturated air; sets how fast air dries |
+| `rain_oro_mm` | int(0, 100000) | 2500 | calibrated (experiment, 11.1) | extra precipitation per unit of upslope gradient along the wind (rise per metre of path) |
+| `moisture_path_mm_km` | int(100, 2000000) | 32000 | calibrated (experiment, 11.1) | rain integrated along the path (mm × km) that would use up saturated air; sets how fast air dries |
 | `loss_max` | fx(0, "0.9") | "0.25" | designed | cap on the share of the air's moisture lost in one step |
 | `ocean_recharge_m` | int(16, 100000) | 500 | guess | open water over which air takes up moisture again (per step it regains step/recharge of its deficit) |
 | `coast_rain_mm` | int(0, 5000) | 150 | guess | rain added at the coast, every direction (sea breeze, fog) |
@@ -83,8 +89,8 @@ temp_noise_amp_c = 1
 wind_weights = [1, 1, 1, 1, 1, 1, 1, 1]
 smooth_radius_m = 320
 rain_base_mm = 800
-rain_oro_mm = 5000
-moisture_path_mm_km = 16000
+rain_oro_mm = 2500
+moisture_path_mm_km = 32000
 loss_max = "0.25"
 ocean_recharge_m = 500
 coast_rain_mm = 150
@@ -94,13 +100,13 @@ rain_noise_amp = "0.4"
 rain_min_mm = 250
 ```
 
-Every fixed-id directory gets this file (P1-00 6.1: every id must be defined where the kind's directory exists), so adding `climate` to the `worldgen` id set changes `content_hash` of every world: a PATCH bump and re-recorded golden hashes in the implementing branch (P1-00 6.4; proposals "Every world's hash depends on the shipped tuning files").
+Every fixed-id directory gets this file (P1-00 6.1: every id must be defined where the kind's directory exists), so adding `climate` to the `worldgen` id set changes `content_hash` of every world: a bump and re-recorded golden hashes in the implementing branch (P1-00 6.4; proposals "Every world's hash depends on the shipped tuning files"). That bump is the 0.7.0 of the climate merge; the changed values above are part of the same, not yet merged, change.
 
-Fixed constants (not tuning): the 3-tap upwind weights (1, 2, 1)/4; the step lengths 16 m and 16√2 m (`SQRT2`, P1-00 amendment A1); off-map air is saturated (q = ONE) at sea level.
+Fixed constants (not tuning): the 3-tap upwind weights (1, 2, 1)/4 and the tap shapes of C5; the step lengths 16 m and 16√2 m (`SQRT2`, P1-00 amendment A1); off-map air is saturated (q = ONE) at sea level; C4 is two box passes of half-width (r div 2).
 
 ## 5. Algorithm
 
-Notation as P1-01 5.0: every value is `Fx` unless stated, every operation the P0-01 operation of that name with its rounding, statements evaluated in the order written. X = `from_int(16x + 8)`, Y = `from_int(16y + 8)` (metres); V = `from_ratio(2y + 1, 2N)` (P1-00 2.1). On a W × H test grid, N in V is replaced by H and lines run over W or H as stated. Steps C1 to C7 in order.
+Notation as P1-01 5.0: every value is `Fx` unless stated, every operation the P0-01 operation of that name with its rounding, statements evaluated in the order written. X = `from_int(16x + 8)`, Y = `from_int(16y + 8)` (metres); V = `from_ratio(2y + 1, 2N)` (P1-00 2.1). On a W × H test grid, N in V is replaced by H and lines and rows run over W or H as stated. Steps C1 to C7 in order.
 
 ### C1. Preconditions (D1)
 
@@ -126,38 +132,60 @@ T     = (t_sea − lap) + tn
 temperature = clamp(round_int(mul_int(T, 10)), −600, 500)
 ```
 
-### C4. Smoothed surface (D2, two separable passes, G6 row blocks)
+### C4. Smoothed surface: a triangle kernel (D2, two box passes, G6 row blocks)
 
-r = `smooth_radius_m` div 16 (cells; 20 with the default). For each cell, the window is the square [x − r, x + r] × [y − r, y + r] clipped to the map, with c_w cells (a rectangle):
-
-```
-sum  = Σ S over the window           // int64, exact: ≤ 4097² × 30000 < 2^39
-hs   = from_ratio(sum, c_w)          // Fx, decimetres
-```
-
-Computed as a row pass (sums along x) followed by a column pass over the row sums; both are exact integer sums, so the window sum, and hence hs, does not depend on how the passes are split. r = 0 gives hs = `from_int(S)`.
-
-### C5. Moisture sweep (D4 over lines)
-
-Moisture q ∈ [0, ONE] is the air's share of saturation; p is precipitation in mm/yr (`Fx`).
-
-**Lines.** If dx ≠ 0 the lines are columns, processed in the order x = 0, 1, …, N − 1 when dx = 1 and x = N − 1, …, 0 when dx = −1. If dx = 0 the lines are rows, y ascending when dy = 1, descending when dy = −1. Each cell reads only values of the previous line, so the cells of one line may be computed in any order or in parallel; the lines themselves are sequential.
-
-**Upwind taps** of cell (x, y): three cells of the previous line,
+r = `smooth_radius_m` div 16 (cells; 20 with the default) and h = r div 2 (10 with the default). The **box** of half-width h at cell (x, y) is the window [x − h, x + h] × [y − h, y + h] clipped to the map (on a test grid, to W × H), with c_w cells (a rectangle, 1 ≤ c_w ≤ (2h + 1)²). Clipping is the only edge rule: an h at or beyond the grid simply clips, and every h ≥ max(W, H) − 1 gives every cell the whole grid as its window.
 
 ```
-dx ≠ 0:  (x − dx, y − dy − 1), (x − dx, y − dy), (x − dx, y − dy + 1)      // a, b, c
-dx = 0:  (x − 1, y − dy),      (x,      y − dy), (x + 1, y − dy)
+// Pass 1, on the integers S:
+sum1 = Σ S over the box of half-width h        // int64, exact
+hs1  = from_ratio(sum1, c_w)                    // Fx, decimetres, RHA
+// Pass 2, on the raw values of hs1:
+sum2 = Σ hs1.raw over the box of half-width h  // int64, exact
+hs   = div_int(from_raw(sum2), c_w)            // Fx, decimetres: RHA(sum2 / c_w)
 ```
 
-A tap outside the map has q = ONE and hs = 0 (saturated air at sea level: the margin is ocean). With taps a, b, c in that order:
+Each pass may be computed in any split (a row pass of sums along x, then a column pass over the row sums, in G6 row blocks); every sum is an exact integer, so the result does not depend on the split or the thread count. Pass 2 reads the complete hs1 grid: all of pass 1 is finished before any of pass 2 starts. h = 0 (r ≤ 1) gives hs = `from_int(S)`.
+
+Away from the edges, hs is S under the separable weights (1, 2, …, 2h + 1, …, 2, 1)/(2h + 1)² along each axis (up to the rounding of hs1): a triangle with support half-width 2h, which is r for even r (20 cells, 320 m, with the default, the same support as the single box of radius 20 that this replaces) and r − 1 for odd r. Near an edge each pass renormalises over its own clipped window, so the weights there are not a clipped triangle (example in 5.1).
+
+Why two passes: along the wind, the slope of a single box-filtered surface is the difference of the two edge rows of the window (moving the window one cell adds the row that enters and drops the row that leaves), so terrain roughness at the window's edges passes straight into the rise of C5 and into rainfall as comb-like bands across the wind. The triangle's weights fall to zero at its edges, and the second pass removes those bands (experiment, 11.1: gone on every map where they showed).
+
+### C5. Moisture sweep (D4)
+
+Moisture q ∈ [0, ONE] is the air's share of saturation; p is precipitation in mm/yr (`Fx`). An **orthogonal** wind has dx = 0 or dy = 0 (codes 0, 2, 4, 6); a **diagonal** wind has both non-zero (codes 1, 3, 5, 7).
+
+**Order.** Orthogonal winds sweep by lines. If dx ≠ 0 the lines are columns, processed x = 0, 1, …, W − 1 when dx = 1 and x = W − 1, …, 0 when dx = −1; if dx = 0 the lines are rows, y ascending when dy = 1, descending when dy = −1. Each cell reads only values of the previous line, so the cells of one line may be computed in any order or in parallel; the lines themselves are sequential.
+
+Diagonal winds sweep in **raster order**, one sequential pass: rows in the order of dy (y = 0, 1, …, H − 1 when dy = 1; y = H − 1, …, 0 when dy = −1), and within each row the cells in the order of dx (x = 0, 1, …, W − 1 when dx = 1; x = W − 1, …, 0 when dx = −1). A cell reads the cell before it in its own row, so the cells of a row are not independent; the sweep is single-threaded.
+
+**Upwind taps** a, b, c of cell (x, y), b the centre with weight 2:
+
+```
+orthogonal, dx ≠ 0 (columns):  a = (x − dx, y − 1),  b = (x − dx, y),       c = (x − dx, y + 1)
+orthogonal, dx = 0 (rows):     a = (x − 1, y − dy),  b = (x, y − dy),       c = (x + 1, y − dy)
+diagonal:                      a = (x − dx, y),      b = (x − dx, y − dy),  c = (x, y − dy)
+```
+
+| Code | Wind toward (dx, dy) | a | b (weight 2) | c |
+| --- | --- | --- | --- | --- |
+| 1 | SE (1, 1) | (x − 1, y) | (x − 1, y − 1) | (x, y − 1) |
+| 3 | SW (−1, 1) | (x + 1, y) | (x + 1, y − 1) | (x, y − 1) |
+| 5 | NW (−1, −1) | (x + 1, y) | (x + 1, y + 1) | (x, y + 1) |
+| 7 | NE (1, −1) | (x − 1, y) | (x − 1, y + 1) | (x, y + 1) |
+
+So a diagonal wind reads the diagonal upwind neighbour and the two orthogonal upwind neighbours, which lie on either side of the wind's axis: three taps across the wind, as for an orthogonal wind. In the raster order every tap is computed before it is read: a is the previous cell of the same row, b and c lie in the previous row.
+
+**Off-map taps.** A tap outside the map has q = ONE and hs = 0 (saturated air at sea level: the margin is ocean). On real maps the edge band is ocean (P1-01 `edge_margin_frac`, at least one cell), so air entering the map recharges over open water and the rule never shows; on a test grid without an ocean border it does (5.1, cell (4, 0) of the SE sweep).
+
+With taps a, b, c:
 
 ```
 q_up  = div_int((q_a + mul_int(q_b, 2)) + q_c, 4)
 hs_up = div_int((hs_a + mul_int(hs_b, 2)) + hs_c, 4)
 ```
 
-**Step.** Diagonal winds (dx ≠ 0 and dy ≠ 0) step 16√2 m, the others 16 m:
+**Step.** Diagonal winds step 16√2 m, the others 16 m:
 
 ```
 step_m  = diagonal ? mul_int(SQRT2, 16)  : from_int(16)
@@ -184,6 +212,8 @@ q    = q_up − mul(q_up, lam)
 
 In words: rain is proportional to the moisture left in the air and to how steeply the air is being lifted; the air loses moisture in proportion to the rain it has dropped over the step, so a long climb wrings it out and the lee gets what is left. The lateral 1-2-1 taps spread the shadow sideways a little at every step (about √(n/2) cells after n steps), so a shadow is not a one-cell-sharp streak. Lakes are treated as land (they are small); only the sea recharges the air.
 
+**Symmetry.** C4 and C5 commute with the eight symmetries of the square grid (the mirrors x ↦ W − 1 − x and y ↦ H − 1 − y, the transpose (x, y) ↦ (y, x), and their compositions) when the wind vector is mapped by the same symmetry: for every grid G (any W × H; the transpose swaps W and H), every code k and every symmetry σ, the sweep of σ(G) with wind σ(k) equals σ applied to the sweep of G with wind k, q and p exactly. The mirrors were exact before this revision; the diagonal taps across the wind add the transpose, which maps SE and NW onto themselves and swaps SW with NE. Hence the four orthogonal winds are exact rotations and mirrors of one another, and so are the four diagonal winds; no symmetry relates a diagonal wind to an orthogonal one (they step different lengths with different tap shapes). The rest of the stage is not symmetric (the latitude gradient and the noise are fixed to the map).
+
 ### C6. Rainfall (D1, G6 row blocks)
 
 ```
@@ -201,7 +231,7 @@ rainfall = clamp(round_int(pr + cb), rain_min_mm, 10000)
 
 ### 5.1 Worked examples
 
-Computed by the spec writer with an exact-integer Python reference of this section (an implementation of the P0-01 operations checked against P0-01's own vectors: `stream_key(0, "geo.elevation.erosion")` = 0x7d5f47a9629481b8, `Rng(0)` first output 0x99ec5f36cb75f2b4, `parse_decimal("0.4")` raw 1717986918); the sweep cells marked "by hand" were also checked by hand. Noise amplitudes are 0 unless stated, shipped values otherwise.
+Computed by the spec writer with an exact-integer Python reference of this section (an implementation of the P0-01 operations checked against P0-01's own vectors: `stream_key(0, "geo.elevation.erosion")` = 0x7d5f47a9629481b8, `Rng(0)` first output 0x99ec5f36cb75f2b4, `parse_decimal("0.4")` raw 1717986918; the same reference reproduces every example of the first version of this section). The cells marked "by hand" were also checked by hand. The C4 and C5 examples were cross-checked against the experiment build: commit `2689076` extracted with `git archive` into a scratch directory, its `worldgen` library built out of tree (GCC, Release), and a small driver calling `climate_triangle_mean` and `climate_sweep` with `UNMAPPED_EXP_DIAG_ACROSS=1` (the experiment's switch for the diagonal taps, `experiment.md`); every value below and 300 random cases (grids up to 14 × 14, all eight codes, r 0 to 40, random `water` and tuning) agree raw for raw. Noise amplitudes are 0 unless stated, shipped values otherwise.
 
 **C2 wind.** `wind_weights` all 1: seeds 0 to 11 give k_w = 1, 3, 4, 1, 1, 6, 0, 2, 5, 1, 2, 1; seed 42 gives 6. Weights [0, 0, 0, 0, 5, 0, 0, 0] give 4 for every seed (one draw is still consumed).
 
@@ -218,32 +248,64 @@ Computed by the spec writer with an exact-integer Python reference of this secti
 
 (By hand, first row: V = 1023/2048, t_sea = 5 + 4 × 1023/2048 = 6.998046875 exactly; lap = 6.5 × 12000 / 10000 = 7.8; T = −0.80195…, × 10 → −8.)
 
-**C4 box mean**, r = 1, a 4 × 3 grid S (rows y = 0 to 2): `0 10 20 30`, `0 40 50 60`, `0 0 70 80`. hs in dm: row 0 `12.5 20 35 40`; row 1 `8.3333 21.1111 40 51.6667` (raw 35791394133, 90671531804, 171798691840, 221906643627); row 2 `10 26.6667 50 65` (26.6667 is raw 114532461227). For example (0, 1): window x 0..1, y 0..2, sum 50 over 6 cells.
+**One box pass** (the seam `climate_box_mean`, which is pass 1 of C4), half-width 1, a 4 × 3 grid S (rows y = 0 to 2): `0 10 20 30`, `0 40 50 60`, `0 0 70 80`. hs1 in dm: row 0 `12.5 20 35 40`; row 1 `8.3333 21.1111 40 51.6667` (raw 35791394133, 90671531804, 171798691840, 221906643627); row 2 `10 26.6667 50 65` (26.6667 is raw 114532461227). For example (0, 1): window x 0..1, y 0..2, sum 50 over 6 cells.
 
-**C5 sweep, wind E (k_w = 0)**, r = 0 (hs = S), a 6 × 3 grid, columns 0 and 5 ocean (S = 0), S rows: `0 20 60 120 80 0`, `0 30 90 160 100 0`, `0 10 40 80 60 0`. Shipped `rain_base_mm` 800, `rain_oro_mm` 5000, `moisture_path_mm_km` 16000, `loss_max` 0.25, `ocean_recharge_m` 500 (rec = 0.032, raw 137438953).
+**C4 triangle**, the same grid with r = 2 (`smooth_radius_m` 32 to 47), so h = 1 and pass 1 is the box pass above. hs (raw), rows y = 0 to 2:
 
-- (1, 0), by hand: the upwind column is outside the map, so q_up = ONE, hs_up = 0; rise 20 dm, g = 20/160 = 0.125 (raw 536870912); p = 800 + 5000 × 0.125 = 1425 mm; lam = 1425 × 16 / 16000000 = 0.001425 (raw 6120328); q = 4294967296 − 6120328 = 4288846968.
-- (2, 1), by hand: taps (1, 0), (1, 1), (1, 2) with q 4288846968, 4287504790, 4290189145: q_up = RHA(17154045693 / 4) = 4288511423; hs_up = (20 + 60 + 10)/4 = 22.5 dm; rise 67.5, g = 0.421875 (raw 1811939328); p raw 12476887921291 (2905.002 mm).
+```
+66512340764  98028651710 148733126732 178956970667
+70588582874 106711378805 166761384518 201624853618
+70986265031 111748686127 182138427923 221906643627
+```
+
+(dm: `15.4861 22.8241 34.6296 41.6667`, `16.4352 24.8457 38.8272 46.9444`, `16.5278 26.0185 42.4074 51.6667`.) By hand, (0, 0): the window is x 0..1, y 0..1, c_w = 4; sum2 = 53687091200 + 85899345920 + 35791394133 + 90671531804 = 266049363057 (hs1 12.5, 20, 8.3333, 21.1111); RHA(266049363057 / 4) = 66512340764. The same grid with r = 3 gives the same hs (h = 1); r = 0 or 1 gives `from_int(S)`; r ≥ 6 (h ≥ 3 ≥ max(W, H) − 1) gives every cell `from_ratio(360, 12)` = raw 128849018880 (30 dm).
+
+**C4 triangle, edge clipping**: a 9 × 9 grid with S = 900 at (4, 4) and 0 elsewhere, r = 4 (h = 2). Row y = 4 of hs, dm: `12 18 21.6 28.8 36 28.8 21.6 18 12` (raw 51539607552, 77309411328, 92771293594, 123695058125, 154618822656, …, symmetric). Unclipped, the value at x is 900 × w(x) × w(4) with the weights w = (1, 2, 3, 4, 5, 4, 3, 2, 1)/25 (36 = 900 × 5/25 × 5/25; 21.6 = 900 × 3/25 × 5/25), which holds for x = 2 to 6; at x = 0 and 1 the second pass's window is clipped to 3 and 4 columns, which gives 12 and 18 in place of the unclipped 7.2 and 14.4.
+
+**C5 sweep, wind E (k_w = 0)**, r = 0 (hs = S), a 6 × 3 grid, columns 0 and 5 ocean (S = 0), S rows: `0 20 60 120 80 0`, `0 30 90 160 100 0`, `0 10 40 80 60 0`. Shipped `rain_base_mm` 800, `rain_oro_mm` 2500, `moisture_path_mm_km` 32000, `loss_max` 0.25, `ocean_recharge_m` 500 (rec = 0.032, raw 137438953).
+
+- (1, 0), by hand: the upwind column is outside the map, so q_up = ONE, hs_up = 0; rise 20 dm, g = 20/160 = 0.125 (raw 536870912); p = 800 + 2500 × 0.125 = 1112.5 mm; lam = 1112.5 × 16 / 32000000 = 0.00055625 (raw 2389076); q = 4294967296 − 2389076 = 4292578220.
+- (2, 1), by hand: taps (1, 0), (1, 1), (1, 2) with q 4292578220, 4292242676, 4292913765: q_up = RHA(17169977337 / 4) = 4292494334; hs_up = (20 + 60 + 10)/4 = 22.5 dm; rise 67.5, g = 0.421875 (raw 1811939328); p = q_up × (800 + 1054.6875), raw 7961235585091 (1853.620 mm).
 
 q (raw), rows y = 0 to 2:
 
 ```
-4294967296 4288846968 4280922232 4270788875 4271670939 4276491274
-4294967296 4287504790 4276053289 4263755588 4265212810 4269935559
-4294967296 4290189145 4283599746 4276126894 4274335696 4277781016
+4294967296 4292578220 4289950298 4286870704 4286633270 4288375589
+4294967296 4292242676 4288516008 4284675152 4284396886 4285979494
+4294967296 4292913765 4290620742 4288210164 4287302465 4288699479
 ```
 
 p (mm, three decimals of the raw value):
 
 ```
-800.000 1425.000 2125.684 2901.415 796.295 796.445
-800.000 1737.500 2905.002 3599.202 795.090 795.183
-800.000 1112.500 1657.731 1967.095 796.792 796.693
+800.000 1112.500 1463.423 1852.908 798.767 798.732
+800.000 1268.750 1853.620 2203.391 798.350 798.271
+800.000  956.250 1229.199 1384.716 798.891 798.794
 ```
 
 Column 4 descends (rise 0), so it gets only base rain from the depleted air; column 5 is ocean, whose own rain uses q_up and which starts recharging.
 
-**Diagonal step, wind SE (k_w = 1)**, same grid: (1, 0) has taps (0, −2), (0, −1), (0, 0), the first two outside the map: q_up = ONE, hs_up = 0, g = div(20 dm, mul_int(SQRT2, 160)) = raw 379625062, p raw 5334099146800 (1241.942 mm), lam raw 7543555, q 4287423741. (3, 0) has taps (2, −2), (2, −1), (2, 0): q_up 4291438217, hs_up 15 dm, p 3117.630 mm.
+**C5 sweep, wind SE (k_w = 1)**, same grid and tuning, raster order (rows y = 0, 1, 2; x ascending in each). Step 16√2: step_dm = raw 971840160000 (226.27 dm), rec raw 194368032.
+
+- (1, 0), by hand: taps a = (0, 0) (ocean, q = ONE, hs 0), b = (0, −1) and c = (1, −1) off the map: q_up = ONE, hs_up = 0; g = div(20 dm, step_dm) = raw 379625062 (0.0883883); p = 800 + 2500 × 0.0883883 = 1020.971 mm (raw 4385036491800); lam raw 3100689; q = 4291866607.
+- (2, 1): taps a = (1, 1), b = (1, 0), c = (2, 0) with q 4290924843, 4291866607, 4289918572: q_up = 4291144157; hs_up = (30 + 2 × 20 + 60)/4 = 32.5 dm; rise 57.5; p raw 6159041656350 (1434.014 mm); q 4286792934.
+- (4, 0): a = (3, 0) (q 4287755798, hs 120), b and c off the map: q_up = 4293164422, hs_up = 30 dm, rise 50, p 1351.859 mm. The cell is on the lee slope of the E sweep, but here two of its taps are the sea-level margin: the off-map rule at work on a grid without an ocean border.
+
+q (raw), rows y = 0 to 2:
+
+```
+4294967296 4291866607 4289918572 4287755798 4289060547 4293557436
+4294967296 4290924843 4286792934 4283581311 4284617726 4289340761
+4294967296 4291444379 4287597741 4283771548 4281470892 4285462311
+```
+
+p (mm):
+
+```
+800.000 1020.971 1407.416 1959.521 1351.859 799.725
+800.000 1076.019 1434.014 1653.805  798.523 798.902
+800.000  827.427  799.079  798.365  797.936 798.146
+```
 
 **C6 rainfall** (shipped values; rn given):
 
@@ -256,7 +318,7 @@ Column 4 descends (rise 0), so it gets only base rain from the depleted air; col
 | 800 | 700 | 0.5 | 80 | 1040 |
 | 800 | −40 (ocean) | −0.3 | 150 | 854 |
 
-For the wind-E sweep above, with `coast_dist` 16 on the land columns and −16 on the ocean columns, `rainfall` rows: `950 1573 2274 3050 945 946`, `950 1886 3053 3748 943 945`, `950 1261 1806 2115 945 947`.
+For the two sweeps above, with `coast_dist` 16 on the land columns and −16 on the ocean columns, `rainfall` rows: wind E `950 1261 1612 2001 947 949`, `950 1417 2002 2352 947 948`, `950 1105 1378 1533 947 949`; wind SE `950 1169 1556 2108 1500 950`, `950 1224 1582 1802 947 949`, `950 976 947 947 946 948`.
 
 ## 6. Invariants
 
@@ -267,7 +329,8 @@ For every world and every tuning inside the bounds:
 3. **Moisture stays a share.** Every q of C5 is in [0, ONE]: a 1-2-1 mean of values in [0, ONE] is in [0, ONE]; the ocean update adds at most ONE − q_up; on other cells lam ≤ `loss_max` < 1.
 4. **Rain shadow.** On every non-ocean cell of C5, q ≤ q_up (air only dries over land), and where rise = 0, p = mul(q_up, `rain_base_mm`) (a lee slope gets only base rain from the air that reaches it).
 5. **No wind, no shadow.** With `rain_oro_mm` = 0 and both noise amplitudes 0, rainfall on land depends only on the moisture path, not on the terrain.
-6. Pure function of the seed, N, the five input layers and `worldgen.climate`; independent of thread count (D10).
+6. Pure function of the seed, N, the four input layers and `worldgen.climate`; independent of thread count (D10).
+7. **Symmetry** of C4 and C5 under the eight grid symmetries, as stated at the end of C5. Each hs lies between the smallest and largest S of the cells within distance 2h (C4 is a mean of means).
 
 ## 7. Determinism notes and overflow bounds
 
@@ -275,25 +338,25 @@ For every world and every tuning inside the bounds:
 | --- | --- | --- |
 | C2 | D9, sequential | one `Rng`, one `weighted_index` call; no other `Rng` in the stage |
 | C3, C6 | D1, parallel by G6 row blocks | location-keyed noise only |
-| C4 | D2, parallel by G6 row blocks | exact integer sums; any split gives the same sums |
-| C5 | D4 over lines | lines in the stated order; within a line D1 (reads only the previous line) |
+| C4 | D2, two passes, each parallel by G6 row blocks | exact integer sums; any split gives the same sums; pass 2 starts after pass 1 has finished |
+| C5 | D4 | orthogonal winds: lines in the stated order, within a line D1 (reads only the previous line); diagonal winds: one sequential raster sweep in the stated order |
 
-No floating point, no new math function: `fbm_m` (P1-01 4.1), `mul`, `div`, `div_int`, `mul_int`, `from_ratio`, `round_int`, `clamp`, `SQRT2`.
+No floating point, no new math function: `fbm_m` (P1-01 4.1), `mul`, `div`, `div_int`, `mul_int`, `from_ratio`, `from_raw`, `round_int`, `clamp`, `SQRT2`.
 
-Overflow (N = 2048, any tuning inside the bounds):
+Overflow (N = 2048, any tuning inside the bounds, S ∈ [0, 32767] by precondition 3):
 
-- C3: |t_sea| ≤ 40; lap ≤ 15 × 30000 / 10000 = 45 (`mul_int` raw ≤ 15 × 30000 × 2^32 < 2^51); |tn| ≤ 5; T ∈ [−90, 85] before the clamp; × 10 fits.
-- C4: sums < 2^39; hs ≤ 30000.
-- C5: rise ≤ 30000 dm, step_dm ≥ 160, so g ≤ 187.5; `mul_int(g, rain_oro_mm)` ≤ 1.875 × 10^7; p ≤ 1.876 × 10^7 mm (q ≤ 1); mul(p, step_m) ≤ 4.25 × 10^8 (< 2^31); 1000 × `moisture_path_mm_km` ≤ 2 × 10^9 fits `int64` as a `div_int` divisor; rec ≤ ONE.
-- C6: f ≤ 2; pr ≤ 3.76 × 10^7 < 2^31; `coast_rain_mm` × reach ≤ 5000 × 32767 fits; round_int then clamp.
+- C3: |t_sea| ≤ 40; lap ≤ 15 × 32767 / 10000 < 50 (`mul_int` raw ≤ 15 × 32767 × 2^32 < 2^51); |tn| ≤ 5; T ∈ [−85, 45] before the clamp; × 10 fits.
+- C4: h ≤ 4000 div 16 div 2 = 125, so a window holds at most 251² = 63001 cells. sum1 ≤ 63001 × 32767 < 2^31. hs1.raw ≤ 32767 × 2^32; sum2 ≤ 63001 × 32767 × 2^32 ≈ 8.866 × 10^18 < 2^63 − 1 ≈ 9.223 × 10^18. The margin is small: a running-window column pass that adds the entering row before dropping the leaving one (as the implementation does) briefly holds 2h + 2 rows, 252 × 251 × 32767 × 2^32 ≈ 8.902 × 10^18, which still fits; raising the bound of `smooth_radius_m` above 4000, or admitting S above 32767, needs a new argument (for example 128-bit window sums). hs ≤ 32767 dm.
+- C5: rise ≤ 32767 dm, step_dm ≥ 160, so g < 205; `mul_int(g, rain_oro_mm)` < 2.05 × 10^7; p < 2.06 × 10^7 mm (q ≤ 1); mul(p, step_m) < 4.7 × 10^8 (< 2^31); 1000 × `moisture_path_mm_km` ≤ 2 × 10^9 fits `int64` as a `div_int` divisor; rec ≤ ONE.
+- C6: f ≤ 2; pr < 4.2 × 10^7 < 2^31; `coast_rain_mm` × reach ≤ 5000 × 32767 fits; round_int then clamp.
 
 ## 8. Performance
 
-Budget (P1-00 11): 0.3 / 1.5 / 6 s at 512 / 1024 / 2048. Cost per cell: 6 `noise2` octaves (C3, C6; parallel), a constant-time box filter (C4; parallel), and about 20 integer operations in the single-threaded sweep (C5: about 0.05 s at 1024 by estimate). Memory: S, hs, q (one line suffices), p as `int64` grids, about 32 bytes per cell (130 MB at 2048), within P1-00's 2 GB.
+Budget (P1-00 11): 0.3 / 1.5 / 6 s at 512 / 1024 / 2048. Cost per cell: 6 `noise2` octaves (C3, C6; parallel), two constant-time box passes (C4; parallel), and about 20 integer operations in the single-threaded sweep (C5: about 0.05 s at 1024 by estimate, for either sweep order). Memory: S, hs1, hs, q and p as `int64` grids, about 40 bytes per cell (170 MB at 2048), within P1-00's 2 GB; q needs only two lines or rows, and hs1 can be freed after pass 2.
 
 ## 9. Report and render
 
-**`report`** (P1-00 10.3), appended to `[geography]` when `temperature` and `rainfall` are present, in this order ("land" is `elevation` > 0, as in 10.3):
+**`report`** (P1-00 10.3), appended to `[geography]` whenever both `temperature` and `rainfall` are present, with or without the hydrology layers (after the hydrology lines when those are printed), in this order ("land" is `elevation` > 0, as in 10.3):
 
 | Key | Value |
 | --- | --- |
@@ -302,18 +365,22 @@ Budget (P1-00 11): 0.3 / 1.5 / 6 s at 512 / 1024 / 2048. Cost per cell: 6 `noise
 | `land_below_0c` | ratio4(land cells with `temperature` < 0, land cells) |
 | `rain_contrast` | ratio4(p90, p10) of land `rainfall` (the two values above); `n/a` if p10 = 0 |
 
-**Statistics** (for P1-00 13.1; all **provisional**: set from the floating-point prototype of section 11 on 20 worlds, to be replaced by the validation specialist's first implementation sweep with the 13.1 seed set, taking the measured min–max widened by about 10% as typical and the hard bound only where a value outside would mean a defect):
+With no land cell each of the four keys prints a single `n/a` (not one per percentile), as `elevation_m` does (P1-00 appendix C 6).
 
-| Statistic | All seeds (hard) | Typical (≥ 90%) | Prototype |
+**Statistics** (for P1-00 13.1; all **provisional**: measured on the experiment worlds of 11.1, 512 seeds 0–9, 1024 seeds 0–9, 2048 seeds 1 and 5, with the adopted C4 and tuning, widened by about 10%; to be replaced by the validation specialist's sweep with the 13.1 seed set, taking the measured min–max widened by about 10% as typical and the hard bound only where a value outside would mean a defect):
+
+| Statistic | All seeds (hard) | Typical (≥ 90%) | Measured (experiment, min–max) |
 | --- | --- | --- | --- |
-| `temperature_c` p50 | within the catalogue range (by construction) | 3.0–9.0 °C | 4.6–6.2 °C |
-| `rainfall_mm` p50 | ≥ `rain_min_mm` (by construction) | 600–1200 mm | 670–950 mm |
-| `land_below_0c` | descriptive | — | not measured |
-| `rain_contrast` | descriptive | 1.5–10 | p90/p10 ≈ 2.5–7 |
+| `temperature_c` p50 | within the catalogue range (by construction) | 4.5–7.0 °C | 5.0–6.4 °C |
+| `rainfall_mm` p50, 512 | ≥ `rain_min_mm` (by construction) | 750–1100 mm | 834–1013 (C32o25); 817–993 (D) |
+| `rainfall_mm` p50, 1024 | as above | 690–940 mm | 763–859; 736–829 |
+| `rainfall_mm` p50, 2048 | as above | 620–780 mm | 685–707; 668–685 |
+| `rain_contrast` | descriptive | 1.6–4.5 | 1.73–4.02; 1.67–4.02 |
+| `land_below_0c` | descriptive | — | 0.019–0.085 (temperature does not depend on the rainfall variants) |
 
-The real acceptance test of climate is the biome mix (P1-04 9).
+The ranges were set on variant C32o25, which has the shipped tuning and triangle kernel but the former diagonal taps; variant D is the adopted algorithm, and its values lie inside them. The real acceptance test of climate is the biome mix (P1-04 9), whose rainfall thresholds need re-deriving (limitation 7).
 
-**Palettes** (P1-00 10.2 interpolation rule; registered under `auto`):
+**Palettes** (P1-00 10.2 interpolation rule; registered under `auto`). The palette names are `temperature`, which suits `i16` layers only, and `rainfall`, which suits `u16` layers only (P1-00 appendix C 1: naming a palette that does not suit the layer is a usage error; under `auto` an unsuitable registered palette falls back to `gray`).
 
 `temperature` (`i16`, t = value in tenths):
 
@@ -331,43 +398,142 @@ Example: `temperature` 25 (2.5 °C) between stops 0 and 50: R = 171 + floor((2·
 
 ## 10. Tests required
 
-Library seams (interim names; the engineer may add helpers but should not change these without a spec note): `climate_wind(seed, weights) → code`; `climate_temperature_cell(...)`; `climate_box_mean(S grid, r)`; `climate_sweep(S grid, water grid, hs grid, wind, tuning) → (q grid, p grid)`; `climate_rainfall_cell(p, coast_dist, rn, tuning)`; `climate_layers(elevation, water, water_depth, coast_dist, tuning, seed, threads)`; all on any W × H grid.
+Library seams, as implemented in `worldgen/include/worldgen/stages/climate.hpp` (namespace `worldgen::stages`; `Fx` is `worldgen::Fx`, `Grid` and `Direction` are from `worldgen/geo/grid.hpp`). All work on any W × H grid with index y × W + x; each raises `FatalError` on an array of the wrong length, an invalid grid, threads outside [1, 256] or a violated precondition; `threads` never changes a result. The engineer may add helpers but should not change these without a spec note.
+
+```cpp
+ClimateTuning climate_tuning_from(const data::Record& record);        // the 17 fields of section 4
+ClimateTuning climate_tuning_from(const data::ContentSet& content);   // of definition worldgen.climate
+
+// C1: S = elevation + water_depth; fatal "climate: input precondition: ..." unless the
+// preconditions 2 and 3 of section 2 hold (sizes as precondition 1).
+std::vector<std::int64_t> climate_surface(Grid grid, std::span<const std::int16_t> elevation,
+                                          std::span<const std::uint8_t> water,
+                                          std::span<const std::uint16_t> water_depth);
+// C2: the code the wind blows toward. Fatal unless 8 weights, none negative, sum >= 1.
+Direction climate_wind(std::uint64_t seed, std::span<const std::int64_t> weights);
+// C3 for one cell of row y of a grid of `height` rows; noise is the fbm_m value at the cell.
+std::int16_t climate_temperature_cell(std::int64_t y, std::int64_t height, std::int64_t s_dm, Fx noise,
+                                      const ClimateTuning& tuning);
+std::vector<std::int16_t> climate_temperature(std::uint64_t seed, Grid grid, std::span<const std::int64_t> surface,
+                                              const ClimateTuning& tuning, std::uint32_t threads = 1);
+// One box pass of half-width r_cells on integer S: hs1 of C4 with h = r_cells.
+std::vector<Fx> climate_box_mean(Grid grid, std::span<const std::int64_t> surface, std::int64_t r_cells,
+                                 std::uint32_t threads = 1);
+// C4: the triangle kernel with r = r_cells (two passes of half-width r_cells div 2).
+std::vector<Fx> climate_triangle_mean(Grid grid, std::span<const std::int64_t> surface, std::int64_t r_cells,
+                                      std::uint32_t threads = 1);
+// C5 (single-threaded). wind > 7 is fatal.
+struct ClimateSweep { std::vector<Fx> q; std::vector<Fx> p; };
+ClimateSweep climate_sweep(Grid grid, std::span<const std::uint8_t> water, std::span<const Fx> hs,
+                           Direction wind, const ClimateTuning& tuning);
+// C6 for one cell and for a grid.
+std::uint16_t climate_rainfall_cell(Fx p, std::int64_t coast_dist, Fx rn, const ClimateTuning& tuning);
+std::vector<std::uint16_t> climate_rainfall(std::uint64_t seed, Grid grid, std::span<const Fx> p,
+                                            std::span<const std::int16_t> coast_dist,
+                                            const ClimateTuning& tuning, std::uint32_t threads = 1);
+// C1 to C6.
+struct ClimateLayers { std::vector<std::int16_t> temperature; std::vector<std::uint16_t> rainfall; };
+ClimateLayers climate_layers(Grid grid, std::span<const std::int16_t> elevation,
+                             std::span<const std::uint8_t> water, std::span<const std::uint16_t> water_depth,
+                             std::span<const std::int16_t> coast_dist, const ClimateTuning& tuning,
+                             std::uint64_t seed, std::uint32_t threads = 1);
+// The stage: reads worldgen.climate and the four layers (precondition 1), runs climate_layers, writes C7.
+void run_climate(StageContext& context);
+```
+
+Both C4 seams are kept: `climate_triangle_mean` is C4 and is what `climate_layers` calls; `climate_box_mean` is its first pass alone, kept so that a single box can be tested on its own (the one-box example of 5.1). The second pass, on `Fx` raw values, is not a seam. Both C4 seams are fatal for r_cells < 0 and for any S outside [0, 32767]. `climate_sweep` takes the smoothed surface hs, not S.
 
 ### 10.1 Unit tests
 
 1. Every worked example of 5.1 exactly (raw values where given).
 2. The C3 noise term: for seed 0, N = 64 and the shipped tuning, at 16 cells chosen by the test, `temperature` equals the test's own evaluation of C3 with `fbm2`.
-3. Box mean at r larger than the grid (every window is the whole grid): every hs is the grid mean.
-4. Sweep with each of the 8 wind codes on a 5 × 5 grid of S = 10 on land with an ocean border: the result is the 90°-rotated or mirrored image of the code 0 and code 1 results (the test rotates the grid, sweeps, rotates back and compares exactly).
+3. Box and triangle at radii as large as the grid or larger: `climate_box_mean` with r_cells ≥ max(W, H) − 1, and `climate_triangle_mean` with r_cells div 2 ≥ max(W, H) − 1, give every cell `from_ratio(ΣS, W·H)`. `climate_triangle_mean` with r_cells 0 or 1 gives `from_int(S)`; with odd r_cells it equals the result for r_cells − 1.
+4. **Symmetry** (invariant 7). On the 200 random fixtures of 10.2 and on a non-square 7 × 5 grid of random S with a one-cell ocean border, for every code k = 0 to 7 and each of the three generators σ (mirror in x, mirror in y, transpose), the test transforms `water` and hs by σ, sweeps with the code of σ(dx, dy), transforms the result back and compares q and p with the sweep of the original exactly. All 24 pairs must hold, including the transpose for the diagonal codes (which the former vertical taps failed). Also `climate_triangle_mean` commutes with the three σ.
 5. Wind: weights with a single non-zero entry always give that code; a weights array summing to 0 is a load error (named check); 7 or 9 entries are a type error.
 6. Tuning validation: each bound of section 4 rejects a value one step outside it; a float literal is a P0-03 error.
+7. Preconditions: each violation of section 2 (a missing input layer, a layer of the wrong size or type, a `water` value of 4, S ≠ 0 on an ocean cell, S < 1 on another cell, S > 32767) is fatal with the prefix `climate: input precondition: `; from `worldgen-cli generate` it exits 1 and leaves no world file and no `.partial`.
+8. Report: on a world with `temperature` and `rainfall` but without the hydrology layers, the four climate keys are printed; on a grid with no land each prints a single `n/a`.
 
 ### 10.2 Property tests
 
-Over seeds 0 to 63 at N = 128 (fixture tuning; elevation and hydrology layers from the P1-01 and P1-02 stages) and 200 random fixtures (S random in [1, 3000] on a 32 × 32 interior with an ocean border, `water` 0 on land, random wind code; stream `test.climate`, test-only): invariants 1 to 5 by code independent of the stage.
+Over seeds 0 to 63 at N = 128 (fixture tuning; elevation and hydrology layers from the P1-01 and P1-02 stages) and 200 random fixtures: invariants 1 to 5 and 7 by code independent of the stage.
+
+Random fixture f (f = 0 to 199) is a 34 × 34 grid: `Rng(substream(stream_key(0, "test.climate"), f))` draws the wind code with `uniform_u64(8)` first, then `uniform_i64(1, 3000)` for each interior cell (x and y in 1..32) in index order, which is that cell's `elevation` and S (`water` 0, `water_depth` 0); the one-cell border is ocean with `elevation` −10, `water` 3 and `water_depth` 10; `coast_dist` is P1-02 H7 on that ocean mask. The climate tuning is the shipped tuning with `wind_weights` one-hot at the drawn code, and the world seed is f. `test.climate` is a test-only stream.
 
 ### 10.3 Determinism tests
 
-Threads 1, 2 and 5 give identical layers (seeds 0 and 42 at N = 128 and 512); resume (P1-00 X2): climate run on layers read back from a world written after hydrology equals the uninterrupted pipeline.
+Threads 1, 2 and 5 give identical layers (seeds 0 and 42 at N = 128 and 512), and identical `climate_triangle_mean` results on the random fixtures; resume (P1-00 X2): climate run on layers read back from a world written after hydrology equals the uninterrupted pipeline.
 
 ### 10.4 Golden values
 
-Layer hashes of `temperature` and `rainfall` with fixture tuning for seeds 0, 42 and "The Unmapped" at N = 512, seed 1 at 1024, seed 0 at 128, recorded by the validation specialist after the implementation passes. Their inputs come from the hydrology golden cases, so an upstream change re-records them together.
+Layer hashes of `temperature` and `rainfall` with fixture tuning for seeds 0, 42 and "The Unmapped" at N = 512, seed 1 at 1024, seed 0 at 128, recorded by the validation specialist after the implementation passes. Their inputs come from the hydrology golden cases, so an upstream change re-records them together. Any golden file written against the first version of this spec (the test writer's `p1-03-climate.txt` on `p1/03-climate-tests`) is regenerated from the revised reference.
 
 ## 11. Known limitations and calibration
 
-1. **Calibration is from a floating-point prototype**, not this arithmetic: the spec writer's Python model of C3 to C6 with substitute noise (smoothed Gaussian fields of similar wavelength) and an approximate hydrology (G3/G4 without lake rerouting), run on generator 0.3.0 worlds (512 seeds 0–11, 1024 seeds 0–5, 12, 18) with wind code = seed mod 8. Values marked "guess" were chosen there so that the five natural biomes of P1-04 all appear (section P1-04 11); expect to retune after the first implementation sweep.
+1. **First calibration was from a floating-point prototype**, not this arithmetic: the spec writer's Python model of C3 to C6 with substitute noise (smoothed Gaussian fields of similar wavelength) and an approximate hydrology (G3/G4 without lake rerouting), run on generator 0.3.0 worlds (512 seeds 0–11, 1024 seeds 0–5, 12, 18) with wind code = seed mod 8. Values marked "guess" were chosen there so that the five natural biomes of P1-04 all appear (section P1-04 11). `rain_oro_mm` and `moisture_path_mm_km` have since been retuned on the implementation (11.1); the other guesses stand until the validation sweep.
 2. **One wind, no seasons.** The model has no seasonal cycle, no secondary wind and no temperature effect of the sea (continentality). On a 16 km map these would be small next to the orographic effect.
-3. **Streaks along the wind.** Advection along one D8 direction leaves faint stripes parallel to the wind in the rain field downwind of sharp terrain; the 320 m smoothing, the 1-2-1 taps and the rain noise hide most of them. Diagonal winds step along exact diagonals.
-4. **Rain on steep windward faces is high** (prototype land p90 1300–3500 mm, maximum at the 10000 mm cap on a few cells): the ranges are walls (P1-01), and even smoothed over 320 m their windward gradient is large. It matters only where it moves a biome boundary; lower `rain_oro_mm` if the critic finds the windward flanks too wet.
+3. **Faint lee streaks along the wind.** Advection along one D8 direction leaves faint stripes parallel to the wind in the rain field downwind of sharp terrain. The triangle kernel, the 1-2-1 taps, the wetter air of the shipped `moisture_path_mm_km` and the rain noise hide most of them; faint fingers remain in places (experiment: the s5-2048 stripe in the lee of a N–S arm under a north wind is much fainter from B32 on), judged acceptable. The comb-like bands across the wind that the single box produced are gone (C4). Diagonal winds take three taps across the wind and are exact rotations and mirrors of one another (C5, symmetry), but are not rotations of the orthogonal winds, so a world's rain field is not the 45° rotation of the same world under the neighbouring orthogonal wind.
+4. **Rain on steep windward faces is high**: the ranges are walls (P1-01), and even smoothed over 320 m their windward gradient is large. With the shipped `rain_oro_mm` 2500 the land maximum (`rainfall_mm` p100) has median 5798 / 5074 / 4214 mm at 512 / 1024 / 2048 and reaches 8671 mm on one 512 world (variant D); the 10000 mm cap is no longer reached on the experiment worlds (at 5000 it was reached on 512 maps). Lowering `rain_oro_mm` to about 2000 would keep every 512 world under 6000–7000 mm at the cost of more contrast.
 5. **Rivers do not follow the rain.** `flow_accum` counts cells (P1-02 open question 2); this spec adds no rainfall-weighted discharge (open question 3).
+6. **Passes do not let moisture through visibly.** A natural pass or gap (P1-01) is narrower than the 640 m support of C4, so the smoothed surface the air sees has no notch there and the lee of a pass is as dry as the lee of the range beside it.
+7. **Rainfall depends on map size.** The moisture path is in metres (section 1), so a wider continent has a drier interior: land median about 890 / 800 / 700 mm at 512 / 1024 / 2048, land under 700 mm 9% / 26% / 51% (variant C32o25; variant D, the adopted algorithm: 880 / 786 / 676 mm and 11% / 30% / 56%). P1-04's fixed 700 mm forest threshold (and its 500 mm marsh minimum) will therefore give much more open land at 2048 than at 512; P1-04 must re-derive its rainfall thresholds per map size or from rainfall quantiles once climate merges (P1-04 11, item 6; open question 6).
+
+### 11.1 Calibration on the first implementation (2026-11-17)
+
+Experiment on branch `p1/03-climate-experiment` (commit `2689076`, generator 0.7.0 code otherwise; report `~/.cache/the-unmapped/out/p1-03-climate/exp/experiment.md`, with rainfall contact sheets and crops beside it). Worlds: 512 seeds 0–9, 1024 seeds 0–9, 2048 seeds 1 and 5; terrain and hydrology identical in every variant. The first implementation reproduced every worked example of the first version of this spec, and an independent test reference agreed, so the defects in its maps (comb-like bands across the wind; windward lowlands of 2048 maps as dry as the lee, 31% of land under 500 mm; the 10000 mm cap reached on 512 maps) were consequences of the algorithm and tuning as specified.
+
+| Variant | C4 | `moisture_path_mm_km` | `rain_oro_mm` | Diagonal taps |
+| --- | --- | --- | --- | --- |
+| spec (base) | one box, r = 20 | 16000 | 5000 | vertical triple of the previous column (first version) |
+| A | triangle, two boxes r = 10 | 16000 | 5000 | vertical |
+| B32 | triangle | 32000 | 5000 | vertical |
+| B64 | triangle | 64000 | 5000 | vertical |
+| C32 | triangle | 32000 | 3500 | vertical |
+| C32o25 | triangle | 32000 | 2500 | vertical |
+| D (adopted) | triangle | 32000 | 2500 | across the wind (C5) |
+
+Results: `rainfall_mm` p50 and `rain_contrast` as min / median / max over the worlds of a size, p100 as median (max); land shares as means over worlds; lowland (land, not lake, below 200 m) rainfall as cell-weighted means, where a lowland cell is "lee" if tracing against the wind for up to 400 steps meets a cell of 800 m or more, and "windward" if it is not lee and tracing with the wind meets one.
+
+| Variant | N | p50 mm | p100 mm | `rain_contrast` | land < 500 mm | land < 700 mm | windward / lee lowland mm |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| spec | 512 | 811 / 835 / 1054 | 8298 (10000) | 3.18 / 5.38 / 7.20 | 3.2% | 28.3% | 1691 / 677 |
+| spec | 1024 | 691 / 738 / 821 | 6670 (9571) | 2.35 / 3.93 / 6.12 | 15.2% | 44.6% | 1083 / 536 |
+| spec | 2048 | 583 / 600 / 616 | 5916 (6801) | 2.83 / 2.97 / 3.11 | 31.0% | 66.5% | 668 / 379 |
+| A | 512 | 802 / 826 / 1025 | 9786 (10000) | 3.13 / 5.72 / 8.00 | 4.5% | 29.2% | 1638 / 668 |
+| A | 1024 | 688 / 732 / 808 | 8580 (10000) | 2.46 / 4.25 / 6.57 | 16.1% | 45.0% | 1067 / 529 |
+| A | 2048 | 582 / 600 / 617 | 6955 (8177) | 2.88 / 3.03 / 3.17 | 31.2% | 66.5% | 658 / 375 |
+| B32 | 512 | 846 / 886 / 1077 | 10000 (10000) | 3.09 / 5.36 / 7.21 | 0.1% | 15.8% | 1702 / 794 |
+| B32 | 1024 | 760 / 805 / 874 | 9314 (10000) | 2.22 / 3.78 / 5.79 | 1.9% | 30.2% | 1136 / 664 |
+| B32 | 2048 | 688 / 700 / 712 | 8617 (9369) | 2.18 / 2.32 / 2.46 | 11.9% | 49.8% | 775 / 518 |
+| B64 | 512 | 876 / 930 / 1111 | 10000 (10000) | 3.03 / 5.20 / 6.74 | 0.0% | 4.8% | 1738 / 884 |
+| B64 | 1024 | 818 / 853 / 908 | 9958 (10000) | 2.11 / 3.58 / 5.31 | 0.0% | 14.3% | 1177 / 771 |
+| B64 | 2048 | 760 / 766 / 771 | 9833 (10000) | 1.82 / 1.96 / 2.09 | 0.5% | 30.0% | 856 / 648 |
+| C32 | 512 | 839 / 890 / 1032 | 8362 (10000) | 2.50 / 4.05 / 5.26 | 0.0% | 12.0% | 1456 / 799 |
+| C32 | 1024 | 761 / 804 / 867 | 6919 (9903) | 1.92 / 2.95 / 4.35 | 0.5% | 28.1% | 1037 / 680 |
+| C32 | 2048 | 686 / 698 / 710 | 6400 (6967) | 1.98 / 2.07 / 2.16 | 8.4% | 50.4% | 743 / 535 |
+| C32o25 | 512 | 834 / 892 / 1013 | 6314 (8740) | 2.11 / 3.18 / 4.02 | 0.0% | 9.1% | 1290 / 802 |
+| C32o25 | 1024 | 763 / 803 / 859 | 5252 (7486) | 1.73 / 2.41 / 3.42 | 0.1% | 26.1% | 970 / 691 |
+| C32o25 | 2048 | 685 / 696 / 707 | 4848 (5291) | 1.86 / 1.92 / 1.98 | 6.2% | 51.1% | 720 / 548 |
+| D | 512 | 817 / 880 / 993 | 5798 (8671) | 1.91 / 3.06 / 4.02 | 0.0% | 11.1% | 1221 / 789 |
+| D | 1024 | 736 / 786 / 829 | 5074 (6610) | 1.67 / 2.25 / 2.97 | 0.4% | 30.4% | 931 / 671 |
+| D | 2048 | 668 / 676 / 685 | 4214 (5291) | 1.86 / 1.96 / 2.06 | 11.4% | 56.3% | 682 / 522 |
+
+Temperature is the same in every variant: p50 5.0–6.4 °C, `land_below_0c` 0.019–0.085. (Variant C64, `moisture_path_mm_km` 64000 with `rain_oro_mm` 3500, was also run and is in the report.)
+
+Decisions (the lead, 2026-11-17):
+
+- **Triangle kernel** (A against spec): the comb-like bands across the wind are gone on every map where they showed (s5-1024, s7-1024, s1-2048); almost all of the diagonal column striping was the box kernel too. Statistics barely move.
+- **`moisture_path_mm_km` 32000** (was 16000): at 16000 the windward lowlands of 2048 maps were as dry as the lee (31% of land under 500 mm, windward lowland 658 mm). 32000 raises the 2048 windward lowland to 775 mm and the lee to 518 mm with the rain shadow still reading as dry; 64000 overshoots (land under 500 mm all but disappears, the lee at 2048 reaches 648 mm).
+- **`rain_oro_mm` 2500** (was 5000): at 5000 the 10000 mm cap was reached on 512 maps, and at 3500 still on one; 2500 removes it. The price is lower contrast (`rain_contrast` median 3.2 / 2.4 / 1.9 against 5.4 / 3.9 / 3.0).
+- **Diagonal taps across the wind** (D against C32o25): adopted for the exact transpose symmetry (C5) and the cleaner reading "three taps across the wind", not for a visible fix once C4 is a triangle. Its effect on the statistics is small (p50 lower by 10–25 mm, p100 lower, lee lowland about the same).
 
 ## 12. Open questions for the lead
 
-1. **Wind direction per world** (a matter of taste for Paul). Chosen: drawn uniformly from the 8 D8 directions, so the wet side differs between worlds. Alternatives: always a westerly (weights `[1, 0, 0, 0, 0, 0, 0, 0]`), or westerlies favoured (e.g. `[4, 2, 1, 1, 1, 1, 1, 2]`). Both are a data change only. Recommendation: keep uniform for variety; the north–south temperature gradient is fixed, so the wind is the main thing that makes two continents' climates differ.
-2. **Temperature span and level** (taste). Chosen: 5 °C at sea level in the north to 9 °C in the south, 6.5 °C per km lapse: a cool temperate land in keeping with dark high fantasy, alpine conditions above about 1,000 m. The span is a map fraction (proposals "Climate's latitude span is a fraction of the map"), the same at every map size. Recommendation: approve; revisit with the biome images.
+1. **Wind direction per world** (a matter of taste for Paul; provisionally accepted). Chosen: drawn uniformly from the 8 D8 directions, so the wet side differs between worlds. Alternatives: always a westerly (weights `[1, 0, 0, 0, 0, 0, 0, 0]`), or westerlies favoured (e.g. `[4, 2, 1, 1, 1, 1, 1, 2]`). Both are a data change only. Recommendation: keep uniform for variety; the north–south temperature gradient is fixed, so the wind is the main thing that makes two continents' climates differ.
+2. **Temperature span and level** (taste; provisionally accepted). Chosen: 5 °C at sea level in the north to 9 °C in the south, 6.5 °C per km lapse: a cool temperate land in keeping with dark high fantasy, alpine conditions above about 1,000 m. The span is a map fraction (proposals "Climate's latitude span is a fraction of the map"), the same at every map size. Recommendation: approve; revisit with the biome images.
 3. **Rainfall-weighted discharge** (P1-02 open question 2). Recommendation: none in P1. Rivers are sized by area; biomes and resources use `rainfall` and the river raster directly; a rain-shadow river being as large as a wet-side river is acceptable (and real: exotic rivers). If history or the runtime needs discharge, a later stage can compute it from `flow_dir` and `rainfall` without changing any existing layer.
 4. **Store the wind direction?** It is not in the world file, so `report` cannot print it and the viewer cannot draw it. Recommendation: no change now; if the critic or the viewer needs it, add a one-row table (`climate`: `wind_toward`) with the next schema change rather than an extra `meta` key.
 5. **Lakes do not recharge the air.** Large lakes would moisten their lee shore. Recommendation: leave it; the lake share is capped at 3% of land (P1-01).
+6. **Size dependence of rainfall** (limitation 7). Chosen: keep the moisture path in metres, so a larger map is a larger land with a drier interior (P1-00 2.2), and let P1-04 adapt its thresholds. The alternative, a moisture path in map fractions, would make 512 and 2048 maps equally wet but give a 2048 map's ranges a weaker shadow per kilometre. Recommendation: keep metres; decide P1-04's form (per-size thresholds or rainfall quantiles) with its recalibration.
 
-**Schema and catalogue impact:** none. The `worldgen` kind gains the id `climate` (P1-00 6.1), which changes `content_hash` of every world (PATCH bump, P1-00 6.4). Three stream names are registered.
+**Schema and catalogue impact:** none. The `worldgen` kind gains the id `climate` (P1-00 6.1), which changes `content_hash` of every world (the 0.7.0 bump of the climate merge, P1-00 6.4). Three stream names are registered.
