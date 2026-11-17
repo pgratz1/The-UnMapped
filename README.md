@@ -49,7 +49,7 @@ The full design is in [`docs/design/design.md`](docs/design/design.md).
 | **Current phase** | P1 Geography. P0 Foundation and P2 Godot bring-up and viewer v0 are complete |
 | **Next phase** | P3 History core, after P1 |
 | **Current milestone** | Milestone 0, Geography generator: in progress (P1 and P2) |
-| **Work in flight** | P1: elevation and hydrology are merged, so `generate` writes a continent with ranges, passes, rivers and lakes. Elevation followed five rounds of design exploration and two world-critic reviews (`docs/reviews/`): irregular continents, long segmented ranges with 2,000 to 2,500 m peaks, valleys cut by erosion, and a guaranteed share of mountains in every world. Generator 0.6.0 (2026-11-17) added natural passes at saddles of each range's drainage divide, after five more exploration rounds and three critic reviews: a pass is cut by at most 500 m, so naturally low saddles become low gates and others stay high cols, and about two in five are walkable end to end at the default map size. Pass sites are stored in a `pass` table for the history simulation (the first schema change, version 2). Very steep faces are bounded by a final slope-relaxing step. Next: climate, biomes, resources and habitability, and regions, whose specs are approved. |
+| **Work in flight** | P1: elevation and hydrology are merged, so `generate` writes a continent with ranges, passes, rivers and lakes. Elevation followed five rounds of design exploration and two world-critic reviews (`docs/reviews/`): irregular continents, long segmented ranges with 2,000 to 2,500 m peaks, valleys cut by erosion, and a guaranteed share of mountains in every world. Generator 0.6.0 (2026-11-17) added natural passes at saddles of each range's drainage divide, after five more exploration rounds and three critic reviews: a pass is cut by at most 500 m, so naturally low saddles become low gates and others stay high cols, and about two in five are walkable end to end at the default map size. Pass sites are stored in a `pass` table for the history simulation (the first schema change, version 2). Very steep faces are bounded by a final slope-relaxing step. Climate merged the same day (generator 0.7.0): temperature falls with height and from south to north, and each world has one prevailing wind that makes ranges wet on the windward side and dry in the lee. Next: biomes (its rainfall thresholds will scale with map size), then resources and habitability, and regions. |
 | **`main`** | Builds and passes all tests on Linux (GCC, Clang, Clang with sanitizers) and Windows (MSVC), in debug and release |
 
 **What "P0 done" means.** The phase's exit check is that an empty world file is byte-identical across all three compilers and that `worldgen-cli hash` proves it in continuous integration. It does: eight test worlds, six empty and two holding test layers, are identical across all seven build configurations, and each matches its recorded golden hash. CI repeats the comparison on every push. With geography stages merged the comparison covers twelve worlds, four of them full maps with elevation and hydrology at 512 and 1024.
@@ -61,7 +61,8 @@ The full design is in [`docs/design/design.md`](docs/design/design.md).
 
 **Known gaps and notes**
 
-- Geography so far is elevation and hydrology: no climate, biomes or regions yet.
+- Geography so far is elevation, hydrology and climate: no biomes or regions yet.
+- Climate limitations (`docs/reviews/p1-03-climate-critic.md`): rainfall depends on map size (small maps are wetter); every world has the same temperature range; the wind direction is not stored yet; passes do not channel moisture.
 - Known elevation limitations are listed in section 11 of the elevation spec and in `docs/reviews/p1-01b-elevation-passes-critic.md`. The main ones: low gates on small maps can cut a range down nearly to the plain; a pass sometimes erases a mountain lake on its crossing; about two in five small (512) worlds get no pass; on a rare small map a range drops into the sea as a very steep smooth face (512, seed 41); filled basins among peaks can look smooth; a few worlds get ring-shaped ranges. Rivers on gently sloping lowland run in angular steps (`docs/reviews/p1-02-hydrology-critic.md`).
 - The only registered data kind is generator tuning (`game/data/worldgen/`); biomes, races and the rest come with their phases.
 - The noise primitive's output stays within about two thirds of its nominal range, which is normal for this kind of noise; the P1 elevation spec needs to account for it.
@@ -78,7 +79,7 @@ The first block of work is the world generator prototype: seven phases, P0 to P6
 | Phase | Delivers | Depends on | Status |
 | --- | --- | --- | --- |
 | **P0 Foundation** | Repository layout, CMake presets, vendored dependencies, CI on three compilers, the deterministic core, the reproducible SQLite layer, the TOML loader, `worldgen-cli` | — | **Done** 2026-11-15, reviewed |
-| **P1 Geography** | Elevation, erosion, hydrology, climate, biomes, resources and regions, each writing its layer; image export per layer | P0 | **In progress** since 2026-11-15: first three specs approved, shared foundation, elevation and hydrology merged (2026-11-16); natural passes merged (2026-11-17, generator 0.6.0, schema 2); specs for the remaining four stages approved; climate next |
+| **P1 Geography** | Elevation, erosion, hydrology, climate, biomes, resources and regions, each writing its layer; image export per layer | P0 | **In progress** since 2026-11-15: first three specs approved, shared foundation, elevation and hydrology merged (2026-11-16); natural passes merged (2026-11-17, generator 0.6.0, schema 2); climate merged (2026-11-17, generator 0.7.0); biomes next |
 | **P2 Godot bring-up and viewer v0** | Godot version pinned, C++ extension building on Linux and Windows, `world.db` reader bound into Godot, 2D map with switchable layers | P0; parallel with P1 | **Done** 2026-11-15, awaiting Paul's hands-on review. Godot 4.7.2 and godot-cpp 10.0.0 pinned; the extension builds and its headless check passes on Linux and Windows |
 | **P3 History core** | Race and culture definitions, ages and the awakening schedule, active phases and quiet intervals, civilizations, settlements, wars, ruin, the event log, a text history report | P1 | Not started |
 | **P4 Viewer v1** | Timeline scrubber, territory by year, settlement and site markers, browser for civilizations and events | P2, P3; parallel with P5 | Not started |
@@ -122,7 +123,7 @@ Around them: about 300 automated test cases, 2,201 golden vectors for the core p
 
 ## What works today
 
-`worldgen-cli` writes world files and inspects them. A generated world currently holds a table of mountain passes and eight geography layers (elevation, then water, water depth, flow direction, flow accumulation, rivers, lakes and distance to the coast from hydrology) on a 512, 1024 or 2048 cell map at 16 m per cell.
+`worldgen-cli` writes world files and inspects them. A generated world currently holds a table of mountain passes and ten geography layers (elevation; water, water depth, flow direction, flow accumulation, rivers, lakes and distance to the coast from hydrology; temperature and rainfall from climate) on a 512, 1024 or 2048 cell map at 16 m per cell.
 
 ```
 $ worldgen-cli generate --seed-phrase "The Unmapped"
@@ -131,16 +132,16 @@ $ worldgen-cli generate --seed-phrase "The Unmapped"
 $ worldgen-cli report --db ~/.cache/the-unmapped/out/world-15629206466951235176.db
 # worldgen report v2
 [meta]
-content_hash = 623da6ffeb9a56190bfae4ac5c9d5f25d4fe2a9008362aa8effc429079cd56b3
+content_hash = 79860d570603ba384e6faa4f4bd2fd0a4f567920c46a78b8a7ea2278cb0b7fcf
 format = the-unmapped-world
-generator_version = 0.6.0
+generator_version = 0.7.0
 param.map_size = 1024
 schema_version = 2
 seed = 15629206466951235176
 seed_phrase = the unmapped
-stages = elevation,hydrology
+stages = elevation,hydrology,climate
 [tables]
-layer = 8
+layer = 10
 meta = 8
 pass = 3
 [layers]
@@ -152,6 +153,8 @@ flow_accum u32 1024x1024 codec=1 bytes=468500 min=0 max=120835
 river u8 1024x1024 codec=1 bytes=27457 min=0 max=8
 lake u32 1024x1024 codec=1 bytes=2234 min=0 max=4
 coast_dist i16 1024x1024 codec=1 bytes=1022256 min=-6579 max=5008
+temperature i16 1024x1024 codec=1 bytes=274872 min=-55 max=94
+rainfall u16 1024x1024 codec=1 bytes=1026588 min=497 max=4535
 [geography]
 cells = 1048576
 land_cells = 419430
@@ -187,9 +190,13 @@ river_mouths = 49
 major_rivers = 15
 longest_river_m = 11685
 largest_basin_share = 0.2881
+temperature_c = -5.5 0.3 5.2 7.1 8.7
+rainfall_mm = 497 553 709 1466 4535
+land_below_0c = 0.0833
+rain_contrast = 2.6510
 
 $ worldgen-cli hash --db ~/.cache/the-unmapped/out/world-15629206466951235176.db
-3545d97c302bbccc99215af691b7ded443cc2d6beff244a9b7426051bfe7fc7e
+610719b6e5c29113b2214027bb35e2ee4f27f12ea229fcc1b0cf83550054559c
 
 $ worldgen-cli render --db ~/.cache/the-unmapped/out/world-15629206466951235176.db --composite map
 /home/you/.cache/the-unmapped/out/world-15629206466951235176.map.png
@@ -199,7 +206,11 @@ That hash is the same on every supported compiler and platform, and with any num
 
 ![Shaded relief map of the world generated from the phrase "The Unmapped"](docs/images/p1-elevation-map.jpg)
 
-A 1024 world takes about 7 seconds on six cores. `--until elevation` stops after elevation, `--until none` writes an empty world, and `--test-pattern` writes three small test layers that exercise hashing, noise and the layer codec.
+The rainfall layer of the same world (`render --layer rainfall`): dark is wet. The prevailing wind decides which side of each range gets the rain:
+
+![Rainfall map of the same world](docs/images/p1-rainfall.jpg)
+
+A 1024 world takes about 8 seconds on six cores. `--until elevation` stops after elevation, `--until none` writes an empty world, and `--test-pattern` writes three small test layers that exercise hashing, noise and the layer codec.
 
 | Command | Does |
 | --- | --- |

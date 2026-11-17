@@ -6,7 +6,7 @@ A single-player, first-person, open-world RPG whose world and history are genera
 
 - **Design doc:** `docs/design/design.md`. It is the specification for the whole project. Read the sections relevant to your task before starting.
 - **Current work:** the world generator prototype, section 13 of the design doc (phases P0 to P6).
-- **Current phase:** P1 Geography. P0 Foundation and P2 (Godot bring-up and viewer v0) are done. The elevation and hydrology stages (specs P1-01, P1-02) are merged; climate, biomes, resources and habitability, and regions (specs P1-03 to P1-06, approved) are next.
+- **Current phase:** P1 Geography. P0 Foundation and P2 (Godot bring-up and viewer v0) are done. The elevation, hydrology and climate stages (specs P1-01 to P1-03) are merged; biomes, resources and habitability, and regions (specs P1-04 to P1-06) are next.
 - **Next phase:** P3 History core, after Paul's review of P1.
 
 ## The design doc is read-only
