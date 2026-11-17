@@ -371,8 +371,8 @@ inline constexpr std::int64_t PASS_FOOT_R2 = 1369;
 
 // The climate keys of P1-03 9 in their order, each "<key> = <value>\n":
 //   temperature_c   land percentiles 0, 10, 50, 90, 100 of temperature, each
-//                   metres1 of the value in tenths (e.g. "-14.5"); n/a each
-//                   when there is no land
+//                   metres1 of the value in tenths (e.g. "-14.5"); a single
+//                   n/a (for both keys) when there is no land
 //   rainfall_mm     land percentiles 0, 10, 50, 90, 100 of rainfall
 //   land_below_0c   ratio4(land cells with temperature < 0, land cells)
 //   rain_contrast   ratio4(rainfall p90, rainfall p10); n/a when p10 = 0

@@ -90,11 +90,7 @@ ClimateTuning climate_tuning_from(const data::Record& record) {
         fatal("climate: wind_weights does not have 8 entries");
     }
     for (std::size_t k = 0; k < WIND_CODES; ++k) {
-        const std::int64_t w = weights[k].as_int();
-        if (w < 0) {
-            fatal("climate: a wind weight is negative");
-        }
-        t.wind_weights[k] = static_cast<std::uint64_t>(w);
+        t.wind_weights[k] = weights[k].as_int();
     }
     t.smooth_radius_m = record.get_int("smooth_radius_m");
     t.rain_base_mm = record.get_int("rain_base_mm");
@@ -144,18 +140,30 @@ std::vector<std::int64_t> climate_surface(Grid grid, std::span<const std::int16_
 
 // --- C2: prevailing wind (D9, sequential) ------------------------------------------------------
 
-Direction climate_wind(std::uint64_t seed, std::span<const std::uint64_t> weights) {
+Direction climate_wind(std::uint64_t seed, std::span<const std::int64_t> weights) {
     if (weights.size() != WIND_CODES) {
         fatal("climate_wind: weights must have 8 entries");
     }
+    std::array<std::uint64_t, WIND_CODES> w{};
+    for (std::size_t k = 0; k < WIND_CODES; ++k) {
+        if (weights[k] < 0) {
+            fatal("climate_wind: a weight is negative");
+        }
+        w[k] = static_cast<std::uint64_t>(weights[k]);
+    }
     Rng rng(stream_key(seed, streams::geo_climate_wind));
-    const std::size_t k = rng.weighted_index(weights);  // one call (P0-01 6.3); fatal on a zero sum
+    const std::size_t k = rng.weighted_index(w);  // one call (P0-01 6.3); fatal on a zero sum
     return static_cast<Direction>(k);
 }
 
 // --- C3: temperature (D1, G6 row blocks) ---------------------------------------------------------
 
-std::int16_t climate_temperature_cell(const ClimateTuning& tuning, Fx v, std::int64_t s_dm, Fx noise) {
+std::int16_t climate_temperature_cell(std::int64_t y, std::int64_t height, std::int64_t s_dm, Fx noise,
+                                      const ClimateTuning& tuning) {
+    if (y < 0 || y >= height) {
+        fatal("climate_temperature_cell: row outside the grid");
+    }
+    const Fx v = Fx::from_ratio(2 * y + 1, 2 * height);
     const Fx t_sea = tuning.temp_north_c + mul(tuning.temp_south_c - tuning.temp_north_c, v);
     const Fx lap = div_int(mul_int(tuning.lapse_c_per_km, s_dm), 10000);  // S in dm; 10000 dm = 1 km
     const Fx tn = mul(tuning.temp_noise_amp_c, noise);
@@ -172,12 +180,11 @@ std::vector<std::int16_t> climate_temperature(std::uint64_t seed, Grid grid, std
     std::vector<std::int16_t> out(grid.cells(), 0);
     geo::for_each_row_block(grid.height, threads, [&](const geo::RowBlock& block) {
         for (std::int32_t y = block.y_begin; y < block.y_end; ++y) {
-            const Fx v = Fx::from_ratio(2 * std::int64_t{y} + 1, 2 * std::int64_t{grid.height});
             const Fx ym = cell_centre_m(y);
             for (std::int32_t x = 0; x < grid.width; ++x) {
                 const CellIndex i = grid.index(x, y);
                 const Fx nz = geo::fbm_m(key, cell_centre_m(x), ym, tuning.temp_noise);
-                out[i] = climate_temperature_cell(tuning, v, surface[i], nz);
+                out[i] = climate_temperature_cell(y, grid.height, surface[i], nz, tuning);
             }
         }
     });

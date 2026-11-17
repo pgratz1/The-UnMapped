@@ -64,7 +64,7 @@ struct ClimateTuning {
     Fx lapse_c_per_km;   // cooling per km of height
     geo::FbmM temp_noise;
     Fx temp_noise_amp_c;  // degrees C per unit of temp_noise
-    std::array<std::uint64_t, WIND_CODES> wind_weights{};  // chance the wind blows toward code k
+    std::array<std::int64_t, WIND_CODES> wind_weights{};  // chance the wind blows toward code k
     std::int64_t smooth_radius_m = 0;      // half-width of the C4 window, metres
     std::int64_t rain_base_mm = 0;         // rain from saturated air over level ground
     std::int64_t rain_oro_mm = 0;          // extra rain per unit of upslope gradient
@@ -102,19 +102,22 @@ struct ClimateTuning {
 // C2 (D9, sequential): Rng(stream_key(seed, "geo.climate.wind")).
 // weighted_index(weights), one call: the D8 code (P1-00 2.3) the wind blows
 // toward (0 = toward the east, a westerly). Fatal unless weights has 8
-// entries with a non-zero sum.
-[[nodiscard]] geo::Direction climate_wind(std::uint64_t seed, std::span<const std::uint64_t> weights);
+// entries, none negative, with a non-zero sum.
+[[nodiscard]] geo::Direction climate_wind(std::uint64_t seed, std::span<const std::int64_t> weights);
 
 // --- C3: temperature ----------------------------------------------------------------------
 
-// C3 for one cell: v = V (from_ratio(2y + 1, 2H)), s_dm = S, noise = the
-// fbm_m value of geo.climate.temperature at the cell (the stage passes
-// fbm_m(K_temp, X, Y, temp_noise); tn = mul(temp_noise_amp_c, noise)):
+// C3 for the cell of row y of a grid of `height` rows: v = V =
+// from_ratio(2y + 1, 2 height), s_dm = S, noise = the fbm_m value of
+// geo.climate.temperature at the cell (the stage passes fbm_m(K_temp, X, Y,
+// temp_noise); tn = mul(temp_noise_amp_c, noise)):
 //   t_sea = temp_north_c + mul(temp_south_c - temp_north_c, v)
 //   lap   = div_int(mul_int(lapse_c_per_km, s_dm), 10000)
 //   T     = (t_sea - lap) + tn
 //   temperature = clamp(round_int(mul_int(T, 10)), -600, 500)
-[[nodiscard]] std::int16_t climate_temperature_cell(const ClimateTuning& tuning, Fx v, std::int64_t s_dm, Fx noise);
+// Fatal unless 0 <= y < height.
+[[nodiscard]] std::int16_t climate_temperature_cell(std::int64_t y, std::int64_t height, std::int64_t s_dm, Fx noise,
+                                                    const ClimateTuning& tuning);
 
 // C3 on a W x H grid (D1, G6 row blocks), the surface S as climate_surface
 // returns it.

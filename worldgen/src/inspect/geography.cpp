@@ -1106,13 +1106,18 @@ std::string climate_lines(std::span<const std::int16_t> e, std::span<const std::
     std::string out;
     std::string temps;
     std::string rains;
-    for (std::size_t k = 0; k < PS.size(); ++k) {
+    // Percentiles over no values print one n/a (P1-00 10.3, as elevation_m).
+    if (t.empty()) {
+        temps = std::string(NOT_AVAILABLE);
+        rains = std::string(NOT_AVAILABLE);
+    }
+    for (std::size_t k = 0; k < t.size(); ++k) {
         if (k != 0U) {
             temps += ' ';
             rains += ' ';
         }
-        temps += t.empty() ? std::string(NOT_AVAILABLE) : metres1(t[k]);
-        rains += r.empty() ? std::string(NOT_AVAILABLE) : db::format_i64(r[k]);
+        temps += metres1(t[k]);
+        rains += db::format_i64(r[k]);
     }
     line(out, "temperature_c", temps);
     line(out, "rainfall_mm", rains);
