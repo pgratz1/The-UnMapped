@@ -1,0 +1,18 @@
+[worldgen.climate]
+temp_north_c = 5
+temp_south_c = 9
+lapse_c_per_km = "6.5"
+temp_noise = { wavelength_m = 6000, octaves = 3, gain = "0.5" }
+temp_noise_amp_c = 1
+wind_weights = [1, 1, 1, 1, 1, 1, 1, 1]
+smooth_radius_m = 320
+rain_base_mm = 800
+rain_oro_mm = 5000
+moisture_path_mm_km = 16000
+loss_max = "0.25"
+ocean_recharge_m = 500
+coast_rain_mm = 150
+coast_rain_reach_m = 1500
+rain_noise = { wavelength_m = 5000, octaves = 3, gain = "0.5" }
+rain_noise_amp = "0.4"
+rain_min_mm = 250

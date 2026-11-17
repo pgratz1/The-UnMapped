@@ -325,6 +325,51 @@ std::vector<std::int64_t> land_percentiles(std::span<const std::int16_t> e, std:
     return out;
 }
 
+namespace {
+
+// The land percentiles of a 16-bit climate layer: an exact histogram over
+// the 65536 values of the type, offset so that bin b holds value b + base.
+template <class T>
+std::vector<std::int64_t> land_layer_percentiles_of(std::span<const std::int16_t> e, std::span<const T> values,
+                                                    std::span<const std::uint32_t> ps, std::int64_t base) {
+    if (values.size() != e.size()) {
+        fatal("land_layer_percentiles: sizes differ");
+    }
+    std::vector<std::uint64_t> count(65536U, 0U);
+    std::uint64_t n = 0;
+    for (std::size_t i = 0; i < e.size(); ++i) {
+        if (e[i] > 0) {
+            ++count[static_cast<std::size_t>(static_cast<std::int64_t>(values[i]) - base)];
+            ++n;
+        }
+    }
+    std::vector<std::int64_t> out;
+    if (n == 0U) {
+        return out;
+    }
+    for (const std::uint32_t p : ps) {
+        out.push_back(kth_in_bins(
+            count.size(), percentile_rank(n, p),
+            [base](std::size_t b) { return static_cast<std::int64_t>(b) + base; },
+            [&count](std::size_t b) { return count[b]; }));
+    }
+    return out;
+}
+
+}  // namespace
+
+std::vector<std::int64_t> land_layer_percentiles(std::span<const std::int16_t> e,
+                                                 std::span<const std::int16_t> values,
+                                                 std::span<const std::uint32_t> ps) {
+    return land_layer_percentiles_of(e, values, ps, -32768);
+}
+
+std::vector<std::int64_t> land_layer_percentiles(std::span<const std::int16_t> e,
+                                                 std::span<const std::uint16_t> values,
+                                                 std::span<const std::uint32_t> ps) {
+    return land_layer_percentiles_of(e, values, ps, 0);
+}
+
 std::vector<std::int64_t> ocean_depth_percentiles(std::span<const std::int16_t> e,
                                                   std::span<const std::uint32_t> ps) {
     const std::vector<std::uint64_t> count = i16_histogram(e);
@@ -878,19 +923,29 @@ std::optional<std::string> geography_layers_problem(const GeographyLayers& layer
         return "layer 'elevation' has " + db::format_u64(e.cell_count()) + " cells, more than the " +
                db::format_u64(geo::MAX_GRID_CELLS) + " the shared geography algorithms support";
     }
-    if (!layers.has_hydrology()) {
-        return std::nullopt;
+    if (layers.has_hydrology()) {
+        const HydrologyLayerSpec hydro[] = {
+            {layers.water, "water", db::ElementType::u8},
+            {layers.flow_dir, "flow_dir", db::ElementType::u8},
+            {layers.flow_accum, "flow_accum", db::ElementType::u32},
+            {layers.river, "river", db::ElementType::u8},
+            {layers.lake, "lake", db::ElementType::u32},
+        };
+        for (const auto& l : hydro) {
+            if (std::optional<std::string> p = layer_problem(l.grid, l.name, l.type, e)) {
+                return p;
+            }
+        }
     }
-    const HydrologyLayerSpec hydro[] = {
-        {layers.water, "water", db::ElementType::u8},
-        {layers.flow_dir, "flow_dir", db::ElementType::u8},
-        {layers.flow_accum, "flow_accum", db::ElementType::u32},
-        {layers.river, "river", db::ElementType::u8},
-        {layers.lake, "lake", db::ElementType::u32},
-    };
-    for (const auto& l : hydro) {
-        if (std::optional<std::string> p = layer_problem(l.grid, l.name, l.type, e)) {
-            return p;
+    if (layers.has_climate()) {
+        const HydrologyLayerSpec climate[] = {
+            {layers.temperature, "temperature", db::ElementType::i16},
+            {layers.rainfall, "rainfall", db::ElementType::u16},
+        };
+        for (const auto& l : climate) {
+            if (std::optional<std::string> p = layer_problem(l.grid, l.name, l.type, e)) {
+                return p;
+            }
         }
     }
     return std::nullopt;
@@ -1032,6 +1087,52 @@ std::string pass_lines(std::span<const std::int16_t> e, std::uint32_t w, std::ui
     return out;
 }
 
+std::string climate_lines(std::span<const std::int16_t> e, std::span<const std::int16_t> temperature,
+                          std::span<const std::uint16_t> rainfall) {
+    if (temperature.size() != e.size() || rainfall.size() != e.size()) {
+        fatal("climate_lines: sizes differ");
+    }
+    static constexpr std::array<std::uint32_t, 5> PS = {0U, 10U, 50U, 90U, 100U};
+    const std::vector<std::int64_t> t = land_layer_percentiles(e, temperature, PS);
+    const std::vector<std::int64_t> r = land_layer_percentiles(e, rainfall, PS);
+    std::uint64_t land = 0;
+    std::uint64_t below = 0;
+    for (std::size_t i = 0; i < e.size(); ++i) {
+        if (e[i] > 0) {
+            ++land;
+            if (temperature[i] < 0) ++below;
+        }
+    }
+    std::string out;
+    std::string temps;
+    std::string rains;
+    for (std::size_t k = 0; k < PS.size(); ++k) {
+        if (k != 0U) {
+            temps += ' ';
+            rains += ' ';
+        }
+        temps += t.empty() ? std::string(NOT_AVAILABLE) : metres1(t[k]);
+        rains += r.empty() ? std::string(NOT_AVAILABLE) : db::format_i64(r[k]);
+    }
+    line(out, "temperature_c", temps);
+    line(out, "rainfall_mm", rains);
+    line(out, "land_below_0c", ratio4(below, land));
+    const bool contrast = !r.empty() && r[1] > 0;
+    line(out, "rain_contrast",
+         contrast ? ratio4(static_cast<std::uint64_t>(r[3]), static_cast<std::uint64_t>(r[1]))
+                  : std::string(NOT_AVAILABLE));
+    return out;
+}
+
+namespace {
+
+// The hydrology lines of [geography]; false with *problem set when the
+// statistics fail (defined below geography_section).
+bool append_hydrology_lines(const GeographyLayers& layers, std::span<const std::int16_t> e, std::uint32_t w,
+                            std::uint32_t h, const LandOceanCounts& counts, std::string& out, std::string* problem);
+
+}  // namespace
+
 std::optional<std::string> geography_section(const GeographyLayers& layers, std::string* problem) {
     if (std::optional<std::string> p = geography_layers_problem(layers)) {
         if (problem != nullptr) *problem = *p;
@@ -1082,9 +1183,22 @@ std::optional<std::string> geography_section(const GeographyLayers& layers, std:
         out += pass_lines(e, w, h, *layers.passes);
     }
 
-    if (!layers.has_hydrology()) {
-        return out;
+    if (layers.has_hydrology()) {
+        if (!append_hydrology_lines(layers, e, w, h, counts, out, problem)) {
+            return std::nullopt;
+        }
     }
+    if (layers.has_climate()) {
+        out += climate_lines(e, *layers.temperature->get_if<std::int16_t>(),
+                             *layers.rainfall->get_if<std::uint16_t>());
+    }
+    return out;
+}
+
+namespace {
+
+bool append_hydrology_lines(const GeographyLayers& layers, std::span<const std::int16_t> e, std::uint32_t w,
+                            std::uint32_t h, const LandOceanCounts& counts, std::string& out, std::string* problem) {
     const HydrologyCells cells{
         *layers.water->get_if<std::uint8_t>(),     *layers.flow_dir->get_if<std::uint8_t>(),
         *layers.flow_accum->get_if<std::uint32_t>(), *layers.river->get_if<std::uint8_t>(),
@@ -1097,7 +1211,7 @@ std::optional<std::string> geography_section(const GeographyLayers& layers, std:
             *problem = "layer 'flow_dir' does not lead to the ocean from cell (" + db::format_u64(c % w) + ", " +
                        db::format_u64(c / w) + ")";
         }
-        return std::nullopt;
+        return false;
     }
     const HydrologyStats& s = *hydro.stats;
     line(out, "lakes", db::format_u64(s.lakes));
@@ -1111,7 +1225,9 @@ std::optional<std::string> geography_section(const GeographyLayers& layers, std:
     line(out, "major_rivers", db::format_u64(s.major_rivers));
     line(out, "longest_river_m", db::format_i64(Fx::from_raw(s.longest_river_raw).round_int()));
     line(out, "largest_basin_share", ratio4(s.largest_basin_cells, counts.land));
-    return out;
+    return true;
 }
+
+}  // namespace
 
 }  // namespace worldgen::inspect

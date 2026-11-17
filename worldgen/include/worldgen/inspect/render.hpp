@@ -35,16 +35,19 @@ enum class Palette : std::uint8_t {
     direction = 5,        // "direction": D8 code 0..8 (flow_dir)
     ids = 6,              // "ids": hashed colour per id (lake, later region)
     signed_distance = 7,  // "signed": signed distance (coast_dist)
+    temperature = 8,      // "temperature": tenths of a degree Celsius (P1-03 9)
+    rainfall = 9,         // "rainfall": millimetres per year (P1-03 9)
 };
 
 // Every palette in enumerator order (for --help text and tests).
-inline constexpr std::array<Palette, 8> ALL_PALETTES = {
-    Palette::gray,      Palette::hypsometric, Palette::water, Palette::river,
-    Palette::log2,      Palette::direction,   Palette::ids,   Palette::signed_distance,
+inline constexpr std::array<Palette, 10> ALL_PALETTES = {
+    Palette::gray,      Palette::hypsometric, Palette::water,       Palette::river,    Palette::log2,
+    Palette::direction, Palette::ids,         Palette::signed_distance, Palette::temperature, Palette::rainfall,
 };
 
 // The --palette text of a palette: "gray", "hypsometric", "water", "river",
-// "log2", "direction", "ids", "signed" (P1-00 10.2).
+// "log2", "direction", "ids", "signed", "temperature", "rainfall" (P1-00
+// 10.2, P1-03 9).
 [[nodiscard]] std::string_view palette_name(Palette palette) noexcept;
 
 // The palette for a --palette value other than "auto" (one of the names of
@@ -55,7 +58,8 @@ inline constexpr std::array<Palette, 8> ALL_PALETTES = {
 // The palette registered for a layer name, used by --palette auto (P1-00
 // 10.2, P0-04 amendment 16b): elevation -> hypsometric, water -> water,
 // river -> river, flow_accum -> log2, flow_dir -> direction, lake -> ids,
-// coast_dist -> signed; every other layer (water_depth included) -> gray.
+// coast_dist -> signed, temperature -> temperature, rainfall -> rainfall
+// (P1-03 9); every other layer (water_depth included) -> gray.
 [[nodiscard]] Palette registered_palette(std::string_view layer_name) noexcept;
 
 // Whether a palette suits a grid (P0-04 amendment 16b: "a named palette
@@ -69,6 +73,8 @@ inline constexpr std::array<Palette, 8> ALL_PALETTES = {
 //   direction   u8 (values outside 0..8 have their own colour)
 //   ids         any unsigned type
 //   signed      any signed type (i8, i16, i32, i64)
+//   temperature i16 (the catalogue type, as hypsometric)
+//   rainfall    u16 (the catalogue type)
 // The grid must be valid (db::is_valid_layer_grid); an invalid grid suits
 // no palette.
 [[nodiscard]] bool palette_suits(Palette palette, const db::LayerGrid& grid) noexcept;
@@ -134,6 +140,35 @@ inline constexpr std::array<RampStop, 5> HYPSOMETRIC_OCEAN_STOPS = {{
 // hypsometric (P1-00 10.2): e > 0 -> land colour of t = e; e <= 0 -> ocean
 // colour of t = -e (e = 0 is the ocean colour of depth 0). Any int64.
 [[nodiscard]] Rgb hypsometric_colour(std::int64_t e);
+
+// The temperature ramp on t = tenths of a degree Celsius (P1-03 9).
+inline constexpr std::array<RampStop, 7> TEMPERATURE_STOPS = {{
+    {-300, {49, 54, 149}},
+    {-100, {69, 117, 180}},
+    {0, {171, 217, 233}},
+    {50, {255, 255, 191}},
+    {100, {253, 174, 97}},
+    {200, {215, 48, 39}},
+    {300, {165, 0, 38}},
+}};
+
+// The rainfall ramp on t = millimetres per year (P1-03 9).
+inline constexpr std::array<RampStop, 9> RAINFALL_STOPS = {{
+    {0, {140, 81, 10}},
+    {250, {191, 129, 45}},
+    {500, {223, 194, 125}},
+    {750, {246, 232, 195}},
+    {1000, {199, 234, 229}},
+    {1500, {128, 205, 193}},
+    {2500, {53, 151, 143}},
+    {4000, {1, 102, 94}},
+    {10000, {0, 60, 48}},
+}};
+
+// ramp_colour(TEMPERATURE_STOPS, t) and ramp_colour(RAINFALL_STOPS, t)
+// (P1-03 9). Any int64.
+[[nodiscard]] Rgb temperature_colour(std::int64_t t);
+[[nodiscard]] Rgb rainfall_colour(std::int64_t t);
 
 // water (P1-00 10.2): 0 (214, 200, 160); 1 (52, 100, 200); 2 (64, 128, 204);
 // 3 (24, 56, 120); any other value (255, 0, 255).

@@ -356,6 +356,31 @@ inline constexpr std::int64_t PASS_FOOT_R2 = 1369;
 [[nodiscard]] std::string pass_lines(std::span<const std::int16_t> e, std::uint32_t w, std::uint32_t h,
                                      std::span<const PassRecord> passes);
 
+// --- Climate statistics (P1-00 10.3, P1-03 9) ----------------------------------------
+
+// The land percentiles listed in ps (each 0..100) of a climate layer over
+// the land cells (e > 0) of e, in the order of ps (kth(values,
+// percentile_rank(n, p)), G1 values; computed on an exact histogram). Empty
+// if there is no land. FatalError if the sizes differ.
+[[nodiscard]] std::vector<std::int64_t> land_layer_percentiles(std::span<const std::int16_t> e,
+                                                               std::span<const std::int16_t> values,
+                                                               std::span<const std::uint32_t> ps);
+[[nodiscard]] std::vector<std::int64_t> land_layer_percentiles(std::span<const std::int16_t> e,
+                                                               std::span<const std::uint16_t> values,
+                                                               std::span<const std::uint32_t> ps);
+
+// The climate keys of P1-03 9 in their order, each "<key> = <value>\n":
+//   temperature_c   land percentiles 0, 10, 50, 90, 100 of temperature, each
+//                   metres1 of the value in tenths (e.g. "-14.5"); n/a each
+//                   when there is no land
+//   rainfall_mm     land percentiles 0, 10, 50, 90, 100 of rainfall
+//   land_below_0c   ratio4(land cells with temperature < 0, land cells)
+//   rain_contrast   ratio4(rainfall p90, rainfall p10); n/a when p10 = 0
+//                   or there is no land
+// FatalError if a size differs from e.
+[[nodiscard]] std::string climate_lines(std::span<const std::int16_t> e, std::span<const std::int16_t> temperature,
+                                        std::span<const std::uint16_t> rainfall);
+
 // --- The section ------------------------------------------------------------------
 
 // The layers [geography] reads, from a world (null when absent).
@@ -369,6 +394,11 @@ struct GeographyLayers {
     // The rows of table `pass` (P1-01 9.1), or null when the world has no
     // such table; the pass keys are printed only when it is not null.
     const std::vector<PassRecord>* passes = nullptr;
+    // The climate layers (P1-03 3), null when absent.
+    const db::LayerGrid* temperature = nullptr;
+    const db::LayerGrid* rainfall = nullptr;
+    // True when temperature and rainfall are both present.
+    [[nodiscard]] bool has_climate() const noexcept { return temperature != nullptr && rainfall != nullptr; }
     // True when water, flow_dir, flow_accum, river and lake are all present.
     [[nodiscard]] bool has_hydrology() const noexcept {
         return water != nullptr && flow_dir != nullptr && flow_accum != nullptr && river != nullptr &&
@@ -380,13 +410,15 @@ struct GeographyLayers {
 // (reading chosen): elevation must be present, valid and i16; when
 // has_hydrology(), water, flow_dir and river must be u8 and flow_accum and
 // lake u32, each the size of elevation. When any of the five is absent the
-// hydrology layers are not used, so they are not checked. Text names the
-// layer.
+// hydrology layers are not used, so they are not checked. When
+// has_climate(), temperature must be i16 and rainfall u16, each the size of
+// elevation (unchecked otherwise). Text names the layer.
 [[nodiscard]] std::optional<std::string> geography_layers_problem(const GeographyLayers& layers);
 
 // The [geography] section (P1-00 10.3): the line "[geography]" then one
 // "<key> = <value>" line per key, in the order of 10.3, each ending in a
-// line feed; the hydrology lines only when has_hydrology(). Values that are
+// line feed; the hydrology lines only when has_hydrology(), then the
+// climate lines (climate_lines) only when has_climate(). Values that are
 // undefined on the world print as n/a (percentiles with no land or no ocean,
 // ratio4 over 0, coast_ratio with no land). Returns std::nullopt with
 // *problem set when geography_layers_problem reports one, or when the

@@ -264,8 +264,8 @@ private:
 // The production registry: the fixed list of every kind the generator uses
 // (P0-03 7.1, defined in one source file, src/data/kinds.cpp). It holds the
 // fixed-id kind `worldgen` (P1-00 6.1, P0-03 amendment 16: directory
-// `worldgen`, required) with the ids of the first pass, `elevation`
-// (P1-01 4.2) and `hydrology` (P1-02 4). Because a required kind is
+// `worldgen`, required) with the ids `elevation` (P1-01 4.2),
+// `hydrology` (P1-02 4) and `climate` (P1-03 4). Because a required kind is
 // registered, every world needs a data root and its content_hash is the
 // hash of the loaded data (P0-03 amendment 17).
 [[nodiscard]] KindRegistry builtin_kinds();
@@ -277,6 +277,7 @@ inline constexpr std::string_view WORLDGEN_KIND = "worldgen";
 inline constexpr std::string_view WORLDGEN_DIRECTORY = "worldgen";
 inline constexpr std::string_view WORLDGEN_ELEVATION_ID = "elevation";
 inline constexpr std::string_view WORLDGEN_HYDROLOGY_ID = "hydrology";
+inline constexpr std::string_view WORLDGEN_CLIMATE_ID = "climate";
 
 // The schema of definition worldgen.elevation (P1-01 4.2): every field of
 // the table of 4.2 in its order, all required, with the shared noise record
@@ -290,5 +291,11 @@ inline constexpr std::string_view WORLDGEN_HYDROLOGY_ID = "hydrology";
 // The schema of definition worldgen.hydrology (P1-02 4): river_min_area_m2
 // int(256, 10^9), required.
 [[nodiscard]] Schema worldgen_hydrology_schema();
+
+// The schema of definition worldgen.climate (P1-03 4): every field of the
+// table of 4 in its order, all required. Named check, a load error at the
+// definition's header (P0-03 7.5):
+//   wind_weights_positive   the sum of wind_weights is at least 1.
+[[nodiscard]] Schema worldgen_climate_schema();
 
 }  // namespace worldgen::data

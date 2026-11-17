@@ -39,6 +39,8 @@ std::string_view palette_name(Palette palette) noexcept {
         case Palette::direction: return "direction";
         case Palette::ids: return "ids";
         case Palette::signed_distance: return "signed";
+        case Palette::temperature: return "temperature";
+        case Palette::rainfall: return "rainfall";
     }
     return "gray";
 }
@@ -60,6 +62,8 @@ Palette registered_palette(std::string_view layer_name) noexcept {
     if (layer_name == "flow_dir") return Palette::direction;
     if (layer_name == "lake") return Palette::ids;
     if (layer_name == "coast_dist") return Palette::signed_distance;
+    if (layer_name == "temperature") return Palette::temperature;  // P1-03 9
+    if (layer_name == "rainfall") return Palette::rainfall;        // P1-03 9
     return Palette::gray;  // P1-00 10.2: every other layer, water_depth included
 }
 
@@ -88,6 +92,8 @@ bool palette_suits(Palette palette, const db::LayerGrid& grid) noexcept {
         case Palette::log2:
         case Palette::ids: return is_unsigned_type(t);
         case Palette::signed_distance: return !is_unsigned_type(t);
+        case Palette::temperature: return t == db::ElementType::i16;
+        case Palette::rainfall: return t == db::ElementType::u16;
     }
     return false;
 }
@@ -102,6 +108,8 @@ std::string_view palette_requirement(Palette palette) noexcept {
         case Palette::direction: return "a u8 layer";
         case Palette::ids: return "a layer of an unsigned type (u8, u16, u32, u64)";
         case Palette::signed_distance: return "a layer of a signed type (i8, i16, i32, i64)";
+        case Palette::temperature: return "an i16 layer";
+        case Palette::rainfall: return "a u16 layer";
     }
     return "any layer";
 }
@@ -166,6 +174,15 @@ Rgb hypsometric_land_colour(std::int64_t t) {
 
 Rgb hypsometric_ocean_colour(std::int64_t depth) {
     return ramp_unchecked(HYPSOMETRIC_OCEAN_STOPS, depth);
+}
+
+// The climate ramps are valid constants too.
+Rgb temperature_colour(std::int64_t t) {
+    return ramp_unchecked(TEMPERATURE_STOPS, t);
+}
+
+Rgb rainfall_colour(std::int64_t t) {
+    return ramp_unchecked(RAINFALL_STOPS, t);
 }
 
 Rgb hypsometric_colour(std::int64_t e) {
@@ -446,6 +463,22 @@ void render_rgb(const db::LayerGrid& grid, Palette palette, std::uint32_t scale,
                     if constexpr (std::is_signed_v<T>) {
                         fill_buffer(rgb, grid.width, grid.height, scale, [&](std::size_t i) {
                             return hypsometric_colour(static_cast<std::int64_t>(cells[i]));
+                        });
+                    }
+                    return;
+                }
+                case Palette::temperature: {
+                    if constexpr (std::is_signed_v<T>) {
+                        fill_buffer(rgb, grid.width, grid.height, scale, [&](std::size_t i) {
+                            return temperature_colour(static_cast<std::int64_t>(cells[i]));
+                        });
+                    }
+                    return;
+                }
+                case Palette::rainfall: {
+                    if constexpr (!std::is_signed_v<T>) {
+                        fill_buffer(rgb, grid.width, grid.height, scale, [&](std::size_t i) {
+                            return rainfall_colour(static_cast<std::int64_t>(cells[i]));
                         });
                     }
                     return;

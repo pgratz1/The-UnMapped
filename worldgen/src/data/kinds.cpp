@@ -2,9 +2,10 @@
 // lists every kind schema the generator loads from the data directory.
 //
 // P1 registers the fixed-id kind `worldgen` (P1-00 section 6.1, P0-03
-// amendment 16) with the ids of the first pass: `elevation` (P1-01 section
-// 4.2) and `hydrology` (P1-02 section 4). The second-pass specs add their
-// ids here.
+// amendment 16) with the ids of the first pass, `elevation` (P1-01 section
+// 4.2) and `hydrology` (P1-02 section 4), and of the second pass so far,
+// `climate` (P1-03 section 4). The later second-pass specs add their ids
+// here.
 
 #include <optional>
 #include <string>
@@ -55,6 +56,18 @@ std::optional<std::string> check_pass_masks(const Record& r) {
 std::optional<std::string> check_pass_saddle_clamp(const Record& r) {
     if (r.get_fx("pass_min_col_m") > r.get_fx("pass_saddle_max_m")) {
         return std::string("pass_min_col_m must not exceed pass_saddle_max_m");
+    }
+    return std::nullopt;
+}
+
+// P1-03 4 named check wind_weights_positive.
+std::optional<std::string> check_wind_weights_positive(const Record& r) {
+    std::int64_t sum = 0;
+    for (const Value& v : r.get_array("wind_weights")) {
+        sum += v.as_int();  // 8 entries of at most 1000: no overflow
+    }
+    if (sum < 1) {
+        return std::string("wind_weights must not all be 0");
     }
     return std::nullopt;
 }
@@ -180,6 +193,34 @@ Schema worldgen_hydrology_schema() {
     });
 }
 
+Schema worldgen_climate_schema() {
+    // P1-03 4, in declaration order (this order fixes the canonical
+    // encoding, P0-03 8).
+    std::vector<Field> fields{
+        Field::required("temp_north_c", Type::fixed("-30", "40")),
+        Field::required("temp_south_c", Type::fixed("-30", "40")),
+        Field::required("lapse_c_per_km", Type::fixed("0", "15")),
+        Field::required("temp_noise", geo::fbm_m_type()),
+        Field::required("temp_noise_amp_c", Type::fixed("0", "5")),
+        Field::required("wind_weights", Type::array(Type::integer(0, 1000), 8, 8)),
+        Field::required("smooth_radius_m", Type::integer(0, 4000)),
+        Field::required("rain_base_mm", Type::integer(0, 5000)),
+        Field::required("rain_oro_mm", Type::integer(0, 100000)),
+        Field::required("moisture_path_mm_km", Type::integer(100, 2000000)),
+        Field::required("loss_max", Type::fixed("0", "0.9")),
+        Field::required("ocean_recharge_m", Type::integer(16, 100000)),
+        Field::required("coast_rain_mm", Type::integer(0, 5000)),
+        Field::required("coast_rain_reach_m", Type::integer(16, 32767)),
+        Field::required("rain_noise", geo::fbm_m_type()),
+        Field::required("rain_noise_amp", Type::fixed("0", "1")),
+        Field::required("rain_min_mm", Type::integer(0, 5000)),
+    };
+    std::vector<Check> checks{
+        Check{"wind_weights_positive", [](const Record& r) { return check_wind_weights_positive(r); }},
+    };
+    return Schema(std::move(fields), std::move(checks));
+}
+
 KindRegistry builtin_kinds() {
     KindRegistry registry;
     // P1-00 6.1: kind `worldgen`, directory `worldgen`, required, fixed ids.
@@ -187,6 +228,7 @@ KindRegistry builtin_kinds() {
                                       {
                                           IdSchema{std::string(WORLDGEN_ELEVATION_ID), worldgen_elevation_schema()},
                                           IdSchema{std::string(WORLDGEN_HYDROLOGY_ID), worldgen_hydrology_schema()},
+                                          IdSchema{std::string(WORLDGEN_CLIMATE_ID), worldgen_climate_schema()},
                                       }));
     return registry;
 }

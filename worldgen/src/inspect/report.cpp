@@ -148,9 +148,10 @@ db::Result<std::string> build_report(const db::WorldReader& world) {
         }
         // The grids [geography] reads, kept from this pass so that no layer
         // is decoded twice. Layer names are unique (P0-02 5.6).
-        std::optional<db::LayerGrid> geo_grids[6];
-        static constexpr std::string_view GEO_NAMES[6] = {"elevation", "water", "flow_dir",
-                                                          "flow_accum", "river", "lake"};
+        constexpr std::size_t GEO_LAYERS = 8;
+        std::optional<db::LayerGrid> geo_grids[GEO_LAYERS];
+        static constexpr std::string_view GEO_NAMES[GEO_LAYERS] = {
+            "elevation", "water", "flow_dir", "flow_accum", "river", "lake", "temperature", "rainfall"};
         for (const db::LayerInfo& info : layers.value()) {
             db::Result<db::Layer> layer = world.read_layer(info.name);
             if (!layer.ok()) {
@@ -170,7 +171,7 @@ db::Result<std::string> build_report(const db::WorldReader& world) {
             out += ' ';
             out += format_range(value_range(layer.value().grid));
             out += '\n';
-            for (std::size_t k = 0; k < 6U; ++k) {
+            for (std::size_t k = 0; k < GEO_LAYERS; ++k) {
                 if (info.name == GEO_NAMES[k]) {
                     geo_grids[k] = std::move(layer.value().grid);
                 }
@@ -209,6 +210,8 @@ db::Result<std::string> build_report(const db::WorldReader& world) {
             geo.flow_accum = ptr(3);
             geo.river = ptr(4);
             geo.lake = ptr(5);
+            geo.temperature = ptr(6);
+            geo.rainfall = ptr(7);
             geo.passes = passes ? &*passes : nullptr;
             std::string problem;
             std::optional<std::string> section = geography_section(geo, &problem);

@@ -13,8 +13,10 @@ namespace worldgen {
 // the first geography stage (elevation, P1-01) and the `worldgen` data kind
 // (P1-00 6.4 rule 4); 0.3.0 until the hydrology stage (P1-02) joined the
 // default pipeline; 0.4.0 until the hydrology tie-break on flats (P1-02 H2,
-// stream geo.hydrology.flat); now 0.5.0.
-inline constexpr std::string_view GENERATOR_VERSION = "0.6.0";
+// stream geo.hydrology.flat); 0.5.0 until the elevation passes and final
+// talus (P1-01 fourth version, schema 2); 0.6.0 until the climate stage
+// (P1-03) joined the default pipeline; now 0.7.0.
+inline constexpr std::string_view GENERATOR_VERSION = "0.7.0";
 
 // Returns GENERATOR_VERSION (P0-02 5.5). A world is only guaranteed
 // reproducible under the same generator version (design doc section 4).
