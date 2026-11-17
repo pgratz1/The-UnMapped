@@ -1,6 +1,6 @@
 # P1-03 Climate
 
-Status: approved by the lead, 2026-11-16; revised 2026-11-17 after the first implementation (branch `p1/03-climate`) and a tuning experiment (branch `p1/03-climate-experiment-c4`, commit `2689076`): C4 becomes a triangle kernel, diagonal winds take their taps across the wind (C5), shipped `moisture_path_mm_km` 32000 and `rain_oro_mm` 2500, statistics ranges from the experiment, seams as implemented, corrections. Revised again 2026-11-17 after the world critic's review and the determinism audit: shipped `coast_rain_mm` 75 (coast experiment, 11.1), entry guards of the C4 seams and of `climate_temperature_cell` (10), section 7's C4 bound corrected, limitations 8 to 10 and open questions 4 and 7. Paul has provisionally accepted the choices of taste (open questions 1 and 2). Phase P1 Geography, stage 3 (`climate`). Design doc section 4 (stage 3: "temperature from latitude and elevation; rainfall from prevailing wind and rain shadow"; "scale is compressed"). Depends on P0-01 to P0-04, P1-00 (shared algorithms G1 to G8, rules D1 to D10, section 2.2 map-size convention), P1-01 (the `elevation` layer) and P1-02 (`water`, `water_depth`, `coast_dist`). The climate merge is `GENERATOR_VERSION` 0.7.0; this revision lands before that merge and needs no further bump. Tuning values marked "guess" and every statistics range are still provisional until the validation sweep (section 11).
+Status: approved by the lead, 2026-11-16; revised 2026-11-17 after the first implementation (branch `p1/03-climate`) and a tuning experiment (branch `p1/03-climate-experiment-c4`, commit `2689076`): C4 becomes a triangle kernel, diagonal winds take their taps across the wind (C5), shipped `moisture_path_mm_km` 32000 and `rain_oro_mm` 2500, statistics ranges from the experiment, seams as implemented, corrections. Revised again 2026-11-17 after the world critic's review and the determinism audit: shipped `coast_rain_mm` 75 (coast experiment, 11.1), entry guards of the C4 seams and of `climate_temperature_cell` (10), section 7's C4 bound corrected, limitations 8 to 10 and open questions 4 and 7. Amended 2026-11-17 by the spec writer with the P1-04 revision (draft, awaiting approval): the climate stage also writes the one-row table `climate` with the wind direction (section 3, C7; schema version 3, made by the biomes merge), `report` prints `wind_toward` (9), the statistics ranges of section 9 are the validation sweep's proposed final values, 10.4 names where the climate layer hashes live, limitation 4's maximum from the sweep, open question 4 resolved. The climate layers do not change. Paul has provisionally accepted the choices of taste (open questions 1 and 2). Phase P1 Geography, stage 3 (`climate`). Design doc section 4 (stage 3: "temperature from latitude and elevation; rainfall from prevailing wind and rain shadow"; "scale is compressed"). Depends on P0-01 to P0-04, P1-00 (shared algorithms G1 to G8, rules D1 to D10, section 2.2 map-size convention), P1-01 (the `elevation` layer) and P1-02 (`water`, `water_depth`, `coast_dist`). The climate merge is `GENERATOR_VERSION` 0.7.0; this revision lands before that merge and needs no further bump. Tuning values marked "guess" and every statistics range are still provisional until the validation sweep (section 11).
 
 ## 1. Purpose
 
@@ -49,7 +49,20 @@ Two layers, N × N, codec 1, written in this order in one stage transaction (lay
 | `temperature` | `i16` | tenths of a degree Celsius | [−600, 500] | annual mean air temperature at the surface S; on ocean, at sea level |
 | `rainfall` | `u16` | millimetres per year | [`rain_min_mm`, 10000] | annual precipitation; defined on ocean cells too (rain over the sea), which no later stage uses |
 
-Both are in the P1-00 catalogue already ("fixed"). This spec adds no further climate layer and no table: **no schema change, no catalogue change.** The prevailing wind direction is not stored (open question 4).
+Both are in the P1-00 catalogue already ("fixed"). This spec adds no further climate layer.
+
+**Table `climate`** (from schema version 3, added by the biomes merge, P1-04 3; amended 2026-11-17, world critic S2, open question 4): one row, written in C7 in the same transaction as the layers:
+
+```
+CREATE TABLE climate (id INTEGER PRIMARY KEY, wind_toward INTEGER NOT NULL) STRICT
+```
+
+| Column | Value |
+| --- | --- |
+| `id` | 1 |
+| `wind_toward` | k_w of C2: the D8 code (P1-00 2.3, 0 E to 7 NE) the prevailing wind blows **toward** |
+
+The table exists in every world of schema 3 (DDL order: `meta`, `layer`, `pass`, `biome`, `climate`) and is empty unless the climate stage ran. It is where any later per-world climate value goes (for example the temperature offset of open question 7, as a new column with its own schema bump). The `temperature` and `rainfall` layers are unchanged by this amendment: their hashes stay those of `p1-03-climate.txt`. The runtime reads it for weather direction and cloud drift; the viewer may draw an arrow.
 
 ## 4. Tuning
 
@@ -227,7 +240,7 @@ rainfall = clamp(round_int(pr + cb), rain_min_mm, 10000)
 
 ### C7. Write
 
-`temperature`, then `rainfall`, in one transaction.
+`temperature`, then `rainfall`, then the `climate` row (`id` 1, `wind_toward` k_w; schema 3 and later), in one transaction.
 
 ### 5.1 Worked examples
 
@@ -364,21 +377,21 @@ Budget (P1-00 11): 0.3 / 1.5 / 6 s at 512 / 1024 / 2048. Cost per cell: 6 `noise
 | `rainfall_mm` | land percentiles 0, 10, 50, 90, 100 of `rainfall`, integers |
 | `land_below_0c` | ratio4(land cells with `temperature` < 0, land cells) |
 | `rain_contrast` | ratio4(p90, p10) of land `rainfall` (the two values above); `n/a` if p10 = 0 |
+| `wind_toward` | from table `climate`: the name of the code (P1-00 2.3: `E`, `SE`, `S`, `SW`, `W`, `NW`, `N`, `NE`), e.g. `wind_toward = SE`. Printed first of the climate group, whenever the table has its row, whether or not the climate layers are present; omitted when the table is empty or absent (schema 2 worlds). A table with more than one row, a row with `id` ≠ 1, or a `wind_toward` outside 0..7 is a corrupt-data error naming table `climate` (`worldgen-cli: error: corrupt table 'climate': <reason>`, exit 3, as for `pass`, P1-00 10.3) |
 
 With no land cell each of the four keys prints a single `n/a` (not one per percentile), as `elevation_m` does (P1-00 appendix C 6).
 
-**Statistics** (for P1-00 13.1; all **provisional**: measured on the experiment worlds of 11.1, 512 seeds 0–9, 1024 seeds 0–9, 2048 seeds 1 and 5, with the shipped algorithm and tuning, widened by about 10%; to be replaced by the validation specialist's sweep with the 13.1 seed set, taking the measured min–max widened by about 10% as typical and the hard bound only where a value outside would mean a defect):
+**Statistics** (for P1-00 13.1): the final ranges proposed by the validation sweep of 0.7.0 (`docs/reviews/p1-03-climate-validation.md` 3.3; 512 and 1024 seeds 0–49, 2048 seeds 0–7, the shipped algorithm and tuning), typical = measured min–max widened by about 10% (low end × 0.9, high end × 1.1, rounded outward), hard only where a value outside means a defect. **The 2048 ranges rest on 8 seeds**; P1-00 13.1's full seed set (2048 seeds 0–19, 1024 seeds 0–199) may widen them.
 
-| Statistic | All seeds (hard) | Typical (≥ 90%) | Measured (experiment, min–max) |
+| Statistic | All seeds (hard) | Typical (≥ 90%) | Measured 512 / 1024 / 2048 |
 | --- | --- | --- | --- |
-| `temperature_c` p50 | within the catalogue range (by construction) | 4.5–7.0 °C | 5.0–6.4 °C |
-| `rainfall_mm` p50, 512 | ≥ `rain_min_mm` (by construction) | 700–1030 mm | 774–932 (E1) |
-| `rainfall_mm` p50, 1024 | as above | 650–880 mm | 718–798 |
-| `rainfall_mm` p50, 2048 | as above | 600–745 mm | 662–677 |
-| `rain_contrast` | descriptive | 1.5–4.6 | 1.64–4.21 |
-| `land_below_0c` | descriptive | — | 0.019–0.085 (temperature does not depend on the rainfall variants) |
+| `temperature_c` p50 | within the catalogue range (construction); every land cell ≤ 10.0 °C (t_sea ≤ 9 °C plus 1 °C of noise) | 4.5–7.2 °C at every size | 5.0–6.5 / 5.3–6.5 / 5.9–6.5 °C |
+| `rainfall_mm` p50 | ≥ `rain_min_mm` (construction) | 680–1030 / 635–900 / 585–750 mm | 752–932 / 707–817 / 648–683 mm |
+| `rain_contrast` | descriptive | 1.7–5.1 / 1.5–3.7 / 1.6–2.7 | 1.86–4.64 / 1.64–3.34 / 1.74–2.47 |
+| `land_below_0c` | descriptive | 0.017–0.115 at every size | 0.019–0.104 / 0.031–0.104 / 0.021–0.091 |
+| `rainfall_mm` p100 | descriptive (the cap is part of C6, not a requirement) | — | 3418–9583 / 2884–8972 / 3028–6017 mm |
 
-The measured values are those of variant E1 of the coast experiment (11.1), which is the shipped algorithm and tuning (variant D with `coast_rain_mm` 75), each widened by about 10% of the value (low end × 0.9, high end × 1.1, rounded). The real acceptance test of climate is the biome mix (P1-04 9), whose rainfall thresholds need re-deriving (limitation 7).
+The rainfall statistics depend on map size (limitation 7), so they keep per-size ranges; `rain_contrast` narrows with size. The acceptance test of climate is the biome mix (P1-04 9, 11), which absorbs the size dependence with a per-size rainfall scale.
 
 **Palettes** (P1-00 10.2 interpolation rule; registered under `auto`). The palette names are `temperature`, which suits `i16` layers only, and `rainfall`, which suits `u16` layers only (P1-00 appendix C 1: naming a palette that does not suit the layer is a usage error; under `auto` an unsuitable registered palette falls back to `gray`).
 
@@ -457,6 +470,8 @@ The code holds compile-time assertions that the stage can never trip the guard: 
 
 ### 10.1 Unit tests
 
+0. **Table `climate`** (schema 3): a world generated with the shipped data has exactly one row (`id` 1, `wind_toward` = `climate_wind(seed, weights)`, e.g. 1 for seed 0, 6 for seed 42); `--until hydrology` leaves the table empty; `report` prints `wind_toward = SE` for seed 0 first in the climate group, omits it for an empty table, and exits 3 naming table `climate` for a hand-made world with two rows or with `wind_toward` 8.
+
 1. Every worked example of 5.1 exactly (raw values where given).
 2. The C3 noise term: for seed 0, N = 64 and the shipped tuning, at 16 cells chosen by the test, `temperature` equals the test's own evaluation of C3 with `fbm2`.
 3. Box and triangle at radii as large as the grid or larger: `climate_box_mean` with r_cells ≥ max(W, H) − 1, and `climate_triangle_mean` with r_cells div 2 ≥ max(W, H) − 1, give every cell `from_ratio(ΣS, W·H)`. `climate_triangle_mean` with r_cells 0 or 1 gives `from_int(S)`; with odd r_cells it equals the result for r_cells − 1.
@@ -479,14 +494,14 @@ Threads 1, 2 and 5 give identical layers (seeds 0 and 42 at N = 128 and 512), an
 
 ### 10.4 Golden values
 
-Layer hashes of `temperature` and `rainfall` with fixture tuning for seeds 0, 42 and "The Unmapped" at N = 512, seed 1 at 1024, seed 0 at 128, recorded by the validation specialist after the implementation passes. Their inputs come from the hydrology golden cases, so an upstream change re-records them together. Any golden file written against the first version of this spec (the test writer's `p1-03-climate.txt` on `p1/03-climate-tests`) is regenerated from the revised reference.
+Layer hashes of `temperature` and `rainfall` with fixture tuning for seeds 0, 42 and "The Unmapped" at N = 512, seed 1 at 1024, seed 0 at 128. They live in `worldgen/tests/golden/p1-03-climate.txt` (written by the test writer's independent reference: cases `shipped-512-s0`, `shipped-512-s42`, `shipped-512-phrase`, `shipped-1024-s1` checked by `climate-slow`, the N = 128 case by the default suite); the validation specialist confirms that the implementation's `hash --detail` values equal them (they did for 0.7.0: `docs/reviews/p1-03-climate-validation.md` 5) rather than recording a second copy. The CI world cases' file hashes are in `p1-worlds.txt`. The `climate` table's logical hash is covered by the file hashes; the schema-3 change does not alter the layer vectors. Their inputs come from the hydrology golden cases, so an upstream change re-records them together. Any golden file written against the first version of this spec (the test writer's `p1-03-climate.txt` on `p1/03-climate-tests`) is regenerated from the revised reference.
 
 ## 11. Known limitations and calibration
 
 1. **First calibration was from a floating-point prototype**, not this arithmetic: the spec writer's Python model of C3 to C6 with substitute noise (smoothed Gaussian fields of similar wavelength) and an approximate hydrology (G3/G4 without lake rerouting), run on generator 0.3.0 worlds (512 seeds 0–11, 1024 seeds 0–5, 12, 18) with wind code = seed mod 8. Values marked "guess" were chosen there so that the five natural biomes of P1-04 all appear (section P1-04 11). `rain_oro_mm` and `moisture_path_mm_km` have since been retuned on the implementation (11.1); the other guesses stand until the validation sweep.
 2. **One wind, no seasons.** The model has no seasonal cycle, no secondary wind and no temperature effect of the sea (continentality). On a 16 km map these would be small next to the orographic effect.
 3. **Faint lee streaks along the wind.** Advection along one D8 direction leaves faint stripes parallel to the wind in the rain field downwind of sharp terrain. The triangle kernel, the 1-2-1 taps, the wetter air of the shipped `moisture_path_mm_km` and the rain noise hide most of them; faint fingers remain in places (experiment: the s5-2048 stripe in the lee of a N–S arm under a north wind is much fainter from B32 on), judged acceptable. The comb-like bands across the wind that the single box produced are gone (C4). Diagonal winds take three taps across the wind and are exact rotations and mirrors of one another (C5, symmetry), but are not rotations of the orthogonal winds, so a world's rain field is not the 45° rotation of the same world under the neighbouring orthogonal wind.
-4. **Rain on steep windward faces is high**: the ranges are walls (P1-01), and even smoothed over 320 m their windward gradient is large. With the shipped `rain_oro_mm` 2500 the land maximum (`rainfall_mm` p100) has median 5798 / 5074 / 4214 mm at 512 / 1024 / 2048 and reaches 8671 mm on one 512 world (variant D); the 10000 mm cap is no longer reached on the experiment worlds (at 5000 it was reached on 512 maps). Lowering `rain_oro_mm` to about 2000 would keep every 512 world under 6000–7000 mm at the cost of more contrast.
+4. **Rain on steep windward faces is high**: the ranges are walls (P1-01), and even smoothed over 320 m their windward gradient is large. With the shipped `rain_oro_mm` 2500 the land maximum (`rainfall_mm` p100) has median 5798 / 5074 / 4214 mm at 512 / 1024 / 2048 on the experiment worlds; on the validation sweep's 108 worlds it reaches **9583 mm** (512 seed 21, cell (75, 188), a 937 m windward sea cliff under a west wind; 4% under the cap; p100 ranges 3418–9583 / 2884–8972 / 3028–6017 mm); the 10000 mm cap is reached on none (at 5000 it was reached on 512 maps). Lowering `rain_oro_mm` to about 2000 would keep every 512 world under 6000–7000 mm at the cost of more contrast.
 5. **Rivers do not follow the rain.** `flow_accum` counts cells (P1-02 open question 2); this spec adds no rainfall-weighted discharge (open question 3).
 6. **Passes do not let moisture through visibly.** A natural pass or gap (P1-01) is narrower than the 640 m support of C4, so the smoothed surface the air sees has no notch there and the lee of a pass is as dry as the lee of the range beside it.
 7. **Rainfall depends on map size.** The moisture path is in metres (section 1), so a wider continent has a drier interior: with the shipped tuning (variant E1) land median 829 / 761 / 670 mm at 512 / 1024 / 2048, land (not lake) under 700 mm 16.7% / 33.9% / 57.7% pooled over the worlds of a size (variant D, with the former coast bonus: 880 / 786 / 676 mm). P1-04's fixed 700 mm forest threshold (and its 500 mm marsh minimum) would therefore give much more open land at 2048 than at 512 (the critic's biome trial: grassland median 6% / 19% / 37%); P1-04 re-derives its rainfall thresholds per map size once climate merges (P1-04 11, item 6; open question 6).
@@ -577,9 +592,9 @@ Decisions (the lead, 2026-11-17):
 1. **Wind direction per world** (a matter of taste for Paul; provisionally accepted). Chosen: drawn uniformly from the 8 D8 directions, so the wet side differs between worlds. Alternatives: always a westerly (weights `[1, 0, 0, 0, 0, 0, 0, 0]`), or westerlies favoured (e.g. `[4, 2, 1, 1, 1, 1, 1, 2]`). Both are a data change only. Recommendation: keep uniform for variety; the north–south temperature gradient is fixed, so the wind is the main thing that makes two continents' climates differ.
 2. **Temperature span and level** (taste; provisionally accepted). Chosen: 5 °C at sea level in the north to 9 °C in the south, 6.5 °C per km lapse: a cool temperate land in keeping with dark high fantasy, alpine conditions above about 1,000 m. The span is a map fraction (proposals "Climate's latitude span is a fraction of the map"), the same at every map size. Recommendation: approve; revisit with the biome images.
 3. **Rainfall-weighted discharge** (P1-02 open question 2). Recommendation: none in P1. Rivers are sized by area; biomes and resources use `rainfall` and the river raster directly; a rain-shadow river being as large as a wet-side river is acceptable (and real: exotic rivers). If history or the runtime needs discharge, a later stage can compute it from `flow_dir` and `rainfall` without changing any existing layer.
-4. **Store the wind direction** (world critic S2). It is not in the world file, so `report` cannot print it, the viewer cannot draw it, every reviewer has to infer it, and the runtime will need it for weather direction, cloud drift and vegetation lean. Recommendation: store it with the next schema change, schema 3 (P1-04's `biome` table), and not later: either a one-row table `climate` with the column `wind_toward` (the C2 code) or a `meta` key `climate.wind_toward`. The table is preferred, since it is where any later per-world climate value (such as the offset of question 7) would also go; `report` then prints the code and the viewer an arrow. This is a schema change (hard rule 7: version bump, spec update, proposals entry) made in the P1-04 revision or a climate follow-up, not in this merge.
+4. **Store the wind direction** (world critic S2). **Resolved (lead, 2026-11-17): a one-row table `climate` with `wind_toward`, in schema 3 with P1-04's `biome` table (section 3, C7, 9).** The original question: it is not in the world file, so `report` cannot print it, the viewer cannot draw it, every reviewer has to infer it, and the runtime will need it for weather direction, cloud drift and vegetation lean. Recommendation: store it with the next schema change, schema 3 (P1-04's `biome` table), and not later: either a one-row table `climate` with the column `wind_toward` (the C2 code) or a `meta` key `climate.wind_toward`. The table is preferred, since it is where any later per-world climate value (such as the offset of question 7) would also go; `report` then prints the code and the viewer an arrow. This is a schema change (hard rule 7: version bump, spec update, proposals entry) made in the P1-04 revision or a climate follow-up, not in this merge.
 5. **Lakes do not recharge the air.** Large lakes would moisten their lee shore. Recommendation: leave it; the lake share is capped at 3% of land (P1-01).
 6. **Size dependence of rainfall** (limitation 7). Chosen: keep the moisture path in metres, so a larger map is a larger land with a drier interior (P1-00 2.2), and let P1-04 adapt its thresholds. The alternative, a moisture path in map fractions, would make 512 and 2048 maps equally wet but give a 2048 map's ranges a weaker shadow per kilometre. Recommendation: keep metres; P1-04 uses per-size thresholds, one size-keyed scale on its rule thresholds in mm (the critic's recommendation, recorded in P1-04 11.6), not per-world quantiles, which would remove the variety between worlds. Revisit the moisture path only if P1-05's absolute scores make every 2048 world look poor.
 7. **A per-world temperature offset** (taste, for Paul; world critic S4). Temperature is the same function of height and row in every world (limitation 8), so every world has its treeline near 1,000 m. A per-world sea-level offset (for example a uniform draw in [−2, +2] °C from a new stream `geo.climate.offset`, added to t_sea) would make some worlds moor-heavy and some mild, more variety than any change to the wind distribution. It is a design question for Paul (proposals "Second-pass geography"); if adopted it is a new tuning field, a new stream and, if stored, a column of the table of question 4. No change now.
 
-**Schema and catalogue impact:** none. The `worldgen` kind gains the id `climate` (P1-00 6.1), which changes `content_hash` of every world (the 0.7.0 bump of the climate merge, P1-00 6.4). Three stream names are registered.
+**Schema and catalogue impact:** table `climate` (one row, `wind_toward`), schema version 3, made by the biomes merge together with table `biome` (P1-04 3 and 12 list the whole change); no catalogue change. The `worldgen` kind gains the id `climate` (P1-00 6.1), which changes `content_hash` of every world (the 0.7.0 bump of the climate merge, P1-00 6.4). Three stream names are registered.

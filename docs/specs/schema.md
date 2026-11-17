@@ -47,8 +47,8 @@ The authoritative catalogue, with value ranges and special values, is P1-00 sect
 | `river` | `u8` | river class 1 to 15, 0 none | `hydrology` | P1 (schema 1) |
 | `lake` | `u32` | lake id, 0 none | `hydrology` | P1 (schema 1) |
 | `coast_dist` | `i16` | metres to the coast, positive on land, negative on ocean | `hydrology` | P1 (schema 1) |
-| `temperature` | `i16` | annual mean, 0.1 °C | `climate` | planned (P1 second pass) |
-| `rainfall` | `u16` | mm per year | `climate` | planned |
+| `temperature` | `i16` | annual mean, 0.1 °C | `climate` | P1 (schema 2, generator 0.7.0) |
+| `rainfall` | `u16` | mm per year | `climate` | P1 (schema 2, generator 0.7.0) |
 | `biome` | `u8` | biome code (table `biome`) | `biomes` | planned |
 | `fertility`, `ore`, `timber`, `fresh_water`, `habitability` | `u8` | score 0 to 255 on an absolute scale (P1-05) | `resources` | planned |
 | `walk_area` | `u16` | walkable-area id, 0 none (P1-05) | `resources` | planned (added 2026-11-16) |
@@ -57,11 +57,11 @@ The authoritative catalogue, with value ranges and special values, is P1-00 sect
 
 ## 4. Planned changes
 
-From P1-00 section 9.2; the DDL becomes final in the spec of the branch that makes the change.
+From P1-00 section 9.2; the DDL becomes final in the spec of the branch that makes the change. When version 3 merges, its DDL moves to section 1, `meta.schema_version` in section 2 becomes `3`, and the changelog gains its row.
 
 | Version | Change | Branch |
 | --- | --- | --- |
-| 3 | `CREATE TABLE biome (id INTEGER PRIMARY KEY, key TEXT NOT NULL UNIQUE, name TEXT NOT NULL, colour INTEGER NOT NULL, water INTEGER NOT NULL) STRICT` | biomes (P1 second pass) |
+| 3 | Two tables, executed in this order after `pass`: `CREATE TABLE biome (id INTEGER PRIMARY KEY, key TEXT NOT NULL UNIQUE, name TEXT NOT NULL, colour INTEGER NOT NULL, water INTEGER NOT NULL) STRICT` (one row per loaded biome definition, `id` = biome code, written by the biome stage) and `CREATE TABLE climate (id INTEGER PRIMARY KEY, wind_toward INTEGER NOT NULL) STRICT` (one row, `id` 1, `wind_toward` = the prevailing wind's D8 code 0 E to 7 NE, the direction it blows toward, written by the climate stage). Both exist in every world of schema 3, empty when their stage did not run; the empty world is expected to grow from 5 to 7 pages. `report` lists both under `[tables]` and prints `wind_toward` (P1-03 9). DDL final in `p1-04-biomes.md` section 3 and `p1-03-climate.md` section 3 | biomes (P1 second pass, generator 0.8.0) |
 | 4 | tables `region` and `region_border` (DDL proposed in `p1-06-regions.md` section 3) | regions (P1 second pass) |
 
 ## 5. Changelog
