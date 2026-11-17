@@ -49,7 +49,10 @@ inline constexpr std::int64_t BIOME_RAIN_UNBOUNDED_MM = 10000;
 // the extreme of its field's range means "unbounded on that side": B4 skips
 // that comparison (temp_min_c -60, temp_max_c 50, rain_min_mm 0, rain_max_mm
 // 10000, elev_min_m 0, elev_max_m 3000, slope_max 100, hand_max_m 3000,
-// coast_max_m 32767).
+// coast_max_m 32767). Every seam that takes rules (biome_rule_matches,
+// biome_lookup, biome_layer) is fatal, "biomes: rule: <field> outside its
+// schema range", for a field outside these ranges, and "biomes: rule: the
+// rain scale is outside [0.25, 4]" for such a scale.
 inline constexpr std::int64_t BIOME_TEMP_MIN_C = -60;
 inline constexpr std::int64_t BIOME_TEMP_MAX_C = 50;
 inline constexpr std::int64_t BIOME_ELEV_MAX_M = 3000;
