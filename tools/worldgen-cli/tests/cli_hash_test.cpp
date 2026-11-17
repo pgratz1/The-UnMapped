@@ -88,12 +88,14 @@ TEST_CASE("cli 12.5: --detail of the empty world") {
     REQUIRE(r.exit_code == EXIT_OK);
     CHECK(r.out.find('\r') == std::string::npos);
     const std::vector<std::string> lines = lines_of(r.out);
-    REQUIRE(lines.size() == 4);
+    // Schema 2: five lines, the last the empty table pass (P1-01 9.1).
+    REQUIRE(lines.size() == 5);
     CHECK(lines[0] == "file " + file_sha256_hex(world));
     CHECK(lines[1] == "schema " + to_hex(p004::p0_schema_hash()));
     CHECK(lines[2] == "table layer " + to_hex(p004::layer_table_hash({})));
     CHECK(lines[3] == "table meta " + to_hex(p004::meta_table_hash(cli_meta_rows(0))));
-    CHECK(r.out == lines[0] + "\n" + lines[1] + "\n" + lines[2] + "\n" + lines[3] + "\n");
+    CHECK(lines[4] == "table pass " + to_hex(p004::pass_table_hash({})));
+    CHECK(r.out == lines[0] + "\n" + lines[1] + "\n" + lines[2] + "\n" + lines[3] + "\n" + lines[4] + "\n");
     MESSAGE("empty seed-0 --detail:\n", r.out);
 }
 
@@ -103,7 +105,7 @@ TEST_CASE("cli 12.5: --detail of a test-pattern world") {
     const ProcessResult r = sb.cli({"hash", "--db", u8(world), "--detail"});
     REQUIRE(r.exit_code == EXIT_OK);
     const std::vector<std::string> lines = lines_of(r.out);
-    REQUIRE(lines.size() == 7);
+    REQUIRE(lines.size() == 8);
     const auto ramp = p004::ramp_cells();
     const auto hash = p004::hash_cells(42);
     const auto noise = p004::noise_cells(42);
@@ -116,9 +118,10 @@ TEST_CASE("cli 12.5: --detail of a test-pattern world") {
     };
     CHECK(lines[2] == "table layer " + to_hex(p004::layer_table_hash(rows)));
     CHECK(lines[3] == "table meta " + to_hex(p004::meta_table_hash(cli_meta_rows(42, "", "test_pattern"))));
-    CHECK(lines[4] == "layer test.ramp " + to_hex(p004::layer_hash_u8(256, 256, ramp)));
-    CHECK(lines[5] == "layer test.hash " + to_hex(p004::layer_hash_u8(256, 256, hash)));
-    CHECK(lines[6] == "layer test.noise " + to_hex(p004::layer_hash_i16(256, 256, noise)));
+    CHECK(lines[4] == "table pass " + to_hex(p004::pass_table_hash({})));  // the table exists, empty
+    CHECK(lines[5] == "layer test.ramp " + to_hex(p004::layer_hash_u8(256, 256, ramp)));
+    CHECK(lines[6] == "layer test.hash " + to_hex(p004::layer_hash_u8(256, 256, hash)));
+    CHECK(lines[7] == "layer test.noise " + to_hex(p004::layer_hash_i16(256, 256, noise)));
 }
 
 TEST_CASE("cli 12.5: layer hash is codec-independent") {

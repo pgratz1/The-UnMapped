@@ -181,7 +181,9 @@ bool has(std::string_view text, std::string_view part) { return text.find(part) 
 std::string slope_lines(std::string_view p999, std::string_view over, std::string_view p50, std::string_view flat,
                         std::string_view run) {
     return line("step_p999_m", p999) + line("slope_over", over) + line("slope_p50_above_500m", p50) +
-           line("lowland_flat_share", flat) + line("edge_parallel_run_m", run);
+           line("lowland_flat_share", flat) + line("edge_parallel_run_m", run) + line("passes", "0") +
+           line("natural_gaps", "0") + line("passes_capped", "0") + line("pass_col_m", "n/a n/a n/a") +
+           line("passes_walkable", "0");
 }
 
 }  // namespace
@@ -1039,7 +1041,7 @@ TEST_CASE("report v2: the whole report of a world with elevation only") {
     layers.push_back({"elevation", g, Codec::delta_varint});
     REQUIRE(worldgen::stages::testing::write_fixture_world(out, 5, layers).ok());
     const std::string expected = "# worldgen report v2\n[meta]\n" + meta_lines(5, "test_fixture") +
-                                 "[tables]\nlayer = 1\nmeta = 8\n[layers]\n"
+                                 "[tables]\nlayer = 1\nmeta = 8\npass = 0\n[layers]\n"
                                  "elevation i16 5x5 codec=1 bytes=" +
                                  std::to_string(worldgen::db::encode_layer_blob(g).size()) +
                                  " min=-300 max=20000\n" + std::string(p100::SQUARE_GEOGRAPHY);
@@ -1056,7 +1058,7 @@ TEST_CASE("report v2: the whole report of the P1-02 worked example") {
                " min=" + lo + " max=" + hi + "\n";
     };
     const std::string expected =
-        "# worldgen report v2\n[meta]\n" + meta_lines(7, "test_fixture") + "[tables]\nlayer = 8\nmeta = 8\n[layers]\n" +
+        "# worldgen report v2\n[meta]\n" + meta_lines(7, "test_fixture") + "[tables]\nlayer = 8\nmeta = 8\npass = 0\n[layers]\n" +
         layer_line(layers[0], "i16", "-5", "80") + layer_line(layers[1], "u8", "0", "3") +
         layer_line(layers[2], "u16", "0", "8") + layer_line(layers[3], "u8", "0", "8") +
         layer_line(layers[4], "u32", "0", "10") + layer_line(layers[5], "u8", "0", "2") +

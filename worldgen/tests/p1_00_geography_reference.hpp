@@ -199,7 +199,12 @@ inline constexpr std::string_view WORKED_GEOGRAPHY_ELEVATION_LINES =
     "slope_over = 35:0.0000 45:0.0000\n"
     "slope_p50_above_500m = n/a\n"
     "lowland_flat_share = 0.0000\n"
-    "edge_parallel_run_m = 96\n";
+    "edge_parallel_run_m = 96\n"
+    "passes = 0\n"
+    "natural_gaps = 0\n"
+    "passes_capped = 0\n"
+    "pass_col_m = n/a n/a n/a\n"
+    "passes_walkable = 0\n";
 
 // The hydrology lines for the worked example, derived by hand:
 //   lakes: the largest lake value is 1.
@@ -310,7 +315,12 @@ inline constexpr std::string_view SQUARE_GEOGRAPHY =
     "slope_over = 35:1.0000 45:1.0000\n"
     "slope_p50_above_500m = 62.5008\n"
     "lowland_flat_share = 0.0000\n"
-    "edge_parallel_run_m = 48\n";
+    "edge_parallel_run_m = 48\n"
+    "passes = 0\n"
+    "natural_gaps = 0\n"
+    "passes_capped = 0\n"
+    "pass_col_m = n/a n/a n/a\n"
+    "passes_walkable = 0\n";
 
 // --- A world built for the slope statistics (7 x 6) ---------------------------
 //
@@ -397,6 +407,11 @@ inline constexpr std::string_view SLOPE_GEOGRAPHY =
     "slope_over = 35:0.7000 45:0.6333\n"
     "slope_p50_above_500m = 1.1375\n"
     "lowland_flat_share = 0.0588\n"
-    "edge_parallel_run_m = 96\n";
+    "edge_parallel_run_m = 96\n"
+    "passes = 0\n"
+    "natural_gaps = 0\n"
+    "passes_capped = 0\n"
+    "pass_col_m = n/a n/a n/a\n"
+    "passes_walkable = 0\n";
 
 }  // namespace p100

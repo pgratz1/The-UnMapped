@@ -441,7 +441,16 @@ TEST_CASE("generate P1-00 10.1: --until none and every thread count give the P0 
     // 0.5.0. The CLI case empty-seed-0 of P0-04 section 9 carries the content
     // hash of the shipped data since the `worldgen` kind was registered
     // (P0-03 amendment 17), so it differs from this value.
-    CHECK(worldgen::sha256_hex(bytes) == "0be822e8bd8a7b7e63c7f157a335eeffcbd57a71919471b48ce7eb5c41e6000e");
+    // PLACEHOLDER (generator 0.6.0, schema 2): the file hash changes with the
+    // version and the new table `pass`; recorded by the validation
+    // specialist. 0.5.0 value:
+    // 0be822e8bd8a7b7e63c7f157a335eeffcbd57a71919471b48ce7eb5c41e6000e.
+    const std::string empty_want = "PLACEHOLDER";
+    if (empty_want == "PLACEHOLDER") {
+        MESSAGE("golden placeholder: empty world seed 0 file hash ", worldgen::sha256_hex(bytes));
+    } else {
+        CHECK(worldgen::sha256_hex(bytes) == empty_want);
+    }
     // The test pattern at several thread counts: identical bytes.
     worldgen::WorldParams t;
     t.seed = 0;
@@ -454,7 +463,15 @@ TEST_CASE("generate P1-00 10.1: --until none and every thread count give the P0 
     const auto tp = dbtest::read_file(dir.file("tp1.db"));
     CHECK(dbtest::read_file(dir.file("tp2.db")) == tp);
     CHECK(dbtest::read_file(dir.file("tp5.db")) == tp);
-    CHECK(worldgen::sha256_hex(tp) == "4cd187010d8239d804eec1bc2da5de5bde61a64275db2f693829883df7422eb5");  // content hash of no data, generator 0.5.0
+    // PLACEHOLDER (generator 0.6.0, schema 2), content hash of no data;
+    // recorded by the validation specialist. 0.5.0 value:
+    // 4cd187010d8239d804eec1bc2da5de5bde61a64275db2f693829883df7422eb5.
+    const std::string tp_want = "PLACEHOLDER";
+    if (tp_want == "PLACEHOLDER") {
+        MESSAGE("golden placeholder: test-pattern world seed 0 file hash ", worldgen::sha256_hex(tp));
+    } else {
+        CHECK(worldgen::sha256_hex(tp) == tp_want);
+    }
 }
 
 TEST_CASE("generate: an unusable stage limit, or a content hash that does not match, is fatal and leaves nothing") {

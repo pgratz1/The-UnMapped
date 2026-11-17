@@ -53,3 +53,9 @@ target_sources(worldgen-cli-tests PRIVATE cli_hydrology_test.cpp)
 target_compile_definitions(worldgen-cli-tests PRIVATE
     UNMAPPED_P1_02_GOLDEN_PATH="${PROJECT_SOURCE_DIR}/worldgen/tests/golden/p1-02-hydrology.txt"
 )
+# The elevation revision "natural passes and final talus" (P1-01 fourth
+# version): schema 2, table `pass`, the report pass keys.
+target_sources(worldgen-cli-tests PRIVATE cli_passes_test.cpp)
+target_compile_definitions(worldgen-cli-tests PRIVATE
+    UNMAPPED_P1_01_GOLDEN_PATH="${PROJECT_SOURCE_DIR}/worldgen/tests/golden/p1-01-elevation.txt"
+)
