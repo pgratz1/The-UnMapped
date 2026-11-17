@@ -5,6 +5,7 @@
 #include "stages/pipeline.hpp"
 #include "worldgen/core/error.hpp"
 #include "worldgen/core/parallel.hpp"
+#include "worldgen/stages/biomes.hpp"
 #include "worldgen/stages/climate.hpp"
 #include "worldgen/stages/elevation.hpp"
 #include "worldgen/stages/hydrology.hpp"
@@ -69,6 +70,14 @@ void StageContext::write_pass(const db::PassRow& row) {
     state_->stage.write_pass(row);
 }
 
+void StageContext::write_biome(const db::BiomeRow& row) {
+    state_->stage.write_biome(row);
+}
+
+void StageContext::write_climate(const db::ClimateRow& row) {
+    state_->stage.write_climate(row);
+}
+
 // --- Pipeline ------------------------------------------------------------------------
 
 namespace detail {
@@ -102,10 +111,11 @@ void Pipeline::run(const StageInfo& stage) {
 std::span<const StageInfo> implemented_geography_stages() noexcept {
     // Each geography stage is added here as it is implemented, in the order
     // of GEOGRAPHY_STAGE_NAMES (P1-00 3).
-    static constexpr std::array<StageInfo, 3> STAGES = {
+    static constexpr std::array<StageInfo, 4> STAGES = {
         StageInfo{ELEVATION_STAGE, &run_elevation},  // P1-01
         StageInfo{HYDROLOGY_STAGE, &run_hydrology},  // P1-02
         StageInfo{CLIMATE_STAGE, &run_climate},      // P1-03
+        StageInfo{BIOMES_STAGE, &run_biomes},        // P1-04
     };
     return STAGES;
 }

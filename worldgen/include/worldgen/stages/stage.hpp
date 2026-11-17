@@ -76,6 +76,14 @@ public:
     // the order of these calls. FatalError as StageWriter::write_pass.
     void write_pass(const db::PassRow& row);
 
+    // Writes one row of table `biome` (P1-04 B6), in ascending id.
+    // FatalError as StageWriter::write_biome.
+    void write_biome(const db::BiomeRow& row);
+
+    // Writes the row of table `climate` (P1-03 C7). FatalError as
+    // StageWriter::write_climate.
+    void write_climate(const db::ClimateRow& row);
+
 private:
     friend class detail::Pipeline;
     struct State;
@@ -102,8 +110,8 @@ inline constexpr std::array<std::string_view, 6> GEOGRAPHY_STAGE_NAMES = {
 
 // The implemented geography stages, in run order (P1-00 3, 10.1): the stages
 // generate runs by default. Each implemented stage is the next one of
-// GEOGRAPHY_STAGE_NAMES; so far `elevation` (P1-01), `hydrology` (P1-02)
-// and `climate` (P1-03).
+// GEOGRAPHY_STAGE_NAMES; so far `elevation` (P1-01), `hydrology` (P1-02),
+// `climate` (P1-03) and `biomes` (P1-04).
 [[nodiscard]] std::span<const StageInfo> implemented_geography_stages() noexcept;
 
 // --- Stage limit (P1-00 10.1, --until) ------------------------------------------

@@ -43,6 +43,7 @@
 #include "worldgen/db/utf8_path.hpp"
 #include "worldgen/db/writer.hpp"
 #include "worldgen/generate.hpp"
+#include "worldgen/inspect/geography.hpp"
 #include "worldgen/inspect/hashes.hpp"
 #include "worldgen/inspect/render.hpp"
 #include "worldgen/inspect/report.hpp"
@@ -157,16 +158,19 @@ constexpr std::string_view GENERATE_USAGE =
     "Prints the absolute path of the written file.\n";
 
 constexpr std::string_view RENDER_USAGE =
-    "usage: worldgen-cli render --db PATH (--layer NAME [--palette P] | --composite map) [--out PATH]\n"
+    "usage: worldgen-cli render --db PATH (--layer NAME [--palette P] | --composite NAME) [--out PATH]\n"
     "                           [--scale N] [--force] [--verbose]\n"
     "\n"
     "  --db PATH           world file\n"
     "  --layer NAME        layer to render\n"
-    "  --composite map     shaded relief from elevation, with water and river when present\n"
+    "  --composite NAME    map: shaded relief from elevation, with water and river when present;\n"
+    "                      biomes: shaded biome colours from layer and table biome, with water\n"
+    "                      and river when present\n"
     "  --out PATH          output PNG (default <build root>/out/<db file stem>.<layer>.png,\n"
-    "                      or <db file stem>.map.png for --composite map)\n"
+    "                      or <db file stem>.<composite>.png for --composite)\n"
     "  --palette P         auto (the layer's registered palette, default), gray, hypsometric,\n"
-    "                      water, river, log2, direction, ids or signed; --layer only\n"
+    "                      water, river, log2, direction, ids, signed, temperature, rainfall\n"
+    "                      or biome; --layer only\n"
     "  --scale N           each cell becomes an N x N block, 1 to 16 (default 1)\n"
     "  --force             replace an existing output file\n"
     "  --verbose           print progress and timings to stderr\n"
@@ -632,6 +636,39 @@ std::optional<db::LayerGrid> read_optional_layer(const db::WorldReader& world, c
     return std::move(layer.value().grid);
 }
 
+// The colours of table `biome` (P1-04 9): empty when the world has no such
+// table; exit 3 naming the table when a row is malformed.
+std::vector<inspect::BiomeColour> read_biome_colours(const db::WorldReader& world, const Progress& progress) {
+    db::Result<std::vector<std::vector<db::ColumnValue>>> rows = world.table_rows(db::BIOME_TABLE);
+    if (!rows.ok()) {
+        if (rows.code() == db::ErrorCode::table_not_found) {
+            progress.note("table 'biome' is absent");
+            return {};
+        }
+        fail_with(rows.error());
+    }
+    const inspect::BiomeTableResult table = inspect::read_biome_rows(rows.value());
+    if (table.problem) {
+        fail_with(db::Error{db::ErrorCode::corrupt_layer, "corrupt table 'biome': " + *table.problem});
+    }
+    std::vector<inspect::BiomeColour> colours;
+    for (const inspect::BiomeRecord& r : table.records) {
+        colours.push_back(inspect::BiomeColour{r.id, r.colour});
+    }
+    progress.note("read table 'biome' (" + format_u64(colours.size()) + " rows)");
+    return colours;
+}
+
+// The names --composite accepts, for its usage message: "map, biomes".
+std::string composite_name_list() {
+    std::string names;
+    for (const inspect::Composite c : inspect::ALL_COMPOSITES) {
+        if (!names.empty()) names += ", ";
+        names += inspect::composite_name(c);
+    }
+    return names;
+}
+
 Exit run_render(const Options& options) {
     const Progress progress(options.flag("verbose"));
     const std::string& db_path = required(options, "render", "db");
@@ -645,7 +682,7 @@ Exit run_render(const Options& options) {
     if (composite_option != nullptr) {
         composite = inspect::composite_from_name(*composite_option);
         if (!composite) {
-            usage_error("invalid --composite '" + *composite_option + "'; expected map");
+            usage_error("invalid --composite '" + *composite_option + "'; expected " + composite_name_list());
         }
         if (options.value("palette") != nullptr) {
             usage_error("--palette applies to --layer only");
@@ -678,13 +715,22 @@ Exit run_render(const Options& options) {
     std::optional<db::LayerGrid> water;
     std::optional<db::LayerGrid> river;
     std::optional<db::LayerGrid> flow_dir;
+    std::optional<db::LayerGrid> biome;
     if (composite) {
+        if (*composite == inspect::Composite::biomes) {
+            biome = read_render_layer(world, "biome", progress);  // required (P1-04 9)
+        }
         water = read_optional_layer(world, "water", progress);
         river = read_optional_layer(world, "river", progress);
         flow_dir = read_optional_layer(world, "flow_dir", progress);
-        if (const std::optional<std::string> problem = inspect::composite_map_problem(
-                grid, water ? &*water : nullptr, river ? &*river : nullptr, flow_dir ? &*flow_dir : nullptr)) {
-            throw Failure(Exit::input, "cannot render the composite map: " + *problem + "; " + layer_name_list(world));
+        const std::optional<std::string> problem =
+            biome ? inspect::composite_biomes_problem(grid, *biome, water ? &*water : nullptr,
+                                                      river ? &*river : nullptr, flow_dir ? &*flow_dir : nullptr)
+                  : inspect::composite_map_problem(grid, water ? &*water : nullptr, river ? &*river : nullptr,
+                                                   flow_dir ? &*flow_dir : nullptr);
+        if (problem) {
+            throw Failure(Exit::input, "cannot render the composite " + image_name + ": " + *problem + "; " +
+                                           layer_name_list(world));
         }
     } else if (palette && !inspect::palette_suits(*palette, grid)) {
         usage_error("palette '" + std::string(inspect::palette_name(*palette)) + "' does not suit layer '" +
@@ -714,8 +760,14 @@ Exit run_render(const Options& options) {
     if (composite) {
         progress.note("rendering " + format_u64(width) + " x " + format_u64(height) + " pixels, composite " +
                       image_name);
-        rgb = inspect::render_composite_map(grid, water ? &*water : nullptr, river ? &*river : nullptr,
-                                            flow_dir ? &*flow_dir : nullptr, scale);
+        if (biome) {
+            const std::vector<inspect::BiomeColour> colours = read_biome_colours(world, progress);
+            rgb = inspect::render_composite_biomes(grid, *biome, colours, water ? &*water : nullptr,
+                                                   river ? &*river : nullptr, flow_dir ? &*flow_dir : nullptr, scale);
+        } else {
+            rgb = inspect::render_composite_map(grid, water ? &*water : nullptr, river ? &*river : nullptr,
+                                                flow_dir ? &*flow_dir : nullptr, scale);
+        }
     } else {
         const inspect::Palette chosen = palette.value_or(inspect::auto_palette(*layer_option, grid));
         if (!palette && chosen != inspect::registered_palette(*layer_option)) {
@@ -723,7 +775,11 @@ Exit run_render(const Options& options) {
         }
         progress.note("rendering " + format_u64(width) + " x " + format_u64(height) + " pixels, palette " +
                       std::string(inspect::palette_name(chosen)));
-        rgb = inspect::render_rgb(grid, chosen, scale);
+        std::vector<inspect::BiomeColour> colours;
+        if (chosen == inspect::Palette::biome) {
+            colours = read_biome_colours(world, progress);
+        }
+        rgb = inspect::render_rgb(grid, chosen, scale, colours);
     }
 
     std::vector<std::uint8_t> png;

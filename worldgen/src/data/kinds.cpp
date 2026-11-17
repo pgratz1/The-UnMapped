@@ -7,11 +7,17 @@
 // `climate` (P1-03 section 4). The later second-pass specs add their ids
 // here.
 
+#include <array>
+#include <cstddef>
+#include <map>
 #include <optional>
 #include <string>
+#include <string_view>
 #include <utility>
 #include <vector>
 
+#include "data/text.hpp"
+#include "worldgen/data/content.hpp"
 #include "worldgen/data/schema.hpp"
 #include "worldgen/geo/noise_schema.hpp"
 
@@ -72,7 +78,192 @@ std::optional<std::string> check_wind_weights_positive(const Record& r) {
     return std::nullopt;
 }
 
+// --- biome (P1-04 4.1) -------------------------------------------------------------
+
+// Named check 2.
+std::optional<std::string> check_biome_water_body(const Record& r) {
+    const bool body = r.get_string("water_body") != "none";
+    if (r.get_bool("water") != body) {
+        return std::string("water must be true exactly when water_body is not \"none\"");
+    }
+    return std::nullopt;
+}
+
+// Named check 5.
+std::optional<std::string> check_biome_water_rules(const Record& r) {
+    if (r.get_string("water_body") != "none" && (r.get_int("priority") != 0 || !r.get_array("rules").empty())) {
+        return std::string("water biomes take no rules and priority 0");
+    }
+    return std::nullopt;
+}
+
+// Named check 7: the first rule (array order) with a min above its max,
+// fields checked in the order temp, rain, elev.
+std::optional<std::string> check_biome_rule_ranges(const Record& r) {
+    const std::vector<Value>& rules = r.get_array("rules");
+    for (std::size_t i = 0; i < rules.size(); ++i) {
+        const Record& rule = rules[i].as_record();
+        const std::string at = "rules[" + detail::uint_text(i) + "]: ";
+        if (rule.get_fx("temp_min_c") > rule.get_fx("temp_max_c")) {
+            return at + "temp_min_c must not exceed temp_max_c";
+        }
+        if (rule.get_int("rain_min_mm") > rule.get_int("rain_max_mm")) {
+            return at + "rain_min_mm must not exceed rain_max_mm";
+        }
+        if (rule.get_int("elev_min_m") > rule.get_int("elev_max_m")) {
+            return at + "elev_min_m must not exceed elev_max_m";
+        }
+    }
+    return std::nullopt;
+}
+
+bool is_land_biome(const Definition& d) {
+    return d.record.get_string("water_body") == "none";
+}
+
+// Kind-level check 1: a repeated code is reported at its second definition
+// in id order, naming the first.
+std::vector<KindCheckFailure> check_biome_code_unique(std::span<const Definition> defs) {
+    std::vector<KindCheckFailure> out;
+    std::map<std::int64_t, std::size_t> first;
+    for (std::size_t i = 0; i < defs.size(); ++i) {
+        const std::int64_t code = defs[i].record.get_int("code");
+        const auto [it, inserted] = first.try_emplace(code, i);
+        if (!inserted) {
+            out.push_back(
+                KindCheckFailure{i, "code " + detail::int_text(code) + " is also used by '" + defs[it->second].id + "'"});
+        }
+    }
+    return out;
+}
+
+// Kind-level check 3: exactly one "ocean" and exactly one "lake"; a second
+// one is reported at itself (the second in id order), a missing one against
+// the directory.
+std::vector<KindCheckFailure> check_biome_water_unique(std::span<const Definition> defs) {
+    std::vector<KindCheckFailure> out;
+    static constexpr std::array<std::string_view, 2> BODIES = {"ocean", "lake"};
+    for (const std::string_view body : BODIES) {
+        const std::string message = "exactly one biome must have water_body \"" + std::string(body) + "\"";
+        std::vector<std::size_t> found;
+        for (std::size_t i = 0; i < defs.size(); ++i) {
+            if (defs[i].record.get_string("water_body") == body) {
+                found.push_back(i);
+            }
+        }
+        if (found.empty()) {
+            out.push_back(KindCheckFailure{std::nullopt, message});
+        } else if (found.size() > 1U) {
+            out.push_back(KindCheckFailure{found[1], message});
+        }
+    }
+    return out;
+}
+
+// Kind-level check 4: exactly one fallback, and it is a land biome. A second
+// fallback is reported at itself, a missing one against the directory, a
+// water fallback at its definition.
+std::vector<KindCheckFailure> check_biome_fallback(std::span<const Definition> defs) {
+    const std::string message = "exactly one land biome must have fallback = true";
+    std::vector<std::size_t> found;
+    for (std::size_t i = 0; i < defs.size(); ++i) {
+        if (defs[i].record.get_bool("fallback")) {
+            found.push_back(i);
+        }
+    }
+    std::vector<KindCheckFailure> out;
+    if (found.empty()) {
+        out.push_back(KindCheckFailure{std::nullopt, message});
+    } else if (found.size() > 1U) {
+        out.push_back(KindCheckFailure{found[1], message});
+    } else if (!is_land_biome(defs[found[0]])) {
+        out.push_back(KindCheckFailure{found[0], message});
+    }
+    return out;
+}
+
+// Kind-level check 6: land biomes with priority > 0 have distinct
+// priorities; a repeat is reported at its second definition in id order.
+std::vector<KindCheckFailure> check_biome_priority_unique(std::span<const Definition> defs) {
+    std::vector<KindCheckFailure> out;
+    std::map<std::int64_t, std::size_t> first;
+    for (std::size_t i = 0; i < defs.size(); ++i) {
+        const std::int64_t p = defs[i].record.get_int("priority");
+        if (!is_land_biome(defs[i]) || p == 0) {
+            continue;
+        }
+        const auto [it, inserted] = first.try_emplace(p, i);
+        if (!inserted) {
+            out.push_back(
+                KindCheckFailure{i, "priority " + detail::int_text(p) + " is also used by '" + defs[it->second].id + "'"});
+        }
+    }
+    return out;
+}
+
+Schema biome_rule_schema() {
+    return Schema(std::vector<Field>{
+        Field::required("temp_min_c", Type::fixed("-60", "50")),
+        Field::required("temp_max_c", Type::fixed("-60", "50")),
+        Field::required("rain_min_mm", Type::integer(0, 10000)),
+        Field::required("rain_max_mm", Type::integer(0, 10000)),
+        Field::required("elev_min_m", Type::integer(0, 3000)),
+        Field::required("elev_max_m", Type::integer(0, 3000)),
+        Field::required("slope_max", Type::fixed("0", "100")),
+        Field::required("hand_max_m", Type::fixed("0", "3000")),
+        Field::required("coast_max_m", Type::integer(0, 32767)),
+    });
+}
+
 }  // namespace
+
+Schema biome_schema() {
+    // P1-04 4.1, in declaration order (this order fixes the canonical
+    // encoding, P0-03 8).
+    std::vector<Field> fields{
+        Field::required("code", Type::integer(1, 254)),
+        Field::required("name", Type::string(64)),
+        Field::required("colour", Type::integer(0, 16777215)),
+        Field::required("water", Type::boolean()),
+        Field::required("water_body", Type::enumeration({"none", "lake", "ocean"})),
+        Field::required("priority", Type::integer(0, 255)),
+        Field::required("fallback", Type::boolean()),
+        Field::required("rules", Type::array(Type::record(biome_rule_schema()), 0, 16)),
+        Field::required("fertility", Type::fixed("0", "1")),
+        Field::required("timber", Type::fixed("0", "1")),
+        Field::required("region_noun", Type::string(32)),
+    };
+    std::vector<Check> checks{
+        Check{"biome_water_body", [](const Record& r) { return check_biome_water_body(r); }},
+        Check{"biome_water_rules", [](const Record& r) { return check_biome_water_rules(r); }},
+        Check{"biome_rule_ranges", [](const Record& r) { return check_biome_rule_ranges(r); }},
+    };
+    return Schema(std::move(fields), std::move(checks));
+}
+
+std::vector<KindCheck> biome_kind_checks() {
+    std::vector<KindCheck> out;
+    out.push_back(KindCheck{"biome_code_unique", [](std::span<const Definition> d) { return check_biome_code_unique(d); }});
+    out.push_back(KindCheck{"biome_water_unique", [](std::span<const Definition> d) { return check_biome_water_unique(d); }});
+    out.push_back(KindCheck{"biome_fallback", [](std::span<const Definition> d) { return check_biome_fallback(d); }});
+    out.push_back(
+        KindCheck{"biome_priority_unique", [](std::span<const Definition> d) { return check_biome_priority_unique(d); }});
+    return out;
+}
+
+Schema worldgen_biomes_schema() {
+    // P1-04 4.2, in declaration order (this order fixes the canonical
+    // encoding, P0-03 8).
+    return Schema(std::vector<Field>{
+        Field::required("jitter_noise", geo::fbm_m_type()),
+        Field::required("temp_jitter_c", Type::fixed("0", "10")),
+        Field::required("rain_jitter", Type::fixed("0", "1")),
+        Field::required("rain_scale_512", Type::fixed("0.25", "4")),
+        Field::required("rain_scale_1024", Type::fixed("0.25", "4")),
+        Field::required("rain_scale_2048", Type::fixed("0.25", "4")),
+        Field::required("drain_river_class_min", Type::integer(1, 15)),
+    });
+}
 
 Schema worldgen_elevation_schema() {
     // P1-01 4.2, in declaration order (this order fixes the canonical
@@ -229,7 +420,13 @@ KindRegistry builtin_kinds() {
                                           IdSchema{std::string(WORLDGEN_ELEVATION_ID), worldgen_elevation_schema()},
                                           IdSchema{std::string(WORLDGEN_HYDROLOGY_ID), worldgen_hydrology_schema()},
                                           IdSchema{std::string(WORLDGEN_CLIMATE_ID), worldgen_climate_schema()},
+                                          IdSchema{std::string(WORLDGEN_BIOMES_ID), worldgen_biomes_schema()},
                                       }));
+    // P1-00 6.6: kind `biome`, directory `biomes`, required, open ids, with
+    // the kind-level checks of P1-04 4.1.
+    Kind biome{std::string(BIOME_KIND), std::string(BIOME_DIRECTORY), true, biome_schema()};
+    biome.kind_checks = biome_kind_checks();
+    registry.add(std::move(biome));
     return registry;
 }
 

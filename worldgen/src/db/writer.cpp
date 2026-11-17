@@ -415,6 +415,8 @@ StageWriter::~StageWriter() {
     }
     state_->next_layer_id = state_->stage_start_layer_id;
     state_->next_pass_id = state_->stage_start_pass_id;
+    state_->last_biome_id = state_->stage_start_biome_id;
+    state_->climate_written = state_->stage_start_climate;
     state_->stage_open = false;
 }
 
@@ -463,6 +465,55 @@ void StageWriter::write_pass(const PassRow& row) {
                    detail::error_message(db));
     }
     state_->next_pass_id = row.id + 1;
+}
+
+void StageWriter::write_biome(const BiomeRow& row) {
+    if (state_ == nullptr) {
+        fatal("StageWriter::write_biome: stage is not open");
+    }
+    if (row.id < 1 || row.id <= state_->last_biome_id) {
+        fatal_text("StageWriter::write_biome: biome row has id " + format_i64(row.id) +
+                   ", expected an id above " + format_i64(state_->last_biome_id) + " (ascending ids)");
+    }
+    if (row.water != 0 && row.water != 1) {
+        fatal("StageWriter::write_biome: water must be 0 or 1");
+    }
+    detail::Statement stmt;
+    sqlite3* db = state_->db.get();
+    int rc = stmt.prepare(db, "INSERT INTO biome (id, key, name, colour, water) VALUES (?1, ?2, ?3, ?4, ?5)");
+    if (rc == SQLITE_OK) rc = stmt.bind_int64(1, row.id);
+    if (rc == SQLITE_OK) rc = stmt.bind_text(2, row.key);
+    if (rc == SQLITE_OK) rc = stmt.bind_text(3, row.name);
+    if (rc == SQLITE_OK) rc = stmt.bind_int64(4, row.colour);
+    if (rc == SQLITE_OK) rc = stmt.bind_int64(5, row.water);
+    if (rc == SQLITE_OK) rc = stmt.step() == SQLITE_DONE ? SQLITE_OK : SQLITE_ERROR;
+    if (rc != SQLITE_OK) {
+        fatal_text("world database: inserting biome row " + format_i64(row.id) + " failed: " +
+                   detail::error_message(db));
+    }
+    state_->last_biome_id = row.id;
+}
+
+void StageWriter::write_climate(const ClimateRow& row) {
+    if (state_ == nullptr) {
+        fatal("StageWriter::write_climate: stage is not open");
+    }
+    if (row.id != 1 || state_->climate_written) {
+        fatal("StageWriter::write_climate: table climate has exactly one row, id 1");
+    }
+    if (row.wind_toward < 0 || row.wind_toward > 7) {
+        fatal("StageWriter::write_climate: wind_toward must be a D8 code 0..7");
+    }
+    detail::Statement stmt;
+    sqlite3* db = state_->db.get();
+    int rc = stmt.prepare(db, "INSERT INTO climate (id, wind_toward) VALUES (?1, ?2)");
+    if (rc == SQLITE_OK) rc = stmt.bind_int64(1, row.id);
+    if (rc == SQLITE_OK) rc = stmt.bind_int64(2, row.wind_toward);
+    if (rc == SQLITE_OK) rc = stmt.step() == SQLITE_DONE ? SQLITE_OK : SQLITE_ERROR;
+    if (rc != SQLITE_OK) {
+        fatal_text("world database: inserting the climate row failed: " + detail::error_message(db));
+    }
+    state_->climate_written = true;
 }
 
 void StageWriter::commit() {
@@ -548,6 +599,8 @@ StageWriter WorldWriter::begin_stage(std::string_view stage_name) {
     s.stage_open = true;
     s.stage_start_layer_id = s.next_layer_id;
     s.stage_start_pass_id = s.next_pass_id;
+    s.stage_start_biome_id = s.last_biome_id;
+    s.stage_start_climate = s.climate_written;
     return StageWriter(s, std::string(stage_name));
 }
 

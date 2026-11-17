@@ -1,0 +1,22 @@
+[biome.highland_moor]
+code = 6
+name = "Highland moor"
+colour = 0x786468
+water = false
+water_body = "none"
+priority = 30
+fallback = false
+fertility = "0.3"
+timber = "0.1"
+region_noun = "Moor"
+
+[[biome.highland_moor.rules]]
+temp_min_c = -60
+temp_max_c = 4
+rain_min_mm = 0
+rain_max_mm = 10000
+elev_min_m = 300
+elev_max_m = 3000
+slope_max = 100
+hand_max_m = 3000
+coast_max_m = 32767

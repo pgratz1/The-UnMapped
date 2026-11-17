@@ -1,0 +1,8 @@
+[worldgen.biomes]
+jitter_noise = { wavelength_m = 500, octaves = 4, gain = "0.5" }
+temp_jitter_c = 1
+rain_jitter = "0.2"
+rain_scale_512 = "1.125"
+rain_scale_1024 = 1
+rain_scale_2048 = "0.875"
+drain_river_class_min = 3

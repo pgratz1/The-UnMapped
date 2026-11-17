@@ -515,9 +515,14 @@ void run_climate(StageContext& context) {
                                                   "climate: input precondition: the coast_dist layer is not N x N");
     const Grid grid = geo::square_grid(static_cast<std::int32_t>(n));
     ClimateLayers layers = climate_layers(grid, e, water, depth, coast, tuning, context.seed(), context.threads());
-    // C7: one transaction (the pipeline's), temperature then rainfall.
+    // C7: one transaction (the pipeline's), temperature, rainfall, then the
+    // climate row (schema 3, P1-03 3).
     context.write_layer(TEMPERATURE_LAYER, layer_of(grid, std::move(layers.temperature)));
     context.write_layer(RAINFALL_LAYER, layer_of(grid, std::move(layers.rainfall)));
+    db::ClimateRow row;
+    row.id = 1;
+    row.wind_toward = static_cast<std::int64_t>(climate_wind(context.seed(), tuning.wind_weights));
+    context.write_climate(row);
 }
 
 }  // namespace worldgen::stages

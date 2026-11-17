@@ -22,6 +22,7 @@
 
 #include "worldgen/core/fx.hpp"
 #include "worldgen/db/layer_blob.hpp"
+#include "worldgen/db/reader.hpp"
 
 namespace worldgen::inspect {
 
@@ -381,6 +382,54 @@ inline constexpr std::int64_t PASS_FOOT_R2 = 1369;
 [[nodiscard]] std::string climate_lines(std::span<const std::int16_t> e, std::span<const std::int16_t> temperature,
                                         std::span<const std::uint16_t> rainfall);
 
+// --- Tables of schema 3: climate and biome (P1-03 3, P1-04 3) ----------------------
+
+// The names of the wind codes for wind_toward (P1-00 2.3): "E", "SE", "S",
+// "SW", "W", "NW", "N", "NE" for 0..7. FatalError for any other code.
+[[nodiscard]] std::string_view wind_code_name(std::int64_t code);
+
+// The rows of table `climate` as report reads them (P1-03 9): std::nullopt
+// for an empty table; the wind_toward code of its row otherwise. Returns the
+// reason when the table is malformed: more than one row, a row with other
+// than 2 integer columns, an id other than 1, a wind_toward outside 0..7.
+struct ClimateTableResult {
+    std::optional<std::int64_t> wind_toward{};
+    std::optional<std::string> problem;
+};
+[[nodiscard]] ClimateTableResult read_climate_rows(std::span<const std::vector<db::ColumnValue>> rows);
+
+// One row of table `biome` (P1-04 3, B6) as report and render read it.
+struct BiomeRecord {
+    std::int64_t id = 0;
+    std::string key;
+    std::string name;
+    std::int64_t colour = 0;  // 0xRRGGBB
+    std::int64_t water = 0;   // 0 or 1
+};
+
+// The rows of table `biome`, checked (reading chosen, as for `pass`): five
+// columns, id, colour and water integers, key and name text, id in 1..254,
+// colour in 0..0xFFFFFF, water 0 or 1. Returns the records in table order,
+// or the reason the first bad row fails ("row <id>: ...").
+struct BiomeTableResult {
+    std::vector<BiomeRecord> records;
+    std::optional<std::string> problem;
+};
+[[nodiscard]] BiomeTableResult read_biome_rows(std::span<const std::vector<db::ColumnValue>> rows);
+
+// The biome keys of P1-04 9 in their order, each "<key> = <value>\n", for a
+// biome layer of w x h cells (u8) and the biome table:
+//   biome_share    for each record with water = 0, ascending id:
+//                  <key>:<ratio4(cells with that code, cells whose biome
+//                  record has water = 0)>, separated by single spaces; n/a
+//                  when the table has no record with water = 0
+//   biome_patches  the number of 8-connected components (G2, equivalence:
+//                  equal biome value) of the cells whose biome record has
+//                  water = 0
+// Keys are escaped as report text. FatalError if a size is wrong.
+[[nodiscard]] std::string biome_lines(std::span<const std::uint8_t> biome, std::uint32_t w, std::uint32_t h,
+                                      std::span<const BiomeRecord> records);
+
 // --- The section ------------------------------------------------------------------
 
 // The layers [geography] reads, from a world (null when absent).
@@ -397,8 +446,17 @@ struct GeographyLayers {
     // The climate layers (P1-03 3), null when absent.
     const db::LayerGrid* temperature = nullptr;
     const db::LayerGrid* rainfall = nullptr;
+    // The wind_toward code of table `climate` (P1-03 9), std::nullopt when
+    // the table is empty or absent; printed first of the climate group.
+    std::optional<std::int64_t> wind_toward{};
+    // The biome layer (P1-04 3) and the rows of table `biome`, null when
+    // absent; the biome keys are printed only when both are given.
+    const db::LayerGrid* biome = nullptr;
+    const std::vector<BiomeRecord>* biomes = nullptr;
     // True when temperature and rainfall are both present.
     [[nodiscard]] bool has_climate() const noexcept { return temperature != nullptr && rainfall != nullptr; }
+    // True when the biome layer and the biome table are both present.
+    [[nodiscard]] bool has_biomes() const noexcept { return biome != nullptr && biomes != nullptr; }
     // True when water, flow_dir, flow_accum, river and lake are all present.
     [[nodiscard]] bool has_hydrology() const noexcept {
         return water != nullptr && flow_dir != nullptr && flow_accum != nullptr && river != nullptr &&
@@ -412,13 +470,16 @@ struct GeographyLayers {
 // lake u32, each the size of elevation. When any of the five is absent the
 // hydrology layers are not used, so they are not checked. When
 // has_climate(), temperature must be i16 and rainfall u16, each the size of
-// elevation (unchecked otherwise). Text names the layer.
+// elevation (unchecked otherwise); when has_biomes(), biome must be u8 and
+// the size of elevation. Text names the layer.
 [[nodiscard]] std::optional<std::string> geography_layers_problem(const GeographyLayers& layers);
 
 // The [geography] section (P1-00 10.3): the line "[geography]" then one
 // "<key> = <value>" line per key, in the order of 10.3, each ending in a
-// line feed; the hydrology lines only when has_hydrology(), then the
-// climate lines (climate_lines) only when has_climate(). Values that are
+// line feed; the hydrology lines only when has_hydrology(), then
+// wind_toward when it is set, the climate lines (climate_lines) only when
+// has_climate(), then the biome lines (biome_lines) only when has_biomes().
+// Values that are
 // undefined on the world print as n/a (percentiles with no land or no ocean,
 // ratio4 over 0, coast_ratio with no land). Returns std::nullopt with
 // *problem set when geography_layers_problem reports one, or when the

@@ -15,6 +15,7 @@
 #include <functional>
 #include <memory>
 #include <optional>
+#include <span>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -25,6 +26,7 @@
 namespace worldgen::data {
 
 class Schema;
+struct Definition;  // worldgen/data/content.hpp
 
 // --- Grammars (P0-03 sections 7.1, 7.3) -------------------------------------
 
@@ -194,6 +196,32 @@ private:
     std::vector<Check> checks_;
 };
 
+// --- Kind-level checks (P1-04 4.1) -------------------------------------------
+
+// One failure of a kind-level check: the index of the definition it is
+// reported at (in the span the check was given, ascending id), or
+// std::nullopt to report it against the kind's directory with no position;
+// and the message.
+struct KindCheckFailure {
+    std::optional<std::size_t> definition;
+    std::string message;
+};
+
+// A named rule over all definitions of one kind (P1-04 4.1 named checks that
+// compare definitions, e.g. biome_code_unique). Run once, after every
+// definition of the kind passed type validation and its own named checks,
+// on the definitions in ascending id order; not run when any definition of
+// the kind (or any file of its directory) produced an error, so that one
+// broken file does not also report "missing" or "duplicate" findings. Each
+// failure becomes one load error: at the definition's header,
+// "check '<name>' failed for '<kind>.<id>': <message>", or against the
+// directory, "check '<name>' failed for kind '<kind>': <message>". Must be a
+// pure function of the definitions.
+struct KindCheck {
+    std::string name;
+    std::function<std::vector<KindCheckFailure>(std::span<const Definition>)> rule;
+};
+
 // --- Kinds and the registry (P0-03 section 7.1) -----------------------------
 
 // One id of a fixed-id kind and the schema of its definition (P0-03
@@ -226,6 +254,7 @@ struct Kind {
     bool required = false;  // missing directory or zero definitions is an error
     Schema schema;          // the schema of every definition of an open kind
     std::vector<IdSchema> id_schemas{};  // fixed-id kinds only: one entry per id ({} so that Kind{name, dir, req, schema} needs no fifth initializer)
+    std::vector<KindCheck> kind_checks{};  // checks across definitions (P1-04 4.1), run in this order
 
     // A fixed-id kind (P0-03 amendment 15); `schema` stays empty.
     [[nodiscard]] static Kind with_fixed_ids(std::string name, std::string directory, bool required,
@@ -265,7 +294,9 @@ private:
 // (P0-03 7.1, defined in one source file, src/data/kinds.cpp). It holds the
 // fixed-id kind `worldgen` (P1-00 6.1, P0-03 amendment 16: directory
 // `worldgen`, required) with the ids `elevation` (P1-01 4.2),
-// `hydrology` (P1-02 4) and `climate` (P1-03 4). Because a required kind is
+// `hydrology` (P1-02 4), `climate` (P1-03 4) and `biomes` (P1-04 4.2),
+// and the open kind `biome` (P1-00 6.6, P1-04 4.1: directory `biomes`,
+// required, with its kind-level checks). Because a required kind is
 // registered, every world needs a data root and its content_hash is the
 // hash of the loaded data (P0-03 amendment 17).
 [[nodiscard]] KindRegistry builtin_kinds();
@@ -278,6 +309,7 @@ inline constexpr std::string_view WORLDGEN_DIRECTORY = "worldgen";
 inline constexpr std::string_view WORLDGEN_ELEVATION_ID = "elevation";
 inline constexpr std::string_view WORLDGEN_HYDROLOGY_ID = "hydrology";
 inline constexpr std::string_view WORLDGEN_CLIMATE_ID = "climate";
+inline constexpr std::string_view WORLDGEN_BIOMES_ID = "biomes";
 // Upper bound of worldgen.climate.smooth_radius_m (P1-03 4); the climate
 // stage's overflow argument for C4 depends on it (static_assert there).
 inline constexpr std::int64_t CLIMATE_SMOOTH_RADIUS_MAX_M = 4000;
@@ -294,6 +326,34 @@ inline constexpr std::int64_t CLIMATE_SMOOTH_RADIUS_MAX_M = 4000;
 // The schema of definition worldgen.hydrology (P1-02 4): river_min_area_m2
 // int(256, 10^9), required.
 [[nodiscard]] Schema worldgen_hydrology_schema();
+
+// The schema of definition worldgen.biomes (P1-04 4.2): jitter_noise
+// (fbm_m), temp_jitter_c fx(0, 10), rain_jitter fx(0, 1), rain_scale_512,
+// rain_scale_1024 and rain_scale_2048 fx(0.25, 4), drain_river_class_min
+// int(1, 15), in this order, all required.
+[[nodiscard]] Schema worldgen_biomes_schema();
+
+// --- The `biome` kind (P1-00 6.6, P1-04 4.1) ---------------------------------
+
+// Kind name and directory (P1-00 6.6): files in game/data/biomes/.
+inline constexpr std::string_view BIOME_KIND = "biome";
+inline constexpr std::string_view BIOME_DIRECTORY = "biomes";
+
+// The schema of a biome definition (P1-04 4.1): code int(1, 254), name
+// string(64), colour int(0, 16777215), water bool, water_body enum("none",
+// "lake", "ocean"), priority int(0, 255), fallback bool, rules
+// array(record(biome_rule), 0, 16), fertility fx(0, 1), timber fx(0, 1),
+// region_noun string(32), in this order, all required. Record biome_rule:
+// temp_min_c, temp_max_c fx(-60, 50); rain_min_mm, rain_max_mm int(0,
+// 10000); elev_min_m, elev_max_m int(0, 3000); slope_max fx(0, 100);
+// hand_max_m fx(0, 3000); coast_max_m int(0, 32767). Named checks of one
+// definition: biome_water_body, biome_water_rules, biome_rule_ranges.
+[[nodiscard]] Schema biome_schema();
+
+// The kind-level named checks of P1-04 4.1, in this order:
+// biome_code_unique, biome_water_unique, biome_fallback,
+// biome_priority_unique.
+[[nodiscard]] std::vector<KindCheck> biome_kind_checks();
 
 // The schema of definition worldgen.climate (P1-03 4): every field of the
 // table of 4 in its order, all required. Named check, a load error at the

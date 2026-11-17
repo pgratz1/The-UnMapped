@@ -69,6 +69,24 @@ struct PassRow {
     std::vector<std::uint8_t> path;
 };
 
+// One row of table `biome` (P1-04 3, B6; schema 3): a loaded biome
+// definition. id is the biome code, key the definition id, colour 0xRRGGBB,
+// water 0 or 1.
+struct BiomeRow {
+    std::int64_t id = 0;
+    std::string key;
+    std::string name;
+    std::int64_t colour = 0;
+    std::int64_t water = 0;
+};
+
+// The one row of table `climate` (P1-03 3, C7; schema 3): id 1 and the D8
+// code (0 E to 7 NE) the prevailing wind blows toward.
+struct ClimateRow {
+    std::int64_t id = 1;
+    std::int64_t wind_toward = 0;
+};
+
 // One stage's transaction on the working database (P0-02 6 step 3).
 // Obtained from WorldWriter::begin_stage; at most one is open at a time.
 // Destroying it without commit() rolls the transaction back and leaves no
@@ -99,6 +117,18 @@ public:
     // P0-02 6 step 3). FatalError if the stage is closed, the id is out of
     // order, kind or capped is not 0 or 1, or SQLite rejects the row.
     void write_pass(const PassRow& row);
+
+    // Inserts one row of table `biome` (P1-04 B6). Rows are written in
+    // strictly ascending id (ascending primary key, P0-02 6 step 3).
+    // FatalError if the stage is closed, the id is not above every id
+    // written before (or below 1), water is not 0 or 1, or SQLite rejects
+    // the row (for example a duplicate key).
+    void write_biome(const BiomeRow& row);
+
+    // Inserts the row of table `climate` (P1-03 C7). FatalError if the
+    // stage is closed, the id is not 1, the table already has its row,
+    // wind_toward is outside 0..7, or SQLite rejects the row.
+    void write_climate(const ClimateRow& row);
 
     // COMMIT, and append the stage name to meta.stages (P0-02 5.5, 6 step 3).
     // FatalError if already committed or SQLite fails.

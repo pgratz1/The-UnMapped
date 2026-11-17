@@ -57,12 +57,17 @@ inline constexpr std::string_view geo_climate_wind = "geo.climate.wind";
 inline constexpr std::string_view geo_climate_temperature = "geo.climate.temperature";
 inline constexpr std::string_view geo_climate_rainfall = "geo.climate.rainfall";
 
+// Keys of stage biomes (P1-00 section 3, P1-04 section 2): the noise keys of
+// the temperature and rainfall jitter the rules see (fbm_m only, no Rng).
+inline constexpr std::string_view geo_biomes_temp_jitter = "geo.biomes.temp_jitter";
+inline constexpr std::string_view geo_biomes_rain_jitter = "geo.biomes.rain_jitter";
+
 // Reserved prefixes for the later second-pass stages (P1-00 section 3):
 // their names are registered here by the stage that uses them.
-//   geo.biomes.   geo.resources.   geo.regions.
+//   geo.resources.   geo.regions.
 
 // Every registered name, in registration order.
-inline constexpr std::array<std::string_view, 24> all_stream_names = {
+inline constexpr std::array<std::string_view, 26> all_stream_names = {
     test_hash,
     test_noise,
     test_wide,
@@ -87,6 +92,8 @@ inline constexpr std::array<std::string_view, 24> all_stream_names = {
     geo_climate_wind,
     geo_climate_temperature,
     geo_climate_rainfall,
+    geo_biomes_temp_jitter,
+    geo_biomes_rain_jitter,
 };
 
 }  // namespace worldgen::streams

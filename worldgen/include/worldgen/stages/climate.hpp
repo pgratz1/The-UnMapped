@@ -200,7 +200,8 @@ struct ClimateLayers {
 // stored elevation (i16), water (u8), water_depth (u16) and coast_dist (i16)
 // layers, each N x N with N = param.map_size (fatal otherwise, "climate:
 // input precondition: ..."), runs climate_layers with meta.seed and writes
-// `temperature` then `rainfall` (codec 1).
+// `temperature` then `rainfall` (codec 1), then the one row of table
+// `climate` (id 1, wind_toward = climate_wind(seed, wind_weights); schema 3).
 void run_climate(StageContext& context);
 
 }  // namespace worldgen::stages

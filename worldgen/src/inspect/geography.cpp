@@ -6,6 +6,8 @@
 #include <array>
 #include <cstddef>
 #include <limits>
+#include <map>
+#include <string>
 #include <utility>
 
 #include "worldgen/core/checked.hpp"
@@ -16,6 +18,7 @@
 #include "worldgen/geo/components.hpp"
 #include "worldgen/geo/grid.hpp"
 #include "worldgen/geo/select.hpp"
+#include "worldgen/inspect/report.hpp"
 
 namespace worldgen::inspect {
 
@@ -937,6 +940,11 @@ std::optional<std::string> geography_layers_problem(const GeographyLayers& layer
             }
         }
     }
+    if (layers.has_biomes()) {
+        if (std::optional<std::string> p = layer_problem(layers.biome, "biome", db::ElementType::u8, e)) {
+            return p;
+        }
+    }
     if (layers.has_climate()) {
         const HydrologyLayerSpec climate[] = {
             {layers.temperature, "temperature", db::ElementType::i16},
@@ -1129,6 +1137,126 @@ std::string climate_lines(std::span<const std::int16_t> e, std::span<const std::
     return out;
 }
 
+// --- Tables of schema 3 (P1-03 9, P1-04 9) ------------------------------------------
+
+std::string_view wind_code_name(std::int64_t code) {
+    static constexpr std::array<std::string_view, 8> NAMES = {"E", "SE", "S", "SW", "W", "NW", "N", "NE"};
+    if (code < 0 || code > 7) {
+        fatal("wind_code_name: not a D8 code");
+    }
+    return NAMES[static_cast<std::size_t>(code)];
+}
+
+ClimateTableResult read_climate_rows(std::span<const std::vector<db::ColumnValue>> rows) {
+    ClimateTableResult r;
+    if (rows.empty()) {
+        return r;
+    }
+    if (rows.size() > 1U) {
+        r.problem = "the table has " + db::format_u64(rows.size()) + " rows, expected 1";
+        return r;
+    }
+    const std::vector<db::ColumnValue>& row = rows[0];
+    if (row.size() != 2U || row[0].type != db::ValueType::integer || row[1].type != db::ValueType::integer) {
+        r.problem = "the row does not have two integer columns";
+        return r;
+    }
+    if (row[0].integer != 1) {
+        r.problem = "the row has id " + db::format_i64(row[0].integer) + ", expected 1";
+        return r;
+    }
+    if (row[1].integer < 0 || row[1].integer > 7) {
+        r.problem = "wind_toward " + db::format_i64(row[1].integer) + " is not a D8 code 0..7";
+        return r;
+    }
+    r.wind_toward = row[1].integer;
+    return r;
+}
+
+BiomeTableResult read_biome_rows(std::span<const std::vector<db::ColumnValue>> rows) {
+    BiomeTableResult r;
+    for (const std::vector<db::ColumnValue>& row : rows) {
+        const std::string id = (!row.empty() && row[0].type == db::ValueType::integer) ? db::format_i64(row[0].integer)
+                                                                                       : std::string("?");
+        const std::string at = "row " + id + ": ";
+        if (row.size() != 5U) {
+            r.problem = at + "has " + db::format_u64(row.size()) + " columns, expected 5";
+            return r;
+        }
+        if (row[0].type != db::ValueType::integer || row[3].type != db::ValueType::integer ||
+            row[4].type != db::ValueType::integer) {
+            r.problem = at + "id, colour and water must be integers";
+            return r;
+        }
+        if (row[1].type != db::ValueType::text || row[2].type != db::ValueType::text) {
+            r.problem = at + "key and name must be text";
+            return r;
+        }
+        BiomeRecord b;
+        b.id = row[0].integer;
+        b.key = row[1].bytes;
+        b.name = row[2].bytes;
+        b.colour = row[3].integer;
+        b.water = row[4].integer;
+        if (b.id < 1 || b.id > 254) {
+            r.problem = at + "id is not a biome code 1..254";
+            return r;
+        }
+        if (b.colour < 0 || b.colour > 0xFFFFFF) {
+            r.problem = at + "colour " + db::format_i64(b.colour) + " is not 0xRRGGBB";
+            return r;
+        }
+        if (b.water != 0 && b.water != 1) {
+            r.problem = at + "water " + db::format_i64(b.water) + " is not 0 or 1";
+            return r;
+        }
+        r.records.push_back(std::move(b));
+    }
+    return r;
+}
+
+std::string biome_lines(std::span<const std::uint8_t> biome, std::uint32_t w, std::uint32_t h,
+                        std::span<const BiomeRecord> records) {
+    require_grid(biome.size(), w, h, "biome_lines: grid size");
+    // Land rows by code (ids are unique: the primary key), ascending id.
+    std::array<std::uint8_t, 256> land{};
+    std::map<std::int64_t, const BiomeRecord*> land_rows;
+    for (const BiomeRecord& r : records) {
+        if (r.water == 0 && r.id >= 0 && r.id <= 255) {
+            land[static_cast<std::size_t>(r.id)] = 1U;
+            land_rows.emplace(r.id, &r);
+        }
+    }
+    std::array<std::uint64_t, 256> count{};
+    std::uint64_t land_cells = 0;
+    std::vector<std::uint8_t> mask(biome.size(), 0U);
+    std::vector<std::int64_t> key(biome.size(), 0);
+    for (std::size_t i = 0; i < biome.size(); ++i) {
+        ++count[biome[i]];
+        key[i] = biome[i];
+        if (land[biome[i]] != 0U) {
+            mask[i] = 1U;
+            ++land_cells;
+        }
+    }
+    std::string share;
+    for (const auto& [id, rec] : land_rows) {
+        if (!share.empty()) share += ' ';
+        share += escape_report_text(rec->key);
+        share += ':';
+        share += ratio4(count[static_cast<std::size_t>(id)], land_cells);
+    }
+    if (share.empty()) {
+        share = std::string(NOT_AVAILABLE);
+    }
+    const geo::Grid grid{static_cast<std::int32_t>(w), static_cast<std::int32_t>(h)};
+    const geo::Components c = geo::label_components(grid, mask, geo::Connectivity::eight, key);
+    std::string out;
+    line(out, "biome_share", share);
+    line(out, "biome_patches", db::format_u64(c.count));
+    return out;
+}
+
 namespace {
 
 // The hydrology lines of [geography]; false with *problem set when the
@@ -1193,9 +1321,15 @@ std::optional<std::string> geography_section(const GeographyLayers& layers, std:
             return std::nullopt;
         }
     }
+    if (layers.wind_toward) {
+        line(out, "wind_toward", std::string(wind_code_name(*layers.wind_toward)));
+    }
     if (layers.has_climate()) {
         out += climate_lines(e, *layers.temperature->get_if<std::int16_t>(),
                              *layers.rainfall->get_if<std::uint16_t>());
+    }
+    if (layers.has_biomes()) {
+        out += biome_lines(*layers.biome->get_if<std::uint8_t>(), w, h, *layers.biomes);
     }
     return out;
 }

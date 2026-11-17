@@ -1,0 +1,22 @@
+[biome.temperate_forest]
+code = 3
+name = "Temperate forest"
+colour = 0x2E6034
+water = false
+water_body = "none"
+priority = 20
+fallback = false
+fertility = "0.7"
+timber = 1
+region_noun = "Wood"
+
+[[biome.temperate_forest.rules]]
+temp_min_c = -60
+temp_max_c = 50
+rain_min_mm = 720
+rain_max_mm = 10000
+elev_min_m = 0
+elev_max_m = 3000
+slope_max = 100
+hand_max_m = 3000
+coast_max_m = 32767

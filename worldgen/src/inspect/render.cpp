@@ -3,6 +3,7 @@
 #include "worldgen/inspect/render.hpp"
 
 #include <algorithm>
+#include <array>
 #include <cstddef>
 #include <limits>
 #include <type_traits>
@@ -41,6 +42,7 @@ std::string_view palette_name(Palette palette) noexcept {
         case Palette::signed_distance: return "signed";
         case Palette::temperature: return "temperature";
         case Palette::rainfall: return "rainfall";
+        case Palette::biome: return "biome";
     }
     return "gray";
 }
@@ -64,6 +66,7 @@ Palette registered_palette(std::string_view layer_name) noexcept {
     if (layer_name == "coast_dist") return Palette::signed_distance;
     if (layer_name == "temperature") return Palette::temperature;  // P1-03 9
     if (layer_name == "rainfall") return Palette::rainfall;        // P1-03 9
+    if (layer_name == "biome") return Palette::biome;              // P1-04 9
     return Palette::gray;  // P1-00 10.2: every other layer, water_depth included
 }
 
@@ -94,6 +97,7 @@ bool palette_suits(Palette palette, const db::LayerGrid& grid) noexcept {
         case Palette::signed_distance: return !is_unsigned_type(t);
         case Palette::temperature: return t == db::ElementType::i16;
         case Palette::rainfall: return t == db::ElementType::u16;
+        case Palette::biome: return t == db::ElementType::u8;
     }
     return false;
 }
@@ -110,6 +114,7 @@ std::string_view palette_requirement(Palette palette) noexcept {
         case Palette::signed_distance: return "a layer of a signed type (i8, i16, i32, i64)";
         case Palette::temperature: return "an i16 layer";
         case Palette::rainfall: return "a u16 layer";
+        case Palette::biome: return "a u8 layer";
     }
     return "any layer";
 }
@@ -253,6 +258,17 @@ Rgb ids_colour(std::uint64_t v) noexcept {
         return static_cast<std::uint8_t>(64U + byte * 191U / 255U);
     };
     return Rgb{channel(0U), channel(1U), channel(2U)};
+}
+
+Rgb biome_colour(std::span<const BiomeColour> table, std::uint64_t v) noexcept {
+    for (const BiomeColour& b : table) {
+        if (b.id >= 0 && static_cast<std::uint64_t>(b.id) == v) {
+            const auto c = static_cast<std::uint64_t>(b.colour);
+            return Rgb{static_cast<std::uint8_t>((c >> 16U) & 0xFFU), static_cast<std::uint8_t>((c >> 8U) & 0xFFU),
+                       static_cast<std::uint8_t>(c & 0xFFU)};
+        }
+    }
+    return MAGENTA;
 }
 
 SignedScale signed_scale(const db::LayerGrid& grid) {
@@ -424,6 +440,11 @@ std::size_t render_rgb_size(const db::LayerGrid& grid, std::uint32_t scale) {
 }
 
 void render_rgb(const db::LayerGrid& grid, Palette palette, std::uint32_t scale, std::span<std::uint8_t> rgb) {
+    render_rgb(grid, palette, scale, std::span<const BiomeColour>{}, rgb);
+}
+
+void render_rgb(const db::LayerGrid& grid, Palette palette, std::uint32_t scale,
+                std::span<const BiomeColour> biome_table, std::span<std::uint8_t> rgb) {
     require_valid(grid, "render_rgb: invalid layer grid");
     if (scale < MIN_RENDER_SCALE || scale > MAX_RENDER_SCALE) {
         fatal("render_rgb: scale must be 1 to 16");
@@ -483,6 +504,20 @@ void render_rgb(const db::LayerGrid& grid, Palette palette, std::uint32_t scale,
                     }
                     return;
                 }
+                case Palette::biome: {
+                    if constexpr (!std::is_signed_v<T>) {
+                        // One colour per code, then per cell.
+                        std::array<Rgb, 256> colours{};
+                        for (std::size_t v = 0; v < colours.size(); ++v) {
+                            colours[v] = biome_colour(biome_table, v);
+                        }
+                        fill_buffer(rgb, grid.width, grid.height, scale, [&](std::size_t i) {
+                            const std::uint64_t v = as_u64(cells[i]);
+                            return v < colours.size() ? colours[v] : MAGENTA;
+                        });
+                    }
+                    return;
+                }
                 case Palette::water:
                 case Palette::river:
                 case Palette::log2:
@@ -517,18 +552,28 @@ std::vector<std::uint8_t> render_rgb(const db::LayerGrid& grid, Palette palette,
     return rgb;
 }
 
+std::vector<std::uint8_t> render_rgb(const db::LayerGrid& grid, Palette palette, std::uint32_t scale,
+                                     std::span<const BiomeColour> biome_table) {
+    std::vector<std::uint8_t> rgb(render_rgb_size(grid, scale));
+    render_rgb(grid, palette, scale, biome_table, rgb);
+    return rgb;
+}
+
 // --- Composite map ---------------------------------------------------------------
 
 std::string_view composite_name(Composite composite) noexcept {
     switch (composite) {
         case Composite::map: return "map";
+        case Composite::biomes: return "biomes";
     }
     return "map";
 }
 
 std::optional<Composite> composite_from_name(std::string_view name) noexcept {
-    if (name == "map") {
-        return Composite::map;
+    for (const Composite c : ALL_COMPOSITES) {
+        if (name == composite_name(c)) {
+            return c;
+        }
     }
     return std::nullopt;
 }
@@ -683,14 +728,16 @@ std::vector<std::uint8_t> render_composite_map(const db::LayerGrid& elevation, c
     return render_composite_map(elevation, water, river, nullptr, scale);
 }
 
-std::vector<std::uint8_t> render_composite_map(const db::LayerGrid& elevation, const db::LayerGrid* water,
-                                               const db::LayerGrid* river, const db::LayerGrid* flow_dir,
-                                               std::uint32_t scale) {
-    if (composite_map_problem(elevation, water, river, flow_dir)) {
-        fatal("render_composite_map: unsuitable layers");
-    }
-    std::vector<std::uint8_t> rgb(
-        buffer_size(elevation.width, elevation.height, scale, "render_composite_map: scale must be 1 to 16"));
+namespace {
+
+// Steps 1 to 4 of the composite map (P1-00 10.2), with the land colour of
+// step 2 given by land_colour(i, e) before shading (hypsometric for the
+// composite map, the biome colour for the composite biomes, P1-04 9).
+template <class LandColour>
+std::vector<std::uint8_t> render_shaded(const db::LayerGrid& elevation, const db::LayerGrid* water,
+                                        const db::LayerGrid* river, const db::LayerGrid* flow_dir, std::uint32_t scale,
+                                        const LandColour& land_colour, const char* scale_problem) {
+    std::vector<std::uint8_t> rgb(buffer_size(elevation.width, elevation.height, scale, scale_problem));
     const std::vector<std::int16_t>& e = *elevation.get_if<std::int16_t>();
     const std::vector<std::uint8_t>* wcells = water == nullptr ? nullptr : water->get_if<std::uint8_t>();
     const std::vector<std::uint8_t>* rcells = river == nullptr ? nullptr : river->get_if<std::uint8_t>();
@@ -718,13 +765,53 @@ std::vector<std::uint8_t> render_composite_map(const db::LayerGrid& elevation, c
         }
         const auto x = static_cast<std::uint32_t>(i % w);
         const auto y = static_cast<std::uint32_t>(i / w);
-        colour[i] = shade_colour(hypsometric_land_colour(v), hillshade_factor(e, w, h, x, y));
+        colour[i] = shade_colour(land_colour(i, v), hillshade_factor(e, w, h, x, y));
     }
     if (wcells != nullptr && rcells != nullptr) {
         paint_rivers(colour, w, h, *wcells, *rcells, fcells);
     }
     fill_buffer(rgb, w, h, scale, [&](std::size_t i) { return colour[i]; });
     return rgb;
+}
+
+}  // namespace
+
+std::vector<std::uint8_t> render_composite_map(const db::LayerGrid& elevation, const db::LayerGrid* water,
+                                               const db::LayerGrid* river, const db::LayerGrid* flow_dir,
+                                               std::uint32_t scale) {
+    if (composite_map_problem(elevation, water, river, flow_dir)) {
+        fatal("render_composite_map: unsuitable layers");
+    }
+    return render_shaded(
+        elevation, water, river, flow_dir, scale,
+        [](std::size_t, std::int64_t v) { return hypsometric_land_colour(v); },
+        "render_composite_map: scale must be 1 to 16");
+}
+
+std::optional<std::string> composite_biomes_problem(const db::LayerGrid& elevation, const db::LayerGrid& biome,
+                                                    const db::LayerGrid* water, const db::LayerGrid* river,
+                                                    const db::LayerGrid* flow_dir) {
+    if (std::optional<std::string> p = composite_map_problem(elevation, water, river, flow_dir)) {
+        return p;
+    }
+    return u8_companion_problem(&biome, "biome", elevation);
+}
+
+std::vector<std::uint8_t> render_composite_biomes(const db::LayerGrid& elevation, const db::LayerGrid& biome,
+                                                  std::span<const BiomeColour> biome_table,
+                                                  const db::LayerGrid* water, const db::LayerGrid* river,
+                                                  const db::LayerGrid* flow_dir, std::uint32_t scale) {
+    if (composite_biomes_problem(elevation, biome, water, river, flow_dir)) {
+        fatal("render_composite_biomes: unsuitable layers");
+    }
+    std::array<Rgb, 256> colours{};
+    for (std::size_t v = 0; v < colours.size(); ++v) {
+        colours[v] = biome_colour(biome_table, v);
+    }
+    const std::vector<std::uint8_t>& codes = *biome.get_if<std::uint8_t>();
+    return render_shaded(
+        elevation, water, river, flow_dir, scale, [&](std::size_t i, std::int64_t) { return colours[codes[i]]; },
+        "render_composite_biomes: scale must be 1 to 16");
 }
 
 }  // namespace worldgen::inspect

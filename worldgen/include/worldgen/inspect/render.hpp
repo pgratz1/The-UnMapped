@@ -37,29 +37,32 @@ enum class Palette : std::uint8_t {
     signed_distance = 7,  // "signed": signed distance (coast_dist)
     temperature = 8,      // "temperature": tenths of a degree Celsius (P1-03 9)
     rainfall = 9,         // "rainfall": millimetres per year (P1-03 9)
+    biome = 10,           // "biome": the colour of the table `biome` row of the code (P1-04 9)
 };
 
-// Every palette in enumerator order (for --help text and tests).
-inline constexpr std::array<Palette, 10> ALL_PALETTES = {
-    Palette::gray,      Palette::hypsometric, Palette::water,       Palette::river,    Palette::log2,
-    Palette::direction, Palette::ids,         Palette::signed_distance, Palette::temperature, Palette::rainfall,
+// Every palette in enumerator order, which is the registration order (for
+// --help text and tests).
+inline constexpr std::array<Palette, 11> ALL_PALETTES = {
+    Palette::gray,      Palette::hypsometric, Palette::water,           Palette::river,
+    Palette::log2,      Palette::direction,   Palette::ids,             Palette::signed_distance,
+    Palette::temperature, Palette::rainfall,  Palette::biome,
 };
 
 // The --palette text of a palette: "gray", "hypsometric", "water", "river",
-// "log2", "direction", "ids", "signed", "temperature", "rainfall" (P1-00
-// 10.2, P1-03 9).
+// "log2", "direction", "ids", "signed", "temperature", "rainfall", "biome"
+// (P1-00 10.2, P1-03 9, P1-04 9).
 [[nodiscard]] std::string_view palette_name(Palette palette) noexcept;
 
 // The palette for a --palette value other than "auto" (one of the names of
-// palette_name, exact case), or std::nullopt for an unknown name. "biome"
-// (P1-00 10.2, second pass) is not known yet: it needs table `biome`.
+// palette_name, exact case), or std::nullopt for an unknown name.
 [[nodiscard]] std::optional<Palette> palette_from_name(std::string_view name) noexcept;
 
 // The palette registered for a layer name, used by --palette auto (P1-00
 // 10.2, P0-04 amendment 16b): elevation -> hypsometric, water -> water,
 // river -> river, flow_accum -> log2, flow_dir -> direction, lake -> ids,
 // coast_dist -> signed, temperature -> temperature, rainfall -> rainfall
-// (P1-03 9); every other layer (water_depth included) -> gray.
+// (P1-03 9), biome -> biome (P1-04 9); every other layer (water_depth
+// included) -> gray.
 [[nodiscard]] Palette registered_palette(std::string_view layer_name) noexcept;
 
 // Whether a palette suits a grid (P0-04 amendment 16b: "a named palette
@@ -75,6 +78,7 @@ inline constexpr std::array<Palette, 10> ALL_PALETTES = {
 //   signed      any signed type (i8, i16, i32, i64)
 //   temperature i16 (the catalogue type, as hypsometric)
 //   rainfall    u16 (the catalogue type)
+//   biome       u8 (the catalogue type)
 // The grid must be valid (db::is_valid_layer_grid); an invalid grid suits
 // no palette.
 [[nodiscard]] bool palette_suits(Palette palette, const db::LayerGrid& grid) noexcept;
@@ -211,6 +215,19 @@ struct SignedScale {
 // v > P or -v > M.
 [[nodiscard]] Rgb signed_colour(std::int64_t v, SignedScale scale);
 
+// One colour of the biome palette: the id (biome code) and colour
+// (0xRRGGBB) of a row of table `biome` (P1-04 9).
+struct BiomeColour {
+    std::int64_t id = 0;
+    std::int64_t colour = 0;
+};
+
+// biome (P1-04 9): the colour of the entry whose id equals v, as
+// (R, G, B) = ((c >> 16) & 0xFF, (c >> 8) & 0xFF, c & 0xFF); a value with no
+// entry (255, 0, 255). With several entries of one id the first is used
+// (a table has none: id is its primary key).
+[[nodiscard]] Rgb biome_colour(std::span<const BiomeColour> table, std::uint64_t v) noexcept;
+
 // --- Gray (P0-04 6) and the render buffer ------------------------------------
 
 // Allowed --scale values (P0-04 6).
@@ -244,12 +261,17 @@ struct ValueRange {
 // to bottom, each row left (x = 0, west) to right; cell (x, y) fills the
 // scale x scale block at pixel (scale x, scale y) (nearest neighbour). Each
 // cell's colour is the palette's colour of its value: gray over
-// value_range, signed over signed_scale, every other palette per value.
-// FatalError if the grid is invalid, the palette does not suit it
-// (palette_suits), scale is outside 1..16, or the buffer size does not fit
-// in std::size_t.
+// value_range, signed over signed_scale, biome over the biome table (none
+// in this form, so every cell is (255, 0, 255): a world without the table),
+// every other palette per value. FatalError if the grid is invalid, the
+// palette does not suit it (palette_suits), scale is outside 1..16, or the
+// buffer size does not fit in std::size_t.
 [[nodiscard]] std::vector<std::uint8_t> render_rgb(const db::LayerGrid& grid, Palette palette,
                                                    std::uint32_t scale);
+// The same with the rows of table `biome` for the biome palette (ignored by
+// every other palette).
+[[nodiscard]] std::vector<std::uint8_t> render_rgb(const db::LayerGrid& grid, Palette palette, std::uint32_t scale,
+                                                   std::span<const BiomeColour> biome_table);
 
 // The byte size of render_rgb's buffer: 3 (width scale) (height scale).
 // FatalError if the grid is invalid, scale is outside 1..16, or the size
@@ -262,15 +284,21 @@ struct ValueRange {
 // as the returning overload. FatalError in the same cases, and if out.size()
 // is not render_rgb_size(grid, scale).
 void render_rgb(const db::LayerGrid& grid, Palette palette, std::uint32_t scale, std::span<std::uint8_t> out);
+void render_rgb(const db::LayerGrid& grid, Palette palette, std::uint32_t scale,
+                std::span<const BiomeColour> biome_table, std::span<std::uint8_t> out);
 
 // --- Composites (P1-00 10.2, P0-04 amendment 16b) ----------------------------
 
 // A composite image built from several layers.
 enum class Composite : std::uint8_t {
-    map = 0,  // "map": shaded hypsometric relief with water overlays
+    map = 0,     // "map": shaded hypsometric relief with water overlays
+    biomes = 1,  // "biomes": shaded biome colours with water overlays (P1-04 9)
 };
 
-// The --composite text of a composite: "map".
+// Every composite in enumerator order (for --help text and tests).
+inline constexpr std::array<Composite, 2> ALL_COMPOSITES = {Composite::map, Composite::biomes};
+
+// The --composite text of a composite: "map", "biomes".
 [[nodiscard]] std::string_view composite_name(Composite composite) noexcept;
 
 // The composite for a --composite value, or std::nullopt for an unknown name.
@@ -336,5 +364,28 @@ enum class Composite : std::uint8_t {
                                                              const db::LayerGrid* water,
                                                              const db::LayerGrid* river,
                                                              const db::LayerGrid* flow_dir, std::uint32_t scale);
+
+// Why the layers of the composite biomes cannot be used, or std::nullopt
+// (P1-04 9): as composite_map_problem, and biome must be a valid u8 grid of
+// the elevation's size.
+[[nodiscard]] std::optional<std::string> composite_biomes_problem(const db::LayerGrid& elevation,
+                                                                  const db::LayerGrid& biome,
+                                                                  const db::LayerGrid* water,
+                                                                  const db::LayerGrid* river,
+                                                                  const db::LayerGrid* flow_dir);
+
+// The RGB buffer of the composite biomes (P1-04 9), laid out as render_rgb.
+// Per cell, with e the elevation: e < 0: hypsometric_ocean_colour(-e);
+// otherwise shade_colour(biome_colour(table, biome), hillshade_factor(...))
+// (step 2 of the composite map with the biome colour in place of the
+// hypsometric one); then steps 3 and 4 of the composite map (lake colour,
+// rivers) when water is given. FatalError if composite_biomes_problem
+// reports a problem, scale is outside 1..16 or the buffer does not fit.
+[[nodiscard]] std::vector<std::uint8_t> render_composite_biomes(const db::LayerGrid& elevation,
+                                                                const db::LayerGrid& biome,
+                                                                std::span<const BiomeColour> biome_table,
+                                                                const db::LayerGrid* water,
+                                                                const db::LayerGrid* river,
+                                                                const db::LayerGrid* flow_dir, std::uint32_t scale);
 
 }  // namespace worldgen::inspect

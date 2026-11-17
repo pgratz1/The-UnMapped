@@ -148,10 +148,10 @@ db::Result<std::string> build_report(const db::WorldReader& world) {
         }
         // The grids [geography] reads, kept from this pass so that no layer
         // is decoded twice. Layer names are unique (P0-02 5.6).
-        constexpr std::size_t GEO_LAYERS = 8;
+        constexpr std::size_t GEO_LAYERS = 9;
         std::optional<db::LayerGrid> geo_grids[GEO_LAYERS];
         static constexpr std::string_view GEO_NAMES[GEO_LAYERS] = {
-            "elevation", "water", "flow_dir", "flow_accum", "river", "lake", "temperature", "rainfall"};
+            "elevation", "water", "flow_dir", "flow_accum", "river", "lake", "temperature", "rainfall", "biome"};
         for (const db::LayerInfo& info : layers.value()) {
             db::Result<db::Layer> layer = world.read_layer(info.name);
             if (!layer.ok()) {
@@ -200,6 +200,34 @@ db::Result<std::string> build_report(const db::WorldReader& world) {
             }
         }
 
+        // Tables climate and biome (schema 3, P1-03 9, P1-04 9): read and
+        // checked whenever they exist; a malformed row is a corrupt table.
+        std::optional<std::int64_t> wind_toward;
+        std::optional<std::vector<BiomeRecord>> biomes;
+        for (const db::TableSummary& t : tables.value()) {
+            if (t.name == db::CLIMATE_TABLE) {
+                db::Result<std::vector<std::vector<db::ColumnValue>>> rows = world.table_rows(db::CLIMATE_TABLE);
+                if (!rows.ok()) {
+                    return rows.error();
+                }
+                const ClimateTableResult climate = read_climate_rows(rows.value());
+                if (climate.problem) {
+                    return db::Error{db::ErrorCode::corrupt_layer, "corrupt table 'climate': " + *climate.problem};
+                }
+                wind_toward = climate.wind_toward;
+            } else if (t.name == db::BIOME_TABLE) {
+                db::Result<std::vector<std::vector<db::ColumnValue>>> rows = world.table_rows(db::BIOME_TABLE);
+                if (!rows.ok()) {
+                    return rows.error();
+                }
+                BiomeTableResult biome = read_biome_rows(rows.value());
+                if (biome.problem) {
+                    return db::Error{db::ErrorCode::corrupt_layer, "corrupt table 'biome': " + *biome.problem};
+                }
+                biomes = std::move(biome.records);
+            }
+        }
+
         // [geography] (P1-00 10.3), when the world has an elevation layer.
         if (geo_grids[0]) {
             const auto ptr = [&geo_grids](std::size_t k) { return geo_grids[k] ? &*geo_grids[k] : nullptr; };
@@ -213,6 +241,9 @@ db::Result<std::string> build_report(const db::WorldReader& world) {
             geo.temperature = ptr(6);
             geo.rainfall = ptr(7);
             geo.passes = passes ? &*passes : nullptr;
+            geo.wind_toward = wind_toward;
+            geo.biome = ptr(8);
+            geo.biomes = biomes ? &*biomes : nullptr;
             std::string problem;
             std::optional<std::string> section = geography_section(geo, &problem);
             if (!section) {

@@ -617,6 +617,7 @@ struct Location {
 KindContent load_kind(const Kind& kind, const Listing& listing, ErrorList& errors, std::vector<PendingRef>& refs,
                       IdSet& ids) {
     KindContent out{kind.name, {}};
+    const std::size_t errors_before = errors.size();
     if (!listing.present) {
         if (kind.required && !listing.failed) {
             errors.add(kind.directory, Position{},
@@ -702,12 +703,32 @@ KindContent load_kind(const Kind& kind, const Listing& listing, ErrorList& error
                      [](const Candidate& a, const Candidate& b) { return detail::bytes_less(a.id, b.id); });
 
     Validator validator(errors, refs);
+    std::vector<Location> locations;  // of out.definitions, for the kind-level checks
     for (const Candidate& c : candidates) {
         Record record;
         const bool ok =
             validator.record(*kind.schema_for(c.id), *c.node, detail::child_key(kind.name, c.id), *c.path, record);
         if (ok && !c.duplicate) {
             out.definitions.push_back(Definition{c.id, std::move(record)});
+            locations.push_back(Location{*c.path, c.node->position});
+        }
+    }
+    // Kind-level checks (P1-04 4.1), only when the whole kind loaded cleanly.
+    if (errors.size() == errors_before) {
+        for (const KindCheck& check : kind.kind_checks) {
+            for (const KindCheckFailure& f : check.rule(out.definitions)) {
+                if (f.definition && *f.definition < out.definitions.size()) {
+                    const Location& at = locations[*f.definition];
+                    errors.add(at.path, at.position,
+                               "check " + in_quotes(check.name) + " failed for " +
+                                   in_quotes(detail::child_key(kind.name, out.definitions[*f.definition].id)) +
+                                   ": " + f.message);
+                } else {
+                    errors.add(kind.directory, Position{},
+                               "check " + in_quotes(check.name) + " failed for kind " + in_quotes(kind.name) + ": " +
+                                   f.message);
+                }
+            }
         }
     }
     for (const auto& [id, location] : first_seen) {

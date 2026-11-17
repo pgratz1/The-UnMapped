@@ -1,0 +1,12 @@
+[biome.blighted_waste]
+code = 8
+name = "Blighted waste"
+colour = 0x605446
+water = false
+water_body = "none"
+priority = 0
+fallback = false
+rules = []
+fertility = 0
+timber = 0
+region_noun = "Waste"

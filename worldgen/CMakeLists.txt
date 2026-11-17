@@ -55,10 +55,12 @@ add_library(worldgen STATIC
     src/geo/noise.cpp
     src/geo/noise_schema.cpp
     src/geo/select.cpp
+    src/geo/terrain.cpp
     # Geography stages (P1-01 onward).
     src/stages/elevation.cpp
     src/stages/elevation_passes.cpp
     src/stages/hydrology.cpp
+    src/stages/biomes.cpp
     src/stages/climate.cpp
 )
 add_library(worldgen::worldgen ALIAS worldgen)
