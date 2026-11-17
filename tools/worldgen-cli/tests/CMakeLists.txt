@@ -71,3 +71,12 @@ target_sources(worldgen-cli-tests PRIVATE cli_climate_test.cpp)
 target_compile_definitions(worldgen-cli-tests PRIVATE
     UNMAPPED_P1_03_GOLDEN_PATH="${PROJECT_SOURCE_DIR}/worldgen/tests/golden/p1-03-climate.txt"
 )
+# generate --until biomes, schema 3 (tables biome and climate), report keys,
+# corrupt climate rows, render --layer biome, --composite biomes and the
+# render help (P1-04 3 and 9; P1-03 9; P1-00 10.1 to 10.3), against the
+# biome golden vectors and pixels decoded from the PNG (png_decode.hpp).
+# Slow checks in the doctest suite "biomes-slow".
+target_sources(worldgen-cli-tests PRIVATE cli_biomes_test.cpp)
+target_compile_definitions(worldgen-cli-tests PRIVATE
+    UNMAPPED_P1_04_GOLDEN_PATH="${PROJECT_SOURCE_DIR}/worldgen/tests/golden/p1-04-biomes.txt"
+)
