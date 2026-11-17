@@ -52,6 +52,10 @@ inline constexpr std::int64_t TEMPERATURE_MIN = -600;
 inline constexpr std::int64_t TEMPERATURE_MAX = 500;
 inline constexpr std::int64_t RAINFALL_MAX = 10000;
 
+// The largest surface S, decimetres (P1-03 section 2 precondition 3; the
+// bound behind C4's overflow argument, section 7).
+inline constexpr std::int64_t SURFACE_MAX_DM = 32767;
+
 // Number of wind weights: one per D8 code (P1-03 4).
 inline constexpr std::size_t WIND_CODES = 8;
 
@@ -91,8 +95,9 @@ struct ClimateTuning {
 
 // P1-03 section 2 on a W x H grid: returns S[i] = elevation[i] +
 // water_depth[i] (decimetres). Fatal ("climate: input precondition: ...")
-// unless every array has grid.cells() values, S = 0 on every ocean cell
-// (water = 3) and S >= 1 on every other cell.
+// unless every array has grid.cells() values, then (precondition 2) every
+// water value is in 0..3, then (precondition 3) S = 0 on every ocean cell
+// (water = 3), S >= 1 on every other cell and S <= 32767 everywhere.
 [[nodiscard]] std::vector<std::int64_t> climate_surface(geo::Grid grid, std::span<const std::int16_t> elevation,
                                                         std::span<const std::uint8_t> water,
                                                         std::span<const std::uint16_t> water_depth);
@@ -127,12 +132,19 @@ struct ClimateTuning {
 
 // --- C4: smoothed surface -----------------------------------------------------------------
 
-// C4 (D2, two separable passes, G6 row blocks): hs[i] = from_ratio(sum,
+// One box pass (pass 1 of C4; D2, G6 row blocks): hs1[i] = from_ratio(sum,
 // c_w), the mean of S over the square window of half-width r_cells cells
 // around the cell, clipped to the grid (c_w its cell count). r_cells = 0
-// gives from_int(S). Fatal if r_cells < 0.
+// gives from_int(S). Fatal if r_cells < 0 or some S is outside [0, 32767].
 [[nodiscard]] std::vector<Fx> climate_box_mean(geo::Grid grid, std::span<const std::int64_t> surface,
                                                std::int64_t r_cells, std::uint32_t threads = 1);
+
+// C4, the triangle kernel with r = r_cells: h = r_cells div 2; pass 1 is
+// climate_box_mean with half-width h; pass 2 is a box of half-width h over
+// the raw values of pass 1, hs = div_int(from_raw(sum2), c_w). r_cells 0 or
+// 1 gives from_int(S). Fatal as climate_box_mean.
+[[nodiscard]] std::vector<Fx> climate_triangle_mean(geo::Grid grid, std::span<const std::int64_t> surface,
+                                                    std::int64_t r_cells, std::uint32_t threads = 1);
 
 // --- C5: moisture sweep ---------------------------------------------------------------------
 
@@ -143,8 +155,11 @@ struct ClimateSweep {
     std::vector<Fx> p;
 };
 
-// C5 (D4 over lines; single-threaded) for the wind blowing toward code
-// `wind` (0..7), with water (3 = ocean) and the smoothed surface hs of C4.
+// C5 (D4; single-threaded) for the wind blowing toward code `wind` (0..7),
+// with water (3 = ocean) and the smoothed surface hs of C4. Orthogonal winds
+// sweep by lines with the three taps of the previous line; diagonal winds
+// sweep in raster order with the taps (x - dx, y), (x - dx, y - dy) and
+// (x, y - dy), across the wind (P1-03 C5).
 // Off-map taps are saturated air at sea level (q = ONE, hs = 0). Fatal if a
 // size is wrong or wind > 7.
 [[nodiscard]] ClimateSweep climate_sweep(geo::Grid grid, std::span<const std::uint8_t> water,
@@ -174,7 +189,7 @@ struct ClimateLayers {
 };
 
 // C1 to C6 on a W x H grid from the four input layers (P1-03 10): the wind
-// is climate_wind(seed, tuning.wind_weights).
+// is climate_wind(seed, tuning.wind_weights), C4 is climate_triangle_mean.
 [[nodiscard]] ClimateLayers climate_layers(geo::Grid grid, std::span<const std::int16_t> elevation,
                                            std::span<const std::uint8_t> water,
                                            std::span<const std::uint16_t> water_depth,

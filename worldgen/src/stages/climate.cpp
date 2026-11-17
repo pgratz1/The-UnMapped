@@ -123,6 +123,12 @@ std::vector<std::int64_t> climate_surface(Grid grid, std::span<const std::int16_
     geo::check_grid_array(grid, water.size(), "climate: input precondition: water size");
     geo::check_grid_array(grid, water_depth.size(), "climate: input precondition: water_depth size");
     const std::uint32_t n = grid.cells();
+    // Precondition 2 on every cell, then precondition 3 (P1-03 section 2 order).
+    for (CellIndex i = 0; i < n; ++i) {
+        if (water[i] > WATER_OCEAN) {
+            fatal("climate: input precondition: a water value is outside 0..3");
+        }
+    }
     std::vector<std::int64_t> s(n, 0);
     for (CellIndex i = 0; i < n; ++i) {
         const std::int64_t v = std::int64_t{elevation[i]} + std::int64_t{water_depth[i]};
@@ -132,6 +138,9 @@ std::vector<std::int64_t> climate_surface(Grid grid, std::span<const std::int16_
             }
         } else if (v < 1) {
             fatal("climate: input precondition: S is below 1 on a non-ocean cell");
+        }
+        if (v > SURFACE_MAX_DM) {
+            fatal("climate: input precondition: S is above 32767");
         }
         s[i] = v;
     }
@@ -193,13 +202,33 @@ std::vector<std::int16_t> climate_temperature(std::uint64_t seed, Grid grid, std
 
 // --- C4: smoothed surface (D2, G6 row blocks) ----------------------------------------------------
 
-std::vector<Fx> climate_box_mean(Grid grid, std::span<const std::int64_t> surface, std::int64_t r_cells,
-                                 std::uint32_t threads) {
-    check_threads(threads);
-    geo::check_grid_array(grid, surface.size(), "climate_box_mean: surface");
+namespace {
+
+// The S bound behind C4's overflow argument (P1-03 section 2 precondition 3,
+// section 7), checked at entry of both C4 seams.
+void check_surface_range(Grid grid, std::span<const std::int64_t> surface, std::int64_t r_cells, const char* what) {
+    geo::check_grid_array(grid, surface.size(), what);
     if (r_cells < 0) {
-        fatal("climate_box_mean: negative radius");
+        fatal("climate: C4: negative radius");
     }
+    for (const std::int64_t v : surface) {
+        if (v < 0 || v > SURFACE_MAX_DM) {
+            fatal("climate: input precondition: S is outside [0, 32767]");
+        }
+    }
+}
+
+// One box pass of half-width r_cells (P1-03 C4). raw_input false: the
+// values are integers S and the mean is from_ratio(sum, c_w) (pass 1);
+// raw_input true: the values are Fx raw values and the mean is
+// div_int(from_raw(sum), c_w) (pass 2). Window sums are exact int64: with S
+// <= 32767 and h <= 125 a window holds at most 251^2 values of at most
+// 32767 x 2^32 raw, below 8.87 x 10^18 (section 7); the running column sum
+// drops the leaving row before it adds the entering one, so it never holds
+// more than the 2h + 1 rows of a window.
+std::vector<Fx> box_pass(Grid grid, std::span<const std::int64_t> surface, std::int64_t r_cells,
+                         std::uint32_t threads, bool raw_input) {
+    check_threads(threads);
     const std::int64_t w = grid.width;
     const std::int64_t h = grid.height;
     const std::int64_t r = std::min<std::int64_t>(r_cells, std::max(w, h));  // a larger r clips to the same window
@@ -238,18 +267,20 @@ std::vector<Fx> climate_box_mean(Grid grid, std::span<const std::int64_t> surfac
         }
         for (std::int64_t y = y0; y < block.y_end; ++y) {
             if (y > y0) {
-                const std::int64_t add = y + r;
+                // Drop the leaving row first, then add the entering one:
+                // the same exact sum, and never more than one window held.
                 const std::int64_t drop = y - r - 1;
-                if (add < h) {
-                    const std::size_t row = static_cast<std::size_t>(add) * static_cast<std::size_t>(w);
-                    for (std::size_t x = 0; x < acc.size(); ++x) {
-                        acc[x] += rowsum[row + x];
-                    }
-                }
+                const std::int64_t add = y + r;
                 if (drop >= 0) {
                     const std::size_t row = static_cast<std::size_t>(drop) * static_cast<std::size_t>(w);
                     for (std::size_t x = 0; x < acc.size(); ++x) {
                         acc[x] -= rowsum[row + x];
+                    }
+                }
+                if (add < h) {
+                    const std::size_t row = static_cast<std::size_t>(add) * static_cast<std::size_t>(w);
+                    for (std::size_t x = 0; x < acc.size(); ++x) {
+                        acc[x] += rowsum[row + x];
                     }
                 }
             }
@@ -257,14 +288,38 @@ std::vector<Fx> climate_box_mean(Grid grid, std::span<const std::int64_t> surfac
             const std::size_t out_row = static_cast<std::size_t>(y) * static_cast<std::size_t>(w);
             for (std::int64_t x = 0; x < w; ++x) {
                 const std::int64_t cols = std::min<std::int64_t>(w - 1, x + r) - std::max<std::int64_t>(0, x - r) + 1;
-                hs[out_row + static_cast<std::size_t>(x)] = Fx::from_ratio(acc[static_cast<std::size_t>(x)], rows * cols);
+                const std::int64_t sum = acc[static_cast<std::size_t>(x)];
+                hs[out_row + static_cast<std::size_t>(x)] =
+                    raw_input ? div_int(Fx::from_raw(sum), rows * cols) : Fx::from_ratio(sum, rows * cols);
             }
         }
     });
     return hs;
 }
 
-// --- C5: moisture sweep (D4 over lines) ------------------------------------------------------------
+}  // namespace
+
+std::vector<Fx> climate_box_mean(Grid grid, std::span<const std::int64_t> surface, std::int64_t r_cells,
+                                 std::uint32_t threads) {
+    check_surface_range(grid, surface, r_cells, "climate_box_mean: surface");
+    return box_pass(grid, surface, r_cells, threads, false);
+}
+
+std::vector<Fx> climate_triangle_mean(Grid grid, std::span<const std::int64_t> surface, std::int64_t r_cells,
+                                      std::uint32_t threads) {
+    check_surface_range(grid, surface, r_cells, "climate_triangle_mean: surface");
+    const std::int64_t h = r_cells / 2;
+    std::vector<Fx> hs1 = box_pass(grid, surface, h, threads, false);  // pass 1 finishes before pass 2
+    std::vector<std::int64_t> raw(hs1.size());
+    for (std::size_t i = 0; i < hs1.size(); ++i) {
+        raw[i] = hs1[i].raw();
+    }
+    hs1.clear();
+    hs1.shrink_to_fit();
+    return box_pass(grid, raw, h, threads, true);
+}
+
+// --- C5: moisture sweep (D4: lines, or a raster for diagonal winds) ------------------------------------------------------------
 
 ClimateSweep climate_sweep(Grid grid, std::span<const std::uint8_t> water, std::span<const Fx> hs, Direction wind,
                            const ClimateTuning& tuning) {
@@ -316,14 +371,24 @@ ClimateSweep climate_sweep(Grid grid, std::span<const std::uint8_t> water, std::
         out.q[i] = q_up - mul(q_up, lam);
     };
 
-    if (dx != 0) {
+    if (diagonal) {
+        // Raster order: rows in the order of dy, cells in the order of dx;
+        // taps across the wind: a = (x - dx, y), the previous cell of the
+        // row, b = (x - dx, y - dy) and c = (x, y - dy) in the previous row.
+        for (std::int32_t ky = 0; ky < grid.height; ++ky) {
+            const std::int32_t y = dy == 1 ? ky : grid.height - 1 - ky;
+            for (std::int32_t kx = 0; kx < grid.width; ++kx) {
+                const std::int32_t x = dx == 1 ? kx : grid.width - 1 - kx;
+                cell(x, y, tap(x - dx, y), tap(x - dx, y - dy), tap(x, y - dy));
+            }
+        }
+    } else if (dx != 0) {
         // Lines are columns, x ascending for dx = 1 and descending for dx = -1.
         for (std::int32_t k = 0; k < grid.width; ++k) {
             const std::int32_t x = dx == 1 ? k : grid.width - 1 - k;
-            const std::int32_t ux = x - dx;
+            const std::int32_t ux = x - dx;  // dy = 0 here
             for (std::int32_t y = 0; y < grid.height; ++y) {
-                const std::int32_t uy = y - dy;
-                cell(x, y, tap(ux, uy - 1), tap(ux, uy), tap(ux, uy + 1));
+                cell(x, y, tap(ux, y - 1), tap(ux, y), tap(ux, y + 1));
             }
         }
     } else {
@@ -383,7 +448,7 @@ ClimateLayers climate_layers(Grid grid, std::span<const std::int16_t> elevation,
     const Direction wind = climate_wind(seed, tuning.wind_weights);                             // C2
     ClimateLayers out;
     out.temperature = climate_temperature(seed, grid, s, tuning, threads);  // C3
-    std::vector<Fx> hs = climate_box_mean(grid, s, tuning.smooth_radius_m / geo::CELL_M, threads);  // C4
+    std::vector<Fx> hs = climate_triangle_mean(grid, s, tuning.smooth_radius_m / geo::CELL_M, threads);  // C4
     ClimateSweep sweep = climate_sweep(grid, water, hs, wind, tuning);                                // C5
     hs.clear();
     hs.shrink_to_fit();
