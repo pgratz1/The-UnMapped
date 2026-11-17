@@ -222,9 +222,19 @@ std::string line_after(const std::string& text, std::string_view key) {
 }
 
 // One generated pair of worlds per test run (pure function of the inputs).
+// The Sandbox is never destroyed: its destructor runs doctest CHECKs, which
+// would run after doctest has finished for a static object (a segfault at
+// exit). The directory is removed by ~Worlds without doctest.
 struct Worlds {
-    Sandbox sb;
+    Sandbox& sb = *new Sandbox;  // NOLINT: deliberately leaked, see above
     fs::path data, full, climate;
+
+    ~Worlds() {
+        std::error_code ec;
+        fs::remove_all(sb.root().parent_path(), ec);
+    }
+    Worlds(const Worlds&) = delete;
+    Worlds& operator=(const Worlds&) = delete;
 
     Worlds() {
         data = write_data_root(sb);
