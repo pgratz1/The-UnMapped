@@ -572,6 +572,11 @@ void Layout::basins() {
                 }
             }
         }
+        if (queue.empty()) {
+            // G3 is fatal on a grid with no ocean cell; so is this flood (only
+            // a test grid can have land and no ocean next to it).
+            fatal("pass_layout: the basin flood needs an ocean cell next to land");
+        }
         while (!queue.empty()) {
             const auto [lv, c] = queue.top();
             queue.pop();

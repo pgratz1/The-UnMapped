@@ -519,7 +519,8 @@ void erode(geo::Grid grid, std::span<std::int64_t> h, std::span<const std::uint8
 // E8.7 final talus (D3 of D2 steps): `iterations` Jacobi steps of E8.6's
 // talus rule with drops drop_o, drop_d and rate. Evaluated on an active set
 // (P1-01 E8.7), in parallel blocks of that set; the result equals the full
-// Jacobi steps and does not depend on threads.
+// Jacobi steps and does not depend on threads. FatalError if iterations > 0
+// and a land height is below floor on entry (the contract of E7/E8).
 void final_talus(geo::Grid grid, std::span<std::int64_t> h, std::span<const std::uint8_t> ocean, Fx drop_o,
                  Fx drop_d, Fx rate, Fx floor, std::int32_t iterations, std::uint32_t threads = 1);
 
