@@ -58,9 +58,9 @@ From P1-00 section 9.2; the DDL becomes final in the spec of the branch that mak
 
 | Version | Change | Branch |
 | --- | --- | --- |
-| 2 | `CREATE TABLE biome (id INTEGER PRIMARY KEY, key TEXT NOT NULL UNIQUE, name TEXT NOT NULL, colour INTEGER NOT NULL, water INTEGER NOT NULL) STRICT` | biomes (P1 second pass) |
-| 3 | tables `region` and `region_border` (DDL proposed in `p1-06-regions.md` section 3) | regions (P1 second pass) |
-| next free (2 if first) | **proposed, pending the lead's decision:** `CREATE TABLE pass (id INTEGER PRIMARY KEY, range_id INTEGER NOT NULL, kind INTEGER NOT NULL, capped INTEGER NOT NULL, col_x INTEGER NOT NULL, col_y INTEGER NOT NULL, saddle_dm INTEGER NOT NULL, col_dm INTEGER NOT NULL, path BLOB NOT NULL) STRICT`, natural pass sites (`p1-01-elevation.md` section 9.1); the versions of the rows above shift by one if it merges first | elevation revision 0.6.0 (passes) |
+| 2 | `CREATE TABLE pass (id INTEGER PRIMARY KEY, range_id INTEGER NOT NULL, kind INTEGER NOT NULL, capped INTEGER NOT NULL, col_x INTEGER NOT NULL, col_y INTEGER NOT NULL, saddle_dm INTEGER NOT NULL, col_dm INTEGER NOT NULL, path BLOB NOT NULL) STRICT`, executed after `layer`'s; natural pass sites, one row per site in `id` order (`p1-01-elevation.md` section 9.1; proposals "Pass sites are stored in the world file"); with generator 0.6.0 | elevation revision 0.6.0 (passes; adopted) |
+| 3 | `CREATE TABLE biome (id INTEGER PRIMARY KEY, key TEXT NOT NULL UNIQUE, name TEXT NOT NULL, colour INTEGER NOT NULL, water INTEGER NOT NULL) STRICT` | biomes (P1 second pass) |
+| 4 | tables `region` and `region_border` (DDL proposed in `p1-06-regions.md` section 3) | regions (P1 second pass) |
 
 ## 5. Changelog
 
