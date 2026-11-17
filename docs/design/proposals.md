@@ -292,6 +292,7 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
 - Problem: in the adopted elevation candidate the ranges are closed walls with open ends. Measured at 1024, a median of 1.3% of land above 500 m can be reached on foot, no walkable route climbs above about 250 m, and walkers go round a range (detours of 1.5 to 3 times, up to 10 times). There are no saddle passes, so history has no natural crossing to fortify, tax or fight over; every crossing must be a built road.
 - Proposal: decide whether ranges should have a few natural passes. A cheap way: one more low-frequency noise lowers the mountains only where its zero line crosses a belt, giving one to three cols 500 to 800 m wide per range and leaving crests elsewhere alone. It changes every world's bytes but no outline or range layout.
 - Interim choice: Paul decided on 2026-11-17 to add natural passes, together with the deferred fix for very steep smooth faces where a range meets the sea (P1-01 limitation 11), as one elevation revision. Until it merges: no passes in P1-01 as first merged. Low coastal cliffs also seal off a few lowland pockets (for example 12 km² on 1024 seed 18); they are left as they are.
+- Update 2026-11-17, after five exploration rounds and two critic reviews (specified in P1-01, generator 0.6.0): passes sit at true saddles of each range's drainage divide and are a lowering of the range's envelope before erosion, so erosion and rivers shape them like any other ground. The cut at a col is capped by one tuning value (500 m provisionally; 400 to 600 m is the range that still looks natural), so pass height follows the terrain: naturally low saddles become low gates, others stay high cols. Walkability is an outcome, not a requirement: at 500 m about two passes in five are walkable end to end. Paul accepts this as realistic: history may improve a pass, and a player character with magic may find another way over. The steepest-step bound is 150 m at every map size again.
 - Status: open
 
 ### Every world's hash depends on the shipped tuning files
@@ -312,4 +313,14 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
 - Problem: the climate, biome, resource and region specs (P1-03 to P1-06) had to choose where the design is silent.
 - Proposal: confirm or change each. (1) One prevailing wind per world, drawn uniformly from eight directions, so rain shadows differ between worlds. (2) A cool climate: 5 to 9 °C at sea level north to south, 6.5 °C per km of height, so alpine ground starts near 1,000 m. (3) Five natural biomes only: alpine, highland moor, forest, grassland, marsh; blighted waste stays a history overlay. (4) Resource and habitability scores are absolute, not relative to each map, so a poor world is poor. (5) Habitability weights fertility 45, fresh water 30, timber 15, ore 10; history reweights by race. (6) Regions of about 2 km² (roughly 12, 45 and 180 per map at 512, 1024 and 2048), bordered on ridges and large rivers, with placeholder names such as "East Wood II"; history gives cultural names later. (7) No sea regions; lakes belong to land regions.
 - Interim choice: as listed; all numeric acceptance ranges in these specs are provisional until the first implementation sweep.
+- Status: open
+
+### Pass sites are stored in the world file
+
+- Date: 2026-11-17
+- Raised by: spec-writer, via the lead
+- Design doc section: 5 (history), 6 (schema growth)
+- Problem: history needs to know where the passes are (places to fortify, tax, fight over, build a road), and they cannot be recovered from the stored layers: a pass is a decision of the elevation stage, not a property the height field shows unambiguously.
+- Proposal: a table `pass`, one row per pass in site order: range id, kind, whether the cut was capped, the col cell, the natural saddle height and the col height, and the crossing path. This is the first table beyond `meta` and `layer`, so the schema goes to version 2 with generator 0.6.0; the planned `biome` table then takes version 3 and `region` with `region_border` version 4.
+- Interim choice: as proposed, specified in P1-01 section 9.1 and P1-00 section 9.3.
 - Status: open
