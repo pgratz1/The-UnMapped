@@ -936,7 +936,8 @@ bool pass_walkable(std::span<const std::int16_t> e, std::uint32_t w, std::uint32
         for (std::int64_t y = std::max(y0, cy - r); y <= std::min(y1, cy + r); ++y) {
             for (std::int64_t x = std::max(x0, cx - r); x <= std::min(x1, cx + r); ++x) {
                 if ((x - cx) * (x - cx) + (y - cy) * (y - cy) <= r * r) {
-                    at(x, y) |= bits;
+                    std::uint8_t& cell = at(x, y);
+                    cell = static_cast<std::uint8_t>(cell | bits);
                 }
             }
         }
