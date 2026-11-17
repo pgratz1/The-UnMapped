@@ -278,6 +278,9 @@ inline constexpr std::string_view WORLDGEN_DIRECTORY = "worldgen";
 inline constexpr std::string_view WORLDGEN_ELEVATION_ID = "elevation";
 inline constexpr std::string_view WORLDGEN_HYDROLOGY_ID = "hydrology";
 inline constexpr std::string_view WORLDGEN_CLIMATE_ID = "climate";
+// Upper bound of worldgen.climate.smooth_radius_m (P1-03 4); the climate
+// stage's overflow argument for C4 depends on it (static_assert there).
+inline constexpr std::int64_t CLIMATE_SMOOTH_RADIUS_MAX_M = 4000;
 
 // The schema of definition worldgen.elevation (P1-01 4.2): every field of
 // the table of 4.2 in its order, all required, with the shared noise record

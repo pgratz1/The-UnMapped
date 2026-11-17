@@ -5,6 +5,7 @@
 
 #include <algorithm>
 #include <cstddef>
+#include <limits>
 #include <utility>
 
 #include "worldgen/core/error.hpp"
@@ -169,8 +170,8 @@ Direction climate_wind(std::uint64_t seed, std::span<const std::int64_t> weights
 
 std::int16_t climate_temperature_cell(std::int64_t y, std::int64_t height, std::int64_t s_dm, Fx noise,
                                       const ClimateTuning& tuning) {
-    if (y < 0 || y >= height) {
-        fatal("climate_temperature_cell: row outside the grid");
+    if (y < 0 || y >= height || height > std::numeric_limits<std::int32_t>::max()) {
+        fatal("climate_temperature_cell: row outside the grid");  // also keeps 2 height in int64
     }
     const Fx v = Fx::from_ratio(2 * y + 1, 2 * height);
     const Fx t_sea = tuning.temp_north_c + mul(tuning.temp_south_c - tuning.temp_north_c, v);
@@ -204,13 +205,48 @@ std::vector<std::int16_t> climate_temperature(std::uint64_t seed, Grid grid, std
 
 namespace {
 
+// The overflow margin of a box pass (P1-03 section 7). Every value a pass
+// sums is at most VALUE_MAX = 32767 x 2^32: pass 1 sums S <= 32767, and pass 2
+// sums hs1.raw, where hs1 is a mean of S <= 32767 rounded by RHA, so hs1.raw
+// <= 32767 x 2^32 exactly. A sum of at most BOX_TERMS_MAX such values fits
+// int64. The sums a pass forms are: the row prefix over a whole row (W
+// terms), each row-window sum (min(W, 2r + 1) terms), and the running column
+// sum over at most min(H, 2r + 1) row-window sums (one window: the leaving
+// row is dropped before the entering one is added). Hence the guard: W <=
+// BOX_TERMS_MAX and min(W, 2r + 1) min(H, 2r + 1) <= BOX_TERMS_MAX, with r the
+// pass's own half-width.
+constexpr std::int64_t BOX_VALUE_MAX = SURFACE_MAX_DM << 32;
+constexpr std::int64_t BOX_TERMS_MAX = std::numeric_limits<std::int64_t>::max() / BOX_VALUE_MAX;  // 65538
+static_assert(BOX_TERMS_MAX == 65538);
+// The stage stays inside the guard: the largest map side, and the largest
+// window of the triangle's passes (h = smooth_radius_m div 16 div 2, schema
+// bound): raising either bound past the margin breaks the build.
+static_assert(ELEVATION_MAX_N <= BOX_TERMS_MAX);
+static_assert((2 * (data::CLIMATE_SMOOTH_RADIUS_MAX_M / geo::CELL_M / 2) + 1) *
+                  (2 * (data::CLIMATE_SMOOTH_RADIUS_MAX_M / geo::CELL_M / 2) + 1) <=
+              BOX_TERMS_MAX);
+
+// Fatal (prefix "climate: input precondition: ") unless a box pass of
+// half-width r_pass on this grid stays inside the margin above.
+void check_box_margin(Grid grid, std::int64_t r_pass) {
+    const std::int64_t w = grid.width;
+    const std::int64_t h = grid.height;
+    const std::int64_t span = 2 * std::min<std::int64_t>(r_pass, std::max(w, h)) + 1;  // r clipped first: no overflow
+    if (w > BOX_TERMS_MAX || std::min(w, span) * std::min(h, span) > BOX_TERMS_MAX) {
+        fatal("climate: input precondition: the grid or the smoothing window is too large for exact int64 sums");
+    }
+}
+
 // The S bound behind C4's overflow argument (P1-03 section 2 precondition 3,
-// section 7), checked at entry of both C4 seams.
-void check_surface_range(Grid grid, std::span<const std::int64_t> surface, std::int64_t r_cells, const char* what) {
+// section 7), checked at entry of both C4 seams, with the window margin of
+// the pass half-width r_pass.
+void check_surface_range(Grid grid, std::span<const std::int64_t> surface, std::int64_t r_cells, std::int64_t r_pass,
+                         const char* what) {
     geo::check_grid_array(grid, surface.size(), what);
     if (r_cells < 0) {
         fatal("climate: C4: negative radius");
     }
+    check_box_margin(grid, r_pass);
     for (const std::int64_t v : surface) {
         if (v < 0 || v > SURFACE_MAX_DM) {
             fatal("climate: input precondition: S is outside [0, 32767]");
@@ -221,11 +257,10 @@ void check_surface_range(Grid grid, std::span<const std::int64_t> surface, std::
 // One box pass of half-width r_cells (P1-03 C4). raw_input false: the
 // values are integers S and the mean is from_ratio(sum, c_w) (pass 1);
 // raw_input true: the values are Fx raw values and the mean is
-// div_int(from_raw(sum), c_w) (pass 2). Window sums are exact int64: with S
-// <= 32767 and h <= 125 a window holds at most 251^2 values of at most
-// 32767 x 2^32 raw, below 8.87 x 10^18 (section 7); the running column sum
-// drops the leaving row before it adds the entering one, so it never holds
-// more than the 2h + 1 rows of a window.
+// div_int(from_raw(sum), c_w) (pass 2). Every sum is exact int64 when the
+// caller has passed check_box_margin for this half-width (see there); the
+// running column sum drops the leaving row before it adds the entering one,
+// so it never holds more than the 2r + 1 rows of a window.
 std::vector<Fx> box_pass(Grid grid, std::span<const std::int64_t> surface, std::int64_t r_cells,
                          std::uint32_t threads, bool raw_input) {
     check_threads(threads);
@@ -301,13 +336,13 @@ std::vector<Fx> box_pass(Grid grid, std::span<const std::int64_t> surface, std::
 
 std::vector<Fx> climate_box_mean(Grid grid, std::span<const std::int64_t> surface, std::int64_t r_cells,
                                  std::uint32_t threads) {
-    check_surface_range(grid, surface, r_cells, "climate_box_mean: surface");
+    check_surface_range(grid, surface, r_cells, r_cells, "climate_box_mean: surface");
     return box_pass(grid, surface, r_cells, threads, false);
 }
 
 std::vector<Fx> climate_triangle_mean(Grid grid, std::span<const std::int64_t> surface, std::int64_t r_cells,
                                       std::uint32_t threads) {
-    check_surface_range(grid, surface, r_cells, "climate_triangle_mean: surface");
+    check_surface_range(grid, surface, r_cells, r_cells / 2, "climate_triangle_mean: surface");
     const std::int64_t h = r_cells / 2;
     std::vector<Fx> hs1 = box_pass(grid, surface, h, threads, false);  // pass 1 finishes before pass 2
     std::vector<std::int64_t> raw(hs1.size());
