@@ -45,6 +45,18 @@ inline constexpr std::string_view BIOME_LAYER = "biome";
 // "No upper limit" of a rule's rainfall bound: never scaled (P1-04 4.1, B4).
 inline constexpr std::int64_t BIOME_RAIN_UNBOUNDED_MM = 10000;
 
+// The schema extremes of the biome_rule fields (P1-04 4.1). A bound equal to
+// the extreme of its field's range means "unbounded on that side": B4 skips
+// that comparison (temp_min_c -60, temp_max_c 50, rain_min_mm 0, rain_max_mm
+// 10000, elev_min_m 0, elev_max_m 3000, slope_max 100, hand_max_m 3000,
+// coast_max_m 32767).
+inline constexpr std::int64_t BIOME_TEMP_MIN_C = -60;
+inline constexpr std::int64_t BIOME_TEMP_MAX_C = 50;
+inline constexpr std::int64_t BIOME_ELEV_MAX_M = 3000;
+inline constexpr std::int64_t BIOME_SLOPE_MAX = 100;
+inline constexpr std::int64_t BIOME_HAND_MAX_M = 3000;
+inline constexpr std::int64_t BIOME_COAST_MAX_M = 32767;
+
 // --- Definitions (P1-04 4.1) -------------------------------------------------------------
 
 // What hydrology water cells a biome is given to (P1-04 4.1 water_body).
@@ -130,7 +142,7 @@ struct BiomeTuning {
 
 // B4's size rule: rain_scale_512 if n <= 512, rain_scale_1024 if 512 < n <=
 // 1024, otherwise rain_scale_2048. Test grids (n < 512) use the 512 entry.
-// For a W x H grid the stage passes n = H (the grid's side for a square map).
+// For a W x H grid n = max(W, H) (the side N of a square map).
 // Fatal if n < 1.
 [[nodiscard]] Fx biome_rain_scale(const BiomeTuning& tuning, std::int64_t n);
 
@@ -164,7 +176,8 @@ struct BiomeNoise {
 
 // --- B4: classification -------------------------------------------------------------------
 
-// True if a rule matches (all of, B4): r.temp_min_c <= tq <= r.temp_max_c;
+// True if a rule matches (all of, B4; a comparison against a bound at its
+// field's schema extreme is skipped): r.temp_min_c <= tq <= r.temp_max_c;
 // rb(r.rain_min_mm) <= rq <= rb(r.rain_max_mm); 10 r.elev_min_m <=
 // elevation_dm <= 10 r.elev_max_m; S2 x 2^64 <= (320 r.slope_max.raw)^2;
 // from_int(hand_dm) <= mul_int(r.hand_max_m, 10); coast_dist <= r.coast_max_m.
@@ -208,7 +221,7 @@ struct BiomeInputs {
 // Section 2 preconditions 2 and 3 and B2 to B5 on a W x H grid: the `biome`
 // layer. Fatal ("biomes: input precondition: ...") if an array has the
 // wrong length, a water value is outside 0..3, a river value outside 0..15,
-// or G7's preconditions fail. The rainfall scale uses n = grid.height (the
+// or G7's preconditions fail. The rainfall scale uses n = max(W, H) (the
 // side N of a square map).
 [[nodiscard]] std::vector<std::uint8_t> biome_layer(const BiomeInputs& inputs, const BiomeDefinitions& definitions,
                                                     const BiomeTuning& tuning, std::uint64_t seed,

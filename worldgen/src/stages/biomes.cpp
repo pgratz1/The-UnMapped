@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <array>
 #include <cstddef>
+#include <limits>
 #include <string>
 #include <utility>
 
@@ -97,17 +98,25 @@ struct CompiledRule {
     std::int64_t coast_max = 0;
 };
 
+// A bound at the extreme of its schema range means "no limit on that side"
+// (P1-04 4.1, as amended): the comparison is skipped, so a jittered value
+// beyond the stored range (rq above 10000, tq below -60 or above 50) or an
+// extreme cell value still matches. Skipping is done by widening the
+// compiled bound to the type's own extreme.
 CompiledRule compile_rule(const BiomeRule& r, Fx scale) {
+    constexpr std::int64_t I_MIN = std::numeric_limits<std::int64_t>::min();
+    constexpr std::int64_t I_MAX = std::numeric_limits<std::int64_t>::max();
     CompiledRule c;
-    c.temp_lo = r.temp_min_c;
-    c.temp_hi = r.temp_max_c;
-    c.rain_lo = biome_rain_bound(scale, r.rain_min_mm);
-    c.rain_hi = biome_rain_bound(scale, r.rain_max_mm);
-    c.elev_lo_dm = 10 * r.elev_min_m;
-    c.elev_hi_dm = 10 * r.elev_max_m;
-    c.s2_max = geo::slope_s2_limit(r.slope_max);  // S2 2^64 <= (320 t.raw)^2 <=> S2 <= this
-    c.hand_max_dm = mul_int(r.hand_max_m, 10);
-    c.coast_max = r.coast_max_m;
+    c.temp_lo = r.temp_min_c == Fx::from_int(BIOME_TEMP_MIN_C) ? Fx::MIN : r.temp_min_c;
+    c.temp_hi = r.temp_max_c == Fx::from_int(BIOME_TEMP_MAX_C) ? Fx::MAX : r.temp_max_c;
+    c.rain_lo = r.rain_min_mm == 0 ? Fx::MIN : biome_rain_bound(scale, r.rain_min_mm);
+    c.rain_hi = r.rain_max_mm == BIOME_RAIN_UNBOUNDED_MM ? Fx::MAX : biome_rain_bound(scale, r.rain_max_mm);
+    c.elev_lo_dm = r.elev_min_m == 0 ? I_MIN : 10 * r.elev_min_m;
+    c.elev_hi_dm = r.elev_max_m == BIOME_ELEV_MAX_M ? I_MAX : 10 * r.elev_max_m;
+    // S2 2^64 <= (320 t.raw)^2 <=> S2 <= slope_s2_limit(t) (P1-00 G8).
+    c.s2_max = r.slope_max == Fx::from_int(BIOME_SLOPE_MAX) ? I_MAX : geo::slope_s2_limit(r.slope_max);
+    c.hand_max_dm = r.hand_max_m == Fx::from_int(BIOME_HAND_MAX_M) ? Fx::MAX : mul_int(r.hand_max_m, 10);
+    c.coast_max = r.coast_max_m == BIOME_COAST_MAX_M ? I_MAX : r.coast_max_m;
     return c;
 }
 
@@ -373,7 +382,7 @@ std::vector<std::uint8_t> biome_layer(const BiomeInputs& in, const BiomeDefiniti
                                           tuning.drain_river_class_min, "biomes: input precondition: G7: ");
     }
     // B4's scale, once per world.
-    const CompiledLookup lookup = compile_lookup(definitions, biome_rain_scale(tuning, grid.height));
+    const CompiledLookup lookup = compile_lookup(definitions, biome_rain_scale(tuning, std::max(grid.width, grid.height)));
     const std::uint64_t k_tj = stream_key(seed, streams::geo_biomes_temp_jitter);
     const std::uint64_t k_rj = stream_key(seed, streams::geo_biomes_rain_jitter);
 
