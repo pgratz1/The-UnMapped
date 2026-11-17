@@ -288,9 +288,9 @@ TEST_CASE("P1-03 10.2 (slow): invariants, N = 128 seeds 0 to 63 with both fixtur
 TEST_CASE("P1-03 9 (slow): statistics at N = 512 seeds 0 to 9 and N = 1024 seeds 0 to 3; hard bounds asserted, the rest reported") {
     // Hard (P1-03 9, P1-00 13.1 second pass): temperature_c p50 within the
     // catalogue range and rainfall_mm p50 >= rain_min_mm, both by
-    // construction. Typical ranges (revised 2026-11-17: temperature_c p50
-    // 4.5 to 7.0 C; rainfall_mm p50 750 to 1100 / 690 to 940 / 620 to 780 mm
-    // at 512 / 1024 / 2048; rain_contrast 1.6 to 4.5) are provisional:
+    // construction. Typical ranges (revised 2026-11-17, coast_rain_mm 75: temperature_c p50
+    // 4.5 to 7.0 C; rainfall_mm p50 700 to 1030 / 650 to 880 / 600 to 745 mm
+    // at 512 / 1024 / 2048; rain_contrast 1.5 to 4.6) are provisional:
     // printed, not asserted.
     struct Row {
         std::int32_t n;
@@ -314,7 +314,7 @@ TEST_CASE("P1-03 9 (slow): statistics at N = 512 seeds 0 to 9 and N = 1024 seeds
         }
     }
     std::string text = "P1-03 9 statistics (provisional typical: temperature_c p50 4.5-7.0, rainfall_mm p50 "
-                       "750-1100 at 512 and 690-940 at 1024, rain_contrast 1.6-4.5):\n";
+                       "700-1030 at 512 and 650-880 at 1024, rain_contrast 1.5-4.6):\n";
     for (const Row& r : rows) {
         text += "  N " + std::to_string(r.n) + " seed " + std::to_string(r.seed) + ":";
         for (const auto& [k, v] : r.report) {
