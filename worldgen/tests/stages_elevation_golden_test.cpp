@@ -61,7 +61,6 @@ const elev_api::TuningLoad& load_fixture(std::string_view fixture) {
     REQUIRE_MESSAGE(l.ok(), "fixture elevation.toml does not load");
     return l;
 }
-const elev_api::TuningLoad& load_fixture(bool small) { return load_fixture(small ? "small" : "shipped"); }
 
 const elev_api::Tuning& tuning(std::string_view fixture) {
     static const elev_api::Tuning shipped = elev_api::tuning_from(*load_fixture("shipped").content);
@@ -70,7 +69,6 @@ const elev_api::Tuning& tuning(std::string_view fixture) {
     static const elev_api::Tuning sm0 = elev_api::tuning_from(*load_fixture("small-neutral").content);
     return fixture == "shipped" ? shipped : fixture == "small" ? sm : fixture == "shipped-neutral" ? shipped0 : sm0;
 }
-const elev_api::Tuning& tuning(bool small) { return tuning(small ? "small" : "shipped"); }
 
 // E8.7 with the fixture's values.
 std::vector<std::int64_t> final_talus_of(Grid g, std::span<const std::int64_t> h, std::span<const std::uint8_t> ocean,
@@ -661,12 +659,12 @@ TEST_CASE("P1-01 6.1 invariant 8: with erosion_iterations = 0 the layer is E10(E
 TEST_CASE("P1-01 E4: the shipped tuning on a 16 x 16 map has no land component of I_min cells: fatal") {
     // M = 1 leaves 14 x 14 = 196 cells; land_fraction 0.4 of 256 cells
     // leaves at most 103 above the threshold, fewer than I_min = 196.
-    CHECK_THROWS_AS(static_cast<void>(elev_api::elevation_grid(0, 16, tuning(false), 1)), worldgen::FatalError);
+    CHECK_THROWS_AS(static_cast<void>(elev_api::elevation_grid(0, 16, tuning("shipped"), 1)), worldgen::FatalError);
     // P1-01 2 "Small N": fatal for every seed at N <= 21 with the shipped values; N = 24 works.
     for (const std::uint64_t seed : {std::uint64_t{0}, std::uint64_t{1}, std::uint64_t{2}}) {
-        CHECK_THROWS_AS(static_cast<void>(elev_api::elevation_grid(seed, 21, tuning(false), 1)), worldgen::FatalError);
+        CHECK_THROWS_AS(static_cast<void>(elev_api::elevation_grid(seed, 21, tuning("shipped"), 1)), worldgen::FatalError);
     }
-    CHECK(elev_api::elevation_grid(0, 24, tuning(false), 1).size() == 576U);
+    CHECK(elev_api::elevation_grid(0, 24, tuning("shipped"), 1).size() == 576U);
 }
 
 // --- Determinism (10.3, P1-00 D10) -------------------------------------------------
@@ -719,10 +717,10 @@ TEST_CASE("P1-01 10.3: 1, 2 and 5 threads give identical grids (N = 128: seeds 0
 }
 
 TEST_CASE("P1-01 10.3: no hidden state; map sizes are independent worlds") {
-    const std::vector<std::int16_t> a = elev_api::elevation_grid(3, 128, tuning(true), THREADS);
-    const std::vector<std::int16_t> other = elev_api::elevation_grid(3, 256, tuning(false), THREADS);
+    const std::vector<std::int16_t> a = elev_api::elevation_grid(3, 128, tuning("small"), THREADS);
+    const std::vector<std::int16_t> other = elev_api::elevation_grid(3, 256, tuning("shipped"), THREADS);
     CHECK(other.size() == 65536U);
-    const std::vector<std::int16_t> b = elev_api::elevation_grid(3, 128, tuning(true), THREADS);
+    const std::vector<std::int16_t> b = elev_api::elevation_grid(3, 128, tuning("small"), THREADS);
     CHECK(a == b);
 }
 
@@ -785,7 +783,7 @@ void check_hard_bounds(std::span<const std::int16_t> e, std::uint32_t n) {
 }  // namespace
 
 TEST_CASE("P1-01 E11, section 9: generate --until elevation writes the elevation layer and the pass rows (512, seed 42)") {
-    const elev_api::TuningLoad& l = load_fixture(false);
+    const elev_api::TuningLoad& l = load_fixture("shipped");
     dbtest::TempDir dir("elevation-stage");
     const std::string out = dir.file("w.db");
     worldgen::WorldParams params;
@@ -814,7 +812,7 @@ TEST_CASE("P1-01 E11, section 9: generate --until elevation writes the elevation
     REQUIRE(cellsv != nullptr);
     // The stored layer is the stage's grid (the library seam), and equals
     // the reference value of 10.4.1.
-    const worldgen::stages::ElevationResult run = elev_api::elevation_run(42, 512, tuning(false), THREADS);
+    const worldgen::stages::ElevationResult run = elev_api::elevation_run(42, 512, tuning("shipped"), THREADS);
     CHECK(*cellsv == run.e);
     CHECK(layer_hash_i16(512, 512, *cellsv) == "590569e0db4d6bc84fd8e955ef77ab49bec2c82b5d383fd75d212800e31a3b91");
     // The logical layer hash is the 10.4 definition.
@@ -868,9 +866,9 @@ TEST_CASE("P1-01 10.3 (slow): 1, 2 and 5 threads at N = 512, seeds 0 and 42") {
 }
 
 TEST_CASE("P1-01 10.3 (slow): the 512 layer does not depend on a 1024 world generated first") {
-    const std::vector<std::int16_t> a = elev_api::elevation_grid(0, 512, tuning(false), THREADS);
-    static_cast<void>(elev_api::elevation_grid(0, 1024, tuning(false), THREADS));
-    CHECK(elev_api::elevation_grid(0, 512, tuning(false), THREADS) == a);
+    const std::vector<std::int16_t> a = elev_api::elevation_grid(0, 512, tuning("shipped"), THREADS);
+    static_cast<void>(elev_api::elevation_grid(0, 1024, tuning("shipped"), THREADS));
+    CHECK(elev_api::elevation_grid(0, 512, tuning("shipped"), THREADS) == a);
 }
 
 TEST_CASE("P1-01 10.4.2 (slow): mountain floor at N = 512, seeds 9, 10, 12, 13") {
@@ -878,9 +876,9 @@ TEST_CASE("P1-01 10.4.2 (slow): mountain floor at N = 512, seeds 9, 10, 12, 13")
         {9, 688414388}, {10, 653599488}, {12, -397564838}, {13, -1530846568}};
     for (const auto& [seed, o] : want) {
         CAPTURE(seed);
-        const elev_api::Fields f = elev_api::fields(seed, 512, tuning(false), THREADS);
-        const elev_api::Ocean oc = elev_api::classify(f, tuning(false));
-        const elev_api::Heights h = elev_api::heights(seed, f, oc, tuning(false), THREADS);
+        const elev_api::Fields f = elev_api::fields(seed, 512, tuning("shipped"), THREADS);
+        const elev_api::Ocean oc = elev_api::classify(f, tuning("shipped"));
+        const elev_api::Heights h = elev_api::heights(seed, f, oc, tuning("shipped"), THREADS);
         CHECK(h.floor.triggered);
         CHECK(h.floor.o_star == o);
         CHECK(h.floor.beta_star == shipped_values().raw("segment_bias"));
@@ -904,7 +902,7 @@ TEST_CASE("P1-01 10.4.1 (slow): layer hashes at N = 1024, seeds 0 to 9, and the 
     };
     for (std::uint64_t seed = 0; seed < want.size(); ++seed) {
         CAPTURE(seed);
-        const std::vector<std::int16_t> e = elev_api::elevation_grid(seed, 1024, tuning(false), THREADS);
+        const std::vector<std::int16_t> e = elev_api::elevation_grid(seed, 1024, tuning("shipped"), THREADS);
         CHECK(layer_hash_i16(1024, 1024, e) == want[seed]);
         check_hard_bounds(e, 1024);
     }
@@ -939,9 +937,9 @@ TEST_CASE("P1-00 13.1 (slow): hard bounds of the elevation layer (step_p999_m <=
     seeds.push_back(worldgen::seed_from_phrase("The Unmapped").seed);
     for (const std::uint64_t seed : seeds) {
         CAPTURE(seed);
-        check_hard_bounds(elev_api::elevation_grid(seed, 512, tuning(false), THREADS), 512);
+        check_hard_bounds(elev_api::elevation_grid(seed, 512, tuning("shipped"), THREADS), 512);
     }
-    check_hard_bounds(elev_api::elevation_grid(0, 2048, tuning(false), THREADS), 2048);
+    check_hard_bounds(elev_api::elevation_grid(0, 2048, tuning("shipped"), THREADS), 2048);
 }
 
 }  // TEST_SUITE
