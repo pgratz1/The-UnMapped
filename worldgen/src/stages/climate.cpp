@@ -239,19 +239,20 @@ void check_box_margin(Grid grid, std::int64_t r_pass) {
 
 // The S bound behind C4's overflow argument (P1-03 section 2 precondition 3,
 // section 7), checked at entry of both C4 seams, with the window margin of
-// the pass half-width r_pass.
+// the pass half-width r_pass. Order of P1-03 section 10 (entry guards):
+// r_cells >= 0; every S in [0, 32767]; W <= MAX; one window <= MAX.
 void check_surface_range(Grid grid, std::span<const std::int64_t> surface, std::int64_t r_cells, std::int64_t r_pass,
                          const char* what) {
     geo::check_grid_array(grid, surface.size(), what);
     if (r_cells < 0) {
-        fatal("climate: C4: negative radius");
+        fatal("climate: input precondition: negative smoothing radius");
     }
-    check_box_margin(grid, r_pass);
     for (const std::int64_t v : surface) {
         if (v < 0 || v > SURFACE_MAX_DM) {
             fatal("climate: input precondition: S is outside [0, 32767]");
         }
     }
+    check_box_margin(grid, r_pass);
 }
 
 // One box pass of half-width r_cells (P1-03 C4). raw_input false: the
