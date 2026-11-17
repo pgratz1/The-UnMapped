@@ -1,0 +1,22 @@
+[biome.alpine]
+code = 7
+name = "Alpine"
+colour = 0xBEBEB4
+water = false
+water_body = "none"
+priority = 50
+fallback = false
+fertility = 0
+timber = 0
+region_noun = "Peaks"
+
+[[biome.alpine.rules]]
+temp_min_c = -60
+temp_max_c = "0.5"
+rain_min_mm = 0
+rain_max_mm = 10000
+elev_min_m = 600
+elev_max_m = 3000
+slope_max = 100
+hand_max_m = 3000
+coast_max_m = 32767

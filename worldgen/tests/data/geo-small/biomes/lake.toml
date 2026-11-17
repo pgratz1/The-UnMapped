@@ -1,0 +1,12 @@
+[biome.lake]
+code = 2
+name = "Lake"
+colour = 0x4080CC
+water = true
+water_body = "lake"
+priority = 0
+fallback = false
+rules = []
+fertility = 0
+timber = 0
+region_noun = "Mere"

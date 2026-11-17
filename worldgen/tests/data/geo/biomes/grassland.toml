@@ -1,0 +1,12 @@
+[biome.grassland]
+code = 4
+name = "Grassland"
+colour = 0x96AA5A
+water = false
+water_body = "none"
+priority = 10
+fallback = true
+rules = []
+fertility = 1
+timber = "0.15"
+region_noun = "Downs"

@@ -1,0 +1,12 @@
+[biome.ocean]
+code = 1
+name = "Ocean"
+colour = 0x183878
+water = true
+water_body = "ocean"
+priority = 0
+fallback = false
+rules = []
+fertility = 0
+timber = 0
+region_noun = "Sea"
