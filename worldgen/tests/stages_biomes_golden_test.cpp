@@ -601,6 +601,7 @@ TEST_CASE("P1-04 2, 10.1 test 9: each precondition violation is fatal with the p
         fd[EN * 100 + 101] = 0;  // (101, 100) east, (102, 100) west
         layer_of("flow_dir") = LayerGrid{EN, EN, fd};
         expect_fatal("flow_dir cycle (G7)");
+        CHECK(entry_error(dir, "bad.db").rfind(std::string(PRECONDITION) + "G7: ", 0) == 0U);
     }
     {  // G7: a dry cell lower than the lake it drains into
         biome_api::Inputs in = entry_inputs();
@@ -609,6 +610,7 @@ TEST_CASE("P1-04 2, 10.1 test 9: each precondition violation is fatal with the p
         in.water_depth[lake] = 500;
         set_entry(in);
         expect_fatal("negative drainage height (G7)");
+        CHECK(entry_error(dir, "bad.db").rfind(std::string(PRECONDITION) + "G7: ", 0) == 0U);
     }
     // The order of section 2: a missing layer is reported before a bad
     // value (water 4 and no river).
@@ -639,7 +641,7 @@ TEST_CASE("P1-04 3, 10.1 test 7: SCHEMA_VERSION 3; DDL of meta, layer, pass, bio
     CHECK(worldgen::db::DDL_STATEMENTS[4] == "CREATE TABLE climate (id INTEGER PRIMARY KEY, wind_toward INTEGER NOT NULL) STRICT");
 }
 
-TEST_CASE("P1-04 3, P1-00 9.2: an empty world (--until none) has tables biome and climate, empty; user_version 3; 7 pages") {
+TEST_CASE("P1-04 3, P1-00 9.2: an empty world (--until none) has tables biome and climate, empty; user_version 3; 8 pages") {
     dbtest::TempDir dir("biomes-empty");
     REQUIRE(worldgen::generate_world(params_for(0, 512, std::string("none")), fixture_content(), dir.file("e.db"),
                                      worldgen::db::Overwrite::refuse)
@@ -668,9 +670,8 @@ TEST_CASE("P1-04 3, P1-00 9.2: an empty world (--until none) has tables biome an
           std::vector<std::vector<std::string>>{{"sqlite_autoindex_biome_1"}, {"sqlite_autoindex_layer_1"}});
     CHECK(db.rows("SELECT count(*) FROM biome") == std::vector<std::vector<std::string>>{{"0"}});
     CHECK(db.rows("SELECT count(*) FROM climate") == std::vector<std::vector<std::string>>{{"0"}});
-    // P1-04 12: "the empty world grows by one page per table (5 -> 7 pages
-    // expected; the validation confirms)". Asserted as the spec states it.
-    CHECK(dbtest::read_file(dir.file("e.db")).size() == 7U * 4096U);
+    // P1-04 12, P0-02 amendment 15: 8 pages, root pages: sqlite_schema, meta, layer, sqlite_autoindex_layer_1, pass, biome, sqlite_autoindex_biome_1, climate.
+    CHECK(dbtest::read_file(dir.file("e.db")).size() == 32768U);  // 8 pages (P1-04 12, P0-02 amendment 15)
 }
 
 TEST_CASE("P1-04 3: a test-pattern world has tables biome and climate, empty") {

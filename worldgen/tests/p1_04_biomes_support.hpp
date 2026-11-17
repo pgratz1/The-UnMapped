@@ -299,7 +299,7 @@ inline std::int64_t scale_for(const Values& v, std::int64_t n) {
 }
 
 inline std::int64_t rb(std::int64_t sc, std::int64_t b) {
-    return b == 10000 ? fx_int(10000) : worldgen::mul_int(Fx::from_raw(sc), b).raw();
+    return worldgen::mul_int(Fx::from_raw(sc), b).raw();  // non-sentinel bounds only
 }
 
 struct Jittered {
@@ -325,23 +325,25 @@ struct Cell {
 
 // The conditions of B4 that rule r fails, as a bit set.
 inline std::uint32_t failures(const Rule& r, std::int64_t sc, const Cell& c) {
+    // Unbounded sentinels (4.1, amended 2026-11-17): a bound at the extreme
+    // of its field's type skips that comparison.
     std::uint32_t f = 0;
-    if (c.tq < r.temp_min || c.tq > r.temp_max) {
+    if ((r.temp_min != fx_int(-60) && c.tq < r.temp_min) || (r.temp_max != fx_int(50) && c.tq > r.temp_max)) {
         f |= 1U << C_TEMP;
     }
-    if (c.rq < rb(sc, r.rain_min) || c.rq > rb(sc, r.rain_max)) {
+    if ((r.rain_min != 0 && c.rq < rb(sc, r.rain_min)) || (r.rain_max != 10000 && c.rq > rb(sc, r.rain_max))) {
         f |= 1U << C_RAIN;
     }
-    if (c.elevation < 10 * r.elev_min || c.elevation > 10 * r.elev_max) {
+    if ((r.elev_min != 0 && c.elevation < 10 * r.elev_min) || (r.elev_max != 3000 && c.elevation > 10 * r.elev_max)) {
         f |= 1U << C_ELEV;
     }
-    if (!not_steeper(c.s2, r.slope_max)) {
+    if (r.slope_max != fx_int(100) && !not_steeper(c.s2, r.slope_max)) {
         f |= 1U << C_SLOPE;
     }
-    if (fx_int(c.hand) > r.hand_max * 10) {
+    if (r.hand_max != fx_int(3000) && fx_int(c.hand) > r.hand_max * 10) {
         f |= 1U << C_HAND;
     }
-    if (c.coast > r.coast_max) {
+    if (r.coast_max != 32767 && c.coast > r.coast_max) {
         f |= 1U << C_COAST;
     }
     return f;

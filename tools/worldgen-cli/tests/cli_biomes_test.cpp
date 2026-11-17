@@ -36,6 +36,7 @@
 #include "png_decode.hpp"
 #include "worldgen/db/reader.hpp"
 #include "worldgen/db/testing.hpp"
+#include "worldgen/stages/testing.hpp"
 
 namespace {
 
@@ -422,11 +423,102 @@ TEST_CASE("cli P1-04 9, P1-00 10.2: render --composite biomes: biome colour shad
     const fs::path out = w.sb.out_dir() / "seed0.biomes.png";
     CHECK(r.out == printed_path(out));
     check_pixels(decode_png(out), composite(512, 512, e, bio, water, river, fd));
-    // A world without biome cannot draw it.
-    const ProcessResult nc = w.sb.cli({"render", "--db", u8(w.climate), "--composite", "biomes", "--out",
-                                       u8(w.sb.file("nc.png"))});
-    CHECK(nc.exit_code != EXIT_OK);
-    CHECK(nc.out.empty());
+    // A missing row draws (255, 0, 255) in the composite too, shaded.
+    const fs::path cut = w.sb.file("cut-composite.db");
+    fs::copy_file(w.full, cut);
+    REQUIRE(worldgen::db::testing::execute_on_file(u8(cut), "DELETE FROM biome WHERE id = 6").ok());
+    const fs::path co = w.sb.file("cut-composite.png");
+    REQUIRE(w.sb.cli({"render", "--db", u8(cut), "--composite", "biomes", "--out", u8(co)}).exit_code == EXIT_OK);
+    std::map<std::uint8_t, std::uint32_t> rows = colours();
+    rows.erase(6);
+    for (std::size_t i = 0; i < e.size(); ++i) {
+        bio[i] = palette(b[i], rows);
+    }
+    check_pixels(decode_png(co), composite(512, 512, e, bio, water, river, fd));
+}
+
+TEST_CASE("cli P1-04 9, 10.1 test 11: --composite biomes without biome, without elevation, with biome i16: exit 3, no file") {
+    Sandbox sb;
+    using worldgen::stages::testing::FixtureLayer;
+    auto fixture = [&](const char* name, std::vector<FixtureLayer> layers) {
+        const fs::path p = sb.file(name);
+        REQUIRE(worldgen::stages::testing::write_fixture_world(u8(p), 3, layers).ok());
+        return p;
+    };
+    const auto e = worldgen::db::LayerGrid{4, 3, std::vector<std::int16_t>(12, 50)};
+    const auto b = worldgen::db::LayerGrid{4, 3, std::vector<std::uint8_t>(12, 3)};
+    const auto bi16 = worldgen::db::LayerGrid{4, 3, std::vector<std::int16_t>(12, 3)};
+    struct Case {
+        fs::path db;
+        std::string err;
+    };
+    const fs::path no_b = fixture("no-biome.db", {{"elevation", e, worldgen::db::Codec::delta_varint}});
+    const fs::path no_e = fixture("no-elevation.db", {{"biome", b, worldgen::db::Codec::delta_varint}});
+    const fs::path none = fixture("no-layers.db", {});
+    const fs::path i16 = fixture("biome-i16.db", {{"elevation", e, worldgen::db::Codec::delta_varint},
+                                                  {"biome", bi16, worldgen::db::Codec::delta_varint}});
+    const std::vector<Case> cases = {
+        {no_b, "worldgen-cli: error: world file '" + u8(no_b) + "' has no layer 'biome'; available layers: elevation\n"},
+        {no_e, "worldgen-cli: error: world file '" + u8(no_e) + "' has no layer 'elevation'; available layers: biome\n"},
+        {none, "worldgen-cli: error: world file '" + u8(none) + "' has no layer 'elevation'; the world has no layers\n"},
+        {i16, ""},
+    };
+    int k = 0;
+    for (const Case& c : cases) {
+        CAPTURE(u8(c.db));
+        const fs::path out = sb.file("c" + std::to_string(k++) + ".png");
+        const ProcessResult r = sb.cli({"render", "--db", u8(c.db), "--composite", "biomes", "--out", u8(out)});
+        CHECK(r.exit_code == EXIT_INPUT);
+        CHECK(r.out.empty());
+        if (!c.err.empty()) {
+            CHECK(r.err == c.err);
+        } else {
+            CHECK(contains(r.err, "layer 'biome' is i16, expected u8"));
+        }
+        CHECK_FALSE(file_exists(out));
+    }
+    // --palette biome suits u8 only: a usage error on elevation (i16).
+    const ProcessResult p = sb.cli({"render", "--db", u8(i16), "--layer", "elevation", "--palette", "biome", "--out",
+                                    u8(sb.file("p.png"))});
+    CHECK(p.exit_code == EXIT_USAGE);
+    CHECK(contains(p.err, "u8"));
+}
+
+TEST_CASE("cli P1-04 9, 10.1 test 10: report refuses malformed biome rows and a biome value without a row: exit 3") {
+    Worlds& w = worlds();
+    auto rd = worldgen::db::WorldReader::open(u8(w.full));
+    REQUIRE(rd.ok());
+    const std::vector<std::uint8_t> b = layer_of<std::uint8_t>(rd.value(), "biome");
+    // The lowest cell with code 6 (moor), for the missing-row case.
+    const auto it = std::find(b.begin(), b.end(), std::uint8_t{6});
+    REQUIRE(it != b.end());
+    const auto idx = static_cast<std::size_t>(it - b.begin());
+    struct Bad {
+        const char* sql;
+        std::string err;
+    };
+    const std::vector<Bad> bads = {
+        {"UPDATE biome SET key = '' WHERE id = 5", "worldgen-cli: error: corrupt table 'biome': row 5: empty key\n"},
+        {"UPDATE biome SET water = 2 WHERE id = 7", "worldgen-cli: error: corrupt table 'biome': row 7: water not 0 or 1\n"},
+        {"UPDATE biome SET colour = 16777216 WHERE id = 3",
+         "worldgen-cli: error: corrupt table 'biome': row 3: colour outside 0..16777215\n"},
+        {"INSERT INTO biome VALUES (255, 'z', 'Z', 0, 0)",
+         "worldgen-cli: error: corrupt table 'biome': row 255: id outside 1..254\n"},
+        {"DELETE FROM biome WHERE id = 6", "worldgen-cli: error: corrupt layer 'biome': value 6 at (" +
+                                               std::to_string(idx % 512U) + ", " + std::to_string(idx / 512U) +
+                                               ") has no row in table 'biome'\n"},
+    };
+    int k = 0;
+    for (const Bad& x : bads) {
+        CAPTURE(x.sql);
+        const fs::path bad = w.sb.file("badbiome" + std::to_string(k++) + ".db");
+        fs::copy_file(w.full, bad);
+        REQUIRE(worldgen::db::testing::execute_on_file(u8(bad), x.sql).ok());
+        const ProcessResult r = w.sb.cli({"report", "--db", u8(bad)});
+        CHECK(r.exit_code == EXIT_INPUT);
+        CHECK(r.out.empty());
+        CHECK(r.err == x.err);
+    }
 }
 
 TEST_CASE("cli P1-00 10.2: render --help lists every palette --palette accepts, and the composites") {

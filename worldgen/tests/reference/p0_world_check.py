@@ -411,8 +411,8 @@ def check_world(args):
     layers = w["layers"]
     if not args.test_pattern:
         f.check(layers == [], "no layers in an empty world")
-        # P1-04 12: 5 -> 7 pages "expected" with tables biome and climate.
-        f.check(len(data) == 7 * 4096, "empty world is 28672 bytes (P0-02 8; 7 pages, schema 3, P1-04 12)")
+        # P0-02 amendment 15: 8 pages (biome, its UNIQUE key index, climate).
+        f.check(len(data) == 8 * 4096, "empty world is 32768 bytes (P0-02 amendment 15; 8 pages, schema 3)")
     else:
         f.check([(L["id"], L["name"], L["format"], L["width"], L["height"]) for L in layers] == [
             (1, b"test.ramp", b"u8", 256, 256), (2, b"test.hash", b"u8", 256, 256),

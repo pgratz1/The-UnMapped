@@ -129,15 +129,38 @@ TEST_CASE("P1-04 10.1 test 1, P1-00 G7: a flow_dir cycle, a negative height and 
         const std::string m = fatal_message([&] { (void)biome_api::hand(g, s, water, river, fd, 1); });
         CHECK(starts(m, G7_PREFIX));
     }
-    // Only rivers, all class 2: with k = 15 no cell is a drain (k = 16 is
-    // the spec's example; G7 requires 1 <= k <= 15, so 16 is fatal either way).
+    // The only water is class-2 river cells, no lake or ocean: with k = 3 no
+    // drain is reached; with k = 2 every cell is fine.
     {
         const Grid g{3, 1};
         const std::vector<std::int64_t> s = {9, 8, 7};
-        const std::vector<std::uint8_t> water = {1, 1, 1}, river = {2, 2, 2}, fd = {0, 0, 4};
-        CHECK(biome_api::hand(g, s, water, river, fd, 2) == std::vector<std::int64_t>{0, 0, 0});
-        CHECK(starts(fatal_message([&] { (void)biome_api::hand(g, s, water, river, fd, 15); }), G7_PREFIX));
-        CHECK_FALSE(fatal_message([&] { (void)biome_api::hand(g, s, water, river, fd, 16); }).empty());
+        const std::vector<std::uint8_t> water = {0, 1, 1}, river = {0, 2, 2}, fd = {0, 0, 4};
+        CHECK(biome_api::hand(g, s, water, river, fd, 2) == std::vector<std::int64_t>{1, 0, 0});
+        CHECK(starts(fatal_message([&] { (void)biome_api::hand(g, s, water, river, fd, 3); }), G7_PREFIX));
+    }
+    // k outside 1..15 is fatal with the G7 prefix (amended 7.7), also on
+    // the worked example where every other check passes.
+    {
+        const Example& ex = example();
+        for (const std::int64_t k : {0, 16, -1}) {
+            CAPTURE(k);
+            CHECK(starts(fatal_message([&] { (void)biome_api::hand(ex.g, ex.s, ex.h.water, ex.h.river, ex.h.flow_dir, k); }),
+                         G7_PREFIX));
+        }
+        // Arrays of the wrong length: the seam's argument check, G7 prefix.
+        const std::vector<std::uint8_t> short_fd(ex.h.flow_dir.begin(), ex.h.flow_dir.end() - 1);
+        CHECK(starts(fatal_message([&] { (void)biome_api::hand(ex.g, ex.s, ex.h.water, ex.h.river, short_fd, 1); }),
+                     G7_PREFIX));
+    }
+    // Not fatal: a cell whose path passes a higher non-drain cell before a
+    // drain lower than itself (only the drain's S counts). 4 x 1: S 10, 20,
+    // lake at 6, ocean.
+    {
+        const Grid g{4, 1};
+        const std::vector<std::int64_t> s = {10, 20, 6, 0};
+        const std::vector<std::uint8_t> water = {0, 0, 2, 3}, river = {0, 0, 0, 0}, fd = {0, 0, 0, 8};
+        CHECK(biome_api::hand(g, s, water, river, fd, 1) == std::vector<std::int64_t>{4, 14, 0, 0});
+        CHECK(own_hand(g, s, water, river, fd, 1).value() == std::vector<std::int64_t>{4, 14, 0, 0});
     }
 }
 
@@ -198,16 +221,23 @@ const std::vector<Lookup>& lookups() {
         {"B19", 2048, 80, 438, 30, 100, 8, 200, 0, 0, NONE, NONE, "marsh"},
         {"B20", 2048, 80, 437, 30, 100, 8, 200, 0, 0, NONE, NONE, "grassland"},
         {"B21", 1024, 80, 499, 30, 100, 8, 200, 0, 0, NONE, NONE, "grassland"},
+        // Sentinels (5.1, amended 2026-11-17): inputs outside the field ranges.
+        {"S1", 1024, -600, 650, 6500, 100, 100, 2000, -ONE, 0, -261993005056, NONE, "alpine"},
+        {"S2", 1024, 500, 900, 400, 100, 100, 2000, 2576980378, 0, 217325345178, NONE, "temperate_forest"},
+        {"S3", 1024, 80, 9583, 400, 100, 100, 2000, 0, HALF, NONE, 45274538761158, "temperate_forest"},
+        {"S4", 1024, 3, 1200, 8000, 8589934591, 500, 3000, 0, 0, NONE, NONE, "alpine"},
+        {"S5", 1024, -100, 1200, 32767, 200000, 500, 3000, 0, 0, NONE, NONE, "alpine"},
+        {"S6", 1024, 3, 1200, 8000, 200000, 32000, 3000, 0, 0, NONE, NONE, "alpine"},
     };
     return t;
 }
 
 }  // namespace
 
-TEST_CASE("P1-04 5.1, 10.1 test 2: the lookups B1 to B21 with the shipped definitions") {
+TEST_CASE("P1-04 5.1, 10.1 test 2: the lookups B1 to B21 and S1 to S6 with the shipped definitions") {
     const Values v = values();
     const biome_api::Tuning t = tuning();
-    REQUIRE(lookups().size() == 21U);
+    REQUIRE(lookups().size() == 27U);
     for (const Lookup& c : lookups()) {
         CAPTURE(c.name);
         const Jittered j = own_jitter(c.temp, c.rain, c.nt, c.nr, v);
@@ -267,7 +297,7 @@ TEST_CASE("P1-04 4.1, B4: each bound is inclusive and each condition decides on 
 
 TEST_CASE("P1-04 4.2, B4, 10.1 test 3: the rain scale by map size; 10000 is never scaled") {
     const biome_api::Tuning t = tuning();
-    for (const std::int64_t n : {16, 128, 512}) {
+    for (const std::int64_t n : {1, 16, 128, 512}) {
         CAPTURE(n);
         CHECK(biome_api::rain_scale(t, n) == 4831838208);
     }
@@ -275,7 +305,7 @@ TEST_CASE("P1-04 4.2, B4, 10.1 test 3: the rain scale by map size; 10000 is neve
         CAPTURE(n);
         CHECK(biome_api::rain_scale(t, n) == ONE);
     }
-    for (const std::int64_t n : {1025, 2048}) {
+    for (const std::int64_t n : {1025, 2048, 4096}) {
         CAPTURE(n);
         CHECK(biome_api::rain_scale(t, n) == 3758096384);
     }
@@ -289,6 +319,15 @@ TEST_CASE("P1-04 4.2, B4, 10.1 test 3: the rain scale by map size; 10000 is neve
     const std::int64_t s875 = biome_api::rain_scale(t, 2048);
     CHECK(biome_api::lookup(shipped_definitions(), s875, 8 * ONE, 9999 * ONE, 4000, 1000, 500, 100) == FOREST);
     CHECK(biome_api::lookup(shipped_definitions(), s875, 8 * ONE, 10000 * ONE, 4000, 1000, 500, 100) == FOREST);
+    // rain_max_mm 10000 is the sentinel: rq 15000 matches at any scale.
+    for (const std::int64_t n : {512, 1024, 2048}) {
+        CHECK(biome_api::lookup(shipped_definitions(), biome_api::rain_scale(t, n), 8 * ONE, 15000 * ONE, 4000, 1000,
+                                500, 100) == FOREST);
+    }
+    // A W x H grid uses N = max(W, H): a 600 x 100 grid takes the 1024
+    // entry. Checked through biome_layer on such a grid below
+    // ("rain scale of a 600 x 100 grid").
+    CHECK(scale_for(values(), std::max(600, 100)) == ONE);
     // A bound other than 10000 is scaled: rain_max_mm 9999 becomes 8749.125.
     std::string forest(biome_data::shipped_files()[2].text);
     const std::size_t at = forest.find("rain_max_mm = 10000");
@@ -455,4 +494,34 @@ TEST_CASE("P1-04 B3, 10.1 test 8: the jitter fields are fbm2 of the stream keys 
         }
     }
     CHECK(land >= 4);
+}
+
+// --- Scale entry of a W x H grid (B4, amended 2026-11-17) ---------------------------------------
+
+TEST_CASE("P1-04 B4, 10.1 test 3: rain scale of a 600 x 100 grid is the 1024 entry (N = max(W, H))") {
+    biome_api::Inputs in;
+    in.grid = Grid{600, 100};
+    for (std::int32_t y = 0; y < 100; ++y) {
+        for (std::int32_t x = 0; x < 600; ++x) {
+            const bool sea = x < 2 || y < 2 || x >= 598 || y >= 98;
+            in.elevation.push_back(static_cast<std::int16_t>(sea ? -30 : 1 + x / 8));
+            in.water.push_back(sea ? WATER_OCEAN : WATER_DRY);
+            in.water_depth.push_back(static_cast<std::uint16_t>(sea ? 30 : 0));
+            in.flow_dir.push_back(static_cast<std::uint8_t>(sea ? 8 : 4));
+            in.river.push_back(0);
+            in.temperature.push_back(80);
+            in.rainfall.push_back(static_cast<std::uint16_t>(400 + 6 * y));
+        }
+    }
+    std::vector<std::uint8_t> ocean(in.grid.cells());
+    for (std::size_t i = 0; i < ocean.size(); ++i) {
+        ocean[i] = in.water[i] == WATER_OCEAN ? 1 : 0;
+    }
+    in.coast_dist = hydro_api::coast_distance(in.grid, ocean);
+    const auto at = [&](const Overrides& o) { return biome_api::layer(in, shipped_definitions(), tuning(o), 5, 2); };
+    const Overrides all_one = {{"rain_scale_512", "1"}, {"rain_scale_1024", "1"}, {"rain_scale_2048", "1"}};
+    const std::vector<std::uint8_t> ones = at(all_one);
+    CHECK(at({{"rain_scale_512", "0.5"}, {"rain_scale_2048", "2"}}) == ones);
+    CHECK(at({{"rain_scale_1024", "0.5"}}) != ones);
+    CHECK(ones == own_biomes(in, shipped_defs(), values(all_one), 5).biome);
 }

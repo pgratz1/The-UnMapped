@@ -56,9 +56,6 @@ std::string edited(std::string_view file, std::string_view from, std::string_vie
     return {};
 }
 
-std::string check_error(std::string_view name, std::string_view id, std::string_view message) {
-    return "check '" + std::string(name) + "' failed for 'biome." + std::string(id) + "': " + std::string(message);
-}
 
 // The one error of a load that must fail with exactly one error.
 wd::LoadError only_error(const biome_api::Load& l) {
@@ -76,6 +73,8 @@ void check_rejected(const biome_api::Load& l, std::string_view mention) {
         CHECK(text.find(std::string(mention)) != std::string::npos);
     }
 }
+
+bool starts_with_text(std::string_view s, std::string_view p) { return s.substr(0, p.size()) == p; }
 
 std::string fx_text(std::int64_t raw) { return "\"" + Fx::from_raw(raw).to_decimal(18) + "\""; }
 
@@ -151,10 +150,22 @@ TEST_CASE("P1-00 6.1, 6.6: the biome kind and worldgen.biomes are required") {
     // No worldgen/biomes.toml.
     const biome_api::Load b = biome_api::load(std::nullopt, biome_data::directory());
     check_rejected(b, "missing definition 'worldgen.biomes'");
-    // An empty biomes/ directory: no ocean, lake or fallback (named checks 3, 4).
+    // An empty biomes/ directory is P0-03's required-kind error, not the
+    // kind-level checks 3 and 4 (4.1, amended).
     const biome_api::Load c = biome_api::load(std::string(biome_data::TUNING_TOML), wd::MemoryDirectory{"biomes", {}});
-    check_rejected(c, "biome_water_unique");
-    check_rejected(c, "biome_fallback");
+    check_rejected(c, "biomes");
+    CHECK(all_errors(c).find("biome_water_unique") == std::string::npos);
+    CHECK(all_errors(c).find("biome_fallback") == std::string::npos);
+    // Every definition failing type validation: those failures only, no
+    // kind-level check.
+    std::vector<std::pair<std::string, std::string>> broken;
+    for (const auto& f : biome_data::shipped_files()) {
+        broken.emplace_back(std::string(f.name), std::string(f.text) + "unknown_key = 1\n");
+    }
+    const biome_api::Load d = load_defs(broken);
+    CHECK_FALSE(d.ok());
+    CHECK(all_errors(d).find("biome_water_unique") == std::string::npos);
+    CHECK(all_errors(d).find("biome_fallback") == std::string::npos);
 }
 
 TEST_CASE("P1-04 4.1, P1-00 6.4: definitions and tuning are part of the content hash") {
@@ -205,148 +216,141 @@ TEST_CASE("P1-04 4.1, 4.2, P1-00 6.4: the fixture files hold the shipped definit
 
 // --- Named checks (4.1, 10.1 test 6) ---------------------------------------------------------
 
-TEST_CASE("P1-04 4.1 named check 1 biome_code_unique: two definitions with one code") {
-    // grassland takes code 3, which temperate_forest has.
-    const biome_api::Load l = load_defs({{"grassland.toml", edited("grassland.toml", "code = 4", "code = 3")}});
-    INFO(all_errors(l));
-    REQUIRE_FALSE(l.ok());
-    // Which of the two reports is not stated (P1-04 4.1 "errors at the
-    // definition's header"); each error is one of these two forms.
-    const std::string at_forest = "biomes/temperate_forest.toml:1:1: error: " +
-                                  check_error("biome_code_unique", "temperate_forest", "code 3 is also used by 'grassland'");
-    const std::string at_grass = "biomes/grassland.toml:1:1: error: " +
-                                 check_error("biome_code_unique", "grassland", "code 3 is also used by 'temperate_forest'");
-    for (const auto& e : l.errors) {
-        CHECK((e.to_string() == at_forest || e.to_string() == at_grass));
+// Named checks: the table of 4.1 (amended 2026-11-17). An error at a
+// definition is "<path>:1:1: error: <message>" at its header; one against
+// the directory is "biomes: error: <message>" without a position. The
+// message is asserted to end with the table's text (the loader's existing
+// check errors put "check '<name>' failed for '<id>': " before it, P1-01
+// 4.3; the amended table does not restate that prefix).
+
+namespace {
+
+bool ends_with(std::string_view s, std::string_view t) { return s.size() >= t.size() && s.substr(s.size() - t.size()) == t; }
+
+void at_definition(const wd::LoadError& e, std::string_view file, std::string_view check, std::string_view message) {
+    CAPTURE(e.to_string());
+    CHECK(e.path == "biomes/" + std::string(file));
+    CHECK(e.line == 1U);
+    CHECK(e.column == 1U);
+    CHECK(e.message.find("'" + std::string(check) + "'") != std::string::npos);
+    CHECK(ends_with(e.message, message));
+}
+
+void at_directory(const wd::LoadError& e, std::string_view check, std::string_view message) {
+    CAPTURE(e.to_string());
+    CHECK(e.path == "biomes");
+    CHECK(e.line == 0U);
+    CHECK(e.column == 0U);
+    CHECK(starts_with_text(e.to_string(), "biomes: error: "));
+    CHECK(e.message.find("'" + std::string(check) + "'") != std::string::npos);
+    CHECK(ends_with(e.message, message));
+}
+
+}  // namespace
+
+TEST_CASE("P1-04 4.1 named check 1 biome_code_unique: at each later definition, naming the earliest") {
+    {  // grassland takes code 3 of temperate_forest: "grassland" is earlier
+        const wd::LoadError e = only_error(load_defs({{"grassland.toml", edited("grassland.toml", "code = 4", "code = 3")}}));
+        at_definition(e, "temperate_forest.toml", "biome_code_unique", "code 3 is also used by 'biome.grassland'");
+    }
+    {  // three share code 3: two errors, both naming the first in id order
+        const biome_api::Load l = load_defs({{"grassland.toml", edited("grassland.toml", "code = 4", "code = 3")},
+                                             {"marsh.toml", edited("marsh.toml", "code = 5", "code = 3")}});
+        INFO(all_errors(l));
+        REQUIRE(l.errors.size() == 2U);
+        at_definition(l.errors[0], "marsh.toml", "biome_code_unique", "code 3 is also used by 'biome.grassland'");
+        at_definition(l.errors[1], "temperate_forest.toml", "biome_code_unique",
+                      "code 3 is also used by 'biome.grassland'");
     }
 }
 
 TEST_CASE("P1-04 4.1 named check 2 biome_water_body: water exactly when water_body is not none") {
-    {
-        const wd::LoadError e = only_error(load_defs({{"marsh.toml", edited("marsh.toml", "water = false", "water = true")}}));
-        CHECK(e.path == "biomes/marsh.toml");
-        CHECK(e.line == 1U);
-        CHECK(e.column == 1U);
-        CHECK(e.message ==
-              check_error("biome_water_body", "marsh", "water must be true exactly when water_body is not \"none\""));
-    }
-    {
-        const wd::LoadError e = only_error(load_defs({{"ocean.toml", edited("ocean.toml", "water = true", "water = false")}}));
-        CHECK(e.to_string() == "biomes/ocean.toml:1:1: error: " +
-                                   check_error("biome_water_body", "ocean",
-                                               "water must be true exactly when water_body is not \"none\""));
-    }
+    at_definition(only_error(load_defs({{"marsh.toml", edited("marsh.toml", "water = false", "water = true")}})),
+                  "marsh.toml", "biome_water_body", "water must be true exactly when water_body is not \"none\"");
+    at_definition(only_error(load_defs({{"ocean.toml", edited("ocean.toml", "water = true", "water = false")}})),
+                  "ocean.toml", "biome_water_body", "water must be true exactly when water_body is not \"none\"");
 }
 
-TEST_CASE("P1-04 4.1 named check 3 biome_water_unique: exactly one ocean and one lake") {
-    // lake becomes a second ocean: reported at the second in id order
-    // ("ocean"), and the missing lake against the directory.
-    const biome_api::Load l =
-        load_defs({{"lake.toml", edited("lake.toml", "water_body = \"lake\"", "water_body = \"ocean\"")}});
-    INFO(all_errors(l));
-    REQUIRE_FALSE(l.ok());
-    REQUIRE(l.errors.size() == 2U);
-    // Sorted by path (P0-03 9): "biomes" before "biomes/ocean.toml".
-    CHECK(l.errors[0].path == "biomes");
-    CHECK(l.errors[0].line == 0U);
-    CHECK(l.errors[0].message.find("biome_water_unique") != std::string::npos);
-    CHECK(l.errors[0].message.find("exactly one biome must have water_body \"lake\"") != std::string::npos);
-    CHECK(l.errors[1].to_string() == "biomes/ocean.toml:1:1: error: " +
-                                         check_error("biome_water_unique", "ocean",
-                                                     "exactly one biome must have water_body \"ocean\""));
-}
-
-TEST_CASE("P1-04 4.1 named check 4 biome_fallback: exactly one land fallback") {
-    {  // two: grassland and marsh; the second in id order is marsh
-        const wd::LoadError e =
-            only_error(load_defs({{"marsh.toml", edited("marsh.toml", "fallback = false", "fallback = true")}}));
-        CHECK(e.to_string() == "biomes/marsh.toml:1:1: error: " +
-                                   check_error("biome_fallback", "marsh", "exactly one land biome must have fallback = true"));
-    }
-    {  // none: against the directory
-        const wd::LoadError e =
-            only_error(load_defs({{"grassland.toml", edited("grassland.toml", "fallback = true", "fallback = false")}}));
-        CHECK(e.path == "biomes");
-        CHECK(e.line == 0U);
-        CHECK(e.message.find("check 'biome_fallback'") != std::string::npos);
-        CHECK(e.message.find("exactly one land biome must have fallback = true") != std::string::npos);
-    }
-    {  // the only fallback is a water biome
+TEST_CASE("P1-04 4.1 named check 3 biome_water_unique: none against the directory, more at each later one") {
+    {  // lake becomes a second ocean: no lake (directory), ocean at "ocean" naming "lake"
         const biome_api::Load l =
-            load_defs({{"grassland.toml", edited("grassland.toml", "fallback = true", "fallback = false")},
-                       {"ocean.toml", edited("ocean.toml", "fallback = false", "fallback = true")}});
-        check_rejected(l, "exactly one land biome must have fallback = true");
+            load_defs({{"lake.toml", edited("lake.toml", "water_body = \"lake\"", "water_body = \"ocean\"")}});
+        INFO(all_errors(l));
+        REQUIRE(l.errors.size() == 2U);
+        at_directory(l.errors[0], "biome_water_unique", "no biome has water_body \"lake\"");
+        at_definition(l.errors[1], "ocean.toml", "biome_water_unique", "water_body \"ocean\" is also used by 'biome.lake'");
     }
+    {  // no ocean biome at all
+        const wd::LoadError e = only_error(load_defs({{"ocean.toml", ""}}));
+        at_directory(e, "biome_water_unique", "no biome has water_body \"ocean\"");
+    }
+}
+
+TEST_CASE("P1-04 4.1 named check 4 biome_fallback: none, more, and a water fallback") {
+    at_definition(only_error(load_defs({{"marsh.toml", edited("marsh.toml", "fallback = false", "fallback = true")}})),
+                  "marsh.toml", "biome_fallback", "fallback = true is also set by 'biome.grassland'");
+    at_directory(only_error(load_defs({{"grassland.toml", edited("grassland.toml", "fallback = true", "fallback = false")}})),
+                 "biome_fallback", "no biome has fallback = true");
+    // The sole fallback is a water biome: at that definition.
+    at_definition(only_error(load_defs({{"grassland.toml", edited("grassland.toml", "fallback = true", "fallback = false")},
+                                        {"ocean.toml", edited("ocean.toml", "fallback = false", "fallback = true")}})),
+                  "ocean.toml", "biome_fallback", "the fallback biome must have water_body \"none\"");
+    // A water fallback beside the land one: the water error, and the second
+    // fallback ("ocean" is later than "grassland").
+    const biome_api::Load l = load_defs({{"ocean.toml", edited("ocean.toml", "fallback = false", "fallback = true")}});
+    const std::string text = all_errors(l);
+    INFO(text);
+    CHECK(text.find("the fallback biome must have water_body \"none\"") != std::string::npos);
+    CHECK(text.find("fallback = true is also set by 'biome.grassland'") != std::string::npos);
 }
 
 TEST_CASE("P1-04 4.1 named check 5 biome_water_rules: water biomes have priority 0 and no rules") {
-    {
-        const wd::LoadError e = only_error(load_defs({{"lake.toml", edited("lake.toml", "priority = 0", "priority = 5")}}));
-        CHECK(e.to_string() == "biomes/lake.toml:1:1: error: " +
-                                   check_error("biome_water_rules", "lake", "water biomes take no rules and priority 0"));
-    }
-    {
-        const std::string ocean =
-            edited("ocean.toml", "rules = []\n", "") +
-            "\n[[biome.ocean.rules]]\ntemp_min_c = -60\ntemp_max_c = 50\nrain_min_mm = 0\nrain_max_mm = 10000\n"
-            "elev_min_m = 0\nelev_max_m = 3000\nslope_max = 100\nhand_max_m = 3000\ncoast_max_m = 32767\n";
-        const wd::LoadError e = only_error(load_defs({{"ocean.toml", ocean}}));
-        CHECK(e.to_string() == "biomes/ocean.toml:1:1: error: " +
-                                   check_error("biome_water_rules", "ocean", "water biomes take no rules and priority 0"));
-    }
+    at_definition(only_error(load_defs({{"lake.toml", edited("lake.toml", "priority = 0", "priority = 5")}})),
+                  "lake.toml", "biome_water_rules", "water biomes take no rules and priority 0");
+    const std::string ocean =
+        edited("ocean.toml", "rules = []\n", "") +
+        "\n[[biome.ocean.rules]]\ntemp_min_c = -60\ntemp_max_c = 50\nrain_min_mm = 0\nrain_max_mm = 10000\n"
+        "elev_min_m = 0\nelev_max_m = 3000\nslope_max = 100\nhand_max_m = 3000\ncoast_max_m = 32767\n";
+    at_definition(only_error(load_defs({{"ocean.toml", ocean}})), "ocean.toml", "biome_water_rules",
+                  "water biomes take no rules and priority 0");
 }
 
-TEST_CASE("P1-04 4.1 named check 6 biome_priority_unique: land priorities above 0 are distinct") {
-    // highland_moor takes marsh's 40: reported at the second in id order (marsh).
-    const wd::LoadError e = only_error(
-        load_defs({{"highland_moor.toml", edited("highland_moor.toml", "priority = 30", "priority = 40")}}));
-    CHECK(e.to_string() == "biomes/marsh.toml:1:1: error: " +
-                               check_error("biome_priority_unique", "marsh", "priority 40 is also used by 'highland_moor'"));
+TEST_CASE("P1-04 4.1 named check 6 biome_priority_unique: at the later definition, naming the earlier") {
+    at_definition(
+        only_error(load_defs({{"highland_moor.toml", edited("highland_moor.toml", "priority = 30", "priority = 40")}})),
+        "marsh.toml", "biome_priority_unique", "priority 40 is also used by 'biome.highland_moor'");
     // Priority 0 may repeat (blighted_waste and the water biomes already do).
     CHECK(load_defs({{"grassland.toml", edited("grassland.toml", "priority = 10", "priority = 0")}}).ok());
 }
 
-TEST_CASE("P1-04 4.1 named check 7 biome_rule_ranges: min not above max in every rule") {
-    struct Case {
-        const char* min_from;
-        const char* min_to;
-        const char* max_from;
-        const char* max_to;
-        const char* field;  // the spec's <field>
-        const char* full;   // the field name with its unit suffix
-    };
-    for (const Case& c :
-         {Case{"temp_min_c = -60", "temp_min_c = 10", "temp_max_c = 50", "temp_max_c = 9", "temp", "temp_c"},
-          Case{"rain_min_mm = 720", "rain_min_mm = 10000", "rain_max_mm = 10000", "rain_max_mm = 9999", "rain",
-               "rain_mm"},
-          Case{"elev_min_m = 0", "elev_min_m = 3000", "elev_max_m = 3000", "elev_max_m = 2999", "elev", "elev_m"}}) {
-        CAPTURE(c.min_to);
-        std::string text = edited("temperate_forest.toml", c.min_from, c.min_to);
-        const std::size_t at = text.find(c.max_from);
-        REQUIRE(at != std::string::npos);
-        text.replace(at, std::string_view(c.max_from).size(), c.max_to);
-        const wd::LoadError e = only_error(load_defs({{"temperate_forest.toml", text}}));
-        CHECK(e.path == "biomes/temperate_forest.toml");
-        CHECK(e.line == 1U);
-        CHECK(e.column == 1U);
-        // The spec's template "rules[<i>]: <field>_min must not exceed
-        // <field>_max" with <field> = temp, rain, elev; the field names carry
-        // a unit suffix (temp_min_c), so the suffixed form is accepted too
-        // (ambiguity reported to the lead).
-        const std::string f(c.field);
-        const std::string plain = "rules[0]: " + f + "_min must not exceed " + f + "_max";
-        const std::string suffix(std::string(c.full).substr(f.size()));
-        const std::string suffixed = "rules[0]: " + f + "_min" + suffix + " must not exceed " + f + "_max" + suffix;
-        CHECK((e.message == check_error("biome_rule_ranges", "temperate_forest", plain) ||
-               e.message == check_error("biome_rule_ranges", "temperate_forest", suffixed)));
+TEST_CASE("P1-04 4.1 named check 7 biome_rule_ranges: one error per failing pair, field names written out") {
+    {
+        std::string text = edited("temperate_forest.toml", "temp_min_c = -60", "temp_min_c = 10");
+        text.replace(text.find("temp_max_c = 50"), 15, "temp_max_c = 9");
+        at_definition(only_error(load_defs({{"temperate_forest.toml", text}})), "temperate_forest.toml",
+                      "biome_rule_ranges", "rules[0]: temp_min_c must not exceed temp_max_c");
     }
-    // Equal bounds are allowed; the second rule of a definition is rules[1].
+    {
+        std::string text = edited("temperate_forest.toml", "elev_min_m = 0", "elev_min_m = 3000");
+        text.replace(text.find("elev_max_m = 3000"), 17, "elev_max_m = 2999");
+        at_definition(only_error(load_defs({{"temperate_forest.toml", text}})), "temperate_forest.toml",
+                      "biome_rule_ranges", "rules[0]: elev_min_m must not exceed elev_max_m");
+    }
+    // Two pairs in rule 1: two errors, rain before elev (the order listed).
     std::string moor(biome_data::shipped_files()[5].text);
     moor +=
         "\n[[biome.highland_moor.rules]]\ntemp_min_c = 5\ntemp_max_c = 5\nrain_min_mm = 9\nrain_max_mm = 8\n"
-        "elev_min_m = 0\nelev_max_m = 0\nslope_max = 100\nhand_max_m = 3000\ncoast_max_m = 32767\n";
-    const wd::LoadError e = only_error(load_defs({{"highland_moor.toml", moor}}));
-    CHECK(e.message.find("rules[1]: rain_min") != std::string::npos);
+        "elev_min_m = 10\nelev_max_m = 9\nslope_max = 100\nhand_max_m = 3000\ncoast_max_m = 32767\n";
+    const biome_api::Load l = load_defs({{"highland_moor.toml", moor}});
+    INFO(all_errors(l));
+    REQUIRE(l.errors.size() == 2U);
+    // Sorted by message bytes within one position (P0-03 9): "rules[1]: e" < "rules[1]: r".
+    std::vector<std::string> got = {l.errors[0].message, l.errors[1].message};
+    std::sort(got.begin(), got.end(), [](const std::string& a, const std::string& b) {
+        return a.find("rain_min_mm") != std::string::npos && b.find("rain_min_mm") == std::string::npos;
+    });
+    CHECK(ends_with(got[0], "rules[1]: rain_min_mm must not exceed rain_max_mm"));
+    CHECK(ends_with(got[1], "rules[1]: elev_min_m must not exceed elev_max_m"));
 }
 
 // --- Types and bounds (10.1 test 6) -------------------------------------------------------

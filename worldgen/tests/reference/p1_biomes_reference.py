@@ -313,7 +313,9 @@ def rain_scale(t, n):
 
 
 def rb(sc, b):
-    return er.from_int(10000) if b == 10000 else er.mul_int(sc, b)
+    """A non-sentinel rainfall bound scaled (B4); sentinels are skipped by
+    rule_failures and never scaled."""
+    return er.from_int(b) if b in (0, 10000) else er.mul_int(sc, b)
 
 
 def jitter(temp, rain, nt, nr, t):
@@ -323,23 +325,31 @@ def jitter(temp, rain, nt, nr, t):
     return tq, rq
 
 
+SENT_TMIN, SENT_TMAX = -60 << 32, 50 << 32
+SENT_SLOPE, SENT_HAND = 100 << 32, 3000 << 32
+
 CONDITIONS = ("temp", "rain", "elev", "slope", "hand", "coast")
 
 
 def rule_failures(r, sc, tq, rq, elev, s2, hand, coast):
     """The conditions of B4 that rule r fails, as a tuple of names."""
+    # Unbounded sentinels (4.1, amended 2026-11-17): a bound equal to the
+    # extreme of its field's type skips that comparison.
     out = []
-    if not (r["temp_min_c"] <= tq <= r["temp_max_c"]):
+    lo_t, hi_t = r["temp_min_c"], r["temp_max_c"]
+    if (lo_t != SENT_TMIN and tq < lo_t) or (hi_t != SENT_TMAX and tq > hi_t):
         out.append("temp")
-    if not (rb(sc, r["rain_min_mm"]) <= rq <= rb(sc, r["rain_max_mm"])):
+    lo_r, hi_r = r["rain_min_mm"], r["rain_max_mm"]
+    if (lo_r != 0 and rq < rb(sc, lo_r)) or (hi_r != 10000 and rq > rb(sc, hi_r)):
         out.append("rain")
-    if not (10 * r["elev_min_m"] <= elev <= 10 * r["elev_max_m"]):
+    lo_e, hi_e = r["elev_min_m"], r["elev_max_m"]
+    if (lo_e != 0 and elev < 10 * lo_e) or (hi_e != 3000 and elev > 10 * hi_e):
         out.append("elev")
-    if not not_steeper(s2, r["slope_max"]):
+    if r["slope_max"] != SENT_SLOPE and not not_steeper(s2, r["slope_max"]):
         out.append("slope")
-    if not (er.from_int(hand) <= er.mul_int(r["hand_max_m"], 10)):
+    if r["hand_max_m"] != SENT_HAND and not (er.from_int(hand) <= er.mul_int(r["hand_max_m"], 10)):
         out.append("hand")
-    if not (coast <= r["coast_max_m"]):
+    if r["coast_max_m"] != 32767 and not (coast <= r["coast_max_m"]):
         out.append("coast")
     return tuple(out)
 
@@ -939,6 +949,11 @@ HAND_K1 = [
 HAND_K3_ROWS = {4: [0, 40, 30, 28, 40, 30, 20, 0], 5: [0, 35, 33, 31, 25, 20, 10, 0]}
 
 
+def example_args():
+    w, h, e, L = example_layers()
+    return (w, h, e, L["water"], L["water_depth"], L["river"], L["flow_dir"])
+
+
 def check_g7(c):
     w, h, e, L = example_layers()
     c.eq("5.1 river cells (3,4) and (4,5) class 2",
@@ -971,6 +986,16 @@ def check_g7(c):
     expect_fatal(c, "G7 k=15 no drain", lambda: hand_fifo(3, 1, [9, 8, 7], [1, 1, 1], [0, 0, 0], [2, 2, 2],
                                                           [0, 0, 4], 15), G7_PRE)
     c.eq("G7 rivers only k=2", hand_fifo(3, 1, [9, 8, 7], [1, 1, 1], [0, 0, 0], [2, 2, 2], [0, 0, 4], 2), [0, 0, 0])
+    # 10.1 test 1 (amended): k outside 1..15; class-2 rivers only with k = 3;
+    # a higher non-drain cell on the way is not fatal (only the drain's S).
+    for k in (0, 16):
+        expect_fatal(c, "G7 k=%d" % k, lambda k=k: hand_fifo(*(example_args() + (k,))), G7_PRE)
+    expect_fatal(c, "G7 class 2 only, k=3", lambda: hand_fifo(3, 1, [9, 8, 7], [0, 1, 1], [0, 0, 0], [0, 2, 2],
+                                                              [0, 0, 4], 3), G7_PRE)
+    c.eq("G7 higher non-drain on the path", hand_fifo(4, 1, [10, 20, 5, -3], [0, 0, 2, 3], [0, 0, 1, 3],
+                                                      [0, 0, 0, 0], [0, 0, 0, 8], 1), [4, 14, 0, 0])
+    c.eq("G7 higher non-drain, recursive", hand_recursive(4, 1, [10, 20, 5, -3], [0, 0, 2, 3], [0, 0, 1, 3],
+                                                          [0, 0, 0, 0], [0, 0, 0, 8], 1), [4, 14, 0, 0])
 
 
 LOOKUPS = [
@@ -996,6 +1021,13 @@ LOOKUPS = [
     ("B19", 2048, 80, 438, 30, 100, 8, 200, 0, 0, None, None, "marsh"),
     ("B20", 2048, 80, 437, 30, 100, 8, 200, 0, 0, None, None, "grassland"),
     ("B21", 1024, 80, 499, 30, 100, 8, 200, 0, 0, None, None, "grassland"),
+    # Sentinels (5.1, amended 2026-11-17)
+    ("S1", 1024, -600, 650, 6500, 100, 100, 2000, -ONE, 0, -261993005056, None, "alpine"),
+    ("S2", 1024, 500, 900, 400, 100, 100, 2000, 2576980378, 0, 217325345178, None, "temperate_forest"),
+    ("S3", 1024, 80, 9583, 400, 100, 100, 2000, 0, HALF, None, 45274538761158, "temperate_forest"),
+    ("S4", 1024, 3, 1200, 8000, 8589934591, 500, 3000, 0, 0, None, None, "alpine"),
+    ("S5", 1024, -100, 1200, 32767, 200000, 500, 3000, 0, 0, None, None, "alpine"),
+    ("S6", 1024, 3, 1200, 8000, 200000, 32000, 3000, 0, 0, None, None, "alpine"),
 ]
 
 
@@ -1035,12 +1067,15 @@ def check_lookups(c):
     c.ok("G8 0.7002: 50204 not steeper", not_steeper(50204, dec("0.7002")))
     c.ok("G8 0.7002: 50205 steeper", not not_steeper(50205, dec("0.7002")))
     # 10.1 test 3: the size rule and an unscaled 10000.
-    for n, key in ((16, "rain_scale_512"), (128, "rain_scale_512"), (512, "rain_scale_512"),
+    for n, key in ((1, "rain_scale_512"), (4096, "rain_scale_2048"), (600, "rain_scale_1024"),
+                   (16, "rain_scale_512"), (128, "rain_scale_512"), (512, "rain_scale_512"),
                    (513, "rain_scale_1024"), (1024, "rain_scale_1024"), (1025, "rain_scale_2048"),
                    (2048, "rain_scale_2048")):
         c.eq("size rule N=%d" % n, rain_scale(t, n), t[key])
     r = full_rule()
     c.eq("10000 not scaled", rule_failures(r, dec("0.875"), 0, er.from_int(9999), 100, 0, 0, 0), ())
+    for sc in (dec("0.875"), ONE, dec("1.125")):
+        c.eq("rq 15000 under the sentinel", rule_failures(r, sc, 0, er.from_int(15000), 100, 0, 0, 0), ())
     c.eq("10000 x 0.875 would be 8750", rule_failures(full_rule(rmax=9999), dec("0.875"), 0, er.from_int(9999),
                                                       100, 0, 0, 0), ("rain",))
     # 10.1 test 5: two rules, a cell matching only the second.
@@ -1239,12 +1274,12 @@ def check_tables(c):
          1, 3, 3, 4, 2, 1,
          1, 3, 4, 4, 2, 1,
          1, 5, 5, 3, 3, 1,
-         1, 9, 6, 6, 7, 1,
+         1, 8, 6, 6, 7, 1,
          1, 1, 1, 1, 1, 1]
     c.eq("report 6x6 share", biome_share(b, rows),
-         "temperate_forest:0.3846 grassland:0.2308 marsh:0.1538 highland_moor:0.1538 alpine:0.0769 "
-         "blighted_waste:0.0000")
-    c.eq("report 6x6 patches", biome_patches(6, 6, b, rows), 6)
+         "temperate_forest:0.3571 grassland:0.2143 marsh:0.1429 highland_moor:0.1429 alpine:0.0714 "
+         "blighted_waste:0.0714")
+    c.eq("report 6x6 patches", biome_patches(6, 6, b, rows), 7)
 
 
 def main(argv):

@@ -361,10 +361,9 @@ TEST_CASE("cli 12.2: empty world contents (P0-02 8)") {
     CHECK(layers.value().empty());
     CHECK(w.stages().empty());
     // Expected size, P0-02 8 and amendment 9; schema version 2 adds the root
-    // page of table pass (P1-01 9.1), schema version 3 one page each for
-    // biome and climate: 5 -> 7 pages "expected" (P1-04 12; the validation
-    // confirms).
-    CHECK(fs::file_size(out) == 7U * 4096U);
+    // page of table pass (P1-01 9.1); schema version 3 makes 8 (P0-02
+    // amendment 15: biome, sqlite_autoindex_biome_1 and climate).
+    CHECK(fs::file_size(out) == 32768U);  // 8 pages (P0-02 amendment 15, P1-04 12)
 }
 
 TEST_CASE("cli 12.2: test pattern") {

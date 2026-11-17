@@ -196,12 +196,9 @@ TEST_CASE("empty world for seed 0: tables, meta rows and values as in section 8 
     check_header(path);
     check_no_real_values(path);
     // Amendment 14.9: the empty world is 4 pages; schema version 2 adds the
-    // root page of table pass (P1-01 9.1), so 5; schema version 3 adds one
-    // page per table, biome and climate, "5 -> 7 pages expected" (P1-04 12;
-    // asserted as the spec states it. Note: biome.key is UNIQUE, so SQLite
-    // also creates sqlite_autoindex_biome_1 with its own root page, which
-    // would make 8; reported to the lead).
-    CHECK(dbtest::read_file(path).size() == 7U * 4096U);
+    // root page of table pass (P1-01 9.1), so 5; schema version 3 makes 8
+    // (P0-02 amendment 15: page 1 and the meta, layer, sqlite_autoindex_layer_1, pass, biome, sqlite_autoindex_biome_1, climate).
+    CHECK(dbtest::read_file(path).size() == 32768U);  // 8 pages (P0-02 amendment 15)
 
     dbtest::SqliteFile db(path);
     REQUIRE(db.ok());
