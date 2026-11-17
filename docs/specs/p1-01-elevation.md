@@ -612,7 +612,7 @@ All quantities of this step are exact integers or `Fx`, with the operations of 5
 #### E6.5.1 World values (D6 for the flood, D1 otherwise)
 
 1. `world_top` = the land cell with the largest mh, ties: smallest index.
-2. **Tarn basins.** G3 on keys `kb[c] = max(1, (h0[c] + mul(scale, unit[c])).raw)` on land (ocean cells: key 0, ignored by G3) with the ocean mask O; with its flood level Lb, `basin[c]` = (c land) and Lb[c] − kb[c] ≥ `pass_basin_depth_m`.raw. These are depressions of the natural pre-erosion surface at least 40 m deep. Only the values Lb are used (the spill levels, a function of the keys; P1-00 7.3), so any method that gives G3's levels may be used.
+2. **Tarn basins.** The flood levels of G3 on keys `kb[c] = max(1, (h0[c] + mul(scale, unit[c])).raw)` on land (ocean cells: key 0, ignored by G3) with the ocean mask O; with its flood level Lb, `basin[c]` = (c land) and Lb[c] − kb[c] ≥ `pass_basin_depth_m`.raw. These are depressions of the natural pre-erosion surface at least 40 m deep. Only the values Lb are used (the spill levels, a function of the keys; P1-00 7.3), so any method that gives these levels may be used: the shared G3, or (as the implementation does, to meet the memory budget of 8.1) a levels-only priority flood from the ocean that pops by the unique pair (level, cell) and stores no parent or order.
 3. `bigbasin[c]` = c is in an 8-connected component of basin cells (G2) with at least `pass_tarn_min_cells` cells.
 4. `docean[c]` = the P1-02 H7 chamfer distance (fifths) from c to the nearest ocean cell, with the ocean cells as sources (0 on ocean). On an unobstructed grid the two-pass 5/7 transform equals the exact shortest 5/7 path length, so for any cell c, docean[c] = min over ocean cells o of 5 × max(|dx|, |dy|) + 2 × min(|dx|, |dy|) (dx, dy the offset of o from c). It is read only at candidate cols (E6.5.6 (a)), where either form may be used.
 5. Derived integers num, den, coast_clear, min_len, spacing and side_max of 4.5.
@@ -982,7 +982,7 @@ For every seed, N and tuning inside the bounds:
 5. Land values are in [1, 29990]; ocean values in [−29005, −1].
 6. The layer is a pure function of (seed, N, `worldgen.elevation`): independent of thread count, platform and compiler.
 7. **Every depression of the layer is a kept lake.** The depression components of e' (G3 on e', components as in P1-02 H3) are exactly the components kept by E10.3, each with the same cells, size in [lake_min_cells, lake_max_cells], depth ≥ lake_min_depth_dm and its E9 values unchanged; together they hold at most max_share_cells cells. Every other land cell drains to the sea.
-8. With `erosion_iterations` = 0, the layer equals E9 and E10 applied to the E7 output.
+8. With `erosion_iterations` = 0, the layer equals E10(E9(E8.7(E7 output))): the iterations do nothing, E8.7 still runs (with `final_talus_iterations` = 0 as well, it is E10(E9(E7 output))).
 9. Unless E5.1 triggers, (o*, β*) = (0, `segment_bias`). If it triggers, core(o*, β*) ≥ target or β* = 2, and β* ≥ `segment_bias`.
 10. **Outlines.** O, and so the sign of every cell of the layer, equals that of `GENERATOR_VERSION` 0.5.0 for the same seed, N and values of the third version's fields: E1 to E4 are unchanged and no later step reads anything but O's membership (6.5).
 11. **Neutral settings.** With `pass_count_max` = 0 and `final_talus_iterations` = 0 the layer equals the third version's (0.5.0) for the same values of the third version's fields.
@@ -1091,7 +1091,7 @@ No floating point, no `<cmath>`, no `Rng`, no unordered containers, and no new m
 
 ## 8. Performance
 
-Budget (P1-00 11): 2 / 8 / 35 s at 512 / 1024 / 2048 for the stage on the 6-core development machine, release build; peak memory within P1-00's 200 MB / 600 MB / 2 GB for all of geography. **New in this version, a hard budget for the implementation: the stage's own peak memory** (peak RSS of `generate --until elevation`) **is at most 1.3 × that of 0.5.0** on the same machine: 0.5.0 measured 30 / 101 / 376 MB (`r4-timings.txt`, the v16 build), so about **40 / 132 / 490 MB**. Section 8.1 shows how the algorithm fits it.
+Budget (P1-00 11): 2.2 / 8 / 35 s at 512 / 1024 / 2048 (512 raised from 2 s by the lead, 2026-11-17: passes and the final talus cost about 0.05 s there, measured 1.97–2.04 s, and the remaining savings were measured by the engineer at 2 to 15 ms, not worth the risk) for the stage on the 6-core development machine, release build; peak memory within P1-00's 200 MB / 600 MB / 2 GB for all of geography. **New in this version, a hard budget for the implementation: the stage's own peak memory** (peak RSS of `generate --until elevation`) **is at most 1.3 × that of 0.5.0** on the same machine: 0.5.0 measured 30 / 101 / 376 MB (`r4-timings.txt`, the v16 build), so about **40 / 132 / 490 MB**. Section 8.1 shows how the algorithm fits it.
 
 Measured on the third version's exploration build (`linux-gcc-release`, 6 threads; `v16-timings.txt`, `worldgen-cli generate` including loading and writing the file, elevation the only stage):
 
@@ -1105,7 +1105,7 @@ Per step (spec writer's measurement of the library calls, 1024 seed 3, 6 threads
 
 The cost per cell: E2 evaluates 19 `noise2` octaves (warp 3 + 3, continent 4, coast 5, belt 2, segment 2); E5.2 about 20 per land cell plus 6 ridged octaves where the mask is positive; E10.0 6 per land cell. Memory: about 8 bytes per cell for each `int64` grid (c, nb, ns, g, h, hn, F, L, kf, P, cost, bump and the flood queue are the large ones; not all are live at once).
 
-**Round five** (`r5-timings.txt`, `generate --until elevation`, 6 threads, GCC release, cap 400; the machine had a load of 2 to 5, so figures are approximate): 512 seed 0 1.96–1.97 s against 1.90–1.91 s for v16 on the same run (budget 2 s: **at the limit**), 1024 7.10 s against 6.69 s, 2048 28.7 s against 27.8 s. The pass layout and the final talus cost about 0.06 s at 512, 0.4 s at 1024 and 0.9 s at 2048. Peak RSS of that build: 61 / 224 / 872 MB, **over the new budget**, because it keeps about fifteen whole-grid scratch arrays of E6.5 alive together (section 8.1).
+**Round five** (`r5-timings.txt`, `generate --until elevation`, 6 threads, GCC release, cap 400; the machine had a load of 2 to 5, so figures are approximate): 512 seed 0 1.96–1.97 s against 1.90–1.91 s for v16 on the same run (the budget was then 2 s: **at the limit**; now 2.2 s), 1024 7.10 s against 6.69 s, 2048 28.7 s against 27.8 s. The pass layout and the final talus cost about 0.06 s at 512, 0.4 s at 1024 and 0.9 s at 2048. Peak RSS of that build: 61 / 224 / 872 MB, **over the new budget**, because it keeps about fifteen whole-grid scratch arrays of E6.5 alive together (section 8.1).
 
 Erosion is a grid method with an implicit tree solve rather than droplets: droplet erosion is sequential and order-sensitive and has no deterministic parallelism; the stream-power solve is O(N²) per iteration with a defined order and is stable for any step size.
 
@@ -1115,7 +1115,9 @@ If the stage is too slow, in this order:
 2. **Tuning only:** `erosion_route_interval` 2 or 4, then fewer iterations with a larger `erosion_k`. Changes output; a shipped tuning change (PATCH bump).
 3. **Algorithm change (spec amendment):** erode a 2:1 downsampled grid at 2048 and add the difference back bilinearly.
 
-**Where the pass cost at 512 can be saved** (all without changing output; 512 has about 0.04 s of headroom): (i) skip E6.5.1 and E6.5.3 to E6.5.8 entirely when no range has np_k > 0 (E6.5.2 first; at 512 many worlds have no range of the minimum length), and run the basin flood of E6.5.1 only when the first candidate reaches test (g); (ii) evaluate docean at a col as the closed form of E6.5.1 4 over a box of radius coast_clear div 5 cells instead of a whole-grid chamfer; (iii) restrict the divide flood and the range search to the bounding box of the support grown by one cell (exact: neither leaves the support and its seed ring); (iv) the active-set evaluation of E8.7; (v) the third version's own savings in item 1 above. The whole-grid passes (basin flood, docean chamfer, support flood) were most of the exploration's 0.06 to 0.1 s at 512.
+**Implementation** (branch `p1/01b-elevation-passes`, `88da7d3`; `linux-gcc-release`, 6 threads, quiet machine, `generate --until elevation`): 512 2.00–2.04 s and 28.6–29.5 MB, 1024 6.97–7.24 s and 94–97 MB, 2048 28.0–29.3 s and 354–357 MB. Memory is below 0.5.0's peaks (30 / 101 / 376 MB) and well inside the hard budget (40 / 132 / 490 MB), which stays. The 512 time is about at the old 2 s limit, inside the budget of 2.2 s. Of the savings below, the implementation applies (i), (ii), (iv) and (v); not applied: (iii), restricting the divide flood and the range search to the support's bounding box, and a bucket queue for the basin levels. The engineer measured these at 2 to 15 ms: the flood time is the priority queue over the support cells, not the whole-grid setup, and a bucket queue for the basin levels would need radix-heap scratch that the memory budget rules out.
+
+**Where the pass cost at 512 can be saved** (all without changing output): (i) skip E6.5.1 and E6.5.3 to E6.5.8 entirely when no range has np_k > 0 (E6.5.2 first; at 512 many worlds have no range of the minimum length), and run the basin flood of E6.5.1 only when the first candidate reaches test (g); (ii) evaluate docean at a col as the closed form of E6.5.1 4 over a box of radius coast_clear div 5 cells instead of a whole-grid chamfer; (iii) restrict the divide flood and the range search to the bounding box of the support grown by one cell (exact: neither leaves the support and its seed ring); (iv) the active-set evaluation of E8.7; (v) the third version's own savings in item 1 above. The whole-grid passes (basin flood, docean chamfer, support flood) were most of the exploration's 0.06 to 0.1 s at 512.
 
 ### 8.1 Memory
 
@@ -1206,8 +1208,9 @@ struct MountainFloor { std::int64_t target; bool triggered; Fx offset, bias;
                        std::vector<Fx> bisection; };          // every mid, in order; empty if none ran
 MountainFloor mountain_floor(std::span<const FloorCell> land_cells, Fx w_b, const ElevationTuning&);
 // E5 to E7 (fourth version: mask, profile and the pass layout added)
-struct ElevationHeights { std::vector<std::int64_t> h, unit, mask, profile; MountainFloor floor;
-                          std::int64_t land_cells; Fx q, qc, scale; PassLayout passes; };
+struct ElevationHeights { std::vector<std::int64_t> h /* E7's h, every cell */, unit, mask, profile;
+                          MountainFloor floor; std::int64_t land_cells; Fx q, qc, scale; PassLayout passes; };
+// h0 is not exposed: tests that need it compute E5.2 themselves.
 ElevationHeights elevation_heights(std::uint64_t seed, const ElevationFields&, std::span<const std::uint8_t> ocean,
                                    const ElevationTuning&, std::uint32_t threads);
 std::vector<std::int64_t> chamfer_distance(geo::Grid, std::span<const std::uint8_t> source);
@@ -1279,9 +1282,12 @@ Conditioned condition_depressions(geo::Grid, std::span<const std::int16_t> e, st
 // Whole stage
 std::vector<std::int16_t> elevation_grid(std::uint64_t seed, std::int32_t n, const ElevationTuning&,
                                          std::uint32_t threads);
-struct ElevationResult { std::vector<std::int16_t> e; std::vector<PassSite> sites; std::vector<std::int64_t> h7; };
+struct ElevationResult { std::vector<std::int16_t> e; std::vector<PassSite> sites;
+                         std::vector<std::int64_t> h7; };   // h7[s] = E7's h (raw) at the col of sites[s]; whole grid: elevation_heights().h
 ElevationResult elevation_run(std::uint64_t seed, std::int32_t n, const ElevationTuning&, std::uint32_t threads);  // the table's source
 ```
+
+Seam contracts: `pass_layout` lists every range (E6.5.2) even when no range has a slot; `PassRange.divide` is empty when E6.5.3 did not run (no range with a slot), and `candidates` is filled only for ranges with slots and a non-empty divide list (empty otherwise); a natural gap has `depth` = 0 and `capped` = false (its saddle, halfwidth and maxm are those of E6.5.6 (h)); `DivideFlood.side` is 0 exactly on cells not reached (non-support cells that are not seeds, and unreached support cells), and `parent` is unspecified there.
 
 The exploration's equivalents are `elevation_pass_layout` (whose `reject` counters, `divide` flags and `cand_cells` list the same facts in another form) and `final_talus(grid, h, ocean, tuning, threads)`; these names and shapes are this spec's choice, since the exploration's seams are diagnostics. The E6.5 seams take the grids as `Fx` raw values; `pass_layout` computes the basins, docean, ranges and divide itself.
 

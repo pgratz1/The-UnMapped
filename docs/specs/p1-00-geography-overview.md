@@ -435,7 +435,7 @@ Format version 2: the header becomes `# worldgen report v2`, sections `[meta]`, 
 | `slope_p50_above_500m` | tan4 of the median slope over land cells with e ≥ 5000 (500 m); `n/a` if there are none |
 | `lowland_flat_share` | ratio4(land cells with e < 1000 (below 100 m) flatter than 0.5°, land cells with e < 1000); `n/a` if the denominator is 0 |
 | `edge_parallel_run_m` | 16 × the longest edge-parallel coast run, in metres, an integer (definition below) |
-| `passes` | number of rows of table `pass` with `kind` = 1 (lowered passes); printed only when the table exists (P1-01 9.1; every world of schema 2), like every key below down to `passes_walkable` |
+| `passes` | number of rows of table `pass` with `kind` = 1 (lowered passes; a malformed row is an error, below); printed only when the table exists (P1-01 9.1; every world of schema 2), like every key below down to `passes_walkable` |
 | `natural_gaps` | number of rows with `kind` = 0 |
 | `passes_capped` | number of rows with `capped` = 1 |
 | `pass_col_m` | percentiles 0, 50, 100 of `elevation` at the col cells (`col_x`, `col_y`) of the rows with `kind` = 1, as metres1; `n/a n/a n/a` if there are none |
@@ -455,6 +455,8 @@ S2 = gx² + gy²                                                       // int64
 At the edge of a grid (test layers only; on a real map land never touches the edge) the one-sided difference is doubled, so every gx and gy is in decimetres per 32 m = 320 dm. The slope's tangent is √S2 / 320. A tangent threshold is written as an exact decimal T = t / 10^4 and compared without square roots: **steeper than T** means 10^8 × S2 > (320 × t)²; **flatter than T** means 10^8 × S2 < (320 × t)². Thresholds, constants of the report: 35° is t = 7002 (tan 35° = 0.70021; 7002 is 34.9997°); 45° is t = 10000 (exact); 0.5° is t = 87 (tan 0.5° = 0.0087269; 87 is 0.4985°). In S2 terms: steeper than 35° ⟺ S2 ≥ 50205; steeper than 45° ⟺ S2 > 102400; flatter than 0.5° ⟺ S2 ≤ 7. Bounds: \|gx\|, \|gy\| ≤ 2 × 32767, so S2 < 2^33 and 10^8 × S2 < 2^60 fits `int64`. Resolution: the smallest non-zero tangent is 1/320 (0.18°), so "flatter than 0.5°" means a change of at most 2 dm over 32 m in each axis.
 
 **tan4(S2)**: the tangent √S2 / 320 to four decimals: r = isqrt_u64(S2 × 10^8) (= floor(10^4 √S2)), T = (r + 160) div 320, printed as T div 10^4, `.`, and T mod 10^4 with four digits. The median is kth over the S2 values of the cells concerned at min(n − 1, floor(50 n / 100)) (the percentile rule above). For reading: tan 25° = 0.4663, 30° = 0.5774, 35° = 0.7002, 45° = 1.0000.
+
+**Malformed `pass` rows.** `report` checks every row it reads: `kind` and `capped` in {0, 1}, `capped` = 0 when `kind` = 0, (`col_x`, `col_y`) inside the `elevation` grid, `path` non-empty with a length divisible by 4 and every index below width × height of `elevation`. A row that fails is a corrupt-data error of the reader's `corrupt_layer` class naming table `pass`, reported as for a corrupt layer (P0-04 4.5 and 4.6: `worldgen-cli: error: corrupt table 'pass': <reason>` on stderr, nothing on stdout, exit 3, the input-error code). Rows are not checked against the elevation stage's rules (spacing, divide), only for being readable.
 
 **Walkable end to end** (for `passes_walkable`; new with P1-01's fourth version). For one pass row, with P its `path` cells, a = P's first and b = P's last cell, and d2 the squared distance in cells: the region R is the set of land cells c (e > 0) with d2(c, q) ≤ 361 for some q in P (a band of 19 cells, 304 m) or d2(c, a) ≤ 1369 or d2(c, b) ≤ 1369 (discs of 37 cells, 592 m, at the two lowland ends). A cell of R is walkable if it is not steeper than 35° (S2 ≤ 50204 by the cell slope below). The feet are F_a = the walkable cells of R with d2(c, a) ≤ 1369, F_b likewise for b. The pass is walkable if some cell of F_a and some cell of F_b are joined by an 8-connected path of walkable cells of R (a cell in both feet counts). Computed by a breadth-first search from F_a (any order: the answer is a yes or no). The constants 19 and 37 are constants of the report. This measure is close to, but not the same as, the one the passes exploration reported (`pt`, which used the pass's internal zone, cells with bump ≥ 1/4, 600 m discs and feet that exclude lake cells); P1-01 open question 9.
 
@@ -485,7 +487,7 @@ Targets for the validation specialist to measure, not guarantees. Release build,
 
 | Stage | 512 | 1024 (default) | 2048 |
 | --- | --- | --- | --- |
-| `elevation` (noise, erosion, conditioning) | 2 s | 8 s | 35 s |
+| `elevation` (noise, erosion, passes, conditioning) | 2.2 s | 8 s | 35 s |
 | `hydrology` | 0.3 s | 1.2 s | 5 s |
 | `climate` | 0.3 s | 1.5 s | 6 s |
 | `biomes` | 0.1 s | 0.5 s | 2 s |
@@ -495,7 +497,7 @@ Targets for the validation specialist to measure, not guarantees. Release build,
 | **All of geography** | **4 s** | **15 s** | **65 s** |
 | Peak memory | 200 MB | 600 MB | 2 GB |
 
-Milestone 1 requires geography plus history under two minutes at the default size; geography at 15 s leaves at least 100 s for history and derivation. Debug and sanitizer builds are not budgeted (expect 5 to 20 times slower). A stage over twice its target at 1024 is a defect to report; P1-01 section 8 gives the fallbacks for erosion, the expensive part.
+The 512 elevation target was raised from 2 s to 2.2 s by the lead (2026-11-17) for the passes and the final talus (P1-01 section 8). The geography totals are not the sum of the stage rows (at 512 the rows sum to 3.7 s), so the total stays 4 s. Milestone 1 requires geography plus history under two minutes at the default size; geography at 15 s leaves at least 100 s for history and derivation. Debug and sanitizer builds are not budgeted (expect 5 to 20 times slower). A stage over twice its target at 1024 is a defect to report; P1-01 section 8 gives the fallbacks for erosion, the expensive part.
 
 ## 12. Math functions
 
@@ -767,3 +769,4 @@ Decisions by the lead on points raised by the engineers and the determinism audi
 19. **G6 on non-square grids** (tests only) splits by rows of the grid's height. **G1** accepts up to 2^31 values.
 20. **Report format after the slope statistics.** The five keys added to `[geography]` in 10.3 (`step_p999_m`, `slope_over`, `slope_p50_above_500m`, `lowland_flat_share`, `edge_parallel_run_m`) are part of format v2; the header does not change. Format v2 has not been used for any recorded golden world, so nothing needs migrating. The format number changes only once a format has shipped in recorded goldens.
 21. **Slope statistics, wording corrected after implementation.** "Flatter than 0.5°" is S2 ≤ 7, which allows a change of at most 2 dm over 32 m in one axis and at most 1 dm in the other; 2 dm in both axes gives S2 = 8 and is not flat. `step_p999_m` equals `max_step_m` whenever there are at most 2000 land cells, because the largest step belongs to both of its cells. `slope_over` with no land prints `35:n/a 45:n/a`. The central-difference slope does not see a cell's own height: the crest of a one-cell-wide ridge or an isolated spike has slope 0. The edge-parallel run uses the outermost land of each row or column whatever it is connected to, so an offshore islet farther out than the coast sets that line's value.
+22. **Schema 2 and the pass keys** (P1-01 fourth version, 2026-11-17). Every world of schema 2 has the table `pass`, so `[tables]` lists `pass = <rows>` (between `meta` and any later table, ascending name), also for `--until none` (`pass = 0`). Every world with an `elevation` layer prints the five pass keys after `edge_parallel_run_m`; with an empty table they read `passes = 0`, `natural_gaps = 0`, `passes_capped = 0`, `pass_col_m = n/a n/a n/a`, `passes_walkable = 0`. X6's expected text includes them. The report format stays v2 (item 20's rule: no recorded golden uses it yet).
