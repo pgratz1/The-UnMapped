@@ -20,8 +20,6 @@ inline constexpr std::string_view test_noise = "test.noise";
 inline constexpr std::string_view test_wide = "test.wide";
 // Test-only stream for the random hydrology fixtures (P1-02 8.2).
 inline constexpr std::string_view test_hydro = "test.hydro";
-// Test-only stream for the random climate fixtures (P1-03 10.2).
-inline constexpr std::string_view test_climate = "test.climate";
 
 // Keys of stage elevation (P1-00 section 3, P1-01 section 2), in the order
 // of P1-01 section 2. Each is used only as a noise key (noise2 / fbm2
@@ -64,7 +62,7 @@ inline constexpr std::string_view geo_climate_rainfall = "geo.climate.rainfall";
 //   geo.biomes.   geo.resources.   geo.regions.
 
 // Every registered name, in registration order.
-inline constexpr std::array<std::string_view, 25> all_stream_names = {
+inline constexpr std::array<std::string_view, 24> all_stream_names = {
     test_hash,
     test_noise,
     test_wide,
@@ -86,7 +84,6 @@ inline constexpr std::array<std::string_view, 25> all_stream_names = {
     test_hydro,
     geo_hydrology_flat,
     geo_elevation_pass,
-    test_climate,
     geo_climate_wind,
     geo_climate_temperature,
     geo_climate_rainfall,
