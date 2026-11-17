@@ -1104,6 +1104,9 @@ void final_talus(Grid grid, std::span<std::int64_t> h, std::span<const std::uint
     std::vector<CellIndex> active;
     for (CellIndex c = 0; c < cells; ++c) {
         if (ocean[c] == 0U) {
+            if (h[c] < floor.raw()) {  // the contract of E7/E8 (6.6): every land height >= floor
+                fatal("final_talus: a land height is below the land floor");
+            }
             active.push_back(c);
         }
     }
