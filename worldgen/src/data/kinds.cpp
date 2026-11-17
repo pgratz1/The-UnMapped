@@ -203,7 +203,7 @@ Schema worldgen_climate_schema() {
         Field::required("temp_noise", geo::fbm_m_type()),
         Field::required("temp_noise_amp_c", Type::fixed("0", "5")),
         Field::required("wind_weights", Type::array(Type::integer(0, 1000), 8, 8)),
-        Field::required("smooth_radius_m", Type::integer(0, 4000)),
+        Field::required("smooth_radius_m", Type::integer(0, CLIMATE_SMOOTH_RADIUS_MAX_M)),
         Field::required("rain_base_mm", Type::integer(0, 5000)),
         Field::required("rain_oro_mm", Type::integer(0, 100000)),
         Field::required("moisture_path_mm_km", Type::integer(100, 2000000)),
