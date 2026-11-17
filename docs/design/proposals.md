@@ -325,3 +325,23 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
 - Proposal: a table `pass`, one row per pass in site order: range id, kind, whether the cut was capped, the col cell, the natural saddle height and the col height, and the crossing path. This is the first table beyond `meta` and `layer`, so the schema goes to version 2 with generator 0.6.0; the planned `biome` table then takes version 3 and `region` with `region_border` version 4.
 - Interim choice: as proposed, specified in P1-01 section 9.1 and P1-00 section 9.3.
 - Status: open
+
+### Schema version 3: the biome table and the stored wind direction
+
+- Date: 2026-11-17
+- Raised by: spec-writer and world critic, via the lead
+- Design doc section: 4 (geography), 6 (schema growth), 7 (runtime)
+- Problem: the biome layer stores codes whose meaning lives in the data files, so a world file needs the biome definitions it was generated with; and the prevailing wind of a world, which the runtime will want for weather and vegetation, was computed by the climate stage but not stored.
+- Proposal: schema version 3, with generator 0.8.0 (the biome stage). Table `biome` (id, key, name, colour, water flag), one row per biome definition, written by the biome stage. Table `climate` (one row: `wind_toward`, the direction the wind blows toward as one of eight codes), written by the climate stage; the climate layers do not change. Both tables exist in every world, empty when their stage did not run. `region` and `region_border` remain planned as version 4.
+- Interim choice: as proposed, specified in P1-04, P1-03 and docs/specs/schema.md.
+- Status: open
+
+### Biome thresholds scale with map size
+
+- Date: 2026-11-17
+- Raised by: world critic and spec-writer, via the lead
+- Design doc section: 4 (geography)
+- Problem: rainfall depends on map size (air dries as it crosses land; median land rainfall is about 825, 755 and 680 mm at 512, 1024 and 2048 cells), so one fixed forest threshold made small maps almost all forest and large maps half open country.
+- Proposal: each biome rule's rainfall bounds are multiplied by a per-size factor held in the tuning file (1.125, 1, 0.875), so forest starts at about 810, 720 and 630 mm. Thresholds are not set from each world's own rainfall quantiles: that would give every world the same shares and erase the differences that come from where the ranges lie and which way the wind blows. Measured on 108 worlds: forest 27 to 64% and grassland 16 to 59% of land, every biome present in every world, none above 65%. Marsh still grows with map size (about 1, 2.4 and 5.7% median), because larger maps have more flat lowland; accepted.
+- Interim choice: as proposed, specified in P1-04.
+- Status: open
