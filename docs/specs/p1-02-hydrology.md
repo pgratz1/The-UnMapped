@@ -362,6 +362,8 @@ Over seeds 0 to 63 at N = 128 and 0 to 3 at N = 512 (fixture tuning, elevation f
 
 With the H2 tie-break (`GENERATOR_VERSION` 0.5.0, content hash changed by `flat_noise`) the hydrology layer goldens and the world-file goldens are re-recorded; the `elevation` layer hashes do not change, and of the hydrology layers `water_depth`, `lake` and `coast_dist` keep their 0.4.0 layer hashes (invariant 11), which the re-recording checks.
 
+With the elevation revision "natural passes and final talus" (P1-01 fourth version, `GENERATOR_VERSION` 0.6.0) the `elevation` layer changes in almost every world, so every hydrology layer golden and world-file golden is re-recorded together with the elevation goldens; no hydrology rule or field changes, and the statistics ranges of P1-00 13.1 from `lakes` on are re-measured by that validation sweep.
+
 Layer hashes (P0-04 8) of all seven layers, fixture tuning, compared on every preset: seeds 0, 42 and the phrase "The Unmapped" at N = 512, seed 1 at N = 1024, seed 0 at N = 128 (library). The hydrology golden test may read its `elevation` input from the elevation golden case, so a hydrology failure is not masked by an elevation change: when the elevation golden changes, both are re-recorded together.
 
 ## 9. Decisions on rivers, lakes and terrain
