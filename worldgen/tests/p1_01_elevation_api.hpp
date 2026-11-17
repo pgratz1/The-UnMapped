@@ -34,6 +34,36 @@ using worldgen::geo::Grid;
 // when the `worldgen` kind's id set includes `hydrology`, P1-00 6.1).
 inline constexpr std::string_view HYDROLOGY_TOML = "[worldgen.hydrology]\nriver_min_area_m2 = 125000\nflat_noise = { wavelength_m = 400, octaves = 1, gain = \"0.5\" }\n";
 
+// The climate fixture of P1-03 section 4 (needed beside the others once the
+// id set includes `climate`).
+inline constexpr std::string_view CLIMATE_TOML =
+    "[worldgen.climate]\n"
+    "temp_north_c = 5\n"
+    "temp_south_c = 9\n"
+    "lapse_c_per_km = \"6.5\"\n"
+    "temp_noise = { wavelength_m = 6000, octaves = 3, gain = \"0.5\" }\n"
+    "temp_noise_amp_c = 1\n"
+    "wind_weights = [1, 1, 1, 1, 1, 1, 1, 1]\n"
+    "smooth_radius_m = 320\n"
+    "rain_base_mm = 800\n"
+    "rain_oro_mm = 5000\n"
+    "moisture_path_mm_km = 16000\n"
+    "loss_max = \"0.25\"\n"
+    "ocean_recharge_m = 500\n"
+    "coast_rain_mm = 150\n"
+    "coast_rain_reach_m = 1500\n"
+    "rain_noise = { wavelength_m = 5000, octaves = 3, gain = \"0.5\" }\n"
+    "rain_noise_amp = \"0.4\"\n"
+    "rain_min_mm = 250\n";
+
+// True when the production registry's `worldgen` kind has the id (P1-00
+// 6.1: every id of the set must then be defined).
+inline bool worldgen_id_registered(std::string_view id) {
+    const worldgen::data::KindRegistry registry = worldgen::data::builtin_kinds();
+    const worldgen::data::Kind* kind = registry.find("worldgen");
+    return kind != nullptr && kind->schema_for(id) != nullptr;
+}
+
 // The result of loading a data root that holds the given elevation.toml
 // text, through the production registry (P0-03, P1-00 6.1).
 struct TuningLoad {
@@ -50,6 +80,9 @@ inline TuningLoad load_tuning_text(std::string_view elevation_toml) {
     const wd::Kind* kind = registry.find("worldgen");
     if (kind != nullptr && kind->schema_for("hydrology") != nullptr) {
         dir.entries.push_back(wd::MemoryEntry{"hydrology.toml", std::string(HYDROLOGY_TOML), false});
+    }
+    if (kind != nullptr && kind->schema_for("climate") != nullptr) {
+        dir.entries.push_back(wd::MemoryEntry{"climate.toml", std::string(CLIMATE_TOML), false});
     }
     wd::MemoryDataRoot root;
     root.directories.push_back(dir);

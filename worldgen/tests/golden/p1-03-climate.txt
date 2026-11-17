@@ -1,0 +1,676 @@
+# P1-03 climate golden vectors (input layers of generator 0.6.0), generated
+# by worldgen/tests/reference/p1_climate_reference.py golden, an independent
+# exact-integer reference written from docs/specs/p1-03-climate.md, with the
+# input layers from worldgen/tests/reference/p1_hydrology_reference.py (and
+# its elevation from p1_elevation_reference.py).
+# Do not edit by hand; never regenerate to make a C++ test pass.
+#
+# Format: ASCII, LF, one value per line, tokens separated by one space.
+#   case <name> <fixture> <N> <seed> <wind_weights>
+#       starts a case; fixture shipped | small (elevation tuning of P1-01
+#       4.4; hydrology of P1-02 with river_min_area_m2 125000 and flat_tie of
+#       the seed) or random (the 34 x 34 random fixture of P1-03 10.2 number
+#       <seed>, N = 34, no elevation or hydrology stage); climate tuning: the
+#       shipped values of P1-03 4 with wind_weights replaced by the eight
+#       comma-separated values given; the world seed is <seed>
+#   <name> <item> <value>                 one value, items in step order
+# Items, in step order (the test reports the first that differs):
+#   elevation water water_depth coast_dist
+#                P0-04 8 layer hash of each input layer (equal to the
+#                hydrology golden items of the same world)
+#   wind         k_w (C2)
+#   S            SHA-256 of the surface S = elevation + water_depth, int64
+#                little-endian (section 2)
+#   tnoise       SHA-256 of fbm_m(K_temp, X, Y, temp_noise) per cell, raw
+#                int64 (C3, before temp_noise_amp_c)
+#   T            SHA-256 of T per cell, raw int64 (C3, before x 10)
+#   temperature  P0-04 8 layer hash (i16) (C3)
+#   hs           SHA-256 of hs per cell, raw int64 (C4)
+#   q p          SHA-256 of the moisture q and precipitation p per cell, raw
+#                int64 (C5)
+#   rnoise       SHA-256 of fbm_m(K_rain, X, Y, rain_noise) per cell, raw
+#                int64 (C6)
+#   rainfall     P0-04 8 layer hash (u16) (C6)
+#   temperature_range rainfall_range
+#                min,max of each layer over every cell
+#   temperature_c rainfall_mm land_below_0c rain_contrast
+#                the report values of P1-03 9 (P1-00 10.3 rules), spaces
+#                written as "_"
+# small shipped world, wind SE (code 1)
+case shipped-64-s0 shipped 64 0 1,1,1,1,1,1,1,1
+shipped-64-s0 elevation 075e2af60c69e53ea2fc8e2f3e2d1fe0f1764203cfa81f9ea32f37049ffdb9bd
+shipped-64-s0 water 2e9fe70365c05847862a87b2f3dc4748f595d96ffafee15d0ac8c4c5f0dbb64a
+shipped-64-s0 water_depth 2b29fa8418927f342d2e1bd1a2b0204d3a6e07b57ca11936220cb7ac05c3dcda
+shipped-64-s0 coast_dist 6093447c5cfcbd1d310fee372d94756e3f30c881404a746211e4d7e3137ec0c1
+shipped-64-s0 wind 1
+shipped-64-s0 S 14d7a1707494d66c0af14e7222d5a3718a2b7184e2cfbe9ef85ec279e5b5ea80
+shipped-64-s0 tnoise 86dd24a141be0caccca67daae6d8c1594540621ec9fcaa2382072ce5c7c293b7
+shipped-64-s0 T c0825863d72bb4792ba00d721b05f7f3fc493bbfb9cc51dcba9d9163bd88565b
+shipped-64-s0 temperature fe2a4438b0ad7647aaa8bd8e6dc54c33095b656b82ff87b5a0cd3ef48f722c22
+shipped-64-s0 hs e3a3a5ce6ed198858adf5c639ec6dde8386ce9c1b7c40f0ca8f093ca3ae14ba8
+shipped-64-s0 q 5786d3b84d2cc1ce9cfd379ba740e2107740e8fb55672a8a6a7726e20f43760c
+shipped-64-s0 p dd4b04df4af32ca33cb934f410bcc45d80f69cf74b0ff8dfb2e39e20a6726898
+shipped-64-s0 rnoise 9cc036a9ab55ba52390ce67a752debe1544d4d4cf94b9f6daa2f2ab515b9e274
+shipped-64-s0 rainfall 5ab253b345bdba73ec9d8af9425f6f9366d026675c0663e00d7153e8f93ea648
+shipped-64-s0 temperature_range 4,89
+shipped-64-s0 rainfall_range 890,3796
+shipped-64-s0 temperature_c 0.4_2.6_5.4_7.0_8.4
+shipped-64-s0 rainfall_mm 890_912_1749_3225_3796
+shipped-64-s0 land_below_0c 0.0000
+shipped-64-s0 rain_contrast 3.5362
+# N not a power of two, wind SE
+case shipped-48-s3 shipped 48 3 1,1,1,1,1,1,1,1
+shipped-48-s3 elevation 80df6fba9aa7cd4a925bce6899904b36605921c9efab7252e92c559cf05a3296
+shipped-48-s3 water f57b900e9be0f4337cf32dd6bc9380f021fdbba778bb8c668f409400f9c8826a
+shipped-48-s3 water_depth 858ad3df7082f61ce164116e76d71565b71a1ce98077a7ad24e15288ad71bbe1
+shipped-48-s3 coast_dist 12097075aefcc01b3231caa58051eaad53a5489e88e845653646273f37afc17b
+shipped-48-s3 wind 1
+shipped-48-s3 S 0436a29f813463243727ca03bafdb8ab0d0b31bad060cfae68e27eac58dc8fdf
+shipped-48-s3 tnoise a2388c530672f4d263e43fce1e870128451bb39a48a992cf265544f3c79af53d
+shipped-48-s3 T 8e0d567ea6a5d20830a49f31593ee1143543fd9915c8d81401f443f1461dd31b
+shipped-48-s3 temperature 227fdd7714f70ac64425eec0eb132ed7ffa2bf7adb2a2626d324f8bf4dcaca53
+shipped-48-s3 hs 091a1e36fa0255b412833c0e165e21854345b32645327ade81090238ad1b5e2b
+shipped-48-s3 q f8d341d9acb4f49fd57c3cc3dd330e532d59b84b0657802926dd9b3a2739fd4a
+shipped-48-s3 p 9b1a5bcf478eca95cd61b76f4893937c5a8b61bcc14769e1ed2e40123af78167
+shipped-48-s3 rnoise eebcdd0b419635875d2ff0fb9555dc0ee25517069f3d295160c5dbbe1eb7f51a
+shipped-48-s3 rainfall 1c18f785c177863406574406cf5bb6a113dec30ea3facf6ebb9d6f9af95302f5
+shipped-48-s3 temperature_range 8,90
+shipped-48-s3 rainfall_range 908,3354
+shipped-48-s3 temperature_c 0.8_3.3_5.9_7.5_8.4
+shipped-48-s3 rainfall_mm 909_918_1086_2167_3354
+shipped-48-s3 land_below_0c 0.0000
+shipped-48-s3 rain_contrast 2.3606
+# P1-03 10.4 library case, wind SE
+case shipped-128-s0 shipped 128 0 1,1,1,1,1,1,1,1
+shipped-128-s0 elevation e61a87fb6d0151e49cb56de299669d600aca12d4c42652876cb0c5742d0ea812
+shipped-128-s0 water b65542fb026e3dceefbac2e5a9cc4a440959f44c438fe36d42e039db57da27fa
+shipped-128-s0 water_depth bb57dc0838d97bcfc61a2f83c3bb02bf2fb730a530f3fe489fd71d8bf560db54
+shipped-128-s0 coast_dist c4eb82033e2d300425aab8099b17bc17506c3809b433df9bb4ccd62c271af897
+shipped-128-s0 wind 1
+shipped-128-s0 S 95f97ba64d26c18062f8a1b68e335868911028a559026ab5a1e2bbcf7240c6d6
+shipped-128-s0 tnoise 4dd8a188839ea559d4c356bb537943dec86c8fde37bd1f3934871a87a4e33541
+shipped-128-s0 T a335bcda519e94cf2ff95fd9a8258c22c31aeee12da7f3151940bcf04ade8564
+shipped-128-s0 temperature 2dbd2188b25722ce2f9e0195557eb64fd42fd11ab5d56a7d03302693300a983b
+shipped-128-s0 hs c2918576c0d3fcb2f5d65c6f22294ec321ca82d1ee65a1f1f6223bf7c3aaf2e9
+shipped-128-s0 q a076f59fc96a56a7d6ff87733402f175ec820cb920949b5d88bab43618701615
+shipped-128-s0 p 9e78f50b61d213fb14937622e13dc2a97c1a4fabdf3910f1be7b3d7e6c343679
+shipped-128-s0 rnoise 5cd6d15c80d626c0dd92090bf37c422931ac0b67509197f77ee03b4bcbe90302
+shipped-128-s0 rainfall 526317b74ef8e69d7ee17ecff28069791d8fa7eac07b5c0e7a27b229f2278096
+shipped-128-s0 temperature_range -9,89
+shipped-128-s0 rainfall_range 785,6108
+shipped-128-s0 temperature_c -0.9_1.5_5.5_7.0_8.4
+shipped-128-s0 rainfall_mm 785_815_1970_4318_6108
+shipped-128-s0 land_below_0c 0.0256
+shipped-128-s0 rain_contrast 5.2982
+# mountain floor world (P1-01 E5.1), wind SE
+case shipped-128-s9 shipped 128 9 1,1,1,1,1,1,1,1
+shipped-128-s9 elevation 2e9accc34b6240f0c4f559aaca747f37108762ed72bb23de67b11ddbee41f302
+shipped-128-s9 water 52a3bd779413231920cf80ecbf852a858aeda7fbe66e3b581034f8f822b48f64
+shipped-128-s9 water_depth 9028641daf0684ae9c7888f9a93d520d9dd248d38eb0af0541fe2f9d2c7e2146
+shipped-128-s9 coast_dist d781df5197500642f7f0cec4e38a7c9a8d98d64100daf43079cce4e667ea784a
+shipped-128-s9 wind 1
+shipped-128-s9 S ec7dea548899c60bcbe8864351538d335ea795e9832d5a3b3f020de055727a04
+shipped-128-s9 tnoise 25ef23cc56842dd8589f69c61425069901cde2dbbe138e3caecc2df680e7e172
+shipped-128-s9 T 05b4e5981cfb7759bf206bbdb5f976cb824f2301a4f4d3f1fddb12262eeb8583
+shipped-128-s9 temperature afb25e214516932b154df2e7a58a440a43fd80ae3fb09df55704408d698ac5df
+shipped-128-s9 hs bdd6c1491d897e2e5f1b63347bb4464bcd11e8c0e157180b2761bc819816aa41
+shipped-128-s9 q e487e14409be35e2e2f44ba19dc9eeb154bda65d847e57348e808a339006001e
+shipped-128-s9 p 0cef4f83c8efbbb06d3424a75e909670a4964e597cd0f816b7bfa5d93221ec67
+shipped-128-s9 rnoise b1788a8f346627d22d03fe02ab0920753c2ee661bd3c76dad476b172efa540f1
+shipped-128-s9 rainfall 5a5faf09eee5859635fd055986f14e51953eb810ae5271d0a260e9ae45d6bc1d
+shipped-128-s9 temperature_range -20,90
+shipped-128-s9 rainfall_range 753,7629
+shipped-128-s9 temperature_c -2.0_1.2_4.9_7.8_8.6
+shipped-128-s9 rainfall_mm 753_805_954_5069_7629
+shipped-128-s9 land_below_0c 0.0403
+shipped-128-s9 rain_contrast 6.2969
+# seed 42, wind N (code 6)
+case shipped-128-s42 shipped 128 42 1,1,1,1,1,1,1,1
+shipped-128-s42 elevation 58558e4a758a6c13e5d95f67ab3113f5ae6925d64b01efc51601dafe79496f68
+shipped-128-s42 water 8000aaf245727deb6895a4613e9332a3900f0ee3ef9acc6856c70b0957c1caa4
+shipped-128-s42 water_depth 81fb2ae66e914752be6ce5ea9f9f08a442a2ce3b551090fc52c38df0d99ae53e
+shipped-128-s42 coast_dist 04bc4cb6a866a629446c3b58d64fa0b414aea97dcbb0af8602c63426e7bf10cf
+shipped-128-s42 wind 6
+shipped-128-s42 S e5f8dfbfc2b142020c0a8be730a2e9cf5456ea37a7afbad67caf96f821b4961a
+shipped-128-s42 tnoise 47947e6c12a2ec6bb0c7d8e62c020dde253983944060a8556e063925a4987ea0
+shipped-128-s42 T 6aaaf554bcacf6a25b31f46c67183b72db6e07b71cbefa23b860eab1e0a60cbb
+shipped-128-s42 temperature e877f37def304d6cfc87113d5ed25ea6419a82c65cb22618ceaa5894df666814
+shipped-128-s42 hs 1cca2cd62147963308b3c617c3320d8ab22930d5bd35ad4fe33b5d17b16d6a67
+shipped-128-s42 q bd8d33a6ac51588e154c4874e4bd3c0bba96e4f4cc348df68ee1c991b7612e72
+shipped-128-s42 p a47e4cf8492f88236ae1c24baa457c017077d739244f187bf8cd01a09ecab581
+shipped-128-s42 rnoise d1190feed802d98879fd95653c6be7c822426c470a9973b46bd63f76afaac2c5
+shipped-128-s42 rainfall 2673ee66f8d5bc654899779dadf6596461f02b82b9eb91d0a810a3bf786d2eb1
+shipped-128-s42 temperature_range -24,93
+shipped-128-s42 rainfall_range 899,7143
+shipped-128-s42 temperature_c -2.4_1.8_6.0_7.4_8.8
+shipped-128-s42 rainfall_mm 899_934_1016_3901_7143
+shipped-128-s42 land_below_0c 0.0338
+shipped-128-s42 rain_contrast 4.1767
+# small-map fixture, one lake, wind SE
+case small-128-s0 small 128 0 1,1,1,1,1,1,1,1
+small-128-s0 elevation 50eb12f852f5f38da14980b857df34fe422781a4d1b576f84f79b05a4625526a
+small-128-s0 water a8c6ed2f1bd3485b71ae7abc6bc222f4d71ae09473fa4b7f2e1a59bbb21dab22
+small-128-s0 water_depth 52863fa712af591bcd661524a743937095a8b176e179861d605920da148ce6fb
+small-128-s0 coast_dist c4eb82033e2d300425aab8099b17bc17506c3809b433df9bb4ccd62c271af897
+small-128-s0 wind 1
+small-128-s0 S a367f444d9862025b660b96cb2839788f9f819a6ecb5216313d9c5dad7e66025
+small-128-s0 tnoise 4dd8a188839ea559d4c356bb537943dec86c8fde37bd1f3934871a87a4e33541
+small-128-s0 T 6870a61453b05a9e8d6f6cdecbe20afb66ac2aa04796a2378b386e133baa0270
+small-128-s0 temperature 20a044e258f951f92877b0797645fcb65b7082809a3411ed46779b1cc40fefbd
+small-128-s0 hs 547ea9a142adb06bb3eaf162ed9dbfcf6f91c7b8a90ded544c292c71879be6ce
+small-128-s0 q cc4875b9fdd61b9a9cfb9510feb60c33e099cc10071cf8191cee826afbbc4231
+small-128-s0 p 52f5be01ae86dbed2f687ce8b68457290cb880670e86edb6539d2dfa7f694d8a
+small-128-s0 rnoise 5cd6d15c80d626c0dd92090bf37c422931ac0b67509197f77ee03b4bcbe90302
+small-128-s0 rainfall b81c071733b412f393486444b247d6be33682dc90a1a63ede159609b7237ae6b
+small-128-s0 temperature_range -9,89
+small-128-s0 rainfall_range 785,6108
+small-128-s0 temperature_c -0.9_1.5_5.5_7.0_8.4
+small-128-s0 rainfall_mm 785_815_1970_4318_6108
+small-128-s0 land_below_0c 0.0256
+small-128-s0 rain_contrast 5.2982
+# small-map fixture, mountain floor, wind SW (code 3)
+case small-128-s1 small 128 1 1,1,1,1,1,1,1,1
+small-128-s1 elevation 6709812094b96b3d7e384f1665d5c82ecf71aa18485e6559cd3d84956eead9e7
+small-128-s1 water 13374b27f726a46209e5f5239bb88ae1361cfeefdbf4784ec601d7485c228185
+small-128-s1 water_depth 82b17553e373784e53b54be02e3424c145bc916a5d38c47ee439271150869f23
+small-128-s1 coast_dist 7e67efedc2bb092f5450a0f794ac92e40d67a0ee8e03a55a1ae28abbe5a3a63d
+small-128-s1 wind 3
+small-128-s1 S fea756ab23e489e4a69ee6c80ebe8671fcc85d6c555f56133fa31c5fc79a814a
+small-128-s1 tnoise 46d2a05c54f3ea615ae9638576f62def8a3723c7d3720afa27c00706c86361fc
+small-128-s1 T bbeb1a9d979e20b0d032452b323144dfb5bfd08961999cff46887bd5f03bec8b
+small-128-s1 temperature f5aa61eeedd68d5d558eeac01f3801f0b5aeb6b558ee39766b3fa217cd7d8318
+small-128-s1 hs 0571cdd469818b6eeac38286f3ed842a15b91099441ca126d21a71d28ddf2817
+small-128-s1 q 8db56fe39dcabf00e31e56647b9bb10e622a8e167511526b33fa9a10abed4764
+small-128-s1 p e013d0c1fe4411e8d216296a036b5f8645f08641ccd155443b09b0ba9d2be470
+small-128-s1 rnoise 64f68db5e4fee2c1de44130c35b88e501f5e75caa3f7d510f083ce6081ddd12e
+small-128-s1 rainfall c8368cfd277ca93edad99ee14e8295cd6809c6a5115b74d58a42e71661568a5f
+small-128-s1 temperature_range -29,88
+small-128-s1 rainfall_range 706,7424
+small-128-s1 temperature_c -2.9_1.7_5.9_7.1_8.3
+small-128-s1 rainfall_mm 706_732_1473_5412_7424
+small-128-s1 land_below_0c 0.0486
+small-128-s1 rain_contrast 7.3934
+# small-map fixture, two lakes, wind W (code 4)
+case small-128-s2 small 128 2 1,1,1,1,1,1,1,1
+small-128-s2 elevation bf92cf2e455236eba3ba33dea43f0363af1ab3315ad34a9989afbbe45ce4e4b0
+small-128-s2 water c8798d36dbf5eba5214f71e9e4db727600d45f83d0d0dfda1b24784411a651aa
+small-128-s2 water_depth 9e532fb0c413a660f075e4779796e421b3fafa141e030263a7e00cbe5ac1e60c
+small-128-s2 coast_dist 854bd0d9fba28d2d65d4ac0dd4bac03b3290b4d0f95553c3eb9b4903af3d6825
+small-128-s2 wind 4
+small-128-s2 S 2a0b8608d12a80c85291ea7b1282c7c1263a4328b73f0ff9a285c2a1ba032435
+small-128-s2 tnoise 0bd695c66c62fd24718260ec5ec4e9a9a339fc63a4dffc92c4f8368ae67110aa
+small-128-s2 T 5547442d163f8dcfbbb9a40c4c15b47e6cf492aca5bd56e401ce9a29dbd91ec4
+small-128-s2 temperature c2074c29aeb6054cb2e741cd9148699a899678242bd549f1fe0d43d32f59474d
+small-128-s2 hs dc220ef3a39843df9b339721f41a61d86754694a2923f62c4d5ae1eabfe77a75
+small-128-s2 q 21a5073dbcf02f3be1ab3a223d4a3574607ce4effdfca54be4b62447d0578a4e
+small-128-s2 p 1276b7625a40efcd247ab29db652a147b0bcba554ac323aa59d486409068412a
+small-128-s2 rnoise b8927e8e66152d4b3f918005cdc42a87646312c5fed22b1c5125c48a22b06902
+small-128-s2 rainfall a93c5b0a2773677682face1eba2b0705de148ea7874f1d3039e295cfb391bb07
+small-128-s2 temperature_range -15,89
+small-128-s2 rainfall_range 818,5303
+small-128-s2 temperature_c -1.5_2.0_5.2_6.8_8.0
+small-128-s2 rainfall_mm 818_837_937_3545_5303
+small-128-s2 land_below_0c 0.0068
+small-128-s2 rain_contrast 4.2354
+# N = 256
+case shipped-256-s0 shipped 256 0 1,1,1,1,1,1,1,1
+shipped-256-s0 elevation ead406b2867e0f54ca6c8b88aed5a009468f0fbba870e69650eac563bb3ef84b
+shipped-256-s0 water ad455f518f5a7d336e282d8c3a081b4ce6f9fc1dce6a4d7ad7fc7f11b8772465
+shipped-256-s0 water_depth 6cb0481aea5da2cc367d515ec21669c06bbd62c625162cc33565972683d7ff05
+shipped-256-s0 coast_dist a346e7604bf3dab1a358d883f3072d508b9e61ad3603d3af5a8c3ad3fcabab61
+shipped-256-s0 wind 1
+shipped-256-s0 S b04c969bcd014650c549a481a57610356773a80d21cd90ad6360241c540d5b56
+shipped-256-s0 tnoise 200bee62af61acc7b73bda7f43646577434b30e747a147ea41ef4e1f092f74b5
+shipped-256-s0 T e50033435d98f620ae65c99b9a7d623db013957c8166346a0e5010168fdffe97
+shipped-256-s0 temperature 98d8421e41b079032869d0c94458783ede5be11909016b4a2a4b58ce33f6aaa7
+shipped-256-s0 hs 8c5dc9841fe9c8362f97fce4471205f38eee22ca5a8bbe1472bef67b761125a9
+shipped-256-s0 q 5f0479b621acff43f95b53081b86a221cf6465267c71cc0cb8fcfc5116392d42
+shipped-256-s0 p ce8937ce02c521423da5b195c4151a3040b8e89070ed468d04943c0e0d34f6bb
+shipped-256-s0 rnoise 641314e1364d0ed736fb30331b66e3f2a3df873c3cf849c92d50be6ae622ce8f
+shipped-256-s0 rainfall 2947d36091e7bfe83e997c6075b3436d45b3e89d6916a90472d1e11800856e82
+shipped-256-s0 temperature_range -12,91
+shipped-256-s0 rainfall_range 703,5717
+shipped-256-s0 temperature_c -1.2_1.4_5.6_6.8_8.5
+shipped-256-s0 rainfall_mm 703_785_1250_4144_5717
+shipped-256-s0 land_below_0c 0.0278
+shipped-256-s0 rain_contrast 5.2790
+# wind forced to code 0 by wind_weights
+case shipped-64-s0-w0 shipped 64 0 5,0,0,0,0,0,0,0
+shipped-64-s0-w0 elevation 075e2af60c69e53ea2fc8e2f3e2d1fe0f1764203cfa81f9ea32f37049ffdb9bd
+shipped-64-s0-w0 water 2e9fe70365c05847862a87b2f3dc4748f595d96ffafee15d0ac8c4c5f0dbb64a
+shipped-64-s0-w0 water_depth 2b29fa8418927f342d2e1bd1a2b0204d3a6e07b57ca11936220cb7ac05c3dcda
+shipped-64-s0-w0 coast_dist 6093447c5cfcbd1d310fee372d94756e3f30c881404a746211e4d7e3137ec0c1
+shipped-64-s0-w0 wind 0
+shipped-64-s0-w0 S 14d7a1707494d66c0af14e7222d5a3718a2b7184e2cfbe9ef85ec279e5b5ea80
+shipped-64-s0-w0 tnoise 86dd24a141be0caccca67daae6d8c1594540621ec9fcaa2382072ce5c7c293b7
+shipped-64-s0-w0 T c0825863d72bb4792ba00d721b05f7f3fc493bbfb9cc51dcba9d9163bd88565b
+shipped-64-s0-w0 temperature fe2a4438b0ad7647aaa8bd8e6dc54c33095b656b82ff87b5a0cd3ef48f722c22
+shipped-64-s0-w0 hs e3a3a5ce6ed198858adf5c639ec6dde8386ce9c1b7c40f0ca8f093ca3ae14ba8
+shipped-64-s0-w0 q cde07b404a7e79765ab552f057d93205b618ebf20a17af47c62d6d603fc19bfa
+shipped-64-s0-w0 p d52020b700ed78594e66e375af9f26f64a97e9ccc7f0c2e446c8ba3b1a25f748
+shipped-64-s0-w0 rnoise 9cc036a9ab55ba52390ce67a752debe1544d4d4cf94b9f6daa2f2ab515b9e274
+shipped-64-s0-w0 rainfall 5407657b0d78e14a3714933251435cd75da401a3038783ae19b080bffb477bed
+shipped-64-s0-w0 temperature_range 4,89
+shipped-64-s0-w0 rainfall_range 892,4569
+shipped-64-s0-w0 temperature_c 0.4_2.6_5.4_7.0_8.4
+shipped-64-s0-w0 rainfall_mm 892_908_1209_3170_4569
+shipped-64-s0-w0 land_below_0c 0.0000
+shipped-64-s0-w0 rain_contrast 3.4912
+# wind forced to code 1 by wind_weights
+case shipped-64-s0-w1 shipped 64 0 0,5,0,0,0,0,0,0
+shipped-64-s0-w1 elevation 075e2af60c69e53ea2fc8e2f3e2d1fe0f1764203cfa81f9ea32f37049ffdb9bd
+shipped-64-s0-w1 water 2e9fe70365c05847862a87b2f3dc4748f595d96ffafee15d0ac8c4c5f0dbb64a
+shipped-64-s0-w1 water_depth 2b29fa8418927f342d2e1bd1a2b0204d3a6e07b57ca11936220cb7ac05c3dcda
+shipped-64-s0-w1 coast_dist 6093447c5cfcbd1d310fee372d94756e3f30c881404a746211e4d7e3137ec0c1
+shipped-64-s0-w1 wind 1
+shipped-64-s0-w1 S 14d7a1707494d66c0af14e7222d5a3718a2b7184e2cfbe9ef85ec279e5b5ea80
+shipped-64-s0-w1 tnoise 86dd24a141be0caccca67daae6d8c1594540621ec9fcaa2382072ce5c7c293b7
+shipped-64-s0-w1 T c0825863d72bb4792ba00d721b05f7f3fc493bbfb9cc51dcba9d9163bd88565b
+shipped-64-s0-w1 temperature fe2a4438b0ad7647aaa8bd8e6dc54c33095b656b82ff87b5a0cd3ef48f722c22
+shipped-64-s0-w1 hs e3a3a5ce6ed198858adf5c639ec6dde8386ce9c1b7c40f0ca8f093ca3ae14ba8
+shipped-64-s0-w1 q 5786d3b84d2cc1ce9cfd379ba740e2107740e8fb55672a8a6a7726e20f43760c
+shipped-64-s0-w1 p dd4b04df4af32ca33cb934f410bcc45d80f69cf74b0ff8dfb2e39e20a6726898
+shipped-64-s0-w1 rnoise 9cc036a9ab55ba52390ce67a752debe1544d4d4cf94b9f6daa2f2ab515b9e274
+shipped-64-s0-w1 rainfall 5ab253b345bdba73ec9d8af9425f6f9366d026675c0663e00d7153e8f93ea648
+shipped-64-s0-w1 temperature_range 4,89
+shipped-64-s0-w1 rainfall_range 890,3796
+shipped-64-s0-w1 temperature_c 0.4_2.6_5.4_7.0_8.4
+shipped-64-s0-w1 rainfall_mm 890_912_1749_3225_3796
+shipped-64-s0-w1 land_below_0c 0.0000
+shipped-64-s0-w1 rain_contrast 3.5362
+# wind forced to code 2 by wind_weights
+case shipped-64-s0-w2 shipped 64 0 0,0,5,0,0,0,0,0
+shipped-64-s0-w2 elevation 075e2af60c69e53ea2fc8e2f3e2d1fe0f1764203cfa81f9ea32f37049ffdb9bd
+shipped-64-s0-w2 water 2e9fe70365c05847862a87b2f3dc4748f595d96ffafee15d0ac8c4c5f0dbb64a
+shipped-64-s0-w2 water_depth 2b29fa8418927f342d2e1bd1a2b0204d3a6e07b57ca11936220cb7ac05c3dcda
+shipped-64-s0-w2 coast_dist 6093447c5cfcbd1d310fee372d94756e3f30c881404a746211e4d7e3137ec0c1
+shipped-64-s0-w2 wind 2
+shipped-64-s0-w2 S 14d7a1707494d66c0af14e7222d5a3718a2b7184e2cfbe9ef85ec279e5b5ea80
+shipped-64-s0-w2 tnoise 86dd24a141be0caccca67daae6d8c1594540621ec9fcaa2382072ce5c7c293b7
+shipped-64-s0-w2 T c0825863d72bb4792ba00d721b05f7f3fc493bbfb9cc51dcba9d9163bd88565b
+shipped-64-s0-w2 temperature fe2a4438b0ad7647aaa8bd8e6dc54c33095b656b82ff87b5a0cd3ef48f722c22
+shipped-64-s0-w2 hs e3a3a5ce6ed198858adf5c639ec6dde8386ce9c1b7c40f0ca8f093ca3ae14ba8
+shipped-64-s0-w2 q 9f3ad28d40e0affc8adb8b76c354f195a06ea7f650251e4fe6625fb5c4705db6
+shipped-64-s0-w2 p 4014242c7a46a1e831c3fdf13fd4d4606e0f4dca31b3b2c3ff2f055202686dfe
+shipped-64-s0-w2 rnoise 9cc036a9ab55ba52390ce67a752debe1544d4d4cf94b9f6daa2f2ab515b9e274
+shipped-64-s0-w2 rainfall 88c3a303e4434db5934f842be7eed22bed68dbdfe92050b273e5007d3e481a56
+shipped-64-s0-w2 temperature_range 4,89
+shipped-64-s0-w2 rainfall_range 904,4177
+shipped-64-s0-w2 temperature_c 0.4_2.6_5.4_7.0_8.4
+shipped-64-s0-w2 rainfall_mm 904_917_1512_3308_4177
+shipped-64-s0-w2 land_below_0c 0.0000
+shipped-64-s0-w2 rain_contrast 3.6074
+# wind forced to code 3 by wind_weights
+case shipped-64-s0-w3 shipped 64 0 0,0,0,5,0,0,0,0
+shipped-64-s0-w3 elevation 075e2af60c69e53ea2fc8e2f3e2d1fe0f1764203cfa81f9ea32f37049ffdb9bd
+shipped-64-s0-w3 water 2e9fe70365c05847862a87b2f3dc4748f595d96ffafee15d0ac8c4c5f0dbb64a
+shipped-64-s0-w3 water_depth 2b29fa8418927f342d2e1bd1a2b0204d3a6e07b57ca11936220cb7ac05c3dcda
+shipped-64-s0-w3 coast_dist 6093447c5cfcbd1d310fee372d94756e3f30c881404a746211e4d7e3137ec0c1
+shipped-64-s0-w3 wind 3
+shipped-64-s0-w3 S 14d7a1707494d66c0af14e7222d5a3718a2b7184e2cfbe9ef85ec279e5b5ea80
+shipped-64-s0-w3 tnoise 86dd24a141be0caccca67daae6d8c1594540621ec9fcaa2382072ce5c7c293b7
+shipped-64-s0-w3 T c0825863d72bb4792ba00d721b05f7f3fc493bbfb9cc51dcba9d9163bd88565b
+shipped-64-s0-w3 temperature fe2a4438b0ad7647aaa8bd8e6dc54c33095b656b82ff87b5a0cd3ef48f722c22
+shipped-64-s0-w3 hs e3a3a5ce6ed198858adf5c639ec6dde8386ce9c1b7c40f0ca8f093ca3ae14ba8
+shipped-64-s0-w3 q 67b8c91dd4560fd27ed7bc34b4c50f3906bece5754dc8b46e42cf0c1c7487a27
+shipped-64-s0-w3 p 3c6e33b8520c855a31acb98467d42875fdf35a5afd08bd74b50ba61ce59e3f45
+shipped-64-s0-w3 rnoise 9cc036a9ab55ba52390ce67a752debe1544d4d4cf94b9f6daa2f2ab515b9e274
+shipped-64-s0-w3 rainfall b25c6c6b51f998a52a1c2b3db249a33bdaec70721803a826952d00e9cc17a295
+shipped-64-s0-w3 temperature_range 4,89
+shipped-64-s0-w3 rainfall_range 891,4031
+shipped-64-s0-w3 temperature_c 0.4_2.6_5.4_7.0_8.4
+shipped-64-s0-w3 rainfall_mm 891_904_969_3336_4031
+shipped-64-s0-w3 land_below_0c 0.0000
+shipped-64-s0-w3 rain_contrast 3.6903
+# wind forced to code 4 by wind_weights
+case shipped-64-s0-w4 shipped 64 0 0,0,0,0,5,0,0,0
+shipped-64-s0-w4 elevation 075e2af60c69e53ea2fc8e2f3e2d1fe0f1764203cfa81f9ea32f37049ffdb9bd
+shipped-64-s0-w4 water 2e9fe70365c05847862a87b2f3dc4748f595d96ffafee15d0ac8c4c5f0dbb64a
+shipped-64-s0-w4 water_depth 2b29fa8418927f342d2e1bd1a2b0204d3a6e07b57ca11936220cb7ac05c3dcda
+shipped-64-s0-w4 coast_dist 6093447c5cfcbd1d310fee372d94756e3f30c881404a746211e4d7e3137ec0c1
+shipped-64-s0-w4 wind 4
+shipped-64-s0-w4 S 14d7a1707494d66c0af14e7222d5a3718a2b7184e2cfbe9ef85ec279e5b5ea80
+shipped-64-s0-w4 tnoise 86dd24a141be0caccca67daae6d8c1594540621ec9fcaa2382072ce5c7c293b7
+shipped-64-s0-w4 T c0825863d72bb4792ba00d721b05f7f3fc493bbfb9cc51dcba9d9163bd88565b
+shipped-64-s0-w4 temperature fe2a4438b0ad7647aaa8bd8e6dc54c33095b656b82ff87b5a0cd3ef48f722c22
+shipped-64-s0-w4 hs e3a3a5ce6ed198858adf5c639ec6dde8386ce9c1b7c40f0ca8f093ca3ae14ba8
+shipped-64-s0-w4 q f11298fdffd15393348f0cc91be480eea8d673c0fa7845a72032de47a7f864ae
+shipped-64-s0-w4 p 323c447b2152c2cd3e48b25b94ea64dceebfd681e790011f3cd24141e5793bf8
+shipped-64-s0-w4 rnoise 9cc036a9ab55ba52390ce67a752debe1544d4d4cf94b9f6daa2f2ab515b9e274
+shipped-64-s0-w4 rainfall 6e532eb63c618c1e51a5f63e0a299f70b1ee10cc49f5b7e4f898dfe07d10a3e6
+shipped-64-s0-w4 temperature_range 4,89
+shipped-64-s0-w4 rainfall_range 887,4783
+shipped-64-s0-w4 temperature_c 0.4_2.6_5.4_7.0_8.4
+shipped-64-s0-w4 rainfall_mm 887_899_958_2541_4783
+shipped-64-s0-w4 land_below_0c 0.0000
+shipped-64-s0-w4 rain_contrast 2.8265
+# wind forced to code 5 by wind_weights
+case shipped-64-s0-w5 shipped 64 0 0,0,0,0,0,5,0,0
+shipped-64-s0-w5 elevation 075e2af60c69e53ea2fc8e2f3e2d1fe0f1764203cfa81f9ea32f37049ffdb9bd
+shipped-64-s0-w5 water 2e9fe70365c05847862a87b2f3dc4748f595d96ffafee15d0ac8c4c5f0dbb64a
+shipped-64-s0-w5 water_depth 2b29fa8418927f342d2e1bd1a2b0204d3a6e07b57ca11936220cb7ac05c3dcda
+shipped-64-s0-w5 coast_dist 6093447c5cfcbd1d310fee372d94756e3f30c881404a746211e4d7e3137ec0c1
+shipped-64-s0-w5 wind 5
+shipped-64-s0-w5 S 14d7a1707494d66c0af14e7222d5a3718a2b7184e2cfbe9ef85ec279e5b5ea80
+shipped-64-s0-w5 tnoise 86dd24a141be0caccca67daae6d8c1594540621ec9fcaa2382072ce5c7c293b7
+shipped-64-s0-w5 T c0825863d72bb4792ba00d721b05f7f3fc493bbfb9cc51dcba9d9163bd88565b
+shipped-64-s0-w5 temperature fe2a4438b0ad7647aaa8bd8e6dc54c33095b656b82ff87b5a0cd3ef48f722c22
+shipped-64-s0-w5 hs e3a3a5ce6ed198858adf5c639ec6dde8386ce9c1b7c40f0ca8f093ca3ae14ba8
+shipped-64-s0-w5 q 3a772c2de58632c32517d9bcd8e86891453617433c55d8530bc4d948a798c0f9
+shipped-64-s0-w5 p 70a14c5442577ed3d48d93e395dc72635d39ff6e48e1d2b84caf4517c9d4cb55
+shipped-64-s0-w5 rnoise 9cc036a9ab55ba52390ce67a752debe1544d4d4cf94b9f6daa2f2ab515b9e274
+shipped-64-s0-w5 rainfall b29337a6ebe2386a5ac3281a0c268dda8b92084e6cdd3096308d74a809c26a31
+shipped-64-s0-w5 temperature_range 4,89
+shipped-64-s0-w5 rainfall_range 896,4586
+shipped-64-s0-w5 temperature_c 0.4_2.6_5.4_7.0_8.4
+shipped-64-s0-w5 rainfall_mm 896_907_931_2740_4586
+shipped-64-s0-w5 land_below_0c 0.0000
+shipped-64-s0-w5 rain_contrast 3.0209
+# wind forced to code 6 by wind_weights
+case shipped-64-s0-w6 shipped 64 0 0,0,0,0,0,0,5,0
+shipped-64-s0-w6 elevation 075e2af60c69e53ea2fc8e2f3e2d1fe0f1764203cfa81f9ea32f37049ffdb9bd
+shipped-64-s0-w6 water 2e9fe70365c05847862a87b2f3dc4748f595d96ffafee15d0ac8c4c5f0dbb64a
+shipped-64-s0-w6 water_depth 2b29fa8418927f342d2e1bd1a2b0204d3a6e07b57ca11936220cb7ac05c3dcda
+shipped-64-s0-w6 coast_dist 6093447c5cfcbd1d310fee372d94756e3f30c881404a746211e4d7e3137ec0c1
+shipped-64-s0-w6 wind 6
+shipped-64-s0-w6 S 14d7a1707494d66c0af14e7222d5a3718a2b7184e2cfbe9ef85ec279e5b5ea80
+shipped-64-s0-w6 tnoise 86dd24a141be0caccca67daae6d8c1594540621ec9fcaa2382072ce5c7c293b7
+shipped-64-s0-w6 T c0825863d72bb4792ba00d721b05f7f3fc493bbfb9cc51dcba9d9163bd88565b
+shipped-64-s0-w6 temperature fe2a4438b0ad7647aaa8bd8e6dc54c33095b656b82ff87b5a0cd3ef48f722c22
+shipped-64-s0-w6 hs e3a3a5ce6ed198858adf5c639ec6dde8386ce9c1b7c40f0ca8f093ca3ae14ba8
+shipped-64-s0-w6 q f4e3412db3efd27b396fbc2457a9ed9039ae19e0846ae9fdccb666801156a030
+shipped-64-s0-w6 p 8585edf18ae8b4b179cb361d53bfeb86767f577a3f52b5d8a7e572f8b81d2725
+shipped-64-s0-w6 rnoise 9cc036a9ab55ba52390ce67a752debe1544d4d4cf94b9f6daa2f2ab515b9e274
+shipped-64-s0-w6 rainfall 10f9c9ea81283e3408ea2c01c293131ca637b6899b9432bc8ddbb114344c329b
+shipped-64-s0-w6 temperature_range 4,89
+shipped-64-s0-w6 rainfall_range 894,4188
+shipped-64-s0-w6 temperature_c 0.4_2.6_5.4_7.0_8.4
+shipped-64-s0-w6 rainfall_mm 894_901_943_2443_4188
+shipped-64-s0-w6 land_below_0c 0.0000
+shipped-64-s0-w6 rain_contrast 2.7114
+# wind forced to code 7 by wind_weights
+case shipped-64-s0-w7 shipped 64 0 0,0,0,0,0,0,0,5
+shipped-64-s0-w7 elevation 075e2af60c69e53ea2fc8e2f3e2d1fe0f1764203cfa81f9ea32f37049ffdb9bd
+shipped-64-s0-w7 water 2e9fe70365c05847862a87b2f3dc4748f595d96ffafee15d0ac8c4c5f0dbb64a
+shipped-64-s0-w7 water_depth 2b29fa8418927f342d2e1bd1a2b0204d3a6e07b57ca11936220cb7ac05c3dcda
+shipped-64-s0-w7 coast_dist 6093447c5cfcbd1d310fee372d94756e3f30c881404a746211e4d7e3137ec0c1
+shipped-64-s0-w7 wind 7
+shipped-64-s0-w7 S 14d7a1707494d66c0af14e7222d5a3718a2b7184e2cfbe9ef85ec279e5b5ea80
+shipped-64-s0-w7 tnoise 86dd24a141be0caccca67daae6d8c1594540621ec9fcaa2382072ce5c7c293b7
+shipped-64-s0-w7 T c0825863d72bb4792ba00d721b05f7f3fc493bbfb9cc51dcba9d9163bd88565b
+shipped-64-s0-w7 temperature fe2a4438b0ad7647aaa8bd8e6dc54c33095b656b82ff87b5a0cd3ef48f722c22
+shipped-64-s0-w7 hs e3a3a5ce6ed198858adf5c639ec6dde8386ce9c1b7c40f0ca8f093ca3ae14ba8
+shipped-64-s0-w7 q b388d25bca27b534096cfc4c1bf6c93d6748a96e7c5a17f648085ea6b80d8c5e
+shipped-64-s0-w7 p 7159b61d9b5c851296bd18d7ccdbf24f82940278f6a5e2a5c0a1ebe599e9aca2
+shipped-64-s0-w7 rnoise 9cc036a9ab55ba52390ce67a752debe1544d4d4cf94b9f6daa2f2ab515b9e274
+shipped-64-s0-w7 rainfall 7288e0424d5303a4f29e187279d2afe5b56cac0c47ee6a7c7da74afdf9fd3ecc
+shipped-64-s0-w7 temperature_range 4,89
+shipped-64-s0-w7 rainfall_range 902,3710
+shipped-64-s0-w7 temperature_c 0.4_2.6_5.4_7.0_8.4
+shipped-64-s0-w7 rainfall_mm 902_911_1095_2890_3710
+shipped-64-s0-w7 land_below_0c 0.0000
+shipped-64-s0-w7 rain_contrast 3.1723
+# two lakes, wind forced to code 0
+case small-128-s2-w0 small 128 2 5,0,0,0,0,0,0,0
+small-128-s2-w0 elevation bf92cf2e455236eba3ba33dea43f0363af1ab3315ad34a9989afbbe45ce4e4b0
+small-128-s2-w0 water c8798d36dbf5eba5214f71e9e4db727600d45f83d0d0dfda1b24784411a651aa
+small-128-s2-w0 water_depth 9e532fb0c413a660f075e4779796e421b3fafa141e030263a7e00cbe5ac1e60c
+small-128-s2-w0 coast_dist 854bd0d9fba28d2d65d4ac0dd4bac03b3290b4d0f95553c3eb9b4903af3d6825
+small-128-s2-w0 wind 0
+small-128-s2-w0 S 2a0b8608d12a80c85291ea7b1282c7c1263a4328b73f0ff9a285c2a1ba032435
+small-128-s2-w0 tnoise 0bd695c66c62fd24718260ec5ec4e9a9a339fc63a4dffc92c4f8368ae67110aa
+small-128-s2-w0 T 5547442d163f8dcfbbb9a40c4c15b47e6cf492aca5bd56e401ce9a29dbd91ec4
+small-128-s2-w0 temperature c2074c29aeb6054cb2e741cd9148699a899678242bd549f1fe0d43d32f59474d
+small-128-s2-w0 hs dc220ef3a39843df9b339721f41a61d86754694a2923f62c4d5ae1eabfe77a75
+small-128-s2-w0 q 1a7b2afe6f7a77e7c66bbb7ba921bd09f253f8c6c703366e458f9be46b5561cf
+small-128-s2-w0 p 6e1a105bd2e0cd684258672740a8d2522c2dfdc71b0ce3ac1b7aa3df66b8d7a4
+small-128-s2-w0 rnoise b8927e8e66152d4b3f918005cdc42a87646312c5fed22b1c5125c48a22b06902
+small-128-s2-w0 rainfall aa07f94aff105f6c92bbaa28d1483d306c0dfeb932589eaf34675558993281a3
+small-128-s2-w0 temperature_range -15,89
+small-128-s2-w0 rainfall_range 775,6876
+small-128-s2-w0 temperature_c -1.5_2.0_5.2_6.8_8.0
+small-128-s2-w0 rainfall_mm 775_802_1025_4303_6876
+small-128-s2-w0 land_below_0c 0.0068
+small-128-s2-w0 rain_contrast 5.3653
+# two lakes, wind forced to code 2
+case small-128-s2-w2 small 128 2 0,0,5,0,0,0,0,0
+small-128-s2-w2 elevation bf92cf2e455236eba3ba33dea43f0363af1ab3315ad34a9989afbbe45ce4e4b0
+small-128-s2-w2 water c8798d36dbf5eba5214f71e9e4db727600d45f83d0d0dfda1b24784411a651aa
+small-128-s2-w2 water_depth 9e532fb0c413a660f075e4779796e421b3fafa141e030263a7e00cbe5ac1e60c
+small-128-s2-w2 coast_dist 854bd0d9fba28d2d65d4ac0dd4bac03b3290b4d0f95553c3eb9b4903af3d6825
+small-128-s2-w2 wind 2
+small-128-s2-w2 S 2a0b8608d12a80c85291ea7b1282c7c1263a4328b73f0ff9a285c2a1ba032435
+small-128-s2-w2 tnoise 0bd695c66c62fd24718260ec5ec4e9a9a339fc63a4dffc92c4f8368ae67110aa
+small-128-s2-w2 T 5547442d163f8dcfbbb9a40c4c15b47e6cf492aca5bd56e401ce9a29dbd91ec4
+small-128-s2-w2 temperature c2074c29aeb6054cb2e741cd9148699a899678242bd549f1fe0d43d32f59474d
+small-128-s2-w2 hs dc220ef3a39843df9b339721f41a61d86754694a2923f62c4d5ae1eabfe77a75
+small-128-s2-w2 q eaab750136edb240a188bab4efb3c1fb5ddc8dffadf21adc267853946035c718
+small-128-s2-w2 p 4340956a6c3509a3278593b5ef85b1c18f2319e34dec2c3a7735308f2e7486e9
+small-128-s2-w2 rnoise b8927e8e66152d4b3f918005cdc42a87646312c5fed22b1c5125c48a22b06902
+small-128-s2-w2 rainfall bd434a64c60215a1d9226b38c2de657f19929c974747f5b0fbaa6091947c1be2
+small-128-s2-w2 temperature_range -15,89
+small-128-s2-w2 rainfall_range 780,7104
+small-128-s2-w2 temperature_c -1.5_2.0_5.2_6.8_8.0
+small-128-s2-w2 rainfall_mm 780_819_1365_5000_7104
+small-128-s2-w2 land_below_0c 0.0068
+small-128-s2-w2 rain_contrast 6.1050
+# two lakes, wind forced to code 5
+case small-128-s2-w5 small 128 2 0,0,0,0,0,5,0,0
+small-128-s2-w5 elevation bf92cf2e455236eba3ba33dea43f0363af1ab3315ad34a9989afbbe45ce4e4b0
+small-128-s2-w5 water c8798d36dbf5eba5214f71e9e4db727600d45f83d0d0dfda1b24784411a651aa
+small-128-s2-w5 water_depth 9e532fb0c413a660f075e4779796e421b3fafa141e030263a7e00cbe5ac1e60c
+small-128-s2-w5 coast_dist 854bd0d9fba28d2d65d4ac0dd4bac03b3290b4d0f95553c3eb9b4903af3d6825
+small-128-s2-w5 wind 5
+small-128-s2-w5 S 2a0b8608d12a80c85291ea7b1282c7c1263a4328b73f0ff9a285c2a1ba032435
+small-128-s2-w5 tnoise 0bd695c66c62fd24718260ec5ec4e9a9a339fc63a4dffc92c4f8368ae67110aa
+small-128-s2-w5 T 5547442d163f8dcfbbb9a40c4c15b47e6cf492aca5bd56e401ce9a29dbd91ec4
+small-128-s2-w5 temperature c2074c29aeb6054cb2e741cd9148699a899678242bd549f1fe0d43d32f59474d
+small-128-s2-w5 hs dc220ef3a39843df9b339721f41a61d86754694a2923f62c4d5ae1eabfe77a75
+small-128-s2-w5 q 3e54ea874380c76882ce0576613b59fcf082c48658db3c208811593a1307342c
+small-128-s2-w5 p 3d8a5faf34e36453f0dbd6464b548a3bb29b3436a760daf695c7407523161eed
+small-128-s2-w5 rnoise b8927e8e66152d4b3f918005cdc42a87646312c5fed22b1c5125c48a22b06902
+small-128-s2-w5 rainfall 7647f4b38fc426d026dff769c48a07043d0ce1cf0f802071180049e9e6afdb4b
+small-128-s2-w5 temperature_range -15,89
+small-128-s2-w5 rainfall_range 798,5810
+small-128-s2-w5 temperature_c -1.5_2.0_5.2_6.8_8.0
+small-128-s2-w5 rainfall_mm 798_834_922_4112_5810
+small-128-s2-w5 land_below_0c 0.0068
+small-128-s2-w5 rain_contrast 4.9305
+# two lakes, wind forced to code 7
+case small-128-s2-w7 small 128 2 0,0,0,0,0,0,0,5
+small-128-s2-w7 elevation bf92cf2e455236eba3ba33dea43f0363af1ab3315ad34a9989afbbe45ce4e4b0
+small-128-s2-w7 water c8798d36dbf5eba5214f71e9e4db727600d45f83d0d0dfda1b24784411a651aa
+small-128-s2-w7 water_depth 9e532fb0c413a660f075e4779796e421b3fafa141e030263a7e00cbe5ac1e60c
+small-128-s2-w7 coast_dist 854bd0d9fba28d2d65d4ac0dd4bac03b3290b4d0f95553c3eb9b4903af3d6825
+small-128-s2-w7 wind 7
+small-128-s2-w7 S 2a0b8608d12a80c85291ea7b1282c7c1263a4328b73f0ff9a285c2a1ba032435
+small-128-s2-w7 tnoise 0bd695c66c62fd24718260ec5ec4e9a9a339fc63a4dffc92c4f8368ae67110aa
+small-128-s2-w7 T 5547442d163f8dcfbbb9a40c4c15b47e6cf492aca5bd56e401ce9a29dbd91ec4
+small-128-s2-w7 temperature c2074c29aeb6054cb2e741cd9148699a899678242bd549f1fe0d43d32f59474d
+small-128-s2-w7 hs dc220ef3a39843df9b339721f41a61d86754694a2923f62c4d5ae1eabfe77a75
+small-128-s2-w7 q 6b0670ee89dfad960c01b4d38dff5324eb22d6efb4e1affb9a1c1669ff6c475e
+small-128-s2-w7 p 207ff310ddbdff1006852eb849aec7eb3ea57b8bd749b79e740947122b47fdac
+small-128-s2-w7 rnoise b8927e8e66152d4b3f918005cdc42a87646312c5fed22b1c5125c48a22b06902
+small-128-s2-w7 rainfall fb77c0531f978cec3d87710b2da66d54f96a5cc680c1117b40866082a44e569b
+small-128-s2-w7 temperature_range -15,89
+small-128-s2-w7 rainfall_range 783,7849
+small-128-s2-w7 temperature_c -1.5_2.0_5.2_6.8_8.0
+small-128-s2-w7 rainfall_mm 783_811_918_5473_7849
+small-128-s2-w7 land_below_0c 0.0068
+small-128-s2-w7 rain_contrast 6.7485
+# P1-03 10.4
+case shipped-512-s0 shipped 512 0 1,1,1,1,1,1,1,1
+shipped-512-s0 elevation 34f5b1dd5d31c76454be9e217a80526800aa7b32fd5a68a31748c57d821d7f2a
+shipped-512-s0 water 2949219fe337088f8bef8799027dae16f5d9eb9e4f642688ce38c5b858e314f7
+shipped-512-s0 water_depth de292b5c156fb17da9a27462e426e2241718ba506848b763b65800a8c4c41e20
+shipped-512-s0 coast_dist 3bf7bf40d9f5a31d633a5bb7a98b3f11398783e3155ecf34ce890994ce931ed3
+shipped-512-s0 wind 1
+shipped-512-s0 S b46635c34a984607c1d33a8d775845d490c3c2873b2e00d2114a24e35c473c47
+shipped-512-s0 tnoise 7e69aef4c4c77375155d6d393efbaf82417c7429d6161a98d96fe685bd7767fb
+shipped-512-s0 T 7027500c40e756353a257e54374ab26e5a8bbe95e192cc28244013c30671609e
+shipped-512-s0 temperature 5223124d001f2a0a61f8a9e4e0f0d1952d5cf9ba228481d1a0a4e1eb8e4d0f9d
+shipped-512-s0 hs 742d93a55a1cb23f94aadc7df50e2bfba9a7c0e1814d974dc09ab92feca918a9
+shipped-512-s0 q 14c58dad587e94e538f334d8a00b9a47e67421128e12d10a62248bdb63be2f89
+shipped-512-s0 p 3fcc76037e9a5dd4ad3db712c8380a20cae8ba3af3e67e4745057ad47a6458b2
+shipped-512-s0 rnoise 60f3e8143889aa5875141faeec35c5115872c3ae92547afe23813fafbf02e098
+shipped-512-s0 rainfall 69d53c69bdd206a18dc8a428e505ccf965c1c7a15cd1bbc81ede6a02aaee61d5
+shipped-512-s0 temperature_range -28,93
+shipped-512-s0 rainfall_range 492,6540
+shipped-512-s0 temperature_c -2.8_1.1_5.5_6.9_8.6
+shipped-512-s0 rainfall_mm 492_620_1054_3037_6540
+shipped-512-s0 land_below_0c 0.0407
+shipped-512-s0 rain_contrast 4.8984
+# P1-03 10.4
+case shipped-512-s42 shipped 512 42 1,1,1,1,1,1,1,1
+shipped-512-s42 elevation 590569e0db4d6bc84fd8e955ef77ab49bec2c82b5d383fd75d212800e31a3b91
+shipped-512-s42 water ee8c2e984d766de4467066e091aa85b94bc9fba9763f7bf8afe7bbe1d94de9a1
+shipped-512-s42 water_depth 1a500f6152fa15045bb710702e3d25388a44c0dff2c11edc266c3022ae23cbcc
+shipped-512-s42 coast_dist 1d662608fc647159e53b268b06dfecd125c0af6d1bd271838780211f9ef0690b
+shipped-512-s42 wind 6
+shipped-512-s42 S f482428847c05b0a3ddd90ba0b7ed1746aa6feff79582fd68368b6ede5de6a58
+shipped-512-s42 tnoise d2fbe6816674f6645c7b3ef29d8aa3697dae55fb9d336470bf7fbf5c76ea44f2
+shipped-512-s42 T 258b63afb065162281356e7273795198a1b40fb058e836b667d78f7a6ff8b72d
+shipped-512-s42 temperature 242e659fa6110e2efe7b6fc14689d02475a3922c01ddb146a6a23a303421cf2e
+shipped-512-s42 hs 785ce34fc820c112d37a86fba51776bf1206248ad0fcebaeeaf46c0c4dc9b9db
+shipped-512-s42 q 21f4136b42780e09d773935854adedb43eabefc3287e8ae00d692053aa936401
+shipped-512-s42 p d875c16def92c58452ddce620217c40770a55b02044b6dba3efcc7ce54627146
+shipped-512-s42 rnoise 13d7b7cfd3dfac41f5e7c021d62024f0acd189a50dc6df734df3a37c9a819e4e
+shipped-512-s42 rainfall 114812dad84cce7f61845916880946ebcb15c120e873aacc19b6f3fac5d1d76c
+shipped-512-s42 temperature_range -75,93
+shipped-512-s42 rainfall_range 476,8966
+shipped-512-s42 temperature_c -7.5_1.4_5.9_7.3_8.7
+shipped-512-s42 rainfall_mm 476_578_771_3447_8966
+shipped-512-s42 land_below_0c 0.0507
+shipped-512-s42 rain_contrast 5.9637
+# P1-03 10.4, seed phrase "The Unmapped"
+case shipped-512-phrase shipped 512 15629206466951235176 1,1,1,1,1,1,1,1
+shipped-512-phrase elevation d763561a5def9384d83ed33ef6039c1b47652b9ca0c1d5092ba09a47cec7a34c
+shipped-512-phrase water 675ec9ce097d9d08d9f25430a0c2c63d8d6eb641640f18c71e099d0c0da16824
+shipped-512-phrase water_depth 31ec5e3b49089cb09f75913dada9c8c20bd462b8ac36c5e24815a61501c668b6
+shipped-512-phrase coast_dist e81f5a3b657eb814233a8bba52ccc0af601029a8853a196f7ca01fa46bf264c1
+shipped-512-phrase wind 5
+shipped-512-phrase S 0e440d40d05a8882d67ed702ce84efbf958a04da7ad5bb96043f70a994b5ec1e
+shipped-512-phrase tnoise 12128158bf84bd20edb3336d9a7b83de2c23aee9103ed0fdfadf83cec6d3b59c
+shipped-512-phrase T 3014728cc4e60ac51c02549cb0e038db6e11cb0a7d308fa3a0b7e2118bdd34f3
+shipped-512-phrase temperature 5a9148fb00b177b6572187c6a8c226dc0af6b418fe7de1621c82c5837799a331
+shipped-512-phrase hs 23891d8eaf027ea6e9ab28da107837d07ee0d3cc6b06b752652fdef755f1b597
+shipped-512-phrase q 85ca3d37b4f7185e43ca2d5108a2c1015c5af3b207621ec08b02f4fae2386e25
+shipped-512-phrase p 20fa57908a452de8bee864e0c5fa7144d9e48c4c4884e3d2b2dc551b81cf7187
+shipped-512-phrase rnoise 346d167eed87396619b6702d9931278ed82acd6ff3ce9684da320fd293091353
+shipped-512-phrase rainfall df464e0055b01408de9a7b2c1e7840291fda57723525030c552b6a64f54ae6d3
+shipped-512-phrase temperature_range -35,94
+shipped-512-phrase rainfall_range 541,6084
+shipped-512-phrase temperature_c -3.5_0.7_5.0_7.0_8.4
+shipped-512-phrase rainfall_mm 541_589_782_3203_6084
+shipped-512-phrase land_below_0c 0.0723
+shipped-512-phrase rain_contrast 5.4380
+# P1-03 10.4
+case shipped-1024-s1 shipped 1024 1 1,1,1,1,1,1,1,1
+shipped-1024-s1 elevation 2e3b7dee44d149f739bbf6040f0345ee310c51f2f5e27940c57f1759ef16eec4
+shipped-1024-s1 water 11d31f7783c9bbb6376a6aed228207091fb462126e810cff3f754f10f383c672
+shipped-1024-s1 water_depth 82db2e6ba37b5635fbc6613beaea8377aca216e259661c6596eab49c585d3321
+shipped-1024-s1 coast_dist 2402125f0341a1095b7d0bfd4cea46cd28578d989d18d83708af900e6c11d1de
+shipped-1024-s1 wind 3
+shipped-1024-s1 S 52785d75519dd6ae6f7da6837b29e1092313a7caa951e6f836f4daec987297d6
+shipped-1024-s1 tnoise 9de8b806a739c8319bff097fe99dbd6df47a8822ae48831a9d937ea0faaa4c93
+shipped-1024-s1 T 414ae7378d4057042619fc8195e9c01dea46a759cdab22e20d0b298c35a6dc6e
+shipped-1024-s1 temperature 2f182f981a4a091b6a14469f0f1e6d6b5e3a610ee2dbb80e588a87a44beb822f
+shipped-1024-s1 hs dc1212c6a2e2bea48fdd7a76f34aa4bfe158245c15541dd00a6919e01269784d
+shipped-1024-s1 q bd8fc8fb8447e52be32bf656d46e170768cf0b1feb4501831a17952a9c2f2303
+shipped-1024-s1 p ab14e57d27e0fe6d3c39798d71428b39e2f6b139f69562460e8cd544f7cd60fd
+shipped-1024-s1 rnoise e8504b16e78d8c3129ced5c8b6328030259a4c58c2f8f92a5ea3c3a715304d55
+shipped-1024-s1 rainfall 303f87435fca8e68eba295f27d2ea7aa7f366c1f48fd3abbd7e12b3de9732561
+shipped-1024-s1 temperature_range -68,91
+shipped-1024-s1 rainfall_range 405,6479
+shipped-1024-s1 temperature_c -6.8_2.6_6.2_7.4_8.9
+shipped-1024-s1 rainfall_mm 405_504_742_1765_6479
+shipped-1024-s1 land_below_0c 0.0544
+shipped-1024-s1 rain_contrast 3.5020
+# random fixture 0 of P1-03 10.2 (wind code 1)
+case random-0 random 34 0 0,5,0,0,0,0,0,0
+random-0 elevation 493682ae0114f67c08d33d1ca034bdd3a9593781a16b950790d8901bcc19f7a9
+random-0 water e5c8488cb942a0257f2115742cdc0f91820c364ee88f9191d1b344e9cc1818b2
+random-0 water_depth fbdc5ed4862f1987957044c3c5d500baf61cf6fc7c56591c04f9d6c0e84ea52c
+random-0 coast_dist 533fe4ad57c8a5dab81fc425bb56d8455f742125dc0888dc1fc09f58a617e4fe
+random-0 wind 1
+random-0 S 144a4a4126cf9c0084409dfb4399213caf1dcf94629da84dc7fb2e03050fea84
+random-0 tnoise 0001dee1c1fd2d442e74fff331e91ab11b560ac875d93944c33874212197905a
+random-0 T 7182aba0550fa4b0af78b4d9b14512331bf5f89f5b67854827a2325310a87737
+random-0 temperature c7c04e0c9c9b807e8ee6d661d90435e7bdbf1ab1c37b9932505878cc87cf653b
+random-0 hs b73980404f737dc471d141e648f47e40d96c33b34fa9d9ae25c59b0ceeecf2cb
+random-0 q 2d4c7b7831bf91fdfc59d9d0dc638233096b95d0bd09d35e36e77f5ad322afc3
+random-0 p acc5165d7f3c18d9ed4b58fd16f8fb553630a976ad4d1f1b6e71f667c2f11e49
+random-0 rnoise 400bec710778135064cc0aae623ccf3207e0c6944b33f7ff15467a450287804f
+random-0 rainfall 56c75f2f4aba703447a8482766e5d6a4ff69cdcd98a180e0316005430078f951
+random-0 temperature_range 33,89
+random-0 rainfall_range 896,9383
+random-0 temperature_c 3.3_4.3_6.0_7.6_8.7
+random-0 rainfall_mm 896_906_945_1340_9383
+random-0 land_below_0c 0.0000
+random-0 rain_contrast 1.4790
+# random fixture 1 of P1-03 10.2 (wind code 7)
+case random-1 random 34 1 0,0,0,0,0,0,0,5
+random-1 elevation abbac37ce31363e8535679a24715cf9ffb46d7280e93625e69b9864866f117a0
+random-1 water e5c8488cb942a0257f2115742cdc0f91820c364ee88f9191d1b344e9cc1818b2
+random-1 water_depth fbdc5ed4862f1987957044c3c5d500baf61cf6fc7c56591c04f9d6c0e84ea52c
+random-1 coast_dist 533fe4ad57c8a5dab81fc425bb56d8455f742125dc0888dc1fc09f58a617e4fe
+random-1 wind 7
+random-1 S 5bd0f8f5f85fcaf8ace5634fd830b133ced1150a64d357a71eb86ed9e03fc33f
+random-1 tnoise 7aea68fe85b287f84ef786c102dc0f21166215599decbd56fcd19e41a76a812a
+random-1 T a246521198f76a6e7c18f7a63c1ff604c9fa8b76c2ec084ce020f2bbf52b2b8f
+random-1 temperature f38a9d0188c6f35c5324886d8dbca574d0d37ec50ffc89d0c08f29f5ba426e70
+random-1 hs 781970ee83ef665bbdfeb8ad2b55022f8f7d9e7727adbf6acf58d413f2a5da46
+random-1 q f1e481c76c9be829e2ae2a93f115143cd4ba7e4c211fc0f84d3e75d11aa497a2
+random-1 p cf48ff0c8381baca64a676fe8d87f25cfa3ac3f4a0dc3cfbcccc0c0ff64caf96
+random-1 rnoise 3a3a244c6862d4f84df8608c3a5984f050a91120a564f37ba8981c52f85228dd
+random-1 rainfall 42a1a6f6368e8265694e0b4055c42b880129696c3f3044ef8a42f17a7eb898a0
+random-1 temperature_range 33,89
+random-1 rainfall_range 909,9568
+random-1 temperature_c 3.3_4.5_6.0_7.5_8.6
+random-1 rainfall_mm 909_919_938_1336_9568
+random-1 land_below_0c 0.0000
+random-1 rain_contrast 1.4538
+# random fixture 2 of P1-03 10.2 (wind code 6)
+case random-2 random 34 2 0,0,0,0,0,0,5,0
+random-2 elevation 4a1cb1fa03f067564b0d1eeda17497ad3fc84a7c89f7276235da584d708e52b9
+random-2 water e5c8488cb942a0257f2115742cdc0f91820c364ee88f9191d1b344e9cc1818b2
+random-2 water_depth fbdc5ed4862f1987957044c3c5d500baf61cf6fc7c56591c04f9d6c0e84ea52c
+random-2 coast_dist 533fe4ad57c8a5dab81fc425bb56d8455f742125dc0888dc1fc09f58a617e4fe
+random-2 wind 6
+random-2 S 8dbb2cd4a6d5b6a4008fcf48f172f6d0269bae29a5b880c18eabb07f553a2d25
+random-2 tnoise 0387485fdbc6b80cf184ad8078b3ad8794b8a5be1a9d556c42c53441ff4e06c9
+random-2 T 03c824ead955e03c66d3518165b63aef309c7769e08f09f4c1bdb59249558685
+random-2 temperature 5b028eb49968754a71f4857405fd8caae34f39399aab5ae2408285df0fd6db48
+random-2 hs 5b7097d44793805d453e6e665780da12e03df7bcd352631e9c2a684127b75973
+random-2 q 3b8905b7e2433d41acc6f51fc078edd2297a2bb1057d0d8e65a7c9d61f17ab08
+random-2 p 037ae834b0e7e1b881c233bf78e3e318dbd9613a837453b98438ec1ae0bbace7
+random-2 rnoise c9c991a18fa1fca09f5a0a97c8c970af58e84ddcb36c59ed2b02be57cf03c697
+random-2 rainfall ca9194be1838b87c6f9ddbe35880ea747d93e65ffd49391717aaba70750cefb6
+random-2 temperature_range 33,89
+random-2 rainfall_range 929,2544
+random-2 temperature_c 3.3_4.3_5.9_7.6_8.7
+random-2 rainfall_mm 929_935_961_1316_2544
+random-2 land_below_0c 0.0000
+random-2 rain_contrast 1.4075
+# random fixture 3 of P1-03 10.2 (wind code 6)
+case random-3 random 34 3 0,0,0,0,0,0,5,0
+random-3 elevation be685936e2d5c14e4b6d5bc35c0264c42df34f9e98550cd2a6b331f2a7748424
+random-3 water e5c8488cb942a0257f2115742cdc0f91820c364ee88f9191d1b344e9cc1818b2
+random-3 water_depth fbdc5ed4862f1987957044c3c5d500baf61cf6fc7c56591c04f9d6c0e84ea52c
+random-3 coast_dist 533fe4ad57c8a5dab81fc425bb56d8455f742125dc0888dc1fc09f58a617e4fe
+random-3 wind 6
+random-3 S 139b1824f7bb49934dfe2066159d279f18a9589df5e3e8ac95875ed7034486e6
+random-3 tnoise 447efb1bb658f2ed788f5c28feecb103ba2a63fdcd19f17066287e7aa93371b0
+random-3 T a7d9f1cc1aaa0bef76ff00a4680dba7040ac4e84ca800fb67a2054a25c976d66
+random-3 temperature 75698a3e894801628c23f43a2a5530250f534d49a42633962bcb90d94638c2df
+random-3 hs 682a4d3c6671c054f4adb0a613ac625428adc4f9382a7101b4b57af90d998af8
+random-3 q 0718ec64d6030f61079f5cd7715fc781e88c3c7d8b08958b59278cb133219f56
+random-3 p 8d3e5fc48bf93a5b353ba2f8c4ef136f004365c249d62a08891585b7fd7e0d9b
+random-3 rnoise 0c56743d579e0d72e96b8a5c89c332dd73cb30d67c182e0df3a25e94e0c478db
+random-3 rainfall 0c4fb55a9244c3c5a780459b897e3e61377a928d12f921e0fd2a9b49ddb5c9b4
+random-3 temperature_range 33,90
+random-3 rainfall_range 907,2487
+random-3 temperature_c 3.3_4.4_6.1_7.8_8.9
+random-3 rainfall_mm 907_913_980_1316_2487
+random-3 land_below_0c 0.0000
+random-3 rain_contrast 1.4414

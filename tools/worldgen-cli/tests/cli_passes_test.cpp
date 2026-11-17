@@ -20,6 +20,7 @@
 
 #include "cli_test_support.hpp"
 #include "p0_04_reference.hpp"
+#include "p1_01_elevation_api.hpp"
 #include "p1_01_elevation_support.hpp"
 #include "p1_01_passes_support.hpp"
 #include "worldgen/db/reader.hpp"
@@ -37,6 +38,9 @@ fs::path write_data_root(const Sandbox& sb) {
     write_text(root / "worldgen" / "hydrology.toml",
                "[worldgen.hydrology]\nriver_min_area_m2 = 125000\nflat_noise = { wavelength_m = 400, octaves = 1, gain = "
                "\"0.5\" }\n");
+    if (elev_api::worldgen_id_registered("climate")) {
+        write_text(root / "worldgen" / "climate.toml", elev_api::CLIMATE_TOML);  // P1-03 4
+    }
     return root;
 }
 

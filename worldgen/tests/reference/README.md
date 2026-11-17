@@ -241,3 +241,49 @@ the stage without the tie-break (P1-02 H2, "t = 0"). `check` also tests
 invariant 11 (equal `water_depth`, `lake`, `coast_dist`, lake and ocean cells
 and decimetre levels with and without t) on the random fixtures with random t
 and on the golden worlds with `flat_tie`.
+
+## Reference of the P1-03 climate stage
+
+`p1_climate_reference.py` is an independent exact-integer implementation of
+`docs/specs/p1-03-climate.md` (steps C1 to C6, the report keys and palettes
+of section 9), written by the test writer from the spec text and P1-00
+alone, without the stage's implementation. The input layers of a world
+(`elevation`, `water`, `water_depth`, `coast_dist`) come from
+`p1_hydrology_reference.py` with the shipped threshold and `flat_tie` of the
+seed, and its elevation from `p1_elevation_reference.py`; each cached
+elevation grid is checked against the hydrology golden file's `elevation`
+item before use. It uses the elevation reference's fast `Fx` operations and
+`fbm_m`; `check` cross-checks them against `core_reference.py`.
+
+```
+python3 -B worldgen/tests/reference/p1_climate_reference.py check [--quick]
+python3 -B worldgen/tests/reference/p1_climate_reference.py case shipped|small N SEED [WEIGHTS]
+python3 -B worldgen/tests/reference/p1_climate_reference.py golden [PATH|-] [--large]
+python3 -B worldgen/tests/reference/p1_climate_reference.py winds FIRST LAST
+```
+
+`check` reproduces every worked example of P1-03 5.1 (the wind draws, the
+temperature table, the box mean, both sweeps cell by cell with every q raw
+and p to three decimals, the rainfall table and the sweep's rainfall rows,
+the palette example of section 9), checks the sweep against a second method
+(memoized per-cell recursion, no line order) and the box mean against a
+direct window sum, the symmetry of 10.1 test 4 (orthogonal winds under
+mirrors and transposes, diagonal winds under mirrors; it prints, without
+failing, that a transposed diagonal sweep differs), the preconditions, and
+invariants 1 to 5 of section 6 on the 200 random fixtures of 10.2 and
+(without `--quick`) on the golden worlds up to N = 128. About 25 seconds
+with `--quick`, a minute with a warm elevation cache. `golden` writes
+`worldgen/tests/golden/p1-03-climate.txt` (format in its header), read by
+`stages_climate_golden_test.cpp` and `cli_climate_test.cpp`; `--large` adds
+the N = 512 and 1024 worlds of P1-03 10.4 (two minutes with a warm cache;
+the elevation reference takes about three minutes per 512 world and eight
+for the 1024 one). The committed file was written with `--large`.
+`UNMAPPED_ELEVATION_CACHE=DIR` works as for the hydrology reference.
+
+The random fixtures of 10.2 (the test writer's construction): fixture f is
+34 x 34; `Rng(substream(stream_key(0, "test.climate"), f))` draws the wind
+code `uniform_u64(8)` first, then `uniform_i64(1, 3000)` for each interior
+cell in index order (elevation = S, `water` 0, depth 0); the border is
+ocean with elevation -10 and depth 10; `coast_dist` is P1-02 H7 on the
+ocean mask; the climate tuning is shipped with `wind_weights` one-hot at the
+drawn code, and the world seed is f.

@@ -33,6 +33,7 @@
 #include <utility>
 #include <vector>
 
+#include "p1_01_elevation_api.hpp"
 #include "worldgen/data/content.hpp"
 #include "worldgen/data/load_error.hpp"
 #include "worldgen/data/schema.hpp"
@@ -73,6 +74,11 @@ inline TuningLoad load_tuning_text(std::string_view elevation_toml, std::string_
     wd::MemoryDirectory dir{"worldgen", {}};
     dir.entries.push_back(wd::MemoryEntry{"elevation.toml", std::string(elevation_toml), false});
     dir.entries.push_back(wd::MemoryEntry{"hydrology.toml", std::string(hydrology_toml), false});
+    // P1-00 6.1: once `climate` is in the id set it must be defined too.
+    const wd::Kind* kind = registry.find("worldgen");
+    if (kind != nullptr && kind->schema_for("climate") != nullptr) {
+        dir.entries.push_back(wd::MemoryEntry{"climate.toml", std::string(elev_api::CLIMATE_TOML), false});
+    }
     wd::MemoryDataRoot root;
     root.directories.push_back(dir);
     wd::LoadResult<wd::ContentSet> r = wd::load_content_from_memory(registry, root);
