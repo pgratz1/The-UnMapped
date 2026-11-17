@@ -453,7 +453,7 @@ TEST_CASE("P1-03 7: the overflow margin of C4, S = 32767 with smooth_radius_m 40
         const std::vector<std::int64_t> want(g.cells(), Fx::from_int(32767).raw());
         CHECK(climate_api::triangle_mean(g, s, 250, THREADS) == want);
         CHECK(climate_api::triangle_mean(g, s, 251, 5) == want);
-        CHECK(climate_api::box_mean(g, s, 250, THREADS) == want);
+        CHECK(climate_api::box_mean(g, s, 125, THREADS) == want);  // a 251 x 251 box (r 250 would exceed the guard)
     }
     // Values near the top that differ, against the reference's exact
     // integers (golden case "overflow" of p1-03-climate.txt).
@@ -480,6 +480,101 @@ TEST_CASE("P1-03 7: the overflow margin of C4, S = 32767 with smooth_radius_m 40
     }
     CHECK(found);
 }
+
+namespace {
+
+// The entry guard of both C4 seams (P1-03 10, audit fix): with MAX = 65538,
+// fatal with the precondition prefix unless W <= MAX and min(W, 2r + 1) x
+// min(H, 2r + 1) <= MAX, r = r_cells for the box and r_cells div 2 for the
+// triangle. The bound keeps every window sum below 2^63: 65538 x 32767 x
+// 2^32 = 9223372028264841216.
+constexpr std::int64_t GUARD_MAX = 65538;
+
+bool guard_allows(Grid g, std::int64_t r) {
+    const std::int64_t span = 2 * r + 1;
+    return g.width <= GUARD_MAX && std::min<std::int64_t>(g.width, span) * std::min<std::int64_t>(g.height, span) <= GUARD_MAX;
+}
+
+template <typename F>
+void expect_prefixed_fatal(F&& f, const char* what) {
+    CAPTURE(what);
+    try {
+        static_cast<void>(f());
+        FAIL("no fatal error");
+    } catch (const worldgen::FatalError& e) {
+        CHECK(std::string_view(e.what()).substr(0, PRECONDITION.size()) == PRECONDITION);
+    }
+}
+
+}  // namespace
+
+TEST_CASE("P1-03 10: the window guard of both C4 seams, the three fatal paths") {
+    CHECK(static_cast<std::uint64_t>(GUARD_MAX) * 32767U * (std::uint64_t{1} << 32) < (std::uint64_t{1} << 63) - 1U);
+    // S = 32767 on 260 x 255 with r_cells 258: box r = 258, triangle r = 129;
+    // both windows exceed 65538 cells (66300 and 259 x 255 = 66045).
+    {
+        const Grid g{260, 255};
+        const std::vector<std::int64_t> s(g.cells(), 32767);
+        CHECK_FALSE(guard_allows(g, 258));
+        CHECK_FALSE(guard_allows(g, 129));
+        expect_prefixed_fatal([&] { return climate_api::box_mean(g, s, 258, THREADS); }, "box 260 x 255 r 258");
+        expect_prefixed_fatal([&] { return climate_api::triangle_mean(g, s, 258, THREADS); }, "triangle 260 x 255 r 258");
+        // r_cells 250 (the bound of smooth_radius_m) is allowed: 251 x 251.
+        CHECK(guard_allows(g, 125));
+    }
+    // 4096 x 17 with r_cells 8192: 4096 x 17 = 69632 cells per window.
+    {
+        const Grid g{4096, 17};
+        const std::vector<std::int64_t> s(g.cells(), 1);
+        CHECK_FALSE(guard_allows(g, 8192));
+        CHECK_FALSE(guard_allows(g, 4096));
+        expect_prefixed_fatal([&] { return climate_api::box_mean(g, s, 8192, THREADS); }, "box 4096 x 17 r 8192");
+        expect_prefixed_fatal([&] { return climate_api::triangle_mean(g, s, 8192, THREADS); }, "triangle 4096 x 17 r 8192");
+    }
+    // 65539 x 1 with r_cells 0: W above MAX.
+    {
+        const Grid g{65539, 1};
+        const std::vector<std::int64_t> s(g.cells(), 7);
+        CHECK_FALSE(guard_allows(g, 0));
+        expect_prefixed_fatal([&] { return climate_api::box_mean(g, s, 0, THREADS); }, "box 65539 x 1 r 0");
+        expect_prefixed_fatal([&] { return climate_api::triangle_mean(g, s, 0, THREADS); }, "triangle 65539 x 1 r 0");
+    }
+}
+
+TEST_CASE("P1-03 10: in-bounds extremes of the window guard: 65538 x 1 with a huge radius") {
+    const Grid g{65538, 1};
+    const std::vector<std::int64_t> s = random_s(5, g, 32000, 32767);
+    std::int64_t sum = 0;
+    for (const std::int64_t v : s) {
+        sum += v;
+    }
+    CHECK(guard_allows(g, 1000000));
+    const std::vector<std::int64_t> mean(g.cells(), Fx::from_ratio(sum, g.cells()).raw());
+    CHECK(climate_api::box_mean(g, s, 1000000, THREADS) == mean);
+    CHECK(climate_api::triangle_mean(g, s, 2000000, THREADS) == mean);
+    // All at the top: exactly 32767 everywhere.
+    const std::vector<std::int64_t> top(g.cells(), 32767);
+    CHECK(climate_api::triangle_mean(g, top, 2000000, 2) ==
+          std::vector<std::int64_t>(g.cells(), Fx::from_int(32767).raw()));
+    // A single column likewise.
+    const Grid c{1, 65538};
+    CHECK(climate_api::box_mean(c, top, 70000, THREADS) == std::vector<std::int64_t>(c.cells(), Fx::from_int(32767).raw()));
+}
+
+TEST_CASE("P1-03 10: climate_temperature_cell rejects a height above INT32_MAX") {
+    const std::int64_t big = std::int64_t{2147483647};
+    CHECK_NOTHROW(static_cast<void>(climate_api::temperature_cell(0, big, 10, 0, shipped_tuning())));
+    CHECK_THROWS_AS(static_cast<void>(climate_api::temperature_cell(0, big + 1, 10, 0, shipped_tuning())),
+                    worldgen::FatalError);
+}
+
+TEST_SUITE("climate-slow" * doctest::skip()) {
+TEST_CASE("P1-03 10, 7 (slow): in-bounds extreme, 2048 x 2048 triangle with r_cells 250 at S = 32767") {
+    const Grid g{2048, 2048};
+    const std::vector<std::int64_t> s(g.cells(), 32767);
+    CHECK(climate_api::triangle_mean(g, s, 250, 4) == std::vector<std::int64_t>(g.cells(), Fx::from_int(32767).raw()));
+}
+}  // TEST_SUITE
 
 TEST_CASE("P1-03 10: both C4 seams are fatal for r_cells < 0 and for any S outside [0, 32767]") {
     const Grid g{3, 1};
