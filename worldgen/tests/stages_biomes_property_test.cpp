@@ -4,7 +4,7 @@
 // Written from the spec only. Each world is checked against the test's own
 // rule evaluation (every rule of every definition, highest priority kept),
 // its own G7 (recursion along flow_dir with the class test) and its own B5.
-// Seeds 0 to 7 run by default; seeds 0 to 63 (P1-04 10.2) and the 512 and
+// Seeds 0 to 3 run by default (test time); seeds 0 to 63 (P1-04 10.2) and the 512 and
 // 1024 statistics run in the suite "biomes-slow":
 //   worldgen-tests -ts=biomes-slow --no-skip
 
@@ -122,8 +122,8 @@ std::string full_range_rule(std::string_view id) {
 
 }  // namespace
 
-TEST_CASE("P1-04 6 invariants 1 to 4, 10.2: seeds 0 to 7 at N = 128, shipped and small-map fixtures") {
-    for (std::uint64_t seed = 0; seed < 8; ++seed) {
+TEST_CASE("P1-04 6 invariants 1 to 4, 10.2: seeds 0 to 3 at N = 128, shipped and small-map fixtures") {
+    for (std::uint64_t seed = 0; seed < 4; ++seed) {
         check_world(seed, 128, seed % 2 == 1);
     }
 }
