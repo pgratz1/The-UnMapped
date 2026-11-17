@@ -36,13 +36,13 @@ Preconditions (fatal "biomes: input precondition: …"): every input layer prese
 | Layer `biome` (`u8`, layer id 11 in a full run) | the biome `code` of every cell; never 0; `ocean`'s code exactly on `water` = 3, `lake`'s exactly on `water` = 2; a biome whose `priority` is 0 never on a land cell |
 | Table `biome` | one row per loaded biome definition (section 5, B5) |
 
-**Schema change (for the lead): schema version 2**, as planned in P1-00 9.2, made by this stage's branch:
+**Schema change (for the lead): schema version 3**, as planned in P1-00 9.2 (version 2 is the elevation revision's `pass` table, P1-01 9.1), made by this stage's branch:
 
 ```
 CREATE TABLE biome (id INTEGER PRIMARY KEY, key TEXT NOT NULL UNIQUE, name TEXT NOT NULL, colour INTEGER NOT NULL, water INTEGER NOT NULL) STRICT
 ```
 
-Executed after the version 1 DDL in every world (P0-02 5.3), so a world generated with `--until climate` or earlier has an empty `biome` table. `docs/specs/schema.md` gets the DDL and a changelog row; the P1 schema proposals entry is updated (P1-00 appendix B8). The catalogue entry of `biome` is unchanged.
+Executed after the version 2 DDL in every world (P0-02 5.3), so a world generated with `--until climate` or earlier has an empty `biome` table. `docs/specs/schema.md` gets the DDL and a changelog row; the P1 schema proposals entry is updated (P1-00 appendix B8). The catalogue entry of `biome` is unchanged.
 
 ## 4. Data and tuning
 
@@ -396,7 +396,7 @@ Library seams (interim): `biome_definitions_from(content)`; `height_above_draina
 2. B4 cases B1 to B15 exactly, through `biome_lookup` with the shipped definitions and the tq, rq given.
 3. A definition with two rules: a cell matching only the second rule gets the biome.
 4. Named checks 1 to 7: one failing fixture each, with path, line, column and message; a float literal in a rule is a P0-03 error; a rule missing a field is a missing-field error at the rule's table header.
-5. The `biome` table of a world generated with the shipped data equals the eight rows of P1-00 6.6; with `--until climate` the table exists and is empty; `SCHEMA_VERSION` is 2.
+5. The `biome` table of a world generated with the shipped data equals the eight rows of P1-00 6.6; with `--until climate` the table exists and is empty; `SCHEMA_VERSION` is 3.
 6. B3 structural: for seed 0, N = 64, at 16 cells chosen by the test, tq and rq equal the test's evaluation with `fbm2`.
 
 ### 10.2 Property tests
@@ -428,4 +428,4 @@ Layer hash of `biome` and the logical hash of table `biome` (P0-04 8) for the ca
 5. **Biome fields for later stages** (`fertility`, `timber`, `region_noun`) are defined here so the kind is registered once. Recommendation: approve; P1-05 and P1-06 read them.
 6. **Blighted waste** stays a history overlay (P1-00 6.6): history writes its own layer rather than rewriting `biome` (catalogue rule 1). Recommendation: confirm when the history specs are written.
 
-**Schema and catalogue impact (for the lead):** schema version 2 adds table `biome` (DDL in section 3; already planned in P1-00 9.2, appendix B6 and B8). No catalogue change. New data kind `biome` with the fields of 4.1 (P1-00 6.6 updated). New `worldgen` id `biomes`. Two stream names.
+**Schema and catalogue impact (for the lead):** schema version 3 adds table `biome` (DDL in section 3; already planned in P1-00 9.2, appendix B6 and B8). No catalogue change. New data kind `biome` with the fields of 4.1 (P1-00 6.6 updated). New `worldgen` id `biomes`. Two stream names.

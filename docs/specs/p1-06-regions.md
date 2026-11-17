@@ -30,14 +30,14 @@ Preconditions (fatal "regions: input precondition: …"): layers present, N × N
 - Table `region`: one row per region.
 - Table `region_border`: one row per pair of regions sharing at least one 4-adjacent pair of cells.
 
-**Schema change (for the lead): schema version 3** (planned in P1-00 9.2 for `region`; `region_border` is new and needs the proposals entry for P1's schema changes updated, P1-00 appendix B8):
+**Schema change (for the lead): schema version 4** (planned in P1-00 9.2 for `region`; `region_border` is new and needs the proposals entry for P1's schema changes updated, P1-00 appendix B8):
 
 ```
 CREATE TABLE region (id INTEGER PRIMARY KEY, name TEXT NOT NULL, biome INTEGER NOT NULL, x_min INTEGER NOT NULL, y_min INTEGER NOT NULL, x_max INTEGER NOT NULL, y_max INTEGER NOT NULL, seed_x INTEGER NOT NULL, seed_y INTEGER NOT NULL, cells INTEGER NOT NULL, lake_cells INTEGER NOT NULL, river_cells INTEGER NOT NULL, coast_cells INTEGER NOT NULL, elev_mean INTEGER NOT NULL, elev_max INTEGER NOT NULL, habitability_mean INTEGER NOT NULL, walk_area INTEGER NOT NULL, landmass INTEGER NOT NULL) STRICT
 CREATE TABLE region_border (a INTEGER NOT NULL, b INTEGER NOT NULL, length_m INTEGER NOT NULL, low_dm INTEGER NOT NULL, walk_pairs INTEGER NOT NULL, river_pairs INTEGER NOT NULL, PRIMARY KEY (a, b)) STRICT, WITHOUT ROWID
 ```
 
-Executed after the version 2 DDL in every world (empty tables when the stage did not run). If the biome and region branches merge as one, they share one bump (P1-00 9.2). The design doc's `bounds` is stored as the four integer columns `x_min`, `y_min`, `x_max`, `y_max` (inclusive cell coordinates; tables hold no blobs or REAL values, design doc section 6). No foreign-key clauses: `biome` refers to `biome.id`, `walk_area` to the layer of that name, `a` and `b` to `region.id`, and invariants (section 6) check them.
+Executed after the version 3 DDL in every world (empty tables when the stage did not run). If the biome and region branches merge as one, they share one bump (P1-00 9.2). The design doc's `bounds` is stored as the four integer columns `x_min`, `y_min`, `x_max`, `y_max` (inclusive cell coordinates; tables hold no blobs or REAL values, design doc section 6). No foreign-key clauses: `biome` refers to `biome.id`, `walk_area` to the layer of that name, `a` and `b` to `region.id`, and invariants (section 6) check them.
 
 `region` columns: `id` 1 to R; `name` (RG9); `biome` the dominant biome code; bounds; `seed_x`, `seed_y` the region's seed cell (a dry or river cell inside it); `cells` (land cells, lakes included), `lake_cells`, `river_cells`; `coast_cells` (cells with an ocean 4-neighbour); `elev_mean` (RHA mean of `elevation`, dm), `elev_max` (dm); `habitability_mean` (RHA mean over the region's cells, 0 to 255); `walk_area` (the most common non-zero `walk_area` in the region, ties to the smaller id; 0 if none); `landmass` (the 8-connected land component of the region, numbered by G2).
 
@@ -243,7 +243,7 @@ Library seams (interim): `region_candidates`, `region_greedy_seeds`, `region_flo
 1. The worked examples of 5.1 exactly (owners and costs of every flood case; greedy; merge; names and sectors; borders).
 2. RG4: a test world with a 300-cell island and no candidate on it gets a seed at the island's best site cell, numbered after the greedy seeds; a lake-only landmass cannot occur, but a landmass with no site cell takes its smallest-index cell.
 3. RG8 renumbering on a fixture where the greedy numbering differs from the smallest-index order.
-4. Table round trip: the rows read back equal the computed ones; `SCHEMA_VERSION` is 3 (or 2 + 1 as merged).
+4. Table round trip: the rows read back equal the computed ones; `SCHEMA_VERSION` is 4 (or 3 + 1 as merged).
 
 ### 10.2 Property tests
 
@@ -270,7 +270,7 @@ Layer hash of `region` and logical hashes of `region` and `region_border` for th
 1. **Who names regions** (Paul's call). Chosen: geography writes a placeholder name from a compass sector and the dominant biome's noun, so the map and the viewer have readable labels now. Recommendation: keep the placeholder in `region.name`, and let history (P3) add cultural names per civilization in its own table, since a region's name depends on who lives there and when.
 2. **No sea regions; lakes belong to land regions.** Recommendation: approve for P1.
 3. **Region size** (taste): seeds 1.2 km apart, regions below 0.75 km² merged; prototype median 1.9–2.6 km², about 45 regions at 1024, 12 at 512, 180 at 2048. The design says "a few square kilometres". Recommendation: approve; history can group regions into provinces itself.
-4. **The `region_border` table** (new, schema 3): border length, lowest crossing height, walkable pairs, river pairs. Recommendation: approve; it gives history the adjacency graph and tells it which borders need a built pass (`walk_pairs` = 0 with a low `low_dm` is where a pass is worth building).
+4. **The `region_border` table** (new, schema 4): border length, lowest crossing height, walkable pairs, river pairs. Recommendation: approve; it gives history the adjacency graph and tells it which borders need a built pass (`walk_pairs` = 0 with a low `low_dm` is where a pass is worth building).
 5. **Borders on ridges vs. along valleys.** Climbing cost puts borders on ridges; the alternative (regions = drainage basins) puts whole valleys in one region but makes huge lowland regions. Recommendation: approve the cost flood.
 
-**Schema and catalogue impact (for the lead):** schema version 3 adds `region` and `region_border` (DDL in section 3); the proposals entry "P1 schema changes" needs the final DDL and the new `region_border`. Catalogue: `region` made definite (0 on ocean only; lakes have regions). New `worldgen` id `regions`; two stream names.
+**Schema and catalogue impact (for the lead):** schema version 4 adds `region` and `region_border` (DDL in section 3); the proposals entry "P1 schema changes" needs the final DDL and the new `region_border`. Catalogue: `region` made definite (0 on ocean only; lakes have regions). New `worldgen` id `regions`; two stream names.
