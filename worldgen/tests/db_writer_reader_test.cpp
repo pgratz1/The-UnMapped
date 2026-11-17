@@ -208,6 +208,13 @@ TEST_CASE("empty world for seed 0: tables, meta rows and values as in section 8 
     CHECK(db.rows("SELECT count(*) FROM pass") == Rows{{"0"}});
     CHECK(db.rows("SELECT hex(sql) FROM sqlite_schema WHERE name = 'layer'") ==
           db.rows("SELECT hex(CAST('" + std::string(SPEC_DDL_LAYER) + "' AS BLOB))"));
+    // Schema 2: the DDL of table `pass` (P1-01 9.1) byte for byte, and the
+    // table empty in a world no stage wrote.
+    CHECK(db.rows("SELECT sql FROM sqlite_schema WHERE name = 'pass'") == Rows{{SPEC_DDL_PASS}});
+    CHECK(db.rows("SELECT hex(sql) FROM sqlite_schema WHERE name = 'pass'") ==
+          db.rows("SELECT hex(CAST('" + std::string(SPEC_DDL_PASS) + "' AS BLOB))"));
+    CHECK(db.rows("SELECT count(*) FROM pass") == Rows{{"0"}});
+    CHECK(worldgen::db::SCHEMA_VERSION == 2);
 
     // meta: exactly 8 rows, in key order, all TEXT.
     CHECK(db.rows("SELECT key, value FROM meta ORDER BY key") == expected_empty_meta("0", ""));

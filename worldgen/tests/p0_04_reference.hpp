@@ -31,11 +31,11 @@ inline constexpr std::string_view DDL_META =
 inline constexpr std::string_view DDL_LAYER =
     "CREATE TABLE layer (id INTEGER PRIMARY KEY, name TEXT NOT NULL UNIQUE, width INTEGER NOT NULL, height INTEGER "
     "NOT NULL, format TEXT NOT NULL, data BLOB NOT NULL) STRICT";
-// The DDL of table pass, schema version 2 (P1-01 9.1), copied from the spec text.
+// The DDL of table `pass` (schema version 2), copied from P1-01 9.1.
 inline constexpr std::string_view DDL_PASS =
-    "CREATE TABLE pass (id INTEGER PRIMARY KEY, range_id INTEGER NOT NULL, kind INTEGER NOT NULL, capped "
-    "INTEGER NOT NULL, col_x INTEGER NOT NULL, col_y INTEGER NOT NULL, saddle_dm INTEGER NOT NULL, col_dm INTEGER "
-    "NOT NULL, path BLOB NOT NULL) STRICT";
+    "CREATE TABLE pass (id INTEGER PRIMARY KEY, range_id INTEGER NOT NULL, kind INTEGER NOT NULL, capped INTEGER NOT "
+    "NULL, col_x INTEGER NOT NULL, col_y INTEGER NOT NULL, saddle_dm INTEGER NOT NULL, col_dm INTEGER NOT NULL, path "
+    "BLOB NOT NULL) STRICT";
 inline constexpr std::string_view EMPTY_CONTENT_HASH =
     "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
 
@@ -192,17 +192,32 @@ inline worldgen::Sha256Digest layer_table_hash(const std::vector<LayerRow>& rows
     return e.digest();
 }
 
-// table pass with no rows (schema version 2, P1-01 9.1): the column count 9.
-inline worldgen::Sha256Digest empty_pass_table_hash() {
+// One row of table `pass` (P1-01 9.1), as stored.
+struct PassTableRow {
+    std::int64_t id, range_id, kind, capped, col_x, col_y, saddle_dm, col_dm;
+    std::vector<std::uint8_t> path;
+};
+
+// table pass: u64 column count (9), then each row in id order.
+inline worldgen::Sha256Digest pass_table_hash(const std::vector<PassTableRow>& rows) {
     Encoder e;
     e.u64(9);
+    for (const PassTableRow& r : rows) {
+        for (const std::int64_t v : {r.id, r.range_id, r.kind, r.capped, r.col_x, r.col_y, r.saddle_dm, r.col_dm}) {
+            e.col_integer(v);
+        }
+        e.col_blob(r.path);
+    }
     return e.digest();
 }
 
-// schema of a P0 world: sqlite_schema rows ordered by type, then name:
-// the automatic index of layer.name (sql NULL, amendment 10), then the
-// tables layer, meta and (schema version 2) pass with their DDL. rootpage
-// is excluded.
+// table pass with no rows: the column count 9 only.
+inline worldgen::Sha256Digest empty_pass_table_hash() { return pass_table_hash({}); }
+
+// schema of every world at schema version 2 (the name is the P0 one):
+// sqlite_schema rows ordered by type, then name: the automatic index of
+// layer.name (sql NULL, amendment 10), then the tables layer, meta and pass
+// with their DDL. rootpage is excluded.
 inline worldgen::Sha256Digest p0_schema_hash() {
     Encoder e;
     e.col_text("index");

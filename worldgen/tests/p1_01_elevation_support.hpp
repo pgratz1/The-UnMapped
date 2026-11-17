@@ -138,6 +138,7 @@ inline const std::vector<FieldText>& shipped_fields() {
         {"fill_noise", "{ wavelength_m = 400, octaves = 3, gain = \"0.5\" }"},
         {"fill_cost_amp", "3"},
         {"fill_detail_m", "3"},
+        // Fourth version (generator 0.6.0): passes and the final talus.
         {"pass_count_max", "3"},
         {"pass_core_mask", "\"0.25\""},
         {"pass_crest_frac", "\"0.3\""},
@@ -178,15 +179,45 @@ inline const std::vector<FieldText>& shipped_fields() {
 
 using Overrides = std::vector<std::pair<std::string, std::string>>;
 
-// The fourteen lines of the small-map fixture (4.4, fourth version).
+// The fourteen lines of the small-map fixture (4.4): the third version's
+// five and the fourth version's nine pass radii.
 inline const Overrides& small_overrides() {
     static const Overrides o = {
-        {"segment_on_share", "\"0.12\""}, {"lake_min_area_m2", "10240"}, {"lake_max_area_m2", "160000"},
-        {"lake_area_ref_n", "128"},       {"lake_min_depth_m", "1"},
-        {"pass_tarn_min_cells", "20"},    {"pass_divide_reach_m", "400"}, {"pass_saddle_window_m", "200"},
-        {"pass_saddle_rise_m", "75"},     {"pass_saddle_rise_reach_m", "600"}, {"pass_min_spacing_m", "800"},
-        {"pass_col_tarn_m", "64"},        {"pass_halfwidth_m", "200"},  {"pass_spacing_m", "1000"},
+        {"segment_on_share", "\"0.12\""},
+        {"lake_min_area_m2", "10240"},
+        {"lake_max_area_m2", "160000"},
+        {"lake_area_ref_n", "128"},
+        {"lake_min_depth_m", "1"},
+        {"pass_tarn_min_cells", "20"},
+        {"pass_divide_reach_m", "400"},
+        {"pass_saddle_window_m", "200"},
+        {"pass_saddle_rise_m", "75"},
+        {"pass_saddle_rise_reach_m", "600"},
+        {"pass_min_spacing_m", "800"},
+        {"pass_col_tarn_m", "64"},
+        {"pass_halfwidth_m", "200"},
+        {"pass_spacing_m", "1000"},
     };
+    return o;
+}
+
+// The neutral settings of 10.4.2 (invariant 11): no pass site and no final
+// talus step; with them every grid of the third version (0.5.0) holds.
+inline const Overrides& neutral_overrides() {
+    static const Overrides o = {{"pass_count_max", "0"}, {"final_talus_iterations", "0"}};
+    return o;
+}
+
+// The overrides of a golden fixture name: shipped, small, shipped-neutral,
+// small-neutral.
+inline Overrides fixture_overrides(std::string_view fixture) {
+    Overrides o;
+    if (fixture.substr(0, 5) == "small") {
+        o = small_overrides();
+    }
+    if (fixture.size() > 8 && fixture.substr(fixture.size() - 8) == "-neutral") {
+        o.insert(o.end(), neutral_overrides().begin(), neutral_overrides().end());
+    }
     return o;
 }
 
@@ -269,10 +300,10 @@ inline FieldValue parse_value(std::string_view text, bool fx_field) {
 // Integer fields of 4.2 (every other scalar field is fx).
 [[nodiscard]] inline bool is_int_field(std::string_view name) {
     static const std::vector<std::string_view> ints = {
-        "island_min_area_m2", "belt_offset_steps", "erosion_iterations", "erosion_route_interval",
-        "lake_min_area_m2",   "lake_max_area_m2",  "lake_area_ref_n",
-        "pass_count_max",     "pass_min_length_m", "pass_spacing_m", "pass_size_ref_n",
-        "pass_tarn_min_cells", "final_talus_iterations",
+        "island_min_area_m2", "belt_offset_steps",   "erosion_iterations", "erosion_route_interval",
+        "lake_min_area_m2",   "lake_max_area_m2",    "lake_area_ref_n",    "pass_count_max",
+        "pass_min_length_m",  "pass_spacing_m",      "pass_size_ref_n",    "pass_tarn_min_cells",
+        "final_talus_iterations",
     };
     return std::find(ints.begin(), ints.end(), name) != ints.end();
 }
@@ -331,6 +362,35 @@ public:
         return std::min(fx("belt_halfwidth_m"), worldgen::mul(fx("belt_halfwidth_frac"), side)).raw();
     }
 
+    // Pass integers of 4.5 for a grid of width w (fifths, cells, units).
+    struct PassInts {
+        std::int64_t num = 0, den = 0, coast_clear = 0, min_len = 0, spacing = 0, side_max = 0, reach5 = 0;
+        std::int64_t win = 0, rise_b = 0, spacing_b = 0, tarn_b = 0, rise_u = 0, body_u = 0, walk = 0;
+        std::int64_t drop_o = 0, drop_d = 0;  // D_o^f, D_d^f raw
+    };
+    [[nodiscard]] PassInts pass_ints(std::int64_t w) const {
+        using worldgen::mul_div;
+        PassInts p;
+        const std::int64_t ref = i("pass_size_ref_n");
+        p.num = std::min(w, ref);
+        p.den = ref;
+        p.coast_clear = mul_div(raw("pass_coast_clear_m"), 5 * p.num, 16 * ONE * p.den);
+        p.min_len = (i("pass_min_length_m") * 5 * p.num) / (16 * p.den);
+        p.spacing = (i("pass_spacing_m") * 5) / 16;
+        p.side_max = mul_div(raw("pass_side_max_m"), p.num, p.den);
+        p.reach5 = mul_div(raw("pass_divide_reach_m"), 5, 16 * ONE);
+        p.win = (raw("pass_saddle_window_m") >> 32) / 16;
+        p.rise_b = (raw("pass_saddle_rise_reach_m") >> 32) / 16;
+        p.spacing_b = (raw("pass_min_spacing_m") >> 32) / 16;
+        p.tarn_b = (raw("pass_col_tarn_m") >> 32) / 16;
+        p.rise_u = raw("pass_saddle_rise_m") >> 16;
+        p.body_u = raw("pass_body_m") >> 16;
+        p.walk = raw("pass_walk_grade") * 48;
+        p.drop_o = raw("final_talus_slope") * 16;
+        p.drop_d = worldgen::mul(Fx::from_raw(p.drop_o), Fx::SQRT2).raw();
+        return p;
+    }
+
 private:
     [[nodiscard]] const FieldValue& get(std::string_view name) const {
         const auto it = map_.find(std::string(name));
@@ -347,6 +407,22 @@ inline const Values& shipped_values() {
 inline const Values& small_values() {
     static const Values v(small_overrides());
     return v;
+}
+// The values of a golden fixture name (fixture_overrides).
+inline const Values& fixture_values(std::string_view fixture) {
+    static const Values shipped_neutral(fixture_overrides("shipped-neutral"));
+    static const Values small_neutral(fixture_overrides("small-neutral"));
+    if (fixture == "shipped") {
+        return shipped_values();
+    }
+    if (fixture == "small") {
+        return small_values();
+    }
+    if (fixture == "shipped-neutral") {
+        return shipped_neutral;
+    }
+    REQUIRE_MESSAGE(fixture == "small-neutral", "unknown fixture " << std::string(fixture));
+    return small_neutral;
 }
 
 // Stream keys of section 2.

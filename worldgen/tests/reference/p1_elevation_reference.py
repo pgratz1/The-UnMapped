@@ -17,17 +17,28 @@ against core_reference.py by `check`.
 
 Usage (from the repository root; -B keeps __pycache__ out of the tree):
 
-    python3 -B worldgen/tests/reference/p1_elevation_reference.py check [--large]
-        Worked examples of P1-01 10.1 and the reference values of 10.4 at
-        N = 64, 128 and 256 (about two minutes). --large adds the N = 512
-        floor results and the N = 1024 seed 0 layer hash (much longer).
+    python3 -B worldgen/tests/reference/p1_elevation_reference.py check [--large] [--examples]
+        Worked examples of P1-01 10.1 (T1 to T7 of the fourth version
+        included), the neutral-settings values of 10.4.2 and the fourth
+        version's values of 10.4.1 at N = 64, 128 and 256 (about five
+        minutes). --examples runs the examples only (under a second);
+        --large adds the N = 512 floor results and layer hashes and the
+        N = 1024 seed 0 layer hashes (much longer).
 
     python3 -B worldgen/tests/reference/p1_elevation_reference.py case FIXTURE N SEED
-        Print the per-step values of one world (FIXTURE: shipped or small).
+        Print the per-step values of one world (FIXTURE: shipped, small,
+        shipped-neutral or small-neutral).
 
-    python3 -B worldgen/tests/reference/p1_elevation_reference.py golden [PATH|-]
+    python3 -B worldgen/tests/reference/p1_elevation_reference.py golden --large [PATH|-]
         Write the golden vector file (default worldgen/tests/golden/
-        p1-01-elevation.txt); "-" writes it to standard output.
+        p1-01-elevation.txt); "-" writes it to standard output. The
+        committed file is written with --large (the N = 512 cases, about
+        ten minutes in all).
+
+    python3 -B worldgen/tests/reference/p1_elevation_reference.py golden-legacy [PATH|-]
+        The third version's (0.5.0) golden file, regenerated under the
+        neutral settings (pass_count_max 0, final_talus_iterations 0): byte
+        for byte the file committed before 0.6.0 (invariant 11).
 
 Values are Python ints: an Fx is its raw int64. FatalError (from
 core_reference) stands for the project's fatal error.
@@ -382,21 +393,72 @@ SHIPPED_TEXT = [
     ("fill_noise", ("m", 400, 3, "0.5")),
     ("fill_cost_amp", 3),
     ("fill_detail_m", 3),
+    # Fourth version (0.6.0): the 34 pass and final-talus fields.
+    ("pass_count_max", 3),
+    ("pass_core_mask", "0.25"),
+    ("pass_crest_frac", "0.3"),
+    ("pass_min_length_m", 3000),
+    ("pass_spacing_m", 3000),
+    ("pass_size_ref_n", 1024),
+    ("pass_region_mask", "0.03"),
+    ("pass_body_m", 300),
+    ("pass_basin_depth_m", 40),
+    ("pass_tarn_min_cells", 300),
+    ("pass_divide_reach_m", 1000),
+    ("pass_saddle_window_m", 400),
+    ("pass_saddle_rise_m", 150),
+    ("pass_saddle_rise_reach_m", 1500),
+    ("pass_min_spacing_m", 2500),
+    ("pass_coast_clear_m", 700),
+    ("pass_barrier_m", 600),
+    ("pass_side_max_m", 3000),
+    ("pass_col_tarn_m", 160),
+    ("pass_grade", "0.9"),
+    ("pass_grade_jitter", "0.3"),
+    ("pass_min_col_m", 150),
+    ("pass_saddle_max_m", 600),
+    ("pass_max_cut_m", 500),
+    ("pass_peak_rise_m", 150),
+    ("pass_halfwidth_m", 450),
+    ("pass_width_jitter", "0.3"),
+    ("pass_width_var", "0.35"),
+    ("pass_walk_grade", "0.55"),
+    ("pass_texture_keep", "0.25"),
+    ("pass_drain_step_m", "0.1"),
+    ("final_talus_iterations", 100),
+    ("final_talus_slope", 5),
+    ("final_talus_rate", "0.0625"),
 ]
 
+# The small-map fixture of 4.4: fourteen lines (five of the third version,
+# nine pass radii of the fourth).
 SMALL_OVERRIDES = {
     "segment_on_share": "0.12",
     "lake_min_area_m2": 10240,
     "lake_max_area_m2": 160000,
     "lake_area_ref_n": 128,
     "lake_min_depth_m": 1,
+    "pass_tarn_min_cells": 20,
+    "pass_divide_reach_m": 400,
+    "pass_saddle_window_m": 200,
+    "pass_saddle_rise_m": 75,
+    "pass_saddle_rise_reach_m": 600,
+    "pass_min_spacing_m": 800,
+    "pass_col_tarn_m": 64,
+    "pass_halfwidth_m": 200,
+    "pass_spacing_m": 1000,
 }
+
+# Neutral settings (P1-01 invariant 11, 10.4.2): no pass site, no final
+# talus step. With them every grid of the third version (0.5.0) holds.
+NEUTRAL_OVERRIDES = {"pass_count_max": 0, "final_talus_iterations": 0}
 
 # Fields of type int (all others are fx or records).
 INT_FIELDS = {
     "island_min_area_m2", "belt_offset_steps", "erosion_iterations",
     "erosion_route_interval", "lake_min_area_m2", "lake_max_area_m2",
-    "lake_area_ref_n",
+    "lake_area_ref_n", "pass_count_max", "pass_min_length_m", "pass_spacing_m",
+    "pass_size_ref_n", "pass_tarn_min_cells", "final_talus_iterations",
 }
 
 
@@ -430,6 +492,18 @@ def shipped_tuning():
 
 def small_tuning():
     return make_tuning(SMALL_OVERRIDES)
+
+
+def tuning_of(fixture):
+    """shipped, small, shipped-neutral or small-neutral (neutral: 10.4.2)."""
+    o = {}
+    if fixture.startswith("small"):
+        o.update(SMALL_OVERRIDES)
+    elif not fixture.startswith("shipped"):
+        fatal("unknown fixture " + fixture)
+    if fixture.endswith("-neutral"):
+        o.update(NEUTRAL_OVERRIDES)
+    return make_tuning(o)
 
 
 def toml_text(overrides=None):
@@ -478,6 +552,10 @@ def named_checks(t):
         bad.append(2)
     if t["lake_min_area_m2"] > t["lake_max_area_m2"]:
         bad.append(3)
+    if t["pass_region_mask"] > t["pass_core_mask"]:
+        bad.append(4)
+    if t["pass_min_col_m"] > t["pass_saddle_max_m"]:
+        bad.append(5)
     return bad
 
 
@@ -958,6 +1036,8 @@ def heights(seed, n, t, f, O, fl=None):
     N2 = n * n
     h0 = [0] * N2
     unit = [0] * N2
+    maskg = [0] * N2
+    profg = [0] * N2
     contrast = t["segment_contrast"]
     for i in range(N2):
         if O[i]:
@@ -978,8 +1058,10 @@ def heights(seed, n, t, f, O, fl=None):
             ff = t["foothill_fraction"]
             profile = add(ff, mul(ONE - ff, ridge))
             u = mul(mask, profile)
+            profg[i] = profile
         else:
             u = 0
+        maskg[i] = mask
         hh = fbm_m(K["hills"], qx, qy, t["hill_noise"])
         rn = fbm_m(K["roughness"], X, Y, t["roughness_noise"])
         rmin = t["roughness_min"]
@@ -1002,15 +1084,706 @@ def heights(seed, n, t, f, O, fl=None):
     ps = div(mh, q) if mul_int(q, 3) > ONE else cap
     ch = t["mountain_cover_height_m"]
     scale = div(ch, qc) if (qc > 0 and mul(ps, qc) > ch) else ps
+    # E6.5
+    lay = pass_layout(seed, n, n, h0, unit, maskg, profg, f["nb"], O, scale, o_star, w_b, t)
     # E7
+    h = compose(n, n, h0, unit, maskg, profg, O, scale, lay["P"], lay["adj"], t,
+                [ocean_depth_of_dl(dl[i], t) if O[i] else 0 for i in range(N2)])
+    return {"h7": h, "scale": scale, "floor": fl, "q": q, "qc": qc, "h0": h0, "unit": unit,
+            "mask": maskg, "profile": profg, "passes": lay}
+
+
+def compose(w, h, h0, unit, mask, profile, O, scale, P, adj, t, ocean_h):
+    """E7 on any grid: land from h0, unit and the pass factor and adjustment;
+    ocean from ocean_h."""
     fl_m = t["land_floor_m"]
-    h = [0] * N2
-    for i in range(N2):
+    f = t["foothill_fraction"]
+    keep = t["pass_texture_keep"]
+    out = [0] * (w * h)
+    for i in range(w * h):
         if O[i]:
-            h[i] = ocean_depth_of_dl(dl[i], t)
+            out[i] = ocean_h[i]
+            continue
+        nat = mul(scale, unit[i])
+        m = nat
+        if P[i] < ONE:
+            m = m_low(scale, mask[i], profile[i], P[i], f, keep)
+        if adj[i] != 0:
+            m = min(sub(m, adj[i]), nat)
+        out[i] = clamp(add(h0[i], m), fl_m, H_MAX)
+    return out
+
+
+# ---------------------------------------------------------------------------
+# E6.5: pass layout (fourth version, generator 0.6.0)
+# ---------------------------------------------------------------------------
+
+PASS_REJECTS = ("coast", "barrier", "sea", "side", "along_divide", "along_crest", "chord",
+                "tarn_crossing", "col_tarn", "summit_top", "zone_p90", "feet", "shoulders")
+FR_8_15 = from_ratio(8, 15)
+FR_9_10 = from_ratio(9, 10)
+FR_1_1500 = from_ratio(1, 1500)
+NO_LIMIT = 1 << 62
+
+
+def fm(f5):
+    """Fifths of a cell to metres (E6.5.0)."""
+    return from_ratio(16 * f5, 5)
+
+
+def m_low(scale, mk, pr, p, f, keep):
+    """m'(c, p) of E6.5.0, in the order written."""
+    return mul(scale, add(mul(mul(p, mk), f), mul(mul(max(p, keep), mk), max(0, sub(pr, f)))))
+
+
+def pass_derived(t, w):
+    """The pass integers of 4.5 for grid width w."""
+    ref = t["pass_size_ref_n"]
+    num, den = min(w, ref), ref
+    d = {"num": num, "den": den}
+    d["coast_clear"] = mul_div(t["pass_coast_clear_m"], 5 * num, 16 * ONE * den)
+    d["min_len"] = (t["pass_min_length_m"] * 5 * num) // (16 * den)
+    d["spacing"] = (t["pass_spacing_m"] * 5) // 16
+    d["side_max"] = mul_div(t["pass_side_max_m"], num, den)
+    d["reach5"] = mul_div(t["pass_divide_reach_m"], 5, 16 * ONE)
+    d["win"] = (t["pass_saddle_window_m"] >> 32) // 16
+    d["rise_b"] = (t["pass_saddle_rise_reach_m"] >> 32) // 16
+    d["spacing_b"] = (t["pass_min_spacing_m"] >> 32) // 16
+    d["tarn_b"] = (t["pass_col_tarn_m"] >> 32) // 16
+    d["rise_u"] = t["pass_saddle_rise_m"] >> 16
+    d["body_u"] = t["pass_body_m"] >> 16
+    d["walk"] = mul_int(t["pass_walk_grade"], 48)
+    d["Dof"] = mul_int(t["final_talus_slope"], 16)
+    d["Ddf"] = mul(d["Dof"], SQRT2)
+    return d
+
+
+def dijkstra(w, h, in_domain, sources, limit, queue="heap"):
+    """E6.5.0 Dijkstra: sources (cell, value), the first listing of a cell
+    wins; pops by (distance, cell). Returns (dist, src) dicts. queue "heap"
+    uses heapq; "sorted" a list kept sorted (a different structure with the
+    same pop order, for the queue-independence check)."""
+    import bisect
+    tab = nbt(w, h)
+    dist = {}
+    src = {}
+    for c, v in sources:
+        if c not in dist:
+            dist[c] = 0
+            src[c] = v
+    heap = sorted((0, c) for c in dist)
+    if queue == "heap":
+        heapq.heapify(heap)
+        pop = heapq.heappop
+        push = heapq.heappush
+    else:
+        def pop(q):
+            return q.pop(0)
+
+        def push(q, e):
+            bisect.insort(q, e)
+    while heap:
+        d, c = pop(heap)
+        if dist[c] != d:
+            continue
+        sc = src[c]
+        for code, m in tab[c]:
+            if not in_domain(m):
+                continue
+            nd = d + (7 if code & 1 else 5)
+            if nd > limit:
+                continue
+            dm = dist.get(m)
+            if dm is None or nd < dm:
+                dist[m] = nd
+                src[m] = sc
+                push(heap, (nd, m))
+    return dist, src
+
+
+def divide_flood(w, h, support, key, nb, o_star, queue="heap"):
+    """E6.5.3 step 2: (level, parent, side); parent -1 and side 0 where unset."""
+    import bisect
+    n = w * h
+    tab = nbt(w, h)
+    level = [-1] * n
+    parent = [-1] * n
+    side = [0] * n
+    q = []
+    seq = 0
+    for c in range(n):
+        if support[c]:
+            continue
+        if any(support[m] for _, m in tab[c]):
+            level[c] = 0
+            parent[c] = c
+            side[c] = 2 if nb[c] >= o_star else 1
+            q.append((0, seq, c))
+            seq += 1
+    if queue == "heap":
+        heapq.heapify(q)
+        pop = heapq.heappop
+        push = heapq.heappush
+    else:
+        def pop(qq):
+            return qq.pop(0)
+
+        def push(qq, e):
+            bisect.insort(qq, e)
+    while q:
+        k, _, c = pop(q)
+        for _, m in tab[c]:
+            if not support[m] or level[m] >= 0:
+                continue
+            km = key[m]
+            level[m] = km if km > k else k
+            parent[m] = c
+            side[m] = side[c]
+            push(q, (level[m], seq, m))
+            seq += 1
+    return level, parent, side
+
+
+class Buckets:
+    """Cells bucketed by 32 x 32 blocks for box queries; results are not in
+    index order, so callers break ties by index explicitly."""
+
+    def __init__(self, w, cells, bs=32):
+        self.w = w
+        self.bs = bs
+        self.b = {}
+        for c in cells:
+            self.b.setdefault((c % w // bs, c // w // bs), []).append(c)
+
+    def box(self, c, r):
+        w, bs = self.w, self.bs
+        x0, y0 = c % w, c // w
+        r2 = r * r
+        out = []
+        for by in range((y0 - r) // bs if y0 >= r else 0, (y0 + r) // bs + 1):
+            for bx in range((x0 - r) // bs if x0 >= r else 0, (x0 + r) // bs + 1):
+                for q in self.b.get((bx, by), ()):
+                    dx = q % w - x0
+                    dy = q // w - y0
+                    if -r <= dx <= r and -r <= dy <= r and dx * dx + dy * dy <= r2:
+                        out.append(q)
+        return out
+
+
+def grid_box(w, h, c, r):
+    """B(c, r) of E6.5.0 over the whole grid, in index order."""
+    x0, y0 = c % w, c // w
+    out = []
+    r2 = r * r
+    for y in range(max(0, y0 - r), min(h - 1, y0 + r) + 1):
+        dy = y - y0
+        for x in range(max(0, x0 - r), min(w - 1, x0 + r) + 1):
+            dx = x - x0
+            if dx * dx + dy * dy <= r2:
+                out.append(y * w + x)
+    return out
+
+
+def pass_ranges(w, h, mh, mask, nb, O, o_star, w_b, t, pd):
+    """E6.5.2: crest, labels, ranges and dA."""
+    n = w * h
+    crest_lim = mul(t["pass_crest_frac"], w_b)
+    core = t["pass_core_mask"]
+    crest = bytearray(1 if (not O[i] and mask[i] >= core and abs(nb[i] - o_star) <= crest_lim) else 0
+                      for i in range(n))
+    label, comps = g2_components(w, h, crest, 8)
+    ranges = []
+    dA_all = {}
+    for k, cells in enumerate(comps, 1):
+        s0 = min(cells)
+
+        def inr(m, k=k):
+            return label[m] == k
+        gS, _ = dijkstra(w, h, inr, [(s0, s0)], NO_LIMIT)
+        A = min(cells, key=lambda c: (-gS[c], c))
+        dA, _ = dijkstra(w, h, inr, [(A, A)], NO_LIMIT)
+        B = min(cells, key=lambda c: (-dA[c], c))
+        length = dA[B]
+        if length < pd["min_len"]:
+            slots = 0
         else:
-            h[i] = clamp(add(h0[i], mul(scale, unit[i])), fl_m, H_MAX)
-    return {"h7": h, "scale": scale, "floor": fl, "q": q, "qc": qc}
+            slots = min(t["pass_count_max"], 1 + (length - pd["min_len"]) // pd["spacing"])
+        top = min(cells, key=lambda c: (-mh[c], c))
+        p90 = kth([mh[c] for c in cells], quantile_rank(FR_9_10, len(cells)))
+        dA_all.update(dA)
+        ranges.append({"label": k, "s0": s0, "A": A, "B": B, "length": length, "slots": slots,
+                       "top": top, "p90": p90, "cells": sorted(cells), "divide": [], "candidates": []})
+    return crest, label, ranges, dA_all
+
+
+def pass_chain(parent, c):
+    out = [c]
+    while parent[c] != c:
+        c = parent[c]
+        out.append(c)
+    return out
+
+
+def pass_depth(mks, prs, scale, saddle, capped, maxm, t):
+    """E6.5.6 (o) on the axis values: (lo, capped)."""
+    f = t["foothill_fraction"]
+    keep = t["pass_texture_keep"]
+    walk = mul_int(t["pass_walk_grade"], 48)
+    nq = len(mks)
+
+    def mv(p):
+        return [m_low(scale, mks[q], prs[q], p, f, keep) for q in range(nq)]
+
+    def fits(p):
+        v = mv(p)
+        for x in v:
+            if x > saddle:
+                return False
+        if not capped:
+            for q in range(3, nq):
+                if abs(v[q] - v[q - 3]) > walk:
+                    return False
+        return True
+
+    def top(p):
+        v = mv(p)
+        return max(v) if v else 0
+
+    if fits(ONE):
+        lo = ONE
+    else:
+        lo, hi = 0, ONE
+        for _ in range(32):
+            mid = (lo + hi) >> 1
+            if fits(mid):
+                lo = mid
+            else:
+                hi = mid
+    floor_m = sub(maxm << 16, t["pass_max_cut_m"])
+    if top(lo) < floor_m:
+        plo, phi = lo, ONE
+        for _ in range(32):
+            mid = (plo + phi) >> 1
+            if top(mid) >= floor_m:
+                phi = mid
+            else:
+                plo = mid
+        lo = phi
+        capped = True
+    return lo, capped
+
+
+def pass_bump(dist, dend, halfwidth, width_var, nz):
+    """E6.5.7: the bump of one reached cell; 0 if dist >= hwv."""
+    hwv = mul(halfwidth, add(ONE, mul(width_var, nz)))
+    if dist >= hwv:
+        return 0
+    return mul(fade(ONE - div(dist, hwv)), fade(clamp(div(dend, from_int(300)), 0, ONE)))
+
+
+def pass_drainage(S, Nn, ci, eps):
+    """E6.5.8: Delta per axis cell."""
+    last = len(S) - 1
+    U = list(S)
+    for q in range(ci - 1, -1, -1):
+        U[q] = min(S[q], sub(U[q + 1], eps))
+    for q in range(ci + 1, last + 1):
+        U[q] = min(S[q], sub(U[q - 1], eps))
+    L = list(Nn)
+    for q in range(1, ci + 1):
+        L[q] = add(L[q - 1], eps)
+    for q in range(last - 1, ci, -1):
+        L[q] = add(L[q + 1], eps)
+    return [sub(max(U[q], min(Nn[q], L[q])), S[q]) for q in range(last + 1)]
+
+
+def pass_layout(seed, w, h, h0, unit, mask, profile, nb, O, scale, o_star, w_b, t, queue="heap"):
+    """E6.5 on any W x H grid. Returns ranges, sites, tries, P and adj."""
+    n = w * h
+    pd = pass_derived(t, w)
+    K_pass = stream_key(seed, "geo.elevation.pass")
+    tab = nbt(w, h)
+    mh = [0 if O[i] else mul(scale, unit[i]) >> 16 for i in range(n)]
+    ter = [(h0[i] >> 16) + mh[i] for i in range(n)]
+    Kf = [v if v > 0 else 0 for v in ter]
+    P = [ONE] * n
+    adj = [0] * n
+    res = {"ranges": [], "sites": [], "tries": [], "P": P, "adj": adj, "mh": mh, "pd": pd}
+    crest, label, ranges, dA = pass_ranges(w, h, mh, mask, nb, O, o_star, w_b, t, pd)
+    res["ranges"] = ranges
+    if not any(r["slots"] > 0 for r in ranges):
+        return res
+    # E6.5.1
+    world_top = min((i for i in range(n) if not O[i]), key=lambda c: (-mh[c], c))
+    kb = [0 if O[i] else max(1, add(h0[i], mul(scale, unit[i]))) for i in range(n)]
+    Lb, _, _ = g3_flood(w, h, kb, O)
+    bd = t["pass_basin_depth_m"]
+    basin = bytearray(1 if (not O[i] and Lb[i] - kb[i] >= bd) else 0 for i in range(n))
+    _, bcomps = g2_components(w, h, basin, 8)
+    bigbasin = bytearray(n)
+    for cells in bcomps:
+        if len(cells) >= t["pass_tarn_min_cells"]:
+            for c in cells:
+                bigbasin[c] = 1
+    docean = chamfer(w, h, O)
+    res["world_top"] = world_top
+    res["basin"] = basin
+    # E6.5.3
+    rm = t["pass_region_mask"]
+    support = bytearray(1 if (not O[i] and mask[i] >= rm) else 0 for i in range(n))
+    body = bytearray(1 if (support[i] and mh[i] >= pd["body_u"]) else 0 for i in range(n))
+    level, parent, side = divide_flood(w, h, support, Kf, nb, o_star, queue)
+    res["flood"] = (level, parent, side)
+    pt = {}
+    dh = {}
+    for c in range(n):
+        if not body[c] or side[c] != 1:
+            continue
+        best = -1
+        x, y = c % w, c // w
+        for code in N4:
+            xx, yy = x + DX[code], y + DY[code]
+            if not (0 <= xx < w and 0 <= yy < h):
+                continue
+            m = yy * w + xx
+            if body[m] and side[m] == 2 and (best < 0 or Kf[m] < Kf[best]):
+                best = m
+        if best >= 0:
+            pt[c] = best
+            dh[c] = max(Kf[c], Kf[best])
+    crest_cells = [i for i in range(n) if crest[i]]
+    rdist, rsrc = dijkstra(w, h, lambda m: support[m], [(c, c) for c in crest_cells], pd["reach5"], queue)
+    res["range_search"] = (rdist, rsrc)
+    for c in sorted(pt):
+        if c in rdist:
+            ranges[label[rsrc[c]] - 1]["divide"].append(c)
+    res["partner"] = pt
+    res["dh"] = dh
+    # E6.5.4 to E6.5.6
+    world_cols = []
+    sites = res["sites"]
+    tries = res["tries"]
+    sb2 = pd["spacing_b"] ** 2
+
+    def xy(c):
+        return c % w, c // w
+
+    def d2(a, b):
+        dx = a % w - b % w
+        dy = a // w - b // w
+        return dx * dx + dy * dy
+
+    for rg in ranges:
+        if rg["slots"] == 0 or not rg["divide"]:
+            continue
+        k = rg["label"]
+        D = rg["divide"]
+        DB = Buckets(w, D)
+        CB = Buckets(w, rg["cells"])
+        cand = []
+        info = {}
+        for c in D:
+            dc = dh[c]
+            if any(q != c and (dh[q], q) < (dc, c) for q in DB.box(c, pd["win"])):
+                continue
+            chA = pass_chain(parent, c)
+            chB = pass_chain(parent, pt[c])
+            pa = chA[min(20, len(chA) - 1)]
+            pb = chB[min(20, len(chB) - 1)]
+            ax, ay = pb % w - pa % w, pb // w - pa // w
+            lmax = rmax = -1
+            cx, cy = xy(c)
+            for q in DB.box(c, pd["rise_b"]):
+                crv = ax * (q // w - cy) - ay * (q % w - cx)
+                if crv > 0:
+                    lmax = max(lmax, dh[q])
+                elif crv < 0:
+                    rmax = max(rmax, dh[q])
+            if lmax >= dc + pd["rise_u"] and rmax >= dc + pd["rise_u"]:
+                cand.append(c)
+                info[c] = (ax, ay, chA, chB)
+        rg["candidates"] = cand
+        cols_k = []
+        tried = set()
+        for j in range(rg["slots"]):
+            placed = False
+            while True:
+                elig = [c for c in cand if c not in tried and all(d2(c, wc) >= sb2 for wc in world_cols)]
+                if not elig:
+                    break
+
+                def score(c):
+                    dmin = min([d2(c, rg["A"]), d2(c, rg["B"])] + [d2(c, wc) for wc in cols_k])
+                    hj = hash_at(K_pass, c, j) >> 54
+                    return dmin * (1024 + (hj * 3) // 10)
+                best = min(elig, key=lambda c: (dh[c], -score(c), c))
+                tried.add(best)
+                rej, site = pass_crossing(best, info[best], rg, k, t, pd, w, h, O, h0, mask, profile,
+                                          mh, ter, body, bigbasin, basin, docean, dA, label, pt, D, DB, CB,
+                                          dh, world_top, scale, K_pass)
+                tries.append((best, k, j, rej))
+                if site is not None:
+                    site["slot"] = j
+                    site["s"] = len(sites)
+                    sites.append(site)
+                    cols_k.append(best)
+                    world_cols.append(best)
+                    placed = True
+                    break
+            if not placed:
+                break
+    # E6.5.7
+    fz = t["foothill_fraction"]
+    keep = t["pass_texture_keep"]
+    Knz = substream(K_pass, 3)
+    records = []
+    for s in sites:
+        if s["gap"]:
+            records.append(None)
+            continue
+        axis = s["axis"]
+        arc = s["arc"]
+        ci = s["ci"]
+        last = len(axis) - 1
+        hw = s["halfwidth"]
+        hwmax = mul(hw, add(ONE, t["pass_width_var"]))
+        lim5 = mul_div(hwmax, 5, 16 * ONE) + 2
+        dist, src = dijkstra(w, h, lambda m: not O[m], [(c, a) for a, c in enumerate(axis)], lim5, queue)
+        rec = []
+        for c in sorted(dist):
+            d = dist[c]
+            a = src[c]
+            s_m = fm(arc[a] - arc[ci])
+            dend = fm(min(arc[a], arc[last] - arc[a]))
+            dd = fm(d)
+            nz = noise2(Knz, mul(s_m, FR_1_1500), from_int(3 * s["s"] + 2))
+            hwv = mul(hw, add(ONE, mul(t["pass_width_var"], nz)))
+            if dd >= hwv:
+                continue
+            bump = mul(fade(ONE - div(dd, hwv)), fade(clamp(div(dend, from_int(300)), 0, ONE)))
+            pv = ONE - mul(s["depth"], bump)
+            if pv < P[c]:
+                P[c] = pv
+            rec.append((c, a, bump))
+        records.append(rec)
+    # E6.5.8
+    eps = t["pass_drain_step_m"]
+    best = {}
+    for s, rec in zip(sites, records):
+        if rec is None:
+            continue
+        axis = s["axis"]
+        S = [add(h0[c], m_low(scale, mask[c], profile[c], P[c], fz, keep)) for c in axis]
+        Nn = [add(h0[c], m_low(scale, mask[c], profile[c], ONE, fz, keep)) for c in axis]
+        Dl = pass_drainage(S, Nn, s["ci"], eps)
+        s["delta"] = Dl
+        for c, a, bump in rec:
+            if bump > best.get(c, -1):
+                best[c] = bump
+                adj[c] = -mul(Dl[a], bump)
+    res["records"] = records
+    return res
+
+
+def pass_crossing(c, info, rg, k, t, pd, w, h, O, h0, mask, profile, mh, ter, body, bigbasin, basin,
+                  docean, dA, label, pt, D, DB, CB, dh, world_top, scale, K_pass):
+    """E6.5.6 for col c: (reject name or None, site dict or None)."""
+    ax, ay, chA, chB = info
+    cx, cy = c % w, c // w
+    # (a)
+    if docean[c] < pd["coast_clear"]:
+        return "coast", None
+    # (b)
+    if mul(mask[c], scale) < t["pass_barrier_m"]:
+        return "barrier", None
+    # (c)
+    axis = list(reversed(chA)) + chB
+    ci = len(chA) - 1
+    if O[chA[-1]] or O[chB[-1]]:
+        return "sea", None
+    arc = [0] * len(axis)
+    for q in range(1, len(axis)):
+        a0, a1 = axis[q - 1], axis[q]
+        diag = (a0 % w != a1 % w) and (a0 // w != a1 // w)
+        arc[q] = arc[q - 1] + (7 if diag else 5)
+    last = len(axis) - 1
+    reach_A = fm(arc[ci])
+    reach_B = fm(arc[last] - arc[ci])
+    # (d)
+    qA = max(q for q in range(ci) if not body[axis[q]])
+    qB = min(q for q in range(ci + 1, last + 1) if not body[axis[q]])
+    eA, eB = axis[qA], axis[qB]
+    b5A = arc[ci] - arc[qA]
+    b5B = arc[qB] - arc[ci]
+    if max(fm(b5A), fm(b5B)) > pd["side_max"]:
+        return "side", None
+    exits = [(e % w - cx, e // w - cy) for e in (eA, eB)]
+    # (e) 1
+    sxl = syl = nl = sxr = syr = nr = 0
+    for q in DB.box(c, 37):
+        dx, dy = q % w - cx, q // w - cy
+        crv = ax * dy - ay * dx
+        if crv > 0:
+            sxl += dx
+            syl += dy
+            nl += 1
+        elif crv < 0:
+            sxr += dx
+            syr += dy
+            nr += 1
+    if nl > 0 and nr > 0:
+        tx = sxr // nr - sxl // nl
+        ty = syr // nr - syl // nl
+        t2 = tx * tx + ty * ty
+        for vx, vy in exits:
+            vt = vx * tx + vy * ty
+            if 2 * vt * vt > (vx * vx + vy * vy) * t2:
+                return "along_divide", None
+    # (e) 2
+    tp = None
+    box = CB.box(c, pd["rise_b"])
+    if box:
+        cmin = min(box, key=lambda q: (dA[q], q))
+        cmax = min(box, key=lambda q: (-dA[q], q))
+        if cmin != cmax:
+            tp = (cmax % w - cmin % w, cmax // w - cmin // w)
+            t2 = tp[0] ** 2 + tp[1] ** 2
+            for vx, vy in exits:
+                vt = vx * tp[0] + vy * tp[1]
+                if 2 * vt * vt > (vx * vx + vy * vy) * t2:
+                    return "along_crest", None
+    # (f)
+    chx, chy = eB % w - eA % w, eB // w - eA // w
+    chord2 = chx * chx + chy * chy
+    arc5 = b5A + b5B
+    if 4 * arc5 * arc5 > 225 * chord2:
+        return "chord", None
+    if tp is not None:
+        ct = chx * tp[0] + chy * tp[1]
+        if 100 * ct * ct > 33 * chord2 * (tp[0] ** 2 + tp[1] ** 2):
+            return "chord", None
+    # (g)
+    if any(body[q] and bigbasin[q] for q in axis):
+        return "tarn_crossing", None
+    # (h)
+    maxm = max(mh[q] for q in axis) if axis else 0
+    M = maxm << 16
+    vj = ((hash_at(K_pass, c, 16) >> 32) * 2) - ONE
+    wj = ((hash_at(K_pass, c, 17) >> 32) * 2) - ONE
+    grade = max(0, mul(t["pass_grade"], add(ONE, mul(t["pass_grade_jitter"], vj))))
+    saddle = clamp(mul(mul(grade, min(reach_A, reach_B)), FR_8_15), t["pass_min_col_m"], t["pass_saddle_max_m"])
+    capped = False
+    if sub(M, t["pass_max_cut_m"]) > saddle:
+        saddle = sub(M, t["pass_max_cut_m"])
+        capped = True
+    halfwidth = mul(t["pass_halfwidth_m"], add(ONE, mul(t["pass_width_jitter"], wj)))
+    site = {"range": k, "col": c, "partner": pt[c], "axis": axis, "ci": ci, "arc": arc, "dh": dh[c],
+            "maxm": maxm, "saddle": saddle, "halfwidth": halfwidth, "capped": capped, "gap": False,
+            "depth": 0, "reach": (reach_A, reach_B), "exits": (eA, eB)}
+    # (i)
+    if M <= saddle:
+        site["gap"] = True
+        site["capped"] = False
+        return None, site
+    # (j)
+    if any(basin[q] for q in grid_box(w, h, c, pd["tarn_b"])):
+        return "col_tarn", None
+    # (k)
+    hr = ((halfwidth >> 32) // 16) // 2
+    hr2 = hr * hr
+    tk = rg["top"]
+    for q in axis:
+        if _d2(w, q, tk) <= hr2 or _d2(w, q, world_top) <= hr2:
+            return "summit_top", None
+    # (l)
+    zmax = -1
+    for a in range(0, len(axis), 4):
+        for q in grid_box(w, h, axis[a], hr):
+            if not O[q] and mh[q] > zmax:
+                zmax = mh[q]
+    if zmax > rg["p90"]:
+        return "zone_p90", None
+    # (m)
+    if sub(add(h0[c], saddle), max(h0[axis[0]], h0[axis[last]])) < t["pass_min_col_m"]:
+        return "feet", None
+    # (n)
+    need = max(t["pass_barrier_m"], add(saddle, t["pass_peak_rise_m"])) >> 16
+    hl = hrr = -1
+    for q in DB.box(c, 187):
+        dx, dy = q % w - cx, q // w - cy
+        if dx * dx + dy * dy < 81:
+            continue
+        crv = ax * dy - ay * dx
+        tv = max(ter[q], ter[pt[q]])
+        if crv > 0:
+            hl = max(hl, tv)
+        elif crv < 0:
+            hrr = max(hrr, tv)
+    if hl < need or hrr < need:
+        return "shoulders", None
+    # (o)
+    lo, capped = pass_depth([mask[q] for q in axis], [profile[q] for q in axis], scale, saddle, capped,
+                            maxm, t)
+    site["capped"] = capped
+    site["depth"] = ONE - lo
+    site["lo"] = lo
+    return None, site
+
+
+def _d2(w, a, b):
+    dx = a % w - b % w
+    dy = a // w - b // w
+    return dx * dx + dy * dy
+
+
+def talus_once(w, h, hg, ocean, Do, Dd, rate, flo, cells):
+    """One E8.6-form step over the given land cells (Jacobi): returns
+    (new values dict, cells with delta != 0)."""
+    tab = nbt(w, h)
+    new = {}
+    nz = []
+    for c in cells:
+        hc = hg[c]
+        delta = 0
+        for code, m in tab[c]:
+            hm = 0 if ocean[m] else hg[m]
+            Dk = Dd if code & 1 else Do
+            xv = sub(hc, hm)
+            if xv > Dk:
+                delta = sub(delta, mul(rate, sub(xv, Dk)))
+            elif (not ocean[m]) and -xv > Dk:
+                delta = add(delta, mul(rate, sub(-xv, Dk)))
+        if delta != 0:
+            nz.append(c)
+        v = add(hc, delta)
+        new[c] = v if v > flo else flo
+    return new, nz
+
+
+def final_talus(w, h, hg, ocean, Do, Dd, rate, flo, iterations, active=True):
+    """E8.7: with active=True the active-set evaluation of the spec, else
+    full Jacobi steps over every land cell."""
+    hg = list(hg)
+    tab = nbt(w, h)
+    land = [c for c in range(w * h) if not ocean[c]]
+    cells = land
+    for _ in range(iterations):
+        if not cells:
+            break
+        new, nz = talus_once(w, h, hg, ocean, Do, Dd, rate, flo, cells)
+        for c, v in new.items():
+            hg[c] = v
+        if active:
+            s = set()
+            for c in nz:
+                s.add(c)
+                for _, m in tab[c]:
+                    if not ocean[m]:
+                        s.add(m)
+            cells = sorted(s)
+        else:
+            cells = land
+    return hg
 
 
 # ---------------------------------------------------------------------------
@@ -1276,7 +2049,11 @@ def run_world(seed, n, t, upto=None):
     p = erosion_params(t, stream_key(seed, "geo.elevation.erosion"))
     h8 = erode(n, n, hts["h7"], O, p)
     r["h8"] = h8
-    e = quantize(h8, O)
+    pd = pass_derived(t, n)
+    h8t = final_talus(n, n, h8, O, pd["Dof"], pd["Ddf"], t["final_talus_rate"], t["land_floor_m"],
+                      t["final_talus_iterations"])
+    r["h8t"] = h8t
+    e = quantize(h8t, O)
     r["e"] = e
     cost, bump = cost_bump(seed, n, n, t, O)
     max_share = max(1, round_int(mul(from_int(L_O), t["lake_max_share"])))
@@ -1838,7 +2615,451 @@ def check_tuning_examples(c):
     c.eq("check 3", named_checks(make_tuning({"lake_min_area_m2": 200000, "lake_max_area_m2": 100000})), [3])
 
 
-# 10.4 reference values.
+# ---------------------------------------------------------------------------
+# Section 9.1 pass rows and P1-00 10.3 report pass keys
+# ---------------------------------------------------------------------------
+
+def pass_rows(n, sites, h7):
+    """The rows of table `pass` (9.1), in id order: dicts."""
+    rows = []
+    for s in sites:
+        c = s["col"]
+        rows.append({"id": s["s"] + 1, "range_id": s["range"], "kind": 0 if s["gap"] else 1,
+                     "capped": 1 if (s["capped"] and not s["gap"]) else 0, "col_x": c % n, "col_y": c // n,
+                     "saddle_dm": mul_div(s["dh"], 10, 1 << 16), "col_dm": mul_div(h7[c], 10, 1 << 32),
+                     "path": b"".join(q.to_bytes(4, "little") for q in s["axis"])})
+    return rows
+
+
+def rows_text(rows):
+    return "".join("%d %d %d %d %d %d %d %d %s\n" % (r["id"], r["range_id"], r["kind"], r["capped"], r["col_x"],
+                                                     r["col_y"], r["saddle_dm"], r["col_dm"],
+                                                     hashlib.sha256(r["path"]).hexdigest()) for r in rows)
+
+
+def cell_s2(w, h, e, x, y):
+    """P1-00 10.3 cell slope S2 on e' = max(e, 0)."""
+    def ep(xx, yy):
+        v = e[yy * w + xx]
+        return v if v > 0 else 0
+    xa, xb = max(x - 1, 0), min(x + 1, w - 1)
+    ya, yb = max(y - 1, 0), min(y + 1, h - 1)
+    gx = (ep(xb, y) - ep(xa, y)) * (2 // (xb - xa)) if xb > xa else 0
+    gy = (ep(x, yb) - ep(x, ya)) * (2 // (yb - ya)) if yb > ya else 0
+    return gx * gx + gy * gy
+
+
+def walkable_end_to_end(w, h, e, path):
+    """P1-00 10.3 "walkable end to end" of one pass row."""
+    a, b = path[0], path[-1]
+    region = {}
+    for q in path:
+        for c in grid_box(w, h, q, 19):
+            if e[c] > 0:
+                region[c] = 1
+    for q in (a, b):
+        for c in grid_box(w, h, q, 37):
+            if e[c] > 0:
+                region[c] = 1
+    walk = {c for c in region if cell_s2(w, h, e, c % w, c // w) <= 50204}
+    Fa = [c for c in sorted(walk) if _d2(w, c, a) <= 1369]
+    Fb = {c for c in walk if _d2(w, c, b) <= 1369}
+    seen = set(Fa)
+    dq = deque(Fa)
+    tab = nbt(w, h)
+    while dq:
+        c = dq.popleft()
+        if c in Fb:
+            return True
+        for _, m in tab[c]:
+            if m in walk and m not in seen:
+                seen.add(m)
+                dq.append(m)
+    return False
+
+
+def metres1(v):
+    s = "-" if v < 0 else ""
+    v = abs(v)
+    return "%s%d.%d" % (s, v // 10, v % 10)
+
+
+def report_pass_lines(n, rows, e):
+    lowered = [r for r in rows if r["kind"] == 1]
+    out = ["passes = %d" % len(lowered), "natural_gaps = %d" % sum(1 for r in rows if r["kind"] == 0),
+           "passes_capped = %d" % sum(1 for r in rows if r["capped"] == 1)]
+    vals = sorted(e[r["col_y"] * n + r["col_x"]] for r in lowered)
+    if vals:
+        pc = [vals[min(len(vals) - 1, p * len(vals) // 100)] for p in (0, 50, 100)]
+        out.append("pass_col_m = " + " ".join(metres1(v) for v in pc))
+    else:
+        out.append("pass_col_m = n/a n/a n/a")
+    walk = 0
+    for r in lowered:
+        path = [int.from_bytes(r["path"][4 * i:4 * i + 4], "little") for i in range(len(r["path"]) // 4)]
+        if walkable_end_to_end(n, n, e, path):
+            walk += 1
+    out.append("passes_walkable = %d" % walk)
+    return out
+
+
+# ---------------------------------------------------------------------------
+# Worked examples of the fourth version (P1-01 10.1, T1 to T7)
+# ---------------------------------------------------------------------------
+
+T1_K = [
+    [100] * 13,
+    [400 + 20 * (x % 3) for x in range(2, 15)],
+    [800, 850, 900, 950, 900, 700, 550, 650, 900, 950, 900, 850, 800],
+    [380 + 20 * (x % 2) for x in range(2, 15)],
+    [100] * 13,
+]
+T1_OVERRIDES = {"pass_saddle_window_m": 32, "pass_saddle_rise_reach_m": 96, "pass_size_ref_n": 16,
+                "pass_min_length_m": 0, "pass_coast_clear_m": 0, "pass_halfwidth_m": 20}
+
+
+def t1_grid(h0_extra=None):
+    w, h = 17, 9
+    n = w * h
+    O = bytearray(1 if (x == 0 or x == 16 or y == 0 or y == 8) else 0 for y in range(h) for x in range(w))
+    h0 = [0] * n
+    unit = [0] * n
+    mask = [0] * n
+    prof = [0] * n
+    nb = [ONE if (i // w) <= 3 else -ONE for i in range(n)]
+    for y in range(2, 7):
+        for x in range(2, 15):
+            i = y * w + x
+            mask[i] = ONE
+            prof[i] = ONE
+            unit[i] = T1_K[y - 2][x - 2] << 22
+    if h0_extra:
+        for (x, y), v in h0_extra.items():
+            h0[y * w + x] = v
+    return w, h, h0, unit, mask, prof, nb, O
+
+
+def t1_run(over=None, h0_extra=None):
+    o = dict(T1_OVERRIDES)
+    if over:
+        o.update(over)
+    t = make_tuning(o)
+    w, h, h0, unit, mask, prof, nb, O = t1_grid(h0_extra)
+    return pass_layout(0, w, h, h0, unit, mask, prof, nb, O, from_int(1024), 0, from_int(4), t), w
+
+
+def check_pass_examples(c):
+    t = shipped_tuning()
+    ts = small_tuning()
+    # Pass derived integers.
+    for n, cc, ml, sm in ((128, 27, 117, 375), (512, 109, 468, 1500), (1024, 219, 937, 3000), (2048, 219, 937, 3000)):
+        pd = pass_derived(t, n)
+        c.eq("pd %d" % n, (pd["coast_clear"], pd["min_len"], pd["side_max"]), (cc, ml, from_int(sm)))
+    pd = pass_derived(t, 1024)
+    pds = pass_derived(ts, 128)
+    c.eq("pd spacing", (pd["spacing"], pds["spacing"]), (937, 312))
+    c.eq("pd reach5", (pd["reach5"], pds["reach5"]), (313, 125))
+    c.eq("pd boxes", (pd["win"], pd["rise_b"], pd["spacing_b"], pd["tarn_b"]), (25, 93, 156, 10))
+    c.eq("pd boxes small", (pds["win"], pds["rise_b"], pds["spacing_b"], pds["tarn_b"]), (12, 37, 50, 4))
+    c.eq("pd units", (pd["rise_u"], pds["rise_u"], pd["body_u"]), (9830400, 4915200, 19660800))
+    c.eq("pd consts", (FR_8_15, FR_9_10, FR_1_1500, pd["walk"], pd["Dof"], pd["Ddf"]),
+         (2290649225, 3865470566, 2863312, 113387136624, 343597383680, 485920080000))
+    c.eq("K_pass seed 0", stream_key(0, "geo.elevation.pass"), 0x964f8d9d472fb93b)
+    c.eq("substream(K_pass, 3)", substream(stream_key(0, "geo.elevation.pass"), 3), 0x262b01aeab682941)
+    # T1.
+    lay, w = t1_run()
+    rg = lay["ranges"]
+    c.eq("T1 ranges", len(rg), 1)
+    r = rg[0]
+    c.eq("T1 range", (r["s0"], r["A"], r["B"], r["length"], r["slots"], r["top"], r["p90"]),
+         (36, 116, 36, 68, 1, 4 * 17 + 5, 850 << 16))
+    lev, par, side = lay["flood"]
+    c.eq("T1 sides rows<=3", all(side[y * w + x] == 2 for y in range(2, 4) for x in range(2, 15)), True)
+    c.eq("T1 sides rows>=5", all(side[y * w + x] == 1 for y in range(5, 7) for x in range(2, 15)), True)
+    c.eq("T1 side row 4", [side[4 * w + x] for x in range(2, 15)], [2] + [1] * 11 + [2])
+    want_div = [((x, 4), (x, 3), dh) for x, dh in zip(range(3, 14), (850, 900, 950, 900, 700, 550, 650, 900,
+                                                                       950, 900, 850))]
+    want_div += [((2, 5), (2, 4), 800), ((14, 5), (14, 4), 800)]
+    got_div = [((d % w, d // w), (lay["partner"][d] % w, lay["partner"][d] // w), lay["dh"][d] >> 16)
+               for d in r["divide"]]
+    c.eq("T1 divide", got_div, want_div)
+    c.eq("T1 divide exact", all((lay["dh"][d] & 0xFFFF) == 0 for d in r["divide"]), True)
+    c.eq("T1 candidates", r["candidates"], [4 * w + 8])
+    c.eq("T1 tries", lay["tries"], [(4 * w + 8, 1, 0, "shoulders")])
+    c.eq("T1 chains", (pass_chain(par, 4 * w + 8), pass_chain(par, 3 * w + 8)),
+         ([4 * w + 8, 5 * w + 8, 6 * w + 7, 7 * w + 6], [3 * w + 8, 2 * w + 7, 1 * w + 6]))
+    c.eq("T1 values", (hash_at(stream_key(0, "geo.elevation.pass"), 4 * w + 8, 16) >> 32) * 2 - ONE, 3576141052)
+    c.eq("T1 wj", (hash_at(stream_key(0, "geo.elevation.pass"), 4 * w + 8, 17) >> 32) * 2 - ONE, 879522112)
+    c.eq("T1 reach fm(19)", fm(19), 261134011597)
+    c.eq("T1 P = ONE, adj = 0", (set(lay["P"]), set(lay["adj"])), ({ONE}, {0}))
+    # Variants.
+    for over, h0x, want in (({"pass_coast_clear_m": 100}, None, "coast"),
+                            ({"pass_barrier_m": 1100}, None, "barrier"),
+                            ({"pass_side_max_m": 30}, None, "side"),
+                            ({"pass_halfwidth_m": 450}, None, "summit_top"),
+                            (None, {(6, 7): from_int(10)}, "feet")):
+        lv, _ = t1_run(over, h0x)
+        c.eq("T1 variant %s" % want, lv["tries"], [(4 * w + 8, 1, 0, want)])
+        c.eq("T1 variant %s no site" % want, lv["sites"], [])
+    # A constructed variant for rule (c), which no fixture world reaches
+    # (10.2 "Rule coverage"): row y = 7 made ocean, so the side-1 chain of
+    # the col ends at an ocean seed.
+    tv = make_tuning(T1_OVERRIDES)
+    w7, h7_, h0g, ug, mg, pg, nbg, Og = t1_grid()
+    for x in range(17):
+        Og[7 * 17 + x] = 1
+    lv = pass_layout(0, w7, h7_, h0g, ug, mg, pg, nbg, Og, from_int(1024), 0, from_int(4), tv)
+    c.eq("T1 variant sea", lv["tries"], [(4 * w + 8, 1, 0, "sea")])
+    lv, _ = t1_run({"pass_min_col_m": 600, "pass_saddle_max_m": 600})
+    c.eq("T1 natural gap try", lv["tries"], [(4 * w + 8, 1, 0, None)])
+    s = lv["sites"][0]
+    axis_want = [7 * w + 6, 6 * w + 7, 5 * w + 8, 4 * w + 8, 3 * w + 8, 2 * w + 7, 1 * w + 6]
+    c.eq("T1 natural gap site", (s["gap"], s["capped"], s["axis"], s["ci"], s["arc"], s["saddle"], s["maxm"]),
+         (True, False, axis_want, 3, [0, 7, 14, 19, 24, 31, 38], from_int(600), 36044800))
+    c.eq("T1 gap P, adj", (set(lv["P"]), set(lv["adj"])), ({ONE}, {0}))
+    rows = pass_rows(17, lv["sites"], [0] * (17 * 9))
+    c.eq("T1 gap row", (rows[0]["id"], rows[0]["range_id"], rows[0]["kind"], rows[0]["capped"], rows[0]["col_x"],
+                        rows[0]["col_y"], rows[0]["saddle_dm"]), (1, 1, 0, 0, 8, 4, 5500))
+    # T1 values of (h) on the base case, recomputed from the site of a run
+    # whose shoulders test cannot fail (pass_barrier_m 0, pass_peak_rise_m 0
+    # would still need divide cells 9 cells away): the gap variant above has
+    # the same reaches; its halfwidth is the base case's.
+    c.eq("T1 halfwidth", s["halfwidth"], 91176478600)
+    c.eq("T1 exits", s["exits"], (6 * w + 7, 2 * w + 7))
+    # T2.
+    def along(v, tv):
+        vt = v[0] * tv[0] + v[1] * tv[1]
+        return 2 * vt * vt > (v[0] ** 2 + v[1] ** 2) * (tv[0] ** 2 + tv[1] ** 2)
+    c.eq("T2 e1", (along((-3, 1), (-7, 0)), along((-1, 2), (-7, 0)), along((-1, -2), (-7, 0))), (True, False, False))
+    c.eq("T2 e2", (along((-4, -1), (-11, -2)), along((-1, 2), (-11, -2)), along((-1, -2), (-11, -2))),
+         (True, False, False))
+    c.eq("T2 chord arc", (4 * 40 * 40 > 225 * 16, 4 * 24 * 24 > 225 * 16), (True, False))
+    c.eq("T2 chord angle", (100 * 41 ** 2 > 33 * 25 * 125, 100 * 8 ** 2 > 33 * 16 * 125), (True, False))
+    c.eq("T2 fdiv", (-21 // 6, 21 // 6), (-4, 3))
+    # T3.
+    def t3(scale_m, profs, maxm, saddle, capped):
+        prs = [cr.parse_decimal(p) for p in profs]
+        return pass_depth([ONE] * 7, prs, from_int(scale_m), saddle, capped, maxm, t), prs
+    (lo, cap), prs = t3(1000, ["0.6", "0.62", "0.64", "0.65", "0.64", "0.62", "0.6"], 42598399, from_int(600), False)
+    c.eq("T3 A", (lo, cap, ONE - lo), (2267742738, False, 2027224558))
+    mv = [m_low(from_int(1000), ONE, p, lo, t["foothill_fraction"], t["pass_texture_keep"]) for p in prs]
+    c.eq("T3 A top", max(mv), 1474032779000)
+    c.eq("T3 A m' (cm)", [rha(v * 100, ONE) for v in mv], [31680, 32736, 33792, 34320, 33792, 32736, 31680])
+    (lo, cap), prs = t3(1000, ["0.15", "0.4", "0.7", "0.85", "0.75", "0.45", "0.15"], 850 << 16, from_int(600), False)
+    c.eq("T3 B", (lo, cap, ONE - lo), (1768515945, True, 2526451351))
+    mv = [m_low(from_int(1000), ONE, p, lo, t["foothill_fraction"], t["pass_texture_keep"]) for p in prs]
+    c.eq("T3 B top", max(mv), 1503238554000)
+    c.eq("T3 B m' (mm)", [rha(v * 1000, ONE) for v in mv], [61765, 164706, 288235, 350000, 308824, 185294, 61765])
+    (lo, cap), prs = t3(1400, ["0.5", "0.9", "1", "1", "0.95", "0.7", "0.4"], 1400 << 16, from_int(900), True)
+    c.eq("T3 C", (lo, cap, ONE - lo), (2761050405, True, 1533916891))
+    mv = [m_low(from_int(1400), ONE, p, lo, t["foothill_fraction"], t["pass_texture_keep"]) for p in prs]
+    c.eq("T3 C top", max(mv), 3865470567000)
+    # T4.
+    K3 = substream(stream_key(0, "geo.elevation.pass"), 3)
+    hw = from_int(450)
+    depth = cr.parse_decimal("0.4")
+    c.eq("T4 hwmax", mul(hw, add(ONE, t["pass_width_var"])), 2609192632500)
+    c.eq("T4 lim5", mul_div(2609192632500, 5, 16 * ONE) + 2, 192)
+    for d, arca, xw, nzw, bw, pw in ((0, 100, 0, 0, ONE, 2576980378),
+                                     (35, 150, 458129920, -413989064, 3815349666, 2768827430),
+                                     (100, 150, 458129920, -413989064, 510662794, 4090702178),
+                                     (60, 40, -549755904, 476092256, 1039159827, 3879303365),
+                                     (0, 240, 1282763776, -589897286, 44140840, 4277310960)):
+        s_m = fm(arca - 100)
+        dend = fm(min(arca, 250 - arca))
+        x = mul(s_m, FR_1_1500)
+        nz = noise2(K3, x, from_int(2))
+        b = pass_bump(fm(d), dend, hw, t["pass_width_var"], nz)
+        c.eq("T4 row d=%d arc=%d" % (d, arca), (x, nz, b, ONE - mul(depth, b)), (xw, nzw, bw, pw))
+    c.eq("T4 hwv row 2", mul(hw, add(ONE, mul(t["pass_width_var"], -413989064))), 1867532005800)
+    c.eq("T4 hwv row 4", mul(hw, add(ONE, mul(t["pass_width_var"], 476092256))), 2007719813700)
+    c.eq("T4 bump 0 at hwv", pass_bump(1867532005800, from_int(320), hw, t["pass_width_var"], -413989064), 0)
+    # T5.
+    Nn = [from_int(v) for v in (100, 300, 600, 900, 1000, 950, 900, 800, 760)]
+    S = [from_int(v) for v in (100, 280, 520, 640, 600, 610, 560, 380, 760)]
+    Dl = pass_drainage(S, Nn, 4, cr.parse_decimal("0.1"))
+    c.eq("T5 delta", Dl, [0, 0, 0, -172228188570, 0, 645533584590, 859852452660, 1632517069210, 0])
+    c.eq("T5 adj", (-mul(Dl[5], HALF), -mul(Dl[7], HALF)), (-322766792295, -816258534605))
+    # T6.
+    w6, h6 = 4, 3
+    rows6 = [[-5, 300, 310, 320], [-5, 200, 400, 420], [-5, 150, 380, 410]]
+    hg = [from_int(v) for r6 in rows6 for v in r6]
+    O6 = bytearray(1 if i % 4 == 0 else 0 for i in range(12))
+    pd6 = pass_derived(t, 4)
+    one = final_talus(w6, h6, hg, O6, pd6["Dof"], pd6["Ddf"], t["final_talus_rate"], t["land_floor_m"], 1)
+    c.eq("T6 one step", [one[i] for i in range(12) if i % 4],
+         [1173905047560, 1334124216320, 1379758243840, 835676373000, 1646351450120, 1798517555200,
+          692563476480, 1573873877000, 1760936591360])
+    full = final_talus(w6, h6, hg, O6, pd6["Dof"], pd6["Ddf"], t["final_talus_rate"], t["land_floor_m"], 100)
+    jac = final_talus(w6, h6, hg, O6, pd6["Dof"], pd6["Ddf"], t["final_talus_rate"], t["land_floor_m"], 100,
+                      active=False)
+    c.eq("T6 active = Jacobi", full, jac)
+    c.eq("T6 100 steps (mm)", [rha(full[i] * 1000, ONE) for i in range(12) if i % 4],
+         [97018, 190660, 278227, 99632, 195395, 284157, 100483, 196936, 286085])
+    c.eq("T6 ocean unchanged", [full[i] for i in range(0, 12, 4)], [from_int(-5)] * 3)
+
+
+# 10.4.1 reference values (fourth version, 0.6.0).
+
+REF4 = {
+    ("shipped", 64, 0): {
+        "P": "87d681296dff508e8132727aaa9b80254d14eda26d33ddd76721444876a5a7f0",
+        "adj": "c35020473aed1b4642cd726cad727b63fff2824ad68cedd7ffb73c7cbd890479",
+        "h8t": "6408c155b6771eaa76b4453844f8a7b6f0f59ef30d090a0b6fb70da6d86e457e",
+        "e_final": "9c6c21460f25fe03f5928e707cb4404b21e66d5547657946f96ae8c2530afcff",
+        "layer": "075e2af60c69e53ea2fc8e2f3e2d1fe0f1764203cfa81f9ea32f37049ffdb9bd",
+        "c": "8cb0bbd013e3bf7259047e494d2e89d2b28dc4cdc5c93d998b70a9453d1e8039",
+        "h7": "a6ae624b4587b0342e3fe5347db71ab01d74846bc9fe92d85f1bee7ceab52dc6",
+        "h8": "ec6a46ad0e448a23fbbff052dae9e5a34a8b877da23e38dddda4cd470ad77d49",
+    },
+    ("shipped", 128, 0): {
+        "nb": "a61dff055900dccac737af967ce454cf12821b4f152948115f299792b46f82ba",
+        "ns": "f6f56213c65f5e25aefcc9b17c6582aa150d2a47961b383e4596b625a1276923",
+        "P": "10eafb1e477739919c48e8fa320ac354548dd19a2fbc7cc7b8a2b3be246eac81",
+        "adj": "fa43239bcee7b97ca62f007cc68487560a39e19f74f3dde7486db3f98df8e471",
+        "h8t": "d925e3ab848ad8c6ffb3e6fbc486ac198f542cf6e20f4e5b53249f19fe584c4b",
+        "e_final": "6be551a27cd94ccc5115a2d14c245f4e197979c83f1859f87f3ad618a3c304c9",
+        "layer": "e61a87fb6d0151e49cb56de299669d600aca12d4c42652876cb0c5742d0ea812",
+        "h7": "13dfebec68615f598877827ee22f8de0b1bfc7dcc9cf080582ed2b7cfbe26110",
+        "h8": "45f75a532f1197cedf1005eee6db8ac526e4d4b9a624f94647a34794cc1b5306",
+    },
+    ("shipped", 256, 0): {
+        "c": "c3fa7a799ab0a9ec6aa3c44de39958b7312ca468b3d9697b903a0954297d39a1",
+        "nb": "d6b3c82b43ff0e85cf11e453992ee40b6c8832d5aa5b0d8bc8f9eb29c35788fa",
+        "ns": "ba84fe241f434395ab4408d7f25360b0a0d5935a74253e94793c84b93b11e464",
+        "ocean": "f4039a874b6feaf97b3966a148bcf9a985b2f88901516b5954987a2a9ae3ad8a",
+        "P": "0e02226887184b32b1aed104a73e8825b72ea7d5bf55e371f899dc0a639acaa0",
+        "adj": "a119fc5fd29a2e1d49bbcec023502a6ff1384f16ebe884f013a090a1ac1009f2",
+        "h7": "0a3f80ad3c3881a0210535c4071457edde0f5dc490a3b4386ba1027026193226",
+        "h8": "d510feb3b1cde0163fe1cbaef4a8d46856c928a94bd219ef5afb869e179c0b08",
+        "h8t": "4a139b55e1dd03e164a4ee22066873e5a95d77f1f504e50cde6de6ecda8f0e6e",
+        "e_final": "e4209a31883b7deb6e9bc360f88af565c5ce810219e3be960980d6a3e69099c8",
+        "layer": "ead406b2867e0f54ca6c8b88aed5a009468f0fbba870e69650eac563bb3ef84b",
+    },
+    ("small", 128, 0): {
+        "P": "10eafb1e477739919c48e8fa320ac354548dd19a2fbc7cc7b8a2b3be246eac81",
+        "adj": "fa43239bcee7b97ca62f007cc68487560a39e19f74f3dde7486db3f98df8e471",
+        "h7": "13dfebec68615f598877827ee22f8de0b1bfc7dcc9cf080582ed2b7cfbe26110",
+        "h8": "45f75a532f1197cedf1005eee6db8ac526e4d4b9a624f94647a34794cc1b5306",
+        "h8t": "d925e3ab848ad8c6ffb3e6fbc486ac198f542cf6e20f4e5b53249f19fe584c4b",
+        "e_final": "ca3950733df5223ce1611e6c69d6e88c182f0668769be27d9d347694e5e66a3b",
+        "layer": "50eb12f852f5f38da14980b857df34fe422781a4d1b576f84f79b05a4625526a",
+    },
+    ("small", 128, 8): {
+        "P": "153363e52dba3ac0a7f4bd4b3fdf6a8de5974b8c2a8c0be7a69925225e7ac099",
+        "adj": "dcb69c21eae52ffeda6a38cabb4a519d894b619a6a84c07122ca407d6b03156e",
+        "h7": "a5c12ba35a719cd335bcf95c98a0b1247a4aa898dc270013cfd2c80352aeb81a",
+        "h8": "0e05b9b0b512b4d54dd3bb80a88afc00fbf5da3149ed9ff81f3153f1e221789b",
+        "h8t": "327e6b3916ec56edc715489d8ff51ad90a4ed948fb25a5d2de35482bfa5c1d0f",
+        "e_final": "3125ad6fd0b1dff9dc9603c9410a15e401c0a7d57cc1c0c4468ed267e678f94c",
+        "layer": "1578240a7313d25c93b8828be004579ef84cf708e956a9d138314c8eef141850",
+    },
+    ("small", 128, 9): {
+        "P": "10eafb1e477739919c48e8fa320ac354548dd19a2fbc7cc7b8a2b3be246eac81",
+        "adj": "fa43239bcee7b97ca62f007cc68487560a39e19f74f3dde7486db3f98df8e471",
+        "h7": "7ecb32fd5a899bea113545a8f893477fac81543eaf298f8f343b035a077ae3c3",
+        "h8": "e30981579894a7676abb613e4a0fcb93efbdaceb898716524f451574dafa3c96",
+        "h8t": "a532343c77c14e1b431ad153607af8b53979121c69787c4b8f041fb8bfe4154f",
+        "e_final": "e33673ba2a648ba2811b9bcbdcf50d33dbd5ba640a57432ea1776bdd9c0c6249",
+        "layer": "e0b66bbbb9083fe4660eac5d6fbcd70ddfb0f17c1e9ea70051fa386e6dd97076",
+    },
+    ("small", 128, 31): {
+        "P": "8768912497d41aa61eccec911d16b1ede6b8ae8ec5ebcfcbe5134ae4a9db4585",
+        "adj": "b7b1c7d41c2b279999a924756112d3ec7bdbdde1009399cc412a4c55296dfafd",
+        "h7": "35012aa76a441a944d39995017d31d2fca88af9ab33b95916662e38f8ed6d7c3",
+        "h8": "fdad85f5df957983bf2696aac36616cf189f5f096482a77eb74b6630bef9c9d9",
+        "h8t": "56263941cc9ca5b13836c2e61c65977ae7e17040f2392ac9b4feb9eac9f969b8",
+        "e_final": "30d7de5445528b35394efb713051bda2c5e4c4155e15518a7f83b1c7f7da4478",
+        "layer": "910ed145f33dd585ddc999d8e18ad8e381d4845f627603851db2d1423c06db47",
+    },
+}
+REF4_1024 = [
+    "44bc2c07bc695a1e608bfe8963ea5d88b807e6f78d27d2662194ca06ffab949d",
+    "2e3b7dee44d149f739bbf6040f0345ee310c51f2f5e27940c57f1759ef16eec4",
+    "58fe223112f73ebc8dbe03d64386144631b2cef6735f7117a6bd905b43592861",
+    "e9fb8259e2813298306a12b7d3611405485dd144de7cc6ec6cb6d0daca3d1273",
+    "74ff0a90733704ba6d66f0bcef621f4d0dd76ad11c7fa1647ab83437edb6cdd8",
+    "0efc92d64a60b4acf154cd096e57d2b8609f391d0054d623cc2ef10d9f061536",
+    "162ae0a5ec41b22c6524f1fbb3c6b242c5a62de336018b89b8bd7e3f211f4c92",
+    "81d5e490e155cdf7e6617d1fd89c42f1610fa6132ef37882494fd5175aa7d07a",
+    "ec1de02ad1778c4e53d9e81c49e15a1c2a5de5c6b72b87aef1ac9ced67f94052",
+    "8f8c726a9941a62e86c4c7fcfd1add9291f204b13420694d80820d0c4f6754b3",
+]
+REF4_512 = {0: "34f5b1dd5d31c76454be9e217a80526800aa7b32fd5a68a31748c57d821d7f2a",
+            41: "08e1bfa2be85aec74e62b14c4207fe037b13bde845870f40771ae5bb272c6168",
+            42: "590569e0db4d6bc84fd8e955ef77ab49bec2c82b5d383fd75d212800e31a3b91"}
+
+
+def v4_items(r):
+    d = dict(world_items(r))
+    lay = r["heights"]["passes"]
+    d["P"] = h_i64(lay["P"])
+    d["adj"] = h_i64(lay["adj"])
+    d["h8t"] = h_i64(r["h8t"])
+    return d
+
+
+def check_worlds_v4(c, large=False):
+    for (fx, n, seed), want in REF4.items():
+        r = run_world(seed, n, tuning_of(fx))
+        d = v4_items(r)
+        for k, v in want.items():
+            c.eq("v4 %s %d/%d %s" % (fx, n, seed, k), d[k], v)
+        lay = r["heights"]["passes"]
+        tries = [(tr[0] % n, tr[0] // n, tr[3]) for tr in lay["tries"]]
+        sites = [(s["col"] % n, s["col"] // n, len(s["axis"]), s["ci"], s["gap"], s["capped"], s["depth"])
+                 for s in lay["sites"]]
+        if (fx, n, seed) == ("shipped", 256, 0):
+            c.eq("v4 256/0 sites", [s[:6] for s in sites], [(106, 101, 31, 17, False, True)])
+            c.eq("v4 256/0 rejects", sorted(x[2] for x in tries if x[2]), ["barrier", "coast", "coast"])
+        if (fx, n, seed) == ("shipped", 128, 0):
+            c.eq("v4 shipped 128/0 tries", [x[2] for x in tries], ["barrier"])
+            c.eq("v4 shipped 128/0 sites", sites, [])
+        if (fx, n, seed) == ("small", 128, 0):
+            c.eq("v4 small 128/0 rejects", sorted(x[2] for x in tries), sorted(["coast", "barrier", "barrier",
+                                                                                 "zone_p90"]))
+        if (fx, n, seed) == ("small", 128, 8):
+            c.eq("v4 small 128/8 sites", sites, [(72, 94, 16, 9, False, True, 3722241624),
+                                                 (69, 35, 10, 4, False, True, 2965120895)])
+            rows = pass_rows(n, lay["sites"], r["heights"]["h7"])
+            c.eq("T7 seed 8 rows", [(x["id"], x["range_id"], x["kind"], x["capped"], x["col_x"], x["col_y"],
+                                     x["saddle_dm"], x["col_dm"], len(x["path"]) // 4,
+                                     hashlib.sha256(x["path"]).hexdigest()) for x in rows],
+                 [(1, 1, 1, 1, 72, 94, 6878, 5151, 16,
+                   "22011adaf46efab7a64646e862e9fc7b14dee30df9af79259faa3e6f01068a4f"),
+                  (2, 1, 1, 1, 69, 35, 8149, 7342, 10,
+                   "b464f12091144654c74871fe94fabf49e749053c2a21e58e865c39cebaf70d27")])
+            e = r["e_final"]
+            c.eq("T7 seed 8 final at cols", (e[94 * n + 72], e[35 * n + 69]), (4775, 6333))
+            c.eq("T7 seed 8 report", report_pass_lines(n, rows, e),
+                 ["passes = 2", "natural_gaps = 0", "passes_capped = 2", "pass_col_m = 477.5 633.3 633.3",
+                  "passes_walkable = 2"])
+        if (fx, n, seed) == ("small", 128, 9):
+            c.eq("v4 small 128/9 rejects", sorted(x[2] for x in tries), ["along_crest", "tarn_crossing"])
+        if (fx, n, seed) == ("small", 128, 31):
+            c.eq("v4 small 128/31 sites", sites, [(84, 67, 21, 11, False, False, ONE)])
+            c.eq("v4 small 128/31 rejects", sorted(x[2] for x in tries if x[2]), ["barrier", "barrier", "feet"])
+            rows = pass_rows(n, lay["sites"], r["heights"]["h7"])
+            c.eq("T7 seed 31 rows", [(x["id"], x["range_id"], x["kind"], x["capped"], x["col_x"], x["col_y"],
+                                      x["saddle_dm"], x["col_dm"], len(x["path"]) // 4,
+                                      hashlib.sha256(x["path"]).hexdigest()) for x in rows],
+                 [(1, 2, 1, 0, 84, 67, 6243, 2243, 21,
+                   "ceb9bca4970eef67433bf47621586bf43373bf1c35fafe598c3131165454e571")])
+            e = r["e_final"]
+            c.eq("T7 seed 31 final at col", e[67 * n + 84], 2223)
+            c.eq("T7 seed 31 report", report_pass_lines(n, rows, e),
+                 ["passes = 1", "natural_gaps = 0", "passes_capped = 0", "pass_col_m = 222.3 222.3 222.3",
+                  "passes_walkable = 1"])
+        sys.stderr.write("check v4: %s %d/%d done\n" % (fx, n, seed))
+    if large:
+        for s, want in REF4_512.items():
+            r = run_world(s, 512, shipped_tuning())
+            c.eq("v4 512/%d layer" % s, layer_hash(512, r["e_final"]), want)
+        r = run_world(0, 1024, shipped_tuning())
+        c.eq("v4 1024/0 layer", layer_hash(1024, r["e_final"]), REF4_1024[0])
+
+
+# 10.4 reference values (third version; now 10.4.2, the neutral settings).
 
 REF_64 = {
     "c": "8cb0bbd013e3bf7259047e494d2e89d2b28dc4cdc5c93d998b70a9453d1e8039",
@@ -1904,8 +3125,9 @@ def check_reference(c, want, items, label):
 
 
 def check_worlds(c, large=False):
-    t = shipped_tuning()
-    ts = small_tuning()
+    """The third version's values (10.4.2) under the neutral settings."""
+    t = tuning_of("shipped-neutral")
+    ts = tuning_of("small-neutral")
     r = run_world(0, 64, t)
     items = world_items(r)
     check_reference(c, REF_64, items, "64/0")
@@ -2028,14 +3250,157 @@ GOLDEN_HEADER = """\
 """
 
 
-def golden_text():
+def golden_text_legacy():
+    """The third version's (0.5.0) golden file, regenerated under the
+    neutral settings: byte for byte the file committed before 0.6.0."""
     out = [GOLDEN_HEADER]
     for name, fx, n, seed, why in GOLDEN_CASES:
-        t = shipped_tuning() if fx == "shipped" else small_tuning()
+        t = tuning_of(fx + "-neutral")
         r = run_world(seed, n, t)
         out.append("# %s\n" % why)
         out.append("case %s %s %d %d\n" % (name, fx, n, seed))
         for item, v in world_items(r):
+            out.append("%s %s %s\n" % (name, item, v))
+        sys.stderr.write("golden: %s done\n" % name)
+    return "".join(out)
+
+
+GOLDEN_CASES_V4 = [
+    # (name, fixture, N, seed, why)
+    ("shipped-64-s0", "shipped", 64, 0, "P1-01 10.4.1 first row: no site (one candidate fails the barrier)"),
+    ("shipped-64-s7", "shipped", 64, 7, "small shipped world"),
+    ("shipped-48-s3", "shipped", 48, 3, "N not a power of two"),
+    ("shipped-128-s0", "shipped", 128, 0, "P1-01 10.4.1: no site, one candidate fails the barrier"),
+    ("shipped-128-s9", "shipped", 128, 9, "mountain floor triggers, offset +2d"),
+    ("shipped-128-s12", "shipped", 128, 12, "mountain floor triggers, offset -2d"),
+    ("shipped-128-s13", "shipped", 128, 13, "mountain floor triggers, last offset -4d"),
+    ("shipped-128-s42", "shipped", 128, 42, "seed 42"),
+    ("small-64-s0", "small", 64, 0, "small fixture at 64"),
+    ("small-128-s0", "small", 128, 0, "P1-01 10.4.1: no site; coast, barrier and zone p90 rejections; one lake"),
+    ("small-128-s1", "small", 128, 1, "mountain floor (offset +d), share cap skips a candidate"),
+    ("small-128-s2", "small", 128, 2, "across rejection; two lakes in volume order"),
+    ("small-128-s5", "small", 128, 5, "small fixture"),
+    ("small-128-s8", "small", 128, 8, "P1-01 10.4.1, T7: two capped passes on one range"),
+    ("small-128-s9", "small", 128, 9, "P1-01 10.4.1: across and tarn-on-the-crossing rejections"),
+    ("small-128-s11", "small", 128, 11, "col tarn rejection"),
+    ("small-128-s20", "small", 128, 20, "summit near a top rejection"),
+    ("small-128-s23", "small", 128, 23, "chord rejection"),
+    ("small-128-s30", "small", 128, 30, "side length rejection"),
+    ("small-128-s31", "small", 128, 31, "P1-01 10.4.1, T7: one uncapped pass, depth ONE; feet rejection"),
+    ("small-128-s38", "small", 128, 38, "shoulders rejection"),
+    ("shipped-256-s0", "shipped", 256, 0, "P1-01 10.4.1: one capped pass"),
+    ("shipped-neutral-64-s0", "shipped-neutral", 64, 0, "neutral settings: the 0.5.0 values (10.4.2)"),
+    ("shipped-neutral-128-s0", "shipped-neutral", 128, 0, "neutral settings: the 0.5.0 values (10.4.2)"),
+    ("shipped-neutral-128-s13", "shipped-neutral", 128, 13, "neutral settings, mountain floor (10.4.2)"),
+    ("small-neutral-128-s1", "small-neutral", 128, 1, "neutral settings, small-map fixture (10.4.2)"),
+]
+
+GOLDEN_HEADER_V4 = """\
+# P1-01 elevation golden vectors (fourth version, natural passes and final
+# talus, generator 0.6.0), generated by
+# worldgen/tests/reference/p1_elevation_reference.py golden, an independent
+# exact-integer reference written from docs/specs/p1-01-elevation.md.
+# Do not edit by hand; never regenerate to make a C++ test pass.
+#
+# Format: ASCII, LF, one value per line, tokens separated by one space.
+#   case <name> <fixture> <N> <seed>      starts a case; fixture: shipped |
+#       small (4.4) | shipped-neutral | small-neutral (the same with
+#       pass_count_max = 0 and final_talus_iterations = 0, 10.4.2)
+#   <name> <item> <value>                  one value, items in step order
+# Items, in step order (the test reports the first that differs):
+#   centre      cx,cy raw (E1)
+#   c nb ns     SHA-256 of the int64 raw grids, little-endian (E2)
+#   c_sea w_b s_land                       raw values (E3)
+#   ocean       SHA-256 of one byte per cell, 1 = ocean (E4)
+#   land_cells  L_O (E4)
+#   floor       triggered(0|1),target,o*,beta* raw (E5.1)
+#   scale       raw (E6)
+#   ranges      <count>:<SHA-256 of the text, one line per range in label
+#               order: "label s0 end_a end_b top length p90 slots\\n">  (E6.5.2)
+#   divide      SHA-256 of the text, one line per range with slots > 0:
+#               "label:" D_k cells comma separated "|" candidate cells comma
+#               separated "\\n"; - if no range has a slot (E6.5.3, E6.5.4)
+#   tries       col:range:slot:rule for every tried candidate in try order,
+#               ";" separated, rule a PassReject name or "site"; - if none
+#   sites       number of sites (lowered passes and natural gaps)
+#   site.<s>    range,col,partner,gap(0|1),capped(0|1),axis cells,ci,dh,maxm,
+#               saddle raw,halfwidth raw,depth raw (0 for a gap),SHA-256 of
+#               the axis as u32 little-endian  (E6.5.6)
+#   P adj       SHA-256 of the int64 factor and adjustment grids (E6.5.7, E6.5.8)
+#   h7          SHA-256 of the int64 heights after E7
+#   h8          SHA-256 of the int64 heights after E8 (before E8.7)
+#   h8t         SHA-256 of the int64 heights after E8.7
+#   e           SHA-256 of the int16 grid after E9
+#   max_share   max_share_cells (E10.3)
+#   depressions number of depression components (E10.2)
+#   candidates  candidate labels in selection order, or - (E10.3)
+#   kept        kept labels in selection order, or - (E10.3)
+#   kept_cells  cells kept (E10.3)
+#   e_final     SHA-256 of the int16 grid after E10
+#   layer       P0-04 8 layer hash of the elevation layer
+#   pass_rows   SHA-256 of the rows of table `pass` (9.1), one line per row
+#               in id order: "id range_id kind capped col_x col_y saddle_dm
+#               col_dm <SHA-256 of path>\\n"; - if the table is empty
+"""
+
+
+def v4_world_items(r):
+    """Golden items of the fourth version, in step order."""
+    n = r["n"]
+    base = world_items(r)
+    lay = r["heights"]["passes"]
+    rtext = "".join("%d %d %d %d %d %d %d %d\n" % (g["label"], g["s0"], g["A"], g["B"], g["top"], g["length"],
+                                                   g["p90"], g["slots"]) for g in lay["ranges"])
+    ranges = "%d:%s" % (len(lay["ranges"]), hashlib.sha256(rtext.encode()).hexdigest())
+    if any(g["slots"] > 0 for g in lay["ranges"]):
+        dtext = "".join("%d:%s|%s\n" % (g["label"], ",".join(str(x) for x in g["divide"]),
+                                        ",".join(str(x) for x in g["candidates"]))
+                        for g in lay["ranges"] if g["slots"] > 0)
+        divide = hashlib.sha256(dtext.encode()).hexdigest()
+    else:
+        divide = "-"
+    tries = ";".join("%d:%d:%d:%s" % (tr[0], tr[1], tr[2], tr[3] or "site") for tr in lay["tries"]) or "-"
+    items = []
+    for name, v in base:
+        if name == "h7":
+            items.append(("ranges", ranges))
+            items.append(("divide", divide))
+            items.append(("tries", tries))
+            items.append(("sites", str(len(lay["sites"]))))
+            for s in lay["sites"]:
+                axis = b"".join(q.to_bytes(4, "little") for q in s["axis"])
+                items.append(("site.%d" % s["s"], "%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%s" % (
+                    s["range"], s["col"], s["partner"], 1 if s["gap"] else 0, 1 if s["capped"] else 0,
+                    len(s["axis"]), s["ci"], s["dh"], s["maxm"], s["saddle"], s["halfwidth"],
+                    0 if s["gap"] else s["depth"], hashlib.sha256(axis).hexdigest())))
+            items.append(("P", h_i64(lay["P"])))
+            items.append(("adj", h_i64(lay["adj"])))
+        items.append((name, v))
+        if name == "h8":
+            items.append(("h8t", h_i64(r["h8t"])))
+    rows = pass_rows(n, lay["sites"], r["heights"]["h7"])
+    items.append(("pass_rows", hashlib.sha256(rows_text(rows).encode()).hexdigest() if rows else "-"))
+    return items
+
+
+PHRASE_SEED = 15629206466951235176  # seed_from_phrase("The Unmapped")
+
+# Larger cases (golden --large), read only by the opt-in elevation-slow suite.
+GOLDEN_LARGE_V4 = [
+    ("shipped-512-s0", "shipped", 512, 0, "P1-01 10.4.1: N = 512 seed 0 (no site)"),
+    ("shipped-512-s41", "shipped", 512, 41, "P1-01 10.4.1: N = 512 seed 41 (the steep coast of limitation 11)"),
+    ("shipped-512-s42", "shipped", 512, 42, "P1-01 10.4.1: N = 512 seed 42 (one pass)"),
+    ("shipped-512-phrase", "shipped", 512, PHRASE_SEED, "N = 512, seed phrase \"The Unmapped\" (one pass)"),
+]
+
+
+def golden_text(large=False):
+    out = [GOLDEN_HEADER_V4]
+    for name, fx, n, seed, why in GOLDEN_CASES_V4 + (GOLDEN_LARGE_V4 if large else []):
+        r = run_world(seed, n, tuning_of(fx))
+        out.append("# %s\n" % why)
+        out.append("case %s %s %d %d\n" % (name, fx, n, seed))
+        for item, v in v4_world_items(r):
             out.append("%s %s %s\n" % (name, item, v))
         sys.stderr.write("golden: %s done\n" % name)
     return "".join(out)
@@ -2047,20 +3412,41 @@ def main(argv):
         c = Checker()
         check_primitives(c)
         check_examples(c)
+        check_pass_examples(c)
         print("examples: %d passed, %d failed" % (c.passes, c.fails))
-        check_worlds(c, large)
+        if "--examples" not in argv:
+            check_worlds(c, large)
+            print("neutral (10.4.2): %d passed, %d failed" % (c.passes, c.fails))
+            check_worlds_v4(c, large)
         print("total: %d passed, %d failed" % (c.passes, c.fails))
         return 1 if c.fails else 0
+    if len(argv) >= 2 and argv[1] == "golden-legacy":
+        text = golden_text_legacy()
+        if len(argv) > 2 and argv[2] != "-":
+            with open(argv[2], "w", newline="\n") as fh:
+                fh.write(text)
+        else:
+            sys.stdout.write(text)
+        return 0
     if len(argv) == 5 and argv[1] == "case":
-        t = shipped_tuning() if argv[2] == "shipped" else small_tuning()
+        t = tuning_of(argv[2])
         r = run_world(int(argv[4]), int(argv[3]), t)
         for item, v in world_items(r):
             print(item, v)
         print("stats", r["info"]["stats"])
+        lay = r["heights"]["passes"]
+        print("P", h_i64(lay["P"]))
+        print("adj", h_i64(lay["adj"]))
+        print("h8t", h_i64(r["h8t"]))
+        for tr in lay["tries"]:
+            print("try", tr[0] % int(argv[3]), tr[0] // int(argv[3]), tr[1:])
+        for s in lay["sites"]:
+            print("site", {k: v for k, v in s.items() if k not in ("arc", "delta")})
         return 0
     if len(argv) >= 2 and argv[1] == "golden":
-        text = golden_text()
-        path = argv[2] if len(argv) > 2 else os.path.join(_HERE, "..", "golden", "p1-01-elevation.txt")
+        args = [a for a in argv[2:] if not a.startswith("--")]
+        text = golden_text(large="--large" in argv)
+        path = args[0] if args else os.path.join(_HERE, "..", "golden", "p1-01-elevation.txt")
         if path == "-":
             sys.stdout.write(text)
         else:

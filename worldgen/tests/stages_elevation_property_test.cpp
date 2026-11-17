@@ -315,11 +315,29 @@ void check_world(std::uint64_t seed, std::int32_t n, bool small) {
     }
     CHECK(max_land8 <= max_land7);
 
+    // E8.7 (invariant 15): the contract is kept and the largest land height
+    // does not grow (fourth version).
+    const Values::PassInts pi = v.pass_ints(n);
+    const std::vector<std::int64_t> h8t =
+        elev_api::final_talus(g, h8, oc.mask, pi.drop_o, pi.drop_d, v.raw("final_talus_rate"), v.raw("land_floor_m"),
+                              static_cast<std::int32_t>(v.i("final_talus_iterations")), THREADS);
+    std::int64_t max_land8t = 0;
+    for (std::size_t i = 0; i < nn; ++i) {
+        if (land[i] != 0U) {
+            REQUIRE(h8t[i] >= v.raw("land_floor_m"));
+            REQUIRE(h8t[i] <= H_MAX_RAW);
+            max_land8t = std::max(max_land8t, h8t[i]);
+        } else {
+            REQUIRE(h8t[i] == h8[i]);
+        }
+    }
+    CHECK(max_land8t <= max_land8);
+
     // E9.
-    const std::vector<std::int16_t> e = elev_api::quantize(h8, oc.mask);
+    const std::vector<std::int16_t> e = elev_api::quantize(h8t, oc.mask);
     REQUIRE(e.size() == nn);
     for (std::size_t i = 0; i < nn; ++i) {
-        REQUIRE(e[i] == quantize_cell(h8[i], oc.mask[i] != 0U));
+        REQUIRE(e[i] == quantize_cell(h8t[i], oc.mask[i] != 0U));
         if (land[i] != 0U) {
             REQUIRE(e[i] <= 29900);
         }

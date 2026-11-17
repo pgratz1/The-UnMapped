@@ -114,13 +114,60 @@ const std::vector<Bound>& scalar_bounds() {
         {"fill_slope_dm", false, "0", "10"},
         {"fill_cost_amp", false, "0", "16"},
         {"fill_detail_m", false, "0", "10"},
+        // Fourth version: the 34 pass and final-talus fields.
+        {"pass_count_max", true, "0", "3"},
+        {"pass_core_mask", false, "0.01", "1"},
+        {"pass_crest_frac", false, "0", "1"},
+        {"pass_min_length_m", true, "0", "100000"},
+        {"pass_spacing_m", true, "500", "100000"},
+        {"pass_size_ref_n", true, "16", "2048"},
+        {"pass_region_mask", false, "0.005", "1"},
+        {"pass_body_m", false, "0", "2900"},
+        {"pass_basin_depth_m", false, "1", "1000"},
+        {"pass_tarn_min_cells", true, "0", "1000000"},
+        {"pass_divide_reach_m", false, "0", "20000"},
+        {"pass_saddle_window_m", false, "0", "20000"},
+        {"pass_saddle_rise_m", false, "0", "2900"},
+        {"pass_saddle_rise_reach_m", false, "0", "20000"},
+        {"pass_min_spacing_m", false, "0", "100000"},
+        {"pass_coast_clear_m", false, "0", "20000"},
+        {"pass_barrier_m", false, "0", "2900"},
+        {"pass_side_max_m", false, "0", "100000"},
+        {"pass_col_tarn_m", false, "0", "5000"},
+        {"pass_grade", false, "0", "2"},
+        {"pass_grade_jitter", false, "0", "1"},
+        {"pass_min_col_m", false, "0", "2900"},
+        {"pass_saddle_max_m", false, "0", "2900"},
+        {"pass_max_cut_m", false, "1", "2900"},
+        {"pass_peak_rise_m", false, "0", "2900"},
+        {"pass_halfwidth_m", false, "0", "5000"},
+        {"pass_width_jitter", false, "0", "0.9"},
+        {"pass_width_var", false, "0", "0.9"},
+        {"pass_walk_grade", false, "0.01", "4"},
+        {"pass_texture_keep", false, "0", "1"},
+        {"pass_drain_step_m", false, "0.01", "10"},
+        {"final_talus_iterations", true, "0", "1000"},
+        {"final_talus_slope", false, "0.05", "16"},
+        {"final_talus_rate", false, "0", "0.125"},
     };
     return b;
 }
 
-// Overrides that keep the three named checks satisfied while one field
+// Overrides that keep the five named checks satisfied while one field
 // sits at a bound (the checks relate some pairs of fields).
 Overrides companions(std::string_view field, bool at_lo) {
+    if (field == "pass_core_mask" && at_lo) {
+        return {{"pass_region_mask", "\"0.005\""}};
+    }
+    if (field == "pass_region_mask" && !at_lo) {
+        return {{"pass_core_mask", "1"}};
+    }
+    if (field == "pass_min_col_m" && !at_lo) {
+        return {{"pass_saddle_max_m", "2900"}};
+    }
+    if (field == "pass_saddle_max_m" && at_lo) {
+        return {{"pass_min_col_m", "0"}};
+    }
     if (field == "edge_radial_start") {
         return at_lo ? Overrides{} : Overrides{{"edge_radial_end", "2"}, {"edge_radial_start", "\"1.99\""}};
     }
@@ -185,6 +232,36 @@ TEST_CASE("P1-01 4.3: named check 3, lake_min_area_m2 <= lake_max_area_m2") {
     CHECK(loads({{"lake_min_area_m2", "100000"}, {"lake_max_area_m2", "100000"}}));
 }
 
+TEST_CASE("P1-01 4.3: named check 4, pass_region_mask <= pass_core_mask") {
+    check_rejected({{"pass_region_mask", "\"0.3\""}}, "elevation");
+    check_rejected({{"pass_region_mask", "\"0.25\""}, {"pass_core_mask", "\"0.2\""}}, "elevation");
+    CHECK(loads({{"pass_region_mask", "\"0.25\""}}));  // equal is allowed
+}
+
+TEST_CASE("P1-01 4.3: named check 5, pass_min_col_m <= pass_saddle_max_m") {
+    check_rejected({{"pass_min_col_m", "700"}}, "elevation");
+    CHECK(loads({{"pass_min_col_m", "600"}}));  // equal is allowed
+    CHECK(loads({{"pass_min_col_m", "600"}, {"pass_saddle_max_m", "600"}}));
+}
+
+TEST_CASE("P1-01 10.1: the fourth version's raised lower bounds and upper bounds named in 10.1") {
+    check_rejected({{"pass_size_ref_n", "15"}}, "pass_size_ref_n");
+    check_rejected({{"pass_basin_depth_m", "\"0.9\""}}, "pass_basin_depth_m");
+    check_rejected({{"pass_max_cut_m", "\"0.9\""}}, "pass_max_cut_m");
+    check_rejected({{"pass_walk_grade", "\"0.009\""}}, "pass_walk_grade");
+    check_rejected({{"pass_drain_step_m", "\"0.009\""}}, "pass_drain_step_m");
+    check_rejected({{"final_talus_rate", "\"0.1251\""}}, "final_talus_rate");
+    check_rejected({{"pass_count_max", "4"}}, "pass_count_max");
+    // The zero values that keep their meaning (4.2): no slot, no step.
+    CHECK(loads({{"pass_count_max", "0"}, {"final_talus_iterations", "0"}}));
+    // The zero "switch" values of the exploration are rejected.
+    check_rejected({{"pass_size_ref_n", "0"}}, "pass_size_ref_n");
+    check_rejected({{"pass_basin_depth_m", "0"}}, "pass_basin_depth_m");
+    check_rejected({{"pass_max_cut_m", "0"}}, "pass_max_cut_m");
+    check_rejected({{"pass_walk_grade", "0"}}, "pass_walk_grade");
+    check_rejected({{"pass_drain_step_m", "0"}}, "pass_drain_step_m");
+}
+
 TEST_CASE("P1-01 4.3: a named-check failure is a load error at the definition's header, with the stated text") {
     struct Case {
         Overrides o;
@@ -195,14 +272,20 @@ TEST_CASE("P1-01 4.3: a named-check failure is a load error at the definition's 
     const std::string span = head + "edge_radial_span" + tail + "edge_radial_end - edge_radial_start must be at least 0.01";
     const std::string ranks = head + "mountain_ranks" + tail + "mountain_cover_rank must not exceed mountain_peak_rank";
     const std::string areas = head + "lake_areas" + tail + "lake_min_area_m2 must not exceed lake_max_area_m2";
+    const std::string masks = head + "pass_masks" + tail + "pass_region_mask must not exceed pass_core_mask";
+    const std::string clamp = head + "pass_saddle_clamp" + tail + "pass_min_col_m must not exceed pass_saddle_max_m";
     const std::vector<Case> cases = {
         {{{"edge_radial_start", "\"1.0\""}, {"edge_radial_end", "\"1.005\""}}, {span}},
         {{{"mountain_cover_rank", "\"0.999\""}}, {ranks}},
         {{{"lake_min_area_m2", "200000"}, {"lake_max_area_m2", "100000"}}, {areas}},
+        {{{"pass_region_mask", "\"0.3\""}}, {masks}},
+        {{{"pass_min_col_m", "700"}}, {clamp}},
         // Several failing checks give several errors, sorted as P0-03 9 sorts them.
         {{{"edge_radial_start", "\"1.0\""}, {"edge_radial_end", "\"1.0\""}, {"mountain_cover_rank", "\"0.999\""},
           {"lake_min_area_m2", "200000"}, {"lake_max_area_m2", "100000"}},
          {span, areas, ranks}},
+        {{{"pass_region_mask", "\"0.3\""}, {"pass_min_col_m", "700"}, {"mountain_cover_rank", "\"0.999\""}},
+         {ranks, masks, clamp}},
     };
     for (const Case& c : cases) {
         const elev_api::TuningLoad l = elev_api::load_tuning_text(elevation_toml(c.o));

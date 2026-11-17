@@ -179,6 +179,7 @@ TEST_CASE("hashes 8: table meta by hand for other meta contents") {
     REQUIRE(d.value().tables.size() == 3);
     CHECK(d.value().tables[1].digest ==
           p004::meta_table_hash(p004::meta_rows(ps.seed, ps.phrase, "test_pattern", "512")));
+    CHECK(d.value().tables[2].digest == p004::pass_table_hash({}));
 }
 
 TEST_CASE("hashes 8, 12.5: detail hashes of a test-pattern world") {
@@ -198,6 +199,8 @@ TEST_CASE("hashes 8, 12.5: detail hashes of a test-pattern world") {
     };
     REQUIRE(d.value().tables.size() == 3);
     CHECK(d.value().tables[0].digest == p004::layer_table_hash(rows));
+    CHECK(d.value().tables[2].name == "pass");
+    CHECK(d.value().tables[2].digest == p004::pass_table_hash({}));  // a test-pattern world: empty
     CHECK(d.value().tables[1].digest == p004::meta_table_hash(p004::meta_rows(0, "", "test_pattern")));
     REQUIRE(d.value().layers.size() == 3);
     CHECK(d.value().layers[0].name == "test.ramp");

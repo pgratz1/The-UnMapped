@@ -118,6 +118,10 @@ target_sources(worldgen-tests PRIVATE
     stages_elevation_golden_test.cpp
     stages_elevation_property_test.cpp
     stages_elevation_seams_test.cpp
+    # Fourth version (generator 0.6.0): passes (E6.5, E7) and the final
+    # talus (E8.7), against the test's own implementation in
+    # p1_01_passes_support.hpp.
+    stages_elevation_passes_test.cpp
 )
 target_compile_definitions(worldgen-tests PRIVATE
     UNMAPPED_P1_01_GOLDEN_PATH="${CMAKE_CURRENT_SOURCE_DIR}/golden/p1-01-elevation.txt"
