@@ -496,6 +496,70 @@ TEST_CASE("P1-04 B3, 10.1 test 8: the jitter fields are fbm2 of the stream keys 
     CHECK(land >= 4);
 }
 
+// --- Rules and scales outside their schema ranges (audit fix) -------------------------------------
+
+TEST_CASE("P1-04 4.1, B4: a rule field outside its schema range is fatal through rule_matches, lookup and layer") {
+    const biome_api::Definitions& d = shipped_definitions();
+    const biome_api::Rule marsh = biome_api::rule_of(d, "marsh");
+    // The unmodified rule matches the B3 case (marsh).
+    CHECK(biome_api::rule_matches(marsh, ONE, 8 * ONE, 900 * ONE, 30, 100, 8, 200));
+    struct Bad {
+        const char* field;
+        biome_api::Rule rule;
+    };
+    std::vector<Bad> bads;
+    auto add = [&](const char* f, auto set) {
+        biome_api::Rule r = marsh;
+        set(r);
+        bads.push_back({f, r});
+    };
+    add("elev_min_m", [](biome_api::Rule& r) { r.elev_min_m = std::int64_t{1} << 61; });
+    add("elev_min_m", [](biome_api::Rule& r) { r.elev_min_m = -1; });
+    add("elev_max_m", [](biome_api::Rule& r) { r.elev_max_m = 3001; });
+    add("rain_min_mm", [](biome_api::Rule& r) { r.rain_min_mm = -1; });
+    add("rain_max_mm", [](biome_api::Rule& r) { r.rain_max_mm = 10001; });
+    add("temp_min_c", [](biome_api::Rule& r) { r.temp_min_c = Fx::from_raw(-60 * ONE - 1); });
+    add("temp_max_c", [](biome_api::Rule& r) { r.temp_max_c = Fx::from_raw(50 * ONE + 1); });
+    add("slope_max", [](biome_api::Rule& r) { r.slope_max = Fx::from_raw(100 * ONE + 1); });
+    add("slope_max", [](biome_api::Rule& r) { r.slope_max = Fx::from_raw(-1); });
+    add("hand_max_m", [](biome_api::Rule& r) { r.hand_max_m = Fx::from_raw(3000 * ONE + 1); });
+    add("coast_max_m", [](biome_api::Rule& r) { r.coast_max_m = 32768; });
+    add("coast_max_m", [](biome_api::Rule& r) { r.coast_max_m = -1; });
+    const biome_api::Inputs in = designed_inputs(0);
+    for (const Bad& b : bads) {
+        CAPTURE(b.field);
+        const std::string want = std::string("biomes: rule: ") + b.field + " outside its schema range";
+        CHECK(fatal_message([&] { (void)biome_api::rule_matches(b.rule, ONE, 8 * ONE, 900 * ONE, 30, 100, 8, 200); }) ==
+              want);
+        const biome_api::Definitions bad = biome_api::with_rule(d, "marsh", b.rule);
+        CHECK(fatal_message([&] { (void)biome_api::lookup(bad, ONE, 8 * ONE, 900 * ONE, 30, 100, 8, 200); }) == want);
+        CHECK(fatal_message([&] { (void)biome_api::layer(in, bad, tuning(), 0, 2); }) == want);
+    }
+    // The extremes themselves are in range (they are the sentinels).
+    biome_api::Rule edge = marsh;
+    edge.elev_min_m = 0;
+    edge.elev_max_m = 3000;
+    edge.coast_max_m = 32767;
+    edge.rain_max_mm = 10000;
+    CHECK_NOTHROW((void)biome_api::rule_matches(edge, ONE, 8 * ONE, 900 * ONE, 30, 100, 8, 200));
+}
+
+TEST_CASE("P1-04 B4: a rain scale outside [0.25, 4] is fatal through rule_matches and lookup") {
+    const biome_api::Definitions& d = shipped_definitions();
+    const biome_api::Rule marsh = biome_api::rule_of(d, "marsh");
+    const std::string want = "biomes: rule: the rain scale is outside [0.25, 4]";
+    for (const std::int64_t sc : {ONE / 4 - 1, 4 * ONE + 1, std::int64_t{0}, -ONE}) {
+        CAPTURE(sc);
+        CHECK(fatal_message([&] { (void)biome_api::rule_matches(marsh, sc, 8 * ONE, 900 * ONE, 30, 100, 8, 200); }) ==
+              want);
+        CHECK(fatal_message([&] { (void)biome_api::lookup(d, sc, 8 * ONE, 900 * ONE, 30, 100, 8, 200); }) == want);
+    }
+    for (const std::int64_t sc : {ONE / 4, 4 * ONE}) {
+        CAPTURE(sc);
+        CHECK_NOTHROW((void)biome_api::lookup(d, sc, 8 * ONE, 900 * ONE, 30, 100, 8, 200));
+    }
+}
+
 // --- Scale entry of a W x H grid (B4, amended 2026-11-17) ---------------------------------------
 
 TEST_CASE("P1-04 B4, 10.1 test 3: rain scale of a 600 x 100 grid is the 1024 entry (N = max(W, H))") {

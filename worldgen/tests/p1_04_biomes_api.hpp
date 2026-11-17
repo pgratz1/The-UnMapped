@@ -36,6 +36,7 @@
 
 #include <cstdint>
 #include <optional>
+#include <stdexcept>
 #include <span>
 #include <string>
 #include <string_view>
@@ -108,6 +109,43 @@ inline std::uint8_t lookup(const Definitions& d, std::int64_t scale_raw, std::in
                            std::int64_t elevation, std::int64_t s2, std::int64_t hand, std::int64_t coast_dist) {
     return worldgen::stages::biome_lookup(d, Fx::from_raw(scale_raw), Fx::from_raw(tq_raw), Fx::from_raw(rq_raw),
                                           elevation, s2, hand, coast_dist);
+}
+
+// --- Rules outside their schema ranges (audit fix, engineer's d863651) -----------------
+//
+// The seams that take rules are fatal, "biomes: rule: <field> outside its
+// schema range", for a rule field outside the 4.1 range (which the loader
+// can never produce), and "biomes: rule: the rain scale is outside [0.25,
+// 4]". These helpers build such rules from the loaded shipped definitions;
+// they use the stage's BiomeRule and BiomeDefinitions fields directly.
+
+using Rule = worldgen::stages::BiomeRule;
+
+// The first rule of definition `key`.
+inline Rule rule_of(const Definitions& d, std::string_view key) {
+    for (const auto& b : d.biomes) {
+        if (b.key == key && !b.rules.empty()) {
+            return b.rules.front();
+        }
+    }
+    throw std::runtime_error("no rule for " + std::string(key));
+}
+
+// The definitions with the first rule of `key` replaced.
+inline Definitions with_rule(Definitions d, std::string_view key, const Rule& r) {
+    for (auto& b : d.biomes) {
+        if (b.key == key && !b.rules.empty()) {
+            b.rules.front() = r;
+        }
+    }
+    return d;
+}
+
+// Seam biome_rule_matches.
+inline bool rule_matches(const Rule& r, std::int64_t scale_raw, std::int64_t tq_raw, std::int64_t rq_raw,
+                         std::int64_t elevation, std::int64_t s2, std::int64_t hand, std::int64_t coast_dist) {
+    return worldgen::stages::biome_rule_matches(r, Fx::from_raw(scale_raw), Fx::from_raw(tq_raw),
+                                                Fx::from_raw(rq_raw), elevation, s2, hand, coast_dist);
 }
 
 // B5 (seam biome_river_cells): the biome grid from the B4 grid.
