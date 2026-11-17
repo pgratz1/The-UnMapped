@@ -19,6 +19,7 @@
 
 #include "p1_02_hydrology_api.hpp"
 #include "p1_02_hydrology_support.hpp"
+#include "p1_04_biomes_data.hpp"
 #include "worldgen/core/fx.hpp"
 #include "worldgen/data/content.hpp"
 #include "worldgen/geo/noise.hpp"
@@ -94,6 +95,9 @@ TEST_CASE("P1-00 6.1: the hydrology definition is required beside elevation") {
     wd::MemoryDirectory dir{"worldgen", {}};
     dir.entries.push_back(wd::MemoryEntry{"elevation.toml", elev_test::elevation_toml(), false});
     wd::MemoryDataRoot root;
+    // The biome data (P1-04 4.1, 4.2), so that only the definition under
+    // test is missing.
+    biome_data::add_to(registry, root, dir);
     root.directories.push_back(dir);
     const wd::LoadResult<wd::ContentSet> r = wd::load_content_from_memory(registry, root);
     CHECK_FALSE(r.ok());

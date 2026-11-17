@@ -297,3 +297,49 @@ cell in index order (elevation = S, `water` 0, depth 0); the border is
 ocean with elevation -10 and depth 10; `coast_dist` is P1-02 H7 on the
 ocean mask; the climate tuning is shipped with `wind_weights` one-hot at the
 drawn code, and the world seed is f.
+
+## Reference of the P1-04 biome stage
+
+`p1_biomes_reference.py` is an independent exact-integer implementation of
+`docs/specs/p1-04-biomes.md` (second version: B2 to B6, G7 with the minimum
+river class, G8, the `biome` and `climate` table rows, the report keys of
+section 9), written by the test writer from the spec text and P1-00 alone,
+without the stage's implementation. The input layers of a world come from
+`p1_hydrology_reference.py` (with `flow_dir` and `river`) and
+`p1_climate_reference.py`.
+
+```
+python3 -B worldgen/tests/reference/p1_biomes_reference.py check [--quick]
+python3 -B worldgen/tests/reference/p1_biomes_reference.py realcells DB
+python3 -B worldgen/tests/reference/p1_biomes_reference.py golden [PATH|-] [--large] [--db-dir DIR]
+python3 -B worldgen/tests/reference/p1_biomes_reference.py case NAME
+```
+
+`check` reproduces the worked examples of P1-04 5.1: G7 on P1-02's example
+with k = 1 and k = 3 (and k = 2, 15) by the spec's FIFO and by a second
+method (recursion along `flow_dir`), the G7 precondition failures, the 21
+lookups B1 to B21 with every raw tq and rq the table gives, the slope and
+scale claims, the size rule, the B5 examples, the real-cell table from its
+tabulated inputs, the eight `biome` rows, and the 6 x 6 report example; then
+invariants 1 to 4 of section 6 (its own exhaustive rule evaluation and B5)
+on the designed fixtures and the golden worlds up to N = 128, and that the
+designed fixtures fire every natural biome and make every live condition the
+sole failure of its rule somewhere. About ten seconds. `realcells DB`
+checks the real-cell table on the 0.7.0 world file of 1024 seed 3 (every
+input, hand, S2, nt, nr, tq, rq, the B4 codes and the river cell's B5;
+about seven seconds).
+
+`golden` writes `worldgen/tests/golden/p1-04-biomes.txt` (format and the
+designed fixtures' construction in its header), read by
+`stages_biomes_golden_test.cpp` and `cli_biomes_test.cpp`. `--large` adds
+N = 256, 512 (seeds 0, 42 and the phrase) and 1024 (seed 1). With
+`--db-dir DIR`, the inputs of a large case are decoded from `DIR/<case>.db`
+(a world of the merged 0.7.0 pipeline with the shipped data) instead of
+being recomputed, and each decoded layer is first compared with the layer
+hashes of `p1-03-climate.txt` and `p1-02-hydrology.txt` for that world, so
+they are proven equal to the references' layers. The committed file was
+written with `--large --db-dir` (the validation worlds of
+`~/.cache/the-unmapped/out/p1-03-validation/` for 512 seeds 0 and 42 and
+1024 seed 1, and a 0.7.0 `generate --seed-phrase "The Unmapped"` for the
+phrase); the N = 256 case and every default case come from the references.
+`UNMAPPED_ELEVATION_CACHE=DIR` works as for the hydrology reference.

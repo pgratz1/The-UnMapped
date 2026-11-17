@@ -22,6 +22,7 @@
 
 #include "p1_03_climate_api.hpp"
 #include "p1_03_climate_support.hpp"
+#include "p1_04_biomes_data.hpp"
 #include "worldgen/core/fx.hpp"
 #include "worldgen/data/content.hpp"
 
@@ -123,6 +124,9 @@ TEST_CASE("P1-03 4, P1-00 6.1: the climate definition is required beside elevati
     dir.entries.push_back(
         wd::MemoryEntry{"hydrology.toml", hydro_test::hydrology_toml(hydro_test::SHIPPED_AREA), false});
     wd::MemoryDataRoot root;
+    // The biome data (P1-04 4.1, 4.2), so that only the definition under
+    // test is missing.
+    biome_data::add_to(registry, root, dir);
     root.directories.push_back(dir);
     const wd::LoadResult<wd::ContentSet> r = wd::load_content_from_memory(registry, root);
     CHECK_FALSE(r.ok());

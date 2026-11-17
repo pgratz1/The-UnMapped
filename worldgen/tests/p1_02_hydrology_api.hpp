@@ -34,6 +34,7 @@
 #include <vector>
 
 #include "p1_01_elevation_api.hpp"
+#include "p1_04_biomes_data.hpp"
 #include "worldgen/data/content.hpp"
 #include "worldgen/data/load_error.hpp"
 #include "worldgen/data/schema.hpp"

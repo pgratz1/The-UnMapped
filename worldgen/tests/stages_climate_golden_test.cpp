@@ -411,15 +411,19 @@ TEST_CASE("P1-03 3, C7, P1-00 X1 and X2 (slow): generate writes temperature and 
         CHECK(dc.value().layers[i].digest == dh.value().layers[i].digest);
         CHECK(infos.value()[i].encoded_size == rh.value().layers().value()[i].encoded_size);
     }
-    // Every table, `pass` included: climate adds no table and changes none
-    // (P1-03 3: no schema change).
+    // Every table, `pass` included: climate changes no other table. Schema 3
+    // (P1-03 3, C7): its one row goes to table `climate`, which exists, empty,
+    // in the hydrology world too.
     REQUIRE(dc.value().tables.size() == dh.value().tables.size());
     bool saw_pass = false;
     for (std::size_t i = 0; i < dc.value().tables.size(); ++i) {
         CAPTURE(dc.value().tables[i].name);
         CHECK(dc.value().tables[i].name == dh.value().tables[i].name);
-        if (dc.value().tables[i].name == "meta" || dc.value().tables[i].name == "layer") {
-            continue;  // meta.stages differs; `layer` gains the two climate rows (compared above)
+        if (dc.value().tables[i].name == "meta" || dc.value().tables[i].name == "layer" ||
+            dc.value().tables[i].name == "climate") {
+            // meta.stages differs; `layer` gains the two climate rows (compared
+            // above); `climate` gains its row (schema 3, P1-03 C7).
+            continue;
         }
         saw_pass = saw_pass || dc.value().tables[i].name == "pass";
         CHECK(dc.value().tables[i].digest == dh.value().tables[i].digest);
