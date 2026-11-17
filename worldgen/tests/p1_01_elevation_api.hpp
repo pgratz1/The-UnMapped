@@ -40,7 +40,7 @@ inline constexpr std::string_view CLIMATE_TOML =
     "[worldgen.climate]\ntemp_north_c = 5\ntemp_south_c = 9\nlapse_c_per_km = \"6.5\"\n"
     "temp_noise = { wavelength_m = 6000, octaves = 3, gain = \"0.5\" }\ntemp_noise_amp_c = 1\n"
     "wind_weights = [1, 1, 1, 1, 1, 1, 1, 1]\nsmooth_radius_m = 320\nrain_base_mm = 800\nrain_oro_mm = 2500\n"
-    "moisture_path_mm_km = 32000\nloss_max = \"0.25\"\nocean_recharge_m = 500\ncoast_rain_mm = 150\n"
+    "moisture_path_mm_km = 32000\nloss_max = \"0.25\"\nocean_recharge_m = 500\ncoast_rain_mm = 75\n"
     "coast_rain_reach_m = 1500\nrain_noise = { wavelength_m = 5000, octaves = 3, gain = \"0.5\" }\n"
     "rain_noise_amp = \"0.4\"\nrain_min_mm = 250\n";
 
