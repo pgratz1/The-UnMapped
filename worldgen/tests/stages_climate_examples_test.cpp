@@ -577,17 +577,16 @@ TEST_CASE("P1-03 10, 7 (slow): in-bounds extreme, 2048 x 2048 triangle with r_ce
 }
 }  // TEST_SUITE
 
-TEST_CASE("P1-03 10: both C4 seams are fatal for r_cells < 0 and for any S outside [0, 32767]") {
+TEST_CASE("P1-03 10: both C4 seams are fatal, with the prefix, for r_cells < 0 and for any S outside [0, 32767]") {
     const Grid g{3, 1};
-    CHECK_THROWS_AS(static_cast<void>(climate_api::box_mean(g, std::vector<std::int64_t>{1, 2, 3}, -1, THREADS)),
-                    worldgen::FatalError);
-    CHECK_THROWS_AS(static_cast<void>(climate_api::triangle_mean(g, std::vector<std::int64_t>{1, 2, 3}, -1, THREADS)),
-                    worldgen::FatalError);
+    const std::vector<std::int64_t> ok = {1, 2, 3};
+    expect_prefixed_fatal([&] { return climate_api::box_mean(g, ok, -1, THREADS); }, "box r -1");
+    expect_prefixed_fatal([&] { return climate_api::triangle_mean(g, ok, -1, THREADS); }, "triangle r -1");
     for (const std::int64_t bad : {std::int64_t{-1}, std::int64_t{32768}}) {
         CAPTURE(bad);
         const std::vector<std::int64_t> s = {1, bad, 3};
-        CHECK_THROWS_AS(static_cast<void>(climate_api::box_mean(g, s, 1, THREADS)), worldgen::FatalError);
-        CHECK_THROWS_AS(static_cast<void>(climate_api::triangle_mean(g, s, 2, THREADS)), worldgen::FatalError);
+        expect_prefixed_fatal([&] { return climate_api::box_mean(g, s, 1, THREADS); }, "box bad S");
+        expect_prefixed_fatal([&] { return climate_api::triangle_mean(g, s, 2, THREADS); }, "triangle bad S");
     }
     CHECK_NOTHROW(static_cast<void>(climate_api::triangle_mean(g, std::vector<std::int64_t>{0, 32767, 0}, 2, THREADS)));
 }
