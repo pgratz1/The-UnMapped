@@ -1,6 +1,6 @@
 # P1-04 Biomes
 
-Status: draft, spec writer, 2026-11-16; **revised 2026-11-17 for implementation** (second version, awaiting approval): recalibrated on the 0.7.0 climate (generator 0.7.0, `coast_rain_mm` 75) instead of the floating-point prototype; per-size rainfall scale; marsh rule and drainage height (G7 with a minimum river class); jitter retuned; river cells take the biome of their banks; schema version 3 also adds the climate stage's one-row table `climate` (the wind). Section 0 lists every change. Phase P1 Geography, stage 4 (`biomes`). Design doc section 4 (stage 4: "a lookup on temperature and rainfall, plus special cases for coast, river and high peaks"; the starting biomes), 6 (`region.biome`), 7 (scatter "from biome rules"). Depends on P0-01 to P0-04, P1-00 (G1 to G8, D1 to D10, the `biome` kind of 6.6, schema 9.2), P1-02 and P1-03. Tuning values marked "calibrated" were set on the 108 worlds of the climate validation sweep (section 11); every statistics range is provisional until the implementation's validation sweep.
+Status: draft, spec writer, 2026-11-16; **revised 2026-11-17 for implementation** (second version, awaiting approval): recalibrated on the 0.7.0 climate (generator 0.7.0, `coast_rain_mm` 75) instead of the floating-point prototype; per-size rainfall scale; marsh rule and drainage height (G7 with a minimum river class); jitter retuned; river cells take the biome of their banks; schema version 3 also adds the climate stage's one-row table `climate` (the wind). Section 0 lists every change. Amended 2026-11-17 after the test writer's reference (gaps closed, no rule or value changed): unbounded sentinels (4.1, B4, 5.1), the scale entry of a test grid (B4), G7's class range and test wording (10.1), named-check positions and messages (4.1), precondition prefixes (2), malformed `biome` rows and missing codes in `report` (9), `--composite biomes` without its layers and the palette's layer type (9), the empty world's size (12). Phase P1 Geography, stage 4 (`biomes`). Design doc section 4 (stage 4: "a lookup on temperature and rainfall, plus special cases for coast, river and high peaks"; the starting biomes), 6 (`region.biome`), 7 (scatter "from biome rules"). Depends on P0-01 to P0-04, P1-00 (G1 to G8, D1 to D10, the `biome` kind of 6.6, schema 9.2), P1-02 and P1-03. Tuning values marked "calibrated" were set on the 108 worlds of the climate validation sweep (section 11); every statistics range is provisional until the implementation's validation sweep.
 
 ## 0. Changes in this revision
 
@@ -46,6 +46,8 @@ Preconditions (fatal, message beginning `biomes: input precondition: `; from `ge
 2. Every `water` value is in 0..3; every `river` value is in 0..15.
 3. The G7 preconditions (P1-00 7.7): every non-drain cell reaches a drain cell along `flow_dir`, and no height above drainage is negative.
 
+**Prefixes.** Every precondition failure of the stage, including one found by G7 inside the stage, is reported as `biomes: input precondition: ` followed by the detail; for a G7 failure the detail is G7's own message, which begins `G7: ` (for example `biomes: input precondition: G7: cell (4, 2) does not reach a drain cell`). The G7 seam called directly (10, `height_above_drainage`) raises its message with the prefix `G7: ` only; so do its argument checks (k outside 1..15, arrays of the wrong length).
+
 ## 3. Outputs
 
 | Output | Content |
@@ -82,26 +84,36 @@ Registered by this stage's implementation (P1-00 6.6). Fields in schema declarat
 | `timber` | fx(0, 1) | usable wood of the biome, used by P1-05 |
 | `region_noun` | string(32) | noun for region names, used by P1-06 (e.g. `Fen`) |
 
-Record `biome_rule` (all fields required; a condition holds when the value lies in the closed interval):
+Record `biome_rule` (all fields required; a condition holds when the value lies in the closed interval). **Unbounded sentinels** (lead's decision, 2026-11-17): a bound equal to the extreme value of its field's type, on the side it bounds, means "no limit on that side", and B4 skips that comparison entirely. The inputs can lie outside the field ranges (tq down to −61 °C and up to 51 °C with the jitter, rq up to 20000 mm, S2 tangents up to about 290, `elevation` up to 3276.7 m, hand up to 3276.7 m), so without the rule a rule written with full ranges would fail on those cells.
 
-| Field | Type | Compared with |
-| --- | --- | --- |
-| `temp_min_c`, `temp_max_c` | fx(−60, 50) | tq, the jittered temperature in °C |
-| `rain_min_mm`, `rain_max_mm` | int(0, 10000) | rq, the jittered rainfall in mm, against the bound **scaled for the map size** (B4); 10000 means "no upper limit" and is never scaled |
-| `elev_min_m`, `elev_max_m` | int(0, 3000) | `elevation` in metres (compared as 10 × bound against decimetres) |
-| `slope_max` | fx(0, 100) | the cell's slope tangent (G8), compared exactly as S2 |
-| `hand_max_m` | fx(0, 3000) | height above drainage (G7 with k = `drain_river_class_min`) |
-| `coast_max_m` | int(0, 32767) | `coast_dist` |
+| Field | Type | Compared with | Sentinel (comparison skipped) |
+| --- | --- | --- | --- |
+| `temp_min_c`, `temp_max_c` | fx(−60, 50) | tq, the jittered temperature in °C | `temp_min_c` = −60; `temp_max_c` = 50 |
+| `rain_min_mm`, `rain_max_mm` | int(0, 10000) | rq, the jittered rainfall in mm, against the bound **scaled for the map size** (B4) | `rain_min_mm` = 0; `rain_max_mm` = 10000 (neither is scaled) |
+| `elev_min_m`, `elev_max_m` | int(0, 3000) | `elevation` in metres (compared as 10 × bound against decimetres) | `elev_min_m` = 0; `elev_max_m` = 3000 |
+| `slope_max` | fx(0, 100) | the cell's slope tangent (G8), compared exactly as S2 | 100 |
+| `hand_max_m` | fx(0, 3000) | height above drainage (G7 with k = `drain_river_class_min`) | 3000 |
+| `coast_max_m` | int(0, 32767) | `coast_dist` | 32767 |
 
-Named checks (P0-03 7.5, run after type validation; errors at the definition's header, form as P1-01 4.3, the message given):
+The lower sentinels `rain_min_mm` 0 and `elev_min_m` 0 and the upper sentinel `coast_max_m` 32767 can never change a result (rq ≥ 0; a classified cell has `elevation` ≥ 1; `coast_dist` ≤ 32767); they are listed so that the rule is the same for every field. A bound one step inside the extreme (for example `rain_max_mm` 9999, or `slope_max` one raw step below 100) is compared normally.
 
-1. `biome_code_unique` (P1-00): no two definitions share a `code` — `code <c> is also used by '<other id>'`.
-2. `biome_water_body`: `water` is true exactly when `water_body` is not "none" — `water must be true exactly when water_body is not "none"`.
-3. `biome_water_unique` (kind-level, reported at the second definition in id order, or against the directory when missing): exactly one definition has `water_body` "ocean" and exactly one "lake" — `exactly one biome must have water_body "<v>"`.
-4. `biome_fallback` (kind-level, as 3): exactly one definition has `fallback` true, and it has `water_body` "none" — `exactly one land biome must have fallback = true`.
-5. `biome_water_rules`: a definition with `water_body` not "none" has `priority` 0 and no rules — `water biomes take no rules and priority 0`.
-6. `biome_priority_unique` (kind-level, as 3): land definitions with `priority` > 0 have distinct priorities — `priority <p> is also used by '<other id>'`.
-7. `biome_rule_ranges`: in every rule, `temp_min_c ≤ temp_max_c`, `rain_min_mm ≤ rain_max_mm`, `elev_min_m ≤ elev_max_m` — `rules[<i>]: <field>_min must not exceed <field>_max`.
+Named checks (P0-03 7.5, run after type validation, only over definitions that passed it). Positions and forms (P0-03 9):
+
+- **At a definition**: `<path>:<line>:<column>: error: <message>` at the definition's header (P0-03 amendment 10 gives the header position).
+- **Against the directory**: `biomes: error: <message>`, no position (the kind's directory, relative to the data root).
+- **Between two definitions** (checks 1, 3, 4, 6 when two clash): reported once for each later definition, at its header, naming the earliest. "Earlier" and "later" are the canonical order of P0-03 7.4, ascending id by bytes, which is also the order validation runs in; file order never matters. Three definitions sharing a code give two errors, both naming the first.
+
+| # | Check | Condition | Where | Message |
+| --- | --- | --- | --- | --- |
+| 1 | `biome_code_unique` (P1-00) | no two definitions share a `code` | at the later definition | `code <c> is also used by 'biome.<earlier id>'` |
+| 2 | `biome_water_body` | `water` is true exactly when `water_body` is not "none" | at the definition | `water must be true exactly when water_body is not "none"` |
+| 3 | `biome_water_unique` | exactly one definition has `water_body` "ocean", exactly one "lake" | none: against the directory; two or more: at each later one | none: `no biome has water_body "<v>"`; more: `water_body "<v>" is also used by 'biome.<earlier id>'` |
+| 4 | `biome_fallback` | exactly one definition has `fallback` true, and it has `water_body` "none" | none: against the directory; two or more: at each later one; a fallback with `water_body` other than "none" (whether or not it is the only one): at that definition | none: `no biome has fallback = true`; more: `fallback = true is also set by 'biome.<earlier id>'`; water: `the fallback biome must have water_body "none"` |
+| 5 | `biome_water_rules` | a definition with `water_body` not "none" has `priority` 0 and no rules | at the definition | `water biomes take no rules and priority 0` |
+| 6 | `biome_priority_unique` | land definitions (`water_body` "none") with `priority` > 0 have distinct priorities | at the later definition | `priority <p> is also used by 'biome.<earlier id>'` |
+| 7 | `biome_rule_ranges` | in every rule, `temp_min_c ≤ temp_max_c`, `rain_min_mm ≤ rain_max_mm`, `elev_min_m ≤ elev_max_m` | at the definition; one error per failing pair, rules in array order, pairs in the order listed | `rules[<i>]: <min field> must not exceed <max field>`, with the field names written out, e.g. `rules[0]: temp_min_c must not exceed temp_max_c`, `rules[1]: rain_min_mm must not exceed rain_max_mm`, `rules[0]: elev_min_m must not exceed elev_max_m` |
+
+The kind-level checks (3 and 4 when none matches) run once, after every definition has been validated, and only if the kind has at least one definition that passed type validation (a kind whose every definition failed reports those failures only). A directory that is missing or holds no definition is P0-03's required-kind error, not these.
 
 Shipped definitions, `game/data/biomes/` (shown as one file; one file per biome is the recommended layout, and file names carry no meaning, P0-03 7.4). The fixture copies are `worldgen/tests/data/geo/biomes/` and `worldgen/tests/data/geo-small/biomes/`. Codes, names and colours are those fixed in P1-00 6.6. Rule values differing from the first version are marked in the comments.
 
@@ -312,19 +324,23 @@ The jitter is used only for the lookup; the climate layers are not changed.
 
 ### B4. Classification (D1, G6 row blocks)
 
-Once per world: sc = `rain_scale_512` if N ≤ 512, `rain_scale_1024` if 512 < N ≤ 1024, otherwise `rain_scale_2048`; and for a rainfall bound b, rb(b) = `from_int(10000)` if b = 10000, otherwise `mul_int(sc, b)` (exact).
+Once per world: with N the map side (on a W × H test grid, N = max(W, H)), sc = `rain_scale_512` if N ≤ 512, `rain_scale_1024` if 512 < N ≤ 1024, otherwise `rain_scale_2048`. This is total: every N ≥ 1 selects exactly one entry (any grid of side at most 512 uses the 512 entry). For a rainfall bound b that is not a sentinel, rb(b) = `mul_int(sc, b)` (exact).
 
 ```
 water = 3:  biome = code of the definition with water_body "ocean"
 water = 2:  biome = code of the definition with water_body "lake"
 otherwise:  for each land definition with priority > 0, in descending priority:
-                if any rule r of it matches (all of):
-                    r.temp_min_c ≤ tq ≤ r.temp_max_c
-                    rb(r.rain_min_mm) ≤ rq ≤ rb(r.rain_max_mm)
-                    10 × r.elev_min_m ≤ elevation ≤ 10 × r.elev_max_m
-                    S2 × 2^64 ≤ (320 × r.slope_max.raw)²                    (U128, exact; P1-00 G8)
-                    from_int(hand) ≤ mul_int(r.hand_max_m, 10)
-                    coast_dist ≤ r.coast_max_m
+                if any rule r of it matches (all of the comparisons below,
+                    each skipped when its bound is the sentinel of 4.1):
+                    r.temp_min_c ≤ tq                  (skipped if r.temp_min_c = −60)
+                    tq ≤ r.temp_max_c                  (skipped if r.temp_max_c = 50)
+                    rb(r.rain_min_mm) ≤ rq             (skipped if r.rain_min_mm = 0)
+                    rq ≤ rb(r.rain_max_mm)             (skipped if r.rain_max_mm = 10000)
+                    10 × r.elev_min_m ≤ elevation      (skipped if r.elev_min_m = 0)
+                    elevation ≤ 10 × r.elev_max_m      (skipped if r.elev_max_m = 3000)
+                    S2 × 2^64 ≤ (320 × r.slope_max.raw)²   (U128, exact, P1-00 G8; skipped if r.slope_max = 100)
+                    from_int(hand) ≤ mul_int(r.hand_max_m, 10)   (skipped if r.hand_max_m = 3000)
+                    coast_dist ≤ r.coast_max_m         (skipped if r.coast_max_m = 32767)
                 then biome = its code; stop
             if none matched: biome = code of the fallback definition
 ```
@@ -381,6 +397,19 @@ With k = 3 (the shipped `drain_river_class_min`), the class-2 river cells are no
 | B20 | 2048 | 80 | 437 | 30 | 100 | 8 | 200 | | 8.0, 437 | grassland | below 437.5 and below 630 |
 | B21 | 1024 | 80 | 499 | 30 | 100 | 8 | 200 | | 8.0, 499 | grassland | marsh needs 500 |
 
+**Sentinels** (4.1), shipped definitions, N = 1024; each cell lies outside a field's range, and without the sentinel rule the biome would be the one in brackets:
+
+| Case | temp | rain | elev | S2 | hand | coast | nt, nr | tq, rq | Biome | Sentinel |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| S1 | −600 | 650 | 6500 | 100 | 100 | 2000 | nt −1 | raw −261993005056 (−61.0), 650 | alpine (grassland) | `temp_min_c` −60 of alpine |
+| S2 | 500 | 900 | 400 | 100 | 100 | 2000 | nt 0.6 | raw 217325345178 (50.6), 900 | temperate_forest (grassland) | `temp_max_c` 50 of forest |
+| S3 | 80 | 9583 | 400 | 100 | 100 | 2000 | nr 0.5 | 8.0, raw 45274538761158 (10541.3) | temperate_forest (grassland) | `rain_max_mm` 10000 of forest |
+| S4 | 3 | 1200 | 8000 | 8589934591 | 500 | 3000 | | 0.3, 1200 | alpine (temperate_forest) | `slope_max` 100 of alpine (tangent about 289.6) |
+| S5 | −100 | 1200 | 32767 | 200000 | 500 | 3000 | | −10.0, 1200 | alpine (temperate_forest) | `elev_max_m` 3000 of alpine (3276.7 m) |
+| S6 | 3 | 1200 | 8000 | 200000 | 32000 | 3000 | | 0.3, 1200 | alpine (temperate_forest) | `hand_max_m` 3000 of alpine (hand 3200 m) |
+
+The sentinels `rain_min_mm` 0, `elev_min_m` 0 and `coast_max_m` 32767 change no result (4.1); B1 to B21 already pass through them (for example B1 meets alpine's `rain_min_mm` 0 and `coast_max_m` 32767).
+
 `slope_max` "0.05" is raw 214748365; (320 × raw)² / 2^64 = 256.0000005, so S2 = 256 is not steeper and 257 is (B4, B5). `rain_scale_512` "1.125" is raw 4831838208 and `rain_scale_2048` "0.875" raw 3758096384, so every scaled bound of the shipped rules is exact. In B12 f = ONE + mul(0.2, 0.5) = 1.1 (raw 4724464026), 650 × f = raw 3070901616900.
 
 **B5.** A river cell whose dry neighbours have codes 3, 3, 4, 4, 5 gets 3 (two each of 3 and 4; the tie goes to the smaller code); with 4, 4, 4, 3 it gets 4; a river cell with no dry neighbour (for example between a lake and another river cell on every side) keeps its B4 code.
@@ -433,6 +462,12 @@ Budget (P1-00 11): 0.1 / 0.5 / 2 s at 512 / 1024 / 2048. Cost per non-water cell
 
 `[tables]` lists `biome = <rows>` and `climate = <rows>` in ascending name order with the others (every world of schema 3 has both tables, also `--until none`: `biome = 0`, `climate = 0`).
 
+The two keys are printed when the `biome` layer exists. Then:
+
+- **Every row of table `biome` is checked** (whether or not the layer exists): `id` in 1..254, `key` non-empty, `colour` in 0..16777215, `water` 0 or 1. A row that fails is a corrupt-data error naming the table, as for `pass` (P1-00 10.3) and `climate` (P1-03 9): `worldgen-cli: error: corrupt table 'biome': row <id>: <reason>` on stderr, nothing on stdout, exit 3; the reason is the first failing check in the order listed (`id outside 1..254`, `empty key`, `colour outside 0..16777215`, `water not 0 or 1`); rows are checked in ascending `id`. (`id` and `key` uniqueness are guaranteed by the DDL.)
+- **The `biome` layer must be `u8`, of the same size as `elevation`, and every value must have a row**: otherwise a corrupt-data error naming the layer, `worldgen-cli: error: corrupt layer 'biome': <reason>`, exit 3, with the reason `type <t>, expected u8`, `size <W>x<H>, expected <N>x<N>`, or `value <v> at (<x>, <y>) has no row in table 'biome'` for the lowest such cell index. An empty table with a `biome` layer is therefore this error at cell 0.
+- A table with rows and no `biome` layer prints neither key.
+
 **Statistics** (P1-00 13.1, replacing the prototype rows; **provisional**). Measured by the spec writer on the 108 worlds of the climate validation sweep (512 and 1024 seeds 0–49, 2048 seeds 0–7; generator 0.7.0) with a calibration model of B2 to B5 (section 11.1). The validation specialist resets them from the implementation's sweep, typical = measured min–max widened by about 10%:
 
 | Statistic | All seeds (hard) | Typical (≥ 90%), 512 / 1024 / 2048 | Measured min / median / max, 512 / 1024 / 2048 |
@@ -447,9 +482,9 @@ Budget (P1-00 11): 0.1 / 0.5 / 2 s at 512 / 1024 / 2048. Cost per non-water cell
 
 Every natural biome is present (≥ 0.1% of land) in every one of the 108 worlds; the smallest share is marsh at 512 seed 10 (0.12%). No biome exceeds 0.65 in any world. The hard marsh bound 0.15 marks the defect the first rules had (14–28% at 2048).
 
-**Palette `biome`** (layer `biome`, `u8`): the colour of the `biome` table row whose `id` equals the value, as 0xRRGGBB; a value with no row, or a world without the table, (255, 0, 255). Registered under `auto`. (This implements P1-00 appendix C item 5.)
+**Palette `biome`**: suits `u8` layers only (P1-00 appendix C 1; any values). Each value gets the colour of the `biome` table row whose `id` equals it, as 0xRRGGBB; a value with no row, or a world without the table or with an empty one, (255, 0, 255) (render draws; it does not validate as `report` does). Registered under `auto` for the layer `biome`. `--palette biome` on a layer of another type, for example `elevation` (`i16`), is a usage error (exit 2) whose message says the palette needs a `u8` layer. (This implements P1-00 appendix C item 5.)
 
-**Composite `biomes`** (`--composite biomes`; default output `<stem>.biomes.png`). Needs `elevation`, `biome` and the table; uses `water`, `river` and `flow_dir` when present. Per cell: ocean (e < 0): the `hypsometric` ocean colour; otherwise the biome colour, shaded exactly as step 2 of the composite `map` (P1-00 10.2); then steps 3 and 4 of `map` (lake colour and the river drawing) when `water` is present. P0-04 amendment for the lead: `--composite` accepts `map`, `biomes` (and `regions`, P1-06). `render --help` lists every palette `--palette` accepts, `biome` included (P1-00 10.2).
+**Composite `biomes`** (`--composite biomes`; default output `<stem>.biomes.png`). Needs `elevation` and `biome`; uses the table for colours (as the palette: a missing row or table draws (255, 0, 255)) and `water`, `river` and `flow_dir` when present. Without `elevation`, or without `biome` (checked in that order), `render` exits 3 with the reader's message and the layer list, as for `--composite map` (P1-00 appendix C 4): `worldgen-cli: error: world file '<path>' has no layer 'biome'; available layers: <names, comma separated>` (or `…; the world has no layers`), and writes no file. A `biome` layer that is not `u8`, or not the size of `elevation`, is refused like the optional layers of `map` (`composite_map_problem`, P1-00 10.2): exit 3 with `layer 'biome' is <t>, expected u8` or a size message naming the layer. Per cell: ocean (e < 0): the `hypsometric` ocean colour; otherwise the biome colour, shaded exactly as step 2 of the composite `map` (P1-00 10.2); then steps 3 and 4 of `map` (lake colour and the river drawing) when `water` is present. P0-04 amendment for the lead: `--composite` accepts `map`, `biomes` (and `regions`, P1-06). `render --help` lists every palette `--palette` accepts, `biome` included (P1-00 10.2).
 
 ## 10. Tests required
 
@@ -457,16 +492,17 @@ Library seams (interim; the engineer may add helpers): `biome_definitions_from(c
 
 ### 10.1 Unit tests
 
-1. G7 on P1-02's worked example exactly with k = 1 and k = 3 (5.1), and its precondition failures: a `flow_dir` cycle on a hand-made grid and a dry cell draining to a cell with higher S are fatal; with k = 16 on a grid whose only drains are rivers, a cell that reaches no drain is fatal.
-2. B4 cases B1 to B21 exactly, through `biome_lookup` with the shipped definitions, the scale of the case's N, and the tq, rq given.
-3. The size rule: `biome_rain_scale` gives the 512 entry for N = 16, 128 and 512, the 1024 entry for 513 and 1024, the 2048 entry for 1025 and 2048; a bound of 10000 is not scaled (a rule with `rain_max_mm` 10000 matches rq = 9999 at scale 0.875).
+1. G7 on P1-02's worked example exactly with k = 1 and k = 3 (5.1). Its failures, each fatal with the prefix `G7: ` through the seam (and `biomes: input precondition: G7: ` through the stage): k = 0 and k = 16 (outside 1..15; the stage never passes them, since `drain_river_class_min` is int(1, 15)); a `flow_dir` cycle among non-drain cells on a hand-made grid (no drain reached); a grid whose only water is river cells of class 2 with k = 3 and no lake or ocean (no drain reached); a non-drain cell whose drain cell has a higher S than the cell itself (negative hand). Not fatal: a non-drain cell c whose path passes through a higher non-drain cell before reaching a drain cell lower than c (hand = S[c] − S[drain(c)] ≥ 0; only the drain's S counts).
+2. B4 cases B1 to B21 and S1 to S6 exactly, through `biome_lookup` with the shipped definitions, the scale of the case's N, and the tq, rq given.
+3. The size rule: `biome_rain_scale` gives the 512 entry for N = 1, 16, 128 and 512, the 1024 entry for 513 and 1024, the 2048 entry for 1025, 2048 and 4096; a W × H grid uses N = max(W, H) (a 600 × 100 grid uses the 1024 entry). Sentinels: a rule with `rain_max_mm` 10000 matches rq = 9999 at scale 0.875 and rq = 15000 at any scale; with `rain_max_mm` 9999 it fails rq = 9999 at scale 0.875 (bound 8749.125).
 4. B5 examples of 5.1, and the real-cell example (the test may build the 3 × 3 neighbourhood by hand).
 5. A definition with two rules: a cell matching only the second rule gets the biome.
-6. Named checks 1 to 7: one failing fixture each, with path, line, column and message; a float literal in a rule is a P0-03 error; a rule missing a field is a missing-field error at the rule's table header. Tuning: each bound of 4.2 rejects a value one step outside it.
+6. Named checks 1 to 7: one failing fixture for each row and each "where" of the table in 4.1 (including a missing ocean biome against the directory, three definitions sharing a code giving two errors that both name the first in id order, and a sole fallback that is a water biome), with path, line, column and message; a float literal in a rule is a P0-03 error; a rule missing a field is a missing-field error at the rule's table header. Tuning: each bound of 4.2 rejects a value one step outside it.
 7. The `biome` table of a world generated with the shipped data equals the eight rows of P1-00 6.6; with `--until climate` the table exists and is empty; `SCHEMA_VERSION` is 3; the `sqlite_schema` rows of an empty world list `biome` and `climate` with the DDL of section 3 byte for byte.
 8. B3 structural: for seed 0, N = 64, at 16 cells chosen by the test, tq and rq equal the test's evaluation with `fbm2`.
 9. Preconditions of section 2, each fatal with the prefix: a missing `river` layer, a `river` value of 16, a `water` value of 4.
-10. Report: `biome_share` and `biome_patches` on a hand-made 6 × 6 world with a `biome` table, recomputed by the test; `[tables]` lists `biome` and `climate`.
+10. Report: `biome_share` and `biome_patches` on a hand-made 6 × 6 world with a `biome` table, recomputed by the test; `[tables]` lists `biome` and `climate`; each malformed-row case of section 9 and a layer value with no row exit 3 with the stated message and print nothing on stdout.
+11. Render: `--composite biomes` on a world without `biome`, without `elevation`, and with `biome` of type `i16`, each exit 3 with the stated message; `--palette biome` on `elevation` is a usage error (exit 2); on the `biome` layer of a world whose table lacks a code, that code's pixels are (255, 0, 255).
 
 ### 10.2 Property tests
 
@@ -541,7 +577,7 @@ The lead's target picture and what the shipped values give (min / median / max o
 - Schema version 2 → 3, in the biomes merge (generator 0.8.0). `SCHEMA_VERSION`, `PRAGMA user_version` and `meta.schema_version` become 3.
 - New table `biome` (DDL in section 3): one row per loaded biome definition, written by the biome stage; `id` = biome `code`, `key` = definition id, `name`, `colour` (0xRRGGBB), `water` (0 or 1).
 - New table `climate` (DDL in section 3): one row, `id` 1, `wind_toward` = the prevailing wind's D8 code (0 E to 7 NE, the direction the wind blows toward; P1-03 C2), written by the climate stage in C7. The climate layers are byte-identical to 0.7.0's.
-- DDL order: `meta`, `layer`, `pass`, `biome`, `climate`. Both tables exist in every world of schema 3; empty when their stage did not run. The empty world grows by one page per table (5 → 7 pages expected; the validation confirms, P0-02 amendment).
+- DDL order: `meta`, `layer`, `pass`, `biome`, `climate`. Both tables exist in every world of schema 3; empty when their stage did not run. **The empty world grows from 5 to 8 pages (32768 bytes)**: one root page each for `biome`, the automatic index `sqlite_autoindex_biome_1` of its UNIQUE `key` column, and `climate` (page 1 `sqlite_schema`, 2 `meta`, 3 `layer`, 4 `sqlite_autoindex_layer_1`, 5 `pass`, 6 `biome`, 7 `sqlite_autoindex_biome_1`, 8 `climate`). Established by building the schema-3 DDL with page size 4096, no auto-vacuum and `VACUUM INTO` (SQLite 3.46.1; the same procedure gives 5 pages for schema 2, as P0-02 amendment 14 records for the vendored 3.54.1); P0-02 amendment 15.
 - `report`: `[tables]` lists both; `[geography]` gains `wind_toward` (P1-03 9), `biome_share` and `biome_patches`; a malformed `climate` row is a corrupt-table error (P1-03 9).
 - No layer catalogue change, no new `meta` or `param.*` key. `region` and `region_border` stay planned as version 4 (P1-06).
 - New data kind `biome` (fields in 4.1, P1-00 6.6); new `worldgen` id `biomes`; two stream names (`geo.biomes.temp_jitter`, `geo.biomes.rain_jitter`); G7 gains the minimum river class parameter (P1-00 7.7).

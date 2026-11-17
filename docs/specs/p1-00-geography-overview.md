@@ -268,7 +268,7 @@ Parallel per-cell work is split into blocks of 64 rows: block b covers rows 64b 
 
 ### 7.7 G7: height above drainage (added for the second pass)
 
-Input: the stored `elevation`, `water`, `water_depth`, `flow_dir` and `river`, and a minimum river class k, 1 ≤ k ≤ 15 (amended 2026-11-17 for P1-04: P1-04 uses k = `drain_river_class_min`, 3 as shipped; P1-05 uses k = 1). Output: hand[i] in decimetres, `int64`, for every cell. A **drain cell** is a lake or ocean cell (`water` 2 or 3), or a river cell (`water` 1) with `river` ≥ k; with k = 1 every river cell is a drain (P1-02 invariant 5), which is the definition before the amendment. With S = `elevation` + `water_depth` (the water or land surface; 0 on ocean):
+Input: the stored `elevation`, `water`, `water_depth`, `flow_dir` and `river`, and a minimum river class k, 1 ≤ k ≤ 15, any other k being fatal (amended 2026-11-17 for P1-04: P1-04 uses k = `drain_river_class_min`, 3 as shipped; P1-05 uses k = 1). Output: hand[i] in decimetres, `int64`, for every cell. A **drain cell** is a lake or ocean cell (`water` 2 or 3), or a river cell (`water` 1) with `river` ≥ k; with k = 1 every river cell is a drain (P1-02 invariant 5), which is the definition before the amendment. With S = `elevation` + `water_depth` (the water or land surface; 0 on ocean):
 
 ```
 drain(c) = c                     if c is a drain cell
@@ -276,7 +276,7 @@ drain(c) = c                     if c is a drain cell
 hand[c]  = S[c] − S[drain(c)]    (0 on drain cells)
 ```
 
-The result is a function of the layers, so any order that visits a cell after its downstream cell gives it. Reference (D5): a FIFO queue starts with every drain cell in index order; popping c, each neighbour m in the 8-neighbour order that is not a drain cell and whose `flow_dir` points to c gets drain(m) = drain(c) and is pushed. Fatal ("G7: …") if a non-drain cell is not reached (a `flow_dir` that does not lead to water) or if some hand is negative (P1-02 invariant 3 makes both impossible on a hydrology output). Bounds: 0 ≤ hand ≤ 30000. Used by P1-04 (marsh) and P1-05 (floodplain, flooding). Worked examples, k = 1 and k = 3: P1-04 5.1.
+The result is a function of the layers, so any order that visits a cell after its downstream cell gives it. Reference (D5): a FIFO queue starts with every drain cell in index order; popping c, each neighbour m in the 8-neighbour order that is not a drain cell and whose `flow_dir` points to c gets drain(m) = drain(c) and is pushed. Every G7 failure is fatal with a message beginning `G7: ` (a stage that calls G7 reports it after its own precondition prefix, e.g. `biomes: input precondition: G7: …`, P1-04 2). Fatal if k is outside 1..15, if a non-drain cell is not reached (a `flow_dir` that does not lead to water) or if some hand is negative (P1-02 invariant 3 makes both impossible on a hydrology output). Bounds: 0 ≤ hand ≤ 30000. Used by P1-04 (marsh) and P1-05 (floodplain, flooding). Worked examples, k = 1 and k = 3: P1-04 5.1.
 
 ### 7.8 G8: cell slope (added for the second pass)
 
@@ -369,7 +369,7 @@ Example: e = 250 (25 m) between stops 0 and 500: R = 70 + floor((2·34·250 + 50
 
 **`signed`** (layer `coast_dist`): with P = max(1, largest positive value) and M = max(1, −smallest negative value): v ≥ 0 → (g, g, g) with g = gray_level(v, P) of P0-04 6 (d = v, r = P); v < 0 → (0, 0, 255 − floor(3·gray_level(−v, M)/4)).
 
-`water_depth` keeps `gray`. **`render --help`** lists every palette name `--palette` accepts, in registration order after `auto` and `gray`, including each second-pass palette from the merge that adds it (`temperature` and `rainfall` from 0.7.0, `biome` from the biomes merge, and so on); a palette accepted by `--palette` but missing from the help text is a defect (the 0.7.0 help omitted `temperature` and `rainfall`, validation finding 3). The same applies to the `--composite` names. Second pass, each defined in its stage spec and registered under `auto`: **`temperature`** and **`rainfall`** ramps (P1-03 9; palette names `temperature`, which suits `i16` layers only, and `rainfall`, which suits `u16` layers only); **`biome`**, the colour of the table `biome` row with `id` = value, unknown (255, 0, 255) (P1-04 9); **`score`** ramp for `fertility`, `ore`, `timber`, `fresh_water`, `habitability` (P1-05 9); `ids` for `walk_area` and `region`.
+`water_depth` keeps `gray`. **`render --help`** lists every palette name `--palette` accepts, in registration order after `auto` and `gray`, including each second-pass palette from the merge that adds it (`temperature` and `rainfall` from 0.7.0, `biome` from the biomes merge, and so on); a palette accepted by `--palette` but missing from the help text is a defect (the 0.7.0 help omitted `temperature` and `rainfall`, validation finding 3). The same applies to the `--composite` names. Second pass, each defined in its stage spec and registered under `auto`: **`temperature`** and **`rainfall`** ramps (P1-03 9; palette names `temperature`, which suits `i16` layers only, and `rainfall`, which suits `u16` layers only); **`biome`** (suits `u8` layers only, so `--palette biome` on `elevation` is a usage error), the colour of the table `biome` row with `id` = value, unknown (255, 0, 255) (P1-04 9); **`score`** ramp for `fertility`, `ore`, `timber`, `fresh_water`, `habitability` (P1-05 9); `ids` for `walk_area` and `region`.
 
 **Composite `map`** (`--composite map`; default output `<stem>.map.png`). Needs `elevation`; uses `water` and `river` when present. Per cell:
 
@@ -748,7 +748,7 @@ Decisions by the lead on points raised by the engineers and the determinism audi
 
 **Render (10.2)**
 
-1. **Which layers a palette suits.** `hypsometric`: `i16`. `water` and `direction`: `u8`. `river`: `u8` with every value at most 15. `log2` and `ids`: any unsigned type. `signed`: any signed type. `gray`: any layer. Naming a palette that does not suit the layer is a usage error (exit 2) whose message says what the palette needs. Under `auto`, a registered palette that does not suit the layer falls back to `gray`.
+1. **Which layers a palette suits.** `hypsometric`: `i16`. `water`, `direction` and `biome` (P1-04 9): `u8`. `river`: `u8` with every value at most 15. `log2` and `ids`: any unsigned type. `signed`: any signed type. `gray`: any layer. Naming a palette that does not suit the layer is a usage error (exit 2) whose message says what the palette needs. Under `auto`, a registered palette that does not suit the layer falls back to `gray`.
 2. **Out-of-range category values.** A `water` or `river` value outside the catalogue's range is drawn (255, 0, 255), so a bad layer is obvious.
 3. **Elevation 0.** No finished `elevation` layer contains 0 (catalogue rule 4). On a hand-made layer that does, `hypsometric` draws it as ocean at depth 0, and the composite and the report statistics count it as neither land nor ocean.
 4. **`--palette` with `--composite`** is a usage error. The composite needs an `i16` `elevation` layer; without one, or with an optional layer of the wrong type or size, `render` exits 3 and lists the layers present.

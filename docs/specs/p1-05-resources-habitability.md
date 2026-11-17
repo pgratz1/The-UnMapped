@@ -140,7 +140,7 @@ Section 2.
 
 ### R2. Drainage height, slope (P1-00 G7, G8)
 
-hand (dm) by G7; S2 and tan by G8.
+hand (dm) by G7 with minimum river class k = 1 (every river cell, lake and ocean cell is a drain; P1-00 7.7; P1-04 uses k = 3); S2 and tan by G8.
 
 ### R3. Fresh water (D4 chamfer, then D1)
 
