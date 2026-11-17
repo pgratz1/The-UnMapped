@@ -144,12 +144,14 @@ TEST_CASE("hashes 8, 12.5: detail hashes of the empty world") {
     const auto d = detail_hashes(w);
     REQUIRE(d.ok());
     CHECK(d.value().schema == p004::p0_schema_hash());
-    REQUIRE(d.value().tables.size() == 2);
+    REQUIRE(d.value().tables.size() == 3);
     CHECK(d.value().tables[0].name == "layer");
     CHECK(d.value().tables[0].digest == p004::layer_table_hash({}));
     CHECK(d.value().tables[1].name == "meta");
     // The table meta hash built by hand over the eight known rows (12.5).
     CHECK(d.value().tables[1].digest == p004::meta_table_hash(p004::meta_rows(0)));
+    CHECK(d.value().tables[2].name == "pass");
+    CHECK(d.value().tables[2].digest == p004::empty_pass_table_hash());
     CHECK(d.value().layers.empty());
 
     // The --detail text.
@@ -157,7 +159,8 @@ TEST_CASE("hashes 8, 12.5: detail hashes of the empty world") {
     REQUIRE(file.ok());
     const std::string expected = "file " + to_hex(file.value()) + "\nschema " + to_hex(p004::p0_schema_hash()) +
                                  "\ntable layer " + to_hex(p004::layer_table_hash({})) + "\ntable meta " +
-                                 to_hex(p004::meta_table_hash(p004::meta_rows(0))) + "\n";
+                                 to_hex(p004::meta_table_hash(p004::meta_rows(0))) + "\ntable pass " +
+                                 to_hex(p004::empty_pass_table_hash()) + "\n";
     CHECK(worldgen::inspect::format_detail(file.value(), d.value()) == expected);
 }
 
@@ -173,7 +176,7 @@ TEST_CASE("hashes 8: table meta by hand for other meta contents") {
     REQUIRE(worldgen::generate_world(p, out, Overwrite::refuse).ok());
     const auto d = detail_hashes(open_world(out));
     REQUIRE(d.ok());
-    REQUIRE(d.value().tables.size() == 2);
+    REQUIRE(d.value().tables.size() == 3);
     CHECK(d.value().tables[1].digest ==
           p004::meta_table_hash(p004::meta_rows(ps.seed, ps.phrase, "test_pattern", "512")));
 }
@@ -193,7 +196,7 @@ TEST_CASE("hashes 8, 12.5: detail hashes of a test-pattern world") {
         {2, "test.hash", 256, 256, "u8", worldgen::db::encode_layer_blob(p004::grid_of(256, 256, hash))},
         {3, "test.noise", 256, 256, "i16", worldgen::db::encode_layer_blob(p004::grid_of(256, 256, noise))},
     };
-    REQUIRE(d.value().tables.size() == 2);
+    REQUIRE(d.value().tables.size() == 3);
     CHECK(d.value().tables[0].digest == p004::layer_table_hash(rows));
     CHECK(d.value().tables[1].digest == p004::meta_table_hash(p004::meta_rows(0, "", "test_pattern")));
     REQUIRE(d.value().layers.size() == 3);
@@ -291,9 +294,10 @@ TEST_CASE("hashes 8: REAL values and tables without a primary key are errors") {
         REQUIRE(worldgen::db::testing::execute_on_file(out, "ANALYZE").ok());
         const auto d = detail_hashes(open_world(out));
         REQUIRE(d.ok());
-        REQUIRE(d.value().tables.size() == 2);
+        REQUIRE(d.value().tables.size() == 3);
         CHECK(d.value().tables[0].name == "layer");
         CHECK(d.value().tables[1].name == "meta");
+        CHECK(d.value().tables[2].name == "pass");
     }
     SUBCASE("corrupt layer") {
         worldgen::db::WorldWriter writer;
@@ -320,11 +324,13 @@ TEST_CASE("reader raw rows (P0-02 amendment 10): tables, columns, keys, rows") {
 
     const auto tables = w.tables();
     REQUIRE(tables.ok());
-    REQUIRE(tables.value().size() == 2);
+    REQUIRE(tables.value().size() == 3);
     CHECK(tables.value()[0].name == "layer");
     CHECK(tables.value()[0].row_count == 3U);
     CHECK(tables.value()[1].name == "meta");
     CHECK(tables.value()[1].row_count == 8U);
+    CHECK(tables.value()[2].name == "pass");
+    CHECK(tables.value()[2].row_count == 0U);
 
     CHECK(w.table_columns("meta").value() == std::vector<std::string>{"key", "value"});
     CHECK(w.table_columns("layer").value() ==
@@ -362,6 +368,7 @@ TEST_CASE("reader raw rows (P0-02 amendment 10): tables, columns, keys, rows") {
         {text("index"), text("sqlite_autoindex_layer_1"), text("layer"), null_value()},
         {text("table"), text("layer"), text("layer"), text(p004::DDL_LAYER)},
         {text("table"), text("meta"), text("meta"), text(p004::DDL_META)},
+        {text("table"), text("pass"), text("pass"), text(p004::DDL_PASS)},
     };
     CHECK(schema.value() == expected_schema);
     CHECK(worldgen::db::SCHEMA_ROW_COLUMNS == std::array<std::string_view, 4>{"type", "name", "tbl_name", "sql"});
@@ -372,7 +379,7 @@ TEST_CASE("reader raw rows (P0-02 amendment 10): tables, columns, keys, rows") {
                  ++visited;
              })
                 .ok());
-    CHECK(visited == 3);
+    CHECK(visited == 4);
     CHECK(std::string(worldgen::db::sqlite_library_version()) == sqlite3_libversion());
 }
 
@@ -420,7 +427,7 @@ TEST_CASE("reader raw rows: primary-key order with BINARY collation, composite k
     e.col_blob(std::vector<std::uint8_t>{0x00});
     const auto d = detail_hashes(w);
     REQUIRE(d.ok());
-    REQUIRE(d.value().tables.size() == 3);
+    REQUIRE(d.value().tables.size() == 4);
     CHECK(d.value().tables[2].name == "pair");
     CHECK(d.value().tables[2].digest == e.digest());
     // The schema hash now covers the new table too (and is no longer the P0 one).

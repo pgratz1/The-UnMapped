@@ -235,6 +235,24 @@ inline constexpr std::string_view WORKED_GEOGRAPHY_HYDROLOGY_LINES =
     "longest_river_m = 39\n"
     "largest_basin_share = 0.3333\n";
 
+// The pass keys of [geography] for a world whose table pass has no rows
+// (P1-00 10.3; every schema version 2 world has the table, P1-01 9.1),
+// inserted after the edge_parallel_run_m line of a section.
+inline constexpr std::string_view EMPTY_PASS_LINES =
+    "passes = 0\n"
+    "natural_gaps = 0\n"
+    "passes_capped = 0\n"
+    "pass_col_m = n/a n/a n/a\n"
+    "passes_walkable = 0\n";
+
+inline std::string with_empty_pass_lines(std::string_view section) {
+    std::string s(section);
+    const std::size_t at = s.find("edge_parallel_run_m = ");
+    const std::size_t end = s.find('\n', at);
+    s.insert(end + 1U, EMPTY_PASS_LINES);
+    return s;
+}
+
 inline std::string worked_geography() {
     return std::string(WORKED_GEOGRAPHY_ELEVATION_LINES) + std::string(WORKED_GEOGRAPHY_HYDROLOGY_LINES);
 }

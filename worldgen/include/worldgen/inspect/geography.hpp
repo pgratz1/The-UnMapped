@@ -324,6 +324,38 @@ struct HydrologyResult {
 [[nodiscard]] HydrologyResult hydrology_stats(std::span<const std::int16_t> e, const HydrologyCells& hydro,
                                               std::uint32_t w, std::uint32_t h);
 
+// --- Pass statistics (P1-00 10.3, P1-01 9.1; added with P1-01's fourth version) -----
+
+// One row of table `pass` as the report reads it: kind (1 lowered pass, 0
+// natural gap), capped, the col cell and the path cells (decoded from the
+// u32 little-endian blob), in id order.
+struct PassRecord {
+    std::int64_t kind = 0;
+    std::int64_t capped = 0;
+    std::int64_t col_x = 0;
+    std::int64_t col_y = 0;
+    std::vector<std::uint32_t> path;
+};
+
+// The constants of the walkability measure (P1-00 10.3, "Walkable end to
+// end"): band radius 19 cells around the path, foot discs of 37 cells at
+// its two ends, walkable = not steeper than 35 degrees (S2 <= 50204).
+inline constexpr std::int64_t PASS_BAND_R2 = 361;
+inline constexpr std::int64_t PASS_FOOT_R2 = 1369;
+
+// True if the pass with path `path` (cell indices of the w x h layer e,
+// non-empty, each < w h) is walkable end to end (P1-00 10.3): some cell of
+// F_a and some cell of F_b are joined by an 8-path of walkable cells of R.
+// FatalError if the path is empty or a cell is outside the grid.
+[[nodiscard]] bool pass_walkable(std::span<const std::int16_t> e, std::uint32_t w, std::uint32_t h,
+                                 std::span<const std::uint32_t> path);
+
+// The pass keys of P1-00 10.3 in their order, each "<key> = <value>\n":
+// passes, natural_gaps, passes_capped, pass_col_m, passes_walkable.
+// FatalError if a col or path cell is outside the grid.
+[[nodiscard]] std::string pass_lines(std::span<const std::int16_t> e, std::uint32_t w, std::uint32_t h,
+                                     std::span<const PassRecord> passes);
+
 // --- The section ------------------------------------------------------------------
 
 // The layers [geography] reads, from a world (null when absent).
@@ -334,6 +366,9 @@ struct GeographyLayers {
     const db::LayerGrid* flow_accum = nullptr;
     const db::LayerGrid* river = nullptr;
     const db::LayerGrid* lake = nullptr;
+    // The rows of table `pass` (P1-01 9.1), or null when the world has no
+    // such table; the pass keys are printed only when it is not null.
+    const std::vector<PassRecord>* passes = nullptr;
     // True when water, flow_dir, flow_accum, river and lake are all present.
     [[nodiscard]] bool has_hydrology() const noexcept {
         return water != nullptr && flow_dir != nullptr && flow_accum != nullptr && river != nullptr &&

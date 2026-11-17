@@ -896,6 +896,141 @@ std::optional<std::string> geography_layers_problem(const GeographyLayers& layer
     return std::nullopt;
 }
 
+bool pass_walkable(std::span<const std::int16_t> e, std::uint32_t w, std::uint32_t h,
+                   std::span<const std::uint32_t> path) {
+    require_grid(e.size(), w, h, "pass_walkable: grid size");
+    if (path.empty()) {
+        fatal("pass_walkable: empty path");
+    }
+    const std::uint64_t cells = std::uint64_t{w} * h;
+    std::int64_t x0 = w;
+    std::int64_t y0 = h;
+    std::int64_t x1 = -1;
+    std::int64_t y1 = -1;
+    for (const std::uint32_t c : path) {
+        if (c >= cells) {
+            fatal("pass_walkable: path cell outside the grid");
+        }
+        x0 = std::min<std::int64_t>(x0, c % w);
+        x1 = std::max<std::int64_t>(x1, c % w);
+        y0 = std::min<std::int64_t>(y0, c / w);
+        y1 = std::max<std::int64_t>(y1, c / w);
+    }
+    // Every cell of R lies within 37 cells of the path's bounding box.
+    constexpr std::int64_t FOOT_R = 37;
+    constexpr std::int64_t BAND_R = 19;
+    x0 = std::max<std::int64_t>(0, x0 - FOOT_R);
+    y0 = std::max<std::int64_t>(0, y0 - FOOT_R);
+    x1 = std::min<std::int64_t>(std::int64_t{w} - 1, x1 + FOOT_R);
+    y1 = std::min<std::int64_t>(std::int64_t{h} - 1, y1 + FOOT_R);
+    const std::int64_t bw = x1 - x0 + 1;
+    const std::int64_t bh = y1 - y0 + 1;
+    // Per box cell: bit 0 in R, bit 1 walkable, bit 2 in F_a, bit 3 in F_b, bit 4 visited.
+    std::vector<std::uint8_t> st(static_cast<std::size_t>(bw * bh), 0);
+    const auto at = [&](std::int64_t x, std::int64_t y) -> std::uint8_t& {
+        return st[static_cast<std::size_t>((y - y0) * bw + (x - x0))];
+    };
+    const auto disc = [&](std::uint32_t c, std::int64_t r, std::uint8_t bits) {
+        const std::int64_t cx = c % w;
+        const std::int64_t cy = c / w;
+        for (std::int64_t y = std::max(y0, cy - r); y <= std::min(y1, cy + r); ++y) {
+            for (std::int64_t x = std::max(x0, cx - r); x <= std::min(x1, cx + r); ++x) {
+                if ((x - cx) * (x - cx) + (y - cy) * (y - cy) <= r * r) {
+                    at(x, y) |= bits;
+                }
+            }
+        }
+    };
+    static_assert(BAND_R * BAND_R == PASS_BAND_R2 && FOOT_R * FOOT_R == PASS_FOOT_R2);
+    for (const std::uint32_t c : path) {
+        disc(c, BAND_R, 1U);
+    }
+    disc(path.front(), FOOT_R, 1U | 4U);
+    disc(path.back(), FOOT_R, 1U | 8U);
+    std::vector<std::pair<std::int64_t, std::int64_t>> stack;
+    for (std::int64_t y = y0; y <= y1; ++y) {
+        for (std::int64_t x = x0; x <= x1; ++x) {
+            std::uint8_t& s = at(x, y);
+            const std::int16_t v = e[static_cast<std::size_t>(y) * w + static_cast<std::size_t>(x)];
+            if ((s & 1U) == 0U || v <= 0 ||
+                slope_steeper_than(slope_s2_at(e, w, h, static_cast<std::size_t>(x), static_cast<std::size_t>(y)),
+                                   SLOPE_TAN4_35_DEG)) {
+                s = 0;  // not a walkable cell of R
+                continue;
+            }
+            s = static_cast<std::uint8_t>(s | 2U);
+            if ((s & 4U) != 0U) {
+                s = static_cast<std::uint8_t>(s | 16U);
+                stack.emplace_back(x, y);
+            }
+        }
+    }
+    // Breadth or depth makes no difference to the yes or no answer.
+    while (!stack.empty()) {
+        const auto [x, y] = stack.back();
+        stack.pop_back();
+        if ((at(x, y) & 8U) != 0U) {
+            return true;
+        }
+        for (std::int64_t dy = -1; dy <= 1; ++dy) {
+            for (std::int64_t dx = -1; dx <= 1; ++dx) {
+                const std::int64_t nx = x + dx;
+                const std::int64_t ny = y + dy;
+                if ((dx == 0 && dy == 0) || nx < x0 || nx > x1 || ny < y0 || ny > y1) {
+                    continue;
+                }
+                std::uint8_t& s = at(nx, ny);
+                if ((s & 2U) != 0U && (s & 16U) == 0U) {
+                    s = static_cast<std::uint8_t>(s | 16U);
+                    stack.emplace_back(nx, ny);
+                }
+            }
+        }
+    }
+    return false;
+}
+
+std::string pass_lines(std::span<const std::int16_t> e, std::uint32_t w, std::uint32_t h,
+                       std::span<const PassRecord> passes) {
+    require_grid(e.size(), w, h, "pass_lines: grid size");
+    std::uint64_t lowered = 0;
+    std::uint64_t gaps = 0;
+    std::uint64_t capped = 0;
+    std::uint64_t walkable = 0;
+    std::vector<std::int64_t> col_e;
+    for (const PassRecord& p : passes) {
+        if (p.capped == 1) ++capped;
+        if (p.kind != 1) {
+            if (p.kind == 0) ++gaps;
+            continue;
+        }
+        ++lowered;
+        if (p.col_x < 0 || p.col_y < 0 || p.col_x >= w || p.col_y >= h) {
+            fatal("pass_lines: col outside the grid");
+        }
+        col_e.push_back(e[static_cast<std::size_t>(p.col_y) * w + static_cast<std::size_t>(p.col_x)]);
+        if (pass_walkable(e, w, h, p.path)) ++walkable;
+    }
+    std::string out;
+    line(out, "passes", db::format_u64(lowered));
+    line(out, "natural_gaps", db::format_u64(gaps));
+    line(out, "passes_capped", db::format_u64(capped));
+    std::string cols;
+    if (col_e.empty()) {
+        cols = "n/a n/a n/a";
+    } else {
+        std::vector<std::int64_t> sorted = col_e;
+        std::sort(sorted.begin(), sorted.end());  // determinism-lint: allow(unstable-sort) -- int64 values: equal elements are indistinguishable
+        for (const std::uint32_t p : {0U, 50U, 100U}) {
+            if (!cols.empty()) cols += ' ';
+            cols += metres1(sorted[percentile_rank(sorted.size(), p)]);
+        }
+    }
+    line(out, "pass_col_m", cols);
+    line(out, "passes_walkable", db::format_u64(walkable));
+    return out;
+}
+
 std::optional<std::string> geography_section(const GeographyLayers& layers, std::string* problem) {
     if (std::optional<std::string> p = geography_layers_problem(layers)) {
         if (problem != nullptr) *problem = *p;
@@ -942,6 +1077,9 @@ std::optional<std::string> geography_section(const GeographyLayers& layers, std:
          slopes.median_high_s2 ? tan4(*slopes.median_high_s2) : std::string(NOT_AVAILABLE));
     line(out, "lowland_flat_share", ratio4(slopes.lowland_flat, slopes.lowland));
     line(out, "edge_parallel_run_m", db::format_u64(edge_parallel_run_m(e, w, h)));
+    if (layers.passes != nullptr) {
+        out += pass_lines(e, w, h, *layers.passes);
+    }
 
     if (!layers.has_hydrology()) {
         return out;

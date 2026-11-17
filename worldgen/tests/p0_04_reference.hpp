@@ -31,6 +31,11 @@ inline constexpr std::string_view DDL_META =
 inline constexpr std::string_view DDL_LAYER =
     "CREATE TABLE layer (id INTEGER PRIMARY KEY, name TEXT NOT NULL UNIQUE, width INTEGER NOT NULL, height INTEGER "
     "NOT NULL, format TEXT NOT NULL, data BLOB NOT NULL) STRICT";
+// The DDL of table pass, schema version 2 (P1-01 9.1), copied from the spec text.
+inline constexpr std::string_view DDL_PASS =
+    "CREATE TABLE pass (id INTEGER PRIMARY KEY, range_id INTEGER NOT NULL, kind INTEGER NOT NULL, capped "
+    "INTEGER NOT NULL, col_x INTEGER NOT NULL, col_y INTEGER NOT NULL, saddle_dm INTEGER NOT NULL, col_dm INTEGER "
+    "NOT NULL, path BLOB NOT NULL) STRICT";
 inline constexpr std::string_view EMPTY_CONTENT_HASH =
     "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
 
@@ -142,9 +147,9 @@ inline MetaRows meta_rows(std::uint64_t seed, std::string_view phrase = {}, std:
     return {
         {"content_hash", std::string(EMPTY_CONTENT_HASH)},
         {"format", "the-unmapped-world"},
-        {"generator_version", "0.5.0"},
+        {"generator_version", "0.6.0"},
         {"param.map_size", std::string(map_size)},
-        {"schema_version", "1"},
+        {"schema_version", "2"},
         {"seed", std::to_string(seed)},
         {"seed_phrase", std::string(phrase)},
         {"stages", std::string(stages)},
@@ -187,9 +192,17 @@ inline worldgen::Sha256Digest layer_table_hash(const std::vector<LayerRow>& rows
     return e.digest();
 }
 
+// table pass with no rows (schema version 2, P1-01 9.1): the column count 9.
+inline worldgen::Sha256Digest empty_pass_table_hash() {
+    Encoder e;
+    e.u64(9);
+    return e.digest();
+}
+
 // schema of a P0 world: sqlite_schema rows ordered by type, then name:
 // the automatic index of layer.name (sql NULL, amendment 10), then the
-// tables layer and meta with their DDL. rootpage is excluded.
+// tables layer, meta and (schema version 2) pass with their DDL. rootpage
+// is excluded.
 inline worldgen::Sha256Digest p0_schema_hash() {
     Encoder e;
     e.col_text("index");
@@ -204,6 +217,10 @@ inline worldgen::Sha256Digest p0_schema_hash() {
     e.col_text("meta");
     e.col_text("meta");
     e.col_text(DDL_META);
+    e.col_text("table");
+    e.col_text("pass");
+    e.col_text("pass");
+    e.col_text(DDL_PASS);
     return e.digest();
 }
 
@@ -240,15 +257,16 @@ inline constexpr std::string_view REPORT_SEED_0 =
     "[meta]\n"
     "content_hash = e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\n"
     "format = the-unmapped-world\n"
-    "generator_version = 0.5.0\n"
+    "generator_version = 0.6.0\n"
     "param.map_size = 1024\n"
-    "schema_version = 1\n"
+    "schema_version = 2\n"
     "seed = 0\n"
     "seed_phrase =\n"
     "stages =\n"
     "[tables]\n"
     "layer = 0\n"
     "meta = 8\n"
+    "pass = 0\n"
     "[layers]\n"
     "(none)\n";
 

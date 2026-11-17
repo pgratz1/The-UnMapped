@@ -114,6 +114,55 @@ db::Result<std::string> build_report(const db::WorldReader& world) {
             }
         }
 
+        // The rows of table pass (P1-01 9.1), for the pass keys of [geography].
+        std::optional<std::vector<PassRecord>> passes;
+        for (const db::TableSummary& t : tables.value()) {
+            if (t.name != db::PASS_TABLE || !geo_grids[0]) {
+                continue;
+            }
+            db::Result<std::vector<std::vector<db::ColumnValue>>> rows = world.table_rows(db::PASS_TABLE);
+            if (!rows.ok()) {
+                return rows.error();
+            }
+            const std::uint64_t cells = geo_grids[0]->cell_count();
+            passes.emplace();
+            for (const std::vector<db::ColumnValue>& row : rows.value()) {
+                const auto bad = [&]() {
+                    return db::Error{db::ErrorCode::corrupt_layer,
+                                     "cannot report geography: table 'pass' has a row that is not a pass site"};
+                };
+                if (row.size() != 9U || row[8].type != db::ValueType::blob || row[8].bytes.empty() ||
+                    row[8].bytes.size() % 4U != 0U) {
+                    return bad();
+                }
+                for (std::size_t k = 0; k < 8U; ++k) {
+                    if (row[k].type != db::ValueType::integer) {
+                        return bad();
+                    }
+                }
+                PassRecord p;
+                p.kind = row[2].integer;
+                p.capped = row[3].integer;
+                p.col_x = row[4].integer;
+                p.col_y = row[5].integer;
+                const std::string& b = row[8].bytes;
+                for (std::size_t i = 0; i < b.size(); i += 4U) {
+                    std::uint32_t c = 0;
+                    for (std::size_t k = 0; k < 4U; ++k) {
+                        c |= static_cast<std::uint32_t>(static_cast<std::uint8_t>(b[i + k])) << (8U * k);
+                    }
+                    if (c >= cells) {
+                        return bad();
+                    }
+                    p.path.push_back(c);
+                }
+                if (p.col_x < 0 || p.col_y < 0 || p.col_x >= geo_grids[0]->width || p.col_y >= geo_grids[0]->height) {
+                    return bad();
+                }
+                passes->push_back(std::move(p));
+            }
+        }
+
         // [geography] (P1-00 10.3), when the world has an elevation layer.
         if (geo_grids[0]) {
             const auto ptr = [&geo_grids](std::size_t k) { return geo_grids[k] ? &*geo_grids[k] : nullptr; };
@@ -124,6 +173,7 @@ db::Result<std::string> build_report(const db::WorldReader& world) {
             geo.flow_accum = ptr(3);
             geo.river = ptr(4);
             geo.lake = ptr(5);
+            geo.passes = passes ? &*passes : nullptr;
             std::string problem;
             std::optional<std::string> section = geography_section(geo, &problem);
             if (!section) {

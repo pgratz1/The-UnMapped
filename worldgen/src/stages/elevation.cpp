@@ -1167,7 +1167,7 @@ void final_talus(Grid grid, std::span<std::int64_t> h, std::span<const std::uint
         for (const CellIndex c : next) {
             flag[c] = 0;
         }
-        std::sort(next.begin(), next.end());
+        std::sort(next.begin(), next.end());  // determinism-lint: allow(unstable-sort) -- unique cell indices
         active.swap(next);
     }
 }

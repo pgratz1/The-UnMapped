@@ -956,7 +956,7 @@ void Layout::factor(PassLayout& out) {
             sources.emplace_back(site.axis[a], static_cast<std::uint32_t>(a));
         }
         dijkstra(grid_, sources, land_domain, lim5, s);
-        std::sort(s.touched.begin(), s.touched.end());
+        std::sort(s.touched.begin(), s.touched.end());  // determinism-lint: allow(unstable-sort) -- unique cell indices
         const Fx band = Fx::from_int(3 * static_cast<std::int64_t>(si) + 2);
         for (const CellIndex c : s.touched) {
             const std::size_t a = s.src[c];

@@ -64,7 +64,7 @@ TEST_CASE("cli 12.4: escaping in meta values (test-only world)") {
             s += v.empty() ? k + " =\n" : k + " = " + v + "\n";
         }
         s += line;
-        s += "[tables]\nlayer = 0\nmeta = 9\n[layers]\n(none)\n";
+        s += "[tables]\nlayer = 0\nmeta = 9\npass = 0\n[layers]\n(none)\n";
         return s;
     };
     SUBCASE("backslash and tab") {
@@ -94,7 +94,7 @@ TEST_CASE("cli 12.4: test-pattern world") {
     const ProcessResult r = sb.cli({"report", "--db", u8(world)});
     REQUIRE(r.exit_code == EXIT_OK);
     const std::vector<std::string> lines = lines_of(r.out);
-    REQUIRE(lines.size() == 17);
+    REQUIRE(lines.size() == 18);
     CHECK(r.out.back() == '\n');
     CHECK(lines[0] == "# worldgen report v2");
     CHECK(lines[1] == "[meta]");
@@ -102,13 +102,14 @@ TEST_CASE("cli 12.4: test-pattern world") {
     CHECK(lines[10] == "[tables]");
     CHECK(lines[11] == "layer = 3");
     CHECK(lines[12] == "meta = 8");
-    CHECK(lines[13] == "[layers]");
-    CHECK(starts_with(lines[14], "test.ramp u8 256x256 codec=1 bytes="));
-    CHECK(lines[14].substr(lines[14].size() - 14) == " min=0 max=255");
-    CHECK(lines[14] == layer_line("test.ramp", "u8", p004::ramp_cells()));
-    CHECK(lines[15] == layer_line("test.hash", "u8", p004::hash_cells(0)));
-    CHECK(lines[16] == layer_line("test.noise", "i16", p004::noise_cells(0)));
-    MESSAGE("seed-0 pattern report layer lines:\n", lines[14], "\n", lines[15], "\n", lines[16]);
+    CHECK(lines[13] == "pass = 0");
+    CHECK(lines[14] == "[layers]");
+    CHECK(starts_with(lines[15], "test.ramp u8 256x256 codec=1 bytes="));
+    CHECK(lines[15].substr(lines[15].size() - 14) == " min=0 max=255");
+    CHECK(lines[15] == layer_line("test.ramp", "u8", p004::ramp_cells()));
+    CHECK(lines[16] == layer_line("test.hash", "u8", p004::hash_cells(0)));
+    CHECK(lines[17] == layer_line("test.noise", "i16", p004::noise_cells(0)));
+    MESSAGE("seed-0 pattern report layer lines:\n", lines[15], "\n", lines[16], "\n", lines[17]);
 }
 
 TEST_CASE("cli 12.4: --out writes the same bytes as stdout") {

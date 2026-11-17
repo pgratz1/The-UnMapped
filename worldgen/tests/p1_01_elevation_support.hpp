@@ -138,17 +138,54 @@ inline const std::vector<FieldText>& shipped_fields() {
         {"fill_noise", "{ wavelength_m = 400, octaves = 3, gain = \"0.5\" }"},
         {"fill_cost_amp", "3"},
         {"fill_detail_m", "3"},
+        {"pass_count_max", "3"},
+        {"pass_core_mask", "\"0.25\""},
+        {"pass_crest_frac", "\"0.3\""},
+        {"pass_min_length_m", "3000"},
+        {"pass_spacing_m", "3000"},
+        {"pass_size_ref_n", "1024"},
+        {"pass_region_mask", "\"0.03\""},
+        {"pass_body_m", "300"},
+        {"pass_basin_depth_m", "40"},
+        {"pass_tarn_min_cells", "300"},
+        {"pass_divide_reach_m", "1000"},
+        {"pass_saddle_window_m", "400"},
+        {"pass_saddle_rise_m", "150"},
+        {"pass_saddle_rise_reach_m", "1500"},
+        {"pass_min_spacing_m", "2500"},
+        {"pass_coast_clear_m", "700"},
+        {"pass_barrier_m", "600"},
+        {"pass_side_max_m", "3000"},
+        {"pass_col_tarn_m", "160"},
+        {"pass_grade", "\"0.9\""},
+        {"pass_grade_jitter", "\"0.3\""},
+        {"pass_min_col_m", "150"},
+        {"pass_saddle_max_m", "600"},
+        {"pass_max_cut_m", "500"},
+        {"pass_peak_rise_m", "150"},
+        {"pass_halfwidth_m", "450"},
+        {"pass_width_jitter", "\"0.3\""},
+        {"pass_width_var", "\"0.35\""},
+        {"pass_walk_grade", "\"0.55\""},
+        {"pass_texture_keep", "\"0.25\""},
+        {"pass_drain_step_m", "\"0.1\""},
+        {"final_talus_iterations", "100"},
+        {"final_talus_slope", "5"},
+        {"final_talus_rate", "\"0.0625\""},
     };
     return f;
 }
 
 using Overrides = std::vector<std::pair<std::string, std::string>>;
 
-// The five lines of the small-map fixture (4.4).
+// The fourteen lines of the small-map fixture (4.4, fourth version).
 inline const Overrides& small_overrides() {
     static const Overrides o = {
         {"segment_on_share", "\"0.12\""}, {"lake_min_area_m2", "10240"}, {"lake_max_area_m2", "160000"},
         {"lake_area_ref_n", "128"},       {"lake_min_depth_m", "1"},
+        {"pass_tarn_min_cells", "20"},    {"pass_divide_reach_m", "400"}, {"pass_saddle_window_m", "200"},
+        {"pass_saddle_rise_m", "75"},     {"pass_saddle_rise_reach_m", "600"}, {"pass_min_spacing_m", "800"},
+        {"pass_col_tarn_m", "64"},        {"pass_halfwidth_m", "200"},  {"pass_spacing_m", "1000"},
     };
     return o;
 }
@@ -234,6 +271,8 @@ inline FieldValue parse_value(std::string_view text, bool fx_field) {
     static const std::vector<std::string_view> ints = {
         "island_min_area_m2", "belt_offset_steps", "erosion_iterations", "erosion_route_interval",
         "lake_min_area_m2",   "lake_max_area_m2",  "lake_area_ref_n",
+        "pass_count_max",     "pass_min_length_m", "pass_spacing_m", "pass_size_ref_n",
+        "pass_tarn_min_cells", "final_talus_iterations",
     };
     return std::find(ints.begin(), ints.end(), name) != ints.end();
 }

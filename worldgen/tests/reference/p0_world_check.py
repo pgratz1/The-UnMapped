@@ -64,9 +64,15 @@ TYPE_CODE = {v[0]: k for k, v in TYPES.items()}
 DDL_META = b"CREATE TABLE meta (key TEXT PRIMARY KEY, value TEXT NOT NULL) STRICT, WITHOUT ROWID"
 DDL_LAYER = (b"CREATE TABLE layer (id INTEGER PRIMARY KEY, name TEXT NOT NULL UNIQUE, width INTEGER NOT NULL, "
              b"height INTEGER NOT NULL, format TEXT NOT NULL, data BLOB NOT NULL) STRICT")
+# Schema version 2 adds table pass (P1-01 9.1, docs/specs/schema.md); every
+# world has it, with no rows in a P0 world.
+DDL_PASS = (b"CREATE TABLE pass (id INTEGER PRIMARY KEY, range_id INTEGER NOT NULL, kind INTEGER NOT NULL, "
+            b"capped INTEGER NOT NULL, col_x INTEGER NOT NULL, col_y INTEGER NOT NULL, saddle_dm INTEGER NOT NULL, "
+            b"col_dm INTEGER NOT NULL, path BLOB NOT NULL) STRICT")
+SCHEMA_VERSION = 2
 # The generator version the checked worlds are expected to carry (P0-02 5.5,
 # amendment 12). One edit per version bump; --generator-version overrides it.
-GENERATOR_VERSION = "0.5.0"
+GENERATOR_VERSION = "0.6.0"
 EMPTY_SHA = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
 
 
@@ -343,7 +349,7 @@ def header_checks(f, data):
     f.check(be(48, 4) == 0, "default page cache size 0")
     f.check(be(52, 4) == 0, "largest root page 0")
     f.check(be(56, 4) == 1, "text encoding UTF-8")
-    f.check(be(60, 4) == 1, "user_version 1")
+    f.check(be(60, 4) == SCHEMA_VERSION, "user_version %d" % SCHEMA_VERSION)
     f.check(be(64, 4) == 0, "incremental vacuum 0")
     f.check(be(68, 4) == 0x554E4D50, "application_id UNMP")
     f.check(data[72:92] == bytes(20), "reserved 72-91 zero")
@@ -371,14 +377,15 @@ def check_world(args):
     sch = [(r[0], r[1], r[2], r[3] if r[4] != b"null" else None) for r in w["schema_rows"]]
     f.check(sch == [(b"index", b"sqlite_autoindex_layer_1", b"layer", None),
                     (b"table", b"layer", b"layer", DDL_LAYER),
-                    (b"table", b"meta", b"meta", DDL_META)], "sqlite_schema rows: %r" % (sch,))
+                    (b"table", b"meta", b"meta", DDL_META),
+                    (b"table", b"pass", b"pass", DDL_PASS)], "sqlite_schema rows: %r" % (sch,))
     # meta (P0-02 5.5, 8)
     expected_meta = [
         (b"content_hash", args.content_hash.encode()),
         (b"format", b"the-unmapped-world"),
         (b"generator_version", args.generator_version.encode()),
         (b"param.map_size", str(args.map_size).encode()),
-        (b"schema_version", b"1"),
+        (b"schema_version", str(SCHEMA_VERSION).encode()),
         (b"seed", str(seed).encode()),
         (b"seed_phrase", phrase),
         (b"stages", b"test_pattern" if args.test_pattern else b""),
@@ -386,12 +393,13 @@ def check_world(args):
     meta = [(k[1], v[1]) for k, v in w["tables"][b"meta"][1]]
     f.check(meta == expected_meta, "meta rows: %r" % (meta,))
     f.check(all(k[0] == "text" and v[0] == "text" for k, v in w["tables"][b"meta"][1]), "meta values are TEXT")
-    f.check(list(w["tables"]) == [b"layer", b"meta"], "tables are layer, meta")
+    f.check(list(w["tables"]) == [b"layer", b"meta", b"pass"], "tables are layer, meta, pass")
+    f.check(w["tables"][b"pass"][1] == [], "table pass has no rows in a P0 world")
     # layers
     layers = w["layers"]
     if not args.test_pattern:
         f.check(layers == [], "no layers in an empty world")
-        f.check(len(data) == 16384, "empty world is 16384 bytes (P0-02 8)")
+        f.check(len(data) == 20480, "empty world is 20480 bytes (P0-02 8; 5 pages with table pass)")
     else:
         f.check([(L["id"], L["name"], L["format"], L["width"], L["height"]) for L in layers] == [
             (1, b"test.ramp", b"u8", 256, 256), (2, b"test.hash", b"u8", 256, 256),

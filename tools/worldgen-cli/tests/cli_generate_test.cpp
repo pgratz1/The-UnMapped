@@ -344,17 +344,20 @@ TEST_CASE("cli 12.2: empty world contents (P0-02 8)") {
     }
     const auto tables = w.tables();
     REQUIRE(tables.ok());
-    REQUIRE(tables.value().size() == 2);
+    REQUIRE(tables.value().size() == 3);
     CHECK(tables.value()[0].name == "layer");
     CHECK(tables.value()[0].row_count == 0);
     CHECK(tables.value()[1].name == "meta");
     CHECK(tables.value()[1].row_count == 8);
+    CHECK(tables.value()[2].name == "pass");
+    CHECK(tables.value()[2].row_count == 0);
     const auto layers = w.layers();
     REQUIRE(layers.ok());
     CHECK(layers.value().empty());
     CHECK(w.stages().empty());
-    // Expected size, P0-02 8 and amendment 9.
-    CHECK(fs::file_size(out) == 16384U);
+    // Expected size, P0-02 8 and amendment 9; schema version 2 adds the root
+    // page of table pass (P1-01 9.1).
+    CHECK(fs::file_size(out) == 20480U);
 }
 
 TEST_CASE("cli 12.2: test pattern") {

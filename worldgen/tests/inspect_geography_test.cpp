@@ -1039,10 +1039,10 @@ TEST_CASE("report v2: the whole report of a world with elevation only") {
     layers.push_back({"elevation", g, Codec::delta_varint});
     REQUIRE(worldgen::stages::testing::write_fixture_world(out, 5, layers).ok());
     const std::string expected = "# worldgen report v2\n[meta]\n" + meta_lines(5, "test_fixture") +
-                                 "[tables]\nlayer = 1\nmeta = 8\n[layers]\n"
+                                 "[tables]\nlayer = 1\nmeta = 8\npass = 0\n[layers]\n"
                                  "elevation i16 5x5 codec=1 bytes=" +
                                  std::to_string(worldgen::db::encode_layer_blob(g).size()) +
-                                 " min=-300 max=20000\n" + std::string(p100::SQUARE_GEOGRAPHY);
+                                 " min=-300 max=20000\n" + p100::with_empty_pass_lines(p100::SQUARE_GEOGRAPHY);
     CHECK(report_of(out) == expected);
 }
 
@@ -1056,11 +1056,12 @@ TEST_CASE("report v2: the whole report of the P1-02 worked example") {
                " min=" + lo + " max=" + hi + "\n";
     };
     const std::string expected =
-        "# worldgen report v2\n[meta]\n" + meta_lines(7, "test_fixture") + "[tables]\nlayer = 8\nmeta = 8\n[layers]\n" +
+        "# worldgen report v2\n[meta]\n" + meta_lines(7, "test_fixture") + "[tables]\nlayer = 8\nmeta = 8\npass = 0\n[layers]\n" +
         layer_line(layers[0], "i16", "-5", "80") + layer_line(layers[1], "u8", "0", "3") +
         layer_line(layers[2], "u16", "0", "8") + layer_line(layers[3], "u8", "0", "8") +
         layer_line(layers[4], "u32", "0", "10") + layer_line(layers[5], "u8", "0", "2") +
-        layer_line(layers[6], "u32", "0", "1") + layer_line(layers[7], "i16", "-22", "48") + p100::worked_geography();
+        layer_line(layers[6], "u32", "0", "1") + layer_line(layers[7], "i16", "-22", "48") +
+        p100::with_empty_pass_lines(p100::worked_geography());
     CHECK(report_of(out) == expected);
 }
 
@@ -1134,7 +1135,7 @@ TEST_CASE("report v2: [geography] and the geography renders do not depend on the
     REQUIRE(pa != std::string::npos);
     REQUIRE(pb != std::string::npos);
     CHECK(a.substr(pa) == b.substr(pb));
-    CHECK(a.substr(pa) == p100::worked_geography());
+    CHECK(a.substr(pa) == p100::with_empty_pass_lines(p100::worked_geography()));
     CHECK(has(a, "elevation i16 8x7 codec=0 "));
     CHECK(has(b, "elevation i16 8x7 codec=1 "));
     // Renders of the decoded layers.
