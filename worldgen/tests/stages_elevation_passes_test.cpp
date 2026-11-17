@@ -31,6 +31,7 @@
 #include "p1_01_elevation_api.hpp"
 #include "p1_01_elevation_support.hpp"
 #include "p1_01_passes_support.hpp"
+#include "worldgen/core/error.hpp"
 #include "worldgen/core/fx.hpp"
 #include "worldgen/core/hash.hpp"
 #include "worldgen/core/math.hpp"
@@ -620,7 +621,43 @@ TEST_CASE("P1-01 10.1 T6: one final-talus step and 100 steps (final_talus)") {
     CHECK(elev_api::final_talus(g, h, ocean, pi.drop_o, pi.drop_d, rate, floor, 0, 1) == h);
 }
 
+TEST_CASE("P1-01 6.6, E8.7: final_talus is fatal on a land height below the floor, unless no step runs") {
+    const Values& v = shipped_values();
+    const Grid g{4, 3};
+    std::vector<std::int64_t> h(12, Fx::from_int(50).raw());
+    std::vector<std::uint8_t> ocean(12, 0);
+    for (std::size_t i = 0; i < 12; i += 4) {
+        ocean[i] = 1;
+        h[i] = Fx::from_int(-5).raw();  // ocean below the floor is fine
+    }
+    const Values::PassInts pi = v.pass_ints(4);
+    const std::int64_t rate = v.raw("final_talus_rate");
+    const std::int64_t floor = v.raw("land_floor_m");
+    CHECK(elev_api::final_talus(g, h, ocean, pi.drop_o, pi.drop_d, rate, floor, 3, 1).size() == 12U);
+    h[6] = floor - 1;  // one land cell 1 raw below the floor: the E7/E8 contract is broken
+    for (const std::uint32_t threads : {1U, 2U}) {
+        CAPTURE(threads);
+        CHECK_THROWS_AS(static_cast<void>(elev_api::final_talus(g, h, ocean, pi.drop_o, pi.drop_d, rate, floor, 1,
+                                                                threads)),
+                        worldgen::FatalError);
+    }
+    // With 0 iterations no step runs and nothing is checked: the grid is returned unchanged.
+    CHECK(elev_api::final_talus(g, h, ocean, pi.drop_o, pi.drop_d, rate, floor, 0, 1) == h);
+}
+
+TEST_CASE("P1-01 E6.5.1: the basin flood is fatal when no land cell borders the ocean (pass_layout on a test grid)") {
+    const TuningPair tp = tuning_with(t1_overrides());
+    T1Grid t = t1_grid();
+    // The T1 grid reaches E6.5.1 (its range has a slot); with the ocean
+    // border made land there is no ocean cell next to land.
+    std::fill(t.ocean.begin(), t.ocean.end(), std::uint8_t{0});
+    CHECK_THROWS_AS(static_cast<void>(t1_stage(t, tp.tuning)), worldgen::FatalError);
+    // The unchanged grid runs (T1).
+    CHECK(t1_stage(t1_grid(), tp.tuning).tries.size() == 1U);
+}
+
 TEST_CASE("P1-01 10.2: E8.7 alone on random inputs meeting the contract (and against plain Jacobi steps)") {
+
     worldgen::Rng rng(worldgen::substream(worldgen::stream_key(0, "test.noise"), 62));
     const Values& v = shipped_values();
     for (int fx = 0; fx < 30; ++fx) {
