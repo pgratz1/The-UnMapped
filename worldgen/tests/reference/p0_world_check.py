@@ -72,7 +72,7 @@ DDL_PASS = (b"CREATE TABLE pass (id INTEGER PRIMARY KEY, range_id INTEGER NOT NU
 SCHEMA_VERSION = 2
 # The generator version the checked worlds are expected to carry (P0-02 5.5,
 # amendment 12). One edit per version bump; --generator-version overrides it.
-GENERATOR_VERSION = "0.6.0"
+GENERATOR_VERSION = "0.7.0"
 EMPTY_SHA = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
 
 

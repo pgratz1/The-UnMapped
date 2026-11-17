@@ -447,10 +447,10 @@ TEST_CASE("fixed-id kinds: loading from disk") {
     CHECK(contains(bad.errors[0].message, "unknown id 'delta' for kind 'tune'"));
 }
 
-TEST_CASE("fixed-id kinds: the production registry holds worldgen with the first-pass ids") {
+TEST_CASE("fixed-id kinds: the production registry holds worldgen with the implemented stages' ids") {
     // P1-00 6.1: `worldgen`, directory `worldgen`, required, fixed ids
-    // `elevation` (P1-01 4.2) and `hydrology` (P1-02 4), registered with the
-    // elevation stage.
+    // `elevation` (P1-01 4.2), `hydrology` (P1-02 4) and `climate` (P1-03
+    // 4), kept in ascending id order.
     const wd::KindRegistry builtin = wd::builtin_kinds();
     REQUIRE(builtin.kinds().size() == 1U);
     const wd::Kind& k = builtin.kinds()[0];
@@ -458,7 +458,8 @@ TEST_CASE("fixed-id kinds: the production registry holds worldgen with the first
     CHECK(k.directory == "worldgen");
     CHECK(k.required);
     REQUIRE(k.has_fixed_ids());
-    REQUIRE(k.id_schemas.size() == 2U);
-    CHECK(k.id_schemas[0].id == "elevation");
-    CHECK(k.id_schemas[1].id == "hydrology");
+    REQUIRE(k.id_schemas.size() == 3U);
+    CHECK(k.id_schemas[0].id == "climate");
+    CHECK(k.id_schemas[1].id == "elevation");
+    CHECK(k.id_schemas[2].id == "hydrology");
 }

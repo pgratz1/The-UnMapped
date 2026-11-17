@@ -577,8 +577,8 @@ TEST_CASE("palette 10.2: names, registered palettes and auto") {
     using worldgen::inspect::palette_from_name;
     using worldgen::inspect::palette_name;
     using worldgen::inspect::registered_palette;
-    const std::array<std::string_view, 8> names = {"gray", "hypsometric", "water", "river",
-                                                   "log2", "direction",   "ids",   "signed"};
+    const std::array<std::string_view, 10> names = {"gray", "hypsometric", "water",  "river",       "log2",
+                                                    "direction", "ids",   "signed", "temperature", "rainfall"};
     for (std::size_t k = 0; k < names.size(); ++k) {
         const Palette p = worldgen::inspect::ALL_PALETTES[k];
         CHECK(palette_name(p) == names[k]);
@@ -598,7 +598,7 @@ TEST_CASE("palette 10.2: names, registered palettes and auto") {
     CHECK(registered_palette("lake") == Palette::ids);
     CHECK(registered_palette("coast_dist") == Palette::signed_distance);
     for (const char* other : {"water_depth", "test.ramp", "test.noise", "Elevation", "elevation ", "region",
-                              "biome", "temperature", ""}) {
+                              "biome", "Temperature", ""}) {
         INFO("layer '", other, "'");
         CHECK(registered_palette(other) == Palette::gray);
     }

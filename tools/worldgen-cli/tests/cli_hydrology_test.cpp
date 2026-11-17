@@ -22,6 +22,7 @@
 #include <vector>
 
 #include "cli_test_support.hpp"
+#include "p1_01_elevation_api.hpp"
 #include "p1_01_elevation_support.hpp"
 
 namespace {
@@ -33,6 +34,7 @@ fs::path write_data_root(const Sandbox& sb) {
     fs::create_directories(root / "worldgen");
     write_text(root / "worldgen" / "elevation.toml", elev_test::elevation_toml());
     write_text(root / "worldgen" / "hydrology.toml", "[worldgen.hydrology]\nriver_min_area_m2 = 125000\nflat_noise = { wavelength_m = 400, octaves = 1, gain = \"0.5\" }\n");
+    write_text(root / "worldgen" / "climate.toml", std::string(elev_api::CLIMATE_TOML));  // P1-03 4
     return root;
 }
 
@@ -96,8 +98,17 @@ TEST_CASE("cli P1-00 X1, P1-02 H9, P1-00 10.2, 10.3: generate --until hydrology 
     generate(sb, data, {"--seed", "0", "--until", "elevation", "--threads", "5"}, "e.db");
     generate(sb, data, {"--seed", "0"}, "d.db");  // default: every implemented stage
 
-    // The default is elevation then hydrology: the same file.
-    CHECK(read_bytes(sb.file("d.db")) == read_bytes(sb.file("h.db")));
+    // The default runs elevation, hydrology and then climate (P1-03): its
+    // first eight layers are those of --until hydrology.
+    {
+        const auto all = layer_lines(sb, sb.file("d.db"));
+        const auto upto = layer_lines(sb, sb.file("h.db"));
+        REQUIRE(all.size() == 10U);
+        REQUIRE(upto.size() == 8U);
+        for (std::size_t i = 0; i < upto.size(); ++i) {
+            CHECK(all[i] == upto[i]);
+        }
+    }
 
     // Layers in catalogue order, with the golden layer hashes of the
     // reference (case shipped-512-s0).
@@ -176,10 +187,10 @@ TEST_CASE("cli P1-00 X1, P1-02 H9, P1-00 10.2, 10.3: generate --until hydrology 
     }
 }
 
-TEST_CASE("cli P1-00 10.1: --until hydrology is accepted; the next stage is not implemented") {
+TEST_CASE("cli P1-00 10.1: --until hydrology is accepted; biomes (after climate) is not implemented") {
     Sandbox sb;
     const fs::path data = write_data_root(sb);
-    const ProcessResult r = sb.cli({"generate", "--seed", "0", "--map-size", "512", "--until", "climate", "--data",
+    const ProcessResult r = sb.cli({"generate", "--seed", "0", "--map-size", "512", "--until", "biomes", "--data",
                                     u8(data), "--out", u8(sb.file("c.db"))});
     CHECK(r.exit_code == EXIT_USAGE);
     CHECK_FALSE(file_exists(sb.file("c.db")));
@@ -205,8 +216,8 @@ TEST_CASE("cli P1-00 X3 (slow): generate at 512, seeds 0 and 42, --threads 1, 2 
     // seed 42 against the reference.
     const auto lines = layer_lines(sb, sb.file("s42-1.db"));
     const std::map<std::string, std::string> g = golden_case("shipped-512-s42");
-    REQUIRE(lines.size() == 8U);
-    for (std::size_t i = 1; i < lines.size(); ++i) {
+    REQUIRE(lines.size() == 10U);  // the default run ends with climate (P1-03)
+    for (std::size_t i = 1; i < 8U; ++i) {
         CAPTURE(lines[i].first);
         CHECK(lines[i].second == g.at(lines[i].first));
     }

@@ -20,6 +20,7 @@
 
 #include "cli_test_support.hpp"
 #include "p0_04_reference.hpp"
+#include "p1_01_elevation_api.hpp"
 #include "p1_01_elevation_support.hpp"
 #include "p1_01_passes_support.hpp"
 #include "worldgen/db/reader.hpp"
@@ -37,6 +38,7 @@ fs::path write_data_root(const Sandbox& sb) {
     write_text(root / "worldgen" / "hydrology.toml",
                "[worldgen.hydrology]\nriver_min_area_m2 = 125000\nflat_noise = { wavelength_m = 400, octaves = 1, gain = "
                "\"0.5\" }\n");
+    write_text(root / "worldgen" / "climate.toml", std::string(elev_api::CLIMATE_TOML));  // P1-03 4
     return root;
 }
 
@@ -172,7 +174,7 @@ TEST_CASE("cli P1-01 9.1, P1-00 10.3: a world with a pass (512, seed 42): rows, 
     REQUIRE(rep.exit_code == EXIT_OK);
     CHECK(contains(rep.out, "\nschema_version = 2\n"));
     CHECK(contains(rep.out, "\ngenerator_version = " + std::string(worldgen::GENERATOR_VERSION) + "\n"));
-    CHECK(std::string(worldgen::GENERATOR_VERSION) == "0.6.0");
+    CHECK(std::string(worldgen::GENERATOR_VERSION) == "0.7.0");
     CHECK(contains(rep.out, "\n[tables]\nlayer = 1\nmeta = 8\npass = " + std::to_string(rows.size()) + "\n[layers]\n"));
     const std::vector<std::string> want =
         elev_test::report_pass_lines(worldgen::geo::Grid{512, 512}, *e, rows);
