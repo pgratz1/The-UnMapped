@@ -2,22 +2,25 @@
 
 The contract between the generator and the game (design doc section 6; P0-02). This file holds the full current DDL, the required `meta` keys, the layer catalogue and the changelog. It is updated by every branch that changes the schema (P0-02 5.2) and by every spec that adds a layer.
 
-**Current schema version: 1.** `SCHEMA_VERSION` in `worldgen/include/worldgen/db/schema.hpp`; equal to `PRAGMA user_version` and `meta.schema_version`.
+**Current schema version: 2** (from generator 0.6.0). `SCHEMA_VERSION` in `worldgen/include/worldgen/db/schema.hpp`; equal to `PRAGMA user_version` and `meta.schema_version`.
 
-## 1. DDL at version 1
+## 1. DDL at version 2
 
-Executed in this order, each as one statement, byte for byte as written (P0-02 5.3, 5.4):
+Executed in this order, each as one statement, byte for byte as written (P0-02 5.3, 5.4; `DDL_STATEMENTS` in `worldgen/include/worldgen/db/schema.hpp`):
 
 ```
 CREATE TABLE meta (key TEXT PRIMARY KEY, value TEXT NOT NULL) STRICT, WITHOUT ROWID
 CREATE TABLE layer (id INTEGER PRIMARY KEY, name TEXT NOT NULL UNIQUE, width INTEGER NOT NULL, height INTEGER NOT NULL, format TEXT NOT NULL, data BLOB NOT NULL) STRICT
+CREATE TABLE pass (id INTEGER PRIMARY KEY, range_id INTEGER NOT NULL, kind INTEGER NOT NULL, capped INTEGER NOT NULL, col_x INTEGER NOT NULL, col_y INTEGER NOT NULL, saddle_dm INTEGER NOT NULL, col_dm INTEGER NOT NULL, path BLOB NOT NULL) STRICT
 ```
+
+`pass` (version 2): one row per natural pass site, written by the elevation stage in `id` order; empty when no site was placed or the stage did not run. Columns and their meaning in `p1-01-elevation.md` section 9.1.
 
 SQLite adds the automatic index `sqlite_autoindex_layer_1` for `layer.name`.
 
 File settings (P0-02 4): page size 4096, UTF-8, no auto-vacuum, `application_id` 0x554E4D50 (`UNMP`), `user_version` = schema version, written with `VACUUM INTO`. Layer blobs: format version 1, codec 0 (raw) or 1 (delta-varint) (P0-02 7).
 
-## 2. Required `meta` keys at version 1
+## 2. Required `meta` keys at version 2
 
 | Key | Value |
 | --- | --- |
@@ -25,7 +28,7 @@ File settings (P0-02 4): page size 4096, UTF-8, no auto-vacuum, `application_id`
 | `format` | `the-unmapped-world` |
 | `generator_version` | `MAJOR.MINOR.PATCH` |
 | `param.map_size` | 512, 1024 or 2048 |
-| `schema_version` | `1` |
+| `schema_version` | `2` |
 | `seed` | unsigned decimal |
 | `seed_phrase` | the scrubbed phrase, or empty |
 | `stages` | stage names in run order, comma separated (P1-00 section 3), e.g. `elevation,hydrology` |
@@ -58,7 +61,6 @@ From P1-00 section 9.2; the DDL becomes final in the spec of the branch that mak
 
 | Version | Change | Branch |
 | --- | --- | --- |
-| 2 | `CREATE TABLE pass (id INTEGER PRIMARY KEY, range_id INTEGER NOT NULL, kind INTEGER NOT NULL, capped INTEGER NOT NULL, col_x INTEGER NOT NULL, col_y INTEGER NOT NULL, saddle_dm INTEGER NOT NULL, col_dm INTEGER NOT NULL, path BLOB NOT NULL) STRICT`, executed after `layer`'s; natural pass sites, one row per site in `id` order (`p1-01-elevation.md` section 9.1; proposals "Pass sites are stored in the world file"); with generator 0.6.0 | elevation revision 0.6.0 (passes; adopted) |
 | 3 | `CREATE TABLE biome (id INTEGER PRIMARY KEY, key TEXT NOT NULL UNIQUE, name TEXT NOT NULL, colour INTEGER NOT NULL, water INTEGER NOT NULL) STRICT` | biomes (P1 second pass) |
 | 4 | tables `region` and `region_border` (DDL proposed in `p1-06-regions.md` section 3) | regions (P1 second pass) |
 
@@ -68,3 +70,4 @@ From P1-00 section 9.2; the DDL becomes final in the spec of the branch that mak
 | --- | --- | --- | --- |
 | 1 | 2026-11-15 | Initial schema: `meta`, `layer` | P0-02 |
 | 1 | 2026-11-15 | No schema change: the layer catalogue gains the elevation and hydrology layers; `meta.stages` lists geography stages | P1-00, P1-01, P1-02 |
+| 2 | 2026-11-17 | 1 → 2 with generator 0.6.0: table `pass` added (natural pass sites, executed third, after `layer`); `meta.schema_version` and `user_version` 2; the empty world grows from 4 to 5 pages (P0-02 amendment 14). Proposals "Pass sites are stored in the world file" | P1-01 (fourth version) 9.1, P1-00 9.3 |
