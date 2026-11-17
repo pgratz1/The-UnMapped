@@ -58,13 +58,13 @@ shipped-64-s0 hs d0b3f836b97adb93b2d9dc7fdfe3a4e1218fbadca74eb42a8a281ab72978f80
 shipped-64-s0 q 4950168171649525afe39f99a958034444b367292090364467a39521145a2606
 shipped-64-s0 p e7379cc33432484edea5454eb7866739621b0ce80dae60c07f85a4c1e03f1264
 shipped-64-s0 rnoise 9cc036a9ab55ba52390ce67a752debe1544d4d4cf94b9f6daa2f2ab515b9e274
-shipped-64-s0 rainfall a61ca8df23334b8faacb140b9f6fb34e2012872731fa3c9f084d74a29c46d2bd
+shipped-64-s0 rainfall f5e38ddcc387c11ccc1c556ce1572dcbfb1002af9c4f04442422d0efa27a4520
 shipped-64-s0 temperature_range 4,89
-shipped-64-s0 rainfall_range 911,3033
+shipped-64-s0 rainfall_range 847,2964
 shipped-64-s0 temperature_c 0.4_2.6_5.4_7.0_8.4
-shipped-64-s0 rainfall_mm 911_936_1475_2642_3033
+shipped-64-s0 rainfall_mm 847_865_1402_2572_2964
 shipped-64-s0 land_below_0c 0.0000
-shipped-64-s0 rain_contrast 2.8226
+shipped-64-s0 rain_contrast 2.9734
 # N not a power of two, wind SE
 case shipped-48-s3 shipped 48 3 1,1,1,1,1,1,1,1
 shipped-48-s3 elevation 80df6fba9aa7cd4a925bce6899904b36605921c9efab7252e92c559cf05a3296
@@ -80,13 +80,13 @@ shipped-48-s3 hs 10271880ce1d68f40656f03460b62f17f6ab8453779a0843128659cef7c3394
 shipped-48-s3 q 4b8ea20dd84987dabed3b545979d696240edc4ba000d831c5467f1c8d6e54592
 shipped-48-s3 p efbbcbca92e6be9161ae31a70d49422622788ca8e861728ee3a15de2605920a0
 shipped-48-s3 rnoise eebcdd0b419635875d2ff0fb9555dc0ee25517069f3d295160c5dbbe1eb7f51a
-shipped-48-s3 rainfall 4f7f3b1ea31a76a0cc3a555ea06e623a764c9d31f8b63e745cf723880f339a5a
+shipped-48-s3 rainfall e4eabfecef9cb4ef954af07d7b75d62a8a6150dfaad541f2cbff2d198808da79
 shipped-48-s3 temperature_range 8,90
-shipped-48-s3 rainfall_range 909,2812
+shipped-48-s3 rainfall_range 838,2738
 shipped-48-s3 temperature_c 0.8_3.3_5.9_7.5_8.4
-shipped-48-s3 rainfall_mm 909_916_943_2120_2812
+shipped-48-s3 rainfall_mm 843_845_870_2049_2738
 shipped-48-s3 land_below_0c 0.0000
-shipped-48-s3 rain_contrast 2.3144
+shipped-48-s3 rain_contrast 2.4249
 # P1-03 10.4 library case, wind SE
 case shipped-128-s0 shipped 128 0 1,1,1,1,1,1,1,1
 shipped-128-s0 elevation e61a87fb6d0151e49cb56de299669d600aca12d4c42652876cb0c5742d0ea812
@@ -102,13 +102,13 @@ shipped-128-s0 hs 0afbbf3c62809a51d48818d1ab35966b44978f656b1a6f88af0403599ad206
 shipped-128-s0 q 562972f9e2a3c4d4e68fc5549731f74590575101a86645fc3e5ae4e1c47b9a63
 shipped-128-s0 p b40a45b35e2d2a7a8fbc418afcf6b191426673178cf57cf9aee6864dd8d405fc
 shipped-128-s0 rnoise 5cd6d15c80d626c0dd92090bf37c422931ac0b67509197f77ee03b4bcbe90302
-shipped-128-s0 rainfall 4aad2e4e99aae13b96ef4fa1dbe3f8272431b1bad3da0919f9dbe33f577476ac
+shipped-128-s0 rainfall 8a7ce8650ad3b3740cdb5c35833fae3f5bfdda2c74fff9fc4be6df27a2c24b64
 shipped-128-s0 temperature_range -9,89
-shipped-128-s0 rainfall_range 869,3667
+shipped-128-s0 rainfall_range 816,3609
 shipped-128-s0 temperature_c -0.9_1.5_5.5_7.0_8.4
-shipped-128-s0 rainfall_mm 869_898_1367_2890_3667
+shipped-128-s0 rainfall_mm 816_830_1297_2826_3609
 shipped-128-s0 land_below_0c 0.0256
-shipped-128-s0 rain_contrast 3.2183
+shipped-128-s0 rain_contrast 3.4048
 # mountain floor world (P1-01 E5.1), wind SE
 case shipped-128-s9 shipped 128 9 1,1,1,1,1,1,1,1
 shipped-128-s9 elevation 2e9accc34b6240f0c4f559aaca747f37108762ed72bb23de67b11ddbee41f302
@@ -124,13 +124,13 @@ shipped-128-s9 hs cc72ec87a43bc63a05623ee165b5bc56d14a10d615cbfdce1ec0206f17cd17
 shipped-128-s9 q ebefef738519d512fd2bec18dc87a7f11c928a5ee3824f34f013b879627cd4e7
 shipped-128-s9 p aebee224506cd9aa9e6f55bfd946233d934c163d589b0fd551c1b727fb34d659
 shipped-128-s9 rnoise b1788a8f346627d22d03fe02ab0920753c2ee661bd3c76dad476b172efa540f1
-shipped-128-s9 rainfall 3ac1406105e876f4d531f75b38f394f8f150e2440f9f664b60cf49d441a09e08
+shipped-128-s9 rainfall 89c6814e90092c7f45f563dab2fee0da1698425a9c9c10bd9f5bd45bb3f49ccc
 shipped-128-s9 temperature_range -20,90
-shipped-128-s9 rainfall_range 856,3856
+shipped-128-s9 rainfall_range 808,3787
 shipped-128-s9 temperature_c -2.0_1.2_4.9_7.8_8.6
-shipped-128-s9 rainfall_mm 856_902_985_2872_3856
+shipped-128-s9 rainfall_mm 808_842_913_2811_3787
 shipped-128-s9 land_below_0c 0.0403
-shipped-128-s9 rain_contrast 3.1840
+shipped-128-s9 rain_contrast 3.3385
 # seed 42, wind N (code 6)
 case shipped-128-s42 shipped 128 42 1,1,1,1,1,1,1,1
 shipped-128-s42 elevation 58558e4a758a6c13e5d95f67ab3113f5ae6925d64b01efc51601dafe79496f68
@@ -146,13 +146,13 @@ shipped-128-s42 hs 7f2c3e9df4c039af77d8c9016ad72aa5eb2f0b51747d829e3867daecc7a85
 shipped-128-s42 q c52cd348ea7998703b6a13c2e34dd94eecf1c66ea2cd91741e5e58414581a61b
 shipped-128-s42 p 5155d98e636929e2e98daec333bce55d1d72270c820f139db421f673030a09e6
 shipped-128-s42 rnoise d1190feed802d98879fd95653c6be7c822426c470a9973b46bd63f76afaac2c5
-shipped-128-s42 rainfall 0a927ff398248557794cc7e3809cd31b5de83845bce675f95185bed52c925238
+shipped-128-s42 rainfall 6858c6da0cbdc92112cd47d360c2777d4d07ea7c473533b5b53e405e9b44529b
 shipped-128-s42 temperature_range -24,93
-shipped-128-s42 rainfall_range 951,6526
+shipped-128-s42 rainfall_range 876,6467
 shipped-128-s42 temperature_c -2.4_1.8_6.0_7.4_8.8
-shipped-128-s42 rainfall_mm 958_993_1037_4033_6526
+shipped-128-s42 rainfall_mm 897_935_969_3964_6467
 shipped-128-s42 land_below_0c 0.0338
-shipped-128-s42 rain_contrast 4.0614
+shipped-128-s42 rain_contrast 4.2396
 # small-map fixture, one lake, wind SE
 case small-128-s0 small 128 0 1,1,1,1,1,1,1,1
 small-128-s0 elevation 50eb12f852f5f38da14980b857df34fe422781a4d1b576f84f79b05a4625526a
@@ -168,13 +168,13 @@ small-128-s0 hs e53b0c33c94ee0a2e871b6cad6a1a311850ef3444778ab872731cc74ccaacd85
 small-128-s0 q ff120bbeddbf475bb166fa83a69324612b9f1d6a9e3946492ace98f42bfe3976
 small-128-s0 p 89a123611c1e0ea8de009be2c38a2dc3b70cbd560663781700d102bd1975822d
 small-128-s0 rnoise 5cd6d15c80d626c0dd92090bf37c422931ac0b67509197f77ee03b4bcbe90302
-small-128-s0 rainfall c1220ec8eaa150dcc2922514fea68658587e75f5f2fef6d3f945b5d77453eacf
+small-128-s0 rainfall cbab402b3f90b8d5c9badbdc2214a0974b7f5f20e67692576fcfe0b1f95d7f4b
 small-128-s0 temperature_range -9,89
-small-128-s0 rainfall_range 869,3668
+small-128-s0 rainfall_range 816,3610
 small-128-s0 temperature_c -0.9_1.5_5.5_7.0_8.4
-small-128-s0 rainfall_mm 869_898_1367_2890_3668
+small-128-s0 rainfall_mm 816_830_1297_2827_3610
 small-128-s0 land_below_0c 0.0256
-small-128-s0 rain_contrast 3.2183
+small-128-s0 rain_contrast 3.4060
 # small-map fixture, mountain floor, wind SW (code 3)
 case small-128-s1 small 128 1 1,1,1,1,1,1,1,1
 small-128-s1 elevation 6709812094b96b3d7e384f1665d5c82ecf71aa18485e6559cd3d84956eead9e7
@@ -190,13 +190,13 @@ small-128-s1 hs f6a71db5bff07fe289d13c42cc5fc53e2b14908895115a75b37d8c5270421041
 small-128-s1 q b4d908b97b1d274fd766aff4c00fc19cc16fb28e3566aabfd2405a883b7cc6de
 small-128-s1 p 254753467c053e823dd0c1d9cffb9030988fd5870457cd421acd8d2ca9736153
 small-128-s1 rnoise 64f68db5e4fee2c1de44130c35b88e501f5e75caa3f7d510f083ce6081ddd12e
-small-128-s1 rainfall 60c501c7ae6422bf273d389c171328fc4934cdb44e4a50373b631dc607707162
+small-128-s1 rainfall 36d7c9d03022a2b66b86b93ffba194ac8279d3bd4b1c17881f6aa3a94790b75e
 small-128-s1 temperature_range -29,88
-small-128-s1 rainfall_range 791,5386
+small-128-s1 rainfall_range 729,5334
 small-128-s1 temperature_c -2.9_1.7_5.9_7.1_8.3
-small-128-s1 rainfall_mm 791_815_1089_3374_5386
+small-128-s1 rainfall_mm 729_749_1019_3319_5334
 small-128-s1 land_below_0c 0.0486
-small-128-s1 rain_contrast 4.1399
+small-128-s1 rain_contrast 4.4312
 # small-map fixture, two lakes, wind W (code 4)
 case small-128-s2 small 128 2 1,1,1,1,1,1,1,1
 small-128-s2 elevation bf92cf2e455236eba3ba33dea43f0363af1ab3315ad34a9989afbbe45ce4e4b0
@@ -212,13 +212,13 @@ small-128-s2 hs 865e16b1fcfa96ac657a3ae1473eadbfcc2c067be0ca777564b29b6208721e5e
 small-128-s2 q 0a516bb2dbb775f674df336fa56fae258e3a24e3501d98cc8bf3482b8c6aa903
 small-128-s2 p 136b9e979664fecc78b6411331b91122688901a4f0d6ad9beb1dc99fb77f092f
 small-128-s2 rnoise b8927e8e66152d4b3f918005cdc42a87646312c5fed22b1c5125c48a22b06902
-small-128-s2 rainfall f83fdfce9b0d16e8b3ef726a3be088bda949548424a55ae45433bb35cbe44523
+small-128-s2 rainfall 62bc1ba92a0ccbed778f3e9f20c26b9f5a10a9a864f1af23cbbbabbb4e36dd15
 small-128-s2 temperature_range -15,89
-small-128-s2 rainfall_range 883,4527
+small-128-s2 rainfall_range 821,4456
 small-128-s2 temperature_c -1.5_2.0_5.2_6.8_8.0
-small-128-s2 rainfall_mm 883_899_947_3050_4527
+small-128-s2 rainfall_mm 821_833_874_2979_4456
 small-128-s2 land_below_0c 0.0068
-small-128-s2 rain_contrast 3.3927
+small-128-s2 rain_contrast 3.5762
 # N = 256
 case shipped-256-s0 shipped 256 0 1,1,1,1,1,1,1,1
 shipped-256-s0 elevation ead406b2867e0f54ca6c8b88aed5a009468f0fbba870e69650eac563bb3ef84b
@@ -234,13 +234,13 @@ shipped-256-s0 hs 20992f68d261923579b2c17bd3c92c7927ed3317991c796e2af3494f1680d2
 shipped-256-s0 q b056c4b9d61702b8421bd56262007ae448b8e2521c842c5d4a2d2d0b54109df1
 shipped-256-s0 p ee2848186fd52ec89e85a20a9e117f7868778dc45ffd9e203cfaaaab4a4e20f6
 shipped-256-s0 rnoise 641314e1364d0ed736fb30331b66e3f2a3df873c3cf849c92d50be6ae622ce8f
-shipped-256-s0 rainfall 6cf22c98f49ccb8cb5d19e8b9071cf7ffff9e334674c7852da8f1ba426717fc6
+shipped-256-s0 rainfall 29615bd9d36151e81d9ae22f05013955fb4f6411b57ddd38d2017eafa1dcc852
 shipped-256-s0 temperature_range -12,91
-shipped-256-s0 rainfall_range 838,4197
+shipped-256-s0 rainfall_range 805,4132
 shipped-256-s0 temperature_c -1.2_1.4_5.6_6.8_8.5
-shipped-256-s0 rainfall_mm 838_893_1093_2546_4197
+shipped-256-s0 rainfall_mm 805_832_1028_2491_4132
 shipped-256-s0 land_below_0c 0.0278
-shipped-256-s0 rain_contrast 2.8511
+shipped-256-s0 rain_contrast 2.9940
 # wind forced to code 0 by wind_weights
 case shipped-64-s0-w0 shipped 64 0 5,0,0,0,0,0,0,0
 shipped-64-s0-w0 elevation 075e2af60c69e53ea2fc8e2f3e2d1fe0f1764203cfa81f9ea32f37049ffdb9bd
@@ -256,13 +256,13 @@ shipped-64-s0-w0 hs d0b3f836b97adb93b2d9dc7fdfe3a4e1218fbadca74eb42a8a281ab72978
 shipped-64-s0-w0 q 2709a65e02b953a55a28e7c2359974f5e2e6c8f38f137ff1833d4f488c289b26
 shipped-64-s0-w0 p 00abf3d8a986c077c4f35c5d6582f20cbabded960bd800de9c9e5082f107b11a
 shipped-64-s0-w0 rnoise 9cc036a9ab55ba52390ce67a752debe1544d4d4cf94b9f6daa2f2ab515b9e274
-shipped-64-s0-w0 rainfall 787ecef9d25802ac84de29496f13ff5e9576fc9947624181d323bac133b6bcd0
+shipped-64-s0-w0 rainfall 13988345b1f74fb38b8c94957c370d819063d0bf5ee8ca081c7c5aacd1cdf379
 shipped-64-s0-w0 temperature_range 4,89
-shipped-64-s0-w0 rainfall_range 917,4515
+shipped-64-s0-w0 rainfall_range 850,4445
 shipped-64-s0-w0 temperature_c 0.4_2.6_5.4_7.0_8.4
-shipped-64-s0-w0 rainfall_mm 917_930_1166_3720_4515
+shipped-64-s0-w0 rainfall_mm 850_859_1092_3648_4445
 shipped-64-s0-w0 land_below_0c 0.0000
-shipped-64-s0-w0 rain_contrast 4.0000
+shipped-64-s0-w0 rain_contrast 4.2468
 # wind forced to code 1 by wind_weights
 case shipped-64-s0-w1 shipped 64 0 0,5,0,0,0,0,0,0
 shipped-64-s0-w1 elevation 075e2af60c69e53ea2fc8e2f3e2d1fe0f1764203cfa81f9ea32f37049ffdb9bd
@@ -278,13 +278,13 @@ shipped-64-s0-w1 hs d0b3f836b97adb93b2d9dc7fdfe3a4e1218fbadca74eb42a8a281ab72978
 shipped-64-s0-w1 q 4950168171649525afe39f99a958034444b367292090364467a39521145a2606
 shipped-64-s0-w1 p e7379cc33432484edea5454eb7866739621b0ce80dae60c07f85a4c1e03f1264
 shipped-64-s0-w1 rnoise 9cc036a9ab55ba52390ce67a752debe1544d4d4cf94b9f6daa2f2ab515b9e274
-shipped-64-s0-w1 rainfall a61ca8df23334b8faacb140b9f6fb34e2012872731fa3c9f084d74a29c46d2bd
+shipped-64-s0-w1 rainfall f5e38ddcc387c11ccc1c556ce1572dcbfb1002af9c4f04442422d0efa27a4520
 shipped-64-s0-w1 temperature_range 4,89
-shipped-64-s0-w1 rainfall_range 911,3033
+shipped-64-s0-w1 rainfall_range 847,2964
 shipped-64-s0-w1 temperature_c 0.4_2.6_5.4_7.0_8.4
-shipped-64-s0-w1 rainfall_mm 911_936_1475_2642_3033
+shipped-64-s0-w1 rainfall_mm 847_865_1402_2572_2964
 shipped-64-s0-w1 land_below_0c 0.0000
-shipped-64-s0-w1 rain_contrast 2.8226
+shipped-64-s0-w1 rain_contrast 2.9734
 # wind forced to code 2 by wind_weights
 case shipped-64-s0-w2 shipped 64 0 0,0,5,0,0,0,0,0
 shipped-64-s0-w2 elevation 075e2af60c69e53ea2fc8e2f3e2d1fe0f1764203cfa81f9ea32f37049ffdb9bd
@@ -300,13 +300,13 @@ shipped-64-s0-w2 hs d0b3f836b97adb93b2d9dc7fdfe3a4e1218fbadca74eb42a8a281ab72978
 shipped-64-s0-w2 q a20e3c9b7574e46946d70c533a8b845fa7beaa8aacdab95121c70637f234bd53
 shipped-64-s0-w2 p 60a2ccf9fe5a23c93febabe61ef75796e7ed1aef378b59d60ff20ee8de148255
 shipped-64-s0-w2 rnoise 9cc036a9ab55ba52390ce67a752debe1544d4d4cf94b9f6daa2f2ab515b9e274
-shipped-64-s0-w2 rainfall 229f8460cf7ba05e4d4a3f27e41f3cf9d488fdaacc6d15eb33a4aec929eac5c5
+shipped-64-s0-w2 rainfall 503f465983cdd449da01a06e982f44bf3b3afaf37e63e4d95b310d1d35de5ebf
 shipped-64-s0-w2 temperature_range 4,89
-shipped-64-s0-w2 rainfall_range 920,4257
+shipped-64-s0-w2 rainfall_range 851,4183
 shipped-64-s0-w2 temperature_c 0.4_2.6_5.4_7.0_8.4
-shipped-64-s0-w2 rainfall_mm 920_935_1410_3355_4257
+shipped-64-s0-w2 rainfall_mm 855_865_1342_3285_4183
 shipped-64-s0-w2 land_below_0c 0.0000
-shipped-64-s0-w2 rain_contrast 3.5882
+shipped-64-s0-w2 rain_contrast 3.7977
 # wind forced to code 3 by wind_weights
 case shipped-64-s0-w3 shipped 64 0 0,0,0,5,0,0,0,0
 shipped-64-s0-w3 elevation 075e2af60c69e53ea2fc8e2f3e2d1fe0f1764203cfa81f9ea32f37049ffdb9bd
@@ -322,13 +322,13 @@ shipped-64-s0-w3 hs d0b3f836b97adb93b2d9dc7fdfe3a4e1218fbadca74eb42a8a281ab72978
 shipped-64-s0-w3 q 236fb9a29b50be5a0f46db9d0a678aaf6ec11270ffdca1be77f3d20d9a2fc6e8
 shipped-64-s0-w3 p 6f15419dc7677fdc7bf6cb620b0cb6a0b0938d0900dd5500b945e205ea4bef0d
 shipped-64-s0-w3 rnoise 9cc036a9ab55ba52390ce67a752debe1544d4d4cf94b9f6daa2f2ab515b9e274
-shipped-64-s0-w3 rainfall 4be474150a3fa0d54047a5c21b235bdb5aa50fbede1bf07c609e33fd2df29700
+shipped-64-s0-w3 rainfall 65f5bcf8999116fc15c86db1413c16d4981f250f7a5dcafaa41c6c8443eeb647
 shipped-64-s0-w3 temperature_range 4,89
-shipped-64-s0-w3 rainfall_range 907,3069
+shipped-64-s0-w3 rainfall_range 842,2997
 shipped-64-s0-w3 temperature_c 0.4_2.6_5.4_7.0_8.4
-shipped-64-s0-w3 rainfall_mm 907_920_1271_2623_3069
+shipped-64-s0-w3 rainfall_mm 842_852_1198_2554_2997
 shipped-64-s0-w3 land_below_0c 0.0000
-shipped-64-s0-w3 rain_contrast 2.8511
+shipped-64-s0-w3 rain_contrast 2.9977
 # wind forced to code 4 by wind_weights
 case shipped-64-s0-w4 shipped 64 0 0,0,0,0,5,0,0,0
 shipped-64-s0-w4 elevation 075e2af60c69e53ea2fc8e2f3e2d1fe0f1764203cfa81f9ea32f37049ffdb9bd
@@ -344,13 +344,13 @@ shipped-64-s0-w4 hs d0b3f836b97adb93b2d9dc7fdfe3a4e1218fbadca74eb42a8a281ab72978
 shipped-64-s0-w4 q fa10f017dcee087f9b65342be172bb4a0509bab791c37258fdf875cf0630f98c
 shipped-64-s0-w4 p 974384a01af691e61270edee4666fc57de19b3c91fa06b860fc8dabef9978d7c
 shipped-64-s0-w4 rnoise 9cc036a9ab55ba52390ce67a752debe1544d4d4cf94b9f6daa2f2ab515b9e274
-shipped-64-s0-w4 rainfall 274cb5fe0cc934a6705d4f30d1fae7d644f9cb245fcca2c7cad37a1f6f50833f
+shipped-64-s0-w4 rainfall 3a7930705afce12df4661effae30ca7c7aa8ba8b1ec3ce74b975d7775604315d
 shipped-64-s0-w4 temperature_range 4,89
-shipped-64-s0-w4 rainfall_range 906,4478
+shipped-64-s0-w4 rainfall_range 840,4405
 shipped-64-s0-w4 temperature_c 0.4_2.6_5.4_7.0_8.4
-shipped-64-s0-w4 rainfall_mm 906_916_970_3370_4478
+shipped-64-s0-w4 rainfall_mm 840_846_898_3298_4405
 shipped-64-s0-w4 land_below_0c 0.0000
-shipped-64-s0-w4 rain_contrast 3.6790
+shipped-64-s0-w4 rain_contrast 3.8983
 # wind forced to code 5 by wind_weights
 case shipped-64-s0-w5 shipped 64 0 0,0,0,0,0,5,0,0
 shipped-64-s0-w5 elevation 075e2af60c69e53ea2fc8e2f3e2d1fe0f1764203cfa81f9ea32f37049ffdb9bd
@@ -366,13 +366,13 @@ shipped-64-s0-w5 hs d0b3f836b97adb93b2d9dc7fdfe3a4e1218fbadca74eb42a8a281ab72978
 shipped-64-s0-w5 q 84289db736c141c67edafd46ff8a56a591526204e911a55c0e73942ce1beb2a4
 shipped-64-s0-w5 p 127abb93c4c743e78e35aa6018aaa83e8736cdd077fd8f49f8c9500d36f40a50
 shipped-64-s0-w5 rnoise 9cc036a9ab55ba52390ce67a752debe1544d4d4cf94b9f6daa2f2ab515b9e274
-shipped-64-s0-w5 rainfall f566232ceb83803e644ac8cedb8ffd0c4b5d630b954166e8c26e107f86cf9fef
+shipped-64-s0-w5 rainfall 0b731253da6c3f7feeeeeaae491dad9eaa472ecc4bcf9bbb4e404aebfc6f8651
 shipped-64-s0-w5 temperature_range 4,89
-shipped-64-s0-w5 rainfall_range 903,3863
+shipped-64-s0-w5 rainfall_range 832,3790
 shipped-64-s0-w5 temperature_c 0.4_2.6_5.4_7.0_8.4
-shipped-64-s0-w5 rainfall_mm 903_912_937_2957_3863
+shipped-64-s0-w5 rainfall_mm 832_841_865_2886_3790
 shipped-64-s0-w5 land_below_0c 0.0000
-shipped-64-s0-w5 rain_contrast 3.2423
+shipped-64-s0-w5 rain_contrast 3.4316
 # wind forced to code 6 by wind_weights
 case shipped-64-s0-w6 shipped 64 0 0,0,0,0,0,0,5,0
 shipped-64-s0-w6 elevation 075e2af60c69e53ea2fc8e2f3e2d1fe0f1764203cfa81f9ea32f37049ffdb9bd
@@ -388,13 +388,13 @@ shipped-64-s0-w6 hs d0b3f836b97adb93b2d9dc7fdfe3a4e1218fbadca74eb42a8a281ab72978
 shipped-64-s0-w6 q dfbe7db7eeb7eb52c9e112fb1985ee319a698c327e379a162411bbbd934bba83
 shipped-64-s0-w6 p 6583ce2a0b033a6f82696143d677a3a3e813bbeabb6f2ba9a551713d32a4853a
 shipped-64-s0-w6 rnoise 9cc036a9ab55ba52390ce67a752debe1544d4d4cf94b9f6daa2f2ab515b9e274
-shipped-64-s0-w6 rainfall 1f3cb397a1a9273cbc885f16968d2970f6403212bd99965b67025621df740df4
+shipped-64-s0-w6 rainfall 9ceccd1542fcca2e49fd93f453e3e2969ee479fbd504578bf1110474fb16b32d
 shipped-64-s0-w6 temperature_range 4,89
-shipped-64-s0-w6 rainfall_range 907,4434
+shipped-64-s0-w6 rainfall_range 832,4363
 shipped-64-s0-w6 temperature_c 0.4_2.6_5.4_7.0_8.4
-shipped-64-s0-w6 rainfall_mm 907_915_952_3465_4434
+shipped-64-s0-w6 rainfall_mm 834_844_881_3393_4363
 shipped-64-s0-w6 land_below_0c 0.0000
-shipped-64-s0-w6 rain_contrast 3.7869
+shipped-64-s0-w6 rain_contrast 4.0201
 # wind forced to code 7 by wind_weights
 case shipped-64-s0-w7 shipped 64 0 0,0,0,0,0,0,0,5
 shipped-64-s0-w7 elevation 075e2af60c69e53ea2fc8e2f3e2d1fe0f1764203cfa81f9ea32f37049ffdb9bd
@@ -410,13 +410,13 @@ shipped-64-s0-w7 hs d0b3f836b97adb93b2d9dc7fdfe3a4e1218fbadca74eb42a8a281ab72978
 shipped-64-s0-w7 q cba7e57f71b6639e065f8236fb70e0d98a8654e4b6876af9786a678ffd8626d2
 shipped-64-s0-w7 p 98c7468ff3a47ef6d01ad3b499e6b8959438a5f0a4424a682c75c8342687f686
 shipped-64-s0-w7 rnoise 9cc036a9ab55ba52390ce67a752debe1544d4d4cf94b9f6daa2f2ab515b9e274
-shipped-64-s0-w7 rainfall 2c21891bf00f0921d3c795ae5ad9db7a892a7accfccbdc21a529f1684bbf8af9
+shipped-64-s0-w7 rainfall cbad35e4e810afe8861249f554373eff9a7d0edac2d483b15c9ff88a03afeacd
 shipped-64-s0-w7 temperature_range 4,89
-shipped-64-s0-w7 rainfall_range 913,3647
+shipped-64-s0-w7 rainfall_range 841,3577
 shipped-64-s0-w7 temperature_c 0.4_2.6_5.4_7.0_8.4
-shipped-64-s0-w7 rainfall_mm 913_920_967_3076_3647
+shipped-64-s0-w7 rainfall_mm 841_847_894_3005_3577
 shipped-64-s0-w7 land_below_0c 0.0000
-shipped-64-s0-w7 rain_contrast 3.3435
+shipped-64-s0-w7 rain_contrast 3.5478
 # two lakes, wind forced to code 0
 case small-128-s2-w0 small 128 2 5,0,0,0,0,0,0,0
 small-128-s2-w0 elevation bf92cf2e455236eba3ba33dea43f0363af1ab3315ad34a9989afbbe45ce4e4b0
@@ -432,13 +432,13 @@ small-128-s2-w0 hs 865e16b1fcfa96ac657a3ae1473eadbfcc2c067be0ca777564b29b6208721
 small-128-s2-w0 q 2ed34191cd3de77f4a97911001db6205b8ecd6d69838331e041fea6edf22cffd
 small-128-s2-w0 p 4cbf46a5d23be02c1994a195e2e34a41324f329dd34b547ee7dfc7319cbbb1fc
 small-128-s2-w0 rnoise b8927e8e66152d4b3f918005cdc42a87646312c5fed22b1c5125c48a22b06902
-small-128-s2-w0 rainfall 939f353df5dcedf8aa65556442f688b77d915b0ea74f396834024d08c7ecca0d
+small-128-s2-w0 rainfall 86122731b8d773e5edb73e4f4995634b94c4bba0367c68ec4acdc7ae3b630805
 small-128-s2-w0 temperature_range -15,89
-small-128-s2-w0 rainfall_range 859,5943
+small-128-s2-w0 rainfall_range 801,5878
 small-128-s2-w0 temperature_c -1.5_2.0_5.2_6.8_8.0
-small-128-s2-w0 rainfall_mm 859_879_1043_3466_5943
+small-128-s2-w0 rainfall_mm 801_814_973_3406_5878
 small-128-s2-w0 land_below_0c 0.0068
-small-128-s2-w0 rain_contrast 3.9431
+small-128-s2-w0 rain_contrast 4.1843
 # two lakes, wind forced to code 2
 case small-128-s2-w2 small 128 2 0,0,5,0,0,0,0,0
 small-128-s2-w2 elevation bf92cf2e455236eba3ba33dea43f0363af1ab3315ad34a9989afbbe45ce4e4b0
@@ -454,13 +454,13 @@ small-128-s2-w2 hs 865e16b1fcfa96ac657a3ae1473eadbfcc2c067be0ca777564b29b6208721
 small-128-s2-w2 q cd2cf32761712d78b21b713675817a8036700fc68099afad126b007f9a1897f0
 small-128-s2-w2 p e542290bd64744a61ad28ad9dba91550a010eedebcce1e80671067ffc6f86a7f
 small-128-s2-w2 rnoise b8927e8e66152d4b3f918005cdc42a87646312c5fed22b1c5125c48a22b06902
-small-128-s2-w2 rainfall 26404418fc78cf63cd161530d500bba4a4ce9a1f1dee805c1f0e25a99d6d6c05
+small-128-s2-w2 rainfall 7c5b91c6899b02e4f21b5d2ce12d921a8524b02c2012580865119120a276ecad
 small-128-s2-w2 temperature_range -15,89
-small-128-s2-w2 rainfall_range 871,5885
+small-128-s2-w2 rainfall_range 817,5813
 small-128-s2-w2 temperature_c -1.5_2.0_5.2_6.8_8.0
-small-128-s2-w2 rainfall_mm 871_901_1196_3443_5885
+small-128-s2-w2 rainfall_mm 817_835_1127_3381_5813
 small-128-s2-w2 land_below_0c 0.0068
-small-128-s2-w2 rain_contrast 3.8213
+small-128-s2-w2 rain_contrast 4.0491
 # two lakes, wind forced to code 5
 case small-128-s2-w5 small 128 2 0,0,0,0,0,5,0,0
 small-128-s2-w5 elevation bf92cf2e455236eba3ba33dea43f0363af1ab3315ad34a9989afbbe45ce4e4b0
@@ -476,13 +476,13 @@ small-128-s2-w5 hs 865e16b1fcfa96ac657a3ae1473eadbfcc2c067be0ca777564b29b6208721
 small-128-s2-w5 q 438cfd8206aa9d2446b612fc28c6f35970853927fd1d87bda689d9b2a42b1d93
 small-128-s2-w5 p ec4174878779310ca29e11943aff297bbd596e12d0bfac11fbd4b16f1267cf38
 small-128-s2-w5 rnoise b8927e8e66152d4b3f918005cdc42a87646312c5fed22b1c5125c48a22b06902
-small-128-s2-w5 rainfall 4c18704d626418e5e0737284b4f55711dc386fa0d345d28d69b31d411ddbcdd7
+small-128-s2-w5 rainfall 47cee75f88ce8834a57fdc88e5fa7dd58fcc7c8add742221414ff25f8c3aa9d8
 small-128-s2-w5 temperature_range -15,89
-small-128-s2-w5 rainfall_range 878,3873
+small-128-s2-w5 rainfall_range 820,3808
 small-128-s2-w5 temperature_c -1.5_2.0_5.2_6.8_8.0
-small-128-s2-w5 rainfall_mm 878_891_935_2831_3873
+small-128-s2-w5 rainfall_mm 820_826_863_2759_3808
 small-128-s2-w5 land_below_0c 0.0068
-small-128-s2-w5 rain_contrast 3.1773
+small-128-s2-w5 rain_contrast 3.3402
 # two lakes, wind forced to code 7
 case small-128-s2-w7 small 128 2 0,0,0,0,0,0,0,5
 small-128-s2-w7 elevation bf92cf2e455236eba3ba33dea43f0363af1ab3315ad34a9989afbbe45ce4e4b0
@@ -498,13 +498,13 @@ small-128-s2-w7 hs 865e16b1fcfa96ac657a3ae1473eadbfcc2c067be0ca777564b29b6208721
 small-128-s2-w7 q df7f2e78832d2c21382ee5f9afac52f57f54558aa82a0293408fe4a50034502d
 small-128-s2-w7 p f7da137a79dc332ad2f8dae033720841c25945ce487249421cb71eb9acf0e4fd
 small-128-s2-w7 rnoise b8927e8e66152d4b3f918005cdc42a87646312c5fed22b1c5125c48a22b06902
-small-128-s2-w7 rainfall c03a4e8fcdae510281f3444c548458de28fdb7a66c69e234a00737dc529d196f
+small-128-s2-w7 rainfall 04a91e6994e234ff03968c7ce1d83cb5ac7f6a1a9f10604abcb4dd73352edc42
 small-128-s2-w7 temperature_range -15,89
-small-128-s2-w7 rainfall_range 848,4751
+small-128-s2-w7 rainfall_range 793,4682
 small-128-s2-w7 temperature_c -1.5_2.0_5.2_6.8_8.0
-small-128-s2-w7 rainfall_mm 848_873_939_3298_4751
+small-128-s2-w7 rainfall_mm 793_808_866_3229_4682
 small-128-s2-w7 land_below_0c 0.0068
-small-128-s2-w7 rain_contrast 3.7778
+small-128-s2-w7 rain_contrast 3.9963
 # P1-03 10.4
 case shipped-512-s0 shipped 512 0 1,1,1,1,1,1,1,1
 shipped-512-s0 elevation 34f5b1dd5d31c76454be9e217a80526800aa7b32fd5a68a31748c57d821d7f2a
@@ -520,13 +520,13 @@ shipped-512-s0 hs 3cab58fcf7bffbb1c40c73611d06b6b8422cc1e92f23f54908222cbffd5479
 shipped-512-s0 q 72d52c60a932c9f129148fe9e5185f9c1c87da5e4b50ff2346a086ea5d6ab1c2
 shipped-512-s0 p a629b4623222f540c5eb1f1419b234dc4351d0a37667d9aa7314a75bf878495b
 shipped-512-s0 rnoise 60f3e8143889aa5875141faeec35c5115872c3ae92547afe23813fafbf02e098
-shipped-512-s0 rainfall c3dcf5f6fa87dba787c1f160005ecfc4887cd76593147defc9632300d08aef01
+shipped-512-s0 rainfall 659f08662634db0397254378313c020504ef6b0b163e87094e9387503f160871
 shipped-512-s0 temperature_range -28,93
-shipped-512-s0 rainfall_range 621,3452
+shipped-512-s0 rainfall_range 614,3418
 shipped-512-s0 temperature_c -2.8_1.1_5.5_6.9_8.6
-shipped-512-s0 rainfall_mm 621_725_993_1963_3452
+shipped-512-s0 rainfall_mm 614_674_932_1921_3418
 shipped-512-s0 land_below_0c 0.0407
-shipped-512-s0 rain_contrast 2.7076
+shipped-512-s0 rain_contrast 2.8501
 # P1-03 10.4
 case shipped-512-s42 shipped 512 42 1,1,1,1,1,1,1,1
 shipped-512-s42 elevation 590569e0db4d6bc84fd8e955ef77ab49bec2c82b5d383fd75d212800e31a3b91
@@ -542,13 +542,13 @@ shipped-512-s42 hs aeda213c7c1ca38aa323429995cd263e96d2bd2fac7c10f994dfb7cd5efed
 shipped-512-s42 q 046c7b768cb429caf81407b3e923aafcd3e798862ecb4233cdc05557f9d0ec57
 shipped-512-s42 p 3045527585138ff3d1ebe8c36f8ab026647ef36caca8c98eed75057f510482f6
 shipped-512-s42 rnoise 13d7b7cfd3dfac41f5e7c021d62024f0acd189a50dc6df734df3a37c9a819e4e
-shipped-512-s42 rainfall 8cae10a3a1efcd434223a3ededab2319c59f8338df748d1889f92925dc2ccd50
+shipped-512-s42 rainfall abcc7e173867b7ae77aaeb27c0694ca9c05dbdeedc0921dc070d7fb189507b12
 shipped-512-s42 temperature_range -75,93
-shipped-512-s42 rainfall_range 661,8346
+shipped-512-s42 rainfall_range 657,8346
 shipped-512-s42 temperature_c -7.5_1.4_5.9_7.3_8.7
-shipped-512-s42 rainfall_mm 661_723_841_2575_8346
+shipped-512-s42 rainfall_mm 657_691_801_2537_8346
 shipped-512-s42 land_below_0c 0.0507
-shipped-512-s42 rain_contrast 3.5615
+shipped-512-s42 rain_contrast 3.6715
 # P1-03 10.4, seed phrase "The Unmapped"
 case shipped-512-phrase shipped 512 15629206466951235176 1,1,1,1,1,1,1,1
 shipped-512-phrase elevation d763561a5def9384d83ed33ef6039c1b47652b9ca0c1d5092ba09a47cec7a34c
@@ -564,13 +564,13 @@ shipped-512-phrase hs d892ba60ebdf10a10c0619355e54801e282e3645ccd1c091eed07f094d
 shipped-512-phrase q e7e730fd4dd091db3c260412c1e628eac9581eb8fdd4195abcac53bbecf9d276
 shipped-512-phrase p b76b0fa7dcf0a1c8b01c07d03ed3f10624261c8de2540fcb39fc5caad57daeea
 shipped-512-phrase rnoise 346d167eed87396619b6702d9931278ed82acd6ff3ce9684da320fd293091353
-shipped-512-phrase rainfall 2fbf336da780c4fc242ad983f173b600bfd1d44f372268c2005218b052f76e49
+shipped-512-phrase rainfall 7d97efed6ee036353c500ad8088fc893de5870078b6ca5e2597a6309e3a873bf
 shipped-512-phrase temperature_range -35,94
-shipped-512-phrase rainfall_range 662,3895
+shipped-512-phrase rainfall_range 661,3844
 shipped-512-phrase temperature_c -3.5_0.7_5.0_7.0_8.4
-shipped-512-phrase rainfall_mm 662_727_835_1982_3895
+shipped-512-phrase rainfall_mm 661_715_791_1941_3844
 shipped-512-phrase land_below_0c 0.0723
-shipped-512-phrase rain_contrast 2.7263
+shipped-512-phrase rain_contrast 2.7147
 # P1-03 10.4
 case shipped-1024-s1 shipped 1024 1 1,1,1,1,1,1,1,1
 shipped-1024-s1 elevation 2e3b7dee44d149f739bbf6040f0345ee310c51f2f5e27940c57f1759ef16eec4
@@ -586,13 +586,13 @@ shipped-1024-s1 hs 5bc6b79c5c3fe456f892b1155c019d37ef17056db9279517c1465d185153c
 shipped-1024-s1 q c42a602f923db7c32912fca1276680ae2e27763e86a47eefab24f68c5f2529da
 shipped-1024-s1 p f2969d00569b847e391eade2a83a020521b8840495d18d70ab3e0cfb1e175d0b
 shipped-1024-s1 rnoise e8504b16e78d8c3129ced5c8b6328030259a4c58c2f8f92a5ea3c3a715304d55
-shipped-1024-s1 rainfall 83659d7e949d6fad80e32420bd2b051fab1a66bc2774836dffb7dffe117e6fb9
+shipped-1024-s1 rainfall 790bab751cee484408552b6960d92095b05df2a4114e3976c4ee8f2789951480
 shipped-1024-s1 temperature_range -68,91
-shipped-1024-s1 rainfall_range 553,4095
+shipped-1024-s1 rainfall_range 553,4056
 shipped-1024-s1 temperature_c -6.8_2.6_6.2_7.4_8.9
-shipped-1024-s1 rainfall_mm 553_629_779_1235_4095
+shipped-1024-s1 rainfall_mm 553_614_755_1217_4056
 shipped-1024-s1 land_below_0c 0.0544
-shipped-1024-s1 rain_contrast 1.9634
+shipped-1024-s1 rain_contrast 1.9821
 # C4 overflow margin (P1-03 7): 260 x 255, S = 32767 - (7x + 13y) mod 768, r = 250
 case overflow-260x255 overflow 260 0 1,1,1,1,1,1,1,1
 overflow-260x255 S ce87f4ad83d7c2627d2017231bed96f81372a28b7d50922ecdd09b73d3148894
@@ -614,13 +614,13 @@ random-0 hs e508c4d8c956758576ca93a1dfd1b70d6d6669f571fc95aae6d08bb71499d4c4
 random-0 q b2e174f06ca91327501be1533a3716bc0adb790be3f073dfe1e41d966b689031
 random-0 p c9d8d621647613cf8166f552ac7c4876fac023d0f78d9dc9d7a2f99d638dde64
 random-0 rnoise 400bec710778135064cc0aae623ccf3207e0c6944b33f7ff15467a450287804f
-random-0 rainfall 805ca67bc353514ca335502e6586e39cd113f03966c055253d82f43ed2053c7f
+random-0 rainfall 3c6eace961ac5592732a774e14085ccca9a253a10fd7ea542903f83663ab5326
 random-0 temperature_range 33,89
-random-0 rainfall_range 909,1105
+random-0 rainfall_range 845,1031
 random-0 temperature_c 3.3_4.3_6.0_7.6_8.7
-random-0 rainfall_mm 909_919_943_1036_1105
+random-0 rainfall_mm 845_850_873_965_1031
 random-0 land_below_0c 0.0000
-random-0 rain_contrast 1.1273
+random-0 rain_contrast 1.1353
 # random fixture 1 of P1-03 10.2 (wind code 7)
 case random-1 random 34 1 0,0,0,0,0,0,0,5
 random-1 elevation abbac37ce31363e8535679a24715cf9ffb46d7280e93625e69b9864866f117a0
@@ -636,13 +636,13 @@ random-1 hs 2af3f8bdc97f5b44d003a7ee458ae625d444153ec193ac277001af99cd7c466f
 random-1 q 88c8b8aaee411731cbe52d503a44a5d22c851b6e28ede01667c20e2d7a7b7a3f
 random-1 p 332c2763add0d466934998e078ec59a4d365613c15b8db6819f0e30b71d7124d
 random-1 rnoise 3a3a244c6862d4f84df8608c3a5984f050a91120a564f37ba8981c52f85228dd
-random-1 rainfall 574ba299cae139aa9feac2ecf96a2fe07428cec426b5a4fe456185d2db94f503
+random-1 rainfall 6e0c01048ed5a932348eb9c01d8de681b51578577ab689465dffe28e9c449d75
 random-1 temperature_range 33,89
-random-1 rainfall_range 919,1057
+random-1 rainfall_range 857,983
 random-1 temperature_c 3.3_4.5_6.0_7.5_8.6
-random-1 rainfall_mm 919_928_942_1001_1057
+random-1 rainfall_mm 857_861_870_930_983
 random-1 land_below_0c 0.0000
-random-1 rain_contrast 1.0787
+random-1 rain_contrast 1.0801
 # random fixture 2 of P1-03 10.2 (wind code 6)
 case random-2 random 34 2 0,0,0,0,0,0,5,0
 random-2 elevation 4a1cb1fa03f067564b0d1eeda17497ad3fc84a7c89f7276235da584d708e52b9
@@ -658,13 +658,13 @@ random-2 hs f73126768e8809f1bec3115b7647a0ed3dbfb4f1f242a68aad16df94bf858e1b
 random-2 q 3c2fba4839fa334ce40ff0e63baa958d8e7de327caa7892cf1181985d8c34d99
 random-2 p 8c31f418af9b08288c2b19a287dcfdad92f4cc57cbde351e9c9901692e5e3c63
 random-2 rnoise c9c991a18fa1fca09f5a0a97c8c970af58e84ddcb36c59ed2b02be57cf03c697
-random-2 rainfall 1fc15ba8010aa56b057c33b4d15cd595dd1ac249adcb2f222f96347851463706
+random-2 rainfall ddcad3df961f306bcee3930a496991bea43f69d3f48d18519d1247eec4f50d51
 random-2 temperature_range 33,89
-random-2 rainfall_range 938,1109
+random-2 rainfall_range 869,1035
 random-2 temperature_c 3.3_4.3_5.9_7.6_8.7
-random-2 rainfall_mm 938_943_976_1075_1109
+random-2 rainfall_mm 869_873_907_1003_1035
 random-2 land_below_0c 0.0000
-random-2 rain_contrast 1.1400
+random-2 rain_contrast 1.1489
 # random fixture 3 of P1-03 10.2 (wind code 6)
 case random-3 random 34 3 0,0,0,0,0,0,5,0
 random-3 elevation be685936e2d5c14e4b6d5bc35c0264c42df34f9e98550cd2a6b331f2a7748424
@@ -680,10 +680,10 @@ random-3 hs 41070edcff6fb32df6bdaa1734628bea318fa45f6b64a3b9a994f1437749fc33
 random-3 q 958845f3480955343ca48a43838b0f73a6b17ef94c7349416c0ac693f2f4b21c
 random-3 p 2990a86d97415f557293b5d424860d0c62d3d579fa17c80379b0faa75631a76f
 random-3 rnoise 0c56743d579e0d72e96b8a5c89c332dd73cb30d67c182e0df3a25e94e0c478db
-random-3 rainfall 771b1fbe6582c1818786ffc85b3243c345da9b0d690b723c7e68762a53a22b6e
+random-3 rainfall 919b7ca9ea68cdf69f3e86a2aa9bef0e988f63120a11c65f7362b0f363f57962
 random-3 temperature_range 33,90
-random-3 rainfall_range 919,1111
+random-3 rainfall_range 852,1037
 random-3 temperature_c 3.3_4.4_6.1_7.8_8.9
-random-3 rainfall_mm 919_927_971_1029_1111
+random-3 rainfall_mm 852_855_902_956_1037
 random-3 land_below_0c 0.0000
-random-3 rain_contrast 1.1100
+random-3 rain_contrast 1.1181

@@ -93,7 +93,7 @@ inline const std::vector<FieldText>& shipped_fields() {
         {"moisture_path_mm_km", "32000"},
         {"loss_max", "\"0.25\""},
         {"ocean_recharge_m", "500"},
-        {"coast_rain_mm", "150"},
+        {"coast_rain_mm", "75"},
         {"coast_rain_reach_m", "1500"},
         {"rain_noise", "{ wavelength_m = 5000, octaves = 3, gain = \"0.5\" }"},
         {"rain_noise_amp", "\"0.4\""},
@@ -117,7 +117,7 @@ inline constexpr std::string_view SHIPPED_TOML =
     "moisture_path_mm_km = 32000\n"
     "loss_max = \"0.25\"\n"
     "ocean_recharge_m = 500\n"
-    "coast_rain_mm = 150\n"
+    "coast_rain_mm = 75\n"
     "coast_rain_reach_m = 1500\n"
     "rain_noise = { wavelength_m = 5000, octaves = 3, gain = \"0.5\" }\n"
     "rain_noise_amp = \"0.4\"\n"

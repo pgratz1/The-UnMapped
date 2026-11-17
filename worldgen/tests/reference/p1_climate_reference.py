@@ -106,7 +106,7 @@ def shipped_tuning(**over):
         "moisture_path_mm_km": 32000,
         "loss_max": dec("0.25"),
         "ocean_recharge_m": 500,
-        "coast_rain_mm": 150,
+        "coast_rain_mm": 75,
         "coast_rain_reach_m": 1500,
         "rain_noise": (5000, 3, dec("0.5")),
         "rain_noise_amp": dec("0.4"),
@@ -241,26 +241,35 @@ def window_sums(w, h, V, r):
     return out
 
 
-def check_surface_range(S):
+GUARD_MAX = INT64_MAX // (S_MAX << 32)  # 65538
+
+
+def seam_guard(w, h, S, r_cells, r):
+    """Entry guard of the C4 seams (P1-03 10), in order: r_cells >= 0; every
+    S in [0, 32767]; W <= MAX; min(W, 2r + 1) x min(H, 2r + 1) <= MAX."""
+    if r_cells < 0:
+        fatal(PRE + "C4 radius below 0")
     for v in S:
         if not 0 <= v <= S_MAX:
-            fatal("C4: S outside [0, 32767]")
+            fatal(PRE + "C4 surface outside [0, 32767]")
+    if w > GUARD_MAX:
+        fatal(PRE + "C4 grid wider than 65538")
+    if min(w, 2 * r + 1) * min(h, 2 * r + 1) > GUARD_MAX:
+        fatal(PRE + "C4 window above 65538 cells")
 
 
 def box_mean(w, h, S, r):
     """One box pass of half-width r (seam climate_box_mean, pass 1 of C4):
-    hs1 = from_ratio(sum, c_w)."""
-    if r < 0:
-        fatal("box radius")
-    check_surface_range(S)
+    hs1 = from_ratio(sum, c_w). Guard radius r."""
+    seam_guard(w, h, S, r, r)
     return [er.from_ratio(s, cw) for s, cw in window_sums(w, h, S, r)]
 
 
 def triangle_mean(w, h, S, r):
     """C4 (seam climate_triangle_mean): h = r div 2; pass 1 = box_mean(S, h);
-    pass 2 on the raw values of hs1: hs = div_int(from_raw(sum2), c_w)."""
-    if r < 0:
-        fatal("triangle radius")
+    pass 2 on the raw values of hs1: hs = div_int(from_raw(sum2), c_w).
+    Guard radius r div 2, covering both passes."""
+    seam_guard(w, h, S, r, r // 2 if r >= 0 else 0)
     hh = r // 2
     hs1 = box_mean(w, h, S, hh)
     return [er.div_int(s, cw) for s, cw in window_sums(w, h, hs1, hh)]
@@ -894,6 +903,23 @@ def check_overflow_margin(c):
     c.eq("overflow bound value", full, 63001 * 32767 << 32)
     # The running-window bound of section 7 (252 x 251 rows) also fits.
     c.ok("running window bound", 252 * 251 * S_MAX * ONE < INT64_MAX)
+    # The seam guard (P1-03 10, test 10.1.9): MAX = 65538.
+    c.eq("guard MAX", GUARD_MAX, 65538)
+    c.ok("guard MAX sums fit", GUARD_MAX * S_MAX * ONE <= INT64_MAX)
+    c.ok("guard MAX + 1 sums do not", (GUARD_MAX + 1) * S_MAX * ONE > INT64_MAX)
+    for (w, h, r) in ((260, 255, 258), (4096, 17, 8192), (65539, 1, 0)):
+        S = [S_MAX] * (w * h)
+        expect_fatal(c, "guard box %d x %d r %d" % (w, h, r), lambda: box_mean(w, h, S, r), PRE)
+        expect_fatal(c, "guard triangle %d x %d r %d" % (w, h, r), lambda: triangle_mean(w, h, S, r), PRE)
+    # Just inside: a window of exactly 63001 cells (r 250 on 260 x 255; the
+    # box with half-width 125), and 65538 x 1 with a huge radius.
+    S = [S_MAX] * (260 * 255)
+    c.ok("guard 260 x 255 box r 125", all(v == er.from_int(S_MAX) for v in box_mean(260, 255, S, 125)))
+    S = [S_MAX - (i * 7) % 700 for i in range(65538)]
+    tot = sum(S)
+    c.ok("guard 65538 x 1 box huge r", all(v == er.from_ratio(tot, 65538) for v in box_mean(65538, 1, S, 10 ** 6)))
+    c.ok("guard 65538 x 1 triangle huge r", all(v == er.from_ratio(tot, 65538)
+                                               for v in triangle_mean(65538, 1, S, 2 * 10 ** 6)))
 
 
 SWEEP_Q = [
@@ -906,7 +932,7 @@ SWEEP_P = [
     ["800.000", "1268.750", "1853.620", "2203.391", "798.350", "798.271"],
     ["800.000", "956.250", "1229.199", "1384.716", "798.891", "798.794"],
 ]
-SWEEP_RAIN = [[950, 1261, 1612, 2001, 947, 949], [950, 1417, 2002, 2352, 947, 948], [950, 1105, 1378, 1533, 947, 949]]
+SWEEP_RAIN = [[875, 1187, 1538, 1927, 873, 874], [875, 1343, 1928, 2278, 873, 873], [875, 1030, 1303, 1459, 873, 874]]
 SE_Q = [
     [4294967296, 4291866607, 4289918572, 4287755798, 4289060547, 4293557436],
     [4294967296, 4290924843, 4286792934, 4283581311, 4284617726, 4289340761],
@@ -917,7 +943,7 @@ SE_P = [
     ["800.000", "1076.019", "1434.014", "1653.805", "798.523", "798.902"],
     ["800.000", "827.427", "799.079", "798.365", "797.936", "798.146"],
 ]
-SE_RAIN = [[950, 1169, 1556, 2108, 1500, 950], [950, 1224, 1582, 1802, 947, 949], [950, 976, 947, 947, 946, 948]]
+SE_RAIN = [[875, 1095, 1482, 2034, 1426, 875], [875, 1150, 1508, 1728, 873, 874], [875, 902, 873, 873, 872, 873]]
 
 
 def check_sweep(c):
@@ -1026,12 +1052,12 @@ def check_sweep(c):
 
 RAIN_TABLE = [
     # p mm, coast_dist, rn text, cb raw, rainfall
-    (800, 16, "0", er.from_ratio(150 * 1484, 1500), 948),
+    (800, 16, "0", er.from_ratio(75 * 1484, 1500), 874),
     (800, 1500, "0", 0, 800),
     (100, 3000, "0", 0, 250),
-    (12000, 50, "0", er.from_int(145), 10000),
-    (800, 700, "0.5", er.from_int(80), 1040),
-    (800, -40, "-0.3", er.from_int(150), 854),
+    (12000, 50, "0", er.from_ratio(145, 2), 10000),
+    (800, 700, "0.5", er.from_int(40), 1000),
+    (800, -40, "-0.3", er.from_int(75), 779),
 ]
 
 
@@ -1042,9 +1068,9 @@ def check_rainfall(c):
         lab = "C6 p %d d %d rn %s" % (pm, d, rn)
         c.eq(lab + " cb", got_cb, cb)
         c.eq(lab + " rainfall", rain, want)
-    c.eq("C6 cb 148.4", mm3(RAIN_TABLE[0][3]), "148.400")
+    c.eq("C6 cb 74.2", mm3(RAIN_TABLE[0][3]), "74.200")
     # Edge of the reach and the noise floor.
-    c.eq("C6 d = reach - 1", rain_parts(er.from_int(800), 1499, 0, t)[2], er.from_ratio(150, 1500))
+    c.eq("C6 d = reach - 1", rain_parts(er.from_int(800), 1499, 0, t)[2], er.from_ratio(75, 1500))
     c.eq("C6 f floor", rain_parts(er.from_int(800), 5000, -ONE, shipped_tuning(rain_noise_amp=ONE))[0], 0)
 
 

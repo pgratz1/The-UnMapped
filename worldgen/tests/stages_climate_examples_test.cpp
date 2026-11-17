@@ -86,9 +86,9 @@ const std::vector<std::vector<std::string>>& sweep_p() {
 
 const std::vector<std::vector<std::uint16_t>>& sweep_rainfall() {
     static const std::vector<std::vector<std::uint16_t>> r = {
-        {950, 1261, 1612, 2001, 947, 949},
-        {950, 1417, 2002, 2352, 947, 948},
-        {950, 1105, 1378, 1533, 947, 949},
+        {875, 1187, 1538, 1927, 873, 874},  // coast_rain_mm 75 (P1-03 revised)
+        {875, 1343, 1928, 2278, 873, 873},
+        {875, 1030, 1303, 1459, 873, 874},
     };
     return r;
 }
@@ -114,9 +114,9 @@ const std::vector<std::vector<std::string>>& se_p() {
 
 const std::vector<std::vector<std::uint16_t>>& se_rainfall() {
     static const std::vector<std::vector<std::uint16_t>> r = {
-        {950, 1169, 1556, 2108, 1500, 950},
-        {950, 1224, 1582, 1802, 947, 949},
-        {950, 976, 947, 947, 946, 948},
+        {875, 1095, 1482, 2034, 1426, 875},
+        {875, 1150, 1508, 1728, 873, 874},
+        {875, 902, 873, 873, 872, 873},
     };
     return r;
 }
@@ -525,7 +525,7 @@ TEST_CASE("P1-03 10: the window guard of both C4 seams, the three fatal paths") 
     // 4096 x 17 with r_cells 8192: 4096 x 17 = 69632 cells per window.
     {
         const Grid g{4096, 17};
-        const std::vector<std::int64_t> s(g.cells(), 1);
+        const std::vector<std::int64_t> s(g.cells(), 32767);
         CHECK_FALSE(guard_allows(g, 8192));
         CHECK_FALSE(guard_allows(g, 4096));
         expect_prefixed_fatal([&] { return climate_api::box_mean(g, s, 8192, THREADS); }, "box 4096 x 17 r 8192");
@@ -534,7 +534,7 @@ TEST_CASE("P1-03 10: the window guard of both C4 seams, the three fatal paths") 
     // 65539 x 1 with r_cells 0: W above MAX.
     {
         const Grid g{65539, 1};
-        const std::vector<std::int64_t> s(g.cells(), 7);
+        const std::vector<std::int64_t> s(g.cells(), 32767);
         CHECK_FALSE(guard_allows(g, 0));
         expect_prefixed_fatal([&] { return climate_api::box_mean(g, s, 0, THREADS); }, "box 65539 x 1 r 0");
         expect_prefixed_fatal([&] { return climate_api::triangle_mean(g, s, 0, THREADS); }, "triangle 65539 x 1 r 0");
@@ -564,6 +564,7 @@ TEST_CASE("P1-03 10: in-bounds extremes of the window guard: 65538 x 1 with a hu
 TEST_CASE("P1-03 10: climate_temperature_cell rejects a height above INT32_MAX") {
     const std::int64_t big = std::int64_t{2147483647};
     CHECK_NOTHROW(static_cast<void>(climate_api::temperature_cell(0, big, 10, 0, shipped_tuning())));
+    CHECK_NOTHROW(static_cast<void>(climate_api::temperature_cell(big - 1, big, 10, 0, shipped_tuning())));
     CHECK_THROWS_AS(static_cast<void>(climate_api::temperature_cell(0, big + 1, 10, 0, shipped_tuning())),
                     worldgen::FatalError);
 }
@@ -732,12 +733,13 @@ TEST_CASE("P1-03 5.1 C6: the rainfall table (shipped values, rn given)") {
         std::uint16_t rainfall;
     };
     const std::vector<Row> rows = {
-        {800, 16, "0", Fx::from_ratio(150 * 1484, 1500).raw(), 948},
+        // coast_rain_mm 75 (P1-03 revised 2026-11-17).
+        {800, 16, "0", Fx::from_ratio(75 * 1484, 1500).raw(), 874},
         {800, 1500, "0", 0, 800},
         {100, 3000, "0", 0, 250},
-        {12000, 50, "0", Fx::from_int(145).raw(), 10000},
-        {800, 700, "0.5", Fx::from_int(80).raw(), 1040},
-        {800, -40, "-0.3", Fx::from_int(150).raw(), 854},
+        {12000, 50, "0", Fx::from_ratio(145, 2).raw(), 10000},
+        {800, 700, "0.5", Fx::from_int(40).raw(), 1000},
+        {800, -40, "-0.3", Fx::from_int(75).raw(), 779},
     };
     const Values v = values();
     for (const Row& r : rows) {
@@ -750,23 +752,23 @@ TEST_CASE("P1-03 5.1 C6: the rainfall table (shipped values, rn given)") {
         CHECK(own.rainfall == r.rainfall);
         CHECK(climate_api::rainfall_cell(Fx::from_int(r.p_mm).raw(), r.coast, rn, shipped_tuning()) == r.rainfall);
     }
-    CHECK(mm3(Fx::from_ratio(150 * 1484, 1500).raw()) == "148.400");
+    CHECK(mm3(Fx::from_ratio(75 * 1484, 1500).raw()) == "74.200");
 }
 
 TEST_CASE("P1-03 C6: the coast bonus falls linearly to 0 at coast_rain_reach_m; the noise factor is floored at 0") {
     const Values v = values();
     const std::int64_t p = Fx::from_int(800).raw();
-    CHECK(own_rainfall(p, 1499, 0, v).cb == Fx::from_ratio(150, 1500).raw());
+    CHECK(own_rainfall(p, 1499, 0, v).cb == Fx::from_ratio(75, 1500).raw());
     CHECK(climate_api::rainfall_cell(p, 1499, 0, shipped_tuning()) == 800);
-    CHECK(climate_api::rainfall_cell(p, 0, 0, shipped_tuning()) == 950);
-    CHECK(climate_api::rainfall_cell(p, -32767, 0, shipped_tuning()) == 950);  // ocean counts as 0
+    CHECK(climate_api::rainfall_cell(p, 0, 0, shipped_tuning()) == 875);
+    CHECK(climate_api::rainfall_cell(p, -32767, 0, shipped_tuning()) == 875);  // ocean counts as 0
     CHECK(climate_api::rainfall_cell(p, 32767, 0, shipped_tuning()) == 800);
     // rain_noise_amp 1 and rn = -1: f = max(0, 0) = 0, so only the coast bonus
     // and the floor remain.
     const climate_api::Tuning amp1 = tuning({{"rain_noise_amp", "1"}});
     CHECK(climate_api::rainfall_cell(p, 5000, -ONE, amp1) == 250);
-    CHECK(climate_api::rainfall_cell(p, 0, -ONE, amp1) == 250);  // 0 + 150, floored at 250
-    CHECK(climate_api::rainfall_cell(p, 0, ONE, amp1) == 1750);  // 800 x 2 + 150
+    CHECK(climate_api::rainfall_cell(p, 0, -ONE, amp1) == 250);  // 0 + 75, floored at 250
+    CHECK(climate_api::rainfall_cell(p, 0, ONE, amp1) == 1675);  // 800 x 2 + 75
     // rain_min_mm 0 and the cap.
     const climate_api::Tuning floor0 = tuning({{"rain_min_mm", "0"}});
     CHECK(climate_api::rainfall_cell(0, 5000, 0, floor0) == 0);
