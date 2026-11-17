@@ -17,17 +17,28 @@ against core_reference.py by `check`.
 
 Usage (from the repository root; -B keeps __pycache__ out of the tree):
 
-    python3 -B worldgen/tests/reference/p1_elevation_reference.py check [--large]
-        Worked examples of P1-01 10.1 and the reference values of 10.4 at
-        N = 64, 128 and 256 (about two minutes). --large adds the N = 512
-        floor results and the N = 1024 seed 0 layer hash (much longer).
+    python3 -B worldgen/tests/reference/p1_elevation_reference.py check [--large] [--examples]
+        Worked examples of P1-01 10.1 (T1 to T7 of the fourth version
+        included), the neutral-settings values of 10.4.2 and the fourth
+        version's values of 10.4.1 at N = 64, 128 and 256 (about five
+        minutes). --examples runs the examples only (under a second);
+        --large adds the N = 512 floor results and layer hashes and the
+        N = 1024 seed 0 layer hashes (much longer).
 
     python3 -B worldgen/tests/reference/p1_elevation_reference.py case FIXTURE N SEED
-        Print the per-step values of one world (FIXTURE: shipped or small).
+        Print the per-step values of one world (FIXTURE: shipped, small,
+        shipped-neutral or small-neutral).
 
-    python3 -B worldgen/tests/reference/p1_elevation_reference.py golden [PATH|-]
+    python3 -B worldgen/tests/reference/p1_elevation_reference.py golden --large [PATH|-]
         Write the golden vector file (default worldgen/tests/golden/
-        p1-01-elevation.txt); "-" writes it to standard output.
+        p1-01-elevation.txt); "-" writes it to standard output. The
+        committed file is written with --large (the N = 512 cases, about
+        ten minutes in all).
+
+    python3 -B worldgen/tests/reference/p1_elevation_reference.py golden-legacy [PATH|-]
+        The third version's (0.5.0) golden file, regenerated under the
+        neutral settings (pass_count_max 0, final_talus_iterations 0): byte
+        for byte the file committed before 0.6.0 (invariant 11).
 
 Values are Python ints: an Fx is its raw int64. FatalError (from
 core_reference) stands for the project's fatal error.
@@ -2790,6 +2801,15 @@ def check_pass_examples(c):
         lv, _ = t1_run(over, h0x)
         c.eq("T1 variant %s" % want, lv["tries"], [(4 * w + 8, 1, 0, want)])
         c.eq("T1 variant %s no site" % want, lv["sites"], [])
+    # A constructed variant for rule (c), which no fixture world reaches
+    # (10.2 "Rule coverage"): row y = 7 made ocean, so the side-1 chain of
+    # the col ends at an ocean seed.
+    tv = make_tuning(T1_OVERRIDES)
+    w7, h7_, h0g, ug, mg, pg, nbg, Og = t1_grid()
+    for x in range(17):
+        Og[7 * 17 + x] = 1
+    lv = pass_layout(0, w7, h7_, h0g, ug, mg, pg, nbg, Og, from_int(1024), 0, from_int(4), tv)
+    c.eq("T1 variant sea", lv["tries"], [(4 * w + 8, 1, 0, "sea")])
     lv, _ = t1_run({"pass_min_col_m": 600, "pass_saddle_max_m": 600})
     c.eq("T1 natural gap try", lv["tries"], [(4 * w + 8, 1, 0, None)])
     s = lv["sites"][0]
@@ -3247,7 +3267,7 @@ def golden_text_legacy():
 
 GOLDEN_CASES_V4 = [
     # (name, fixture, N, seed, why)
-    ("shipped-64-s0", "shipped", 64, 0, "P1-01 10.4.1 first row: no range of the minimum length"),
+    ("shipped-64-s0", "shipped", 64, 0, "P1-01 10.4.1 first row: no site (one candidate fails the barrier)"),
     ("shipped-64-s7", "shipped", 64, 7, "small shipped world"),
     ("shipped-48-s3", "shipped", 48, 3, "N not a power of two"),
     ("shipped-128-s0", "shipped", 128, 0, "P1-01 10.4.1: no site, one candidate fails the barrier"),
@@ -3363,9 +3383,20 @@ def v4_world_items(r):
     return items
 
 
-def golden_text():
+PHRASE_SEED = 15629206466951235176  # seed_from_phrase("The Unmapped")
+
+# Larger cases (golden --large), read only by the opt-in elevation-slow suite.
+GOLDEN_LARGE_V4 = [
+    ("shipped-512-s0", "shipped", 512, 0, "P1-01 10.4.1: N = 512 seed 0 (no site)"),
+    ("shipped-512-s41", "shipped", 512, 41, "P1-01 10.4.1: N = 512 seed 41 (the steep coast of limitation 11)"),
+    ("shipped-512-s42", "shipped", 512, 42, "P1-01 10.4.1: N = 512 seed 42 (one pass)"),
+    ("shipped-512-phrase", "shipped", 512, PHRASE_SEED, "N = 512, seed phrase \"The Unmapped\" (one pass)"),
+]
+
+
+def golden_text(large=False):
     out = [GOLDEN_HEADER_V4]
-    for name, fx, n, seed, why in GOLDEN_CASES_V4:
+    for name, fx, n, seed, why in GOLDEN_CASES_V4 + (GOLDEN_LARGE_V4 if large else []):
         r = run_world(seed, n, tuning_of(fx))
         out.append("# %s\n" % why)
         out.append("case %s %s %d %d\n" % (name, fx, n, seed))
@@ -3413,8 +3444,9 @@ def main(argv):
             print("site", {k: v for k, v in s.items() if k not in ("arc", "delta")})
         return 0
     if len(argv) >= 2 and argv[1] == "golden":
-        text = golden_text()
-        path = argv[2] if len(argv) > 2 else os.path.join(_HERE, "..", "golden", "p1-01-elevation.txt")
+        args = [a for a in argv[2:] if not a.startswith("--")]
+        text = golden_text(large="--large" in argv)
+        path = args[0] if args else os.path.join(_HERE, "..", "golden", "p1-01-elevation.txt")
         if path == "-":
             sys.stdout.write(text)
         else:
