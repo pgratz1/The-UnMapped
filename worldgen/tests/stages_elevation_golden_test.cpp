@@ -710,9 +710,8 @@ void check_threads(std::uint64_t seed, std::int32_t n, std::string_view fixture)
 
 }  // namespace
 
-TEST_CASE("P1-01 10.3: 1, 2 and 5 threads give identical grids (N = 128: seeds 0 and 42; small fixture 8 and 31)") {
+TEST_CASE("P1-01 10.3: 1, 2 and 5 threads give identical grids (N = 128: seed 0; small fixture 8 and 31; 512 seeds 0 and 42 in the slow suite)") {
     check_threads(0, 128, "shipped");
-    check_threads(42, 128, "shipped");
     // Lowered passes, so E7 reads P and adj in every row block.
     check_threads(8, 128, "small");
     check_threads(31, 128, "small");

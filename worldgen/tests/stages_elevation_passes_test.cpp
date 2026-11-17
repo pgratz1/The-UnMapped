@@ -1142,6 +1142,14 @@ TEST_CASE("P1-00 10.3: a malformed row of table pass is a corrupt_layer-class er
         {"col outside the layer", "INSERT INTO pass VALUES (1, 1, 1, 0, 120, 20, 900, 100, " +
                                       path_blob({20 * 120 + 10}) + ")"},
         {"negative col", "INSERT INTO pass VALUES (1, 1, 1, 0, -1, 20, 900, 100, " + path_blob({20 * 120 + 10}) + ")"},
+        {"col_y outside the layer", "INSERT INTO pass VALUES (1, 1, 1, 0, 10, 40, 900, 100, " +
+                                        path_blob({20 * 120 + 10}) + ")"},
+        {"kind 2", "INSERT INTO pass VALUES (1, 1, 2, 0, 10, 20, 900, 100, " + path_blob({20 * 120 + 10}) + ")"},
+        {"capped 2", "INSERT INTO pass VALUES (1, 1, 1, 2, 10, 20, 900, 100, " + path_blob({20 * 120 + 10}) + ")"},
+        {"capped 1 on a natural gap", "INSERT INTO pass VALUES (1, 1, 0, 1, 10, 20, 900, 100, " +
+                                          path_blob({20 * 120 + 10}) + ")"},
+        {"a bad second row", "INSERT INTO pass VALUES (1, 1, 1, 0, 10, 20, 900, 100, " + path_blob({20 * 120 + 10}) +
+                                 "); INSERT INTO pass VALUES (2, 1, 1, 0, 10, 20, 900, 100, x'')"},
     };
     int k = 0;
     for (const Bad& b : bads) {
@@ -1152,7 +1160,8 @@ TEST_CASE("P1-00 10.3: a malformed row of table pass is a corrupt_layer-class er
         const auto r = worldgen::inspect::build_report(w.value());
         REQUIRE_FALSE(r.ok());
         CHECK(r.code() == worldgen::db::ErrorCode::corrupt_layer);
-        CHECK(r.error().message.find("pass") != std::string::npos);
+        // P1-00 10.3: the error names table pass; the reason text is free.
+        CHECK(r.error().message.rfind("corrupt table 'pass': ", 0) == 0);
     }
 }
 

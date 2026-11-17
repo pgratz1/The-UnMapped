@@ -23,6 +23,7 @@
 #include "p1_01_elevation_support.hpp"
 #include "p1_01_passes_support.hpp"
 #include "worldgen/db/reader.hpp"
+#include "worldgen/db/testing.hpp"
 #include "worldgen/version.hpp"
 
 namespace {
@@ -119,7 +120,30 @@ TEST_CASE("cli P1-01 9.1, P1-00 10.3: a world with a pass (512, seed 42): rows, 
     REQUIRE(rows.size() == 1U);
     for (std::size_t i = 0; i < rows.size(); ++i) {
         CHECK(rows[i].id == static_cast<std::int64_t>(i) + 1);
-        CHECK(rows[i].path.size() % 4U == 0U);
+        REQUIRE(rows[i].path.size() % 4U == 0U);
+        // The path is u32 little-endian cell indices (9.1), decoded here
+        // byte by byte: every index is a cell of the 512 x 512 map, steps
+        // are between 8-adjacent cells, and the col is on the path.
+        std::vector<std::int64_t> cells_;
+        for (std::size_t k = 0; k < rows[i].path.size(); k += 4) {
+            const std::uint32_t c = static_cast<std::uint32_t>(rows[i].path[k]) |
+                                    (static_cast<std::uint32_t>(rows[i].path[k + 1]) << 8U) |
+                                    (static_cast<std::uint32_t>(rows[i].path[k + 2]) << 16U) |
+                                    (static_cast<std::uint32_t>(rows[i].path[k + 3]) << 24U);
+            REQUIRE(c < 512U * 512U);
+            cells_.push_back(c);
+        }
+        bool col_on_path = false;
+        for (std::size_t k = 0; k < cells_.size(); ++k) {
+            col_on_path = col_on_path || cells_[k] == rows[i].col_y * 512 + rows[i].col_x;
+            if (k > 0) {
+                const std::int64_t dx = cells_[k] % 512 - cells_[k - 1] % 512;
+                const std::int64_t dy = cells_[k] / 512 - cells_[k - 1] / 512;
+                CHECK(dx * dx + dy * dy >= 1);
+                CHECK(dx * dx + dy * dy <= 2);
+            }
+        }
+        CHECK(col_on_path);
     }
     const std::map<std::string, std::string> gold = elevation_golden("shipped-512-s42");
     CHECK(worldgen::to_hex(worldgen::sha256(std::span<const std::uint8_t>(
@@ -191,4 +215,43 @@ TEST_CASE("cli P1-00 10.3: the pass keys of a world without a site, and with no 
     const ProcessResult hn = sb.cli({"hash", "--db", u8(none), "--detail"});
     REQUIRE(hn.exit_code == EXIT_OK);
     CHECK(contains(hn.out, "\ntable pass " + worldgen::to_hex(p004::pass_table_hash({})) + "\n"));
+}
+
+TEST_CASE("cli P1-00 10.3, P0-04 4.5: report refuses a malformed row of table pass: exit 3, nothing on stdout") {
+    Sandbox sb;
+    const fs::path data = write_data_root(sb);
+    const fs::path world = sb.file("w.db");
+    REQUIRE(sb.cli({"generate", "--seed", "42", "--map-size", "512", "--until", "elevation", "--data", u8(data),
+                    "--threads", "4", "--out", u8(world)})
+                .exit_code == EXIT_OK);
+    // The unmodified world reports.
+    REQUIRE(sb.cli({"report", "--db", u8(world)}).exit_code == EXIT_OK);
+    struct Bad {
+        const char* what;
+        const char* sql;
+    };
+    const std::vector<Bad> bads = {
+        {"kind 2", "UPDATE pass SET kind = 2"},
+        {"kind -1", "UPDATE pass SET kind = -1"},
+        {"capped 2", "UPDATE pass SET capped = 2"},
+        {"capped 1 on a natural gap", "UPDATE pass SET kind = 0, capped = 1"},
+        {"col_x outside", "UPDATE pass SET col_x = 512"},
+        {"col_y negative", "UPDATE pass SET col_y = -1"},
+        {"empty path", "UPDATE pass SET path = x''"},
+        {"path length not a multiple of 4", "UPDATE pass SET path = x'010203'"},
+        {"path index out of range", "UPDATE pass SET path = x'00000400'"},  // 262144 = 512 * 512
+        {"a second, bad row", "INSERT INTO pass SELECT 2, range_id, kind, capped, col_x, col_y, saddle_dm, col_dm, "
+                              "x'ffffffff' FROM pass WHERE id = 1"},
+    };
+    int k = 0;
+    for (const Bad& b : bads) {
+        CAPTURE(b.what);
+        const fs::path bad = sb.file("bad" + std::to_string(k++) + ".db");
+        fs::copy_file(world, bad);
+        REQUIRE(worldgen::db::testing::execute_on_file(u8(bad), b.sql).ok());
+        const ProcessResult r = sb.cli({"report", "--db", u8(bad)});
+        CHECK(r.exit_code == EXIT_INPUT);
+        CHECK(r.out.empty());
+        CHECK(starts_with(r.err, "worldgen-cli: error: corrupt table 'pass': "));
+    }
 }
