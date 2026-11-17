@@ -121,14 +121,14 @@ std::string seed_0_report_with_line(const std::string& line) {
     return "# worldgen report v2\n[meta]\n"
            "content_hash = e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\n"
            "format = the-unmapped-world\n"
-           "generator_version = 0.7.0\n"
+           "generator_version = 0.8.0\n"  // P1-04 4.2
            "param.map_size = 1024\n"
-           "schema_version = 2\n"
+           "schema_version = 3\n"  // schema 3, P1-04 12
            "seed = 0\n"
            "seed_phrase =\n"
            "stages =\n" +
            line +
-           "[tables]\nlayer = 0\nmeta = 9\npass = 0\n[layers]\n(none)\n";
+           "[tables]\nbiome = 0\nclimate = 0\nlayer = 0\nmeta = 9\npass = 0\n[layers]\n(none)\n";  // P1-04 9
 }
 
 }  // namespace
@@ -170,13 +170,13 @@ TEST_CASE("report 7: test-pattern world") {
         "# worldgen report v2\n[meta]\n"
         "content_hash = e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\n"
         "format = the-unmapped-world\n"
-        "generator_version = 0.7.0\n"
+        "generator_version = 0.8.0\n"  // P1-04 4.2
         "param.map_size = 1024\n"
-        "schema_version = 2\n"
+        "schema_version = 3\n"  // schema 3, P1-04 12
         "seed = 42\n"
         "seed_phrase =\n"
         "stages = test_pattern\n"
-        "[tables]\nlayer = 3\nmeta = 8\npass = 0\n[layers]\n" +
+        "[tables]\nbiome = 0\nclimate = 0\nlayer = 3\nmeta = 8\npass = 0\n[layers]\n" +  // P1-04 9
         line("test.ramp", "u8", p004::grid_of(256, 256, p004::ramp_cells()), "0", "255") +
         line("test.hash", "u8", p004::grid_of(256, 256, hash), std::to_string(int{*hlo}), std::to_string(int{*hhi})) +
         line("test.noise", "i16", p004::grid_of(256, 256, noise), std::to_string(int{*nlo}), std::to_string(int{*nhi}));
@@ -198,7 +198,8 @@ TEST_CASE("report 7: layer lines for every element type, codec 0, extreme values
     const std::string out = dir.file("w.db");
     REQUIRE(worldgen::stages::testing::write_fixture_world(out, 3, layers).ok());
     const std::string report = report_of(out);
-    const std::string expected_tail = "[tables]\nlayer = 4\nmeta = 8\npass = 0\n[layers]\n"
+    // schema 3: biome and climate listed, empty (P1-04 9).
+    const std::string expected_tail = "[tables]\nbiome = 0\nclimate = 0\nlayer = 4\nmeta = 8\npass = 0\n[layers]\n"
                                       "test.u64 u64 2x1 codec=0 bytes=40 min=0 max=18446744073709551615\n"
                                       "test.i64 i64 1x2 codec=0 bytes=40 min=-9223372036854775808 "
                                       "max=9223372036854775807\n"
@@ -221,7 +222,9 @@ TEST_CASE("report 7: sqlite_* tables are excluded, other tables listed by name")
                 out, "CREATE TABLE aaa (id INTEGER PRIMARY KEY) STRICT; INSERT INTO aaa VALUES (1), (2), (3)")
                 .ok());
     const std::string report = report_of(out);
-    CHECK(report.find("[tables]\naaa = 3\nlayer = 0\nmeta = 8\npass = 0\n[layers]\n") != std::string::npos);
+    // Ascending name with the schema-3 tables (P1-04 9).
+    CHECK(report.find("[tables]\naaa = 3\nbiome = 0\nclimate = 0\nlayer = 0\nmeta = 8\npass = 0\n[layers]\n") !=
+          std::string::npos);
 }
 
 TEST_CASE("report 7: a corrupt layer is a corrupt_layer error") {

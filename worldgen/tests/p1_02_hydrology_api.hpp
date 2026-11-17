@@ -34,6 +34,7 @@
 #include <vector>
 
 #include "p1_01_elevation_api.hpp"
+#include "p1_04_biomes_data.hpp"
 #include "worldgen/data/content.hpp"
 #include "worldgen/data/load_error.hpp"
 #include "worldgen/data/schema.hpp"
@@ -80,6 +81,8 @@ inline TuningLoad load_tuning_text(std::string_view elevation_toml, std::string_
         dir.entries.push_back(wd::MemoryEntry{"climate.toml", std::string(elev_api::CLIMATE_TOML), false});
     }
     wd::MemoryDataRoot root;
+    // The biome data (P1-04 4.1, 4.2), required once the biomes merge registers it.
+    biome_data::add_to(registry, root, dir);
     root.directories.push_back(dir);
     wd::LoadResult<wd::ContentSet> r = wd::load_content_from_memory(registry, root);
     TuningLoad out;

@@ -16,6 +16,7 @@
 #include "cli_test_support.hpp"
 #include "p1_01_elevation_api.hpp"
 #include "p1_01_elevation_support.hpp"
+#include "p1_04_biomes_data.hpp"
 
 namespace {
 
@@ -27,6 +28,7 @@ fs::path write_data_root(const Sandbox& sb) {
     write_text(root / "worldgen" / "elevation.toml", elev_test::elevation_toml());
     write_text(root / "worldgen" / "hydrology.toml", "[worldgen.hydrology]\nriver_min_area_m2 = 125000\nflat_noise = { wavelength_m = 400, octaves = 1, gain = \"0.5\" }\n");
     write_text(root / "worldgen" / "climate.toml", std::string(elev_api::CLIMATE_TOML));  // P1-03 4
+    biome_data::write_to(root);  // the biome kind and worldgen.biomes are required (P1-04 4.1, 4.2)
     return root;
 }
 

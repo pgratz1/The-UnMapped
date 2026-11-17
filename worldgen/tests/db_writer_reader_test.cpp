@@ -48,6 +48,13 @@ constexpr const char* SPEC_DDL_PASS =
     "CREATE TABLE pass (id INTEGER PRIMARY KEY, range_id INTEGER NOT NULL, kind INTEGER NOT NULL, capped "
     "INTEGER NOT NULL, col_x INTEGER NOT NULL, col_y INTEGER NOT NULL, saddle_dm INTEGER NOT NULL, col_dm INTEGER "
     "NOT NULL, path BLOB NOT NULL) STRICT";
+// The DDL of tables biome and climate, schema version 3 (P1-04 3, P1-03 3),
+// copied from the spec text.
+constexpr const char* SPEC_DDL_BIOME =
+    "CREATE TABLE biome (id INTEGER PRIMARY KEY, key TEXT NOT NULL UNIQUE, name TEXT NOT NULL, colour INTEGER NOT "
+    "NULL, water INTEGER NOT NULL) STRICT";
+constexpr const char* SPEC_DDL_CLIMATE =
+    "CREATE TABLE climate (id INTEGER PRIMARY KEY, wind_toward INTEGER NOT NULL) STRICT";
 constexpr const char* EMPTY_SHA256 = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
 
 template <class T>
@@ -84,9 +91,9 @@ Rows expected_empty_meta(const std::string& seed_text, const std::string& phrase
     return {
         {"content_hash", EMPTY_SHA256},
         {"format", "the-unmapped-world"},
-        {"generator_version", "0.7.0"},
+        {"generator_version", "0.8.0"},
         {"param.map_size", "1024"},
-        {"schema_version", "2"},
+        {"schema_version", "3"},
         {"seed", seed_text},
         {"seed_phrase", phrase},
         {"stages", ""},
@@ -118,7 +125,7 @@ void check_header(const std::string& path) {
     CHECK(dbtest::be32(b, 52) == 0);  // largest root page (auto-vacuum)
     CHECK(dbtest::be32(b, 56) == 1);  // text encoding UTF-8
     CHECK(dbtest::be32(b, 60) == static_cast<std::uint32_t>(worldgen::db::SCHEMA_VERSION));  // user version
-    CHECK(dbtest::be32(b, 60) == 2);
+    CHECK(dbtest::be32(b, 60) == 3);
     CHECK(dbtest::be32(b, 64) == 0);           // incremental vacuum
     CHECK(dbtest::be32(b, 68) == 0x554E4D50U);  // application id "UNMP"
     CHECK(b[68] == 'U');
@@ -189,15 +196,32 @@ TEST_CASE("empty world for seed 0: tables, meta rows and values as in section 8 
     check_header(path);
     check_no_real_values(path);
     // Amendment 14.9: the empty world is 4 pages; schema version 2 adds the
-    // root page of table pass (P1-01 9.1), so 5.
-    CHECK(dbtest::read_file(path).size() == 20480);
+    // root page of table pass (P1-01 9.1), so 5; schema version 3 adds one
+    // page per table, biome and climate, "5 -> 7 pages expected" (P1-04 12;
+    // asserted as the spec states it. Note: biome.key is UNIQUE, so SQLite
+    // also creates sqlite_autoindex_biome_1 with its own root page, which
+    // would make 8; reported to the lead).
+    CHECK(dbtest::read_file(path).size() == 7U * 4096U);
 
     dbtest::SqliteFile db(path);
     REQUIRE(db.ok());
-    // sqlite_schema: the three tables and the automatic index of layer.name.
+    // sqlite_schema: the five tables and the automatic indexes of
+    // layer.name and biome.key.
     const Rows schema = db.rows("SELECT type, name, tbl_name FROM sqlite_schema ORDER BY type, name");
-    CHECK(schema == Rows{{"index", "sqlite_autoindex_layer_1", "layer"}, {"table", "layer", "layer"},
-                         {"table", "meta", "meta"}, {"table", "pass", "pass"}});
+    CHECK(schema == Rows{{"index", "sqlite_autoindex_biome_1", "biome"},
+                         {"index", "sqlite_autoindex_layer_1", "layer"},
+                         {"table", "biome", "biome"},
+                         {"table", "climate", "climate"},
+                         {"table", "layer", "layer"},
+                         {"table", "meta", "meta"},
+                         {"table", "pass", "pass"}});
+    // Schema 3 (P1-04 3): biome and climate byte for byte, after pass, empty.
+    CHECK(db.rows("SELECT name FROM sqlite_schema WHERE type = 'table' ORDER BY rowid") ==
+          Rows{{"meta"}, {"layer"}, {"pass"}, {"biome"}, {"climate"}});
+    CHECK(db.rows("SELECT sql FROM sqlite_schema WHERE name = 'biome'") == Rows{{SPEC_DDL_BIOME}});
+    CHECK(db.rows("SELECT sql FROM sqlite_schema WHERE name = 'climate'") == Rows{{SPEC_DDL_CLIMATE}});
+    CHECK(db.rows("SELECT count(*) FROM biome") == Rows{{"0"}});
+    CHECK(db.rows("SELECT count(*) FROM climate") == Rows{{"0"}});
     // DDL byte for byte (5.4), and equal to the header's constants.
     CHECK(db.rows("SELECT sql FROM sqlite_schema WHERE name = 'meta'") == Rows{{SPEC_DDL_META}});
     CHECK(db.rows("SELECT sql FROM sqlite_schema WHERE name = 'layer'") == Rows{{SPEC_DDL_LAYER}});
@@ -214,7 +238,7 @@ TEST_CASE("empty world for seed 0: tables, meta rows and values as in section 8 
     CHECK(db.rows("SELECT hex(sql) FROM sqlite_schema WHERE name = 'pass'") ==
           db.rows("SELECT hex(CAST('" + std::string(SPEC_DDL_PASS) + "' AS BLOB))"));
     CHECK(db.rows("SELECT count(*) FROM pass") == Rows{{"0"}});
-    CHECK(worldgen::db::SCHEMA_VERSION == 2);
+    CHECK(worldgen::db::SCHEMA_VERSION == 3);
 
     // meta: exactly 8 rows, in key order, all TEXT.
     CHECK(db.rows("SELECT key, value FROM meta ORDER BY key") == expected_empty_meta("0", ""));
@@ -224,7 +248,7 @@ TEST_CASE("empty world for seed 0: tables, meta rows and values as in section 8 
     CHECK(db.rows("SELECT count(*) FROM layer") == Rows{{"0"}});
     // Pragmas agree with the header.
     CHECK(db.rows("PRAGMA application_id") == Rows{{"1431194960"}});
-    CHECK(db.rows("PRAGMA user_version") == Rows{{"2"}});
+    CHECK(db.rows("PRAGMA user_version") == Rows{{"3"}});
     CHECK(db.rows("PRAGMA page_size") == Rows{{"4096"}});
     CHECK(db.rows("PRAGMA encoding") == Rows{{"UTF-8"}});
     CHECK(db.rows("PRAGMA auto_vacuum") == Rows{{"0"}});
@@ -242,8 +266,8 @@ TEST_CASE("empty world through the reader (9)") {
     REQUIRE_MESSAGE(opened.ok(), (opened.ok() ? std::string() : opened.error().message));
     const WorldReader& reader = opened.value();
     CHECK(reader.seed() == 0);
-    CHECK(reader.schema_version() == 2);
-    CHECK(reader.generator_version() == "0.7.0");
+    CHECK(reader.schema_version() == 3);
+    CHECK(reader.generator_version() == "0.8.0");
     CHECK(reader.seed_phrase().empty());
     CHECK(reader.map_size() == 1024);
     CHECK(reader.stages().empty());
@@ -758,16 +782,16 @@ TEST_CASE("reader errors are distinct and in the order of section 9 (12.2, 14.2)
         CHECK(open_code(path) == name(ErrorCode::not_world));
         CHECK(dbtest::dir_entries(dir.path()) == before);
     }
-    SUBCASE("user_version 3") {
-        const auto r = WorldReader::open(variant("uv3.db", "PRAGMA user_version = 3"));
+    SUBCASE("user_version 4") {
+        const auto r = WorldReader::open(variant("uv4.db", "PRAGMA user_version = 4"));
         REQUIRE_FALSE(r.ok());
         CHECK(r.code() == ErrorCode::unsupported_schema_version);
         // "world schema version X, this build reads Y"
+        CHECK(r.error().message.find('4') != std::string::npos);
         CHECK(r.error().message.find('3') != std::string::npos);
-        CHECK(r.error().message.find('2') != std::string::npos);
     }
-    SUBCASE("meta.schema_version 3") {
-        CHECK(open_code(variant("msv3.db", "UPDATE meta SET value = '3' WHERE key = 'schema_version'")) ==
+    SUBCASE("meta.schema_version 4") {
+        CHECK(open_code(variant("msv4.db", "UPDATE meta SET value = '4' WHERE key = 'schema_version'")) ==
               name(ErrorCode::unsupported_schema_version));
     }
     SUBCASE("a world missing seed") {
@@ -858,9 +882,9 @@ TEST_CASE("reader errors are distinct and in the order of section 9 (12.2, 14.2)
         CHECK(r.value().meta_entries().size() == 9);
     }
     SUBCASE("validation order: the earlier check wins") {
-        CHECK(open_code(variant("o1.db", "PRAGMA application_id = 1; PRAGMA user_version = 3")) ==
+        CHECK(open_code(variant("o1.db", "PRAGMA application_id = 1; PRAGMA user_version = 4")) ==
               name(ErrorCode::not_world));
-        CHECK(open_code(variant("o2.db", "PRAGMA user_version = 3; DELETE FROM meta WHERE key = 'seed'")) ==
+        CHECK(open_code(variant("o2.db", "PRAGMA user_version = 4; DELETE FROM meta WHERE key = 'seed'")) ==
               name(ErrorCode::unsupported_schema_version));
         CHECK(open_code(variant("o3.db", "DELETE FROM meta WHERE key = 'seed'; UPDATE meta SET value = '7' WHERE key "
                                          "= 'param.map_size'")) == name(ErrorCode::meta_key_missing));

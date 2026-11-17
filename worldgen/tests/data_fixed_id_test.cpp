@@ -449,17 +449,27 @@ TEST_CASE("fixed-id kinds: loading from disk") {
 
 TEST_CASE("fixed-id kinds: the production registry holds worldgen with the implemented stages' ids") {
     // P1-00 6.1: `worldgen`, directory `worldgen`, required, fixed ids
-    // `elevation` (P1-01 4.2), `hydrology` (P1-02 4) and `climate` (P1-03
-    // 4), kept in ascending id order.
+    // `elevation` (P1-01 4.2), `hydrology` (P1-02 4), `climate` (P1-03 4)
+    // and `biomes` (P1-04 4.2), kept in ascending id order. Since the biomes
+    // merge the registry also holds the kind `biome` (P1-00 6.6, P1-04 4.1:
+    // directory `biomes`, required once registered, not fixed-id).
     const wd::KindRegistry builtin = wd::builtin_kinds();
-    REQUIRE(builtin.kinds().size() == 1U);
-    const wd::Kind& k = builtin.kinds()[0];
+    REQUIRE(builtin.kinds().size() == 2U);
+    const wd::Kind* kp = builtin.find("worldgen");
+    REQUIRE(kp != nullptr);
+    const wd::Kind& k = *kp;
     CHECK(k.name == "worldgen");
     CHECK(k.directory == "worldgen");
     CHECK(k.required);
     REQUIRE(k.has_fixed_ids());
-    REQUIRE(k.id_schemas.size() == 3U);
-    CHECK(k.id_schemas[0].id == "climate");
-    CHECK(k.id_schemas[1].id == "elevation");
-    CHECK(k.id_schemas[2].id == "hydrology");
+    REQUIRE(k.id_schemas.size() == 4U);
+    CHECK(k.id_schemas[0].id == "biomes");
+    CHECK(k.id_schemas[1].id == "climate");
+    CHECK(k.id_schemas[2].id == "elevation");
+    CHECK(k.id_schemas[3].id == "hydrology");
+    const wd::Kind* b = builtin.find("biome");
+    REQUIRE(b != nullptr);
+    CHECK(b->directory == "biomes");
+    CHECK(b->required);
+    CHECK_FALSE(b->has_fixed_ids());
 }

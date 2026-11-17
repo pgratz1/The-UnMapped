@@ -25,7 +25,9 @@
 #include <vector>
 
 #include "cli_test_support.hpp"
+#include "p0_04_reference.hpp"
 #include "p1_01_elevation_support.hpp"
+#include "p1_04_biomes_data.hpp"
 #include "worldgen/db/reader.hpp"
 
 namespace {
@@ -62,6 +64,7 @@ fs::path write_data_root(const Sandbox& sb, std::string_view climate = CLIMATE_T
     write_text(root / "worldgen" / "elevation.toml", elev_test::elevation_toml());
     write_text(root / "worldgen" / "hydrology.toml", HYDROLOGY_TOML);
     write_text(root / "worldgen" / "climate.toml", climate);
+    biome_data::write_to(root);  // the biome kind and worldgen.biomes are required (P1-04 4.1, 4.2)
     return root;
 }
 
@@ -100,14 +103,16 @@ std::vector<std::pair<std::string, std::string>> layer_lines(const Sandbox& sb, 
 }
 
 // The "table <name> <hex>" lines of hash --detail, without `meta` (stages
-// differ) and `layer` (it gains the climate rows; the layers themselves are
-// compared by their layer lines).
+// differ), `layer` (it gains the climate rows; the layers themselves are
+// compared by their layer lines) and `climate` (schema 3, P1-03 C7: it gains
+// its row; checked on its own).
 std::vector<std::string> table_lines(const Sandbox& sb, const fs::path& db) {
     const ProcessResult h = sb.cli({"hash", "--db", u8(db), "--detail"});
     REQUIRE(h.exit_code == EXIT_OK);
     std::vector<std::string> out;
     for (const std::string& line : lines_of(h.out)) {
-        if (starts_with(line, "table ") && !starts_with(line, "table meta ") && !starts_with(line, "table layer ")) {
+        if (starts_with(line, "table ") && !starts_with(line, "table meta ") && !starts_with(line, "table layer ") &&
+            !starts_with(line, "table climate ")) {
             out.push_back(line);
         }
     }
@@ -205,6 +210,21 @@ TEST_CASE("cli P1-00 X1, P1-03 3 and 9: generate --until climate at 512; hash, r
         CHECK(lines[i] == hyd[i]);
     }
     CHECK(table_lines(sb, sb.file("c.db")) == table_lines(sb, sb.file("h.db")));
+    // Table climate (schema 3; P1-03 3, C7, X0): one row, id 1, wind_toward
+    // k_w = 1 for seed 0 with wind_weights all 1 (C2); empty under --until
+    // hydrology. Its table hash by hand (P0-04 8).
+    {
+        p004::Encoder e;
+        e.u64(2);
+        e.col_integer(1);
+        e.col_integer(1);
+        const ProcessResult hc = sb.cli({"hash", "--db", u8(sb.file("c.db")), "--detail"});
+        const ProcessResult hh = sb.cli({"hash", "--db", u8(sb.file("h.db")), "--detail"});
+        REQUIRE(hc.exit_code == EXIT_OK);
+        REQUIRE(hh.exit_code == EXIT_OK);
+        CHECK(contains(hc.out, "\ntable climate " + worldgen::to_hex(e.digest()) + "\n"));
+        CHECK(contains(hh.out, "\ntable climate " + worldgen::to_hex(p004::empty_climate_table_hash()) + "\n"));
+    }
     // The reference's layer hashes, when the golden file holds this world.
     const std::map<std::string, std::string> g = golden_case("shipped-512-s0");
     if (!g.empty()) {
@@ -223,10 +243,16 @@ TEST_CASE("cli P1-00 X1, P1-03 3 and 9: generate --until climate at 512; hash, r
     CHECK(contains(rep.out, "\nstages = elevation,hydrology,climate\n"));
     CHECK(contains(rep.out, "\ntemperature i16 512x512 codec=1 "));
     CHECK(contains(rep.out, "\nrainfall u16 512x512 codec=1 "));
+    CHECK(contains(rep.out, "\n[tables]\nbiome = 0\nclimate = 1\n"));  // schema 3 (P1-04 9)
     const std::size_t basin = rep.out.find("\nlargest_basin_share = ");
     REQUIRE(basin != std::string::npos);
-    std::size_t at = basin;
     const std::vector<std::string> want = expected_climate_lines(sb.file("c.db"));
+    // wind_toward (P1-03 9): first of the climate group, SE for k_w = 1.
+    const std::size_t wind = rep.out.find("\nwind_toward = SE\n", basin);
+    CHECK(wind != std::string::npos);
+    REQUIRE(!want.empty());
+    CHECK(wind < rep.out.find("\n" + want[0] + "\n", basin));
+    std::size_t at = basin;
     for (const std::string& line : want) {
         CAPTURE(line);
         const std::size_t k = rep.out.find("\n" + line + "\n", at);
@@ -248,6 +274,7 @@ TEST_CASE("cli P1-00 X1, P1-03 3 and 9: generate --until climate at 512; hash, r
     REQUIRE(rep_h.exit_code == EXIT_OK);
     CHECK_FALSE(contains(rep_h.out, "\ntemperature_c = "));
     CHECK_FALSE(contains(rep_h.out, "\nrain_contrast = "));
+    CHECK_FALSE(contains(rep_h.out, "\nwind_toward = "));  // empty table: omitted (P1-03 9)
 
     // render: each new layer under auto uses its registered palette, the same
     // as the named palette, and not gray.
@@ -282,10 +309,11 @@ TEST_CASE("cli P1-00 X1, P1-03 3 and 9: generate --until climate at 512; hash, r
               .exit_code == EXIT_OK);  // water_depth is u16
 }
 
-TEST_CASE("cli P1-00 10.1: --until climate is accepted; the next stage is not implemented yet; tuning errors are input errors") {
+TEST_CASE("cli P1-00 10.1: --until climate is accepted; the next unimplemented stage is refused; tuning errors are input errors") {
     Sandbox sb;
     const fs::path data = write_data_root(sb);
-    const ProcessResult b = sb.cli({"generate", "--seed", "0", "--map-size", "512", "--until", "biomes", "--data",
+    // biomes is implemented since P1-04; resources is the next stage, not yet.
+    const ProcessResult b = sb.cli({"generate", "--seed", "0", "--map-size", "512", "--until", "resources", "--data",
                                     u8(data), "--out", u8(sb.file("b.db"))});
     CHECK(b.exit_code == EXIT_USAGE);
     CHECK_FALSE(file_exists(sb.file("b.db")));
@@ -327,7 +355,7 @@ TEST_CASE("cli P1-00 X3 (slow): --until climate at 512, seeds 0 and 42, --thread
         CHECK(read_bytes(sb.file(std::string("s") + seed + "-5.db")) == a);
     }
     // The default run includes climate: its first ten layers are those of
-    // --until climate (byte-identical while climate is the last stage).
+    // --until climate (biomes, P1-04, adds layer 11 after them).
     generate(sb, data, {"--seed", "0"}, "default.db");
     const auto dflt = layer_lines(sb, sb.file("default.db"));
     const auto upto = layer_lines(sb, sb.file("s0-1.db"));

@@ -69,10 +69,16 @@ DDL_LAYER = (b"CREATE TABLE layer (id INTEGER PRIMARY KEY, name TEXT NOT NULL UN
 DDL_PASS = (b"CREATE TABLE pass (id INTEGER PRIMARY KEY, range_id INTEGER NOT NULL, kind INTEGER NOT NULL, "
             b"capped INTEGER NOT NULL, col_x INTEGER NOT NULL, col_y INTEGER NOT NULL, saddle_dm INTEGER NOT NULL, "
             b"col_dm INTEGER NOT NULL, path BLOB NOT NULL) STRICT")
-SCHEMA_VERSION = 2
+# Schema version 3 adds tables biome and climate, executed in this order after
+# pass (P1-04 3, 12; P1-03 3); every world has both, empty in a P0 world.
+# biome.key is UNIQUE, so biome has the automatic index sqlite_autoindex_biome_1.
+DDL_BIOME = (b"CREATE TABLE biome (id INTEGER PRIMARY KEY, key TEXT NOT NULL UNIQUE, name TEXT NOT NULL, "
+             b"colour INTEGER NOT NULL, water INTEGER NOT NULL) STRICT")
+DDL_CLIMATE = b"CREATE TABLE climate (id INTEGER PRIMARY KEY, wind_toward INTEGER NOT NULL) STRICT"
+SCHEMA_VERSION = 3
 # The generator version the checked worlds are expected to carry (P0-02 5.5,
 # amendment 12). One edit per version bump; --generator-version overrides it.
-GENERATOR_VERSION = "0.7.0"
+GENERATOR_VERSION = "0.8.0"  # P1-04 4.2: the biomes merge
 EMPTY_SHA = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
 
 
@@ -375,7 +381,10 @@ def check_world(args):
         seed = int(args.seed, 0)
     # schema (P0-02 5.4, 8)
     sch = [(r[0], r[1], r[2], r[3] if r[4] != b"null" else None) for r in w["schema_rows"]]
-    f.check(sch == [(b"index", b"sqlite_autoindex_layer_1", b"layer", None),
+    f.check(sch == [(b"index", b"sqlite_autoindex_biome_1", b"biome", None),
+                    (b"index", b"sqlite_autoindex_layer_1", b"layer", None),
+                    (b"table", b"biome", b"biome", DDL_BIOME),
+                    (b"table", b"climate", b"climate", DDL_CLIMATE),
                     (b"table", b"layer", b"layer", DDL_LAYER),
                     (b"table", b"meta", b"meta", DDL_META),
                     (b"table", b"pass", b"pass", DDL_PASS)], "sqlite_schema rows: %r" % (sch,))
@@ -393,13 +402,17 @@ def check_world(args):
     meta = [(k[1], v[1]) for k, v in w["tables"][b"meta"][1]]
     f.check(meta == expected_meta, "meta rows: %r" % (meta,))
     f.check(all(k[0] == "text" and v[0] == "text" for k, v in w["tables"][b"meta"][1]), "meta values are TEXT")
-    f.check(list(w["tables"]) == [b"layer", b"meta", b"pass"], "tables are layer, meta, pass")
+    f.check(list(w["tables"]) == [b"biome", b"climate", b"layer", b"meta", b"pass"],
+            "tables are biome, climate, layer, meta, pass (schema 3)")
     f.check(w["tables"][b"pass"][1] == [], "table pass has no rows in a P0 world")
+    f.check(w["tables"][b"biome"][1] == [], "table biome has no rows in a P0 world (schema 3)")
+    f.check(w["tables"][b"climate"][1] == [], "table climate has no rows in a P0 world (schema 3)")
     # layers
     layers = w["layers"]
     if not args.test_pattern:
         f.check(layers == [], "no layers in an empty world")
-        f.check(len(data) == 20480, "empty world is 20480 bytes (P0-02 8; 5 pages with table pass)")
+        # P1-04 12: 5 -> 7 pages "expected" with tables biome and climate.
+        f.check(len(data) == 7 * 4096, "empty world is 28672 bytes (P0-02 8; 7 pages, schema 3, P1-04 12)")
     else:
         f.check([(L["id"], L["name"], L["format"], L["width"], L["height"]) for L in layers] == [
             (1, b"test.ramp", b"u8", 256, 256), (2, b"test.hash", b"u8", 256, 256),

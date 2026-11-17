@@ -301,7 +301,8 @@ TEST_CASE("cli 10.3: report on a world with elevation only") {
     for (const auto& [k, v] : p004::meta_rows(0, {}, "test_fixture")) {
         expected += v.empty() ? k + " =\n" : k + " = " + v + "\n";
     }
-    expected += "[tables]\nlayer = 1\nmeta = 8\npass = 0\n[layers]\nelevation i16 5x5 codec=1 bytes=" +
+    // schema 3: tables biome and climate listed, empty (P1-04 9).
+    expected += "[tables]\nbiome = 0\nclimate = 0\nlayer = 1\nmeta = 8\npass = 0\n[layers]\nelevation i16 5x5 codec=1 bytes=" +
                 std::to_string(worldgen::db::encode_layer_blob(g).size()) + " min=-300 max=20000\n";
     expected += p100::with_empty_pass_lines(p100::SQUARE_GEOGRAPHY);
     CHECK(r.out == expected);
