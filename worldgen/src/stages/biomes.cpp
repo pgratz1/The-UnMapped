@@ -103,9 +103,37 @@ struct CompiledRule {
 // beyond the stored range (rq above 10000, tq below -60 or above 50) or an
 // extreme cell value still matches. Skipping is done by widening the
 // compiled bound to the type's own extreme.
+// Fatal ("biomes: rule: <field> outside its schema range") unless every
+// field of a rule lies in its P1-04 4.1 schema range, so that no compiled
+// bound can overflow whatever a caller of a public seam builds by hand
+// (determinism audit S1).
+void check_rule_ranges(const BiomeRule& r) {
+    const auto fx_in = [](Fx v, std::int64_t lo, std::int64_t hi) {
+        return Fx::from_int(lo) <= v && v <= Fx::from_int(hi);
+    };
+    const auto int_in = [](std::int64_t v, std::int64_t lo, std::int64_t hi) { return lo <= v && v <= hi; };
+    const char* bad = nullptr;
+    if (!fx_in(r.temp_min_c, BIOME_TEMP_MIN_C, BIOME_TEMP_MAX_C)) bad = "temp_min_c";
+    else if (!fx_in(r.temp_max_c, BIOME_TEMP_MIN_C, BIOME_TEMP_MAX_C)) bad = "temp_max_c";
+    else if (!int_in(r.rain_min_mm, 0, BIOME_RAIN_UNBOUNDED_MM)) bad = "rain_min_mm";
+    else if (!int_in(r.rain_max_mm, 0, BIOME_RAIN_UNBOUNDED_MM)) bad = "rain_max_mm";
+    else if (!int_in(r.elev_min_m, 0, BIOME_ELEV_MAX_M)) bad = "elev_min_m";
+    else if (!int_in(r.elev_max_m, 0, BIOME_ELEV_MAX_M)) bad = "elev_max_m";
+    else if (!fx_in(r.slope_max, 0, BIOME_SLOPE_MAX)) bad = "slope_max";
+    else if (!fx_in(r.hand_max_m, 0, BIOME_HAND_MAX_M)) bad = "hand_max_m";
+    else if (!int_in(r.coast_max_m, 0, BIOME_COAST_MAX_M)) bad = "coast_max_m";
+    if (bad != nullptr) {
+        throw FatalError(std::string("biomes: rule: ") + bad + " outside its schema range");
+    }
+}
+
 CompiledRule compile_rule(const BiomeRule& r, Fx scale) {
     constexpr std::int64_t I_MIN = std::numeric_limits<std::int64_t>::min();
     constexpr std::int64_t I_MAX = std::numeric_limits<std::int64_t>::max();
+    check_rule_ranges(r);
+    if (scale < Fx::from_ratio(1, 4) || scale > Fx::from_int(4)) {
+        fatal("biomes: rule: the rain scale is outside [0.25, 4]");
+    }
     CompiledRule c;
     c.temp_lo = r.temp_min_c == Fx::from_int(BIOME_TEMP_MIN_C) ? Fx::MIN : r.temp_min_c;
     c.temp_hi = r.temp_max_c == Fx::from_int(BIOME_TEMP_MAX_C) ? Fx::MAX : r.temp_max_c;
