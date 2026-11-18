@@ -355,3 +355,13 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
 - Proposal (Paul, 2026-11-17: "add all of them for more variety"; yes to temperature; yes to the coast): four additions to the natural biomes: heath (dry upland on the lee side of a range), steppe (the dry heart of a rain shadow), wet woodland (along rivers through open country), and fens (marsh allowed to form broad wetlands, enough to be a homeland). Each world gets its own overall temperature, about 2 °C either way. The coastal rain bonus is reduced so lee coasts read as dry. The design doc's list of six biomes (five natural and blighted waste) grows accordingly; races, beasts and the runtime's planting should take the new biomes into account.
 - Interim choice: to be specified as a revision of P1-03 and P1-04 after the first biome stage merges (generator 0.8.0); calibrated on real worlds and reviewed by the world critic before the spec is fixed.
 - Status: open
+
+### Large maps may have unusual worlds
+
+- Date: 2026-11-18
+- Raised by: validation specialist, decided by Paul
+- Design doc section: 4 (geography)
+- Problem: a sweep of twenty worlds at the largest map size found two outside elevation's hard acceptance bounds: one with almost no high ground (3% of land above 500 m; one short coastal range on a broad lowland continent) and one with a summit of 2,931 m against an intended maximum of 2,800 m. The mountain guarantee measures the footprint of the mountain belt, not the height reached, and the height scaling leaves the very top unbounded.
+- Proposal (Paul, 2026-11-18): leave it; this is natural variation between worlds. The affected bounds at the largest size become descriptive: an occasional large world is nearly flat or has an unusually tall peak. This qualifies the earlier entry "Every world has real uplands", which still holds at the two smaller sizes.
+- Interim choice: no change to elevation; the acceptance ranges for the largest size are widened in the specs with the next revision, and the two worlds stay recorded in docs/reviews/p1-04-biomes-validation.md.
+- Status: open
