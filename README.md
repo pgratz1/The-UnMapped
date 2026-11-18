@@ -42,14 +42,14 @@ The full design is in [`docs/design/design.md`](docs/design/design.md).
 
 ## Status
 
-*Last updated: 2026-11-17.*
+*Last updated: 2026-11-18.*
 
 | | |
 | --- | --- |
 | **Current phase** | P1 Geography. P0 Foundation and P2 Godot bring-up and viewer v0 are complete |
 | **Next phase** | P3 History core, after P1 |
 | **Current milestone** | Milestone 0, Geography generator: in progress (P1 and P2) |
-| **Work in flight** | P1: elevation and hydrology are merged, so `generate` writes a continent with ranges, passes, rivers and lakes. Elevation followed five rounds of design exploration and two world-critic reviews (`docs/reviews/`): irregular continents, long segmented ranges with 2,000 to 2,500 m peaks, valleys cut by erosion, and a guaranteed share of mountains in every world. Generator 0.6.0 (2026-11-17) added natural passes at saddles of each range's drainage divide, after five more exploration rounds and three critic reviews: a pass is cut by at most 500 m, so naturally low saddles become low gates and others stay high cols, and about two in five are walkable end to end at the default map size. Pass sites are stored in a `pass` table for the history simulation (the first schema change, version 2). Very steep faces are bounded by a final slope-relaxing step. Climate merged the same day (generator 0.7.0): temperature falls with height and from south to north, and each world has one prevailing wind that makes ranges wet on the windward side and dry in the lee. Biomes merged on 2026-11-18 (generator 0.8.0, schema 3): alpine, highland moor, marsh, forest and grassland by rules held as data, with forest thresholds scaled to map size; the biome definitions and the world's wind direction are stored in the world file. In progress: a revision adding heath, steppe, wet woodland and fens, a per-world temperature offset and a thinner coastal forest (Paul's decisions of 2026-11-17; design exploration under way). After it: resources and habitability, and regions. |
+| **Work in flight** | P1: elevation and hydrology are merged, so `generate` writes a continent with ranges, passes, rivers and lakes. Elevation followed five rounds of design exploration and two world-critic reviews (`docs/reviews/`): irregular continents, long segmented ranges with 2,000 to 2,500 m peaks, valleys cut by erosion, and a guaranteed share of mountains in every world. Generator 0.6.0 (2026-11-17) added natural passes at saddles of each range's drainage divide, after five more exploration rounds and three critic reviews: a pass is cut by at most 500 m, so naturally low saddles become low gates and others stay high cols, and about two in five are walkable end to end at the default map size. Pass sites are stored in a `pass` table for the history simulation (the first schema change, version 2). Very steep faces are bounded by a final slope-relaxing step. Climate merged the same day (generator 0.7.0): temperature falls with height and from south to north, and each world has one prevailing wind that makes ranges wet on the windward side and dry in the lee. Biomes merged on 2026-11-18 (generator 0.8.0, schema 3): alpine, highland moor, marsh, forest and grassland by rules held as data, with forest thresholds scaled to map size; the biome definitions and the world's wind direction are stored in the world file. A variety revision merged the same day (generator 0.9.0, schema 4; Paul's decisions of 2026-11-17): heath, steppe, wet woodland along large rivers and fens on wet lowland bring the count to nine natural biomes, each world draws its own temperature offset of up to 2 °C either way (stored in the world file), and the coastal forest ring is thinner. Validated on 271 worlds; a world-critic review (`docs/reviews/p1-04b-biome-variety-critic.md`) notes two follow-ups, a visible heath stripe on some worlds and blocky fen patches on the largest maps. Next: resources and habitability, then regions. |
 | **`main`** | Builds and passes all tests on Linux (GCC, Clang, Clang with sanitizers) and Windows (MSVC), in debug and release |
 
 **What "P0 done" means.** The phase's exit check is that an empty world file is byte-identical across all three compilers and that `worldgen-cli hash` proves it in continuous integration. It does: eight test worlds, six empty and two holding test layers, are identical across all seven build configurations, and each matches its recorded golden hash. CI repeats the comparison on every push. With geography stages merged the comparison covers twelve worlds, four of them full maps with elevation and hydrology at 512 and 1024.
@@ -81,7 +81,7 @@ The first block of work is the world generator prototype: seven phases, P0 to P6
 | Phase | Delivers | Depends on | Status |
 | --- | --- | --- | --- |
 | **P0 Foundation** | Repository layout, CMake presets, vendored dependencies, CI on three compilers, the deterministic core, the reproducible SQLite layer, the TOML loader, `worldgen-cli` | — | **Done** 2026-11-15, reviewed |
-| **P1 Geography** | Elevation, erosion, hydrology, climate, biomes, resources and regions, each writing its layer; image export per layer | P0 | **In progress** since 2026-11-15: first three specs approved, shared foundation, elevation and hydrology merged (2026-11-16); natural passes merged (2026-11-17, generator 0.6.0, schema 2); climate merged (2026-11-17, generator 0.7.0); biomes merged (2026-11-18, generator 0.8.0, schema 3); biome variety revision in exploration |
+| **P1 Geography** | Elevation, erosion, hydrology, climate, biomes, resources and regions, each writing its layer; image export per layer | P0 | **In progress** since 2026-11-15: first three specs approved, shared foundation, elevation and hydrology merged (2026-11-16); natural passes merged (2026-11-17, generator 0.6.0, schema 2); climate merged (2026-11-17, generator 0.7.0); biomes merged (2026-11-18, generator 0.8.0, schema 3); biome variety revision merged (2026-11-18, generator 0.9.0, schema 4); resources and habitability, and regions, remain |
 | **P2 Godot bring-up and viewer v0** | Godot version pinned, C++ extension building on Linux and Windows, `world.db` reader bound into Godot, 2D map with switchable layers | P0; parallel with P1 | **Done** 2026-11-15, awaiting Paul's hands-on review. Godot 4.7.2 and godot-cpp 10.0.0 pinned; the extension builds and its headless check passes on Linux and Windows |
 | **P3 History core** | Race and culture definitions, ages and the awakening schedule, active phases and quiet intervals, civilizations, settlements, wars, ruin, the event log, a text history report | P1 | Not started |
 | **P4 Viewer v1** | Timeline scrubber, territory by year, settlement and site markers, browser for civilizations and events | P2, P3; parallel with P5 | Not started |
@@ -125,7 +125,7 @@ Around them: about 300 automated test cases, 2,201 golden vectors for the core p
 
 ## What works today
 
-`worldgen-cli` writes world files and inspects them. A generated world currently holds a table of mountain passes and a table of biome definitions, the world's wind direction, and eleven geography layers (elevation; water, water depth, flow direction, flow accumulation, rivers, lakes and distance to the coast from hydrology; temperature and rainfall from climate; biomes) on a 512, 1024 or 2048 cell map at 16 m per cell.
+`worldgen-cli` writes world files and inspects them. A generated world currently holds a table of mountain passes and a table of biome definitions, the world's wind direction and temperature offset, and eleven geography layers (elevation; water, water depth, flow direction, flow accumulation, rivers, lakes and distance to the coast from hydrology; temperature and rainfall from climate; biomes) on a 512, 1024 or 2048 cell map at 16 m per cell.
 
 ```
 $ worldgen-cli generate --seed-phrase "The Unmapped"
@@ -134,16 +134,16 @@ $ worldgen-cli generate --seed-phrase "The Unmapped"
 $ worldgen-cli report --db ~/.cache/the-unmapped/out/world-15629206466951235176.db
 # worldgen report v2
 [meta]
-content_hash = 5129d6425219153ff571b6ed4c04811110c4f8d0868d1f7f8d80942414218938
+content_hash = 93238a8f58d2b0b88c41cb6b17018886e967c9f356149cec052e9805db1562e6
 format = the-unmapped-world
-generator_version = 0.8.0
+generator_version = 0.9.0
 param.map_size = 1024
-schema_version = 3
+schema_version = 4
 seed = 15629206466951235176
 seed_phrase = the unmapped
 stages = elevation,hydrology,climate,biomes
 [tables]
-biome = 8
+biome = 12
 climate = 1
 layer = 11
 meta = 8
@@ -157,9 +157,9 @@ flow_accum u32 1024x1024 codec=1 bytes=468500 min=0 max=120835
 river u8 1024x1024 codec=1 bytes=27457 min=0 max=8
 lake u32 1024x1024 codec=1 bytes=2234 min=0 max=4
 coast_dist i16 1024x1024 codec=1 bytes=1022256 min=-6579 max=5008
-temperature i16 1024x1024 codec=1 bytes=274872 min=-55 max=94
-rainfall u16 1024x1024 codec=1 bytes=1026588 min=497 max=4535
-biome u8 1024x1024 codec=1 bytes=33855 min=1 max=7
+temperature i16 1024x1024 codec=1 bytes=274872 min=-65 max=84
+rainfall u16 1024x1024 codec=1 bytes=1019690 min=497 max=4535
+biome u8 1024x1024 codec=1 bytes=48513 min=1 max=12
 [geography]
 cells = 1048576
 land_cells = 419430
@@ -196,15 +196,16 @@ major_rivers = 15
 longest_river_m = 11685
 largest_basin_share = 0.2881
 wind_toward = NW
-temperature_c = -5.5 0.3 5.2 7.1 8.7
-rainfall_mm = 497 553 709 1466 4535
-land_below_0c = 0.0833
-rain_contrast = 2.6510
-biome_share = temperate_forest:0.3330 grassland:0.3411 marsh:0.0228 highland_moor:0.1954 alpine:0.1078 blighted_waste:0.0000
-biome_patches = 252
+temp_offset_c = -1.0
+temperature_c = -6.5 -0.7 4.2 6.1 7.7
+rainfall_mm = 497 553 706 1457 4535
+land_below_0c = 0.1249
+rain_contrast = 2.6347
+biome_share = temperate_forest:0.2927 grassland:0.1449 marsh:0.0053 highland_moor:0.1038 alpine:0.1533 blighted_waste:0.0000 heath:0.0798 steppe:0.1646 wet_woodland:0.0182 fen:0.0374
+biome_patches = 475
 
 $ worldgen-cli hash --db ~/.cache/the-unmapped/out/world-15629206466951235176.db
-bca3b5c9be0dae55c56b2afb00b8d7449ca95abe329a3b66215c9a0938303e52
+78b2c0b6d1c2f31ce896954a719f94046e8c0e0322127d741bd2f100f224d00d
 
 $ worldgen-cli render --db ~/.cache/the-unmapped/out/world-15629206466951235176.db --composite map
 /home/you/.cache/the-unmapped/out/world-15629206466951235176.map.png
@@ -218,7 +219,7 @@ The rainfall layer of the same world (`render --layer rainfall`): dark is wet. T
 
 ![Rainfall map of the same world](docs/images/p1-rainfall.jpg)
 
-The biome map (`render --composite biomes`): dark green is forest, pale green grassland, grey-green marsh, mauve highland moor, white alpine ground:
+The biome map (`render --composite biomes`): dark green is forest, pale green grassland, straw yellow steppe, blue-green wet woodland along the large rivers, pale teal marsh, grey-brown fen, mauve highland moor, rust brown heath and pale grey alpine ground. This world drew a temperature offset of −1.0 °C, so it is a cold one:
 
 ![Biome map of the same world](docs/images/p1-biomes.jpg)
 

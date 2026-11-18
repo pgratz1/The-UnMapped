@@ -6,7 +6,7 @@ A single-player, first-person, open-world RPG whose world and history are genera
 
 - **Design doc:** `docs/design/design.md`. It is the specification for the whole project. Read the sections relevant to your task before starting.
 - **Current work:** the world generator prototype, section 13 of the design doc (phases P0 to P6).
-- **Current phase:** P1 Geography. P0 Foundation and P2 (Godot bring-up and viewer v0) are done. The elevation, hydrology, climate and biome stages (specs P1-01 to P1-04) are merged; a biome variety revision is being explored; resources and habitability, and regions (specs P1-05, P1-06) follow.
+- **Current phase:** P1 Geography. P0 Foundation and P2 (Godot bring-up and viewer v0) are done. The elevation, hydrology, climate and biome stages (specs P1-01 to P1-04) are merged, including the biome variety revision (generator 0.9.0, schema 4); resources and habitability, and regions (specs P1-05, P1-06) follow.
 - **Next phase:** P3 History core, after Paul's review of P1.
 
 ## The design doc is read-only
@@ -136,11 +136,11 @@ Approximate full `ctest` time on a 6-core Linux machine:
 
 | Preset | `ctest` |
 | --- | --- |
-| `linux-gcc-release`, `linux-clang-release` | about 110 seconds |
-| `linux-gcc-debug`, `linux-clang-debug` | about four and a half minutes |
-| `linux-clang-asan` | about 18 minutes (`worldgen-tests` alone about 12) |
+| `linux-gcc-release`, `linux-clang-release` | about two and a half minutes |
+| `linux-gcc-debug`, `linux-clang-debug` | about ten minutes |
+| `linux-clang-asan` | about 42 minutes (`worldgen-tests` alone about 30) |
 
-Measured 2026-11-16 at generator 0.4.0. Windows times are not measured yet. `worldgen-tests` takes most of it. For quick iteration use `linux-gcc-release` or `linux-clang-release` (run a single doctest executable with `-tc=` or `-ts=` for narrower checks); run both debug presets and `linux-clang-asan` before handing work on.
+Measured 2026-11-18 at generator 0.9.0. Windows times are not measured yet. `worldgen-tests` takes most of it. For quick iteration use `linux-gcc-release` or `linux-clang-release` (run a single doctest executable with `-tc=` or `-ts=` for narrower checks); run both debug presets and `linux-clang-asan` before handing work on.
 
 ### Determinism lint
 
