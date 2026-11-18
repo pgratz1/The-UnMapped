@@ -90,6 +90,7 @@ inline constexpr std::string_view BIOME_DEFINITIONS_TOML =
     "rules = []\n"
     "fertility = 0\n"
     "timber = 0\n"
+    "forage = 0\n"
     "region_noun = \"Sea\"\n"
     "\n"
     "[biome.lake]\n"
@@ -103,6 +104,7 @@ inline constexpr std::string_view BIOME_DEFINITIONS_TOML =
     "rules = []\n"
     "fertility = 0\n"
     "timber = 0\n"
+    "forage = 0\n"
     "region_noun = \"Mere\"\n"
     "\n"
     "[biome.temperate_forest]\n"
@@ -115,6 +117,7 @@ inline constexpr std::string_view BIOME_DEFINITIONS_TOML =
     "fallback = false\n"
     "fertility = \"0.7\"\n"
     "timber = 1\n"
+    "forage = \"0.5\"\n"
     "region_noun = \"Wood\"\n"
     "\n"
     "[[biome.temperate_forest.rules]]\n"
@@ -141,6 +144,7 @@ inline constexpr std::string_view BIOME_DEFINITIONS_TOML =
     "rules = []\n"
     "fertility = 1\n"
     "timber = \"0.15\"\n"
+    "forage = \"0.3\"\n"
     "region_noun = \"Downs\"\n"
     "\n"
     "[biome.marsh]\n"
@@ -153,6 +157,7 @@ inline constexpr std::string_view BIOME_DEFINITIONS_TOML =
     "fallback = false\n"
     "fertility = \"0.45\"\n"
     "timber = \"0.3\"\n"
+    "forage = \"0.8\"\n"
     "region_noun = \"Marsh\"\n"
     "\n"
     "[[biome.marsh.rules]]\n"
@@ -178,6 +183,7 @@ inline constexpr std::string_view BIOME_DEFINITIONS_TOML =
     "fallback = false\n"
     "fertility = \"0.3\"\n"
     "timber = \"0.1\"\n"
+    "forage = \"0.25\"\n"
     "region_noun = \"Moor\"\n"
     "\n"
     "[[biome.highland_moor.rules]]\n"
@@ -203,6 +209,7 @@ inline constexpr std::string_view BIOME_DEFINITIONS_TOML =
     "fallback = false\n"
     "fertility = 0\n"
     "timber = 0\n"
+    "forage = \"0.05\"\n"
     "region_noun = \"Peaks\"\n"
     "\n"
     "[[biome.alpine.rules]]\n"
@@ -229,6 +236,7 @@ inline constexpr std::string_view BIOME_DEFINITIONS_TOML =
     "rules = []\n"
     "fertility = 0\n"
     "timber = 0\n"
+    "forage = 0\n"
     "region_noun = \"Waste\"\n"
     "\n"
     "[biome.heath]\n"
@@ -241,6 +249,7 @@ inline constexpr std::string_view BIOME_DEFINITIONS_TOML =
     "fallback = false\n"
     "fertility = \"0.2\"\n"
     "timber = \"0.05\"\n"
+    "forage = \"0.2\"\n"
     "region_noun = \"Heath\"\n"
     "\n"
     "[[biome.heath.rules]]\n"
@@ -264,8 +273,9 @@ inline constexpr std::string_view BIOME_DEFINITIONS_TOML =
     "water_body = \"none\"\n"
     "priority = 15\n"
     "fallback = false\n"
-    "fertility = \"0.6\"\n"
+    "fertility = \"0.7\"\n"
     "timber = \"0.05\"\n"
+    "forage = \"0.35\"\n"
     "region_noun = \"Steppe\"\n"
     "\n"
     "[[biome.steppe.rules]]\n"
@@ -291,6 +301,7 @@ inline constexpr std::string_view BIOME_DEFINITIONS_TOML =
     "fallback = false\n"
     "fertility = \"0.5\"\n"
     "timber = \"0.7\"\n"
+    "forage = \"0.7\"\n"
     "region_noun = \"Carr\"\n"
     "\n"
     "[[biome.wet_woodland.rules]]\n"
@@ -316,6 +327,7 @@ inline constexpr std::string_view BIOME_DEFINITIONS_TOML =
     "fallback = false\n"
     "fertility = \"0.25\"\n"
     "timber = \"0.2\"\n"
+    "forage = \"0.6\"\n"
     "region_noun = \"Fen\"\n"
     "\n"
     "[[biome.fen.rules]]\n"
@@ -331,9 +343,47 @@ inline constexpr std::string_view BIOME_DEFINITIONS_TOML =
     "river_dist_max_m = 32767\n"
     "wet_frac_min = \"0.45\"\n";
 
+// worldgen/resources.toml: the shipped values (P1-05 4.2).
+inline constexpr std::string_view RESOURCES_TOML =
+    "[worldgen.resources]\n"
+    "fresh_reach_m = 400\n"
+    "fresh_rain_weight = \"0.4\"\n"
+    "fresh_rain_lo_mm = 300\n"
+    "fresh_rain_hi_mm = 1500\n"
+    "fert_slope_lo = \"0.18\"\n"
+    "fert_slope_hi = \"0.47\"\n"
+    "alluvial_bonus = \"0.15\"\n"
+    "alluvial_hand_m = 5\n"
+    "timber_slope_lo = \"0.7\"\n"
+    "timber_slope_hi = \"1.4\"\n"
+    "fish_river_class_min = 4\n"
+    "fish_weight = \"0.3\"\n"
+    "fish_reach_m = 300\n"
+    "ore_noise = { wavelength_m = 1500, octaves = 3, gain = \"0.5\" }\n"
+    "ore_vein_lo = 0\n"
+    "ore_vein_hi = \"0.2\"\n"
+    "ore_elev_lo_m = 100\n"
+    "ore_elev_hi_m = 600\n"
+    "ore_lowland = \"0.15\"\n"
+    "ore_slope_base = \"0.65\"\n"
+    "ore_slope_lo = \"0.3\"\n"
+    "ore_slope_hi = \"1.0\"\n"
+    "walk_slope_max = \"0.7002\"\n"
+    "walk_min_area_m2 = 250000\n"
+    "hab_slope_lo = \"0.18\"\n"
+    "hab_slope_hi = \"0.47\"\n"
+    "hab_weight_fertility = 70\n"
+    "hab_weight_forage = 15\n"
+    "hab_weight_timber = 10\n"
+    "hab_weight_ore = 5\n"
+    "hab_water_min = \"0.25\"\n"
+    "hab_flood_hand_m = \"0.5\"\n"
+    "hab_flood_factor = \"0.75\"\n"
+    "hab_pocket_factor = \"0.25\"\n";
+
 // Adds what the production registry requires besides the stage tunings
-// given by a test: worldgen/biomes.toml when the id `biomes` is registered
-// and the directory `biomes` with the twelve definitions when the kind
+// given by a test: worldgen/biomes.toml when the id `biomes` is registered,
+// worldgen/resources.toml when the id `resources` is, and the directory `biomes` with the twelve definitions when the kind
 // `biome` is (P1-04 4). The `worldgen` directory must already be in root.
 inline void add_biome_fixtures(worldgen::data::MemoryDataRoot& root) {
     namespace wd = worldgen::data;
@@ -343,6 +393,13 @@ inline void add_biome_fixtures(worldgen::data::MemoryDataRoot& root) {
         for (wd::MemoryDirectory& d : root.directories) {
             if (d.name == "worldgen") {
                 d.entries.push_back(wd::MemoryEntry{"biomes.toml", std::string(BIOMES_TOML), false});
+            }
+        }
+    }
+    if (kind != nullptr && kind->schema_for("resources") != nullptr) {
+        for (wd::MemoryDirectory& d : root.directories) {
+            if (d.name == "worldgen") {
+                d.entries.push_back(wd::MemoryEntry{"resources.toml", std::string(RESOURCES_TOML), false});
             }
         }
     }

@@ -80,3 +80,11 @@ target_sources(worldgen-cli-tests PRIVATE cli_biomes_test.cpp)
 target_compile_definitions(worldgen-cli-tests PRIVATE
     UNMAPPED_P1_04_GOLDEN_PATH="${PROJECT_SOURCE_DIR}/worldgen/tests/golden/p1-04-biomes.txt"
 )
+# generate --until resources, report keys, corrupt resources layers, render
+# with the `score` palette and the render help (P1-05 3 and 9; P1-00 10.1 to
+# 10.3), against the resources golden vectors and pixels decoded from the
+# PNG. Slow checks in the doctest suite "resources-slow".
+target_sources(worldgen-cli-tests PRIVATE cli_resources_test.cpp)
+target_compile_definitions(worldgen-cli-tests PRIVATE
+    UNMAPPED_P1_05_GOLDEN_PATH="${PROJECT_SOURCE_DIR}/worldgen/tests/golden/p1-05-resources.txt"
+)

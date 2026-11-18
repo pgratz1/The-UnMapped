@@ -8,6 +8,7 @@ priority = 45
 fallback = false
 fertility = "0.25"
 timber = "0.2"
+forage = "0.6"
 region_noun = "Fen"
 
 [[biome.fen.rules]]

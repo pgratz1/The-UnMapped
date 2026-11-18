@@ -81,7 +81,7 @@ DDL_CLIMATE = (b"CREATE TABLE climate (id INTEGER PRIMARY KEY, wind_toward INTEG
 SCHEMA_VERSION = 4
 # The generator version the checked worlds are expected to carry (P0-02 5.5,
 # amendment 12). One edit per version bump; --generator-version overrides it.
-GENERATOR_VERSION = "0.9.0"
+GENERATOR_VERSION = "0.10.0"
 EMPTY_SHA = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
 
 

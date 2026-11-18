@@ -33,6 +33,11 @@ namespace worldgen::geo {
 // below).
 [[nodiscard]] std::int64_t slope_s2_limit(Fx t);
 
+// The slope tangent of G8 (P1-00 7.8): tan = div_int(from_raw(isqrt_u128(S2
+// x 2^64)), 320), an Fx. Fatal if S2 < 0 or S2 >= 2^34 (S2 < 2^33 on any
+// i16 elevation). Examples: 9216 -> raw 1288490189 (0.3); 102400 -> ONE.
+[[nodiscard]] Fx slope_tangent(std::int64_t s2);
+
 // "Not steeper than t" (P1-00 7.8), exactly: S2 x 2^64 <= (320 t.raw)^2.
 // Fatal if S2 < 0 or as slope_s2_limit.
 [[nodiscard]] bool slope_not_steeper(std::int64_t s2, Fx t);

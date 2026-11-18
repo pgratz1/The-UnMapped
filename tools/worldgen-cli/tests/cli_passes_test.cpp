@@ -40,6 +40,7 @@ fs::path write_data_root(const Sandbox& sb) {
                "\"0.5\" }\n");
     write_text(root / "worldgen" / "climate.toml", std::string(elev_api::CLIMATE_TOML));  // P1-03 4
     write_text(root / "worldgen" / "biomes.toml", std::string(elev_api::BIOMES_TOML));  // P1-04 4.2
+    write_text(root / "worldgen" / "resources.toml", std::string(elev_api::RESOURCES_TOML));  // P1-05 4.2
     fs::create_directories(root / "biomes");
     write_text(root / "biomes" / "biomes.toml", std::string(elev_api::BIOME_DEFINITIONS_TOML));  // P1-04 4.1
     return root;
@@ -179,7 +180,7 @@ TEST_CASE("cli P1-01 9.1, P1-00 10.3: a world with a pass (512, seed 42): rows, 
     REQUIRE(rep.exit_code == EXIT_OK);
     CHECK(contains(rep.out, "\nschema_version = 4\n"));
     CHECK(contains(rep.out, "\ngenerator_version = " + std::string(worldgen::GENERATOR_VERSION) + "\n"));
-    CHECK(std::string(worldgen::GENERATOR_VERSION) == "0.9.0");
+    CHECK(std::string(worldgen::GENERATOR_VERSION) == "0.10.0");
     CHECK(contains(rep.out, "\n[tables]\nbiome = 0\nclimate = 0\nlayer = 1\nmeta = 8\npass = " + std::to_string(rows.size()) + "\n[layers]\n"));
     const std::vector<std::string> want =
         elev_test::report_pass_lines(worldgen::geo::Grid{512, 512}, *e, rows);

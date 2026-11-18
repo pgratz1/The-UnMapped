@@ -8,6 +8,7 @@ priority = 40
 fallback = false
 fertility = "0.45"
 timber = "0.3"
+forage = "0.8"
 region_noun = "Marsh"
 
 [[biome.marsh.rules]]

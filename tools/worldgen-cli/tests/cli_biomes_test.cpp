@@ -644,11 +644,11 @@ TEST_CASE("cli P1-00 10.2: render --help lists every palette --palette accepts, 
     CHECK(contains(t, "biomes"));
 }
 
-TEST_CASE("cli P1-00 10.1: --until biomes is accepted; the stage after it is not implemented yet") {
+TEST_CASE("cli P1-00 10.1: --until biomes is accepted; the stage after resources is not implemented yet") {
     Sandbox sb;
     const fs::path data = write_data_root(sb);
     const ProcessResult r = sb.cli({"generate", "--seed", "1", "--map-size", "512", "--data", u8(data), "--until",
-                                    "resources", "--out", u8(sb.file("r.db"))});
+                                    "regions", "--out", u8(sb.file("r.db"))});
     CHECK(r.exit_code == EXIT_USAGE);
     // A data root without the biome definitions is an input error (exit 3).
     const fs::path bare = sb.file("bare");
@@ -657,6 +657,7 @@ TEST_CASE("cli P1-00 10.1: --until biomes is accepted; the stage after it is not
     write_text(bare / "worldgen" / "hydrology.toml", HYDROLOGY_TOML);
     write_text(bare / "worldgen" / "climate.toml", std::string(elev_api::CLIMATE_TOML));
     write_text(bare / "worldgen" / "biomes.toml", biome_data::TUNING_TOML);
+    write_text(bare / "worldgen" / "resources.toml", biome_data::RESOURCES_TOML);
     const ProcessResult m = sb.cli({"generate", "--seed", "1", "--map-size", "512", "--data", u8(bare), "--until",
                                     "none", "--out", u8(sb.file("m.db"))});
     CHECK(m.exit_code == EXIT_INPUT);

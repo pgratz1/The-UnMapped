@@ -38,19 +38,20 @@ enum class Palette : std::uint8_t {
     temperature = 8,      // "temperature": tenths of a degree Celsius (P1-03 9)
     rainfall = 9,         // "rainfall": millimetres per year (P1-03 9)
     biome = 10,           // "biome": the colour of the table `biome` row of the code (P1-04 9)
+    score = 11,           // "score": the score ramp of P1-05 9 (u8 scores 0..255)
 };
 
 // Every palette in enumerator order, which is the registration order (for
 // --help text and tests).
-inline constexpr std::array<Palette, 11> ALL_PALETTES = {
-    Palette::gray,      Palette::hypsometric, Palette::water,           Palette::river,
-    Palette::log2,      Palette::direction,   Palette::ids,             Palette::signed_distance,
-    Palette::temperature, Palette::rainfall,  Palette::biome,
+inline constexpr std::array<Palette, 12> ALL_PALETTES = {
+    Palette::gray,        Palette::hypsometric, Palette::water,  Palette::river,
+    Palette::log2,        Palette::direction,   Palette::ids,    Palette::signed_distance,
+    Palette::temperature, Palette::rainfall,    Palette::biome,  Palette::score,
 };
 
 // The --palette text of a palette: "gray", "hypsometric", "water", "river",
-// "log2", "direction", "ids", "signed", "temperature", "rainfall", "biome"
-// (P1-00 10.2, P1-03 9, P1-04 9).
+// "log2", "direction", "ids", "signed", "temperature", "rainfall", "biome",
+// "score" (P1-00 10.2, P1-03 9, P1-04 9, P1-05 9).
 [[nodiscard]] std::string_view palette_name(Palette palette) noexcept;
 
 // The palette for a --palette value other than "auto" (one of the names of
@@ -61,8 +62,9 @@ inline constexpr std::array<Palette, 11> ALL_PALETTES = {
 // 10.2, P0-04 amendment 16b): elevation -> hypsometric, water -> water,
 // river -> river, flow_accum -> log2, flow_dir -> direction, lake -> ids,
 // coast_dist -> signed, temperature -> temperature, rainfall -> rainfall
-// (P1-03 9), biome -> biome (P1-04 9); every other layer (water_depth
-// included) -> gray.
+// (P1-03 9), biome -> biome (P1-04 9), fertility, ore, timber, fresh_water,
+// forage, habitability -> score and walk_area -> ids (P1-05 9); every other
+// layer (water_depth included) -> gray.
 [[nodiscard]] Palette registered_palette(std::string_view layer_name) noexcept;
 
 // Whether a palette suits a grid (P0-04 amendment 16b: "a named palette
@@ -79,6 +81,7 @@ inline constexpr std::array<Palette, 11> ALL_PALETTES = {
 //   temperature i16 (the catalogue type, as hypsometric)
 //   rainfall    u16 (the catalogue type)
 //   biome       u8 (the catalogue type)
+//   score       u8 (the catalogue type of the score layers, P1-05 9)
 // The grid must be valid (db::is_valid_layer_grid); an invalid grid suits
 // no palette.
 [[nodiscard]] bool palette_suits(Palette palette, const db::LayerGrid& grid) noexcept;
@@ -168,6 +171,19 @@ inline constexpr std::array<RampStop, 9> RAINFALL_STOPS = {{
     {4000, {1, 102, 94}},
     {10000, {0, 60, 48}},
 }};
+
+// The score ramp on t = a u8 score 0..255 (P1-05 9).
+inline constexpr std::array<RampStop, 5> SCORE_STOPS = {{
+    {0, {68, 1, 84}},
+    {64, {59, 82, 139}},
+    {128, {33, 145, 140}},
+    {192, {94, 201, 98}},
+    {255, {253, 231, 37}},
+}};
+
+// ramp_colour(SCORE_STOPS, t) (P1-05 9). Any int64; e.g. 100 -> (44, 117,
+// 140).
+[[nodiscard]] Rgb score_colour(std::int64_t t);
 
 // ramp_colour(TEMPERATURE_STOPS, t) and ramp_colour(RAINFALL_STOPS, t)
 // (P1-03 9). Any int64.
