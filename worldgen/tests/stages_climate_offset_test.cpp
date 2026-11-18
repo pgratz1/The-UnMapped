@@ -11,6 +11,7 @@
 
 #include <algorithm>
 #include <cstdint>
+#include <map>
 #include <set>
 #include <string>
 #include <vector>
@@ -194,6 +195,27 @@ TEST_CASE("P1-03 C2b, P1-00 3: the stream geo.climate.temp_offset is registered;
     CHECK(std::find(names.begin(), names.end(), std::string_view("geo.biomes.wet_jitter")) == names.end());
     CHECK(std::find(names.begin(), names.end(), std::string_view("geo.biomes.elev_jitter")) == names.end());
     CHECK(worldgen::stream_key(0, STREAM_OFFSET) != worldgen::stream_key(0, STREAM_WIND));
+}
+
+TEST_CASE("P1-03 golden, invariant 8: with M = 0 the temperature item is the 0.8.0 one; offsets at both extremes") {
+    // fe2a4438... is shipped-64-s0's temperature in the 0.8.0 file (offset 0, and the coast bonus does not touch
+    // temperature); shipped-64-s0-off0 and -off004 (M = 0) must reproduce it.
+    const std::string t080 = "fe2a4438b0ad7647aaa8bd8e6dc54c33095b656b82ff87b5a0cd3ef48f722c22";
+    std::map<std::string, std::string> offsets;
+    for (const GoldenCase& c : read_golden(UNMAPPED_P1_03_GOLDEN_PATH)) {
+        if (c.name == "shipped-64-s0-off0" || c.name == "shipped-64-s0-off004") {
+            CHECK(c.get("temperature") == t080);
+        }
+        if (c.fixture != "overflow") {
+            offsets[c.name] = c.get("temp_offset_dc");
+        }
+    }
+    CHECK(offsets["shipped-64-s0"] == "20");
+    CHECK(offsets["shipped-64-s88"] == "-20");
+    CHECK(offsets["shipped-64-s70"] == "0");
+    CHECK(offsets["shipped-64-s0-off0"] == "0");
+    CHECK(offsets["shipped-64-s88-off5"] == "-50");
+    CHECK(offsets["shipped-64-s218-off5"] == "50");
 }
 
 TEST_CASE("P1-03 6 invariant 8: with temp_offset_max_c 0 the stage is the 0.8.0 stage on the 0.8.0 tuning") {

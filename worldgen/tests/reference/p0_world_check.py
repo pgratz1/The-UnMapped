@@ -74,11 +74,14 @@ DDL_PASS = (b"CREATE TABLE pass (id INTEGER PRIMARY KEY, range_id INTEGER NOT NU
 # biome.key is UNIQUE, so SQLite adds the index sqlite_autoindex_biome_1.
 DDL_BIOME = (b"CREATE TABLE biome (id INTEGER PRIMARY KEY, key TEXT NOT NULL UNIQUE, name TEXT NOT NULL, "
              b"colour INTEGER NOT NULL, water INTEGER NOT NULL) STRICT")
-DDL_CLIMATE = b"CREATE TABLE climate (id INTEGER PRIMARY KEY, wind_toward INTEGER NOT NULL) STRICT"
-SCHEMA_VERSION = 3
+# Schema version 4 (P1-03 3, P0-02 amendment 16) replaces the climate
+# statement in place: the column temp_offset_dc.
+DDL_CLIMATE = (b"CREATE TABLE climate (id INTEGER PRIMARY KEY, wind_toward INTEGER NOT NULL, "
+               b"temp_offset_dc INTEGER NOT NULL) STRICT")
+SCHEMA_VERSION = 4
 # The generator version the checked worlds are expected to carry (P0-02 5.5,
 # amendment 12). One edit per version bump; --generator-version overrides it.
-GENERATOR_VERSION = "0.8.0"
+GENERATOR_VERSION = "0.9.0"
 EMPTY_SHA = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
 
 

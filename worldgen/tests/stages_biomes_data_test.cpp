@@ -116,7 +116,32 @@ TEST_CASE("P1-04 4.1: the shipped definitions load; fields in declaration order 
     const auto* marsh = l.content->find("biome", "marsh");
     REQUIRE(marsh != nullptr);
     CHECK(marsh->record.get_fx("fertility").raw() == fx_of("0.45"));
-    CHECK(marsh->record.get_string("region_noun") == "Fen");
+    CHECK(marsh->record.get_string("region_noun") == "Marsh");  // 0.9.0 ("Fen" is now fen's)
+    // Twelve definitions (0.9.0), each rule with the eleven fields of 4.1 in
+    // declaration order, the two new ones after coast_max_m.
+    CHECK(shipped_defs().size() == 12U);
+    CHECK(l.content->find("biome", "fen")->record.get_string("region_noun") == "Fen");
+    CHECK(l.content->find("biome", "wet_woodland")->record.get_string("region_noun") == "Carr");
+    CHECK(l.content->find("biome", "steppe")->record.get_fx("fertility").raw() == fx_of("0.6"));
+    CHECK(l.content->find("biome", "heath")->record.get_fx("timber").raw() == fx_of("0.05"));
+    const std::vector<std::string> rule_order = {"temp_min_c",  "temp_max_c", "rain_min_mm", "rain_max_mm",
+                                                 "elev_min_m",  "elev_max_m", "slope_max",   "hand_max_m",
+                                                 "coast_max_m", "river_dist_max_m", "wet_frac_min"};
+    for (const char* id : {"fen", "wet_woodland", "temperate_forest", "alpine"}) {
+        CAPTURE(id);
+        const auto& rules = l.content->find("biome", id)->record.get_array("rules");
+        REQUIRE(rules.size() == 1U);
+        const auto& r = rules[0].as_record();
+        REQUIRE(r.size() == rule_order.size());
+        for (std::size_t i = 0; i < rule_order.size(); ++i) {
+            CHECK(r.name_at(i) == rule_order[i]);
+        }
+    }
+    const auto& fen_rule = l.content->find("biome", "fen")->record.get_array("rules")[0].as_record();
+    CHECK(fen_rule.get_fx("wet_frac_min").raw() == 1932735283);
+    CHECK(fen_rule.get_int("river_dist_max_m") == 32767);
+    CHECK(l.content->find("biome", "wet_woodland")->record.get_array("rules")[0].as_record().get_int(
+              "river_dist_max_m") == 112);
     CHECK(l.content->find("biome", "temperate_forest")->record.get_fx("timber") == Fx::from_int(1));
     static_cast<void>(biome_api::definitions_from(*l.content));
     static_cast<void>(biome_api::tuning_from(*l.content));
@@ -141,6 +166,23 @@ TEST_CASE("P1-04 4.2: the shipped tuning loads with the values of 4.2") {
     CHECK(def->record.get_fx("rain_scale_1024").raw() == ONE);
     CHECK(def->record.get_fx("rain_scale_2048").raw() == 3758096384);
     CHECK(def->record.get_int("drain_river_class_min") == 3);
+    // 0.9.0 (4.2): the six new fields.
+    CHECK(biome_data::tuning_fields().size() == 13U);
+    CHECK(def->record.get_int("river_dist_class_min") == 4);
+    CHECK(def->record.get_int("wet_window_m") == 480);
+    CHECK(def->record.get_fx("wet_hand_m") == Fx::from_int(5));
+    CHECK(def->record.get_fx("wet_scale_512").raw() == ONE);
+    CHECK(def->record.get_fx("wet_scale_1024").raw() == ONE);
+    CHECK(def->record.get_fx("wet_scale_2048").raw() == 6442450944);
+    const biome_api::Tuning t = biome_api::tuning_from(*l.content);
+    for (const std::int64_t n : {1, 16, 128, 512}) {
+        CHECK(biome_api::wet_scale(t, n) == ONE);
+    }
+    CHECK(biome_api::wet_scale(t, 513) == ONE);
+    CHECK(biome_api::wet_scale(t, 1024) == ONE);
+    for (const std::int64_t n : {1025, 2048, 4096}) {
+        CHECK(biome_api::wet_scale(t, n) == 6442450944);
+    }
 }
 
 TEST_CASE("P1-00 6.1, 6.6: the biome kind and worldgen.biomes are required") {
@@ -310,7 +352,8 @@ TEST_CASE("P1-04 4.1 named check 5 biome_water_rules: water biomes have priority
     const std::string ocean =
         edited("ocean.toml", "rules = []\n", "") +
         "\n[[biome.ocean.rules]]\ntemp_min_c = -60\ntemp_max_c = 50\nrain_min_mm = 0\nrain_max_mm = 10000\n"
-        "elev_min_m = 0\nelev_max_m = 3000\nslope_max = 100\nhand_max_m = 3000\ncoast_max_m = 32767\n";
+        "elev_min_m = 0\nelev_max_m = 3000\nslope_max = 100\nhand_max_m = 3000\ncoast_max_m = 32767\n"
+        "river_dist_max_m = 32767\nwet_frac_min = 0\n";
     at_definition(only_error(load_defs({{"ocean.toml", ocean}})), "ocean.toml", "biome_water_rules",
                   "water biomes take no rules and priority 0");
 }
@@ -340,7 +383,8 @@ TEST_CASE("P1-04 4.1 named check 7 biome_rule_ranges: one error per failing pair
     std::string moor(biome_data::shipped_files()[5].text);
     moor +=
         "\n[[biome.highland_moor.rules]]\ntemp_min_c = 5\ntemp_max_c = 5\nrain_min_mm = 9\nrain_max_mm = 8\n"
-        "elev_min_m = 10\nelev_max_m = 9\nslope_max = 100\nhand_max_m = 3000\ncoast_max_m = 32767\n";
+        "elev_min_m = 10\nelev_max_m = 9\nslope_max = 100\nhand_max_m = 3000\ncoast_max_m = 32767\n"
+        "river_dist_max_m = 32767\nwet_frac_min = 0\n";
     const biome_api::Load l = load_defs({{"highland_moor.toml", moor}});
     INFO(all_errors(l));
     REQUIRE(l.errors.size() == 2U);
@@ -380,6 +424,18 @@ TEST_CASE("P1-04 10.1 test 6: a float literal in a rule is a P0-03 error; a miss
     CHECK(g.errors[0].to_string() ==
           "biomes: error: check 'biome_fallback' failed for kind 'biome': no biome has fallback = true");
     CHECK(g.errors[1].to_string() == "biomes/grassland.toml:1:1: error: missing required field 'biome.grassland.rules'");
+    // 0.9.0: river_dist_max_m and wet_frac_min are required in every rule
+    // (no optional-field mechanism, 4.1), reported at the rule's header.
+    for (const char* field : {"river_dist_max_m = 32767\n", "wet_frac_min = 0\n"}) {
+        CAPTURE(field);
+        const wd::LoadError m = only_error(load_defs({{"marsh.toml", edited("marsh.toml", field, "")}}));
+        CHECK(m.path == "biomes/marsh.toml");
+        CHECK(m.line == 13U);
+        CHECK(m.column == 1U);
+        CHECK(m.message.find(std::string(field).substr(0, std::string(field).find(' '))) != std::string::npos);
+    }
+    check_rejected(load_defs({{"fen.toml", edited("fen.toml", "wet_frac_min = \"0.45\"", "wet_frac_min = 0.45")}}),
+                   "floating-point");
     // An unknown key in a rule.
     check_rejected(load_defs({{"marsh.toml", edited("marsh.toml", "hand_max_m = 1\n", "hand_max_m = 1\nhand_min_m = 0\n")}}),
                    "hand_min_m");
@@ -413,9 +469,14 @@ TEST_CASE("P1-04 4.1: every bound of the definition and rule fields rejects one 
         {"marsh.toml", "hand_max_m = 1", "hand_max_m = 3000", "hand_max_m = \"3000.000000001\""},
         {"marsh.toml", "coast_max_m = 32767", "coast_max_m = 0", "coast_max_m = 32768"},
         {"marsh.toml", "coast_max_m = 32767", "coast_max_m = 0", "coast_max_m = -1"},
+        // 0.9.0 rule fields (4.1).
+        {"marsh.toml", "river_dist_max_m = 32767", "river_dist_max_m = 0", "river_dist_max_m = -1"},
+        {"marsh.toml", "river_dist_max_m = 32767", "river_dist_max_m = 32767", "river_dist_max_m = 32768"},
+        {"marsh.toml", "wet_frac_min = 0", "wet_frac_min = 1", "wet_frac_min = \"1.000000001\""},
+        {"marsh.toml", "wet_frac_min = 0", "wet_frac_min = 0", "wet_frac_min = \"-0.000000001\""},
         {"marsh.toml", "name = \"Marsh\"", "name = \"" "0123456789012345678901234567890123456789012345678901234567890123" "\"",
          "name = \"" "01234567890123456789012345678901234567890123456789012345678901234" "\""},
-        {"marsh.toml", "region_noun = \"Fen\"", "region_noun = \"" "01234567890123456789012345678901" "\"",
+        {"marsh.toml", "region_noun = \"Marsh\"", "region_noun = \"" "01234567890123456789012345678901" "\"",
          "region_noun = \"" "012345678901234567890123456789012" "\""},
         {"marsh.toml", "water = false", "water = false", "water = 0"},
     };
@@ -429,7 +490,8 @@ TEST_CASE("P1-04 4.1: every bound of the definition and rule fields rejects one 
     std::string many(biome_data::shipped_files()[4].text);
     const std::string rule =
         "\n[[biome.marsh.rules]]\ntemp_min_c = -60\ntemp_max_c = 50\nrain_min_mm = 500\nrain_max_mm = 10000\n"
-        "elev_min_m = 0\nelev_max_m = 200\nslope_max = \"0.05\"\nhand_max_m = 1\ncoast_max_m = 32767\n";
+        "elev_min_m = 0\nelev_max_m = 200\nslope_max = \"0.05\"\nhand_max_m = 1\ncoast_max_m = 32767\n"
+        "river_dist_max_m = 32767\nwet_frac_min = 0\n";
     for (int i = 1; i < 16; ++i) {
         many += rule;
     }
@@ -448,6 +510,10 @@ TEST_CASE("P1-04 4.2, 10.1 test 6: each tuning bound rejects one step outside") 
         {"temp_jitter_c", false, "0", "10"},       {"rain_jitter", false, "0", "1"},
         {"rain_scale_512", false, "0.25", "4"},    {"rain_scale_1024", false, "0.25", "4"},
         {"rain_scale_2048", false, "0.25", "4"},   {"drain_river_class_min", true, "1", "15"},
+        // 0.9.0 (4.2): wet_window_m 2001 is rejected.
+        {"river_dist_class_min", true, "1", "15"}, {"wet_window_m", true, "0", "2000"},
+        {"wet_hand_m", false, "0", "100"},         {"wet_scale_512", false, "0.25", "4"},
+        {"wet_scale_1024", false, "0.25", "4"},    {"wet_scale_2048", false, "0.25", "4"},
     };
     for (const Bound& b : bounds) {
         CAPTURE(b.field);

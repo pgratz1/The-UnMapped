@@ -8,6 +8,7 @@
 
 #include <doctest/doctest.h>
 
+#include <array>
 #include <cstdint>
 #include <ostream>
 #include <string>
@@ -41,10 +42,23 @@ constexpr std::string_view ROWS_SQL =
     "INSERT INTO biome VALUES (2, 'lake', 'Lake', 4227276, 1);"
     "INSERT INTO biome VALUES (3, 'temperate_forest', 'Temperate forest', 3039284, 0);"
     "INSERT INTO biome VALUES (4, 'grassland', 'Grassland', 9874010, 0);"
-    "INSERT INTO biome VALUES (5, 'marsh', 'Marsh', 6057556, 0);"
-    "INSERT INTO biome VALUES (6, 'highland_moor', 'Highland moor', 7890024, 0);"
+    "INSERT INTO biome VALUES (5, 'marsh', 'Marsh', 6988694, 0);"
+    "INSERT INTO biome VALUES (6, 'highland_moor', 'Highland moor', 8283776, 0);"
     "INSERT INTO biome VALUES (7, 'alpine', 'Alpine', 12500660, 0);"
-    "INSERT INTO biome VALUES (8, 'blighted_waste', 'Blighted waste', 6313030, 0);";
+    "INSERT INTO biome VALUES (8, 'blighted_waste', 'Blighted waste', 6313030, 0);"
+    "INSERT INTO biome VALUES (9, 'heath', 'Heath', 9725514, 0);"
+    "INSERT INTO biome VALUES (10, 'steppe', 'Steppe', 14733974, 0);"
+    "INSERT INTO biome VALUES (11, 'wet_woodland', 'Wet woodland', 2314334, 0);"
+    "INSERT INTO biome VALUES (12, 'fen', 'Fen', 9076848, 0);";
+
+// The same 6 x 6 ring with every natural code of the third version inside
+// (P1-04 10.1 test 12: ten keys in code order).
+const std::vector<std::uint8_t> BIOMES12 = {1, 1,  1,  1,  1,  1,  //
+                                            1, 3,  9,  10, 2,  1,  //
+                                            1, 11, 12, 12, 2,  1,  //
+                                            1, 5,  4,  3,  9,  1,  //
+                                            1, 6,  7,  10, 10, 1,  //
+                                            1, 1,  1,  1,  1,  1};
 
 std::string world(const dbtest::TempDir& dir, const std::string& name, const std::string& sql, bool with_biome = true,
                   const worldgen::db::LayerGrid* biome = nullptr) {
@@ -89,14 +103,27 @@ TEST_CASE("P1-04 9, 10.1 test 10: biome_share and biome_patches on a hand-made 6
     const std::string share = biome_share(BIOMES, shipped_defs());
     CHECK(share ==
           "temperate_forest:0.3571 grassland:0.2143 marsh:0.1429 highland_moor:0.1429 alpine:0.0714 "
-          "blighted_waste:0.0714");
+          "blighted_waste:0.0714 heath:0.0000 steppe:0.0000 wet_woodland:0.0000 fen:0.0000");
     CHECK(biome_patches(Grid{6, 6}, BIOMES, shipped_defs()) == 7);
     // The two keys close [geography] (no climate or hydrology layers here).
     CHECK(ends_with(text, "\nbiome_share = " + share + "\nbiome_patches = 7\n"));
     // [tables], ascending name: biome, climate, layer, meta, pass.
-    CHECK(text.find("\n[tables]\nbiome = 8\nclimate = 0\nlayer = 2\nmeta = 8\npass = 0\n[layers]\n") != std::string::npos);
-    // No climate row: no wind_toward.
+    CHECK(text.find("\n[tables]\nbiome = 12\nclimate = 0\nlayer = 2\nmeta = 8\npass = 0\n[layers]\n") != std::string::npos);
+    // No climate row: no wind_toward, no temp_offset_c.
     CHECK(text.find("wind_toward") == std::string::npos);
+    CHECK(text.find("temp_offset_c") == std::string::npos);
+}
+
+TEST_CASE("P1-04 9, 10.1 test 12: biome_share lists ten keys in code order on a world with every natural code") {
+    dbtest::TempDir dir("biomes-report-12");
+    const worldgen::db::LayerGrid b = p004::grid_of(6, 6, BIOMES12);
+    const std::string text = report_of(world(dir, "w.db", std::string(ROWS_SQL), true, &b));
+    const std::string share = biome_share(BIOMES12, shipped_defs());
+    CHECK(share ==
+          "temperate_forest:0.1429 grassland:0.0714 marsh:0.0714 highland_moor:0.0714 alpine:0.0714 "
+          "blighted_waste:0.0000 heath:0.1429 steppe:0.2143 wet_woodland:0.0714 fen:0.1429");
+    CHECK(biome_patches(Grid{6, 6}, BIOMES12, shipped_defs()) == 12);
+    CHECK(ends_with(text, "\nbiome_share = " + share + "\nbiome_patches = 12\n"));
 }
 
 TEST_CASE("P1-04 9: the biome keys need the biome layer; without it they are absent") {
@@ -111,13 +138,20 @@ TEST_CASE("P1-03 9: wind_toward from table climate, first of the climate group, 
     dbtest::TempDir dir("biomes-report-wind");
     for (std::int64_t k = 0; k < 8; ++k) {
         CAPTURE(k);
-        const std::string sql = std::string(ROWS_SQL) + "INSERT INTO climate VALUES (1, " + std::to_string(k) + ");";
+        // temp_offset_dc (schema 4) over the formatter's cases: -19, 20, 0, -5, ...
+        const std::array<std::int64_t, 8> offs = {-19, 20, 0, -5, 50, -50, 9, -10};
+        const std::array<const char*, 8> texts = {"-1.9", "2.0", "0.0", "-0.5", "5.0", "-5.0", "0.9", "-1.0"};
+        const std::size_t ki = static_cast<std::size_t>(k);
+        const std::string sql = std::string(ROWS_SQL) + "INSERT INTO climate VALUES (1, " + std::to_string(k) + ", " +
+                                std::to_string(offs[ki]) + ");";
         const std::string text = report_of(world(dir, "w" + std::to_string(k) + ".db", sql));
-        const std::string line = "\nwind_toward = " + std::string(WIND_NAMES[static_cast<std::size_t>(k)]) + "\n";
+        const std::string line = "\nwind_toward = " + std::string(WIND_NAMES[ki]) + "\n";
         const std::size_t at = text.find(line);
         REQUIRE(at != std::string::npos);
-        // Before the biome group, after the pass keys.
-        CHECK(text.substr(at + line.size(), 14) == "biome_share = ");
+        // temp_offset_c right after wind_toward (P1-03 9), then the biome group.
+        const std::string off_line = std::string("temp_offset_c = ") + texts[ki] + "\n";
+        CHECK(text.substr(at + line.size(), off_line.size()) == off_line);
+        CHECK(text.substr(at + line.size() + off_line.size(), 14) == "biome_share = ");
         CHECK(text.find("\npasses_walkable = 0" + line) != std::string::npos);
         CHECK(text.find("\nclimate = 1\n") != std::string::npos);
     }
@@ -129,11 +163,44 @@ TEST_CASE("P1-03 9: a malformed climate table is a corrupt-data error naming tab
         const char* what;
         const char* sql;
     };
+    // Each reason of P1-03 9 (0.9.0), in the order checked; the message names
+    // the table and gives the reason.
+    struct Reason {
+        const char* sql;
+        const char* reason;
+    };
+    const std::vector<Reason> reasons = {
+        {"INSERT INTO climate VALUES (1, 1, 0); INSERT INTO climate VALUES (2, 1, 0);", "2 rows, expected at most 1"},
+        {"DROP TABLE climate; CREATE TABLE climate (id INTEGER PRIMARY KEY, wind_toward INTEGER NOT NULL) STRICT;"
+         "INSERT INTO climate VALUES (1, 1);",
+         "the row does not have three integer columns"},
+        {"INSERT INTO climate VALUES (2, 1, 0);", "id 2, expected 1"},
+        {"INSERT INTO climate VALUES (1, 8, 0);", "wind_toward 8 outside 0..7"},
+        {"INSERT INTO climate VALUES (1, 1, 51);", "temp_offset_dc 51 outside -50..50"},
+        {"INSERT INTO climate VALUES (1, 1, -51);", "temp_offset_dc -51 outside -50..50"},
+        {"INSERT INTO climate VALUES (1, 8, 51);", "wind_toward 8 outside 0..7"},  // order: wind first
+    };
+    int kr = 0;
+    for (const Reason& rr : reasons) {
+        CAPTURE(rr.reason);
+        const std::string out = world(dir, "r" + std::to_string(kr++) + ".db", std::string(ROWS_SQL) + rr.sql);
+        auto w = worldgen::db::WorldReader::open(out);
+        REQUIRE(w.ok());
+        const auto r = worldgen::inspect::build_report(w.value());
+        REQUIRE_FALSE(r.ok());
+        CHECK(r.error().message.find("corrupt table 'climate': " + std::string(rr.reason)) != std::string::npos);
+    }
+    // The bounds themselves are accepted.
+    for (const char* ok : {"INSERT INTO climate VALUES (1, 7, 50);", "INSERT INTO climate VALUES (1, 0, -50);"}) {
+        CAPTURE(ok);
+        const std::string text = report_of(world(dir, "ok" + std::to_string(kr++) + ".db", std::string(ROWS_SQL) + ok));
+        CHECK(text.find("temp_offset_c = ") != std::string::npos);
+    }
     const std::vector<Bad> bads = {
-        {"two rows", "INSERT INTO climate VALUES (1, 1); INSERT INTO climate VALUES (2, 1);"},
-        {"id 2", "INSERT INTO climate VALUES (2, 1);"},
-        {"wind_toward 8", "INSERT INTO climate VALUES (1, 8);"},
-        {"wind_toward -1", "INSERT INTO climate VALUES (1, -1);"},
+        {"two rows", "INSERT INTO climate VALUES (1, 1, 0); INSERT INTO climate VALUES (2, 1, 0);"},
+        {"id 2", "INSERT INTO climate VALUES (2, 1, 0);"},
+        {"wind_toward 8", "INSERT INTO climate VALUES (1, 8, 0);"},
+        {"wind_toward -1", "INSERT INTO climate VALUES (1, -1, 0);"},
     };
     int k = 0;
     for (const Bad& b : bads) {

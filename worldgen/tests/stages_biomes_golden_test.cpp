@@ -74,12 +74,24 @@ std::vector<std::pair<std::string, std::string>> items_of(const biome_api::Input
     // Test grids: N = max(W, H) (all square here).
     const std::int64_t scale = biome_api::rain_scale(t, std::max(g.width, g.height));
     out.emplace_back("scale", std::to_string(scale));
+    const std::int64_t wscale = biome_api::wet_scale(t, std::max(g.width, g.height));
+    out.emplace_back("wet_scale", std::to_string(wscale));
     const Own own = own_biomes(in, shipped_defs(), v, c.seed);
+    CHECK(wscale == own.wet_scale);
     const std::vector<std::int64_t> s = surface(in.elevation, in.water_depth);
     const std::vector<std::int64_t> hand = biome_api::hand(g, s, in.water, in.river, in.flow_dir, v.k);
     out.emplace_back("hand", hash_i64(hand));
     CHECK(hand == own.hand);
     out.emplace_back("S2", hash_i64(own.s2));
+    // B2b and B2c through the seams (0.9.0), checked against the test's own.
+    const std::vector<std::int64_t> d34 = biome_api::river_distance(g, in.water, in.river, v.rdist_k);
+    out.emplace_back("d34", hash_i64(d34));
+    CHECK(d34 == own.d34);
+    const biome_api::WetShare wet = biome_api::wet_share(g, in.water, hand, v.wet_hand, v.wet_window / 16);
+    out.emplace_back("wet_count", hash_i64(wet.count));
+    out.emplace_back("wet_total", hash_i64(wet.total));
+    CHECK(wet.count == own.wet.count);
+    CHECK(wet.total == own.wet.total);
     out.emplace_back("nt", hash_i64(own.nt));
     out.emplace_back("nr", hash_i64(own.nr));
     out.emplace_back("tq", hash_i64(own.tq));
@@ -94,7 +106,7 @@ std::vector<std::pair<std::string, std::string>> items_of(const biome_api::Input
             b4[i] = LAKE;
         } else {
             b4[i] = biome_api::lookup(shipped_definitions(), scale, own.tq[i], own.rq[i], in.elevation[i], own.s2[i],
-                                      hand[i], in.coast_dist[i]);
+                                      hand[i], in.coast_dist[i], d34[i], wet.count[i], wet.total[i], wscale);
         }
     }
     out.emplace_back("b4", u8_hash(g, b4));
@@ -114,10 +126,12 @@ std::vector<std::pair<std::string, std::string>> items_of(const biome_api::Input
         }
     }
     out.emplace_back("table_biome", biome_table_hash(shipped_defs()));
-    if (c.fixture != "designed") {
+    if (c.fixture != "designed" && c.fixture != "terrace") {
         const std::uint8_t wind = climate_api::wind(c.seed, climate_test::UNIFORM);
         out.emplace_back("wind", std::to_string(int{wind}));
-        out.emplace_back("table_climate", climate_table_hash(wind));
+        const std::int64_t offset = climate_api::temp_offset_dc(c.seed, climate_test::shipped_tuning());
+        out.emplace_back("temp_offset_dc", std::to_string(offset));
+        out.emplace_back("table_climate", climate_table_hash(wind, offset));
     }
     std::string counts;
     for (const Def& d : shipped_defs()) {
@@ -254,14 +268,18 @@ TEST_CASE("P1-04 golden: the default cases cover every biome, every live conditi
         // Every case below 512 uses the 512 entry.
         CHECK(std::stoll(c.get("scale")) == values(c.overrides).scale_512);
     }
-    CHECK(defaults >= 15U);
-    for (const char* code : {"3", "4", "5", "6", "7"}) {
+    CHECK(defaults >= 30U);
+    // Every natural biome (third version: nine) is assigned somewhere.
+    for (const char* code : {"3", "4", "5", "6", "7", "9", "10", "11", "12"}) {
         CAPTURE(code);
         CHECK(totals[code] > 0);
     }
-    for (const char* cond : {"alpine.0.temp", "alpine.0.elev", "highland_moor.0.temp", "highland_moor.0.elev",
-                             "marsh.0.rain", "marsh.0.elev", "marsh.0.slope", "marsh.0.hand",
-                             "temperate_forest.0.rain"}) {
+    // Every live condition of every rule is the sole failure somewhere.
+    for (const char* cond :
+         {"alpine.0.temp", "alpine.0.elev", "highland_moor.0.temp", "highland_moor.0.elev", "highland_moor.0.rain",
+          "marsh.0.rain", "marsh.0.elev", "marsh.0.slope", "marsh.0.hand", "temperate_forest.0.rain", "fen.0.rain",
+          "fen.0.elev", "fen.0.slope", "fen.0.hand", "fen.0.wet", "heath.0.temp", "heath.0.elev", "steppe.0.rain",
+          "wet_woodland.0.rain", "wet_woodland.0.elev", "wet_woodland.0.hand", "wet_woodland.0.rdist"}) {
         CAPTURE(cond);
         CHECK(sole.count(cond) == 1U);
     }
@@ -271,7 +289,10 @@ TEST_CASE("P1-04 golden: the default cases cover every biome, every live conditi
     CHECK(ocean);
     // The rain scale entries through the 512 entry, and drain classes.
     for (const char* o : {"rain_scale_512=1", "rain_scale_512=0.875", "drain_river_class_min=1",
-                          "drain_river_class_min=6", "temp_jitter_c=0"}) {
+                          "drain_river_class_min=6", "temp_jitter_c=0", "wet_hand_m=0", "wet_hand_m=100",
+                          "wet_window_m=0", "wet_window_m=47", "wet_window_m=63", "wet_window_m=2000",
+                          "wet_scale_512=1.5", "wet_scale_512=4", "wet_scale_512=0.25", "river_dist_class_min=1",
+                          "river_dist_class_min=15"}) {
         CAPTURE(o);
         CHECK(overridden.count(o) == 1U);
     }
@@ -285,7 +306,7 @@ TEST_CASE("P1-04 golden: every case up to N = 128, step by step") {
             ++ran;
         }
     }
-    CHECK(ran >= 15U);
+    CHECK(ran >= 30U);
 }
 
 TEST_CASE("P1-04 golden: the table hashes are those of the shipped definitions and of k_w") {
@@ -293,7 +314,8 @@ TEST_CASE("P1-04 golden: the table hashes are those of the shipped definitions a
         CAPTURE(c.name);
         CHECK(c.get("table_biome") == biome_table_hash(shipped_defs()));
         if (c.has("wind")) {
-            CHECK(c.get("table_climate") == climate_table_hash(std::stoll(c.get("wind"))));
+            CHECK(c.get("table_climate") ==
+                  climate_table_hash(std::stoll(c.get("wind")), std::stoll(c.get("temp_offset_dc"))));
         }
     }
 }
@@ -504,10 +526,15 @@ const std::vector<std::vector<std::string>> SHIPPED_ROWS = {
     {"2", "lake", "Lake", "4227276", "1"},
     {"3", "temperate_forest", "Temperate forest", "3039284", "0"},
     {"4", "grassland", "Grassland", "9874010", "0"},
-    {"5", "marsh", "Marsh", "6057556", "0"},
-    {"6", "highland_moor", "Highland moor", "7890024", "0"},
+    {"5", "marsh", "Marsh", "6988694", "0"},
+    {"6", "highland_moor", "Highland moor", "8283776", "0"},
     {"7", "alpine", "Alpine", "12500660", "0"},
     {"8", "blighted_waste", "Blighted waste", "6313030", "0"},
+    // 0.9.0 (P1-00 6.6, P1-04 4.1): twelve rows.
+    {"9", "heath", "Heath", "9725514", "0"},
+    {"10", "steppe", "Steppe", "14733974", "0"},
+    {"11", "wet_woodland", "Wet woodland", "2314334", "0"},
+    {"12", "fen", "Fen", "9076848", "0"},
 };
 
 }  // namespace
@@ -624,10 +651,10 @@ TEST_CASE("P1-04 2, 10.1 test 9: each precondition violation is fatal with the p
     }
 }
 
-// --- Schema 3 (section 3, P1-00 9.2) -----------------------------------------------------------
+// --- Schema 4 (section 3, P1-03 3, P1-00 9.2, P0-02 amendment 16) ------------------------------
 
-TEST_CASE("P1-04 3, 10.1 test 7: SCHEMA_VERSION 3; DDL of meta, layer, pass, biome, climate byte for byte") {
-    CHECK(worldgen::db::SCHEMA_VERSION == 3);
+TEST_CASE("P1-04 3, 10.1 test 9: SCHEMA_VERSION 4; DDL of meta, layer, pass, biome (schema 3), climate (schema 4)") {
+    CHECK(worldgen::db::SCHEMA_VERSION == 4);
     REQUIRE(worldgen::db::DDL_STATEMENTS.size() == 5U);
     CHECK(worldgen::db::DDL_STATEMENTS[0].substr(0, 18) == "CREATE TABLE meta ");
     CHECK(worldgen::db::DDL_STATEMENTS[1].substr(0, 19) == "CREATE TABLE layer ");
@@ -635,18 +662,25 @@ TEST_CASE("P1-04 3, 10.1 test 7: SCHEMA_VERSION 3; DDL of meta, layer, pass, bio
     CHECK(worldgen::db::DDL_STATEMENTS[3] ==
           "CREATE TABLE biome (id INTEGER PRIMARY KEY, key TEXT NOT NULL UNIQUE, name TEXT NOT NULL, colour INTEGER "
           "NOT NULL, water INTEGER NOT NULL) STRICT");
-    CHECK(worldgen::db::DDL_STATEMENTS[4] == "CREATE TABLE climate (id INTEGER PRIMARY KEY, wind_toward INTEGER NOT NULL) STRICT");
+    CHECK(worldgen::db::DDL_STATEMENTS[4] ==
+          "CREATE TABLE climate (id INTEGER PRIMARY KEY, wind_toward INTEGER NOT NULL, temp_offset_dc INTEGER NOT NULL) "
+          "STRICT");
 }
 
-TEST_CASE("P1-04 3, P1-00 9.2: an empty world (--until none) has tables biome and climate, empty; user_version 3; 8 pages") {
+TEST_CASE("P1-04 3, P1-00 9.2: an empty world (--until none) has tables biome and climate, empty; user_version 4; 8 pages") {
     dbtest::TempDir dir("biomes-empty");
     REQUIRE(worldgen::generate_world(params_for(0, 512, std::string("none")), fixture_content(), dir.file("e.db"),
                                      worldgen::db::Overwrite::refuse)
                 .ok());
     const dbtest::SqliteFile db(dir.file("e.db"));
     REQUIRE(db.ok());
-    CHECK(db.rows("PRAGMA user_version") == std::vector<std::vector<std::string>>{{"3"}});
-    CHECK(db.rows("SELECT value FROM meta WHERE key = 'schema_version'") == std::vector<std::vector<std::string>>{{"3"}});
+    CHECK(db.rows("PRAGMA user_version") == std::vector<std::vector<std::string>>{{"4"}});
+    CHECK(db.rows("SELECT value FROM meta WHERE key = 'schema_version'") == std::vector<std::vector<std::string>>{{"4"}});
+    {
+        auto r = worldgen::db::WorldReader::open(dir.file("e.db"));
+        REQUIRE(r.ok());
+        CHECK(r.value().schema_version() == 4);
+    }
     // The sqlite_schema rows in creation order (rowid): the five tables with
     // their DDL, and the automatic indexes of layer.name and biome.key.
     const auto rows = db.rows("SELECT type, name, tbl_name, sql FROM sqlite_schema ORDER BY rowid");
@@ -680,7 +714,7 @@ TEST_CASE("P1-04 3: a test-pattern world has tables biome and climate, empty") {
     REQUIRE(db.ok());
     CHECK(db.rows("SELECT count(*) FROM biome") == std::vector<std::vector<std::string>>{{"0"}});
     CHECK(db.rows("SELECT count(*) FROM climate") == std::vector<std::vector<std::string>>{{"0"}});
-    CHECK(db.rows("PRAGMA user_version") == std::vector<std::vector<std::string>>{{"3"}});
+    CHECK(db.rows("PRAGMA user_version") == std::vector<std::vector<std::string>>{{"4"}});
 }
 
 // --- Slow checks (opt-in) ------------------------------------------------------------------------
@@ -724,7 +758,7 @@ TEST_CASE("P1-04 3, P1-03 C7, P1-00 X1 and X2 (slow): generate at 512, seed 0: l
     CHECK(infos.value()[10].type == worldgen::db::ElementType::u8);
     CHECK(infos.value()[10].codec == worldgen::db::Codec::delta_varint);
     // Earlier layers and table pass byte-identical with and without biomes;
-    // the climate layers equal the 0.7.0 golden vectors (p1-03-climate.txt).
+    // the climate layers equal the 0.9.0 golden vectors (p1-03-climate.txt).
     const auto df = worldgen::inspect::detail_hashes(rf.value());
     const auto dc = worldgen::inspect::detail_hashes(rc.value());
     REQUIRE(df.ok());
@@ -740,8 +774,27 @@ TEST_CASE("P1-04 3, P1-03 C7, P1-00 X1 and X2 (slow): generate at 512, seed 0: l
         if (c.name == "shipped-512-s0") {
             CHECK(worldgen::to_hex(dc.value().layers[8].digest) == c.get("temperature"));
             CHECK(worldgen::to_hex(dc.value().layers[9].digest) == c.get("rainfall"));
+            CHECK(c.get("temp_offset_dc") == "20");
         }
     }
+    // Upstream identity (P1-04 6 item 9): the elevation and hydrology layers
+    // equal the hydrology golden vectors, unchanged since 0.8.0.
+    std::size_t upstream = 0;
+    for (const auto& hc : hydro_test::read_golden(UNMAPPED_P1_02_GOLDEN_PATH)) {
+        if (hc.name != "shipped-512-s0") {
+            continue;
+        }
+        for (std::size_t i = 0; i < 8; ++i) {
+            for (const auto& [item, value] : hc.items) {
+                if (item == dc.value().layers[i].name) {
+                    CAPTURE(item);
+                    CHECK(worldgen::to_hex(dc.value().layers[i].digest) == value);
+                    ++upstream;
+                }
+            }
+        }
+    }
+    CHECK(upstream >= 6U);
     for (std::size_t i = 0; i < dc.value().tables.size(); ++i) {
         const std::string& name = dc.value().tables[i].name;
         CAPTURE(name);
@@ -754,8 +807,12 @@ TEST_CASE("P1-04 3, P1-03 C7, P1-00 X1 and X2 (slow): generate at 512, seed 0: l
     CHECK(c.rows("SELECT count(*) FROM biome") == std::vector<std::vector<std::string>>{{"0"}});
     const std::string wind = std::to_string(int{climate_api::wind(0, climate_test::UNIFORM)});
     CHECK(wind == "1");
-    CHECK(f.rows("SELECT id, wind_toward FROM climate") == std::vector<std::vector<std::string>>{{"1", wind}});
-    CHECK(c.rows("SELECT id, wind_toward FROM climate") == std::vector<std::vector<std::string>>{{"1", wind}});
+    // Schema 4: the row with both columns; seed 0 is (1, 1, 20) (P1-03 10.1 test 0).
+    CHECK(f.rows("SELECT id, wind_toward, temp_offset_dc FROM climate") ==
+          std::vector<std::vector<std::string>>{{"1", wind, "20"}});
+    CHECK(c.rows("SELECT id, wind_toward, temp_offset_dc FROM climate") ==
+          std::vector<std::vector<std::string>>{{"1", "1", "20"}});
+    CHECK(c.rows("SELECT typeof(temp_offset_dc) FROM climate") == std::vector<std::vector<std::string>>{{"integer"}});
     CHECK(h.rows("SELECT count(*) FROM climate") == std::vector<std::vector<std::string>>{{"0"}});
     CHECK(h.rows("SELECT count(*) FROM biome") == std::vector<std::vector<std::string>>{{"0"}});
     // The biome layer against the golden case and the test's own stage on the

@@ -187,6 +187,9 @@ target_sources(worldgen-tests PRIVATE
     stages_biomes_data_test.cpp
     stages_biomes_golden_test.cpp
     stages_biomes_property_test.cpp
+    # Third version (generator 0.9.0): B2b, B2c, the wet scale, the new
+    # rule comparisons and the worked examples of the biome variety revision.
+    stages_biomes_variety_test.cpp
     inspect_biomes_test.cpp
 )
 target_compile_definitions(worldgen-tests PRIVATE

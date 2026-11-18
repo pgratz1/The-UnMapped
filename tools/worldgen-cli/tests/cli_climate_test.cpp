@@ -51,11 +51,12 @@ constexpr std::string_view CLIMATE_TOML =
     "moisture_path_mm_km = 32000\n"
     "loss_max = \"0.25\"\n"
     "ocean_recharge_m = 500\n"
-    "coast_rain_mm = 75\n"
+    "coast_rain_mm = 40\n"
     "coast_rain_reach_m = 1500\n"
     "rain_noise = { wavelength_m = 5000, octaves = 3, gain = \"0.5\" }\n"
     "rain_noise_amp = \"0.4\"\n"
-    "rain_min_mm = 250\n";
+    "rain_min_mm = 250\n"
+    "temp_offset_max_c = 2\n";
 
 fs::path write_data_root(const Sandbox& sb, std::string_view climate = CLIMATE_TOML) {
     const fs::path root = sb.file("data");

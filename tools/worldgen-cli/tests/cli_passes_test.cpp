@@ -89,7 +89,7 @@ TEST_CASE("cli P1-01 9.1, P1-00 10.3: a world with a pass (512, seed 42): rows, 
     auto opened = worldgen::db::WorldReader::open(u8(world));
     REQUIRE(opened.ok());
     const worldgen::db::WorldReader& w = opened.value();
-    CHECK(w.schema_version() == 3);
+    CHECK(w.schema_version() == 4);
     CHECK(w.table_columns("pass").value() == std::vector<std::string>{"id", "range_id", "kind", "capped", "col_x",
                                                                        "col_y", "saddle_dm", "col_dm", "path"});
     const auto raw = w.table_rows("pass");
@@ -177,9 +177,9 @@ TEST_CASE("cli P1-01 9.1, P1-00 10.3: a world with a pass (512, seed 42): rows, 
     const ProcessResult rep = sb.cli({"report", "--db", u8(world)});
     INFO("stderr: ", rep.err);
     REQUIRE(rep.exit_code == EXIT_OK);
-    CHECK(contains(rep.out, "\nschema_version = 3\n"));
+    CHECK(contains(rep.out, "\nschema_version = 4\n"));
     CHECK(contains(rep.out, "\ngenerator_version = " + std::string(worldgen::GENERATOR_VERSION) + "\n"));
-    CHECK(std::string(worldgen::GENERATOR_VERSION) == "0.8.0");
+    CHECK(std::string(worldgen::GENERATOR_VERSION) == "0.9.0");
     CHECK(contains(rep.out, "\n[tables]\nbiome = 0\nclimate = 0\nlayer = 1\nmeta = 8\npass = " + std::to_string(rows.size()) + "\n[layers]\n"));
     const std::vector<std::string> want =
         elev_test::report_pass_lines(worldgen::geo::Grid{512, 512}, *e, rows);

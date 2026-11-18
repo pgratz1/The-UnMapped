@@ -64,7 +64,10 @@ inline constexpr std::array<std::int32_t, 8> DY = {0, 1, 1, 1, 0, -1, -1, -1};
 
 // Codes of the shipped definitions (P1-00 6.6).
 inline constexpr std::uint8_t OCEAN = 1, LAKE = 2, FOREST = 3, GRASSLAND = 4, MARSH = 5, MOOR = 6, ALPINE = 7,
-                              BLIGHTED = 8;
+                              BLIGHTED = 8, HEATH = 9, STEPPE = 10, WET_WOODLAND = 11, FEN = 12;
+
+// B2b's "no target" value (P1-04 B2b).
+inline constexpr std::int64_t FAR = std::int64_t{1} << 40;
 
 // --- Own definitions (P1-04 4.1), raw values ------------------------------------------
 
@@ -75,6 +78,8 @@ struct Rule {
     std::int64_t slope_max = 0;               // raw Fx
     std::int64_t hand_max = 0;                // raw Fx (metres)
     std::int64_t coast_max = 0;               // m
+    std::int64_t rdist_max = 32767;           // m (river_dist_max_m, 0.9.0)
+    std::int64_t wet_min = 0;                 // raw Fx (wet_frac_min, 0.9.0)
 };
 
 struct Def {
@@ -91,7 +96,9 @@ struct Def {
 
 inline std::int64_t fx_int(std::int64_t v) { return v * ONE; }
 
-inline Rule full_rule() { return Rule{fx_int(-60), fx_int(50), 0, 10000, 0, 3000, fx_int(100), fx_int(3000), 32767}; }
+inline Rule full_rule() {
+    return Rule{fx_int(-60), fx_int(50), 0, 10000, 0, 3000, fx_int(100), fx_int(3000), 32767, 32767, 0};
+}
 
 inline const std::vector<Def>& shipped_defs() {
     static const std::vector<Def> d = [] {
@@ -105,18 +112,39 @@ inline const std::vector<Def>& shipped_defs() {
         marsh.hand_max = fx_int(1);
         Rule moor = full_rule();
         moor.temp_max = fx_int(4);
+        moor.rain_min = 720;  // 0.9.0
         moor.elev_min = 300;
         Rule alpine = full_rule();
         alpine.temp_max = HALF;  // "0.5"
         alpine.elev_min = 600;
+        Rule heath = full_rule();
+        heath.temp_max = fx_int(4);
+        heath.elev_min = 300;
+        Rule steppe = full_rule();
+        steppe.rain_max = 600;
+        Rule ww = full_rule();
+        ww.rain_min = 450;
+        ww.elev_max = 300;
+        ww.hand_max = fx_int(5);
+        ww.rdist_max = 112;
+        Rule fen = full_rule();
+        fen.rain_min = 500;
+        fen.elev_max = 200;
+        fen.slope_max = 214748365;  // "0.05"
+        fen.hand_max = fx_int(3);
+        fen.wet_min = 1932735283;  // "0.45"
         v.push_back(Def{"ocean", OCEAN, "Ocean", 0x183878, true, "ocean", 0, false, {}});
         v.push_back(Def{"lake", LAKE, "Lake", 0x4080CC, true, "lake", 0, false, {}});
         v.push_back(Def{"temperate_forest", FOREST, "Temperate forest", 0x2E6034, false, "none", 20, false, {forest}});
         v.push_back(Def{"grassland", GRASSLAND, "Grassland", 0x96AA5A, false, "none", 10, true, {}});
-        v.push_back(Def{"marsh", MARSH, "Marsh", 0x5C6E54, false, "none", 40, false, {marsh}});
-        v.push_back(Def{"highland_moor", MOOR, "Highland moor", 0x786468, false, "none", 30, false, {moor}});
+        v.push_back(Def{"marsh", MARSH, "Marsh", 0x6AA396, false, "none", 40, false, {marsh}});
+        v.push_back(Def{"highland_moor", MOOR, "Highland moor", 0x7E6680, false, "none", 30, false, {moor}});
         v.push_back(Def{"alpine", ALPINE, "Alpine", 0xBEBEB4, false, "none", 50, false, {alpine}});
         v.push_back(Def{"blighted_waste", BLIGHTED, "Blighted waste", 0x605446, false, "none", 0, false, {}});
+        v.push_back(Def{"heath", HEATH, "Heath", 0x94664A, false, "none", 25, false, {heath}});
+        v.push_back(Def{"steppe", STEPPE, "Steppe", 0xE0D296, false, "none", 15, false, {steppe}});
+        v.push_back(Def{"wet_woodland", WET_WOODLAND, "Wet woodland", 0x23505E, false, "none", 18, false, {ww}});
+        v.push_back(Def{"fen", FEN, "Fen", 0x8A8070, false, "none", 45, false, {fen}});
         return v;
     }();
     return d;
@@ -132,7 +160,19 @@ struct Values {
     std::int64_t scale_1024 = ONE;
     std::int64_t scale_2048 = 3758096384;     // "0.875"
     std::int64_t k = 3;
+    // 0.9.0 (P1-04 4.2)
+    std::int64_t rdist_k = 4;                 // river_dist_class_min
+    std::int64_t wet_window = 480;            // wet_window_m
+    std::int64_t wet_hand = 5 * ONE;          // wet_hand_m, raw
+    std::int64_t wet_512 = ONE;               // wet_scale_512, raw
+    std::int64_t wet_1024 = ONE;
+    std::int64_t wet_2048 = 6442450944;       // "1.5"
 };
+
+// The int fields of worldgen.biomes (written without quotes in TOML).
+inline bool is_int_tuning(std::string_view k) {
+    return k == "drain_river_class_min" || k == "river_dist_class_min" || k == "wet_window_m";
+}
 
 // An fx value written as decimal text without quotes, as raw.
 inline std::int64_t fx_of(std::string_view text) {
@@ -158,6 +198,18 @@ inline Values values(const Overrides& o = {}) {
             v.scale_2048 = fx_of(text);
         } else if (k == "drain_river_class_min") {
             v.k = std::stoll(text);
+        } else if (k == "river_dist_class_min") {
+            v.rdist_k = std::stoll(text);
+        } else if (k == "wet_window_m") {
+            v.wet_window = std::stoll(text);
+        } else if (k == "wet_hand_m") {
+            v.wet_hand = fx_of(text);
+        } else if (k == "wet_scale_512") {
+            v.wet_512 = fx_of(text);
+        } else if (k == "wet_scale_1024") {
+            v.wet_1024 = fx_of(text);
+        } else if (k == "wet_scale_2048") {
+            v.wet_2048 = fx_of(text);
         } else {
             FAIL("unknown tuning field " << k);
         }
@@ -170,7 +222,7 @@ inline Values values(const Overrides& o = {}) {
 inline Overrides toml_overrides(const Overrides& o) {
     Overrides out;
     for (const auto& [k, v] : o) {
-        out.emplace_back(k, k == "drain_river_class_min" ? v : "\"" + v + "\"");
+        out.emplace_back(k, is_int_tuning(k) ? v : "\"" + v + "\"");
     }
     return out;
 }
@@ -298,6 +350,124 @@ inline std::int64_t scale_for(const Values& v, std::int64_t n) {
     return n <= 512 ? v.scale_512 : (n <= 1024 ? v.scale_1024 : v.scale_2048);
 }
 
+inline std::int64_t wet_scale_for(const Values& v, std::int64_t n) {
+    return n <= 512 ? v.wet_512 : (n <= 1024 ? v.wet_1024 : v.wet_2048);
+}
+
+// need(r) = mul(wet_frac_min, ws).raw (P0-01 mul, round half away from zero).
+inline std::int64_t need_of(std::int64_t wet_min, std::int64_t ws) {
+    return worldgen::mul(Fx::from_raw(wet_min), Fx::from_raw(ws)).raw();
+}
+
+// --- Own B2b and B2c (P1-04 third version) ----------------------------------------------------
+
+// B2b by the spec's two raster passes, written independently of the stage.
+inline std::vector<std::int64_t> own_d34(Grid g, std::span<const std::uint8_t> water,
+                                         std::span<const std::uint8_t> river, std::int64_t k) {
+    const std::int32_t w = g.width, h = g.height;
+    std::vector<std::int64_t> d(g.cells(), FAR);
+    for (std::size_t i = 0; i < d.size(); ++i) {
+        if (water[i] == WATER_RIVER && river[i] >= k) {
+            d[i] = 0;
+        }
+    }
+    auto at = [&](std::int32_t x, std::int32_t y) -> std::int64_t& { return d[g.index(x, y)]; };
+    for (std::int32_t y = 0; y < h; ++y) {
+        for (std::int32_t x = 0; x < w; ++x) {
+            std::int64_t v = at(x, y);
+            if (x > 0) v = std::min(v, at(x - 1, y) + 3);
+            if (y > 0 && x > 0) v = std::min(v, at(x - 1, y - 1) + 4);
+            if (y > 0) v = std::min(v, at(x, y - 1) + 3);
+            if (y > 0 && x < w - 1) v = std::min(v, at(x + 1, y - 1) + 4);
+            at(x, y) = v;
+        }
+    }
+    for (std::int32_t y = h - 1; y >= 0; --y) {
+        for (std::int32_t x = w - 1; x >= 0; --x) {
+            std::int64_t v = at(x, y);
+            if (x < w - 1) v = std::min(v, at(x + 1, y) + 3);
+            if (y < h - 1 && x < w - 1) v = std::min(v, at(x + 1, y + 1) + 4);
+            if (y < h - 1) v = std::min(v, at(x, y + 1) + 3);
+            if (y < h - 1 && x > 0) v = std::min(v, at(x - 1, y + 1) + 4);
+            at(x, y) = v;
+        }
+    }
+    return d;
+}
+
+// The closed form of B2b by brute force over the targets (invariant 8).
+inline std::vector<std::int64_t> closed_d34(Grid g, std::span<const std::uint8_t> water,
+                                            std::span<const std::uint8_t> river, std::int64_t k) {
+    std::vector<std::pair<std::int64_t, std::int64_t>> t;
+    for (std::size_t i = 0; i < g.cells(); ++i) {
+        if (water[i] == WATER_RIVER && river[i] >= k) {
+            t.emplace_back(g.x_of(static_cast<worldgen::geo::CellIndex>(i)),
+                           g.y_of(static_cast<worldgen::geo::CellIndex>(i)));
+        }
+    }
+    std::vector<std::int64_t> out(g.cells(), FAR);
+    for (std::size_t i = 0; i < g.cells(); ++i) {
+        const std::int64_t x = g.x_of(static_cast<worldgen::geo::CellIndex>(i));
+        const std::int64_t y = g.y_of(static_cast<worldgen::geo::CellIndex>(i));
+        for (const auto& [tx, ty] : t) {
+            const std::int64_t a = x > tx ? x - tx : tx - x;
+            const std::int64_t b = y > ty ? y - ty : ty - y;
+            out[i] = std::min(out[i], 3 * std::max(a, b) + std::min(a, b));
+        }
+    }
+    return out;
+}
+
+// B2c's wet cells: water != 3 and from_int(hand) <= mul_int(wet_hand_m, 10).
+inline std::vector<std::int64_t> own_wet(std::span<const std::uint8_t> water, std::span<const std::int64_t> hand,
+                                         std::int64_t wet_hand_raw) {
+    std::vector<std::int64_t> out(water.size(), 0);
+    for (std::size_t i = 0; i < out.size(); ++i) {
+        out[i] = (water[i] != WATER_OCEAN && Fx::from_int(hand[i]).raw() <= wet_hand_raw * 10) ? 1 : 0;
+    }
+    return out;
+}
+
+// One clipped box pass by direct summation over each window (the test's
+// method; the stage may use prefix sums: the sums are exact either way).
+inline std::vector<std::int64_t> own_box(Grid g, std::span<const std::int64_t> v, std::int64_t hh) {
+    std::vector<std::int64_t> rows(g.cells(), 0), out(g.cells(), 0);
+    for (std::int32_t y = 0; y < g.height; ++y) {
+        for (std::int32_t x = 0; x < g.width; ++x) {
+            std::int64_t t = 0;
+            const std::int64_t lo = std::max<std::int64_t>(0, x - hh), hi = std::min<std::int64_t>(g.width - 1, x + hh);
+            for (std::int64_t xx = lo; xx <= hi; ++xx) {
+                t += v[g.index(static_cast<std::int32_t>(xx), y)];
+            }
+            rows[g.index(x, y)] = t;
+        }
+    }
+    for (std::int32_t y = 0; y < g.height; ++y) {
+        for (std::int32_t x = 0; x < g.width; ++x) {
+            std::int64_t t = 0;
+            const std::int64_t lo = std::max<std::int64_t>(0, y - hh), hi = std::min<std::int64_t>(g.height - 1, y + hh);
+            for (std::int64_t yy = lo; yy <= hi; ++yy) {
+                t += rows[g.index(x, static_cast<std::int32_t>(yy))];
+            }
+            out[g.index(x, y)] = t;
+        }
+    }
+    return out;
+}
+
+struct WetShare {
+    std::vector<std::int64_t> count, total;
+};
+
+// B2c with h = r_cells div 2: two passes, each clipped.
+inline WetShare own_wet_share(Grid g, std::span<const std::uint8_t> water, std::span<const std::int64_t> hand,
+                              std::int64_t wet_hand_raw, std::int64_t r_cells) {
+    const std::int64_t hh = r_cells / 2;
+    const std::vector<std::int64_t> wet = own_wet(water, hand, wet_hand_raw);
+    const std::vector<std::int64_t> one(g.cells(), 1);
+    return WetShare{own_box(g, own_box(g, wet, hh), hh), own_box(g, own_box(g, one, hh), hh)};
+}
+
 inline std::int64_t rb(std::int64_t sc, std::int64_t b) {
     return worldgen::mul_int(Fx::from_raw(sc), b).raw();  // non-sentinel bounds only
 }
@@ -315,16 +485,17 @@ inline Jittered own_jitter(std::int64_t temperature, std::int64_t rainfall, std:
     return Jittered{tq.raw(), rq.raw()};
 }
 
-enum Condition : std::uint8_t { C_TEMP, C_RAIN, C_ELEV, C_SLOPE, C_HAND, C_COAST, C_COUNT };
-inline constexpr std::array<std::string_view, C_COUNT> CONDITION_NAMES = {"temp", "rain", "elev",
-                                                                           "slope", "hand", "coast"};
+enum Condition : std::uint8_t { C_TEMP, C_RAIN, C_ELEV, C_SLOPE, C_HAND, C_COAST, C_RDIST, C_WET, C_COUNT };
+inline constexpr std::array<std::string_view, C_COUNT> CONDITION_NAMES = {"temp",  "rain",  "elev", "slope",
+                                                                           "hand",  "coast", "rdist", "wet"};
 
 struct Cell {
     std::int64_t tq = 0, rq = 0, elevation = 0, s2 = 0, hand = 0, coast = 0;
+    std::int64_t d34 = FAR, wcount = 0, wtotal = 1;  // B2b, B2c (0.9.0)
 };
 
-// The conditions of B4 that rule r fails, as a bit set.
-inline std::uint32_t failures(const Rule& r, std::int64_t sc, const Cell& c) {
+// The conditions of B4 that rule r fails, as a bit set; ws the wet scale.
+inline std::uint32_t failures(const Rule& r, std::int64_t sc, const Cell& c, std::int64_t ws = ONE) {
     // Unbounded sentinels (4.1, amended 2026-11-17): a bound at the extreme
     // of its field's type skips that comparison.
     std::uint32_t f = 0;
@@ -345,6 +516,12 @@ inline std::uint32_t failures(const Rule& r, std::int64_t sc, const Cell& c) {
     }
     if (r.coast_max != 32767 && c.coast > r.coast_max) {
         f |= 1U << C_COAST;
+    }
+    if (r.rdist_max != 32767 && 16 * c.d34 > 3 * r.rdist_max) {
+        f |= 1U << C_RDIST;
+    }
+    if (r.wet_min != 0 && need_of(r.wet_min, ws) * c.wtotal > c.wcount * ONE) {
+        f |= 1U << C_WET;
     }
     return f;
 }
@@ -375,10 +552,11 @@ inline std::uint8_t fallback_of(const std::vector<Def>& defs) {
 using FailCounts = std::map<std::string, std::int64_t>;
 
 // B4 for one cell in priority order; optionally records sole failures.
-inline std::uint8_t own_lookup(const std::vector<Def>& defs, std::int64_t sc, const Cell& c, FailCounts* fails = nullptr) {
+inline std::uint8_t own_lookup(const std::vector<Def>& defs, std::int64_t sc, const Cell& c, FailCounts* fails = nullptr,
+                               std::int64_t ws = ONE) {
     for (const Def* d : ordered(defs)) {
         for (std::size_t ri = 0; ri < d->rules.size(); ++ri) {
-            const std::uint32_t f = failures(d->rules[ri], sc, c);
+            const std::uint32_t f = failures(d->rules[ri], sc, c, ws);
             if (f == 0) {
                 return d->code;
             }
@@ -396,7 +574,8 @@ inline std::uint8_t own_lookup(const std::vector<Def>& defs, std::int64_t sc, co
 
 // Invariant 4 written differently: every rule of every definition is
 // evaluated and the matching definition of highest priority kept.
-inline std::uint8_t own_lookup_exhaustive(const std::vector<Def>& defs, std::int64_t sc, const Cell& c) {
+inline std::uint8_t own_lookup_exhaustive(const std::vector<Def>& defs, std::int64_t sc, const Cell& c,
+                                          std::int64_t ws = ONE) {
     std::int64_t best = -1;
     std::uint8_t code = fallback_of(defs);
     for (const Def& d : defs) {
@@ -404,7 +583,7 @@ inline std::uint8_t own_lookup_exhaustive(const std::vector<Def>& defs, std::int
             continue;
         }
         for (const Rule& r : d.rules) {
-            if (failures(r, sc, c) == 0 && d.priority > best) {
+            if (failures(r, sc, c, ws) == 0 && d.priority > best) {
                 best = d.priority;
                 code = d.code;
             }
@@ -481,7 +660,9 @@ inline std::vector<std::int64_t> noise_grid(std::uint64_t seed, std::string_view
 // Every intermediate of the test's own stage.
 struct Own {
     std::int64_t scale = 0;
-    std::vector<std::int64_t> hand, s2, nt, nr, tq, rq;
+    std::int64_t wet_scale = 0;
+    std::vector<std::int64_t> hand, s2, d34, nt, nr, tq, rq;
+    WetShare wet;
     std::vector<std::uint8_t> b4, biome;
     B5Stats b5;
     FailCounts fails;
@@ -496,7 +677,10 @@ inline Own own_biomes(const biome_api::Inputs& in, const std::vector<Def>& defs,
     REQUIRE_MESSAGE(h.has_value(), "the inputs violate the G7 preconditions");
     o.hand = *h;
     o.s2 = own_s2(g, in.elevation);
+    o.d34 = own_d34(g, in.water, in.river, v.rdist_k);
+    o.wet = own_wet_share(g, in.water, o.hand, v.wet_hand, v.wet_window / 16);
     o.scale = scale_for(v, std::max(g.width, g.height));
+    o.wet_scale = wet_scale_for(v, std::max(g.width, g.height));
     o.nt = noise_grid(seed, STREAM_TJ, g, in.water, v.jitter);
     o.nr = noise_grid(seed, STREAM_RJ, g, in.water, v.jitter);
     o.tq.assign(g.cells(), 0);
@@ -514,9 +698,10 @@ inline Own own_biomes(const biome_api::Inputs& in, const std::vector<Def>& defs,
         const Jittered j = own_jitter(in.temperature[i], in.rainfall[i], o.nt[i], o.nr[i], v);
         o.tq[i] = j.tq;
         o.rq[i] = j.rq;
-        const Cell c{j.tq, j.rq, in.elevation[i], o.s2[i], o.hand[i], in.coast_dist[i]};
+        const Cell c{j.tq,      j.rq,       in.elevation[i],    o.s2[i],           o.hand[i],
+                     in.coast_dist[i], o.d34[i], o.wet.count[i], o.wet.total[i]};
         const bool dry = in.water[i] == WATER_DRY;
-        o.b4[i] = own_lookup(defs, o.scale, c, dry ? &o.fails : nullptr);
+        o.b4[i] = own_lookup(defs, o.scale, c, dry ? &o.fails : nullptr, o.wet_scale);
         if (dry) {
             o.fired[o.b4[i]] += 1;
         }
@@ -562,8 +747,12 @@ inline constexpr std::int32_t DESIGNED_W = 40;
 inline constexpr std::array<std::int64_t, 4> DESIGNED_BASE = {90, 60, 20, 0};
 inline constexpr std::int64_t DESIGNED_AREA = 2560;
 
-inline biome_api::Inputs designed_inputs(std::uint64_t f) {
-    worldgen::Rng rng(worldgen::substream(worldgen::stream_key(0, STREAM_TEST), f));
+// Terrace fixture f (golden header; reference terrace_elevation): draws from
+// substream 100 + f, zones lowland (x <= 12), terrace (13..20), valley (21..38).
+inline constexpr std::array<std::int64_t, 2> TERRACE_BASE = {90, 20};
+
+inline biome_api::Inputs designed_inputs(std::uint64_t f, bool terrace = false) {
+    worldgen::Rng rng(worldgen::substream(worldgen::stream_key(0, STREAM_TEST), terrace ? 100 + f : f));
     biome_api::Inputs in;
     in.grid = Grid{DESIGNED_W, DESIGNED_W};
     std::vector<std::int64_t> ut, ur;
@@ -577,6 +766,16 @@ inline biome_api::Inputs designed_inputs(std::uint64_t f) {
             std::int64_t e = 0;
             if (x == 0 || y == 0 || x == DESIGNED_W - 1 || y == DESIGNED_W - 1) {
                 e = -20;
+            } else if (terrace) {
+                const std::int64_t d = y > 20 ? y - 20 : 20 - y;
+                if (x <= 12) {
+                    e = 3 + x + a % 4;
+                } else if (x <= 20) {
+                    e = 32 + 2 * (x - 13) + a % 2;
+                } else {
+                    e = 3050 + 8 * (38 - x) + 30 * std::min<std::int64_t>(d, 3) - 40 * std::max<std::int64_t>(0, d - 3) +
+                        a % 3;
+                }
             } else if (x <= 13) {
                 e = 3 + x + a % 4;
             } else if (x <= 19) {
@@ -595,7 +794,7 @@ inline biome_api::Inputs designed_inputs(std::uint64_t f) {
     in.flow_dir = h.flow_dir;
     in.river = h.river;
     in.coast_dist = h.coast_dist;
-    const std::int64_t base = DESIGNED_BASE[f % DESIGNED_BASE.size()];
+    const std::int64_t base = terrace ? TERRACE_BASE[f % TERRACE_BASE.size()] : DESIGNED_BASE[f % DESIGNED_BASE.size()];
     for (std::size_t i = 0; i < in.grid.cells(); ++i) {
         const std::int64_t e = std::max<std::int64_t>(in.elevation[i], 0);
         // floor division of a non-negative numerator
@@ -643,10 +842,11 @@ inline std::string biome_table_hash(const std::vector<Def>& defs) {
     return worldgen::to_hex(s.final());
 }
 
-inline std::string climate_table_hash(std::int64_t wind) {
+// Logical hash of table climate at schema 4: (id 1, wind_toward, temp_offset_dc).
+inline std::string climate_table_hash(std::int64_t wind, std::int64_t offset_dc) {
     worldgen::Sha256 s;
-    elev_test::put_le(s, 2, 8);
-    for (const std::int64_t v : {std::int64_t{1}, wind}) {
+    elev_test::put_le(s, 3, 8);
+    for (const std::int64_t v : {std::int64_t{1}, wind, offset_dc}) {
         elev_test::put_le(s, 1, 1);
         elev_test::put_le(s, static_cast<std::uint64_t>(v), 8);
     }
@@ -724,7 +924,7 @@ inline constexpr std::array<std::string_view, 8> WIND_NAMES = {"E", "SE", "S", "
 
 struct GoldenCase {
     std::string name;
-    std::string fixture;  // shipped | small | designed
+    std::string fixture;  // shipped | small | designed | terrace
     std::int32_t n = 0;
     std::uint64_t seed = 0;
     Overrides overrides;
@@ -792,6 +992,9 @@ inline const std::vector<GoldenCase>& golden() {
 inline biome_api::Inputs case_inputs(const GoldenCase& c) {
     if (c.fixture == "designed") {
         return designed_inputs(c.seed);
+    }
+    if (c.fixture == "terrace") {
+        return designed_inputs(c.seed, true);
     }
     REQUIRE((c.fixture == "shipped" || c.fixture == "small"));
     return world_inputs(c.seed, c.n, c.fixture == "small");
