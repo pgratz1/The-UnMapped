@@ -56,6 +56,11 @@ inline constexpr std::int64_t RAINFALL_MAX = 10000;
 // bound behind C4's overflow argument, section 7).
 inline constexpr std::int64_t SURFACE_MAX_DM = 32767;
 
+// The bound of temp_offset_max_c (P1-03 4), degrees C, and so of the
+// offset off_dc of C2b and of climate.temp_offset_dc, tenths (P1-03 3, 7).
+inline constexpr std::int64_t TEMP_OFFSET_MAX_C = 5;
+inline constexpr std::int64_t TEMP_OFFSET_MAX_DC = 50;
+
 // Number of wind weights: one per D8 code (P1-03 4).
 inline constexpr std::size_t WIND_CODES = 8;
 
@@ -80,6 +85,7 @@ struct ClimateTuning {
     geo::FbmM rain_noise;
     Fx rain_noise_amp;            // rainfall x (1 + amp x noise)
     std::int64_t rain_min_mm = 0;  // floor of the stored rainfall
+    Fx temp_offset_max_c;          // half-width of the per-world offset of C2b, degrees C, [0, 5]
 
     friend bool operator==(const ClimateTuning&, const ClimateTuning&) = default;
 };
@@ -110,6 +116,15 @@ struct ClimateTuning {
 // entries, none negative, with a non-zero sum.
 [[nodiscard]] geo::Direction climate_wind(std::uint64_t seed, std::span<const std::int64_t> weights);
 
+// --- C2b: per-world temperature offset -------------------------------------------------
+
+// C2b (D9, sequential; generator 0.9.0): the world's temperature offset in
+// tenths of a degree, off_dc. M = round_int(mul_int(temp_offset_max_c, 10));
+// 0 if M = 0 (no draw), otherwise the first value of
+// Rng(stream_key(seed, "geo.climate.temp_offset")).uniform_i64(-M, M).
+// Fatal unless temp_offset_max_c is in [0, 5].
+[[nodiscard]] std::int64_t climate_temp_offset_dc(std::uint64_t seed, const ClimateTuning& tuning);
+
 // --- C3: temperature ----------------------------------------------------------------------
 
 // C3 for the cell of row y of a grid of `height` rows: v = V =
@@ -118,17 +133,19 @@ struct ClimateTuning {
 // temp_noise); tn = mul(temp_noise_amp_c, noise)):
 //   t_sea = temp_north_c + mul(temp_south_c - temp_north_c, v)
 //   lap   = div_int(mul_int(lapse_c_per_km, s_dm), 10000)
-//   T     = (t_sea - lap) + tn
+//   off   = from_ratio(offset_dc, 10)       (offset_dc = off_dc of C2b)
+//   T     = ((t_sea + off) - lap) + tn
 //   temperature = clamp(round_int(mul_int(T, 10)), -600, 500)
-// Fatal unless 0 <= y < height.
+// Fatal unless 0 <= y < height <= INT32_MAX and -50 <= offset_dc <= 50.
 [[nodiscard]] std::int16_t climate_temperature_cell(std::int64_t y, std::int64_t height, std::int64_t s_dm, Fx noise,
-                                                    const ClimateTuning& tuning);
+                                                    std::int64_t offset_dc, const ClimateTuning& tuning);
 
 // C3 on a W x H grid (D1, G6 row blocks), the surface S as climate_surface
-// returns it.
+// returns it, with the offset off_dc of C2b. Fatal unless -50 <= offset_dc <= 50.
 [[nodiscard]] std::vector<std::int16_t> climate_temperature(std::uint64_t seed, geo::Grid grid,
                                                             std::span<const std::int64_t> surface,
-                                                            const ClimateTuning& tuning, std::uint32_t threads = 1);
+                                                            std::int64_t offset_dc, const ClimateTuning& tuning,
+                                                            std::uint32_t threads = 1);
 
 // --- C4: smoothed surface -----------------------------------------------------------------
 
@@ -189,7 +206,8 @@ struct ClimateLayers {
 };
 
 // C1 to C6 on a W x H grid from the four input layers (P1-03 10): the wind
-// is climate_wind(seed, tuning.wind_weights), C4 is climate_triangle_mean.
+// is climate_wind(seed, tuning.wind_weights), the offset of C3 is
+// climate_temp_offset_dc(seed, tuning) (C2b), C4 is climate_triangle_mean.
 [[nodiscard]] ClimateLayers climate_layers(geo::Grid grid, std::span<const std::int16_t> elevation,
                                            std::span<const std::uint8_t> water,
                                            std::span<const std::uint16_t> water_depth,
@@ -201,7 +219,8 @@ struct ClimateLayers {
 // layers, each N x N with N = param.map_size (fatal otherwise, "climate:
 // input precondition: ..."), runs climate_layers with meta.seed and writes
 // `temperature` then `rainfall` (codec 1), then the one row of table
-// `climate` (id 1, wind_toward = climate_wind(seed, wind_weights); schema 3).
+// `climate` (id 1, wind_toward = climate_wind(seed, wind_weights),
+// temp_offset_dc = climate_temp_offset_dc(seed, tuning); schema 4).
 void run_climate(StageContext& context);
 
 }  // namespace worldgen::stages

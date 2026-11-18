@@ -200,9 +200,10 @@ db::Result<std::string> build_report(const db::WorldReader& world) {
             }
         }
 
-        // Tables climate and biome (schema 3, P1-03 9, P1-04 9): read and
+        // Tables climate and biome (schema 4, P1-03 9, P1-04 9): read and
         // checked whenever they exist; a malformed row is a corrupt table.
         std::optional<std::int64_t> wind_toward;
+        std::optional<std::int64_t> temp_offset_dc;
         std::optional<std::vector<BiomeRecord>> biomes;
         for (const db::TableSummary& t : tables.value()) {
             if (t.name == db::CLIMATE_TABLE) {
@@ -215,6 +216,7 @@ db::Result<std::string> build_report(const db::WorldReader& world) {
                     return db::Error{db::ErrorCode::corrupt_layer, "corrupt table 'climate': " + *climate.problem};
                 }
                 wind_toward = climate.wind_toward;
+                temp_offset_dc = climate.temp_offset_dc;
             } else if (t.name == db::BIOME_TABLE) {
                 db::Result<std::vector<std::vector<db::ColumnValue>>> rows = world.table_rows(db::BIOME_TABLE);
                 if (!rows.ok()) {
@@ -255,6 +257,7 @@ db::Result<std::string> build_report(const db::WorldReader& world) {
             geo.rainfall = ptr(7);
             geo.passes = passes ? &*passes : nullptr;
             geo.wind_toward = wind_toward;
+            geo.temp_offset_dc = temp_offset_dc;
             geo.biome = ptr(8);
             geo.biomes = biomes ? &*biomes : nullptr;
             std::string problem;

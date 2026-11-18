@@ -382,18 +382,21 @@ inline constexpr std::int64_t PASS_FOOT_R2 = 1369;
 [[nodiscard]] std::string climate_lines(std::span<const std::int16_t> e, std::span<const std::int16_t> temperature,
                                         std::span<const std::uint16_t> rainfall);
 
-// --- Tables of schema 3: climate and biome (P1-03 3, P1-04 3) ----------------------
+// --- Tables climate and biome (schema 4; P1-03 3, P1-04 3) ----------------------
 
 // The names of the wind codes for wind_toward (P1-00 2.3): "E", "SE", "S",
 // "SW", "W", "NW", "N", "NE" for 0..7. FatalError for any other code.
 [[nodiscard]] std::string_view wind_code_name(std::int64_t code);
 
 // The rows of table `climate` as report reads them (P1-03 9): std::nullopt
-// for an empty table; the wind_toward code of its row otherwise. Returns the
-// reason when the table is malformed: more than one row, a row with other
-// than 2 integer columns, an id other than 1, a wind_toward outside 0..7.
+// for an empty table; the wind_toward code and temp_offset_dc of its row
+// otherwise. Returns the reason when the table is malformed, the first of:
+// "<n> rows, expected at most 1"; "the row does not have three integer
+// columns"; "id <v>, expected 1"; "wind_toward <v> outside 0..7";
+// "temp_offset_dc <v> outside -50..50".
 struct ClimateTableResult {
     std::optional<std::int64_t> wind_toward{};
+    std::optional<std::int64_t> temp_offset_dc{};
     std::optional<std::string> problem;
 };
 [[nodiscard]] ClimateTableResult read_climate_rows(std::span<const std::vector<db::ColumnValue>> rows);
@@ -459,6 +462,9 @@ struct GeographyLayers {
     // The wind_toward code of table `climate` (P1-03 9), std::nullopt when
     // the table is empty or absent; printed first of the climate group.
     std::optional<std::int64_t> wind_toward{};
+    // temp_offset_dc of the same row (schema 4), printed as temp_offset_c
+    // right after wind_toward; set together with wind_toward.
+    std::optional<std::int64_t> temp_offset_dc{};
     // The biome layer (P1-04 3) and the rows of table `biome`, null when
     // absent; the biome keys are printed only when both are given.
     const db::LayerGrid* biome = nullptr;
@@ -487,7 +493,7 @@ struct GeographyLayers {
 // The [geography] section (P1-00 10.3): the line "[geography]" then one
 // "<key> = <value>" line per key, in the order of 10.3, each ending in a
 // line feed; the hydrology lines only when has_hydrology(), then
-// wind_toward when it is set, the climate lines (climate_lines) only when
+// wind_toward and temp_offset_c when they are set, the climate lines (climate_lines) only when
 // has_climate(), then the biome lines (biome_lines) only when has_biomes().
 // Values that are
 // undefined on the world print as n/a (percentiles with no land or no ocean,

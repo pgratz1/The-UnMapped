@@ -1,0 +1,24 @@
+[biome.wet_woodland]
+code = 11
+name = "Wet woodland"
+colour = 0x23505E
+water = false
+water_body = "none"
+priority = 18
+fallback = false
+fertility = "0.5"
+timber = "0.7"
+region_noun = "Carr"
+
+[[biome.wet_woodland.rules]]
+temp_min_c = -60
+temp_max_c = 50
+rain_min_mm = 450
+rain_max_mm = 10000
+elev_min_m = 0
+elev_max_m = 300
+slope_max = 100
+hand_max_m = 5
+coast_max_m = 32767
+river_dist_max_m = 112
+wet_frac_min = 0

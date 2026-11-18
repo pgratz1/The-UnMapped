@@ -1,9 +1,9 @@
 #pragma once
 
-// World database schema, version 3 (spec P0-02 sections 4.2, 5;
+// World database schema, version 4 (spec P0-02 sections 4.2, 5;
 // docs/specs/schema.md; table `pass` from P1-01 section 9.1, schema 2;
 // tables `biome` and `climate` from P1-04 section 3 and P1-03 section 3,
-// schema 3).
+// schema 3; column climate.temp_offset_dc, schema 4, P0-02 amendment 16).
 //
 // The DDL strings below are stored verbatim in sqlite_schema and are
 // therefore part of every world file. Each is one line with single spaces,
@@ -19,7 +19,7 @@ namespace worldgen::db {
 
 // The schema version (P0-02 5.2 rule 1). Written to PRAGMA user_version
 // and meta.schema_version; a reader supports exactly this version.
-inline constexpr std::int64_t SCHEMA_VERSION = 3;
+inline constexpr std::int64_t SCHEMA_VERSION = 4;
 
 // PRAGMA application_id of every world file: 0x554E4D50, ASCII "UNMP"
 // (P0-02 4.2, header offset 68 in 6.1).
@@ -52,17 +52,19 @@ inline constexpr std::string_view DDL_BIOME =
     "CREATE TABLE biome (id INTEGER PRIMARY KEY, key TEXT NOT NULL UNIQUE, name TEXT NOT NULL, "
     "colour INTEGER NOT NULL, water INTEGER NOT NULL) STRICT";
 
-// DDL of the climate table (P1-03 3, schema version 3), executed fifth: one
-// row (id 1) written by the climate stage.
+// DDL of the climate table (P1-03 3, schema version 4; the column
+// temp_offset_dc is new in version 4), executed fifth: one row (id 1)
+// written by the climate stage.
 inline constexpr std::string_view DDL_CLIMATE =
-    "CREATE TABLE climate (id INTEGER PRIMARY KEY, wind_toward INTEGER NOT NULL) STRICT";
+    "CREATE TABLE climate (id INTEGER PRIMARY KEY, wind_toward INTEGER NOT NULL, temp_offset_dc INTEGER NOT NULL) "
+    "STRICT";
 
 // The names of the biome and climate tables (P1-04 3, P1-03 3).
 inline constexpr std::string_view BIOME_TABLE = "biome";
 inline constexpr std::string_view CLIMATE_TABLE = "climate";
 
 // The DDL statements in execution order (P0-02 5.4, section 6 step 2;
-// schema 3: meta, layer, pass, biome, climate).
+// schema 4: meta, layer, pass, biome, climate).
 inline constexpr std::array<std::string_view, 5> DDL_STATEMENTS = {DDL_META, DDL_LAYER, DDL_PASS, DDL_BIOME,
                                                                    DDL_CLIMATE};
 

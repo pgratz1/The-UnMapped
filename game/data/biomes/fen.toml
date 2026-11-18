@@ -1,0 +1,24 @@
+[biome.fen]
+code = 12
+name = "Fen"
+colour = 0x8A8070
+water = false
+water_body = "none"
+priority = 45
+fallback = false
+fertility = "0.25"
+timber = "0.2"
+region_noun = "Fen"
+
+[[biome.fen.rules]]
+temp_min_c = -60
+temp_max_c = 50
+rain_min_mm = 500
+rain_max_mm = 10000
+elev_min_m = 0
+elev_max_m = 200
+slope_max = "0.05"
+hand_max_m = 3
+coast_max_m = 32767
+river_dist_max_m = 32767
+wet_frac_min = "0.45"

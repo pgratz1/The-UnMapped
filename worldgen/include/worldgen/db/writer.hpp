@@ -80,11 +80,13 @@ struct BiomeRow {
     std::int64_t water = 0;
 };
 
-// The one row of table `climate` (P1-03 3, C7; schema 3): id 1 and the D8
-// code (0 E to 7 NE) the prevailing wind blows toward.
+// The one row of table `climate` (P1-03 3, C7; schema 4): id 1, the D8
+// code (0 E to 7 NE) the prevailing wind blows toward and the world's
+// temperature offset in tenths of a degree (C2b, -50..50).
 struct ClimateRow {
     std::int64_t id = 1;
     std::int64_t wind_toward = 0;
+    std::int64_t temp_offset_dc = 0;
 };
 
 // One stage's transaction on the working database (P0-02 6 step 3).

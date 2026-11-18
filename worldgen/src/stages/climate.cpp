@@ -104,6 +104,7 @@ ClimateTuning climate_tuning_from(const data::Record& record) {
     t.rain_noise = geo::fbm_m_from(record.get("rain_noise"));
     t.rain_noise_amp = record.get_fx("rain_noise_amp");
     t.rain_min_mm = record.get_int("rain_min_mm");
+    t.temp_offset_max_c = record.get_fx("temp_offset_max_c");
     return t;
 }
 
@@ -166,25 +167,48 @@ Direction climate_wind(std::uint64_t seed, std::span<const std::int64_t> weights
     return static_cast<Direction>(k);
 }
 
+// --- C2b: per-world temperature offset (D9, sequential) ------------------------------------------
+
+std::int64_t climate_temp_offset_dc(std::uint64_t seed, const ClimateTuning& tuning) {
+    if (tuning.temp_offset_max_c < Fx{} || tuning.temp_offset_max_c > Fx::from_int(TEMP_OFFSET_MAX_C)) {
+        fatal("climate_temp_offset_dc: temp_offset_max_c outside [0, 5]");
+    }
+    // M = round_int(mul_int(temp_offset_max_c, 10)): whole tenths, 0..50.
+    const std::int64_t m = mul_int(tuning.temp_offset_max_c, 10).round_int();
+    if (m == 0) {
+        return 0;  // no draw; the stream serves nothing else
+    }
+    Rng rng(stream_key(seed, streams::geo_climate_temp_offset));
+    return rng.uniform_i64(-m, m);  // one call, inclusive bounds (P0-01 6.3)
+}
+
 // --- C3: temperature (D1, G6 row blocks) ---------------------------------------------------------
 
 std::int16_t climate_temperature_cell(std::int64_t y, std::int64_t height, std::int64_t s_dm, Fx noise,
-                                      const ClimateTuning& tuning) {
+                                      std::int64_t offset_dc, const ClimateTuning& tuning) {
     if (y < 0 || y >= height || height > std::numeric_limits<std::int32_t>::max()) {
         fatal("climate_temperature_cell: row outside the grid");  // also keeps 2 height in int64
     }
+    if (offset_dc < -TEMP_OFFSET_MAX_DC || offset_dc > TEMP_OFFSET_MAX_DC) {
+        fatal("climate_temperature_cell: offset_dc outside [-50, 50]");
+    }
+    const Fx off = Fx::from_ratio(offset_dc, 10);  // C2b, RHA
     const Fx v = Fx::from_ratio(2 * y + 1, 2 * height);
     const Fx t_sea = tuning.temp_north_c + mul(tuning.temp_south_c - tuning.temp_north_c, v);
     const Fx lap = div_int(mul_int(tuning.lapse_c_per_km, s_dm), 10000);  // S in dm; 10000 dm = 1 km
     const Fx tn = mul(tuning.temp_noise_amp_c, noise);
-    const Fx t = (t_sea - lap) + tn;
+    const Fx t = ((t_sea + off) - lap) + tn;  // t_sea + 0 is exact
     const std::int64_t tenths = clamp_checked(mul_int(t, 10).round_int(), TEMPERATURE_MIN, TEMPERATURE_MAX);
     return static_cast<std::int16_t>(tenths);
 }
 
 std::vector<std::int16_t> climate_temperature(std::uint64_t seed, Grid grid, std::span<const std::int64_t> surface,
-                                              const ClimateTuning& tuning, std::uint32_t threads) {
+                                              std::int64_t offset_dc, const ClimateTuning& tuning,
+                                              std::uint32_t threads) {
     check_threads(threads);
+    if (offset_dc < -TEMP_OFFSET_MAX_DC || offset_dc > TEMP_OFFSET_MAX_DC) {
+        fatal("climate_temperature: offset_dc outside [-50, 50]");
+    }
     geo::check_grid_array(grid, surface.size(), "climate_temperature: surface");
     const std::uint64_t key = stream_key(seed, streams::geo_climate_temperature);
     std::vector<std::int16_t> out(grid.cells(), 0);
@@ -194,7 +218,7 @@ std::vector<std::int16_t> climate_temperature(std::uint64_t seed, Grid grid, std
             for (std::int32_t x = 0; x < grid.width; ++x) {
                 const CellIndex i = grid.index(x, y);
                 const Fx nz = geo::fbm_m(key, cell_centre_m(x), ym, tuning.temp_noise);
-                out[i] = climate_temperature_cell(y, grid.height, surface[i], nz, tuning);
+                out[i] = climate_temperature_cell(y, grid.height, surface[i], nz, offset_dc, tuning);
             }
         }
     });
@@ -483,7 +507,8 @@ ClimateLayers climate_layers(Grid grid, std::span<const std::int16_t> elevation,
     const std::vector<std::int64_t> s = climate_surface(grid, elevation, water, water_depth);  // C1
     const Direction wind = climate_wind(seed, tuning.wind_weights);                             // C2
     ClimateLayers out;
-    out.temperature = climate_temperature(seed, grid, s, tuning, threads);  // C3
+    const std::int64_t offset_dc = climate_temp_offset_dc(seed, tuning);                       // C2b
+    out.temperature = climate_temperature(seed, grid, s, offset_dc, tuning, threads);          // C3
     std::vector<Fx> hs = climate_triangle_mean(grid, s, tuning.smooth_radius_m / geo::CELL_M, threads);  // C4
     ClimateSweep sweep = climate_sweep(grid, water, hs, wind, tuning);                                // C5
     hs.clear();
@@ -522,6 +547,7 @@ void run_climate(StageContext& context) {
     db::ClimateRow row;
     row.id = 1;
     row.wind_toward = static_cast<std::int64_t>(climate_wind(context.seed(), tuning.wind_weights));
+    row.temp_offset_dc = climate_temp_offset_dc(context.seed(), tuning);
     context.write_climate(row);
 }
 

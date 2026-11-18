@@ -1,0 +1,24 @@
+[biome.steppe]
+code = 10
+name = "Steppe"
+colour = 0xE0D296
+water = false
+water_body = "none"
+priority = 15
+fallback = false
+fertility = "0.6"
+timber = "0.05"
+region_noun = "Steppe"
+
+[[biome.steppe.rules]]
+temp_min_c = -60
+temp_max_c = 50
+rain_min_mm = 0
+rain_max_mm = 600
+elev_min_m = 0
+elev_max_m = 3000
+slope_max = 100
+hand_max_m = 3000
+coast_max_m = 32767
+river_dist_max_m = 32767
+wet_frac_min = 0
