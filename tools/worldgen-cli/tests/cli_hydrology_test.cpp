@@ -221,7 +221,7 @@ TEST_CASE("cli P1-00 X3 (slow): generate at 512, seeds 0 and 42, --threads 1, 2 
     // seed 42 against the reference.
     const auto lines = layer_lines(sb, sb.file("s42-1.db"));
     const std::map<std::string, std::string> g = golden_case("shipped-512-s42");
-    REQUIRE(lines.size() == 11U);  // the default run ends with biomes (P1-04, layer 11)
+    REQUIRE(lines.size() == 18U);  // the default run ends with resources (P1-05, layer 18)
     for (std::size_t i = 1; i < 8U; ++i) {
         CAPTURE(lines[i].first);
         CHECK(lines[i].second == g.at(lines[i].first));
