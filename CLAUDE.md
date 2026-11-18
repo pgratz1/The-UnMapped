@@ -130,17 +130,29 @@ The build tree is `%LOCALAPPDATA%\the-unmapped\build\<source dir name>\<preset>\
 | `tools/worldgen-cli/tests/worldgen-cli-tests` | doctest integration tests that run `worldgen-cli` as a child process |
 | `tools/worldgen-cli/worldgen-cli-test-hooks` | `worldgen-cli` with a test-only fault hook, used by `worldgen-cli-tests`; never shipped |
 
-`ctest` runs `worldgen-tests`, `worldgen-cli-tests` and two quick `worldgen-cli` checks (`--version`, unknown command). Run a doctest executable directly for options such as `-tc="<name>"` or `-s`. Tests write scratch files under the build tree or the system temp directory, never into the source tree. `worldgen-tests` and `worldgen-cli-tests` have a CTest timeout of 3600 s on every preset (CTest's default of 1500 s is too close to the sanitizer run), and `gdext-headless-check` one of 300 s.
+`ctest` runs each doctest executable as several entries, each a disjoint group of its source files (doctest `-sf=`), so that they run in parallel; the test presets run four at a time (`"jobs": 4`; `ctest --preset <preset> -j 6` overrides it). The groups are declared with `unmapped_add_doctest_shards()` (`cmake/UnmappedTestShards.cmake`) at the end of `worldgen/tests/CMakeLists.txt` and `tools/worldgen-cli/tests/CMakeLists.txt`:
 
-Approximate full `ctest` time on a 6-core Linux machine:
-
-| Preset | `ctest` |
+| CTest entry | What it runs |
 | --- | --- |
-| `linux-gcc-release`, `linux-clang-release` | about two and a half minutes |
-| `linux-gcc-debug`, `linux-clang-debug` | about ten minutes |
-| `linux-clang-asan` | about 42 minutes (`worldgen-tests` alone about 30) |
+| `worldgen-tests-elevation-golden`, `-elevation`, `-hydrology`, `-climate`, `-biomes`, `-biomes-inspect` | `worldgen-tests` on that stage's test files |
+| `worldgen-tests-other` | `worldgen-tests` on every file no group names (core, data, database, geo, pipeline, inspection; a new test file lands here until it is given a group) |
+| `worldgen-cli-tests-hydrology-elevation`, `-passes-climate`, `-biomes-generate` | `worldgen-cli-tests` on those files |
+| `worldgen-cli-tests-other` | `worldgen-cli-tests` on every other file |
+| `worldgen-tests-partition`, `worldgen-cli-tests-partition` | checks with `--count` (and `--count --no-skip`) that the groups and `-other` hold every test case exactly once and that no group is empty |
+| `worldgen-cli-version`, `worldgen-cli-unknown-command` | two quick `worldgen-cli` checks |
+| `gdext-headless-check` | only with the extension (see below) |
 
-Measured 2026-11-18 at generator 0.9.0. Windows times are not measured yet. `worldgen-tests` takes most of it. For quick iteration use `linux-gcc-release` or `linux-clang-release` (run a single doctest executable with `-tc=` or `-ts=` for narrower checks); run both debug presets and `linux-clang-asan` before handing work on.
+`ctest -R '^worldgen-tests'` runs the library entries only. The executables are unchanged: run one directly for the whole set or for options such as `-tc="<name>"`, `-ts=`, `-sf=` or `-s`. A group keeps a stage's files together, since its support headers cache inputs in memory per process; a group that grows past the others is split by naming fewer files. Every entry is safe to run alongside the others: scratch directories are per process (process id, or created atomically) and caches are in memory. Tests write scratch files under the build tree or the system temp directory, never into the source tree. Each `worldgen-tests-*` and `worldgen-cli-tests-*` entry has a CTest timeout of 3600 s on every preset, and `gdext-headless-check` one of 300 s.
+
+Approximate full `ctest` time on a 6-core Linux machine, with the presets' four jobs and with `-j 1`:
+
+| Preset | `ctest` (4 jobs) | `ctest -j 1` |
+| --- | --- | --- |
+| `linux-gcc-release`, `linux-clang-release` | about 55 seconds | about two and a half minutes |
+| `linux-gcc-debug`, `linux-clang-debug` | about seven minutes | about eleven minutes |
+| `linux-clang-asan` | about 19 minutes | about 45 minutes |
+
+Measured 2026-11-18 at generator 0.9.0 on a machine running other builds, so take them as upper bounds. Windows times are not measured yet. Under `linux-clang-asan` the longest entries (`worldgen-tests-elevation`, `-hydrology` and `-elevation-golden`) take about 10 minutes each, which is the floor however many jobs run. For quick iteration use `linux-gcc-release` or `linux-clang-release` (run a single doctest executable with `-tc=` or `-ts=` for narrower checks); run both debug presets and `linux-clang-asan` before handing work on.
 
 ### Determinism lint
 
@@ -205,7 +217,7 @@ All flags are set in `cmake/UnmappedCompilerFlags.cmake`:
 
 ### Adding code
 
-- Library sources go in `worldgen/CMakeLists.txt`, library tests in `worldgen/tests/CMakeLists.txt` (`worldgen-tests`), CLI sources in `tools/worldgen-cli/CMakeLists.txt` and CLI integration tests in `tools/worldgen-cli/tests/CMakeLists.txt` (`worldgen-cli-tests`). Every new project target calls `unmapped_project_target()`.
+- Library sources go in `worldgen/CMakeLists.txt`, library tests in `worldgen/tests/CMakeLists.txt` (`worldgen-tests`), CLI sources in `tools/worldgen-cli/CMakeLists.txt` and CLI integration tests in `tools/worldgen-cli/tests/CMakeLists.txt` (`worldgen-cli-tests`). A new test file runs in the `-other` CTest entry; a large one gets its own `SHARD` line in the `unmapped_add_doctest_shards()` call at the end of the same file (pattern `*<file name>`, no directory). Every new project target calls `unmapped_project_target()`.
 - Vendored libraries are linked as `unmapped::sqlite3`, `unmapped::doctest`, `unmapped::tomlplusplus` and `unmapped::stb_image_write`; with `UNMAPPED_BUILD_GDEXT=ON` also `unmapped::godot-cpp`.
 - Extension sources go in `gdext/CMakeLists.txt` (`unmapped_gdext`); scenes and resources in `game/`. See `gdext/README.md`.
 
@@ -258,7 +270,7 @@ GODOT=~/.cache/the-unmapped/tools/godot-4.7.2-stable/Godot_v4.7.2-stable_linux.x
 `.github/workflows/ci.yml` runs on pushes to `main`, on pull requests and by hand (`workflow_dispatch`):
 
 - `determinism-lint` (one Linux job): the two lint commands above.
-- `build` (one job per preset, all seven, on `ubuntu-latest` and `windows-latest`, 180-minute job timeout): configure, build and `ctest` under `$RUNNER_TEMP/unmapped`; then `world-hashes.sh generate` and `expect` (a warning, not a failure, while `p0-worlds.txt` is absent); upload the case files as artifact `world-hashes-<preset>`; finally fail if the checkout holds any generated file.
+- `build` (one job per preset, all seven, on `ubuntu-latest` and `windows-latest`, 180-minute job timeout): configure, build and `ctest` (four entries at a time, from the test preset; the hosted Linux and Windows runners have 4 vCPUs for a public repository) under `$RUNNER_TEMP/unmapped`; then `world-hashes.sh generate` and `expect` (a warning, not a failure, while `p0-worlds.txt` is absent); upload the case files as artifact `world-hashes-<preset>`; finally fail if the checkout holds any generated file.
 - `compare-hashes` (Linux, after every `build` job, also when some failed, not when the run is cancelled): downloads every `world-hashes-*` artifact and runs `world-hashes.sh compare` over every build preset in `CMakePresets.json`. A difference, or a preset with no artifact, fails it. This job is the P0 exit check: the empty worlds are byte-identical across GCC, Clang and MSVC.
 - `gdext` (two jobs, `gdext-linux` with `linux-gcc-release` and `gdext-windows` with `windows-msvc-release`): the extension. Fetches the pinned editor with `tools/ci/fetch-godot.sh --tools-dir "$RUNNER_TEMP/unmapped/tools"` (cached per Godot version and digests file; a restored copy is re-verified), configures with `-DUNMAPPED_BUILD_GDEXT=ON -DUNMAPPED_GODOT=<editor>` into `build/<preset>-gdext`, fails straight after configure if `ctest -N` does not list `gdext-headless-check`, builds, runs `ctest`, prints the headless check's full log, then `world-hashes.sh generate` and `expect` under the label `<preset>-gdext` (artifact `gdext-world-hashes-<preset>`, a name `compare-hashes` does not download), and ends with the clean-checkout check. On failure it also lists the run copy of the project and uploads the headless check's files.
 - `compare-gdext-hashes` (Linux, after `build` and `gdext`): `world-hashes.sh compare <preset> <preset>-gdext` for both presets, which proves that building `worldgen` position independent for the extension changes no output byte. A separate job, so that `compare-hashes` does not wait for the extension builds.
