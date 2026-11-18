@@ -345,3 +345,13 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
 - Proposal: each biome rule's rainfall bounds are multiplied by a per-size factor held in the tuning file (1.125, 1, 0.875), so forest starts at about 810, 720 and 630 mm. Thresholds are not set from each world's own rainfall quantiles: that would give every world the same shares and erase the differences that come from where the ranges lie and which way the wind blows. Measured on 108 worlds: forest 27 to 64% and grassland 16 to 59% of land, every biome present in every world, none above 65%. Marsh still grows with map size (about 1, 2.4 and 5.7% median), because larger maps have more flat lowland; accepted.
 - Interim choice: as proposed, specified in P1-04.
 - Status: open
+
+### More natural biomes, per-world temperature, a thinner coastal forest
+
+- Date: 2026-11-17
+- Raised by: world critic (reviews of climate and biomes), decided by Paul
+- Design doc section: 4 (geography), 5 (peoples and beasts by biome)
+- Problem: with five natural biomes every range had the same rings (bare peak, moor) on its wet and dry sides, grassland was one undivided kind, rivers crossing open country had bare banks, marsh was thin ribbons that never formed a region, every world had the same temperatures, and the first kilometre of every coast was forest even on the dry side.
+- Proposal (Paul, 2026-11-17: "add all of them for more variety"; yes to temperature; yes to the coast): four additions to the natural biomes: heath (dry upland on the lee side of a range), steppe (the dry heart of a rain shadow), wet woodland (along rivers through open country), and fens (marsh allowed to form broad wetlands, enough to be a homeland). Each world gets its own overall temperature, about 2 °C either way. The coastal rain bonus is reduced so lee coasts read as dry. The design doc's list of six biomes (five natural and blighted waste) grows accordingly; races, beasts and the runtime's planting should take the new biomes into account.
+- Interim choice: to be specified as a revision of P1-03 and P1-04 after the first biome stage merges (generator 0.8.0); calibrated on real worlds and reviewed by the world critic before the spec is fixed.
+- Status: open
