@@ -1,6 +1,6 @@
 # P1-06 Regions
 
-Status: draft, spec writer, 2026-11-16, awaiting approval. Phase P1 Geography, stage 6 (`regions`). Design doc section 4 (stage 6: "cells are grouped into named regions of a few square kilometres, the unit the history simulation reasons about"), 5 (civilizations "claim a region"; events have a `region_id`; beast populations per region), 6 (table `region`: `id`, `name`, `biome`, `bounds`, summary statistics). Depends on P0-01 to P0-04, P1-00, P1-02, P1-04 and P1-05. Tuning values marked "guess" and every statistics range are starting points (section 11).
+Status: draft, spec writer, 2026-11-16, awaiting approval. Phase P1 Geography, stage 6 (`regions`). Design doc section 4 (stage 6: "cells are grouped into named regions of a few square kilometres, the unit the history simulation reasons about"), 5 (civilizations "claim a region"; events have a `region_id`; beast populations per region), 6 (table `region`: `id`, `name`, `biome`, `bounds`, summary statistics). Depends on P0-01 to P0-04, P1-00, P1-02, P1-04 and P1-05. Tuning values marked "guess" and every statistics range are starting points (section 11). Amended 2026-11-18 for the biome variety revision (P1-04 third version, generator 0.9.0): the regions tables are schema version 5 (version 4 is `climate.temp_offset_dc`); the biome set has nine natural biomes, with `region_noun` Fen (fen), Marsh (marsh, was Fen), Heath, Steppe and Carr (wet woodland) besides Wood, Downs, Moor and Peaks (P1-04 4.1); the RG9 example's marsh region is `South Marsh`.
 
 ## 1. Purpose
 
@@ -30,7 +30,7 @@ Preconditions (fatal "regions: input precondition: …"): layers present, N × N
 - Table `region`: one row per region.
 - Table `region_border`: one row per pair of regions sharing at least one 4-adjacent pair of cells.
 
-**Schema change (for the lead): schema version 4** (planned in P1-00 9.2 for `region`; `region_border` is new and needs the proposals entry for P1's schema changes updated, P1-00 appendix B8):
+**Schema change (for the lead): schema version 5** (renumbered 2026-11-18: version 4 is the biome variety revision's `climate.temp_offset_dc`, P1-03 3; planned in P1-00 9.2 for `region`; `region_border` is new and needs the proposals entry for P1's schema changes updated, P1-00 appendix B8):
 
 ```
 CREATE TABLE region (id INTEGER PRIMARY KEY, name TEXT NOT NULL, biome INTEGER NOT NULL, x_min INTEGER NOT NULL, y_min INTEGER NOT NULL, x_max INTEGER NOT NULL, y_max INTEGER NOT NULL, seed_x INTEGER NOT NULL, seed_y INTEGER NOT NULL, cells INTEGER NOT NULL, lake_cells INTEGER NOT NULL, river_cells INTEGER NOT NULL, coast_cells INTEGER NOT NULL, elev_mean INTEGER NOT NULL, elev_max INTEGER NOT NULL, habitability_mean INTEGER NOT NULL, walk_area INTEGER NOT NULL, landmass INTEGER NOT NULL) STRICT
@@ -176,7 +176,7 @@ Computed by the spec writer's exact-integer reference (P1-03 5.1) and, for the f
 
 **RG7 merge** (min_cells 100): regions 1 (500 cells), 2 (120), 3 (90), 4 (60, an island: no neighbour); n(1, 2) = 30, n(1, 3) = 12, n(2, 3) = 12. Region 3 is merged (smallest small region with a neighbour) into 1 (tie 12 = 12 to the smaller number); region 1 now has 590 cells and n(1, 2) = 42. Region 4 stays. Result: 1 (590), 2 (120), 4 (60).
 
-**RG9 names** at N = 1024, land centroid (500, 480), `name_central_frac` "0.12" (raw 515396076): r_c = round_int(122.88) = 123. Seeds and dominant biomes: (520, 470) grassland → d² = 500 < 15129: `Central Downs`; (800, 500) forest → dx 300, dy 20, 29 × 20 ≤ 12 × 300: `East Wood`; (200, 200) alpine → dx −300, dy −280: `Northwest Peaks`; (510, 900) marsh → 29 × 10 ≤ 12 × 420: `South Fen`; (790, 560) forest → `East Wood` again, so as the fifth region in id order it is `East Wood II`. Sector checks: (10, 4) East; (10, 5) Southeast; (−3, −7) Northwest; (0, −9) North; (4, 10) South; (5, 12) Southeast. Roman: 1 I, 4 IV, 9 IX, 14 XIV, 40 XL.
+**RG9 names** at N = 1024, land centroid (500, 480), `name_central_frac` "0.12" (raw 515396076): r_c = round_int(122.88) = 123. Seeds and dominant biomes: (520, 470) grassland → d² = 500 < 15129: `Central Downs`; (800, 500) forest → dx 300, dy 20, 29 × 20 ≤ 12 × 300: `East Wood`; (200, 200) alpine → dx −300, dy −280: `Northwest Peaks`; (510, 900) marsh → 29 × 10 ≤ 12 × 420: `South Marsh` (marsh's noun since P1-04's third version; a fen-dominated region would be `South Fen`); (790, 560) forest → `East Wood` again, so as the fifth region in id order it is `East Wood II`. Sector checks: (10, 4) East; (10, 5) Southeast; (−3, −7) Northwest; (0, −9) North; (4, 10) South; (5, 12) Southeast. Roman: 1 I, 4 IV, 9 IX, 14 XIV, 40 XL.
 
 **RG10 borders.** The ridge example: the regions meet along columns 3 and 4, five pairs: one row (1, 2), `length_m` 80, `low_dm` 110 (every pair has the ridge cell at 110), `walk_pairs` 5 if all cells share `walk_area` 1, `river_pairs` 0. The class-4 river example: (1, 2), `length_m` 80, `low_dm` 10, `river_pairs` 5.
 
@@ -243,7 +243,7 @@ Library seams (interim): `region_candidates`, `region_greedy_seeds`, `region_flo
 1. The worked examples of 5.1 exactly (owners and costs of every flood case; greedy; merge; names and sectors; borders).
 2. RG4: a test world with a 300-cell island and no candidate on it gets a seed at the island's best site cell, numbered after the greedy seeds; a lake-only landmass cannot occur, but a landmass with no site cell takes its smallest-index cell.
 3. RG8 renumbering on a fixture where the greedy numbering differs from the smallest-index order.
-4. Table round trip: the rows read back equal the computed ones; `SCHEMA_VERSION` is 4 (or 3 + 1 as merged).
+4. Table round trip: the rows read back equal the computed ones; `SCHEMA_VERSION` is 5 (or 4 + 1 as merged).
 
 ### 10.2 Property tests
 
@@ -270,7 +270,7 @@ Layer hash of `region` and logical hashes of `region` and `region_border` for th
 1. **Who names regions** (Paul's call). Chosen: geography writes a placeholder name from a compass sector and the dominant biome's noun, so the map and the viewer have readable labels now. Recommendation: keep the placeholder in `region.name`, and let history (P3) add cultural names per civilization in its own table, since a region's name depends on who lives there and when.
 2. **No sea regions; lakes belong to land regions.** Recommendation: approve for P1.
 3. **Region size** (taste): seeds 1.2 km apart, regions below 0.75 km² merged; prototype median 1.9–2.6 km², about 45 regions at 1024, 12 at 512, 180 at 2048. The design says "a few square kilometres". Recommendation: approve; history can group regions into provinces itself.
-4. **The `region_border` table** (new, schema 4): border length, lowest crossing height, walkable pairs, river pairs. Recommendation: approve; it gives history the adjacency graph and tells it which borders need a built pass (`walk_pairs` = 0 with a low `low_dm` is where a pass is worth building).
+4. **The `region_border` table** (new, schema 5): border length, lowest crossing height, walkable pairs, river pairs. Recommendation: approve; it gives history the adjacency graph and tells it which borders need a built pass (`walk_pairs` = 0 with a low `low_dm` is where a pass is worth building).
 5. **Borders on ridges vs. along valleys.** Climbing cost puts borders on ridges; the alternative (regions = drainage basins) puts whole valleys in one region but makes huge lowland regions. Recommendation: approve the cost flood.
 
-**Schema and catalogue impact (for the lead):** schema version 4 adds `region` and `region_border` (DDL in section 3); the proposals entry "P1 schema changes" needs the final DDL and the new `region_border`. Catalogue: `region` made definite (0 on ocean only; lakes have regions). New `worldgen` id `regions`; two stream names.
+**Schema and catalogue impact (for the lead):** schema version 5 (4 until the biome variety revision took it) adds `region` and `region_border` (DDL in section 3); the proposals entry "P1 schema changes" needs the final DDL and the new `region_border`. Catalogue: `region` made definite (0 on ocean only; lakes have regions). New `worldgen` id `regions`; two stream names.
