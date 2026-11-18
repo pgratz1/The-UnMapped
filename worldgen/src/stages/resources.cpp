@@ -449,6 +449,7 @@ std::uint8_t ore_cell(std::int64_t elevation, std::int64_t s2, Fx noise, const R
 }
 
 Fx resource_ore_noise(std::uint64_t seed, std::int32_t x, std::int32_t y, const ResourceTuning& tuning) {
+    check_resource_tuning(tuning);  // audit note N6: like every seam that takes a tuning
     return geo::fbm_m(stream_key(seed, streams::geo_resources_ore), cell_centre_m(x), cell_centre_m(y),
                       tuning.ore_noise);
 }
@@ -660,22 +661,49 @@ ResourceLayers resources_layers(const ResourceInputs& in, const BiomeDefinitions
 
 namespace {
 
-// A stored input layer of the catalogue type T and N x N cells; fatal
-// otherwise (P1-05 section 2).
+// The seven stored inputs with their catalogue types, in the order of the
+// inputs table of P1-05 section 2.
+struct StoredInput {
+    std::string_view name;
+    db::ElementType type;
+};
+constexpr std::array<StoredInput, 7> STORED_INPUTS = {{
+    {ELEVATION_LAYER, db::ElementType::i16},
+    {WATER_LAYER, db::ElementType::u8},
+    {WATER_DEPTH_LAYER, db::ElementType::u16},
+    {FLOW_DIR_LAYER, db::ElementType::u8},
+    {RIVER_LAYER, db::ElementType::u8},
+    {RAINFALL_LAYER, db::ElementType::u16},
+    {BIOME_LAYER, db::ElementType::u8},
+}};
+
+// The stage-entry checks of section 2 item 1, each over all seven inputs in
+// turn: present, of its catalogue type, of the size N x N (the size of
+// elevation, which is checked first).
+void check_stored_inputs(const StageContext& context, std::int64_t n) {
+    for (const StoredInput& s : STORED_INPUTS) {
+        if (context.find_layer(s.name) == nullptr) {
+            fatal_text(std::string(PRECONDITION) + "missing layer '" + std::string(s.name) + "'");
+        }
+    }
+    for (const StoredInput& s : STORED_INPUTS) {
+        if (context.find_layer(s.name)->type() != s.type) {
+            fatal_text(std::string(PRECONDITION) + "layer '" + std::string(s.name) +
+                       "' does not have its catalogue type");
+        }
+    }
+    for (const StoredInput& s : STORED_INPUTS) {
+        const db::LayerGrid* grid = context.find_layer(s.name);
+        if (grid->width != static_cast<std::uint32_t>(n) || grid->height != static_cast<std::uint32_t>(n)) {
+            fatal_text(std::string(PRECONDITION) + std::string(s.name) + " length is not width * height");
+        }
+    }
+}
+
+// A stored input after check_stored_inputs.
 template <class T>
-std::span<const T> input_layer(const StageContext& context, std::string_view name, std::int64_t n) {
-    const db::LayerGrid* grid = context.find_layer(name);
-    if (grid == nullptr) {
-        fatal_text(std::string(PRECONDITION) + "missing layer '" + std::string(name) + "'");
-    }
-    const std::vector<T>* values = grid->get_if<T>();
-    if (values == nullptr) {
-        fatal_text(std::string(PRECONDITION) + "layer '" + std::string(name) + "' does not have its catalogue type");
-    }
-    if (grid->width != static_cast<std::uint32_t>(n) || grid->height != static_cast<std::uint32_t>(n)) {
-        fatal_text(std::string(PRECONDITION) + std::string(name) + " length is not width * height");
-    }
-    return *values;
+std::span<const T> input_layer(const StageContext& context, std::string_view name) {
+    return *context.find_layer(name)->get_if<T>();
 }
 
 template <class T>
@@ -696,22 +724,17 @@ void run_resources(StageContext& context) {
     if (n < ELEVATION_MIN_N || n > ELEVATION_MAX_N) {
         fatal("resources: map size outside [16, 2048]");
     }
-    // Section 2: every input layer present, in the order of the inputs table.
-    for (const std::string_view name : {ELEVATION_LAYER, WATER_LAYER, WATER_DEPTH_LAYER, FLOW_DIR_LAYER,
-                                        RIVER_LAYER, RAINFALL_LAYER, BIOME_LAYER}) {
-        if (context.find_layer(name) == nullptr) {
-            fatal_text(std::string(PRECONDITION) + "missing layer '" + std::string(name) + "'");
-        }
-    }
+    // Section 2 item 1: present, catalogue type, size.
+    check_stored_inputs(context, n);
     ResourceInputs in;
     in.grid = geo::square_grid(static_cast<std::int32_t>(n));
-    in.elevation = input_layer<std::int16_t>(context, ELEVATION_LAYER, n);
-    in.water = input_layer<std::uint8_t>(context, WATER_LAYER, n);
-    in.water_depth = input_layer<std::uint16_t>(context, WATER_DEPTH_LAYER, n);
-    in.flow_dir = input_layer<std::uint8_t>(context, FLOW_DIR_LAYER, n);
-    in.river = input_layer<std::uint8_t>(context, RIVER_LAYER, n);
-    in.rainfall = input_layer<std::uint16_t>(context, RAINFALL_LAYER, n);
-    in.biome = input_layer<std::uint8_t>(context, BIOME_LAYER, n);
+    in.elevation = input_layer<std::int16_t>(context, ELEVATION_LAYER);
+    in.water = input_layer<std::uint8_t>(context, WATER_LAYER);
+    in.water_depth = input_layer<std::uint16_t>(context, WATER_DEPTH_LAYER);
+    in.flow_dir = input_layer<std::uint8_t>(context, FLOW_DIR_LAYER);
+    in.river = input_layer<std::uint8_t>(context, RIVER_LAYER);
+    in.rainfall = input_layer<std::uint16_t>(context, RAINFALL_LAYER);
+    in.biome = input_layer<std::uint8_t>(context, BIOME_LAYER);
     ResourceLayers layers = resources_layers(in, definitions, tuning, context.seed(), context.threads());
     // R7: one transaction (the pipeline's), in the order of section 3.
     context.write_layer(FERTILITY_LAYER, square_layer(n, std::move(layers.fertility)));

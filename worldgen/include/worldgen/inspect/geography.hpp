@@ -481,7 +481,8 @@ struct ResourceCells {
 //   ore_rich_share   ratio4(dry cells with ore >= 128, dry cells)
 //   walk_areas       the largest walk_area value (0 if none)
 //   walk_main_share  ratio4(cells of the most common non-zero walk_area,
-//                    land cells); 0.0000 if there is no walk area
+//                    land cells); 0.0000 if there is no walk area, n/a
+//                    when there is no land
 //   walk_share       ratio4(cells with walk_area > 0, land cells)
 // Percentiles by the rule of P1-00 10.3. FatalError if a size is wrong.
 [[nodiscard]] std::string resource_lines(const ResourceCells& cells, std::uint32_t w, std::uint32_t h);

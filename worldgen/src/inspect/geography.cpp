@@ -1408,7 +1408,8 @@ std::string resource_lines(const ResourceCells& c, std::uint32_t w, std::uint32_
     line(out, "habitable_share", ratio4(at_least(5, 64), dry));
     line(out, "ore_rich_share", ratio4(at_least(1, 128), dry));
     line(out, "walk_areas", db::format_u64(largest_id));
-    line(out, "walk_main_share", largest_id == 0U ? std::string("0.0000") : ratio4(main_cells, land));
+    // 0.0000 without a walk area when there is land, n/a when there is none (P1-05 9).
+    line(out, "walk_main_share", ratio4(largest_id == 0U ? 0U : main_cells, land));
     line(out, "walk_share", ratio4(walk, land));
     return out;
 }
