@@ -16,6 +16,7 @@
 #include <utility>
 #include <vector>
 
+#include "p1_05_resources_data.hpp"
 #include "worldgen/data/content.hpp"
 #include "worldgen/data/schema.hpp"
 
@@ -89,7 +90,7 @@ struct DefinitionFile {
     std::string_view text;
 };
 
-inline const std::vector<DefinitionFile>& shipped_files() {
+inline const std::vector<DefinitionFile>& files_090() {
     static const std::vector<DefinitionFile> f = {
         {"ocean.toml",
          "[biome.ocean]\ncode = 1\nname = \"Ocean\"\ncolour = 0x183878\nwater = true\n"
@@ -167,6 +168,29 @@ inline const std::vector<DefinitionFile>& shipped_files() {
     return f;
 }
 
+// The shipped definition files as the production registry expects them:
+// the 0.9.0 text above, and from the resources merge (P1-05 4.1: the
+// `biome` kind has the field `forage`) each with its `forage` line after
+// `timber` and steppe's fertility 0.7 (resource_data::with_forage).
+inline const std::vector<DefinitionFile>& shipped_files() {
+    static const std::vector<std::string> texts = [] {
+        std::vector<std::string> t;
+        const bool forage = resource_data::forage_registered();
+        for (const DefinitionFile& f : files_090()) {
+            t.push_back(forage ? resource_data::with_forage(f.name, std::string(f.text)) : std::string(f.text));
+        }
+        return t;
+    }();
+    static const std::vector<DefinitionFile> f = [] {
+        std::vector<DefinitionFile> out;
+        for (std::size_t i = 0; i < files_090().size(); ++i) {
+            out.push_back(DefinitionFile{files_090()[i].name, texts[i]});
+        }
+        return out;
+    }();
+    return f;
+}
+
 // The shipped definitions as a biomes/ directory, with `replace` entries
 // substituted by file name (an empty text drops the file) and `extra` files
 // appended.
@@ -202,12 +226,17 @@ inline worldgen::data::MemoryDirectory directory(const std::vector<std::pair<std
     return k != nullptr && k->schema_for("biomes") != nullptr;
 }
 
-// Adds worldgen/biomes.toml to `worldgen_dir` and the biomes/ directory to
-// `root`, each only when the registry has it.
+// Adds worldgen/biomes.toml (and worldgen/resources.toml, P1-05 4.2) to
+// `worldgen_dir` and the biomes/ directory to `root`, each only when the
+// registry has it.
 inline void add_to(const worldgen::data::KindRegistry& registry, worldgen::data::MemoryDataRoot& root,
                    worldgen::data::MemoryDirectory& worldgen_dir) {
     if (tuning_registered(registry)) {
         worldgen_dir.entries.push_back(worldgen::data::MemoryEntry{"biomes.toml", std::string(TUNING_TOML), false});
+    }
+    if (resource_data::registered(registry)) {
+        worldgen_dir.entries.push_back(
+            worldgen::data::MemoryEntry{"resources.toml", std::string(resource_data::TUNING_TOML), false});
     }
     if (registered(registry)) {
         root.directories.push_back(directory());
@@ -215,7 +244,8 @@ inline void add_to(const worldgen::data::KindRegistry& registry, worldgen::data:
 }
 
 // The same for a data root on disk (CLI sandboxes): writes
-// <root>/worldgen/biomes.toml and <root>/biomes/*.toml when registered.
+// <root>/worldgen/biomes.toml, <root>/worldgen/resources.toml and
+// <root>/biomes/*.toml when registered.
 inline void write_to(const std::filesystem::path& root) {
     const worldgen::data::KindRegistry registry = worldgen::data::builtin_kinds();
     auto write = [](const std::filesystem::path& p, std::string_view text) {
@@ -225,6 +255,9 @@ inline void write_to(const std::filesystem::path& root) {
     };
     if (tuning_registered(registry)) {
         write(root / "worldgen" / "biomes.toml", TUNING_TOML);
+    }
+    if (resource_data::registered(registry)) {
+        write(root / "worldgen" / "resources.toml", resource_data::TUNING_TOML);
     }
     if (registered(registry)) {
         for (const DefinitionFile& f : shipped_files()) {

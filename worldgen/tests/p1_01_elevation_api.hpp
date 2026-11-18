@@ -19,6 +19,7 @@
 #include <vector>
 
 #include "p1_04_biomes_data.hpp"
+#include "p1_05_resources_data.hpp"
 #include "worldgen/core/fx.hpp"
 #include "worldgen/data/content.hpp"
 #include "worldgen/data/load_error.hpp"
@@ -331,6 +332,21 @@ inline constexpr std::string_view BIOME_DEFINITIONS_TOML =
     "river_dist_max_m = 32767\n"
     "wet_frac_min = \"0.45\"\n";
 
+// BIOME_DEFINITIONS_TOML as the production registry expects it: from the
+// resources merge (P1-05 4.1, the `biome` kind has the field `forage`) the
+// twelve shipped files of p1_04_biomes_data.hpp, which then carry `forage`
+// and steppe's fertility 0.7; before it the text above.
+inline std::string biome_definitions_toml() {
+    if (!resource_data::forage_registered()) {
+        return std::string(BIOME_DEFINITIONS_TOML);
+    }
+    std::string all;
+    for (const biome_data::DefinitionFile& f : biome_data::shipped_files()) {
+        all += std::string(f.text) + "\n";
+    }
+    return all;
+}
+
 // Adds what the production registry requires besides the stage tunings
 // given by a test: worldgen/biomes.toml when the id `biomes` is registered
 // and the directory `biomes` with the twelve definitions when the kind
@@ -346,9 +362,17 @@ inline void add_biome_fixtures(worldgen::data::MemoryDataRoot& root) {
             }
         }
     }
+    // P1-05 4.2: worldgen/resources.toml once the id `resources` is registered.
+    if (resource_data::registered(registry)) {
+        for (wd::MemoryDirectory& d : root.directories) {
+            if (d.name == "worldgen") {
+                d.entries.push_back(wd::MemoryEntry{"resources.toml", std::string(resource_data::TUNING_TOML), false});
+            }
+        }
+    }
     if (registry.find("biome") != nullptr) {
         root.directories.push_back(
-            wd::MemoryDirectory{"biomes", {wd::MemoryEntry{"biomes.toml", std::string(BIOME_DEFINITIONS_TOML), false}}});
+            wd::MemoryDirectory{"biomes", {wd::MemoryEntry{"biomes.toml", biome_definitions_toml(), false}}});
     }
 }
 

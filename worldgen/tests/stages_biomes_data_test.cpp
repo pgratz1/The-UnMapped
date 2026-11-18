@@ -22,6 +22,7 @@
 #include "p1_04_biomes_api.hpp"
 #include "p1_04_biomes_data.hpp"
 #include "p1_04_biomes_support.hpp"
+#include "p1_05_resources_data.hpp"
 #include "worldgen/core/fx.hpp"
 #include "worldgen/data/content.hpp"
 
@@ -94,8 +95,13 @@ TEST_CASE("P1-04 4.1: the shipped definitions load; fields in declaration order 
     const biome_api::Load l = load_defs({});
     INFO(all_errors(l));
     REQUIRE(l.ok());
-    const std::vector<std::string> order = {"code",     "name",  "colour",   "water",  "water_body",  "priority",
-                                            "fallback", "rules", "fertility", "timber", "region_noun"};
+    // P1-05 4.1 (generator 0.10.0) adds `forage` after `timber` once the
+    // resources merge registers it.
+    std::vector<std::string> order = {"code",     "name",  "colour",   "water",  "water_body",  "priority",
+                                      "fallback", "rules", "fertility", "timber", "region_noun"};
+    if (resource_data::forage_registered()) {
+        order.insert(order.begin() + 10, "forage");
+    }
     for (const Def& d : shipped_defs()) {
         CAPTURE(d.key);
         const auto* def = l.content->find("biome", d.key);
@@ -122,7 +128,9 @@ TEST_CASE("P1-04 4.1: the shipped definitions load; fields in declaration order 
     CHECK(shipped_defs().size() == 12U);
     CHECK(l.content->find("biome", "fen")->record.get_string("region_noun") == "Fen");
     CHECK(l.content->find("biome", "wet_woodland")->record.get_string("region_noun") == "Carr");
-    CHECK(l.content->find("biome", "steppe")->record.get_fx("fertility").raw() == fx_of("0.6"));
+    // Steppe's fertility is 0.7 from P1-05 4.1 (generator 0.10.0).
+    CHECK(l.content->find("biome", "steppe")->record.get_fx("fertility").raw() ==
+          fx_of(resource_data::forage_registered() ? "0.7" : "0.6"));
     CHECK(l.content->find("biome", "heath")->record.get_fx("timber").raw() == fx_of("0.05"));
     const std::vector<std::string> rule_order = {"temp_min_c",  "temp_max_c", "rain_min_mm", "rain_max_mm",
                                                  "elev_min_m",  "elev_max_m", "slope_max",   "hand_max_m",

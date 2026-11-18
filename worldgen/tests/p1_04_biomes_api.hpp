@@ -52,6 +52,7 @@
 #include "p1_02_hydrology_support.hpp"
 #include "p1_03_climate_support.hpp"
 #include "p1_04_biomes_data.hpp"
+#include "p1_05_resources_data.hpp"
 #include "worldgen/core/fx.hpp"
 #include "worldgen/data/content.hpp"
 #include "worldgen/data/load_error.hpp"
@@ -86,6 +87,11 @@ inline Load load(std::optional<std::string> biomes_tuning, std::optional<worldge
     dir.entries.push_back(wd::MemoryEntry{"climate.toml", std::string(climate_test::SHIPPED_TOML), false});
     if (biomes_tuning.has_value()) {
         dir.entries.push_back(wd::MemoryEntry{"biomes.toml", *biomes_tuning, false});
+    }
+    // P1-05 4.2: every id of the `worldgen` set must be defined once the
+    // resources merge registers `resources`.
+    if (resource_data::registered(registry)) {
+        dir.entries.push_back(wd::MemoryEntry{"resources.toml", std::string(resource_data::TUNING_TOML), false});
     }
     wd::MemoryDataRoot root;
     root.directories.push_back(dir);

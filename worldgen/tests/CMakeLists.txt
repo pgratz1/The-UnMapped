@@ -195,3 +195,24 @@ target_sources(worldgen-tests PRIVATE
 target_compile_definitions(worldgen-tests PRIVATE
     UNMAPPED_P1_04_GOLDEN_PATH="${CMAKE_CURRENT_SOURCE_DIR}/golden/p1-04-biomes.txt"
 )
+
+# The resources stage (spec P1-05): worked examples of 5.1 and the unit
+# tests of 10.1, `worldgen.resources` with its named checks and the biome
+# field `forage`, golden vectors per step, the invariants of section 6 as
+# property tests, determinism, resume, the stage entry and its
+# preconditions, and the report keys and `score` palette of section 9. The
+# stage API is reached only through p1_05_resources_api.hpp; the test's own
+# R2 to R6 are in p1_05_resources_support.hpp. Golden vectors are generated
+# by reference/p1_resources_reference.py and read in place. Slow checks are
+# in the doctest suite "resources-slow", skipped by default
+# (worldgen-tests -ts=resources-slow --no-skip).
+target_sources(worldgen-tests PRIVATE
+    stages_resources_examples_test.cpp
+    stages_resources_data_test.cpp
+    stages_resources_golden_test.cpp
+    stages_resources_property_test.cpp
+    inspect_resources_test.cpp
+)
+target_compile_definitions(worldgen-tests PRIVATE
+    UNMAPPED_P1_05_GOLDEN_PATH="${CMAKE_CURRENT_SOURCE_DIR}/golden/p1-05-resources.txt"
+)
