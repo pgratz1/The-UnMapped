@@ -111,7 +111,7 @@ inline constexpr std::array<std::string_view, 6> GEOGRAPHY_STAGE_NAMES = {
 // The implemented geography stages, in run order (P1-00 3, 10.1): the stages
 // generate runs by default. Each implemented stage is the next one of
 // GEOGRAPHY_STAGE_NAMES; so far `elevation` (P1-01), `hydrology` (P1-02),
-// `climate` (P1-03) and `biomes` (P1-04).
+// `climate` (P1-03), `biomes` (P1-04) and `resources` (P1-05).
 [[nodiscard]] std::span<const StageInfo> implemented_geography_stages() noexcept;
 
 // --- Stage limit (P1-00 10.1, --until) ------------------------------------------

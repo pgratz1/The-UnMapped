@@ -8,6 +8,7 @@ priority = 50
 fallback = false
 fertility = 0
 timber = 0
+forage = "0.05"
 region_noun = "Peaks"
 
 [[biome.alpine.rules]]

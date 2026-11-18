@@ -8,6 +8,7 @@ priority = 18
 fallback = false
 fertility = "0.5"
 timber = "0.7"
+forage = "0.7"
 region_noun = "Carr"
 
 [[biome.wet_woodland.rules]]

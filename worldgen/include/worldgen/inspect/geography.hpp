@@ -13,6 +13,7 @@
 //
 // Single-threaded throughout. Neighbour orders are those of P1-00 2.3.
 
+#include <array>
 #include <cstdint>
 #include <optional>
 #include <span>
@@ -443,6 +444,48 @@ struct BiomeTableResult {
 [[nodiscard]] std::string biome_lines(std::span<const std::uint8_t> biome, std::uint32_t w, std::uint32_t h,
                                       std::span<const BiomeRecord> records);
 
+// --- Resources (P1-05 9) -----------------------------------------------------------
+
+// The seven layers of the resources stage, in writing order (P1-05 3).
+inline constexpr std::array<std::string_view, 7> RESOURCE_LAYER_NAMES = {
+    "fertility", "ore", "timber", "fresh_water", "forage", "habitability", "walk_area"};
+
+// Why a resources layer cannot be reported (P1-05 9), or std::nullopt:
+// "type <t>, expected u8" (u16 for walk_area); "size <W>x<H>, expected
+// <N>x<N>" when it is not the size of elevation (given, non-null); "not a
+// valid grid".
+[[nodiscard]] std::optional<std::string> resource_layer_problem(const db::LayerGrid& layer, std::string_view name,
+                                                                const db::LayerGrid* elevation);
+
+// The cells of the resources keys: elevation (land = e > 0), water (dry =
+// water 0 or 1) and the seven layers, each w x h.
+struct ResourceCells {
+    std::span<const std::int16_t> elevation;
+    std::span<const std::uint8_t> water;
+    std::span<const std::uint8_t> fertility;
+    std::span<const std::uint8_t> ore;
+    std::span<const std::uint8_t> timber;
+    std::span<const std::uint8_t> fresh_water;
+    std::span<const std::uint8_t> forage;
+    std::span<const std::uint8_t> habitability;
+    std::span<const std::uint16_t> walk_area;
+};
+
+// The resources keys of P1-05 9 in their order, each "<key> = <value>\n":
+//   scores_p50       fertility:<p50> ore:<p50> timber:<p50> fresh_water:<p50>
+//                    forage:<p50> habitability:<p50> over dry land (n/a
+//                    for each when there is none)
+//   scores_p90       the same with the 90th percentiles
+//   fertile_share    ratio4(dry cells with fertility >= 166, dry cells)
+//   habitable_share  ratio4(dry cells with habitability >= 64, dry cells)
+//   ore_rich_share   ratio4(dry cells with ore >= 128, dry cells)
+//   walk_areas       the largest walk_area value (0 if none)
+//   walk_main_share  ratio4(cells of the most common non-zero walk_area,
+//                    land cells); 0.0000 if there is no walk area
+//   walk_share       ratio4(cells with walk_area > 0, land cells)
+// Percentiles by the rule of P1-00 10.3. FatalError if a size is wrong.
+[[nodiscard]] std::string resource_lines(const ResourceCells& cells, std::uint32_t w, std::uint32_t h);
+
 // --- The section ------------------------------------------------------------------
 
 // The layers [geography] reads, from a world (null when absent).
@@ -469,10 +512,22 @@ struct GeographyLayers {
     // absent; the biome keys are printed only when both are given.
     const db::LayerGrid* biome = nullptr;
     const std::vector<BiomeRecord>* biomes = nullptr;
+    // The seven resources layers (P1-05 3) in the order of
+    // RESOURCE_LAYER_NAMES, null when absent; the resources keys are printed
+    // only when all seven and water are given.
+    std::array<const db::LayerGrid*, 7> resources{};
     // True when temperature and rainfall are both present.
     [[nodiscard]] bool has_climate() const noexcept { return temperature != nullptr && rainfall != nullptr; }
     // True when the biome layer and the biome table are both present.
     [[nodiscard]] bool has_biomes() const noexcept { return biome != nullptr && biomes != nullptr; }
+    // True when water and the seven resources layers are all present.
+    [[nodiscard]] bool has_resources() const noexcept {
+        if (water == nullptr) return false;
+        for (const db::LayerGrid* l : resources) {
+            if (l == nullptr) return false;
+        }
+        return true;
+    }
     // True when water, flow_dir, flow_accum, river and lake are all present.
     [[nodiscard]] bool has_hydrology() const noexcept {
         return water != nullptr && flow_dir != nullptr && flow_accum != nullptr && river != nullptr &&
@@ -487,14 +542,17 @@ struct GeographyLayers {
 // hydrology layers are not used, so they are not checked. When
 // has_climate(), temperature must be i16 and rainfall u16, each the size of
 // elevation (unchecked otherwise); when has_biomes(), biome must be u8 and
-// the size of elevation. Text names the layer.
+// the size of elevation; when has_resources(), water and the six scores
+// must be u8 and walk_area u16, each the size of elevation. Text names the
+// layer.
 [[nodiscard]] std::optional<std::string> geography_layers_problem(const GeographyLayers& layers);
 
 // The [geography] section (P1-00 10.3): the line "[geography]" then one
 // "<key> = <value>" line per key, in the order of 10.3, each ending in a
 // line feed; the hydrology lines only when has_hydrology(), then
 // wind_toward and temp_offset_c when they are set, the climate lines (climate_lines) only when
-// has_climate(), then the biome lines (biome_lines) only when has_biomes().
+// has_climate(), then the biome lines (biome_lines) only when has_biomes(),
+// then the resources lines (resource_lines) only when has_resources().
 // Values that are
 // undefined on the world print as n/a (percentiles with no land or no ocean,
 // ratio4 over 0, coast_ratio with no land). Returns std::nullopt with

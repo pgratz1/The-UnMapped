@@ -94,8 +94,9 @@ TEST_CASE("P1-04 4.1: the shipped definitions load; fields in declaration order 
     const biome_api::Load l = load_defs({});
     INFO(all_errors(l));
     REQUIRE(l.ok());
+    // 0.10.0: forage after timber (P1-05 4.1).
     const std::vector<std::string> order = {"code",     "name",  "colour",   "water",  "water_body",  "priority",
-                                            "fallback", "rules", "fertility", "timber", "region_noun"};
+                                            "fallback", "rules", "fertility", "timber", "forage", "region_noun"};
     for (const Def& d : shipped_defs()) {
         CAPTURE(d.key);
         const auto* def = l.content->find("biome", d.key);
@@ -122,7 +123,7 @@ TEST_CASE("P1-04 4.1: the shipped definitions load; fields in declaration order 
     CHECK(shipped_defs().size() == 12U);
     CHECK(l.content->find("biome", "fen")->record.get_string("region_noun") == "Fen");
     CHECK(l.content->find("biome", "wet_woodland")->record.get_string("region_noun") == "Carr");
-    CHECK(l.content->find("biome", "steppe")->record.get_fx("fertility").raw() == fx_of("0.6"));
+    CHECK(l.content->find("biome", "steppe")->record.get_fx("fertility").raw() == fx_of("0.7"));  // 0.10.0 (P1-05 4.1)
     CHECK(l.content->find("biome", "heath")->record.get_fx("timber").raw() == fx_of("0.05"));
     const std::vector<std::string> rule_order = {"temp_min_c",  "temp_max_c", "rain_min_mm", "rain_max_mm",
                                                  "elev_min_m",  "elev_max_m", "slope_max",   "hand_max_m",
@@ -408,10 +409,10 @@ TEST_CASE("P1-04 10.1 test 6: a float literal in a rule is a P0-03 error; a miss
     check_rejected(load_defs({{"marsh.toml", edited("marsh.toml", "fertility = \"0.45\"", "fertility = 0.45")}}),
                    "floating-point");
     // coast_max_m removed from marsh's rule: the [[biome.marsh.rules]]
-    // header is line 13 of marsh.toml.
+    // header is line 14 of marsh.toml (13 before forage, 0.10.0).
     const wd::LoadError e = only_error(load_defs({{"marsh.toml", edited("marsh.toml", "coast_max_m = 32767\n", "")}}));
     CHECK(e.path == "biomes/marsh.toml");
-    CHECK(e.line == 13U);
+    CHECK(e.line == 14U);
     CHECK(e.column == 1U);
     CHECK(e.message.find("coast_max_m") != std::string::npos);
     // A definition with neither `rules = []` nor rule tables: missing field.
@@ -430,7 +431,7 @@ TEST_CASE("P1-04 10.1 test 6: a float literal in a rule is a P0-03 error; a miss
         CAPTURE(field);
         const wd::LoadError m = only_error(load_defs({{"marsh.toml", edited("marsh.toml", field, "")}}));
         CHECK(m.path == "biomes/marsh.toml");
-        CHECK(m.line == 13U);
+        CHECK(m.line == 14U);
         CHECK(m.column == 1U);
         CHECK(m.message.find(std::string(field).substr(0, std::string(field).find(' '))) != std::string::npos);
     }

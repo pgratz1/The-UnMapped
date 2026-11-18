@@ -119,9 +119,9 @@ TEST_CASE("cli P1-00 10.1, X1: every unimplemented stage name is a usage error, 
     Sandbox sb;
     const std::string bogus = usage_error(sb, {"--until", "bogus"});
     CHECK(contains(bogus, "bogus"));
-    // elevation (P1-01), hydrology (P1-02), climate (P1-03) and biomes
-    // (P1-04) are implemented; the later stages are not yet.
-    for (const char* name : {"resources", "regions"}) {
+    // elevation (P1-01), hydrology (P1-02), climate (P1-03), biomes (P1-04)
+    // and resources (P1-05) are implemented; regions is not yet.
+    for (const char* name : {"regions"}) {
         CAPTURE(name);
         const std::string err = usage_error(sb, {"--until", name});
         CHECK(contains(err, name));

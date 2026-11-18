@@ -406,6 +406,37 @@ Example: t = 100 → (44, 117, 140): R = 59 + floor((2·(33 − 59)·36 + 64)/12
 
 Library seams (interim; the engineer may add helpers, and records the final signatures in this section after implementation, as P1-04 10): `resource_ramp(x, a, b)`, `resource_q255(s)`, `slope_tangent(S2)` (G8, shared with P1-04), `chamfer_metres(grid, source)`, `fresh_water_cell(df, rainfall, tuning)`, `fertility_cell(fb, s2, hand, tuning)`, `timber_cell(tb, s2, tuning)`, `forage_cell(gb, dg, tuning)`, `ore_cell(elevation, s2, noise, tuning)`, `walk_areas(grid, S, water, s2, walk_slope_max, walk_min_cells) → (ids, count)`, `habitability_cell(F, W, G, T, O, s2, hand, walk_area, tuning)`, `resources_layers(inputs, definitions, tuning, seed, threads)`. Each raises `FatalError` on a contract violation (wrong array length, threads outside [1, 256], a violated precondition).
 
+**As implemented** (generator engineer, branch `p1/05-resources`; `worldgen/include/worldgen/stages/resources.hpp`, namespace `worldgen::stages`, unless marked `geo::`; `Fx` is `worldgen::Fx`, `Grid` is `geo::Grid`; the header comments give each seam's fatal cases):
+
+```cpp
+Fx geo::slope_tangent(std::int64_t s2);                                  // worldgen/geo/terrain.hpp; S2 in [0, 2^34)
+Fx resource_ramp(Fx x, Fx a, Fx b);                                      // fatal unless a < b
+std::uint8_t resource_q255(Fx s);
+std::vector<std::int64_t> chamfer_metres(Grid grid, std::span<const std::uint8_t> source);   // metres, 32767 = none
+std::uint8_t fresh_water_cell(std::int64_t df, std::int64_t rainfall, const ResourceTuning& tuning);
+std::uint8_t fertility_cell(Fx fb, std::int64_t s2, std::int64_t hand, const ResourceTuning& tuning);
+std::uint8_t timber_cell(Fx tb, std::int64_t s2, const ResourceTuning& tuning);
+std::uint8_t forage_cell(Fx gb, std::int64_t dg, const ResourceTuning& tuning);
+std::uint8_t ore_cell(std::int64_t elevation, std::int64_t s2, Fx noise, const ResourceTuning& tuning);
+Fx resource_ore_noise(std::uint64_t seed, std::int32_t x, std::int32_t y, const ResourceTuning& tuning);
+struct WalkAreas { std::vector<std::uint16_t> ids; std::int64_t count = 0; };
+WalkAreas walk_areas(Grid grid, std::span<const std::int64_t> surface, std::span<const std::uint8_t> water,
+                     std::span<const std::int64_t> s2, Fx walk_slope_max, std::int64_t walk_min_cells);
+std::uint8_t habitability_cell(std::int64_t F, std::int64_t W, std::int64_t G, std::int64_t T, std::int64_t O,
+                               std::int64_t s2, std::int64_t hand, std::int64_t walk_area, const ResourceTuning& tuning);
+struct ResourceInputs { Grid grid; /* spans: elevation i16, water u8, water_depth u16, flow_dir u8, river u8,
+                                      rainfall u16, biome u8 */ };
+struct ResourceLayers { /* fertility, ore, timber, fresh_water, forage, habitability: u8; walk_area: u16 */ };
+ResourceLayers resources_layers(const ResourceInputs& inputs, const BiomeDefinitions& definitions,
+                                const ResourceTuning& tuning, std::uint64_t seed, std::uint32_t threads = 1);
+ResourceTuning resource_tuning_from(const data::ContentSet& content);   // and from a data::Record
+void check_resource_tuning(const ResourceTuning& tuning);               // schema ranges and named checks
+std::int64_t resource_walk_min_cells(const ResourceTuning& tuning);
+void run_resources(StageContext& context);
+```
+
+`BiomeDef` (P1-04 seams) gains `Fx forage`. Order of the fatal checks of `resources_layers`: threads (`resources: thread count outside [1, 256]`); the tuning (`resources: tuning: <field> outside its schema range`, then the named-check messages of 4.2 after `resources: tuning: `); a definition's `fertility`, `timber` or `forage` outside [0, 1] (`resources: biome '<key>' has a value outside [0, 1]`); then section 2 with the prefix `resources: input precondition: ` (grid checks, lengths in the order of `ResourceInputs`, `water`, `river`, `biome`, G7). Through the stage, the missing-layer check of section 2 comes first, and a stored layer of another type or size is `layer '<name>' does not have its catalogue type` or `<name> length is not width * height`. Report: a resources layer of the wrong type or size is refused whenever it exists, also when the group is not printed (some of the seven missing).
+
 ### 10.1 Unit tests
 
 1. Every worked example of 5.1 exactly, through the seams.

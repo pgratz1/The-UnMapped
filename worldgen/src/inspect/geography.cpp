@@ -945,6 +945,18 @@ std::optional<std::string> geography_layers_problem(const GeographyLayers& layer
             return p;
         }
     }
+    if (layers.has_resources()) {
+        if (std::optional<std::string> p = layer_problem(layers.water, "water", db::ElementType::u8, e)) {
+            return p;
+        }
+        for (std::size_t k = 0; k < RESOURCE_LAYER_NAMES.size(); ++k) {
+            const db::ElementType type = k + 1 == RESOURCE_LAYER_NAMES.size() ? db::ElementType::u16
+                                                                                : db::ElementType::u8;
+            if (std::optional<std::string> p = layer_problem(layers.resources[k], RESOURCE_LAYER_NAMES[k], type, e)) {
+                return p;
+            }
+        }
+    }
     if (layers.has_climate()) {
         const HydrologyLayerSpec climate[] = {
             {layers.temperature, "temperature", db::ElementType::i16},
@@ -1296,6 +1308,111 @@ std::string biome_lines(std::span<const std::uint8_t> biome, std::uint32_t w, st
     return out;
 }
 
+std::optional<std::string> resource_layer_problem(const db::LayerGrid& layer, std::string_view name,
+                                                  const db::LayerGrid* elevation) {
+    if (!db::is_valid_layer_grid(layer)) {
+        return std::string("not a valid grid");
+    }
+    const db::ElementType want = name == "walk_area" ? db::ElementType::u16 : db::ElementType::u8;
+    if (layer.type() != want) {
+        return "type " + std::string(db::element_type_name(layer.type())) + ", expected " +
+               std::string(db::element_type_name(want));
+    }
+    if (elevation != nullptr && (layer.width != elevation->width || layer.height != elevation->height)) {
+        return "size " + db::format_u64(layer.width) + "x" + db::format_u64(layer.height) + ", expected " +
+               db::format_u64(elevation->width) + "x" + db::format_u64(elevation->height);
+    }
+    return std::nullopt;
+}
+
+namespace {
+
+// Percentile p of a multiset of u8 values given by its histogram (P1-00
+// 10.3): kth(values, min(n - 1, floor(p n / 100))); n/a over no values.
+std::string histogram_percentile(const std::array<std::uint64_t, 256>& count, std::uint64_t n, std::uint32_t p) {
+    if (n == 0U) {
+        return std::string(NOT_AVAILABLE);
+    }
+    const std::uint64_t rank = percentile_rank(n, p);
+    std::uint64_t seen = 0;
+    for (std::size_t v = 0; v < count.size(); ++v) {
+        seen += count[v];
+        if (seen > rank) {
+            return db::format_u64(v);
+        }
+    }
+    fatal("histogram_percentile: rank beyond the values");
+}
+
+}  // namespace
+
+std::string resource_lines(const ResourceCells& c, std::uint32_t w, std::uint32_t h) {
+    const std::array<std::span<const std::uint8_t>, 6> scores = {c.fertility, c.ore,    c.timber,
+                                                                 c.fresh_water, c.forage, c.habitability};
+    static constexpr std::array<std::string_view, 6> NAMES = {"fertility", "ore",    "timber",
+                                                              "fresh_water", "forage", "habitability"};
+    require_grid(c.elevation.size(), w, h, "resource_lines: elevation");
+    require_grid(c.water.size(), w, h, "resource_lines: water");
+    for (const std::span<const std::uint8_t> s : scores) {
+        require_grid(s.size(), w, h, "resource_lines: score layer");
+    }
+    require_grid(c.walk_area.size(), w, h, "resource_lines: walk_area");
+    std::array<std::array<std::uint64_t, 256>, 6> hist{};
+    std::uint64_t dry = 0;
+    for (std::size_t i = 0; i < c.water.size(); ++i) {
+        if (c.water[i] > 1U) {
+            continue;
+        }
+        ++dry;
+        for (std::size_t k = 0; k < scores.size(); ++k) {
+            ++hist[k][scores[k][i]];
+        }
+    }
+    std::string p50;
+    std::string p90;
+    for (std::size_t k = 0; k < scores.size(); ++k) {
+        if (k > 0) {
+            p50 += ' ';
+            p90 += ' ';
+        }
+        p50 += std::string(NAMES[k]) + ':' + histogram_percentile(hist[k], dry, 50U);
+        p90 += std::string(NAMES[k]) + ':' + histogram_percentile(hist[k], dry, 90U);
+    }
+    const auto at_least = [&](std::size_t k, std::size_t lo) {
+        std::uint64_t s = 0;
+        for (std::size_t v = lo; v < 256U; ++v) s += hist[k][v];
+        return s;
+    };
+    // walk areas: counts per id (ids up to 65535), land cells.
+    std::vector<std::uint64_t> area(65536U, 0U);
+    std::uint64_t land = 0;
+    std::uint64_t walk = 0;
+    std::size_t largest_id = 0;
+    for (std::size_t i = 0; i < c.walk_area.size(); ++i) {
+        if (c.elevation[i] > 0) ++land;
+        const std::uint16_t id = c.walk_area[i];
+        if (id != 0U) {
+            ++walk;
+            ++area[id];
+            largest_id = std::max<std::size_t>(largest_id, id);
+        }
+    }
+    std::uint64_t main_cells = 0;
+    for (const std::uint64_t a : area) {
+        main_cells = std::max(main_cells, a);
+    }
+    std::string out;
+    line(out, "scores_p50", p50);
+    line(out, "scores_p90", p90);
+    line(out, "fertile_share", ratio4(at_least(0, 166), dry));
+    line(out, "habitable_share", ratio4(at_least(5, 64), dry));
+    line(out, "ore_rich_share", ratio4(at_least(1, 128), dry));
+    line(out, "walk_areas", db::format_u64(largest_id));
+    line(out, "walk_main_share", largest_id == 0U ? std::string("0.0000") : ratio4(main_cells, land));
+    line(out, "walk_share", ratio4(walk, land));
+    return out;
+}
+
 namespace {
 
 // The hydrology lines of [geography]; false with *problem set when the
@@ -1372,6 +1489,22 @@ std::optional<std::string> geography_section(const GeographyLayers& layers, std:
     }
     if (layers.has_biomes()) {
         out += biome_lines(*layers.biome->get_if<std::uint8_t>(), w, h, *layers.biomes);
+    }
+    if (layers.has_resources()) {
+        const auto u8 = [&layers](std::size_t k) {
+            return std::span<const std::uint8_t>(*layers.resources[k]->get_if<std::uint8_t>());
+        };
+        ResourceCells cells;
+        cells.elevation = e;
+        cells.water = *layers.water->get_if<std::uint8_t>();
+        cells.fertility = u8(0);
+        cells.ore = u8(1);
+        cells.timber = u8(2);
+        cells.fresh_water = u8(3);
+        cells.forage = u8(4);
+        cells.habitability = u8(5);
+        cells.walk_area = *layers.resources[6]->get_if<std::uint16_t>();
+        out += resource_lines(cells, w, h);
     }
     return out;
 }

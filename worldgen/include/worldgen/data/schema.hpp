@@ -310,6 +310,7 @@ inline constexpr std::string_view WORLDGEN_ELEVATION_ID = "elevation";
 inline constexpr std::string_view WORLDGEN_HYDROLOGY_ID = "hydrology";
 inline constexpr std::string_view WORLDGEN_CLIMATE_ID = "climate";
 inline constexpr std::string_view WORLDGEN_BIOMES_ID = "biomes";
+inline constexpr std::string_view WORLDGEN_RESOURCES_ID = "resources";
 // Upper bound of worldgen.climate.smooth_radius_m (P1-03 4); the climate
 // stage's overflow argument for C4 depends on it (static_assert there).
 inline constexpr std::int64_t CLIMATE_SMOOTH_RADIUS_MAX_M = 4000;
@@ -343,7 +344,7 @@ inline constexpr std::string_view BIOME_DIRECTORY = "biomes";
 // string(64), colour int(0, 16777215), water bool, water_body enum("none",
 // "lake", "ocean"), priority int(0, 255), fallback bool, rules
 // array(record(biome_rule), 0, 16), fertility fx(0, 1), timber fx(0, 1),
-// region_noun string(32), in this order, all required. Record biome_rule:
+// forage fx(0, 1) (P1-05 4.1, from generator 0.10.0), region_noun string(32), in this order, all required. Record biome_rule:
 // temp_min_c, temp_max_c fx(-60, 50); rain_min_mm, rain_max_mm int(0,
 // 10000); elev_min_m, elev_max_m int(0, 3000); slope_max fx(0, 100);
 // hand_max_m fx(0, 3000); coast_max_m int(0, 32767). Named checks of one
@@ -362,5 +363,14 @@ inline constexpr std::string_view BIOME_DIRECTORY = "biomes";
 // definition's header (P0-03 7.5):
 //   wind_weights_positive   the sum of wind_weights is at least 1.
 [[nodiscard]] Schema worldgen_climate_schema();
+
+// The schema of definition worldgen.resources (P1-05 4.2): every field of
+// the table of 4.2 in its order, all required. Named checks, each a load
+// error at the definition's header (P0-03 7.5), in this order:
+// fresh_rain_ordered, fert_slope_ordered, timber_slope_ordered,
+// ore_vein_ordered, ore_elev_ordered, ore_slope_ordered, hab_slope_ordered
+// (each "<lo> must be below <hi>"), hab_weights_positive ("the hab_weight
+// fields must not all be 0").
+[[nodiscard]] Schema worldgen_resources_schema();
 
 }  // namespace worldgen::data

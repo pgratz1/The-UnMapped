@@ -9,4 +9,5 @@ fallback = false
 rules = []
 fertility = 0
 timber = 0
+forage = 0
 region_noun = "Mere"

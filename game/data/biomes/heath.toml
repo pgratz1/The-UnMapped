@@ -8,6 +8,7 @@ priority = 25
 fallback = false
 fertility = "0.2"
 timber = "0.05"
+forage = "0.2"
 region_noun = "Heath"
 
 [[biome.heath.rules]]

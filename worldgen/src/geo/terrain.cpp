@@ -8,6 +8,7 @@
 #include <string>
 
 #include "worldgen/core/error.hpp"
+#include "worldgen/core/math.hpp"
 #include "worldgen/core/wide.hpp"
 
 namespace worldgen::geo {
@@ -155,6 +156,16 @@ std::int64_t slope_s2_limit(Fx t) {
         return std::numeric_limits<std::int64_t>::max();
     }
     return static_cast<std::int64_t>(sq.hi);
+}
+
+Fx slope_tangent(std::int64_t s2) {
+    if (s2 < 0 || s2 >= (std::int64_t{1} << 34U)) {
+        fatal("slope_tangent: S2 outside [0, 2^34)");
+    }
+    // S2 x 2^64 is the U128 {S2, 0}; its root is below 2^49, so from_raw
+    // and div_int are exact and in range.
+    const std::uint64_t root = isqrt_u128(U128{static_cast<std::uint64_t>(s2), 0U});
+    return div_int(Fx::from_raw(static_cast<std::int64_t>(root)), 320);
 }
 
 bool slope_not_steeper(std::int64_t s2, Fx t) {

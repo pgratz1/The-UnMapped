@@ -148,10 +148,13 @@ db::Result<std::string> build_report(const db::WorldReader& world) {
         }
         // The grids [geography] reads, kept from this pass so that no layer
         // is decoded twice. Layer names are unique (P0-02 5.6).
-        constexpr std::size_t GEO_LAYERS = 9;
+        constexpr std::size_t GEO_LAYERS = 16;
+        constexpr std::size_t RESOURCES_FIRST = 9;  // the seven layers of P1-05 3 follow biome
         std::optional<db::LayerGrid> geo_grids[GEO_LAYERS];
         static constexpr std::string_view GEO_NAMES[GEO_LAYERS] = {
-            "elevation", "water", "flow_dir", "flow_accum", "river", "lake", "temperature", "rainfall", "biome"};
+            "elevation", "water",     "flow_dir", "flow_accum",  "river",  "lake",         "temperature", "rainfall",
+            "biome",     "fertility", "ore",      "timber",      "fresh_water", "forage", "habitability", "walk_area"};
+        static_assert(GEO_LAYERS == RESOURCES_FIRST + RESOURCE_LAYER_NAMES.size());
         for (const db::LayerInfo& info : layers.value()) {
             db::Result<db::Layer> layer = world.read_layer(info.name);
             if (!layer.ok()) {
@@ -243,6 +246,20 @@ db::Result<std::string> build_report(const db::WorldReader& world) {
             }
         }
 
+        // The resources layers (P1-05 9): each u8 (walk_area u16) and the size
+        // of elevation, whenever it exists.
+        for (std::size_t k = 0; k < RESOURCE_LAYER_NAMES.size(); ++k) {
+            const std::optional<db::LayerGrid>& g = geo_grids[RESOURCES_FIRST + k];
+            if (!g) {
+                continue;
+            }
+            if (std::optional<std::string> why =
+                    resource_layer_problem(*g, RESOURCE_LAYER_NAMES[k], geo_grids[0] ? &*geo_grids[0] : nullptr)) {
+                return db::Error{db::ErrorCode::corrupt_layer,
+                                 "corrupt layer '" + std::string(RESOURCE_LAYER_NAMES[k]) + "': " + *why};
+            }
+        }
+
         // [geography] (P1-00 10.3), when the world has an elevation layer.
         if (geo_grids[0]) {
             const auto ptr = [&geo_grids](std::size_t k) { return geo_grids[k] ? &*geo_grids[k] : nullptr; };
@@ -260,6 +277,9 @@ db::Result<std::string> build_report(const db::WorldReader& world) {
             geo.temp_offset_dc = temp_offset_dc;
             geo.biome = ptr(8);
             geo.biomes = biomes ? &*biomes : nullptr;
+            for (std::size_t k = 0; k < geo.resources.size(); ++k) {
+                geo.resources[k] = ptr(RESOURCES_FIRST + k);
+            }
             std::string problem;
             std::optional<std::string> section = geography_section(geo, &problem);
             if (!section) {

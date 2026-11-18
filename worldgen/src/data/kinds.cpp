@@ -4,8 +4,8 @@
 // P1 registers the fixed-id kind `worldgen` (P1-00 section 6.1, P0-03
 // amendment 16) with the ids of the first pass, `elevation` (P1-01 section
 // 4.2) and `hydrology` (P1-02 section 4), and of the second pass so far,
-// `climate` (P1-03 section 4). The later second-pass specs add their ids
-// here.
+// `climate` (P1-03 section 4), `biomes` (P1-04 section 4.2) and `resources`
+// (P1-05 section 4.2). The later second-pass specs add their ids here.
 
 #include <array>
 #include <cstddef>
@@ -74,6 +74,33 @@ std::optional<std::string> check_wind_weights_positive(const Record& r) {
     }
     if (sum < 1) {
         return std::string("wind_weights must not all be 0");
+    }
+    return std::nullopt;
+}
+
+// P1-05 4.2: a named check "<lo> must be below <hi>" for two fx or two int
+// fields of one kind.
+std::optional<std::string> check_fx_below(const Record& r, const char* lo, const char* hi) {
+    if (r.get_fx(lo) < r.get_fx(hi)) {
+        return std::nullopt;
+    }
+    return std::string(lo) + " must be below " + hi;
+}
+
+std::optional<std::string> check_int_below(const Record& r, const char* lo, const char* hi) {
+    if (r.get_int(lo) < r.get_int(hi)) {
+        return std::nullopt;
+    }
+    return std::string(lo) + " must be below " + hi;
+}
+
+// P1-05 4.2 named check hab_weights_positive.
+std::optional<std::string> check_hab_weights_positive(const Record& r) {
+    // Four fields of at most 1000: no overflow.
+    const std::int64_t sum = r.get_int("hab_weight_fertility") + r.get_int("hab_weight_forage") +
+                             r.get_int("hab_weight_timber") + r.get_int("hab_weight_ore");
+    if (sum < 1) {
+        return std::string("the hab_weight fields must not all be 0");
     }
     return std::nullopt;
 }
@@ -246,6 +273,7 @@ Schema biome_schema() {
         Field::required("rules", Type::array(Type::record(biome_rule_schema()), 0, 16)),
         Field::required("fertility", Type::fixed("0", "1")),
         Field::required("timber", Type::fixed("0", "1")),
+        Field::required("forage", Type::fixed("0", "1")),  // P1-05 4.1, generator 0.10.0
         Field::required("region_noun", Type::string(32)),
     };
     std::vector<Check> checks{
@@ -434,6 +462,61 @@ Schema worldgen_climate_schema() {
     return Schema(std::move(fields), std::move(checks));
 }
 
+Schema worldgen_resources_schema() {
+    // P1-05 4.2, in declaration order (this order fixes the canonical
+    // encoding, P0-03 8).
+    std::vector<Field> fields{
+        Field::required("fresh_reach_m", Type::integer(16, 10000)),
+        Field::required("fresh_rain_weight", Type::fixed("0", "1")),
+        Field::required("fresh_rain_lo_mm", Type::integer(0, 10000)),
+        Field::required("fresh_rain_hi_mm", Type::integer(0, 10000)),
+        Field::required("fert_slope_lo", Type::fixed("0", "10")),
+        Field::required("fert_slope_hi", Type::fixed("0", "10")),
+        Field::required("alluvial_bonus", Type::fixed("0", "4")),
+        Field::required("alluvial_hand_m", Type::fixed("0.1", "100")),
+        Field::required("timber_slope_lo", Type::fixed("0", "10")),
+        Field::required("timber_slope_hi", Type::fixed("0", "10")),
+        Field::required("fish_river_class_min", Type::integer(1, 15)),
+        Field::required("fish_weight", Type::fixed("0", "1")),
+        Field::required("fish_reach_m", Type::integer(16, 10000)),
+        Field::required("ore_noise", geo::fbm_m_type()),
+        Field::required("ore_vein_lo", Type::fixed("-1", "1")),
+        Field::required("ore_vein_hi", Type::fixed("-1", "1")),
+        Field::required("ore_elev_lo_m", Type::integer(0, 3000)),
+        Field::required("ore_elev_hi_m", Type::integer(0, 3000)),
+        Field::required("ore_lowland", Type::fixed("0", "1")),
+        Field::required("ore_slope_base", Type::fixed("0", "1")),
+        Field::required("ore_slope_lo", Type::fixed("0", "10")),
+        Field::required("ore_slope_hi", Type::fixed("0", "10")),
+        Field::required("walk_slope_max", Type::fixed("0.01", "10")),
+        Field::required("walk_min_area_m2", Type::integer(16384, 1000000000)),
+        Field::required("hab_slope_lo", Type::fixed("0", "10")),
+        Field::required("hab_slope_hi", Type::fixed("0", "10")),
+        Field::required("hab_weight_fertility", Type::integer(0, 1000)),
+        Field::required("hab_weight_forage", Type::integer(0, 1000)),
+        Field::required("hab_weight_timber", Type::integer(0, 1000)),
+        Field::required("hab_weight_ore", Type::integer(0, 1000)),
+        Field::required("hab_water_min", Type::fixed("0", "1")),
+        Field::required("hab_flood_hand_m", Type::fixed("0", "100")),
+        Field::required("hab_flood_factor", Type::fixed("0", "1")),
+        Field::required("hab_pocket_factor", Type::fixed("0", "1")),
+    };
+    // P1-05 4.2 named checks, in registration order.
+    std::vector<Check> checks{
+        Check{"fresh_rain_ordered",
+              [](const Record& r) { return check_int_below(r, "fresh_rain_lo_mm", "fresh_rain_hi_mm"); }},
+        Check{"fert_slope_ordered", [](const Record& r) { return check_fx_below(r, "fert_slope_lo", "fert_slope_hi"); }},
+        Check{"timber_slope_ordered",
+              [](const Record& r) { return check_fx_below(r, "timber_slope_lo", "timber_slope_hi"); }},
+        Check{"ore_vein_ordered", [](const Record& r) { return check_fx_below(r, "ore_vein_lo", "ore_vein_hi"); }},
+        Check{"ore_elev_ordered", [](const Record& r) { return check_int_below(r, "ore_elev_lo_m", "ore_elev_hi_m"); }},
+        Check{"ore_slope_ordered", [](const Record& r) { return check_fx_below(r, "ore_slope_lo", "ore_slope_hi"); }},
+        Check{"hab_slope_ordered", [](const Record& r) { return check_fx_below(r, "hab_slope_lo", "hab_slope_hi"); }},
+        Check{"hab_weights_positive", [](const Record& r) { return check_hab_weights_positive(r); }},
+    };
+    return Schema(std::move(fields), std::move(checks));
+}
+
 KindRegistry builtin_kinds() {
     KindRegistry registry;
     // P1-00 6.1: kind `worldgen`, directory `worldgen`, required, fixed ids.
@@ -443,6 +526,7 @@ KindRegistry builtin_kinds() {
                                           IdSchema{std::string(WORLDGEN_HYDROLOGY_ID), worldgen_hydrology_schema()},
                                           IdSchema{std::string(WORLDGEN_CLIMATE_ID), worldgen_climate_schema()},
                                           IdSchema{std::string(WORLDGEN_BIOMES_ID), worldgen_biomes_schema()},
+                                          IdSchema{std::string(WORLDGEN_RESOURCES_ID), worldgen_resources_schema()},
                                       }));
     // P1-00 6.6: kind `biome`, directory `biomes`, required, open ids, with
     // the kind-level checks of P1-04 4.1.

@@ -1,0 +1,35 @@
+[worldgen.resources]
+fresh_reach_m = 400
+fresh_rain_weight = "0.4"
+fresh_rain_lo_mm = 300
+fresh_rain_hi_mm = 1500
+fert_slope_lo = "0.18"
+fert_slope_hi = "0.47"
+alluvial_bonus = "0.3"
+alluvial_hand_m = 5
+timber_slope_lo = "0.7"
+timber_slope_hi = "1.4"
+fish_river_class_min = 4
+fish_weight = "0.3"
+fish_reach_m = 300
+ore_noise = { wavelength_m = 1500, octaves = 3, gain = "0.5" }
+ore_vein_lo = 0
+ore_vein_hi = "0.2"
+ore_elev_lo_m = 100
+ore_elev_hi_m = 800
+ore_lowland = "0.15"
+ore_slope_base = "0.5"
+ore_slope_lo = "0.3"
+ore_slope_hi = "1.0"
+walk_slope_max = "0.7002"
+walk_min_area_m2 = 250000
+hab_slope_lo = "0.18"
+hab_slope_hi = "0.47"
+hab_weight_fertility = 55
+hab_weight_forage = 20
+hab_weight_timber = 15
+hab_weight_ore = 10
+hab_water_min = "0.25"
+hab_flood_hand_m = 1
+hab_flood_factor = "0.5"
+hab_pocket_factor = "0.25"
