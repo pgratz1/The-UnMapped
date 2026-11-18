@@ -365,3 +365,13 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
 - Proposal (Paul, 2026-11-18): leave it; this is natural variation between worlds. The affected bounds at the largest size become descriptive: an occasional large world is nearly flat or has an unusually tall peak. This qualifies the earlier entry "Every world has real uplands", which still holds at the two smaller sizes.
 - Interim choice: no change to elevation; the acceptance ranges for the largest size are widened in the specs with the next revision, and the two worlds stay recorded in docs/reviews/p1-04-biomes-validation.md.
 - Status: open
+
+### Schema version 4: the stored per-world temperature offset
+
+- Date: 2026-11-18
+- Raised by: spec-writer, via the lead
+- Design doc section: 4 (geography), 6 (schema growth), 7 (runtime)
+- Problem: each world now has its own overall temperature (Paul's decision of 2026-11-17), which the runtime and the history phase need to know and which cannot be recovered exactly from the temperature layer.
+- Proposal: schema version 4, with generator 0.9.0. Table `climate` gains the column `temp_offset_dc` (tenths of a degree, between −20 and +20 with shipped tuning). Table `biome` keeps its shape and has twelve rows (ocean, lake, nine natural biomes, blighted waste). `region` and `region_border` move to version 5.
+- Interim choice: as proposed, specified in P1-03, P1-04 (third version) and docs/specs/schema.md.
+- Status: open
