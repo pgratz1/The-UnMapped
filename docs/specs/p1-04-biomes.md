@@ -13,7 +13,7 @@ Status: **third version, "biome variety" (generator 0.9.0, schema version 4), dr
 | Moor colour | 0x786468 | 0x7E6680 | world critic's palette |
 | `biome_rule` | nine fields | two more, after `coast_max_m`: `river_dist_max_m`, `wet_frac_min` (4.1), with sentinels 32767 and 0 | wet woodland near rivers; fen where wet ground is broad |
 | Stage steps | B1 to B6 | new **B2b** (3-4 chamfer distance to rivers of class ≥ `river_dist_class_min`) and **B2c** (share of wet cells in a triangle window, two exact box passes); B4 gains two comparisons | |
-| `worldgen.biomes` | seven fields | seven more: `river_dist_class_min`, `wet_window_m`, `wet_hand_m`, `wet_scale_512`, `wet_scale_1024`, `wet_scale_2048` and the fixed two-pass window (4.2) | |
+| `worldgen.biomes` | seven fields | six more: `river_dist_class_min`, `wet_window_m`, `wet_hand_m`, `wet_scale_512`, `wet_scale_1024`, `wet_scale_2048`; the window's two passes are fixed (4.2) | |
 | Table `biome` | eight rows | twelve rows | |
 | `report` | `biome_share` with 6 keys | 10 keys, ascending code; `temp_offset_c` is new (P1-03 9) | |
 | Schema | 3 | **4**: table `climate` gains `temp_offset_dc` (P1-03 3); no change to table `biome` | Paul: per-world temperature |
@@ -102,7 +102,7 @@ Record `biome_rule`: all eleven fields required (the two new ones too: there is 
 
 The lower sentinels `rain_min_mm` 0, `elev_min_m` 0 and `wet_frac_min` 0 and the upper sentinel `coast_max_m` 32767 can never change a result (rq ≥ 0; a classified cell has `elevation` ≥ 1; `coast_dist` ≤ 32767; count ≥ 0); they are listed so that the rule is the same for every field. `river_dist_max_m` 32767 does change results: it is the only way a rule matches a cell with d34 = 2^40. A bound one step inside the extreme (for example `rain_max_mm` 9999, `river_dist_max_m` 32766, or `wet_frac_min` raw 1) is compared normally.
 
-**Field ranges at the seams.** Data loaded through P0-03 has every field in range. The seams that take definitions as values (`biome_lookup`, `biome_layer`, section 10) check every rule field against the range above before any cell is evaluated, in rule-array order and field declaration order, and stop at the first failure: fatal `biomes: rule: <field> outside its schema range` (for example `biomes: rule: wet_frac_min outside its schema range` for raw ONE + 1). This was already the 0.8.0 code's behaviour for the nine old fields; the two new fields are checked after `coast_max_m`, in their order.
+**Field ranges at the seams.** Data loaded through P0-03 has every field in range. The seams that take definitions as values (`biome_lookup`, `biome_layer`, section 10) check every rule field against the range above before any cell is evaluated, in B4's order (land definitions with priority > 0 in descending priority, rules in array order, fields in declaration order), and stop at the first failure: fatal `biomes: rule: <field> outside its schema range` (for example `biomes: rule: wet_frac_min outside its schema range` for raw ONE + 1). This was already the 0.8.0 code's behaviour for the nine old fields; the two new fields are checked after `coast_max_m`, in their order.
 
 **Canonical encoding.** The two new fields are appended to `biome_rule` in the order of the table, so every rule's encoding grows by two fields and `content_hash` of every world changes (P1-00 6.4).
 
