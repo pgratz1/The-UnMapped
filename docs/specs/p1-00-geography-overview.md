@@ -495,14 +495,14 @@ Targets for the validation specialist to measure, not guarantees. Release build,
 | `elevation` (noise, erosion, passes, conditioning) | 2.2 s | 8 s | 35 s |
 | `hydrology` | 0.3 s | 1.2 s | 5 s |
 | `climate` | 0.3 s | 1.5 s | 6 s |
-| `biomes` | 0.1 s | 0.5 s | 2 s |
+| `biomes` | 0.15 s | 0.5 s | 2 s |
 | `resources` | 0.2 s | 1 s | 4 s |
 | `regions` | 0.3 s | 1.5 s | 6 s |
 | load data, encode layers, finalize | 0.3 s | 1 s | 4 s |
 | **All of geography** | **4 s** | **15 s** | **65 s** |
 | Peak memory | 200 MB | 600 MB | 2 GB |
 
-The 512 elevation target was raised from 2 s to 2.2 s by the lead (2026-11-17) for the passes and the final talus (P1-01 section 8). The geography totals are not the sum of the stage rows (at 512 the rows sum to 3.7 s), so the total stays 4 s. Milestone 1 requires geography plus history under two minutes at the default size; geography at 15 s leaves at least 100 s for history and derivation. Debug and sanitizer builds are not budgeted (expect 5 to 20 times slower). A stage over twice its target at 1024 is a defect to report; P1-01 section 8 gives the fallbacks for erosion, the expensive part.
+The 512 elevation target was raised from 2 s to 2.2 s by the lead (2026-11-17) for the passes and the final talus (P1-01 section 8). The 512 biomes target was raised from 0.1 s to 0.15 s (P1-04 third version, section 8, 2026-11-18): the 0.9.0 stage computes in 71 ms but its run difference, which includes fixed per-stage costs, sits at 0.10 s. The geography totals are not the sum of the stage rows (at 512 the rows sum to 3.7 s), so the total stays 4 s. Milestone 1 requires geography plus history under two minutes at the default size; geography at 15 s leaves at least 100 s for history and derivation. Debug and sanitizer builds are not budgeted (expect 5 to 20 times slower). A stage over twice its target at 1024 is a defect to report; P1-01 section 8 gives the fallbacks for erosion, the expensive part.
 
 ## 12. Math functions
 
