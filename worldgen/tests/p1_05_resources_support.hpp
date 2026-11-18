@@ -101,7 +101,7 @@ struct Values {
     std::int64_t fresh_rain_hi_mm = 1500;
     std::int64_t fert_slope_lo = fx_of("0.18");
     std::int64_t fert_slope_hi = fx_of("0.47");
-    std::int64_t alluvial_bonus = fx_of("0.3");
+    std::int64_t alluvial_bonus = fx_of("0.15");
     std::int64_t alluvial_hand_m = 5 * ONE;
     std::int64_t timber_slope_lo = fx_of("0.7");
     std::int64_t timber_slope_hi = fx_of("1.4");
@@ -112,22 +112,22 @@ struct Values {
     std::int64_t ore_vein_lo = 0;
     std::int64_t ore_vein_hi = fx_of("0.2");
     std::int64_t ore_elev_lo_m = 100;
-    std::int64_t ore_elev_hi_m = 800;
+    std::int64_t ore_elev_hi_m = 600;
     std::int64_t ore_lowland = fx_of("0.15");
-    std::int64_t ore_slope_base = HALF;
+    std::int64_t ore_slope_base = fx_of("0.65");
     std::int64_t ore_slope_lo = fx_of("0.3");
     std::int64_t ore_slope_hi = ONE;
     std::int64_t walk_slope_max = fx_of("0.7002");
     std::int64_t walk_min_area_m2 = 250000;
     std::int64_t hab_slope_lo = fx_of("0.18");
     std::int64_t hab_slope_hi = fx_of("0.47");
-    std::int64_t hab_weight_fertility = 55;
-    std::int64_t hab_weight_forage = 20;
-    std::int64_t hab_weight_timber = 15;
-    std::int64_t hab_weight_ore = 10;
+    std::int64_t hab_weight_fertility = 70;
+    std::int64_t hab_weight_forage = 15;
+    std::int64_t hab_weight_timber = 10;
+    std::int64_t hab_weight_ore = 5;
     std::int64_t hab_water_min = fx_of("0.25");
-    std::int64_t hab_flood_hand_m = ONE;
-    std::int64_t hab_flood_factor = HALF;
+    std::int64_t hab_flood_hand_m = HALF;
+    std::int64_t hab_flood_factor = fx_of("0.75");
     std::int64_t hab_pocket_factor = fx_of("0.25");
 
     [[nodiscard]] std::int64_t walk_min_cells() const { return (walk_min_area_m2 + 255) / 256; }
@@ -707,7 +707,9 @@ inline std::vector<std::pair<std::string, std::string>> report_values(std::span<
     for (const auto& kv : areas) {
         main = std::max(main, kv.second);
     }
-    out.emplace_back("walk_main_share", areas.empty() ? std::string("0.0000") : ratio4(main, land));
+    // 9 (r2): n/a without land takes precedence over the 0.0000 rule.
+    out.emplace_back("walk_main_share", land == 0 ? std::string("n/a")
+                                                  : areas.empty() ? std::string("0.0000") : ratio4(main, land));
     out.emplace_back("walk_share", ratio4(walk, land));
     return out;
 }

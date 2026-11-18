@@ -156,9 +156,9 @@ TEST_CASE("P1-05 5.1 R4: fertility (fb, S2, hand) with sf and al") {
         int want;
     };
     const Values v = values();
-    for (const Row r : {Row{"1", 9216, 20, 176}, Row{"1", 0, 0, 255}, Row{"0.7", 0, 0, 232}, Row{"0.7", 0, 60, 178},
-                        Row{"0.7", 22118, 100, 3}, Row{"0.45", 0, 5, 146}, Row{"1", 30000, 0, 0},
-                        Row{"0.3", 3318, 49, 77}}) {
+    for (const Row r : {Row{"1", 9216, 20, 163}, Row{"1", 0, 0, 255}, Row{"0.7", 0, 0, 205}, Row{"0.7", 0, 60, 178},
+                        Row{"0.7", 22118, 100, 3}, Row{"0.45", 0, 5, 130}, Row{"0.45", 0, 4, 131},
+                        Row{"1", 30000, 0, 0}, Row{"0.3", 3318, 49, 77}}) {
         CAPTURE(r.fb);
         CAPTURE(r.s2);
         CAPTURE(r.hand);
@@ -166,12 +166,14 @@ TEST_CASE("P1-05 5.1 R4: fertility (fb, S2, hand) with sf and al") {
         CHECK(int{own_fertility(D(r.fb), r.s2, r.hand, v)} == r.want);
     }
     CHECK(own_fert_parts(9216, 20, v).sf == 2517739448);
-    CHECK(own_fert_parts(9216, 20, v).al == 5068061410);
-    CHECK(own_fert_parts(0, 0, v).al == 5583457485);
+    CHECK(own_fert_parts(9216, 20, v).al == 4681514352);
+    CHECK(own_fert_parts(0, 0, v).al == 4939212390);
+    CHECK(own_fert_parts(0, 5, v).al == 4874787881);
+    CHECK(own_fert_parts(0, 4, v).al == 4887672782);
     CHECK(own_fert_parts(0, 60, v).al == ONE);
     CHECK(own_fert_parts(22118, 100, v).sf == 77697452);
     CHECK(own_fert_parts(3318, 49, v).sf == 4294870875);
-    CHECK(own_fert_parts(3318, 49, v).al == 4320737100);
+    CHECK(own_fert_parts(3318, 49, v).al == 4307852198);
 }
 
 TEST_CASE("P1-05 5.1 R4: timber (tb, S2)") {
@@ -220,8 +222,8 @@ TEST_CASE("P1-05 5.1 R4: ore (elevation, S2, noise) with eu, su, vn") {
         int want;
     };
     const Values v = values();
-    for (const Row r : {Row{8000, 102400, "0.2", 255}, Row{8000, 102400, "0.1", 128}, Row{500, 0, "0.3", 19},
-                        Row{15000, 20000, "0.05", 38}, Row{4500, 9216, "0.15", 48}, Row{8000, 102400, "-0.04", 0}}) {
+    for (const Row r : {Row{8000, 102400, "0.2", 255}, Row{8000, 102400, "0.1", 128}, Row{500, 0, "0.3", 25},
+                        Row{15000, 20000, "0.05", 46}, Row{4500, 9216, "0.15", 87}, Row{8000, 102400, "-0.04", 0}}) {
         CAPTURE(r.e);
         CAPTURE(r.s2);
         CAPTURE(r.noise);
@@ -231,14 +233,14 @@ TEST_CASE("P1-05 5.1 R4: ore (elevation, S2, noise) with eu, su, vn") {
     CHECK(own_ore_parts(8000, 102400, D("0.1"), v).vn == 2147483651);
     const OreParts low = own_ore_parts(500, 0, D("0.3"), v);
     CHECK(low.eu == 644245094);
-    CHECK(low.su == HALF);
+    CHECK(low.su == 2791728742);  // ore_slope_base 0.65 (r2)
     CHECK(low.vn == ONE);
     const OreParts hi = own_ore_parts(15000, 20000, D("0.05"), v);
-    CHECK(hi.su == 2582937308);
+    CHECK(hi.su == 3096546304);
     CHECK(hi.vn == 1073741825);
     const OreParts mid = own_ore_parts(4500, 9216, D("0.15"), v);
-    CHECK(mid.eu == HALF);
-    CHECK(mid.su == HALF);
+    CHECK(mid.eu == 3006477107);
+    CHECK(mid.su == 2791728742);
     CHECK(mid.vn == 3221225471);
 }
 
@@ -264,7 +266,7 @@ TEST_CASE("P1-05 10.1 test 2: the ore noise at 16 cells of seed 0, N = 64, is fb
 
 // --- R6 -------------------------------------------------------------------------------------------
 
-TEST_CASE("P1-05 5.1 R6: the eight rows of the habitability table, every intermediate") {
+TEST_CASE("P1-05 5.1 R6: the eleven rows of the habitability table (r2), every intermediate") {
     struct Row {
         int f, w, g, t, o;
         std::int64_t s2, hand;
@@ -273,14 +275,17 @@ TEST_CASE("P1-05 5.1 R6: the eight rows of the habitability table, every interme
         bool flood, pocket;
         int want;
     };
-    const std::vector<Row> rows = {
-        {232, 255, 204, 255, 3, 0, 20, 1, 20695, 3485660713, ONE, ONE, false, false, 207},
-        {232, 255, 204, 255, 3, 0, 0, 1, 20695, 3485660713, ONE, ONE, true, false, 103},
-        {255, 255, 153, 38, 0, 0, 5, 1, 17655, 2973633240, ONE, ONE, true, false, 88},
-        {255, 255, 153, 38, 0, 0, 5, 0, 17655, 2973633240, ONE, ONE, true, true, 22},
-        {179, 102, 128, 255, 0, 3318, 300, 1, 16230, 2733620361, 2362232013, 4294870875, false, false, 89},
-        {255, 40, 90, 38, 0, 0, 300, 1, 16395, 2761411326, 1579032094, ONE, false, false, 60},
-        {170, 13, 89, 13, 0, 0, 300, 2, 11325, 1907470770, 1237961162, ONE, false, false, 33},
+    const std::vector<Row> rows = {  // r2 (2026-11-18)
+        {205, 255, 204, 255, 3, 0, 20, 1, 19975, 3364391049, ONE, ONE, false, false, 200},
+        {205, 255, 204, 255, 3, 0, 0, 1, 19975, 3364391049, ONE, ONE, true, false, 150},
+        {255, 255, 153, 38, 0, 0, 5, 1, 20525, 3457027598, ONE, ONE, false, false, 205},
+        {255, 255, 153, 38, 0, 0, 4, 1, 20525, 3457027598, ONE, ONE, true, false, 154},
+        {255, 255, 153, 38, 0, 0, 4, 0, 20525, 3457027598, ONE, ONE, true, true, 38},
+        {179, 255, 204, 255, 0, 0, 300, 1, 18140, 3055321833, ONE, ONE, false, false, 181},
+        {179, 102, 128, 255, 0, 3318, 300, 1, 17000, 2863311531, 2362232013, 4294870875, false, false, 93},
+        {255, 40, 90, 38, 0, 0, 300, 1, 19580, 3297861163, 1579032094, ONE, false, false, 72},
+        {179, 255, 89, 13, 0, 0, 300, 1, 13995, 2357179110, ONE, ONE, false, false, 140},
+        {179, 13, 89, 13, 0, 0, 300, 2, 13995, 2357179110, 1237961162, ONE, false, false, 40},
         {200, 200, 200, 200, 200, 30000, 300, 1, 20000, 3368601801, 3600193175, 0, false, false, 0},
     };
     const Values v = values();
@@ -302,6 +307,21 @@ TEST_CASE("P1-05 5.1 R6: the eight rows of the habitability table, every interme
                                              static_cast<std::uint8_t>(r.o), r.s2, r.hand, r.walk, shipped())} ==
               r.want);
     }
+}
+
+TEST_CASE("P1-05 7, 10 (r2): the cell seams refuse hand outside [0, 65535]; resource_ore_noise checks the tuning") {
+    CHECK(fatal_message([] { (void)resource_api::fertility(ONE, 0, 65536, shipped()); }) ==
+          "fertility_cell: hand above 65535");
+    CHECK(fatal_message([] { (void)resource_api::habitability(1, 1, 1, 1, 1, 0, 65536, 1, shipped()); }) ==
+          "habitability_cell: hand above 65535");
+    CHECK_THROWS_AS((void)resource_api::fertility(ONE, 0, -1, shipped()), worldgen::FatalError);
+    CHECK_THROWS_AS((void)resource_api::habitability(1, 1, 1, 1, 1, 0, -1, 1, shipped()), worldgen::FatalError);
+    CHECK_NOTHROW((void)resource_api::fertility(ONE, 0, 65535, shipped()));
+    CHECK_NOTHROW((void)resource_api::habitability(1, 1, 1, 1, 1, 0, 65535, 1, shipped()));
+    resource_api::Tuning bad = tuning();
+    bad.ore_vein_hi = bad.ore_vein_lo;
+    CHECK(fatal_message([&] { (void)resource_api::ore_noise(0, 1, 1, bad); }) ==
+          "resources: tuning: ore_vein_lo must be below ore_vein_hi");
 }
 
 // --- R5 -------------------------------------------------------------------------------------------

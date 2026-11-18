@@ -307,16 +307,16 @@ TEST_CASE("P1-05 golden: every case up to N = 128, step by step") {
     CHECK(ran >= 30U);
 }
 
-TEST_CASE("P1-05 9 statistics: the golden report values of 512 seed 0 equal the spec's example") {
+TEST_CASE("P1-05 9 statistics: the golden report values of 512 seed 0 equal the spec's example (r2 tuning)") {
     for (const GoldenCase& c : golden()) {
         if (c.name != "shipped-512-s0") {
             continue;
         }
         CHECK(c.get("scores_p50") == "fertility:0_ore:2_timber:38_fresh_water:102_forage:128_habitability:0");
-        CHECK(c.get("scores_p90") == "fertility:178_ore:104_timber:255_fresh_water:226_forage:184_habitability:110");
-        CHECK(c.get("fertile_share") == "0.2046");
-        CHECK(c.get("habitable_share") == "0.2062");
-        CHECK(c.get("ore_rich_share") == "0.0866");
+        CHECK(c.get("scores_p90") == "fertility:178_ore:133_timber:255_fresh_water:226_forage:184_habitability:122");
+        CHECK(c.get("fertile_share") == "0.2032");
+        CHECK(c.get("habitable_share") == "0.2231");
+        CHECK(c.get("ore_rich_share") == "0.1025");
         CHECK(c.get("walk_areas") == "4");
         CHECK(c.get("walk_main_share") == "0.1826");
         CHECK(c.get("walk_share") == "0.4286");
@@ -693,6 +693,14 @@ TEST_CASE("P1-05 2, 10.1 test 5: each precondition is fatal with its message, le
             layer_of(name) = LayerGrid{256, 256, std::vector<std::uint16_t>(256 * 256, 800)};
         }
         expect(std::string(name) + " not N x N", std::string(PRECONDITION) + name + " length is not width * height");
+    }
+    {  // Order (r2, section 2 item 1): all present, then all of type, then all of size.
+        set_entry(entry_inputs());
+        layer_of("elevation") = LayerGrid{256, 256, std::vector<std::int16_t>(256 * 256, 80)};
+        layer_of("biome") = LayerGrid{EN, EN, std::vector<std::uint16_t>(EN * EN, 4)};
+        expect("size and type", std::string(PRECONDITION) + "layer 'biome' does not have its catalogue type");
+        drop("rainfall");
+        expect("missing, size and type", std::string(PRECONDITION) + "missing layer 'rainfall'");
     }
     {
         set_entry(entry_inputs());

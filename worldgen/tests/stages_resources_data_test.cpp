@@ -119,7 +119,12 @@ TEST_CASE("P1-05 4.2: the shipped tuning loads; fields in declaration order with
     CHECK(def->record.get_int("hab_weight_fertility") + def->record.get_int("hab_weight_forage") +
               def->record.get_int("hab_weight_timber") + def->record.get_int("hab_weight_ore") ==
           100);
-    CHECK(def->record.get_fx("hab_flood_hand_m") == Fx::from_int(1));
+    CHECK(def->record.get_fx("hab_flood_hand_m").raw() == HALF);  // r2
+    CHECK(def->record.get_int("hab_weight_fertility") == 70);         // r2
+    CHECK(def->record.get_fx("ore_slope_base").raw() == fx_of("0.65"));
+    CHECK(def->record.get_int("ore_elev_hi_m") == 600);
+    CHECK(def->record.get_fx("alluvial_bonus").raw() == fx_of("0.15"));
+    CHECK(def->record.get_fx("hab_flood_factor").raw() == fx_of("0.75"));
     CHECK(def->record.get_fx("hab_pocket_factor").raw() == 1073741824);
     static_cast<void>(resource_api::tuning_from(*l.content));
     // walk_min_cells = (walk_min_area_m2 + 255) div 256 = 977 (5 R5).

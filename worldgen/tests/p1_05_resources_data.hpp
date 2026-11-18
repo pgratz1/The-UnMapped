@@ -19,7 +19,7 @@
 
 namespace resource_data {
 
-// P1-05 4.2, the shipped file and the fixtures' (identical).
+// P1-05 4.2 (r2 tuning, 2026-11-18), the shipped file and the fixtures' (identical).
 inline constexpr std::string_view TUNING_TOML =
     "[worldgen.resources]\n"
     "fresh_reach_m = 400\n"
@@ -28,7 +28,7 @@ inline constexpr std::string_view TUNING_TOML =
     "fresh_rain_hi_mm = 1500\n"
     "fert_slope_lo = \"0.18\"\n"
     "fert_slope_hi = \"0.47\"\n"
-    "alluvial_bonus = \"0.3\"\n"
+    "alluvial_bonus = \"0.15\"\n"
     "alluvial_hand_m = 5\n"
     "timber_slope_lo = \"0.7\"\n"
     "timber_slope_hi = \"1.4\"\n"
@@ -39,22 +39,22 @@ inline constexpr std::string_view TUNING_TOML =
     "ore_vein_lo = 0\n"
     "ore_vein_hi = \"0.2\"\n"
     "ore_elev_lo_m = 100\n"
-    "ore_elev_hi_m = 800\n"
+    "ore_elev_hi_m = 600\n"
     "ore_lowland = \"0.15\"\n"
-    "ore_slope_base = \"0.5\"\n"
+    "ore_slope_base = \"0.65\"\n"
     "ore_slope_lo = \"0.3\"\n"
     "ore_slope_hi = \"1.0\"\n"
     "walk_slope_max = \"0.7002\"\n"
     "walk_min_area_m2 = 250000\n"
     "hab_slope_lo = \"0.18\"\n"
     "hab_slope_hi = \"0.47\"\n"
-    "hab_weight_fertility = 55\n"
-    "hab_weight_forage = 20\n"
-    "hab_weight_timber = 15\n"
-    "hab_weight_ore = 10\n"
+    "hab_weight_fertility = 70\n"
+    "hab_weight_forage = 15\n"
+    "hab_weight_timber = 10\n"
+    "hab_weight_ore = 5\n"
     "hab_water_min = \"0.25\"\n"
-    "hab_flood_hand_m = 1\n"
-    "hab_flood_factor = \"0.5\"\n"
+    "hab_flood_hand_m = \"0.5\"\n"
+    "hab_flood_factor = \"0.75\"\n"
     "hab_pocket_factor = \"0.25\"\n";
 
 // The fields of 4.2 in declaration order with their shipped text, their
@@ -76,7 +76,7 @@ inline const std::vector<FieldText>& tuning_fields() {
         {"fresh_rain_hi_mm", "1500", "int", "0", "10000"},
         {"fert_slope_lo", "\"0.18\"", "fx", "0", "10"},
         {"fert_slope_hi", "\"0.47\"", "fx", "0", "10"},
-        {"alluvial_bonus", "\"0.3\"", "fx", "0", "4"},
+        {"alluvial_bonus", "\"0.15\"", "fx", "0", "4"},
         {"alluvial_hand_m", "5", "fx", "0.1", "100"},
         {"timber_slope_lo", "\"0.7\"", "fx", "0", "10"},
         {"timber_slope_hi", "\"1.4\"", "fx", "0", "10"},
@@ -87,22 +87,22 @@ inline const std::vector<FieldText>& tuning_fields() {
         {"ore_vein_lo", "0", "fx", "-1", "1"},
         {"ore_vein_hi", "\"0.2\"", "fx", "-1", "1"},
         {"ore_elev_lo_m", "100", "int", "0", "3000"},
-        {"ore_elev_hi_m", "800", "int", "0", "3000"},
+        {"ore_elev_hi_m", "600", "int", "0", "3000"},
         {"ore_lowland", "\"0.15\"", "fx", "0", "1"},
-        {"ore_slope_base", "\"0.5\"", "fx", "0", "1"},
+        {"ore_slope_base", "\"0.65\"", "fx", "0", "1"},
         {"ore_slope_lo", "\"0.3\"", "fx", "0", "10"},
         {"ore_slope_hi", "\"1.0\"", "fx", "0", "10"},
         {"walk_slope_max", "\"0.7002\"", "fx", "0.01", "10"},
         {"walk_min_area_m2", "250000", "int", "16384", "1000000000"},
         {"hab_slope_lo", "\"0.18\"", "fx", "0", "10"},
         {"hab_slope_hi", "\"0.47\"", "fx", "0", "10"},
-        {"hab_weight_fertility", "55", "int", "0", "1000"},
-        {"hab_weight_forage", "20", "int", "0", "1000"},
-        {"hab_weight_timber", "15", "int", "0", "1000"},
-        {"hab_weight_ore", "10", "int", "0", "1000"},
+        {"hab_weight_fertility", "70", "int", "0", "1000"},
+        {"hab_weight_forage", "15", "int", "0", "1000"},
+        {"hab_weight_timber", "10", "int", "0", "1000"},
+        {"hab_weight_ore", "5", "int", "0", "1000"},
         {"hab_water_min", "\"0.25\"", "fx", "0", "1"},
-        {"hab_flood_hand_m", "1", "fx", "0", "100"},
-        {"hab_flood_factor", "\"0.5\"", "fx", "0", "1"},
+        {"hab_flood_hand_m", "\"0.5\"", "fx", "0", "100"},
+        {"hab_flood_factor", "\"0.75\"", "fx", "0", "1"},
         {"hab_pocket_factor", "\"0.25\"", "fx", "0", "1"},
     };
     return f;

@@ -249,6 +249,36 @@ TEST_CASE("P1-05 9 (lead's ruling 3): a corrupt resources layer is refused even 
     CHECK(report_error(out2).find("type u8, expected u16") != std::string::npos);
 }
 
+TEST_CASE("P1-05 9 (r2): a world with no dry land; with lake land the walk shares are 0.0000, without land n/a") {
+    dbtest::TempDir dir("resources-report-nodry");
+    const std::string na_scores = "fertility:n/a ore:n/a timber:n/a fresh_water:n/a forage:n/a habitability:n/a";
+    for (const bool lakes : {true, false}) {
+        CAPTURE(lakes);
+        World w = make_world();
+        for (std::size_t i = 0; i < w.water.size(); ++i) {
+            if (w.water[i] != WATER_OCEAN) {
+                w.water[i] = lakes ? WATER_LAKE : WATER_OCEAN;
+                if (!lakes) {
+                    w.elevation[i] = -5;
+                }
+            }
+            w.l.fertility[i] = w.l.ore[i] = w.l.timber[i] = w.l.forage[i] = w.l.habitability[i] = 0;
+            w.l.fresh_water[i] = w.water[i] == WATER_LAKE ? 255 : 0;
+            w.l.walk_area[i] = 0;
+        }
+        const std::string walk = lakes ? "0.0000" : "n/a";
+        const std::vector<std::pair<std::string, std::string>> want = {
+            {"scores_p50", na_scores}, {"scores_p90", na_scores},  {"fertile_share", "n/a"},
+            {"habitable_share", "n/a"}, {"ore_rich_share", "n/a"}, {"walk_areas", "0"},
+            {"walk_main_share", walk},  {"walk_share", walk},
+        };
+        CHECK(report_values(w.elevation, w.water, w.l) == want);
+        const std::string text = report_of(write(dir, lakes ? "lakes.db" : "sea.db", w));
+        INFO(text);
+        CHECK(ends_with(text, keys_text(want)));
+    }
+}
+
 // --- render (9, 10.1 test 8) --------------------------------------------------------------------------
 
 TEST_CASE("P1-05 9, 10.1 test 8: the score palette at its stops and t = 100; registered for the six score layers") {
