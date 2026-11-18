@@ -1,8 +1,12 @@
 #!/usr/bin/env python3
 """Independent exact-integer reference of the P1-04 biome stage.
 
-Written by the test writer from docs/specs/p1-04-biomes.md (second version,
-2026-11-17), the `climate` table of docs/specs/p1-03-climate.md (3, C7, 9)
+Written by the test writer from docs/specs/p1-04-biomes.md (third version,
+"biome variety", generator 0.9.0: twelve definitions, the rule fields
+river_dist_max_m and wet_frac_min with their sentinels, B2b river distance
+by the two-pass 3-4 chamfer, B2c wet share by two exact box passes, the
+per-size wet scale; the second version, 0.8.0, is kept as --legacy, which
+reproduces the 0.8.0 golden file byte for byte), the `climate` table of docs/specs/p1-03-climate.md (3, C7, 9)
 and docs/specs/p1-00-geography-overview.md (G2, G6, G7 with the minimum
 river class, G8, 9.2, 10.2, 10.3) only, without reading any implementation
 of the stage. Steps B2 to B6 are implemented here from the spec text. The
@@ -29,7 +33,19 @@ Usage (from the repository root; -B keeps __pycache__ out of the tree):
         S2 (G8), nt, nr, tq, rq, the B4 code, and B5 for river cells, and
         compares every value with the table. Exit 1 on a difference.
 
+    python3 -B worldgen/tests/reference/p1_biomes_reference.py realcells3 DB
+        The third version's nine real cells (5.1) on the 0.8.0 world file of
+        1024 seed 3: elevation and hydrology decoded, temperature and
+        rainfall recomputed by p1_climate_reference.py, then hand, S2, d34,
+        the wet share, nt, nr, tq, rq and B4 compared with the table.
+
     python3 -B worldgen/tests/reference/p1_biomes_reference.py golden [PATH|-] [--large] [--db-dir DIR]
+            [--legacy] [--climate-golden PATH]
+        At 0.9.0 only the six elevation and hydrology layers come from the
+        world file (checked against the golden files); the climate layers
+        are recomputed. --legacy writes the 0.8.0 file (eight definitions,
+        0.8.0 climate inputs; --climate-golden names the 0.8.0
+        p1-03-climate.txt to check decoded inputs against).
         Write the golden vector file (default worldgen/tests/golden/
         p1-04-biomes.txt); "-" writes it to standard output. --large adds the
         N = 256, 512 and 1024 worlds of P1-04 10.4. With --db-dir DIR the
@@ -88,12 +104,23 @@ def dec(text):
 # Data: the shipped biome definitions (4.1) and tuning (4.2)
 # ---------------------------------------------------------------------------
 
-def rule(tmin, tmax, rmin, rmax, emin, emax, slope, hand, coast):
-    """A biome_rule with fx fields as raw values (temp, slope, hand) and int
-    fields as ints."""
+def rule(tmin, tmax, rmin, rmax, emin, emax, slope, hand, coast, rdist=32767, wet=0):
+    """A biome_rule with fx fields as raw values (temp, slope, hand, wet) and
+    int fields as ints; the eleven fields in declaration order (4.1, third
+    version: river_dist_max_m and wet_frac_min after coast_max_m)."""
     return {"temp_min_c": tmin, "temp_max_c": tmax, "rain_min_mm": rmin, "rain_max_mm": rmax,
             "elev_min_m": emin, "elev_max_m": emax, "slope_max": slope, "hand_max_m": hand,
-            "coast_max_m": coast}
+            "coast_max_m": coast, "river_dist_max_m": rdist, "wet_frac_min": wet}
+
+
+# Field names and schema ranges (raw for fx) in declaration order (4.1).
+RULE_FIELDS = (
+    ("temp_min_c", -60 << 32, 50 << 32), ("temp_max_c", -60 << 32, 50 << 32),
+    ("rain_min_mm", 0, 10000), ("rain_max_mm", 0, 10000),
+    ("elev_min_m", 0, 3000), ("elev_max_m", 0, 3000),
+    ("slope_max", 0, 100 << 32), ("hand_max_m", 0, 3000 << 32),
+    ("coast_max_m", 0, 32767), ("river_dist_max_m", 0, 32767), ("wet_frac_min", 0, 1 << 32),
+)
 
 
 def F(v):
@@ -101,21 +128,56 @@ def F(v):
     return er.from_int(v) if isinstance(v, int) else dec(v)
 
 
-FULL = dict(tmin=F(-60), tmax=F(50), rmin=0, rmax=10000, emin=0, emax=3000, slope=F(100), hand=F(3000), coast=32767)
+FULL = dict(tmin=F(-60), tmax=F(50), rmin=0, rmax=10000, emin=0, emax=3000, slope=F(100), hand=F(3000), coast=32767,
+            rdist=32767, wet=0)
 
 
 def full_rule(**over):
     a = dict(FULL)
     a.update(over)
-    return rule(a["tmin"], a["tmax"], a["rmin"], a["rmax"], a["emin"], a["emax"], a["slope"], a["hand"], a["coast"])
+    return rule(a["tmin"], a["tmax"], a["rmin"], a["rmax"], a["emin"], a["emax"], a["slope"], a["hand"], a["coast"],
+                a["rdist"], a["wet"])
+
+
+def _d(code, name, colour, water, body, prio, fb, rules, fert, timber, noun):
+    return {"code": code, "name": name, "colour": colour, "water": water, "water_body": body,
+            "priority": prio, "fallback": fb, "rules": rules, "fertility": F(fert), "timber": F(timber),
+            "region_noun": noun}
 
 
 def shipped_definitions():
-    """The eight definitions of 4.1, by id, fields as in the TOML."""
-    def d(code, name, colour, water, body, prio, fb, rules, fert, timber, noun):
-        return {"code": code, "name": name, "colour": colour, "water": water, "water_body": body,
-                "priority": prio, "fallback": fb, "rules": rules, "fertility": F(fert), "timber": F(timber),
-                "region_noun": noun}
+    """The twelve definitions of 4.1 (third version, generator 0.9.0), by id,
+    fields as in the TOML."""
+    d = _d
+    return {
+        "ocean": d(1, "Ocean", 0x183878, True, "ocean", 0, False, [], 0, 0, "Sea"),
+        "lake": d(2, "Lake", 0x4080CC, True, "lake", 0, False, [], 0, 0, "Mere"),
+        "temperate_forest": d(3, "Temperate forest", 0x2E6034, False, "none", 20, False,
+                              [full_rule(rmin=720)], "0.7", 1, "Wood"),
+        "grassland": d(4, "Grassland", 0x96AA5A, False, "none", 10, True, [], 1, "0.15", "Downs"),
+        "marsh": d(5, "Marsh", 0x6AA396, False, "none", 40, False,
+                   [full_rule(rmin=500, emax=200, slope=F("0.05"), hand=F(1))], "0.45", "0.3", "Marsh"),
+        "highland_moor": d(6, "Highland moor", 0x7E6680, False, "none", 30, False,
+                           [full_rule(tmax=F(4), rmin=720, emin=300)], "0.3", "0.1", "Moor"),
+        "alpine": d(7, "Alpine", 0xBEBEB4, False, "none", 50, False,
+                    [full_rule(tmax=F("0.5"), emin=600)], 0, 0, "Peaks"),
+        "blighted_waste": d(8, "Blighted waste", 0x605446, False, "none", 0, False, [], 0, 0, "Waste"),
+        "heath": d(9, "Heath", 0x94664A, False, "none", 25, False,
+                   [full_rule(tmax=F(4), emin=300)], "0.2", "0.05", "Heath"),
+        "steppe": d(10, "Steppe", 0xE0D296, False, "none", 15, False,
+                    [full_rule(rmax=600)], "0.6", "0.05", "Steppe"),
+        "wet_woodland": d(11, "Wet woodland", 0x23505E, False, "none", 18, False,
+                          [full_rule(rmin=450, emax=300, hand=F(5), rdist=112)], "0.5", "0.7", "Carr"),
+        "fen": d(12, "Fen", 0x8A8070, False, "none", 45, False,
+                 [full_rule(rmin=500, emax=200, slope=F("0.05"), hand=F(3), wet=F("0.45"))], "0.25", "0.2", "Fen"),
+    }
+
+
+def legacy_definitions():
+    """The eight definitions of the second version (generator 0.8.0), with
+    the two new rule fields at their sentinels (river_dist_max_m 32767,
+    wet_frac_min 0): the neutral setting of P1-04 6 item 9."""
+    d = _d
     return {
         "ocean": d(1, "Ocean", 0x183878, True, "ocean", 0, False, [], 0, 0, "Sea"),
         "lake": d(2, "Lake", 0x4080CC, True, "lake", 0, False, [], 0, 0, "Mere"),
@@ -141,6 +203,12 @@ def shipped_tuning(**over):
         "rain_scale_1024": er.from_int(1),
         "rain_scale_2048": dec("0.875"),
         "drain_river_class_min": 3,
+        "river_dist_class_min": 4,
+        "wet_window_m": 480,
+        "wet_hand_m": er.from_int(5),
+        "wet_scale_512": er.from_int(1),
+        "wet_scale_1024": er.from_int(1),
+        "wet_scale_2048": dec("1.5"),
     }
     for k, v in over.items():
         if k not in t:
@@ -150,7 +218,9 @@ def shipped_tuning(**over):
 
 
 # The order of the TOML text of a tuning override in a golden case line.
-TUNING_FX = ("temp_jitter_c", "rain_jitter", "rain_scale_512", "rain_scale_1024", "rain_scale_2048")
+TUNING_FX = ("temp_jitter_c", "rain_jitter", "rain_scale_512", "rain_scale_1024", "rain_scale_2048",
+             "wet_hand_m", "wet_scale_512", "wet_scale_1024", "wet_scale_2048")
+TUNING_INT = ("drain_river_class_min", "river_dist_class_min", "wet_window_m")
 
 
 def tuning_of(overrides):
@@ -160,7 +230,7 @@ def tuning_of(overrides):
     for k, v in overrides:
         if k in TUNING_FX:
             over[k] = dec(v)
-        elif k == "drain_river_class_min":
+        elif k in TUNING_INT:
             over[k] = int(v)
         else:
             raise KeyError(k)
@@ -187,6 +257,7 @@ class Defs:
 
 
 SHIPPED = Defs(shipped_definitions())
+LEGACY = Defs(legacy_definitions())
 
 
 # ---------------------------------------------------------------------------
@@ -300,6 +371,171 @@ def not_steeper(s2, t_raw):
 
 
 # ---------------------------------------------------------------------------
+# B2b: river distance (3-4 chamfer to river cells of class >= k_r)
+# ---------------------------------------------------------------------------
+
+FAR = 1 << 40
+
+
+def river_distance(w, h, water, river, k):
+    """B2b by the two raster passes of the spec, in place."""
+    if not 1 <= k <= 15:
+        fatal("biomes: river_dist_class_min %d outside 1..15" % k)
+    n = w * h
+    if len(water) != n or len(river) != n:
+        fatal("biomes: river distance: arrays of the wrong length")
+    d = [0 if (water[i] == WATER_RIVER and river[i] >= k) else FAR for i in range(n)]
+    for y in range(h):
+        for x in range(w):
+            i = y * w + x
+            v = d[i]
+            if x > 0 and d[i - 1] + 3 < v:
+                v = d[i - 1] + 3
+            if y > 0:
+                if x > 0 and d[i - w - 1] + 4 < v:
+                    v = d[i - w - 1] + 4
+                if d[i - w] + 3 < v:
+                    v = d[i - w] + 3
+                if x < w - 1 and d[i - w + 1] + 4 < v:
+                    v = d[i - w + 1] + 4
+            d[i] = v
+    for y in range(h - 1, -1, -1):
+        for x in range(w - 1, -1, -1):
+            i = y * w + x
+            v = d[i]
+            if x < w - 1 and d[i + 1] + 3 < v:
+                v = d[i + 1] + 3
+            if y < h - 1:
+                if x < w - 1 and d[i + w + 1] + 4 < v:
+                    v = d[i + w + 1] + 4
+                if d[i + w] + 3 < v:
+                    v = d[i + w] + 3
+                if x > 0 and d[i + w - 1] + 4 < v:
+                    v = d[i + w - 1] + 4
+            d[i] = v
+    return d
+
+
+def river_distance_forward(w, h, water, river, k):
+    """The grid after the forward pass alone (for the 5.1 example)."""
+    d = [0 if (water[i] == WATER_RIVER and river[i] >= k) else FAR for i in range(w * h)]
+    for y in range(h):
+        for x in range(w):
+            i = y * w + x
+            c = [d[i]]
+            if x > 0:
+                c.append(d[i - 1] + 3)
+            if y > 0:
+                if x > 0:
+                    c.append(d[i - w - 1] + 4)
+                c.append(d[i - w] + 3)
+                if x < w - 1:
+                    c.append(d[i - w + 1] + 4)
+            d[i] = min(c)
+    return d
+
+
+def river_distance_closed(w, h, water, river, k):
+    """The closed form of B2b by brute force over the targets: min over
+    targets t of 3 max(|dx|, |dy|) + min(|dx|, |dy|); FAR without a target."""
+    targets = [(i % w, i // w) for i in range(w * h) if water[i] == WATER_RIVER and river[i] >= k]
+    out = []
+    for i in range(w * h):
+        x, y = i % w, i // w
+        best = FAR
+        for tx, ty in targets:
+            a, b = abs(x - tx), abs(y - ty)
+            v = 3 * max(a, b) + min(a, b)
+            if v < best:
+                best = v
+        out.append(best)
+    return out
+
+
+# ---------------------------------------------------------------------------
+# B2c: wet share (triangle window as two exact box passes)
+# ---------------------------------------------------------------------------
+
+def wet_cells(water, hand, wet_hand_raw):
+    """wet[i] = 1 if water != 3 and from_int(hand) <= mul_int(wet_hand_m, 10)."""
+    lim = er.mul_int(wet_hand_raw, 10)
+    return [1 if (water[i] != WATER_OCEAN and er.from_int(hand[i]) <= lim) else 0 for i in range(len(water))]
+
+
+def box_pass(w, h, v, hh):
+    """Sum over [x - hh, x + hh] x [y - hh, y + hh] clipped to the grid, by a
+    row pass then a column pass of running sums (exact integers)."""
+    rows = [0] * (w * h)
+    for y in range(h):
+        base = y * w
+        pre = [0] * (w + 1)
+        for x in range(w):
+            pre[x + 1] = pre[x] + v[base + x]
+        for x in range(w):
+            rows[base + x] = pre[min(w, x + hh + 1)] - pre[max(0, x - hh)]
+    out = [0] * (w * h)
+    for x in range(w):
+        pre = [0] * (h + 1)
+        for y in range(h):
+            pre[y + 1] = pre[y] + rows[y * w + x]
+        for y in range(h):
+            out[y * w + x] = pre[min(h, y + hh + 1)] - pre[max(0, y - hh)]
+    return out
+
+
+def box_pass_direct(w, h, v, hh):
+    """The same box sum by direct summation (second method)."""
+    out = [0] * (w * h)
+    for y in range(h):
+        for x in range(w):
+            t = 0
+            for yy in range(max(0, y - hh), min(h, y + hh + 1)):
+                for xx in range(max(0, x - hh), min(w, x + hh + 1)):
+                    t += v[yy * w + xx]
+            out[y * w + x] = t
+    return out
+
+
+def wet_share_guard(w, h, r_cells, lengths):
+    """Entry guard of the B2c seam (P1-04 7), in order: r_cells in 0..125;
+    W x H <= 2^31; arrays of length W x H."""
+    if not 0 <= r_cells <= 125:
+        fatal(PRE + "wet window radius %d outside 0..125 cells" % r_cells)
+    if w * h > (1 << 31):
+        fatal(PRE + "grid of %d x %d cells exceeds 2^31" % (w, h))
+    for ln in lengths:
+        if ln != w * h:
+            fatal(PRE + "array of length %d, expected %d" % (ln, w * h))
+
+
+def wet_share(w, h, water, hand, wet_hand_raw, r_cells, direct=False):
+    """B2c: (wet_count, wet_total) per cell, h = r_cells div 2."""
+    wet_share_guard(w, h, r_cells, (len(water), len(hand)))
+    hh = r_cells // 2
+    wet = wet_cells(water, hand, wet_hand_raw)
+    bp = box_pass_direct if direct else box_pass
+    count = bp(w, h, bp(w, h, wet, hh), hh)
+    total = bp(w, h, bp(w, h, [1] * (w * h), hh), hh)
+    return count, total
+
+
+def size_entry(n):
+    """B4's size rule: 512 if N <= 512, 1024 if 512 < N <= 1024, else 2048."""
+    if n < 1:
+        fatal("biomes: map size %d below 1" % n)
+    return 512 if n <= 512 else (1024 if n <= 1024 else 2048)
+
+
+def wet_scale(t, n):
+    return t["wet_scale_%d" % size_entry(n)]
+
+
+def need_of(r, ws):
+    """need(r) = mul(wet_frac_min, ws).raw (RHA)."""
+    return er.mul(r["wet_frac_min"], ws)
+
+
+# ---------------------------------------------------------------------------
 # B3 to B5
 # ---------------------------------------------------------------------------
 
@@ -328,10 +564,21 @@ def jitter(temp, rain, nt, nr, t):
 SENT_TMIN, SENT_TMAX = -60 << 32, 50 << 32
 SENT_SLOPE, SENT_HAND = 100 << 32, 3000 << 32
 
-CONDITIONS = ("temp", "rain", "elev", "slope", "hand", "coast")
+CONDITIONS = ("temp", "rain", "elev", "slope", "hand", "coast", "rdist", "wet")
 
 
-def rule_failures(r, sc, tq, rq, elev, s2, hand, coast):
+def check_rule_ranges(D):
+    """The seam check of 4.1: every rule field of the land definitions with
+    priority > 0, in B4's order, against its schema range; first failure
+    fatal "biomes: rule: <field> outside its schema range"."""
+    for _, d in D.ordered:
+        for r in d["rules"]:
+            for name, lo, hi in RULE_FIELDS:
+                if not lo <= r[name] <= hi:
+                    fatal("biomes: rule: %s outside its schema range" % name)
+
+
+def rule_failures(r, sc, tq, rq, elev, s2, hand, coast, d34=FAR, wcount=0, wtotal=1, ws=ONE):
     """The conditions of B4 that rule r fails, as a tuple of names."""
     # Unbounded sentinels (4.1, amended 2026-11-17): a bound equal to the
     # extreme of its field's type skips that comparison.
@@ -351,15 +598,19 @@ def rule_failures(r, sc, tq, rq, elev, s2, hand, coast):
         out.append("hand")
     if r["coast_max_m"] != 32767 and not (coast <= r["coast_max_m"]):
         out.append("coast")
+    if r["river_dist_max_m"] != 32767 and not (16 * d34 <= 3 * r["river_dist_max_m"]):
+        out.append("rdist")
+    if r["wet_frac_min"] != 0 and not (need_of(r, ws) * wtotal <= wcount * ONE):
+        out.append("wet")
     return tuple(out)
 
 
-def lookup(D, sc, tq, rq, elev, s2, hand, coast, trace=None):
+def lookup(D, sc, tq, rq, elev, s2, hand, coast, trace=None, d34=FAR, wcount=0, wtotal=1, ws=ONE):
     """B4 for a cell with water in {0, 1}: the code. trace, if given, gets
     (definition id, rule index, failures) for every rule tried, in order."""
     for k, d in D.ordered:
         for ri, r in enumerate(d["rules"]):
-            f = rule_failures(r, sc, tq, rq, elev, s2, hand, coast)
+            f = rule_failures(r, sc, tq, rq, elev, s2, hand, coast, d34, wcount, wtotal, ws)
             if trace is not None:
                 trace.append((k, ri, f))
             if not f:
@@ -422,6 +673,7 @@ def biomes(w, h, L, D, t, seed, n=None, coverage=False):
     max(W, H); see the reading in the golden header). Returns a dict of
     every intermediate."""
     preconditions(w, h, L)
+    check_rule_ranges(D)
     e, water, depth, river, fd = L["elevation"], L["water"], L["water_depth"], L["river"], L["flow_dir"]
     coast, temp, rain = L["coast_dist"], L["temperature"], L["rainfall"]
     try:
@@ -429,8 +681,11 @@ def biomes(w, h, L, D, t, seed, n=None, coverage=False):
     except FatalError as ex:
         fatal(PRE + str(ex))
     s2 = slope_s2(w, h, e)
+    d34 = river_distance(w, h, water, river, t["river_dist_class_min"])
+    wcount, wtotal = wet_share(w, h, water, hand, t["wet_hand_m"], t["wet_window_m"] // 16)
     n = max(w, h) if n is None else n
     sc = rain_scale(t, n)
+    ws = wet_scale(t, n)
     ktj = cr.stream_key(seed, STREAM_TJ)
     krj = cr.stream_key(seed, STREAM_RJ)
     cells = w * h
@@ -449,7 +704,7 @@ def biomes(w, h, L, D, t, seed, n=None, coverage=False):
         nr[i] = noise_at(krj, x, y, t["jitter_noise"])
         tq[i], rq[i] = jitter(temp[i], rain[i], nt[i], nr[i], t)
         tr = [] if coverage else None
-        b4[i] = lookup(D, sc, tq[i], rq[i], e[i], s2[i], hand[i], coast[i], tr)
+        b4[i] = lookup(D, sc, tq[i], rq[i], e[i], s2[i], hand[i], coast[i], tr, d34[i], wcount[i], wtotal[i], ws)
         if coverage and water[i] == WATER_DRY:
             fired[b4[i]] = fired.get(b4[i], 0) + 1
             for k, ri, f in tr:
@@ -457,7 +712,8 @@ def biomes(w, h, L, D, t, seed, n=None, coverage=False):
                     key = (k, ri, f[0])
                     fails[key] = fails.get(key, 0) + 1
     biome, b5 = river_cells(w, h, water, b4)
-    return {"w": w, "h": h, "L": L, "hand": hand, "s2": s2, "scale": sc, "nt": nt, "nr": nr, "tq": tq, "rq": rq,
+    return {"w": w, "h": h, "L": L, "hand": hand, "s2": s2, "scale": sc, "wet_scale": ws, "d34": d34,
+            "wet_count": wcount, "wet_total": wtotal, "nt": nt, "nr": nr, "tq": tq, "rq": rq,
             "b4": b4, "biome": biome, "b5": b5, "fails": fails, "fired": fired}
 
 
@@ -534,8 +790,12 @@ def biome_table_hash(D):
     return table_hash(5, D.table_rows())
 
 
-def climate_table_hash(wind):
-    return table_hash(2, [(1, wind)])
+def climate_table_hash(wind, off=None):
+    """Table climate: (id, wind_toward) at schema 3 (off None), (id,
+    wind_toward, temp_offset_dc) at schema 4."""
+    if off is None:
+        return table_hash(2, [(1, wind)])
+    return table_hash(3, [(1, wind, off)])
 
 
 # ---------------------------------------------------------------------------
@@ -546,10 +806,11 @@ LAYER_TYPES = (("elevation", 4), ("water", 1), ("water_depth", 3), ("flow_dir", 
                ("coast_dist", 4), ("temperature", 4), ("rainfall", 3))
 
 
-def world_layers(fixture, n, seed):
-    """The eight input layers of a world and its wind, from the hydrology and
-    climate references (flat_tie of the seed, shipped hydrology and climate
-    tuning; elevation fixture shipped or small)."""
+def world_layers(fixture, n, seed, legacy=False):
+    """The eight input layers of a world, its wind and its offset, from the
+    hydrology and climate references (flat_tie of the seed, shipped
+    hydrology and climate tuning; elevation fixture shipped or small;
+    legacy: the 0.8.0 climate, coast_rain_mm 75 and no offset)."""
     import p1_climate_reference as clr
     import p1_hydrology_reference as hr
     e = hr.elevation_of(fixture, n, seed)
@@ -563,10 +824,11 @@ def world_layers(fixture, n, seed):
     L = {"elevation": e}
     for name in ("water", "water_depth", "flow_dir", "river", "coast_dist"):
         L[name] = hr.layer(r, name)
-    c = clr.climate(n, n, e, L["water"], L["water_depth"], L["coast_dist"], clr.shipped_tuning(), seed)
+    ct = clr.legacy_tuning() if legacy else clr.shipped_tuning()
+    c = clr.climate(n, n, e, L["water"], L["water_depth"], L["coast_dist"], ct, seed)
     L["temperature"] = c["temperature"]
     L["rainfall"] = c["rainfall"]
-    return L, c["wind"]
+    return L, c["wind"], c["offset_dc"]
 
 
 def decode_blob(blob):
@@ -589,9 +851,13 @@ def db_layers(path):
         con.close()
 
 
+CLIMATE_GOLDEN = os.path.join(_HERE, "..", "golden", "p1-03-climate.txt")
+
+
 def climate_golden_items():
-    """{case name: {item: value}} of p1-03-climate.txt."""
-    path = os.path.join(_HERE, "..", "golden", "p1-03-climate.txt")
+    """{case name: {item: value}} of p1-03-climate.txt (or of the file named
+    by --climate-golden)."""
+    path = CLIMATE_GOLDEN
     out = {}
     with open(path) as f:
         for line in f:
@@ -605,14 +871,17 @@ def climate_golden_items():
     return out
 
 
-def layers_from_db(path, climate_case):
-    """The eight input layers of a world file, each checked against the layer
-    hashes of the climate golden case (so equal to the references')."""
+def layers_from_db(path, climate_case, upstream_only=False):
+    """The eight input layers of a world file (upstream_only: the six
+    elevation and hydrology layers), each checked against the layer hashes
+    of the climate golden case (so equal to the references')."""
     raw = db_layers(path)
     golden = climate_golden_items()[climate_case]
     L = {}
     n = None
     for name, code in LAYER_TYPES:
+        if upstream_only and name in ("temperature", "rainfall"):
+            continue
         w, h, tcode, values = raw[name]
         if tcode != code:
             fatal("%s: layer %s has type %d" % (path, name, tcode))
@@ -708,6 +977,60 @@ def designed_layers(f):
     return w, h, L
 
 
+# Terrace fixtures (the test writer's construction for the third version,
+# written out in the golden header): 40 x 40, a one-cell ocean border
+# (e = -20); interior zones by column x: lowland (x <= 12), terrace
+# (13..20, 3.2 to 4.7 m: wet ground too high for fen's 3 m), highland
+# valley (21..38, above 300 m, a valley along y = 20 between ridges at d = 3, draining west,
+# whose river is a target of B2b). Per cell, in index order, three draws
+# from Rng(substream(stream_key(0, "test.biomes"), 100 + f)): u_e =
+# uniform_i64(0, 60), u_t = uniform_i64(-15, 15), u_r = uniform_i64(-40, 40)
+# (drawn for border cells too, then discarded).
+#   lowland   e = 3 + x + u_e mod 4
+#   terrace   e = 32 + 2 (x - 13) + u_e mod 2
+#   valley    e = 3050 + 8 (38 - x) + 30 min(d, 3) - 40 max(0, d - 3) + u_e mod 3, d = |y - 20|
+#   ocean     e = -20
+#   temperature = BASE[f] - (65 max(e, 0)) div 10000 + u_t; rainfall = 380 + 18 y + u_r
+# Hydrology as for the designed fixtures.
+TERRACE_BASE = (90, 20)
+
+
+def terrace_elevation(f):
+    rng = cr.Rng(cr.substream(cr.stream_key(0, STREAM_TEST), 100 + f))
+    w = h = DESIGNED_W
+    e, ut, ur = [], [], []
+    for i in range(w * h):
+        x, y = i % w, i // w
+        a = rng.uniform_i64(0, 60)
+        b = rng.uniform_i64(-15, 15)
+        c = rng.uniform_i64(-40, 40)
+        ut.append(b)
+        ur.append(c)
+        if x == 0 or y == 0 or x == w - 1 or y == h - 1:
+            e.append(-20)
+        elif x <= 12:
+            e.append(3 + x + a % 4)
+        elif x <= 20:
+            e.append(32 + 2 * (x - 13) + a % 2)
+        else:
+            d = abs(y - 20)
+            e.append(3050 + 8 * (38 - x) + 30 * min(d, 3) - 40 * max(0, d - 3) + a % 3)
+    return w, h, e, ut, ur
+
+
+def terrace_layers(f):
+    import p1_hydrology_reference as hr
+    w, h, e, ut, ur = terrace_elevation(f)
+    r = hr.hydrology(w, h, e, DESIGNED_AREA, None)
+    L = {"elevation": e}
+    for name in ("water", "water_depth", "flow_dir", "river", "coast_dist"):
+        L[name] = hr.layer(r, name)
+    base = TERRACE_BASE[f % len(TERRACE_BASE)]
+    L["temperature"] = [base - (65 * max(e[i], 0)) // 10000 + ut[i] for i in range(w * h)]
+    L["rainfall"] = [380 + 18 * (i // w) + ur[i] for i in range(w * h)]
+    return w, h, L
+
+
 # ---------------------------------------------------------------------------
 # Golden cases
 # ---------------------------------------------------------------------------
@@ -725,7 +1048,7 @@ def phrase_seed():
 # (name, fixture, N, seed, tuning overrides, why). fixture: shipped | small
 # (worlds of the elevation fixtures, hydrology and climate shipped) or
 # designed (the designed fixture number <seed>, 40 x 40).
-GOLDEN_CASES = [
+LEGACY_GOLDEN_CASES = [
     ("designed-0", "designed", 40, 0, [], "designed fixture 0 (warm: forest, grassland, marsh, moor on the summit)"),
     ("designed-1", "designed", 40, 1, [], "designed fixture 1 (cool: alpine summit, moor below)"),
     ("designed-2", "designed", 40, 2, [], "designed fixture 2 (cold: alpine above 600 m, moor from 300 m)"),
@@ -749,7 +1072,7 @@ GOLDEN_CASES = [
     ("small-128-s1", "small", 128, 1, [], "small-map fixture"),
     ("small-128-s2", "small", 128, 2, [], "small-map fixture"),
 ]
-LARGE_CASES = [
+LEGACY_LARGE_CASES = [
     ("shipped-256-s0", "shipped", 256, 0, [], "shipped world, N = 256"),
     ("shipped-512-s0", "shipped", 512, 0, [], "P1-04 10.4"),
     ("shipped-512-s42", "shipped", 512, 42, [], "P1-04 10.4"),
@@ -758,24 +1081,64 @@ LARGE_CASES = [
 ]
 
 
-def case_inputs(fx, n, seed, db_dir=None, name=None):
-    """(w, h, L, wind or None)."""
+# The third version's cases (generator 0.9.0): the 0.8.0 cases, the terrace
+# fixtures and tuning variants of the two new steps.
+GOLDEN_CASES = LEGACY_GOLDEN_CASES[:9] + [
+    ("designed-0-wh0", "designed", 40, 0, [("wet_hand_m", "0")],
+     "wet_hand_m 0: only hand-0 cells are wet, fen fails on the share alone and marsh takes the margins"),
+    ("designed-2-wh100", "designed", 40, 2, [("wet_hand_m", "100")], "wet_hand_m 100 (its bound): every land cell wet"),
+    ("designed-1-ww0", "designed", 40, 1, [("wet_window_m", "0")], "wet_window_m 0: h = 0, count = wet, total = 1"),
+    ("designed-1-ww47", "designed", 40, 1, [("wet_window_m", "47")], "wet_window_m 47: r = 2, h = 1"),
+    ("designed-1-ww63", "designed", 40, 1, [("wet_window_m", "63")], "wet_window_m 63: r = 3 (odd), h = 1, as 47"),
+    ("designed-3-ww2000", "designed", 40, 3, [("wet_window_m", "2000")],
+     "wet_window_m 2000 (its bound): h = 62, every window of both passes is the whole grid"),
+    ("designed-0-ws15", "designed", 40, 0, [("wet_scale_512", "1.5")],
+     "wet_scale_512 1.5 (the 2048 factor through the 512 entry)"),
+    ("designed-0-ws4", "designed", 40, 0, [("wet_scale_512", "4")], "wet_scale_512 4 (its bound): need above 1, no fen"),
+    ("designed-0-ws025", "designed", 40, 0, [("wet_scale_512", "0.25")], "wet_scale_512 0.25 (its bound)"),
+    ("designed-0-ws2048", "designed", 40, 0, [("wet_scale_2048", "4"), ("wet_scale_1024", "4")],
+     "the 1024 and 2048 wet scales do not apply below 512"),
+    ("designed-1-rk1", "designed", 40, 1, [("river_dist_class_min", "1")], "river_dist_class_min 1: every river a target"),
+    ("designed-0-rk15", "designed", 40, 0, [("river_dist_class_min", "15")],
+     "river_dist_class_min 15: no target, d34 = 2^40 everywhere, no wet woodland"),
+    ("terrace-0", "terrace", 40, 0, [], "terrace fixture 0 (warm: fen fails on hand on the terrace, wet woodland on "
+     "elevation in the highland valley)"),
+    ("terrace-1", "terrace", 40, 1, [], "terrace fixture 1 (cool: heath and moor in the highland valley)"),
+] + LEGACY_GOLDEN_CASES[9:]
+LARGE_CASES = list(LEGACY_LARGE_CASES)
+
+
+def case_inputs(fx, n, seed, db_dir=None, name=None, legacy=False):
+    """(w, h, L, wind or None, offset or None). With db_dir, a large world's
+    layers are decoded from DIR/<name>.db and checked against the golden
+    files; at 0.9.0 (not legacy) only the six elevation and hydrology layers
+    are taken from the file (unchanged since 0.6.0 and 0.7.0) and the two
+    climate layers are recomputed by p1_climate_reference.py."""
     if fx == "designed":
         w, h, L = designed_layers(seed)
-        return w, h, L, None
+        return w, h, L, None, None
+    if fx == "terrace":
+        w, h, L = terrace_layers(seed)
+        return w, h, L, None, None
     if db_dir and name:
         path = os.path.join(db_dir, name + ".db")
         if os.path.exists(path):
-            nn, L = layers_from_db(path, name)
+            nn, L = layers_from_db(path, name, upstream_only=not legacy)
             if nn != n:
                 fatal("%s: N %d" % (path, nn))
             if hydro_golden_check(fx, n, seed, L) is None:
                 sys.stderr.write("note: %s flow_dir and river not in p1-02-hydrology.txt; checked by the "
                                  "G7 preconditions and the climate hashes only\n" % name)
             import p1_climate_reference as clr
-            return n, n, L, clr.wind(seed, clr.UNIFORM)[0]
-    L, wind = world_layers(fx, n, seed)
-    return n, n, L, wind
+            if legacy:
+                return n, n, L, clr.wind(seed, clr.UNIFORM)[0], None
+            c = clr.climate(n, n, L["elevation"], L["water"], L["water_depth"], L["coast_dist"],
+                            clr.shipped_tuning(), seed)
+            L["temperature"] = c["temperature"]
+            L["rainfall"] = c["rainfall"]
+            return n, n, L, c["wind"], c["offset_dc"]
+    L, wind, off = world_layers(fx, n, seed, legacy)
+    return n, n, L, wind, (None if legacy else off)
 
 
 def coverage_items(r, D):
@@ -790,14 +1153,20 @@ def coverage_items(r, D):
     return fired, ",".join(parts) if parts else "-"
 
 
-def world_items(r, D, wind):
+def world_items(r, D, wind, off=None, legacy=False):
     w, h, L = r["w"], r["h"], r["L"]
     items = []
     for name, code in LAYER_TYPES:
         items.append((name, layer_hash(w, h, code, L[name])))
     items.append(("scale", str(r["scale"])))
+    if not legacy:
+        items.append(("wet_scale", str(r["wet_scale"])))
     items.append(("hand", h_i64(r["hand"])))
     items.append(("S2", h_i64(r["s2"])))
+    if not legacy:
+        items.append(("d34", h_i64(r["d34"])))
+        items.append(("wet_count", h_i64(r["wet_count"])))
+        items.append(("wet_total", h_i64(r["wet_total"])))
     items.append(("nt", h_i64(r["nt"])))
     items.append(("nr", h_i64(r["nr"])))
     items.append(("tq", h_i64(r["tq"])))
@@ -807,7 +1176,9 @@ def world_items(r, D, wind):
     items.append(("table_biome", biome_table_hash(D)))
     if wind is not None:
         items.append(("wind", str(wind)))
-        items.append(("table_climate", climate_table_hash(wind)))
+        if not legacy:
+            items.append(("temp_offset_dc", str(off)))
+        items.append(("table_climate", climate_table_hash(wind, None if legacy else off)))
     counts = ",".join("%d:%d" % (row[0], sum(1 for v in r["biome"] if v == row[0])) for row in D.table_rows())
     items.append(("counts", counts))
     items.append(("b5", "%d,%d,%d,%d" % r["b5"]))
@@ -820,7 +1191,7 @@ def world_items(r, D, wind):
     return items
 
 
-GOLDEN_HEADER = """\
+LEGACY_HEADER = """\
 # P1-04 biome golden vectors (spec second version, 2026-11-17; input layers
 # of generator 0.7.0), generated by
 # worldgen/tests/reference/p1_biomes_reference.py golden, an independent
@@ -883,23 +1254,104 @@ GOLDEN_HEADER = """\
 """
 
 
-def case_result(name, fx, n, seed, overrides, db_dir=None, coverage=True):
+GOLDEN_HEADER = """\
+# P1-04 biome golden vectors for generator 0.9.0 (spec third version, "biome
+# variety", 2026-11-18: twelve definitions, B2b river distance, B2c wet
+# share; climate inputs of P1-03 revised 2026-11-18 with the per-world
+# offset and coast_rain_mm 40; elevation and hydrology inputs unchanged),
+# generated by worldgen/tests/reference/p1_biomes_reference.py golden, an
+# independent exact-integer reference written from docs/specs/p1-04-biomes.md,
+# with the input layers from p1_hydrology_reference.py and
+# p1_climate_reference.py (elevation from p1_elevation_reference.py), or for
+# designed and terrace fixtures from the constructions below.
+# Do not edit by hand; never regenerate to make a C++ test pass.
+#
+# Format: ASCII, LF, one value per line, tokens separated by one space.
+#   case <name> <fixture> <N> <seed> <overrides>
+#       starts a case. fixture shipped | small: the world of that elevation
+#       fixture (P1-01 4.4), hydrology with the shipped tuning and the
+#       seed's flat_tie, climate with the shipped tuning (P1-03 4); the
+#       world seed is <seed>. fixture designed | terrace: that fixture number
+#       <seed> (below), 40 x 40, world seed <seed>. Biome data: the twelve
+#       shipped definitions of P1-04 4.1. Biome tuning: the shipped values of
+#       4.2 with <overrides>, "-" or comma-separated field=value (fx values as
+#       decimal text).
+#   <name> <item> <value>                 one value, items in step order
+# Items, in step order (the test reports the first that differs):
+#   elevation water water_depth flow_dir river coast_dist temperature rainfall
+#                P0-04 8 layer hash of each input layer
+#   scale        raw Fx of the rain scale chosen by B4's size rule; a W x H
+#                test grid uses N = max(W, H) (every grid here is square),
+#                so every case below 512 uses rain_scale_512
+#   wet_scale    raw Fx of the wet scale chosen by the same rule
+#   hand         SHA-256 of G7 (k = drain_river_class_min) per cell, int64 LE
+#   S2           SHA-256 of G8's S2 per cell, int64 LE
+#   d34          SHA-256 of B2b's d34 per cell, int64 LE (2^40 on cells
+#                without a target in the grid)
+#   wet_count wet_total
+#                SHA-256 of B2c's wet_count and wet_total per cell, int64 LE
+#                (r = wet_window_m div 16, h = r div 2)
+#   nt nr        SHA-256 of fbm_m(K_tj or K_rj, X, Y, jitter_noise) per cell,
+#                raw int64; 0 on cells with water 2 or 3 (B3 skips them)
+#   tq rq        SHA-256 of B3's tq and rq per cell, raw int64; 0 on water 2, 3
+#   b4           P0-04 8 layer hash (u8) of the B4 grid (ocean and lake codes
+#                on water 3 and 2; B4 evaluated on river cells too)
+#   biome        P0-04 8 layer hash (u8) of the biome layer (after B5)
+#   table_biome  P0-04 8 logical hash of table biome (B6, twelve rows)
+#   wind temp_offset_dc table_climate
+#                worlds only: k_w (P1-03 C2), off_dc (P1-03 C2b) and the
+#                logical hash of table climate (one row: id 1, wind_toward
+#                k_w, temp_offset_dc off_dc; three columns, schema 4)
+#   counts       code:cells of the biome layer for every definition, by code
+#   b5           river cells, river cells B5 changed, river cells whose mode
+#                was tied, river cells without a dry neighbour
+#   fired        code:dry cells (water 0) B4 assigned, every code
+#   sole_fail    <definition>.<rule index>.<condition>:<n>, n the dry cells
+#                that reached the rule (no higher-priority match) and fail
+#                exactly that one condition of it; conditions temp rain elev
+#                slope hand coast rdist (river distance) wet (wet share);
+#                "-" if none
+#   biome_share biome_patches
+#                the report values of P1-04 9, spaces written as "_"
+#
+# Designed fixture f: 40 x 40, a one-cell ocean border (e = -20); interior
+# zones by column x: lowland x <= 13, ramp 14..19, plateau 20..27,
+# mountain 28..38. Per cell in index order, three draws from
+# Rng(substream(stream_key(0, "test.biomes"), f)): u_e = uniform_i64(0, 60),
+# u_t = uniform_i64(-15, 15), u_r = uniform_i64(-40, 40) (border cells draw
+# too). e = 3 + x + u_e mod 4 (lowland), 17 + 350 (x - 13) + u_e mod 41
+# (ramp), 2105 + u_e mod 5 (plateau), 2110 + 110 (x - 27)^2 + u_e
+# (mountain). temperature = BASE - floor(65 max(e, 0) / 10000) + u_t with
+# BASE 90, 60, 20, 0 for f = 0, 1, 2, 3; rainfall = 380 + 18 y + u_r.
+# Terrace fixture f: the same, with the draws from
+# Rng(substream(stream_key(0, "test.biomes"), 100 + f)), zones lowland
+# x <= 12 (e = 3 + x + u_e mod 4), terrace 13..20 (e = 32 + 2 (x - 13) +
+# u_e mod 2) and valley 21..38 (e = 3050 + 8 (38 - x) + 30 min(d, 3)
+# - 40 max(0, d - 3) + u_e mod 3, d = |y - 20|), and BASE 90, 20 for f = 0, 1.
+# Hydrology: P1-02 with river_min_area_m2 2560 (T = 10) and t = 0 (no tie).
+"""
+
+
+def case_result(name, fx, n, seed, overrides, db_dir=None, coverage=True, legacy=False):
     if seed is None:
         seed = phrase_seed()
-    w, h, L, wind = case_inputs(fx, n, seed, db_dir, name)
+    w, h, L, wind, off = case_inputs(fx, n, seed, db_dir, name, legacy)
     t = tuning_of(overrides)
-    r = biomes(w, h, L, SHIPPED, t, seed, coverage=coverage)
-    return seed, r, wind, t
+    r = biomes(w, h, L, LEGACY if legacy else SHIPPED, t, seed, coverage=coverage)
+    return seed, r, wind, t, off
 
 
-def golden_text(large=False, db_dir=None):
-    out = [GOLDEN_HEADER]
-    for name, fx, n, seed, overrides, why in GOLDEN_CASES + (LARGE_CASES if large else []):
-        seed, r, wind, _ = case_result(name, fx, n, seed, overrides, db_dir)
+def golden_text(large=False, db_dir=None, legacy=False):
+    out = [LEGACY_HEADER if legacy else GOLDEN_HEADER]
+    D = LEGACY if legacy else SHIPPED
+    cases = (LEGACY_GOLDEN_CASES + (LEGACY_LARGE_CASES if large else [])) if legacy else \
+        (GOLDEN_CASES + (LARGE_CASES if large else []))
+    for name, fx, n, seed, overrides, why in cases:
+        seed, r, wind, _, off = case_result(name, fx, n, seed, overrides, db_dir, legacy=legacy)
         ov = ",".join("%s=%s" % kv for kv in overrides) if overrides else "-"
         out.append("# %s\n" % why)
         out.append("case %s %s %d %d %s\n" % (name, fx, n, seed, ov))
-        for item, v in world_items(r, SHIPPED, wind):
+        for item, v in world_items(r, D, wind, off, legacy):
             out.append("%s %s %s\n" % (name, item, v))
         sys.stderr.write("golden: %s done\n" % name)
     return "".join(out)
@@ -1036,6 +1488,58 @@ LOOKUPS = [
 ]
 
 
+# The second version's results that change with the third (5.1): B10 and
+# B15 heath (moor needs 720 mm), B20 and B21 steppe.
+LOOKUPS_V3_CHANGED = {"B10": "heath", "B15": "heath", "B20": "steppe", "B21": "steppe"}
+# Variants of 5.1: count / total 1 / 1 instead of 0 / 1, and d34 0 instead of FAR.
+LOOKUPS_WET1 = {"B3": "fen", "B5": "fen", "B6": "fen", "B19": "fen"}
+LOOKUPS_D34_0 = {"B20": "wet_woodland", "B21": "wet_woodland"}
+
+# The third version's lookups (5.1): case, N, temp, rain, elev, S2, hand,
+# coast, d34 (None = FAR), count, total, biome, sole failures named in the
+# "Why" column as (definition, condition).
+LOOKUPS3 = [
+    ("V1", 1024, 80, 900, 30, 100, 20, 200, None, 9, 10, "fen", []),
+    ("V2", 1024, 80, 900, 30, 100, 20, 200, None, 8, 20, "temperate_forest", [("fen", "wet")]),
+    ("V3", 1024, 80, 900, 30, 100, 10, 200, None, 8, 20, "marsh", [("fen", "wet")]),
+    ("V4", 1024, 80, 900, 30, 100, 10, 200, None, 9, 20, "fen", []),
+    ("V5", 1024, 80, 900, 30, 100, 31, 200, None, 20, 20, "temperate_forest", [("fen", "hand")]),
+    ("V6", 1024, 80, 900, 30, 257, 20, 200, None, 20, 20, "temperate_forest", [("fen", "slope")]),
+    ("V7", 1024, 80, 499, 30, 100, 20, 200, None, 20, 20, "steppe", [("fen", "rain"), ("wet_woodland", "rdist")]),
+    ("V8", 1024, 80, 900, 2001, 100, 20, 200, None, 20, 20, "temperate_forest", [("fen", "elev")]),
+    ("V9", 2048, 80, 900, 30, 100, 20, 200, None, 26, 40, "temperate_forest", [("fen", "wet")]),
+    ("V10", 2048, 80, 900, 30, 100, 20, 200, None, 27, 40, "temperate_forest", [("fen", "wet")]),
+    ("V11", 2048, 80, 900, 30, 100, 20, 200, None, 28, 40, "fen", []),
+    ("V12", 512, 80, 900, 30, 100, 20, 200, None, 9, 20, "fen", []),
+    ("W1", 1024, 80, 650, 1000, 100, 40, 2000, 21, 0, 100, "wet_woodland", []),
+    ("W2", 1024, 80, 650, 1000, 100, 40, 2000, 22, 0, 100, "grassland", [("wet_woodland", "rdist")]),
+    ("W3", 1024, 80, 449, 1000, 100, 40, 2000, 21, 0, 100, "steppe", [("wet_woodland", "rain")]),
+    ("W4", 1024, 80, 650, 3001, 100, 40, 2000, 21, 0, 100, "grassland", [("wet_woodland", "elev")]),
+    ("W5", 1024, 80, 650, 1000, 100, 51, 2000, 21, 0, 100, "grassland", [("wet_woodland", "hand")]),
+    ("W6", 1024, 80, 600, 1000, 100, 40, 2000, 22, 0, 100, "steppe", []),
+    ("W7", 1024, 80, 650, 1000, 100, 40, 2000, None, 0, 100, "grassland", [("wet_woodland", "rdist")]),
+    ("W8", 2048, 80, 394, 1000, 100, 40, 2000, 21, 0, 100, "wet_woodland", []),
+    ("W9", 2048, 80, 393, 1000, 100, 40, 2000, 21, 0, 100, "steppe", [("wet_woodland", "rain")]),
+    ("H1", 1024, 30, 720, 5000, 10000, 500, 3000, None, 0, 100, "highland_moor", []),
+    ("H2", 1024, 30, 719, 5000, 10000, 500, 3000, None, 0, 100, "heath", [("highland_moor", "rain")]),
+    ("H3", 512, 30, 809, 5000, 10000, 500, 3000, None, 0, 100, "heath", [("highland_moor", "rain")]),
+    ("H4", 512, 30, 810, 5000, 10000, 500, 3000, None, 0, 100, "highland_moor", []),
+    ("H5", 1024, 41, 650, 5000, 10000, 500, 3000, None, 0, 100, "grassland", [("heath", "temp")]),
+    ("H6", 1024, 41, 590, 5000, 10000, 500, 3000, None, 0, 100, "steppe", [("heath", "temp")]),
+    ("H7", 1024, 40, 300, 2999, 10000, 500, 3000, None, 0, 100, "steppe", [("heath", "elev")]),
+    ("P1", 1024, 80, 600, 400, 100, 100, 2000, None, 0, 100, "steppe", []),
+    ("P2", 1024, 80, 601, 400, 100, 100, 2000, None, 0, 100, "grassland", [("steppe", "rain")]),
+    ("P3", 512, 80, 675, 400, 100, 100, 2000, None, 0, 100, "steppe", []),
+    ("P4", 512, 80, 676, 400, 100, 100, 2000, None, 0, 100, "grassland", [("steppe", "rain")]),
+    ("P5", 2048, 80, 525, 400, 100, 100, 2000, None, 0, 100, "steppe", []),
+    ("P6", 2048, 80, 526, 400, 100, 100, 2000, None, 0, 100, "grassland", [("steppe", "rain")]),
+]
+
+
+def lookup_at(D, t, n, tq, rq, elev, s2, hand, coast, d34, cnt, tot, trace=None):
+    return lookup(D, rain_scale(t, n), tq, rq, elev, s2, hand, coast, trace, d34, cnt, tot, wet_scale(t, n))
+
+
 def check_lookups(c):
     t = shipped_tuning()
     D = SHIPPED
@@ -1046,7 +1550,23 @@ def check_lookups(c):
             c.eq(case + " tq raw", tq, tq_want)
         if rq_want is not None:
             c.eq(case + " rq raw", rq, rq_want)
-        c.eq(case + " biome", lookup(D, rain_scale(t, n), tq, rq, elev, s2, hand, coast), code_of[want])
+        v3 = LOOKUPS_V3_CHANGED.get(case, want)
+        c.eq(case + " biome (0.9.0, d34 FAR, 0 / 1)", lookup_at(D, t, n, tq, rq, elev, s2, hand, coast, FAR, 0, 1),
+             code_of[v3])
+        c.eq(case + " biome with the 0.8.0 definitions", lookup_at(LEGACY, t, n, tq, rq, elev, s2, hand, coast,
+                                                                      FAR, 0, 1), code_of[want])
+        c.eq(case + " count / total 1 / 1", lookup_at(D, t, n, tq, rq, elev, s2, hand, coast, FAR, 1, 1),
+             code_of[LOOKUPS_WET1.get(case, v3)])
+        c.eq(case + " d34 0", lookup_at(D, t, n, tq, rq, elev, s2, hand, coast, 0, 0, 1),
+             code_of[LOOKUPS_D34_0.get(case, v3)])
+    for case, n, temp, rain, elev, s2, hand, coast, d34, cnt, tot, want, soles in LOOKUPS3:
+        tq, rq = jitter(temp, rain, 0, 0, t)
+        tr = []
+        got = lookup_at(D, t, n, tq, rq, elev, s2, hand, coast, FAR if d34 is None else d34, cnt, tot, tr)
+        c.eq(case + " biome", got, code_of[want])
+        fails = {k: f for k, _, f in tr}
+        for k, cond in soles:
+            c.eq(case + " sole failure of " + k, fails.get(k), (cond,))
     # The decimal values printed in the table.
     c.eq("B12 rq = 715.0", er.round_int(jitter(80, 650, 0, HALF, t)[1]), 715)
     c.eq("B13 rq ~ 728.0", er.round_int(jitter(80, 650, 0, 2576980378, t)[1]), 728)
@@ -1085,10 +1605,195 @@ def check_lookups(c):
                                                       100, 0, 0, 0), ("rain",))
     # 10.1 test 5: two rules, a cell matching only the second.
     defs = shipped_definitions()
-    defs["highland_moor"]["rules"] = [full_rule(tmax=F(4), emin=300), full_rule(tmin=F(20), emin=0, emax=100)]
+    defs["highland_moor"]["rules"] = [full_rule(tmax=F(4), rmin=720, emin=300), full_rule(tmin=F(20), emin=0, emax=100)]
     D2 = Defs(defs)
     c.eq("two rules: second matches", lookup(D2, ONE, er.from_int(25), er.from_int(600), 500, 0, 100, 100), 6)
-    c.eq("two rules: neither", lookup(D2, ONE, er.from_int(15), er.from_int(600), 500, 0, 100, 100), 4)
+    c.eq("two rules: neither (steppe at 600)", lookup(D2, ONE, er.from_int(15), er.from_int(600), 500, 0, 100, 100), 10)
+    c.eq("two rules: neither (grassland at 650)", lookup(D2, ONE, er.from_int(15), er.from_int(650), 500, 0, 100, 100),
+         4)
+    # Exactness of the share comparison (5.1).
+    w45 = dec("0.45")
+    c.eq("0.45 raw", w45, 1932735283)
+    c.eq("need at 1024", need_of({"wet_frac_min": w45}, wet_scale(t, 1024)), 1932735283)
+    c.eq("1.5 raw", dec("1.5"), 6442450944)
+    c.eq("need at 2048 = RHA(2899102924.5)", need_of({"wet_frac_min": w45}, wet_scale(t, 2048)), 2899102925)
+    c.eq("0.45 x 20 vs 9 x 2^32", (1932735283 * 20, 9 * ONE), (38654705660, 38654705664))
+    c.eq("0.675 x 40 vs 27 x 2^32", (2899102925 * 40, 27 * ONE), (115964117000, 115964116992))
+    c.eq("6 x 4 (3, 2) comparison", (1932735283 * 72, 35 * ONE), (139156940376, 150323855360))
+    fen = SHIPPED.defs["fen"]["rules"][0]
+    for n, cnt, tot, ok in ((1024, 9, 20, True), (2048, 27, 40, False), (2048, 28, 40, True), (512, 9, 20, True),
+                            (1024, 8, 20, False)):
+        c.eq("fen share %d / %d at %d" % (cnt, tot, n),
+             "wet" not in rule_failures(fen, ONE, 0, 0, 0, 0, 0, 0, FAR, cnt, tot, wet_scale(t, n)), ok)
+    # River distance bound: 3 x 112 = 336; d34 21 matches, 22 does not.
+    ww = SHIPPED.defs["wet_woodland"]["rules"][0]
+    c.eq("d34 21 within 112 m", "rdist" in rule_failures(ww, ONE, 0, 0, 0, 0, 0, 0, 21), False)
+    c.eq("d34 22 beyond 112 m", "rdist" in rule_failures(ww, ONE, 0, 0, 0, 0, 0, 0, 22), True)
+    c.eq("d34 24 (eight orthogonal steps)", "rdist" in rule_failures(ww, ONE, 0, 0, 0, 0, 0, 0, 24), True)
+    c.eq("d34 20 (five diagonal steps)", "rdist" in rule_failures(ww, ONE, 0, 0, 0, 0, 0, 0, 20), False)
+    # 10.1 test 3, the new sentinels and their neighbours.
+    for n, key in ((1, 512), (16, 512), (128, 512), (512, 512), (513, 1024), (1024, 1024), (1025, 2048),
+                   (2048, 2048), (4096, 2048)):
+        c.eq("wet scale size rule N=%d" % n, wet_scale(t, n), t["wet_scale_%d" % key])
+    fr = full_rule()
+    c.eq("river_dist_max_m 32767 matches FAR", rule_failures(fr, ONE, 0, 0, 0, 0, 0, 0, FAR), ())
+    r66 = full_rule(rdist=32766)
+    c.eq("river_dist_max_m 32766 fails FAR", rule_failures(r66, ONE, 0, 0, 0, 0, 0, 0, FAR), ("rdist",))
+    c.eq("32766 x 3 div 16", 32766 * 3 // 16, 6143)
+    c.eq("river_dist_max_m 32766 matches 6143", rule_failures(r66, ONE, 0, 0, 0, 0, 0, 0, 6143), ())
+    c.eq("16 x 6143 vs 3 x 32766", (16 * 6143, 3 * 32766), (98288, 98298))
+    c.eq("river_dist_max_m 32766 fails 6144", rule_failures(r66, ONE, 0, 0, 0, 0, 0, 0, 6144), ("rdist",))
+    c.eq("wet_frac_min 0 matches count 0", rule_failures(fr, ONE, 0, 0, 0, 0, 0, 0, FAR, 0, 1), ())
+    r1 = full_rule(wet=1)
+    c.eq("raw 1 with ws 0.25: need RHA(0.25) = 0", need_of(r1, dec("0.25")), 0)
+    c.eq("raw 1 with ws 0.25 matches count 0", rule_failures(r1, ONE, 0, 0, 0, 0, 0, 0, FAR, 0, 1, dec("0.25")), ())
+    c.eq("raw 1 with ws 1: need 1", need_of(r1, ONE), 1)
+    c.eq("raw 1 with ws 1 fails 0 / 1", rule_failures(r1, ONE, 0, 0, 0, 0, 0, 0, FAR, 0, 1, ONE), ("wet",))
+    c.eq("raw 1 with ws 1 matches 1 / 1000", rule_failures(r1, ONE, 0, 0, 0, 0, 0, 0, FAR, 1, 1000, ONE), ())
+    # Shipped bounds by size (4.1 summary).
+    c.eq("steppe 675 / 600 / 525", [rb(rain_scale(t, n), 600) for n in (512, 1024, 2048)],
+         [er.from_int(675), er.from_int(600), er.from_int(525)])
+    c.eq("wet woodland 506.25 / 450 / 393.75", [rb(rain_scale(t, n), 450) for n in (512, 1024, 2048)],
+         [dec("506.25"), er.from_int(450), dec("393.75")])
+    # Field ranges at the seams (4.1).
+    for field, bad in (("wet_frac_min", ONE + 1), ("river_dist_max_m", 32768), ("coast_max_m", -1)):
+        dd = shipped_definitions()
+        dd["fen"]["rules"][0][field] = bad
+        expect_fatal(c, "rule field %s out of range" % field, lambda dd=dd: check_rule_ranges(Defs(dd)),
+                     "biomes: rule: %s outside its schema range" % field)
+
+
+B2B_FORWARD = [
+    "F F F F F F F F",
+    "F F F F F F F F",
+    "F F 0 3 6 9 12 15",
+    "F 4 3 0 3 6 9 12",
+    "8 7 4 3 4 7 10 13",
+]
+B2B_RESULT = [
+    "8 7 6 7 8 11 12 15",
+    "7 4 3 4 7 8 11 14",
+    "6 3 0 3 4 7 10 13",
+    "7 4 3 0 3 6 9 12",
+    "8 7 4 3 4 7 10 13",
+]
+
+
+def _grid_rows(rows):
+    return [FAR if v == "F" else int(v) for row in rows for v in row.split()]
+
+
+def b2b_example():
+    """8 x 5, column 7 ocean; (0, 1), (1, 1) class 2; (2, 2) class 4; (3, 3) class 5."""
+    w, h = 8, 5
+    water = [3 if i % w == 7 else 0 for i in range(w * h)]
+    river = [0] * (w * h)
+    for (x, y), k in (((0, 1), 2), ((1, 1), 2), ((2, 2), 4), ((3, 3), 5)):
+        water[y * w + x] = 1
+        river[y * w + x] = k
+    return w, h, water, river
+
+
+def check_b2b(c):
+    w, h, water, river = b2b_example()
+    c.eq("B2b 8x5 forward pass", river_distance_forward(w, h, water, river, 4), _grid_rows(B2B_FORWARD))
+    got = river_distance(w, h, water, river, 4)
+    c.eq("B2b 8x5 result", got, _grid_rows(B2B_RESULT))
+    c.eq("B2b 8x5 closed form", river_distance_closed(w, h, water, river, 4), got)
+    c.eq("B2b (0,0) two diagonal steps", got[0], 8)
+    c.eq("B2b (7,0) from (3,3)", got[7], 3 * 4 + 3)
+    c.ok("B2b (7,0) from (2,2) would be 17", 3 * 5 + 2 == 17)
+    c.eq("B2b class-2 cells like dry cells", (got[8], got[9]), (7, 4))
+    c.eq("B2b k_r 6: FAR everywhere", set(river_distance(w, h, water, river, 6)), {FAR})
+    c.eq("B2b k_r 5: one target", river_distance(w, h, water, river, 5),
+         river_distance_closed(w, h, water, river, 5))
+    c.eq("B2b 1 x 1 target", river_distance(1, 1, [1], [4], 4), [0])
+    c.eq("B2b 1 x 1 no target", river_distance(1, 1, [0], [0], 4), [FAR])
+    for k in (0, 16):
+        expect_fatal(c, "B2b k %d" % k, lambda k=k: river_distance(w, h, water, river, k))
+    expect_fatal(c, "B2b wrong length", lambda: river_distance(w, h, water[:-1], river, 4))
+    # 10.1 test 4: 200 random grids up to 12 x 12 against the closed form.
+    for f in range(200):
+        rng = cr.Rng(cr.substream(cr.stream_key(0, "test.biomes.b2b"), f))
+        gw = 1 + rng.uniform_i64(0, 11)
+        gh = 1 + rng.uniform_i64(0, 11)
+        wa = [(0, 1, 3)[rng.uniform_i64(0, 2)] for _ in range(gw * gh)]
+        rv = [rng.uniform_i64(1, 15) if v == 1 else 0 for v in wa]
+        k = 1 + rng.uniform_i64(0, 14)
+        c.eq("B2b random %d" % f, river_distance(gw, gh, wa, rv, k), river_distance_closed(gw, gh, wa, rv, k))
+    # The bound of 112 m: seven orthogonal steps (d34 21), five diagonal (20).
+    c.ok("112 m bound", 16 * 21 <= 3 * 112 < 16 * 22)
+
+
+B2C_HAND = [
+    [0, 10, 40, 80, 90, 120],
+    [0, 0, 20, 51, 60, 70],
+    [0, 5, 0, 30, 200, 300],
+    [0, 30, 60, 10, 250, 400],
+]
+B2C_WET = [[0, 1, 1, 0, 0, 0], [0, 1, 1, 0, 0, 0], [0, 1, 1, 1, 0, 0], [0, 1, 0, 1, 0, 0]]
+B2C_COUNT = [[15, 26, 27, 18, 7, 1], [23, 41, 43, 31, 13, 3], [22, 41, 44, 35, 16, 5], [13, 25, 27, 23, 11, 4]]
+B2C_TOTAL = [[25, 40, 45, 45, 40, 25], [40, 64, 72, 72, 64, 40], [40, 64, 72, 72, 64, 40], [25, 40, 45, 45, 40, 25]]
+B2C_PASS_045 = [[1, 1, 1, 0, 0, 0], [1, 1, 1, 0, 0, 0], [1, 1, 1, 1, 0, 0], [1, 1, 1, 1, 0, 0]]
+
+
+def b2c_example():
+    w, h = 6, 4
+    water = [3 if i % w == 0 else 0 for i in range(w * h)]
+    water[1 * w + 1] = 1
+    water[2 * w + 2] = 2
+    hand = [v for row in B2C_HAND for v in row]
+    return w, h, water, hand
+
+
+def check_b2c(c):
+    w, h, water, hand = b2c_example()
+    c.eq("B2c 6x4 wet", wet_cells(water, hand, er.from_int(5)), [v for row in B2C_WET for v in row])
+    for r_cells in (2, 3):
+        cnt, tot = wet_share(w, h, water, hand, er.from_int(5), r_cells)
+        c.eq("B2c 6x4 count r %d" % r_cells, cnt, [v for row in B2C_COUNT for v in row])
+        c.eq("B2c 6x4 total r %d" % r_cells, tot, [v for row in B2C_TOTAL for v in row])
+        c.eq("B2c 6x4 direct r %d" % r_cells, wet_share(w, h, water, hand, er.from_int(5), r_cells, True), (cnt, tot))
+    c.eq("B2c wet_window_m 32 and 47 give r 2", (32 // 16, 47 // 16), (2, 2))
+    cnt, tot = wet_share(w, h, water, hand, er.from_int(5), 2)
+    first = box_pass(w, h, wet_cells(water, hand, er.from_int(5)), 1)
+    c.eq("B2c (0,0) first pass 2, 4, 3, 6", (first[0], first[1], first[6], first[7]), (2, 4, 3, 6))
+    c.eq("B2c (0,0) 15 / 25", (cnt[0], tot[0]), (15, 25))
+    need = need_of({"wet_frac_min": dec("0.45")}, ONE)
+    passed = [1 if need * tot[i] <= cnt[i] * ONE else 0 for i in range(w * h)]
+    c.eq("B2c 6x4 cells passing 0.45", passed, [v for row in B2C_PASS_045 for v in row])
+    for r_cells in (0, 1):
+        cnt, tot = wet_share(w, h, water, hand, er.from_int(5), r_cells)
+        c.eq("B2c r %d: count = wet" % r_cells, cnt, wet_cells(water, hand, er.from_int(5)))
+        c.eq("B2c r %d: total = 1" % r_cells, tot, [1] * (w * h))
+    big = max(w, h) - 1
+    cnt, tot = wet_share(w, h, water, hand, er.from_int(5), 2 * big)
+    nw = sum(wet_cells(water, hand, er.from_int(5)))
+    c.eq("B2c h >= max(W, H) - 1: total (W H)^2", set(tot), {(w * h) ** 2})
+    c.eq("B2c h >= max(W, H) - 1: count = wet x W H", set(cnt), {nw * w * h})
+    c.eq("B2c shipped interior total 31^4", (2 * ((480 // 16) // 2) + 1) ** 4, 923521)
+    expect_fatal(c, "B2c r -1", lambda: wet_share(w, h, water, hand, er.from_int(5), -1), PRE)
+    expect_fatal(c, "B2c r 126", lambda: wet_share(w, h, water, hand, er.from_int(5), 126), PRE)
+    expect_fatal(c, "B2c 65536 x 32769 grid", lambda: wet_share_guard(65536, 32769, 125, (0, 0)), PRE)
+    c.eq("B2c 65536 x 32769 cells", 65536 * 32769, (1 << 31) + 65536)
+    expect_fatal(c, "B2c wrong length", lambda: wet_share(w, h, water[:-1], hand, er.from_int(5), 2), PRE)
+    # The 2048 x 2048 all-wet grid with r 125 (centre total 125^4), by the
+    # closed form of a clipped box: a box sum of ones is the window area, and
+    # the second pass sums the first-pass areas over its window.
+    n = 2048
+    hh = 62
+
+    def first_len(x):
+        return min(n, x + hh + 1) - max(0, x - hh)
+    pre = [0]
+    for x in range(n):
+        pre.append(pre[-1] + first_len(x))
+
+    def second_len(x):
+        return pre[min(n, x + hh + 1)] - pre[max(0, x - hh)]
+    c.eq("B2c 2048 all wet centre total 125^4", second_len(1024) ** 2, 244140625)
+    c.eq("B2c 2048 all wet corner total", second_len(0) ** 2, (sum(first_len(x) for x in range(hh + 1))) ** 2)
+    c.ok("B2c bounds 125^4 < 2^28", 125 ** 4 < (1 << 28))
 
 
 def check_b5(c):
@@ -1125,6 +1830,87 @@ REAL_CELLS = [
 REAL_RIVER_NEIGHBOURS = [4, 4, 4, 4, 4, 3, 3]
 
 
+REAL_CELLS3 = [
+    # (x, y), temp, rain, elev, S2, hand, coast, d34, count, nt, nr, tq, rq, biome; total 923521, N 1024
+    ((259, 736), 86, 699, 757, 41, 13, 1882, 16, 641749, 455563771, -999575947, 37392282517, 2862441422793, "fen"),
+    ((284, 361), 78, 942, 1, 13, 1, 16, 315, 148404, -1017221412, -752647596, 32483523497, 3904060385934, "marsh"),
+    ((472, 386), 75, 724, 858, 545, 12, 1226, 3, 438811, 83850000, -253231258, 32296104720, 3072888435856,
+     "wet_woodland"),
+    ((684, 466), 82, 593, 294, 3250, 157, 2493, 19, 333131, 350524620, -202881697, 35569256447, 2522853837501,
+     "steppe"),
+    ((279, 647), 27, 641, 9106, 79330, 8351, 3178, 119, 136, -1289992732, 286353072, 10306418967, 2789784500310,
+     "heath"),
+    ((311, 406), 30, 2293, 7456, 647744, 7456, 662, 235, 2481, -2578119, -184783332, 12882323769, 9763618374590,
+     "highland_moor"),
+    ((289, 579), -57, 648, 21387, 1348085, 12482, 2224, 307, 0, 350321980, 1031307981, -24130991607, 2916796322016,
+     "alpine"),
+    ((419, 381), 73, 711, 1072, 2601, 506, 691, 51, 40243, 1277719975, 1681520217, 32630981236, 3292833922029,
+     "temperate_forest"),
+    ((656, 727), 63, 653, 5062, 55060, 2604, 2211, 144, 1049, -61014387, 153219071, 26997279578, 2824624054830,
+     "grassland"),
+]
+REAL_TOTAL = 923521
+
+
+def check_real_cells3_given(c):
+    t = shipped_tuning()
+    code_of = {k: d["code"] for k, d in SHIPPED.defs.items()}
+    for (xy, temp, rain, elev, s2, hand, coast, d34, cnt, nt, nr, tqw, rqw, want) in REAL_CELLS3:
+        tq, rq = jitter(temp, rain, nt, nr, t)
+        c.eq("real3 %r tq" % (xy,), tq, tqw)
+        c.eq("real3 %r rq" % (xy,), rq, rqw)
+        c.eq("real3 %r B4" % (xy,), lookup_at(SHIPPED, t, 1024, tq, rq, elev, s2, hand, coast, d34, cnt, REAL_TOTAL),
+             code_of[want])
+    # The printed shares and decimals.
+    c.eq("real3 fen share 0.695", ratio4(641749, REAL_TOTAL), "0.6949")
+    c.eq("real3 marsh share 0.161", ratio4(148404, REAL_TOTAL), "0.1607")
+
+
+def check_real_cells3_db(c, path):
+    """The third version's real cells on 1024 seed 3: the elevation and
+    hydrology layers decoded from a 0.8.0 world file (checked against the
+    cells' tabulated inputs), temperature and rainfall recomputed by
+    p1_climate_reference.py (offset 14 for seed 3, coast 40), then hand, S2,
+    d34, the wet share, nt, nr, tq, rq and B4 at every cell of the table."""
+    import p1_climate_reference as clr
+    raw = db_layers(path)
+    L = {}
+    for name, code in LAYER_TYPES:
+        if name in ("temperature", "rainfall"):
+            continue
+        w, h, tcode, values = raw[name]
+        L[name] = values
+    con = sqlite3.connect("file:%s?mode=ro" % path, uri=True)
+    seed = int(con.execute("SELECT value FROM meta WHERE key = 'seed'").fetchone()[0])
+    con.close()
+    c.eq("real3 seed", seed, 3)
+    ct = clr.climate(w, h, L["elevation"], L["water"], L["water_depth"], L["coast_dist"], clr.shipped_tuning(), seed)
+    c.eq("real3 offset seed 3", ct["offset_dc"], 14)
+    L["temperature"], L["rainfall"] = ct["temperature"], ct["rainfall"]
+    t = shipped_tuning()
+    hand = hand_fifo(w, h, L["elevation"], L["water"], L["water_depth"], L["river"], L["flow_dir"], 3)
+    s2 = slope_s2(w, h, L["elevation"])
+    d34 = river_distance(w, h, L["water"], L["river"], 4)
+    cnt, tot = wet_share(w, h, L["water"], hand, t["wet_hand_m"], 30)
+    ktj = cr.stream_key(seed, STREAM_TJ)
+    krj = cr.stream_key(seed, STREAM_RJ)
+    code_of = {k: d["code"] for k, d in SHIPPED.defs.items()}
+    for (xy, temp, rain, elev, s2w, handw, coast, d34w, cntw, ntw, nrw, tqw, rqw, want) in REAL_CELLS3:
+        i = xy[1] * w + xy[0]
+        got = (L["water"][i], L["temperature"][i], L["rainfall"][i], L["elevation"][i], s2[i], hand[i],
+               L["coast_dist"][i], d34[i], cnt[i], tot[i])
+        c.eq("real3 db %r inputs" % (xy,), got, (0, temp, rain, elev, s2w, handw, coast, d34w, cntw, REAL_TOTAL))
+        nt = noise_at(ktj, xy[0], xy[1], t["jitter_noise"])
+        nr = noise_at(krj, xy[0], xy[1], t["jitter_noise"])
+        tq, rq = jitter(L["temperature"][i], L["rainfall"][i], nt, nr, t)
+        c.eq("real3 db %r nt nr tq rq" % (xy,), (nt, nr, tq, rq), (ntw, nrw, tqw, rqw))
+        c.eq("real3 db %r B4" % (xy,), lookup_at(SHIPPED, t, w, tq, rq, L["elevation"][i], s2[i], hand[i],
+                                                 L["coast_dist"][i], d34[i], cnt[i], tot[i]), code_of[want])
+    # The spec's 3000 random dry cells are the exploration build's sample; this
+    # reference instead counts every dry cell's B4 code over the whole world.
+    return L, hand, s2, d34, cnt, tot
+
+
 def check_real_cells_given(c):
     """The real-cell table from its own inputs (no world file needed): B3 and
     B4 on the given values, B5 on the given neighbour codes."""
@@ -1134,7 +1920,7 @@ def check_real_cells_given(c):
         tq, rq = jitter(temp, rain, nt, nr, t)
         c.eq("real %r tq" % (xy,), tq, tq_w)
         c.eq("real %r rq" % (xy,), rq, rq_w)
-        c.eq("real %r B4" % (xy,), lookup(SHIPPED, ONE, tq, rq, elev, s2, hand, coast), code_of[want])
+        c.eq("real %r B4 (0.8.0 definitions)" % (xy,), lookup(LEGACY, ONE, tq, rq, elev, s2, hand, coast), code_of[want])
     counts = {}
     for v in REAL_RIVER_NEIGHBOURS:
         counts[v] = counts.get(v, 0) + 1
@@ -1166,7 +1952,7 @@ def check_real_cells_db(c, path):
         nt = noise_at(ktj, x, y, t["jitter_noise"])
         nr = noise_at(krj, x, y, t["jitter_noise"])
         tq, rq = jitter(L["temperature"][i], L["rainfall"][i], nt, nr, t)
-        return nt, nr, tq, rq, lookup(SHIPPED, sc, tq, rq, L["elevation"][i], s2[i], hand[i], L["coast_dist"][i])
+        return nt, nr, tq, rq, lookup(LEGACY, sc, tq, rq, L["elevation"][i], s2[i], hand[i], L["coast_dist"][i])
 
     for (xy, water, temp, rain, elev, s2w, handw, coast, ntw, nrw, tqw, rqw, want) in REAL_CELLS:
         i = xy[1] * w + xy[0]
@@ -1205,6 +1991,17 @@ def check_invariants(c, label, r, D, t):
     hand2 = hand_recursive(w, h, L["elevation"], water, L["water_depth"], L["river"], L["flow_dir"],
                            t["drain_river_class_min"])
     c.eq(label + " G7 FIFO = recursive", r["hand"], hand2)
+    # Invariant 8: B2b against its closed form, B2c against direct sums.
+    d34c = river_distance_closed(w, h, water, L["river"], t["river_dist_class_min"])
+    c.eq(label + " inv 8 d34 closed form", r["d34"], d34c)
+    if w * h <= 1600:
+        wc, wt = wet_share(w, h, water, hand2, t["wet_hand_m"], t["wet_window_m"] // 16, direct=True)
+        c.eq(label + " inv 8 wet share by direct sums", (r["wet_count"], r["wet_total"]), (wc, wt))
+    hh = (t["wet_window_m"] // 16) // 2
+    c.ok(label + " inv 8 0 <= count <= total", all(0 <= a <= b for a, b in zip(r["wet_count"], r["wet_total"])))
+    c.ok(label + " inv 8 interior total (2h + 1)^4", all(
+        r["wet_total"][i] == (2 * hh + 1) ** 4 for i in range(w * h)
+        if 2 * hh <= i % w < w - 2 * hh and 2 * hh <= i // w < h - 2 * hh))
     own = [0] * (w * h)
     for i in range(w * h):
         if water[i] >= 2:
@@ -1215,7 +2012,8 @@ def check_invariants(c, label, r, D, t):
             if d["water_body"] != "none" or d["priority"] == 0:
                 continue
             if any(not rule_failures(rr, r["scale"], r["tq"][i], r["rq"][i], L["elevation"][i], r["s2"][i],
-                                     hand2[i], L["coast_dist"][i]) for rr in d["rules"]):
+                                     hand2[i], L["coast_dist"][i], d34c[i], r["wet_count"][i], r["wet_total"][i],
+                                     r["wet_scale"]) for rr in d["rules"]):
                 if best is None or d["priority"] > best[0]:
                     best = (d["priority"], d["code"])
         own[i] = best[1] if best else D.fallback
@@ -1240,36 +2038,70 @@ def check_designed(c):
     covered_fired = set()
     covered_fail = set()
     for name, fx, n, seed, overrides, _ in GOLDEN_CASES:
-        if fx != "designed":
+        if fx not in ("designed", "terrace"):
             continue
-        _, r, _, t = case_result(name, fx, n, seed, overrides)
+        _, r, _, t, _ = case_result(name, fx, n, seed, overrides)
         check_invariants(c, name, r, SHIPPED, t)
         covered_fired |= set(k for k, v in r["fired"].items() if v)
         covered_fail |= set(k for k, v in r["fails"].items() if v)
         sys.stderr.write("check: %s counts %s b5 %s\n" % (name, sorted(r["fired"].items()), r["b5"]))
-    c.eq("designed fixtures: every natural biome fires", sorted(covered_fired), [3, 4, 5, 6, 7])
+    c.eq("designed and terrace fixtures: every natural biome fires", sorted(covered_fired),
+         [3, 4, 5, 6, 7, 9, 10, 11, 12])
     live = {("alpine", 0, "temp"), ("alpine", 0, "elev"), ("highland_moor", 0, "temp"), ("highland_moor", 0, "elev"),
+            ("highland_moor", 0, "rain"),
             ("marsh", 0, "rain"), ("marsh", 0, "elev"), ("marsh", 0, "slope"), ("marsh", 0, "hand"),
-            ("temperate_forest", 0, "rain")}
+            ("temperate_forest", 0, "rain"),
+            ("fen", 0, "rain"), ("fen", 0, "elev"), ("fen", 0, "slope"), ("fen", 0, "hand"), ("fen", 0, "wet"),
+            ("heath", 0, "temp"), ("heath", 0, "elev"), ("steppe", 0, "rain"),
+            ("wet_woodland", 0, "rain"), ("wet_woodland", 0, "elev"), ("wet_woodland", 0, "hand"),
+            ("wet_woodland", 0, "rdist")}
     c.eq("designed fixtures: every live condition is the sole failure somewhere", sorted(live - covered_fail), [])
 
 
 def check_worlds(c, upto):
     for name, fx, n, seed, overrides, _ in GOLDEN_CASES:
-        if fx == "designed" or n > upto:
+        if fx in ("designed", "terrace") or n > upto:
             continue
-        _, r, wind, t = case_result(name, fx, n, seed, overrides)
+        _, r, wind, t, _ = case_result(name, fx, n, seed, overrides)
         check_invariants(c, name, r, SHIPPED, t)
         sys.stderr.write("check: %s counts %s b5 %s\n" % (name, sorted(r["fired"].items()), r["b5"]))
 
 
+TABLE_ROWS_12 = [
+    (1, "ocean", "Ocean", 0x183878, 1), (2, "lake", "Lake", 0x4080CC, 1),
+    (3, "temperate_forest", "Temperate forest", 0x2E6034, 0), (4, "grassland", "Grassland", 0x96AA5A, 0),
+    (5, "marsh", "Marsh", 0x6AA396, 0), (6, "highland_moor", "Highland moor", 0x7E6680, 0),
+    (7, "alpine", "Alpine", 0xBEBEB4, 0), (8, "blighted_waste", "Blighted waste", 0x605446, 0),
+    (9, "heath", "Heath", 0x94664A, 0), (10, "steppe", "Steppe", 0xE0D296, 0),
+    (11, "wet_woodland", "Wet woodland", 0x23505E, 0), (12, "fen", "Fen", 0x8A8070, 0)]
+
+
 def check_tables(c):
     rows = SHIPPED.table_rows()
-    c.eq("table biome rows", rows, [
+    c.eq("table biome rows (twelve, P1-00 6.6)", rows, TABLE_ROWS_12)
+    c.eq("twelve colours pairwise distinct", len(set(r[3] for r in rows)), 12)
+    c.eq("table biome logical hash (P1-04 10.4)", biome_table_hash(SHIPPED),
+         "a7878ee4c9ef402dfe8dce7f3691f0c0c84e6eb9d15eeb4cd3390e2d199f5472")
+    c.eq("canonical id order", sorted(SHIPPED.defs),
+         ["alpine", "blighted_waste", "fen", "grassland", "heath", "highland_moor", "lake", "marsh", "ocean",
+          "steppe", "temperate_forest", "wet_woodland"])
+    c.eq("B4 order", [k for k, _ in SHIPPED.ordered],
+         ["alpine", "fen", "marsh", "highland_moor", "heath", "temperate_forest", "wet_woodland", "steppe",
+          "grassland"])
+    c.eq("legacy rows (0.8.0)", LEGACY.table_rows(), [
         (1, "ocean", "Ocean", 0x183878, 1), (2, "lake", "Lake", 0x4080CC, 1),
         (3, "temperate_forest", "Temperate forest", 0x2E6034, 0), (4, "grassland", "Grassland", 0x96AA5A, 0),
         (5, "marsh", "Marsh", 0x5C6E54, 0), (6, "highland_moor", "Highland moor", 0x786468, 0),
         (7, "alpine", "Alpine", 0xBEBEB4, 0), (8, "blighted_waste", "Blighted waste", 0x605446, 0)])
+    # Logical hashes of table climate at schema 4 (P1-04 10.4).
+    import p1_climate_reference as clr
+    phrase = phrase_seed()
+    for seed, want in ((0, "9709df66fb80b17713c5168055a0c0b5c3d60eab2ba7a853ad870803bead7bee"),
+                       (42, "9db9624ecd088e286f671eb722d2395acb51d6355062316314d358dfc8bba645"),
+                       (phrase, "c96cf24baac00ce6cbfaffd73c3363a4ae7613e93421f4eb4ed22b2129c7362c"),
+                       (1, "2fd5c14fc4b31e2c2ec4ca8c02f3a2f55e656bb6fab2747cbd436d3833e24570")):
+        c.eq("table climate hash seed %d" % seed,
+             climate_table_hash(clr.wind(seed, clr.UNIFORM)[0], clr.offset_dc(seed, clr.shipped_tuning())), want)
     import p1_climate_reference as clr
     c.eq("climate row seed 0 wind SE", clr.wind(0, clr.UNIFORM)[0], 1)
     c.eq("climate row seed 42 wind N", clr.wind(42, clr.UNIFORM)[0], 6)
@@ -1283,8 +2115,18 @@ def check_tables(c):
          1, 1, 1, 1, 1, 1]
     c.eq("report 6x6 share", biome_share(b, rows),
          "temperate_forest:0.3571 grassland:0.2143 marsh:0.1429 highland_moor:0.1429 alpine:0.0714 "
-         "blighted_waste:0.0714")
+         "blighted_waste:0.0714 heath:0.0000 steppe:0.0000 wet_woodland:0.0000 fen:0.0000")
     c.eq("report 6x6 patches", biome_patches(6, 6, b, rows), 7)
+    b12 = [1, 1, 1, 1, 1, 1,
+           1, 3, 9, 10, 2, 1,
+           1, 11, 12, 12, 2, 1,
+           1, 5, 4, 3, 9, 1,
+           1, 6, 7, 10, 10, 1,
+           1, 1, 1, 1, 1, 1]
+    c.eq("report 6x6 twelve codes share", biome_share(b12, rows),
+         "temperate_forest:0.1429 grassland:0.0714 marsh:0.0714 highland_moor:0.0714 alpine:0.0714 "
+         "blighted_waste:0.0000 heath:0.1429 steppe:0.2143 wet_woodland:0.0714 fen:0.1429")
+    c.eq("report 6x6 twelve codes patches", biome_patches(6, 6, b12, rows), 12)
 
 
 def main(argv):
@@ -1292,8 +2134,11 @@ def main(argv):
         c = Checker()
         check_g7(c)
         check_lookups(c)
+        check_b2b(c)
+        check_b2c(c)
         check_b5(c)
         check_real_cells_given(c)
+        check_real_cells3_given(c)
         check_tables(c)
         check_designed(c)
         check_worlds(c, 64 if "--quick" in argv else 128)
@@ -1304,16 +2149,24 @@ def main(argv):
         check_real_cells_db(c, argv[2])
         sys.stderr.write("realcells: %d passed, %d failed\n" % (c.passes, c.fails))
         return 1 if c.fails else 0
+    if len(argv) == 3 and argv[1] == "realcells3":
+        c = Checker()
+        check_real_cells3_db(c, argv[2])
+        sys.stderr.write("realcells: %d passed, %d failed\n" % (c.passes, c.fails))
+        return 1 if c.fails else 0
     if len(argv) >= 2 and argv[1] == "golden":
+        global CLIMATE_GOLDEN
         args = []
         db_dir = None
         it = iter(argv[2:])
         for a in it:
             if a == "--db-dir":
                 db_dir = next(it)
+            elif a == "--climate-golden":
+                CLIMATE_GOLDEN = next(it)
             elif not a.startswith("--"):
                 args.append(a)
-        text = golden_text(large="--large" in argv, db_dir=db_dir)
+        text = golden_text(large="--large" in argv, db_dir=db_dir, legacy="--legacy" in argv)
         path = args[0] if args else os.path.join(_HERE, "..", "golden", "p1-04-biomes.txt")
         if path == "-":
             sys.stdout.write(text)
@@ -1324,8 +2177,8 @@ def main(argv):
     if len(argv) == 3 and argv[1] == "case":
         for name, fx, n, seed, overrides, _ in GOLDEN_CASES + LARGE_CASES:
             if name == argv[2]:
-                _, r, wind, _ = case_result(name, fx, n, seed, overrides)
-                for item, v in world_items(r, SHIPPED, wind):
+                _, r, wind, _, off = case_result(name, fx, n, seed, overrides)
+                for item, v in world_items(r, SHIPPED, wind, off):
                     print(item, v)
                 return 0
         return 2
