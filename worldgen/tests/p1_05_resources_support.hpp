@@ -249,7 +249,9 @@ inline resource_api::Tuning tuning(const Overrides& o = {}) { return resource_ap
 // --- Own helpers (5) -------------------------------------------------------------------------
 
 inline std::int64_t own_ramp(std::int64_t x, std::int64_t a, std::int64_t b) {
-    REQUIRE(a < b);
+    if (!(a < b)) {
+        FAIL("ramp with a >= b");
+    }
     if (x <= a) {
         return 0;
     }
@@ -269,7 +271,9 @@ inline std::int64_t own_metres(std::int64_t d) { return std::min<std::int64_t>(3
 
 // G8's tangent: div_int(from_raw(isqrt_u128(S2 x 2^64)), 320).
 inline std::int64_t own_tangent(std::int64_t s2) {
-    REQUIRE(s2 >= 0);
+    if (s2 < 0) {
+        FAIL("S2 < 0");
+    }
     const std::uint64_t r = worldgen::isqrt_u128(worldgen::U128{static_cast<std::uint64_t>(s2), 0});
     return worldgen::div_int(Fx::from_raw(static_cast<std::int64_t>(r)), 320).raw();
 }
@@ -483,7 +487,9 @@ inline OwnWalk own_walk(Grid g, std::span<const std::int64_t> s, std::span<const
     for (const auto& [root, cells] : size) {
         if (cells >= min_cells) {
             ++w.kept;
-            REQUIRE(w.kept <= 65535);
+            if (w.kept > 65535) {
+                FAIL("more than 65535 walk areas");
+            }
             id[root] = static_cast<std::uint16_t>(w.kept);
         } else {
             ++w.dropped;
