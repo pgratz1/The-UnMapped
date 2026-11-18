@@ -375,3 +375,13 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
 - Proposal: schema version 4, with generator 0.9.0. Table `climate` gains the column `temp_offset_dc` (tenths of a degree, between −20 and +20 with shipped tuning). Table `biome` keeps its shape and has twelve rows (ocean, lake, nine natural biomes, blighted waste). `region` and `region_border` move to version 5.
 - Interim choice: as proposed, specified in P1-03, P1-04 (third version) and docs/specs/schema.md.
 - Status: open
+
+### Wild food (forage) as a fifth resource score; habitability treats water as a necessity
+
+- Date: 2026-11-18
+- Raised by: spec-writer and world critic, approved by the lead
+- Design doc section: 4 (geography: resources, habitability), 5 (peoples), 6 (history: homelands, settlement)
+- Problem: the resource scores valued land only as farmland, timber or ore, so marsh, fen, wet woodland and coasts were worth nothing, although the design has hunting and fishing feed settlements and wild-land peoples live there. The earlier habitability sketch added water as one bonus among others, so dry ground far from any river could still score well.
+- Proposal: a `forage` score (wild food: game, fowl, fish, reeds), from a per-biome value held as data plus a bonus within 300 m of the sea, a lake or a large river. History uses it as a second food source and for peoples of wild places. Habitability is a weighted mean of fertility (55), forage (20), timber (15) and ore (10), multiplied by a fresh-water factor between 0.25 and 1 and reduced by slope, flooding and very small walkable pockets; there is no separate coast bonus, since the sea's value comes through forage. Steppe fertility is 0.7 and "fertile" land is fertility 0.65 or more, so forest (0.7) counts as clearable farmland. All scores are absolute (0 to 255), not normalized per world, so a harsh world reads as harsh. Small maps are mostly mountain: at the smallest size a world may have well under a third of its land walkable in one piece, and that bound is descriptive there. This revises item (5) of "Second-pass geography: choices of taste for Paul".
+- Interim choice: as proposed, specified in P1-05 (second version), generator 0.10.0. The stage writes layers only; the schema stays at version 4, the layer catalogue gains `forage`, and `region` becomes layer 19. Weights and per-biome values are tuning data and can be changed without a code change.
+- Status: open
