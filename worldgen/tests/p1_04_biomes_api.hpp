@@ -107,8 +107,10 @@ inline std::int64_t rain_scale(const Tuning& t, std::int64_t n) { return worldge
 // B4 for one cell (seam biome_lookup).
 inline std::uint8_t lookup(const Definitions& d, std::int64_t scale_raw, std::int64_t tq_raw, std::int64_t rq_raw,
                            std::int64_t elevation, std::int64_t s2, std::int64_t hand, std::int64_t coast_dist) {
-    return worldgen::stages::biome_lookup(d, Fx::from_raw(scale_raw), Fx::from_raw(tq_raw), Fx::from_raw(rq_raw),
-                                          elevation, s2, hand, coast_dist);
+    // 0.9.0 seam (engineer, minimal compile fix): wet scale 1, no target river, share 0 / 1.
+    return worldgen::stages::biome_lookup(d, Fx::from_raw(scale_raw), Fx::ONE, Fx::from_raw(tq_raw),
+                                          Fx::from_raw(rq_raw), elevation, s2, hand, coast_dist,
+                                          worldgen::stages::BIOME_D34_FAR, 0, 1);
 }
 
 // --- Rules outside their schema ranges (audit fix, engineer's d863651) -----------------
@@ -144,8 +146,10 @@ inline Definitions with_rule(Definitions d, std::string_view key, const Rule& r)
 // Seam biome_rule_matches.
 inline bool rule_matches(const Rule& r, std::int64_t scale_raw, std::int64_t tq_raw, std::int64_t rq_raw,
                          std::int64_t elevation, std::int64_t s2, std::int64_t hand, std::int64_t coast_dist) {
-    return worldgen::stages::biome_rule_matches(r, Fx::from_raw(scale_raw), Fx::from_raw(tq_raw),
-                                                Fx::from_raw(rq_raw), elevation, s2, hand, coast_dist);
+    // 0.9.0 seam (engineer, minimal compile fix): wet scale 1, no target river, share 0 / 1.
+    return worldgen::stages::biome_rule_matches(r, Fx::from_raw(scale_raw), Fx::ONE, Fx::from_raw(tq_raw),
+                                                Fx::from_raw(rq_raw), elevation, s2, hand, coast_dist,
+                                                worldgen::stages::BIOME_D34_FAR, 0, 1);
 }
 
 // B5 (seam biome_river_cells): the biome grid from the B4 grid.

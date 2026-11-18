@@ -130,13 +130,15 @@ inline std::uint8_t wind(std::uint64_t seed, std::span<const std::int64_t> weigh
 // C3 for one cell (seam climate_temperature_cell).
 inline std::int16_t temperature_cell(std::int64_t y, std::int64_t height, std::int64_t s_dm, std::int64_t noise_raw,
                                      const Tuning& t) {
-    return worldgen::stages::climate_temperature_cell(y, height, s_dm, Fx::from_raw(noise_raw), t);
+    // 0.9.0 seam (engineer, minimal compile fix): offset 0, the 0.8.0 values.
+    return worldgen::stages::climate_temperature_cell(y, height, s_dm, Fx::from_raw(noise_raw), 0, t);
 }
 
 // C3 for a grid (seam climate_temperature).
 inline std::vector<std::int16_t> temperature(std::uint64_t seed, Grid g, std::span<const std::int64_t> s,
                                              const Tuning& t, std::uint32_t threads) {
-    return worldgen::stages::climate_temperature(seed, g, s, t, threads);
+    // 0.9.0 seam (engineer, minimal compile fix): offset 0, the 0.8.0 values.
+    return worldgen::stages::climate_temperature(seed, g, s, 0, t, threads);
 }
 
 // One box pass of half-width r_cells (seam climate_box_mean): hs1, raw.
