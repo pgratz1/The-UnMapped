@@ -1,6 +1,6 @@
 # P1-03 Climate
 
-Status: approved by the lead, 2026-11-16; revised 2026-11-17 after the first implementation (branch `p1/03-climate`) and a tuning experiment (branch `p1/03-climate-experiment-c4`, commit `2689076`): C4 becomes a triangle kernel, diagonal winds take their taps across the wind (C5), shipped `moisture_path_mm_km` 32000 and `rain_oro_mm` 2500, statistics ranges from the experiment, seams as implemented, corrections. Revised again 2026-11-17 after the world critic's review and the determinism audit: shipped `coast_rain_mm` 75 (coast experiment, 11.1), entry guards of the C4 seams and of `climate_temperature_cell` (10), section 7's C4 bound corrected, limitations 8 to 10 and open questions 4 and 7. Amended 2026-11-17 by the spec writer with the P1-04 revision (draft, awaiting approval): the climate stage also writes the one-row table `climate` with the wind direction (section 3, C7; schema version 3, made by the biomes merge), `report` prints `wind_toward` (9), the statistics ranges of section 9 are the validation sweep's proposed final values, 10.4 names where the climate layer hashes live, limitation 4's maximum from the sweep, open question 4 resolved. The climate layers do not change. Paul has provisionally accepted the choices of taste (open questions 1 and 2). Phase P1 Geography, stage 3 (`climate`). Design doc section 4 (stage 3: "temperature from latitude and elevation; rainfall from prevailing wind and rain shadow"; "scale is compressed"). Depends on P0-01 to P0-04, P1-00 (shared algorithms G1 to G8, rules D1 to D10, section 2.2 map-size convention), P1-01 (the `elevation` layer) and P1-02 (`water`, `water_depth`, `coast_dist`). The climate merge is `GENERATOR_VERSION` 0.7.0; this revision lands before that merge and needs no further bump. Tuning values marked "guess" and every statistics range are still provisional until the validation sweep (section 11).
+Status: approved by the lead, 2026-11-16; revised 2026-11-17 after the first implementation (branch `p1/03-climate`) and a tuning experiment (branch `p1/03-climate-experiment-c4`, commit `2689076`): C4 becomes a triangle kernel, diagonal winds take their taps across the wind (C5), shipped `moisture_path_mm_km` 32000 and `rain_oro_mm` 2500, statistics ranges from the experiment, seams as implemented, corrections. Revised again 2026-11-17 after the world critic's review and the determinism audit: shipped `coast_rain_mm` 75 (coast experiment, 11.1), entry guards of the C4 seams and of `climate_temperature_cell` (10), section 7's C4 bound corrected, limitations 8 to 10 and open questions 4 and 7. Amended 2026-11-17 by the spec writer with the P1-04 revision (draft, awaiting approval): the climate stage also writes the one-row table `climate` with the wind direction (section 3, C7; schema version 3, made by the biomes merge), `report` prints `wind_toward` (9), the statistics ranges of section 9 are the validation sweep's proposed final values, 10.4 names where the climate layer hashes live, limitation 4's maximum from the sweep, open question 4 resolved. The climate layers do not change. **Revised 2026-11-18 for the biome variety revision (draft, awaiting approval; generator 0.9.0, schema version 4; with P1-04 third version):** a per-world temperature offset (new tuning field `temp_offset_max_c`, new stream `geo.climate.temp_offset`, new step C2b, C3 adds it to the sea-level temperature; Paul: uniform ±2 °C), stored in the new column `climate.temp_offset_dc` (schema 4, section 3) and printed by `report` as `temp_offset_c` (9); shipped `coast_rain_mm` 40 (was 75; Paul: a thinner coastal forest); worked examples, statistics, tests and limitations updated; open question 7 resolved. Proposals "More natural biomes, per-world temperature, a thinner coastal forest". Paul has provisionally accepted the choices of taste (open questions 1 and 2). Phase P1 Geography, stage 3 (`climate`). Design doc section 4 (stage 3: "temperature from latitude and elevation; rainfall from prevailing wind and rain shadow"; "scale is compressed"). Depends on P0-01 to P0-04, P1-00 (shared algorithms G1 to G8, rules D1 to D10, section 2.2 map-size convention), P1-01 (the `elevation` layer) and P1-02 (`water`, `water_depth`, `coast_dist`). The climate merge is `GENERATOR_VERSION` 0.7.0; this revision lands before that merge and needs no further bump. Tuning values marked "guess" and every statistics range are still provisional until the validation sweep (section 11).
 
 ## 1. Purpose
 
@@ -8,7 +8,7 @@ Give every cell an annual mean temperature and an annual precipitation. Biomes (
 
 The map is small (8 to 33 km) and its terrain is one continent with steep ranges (P1-01: peaks 1,200 to 2,600 m, ranges as walls, most land low). So climate is a local gradient with a strong orographic effect, not a stack of planetary belts:
 
-- **Temperature** falls from south to north by a fixed amount per map (the latitude span is a map fraction, P1-00 2.2, proposals "Climate's latitude span is a fraction of the map"), and falls with height at a lapse rate. The ranges are what make cold places.
+- **Temperature** falls from south to north by a fixed amount per map (the latitude span is a map fraction, P1-00 2.2, proposals "Climate's latitude span is a fraction of the map"), and falls with height at a lapse rate. The ranges are what make cold places. Each world has its own overall level, up to 2 °C warmer or colder than the reference (C2b, since 0.9.0), so some worlds have large snowfields and some almost none.
 - **Rainfall** comes from one prevailing wind per world. Saturated air comes off the sea, rains more where it is forced up a slope, and loses moisture as it rains, so the far side of a range is dry (rain shadow) and inland air is drier than coastal air. A small bonus near every coast stands for sea breezes and fog.
 
 Every distance in this stage is in metres (P1-00 2.2): a 2048 map has a wider continent and so a drier interior, with the same rain shadow behind each range (limitation 7).
@@ -29,6 +29,7 @@ Streams (P0-01 7.3; registered in `streams.hpp`):
 | K_wind | `geo.climate.wind` | `Rng(K_wind)`, one `weighted_index` call, sequential (C2; D9) |
 | K_temp | `geo.climate.temperature` | noise key of `fbm_m` (C3) |
 | K_rain | `geo.climate.rainfall` | noise key of `fbm_m` (C6) |
+| K_off | `geo.climate.temp_offset` | `Rng(K_off)`, at most one `uniform_i64` call, sequential (C2b; D9; new in the 0.9.0 revision) |
 
 The test-only stream `test.climate` (section 10.2) is not registered in `streams.hpp` and is never used by the stage.
 
@@ -51,18 +52,23 @@ Two layers, N × N, codec 1, written in this order in one stage transaction (lay
 
 Both are in the P1-00 catalogue already ("fixed"). This spec adds no further climate layer.
 
-**Table `climate`** (from schema version 3, added by the biomes merge, P1-04 3; amended 2026-11-17, world critic S2, open question 4): one row, written in C7 in the same transaction as the layers:
+**Table `climate`** (from schema version 3, added by the biomes merge, P1-04 3; amended 2026-11-17, world critic S2, open question 4; **column `temp_offset_dc` added in schema version 4**, generator 0.9.0, 2026-11-18): one row, written in C7 in the same transaction as the layers. Schema 4 DDL, which **replaces** schema 3's `climate` statement in the same position (fifth, after `biome`), byte for byte:
 
 ```
-CREATE TABLE climate (id INTEGER PRIMARY KEY, wind_toward INTEGER NOT NULL) STRICT
+CREATE TABLE climate (id INTEGER PRIMARY KEY, wind_toward INTEGER NOT NULL, temp_offset_dc INTEGER NOT NULL) STRICT
 ```
+
+(Schema 3's statement was `CREATE TABLE climate (id INTEGER PRIMARY KEY, wind_toward INTEGER NOT NULL) STRICT`.)
 
 | Column | Value |
 | --- | --- |
 | `id` | 1 |
 | `wind_toward` | k_w of C2: the D8 code (P1-00 2.3, 0 E to 7 NE) the prevailing wind blows **toward** |
+| `temp_offset_dc` (schema 4) | off_dc of C2b: the world's temperature offset in tenths of a degree Celsius, −50..50 for any tuning inside the bounds (−20..20 with the shipped `temp_offset_max_c` 2) |
 
-The table exists in every world of schema 3 (DDL order: `meta`, `layer`, `pass`, `biome`, `climate`) and is empty unless the climate stage ran. It is where any later per-world climate value goes (for example the temperature offset of open question 7, as a new column with its own schema bump). The `temperature` and `rainfall` layers are unchanged by this amendment: their hashes stay those of `p1-03-climate.txt`. The runtime reads it for weather direction and cloud drift; the viewer may draw an arrow.
+The table exists in every world of schema 4 (DDL order: `meta`, `layer`, `pass`, `biome`, `climate`) and is empty unless the climate stage ran. The row is inserted with all three columns (`INSERT INTO climate (id, wind_toward, temp_offset_dc) VALUES (?1, ?2, ?3)`). The runtime reads it for weather direction and cloud drift; the viewer may draw an arrow.
+
+**Schema 4 rules** (hard rule 7; P0-02 5.2 and amendment 16): `SCHEMA_VERSION` 4, written as `PRAGMA user_version` and `meta.schema_version`; the writer has one `climate` DDL (no switch, no environment variable: the exploration's `UNMAPPED_EXP_SCHEMA4` and its two-way INSERT do not survive); the reader supports exactly version 4 and refuses a schema 3 world (`user_version` or `meta.schema_version` 3) as an unsupported schema version, "world schema version 3, this build reads 4" (P0-02 5.2 rule 4; old worlds are regenerated); the verification of a `.partial` (P0-02) and the file-header check compare `user_version` with 4. The table adds no page, so the empty world stays 8 pages, 32768 bytes (checked on the exploration build with the schema-4 DDL: `--until none` gives 8 pages, `user_version` 4). `docs/specs/schema.md` has the DDL and the changelog row.
 
 ## 4. Tuning
 
@@ -82,11 +88,12 @@ Fields of `worldgen.climate`, all required (P1-00 6.1), in schema declaration or
 | `moisture_path_mm_km` | int(100, 2000000) | 32000 | calibrated (experiment, 11.1) | rain integrated along the path (mm × km) that would use up saturated air; sets how fast air dries |
 | `loss_max` | fx(0, "0.9") | "0.25" | designed | cap on the share of the air's moisture lost in one step |
 | `ocean_recharge_m` | int(16, 100000) | 500 | guess | open water over which air takes up moisture again (per step it regains step/recharge of its deficit) |
-| `coast_rain_mm` | int(0, 5000) | 75 | calibrated (coast experiment, 11.1) | rain added at the coast, every direction (sea breeze, fog) |
+| `coast_rain_mm` | int(0, 5000) | 40 | calibrated (coast experiment 11.1, then the variety revision, P1-04 11.1; Paul) | rain added at the coast, every direction (sea breeze, fog) |
 | `coast_rain_reach_m` | int(16, 32767) | 1500 | guess | distance inland over which that bonus falls linearly to 0 |
 | `rain_noise` | `fbm_m` | wavelength 5000, octaves 3, gain "0.5" | guess | local rainfall variation |
 | `rain_noise_amp` | fx(0, 1) | "0.4" | guess | relative weight: rainfall × (1 + amp × noise) |
 | `rain_min_mm` | int(0, 5000) | 250 | guess | floor of the stored rainfall |
+| `temp_offset_max_c` (new, 0.9.0) | fx(0, 5) | 2 | designed (Paul: ±2 °C) | half-width of the per-world temperature offset (C2b): the offset is uniform over the whole tenths from −M to M, M = round_int(10 × `temp_offset_max_c`) |
 
 `fbm_m` is the noise record of P1-01 4.1. Named checks (P0-03 7.5; error at the definition's header, form as P1-01 4.3): `wind_weights_positive`: the sum of `wind_weights` is at least 1 (message `wind_weights must not all be 0`).
 
@@ -106,20 +113,21 @@ rain_oro_mm = 2500
 moisture_path_mm_km = 32000
 loss_max = "0.25"
 ocean_recharge_m = 500
-coast_rain_mm = 75
+coast_rain_mm = 40
 coast_rain_reach_m = 1500
 rain_noise = { wavelength_m = 5000, octaves = 3, gain = "0.5" }
 rain_noise_amp = "0.4"
 rain_min_mm = 250
+temp_offset_max_c = 2
 ```
 
-Every fixed-id directory gets this file (P1-00 6.1: every id must be defined where the kind's directory exists), so adding `climate` to the `worldgen` id set changes `content_hash` of every world: a bump and re-recorded golden hashes in the implementing branch (P1-00 6.4; proposals "Every world's hash depends on the shipped tuning files"). That bump is the 0.7.0 of the climate merge; the changed values above are part of the same, not yet merged, change.
+Every fixed-id directory gets this file (P1-00 6.1: every id must be defined where the kind's directory exists), so adding `climate` to the `worldgen` id set changes `content_hash` of every world: a bump and re-recorded golden hashes in the implementing branch (P1-00 6.4; proposals "Every world's hash depends on the shipped tuning files"). That bump is the 0.7.0 of the climate merge. The variety revision changes `coast_rain_mm` and adds `temp_offset_max_c`, which again changes `content_hash` of every world: generator 0.9.0, with P1-04's changes.
 
-Fixed constants (not tuning): the 3-tap upwind weights (1, 2, 1)/4 and the tap shapes of C5; the step lengths 16 m and 16√2 m (`SQRT2`, P1-00 amendment A1); off-map air is saturated (q = ONE) at sea level; C4 is two box passes of half-width (r div 2).
+Fixed constants (not tuning): the 3-tap upwind weights (1, 2, 1)/4 and the tap shapes of C5; the step lengths 16 m and 16√2 m (`SQRT2`, P1-00 amendment A1); off-map air is saturated (q = ONE) at sea level; C4 is two box passes of half-width (r div 2); the offset of C2b is one uniform draw (the exploration's `temp_offset_draws`, a mean of up to four draws, is not specified).
 
 ## 5. Algorithm
 
-Notation as P1-01 5.0: every value is `Fx` unless stated, every operation the P0-01 operation of that name with its rounding, statements evaluated in the order written. X = `from_int(16x + 8)`, Y = `from_int(16y + 8)` (metres); V = `from_ratio(2y + 1, 2N)` (P1-00 2.1). On a W × H test grid, N in V is replaced by H and lines and rows run over W or H as stated. Steps C1 to C7 in order.
+Notation as P1-01 5.0: every value is `Fx` unless stated, every operation the P0-01 operation of that name with its rounding, statements evaluated in the order written. X = `from_int(16x + 8)`, Y = `from_int(16y + 8)` (metres); V = `from_ratio(2y + 1, 2N)` (P1-00 2.1). On a W × H test grid, N in V is replaced by H and lines and rows run over W or H as stated. Steps C1, C2, C2b, C3 to C7 in order.
 
 ### C1. Preconditions (D1)
 
@@ -135,13 +143,23 @@ k_w = rng.weighted_index(wind_weights)          // one call; P0-01 6.3
 
 The wind blows **toward** k_w: k_w = 0 is a wind from the west (a westerly). The draw happens once per world and depends only on the seed and the weights.
 
+### C2b. Per-world temperature offset (sequential, D9; new in 0.9.0)
+
+```
+M      = round_int(mul_int(temp_offset_max_c, 10))       // whole tenths; 20 with the shipped value; 0..50
+off_dc = (M = 0) ? 0 : Rng(K_off).uniform_i64(−M, M)    // one call, inclusive bounds (P0-01 6.3)
+off    = from_ratio(off_dc, 10)                         // Fx, degrees C, RHA
+```
+
+Once per world, from its own stream, so it depends only on the seed and `temp_offset_max_c`, and no other draw of the stage moves (the wind's `Rng(K_wind)` is a different stream: `wind_toward` is unchanged from 0.8.0). With M = 0 no draw is needed (the stream is used for nothing else, so drawing or not is not observable). The offset is applied in whole tenths, so the stored integer `temp_offset_dc` is exactly what C3 used (as from_ratio of it). Rainfall does not depend on it.
+
 ### C3. Temperature (D1, G6 row blocks)
 
 ```
 t_sea = temp_north_c + mul(temp_south_c − temp_north_c, V)
 lap   = div_int(mul_int(lapse_c_per_km, S), 10000)          // S in dm; 10000 dm = 1 km
 tn    = mul(temp_noise_amp_c, fbm_m(K_temp, X, Y, temp_noise))
-T     = (t_sea − lap) + tn
+T     = ((t_sea + off) − lap) + tn                     // off of C2b; t_sea + 0 is exact
 temperature = clamp(round_int(mul_int(T, 10)), −600, 500)
 ```
 
@@ -240,7 +258,7 @@ rainfall = clamp(round_int(pr + cb), rain_min_mm, 10000)
 
 ### C7. Write
 
-`temperature`, then `rainfall`, then the `climate` row (`id` 1, `wind_toward` k_w; schema 3 and later), in one transaction.
+`temperature`, then `rainfall`, then the `climate` row (`id` 1, `wind_toward` k_w, `temp_offset_dc` off_dc; schema 4), in one transaction.
 
 ### 5.1 Worked examples
 
@@ -259,7 +277,23 @@ Computed by the spec writer with an exact-integer Python reference of this secti
 | 512 | 255 | 5 | 30047993856 (6.996094) | 13958644 (0.00325) | 70 |
 | 512 | 100 | 7000 | 24847056896 (5.785156) | 19542101197 (4.55) | 12 |
 
-(By hand, first row: V = 1023/2048, t_sea = 5 + 4 × 1023/2048 = 6.998046875 exactly; lap = 6.5 × 12000 / 10000 = 7.8; T = −0.80195…, × 10 → −8.)
+(By hand, first row: V = 1023/2048, t_sea = 5 + 4 × 1023/2048 = 6.998046875 exactly; lap = 6.5 × 12000 / 10000 = 7.8; T = −0.80195…, × 10 → −8.) These rows have off_dc = 0, which gives the 0.8.0 values exactly.
+
+**C2b offset** (shipped `temp_offset_max_c` 2, so M = 20; the first output of `Rng(stream_key(seed, "geo.climate.temp_offset")).uniform_i64(−20, 20)`): seeds 0 to 11 give off_dc = 20, 10, −11, 14, 2, 8, 6, −2, −19, −13, 11, 10; seed 42 gives 9; the phrase "The Unmapped" (seed 15629206466951235176) gives −10. These equal the exploration build's values for every one of the 58 calibration worlds (seeds 0–29). `temp_offset_max_c` "0.04" gives M = round_int(0.4) = 0 and off_dc = 0 for every seed; "0.05" gives M = 1 (0.5 rounds away from zero).
+
+**C3 with the offset** (same tuning and rows as above; off = from_ratio(off_dc, 10): −19 → raw −8160437862, 9 → raw 3865470566, 20 → raw 8589934592 exactly):
+
+| N | y | S (dm) | off_dc | T (raw) | `temperature` |
+| --- | --- | --- | --- | --- | --- |
+| 1024 | 511 | 12000 | −19 | −11604800307 | −27 |
+| 1024 | 511 | 12000 | 9 | 421108121 | 1 |
+| 1024 | 511 | 12000 | 20 | 5145572147 | 12 |
+| 1024 | 0 | 0 | −19 | 13322787226 | 31 |
+| 1024 | 0 | 0 | 20 | 30073159680 | 70 |
+| 512 | 100 | 7000 | −19 | −2855482163 | −7 |
+| 512 | 100 | 7000 | 9 | 9170426265 | 21 |
+
+(By hand, first row: T = (30056382464 − 8160437862) − 33500744909 = −11604800307, −2.702 °C, × 10 → −27.)
 
 **One box pass** (the seam `climate_box_mean`, which is pass 1 of C4), half-width 1, a 4 × 3 grid S (rows y = 0 to 2): `0 10 20 30`, `0 40 50 60`, `0 0 70 80`. hs1 in dm: row 0 `12.5 20 35 40`; row 1 `8.3333 21.1111 40 51.6667` (raw 35791394133, 90671531804, 171798691840, 221906643627); row 2 `10 26.6667 50 65` (26.6667 is raw 114532461227). For example (0, 1): window x 0..1, y 0..2, sum 50 over 6 cells.
 
@@ -324,32 +358,34 @@ p (mm):
 
 | p (mm) | `coast_dist` | rn | cb (mm) | `rainfall` |
 | --- | --- | --- | --- | --- |
-| 800 | 16 | 0 | 74.2 | 874 |
+| 800 | 16 | 0 | 39.573 (raw 169966172460) | 840 |
 | 800 | 1500 | 0 | 0 | 800 |
 | 100 | 3000 | 0 | 0 | 250 (floor) |
-| 12000 | 50 | 0 | 72.5 | 10000 (cap) |
-| 800 | 700 | 0.5 | 40 | 1000 |
-| 800 | −40 (ocean) | −0.3 | 75 | 779 |
+| 12000 | 50 | 0 | 38.667 (raw 166072068779) | 10000 (cap) |
+| 800 | 700 | 0.5 | 21.333 (raw 91625968981) | 981 |
+| 800 | −40 (ocean) | −0.3 | 40 | 744 |
 
-For the two sweeps above, with `coast_dist` 16 on the land columns and −16 on the ocean columns, `rainfall` rows: wind E `875 1187 1538 1927 873 874`, `875 1343 1928 2278 873 873`, `875 1030 1303 1459 873 874`; wind SE `875 1095 1482 2034 1426 875`, `875 1150 1508 1728 873 874`, `875 902 873 873 872 873`.
+(Shipped `coast_rain_mm` 40 since 0.9.0; with 75, the 0.8.0 value, the six rows gave 874, 800, 250, 10000, 1000, 779.) At d = `coast_rain_reach_m` − 1 = 1499, cb = from_ratio(40, 1500) = raw 114532461. For the two sweeps above, with `coast_dist` 16 on the land columns and −16 on the ocean columns, `rainfall` rows: wind E `840 1152 1503 1892 838 839`, `840 1308 1893 2243 838 838`, `840 996 1269 1424 838 839`; wind SE `840 1061 1447 1999 1391 840`, `840 1116 1474 1693 838 839`, `840 867 839 838 838 838`.
 
 ## 6. Invariants
 
 For every world and every tuning inside the bounds:
 
-1. `temperature` ∈ [−600, 500] and `rainfall` ∈ [`rain_min_mm`, 10000] on every cell.
+1. `temperature` ∈ [−600, 500] and `rainfall` ∈ [`rain_min_mm`, 10000] on every cell. `climate.temp_offset_dc` ∈ [−M, M] with M of C2b.
 2. **Lapse.** With `temp_noise_amp_c` = 0: on cells of one row, S(a) ≥ S(b) implies `temperature`(a) ≤ `temperature`(b); on cells with the same S, `temperature` is non-decreasing from north to south when `temp_south_c` ≥ `temp_north_c`.
 3. **Moisture stays a share.** Every q of C5 is in [0, ONE]: a 1-2-1 mean of values in [0, ONE] is in [0, ONE]; the ocean update adds at most ONE − q_up; on other cells lam ≤ `loss_max` < 1.
 4. **Rain shadow.** On every non-ocean cell of C5, q ≤ q_up (air only dries over land), and where rise = 0, p = mul(q_up, `rain_base_mm`) (a lee slope gets only base rain from the air that reaches it).
 5. **No wind, no shadow.** With `rain_oro_mm` = 0 and both noise amplitudes 0, rainfall on land depends only on the moisture path, not on the terrain.
 6. Pure function of the seed, N, the four input layers and `worldgen.climate`; independent of thread count (D10).
 7. **Symmetry** of C4 and C5 under the eight grid symmetries, as stated at the end of C5. Each hs lies between the smallest and largest S of the cells within distance 2h (C4 is a mean of means).
+8. **The offset is a shift.** With `temp_noise_amp_c` = 0 and no clamping, `temperature` of a world equals the temperature of the same world with offset 0 plus off_dc, up to one tenth of rounding (|difference − off_dc| ≤ 1). `rainfall` and `wind_toward` do not depend on the offset: with `temp_offset_max_c` = 0 every layer equals the layer of the same tuning with any other `temp_offset_max_c`, except `temperature`.
 
 ## 7. Determinism notes and overflow bounds
 
 | Step | Rule | Notes |
 | --- | --- | --- |
-| C2 | D9, sequential | one `Rng`, one `weighted_index` call; no other `Rng` in the stage |
+| C2 | D9, sequential | one `Rng`, one `weighted_index` call |
+| C2b | D9, sequential | one `Rng` of its own stream, at most one `uniform_i64` call; no other `Rng` in the stage |
 | C3, C6 | D1, parallel by G6 row blocks | location-keyed noise only |
 | C4 | D2, two passes, each parallel by G6 row blocks | exact integer sums; any split gives the same sums; pass 2 starts after pass 1 has finished |
 | C5 | D4 | orthogonal winds: lines in the stated order, within a line D1 (reads only the previous line); diagonal winds: one sequential raster sweep in the stated order |
@@ -358,7 +394,8 @@ No floating point, no new math function: `fbm_m` (P1-01 4.1), `mul`, `div`, `div
 
 Overflow (N = 2048, any tuning inside the bounds, S ∈ [0, 32767] by precondition 3):
 
-- C3: |t_sea| ≤ 40; lap ≤ 15 × 32767 / 10000 < 50 (`mul_int` raw ≤ 15 × 32767 × 2^32 < 2^51); |tn| ≤ 5; T ∈ [−85, 45] before the clamp; × 10 fits.
+- C2b: M ≤ 50; |off_dc| ≤ 50; off ∈ [−5, 5].
+- C3: |t_sea| ≤ 40; |off| ≤ 5; lap ≤ 15 × 32767 / 10000 < 50 (`mul_int` raw ≤ 15 × 32767 × 2^32 < 2^51); |tn| ≤ 5; T ∈ [−90, 50] before the clamp; × 10 fits.
 - C4: h ≤ 4000 div 16 div 2 = 125, so a window holds at most 251² = 63001 cells. sum1 ≤ 63001 × 32767 < 2^31. hs1.raw ≤ 32767 × 2^32; sum2 ≤ 63001 × 32767 × 2^32 ≈ 8.866 × 10^18 < 2^63 − 1 ≈ 9.223 × 10^18. The implementation's running column sum drops the leaving row before adding the entering one, so it never holds more than one window: peak 8.866 × 10^18, a margin of 3.6 × 10^17. The row pass's prefix along a whole row is at most W × 32767 × 2^32 ≤ 2048 × 1.407 × 10^14 ≈ 2.9 × 10^17. In general a sum of more than MAX = (2^63 − 1) div (32767 × 2^32) = 65538 values of hs1.raw can overflow, which is what the seams' entry guards of section 10 exclude; raising the bound of `smooth_radius_m` above 4000, or admitting S above 32767, needs a new argument (for example 128-bit window sums). hs ≤ 32767 dm.
 - C5: rise ≤ 32767 dm, step_dm ≥ 160, so g < 205; `mul_int(g, rain_oro_mm)` < 2.05 × 10^7; p < 2.06 × 10^7 mm (q ≤ 1); mul(p, step_m) < 4.7 × 10^8 (< 2^31); 1000 × `moisture_path_mm_km` ≤ 2 × 10^9 fits `int64` as a `div_int` divisor; rec ≤ ONE.
 - C6: f ≤ 2; pr < 4.2 × 10^7 < 2^31; `coast_rain_mm` × reach ≤ 5000 × 32767 fits; round_int then clamp.
@@ -377,11 +414,27 @@ Budget (P1-00 11): 0.3 / 1.5 / 6 s at 512 / 1024 / 2048. Cost per cell: 6 `noise
 | `rainfall_mm` | land percentiles 0, 10, 50, 90, 100 of `rainfall`, integers |
 | `land_below_0c` | ratio4(land cells with `temperature` < 0, land cells) |
 | `rain_contrast` | ratio4(p90, p10) of land `rainfall` (the two values above); `n/a` if p10 = 0 |
-| `wind_toward` | from table `climate`: the name of the code (P1-00 2.3: `E`, `SE`, `S`, `SW`, `W`, `NW`, `N`, `NE`), e.g. `wind_toward = SE`. Printed first of the climate group, whenever the table has its row, whether or not the climate layers are present; omitted when the table is empty or absent (schema 2 worlds). A table with more than one row, a row with `id` ≠ 1, or a `wind_toward` outside 0..7 is a corrupt-data error naming table `climate` (`worldgen-cli: error: corrupt table 'climate': <reason>`, exit 3, as for `pass`, P1-00 10.3) |
+| `wind_toward` | from table `climate`: the name of the code (P1-00 2.3: `E`, `SE`, `S`, `SW`, `W`, `NW`, `N`, `NE`), e.g. `wind_toward = SE`. Printed first of the climate group, whenever the table has its row, whether or not the climate layers are present; omitted when the table is empty |
+| `temp_offset_c` (0.9.0) | from table `climate`: `temp_offset_dc` as tenths with one decimal, the sign, then \|v\| div 10, `.`, \|v\| mod 10 (the `metres1` formatter applied to tenths, as `temperature_c`): −19 → `-1.9`, 20 → `2.0`, 0 → `0.0`, −5 → `-0.5`. Printed right after `wind_toward`, under the same condition |
 
-With no land cell each of the four keys prints a single `n/a` (not one per percentile), as `elevation_m` does (P1-00 appendix C 6).
+**Malformed `climate` table** (checked whenever the table exists, whether or not the climate layers are present): more than one row, a row that does not have three integer columns, a row with `id` ≠ 1, a `wind_toward` outside 0..7 or a `temp_offset_dc` outside −50..50 is a corrupt-data error naming table `climate`: `worldgen-cli: error: corrupt table 'climate': <reason>` on stderr, nothing on stdout, exit 3 (as for `pass`, P1-00 10.3). The reasons, checked in this order: `<n> rows, expected at most 1`; `the row does not have three integer columns`; `id <v>, expected 1`; `wind_toward <v> outside 0..7`; `temp_offset_dc <v> outside -50..50`. (The 0.8.0 reader's second reason read "two integer columns"; the range check of `temp_offset_dc` is new, and the bound is that of `temp_offset_max_c` ≤ 5.)
 
-**Statistics** (for P1-00 13.1): the final ranges proposed by the validation sweep of 0.7.0 (`docs/reviews/p1-03-climate-validation.md` 3.3; 512 and 1024 seeds 0–49, 2048 seeds 0–7, the shipped algorithm and tuning), typical = measured min–max widened by about 10% (low end × 0.9, high end × 1.1, rounded outward), hard only where a value outside means a defect. **The 2048 ranges rest on 8 seeds**; P1-00 13.1's full seed set (2048 seeds 0–19, 1024 seeds 0–199) may widen them.
+With no land cell each of the four layer keys prints a single `n/a` (not one per percentile), as `elevation_m` does (P1-00 appendix C 6).
+
+**Statistics, 0.9.0** (provisional until the variety revision's validation sweep; for P1-00 13.1). Measured by the spec writer on the 58 calibration worlds (512 seeds 0–19, 1024 seeds 0–29, 2048 seeds 0–7) with the final data (P1-04 11.1); land = `elevation` > 0, percentiles by P1-00 10.3:
+
+| Statistic | All seeds (hard) | Typical (≥ 90%) | Measured min / median / max, 512 / 1024 / 2048 |
+| --- | --- | --- | --- |
+| `temperature_c` p50 | within the catalogue range (construction); **every land cell ≤ 12.0 °C** (t_sea ≤ 9 °C, offset ≤ 2 °C, noise ≤ 1 °C) | **3.3–8.7 °C** at every size (was 4.5–7.2) | 3.7 / 6.2 / 7.8; 3.9 / 6.5 / 7.8; 4.8 / 6.9 / 7.9 °C; land maximum 10.6 / 10.7 / 10.8 °C |
+| `rainfall_mm` p50 | ≥ `rain_min_mm` (construction) | 680–1030 / 635–900 / 585–750 mm (unchanged) | 755 / 806 / 903; 698 / 746 / 792; 645 / 675 / 680 mm |
+| `rain_contrast` | descriptive | 1.7–5.1 / 1.5–3.7 / 1.6–2.7 (unchanged) | 1.93 / 3.15 / 4.28; 1.64 / 2.50 / 3.29; 1.72 / 1.85 / 2.46 |
+| `land_below_0c` | descriptive | **0.0007–0.16** at every size (was 0.017–0.115) | 0.0008 / 0.063 / 0.134; 0.0017 / 0.056 / 0.142; 0.015 / 0.031 / 0.095 |
+| `rainfall_mm` p100 | descriptive | — | 3402 / 6219 / 8654; 2884 / 5316 / 8562; 3028 / 4206 / 6017 mm |
+| `temp_offset_c` | within ±`temp_offset_max_c` (construction) | descriptive (uniform) | −1.9 / 0.45 / 2.0; −1.9 / 0.45 / 2.0; −1.1 / 0.7 / 2.0 |
+
+The offset widens the temperature rows by about ±2 °C and `land_below_0c` from 0.1% (warmest worlds) to 14.5% (coldest); rainfall moves only through the smaller coast bonus (p50 down by 0 to 30 mm), and the ranges of 0.7.0 still hold for every one of the 58 worlds, so they are kept. The earlier table follows for the record.
+
+**Statistics, 0.7.0 and 0.8.0** (for P1-00 13.1 until 0.9.0): the final ranges proposed by the validation sweep of 0.7.0 (`docs/reviews/p1-03-climate-validation.md` 3.3; 512 and 1024 seeds 0–49, 2048 seeds 0–7, the shipped algorithm and tuning), typical = measured min–max widened by about 10% (low end × 0.9, high end × 1.1, rounded outward), hard only where a value outside means a defect. **The 2048 ranges rest on 8 seeds**; P1-00 13.1's full seed set (2048 seeds 0–19, 1024 seeds 0–199) may widen them.
 
 | Statistic | All seeds (hard) | Typical (≥ 90%) | Measured 512 / 1024 / 2048 |
 | --- | --- | --- | --- |
@@ -411,10 +464,10 @@ Example: `temperature` 25 (2.5 °C) between stops 0 and 50: R = 171 + floor((2·
 
 ## 10. Tests required
 
-Library seams, as implemented in `worldgen/include/worldgen/stages/climate.hpp` (namespace `worldgen::stages`; `Fx` is `worldgen::Fx`, `Grid` and `Direction` are from `worldgen/geo/grid.hpp`). All work on any W × H grid with index y × W + x; each raises `FatalError` on an array of the wrong length, an invalid grid, threads outside [1, 256] or a violated precondition; `threads` never changes a result. The engineer may add helpers but should not change these without a spec note.
+Library seams, as implemented in `worldgen/include/worldgen/stages/climate.hpp` (namespace `worldgen::stages`; `Fx` is `worldgen::Fx`, `Grid` and `Direction` are from `worldgen/geo/grid.hpp`). All work on any W × H grid with index y × W + x; each raises `FatalError` on an array of the wrong length, an invalid grid, threads outside [1, 256] or a violated precondition; `threads` never changes a result. The engineer may add helpers but should not change these without a spec note. The 0.9.0 revision adds `climate_temp_offset_dc` and the `offset_dc` argument of the two C3 seams (the exploration carried the offset inside `ClimateTuning` with a switch `temp_offset_on`; neither is specified: `ClimateTuning` holds only the 18 data fields).
 
 ```cpp
-ClimateTuning climate_tuning_from(const data::Record& record);        // the 17 fields of section 4
+ClimateTuning climate_tuning_from(const data::Record& record);        // the 18 fields of section 4
 ClimateTuning climate_tuning_from(const data::ContentSet& content);   // of definition worldgen.climate
 
 // C1: S = elevation + water_depth; fatal "climate: input precondition: ..." unless the
@@ -424,12 +477,16 @@ std::vector<std::int64_t> climate_surface(Grid grid, std::span<const std::int16_
                                           std::span<const std::uint16_t> water_depth);
 // C2: the code the wind blows toward. Fatal unless 8 weights, none negative, sum >= 1.
 Direction climate_wind(std::uint64_t seed, std::span<const std::int64_t> weights);
-// C3 for one cell of row y of a grid of `height` rows; noise is the fbm_m value at the cell.
-// Fatal unless 0 <= y < height <= INT32_MAX.
+// C2b (0.9.0): the world's offset in tenths, off_dc. Fatal unless temp_offset_max_c is in [0, 5].
+std::int64_t climate_temp_offset_dc(std::uint64_t seed, const ClimateTuning& tuning);
+// C3 for one cell of row y of a grid of `height` rows; noise is the fbm_m value at the cell;
+// offset_dc is off_dc of C2b (0.9.0: a new argument). Fatal unless 0 <= y < height <= INT32_MAX
+// and -50 <= offset_dc <= 50.
 std::int16_t climate_temperature_cell(std::int64_t y, std::int64_t height, std::int64_t s_dm, Fx noise,
-                                      const ClimateTuning& tuning);
+                                      std::int64_t offset_dc, const ClimateTuning& tuning);
 std::vector<std::int16_t> climate_temperature(std::uint64_t seed, Grid grid, std::span<const std::int64_t> surface,
-                                              const ClimateTuning& tuning, std::uint32_t threads = 1);
+                                              std::int64_t offset_dc, const ClimateTuning& tuning,
+                                              std::uint32_t threads = 1);
 // One box pass of half-width r_cells on integer S: hs1 of C4 with h = r_cells.
 // Entry guard (below) with r = r_cells.
 std::vector<Fx> climate_box_mean(Grid grid, std::span<const std::int64_t> surface, std::int64_t r_cells,
@@ -447,13 +504,14 @@ std::uint16_t climate_rainfall_cell(Fx p, std::int64_t coast_dist, Fx rn, const 
 std::vector<std::uint16_t> climate_rainfall(std::uint64_t seed, Grid grid, std::span<const Fx> p,
                                             std::span<const std::int16_t> coast_dist,
                                             const ClimateTuning& tuning, std::uint32_t threads = 1);
-// C1 to C6.
+// C1 to C6 (C2b inside: climate_layers calls climate_temp_offset_dc with the seed).
 struct ClimateLayers { std::vector<std::int16_t> temperature; std::vector<std::uint16_t> rainfall; };
 ClimateLayers climate_layers(Grid grid, std::span<const std::int16_t> elevation,
                              std::span<const std::uint8_t> water, std::span<const std::uint16_t> water_depth,
                              std::span<const std::int16_t> coast_dist, const ClimateTuning& tuning,
                              std::uint64_t seed, std::uint32_t threads = 1);
-// The stage: reads worldgen.climate and the four layers (precondition 1), runs climate_layers, writes C7.
+// The stage: reads worldgen.climate and the four layers (precondition 1), runs climate_layers, writes C7
+// (the climate row with wind_toward = climate_wind(seed, weights) and temp_offset_dc = climate_temp_offset_dc(seed, tuning)).
 void run_climate(StageContext& context);
 ```
 
@@ -470,21 +528,22 @@ The code holds compile-time assertions that the stage can never trip the guard: 
 
 ### 10.1 Unit tests
 
-0. **Table `climate`** (schema 3): a world generated with the shipped data has exactly one row (`id` 1, `wind_toward` = `climate_wind(seed, weights)`, e.g. 1 for seed 0, 6 for seed 42); `--until hydrology` leaves the table empty; `report` prints `wind_toward = SE` for seed 0 first in the climate group, omits it for an empty table, and exits 3 naming table `climate` for a hand-made world with two rows or with `wind_toward` 8.
+0. **Table `climate`** (schema 4): a world generated with the shipped data has exactly one row (`id` 1, `wind_toward` = `climate_wind(seed, weights)`, `temp_offset_dc` = `climate_temp_offset_dc(seed, tuning)`: (1, 1, 20) for seed 0, (1, 6, 9) for seed 42); `--until hydrology` leaves the table empty; `report` prints `wind_toward = SE` then `temp_offset_c = 2.0` for seed 0 first in the climate group, omits both for an empty table, and exits 3 with each reason of section 9 for hand-made worlds: two rows; a `climate` table created with two columns (the schema 3 DDL, in a file otherwise of schema 4); `id` 2; `wind_toward` 8; `temp_offset_dc` 51 and −51 (50 and −50 are accepted). A world of schema 3 (any 0.8.0 world, `user_version` 3) is refused by `report`, `hash` and `render` with the reader's unsupported-schema error, "world schema version 3, this build reads 4". The empty world is 8 pages and its `sqlite_schema` row for `climate` is the schema-4 DDL of section 3 byte for byte.
+0b. **C2b**: the offsets of 5.1 for seeds 0 to 11, 42 and the phrase; `temp_offset_max_c` 0 gives 0 for every seed; 5 gives values in −50..50 and, over seeds 0 to 9999, both −50 and 50 occur; "0.04" gives 0, "0.05" gives values in −1..1. The C3 offset table of 5.1 exactly through `climate_temperature_cell`; `climate_temperature_cell` with offset_dc 51 is fatal.
 
 1. Every worked example of 5.1 exactly (raw values where given).
 2. The C3 noise term: for seed 0, N = 64 and the shipped tuning, at 16 cells chosen by the test, `temperature` equals the test's own evaluation of C3 with `fbm2`.
 3. Box and triangle at radii as large as the grid or larger: `climate_box_mean` with r_cells ≥ max(W, H) − 1, and `climate_triangle_mean` with r_cells div 2 ≥ max(W, H) − 1, give every cell `from_ratio(ΣS, W·H)`. `climate_triangle_mean` with r_cells 0 or 1 gives `from_int(S)`; with odd r_cells it equals the result for r_cells − 1.
 4. **Symmetry** (invariant 7). On the 200 random fixtures of 10.2 and on a non-square 7 × 5 grid of random S with a one-cell ocean border, for every code k = 0 to 7 and each of the three generators σ (mirror in x, mirror in y, transpose), the test transforms `water` and hs by σ, sweeps with the code of σ(dx, dy), transforms the result back and compares q and p with the sweep of the original exactly. All 24 pairs must hold, including the transpose for the diagonal codes (which the former vertical taps failed). Also `climate_triangle_mean` commutes with the three σ.
 5. Wind: weights with a single non-zero entry always give that code; a weights array summing to 0 is a load error (named check); 7 or 9 entries are a type error.
-6. Tuning validation: each bound of section 4 rejects a value one step outside it; a float literal is a P0-03 error.
+6. Tuning validation: each bound of section 4 rejects a value one step outside it (`temp_offset_max_c` one raw step below 0 and one above 5 among them); a float literal is a P0-03 error.
 7. Preconditions: each violation of section 2 (a missing input layer, a layer of the wrong size or type, a `water` value of 4, S ≠ 0 on an ocean cell, S < 1 on another cell, S > 32767) is fatal with the prefix `climate: input precondition: `; from `worldgen-cli generate` it exits 1 and leaves no world file and no `.partial`.
 8. Report: on a world with `temperature` and `rainfall` but without the hydrology layers, the four climate keys are printed; on a grid with no land each prints a single `n/a`.
 9. Seam guards (fatal, prefix `climate: input precondition: `, all with S = 32767 on every cell; each case through both `climate_box_mean` and `climate_triangle_mean`): a 260 × 255 grid with r_cells 258 (triangle h = 129, window 259 × 255 = 66045; box window 260 × 255 = 66300); a 4096 × 17 grid with r_cells 8192 (the whole grid, 69632 cells); a 65539 × 1 grid with r_cells 0 (the row alone, W > MAX). These are the audit's three reproductions, which overflowed before the guard. Just inside the limits (the stage's extremes: 2048 × 2048 with r_cells 250, and a window of exactly 63001 cells) the seams return exact results. `climate_temperature_cell` with height 2^31 is fatal; with height INT32_MAX and y = height − 1 it returns a value.
 
 ### 10.2 Property tests
 
-Over seeds 0 to 63 at N = 128 (fixture tuning; elevation and hydrology layers from the P1-01 and P1-02 stages) and 200 random fixtures: invariants 1 to 5 and 7 by code independent of the stage.
+Over seeds 0 to 63 at N = 128 (fixture tuning; elevation and hydrology layers from the P1-01 and P1-02 stages) and 200 random fixtures: invariants 1 to 5, 7 and 8 by code independent of the stage (invariant 8: the stage's `temperature` against the test's own C3 with offset 0, on seeds 0 to 63 with `temp_noise_amp_c` 0).
 
 Random fixture f (f = 0 to 199) is a 34 × 34 grid: `Rng(substream(stream_key(0, "test.climate"), f))` draws the wind code with `uniform_u64(8)` first, then `uniform_i64(1, 3000)` for each interior cell (x and y in 1..32) in index order, which is that cell's `elevation` and S (`water` 0, `water_depth` 0); the one-cell border is ocean with `elevation` −10, `water` 3 and `water_depth` 10; `coast_dist` is P1-02 H7 on that ocean mask. The climate tuning is the shipped tuning with `wind_weights` one-hot at the drawn code, and the world seed is f. `test.climate` is a test-only stream.
 
@@ -494,7 +553,7 @@ Threads 1, 2 and 5 give identical layers (seeds 0 and 42 at N = 128 and 512), an
 
 ### 10.4 Golden values
 
-Layer hashes of `temperature` and `rainfall` with fixture tuning for seeds 0, 42 and "The Unmapped" at N = 512, seed 1 at 1024, seed 0 at 128. They live in `worldgen/tests/golden/p1-03-climate.txt` (written by the test writer's independent reference: cases `shipped-512-s0`, `shipped-512-s42`, `shipped-512-phrase`, `shipped-1024-s1` checked by `climate-slow`, the N = 128 case by the default suite); the validation specialist confirms that the implementation's `hash --detail` values equal them (they did for 0.7.0: `docs/reviews/p1-03-climate-validation.md` 5) rather than recording a second copy. The CI world cases' file hashes are in `p1-worlds.txt`. The `climate` table's logical hash is covered by the file hashes; the schema-3 change does not alter the layer vectors. Their inputs come from the hydrology golden cases, so an upstream change re-records them together. Any golden file written against the first version of this spec (the test writer's `p1-03-climate.txt` on `p1/03-climate-tests`) is regenerated from the revised reference.
+Layer hashes of `temperature` and `rainfall` with fixture tuning for seeds 0, 42 and "The Unmapped" at N = 512, seed 1 at 1024, seed 0 at 128, and (0.9.0) the item `temp_offset_dc` of every case. **0.9.0 changes every case** (the offset changes `temperature` unless off_dc = 0, the coast bonus changes `rainfall` near every coast), so `p1-03-climate.txt` is regenerated from the revised reference; reference values from the exploration build for the four large cases are in P1-04 10.4 (for example 512 seed 0: `temperature` 9aed63db…, `rainfall` eab4acae…, `temp_offset_dc` 20). They live in `worldgen/tests/golden/p1-03-climate.txt` (written by the test writer's independent reference: cases `shipped-512-s0`, `shipped-512-s42`, `shipped-512-phrase`, `shipped-1024-s1` checked by `climate-slow`, the N = 128 case by the default suite); the validation specialist confirms that the implementation's `hash --detail` values equal them (they did for 0.7.0: `docs/reviews/p1-03-climate-validation.md` 5) rather than recording a second copy. The CI world cases' file hashes are in `p1-worlds.txt`. The `climate` table's logical hash is covered by the file hashes; the schema-3 change does not alter the layer vectors. Their inputs come from the hydrology golden cases, so an upstream change re-records them together. Any golden file written against the first version of this spec (the test writer's `p1-03-climate.txt` on `p1/03-climate-tests`) is regenerated from the revised reference.
 
 ## 11. Known limitations and calibration
 
@@ -505,9 +564,11 @@ Layer hashes of `temperature` and `rainfall` with fixture tuning for seeds 0, 42
 5. **Rivers do not follow the rain.** `flow_accum` counts cells (P1-02 open question 2); this spec adds no rainfall-weighted discharge (open question 3).
 6. **Passes do not let moisture through visibly.** A natural pass or gap (P1-01) is narrower than the 640 m support of C4, so the smoothed surface the air sees has no notch there and the lee of a pass is as dry as the lee of the range beside it.
 7. **Rainfall depends on map size.** The moisture path is in metres (section 1), so a wider continent has a drier interior: with the shipped tuning (variant E1) land median 829 / 761 / 670 mm at 512 / 1024 / 2048, land (not lake) under 700 mm 16.7% / 33.9% / 57.7% pooled over the worlds of a size (variant D, with the former coast bonus: 880 / 786 / 676 mm). P1-04's fixed 700 mm forest threshold (and its 500 mm marsh minimum) would therefore give much more open land at 2048 than at 512 (the critic's biome trial: grassland median 6% / 19% / 37%); P1-04 re-derives its rainfall thresholds per map size once climate merges (P1-04 11, item 6; open question 6).
-8. **Temperature is mostly height and the same in every world** (world critic S4). Elevation explains 88–93% of land temperature variance in every 1024 world; the uplands sit at mid-map (the north third holds 0–13% upland), so the north–south span changes little in practice, and at 1 °C the noise adds a residual of only 0.13–0.23 °C. Every world has the same treeline, about 1,000 m. A per-world offset is open question 7; raising `temp_noise_amp_c` to about 2 or dropping it are data changes.
+8. **Temperature is mostly height.** Elevation explains 88–93% of land temperature variance in every 1024 world (world critic S4); the uplands sit at mid-map, so the north–south span changes little in practice, and at 1 °C the noise adds a residual of only 0.13–0.23 °C. **Since 0.9.0 the level differs between worlds** (C2b, ±2 °C: the treeline moves by about ±300 m, alpine by −3.4 / −3.0 / −1.8 points of land per +1 °C at 512 / 1024 / 2048), but within a world the treeline and the moor line are still contour bands (P1-04 limitation 4).
 9. **Some worlds have almost no lee.** Where the main range lies on the downwind coast the climate is "coast wet, interior slightly dry": the lee lowland share is ≤ 5% of land in 5 of the critic's 42 worlds (512 seeds 1, 4 and 12; 1024 seed 4; 2048 seed 4) against up to 24% elsewhere. Realistic, but those are the dullest climates; the wind is drawn independently of the terrain (open question 1).
-10. **Cosmetic: the cliff-coast jump and ocean rainfall.** On a windward cliff coast the ocean cell gets about base rain and the first land cell the full orographic rain (critic: about 920 against 3,900–4,300 mm at s2-1024), because the ocean rule ignores the rise of the smoothed surface; physically the rain would start a little offshore. And every ocean cell gets the full coast bonus (d = 0 on ocean), so the sea renders wetter than most land (about 875 mm with the shipped tuning). Nothing reads ocean rainfall; on land the front is right. If it matters for the images, mask the ocean in the `rainfall` render or fade the bonus over the sea with |`coast_dist`|.
+10. **Cosmetic: the cliff-coast jump and ocean rainfall.** On a windward cliff coast the ocean cell gets about base rain and the first land cell the full orographic rain (critic: about 920 against 3,900–4,300 mm at s2-1024), because the ocean rule ignores the rise of the smoothed surface; physically the rain would start a little offshore. And every ocean cell gets the full coast bonus (d = 0 on ocean), so the sea renders wetter than most land (about 840 mm with the shipped tuning since 0.9.0; 875 mm with the 0.8.0 bonus of 75 mm). Nothing reads ocean rainfall; on land the front is right. If it matters for the images, mask the ocean in the `rainfall` render or fade the bonus over the sea with |`coast_dist`|.
+11. **The lee-coast forest rim thins only modestly** with `coast_rain_mm` 40 (P1-04 limitation 7: forest share of open-or-forest land within 1 km of a lee coast 0.40 → 0.33 at 1024, 0.55 → 0.51 at 2048); at 2048 the wet rim is mostly the moisture path. Lowering the bonus further turns lee shores drier than inland (variant E3, 11.1).
+12. **The offset is uniform.** With ±2 °C half of the worlds lie more than 1 °C from the reference level (11 of the 58 calibration worlds at |off| ≥ 1.5 °C); a triangular draw (the mean of two uniform draws) would put one in eight beyond 1 °C. Paul chose uniform for visible variety (11.2).
 
 ### 11.1 Calibration on the first implementation (2026-11-17)
 
@@ -587,6 +648,10 @@ Decisions (the lead, 2026-11-17):
 - **Diagonal taps across the wind** (D against C32o25): adopted for the exact transpose symmetry (C5) and the cleaner reading "three taps across the wind", not for a visible fix once C4 is a triangle. Its effect on the statistics is small (p50 lower by 10–25 mm, p100 lower, lee lowland about the same).
 - **`coast_rain_mm` 75** (was 150; E1 against E0, after the critic's S3): it flattens the lee-coast profile (forest from the shore inland 40 / 41 / 41 / 47% at 1024 against 72 / 58 / 47 / 47%), so the wet rim on lee coasts largely goes, while windward coasts stay wet (99 / 99 / 94 / 83%); a thin rim remains on some 2048 lee coasts. Rainfall p50 falls by 0 to 7%, `rain_contrast` barely moves, temperature and p100 do not change. E2 does too little at the shipped moisture path (air reaching a lee coast is still 0.6–0.9 saturated) and would be a new mechanism; E3 overshoots into lee shores drier than inland, cuts 512 forest from 63% to 44% and turns the sea buff in the renders.
 
+### 11.2 The temperature offset and the coast (variety revision, 2026-11-17)
+
+On the exploration branch (`p1/04b-biome-variety-explore`; `~/.cache/the-unmapped/out/p1-04b-variety/variety-definition.md` 9, `temp-variants.txt`), 58 worlds (512 s0–19, 1024 s0–29, 2048 s0–7). Offsets of the 58 worlds with the shipped ±2 °C: −1.9 to +2.0 °C, mean +0.25, standard deviation 1.12. Per +1 °C, share of land: alpine −3.4 / −3.0 / −1.8 points (512 / 1024 / 2048), moor −1.5 / −1.0 / −1.0, heath −1.1 / −0.4 / 0. Extremes: 1024 s8 (−1.9 °C) alpine 16.2% of land and `land_below_0c` 0.145; 1024 s0 (+2.0 °C) alpine 0.9%, `land_below_0c` 0.002; 512 s0 (+2.0 °C) alpine 0.3%. No world is mostly alpine (maximum 16%) and no biome other than fen at 512 goes missing. Variants ±1.5 and ±2.5 °C and the triangular draw were shown to Paul (sheet `sheets/variant-temp-t15-rec-t25-c2.png` there); he chose uniform ±2 °C. `coast_rain_mm` 75 → 40 (Paul): lee-coast forest 1024 0.40 → 0.33 and 2048 0.55 → 0.51 (median forest share of open-or-forest land within 1 km of a lee coast), windward coasts unchanged (0.97 / 1.0); land rainfall p50 falls by 0 to 30 mm.
+
 ## 12. Open questions for the lead
 
 1. **Wind direction per world** (a matter of taste for Paul; provisionally accepted). Chosen: drawn uniformly from the 8 D8 directions, so the wet side differs between worlds. Alternatives: always a westerly (weights `[1, 0, 0, 0, 0, 0, 0, 0]`), or westerlies favoured (e.g. `[4, 2, 1, 1, 1, 1, 1, 2]`). Both are a data change only. Recommendation: keep uniform for variety; the north–south temperature gradient is fixed, so the wind is the main thing that makes two continents' climates differ.
@@ -595,6 +660,10 @@ Decisions (the lead, 2026-11-17):
 4. **Store the wind direction** (world critic S2). **Resolved (lead, 2026-11-17): a one-row table `climate` with `wind_toward`, in schema 3 with P1-04's `biome` table (section 3, C7, 9).** The original question: it is not in the world file, so `report` cannot print it, the viewer cannot draw it, every reviewer has to infer it, and the runtime will need it for weather direction, cloud drift and vegetation lean. Recommendation: store it with the next schema change, schema 3 (P1-04's `biome` table), and not later: either a one-row table `climate` with the column `wind_toward` (the C2 code) or a `meta` key `climate.wind_toward`. The table is preferred, since it is where any later per-world climate value (such as the offset of question 7) would also go; `report` then prints the code and the viewer an arrow. This is a schema change (hard rule 7: version bump, spec update, proposals entry) made in the P1-04 revision or a climate follow-up, not in this merge.
 5. **Lakes do not recharge the air.** Large lakes would moisten their lee shore. Recommendation: leave it; the lake share is capped at 3% of land (P1-01).
 6. **Size dependence of rainfall** (limitation 7). Chosen: keep the moisture path in metres, so a larger map is a larger land with a drier interior (P1-00 2.2), and let P1-04 adapt its thresholds. The alternative, a moisture path in map fractions, would make 512 and 2048 maps equally wet but give a 2048 map's ranges a weaker shadow per kilometre. Recommendation: keep metres; P1-04 uses per-size thresholds, one size-keyed scale on its rule thresholds in mm (the critic's recommendation, recorded in P1-04 11.6), not per-world quantiles, which would remove the variety between worlds. Revisit the moisture path only if P1-05's absolute scores make every 2048 world look poor.
-7. **A per-world temperature offset** (taste, for Paul; world critic S4). Temperature is the same function of height and row in every world (limitation 8), so every world has its treeline near 1,000 m. A per-world sea-level offset (for example a uniform draw in [−2, +2] °C from a new stream `geo.climate.offset`, added to t_sea) would make some worlds moor-heavy and some mild, more variety than any change to the wind distribution. It is a design question for Paul (proposals "Second-pass geography"); if adopted it is a new tuning field, a new stream and, if stored, a column of the table of question 4. No change now.
+7. **A per-world temperature offset** (taste, for Paul; world critic S4). **Resolved (Paul, 2026-11-17; proposals "More natural biomes, per-world temperature, a thinner coastal forest"): uniform ±2 °C in whole tenths, stream `geo.climate.temp_offset`, stored in `climate.temp_offset_dc` (schema 4), C2b.** The stream name is `geo.climate.temp_offset` (the question had suggested `geo.climate.offset`).
+8. **One draw, not a configurable mean of draws** (new, 0.9.0): the exploration's `temp_offset_draws` int(1, 4) (1 = uniform, 2 = triangular) is not specified, since Paul chose uniform; a triangular offset later would be a new field and a bump. Recommendation: approve.
+9. **Range check of `temp_offset_dc` in `report`** (new, 0.9.0; section 9): −50..50, the bound that `temp_offset_max_c` ≤ 5 gives. Not in the exploration code. Recommendation: approve (it is the same kind of check as `wind_toward` 0..7).
 
 **Schema and catalogue impact:** table `climate` (one row, `wind_toward`), schema version 3, made by the biomes merge together with table `biome` (P1-04 3 and 12 list the whole change); no catalogue change. The `worldgen` kind gains the id `climate` (P1-00 6.1), which changes `content_hash` of every world (the 0.7.0 bump of the climate merge, P1-00 6.4). Three stream names are registered.
+
+**0.9.0 impact:** schema version 3 → 4: table `climate` gains `temp_offset_dc INTEGER NOT NULL` (section 3; P0-02 amendment 16; `docs/specs/schema.md`); `worldgen.climate` gains `temp_offset_max_c` (18 fields) and ships `coast_rain_mm` 40; one new stream name, `geo.climate.temp_offset`; `report` gains `temp_offset_c`. `wind_toward` and every input layer are unchanged; `temperature` changes by the offset, `rainfall` near coasts.
