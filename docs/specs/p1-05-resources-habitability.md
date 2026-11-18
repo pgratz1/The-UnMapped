@@ -1,6 +1,6 @@
 # P1-05 Resources and habitability
 
-Status: **second version, draft, spec writer, 2026-11-18, awaiting approval.** Generator **0.10.0**; **no schema change** (schema version stays 4). It replaces the first draft of 2026-11-16 (never implemented), which was written before the biome stage existed in its present form; section 0 lists every change. Calibrated on the 0.9.0 validation worlds (512 seeds 0–49, 1024 seeds 0–49, 2048 seeds 0–9, layers of `~/.cache/the-unmapped/out/p1-04b-validation/`) with an exact-integer prototype of this spec (section 11). Phase P1 Geography, stage 5 (`resources`). Design doc section 4 (stage 5: "per-cell scores for fertility, ore, timber and fresh water. The history simulation uses these to place peoples"), 5 (awakenings "chosen to suit that race's preferred land"; dwarves "build in places the others avoid"; faeries in "wild places"; settlements "grow or shrink from local resources"; beasts "feed it through hunting"; civilizations "build a road"; sites include mines). Depends on P0-01 to P0-04, P1-00 (G1, G2, G6, G7, G8, D1 to D10), P1-02 (H7), P1-03 and P1-04 (the `biome` layer and the biome definitions). Proposals "High peaks may be inaccessible; history opens the passes", "More natural biomes, per-world temperature, a thinner coastal forest"; world critic `docs/reviews/p1-04b-biome-variety-critic.md` section 5.
+Status: **second version, approved by the lead 2026-11-18; revision r2, draft, spec writer, 2026-11-18** (after the world critic's review of the implementation, `~/.cache/the-unmapped/out/p1-05-critic/critic-review.md`, and the lead's rulings: new defaults for the habitability weights, `alluvial_bonus`, `hab_flood_factor` and `hab_flood_hand_m`, and for `ore_slope_base` and `ore_elev_hi_m`; wording of sections 2, 7, 9 and 10 aligned with the implementation, branch `p1/05-resources` at `d399761`; section 13 lists the revision). Generator **0.10.0**; **no schema change** (schema version stays 4). It replaces the first draft of 2026-11-16 (never implemented), which was written before the biome stage existed in its present form; section 0 lists every change. Calibrated on the 0.9.0 validation worlds (512 seeds 0–49, 1024 seeds 0–49, 2048 seeds 0–9, layers of `~/.cache/the-unmapped/out/p1-04b-validation/`) with an exact-integer prototype of this spec (section 11). Phase P1 Geography, stage 5 (`resources`). Design doc section 4 (stage 5: "per-cell scores for fertility, ore, timber and fresh water. The history simulation uses these to place peoples"), 5 (awakenings "chosen to suit that race's preferred land"; dwarves "build in places the others avoid"; faeries in "wild places"; settlements "grow or shrink from local resources"; beasts "feed it through hunting"; civilizations "build a road"; sites include mines). Depends on P0-01 to P0-04, P1-00 (G1, G2, G6, G7, G8, D1 to D10), P1-02 (H7), P1-03 and P1-04 (the `biome` layer and the biome definitions). Proposals "High peaks may be inaccessible; history opens the passes", "More natural biomes, per-world temperature, a thinner coastal forest"; world critic `docs/reviews/p1-04b-biome-variety-critic.md` section 5.
 
 ## 0. Changes from the first draft
 
@@ -52,7 +52,13 @@ Three facts shape the scores:
 
 Stream: **K_ore = `stream_key(seed, "geo.resources.ore")`**, a noise key (D1), used only by `fbm_m` in R4. No `Rng`, no other randomness.
 
-Preconditions, each fatal with the prefix `resources: input precondition: ` (checked in this order): every input layer present (`missing layer '<name>'`); the P1-00 grid checks; every array of length W × H (`<name> length is not width * height`); `water` in 0..3 (`water value <v> at (<x>, <y>)`, lowest index); `river` in 0..15 (same form); every `biome` value is the `code` of a loaded definition (`biome value <v> at (<x>, <y>) has no definition`, lowest index); then G7 with k = 1 (`resources: input precondition: G7: …`). The layer types are those of the catalogue (P1-00 4); a world read from disk with another type is refused by the reader.
+Checks, each fatal, in this order (the same order as section 10's `resources_layers`, preceded by the stage-entry checks):
+
+1. **At the stage entry** (`run_resources`, reading the stored layers): every input layer present (`resources: input precondition: missing layer '<name>'`, inputs in the order of the table above); each stored layer of its catalogue type (`resources: input precondition: layer '<name>' does not have its catalogue type`); each of the size of `elevation` (`resources: input precondition: <name> length is not width * height`).
+2. The thread count in [1, 256] (`resources: thread count outside [1, 256]`).
+3. The tuning: each field inside its schema range of 4.2 (`resources: tuning: <field> outside its schema range`, fields in declaration order), then the named checks of 4.2 in registration order (`resources: tuning: <message>`). With data loaded by P0-03 these cannot fail; they guard the seams.
+4. Each biome definition's `fertility`, `timber` and `forage` in [0, 1] (`resources: biome '<key>' has a value outside [0, 1]`, definitions in ascending `code`).
+5. With the prefix `resources: input precondition: `: the P1-00 grid checks; every input array of length W × H (`<name> length is not width * height`, in the order of the table above); `water` in 0..3 (`water value <v> at (<x>, <y>)`, lowest index); `river` in 0..15 (same form); every `biome` value is the `code` of a loaded definition (`biome value <v> at (<x>, <y>) has no definition`, lowest index); then G7 with k = 1 (`resources: input precondition: G7: …`).
 
 ## 3. Outputs
 
@@ -113,7 +119,7 @@ New id `resources` of the fixed-id kind `worldgen` (P1-00 6.1), file **`game/dat
 | `fresh_rain_hi_mm` | int(0, 10000) | 1500 | taste | rain contribution full at or above |
 | `fert_slope_lo` | fx(0, 10) | "0.18" | taste | fertility full at or below this slope |
 | `fert_slope_hi` | fx(0, 10) | "0.47" | taste | fertility 0 at or above |
-| `alluvial_bonus` | fx(0, 4) | "0.3" | fitted | extra fertility factor on the floodplain (grassland by a river is capped at 255; flat forest by a river is 232) |
+| `alluvial_bonus` | fx(0, 4) | "0.15" | fitted (r2; was "0.3") | extra fertility factor on the floodplain (grassland by a river is capped at 255; flat forest by a river is 205) |
 | `alluvial_hand_m` | fx("0.1", 100) | 5 | taste | height above drainage at which the bonus is gone |
 | `timber_slope_lo` | fx(0, 10) | "0.7" | taste | timber full at or below |
 | `timber_slope_hi` | fx(0, 10) | "1.4" | taste | timber 0 at or above |
@@ -124,22 +130,22 @@ New id `resources` of the fixed-id kind `worldgen` (P1-00 6.1), file **`game/dat
 | `ore_vein_lo` | fx(−1, 1) | 0 | fitted | noise at or below: no ore |
 | `ore_vein_hi` | fx(−1, 1) | "0.2" | fitted | noise at or above: a full deposit |
 | `ore_elev_lo_m` | int(0, 3000) | 100 | fitted | exposure ramp with height, start |
-| `ore_elev_hi_m` | int(0, 3000) | 800 | fitted | exposure ramp, full |
+| `ore_elev_hi_m` | int(0, 3000) | 600 | fitted (r2; was 800) | exposure ramp, full |
 | `ore_lowland` | fx(0, 1) | "0.15" | fitted | least exposure factor (lowland deposits) |
-| `ore_slope_base` | fx(0, 1) | "0.5" | taste | exposure factor on flat ground |
+| `ore_slope_base` | fx(0, 1) | "0.65" | fitted (r2; was "0.5") | exposure factor on flat ground |
 | `ore_slope_lo` | fx(0, 10) | "0.3" | taste | slope ramp from base … |
 | `ore_slope_hi` | fx(0, 10) | "1.0" | taste | … to full exposure |
 | `walk_slope_max` | fx("0.01", 10) | "0.7002" | designed (35°, the report's `slope_over` threshold) | steeper cells are not walkable |
 | `walk_min_area_m2` | int(16384, 1000000000) | 250000 | taste | smallest walk area kept (977 cells; about a village and its fields) |
 | `hab_slope_lo` | fx(0, 10) | "0.18" | taste | habitability full at or below |
 | `hab_slope_hi` | fx(0, 10) | "0.47" | taste | habitability 0 at or above |
-| `hab_weight_fertility` | int(0, 1000) | 55 | taste | weight of `fertility` |
-| `hab_weight_forage` | int(0, 1000) | 20 | taste | weight of `forage` |
-| `hab_weight_timber` | int(0, 1000) | 15 | taste | weight of `timber` |
-| `hab_weight_ore` | int(0, 1000) | 10 | taste | weight of `ore` |
+| `hab_weight_fertility` | int(0, 1000) | 70 | taste (r2; was 55) | weight of `fertility` |
+| `hab_weight_forage` | int(0, 1000) | 15 | taste (r2; was 20) | weight of `forage` |
+| `hab_weight_timber` | int(0, 1000) | 10 | taste (r2; was 15) | weight of `timber` |
+| `hab_weight_ore` | int(0, 1000) | 5 | taste (r2; was 10) | weight of `ore` |
 | `hab_water_min` | fx(0, 1) | "0.25" | taste | water factor where `fresh_water` is 0 |
-| `hab_flood_hand_m` | fx(0, 100) | 1 | taste | below this height above drainage a site floods |
-| `hab_flood_factor` | fx(0, 1) | "0.5" | taste | habitability factor on flood-prone cells |
+| `hab_flood_hand_m` | fx(0, 100) | "0.5" | fitted (r2; was 1) | below this height above drainage a site floods |
+| `hab_flood_factor` | fx(0, 1) | "0.75" | fitted (r2; was "0.5") | habitability factor on flood-prone cells |
 | `hab_pocket_factor` | fx(0, 1) | "0.25" | taste | habitability factor on cells in no walk area |
 
 **Named checks** (per-definition, P0-03 7.5; each reported at the definition's header as `<path>:<line>:<column>: error: check '<name>' failed for 'worldgen.resources': <message>`), in this registration order:
@@ -164,7 +170,7 @@ fresh_rain_lo_mm = 300
 fresh_rain_hi_mm = 1500
 fert_slope_lo = "0.18"
 fert_slope_hi = "0.47"
-alluvial_bonus = "0.3"
+alluvial_bonus = "0.15"
 alluvial_hand_m = 5
 timber_slope_lo = "0.7"
 timber_slope_hi = "1.4"
@@ -175,22 +181,22 @@ ore_noise = { wavelength_m = 1500, octaves = 3, gain = "0.5" }
 ore_vein_lo = 0
 ore_vein_hi = "0.2"
 ore_elev_lo_m = 100
-ore_elev_hi_m = 800
+ore_elev_hi_m = 600
 ore_lowland = "0.15"
-ore_slope_base = "0.5"
+ore_slope_base = "0.65"
 ore_slope_lo = "0.3"
 ore_slope_hi = "1.0"
 walk_slope_max = "0.7002"
 walk_min_area_m2 = 250000
 hab_slope_lo = "0.18"
 hab_slope_hi = "0.47"
-hab_weight_fertility = 55
-hab_weight_forage = 20
-hab_weight_timber = 15
-hab_weight_ore = 10
+hab_weight_fertility = 70
+hab_weight_forage = 15
+hab_weight_timber = 10
+hab_weight_ore = 5
 hab_water_min = "0.25"
-hab_flood_hand_m = 1
-hab_flood_factor = "0.5"
+hab_flood_hand_m = "0.5"
+hab_flood_factor = "0.75"
 hab_pocket_factor = "0.25"
 ```
 
@@ -301,28 +307,31 @@ Computed by the spec writer's exact-integer reference (`core_reference` operatio
 
 **R3 fresh_water** (df m, rainfall mm → value; fs, fr raw): (0, 800) → 255; (16, 800) → 245 (fs 4123168604); (38, 800) → 231; (64, 800) → 214; (200, 800) → 128 (fs HALF); (400, 800) → 43 (rain only: fr = 0.4 × 500/1200 = raw 715827883, 42.50000002 rounds up); (399, 200) → 1 (fs = from_ratio(1, 400) = raw 10737418, 0.6375 rounds up; fr 0); (1000, 1500) → 102; (1000, 900) → 51; (1000, 2500) → 102; (1000, 300) → 0.
 
-**R4 fertility** (fb, S2, hand dm → value; sf, al raw): (1, 9216, 20) → 176 (sf 2517739448 = 0.586207, al 5068061410 = 1.18); (1, 0, 0) → 255 (al 5583457485 = 1.3, capped); (0.7, 0, 0) → 232 (0.91); (0.7, 0, 60) → 178 (al ONE); (0.7, 22118, 100) → 3 (sf 77697452); (0.45, 0, 5) → 146 (al 1.27); (1, 30000, 0) → 0 (tan 0.541 > 0.47); (0.3, 3318, 49) → 77 (sf 4294870875, al 4320737100).
+**R4 fertility** (fb, S2, hand dm → value; sf, al raw): (1, 9216, 20) → 163 (sf 2517739448 = 0.586207, al 4681514352 = 1.09); (1, 0, 0) → 255 (al 4939212390 = 1.15, capped); (0.7, 0, 0) → 205 (0.805); (0.7, 0, 60) → 178 (al ONE); (0.7, 22118, 100) → 3 (sf 77697452); (0.45, 0, 5) → 130 (al 4874787881 = 1.135); (0.45, 0, 4) → 131 (al 4887672782); (1, 30000, 0) → 0 (tan 0.541 > 0.47); (0.3, 3318, 49) → 77 (sf 4294870875, al 4307852198).
 
 **R4 timber** (tb, S2 → value): (1, 9216) → 255; (1, 50205) → 255 (st raw 4293726303); (1, 102400) → 146 (st raw 2454267026 = 0.571429); (0.15, 0) → 38; (0.7, 250000) → 0 (tan 1.5625 > 1.4).
 
 **R4 forage** (gb, dg m → value; fish raw): (0.8, 0) → 255 (0.8 + 0.3, capped); (0.5, 0) → 204 (fish 1288490189 = 0.3); (0.3, 16) → 149 (fish 1219770712); (0.3, 150) → 115 (fish 644245095); (0.05, 299) → 13 (fish 4294967 = 0.001); (0.3, 300) → 77 (fish 0); (0.2, 5000) → 51.
 
-**R4 ore** (elevation dm, S2, noise n → value; eu, su, vn raw): (8000, 102400, 0.2) → 255 (eu ONE, su ONE, vn ONE); (8000, 102400, 0.1) → 128 (vn raw 2147483651); (500, 0, 0.3) → 19 (eu = `ore_lowland` raw 644245094, su HALF, vn ONE); (15000, 20000, 0.05) → 38 (su raw 2582937308, vn raw 1073741825); (4500, 9216, 0.15) → 48 (eu HALF, su HALF, vn raw 3221225471); (8000, 102400, −0.04) → 0. Noise values are given as decimals; a test feeds their `parse_decimal` raws (0.1 = raw 429496730, −0.04 = raw −171798692).
+**R4 ore** (elevation dm, S2, noise n → value; eu, su, vn raw): (8000, 102400, 0.2) → 255 (eu ONE, su ONE, vn ONE); (8000, 102400, 0.1) → 128 (vn raw 2147483651); (500, 0, 0.3) → 25 (eu = `ore_lowland` raw 644245094, su = `ore_slope_base` raw 2791728742, vn ONE); (15000, 20000, 0.05) → 46 (su raw 3096546304, vn raw 1073741825); (4500, 9216, 0.15) → 87 (eu raw 3006477107 = 0.7, su raw 2791728742, vn raw 3221225471); (8000, 102400, −0.04) → 0. Noise values are given as decimals; a test feeds their `parse_decimal` raws (0.1 = raw 429496730, −0.04 = raw −171798692).
 
 **R6 habitability** (F, W, G, T, O; S2; hand dm; walk_area → value):
 
 | F, W, G, T, O | S2 | hand | walk_area | sc | b (raw) | wat (raw) | slope factor (raw) | flood | pocket | habitability |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| 232, 255, 204, 255, 3 | 0 | 20 | 1 | 20695 | 3485660713 | ONE | ONE | no | no | 207 |
-| 232, 255, 204, 255, 3 | 0 | 0 | 1 | 20695 | 3485660713 | ONE | ONE | × 0.5 | no | 103 |
-| 255, 255, 153, 38, 0 | 0 | 5 | 1 | 17655 | 2973633240 | ONE | ONE | × 0.5 | no | 88 |
-| 255, 255, 153, 38, 0 | 0 | 5 | 0 | 17655 | 2973633240 | ONE | ONE | × 0.5 | × 0.25 | 22 |
-| 179, 102, 128, 255, 0 | 3318 | 300 | 1 | 16230 | 2733620361 | 2362232013 | 4294870875 | no | no | 89 |
-| 255, 40, 90, 38, 0 | 0 | 300 | 1 | 16395 | 2761411326 | 1579032094 | ONE | no | no | 60 |
-| 170, 13, 89, 13, 0 | 0 | 300 | 2 | 11325 | 1907470770 | 1237961162 | ONE | no | no | 33 |
+| 205, 255, 204, 255, 3 | 0 | 20 | 1 | 19975 | 3364391049 | ONE | ONE | no | no | 200 |
+| 205, 255, 204, 255, 3 | 0 | 0 | 1 | 19975 | 3364391049 | ONE | ONE | × 0.75 | no | 150 |
+| 255, 255, 153, 38, 0 | 0 | 5 | 1 | 20525 | 3457027598 | ONE | ONE | no (5 is not below 5) | no | 205 |
+| 255, 255, 153, 38, 0 | 0 | 4 | 1 | 20525 | 3457027598 | ONE | ONE | × 0.75 | no | 154 |
+| 255, 255, 153, 38, 0 | 0 | 4 | 0 | 20525 | 3457027598 | ONE | ONE | × 0.75 | × 0.25 | 38 |
+| 179, 255, 204, 255, 0 | 0 | 300 | 1 | 18140 | 3055321833 | ONE | ONE | no | no | 181 |
+| 179, 102, 128, 255, 0 | 3318 | 300 | 1 | 17000 | 2863311531 | 2362232013 | 4294870875 | no | no | 93 |
+| 255, 40, 90, 38, 0 | 0 | 300 | 1 | 19580 | 3297861163 | 1579032094 | ONE | no | no | 72 |
+| 179, 255, 89, 13, 0 | 0 | 300 | 1 | 13995 | 2357179110 | ONE | ONE | no | no | 140 |
+| 179, 13, 89, 13, 0 | 0 | 300 | 2 | 13995 | 2357179110 | 1237961162 | ONE | no | no | 40 |
 | 200, 200, 200, 200, 200 | 30000 | 300 | 1 | 20000 | 3368601801 | 3600193175 | 0 | no | no | 0 |
 
-(Rows: forest by a river, above and at the water; grassland on a floodplain, in and out of a walk area; forest on a 10° slope 400 m from water; dry grassland far from water; dry steppe; steep ground.)
+(Rows: forest on a river's floodplain, above and at the water; grassland by a river at hand 5 and 4 dm (the flood test is `from_int(hand) < mul_int(0.5, 10)`, i.e. hand < 5 dm), in and out of a walk area; forest above the floodplain by a fish river; forest on a 10° slope 400 m from water; dry grassland far from water; steppe by a river and far from it; steep ground. With the r2 weights the order of flat sites by a river follows fertility: grassland 205 > forest on the floodplain 200 > forest above it 181 > steppe 140.)
 
 **R5.** (a) A 5 × 5 test grid, all land (`water` 0, `water_depth` 0), elevation 20 everywhere except 300 at the centre (2, 2). S2 is 78400 at the centre's four orthogonal neighbours (not walkable) and 0 elsewhere, including the centre. The centre is walkable but its diagonal links fail (|300 − 20| = 280 dm > 158), so it is a component of 1 cell. With walk_min_cells 2: `walk_area` is 1 on the 20 outer and diagonal cells and 0 on the centre and its four neighbours.
 (b) A 9 × 5 grid, rows y = 0 to 4: `20 21 22 23 400 401 402 403 404`, `20 21 22 23 400 401 402 403 404`, `21 22 23 24 401 402 403 404 405`, `21 22 23 24 401 402 403 404 405`, `22 23 24 25 402 403 404 405 406`. Columns 3 and 4 have S2 ≥ 142884 (the 37.7 m step); with walk_min_cells 2, `walk_area` is 1 on columns 0 to 2, 0 on columns 3 and 4, and 2 on columns 5 to 8: two lowlands that history must join by a pass.
@@ -350,7 +359,7 @@ The examples use walk_min_cells 1 or 2, below what `walk_min_area_m2`'s bounds a
 
 No floating point, no new math function, one noise key, no `Rng`.
 
-Overflow (N ≤ 2048, values inside the ranges of 4): chamfer values < 2^14 at 2048 (INF = 2^40; 32 × INF + 5 < 2^46); ramps divide by b − a > 0 (named checks), every numerator below the denominator; `from_int(rainfall)` ≤ 65535 × 2^32 < 2^49; `from_int(dg)` ≤ 32767 × 2^32; every product of factors ≤ ONE except al ≤ 5 (fertility; mul(mul(fb, sf), al) ≤ 5 × ONE) and gb + fish ≤ 2 × ONE; `from_ratio(hand, 10)` with hand ≤ 30000; em ≤ 3276.7 m; sc ≤ 4 × 1000 × 255 < 2^20, so `from_ratio(sc, 255 Σw)` ≤ ONE; walkability and links in `U128` as G8 (S2 < 2^33, so S2 × 2^64 < 2^97; |ΔS| ≤ 65535 + 32767, (ΔS)² × 2^64 < 2^98; (160 × raw)² × 2 < 2^96 for raw ≤ 10 × 2^32); `mul_int(hab_flood_hand_m, 10)` ≤ 1000 × 2^32.
+Overflow (N ≤ 2048, values inside the ranges of 4): chamfer values < 2^14 at 2048 (INF = 2^40; 32 × INF + 5 < 2^46); ramps divide by b − a > 0 (named checks), every numerator below the denominator; `from_int(rainfall)` ≤ 65535 × 2^32 < 2^49; `from_int(dg)` ≤ 32767 × 2^32; every product of factors ≤ ONE except al ≤ 5 (fertility; mul(mul(fb, sf), al) ≤ 5 × ONE) and gb + fish ≤ 2 × ONE; `from_ratio(hand, 10)`: hand ≤ 30000 on real hydrology output (G7), but hand-built input can reach 131070 (S ≤ 98302 + 32768 above a drain at −32768), so the `fertility_cell` and `habitability_cell` seams refuse a negative hand and hand > 65535 (`<seam>: hand above 65535`, as implemented) and `from_int(hand)` ≤ 65535 × 2^32; em ≤ 3276.7 m; sc ≤ 4 × 1000 × 255 < 2^20, so `from_ratio(sc, 255 Σw)` ≤ ONE; walkability and links in `U128` as G8 (S2 < 2^33, so S2 × 2^64 < 2^97; |ΔS| ≤ 131070 (98302 + 32768: S = `elevation` + `water_depth` ≤ 32767 + 65535 on one side, `elevation` ≥ −32768 on the other), (ΔS)² × 2^64 < 2^99, still `U128`; (160 × raw)² × 2 < 2^96 for raw ≤ 10 × 2^32); `mul_int(hab_flood_hand_m, 10)` ≤ 1000 × 2^32.
 
 ## 8. Performance
 
@@ -358,7 +367,7 @@ Overflow (N ≤ 2048, values inside the ranges of 4): chamfer values < 2^14 at 2
 
 ## 9. Report and render
 
-**`report`**, appended to `[geography]` after the biome keys (P1-00 10.3) when all seven layers exist. "Dry land" = cells with `water` ∈ {0, 1} (requires `water`; without it the group prints no key); "land" = `elevation` > 0, as P1-00 10.3. Percentiles by the rule of P1-00 10.3, `n/a` over no values; `ratio4` as there.
+**`report`**, appended to `[geography]` after the biome keys (P1-00 10.3) when all seven layers exist. "Dry land" = cells with `water` ∈ {0, 1} (requires `water`; without it the group prints no key); "land" = `elevation` > 0, as P1-00 10.3. Percentiles by the rule of P1-00 10.3, `n/a` over no values; `ratio4` as there. **A world with no dry land** (all its land is lake) prints `scores_p50 = fertility:n/a ore:n/a timber:n/a fresh_water:n/a forage:n/a habitability:n/a`, the same for `scores_p90`, `n/a` for the three shares over dry cells, `walk_areas = 0`, and `walk_main_share` and `walk_share` as `0.0000` when there are land cells (lakes count as land) and `n/a` when there are none; `n/a` takes precedence over the `0.0000` rule of `walk_main_share`.
 
 | Key | Value |
 | --- | --- |
@@ -371,24 +380,24 @@ Overflow (N ≤ 2048, values inside the ranges of 4): chamfer values < 2^14 at 2
 | `walk_main_share` | ratio4(cells of the most common non-zero `walk_area` value, land cells); `0.0000` if there is no walk area |
 | `walk_share` | ratio4(cells with `walk_area` > 0, land cells) |
 
-A score layer that is not `u8`, or `walk_area` that is not `u16`, or any of them not the size of `elevation`, is a corrupt-data error: `worldgen-cli: error: corrupt layer '<name>': type <t>, expected <u8|u16>` or `… size <W>x<H>, expected <N>x<N>`, exit 3, nothing on stdout (the form of P1-04 9). Example (512 seed 0, prototype): `scores_p50 = fertility:0 ore:2 timber:38 fresh_water:102 forage:128 habitability:0`, `scores_p90 = fertility:178 ore:104 timber:255 fresh_water:226 forage:184 habitability:110`, `fertile_share = 0.2046`, `habitable_share = 0.2062`, `ore_rich_share = 0.0866`, `walk_areas = 4`, `walk_main_share = 0.1826`, `walk_share = 0.4286`.
+A score layer that is not `u8`, or `walk_area` that is not `u16`, or any of them not the size of `elevation`, is a corrupt-data error **whenever that layer exists**, also when the group is not printed because another of the seven is missing: `worldgen-cli: error: corrupt layer '<name>': type <t>, expected <u8|u16>` or `… size <W>x<H>, expected <N>x<N>`, exit 3, nothing on stdout (the form of P1-04 9). Example (512 seed 0, prototype, r2 tuning): `scores_p50 = fertility:0 ore:2 timber:38 fresh_water:102 forage:128 habitability:0`, `scores_p90 = fertility:178 ore:133 timber:255 fresh_water:226 forage:184 habitability:122`, `fertile_share = 0.2032`, `habitable_share = 0.2231`, `ore_rich_share = 0.1025`, `walk_areas = 4`, `walk_main_share = 0.1826`, `walk_share = 0.4286`.
 
-**Statistics** (P1-00 13.1). Measured by the spec writer's exact prototype on the 0.9.0 validation worlds (110: 512 seeds 0–49, 1024 seeds 0–49, 2048 seeds 0–9), with the data of section 4. Typical = measured min–max widened by about 10% (rounded outward); hard only where a value outside means a defect. Comparison is exact (P1-00 13.1). The 2048 ranges rest on ten worlds and should be widened by the validation sweep (2048 seeds 0–19). The implementation's validation sweep confirms them; the prototype's arithmetic is that of this spec, so a difference is a defect of one of the two, not noise.
+**Statistics** (P1-00 13.1). Measured by the spec writer's exact prototype on the 0.9.0 validation worlds (110: 512 seeds 0–49, 1024 seeds 0–49, 2048 seeds 0–9), with the data of section 4 and the r2 tuning (re-measured 2026-11-18; per-world results `~/.cache/the-unmapped/out/p1-05-spec/sweep/final-*.jsonl`, the first version's in `r1-final-*.jsonl`). Typical = measured min–max widened by about 10% (rounded outward); hard only where a value outside means a defect. Comparison is exact (P1-00 13.1). The 2048 ranges rest on ten worlds and should be widened by the validation sweep (2048 seeds 0–19). The implementation's validation sweep confirms them; the prototype's arithmetic is that of this spec, so a difference is a defect of one of the two, not noise.
 
 | Statistic | All seeds (hard) | Typical (≥ 90%), 512 / 1024 / 2048 | Measured min / median / max, 512 / 1024 / 2048 |
 | --- | --- | --- | --- |
-| `habitable_share` | ≥ 0.05 | 0.13–0.62 / 0.29–0.71 / 0.49–0.79 | 0.143 / 0.371 / 0.562; 0.323 / 0.485 / 0.644; 0.550 / 0.654 / 0.715 |
-| `fertile_share` | descriptive | 0.14–0.65 / 0.29–0.75 / 0.52–0.82 | 0.161 / 0.371 / 0.592; 0.322 / 0.507 / 0.682; 0.578 / 0.678 / 0.747 |
-| `ore_rich_share` | > 0 (every world has a rich deposit) | 0.005–0.13 / 0.015–0.09 / 0.016–0.056 | 0.0061 / 0.052 / 0.122; 0.0165 / 0.046 / 0.079; 0.0178 / 0.022 / 0.051 |
+| `habitable_share` | ≥ 0.05 | 0.15–0.70 / 0.32–0.79 / 0.53–0.86 | 0.174 / 0.412 / 0.633; 0.356 / 0.539 / 0.712; 0.597 / 0.715 / 0.780 |
+| `fertile_share` | descriptive | 0.14–0.65 / 0.28–0.75 / 0.51–0.82 | 0.160 / 0.369 / 0.590; 0.320 / 0.504 / 0.680; 0.576 / 0.675 / 0.745 |
+| `ore_rich_share` | > 0 (every world has a rich deposit) | 0.012–0.16 / 0.019–0.11 / 0.018–0.064 | 0.0135 / 0.066 / 0.144; 0.0215 / 0.058 / 0.097; 0.0203 / 0.029 / 0.058 |
 | `walk_areas` | ≥ 1 | 1–7 / 1–8 / 2–12 | 1 / 2 / 6; 1 / 3 / 7; 3 / 5.5 / 10 |
 | `walk_main_share` | 512 descriptive; ≥ 0.30 at 1024 and 2048 | ≥ 0.16 / ≥ 0.43 / ≥ 0.64 | 0.183 / 0.560 / 0.767; 0.487 / 0.679 / 0.829; 0.720 / 0.825 / 0.889 |
 | `walk_share` | descriptive | ≥ 0.35 / ≥ 0.52 / ≥ 0.66 | 0.389 / 0.580 / 0.767; 0.586 / 0.703 / 0.833; 0.736 / 0.836 / 0.891 |
-| `scores_p50` habitability | descriptive | — | 0 / 18 / 72; 8 / 62 / 83; 69 / 82 / 90 |
-| `scores_p90` habitability | ≥ 1 | 70–160 at every size | 82 / 134 / 144; 127 / 141 / 148; 143 / 147 / 151 |
+| `scores_p50` habitability | descriptive | — | 0 / 18 / 81; 7 / 68 / 95; 77 / 98 / 105 |
+| `scores_p90` habitability | ≥ 1 | 85–180 at every size | 95 / 148 / 163; 141 / 152 / 165; 153 / 158 / 163 |
 | `scores_p90` fresh_water | descriptive | — | 224–235 / 231–235 / 235–241 |
 | `scores_p50` fertility, forage, timber | descriptive | — | fertility 0–178 / 35–178 / 178; forage 88–128 / 90–128 / 128; timber 13–70 / 38–255 / 38–255 |
 
-Per-biome means over dry land (median over worlds, 512 / 1024 / 2048; fertility, forage, timber, habitability): forest 99–167, 143–151, 213–250, 58–99; grassland 160–229, 88–96, 33–37, 66–94; steppe 89–152, 101–107, 10–13, 37–66; wet woodland about 145, 242, 178, 127–129; marsh about 147, 240, 77, 59–65; fen about 79, 196, 51, 57–59; moor and heath 1–5, 53–69, 2–10, 0–1.4; alpine 0, 13–16, 0, 0. Steep 512 worlds (seeds 0 and 2) have about 60% of dry land at or steeper than 25°, so habitability 0 there. Percentiles in this table were taken by the sweep as the ⌈pn/100⌉-th value, one rank from the report's rule; the bounds' margins cover that.
+Per-biome means over dry land (median over worlds, 512 / 1024 / 2048; fertility, forage, timber, habitability): forest 97–164, 143–151, 213–250, 61–104; grassland 160–229, 88–96, 33–37, 79–116; steppe 88–149, 101–107, 10–13, 44–79; wet woodland about 135, 242, 178, 132; marsh about 131, 240, 77, 91–101; fen about 71, 196, 51, 67–70; moor and heath 1–5, 53–69, 2–10, 0–1.5; alpine 0, 13–16, 0, 0. (Marsh's mean exceeds forest's because all marsh is flat lowland by water while forest includes steep slopes; at the top, marsh's 95th percentile, 132, stays well below grassland's, 183–186, section 11.3.) Steep 512 worlds (seeds 0 and 2) have about 60% of dry land at or steeper than 25°, so habitability 0 there. Percentiles in this table were taken by the sweep as the ⌈pn/100⌉-th value, one rank from the report's rule; the bounds' margins cover that.
 
 **Palette `score`** (any `u8` layer; registered under `auto` for `fertility`, `ore`, `timber`, `fresh_water`, `forage`, `habitability`), interpolation rule of P1-00 10.2, listed by `render --help`:
 
@@ -404,7 +413,7 @@ Example: t = 100 → (44, 117, 140): R = 59 + floor((2·(33 − 59)·36 + 64)/12
 
 ## 10. Tests required
 
-Library seams (interim; the engineer may add helpers, and records the final signatures in this section after implementation, as P1-04 10): `resource_ramp(x, a, b)`, `resource_q255(s)`, `slope_tangent(S2)` (G8, shared with P1-04), `chamfer_metres(grid, source)`, `fresh_water_cell(df, rainfall, tuning)`, `fertility_cell(fb, s2, hand, tuning)`, `timber_cell(tb, s2, tuning)`, `forage_cell(gb, dg, tuning)`, `ore_cell(elevation, s2, noise, tuning)`, `walk_areas(grid, S, water, s2, walk_slope_max, walk_min_cells) → (ids, count)`, `habitability_cell(F, W, G, T, O, s2, hand, walk_area, tuning)`, `resources_layers(inputs, definitions, tuning, seed, threads)`. Each raises `FatalError` on a contract violation (wrong array length, threads outside [1, 256], a violated precondition).
+Library seams (interim; the engineer may add helpers, and records the final signatures in this section after implementation, as P1-04 10): `resource_ramp(x, a, b)`, `resource_q255(s)`, `geo::slope_tangent(S2)` (G8, in `geo/terrain`, shared with P1-04), `resource_ore_noise(seed, x, y, tuning)`, `chamfer_metres(grid, source)`, `fresh_water_cell(df, rainfall, tuning)`, `fertility_cell(fb, s2, hand, tuning)`, `timber_cell(tb, s2, tuning)`, `forage_cell(gb, dg, tuning)`, `ore_cell(elevation, s2, noise, tuning)`, `walk_areas(grid, S, water, s2, walk_slope_max, walk_min_cells) → (ids, count)` (count = K, the number of kept areas), `habitability_cell(F, W, G, T, O, s2, hand, walk_area, tuning)`, `resources_layers(inputs, definitions, tuning, seed, threads)`. Each raises `FatalError` on a contract violation (wrong array length, threads outside [1, 256], a violated precondition).
 
 **As implemented** (generator engineer, branch `p1/05-resources`; `worldgen/include/worldgen/stages/resources.hpp`, namespace `worldgen::stages`, unless marked `geo::`; `Fx` is `worldgen::Fx`, `Grid` is `geo::Grid`; the header comments give each seam's fatal cases):
 
@@ -418,8 +427,8 @@ std::uint8_t fertility_cell(Fx fb, std::int64_t s2, std::int64_t hand, const Res
 std::uint8_t timber_cell(Fx tb, std::int64_t s2, const ResourceTuning& tuning);
 std::uint8_t forage_cell(Fx gb, std::int64_t dg, const ResourceTuning& tuning);
 std::uint8_t ore_cell(std::int64_t elevation, std::int64_t s2, Fx noise, const ResourceTuning& tuning);
-Fx resource_ore_noise(std::uint64_t seed, std::int32_t x, std::int32_t y, const ResourceTuning& tuning);
-struct WalkAreas { std::vector<std::uint16_t> ids; std::int64_t count = 0; };
+Fx resource_ore_noise(std::uint64_t seed, std::int32_t x, std::int32_t y, const ResourceTuning& tuning);  // fbm_m(K_ore, X, Y, ore_noise); checks the tuning like every seam
+struct WalkAreas { std::vector<std::uint16_t> ids; std::int64_t count = 0; };   // count = K, the number of kept areas
 WalkAreas walk_areas(Grid grid, std::span<const std::int64_t> surface, std::span<const std::uint8_t> water,
                      std::span<const std::int64_t> s2, Fx walk_slope_max, std::int64_t walk_min_cells);
 std::uint8_t habitability_cell(std::int64_t F, std::int64_t W, std::int64_t G, std::int64_t T, std::int64_t O,
@@ -435,7 +444,7 @@ std::int64_t resource_walk_min_cells(const ResourceTuning& tuning);
 void run_resources(StageContext& context);
 ```
 
-`BiomeDef` (P1-04 seams) gains `Fx forage`. Order of the fatal checks of `resources_layers`: threads (`resources: thread count outside [1, 256]`); the tuning (`resources: tuning: <field> outside its schema range`, then the named-check messages of 4.2 after `resources: tuning: `); a definition's `fertility`, `timber` or `forage` outside [0, 1] (`resources: biome '<key>' has a value outside [0, 1]`); then section 2 with the prefix `resources: input precondition: ` (grid checks, lengths in the order of `ResourceInputs`, `water`, `river`, `biome`, G7). Through the stage, the missing-layer check of section 2 comes first, and a stored layer of another type or size is `layer '<name>' does not have its catalogue type` or `<name> length is not width * height`. Report: a resources layer of the wrong type or size is refused whenever it exists, also when the group is not printed (some of the seven missing).
+`BiomeDef` (P1-04 seams) gains `Fx forage`. Order of the fatal checks of `resources_layers` (section 2 states the same list): threads (`resources: thread count outside [1, 256]`); the tuning (`resources: tuning: <field> outside its schema range`, then the named-check messages of 4.2 after `resources: tuning: `); a definition's `fertility`, `timber` or `forage` outside [0, 1] (`resources: biome '<key>' has a value outside [0, 1]`); then section 2 with the prefix `resources: input precondition: ` (grid checks, lengths in the order of `ResourceInputs`, `water`, `river`, `biome`, G7). Through the stage, the missing-layer check of section 2 comes first, and a stored layer of another type or size is `layer '<name>' does not have its catalogue type` or `<name> length is not width * height`. Report: a resources layer of the wrong type or size is refused whenever it exists, also when the group is not printed (some of the seven missing).
 
 ### 10.1 Unit tests
 
@@ -458,7 +467,7 @@ Threads 1, 2, 5: identical layers. Resume: a world written after `biomes` (`--un
 
 ### 10.4 Golden values
 
-`worldgen/tests/golden/p1-05-resources.txt`, written by the test writer's independent reference in `worldgen/tests/reference/` for the cases of P1-04 10.4 (the N = 128 fixture cases and 512 seed 0, 512 seed 42, 512 "The Unmapped", 1024 seed 1 with the shipped data): per case the layer hash (P0-04 8) of each of the seven layers, and the SHA-256 of `hand` (k = 1), `df` and `dg` as grids of `int64` little-endian in cell index order with no header (the encoding of P1-04 10.4), and of the ore noise `fbm_m(K_ore, X, Y, ore_noise)` raw on every cell. The large cases are read by the `*-slow` suites.
+`worldgen/tests/golden/p1-05-resources.txt`, written by the test writer's independent reference in `worldgen/tests/reference/` for the cases of P1-04 10.4 (the N = 128 fixture cases and 512 seed 0, 512 seed 42, 512 "The Unmapped", 1024 seed 1 with the shipped data): per case the layer hash (P0-04 8) of each of the seven layers, and the SHA-256 of `hand` (k = 1, decimetres), `df` and `dg` (**metres**, after `metres()`, 32767 where there is no source) as grids of `int64` little-endian in cell index order with no header (the encoding of P1-04 10.4), and of the ore noise `fbm_m(K_ore, X, Y, ore_noise)` raw (`int64`) on **every** cell, water included (R4 uses it on land only). The large cases are read by the `*-slow` suites.
 
 **Version and golden re-recording.** `GENERATOR_VERSION` becomes **0.10.0** (`worldgen/include/worldgen/version.hpp`). Every geography world changes (seven new layers), and every world, the P0 cases included, changes its `content_hash` (new `worldgen.resources`, new biome field, steppe's value; P1-00 6.4): `p0-worlds.txt` and `p1-worlds.txt` are re-recorded by the validation specialist after the cross-preset comparison. The golden vectors of P1-01 to P1-04 (`p1-01-elevation.txt` … `p1-04-biomes.txt`) hold layer and table hashes, which this change must leave **unchanged**; a difference there is a defect. `tools/ci/world-hashes.sh` needs no new case (the geography cases run every implemented stage); its timings in `CLAUDE.md` grow by this stage's share.
 
@@ -475,7 +484,7 @@ An exact-integer prototype (`~/.cache/the-unmapped/out/p1-05-spec/tools/proto.py
 | ramp 150–900, veins from 0 | 150–900 | 0–0.25 | 0.1 | 0.0020 / 0.035 / 0.093 | 0 |
 | **shipped** | 100–800 | 0–0.2 | 0.15 | 0.0061 / 0.052 / 0.122 | 0 |
 
-Other choices: `fresh_reach_m` 400 (72–94% of dry land lies within 400 m of a river or lake at 0.9.0's river threshold, so 600 m made fresh water nearly uniform); `alluvial_bonus` 0.3 (0.5 lifted flat forest by a river to 255, the same as grassland); weights 55 / 20 / 15 / 10 so that grassland by a river (177) and forest by a river (207) are the best sites and dry steppe far from water stays poor (about 30).
+Other choices (first version; r2 changed the alluvial bonus and the weights, 11.3): `fresh_reach_m` 400 (72–94% of dry land lies within 400 m of a river or lake at 0.9.0's river threshold, so 600 m made fresh water nearly uniform); `alluvial_bonus` 0.3 (0.5 lifted flat forest by a river to 255, the same as grassland); weights 55 / 20 / 15 / 10 so that grassland by a river (177) and forest by a river (207) are the best sites and dry steppe far from water stays poor (about 30).
 
 ### 11.2 Limitations
 
@@ -486,18 +495,55 @@ Other choices: `fresh_reach_m` 400 (72–94% of dry land lies within 400 m of a 
 5. **Walk areas are coarse about passes.** A range is a barrier where its flanks are steeper than 35° everywhere; a single walkable gully joins two areas. Natural passes (P1-01 9.1) are mostly not walkable end to end, so the main lowland is usually one area and high valleys and cliff-bound pockets are others.
 6. **No ore kinds.** One `ore` score; iron, copper, silver or gold would be history's or the runtime's draw from it, keyed by location.
 7. **Fish water is the sea, lakes and rivers of class ≥ 4**, with no distinction between them; coasts are rich in forage regardless of the shore's form (cliffs included: slope still zeroes habitability there).
-8. **Fen and marsh** score as forage-rich, poor-farming, flood-prone land: habitability about 60 (median of world means 57–65), a homeland only for a people who weight forage. Fen is under 0.1% of land on some 512 worlds; nothing here assumes it exists.
+8. **Fen and marsh** score as forage-rich, poor-farming, flood-prone land: mean habitability about 70 (fen) and 90–100 (marsh), 95th percentile 132 against grassland's 183–186, a homeland only for a people who weight forage. Fen is under 0.1% of land on some 512 worlds; nothing here assumes it exists.
 9. **The moor/heath boundary may move** (a possible small biome follow-up). Their values are close (fertility 0.3 / 0.2, forage 0.25 / 0.2) and both are mostly steep, so no bound of section 9 depends on their shares; the statistics are re-confirmed by the validation sweep.
 10. **Straight artefacts of the elevation stage show through.** 512 seed 28 has a straight diagonal scarp (P1-01, "a few straight gullies") that cuts a straight dark band through habitability, fertility and timber; nothing here smooths it.
+
+11. **Lowland contrast is modest (critic F2).** Mean habitability of 1.5 km lowland blocks (≥ 80% walkable dry land) spans about 92 to 124 (10th to 90th percentile, median world, 1024); the stream halos dominate the cell-scale pattern. No tuning of this stage widens it materially (11.3); a regional signal would need a new input (for example a low-frequency soil term), which is code, not tuning.
+12. **Rich ore is still mostly on steep ground (critic F4).** After r2, 34–38% of rich-ore cells (median) lie within 300 m of a walk area and two thirds of the large fields within 160 m. History should test "ore ≥ t within about 300 m of a walk area" for a mine site, not "ore under a walkable cell".
+13. **Big-river banks stay slightly below their hinterland** (median 139 against 146 at 1024, 134 against 137 at 2048): their margins are wet woodland, marsh and fen, whose fertility (0.5, 0.45, 0.25) the weights now favour less. The flood rule is not the cause (with no flood factor at all the gap is the same). Lake shores are cured.
+
+### 11.3 Revision r2: the critic's findings, before and after
+
+The world critic reviewed the implementation (`~/.cache/the-unmapped/out/p1-05-critic/critic-review.md`). Measured with the critic's own measures by the prototype (`~/.cache/the-unmapped/out/p1-05-spec/tools/crit.py`, results `~/.cache/the-unmapped/out/p1-05-spec/crit/`) on 512 seeds 0–49, 1024 seeds 0–11 and 2048 seeds 0–3; "before" is the first version's tuning, "after" the r2 tuning of 4.2. Medians over worlds unless stated.
+
+| Finding and measure | 512 before → after | 1024 before → after | 2048 before → after |
+| --- | --- | --- | --- |
+| F1: worlds where forest's 95th percentile of habitability (walkable) exceeds grassland's | 41 / 50 → 1 / 50 | 12 / 12 → 0 / 12 | 4 / 4 → 0 / 4 |
+| F1: grassland's share of the top 5% sites / of dry land | 0.37 → 0.71 / 0.28 | 0.21 → 0.55 / 0.20 | 0.10 → 0.41 / 0.15 |
+| F1: forest's share of the top 5% sites / of dry land | 0.56 → 0.29 / 0.37 | 0.75 → 0.45 / 0.48 | 0.88 → 0.59 / 0.49 |
+| F1: 95th percentile forest / grassland | 160 / 154 → 165 / 183 | 165 / 154 → 169 / 184 | 170 / 154 → 173 / 184 |
+| F3: lake shore 0–48 m / 48–128 m (walkable dry land) | 99 / 132 → 145 / 141 | 99 / 136 → 148 / 147 | 123 / 142 → 170 / 150 |
+| F3: worlds with the lake shore below its hinterland | 24 / 43 → 15 / 43 | 9 / 12 → 4 / 12 | 3 / 4 → 0 / 4 |
+| F3: big-river bank (class ≥ 6) 0–48 m / 48–128 m | 104 / 129 → 131 / 135 | 130 / 138 → 139 / 146 | 100 / 132 → 134 / 137 |
+| F3: marsh 95th percentile (walkable) | 73 → 132 | 73 → 132 | 73 → 132 |
+| F2: lowland block means, 10th / 50th / 90th percentile | 91 / 98 / 102 → 105 / 109 / 116 | 80 / 98 / 108 → 92 / 109 / 124 | 77 / 98 / 114 → 87 / 109 / 125 |
+| F4: large rich fields (≥ 64 cells of ore ≥ 128) within 160 m of a walk area | 93 / 209 → 153 / 220 | 70 / 133 → 92 / 139 | 56 / 99 → 71 / 107 |
+| F4: worlds with large fields and none within 160 m | 4 → 0 | 1 → 0 | 0 → 0 |
+| F4: worlds with no ore ≥ 96 on walkable land | 39 → 32 | 3 → 0 | 0 → 0 |
+| F4: rich-ore cells within 300 m of a walk area | 0.23 → 0.34 | 0.24 → 0.38 | 0.25 → 0.34 |
+| F4: fragments under 16 cells / largest field's share of rich ore | 1 / 0.61 → 1 / 0.59 | 8 / 0.38 → 3 / 0.36 | 21 / 0.17 → 15 / 0.17 |
+
+Steps, each measured: the weights 70 / 15 / 10 / 5 with `alluvial_bonus` 0.15 cure F1 alone; `hab_flood_factor` 0.75 alone brought the 1024 lake shore to 144 / 146 with 5 of 12 worlds still below, and `hab_flood_hand_m` 0.5 (adopted) to 148 / 147, 4 of 12 (2048: 0 of 4). Dropping the flood factor entirely (1) did not close the big-river gap (139 / 147), which is the wet biomes (limitation 13). `ore_slope_base` 0.65 and `ore_elev_hi_m` 600 move each field onto its walkable foot without new speckle or a single blob (fragments fall, the largest field's share is unchanged); `ore_rich_share` rises by about a quarter (section 9). F2 variants on top of the adopted tuning, 1024 block means 10th / 50th / 90th: adopted 92 / 109 / 124 (ratio 1.33); `hab_water_min` 0.35: 101 / 116 / 131 (1.29); `fresh_reach_m` 600: 106 / 123 / 141 (1.30); `hab_water_min` 0.15: 85 / 103 / 118 (1.34). None widens the spread between regions by more than a few points, so none is adopted (lead's ruling on 0.35). Sheets: `~/.cache/the-unmapped/out/p1-05-spec/sheets/p1-05-r2-layers.png` (every layer, as the first version's sheet) and `~/.cache/the-unmapped/out/p1-05-spec/sheets/p1-05-r2-before-after.png` (habitability and ore before and after; unwalkable land without ore drawn dark grey).
 
 ## 12. Open questions and decisions of taste (for the lead and Paul)
 
 1. **A fifth score, `forage`** (catalogue addition; new biome field). Recommendation: approve; it is how wetlands, forests and coasts get the value the critic asked for without pretending marsh is farmland, and history needs a second food source for fishing and wild peoples. Proposals entry suggested in the report.
 2. **Steppe fertility 0.7** (data change in the biome files). Recommendation: approve (critic).
 3. **Absolute scores** (unchanged from the first draft). Recommendation: approve.
-4. **Habitability: water as a factor, no coast bonus, weights 55 / 20 / 15 / 10, water minimum 0.25.** Taste; history reweights by race.
+4. **Habitability: water as a factor, no coast bonus, weights 70 / 15 / 10 / 5 (r2; were 55 / 20 / 15 / 10), water minimum 0.25.** Taste; history reweights by race.
 5. **Fertile threshold 0.65** for `fertile_share` (critic: below forest's 0.7). A report statistic only; history is free to use its own.
 6. **Small walkable pockets** (below 0.25 km²) are no walk area and keep a quarter of their habitability. Recommendation: approve.
 7. **Timber without a rain term.** Approve; the biome encodes rain.
 
 **Schema and catalogue impact (for the lead):** no schema change (version 4). Catalogue: new layer `forage` (`u8`, id 16); `habitability`'s wording; ids shift so that `region` is 19. Data: new `worldgen` id `resources` (file `game/data/worldgen/resources.toml`), new required field `forage` of kind `biome`, steppe `fertility` 0.7. One stream name, `geo.resources.ore`. Generator 0.10.0.
+
+## 13. Revision r2 (2026-11-18)
+
+After the world critic's review of the implementation and the lead's rulings; the algorithm is unchanged, so the implementation needs only the new `resources.toml`.
+
+1. Tuning defaults (4.2): `hab_weight_fertility` 55 → 70, `hab_weight_forage` 20 → 15, `hab_weight_timber` 15 → 10, `hab_weight_ore` 10 → 5, `alluvial_bonus` 0.3 → 0.15, `hab_flood_factor` 0.5 → 0.75, `hab_flood_hand_m` 1 → 0.5, `ore_slope_base` 0.5 → 0.65, `ore_elev_hi_m` 800 → 600. Not adopted: `hab_water_min` 0.35.
+2. Worked examples (5.1) for fertility, ore and habitability; the report example and the statistics of section 9; P1-00 13.1's P1-05 rows.
+3. Wording: the order of the fatal checks (section 2, agreeing with section 10); `report` refuses a corrupt resources layer whenever it exists; a world with no dry land (9); seams (`geo::slope_tangent` in `geo/terrain`, `resource_ore_noise`, `walk_areas` count = K); golden items `df`, `dg` in metres and the noise on every cell (10.4); overflow bounds |ΔS| ≤ 131070 and the hand bound of the seams (7).
+4. Calibration and limitations (11.2 items 8, 11 to 13; 11.3).
+5. Generator version: the stage is not yet on `main`, so the r2 tuning ships as **0.10.0**; if 0.10.0 had been released with the first tuning, this would be 0.10.1. Every 0.10.0 golden value of this stage, and `p0-worlds.txt` and `p1-worlds.txt` (the content hash changes with `resources.toml`), are re-recorded.
