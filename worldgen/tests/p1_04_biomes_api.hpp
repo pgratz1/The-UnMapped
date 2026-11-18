@@ -15,8 +15,13 @@
 //     biome_definitions_from(const data::ContentSet&) -> Definitions   (opaque to the tests)
 //     biome_tuning_from(const data::ContentSet&) -> Tuning              (opaque to the tests)
 //     biome_rain_scale(const Tuning&, std::int64_t n) -> Fx             (B4 size rule)
-//     biome_lookup(const Definitions&, Fx scale, Fx tq, Fx rq, std::int64_t elevation_dm,
-//                  std::int64_t s2, std::int64_t hand_dm, std::int64_t coast_dist) -> std::uint8_t   (B4)
+//     biome_wet_scale(const Tuning&, std::int64_t n) -> Fx              (B4 size rule, 0.9.0)
+//     biome_river_distance(Grid, water, river, std::int64_t k) -> std::vector<std::int64_t>   (B2b, 0.9.0)
+//     biome_wet_share(Grid, water, std::span<const std::int64_t> hand, Fx wet_hand_m,
+//                     std::int64_t r_cells) -> {count, total} of std::vector<std::int64_t>   (B2c, 0.9.0)
+//     biome_lookup(const Definitions&, Fx scale, Fx wet_scale, Fx tq, Fx rq, std::int64_t elevation_dm,
+//                  std::int64_t s2, std::int64_t hand_dm, std::int64_t coast_dist, std::int64_t d34,
+//                  std::int64_t wet_count, std::int64_t wet_total) -> std::uint8_t   (B4; 0.9.0 order of 10)
 //     biome_river_cells(Grid, std::span<const std::uint8_t> water,
 //                       std::span<const std::uint8_t> b4) -> std::vector<std::uint8_t>          (B5)
 //     BiomeInputs{grid, elevation, water, water_depth, flow_dir, river, coast_dist, temperature,
@@ -104,13 +109,35 @@ inline Tuning tuning_from(const worldgen::data::ContentSet& c) { return worldgen
 // B4's size rule (seam biome_rain_scale), raw.
 inline std::int64_t rain_scale(const Tuning& t, std::int64_t n) { return worldgen::stages::biome_rain_scale(t, n).raw(); }
 
-// B4 for one cell (seam biome_lookup).
+// The wet scale of B4's size rule (seam biome_wet_scale, 0.9.0), raw.
+inline std::int64_t wet_scale(const Tuning& t, std::int64_t n) { return worldgen::stages::biome_wet_scale(t, n).raw(); }
+
+// B4 for one cell (seam biome_lookup; d34, wet_count, wet_total and the wet
+// scale since 0.9.0). The defaults are "no target river" and share 0 / 1.
+inline constexpr std::int64_t FAR = std::int64_t{1} << 40;
 inline std::uint8_t lookup(const Definitions& d, std::int64_t scale_raw, std::int64_t tq_raw, std::int64_t rq_raw,
-                           std::int64_t elevation, std::int64_t s2, std::int64_t hand, std::int64_t coast_dist) {
-    // 0.9.0 seam (engineer, minimal compile fix): wet scale 1, no target river, share 0 / 1.
-    return worldgen::stages::biome_lookup(d, Fx::from_raw(scale_raw), Fx::ONE, Fx::from_raw(tq_raw),
-                                          Fx::from_raw(rq_raw), elevation, s2, hand, coast_dist,
-                                          worldgen::stages::BIOME_D34_FAR, 0, 1);
+                           std::int64_t elevation, std::int64_t s2, std::int64_t hand, std::int64_t coast_dist,
+                           std::int64_t d34 = FAR, std::int64_t wet_count = 0, std::int64_t wet_total = 1,
+                           std::int64_t wet_scale_raw = std::int64_t{1} << 32) {
+    return worldgen::stages::biome_lookup(d, Fx::from_raw(scale_raw), Fx::from_raw(wet_scale_raw),
+                                          Fx::from_raw(tq_raw), Fx::from_raw(rq_raw), elevation, s2, hand,
+                                          coast_dist, d34, wet_count, wet_total);
+}
+
+// B2b (seam biome_river_distance, 0.9.0): d34 per cell, 2^40 without a target.
+inline std::vector<std::int64_t> river_distance(Grid g, std::span<const std::uint8_t> water,
+                                                std::span<const std::uint8_t> river, std::int64_t k) {
+    return worldgen::stages::biome_river_distance(g, water, river, k);
+}
+
+// B2c (seam biome_wet_share, 0.9.0): wet_count and wet_total per cell.
+struct WetShare {
+    std::vector<std::int64_t> count, total;
+};
+inline WetShare wet_share(Grid g, std::span<const std::uint8_t> water, std::span<const std::int64_t> hand,
+                          std::int64_t wet_hand_raw, std::int64_t r_cells) {
+    auto r = worldgen::stages::biome_wet_share(g, water, hand, Fx::from_raw(wet_hand_raw), r_cells);
+    return WetShare{std::move(r.count), std::move(r.total)};
 }
 
 // --- Rules outside their schema ranges (audit fix, engineer's d863651) -----------------
@@ -143,13 +170,27 @@ inline Definitions with_rule(Definitions d, std::string_view key, const Rule& r)
     return d;
 }
 
-// Seam biome_rule_matches.
+// Seam biome_rule_matches (the engineer's helper; assumed to gain the new
+// inputs in biome_lookup's order: wet scale after the rain scale, d34,
+// wet_count, wet_total last).
 inline bool rule_matches(const Rule& r, std::int64_t scale_raw, std::int64_t tq_raw, std::int64_t rq_raw,
-                         std::int64_t elevation, std::int64_t s2, std::int64_t hand, std::int64_t coast_dist) {
-    // 0.9.0 seam (engineer, minimal compile fix): wet scale 1, no target river, share 0 / 1.
-    return worldgen::stages::biome_rule_matches(r, Fx::from_raw(scale_raw), Fx::ONE, Fx::from_raw(tq_raw),
-                                                Fx::from_raw(rq_raw), elevation, s2, hand, coast_dist,
-                                                worldgen::stages::BIOME_D34_FAR, 0, 1);
+                         std::int64_t elevation, std::int64_t s2, std::int64_t hand, std::int64_t coast_dist,
+                         std::int64_t d34 = FAR, std::int64_t wet_count = 0, std::int64_t wet_total = 1,
+                         std::int64_t wet_scale_raw = std::int64_t{1} << 32) {
+    return worldgen::stages::biome_rule_matches(r, Fx::from_raw(scale_raw), Fx::from_raw(wet_scale_raw),
+                                                Fx::from_raw(tq_raw), Fx::from_raw(rq_raw), elevation, s2, hand,
+                                                coast_dist, d34, wet_count, wet_total);
+}
+
+// The two rule fields of 0.9.0 on the stage's BiomeRule (assumed named after
+// the data fields, as the nine older ones are).
+inline Rule with_river_dist_max(Rule r, std::int64_t m) {
+    r.river_dist_max_m = m;
+    return r;
+}
+inline Rule with_wet_frac_min_raw(Rule r, std::int64_t raw) {
+    r.wet_frac_min = Fx::from_raw(raw);
+    return r;
 }
 
 // B5 (seam biome_river_cells): the biome grid from the B4 grid.

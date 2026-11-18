@@ -99,6 +99,10 @@ std::vector<std::pair<std::string, std::string>> items_of(const Inputs& in, cons
     const std::uint8_t wind = climate_api::wind(c.seed, v.wind_weights);
     out.emplace_back("wind", std::to_string(int{wind}));
     const Own own = own_climate(in, v, c.seed);
+    // C2b (0.9.0): the seam against the test's own draw.
+    const std::int64_t offset = climate_api::temp_offset_dc(c.seed, t);
+    CHECK(offset == own.offset_dc);
+    out.emplace_back("temp_offset_dc", std::to_string(offset));
     out.emplace_back("S", hash_i64(own.S));
     out.emplace_back("tnoise", hash_i64(own.tnoise));
     out.emplace_back("T", hash_i64(own.T));
@@ -268,7 +272,7 @@ TEST_CASE("P1-03 golden: every case up to N = 128 and the random fixtures, step 
 TEST_CASE("P1-03 golden: the eight forced winds on one world differ, and code 1 is the world's own wind") {
     std::map<std::string, std::string> rain;
     for (const auto& c : golden()) {
-        if (c.name.rfind("shipped-64-s0", 0) == 0) {
+        if (c.name == "shipped-64-s0" || c.name.rfind("shipped-64-s0-w", 0) == 0) {
             rain[c.name] = c.get("rainfall");
         }
     }
@@ -346,6 +350,7 @@ TEST_CASE("P1-03 6 invariant 6: no hidden state between calls; the seed and the 
     // With both noise amplitudes 0 and a fixed wind, the seed has no effect.
     Overrides o = quiet_overrides();
     o.emplace_back("wind_weights", weights_text(one_hot(rf.wind)));
+    o.emplace_back("temp_offset_max_c", "0");  // 0.9.0: the offset is drawn from the seed too
     CHECK(stage_layers(rf.in, tuning(o), 1, THREADS) == stage_layers(rf.in, tuning(o), 123456789, THREADS));
 }
 

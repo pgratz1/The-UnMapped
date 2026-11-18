@@ -110,8 +110,9 @@ std::vector<T> layer_of(const worldgen::db::WorldReader& r, const char* name) {
 // The shipped colours by code (P1-00 6.6).
 const std::map<std::uint8_t, std::uint32_t>& colours() {
     static const std::map<std::uint8_t, std::uint32_t> c = {{1, 0x183878}, {2, 0x4080CC}, {3, 0x2E6034},
-                                                            {4, 0x96AA5A}, {5, 0x5C6E54}, {6, 0x786468},
-                                                            {7, 0xBEBEB4}, {8, 0x605446}};
+                                                            {4, 0x96AA5A}, {5, 0x6AA396}, {6, 0x7E6680},
+                                                            {7, 0xBEBEB4}, {8, 0x605446}, {9, 0x94664A},
+                                                            {10, 0xE0D296}, {11, 0x23505E}, {12, 0x8A8070}};
     return c;
 }
 
@@ -224,29 +225,43 @@ std::string line_after(const std::string& text, std::string_view key) {
 // One generated pair of worlds per test run (pure function of the inputs).
 // The Sandbox is never destroyed: its destructor runs doctest CHECKs, which
 // would run after doctest has finished for a static object (a segfault at
-// exit). The directory is removed by ~Worlds without doctest.
+// exit). It is held by a static pointer, so it stays reachable (no
+// LeakSanitizer report), and it is created once. Generation runs inside the
+// first test that needs the worlds, never in a static initializer: a failing
+// REQUIRE there fails that test only; later tests fail at once on `ok`
+// instead of retrying (and allocating) again. The directory is removed at
+// exit by DirRemover without doctest.
 struct Worlds {
-    Sandbox& sb = *new Sandbox;  // NOLINT: deliberately leaked, see above
+    Sandbox& sb;
     fs::path data, full, climate;
+    bool tried = false;
+    bool ok = false;
+};
 
-    ~Worlds() {
+struct DirRemover {
+    fs::path dir;
+    ~DirRemover() {
         std::error_code ec;
-        fs::remove_all(sb.root().parent_path(), ec);
-    }
-    Worlds(const Worlds&) = delete;
-    Worlds& operator=(const Worlds&) = delete;
-
-    Worlds() {
-        data = write_data_root(sb);
-        full = sb.file("seed0.db");
-        climate = sb.file("seed0-climate.db");
-        generate(sb, data, {"--until", "biomes"}, full);
-        generate(sb, data, {"--until", "climate"}, climate);
+        if (!dir.empty()) {
+            fs::remove_all(dir, ec);
+        }
     }
 };
 
 Worlds& worlds() {
-    static Worlds w;
+    static Sandbox* const sb = new Sandbox;  // NOLINT: deliberately never destroyed, see above
+    static DirRemover remover{sb->root().parent_path()};
+    static Worlds w{*sb, {}, {}, {}};
+    if (!w.tried) {
+        w.tried = true;
+        w.data = write_data_root(w.sb);
+        w.full = w.sb.file("seed0.db");
+        w.climate = w.sb.file("seed0-climate.db");
+        generate(w.sb, w.data, {"--until", "biomes"}, w.full);
+        generate(w.sb, w.data, {"--until", "climate"}, w.climate);
+        w.ok = true;
+    }
+    REQUIRE_MESSAGE(w.ok, "the shared worlds of cli_biomes_test could not be generated (see the first failure)");
     return w;
 }
 
@@ -266,7 +281,7 @@ TEST_CASE("cli P1-04 3, P1-00 X1: --until biomes at 512: layer 11 biome; earlier
     const auto g3 = golden_case(UNMAPPED_P1_03_GOLDEN_PATH, "shipped-512-s0");
     REQUIRE(!g4.empty());
     CHECK(lf.at("biome") == g4.at("biome"));
-    // The climate layers are those of 0.7.0 (P1-03 3: unchanged by schema 3).
+    // The climate layers are the 0.9.0 reference's (P1-03 10.4; the offset of seed 0 is 20).
     CHECK(lc.at("temperature") == g3.at("temperature"));
     CHECK(lc.at("rainfall") == g3.at("rainfall"));
     for (const char* in : {"elevation", "water", "water_depth", "flow_dir", "river", "coast_dist"}) {
@@ -281,6 +296,12 @@ TEST_CASE("cli P1-04 3, P1-00 X1: --until biomes at 512: layer 11 biome; earlier
     CHECK(tf.at("pass") == tc.at("pass"));
     CHECK(tc.count("biome") == 1U);  // present and empty in a climate world
     CHECK(g4.at("wind") == "1");
+    CHECK(g4.at("temp_offset_dc") == "20");
+    CHECK(g3.at("temp_offset_dc") == "20");
+    // P1-04 10.4: the exploration build's values, equal to the reference's.
+    CHECK(lf.at("biome") == "d936d7be132e5802f5fcd875fa9e2dc96fd7c776c383d926110a318e8bdbba05");
+    CHECK(tf.at("biome") == "a7878ee4c9ef402dfe8dce7f3691f0c0c84e6eb9d15eeb4cd3390e2d199f5472");
+    CHECK(tf.at("climate") == "9709df66fb80b17713c5168055a0c0b5c3d60eab2ba7a853ad870803bead7bee");
 }
 
 TEST_CASE("cli P1-04 9, P1-03 9: report: [tables], wind_toward first of the climate group, biome_share and biome_patches") {
@@ -289,15 +310,19 @@ TEST_CASE("cli P1-04 9, P1-03 9: report: [tables], wind_toward first of the clim
     INFO("stderr: ", r.err);
     REQUIRE(r.exit_code == EXIT_OK);
     const std::string& t = r.out;
-    CHECK(contains(t, "\n[tables]\nbiome = 8\nclimate = 1\nlayer = 11\nmeta = 8\npass = "));
-    CHECK(contains(t, "\nschema_version = 3\n"));
-    CHECK(contains(t, "\nwind_toward = SE\ntemperature_c = "));
+    CHECK(contains(t, "\n[tables]\nbiome = 12\nclimate = 1\nlayer = 11\nmeta = 8\npass = "));
+    CHECK(contains(t, "\nschema_version = 4\n"));
+    CHECK(contains(t, "\nwind_toward = SE\ntemp_offset_c = 2.0\ntemperature_c = "));
+    // P1-04 9's example line for 512 seed 0 (ten keys in code order).
+    CHECK(contains(t, "\nbiome_share = temperate_forest:0.5810 grassland:0.1447 marsh:0.0068 highland_moor:0.0882 "
+                      "alpine:0.0031 blighted_waste:0.0000 heath:0.0726 steppe:0.1021 wet_woodland:0.0015 "
+                      "fen:0.0000\nbiome_patches = 123\n"));
     const auto g4 = golden_case(UNMAPPED_P1_04_GOLDEN_PATH, "shipped-512-s0");
     std::string share = g4.at("biome_share");
     std::replace(share.begin(), share.end(), '_', ' ');
     // blighted_waste's own underscore: the golden value writes spaces as "_",
     // so restore the definition ids.
-    for (const char* id : {"temperate forest", "highland moor", "blighted waste"}) {
+    for (const char* id : {"temperate forest", "highland moor", "blighted waste", "wet woodland"}) {
         std::string from(id), to(id);
         std::replace(to.begin(), to.end(), ' ', '_');
         for (std::size_t at = share.find(from); at != std::string::npos; at = share.find(from)) {
@@ -316,7 +341,7 @@ TEST_CASE("cli P1-04 9, P1-03 9: report: [tables], wind_toward first of the clim
     const ProcessResult c = w.sb.cli({"report", "--db", u8(w.climate)});
     REQUIRE(c.exit_code == EXIT_OK);
     CHECK(contains(c.out, "\n[tables]\nbiome = 0\nclimate = 1\nlayer = 10\n"));
-    CHECK(contains(c.out, "\nwind_toward = SE\n"));
+    CHECK(contains(c.out, "\nwind_toward = SE\ntemp_offset_c = 2.0\n"));
     CHECK_FALSE(contains(c.out, "biome_share"));
 }
 
@@ -336,7 +361,8 @@ TEST_CASE("cli P1-04 3: --until none, --until hydrology and the test pattern hav
         REQUIRE(r.exit_code == EXIT_OK);
         CHECK(contains(r.out, "\n[tables]\nbiome = 0\nclimate = 0\n"));
         CHECK_FALSE(contains(r.out, "wind_toward"));
-        CHECK(contains(r.out, "\nschema_version = 3\n"));
+        CHECK_FALSE(contains(r.out, "temp_offset_c"));
+        CHECK(contains(r.out, "\nschema_version = 4\n"));
     }
 }
 
@@ -346,11 +372,17 @@ TEST_CASE("cli P1-03 9: a malformed climate table is a corrupt-table error: exit
         const char* what;
         const char* sql;
     };
+    // Every reason of P1-03 9 (0.9.0), in its exact wording.
     const std::vector<Bad> bads = {
-        {"two rows", "INSERT INTO climate VALUES (2, 1)"},
-        {"id 2", "UPDATE climate SET id = 2"},
-        {"wind_toward 8", "UPDATE climate SET wind_toward = 8"},
-        {"wind_toward -1", "UPDATE climate SET wind_toward = -1"},
+        {"2 rows, expected at most 1", "INSERT INTO climate VALUES (2, 1, 0)"},
+        {"the row does not have three integer columns",
+         "DROP TABLE climate; CREATE TABLE climate (id INTEGER PRIMARY KEY, wind_toward INTEGER NOT NULL) STRICT; "
+         "INSERT INTO climate VALUES (1, 1)"},
+        {"id 2, expected 1", "UPDATE climate SET id = 2"},
+        {"wind_toward 8 outside 0..7", "UPDATE climate SET wind_toward = 8"},
+        {"wind_toward -1 outside 0..7", "UPDATE climate SET wind_toward = -1"},
+        {"temp_offset_dc 51 outside -50..50", "UPDATE climate SET temp_offset_dc = 51"},
+        {"temp_offset_dc -51 outside -50..50", "UPDATE climate SET temp_offset_dc = -51"},
     };
     int k = 0;
     for (const Bad& b : bads) {
@@ -361,8 +393,41 @@ TEST_CASE("cli P1-03 9: a malformed climate table is a corrupt-table error: exit
         const ProcessResult r = w.sb.cli({"report", "--db", u8(bad)});
         CHECK(r.exit_code == EXIT_INPUT);
         CHECK(r.out.empty());
-        CHECK(starts_with(r.err, "worldgen-cli: error: corrupt table 'climate': "));
+        CHECK(r.err == std::string("worldgen-cli: error: corrupt table 'climate': ") + b.what + "\n");
     }
+    // The bounds -50 and 50 are accepted.
+    for (const char* v : {"50", "-50"}) {
+        const fs::path ok = w.sb.file(std::string("okclimate") + v + ".db");
+        fs::copy_file(w.climate, ok);
+        REQUIRE(worldgen::db::testing::execute_on_file(u8(ok), std::string("UPDATE climate SET temp_offset_dc = ") + v).ok());
+        const ProcessResult r = w.sb.cli({"report", "--db", u8(ok)});
+        CHECK(r.exit_code == EXIT_OK);
+        CHECK(contains(r.out, std::string("\ntemp_offset_c = ") + (v[0] == '-' ? "-5.0" : "5.0") + "\n"));
+    }
+}
+
+TEST_CASE("cli P1-03 3, P0-02 amendment 16: a schema-3 world is refused by report, hash --detail and render") {
+    Worlds& w = worlds();
+    const fs::path old = w.sb.file("schema3.db");
+    fs::copy_file(w.climate, old);
+    REQUIRE(worldgen::db::testing::execute_on_file(
+                u8(old), "PRAGMA user_version = 3; UPDATE meta SET value = '3' WHERE key = 'schema_version'")
+                .ok());
+    for (const std::vector<std::string>& args :
+         {std::vector<std::string>{"report", "--db", u8(old)}, std::vector<std::string>{"hash", "--db", u8(old), "--detail"},
+          std::vector<std::string>{"render", "--db", u8(old), "--layer", "elevation", "--out",
+                                   u8(w.sb.file("schema3.png"))}}) {
+        CAPTURE(args.front());
+        const ProcessResult r = w.sb.cli(args);
+        CHECK(r.exit_code != EXIT_OK);
+        CHECK(r.out.empty());
+        CHECK(contains(r.err, "world schema version 3, this build reads 4"));
+    }
+    CHECK_FALSE(fs::exists(w.sb.file("schema3.png")));
+    // Plain `hash` hashes the file's bytes without opening it as a world
+    // (P0-04 8), so it still prints a hash: P1-03 10.1 test 0's "refused by
+    // hash" holds for `hash --detail` only (reported as a spec contradiction).
+    CHECK(w.sb.cli({"hash", "--db", u8(old)}).exit_code == EXIT_OK);
 }
 
 TEST_CASE("cli P1-04 9: render --layer biome uses the table's colours, (255, 0, 255) for a code without a row") {

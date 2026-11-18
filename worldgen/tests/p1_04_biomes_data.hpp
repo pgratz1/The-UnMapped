@@ -21,7 +21,7 @@
 
 namespace biome_data {
 
-// P1-04 4.2, the shipped file and the fixtures' (identical).
+// P1-04 4.2 (third version, 0.9.0), the shipped file and the fixtures' (identical).
 inline constexpr std::string_view TUNING_TOML =
     "[worldgen.biomes]\n"
     "jitter_noise = { wavelength_m = 500, octaves = 4, gain = \"0.5\" }\n"
@@ -30,7 +30,13 @@ inline constexpr std::string_view TUNING_TOML =
     "rain_scale_512 = \"1.125\"\n"
     "rain_scale_1024 = 1\n"
     "rain_scale_2048 = \"0.875\"\n"
-    "drain_river_class_min = 3\n";
+    "drain_river_class_min = 3\n"
+    "river_dist_class_min = 4\n"
+    "wet_window_m = 480\n"
+    "wet_hand_m = 5\n"
+    "wet_scale_512 = 1\n"
+    "wet_scale_1024 = 1\n"
+    "wet_scale_2048 = \"1.5\"\n";
 
 // The tuning fields of 4.2 in declaration order with their shipped text.
 struct FieldText {
@@ -46,6 +52,12 @@ inline const std::vector<FieldText>& tuning_fields() {
         {"rain_scale_1024", "1"},
         {"rain_scale_2048", "\"0.875\""},
         {"drain_river_class_min", "3"},
+        {"river_dist_class_min", "4"},
+        {"wet_window_m", "480"},
+        {"wet_hand_m", "5"},
+        {"wet_scale_512", "1"},
+        {"wet_scale_1024", "1"},
+        {"wet_scale_2048", "\"1.5\""},
     };
     return f;
 }
@@ -71,7 +83,7 @@ inline std::string tuning_toml(const std::vector<std::pair<std::string, std::str
 
 // One shipped definition file (one file per biome, the recommended layout of
 // 4.1; the spec shows them as one file). Text exactly as in 4.1 without the
-// comments.
+// comments; twelve definitions since 0.9.0.
 struct DefinitionFile {
     std::string_view name;  // file name in biomes/
     std::string_view text;
@@ -80,41 +92,77 @@ struct DefinitionFile {
 inline const std::vector<DefinitionFile>& shipped_files() {
     static const std::vector<DefinitionFile> f = {
         {"ocean.toml",
-         "[biome.ocean]\ncode = 1\nname = \"Ocean\"\ncolour = 0x183878\nwater = true\nwater_body = \"ocean\"\n"
-         "priority = 0\nfallback = false\nrules = []\nfertility = 0\ntimber = 0\nregion_noun = \"Sea\"\n"},
+         "[biome.ocean]\ncode = 1\nname = \"Ocean\"\ncolour = 0x183878\nwater = true\n"
+         "water_body = \"ocean\"\npriority = 0\nfallback = false\nrules = []\nfertility = 0\n"
+         "timber = 0\nregion_noun = \"Sea\"\n"},
         {"lake.toml",
-         "[biome.lake]\ncode = 2\nname = \"Lake\"\ncolour = 0x4080CC\nwater = true\nwater_body = \"lake\"\n"
-         "priority = 0\nfallback = false\nrules = []\nfertility = 0\ntimber = 0\nregion_noun = \"Mere\"\n"},
+         "[biome.lake]\ncode = 2\nname = \"Lake\"\ncolour = 0x4080CC\nwater = true\n"
+         "water_body = \"lake\"\npriority = 0\nfallback = false\nrules = []\nfertility = 0\n"
+         "timber = 0\nregion_noun = \"Mere\"\n"},
         {"temperate_forest.toml",
-         "[biome.temperate_forest]\ncode = 3\nname = \"Temperate forest\"\ncolour = 0x2E6034\nwater = false\n"
-         "water_body = \"none\"\npriority = 20\nfallback = false\nfertility = \"0.7\"\ntimber = 1\n"
-         "region_noun = \"Wood\"\n\n[[biome.temperate_forest.rules]]\ntemp_min_c = -60\ntemp_max_c = 50\n"
-         "rain_min_mm = 720\nrain_max_mm = 10000\nelev_min_m = 0\nelev_max_m = 3000\nslope_max = 100\n"
-         "hand_max_m = 3000\ncoast_max_m = 32767\n"},
+         "[biome.temperate_forest]\ncode = 3\nname = \"Temperate forest\"\ncolour = 0x2E6034\n"
+         "water = false\nwater_body = \"none\"\npriority = 20\nfallback = false\n"
+         "fertility = \"0.7\"\ntimber = 1\nregion_noun = \"Wood\"\n\n"
+         "[[biome.temperate_forest.rules]]\ntemp_min_c = -60\ntemp_max_c = 50\nrain_min_mm = 720\n"
+         "rain_max_mm = 10000\nelev_min_m = 0\nelev_max_m = 3000\nslope_max = 100\n"
+         "hand_max_m = 3000\ncoast_max_m = 32767\nriver_dist_max_m = 32767\nwet_frac_min = 0\n"},
         {"grassland.toml",
          "[biome.grassland]\ncode = 4\nname = \"Grassland\"\ncolour = 0x96AA5A\nwater = false\n"
-         "water_body = \"none\"\npriority = 10\nfallback = true\nrules = []\nfertility = 1\ntimber = \"0.15\"\n"
-         "region_noun = \"Downs\"\n"},
+         "water_body = \"none\"\npriority = 10\nfallback = true\nrules = []\nfertility = 1\n"
+         "timber = \"0.15\"\nregion_noun = \"Downs\"\n"},
         {"marsh.toml",
-         "[biome.marsh]\ncode = 5\nname = \"Marsh\"\ncolour = 0x5C6E54\nwater = false\nwater_body = \"none\"\n"
-         "priority = 40\nfallback = false\nfertility = \"0.45\"\ntimber = \"0.3\"\nregion_noun = \"Fen\"\n\n"
-         "[[biome.marsh.rules]]\ntemp_min_c = -60\ntemp_max_c = 50\nrain_min_mm = 500\nrain_max_mm = 10000\n"
-         "elev_min_m = 0\nelev_max_m = 200\nslope_max = \"0.05\"\nhand_max_m = 1\ncoast_max_m = 32767\n"},
+         "[biome.marsh]\ncode = 5\nname = \"Marsh\"\ncolour = 0x6AA396\nwater = false\n"
+         "water_body = \"none\"\npriority = 40\nfallback = false\nfertility = \"0.45\"\n"
+         "timber = \"0.3\"\nregion_noun = \"Marsh\"\n\n[[biome.marsh.rules]]\ntemp_min_c = -60\n"
+         "temp_max_c = 50\nrain_min_mm = 500\nrain_max_mm = 10000\nelev_min_m = 0\n"
+         "elev_max_m = 200\nslope_max = \"0.05\"\nhand_max_m = 1\ncoast_max_m = 32767\n"
+         "river_dist_max_m = 32767\nwet_frac_min = 0\n"},
         {"highland_moor.toml",
-         "[biome.highland_moor]\ncode = 6\nname = \"Highland moor\"\ncolour = 0x786468\nwater = false\n"
-         "water_body = \"none\"\npriority = 30\nfallback = false\nfertility = \"0.3\"\ntimber = \"0.1\"\n"
-         "region_noun = \"Moor\"\n\n[[biome.highland_moor.rules]]\ntemp_min_c = -60\ntemp_max_c = 4\n"
-         "rain_min_mm = 0\nrain_max_mm = 10000\nelev_min_m = 300\nelev_max_m = 3000\nslope_max = 100\n"
-         "hand_max_m = 3000\ncoast_max_m = 32767\n"},
+         "[biome.highland_moor]\ncode = 6\nname = \"Highland moor\"\ncolour = 0x7E6680\n"
+         "water = false\nwater_body = \"none\"\npriority = 30\nfallback = false\n"
+         "fertility = \"0.3\"\ntimber = \"0.1\"\nregion_noun = \"Moor\"\n\n"
+         "[[biome.highland_moor.rules]]\ntemp_min_c = -60\ntemp_max_c = 4\nrain_min_mm = 720\n"
+         "rain_max_mm = 10000\nelev_min_m = 300\nelev_max_m = 3000\nslope_max = 100\n"
+         "hand_max_m = 3000\ncoast_max_m = 32767\nriver_dist_max_m = 32767\nwet_frac_min = 0\n"},
         {"alpine.toml",
-         "[biome.alpine]\ncode = 7\nname = \"Alpine\"\ncolour = 0xBEBEB4\nwater = false\nwater_body = \"none\"\n"
-         "priority = 50\nfallback = false\nfertility = 0\ntimber = 0\nregion_noun = \"Peaks\"\n\n"
-         "[[biome.alpine.rules]]\ntemp_min_c = -60\ntemp_max_c = \"0.5\"\nrain_min_mm = 0\nrain_max_mm = 10000\n"
-         "elev_min_m = 600\nelev_max_m = 3000\nslope_max = 100\nhand_max_m = 3000\ncoast_max_m = 32767\n"},
+         "[biome.alpine]\ncode = 7\nname = \"Alpine\"\ncolour = 0xBEBEB4\nwater = false\n"
+         "water_body = \"none\"\npriority = 50\nfallback = false\nfertility = 0\ntimber = 0\n"
+         "region_noun = \"Peaks\"\n\n[[biome.alpine.rules]]\ntemp_min_c = -60\n"
+         "temp_max_c = \"0.5\"\nrain_min_mm = 0\nrain_max_mm = 10000\nelev_min_m = 600\n"
+         "elev_max_m = 3000\nslope_max = 100\nhand_max_m = 3000\ncoast_max_m = 32767\n"
+         "river_dist_max_m = 32767\nwet_frac_min = 0\n"},
         {"blighted_waste.toml",
-         "[biome.blighted_waste]\ncode = 8\nname = \"Blighted waste\"\ncolour = 0x605446\nwater = false\n"
-         "water_body = \"none\"\npriority = 0\nfallback = false\nrules = []\nfertility = 0\ntimber = 0\n"
-         "region_noun = \"Waste\"\n"},
+         "[biome.blighted_waste]\ncode = 8\nname = \"Blighted waste\"\ncolour = 0x605446\n"
+         "water = false\nwater_body = \"none\"\npriority = 0\nfallback = false\nrules = []\n"
+         "fertility = 0\ntimber = 0\nregion_noun = \"Waste\"\n"},
+        {"heath.toml",
+         "[biome.heath]\ncode = 9\nname = \"Heath\"\ncolour = 0x94664A\nwater = false\n"
+         "water_body = \"none\"\npriority = 25\nfallback = false\nfertility = \"0.2\"\n"
+         "timber = \"0.05\"\nregion_noun = \"Heath\"\n\n[[biome.heath.rules]]\ntemp_min_c = -60\n"
+         "temp_max_c = 4\nrain_min_mm = 0\nrain_max_mm = 10000\nelev_min_m = 300\n"
+         "elev_max_m = 3000\nslope_max = 100\nhand_max_m = 3000\ncoast_max_m = 32767\n"
+         "river_dist_max_m = 32767\nwet_frac_min = 0\n"},
+        {"steppe.toml",
+         "[biome.steppe]\ncode = 10\nname = \"Steppe\"\ncolour = 0xE0D296\nwater = false\n"
+         "water_body = \"none\"\npriority = 15\nfallback = false\nfertility = \"0.6\"\n"
+         "timber = \"0.05\"\nregion_noun = \"Steppe\"\n\n[[biome.steppe.rules]]\ntemp_min_c = -60\n"
+         "temp_max_c = 50\nrain_min_mm = 0\nrain_max_mm = 600\nelev_min_m = 0\nelev_max_m = 3000\n"
+         "slope_max = 100\nhand_max_m = 3000\ncoast_max_m = 32767\nriver_dist_max_m = 32767\n"
+         "wet_frac_min = 0\n"},
+        {"wet_woodland.toml",
+         "[biome.wet_woodland]\ncode = 11\nname = \"Wet woodland\"\ncolour = 0x23505E\n"
+         "water = false\nwater_body = \"none\"\npriority = 18\nfallback = false\n"
+         "fertility = \"0.5\"\ntimber = \"0.7\"\nregion_noun = \"Carr\"\n\n"
+         "[[biome.wet_woodland.rules]]\ntemp_min_c = -60\ntemp_max_c = 50\nrain_min_mm = 450\n"
+         "rain_max_mm = 10000\nelev_min_m = 0\nelev_max_m = 300\nslope_max = 100\nhand_max_m = 5\n"
+         "coast_max_m = 32767\nriver_dist_max_m = 112\nwet_frac_min = 0\n"},
+        {"fen.toml",
+         "[biome.fen]\ncode = 12\nname = \"Fen\"\ncolour = 0x8A8070\nwater = false\n"
+         "water_body = \"none\"\npriority = 45\nfallback = false\nfertility = \"0.25\"\n"
+         "timber = \"0.2\"\nregion_noun = \"Fen\"\n\n[[biome.fen.rules]]\ntemp_min_c = -60\n"
+         "temp_max_c = 50\nrain_min_mm = 500\nrain_max_mm = 10000\nelev_min_m = 0\n"
+         "elev_max_m = 200\nslope_max = \"0.05\"\nhand_max_m = 3\ncoast_max_m = 32767\n"
+         "river_dist_max_m = 32767\nwet_frac_min = \"0.45\"\n"},
     };
     return f;
 }

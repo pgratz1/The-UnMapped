@@ -46,6 +46,35 @@ std::string violation(const biome_api::Inputs& in, std::span<const std::uint8_t>
     }
     const std::vector<std::int64_t> s2 = own_s2(g, in.elevation);
     const std::int64_t sc = scale_for(v, std::max(g.width, g.height));
+    const std::int64_t ws = wet_scale_for(v, std::max(g.width, g.height));
+    // B2b by its closed form (brute force over the targets) and B2c by direct
+    // window sums: methods independent of the stage's (invariant 8).
+    const std::vector<std::int64_t> d34 = closed_d34(g, in.water, in.river, v.rdist_k);
+    const WetShare wet = own_wet_share(g, in.water, *hand, v.wet_hand, v.wet_window / 16);
+    {
+        const std::int64_t hh = (v.wet_window / 16) / 2;
+        for (std::int32_t y = 0; y < g.height; ++y) {
+            for (std::int32_t x = 0; x < g.width; ++x) {
+                const std::size_t i = g.index(x, y);
+                if (wet.count[i] < 0 || wet.count[i] > wet.total[i]) {
+                    err << "inv 8: count " << wet.count[i] << " total " << wet.total[i] << " at (" << x << ", " << y << ")";
+                    return err.str();
+                }
+                const bool interior = x >= 2 * hh && y >= 2 * hh && x < g.width - 2 * hh && y < g.height - 2 * hh;
+                if (interior && wet.total[i] != (2 * hh + 1) * (2 * hh + 1) * (2 * hh + 1) * (2 * hh + 1)) {
+                    err << "inv 8: interior total " << wet.total[i] << " at (" << x << ", " << y << ")";
+                    return err.str();
+                }
+            }
+        }
+        const biome_api::WetShare stage = biome_api::wet_share(g, in.water, *hand, v.wet_hand, v.wet_window / 16);
+        if (stage.count != wet.count || stage.total != wet.total) {
+            return "inv 8: biome_wet_share differs from the direct sums";
+        }
+        if (biome_api::river_distance(g, in.water, in.river, v.rdist_k) != d34) {
+            return "inv 8: biome_river_distance differs from the closed form";
+        }
+    }
     const auto nt = noise_grid(seed, STREAM_TJ, g, in.water, v.jitter);
     const auto nr = noise_grid(seed, STREAM_RJ, g, in.water, v.jitter);
     std::vector<std::uint8_t> own(g.cells());
@@ -54,7 +83,10 @@ std::string violation(const biome_api::Inputs& in, std::span<const std::uint8_t>
             continue;
         }
         const Jittered j = own_jitter(in.temperature[i], in.rainfall[i], nt[i], nr[i], v);
-        own[i] = own_lookup_exhaustive(defs, sc, Cell{j.tq, j.rq, in.elevation[i], s2[i], (*hand)[i], in.coast_dist[i]});
+        own[i] = own_lookup_exhaustive(defs, sc,
+                                       Cell{j.tq, j.rq, in.elevation[i], s2[i], (*hand)[i], in.coast_dist[i], d34[i],
+                                            wet.count[i], wet.total[i]},
+                                       ws);
     }
     for (std::int32_t y = 0; y < g.height; ++y) {
         for (std::int32_t x = 0; x < g.width; ++x) {
@@ -117,7 +149,8 @@ void check_world(std::uint64_t seed, std::int32_t n, bool small) {
 std::string full_range_rule(std::string_view id) {
     return "\n[[biome." + std::string(id) +
            ".rules]]\ntemp_min_c = -60\ntemp_max_c = 50\nrain_min_mm = 0\nrain_max_mm = 10000\nelev_min_m = 0\n"
-           "elev_max_m = 3000\nslope_max = 100\nhand_max_m = 3000\ncoast_max_m = 32767\n";
+           "elev_max_m = 3000\nslope_max = 100\nhand_max_m = 3000\ncoast_max_m = 32767\n"
+           "river_dist_max_m = 32767\nwet_frac_min = 0\n";
 }
 
 }  // namespace
@@ -128,14 +161,22 @@ TEST_CASE("P1-04 6 invariants 1 to 4, 10.2: seeds 0 to 3 at N = 128, shipped and
     }
 }
 
-TEST_CASE("P1-04 6 invariants 1 to 4: the designed fixtures, with tuning variants") {
-    for (std::uint64_t f = 0; f < 4; ++f) {
+TEST_CASE("P1-04 6 invariants 1 to 4 and 8: the designed and terrace fixtures, with tuning variants") {
+    for (std::uint64_t f = 0; f < 6; ++f) {
         CAPTURE(f);
-        const biome_api::Inputs in = designed_inputs(f);
-        for (const Overrides& o : {Overrides{}, Overrides{{"drain_river_class_min", "1"}},
-                                   Overrides{{"drain_river_class_min", "15"}}, Overrides{{"rain_scale_512", "4"}},
-                                   Overrides{{"rain_scale_512", "0.25"}, {"temp_jitter_c", "10"}, {"rain_jitter", "1"}}}) {
+        const bool terrace = f >= 4;
+        const biome_api::Inputs in = designed_inputs(terrace ? f - 4 : f, terrace);
+        for (const Overrides& o :
+             {Overrides{}, Overrides{{"drain_river_class_min", "1"}}, Overrides{{"drain_river_class_min", "15"}},
+              Overrides{{"rain_scale_512", "4"}},
+              Overrides{{"rain_scale_512", "0.25"}, {"temp_jitter_c", "10"}, {"rain_jitter", "1"}},
+              // 0.9.0: the new tuning at its bounds and in between.
+              Overrides{{"river_dist_class_min", "1"}}, Overrides{{"river_dist_class_min", "15"}},
+              Overrides{{"wet_window_m", "0"}}, Overrides{{"wet_window_m", "2000"}}, Overrides{{"wet_window_m", "63"}},
+              Overrides{{"wet_hand_m", "0"}}, Overrides{{"wet_hand_m", "100"}}, Overrides{{"wet_scale_512", "4"}},
+              Overrides{{"wet_scale_512", "0.25"}}}) {
             CAPTURE(o.size());
+            CAPTURE((o.empty() ? std::string("-") : o.front().first + "=" + o.front().second));
             const std::vector<std::uint8_t> b = biome_api::layer(in, shipped_definitions(), tuning(o), f, 2);
             const std::string v = violation(in, b, shipped_defs(), values(o), f);
             CHECK_MESSAGE(v.empty(), v);
@@ -155,7 +196,8 @@ TEST_CASE("P1-04 10.2: with every rule over its full range, every dry land cell 
             REQUIRE(at != std::string::npos);
             text.erase(at, 11);
             text += full_range_rule(id);
-        } else if (id == "temperate_forest" || id == "marsh" || id == "highland_moor" || id == "alpine") {
+        } else if (id == "temperate_forest" || id == "marsh" || id == "highland_moor" || id == "alpine" ||
+                   id == "heath" || id == "steppe" || id == "wet_woodland" || id == "fen") {
             text = text.substr(0, text.find("\n[[")) + "\n" + full_range_rule(id);
         } else {
             continue;
@@ -179,19 +221,28 @@ TEST_CASE("P1-04 10.2: with every rule over its full range, every dry land cell 
             }
         }
     }
-    // Lowering alpine below grassland's priority makes grassland the first.
-    std::string alpine = replace.back().second;
+    // Lowering alpine below grassland's priority makes fen (45) the first.
+    std::string alpine;
+    for (const auto& r : replace) {
+        if (r.first == "alpine.toml") {
+            alpine = r.second;
+        }
+    }
     const std::size_t at = alpine.find("priority = 50");
     REQUIRE(at != std::string::npos);
     alpine.replace(at, 13, "priority = 5");
-    replace.back().second = alpine;
+    for (auto& r : replace) {
+        if (r.first == "alpine.toml") {
+            r.second = alpine;
+        }
+    }
     const biome_api::Load l2 = biome_api::load(std::string(biome_data::TUNING_TOML), biome_data::directory(replace));
     REQUIRE_MESSAGE(l2.ok(), all_errors(l2));
     const biome_api::Inputs in = designed_inputs(0);
     const std::vector<std::uint8_t> b = biome_api::layer(in, biome_api::definitions_from(*l2.content), tuning(), 0, 1);
     for (std::size_t i = 0; i < b.size(); ++i) {
         if (in.water[i] == WATER_DRY) {
-            REQUIRE(b[i] == MARSH);  // marsh 40 is now the highest
+            REQUIRE(b[i] == FEN);  // fen 45 is now the highest
         }
     }
 }
@@ -221,12 +272,13 @@ TEST_CASE("P1-04 6 invariant 7, B4: only the scale entry of N applies; nothing e
     }
     in.coast_dist = hydro_api::coast_distance(in.grid, ocean);
     const auto at = [&](const Overrides& o) { return biome_api::layer(in, shipped_definitions(), tuning(o), 11, 4); };
-    const std::vector<std::uint8_t> equal = at({{"rain_scale_512", "1"}, {"rain_scale_1024", "1"}, {"rain_scale_2048", "1"}});
-    CHECK(at({{"rain_scale_512", "0.5"}, {"rain_scale_1024", "1"}, {"rain_scale_2048", "2"}}) == equal);
+    const Overrides eq = {{"rain_scale_512", "1"}, {"rain_scale_1024", "1"}, {"rain_scale_2048", "1"},
+                          {"wet_scale_512", "1.5"}, {"wet_scale_1024", "1.5"}, {"wet_scale_2048", "1.5"}};
+    const std::vector<std::uint8_t> equal = at(eq);
+    CHECK(at({{"rain_scale_512", "0.5"}, {"rain_scale_1024", "1"}, {"rain_scale_2048", "2"}, {"wet_scale_512", "0.25"},
+              {"wet_scale_1024", "1.5"}, {"wet_scale_2048", "4"}}) == equal);
     CHECK(at({{"rain_scale_1024", "0.5"}}) != equal);
-    CHECK(equal == own_biomes(in, shipped_defs(),
-                              values({{"rain_scale_512", "1"}, {"rain_scale_1024", "1"}, {"rain_scale_2048", "1"}}), 11)
-                       .biome);
+    CHECK(equal == own_biomes(in, shipped_defs(), values(eq), 11).biome);
     // On a 128 grid only rain_scale_512 applies.
     const biome_api::Inputs w = world_inputs(0, 128, false);
     const auto at128 = [&](const Overrides& o) { return biome_api::layer(w, shipped_definitions(), tuning(o), 0, 4); };
@@ -234,6 +286,8 @@ TEST_CASE("P1-04 6 invariant 7, B4: only the scale entry of N applies; nothing e
         at128({{"rain_scale_512", "1.125"}, {"rain_scale_1024", "1.125"}, {"rain_scale_2048", "1.125"}});
     CHECK(at128({}) == e128);
     CHECK(at128({{"rain_scale_1024", "3"}, {"rain_scale_2048", "0.25"}}) == e128);
+    // Only wet_scale_512 applies at 128 (0.9.0).
+    CHECK(at128({{"wet_scale_1024", "4"}, {"wet_scale_2048", "0.25"}}) == e128);
 }
 
 // --- G7 with the minimum class against the test's own (P1-00 7.7) ------------------------------
@@ -330,8 +384,10 @@ TEST_CASE("P1-04 10.2 (slow): seeds 0 to 63 at N = 128") {
 }
 
 TEST_CASE("P1-04 9 (slow): hard statistics bounds at 512 (seeds 0 to 3) and 1024 (seed 0)") {
-    // Only the bounds the spec marks hard ("All seeds (hard)"): forest,
-    // grassland, moor, alpine <= 0.80 of land; marsh <= 0.15; blighted 0.
+    // Only the bounds the spec marks hard ("All seeds (hard)", third
+    // version): forest, grassland, steppe, moor, heath, alpine <= 0.80 of
+    // land; marsh, fen, wet woodland <= 0.15; blighted 0. The typical ranges
+    // are provisional (P1-04 9) and only reported.
     for (const auto& [seed, n] : std::vector<std::pair<std::uint64_t, std::int32_t>>{{0, 512}, {1, 512}, {2, 512},
                                                                                    {3, 512}, {0, 1024}}) {
         CAPTURE(seed);
@@ -347,15 +403,19 @@ TEST_CASE("P1-04 9 (slow): hard statistics bounds at 512 (seeds 0 to 3) and 1024
             }
         }
         REQUIRE(land > 0U);
-        for (const std::uint8_t c : {FOREST, GRASSLAND, MOOR, ALPINE}) {
+        for (const std::uint8_t c : {FOREST, GRASSLAND, MOOR, ALPINE, HEATH, STEPPE}) {
             CHECK(count[c] * 100U <= land * 80U);
         }
-        CHECK(count[MARSH] * 100U <= land * 15U);
+        for (const std::uint8_t c : {MARSH, FEN, WET_WOODLAND}) {
+            CHECK(count[c] * 100U <= land * 15U);
+        }
         CHECK(count[BLIGHTED] == 0U);
         // Provisional ranges of section 9 are reported, not asserted.
         MESSAGE("seed " << seed << " N " << n << " forest " << count[FOREST] * 10000U / land << " grass "
                         << count[GRASSLAND] * 10000U / land << " marsh " << count[MARSH] * 10000U / land << " moor "
-                        << count[MOOR] * 10000U / land << " alpine " << count[ALPINE] * 10000U / land << " (1e-4)");
+                        << count[MOOR] * 10000U / land << " alpine " << count[ALPINE] * 10000U / land << " heath "
+                        << count[HEATH] * 10000U / land << " steppe " << count[STEPPE] * 10000U / land << " wet_woodland "
+                        << count[WET_WOODLAND] * 10000U / land << " fen " << count[FEN] * 10000U / land << " (1e-4)");
     }
 }
 

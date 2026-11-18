@@ -209,18 +209,19 @@ const std::vector<Lookup>& lookups() {
         {"B7", 1024, 80, 900, 2001, 100, 5, 200, 0, 0, NONE, NONE, "temperate_forest"},
         {"B8", 1024, 80, 719, 400, 100, 100, 2000, 0, 0, NONE, NONE, "grassland"},
         {"B9", 1024, 80, 720, 400, 100, 100, 2000, 0, 0, NONE, NONE, "temperate_forest"},
-        {"B10", 1024, 40, 650, 3000, 100, 100, 2000, 0, 0, NONE, NONE, "highland_moor"},
+        // B10, B15, B20, B21 changed with the third version (5.1): moor needs 720 mm, steppe takes <= 600.
+        {"B10", 1024, 40, 650, 3000, 100, 100, 2000, 0, 0, NONE, NONE, "heath"},
         {"B11", 1024, 41, 650, 3000, 100, 100, 2000, 0, 0, NONE, NONE, "grassland"},
         {"B12", 1024, 80, 650, 400, 100, 100, 2000, 0, HALF, NONE, 3070901616900, "grassland"},
         {"B13", 1024, 80, 650, 400, 100, 100, 2000, 0, 2576980378, NONE, 3126736191150, "temperate_forest"},
         {"B14", 1024, 10, 650, 6500, 100, 100, 2000, -HALF, 0, 2147483648, NONE, "alpine"},
-        {"B15", 1024, 10, 650, 6500, 100, 100, 2000, -1717986918, 0, 2576980378, NONE, "highland_moor"},
+        {"B15", 1024, 10, 650, 6500, 100, 100, 2000, -1717986918, 0, 2576980378, NONE, "heath"},
         {"B16", 512, 80, 800, 400, 100, 100, 2000, 0, 0, NONE, NONE, "grassland"},
         {"B17", 512, 80, 810, 400, 100, 100, 2000, 0, 0, NONE, NONE, "temperate_forest"},
         {"B18", 2048, 80, 630, 400, 100, 100, 2000, 0, 0, NONE, NONE, "temperate_forest"},
         {"B19", 2048, 80, 438, 30, 100, 8, 200, 0, 0, NONE, NONE, "marsh"},
-        {"B20", 2048, 80, 437, 30, 100, 8, 200, 0, 0, NONE, NONE, "grassland"},
-        {"B21", 1024, 80, 499, 30, 100, 8, 200, 0, 0, NONE, NONE, "grassland"},
+        {"B20", 2048, 80, 437, 30, 100, 8, 200, 0, 0, NONE, NONE, "steppe"},
+        {"B21", 1024, 80, 499, 30, 100, 8, 200, 0, 0, NONE, NONE, "steppe"},
         // Sentinels (5.1, amended 2026-11-17): inputs outside the field ranges.
         {"S1", 1024, -600, 650, 6500, 100, 100, 2000, -ONE, 0, -261993005056, NONE, "alpine"},
         {"S2", 1024, 500, 900, 400, 100, 100, 2000, 2576980378, 0, 217325345178, NONE, "temperate_forest"},
@@ -273,16 +274,19 @@ TEST_CASE("P1-04 4.1, B4: each bound is inclusive and each condition decides on 
     CHECK(at(HALF, 800 * ONE, 6000, 0, 500, 1000) == ALPINE);
     CHECK(at(HALF + 1, 800 * ONE, 6000, 0, 500, 1000) == MOOR);
     CHECK(at(HALF, 800 * ONE, 5999, 0, 500, 1000) == MOOR);
-    // Moor: tq <= 4, elevation >= 300 m.
-    CHECK(at(4 * ONE, 600 * ONE, 3000, 0, 500, 1000) == MOOR);
-    CHECK(at(4 * ONE + 1, 600 * ONE, 3000, 0, 500, 1000) == GRASSLAND);
-    CHECK(at(4 * ONE, 600 * ONE, 2999, 0, 500, 1000) == GRASSLAND);
+    // Moor: tq <= 4, elevation >= 300 m, rq >= 720 (0.9.0); heath below 720 mm.
+    CHECK(at(4 * ONE, 720 * ONE, 3000, 0, 500, 1000) == MOOR);
+    CHECK(at(4 * ONE, 720 * ONE - 1, 3000, 0, 500, 1000) == HEATH);
+    CHECK(at(4 * ONE, 650 * ONE, 3000, 0, 500, 1000) == HEATH);
+    CHECK(at(4 * ONE + 1, 650 * ONE, 3000, 0, 500, 1000) == GRASSLAND);
+    CHECK(at(4 * ONE, 650 * ONE, 2999, 0, 500, 1000) == GRASSLAND);
     // Marsh at 1024: rq >= 500, elevation <= 200 m, S2 <= 256, hand <= 10 dm.
     CHECK(at(8 * ONE, 500 * ONE, 2000, 256, 10, 100) == MARSH);
-    CHECK(at(8 * ONE, 500 * ONE - 1, 2000, 256, 10, 100) == GRASSLAND);
-    CHECK(at(8 * ONE, 500 * ONE, 2001, 256, 10, 100) == GRASSLAND);
-    CHECK(at(8 * ONE, 500 * ONE, 2000, 257, 10, 100) == GRASSLAND);
-    CHECK(at(8 * ONE, 500 * ONE, 2000, 256, 11, 100) == GRASSLAND);
+    // Each failing marsh condition falls to steppe since 0.9.0 (rq <= 600).
+    CHECK(at(8 * ONE, 500 * ONE - 1, 2000, 256, 10, 100) == STEPPE);
+    CHECK(at(8 * ONE, 500 * ONE, 2001, 256, 10, 100) == STEPPE);
+    CHECK(at(8 * ONE, 500 * ONE, 2000, 257, 10, 100) == STEPPE);
+    CHECK(at(8 * ONE, 500 * ONE, 2000, 256, 11, 100) == STEPPE);
     // Forest: rq >= 720 at 1024, one raw step below is grassland.
     CHECK(at(8 * ONE, 720 * ONE, 4000, 1000, 500, 100) == FOREST);
     CHECK(at(8 * ONE, 720 * ONE - 1, 4000, 1000, 500, 100) == GRASSLAND);
@@ -410,7 +414,8 @@ TEST_CASE("P1-04 10.1 test 5: a definition with two rules applies where either m
     std::string moor(biome_data::shipped_files()[5].text);
     moor +=
         "\n[[biome.highland_moor.rules]]\ntemp_min_c = 20\ntemp_max_c = 50\nrain_min_mm = 0\nrain_max_mm = 10000\n"
-        "elev_min_m = 0\nelev_max_m = 100\nslope_max = 100\nhand_max_m = 3000\ncoast_max_m = 32767\n";
+        "elev_min_m = 0\nelev_max_m = 100\nslope_max = 100\nhand_max_m = 3000\ncoast_max_m = 32767\n"
+        "river_dist_max_m = 32767\nwet_frac_min = 0\n";
     const biome_api::Load l =
         biome_api::load(std::string(biome_data::TUNING_TOML), biome_data::directory({{"highland_moor.toml", moor}}));
     REQUIRE_MESSAGE(l.ok(), all_errors(l));
@@ -418,44 +423,55 @@ TEST_CASE("P1-04 10.1 test 5: a definition with two rules applies where either m
     // Only the second rule matches (25 C, 50 m): moor, not forest or grassland.
     CHECK(biome_api::lookup(d, ONE, 25 * ONE, 600 * ONE, 500, 0, 100, 100) == MOOR);
     CHECK(biome_api::lookup(d, ONE, 25 * ONE, 900 * ONE, 500, 0, 100, 100) == MOOR);
-    // Only the first (2 C, 400 m).
-    CHECK(biome_api::lookup(d, ONE, 2 * ONE, 600 * ONE, 4000, 0, 100, 100) == MOOR);
-    // Neither (15 C, 50 m): grassland, and forest with rain.
-    CHECK(biome_api::lookup(d, ONE, 15 * ONE, 600 * ONE, 500, 0, 100, 100) == GRASSLAND);
+    // Only the first (2 C, 400 m, 900 mm; since 0.9.0 the first rule needs 720 mm, so 600 mm is heath).
+    CHECK(biome_api::lookup(d, ONE, 2 * ONE, 900 * ONE, 4000, 0, 100, 100) == MOOR);
+    CHECK(biome_api::lookup(d, ONE, 2 * ONE, 600 * ONE, 4000, 0, 100, 100) == HEATH);
+    // Neither (15 C, 50 m): grassland at 650 mm, steppe at 600, forest with rain.
+    CHECK(biome_api::lookup(d, ONE, 15 * ONE, 650 * ONE, 500, 0, 100, 100) == GRASSLAND);
+    CHECK(biome_api::lookup(d, ONE, 15 * ONE, 600 * ONE, 500, 0, 100, 100) == STEPPE);
     CHECK(biome_api::lookup(d, ONE, 15 * ONE, 900 * ONE, 500, 0, 100, 100) == FOREST);
 }
 
 // --- Real cells (5.1) --------------------------------------------------------------------------
 
-TEST_CASE("P1-04 5.1: the real cells of 1024 seed 3 (inputs as tabulated)") {
+TEST_CASE("P1-04 5.1 (third version): the nine real cells of 1024 seed 3 (inputs as tabulated)") {
     struct Real {
-        std::int64_t temp, rain, elev, s2, hand, coast, nt, nr, tq, rq;
+        std::int64_t temp, rain, elev, s2, hand, coast, d34, count, nt, nr, tq, rq;
         std::uint8_t biome;
     };
+    // wet_total is 923521 on every one of these cells (5.1).
     const std::vector<Real> cells = {
-        {58, 716, 1401, 9250, 262, 1936, 23557280, 120289931, 24934367597, 3092422101912, FOREST},
-        {68, 665, 1297, 17, 718, 2819, -773053270, 126360917, 28432724343, 2872959253535, GRASSLAND},
-        {64, 662, 1222, 20, 0, 4470, 371464994, -710571975, 27859255688, 2749188620462, MARSH},
-        {25, 590, 8659, 139634, 3695, 1866, -1090468039, -442498318, 9646950201, 2481815902880, MOOR},
-        {-13, 748, 12129, 174941, 9549, 992, 98162261, 904479069, -5485295224, 3347945606280, ALPINE},
-        {59, 725, 1140, 1, 67, 2352, 1293082526, -319437946, 26633389572, 3067532787575, GRASSLAND},
+        {86, 699, 757, 41, 13, 1882, 16, 641749, 455563771, -999575947, 37392282517, 2862441422793, FEN},
+        {78, 942, 1, 13, 1, 16, 315, 148404, -1017221412, -752647596, 32483523497, 3904060385934, MARSH},
+        {75, 724, 858, 545, 12, 1226, 3, 438811, 83850000, -253231258, 32296104720, 3072888435856, WET_WOODLAND},
+        {82, 593, 294, 3250, 157, 2493, 19, 333131, 350524620, -202881697, 35569256447, 2522853837501, STEPPE},
+        {27, 641, 9106, 79330, 8351, 3178, 119, 136, -1289992732, 286353072, 10306418967, 2789784500310, HEATH},
+        {30, 2293, 7456, 647744, 7456, 662, 235, 2481, -2578119, -184783332, 12882323769, 9763618374590, MOOR},
+        {-57, 648, 21387, 1348085, 12482, 2224, 307, 0, 350321980, 1031307981, -24130991607, 2916796322016, ALPINE},
+        {73, 711, 1072, 2601, 506, 691, 51, 40243, 1277719975, 1681520217, 32630981236, 3292833922029, FOREST},
+        {63, 653, 5062, 55060, 2604, 2211, 144, 1049, -61014387, 153219071, 26997279578, 2824624054830, GRASSLAND},
     };
     const Values v = values();
-    const std::int64_t sc = biome_api::rain_scale(tuning(), 1024);
+    const biome_api::Tuning t = tuning();
+    const std::int64_t sc = biome_api::rain_scale(t, 1024);
+    const std::int64_t ws = biome_api::wet_scale(t, 1024);
     for (const Real& c : cells) {
         CAPTURE(c.temp);
         CAPTURE(c.rain);
         const Jittered j = own_jitter(c.temp, c.rain, c.nt, c.nr, v);
         CHECK(j.tq == c.tq);
         CHECK(j.rq == c.rq);
-        CHECK(biome_api::lookup(shipped_definitions(), sc, c.tq, c.rq, c.elev, c.s2, c.hand, c.coast) == c.biome);
+        CHECK(biome_api::lookup(shipped_definitions(), sc, c.tq, c.rq, c.elev, c.s2, c.hand, c.coast, c.d34, c.count,
+                                923521, ws) == c.biome);
+        const Cell cell{c.tq, c.rq, c.elev, c.s2, c.hand, c.coast, c.d34, c.count, 923521};
+        CHECK(own_lookup(shipped_defs(), sc, cell, nullptr, ws) == c.biome);
     }
-    // nt and nr of (375, 469) are the jitter fields of seed 3 (B3).
+    // nt and nr of (259, 736) are the jitter fields of seed 3 (B3).
     const std::uint64_t ktj = worldgen::stream_key(3, STREAM_TJ);
     const std::uint64_t krj = worldgen::stream_key(3, STREAM_RJ);
-    const Fx X = Fx::from_int(16 * 375 + 8), Y = Fx::from_int(16 * 469 + 8);
-    CHECK(worldgen::geo::fbm_m(ktj, X, Y, v.jitter).raw() == 23557280);
-    CHECK(worldgen::geo::fbm_m(krj, X, Y, v.jitter).raw() == 120289931);
+    const Fx X = Fx::from_int(16 * 259 + 8), Y = Fx::from_int(16 * 736 + 8);
+    CHECK(worldgen::geo::fbm_m(ktj, X, Y, v.jitter).raw() == 455563771);
+    CHECK(worldgen::geo::fbm_m(krj, X, Y, v.jitter).raw() == -999575947);
 }
 
 // --- B3 structural (10.1 test 8) -------------------------------------------------------------
@@ -489,8 +505,9 @@ TEST_CASE("P1-04 B3, 10.1 test 8: the jitter fields are fbm2 of the stream keys 
         CHECK(j.tq == own.tq[i]);
         CHECK(j.rq == own.rq[i]);
         if (in.water[i] == WATER_DRY) {
-            CHECK(stage[i] == own_lookup(shipped_defs(), own.scale,
-                                         Cell{j.tq, j.rq, in.elevation[i], own.s2[i], own.hand[i], in.coast_dist[i]}));
+            const Cell cell{j.tq,         j.rq,       in.elevation[i],    own.s2[i],         own.hand[i],
+                            in.coast_dist[i], own.d34[i], own.wet.count[i], own.wet.total[i]};
+            CHECK(stage[i] == own_lookup(shipped_defs(), own.scale, cell, nullptr, own.wet_scale));
         }
     }
     CHECK(land >= 4);
@@ -525,6 +542,11 @@ TEST_CASE("P1-04 4.1, B4: a rule field outside its schema range is fatal through
     add("hand_max_m", [](biome_api::Rule& r) { r.hand_max_m = Fx::from_raw(3000 * ONE + 1); });
     add("coast_max_m", [](biome_api::Rule& r) { r.coast_max_m = 32768; });
     add("coast_max_m", [](biome_api::Rule& r) { r.coast_max_m = -1; });
+    // 0.9.0: the two new fields, checked after coast_max_m (4.1).
+    add("river_dist_max_m", [](biome_api::Rule& r) { r = biome_api::with_river_dist_max(r, 32768); });
+    add("river_dist_max_m", [](biome_api::Rule& r) { r = biome_api::with_river_dist_max(r, -1); });
+    add("wet_frac_min", [](biome_api::Rule& r) { r = biome_api::with_wet_frac_min_raw(r, ONE + 1); });
+    add("wet_frac_min", [](biome_api::Rule& r) { r = biome_api::with_wet_frac_min_raw(r, -1); });
     const biome_api::Inputs in = designed_inputs(0);
     for (const Bad& b : bads) {
         CAPTURE(b.field);
