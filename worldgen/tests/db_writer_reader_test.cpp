@@ -48,13 +48,14 @@ constexpr const char* SPEC_DDL_PASS =
     "CREATE TABLE pass (id INTEGER PRIMARY KEY, range_id INTEGER NOT NULL, kind INTEGER NOT NULL, capped "
     "INTEGER NOT NULL, col_x INTEGER NOT NULL, col_y INTEGER NOT NULL, saddle_dm INTEGER NOT NULL, col_dm INTEGER "
     "NOT NULL, path BLOB NOT NULL) STRICT";
-// The DDL of tables biome and climate, schema version 3 (P1-04 3), copied
+// The DDL of tables biome and climate, schema version 4 (P1-04 3, P1-03 3), copied
 // from the spec text.
 constexpr const char* SPEC_DDL_BIOME =
     "CREATE TABLE biome (id INTEGER PRIMARY KEY, key TEXT NOT NULL UNIQUE, name TEXT NOT NULL, colour INTEGER NOT "
     "NULL, water INTEGER NOT NULL) STRICT";
 constexpr const char* SPEC_DDL_CLIMATE =
-    "CREATE TABLE climate (id INTEGER PRIMARY KEY, wind_toward INTEGER NOT NULL) STRICT";
+    "CREATE TABLE climate (id INTEGER PRIMARY KEY, wind_toward INTEGER NOT NULL, temp_offset_dc INTEGER NOT NULL) "
+    "STRICT";
 constexpr const char* EMPTY_SHA256 = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
 
 template <class T>
@@ -91,9 +92,9 @@ Rows expected_empty_meta(const std::string& seed_text, const std::string& phrase
     return {
         {"content_hash", EMPTY_SHA256},
         {"format", "the-unmapped-world"},
-        {"generator_version", "0.8.0"},
+        {"generator_version", "0.9.0"},
         {"param.map_size", "1024"},
-        {"schema_version", "3"},
+        {"schema_version", "4"},
         {"seed", seed_text},
         {"seed_phrase", phrase},
         {"stages", ""},
@@ -125,7 +126,7 @@ void check_header(const std::string& path) {
     CHECK(dbtest::be32(b, 52) == 0);  // largest root page (auto-vacuum)
     CHECK(dbtest::be32(b, 56) == 1);  // text encoding UTF-8
     CHECK(dbtest::be32(b, 60) == static_cast<std::uint32_t>(worldgen::db::SCHEMA_VERSION));  // user version
-    CHECK(dbtest::be32(b, 60) == 3);
+    CHECK(dbtest::be32(b, 60) == 4);
     CHECK(dbtest::be32(b, 64) == 0);           // incremental vacuum
     CHECK(dbtest::be32(b, 68) == 0x554E4D50U);  // application id "UNMP"
     CHECK(b[68] == 'U');
@@ -233,7 +234,7 @@ TEST_CASE("empty world for seed 0: tables, meta rows and values as in section 8 
     CHECK(worldgen::db::DDL_CLIMATE == std::string_view(SPEC_DDL_CLIMATE));
     CHECK(db.rows("SELECT count(*) FROM biome") == Rows{{"0"}});
     CHECK(db.rows("SELECT count(*) FROM climate") == Rows{{"0"}});
-    CHECK(worldgen::db::SCHEMA_VERSION == 3);
+    CHECK(worldgen::db::SCHEMA_VERSION == 4);
 
     // meta: exactly 8 rows, in key order, all TEXT.
     CHECK(db.rows("SELECT key, value FROM meta ORDER BY key") == expected_empty_meta("0", ""));
@@ -243,7 +244,7 @@ TEST_CASE("empty world for seed 0: tables, meta rows and values as in section 8 
     CHECK(db.rows("SELECT count(*) FROM layer") == Rows{{"0"}});
     // Pragmas agree with the header.
     CHECK(db.rows("PRAGMA application_id") == Rows{{"1431194960"}});
-    CHECK(db.rows("PRAGMA user_version") == Rows{{"3"}});
+    CHECK(db.rows("PRAGMA user_version") == Rows{{"4"}});
     CHECK(db.rows("PRAGMA page_size") == Rows{{"4096"}});
     CHECK(db.rows("PRAGMA encoding") == Rows{{"UTF-8"}});
     CHECK(db.rows("PRAGMA auto_vacuum") == Rows{{"0"}});
@@ -261,8 +262,8 @@ TEST_CASE("empty world through the reader (9)") {
     REQUIRE_MESSAGE(opened.ok(), (opened.ok() ? std::string() : opened.error().message));
     const WorldReader& reader = opened.value();
     CHECK(reader.seed() == 0);
-    CHECK(reader.schema_version() == 3);
-    CHECK(reader.generator_version() == "0.8.0");
+    CHECK(reader.schema_version() == 4);
+    CHECK(reader.generator_version() == "0.9.0");
     CHECK(reader.seed_phrase().empty());
     CHECK(reader.map_size() == 1024);
     CHECK(reader.stages().empty());
@@ -777,16 +778,14 @@ TEST_CASE("reader errors are distinct and in the order of section 9 (12.2, 14.2)
         CHECK(open_code(path) == name(ErrorCode::not_world));
         CHECK(dbtest::dir_entries(dir.path()) == before);
     }
-    SUBCASE("user_version 4") {
-        const auto r = WorldReader::open(variant("uv4.db", "PRAGMA user_version = 4"));
+    SUBCASE("user_version 3 (a schema 3 world, generator 0.8.0)") {
+        const auto r = WorldReader::open(variant("uv3.db", "PRAGMA user_version = 3"));
         REQUIRE_FALSE(r.ok());
         CHECK(r.code() == ErrorCode::unsupported_schema_version);
-        // "world schema version X, this build reads Y"
-        CHECK(r.error().message.find('4') != std::string::npos);
-        CHECK(r.error().message.find('3') != std::string::npos);
+        CHECK(r.error().message == "world schema version 3, this build reads 4");
     }
-    SUBCASE("meta.schema_version 4") {
-        CHECK(open_code(variant("msv4.db", "UPDATE meta SET value = '4' WHERE key = 'schema_version'")) ==
+    SUBCASE("meta.schema_version 3") {
+        CHECK(open_code(variant("msv3.db", "UPDATE meta SET value = '3' WHERE key = 'schema_version'")) ==
               name(ErrorCode::unsupported_schema_version));
     }
     SUBCASE("a world missing seed") {
@@ -877,9 +876,9 @@ TEST_CASE("reader errors are distinct and in the order of section 9 (12.2, 14.2)
         CHECK(r.value().meta_entries().size() == 9);
     }
     SUBCASE("validation order: the earlier check wins") {
-        CHECK(open_code(variant("o1.db", "PRAGMA application_id = 1; PRAGMA user_version = 4")) ==
+        CHECK(open_code(variant("o1.db", "PRAGMA application_id = 1; PRAGMA user_version = 3")) ==
               name(ErrorCode::not_world));
-        CHECK(open_code(variant("o2.db", "PRAGMA user_version = 4; DELETE FROM meta WHERE key = 'seed'")) ==
+        CHECK(open_code(variant("o2.db", "PRAGMA user_version = 3; DELETE FROM meta WHERE key = 'seed'")) ==
               name(ErrorCode::unsupported_schema_version));
         CHECK(open_code(variant("o3.db", "DELETE FROM meta WHERE key = 'seed'; UPDATE meta SET value = '7' WHERE key "
                                          "= 'param.map_size'")) == name(ErrorCode::meta_key_missing));

@@ -36,13 +36,14 @@ inline constexpr std::string_view DDL_PASS =
     "CREATE TABLE pass (id INTEGER PRIMARY KEY, range_id INTEGER NOT NULL, kind INTEGER NOT NULL, capped INTEGER NOT "
     "NULL, col_x INTEGER NOT NULL, col_y INTEGER NOT NULL, saddle_dm INTEGER NOT NULL, col_dm INTEGER NOT NULL, path "
     "BLOB NOT NULL) STRICT";
-// The DDL of tables `biome` and `climate` (schema version 3), copied from
-// P1-04 3.
+// The DDL of tables `biome` and `climate` (schema version 4), copied from
+// P1-04 3 and P1-03 3.
 inline constexpr std::string_view DDL_BIOME =
     "CREATE TABLE biome (id INTEGER PRIMARY KEY, key TEXT NOT NULL UNIQUE, name TEXT NOT NULL, colour INTEGER NOT "
     "NULL, water INTEGER NOT NULL) STRICT";
 inline constexpr std::string_view DDL_CLIMATE =
-    "CREATE TABLE climate (id INTEGER PRIMARY KEY, wind_toward INTEGER NOT NULL) STRICT";
+    "CREATE TABLE climate (id INTEGER PRIMARY KEY, wind_toward INTEGER NOT NULL, temp_offset_dc INTEGER NOT NULL) "
+    "STRICT";
 inline constexpr std::string_view EMPTY_CONTENT_HASH =
     "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
 
@@ -154,9 +155,9 @@ inline MetaRows meta_rows(std::uint64_t seed, std::string_view phrase = {}, std:
     return {
         {"content_hash", std::string(EMPTY_CONTENT_HASH)},
         {"format", "the-unmapped-world"},
-        {"generator_version", "0.8.0"},
+        {"generator_version", "0.9.0"},
         {"param.map_size", std::string(map_size)},
-        {"schema_version", "3"},
+        {"schema_version", "4"},
         {"seed", std::to_string(seed)},
         {"seed_phrase", std::string(phrase)},
         {"stages", std::string(stages)},
@@ -221,7 +222,7 @@ inline worldgen::Sha256Digest pass_table_hash(const std::vector<PassTableRow>& r
 // table pass with no rows: the column count 9 only.
 inline worldgen::Sha256Digest empty_pass_table_hash() { return pass_table_hash({}); }
 
-// tables biome (5 columns) and climate (2 columns) with no rows (schema 3):
+// tables biome (5 columns) and climate (3 columns) with no rows (schema 4):
 // the column count only.
 inline worldgen::Sha256Digest empty_table_hash(std::uint64_t columns) {
     Encoder e;
@@ -229,9 +230,9 @@ inline worldgen::Sha256Digest empty_table_hash(std::uint64_t columns) {
     return e.digest();
 }
 inline worldgen::Sha256Digest empty_biome_table_hash() { return empty_table_hash(5); }
-inline worldgen::Sha256Digest empty_climate_table_hash() { return empty_table_hash(2); }
+inline worldgen::Sha256Digest empty_climate_table_hash() { return empty_table_hash(3); }
 
-// schema of every world at schema version 3 (the name is the P0 one):
+// schema of every world at schema version 4 (the name is the P0 one):
 // sqlite_schema rows ordered by type, then name: the automatic indexes of
 // biome.key and layer.name (sql NULL, amendment 10), then the tables biome,
 // climate, layer, meta and pass with their DDL. rootpage is excluded.
@@ -301,9 +302,9 @@ inline constexpr std::string_view REPORT_SEED_0 =
     "[meta]\n"
     "content_hash = e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\n"
     "format = the-unmapped-world\n"
-    "generator_version = 0.8.0\n"
+    "generator_version = 0.9.0\n"
     "param.map_size = 1024\n"
-    "schema_version = 3\n"
+    "schema_version = 4\n"
     "seed = 0\n"
     "seed_phrase =\n"
     "stages =\n"

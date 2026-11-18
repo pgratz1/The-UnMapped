@@ -111,13 +111,13 @@ TEST_CASE("P1-03 9: wind_toward from table climate, first of the climate group, 
     dbtest::TempDir dir("biomes-report-wind");
     for (std::int64_t k = 0; k < 8; ++k) {
         CAPTURE(k);
-        const std::string sql = std::string(ROWS_SQL) + "INSERT INTO climate VALUES (1, " + std::to_string(k) + ");";
+        const std::string sql = std::string(ROWS_SQL) + "INSERT INTO climate VALUES (1, " + std::to_string(k) + ", 0);";
         const std::string text = report_of(world(dir, "w" + std::to_string(k) + ".db", sql));
         const std::string line = "\nwind_toward = " + std::string(WIND_NAMES[static_cast<std::size_t>(k)]) + "\n";
         const std::size_t at = text.find(line);
         REQUIRE(at != std::string::npos);
-        // Before the biome group, after the pass keys.
-        CHECK(text.substr(at + line.size(), 14) == "biome_share = ");
+        // Before temp_offset_c (schema 4) and the biome group, after the pass keys.
+        CHECK(text.substr(at + line.size(), 34) == "temp_offset_c = 0.0\nbiome_share = ");
         CHECK(text.find("\npasses_walkable = 0" + line) != std::string::npos);
         CHECK(text.find("\nclimate = 1\n") != std::string::npos);
     }
@@ -130,10 +130,10 @@ TEST_CASE("P1-03 9: a malformed climate table is a corrupt-data error naming tab
         const char* sql;
     };
     const std::vector<Bad> bads = {
-        {"two rows", "INSERT INTO climate VALUES (1, 1); INSERT INTO climate VALUES (2, 1);"},
-        {"id 2", "INSERT INTO climate VALUES (2, 1);"},
-        {"wind_toward 8", "INSERT INTO climate VALUES (1, 8);"},
-        {"wind_toward -1", "INSERT INTO climate VALUES (1, -1);"},
+        {"two rows", "INSERT INTO climate VALUES (1, 1, 0); INSERT INTO climate VALUES (2, 1, 0);"},
+        {"id 2", "INSERT INTO climate VALUES (2, 1, 0);"},
+        {"wind_toward 8", "INSERT INTO climate VALUES (1, 8, 0);"},
+        {"wind_toward -1", "INSERT INTO climate VALUES (1, -1, 0);"},
     };
     int k = 0;
     for (const Bad& b : bads) {
