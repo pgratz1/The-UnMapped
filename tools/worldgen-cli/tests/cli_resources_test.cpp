@@ -232,16 +232,21 @@ TEST_CASE("cli P1-05 9: report: the eight resources keys close [geography], with
     INFO("stderr: ", r.err);
     REQUIRE(r.exit_code == EXIT_OK);
     const auto res = golden_case(UNMAPPED_P1_05_GOLDEN_PATH, "shipped-512-s0");
-    std::string tail;
-    for (const char* key : {"scores_p50", "scores_p90", "fertile_share", "habitable_share", "ore_rich_share",
-                            "walk_areas", "walk_main_share", "walk_share"}) {
-        std::string v = res.at(key);
-        std::replace(v.begin(), v.end(), '_', ' ');
-        tail += std::string(key) + " = " + v + "\n";
-    }
+    // The last eight lines, with spaces in the values written as "_" (the
+    // golden file's encoding; names such as fresh_water hold "_" already).
+    const std::vector<std::string> keys = {"scores_p50",     "scores_p90", "fertile_share",   "habitable_share",
+                                           "ore_rich_share", "walk_areas", "walk_main_share", "walk_share"};
+    const std::vector<std::string> all = lines_of(r.out);
     INFO(r.out);
-    REQUIRE(r.out.size() >= tail.size());
-    CHECK(r.out.substr(r.out.size() - tail.size()) == tail);
+    REQUIRE(all.size() >= keys.size());
+    for (std::size_t k = 0; k < keys.size(); ++k) {
+        const std::string& line = all[all.size() - keys.size() + k];
+        const std::string head = keys[k] + " = ";
+        REQUIRE(line.rfind(head, 0) == 0U);
+        std::string v = line.substr(head.size());
+        std::replace(v.begin(), v.end(), ' ', '_');
+        CHECK(v == res.at(keys[k]));
+    }
     // Right after the biome keys (P1-00 10.3).
     CHECK(contains(r.out, "\nbiome_patches = "));
     CHECK(r.out.find("\nbiome_patches = ") < r.out.find("\nscores_p50 = "));
