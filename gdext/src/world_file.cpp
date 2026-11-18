@@ -10,6 +10,7 @@
 #include <godot_cpp/variant/char_string.hpp>
 
 #include "worldgen/db/result.hpp"
+#include "worldgen/db/schema.hpp"
 
 namespace unmapped {
 
@@ -43,6 +44,7 @@ bool WorldFile::open(const godot::String& path) {
         }
         layers_ = std::move(layers.value());
         reader_.emplace(std::move(opened.value()));
+        read_biome_table();
     } catch (const std::bad_alloc&) {
         set_error("out_of_memory", "Out of memory while opening " + path);
         return false;
@@ -55,9 +57,37 @@ bool WorldFile::open(const godot::String& path) {
     return true;
 }
 
+void WorldFile::read_biome_table() {
+    biome_records_.clear();
+    biome_colours_.clear();
+    biome_table_problem_ = godot::String();
+    auto rows = reader_->table_rows(worldgen::db::BIOME_TABLE);
+    if (!rows.ok()) {
+        // A world before schema 3 has no table: biome cells then draw in
+        // worldgen's "unknown" colour, as `worldgen-cli render` does. Any
+        // other failure makes the table unusable but leaves the file open.
+        if (rows.code() != worldgen::db::ErrorCode::table_not_found) {
+            biome_table_problem_ = to_godot(rows.error().message);
+        }
+        return;
+    }
+    worldgen::inspect::BiomeTableResult table = worldgen::inspect::read_biome_rows(rows.value());
+    if (table.problem) {
+        biome_table_problem_ = "corrupt table 'biome': " + to_godot(*table.problem);
+        return;
+    }
+    biome_records_ = std::move(table.records);
+    for (const auto& record : biome_records_) {
+        biome_colours_.push_back(worldgen::inspect::BiomeColour{record.id, record.colour});
+    }
+}
+
 void WorldFile::close() {
     reader_.reset();
     layers_.clear();
+    biome_records_.clear();
+    biome_colours_.clear();
+    biome_table_problem_ = godot::String();
     path_ = godot::String();
 }
 
@@ -142,7 +172,11 @@ godot::Ref<WorldLayer> WorldFile::read_layer(const godot::String& name) {
         }
         godot::Ref<WorldLayer> layer;
         layer.instantiate();
-        layer->set_layer(std::move(read.value()));
+        layer->set_layer(std::move(read.value()), biome_colours_);
+        if (layer->palette() == worldgen::inspect::Palette::biome && !biome_table_problem_.is_empty()) {
+            set_error("corrupt_table", "Layer " + name + " needs table 'biome': " + biome_table_problem_);
+            return {};
+        }
         return layer;
     } catch (const std::bad_alloc&) {
         set_error("out_of_memory", "Out of memory while reading layer " + name);
@@ -150,6 +184,56 @@ godot::Ref<WorldLayer> WorldFile::read_layer(const godot::String& name) {
         set_error("internal_error", godot::String("Internal error while reading layer ") + name + ": " + e.what());
     }
     return {};
+}
+
+godot::Array WorldFile::get_biome_entries() const {
+    godot::Array entries;
+    for (const auto& record : biome_records_) {
+        godot::Dictionary row;
+        row["id"] = record.id;
+        row["key"] = to_godot(record.key);
+        row["name"] = to_godot(record.name);
+        row["colour"] = record.colour;
+        row["water"] = record.water;
+        entries.push_back(row);
+    }
+    return entries;
+}
+
+godot::String WorldFile::get_biome_table_problem() const {
+    return biome_table_problem_;
+}
+
+int64_t WorldFile::find_layer(std::string_view name) const {
+    for (std::size_t i = 0; i < layers_.size(); ++i) {
+        if (layers_[i].name == name) {
+            return static_cast<int64_t>(i);
+        }
+    }
+    return -1;
+}
+
+std::vector<worldgen::inspect::Composite> WorldFile::composites() const {
+    std::vector<worldgen::inspect::Composite> result;
+    if (find_layer("elevation") < 0) {
+        return result;
+    }
+    for (const worldgen::inspect::Composite composite : worldgen::inspect::ALL_COMPOSITES) {
+        if (composite == worldgen::inspect::Composite::biomes &&
+            (find_layer("biome") < 0 || !biome_table_problem_.is_empty())) {
+            continue;
+        }
+        result.push_back(composite);
+    }
+    return result;
+}
+
+godot::PackedStringArray WorldFile::get_composite_names() const {
+    godot::PackedStringArray names;
+    for (const worldgen::inspect::Composite composite : composites()) {
+        names.push_back(to_godot(worldgen::inspect::composite_name(composite)));
+    }
+    return names;
 }
 
 void WorldFile::set_error(const worldgen::db::Error& error) {
@@ -181,6 +265,9 @@ void WorldFile::_bind_methods() {
     ClassDB::bind_method(D_METHOD("get_layer_names"), &WorldFile::get_layer_names);
     ClassDB::bind_method(D_METHOD("get_layer_info", "index"), &WorldFile::get_layer_info);
     ClassDB::bind_method(D_METHOD("read_layer", "name"), &WorldFile::read_layer);
+    ClassDB::bind_method(D_METHOD("get_biome_entries"), &WorldFile::get_biome_entries);
+    ClassDB::bind_method(D_METHOD("get_biome_table_problem"), &WorldFile::get_biome_table_problem);
+    ClassDB::bind_method(D_METHOD("get_composite_names"), &WorldFile::get_composite_names);
 }
 
 }  // namespace unmapped

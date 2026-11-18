@@ -96,13 +96,13 @@ All in `gdext/src/`, registered at the scene level:
 
 | Class | Base | Role |
 | --- | --- | --- |
-| `WorldFile` | `RefCounted` | Data access: a `world.db` opened read-only through `worldgen::db::WorldReader`. `open(path)` returns false with `get_error_code()` (worldgen's code name: `file_unreadable`, `not_sqlite`, `not_world`, `unsupported_schema_version`, `meta_key_missing`, `meta_value_invalid`, `corrupt_layer`, ...) and `get_error_message()` (worldgen's plain-English message). `get_meta_entries()`, `get_meta_value(key)`, `get_layer_count()`, `get_layer_names()`, `get_layer_info(i)` (id, name, width, height, element_type, codec, encoded_size; no decoding), `read_layer(name)`. |
-| `WorldLayer` | `RefCounted` | A decoded layer: integer cells, `get_cell_text(x, y)` (exact decimal, also for u64), `get_min_text()`, `get_max_text()`, and `to_image()`, an RGB8 `Image` made by worldgen's `render_rgb` with the layer's registered palette, scale 1, the same pixels as `worldgen-cli render`. |
-| `ViewerModel` | `RefCounted` | The model of the viewer screen: the open world, the selected layer, decoded images; signals `world_opened`, `world_open_failed`, `world_closed`, `layer_selected`, `layer_failed`. No Controls; a VR view can use it as is. |
+| `WorldFile` | `RefCounted` | Data access: a `world.db` opened read-only through `worldgen::db::WorldReader`. `open(path)` returns false with `get_error_code()` (worldgen's code name: `file_unreadable`, `not_sqlite`, `not_world`, `unsupported_schema_version`, `meta_key_missing`, `meta_value_invalid`, `corrupt_layer`, ...) and `get_error_message()` (worldgen's plain-English message). `get_meta_entries()`, `get_meta_value(key)`, `get_layer_count()`, `get_layer_names()`, `get_layer_info(i)` (id, name, width, height, element_type, codec, encoded_size; no decoding), `read_layer(name)`. Table `biome` (schema 3) is read once on open through the reader's table access and worldgen's `read_biome_rows`: `get_biome_entries()` (id, key, name, colour, water) and `get_biome_table_problem()`; a world without the table opens normally. `get_composite_names()`: the composites worldgen can build from the file (`map` with an `elevation` layer, `biomes` with `biome` and a usable table too). |
+| `WorldLayer` | `RefCounted` | A decoded layer: integer cells, `get_cell_text(x, y)` (exact decimal, also for u64), `get_min_text()`, `get_max_text()`, `get_palette()`, and `to_image()`, an RGB8 `Image` made by worldgen's `render_rgb` at scale 1 with worldgen's `auto_palette` for the layer (as `worldgen-cli render --palette auto`) and, for the `biome` palette, the world's table `biome` (P1-00 10.2: without it every cell is magenta), rendered straight into the image's buffer; the same pixels as `worldgen-cli render`. `composite_image()` (C++ only) does the same for worldgen's composites. |
+| `ViewerModel` | `RefCounted` | The model of the viewer screen: the open world, its views (every layer, then every composite), the selected view, decoded layers and images; `get_view_count()`, `get_view_info(i)` (kind `layer` or `composite`, name, size, element type, palette), `select_view(i)`, `get_view_image(i)`; signals `world_opened`, `world_open_failed`, `world_closed`, `view_selected`, `view_failed`. No Controls; a VR view can use it as is. |
 | `LayerMapView` | `Control` | Presentation: draws one layer image with nearest filtering, pan (drag with left or middle button), zoom about the cursor (wheel), fit (double click); signal `cell_hovered(x, y)`. |
-| `ViewerScreen` | `Control` | The flat view: root of `game/viewer/viewer.tscn`; finds its parts by unique name, wires them to a `ViewerModel`, reads the command line, runs the headless check. |
+| `ViewerScreen` | `Control` | The flat view: root of `game/viewer/viewer.tscn`; finds its parts by unique name, wires them to a `ViewerModel`, reads the command line, runs the headless check. The layer list shows every view; composites are labelled `map (composite)` and `biomes (composite)`, and hovering one shows the elevation of the cell. |
 
-Integers stay integers up to `WorldLayer`; floats appear only on the Godot side (zoom, pan) and never reach worldgen. The viewer lists whatever layers the file holds, so the layers of phase P1 appear without viewer changes. Every layer is shown with worldgen's registered palette (gray in P0); per-layer palettes come with P1 through `render_rgb`.
+Integers stay integers up to `WorldLayer`; floats appear only on the Godot side (zoom, pan) and never reach worldgen. The viewer lists whatever layers the file holds, so new layers appear without viewer changes; each is drawn with worldgen's palette for it (a new palette needs no viewer change either, unless, like `biome`, it needs data from a table). Composites appear when worldgen offers them for the file's layers.
 
 ## Opening the viewer
 
@@ -115,14 +115,15 @@ GODOT=~/.cache/the-unmapped/tools/godot-4.7.2-stable/Godot_v4.7.2-stable_linux.x
 "$GODOT" --path "$B/game" -- ~/.cache/the-unmapped/out/seed42.db
 ```
 
-Without a path after `--`, use "Open world..." to pick a file. The path must be absolute: Godot changes the working directory to the project. To edit the scenes in the editor: `"$GODOT" --editor --path "$B/game"`.
+Add `--view <name>` after the path to start on that layer or composite (for example `--view biomes`). A real world: `worldgen-cli generate --seed 42 --map-size 512 --out <file>` (about 2 seconds). Without a path after `--`, use "Open world..." to pick a file. The path must be absolute: Godot changes the working directory to the project. To edit the scenes in the editor: `"$GODOT" --editor --path "$B/game"`.
 
 ## Headless check
 
 CTest test `gdext-headless-check`, registered when the option is on, tests are built and the pinned editor is found. It runs `gdext/cmake/headless_check.cmake`:
 
-1. `worldgen-cli generate --seed 42 --test-pattern` into `<build>/gdext/headless-check/`, and `worldgen-cli render` of each of its three layers to PNG.
-2. `godot --headless --path <build>/game --import`: the editor loads the project and the extension.
-3. `godot --headless --path <build>/game -- <world> --check <dir> --expect-layers 3`: the real viewer scene opens the world, the check (`gdext/src/viewer/viewer_check.hpp`) chooses each layer through the layer list and compares the image handed to the map view with the PNG, pixel for pixel; it also checks the meta panel and two reader errors.
+1. `worldgen-cli generate --seed 42 --test-pattern` into `<build>/gdext/headless-check/pattern/`, and `worldgen-cli render` of each of its three layers to PNG.
+2. `worldgen-cli generate --seed 42 --map-size 512 --data <repo>/game/data` into `<build>/gdext/headless-check/real/`; its layers are listed from `worldgen-cli report` (`[layers]`), `biome`, `elevation` and `rainfall` must be among them, and every layer is rendered to `<layer>.png` and the composites `map` and `biomes` to `composite.<name>.png`.
+3. `godot --headless --path <build>/game --import`: the editor loads the project and the extension.
+4. For each world, `godot --headless --path <build>/game -- <world> --check <dir> --expect-layers <n> --expect-composites <m>`: the real viewer scene opens the world, the check (`gdext/src/viewer/viewer_check.hpp`) chooses each layer and composite through the layer list and compares the image handed to the map view with the PNG, pixel for pixel; it also checks the meta panel, that table `biome` was read and no `biome` cell is drawn in the unknown-biome magenta, and two reader errors.
 
-It fails unless every step exits 0 and the viewer prints `UNMAPPED-CHECK: PASS`. Run it alone with `ctest --preset <preset> -R gdext-headless-check -V`.
+It fails unless every step exits 0 and the viewer prints `UNMAPPED-CHECK: PASS` for both worlds. It takes about 7 seconds (`linux-gcc-release`), most of it generating the 512 world. Run it alone with `ctest --preset <preset> -R gdext-headless-check -V`.

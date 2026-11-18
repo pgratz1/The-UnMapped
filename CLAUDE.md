@@ -240,7 +240,7 @@ ctest --preset linux-gcc-debug
 ctest --preset linux-gcc-debug -R gdext-headless-check -V    # the headless check alone
 ```
 
-`gdext-headless-check` is registered only when the pinned editor is found (in the tools folder above, on `PATH`, or named by `-DUNMAPPED_GODOT=<path>`). It generates `--seed 42 --test-pattern`, imports the project headless, runs the real viewer scene on that world and checks that it lists three layers and shows, for each, the same pixels as `worldgen-cli render`. It takes about 4 seconds. A clean build with the extension takes about 3.5 minutes on 6 cores with an empty ccache (godot-cpp is about 1,100 files; `linux-gcc-release`, measured 2026-11-15), against under a minute without it; with a warm ccache a clean build of the same tree takes about 3 seconds.
+`gdext-headless-check` is registered only when the pinned editor is found (in the tools folder above, on `PATH`, or named by `-DUNMAPPED_GODOT=<path>`). It generates `--seed 42 --test-pattern` and a real `--seed 42 --map-size 512` world, imports the project headless, runs the real viewer scene on each world and checks that it lists every layer (three, and the real world's layers from `report`, which must include `biome`, `elevation` and `rainfall`) and the composites `map` and `biomes`, and shows, for each, the same pixels as `worldgen-cli render`. It takes about 7 seconds. A clean build with the extension takes about 3.5 minutes on 6 cores with an empty ccache (godot-cpp is about 1,100 files; `linux-gcc-release`, measured 2026-11-15), against under a minute without it; with a warm ccache a clean build of the same tree takes about 3 seconds.
 
 Open the viewer on a test world (Linux; the path after `--` must be absolute):
 

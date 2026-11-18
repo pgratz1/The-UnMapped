@@ -23,15 +23,30 @@ namespace unmapped {
 
 namespace {
 
-godot::String layer_label(const godot::Dictionary& info) {
+bool is_composite(const godot::Dictionary& info) {
+    return info.get("kind", "") == godot::Variant("composite");
+}
+
+godot::String view_label(const godot::Dictionary& info) {
+    if (is_composite(info)) {
+        return godot::String("{0} (composite)   {1} x {2}")
+            .format(godot::Array::make(info["name"], info["width"], info["height"]));
+    }
     return godot::String("{0}   {1} x {2}  {3}")
         .format(godot::Array::make(info["name"], info["width"], info["height"], info["element_type"]));
 }
 
-godot::String layer_tooltip(const godot::Dictionary& info) {
-    return godot::String("{0}\n{1} x {2} cells, {3}\ncodec {4}, {5} bytes encoded")
+godot::String view_tooltip(const godot::Dictionary& info) {
+    if (is_composite(info)) {
+        return godot::String("{0} (composite)\n{1} x {2} cells, built by worldgen from elevation and the layers "
+                             "it uses")
+            .format(godot::Array::make(info["name"], info["width"], info["height"]));
+    }
+    const godot::String palette = info.get("palette", "");
+    return godot::String("{0}\n{1} x {2} cells, {3}\ncodec {4}, {5} bytes encoded{6}")
         .format(godot::Array::make(info["name"], info["width"], info["height"], info["element_type"],
-                                   info["codec"], info["encoded_size"]));
+                                   info["codec"], info["encoded_size"],
+                                   palette.is_empty() ? godot::String() : "\npalette " + palette));
 }
 
 }  // namespace
@@ -72,19 +87,24 @@ void ViewerScreen::_ready() {
         model_->connect("world_opened", callable_mp(this, &ViewerScreen::on_world_opened));
         model_->connect("world_open_failed", callable_mp(this, &ViewerScreen::on_world_open_failed));
         model_->connect("world_closed", callable_mp(this, &ViewerScreen::on_world_closed));
-        model_->connect("layer_selected", callable_mp(this, &ViewerScreen::on_layer_selected));
-        model_->connect("layer_failed", callable_mp(this, &ViewerScreen::on_layer_failed));
+        model_->connect("view_selected", callable_mp(this, &ViewerScreen::on_view_selected));
+        model_->connect("view_failed", callable_mp(this, &ViewerScreen::on_view_failed));
     }
 
     // Arguments after `--` on the Godot command line.
     const godot::PackedStringArray args = godot::OS::get_singleton()->get_cmdline_user_args();
     godot::String world_path;
+    godot::String start_view;
     for (int64_t i = 0; i < args.size(); ++i) {
         const godot::String arg = args[i];
-        if (arg == "--check" && i + 1 < args.size()) {
+        if (arg == "--view" && i + 1 < args.size()) {
+            start_view = args[++i];
+        } else if (arg == "--check" && i + 1 < args.size()) {
             check_reference_dir_ = args[++i];
         } else if (arg == "--expect-layers" && i + 1 < args.size()) {
             check_expect_layers_ = args[++i].to_int();
+        } else if (arg == "--expect-composites" && i + 1 < args.size()) {
+            check_expect_composites_ = args[++i].to_int();
         } else if (arg == "--screenshot" && i + 1 < args.size()) {
             screenshot_path_ = args[++i];
         } else if (!arg.begins_with("--") && world_path.is_empty()) {
@@ -95,7 +115,18 @@ void ViewerScreen::_ready() {
     }
 
     if (!world_path.is_empty() && wired_) {
-        open_world(world_path);
+        if (open_world(world_path) && !start_view.is_empty()) {
+            bool found = false;
+            for (int64_t i = 0; i < model_->get_view_count() && !found; ++i) {
+                if (model_->get_view_info(i)["name"] == godot::Variant(start_view)) {
+                    choose_view(i);
+                    found = true;
+                }
+            }
+            if (!found) {
+                godot::UtilityFunctions::push_warning("Viewer: no layer or composite called ", start_view);
+            }
+        }
     } else if (wired_) {
         show_status("Open a world file (world.db) to view its layers.", false);
     }
@@ -136,6 +167,7 @@ void ViewerScreen::run_check_deferred() {
     ViewerCheckOptions options;
     options.reference_dir = check_reference_dir_;
     options.expect_layers = check_expect_layers_;
+    options.expect_composites = check_expect_composites_;
     options.wired = wired_;
     const int exit_code = run_viewer_check(*this, options);
     get_tree()->quit(exit_code);
@@ -152,7 +184,7 @@ bool ViewerScreen::open_world(const godot::String& path) {
     return model_->open_world(path);
 }
 
-void ViewerScreen::choose_layer(int64_t index) {
+void ViewerScreen::choose_view(int64_t index) {
     if (!wired_) {
         return;
     }
@@ -169,17 +201,17 @@ void ViewerScreen::on_file_selected(const godot::String& path) {
 }
 
 void ViewerScreen::on_layer_list_selected(int64_t index) {
-    model_->select_layer(index);
+    model_->select_view(index);
 }
 
 void ViewerScreen::on_cell_hovered(int64_t x, int64_t y) {
-    const int64_t selected = model_->get_selected_layer();
+    const int64_t selected = model_->get_selected_view();
     if (selected < 0) {
         return;
     }
-    const godot::Dictionary info = model_->get_layer_info(selected);
+    const godot::Dictionary info = model_->get_view_info(selected);
     if (x < 0 || y < 0) {
-        show_status(layer_tooltip(info).replace("\n", "   "), false);
+        show_status(view_tooltip(info).replace("\n", "   "), false);
         return;
     }
     show_status(godot::String("{0}   x {1}, y {2}:  {3}")
@@ -192,11 +224,11 @@ void ViewerScreen::on_world_opened(const godot::String& path) {
     file_label_->set_tooltip_text(path);
 
     layer_list_->clear();
-    const int64_t count = model_->get_layer_count();
+    const int64_t count = model_->get_view_count();
     for (int64_t i = 0; i < count; ++i) {
-        const godot::Dictionary info = model_->get_layer_info(i);
-        const int32_t item = layer_list_->add_item(layer_label(info));
-        layer_list_->set_item_tooltip(item, layer_tooltip(info));
+        const godot::Dictionary info = model_->get_view_info(i);
+        const int32_t item = layer_list_->add_item(view_label(info));
+        layer_list_->set_item_tooltip(item, view_tooltip(info));
     }
 
     meta_tree_->clear();
@@ -214,7 +246,14 @@ void ViewerScreen::on_world_opened(const godot::String& path) {
         map_view_->clear_image();
         show_status("This world has no layers.", false);
     } else {
-        show_status(godot::String::num_int64(count) + (count == 1 ? " layer" : " layers"), false);
+        const int64_t layers = model_->get_layer_count();
+        const int64_t composites = model_->get_composite_count();
+        godot::String text = godot::String::num_int64(layers) + (layers == 1 ? " layer" : " layers");
+        if (composites > 0) {
+            text += godot::String(", ") + godot::String::num_int64(composites) +
+                    (composites == 1 ? " composite" : " composites");
+        }
+        show_status(text, false);
     }
 }
 
@@ -236,18 +275,21 @@ void ViewerScreen::on_world_closed() {
     map_view_->clear_image();
 }
 
-void ViewerScreen::on_layer_selected(int64_t index) {
+void ViewerScreen::on_view_selected(int64_t index) {
     if (!layer_list_->is_selected(static_cast<int32_t>(index))) {
         layer_list_->select(static_cast<int32_t>(index));
     }
-    map_view_->set_image(model_->get_layer_image(index));
-    show_status(layer_tooltip(model_->get_layer_info(index)).replace("\n", "   "), false);
+    layer_list_->ensure_current_is_visible();
+    const godot::Dictionary info = model_->get_view_info(index);
+    layer_list_->set_item_tooltip(static_cast<int32_t>(index), view_tooltip(info));  // palette now known
+    map_view_->set_image(model_->get_view_image(index));
+    show_status(view_tooltip(info).replace("\n", "   "), false);
 }
 
-void ViewerScreen::on_layer_failed(int64_t index, const godot::String& code, const godot::String& message) {
-    const godot::Dictionary info = model_->get_layer_info(index);
-    const godot::String text =
-        godot::String("Cannot show layer {0}: {1} ({2})").format(godot::Array::make(info["name"], message, code));
+void ViewerScreen::on_view_failed(int64_t index, const godot::String& code, const godot::String& message) {
+    const godot::Dictionary info = model_->get_view_info(index);
+    const godot::String text = godot::String("Cannot show {0} {1}: {2} ({3})")
+                                   .format(godot::Array::make(info["kind"], info["name"], message, code));
     show_status(text, true);
     godot::UtilityFunctions::printerr(text);
 }
@@ -266,7 +308,7 @@ void ViewerScreen::_bind_methods() {
     using godot::D_METHOD;
     ClassDB::bind_method(D_METHOD("get_model"), &ViewerScreen::get_model);
     ClassDB::bind_method(D_METHOD("open_world", "path"), &ViewerScreen::open_world);
-    ClassDB::bind_method(D_METHOD("choose_layer", "index"), &ViewerScreen::choose_layer);
+    ClassDB::bind_method(D_METHOD("choose_view", "index"), &ViewerScreen::choose_view);
 }
 
 }  // namespace unmapped

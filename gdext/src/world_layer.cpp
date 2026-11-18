@@ -1,7 +1,9 @@
 #include "world_layer.hpp"
 
-#include <cstring>
+#include <algorithm>
 #include <exception>
+#include <optional>
+#include <stdexcept>
 #include <string>
 #include <type_traits>
 #include <utility>
@@ -45,8 +47,79 @@ godot::String element_type_text(worldgen::db::ElementType type) {
     return to_godot(worldgen::db::element_type_name(type));
 }
 
-void WorldLayer::set_layer(worldgen::db::Layer layer) {
+bool fits_godot_image(std::uint64_t width, std::uint64_t height) noexcept {
+    return width > 0 && height > 0 && width <= GODOT_IMAGE_MAX_SIDE && height <= GODOT_IMAGE_MAX_SIDE &&
+           width * height <= GODOT_IMAGE_MAX_PIXELS;
+}
+
+godot::Ref<godot::Image> make_rgb_image(std::uint64_t width, std::uint64_t height, const godot::String& what,
+                                        const std::function<void(std::span<std::uint8_t>)>& fill) {
+    if (!fits_godot_image(width, height)) {
+        ERR_PRINT(what + godot::String(" is too large for a Godot image"));
+        return {};
+    }
+    godot::PackedByteArray data;
+    const auto bytes = static_cast<std::size_t>(width * height * 3U);
+    data.resize(static_cast<int64_t>(bytes));
+    try {
+        fill(std::span<std::uint8_t>(data.ptrw(), bytes));
+    } catch (const std::exception& e) {
+        ERR_PRINT(what + godot::String(" cannot be rendered: ") + e.what());
+        return {};
+    }
+    return godot::Image::create_from_data(static_cast<int32_t>(width), static_cast<int32_t>(height), false,
+                                          godot::Image::FORMAT_RGB8, data);
+}
+
+godot::Ref<godot::Image> composite_image(worldgen::inspect::Composite composite, const CompositeLayers& layers,
+                                         std::span<const worldgen::inspect::BiomeColour> biome_table,
+                                         godot::String& problem) {
+    namespace inspect = worldgen::inspect;
+    const godot::String name = to_godot(inspect::composite_name(composite));
+    problem = godot::String();
+    if (layers.elevation == nullptr) {
+        problem = "the world has no layer 'elevation'";
+        return {};
+    }
+    if (composite == inspect::Composite::biomes && layers.biome == nullptr) {
+        problem = "the world has no layer 'biome'";
+        return {};
+    }
+    const std::optional<std::string> unsuitable =
+        composite == inspect::Composite::biomes
+            ? inspect::composite_biomes_problem(*layers.elevation, *layers.biome, layers.water, layers.river,
+                                                layers.flow_dir)
+            : inspect::composite_map_problem(*layers.elevation, layers.water, layers.river, layers.flow_dir);
+    if (unsuitable) {
+        problem = to_godot(*unsuitable);
+        return {};
+    }
+    const worldgen::db::LayerGrid& elevation = *layers.elevation;
+    if (!fits_godot_image(elevation.width, elevation.height)) {
+        problem = "too large for a Godot image";
+        return {};
+    }
+    return make_rgb_image(elevation.width, elevation.height, "Composite " + name, [&](std::span<std::uint8_t> out) {
+        // The composite functions return their buffer; one copy.
+        const std::vector<std::uint8_t> rgb =
+            composite == inspect::Composite::biomes
+                ? inspect::render_composite_biomes(elevation, *layers.biome, biome_table, layers.water,
+                                                   layers.river, layers.flow_dir, 1U)
+                : inspect::render_composite_map(elevation, layers.water, layers.river, layers.flow_dir, 1U);
+        if (rgb.size() != out.size()) {
+            throw std::length_error("composite buffer size differs from the image");
+        }
+        std::copy(rgb.begin(), rgb.end(), out.begin());
+    });
+}
+
+void WorldLayer::set_layer(worldgen::db::Layer layer, std::vector<worldgen::inspect::BiomeColour> biome_table) {
     layer_ = std::move(layer);
+    palette_ = worldgen::db::is_valid_layer_grid(layer_.grid)
+                   ? worldgen::inspect::auto_palette(layer_.name, layer_.grid)
+                   : worldgen::inspect::Palette::gray;
+    biome_table_ = palette_ == worldgen::inspect::Palette::biome ? std::move(biome_table)
+                                                                 : std::vector<worldgen::inspect::BiomeColour>{};
 }
 
 godot::String WorldLayer::get_layer_name() const {
@@ -70,7 +143,7 @@ godot::String WorldLayer::get_codec() const {
 }
 
 godot::String WorldLayer::get_palette() const {
-    return to_godot(worldgen::inspect::palette_name(worldgen::inspect::registered_palette(layer_.name)));
+    return to_godot(worldgen::inspect::palette_name(palette_));
 }
 
 godot::String WorldLayer::get_cell_text(int64_t x, int64_t y) const {
@@ -116,23 +189,9 @@ godot::Ref<godot::Image> WorldLayer::to_image() const {
         ERR_PRINT("WorldLayer.to_image: no valid layer");
         return {};
     }
-    if (grid.width > GODOT_IMAGE_MAX_SIDE || grid.height > GODOT_IMAGE_MAX_SIDE ||
-        grid.cell_count() > GODOT_IMAGE_MAX_PIXELS) {
-        ERR_PRINT(godot::String("Layer ") + get_layer_name() + " is too large for a Godot image");
-        return {};
-    }
-    std::vector<std::uint8_t> rgb;
-    try {
-        rgb = worldgen::inspect::render_rgb(grid, worldgen::inspect::registered_palette(layer_.name), 1U);
-    } catch (const std::exception& e) {
-        ERR_PRINT(godot::String("Layer ") + get_layer_name() + " cannot be rendered: " + e.what());
-        return {};
-    }
-    godot::PackedByteArray data;
-    data.resize(static_cast<int64_t>(rgb.size()));
-    std::memcpy(data.ptrw(), rgb.data(), rgb.size());
-    return godot::Image::create_from_data(static_cast<int32_t>(grid.width), static_cast<int32_t>(grid.height),
-                                          false, godot::Image::FORMAT_RGB8, data);
+    return make_rgb_image(grid.width, grid.height, "Layer " + get_layer_name(), [this](std::span<std::uint8_t> out) {
+        worldgen::inspect::render_rgb(layer_.grid, palette_, 1U, biome_table_, out);
+    });
 }
 
 void WorldLayer::_bind_methods() {

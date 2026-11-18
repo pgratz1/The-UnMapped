@@ -101,6 +101,7 @@ if(UNMAPPED_BUILD_TESTS)
                 COMMAND "${CMAKE_COMMAND}"
                     "-DGODOT=${UNMAPPED_GODOT}"
                     "-DWORLDGEN_CLI=$<TARGET_FILE:worldgen-cli>"
+                    "-DDATA_DIR=${PROJECT_SOURCE_DIR}/game/data"
                     "-DPROJECT_DIR=${UNMAPPED_GODOT_PROJECT_DIR}"
                     "-DWORK_DIR=${CMAKE_CURRENT_BINARY_DIR}/headless-check"
                     -P "${CMAKE_CURRENT_SOURCE_DIR}/cmake/headless_check.cmake")

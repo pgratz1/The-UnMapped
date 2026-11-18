@@ -14,6 +14,7 @@
 
 #include <cstdint>
 #include <optional>
+#include <string_view>
 #include <vector>
 
 #include <godot_cpp/classes/ref.hpp>
@@ -25,6 +26,8 @@
 
 #include "world_layer.hpp"
 #include "worldgen/db/reader.hpp"
+#include "worldgen/inspect/geography.hpp"
+#include "worldgen/inspect/render.hpp"
 
 namespace unmapped {
 
@@ -66,11 +69,32 @@ public:
     // empty for an index out of range.
     [[nodiscard]] godot::Dictionary get_layer_info(int64_t index) const;
 
-    // Decodes a layer by name. Null on failure (see get_error_*).
+    // Decodes a layer by name. Null on failure (see get_error_*). A layer
+    // drawn with the biome palette gets the world's `biome` table (below);
+    // if that table is malformed the read fails with "corrupt_table".
     godot::Ref<WorldLayer> read_layer(const godot::String& name);
+
+    // Table `biome` (schema 3, P1-04 9), read once by open(): an Array of
+    // Dictionary {id, key, name, colour (0xRRGGBB), water} in id order. Empty
+    // when the world has no such table or it is malformed.
+    [[nodiscard]] godot::Array get_biome_entries() const;
+    // Why table `biome` cannot be used ("" when it is fine or absent).
+    [[nodiscard]] godot::String get_biome_table_problem() const;
+
+    // The composite images worldgen can build from this world's layers, in
+    // worldgen's order: "map" when there is an `elevation` layer, "biomes"
+    // when there are also a `biome` layer and a usable table `biome` (P1-00
+    // 10.2, P1-04 9). Their layers are checked only when rendered.
+    [[nodiscard]] godot::PackedStringArray get_composite_names() const;
 
     // --- C++ only --------------------------------------------------------------
     [[nodiscard]] const std::vector<worldgen::db::LayerInfo>& layer_infos() const noexcept { return layers_; }
+    [[nodiscard]] const std::vector<worldgen::inspect::BiomeColour>& biome_colours() const noexcept {
+        return biome_colours_;
+    }
+    [[nodiscard]] std::vector<worldgen::inspect::Composite> composites() const;
+    // Index of the layer called name in layer_infos(), or -1.
+    [[nodiscard]] int64_t find_layer(std::string_view name) const;
 
 protected:
     static void _bind_methods();
@@ -79,9 +103,13 @@ private:
     void set_error(const worldgen::db::Error& error);
     void set_error(const godot::String& code, const godot::String& message);
     void clear_error();
+    void read_biome_table();
 
     std::optional<worldgen::db::WorldReader> reader_;
     std::vector<worldgen::db::LayerInfo> layers_;
+    std::vector<worldgen::inspect::BiomeRecord> biome_records_;
+    std::vector<worldgen::inspect::BiomeColour> biome_colours_;
+    godot::String biome_table_problem_;
     godot::String path_;
     godot::String error_code_;
     godot::String error_message_;
