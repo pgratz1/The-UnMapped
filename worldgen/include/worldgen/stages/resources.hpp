@@ -155,7 +155,7 @@ void check_resource_tuning(const ResourceTuning& tuning);
 
 // The ore noise of R4 at cell (x, y): fbm_m(K_ore, from_int(16 x + 8),
 // from_int(16 y + 8), ore_noise), K_ore = stream_key(seed,
-// "geo.resources.ore").
+// "geo.resources.ore"). Checks the tuning first (check_resource_tuning).
 [[nodiscard]] Fx resource_ore_noise(std::uint64_t seed, std::int32_t x, std::int32_t y, const ResourceTuning& tuning);
 
 // R6 for one land cell from the stored u8 scores (F fertility, W
@@ -228,10 +228,11 @@ struct ResourceLayers {
                                               std::uint32_t threads = 1);
 
 // The stage entry point (P1-05 R7, P1-00 3): reads the biome definitions,
-// worldgen.resources and the seven stored input layers, each N x N with its
-// catalogue type (fatal otherwise: "resources: input precondition: missing
-// layer '<name>'", "... layer '<name>' does not have its catalogue type",
-// "... layer '<name>' is not N x N"), runs resources_layers with meta.seed
+// worldgen.resources and the seven stored input layers (P1-05 section 2
+// item 1, each check over all seven inputs before the next: "resources:
+// input precondition: missing layer '<name>'", then "... layer '<name>'
+// does not have its catalogue type", then "... <name> length is not width *
+// height" unless N x N), runs resources_layers with meta.seed
 // and writes the seven layers (codec 1) in the order of section 3.
 void run_resources(StageContext& context);
 
