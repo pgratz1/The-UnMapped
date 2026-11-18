@@ -11,8 +11,9 @@ rain_oro_mm = 2500
 moisture_path_mm_km = 32000
 loss_max = "0.25"
 ocean_recharge_m = 500
-coast_rain_mm = 75
+coast_rain_mm = 40
 coast_rain_reach_m = 1500
 rain_noise = { wavelength_m = 5000, octaves = 3, gain = "0.5" }
 rain_noise_amp = "0.4"
 rain_min_mm = 250
+temp_offset_max_c = 2

@@ -13,8 +13,11 @@
 //   climate_tuning_from(const data::ContentSet&)
 //   climate_surface(Grid, elevation, water, water_depth) -> std::vector<std::int64_t>   (C1)
 //   climate_wind(seed, std::span<const std::int64_t> weights) -> geo::Direction        (C2)
-//   climate_temperature_cell(std::int64_t y, std::int64_t height, std::int64_t s_dm, Fx noise, tuning)
-//   climate_temperature(seed, Grid, surface, tuning, threads) -> std::vector<std::int16_t>   (C3)
+//   climate_temp_offset_dc(seed, tuning) -> std::int64_t                                   (C2b, 0.9.0)
+//   climate_temperature_cell(std::int64_t y, std::int64_t height, std::int64_t s_dm, Fx noise,
+//                            std::int64_t offset_dc, tuning)                               (C3; offset_dc 0.9.0)
+//   climate_temperature(seed, Grid, surface, std::int64_t offset_dc, tuning, threads)
+//       -> std::vector<std::int16_t>                                                        (C3; offset_dc 0.9.0)
 //   climate_box_mean(Grid, surface, std::int64_t r_cells, threads) -> std::vector<Fx>   (one box pass)
 //   climate_triangle_mean(Grid, surface, std::int64_t r_cells, threads) -> std::vector<Fx>   (C4)
 //   climate_sweep(Grid, water, std::span<const Fx> hs, geo::Direction wind, tuning) -> ClimateSweep {q, p}
@@ -127,16 +130,30 @@ inline std::uint8_t wind(std::uint64_t seed, std::span<const std::int64_t> weigh
     return worldgen::stages::climate_wind(seed, weights);
 }
 
-// C3 for one cell (seam climate_temperature_cell).
-inline std::int16_t temperature_cell(std::int64_t y, std::int64_t height, std::int64_t s_dm, std::int64_t noise_raw,
-                                     const Tuning& t) {
-    return worldgen::stages::climate_temperature_cell(y, height, s_dm, Fx::from_raw(noise_raw), t);
+// A hand-built tuning with temp_offset_max_c set to a raw value, possibly
+// outside [0, 5] (which the loader never produces). Assumes the 18th field
+// of ClimateTuning is named after the data field (P1-03 10: "ClimateTuning
+// holds only the 18 data fields").
+inline Tuning with_offset_max_raw(Tuning t, std::int64_t raw) {
+    t.temp_offset_max_c = Fx::from_raw(raw);
+    return t;
 }
 
-// C3 for a grid (seam climate_temperature).
+// C2b (seam climate_temp_offset_dc, 0.9.0): the world's offset in tenths.
+inline std::int64_t temp_offset_dc(std::uint64_t seed, const Tuning& t) {
+    return worldgen::stages::climate_temp_offset_dc(seed, t);
+}
+
+// C3 for one cell (seam climate_temperature_cell; offset_dc since 0.9.0).
+inline std::int16_t temperature_cell(std::int64_t y, std::int64_t height, std::int64_t s_dm, std::int64_t noise_raw,
+                                     std::int64_t offset_dc, const Tuning& t) {
+    return worldgen::stages::climate_temperature_cell(y, height, s_dm, Fx::from_raw(noise_raw), offset_dc, t);
+}
+
+// C3 for a grid (seam climate_temperature; offset_dc since 0.9.0).
 inline std::vector<std::int16_t> temperature(std::uint64_t seed, Grid g, std::span<const std::int64_t> s,
-                                             const Tuning& t, std::uint32_t threads) {
-    return worldgen::stages::climate_temperature(seed, g, s, t, threads);
+                                             std::int64_t offset_dc, const Tuning& t, std::uint32_t threads) {
+    return worldgen::stages::climate_temperature(seed, g, s, offset_dc, t, threads);
 }
 
 // One box pass of half-width r_cells (seam climate_box_mean): hs1, raw.

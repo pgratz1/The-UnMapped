@@ -163,6 +163,8 @@ target_sources(worldgen-tests PRIVATE
     stages_climate_tuning_test.cpp
     stages_climate_golden_test.cpp
     stages_climate_property_test.cpp
+    # 0.9.0: the per-world temperature offset (C2b, C3 with the offset).
+    stages_climate_offset_test.cpp
     inspect_climate_test.cpp
 )
 target_compile_definitions(worldgen-tests PRIVATE

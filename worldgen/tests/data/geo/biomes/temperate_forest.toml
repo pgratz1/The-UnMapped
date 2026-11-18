@@ -20,3 +20,5 @@ elev_max_m = 3000
 slope_max = 100
 hand_max_m = 3000
 coast_max_m = 32767
+river_dist_max_m = 32767
+wet_frac_min = 0

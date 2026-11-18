@@ -99,6 +99,10 @@ std::vector<std::pair<std::string, std::string>> items_of(const Inputs& in, cons
     const std::uint8_t wind = climate_api::wind(c.seed, v.wind_weights);
     out.emplace_back("wind", std::to_string(int{wind}));
     const Own own = own_climate(in, v, c.seed);
+    // C2b (0.9.0): the seam against the test's own draw.
+    const std::int64_t offset = climate_api::temp_offset_dc(c.seed, t);
+    CHECK(offset == own.offset_dc);
+    out.emplace_back("temp_offset_dc", std::to_string(offset));
     out.emplace_back("S", hash_i64(own.S));
     out.emplace_back("tnoise", hash_i64(own.tnoise));
     out.emplace_back("T", hash_i64(own.T));

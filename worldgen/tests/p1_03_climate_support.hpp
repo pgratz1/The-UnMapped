@@ -62,6 +62,7 @@ inline constexpr std::int64_t RAIN_MAX = 10000;
 
 // Stream names of P1-03 section 2, and the test-only stream of 10.2.
 inline constexpr std::string_view STREAM_WIND = "geo.climate.wind";
+inline constexpr std::string_view STREAM_OFFSET = "geo.climate.temp_offset";  // C2b (0.9.0)
 inline constexpr std::string_view STREAM_TEMP = "geo.climate.temperature";
 inline constexpr std::string_view STREAM_RAIN = "geo.climate.rainfall";
 inline constexpr std::string_view STREAM_TEST = "test.climate";
@@ -93,11 +94,12 @@ inline const std::vector<FieldText>& shipped_fields() {
         {"moisture_path_mm_km", "32000"},
         {"loss_max", "\"0.25\""},
         {"ocean_recharge_m", "500"},
-        {"coast_rain_mm", "75"},
+        {"coast_rain_mm", "40"},
         {"coast_rain_reach_m", "1500"},
         {"rain_noise", "{ wavelength_m = 5000, octaves = 3, gain = \"0.5\" }"},
         {"rain_noise_amp", "\"0.4\""},
         {"rain_min_mm", "250"},
+        {"temp_offset_max_c", "2"},
     };
     return f;
 }
@@ -117,11 +119,19 @@ inline constexpr std::string_view SHIPPED_TOML =
     "moisture_path_mm_km = 32000\n"
     "loss_max = \"0.25\"\n"
     "ocean_recharge_m = 500\n"
-    "coast_rain_mm = 75\n"
+    "coast_rain_mm = 40\n"
     "coast_rain_reach_m = 1500\n"
     "rain_noise = { wavelength_m = 5000, octaves = 3, gain = \"0.5\" }\n"
     "rain_noise_amp = \"0.4\"\n"
-    "rain_min_mm = 250\n";
+    "rain_min_mm = 250\n"
+    "temp_offset_max_c = 2\n";
+
+// The 0.8.0 values of the two fields the 0.9.0 revision changed: the neutral
+// setting under which the 0.9.0 stage is the 0.8.0 stage (P1-04 6 item 9).
+inline const Overrides& legacy_overrides() {
+    static const Overrides o = {{"coast_rain_mm", "75"}, {"temp_offset_max_c", "0"}};
+    return o;
+}
 
 [[nodiscard]] inline bool is_int_field(std::string_view name) {
     static const std::vector<std::string_view> ints = {
@@ -227,6 +237,7 @@ struct Values {
     worldgen::geo::FbmM rain_noise;
     std::int64_t rain_noise_amp = 0;  // raw
     std::int64_t rain_min_mm = 0;
+    std::int64_t temp_offset_max_c = 0;  // raw (0.9.0)
 };
 
 inline std::array<std::int64_t, 8> parse_weights(std::string_view text) {
@@ -283,6 +294,7 @@ inline Values values(const Overrides& overrides = {}) {
     v.rain_noise = rec("rain_noise");
     v.rain_noise_amp = fx("rain_noise_amp");
     v.rain_min_mm = in("rain_min_mm");
+    v.temp_offset_max_c = fx("temp_offset_max_c");
     return v;
 }
 
@@ -300,6 +312,20 @@ inline std::uint8_t own_wind(std::uint64_t seed, const std::array<std::int64_t, 
     return static_cast<std::uint8_t>(rng.weighted_index(u));
 }
 
+// C2b (0.9.0): M = round_int(mul_int(temp_offset_max_c, 10)); off_dc = 0 if M = 0,
+// else the first uniform_i64(-M, M) of Rng(stream_key(seed, "geo.climate.temp_offset")).
+inline std::int64_t own_offset_m(const Values& v) {
+    return worldgen::mul_int(R(v.temp_offset_max_c), 10).round_int();
+}
+inline std::int64_t own_offset_dc(std::uint64_t seed, const Values& v) {
+    const std::int64_t m = own_offset_m(v);
+    if (m == 0) {
+        return 0;
+    }
+    worldgen::Rng rng(worldgen::stream_key(seed, STREAM_OFFSET));
+    return rng.uniform_i64(-m, m);
+}
+
 struct TempParts {
     std::int64_t t_sea = 0, lap = 0, tn = 0, T = 0;  // raw
     std::int16_t temperature = 0;
@@ -307,13 +333,14 @@ struct TempParts {
 
 // C3 for one cell of row y on a map of the given height.
 inline TempParts own_temperature(std::int32_t y, std::int32_t height, std::int64_t s, std::int64_t noise_raw,
-                                 const Values& v) {
+                                 const Values& v, std::int64_t offset_dc = 0) {
     using worldgen::mul;
     const Fx V = Fx::from_ratio(2 * std::int64_t{y} + 1, 2 * std::int64_t{height});
     const Fx t_sea = R(v.temp_north_c) + mul(R(v.temp_south_c) - R(v.temp_north_c), V);
     const Fx lap = worldgen::div_int(worldgen::mul_int(R(v.lapse_c_per_km), s), 10000);
     const Fx tn = mul(R(v.temp_noise_amp_c), R(noise_raw));
-    const Fx T = (t_sea - lap) + tn;
+    const Fx off = Fx::from_ratio(offset_dc, 10);  // C2b, in whole tenths
+    const Fx T = ((t_sea + off) - lap) + tn;
     const std::int64_t t10 = worldgen::mul_int(T, 10).round_int();
     TempParts p;
     p.t_sea = t_sea.raw();
@@ -656,6 +683,7 @@ inline RandomFixture random_fixture(std::uint64_t f) {
 
 struct Own {
     std::uint8_t wind = 0;
+    std::int64_t offset_dc = 0;
     std::vector<std::int64_t> S, tnoise, T;
     std::vector<std::int16_t> temperature;
     std::int64_t r = 0;
@@ -669,6 +697,7 @@ inline Own own_climate(const Inputs& in, const Values& v, std::uint64_t seed) {
     Own o;
     const Grid g = in.grid;
     o.wind = own_wind(seed, v.wind_weights);
+    o.offset_dc = own_offset_dc(seed, v);
     o.S = surface(in);
     o.tnoise = noise_grid(seed, STREAM_TEMP, g, v.temp_noise);
     o.T.resize(g.cells());
@@ -676,7 +705,7 @@ inline Own own_climate(const Inputs& in, const Values& v, std::uint64_t seed) {
     for (std::int32_t y = 0; y < g.height; ++y) {
         for (std::int32_t x = 0; x < g.width; ++x) {
             const std::size_t i = g.index(x, y);
-            const TempParts t = own_temperature(y, g.height, o.S[i], o.tnoise[i], v);
+            const TempParts t = own_temperature(y, g.height, o.S[i], o.tnoise[i], v, o.offset_dc);
             o.T[i] = t.T;
             o.temperature[i] = t.temperature;
         }
@@ -927,6 +956,7 @@ struct GoldenCase {
     std::int32_t n = 0;
     std::uint64_t seed = 0;
     std::array<std::int64_t, 8> weights{};
+    std::string temp_offset_max_c;  // decimal text of the case line (0.9.0), e.g. "2"
     std::vector<std::pair<std::string, std::string>> items;  // in file (step) order
 
     [[nodiscard]] std::string get(std::string_view item) const {
@@ -959,7 +989,7 @@ inline std::vector<GoldenCase> read_golden(const std::string& path) {
             gc.fixture = c;
             std::int64_t n = 0;
             std::string weights;
-            ss >> n >> gc.seed >> weights;
+            ss >> n >> gc.seed >> weights >> gc.temp_offset_max_c;
             REQUIRE_MESSAGE(!ss.fail(), "bad case line: " << line);
             gc.n = static_cast<std::int32_t>(n);
             gc.weights = parse_weights("[" + weights + "]");
@@ -972,8 +1002,13 @@ inline std::vector<GoldenCase> read_golden(const std::string& path) {
     return out;
 }
 
-// The overrides of a golden case's climate tuning (wind_weights only).
-inline Overrides case_overrides(const GoldenCase& c) { return {{"wind_weights", weights_text(c.weights)}}; }
+// The overrides of a golden case's climate tuning (wind_weights and, since 0.9.0,
+// temp_offset_max_c; a decimal with a fraction is written as a TOML string).
+inline Overrides case_overrides(const GoldenCase& c) {
+    const std::string& m = c.temp_offset_max_c;
+    const std::string mt = m.find('.') == std::string::npos ? m : "\"" + m + "\"";
+    return {{"wind_weights", weights_text(c.weights)}, {"temp_offset_max_c", mt}};
+}
 
 // The input layers of a golden case.
 inline Inputs case_inputs(const GoldenCase& c) {
