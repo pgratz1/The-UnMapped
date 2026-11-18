@@ -755,23 +755,32 @@ void check_hard_bounds(std::span<const std::int16_t> e, std::uint32_t n) {
     const std::uint64_t h2 = wi::land_hull_area2(e, n, n);
     CHECK(100U * 2U * land >= 45U * h2);
     CHECK(100U * 2U * land <= 93U * h2);
-    // elevation_m p50 40-300 m, p90 300-1300 m (200-1300 m at 2048), p100
-    // 1200-2800 m (decimetres).
+    // elevation_m p50 40-300 m, p90 300-1300 m, p100 1200-2800 m
+    // (decimetres). At 2048 the p90 minimum, the p100 maximum and the
+    // land_above_m 500 minimum are descriptive since the revision of
+    // 2026-11-18 (P1-00 13.1, Paul: "Large maps may have unusual worlds");
+    // the other side of each row stays hard.
     const std::vector<std::uint32_t> ps = {50, 90, 100};
     const std::vector<std::int64_t> pv = wi::land_percentiles(e, ps);
     REQUIRE(pv.size() == 3U);
     CHECK(pv[0] >= 400);
     CHECK(pv[0] <= 3000);
-    CHECK(pv[1] >= (n >= 2048U ? 2000 : 3000));
+    if (n < 2048U) {
+        CHECK(pv[1] >= 3000);
+    }
     CHECK(pv[1] <= 13000);
     CHECK(pv[2] >= 12000);
-    CHECK(pv[2] <= 28000);
+    if (n < 2048U) {
+        CHECK(pv[2] <= 28000);
+    }
     // land_above_m: 1500 <= 0.08; 500 in 0.06-0.35; 1 - (50) in 0.10-0.50.
     const std::uint64_t a1500 = wi::land_at_or_above(e, 15000);
     const std::uint64_t a500 = wi::land_at_or_above(e, 5000);
     const std::uint64_t a50 = wi::land_at_or_above(e, 500);
     CHECK(100U * a1500 <= 8U * land);
-    CHECK(100U * a500 >= 6U * land);
+    if (n < 2048U) {
+        CHECK(100U * a500 >= 6U * land);
+    }
     CHECK(100U * a500 <= 35U * land);
     CHECK(100U * (land - a50) >= 10U * land);
     CHECK(100U * (land - a50) <= 50U * land);

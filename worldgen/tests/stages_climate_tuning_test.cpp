@@ -78,6 +78,7 @@ const std::vector<Bound>& scalar_bounds() {
         {"coast_rain_reach_m", true, "16", "32767"},
         {"rain_noise_amp", false, "0", "1"},
         {"rain_min_mm", true, "0", "5000"},
+        {"temp_offset_max_c", false, "0", "5"},  // 0.9.0
     };
     return b;
 }

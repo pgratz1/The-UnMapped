@@ -126,9 +126,9 @@ void check_all(const Inputs& in, std::uint64_t seed) {
 
 }  // namespace
 
-TEST_CASE("P1-03 2, P1-00 3: the three climate streams are registered; the test-only test.climate is not") {
+TEST_CASE("P1-03 2, P1-00 3: the four climate streams (0.9.0: with geo.climate.temp_offset) are registered; the test-only test.climate is not") {
     const auto& names = worldgen::streams::all_stream_names;
-    for (const std::string_view want : {STREAM_WIND, STREAM_TEMP, STREAM_RAIN}) {
+    for (const std::string_view want : {STREAM_WIND, STREAM_TEMP, STREAM_RAIN, STREAM_OFFSET}) {
         CAPTURE(std::string(want));
         CHECK(std::find(names.begin(), names.end(), want) != names.end());
     }

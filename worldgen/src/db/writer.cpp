@@ -504,11 +504,15 @@ void StageWriter::write_climate(const ClimateRow& row) {
     if (row.wind_toward < 0 || row.wind_toward > 7) {
         fatal("StageWriter::write_climate: wind_toward must be a D8 code 0..7");
     }
+    if (row.temp_offset_dc < -50 || row.temp_offset_dc > 50) {
+        fatal("StageWriter::write_climate: temp_offset_dc must be in -50..50");
+    }
     detail::Statement stmt;
     sqlite3* db = state_->db.get();
-    int rc = stmt.prepare(db, "INSERT INTO climate (id, wind_toward) VALUES (?1, ?2)");
+    int rc = stmt.prepare(db, "INSERT INTO climate (id, wind_toward, temp_offset_dc) VALUES (?1, ?2, ?3)");
     if (rc == SQLITE_OK) rc = stmt.bind_int64(1, row.id);
     if (rc == SQLITE_OK) rc = stmt.bind_int64(2, row.wind_toward);
+    if (rc == SQLITE_OK) rc = stmt.bind_int64(3, row.temp_offset_dc);
     if (rc == SQLITE_OK) rc = stmt.step() == SQLITE_DONE ? SQLITE_OK : SQLITE_ERROR;
     if (rc != SQLITE_OK) {
         fatal_text("world database: inserting the climate row failed: " + detail::error_message(db));

@@ -86,9 +86,9 @@ const std::vector<std::vector<std::string>>& sweep_p() {
 
 const std::vector<std::vector<std::uint16_t>>& sweep_rainfall() {
     static const std::vector<std::vector<std::uint16_t>> r = {
-        {875, 1187, 1538, 1927, 873, 874},  // coast_rain_mm 75 (P1-03 revised)
-        {875, 1343, 1928, 2278, 873, 873},
-        {875, 1030, 1303, 1459, 873, 874},
+        {840, 1152, 1503, 1892, 838, 839},  // coast_rain_mm 40 (P1-03 revised 2026-11-18, 0.9.0)
+        {840, 1308, 1893, 2243, 838, 838},
+        {840, 996, 1269, 1424, 838, 839},
     };
     return r;
 }
@@ -114,9 +114,9 @@ const std::vector<std::vector<std::string>>& se_p() {
 
 const std::vector<std::vector<std::uint16_t>>& se_rainfall() {
     static const std::vector<std::vector<std::uint16_t>> r = {
-        {875, 1095, 1482, 2034, 1426, 875},
-        {875, 1150, 1508, 1728, 873, 874},
-        {875, 902, 873, 873, 872, 873},
+        {840, 1061, 1447, 1999, 1391, 840},
+        {840, 1116, 1474, 1693, 838, 839},
+        {840, 867, 839, 838, 838, 838},
     };
     return r;
 }
@@ -234,10 +234,10 @@ TEST_CASE("P1-03 5.1 C3: the temperature table (temp_noise_amp_c 0)") {
         CHECK(own.t_sea == r.t_sea);
         CHECK(own.lap == r.lap);
         CHECK(own.temperature == r.temperature);
-        CHECK(climate_api::temperature_cell(r.y, r.n, r.s, 0, t) == r.temperature);
+        CHECK(climate_api::temperature_cell(r.y, r.n, r.s, 0, 0, t) == r.temperature);
         // With amplitude 0 the noise value has no effect.
-        CHECK(climate_api::temperature_cell(r.y, r.n, r.s, ONE, t) == r.temperature);
-        CHECK(climate_api::temperature_cell(r.y, r.n, r.s, -ONE, t) == r.temperature);
+        CHECK(climate_api::temperature_cell(r.y, r.n, r.s, ONE, 0, t) == r.temperature);
+        CHECK(climate_api::temperature_cell(r.y, r.n, r.s, -ONE, 0, t) == r.temperature);
     }
     // By hand, first row: t_sea = 5 + 4 x 1023/2048 = 6.998046875 exactly.
     CHECK(rows[0].t_sea == 5 * ONE + (4 * 1023 * ONE) / 2048);
@@ -249,17 +249,17 @@ TEST_CASE("P1-03 C3: the clamp to [-600, 500] and the noise term with the shippe
     // clamped to -600.
     const climate_api::Tuning hot =
         tuning({{"temp_north_c", "40"}, {"temp_south_c", "40"}, {"lapse_c_per_km", "0"}, {"temp_noise_amp_c", "5"}});
-    CHECK(climate_api::temperature_cell(0, 16, 1, ONE, hot) == 450);
+    CHECK(climate_api::temperature_cell(0, 16, 1, ONE, 0, hot) == 450);
     const climate_api::Tuning cold = tuning(
         {{"temp_north_c", "-30"}, {"temp_south_c", "-30"}, {"lapse_c_per_km", "15"}, {"temp_noise_amp_c", "5"}});
-    CHECK(climate_api::temperature_cell(0, 16, 30000, -ONE, cold) == -600);
-    CHECK(climate_api::temperature_cell(0, 16, 1, ONE, cold) == -250);
+    CHECK(climate_api::temperature_cell(0, 16, 30000, -ONE, 0, cold) == -600);
+    CHECK(climate_api::temperature_cell(0, 16, 1, ONE, 0, cold) == -250);
     // The shipped amplitude 1: the noise adds amp x noise degrees.
     const Values v = values();
     for (const std::int64_t noise : {-ONE, -ONE / 2, std::int64_t{0}, ONE / 3, ONE}) {
         CAPTURE(noise);
         const TempParts own = own_temperature(17, 64, 1234, noise, v);
-        CHECK(climate_api::temperature_cell(17, 64, 1234, noise, shipped_tuning()) == own.temperature);
+        CHECK(climate_api::temperature_cell(17, 64, 1234, noise, 0, shipped_tuning()) == own.temperature);
     }
 }
 
@@ -285,7 +285,7 @@ TEST_CASE("P1-03 10.1 test 2: the C3 noise term, seed 0, N = 64, shipped tuning,
         const worldgen::Fx noise =
             worldgen::fbm2(key, Fx::from_int(16 * x + 8), Fx::from_int(16 * y + 8), v.temp_noise.octaves,
                            Fx::from_ratio(1, v.temp_noise.wavelength_m), Fx::from_int(2), v.temp_noise.gain);
-        CHECK(l.temperature[i] == own_temperature(y, 64, s[i], noise.raw(), v).temperature);
+        CHECK(l.temperature[i] == own_temperature(y, 64, s[i], noise.raw(), v, own_offset_dc(0, v)).temperature);
         land += in.elevation[i] > 0 ? 1U : 0U;
     }
     CHECK(land >= 4U);
@@ -563,9 +563,9 @@ TEST_CASE("P1-03 10: in-bounds extremes of the window guard: 65538 x 1 with a hu
 
 TEST_CASE("P1-03 10: climate_temperature_cell rejects a height above INT32_MAX") {
     const std::int64_t big = std::int64_t{2147483647};
-    CHECK_NOTHROW(static_cast<void>(climate_api::temperature_cell(0, big, 10, 0, shipped_tuning())));
-    CHECK_NOTHROW(static_cast<void>(climate_api::temperature_cell(big - 1, big, 10, 0, shipped_tuning())));
-    CHECK_THROWS_AS(static_cast<void>(climate_api::temperature_cell(0, big + 1, 10, 0, shipped_tuning())),
+    CHECK_NOTHROW(static_cast<void>(climate_api::temperature_cell(0, big, 10, 0, 0, shipped_tuning())));
+    CHECK_NOTHROW(static_cast<void>(climate_api::temperature_cell(big - 1, big, 10, 0, 0, shipped_tuning())));
+    CHECK_THROWS_AS(static_cast<void>(climate_api::temperature_cell(0, big + 1, 10, 0, 0, shipped_tuning())),
                     worldgen::FatalError);
 }
 
@@ -730,16 +730,18 @@ TEST_CASE("P1-03 5.1 C6: the rainfall table (shipped values, rn given)") {
         const char* rn;
         std::int64_t cb_raw;
         std::uint16_t rainfall;
+        std::uint16_t rainfall_75;  // with the 0.8.0 coast_rain_mm 75 (5.1, "with 75 ... gave")
     };
     const std::vector<Row> rows = {
-        // coast_rain_mm 75 (P1-03 revised 2026-11-17).
-        {800, 16, "0", Fx::from_ratio(75 * 1484, 1500).raw(), 874},
-        {800, 1500, "0", 0, 800},
-        {100, 3000, "0", 0, 250},
-        {12000, 50, "0", Fx::from_ratio(145, 2).raw(), 10000},
-        {800, 700, "0.5", Fx::from_int(40).raw(), 1000},
-        {800, -40, "-0.3", Fx::from_int(75).raw(), 779},
+        // coast_rain_mm 40 (P1-03 revised 2026-11-18, generator 0.9.0); cb raw as printed in 5.1.
+        {800, 16, "0", 169966172460, 840, 874},
+        {800, 1500, "0", 0, 800, 800},
+        {100, 3000, "0", 0, 250, 250},
+        {12000, 50, "0", 166072068779, 10000, 10000},
+        {800, 700, "0.5", 91625968981, 981, 1000},
+        {800, -40, "-0.3", Fx::from_int(40).raw(), 744, 779},
     };
+    const climate_api::Tuning t75 = tuning({{"coast_rain_mm", "75"}});
     const Values v = values();
     for (const Row& r : rows) {
         CAPTURE(r.p_mm);
@@ -750,24 +752,29 @@ TEST_CASE("P1-03 5.1 C6: the rainfall table (shipped values, rn given)") {
         CHECK(own.cb == r.cb_raw);
         CHECK(own.rainfall == r.rainfall);
         CHECK(climate_api::rainfall_cell(Fx::from_int(r.p_mm).raw(), r.coast, rn, shipped_tuning()) == r.rainfall);
+        CHECK(climate_api::rainfall_cell(Fx::from_int(r.p_mm).raw(), r.coast, rn, t75) == r.rainfall_75);
     }
-    CHECK(mm3(Fx::from_ratio(75 * 1484, 1500).raw()) == "74.200");
+    CHECK(Fx::from_ratio(40 * 1484, 1500).raw() == 169966172460);
+    CHECK(mm3(169966172460) == "39.573");
+    CHECK(mm3(166072068779) == "38.667");
+    CHECK(mm3(91625968981) == "21.333");
 }
 
 TEST_CASE("P1-03 C6: the coast bonus falls linearly to 0 at coast_rain_reach_m; the noise factor is floored at 0") {
     const Values v = values();
     const std::int64_t p = Fx::from_int(800).raw();
-    CHECK(own_rainfall(p, 1499, 0, v).cb == Fx::from_ratio(75, 1500).raw());
+    CHECK(own_rainfall(p, 1499, 0, v).cb == Fx::from_ratio(40, 1500).raw());
+    CHECK(own_rainfall(p, 1499, 0, v).cb == 114532461);  // 5.1, d = coast_rain_reach_m - 1
     CHECK(climate_api::rainfall_cell(p, 1499, 0, shipped_tuning()) == 800);
-    CHECK(climate_api::rainfall_cell(p, 0, 0, shipped_tuning()) == 875);
-    CHECK(climate_api::rainfall_cell(p, -32767, 0, shipped_tuning()) == 875);  // ocean counts as 0
+    CHECK(climate_api::rainfall_cell(p, 0, 0, shipped_tuning()) == 840);
+    CHECK(climate_api::rainfall_cell(p, -32767, 0, shipped_tuning()) == 840);  // ocean counts as 0
     CHECK(climate_api::rainfall_cell(p, 32767, 0, shipped_tuning()) == 800);
     // rain_noise_amp 1 and rn = -1: f = max(0, 0) = 0, so only the coast bonus
     // and the floor remain.
     const climate_api::Tuning amp1 = tuning({{"rain_noise_amp", "1"}});
     CHECK(climate_api::rainfall_cell(p, 5000, -ONE, amp1) == 250);
-    CHECK(climate_api::rainfall_cell(p, 0, -ONE, amp1) == 250);  // 0 + 75, floored at 250
-    CHECK(climate_api::rainfall_cell(p, 0, ONE, amp1) == 1675);  // 800 x 2 + 75
+    CHECK(climate_api::rainfall_cell(p, 0, -ONE, amp1) == 250);  // 0 + 40, floored at 250
+    CHECK(climate_api::rainfall_cell(p, 0, ONE, amp1) == 1640);  // 800 x 2 + 40
     // rain_min_mm 0 and the cap.
     const climate_api::Tuning floor0 = tuning({{"rain_min_mm", "0"}});
     CHECK(climate_api::rainfall_cell(0, 5000, 0, floor0) == 0);

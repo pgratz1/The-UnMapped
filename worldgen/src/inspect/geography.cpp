@@ -1137,7 +1137,7 @@ std::string climate_lines(std::span<const std::int16_t> e, std::span<const std::
     return out;
 }
 
-// --- Tables of schema 3 (P1-03 9, P1-04 9) ------------------------------------------
+// --- Tables climate and biome (schema 4; P1-03 9, P1-04 9) ------------------------------------------
 
 std::string_view wind_code_name(std::int64_t code) {
     static constexpr std::array<std::string_view, 8> NAMES = {"E", "SE", "S", "SW", "W", "NW", "N", "NE"};
@@ -1153,23 +1153,29 @@ ClimateTableResult read_climate_rows(std::span<const std::vector<db::ColumnValue
         return r;
     }
     if (rows.size() > 1U) {
-        r.problem = "the table has " + db::format_u64(rows.size()) + " rows, expected 1";
+        r.problem = db::format_u64(rows.size()) + " rows, expected at most 1";
         return r;
     }
     const std::vector<db::ColumnValue>& row = rows[0];
-    if (row.size() != 2U || row[0].type != db::ValueType::integer || row[1].type != db::ValueType::integer) {
-        r.problem = "the row does not have two integer columns";
+    if (row.size() != 3U || row[0].type != db::ValueType::integer || row[1].type != db::ValueType::integer ||
+        row[2].type != db::ValueType::integer) {
+        r.problem = "the row does not have three integer columns";
         return r;
     }
     if (row[0].integer != 1) {
-        r.problem = "the row has id " + db::format_i64(row[0].integer) + ", expected 1";
+        r.problem = "id " + db::format_i64(row[0].integer) + ", expected 1";
         return r;
     }
     if (row[1].integer < 0 || row[1].integer > 7) {
-        r.problem = "wind_toward " + db::format_i64(row[1].integer) + " is not a D8 code 0..7";
+        r.problem = "wind_toward " + db::format_i64(row[1].integer) + " outside 0..7";
+        return r;
+    }
+    if (row[2].integer < -50 || row[2].integer > 50) {
+        r.problem = "temp_offset_dc " + db::format_i64(row[2].integer) + " outside -50..50";
         return r;
     }
     r.wind_toward = row[1].integer;
+    r.temp_offset_dc = row[2].integer;
     return r;
 }
 
@@ -1356,6 +1362,9 @@ std::optional<std::string> geography_section(const GeographyLayers& layers, std:
     }
     if (layers.wind_toward) {
         line(out, "wind_toward", std::string(wind_code_name(*layers.wind_toward)));
+    }
+    if (layers.temp_offset_dc) {
+        line(out, "temp_offset_c", metres1(*layers.temp_offset_dc));  // tenths, P1-03 9
     }
     if (layers.has_climate()) {
         out += climate_lines(e, *layers.temperature->get_if<std::int16_t>(),

@@ -56,6 +56,9 @@ inline constexpr std::string_view geo_hydrology_flat = "geo.hydrology.flat";
 inline constexpr std::string_view geo_climate_wind = "geo.climate.wind";
 inline constexpr std::string_view geo_climate_temperature = "geo.climate.temperature";
 inline constexpr std::string_view geo_climate_rainfall = "geo.climate.rainfall";
+// The per-world temperature offset of C2b (P1-03, generator 0.9.0): one
+// Rng, at most one uniform_i64 call, sequential code only (D9).
+inline constexpr std::string_view geo_climate_temp_offset = "geo.climate.temp_offset";
 
 // Keys of stage biomes (P1-00 section 3, P1-04 section 2): the noise keys of
 // the temperature and rainfall jitter the rules see (fbm_m only, no Rng).
@@ -67,7 +70,7 @@ inline constexpr std::string_view geo_biomes_rain_jitter = "geo.biomes.rain_jitt
 //   geo.resources.   geo.regions.
 
 // Every registered name, in registration order.
-inline constexpr std::array<std::string_view, 26> all_stream_names = {
+inline constexpr std::array<std::string_view, 27> all_stream_names = {
     test_hash,
     test_noise,
     test_wide,
@@ -94,6 +97,7 @@ inline constexpr std::array<std::string_view, 26> all_stream_names = {
     geo_climate_rainfall,
     geo_biomes_temp_jitter,
     geo_biomes_rain_jitter,
+    geo_climate_temp_offset,
 };
 
 }  // namespace worldgen::streams

@@ -298,6 +298,22 @@ ocean with elevation -10 and depth 10; `coast_dist` is P1-02 H7 on the
 ocean mask; the climate tuning is shipped with `wind_weights` one-hot at the
 drawn code, and the world seed is f.
 
+### Generator 0.9.0 (P1-03 revised 2026-11-18)
+
+The climate reference adds C2b (`temp_offset_max_c`, one `uniform_i64(-M, M)`
+draw from `geo.climate.temp_offset`, M = round_int(10 x `temp_offset_max_c`))
+and C3 with the offset, ships `coast_rain_mm` 40, and writes the golden item
+`temp_offset_dc` and a seventh case-line field (`temp_offset_max_c`). `check`
+reproduces the C2b offsets of 5.1 (seeds 0 to 11, 42, the phrase; 0.04 and
+0.05; both extremes over seeds 0 to 9999 at M = 50), the C3 offset table, the
+C6 table and both sweep rainfall grids with 40 mm (and the 75 mm values), and
+invariant 8. `golden --legacy` uses temp_offset_max_c 0 and coast_rain_mm 75
+with the 0.8.0 cases, header and items and reproduces the 0.8.0 file byte for
+byte (checked). Large cases need verified elevation grids: the cached 512 and
+1024 grids under `p1-04-tests/elev-cache` were stale; grids decoded from the
+0.8.0 validation worlds, each checked against the hydrology golden
+`elevation` item, were used.
+
 ## Reference of the P1-04 biome stage
 
 `p1_biomes_reference.py` is an independent exact-integer implementation of
@@ -343,3 +359,25 @@ written with `--large --db-dir` (the validation worlds of
 1024 seed 1, and a 0.7.0 `generate --seed-phrase "The Unmapped"` for the
 phrase); the N = 256 case and every default case come from the references.
 `UNMAPPED_ELEVATION_CACHE=DIR` works as for the hydrology reference.
+
+### Third version (generator 0.9.0)
+
+Twelve definitions, the rule fields `river_dist_max_m` and `wet_frac_min`
+(sentinels 32767 and 0, seam range checks), B2b (the two raster passes;
+`river_distance_closed` is the brute-force closed form), B2c (two clipped box
+passes by running sums; `box_pass_direct` sums every window), the per-size
+wet scale and B4's two comparisons. New golden items `wet_scale`, `d34`,
+`wet_count`, `wet_total`, `temp_offset_dc`; table `climate` hashed with three
+columns; conditions `rdist` and `wet` in `sole_fail`. Terrace fixtures (header
+of the golden file) cover fen failing only on hand and wet woodland failing
+only on elevation. `check` reproduces every worked example of 5.1 (chamfer
+and wet-share grids, exactness at 0.45 and 0.675, V1 to P6 with their sole
+failures, B1 to B21 and S1 to S6 with the four changes and both variants,
+the nine real cells from their tabulated inputs); `realcells3 DB` reproduces
+the nine real cells on the 0.8.0 world of 1024 seed 3 (inputs, d34, wet
+share, noise, B4). `golden --large --db-dir DIR` takes only the elevation and
+hydrology layers from `DIR/<case>.db` (0.8.0 validation worlds; the phrase
+world of 0.7.0) and recomputes the climate; the four large cases equal P1-04
+10.4 (layer hashes, table hashes, offsets, biome_share of 512 seed 0).
+`golden --legacy --large --db-dir <0.7.0/0.8.0 worlds> --climate-golden
+<0.8.0 p1-03-climate.txt>` reproduces the 0.8.0 file byte for byte (checked).

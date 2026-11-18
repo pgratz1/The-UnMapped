@@ -225,6 +225,8 @@ Schema biome_rule_schema() {
         Field::required("slope_max", Type::fixed("0", "100")),
         Field::required("hand_max_m", Type::fixed("0", "3000")),
         Field::required("coast_max_m", Type::integer(0, 32767)),
+        Field::required("river_dist_max_m", Type::integer(0, 32767)),
+        Field::required("wet_frac_min", Type::fixed("0", "1")),
     });
 }
 
@@ -275,6 +277,12 @@ Schema worldgen_biomes_schema() {
         Field::required("rain_scale_1024", Type::fixed("0.25", "4")),
         Field::required("rain_scale_2048", Type::fixed("0.25", "4")),
         Field::required("drain_river_class_min", Type::integer(1, 15)),
+        Field::required("river_dist_class_min", Type::integer(1, 15)),
+        Field::required("wet_window_m", Type::integer(0, 2000)),
+        Field::required("wet_hand_m", Type::fixed("0", "100")),
+        Field::required("wet_scale_512", Type::fixed("0.25", "4")),
+        Field::required("wet_scale_1024", Type::fixed("0.25", "4")),
+        Field::required("wet_scale_2048", Type::fixed("0.25", "4")),
     });
 }
 
@@ -418,6 +426,7 @@ Schema worldgen_climate_schema() {
         Field::required("rain_noise", geo::fbm_m_type()),
         Field::required("rain_noise_amp", Type::fixed("0", "1")),
         Field::required("rain_min_mm", Type::integer(0, 5000)),
+        Field::required("temp_offset_max_c", Type::fixed("0", "5")),
     };
     std::vector<Check> checks{
         Check{"wind_weights_positive", [](const Record& r) { return check_wind_weights_positive(r); }},

@@ -4,7 +4,10 @@
 Written by the test writer from docs/specs/p1-03-climate.md (revised
 2026-11-17: triangle kernel C4, diagonal taps across the wind in a raster
 sweep C5, preconditions in order with S <= 32767, shipped rain_oro_mm 2500
-and moisture_path_mm_km 32000) and
+and moisture_path_mm_km 32000; revised 2026-11-18 for generator 0.9.0: the
+per-world temperature offset C2b from stream geo.climate.temp_offset, C3
+with the offset, the new tuning field temp_offset_max_c, shipped
+coast_rain_mm 40, table climate with temp_offset_dc) and
 docs/specs/p1-00-geography-overview.md (2.1 to 2.3, G6, D1 to D10, 10.2,
 10.3) only, without reading any implementation of the stage. Steps C1 to C6
 are implemented here from the spec text. The inputs of a world (elevation,
@@ -31,10 +34,13 @@ Usage (from the repository root; -B keeps __pycache__ out of the tree):
         elevation fixture of P1-01 4.4; WEIGHTS eight comma-separated
         wind_weights, default 1,1,1,1,1,1,1,1).
 
-    python3 -B worldgen/tests/reference/p1_climate_reference.py golden [PATH|-] [--large]
+    python3 -B worldgen/tests/reference/p1_climate_reference.py golden [PATH|-] [--large] [--legacy]
         Write the golden vector file (default worldgen/tests/golden/
         p1-03-climate.txt); "-" writes it to standard output. --large adds
-        the N = 512 and 1024 worlds of P1-03 10.4.
+        the N = 512 and 1024 worlds of P1-03 10.4. --legacy writes the
+        generator 0.8.0 file instead: the neutral setting of 0.9.0
+        (temp_offset_max_c 0, coast_rain_mm 75), the 0.8.0 cases, header and
+        items; it reproduces the 0.8.0 file byte for byte.
 
     python3 -B worldgen/tests/reference/p1_climate_reference.py winds FIRST LAST
         Print k_w for the shipped wind_weights for seeds FIRST to LAST.
@@ -71,6 +77,7 @@ PRE = "climate: input precondition: "
 STREAM_WIND = "geo.climate.wind"
 STREAM_TEMP = "geo.climate.temperature"
 STREAM_RAIN = "geo.climate.rainfall"
+STREAM_OFFSET = "geo.climate.temp_offset"
 STREAM_TEST = "test.climate"
 
 TEMP_MIN, TEMP_MAX = -600, 500
@@ -106,17 +113,27 @@ def shipped_tuning(**over):
         "moisture_path_mm_km": 32000,
         "loss_max": dec("0.25"),
         "ocean_recharge_m": 500,
-        "coast_rain_mm": 75,
+        "coast_rain_mm": 40,
         "coast_rain_reach_m": 1500,
         "rain_noise": (5000, 3, dec("0.5")),
         "rain_noise_amp": dec("0.4"),
         "rain_min_mm": 250,
+        "temp_offset_max_c": er.from_int(2),
     }
     for k, v in over.items():
         if k not in t:
             raise KeyError(k)
         t[k] = v
     return t
+
+
+def legacy_tuning(**over):
+    """The neutral setting of 0.9.0 that is generator 0.8.0's climate: no
+    offset (temp_offset_max_c 0, so off_dc = 0 and C3 adds an exact 0) and
+    the 0.8.0 coast bonus 75 mm (P1-04 6 item 9)."""
+    base = {"coast_rain_mm": 75, "temp_offset_max_c": 0}
+    base.update(over)
+    return shipped_tuning(**base)
 
 
 def quiet_tuning(**over):
@@ -141,6 +158,30 @@ def wind(seed, weights):
     rng = cr.Rng(cr.stream_key(seed, STREAM_WIND))
     k = rng.weighted_index(list(weights))
     return k, rng.draws
+
+
+# ---------------------------------------------------------------------------
+# C2b: per-world temperature offset (0.9.0)
+# ---------------------------------------------------------------------------
+
+OFFSET_MAX_RAW = 5 << 32
+
+
+def offset_m(t):
+    """M = round_int(mul_int(temp_offset_max_c, 10)): whole tenths."""
+    v = t["temp_offset_max_c"]
+    if not 0 <= v <= OFFSET_MAX_RAW:
+        fatal("climate: temp_offset_max_c outside [0, 5]")
+    return er.round_int(er.mul_int(v, 10))
+
+
+def offset_dc(seed, t):
+    """off_dc of C2b: 0 if M = 0, else the first uniform_i64(-M, M) of
+    Rng(stream_key(seed, "geo.climate.temp_offset"))."""
+    m = offset_m(t)
+    if m == 0:
+        return 0
+    return cr.Rng(cr.stream_key(seed, STREAM_OFFSET)).uniform_i64(-m, m)
 
 
 # ---------------------------------------------------------------------------
@@ -185,14 +226,18 @@ def preconditions(w, h, e, water, depth, coast):
 # C3: temperature
 # ---------------------------------------------------------------------------
 
-def temp_parts(y, hgt, s, noise, t):
+def temp_parts(y, hgt, s, noise, t, off_dc=0):
     """C3 for one cell: (t_sea, lap, tn, T, temperature). noise = the raw
-    fbm_m value (before temp_noise_amp_c)."""
+    fbm_m value (before temp_noise_amp_c); off_dc = off_dc of C2b, applied
+    as off = from_ratio(off_dc, 10): T = ((t_sea + off) - lap) + tn."""
+    if not -50 <= off_dc <= 50:
+        fatal("climate: offset_dc outside -50..50")
     V = er.from_ratio(2 * y + 1, 2 * hgt)
     t_sea = er.add(t["temp_north_c"], er.mul(er.sub(t["temp_south_c"], t["temp_north_c"]), V))
     lap = er.div_int(er.mul_int(t["lapse_c_per_km"], s), 10000)
     tn = er.mul(t["temp_noise_amp_c"], noise)
-    T = er.add(er.sub(t_sea, lap), tn)
+    off = er.from_ratio(off_dc, 10)
+    T = er.add(er.sub(er.add(t_sea, off), lap), tn)
     temp = er.clamp(er.round_int(er.mul_int(T, 10)), TEMP_MIN, TEMP_MAX)
     return t_sea, lap, tn, T, temp
 
@@ -458,20 +503,21 @@ def climate(w, h, e, water, depth, coast, t, seed):
     """Every intermediate of C1 to C6 as a dict, on a W x H grid (V uses H)."""
     S = preconditions(w, h, e, water, depth, coast)
     k, _ = wind(seed, t["wind_weights"])
+    off = offset_dc(seed, t)
     n = w * h
     tnoise = noise_grid(seed, STREAM_TEMP, w, h, t["temp_noise"])
     T = [0] * n
     temp = [0] * n
     for i in range(n):
         y = i // w
-        _, _, _, T[i], temp[i] = temp_parts(y, h, S[i], tnoise[i], t)
+        _, _, _, T[i], temp[i] = temp_parts(y, h, S[i], tnoise[i], t, off)
     r = t["smooth_radius_m"] // 16
     hs = triangle_mean(w, h, S, r)
     q, p = sweep(w, h, hs, water, k, t)
     rnoise = noise_grid(seed, STREAM_RAIN, w, h, t["rain_noise"])
     rain = [rain_parts(p[i], coast[i], rnoise[i], t)[3] for i in range(n)]
     return {"w": w, "h": h, "e": list(e), "water": list(water), "depth": list(depth), "coast": list(coast),
-            "S": S, "wind": k, "tnoise": tnoise, "T": T, "temperature": temp, "r": r, "hs": hs, "q": q, "p": p,
+            "S": S, "wind": k, "offset_dc": off, "tnoise": tnoise, "T": T, "temperature": temp, "r": r, "hs": hs, "q": q, "p": p,
             "rnoise": rnoise, "rainfall": rain}
 
 
@@ -818,6 +864,89 @@ def check_temperature(c):
     c.eq("C3 clamp low T", temp_parts(0, 16, 30000, -ONE, cold)[3], er.from_int(-80))
 
 
+# C3 with the offset (5.1): N, y, S, off_dc, T raw, temperature.
+TEMP_OFFSET_TABLE = [
+    (1024, 511, 12000, -19, -11604800307, -27),
+    (1024, 511, 12000, 9, 421108121, 1),
+    (1024, 511, 12000, 20, 5145572147, 12),
+    (1024, 0, 0, -19, 13322787226, 31),
+    (1024, 0, 0, 20, 30073159680, 70),
+    (512, 100, 7000, -19, -2855482163, -7),
+    (512, 100, 7000, 9, 9170426265, 21),
+]
+OFFSETS_0_11 = [20, 10, -11, 14, 2, 8, 6, -2, -19, -13, 11, 10]
+
+
+def check_offset(c):
+    """C2b and C3 with the offset (5.1, 10.1 test 0b)."""
+    t = shipped_tuning()
+    c.eq("C2b seeds 0..11", [offset_dc(s, t) for s in range(12)], OFFSETS_0_11)
+    c.eq("C2b seed 42", offset_dc(42, t), 9)
+    phrase = cr.seed_from_phrase(b"The Unmapped")[1]
+    c.eq("C2b phrase seed", phrase, 15629206466951235176)
+    c.eq("C2b phrase", offset_dc(phrase, t), -10)
+    c.eq("C2b M shipped", offset_m(t), 20)
+    # By hand: the first output of the stream, uniform_i64(-20, 20) of P0-01 6.3.
+    rng = cr.Rng(cr.stream_key(0, STREAM_OFFSET))
+    c.eq("C2b seed 0 through Rng", rng.uniform_i64(-20, 20), 20)
+    c.eq("C2b one draw", rng.draws, 1)
+    c.ok("C2b stream differs from the wind's", cr.stream_key(0, STREAM_OFFSET) != cr.stream_key(0, STREAM_WIND))
+    t0 = shipped_tuning(temp_offset_max_c=0)
+    c.eq("C2b M = 0 gives 0", set(offset_dc(s, t0) for s in range(200)), {0})
+    t004 = shipped_tuning(temp_offset_max_c=dec("0.04"))
+    c.eq("C2b 0.04: M = 0", offset_m(t004), 0)
+    c.eq("C2b 0.04 gives 0", set(offset_dc(s, t004) for s in range(200)), {0})
+    t005 = shipped_tuning(temp_offset_max_c=dec("0.05"))
+    c.eq("C2b 0.05: M = 1", offset_m(t005), 1)
+    c.eq("C2b 0.05 values", set(offset_dc(s, t005) for s in range(200)), {-1, 0, 1})
+    t5 = shipped_tuning(temp_offset_max_c=er.from_int(5))
+    v5 = [offset_dc(s, t5) for s in range(10000)]
+    c.ok("C2b 5 in -50..50", all(-50 <= v <= 50 for v in v5))
+    c.eq("C2b 5 both extremes over seeds 0..9999", (min(v5), max(v5)), (-50, 50))
+    c.eq("C2b seeds of the golden extremes", (offset_dc(88, t), offset_dc(70, t), offset_dc(88, t5),
+                                              offset_dc(218, t5)), (-20, 0, -50, 50))
+    expect_fatal(c, "C2b temp_offset_max_c one raw step above 5",
+                 lambda: offset_dc(0, shipped_tuning(temp_offset_max_c=(5 << 32) + 1)))
+    expect_fatal(c, "C2b temp_offset_max_c one raw step below 0",
+                 lambda: offset_dc(0, shipped_tuning(temp_offset_max_c=-1)))
+    c.eq("C2b off raw -19", er.from_ratio(-19, 10), -8160437862)
+    c.eq("C2b off raw 9", er.from_ratio(9, 10), 3865470566)
+    c.eq("C2b off raw 20 exact", er.from_ratio(20, 10), 8589934592)
+    q = quiet_tuning()
+    for n, y, s, off, T_want, want in TEMP_OFFSET_TABLE:
+        _, _, _, T, temp = temp_parts(y, n, s, 0, q, off)
+        lab = "C3 offset N %d y %d S %d off %d" % (n, y, s, off)
+        c.eq(lab + " T", T, T_want)
+        c.eq(lab + " temperature", temp, want)
+    c.eq("C3 offset by hand", TEMP_OFFSET_TABLE[0][4], (30056382464 - 8160437862) - 33500744909)
+    # Offset 0 is the 0.8.0 C3 exactly (t_sea + 0 is exact).
+    for n, y, s, ts, lp, want in TEMP_TABLE:
+        c.eq("C3 offset 0 = 0.8.0 N %d y %d" % (n, y), temp_parts(y, n, s, 0, q, 0)[3],
+             er.add(er.sub(ts, lp), 0))
+    expect_fatal(c, "C3 offset_dc 51", lambda: temp_parts(0, 16, 0, 0, q, 51))
+    expect_fatal(c, "C3 offset_dc -51", lambda: temp_parts(0, 16, 0, 0, q, -51))
+    c.eq("C3 offset_dc 50 accepted", temp_parts(0, 16, 0, 0, q, 50)[4], 50 + er.round_int(er.mul_int(
+        er.add(q["temp_north_c"], er.mul(er.sub(q["temp_south_c"], q["temp_north_c"]), er.from_ratio(1, 32))), 10)))
+
+
+def check_offset_shift(c, label, w, h, e, water, depth, coast, seed, weights=(1,) * 8):
+    """Invariant 8: with temp_noise_amp_c 0 and no clamping, temperature with
+    the offset = temperature with offset 0 + off_dc, within one tenth;
+    rainfall and the wind do not depend on the offset."""
+    ta = shipped_tuning(wind_weights=list(weights), temp_noise_amp_c=0)
+    t0 = shipped_tuning(wind_weights=list(weights), temp_noise_amp_c=0, temp_offset_max_c=0)
+    ra = climate(w, h, e, water, depth, coast, ta, seed)
+    r0 = climate(w, h, e, water, depth, coast, t0, seed)
+    off = ra["offset_dc"]
+    ok = all(abs(a - b - off) <= 1 for a, b in zip(ra["temperature"], r0["temperature"])
+             if TEMP_MIN < a < TEMP_MAX and TEMP_MIN < b < TEMP_MAX)
+    c.ok(label + " inv 8 shift by off_dc %d" % off, ok)
+    c.eq(label + " inv 8 rainfall", ra["rainfall"], r0["rainfall"])
+    c.eq(label + " inv 8 wind", ra["wind"], r0["wind"])
+    c.eq(label + " inv 8 offset 0", r0["offset_dc"], 0)
+    c.ok(label + " inv 1 offset in [-M, M]", abs(off) <= offset_m(ta))
+
+
 BOX_S = [0, 10, 20, 30, 0, 40, 50, 60, 0, 0, 70, 80]
 TRIANGLE_R2 = [
     [66512340764, 98028651710, 148733126732, 178956970667],
@@ -932,7 +1061,10 @@ SWEEP_P = [
     ["800.000", "1268.750", "1853.620", "2203.391", "798.350", "798.271"],
     ["800.000", "956.250", "1229.199", "1384.716", "798.891", "798.794"],
 ]
-SWEEP_RAIN = [[875, 1187, 1538, 1927, 873, 874], [875, 1343, 1928, 2278, 873, 873], [875, 1030, 1303, 1459, 873, 874]]
+SWEEP_RAIN = [[840, 1152, 1503, 1892, 838, 839], [840, 1308, 1893, 2243, 838, 838], [840, 996, 1269, 1424, 838, 839]]
+# The same rows with the 0.8.0 coast bonus of 75 mm.
+SWEEP_RAIN_75 = [[875, 1187, 1538, 1927, 873, 874], [875, 1343, 1928, 2278, 873, 873],
+                 [875, 1030, 1303, 1459, 873, 874]]
 SE_Q = [
     [4294967296, 4291866607, 4289918572, 4287755798, 4289060547, 4293557436],
     [4294967296, 4290924843, 4286792934, 4283581311, 4284617726, 4289340761],
@@ -943,7 +1075,8 @@ SE_P = [
     ["800.000", "1076.019", "1434.014", "1653.805", "798.523", "798.902"],
     ["800.000", "827.427", "799.079", "798.365", "797.936", "798.146"],
 ]
-SE_RAIN = [[875, 1095, 1482, 2034, 1426, 875], [875, 1150, 1508, 1728, 873, 874], [875, 902, 873, 873, 872, 873]]
+SE_RAIN = [[840, 1061, 1447, 1999, 1391, 840], [840, 1116, 1474, 1693, 838, 839], [840, 867, 839, 838, 838, 838]]
+SE_RAIN_75 = [[875, 1095, 1482, 2034, 1426, 875], [875, 1150, 1508, 1728, 873, 874], [875, 902, 873, 873, 872, 873]]
 
 
 def check_sweep(c):
@@ -992,6 +1125,9 @@ def check_sweep(c):
              (q_up + er.mul(ONE - q_up, 137438953), er.mul(q_up, er.from_int(800))))
     rain = [rain_parts(p[i], coast[i], 0, t)[3] for i in range(w * h)]
     c.eq("C6 E sweep rainfall", rows(w, rain), SWEEP_RAIN)
+    t75 = quiet_tuning(coast_rain_mm=75)
+    c.eq("C6 E sweep rainfall, coast 75 (0.8.0)",
+         rows(w, [rain_parts(p[i], coast[i], 0, t75)[3] for i in range(w * h)]), SWEEP_RAIN_75)
     # Through the whole stage (S = elevation, r = 0, wind forced, noise 0).
     e = [v if v > 0 else -5 for v in S]
     depth = [5 if v == 0 else 0 for v in S]
@@ -1045,32 +1181,40 @@ def check_sweep(c):
     c.eq("C5 SE recursive", sweep_recursive(w, h, hs, water, 1, t), (q1, p1))
     rain = [rain_parts(p1[i], coast[i], 0, t)[3] for i in range(w * h)]
     c.eq("C6 SE sweep rainfall", rows(w, rain), SE_RAIN)
+    t75 = quiet_tuning(coast_rain_mm=75)
+    c.eq("C6 SE sweep rainfall, coast 75 (0.8.0)",
+         rows(w, [rain_parts(p1[i], coast[i], 0, t75)[3] for i in range(w * h)]), SE_RAIN_75)
     tw = quiet_tuning(smooth_radius_m=0, wind_weights=one_hot(1))
     r = climate(w, h, e, water, depth, coast, tw, 0)
     c.eq("C6 SE through the stage rainfall", rows(w, r["rainfall"]), SE_RAIN)
 
 
 RAIN_TABLE = [
-    # p mm, coast_dist, rn text, cb raw, rainfall
-    (800, 16, "0", er.from_ratio(75 * 1484, 1500), 874),
-    (800, 1500, "0", 0, 800),
-    (100, 3000, "0", 0, 250),
-    (12000, 50, "0", er.from_ratio(145, 2), 10000),
-    (800, 700, "0.5", er.from_int(40), 1000),
-    (800, -40, "-0.3", er.from_int(75), 779),
+    # p mm, coast_dist, rn text, cb raw (5.1), rainfall (coast_rain_mm 40), rainfall with 75 (0.8.0)
+    (800, 16, "0", 169966172460, 840, 874),
+    (800, 1500, "0", 0, 800, 800),
+    (100, 3000, "0", 0, 250, 250),
+    (12000, 50, "0", 166072068779, 10000, 10000),
+    (800, 700, "0.5", 91625968981, 981, 1000),
+    (800, -40, "-0.3", er.from_int(40), 744, 779),
 ]
 
 
 def check_rainfall(c):
     t = shipped_tuning()
-    for pm, d, rn, cb, want in RAIN_TABLE:
+    for pm, d, rn, cb, want, want75 in RAIN_TABLE:
         f, pr, got_cb, rain = rain_parts(er.from_int(pm), d, dec(rn), t)
         lab = "C6 p %d d %d rn %s" % (pm, d, rn)
         c.eq(lab + " cb", got_cb, cb)
         c.eq(lab + " rainfall", rain, want)
-    c.eq("C6 cb 74.2", mm3(RAIN_TABLE[0][3]), "74.200")
+        c.eq(lab + " rainfall with coast 75", rain_parts(er.from_int(pm), d, dec(rn), legacy_tuning())[3], want75)
+    c.eq("C6 cb 39.573", mm3(RAIN_TABLE[0][3]), "39.573")
+    c.eq("C6 cb 38.667", mm3(RAIN_TABLE[3][3]), "38.667")
+    c.eq("C6 cb 21.333", mm3(RAIN_TABLE[4][3]), "21.333")
+    c.eq("C6 cb row 1 = from_ratio(40 x 1484, 1500)", RAIN_TABLE[0][3], er.from_ratio(40 * 1484, 1500))
     # Edge of the reach and the noise floor.
-    c.eq("C6 d = reach - 1", rain_parts(er.from_int(800), 1499, 0, t)[2], er.from_ratio(75, 1500))
+    c.eq("C6 d = reach - 1", rain_parts(er.from_int(800), 1499, 0, t)[2], er.from_ratio(40, 1500))
+    c.eq("C6 d = reach - 1 raw", rain_parts(er.from_int(800), 1499, 0, t)[2], 114532461)
     c.eq("C6 f floor", rain_parts(er.from_int(800), 5000, -ONE, shipped_tuning(rain_noise_amp=ONE))[0], 0)
 
 
@@ -1275,7 +1419,7 @@ def check_preconditions(c):
 
 UNIFORM = [1] * 8
 
-GOLDEN_CASES = [
+LEGACY_GOLDEN_CASES = [
     # (name, fixture, N, seed, weights, why)
     ("shipped-64-s0", "shipped", 64, 0, UNIFORM, "small shipped world, wind SE (code 1)"),
     ("shipped-48-s3", "shipped", 48, 3, UNIFORM, "N not a power of two, wind SE"),
@@ -1294,16 +1438,83 @@ GOLDEN_CASES = [
     for k in (0, 2, 5, 7)
 ]
 
-LARGE_CASES = [
+# 0.9.0: every case has a seventh field, temp_offset_max_c as decimal text
+# ("2" is the shipped value). Seeds 88 and 70 give off_dc -20 and 0 with the
+# shipped M = 20; with M = 50 seed 88 gives -50 and seed 218 gives +50.
+GOLDEN_CASES = [c + ("2",) for c in LEGACY_GOLDEN_CASES] + [
+    ("shipped-64-s88", "shipped", 64, 88, UNIFORM, "C2b: off_dc -20, the lower extreme of the shipped offset", "2"),
+    ("shipped-64-s70", "shipped", 64, 70, UNIFORM, "C2b: off_dc 0 drawn with the shipped offset", "2"),
+    ("shipped-64-s0-off0", "shipped", 64, 0, UNIFORM,
+     "temp_offset_max_c 0 (M = 0, no draw): temperature equals the 0.8.0 temperature of shipped-64-s0", "0"),
+    ("shipped-64-s0-off004", "shipped", 64, 0, UNIFORM, "temp_offset_max_c 0.04 rounds to M = 0", "0.04"),
+    ("shipped-64-s88-off5", "shipped", 64, 88, UNIFORM, "temp_offset_max_c 5: off_dc -50, the bound", "5"),
+    ("shipped-64-s218-off5", "shipped", 64, 218, UNIFORM, "temp_offset_max_c 5: off_dc +50, the bound", "5"),
+]
+
+LEGACY_LARGE_CASES = [
     ("shipped-512-s0", "shipped", 512, 0, UNIFORM, "P1-03 10.4"),
     ("shipped-512-s42", "shipped", 512, 42, UNIFORM, "P1-03 10.4"),
     ("shipped-512-phrase", "shipped", 512, None, UNIFORM, "P1-03 10.4, seed phrase \"The Unmapped\""),
     ("shipped-1024-s1", "shipped", 1024, 1, UNIFORM, "P1-03 10.4"),
 ]
+LARGE_CASES = [c + ("2",) for c in LEGACY_LARGE_CASES]
 
 RANDOM_GOLDEN = list(range(4))
 
 GOLDEN_HEADER = """\
+# P1-03 climate golden vectors for generator 0.9.0 (spec revised 2026-11-18:
+# per-world temperature offset C2b and C3 with the offset, shipped
+# coast_rain_mm 40, temp_offset_max_c 2; earlier: triangle kernel C4,
+# diagonal taps across the wind C5, rain_oro_mm 2500, moisture_path_mm_km
+# 32000; input layers of generator 0.6.0 and later, unchanged), generated by
+# worldgen/tests/reference/p1_climate_reference.py golden, an independent
+# exact-integer reference written from docs/specs/p1-03-climate.md, with the
+# input layers from worldgen/tests/reference/p1_hydrology_reference.py (and
+# its elevation from p1_elevation_reference.py).
+# Do not edit by hand; never regenerate to make a C++ test pass.
+#
+# Format: ASCII, LF, one value per line, tokens separated by one space.
+#   case <name> <fixture> <N> <seed> <wind_weights> <temp_offset_max_c>
+#       starts a case; fixture shipped | small (elevation tuning of P1-01
+#       4.4; hydrology of P1-02 with river_min_area_m2 125000 and flat_tie of
+#       the seed) or random (the 34 x 34 random fixture of P1-03 10.2 number
+#       <seed>, N = 34, no elevation or hydrology stage); climate tuning: the
+#       shipped values of P1-03 4 with wind_weights replaced by the eight
+#       comma-separated values given and temp_offset_max_c by the decimal
+#       given (2 is the shipped value); the world seed is <seed>
+#   <name> <item> <value>                 one value, items in step order
+# Items, in step order (the test reports the first that differs):
+#   elevation water water_depth coast_dist
+#                P0-04 8 layer hash of each input layer (equal to the
+#                hydrology golden items of the same world)
+#   wind         k_w (C2)
+#   temp_offset_dc
+#                off_dc (C2b), the value of climate.temp_offset_dc
+#   S            SHA-256 of the surface S = elevation + water_depth, int64
+#                little-endian (section 2)
+#   tnoise       SHA-256 of fbm_m(K_temp, X, Y, temp_noise) per cell, raw
+#                int64 (C3, before temp_noise_amp_c)
+#   T            SHA-256 of T per cell, raw int64 (C3 with off_dc, before x 10)
+#   temperature  P0-04 8 layer hash (i16) (C3)
+#   hs           SHA-256 of hs per cell, raw int64 (C4, the triangle kernel,
+#                r = smooth_radius_m div 16)
+#   q p          SHA-256 of the moisture q and precipitation p per cell, raw
+#                int64 (C5)
+#   rnoise       SHA-256 of fbm_m(K_rain, X, Y, rain_noise) per cell, raw
+#                int64 (C6)
+#   rainfall     P0-04 8 layer hash (u16) (C6)
+#   temperature_range rainfall_range
+#                min,max of each layer over every cell
+#   temperature_c rainfall_mm land_below_0c rain_contrast
+#                the report values of P1-03 9 (P1-00 10.3 rules), spaces
+#                written as "_"
+# One case of fixture overflow (the C4 overflow margin of P1-03 7): a grid
+# of N columns and N - 5 rows with S = 32767 - (7x + 13y) mod 768, items S
+# (SHA-256 of S as int64), hs1 (one box pass, half-width 125), hs (triangle,
+# r = 250) and hs_corner (raw hs at (0, 0)).
+"""
+
+LEGACY_HEADER = """\
 # P1-03 climate golden vectors (spec revised 2026-11-17: triangle kernel C4,
 # diagonal taps across the wind C5, rain_oro_mm 2500, moisture_path_mm_km
 # 32000; input layers of generator 0.6.0), generated by
@@ -1352,7 +1563,7 @@ GOLDEN_HEADER = """\
 """
 
 
-def world_items(r):
+def world_items(r, legacy=False):
     w, h = r["w"], r["h"]
     items = [
         ("elevation", layer_hash(w, h, 4, r["e"])),
@@ -1360,6 +1571,10 @@ def world_items(r):
         ("water_depth", layer_hash(w, h, 3, r["depth"])),
         ("coast_dist", layer_hash(w, h, 4, r["coast"])),
         ("wind", str(r["wind"])),
+    ]
+    if not legacy:
+        items.append(("temp_offset_dc", str(r["offset_dc"])))
+    items += [
         ("S", h_i64(r["S"])),
         ("tnoise", h_i64(r["tnoise"])),
         ("T", h_i64(r["T"])),
@@ -1387,17 +1602,27 @@ def inputs_cached(fx, n, seed):
     return _INPUT_CACHE[k]
 
 
-def golden_text(large=False):
-    out = [GOLDEN_HEADER]
-    cases = GOLDEN_CASES + (LARGE_CASES if large else [])
-    for name, fx, n, seed, weights, why in cases:
+def case_tuning(weights, omax, legacy=False):
+    if legacy:
+        return legacy_tuning(wind_weights=list(weights))
+    return shipped_tuning(wind_weights=list(weights), temp_offset_max_c=dec(omax))
+
+
+def golden_text(large=False, legacy=False):
+    out = [LEGACY_HEADER if legacy else GOLDEN_HEADER]
+    if legacy:
+        cases = [c + ("0",) for c in LEGACY_GOLDEN_CASES + (LEGACY_LARGE_CASES if large else [])]
+    else:
+        cases = GOLDEN_CASES + (LARGE_CASES if large else [])
+    for name, fx, n, seed, weights, why, omax in cases:
         if seed is None:
             seed = cr.seed_from_phrase(b"The Unmapped")[1]
         e, water, depth, coast = inputs_cached(fx, n, seed)
-        r = climate(n, n, e, water, depth, coast, shipped_tuning(wind_weights=list(weights)), seed)
+        r = climate(n, n, e, water, depth, coast, case_tuning(weights, omax, legacy), seed)
         out.append("# %s\n" % why)
-        out.append("case %s %s %d %d %s\n" % (name, fx, n, seed, ",".join(str(v) for v in weights)))
-        for item, v in world_items(r):
+        tail = "" if legacy else " " + omax
+        out.append("case %s %s %d %d %s%s\n" % (name, fx, n, seed, ",".join(str(v) for v in weights), tail))
+        for item, v in world_items(r, legacy):
             out.append("%s %s %s\n" % (name, item, v))
         sys.stderr.write("golden: %s done (wind %d)\n" % (name, r["wind"]))
     # The C4 overflow margin (section 7): a 260 x 255 grid with S near the
@@ -1408,30 +1633,33 @@ def golden_text(large=False):
     hs1 = box_mean(w, h, S, 125)
     hs = triangle_mean(w, h, S, 250)
     out.append("# C4 overflow margin (P1-03 7): %d x %d, S = 32767 - (7x + 13y) mod 768, r = 250\n" % (w, h))
-    out.append("case overflow-260x255 overflow %d 0 %s\n" % (w, ",".join(str(v) for v in UNIFORM)))
+    out.append("case overflow-260x255 overflow %d 0 %s%s\n" % (w, ",".join(str(v) for v in UNIFORM),
+                                                              "" if legacy else " 2"))
     for item, v in (("S", h_i64(S)), ("hs1", h_i64(hs1)), ("hs", h_i64(hs)), ("hs_corner", str(hs[0]))):
         out.append("overflow-260x255 %s %s\n" % (item, v))
     for f in RANDOM_GOLDEN:
         w, h, e, water, depth, coast, code = random_fixture(f)
         weights = one_hot(code)
-        r = climate(w, h, e, water, depth, coast, shipped_tuning(wind_weights=weights), f)
+        r = climate(w, h, e, water, depth, coast, case_tuning(weights, "2", legacy), f)
         name = "random-%d" % f
         out.append("# random fixture %d of P1-03 10.2 (wind code %d)\n" % (f, code))
-        out.append("case %s random %d %d %s\n" % (name, w, f, ",".join(str(v) for v in weights)))
-        for item, v in world_items(r):
+        out.append("case %s random %d %d %s%s\n" % (name, w, f, ",".join(str(v) for v in weights),
+                                                   "" if legacy else " 2"))
+        for item, v in world_items(r, legacy):
             out.append("%s %s %s\n" % (name, item, v))
     return "".join(out)
 
 
 def check_worlds(c):
-    for name, fx, n, seed, weights, _ in GOLDEN_CASES:
+    for name, fx, n, seed, weights, _, omax in GOLDEN_CASES:
         if n > 128 or (weights != UNIFORM and fx == "small"):
             continue
         e, water, depth, coast = inputs_cached(fx, n, seed)
-        t = shipped_tuning(wind_weights=list(weights))
+        t = case_tuning(weights, omax)
         r = check_invariants(c, name, n, n, e, water, depth, coast, t, seed)
         if n <= 64:
             c.eq(name + " recursive sweep", sweep_recursive(n, n, r["hs"], water, r["wind"], t), (r["q"], r["p"]))
+            check_offset_shift(c, name, n, n, e, water, depth, coast, seed, weights)
         sys.stderr.write("check: %s done (wind %d, temperature %d..%d, rainfall %d..%d)\n"
                          % (name, r["wind"], min(r["temperature"]), max(r["temperature"]),
                             min(r["rainfall"]), max(r["rainfall"])))
@@ -1450,6 +1678,7 @@ def main(argv):
         check_core(c)
         check_wind(c)
         check_temperature(c)
+        check_offset(c)
         check_box(c)
         check_overflow_margin(c)
         check_sweep(c)
@@ -1468,7 +1697,7 @@ def main(argv):
         return 0
     if len(argv) >= 2 and argv[1] == "golden":
         args = [a for a in argv[2:] if not a.startswith("--")]
-        text = golden_text(large="--large" in argv)
+        text = golden_text(large="--large" in argv, legacy="--legacy" in argv)
         path = args[0] if args else os.path.join(_HERE, "..", "golden", "p1-03-climate.txt")
         if path == "-":
             sys.stdout.write(text)
