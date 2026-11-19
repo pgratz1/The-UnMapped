@@ -538,3 +538,13 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
 - Proposal: the first present race awakens at year 0; every later present race keeps its own share of the span and its own small shift from the seed, so its date does not depend on which other races were chosen. Ages are numbered over the present races only. Every race has its creator god in the world, present or not, so a god keeps its name whichever races are chosen; a god whose race is absent created nothing in that world.
 - Interim choice: as proposed (`docs/specs/p3-03-chronology.md` C3, 5.2, questions 1 and 2).
 - Status: open
+
+### History: active phases scale with the history span; the detail level sets the simulated share
+
+- Date: 2026-11-19
+- Raised by: spec-writer (P3-04)
+- Design doc section: 5 (Deep time: "of which roughly 1,200 are simulated in detail"; world-creation settings: history span 2,000 to 12,000, history detail sparse, normal, dense)
+- Problem: the design gives the simulated years for the default span only. Fixed phase lengths cannot keep the share of simulated years sensible across the span range: 1,200 years would be 60% of a 2,000-year history and 10% of a 12,000-year one. The design also does not say how the last race's opening phase and the final phase meet when the last age is short.
+- Proposal: phase lengths are tuned in years at the 6,000-year default and scaled in proportion to the span, so the detail level fixes the share (sparse about 12%, normal about 19-20%, that is 1,110-1,200 of 6,000 before flare-ups, dense about 28%). The final phase is at most its length and starts where the last opening phase ends, so with the shipped numbers the orcs' age is usually active from their awakening to the present. A floor (10%) and a cap (45%, flare-ups included) are guaranteed by the scheduler. Each flare-up is marked by a `flare_up` event.
+- Interim choice: as proposed (`docs/specs/p3-04-simulation-engine.md` sections 4.1 and 5, questions 1 to 3 and 6).
+- Status: open
