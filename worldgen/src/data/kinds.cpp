@@ -6,6 +6,9 @@
 // 4.2) and `hydrology` (P1-02 section 4), and of the second pass so far,
 // `climate` (P1-03 section 4), `biomes` (P1-04 section 4.2), `resources`
 // (P1-05 section 4.2) and `regions` (P1-06 section 4).
+//
+// P3-01 registers the history kinds `race`, `culture` and `history`; their
+// schemas are in kinds_history.cpp.
 
 #include <array>
 #include <cstddef>
@@ -578,6 +581,20 @@ KindRegistry builtin_kinds() {
     Kind biome{std::string(BIOME_KIND), std::string(BIOME_DIRECTORY), true, biome_schema()};
     biome.kind_checks = biome_kind_checks();
     registry.add(std::move(biome));
+    // P3-01 3: kind `race`, directory `races`, required, with its
+    // kind-level checks.
+    Kind race{std::string(RACE_KIND), std::string(RACE_DIRECTORY), true, race_schema()};
+    race.kind_checks = race_kind_checks();
+    registry.add(std::move(race));
+    // P3-01 4: kind `culture`, directory `cultures`, required; the naming
+    // record of P3-02 3.
+    registry.add(Kind{std::string(CULTURE_KIND), std::string(CULTURE_DIRECTORY), true, culture_schema()});
+    // P3-01 5: kind `history`, directory `history`, required, fixed ids;
+    // later P3 specs add their ids.
+    registry.add(Kind::with_fixed_ids(std::string(HISTORY_KIND), std::string(HISTORY_DIRECTORY), true,
+                                      {
+                                          IdSchema{std::string(HISTORY_CHRONOLOGY_ID), history_chronology_schema()},
+                                      }));
     return registry;
 }
 

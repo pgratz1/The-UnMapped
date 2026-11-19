@@ -1,0 +1,15 @@
+[culture.human]
+race = "human"
+name = "Human"
+
+[culture.human.naming]
+onsets = ["b", "c", "d", "g", "h", "m", "r", "s", "t", "w", "st", "br", "al", "ed", "ash"]
+nuclei = ["a", "e", "i", "o", "u", "ea"]
+codas = ["n", "d", "r", "s", "l", "rd", "ck", "ld", "m", "nt"]
+patterns = ["ONC", "ONC", "ONCONC", "ONC"]
+min_letters = 4
+max_letters = 9
+forbidden = ["eae", "aea", "ckc", "ldl", "ntd", "rdd", "ckb", "ckm"]
+god_forms = ["{root}"]
+civilization_forms = ["The Kingdom of {root}", "The {root} League", "The Duchy of {root}"]
+settlement_forms = ["{root}", "{root}ford", "{root}ton", "{root}bury", "{root}wick", "{root}ham", "{root}stead"]

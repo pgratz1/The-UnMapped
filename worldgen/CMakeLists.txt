@@ -30,6 +30,7 @@ add_library(worldgen STATIC
     src/data/content.cpp
     src/data/encoding.cpp
     src/data/kinds.cpp
+    src/data/kinds_history.cpp
     src/data/load_error.cpp
     src/data/schema.cpp
     src/data/settings.cpp

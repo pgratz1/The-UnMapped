@@ -1,0 +1,26 @@
+[race.dwarf]
+order = 3
+name = "Dwarf"
+plural = "Dwarves"
+adjective = "Dwarven"
+camp = "neutral"
+awakening_share = "0.55"
+lifespan_years = 300
+generation_years = 70
+growth_permille = 5
+site_weights = { fertility = 10, forage = 10, timber = 10, ore = 60, fresh_water = 10 }
+biomes = [
+  { biome = "alpine", weight = 300 },
+  { biome = "highland_moor", weight = 300 },
+  { biome = "heath", weight = 200 },
+  { biome = "temperate_forest", weight = -100 },
+  { biome = "wet_woodland", weight = -300 },
+  { biome = "marsh", weight = -400 },
+  { biome = "fen", weight = -400 },
+]
+upland = 800
+coast = -200
+expansion = 250
+aggression = 300
+settlement_kinds = ["hamlet", "village", "town", "city", "fortress"]
+culture = "dwarven"
