@@ -100,7 +100,7 @@ def fatal(msg):
 
 
 SPEC_GAPS = (
-    ("14 item 2 against 6.2", "'No two settlements share a cell' contradicts 6.2, where a faded settlement does "
+    ("14 item 2 against 6.2", "RULED (lead, ruling 1): 6.2 rules, as checked here. 'No two settlements share a cell' contradicts 6.2, where a faded settlement does "
                               "not block and the seed cell or the best cell may be the faded one's own cell (the "
                               "stress cases reach it). The reference follows 6.2 and checks invariant 2 as: no two "
                               "settlements share a cell unless the earlier one faded before the later was founded."),
@@ -110,8 +110,9 @@ SPEC_GAPS = (
                                  "village at 300 for races that build villages), as 9.3 item 9 does for colonies."),
     ("11 civ_ended settlement_use 1", "civ_ended carries the abandoned settlement (8.5 item 6) or the settlement "
                                       "ruined last (9.1) as its settlement; the region is that settlement's."),
-    ("10.2 spread 'owned by s's owner'", "The owner of s at its outbreak (before the strike): an outbreak that "
-                                         "makes s abandoned still spreads to that civilization's settlements."),
+    ("10.2 spread 'owned by s's owner'", "OPEN (lead, ruling 6): the reference takes the owner of s at its outbreak "
+                                         "(before the strike); the engineer the owner after the strike, so an "
+                                         "outbreak that abandons s spreads nowhere. SPREAD_OWNER switches."),
     ("10 order in T4", "Famine and plague over the settlements first (10.2), then the crises over the "
                        "civilizations (10.3), in the order of the sections."),
     ("10.3 crisis loss and 8.5 (a)", "The capital's crisis loss is not a strike: it records `before`, sets "
@@ -119,8 +120,9 @@ SPEC_GAPS = (
     ("10.3 d_cap start", "d_cap starts at the capital's region whether or not c holds it, and the search runs "
                          "over c's held regions only."),
     ("10.3 new civilization", "culture = the parent's culture; home_region = the new capital's region."),
-    ("8.6 / P3-04 9.2 faded rows", "A faded settlement keeps its ruined_year and ruin_event (invariant 7 dates "
-                                   "the fading against them)."),
+    ("8.6 / P3-04 9.2 faded rows", "RULED (lead, ruling 3): fading clears ruined_year and ruin_event; invariant 7 "
+                                   "dates the fading against the ruin_faded event's cause."),
+    ("9.2 recovery in Q1", "RULED (lead, ruling 4): invariant 9 governs; 8.3's recovery runs each year inside Q1."),
     ("6.6 W9 'quiet step'", "The quiet-event budget and the 'charged in this step' rule of the quiet eras "
                             "count over the whole quiet step (Q1 to Q6), as P3-04 6.6 counts per quiet step."),
     ("8.5 (b) and 8.2 in Q1", "Abandonment (b) and kind changes at the end of Q1 run over the settlements in "
@@ -130,9 +132,8 @@ SPEC_GAPS = (
                                 "(the next region is not tried), as the text says."),
     ("9.3 item 3 reach origin", "hops are counted from the region of c's capital settlement over every open "
                                 "border (not only held regions)."),
-    ("5.1 bound guard message", "Not given by the spec; the reference raises 'history: peoples: capacity of "
-                                "region <R> for race <r> is <C>, above 2^31 - 1' and the C++ test checks the "
-                                "'history: peoples: ' prefix only."),
+    ("5.1 bound guard message", "Not given by the spec; implemented in P3-04 6.1's bound form 'history: bound: "
+                                "capacity of region <R> for race <r> exceeds 2147483647' (the reference and tests follow)."),
     ("6.2 fatal site", "'history: peoples: no settlement site in region <id>' for an awakening; a colony with no "
                        "site has no target."),
     ("12.2 array positions", "Changed biome weights keep their place in the race file; the added entries (goblin "
@@ -152,6 +153,12 @@ def _k(kid, key, caused, roles, values):
     return pe.kind_def(kid, key, caused, 1, 1, roles, values)
 
 
+# Lead's ruling 4 (2026-11-19): recovery per year inside Q1. False gives the literal 9.2 reading.
+QUIET_RECOVER_EACH_YEAR = True
+# Lead's ruling 6 is open: the owner whose settlements a plague spreads to. "outbreak": the owner of s at
+# its outbreak (this reference's reading); "after": the owner after the outbreak's strike (the engineer's).
+SPREAD_OWNER = "outbreak"
+
 SET_CIV = (("settlement", SETTLEMENT, 1, 1), ("civilization", CIV, 1, 1))
 PEOPLES_KINDS = (
     _k(6, "colony_founded", 0, (("settlement", SETTLEMENT, 1, 1), ("founder", CIV, 1, 1),
@@ -170,7 +177,10 @@ PEOPLES_KINDS = (
     _k(18, "civ_ended", 1, (("civilization", CIV, 1, 1),), ()),
     _k(19, "ruin_faded", 1, (("settlement", SETTLEMENT, 1, 1),), ()),
 )
-COMPILED = tuple(pe.COMPILED) + PEOPLES_KINDS
+# p3_engine_reference.py carries the 0.15.0 catalogue (kinds 1-19) since the integration; this file's own
+# transcription of section 11 must equal its kinds 6-19.
+COMPILED = tuple(pe.COMPILED)
+assert list(COMPILED[5:]) == list(PEOPLES_KINDS) and len(COMPILED) == 19
 KIND_ID = {k["key"]: k["id"] for k in COMPILED}
 # Quiet-step kinds (14 item 8): 6-10, 16-19 (and P3-04's quiet_era).
 QUIET_KINDS = {6, 7, 8, 9, 10, 16, 17, 18, 19}
@@ -425,7 +435,7 @@ class Geo:
             prod = area * self.fit(rid, race) * rd["density"] * t["people_per_kcell"]
             c = max(t["capacity_floor"], prod // 10 ** 9)
             if c > (1 << 31) - 1:
-                fatal("history: peoples: capacity of region %d for race %d is %d, above 2^31 - 1" % (rid, race, c))
+                fatal("history: bound: capacity of region %d for race %d exceeds %d" % (rid, race, (1 << 31) - 1))
             self._cap[key] = c
         return self._cap[key]
 
@@ -812,7 +822,7 @@ class World(pe.World):
         super().flare_start(eng_run, year, length, trigger)
 
     # --- 9.1 growth (one year) and 8.3 recovery
-    def grow_once(self):
+    def grow_once(self, recover=False):
         sh = self.shares()
         for s in self.settlements:
             if not self.standing(s) or not self.visible(s):
@@ -830,6 +840,8 @@ class World(pe.World):
             else:
                 p2 = p
             s["population"] = p2
+            if recover:
+                self.recover(s)
 
     def recover(self, s):
         if s["status"] == DECLINING and s["population"] * 1000 >= self.t["recover_permille"] * self.before.get(s["id"], 0):
@@ -871,11 +883,14 @@ class World(pe.World):
 
     def q1(self):
         self.begin()
+        # Lead's ruling 4 (invariant 9 governs 9.2): 8.3's recovery is applied each year inside Q1,
+        # after each settlement's growth, exactly as in T1.
         for _ in range(self.years):
-            self.grow_once()
-        for s in self.settlements:
-            if self.standing(s) and self.visible(s):
-                self.recover(s)
+            self.grow_once(recover=QUIET_RECOVER_EACH_YEAR)
+        if not QUIET_RECOVER_EACH_YEAR:
+            for s in self.settlements:
+                if self.standing(s) and self.visible(s):
+                    self.recover(s)
         self.abandon_b()
         self.kind_changes()
         self.check_floor()
@@ -1111,6 +1126,8 @@ class World(pe.World):
                 small = s["kind"] in (HAMLET, VILLAGE)
                 toll = t["plague_toll_min"] + pnr.pick(self.draw("hist.peoples.plague_toll", sid, 0, 0), tr_p)
                 o = self.strike(s, "plague", toll, (), salience=(t["plague_small_salience"] if small else None))
+                if SPREAD_OWNER == "after":
+                    owner = s["owner_civ"]
                 struck.add(sid)
                 area = {s["region"]} | {r for r, _c in self.geo.nb[s["region"]]}
                 for uid in range(1, nset + 1):
@@ -1204,6 +1221,9 @@ class World(pe.World):
             self.append("ruin_faded", region=s["region"], settlement=s["id"],
                         participants=(("settlement", SETTLEMENT, s["id"]),), causes=(s["ruin_event"],))
             s["status"] = FADED
+            # Lead's ruling 3: fading clears ruined_year and ruin_event (P3-04 State).
+            s["ruined_year"] = None
+            s["ruin_event"] = 0
 
     # --- the engine hooks
     def tick(self, eng_run, year, phase_end):
@@ -1248,7 +1268,7 @@ class World(pe.World):
                 self.open_era[civ["id"]] = idx
             ev = self.events[idx]
             ev["values"] = {1: ev["end_year"] - ev["year"] + 1, 2: self.generations(civ, ev["year"], ev["end_year"])}
-        self.bookkeeping(start, phase_end)
+        self.bookkeeping(start, phase_end, last)
         if phase_end:
             self.open_era = {}
         self.check_state()
@@ -1342,22 +1362,8 @@ def table_hashes(res):
 
 
 def report_lines(res, inp):
-    """P3-04 11.1 [history] with the keys of 15.4 appended."""
-    o = pe.report_lines(res, inp.params["span"])
-    if not o:
-        return o
-    civ_race = {c[0]: c[2] for c in res["civilization"]}
-    standing = [s for s in res["settlement"] if s[10] in (THRIVING, DECLINING)]
-    o.append("population = %d" % sum(s[11] for s in standing))
-    races = [(r[0], r[1]) for r in inp.races]
-    for rid, key in races:
-        o.append("population_%s = %d" % (key, sum(s[11] for s in standing if civ_race[s[8]] == rid)))
-    for rid, key in races:
-        o.append("settlements_standing_%s = %d" % (key, sum(1 for s in standing if civ_race[s[8]] == rid)))
-    for rid, key in races:
-        o.append("regions_held_%s = %d" % (key, sum(1 for r in res["region_control"]
-                                                      if r[2] is None and civ_race[r[3]] == rid)))
-    return o
+    """P3-04 11.1 [history] with the keys of 15.4 appended (p3_engine_reference.report_lines)."""
+    return pe.report_lines(res, inp.params["span"], inp.races)
 
 
 def stats_extra(res):
@@ -1634,11 +1640,15 @@ def check_invariants(c, res, inp, w, label):
         cells[(s[2], s[3])] = s[0]
     sp2 = t["site_spacing"] ** 2
     ss = res["settlement"]
+    ruined_by = {}   # settlement -> its settlement_abandoned event (a faded row no longer names it)
+    for e in res["event"]:
+        if e[3] == KIND_ID["settlement_abandoned"]:
+            ruined_by[e[6]] = e[0]
     for i in range(len(ss)):
         for j in range(i + 1, len(ss)):
             a, b = ss[i], ss[j]
             # a founded first; it stood at b's founding unless ruined before b's founding event
-            if a[13] and a[13] < b[7]:
+            if a[0] in ruined_by and ruined_by[a[0]] < b[7]:
                 continue
             if w.site_how.get(b[0]) == "relaxed":
                 continue
@@ -1689,8 +1699,12 @@ def check_invariants(c, res, inp, w, label):
             c.true("%s inv 7 s%d ruin event" % (label, s[0]), kind[s[13]] == KIND_ID["settlement_abandoned"])
         if s[10] == FADED:
             fades = [e for e in res["event"] if e[3] == KIND_ID["ruin_faded"] and e[6] == s[0]]
-            c.true("%s inv 7 s%d faded" % (label, s[0]), len(fades) == 1 and causes[fades[0][0]] == [s[13]] and
-                 fades[0][1] >= s[12] + t["ruin_fade_years"])
+            ok = len(fades) == 1 and len(causes.get(fades[0][0], [])) == 1
+            if ok:
+                ruin = ev[causes[fades[0][0]][0]]
+                ok = (ruin[3] == KIND_ID["settlement_abandoned"] and ruin[6] == s[0] and
+                      fades[0][1] >= ruin[1] + t["ruin_fade_years"] and s[12] is None and s[13] == 0)
+            c.true("%s inv 7 s%d faded (cause its ruin event, cleared row)" % (label, s[0]), ok)
     # 8
     want_cause = {
         "became_village": None, "became_town": None, "became_city": None, "plague_spread": ("plague",),
@@ -2058,7 +2072,7 @@ def check_units(c):
         g.capacity(1, HUMAN)
         c.true("16.1.1 bound guard", False)
     except FatalError as e:
-        c.true("16.1.1 bound guard: %s" % e, str(e).startswith("history: peoples: "))
+        c.true("16.1.1 bound guard: %s" % e, str(e).startswith("history: bound: capacity of region 1"))
     # 16.1 item 2: borders
     dat, inp = unit_geo([dict(x_max=9), dict(x_min=10, x_max=19), dict(x_min=20, x_max=29), dict(x_min=30, x_max=39),
                          dict(x_min=40, x_max=49)],
@@ -2372,7 +2386,10 @@ def stored_rows(conn, table):
 
 
 def cmd_check_world(argv):
+    global SPREAD_OWNER, QUIET_RECOVER_EACH_YEAR
     path = argv[0]
+    SPREAD_OWNER = opt(argv, "--spread-owner", SPREAD_OWNER)        # outbreak (default) or after
+    QUIET_RECOVER_EACH_YEAR = opt(argv, "--quiet-recovery", "each-year") == "each-year"   # or end
     dat = data(opt(argv, "--data", "game/data"))
     conn = pchr.open_world(path)
     meta = dict(conn.execute("SELECT key, value FROM meta").fetchall())

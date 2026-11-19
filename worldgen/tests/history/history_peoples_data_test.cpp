@@ -259,8 +259,9 @@ TEST_CASE("P3-05 r1 / P3-01 r7: the 0.16.0 items are absent at 0.15.0") {
     }
     // prowess_permille is not a field of the race kind at 0.15.0
     Files f = history_data::shipped_files();
-    std::string& elf = f["races/elf.toml"];
-    elf.replace(elf.find("aggression = 150\n"), 17, "aggression = 150\nprowess_permille = 1600\n");
+    // on orc (order 6): a type error leaves orders 1 to 5 for the kind-level checks (as the P3-01 tests)
+    std::string& orc = f["races/orc.toml"];
+    orc.replace(orc.find("aggression = 900\n"), 17, "aggression = 900\nprowess_permille = 1300\n");
     CHECK(contains(one_error(load(f)).message, "prowess_permille"));
     // history id conflict is not registered (the P3-01 unknown-id test names the list)
     const wd::KindContent* hist = c.find_kind("history");

@@ -283,8 +283,10 @@ TEST_CASE("P3-05 5.1: the capacity bound guard (C < 2^31) is fatal") {
     g.region_biomes = {{1, 4, 100000}};
     const wd::ContentSet c = with_peoples({{"people_per_kcell", I64(100000000)}});  // past the loader's range
     const std::string m = fatal_of([&] { (void)eng::history_stage(c, inputs_of(g, 0, humans_2000(), c)); });
-    // The message is not given by the spec (gap): a peoples error, or a seam guard on the tuning range.
-    CHECK_MESSAGE((m.rfind("history: peoples: ", 0) == 0 || m.rfind("history: tuning: ", 0) == 0), m);
+    // The message is not given by the spec (gap); the implementation uses P3-04 6.1's bound form
+    // `history: bound: <what> exceeds <n>`, checked for every region and race.
+    CHECK(m.rfind("history: bound: capacity of region 1 for race ", 0) == 0);
+    CHECK(m.find(" exceeds 2147483647") != std::string::npos);
 }
 
 TEST_CASE("P3-05 4.4, 16.1 item 2: walkable, pass-only, barrier, river share exactly 500 permille, length_m 0") {
@@ -412,7 +414,7 @@ TEST_CASE("P3-05 8.5 r1, 13: ruin(s, e) applies items 2-5 with e and does not en
         p2 = ctx.state().settlement(s2).population;
         c2 = p->view().capacity(other, 5);
         e_ruin = test_event(ctx, home, 1);
-        cfg.peoples.sub->ruin(1, e_ruin);
+        cfg.peoples.sub->ruin(ctx, 1, e_ruin);
         const eng::Settlement& a = ctx.state().settlement(1);
         CHECK(a.status == eng::SettlementStatus::ruined);
         CHECK(a.ruin_event == e_ruin);
@@ -427,7 +429,7 @@ TEST_CASE("P3-05 8.5 r1, 13: ruin(s, e) applies items 2-5 with e and does not en
     });
     once_at(cfg, Step::t6, 5, [&](eng::StepContext& ctx) {
         e_ruin2 = test_event(ctx, other, s2);
-        cfg.peoples.sub->ruin(s2, e_ruin2);
+        cfg.peoples.sub->ruin(ctx, s2, e_ruin2);
         CHECK(ctx.state().settlement(s2).status == eng::SettlementStatus::ruined);
         CHECK(ctx.state().region(other).owner == 0);
         CHECK_FALSE(ctx.state().civ(1).ended_year.has_value());  // not item 6: the caller's

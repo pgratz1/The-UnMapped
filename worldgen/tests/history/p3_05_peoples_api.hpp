@@ -22,17 +22,11 @@
 //   worldgen/core/streams.hpp     the twelve hist.peoples.* names after
 //                                 hist.chronology.awakening, 46 in all (3.3)
 //
-// Where the spec leaves a name open, the guess is marked GUESS and is the
-// first thing to check at integration:
-//   GUESS: the awakening handler is history::PeoplesAwakening (P3-05 2,
-//          18.2 item 7), constructed from the PeoplesSubsystem it places
-//          for: PeoplesAwakening(PeoplesSubsystem&).
-//   GUESS: PeoplesSubsystem is default-constructible and reads its inputs
-//          from the StepContext of its first step.
-//   GUESS: Neighbour (13, `std::span<const Neighbour> neighbours`) is
-//          history::Neighbour with members `region` and `cost`.
-//   GUESS: the stream constants are streams::hist_peoples_<name> (the
-//          P0-01 7.3 naming of the existing constants).
+// Settled at integration (the lead's ruling 2, P3-05 16 as implemented):
+//   PeoplesAwakening(PeoplesSubsystem&); PeoplesSubsystem default-constructible;
+//   ruin(StepContext&, settlement, event); PeoplesView::share, population,
+//   regions, settlements, wanted_held take a const StepContext&; the
+//   neighbour type is PeoplesNeighbour {region, cost}.
 //
 // Every contract violation is expected to throw worldgen::FatalError.
 

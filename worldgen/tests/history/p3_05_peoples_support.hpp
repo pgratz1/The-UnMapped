@@ -760,9 +760,16 @@ inline void check_invariants(const Tables& t, const eng::HistoryInputs& in, cons
         }
         if (at(s, 10) == faded) {
             REQUIRE(faded_by.count(at(s, 0)) == 1U);
+            // lead's ruling 3: fading clears ruined_year and ruin_event; the ruin_faded event's cause is the
+            // settlement's ruin event, dated at least ruin_fade_years before it
             const std::int64_t f = faded_by[at(s, 0)];
-            CHECK(causes[f] == std::vector<std::int64_t>{at(s, 13)});
-            CHECK(at(*ev.at(f), 1) >= at(s, 12) + fade_years);
+            CHECK(is_null(s[12]));
+            CHECK(at(s, 13) == 0);
+            REQUIRE(causes[f].size() == 1U);
+            const Row& ruin = *ev.at(causes[f][0]);
+            CHECK(at(ruin, 3) == k_settlement_abandoned);
+            CHECK(at(ruin, 6) == at(s, 0));
+            CHECK(at(*ev.at(f), 1) >= at(ruin, 1) + fade_years);
         }
     }
     // 8: no event of 11 except kinds 6-10, 16-19 in a quiet phase; causes of the caused kinds

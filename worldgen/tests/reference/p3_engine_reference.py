@@ -84,7 +84,7 @@ M64 = (1 << 64) - 1
 REPO = os.path.normpath(os.path.join(_HERE, "..", "..", ".."))
 GOLDEN = os.path.join(REPO, "worldgen", "tests", "golden", "p3-04-engine.txt")
 DEFAULT_INPUTS = os.path.join(os.path.expanduser("~"), ".cache", "the-unmapped", "out", "p3-04-tests", "inputs")
-GENERATOR_VERSION = "0.14.0"
+GENERATOR_VERSION = "0.15.0"  # P3-05: the 0.15.0 catalogue (19 kinds) and report data
 SCHEMA_VERSION = 7
 
 
@@ -118,6 +118,22 @@ events = [
 ({generations} {generations?generation|generations}), from {@year} to {@end_year}." },
   { kind = "flare_up", salience = 50, template = "In {@year} tensions flared into {years} {years?year|years} \
 of upheaval." },
+  { kind = "colony_founded", salience = 15, template = "{founder} sent settlers from {origin} to found {settlement} in {@region}." },
+  { kind = "became_village", salience = 10, template = "{settlement} grew into a village of {population}." },
+  { kind = "became_town", salience = 18, template = "{settlement} grew into a town of {population}." },
+  { kind = "became_city", salience = 45, template = "{settlement} grew into a city of {population}." },
+  { kind = "settlement_dwindled", salience = 15, template = "{settlement} dwindled to {population} souls." },
+  { kind = "famine", salience = 25, template = "Famine struck {settlement}; {dead} died." },
+  { kind = "plague", salience = 45, template = "Plague broke out in {settlement}; {dead} died." },
+  { kind = "plague_spread", salience = 25, template = "The plague spread to {settlement}; {dead} died." },
+  { kind = "succession_crisis", salience = 40, template = "A succession crisis shook {civilization}." },
+  { kind = "civ_seceded", salience = 70, template = "{civilization} broke away from {from}, taking {settlements} \
+{settlements?settlement|settlements} with it." },
+  { kind = "settlement_abandoned", salience = 55, template = "{settlement} was abandoned; {survivors} \
+{survivors?survivor|survivors} left." },
+  { kind = "capital_moved", salience = 50, template = "{civilization} moved its seat to {settlement}." },
+  { kind = "civ_ended", salience = 85, template = "{civilization} came to an end." },
+  { kind = "ruin_faded", salience = 10, template = "The ruins of {settlement} faded from memory." },
 ]
 """
 
@@ -188,7 +204,34 @@ COMPILED = (
              ("population",)),
     kind_def(4, "quiet_era", 0, 1, 0, (("civilization", CIV, 1, 1),), ("years", "generations")),
     kind_def(5, "flare_up", 1, 0, 0, (), ("years",)),
+    # P3-05 11 (generator 0.15.0): kinds 6-19, region_use and settlement_use 1, every count 1-1.
+    kind_def(6, "colony_founded", 0, 1, 1, (("settlement", SETTLEMENT, 1, 1), ("founder", CIV, 1, 1),
+                                            ("origin", SETTLEMENT, 1, 1)), ("population",)),
+    kind_def(7, "became_village", 1, 1, 1, (("settlement", SETTLEMENT, 1, 1), ("civilization", CIV, 1, 1)),
+             ("population",)),
+    kind_def(8, "became_town", 1, 1, 1, (("settlement", SETTLEMENT, 1, 1), ("civilization", CIV, 1, 1)),
+             ("population",)),
+    kind_def(9, "became_city", 1, 1, 1, (("settlement", SETTLEMENT, 1, 1), ("civilization", CIV, 1, 1)),
+             ("population",)),
+    kind_def(10, "settlement_dwindled", 0, 1, 1, (("settlement", SETTLEMENT, 1, 1), ("civilization", CIV, 1, 1)),
+             ("population",)),
+    kind_def(11, "famine", 0, 1, 1, (("settlement", SETTLEMENT, 1, 1), ("civilization", CIV, 1, 1)),
+             ("dead", "population")),
+    kind_def(12, "plague", 0, 1, 1, (("settlement", SETTLEMENT, 1, 1), ("civilization", CIV, 1, 1)),
+             ("dead", "population")),
+    kind_def(13, "plague_spread", 1, 1, 1, (("settlement", SETTLEMENT, 1, 1), ("civilization", CIV, 1, 1)),
+             ("dead", "population")),
+    kind_def(14, "succession_crisis", 0, 1, 1, (("civilization", CIV, 1, 1),), ()),
+    kind_def(15, "civ_seceded", 1, 1, 1, (("civilization", CIV, 1, 1), ("from", CIV, 1, 1)), ("settlements",)),
+    kind_def(16, "settlement_abandoned", 1, 1, 1, (("settlement", SETTLEMENT, 1, 1), ("civilization", CIV, 1, 1)),
+             ("survivors",)),
+    kind_def(17, "capital_moved", 1, 1, 1, (("civilization", CIV, 1, 1), ("settlement", SETTLEMENT, 1, 1)), ()),
+    kind_def(18, "civ_ended", 1, 1, 1, (("civilization", CIV, 1, 1),), ()),
+    kind_def(19, "ruin_faded", 1, 1, 1, (("settlement", SETTLEMENT, 1, 1),), ()),
 )
+
+
+P3_05_KEYS = ['colony_founded', 'became_village', 'became_town', 'became_city', 'settlement_dwindled', 'famine', 'plague', 'plague_spread', 'succession_crisis', 'civ_seceded', 'settlement_abandoned', 'capital_moved', 'civ_ended', 'ruin_faded']
 
 
 def compiled_catalogue():
@@ -862,14 +905,17 @@ class World:
                 self.open_era[civ["id"]] = idx
             ev = self.events[idx]
             ev["values"] = {1: ev["end_year"] - ev["year"] + 1, 2: self.generations(civ, ev["year"], ev["end_year"])}
-        self.bookkeeping(start, phase_end)
+        self.bookkeeping(start, phase_end, last)
         if phase_end:
             self.open_era = {}
 
     def tick(self, eng_run, year, phase_end):
         self.bookkeeping(year, phase_end)
 
-    def bookkeeping(self, y, phase_end):
+    def bookkeeping(self, y, phase_end, end_year=None):
+        """6.7 at year y; item 4's phase-end rows are dated at the phase's end_year (the step's last year
+        in a quiet step: fixed at the P3-05 integration, the stub worlds never reached it)."""
+        end_year = y if end_year is None else end_year
         for rid in sorted(self.owner):
             own, ev = self.owner[rid]
             if own != self.recorded_owner[rid]:
@@ -890,8 +936,8 @@ class World:
         if phase_end:
             for s in self.settlements:
                 cur = (s["owner_civ"], s["kind"], s["status"], s["population"])
-                if self.census_last.get(s["id"]) != cur and s["id"] not in written:
-                    self.census.append((s["id"], y) + cur)
+                if self.census_last.get(s["id"]) != cur and not (s["id"] in written and end_year == y):
+                    self.census.append((s["id"], end_year) + cur)
                     self.census_last[s["id"]] = cur
 
     def last_event_id(self):
@@ -1020,8 +1066,9 @@ def table_hashes(res):
     return {t: pchr.table_hash(COLUMNS[t], res[t]) for t in TABLES}
 
 
-def report_lines(res, end_year):
-    """11.1: the [history] section, or [] when `phase` is empty."""
+def report_lines(res, end_year, races=None):
+    """11.1: the [history] section, or [] when `phase` is empty; with the race rows, the keys P3-05 15.4
+    appends after `relations` (every 0.15.0 world with phases prints them)."""
     ph = res["phase"]
     if not ph:
         return []
@@ -1041,6 +1088,17 @@ def report_lines(res, end_year):
     o.append("regions_held = %d" % sum(1 for r in res["region_control"] if r[2] is None))
     o.append("census_rows = %d" % len(res["settlement_census"]))
     o.append("relations = %d" % len(res["relation"]))
+    if races is not None:
+        civ_race = {c[0]: c[2] for c in res["civilization"]}
+        standing = [x for x in res["settlement"] if x[10] in (1, 2)]
+        o.append("population = %d" % sum(x[11] for x in standing))
+        for rid, key in ((r[0], r[1]) for r in races):
+            o.append("population_%s = %d" % (key, sum(x[11] for x in standing if civ_race[x[8]] == rid)))
+        for rid, key in ((r[0], r[1]) for r in races):
+            o.append("settlements_standing_%s = %d" % (key, sum(1 for x in standing if civ_race[x[8]] == rid)))
+        for rid, key in ((r[0], r[1]) for r in races):
+            o.append("regions_held_%s = %d" % (key, sum(1 for x in res["region_control"]
+                                                          if x[2] is None and civ_race[x[3]] == rid)))
     return o
 
 
@@ -1233,7 +1291,7 @@ def world_lines(name, res):
     h = table_hashes(res)
     for t in TABLES:
         o.append("%s table %s %s" % (name, t, h[t]))
-    for line in report_lines(res, res["_inputs"].params["span"])[1:]:
+    for line in report_lines(res, res["_inputs"].params["span"], res["_inputs"].races)[1:]:
         o.append("%s report %s" % (name, line))
     o.append("%s phases %s" % (name, fmt_phases(res["phase"], trigger=True)))
     w = res["_world"]
@@ -1299,7 +1357,8 @@ def template_kind(key):
 
 
 HEADER = """\
-# P3-04 engine golden vectors for generator 0.14.0 (schema 7), spec
+# P3-04 engine golden vectors for generator 0.15.0 (schema 7): the stub engine (run_engine with
+# the stub configuration) on the 0.15.0 catalogue of 19 kinds (P3-05 11). Spec
 # docs/specs/p3-04-simulation-engine.md approved 2026-11-19, generated by
 # worldgen/tests/reference/p3_engine_reference.py golden, an independent
 # exact-integer reference written from the spec and P3-00 alone (with
@@ -1333,7 +1392,7 @@ HEADER = """\
 #   <case> table <table> <hex>     P0-04 8 logical hash, as the line
 #                                  "table <table> <hex>" of hash --detail,
 #                                  for the thirteen tables of 9.1
-#   <case> report <line>           the [history] lines of 11.1 (after the
+#   <case> report <line>           the [history] lines of 11.1 and P3-05 15.4 (after the
 #                                  header line)
 #   <case> phases <id:age:kind:start:end:trigger|...>
 #   <case> names c<id>:<attempt> s<id>:<attempt> site:<seed|row-major>
@@ -1452,7 +1511,7 @@ def check_data(c):
     c.eq("data report = listing", dat.report, spec_report())
     c.eq("report_events on the shipped report", report_events_messages(dat.report), [])
     c.eq("shipped templates parse", [template_problem(find_kind(COMPILED, k), t) for k, _s, t in dat.report],
-         [None] * 5)
+         [None] * len(COMPILED))
     c.eq("settlement kind hamlet for every race", sorted(set(v[0] for v in dat.settlement_kinds.values())),
          ["hamlet"])
     for root in ("worldgen/tests/data/geo", "worldgen/tests/data/geo-small"):
@@ -1643,7 +1702,7 @@ def check_example(c, inputs):
         "[history]", "end_year = 6000", "phases_opening = 6", "phases_quiet = 5", "phases_flare = 0",
         "phases_final = 1", "simulated_years = 1154", "simulated_permille = 192", "events = 33",
         "events_awakening = 6", "events_civ_founded = 6", "events_settlement_founded = 6", "events_quiet_era = 15",
-        "events_flare_up = 0", "civilizations = 6", "civilizations_alive = 6", "settlements = 6",
+        "events_flare_up = 0"] + ["events_%s = 0" % k for k in P3_05_KEYS] + ["civilizations = 6", "civilizations_alive = 6", "settlements = 6",
         "settlements_standing = 6", "regions_held = 6", "census_rows = 6", "relations = 0"])
     res = world_case("example-42-1024", 42, 1024, 6000, "all", "normal", inputs, ForcedTension(500, 1000, 1))
     ev = res["event"]
@@ -1683,7 +1742,7 @@ def check_templates(c):
         "events[2]: kind 'awakening' is already listed at events[0]",
         "events[3]: template: unclosed placeholder at byte 0",
         "events[4]: template: the template is empty",
-        "event kind 'flare_up' has no entry"])
+        "event kind 'flare_up' has no entry"] + ["event kind '%s' has no entry" % k for k in P3_05_KEYS])
     # rendering on a hand-made view: :all with 0..3, ? with 0, 1, 2
     cat = {99: dict(TEST_KIND, region_use=1, templ="[{actor:all}] {people:plural}/{people:adjective}/{people} at {@region}: "
                                      "{count} {count?thing|things} {{ok}} {@year}-{@end_year}")}

@@ -136,6 +136,63 @@ TEST_CASE("P3-05 14 item 9, 9.2: a quiet step of 25 years equals 25 tick years w
     CHECK(after_quiet == after_ticks);
 }
 
+TEST_CASE("P3-05 14 item 9, 8.3 (lead's ruling 4): recovery is applied each year inside Q1, as in T1") {
+    // A capital pushed far above its share in year 48 declines toward it; a famine of exactly 5% in T4 of
+    // year 49 (the last tick year) makes it declining with before = P. In the quiet step [50, 75) its
+    // population falls toward the share: per year it recovers in the first year (P >= 0.9 before), but
+    // not by the end of the step. The test recomputes both readings and requires the per-year one.
+    db::RegionRow a = plain_region(1, 0, 0, 31, 63);
+    a.cells = 2048;
+    a.walk_cells = 2000;
+    Geo g = hand_made(64, {a});
+    g.region_biomes = {{1, 4, 2048}};
+    const wd::ContentSet c = with_peoples({{"found_rate_permille", I64(0)},
+                                           {"famine_ppm", I64(1000000)},
+                                           {"famine_crowding_permille", I64(0)},
+                                           {"famine_toll_min", I64(50)},
+                                           {"famine_toll_max", I64(50)},
+                                           {"abandon_permille", by_kind(0, 0, 0, 0, 0)},
+                                           {"plague_ppm", by_kind(0, 0, 0, 0, 0)},
+                                           {"crisis_per_generation_permille", I64(0)}});
+    Settings s;
+    s.span = 2000;
+    s.races = {"human"};
+    s.civs = 1;
+    PeoplesConfig cfg(c);
+    const PeoplesConfig* p = &cfg;
+    std::int64_t before = 0, p0 = 0, share = 0;
+    eng::SettlementStatus after_q1 = eng::SettlementStatus::thriving;
+    cfg.add_after({eng::Step::t2}, [&](eng::StepContext& ctx) {
+        if (ctx.year() == 48) share = p->view().share(ctx, 1);
+        if (ctx.year() == 49) before = ctx.state().settlement(1).population;  // after T1, before T4
+    });
+    cfg.add_after({eng::Step::t6}, [&](eng::StepContext& ctx) {
+        if (ctx.year() == 48) ctx.state().set_population(1, 2 * share);
+        if (ctx.year() == 49) {
+            p0 = ctx.state().settlement(1).population;
+            CHECK(ctx.state().settlement(1).status == eng::SettlementStatus::declining);
+            CHECK(p->view().share(ctx, 1) == share);
+        }
+    });
+    cfg.add_after({eng::Step::q3}, [&](eng::StepContext& ctx) {
+        if (ctx.year() == 50) after_q1 = ctx.state().settlement(1).status;
+    });
+    (void)eng::run_engine(c, inputs_of(g, 0, s, c), cfg.get());
+    REQUIRE(share > 0);
+    REQUIRE(p0 == before - before * 50 / 1000);
+    // 9.1 decline over 25 years, 8.3 each year or once at the end
+    std::int64_t q = p0;
+    bool each_year = false;
+    for (int y = 0; y < 25; ++y) {
+        q = q > share ? q - std::max<std::int64_t>(1, (q - share) * 100 / 1000) : q;
+        each_year = each_year || q * 1000 >= 900 * before;
+    }
+    const bool at_end = q * 1000 >= 900 * before;
+    REQUIRE(each_year);
+    REQUIRE_FALSE(at_end);  // the case tells the two readings apart
+    CHECK(after_q1 == eng::SettlementStatus::thriving);
+}
+
 }  // TEST_SUITE
 
 #endif  // UNMAPPED_HAVE_PEOPLES

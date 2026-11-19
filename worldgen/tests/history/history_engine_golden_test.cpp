@@ -35,9 +35,32 @@ std::string section(const std::string& text, const std::string& header) {
     return text.substr(at, end == std::string::npos ? std::string::npos : end + 1 - at);
 }
 
+// A golden world case with the stub configuration (P3-04 7) in place of the shipped history stage, which
+// is peoples since generator 0.15.0 (P3-05 13): every stage up to chronology, then the stub history.
+// Cached per process.
+std::string stub_world_of(const GoldenWorld& g) {
+    static std::map<std::string, std::string> cache;
+    if (const auto it = cache.find(g.name); it != cache.end()) {
+        return it->second;
+    }
+    static dbtest::TempDir dir("engine-stub-worlds");
+    std::vector<worldgen::stages::StageInfo> stages = worldgen::stages::stages_until(std::string("chronology"));
+    stages.push_back(eng::stub_stage_info());
+    chrono_api::Params p = chrono_test::params_with(g.span, chrono_test::races_of_text(g.races));
+    p.detail = g.detail;
+    worldgen::WorldParams wp = chrono_test::world_params(g.seed, g.map_size, p, shipped());
+    if (g.name == "geo-phrase-512") {
+        wp.seed_phrase = "the unmapped";
+    }
+    const std::string path = dir.file(g.name + ".db");
+    REQUIRE(worldgen::stages::testing::generate_world_with_stages(wp, shipped(), stages, path).ok());
+    cache[g.name] = path;
+    return path;
+}
+
 void check_world_case(const GoldenWorld& g) {
     CAPTURE(g.name);
-    const std::string path = world_of(g);
+    const std::string path = stub_world_of(g);
     const db::WorldReader r = open_world(path);
     const std::map<std::string, std::string> detail = chrono_test::detail_tables(r);
     for (const auto& [t, hex] : g.tables) {
