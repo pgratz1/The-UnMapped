@@ -340,10 +340,10 @@ std::optional<std::string> check_engine_phase_budget(const Record& r) {
     for (const std::string_view level : ENGINE_LEVELS) {
         const Record& d = r.get_record(level);
         if (6 * d.get_int("active_years") + d.get_int("final_years") > budget) {  // at most 15000
-            // U+00D7 MULTIPLICATION SIGN and U+2212 MINUS SIGN, as UTF-8 bytes.
+            // ASCII x and - for the spec's multiplication and minus signs (lead, 2026-11-19).
             return std::string(level) +
-                   ": 6 \xC3\x97 active_years + final_years must not be above 6 \xC3\x97 simulated_max_permille "
-                   "\xE2\x88\x92 30";
+                   ": 6 x active_years + final_years must not be above 6 x simulated_max_permille "
+                   "- 30";
         }
     }
     return std::nullopt;

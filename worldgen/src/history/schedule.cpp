@@ -100,8 +100,8 @@ void check_engine_tuning(const EngineTuning& t) {
     for (const auto& [name, l] : levels) {
         if (6 * l->active_years + l->final_years > 6 * t.simulated_max_permille - 30) {
             fail("history: tuning: " + std::string(name) +
-                 ": 6 \xC3\x97 active_years + final_years must not be above 6 \xC3\x97 simulated_max_permille "
-                 "\xE2\x88\x92 30");
+                 ": 6 x active_years + final_years must not be above 6 x simulated_max_permille "
+                 "- 30");
         }
     }
 }
