@@ -1,6 +1,6 @@
 # P3-05 Peoples
 
-Status: **approved by the lead 2026-11-19** (the seven questions of section 19 go to Paul; the interim choices stand). Written by the spec writer 2026-11-19; amended 2026-11-19 for P3-06 (r1, note at the end); the amendments of section 18 applied the same day on `p3/05-spec` (P3-00 correction note for P3-05, P3-04 r2, P0-01 section 18, P3-01 r6, P3-07 r1; `schema.md` is the engineer's), after merging `origin/p3/07-spec` at 1cb9d48. Phase P3 History core, spec 5 (P3-00 3.1 row P3-05), a subsystem of pipeline stage 8, `history`. Generator **0.15.0**; **no schema change** (schema stays 7: P3-05 appends event kinds 6–19 to the catalogue and writes rows, never columns; P3-04 8.2). Design doc sections 4 ("Scale is compressed": a city of 20,000; resources and habitability; regions), 5 (the six races and their characters; "Food and homelands"; entities; the tick loop items 1, 2 and 4; quiet intervals; world-creation settings `civs_per_race` and `event_intensity`), 6 (`civilization`, `settlement`), 13 (P3 row) and 14 (records a model can narrate). Depends on P3-00 (binding; amended in 18.2), P0-01 (stream list, 18.3), P3-01 (kind `race`; amended in 18.4: one new field, three field meanings made precise), P3-02 (keyed draws, names), P3-03 (chronology rows), P3-04 (engine, step seam, `State`, event writer, catalogue; amended in 18.2) and P3-07 (report: section 9's statistics, section 20's requirements; amended in 18.5). Branch read: `origin/p3/04-spec` at 4a00615 for P3-00 to P3-04, `origin/p3/07-spec` at 1cb9d48 for P3-07. Proposals read: up to "History: active phases scale with the history span". Reviews read: `docs/reviews/p1-05-resources-critic.md` 7 and `docs/reviews/p1-06-regions-critic.md` 6–7.
+Status: **approved by the lead 2026-11-19** (the seven questions of section 19 go to Paul; the interim choices stand). Written by the spec writer 2026-11-19; amended 2026-11-19 for P3-06 (r1, r2) and after implementation (r3; notes at the end), note at the end); the amendments of section 18 applied the same day on `p3/05-spec` (P3-00 correction note for P3-05, P3-04 r2, P0-01 section 18, P3-01 r6, P3-07 r1; `schema.md` is the engineer's), after merging `origin/p3/07-spec` at 1cb9d48. Phase P3 History core, spec 5 (P3-00 3.1 row P3-05), a subsystem of pipeline stage 8, `history`. Generator **0.15.0**; **no schema change** (schema stays 7: P3-05 appends event kinds 6–19 to the catalogue and writes rows, never columns; P3-04 8.2). Design doc sections 4 ("Scale is compressed": a city of 20,000; resources and habitability; regions), 5 (the six races and their characters; "Food and homelands"; entities; the tick loop items 1, 2 and 4; quiet intervals; world-creation settings `civs_per_race` and `event_intensity`), 6 (`civilization`, `settlement`), 13 (P3 row) and 14 (records a model can narrate). Depends on P3-00 (binding; amended in 18.2), P0-01 (stream list, 18.3), P3-01 (kind `race`; amended in 18.4: one new field, three field meanings made precise), P3-02 (keyed draws, names), P3-03 (chronology rows), P3-04 (engine, step seam, `State`, event writer, catalogue; amended in 18.2) and P3-07 (report: section 9's statistics, section 20's requirements; amended in 18.5). Branch read: `origin/p3/04-spec` at 4a00615 for P3-00 to P3-04, `origin/p3/07-spec` at 1cb9d48 for P3-07. Proposals read: up to "History: active phases scale with the history span". Reviews read: `docs/reviews/p1-05-resources-critic.md` 7 and `docs/reviews/p1-06-regions-critic.md` 6–7.
 
 Numbers in this spec come from the spec writer's exact-integer prototype `~/.cache/the-unmapped/out/p3-05-spec/peoples.py` (on the P3-02 and P3-03 references for names and chronology and the P3-04 prototype `engine_proto.py` for the schedule, quiet steps and quiet eras), run on the P1-06 validation worlds `~/.cache/the-unmapped/out/p1-06-validation/` (geography unchanged since 0.11.0): 1024 seeds 0–49 (the reference sweep), 512 seeds 0–49, 2048 seeds 0–19, and 1024 seeds 0–49 with each non-default setting of section 15.3. The prototype is evidence, not the reference: the test writer's reference is written from this text (16).
 
@@ -220,7 +220,7 @@ A standing settlement s owned by civilization c is abandoned (a) in T4 right aft
 3. `set_population(s, 0)`, `set_settlement_status(s, ruined, abandoned)` (P3-04: `ruined_year` = Y, `ruin_event` = the abandonment, the row's ruin event required by P3-07 20 item 3), `set_settlement_owner(s, 0, abandoned)` (P3-04 9.2: `owner_civ` 0 when abandoned);
 4. if c holds R and has no other standing settlement in R: `set_region_owner(R, 0, abandoned)`;
 5. if s was c's capital and c has another standing settlement: the most populous (then smaller id) becomes capital, append `capital_moved` (region and settlement of the new capital; participants c as `civilization`, the new capital as `settlement`; cause the abandonment), `set_capital`;
-6. if c has no standing settlement left: append `civ_ended` (region R; participant c as `civilization`; cause the abandonment), `end_civilization(c, civ_ended)`, and every region c still holds is freed with that event (P3-00 10.5 amended, 18.2: a people with no settlement cannot hold land).
+6. if c has no standing settlement left: append `civ_ended` (region R and settlement s, the abandoned settlement (r3); participant c as `civilization`; cause the abandonment), `end_civilization(c, civ_ended)`, and every region c still holds is freed with that event (P3-00 10.5 amended, 18.2: a people with no settlement cannot hold land).
 
 **The ruin procedure** `ruin(s, e)` (r1, for P3-06; P3-06 18.1) is items 2–5 above with the event e in place of the abandonment: the survivors are s's population P at the call; `set_settlement_status(s, ruined, e)` makes e the `ruin_event`; the region is released and `capital_moved` appended with cause e. It does **not** apply item 6 (its caller ends the civilization if it has no standing settlement left). **Abandonment** is: append `settlement_abandoned` (item 1), then `ruin(s, that event)`, then item 6. This is a restructuring only: a world of this spec is byte for byte what it was.
 
@@ -236,7 +236,7 @@ In each quiet step, for each settlement in ascending id with status ruined and Y
 
 ### 9.1 T1: growth and decline
 
-First, each alive civilization (ascending id) with no standing settlement, which only P3-06 can leave behind, ends: append `civ_ended` (region: its last settlement's; cause: the `ruin_event` of its settlement ruined last, ties to the larger id), `end_civilization`, its regions freed with that event (13). Then the shares C_s of 5.2 are computed for every standing settlement (one snapshot), then for each standing visible settlement in ascending id, with P its population and g the owner race's `growth_permille`:
+First, each alive civilization (ascending id) with no standing settlement, which only P3-06 can leave behind, ends (only here, in T1; r3): append `civ_ended` (region and settlement: those of its settlement ruined last (r3); cause: the `ruin_event` of its settlement ruined last, ties to the larger id), `end_civilization`, its regions freed with that event (13). Then the shares C_s of 5.2 are computed for every standing settlement (one snapshot), then for each standing visible settlement in ascending id, with P its population and g the owner race's `growth_permille`:
 
 ```
 if P < C_s:  d = (P × g × (C_s − P) + 500 × C_s) div (1000 × C_s);  if g > 0: d = max(1, d)
@@ -249,7 +249,7 @@ each followed by its status recovery (8.3); then the abandonments of 8.5 (b), th
 
 ### 9.2 Q1: drift in a quiet step (amends P3-00 4.4)
 
-Q1 of a quiet step of L years is the T1 growth of 9.1 applied L times (shares recomputed each time; no pressures, no events between), then 8.3's recovery, 8.5 (b) and 8.2 once at the end, each event charged to the owner (W9; a kind change or an abandonment without budget waits). **Decision**: P3-00 4.4 asks for a closed form with "no per-year loop". No closed form of an integer logistic exists that equals the yearly rule, and two formulas (one for ticks, one for quiet steps) would make the same land support different populations depending on the phase. The L-fold iterate is exact, makes a quiet step equal to L tick years without events (a property test, 16.2), and costs L × settlements integer steps: 25 × 150 × about 200 steps ≈ 750,000 at 1024, about 10 ms.
+Q1 of a quiet step of L years is the T1 growth of 9.1 with 8.3's recovery applied L times, year by year (shares recomputed each time; no pressures, no events between; r3: recovery is part of each year, as in T1), then 8.5 (b) and 8.2 once at the end, settlements in ascending id, each event charged to the owner (W9; a kind change or an abandonment without budget waits). **Decision**: P3-00 4.4 asks for a closed form with "no per-year loop". No closed form of an integer logistic exists that equals the yearly rule, and two formulas (one for ticks, one for quiet steps) would make the same land support different populations depending on the phase. The L-fold iterate is exact, makes a quiet step equal to L tick years without events (a property test, 16.2), and costs L × settlements integer steps: 25 × 150 × about 200 steps ≈ 750,000 at 1024, about 10 ms.
 
 ### 9.3 T2 and Q4: foundings
 
@@ -259,7 +259,7 @@ Per civilization c alive and visible, in ascending id; at most one founding per 
 2. **Source** among the ready: the key (not c's capital, p, P, −id) largest: colonists leave a crowded satellite before the capital, so capitals keep their size.
 3. **Targets.** *Inside*: if c holds the source's region R and 6.3 allows another settlement there, the site of 6.2 in R (not relaxed). *Outward*: over every region R0 that c holds and every R1 in `neighbours(R0)` with cost k: R1 free, not an islet, `hops`(c's capital region)(R1) ≤ `reach_r` = `reach_base` + `expansion_r` × `reach_per_expansion` div 1000, σ(R1, r) ≥ σ_min = max(`expand_min_score`, σ(home, r) × `expand_relative_permille` div 1000), C(R1, r) ≥ `expand_min_capacity`; the R1 with the largest σ(R1, r) − `cost_penalty` × k (k the smallest cost over c's held neighbours of R1), ties to the smaller id; its site by 6.2 (not relaxed; none: no outward target).
 4. **Land hunger** (13): no target: `hunger(c)` += the step's years; nothing else. A target: `hunger(c)` = 0.
-5. **Chance**: p = `found_rate_permille` × `expansion_r` div 1000 × years (years = 1 in a tick, L in a quiet step), × `quiet_found_permille` div 1000 in a quiet step; founding if chance_pm(draw(hist.peoples.found, Y, c, 0, 0), min(1000, p)).
+5. **Chance**: p = `found_rate_permille` × `expansion_r` div 1000 × years (years = 1 in a tick, L in a quiet step), × `quiet_found_permille` div 1000 in every quiet step, whatever its length L (r3); founding if chance_pm(draw(hist.peoples.found, Y, c, 0, 0), min(1000, p)).
 6. In a quiet step, `quiet_events_left(c)` = 0: nothing.
 7. **Colonists**: n = max(`colonists_min`, P_source × `colonist_permille` div 1000); if P_source − n < 2 × `colonists_min`: nothing.
 8. **Choice**: both targets: outward if chance_pm(draw(hist.peoples.outward, Y, c, 0, 0), `expansion_r`), else inside; one target: that one.
@@ -278,7 +278,7 @@ Every rate is scaled by the event intensity I = `intensity.calm` / `normal` / `t
 For each standing visible settlement s in ascending id, with C_s from the snapshot at the step's start and P its current population (a blow earlier in the step counts), crowding k = P × 1000 div C_s:
 
 1. **Famine**: if k ≥ `famine_crowding_permille` and chance_ppm(draw(hist.peoples.famine, Y, s, 0, 0), `famine_ppm` × I div 1000): toll t = `famine_toll_min` + pick(draw(hist.peoples.famine_toll, Y, s, 0, 0), `famine_toll_max` − `famine_toll_min` + 1) per mille; **strike** s with kind `famine`, toll t, no cause. Add s to the step's struck set.
-2. If s is still standing, **plague**: chance_ppm(draw(hist.peoples.plague, Y, s, 0, 0), `plague_ppm[kind(s)]` × I div 1000): toll t = `plague_toll_min` + pick(draw(hist.peoples.plague_toll, Y, s, 0, 0), range + 1); strike s with kind `plague` (the origin event o; its salience is `plague_small_salience` when s is a hamlet or village, else the base); add s to the struck set. Then **spread**, for each settlement u in ascending id, u ≠ s, not struck this step, standing, visible, owned by s's owner, in s's region or a region of `neighbours`(s's region): if chance_pm(draw(hist.peoples.plague_spread, Y, s, u, 0), `plague_spread_permille`): toll (`plague_toll_min` + pick(draw(hist.peoples.plague_toll, Y, u, 1, 0), range + 1)) × `plague_spread_toll_permille` div 1000; strike u with kind `plague_spread`, cause o; add u to the struck set.
+2. If s is still standing, **plague**: chance_ppm(draw(hist.peoples.plague, Y, s, 0, 0), `plague_ppm[kind(s)]` × I div 1000): toll t = `plague_toll_min` + pick(draw(hist.peoples.plague_toll, Y, s, 0, 0), range + 1); strike s with kind `plague` (the origin event o; its salience is `plague_small_salience` when s is a hamlet or village, else the base); add s to the struck set. Then **spread**, unless the outbreak's strike abandoned s (8.5 (a): an outbreak that empties s spreads nowhere; r3), for each settlement u in ascending id, u ≠ s, not struck this step, standing, visible, owned by s's owner (read after the outbreak's strike), in s's region or a region of `neighbours`(s's region): if chance_pm(draw(hist.peoples.plague_spread, Y, s, u, 0), `plague_spread_permille`): toll (`plague_toll_min` + pick(draw(hist.peoples.plague_toll, Y, u, 1, 0), range + 1)) × `plague_spread_toll_permille` div 1000; strike u with kind `plague_spread`, cause o; add u to the struck set.
 
 A settlement struck by spread earlier in the loop still makes its own draws when its turn comes (draws are keyed; the struck set only stops a second spread to it).
 
@@ -287,7 +287,7 @@ A settlement struck by spread earlier in the loop still makes its own draws when
 For each civilization c alive and visible in ascending id, with r its race: rate (ppm per year) = `crisis_per_generation_permille` × 1000 div `generation_years_r` × I div 1000 (a crisis comes about once in 1/0.06 ≈ 17 generations: goblins every 250 years, elves every 2,500). If chance_ppm(draw(hist.peoples.crisis, Y, c, 0, 0), rate): append `succession_crisis` (region and settlement = c's capital; participant c as `civilization`; no cause), the event e. Then:
 
 - **Split** if c has ≥ `split_min_settlements` standing visible settlements, holds ≥ `split_min_regions` regions and chance_pm(draw(hist.peoples.split, Y, c, 0, 0), `split_permille`): d_cap = hop distances from the capital's region over open borders **within c's held regions**; the far region F = the held region with the largest (d_cap (+∞ when unreachable), population of c in it, −id); d_F likewise from F; the seceding part = the held regions with d_F < d_cap (+∞ = +∞ is not less). If the part holds at least one and not all of c's standing settlements: a new civilization c' of race r (name: civilization kind, entity c'), capital the part's most populous settlement (then smaller id); append `civ_seceded` (region and settlement = the new capital; participants c' as `civilization`, c as `from`; value `settlements` = the number of settlements that leave; cause e) — this is c''s founding event (`founding_event`, 18.2); `found_civilization` (home = the new capital's region; event before entity, in the order of P3-04 7.2's `civ_founded`); `set_capital`; `set_settlement_owner` of each of the part's settlements and `set_region_owner` of each of the part's regions to c' with that event.
-- **Otherwise** (no split): the capital loses P × `crisis_loss_permille` div 1000 and becomes declining (8.3; it is the capital's last reduction event, 10.4).
+- **Otherwise** (no split): the capital loses P × `crisis_loss_permille` div 1000 and becomes declining (8.3; `before` = P if it was thriving; the crisis is the capital's last reduction event, 10.4). The loss is not a strike: no 8.5 (a) check follows (r3).
 
 ### 10.4 Strike
 
@@ -484,12 +484,12 @@ class PeoplesView {                                      // owned by PeoplesSubs
 public:
     std::int64_t score(std::int64_t region, std::int64_t race) const;          // σ (4.2)
     std::int64_t capacity(std::int64_t region, std::int64_t race) const;       // C (5.1)
-    std::int64_t share(std::int64_t settlement) const;                         // C_s now (5.2); 0 if not standing
+    std::int64_t share(const StepContext&, std::int64_t settlement) const;     // C_s now (5.2); 0 if not standing (r3: the view's state readers take the step's context)
     std::span<const Neighbour> neighbours(std::int64_t region) const;          // open borders with cost (4.4)
-    std::int64_t population(std::int64_t civ) const;                           // Σ P of its standing settlements
-    std::vector<std::int64_t> regions(std::int64_t civ) const;                 // held, ascending
-    std::vector<std::int64_t> settlements(std::int64_t civ) const;             // standing, ascending
-    std::vector<std::int64_t> wanted_held(std::int64_t civ) const;            // regions held by others that pass 9.3's outward tests but for being held, ascending
+    std::int64_t population(const StepContext&, std::int64_t civ) const;       // Σ P of its standing settlements
+    std::vector<std::int64_t> regions(const StepContext&, std::int64_t civ) const;      // held, ascending
+    std::vector<std::int64_t> settlements(const StepContext&, std::int64_t civ) const;  // standing, ascending
+    std::vector<std::int64_t> wanted_held(const StepContext&, std::int64_t civ) const;            // regions held by others that pass 9.3's outward tests but for being held, ascending
     std::int64_t hunger(std::int64_t civ) const;                               // 9.3 item 4: years crowded with no free target
     std::int64_t last_reduction(std::int64_t settlement) const;                // 10.4; 0 none
 };
@@ -497,10 +497,16 @@ class PeoplesSubsystem final : public Subsystem {
 public:
     const PeoplesView& view() const;
     void note_reduction(std::int64_t settlement, std::int64_t event);         // P3-06 after casualties: the cause of a later abandonment
-    void ruin(std::int64_t settlement, std::int64_t event);                   // 8.5 items 2-5 with `event` as the ruin event (r1); not item 6
+    void ruin(StepContext&, std::int64_t settlement, std::int64_t event);     // 8.5 items 2-5 with `event` as the ruin event (r1); not item 6; the settlement must be standing and owned
+};
+class PeoplesAwakening final : public AwakeningHandler {
+public:
+    explicit PeoplesAwakening(PeoplesSubsystem&);                              // r3
 };
 }
 ```
+
+The state readers of the view and `ruin` take the step's `StepContext` (r3): a subsystem member may not hold `State` or a reference into it between steps (13.1 item 1), so each call reads the state of the step it is made in.
 
 - **Order** (P3-04 6.4): peoples runs before conflict in every step they share (T2; P3-06's T6 comes after T4). P3-06 is installed after peoples in `EngineConfig::subsystems`.
 - **Claims** of free land are peoples' (with a settlement, 9.3); claims of held land, tension, war, battles, sieges, sacking and conquest are P3-06's. `wanted_held` and `hunger` are the inputs of P3-06's tension ("two expanding borders meet", design 5): a civilization with `hunger` > 0 is boxed in, and `wanted_held` says against whom.
@@ -527,14 +533,14 @@ P3-04 6.9's rules, as P3-05 meets them:
 For every seed, setting, data set within the schemas, and map size:
 
 1. Every present race has at least one civilization founded at its awakening year by `civ_founded` (cause the awakening), and at most its setting (`auto`: 2); homes are by 7.1 and 7.2 recomputed independently.
-2. Every settlement row was founded by `settlement_founded` (a capital) or `colony_founded`; its cell is in its region, `water` 0; no two settlements share a cell; any two founded while both stood are ≥ `site_spacing` apart, except a relaxed awakening site (6.2 item 3).
+2. Every settlement row was founded by `settlement_founded` (a capital) or `colony_founded`; its cell is in its region, `water` 0; no two settlements share a cell, unless the earlier one had faded before the later was founded (a faded settlement blocks no site, 6.2; r3); any two founded while both stood are ≥ `site_spacing` apart, except a relaxed awakening site (6.2 item 3).
 3. Every standing settlement has P ≤ 2 × C(R, owner race) (P3-00 12.3) and P ≤ max(kind_cap, its population when the cap was last reached by survivors or colonists); P ≥ `abandon_min` at the end of every T1 and Q1.
 4. A region's owner is a civilization that has a standing settlement in it, or 0 (with P3-06 too: P3-06 transfers regions only with settlements, P3-06 14 item 5; r1).
 5. Every alive civilization has a capital that is one of its standing settlements; every ended one has no standing settlement and holds no region.
 6. Kinds: a fortress stays a fortress; a ladder kind is a kind the race builds; `became_*` events increase the kind, `settlement_dwindled` decreases it.
-7. Every ruined row's `ruin_event` is a `settlement_abandoned` (from P3-06 on, generator 0.16.0, or a `sacked`; r1); every faded row has a `ruin_faded` with cause its `ruin_event`, dated ≥ `ruined_year` + `ruin_fade_years`.
+7. Every ruined row's `ruin_event` is a `settlement_abandoned` (from P3-06 on, generator 0.16.0, or a `sacked`; r1); every faded row has a `ruin_faded` event whose cause is the ruin event it had, dated ≥ that event's year + `ruin_fade_years`; a faded row's `ruined_year` and `ruin_event` are cleared (NULL and 0: P3-04 9.2, they hold only while the row is ruined), so the check goes through the `ruin_faded` event's cause (r3).
 8. Caused kinds have the causes of 11; no event of 11 is dated in a quiet step except kinds 6–10, 16–19.
-9. A quiet step of L years with no event of peoples equals L tick years without pressures (9.2).
+9. A quiet step of L years with no event of peoples equals L tick years without pressures (9.2): growth and recovery are the same yearly rule; this covers every quiet step in which peoples appends nothing (r3).
 10. Draw independence (P3-00 Y3): a test-only extra draw on any `hist.peoples.*` stream before a decision changes nothing else.
 
 ## 15. Measurements (prototype)
@@ -738,6 +744,34 @@ For the independent test writer; the engineer records final signatures here afte
 
 **What the reference must reproduce.** The reference `worldgen/tests/reference/p3_peoples_reference.py` (Python, exact integers, on `core_reference`, `p3_names_reference`, `p3_chronology_reference` and `p3_engine_reference`) is written **from this spec alone**, without reading or porting the C++. From a world's stored geography (tables `region`, `region_border`, `region_biome`, `biome`, layers `region`, `water`, `habitability`, `river`, `flow_dir`), its chronology rows and the data root, it computes **every row of all thirteen history tables** of P3-04 9.1 (`event_kind`, `event_kind_role`, `event_kind_value`, `phase`, `event`, `event_participant`, `event_cause`, `event_value`, `civilization`, `settlement`, `settlement_census`, `region_control`, `relation`) with peoples installed, and compares them with the world **byte for byte through the logical table hashes** of P0-04 8 (and row by row on a mismatch, naming the first differing row). It also prints the per-region σ and C table of section 4–5, the homes of every awakening, the `[history]` lines of 15.4, and the rendered sentence of every event. **The spec writer's prototype `~/.cache/the-unmapped/out/p3-05-spec/peoples.py` is not the reference**: it is evidence for the numbers of section 15, uses its own engine emulation (`engine_proto.py`) and skips the bookkeeping tables; where it and this text differ, the text rules and the difference is reported to the lead.
 
+### 16.0 Readings agreed in implementation (normative; r3)
+
+Agreed by the engineer and the test writer and matching the sample of 15.2:
+
+1. 4.2: S is the sum over the five keys first, then one floor division: S = (Σ_k w_k × m_k(R) × 1000) div (255 × Σ_k w_k).
+2. 7.3: a capital that is not a fortress gets the kind `ladder(r, founding_population)` (300).
+3. T4 order: famine and plague over the settlements (10.2), then the crises over the civilizations (10.3).
+4. 10.3: split distances start at the capital's region and run over c's held regions only; a seceding civilization keeps the parent's culture; its home is the new capital's region.
+5. W9's budget and the quiet era's "charged" rule count per whole quiet step (Q1 to Q6).
+6. The end of Q1 processes abandonments, then kind changes, each in ascending settlement id; one without budget waits for the next step.
+7. 9.3: an outward target region with no site means no outward target (the next region is not tried).
+8. 9.3: reach (`hops` from the capital's region) is counted over every open border, held or not.
+9. 15.4: `regions_held_<race>` counts open `region_control` rows.
+10. 4.1: `share_b` is computed for every `region_biome` row, water biomes included (land(R) itself counts only the non-water biomes, 4.1).
+11. 6.1: the near-sea and near-mouth neighbourhoods are taken inside the grid, without wrapping.
+
+### 16.0a Fatal messages (normative; P3-04 16.6's form, all ASCII; r3)
+
+As implemented on `p3/05-int` (b62c1cf). Tests compare these texts exactly. `<...>` are decimal integers unless stated.
+
+| Group | Messages |
+| --- | --- |
+| Tuning | `history: tuning: the content has no definition history.peoples`; the range and named-check messages of 12.1 with the prefix `history: tuning: ` |
+| Inputs | `history: peoples: layer '<name>' is not <N> x <N> u8 or u16`; `history: peoples: race '<key>' or culture '<key>' is not in the content`; `history: peoples: race <r> has no generation_years above 0`; `history: peoples: race <r> does not exist`; `history: peoples: region <R> does not exist`; `history: peoples: cell (<x>, <y>) is outside the map`; `history: peoples: no region`; `history: peoples: '<text>' is not a settlement kind` |
+| Bounds (H6) | `history: bound: capacity of region <R> for race <r> exceeds 2147483647` |
+| Seams and internal guards | `history: peoples: ruin: settlement <s> is not standing`; `history: peoples: civilization <c> has no standing settlement and none was ruined`; `history: peoples: used before the first step`; `history: peoples: the civilization id is not the expected one`; `history: peoples: the settlement id is not the expected one`; `history: peoples: id <n> below 1` |
+| Sites (6.2 item 4) | `history: peoples: no settlement site in region <id>` |
+
 ### 16.1 Unit tests (seams on hand-made input)
 
 1. `region_score`, `region_capacity` on hand-made region rows: each term alone (a region of only fen for faeries; an upland with `rough` 1000 and no ore; a coastal region at `coast_cells` 0, 100, 200, 400), negative numerators (floor division: σ for B = −1 must be −1, not 0), the clamp of q, `capacity_floor`, the bound guard.
@@ -829,6 +863,7 @@ Section 9 gains, after `wars_open`, the keys of 15.4 in that order with those de
 5. **Secession as the outcome of some crises** (10.3): a crisis in a large realm may split it. Recommendation and interim: yes; it gives P3-06 rivals of one race and the design's "factions" a forerunner.
 6. **Migration deferred** (1): colonists and survivors move; whole peoples do not. Recommendation and interim: refugee migration with P3-06 (after sackings) or P5.
 7. **Faeries in forest**: wetland-rich regions are rare (median one per 1024 world), so faeries mostly live in the wettest free woodland. Recommendation and interim: accept; a stronger preference would leave them landless on most worlds.
+8. **A plague that empties a settlement** (10.2, r3): should the outbreak still spread to its neighbours? Recommendation and interim: no, as measured (the prototype and the implementation agree; an emptied town has no one left to carry it). Alternative: spread from the outbreak's event regardless.
 
 ## 20. For the P3-06 spec writer
 
@@ -864,3 +899,7 @@ Requested by P3-06 18.1, applied on `p3/06-spec` after the lead approved P3-06. 
 ## Revision note r2 (2026-11-19, rules from the P3-04 audit)
 
 New 13.1: how P3-05 meets P3-04 6.9 (the determinism audit's A1, A2, N1–N5): loops over ids counted before a founding, members holding ids, the fixed order peoples then conflict and which subsystem runs first in each shared step, visibility, draw keys (every key checked: all ids, none a position), no relations, regions changing hands within a step. Normative for the implementer at 0.15.0; no rule, number or world byte changes.
+
+## Revision note r3 (2026-11-19, rulings after implementation)
+
+The lead's rulings on the questions the implementation (`p3/05-int`, b62c1cf) raised; text only, no world byte or number changes. 13: `ruin(StepContext&, settlement, event)`; the `PeoplesView` state readers (`share`, `population`, `regions`, `settlements`, `wanted_held`) take `const StepContext&`; `PeoplesAwakening(PeoplesSubsystem&)`. 14 invariant 2: two settlements may share a cell when the earlier had faded first; invariant 7 through the `ruin_faded` event's cause, faded rows' `ruined_year` and `ruin_event` being cleared; invariant 9 covers every quiet step with no peoples event. 9.2: recovery is applied each year inside Q1; abandonments and kind changes once at the end, in ascending id. 9.3: the quiet factor applies in every quiet step. 10.2: the spread reads s's owner after the outbreak's strike, and an outbreak that abandons s spreads nowhere. 8.5 item 6 and 9.1: `civ_ended`'s region and settlement are the abandoned (or last ruined) settlement's; a civilization without standing settlement ends only in T1. 10.3: a crisis loss sets `before`, declining and the last reduction, and is not a strike. New 16.0 (the test writer's readings, agreed) and 16.0a (fatal messages, normative). Question 8 added (a plague that empties a settlement).

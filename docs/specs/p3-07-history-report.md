@@ -893,7 +893,7 @@ regions: 50; held 4, free 46
   rg12 Northeast Downs IV: Finen (c1) since 0
 settlements: 4; thriving 2, declining 0, ruined 1, faded 1
   s1 Voeledell: town, thriving, population 1450, Finen (c1), at 755 293 in Northeast Downs IV (rg12), founded 0 by Finen (c1)
-  s2 Aelith: village, faded, population 0, no owner, at 742 361 in North Heath (rg13), founded 61 by Finen (c1), ruined 2105, e14
+  s2 Aelith: village, faded, population 0, no owner, at 742 361 in North Heath (rg13), founded 61 by Finen (c1)
   s3 Skrisligg Pit: hamlet, ruined, population 0, no owner, at 808 251 in Northeast Downs II (rg10), founded 2074 by The Skib Horde (c2), ruined 2141, e16
   s4 Ghashpit: village, thriving, population 610, The Gutrot Clans (c3), at 836 140 in Northeast Downs (rg7), founded 2074 by The Gutrot Clans (c3)
 settlement kinds: hamlet 1, village 2, town 1, city 0, fortress 0
@@ -980,3 +980,7 @@ Made with P3-06 (its 18.4), in place: section 9 gains nine keys and one family o
 ## Revision note r4 (2026-11-19, P3-04 r6)
 
 5.2 item 2 notes P3-04 r6's bound on phase `end_year` (audit A3), which the shared phase definitions of `[stats]` rely on. The corrupt-data list of this spec is otherwise unchanged and agrees with P3-04 11.1 (it delegates the `phase`, `event` and `event_cause` checks to it). No world byte or report text of a valid world changes.
+
+## Revision note r5 (2026-11-19, faded rows)
+
+The illustrative excerpt of 17 is corrected: a faded settlement's `ruined_year` and `ruin_event` are cleared on fading (P3-04 9.2: they hold only while the row is ruined; P3-05 r3), so its `[present]` line carries no `, ruined <year>, e<event>` part. The format is unchanged.

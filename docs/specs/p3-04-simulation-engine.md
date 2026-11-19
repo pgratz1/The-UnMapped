@@ -783,12 +783,12 @@ For every seed, span, detail level, race subset and accepted data set:
 | --- | --- | --- |
 | `simulated_permille` | 100–450 | sparse 116–117; normal 185–200; dense 268–288 (5.5) |
 | `phases_*` | opening = races present; final ≤ 1; flare 0 at P3-04 | 6 / 5–6 / 0 / 1 at all six races (5.5: 12–13 rows) |
-| `events` | 3P + Σ over quiet rows of the living civilizations | 6 races: 33 (five quiet rows, 15 eras; normal and dense) or 39 (six quiet rows, 21 eras; sparse) |
+| `events` | 3P + Σ over quiet rows of the living civilizations | 6 races: 33 (five quiet rows, 15 eras) or 39 (six quiet rows, 21 eras); at `normal` about 30% of worlds have 39 (r7, from validation), at `dense` 33, at `sparse` 39 |
 | `civilizations`, `settlements`, `regions_held` | = P | 6 |
 
 ### 14.3 Performance
 
-The engine alone (scheduler, 1,200 tick years and about 200 quiet steps dispatched to no subsystem, bookkeeping over a few entities, names, writing) at 1024: **under 50 ms** in a release build; under 0.2 s at every size and span. Of P3-00 12.1's 15 s for `history` at 1024, the engine's own overhead per simulated year must stay below 10 µs with empty subsystems (a microbenchmark test with a tagged doctest suite, not in `ctest`'s default run, reports it). The writing of the stub tables is negligible; P3-00's 1 s for writing the history tables applies with P3-06's log.
+The engine alone (scheduler, 1,200 tick years and about 200 quiet steps dispatched to no subsystem, bookkeeping over a few entities, names, writing) at 1024: **under 50 ms** in a release build; under 0.2 s at every size and span. Of P3-00 12.1's 15 s for `history` at 1024, the engine's own overhead per simulated year must stay below 10 µs with empty subsystems (a microbenchmark: a tagged doctest case, skipped by default and not in `ctest`'s default run, reports it; to be written, r7). The writing of the stub tables is negligible; P3-00's 1 s for writing the history tables applies with P3-06's log.
 
 ## 15. Golden cases
 
@@ -821,7 +821,7 @@ For the independent test writer; the engineer records final signatures here afte
 
 ### 16.2 Property tests
 
-15. Scheduler over seeds 0–999 × spans 2000, 2001, 6000, 11999, 12000 × the three levels × all 63 subsets of the shipped races (age starts from `awakening_years`): invariant 1 with SC1–SC4 recomputed by independent code; and with `ForcedTension(25 × k, 5000, 1)` for k = 1, 3, 7: the flare rows of SC6 recomputed, simulated years ≤ cap.
+15. Scheduler over seeds 0–99 by default and the full 0–999 in the `history-slow` suite (r7) × spans 2000, 2001, 6000, 11999, 12000 × the three levels × all 63 subsets of the shipped races (age starts from `awakening_years`): invariant 1 with SC1–SC4 recomputed by independent code; and with `ForcedTension(25 × k, 5000, 1)` for k = 1, 3, 7: the flare rows of SC6 recomputed, simulated years ≤ cap.
 16. Hand-made tuning within schema ranges (seeded random lengths satisfying the named checks, and race shares packed close as in P3-03 14.2 item 14): invariant 1 always, no guard fires.
 17. Stub worlds on fixture worlds through `generate_world_with_stages` with a synthetic regions stage (2 to 60 regions, some islets, some fewer non-islet regions than races so that S1 sets 2 and 3 and the S2 row-major fallback are reached), seeds 0–15, spans and subsets varied: invariants 2–6, rows equal to the reference.
 
@@ -989,3 +989,7 @@ Requested by the lead after the P3-04 determinism audit (advisories A1, A2, note
 ## Revision note r6 (2026-11-19, hardening after the audit)
 
 The engineer's follow-up to the determinism audit, as implemented on `p3/04-int` at fa87955; text only, no world byte changes. 3.4 item 6 and 16.6: the region-layer precondition `history: engine: layer 'region' is not <N> x <N> u16`, checked after the chronology rows (A4); 6.1: `found_settlement`'s cell-region check is therefore unconditional. 6.9 and 16.6: `history: engine: a subsystem lists step <n> twice` (`<n>` the step number); two different subsystems may list one step. 11.1: each phase row's `end_year` is checked against `history_end_year` − 1 before any arithmetic (A3): `row <id>: end_year <e> above <E - 1>` on a row other than the last, the existing last-phase message on the last.
+
+## Revision note r7 (2026-11-19, after validation)
+
+From the P3-04 validation; text only. 14.2: the stub world's typical event count is 33 or 39 at `normal` (about 30% of worlds have six quiet rows and 39 events). 16.2 item 15: the scheduler property test runs seeds 0-99 by default and 0-999 in the `history-slow` suite. 14.3: the engine-time microbenchmark is a tagged doctest case skipped by default, still to be written.
