@@ -1,6 +1,6 @@
 # P3-05 Peoples
 
-Status: **draft, spec writer, 2026-11-19**, for the lead's approval. Phase P3 History core, spec 5 (P3-00 3.1 row P3-05), a subsystem of pipeline stage 8, `history`. Generator **0.15.0**; **no schema change** (schema stays 7: P3-05 appends event kinds 6–19 to the catalogue and writes rows, never columns; P3-04 8.2). Design doc sections 4 ("Scale is compressed": a city of 20,000; resources and habitability; regions), 5 (the six races and their characters; "Food and homelands"; entities; the tick loop items 1, 2 and 4; quiet intervals; world-creation settings `civs_per_race` and `event_intensity`), 6 (`civilization`, `settlement`), 13 (P3 row) and 14 (records a model can narrate). Depends on P3-00 (binding; amended in 18.2), P0-01 (stream list, 18.3), P3-01 (kind `race`; amended in 18.4: one new field, three field meanings made precise), P3-02 (keyed draws, names), P3-03 (chronology rows), P3-04 (engine, step seam, `State`, event writer, catalogue; amended in 18.2) and P3-07 (report: section 9's statistics, section 20's requirements; amended in 18.5). Branch read: `origin/p3/04-spec` at 4a00615 for P3-00 to P3-04, `origin/p3/07-spec` at 1cb9d48 for P3-07. Proposals read: up to "History: active phases scale with the history span". Reviews read: `docs/reviews/p1-05-resources-critic.md` 7 and `docs/reviews/p1-06-regions-critic.md` 6–7.
+Status: **approved by the lead 2026-11-19** (the seven questions of section 19 go to Paul; the interim choices stand). Written by the spec writer 2026-11-19; the amendments of section 18 applied the same day on `p3/05-spec` (P3-00 correction note for P3-05, P3-04 r2, P0-01 section 18, P3-01 r6, P3-07 r1; `schema.md` is the engineer's), after merging `origin/p3/07-spec` at 1cb9d48. Phase P3 History core, spec 5 (P3-00 3.1 row P3-05), a subsystem of pipeline stage 8, `history`. Generator **0.15.0**; **no schema change** (schema stays 7: P3-05 appends event kinds 6–19 to the catalogue and writes rows, never columns; P3-04 8.2). Design doc sections 4 ("Scale is compressed": a city of 20,000; resources and habitability; regions), 5 (the six races and their characters; "Food and homelands"; entities; the tick loop items 1, 2 and 4; quiet intervals; world-creation settings `civs_per_race` and `event_intensity`), 6 (`civilization`, `settlement`), 13 (P3 row) and 14 (records a model can narrate). Depends on P3-00 (binding; amended in 18.2), P0-01 (stream list, 18.3), P3-01 (kind `race`; amended in 18.4: one new field, three field meanings made precise), P3-02 (keyed draws, names), P3-03 (chronology rows), P3-04 (engine, step seam, `State`, event writer, catalogue; amended in 18.2) and P3-07 (report: section 9's statistics, section 20's requirements; amended in 18.5). Branch read: `origin/p3/04-spec` at 4a00615 for P3-00 to P3-04, `origin/p3/07-spec` at 1cb9d48 for P3-07. Proposals read: up to "History: active phases scale with the history span". Reviews read: `docs/reviews/p1-05-resources-critic.md` 7 and `docs/reviews/p1-06-regions-critic.md` 6–7.
 
 Numbers in this spec come from the spec writer's exact-integer prototype `~/.cache/the-unmapped/out/p3-05-spec/peoples.py` (on the P3-02 and P3-03 references for names and chronology and the P3-04 prototype `engine_proto.py` for the schedule, quiet steps and quiet eras), run on the P1-06 validation worlds `~/.cache/the-unmapped/out/p1-06-validation/` (geography unchanged since 0.11.0): 1024 seeds 0–49 (the reference sweep), 512 seeds 0–49, 2048 seeds 0–19, and 1024 seeds 0–49 with each non-default setting of section 15.3. The prototype is evidence, not the reference: the test writer's reference is written from this text (16).
 
@@ -711,9 +711,15 @@ With `--civs-per-race 4`, 226 of 300 awakenings founded four civilizations, 29 t
 
 **Typical ranges** for the sweep (1024, default settings; outside them is a finding to report, not a defect): civilizations 7–15; standing settlements 55–130; population 130,000–350,000; regions held 20–40; events 300–1,000, 0.3–0.9 per simulated year; summary threshold 20–30; per race as the table of 15.3 (elves under 70,000 and under 50 settlements; humans the largest people in about half the worlds (26 of 50); dwarven homes upland or with reachable ore in at least 90%).
 
+### 15.6 For the validation specialist
+
+Sweeps with shipped data and default settings, release build, from `report --history`'s `[stats]` (P3-07 9 with this spec's keys): **1024 seeds 0–199** (the reference; this spec measured 0–49), **512 seeds 0–49**, **2048 seeds 0–19**; and 1024 seeds 0–49 with each of `--event-intensity calm` and `turbulent`, `--civs-per-race 1` and `4`, `--history-detail dense`, `--history-span 2000` and `12000`, `--races elf` and `--races elf,orc` (the eleven rows of 15.3). On every world: the hard bounds of 15.5 (any failure is a defect with seed and setting); the capacity bound through test 18's seam (C is not stored); purity (threads 1 and 5, resume). Report the typical ranges of 15.5 and the tables of 15.1 and 15.3 recomputed; a median more than 20% away from 15.3's is a finding for the spec writer, not a defect. Performance: 16.4's budget at 1024 seeds 0–19.
+
 ## 16. Tests required
 
-For the independent test writer; the engineer records final signatures here after implementation. The reference `worldgen/tests/reference/p3_peoples_reference.py` (Python, exact integers, on `core_reference`, `p3_names_reference`, `p3_chronology_reference` and `p3_engine_reference`) reproduces from this spec alone every row of the thirteen history tables of a world from its stored geography, chronology rows and data root, as P3-04's reference does for the stub world; it also prints the per-region score and capacity table of a world.
+For the independent test writer; the engineer records final signatures here after implementation.
+
+**What the reference must reproduce.** The reference `worldgen/tests/reference/p3_peoples_reference.py` (Python, exact integers, on `core_reference`, `p3_names_reference`, `p3_chronology_reference` and `p3_engine_reference`) is written **from this spec alone**, without reading or porting the C++. From a world's stored geography (tables `region`, `region_border`, `region_biome`, `biome`, layers `region`, `water`, `habitability`, `river`, `flow_dir`), its chronology rows and the data root, it computes **every row of all thirteen history tables** of P3-04 9.1 (`event_kind`, `event_kind_role`, `event_kind_value`, `phase`, `event`, `event_participant`, `event_cause`, `event_value`, `civilization`, `settlement`, `settlement_census`, `region_control`, `relation`) with peoples installed, and compares them with the world **byte for byte through the logical table hashes** of P0-04 8 (and row by row on a mismatch, naming the first differing row). It also prints the per-region σ and C table of section 4–5, the homes of every awakening, the `[history]` lines of 15.4, and the rendered sentence of every event. **The spec writer's prototype `~/.cache/the-unmapped/out/p3-05-spec/peoples.py` is not the reference**: it is evidence for the numbers of section 15, uses its own engine emulation (`engine_proto.py`) and skips the bookkeeping tables; where it and this text differ, the text rules and the difference is reported to the lead.
 
 ### 16.1 Unit tests (seams on hand-made input)
 
@@ -765,11 +771,13 @@ Lint impact: none expected.
 
 ## 18. Amendments requested
 
+Applied 2026-11-19 on `p3/05-spec` (lead's approval), each in its spec's convention: P3-00 "Correction note (2026-11-19, for P3-05)", P3-04 "Revision note r2", P0-01 section 18, P3-01 "Revision note r6", P3-07 "Revision note r1 (… for P3-05)". 18.1 (`schema.md`) is the engineer's, with the implementation.
+
 ### 18.1 `docs/specs/schema.md` (the engineer)
 
 The "Event catalogue" section gains kinds 6–19 of section 11 (structure only: key, caused, region and settlement use, roles, values). No schema change; `schema_version` stays 7.
 
-### 18.2 P3-00 and P3-04 (applied by the lead with this spec's approval)
+### 18.2 P3-00 and P3-04 (applied)
 
 1. **P3-00 3.1, 4.4; P3-04 6.2 table**: Q4 "slow expansion" into **free** regions (with a settlement) is P3-05's (9.3); P3-06 may add claims in Q4 after it; `quiet_claims` is not a field (the limit is one founding per civilization per step and the quiet-event budget).
 2. **P3-00 4.4 Q1**: "closed form" becomes "the T1 growth rule iterated over the step's years" (9.2).
@@ -804,6 +812,27 @@ Section 9 gains, after `wars_open`, the keys of 15.4 in that order with those de
 5. **Secession as the outcome of some crises** (10.3): a crisis in a large realm may split it. Recommendation and interim: yes; it gives P3-06 rivals of one race and the design's "factions" a forerunner.
 6. **Migration deferred** (1): colonists and survivors move; whole peoples do not. Recommendation and interim: refugee migration with P3-06 (after sackings) or P5.
 7. **Faeries in forest**: wetland-rich regions are rare (median one per 1024 world), so faeries mostly live in the wettest free woodland. Recommendation and interim: accept; a stronger preference would leave them landless on most worlds.
+
+## 20. For the P3-06 spec writer
+
+What P3-06 reads, may call and must not change, and what it has to address. Section 13 is the interface; this is its summary with numbers.
+
+**State it reads** (P3-04 `State`, read-only for this purpose): civilizations (race, capital, home, alive), settlements (owner, region, cell, kind, status, population), region owners; and through `PeoplesView`: σ(R, r) and C(R, r) per region and race (sections 4–5, integers, σ ∈ [−3000, 4000], C ∈ [`capacity_floor`, 2^31)), the current share C_s of a settlement, `neighbours(R)` with crossing cost (1 walkable, 3 pass, +2 large river; barriers absent), `population(c)`, `regions(c)`, `settlements(c)`, `last_reduction(s)`.
+
+**The two tension inputs** (integer; measured at the present, 1024 seeds 0–49, over the alive civilizations, min / quartile / median / quartile / max):
+
+| Input | Definition | Range on the sweep |
+| --- | --- | --- |
+| `hunger(c)` | years (tick years count 1, a quiet step its L) during which c had a settlement at founding pressure (9.3 item 1) and no inside or outward target (item 3), counted since c last had a target (a step without pressure adds nothing and resets nothing); reset to 0 in a step that finds a target; ≥ 0, < E | 0 / 96 / 410 / 1,737 / 4,925 years; per world, 1 / 3 / 4 / 4 / 5 civilizations at ≥ 1,000; the largest per world 1,543 / 3,072 / 4,925 (15.3) |
+| `wanted_held(c)` | the regions held by **another** civilization that pass every outward test of 9.3 item 3 except "free" (adjacent by an open border to a region c holds, within reach of c's capital, σ ≥ σ_min, C ≥ `expand_min_capacity`, not an islet), ascending; its size is the input | size 0 / 0 / 1 / 2 / 8 per civilization; per world 1 / 4 / 6 / 8 / 11 civilizations with size > 0 |
+
+A tension calibrated so that "a boxed-in civilization with a wanted neighbour" is due (P3-04's scale, 1000 = due) can start from these: `hunger` ≥ 1,000 together with `wanted_held` non-empty is true for a few civilizations in every 1024 world.
+
+**The two hooks** (13): `note_reduction(settlement, event)` after P3-06's casualties (the cause of a later abandonment in T1, 8.5 (b)); `abandon(settlement, cause)`, the procedure of 8.5 for a settlement P3-06 destroys without leaving people (region release, capital move, civilization end with `civ_ended`). P3-06 may also append `civ_ended` (kind 18) itself and found settlements of its own kinds (fortresses at passes).
+
+**What P3-06 must not change**: the rows and catalogue kinds 6–19 of this spec (a shipped kind is never edited, P3-04 8.2; it adds its own kinds from id 20); populations except by casualties and transfers through `State` (and then `note_reduction`); peoples' private members (shares, `before`, last reduction, `hunger`); foundings into free land (peoples' only, in T2 before P3-06 and in Q4 before its claims); the step order (peoples before conflict in every shared step). Ownership changes through `State` are respected by every peoples rule from the next step (13).
+
+**What the peaceful sweep leaves to conflict** (facts of 15.1–15.3): ruins are rare (median one per 1024 world, from decline only); no civilization ends in any of the eleven sweeps; elves and goblins live side by side for four thousand years without a quarrel (goblins are hostile to elves from their first year in the design, P3-00 13); on seed 42, 31 of 50 regions are held at the present and 19 are free; the goblins fill the open country within a thousand years of their awakening and then grow little, boxed in; humans become the largest people in their last thousand years only by peaceful expansion, while the design has them spread "over land left open or ruined by older wars". P3-06's wars, sackings and conquests are what should produce ruins, ended civilizations and land for the humans; the flare-up threshold is reached by nothing in P3-05 (it supplies no tension source).
 
 ## Appendix A. Proposals entries (added to `docs/design/proposals.md` with this spec)
 

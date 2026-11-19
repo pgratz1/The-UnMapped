@@ -1,6 +1,6 @@
 # P0-01 Deterministic core
 
-Status: approved by the lead, 2026-11-15; amended the same day after the first implementation and the independent reference (edge cases in 5.4, 5.6, 6.2, 7.3, 8.1, 8.2, 13.3, 13.5, 13.8). Seed phrases are scrubbed (7.3, 13.5) from generator version 0.2.0, per the design doc. Amended 2026-11-19 for phase P3 (section 16: `TAG_HIST` and the `hist.*` stream names of P3-02 and P3-03). Phase P0 Foundation. Design doc sections 4 (determinism rules), 10, 13.
+Status: approved by the lead, 2026-11-15; amended the same day after the first implementation and the independent reference (edge cases in 5.4, 5.6, 6.2, 7.3, 8.1, 8.2, 13.3, 13.5, 13.8). Seed phrases are scrubbed (7.3, 13.5) from generator version 0.2.0, per the design doc. Amended 2026-11-19 for phase P3 (section 16: `TAG_HIST` and the `hist.*` stream names of P3-02 and P3-03). Phase P0 Foundation. Design doc sections 4 (determinism rules), 10, 13. Amended 2026-11-19 for P3-05 (section 18: twelve `hist.peoples.*` streams).
 
 ## 1. Purpose
 
@@ -543,3 +543,8 @@ Requested by P3-02 8 and P3-03 15.4. The tag table of 7.2 gains `TAG_HIST`, `UNM
 ## 17. Amendment for P3-04 (2026-11-19)
 
 No stream name is added: the `history` stage of P3-04 makes no random decision of its own, and its stub subsystems draw only names on the P3-02 streams `hist.names.civilization` and `hist.names.settlement`. The registry of 7.3 stays at 34 names; P3-05 and P3-06 register theirs.
+
+## 18. Amendment for P3-05 (2026-11-19)
+
+Requested by P3-05 3.3. The stream-name registry of 7.3 gains, after `hist.chronology.awakening`, in this order: `hist.peoples.home`, `hist.peoples.civs`, `hist.peoples.found`, `hist.peoples.outward`, `hist.peoples.famine`, `hist.peoples.famine_toll`, `hist.peoples.plague`, `hist.peoples.plague_toll`, `hist.peoples.plague_spread`, `hist.peoples.abandon`, `hist.peoples.crisis`, `hist.peoples.split`: 46 names in all. Registering a stream name changes no world byte.
+
