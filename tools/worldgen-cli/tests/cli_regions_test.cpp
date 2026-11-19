@@ -420,13 +420,13 @@ TEST_CASE("cli P0-04 amendment 18 (e): --composite regions refuses a region laye
     }
 }
 
-TEST_CASE("cli P0-02 amendment 17, 10.1 test 6: a version 4 world is refused by report, hash and render") {
+TEST_CASE("cli P0-02 amendment 17, 10.1 test 6: a version 4 world is refused by report, hash --detail and render") {
     Worlds& w = worlds();
     const fs::path v4 = w.sb.file("v4.db");
     fs::copy_file(w.resources, v4);
     REQUIRE(worldgen::db::testing::execute_on_file(u8(v4), "PRAGMA user_version = 4").ok());
     for (const std::vector<std::string>& args :
-         {std::vector<std::string>{"report", "--db", u8(v4)}, std::vector<std::string>{"hash", "--db", u8(v4)},
+         {std::vector<std::string>{"report", "--db", u8(v4)}, std::vector<std::string>{"hash", "--db", u8(v4), "--detail"},
           std::vector<std::string>{"render", "--db", u8(v4), "--layer", "elevation", "--out", u8(w.sb.file("v4.png"))}}) {
         CAPTURE(args[0]);
         const ProcessResult r = w.sb.cli(args);
@@ -434,6 +434,8 @@ TEST_CASE("cli P0-02 amendment 17, 10.1 test 6: a version 4 world is refused by 
         CHECK(contains(r.err, "world schema version 4, this build reads 5"));
         CHECK(r.out.empty());
     }
+    // Plain `hash` hashes the bytes without opening the world (P0-04 8).
+    CHECK(w.sb.cli({"hash", "--db", u8(v4)}).exit_code == EXIT_OK);
 }
 
 TEST_CASE("cli P1-06 4, P0-03 amendment 17: bad regions tuning is an input error with the loader's message") {

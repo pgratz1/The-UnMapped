@@ -88,7 +88,7 @@ TEST_CASE("cli 12.5: --detail of the empty world") {
     REQUIRE(r.exit_code == EXIT_OK);
     CHECK(r.out.find('\r') == std::string::npos);
     const std::vector<std::string> lines = lines_of(r.out);
-    REQUIRE(lines.size() == 7);
+    REQUIRE(lines.size() == 10);
     CHECK(lines[0] == "file " + file_sha256_hex(world));
     CHECK(lines[1] == "schema " + to_hex(p004::p0_schema_hash()));
     CHECK(lines[2] == "table biome " + to_hex(p004::empty_biome_table_hash()));
@@ -96,6 +96,9 @@ TEST_CASE("cli 12.5: --detail of the empty world") {
     CHECK(lines[4] == "table layer " + to_hex(p004::layer_table_hash({})));
     CHECK(lines[5] == "table meta " + to_hex(p004::meta_table_hash(cli_meta_rows(0))));
     CHECK(lines[6] == "table pass " + to_hex(p004::empty_pass_table_hash()));
+    CHECK(lines[7] == "table region " + to_hex(p004::empty_region_table_hash()));
+    CHECK(lines[8] == "table region_biome " + to_hex(p004::empty_region_biome_table_hash()));
+    CHECK(lines[9] == "table region_border " + to_hex(p004::empty_region_border_table_hash()));
     std::string joined;
     for (const std::string& l : lines) {
         joined += l + "\n";
@@ -110,7 +113,7 @@ TEST_CASE("cli 12.5: --detail of a test-pattern world") {
     const ProcessResult r = sb.cli({"hash", "--db", u8(world), "--detail"});
     REQUIRE(r.exit_code == EXIT_OK);
     const std::vector<std::string> lines = lines_of(r.out);
-    REQUIRE(lines.size() == 10);
+    REQUIRE(lines.size() == 13);
     const auto ramp = p004::ramp_cells();
     const auto hash = p004::hash_cells(42);
     const auto noise = p004::noise_cells(42);
@@ -126,9 +129,12 @@ TEST_CASE("cli 12.5: --detail of a test-pattern world") {
     CHECK(lines[4] == "table layer " + to_hex(p004::layer_table_hash(rows)));
     CHECK(lines[5] == "table meta " + to_hex(p004::meta_table_hash(cli_meta_rows(42, "", "test_pattern"))));
     CHECK(lines[6] == "table pass " + to_hex(p004::empty_pass_table_hash()));
-    CHECK(lines[7] == "layer test.ramp " + to_hex(p004::layer_hash_u8(256, 256, ramp)));
-    CHECK(lines[8] == "layer test.hash " + to_hex(p004::layer_hash_u8(256, 256, hash)));
-    CHECK(lines[9] == "layer test.noise " + to_hex(p004::layer_hash_i16(256, 256, noise)));
+    CHECK(lines[7] == "table region " + to_hex(p004::empty_region_table_hash()));
+    CHECK(lines[8] == "table region_biome " + to_hex(p004::empty_region_biome_table_hash()));
+    CHECK(lines[9] == "table region_border " + to_hex(p004::empty_region_border_table_hash()));
+    CHECK(lines[10] == "layer test.ramp " + to_hex(p004::layer_hash_u8(256, 256, ramp)));
+    CHECK(lines[11] == "layer test.hash " + to_hex(p004::layer_hash_u8(256, 256, hash)));
+    CHECK(lines[12] == "layer test.noise " + to_hex(p004::layer_hash_i16(256, 256, noise)));
 }
 
 TEST_CASE("cli 12.5: layer hash is codec-independent") {
@@ -146,11 +152,11 @@ TEST_CASE("cli 12.5: layer hash is codec-independent") {
     const ProcessResult r = sb.cli({"hash", "--db", u8(world), "--detail"});
     REQUIRE(r.exit_code == EXIT_OK);
     const std::vector<std::string> lines = lines_of(r.out);
-    REQUIRE(lines.size() == 9);
+    REQUIRE(lines.size() == 12);
     const std::string expected = to_hex(p004::layer_hash_i16(7, 5, cells));
     CHECK(lines[6] == "table pass " + to_hex(p004::empty_pass_table_hash()));
-    CHECK(lines[7] == "layer test.raw " + expected);
-    CHECK(lines[8] == "layer test.varint " + expected);
+    CHECK(lines[10] == "layer test.raw " + expected);
+    CHECK(lines[11] == "layer test.varint " + expected);
     CHECK(lines[5] == "table meta " + to_hex(p004::meta_table_hash(p004::meta_rows(9, "", "test_fixture"))));
 }
 
@@ -226,7 +232,7 @@ TEST_CASE("cli 12.5: --detail refuses REAL values and tables without a primary k
         const ProcessResult r = sb.cli({"hash", "--db", u8(world), "--detail"});
         REQUIRE(r.exit_code == EXIT_OK);
         const std::vector<std::string> lines = lines_of(r.out);
-        REQUIRE(lines.size() == 7);
+        REQUIRE(lines.size() == 10);
         CHECK(lines[2] == "table biome " + to_hex(p004::empty_biome_table_hash()));
         CHECK(lines[3] == "table climate " + to_hex(p004::empty_climate_table_hash()));
         CHECK(lines[4] == "table layer " + to_hex(p004::layer_table_hash({})));

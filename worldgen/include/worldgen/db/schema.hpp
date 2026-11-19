@@ -1,9 +1,11 @@
 #pragma once
 
-// World database schema, version 4 (spec P0-02 sections 4.2, 5;
+// World database schema, version 5 (spec P0-02 sections 4.2, 5;
 // docs/specs/schema.md; table `pass` from P1-01 section 9.1, schema 2;
 // tables `biome` and `climate` from P1-04 section 3 and P1-03 section 3,
-// schema 3; column climate.temp_offset_dc, schema 4, P0-02 amendment 16).
+// schema 3; column climate.temp_offset_dc, schema 4, P0-02 amendment 16;
+// tables `region`, `region_border` and `region_biome` from P1-06 section 3,
+// schema 5, P0-02 amendment 17).
 //
 // The DDL strings below are stored verbatim in sqlite_schema and are
 // therefore part of every world file. Each is one line with single spaces,
@@ -19,7 +21,7 @@ namespace worldgen::db {
 
 // The schema version (P0-02 5.2 rule 1). Written to PRAGMA user_version
 // and meta.schema_version; a reader supports exactly this version.
-inline constexpr std::int64_t SCHEMA_VERSION = 4;
+inline constexpr std::int64_t SCHEMA_VERSION = 5;
 
 // PRAGMA application_id of every world file: 0x554E4D50, ASCII "UNMP"
 // (P0-02 4.2, header offset 68 in 6.1).
@@ -63,10 +65,43 @@ inline constexpr std::string_view DDL_CLIMATE =
 inline constexpr std::string_view BIOME_TABLE = "biome";
 inline constexpr std::string_view CLIMATE_TABLE = "climate";
 
+// DDL of the region table (P1-06 3.1, schema version 5), executed sixth:
+// one row per region, written by the regions stage in id order.
+inline constexpr std::string_view DDL_REGION =
+    "CREATE TABLE region (id INTEGER PRIMARY KEY, name TEXT NOT NULL, biome INTEGER NOT NULL, "
+    "x_min INTEGER NOT NULL, y_min INTEGER NOT NULL, x_max INTEGER NOT NULL, y_max INTEGER NOT NULL, "
+    "seed_x INTEGER NOT NULL, seed_y INTEGER NOT NULL, landmass INTEGER NOT NULL, cells INTEGER NOT NULL, "
+    "lake_cells INTEGER NOT NULL, river_cells INTEGER NOT NULL, river_class_max INTEGER NOT NULL, "
+    "coast_cells INTEGER NOT NULL, walk_cells INTEGER NOT NULL, walk_area INTEGER NOT NULL, "
+    "elev_mean_dm INTEGER NOT NULL, elev_max_dm INTEGER NOT NULL, fertility_mean INTEGER NOT NULL, "
+    "forage_mean INTEGER NOT NULL, timber_mean INTEGER NOT NULL, ore_mean INTEGER NOT NULL, "
+    "fresh_water_mean INTEGER NOT NULL, habitability_mean INTEGER NOT NULL, habitability_p90 INTEGER NOT NULL, "
+    "ore_rich_cells INTEGER NOT NULL, ore_reach_cells INTEGER NOT NULL) STRICT";
+
+// DDL of the region_border table (P1-06 3.1, schema version 5), executed
+// seventh: one row per pair of bordering regions, in (a, b) order.
+inline constexpr std::string_view DDL_REGION_BORDER =
+    "CREATE TABLE region_border (a INTEGER NOT NULL, b INTEGER NOT NULL, length_m INTEGER NOT NULL, "
+    "low_dm INTEGER NOT NULL, low_x INTEGER NOT NULL, low_y INTEGER NOT NULL, walk_pairs INTEGER NOT NULL, "
+    "river_pairs INTEGER NOT NULL, river_class_max INTEGER NOT NULL, pass_id INTEGER NOT NULL, "
+    "passes INTEGER NOT NULL, PRIMARY KEY (a, b)) STRICT, WITHOUT ROWID";
+
+// DDL of the region_biome table (P1-06 3.1, schema version 5), executed
+// eighth: cells per region and biome code, in (region, biome) order.
+inline constexpr std::string_view DDL_REGION_BIOME =
+    "CREATE TABLE region_biome (region INTEGER NOT NULL, biome INTEGER NOT NULL, cells INTEGER NOT NULL, "
+    "PRIMARY KEY (region, biome)) STRICT, WITHOUT ROWID";
+
+// The names of the three region tables (P1-06 3.1).
+inline constexpr std::string_view REGION_TABLE = "region";
+inline constexpr std::string_view REGION_BORDER_TABLE = "region_border";
+inline constexpr std::string_view REGION_BIOME_TABLE = "region_biome";
+
 // The DDL statements in execution order (P0-02 5.4, section 6 step 2;
-// schema 4: meta, layer, pass, biome, climate).
-inline constexpr std::array<std::string_view, 5> DDL_STATEMENTS = {DDL_META, DDL_LAYER, DDL_PASS, DDL_BIOME,
-                                                                   DDL_CLIMATE};
+// schema 5: meta, layer, pass, biome, climate, region, region_border,
+// region_biome).
+inline constexpr std::array<std::string_view, 8> DDL_STATEMENTS = {
+    DDL_META, DDL_LAYER, DDL_PASS, DDL_BIOME, DDL_CLIMATE, DDL_REGION, DDL_REGION_BORDER, DDL_REGION_BIOME};
 
 // --- meta keys (P0-02 5.5) --------------------------------------------------
 

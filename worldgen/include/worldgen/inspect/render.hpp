@@ -33,7 +33,7 @@ enum class Palette : std::uint8_t {
     river = 3,            // "river": river class 0..15
     log2 = 4,             // "log2": gray by bit length (flow_accum)
     direction = 5,        // "direction": D8 code 0..8 (flow_dir)
-    ids = 6,              // "ids": hashed colour per id (lake, later region)
+    ids = 6,              // "ids": hashed colour per id (lake, walk_area, region)
     signed_distance = 7,  // "signed": signed distance (coast_dist)
     temperature = 8,      // "temperature": tenths of a degree Celsius (P1-03 9)
     rainfall = 9,         // "rainfall": millimetres per year (P1-03 9)
@@ -63,7 +63,8 @@ inline constexpr std::array<Palette, 12> ALL_PALETTES = {
 // river -> river, flow_accum -> log2, flow_dir -> direction, lake -> ids,
 // coast_dist -> signed, temperature -> temperature, rainfall -> rainfall
 // (P1-03 9), biome -> biome (P1-04 9), fertility, ore, timber, fresh_water,
-// forage, habitability -> score and walk_area -> ids (P1-05 9); every other
+// forage, habitability -> score and walk_area -> ids (P1-05 9), region ->
+// ids (P1-06 9); every other
 // layer (water_depth included) -> gray.
 [[nodiscard]] Palette registered_palette(std::string_view layer_name) noexcept;
 
@@ -309,12 +310,13 @@ void render_rgb(const db::LayerGrid& grid, Palette palette, std::uint32_t scale,
 enum class Composite : std::uint8_t {
     map = 0,     // "map": shaded hypsometric relief with water overlays
     biomes = 1,  // "biomes": shaded biome colours with water overlays (P1-04 9)
+    regions = 2, // "regions": the composite biomes with region borders in black (P1-06 9)
 };
 
 // Every composite in enumerator order (for --help text and tests).
-inline constexpr std::array<Composite, 2> ALL_COMPOSITES = {Composite::map, Composite::biomes};
+inline constexpr std::array<Composite, 3> ALL_COMPOSITES = {Composite::map, Composite::biomes, Composite::regions};
 
-// The --composite text of a composite: "map", "biomes".
+// The --composite text of a composite: "map", "biomes", "regions".
 [[nodiscard]] std::string_view composite_name(Composite composite) noexcept;
 
 // The composite for a --composite value, or std::nullopt for an unknown name.
@@ -403,5 +405,30 @@ inline constexpr std::array<Composite, 2> ALL_COMPOSITES = {Composite::map, Comp
                                                                 const db::LayerGrid* water,
                                                                 const db::LayerGrid* river,
                                                                 const db::LayerGrid* flow_dir, std::uint32_t scale);
+
+// Why the layers of the composite regions cannot be used, or std::nullopt
+// (P0-04 amendment 18 (e)): composite_biomes_problem first, then region must
+// be a valid u16 grid ("layer 'region' is <type>, expected u16") of the
+// elevation's size ("layer 'region' is not the size of layer 'elevation'").
+[[nodiscard]] std::optional<std::string> composite_regions_problem(const db::LayerGrid& elevation,
+                                                                   const db::LayerGrid* water,
+                                                                   const db::LayerGrid* river,
+                                                                   const db::LayerGrid* flow_dir,
+                                                                   const db::LayerGrid& biome,
+                                                                   const db::LayerGrid& region);
+
+// The RGB buffer of the composite regions (P0-04 amendment 18 (e)), laid out
+// as render_rgb: per cell the pixel of the composite biomes, every step
+// included; then (0, 0, 0) on every cell with region v > 0 whose E or S
+// neighbour has a region w > 0 with w != v. At scale k each cell's final
+// colour fills its k x k block. FatalError if composite_regions_problem
+// reports a problem, scale is outside 1..16 or the buffer does not fit.
+[[nodiscard]] std::vector<std::uint8_t> render_composite_regions(const db::LayerGrid& elevation,
+                                                                 const db::LayerGrid* water,
+                                                                 const db::LayerGrid* river,
+                                                                 const db::LayerGrid* flow_dir,
+                                                                 const db::LayerGrid& biome,
+                                                                 const db::LayerGrid& region, std::uint32_t scale,
+                                                                 std::span<const BiomeColour> biome_table);
 
 }  // namespace worldgen::inspect

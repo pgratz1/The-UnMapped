@@ -417,6 +417,9 @@ StageWriter::~StageWriter() {
     state_->next_pass_id = state_->stage_start_pass_id;
     state_->last_biome_id = state_->stage_start_biome_id;
     state_->climate_written = state_->stage_start_climate;
+    state_->last_region_id = state_->stage_start_region_id;
+    state_->last_border_key = state_->stage_start_border_key;
+    state_->last_region_biome_key = state_->stage_start_region_biome_key;
     state_->stage_open = false;
 }
 
@@ -520,6 +523,107 @@ void StageWriter::write_climate(const ClimateRow& row) {
     state_->climate_written = true;
 }
 
+namespace {
+
+// Binds integers ?1 .. ?n of `stmt` from `values`, starting at parameter
+// `first`; the first SQLite error code, or SQLITE_OK.
+int bind_integers(detail::Statement& stmt, int first, std::span<const std::int64_t> values) {
+    int rc = SQLITE_OK;
+    for (std::size_t k = 0; k < values.size() && rc == SQLITE_OK; ++k) {
+        rc = stmt.bind_int64(first + static_cast<int>(k), values[k]);
+    }
+    return rc;
+}
+
+// Prepares `sql`, binds `values` from ?first on (and whatever `bind_rest`
+// binds), steps once; FatalError naming `what` if any step fails.
+template <class BindRest>
+void insert_row(sqlite3* db, std::string_view sql, int first, std::span<const std::int64_t> values,
+                const BindRest& bind_rest, const std::string& what) {
+    detail::Statement stmt;
+    int rc = stmt.prepare(db, sql);
+    if (rc == SQLITE_OK) rc = bind_rest(stmt);
+    if (rc == SQLITE_OK) rc = bind_integers(stmt, first, values);
+    if (rc == SQLITE_OK) rc = stmt.step() == SQLITE_DONE ? SQLITE_OK : SQLITE_ERROR;
+    if (rc != SQLITE_OK) {
+        fatal_text("world database: inserting " + what + " failed: " + detail::error_message(db));
+    }
+}
+
+std::string key_text(std::pair<std::int64_t, std::int64_t> k) {
+    return "(" + format_i64(k.first) + ", " + format_i64(k.second) + ")";
+}
+
+}  // namespace
+
+void StageWriter::write_region(const RegionRow& row) {
+    if (state_ == nullptr) {
+        fatal("StageWriter::write_region: stage is not open");
+    }
+    if (row.id < 1 || row.id <= state_->last_region_id) {
+        fatal_text("StageWriter::write_region: region row has id " + format_i64(row.id) +
+                   ", expected an id above " + format_i64(state_->last_region_id) + " (ascending ids)");
+    }
+    // Every column but `name` (?2), in declared order from ?3.
+    const std::int64_t ints[26] = {
+        row.biome,          row.x_min,          row.y_min,          row.x_max,         row.y_max,
+        row.seed_x,         row.seed_y,         row.landmass,       row.cells,         row.lake_cells,
+        row.river_cells,    row.river_class_max, row.coast_cells,   row.walk_cells,    row.walk_area,
+        row.elev_mean_dm,   row.elev_max_dm,    row.fertility_mean, row.forage_mean,   row.timber_mean,
+        row.ore_mean,       row.fresh_water_mean, row.habitability_mean, row.habitability_p90,
+        row.ore_rich_cells, row.ore_reach_cells,
+    };
+    insert_row(state_->db.get(),
+               "INSERT INTO region (id, name, biome, x_min, y_min, x_max, y_max, seed_x, seed_y, landmass, cells, "
+               "lake_cells, river_cells, river_class_max, coast_cells, walk_cells, walk_area, elev_mean_dm, "
+               "elev_max_dm, fertility_mean, forage_mean, timber_mean, ore_mean, fresh_water_mean, "
+               "habitability_mean, habitability_p90, ore_rich_cells, ore_reach_cells) VALUES (?1, ?2, ?3, ?4, ?5, "
+               "?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17, ?18, ?19, ?20, ?21, ?22, ?23, ?24, ?25, ?26, "
+               "?27, ?28)",
+               3, ints,
+               [&row](detail::Statement& stmt) {
+                   int rc = stmt.bind_int64(1, row.id);
+                   if (rc == SQLITE_OK) rc = stmt.bind_text(2, row.name);
+                   return rc;
+               },
+               "region row " + format_i64(row.id));
+    state_->last_region_id = row.id;
+}
+
+void StageWriter::write_region_border(const RegionBorderRow& row) {
+    if (state_ == nullptr) {
+        fatal("StageWriter::write_region_border: stage is not open");
+    }
+    const std::pair<std::int64_t, std::int64_t> key{row.a, row.b};
+    if (row.a < 1 || row.a >= row.b || key <= state_->last_border_key) {
+        fatal_text("StageWriter::write_region_border: row " + key_text(key) + " is not above " +
+                   key_text(state_->last_border_key) + " with 1 <= a < b (ascending keys)");
+    }
+    const std::int64_t ints[11] = {row.a,           row.b,          row.length_m,    row.low_dm,
+                                   row.low_x,       row.low_y,      row.walk_pairs,  row.river_pairs,
+                                   row.river_class_max, row.pass_id, row.passes};
+    insert_row(state_->db.get(),
+               "INSERT INTO region_border (a, b, length_m, low_dm, low_x, low_y, walk_pairs, river_pairs, "
+               "river_class_max, pass_id, passes) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11)",
+               1, ints, [](detail::Statement&) { return SQLITE_OK; }, "region_border row " + key_text(key));
+    state_->last_border_key = key;
+}
+
+void StageWriter::write_region_biome(const RegionBiomeRow& row) {
+    if (state_ == nullptr) {
+        fatal("StageWriter::write_region_biome: stage is not open");
+    }
+    const std::pair<std::int64_t, std::int64_t> key{row.region, row.biome};
+    if (row.region < 1 || key <= state_->last_region_biome_key) {
+        fatal_text("StageWriter::write_region_biome: row " + key_text(key) + " is not above " +
+                   key_text(state_->last_region_biome_key) + " with region >= 1 (ascending keys)");
+    }
+    const std::int64_t ints[3] = {row.region, row.biome, row.cells};
+    insert_row(state_->db.get(), "INSERT INTO region_biome (region, biome, cells) VALUES (?1, ?2, ?3)", 1, ints,
+               [](detail::Statement&) { return SQLITE_OK; }, "region_biome row " + key_text(key));
+    state_->last_region_biome_key = key;
+}
+
 void StageWriter::commit() {
     if (state_ == nullptr) {
         fatal("StageWriter::commit: stage is not open");
@@ -605,6 +709,9 @@ StageWriter WorldWriter::begin_stage(std::string_view stage_name) {
     s.stage_start_pass_id = s.next_pass_id;
     s.stage_start_biome_id = s.last_biome_id;
     s.stage_start_climate = s.climate_written;
+    s.stage_start_region_id = s.last_region_id;
+    s.stage_start_border_key = s.last_border_key;
+    s.stage_start_region_biome_key = s.last_region_biome_key;
     return StageWriter(s, std::string(stage_name));
 }
 

@@ -517,6 +517,40 @@ TEST_CASE("P1-06 10.1 tests 2, 3: RG6 adds the mainland's best site, then a rive
     CHECK(own_regions(in, {}, values(RG6_TUNING), 0).out == o);
 }
 
+TEST_CASE("P1-06 3.2, RG6, RG10 (ruling): a one-cell lake islet is a region with no dry cell, all its dry values 0") {
+    region_api::Inputs in = rg6_inputs();
+    const Grid g = in.grid;
+    const std::size_t i = g.index(17, 1);
+    in.elevation[i] = 5;
+    in.water[i] = WATER_LAKE;
+    in.water_depth[i] = 5;
+    in.biome[i] = 2;
+    in.habitability[i] = 0;
+    in.walk_area[i] = 0;
+    in.flow_dir[i] = 8;
+    const region_api::Output o = region_api::stage(in, definitions(), {}, tuning(RG6_TUNING), 0, 1);
+    REQUIRE(o.regions.size() == 4U);
+    // Ids by smallest index: the lake islet (index 37) comes before the islet (54).
+    const region_api::RegionRow& r = o.regions[1];
+    CHECK(std::make_pair(r.seed_x, r.seed_y) == std::make_pair(std::int64_t{17}, std::int64_t{1}));
+    CHECK(r.cells == 1);
+    CHECK(r.lake_cells == 1);
+    CHECK(r.biome == 2);
+    CHECK(r.walk_area == 0);
+    CHECK(r.walk_cells == 0);
+    for (const std::int64_t v : {r.elev_mean_dm, r.elev_max_dm, r.fertility_mean, r.forage_mean, r.timber_mean,
+                                 r.ore_mean, r.fresh_water_mean, r.habitability_mean, r.habitability_p90,
+                                 r.ore_rich_cells, r.ore_reach_cells}) {
+        CHECK(v == 0);
+    }
+    std::vector<std::string> names;
+    for (const auto& x : o.regions) {
+        names.push_back(x.name);
+    }
+    CHECK(names == std::vector<std::string>{"West Downs", "East Isle", "East Isle II", "East Isle III"});
+    CHECK(own_regions(in, {}, values(RG6_TUNING), 0).out == o);
+}
+
 TEST_CASE("P1-06 2 check 4: a biome region_noun of `Wet Wood` is fatal at the stage") {
     region_api::Definitions d = definitions();
     for (auto& b : d.biomes) {

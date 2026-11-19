@@ -29,11 +29,6 @@ target_compile_definitions(worldgen-cli-tests PRIVATE
     UNMAPPED_P0_WORLDS_GOLDEN_PATH="${PROJECT_SOURCE_DIR}/worldgen/tests/golden/p0-worlds.txt"
 )
 
-add_test(NAME worldgen-cli-tests COMMAND worldgen-cli-tests)
-# Explicit timeout, above CTest's default of 1500 s: under linux-clang-asan
-# this entry takes about 480 s on 6 cores and grows with every stage.
-# One value for every preset, so a hang is still caught within an hour.
-set_tests_properties(worldgen-cli-tests PROPERTIES TIMEOUT 3600)
 
 # Behaviour fixed after the P0-04 determinism audit: stdout write errors,
 # dangling symbolic links at --out, the render size limit, UTF-16 input.
@@ -98,4 +93,20 @@ target_compile_definitions(worldgen-cli-tests PRIVATE
 target_sources(worldgen-cli-tests PRIVATE cli_regions_test.cpp)
 target_compile_definitions(worldgen-cli-tests PRIVATE
     UNMAPPED_P1_06_GOLDEN_PATH="${PROJECT_SOURCE_DIR}/worldgen/tests/golden/p1-06-regions.txt"
+)
+
+# CTest entries, as for worldgen-tests (cmake/UnmappedTestShards.cmake):
+# groups of source files run in parallel, worldgen-cli-tests-other for every
+# file not named here, and worldgen-cli-tests-partition. Each test case uses
+# its own Sandbox (counter and process id), so the groups never share a
+# scratch path. Costs are seconds under linux-gcc-release (generator 0.10.0);
+# timeout 3600 s per entry on every preset.
+unmapped_add_doctest_shards(worldgen-cli-tests
+    TIMEOUT 3600
+    SHARD hydrology-elevation 13 "*cli_hydrology_test.cpp,*cli_elevation_test.cpp"
+    SHARD passes-climate 12 "*cli_passes_test.cpp,*cli_climate_test.cpp"
+    SHARD biomes 9 "*cli_biomes_test.cpp"
+    SHARD resources-generate 10 "*cli_resources_test.cpp,*cli_generate_test.cpp"
+    SHARD regions 12 "*cli_regions_test.cpp"
+    REST other 10
 )

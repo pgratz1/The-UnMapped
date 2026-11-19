@@ -617,24 +617,28 @@ def region_rows_props(w, h, L, region, R, seeds_of, landmass, walk_dist, defs, t
     rows = []
     for r in range(1, R + 1):
         a = acc[r]
-        if a["dry"] == 0:
-            fatal("regions: region %d has no dry cell" % r)
         s = seeds_of[r]
         wa = 0
         if a["wa"]:
             wa = min(a["wa"].items(), key=lambda kv: (-kv[1], kv[0]))[0]
         land = [(cnt, code) for code, cnt in a["biome"].items() if not water_code[code]]
+        if not land:
+            # 3.2 / RG10 (ruling 2026-11-18): a region with no dry cell takes
+            # the most common code over all its cells.
+            land = [(cnt, code) for code, cnt in a["biome"].items()]
         dom = min(land, key=lambda v: (-v[0], v[1]))[1]
         nd = a["dry"]
-        means = [er.rha(v, nd) for v in a["sums"]]
+        # A region with no dry cell: every value over dry cells is 0.
+        means = [er.rha(v, nd) if nd else 0 for v in a["sums"]]
         rows.append({"id": r, "biome": dom, "x_min": a["xmin"], "y_min": a["ymin"], "x_max": a["xmax"],
                      "y_max": a["ymax"], "seed_x": s % w, "seed_y": s // w, "landmass": landmass[s],
                      "cells": a["cells"], "lake_cells": a["lake"], "river_cells": a["riv"],
                      "river_class_max": a["rcmax"], "coast_cells": a["coast"], "walk_cells": a["walk"],
-                     "walk_area": wa, "elev_mean_dm": er.rha(a["esum"], nd), "elev_max_dm": a["emax"],
+                     "walk_area": wa, "elev_mean_dm": er.rha(a["esum"], nd) if nd else 0,
+                     "elev_max_dm": a["emax"] if nd else 0,
                      "fertility_mean": means[0], "forage_mean": means[1], "timber_mean": means[2],
                      "ore_mean": means[3], "fresh_water_mean": means[4], "habitability_mean": means[5],
-                     "habitability_p90": kth(a["hab"], min(nd - 1, (90 * nd) // 100)),
+                     "habitability_p90": kth(a["hab"], min(nd - 1, (90 * nd) // 100)) if nd else 0,
                      "ore_rich_cells": a["rich"], "ore_reach_cells": a["reach"],
                      "biomes": sorted(a["biome"].items())})
     return rows
@@ -1668,6 +1672,10 @@ def check_rg12(c):
                       r["river_class_max"]), (48, 25, 1, 2, 2, 1, 6))
     c.eq("RG12 second method", border_rows_second(W, H, region, S, walk, water, river, border),
          {(1, 2): (48, 25, 1, 2, 2, 1, 6)})
+    river4 = list(river)
+    river4[2] = 4
+    r4 = border_rows(W, H, region, S, walk, water, river4, border_river_mask(water, river4, t))[(1, 2)]
+    c.eq("RG12 class 4: river_pairs 0, river_class_max 4", (r4["river_pairs"], r4["river_class_max"]), (0, 4))
     p3 = b"".join(i.to_bytes(4, "little") for i in (1 * W + 0, 0 * W + 1, 1 * W + 2, 1 * W + 3))
     c.eq("RG12 steps", pass_steps(W, path_cells(p3), water), [4, 5, 1, 2, 6, 7])
     p5 = b"".join(i.to_bytes(4, "little") for i in (2 * W + 1, 2 * W + 2))
@@ -1819,6 +1827,29 @@ def check_rg6_rg9(c):
     return r
 
 
+def check_lake_only(c):
+    """Ruling of 2026-11-18 (3.2, RG10): the RG6 fixture with a one-cell
+    lake islet at (17, 1): a region with no dry cell."""
+    w, h, L, t = rg6_fixture()
+    i = 1 * w + 17
+    L["elevation"][i] = 5
+    L["water"][i] = WATER_LAKE
+    L["water_depth"][i] = 5
+    L["biome"][i] = 2
+    L["habitability"][i] = 0
+    L["walk_area"][i] = 0
+    L["flow_dir"][i] = 8
+    r = regions(w, h, L, [], t, 0, second=True)
+    c.eq("lake-only seeds", [(s % w, s // w) for s in r["seeds"]], [(14, 3), (5, 4), (17, 1), (17, 6)])
+    row = [x for x in r["rows"] if (x["seed_x"], x["seed_y"]) == (17, 1)][0]
+    c.eq("lake-only row", (row["id"], row["cells"], row["lake_cells"], row["biome"], row["walk_area"], row["walk_cells"],
+                           row["elev_mean_dm"], row["elev_max_dm"], row["habitability_mean"], row["habitability_p90"],
+                           row["fresh_water_mean"], row["ore_rich_cells"]), (2, 1, 1, 2, 0, 0, 0, 0, 0, 0, 0, 0))
+    c.eq("lake-only names", [x["name"] for x in r["rows"]], ["West Downs", "East Isle", "East Isle II", "East Isle III"])
+    check_invariants(c, "lake-only", r)
+    return r
+
+
 def check_preconditions(c):
     w, h, L = make_world(["-5 -5 -5 -5", "-5 10 12 -5", "-5 14 16 -5", "-5 -5 -5 -5"],
                          ["3 3 3 3", "3 0 0 3", "3 0 0 3", "3 3 3 3"])
@@ -1893,7 +1924,8 @@ def check_invariants(c, label, r):
         k = row["id"]
         cs = cells[k]
         s = row["seed_y"] * w + row["seed_x"]
-        ok = region[s] == k and water[s] == WATER_DRY and all(lm[i] == row["landmass"] for i in cs)
+        has_site = any(water[i] == WATER_DRY for i in range(n) if lm[i] == row["landmass"])
+        ok = region[s] == k and (water[s] == WATER_DRY or not has_site) and all(lm[i] == row["landmass"] for i in cs)
         seen = {cs[0]}
         q = deque([cs[0]])
         while q:
@@ -1923,8 +1955,9 @@ def check_invariants(c, label, r):
         xs = [i % w for i in cs]
         ys = [i // w for i in cs]
         want = (min(xs), min(ys), max(xs), max(ys), len(cs), sum(1 for i in cs if water[i] == WATER_LAKE),
-                er.rha(sum(L["elevation"][i] for i in dry), len(dry)), max(L["elevation"][i] for i in dry),
-                sorted(L["habitability"][i] for i in dry)[min(len(dry) - 1, 90 * len(dry) // 100)])
+                er.rha(sum(L["elevation"][i] for i in dry), len(dry)) if dry else 0,
+                max(L["elevation"][i] for i in dry) if dry else 0,
+                sorted(L["habitability"][i] for i in dry)[min(len(dry) - 1, 90 * len(dry) // 100)] if dry else 0)
         got = (row["x_min"], row["y_min"], row["x_max"], row["y_max"], row["cells"], row["lake_cells"],
                row["elev_mean_dm"], row["elev_max_dm"], row["habitability_p90"])
         if want != got:
@@ -1966,6 +1999,7 @@ def check_all(quick):
     check_tuning_errors(c)
     check_preconditions(c)
     check_rg6_rg9(c)
+    check_lake_only(c)
     check_designed(c, quick)
     sys.stderr.write("%d checks passed, %d failed\n" % (c.passes, c.fails))
     return 1 if c.fails else 0

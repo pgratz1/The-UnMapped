@@ -311,7 +311,7 @@ TEST_CASE("cli P1-04 9, P1-03 9: report: [tables], wind_toward first of the clim
     REQUIRE(r.exit_code == EXIT_OK);
     const std::string& t = r.out;
     CHECK(contains(t, "\n[tables]\nbiome = 12\nclimate = 1\nlayer = 11\nmeta = 8\npass = "));
-    CHECK(contains(t, "\nschema_version = 4\n"));
+    CHECK(contains(t, "\nschema_version = 5\n"));
     CHECK(contains(t, "\nwind_toward = SE\ntemp_offset_c = 2.0\ntemperature_c = "));
     // P1-04 9's example line for 512 seed 0 (ten keys in code order).
     CHECK(contains(t, "\nbiome_share = temperate_forest:0.5810 grassland:0.1447 marsh:0.0068 highland_moor:0.0882 "
@@ -362,7 +362,7 @@ TEST_CASE("cli P1-04 3: --until none, --until hydrology and the test pattern hav
         CHECK(contains(r.out, "\n[tables]\nbiome = 0\nclimate = 0\n"));
         CHECK_FALSE(contains(r.out, "wind_toward"));
         CHECK_FALSE(contains(r.out, "temp_offset_c"));
-        CHECK(contains(r.out, "\nschema_version = 4\n"));
+        CHECK(contains(r.out, "\nschema_version = 5\n"));
     }
 }
 
@@ -421,7 +421,7 @@ TEST_CASE("cli P1-03 3, P0-02 amendment 16: a schema-3 world is refused by repor
         const ProcessResult r = w.sb.cli(args);
         CHECK(r.exit_code != EXIT_OK);
         CHECK(r.out.empty());
-        CHECK(contains(r.err, "world schema version 3, this build reads 4"));
+        CHECK(contains(r.err, "world schema version 3, this build reads 5"));
     }
     CHECK_FALSE(fs::exists(w.sb.file("schema3.png")));
     // Plain `hash` hashes the file's bytes without opening it as a world
@@ -644,11 +644,14 @@ TEST_CASE("cli P1-00 10.2: render --help lists every palette --palette accepts, 
     CHECK(contains(t, "biomes"));
 }
 
-TEST_CASE("cli P1-00 10.1: --until biomes is accepted; the stage after resources is not implemented yet") {
+TEST_CASE("cli P1-00 10.1: --until biomes is accepted; an unknown stage is a usage error") {
     Sandbox sb;
     const fs::path data = write_data_root(sb);
+    // Every geography stage is implemented since P1-06 (generator 0.11.0):
+    // an unknown name stands in for the unimplemented stage of earlier
+    // versions.
     const ProcessResult r = sb.cli({"generate", "--seed", "1", "--map-size", "512", "--data", u8(data), "--until",
-                                    "regions", "--out", u8(sb.file("r.db"))});
+                                    "bogus", "--out", u8(sb.file("r.db"))});
     CHECK(r.exit_code == EXIT_USAGE);
     // A data root without the biome definitions is an input error (exit 3).
     const fs::path bare = sb.file("bare");
@@ -658,7 +661,7 @@ TEST_CASE("cli P1-00 10.1: --until biomes is accepted; the stage after resources
     write_text(bare / "worldgen" / "climate.toml", std::string(elev_api::CLIMATE_TOML));
     write_text(bare / "worldgen" / "biomes.toml", biome_data::TUNING_TOML);
     write_text(bare / "worldgen" / "resources.toml", biome_data::RESOURCES_TOML);
-    region_data::write_to(bare);  // P1-06 4, once registered
+    write_text(bare / "worldgen" / "regions.toml", biome_data::REGIONS_TOML);
     const ProcessResult m = sb.cli({"generate", "--seed", "1", "--map-size", "512", "--data", u8(bare), "--until",
                                     "none", "--out", u8(sb.file("m.db"))});
     CHECK(m.exit_code == EXIT_INPUT);

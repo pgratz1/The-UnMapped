@@ -969,13 +969,21 @@ inline Own own_regions(const region_api::Inputs& in, std::span<const region_api:
     }
     for (std::int64_t r = 1; r <= R; ++r) {
         Acc& a = acc[uz(r)];
-        REQUIRE_MESSAGE(a.dry > 0, "region " << r << " has no dry cell");
         region_api::RegionRow row;
         row.id = r;
         std::optional<std::pair<std::int64_t, std::int64_t>> dom;  // (-cells, code)
         for (const auto& [code, cnt] : a.biome) {
             if (!nouns.at(code).water && (!dom || std::make_pair(-cnt, code) < *dom)) {
                 dom = std::make_pair(-cnt, code);
+            }
+        }
+        if (!dom) {
+            // 3.2, RG10 (ruling of 2026-11-18): no dry cell, so the most
+            // common code over all the region's cells.
+            for (const auto& [code, cnt] : a.biome) {
+                if (!dom || std::make_pair(-cnt, code) < *dom) {
+                    dom = std::make_pair(-cnt, code);
+                }
             }
         }
         REQUIRE(dom.has_value());
@@ -1001,16 +1009,18 @@ inline Own own_regions(const region_api::Inputs& in, std::span<const region_api:
             }
         }
         row.walk_area = wa ? wa->second : 0;
-        row.elev_mean_dm = own_rha(a.esum, a.dry);
-        row.elev_max_dm = a.emax;
-        row.fertility_mean = own_rha(a.sums[0], a.dry);
-        row.forage_mean = own_rha(a.sums[1], a.dry);
-        row.timber_mean = own_rha(a.sums[2], a.dry);
-        row.ore_mean = own_rha(a.sums[3], a.dry);
-        row.fresh_water_mean = own_rha(a.sums[4], a.dry);
-        row.habitability_mean = own_rha(a.sums[5], a.dry);
+        // A region with no dry cell: every value over dry cells is 0 (3.2).
+        auto mean = [&](std::int64_t sum) { return a.dry > 0 ? own_rha(sum, a.dry) : 0; };
+        row.elev_mean_dm = mean(a.esum);
+        row.elev_max_dm = a.dry > 0 ? a.emax : 0;
+        row.fertility_mean = mean(a.sums[0]);
+        row.forage_mean = mean(a.sums[1]);
+        row.timber_mean = mean(a.sums[2]);
+        row.ore_mean = mean(a.sums[3]);
+        row.fresh_water_mean = mean(a.sums[4]);
+        row.habitability_mean = mean(a.sums[5]);
         std::sort(a.hab.begin(), a.hab.end());
-        row.habitability_p90 = a.hab[uz(std::min(a.dry - 1, (90 * a.dry) / 100))];
+        row.habitability_p90 = a.dry > 0 ? a.hab[uz(std::min(a.dry - 1, (90 * a.dry) / 100))] : 0;
         row.ore_rich_cells = a.rich;
         row.ore_reach_cells = a.reach;
         o.out.regions.push_back(row);

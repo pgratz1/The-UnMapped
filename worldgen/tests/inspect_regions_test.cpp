@@ -110,7 +110,8 @@ std::string write(const dbtest::TempDir& dir, const std::string& file, const Wor
     std::vector<worldgen::stages::testing::FixtureLayer> layers;
     layers.push_back({"elevation", p004::grid_of(W, W, w.elevation), Codec::delta_varint});
     layers.push_back({"water", p004::grid_of(W, W, w.water), Codec::delta_varint});
-    layers.push_back({"biome", p004::grid_of(W, W, w.biome), Codec::delta_varint});
+    // No biome layer: a biome layer would need table biome (P1-04 9), and the
+    // region keys do not read it.
     if (with_region) {
         layers.push_back({"region", region != nullptr ? *region : p004::grid_of(W, W, w.region), Codec::delta_varint});
     }
@@ -342,4 +343,31 @@ TEST_CASE("P0-04 amendment 18 (e): composite regions refuses a region layer that
     const auto p3 = region_api::composite_problem(e, nullptr, nullptr, nullptr, bad_biome, u8);
     REQUIRE(p3.has_value());
     CHECK(p3->find("'biome'") != std::string::npos);
+}
+
+TEST_CASE("P1-06 9 (ruling): check order layer, table region, table region_border; tables checked without the layer") {
+    dbtest::TempDir dir("regions-report-order");
+    const World w = make_world();
+    const LayerGrid i16 = p004::grid_of(W, W, std::vector<std::int16_t>(W * W, 1));
+    const std::string bad_region = region_sql(w.rows[0]) + region_sql(row_of(2, "East Wood", 0, 0));
+    const std::string bad_border = border_sql({2, 1, 16, 0, 0, 0, 0, 0, 0, 0, 0});
+    // Layer first.
+    std::string e = report_error(write(dir, "a.db", w, true, &i16, bad_region + bad_border));
+    CHECK(e.find("corrupt layer 'region': type i16, expected u16") != std::string::npos);
+    // Then table region before table region_border.
+    e = report_error(write(dir, "b.db", w, true, nullptr, bad_region + bad_border));
+    CHECK(e.find("corrupt table 'region': row 2: cells below 1") != std::string::npos);
+    // Within a table, the first failing row in key order.
+    std::string rows;
+    for (const auto& r : w.rows) {
+        rows += region_sql(r);
+    }
+    e = report_error(write(dir, "c.db", w, true, nullptr,
+                           rows + border_sql({3, 2, 16, 0, 0, 0, 0, 0, 0, 0, 0}) + border_sql({1, 7, 16, 0, 0, 0, 0, 0, 0, 0, 0})));
+    CHECK(e.find("corrupt table 'region_border': row (1, 7): unknown region 7") != std::string::npos);
+    // The table checks run without the layer.
+    e = report_error(write(dir, "d.db", w, false, nullptr, bad_region));
+    CHECK(e.find("corrupt table 'region': row 2: cells below 1") != std::string::npos);
+    e = report_error(write(dir, "e.db", w, false, nullptr, rows + bad_border));
+    CHECK(e.find("corrupt table 'region_border': row (2, 1): a not below b") != std::string::npos);
 }

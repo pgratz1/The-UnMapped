@@ -385,7 +385,7 @@ TEST_CASE("P1-06 5.1 RG11: names at N = 1024, centroid (500, 480), r_c 123; sect
                                                    {510, 900, 5, false}, {790, 560, 3, false}, {500, 100, 3, true}};
     const std::vector<std::string> want = {"Central Downs", "East Wood",    "Northwest Peaks",
                                            "South Marsh",   "East Wood II", "North Isle"};
-    CHECK(region_api::names(in, 500, 480, 123, t, definitions()) == want);
+    CHECK(region_api::names(in, 500, 480, 1024, t, definitions()) == want);
     CHECK(own_name_list(in, 500, 480, 123, v, nouns_of(definitions())) == want);
     // Sector checks of 5.1 (outside the central disc).
     const std::vector<std::pair<std::pair<int, int>, int>> sec = {
@@ -429,7 +429,7 @@ TEST_CASE("P1-06 RG11: the k-th region with a base name gets numeral k from II o
         in.push_back({900, 480, 3, false});
     }
     in.push_back({500, 100, 3, true});
-    const std::vector<std::string> got = region_api::names(in, 500, 480, 123, t, definitions());
+    const std::vector<std::string> got = region_api::names(in, 500, 480, 1024, t, definitions());
     REQUIRE(got.size() == 13U);
     CHECK(got[0] == "Ost Wood");
     CHECK(got[1] == "Ost Wood II");
@@ -469,6 +469,12 @@ TEST_CASE("P1-06 5.1 RG12: the 4 x 3 border row and the pass crossings (pass_id 
     const region_api::BorderRow none{1, 2, 48, 25, 1, 2, 2, 1, 6, 0, 0};
     CHECK(region_api::borders(g, region, s, walk, water, river, {}, tuning()) ==
           std::vector<region_api::BorderRow>{none});
+    // 5.1 (ruling): with (2, 0) of class 4, river_pairs 0 and river_class_max 4.
+    std::vector<std::uint8_t> river4 = river;
+    river4[g.index(2, 0)] = 4;
+    const region_api::BorderRow c4{1, 2, 48, 25, 1, 2, 2, 0, 4, 0, 0};
+    CHECK(region_api::borders(g, region, s, walk, water, river4, {}, tuning()) ==
+          std::vector<region_api::BorderRow>{c4});
     // river_border_class 7: the class-6 cell is no longer a border river,
     // but river_class_max still reports it.
     const region_api::BorderRow r7{1, 2, 48, 25, 1, 2, 2, 0, 6, 0, 0};

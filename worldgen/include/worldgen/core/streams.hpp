@@ -69,12 +69,13 @@ inline constexpr std::string_view geo_biomes_rain_jitter = "geo.biomes.rain_jitt
 // of the ore deposits (fbm_m only, no Rng).
 inline constexpr std::string_view geo_resources_ore = "geo.resources.ore";
 
-// Reserved prefix for the later second-pass stage (P1-00 section 3): its
-// names are registered here by the stage that uses them.
-//   geo.regions.
+// Keys of stage regions (P1-00 section 3, P1-06 section 2): the hash_at key
+// of the seed-site tie-break and the noise key of the step cost (no Rng).
+inline constexpr std::string_view geo_regions_seed = "geo.regions.seed";
+inline constexpr std::string_view geo_regions_cost = "geo.regions.cost";
 
 // Every registered name, in registration order.
-inline constexpr std::array<std::string_view, 28> all_stream_names = {
+inline constexpr std::array<std::string_view, 30> all_stream_names = {
     test_hash,
     test_noise,
     test_wide,
@@ -103,6 +104,8 @@ inline constexpr std::array<std::string_view, 28> all_stream_names = {
     geo_biomes_rain_jitter,
     geo_climate_temp_offset,
     geo_resources_ore,
+    geo_regions_seed,
+    geo_regions_cost,
 };
 
 }  // namespace worldgen::streams
