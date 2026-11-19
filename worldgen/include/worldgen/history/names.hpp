@@ -63,8 +63,9 @@ inline constexpr std::size_t NAME_MAX_BYTES = 64;
 inline constexpr std::uint64_t NAME_ATTEMPTS = 64;
 
 // The result of one attempt (P3-02 4.2): root is the drawn root before
-// capitalization, name the form with {root} replaced by Cap(root). Both
-// are filled whether or not the attempt is valid.
+// capitalization, name the form with {root} replaced by Cap(root). When
+// valid is false, name and root are unspecified (P3-02 4.2): only valid is
+// defined, and callers must not rely on either.
 struct NameAttempt {
     bool valid = false;
     std::string name;
