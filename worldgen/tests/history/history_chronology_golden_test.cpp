@@ -65,6 +65,8 @@ void check_rows(const GoldenCase& c, const Rows& rows, const Params& p, const st
     }
     CHECK(names == want_names);
     CHECK(replay_gods(rows, c.seed, regions, shipped()) == want);
+    // The stage's own record of each choice (ChronologyResult::god_names).
+    CHECK(chrono_api::god_choices(shipped(), p, c.seed, regions) == want);
     const std::map<std::string, std::string> h = table_hashes(rows);
     for (const std::string& t : five_tables()) {
         CAPTURE(t);

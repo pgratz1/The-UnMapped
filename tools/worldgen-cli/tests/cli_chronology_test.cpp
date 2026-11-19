@@ -283,6 +283,37 @@ TEST_CASE("cli P3-03 6, 14.1 item 6: each data check is an input error, also wit
     }
 }
 
+TEST_CASE("cli P3-03 6 D0: a data root without races is refused by the loader first, whatever the plan") {
+    // D0 itself is unreachable through the CLI: an empty required kind is a
+    // loader error (exit 3), with one error per culture whose race is gone.
+    Sandbox sb;
+    const fs::path data = sb.file("data-d0");
+    fs::copy(source_root() / "game" / "data", data, fs::copy_options::recursive);
+    for (const auto& e : fs::directory_iterator(data / "races")) {
+        fs::remove(e.path());
+    }
+    int k = 0;
+    for (const std::vector<std::string>& plan :
+         {std::vector<std::string>{}, std::vector<std::string>{"--until", "none"},
+          std::vector<std::string>{"--test-pattern"}, std::vector<std::string>{"--until", "regions"}}) {
+        const fs::path out = sb.file("d0-" + std::to_string(k++) + ".db");
+        std::vector<std::string> args = {"generate", "--seed", "1", "--map-size", "512", "--data", u8(data), "--out", u8(out)};
+        args.insert(args.end(), plan.begin(), plan.end());
+        const ProcessResult r = sb.cli(args);
+        INFO("stderr: ", r.err);
+        CHECK(r.exit_code == EXIT_INPUT);
+        CHECK(r.out.empty());
+        CHECK_FALSE(file_exists(out));
+        CHECK(contains(r.err, "required kind 'race' has no definitions in 'races/'"));
+        CHECK_FALSE(contains(r.err, "no race is defined"));
+        std::size_t culture_errors = 0;
+        for (const std::string& l : lines_of(r.err)) {
+            culture_errors += starts_with(l, "cultures/") ? 1U : 0U;
+        }
+        CHECK(culture_errors == 6U);
+    }
+}
+
 TEST_CASE("cli P3-03 4.3, 14.1 item 9: --test-pattern records the history flags and changes nothing else") {
     Sandbox sb;
     const fs::path plain = sb.generate({"--seed", "42", "--test-pattern", "--out", u8(sb.file("plain.db"))});
@@ -398,6 +429,7 @@ TEST_CASE("cli P3-03 9.1, 14.1 item 10: corrupt chronology rows exit 3 with noth
         {"UPDATE race SET present = 2 WHERE id = 6", "corrupt table 'race': row 6: present is 2"},
         {"UPDATE age SET start_year = 5001 WHERE id = 2", "corrupt table 'age': row 2: start_year 5001, expected 5000"},
         {"UPDATE age SET end_year = 5998 WHERE id = 2", "corrupt table 'age': the last age ends in 5998, expected 5999"},
+        {"DELETE FROM age", "corrupt table 'age': 0 rows for 2 present races"},
     };
     int k = 0;
     for (const auto& [sql, message] : cases) {

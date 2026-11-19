@@ -122,13 +122,20 @@ TEST_CASE("P3-03 9.1, 14.1 item 10: the keys of a stage-written world; the minim
           "age_years_min = 100\ngods = 0\n");
 }
 
-TEST_CASE("P3-03 9.1, 14.1 item 10: no [chronology] with an empty age table") {
+TEST_CASE("P3-03 9.1, 14.1 item 10: no [chronology] when race and age are both empty") {
     Worlds w;
-    for (const std::string& sql : {std::string(), std::string(BASE_ROWS) + "DELETE FROM age;"}) {
-        const auto r = report_of(w.make(sql));
-        REQUIRE(r.ok());
-        CHECK(r.value().find("[chronology]") == std::string::npos);
-    }
+    const auto r = report_of(w.make(""));
+    REQUIRE(r.ok());
+    CHECK(r.value().find("[chronology]") == std::string::npos);
+}
+
+TEST_CASE("P3-03 9.1, 14.1 item 10: race rows with an empty age table are corrupt (lead's ruling)") {
+    // A chronology run writes race and age together and a world stopped
+    // before it has both empty, so "whenever table race or age has rows"
+    // applies with an empty age table: the count check fails.
+    Worlds w;
+    CHECK(report_error(w.make(std::string(BASE_ROWS) + "DELETE FROM age;")) ==
+          "corrupt table 'age': 0 rows for 3 present races");
 }
 
 TEST_CASE("P3-03 9.1, 14.1 item 10: [tables] lists the 13 tables and [meta] the 16 keys") {

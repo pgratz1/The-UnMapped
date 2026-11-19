@@ -277,6 +277,31 @@ inline Rows stage(const wd::ContentSet& c, const Params& p, std::uint64_t seed,
     return out;
 }
 
+// ChronologyResult::god_names (the engineer's addition): per god in id
+// order, "id:name:attempt" joined by "|", "F" for the numeral fallback (the
+// format of the golden file's gods item).
+inline std::string god_choices(const wd::ContentSet& c, const Params& p, std::uint64_t seed,
+                               const std::vector<std::string>& region_names) {
+    const worldgen::stages::ChronologyResult r =
+        worldgen::stages::chronology_stage(c, to_lib(p), seed, std::span<const std::string>(region_names));
+    std::string out;
+    for (std::size_t i = 0; i < r.god_names.size(); ++i) {
+        const auto& g = r.god_names[i];
+        out += (out.empty() ? "" : "|") + std::to_string(i < r.gods.size() ? r.gods[i].id : 0) + ":" +
+               std::string(g.name) + ":" + (g.fallback ? std::string("F") : std::to_string(g.attempt));
+    }
+    return out;
+}
+
+// WorldWriter::set_param_integer and set_param_decimal (the same canonical
+// check for the eight keys).
+inline void set_param_integer(worldgen::db::WorldWriter& w, std::string_view name, std::int64_t value) {
+    w.set_param_integer(name, value);
+}
+inline void set_param_decimal(worldgen::db::WorldWriter& w, std::string_view name, std::string_view value) {
+    w.set_param_decimal(name, value);
+}
+
 // The stage entry for generate_world_with_stages.
 inline worldgen::stages::StageInfo stage_info() {
     return worldgen::stages::StageInfo{"chronology", &worldgen::stages::run_chronology};

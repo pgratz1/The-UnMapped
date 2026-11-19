@@ -180,6 +180,8 @@ inline wd::MemoryDataRoot edited_root(const std::vector<Edit>& edits) {
     return root;
 }
 
+inline const char* const D0_MESSAGE = "no race is defined; kind 'race' needs at least one definition";
+
 // The edited data must load (the loader cannot see the cross-kind
 // conditions of section 6).
 inline wd::ContentSet edited_content(const std::vector<Edit>& edits) {
