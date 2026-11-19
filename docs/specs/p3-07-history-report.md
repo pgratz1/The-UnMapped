@@ -1,6 +1,6 @@
 # P3-07 History report
 
-Status: **draft for approval**, written by the spec writer 2026-11-19. Phase P3 History core, spec 7 (P3-00 3.1): the text history report, `worldgen-cli report --db PATH --history`. It reads a world file only and changes no world byte, so it needs **no generator version bump and no schema change**. Design doc sections 5 (history: the log is the primary product), 6 (the database stores facts and names; text is rendered from records and templates), 13 (P3 delivers "a text history report"; milestone 1: "the event log reads as coherent history") and 14 (the enrichment pass narrates from the log: this report is its deterministic, template-only counterpart and is not a chronicle in the sense of 14; it is a tool for the world critic, the validation sweeps and Paul). Depends on P0-02 (reader, errors as values), P0-04 (`report`: options, `--out`, `--force`, exit codes, text conventions, the "Later" note), P3-00 (binding: 11, 6.2–6.4, 12.2, 12.3, 13), P3-03 (tables `race`, `god`, `age`; `[chronology]` and its checks, 9.1), P3-04 (binding: schema 7 tables and codes of 9; the catalogue, `render_event` and `HistoryView` of 8, used and not redefined; the world report's `[history]` and its checks, 11.1; the queries of 10). Read on `origin/p3/04-spec` at 4a00615 (the newest text of every spec; the code there is P3-03's). Proposals read: up to "History: active phases scale with the history span; the detail level sets the simulated share".
+Status: **approved by the lead 2026-11-19** (the six questions of section 19 go to Paul; the interim choices stand). Written by the spec writer 2026-11-19; the amendments of 18.1–18.5 applied the same day on `p3/07-spec`. Phase P3 History core, spec 7 (P3-00 3.1): the text history report, `worldgen-cli report --db PATH --history`. It reads a world file only and changes no world byte, so it needs **no generator version bump and no schema change**. Design doc sections 5 (history: the log is the primary product), 6 (the database stores facts and names; text is rendered from records and templates), 13 (P3 delivers "a text history report"; milestone 1: "the event log reads as coherent history") and 14 (the enrichment pass narrates from the log: this report is its deterministic, template-only counterpart and is not a chronicle in the sense of 14; it is a tool for the world critic, the validation sweeps and Paul). Depends on P0-02 (reader, errors as values), P0-04 (`report`: options, `--out`, `--force`, exit codes, text conventions, the "Later" note), P3-00 (binding: 11, 6.2–6.4, 12.2, 12.3, 13), P3-03 (tables `race`, `god`, `age`; `[chronology]` and its checks, 9.1), P3-04 (binding: schema 7 tables and codes of 9; the catalogue, `render_event` and `HistoryView` of 8, used and not redefined; the world report's `[history]` and its checks, 11.1; the queries of 10). Read on `origin/p3/04-spec` at 4a00615 (the newest text of every spec; the code there is P3-03's). Proposals read: up to "History: active phases scale with the history span; the detail level sets the simulated share".
 
 The sample report (section 16) and the illustrative excerpt (17) were produced by the spec writer's exact-integer prototype `~/.cache/the-unmapped/out/p3-07-spec/history_report.py`, run on worlds built by `build_world.py` (the P3-04 prototype's stub world for seed 42, 1024, written as SQLite tables) and `illus.py` (a hand-made world). The prototype is scratch; the test writer's reference is written from this spec.
 
@@ -500,7 +500,7 @@ For the independent test writer. The reference `worldgen/tests/reference/p3_repo
 
 ### 14.3 Hand-made fixture worlds
 
-Small worlds written through the writer API (a synthetic stage through `generate_world_with_stages`, as P3-04 16.2 item 17, writing every schema 7 table directly), described in fixture files under `worldgen/tests/data/history-report/` that both the C++ test and the Python reference read (TOML is suggested: the references already parse it). The reference builds its own SQLite copy of each fixture from the same file; the report text, not the file bytes, must agree. Coverage required (the test writer chooses the rows):
+Small worlds described in fixture files under `worldgen/tests/data/history-report/` that both sides read (TOML is suggested: the references already parse it). **Two independent builds of each fixture**: the C++ test writes it through the writer API (a synthetic stage through `generate_world_with_stages`, as P3-04 16.2 item 17, writing every schema 7 table and the `meta` keys the fixture lists), and the Python reference writes its own copy through SQL (`sqlite3`, the schema 7 DDL of `docs/specs/schema.md`, rows inserted from the same file). **The two copies must have the same table hashes, not the same file bytes**: Python's SQLite is not the vendored version and does not use the writer's page settings and `VACUUM INTO`, so the bytes may differ legitimately. The golden file records, per fixture, the logical hash of every table (P0-04 8, the `table <name> <hex>` lines of `hash --detail`, computed by the reference over its copy) as `<fixture> table <name> <hex>`; the C++ test first compares `hash --detail`'s table lines of its world with them (a difference is a fixture-building defect, reported before any report text is compared), and only then compares the report hashes. The `schema` and `file` lines are not compared. Coverage required (the test writer chooses the rows):
 
 - **H1 war and ruin**: at least two races and three civilizations, one of them ended (with `ended_year`, `ending_event` and its sentence); one settlement ruined by a sacking (`ruined_year`, `ruin_event`) and one faded; one standing settlement with `owner_civ` 0; a flare-up phase with its `flare_up` event and trigger; a closed `war` relation and an open relation of another kind, with two relations of one pair starting in different years (ordering of 6.6); a region taken from one civilization by another (a closed and an open `region_control` row of one region); census rows with population changes at phase ends, and a tie of peak population between two census years; events with two or more causes; a role of `:all` form with two participants; a negative value; an event with no region and no participants (`{}` after the sentence or only values); hand-made event kinds absent from the compiled catalogue, with templates; all five settlement kinds; a region name with a backslash and a non-ASCII byte, and a template literal with a backslash (escaping); a relation with a reserved entity type 6.
 - **H2 minimal**: one race, one civilization with no settlement (`capital: none`, `peak population: 0`, `largest settlement: none`), a span of 2000, an opening and a final phase only (no quiet phase), no relation.
@@ -887,11 +887,13 @@ largest settlement: Voeledell (s1), population 1450
 
 ## 18. Amendments requested
 
+Status: 18.1–18.5 **applied 2026-11-19** on `p3/07-spec` (P3-04 revision r1, P0-02 amendment 20, P0-04 amendment 21, P3-00 correction note for P3-07, P3-01 revision r5). 18.6 is a note for the build engineer, 18.8 for the lead; 18.7 became section 20.
+
 ### 18.1 P3-04 (8.5, `HistoryView`; urgent: the engine is being implemented now)
 
 1. `HistoryView::load` returns `db::Result<HistoryView>`: a corrupt world is an error value, code `corrupt_layer`, message `corrupt table '<table>': <detail>` (the engineer's wording, recorded in P3-04 16), never a `FatalError` (P0-02 9: the read API returns errors as values; a bad file is an input error, exit 3). `render_event` keeps its `FatalError` for an id outside the log (a caller's bug).
 2. Read accessors used by P3-07 and P4 (names are the engineer's): the number of events; per event its row (`year`, `end_year`, `kind`, `phase`, `region`, `settlement`, `salience`), participants (`seq`, role seq, entity type, id) in `seq` order, values in `seq` order, causes ascending; the stored catalogue (kind key, role keys, value keys); the display name of an entity by type and id (8.3), absent for types 6–9.
-3. `HistoryView` and `render_event` accept every kind present in the world's catalogue tables, including kinds the running build does not compile (a world of a later generator of the same schema, or a test fixture): the world is self-describing (A1); the compiled catalogue is used only by the writer.
+3. `HistoryView::load` validates every stored template and every reference of the log, so that `render_event` on a loaded view fails only for an id outside the log. `HistoryView` and `render_event` accept every kind present in the world's catalogue tables, including kinds the running build does not compile (a world of a later generator of the same schema, or a test fixture): the world is self-describing (A1); the compiled catalogue is used only by the writer.
 4. 11.1: one sentence: "Every key of `[history]` is also a key of the history report's `[stats]`, with the same definition (P3-07 9)." No behaviour changes.
 
 ### 18.2 P0-02 (errors)
@@ -916,11 +918,9 @@ Section 5, table row `report`: "P3-04 (the event salience and templates); P3-07 
 
 For every case whose world has history (every case except `empty-*` and `pattern-*`), also save `<preset>-<case>.history.txt` = `report --db <file> --history --level full`, and make `compare` compare these files too (same failure rule and `diff -u` output). CLAUDE.md's description of the script follows (lead).
 
-### 18.7 P3-05 and P3-06 (to be written)
+### 18.7 P3-05 and P3-06
 
-1. P3-06 names its war relation `war` (the `wars` statistics of P3-07 9 count that kind), and states for each relation kind whether it is symmetric (P3-04 6.1); the report prints relations in stored order either way.
-2. Both specs append their sweep statistics to P3-07 9 by amendment (10.3 rule 1), each with a definition computable from the tables; statistics that need values not stored in the world (capacities) are reported by their own tests, not by the report.
-3. Every event that ends a civilization or ruins a settlement is its `ending_event` or `ruin_event`, and has salience high enough to appear among the civilization's milestones (P3-07 7.3) and in the summary (≥ 20; the illustrative excerpt uses 85–90).
+Moved to section 20 (requirements on those specs, which are being written now).
 
 ### 18.8 CLAUDE.md and README (lead)
 
@@ -936,6 +936,15 @@ Each with the recommendation and the interim choice this spec follows.
 4. **A world without history is refused** (exit 3) rather than given a partial report. Recommendation and interim: refuse.
 5. **Islet threshold in the report.** The runaway statistics need the islet rule, which the world does not store; the report uses the decided value 1172 as a constant. Recommendation and interim: keep it; if the tuning value is ever changed, store an islet flag in the world with that change (a schema change).
 6. **Stdout by default**, as `report` (P0-04 question 2, approved). Recommendation and interim: yes.
+
+## 20. Requirements on P3-05 and P3-06
+
+Binding on those specs, which are being written in parallel with this one:
+
+1. P3-06 names its war relation kind `war` (the `wars` and `wars_open` statistics of section 9 count that kind), and states for each relation kind whether it is symmetric (P3-04 6.1); the report prints relations in stored order either way.
+2. Each spec appends its sweep statistics to section 9 by amendment (10.3 rule 1), each with a definition computable from the world's tables; a statistic that needs values not stored in the world (capacities, tension) is checked by that spec's own tests, not by the report.
+3. Every event that ends a civilization or ruins a settlement is that row's `ending_event` or `ruin_event`, and its salience is at least 20 and high enough to rank among the civilization's milestones (7.3); the illustrative excerpt of 17 uses 85–90.
+4. No new event kind may be needed by the report: a kind is printed from its stored template, roles and values (A1). A spec that wants a new block or line in the report asks for a `v2` (10.3).
 
 ## Appendix A. Proposals
 
