@@ -70,7 +70,8 @@ struct AwakeningBounds {
 // first present race awakens at year 0, each later one at
 // clamp(base + d, lo, hi) with d = pick(draw(K_aw, 0, id, 0, 0), 2 jmax + 1)
 // - jmax, K_aw = stream_key(seed, "hist.chronology.awakening"). FatalError if
-// the two spans differ in length, are empty, or span < 1.
+// the two spans differ in length, are empty, span < 1, or the least gap G of
+// C2 is below 1 ("awakening_years: the least gap is below 1 year").
 [[nodiscard]] std::vector<std::int64_t> awakening_years(std::uint64_t seed, std::int64_t span,
                                                         std::span<const std::int64_t> present_ids,
                                                         std::span<const Fx> present_shares,

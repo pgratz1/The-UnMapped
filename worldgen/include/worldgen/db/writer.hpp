@@ -273,7 +273,8 @@ public:
     // FatalError if the stage is closed, a key is not above every key
     // written before to that table, an id (race_biome.race) is below 1,
     // race.present is not 0 or 1, race.awakening_year is not set exactly
-    // when present is 1, a camp is not 0, 1 or 2, or SQLite rejects the row
+    // when present is 1, a camp is not 0, 1 or 2, age.end_year is below
+    // age.start_year, or SQLite rejects the row
     // (for example a duplicate key text).
     void write_race(const RaceRow& row);
     void write_race_biome(const RaceBiomeRow& row);

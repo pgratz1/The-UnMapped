@@ -214,6 +214,11 @@ std::vector<std::int64_t> awakening_years(std::uint64_t seed, std::int64_t span,
     if (b.jmax < 0) {
         fail("awakening_years: negative jitter");
     }
+    // The schedule is strict only while G >= 1 (C3); with loaded data G >= 333
+    // (span >= 2000, at most 6 races, gap >= 1).
+    if (b.gap < 1) {
+        fail("awakening_years: the least gap is below 1 year");
+    }
     const std::uint64_t k_aw = stream_key(seed, streams::hist_chronology_awakening);
     const auto choices = static_cast<std::uint64_t>(2 * b.jmax + 1);
     std::vector<std::int64_t> years;

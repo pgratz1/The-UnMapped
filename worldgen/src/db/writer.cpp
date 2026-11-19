@@ -744,6 +744,9 @@ void StageWriter::write_age(const AgeRow& row) {
         fatal("StageWriter::write_age: stage is not open");
     }
     require_next_id("write_age", "age", row.id, state_->last_age_id);
+    if (row.end_year < row.start_year) {
+        fatal("StageWriter::write_age: end_year must not be below start_year");
+    }
     const std::int64_t ints[4] = {row.id, row.race, row.start_year, row.end_year};
     insert_row(state_->db.get(),
                "INSERT INTO age (id, race, start_year, end_year, name) VALUES (?1, ?2, ?3, ?4, ?5)", 1, ints,
