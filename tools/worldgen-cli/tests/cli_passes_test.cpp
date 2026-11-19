@@ -19,6 +19,7 @@
 #include <vector>
 
 #include "cli_test_support.hpp"
+#include "p3_01_history_data.hpp"
 #include "p0_04_reference.hpp"
 #include "p1_01_elevation_api.hpp"
 #include "p1_01_elevation_support.hpp"
@@ -44,6 +45,7 @@ fs::path write_data_root(const Sandbox& sb) {
     write_text(root / "worldgen" / "regions.toml", std::string(elev_api::REGIONS_TOML));      // P1-06 4
     fs::create_directories(root / "biomes");
     write_text(root / "biomes" / "biomes.toml", std::string(elev_api::BIOME_DEFINITIONS_TOML));  // P1-04 4.1
+    history_data::write_to(root);  // races/, cultures/, history/ (P3-01) when registered
     return root;
 }
 

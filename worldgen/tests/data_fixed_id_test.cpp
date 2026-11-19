@@ -453,11 +453,16 @@ TEST_CASE("fixed-id kinds: the production registry holds worldgen with the imple
     // `biomes` (P1-04 4.2) and `resources` (P1-05 4.2), kept in ascending id
     // order. Since P1-04 the
     // registry also holds the open kind `biome` (P1-00 6.6), which sorts
-    // first.
+    // first; since P3-01 (3 to 5) the kinds `culture`, `history` (fixed ids)
+    // and `race`, which sort between biome and worldgen.
     const wd::KindRegistry builtin = wd::builtin_kinds();
-    REQUIRE(builtin.kinds().size() == 2U);
+    REQUIRE(builtin.kinds().size() == 5U);
     CHECK(builtin.kinds()[0].name == "biome");
-    const wd::Kind& k = builtin.kinds()[1];
+    CHECK(builtin.kinds()[1].name == "culture");
+    CHECK(builtin.kinds()[2].name == "history");
+    CHECK(builtin.kinds()[2].has_fixed_ids());
+    CHECK(builtin.kinds()[3].name == "race");
+    const wd::Kind& k = builtin.kinds()[4];
     CHECK(k.name == "worldgen");
     CHECK(k.directory == "worldgen");
     CHECK(k.required);

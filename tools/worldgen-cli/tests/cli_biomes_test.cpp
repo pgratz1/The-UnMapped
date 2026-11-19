@@ -662,6 +662,7 @@ TEST_CASE("cli P1-00 10.1: --until biomes is accepted; an unknown stage is a usa
     write_text(bare / "worldgen" / "biomes.toml", biome_data::TUNING_TOML);
     write_text(bare / "worldgen" / "resources.toml", biome_data::RESOURCES_TOML);
     write_text(bare / "worldgen" / "regions.toml", biome_data::REGIONS_TOML);
+    history_data::write_to(bare);  // races/, cultures/, history/ (P3-01) when registered
     const ProcessResult m = sb.cli({"generate", "--seed", "1", "--map-size", "512", "--data", u8(bare), "--until",
                                     "none", "--out", u8(sb.file("m.db"))});
     CHECK(m.exit_code == EXIT_INPUT);
