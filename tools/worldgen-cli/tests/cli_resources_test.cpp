@@ -26,6 +26,7 @@
 #include <string_view>
 #include <vector>
 
+#include "p3_01_history_fixture.hpp"
 #include "cli_test_support.hpp"
 #include "p1_01_elevation_api.hpp"
 #include "p1_01_elevation_support.hpp"
@@ -371,6 +372,7 @@ TEST_CASE("cli P1-00 10.1: --until resources is accepted; an unknown stage is a 
     for (const auto& f : biome_data::shipped_files()) {
         write_text(bare / "biomes" / std::string(f.name), f.text);
     }
+    history_fixture::copy_to(bare);  // P3-01: so that only worldgen/resources.toml is missing
     const ProcessResult m = sb.cli({"generate", "--seed", "1", "--map-size", "512", "--data", u8(bare), "--until",
                                     "none", "--out", u8(sb.file("m.db"))});
     CHECK(m.exit_code == EXIT_INPUT);
