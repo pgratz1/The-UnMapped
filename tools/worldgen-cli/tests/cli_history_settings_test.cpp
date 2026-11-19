@@ -178,13 +178,22 @@ TEST_CASE("cli P3-01 6.2: --races errors: empty list, empty item, not an id, rep
 
 TEST_CASE("cli P3-01 6.2: --races with an id that has no race definition (checked after the data is loaded)") {
     Sandbox sb;
-    // "<ids of the loaded races in race order, comma separated>": written
-    // here without spaces, as the flag's own list syntax and param.races
-    // (6.3) write them; the spec does not say (ambiguity reported).
-    const std::string ids = "elf,goblin,dwarf,faerie,human,orc";
-    usage(sb, {"--races", "dragon"}, "unknown race 'dragon' in --races; expected all or ids from: " + ids);
-    usage(sb, {"--races", "elf,dragon"}, "unknown race 'dragon' in --races; expected all or ids from: " + ids);
-    usage(sb, {"--races", "elves"}, "unknown race 'elves' in --races; expected all or ids from: " + ids);
+    // "<ids of the loaded races in race order, comma separated>": the spec
+    // does not say whether a space follows each comma (ambiguity reported);
+    // both are accepted, the race order is required.
+    for (const char* id : {"dragon", "elves"}) {
+        for (const std::string& given : {std::string(id), "elf," + std::string(id)}) {
+            CAPTURE(given);
+            const fs::path out = sb.file("refused.db");
+            const ProcessResult r = sb.cli({"generate", "--seed", "0", "--until", "none", "--races", given, "--out", u8(out)});
+            CHECK(r.exit_code == EXIT_USAGE);
+            CHECK(r.out.empty());
+            CHECK_FALSE(file_exists(out));
+            const std::string head = "worldgen-cli: error: unknown race '" + std::string(id) + "' in --races; expected all or ids from: ";
+            CHECK((r.err == head + "elf,goblin,dwarf,faerie,human,orc\n" + std::string(GENERATE_HINT) ||
+                   r.err == head + "elf, goblin, dwarf, faerie, human, orc\n" + std::string(GENERATE_HINT)));
+        }
+    }
 }
 
 TEST_CASE("cli P3-01 6.2: --divine-script is always refused") {

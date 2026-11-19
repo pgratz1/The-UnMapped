@@ -358,15 +358,20 @@ TEST_CASE("P3-01 3 race_biomes_unique: the later index, naming the first") {
                                                  last + "  { biome = \"temperate_forest\", weight = 1 },\n"))),
                   "races/elf.toml", "race_biomes_unique", "race.elf",
                   "biomes[7]: biome 'temperate_forest' is already listed at biomes[0]");
-    // A biome listed three times: one error per later index, each naming the first.
+    // A biome listed three times. A per-definition check gives one message
+    // (P0-03 7.5), and P3-01 3 does not say whether a third occurrence is
+    // reported too (ambiguity reported): the first repeat must be, naming
+    // the first index; a second error, if any, names the first index too.
     const Load l = load(shipped_edited("races/elf.toml", last,
                                        last + "  { biome = \"heath\", weight = 1 },\n  { biome = \"heath\", weight = 2 },\n"));
     INFO(dump(l));
-    REQUIRE(l.errors.size() == 2U);
+    REQUIRE((l.errors.size() == 1U || l.errors.size() == 2U));
     at_definition(l.errors[0], "races/elf.toml", "race_biomes_unique", "race.elf",
                   "biomes[7]: biome 'heath' is already listed at biomes[3]");
-    at_definition(l.errors[1], "races/elf.toml", "race_biomes_unique", "race.elf",
-                  "biomes[8]: biome 'heath' is already listed at biomes[3]");
+    if (l.errors.size() == 2U) {
+        at_definition(l.errors[1], "races/elf.toml", "race_biomes_unique", "race.elf",
+                      "biomes[8]: biome 'heath' is already listed at biomes[3]");
+    }
 }
 
 TEST_CASE("P3-01 3 race_settlement_kinds_unique") {
