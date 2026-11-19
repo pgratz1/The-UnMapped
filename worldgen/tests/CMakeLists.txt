@@ -251,6 +251,11 @@ target_sources(worldgen-tests PRIVATE
 target_compile_definitions(worldgen-tests PRIVATE
     UNMAPPED_P3_01_GOLDEN_PATH="${CMAKE_CURRENT_SOURCE_DIR}/golden/p3-01-data.txt"
 )
+# The name generator (spec P3-02): the engineer's smoke test of 4.6; the
+# spec's tests are the test writer's.
+target_sources(worldgen-tests PRIVATE
+    history_names_engineer_smoke_test.cpp
+)
 # CTest entries (cmake/UnmappedTestShards.cmake): one per group of source
 # files, run in parallel by `ctest -j`, plus worldgen-tests-other for every
 # file not named here and worldgen-tests-partition, which checks that the

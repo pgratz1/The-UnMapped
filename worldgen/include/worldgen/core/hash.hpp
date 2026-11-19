@@ -53,6 +53,8 @@ inline constexpr std::uint64_t TAG_SUB = 0x534255533A4D4E55ULL;     // "UNM:SUBS
 inline constexpr std::uint64_t TAG_CELL2 = 0x324C45433A4D4E55ULL;   // "UNM:CEL2"
 inline constexpr std::uint64_t TAG_CELL3 = 0x334C45433A4D4E55ULL;   // "UNM:CEL3"
 inline constexpr std::uint64_t TAG_PHRASE = 0x535248503A4D4E55ULL;  // "UNM:PHRS"
+// Keyed draws of the history stages (P3-00 4.6, P3-02 4.1).
+inline constexpr std::uint64_t TAG_HIST = 0x545349483A4D4E55ULL;    // "UNM:HIST"
 
 // --- Derivations (P0-01 7.3) ------------------------------------------------
 
