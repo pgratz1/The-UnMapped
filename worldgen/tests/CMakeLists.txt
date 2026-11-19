@@ -308,6 +308,7 @@ target_sources(worldgen-tests PRIVATE
     history/history_engine_report_test.cpp
     history/history_engine_golden_test.cpp
     history/history_engine_property_test.cpp
+    history/engine_hardening_test.cpp
 )
 target_compile_definitions(worldgen-tests PRIVATE
     UNMAPPED_P3_04_GOLDEN_PATH="${CMAKE_CURRENT_SOURCE_DIR}/golden/p3-04-engine.txt"

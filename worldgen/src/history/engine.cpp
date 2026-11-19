@@ -119,6 +119,15 @@ EngineTuning check_engine_inputs(const data::ContentSet& content, const HistoryI
             fail("history: chronology: no god row for present race " + int_text(r->id));
         }
     }
+    // Audit A4: the region layer the state checks settlement cells against.
+    const db::LayerGrid& layer = in.region_layer;
+    if (in.map_size < 1 || in.map_size > static_cast<std::int64_t>(db::MAX_LAYER_SIDE) ||
+        static_cast<std::int64_t>(layer.width) != in.map_size ||
+        static_cast<std::int64_t>(layer.height) != in.map_size || layer.get_if<std::uint16_t>() == nullptr ||
+        !db::is_valid_layer_grid(layer)) {
+        fail("history: engine: layer 'region' is not " + int_text(in.map_size) + " x " + int_text(in.map_size) +
+             " u16");
+    }
     return tuning;
 }
 
@@ -182,11 +191,17 @@ public:
             if (s == nullptr) {
                 fail("history: engine: a subsystem is null");
             }
+            std::array<bool, 16> listed{};  // the steps this subsystem listed so far (N1)
             for (const Step step : s->steps()) {
                 if (is_engine_step(step) || static_cast<int>(step) < 1 || static_cast<int>(step) > 13) {
                     fail("history: engine: a subsystem lists step " + int_text(static_cast<std::int64_t>(step)) +
                          ", which is not a subsystem step");
                 }
+                if (listed[static_cast<std::size_t>(step)]) {
+                    fail("history: engine: a subsystem lists step " + int_text(static_cast<std::int64_t>(step)) +
+                         " twice");
+                }
+                listed[static_cast<std::size_t>(step)] = true;
                 by_step_[static_cast<std::size_t>(step)].push_back(s);
             }
         }
@@ -914,15 +929,12 @@ std::int64_t State::found_settlement(std::int64_t x, std::int64_t y, std::int64_
     if (!engine_.geo().has_region(region)) {
         fail("history: state: found_settlement: region " + int_text(region) + " does not exist");
     }
-    const db::LayerGrid& layer = engine_.inputs().region_layer;
-    if (static_cast<std::int64_t>(layer.width) == n && static_cast<std::int64_t>(layer.height) == n) {
-        if (const std::vector<std::uint16_t>* cells = layer.get_if<std::uint16_t>()) {
-            const std::uint16_t at = (*cells)[static_cast<std::size_t>(y * n + x)];
-            if (static_cast<std::int64_t>(at) != region) {
-                fail("history: state: found_settlement: cell (" + int_text(x) + ", " + int_text(y) +
-                     ") lies in region " + int_text(at) + ", not " + int_text(region));
-            }
-        }
+    // The region layer is N x N u16: a precondition of run_engine (audit A4).
+    const std::vector<std::uint16_t>& cells = *engine_.inputs().region_layer.get_if<std::uint16_t>();
+    const std::uint16_t at = cells[static_cast<std::size_t>(y * n + x)];
+    if (static_cast<std::int64_t>(at) != region) {
+        fail("history: state: found_settlement: cell (" + int_text(x) + ", " + int_text(y) + ") lies in region " +
+             int_text(at) + ", not " + int_text(region));
     }
     require_live_civ(founder_civ, what);
     if (population < 0 || population > MAX_POPULATION) {

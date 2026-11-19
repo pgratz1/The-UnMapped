@@ -323,13 +323,16 @@ struct HistoryResult {
 // The entry checks the engine depends on (P3-04 3.4 items 2, 4 and 5), in
 // that order, with their messages: the tuning of history.engine, the
 // settings (span, param.races against the present race rows) and the
-// chronology rows. Returns the checked tuning.
+// chronology rows; then (audit A4) "history: engine: layer 'region' is not
+// <N> x <N> u16" unless the region layer is a valid N x N u16 grid, N =
+// map_size. Returns the checked tuning.
 EngineTuning check_engine_inputs(const data::ContentSet& content, const HistoryInputs& inputs);
 
 // Runs the schedule (section 5) and the engine (section 6) with the given
 // configuration. FatalError on a null awakening handler, intervention
 // source or catalogue, on a subsystem that lists an engine step (T5, T7,
-// Q2, Q5, Q6), and on every check of 3.4 items 2, 4, 5, 5.4 to 5.6 and 6.
+// Q2, Q5, Q6) or one step twice ("history: engine: a subsystem lists step
+// <n> twice"), and on every check of 3.4 items 2, 4, 5, 5.4 to 5.6 and 6.
 [[nodiscard]] HistoryResult run_engine(const data::ContentSet& content, const HistoryInputs& inputs,
                                        const EngineConfig& config);
 

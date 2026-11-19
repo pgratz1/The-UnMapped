@@ -130,6 +130,17 @@ HistoryStatsResult history_stats(const HistoryTables& tables, std::int64_t end_y
             result.problem = corrupt(db::PHASE_TABLE, at + "kind " + db::format_i64(kind));
             return result;
         }
+        // Audit A3: bound the stored year before any arithmetic on it (start
+        // is bounded already: it equals expected_start, at most end_year).
+        // On the last row this is the check of 11.1 made early.
+        if (end > end_year - 1) {
+            result.problem = &row == &phases.back()
+                                 ? corrupt(db::PHASE_TABLE, "the last phase ends in " + db::format_i64(end) +
+                                                                ", expected " + db::format_i64(end_year - 1))
+                                 : corrupt(db::PHASE_TABLE, at + "end_year " + db::format_i64(end) + " above " +
+                                                                db::format_i64(end_year - 1));
+            return result;
+        }
         ++counts[kind];
         if (kind != 2) {
             st.simulated_years += end - start + 1;
