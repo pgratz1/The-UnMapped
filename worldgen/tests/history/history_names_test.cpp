@@ -8,8 +8,8 @@
 // worldgen/tests/reference/p3_names_reference.py (an independent reference
 // written from the spec). Where 4.6's tuples fall in it: its seed-0 elven
 // settlement 1 is the list line "0 elven settlement 1 0 Iensath" (by then
-// the seed-0 registry holds the 200 dwarven and elven god and civilization
-// names before it, none of them Iensath); its empty-registry, collision and
+// the seed-0 registry holds the 250 names before it: dwarven 150, elven god
+// and civilization 100, none of them Iensath); its empty-registry, collision and
 // fallback cases are the scenarios "empty", "collide" and "full"; its
 // seed-42 vectors are the scenario "seed42". The library is reached only
 // through p3_02_names_api.hpp.
@@ -126,7 +126,11 @@ TEST_CASE("P3-02 4.6: the golden attempt and step lines (4.6 and the seed-42 tup
         const Kind k = kind_of(t[3]);
         const names_api::Attempt a = names_api::attempt(n, k, dec_u(t[1]), dec_u(t[4]), dec_u(t[5]), dec_u(t[6]));
         CHECK(a.valid == (t[7] == "1"));
-        if (a.valid) CHECK(a.name == t[9]);
+        // An invalid attempt's name and root are unspecified (4.2): compared only when valid.
+        if (a.valid) {
+            CHECK(a.name == t[9]);
+            CHECK(a.root == t[8]);
+        }
     }
     for (const std::string& line : steps) {
         CAPTURE(line);
@@ -365,8 +369,15 @@ TEST_CASE("P3-02 4.3: roman(k) is P1-06 RG11's numeral") {
     for (const std::string& line : lines) {
         const auto t = split(line, 3);
         CAPTURE(line);
-        CHECK(names_api::roman(dec_u(t[1])) == t[2]);
+        if (t[2] == "FATAL") {
+            CHECK_THROWS_WITH_AS((void)names_api::roman(dec_u(t[1])), "roman: k outside [1, 100000]", worldgen::FatalError);
+        } else {
+            CHECK(names_api::roman(dec_u(t[1])) == t[2]);
+        }
     }
+    CHECK(names_api::roman(100000) == std::string(100, 'M'));
+    CHECK_THROWS_AS((void)names_api::roman(0), worldgen::FatalError);
+    CHECK_THROWS_AS((void)names_api::roman(100001), worldgen::FatalError);
     for (std::uint64_t k = 1; k <= 4000; ++k) {
         REQUIRE(names_api::roman(k) == names_test::roman_ref(k));
     }
@@ -383,6 +394,7 @@ TEST_CASE("P3-02 4.3, 4.4: the registry scenarios of the golden file (retries, n
     int fallbacks = 0;
     int retries = 0;
     Registry reg;
+    Registry reg2;  // the same scenario through choose_name
     std::set<std::string> mirror;
     std::string label;
     std::uint64_t seed = 0;
@@ -393,12 +405,14 @@ TEST_CASE("P3-02 4.3, 4.4: the registry scenarios of the golden file (retries, n
             label = t[1];
             seed = dec_u(t[2]);
             reg = Registry();
+            reg2 = Registry();
             mirror.clear();
             ++scenarios;
         } else if (head[0] == "preload") {
             const auto t = split(line, 3);
             REQUIRE(t[1] == label);
             reg.add(t[2]);
+            reg2.add(t[2]);
             mirror.insert(t[2]);
         } else if (head[0] == "result") {
             const auto t = split(line, 8);
@@ -412,6 +426,20 @@ TEST_CASE("P3-02 4.3, 4.4: the registry scenarios of the golden file (retries, n
             CHECK_FALSE(reg.contains(t[7]));
             CHECK(names_api::make_name(n, t[2], k, seed, c, e, reg) == t[7]);
             CHECK(reg.contains(t[7]));
+            // choose_name: same name, the attempt token, and for a fallback the first valid attempt.
+            const names_api::Choice ch = names_api::choose_name(n, t[2], k, seed, c, e, reg2);
+            CHECK(ch.name == t[7]);
+            CHECK(reg2.contains(t[7]));
+            CHECK(ch.fallback == (t[6] == "F"));
+            if (t[6] != "F") {
+                CHECK(ch.attempt == dec_u(t[6]));
+            } else {
+                std::uint64_t first = 64;
+                for (std::uint64_t a = 0; a < 64 && first == 64; ++a) {
+                    if (names_api::attempt(n, k, seed, c, e, a).valid) first = a;
+                }
+                CHECK(ch.attempt == first);
+            }
             mirror.insert(t[7]);
             ++results;
             fallbacks += t[6] == "F" ? 1 : 0;
@@ -436,7 +464,6 @@ TEST_CASE("P3-02 9.3 test 10: seeds 0 and 42, every shipped culture and kind, en
         std::string joined;
         for (const std::string_view cid : names_test::CULTURE_IDS) {
             const Naming n = shipped_naming(cid);
-            const names_api::Namer namer(n);
             for (const Kind k : names_test::KINDS) {
                 for (std::uint64_t e = 1; e <= 50; ++e) {
                     REQUIRE(next < expected.size());
@@ -447,8 +474,12 @@ TEST_CASE("P3-02 9.3 test 10: seeds 0 and 42, every shipped culture and kind, en
                     REQUIRE(t[1] == cid);
                     REQUIRE(kind_of(t[2]) == k);
                     REQUIRE(dec_u(t[3]) == e);
-                    const std::string got = namer.make(cid, k, seed, culture_number(cid), e, reg);
+                    // choose_name gives the name and the attempt token of 9.3 directly.
+                    const names_api::Choice ch = names_api::choose_name(n, cid, k, seed, culture_number(cid), e, reg);
+                    const std::string& got = ch.name;
                     CHECK(got == t[5]);
+                    CHECK(ch.fallback == (t[4] == "F"));
+                    if (t[4] != "F") CHECK(ch.attempt == dec_u(t[4]));
                     // The attempt token: checked against a second registry that
                     // holds exactly the names before this one.
                     check_attempt_rule(n, k, seed, culture_number(cid), e, before, t[4], t[5]);
@@ -526,6 +557,98 @@ TEST_CASE("P3-02 5.1: the sample table (seed 0, one registry per culture: settle
         for (std::uint64_t e = 1; e <= 5; ++e) CHECK(names_api::make_name(n, s.culture, Kind::civilization, 0, c, e, reg) == s.names[i++]);
         for (std::uint64_t e = 1; e <= 3; ++e) CHECK(names_api::make_name(n, s.culture, Kind::god, 0, c, e, reg) == s.names[i++]);
     }
+}
+
+// --- Revised spec (2026-11-19): registry, seams, malformed data ----------------------------------------
+
+TEST_CASE("P3-02 4.3 (revised): adding a name the registry already holds changes nothing") {
+    Registry r;
+    CHECK(r.size() == 0);
+    r.add("Iensath");
+    r.add("Iensath");
+    CHECK(r.size() == 1);
+    CHECK(r.contains("Iensath"));
+    r.add("iensath");
+    CHECK(r.size() == 2);
+    // make_name adds exactly one name; a fallback adds the numbered name only.
+    const Naming tiny = shipped_naming("tiny");
+    r.add("Ba");
+    r.add("Da");
+    const std::size_t before = r.size();
+    const std::string n = names_api::make_name(tiny, "tiny", Kind::god, 0, 1, 1, r);
+    CHECK(r.size() == before + 1);
+    CHECK(r.contains(n));
+    CHECK(n.size() == 5);  // "Ba II" or "Da II"
+}
+
+TEST_CASE("P3-02 9 (revised): the kind seams, the constants and capitalize_root") {
+    CHECK(names_api::kind_text(Kind::god) == "god");
+    CHECK(names_api::kind_text(Kind::civilization) == "civilization");
+    CHECK(names_api::kind_text(Kind::settlement) == "settlement");
+    for (const Kind k : names_test::KINDS) CHECK(names_api::kind_stream(k) == names_test::stream_of(k));
+    const Naming elven = shipped_naming("elven");
+    for (const Kind k : names_test::KINDS) CHECK(names_api::kind_forms(elven, k) == names_test::forms_of(elven, k));
+    CHECK(names_api::attempt_max_bytes() == 48);
+    CHECK(names_api::name_max_bytes() == 64);
+    CHECK(names_api::name_attempts() == 64);
+    for (const std::string& line : golden_lines("cap")) {
+        const auto t = split(line, 3);
+        CHECK(names_api::capitalize_root(t[1]) == t[2]);
+    }
+    // NameAttempt::root is the root before Cap (4.6: iensath).
+    CHECK(names_api::attempt(elven, Kind::settlement, 0, 2, 1, 0).root == "iensath");
+}
+
+TEST_CASE("P3-02 9 (revised): make_name equals choose_name(...).name, registry for registry") {
+    for (const std::string_view cid : {std::string_view("human"), std::string_view("tiny")}) {
+        const Naming n = shipped_naming(cid);
+        Registry a;
+        Registry b;
+        for (std::uint64_t e = 1; e <= 60; ++e) {
+            for (const Kind k : names_test::KINDS) {
+                const std::string m = names_api::make_name(n, cid, k, 9, culture_number(cid), e, a);
+                const names_api::Choice c = names_api::choose_name(n, cid, k, 9, culture_number(cid), e, b);
+                CHECK(m == c.name);
+            }
+        }
+        CHECK(a.size() == b.size());
+    }
+}
+
+TEST_CASE("P3-02 4.2 (revised): malformed naming data is fatal in the library, with its message") {
+    Naming n = shipped_naming("tiny");
+    n.god_forms = {"Lord"};
+    CHECK_THROWS_WITH_AS((void)names_api::attempt(n, Kind::god, 0, 1, 1, 0), "names: a name form must hold exactly one {root}",
+                         worldgen::FatalError);
+    n.god_forms = {"{root} {root}"};
+    CHECK_THROWS_WITH_AS((void)names_api::attempt(n, Kind::god, 0, 1, 1, 0), "names: a name form must hold exactly one {root}",
+                         worldgen::FatalError);
+    n = shipped_naming("tiny");
+    n.patterns = {"OX"};
+    CHECK_THROWS_WITH_AS((void)names_api::attempt(n, Kind::god, 0, 1, 1, 0),
+                         "names: a name pattern holds a symbol other than O, N, C, ' and -", worldgen::FatalError);
+    n = shipped_naming("tiny");
+    n.onsets.clear();
+    CHECK_THROWS_WITH_AS((void)names_api::attempt(n, Kind::god, 0, 1, 1, 0), "names: a naming list is empty",
+                         worldgen::FatalError);
+    n = shipped_naming("tiny");
+    n.settlement_forms.clear();
+    CHECK_THROWS_WITH_AS((void)names_api::attempt(n, Kind::settlement, 0, 1, 1, 0), "names: a naming list is empty",
+                         worldgen::FatalError);
+    n = shipped_naming("tiny");
+    n.patterns.clear();
+    CHECK_THROWS_WITH_AS((void)names_api::attempt(n, Kind::god, 0, 1, 1, 0), "names: a naming list is empty",
+                         worldgen::FatalError);
+    // make_name passes it on.
+    Registry r;
+    CHECK_THROWS_WITH_AS((void)names_api::make_name(n, "tiny", Kind::god, 0, 1, 1, r), "names: a naming list is empty",
+                         worldgen::FatalError);
+    // A list is checked only when picked from: no C in the pattern, an empty codas list is fine.
+    n = shipped_naming("tiny");
+    n.codas.clear();
+    const names_api::Attempt a = names_api::attempt(n, Kind::god, 0, 1, 1, 0);
+    CHECK(a.valid);
+    CHECK((a.name == "Ba" || a.name == "Da"));
 }
 
 }  // TEST_SUITE

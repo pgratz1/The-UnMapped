@@ -5,7 +5,11 @@
 // The tests were written from docs/specs/p3-02-names.md before the
 // implementation existed (test-writer rule), against the test-owned
 // functions and the plain struct `Naming` below. Only this file names
-// library symbols, using the interim seams of spec section 9:
+// library symbols. Written first against the interim seams of spec section
+// 9, then updated to the seams as recorded in the revised spec (revision of
+// 2026-11-19: choose_name, NameAttempt::root, capitalize_root,
+// name_kind_text, name_stream, name_forms, NameRegistry::size and the three
+// constants):
 //
 //   worldgen/history/draw.hpp:  history::draw(stream_key, w0, a, b, k),
 //                               history::pick(u, n), history::chance(u, Fx p),
@@ -14,10 +18,14 @@
 //                               beside the P0-01 tags in core/hash.hpp)
 //   worldgen/history/names.hpp: history::CultureNaming (fields named as the
 //                               TOML fields of section 3), history::NameKind,
-//                               history::NameAttempt {valid, name},
+//                               history::NameAttempt {valid, name, root},
 //                               history::name_attempt, history::NameRegistry
-//                               {contains, add}, history::make_name,
-//                               history::roman, history::culture_naming_from
+//                               {contains, add, size}, history::make_name,
+//                               history::choose_name, history::roman,
+//                               history::culture_naming_from,
+//                               history::capitalize_root, name_kind_text,
+//                               name_stream, name_forms, NAME_ATTEMPT_MAX_BYTES,
+//                               NAME_MAX_BYTES, NAME_ATTEMPTS
 //
 // When the engineer records final signatures that differ (P3-02 9: "the
 // engineer records the final signatures after implementation"), adapt this
@@ -140,16 +148,18 @@ inline Naming naming_from_record(const worldgen::data::Record& naming) {
 
 // --- 4.2 to 4.4 -----------------------------------------------------------------------------------
 
+// name and root are unspecified when !valid (spec 4.2): tests read them only for valid attempts.
 struct Attempt {
     bool valid = false;
     std::string name;
+    std::string root;
 };
 
 inline Attempt attempt(const Naming& n, Kind k, std::uint64_t seed, std::uint64_t culture, std::uint64_t entity,
                        std::uint64_t t) {
     const worldgen::history::NameAttempt a =
         worldgen::history::name_attempt(to_lib(n), to_lib(k), seed, culture, entity, t);
-    return Attempt{a.valid, std::string(a.name)};
+    return Attempt{a.valid, std::string(a.name), std::string(a.root)};
 }
 
 // The per-world registry (4.4). Test code only uses contains and add.
@@ -157,6 +167,7 @@ class Registry {
 public:
     [[nodiscard]] bool contains(std::string_view name) const { return lib_.contains(name); }
     void add(std::string name) { lib_.add(std::move(name)); }
+    [[nodiscard]] std::size_t size() const { return static_cast<std::size_t>(lib_.size()); }
     worldgen::history::NameRegistry& lib() { return lib_; }
 
 private:
@@ -180,7 +191,7 @@ public:
     }
     Attempt attempt(Kind k, std::uint64_t seed, std::uint64_t culture, std::uint64_t entity, std::uint64_t t) const {
         const worldgen::history::NameAttempt a = worldgen::history::name_attempt(lib_, to_lib(k), seed, culture, entity, t);
-        return Attempt{a.valid, std::string(a.name)};
+        return Attempt{a.valid, std::string(a.name), std::string(a.root)};
     }
 
 private:
@@ -188,5 +199,30 @@ private:
 };
 
 inline std::string roman(std::uint64_t k) { return std::string(worldgen::history::roman(k)); }
+
+// choose_name (spec 9): make_name with the attempt number; when fallback,
+// attempt is the first valid attempt, whose name took the numeral.
+struct Choice {
+    std::string name;
+    std::uint64_t attempt = 0;
+    bool fallback = false;
+};
+inline Choice choose_name(const Naming& n, std::string_view culture_id, Kind k, std::uint64_t seed,
+                          std::uint64_t culture, std::uint64_t entity, Registry& registry) {
+    const worldgen::history::NameChoice c =
+        worldgen::history::choose_name(to_lib(n), culture_id, to_lib(k), seed, culture, entity, registry.lib());
+    return Choice{std::string(c.name), static_cast<std::uint64_t>(c.attempt), c.fallback};
+}
+
+inline std::string capitalize_root(std::string_view root) { return std::string(worldgen::history::capitalize_root(root)); }
+inline std::string kind_text(Kind k) { return std::string(worldgen::history::name_kind_text(to_lib(k))); }
+inline std::string kind_stream(Kind k) { return std::string(worldgen::history::name_stream(to_lib(k))); }
+inline std::vector<std::string> kind_forms(const Naming& n, Kind k) {
+    const worldgen::history::CultureNaming c = to_lib(n);
+    return detail::strings_of(worldgen::history::name_forms(c, to_lib(k)));
+}
+inline constexpr std::uint64_t attempt_max_bytes() { return worldgen::history::NAME_ATTEMPT_MAX_BYTES; }
+inline constexpr std::uint64_t name_max_bytes() { return worldgen::history::NAME_MAX_BYTES; }
+inline constexpr std::uint64_t name_attempts() { return worldgen::history::NAME_ATTEMPTS; }
 
 }  // namespace names_api

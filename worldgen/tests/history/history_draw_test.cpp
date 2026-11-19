@@ -9,6 +9,7 @@
 #include <doctest/doctest.h>
 
 #include <array>
+#include <climits>
 #include <cstdint>
 #include <string>
 #include <utility>
@@ -81,6 +82,16 @@ TEST_CASE("P3-02 4.5, 8: the three hist.names streams are registered and keyed a
         }
         CHECK_MESSAGE(found, name);
     }
+    // Revised 8: appended after geo.regions.cost in the order god, civilization, settlement.
+    const auto& all = worldgen::streams::all_stream_names;
+    std::size_t at = all.size();
+    for (std::size_t i = 0; i < all.size(); ++i) {
+        if (all[i] == "geo.regions.cost") at = i;
+    }
+    REQUIRE(at + 3 < all.size());
+    CHECK(all[at + 1] == "hist.names.god");
+    CHECK(all[at + 2] == "hist.names.civilization");
+    CHECK(all[at + 3] == "hist.names.settlement");
     const auto& lines = golden_lines("stream");
     REQUIRE(lines.size() == 9);
     for (const std::string& line : lines) {
@@ -238,13 +249,59 @@ TEST_CASE("P3-02 4.1: weighted gives a zero weight no u, and a single positive w
     // A trailing zero after the last positive weight is never chosen.
     CHECK(names_api::weighted(M64, std::vector<std::int64_t>{1, 0}) == 0);
     CHECK(names_api::weighted(0, std::vector<std::int64_t>{0, 1}) == 1);
-    // Large weights: the product is formed in uint128 (W near 2^63).
-    const std::vector<std::int64_t> big = {std::int64_t{1} << 62, std::int64_t{1} << 62, 1};
-    // W = 2^63 + 1: the last weight's share is below 2^-32, so no high word reaches it.
-    CHECK(names_api::weighted(M64, big) == 1);
+    // Large weights: W = 2^63 - 1, the largest allowed sum; products in uint128.
+    const std::vector<std::int64_t> big = {std::int64_t{1} << 62, (std::int64_t{1} << 62) - 2, 1};
     CHECK(names_api::weighted(0, big) == 0);
-    CHECK(names_api::weighted(std::uint64_t{1} << 63, big) == 1);
-    CHECK(names_api::weighted((std::uint64_t{1} << 63) - 1, big) == 0);
+    // Index 1 starts at high word ceil(2^94 / (2^63 - 1)) = 2^31 + 1.
+    CHECK(names_api::weighted(((std::uint64_t{1} << 31) << 32) | 0xFFFFFFFFULL, big) == 0);
+    CHECK(names_api::weighted(((std::uint64_t{1} << 31) + 1) << 32, big) == 1);
+    // The last weight's share 1 / (2^63 - 1) is below 2^-32: not reached by the largest high word.
+    CHECK(names_api::weighted(M64, big) == 1);
+}
+
+TEST_CASE("P3-02 4.1 (revised): the sum may be up to 2^63 - 1; a sum above it is fatal") {
+    constexpr std::int64_t MAX = INT64_MAX;
+    // At the bound.
+    CHECK(names_api::weighted(M64, std::vector<std::int64_t>{MAX}) == 0);
+    CHECK(names_api::weighted(M64, std::vector<std::int64_t>{MAX, 0}) == 0);
+    CHECK(names_api::weighted(0, std::vector<std::int64_t>{std::int64_t{1} << 62, (std::int64_t{1} << 62) - 1}) == 0);
+    CHECK(names_api::weighted(M64, std::vector<std::int64_t>{std::int64_t{1} << 62, (std::int64_t{1} << 62) - 1}) == 1);
+    // Above it, by one.
+    CHECK_THROWS_AS((void)names_api::weighted(0, std::vector<std::int64_t>{MAX, 1}), worldgen::FatalError);
+    CHECK_THROWS_AS((void)names_api::weighted(0, std::vector<std::int64_t>{std::int64_t{1} << 62, std::int64_t{1} << 62}),
+                    worldgen::FatalError);
+    CHECK_THROWS_AS((void)names_api::weighted(M64, std::vector<std::int64_t>{std::int64_t{1} << 62, std::int64_t{1} << 62, 1}),
+                    worldgen::FatalError);
+    // Far above it (a sum that would wrap int64 twice).
+    CHECK_THROWS_AS((void)names_api::weighted(0, std::vector<std::int64_t>{MAX, MAX, MAX}), worldgen::FatalError);
+}
+
+TEST_CASE("P3-02 4.1 (revised): reachability of small shares") {
+    // A share of at least 2^-32 is always reachable: the middle weight of
+    // (2^31, 1, 2^31 - 1) has share exactly 2^-32 and is chosen at high word 2^31.
+    const std::vector<std::int64_t> exact = {std::int64_t{1} << 31, 1, (std::int64_t{1} << 31) - 1};
+    CHECK(names_api::weighted(std::uint64_t{1} << 63, exact) == 1);
+    CHECK(names_api::weighted((std::uint64_t{1} << 63) - 1, exact) == 0);
+    CHECK(names_api::weighted((std::uint64_t{1} << 63) + (std::uint64_t{1} << 32), exact) == 2);
+    // A share below 2^-32 is chosen for at most one high word, possibly none:
+    // (2^61, 1, 2^61), W = 2^62 + 1: index 1 needs 2^93 <= h * W < 2^93 + 2^32, a
+    // range of h shorter than 1, here only h = ceil(2^93 / W) = 2^31.
+    const std::vector<std::int64_t> tiny = {std::int64_t{1} << 61, 1, std::int64_t{1} << 61};
+    const std::uint64_t h0 = std::uint64_t{1} << 31;
+    int hits = 0;
+    for (std::uint64_t h = h0 - 3; h <= h0 + 3; ++h) hits += names_api::weighted(h << 32, tiny) == 1 ? 1 : 0;
+    CHECK(hits == 1);
+    CHECK(names_api::weighted(h0 << 32, tiny) == 1);
+    // With (2^61, 1, 2^61 - 2^32), W = 2^62 - 2^32 + 1, no high word gives index 1 at all:
+    // ceil(2^93 / W) * W >= 2^93 + 2^32 (the candidate is 2^31 + 3, inside the window).
+    const std::vector<std::int64_t> none = {std::int64_t{1} << 61, 1, (std::int64_t{1} << 61) - (std::int64_t{1} << 32)};
+    hits = 0;
+    for (std::uint64_t h = h0 - 3; h <= h0 + 8; ++h) hits += names_api::weighted(h << 32, none) == 1 ? 1 : 0;
+    CHECK(hits == 0);
+    // A positive w[0] is chosen at high word 0 whatever its share.
+    CHECK(names_api::weighted(0, std::vector<std::int64_t>{1, std::int64_t{1} << 62}) == 0);
+    CHECK(names_api::weighted(0x00000000FFFFFFFFULL, std::vector<std::int64_t>{1, std::int64_t{1} << 62}) == 0);
+    CHECK(names_api::weighted(std::uint64_t{1} << 32, std::vector<std::int64_t>{1, std::int64_t{1} << 62}) == 1);
 }
 
 TEST_CASE("P3-02 9 seams: weighted is fatal for an all-zero list, an empty list and a negative weight") {

@@ -95,7 +95,13 @@ def weighted(u, w):
     for x in w:
         if x < 0:
             fatal("weighted: negative weight")
-    total = sum(w)
+    if len(w) == 0:
+        fatal("weighted: empty list")
+    total = 0
+    for x in w:
+        total += x
+        if total > (1 << 63) - 1:  # 4.1: the sum is formed with overflow checking (P3-00 H6)
+            fatal("weighted: sum above 2^63 - 1")
     if total < 1:
         fatal("weighted: weights sum to 0")
     h = u >> 32
@@ -345,8 +351,8 @@ ROMAN = ((1000, "M"), (900, "CM"), (500, "D"), (400, "CD"), (100, "C"), (90, "XC
 
 
 def roman(k):
-    if k < 1:
-        fatal("roman: k below 1")
+    if k < 1 or k > 100000:
+        fatal("roman: k outside [1, 100000]")
     out = []
     for v, s in ROMAN:
         while k >= v:
@@ -445,10 +451,13 @@ WEIGHTED_CASES = [
     (0, (0, 3, 1)), ((3 << 30) - 1 << 32, (0, 3, 1)), (((3 << 30) - 1 << 32) | 0xFFFFFFFF, (0, 3, 1)),
     ((3 << 30) << 32, (0, 3, 1)), (M64, (0, 3, 1)),
     (0, (5,)), (M64, (5,)), (0, (0, 0, 7, 0)), (M64, (0, 0, 7, 0)), (M64, (1, 0)), (0, (0, 1)),
-    (1 << 63, (1, 1)), ((1 << 63) - 1, (1, 1)), (M64, (1 << 62, 1 << 62, 1)),
+    (1 << 63, (1, 1)), ((1 << 63) - 1, (1, 1)), (M64, (1 << 62, (1 << 62) - 2, 1)), (0, (1 << 62, (1 << 62) - 2, 1)),
+    (M64, ((1 << 63) - 1,)), (M64, ((1 << 63) - 1, 0)), (0, (1, 1 << 62)), (M64, (1, 1 << 62)),
+    (1 << 63, (1 << 31, 1, (1 << 32) - (1 << 31) - 1)), ((1 << 63) - 1, (1 << 31, 1, (1 << 32) - (1 << 31) - 1)),
     (0x8000000100000000, (1, 1, 1)), (0x5555555500000000, (1, 1, 1)), (0x5555555600000000, (1, 1, 1)),
 ]
-WEIGHTED_FATAL = [(0, ()), (0, (0,)), (0, (0, 0, 0)), (0, (1, -1, 3))]
+WEIGHTED_FATAL = [(0, ()), (0, (0,)), (0, (0, 0, 0)), (0, (1, -1, 3)), (M64, (1 << 62, 1 << 62, 1)),
+                  (0, (1 << 62, 1 << 62)), (0, ((1 << 63) - 1, 1))]
 
 CAP_CASES = ["gnink-snunk", "uruld'duuld", "iensath", "a", "a-b-c", "ab'cd-ef", "x-y'z"]
 
@@ -529,9 +538,10 @@ def golden_text():
     o.append("#   pick <u hex> <n> <index|FATAL>")
     o.append("#   chance <u hex> <p raw> <true|false|FATAL>")
     o.append("#   weighted <u hex> <w,w,...|-> <index|FATAL>            (- is the empty list)")
-    o.append("#   roman <k> <numeral>")
+    o.append("#   roman <k> <numeral|FATAL>")
     o.append("#   cap <root> <Cap(root)>")
-    o.append("#   attempt <seed> <culture> <kind> <c> <e> <t> <valid 0|1> <root|-> <name>")
+    o.append("#   attempt <seed> <culture> <kind> <c> <e> <t> <valid 0|1> <root> <name>  (- - when invalid:")
+    o.append("#       an invalid attempt's root and name are unspecified, spec 4.2)")
     o.append("#   step <seed> <culture> <kind> <c> <e> <t> <j> <u hex> <n> <index> <symbol> <piece|->")
     o.append("#       every draw of the attempt (symbol form, pattern, O, N, C)")
     o.append("#   scenario <label> <seed> <preload count> then preload <label> <name> lines (sorted),")
@@ -544,7 +554,8 @@ def golden_text():
     o.append("#       order (c = 1..6), kinds in the order god, civilization, settlement, entities 1..50")
     o.append("#   sha256 <seed> <hex>  of the seed's name lines joined by LF (no trailing LF)")
     o.append("# Where 4.6 falls: its seed-0 elven settlement 1 tuple is the line '0 elven settlement 1 0")
-    o.append("# Iensath' of the list (the registry then holds 200 earlier names, none of them Iensath);")
+    o.append("# Iensath' of the list (the registry then holds 250 earlier names,")
+    o.append("# dwarven 150, elven god and civilization 100, none of them Iensath);")
     o.append("# its empty-registry, collision and fallback cases are scenarios empty, collide and full;")
     o.append("# its seed-42 vectors are scenario seed42.")
     o.append("tag TAG_HIST %s" % hx(TAG_HIST))
@@ -570,15 +581,17 @@ def golden_text():
         o.append("weighted %s %s %d" % (hx(u), wl(w), weighted(u, w)))
     for u, w in WEIGHTED_FATAL:
         o.append("weighted %s %s FATAL" % (hx(u), wl(w)))
-    for k in (1, 2, 3, 4, 5, 9, 14, 40, 49, 90, 400, 1994, 3999, 4000):
+    for k in (1, 2, 3, 4, 5, 9, 14, 40, 49, 90, 400, 1994, 3888, 3999, 4000, 4888, 100000):
         o.append("roman %d %s" % (k, roman(k)))
+    for k in (0, 100001):
+        o.append("roman %d FATAL" % k)
     for r in CAP_CASES:
         o.append("cap %s %s" % (r, cap(r)))
     for seed, cid, kind, e, t in ATTEMPT_CASES:
         c = CULTURE_NUMBER[cid]
         trace = []
         v, n, root = attempt(CULTURES[cid], kind, seed, c, e, t, trace)
-        o.append("attempt %d %s %s %d %d %d %d %s %s" % (seed, cid, kind, c, e, t, 1 if v else 0, root or "-", n))
+        o.append("attempt %d %s %s %d %d %d %d %s %s" % (seed, cid, kind, c, e, t, 1 if v else 0, (root or "-") if v else "-", n if v else "-"))
         for j, uj, nn, idx, sym, piece in trace:
             if sym in ("form", "pattern"):
                 piece = piece.replace(" ", "_")
@@ -742,6 +755,22 @@ def check_all():
             i = pick(u, n)
             # i is the unique index with i * 2^32 <= h * n < (i + 1) * 2^32.
             ck.eq("pick bracket", (i << 32) <= h * n < ((i + 1) << 32), True)
+    # 4.1 revised: the sum bound and small shares.
+    for w, ok in (([(1 << 63) - 1], True), ([(1 << 63) - 1, 0], True), ([(1 << 63) - 1, 1], False),
+                  ([1 << 62, 1 << 62], False), ([1 << 62, (1 << 62) - 1], True)):
+        try:
+            weighted(0, w)
+            ck.eq("weighted bound %r" % w, True, ok)
+        except FatalError:
+            ck.eq("weighted bound %r" % w, False, ok)
+    ck.eq("w[0] tiny share at h=0", weighted(0, (1, 1 << 62)), 0)
+    w = (1 << 61, 1, 1 << 61)
+    total = sum(w)
+    h0 = ((1 << 61 << 32) + total - 1) // total
+    ck.eq("tiny middle share: at most one high word",
+          sum(1 for h in (h0 - 1, h0, h0 + 1) if weighted(h << 32, w) == 1) <= 1, True)
+    w = (1 << 31, 1, (1 << 32) - (1 << 31) - 1)  # middle share exactly 2^-32
+    ck.eq("share 2^-32 reachable", weighted((1 << 31) << 32, w), 1)
     # capitalization
     ck.eq("cap 1", cap("gnink-snunk"), "Gnink-Snunk")
     ck.eq("cap 2", cap("uruld'duuld"), "Uruld'duuld")
