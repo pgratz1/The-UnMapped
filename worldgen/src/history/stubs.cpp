@@ -78,10 +78,13 @@ constexpr std::int64_t WATER_LAKE = 2;  // layer water: 2 = lake (P1-02)
 
 }  // namespace
 
-StubAwakening::StubAwakening(const data::ContentSet& content, const HistoryInputs& inputs,
-                             std::int64_t islet_max_dry_cells)
-    : content_(content), islet_max_dry_cells_(islet_max_dry_cells) {
+void StubAwakening::prepare(const StepContext& context) {
+    if (prepared_) {
+        return;
+    }
+    islet_max_dry_cells_ = engine_tuning_from(context.content()).islet_max_dry_cells;
     // P3-03 8.2: the registry from the stored names, regions, ages, gods.
+    const HistoryInputs& inputs = context.inputs();
     for (const db::RegionRow& r : inputs.regions) {
         registry_.add(r.name);
     }
@@ -91,10 +94,12 @@ StubAwakening::StubAwakening(const data::ContentSet& content, const HistoryInput
     for (const db::GodRow& g : inputs.gods) {
         registry_.add(g.name);
     }
+    prepared_ = true;
 }
 
 std::int64_t StubAwakening::awakening_place(const StepContext& context, std::int64_t race) {
     (void)race;  // the stub ignores race preferences (7.1)
+    prepare(context);
     const std::vector<db::RegionRow>& regions = context.inputs().regions;
     if (regions.empty()) {
         fail("history: stub: no region");
@@ -127,8 +132,8 @@ void StubAwakening::awaken(StepContext& context, std::int64_t race, std::int64_t
     const std::int64_t home = awakening_place(context, race);  // the state has not changed since the event
     const db::RaceRow& r = race_row(in, race);
     const db::CultureRow& culture = culture_row(in, r.culture);
-    const data::Definition* race_def = content_.find(data::RACE_KIND, r.key);
-    const data::Definition* culture_def = content_.find(data::CULTURE_KIND, culture.key);
+    const data::Definition* race_def = context.content().find(data::RACE_KIND, r.key);
+    const data::Definition* culture_def = context.content().find(data::CULTURE_KIND, culture.key);
     if (race_def == nullptr || culture_def == nullptr) {
         fail("history: stub: race '" + r.key + "' or culture '" + culture.key + "' is not in the content");
     }

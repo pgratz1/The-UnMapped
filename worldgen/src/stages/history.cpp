@@ -19,7 +19,7 @@ HistoryResult history_stage(const data::ContentSet& content, const history::Hist
     // Items 2, 4 and 5 (the tuning again, then settings and chronology rows).
     (void)history::check_engine_inputs(content, inputs);
     // The shipped configuration (6.4).
-    history::StubAwakening stub(content, inputs, tuning.islet_max_dry_cells);
+    history::StubAwakening stub;
     history::EmptyInterventionSource none;
     history::EngineConfig config;
     config.awakening = &stub;

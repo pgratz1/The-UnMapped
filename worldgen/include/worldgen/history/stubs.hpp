@@ -17,14 +17,16 @@ namespace worldgen::history {
 // The settlement population the stub founds (7.2 item 3).
 inline constexpr std::int64_t STUB_POPULATION = 200;
 
-// S1 and S2. The name registry is built when the handler is made, from every
-// region.name, age.name and god.name of the inputs, in that order (7.2,
-// P3-03 8.2); names are drawn in creation order (civilization, then
-// settlement, per awakening).
+// S1 and S2. Everything is read through the StepContext: the inputs, the
+// content (race settlement_kinds, culture naming) and history.engine's
+// islet_max_dry_cells (4.1). The name registry is built at the first call,
+// before any name is drawn, from every region.name, age.name and god.name of
+// the inputs, in that order (7.2, P3-03 8.2); names are then drawn in
+// creation order (civilization, then settlement, per awakening). One handler
+// serves one run.
 class StubAwakening final : public AwakeningHandler {
 public:
-    // islet_max_dry_cells is history.engine's (4.1).
-    StubAwakening(const data::ContentSet& content, const HistoryInputs& inputs, std::int64_t islet_max_dry_cells);
+    StubAwakening() = default;
 
     // S1: the best-scoring region (habitability_mean desc, walk_cells desc,
     // id asc) of the first non-empty set of: non-islet free regions,
@@ -38,10 +40,11 @@ public:
     void awaken(StepContext& context, std::int64_t race, std::int64_t awakening_event) override;
 
 private:
-    const data::ContentSet& content_;
-    std::int64_t islet_max_dry_cells_;
+    void prepare(const StepContext& context);
+
+    bool prepared_ = false;
+    std::int64_t islet_max_dry_cells_ = 0;
     NameRegistry registry_;
-    std::int64_t place_ = 0;  // the place awakening_place chose for the awakening in progress
 };
 
 namespace testing {

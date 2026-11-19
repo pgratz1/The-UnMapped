@@ -66,7 +66,7 @@
 #include "worldgen/history/event_catalogue.hpp"
 #include "worldgen/history/inputs.hpp"
 #include "worldgen/history/stubs.hpp"    // GUESS (StubAwakening)
-#include "worldgen/history/testing.hpp"  // GUESS (ForcedTension)
+// ForcedTension is declared in worldgen/history/stubs.hpp (integration).
 #include "worldgen/stages/history.hpp"
 #include "worldgen/stages/stage.hpp"
 
@@ -157,7 +157,7 @@ inline Tables tables_of(const worldgen::stages::HistoryResult& r) {
     Tables t;
     for (const auto& x : r.event_kinds) {
         t.event_kind.push_back({I(x.id), T(x.key), I(x.caused), I(x.region_use), I(x.settlement_use), I(x.salience),
-                                T(x.templ)});
+                                T(x.template_text)});
     }
     for (const auto& x : r.event_kind_roles) {
         t.event_kind_role.push_back({I(x.kind), I(x.seq), T(x.role), I(x.entity_type), I(x.min_count), I(x.max_count)});
