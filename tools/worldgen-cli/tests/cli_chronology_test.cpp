@@ -184,8 +184,11 @@ void check_golden_world(const Sandbox& sb, const std::string& name, const std::v
             tables.push_back(l.substr(6, l.find(' ', 6) - 6));
         }
     }
-    CHECK(tables == std::vector<std::string>{"age", "biome", "climate", "culture", "god", "layer", "meta", "pass",
-                                             "race", "race_biome", "region", "region_biome", "region_border"});
+    CHECK(tables == std::vector<std::string>{"age", "biome", "civilization", "climate", "culture", "event", "event_cause",
+                                             "event_kind", "event_kind_role", "event_kind_value", "event_participant",
+                                             "event_value", "god", "layer", "meta", "pass", "phase", "race",
+                                             "race_biome", "region", "region_biome", "region_border",
+                                             "region_control", "relation", "settlement", "settlement_census"});
     for (const std::string& want : golden_table_lines(name)) {
         CAPTURE(want);
         CHECK(contains(detail, "\n" + want + "\n"));
@@ -211,13 +214,17 @@ void check_golden_world(const Sandbox& sb, const std::string& name, const std::v
 
 TEST_SUITE("chronology") {
 
-TEST_CASE("cli P3-03 4.3, 14.1 item 12: --until chronology equals the default run; meta.stages ends in chronology") {
+// P3-03 14.1 item 12 held at 0.13.0, when chronology was the last stage; from
+// P3-04 (9.5) the default run is --until history, and --until chronology
+// stops before it.
+TEST_CASE("cli P3-03 4.3, 14.1 item 12: --until chronology ends meta.stages in chronology; the default adds history") {
     Sandbox sb;
     const fs::path a = sb.generate({"--seed", "42", "--map-size", "512", "--out", u8(sb.file("default.db"))});
     const fs::path b =
         sb.generate({"--seed", "42", "--map-size", "512", "--until", "chronology", "--out", u8(sb.file("until.db"))});
-    CHECK(read_bytes(a) == read_bytes(b));
-    CHECK(meta_of(a, "stages") == "elevation,hydrology,climate,biomes,resources,regions,chronology");
+    CHECK(read_bytes(a) != read_bytes(b));
+    CHECK(meta_of(a, "stages") == "elevation,hydrology,climate,biomes,resources,regions,chronology,history");
+    CHECK(meta_of(b, "stages") == "elevation,hydrology,climate,biomes,resources,regions,chronology");
     // --until regions: the five tables exist and are empty; the keys are recorded.
     const fs::path g =
         sb.generate({"--seed", "42", "--map-size", "512", "--until", "regions", "--out", u8(sb.file("geo.db"))});
@@ -230,15 +237,11 @@ TEST_CASE("cli P3-03 4.3, 14.1 item 12: --until chronology equals the default ru
     CHECK(section(report(sb, g), "[chronology]").empty());
 }
 
-TEST_CASE("cli P3-03 4.3, 14.1 item 12: --until history is not implemented yet; an unknown stage lists eight names") {
+TEST_CASE("cli P3-03 4.3, 14.1 item 12: --until history is accepted (P3-04 9.5); an unknown stage lists eight names") {
     Sandbox sb;
     const fs::path out = sb.file("x.db");
-    const ProcessResult h = sb.cli({"generate", "--seed", "1", "--until", "history", "--out", u8(out)});
-    CHECK(h.exit_code == EXIT_USAGE);
-    CHECK(h.out.empty());
-    CHECK(h.err == "worldgen-cli: error: stage 'history' given to --until is not implemented yet\n" +
-                       std::string(GENERATE_HINT));
-    CHECK_FALSE(file_exists(out));
+    const fs::path h = sb.generate({"--seed", "1", "--map-size", "512", "--until", "history", "--out", u8(sb.file("h.db"))});
+    CHECK(meta_of(h, "stages") == "elevation,hydrology,climate,biomes,resources,regions,chronology,history");
     const ProcessResult u = sb.cli({"generate", "--seed", "1", "--until", "chronicle", "--out", u8(out)});
     CHECK(u.exit_code == EXIT_USAGE);
     CHECK(u.err == "worldgen-cli: error: unknown stage 'chronicle' given to --until; expected none or a stage name "
@@ -383,7 +386,7 @@ TEST_CASE("cli P3-03 4.2, 14.1 item 8: each setting value reaches its meta key")
     CHECK(contains(meta, "\nparam.civs_per_race = auto\nparam.divine_activity = normal\nparam.divine_script =\n"
                          "param.event_intensity = normal\nparam.history_detail = normal\nparam.history_span = 6000\n"
                          "param.map_size = 1024\nparam.monster_pressure = normal\nparam.races = " +
-                             std::string(ALL_RACES) + "\nschema_version = 6\n"));
+                             std::string(ALL_RACES) + "\nschema_version = 7\n"));
 }
 
 TEST_CASE("cli P3-03 4.1, P3-01 8.2 test 7: file values are recorded, and a flag wins over its file key") {

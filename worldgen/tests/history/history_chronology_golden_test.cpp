@@ -102,7 +102,7 @@ void check_world_case(const GoldenCase& c) {
     // 14.3 item 21: on shipped data the rows do not depend on the region names.
     CHECK(chrono_api::stage(shipped(), p, c.seed, {}) == rows);
     CHECK(chrono_api::stage(shipped(), p, c.seed, regions) == rows);
-    CHECK(meta_or(r, "stages") == "elevation,hydrology,climate,biomes,resources,regions,chronology");
+    CHECK(meta_or(r, "stages") == "elevation,hydrology,climate,biomes,resources,regions,chronology,history");  // P3-04 9.5
 }
 
 }  // namespace

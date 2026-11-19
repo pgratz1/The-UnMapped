@@ -81,6 +81,57 @@ inline constexpr std::string_view DDL_GOD =
 inline constexpr std::string_view DDL_AGE =
     "CREATE TABLE age (id INTEGER PRIMARY KEY, race INTEGER NOT NULL, start_year INTEGER NOT NULL, end_ye"
     "ar INTEGER NOT NULL, name TEXT NOT NULL) STRICT";
+// The DDL of the thirteen history tables (schema version 7), copied from
+// P3-04 9.1.
+inline constexpr std::string_view DDL_EVENT_KIND =
+    "CREATE TABLE event_kind (id INTEGER PRIMARY KEY, key TEXT NOT NULL UNIQUE, caused INTEGER NOT NULL, "
+    "region_use INTEGER NOT NULL, settlement_use INTEGER NOT NULL, salience INTEGER NOT NULL, template TE"
+    "XT NOT NULL) STRICT";
+inline constexpr std::string_view DDL_EVENT_KIND_ROLE =
+    "CREATE TABLE event_kind_role (kind INTEGER NOT NULL, seq INTEGER NOT NULL, role TEXT NOT NULL, entit"
+    "y_type INTEGER NOT NULL, min_count INTEGER NOT NULL, max_count INTEGER NOT NULL, PRIMARY KEY (kind, "
+    "seq)) STRICT, WITHOUT ROWID";
+inline constexpr std::string_view DDL_EVENT_KIND_VALUE =
+    "CREATE TABLE event_kind_value (kind INTEGER NOT NULL, seq INTEGER NOT NULL, key TEXT NOT NULL, PRIMA"
+    "RY KEY (kind, seq)) STRICT, WITHOUT ROWID";
+inline constexpr std::string_view DDL_PHASE =
+    "CREATE TABLE phase (id INTEGER PRIMARY KEY, age INTEGER NOT NULL, kind INTEGER NOT NULL, start_year "
+    "INTEGER NOT NULL, end_year INTEGER NOT NULL, trigger_event INTEGER NOT NULL) STRICT";
+inline constexpr std::string_view DDL_EVENT =
+    "CREATE TABLE event (id INTEGER PRIMARY KEY, year INTEGER NOT NULL, end_year INTEGER NOT NULL, kind I"
+    "NTEGER NOT NULL, phase INTEGER NOT NULL, region INTEGER NOT NULL, settlement INTEGER NOT NULL, salie"
+    "nce INTEGER NOT NULL) STRICT";
+inline constexpr std::string_view DDL_EVENT_PARTICIPANT =
+    "CREATE TABLE event_participant (event INTEGER NOT NULL, seq INTEGER NOT NULL, role INTEGER NOT NULL,"
+    " entity_type INTEGER NOT NULL, entity_id INTEGER NOT NULL, PRIMARY KEY (event, seq)) STRICT, WITHOUT"
+    " ROWID";
+inline constexpr std::string_view DDL_EVENT_CAUSE =
+    "CREATE TABLE event_cause (event INTEGER NOT NULL, cause INTEGER NOT NULL, PRIMARY KEY (event, cause)"
+    ") STRICT, WITHOUT ROWID";
+inline constexpr std::string_view DDL_EVENT_VALUE =
+    "CREATE TABLE event_value (event INTEGER NOT NULL, seq INTEGER NOT NULL, value INTEGER NOT NULL, PRIM"
+    "ARY KEY (event, seq)) STRICT, WITHOUT ROWID";
+inline constexpr std::string_view DDL_CIVILIZATION =
+    "CREATE TABLE civilization (id INTEGER PRIMARY KEY, name TEXT NOT NULL, race INTEGER NOT NULL, cultur"
+    "e INTEGER NOT NULL, home_region INTEGER NOT NULL, capital INTEGER NOT NULL, founded_year INTEGER NOT"
+    " NULL, founding_event INTEGER NOT NULL, ended_year INTEGER, ending_event INTEGER NOT NULL) STRICT";
+inline constexpr std::string_view DDL_SETTLEMENT =
+    "CREATE TABLE settlement (id INTEGER PRIMARY KEY, name TEXT NOT NULL, x INTEGER NOT NULL, y INTEGER N"
+    "OT NULL, region INTEGER NOT NULL, founder_civ INTEGER NOT NULL, founded_year INTEGER NOT NULL, found"
+    "ing_event INTEGER NOT NULL, owner_civ INTEGER NOT NULL, kind INTEGER NOT NULL, status INTEGER NOT NU"
+    "LL, population INTEGER NOT NULL, ruined_year INTEGER, ruin_event INTEGER NOT NULL) STRICT";
+inline constexpr std::string_view DDL_SETTLEMENT_CENSUS =
+    "CREATE TABLE settlement_census (settlement INTEGER NOT NULL, year INTEGER NOT NULL, owner_civ INTEGE"
+    "R NOT NULL, kind INTEGER NOT NULL, status INTEGER NOT NULL, population INTEGER NOT NULL, PRIMARY KEY"
+    " (settlement, year)) STRICT, WITHOUT ROWID";
+inline constexpr std::string_view DDL_REGION_CONTROL =
+    "CREATE TABLE region_control (region INTEGER NOT NULL, from_year INTEGER NOT NULL, to_year INTEGER, c"
+    "iv INTEGER NOT NULL, event INTEGER NOT NULL, PRIMARY KEY (region, from_year)) STRICT, WITHOUT ROWID";
+inline constexpr std::string_view DDL_RELATION =
+    "CREATE TABLE relation (a_type INTEGER NOT NULL, a_id INTEGER NOT NULL, b_type INTEGER NOT NULL, b_id"
+    " INTEGER NOT NULL, kind TEXT NOT NULL, since INTEGER NOT NULL, until INTEGER, since_event INTEGER NO"
+    "T NULL, until_event INTEGER NOT NULL, PRIMARY KEY (a_type, a_id, b_type, b_id, kind, since)) STRICT,"
+    " WITHOUT ROWID";
 inline constexpr std::string_view EMPTY_CONTENT_HASH =
     "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
 
@@ -186,14 +237,16 @@ private:
 
 using MetaRows = std::vector<std::pair<std::string, std::string>>;
 
-// The sixteen meta rows of a P0 world in key order (P0-02 8; the eight
-// history keys at their defaults since schema 6, P3-03 4.2).
+// The seventeen meta rows of a P0 world in key order (P0-02 8; the eight
+// history keys at their defaults since schema 6, P3-03 4.2; history_end_year
+// since schema 7, P3-04 9.4).
 inline MetaRows meta_rows(std::uint64_t seed, std::string_view phrase = {}, std::string_view stages = {},
                           std::string_view map_size = "1024") {
     return {
         {"content_hash", std::string(EMPTY_CONTENT_HASH)},
         {"format", "the-unmapped-world"},
-        {"generator_version", "0.13.0"},
+        {"generator_version", "0.14.0"},
+        {"history_end_year", "6000"},
         {"param.civs_per_race", "auto"},
         {"param.divine_activity", "normal"},
         {"param.divine_script", ""},
@@ -203,7 +256,7 @@ inline MetaRows meta_rows(std::uint64_t seed, std::string_view phrase = {}, std:
         {"param.map_size", std::string(map_size)},
         {"param.monster_pressure", "normal"},
         {"param.races", "elf,goblin,dwarf,faerie,human,orc"},
-        {"schema_version", "6"},
+        {"schema_version", "7"},
         {"seed", std::to_string(seed)},
         {"seed_phrase", std::string(phrase)},
         {"stages", std::string(stages)},
@@ -289,11 +342,25 @@ inline worldgen::Sha256Digest empty_race_biome_table_hash() { return empty_table
 inline worldgen::Sha256Digest empty_culture_table_hash() { return empty_table_hash(4); }
 inline worldgen::Sha256Digest empty_god_table_hash() { return empty_table_hash(3); }
 inline worldgen::Sha256Digest empty_age_table_hash() { return empty_table_hash(5); }
+// The thirteen history tables with no rows (schema 7), by column count.
+inline worldgen::Sha256Digest empty_event_kind_table_hash() { return empty_table_hash(7); }
+inline worldgen::Sha256Digest empty_event_kind_role_table_hash() { return empty_table_hash(6); }
+inline worldgen::Sha256Digest empty_event_kind_value_table_hash() { return empty_table_hash(3); }
+inline worldgen::Sha256Digest empty_phase_table_hash() { return empty_table_hash(6); }
+inline worldgen::Sha256Digest empty_event_table_hash() { return empty_table_hash(8); }
+inline worldgen::Sha256Digest empty_event_participant_table_hash() { return empty_table_hash(5); }
+inline worldgen::Sha256Digest empty_event_cause_table_hash() { return empty_table_hash(2); }
+inline worldgen::Sha256Digest empty_event_value_table_hash() { return empty_table_hash(3); }
+inline worldgen::Sha256Digest empty_civilization_table_hash() { return empty_table_hash(10); }
+inline worldgen::Sha256Digest empty_settlement_table_hash() { return empty_table_hash(14); }
+inline worldgen::Sha256Digest empty_settlement_census_table_hash() { return empty_table_hash(6); }
+inline worldgen::Sha256Digest empty_region_control_table_hash() { return empty_table_hash(5); }
+inline worldgen::Sha256Digest empty_relation_table_hash() { return empty_table_hash(9); }
 
-// schema of every world at schema version 6 (the name is the P0 one):
+// schema of every world at schema version 7 (the name is the P0 one):
 // sqlite_schema rows ordered by type, then name: the automatic indexes of
-// biome.key, culture.key, layer.name and race.key (sql NULL, amendment 10),
-// then the thirteen tables with their DDL. rootpage is excluded.
+// biome.key, culture.key, event_kind.key, layer.name and race.key (sql NULL,
+// amendment 10), then the twenty-six tables with their DDL. rootpage is excluded.
 inline worldgen::Sha256Digest p0_schema_hash() {
     Encoder e;
     const auto index = [&e](std::string_view name, std::string_view table) {
@@ -310,42 +377,69 @@ inline worldgen::Sha256Digest p0_schema_hash() {
     };
     index("sqlite_autoindex_biome_1", "biome");
     index("sqlite_autoindex_culture_1", "culture");
+    index("sqlite_autoindex_event_kind_1", "event_kind");
     index("sqlite_autoindex_layer_1", "layer");
     index("sqlite_autoindex_race_1", "race");
     table("age", DDL_AGE);
     table("biome", DDL_BIOME);
+    table("civilization", DDL_CIVILIZATION);
     table("climate", DDL_CLIMATE);
     table("culture", DDL_CULTURE);
+    table("event", DDL_EVENT);
+    table("event_cause", DDL_EVENT_CAUSE);
+    table("event_kind", DDL_EVENT_KIND);
+    table("event_kind_role", DDL_EVENT_KIND_ROLE);
+    table("event_kind_value", DDL_EVENT_KIND_VALUE);
+    table("event_participant", DDL_EVENT_PARTICIPANT);
+    table("event_value", DDL_EVENT_VALUE);
     table("god", DDL_GOD);
     table("layer", DDL_LAYER);
     table("meta", DDL_META);
     table("pass", DDL_PASS);
+    table("phase", DDL_PHASE);
     table("race", DDL_RACE);
     table("race_biome", DDL_RACE_BIOME);
     table("region", DDL_REGION);
     table("region_biome", DDL_REGION_BIOME);
     table("region_border", DDL_REGION_BORDER);
+    table("region_control", DDL_REGION_CONTROL);
+    table("relation", DDL_RELATION);
+    table("settlement", DDL_SETTLEMENT);
+    table("settlement_census", DDL_SETTLEMENT_CENSUS);
     return e.digest();
 }
 
 // The `table` lines of hash --detail for a world whose only non-empty
-// tables are layer and meta (schema 6): (name, digest) in ascending name.
+// tables are layer and meta (schema 7): (name, digest) in ascending name.
 inline std::vector<std::pair<std::string, worldgen::Sha256Digest>> empty_world_tables(
     const worldgen::Sha256Digest& layer, const worldgen::Sha256Digest& meta) {
     return {
         {"age", empty_age_table_hash()},
         {"biome", empty_biome_table_hash()},
+        {"civilization", empty_civilization_table_hash()},
         {"climate", empty_climate_table_hash()},
         {"culture", empty_culture_table_hash()},
+        {"event", empty_event_table_hash()},
+        {"event_cause", empty_event_cause_table_hash()},
+        {"event_kind", empty_event_kind_table_hash()},
+        {"event_kind_role", empty_event_kind_role_table_hash()},
+        {"event_kind_value", empty_event_kind_value_table_hash()},
+        {"event_participant", empty_event_participant_table_hash()},
+        {"event_value", empty_event_value_table_hash()},
         {"god", empty_god_table_hash()},
         {"layer", layer},
         {"meta", meta},
         {"pass", empty_pass_table_hash()},
+        {"phase", empty_phase_table_hash()},
         {"race", empty_race_table_hash()},
         {"race_biome", empty_race_biome_table_hash()},
         {"region", empty_region_table_hash()},
         {"region_biome", empty_region_biome_table_hash()},
         {"region_border", empty_region_border_table_hash()},
+        {"region_control", empty_region_control_table_hash()},
+        {"relation", empty_relation_table_hash()},
+        {"settlement", empty_settlement_table_hash()},
+        {"settlement_census", empty_settlement_census_table_hash()},
     };
 }
 
@@ -382,7 +476,8 @@ inline constexpr std::string_view REPORT_SEED_0 =
     "[meta]\n"
     "content_hash = e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\n"
     "format = the-unmapped-world\n"
-    "generator_version = 0.13.0\n"
+    "generator_version = 0.14.0\n"
+    "history_end_year = 6000\n"
     "param.civs_per_race = auto\n"
     "param.divine_activity = normal\n"
     "param.divine_script =\n"
@@ -392,24 +487,37 @@ inline constexpr std::string_view REPORT_SEED_0 =
     "param.map_size = 1024\n"
     "param.monster_pressure = normal\n"
     "param.races = elf,goblin,dwarf,faerie,human,orc\n"
-    "schema_version = 6\n"
+    "schema_version = 7\n"
     "seed = 0\n"
     "seed_phrase =\n"
     "stages =\n"
     "[tables]\n"
     "age = 0\n"
     "biome = 0\n"
+    "civilization = 0\n"
     "climate = 0\n"
     "culture = 0\n"
+    "event = 0\n"
+    "event_cause = 0\n"
+    "event_kind = 0\n"
+    "event_kind_role = 0\n"
+    "event_kind_value = 0\n"
+    "event_participant = 0\n"
+    "event_value = 0\n"
     "god = 0\n"
     "layer = 0\n"
-    "meta = 16\n"
+    "meta = 17\n"
     "pass = 0\n"
+    "phase = 0\n"
     "race = 0\n"
     "race_biome = 0\n"
     "region = 0\n"
     "region_biome = 0\n"
     "region_border = 0\n"
+    "region_control = 0\n"
+    "relation = 0\n"
+    "settlement = 0\n"
+    "settlement_census = 0\n"
     "[layers]\n"
     "(none)\n";
 

@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <filesystem>
 #include <system_error>
+#include <tuple>
 #include <utility>
 
 #include "db/file_header.hpp"
@@ -148,6 +149,11 @@ std::map<std::string, std::string> build_meta(const WriterState& s) {
     meta[std::string(META_CONTENT_HASH)] = *s.content_hash;
     meta[std::string(META_FORMAT)] = std::string(WORLD_FORMAT);
     meta[std::string(META_GENERATOR_VERSION)] = std::string(GENERATOR_VERSION);
+    // P3-04 9.4: the last year of history + 1, = param.history_span, for
+    // every world (finalize requires param.history_span).
+    if (const auto span = s.params.find(std::string(META_PARAM_HISTORY_SPAN)); span != s.params.end()) {
+        meta[std::string(META_HISTORY_END_YEAR)] = span->second;
+    }
     meta[std::string(META_SCHEMA_VERSION)] = format_i64(SCHEMA_VERSION);
     meta[std::string(META_SEED)] = format_u64(*s.seed);
     meta[std::string(META_SEED_PHRASE)] = s.seed_phrase;
@@ -433,6 +439,7 @@ StageWriter::~StageWriter() {
     state_->last_culture_id = state_->stage_start_culture_id;
     state_->last_god_id = state_->stage_start_god_id;
     state_->last_age_id = state_->stage_start_age_id;
+    state_->history_keys = state_->stage_start_history_keys;
     state_->stage_open = false;
 }
 
@@ -755,6 +762,231 @@ void StageWriter::write_age(const AgeRow& row) {
     state_->last_age_id = row.id;
 }
 
+// --- The history tables (P3-04 9.3) ------------------------------------------
+
+namespace {
+
+void require_open(const detail::WriterState* state, const char* operation) {
+    if (state == nullptr) {
+        fatal_text(std::string("StageWriter::") + operation + ": stage is not open");
+    }
+}
+
+// FatalError unless the pair key is above `last` with a first component >= 1.
+void require_next_pair(const char* operation, std::pair<std::int64_t, std::int64_t> key,
+                       std::pair<std::int64_t, std::int64_t> last) {
+    if (key.first < 1 || key <= last) {
+        fatal_text(std::string("StageWriter::") + operation + ": row " + key_text(key) + " is not above " +
+                   key_text(last) + " with a first key column >= 1 (ascending keys)");
+    }
+}
+
+int bind_optional(detail::Statement& stmt, int index, const std::optional<std::int64_t>& value) {
+    return value ? stmt.bind_int64(index, *value) : stmt.bind_null(index);
+}
+
+constexpr auto NO_TEXT = [](detail::Statement&) { return SQLITE_OK; };
+
+}  // namespace
+
+void StageWriter::write_event_kind(const EventKindRow& row) {
+    require_open(state_, "write_event_kind");
+    require_next_id("write_event_kind", "event_kind", row.id, state_->history_keys.event_kind);
+    const std::int64_t ints[4] = {row.caused, row.region_use, row.settlement_use, row.salience};
+    insert_row(state_->db.get(),
+               "INSERT INTO event_kind (id, key, caused, region_use, settlement_use, salience, template) VALUES (?1, "
+               "?2, ?3, ?4, ?5, ?6, ?7)",
+               3, ints,
+               [&row](detail::Statement& stmt) {
+                   int rc = stmt.bind_int64(1, row.id);
+                   if (rc == SQLITE_OK) rc = stmt.bind_text(2, row.key);
+                   if (rc == SQLITE_OK) rc = stmt.bind_text(7, row.template_text);
+                   return rc;
+               },
+               "event_kind row " + format_i64(row.id));
+    state_->history_keys.event_kind = row.id;
+}
+
+void StageWriter::write_event_kind_role(const EventKindRoleRow& row) {
+    require_open(state_, "write_event_kind_role");
+    const std::pair<std::int64_t, std::int64_t> key{row.kind, row.seq};
+    require_next_pair("write_event_kind_role", key, state_->history_keys.event_kind_role);
+    const std::int64_t ints[3] = {row.entity_type, row.min_count, row.max_count};
+    insert_row(state_->db.get(),
+               "INSERT INTO event_kind_role (kind, seq, role, entity_type, min_count, max_count) VALUES (?1, ?2, ?3, "
+               "?4, ?5, ?6)",
+               4, ints,
+               [&row](detail::Statement& stmt) {
+                   int rc = stmt.bind_int64(1, row.kind);
+                   if (rc == SQLITE_OK) rc = stmt.bind_int64(2, row.seq);
+                   if (rc == SQLITE_OK) rc = stmt.bind_text(3, row.role);
+                   return rc;
+               },
+               "event_kind_role row " + key_text(key));
+    state_->history_keys.event_kind_role = key;
+}
+
+void StageWriter::write_event_kind_value(const EventKindValueRow& row) {
+    require_open(state_, "write_event_kind_value");
+    const std::pair<std::int64_t, std::int64_t> key{row.kind, row.seq};
+    require_next_pair("write_event_kind_value", key, state_->history_keys.event_kind_value);
+    const std::int64_t ints[2] = {row.kind, row.seq};
+    insert_row(state_->db.get(), "INSERT INTO event_kind_value (kind, seq, key) VALUES (?1, ?2, ?3)", 1, ints,
+               [&row](detail::Statement& stmt) { return stmt.bind_text(3, row.key); },
+               "event_kind_value row " + key_text(key));
+    state_->history_keys.event_kind_value = key;
+}
+
+void StageWriter::write_phase(const PhaseRow& row) {
+    require_open(state_, "write_phase");
+    require_next_id("write_phase", "phase", row.id, state_->history_keys.phase);
+    const std::int64_t ints[6] = {row.id, row.age, row.kind, row.start_year, row.end_year, row.trigger_event};
+    insert_row(state_->db.get(),
+               "INSERT INTO phase (id, age, kind, start_year, end_year, trigger_event) VALUES (?1, ?2, ?3, ?4, ?5, "
+               "?6)",
+               1, ints, NO_TEXT, "phase row " + format_i64(row.id));
+    state_->history_keys.phase = row.id;
+}
+
+void StageWriter::write_event(const EventRow& row) {
+    require_open(state_, "write_event");
+    require_next_id("write_event", "event", row.id, state_->history_keys.event);
+    const std::int64_t ints[8] = {row.id,     row.year,   row.end_year,   row.kind,
+                                  row.phase,  row.region, row.settlement, row.salience};
+    insert_row(state_->db.get(),
+               "INSERT INTO event (id, year, end_year, kind, phase, region, settlement, salience) VALUES (?1, ?2, ?3, "
+               "?4, ?5, ?6, ?7, ?8)",
+               1, ints, NO_TEXT, "event row " + format_i64(row.id));
+    state_->history_keys.event = row.id;
+}
+
+void StageWriter::write_event_participant(const EventParticipantRow& row) {
+    require_open(state_, "write_event_participant");
+    const std::pair<std::int64_t, std::int64_t> key{row.event, row.seq};
+    require_next_pair("write_event_participant", key, state_->history_keys.event_participant);
+    const std::int64_t ints[5] = {row.event, row.seq, row.role, row.entity_type, row.entity_id};
+    insert_row(state_->db.get(),
+               "INSERT INTO event_participant (event, seq, role, entity_type, entity_id) VALUES (?1, ?2, ?3, ?4, ?5)",
+               1, ints, NO_TEXT, "event_participant row " + key_text(key));
+    state_->history_keys.event_participant = key;
+}
+
+void StageWriter::write_event_cause(const EventCauseRow& row) {
+    require_open(state_, "write_event_cause");
+    const std::pair<std::int64_t, std::int64_t> key{row.event, row.cause};
+    require_next_pair("write_event_cause", key, state_->history_keys.event_cause);
+    const std::int64_t ints[2] = {row.event, row.cause};
+    insert_row(state_->db.get(), "INSERT INTO event_cause (event, cause) VALUES (?1, ?2)", 1, ints, NO_TEXT,
+               "event_cause row " + key_text(key));
+    state_->history_keys.event_cause = key;
+}
+
+void StageWriter::write_event_value(const EventValueRow& row) {
+    require_open(state_, "write_event_value");
+    const std::pair<std::int64_t, std::int64_t> key{row.event, row.seq};
+    require_next_pair("write_event_value", key, state_->history_keys.event_value);
+    const std::int64_t ints[3] = {row.event, row.seq, row.value};
+    insert_row(state_->db.get(), "INSERT INTO event_value (event, seq, value) VALUES (?1, ?2, ?3)", 1, ints, NO_TEXT,
+               "event_value row " + key_text(key));
+    state_->history_keys.event_value = key;
+}
+
+void StageWriter::write_civilization(const CivilizationRow& row) {
+    require_open(state_, "write_civilization");
+    require_next_id("write_civilization", "civilization", row.id, state_->history_keys.civilization);
+    const std::int64_t ints[6] = {row.race,         row.culture,        row.home_region,
+                                  row.capital,      row.founded_year,   row.founding_event};
+    insert_row(state_->db.get(),
+               "INSERT INTO civilization (id, name, race, culture, home_region, capital, founded_year, "
+               "founding_event, ended_year, ending_event) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10)",
+               3, ints,
+               [&row](detail::Statement& stmt) {
+                   int rc = stmt.bind_int64(1, row.id);
+                   if (rc == SQLITE_OK) rc = stmt.bind_text(2, row.name);
+                   if (rc == SQLITE_OK) rc = bind_optional(stmt, 9, row.ended_year);
+                   if (rc == SQLITE_OK) rc = stmt.bind_int64(10, row.ending_event);
+                   return rc;
+               },
+               "civilization row " + format_i64(row.id));
+    state_->history_keys.civilization = row.id;
+}
+
+void StageWriter::write_settlement(const SettlementRow& row) {
+    require_open(state_, "write_settlement");
+    require_next_id("write_settlement", "settlement", row.id, state_->history_keys.settlement);
+    const std::int64_t ints[10] = {row.x,           row.y,         row.region, row.founder_civ, row.founded_year,
+                                   row.founding_event, row.owner_civ, row.kind,   row.status,      row.population};
+    insert_row(state_->db.get(),
+               "INSERT INTO settlement (id, name, x, y, region, founder_civ, founded_year, founding_event, "
+               "owner_civ, kind, status, population, ruined_year, ruin_event) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, "
+               "?9, ?10, ?11, ?12, ?13, ?14)",
+               3, ints,
+               [&row](detail::Statement& stmt) {
+                   int rc = stmt.bind_int64(1, row.id);
+                   if (rc == SQLITE_OK) rc = stmt.bind_text(2, row.name);
+                   if (rc == SQLITE_OK) rc = bind_optional(stmt, 13, row.ruined_year);
+                   if (rc == SQLITE_OK) rc = stmt.bind_int64(14, row.ruin_event);
+                   return rc;
+               },
+               "settlement row " + format_i64(row.id));
+    state_->history_keys.settlement = row.id;
+}
+
+void StageWriter::write_settlement_census(const SettlementCensusRow& row) {
+    require_open(state_, "write_settlement_census");
+    const std::pair<std::int64_t, std::int64_t> key{row.settlement, row.year};
+    require_next_pair("write_settlement_census", key, state_->history_keys.settlement_census);
+    const std::int64_t ints[6] = {row.settlement, row.year, row.owner_civ, row.kind, row.status, row.population};
+    insert_row(state_->db.get(),
+               "INSERT INTO settlement_census (settlement, year, owner_civ, kind, status, population) VALUES (?1, ?2, "
+               "?3, ?4, ?5, ?6)",
+               1, ints, NO_TEXT, "settlement_census row " + key_text(key));
+    state_->history_keys.settlement_census = key;
+}
+
+void StageWriter::write_region_control(const RegionControlRow& row) {
+    require_open(state_, "write_region_control");
+    const std::pair<std::int64_t, std::int64_t> key{row.region, row.from_year};
+    require_next_pair("write_region_control", key, state_->history_keys.region_control);
+    const std::int64_t ints[2] = {row.civ, row.event};
+    insert_row(state_->db.get(),
+               "INSERT INTO region_control (region, from_year, to_year, civ, event) VALUES (?1, ?2, ?3, ?4, ?5)", 4,
+               ints,
+               [&row](detail::Statement& stmt) {
+                   int rc = stmt.bind_int64(1, row.region);
+                   if (rc == SQLITE_OK) rc = stmt.bind_int64(2, row.from_year);
+                   if (rc == SQLITE_OK) rc = bind_optional(stmt, 3, row.to_year);
+                   return rc;
+               },
+               "region_control row " + key_text(key));
+    state_->history_keys.region_control = key;
+}
+
+void StageWriter::write_relation(const RelationRow& row) {
+    require_open(state_, "write_relation");
+    auto key = std::make_tuple(row.a_type, row.a_id, row.b_type, row.b_id, row.kind, row.since);
+    if (row.a_type < 1 || key <= state_->history_keys.relation) {
+        fatal_text("StageWriter::write_relation: row (" + format_i64(row.a_type) + ", " + format_i64(row.a_id) +
+                   ", " + format_i64(row.b_type) + ", " + format_i64(row.b_id) + ", '" + row.kind + "', " +
+                   format_i64(row.since) + ") is not above the previous row with a_type >= 1 (ascending keys)");
+    }
+    const std::int64_t ints[4] = {row.a_type, row.a_id, row.b_type, row.b_id};
+    insert_row(state_->db.get(),
+               "INSERT INTO relation (a_type, a_id, b_type, b_id, kind, since, until, since_event, until_event) "
+               "VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)",
+               1, ints,
+               [&row](detail::Statement& stmt) {
+                   int rc = stmt.bind_text(5, row.kind);
+                   if (rc == SQLITE_OK) rc = stmt.bind_int64(6, row.since);
+                   if (rc == SQLITE_OK) rc = bind_optional(stmt, 7, row.until);
+                   if (rc == SQLITE_OK) rc = stmt.bind_int64(8, row.since_event);
+                   if (rc == SQLITE_OK) rc = stmt.bind_int64(9, row.until_event);
+                   return rc;
+               },
+               "relation row");
+    state_->history_keys.relation = std::move(key);
+}
+
 void StageWriter::commit() {
     if (state_ == nullptr) {
         fatal("StageWriter::commit: stage is not open");
@@ -864,6 +1096,7 @@ StageWriter WorldWriter::begin_stage(std::string_view stage_name) {
     s.stage_start_culture_id = s.last_culture_id;
     s.stage_start_god_id = s.last_god_id;
     s.stage_start_age_id = s.last_age_id;
+    s.stage_start_history_keys = s.history_keys;
     return StageWriter(s, std::string(stage_name));
 }
 

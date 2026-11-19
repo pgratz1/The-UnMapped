@@ -153,8 +153,8 @@ constexpr std::string_view GENERATE_USAGE =
     "  --settings FILE     world settings file; flags override it key by key\n"
     "  --data DIR          data root (default UNMAPPED_DATA_DIR, else the source tree's game/data)\n"
     "  --until STAGE       run the stages up to and including STAGE (elevation ...\n"
-    "                      regions, chronology); 'none' runs no stage (default: every\n"
-    "                      implemented stage)\n"
+    "                      regions, chronology, history); 'none' runs no stage\n"
+    "                      (default: every implemented stage)\n"
     "  --test-pattern      run only the P0 test-pattern stage, no geography\n"
     "  --threads N         threads for parallel steps, 1 to 256 (default: hardware threads);\n"
     "                      never changes the output\n"
@@ -173,8 +173,9 @@ constexpr std::string_view GENERATE_USAGE =
     "  --verbose           print progress and timings to stderr\n"
     "\n"
     "The history settings are recorded in every world. The chronology stage uses\n"
-    "the span and the races; the others take effect with the history stage.\n"
-    "--test-pattern records them and writes no history.\n"
+    "the span and the races, the history stage the span and the detail; the\n"
+    "others take effect with later history subsystems. --test-pattern records\n"
+    "them and writes no history.\n"
     "\n"
     "Prints the absolute path of the written file.\n";
 

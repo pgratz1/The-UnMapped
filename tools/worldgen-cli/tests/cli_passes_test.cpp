@@ -93,7 +93,7 @@ TEST_CASE("cli P1-01 9.1, P1-00 10.3: a world with a pass (512, seed 42): rows, 
     auto opened = worldgen::db::WorldReader::open(u8(world));
     REQUIRE(opened.ok());
     const worldgen::db::WorldReader& w = opened.value();
-    CHECK(w.schema_version() == 6);
+    CHECK(w.schema_version() == 7);
     CHECK(w.table_columns("pass").value() == std::vector<std::string>{"id", "range_id", "kind", "capped", "col_x",
                                                                        "col_y", "saddle_dm", "col_dm", "path"});
     const auto raw = w.table_rows("pass");
@@ -167,33 +167,29 @@ TEST_CASE("cli P1-01 9.1, P1-00 10.3: a world with a pass (512, seed 42): rows, 
     const ProcessResult h = sb.cli({"hash", "--db", u8(world), "--detail"});
     REQUIRE(h.exit_code == EXIT_OK);
     const std::vector<std::string> hl = lines_of(h.out);
-    REQUIRE(hl.size() == 16U);  // thirteen tables since schema 6 (P3-03 9.2)
-    CHECK(starts_with(hl[2], "table age "));
-    CHECK(starts_with(hl[3], "table biome "));
-    CHECK(starts_with(hl[4], "table climate "));
-    CHECK(starts_with(hl[5], "table culture "));
-    CHECK(starts_with(hl[6], "table god "));
-    CHECK(starts_with(hl[7], "table layer "));
-    CHECK(starts_with(hl[8], "table meta "));
-    CHECK(hl[9] == "table pass " + worldgen::to_hex(p004::pass_table_hash(trows)));
-    CHECK(starts_with(hl[10], "table race "));
-    CHECK(starts_with(hl[11], "table race_biome "));
-    CHECK(starts_with(hl[12], "table region "));
-    CHECK(starts_with(hl[13], "table region_biome "));
-    CHECK(starts_with(hl[14], "table region_border "));
-    CHECK(hl[15] == "layer elevation " + gold.at("layer"));
-    CHECK(hl[15] == "layer elevation 590569e0db4d6bc84fd8e955ef77ab49bec2c82b5d383fd75d212800e31a3b91");  // 10.4.1
+    REQUIRE(hl.size() == 29U);  // twenty-six tables since schema 7 (P3-04 11.2)
+    const char* const names[] = {"age", "biome", "civilization", "climate", "culture", "event", "event_cause",
+                                 "event_kind", "event_kind_role", "event_kind_value", "event_participant",
+                                 "event_value", "god", "layer", "meta", "pass", "phase", "race", "race_biome",
+                                 "region", "region_biome", "region_border", "region_control", "relation",
+                                 "settlement", "settlement_census"};
+    for (std::size_t k = 0; k < 26; ++k) {
+        CHECK(starts_with(hl[2 + k], std::string("table ") + names[k] + " "));
+    }
+    CHECK(hl[17] == "table pass " + worldgen::to_hex(p004::pass_table_hash(trows)));
+    CHECK(hl[28] == "layer elevation " + gold.at("layer"));
+    CHECK(hl[28] == "layer elevation 590569e0db4d6bc84fd8e955ef77ab49bec2c82b5d383fd75d212800e31a3b91");  // 10.4.1
 
     // report: schema 2, the table, and the five pass keys right after
     // edge_parallel_run_m, equal to the test's own measure.
     const ProcessResult rep = sb.cli({"report", "--db", u8(world)});
     INFO("stderr: ", rep.err);
     REQUIRE(rep.exit_code == EXIT_OK);
-    CHECK(contains(rep.out, "\nschema_version = 6\n"));
+    CHECK(contains(rep.out, "\nschema_version = 7\n"));
     CHECK(contains(rep.out, "\ngenerator_version = " + std::string(worldgen::GENERATOR_VERSION) + "\n"));
-    CHECK(std::string(worldgen::GENERATOR_VERSION) == "0.13.0");
-    CHECK(contains(rep.out, "\n[tables]\nage = 0\nbiome = 0\nclimate = 0\nculture = 0\ngod = 0\nlayer = 1\nmeta = 16\npass = " + std::to_string(rows.size()) +
-                                "\nrace = 0\nrace_biome = 0\nregion = 0\nregion_biome = 0\nregion_border = 0\n[layers]\n"));
+    CHECK(std::string(worldgen::GENERATOR_VERSION) == "0.14.0");
+    CHECK(contains(rep.out, "\n[tables]\nage = 0\nbiome = 0\ncivilization = 0\nclimate = 0\nculture = 0\nevent = 0\nevent_cause = 0\nevent_kind = 0\nevent_kind_role = 0\nevent_kind_value = 0\nevent_participant = 0\nevent_value = 0\ngod = 0\nlayer = 1\nmeta = 17\npass = " + std::to_string(rows.size()) +
+                                "\nphase = 0\nrace = 0\nrace_biome = 0\nregion = 0\nregion_biome = 0\nregion_border = 0\nregion_control = 0\nrelation = 0\nsettlement = 0\nsettlement_census = 0\n[layers]\n"));
     const std::vector<std::string> want =
         elev_test::report_pass_lines(worldgen::geo::Grid{512, 512}, *e, rows);
     std::string block;
@@ -220,7 +216,7 @@ TEST_CASE("cli P1-00 10.3: the pass keys of a world without a site, and with no 
     REQUIRE(g.exit_code == EXIT_OK);
     const ProcessResult rep = sb.cli({"report", "--db", u8(world)});
     REQUIRE(rep.exit_code == EXIT_OK);
-    CHECK(contains(rep.out, "\npass = 0\nrace = 0\nrace_biome = 0\nregion = 0\nregion_biome = 0\nregion_border = 0\n[layers]\n"));
+    CHECK(contains(rep.out, "\npass = 0\nphase = 0\nrace = 0\nrace_biome = 0\nregion = 0\nregion_biome = 0\nregion_border = 0\nregion_control = 0\nrelation = 0\nsettlement = 0\nsettlement_census = 0\n[layers]\n"));
     CHECK(contains(rep.out, "\npasses = 0\nnatural_gaps = 0\npasses_capped = 0\npass_col_m = n/a n/a n/a\n"
                             "passes_walkable = 0\n"));
     // --until none: no [geography] section, so no pass key, but the table.
@@ -229,7 +225,7 @@ TEST_CASE("cli P1-00 10.3: the pass keys of a world without a site, and with no 
             EXIT_OK);
     const ProcessResult rn = sb.cli({"report", "--db", u8(none)});
     REQUIRE(rn.exit_code == EXIT_OK);
-    CHECK(contains(rn.out, "\npass = 0\nrace = 0\nrace_biome = 0\nregion = 0\nregion_biome = 0\nregion_border = 0\n[layers]\n"));
+    CHECK(contains(rn.out, "\npass = 0\nphase = 0\nrace = 0\nrace_biome = 0\nregion = 0\nregion_biome = 0\nregion_border = 0\nregion_control = 0\nrelation = 0\nsettlement = 0\nsettlement_census = 0\n[layers]\n"));
     CHECK_FALSE(contains(rn.out, "passes ="));
     CHECK_FALSE(contains(rn.out, "[geography]"));
     const ProcessResult hn = sb.cli({"hash", "--db", u8(none), "--detail"});

@@ -12,3 +12,15 @@ std::uint64_t geography_draw(std::uint64_t key) {
 }
 
 }  // namespace worldgen::stages
+
+// history-live-iteration applies to history code only: the same loop in a
+// geography stage is not reported (no such State exists there).
+namespace worldgen::stages {
+
+void geography_loop(Things& state) {
+    for (const auto& c : state.civs()) {
+        state.found_civilization(c.id);
+    }
+}
+
+}  // namespace worldgen::stages

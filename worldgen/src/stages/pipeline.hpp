@@ -42,6 +42,21 @@ public:
     [[nodiscard]] const std::vector<db::PassRow>& passes() const noexcept { return passes_; }
     // The committed rows of table region, in id order.
     [[nodiscard]] const std::vector<db::RegionRow>& regions() const noexcept { return regions_; }
+    // The committed rows of the region and chronology tables (P3-04 3.3),
+    // in key order.
+    struct CommittedRows {
+        std::vector<db::RegionBorderRow> region_borders;
+        std::vector<db::RegionBiomeRow> region_biomes;
+        std::vector<db::RaceRow> races;
+        std::vector<db::RaceBiomeRow> race_biomes;
+        std::vector<db::CultureRow> cultures;
+        std::vector<db::GodRow> gods;
+        std::vector<db::AgeRow> ages;
+
+        // Appends every row of `more` (a stage's rows, in writing order).
+        void append(CommittedRows&& more);
+    };
+    [[nodiscard]] const CommittedRows& rows() const noexcept { return rows_; }
     [[nodiscard]] const history::HistoryParams& history_params() const noexcept { return history_; }
     [[nodiscard]] db::WorldWriter& writer() noexcept { return writer_; }
     [[nodiscard]] const data::ContentSet& content() const noexcept { return content_; }
@@ -57,6 +72,7 @@ private:
     std::vector<StoredLayer> layers_;  // committed layers, in id order
     std::vector<db::PassRow> passes_;  // committed rows of table pass, in id order
     std::vector<db::RegionRow> regions_;  // committed rows of table region, in id order
+    CommittedRows rows_;                  // committed rows of the tables history reads
 };
 
 }  // namespace worldgen::stages::detail

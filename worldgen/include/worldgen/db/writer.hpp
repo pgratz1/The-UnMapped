@@ -214,6 +214,176 @@ struct AgeRow {
     friend bool operator==(const AgeRow&, const AgeRow&) = default;
 };
 
+// --- The history tables (P3-04 9; schema 7) ----------------------------------
+// One struct per table, columns in declared order; std::optional for the
+// nullable columns (NULL exactly while the year has not happened).
+
+// One row of table `event_kind` (P3-04 8.2, 9.2).
+struct EventKindRow {
+    std::int64_t id = 0;
+    std::string key;
+    std::int64_t caused = 0;          // 0 or 1
+    std::int64_t region_use = 0;      // 0 never, 1 always, 2 optional
+    std::int64_t settlement_use = 0;  // 0, 1 or 2
+    std::int64_t salience = 0;        // 0 ... 100
+    std::string template_text;        // column `template`
+
+    friend bool operator==(const EventKindRow&, const EventKindRow&) = default;
+};
+
+// One row of table `event_kind_role` (P3-04 8.2, 9.2); max_count 0 =
+// unbounded.
+struct EventKindRoleRow {
+    std::int64_t kind = 0;
+    std::int64_t seq = 0;
+    std::string role;
+    std::int64_t entity_type = 0;
+    std::int64_t min_count = 0;
+    std::int64_t max_count = 0;
+
+    friend bool operator==(const EventKindRoleRow&, const EventKindRoleRow&) = default;
+};
+
+// One row of table `event_kind_value` (P3-04 8.2, 9.2).
+struct EventKindValueRow {
+    std::int64_t kind = 0;
+    std::int64_t seq = 0;
+    std::string key;
+
+    friend bool operator==(const EventKindValueRow&, const EventKindValueRow&) = default;
+};
+
+// One row of table `phase` (P3-04 5.7): end_year inclusive.
+struct PhaseRow {
+    std::int64_t id = 0;
+    std::int64_t age = 0;
+    std::int64_t kind = 0;  // 1 opening, 2 quiet, 3 flare-up, 4 final
+    std::int64_t start_year = 0;
+    std::int64_t end_year = 0;
+    std::int64_t trigger_event = 0;
+
+    friend bool operator==(const PhaseRow&, const PhaseRow&) = default;
+};
+
+// One row of table `event` (P3-04 6.6, 9.2).
+struct EventRow {
+    std::int64_t id = 0;
+    std::int64_t year = 0;
+    std::int64_t end_year = 0;
+    std::int64_t kind = 0;
+    std::int64_t phase = 0;
+    std::int64_t region = 0;
+    std::int64_t settlement = 0;
+    std::int64_t salience = 0;
+
+    friend bool operator==(const EventRow&, const EventRow&) = default;
+};
+
+// One row of table `event_participant` (P3-04 9.2): role is the role's seq
+// in event_kind_role, entity_type its code.
+struct EventParticipantRow {
+    std::int64_t event = 0;
+    std::int64_t seq = 0;
+    std::int64_t role = 0;
+    std::int64_t entity_type = 0;
+    std::int64_t entity_id = 0;
+
+    friend bool operator==(const EventParticipantRow&, const EventParticipantRow&) = default;
+};
+
+// One row of table `event_cause` (P3-04 9.2): cause < event.
+struct EventCauseRow {
+    std::int64_t event = 0;
+    std::int64_t cause = 0;
+
+    friend bool operator==(const EventCauseRow&, const EventCauseRow&) = default;
+};
+
+// One row of table `event_value` (P3-04 9.2): seq is the value key's seq in
+// event_kind_value.
+struct EventValueRow {
+    std::int64_t event = 0;
+    std::int64_t seq = 0;
+    std::int64_t value = 0;
+
+    friend bool operator==(const EventValueRow&, const EventValueRow&) = default;
+};
+
+// One row of table `civilization` (P3-04 9.2), the end state.
+struct CivilizationRow {
+    std::int64_t id = 0;
+    std::string name;
+    std::int64_t race = 0;
+    std::int64_t culture = 0;
+    std::int64_t home_region = 0;
+    std::int64_t capital = 0;  // settlement id or 0
+    std::int64_t founded_year = 0;
+    std::int64_t founding_event = 0;
+    std::optional<std::int64_t> ended_year;
+    std::int64_t ending_event = 0;
+
+    friend bool operator==(const CivilizationRow&, const CivilizationRow&) = default;
+};
+
+// One row of table `settlement` (P3-04 9.2), the end state.
+struct SettlementRow {
+    std::int64_t id = 0;
+    std::string name;
+    std::int64_t x = 0;
+    std::int64_t y = 0;
+    std::int64_t region = 0;
+    std::int64_t founder_civ = 0;
+    std::int64_t founded_year = 0;
+    std::int64_t founding_event = 0;
+    std::int64_t owner_civ = 0;
+    std::int64_t kind = 0;    // 1 hamlet ... 5 fortress
+    std::int64_t status = 0;  // 1 thriving, 2 declining, 3 ruined, 4 faded
+    std::int64_t population = 0;
+    std::optional<std::int64_t> ruined_year;
+    std::int64_t ruin_event = 0;
+
+    friend bool operator==(const SettlementRow&, const SettlementRow&) = default;
+};
+
+// One row of table `settlement_census` (P3-04 6.7).
+struct SettlementCensusRow {
+    std::int64_t settlement = 0;
+    std::int64_t year = 0;
+    std::int64_t owner_civ = 0;
+    std::int64_t kind = 0;
+    std::int64_t status = 0;
+    std::int64_t population = 0;
+
+    friend bool operator==(const SettlementCensusRow&, const SettlementCensusRow&) = default;
+};
+
+// One row of table `region_control` (P3-04 6.7): to_year NULL while open.
+struct RegionControlRow {
+    std::int64_t region = 0;
+    std::int64_t from_year = 0;
+    std::optional<std::int64_t> to_year;
+    std::int64_t civ = 0;
+    std::int64_t event = 0;
+
+    friend bool operator==(const RegionControlRow&, const RegionControlRow&) = default;
+};
+
+// One row of table `relation` (P3-04 6.7): until NULL and until_event 0
+// while open.
+struct RelationRow {
+    std::int64_t a_type = 0;
+    std::int64_t a_id = 0;
+    std::int64_t b_type = 0;
+    std::int64_t b_id = 0;
+    std::string kind;
+    std::int64_t since = 0;
+    std::optional<std::int64_t> until;
+    std::int64_t since_event = 0;
+    std::int64_t until_event = 0;
+
+    friend bool operator==(const RelationRow&, const RelationRow&) = default;
+};
+
 // One stage's transaction on the working database (P0-02 6 step 3).
 // Obtained from WorldWriter::begin_stage; at most one is open at a time.
 // Destroying it without commit() rolls the transaction back and leaves no
@@ -281,6 +451,27 @@ public:
     void write_culture(const CultureRow& row);
     void write_god(const GodRow& row);
     void write_age(const AgeRow& row);
+
+    // Insert one row of each of the thirteen history tables (P3-04 9.3).
+    // Rows of each table are written in strictly ascending primary key (id;
+    // (kind, seq); (event, seq); (event, cause); (settlement, year);
+    // (region, from_year); (a_type, a_id, b_type, b_id, kind, since) with
+    // kind compared by bytes), P0-02 6 step 3. FatalError if the stage is
+    // closed, a key is not above every key written before to that table,
+    // its first component is below 1, or SQLite rejects the row.
+    void write_event_kind(const EventKindRow& row);
+    void write_event_kind_role(const EventKindRoleRow& row);
+    void write_event_kind_value(const EventKindValueRow& row);
+    void write_phase(const PhaseRow& row);
+    void write_event(const EventRow& row);
+    void write_event_participant(const EventParticipantRow& row);
+    void write_event_cause(const EventCauseRow& row);
+    void write_event_value(const EventValueRow& row);
+    void write_civilization(const CivilizationRow& row);
+    void write_settlement(const SettlementRow& row);
+    void write_settlement_census(const SettlementCensusRow& row);
+    void write_region_control(const RegionControlRow& row);
+    void write_relation(const RelationRow& row);
 
     // COMMIT, and append the stage name to meta.stages (P0-02 5.5, 6 step 3).
     // FatalError if already committed or SQLite fails.

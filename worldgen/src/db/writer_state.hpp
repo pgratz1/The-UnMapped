@@ -6,6 +6,7 @@
 #include <map>
 #include <optional>
 #include <string>
+#include <tuple>
 #include <utility>
 #include <vector>
 
@@ -13,6 +14,25 @@
 #include "worldgen/db/testing.hpp"
 
 namespace worldgen::db::detail {
+
+// The last primary key written to each history table (P3-04 9.3).
+struct HistoryKeys {
+    using Pair = std::pair<std::int64_t, std::int64_t>;
+    std::int64_t event_kind = 0;
+    Pair event_kind_role{0, 0};
+    Pair event_kind_value{0, 0};
+    std::int64_t phase = 0;
+    std::int64_t event = 0;
+    Pair event_participant{0, 0};
+    Pair event_cause{0, 0};
+    Pair event_value{0, 0};
+    std::int64_t civilization = 0;
+    std::int64_t settlement = 0;
+    Pair settlement_census{0, 0};
+    Pair region_control{0, 0};
+    std::tuple<std::int64_t, std::int64_t, std::int64_t, std::int64_t, std::string, std::int64_t> relation{
+        0, 0, 0, 0, std::string(), 0};
+};
 
 struct WriterState {
     Connection db;                 // the working database; closed by finalize
@@ -47,6 +67,11 @@ struct WriterState {
     std::int64_t stage_start_god_id = 0;
     std::int64_t last_age_id = 0;
     std::int64_t stage_start_age_id = 0;
+    // The thirteen history tables (P3-04 9.3): the last key written to each
+    // (all zero before the first row) and their values at begin_stage,
+    // restored on rollback.
+    HistoryKeys history_keys;
+    HistoryKeys stage_start_history_keys;
     std::vector<std::string> stages;              // committed stages, run order
     std::optional<std::uint64_t> seed;
     std::string seed_phrase;                      // empty for a numeric seed

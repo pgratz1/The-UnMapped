@@ -1,13 +1,15 @@
 #pragma once
 
-// World database schema, version 6 (spec P0-02 sections 4.2, 5;
+// World database schema, version 7 (spec P0-02 sections 4.2, 5;
 // docs/specs/schema.md; table `pass` from P1-01 section 9.1, schema 2;
 // tables `biome` and `climate` from P1-04 section 3 and P1-03 section 3,
 // schema 3; column climate.temp_offset_dc, schema 4, P0-02 amendment 16;
 // tables `region`, `region_border` and `region_biome` from P1-06 section 3,
 // schema 5, P0-02 amendment 17; tables `race`, `race_biome`, `culture`,
 // `god` and `age` and the eight history `meta` keys from P3-03 sections 4.2
-// and 5, schema 6, P0-02 amendment 18).
+// and 5, schema 6, P0-02 amendment 18; the thirteen history tables and
+// meta key history_end_year from P3-04 section 9, schema 7, P0-02
+// amendment 19).
 //
 // The DDL strings below are stored verbatim in sqlite_schema and are
 // therefore part of every world file. Each is one line with single spaces,
@@ -23,7 +25,7 @@ namespace worldgen::db {
 
 // The schema version (P0-02 5.2 rule 1). Written to PRAGMA user_version
 // and meta.schema_version; a reader supports exactly this version.
-inline constexpr std::int64_t SCHEMA_VERSION = 6;
+inline constexpr std::int64_t SCHEMA_VERSION = 7;
 
 // PRAGMA application_id of every world file: 0x554E4D50, ASCII "UNMP"
 // (P0-02 4.2, header offset 68 in 6.1).
@@ -130,19 +132,104 @@ inline constexpr std::string_view CULTURE_TABLE = "culture";
 inline constexpr std::string_view GOD_TABLE = "god";
 inline constexpr std::string_view AGE_TABLE = "age";
 
+// DDL of the history tables (P3-04 9.1, schema version 7), executed
+// fourteenth to twenty-sixth: written by the history stage, empty when it
+// did not run. The event catalogue (event_kind, event_kind_role,
+// event_kind_value), the phases and the event log (phase, event,
+// event_participant, event_cause, event_value), the entities at the end of
+// the run (civilization, settlement) and the by-year tables
+// (settlement_census, region_control, relation). Nullable columns:
+// civilization.ended_year, settlement.ruined_year, region_control.to_year,
+// relation.until.
+inline constexpr std::string_view DDL_EVENT_KIND =
+    "CREATE TABLE event_kind (id INTEGER PRIMARY KEY, key TEXT NOT NULL UNIQUE, caused INTEGER NOT NULL, region_use "
+    "INTEGER NOT NULL, settlement_use INTEGER NOT NULL, salience INTEGER NOT NULL, template TEXT NOT NULL) STRICT";
+inline constexpr std::string_view DDL_EVENT_KIND_ROLE =
+    "CREATE TABLE event_kind_role (kind INTEGER NOT NULL, seq INTEGER NOT NULL, role TEXT NOT NULL, entity_type "
+    "INTEGER NOT NULL, min_count INTEGER NOT NULL, max_count INTEGER NOT NULL, PRIMARY KEY (kind, seq)) STRICT, "
+    "WITHOUT ROWID";
+inline constexpr std::string_view DDL_EVENT_KIND_VALUE =
+    "CREATE TABLE event_kind_value (kind INTEGER NOT NULL, seq INTEGER NOT NULL, key TEXT NOT NULL, PRIMARY KEY "
+    "(kind, seq)) STRICT, WITHOUT ROWID";
+inline constexpr std::string_view DDL_PHASE =
+    "CREATE TABLE phase (id INTEGER PRIMARY KEY, age INTEGER NOT NULL, kind INTEGER NOT NULL, start_year INTEGER NOT "
+    "NULL, end_year INTEGER NOT NULL, trigger_event INTEGER NOT NULL) STRICT";
+inline constexpr std::string_view DDL_EVENT =
+    "CREATE TABLE event (id INTEGER PRIMARY KEY, year INTEGER NOT NULL, end_year INTEGER NOT NULL, kind INTEGER NOT "
+    "NULL, phase INTEGER NOT NULL, region INTEGER NOT NULL, settlement INTEGER NOT NULL, salience INTEGER NOT NULL) "
+    "STRICT";
+inline constexpr std::string_view DDL_EVENT_PARTICIPANT =
+    "CREATE TABLE event_participant (event INTEGER NOT NULL, seq INTEGER NOT NULL, role INTEGER NOT NULL, "
+    "entity_type INTEGER NOT NULL, entity_id INTEGER NOT NULL, PRIMARY KEY (event, seq)) STRICT, WITHOUT ROWID";
+inline constexpr std::string_view DDL_EVENT_CAUSE =
+    "CREATE TABLE event_cause (event INTEGER NOT NULL, cause INTEGER NOT NULL, PRIMARY KEY (event, cause)) STRICT, "
+    "WITHOUT ROWID";
+inline constexpr std::string_view DDL_EVENT_VALUE =
+    "CREATE TABLE event_value (event INTEGER NOT NULL, seq INTEGER NOT NULL, value INTEGER NOT NULL, PRIMARY KEY "
+    "(event, seq)) STRICT, WITHOUT ROWID";
+inline constexpr std::string_view DDL_CIVILIZATION =
+    "CREATE TABLE civilization (id INTEGER PRIMARY KEY, name TEXT NOT NULL, race INTEGER NOT NULL, culture INTEGER "
+    "NOT NULL, home_region INTEGER NOT NULL, capital INTEGER NOT NULL, founded_year INTEGER NOT NULL, founding_event "
+    "INTEGER NOT NULL, ended_year INTEGER, ending_event INTEGER NOT NULL) STRICT";
+inline constexpr std::string_view DDL_SETTLEMENT =
+    "CREATE TABLE settlement (id INTEGER PRIMARY KEY, name TEXT NOT NULL, x INTEGER NOT NULL, y INTEGER NOT NULL, "
+    "region INTEGER NOT NULL, founder_civ INTEGER NOT NULL, founded_year INTEGER NOT NULL, founding_event INTEGER NOT "
+    "NULL, owner_civ INTEGER NOT NULL, kind INTEGER NOT NULL, status INTEGER NOT NULL, population INTEGER NOT NULL, "
+    "ruined_year INTEGER, ruin_event INTEGER NOT NULL) STRICT";
+inline constexpr std::string_view DDL_SETTLEMENT_CENSUS =
+    "CREATE TABLE settlement_census (settlement INTEGER NOT NULL, year INTEGER NOT NULL, owner_civ INTEGER NOT NULL, "
+    "kind INTEGER NOT NULL, status INTEGER NOT NULL, population INTEGER NOT NULL, PRIMARY KEY (settlement, year)) "
+    "STRICT, WITHOUT ROWID";
+inline constexpr std::string_view DDL_REGION_CONTROL =
+    "CREATE TABLE region_control (region INTEGER NOT NULL, from_year INTEGER NOT NULL, to_year INTEGER, civ INTEGER "
+    "NOT NULL, event INTEGER NOT NULL, PRIMARY KEY (region, from_year)) STRICT, WITHOUT ROWID";
+inline constexpr std::string_view DDL_RELATION =
+    "CREATE TABLE relation (a_type INTEGER NOT NULL, a_id INTEGER NOT NULL, b_type INTEGER NOT NULL, b_id INTEGER NOT "
+    "NULL, kind TEXT NOT NULL, since INTEGER NOT NULL, until INTEGER, since_event INTEGER NOT NULL, until_event "
+    "INTEGER NOT NULL, PRIMARY KEY (a_type, a_id, b_type, b_id, kind, since)) STRICT, WITHOUT ROWID";
+
+// The names of the thirteen history tables (P3-04 9.1), in DDL order.
+inline constexpr std::string_view EVENT_KIND_TABLE = "event_kind";
+inline constexpr std::string_view EVENT_KIND_ROLE_TABLE = "event_kind_role";
+inline constexpr std::string_view EVENT_KIND_VALUE_TABLE = "event_kind_value";
+inline constexpr std::string_view PHASE_TABLE = "phase";
+inline constexpr std::string_view EVENT_TABLE = "event";
+inline constexpr std::string_view EVENT_PARTICIPANT_TABLE = "event_participant";
+inline constexpr std::string_view EVENT_CAUSE_TABLE = "event_cause";
+inline constexpr std::string_view EVENT_VALUE_TABLE = "event_value";
+inline constexpr std::string_view CIVILIZATION_TABLE = "civilization";
+inline constexpr std::string_view SETTLEMENT_TABLE = "settlement";
+inline constexpr std::string_view SETTLEMENT_CENSUS_TABLE = "settlement_census";
+inline constexpr std::string_view REGION_CONTROL_TABLE = "region_control";
+inline constexpr std::string_view RELATION_TABLE = "relation";
+inline constexpr std::array<std::string_view, 13> HISTORY_TABLES = {
+    EVENT_KIND_TABLE,        EVENT_KIND_ROLE_TABLE,   EVENT_KIND_VALUE_TABLE, PHASE_TABLE,
+    EVENT_TABLE,             EVENT_PARTICIPANT_TABLE, EVENT_CAUSE_TABLE,      EVENT_VALUE_TABLE,
+    CIVILIZATION_TABLE,      SETTLEMENT_TABLE,        SETTLEMENT_CENSUS_TABLE, REGION_CONTROL_TABLE,
+    RELATION_TABLE};
+
 // The DDL statements in execution order (P0-02 5.4, section 6 step 2;
-// schema 6: meta, layer, pass, biome, climate, region, region_border,
-// region_biome, race, race_biome, culture, god, age).
-inline constexpr std::array<std::string_view, 13> DDL_STATEMENTS = {
-    DDL_META,       DDL_LAYER,         DDL_PASS,         DDL_BIOME, DDL_CLIMATE,
-    DDL_REGION,     DDL_REGION_BORDER, DDL_REGION_BIOME, DDL_RACE,  DDL_RACE_BIOME,
-    DDL_CULTURE,    DDL_GOD,           DDL_AGE};
+// schema 7: meta, layer, pass, biome, climate, region, region_border,
+// region_biome, race, race_biome, culture, god, age, then the thirteen
+// history tables of P3-04 9.1).
+inline constexpr std::array<std::string_view, 26> DDL_STATEMENTS = {
+    DDL_META,           DDL_LAYER,           DDL_PASS,
+    DDL_BIOME,          DDL_CLIMATE,         DDL_REGION,
+    DDL_REGION_BORDER,  DDL_REGION_BIOME,    DDL_RACE,
+    DDL_RACE_BIOME,     DDL_CULTURE,         DDL_GOD,
+    DDL_AGE,            DDL_EVENT_KIND,      DDL_EVENT_KIND_ROLE,
+    DDL_EVENT_KIND_VALUE, DDL_PHASE,         DDL_EVENT,
+    DDL_EVENT_PARTICIPANT, DDL_EVENT_CAUSE,  DDL_EVENT_VALUE,
+    DDL_CIVILIZATION,   DDL_SETTLEMENT,      DDL_SETTLEMENT_CENSUS,
+    DDL_REGION_CONTROL, DDL_RELATION};
+
 
 // --- meta keys (P0-02 5.5) --------------------------------------------------
 
 inline constexpr std::string_view META_CONTENT_HASH = "content_hash";        // 64 lowercase hex digits
 inline constexpr std::string_view META_FORMAT = "format";                    // literal WORLD_FORMAT
 inline constexpr std::string_view META_GENERATOR_VERSION = "generator_version";  // MAJOR.MINOR.PATCH
+inline constexpr std::string_view META_HISTORY_END_YEAR = "history_end_year";  // = param.history_span (P3-04 9.4)
 inline constexpr std::string_view META_PARAM_CIVS_PER_RACE = "param.civs_per_race";      // auto, 1 ... 4
 inline constexpr std::string_view META_PARAM_DIVINE_ACTIVITY = "param.divine_activity";  // distant, normal, meddling
 inline constexpr std::string_view META_PARAM_DIVINE_SCRIPT = "param.divine_script";      // empty or 64 lower-case hex
@@ -168,10 +255,11 @@ inline constexpr std::array<std::int64_t, 3> ALLOWED_MAP_SIZES = {512, 1024, 204
 
 // Every key required at SCHEMA_VERSION, in ascending byte order, which is
 // the order the writer inserts them (P0-02 5.5, section 6 step 4).
-inline constexpr std::array<std::string_view, 16> REQUIRED_META_KEYS = {
+inline constexpr std::array<std::string_view, 17> REQUIRED_META_KEYS = {
     META_CONTENT_HASH,
     META_FORMAT,
     META_GENERATOR_VERSION,
+    META_HISTORY_END_YEAR,
     META_PARAM_CIVS_PER_RACE,
     META_PARAM_DIVINE_ACTIVITY,
     META_PARAM_DIVINE_SCRIPT,
