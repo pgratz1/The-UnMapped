@@ -23,6 +23,7 @@
 #include "p1_03_climate_api.hpp"
 #include "p1_03_climate_support.hpp"
 #include "p1_04_biomes_data.hpp"
+#include "p3_01_history_fixture.hpp"
 #include "worldgen/core/fx.hpp"
 #include "worldgen/data/content.hpp"
 
@@ -129,6 +130,7 @@ TEST_CASE("P1-03 4, P1-00 6.1: the climate definition is required beside elevati
     // test is missing.
     biome_data::add_to(registry, root, dir);
     root.directories.push_back(dir);
+    history_fixture::add_to(root);  // P3-01: the required history kinds
     const wd::LoadResult<wd::ContentSet> r = wd::load_content_from_memory(registry, root);
     CHECK_FALSE(r.ok());
     std::string text;

@@ -27,6 +27,9 @@ target_compile_definitions(worldgen-cli-tests PRIVATE
     UNMAPPED_CLI_TEST_TMP_ROOT="${CMAKE_CURRENT_BINARY_DIR}/cli-test-tmp"
     # Golden world hashes (P0-04 section 9), read in place, never written.
     UNMAPPED_P0_WORLDS_GOLDEN_PATH="${PROJECT_SOURCE_DIR}/worldgen/tests/golden/p0-worlds.txt"
+    # P3-01: the history data directories that data roots built by the
+    # tests copy (p3_01_history_fixture.hpp), read in place.
+    UNMAPPED_HISTORY_FIXTURE_DIR="${PROJECT_SOURCE_DIR}/worldgen/tests/data/geo"
 )
 
 

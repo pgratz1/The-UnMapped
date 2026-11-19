@@ -22,6 +22,7 @@
 
 #include "data_loader_support.hpp"
 #include "db_test_support.hpp"
+#include "p3_01_history_fixture.hpp"
 #include "worldgen/core/error.hpp"
 #include "worldgen/core/sha256.hpp"
 #include "worldgen/data/data.hpp"
@@ -165,6 +166,7 @@ wd::ContentSet tune_content() {
     reg.add(wd::Kind::with_fixed_ids("tune", "tunes", true, std::move(ids)));
     wd::MemoryDataRoot root;
     root.directories.push_back(loader_test::dir("tunes", {loader_test::file("t.toml", "[tune.only]\nx = 4\n")}));
+    history_fixture::add_to(root);  // P3-01: the required history kinds
     auto r = wd::load_content_from_memory(reg, root);
     REQUIRE(r.ok());
     return *r.value;

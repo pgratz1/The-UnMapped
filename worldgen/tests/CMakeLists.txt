@@ -53,6 +53,9 @@ target_compile_definitions(worldgen-tests PRIVATE
 # tree; tests never write there (scratch files go to the system temp dir).
 target_compile_definitions(worldgen-tests PRIVATE
     UNMAPPED_LOADER_FIXTURE_DIR="${CMAKE_CURRENT_SOURCE_DIR}/data/loader"
+    # P3-01: the history data directories that data roots built by the P1
+    # tests copy (p3_01_history_fixture.hpp), read in place.
+    UNMAPPED_HISTORY_FIXTURE_DIR="${CMAKE_CURRENT_SOURCE_DIR}/data/geo"
 )
 
 # worldgen-cli library parts (spec P0-04 section 12, amendment 12): the
