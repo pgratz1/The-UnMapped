@@ -66,6 +66,7 @@ fs::path write_data_root(const Sandbox& sb, std::string_view climate = CLIMATE_T
     write_text(root / "worldgen" / "climate.toml", climate);
     write_text(root / "worldgen" / "biomes.toml", std::string(elev_api::BIOMES_TOML));  // P1-04 4.2
     write_text(root / "worldgen" / "resources.toml", std::string(elev_api::RESOURCES_TOML));  // P1-05 4.2
+    region_data::write_to(root);  // P1-06 4, once registered
     fs::create_directories(root / "biomes");
     write_text(root / "biomes" / "biomes.toml", std::string(elev_api::BIOME_DEFINITIONS_TOML));  // P1-04 4.1
     return root;

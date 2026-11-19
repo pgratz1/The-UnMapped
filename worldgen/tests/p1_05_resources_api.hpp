@@ -92,6 +92,7 @@ inline Load load(std::optional<std::string> resources_tuning, std::optional<worl
     if (resources_tuning.has_value()) {
         dir.entries.push_back(wd::MemoryEntry{"resources.toml", *resources_tuning, false});
     }
+    region_data::add_to(registry, dir);  // P1-06 4, once registered
     wd::MemoryDataRoot root;
     root.directories.push_back(dir);
     if (biomes_dir.has_value()) {

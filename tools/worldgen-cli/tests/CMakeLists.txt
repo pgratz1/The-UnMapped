@@ -88,3 +88,14 @@ target_sources(worldgen-cli-tests PRIVATE cli_resources_test.cpp)
 target_compile_definitions(worldgen-cli-tests PRIVATE
     UNMAPPED_P1_05_GOLDEN_PATH="${PROJECT_SOURCE_DIR}/worldgen/tests/golden/p1-05-resources.txt"
 )
+# The default run with the regions stage (ids 1 to 19), hash --detail and
+# report with the three region tables, the region keys, render of the layer
+# region (`ids`) and the composite `regions`, the schema 5 refusal of
+# version 4 worlds and the loader's messages for bad regions tuning (P1-06
+# 3, 4 and 9; P0-02 amendment 17; P0-03 amendment 17; P0-04 amendment 18),
+# against the regions golden vectors and pixels decoded from the PNG. Slow
+# checks in the doctest suite "regions-slow".
+target_sources(worldgen-cli-tests PRIVATE cli_regions_test.cpp)
+target_compile_definitions(worldgen-cli-tests PRIVATE
+    UNMAPPED_P1_06_GOLDEN_PATH="${PROJECT_SOURCE_DIR}/worldgen/tests/golden/p1-06-regions.txt"
+)

@@ -658,6 +658,7 @@ TEST_CASE("cli P1-00 10.1: --until biomes is accepted; the stage after resources
     write_text(bare / "worldgen" / "climate.toml", std::string(elev_api::CLIMATE_TOML));
     write_text(bare / "worldgen" / "biomes.toml", biome_data::TUNING_TOML);
     write_text(bare / "worldgen" / "resources.toml", biome_data::RESOURCES_TOML);
+    region_data::write_to(bare);  // P1-06 4, once registered
     const ProcessResult m = sb.cli({"generate", "--seed", "1", "--map-size", "512", "--data", u8(bare), "--until",
                                     "none", "--out", u8(sb.file("m.db"))});
     CHECK(m.exit_code == EXIT_INPUT);

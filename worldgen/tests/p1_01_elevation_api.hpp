@@ -403,6 +403,11 @@ inline void add_biome_fixtures(worldgen::data::MemoryDataRoot& root) {
             }
         }
     }
+    for (wd::MemoryDirectory& d : root.directories) {  // P1-06 4, once `regions` is registered
+        if (d.name == "worldgen") {
+            region_data::add_to(registry, d);
+        }
+    }
     if (registry.find("biome") != nullptr) {
         root.directories.push_back(
             wd::MemoryDirectory{"biomes", {wd::MemoryEntry{"biomes.toml", std::string(BIOME_DEFINITIONS_TOML), false}}});

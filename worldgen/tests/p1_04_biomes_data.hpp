@@ -16,6 +16,7 @@
 #include <utility>
 #include <vector>
 
+#include "p1_06_regions_data.hpp"
 #include "worldgen/data/content.hpp"
 #include "worldgen/data/schema.hpp"
 
@@ -258,6 +259,7 @@ inline void add_to(const worldgen::data::KindRegistry& registry, worldgen::data:
         worldgen_dir.entries.push_back(
             worldgen::data::MemoryEntry{"resources.toml", std::string(RESOURCES_TOML), false});
     }
+    region_data::add_to(registry, worldgen_dir);  // P1-06 4, once registered
     if (registered(registry)) {
         root.directories.push_back(directory());
     }
@@ -278,6 +280,7 @@ inline void write_to(const std::filesystem::path& root) {
     if (resources_registered(registry)) {
         write(root / "worldgen" / "resources.toml", RESOURCES_TOML);
     }
+    region_data::write_to(root);  // P1-06 4, once registered
     if (registered(registry)) {
         for (const DefinitionFile& f : shipped_files()) {
             write(root / "biomes" / std::string(f.name), f.text);
