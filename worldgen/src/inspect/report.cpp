@@ -12,6 +12,7 @@
 #include <vector>
 
 #include "worldgen/db/schema.hpp"
+#include "worldgen/inspect/chronology.hpp"
 #include "worldgen/inspect/geography.hpp"
 #include "worldgen/inspect/render.hpp"
 
@@ -341,9 +342,37 @@ db::Result<std::string> build_report(const db::WorldReader& world) {
         if (geography && geo_grids[REGION_INDEX] && regions && region_borders) {
             *geography += region_lines(*regions, *region_borders);
         }
+        // Tables race and age (schema 6, P3-03 9.1): checked after every
+        // [geography] check whenever either has rows; [chronology] follows
+        // [geography] (or [layers]) when age has a row.
+        std::vector<std::vector<db::ColumnValue>> race_rows;
+        std::vector<std::vector<db::ColumnValue>> age_rows;
+        std::uint64_t god_rows = 0;
+        for (const db::TableSummary& t : tables.value()) {
+            if (t.name == db::RACE_TABLE || t.name == db::AGE_TABLE) {
+                db::Result<std::vector<std::vector<db::ColumnValue>>> rows = world.table_rows(t.name);
+                if (!rows.ok()) {
+                    return rows.error();
+                }
+                (t.name == db::RACE_TABLE ? race_rows : age_rows) = std::move(rows.value());
+            } else if (t.name == db::GOD_TABLE) {
+                god_rows = t.row_count;
+            }
+        }
+        std::int64_t span = 0;
+        if (const std::optional<std::string> text = world.meta(db::META_PARAM_HISTORY_SPAN)) {
+            if (const std::optional<std::uint64_t> v = db::parse_canonical_u64(*text)) {
+                span = static_cast<std::int64_t>(*v);  // validated by the reader: 2000 ... 12000
+            }
+        }
+        ChronologySectionResult chronology = chronology_section(race_rows, age_rows, god_rows, span);
+        if (chronology.problem) {
+            return db::Error{db::ErrorCode::corrupt_layer, *chronology.problem};
+        }
         if (geography) {
             out += *geography;
         }
+        out += chronology.section;
         return out;
     } catch (const std::bad_alloc&) {
         return db::Error{db::ErrorCode::out_of_memory, "out of memory while building the report"};

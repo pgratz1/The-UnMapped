@@ -18,6 +18,9 @@ namespace detail {
 // run_test_pattern, failing inside the stage when fault says so.
 void run_test_pattern(db::WorldWriter& world, StageFault fault);
 
+// Sets the eight history keys of P3-03 4.2 on writer (generate.cpp).
+void write_history_params(db::WorldWriter& writer, const history::HistoryParams& history);
+
 // generate_world with a fault (generate.cpp).
 // stages_override, when not null, replaces the geography stages (test hook
 // generate_world_with_stages).

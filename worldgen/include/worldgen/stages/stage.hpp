@@ -29,6 +29,7 @@
 #include "worldgen/data/content.hpp"
 #include "worldgen/db/layer_blob.hpp"
 #include "worldgen/db/writer.hpp"
+#include "worldgen/history/params.hpp"
 
 namespace worldgen::stages {
 
@@ -57,6 +58,9 @@ public:
     [[nodiscard]] std::uint32_t threads() const noexcept;
     // The loaded content (P0-03): the tuning definitions and data kinds.
     [[nodiscard]] const data::ContentSet& content() const noexcept;
+    // The history settings of the world (P3-03 4.1 step 4): exactly the
+    // values generate_world records in meta.
+    [[nodiscard]] const history::HistoryParams& history_params() const noexcept;
 
     // A layer written by an earlier stage of this run, by name, as stored
     // (P1-00 5.1), or nullptr if no earlier stage wrote it. Layers this
@@ -70,6 +74,11 @@ public:
     // order, exactly as written (P1-06 2: the regions stage reads them).
     // Rows this stage has written itself are not returned.
     [[nodiscard]] std::span<const db::PassRow> passes() const noexcept;
+
+    // The rows of table `region` written by earlier stages of this run, in
+    // id order, exactly as written (P3-03 3: the chronology stage reads the
+    // names). Rows this stage has written itself are not returned.
+    [[nodiscard]] std::span<const db::RegionRow> regions() const noexcept;
 
     // Writes one of this stage's layers with the next layer id and codec 1
     // (P1-00 4 rules 1 and 2; P0-02 5.6). Layers are written in the order of
@@ -96,6 +105,15 @@ public:
     void write_region_border(const db::RegionBorderRow& row);
     void write_region_biome(const db::RegionBiomeRow& row);
 
+    // Write one row of tables `race`, `race_biome`, `culture`, `god` and
+    // `age` (P3-03 5.3), each in ascending key. FatalError as the
+    // StageWriter functions of the same names.
+    void write_race(const db::RaceRow& row);
+    void write_race_biome(const db::RaceBiomeRow& row);
+    void write_culture(const db::CultureRow& row);
+    void write_god(const db::GodRow& row);
+    void write_age(const db::AgeRow& row);
+
 private:
     friend class detail::Pipeline;
     struct State;
@@ -114,39 +132,49 @@ struct StageInfo {
     StageEntry run = nullptr;
 };
 
-// The names of the geography stages of P1-00 section 3, in run order,
-// implemented or not.
-inline constexpr std::array<std::string_view, 6> GEOGRAPHY_STAGE_NAMES = {
-    "elevation", "hydrology", "climate", "biomes", "resources", "regions",
+// The names of the stages of P1-00 section 3 and P3-00 5, in run order,
+// implemented or not: the six geography stages, then `chronology` (P3-03)
+// and `history` (P3-04 to P3-06).
+inline constexpr std::array<std::string_view, 8> STAGE_NAMES = {
+    "elevation", "hydrology", "climate", "biomes", "resources", "regions", "chronology", "history",
 };
 
-// The implemented geography stages, in run order (P1-00 3, 10.1): the stages
-// generate runs by default. Each implemented stage is the next one of
-// GEOGRAPHY_STAGE_NAMES: `elevation` (P1-01), `hydrology` (P1-02),
-// `climate` (P1-03), `biomes` (P1-04), `resources` (P1-05) and `regions`
-// (P1-06), all six.
-[[nodiscard]] std::span<const StageInfo> implemented_geography_stages() noexcept;
+// The implemented stages, in run order (P1-00 3, 10.1; P3-03 4.3): the
+// stages generate runs by default. Each implemented stage is the next one of
+// STAGE_NAMES: `elevation` (P1-01), `hydrology` (P1-02), `climate` (P1-03),
+// `biomes` (P1-04), `resources` (P1-05), `regions` (P1-06) and
+// `chronology` (P3-03).
+[[nodiscard]] std::span<const StageInfo> implemented_stages() noexcept;
+
+// The former name of implemented_stages(), from before the history stages.
+[[nodiscard]] inline std::span<const StageInfo> implemented_geography_stages() noexcept {
+    return implemented_stages();
+}
 
 // --- Stage limit (P1-00 10.1, --until) ------------------------------------------
 
-// `--until none`: run no geography stage (the P0 empty world).
+// `--until none`: run no stage (the P0 empty world).
 inline constexpr std::string_view UNTIL_NONE = "none";
 
 // Why a stage limit is not usable (P1-00 10.1: each is a usage error, exit 2).
 enum class StageLimitError : std::uint8_t {
     none = 0,         // usable: "none" or an implemented stage name
-    not_implemented,  // a geography stage name of P1-00 3 with no implementation yet
+    not_implemented,  // a name of STAGE_NAMES with no implementation yet
     unknown,          // not a stage name at all
 };
 
 // Checks a --until value (P1-00 10.1).
 [[nodiscard]] StageLimitError check_stage_limit(std::string_view until) noexcept;
 
-// The geography stages to run, in order, for a limit (P1-00 10.1): every
-// implemented stage when `until` is std::nullopt; none for UNTIL_NONE;
-// otherwise the
+// The stages to run, in order, for a limit (P1-00 10.1): every implemented
+// stage when `until` is std::nullopt; none for UNTIL_NONE; otherwise the
 // implemented stages up to and including `until`. FatalError if
 // check_stage_limit(until) is not none.
-[[nodiscard]] std::vector<StageInfo> geography_stages_until(const std::optional<std::string>& until);
+[[nodiscard]] std::vector<StageInfo> stages_until(const std::optional<std::string>& until);
+
+// The former name of stages_until(), from before the history stages.
+[[nodiscard]] inline std::vector<StageInfo> geography_stages_until(const std::optional<std::string>& until) {
+    return stages_until(until);
+}
 
 }  // namespace worldgen::stages

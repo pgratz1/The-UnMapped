@@ -26,6 +26,7 @@
 
 #include <cstdint>
 #include <memory>
+#include <optional>
 #include <span>
 #include <string>
 #include <string_view>
@@ -152,6 +153,67 @@ struct RegionBiomeRow {
     friend bool operator==(const RegionBiomeRow&, const RegionBiomeRow&) = default;
 };
 
+// One row of table `race` (P3-03 5.2; schema 6), columns in declared
+// order. camp 0 good, 1 neutral, 2 evil; present 0 or 1; awakening_year set
+// exactly when present is 1 (NULL otherwise).
+struct RaceRow {
+    std::int64_t id = 0;
+    std::string key;
+    std::string name;
+    std::string plural;
+    std::string adjective;
+    std::int64_t camp = 0;
+    std::int64_t lifespan_years = 0;
+    std::int64_t generation_years = 0;
+    std::int64_t culture = 0;
+    std::int64_t present = 0;
+    std::optional<std::int64_t> awakening_year;
+    std::int64_t creator_god = 0;
+
+    friend bool operator==(const RaceRow&, const RaceRow&) = default;
+};
+
+// One row of table `race_biome` (P3-03 5.2; schema 6): a listed biome
+// preference of a race (biome = the biome code).
+struct RaceBiomeRow {
+    std::int64_t race = 0;
+    std::int64_t biome = 0;
+    std::int64_t weight = 0;
+
+    friend bool operator==(const RaceBiomeRow&, const RaceBiomeRow&) = default;
+};
+
+// One row of table `culture` (P3-03 5.2; schema 6).
+struct CultureRow {
+    std::int64_t id = 0;
+    std::string key;
+    std::string name;
+    std::int64_t race = 0;
+
+    friend bool operator==(const CultureRow&, const CultureRow&) = default;
+};
+
+// One row of table `god` (P3-03 5.2; schema 6): a creator god, id = its
+// race's id.
+struct GodRow {
+    std::int64_t id = 0;
+    std::string name;
+    std::int64_t camp = 0;
+
+    friend bool operator==(const GodRow&, const GodRow&) = default;
+};
+
+// One row of table `age` (P3-03 5.2; schema 6), columns in declared order.
+struct AgeRow {
+    std::int64_t id = 0;
+    std::int64_t race = 0;
+    std::int64_t start_year = 0;
+    std::int64_t end_year = 0;
+    std::string name;
+
+    friend bool operator==(const AgeRow&, const AgeRow&) = default;
+};
+
 // One stage's transaction on the working database (P0-02 6 step 3).
 // Obtained from WorldWriter::begin_stage; at most one is open at a time.
 // Destroying it without commit() rolls the transaction back and leaves no
@@ -204,6 +266,20 @@ public:
     void write_region(const RegionRow& row);
     void write_region_border(const RegionBorderRow& row);
     void write_region_biome(const RegionBiomeRow& row);
+
+    // Insert one row of tables `race`, `race_biome`, `culture`, `god` and
+    // `age` (P3-03 5.3). Rows of each table are written in strictly
+    // ascending primary key (id; (race, biome); id; id; id), P0-02 6 step 3.
+    // FatalError if the stage is closed, a key is not above every key
+    // written before to that table, an id (race_biome.race) is below 1,
+    // race.present is not 0 or 1, race.awakening_year is not set exactly
+    // when present is 1, a camp is not 0, 1 or 2, or SQLite rejects the row
+    // (for example a duplicate key text).
+    void write_race(const RaceRow& row);
+    void write_race_biome(const RaceBiomeRow& row);
+    void write_culture(const CultureRow& row);
+    void write_god(const GodRow& row);
+    void write_age(const AgeRow& row);
 
     // COMMIT, and append the stage name to meta.stages (P0-02 5.5, 6 step 3).
     // FatalError if already committed or SQLite fails.
@@ -262,6 +338,16 @@ public:
     // or the text fails the decimal grammar.
     void set_param_decimal(std::string_view name, std::string_view decimal_text);
 
+    // meta.param.<name> = value, as given (P3-03 4.1). FatalError if
+    // "param." + name is not a valid meta key, if name is "map_size" (an
+    // integer parameter), or if "param." + name is one of the eight history
+    // keys (HISTORY_META_KEYS) and value is not its canonical text
+    // (is_canonical_history_meta_value). set_param_integer and
+    // set_param_decimal apply the same canonical check to the text they
+    // produce. Every key of REQUIRED_META_KEYS under "param." is required
+    // before finalize().
+    void set_param_text(std::string_view name, std::string_view value);
+
     // The seed set so far, or 0 if none (stages derive their streams from it).
     [[nodiscard]] std::uint64_t seed() const noexcept;
 
@@ -309,7 +395,8 @@ public:
     //   - output_parent_missing: the parent directory does not exist;
     //   - output_rename_failed: the rename into place did not succeed.
     // Raises FatalError for contract violations: a stage still open, seed /
-    // content hash / param.map_size not set, finalize() called twice, a
+    // content hash not set, a required param.* key not set ("WorldWriter::
+    // finalize: meta key '<key>' was not set", the first in ascending order), finalize() called twice, a
     // failed integrity_check or header verification.
     //
     // Rename and the existing <out>. Ok is returned only when a rename call

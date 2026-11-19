@@ -390,6 +390,14 @@ void require_param_name(std::string_view name, const char* operation) {
     }
 }
 
+// The eight history keys take only their canonical text (P3-03 4.1, 4.2).
+void require_canonical_history_value(const std::string& key, std::string_view value, const char* operation) {
+    if (is_history_meta_key(key) && !is_canonical_history_meta_value(key, value)) {
+        throw FatalError(std::string("WorldWriter::") + operation + ": '" + std::string(value) +
+                         "' is not the canonical form of a value of meta key '" + key + "'");
+    }
+}
+
 }  // namespace
 
 // --- StageWriter --------------------------------------------------------------
@@ -420,6 +428,11 @@ StageWriter::~StageWriter() {
     state_->last_region_id = state_->stage_start_region_id;
     state_->last_border_key = state_->stage_start_border_key;
     state_->last_region_biome_key = state_->stage_start_region_biome_key;
+    state_->last_race_id = state_->stage_start_race_id;
+    state_->last_race_biome_key = state_->stage_start_race_biome_key;
+    state_->last_culture_id = state_->stage_start_culture_id;
+    state_->last_god_id = state_->stage_start_god_id;
+    state_->last_age_id = state_->stage_start_age_id;
     state_->stage_open = false;
 }
 
@@ -624,6 +637,121 @@ void StageWriter::write_region_biome(const RegionBiomeRow& row) {
     state_->last_region_biome_key = key;
 }
 
+namespace {
+
+// FatalError unless id is at least 1 and above `last` (ascending ids).
+void require_next_id(const char* operation, const char* table, std::int64_t id, std::int64_t last) {
+    if (id < 1 || id <= last) {
+        fatal_text(std::string("StageWriter::") + operation + ": " + table + " row has id " + format_i64(id) +
+                   ", expected an id above " + format_i64(last) + " (ascending ids)");
+    }
+}
+
+void require_camp(const char* operation, std::int64_t camp) {
+    if (camp < 0 || camp > 2) {
+        fatal_text(std::string("StageWriter::") + operation + ": camp must be 0, 1 or 2");
+    }
+}
+
+}  // namespace
+
+void StageWriter::write_race(const RaceRow& row) {
+    if (state_ == nullptr) {
+        fatal("StageWriter::write_race: stage is not open");
+    }
+    require_next_id("write_race", "race", row.id, state_->last_race_id);
+    require_camp("write_race", row.camp);
+    if (row.present != 0 && row.present != 1) {
+        fatal("StageWriter::write_race: present must be 0 or 1");
+    }
+    if (row.awakening_year.has_value() != (row.present == 1)) {
+        fatal("StageWriter::write_race: awakening_year must be set exactly when present is 1");
+    }
+    // Columns camp ... present from ?6, then awakening_year (?11) and
+    // creator_god (?12).
+    const std::int64_t ints[5] = {row.camp, row.lifespan_years, row.generation_years, row.culture, row.present};
+    insert_row(state_->db.get(),
+               "INSERT INTO race (id, key, name, plural, adjective, camp, lifespan_years, generation_years, culture, "
+               "present, awakening_year, creator_god) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12)",
+               6, ints,
+               [&row](detail::Statement& stmt) {
+                   int rc = stmt.bind_int64(1, row.id);
+                   if (rc == SQLITE_OK) rc = stmt.bind_text(2, row.key);
+                   if (rc == SQLITE_OK) rc = stmt.bind_text(3, row.name);
+                   if (rc == SQLITE_OK) rc = stmt.bind_text(4, row.plural);
+                   if (rc == SQLITE_OK) rc = stmt.bind_text(5, row.adjective);
+                   if (rc == SQLITE_OK) {
+                       rc = row.awakening_year ? stmt.bind_int64(11, *row.awakening_year) : stmt.bind_null(11);
+                   }
+                   if (rc == SQLITE_OK) rc = stmt.bind_int64(12, row.creator_god);
+                   return rc;
+               },
+               "race row " + format_i64(row.id));
+    state_->last_race_id = row.id;
+}
+
+void StageWriter::write_race_biome(const RaceBiomeRow& row) {
+    if (state_ == nullptr) {
+        fatal("StageWriter::write_race_biome: stage is not open");
+    }
+    const std::pair<std::int64_t, std::int64_t> key{row.race, row.biome};
+    if (row.race < 1 || key <= state_->last_race_biome_key) {
+        fatal_text("StageWriter::write_race_biome: row " + key_text(key) + " is not above " +
+                   key_text(state_->last_race_biome_key) + " with race >= 1 (ascending keys)");
+    }
+    const std::int64_t ints[3] = {row.race, row.biome, row.weight};
+    insert_row(state_->db.get(), "INSERT INTO race_biome (race, biome, weight) VALUES (?1, ?2, ?3)", 1, ints,
+               [](detail::Statement&) { return SQLITE_OK; }, "race_biome row " + key_text(key));
+    state_->last_race_biome_key = key;
+}
+
+void StageWriter::write_culture(const CultureRow& row) {
+    if (state_ == nullptr) {
+        fatal("StageWriter::write_culture: stage is not open");
+    }
+    require_next_id("write_culture", "culture", row.id, state_->last_culture_id);
+    const std::int64_t ints[1] = {row.race};
+    insert_row(state_->db.get(), "INSERT INTO culture (id, key, name, race) VALUES (?1, ?2, ?3, ?4)", 4, ints,
+               [&row](detail::Statement& stmt) {
+                   int rc = stmt.bind_int64(1, row.id);
+                   if (rc == SQLITE_OK) rc = stmt.bind_text(2, row.key);
+                   if (rc == SQLITE_OK) rc = stmt.bind_text(3, row.name);
+                   return rc;
+               },
+               "culture row " + format_i64(row.id));
+    state_->last_culture_id = row.id;
+}
+
+void StageWriter::write_god(const GodRow& row) {
+    if (state_ == nullptr) {
+        fatal("StageWriter::write_god: stage is not open");
+    }
+    require_next_id("write_god", "god", row.id, state_->last_god_id);
+    require_camp("write_god", row.camp);
+    const std::int64_t ints[1] = {row.camp};
+    insert_row(state_->db.get(), "INSERT INTO god (id, name, camp) VALUES (?1, ?2, ?3)", 3, ints,
+               [&row](detail::Statement& stmt) {
+                   int rc = stmt.bind_int64(1, row.id);
+                   if (rc == SQLITE_OK) rc = stmt.bind_text(2, row.name);
+                   return rc;
+               },
+               "god row " + format_i64(row.id));
+    state_->last_god_id = row.id;
+}
+
+void StageWriter::write_age(const AgeRow& row) {
+    if (state_ == nullptr) {
+        fatal("StageWriter::write_age: stage is not open");
+    }
+    require_next_id("write_age", "age", row.id, state_->last_age_id);
+    const std::int64_t ints[4] = {row.id, row.race, row.start_year, row.end_year};
+    insert_row(state_->db.get(),
+               "INSERT INTO age (id, race, start_year, end_year, name) VALUES (?1, ?2, ?3, ?4, ?5)", 1, ints,
+               [&row](detail::Statement& stmt) { return stmt.bind_text(5, row.name); },
+               "age row " + format_i64(row.id));
+    state_->last_age_id = row.id;
+}
+
 void StageWriter::commit() {
     if (state_ == nullptr) {
         fatal("StageWriter::commit: stage is not open");
@@ -672,7 +800,10 @@ void WorldWriter::set_param_integer(std::string_view name, std::int64_t value) {
         std::find(ALLOWED_MAP_SIZES.begin(), ALLOWED_MAP_SIZES.end(), value) == ALLOWED_MAP_SIZES.end()) {
         fatal_text("WorldWriter::set_param_integer: map_size " + format_i64(value) + " is not 512, 1024 or 2048");
     }
-    s.params[std::string(META_PARAM_PREFIX) + std::string(name)] = format_i64(value);
+    const std::string key = std::string(META_PARAM_PREFIX) + std::string(name);
+    std::string text = format_i64(value);
+    require_canonical_history_value(key, text, "set_param_integer");
+    s.params[key] = std::move(text);
 }
 
 void WorldWriter::set_param_decimal(std::string_view name, std::string_view decimal_text) {
@@ -685,7 +816,20 @@ void WorldWriter::set_param_decimal(std::string_view name, std::string_view deci
     if (!canonical) {
         fatal_text("WorldWriter::set_param_decimal: '" + std::string(decimal_text) + "' is not a valid decimal");
     }
-    s.params[std::string(META_PARAM_PREFIX) + std::string(name)] = std::move(*canonical);
+    const std::string key = std::string(META_PARAM_PREFIX) + std::string(name);
+    require_canonical_history_value(key, *canonical, "set_param_decimal");
+    s.params[key] = std::move(*canonical);
+}
+
+void WorldWriter::set_param_text(std::string_view name, std::string_view value) {
+    WriterState& s = detail::live_state(state_.get(), "set_param_text");
+    require_param_name(name, "set_param_text");
+    const std::string key = std::string(META_PARAM_PREFIX) + std::string(name);
+    if (key == META_PARAM_MAP_SIZE) {
+        fatal("WorldWriter::set_param_text: map_size is an integer parameter");
+    }
+    require_canonical_history_value(key, value, "set_param_text");
+    s.params[key] = std::string(value);
 }
 
 std::uint64_t WorldWriter::seed() const noexcept {
@@ -712,6 +856,11 @@ StageWriter WorldWriter::begin_stage(std::string_view stage_name) {
     s.stage_start_region_id = s.last_region_id;
     s.stage_start_border_key = s.last_border_key;
     s.stage_start_region_biome_key = s.last_region_biome_key;
+    s.stage_start_race_id = s.last_race_id;
+    s.stage_start_race_biome_key = s.last_race_biome_key;
+    s.stage_start_culture_id = s.last_culture_id;
+    s.stage_start_god_id = s.last_god_id;
+    s.stage_start_age_id = s.last_age_id;
     return StageWriter(s, std::string(stage_name));
 }
 
@@ -763,8 +912,13 @@ Status WorldWriter::finalize(std::string_view out_utf8, Overwrite overwrite) {
     if (!s.content_hash) {
         fatal("WorldWriter::finalize: no content hash set");
     }
-    if (s.params.find(std::string(META_PARAM_MAP_SIZE)) == s.params.end()) {
-        fatal("WorldWriter::finalize: param.map_size not set");
+    // Every required param.* key (P3-03 4.1): the first missing one in
+    // ascending key order is named.
+    for (const std::string_view key : REQUIRED_META_KEYS) {
+        if (key.substr(0, META_PARAM_PREFIX.size()) == META_PARAM_PREFIX &&
+            s.params.find(std::string(key)) == s.params.end()) {
+            fatal_text("WorldWriter::finalize: meta key '" + std::string(key) + "' was not set");
+        }
     }
     s.finalized = true;
 

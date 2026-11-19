@@ -81,8 +81,12 @@ inline constexpr std::string_view hist_names_god = "hist.names.god";
 inline constexpr std::string_view hist_names_civilization = "hist.names.civilization";
 inline constexpr std::string_view hist_names_settlement = "hist.names.settlement";
 
+// Key of stage chronology (P3-03 3, C3): the keyed draw of each present
+// race's awakening shift, history::draw(stream_key, 0, race id, 0, 0). No
+// Rng.
+inline constexpr std::string_view hist_chronology_awakening = "hist.chronology.awakening";
 // Every registered name, in registration order.
-inline constexpr std::array<std::string_view, 33> all_stream_names = {
+inline constexpr std::array<std::string_view, 34> all_stream_names = {
     test_hash,
     test_noise,
     test_wide,
@@ -116,6 +120,7 @@ inline constexpr std::array<std::string_view, 33> all_stream_names = {
     hist_names_god,
     hist_names_civilization,
     hist_names_settlement,
+    hist_chronology_awakening,
 };
 
 }  // namespace worldgen::streams

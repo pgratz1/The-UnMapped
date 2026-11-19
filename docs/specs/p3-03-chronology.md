@@ -371,7 +371,7 @@ No floating point, no unordered iteration, no `Rng`. Overflow: |raw| of a share 
 
 ## 14. Tests required
 
-For the independent test writer; seams (interim; the engineer records the final signatures here after implementation):
+For the independent test writer; seams (interim; the engineer records the final signatures here after implementation). **Final signatures** (engineer, 2026-11-19): as below, with these differences. `ChronologyTuning`, `AwakeningBounds` and the five row types have defaulted `operator==`; `ChronologyResult` has a sixth member `std::vector<history::NameChoice> god_names` (god id order: the accepted attempt, and `fallback` for a numeral); `stages::age_name_text` is `using history::age_name_text` (declared in `worldgen/history/data_checks.hpp`, so that the data checks need no stage header); `check_chronology_tuning(const ChronologyTuning&)` is public (C1 item 2); `history::history_params_problem(const HistoryParams&)` returns the first invalid field name (`span`, `civs_per_race`, `races`, `divine_script`) or an empty view; `StageContext::regions()` returns `std::span<const db::RegionRow>`; the stage list is `stages::STAGE_NAMES`, `implemented_stages()` and `stages_until()` (the former names `implemented_geography_stages()` and `geography_stages_until()` remain as inline aliases); `roman` is `worldgen::roman_numeral` in `worldgen/core/roman.hpp`, with `stages::roman` and `history::roman` forwarding to it.
 
 ```cpp
 namespace worldgen::stages {
@@ -431,7 +431,7 @@ void run_chronology(StageContext&);
 
 ### 14.5 Measured values to confirm
 
-The empty-world size of 5.1 (**18 pages, 73728 bytes**) is the spec writer's measurement with Python's SQLite 3.46.1, not the vendored 3.54.1. The engineer confirms it with the vendored build (`--until none`, `PRAGMA page_count`) **before** writing it into a test or into `schema.md`. If it differs, the engineer reports the measured value and the root-page list to the lead, and this spec (5.1, 14.1 item 7, 15.1, 15.2) is corrected; the DDL and the code are not changed to reach the figure.
+The empty-world size of 5.1 (**18 pages, 73728 bytes**) is the spec writer's measurement with Python's SQLite 3.46.1, not the vendored 3.54.1. The engineer confirms it with the vendored build (`--until none`, `PRAGMA page_count`) **before** writing it into a test or into `schema.md`. If it differs, the engineer reports the measured value and the root-page list to the lead, and this spec (5.1, 14.1 item 7, 15.1, 15.2) is corrected; the DDL and the code are not changed to reach the figure. **Confirmed** (engineer, 2026-11-19): `--until none` written by the vendored SQLite 3.54.1 is 18 pages, 73728 bytes, root pages 2 to 18 in the order of 15.2, and the `sqlite_schema` SQL text is 2928 bytes.
 
 ## 15. Amendments requested (the engineer applies 15.1; the lead the others)
 

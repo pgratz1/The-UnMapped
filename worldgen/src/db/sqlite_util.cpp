@@ -39,6 +39,10 @@ int Statement::bind_int64(int index, std::int64_t value) noexcept {
     return sqlite3_bind_int64(stmt_, index, static_cast<sqlite3_int64>(value));
 }
 
+int Statement::bind_null(int index) noexcept {
+    return sqlite3_bind_null(stmt_, index);
+}
+
 int Statement::bind_text(int index, std::string_view text) noexcept {
     if (text.size() > static_cast<std::size_t>(std::numeric_limits<int>::max())) {
         return SQLITE_TOOBIG;

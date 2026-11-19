@@ -11,6 +11,7 @@
 #include "worldgen/data/content.hpp"
 #include "worldgen/db/layer_blob.hpp"
 #include "worldgen/db/writer.hpp"
+#include "worldgen/history/params.hpp"
 #include "worldgen/stages/stage.hpp"
 
 namespace worldgen::stages::detail {
@@ -25,7 +26,10 @@ class Pipeline {
 public:
     // The writer must have its seed and param.map_size set; content, the
     // writer and the pipeline must outlive every run().
-    Pipeline(db::WorldWriter& writer, const data::ContentSet& content, std::int64_t map_size, std::uint32_t threads);
+    // history is the world's HistoryParams (StageContext::history_params);
+    // it must outlive every run().
+    Pipeline(db::WorldWriter& writer, const data::ContentSet& content, std::int64_t map_size, std::uint32_t threads,
+             const history::HistoryParams& history);
 
     // Runs one stage (P0-02 6 step 3): begin_stage(stage.name), the entry
     // point with a fresh StageContext, commit. If the entry point throws,
@@ -36,6 +40,9 @@ public:
     [[nodiscard]] const std::vector<StoredLayer>& layers() const noexcept { return layers_; }
     // The committed rows of table pass, in id order.
     [[nodiscard]] const std::vector<db::PassRow>& passes() const noexcept { return passes_; }
+    // The committed rows of table region, in id order.
+    [[nodiscard]] const std::vector<db::RegionRow>& regions() const noexcept { return regions_; }
+    [[nodiscard]] const history::HistoryParams& history_params() const noexcept { return history_; }
     [[nodiscard]] db::WorldWriter& writer() noexcept { return writer_; }
     [[nodiscard]] const data::ContentSet& content() const noexcept { return content_; }
     [[nodiscard]] std::int64_t map_size() const noexcept { return map_size_; }
@@ -46,8 +53,10 @@ private:
     const data::ContentSet& content_;
     std::int64_t map_size_;
     std::uint32_t threads_;
+    const history::HistoryParams& history_;
     std::vector<StoredLayer> layers_;  // committed layers, in id order
     std::vector<db::PassRow> passes_;  // committed rows of table pass, in id order
+    std::vector<db::RegionRow> regions_;  // committed rows of table region, in id order
 };
 
 }  // namespace worldgen::stages::detail

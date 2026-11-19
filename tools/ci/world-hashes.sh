@@ -1,6 +1,6 @@
 #!/bin/sh
 # Cross-compiler world hash check (spec P0-04 section 9 with amendment 16 (d);
-# P1-00 section 14, X5).
+# P1-00 section 14, X5; P3-03 section 13).
 #
 # Generates the golden cases with one preset's worldgen-cli, saves each
 # world's `hash --detail` and `report` text, checks them against the golden
@@ -9,6 +9,7 @@
 #
 #   tools/ci/world-hashes.sh generate PRESET [--build-dir DIR] [--out-dir DIR]
 #   tools/ci/world-hashes.sh expect   PRESET [--build-dir DIR] [--out-dir DIR] [--golden FILE] [--golden-geo FILE]
+#                                             [--golden-hist FILE]
 #   tools/ci/world-hashes.sh compare  PRESET PRESET... [--out-dir DIR]
 #   tools/ci/world-hashes.sh local    PRESET PRESET... [--out-dir DIR]
 #   tools/ci/world-hashes.sh cases
@@ -21,8 +22,9 @@
 # expect    runs hash --expect for every case against its golden file: the
 #           P0 cases against worldgen/tests/golden/p0-worlds.txt (--golden),
 #           the geography cases against worldgen/tests/golden/p1-worlds.txt
-#           (--golden-geo). A golden file that does not exist is reported
-#           and its cases are skipped.
+#           (--golden-geo), the history cases against
+#           worldgen/tests/golden/p3-worlds.txt (--golden-hist). A golden
+#           file that does not exist is reported and its cases are skipped.
 # compare   fails if any preset's .txt or .report.txt for any case differs
 #           from the others, or is missing, and prints a diff.
 # local     generate for each preset (each must already be built), then
@@ -44,11 +46,13 @@ set -u
 
 # The case table of P0-04 section 9 (with amendment 16 (d): the empty-*
 # cases pass --until none) and the geography cases of P1-00 section 14 X5
-# that the implemented stages allow, each list in case-name order (the order
-# of its golden file). Arguments are given in run_generate below.
+# that the implemented stages allow, and the history cases of P3-03 section
+# 13, each list in case-name order (the order of its golden file). Arguments
+# are given in run_generate below.
 P0_CASES='empty-phrase empty-seed-0 empty-seed-0-512 empty-seed-1 empty-seed-42 empty-seed-max pattern-seed-0 pattern-seed-42'
 GEO_CASES='geo-phrase-512 geo-seed-0-512 geo-seed-1-1024 geo-seed-42-512'
-CASES="$P0_CASES $GEO_CASES"
+HIST_CASES='hist-races-elf-orc-1024 hist-span-2000-512'
+CASES="$P0_CASES $GEO_CASES $HIST_CASES"
 
 # Run "worldgen-cli generate" for case $1 writing world file $2. Every case
 # reads the shipped data of this checkout (--data, so that UNMAPPED_DATA_DIR
@@ -63,11 +67,15 @@ run_generate() {
         empty-phrase)     "$cli" generate --out "$2" --data "$data_dir" --until none --seed-phrase "The Unmapped" ;;
         pattern-seed-0)   "$cli" generate --out "$2" --data "$data_dir" --seed 0 --test-pattern ;;
         pattern-seed-42)  "$cli" generate --out "$2" --data "$data_dir" --seed 42 --test-pattern ;;
-        # P1-00 14 X5. Default stages: elevation, hydrology, climate and biomes.
+        # P1-00 14 X5. Default stages: every implemented stage (the geography
+        # stages and chronology).
         geo-seed-0-512)   "$cli" generate --out "$2" --data "$data_dir" --seed 0 --map-size 512 ;;
         geo-seed-42-512)  "$cli" generate --out "$2" --data "$data_dir" --seed 42 --map-size 512 ;;
         geo-phrase-512)   "$cli" generate --out "$2" --data "$data_dir" --seed-phrase "The Unmapped" --map-size 512 ;;
         geo-seed-1-1024)  "$cli" generate --out "$2" --data "$data_dir" --seed 1 ;;
+        # P3-03 13: the span and the race subset change chronology bytes.
+        hist-span-2000-512)      "$cli" generate --out "$2" --data "$data_dir" --seed 7 --map-size 512 --history-span 2000 ;;
+        hist-races-elf-orc-1024) "$cli" generate --out "$2" --data "$data_dir" --seed 3 --races elf,orc ;;
         *) echo "world-hashes: internal error: unknown case $1" >&2; return 1 ;;
     esac
 }
@@ -75,7 +83,7 @@ run_generate() {
 me=world-hashes
 
 usage() {
-    sed -n '10,14p' "$0" | sed 's/^# *//' >&2
+    sed -n '10,15p' "$0" | sed 's/^# *//' >&2
     exit 2
 }
 
@@ -139,12 +147,14 @@ build_dir=
 out_dir=
 golden=
 golden_geo=
+golden_hist=
 while [ $# -gt 0 ]; do
     case $1 in
         --build-dir) [ $# -ge 2 ] || die "--build-dir needs a value"; build_dir=$2; shift 2 ;;
         --out-dir)   [ $# -ge 2 ] || die "--out-dir needs a value"; out_dir=$2; shift 2 ;;
         --golden)    [ $# -ge 2 ] || die "--golden needs a value"; golden=$2; shift 2 ;;
         --golden-geo) [ $# -ge 2 ] || die "--golden-geo needs a value"; golden_geo=$2; shift 2 ;;
+        --golden-hist) [ $# -ge 2 ] || die "--golden-hist needs a value"; golden_hist=$2; shift 2 ;;
         --help | -h) usage ;;
         -*) die "unknown option $1" ;;
         *) presets="$presets $1"; shift ;;
@@ -304,6 +314,7 @@ expect() {
     failed=0
     expect_file "$preset" "${golden:-$source_dir/worldgen/tests/golden/p0-worlds.txt}" "$P0_CASES" || failed=1
     expect_file "$preset" "${golden_geo:-$source_dir/worldgen/tests/golden/p1-worlds.txt}" "$GEO_CASES" || failed=1
+    expect_file "$preset" "${golden_hist:-$source_dir/worldgen/tests/golden/p3-worlds.txt}" "$HIST_CASES" || failed=1
     return "$failed"
 }
 

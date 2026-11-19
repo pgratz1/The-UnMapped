@@ -35,6 +35,18 @@ struct WriterState {
     std::pair<std::int64_t, std::int64_t> stage_start_border_key{0, 0};
     std::pair<std::int64_t, std::int64_t> last_region_biome_key{0, 0};
     std::pair<std::int64_t, std::int64_t> stage_start_region_biome_key{0, 0};
+    // Tables race, race_biome, culture, god, age (P3-03 5.3): the last key
+    // written and its value at begin_stage, restored on rollback.
+    std::int64_t last_race_id = 0;
+    std::int64_t stage_start_race_id = 0;
+    std::pair<std::int64_t, std::int64_t> last_race_biome_key{0, 0};
+    std::pair<std::int64_t, std::int64_t> stage_start_race_biome_key{0, 0};
+    std::int64_t last_culture_id = 0;
+    std::int64_t stage_start_culture_id = 0;
+    std::int64_t last_god_id = 0;
+    std::int64_t stage_start_god_id = 0;
+    std::int64_t last_age_id = 0;
+    std::int64_t stage_start_age_id = 0;
     std::vector<std::string> stages;              // committed stages, run order
     std::optional<std::uint64_t> seed;
     std::string seed_phrase;                      // empty for a numeric seed

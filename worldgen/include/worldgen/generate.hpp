@@ -17,6 +17,7 @@
 #include "worldgen/data/content.hpp"
 #include "worldgen/db/result.hpp"
 #include "worldgen/db/writer.hpp"
+#include "worldgen/history/params.hpp"
 
 namespace worldgen {
 
@@ -42,8 +43,14 @@ struct WorldParams {
     // implemented geography stage in the order of P1-00 section 3;
     // stages::UNTIL_NONE ("none") runs none (the P0 empty world); a stage
     // name runs the stages up to and including it. It must be accepted by
-    // stages::check_stage_limit.
+    // stages::check_stage_limit. With no limit, `chronology` runs after
+    // the geography stages (P3-03 4.3).
     std::optional<std::string> until;
+    // The history settings (P3-03 4.1): recorded in meta for every world
+    // (the eight param.* keys of P3-03 4.2) and handed to every stage
+    // (StageContext::history_params). generate_world checks them first:
+    // FatalError "generate_world: params.history.<field> is invalid".
+    history::HistoryParams history;
     // Threads for parallel steps, 1 to 256 (P1-00 D10). Used only to
     // schedule work: it is never recorded in the world and never changes
     // a byte of it.
@@ -52,8 +59,8 @@ struct WorldParams {
 
 // The names of the stages generate_world runs for params, in run order
 // (P0-04 5.1 step 3, P1-00 10.1): {"test_pattern"} with test_pattern;
-// otherwise the implemented geography stages up to params.until (by
-// default every implemented stage: "elevation"). FatalError if test_pattern is
+// otherwise the implemented stages up to params.until (by default every
+// implemented stage: "elevation" ... "regions", "chronology"). FatalError if test_pattern is
 // combined with until, or until is not accepted by check_stage_limit.
 [[nodiscard]] std::vector<std::string_view> planned_stages(const WorldParams& params);
 

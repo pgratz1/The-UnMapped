@@ -35,7 +35,10 @@ inline constexpr std::string_view REPORT_HEADER_V2 = "# worldgen report v2";
 // through escape_report_text. Then, when the world has a layer named
 // `elevation`, the section [geography] of P1-00 10.3 (geography_section in
 // geography.hpp), reading the layers elevation, water, flow_dir,
-// flow_accum, river and lake.
+// flow_accum, river and lake. Then, when table age has a row, the section
+// [chronology] of P3-03 9.1 (chronology_section in chronology.hpp), after
+// the checks of tables race and age (corrupt_layer, "corrupt table 'race':
+// ..." or "corrupt table 'age': ...").
 //
 // Decodes every layer for min and max, so a corrupt layer is a
 // corrupt_layer error; other reader errors are passed on. A geography layer

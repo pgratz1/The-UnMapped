@@ -21,8 +21,10 @@ namespace worldgen {
 // the resources stage (P1-05) joined it; 0.10.0 until the regions stage
 // (P1-06) joined it with schema 5 (tables region, region_border and
 // region_biome); 0.11.0 until the history data kinds race, culture and
-// history (P3-01) entered every world's content hash; now 0.12.0.
-inline constexpr std::string_view GENERATOR_VERSION = "0.12.0";
+// history (P3-01) entered every world's content hash; 0.12.0 until the
+// chronology stage (P3-03) joined it with schema 6 (tables race,
+// race_biome, culture, god and age, eight history meta keys); now 0.13.0.
+inline constexpr std::string_view GENERATOR_VERSION = "0.13.0";
 
 // Returns GENERATOR_VERSION (P0-02 5.5). A world is only guaranteed
 // reproducible under the same generator version (design doc section 4).
