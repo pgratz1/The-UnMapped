@@ -178,22 +178,14 @@ TEST_CASE("cli P3-01 6.2: --races errors: empty list, empty item, not an id, rep
 
 TEST_CASE("cli P3-01 6.2: --races with an id that has no race definition (checked after the data is loaded)") {
     Sandbox sb;
-    // "<ids of the loaded races in race order, comma separated>": the spec
-    // does not say whether a space follows each comma (ambiguity reported);
-    // both are accepted, the race order is required.
-    for (const char* id : {"dragon", "elves"}) {
-        for (const std::string& given : {std::string(id), "elf," + std::string(id)}) {
-            CAPTURE(given);
-            const fs::path out = sb.file("refused.db");
-            const ProcessResult r = sb.cli({"generate", "--seed", "0", "--until", "none", "--races", given, "--out", u8(out)});
-            CHECK(r.exit_code == EXIT_USAGE);
-            CHECK(r.out.empty());
-            CHECK_FALSE(file_exists(out));
-            const std::string head = "worldgen-cli: error: unknown race '" + std::string(id) + "' in --races; expected all or ids from: ";
-            CHECK((r.err == head + "elf,goblin,dwarf,faerie,human,orc\n" + std::string(GENERATE_HINT) ||
-                   r.err == head + "elf, goblin, dwarf, faerie, human, orc\n" + std::string(GENERATE_HINT)));
-        }
-    }
+    // P3-01 6.2 (revised): the loaded ids in race order, separated by ", ".
+    const std::string ids = "elf, goblin, dwarf, faerie, human, orc";
+    usage(sb, {"--races", "dragon"}, "unknown race 'dragon' in --races; expected all or ids from: " + ids);
+    usage(sb, {"--races", "elf,dragon"}, "unknown race 'dragon' in --races; expected all or ids from: " + ids);
+    usage(sb, {"--races", "elves"}, "unknown race 'elves' in --races; expected all or ids from: " + ids);
+    // Several unknown ids: only the first, in the order given.
+    usage(sb, {"--races", "wyrm,elf,dragon"}, "unknown race 'wyrm' in --races; expected all or ids from: " + ids);
+    usage(sb, {"--races", "dragon,wyrm"}, "unknown race 'dragon' in --races; expected all or ids from: " + ids);
 }
 
 TEST_CASE("cli P3-01 6.2: --divine-script is always refused") {
@@ -308,7 +300,8 @@ TEST_CASE("cli P3-01 6.2, 8.2 test 7: settings-file errors are input errors at t
         REQUIRE(lines.size() == 1U);
         CHECK(lines[0] == u8(sb.file(name)) + ":2:" + c.column + ": error: " + c.message);
     }
-    // The words of the four word keys: message form only.
+    // The word keys and races with a wrong string: <found> is the string in
+    // double quotes (P3-01 6.2, revised).
     for (const auto& [key, expected] : std::vector<std::pair<std::string, std::string>>{
              {"history_detail", "; expected sparse, normal or dense"},
              {"event_intensity", "; expected calm, normal or turbulent"},
@@ -319,22 +312,66 @@ TEST_CASE("cli P3-01 6.2, 8.2 test 7: settings-file errors are input errors at t
         const std::string name = "w" + key + ".toml";
         const std::vector<std::string> lines = input_error(sb, name, "[world]\n" + key + " = \"bogus\"\n");
         REQUIRE(lines.size() == 1U);
-        const std::string prefix = u8(sb.file(name)) + ":2:" + std::to_string(key.size() + 4) + ": error: 'world." + key + "' is ";
-        CHECK(starts_with(lines[0], prefix));
-        CHECK(lines[0].substr(lines[0].size() - std::min(lines[0].size(), expected.size())) == expected);
+        CHECK(lines[0] == u8(sb.file(name)) + ":2:" + std::to_string(key.size() + 4) + ": error: 'world." + key +
+                              "' is \"bogus\"" + expected);
+    }
+    // world.races: an empty array, and an element that is not an id.
+    {
+        const std::vector<std::string> lines = input_error(sb, "empty.toml", "[world]\nraces = []\n");
+        REQUIRE(lines.size() == 1U);
+        CHECK(lines[0] == u8(sb.file("empty.toml")) +
+                              ":2:9: error: 'world.races' is an empty array; expected \"all\" or an array of race ids");
+    }
+    {
+        const std::vector<std::string> lines = input_error(sb, "elem.toml", "[world]\nraces = [\"elf\", 7]\n");
+        REQUIRE(lines.size() == 1U);
+        CHECK(lines[0] == u8(sb.file("elem.toml")) + ":2:17: error: 'world.races[1]' is 7; expected a race id");
     }
 }
 
 TEST_CASE("cli P3-01 6.2: a race id in the settings file with no race definition is an input error at the element") {
     Sandbox sb;
+    const std::string ids = "elf, goblin, dwarf, faerie, human, orc";
     const std::string name = "dragon.toml";
     const std::vector<std::string> lines = input_error(sb, name, "[world]\nraces = [\"elf\", \"dragon\"]\n");
     REQUIRE(lines.size() == 1U);
-    const std::string prefix = u8(sb.file(name)) + ":2:17: error: 'world.races[1]' is \"dragon\", which is not a race id; expected one of ";
-    CHECK(starts_with(lines[0], prefix));
-    for (const std::string& id : history_data::race_order()) {
-        CHECK(contains(lines[0].substr(prefix.size()), id));
+    CHECK(lines[0] == u8(sb.file(name)) + ":2:17: error: 'world.races[1]' is \"dragon\", which is not a race id; expected one of " + ids);
+    // Every such element is reported.
+    const std::vector<std::string> two = input_error(sb, "two.toml", "[world]\nraces = [\"wyrm\", \"elf\", \"dragon\"]\n");
+    REQUIRE(two.size() == 2U);
+    CHECK(two[0] == u8(sb.file("two.toml")) + ":2:10: error: 'world.races[0]' is \"wyrm\", which is not a race id; expected one of " + ids);
+    CHECK(two[1] == u8(sb.file("two.toml")) + ":2:25: error: 'world.races[2]' is \"dragon\", which is not a race id; expected one of " + ids);
+}
+
+TEST_CASE("cli P3-01 6.2: the file's race ids are checked even when --races overrides them; the flag's error comes first") {
+    Sandbox sb;
+    const std::string ids = "elf, goblin, dwarf, faerie, human, orc";
+    const fs::path settings = sb.file("dragon.toml");
+    write_text(settings, "[world]\nraces = [\"elf\", \"dragon\"]\n");
+    const std::string file_line =
+        u8(settings) + ":2:17: error: 'world.races[1]' is \"dragon\", which is not a race id; expected one of " + ids;
+    // A valid --races does not hide the file's unknown id: exit 3.
+    for (const char* flag : {"all", "elf", "orc,elf"}) {
+        CAPTURE(flag);
+        const fs::path out = sb.file("o.db");
+        const ProcessResult r =
+            sb.cli({"generate", "--seed", "0", "--until", "none", "--settings", u8(settings), "--races", flag, "--out", u8(out)});
+        INFO("stderr: ", r.err);
+        CHECK(r.exit_code == EXIT_INPUT);
+        CHECK_FALSE(file_exists(out));
+        const std::vector<std::string> lines = lines_of(r.err);
+        REQUIRE(lines.size() == 2U);
+        CHECK(starts_with(lines[0], "worldgen-cli: error: "));
+        CHECK(lines[1] == file_line);
     }
+    // Both name unknown races: the flag's usage error (exit 2) is reported.
+    usage(sb, {"--settings", u8(settings), "--races", "wyrm"},
+          "unknown race 'wyrm' in --races; expected all or ids from: " + ids);
+    // A form error of the flag comes before the file is read at all.
+    const fs::path broken = sb.file("broken.toml");
+    write_text(broken, "[world]\nhistory_span = 1\n");
+    usage(sb, {"--settings", u8(broken), "--races", "elf,,orc"},
+          "invalid --races 'elf,,orc'; expected all or a comma-separated list of race ids");
 }
 
 // --- 8.3 test 10: the --until none worlds of the three data roots ------------------------
