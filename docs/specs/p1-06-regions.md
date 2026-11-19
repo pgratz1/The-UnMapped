@@ -74,7 +74,7 @@ CREATE TABLE region_biome (region INTEGER NOT NULL, biome INTEGER NOT NULL, cell
 
 ### 3.2 Columns of `region`
 
-"Dry" cells are cells with `water` ∈ {0, 1} (dry land and river cells; the score layers are defined there, P1-05 3). Every region contains its seed, a dry cell, so every region has at least one dry cell. Means are RHA(sum, count) (round half away from zero; P0-01 5).
+"Dry" cells are cells with `water` ∈ {0, 1} (dry land and river cells; the score layers are defined there, P1-05 3). Every region contains its seed. On hydrology output the seed is a site cell, so every region has a dry cell; a hand-made landmass without a site cell (RG6) can give a region with **no dry cell**, and then every value taken over dry cells is 0 (`elev_mean_dm`, `elev_max_dm`, the six means, `habitability_p90`, `ore_rich_cells`, `ore_reach_cells`). Means are RHA(sum, count) (round half away from zero; P0-01 5).
 
 | Column | Value | Range | Read by history for |
 | --- | --- | --- | --- |
@@ -82,7 +82,7 @@ CREATE TABLE region_biome (region INTEGER NOT NULL, biome INTEGER NOT NULL, cell
 | `name` | placeholder name (RG11) | unique | display until history names the region |
 | `biome` | dominant biome code (RG10) | a non-water code | the region's character, beast and race preference |
 | `x_min`, `y_min`, `x_max`, `y_max` | inclusive cell bounds of the region's cells | 0..N−1 | quick spatial lookup |
-| `seed_x`, `seed_y` | the region's seed (RG4, RG7), its best settlement site | a dry cell of the region | the first village site |
+| `seed_x`, `seed_y` | the region's seed (RG4, RG7), its best settlement site | a site cell of the region (RG6: the landmass's smallest-index cell if the landmass has no site cell) | the first village site |
 | `landmass` | G2 label of the 8-connected land component holding the region (RG6) | ≥ 1 | islands, sea crossings |
 | `cells` | land cells (lakes and rivers included) | ≥ 1 | area: `cells` × 256 m² |
 | `lake_cells`, `river_cells` | cells with `water` 2, 1 | | lakes and rivers inside |
@@ -110,7 +110,7 @@ A **border pair** is an unordered pair of 4-adjacent land cells in different reg
 | `low_x`, `low_y` | the cell of the first pair (enumeration order) that attains `low_dm`: its cell with the larger S, the first cell of the pair if equal |
 | `walk_pairs` | pairs whose two cells have the same non-zero `walk_area` (a walker crosses there) |
 | `river_pairs` | pairs in which either cell is a river cell (`water` 1) of class ≥ `river_border_class` |
-| `river_class_max` | the largest `river` value over the river cells of the pairs, 0 if none |
+| `river_class_max` | the largest `river` value over every river cell (`water` 1, any class) of the pairs, 0 if none; it is not limited to border river cells, so a border can have `river_pairs` 0 and `river_class_max` 1 to `river_border_class` − 1 |
 | `pass_id` | the smallest `pass.id` of a pass that crosses this border (RG12), 0 if none |
 | `passes` | the number of passes that cross it |
 
@@ -222,7 +222,7 @@ with Δx = c.x − s.x, Δy = c.y − s.y (RHA of a negative product rounds half
 
 ### RG6. One seed per landmass (D5)
 
-Label the 8-connected components of land with G2 (labels 1 … M in order of smallest index; `landmass`). For each landmass in label order that holds no seed, append a seed at its best site cell, or, if it has none, at its smallest-index cell, numbered after the existing seeds. (A landmass without a site cell does not occur on hydrology output: every island has dry land.)
+Label the 8-connected components of land with G2 (labels 1 … M in order of smallest index; `landmass`). For each landmass in label order that holds no seed, append a seed at its best site cell, or, if it has none, at its smallest-index cell, numbered after the existing seeds. (A landmass without a site cell does not occur on hydrology output: every island has dry land. On hand-made input the smallest-index cell may be a river or lake cell; it is still the seed, `seed_x`, `seed_y`, and the sector of RG11; the region's dry-cell values follow 3.2.)
 
 ### RG7. Cost flood (D6)
 
@@ -266,13 +266,13 @@ Regions get ids 1, 2, … in order of their smallest cell index; `region` = id o
 
 Each column of 3.2 by exact integer reductions over the region's cells (sums, counts, minima, maxima). The 90th percentile is kth over the region's dry `habitability` values at rank min(n − 1, (90 n) div 100) (G1). `ore_reach_cells` uses dw = metres(chamfer(source = `walk_area` > 0)) by P1-02 H7 (5/7 weights, metres(d) = min(32767, (32 d + 5) div 10), as P1-05 R3): a dry cell counts if `ore` ≥ `ore_rich_min` and dw ≤ `ore_reach_m`.
 
-**Dominant biome**: the code with the most cells among the region's cells whose definition has `water` = false, ties to the smaller code. (Every region has a dry cell, and dry cells carry non-water biomes, P1-04 B5.)
+**Dominant biome**: the code with the most cells among the region's cells whose definition has `water` = false, ties to the smaller code. If the region has no such cell (only possible for a hand-made landmass without a site cell, RG6), the code with the most cells among all its cells, ties to the smaller code (for a lake-only landmass the `lake` code, so its noun is `Mere`, or `Isle` by RG11 3); everything else about the region (`walk_area` 0, `region_biome` rows, borders, `report`) follows the general rules.
 
 ### RG11. Names (sequential, id order)
 
 With the words of `names` (record `region_names`) and the biome nouns:
 
-1. **Land centroid**: L = the number of land cells, cx = RHA(Σx, L), cy = RHA(Σy, L) over land cells. r_c = round_int(mul_int(`name_central_frac`, N)).
+1. **Land centroid**: L = the number of land cells, cx = RHA(Σx, L), cy = RHA(Σy, L) over land cells. r_c = round_int(mul_int(`name_central_frac`, N)), with N the grid **width** W on a non-square test grid (worlds are square).
 2. **Sector** of a region from its seed: dx = seed_x − cx, dy = seed_y − cy (y grows southward). If dx² + dy² < r_c²: `central`. Otherwise, with ax = |dx|, ay = |dy|: if 29 ay ≤ 12 ax, `east` (dx > 0) or `west`; else if 29 ax ≤ 12 ay, `south` (dy > 0) or `north`; else `southeast`, `southwest`, `northeast` or `northwest` by the signs of dy and dx. (12/29 = 0.4138 approximates tan 22.5° = 0.4142.)
 3. **Noun**: `isle` if the region is the only region of its landmass and that landmass is not the largest (most cells; ties to the smaller label); otherwise the `region_noun` of its dominant biome.
 4. **Base name** = sector word, one space, noun. **Name**: going through regions in id order, the k-th region with a given base name is named the base name for k = 1, and the base name, one space and the Roman numeral of k for k ≥ 2 (`East Wood II`). Roman numerals: standard subtractive form (I, II, III, IV, V, …, IX, X, …, XL, L, …, XC, C, …, CD, D, …, CM, M), thousands as repeated M.
@@ -315,13 +315,13 @@ Computed by the spec writer's exact-integer prototype (`~/.cache/the-unmapped/ou
 
 **RG11 names** at N = 1024, land centroid (500, 480), `name_central_frac` "0.12" (raw 515396076): r_c = round_int(122.88) = 123. Seeds and dominant biomes, regions in id order: (520, 470) grassland → d² = 500 < 15129: `Central Downs`; (800, 500) forest → dx 300, dy 20, 29 × 20 ≤ 12 × 300: `East Wood`; (200, 200) alpine → dx −300, dy −280: `Northwest Peaks`; (510, 900) marsh → 29 × 10 ≤ 12 × 420: `South Marsh`; (790, 560) forest → `East Wood` again, the second: `East Wood II`; a lone region on a small island north of the centre: `North Isle`. Sector checks (dx, dy): (10, 4) east; (10, 5) southeast; (−3, −7) northwest; (0, −9) north; (4, 10) south; (5, 12) southeast. Roman: 2 II, 4 IV, 9 IX, 14 XIV, 40 XL, 90 XC, 400 CD, 1994 MCMXCIV, 4000 MMMM.
 
-**RG12 borders and passes.** A 4 × 3 test world, all land, region 1 on columns 0–1 and region 2 on columns 2–3; S rows `10 20 30 10`, `10 50 40 10`, `10 25 25 10`; `walk_area` 1 everywhere except 0 at (1, 1) and (2, 1); (2, 0) a river cell of class 6. Border pairs (1, y)–(2, y) for y = 0, 1, 2 with max S 30, 50, 25. Row (1, 2): `length_m` 48, `low_dm` 25, `low_x`, `low_y` = (1, 2) (equal S: the first cell), `walk_pairs` 2, `river_pairs` 1, `river_class_max` 6. A pass with path (0, 1), (1, 0), (2, 1), (3, 1): the step (0, 1) → (1, 0) gets the corner (1, 1) (inside region 1); the step (1, 0) → (2, 1) gets the corner (2, 0), and (1, 0)–(2, 0) crosses (1, 2). With this pass as id 3 and a second crossing pass of id 5: `pass_id` 3, `passes` 2.
+**RG12 borders and passes.** A 4 × 3 test world, all land, region 1 on columns 0–1 and region 2 on columns 2–3; S rows `10 20 30 10`, `10 50 40 10`, `10 25 25 10`; `walk_area` 1 everywhere except 0 at (1, 1) and (2, 1); (2, 0) a river cell of class 6. Border pairs (1, y)–(2, y) for y = 0, 1, 2 with max S 30, 50, 25. Row (1, 2): `length_m` 48, `low_dm` 25, `low_x`, `low_y` = (1, 2) (equal S: the first cell), `walk_pairs` 2, `river_pairs` 1, `river_class_max` 6. If (2, 0) were of class 4 instead (below `river_border_class`), the row would have `river_pairs` 0 and `river_class_max` 4. A pass with path (0, 1), (1, 0), (2, 1), (3, 1): the step (0, 1) → (1, 0) gets the corner (1, 1) (inside region 1); the step (1, 0) → (2, 1) gets the corner (2, 0), and (1, 0)–(2, 0) crosses (1, 2). With this pass as id 3 and a second crossing pass of id 5: `pass_id` 3, `passes` 2.
 
 ## 6. Invariants
 
 1. `region` > 0 exactly on land cells (`water` ≠ 3); 0 on ocean.
 2. Region ids are 1 to R, each used, increasing with each region's smallest cell index; R = the number of `region` rows.
-3. Each region is 8-connected, lies on one landmass and contains its seed (`seed_x`, `seed_y`), a site cell; `landmass` is that landmass's G2 label.
+3. Each region is 8-connected, lies on one landmass and contains its seed (`seed_x`, `seed_y`), which is a site cell unless the landmass has none (then its smallest-index cell, RG6); `landmass` is that landmass's G2 label.
 4. Every region has at least min_cells cells, unless it has no 4-adjacent neighbour region.
 5. Every column of the three tables equals its definition recomputed from the layers, the definitions and table `pass` (bounds, counts, means, percentile, dominant biome, walk area, the border rows and exactly the pairs that share a 4-adjacent cell pair, with `a` < `b`; the biome rows sum to `cells`).
 6. Names are unique; each is a sector word and a noun, optionally followed by a Roman numeral ≥ II, all words from the data.
@@ -365,16 +365,16 @@ Budget (P1-00 11): **0.3 / 1.5 / 6 s** at 512 / 1024 / 2048. Work: G7 (linear), 
 | `regions_isolated` | regions that appear in no `region_border` row |
 | `regions_upland` | regions with 4 × `walk_cells` < `cells` |
 
-Corrupt data, each exit 3 with nothing on stdout (the forms of P1-04 9): a `region` layer that is not `u16` or not the size of `elevation` (`corrupt layer 'region': type <t>, expected u16` or `… size <W>x<H>, expected <N>x<N>`), whenever the layer exists; a `region_border` row with `a` ≥ `b` or with `a` or `b` not an id of table `region` (`corrupt table 'region_border': row (<a>, <b>): <reason>`, reasons `a not below b`, `unknown region <id>`, first failing row in key order); a `region` row with `cells` < 1 (`corrupt table 'region': row <id>: cells below 1`). `report` does not recompute the tables from the layer.
+Corrupt data, each exit 3 with nothing on stdout (the forms of P1-04 9): a `region` layer that is not `u16` or not the size of `elevation` (`corrupt layer 'region': type <t>, expected u16` or `… size <W>x<H>, expected <N>x<N>`), whenever the layer exists; a `region_border` row with `a` ≥ `b` or with `a` or `b` not an id of table `region` (`corrupt table 'region_border': row (<a>, <b>): <reason>`, reasons `a not below b`, `unknown region <id>`, first failing row in key order); a `region` row with `cells` < 1 (`corrupt table 'region': row <id>: cells below 1`). `report` does not recompute the tables from the layer. **Order of the checks**, after every check of the earlier `[geography]` groups: (1) the `region` layer, when it exists (type, then size); (2) table `region`, every row in `id` order; (3) table `region_border`, every row in (`a`, `b`) order. The first failure is the one reported. The two table checks run whenever the tables have rows, also without the layer (as `pass` and `biome`); `region_border`'s `unknown region` check uses the `id` set of table `region`.
 
 Example (512 seed 0, prototype): `regions = 14`, `region_area_km2 = 0.06 1.69 3.50`, `region_borders = 18`, `region_borders_walkable = 9`, `region_borders_river = 0`, `region_borders_pass = 0`, `regions_isolated = 3`, `regions_upland = 6`. (1024 seed 0: `regions = 56`, `region_area_km2 = 0.06 1.75 4.53`, `region_borders = 113`, `region_borders_walkable = 85`, `region_borders_river = 10`, `region_borders_pass = 4`, `regions_isolated = 6`, `regions_upland = 12`.)
 
-**Statistics** (P1-00 13.1). Measured by the prototype of this spec on the 0.10.0 worlds of section 11 (512 seeds 0–19, 1024 seeds 0–29, 2048 seeds 0–5). Typical = measured min–max widened by about 10%, rounded outward; hard only where a value outside means a defect. The 2048 ranges rest on six worlds and should be widened by the validation sweep (2048 seeds 0–19); the prototype's flood is exact, its noise and hand are those of the spec (they come from the P1-05 prototype's checked `fbm_m` and G7), so the validation sweep should reproduce these numbers closely.
+**Statistics** (P1-00 13.1). Measured by the prototype of this spec on the 0.10.0 worlds of section 11 (512 seeds 0–19, 1024 seeds 0–29, 2048 seeds 0–5). Every value is taken with the report's own rule (the `region_area_km2` p50 by the rank rule of P1-00 10.3, the upper median for an even count; corrected 2026-11-18, the first table used the interpolated median). Typical = measured min–max widened by about 10%, rounded outward; hard only where a value outside means a defect. The 2048 ranges rest on six worlds and should be widened by the validation sweep (2048 seeds 0–19); the prototype's flood is exact, its noise and hand are those of the spec (they come from the P1-05 prototype's checked `fbm_m` and G7), so the validation sweep should reproduce these numbers closely.
 
 | Statistic | All seeds (hard) | Typical (≥ 90%), 512 / 1024 / 2048 | Measured min / median / max, 512 / 1024 / 2048 |
 | --- | --- | --- | --- |
 | `regions` | ≥ 1 | 10–18 / 40–62 / 175–225 | 11 / 13 / 16; 45 / 49 / 56; 195 / 200 / 204 |
-| `region_area_km2` p50 | 0.5–5 | 1.2–2.6 / 1.5–2.7 / 1.8–2.3 | 1.34 / 1.89 / 2.36; 1.71 / 2.10 / 2.43; 1.97 / 2.04 / 2.12 |
+| `region_area_km2` p50 | 0.5–5 | 1.3–2.8 / 1.5–2.7 / 1.8–2.3 | 1.45 / 1.94 / 2.53; 1.74 / 2.13 / 2.43; 1.97 / 2.04 / 2.12 |
 | `region_area_km2` p100 | ≤ 15 | ≤ 6.2 / ≤ 6.7 / ≤ 7.0 | 3.10 / 4.53 / 5.64; 3.37 / 4.78 / 6.05; 4.49 / 5.25 / 6.37 |
 | `region_area_km2` p0 | descriptive (islands) | — | 0.05–1.06; 0.06–1.03; 0.06–0.81 |
 | `region_borders` | descriptive | — | 18 / 24.5 / 30; 105 / 116 / 134; 510 / 522 / 545 |
@@ -441,7 +441,7 @@ Measures, besides the report keys: **crest share**, of the border pairs where th
 
 ### 11.2 Variants (medians over worlds; 512 seeds 0–19, 1024 seeds 0–29, 2048 seeds 0–5)
 
-| Variant | Size | `regions` | area p50 / p100 km² | crest / trough | large-river share (≥ 6 / ≥ 7) | iq |
+| Variant | Size | `regions` | area p50 (interpolated median) / p100 km² | crest / trough | large-river share (≥ 6 / ≥ 7) | iq |
 | --- | --- | --- | --- | --- | --- | --- |
 | plain distance (no weight, no river cost, no noise; same seed rule) | 512 / 1024 / 2048 | 14 / 51 / 210 | 1.87 / 3.56; 2.04 / 3.85; 2.04 / 4.34 | 0.17 / 0.08; 0.14 / 0.05; 0.12 / 0.06 | 0.00; 0.07 / 0.06; 0.08 / 0.08 | 0.41 / 0.46 / 0.47 |
 | first draft (climb 10 both ways, class 4 at 60 m, hash seeds) | 512 / 1024 / 2048 | 13 / 46 / 171 | 1.79 / 4.30; 2.31 / 4.80; 2.63 / 4.98 | 0.16 / 0.04; 0.10 / 0.04; 0.08 / 0.04 | 0.09; 0.07 / 0.07; 0.09 / 0.10 | 0.31 / 0.36 / 0.44 |
