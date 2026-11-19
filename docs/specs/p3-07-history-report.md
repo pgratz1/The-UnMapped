@@ -424,6 +424,15 @@ Integers only. "Standing" = status 1 or 2. Every key of the world report's `[his
 | `civ_settlements_max` | max over alive civilizations of their standing settlements; 0 when none |
 | `settlements_colonies` | settlements whose `founding_event` is of kind `colony_founded` |
 | `civilizations_seceded` | civilizations whose `founding_event` is of kind `civ_seceded` |
+| `relations_enmity`, `relations_peace` | rows of `relation` of kind `enmity`, of kind `peace` (P3-06 15.4; r3) |
+| `war_years_total` | Σ over `war` rows of (`until`, or E when NULL) − `since` |
+| `war_years_max` | the largest of those; 0 when there is none |
+| `civilizations_conquered` | civilizations whose `ending_event` is of kind `civ_conquered` |
+| `settlements_sacked` | settlements whose `ruin_event` is of kind `sacked` |
+| `settlements_captured` | distinct `event.settlement` of events of kind `settlement_captured` |
+| `regions_conquered` | `region_control` rows whose `event` is of kind `settlement_captured` or `region_ceded` |
+| `races_alive` | `race` rows with at least one civilization with `ended_year` NULL |
+| `wars_attacker_<race key>` | one line per `race` row in id order: `war` rows whose `a_id` is a civilization of that race |
 
 For the P3-04 to P3-06 sweeps (P3-00 12.2, 12.3): order and schedule from `[ages]` and the world report's `[chronology]`; phases and the 10–50% bound from `simulated_permille`; "not empty" from `civilizations_alive`, `settlements_standing` and `civilizations_<race>`; "not runaway" from `share_over_800_years` and `events_per_1000_simulated_years`; log integrity is the report's exit status 0 (5.2) together with P3-04's own invariant tests. Population against capacity is P3-05's statistic: capacity is not stored in the world.
 
@@ -964,3 +973,6 @@ Made with P3-05 (its 18.5), in place: section 9 gains seven keys after `wars_ope
 
 Text only, no behaviour change. Messages and output formats are part of the cross-platform contract and are ASCII: the corrupt-data reasons of 5.2 print `<E - 1>` (was written with a minus sign), the relation line of 7 `<until - 1>`, and the chronicle line quoted in 18.4 item 1 matches 6's grammar (`[ [causes e<c1>, e<c2>, ...]]`). The placeholders always printed a number; the change is to the spec text. Checked against the P3-04 rulings of 2026-11-19 (P3-04 r3): nothing else in this spec contradicts them (the `flare_up` example of 14 is a point event with a cause, as ruled).
 
+## Revision note r3 (2026-11-19, amendments for P3-06)
+
+Made with P3-06 (its 18.4), in place: section 9 gains nine keys and one family of six per-race lines after `civilizations_seceded` (10.3 rule 1; format stays v1): `relations_enmity`, `relations_peace`, `war_years_total`, `war_years_max`, `civilizations_conquered`, `settlements_sacked`, `settlements_captured`, `regions_conquered`, `races_alive` and the six `wars_attacker_<race key>` lines (one per `race` row). They are defined over kinds and relation kinds that exist from generator 0.16.0; on an earlier world they print 0 (and `races_alive` the races with a living civilization). Section 20 item 1 is met by P3-06 4.3: `war` is asymmetric (a the attacker), `enmity` and `peace` symmetric. The illustrative excerpt of 17 stays illustrative: P3-06's kinds are `claim`, `war_declared`, `battle`, `siege`, `sacked`, `peace`, `truce`, `civ_conquered` and others (P3-06 11), not `region_claimed` or `civ_ended` by conquest. No world byte changes.

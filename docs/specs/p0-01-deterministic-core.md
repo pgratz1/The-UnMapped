@@ -548,3 +548,6 @@ No stream name is added: the `history` stage of P3-04 makes no random decision o
 
 Requested by P3-05 3.3. The stream-name registry of 7.3 gains, after `hist.chronology.awakening`, in this order: `hist.peoples.home`, `hist.peoples.civs`, `hist.peoples.found`, `hist.peoples.outward`, `hist.peoples.famine`, `hist.peoples.famine_toll`, `hist.peoples.plague`, `hist.peoples.plague_toll`, `hist.peoples.plague_spread`, `hist.peoples.abandon`, `hist.peoples.crisis`, `hist.peoples.split`: 46 names in all. Registering a stream name changes no world byte.
 
+## 19. Amendment for P3-06 (2026-11-19)
+
+Requested by P3-06 3.3 and 18.2. The stream-name registry of 7.3 gains, after `hist.peoples.split`, in this order: `hist.conflict.declare`, `hist.conflict.battle`, `hist.conflict.battle_win`, `hist.conflict.siege`, `hist.conflict.sack`: 51 names in all, from the P3-06 merge (generator 0.16.0). Registering a stream name changes no world byte.

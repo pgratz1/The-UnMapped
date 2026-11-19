@@ -1,6 +1,6 @@
 # P3-06 Expansion and conflict
 
-Status: **draft for the lead's approval** (written by the spec writer 2026-11-19). Phase P3 History core, spec 6 (P3-00 3.1 row P3-06), a subsystem of pipeline stage 8, `history`, and its tension source. Generator **0.16.0**; **no schema change** (schema stays 7: P3-06 appends event kinds 20–30 to the catalogue and writes rows of `event`, `relation`, `region_control`, `settlement`, `civilization` and `settlement_census` through P3-04's `State`; no column). Design doc sections 5 (the races and their camps and characters; "goblins hostile to elves from the first year", dwarves "arrive into a world already at war", humans "spread quickly over land left open or ruined by older wars", orcs "their coming opens the most recent age of conflict"; deep time and flare-ups "two expanding borders meet"; alignment sets starting relations; race relations "old wars leave grudges"; mountains, passes and roads in history; the tick loop items 2 and 5), 6 (`relation`, `settlement`, `civilization`), 13 (P3 row: wars, ruin; P5 exit: "no world is empty or runaway") and 14 (records a model can narrate). Depends on P3-00 (binding), P3-01 (race fields `camp`, `expansion`, `aggression`; amended in 18.3: one new race field), P3-02 (keyed draws), P3-04 (engine, step seam, `TensionSource`, flare-ups SC5/SC6, event writer W1–W9, bookkeeping), **P3-05 (peoples: its `PeoplesView`, `note_reduction`, and one new hook, amendment 18.1, to be applied before P3-05 is implemented)** and P3-07 (report: section 9 statistics, section 20 requirements; amended in 18.4). Branch read: `origin/p3/05-spec` at 73b01a4 (newest text of P3-00 to P3-07). Proposals read: up to "History: random pressures act only in active phases; migration waits for conflict".
+Status: **approved by the lead 2026-11-19 as the basis for implementation** (the ten questions of section 19 go to Paul; the interim choices stand; the measured shortfalls of 15.2 and 19 items 7, 9, 10 go to the world critic after implementation). Written by the spec writer 2026-11-19; the amendments of section 18 applied the same day on `p3/06-spec`, after merging `origin/p3/04-spec-fixes` at 13b8062 (P3-04 r3, P3-07 r2); checked against P3-04 r3 (16.5, note at the end). Phase P3 History core, spec 6 (P3-00 3.1 row P3-06), a subsystem of pipeline stage 8, `history`, and its tension source. Generator **0.16.0**; **no schema change** (schema stays 7: P3-06 appends event kinds 20–30 to the catalogue and writes rows of `event`, `relation`, `region_control`, `settlement`, `civilization` and `settlement_census` through P3-04's `State`; no column). Design doc sections 5 (the races and their camps and characters; "goblins hostile to elves from the first year", dwarves "arrive into a world already at war", humans "spread quickly over land left open or ruined by older wars", orcs "their coming opens the most recent age of conflict"; deep time and flare-ups "two expanding borders meet"; alignment sets starting relations; race relations "old wars leave grudges"; mountains, passes and roads in history; the tick loop items 2 and 5), 6 (`relation`, `settlement`, `civilization`), 13 (P3 row: wars, ruin; P5 exit: "no world is empty or runaway") and 14 (records a model can narrate). Depends on P3-00 (binding), P3-01 (race fields `camp`, `expansion`, `aggression`; amended in 18.3: one new race field), P3-02 (keyed draws), P3-04 (engine, step seam, `TensionSource`, flare-ups SC5/SC6, event writer W1–W9, bookkeeping), **P3-05 (peoples: its `PeoplesView`, `note_reduction`, and one new hook, amendment 18.1, to be applied before P3-05 is implemented)** and P3-07 (report: section 9 statistics, section 20 requirements; amended in 18.4). Branch read: `origin/p3/05-spec` at 73b01a4 (newest text of P3-00 to P3-07). Proposals read: up to "History: random pressures act only in active phases; migration waits for conflict".
 
 Numbers in this spec come from the spec writer's exact-integer prototype `~/.cache/the-unmapped/out/p3-06-spec/conflict.py`, built on the P3-05 prototype `peoples.py` (which it imports unchanged) with a dynamic scheduler that follows P3-04 SC1–SC6, run on the P1-06 validation worlds `~/.cache/the-unmapped/out/p1-06-validation/` (geography unchanged since 0.11.0). The prototype is evidence, not the reference (16).
 
@@ -763,7 +763,7 @@ Claims, battles and sieges are counted by P3-07's `events_<key>` lines. Strain, 
 
 ### 15.6 For the validation specialist
 
-Sweeps with shipped data and default settings, release build, from `report --history`'s `[stats]`: **1024 seeds 0–199**, **512 seeds 0–49**, **2048 seeds 0–19**; and 1024 seeds 0–49 with each setting of 15.3's table (`--event-intensity calm` and `turbulent`, `--civs-per-race 4`, `--races elf,goblin` and `elf,orc`, `--history-span 2000` and `12000`, `--history-detail dense`), plus P3-05's `--civs-per-race 1` and `--races elf`. On every world: the hard bounds of 15.5 and P3-05's; purity (threads 1 and 5, resume). A median more than 20% away from 15.3's is a finding for the spec writer. Performance: 16.4 at 1024 seeds 0–19.
+Sweeps with shipped data and default settings, release build, from `report --history`'s `[stats]`: **1024 seeds 0–199**, **512 seeds 0–49**, **2048 seeds 0–19**; and 1024 seeds 0–49 with each setting of 15.3's table (`--event-intensity calm` and `turbulent`, `--civs-per-race 4`, `--races elf,goblin` and `elf,orc`, `--history-span 2000` and `12000`, `--history-detail dense`), plus P3-05's `--civs-per-race 1` and `--races elf`. On every world: the hard bounds of 15.5 and P3-05's; purity (threads 1 and 5, resume). A median more than 20% away from 15.3's is a finding for the spec writer. Performance: 16.6 at 1024 seeds 0–19.
 
 ## 16. Tests required
 
@@ -821,7 +821,24 @@ The test builds this state through the seams, runs the pure functions and one T2
 19. `worldgen/tests/golden/p3-06-conflict.txt`, written by the reference: for the four P1 golden cases and the three `hist-*` cases: (a) the logical hashes of the thirteen history tables; (b) the war lines of 16; (c) the tension of every quiet step (`<case> q<start> <value> e<trigger>`); (d) the `[stats]` lines of 15.4; (e) the rendered sentence of every event of the 512 cases and of every event of kinds 20–30 of the 1024 cases (`*-slow` suite). The C++ must match every line.
 20. The sample of 15.2 (seed 42 at 1024, default settings) is a golden case of its own, `hist-conflict-42-1024`, in `p3-06-conflict.txt` only: its war list and the sixty summary lines of 15.2 must equal the spec's (prototype and reference are independent; a difference is resolved before merge). P3-05's `hist-peoples-42-1024` is re-recorded with conflict installed (its events e1–e37 are unchanged: conflict appends nothing before its first claim, e38 in year 2148, and changes no peoples state before it).
 
-### 16.4 Performance
+### 16.4 Fatal messages (normative; P3-04 16.6's form, all ASCII)
+
+Seam guards, unreachable with loaded data and tested through the seams with hand-made tuning; tests compare the texts exactly. `<...>` are decimal integers unless stated.
+
+| Group | Messages |
+| --- | --- |
+| Tuning (at configuration, in the order of 12.1, record fields as `<record>.<field>`) | `history: tuning: the content has no definition history.conflict`; `history: tuning: conflict.<field> outside its schema range`; `history: tuning: claim_strain must not be above declare_min`; `history: tuning: declare_min + declare_span must not be above strain_max` |
+| Race data | `history: conflict: race '<key>' is not in the content` (a present race row with no race definition) |
+| Bounds (H6) | `history: bound: conflict force of civilization <c> exceeds 2^40`; `history: bound: conflict strain of civilization <a> against <b> exceeds 2^40` (unreachable: `strain_max` caps it) |
+| Seam | `history: conflict: ruin of settlement <s>, which is not standing` (a fall of a settlement that is not standing: an internal error) |
+
+Every other failure surfaces through P3-04's `State` and event-writer messages (16.6 there), with the call or event that failed.
+
+### 16.5 Agreement with P3-04 r3
+
+Checked after merging P3-04 r3: P3-06's steps T2, T6, Q4 are subsystem steps (r3's refusal of engine-owned steps does not apply); P3-06 calls `quiet_events_left` only in quiet steps (r3 makes it `quiet_events_max` elsewhere, which P3-06 does not rely on); the first year of a flare-up is recognized by the phase id and kind in T2 (7.2), after the engine's `flare` step has appended the point event `flare_up` (r3 6.3), whose id P3-06 neither needs nor predicts; P3-06 creates no civilization or settlement, so W4's next-id rule does not touch it; every relation it opens is closed with an event (r3's guard "a relation vanished without a closing event" cannot fire); the floor clamp of r3 5.1 changes no flare-up arithmetic (P3-06's flare-ups are bounded by the cap as before). All message texts of this spec (12.1's named checks, 16.4) are ASCII.
+
+### 16.6 Performance
 
 `history` at 1024 with peoples and conflict (prototype: about 2.2 s per world on top of P3-05's 3.4 s of CPU time in Python, single-threaded): budget **4 s** in a release build (P3-00 12.1 gives 15 s for P3-04 to P3-06 together; P3-05's own budget is 2 s), 512: 1 s, 2048: 16 s. Costs per tick year: the fronts of every ordered pair of alive civilizations (about 100 pairs × a two-border search over about 30 presence regions), `wanted_held` per civilization, and per open war a battle; per quiet step the same strain update once. A microbenchmark tagged like P3-04 14.3's reports it. The engineer may cache presence and fronts per step (they change only with ownership), which this text permits because they are pure functions of the step's state.
 
@@ -840,9 +857,9 @@ Lint impact: none expected.
 
 ## 18. Amendments requested
 
-To be applied with the lead's approval, each in its spec's convention. **18.1 first: P3-05 is about to be implemented.**
+**Applied 2026-11-19** on `p3/06-spec` after the lead's approval, each in its spec's convention: P3-05 "Revision note r1 (… for P3-06)", P0-01 section 19, P3-01 "Revision note r7", P3-07 "Revision note r3", P3-00 "Correction note (2026-11-19, for P3-06)", P3-04 "Revision note r4", `schema.md` section 6 ("Planned additions"). Each amendment that describes data or behaviour of generator 0.16.0 is marked so in the amended spec; **P3-05's implementer at 0.15.0 applies only 18.1 item 1** (the `ruin` restructuring, no world byte changes).
 
-### 18.1 P3-05 (peoples) — apply before P3-05 is implemented
+### 18.1 P3-05 (peoples) — applied as P3-05 r1 (8.5, 13, 14, note); item 1 is the only part of 0.15.0
 
 1. **New hook** `PeoplesSubsystem::ruin(std::int64_t settlement, std::int64_t event)`: performs 8.5 items 2–5 for the settlement with `event` in place of the abandonment event (survivors to the owner's nearest other standing settlement up to its room; `set_population(s, 0)`, `set_settlement_status(s, ruined, event)` so that `ruin_event` = `event`, `set_settlement_owner(s, 0, event)`; the release of the region; the capital move with `capital_moved` caused by `event`), and **not** item 6 (the caller ends the civilization). `abandon(s, cause)` becomes: append `settlement_abandoned`, `ruin(s, that event)`, then item 6. No behaviour of a P3-05 world changes (a refactor; P3-05's golden vectors at 0.15.0 are unaffected).
 2. 13 "Ruin by sacking": P3-06 calls `ruin(settlement, sack event)`, not `abandon`; the ruined row's `ruin_event` is the `sacked` event (P3-07 20 item 3).
@@ -850,26 +867,26 @@ To be applied with the lead's approval, each in its spec's convention. **18.1 fi
 4. 14 invariant 4: the exception "(P3-05 alone; P3-06 may hold regions without settlements)" becomes "with P3-06 too: P3-06 transfers regions only with settlements (P3-06 14 item 5)"; invariant 7: a ruined row's `ruin_event` is a `settlement_abandoned` or (from P3-06) a `sacked`.
 5. 15: the measurements are those of a world without conflict (0.15.0); P3-06 15 gives the 0.16.0 figures.
 
-### 18.2 P0-01 (stream list)
+### 18.2 P0-01 (stream list) — applied as P0-01 section 19
 
 The registry gains, after `hist.peoples.split`, `hist.conflict.declare`, `hist.conflict.battle`, `hist.conflict.battle_win`, `hist.conflict.siege`, `hist.conflict.sack` (51 names). No world byte changes by registration.
 
-### 18.3 P3-01 (data)
+### 18.3 P3-01 (data) — applied as P3-01 r7 (3, 3.1, 5, 8.1 item 4, status), every item from 0.16.0
 
 1. Race field `prowess_permille` int(1, 4000), required, after `aggression`: "fighting strength of the race's people, per mille of the standard (P3-06 6.1)"; shipped values 12.2; the fixture race files gain it.
 2. Goblin `aggression` 600 (section 3.1's shipped data).
 3. Field meaning of `aggression`: readiness for war, which P3-06 squares in the strain rate (5.2) and uses against the odds of a declaration (7.2); of `expansion`: unchanged (P3-05).
 4. Section 5's id table: `conflict` "added by P3-06 (12.1 there)"; 8.1 item 4's expected list `'chronology', 'conflict', 'engine', 'peoples', 'report'`, and a future-id example that is not registered (for example `monsters`).
 
-### 18.4 P3-07 (appended keys; format stays v1)
+### 18.4 P3-07 (appended keys; format stays v1) — applied as P3-07 r3 (9, note)
 
 Section 9 gains, after `civilizations_seceded`, the keys of 15.4 in that order with those definitions. 20 item 1 is met by 4.3 (`war` asymmetric, `enmity` and `peace` symmetric). The illustrative excerpt of 17 stays illustrative (its kinds `region_claimed` and `civ_ended`-by-conquest are not P3-06's).
 
-### 18.5 P3-00, P3-04, `schema.md`
+### 18.5 P3-00, P3-04, `schema.md` — applied as the P3-00 correction note for P3-06 (4.4, 6.1, 10.5, 10.6), P3-04 r4 (6.4, 8.2), `schema.md` 6
 
-1. **P3-00 6.1** (`relation` row note): kinds `enmity`, `war`, `peace` (P3-06 4.3); vassalage and alliances deferred. **10.5**: a sacked settlement is ruined (its survivors flee) or a fallen one changes owner; a civilization with no standing settlement left by conquest ends with `civ_conquered`. **10.6**: the 3 × 3 table's shipped values (4.1). **4.4** Q4: P3-06 ends open wars and builds strain and claims (7.8).
+1. **P3-00 6.1** (`relation` row note): kinds `enmity`, `war`, `peace` (P3-06 4.3); vassalage and alliances deferred; the expected event count marked as a proposed correction (question 8), awaiting Paul. **10.5**: a sacked settlement is ruined (its survivors flee) or a fallen one changes owner; a civilization with no standing settlement left by conquest ends with `civ_conquered`. **10.6**: the 3 × 3 table's shipped values (4.1). **4.4** Q4: P3-06 ends open wars and builds strain and claims (7.8).
 2. **P3-04 6.4**: the shipped `EngineConfig` installs `ConflictSubsystem` after `PeoplesSubsystem` (steps T2, T6, Q4) and as the only tension source, from generator 0.16.0; 8.2: the catalogue is extended by P3-06 with kinds 20–30. No engine rule changes.
-3. **`schema.md`** (the engineer): the catalogue table gains kinds 20–30 (structure only); the relation kinds `enmity` (symmetric), `war` (asymmetric, a the attacker), `peace` (symmetric). No schema change; `schema_version` stays 7.
+3. **`schema.md`**: a "Planned additions" list after the current (0.14.0) catalogue gives kinds 20–30 from 0.16.0 (structure only), which the engineer moves into the table at the merge; the relation kinds `enmity` (symmetric), `war` (asymmetric, a the attacker), `peace` (symmetric). No schema change; `schema_version` stays 7.
 
 ## 19. Open questions for Paul
 
@@ -891,3 +908,7 @@ Each with the recommendation and the interim choice this spec follows.
 - "History: wars are limited, fought for a claimed region, and end with the active phase" (questions 1 and 2).
 - "History: no race is wiped out; newly awakened peoples are sheltered" (question 4).
 - "History: a fighting strength per race; goblins less aggressive than orcs" (question 3).
+
+## Revision note r1 (2026-11-19, approval and amendments applied)
+
+Approved by the lead as the basis for implementation. Section 18 applied to P3-05 (r1), P0-01 (19), P3-01 (r7), P3-07 (r3), P3-00 (correction note), P3-04 (r4) and `schema.md` (6), and turned into a record of what was applied. `origin/p3/04-spec-fixes` (13b8062, P3-04 r3, P3-07 r2) merged; the spec checked against r3: new 16.4 (fatal messages, ASCII) and 16.5 (agreement with r3), performance renumbered 16.6. No rule or number changes.

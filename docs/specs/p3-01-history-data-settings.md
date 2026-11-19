@@ -1,6 +1,6 @@
 # P3-01 History data and settings
 
-Status: **approved by the lead 2026-11-19; revised 2026-11-19 (text only, after implementation); amended 2026-11-19 for P3-03 (r2); amended again 2026-11-19 after the P3-03 implementation (r3: check D0)**: see the revision notes at the end. Phase P3 History core, spec 1 (P3-00 3.1). Design doc sections 3 (data in TOML), 5 (the six races, their order, camps and timing; "Food and homelands"; world-creation settings), 6 (`meta` holds the settings). Depends on P0-03 (with amendments 15 to 17), P0-04, P1-00 6 and P3-00. Written together with P3-02, which defines the culture naming record that this spec's `culture` kind carries. Amended 2026-11-19 for P3-05 (r6: `density_permille`, field meanings).
+Status: **approved by the lead 2026-11-19; revised 2026-11-19 (text only, after implementation); amended 2026-11-19 for P3-03 (r2); amended again 2026-11-19 after the P3-03 implementation (r3: check D0)**: see the revision notes at the end. Phase P3 History core, spec 1 (P3-00 3.1). Design doc sections 3 (data in TOML), 5 (the six races, their order, camps and timing; "Food and homelands"; world-creation settings), 6 (`meta` holds the settings). Depends on P0-03 (with amendments 15 to 17), P0-04, P1-00 6 and P3-00. Written together with P3-02, which defines the culture naming record that this spec's `culture` kind carries. Amended 2026-11-19 for P3-05 (r6: `density_permille`, field meanings) and for P3-06 (r7: `prowess_permille`, goblin aggression, id `conflict`, all from generator 0.16.0).
 
 ## 1. Purpose
 
@@ -45,7 +45,8 @@ Directory `races/`, **required**, one schema for all definitions. Fields, all re
 | `upland` | int(−1000, 1000) | preference for upland ground, weighted by the region's rough share (P3-05 4.2; r6) |
 | `coast` | int(−1000, 1000) | preference for coastal regions, weighted by the region's coast share (P3-05 4.2; r6) |
 | `expansion` | int(0, 1000) | drive to claim regions (P3-06) |
-| `aggression` | int(0, 1000) | readiness for war (P3-06) |
+| `aggression` | int(0, 1000) | readiness for war; P3-06 squares it in the strain rate and uses it against the odds of a declaration (P3-06 5.2, 7.2; r7) |
+| `prowess_permille` | int(1, 4000) | **from generator 0.16.0 (P3-06; r7), not before**: fighting strength of the race's people, per mille of the standard (P3-06 6.1); shipped elf 1600, goblin 800, dwarf 1400, faerie 1200, human 1000, orc 1300 |
 | `settlement_kinds` | array(enum(hamlet, village, town, city, fortress), 1, 5) | settlement kinds the race builds |
 | `culture` | ref(culture) | the race's default culture |
 
@@ -147,7 +148,7 @@ biomes = [
 upland = 100
 coast = -100
 expansion = 600
-aggression = 700
+aggression = 700        # 600 from generator 0.16.0 (P3-06 12.2; r7); 700 until then
 settlement_kinds = ["hamlet", "village", "town", "fortress"]
 culture = "goblin"
 ```
@@ -276,7 +277,7 @@ settlement_kinds = ["hamlet", "village", "town", "fortress"]
 culture = "orcish"
 ```
 
-Reasons, in short: **elves** (good, very long-lived, few) live in forest and wet woodland, grow slowest and expand least; **goblins** (evil, short-lived, numerous) take dry uplands and poorer lowland, grow fast, are aggressive, and through the camp rule are hostile to elves from their first year; **dwarves** (neutral, long-lived) want reachable ore in uplands (`upland` 800, ore 60; the P1 critic: report-upland regions with `ore_reach_cells` > 0, median 3 per 1024 world), and avoid wetland; **faeries** (good, small, hidden) take forage-rich wetland and wet woodland (regions with a quarter or more wetland: median 1 per 1024 world, so they must also accept forest), and build only hamlets and villages; **humans** (neutral, adaptable, fast-growing) farm (fertility 60, grassland), like coasts and expand fastest; **orcs** (evil, warlike) take steppe and heath, most aggressive of all. Lifespans and generations are of the design's characters (elves "very long-lived", goblins "short-lived"); they matter only for ruling-line turnover in P3.
+Reasons, in short: **elves** (good, very long-lived, few) live in forest and wet woodland, grow slowest and expand least; **goblins** (evil, short-lived, numerous) take dry uplands and poorer lowland, grow fast, are aggressive, and through the camp rule are hostile to elves from their first year; **dwarves** (neutral, long-lived) want reachable ore in uplands (`upland` 800, ore 60; the P1 critic: report-upland regions with `ore_reach_cells` > 0, median 3 per 1024 world), and avoid wetland; **faeries** (good, small, hidden) take forage-rich wetland and wet woodland (regions with a quarter or more wetland: median 1 per 1024 world, so they must also accept forest), and build only hamlets and villages; **humans** (neutral, adaptable, fast-growing) farm (fertility 60, grassland), like coasts and expand fastest; **orcs** (evil, warlike) take steppe and heath, most aggressive of all. From generator 0.16.0 (P3-06, r7) every race file also carries `prowess_permille` after `aggression`, and the goblins' `aggression` is 600 (the orcs stay the most aggressive by a clear margin, P3-06 12.2); neither change belongs to an earlier merge. Lifespans and generations are of the design's characters (elves "very long-lived", goblins "short-lived"); they matter only for ruling-line turnover in P3.
 
 ## 4. Kind `culture`
 
@@ -312,7 +313,7 @@ Directory `history/`, **required**, a **fixed-id kind** (P0-03 amendment 15), on
 | `chronology` | P3-03 | **complete here** |
 | `engine` | P3-04 | added by P3-04 (5.2, r4) |
 | `peoples` | P3-05 | added by P3-05 (12.1 there, r6) |
-| `conflict` | P3-06 | added by P3-06 |
+| `conflict` | P3-06 | added by P3-06 at generator 0.16.0 (12.1 there, r7); a 0.15.0 root has no `conflict.toml` |
 | `report` | P3-04 (the event salience and templates) | added by P3-04 (5.3, r4); P3-07 adds no field (P3-07 8; r5) |
 
 **A not-yet-registered id** is handled exactly as for `worldgen`: the id set of the kind is what the build registers; a definition with any other id is an error at its header, `unknown id 'engine' for kind 'history'; expected one of 'chronology'` (P0-03 amendment 15's message as implemented: the registered ids in ascending order, each in single quotes, separated by `, `), and every registered id must be defined (`missing definition 'history.<id>'`, against the directory). So each data root carries exactly the files of the ids registered by its build: a spec that adds an id adds its file to `game/data/history/` and to the two fixture roots in the same merge. A file for a future id must not be committed early.
@@ -428,7 +429,7 @@ Where the tests are (section 2): 8.1 and the `Settings`-level parts of 8.2 in `w
 1. The shipped data loads; every value of the six races (3.1) and the chronology tuning (5.1) equals the listing (a table transcribed in the test, not read from the files); the six cultures have the `race` and `name` of section 4.
 2. Each per-definition and kind-level check of section 3 fails once on a fixture with its exact message and position; `race_order_dense` is not reported when `race_order_unique` fails; the duplicate- and missing-order behaviour of section 3 holds.
 3. Word grammar on `name`, `plural`, `adjective`: `elf`, `High Elf` fail (P0-03 amendment 17's message).
-4. Fixed-id behaviour: a fixture data root with `history/engine.toml` fails with `unknown id 'engine' for kind 'history'; expected one of 'chronology'` (from P3-04 on, r4: a root with `history/peoples.toml` fails with `unknown id 'peoples' for kind 'history'; expected one of 'chronology', 'engine', 'report'`, and a root missing `engine.toml` or `report.toml` fails with `missing definition 'history.<id>'`); a root without `history/chronology.toml` fails with `missing definition 'history.chronology'`; a root without `races/` fails as a missing required kind directory.
+4. Fixed-id behaviour: a fixture data root with `history/engine.toml` fails with `unknown id 'engine' for kind 'history'; expected one of 'chronology'` (from P3-04 on, r4: a root with `history/peoples.toml` fails with `unknown id 'peoples' for kind 'history'; expected one of 'chronology', 'engine', 'report'` (from P3-05 on, r6: the list `'chronology', 'engine', 'peoples', 'report'`; from P3-06 on, r7: `'chronology', 'conflict', 'engine', 'peoples', 'report'`, with a future-id example that is not registered, for example `monsters`), and a root missing `engine.toml` or `report.toml` fails with `missing definition 'history.<id>'`); a root without `history/chronology.toml` fails with `missing definition 'history.chronology'`; a root without `races/` fails as a missing required kind directory.
 5. Ranges: each bounded field one step outside its bounds is a range error.
 
 ### 8.2 Settings
@@ -486,3 +487,6 @@ Requested by P3-07 18.5. 5 and 5.3: `history.report` keeps the one field of P3-0
 
 Made with P3-05 (its 18.4), in place where marked. Race field `density_permille` int(1, 1000), required, after `growth_permille` (shipped: elf 300, goblin 900, dwarf 700, faerie 250, human 1000, orc 800; the fixture race files gain it). Field meanings: `site_weights.ore` weighs reachable ore, `upland` is weighted by the rough share and `coast` by the coast share (P3-05 4.1, 4.2). Section 3.1's shipped data: goblins gain `temperate_forest` −200 and `wet_woodland` −300; faeries `upland` 200 and biome weights fen 800, wet woodland 800, marsh 600, temperate forest 100, highland moor 300, heath 100 (P3-05 12.2; the TOML blocks of 3.1 are to be read with these values). Section 5: id `peoples` is registered by P3-05; 8.1 item 4's expected list becomes `'chronology', 'engine', 'peoples', 'report'`, and its future-id example `conflict`.
 
+## Revision note r7 (2026-11-19, amendments for P3-06)
+
+Made with P3-06 (its 18.3), in place where marked; **every change takes effect at generator 0.16.0 with the P3-06 merge and is not part of P3-05's 0.15.0 data**. Race field `prowess_permille` int(1, 4000), required, after `aggression` (shipped: elf 1600, goblin 800, dwarf 1400, faerie 1200, human 1000, orc 1300; the fixture race files gain it). Goblin `aggression` 700 → 600 (section 3.1's goblin block is annotated, its value stays 700 until 0.16.0). Field meaning of `aggression` made precise (squared in the strain rate, used against the declaration odds); `expansion` unchanged. Section 5: id `conflict` is registered by P3-06; 8.1 item 4's expected list becomes `'chronology', 'conflict', 'engine', 'peoples', 'report'` and its future-id example an unregistered id such as `monsters`.
