@@ -9,31 +9,30 @@
 //     names and types are not given.
 //   - 6.2: the ids of `world.races` are "checked after the data is loaded,
 //     still reported at the value's position": no function is named.
-//   - 8.1 test 8: "`all` gives every loaded race in race order": the
-//     resolution against the loaded data is not named either.
+//   - 8.2 test 8: "`all` gives every loaded race in race order": the
+//     resolution against the loaded data is not named either, nor is a
+//     library parser of the --races flag text (6.1).
 //
 // The tests see only the test-owned view below: History, the eight values
 // in the text form of the meta keys of 6.3 (param.history_span and so on,
 // races resolved to the present ids in race order, comma separated), and
-// two functions. Everything else they use is the existing P0-03 API
+// three functions. Everything else they use is the existing P0-03 API
 // (worldgen::data::parse_settings, load_content, load_content_from_memory,
 // builtin_kinds, content_hash_hex).
 //
-// INTEGRATION: the body of each function below assumes these names (the
-// test writer's guess, marked "ASSUMED"); replace them with the engineer's:
-//   Settings::history_span       std::int64_t                          default 6000
-//   Settings::history_detail     std::string                           "sparse" | "normal" | "dense"
-//   Settings::civs_per_race      std::optional<std::int64_t>           std::nullopt = auto
-//   Settings::races              std::optional<std::vector<std::string>> std::nullopt = all
-//   Settings::event_intensity    std::string                           "calm" | "normal" | "turbulent"
-//   Settings::monster_pressure   std::string                           "low" | "normal" | "high"
-//   Settings::divine_activity    std::string                           "distant" | "normal" | "meddling"
-//   worldgen::data::check_settings_races(const Settings&, const ContentSet&, std::string_view display_path)
-//       -> std::vector<LoadError>     the post-load check of world.races (6.2), at the values' positions
-//   worldgen::data::present_races(const Settings&, const ContentSet&)
-//       -> std::vector<std::string>   the present race ids in race order (6.1, 6.3)
+// Integration (done after the tests were drafted, against branch
+// p3/01-history-data at 65833c4): the engineer's names, used only below:
+//   Settings::history_span (int64), history_detail (HistoryDetail),
+//   civs_per_race (optional<int64>, nullopt = auto), races
+//   (optional<vector<string>>, nullopt = all), event_intensity,
+//   monster_pressure, divine_activity (enums) and their *_name() texts;
+//   check_settings_races(const Settings&, const ContentSet&) for the
+//   post-load race check; resolve_races(Settings&, const ContentSet&) for
+//   race order; parse_races_text(text) for the --races flag text.
+// Until that branch is merged, this header does not compile on main.
 
 #include <cstdint>
+#include <optional>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -69,16 +68,20 @@ inline History defaults() {
 // The settings of `s`, with its races resolved against the loaded `content`.
 inline History history_of(const wd::Settings& s, const wd::ContentSet& content) {
     History h;
-    h.history_span = std::to_string(s.history_span);                                         // ASSUMED
-    h.history_detail = std::string(s.history_detail);                                        // ASSUMED
-    h.civs_per_race = s.civs_per_race.has_value() ? std::to_string(*s.civs_per_race) : "auto";  // ASSUMED
-    for (const std::string& id : wd::present_races(s, content)) {                            // ASSUMED
-        h.races += (h.races.empty() ? "" : ",") + id;
+    h.history_span = std::to_string(s.history_span);
+    h.history_detail = std::string(wd::history_detail_name(s.history_detail));
+    h.civs_per_race = s.civs_per_race.has_value() ? std::to_string(*s.civs_per_race) : "auto";
+    wd::Settings resolved = s;
+    wd::resolve_races(resolved, content);
+    if (resolved.races.has_value()) {
+        for (const std::string& id : *resolved.races) {
+            h.races += (h.races.empty() ? "" : ",") + id;
+        }
     }
-    h.event_intensity = std::string(s.event_intensity);    // ASSUMED
-    h.monster_pressure = std::string(s.monster_pressure);  // ASSUMED
-    h.divine_activity = std::string(s.divine_activity);    // ASSUMED
-    h.divine_script = "";
+    h.event_intensity = std::string(wd::event_intensity_name(s.event_intensity));
+    h.monster_pressure = std::string(wd::monster_pressure_name(s.monster_pressure));
+    h.divine_activity = std::string(wd::divine_activity_name(s.divine_activity));
+    h.divine_script = s.divine_script;
     return h;
 }
 
@@ -90,7 +93,7 @@ inline wd::LoadResult<wd::Settings> parse_settings_with_data(std::string_view di
     if (!r.ok()) {
         return r;
     }
-    std::vector<wd::LoadError> errors = wd::check_settings_races(*r.value, content, display_path);  // ASSUMED
+    std::vector<wd::LoadError> errors = wd::check_settings_races(*r.value, content);
     if (!errors.empty()) {
         wd::sort_errors(errors);
         wd::LoadResult<wd::Settings> failed;
@@ -98,6 +101,20 @@ inline wd::LoadResult<wd::Settings> parse_settings_with_data(std::string_view di
         return failed;
     }
     return r;
+}
+
+// The --races flag text (P3-01 6.1, 6.2) as the races of a Settings value,
+// resolved against `content` into the param.races text of 6.3; std::nullopt
+// when the text is not a valid form (the usage error of 6.2). Ids are
+// assumed known (the unknown-id error is the CLI's, tested there).
+inline std::optional<std::string> races_from_flag(std::string_view text, const wd::ContentSet& content) {
+    const wd::RacesText parsed = wd::parse_races_text(text);
+    if (!parsed.ok) {
+        return std::nullopt;
+    }
+    wd::Settings s;
+    s.races = parsed.races;
+    return history_of(s, content).races;
 }
 
 }  // namespace history_api

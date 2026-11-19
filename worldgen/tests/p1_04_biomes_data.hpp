@@ -16,7 +16,6 @@
 #include <utility>
 #include <vector>
 
-#include "p3_01_history_data.hpp"
 #include "worldgen/data/content.hpp"
 #include "worldgen/data/schema.hpp"
 
@@ -292,7 +291,6 @@ inline void add_to(const worldgen::data::KindRegistry& registry, worldgen::data:
     if (registered(registry)) {
         root.directories.push_back(directory());
     }
-    history_data::add_to(registry, root);  // races/, cultures/, history/ (P3-01) when registered
 }
 
 // The same for a data root on disk (CLI sandboxes): writes
@@ -318,7 +316,6 @@ inline void write_to(const std::filesystem::path& root) {
             write(root / "biomes" / std::string(f.name), f.text);
         }
     }
-    history_data::write_to(root);  // races/, cultures/, history/ (P3-01) when registered
 }
 
 }  // namespace biome_data

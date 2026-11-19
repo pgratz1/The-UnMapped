@@ -2,23 +2,18 @@
 
 // The shipped history data of spec P3-01 (sections 3.1, 4 and 5.1) and the
 // naming blocks of P3-02 5, transcribed from the specs (not read from the
-// data files), for the P3-01 tests and for every test that builds a data
-// root of its own.
+// data files), for the P3-01 tests.
 //
-// Since P3-01 the production registry holds the required kinds `race`,
-// `culture` and `history`, so every data root needs races/, cultures/ and
-// history/. add_to() and write_to() add them to an in-memory or on-disk
-// root, each only while its kind is registered (so the same test code
-// works before and after the kinds exist). The texts are the spec listings
-// without their leading "# game/data/..." comment line, so every
-// definition header is at line 1, column 1.
+// The texts are the spec listings without their leading
+// "# game/data/..." comment line, so every definition header is at line 1,
+// column 1. (The data roots that the P1 tests build get the history kinds
+// from the engineer's p3_01_history_fixture.hpp, which copies the fixture
+// files; these transcriptions are the tests' independent reading.)
 //
 // Mirrors RACE_FILES, NAMING and CHRONOLOGY_FILE of
 // worldgen/tests/reference/p3_data_reference.py.
 
 #include <cstdint>
-#include <filesystem>
-#include <fstream>
 #include <map>
 #include <string>
 #include <string_view>
@@ -351,32 +346,6 @@ inline std::vector<worldgen::data::MemoryDirectory> directories(const Files& fil
         out.push_back(std::move(dir));
     }
     return out;
-}
-
-// Adds races/, cultures/ and history/ with the shipped files to an
-// in-memory root, each only when its kind is registered in `registry`.
-inline void add_to(const worldgen::data::KindRegistry& registry, worldgen::data::MemoryDataRoot& root) {
-    for (worldgen::data::MemoryDirectory& d : directories(shipped_files())) {
-        if (registry.find(kind_of_directory(d.name)) != nullptr) {
-            root.directories.push_back(std::move(d));
-        }
-    }
-}
-
-// The same for a data root on disk (CLI sandboxes and on-disk loader
-// tests), with the production registry.
-inline void write_to(const std::filesystem::path& root) {
-    const worldgen::data::KindRegistry registry = worldgen::data::builtin_kinds();
-    for (const auto& [path, text] : shipped_files()) {
-        const std::string d = path.substr(0, path.find('/'));
-        if (registry.find(kind_of_directory(d)) == nullptr) {
-            continue;
-        }
-        const std::filesystem::path p = root / std::filesystem::path(path);
-        std::filesystem::create_directories(p.parent_path());
-        std::ofstream out(p, std::ios::binary | std::ios::trunc);
-        out.write(text.data(), static_cast<std::streamsize>(text.size()));
-    }
 }
 
 // --- The values of the listings, as a table (P3-01 8.1 test 1) ----------------------

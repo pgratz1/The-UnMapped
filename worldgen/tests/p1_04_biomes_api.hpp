@@ -52,7 +52,6 @@
 #include "p1_02_hydrology_support.hpp"
 #include "p1_03_climate_support.hpp"
 #include "p1_04_biomes_data.hpp"
-#include "p3_01_history_data.hpp"
 #include "worldgen/core/fx.hpp"
 #include "worldgen/data/content.hpp"
 #include "worldgen/data/load_error.hpp"
@@ -99,7 +98,6 @@ inline Load load(std::optional<std::string> biomes_tuning, std::optional<worldge
     if (biomes_dir.has_value()) {
         root.directories.push_back(*biomes_dir);
     }
-    history_data::add_to(registry, root);  // races/, cultures/, history/ (P3-01) when registered
     wd::LoadResult<wd::ContentSet> r = wd::load_content_from_memory(registry, root);
     Load out;
     out.errors = r.errors;

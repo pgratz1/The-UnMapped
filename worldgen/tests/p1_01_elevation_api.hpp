@@ -19,7 +19,6 @@
 #include <vector>
 
 #include "p1_04_biomes_data.hpp"
-#include "p3_01_history_data.hpp"
 #include "worldgen/core/fx.hpp"
 #include "worldgen/data/content.hpp"
 #include "worldgen/data/load_error.hpp"
@@ -418,7 +417,6 @@ inline void add_biome_fixtures(worldgen::data::MemoryDataRoot& root) {
         root.directories.push_back(
             wd::MemoryDirectory{"biomes", {wd::MemoryEntry{"biomes.toml", std::string(BIOME_DEFINITIONS_TOML), false}}});
     }
-    history_data::add_to(registry, root);  // races/, cultures/, history/ (P3-01) when registered
 }
 
 // True when the production registry's `worldgen` kind has the id (P1-00

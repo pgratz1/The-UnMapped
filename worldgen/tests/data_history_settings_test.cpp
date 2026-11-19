@@ -12,6 +12,7 @@
 
 #include <algorithm>
 #include <cstdint>
+#include <optional>
 #include <ostream>
 #include <string>
 #include <string_view>
@@ -151,6 +152,22 @@ TEST_CASE("P3-01 6.1, 8.2 test 8: world.races is \"all\" or a set of ids, stored
     CHECK(h.races == "goblin");
     CHECK(h.history_span == "2000");
     CHECK(h.civs_per_race == "4");
+}
+
+TEST_CASE("P3-01 6.1, 8.2 test 8: the --races flag text normalizes as the settings-file array does") {
+    const wd::ContentSet& c = shipped_content();
+    CHECK(history_api::races_from_flag("orc,elf", c) == history_api::races_from_flag("elf,orc", c));
+    CHECK(history_api::races_from_flag("orc,elf", c) == std::optional<std::string>("elf,orc"));
+    CHECK(history_api::races_from_flag("all", c) == std::optional<std::string>("elf,goblin,dwarf,faerie,human,orc"));
+    CHECK(history_api::races_from_flag("orc,human,faerie,dwarf,goblin,elf", c) == history_api::races_from_flag("all", c));
+    CHECK(history_api::races_from_flag("dwarf", c) == std::optional<std::string>("dwarf"));
+    // The same value as the settings file's array.
+    CHECK(history_api::races_from_flag("human,dwarf", c) == std::optional<std::string>(parsed("races = [\"dwarf\", \"human\"]\n").races));
+    // The invalid forms of 6.2.
+    for (const char* bad : {"", ",", "elf,", ",elf", "elf,,orc", "Elf", "elf orc", "elf, orc", "elf,elf", "ALL"}) {
+        CAPTURE(bad);
+        CHECK_FALSE(history_api::races_from_flag(bad, c).has_value());
+    }
 }
 
 TEST_CASE("P3-01 8.2 test 8: \"all\" is every race of the loaded data, in race order") {
