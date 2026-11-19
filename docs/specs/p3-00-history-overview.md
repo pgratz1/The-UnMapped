@@ -143,15 +143,15 @@ with a, b the ids of the entities the decision is about (0 if none) and k a smal
 
 `generate` runs every implemented stage by default; `--until regions` gives a geography-only world (the history tables exist and are empty), `--until chronology` stops after the schedule. `meta.stages` lists the stage names. The thread count does not affect history (H7).
 
-**Settings** (design 5, "World-creation settings"; P3-01 adds the flags and settings-file keys, P0-03 6 and P0-04 4):
+**Settings** (design 5, "World-creation settings"; P3-01 adds the flags and settings-file keys in `[world]`, P0-03 6 and P0-04 4; exact forms and messages in P3-01 6):
 
 | Setting | Flag, settings key | `meta` key | Default | Range | In P3 |
 | --- | --- | --- | --- | --- | --- |
-| History span | `--history-span`, `history.span` | `param.history_span` | 6000 | 2000–12000 | used |
-| History detail | `--history-detail`, `history.detail` | `param.history_detail` | `normal` | `sparse`, `normal`, `dense` | used (phase lengths, flare threshold) |
-| Civilizations per race | `--civs-per-race`, `history.civs_per_race` | `param.civs_per_race` | `auto` | `auto`, 1–4 | used (`auto`: 1–2 from the seed, scaled by land, 10.3) |
-| Races present | `--races`, `history.races` | `param.races` | all six | a set of race keys, written in race order, comma separated | used |
-| Event intensity | `--event-intensity`, `history.event_intensity` | `param.event_intensity` | `normal` | `calm`, `normal`, `turbulent` | used (pressure rates) |
+| History span | `--history-span`, `world.history_span` | `param.history_span` | 6000 | 2000–12000 | used |
+| History detail | `--history-detail`, `world.history_detail` | `param.history_detail` | `normal` | `sparse`, `normal`, `dense` | used (phase lengths, flare threshold) |
+| Civilizations per race | `--civs-per-race`, `world.civs_per_race` | `param.civs_per_race` | `auto` | `auto`, 1–4 | used (`auto`: 1–2 from the seed, scaled by land, 10.3) |
+| Races present | `--races`, `world.races` | `param.races` | all six | a set of race keys, written in race order, comma separated | used |
+| Event intensity | `--event-intensity`, `world.event_intensity` | `param.event_intensity` | `normal` | `calm`, `normal`, `turbulent` | used (pressure rates) |
 | Monster pressure | `--monster-pressure` | `param.monster_pressure` | `normal` | `low`, `normal`, `high` | stored, unused until P5 |
 | Divine activity | `--divine-activity` | `param.divine_activity` | `normal` | `distant`, `normal`, `meddling` | stored, unused until P5 |
 | Divine script | `--divine-script FILE` | `param.divine_script` | empty | SHA-256 of the script file, lower-case hex, or empty | refused in P3 ("divine scripts need phase P5"); the key exists so that the world records "no script" (9.2) |
