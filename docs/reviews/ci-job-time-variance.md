@@ -68,6 +68,16 @@ These tests were run locally on 4 of the 6 cores (`taskset -c 0-3`) to stand in 
 
 No job log shows an out-of-memory kill or a sanitizer allocation failure.
 
+## Check run
+
+Run `44492829269` on this branch (no code change) passed on every job. It landed on a slow asan runner and a fast msvc-debug runner, and the ratio still held:
+
+| Job | Total | Build | Test | Hashes | Test / hashes |
+| --- | --- | --- | --- | --- | --- |
+| `linux-clang-asan` | 55.2 | 3.3 | 42.5 | 9.2 | 4.6 |
+| `windows-msvc-debug` | 14.8 | 1.9 | 10.2 | 2.2 | 4.7 |
+| `linux-gcc-debug` | 13.2 | 2.3 | 8.4 | 2.0 | 4.1 |
+
 ## What this means
 
 - **Not ours to fix.** The variance is the speed of the hosted runner each job lands on.
