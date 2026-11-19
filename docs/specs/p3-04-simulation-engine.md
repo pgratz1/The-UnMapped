@@ -457,6 +457,18 @@ At the end of every tick year (T7) and quiet step (after the quiet eras in Q6), 
 
 **End of the run** (after year E − 1): open `region_control` rows keep `to_year` NULL; open relations keep `until` NULL; the `civilization` and `settlement` rows hold the end state (`owner_civ`, `kind`, `status`, `population`, `ruined_year`, `ruin_event`, `capital`, `ended_year`, `ending_event`); `phase` rows as built.
 
+### 6.9 Rules for subsystems (normative; from the P3-04 determinism audit, r5)
+
+The audit of the engine (`docs/reviews/p3-04-simulation-engine-determinism-audit.md` on `p3/04-audit`, A1, A2, N1–N5) found the engine itself safe and named hazards for the subsystems that plug into it. Every subsystem (P3-05, P3-06, P5) follows these rules; the subsystem specs state how they meet them.
+
+1. **No live iteration across a creation or a relation change (A1).** Never call `found_civilization`, `found_settlement`, `open_relation` or `close_relation` inside a loop over `civs()`, `settlements()` or `relations()`, and never keep a reference, pointer or span obtained from `State` across such a call. Iterate ids up to a count taken before the loop (`for (id = 1; id <= n; ++id)`, re-fetching `civ(id)` after any founding), or collect the changes and apply them after the loop; for relations, copy the keys first. A subsystem's members hold ids, never references into `State`. The vectors grow differently under different standard libraries (libstdc++ and libc++ double their capacity, MSVC's grows by half), so a violation can read freed memory on one platform and not another. The lint rule `history-live-iteration` reports the range-for form; references held across a founding remain an audit item.
+2. **`tension()` is a pure read (A2).** The engine does not call it for the step that ends a quiet interval (SC6, E3), so anything a source accumulated inside it would depend on where awakenings fall. A tension source accumulates in its subsystem steps and `tension()` reports what is stored.
+3. **Fixed subsystem order (N1).** `EngineConfig::subsystems` is a vector filled in a fixed order in code (`stages/history.cpp`), never from a container ordered by pointer. Shipped: peoples, then conflict (from 0.16.0). A subsystem whose `steps()` lists one step twice is refused when the engine is configured, fatal `history: engine: a subsystem lists step <n> twice` (added by the engineer with the audit's follow-up; 16.6 gains it).
+4. **Visibility in shared steps (N2).** `civs()` and `settlements()` return every entity, also those created in the current step; a subsystem reads entities through `visible()` (6.2). In a step shared by two subsystems, each spec states what it sees of the other's same-step changes: entities created earlier in the step are invisible; region owners, populations and statuses are live state.
+5. **Draw keys (N3).** `draw(stream, a, b, k)` fixes w0 to the step's year, so two decisions on one stream with equal (a, b, k) in different steps of one year get the same value. One declared stream per decision kind; a, b are entity ids or ids stored in the world, k a decision ordinal; never a position in a filtered or sorted list.
+6. **Symmetric relations are normalized by the subsystem (N4).** `open_relation` stores the key as given; a subsystem stores a symmetric relation with (a_type, a_id) < (b_type, b_id), through one helper.
+7. **Net change per bookkeeping (N5, 6.7).** A relation closed and reopened before the next bookkeeping (T7 of the same tick year, or Q6 of the same quiet step) leaves its row unchanged and keeps its first `since_event`; a region whose owner is set several times records the last owner and the last `owner_event`. A subsystem that must record such a change does not make it within one year (P3-06 7.3 delays the first battle of a war to the year after its declaration for this reason).
+
 ### 6.8 Divine interventions (P3-00 9.2)
 
 ```cpp
@@ -967,3 +979,7 @@ The lead's rulings of 2026-11-19 on the questions the implementation (`p3/04-int
 ## Revision note r4 (2026-11-19, amendments for P3-06)
 
 Made with P3-06 (its 18.5 item 2), in place. 6.4: **from generator 0.16.0** the shipped `EngineConfig` installs `ConflictSubsystem` after `PeoplesSubsystem`, with steps T2, T6, Q4 (all subsystem steps, so the r3 check accepts them), and as the only tension source (6.5), so flare-ups occur in shipped worlds from 0.16.0 on. 8.2: P3-06 appends kinds 20–30 (P3-06 11) from 0.16.0. No engine rule, message or golden value of this spec changes.
+
+## Revision note r5 (2026-11-19, rules from the determinism audit)
+
+Requested by the lead after the P3-04 determinism audit (advisories A1, A2, notes N1–N5). New 6.9: the normative rules for subsystems (no live iteration across a creation or relation change; `tension()` a pure read; fixed subsystem order and the refusal of a step listed twice, whose message the engineer adds to 16.6; visibility in shared steps; draw keys from ids; symmetric relations normalized by the subsystem; net change per bookkeeping). No engine rule, world byte or golden value changes; the duplicate-step refusal is a configuration guard that shipped configurations never trip.
