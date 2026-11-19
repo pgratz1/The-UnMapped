@@ -457,7 +457,7 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
 - Problem: a quiet interval "advances the world in one jump", yet it "can be interrupted" when a tension measure crosses a threshold. A single jump cannot be interrupted part-way, and the design does not say how often tension is checked.
 - Proposal: a quiet interval is a sequence of quiet steps (25 years by default, tuning); after each step the tension measure is evaluated and, above the threshold, a flare-up (a short active phase) starts the next year. Consecutive quiet steps without change are written as one summary event spanning them.
 - Interim choice: as proposed, in `docs/specs/p3-00-history-overview.md` 4.1 and 4.4.
-- Status: open
+- Status: open (interim choice accepted by Paul, 2026-11-19; design doc to be updated)
 
 ### History: the calendar starts at the first elven awakening
 
@@ -467,7 +467,7 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
 - Problem: the design gives years relative to the span ("year 0", "around year 2,100") but does not fix year 0 or the present, nor whether there are months.
 - Proposal: years are integers; year 0 is the first elven awakening; the present is year E, the history span (6,000 by default), stored as `meta.history_end_year`; events within a year are ordered by event id. Eras shown to players are derived at runtime.
 - Interim choice: as proposed (P3-00 2.1).
-- Status: open
+- Status: open (interim choice accepted by Paul, 2026-11-19; design doc to be updated)
 
 ### History: P3 creates only the creator gods
 
@@ -477,7 +477,7 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
 - Problem: each awakening is "an event with a god, a year and a place", but the pantheon and god interventions are phase P5.
 - Proposal: P3 writes one named creator god per race (with its camp) into table `god`, so that awakening events name their creator; the rest of the pantheon, domains and interventions come with P5, which adds columns with a schema bump. P3 defines the seam for interventions and for the divine script (design 14): an intervention source consulted once per tick, empty in P3; `meta.param.divine_script` records the script's hash or nothing.
 - Interim choice: as proposed (P3-00 9.2).
-- Status: open
+- Status: open (interim choice accepted by Paul, 2026-11-19; design doc to be updated)
 
 ### History: territory is held by whole regions
 
@@ -487,7 +487,7 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
 - Problem: the design does not say at what grain territory is held, and P4's timeline must show it at any year cheaply.
 - Proposal: a region is held by at most one civilization at a time; table `region_control` stores ownership intervals (region, from year, to year, civilization, causing event), and `settlement_census` the settlement states by year, so a viewer answers any year without replaying the log.
 - Interim choice: as proposed (P3-00 6.4).
-- Status: open
+- Status: open (interim choice accepted by Paul, 2026-11-19; design doc to be updated)
 
 ### History: the event log stores facts, not summaries
 
@@ -497,7 +497,7 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
 - Problem: the design's `event` table has a `summary` column, while its rules say that text shown to players is generated at runtime from records and templates. Sites do not exist before P6.
 - Proposal: `event` holds kind, year and end year, phase, region, settlement and a salience score; participants with roles, integer values and causes are in `event_participant`, `event_value` and `event_cause`. Sentences are rendered from a catalogue of event kinds with templates (data), in the history report, the viewer and the game. `site_id` is added with the sites in P6. The catalogue of kinds, roles and value keys is part of the schema contract, as the layer catalogue is.
 - Interim choice: as proposed (P3-00 6.2, 6.3).
-- Status: open
+- Status: open (interim choice accepted by Paul, 2026-11-19; design doc to be updated)
 
 ### History: event rules are code with TOML tuning in P3; roads and improved passes wait for P5
 
@@ -507,7 +507,7 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
 - Problem: the design lists event rules among the TOML data and puts road building and pass improvement in the tick loop, while the P3 row of section 13 lists civilizations, settlements, wars and ruin only.
 - Proposal: in P3 the rules are code from the stage specs, with every number in TOML tuning (kind `history`) and the report templates in data; whether conditions and effects should become data is decided in P5, once it is clear which rules need to vary. Roads and improved passes come with P5 (table `road`); P3 treats passes as fixed crossings.
 - Interim choice: as proposed (P3-00 8.4, 15).
-- Status: open
+- Status: open (interim choice accepted by Paul, 2026-11-19; design doc to be updated)
 
 ### History: schema versions 6 and 7
 
@@ -517,4 +517,14 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
 - Problem: the design's table list is the target for all phases; P3 needs a subset, some tables the list does not have, and the `meta` keys for the world-creation settings.
 - Proposal: schema 6 (chronology): `race`, `race_biome` (new: preferred biomes as rows), `culture`, `god` (creator gods), `age`, and the world-creation settings as required `meta` keys (including those P5 will use, so they need no later bump). Schema 7 (history engine): the event catalogue as tables `event_kind`, `event_kind_role` and `event_kind_value` (new; the world carries the kinds, roles, value keys and report templates it was generated with, so readers need no copy of the catalogue, and worldgen exposes the catalogue and the sentence renderer as library functions), `phase`, `event` (whose `kind` refers to `event_kind`), `event_participant`, `event_cause`, `event_value` (new), `civilization`, `settlement`, `settlement_census` (new), `region_control` (new), `relation` (with an end year). The later P3 stages add rows and catalogue entries, not columns.
 - Interim choice: as proposed (P3-00 6.1); exact DDL in the P3-03 and P3-04 specs.
-- Status: open
+- Status: open (interim choice accepted by Paul, 2026-11-19; design doc to be updated)
+
+### Paul's decisions of 2026-11-19: the P3 interim choices are accepted; names are ASCII and unique
+
+- Date: 2026-11-19
+- Raised by: lead, recording Paul's decision
+- Design doc section: 5 (history), 6 (world database), 13 (phase P3)
+- Problem: the P3 overview (`docs/specs/p3-00-history-overview.md` section 15) and the first stage specs put fourteen questions to Paul, each with an interim choice.
+- Proposal: none; a record. Paul accepted every interim choice: (1) quiet intervals advance in 25-year steps with tension checked after each; (2) year 0 is the first elven awakening and the present is the span; (3) P3 creates one named creator god per race, the rest of the pantheon is P5; (4) territory is held by whole regions; (5) events store facts and are rendered from templates, with no `summary` column, and `site_id` waits for P6; (6) event rules are code with their numbers in TOML in P3, data-driven rules are decided in P5; (7) roads and improved passes wait for P5; (8) 512 worlds run all races with fewer civilizations and are not judged for quality; (9) one culture per race in P3; (10) the history report is `report --history`; (11) the P5 world-creation settings are stored in `meta` from schema 6 and `--divine-script` is refused until P5; (12) the six cultures' first naming data stands as a starting point (a data edit later); (13) names are ASCII only (letters, space, apostrophe, hyphen); (14) names are unique across the whole world and across kinds.
+- Interim choice: the P3 specs already follow these.
+- Status: decided
