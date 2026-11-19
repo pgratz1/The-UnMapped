@@ -93,6 +93,7 @@ TEST_CASE("P3-03 7.1, 14.1 item 1: seed 42, span 6000: K_aw, base, u, pick, d an
           "4:4:4243:4968:The Age of Faeries|5:5:4969:5595:The Age of Humans|6:6:5596:5999:The Age of Orcs");
     CHECK(god_names(r) == std::vector<std::string>{"Fielie", "Krok", "Bronhak", "Syfiash", "Wealstuld", "Kruu"});
     CHECK(replay_gods(r, 42, {}, shipped()) == "1:Fielie:0|2:Krok:0|3:Bronhak:1|4:Syfiash:0|5:Wealstuld:0|6:Kruu:0");
+    CHECK(chrono_api::god_choices(shipped(), Params{}, 42, {}) == "1:Fielie:0|2:Krok:0|3:Bronhak:1|4:Syfiash:0|5:Wealstuld:0|6:Kruu:0");
 }
 
 TEST_CASE("P3-03 7.1, 14.1 item 1: seed 0 and seed 1, span 6000") {
@@ -152,6 +153,7 @@ TEST_CASE("P3-03 7.1, 14.1 item 1: seed 3, --races elf,orc (hist-races-elf-orc-1
     CHECK(ages_text(r.ages) == "1:1:0:5601:The Age of Elves|2:6:5602:5999:The Age of Orcs");
     CHECK(god_names(r) == std::vector<std::string>{"Vaennela", "Buzz", "Nonthom", "Pyia", "Alis", "Uguuggrush"});
     CHECK(replay_gods(r, 3, {}, shipped()) == "1:Vaennela:0|2:Buzz:0|3:Nonthom:1|4:Pyia:0|5:Alis:1|6:Uguuggrush:0");
+    CHECK(chrono_api::god_choices(shipped(), params_with(6000, {"elf", "orc"}), 3, {}) == "1:Vaennela:0|2:Buzz:0|3:Nonthom:1|4:Pyia:0|5:Alis:1|6:Uguuggrush:0");
     REQUIRE(r.races.size() == 6U);
     for (std::size_t i = 1; i <= 4; ++i) {
         CAPTURE(i);
@@ -190,6 +192,9 @@ TEST_CASE("P3-03 7.1, 14.1 item 1: collisions with preloaded region names") {
     CHECK(r.gods[1].name == "Zatch");
     const std::string replay = replay_gods(r, 42, regions, shipped());
     CHECK(replay.substr(0, replay.find("|3:")) == "1:Mical:2|2:Zatch:1");
+    const std::string choices = chrono_api::god_choices(shipped(), Params{}, 42, regions);
+    CHECK(choices == replay);
+    CHECK(choices.substr(0, choices.find("|3:")) == "1:Mical:2|2:Zatch:1");
     // Every name of the world is distinct (invariant 8).
     std::set<std::string> all(regions.begin(), regions.end());
     for (const AgeRow& a : r.ages) {
@@ -377,6 +382,53 @@ TEST_CASE("P3-03 6, 14.1 item 6: each condition fails once: library, then the st
         CHECK(stage_error(Params{}, c) == "chronology: data: " + dc.messages.front());
         dbtest::TempDir dir("chronology-data");
         CHECK(run_pipeline(dir.file("w.db"), c, 42, Params{}, {"Somewhere"}) == "chronology: data: " + dc.messages.front());
+    }
+}
+
+// D0 cannot come from the loader (an empty required kind is a loader
+// error), so the content set is built in memory from the shipped one.
+wd::ContentSet without_races(bool drop_kind) {
+    wd::ContentSet c = shipped();
+    for (std::size_t i = 0; i < c.kinds.size(); ++i) {
+        if (c.kinds[i].kind == wd::RACE_KIND) {
+            if (drop_kind) {
+                c.kinds.erase(c.kinds.begin() + static_cast<std::ptrdiff_t>(i));
+            } else {
+                c.kinds[i].definitions.clear();
+            }
+            break;
+        }
+    }
+    return c;
+}
+
+TEST_CASE("P3-03 6 D0 (lead's decision 2026-11-19): a content set without race definitions") {
+    for (const bool drop_kind : {false, true}) {
+        CAPTURE(drop_kind);
+        const wd::ContentSet c = without_races(drop_kind);
+        const std::vector<wd::LoadError> errors = chrono_api::check_data(c);
+        REQUIRE_FALSE(errors.empty());
+        // First in the D order (the cultures still name their races: D3 cannot
+        // fire without race definitions, so D0 is the only error).
+        CHECK(errors[0].path == "races");
+        CHECK(errors[0].line == 0U);
+        CHECK(errors[0].column == 0U);
+        CHECK(errors[0].message == D0_MESSAGE);
+        CHECK(errors.size() == 1U);
+        // Stage seam and entry: C1 item 3 (settings) comes before item 4 (data).
+        CHECK(stage_error(params_with(6000, {"elf"}), c) == "chronology: settings: unknown race 'elf'");
+        dbtest::TempDir dir("chronology-d0");
+        CHECK(run_pipeline(dir.file("a.db"), c, 42, params_with(6000, {"elf"}), {"Somewhere"}) ==
+              "chronology: settings: unknown race 'elf'");
+        // An empty race list does not reach D0 either: C1 item 3 refuses it at
+        // the seam, and generate_world refuses params.history before any stage
+        // (4.1 step 2). So D0 is reported by check_history_data (and by the
+        // CLI's input check) but never by the stage guard with these inputs.
+        CHECK(stage_error(params_with(6000, {}), c) == "chronology: settings: no race present");
+        CHECK(run_pipeline(dir.file("b.db"), c, 42, params_with(6000, {}), {"Somewhere"}) ==
+              "generate_world: params.history.races is invalid");
+        CHECK_FALSE(dbtest::exists(dir.file("a.db")));
+        CHECK_FALSE(dbtest::exists(dir.file("b.db")));
     }
 }
 

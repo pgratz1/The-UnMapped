@@ -10,6 +10,7 @@
 #include <doctest/doctest.h>
 
 #include <cstdint>
+#include <functional>
 #include <ostream>
 #include <string>
 #include <utility>
@@ -241,7 +242,54 @@ TEST_CASE("P3-03 4.1, 14.1 item 8: history_params_from(Settings) after resolve_r
     CHECK(chrono_api::params_from_settings(all) == Params{});
     // Unresolved races (all, std::nullopt) are a FatalError (4.1).
     wd::Settings unresolved;
-    CHECK_THROWS_AS((void)chrono_api::params_from_settings(unresolved), worldgen::FatalError);
+    CHECK(fatal_of([&] { (void)chrono_api::params_from_settings(unresolved); }) ==
+          "history_params_from: the races are not resolved");
+}
+
+TEST_CASE("P3-03 4.1: generate_world checks params.history before any work, naming the field") {
+    dbtest::TempDir dir("chronology-params");
+    struct Case {
+        Params p;
+        std::string field;
+    };
+    std::vector<Case> cases;
+    cases.push_back({params_with(1999, six()), "span"});
+    cases.push_back({params_with(12001, six()), "span"});
+    {
+        Params p;
+        p.civs = 0;
+        cases.push_back({p, "civs_per_race"});
+        p.civs = 5;
+        cases.push_back({p, "civs_per_race"});
+    }
+    cases.push_back({params_with(6000, {}), "races"});
+    cases.push_back({params_with(6000, {"elf", "elf"}), "races"});
+    cases.push_back({params_with(6000, {"Elf"}), "races"});
+    cases.push_back({params_with(6000, {"elf", ""}), "races"});
+    {
+        Params p;
+        p.script = std::string(63, 'a');
+        cases.push_back({p, "divine_script"});
+        p.script = std::string(64, 'A');
+        cases.push_back({p, "divine_script"});
+    }
+    int n = 0;
+    for (const Case& c : cases) {
+        CAPTURE(c.field);
+        const std::string path = dir.file("p" + std::to_string(n++) + ".db");
+        const std::string msg = fatal_of([&] {
+            (void)worldgen::generate_world(world_params(1, 512, c.p, shipped(), std::string("none")), shipped(), path,
+                                           worldgen::db::Overwrite::refuse);
+        });
+        CHECK(msg == "generate_world: params.history." + c.field + " is invalid");
+        CHECK_FALSE(dbtest::exists(path));
+    }
+    // Race ids that name no loaded race are the stage's check, not generate_world's (4.1 step 2).
+    CHECK(fatal_of([&] {
+              (void)worldgen::generate_world(world_params(1, 512, params_with(6000, {"troll"}), shipped(),
+                                                          std::string("none")),
+                                             shipped(), dir.file("troll.db"), worldgen::db::Overwrite::refuse);
+          }).empty());
 }
 
 TEST_CASE("P3-03 4.1, 4.3, 14.3 item 20: every kind of world records the eight keys") {
@@ -323,8 +371,40 @@ TEST_CASE("P3-03 4.1, 14.1 item 8: set_param_text refuses a non-canonical value 
             CAPTURE(name);
             CAPTURE(v);
             worldgen::db::WorldWriter w;
-            CHECK_THROWS_AS(chrono_api::set_param_text(w, name, v), worldgen::FatalError);
+            CHECK(fatal_of([&] { chrono_api::set_param_text(w, name, v); }) ==
+                  "WorldWriter::set_param_text: '" + v + "' is not the canonical form of a value of meta key 'param." +
+                      name + "'");
         }
+    }
+    // map_size stays integer-only.
+    {
+        worldgen::db::WorldWriter w;
+        CHECK(fatal_of([&] { chrono_api::set_param_text(w, "map_size", "1024"); }) ==
+              "WorldWriter::set_param_text: map_size is an integer parameter");
+    }
+    // The same canonical check through set_param_integer and set_param_decimal
+    // for the eight keys (the message names the canonical form and the key).
+    const std::vector<std::pair<std::string, std::int64_t>> bad_int = {
+        {"history_span", 1999}, {"history_span", 12001}, {"civs_per_race", 0}, {"civs_per_race", 5}};
+    for (const auto& [name, v] : bad_int) {
+        CAPTURE(name);
+        CAPTURE(v);
+        worldgen::db::WorldWriter w;
+        CHECK(fatal_of([&] { chrono_api::set_param_integer(w, name, v); }) ==
+              "WorldWriter::set_param_integer: '" + std::to_string(v) +
+                  "' is not the canonical form of a value of meta key 'param." + name + "'");
+    }
+    for (const char* name : {"history_detail", "races", "history_span"}) {
+        CAPTURE(name);
+        worldgen::db::WorldWriter w;
+        CHECK(fatal_of([&] { chrono_api::set_param_decimal(w, name, "0.5"); }) ==
+              "WorldWriter::set_param_decimal: '0.5' is not the canonical form of a value of meta key 'param." +
+                  std::string(name) + "'");
+    }
+    {
+        worldgen::db::WorldWriter w;
+        CHECK_NOTHROW(chrono_api::set_param_integer(w, "history_span", 6000));
+        CHECK_NOTHROW(chrono_api::set_param_integer(w, "civs_per_race", 2));
     }
     const std::vector<std::pair<std::string, std::string>> good = {
         {"civs_per_race", "auto"}, {"civs_per_race", "4"}, {"divine_script", ""},

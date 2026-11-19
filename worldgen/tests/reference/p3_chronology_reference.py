@@ -186,6 +186,8 @@ def is_natural(b):
 def check_history_data(data):
     """[(path, message)] sorted and deduplicated (P0-03 9: path, no position, message bytes)."""
     errs = []
+    if not data.races:  # D0 (lead's decision 2026-11-19), first in the D order
+        errs.append("no race is defined; kind 'race' needs at least one definition")
     for r in data.races:  # race order, every definition
         for bid, _w in r["biomes"]:  # D1, D2 per entry in list order
             b = data.biomes[bid]
@@ -868,6 +870,8 @@ def check_data_checks(c):
     races[5]["biomes"].append(("ocean", 1))
     races[0]["biomes"].append(("lake", 1))
     got = check_history_data(edited(data, races=races))
+    c.eq("D0", check_history_data(edited(data, races=[], cultures={})),
+         [("races", "no race is defined; kind 'race' needs at least one definition")])
     c.eq("two sorted", got, [("races", "race 'elf' prefers water biome 'lake'"),
                              ("races", "race 'orc' prefers water biome 'ocean'")])
     for form, ok in (("The Age of {plural}", True), (" Age {plural}", False), ("Age  {plural}", False),
