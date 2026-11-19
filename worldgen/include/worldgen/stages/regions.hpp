@@ -68,6 +68,7 @@ struct RegionNames {
     std::string west;
     std::string northwest;
     std::string isle;
+    std::string upland;  // r2: the noun of an upland region (RG11 3c)
 
     friend bool operator==(const RegionNames&, const RegionNames&) = default;
 };
@@ -87,6 +88,9 @@ struct RegionTuning {
     std::int64_t ore_reach_m = 0;
     Fx name_central_frac;
     RegionNames names;
+    // r2: biome keys (definition ids) whose noun an upland region keeps
+    // (RG11 3c), at most 16, in data order.
+    std::vector<std::string> upland_own_noun;
 
     friend bool operator==(const RegionTuning&, const RegionTuning&) = default;
 };
@@ -101,7 +105,8 @@ struct RegionTuning {
 // Fatal ("regions: tuning: <field> outside its schema range", fields in
 // declaration order, a word of `names` counting as outside its range when it
 // is longer than 32 bytes or fails the word grammar, reported as
-// "names.<word>"), then "regions: tuning: seed_tile_m must be at most twice
+// "names.<word>"; upland_own_noun with more than 16 entries or an entry that
+// is not an id), then "regions: tuning: seed_tile_m must be at most twice
 // seed_spacing_m" (named check of 4). Every seam that takes a tuning calls
 // it first.
 void check_region_tuning(const RegionTuning& tuning);
@@ -268,12 +273,22 @@ struct RegionNameInput {
     std::int64_t seed_y = 0;
     std::uint8_t biome = 0;          // dominant biome code
     std::uint32_t landmass = 0;      // G2 label
+    // r2 (RG11 3b, 3c): the region's cells, lake cells and walkable cells.
+    // The defaults (one walkable dry cell) select neither Mere nor upland.
+    std::int64_t cells = 1;
+    std::int64_t lake_cells = 0;
+    std::int64_t walk_cells = 1;
 };
 
 // RG11 for regions in id order. land_cells, sum_x and sum_y are over the
 // land cells of the map; landmass_cells[k - 1] is the size of landmass k;
-// n is the map side. Fatal if a region's biome has no definition, a
-// landmass is out of range, the tuning fails, or land_cells is 0.
+// n is the map side. Nouns by RG11 3 (r2): isle; the lake biome's noun if
+// 2 lake_cells >= cells; upland if 4 walk_cells < cells and the dominant
+// biome's key is not in upland_own_noun; else the dominant biome's noun.
+// Fatal if a region's biome has no definition, a landmass is out of range,
+// the tuning fails, land_cells is 0, or an upland_own_noun key names no
+// loaded biome ("regions: tuning: upland_own_noun '<key>' is not a loaded
+// biome").
 [[nodiscard]] std::vector<std::string> region_names(std::span<const RegionNameInput> regions,
                                                     std::span<const std::uint64_t> landmass_cells,
                                                     std::uint64_t land_cells, std::uint64_t sum_x,
@@ -292,11 +307,16 @@ struct RegionNameInput {
                                                               std::span<const std::uint16_t> walk_area,
                                                               const RegionTuning& tuning);
 
-// RG12 passes: for each pass row (id order), the borders its path crosses;
-// sets pass_id (smallest id) and passes (count) of those rows. Fatal if a
-// size is wrong, a path is not a chain of cells ("regions: input
-// precondition: pass <id>: path is not a chain of cells"), or a crossing
-// has no border row.
+// RG12 passes (r2): each pass row is attached to at most one border, the
+// crossing of its path nearest its col (q = first position of the col cell
+// in the path; a crossing inside step j has d = min(|j - q|, |j + 1 - q|);
+// smallest (d, j), then the first in sequence order); none if its path
+// crosses no border. Sets pass_id (smallest attached id) and passes (count)
+// of the rows. Fatal if a size is wrong, a path is not a chain of cells
+// ("regions: input precondition: pass <id>: path is not a chain of cells",
+// every pass first), a col cell is outside the grid or not on its path
+// ("... pass <id>: col cell is not on its path", then every pass), or a
+// crossing has no border row.
 void region_pass_crossings(geo::Grid grid, std::span<const std::uint16_t> region,
                            std::span<const std::uint8_t> water, std::span<const db::PassRow> passes,
                            std::vector<db::RegionBorderRow>& borders);

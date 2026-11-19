@@ -383,7 +383,7 @@ inline constexpr std::string_view BIOME_DIRECTORY = "biomes";
 [[nodiscard]] Schema worldgen_resources_schema();
 
 // The schema of record `region_names` (P1-06 4): central, north, northeast,
-// east, southeast, south, southwest, west, northwest, isle, each
+// east, southeast, south, southwest, west, northwest, isle, upland (r2), each
 // string(32, word), all required, in this order.
 [[nodiscard]] Schema region_names_schema();
 
