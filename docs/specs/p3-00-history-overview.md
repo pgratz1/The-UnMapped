@@ -1,6 +1,6 @@
 # P3-00 History overview
 
-Status: **approved by the lead 2026-11-19, with amendment A1** (the event catalogue is stored in the world and exposed by the library: 6.1, 6.3, 11). Corrected the same day while writing P3-01 and P3-02: the version plan (3.2), where the `meta` keys are written (5, 6.1) and which spec introduces the keyed draws (4.6). Phase P3 History core, the counterpart of `p1-00-geography-overview.md`. Design doc sections 5 (History simulation), 6 (World database), 11 (milestone 1), 12 (open questions), 13 (phase P3 and what P4 and P5 add) and 14 (narrative enrichment, the divine script). Depends on P0-01 to P0-04 with their amendments and on the finished geography (P1-00 to P1-06, generator 0.11.0, schema 5). Proposals read: "Paul's decision of 2026-11-19: P1 Geography approved; the critic's recommendations accepted" and the entries before it. Numbers measured for this spec are from the P1-06 validation worlds (`~/.cache/the-unmapped/out/p1-06-validation/`, generator 0.11.0: 512 seeds 0–49, 1024 seeds 0–199, 2048 seeds 0–19) with the script `~/.cache/the-unmapped/out/p3-00-spec/homes.py`.
+Status: **approved by the lead 2026-11-19, with amendment A1** (the event catalogue is stored in the world and exposed by the library: 6.1, 6.3, 11). Corrected 2026-11-19 for P3-03 (2.1 age ids, 4.6 pointer to P3-02 4.1, 5 `--until history`, 6.1 `race` and `god` rows, 12.4 case timing; see the note at the end). Corrected the same day while writing P3-01 and P3-02: the version plan (3.2), where the `meta` keys are written (5, 6.1) and which spec introduces the keyed draws (4.6). Phase P3 History core, the counterpart of `p1-00-geography-overview.md`. Design doc sections 5 (History simulation), 6 (World database), 11 (milestone 1), 12 (open questions), 13 (phase P3 and what P4 and P5 add) and 14 (narrative enrichment, the divine script). Depends on P0-01 to P0-04 with their amendments and on the finished geography (P1-00 to P1-06, generator 0.11.0, schema 5). Proposals read: "Paul's decision of 2026-11-19: P1 Geography approved; the critic's recommendations accepted" and the entries before it. Numbers measured for this spec are from the P1-06 validation worlds (`~/.cache/the-unmapped/out/p1-06-validation/`, generator 0.11.0: 512 seeds 0–49, 1024 seeds 0–199, 2048 seeds 0–19) with the script `~/.cache/the-unmapped/out/p3-00-spec/homes.py`.
 
 This overview fixes what every P3 stage spec inherits: the breakdown into specs, the calendar and the simulation loop, the random streams and determinism rules of a simulation, the schema plan, the data kinds, what history reads from geography, the history report, the budget and the validation plan. It does not specify any subsystem's rules: those are the stage specs' (section 3). Values marked "interim" are this spec's reading where the design is silent; section 15 lists them for Paul.
 
@@ -23,7 +23,7 @@ Exit check (design 13): the default world (1024, 6,000 years) generates in under
 | Present | year **E** = the history span (`param.history_span`, default 6000); the simulation ends after year E − 1 is processed and the world state is "as of year E" |
 | Order within a year | event `id` order (section 6.2); ids are assigned in processing order, which is fully defined (section 4) |
 | Spans | an event that summarizes a stretch (a quiet interval) has `year` = its first year and `end_year` = its last year; a point event has `end_year` = `year` |
-| Ages | age k runs from race k's awakening year to the year before race k+1's (the last age to E − 1); age ids 1–6 in race order |
+| Ages | age k runs from race k's awakening year to the year before race k+1's (the last age to E − 1); age ids 1 … P over the present races in race order (1–6 when all six are present); with a `--races` subset the first present race awakens at year 0 (P3-03 C3, 5.2) |
 
 All years are in [0, E]. A calendar shown to players (eras, "in the 3rd year of the Goblin Age") is derived at runtime or by the report; the database stores plain years.
 
@@ -132,7 +132,7 @@ Stream names: `hist.<stage or subsystem>.<decision>` (P0-01 7.3 grammar), regist
 draw(name, year, a, b, k) = hash_words(TAG_HIST, [stream_key(seed, name), year, a, b, k])     // uint64
 ```
 
-with a, b the ids of the entities the decision is about (0 if none) and k a small counter for several draws of one decision. `TAG_HIST` (`UNM:HIST`) is a new domain tag (P0-01 amendment). **P3-02 introduces it and the helpers** (it merges before P3-03 and P3-04 and is the first user of keyed draws; P3-02 4). Helpers: `chance(u, p)` = (u >> 32) < p.raw for `Fx` p in [0, ONE]; `pick(u, n)` = the index (u >> 32) × n >> 32 (integer, no modulo bias beyond 2^-32); `weighted(u, weights)` = the first index whose prefix sum exceeds (u >> 32) × Σ >> 32, over weights in a defined order. Chronology uses the same scheme with year 0.
+with a, b the ids of the entities the decision is about (0 if none) and k a small counter for several draws of one decision. `TAG_HIST` (`UNM:HIST`) is a new domain tag (P0-01 amendment). **P3-02 introduces it and the helpers** (it merges before P3-03 and P3-04 and is the first user of keyed draws; P3-02 4). Helpers: `chance(u, p)` = (u >> 32) < p.raw for `Fx` p in [0, ONE]; `pick(u, n)` = the index (u >> 32) × n >> 32 (integer, no modulo bias beyond 2^-32); `weighted(u, weights)` = the first index whose prefix sum exceeds (u >> 32) × Σ >> 32, over weights in a defined order. Chronology uses the same scheme with year 0. The authoritative wording of the helpers, `weighted` included (its bounds and exact boundary rule), is P3-02 4.1.
 
 ## 5. Pipeline, settings and `--until`
 
@@ -141,7 +141,7 @@ with a, b the ids of the entities the decision is about (0 if none) and k a smal
 | 7 | `chronology` | P3-03 | settings (`meta`), `race`, `culture`, `history.chronology` | `race`, `race_biome`, `culture`, `god`, `age` |
 | 8 | `history` | P3-04 to P3-06 | everything above, `history.*` tuning | the history tables of 6.1 |
 
-`generate` runs every implemented stage by default; `--until regions` gives a geography-only world (the history tables exist and are empty), `--until chronology` stops after the schedule. `meta.stages` lists the stage names. The thread count does not affect history (H7).
+`generate` runs every implemented stage by default; `--until regions` gives a geography-only world (the history tables exist and are empty), `--until chronology` stops after the schedule; `--until history` is a usage error ("not implemented yet") until P3-04 implements the stage (P3-03 4.3). `meta.stages` lists the stage names. The thread count does not affect history (H7).
 
 **Settings** (design 5, "World-creation settings"; P3-01 adds the flags and settings-file keys in `[world]`, P0-03 6 and P0-04 4; exact forms and messages in P3-01 6):
 
@@ -171,10 +171,10 @@ P3-05 and P3-06 add rows, event kinds and value keys to the catalogue (a catalog
 
 | Table | Key columns (outline) | Row order | Notes |
 | --- | --- | --- | --- |
-| `race` | `id` (= order 1–6), `key`, `name`, `camp` (0 good, 1 neutral, 2 evil), `lifespan_years`, `generation_years`, `creator_god`, `awakening_year`, `present` (0/1) | id | echo of the data, as `biome` (design 6 `race`); all six rows even when `--races` leaves some out (`present` 0, `awakening_year` NULL) |
+| `race` | `id` (= order 1–6), `key`, `name`, `plural`, `adjective`, `camp` (0 good, 1 neutral, 2 evil), `lifespan_years`, `generation_years`, `culture`, `present` (0/1), `awakening_year`, `creator_god` (= `id` on every row) (exact DDL P3-03 5.1) | id | echo of the data, as `biome` (design 6 `race`); all six rows even when `--races` leaves some out (`present` 0, `awakening_year` NULL) |
 | `race_biome` | `race`, `biome`, `weight` | (race, biome) | preferred land (design: `preferred_biomes`) |
 | `culture` | `id`, `key`, `name`, `race` | id | echo; naming data stays in the content hash, not in the table |
-| `god` | `id`, `name`, `camp` | id | **P3 rows: the creator gods only**, one per race, named by P3-02; P5 adds the rest of the pantheon and columns (`domain`) with a bump |
+| `god` | `id`, `name`, `camp` | id | **P3 rows: the creator gods only**, one per race, present or not (`id` = race id, P3-03 5.2), named by P3-02; P5 adds the rest of the pantheon and columns (`domain`) with a bump |
 | `age` | `id` (1–6), `race`, `start_year`, `end_year`, `name` | id | design 6 `age` |
 | `phase` | `id`, `age`, `kind` (4.1), `start_year`, `end_year`, `trigger_event` | id (= time order) | design 6 `phase` |
 | `event_kind` | `id`, `key`, `caused` (0/1), `salience`, `template` | id | the event catalogue (6.3, A1), one row per kind, written by the `history` stage as `biome` is written by the biome stage |
@@ -356,7 +356,7 @@ The validation specialist sweeps with shipped data and default settings: 1024 se
 
 ### 12.4 Golden cases
 
-The geography cases of `world-hashes.sh` (P1-00 14 X5) run every stage by default, so from P3-03 on they are full-history worlds; their hashes are re-recorded at each P3 merge. Added cases (interim): `hist-span-2000-512` (`--seed 7 --map-size 512 --history-span 2000`), `hist-races-elf-orc-1024` (`--seed 3 --races elf,orc`) and `hist-dense-1024` (`--seed 11 --history-detail dense`), so that the settings paths are compared across compilers. Each stage spec adds golden vectors of its own (P1 style: table hashes of fixture and shipped worlds, written by the test writer's independent reference); P3-07 adds the report text hashes.
+The geography cases of `world-hashes.sh` (P1-00 14 X5) run every stage by default, so from P3-03 on they are full-history worlds; their hashes are re-recorded at each P3 merge. Added cases: `hist-span-2000-512` (`--seed 7 --map-size 512 --history-span 2000`) and `hist-races-elf-orc-1024` (`--seed 3 --races elf,orc`) with P3-03 (golden file `p3-worlds.txt`), and `hist-dense-1024` (`--seed 11 --history-detail dense`) with P3-04, where the detail level first changes table bytes; so that the settings paths are compared across compilers. Each stage spec adds golden vectors of its own (P1 style: table hashes of fixture and shipped worlds, written by the test writer's independent reference); P3-07 adds the report text hashes.
 
 ### 12.5 Tests that span stages
 
@@ -399,3 +399,7 @@ Each with the recommendation and the interim choice the specs follow until he de
 - "History: the event log stores facts, not summaries; no `site_id` until P6" (question 5).
 - "History: event rules are code with TOML tuning in P3" (question 6), with roads and improved passes deferred to P5 (question 7).
 - "History: schema versions 6 and 7 and the new tables" (6.1, design 6 table list: new tables `race_biome`, `event_value`, `settlement_census`, `region_control`; `relation` gains `until`).
+
+## Correction note (2026-11-19, for P3-03)
+
+Made with the P3-03 spec; no other content changes. 2.1: age ids are 1 … P over the present races, and with a subset the first present race awakens at year 0. 4.6: P3-02 4.1 is the authoritative wording of the helpers, `weighted` included. 5: `--until history` is refused until P3-04. 6.1: `race` gains `plural`, `adjective` and `culture`, and `creator_god` = `id`; `god` has one row per race, present or not. 12.4: two `hist-*` cases with P3-03, `hist-dense-1024` with P3-04. The registry rule for the history stage is P3-03 8.2.
