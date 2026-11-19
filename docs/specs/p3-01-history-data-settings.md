@@ -1,6 +1,6 @@
 # P3-01 History data and settings
 
-Status: **draft, spec writer, 2026-11-19, awaiting approval.** Phase P3 History core, spec 1 (P3-00 3.1). Design doc sections 3 (data in TOML), 5 (the six races, their order, camps and timing; "Food and homelands"; world-creation settings), 6 (`meta` holds the settings). Depends on P0-03 (with amendments 15 to 17), P0-04, P1-00 6 and P3-00. Written together with P3-02, which defines the culture naming record that this spec's `culture` kind carries.
+Status: **approved by the lead 2026-11-19; revised 2026-11-19 (text only, after implementation)**: see the revision note at the end. Phase P3 History core, spec 1 (P3-00 3.1). Design doc sections 3 (data in TOML), 5 (the six races, their order, camps and timing; "Food and homelands"; world-creation settings), 6 (`meta` holds the settings). Depends on P0-03 (with amendments 15 to 17), P0-04, P1-00 6 and P3-00. Written together with P3-02, which defines the culture naming record that this spec's `culture` kind carries.
 
 ## 1. Purpose
 
@@ -20,7 +20,7 @@ Nothing here simulates. The merge changes every world's `content_hash` and nothi
 | Command line | `tools/worldgen-cli/cli.cpp` (flags, usage text, help) |
 | Data | `game/data/races/*.toml`, `game/data/cultures/*.toml`, `game/data/history/chronology.toml`; identical copies under `worldgen/tests/data/geo/` and `worldgen/tests/data/geo-small/` |
 | Version | `worldgen/include/worldgen/version.hpp`: **0.12.0** |
-| Tests | new files under `worldgen/tests/data/` (loader) and `tools/worldgen-cli/tests/` (flags); golden `worldgen/tests/golden/p3-01-data.txt` |
+| Tests | library: `worldgen/tests/data_history_kinds_test.cpp` (kinds and checks), `data_history_settings_test.cpp` (settings keys), `data_history_golden_test.cpp` (content hash), with the support headers `p3_01_history_data.hpp` (the transcribed listings), `p3_01_history_data_api.hpp`, `p3_01_history_fixture.hpp` and `p3_01_history_support.hpp`, all in `worldgen/tests/`; they run in the CTest entry `worldgen-tests-other`. CLI: `tools/worldgen-cli/tests/cli_history_settings_test.cpp`, CTest entry `worldgen-cli-tests-history-settings`. Reference `worldgen/tests/reference/p3_data_reference.py`; golden `worldgen/tests/golden/p3-01-data.txt` |
 
 P3-02 touches none of these files except that its seam reads the `naming` record this spec registers (P3-02 9). **Merge order: P3-01 first, then P3-02.** The two can be implemented in parallel: P3-02's engineer builds against the record layout of P3-02 3 and rebases on P3-01.
 
@@ -65,9 +65,16 @@ Reserved for P5 and not declared now: temperament, magic school leanings, stance
 
 | Check | Rule | Failure (position, message) |
 | --- | --- | --- |
-| `race_order_unique` | no two definitions share `order` | at each later one in canonical id order: `order <k> is also used by 'race.<id>'` |
+| `race_order_unique` | no two definitions share `order` | at each later one in canonical id order: `order <k> is also used by 'race.<id>'`, where `<id>` is the earliest (by id) definition with that order |
 | `race_order_dense` | the orders are exactly 1 … n for n definitions | against the directory: `orders must be 1 to <n> without gaps; <k> is missing` (the smallest missing k); not run if `race_order_unique` failed |
 | `race_awakening_order` | the race of order 1 has `awakening_share` 0; shares strictly increase with order | at the definition: `the race of order 1 must have awakening_share 0`, or `awakening_share must be above that of 'race.<id>' (order <k−1>)` |
+
+**With duplicate or missing orders** (details of the checks above, as implemented):
+
+- `race_awakening_order` runs whatever `race_order_unique` and `race_order_dense` report. Every race of order 1 (there may be several) is checked against 0. A race of order k ≥ 2 is compared with the **earliest (by id) race of order k − 1**, and with nothing when no race of order k − 1 exists (no message for it).
+- `race_order_dense` is not reported when `race_order_unique` fails (so a set with a repeated order and a gap reports only the repeat).
+- The per-definition uniqueness checks `race_biomes_unique` and `race_settlement_kinds_unique` report the **first repeat only** (the smallest later index i), one message per check and definition; `race_order_unique` reports every later definition, one message each.
+- Side effect of P0-03 amendment 16 (kind-level checks run over the definitions that passed type validation): a race with any field error (a wrong type, a value out of bounds, a missing required or an unknown key) is left out of the kind-level checks, so its order counts as missing. Such an error in the race of order k < n (n races) therefore also yields `race_order_dense` (`… <k> is missing`), and the race of order k + 1 is not compared by `race_awakening_order`.
 
 **Cross-kind conditions**, which the loader cannot check (a named check sees one kind): checked at the entry of the `chronology` stage (P3-03), each fatal with the prefix `chronology: data: `, in race order:
 
@@ -303,11 +310,13 @@ Directory `history/`, **required**, a **fixed-id kind** (P0-03 amendment 15), on
 | `conflict` | P3-06 | added by P3-06 |
 | `report` | P3-07 (with the event templates written from P3-04 on) | added by P3-04 or P3-07, whichever lands first |
 
-**A not-yet-registered id** is handled exactly as for `worldgen`: the id set of the kind is what the build registers; a definition with any other id is an error at its header, `unknown id 'engine' for kind 'history'; expected one of chronology` (P0-03 amendment 15's message), and every registered id must be defined (`missing definition 'history.<id>'`, against the directory). So each data root carries exactly the files of the ids registered by its build: a spec that adds an id adds its file to `game/data/history/` and to the two fixture roots in the same merge. A file for a future id must not be committed early.
+**A not-yet-registered id** is handled exactly as for `worldgen`: the id set of the kind is what the build registers; a definition with any other id is an error at its header, `unknown id 'engine' for kind 'history'; expected one of 'chronology'` (P0-03 amendment 15's message as implemented: the registered ids in ascending order, each in single quotes, separated by `, `), and every registered id must be defined (`missing definition 'history.<id>'`, against the directory). So each data root carries exactly the files of the ids registered by its build: a spec that adds an id adds its file to `game/data/history/` and to the two fixture roots in the same merge. A file for a future id must not be committed early.
 
 ### 5.1 `history.chronology`
 
-| Field | Type and bounds | Default | Status | Meaning |
+All three fields are **required** (no default is applied when one is absent: a missing field is an error). The Default column gives the shipped value.
+
+| Field | Type and bounds | Default (shipped value) | Status | Meaning |
 | --- | --- | --- | --- | --- |
 | `awakening_jitter_frac` | fx(0, "0.05") | "0.01" | taste | the seed moves each awakening after the first by up to this share of the span either way (60 years at 6,000; design 5 "the seed shifts each date by a small amount") |
 | `awakening_min_gap_years` | int(1, 2000) | 100 | taste | least distance between two consecutive awakenings after the jitter; the order never changes (P3-03) |
@@ -327,7 +336,7 @@ age_name_form = "The Age of {plural}"
 
 ### 6.1 Settings, flags and keys
 
-Settings-file keys are in `[world]`, as P0-03 6 requires (correcting P3-00 5, which wrote `history.span`); flags override the file key by key.
+Settings-file keys are in `[world]`, as P0-03 6 requires (correcting P3-00 5, which wrote `history.span`); flags override the file key by key. In P3-01 the override is not observable in the world (no value is written; the `--verbose` progress line shows the resolved values, but progress text is not part of the contract); it becomes observable with the `meta` keys at P3-03 (6.3).
 
 | Setting | Flag | Settings key | Type in the file | Default | Valid values |
 | --- | --- | --- | --- | --- | --- |
@@ -352,17 +361,31 @@ Command line: usage errors, exit 2, with the hint line (P0-04 4.1), message form
 | detail | `invalid --history-detail '<text>'; expected sparse, normal or dense` |
 | civilizations | `invalid --civs-per-race '<text>'; expected auto or an integer from 1 to 4` |
 | races: empty list, empty item, an item that is not an id, or a repeated id | `invalid --races '<text>'; expected all or a comma-separated list of race ids` |
-| races: an id with no `race` definition (checked after the data is loaded) | `unknown race '<id>' in --races; expected all or ids from: <ids of the loaded races in race order, comma separated>` |
+| races: an id with no `race` definition (checked after the data is loaded) | `unknown race '<id>' in --races; expected all or ids from: <ids>`, `<ids>` the loaded races' ids in race order separated by `, ` (e.g. `elf, goblin, dwarf, faerie, human, orc`); with several unknown ids only the first, in the order given, is named |
 | intensity, pressure, activity | `invalid --event-intensity '<text>'; expected calm, normal or turbulent` (and the same form for the other two with their values) |
 | divine script | `--divine-script is not supported yet: divine scripts need phase P5` |
 
-Settings file: input errors (exit 3) at the value's position, in the loader's form (P0-03 9): `'world.history_span' is <found>; expected an integer from 2000 to 12000`, and the same pattern for each key (`expected sparse, normal or dense`, `expected "auto" or an integer from 1 to 4`, `expected "all" or an array of race ids`, …); an array with a repeated id: `'world.races[<i>]' is "<id>", which is already listed`; an id with no definition: `'world.races[<i>]' is "<id>", which is not a race id; expected one of <ids>` (checked after the data is loaded, still reported at the value's position); `'world.divine_script' is not supported yet: divine scripts need phase P5`. The unknown-key message of `[world]` lists the new keys: `expected seed, seed_phrase, map_size, history_span, history_detail, civs_per_race, races, event_intensity, monster_pressure, divine_activity or divine_script`.
+Settings file: input errors (exit 3) at the value's position, in the loader's form (P0-03 9).
+
+| Case | Message, at the position of |
+| --- | --- |
+| a key's value of the wrong type or outside its values | `'world.history_span' is <found>; expected an integer from 2000 to 12000`, and the same form for each key: `expected sparse, normal or dense` (`history_detail`), `expected "auto" or an integer from 1 to 4` (`civs_per_race`), `expected "all" or an array of race ids` (`races`), `expected calm, normal or turbulent` (`event_intensity`), `expected low, normal or high` (`monster_pressure`), `expected distant, normal or meddling` (`divine_activity`); at the value |
+| `world.races` is an empty array | `'world.races' is an empty array; expected "all" or an array of race ids`; at the array |
+| an element of `world.races` that is not a string, or a string that does not match the id grammar | `'world.races[<i>]' is <found>; expected a race id`; at the element |
+| an element repeating an earlier one | `'world.races[<i>]' is "<id>", which is already listed`; at the later element |
+| an element with no `race` definition (checked after the data is loaded) | `'world.races[<i>]' is "<id>", which is not a race id; expected one of <ids>`, `<ids>` the loaded races' ids in race order separated by `, `; at the element; every such element is reported |
+| `world.divine_script`, a value of any type | `'world.divine_script' is not supported yet: divine scripts need phase P5`; at the value |
+| an unknown key in `[world]` | `unknown key 'world.<key>'; expected seed, seed_phrase, map_size, history_span, history_detail, civs_per_race, races, event_intensity, monster_pressure, divine_activity or divine_script` |
+
+**`<found>`** is the value as written for an integer (decimal, e.g. `1999`) and for a string (its text between double quotes, e.g. `"bogus"`), and the kind of value otherwise: `a boolean`, `an array`, `a table`. A floating-point value, a date or time value, or a string with a forbidden control character is reported by the loader's value scan with its own message (P0-03 4 and amendment 2) and gets no second message from these keys; this holds for every key above, `world.divine_script` and the elements of `world.races` included.
+
+**Order of the race checks.** Every form error of a flag (including `--races`) is a usage error found before the settings file and the data are read (P0-04 4.1). After the data is loaded, the unknown ids of `--races` are checked first (exit 2), then those of the settings file's `world.races` (exit 3). **The file's race ids are checked even when `--races` overrides them**: a settings file naming an unknown race fails with exit 3 whatever `--races` says; when both name unknown races, the flag's usage error (exit 2) is the one reported.
 
 `--test-pattern` with any history flag: the flags are accepted and have no effect (the test pattern writes no history); interim, since the settings are world-creation settings like `--map-size`, which `--test-pattern` also accepts.
 
 ### 6.3 The `meta` keys
 
-`Settings` carries the eight values from P3-01 on. **They are written into `meta` by the `chronology` stage's merge, P3-03, with schema 6** (P3-00 5 and 6.5, corrected): a new required `meta` key is a schema change, and P3-03 makes the one bump to schema 6. P3-01 changes no table and no `meta` key.
+`Settings` (`worldgen/include/worldgen/data/settings.hpp`) carries the eight values from P3-01 on, after the flags have been applied and `world.races` put in race order. They are **not in `WorldParams` yet**, and nothing in P3-01 passes them to a stage; P3-03 decides how they reach the `chronology` stage. **They are written into `meta` by the `chronology` stage's merge, P3-03, with schema 6** (P3-00 5 and 6.5, corrected): a new required `meta` key is a schema change, and P3-03 makes the one bump to schema 6. P3-01 changes no table and no `meta` key.
 
 | Key | Value text |
 | --- | --- |
@@ -385,18 +408,20 @@ Settings file: input errors (exit 3) at the value's position, in the loader's fo
 
 For the independent test writer.
 
+Where the tests are (section 2): 8.1 and the `Settings`-level parts of 8.2 in `worldgen/tests/data_history_kinds_test.cpp`, `data_history_settings_test.cpp` and `data_history_golden_test.cpp` (CTest entry `worldgen-tests-other`); the flags and the worlds of 8.3 in `tools/worldgen-cli/tests/cli_history_settings_test.cpp` (CTest entry `worldgen-cli-tests-history-settings`). P3-02's tests run in their own entry, `worldgen-tests-history`.
+
 ### 8.1 Loading
 
 1. The shipped data loads; every value of the six races (3.1) and the chronology tuning (5.1) equals the listing (a table transcribed in the test, not read from the files); the six cultures have the `race` and `name` of section 4.
-2. Each per-definition and kind-level check of section 3 fails once on a fixture with its exact message and position; `race_order_dense` is not reported when `race_order_unique` fails.
+2. Each per-definition and kind-level check of section 3 fails once on a fixture with its exact message and position; `race_order_dense` is not reported when `race_order_unique` fails; the duplicate- and missing-order behaviour of section 3 holds.
 3. Word grammar on `name`, `plural`, `adjective`: `elf`, `High Elf` fail (P0-03 amendment 17's message).
-4. Fixed-id behaviour: a fixture data root with `history/engine.toml` fails with `unknown id 'engine' for kind 'history'; expected one of chronology`; a root without `history/chronology.toml` fails with `missing definition 'history.chronology'`; a root without `races/` fails as a missing required kind directory.
+4. Fixed-id behaviour: a fixture data root with `history/engine.toml` fails with `unknown id 'engine' for kind 'history'; expected one of 'chronology'`; a root without `history/chronology.toml` fails with `missing definition 'history.chronology'`; a root without `races/` fails as a missing required kind directory.
 5. Ranges: each bounded field one step outside its bounds is a range error.
 
 ### 8.2 Settings
 
 6. Every flag: each valid value accepted, each invalid form of 6.2 rejected with its message and exit 2; `--divine-script` always rejected.
-7. Every settings key: valid and invalid values with message and position (exit 3); flag overrides the file key; an unknown `[world]` key lists the new keys.
+7. Every settings key: valid and invalid values with message and position (exit 3), including the `world.races` element and empty-array messages; a flag beside a file key is accepted (which value wins is tested from P3-03 on, through `meta`); the file's unknown race ids are an error even with `--races`; an unknown `[world]` key lists the new keys.
 8. `--races` normalization: `orc,elf` and `elf,orc` give the same `Settings` value; `all` gives every loaded race in race order.
 
 ### 8.3 Content hash and worlds
@@ -410,3 +435,16 @@ For the independent test writer.
 1. **Shipped weights** are first values (3.1). Recommendation: approve as a starting point; P3-05 tunes them on the 1024 sweep.
 2. **`--test-pattern` with history flags** accepted and ignored (6.2). Recommendation: approve.
 3. **Cross-kind data conditions** checked at the stage, not by the loader (3). Recommendation: approve; a loader-level cross-kind check is a P0-03 feature no kind needed before.
+
+## Revision note (2026-11-19, text only, after implementation)
+
+The implementation and the independent tests (merged on `p3/01-int`) agreed; this revision makes the text say what they do. No behaviour, golden value or world byte changes.
+
+1. 5, 8.1: the unknown-id message quotes the ids: `expected one of 'chronology'` (P0-03 amendment 15 as implemented).
+2. 6.2: id lists in messages are separated by `, ` and are in race order.
+3. 6.2: the messages for a `world.races` element that is not a string or an id and for an empty array; the form of `<found>` per value type; `world.divine_script` refused for a value of any type; the settings-file messages set out as a table.
+4. 6.1, 6.2: the file's race ids are checked even when `--races` overrides them (exit 3); the flag's error (exit 2) comes first; only the first unknown id of `--races` is named; flag-over-file precedence becomes observable at P3-03.
+5. 3: `race_awakening_order` with duplicate or missing orders; `race_order_dense` suppressed when `race_order_unique` fails; the uniqueness checks report the first repeat only; the side effect of a type error on `race_order_dense`.
+6. 5.1: the `history.chronology` fields are required; the Default column is the shipped value.
+7. 6.3: `Settings` carries the values; they are not in `WorldParams`; P3-03 decides how they reach the stage.
+8. 2, 8: the test files and the CTest entries `worldgen-cli-tests-history-settings` and (P3-02) `worldgen-tests-history`.
