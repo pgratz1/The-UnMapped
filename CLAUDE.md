@@ -6,7 +6,7 @@ A single-player, first-person, open-world RPG whose world and history are genera
 
 - **Design doc:** `docs/design/design.md`. It is the specification for the whole project. Read the sections relevant to your task before starting.
 - **Current work:** the world generator prototype, section 13 of the design doc (phases P0 to P6).
-- **Current phase:** P3 History core, started 2026-11-19. The overview spec (P3-00, `docs/specs/p3-00-history-overview.md`) splits it into specs P3-01 to P3-07. P3-01 (history data and settings) is merged (generator 0.12.0, schema 5); P3-02 (names) and P3-03 (chronology, schema 6) are approved and in progress. P0 Foundation, P1 Geography (approved by Paul on 2026-11-19) and P2 (Godot bring-up and viewer v0) are done. The reference map size for history is 1024.
+- **Current phase:** P3 History core, started 2026-11-19. The overview spec (P3-00, `docs/specs/p3-00-history-overview.md`) splits it into specs P3-01 to P3-07. P3-01 (history data and settings; generator 0.12.0, schema 5) and P3-02 (names: `src/history/draw.cpp`, `src/history/names.cpp`; a library no stage calls yet) are merged; P3-03 (chronology, schema 6) is in validation and P3-04 (simulation engine, schema 7) is being implemented. P0 Foundation, P1 Geography (approved by Paul on 2026-11-19) and P2 (Godot bring-up and viewer v0) are done. The reference map size for history is 1024.
 - **Next phases:** P4 Viewer v1 and P5 History depth, in parallel, after Paul's review of P3.
 
 ## The design doc is read-only
@@ -134,7 +134,7 @@ The build tree is `%LOCALAPPDATA%\the-unmapped\build\<source dir name>\<preset>\
 
 | CTest entry | What it runs |
 | --- | --- |
-| `worldgen-tests-elevation-golden`, `-elevation`, `-hydrology`, `-climate`, `-biomes`, `-biomes-inspect`, `-resources`, `-regions` | `worldgen-tests` on that stage's test files |
+| `worldgen-tests-elevation-golden`, `-elevation`, `-hydrology`, `-climate`, `-biomes`, `-biomes-inspect`, `-resources`, `-regions`, `-history` | `worldgen-tests` on that stage's test files (`-history`: the keyed draws and names tests under `worldgen/tests/history/`) |
 | `worldgen-tests-other` | `worldgen-tests` on every file no group names (core, data, database, geo, pipeline, inspection; a new test file lands here until it is given a group) |
 | `worldgen-cli-tests-hydrology-elevation`, `-passes-climate`, `-biomes`, `-resources-generate`, `-regions`, `-history-settings` | `worldgen-cli-tests` on those files |
 | `worldgen-cli-tests-other` | `worldgen-cli-tests` on every other file |
@@ -184,7 +184,7 @@ Each preset must be built first (default build tree, or `--build-dir DIR` for `g
 - `worldgen/tests/golden/core_vectors.txt`: reference outputs of the deterministic core (spec P0-01 13.8), read by `worldgen-tests`.
 - `worldgen/tests/golden/p0-worlds.txt`: SHA-256 of the world file for each P0 case, lines `<case> <hex>` sorted by case name, LF. Read by `worldgen-cli-tests` (skipped while the file is absent) and by `world-hashes.sh expect` in CI. Recorded by the validation specialist. Since the `worldgen` kind is registered, these worlds carry the content hash of the shipped `game/data`, so a change to the shipped tuning changes them too (P1-00 6.4).
 - `worldgen/tests/golden/p1-worlds.txt`: the same for the geography cases of P1-00 14 X5, read by `world-hashes.sh expect` (a note, not a failure, while the file is absent). Recorded by the validation specialist.
-- `worldgen/tests/golden/p1-01-elevation.txt`, `p1-02-hydrology.txt`, `p1-03-climate.txt`, `p1-04-biomes.txt`, `p1-05-resources.txt`, `p1-06-regions.txt`, `p3-01-data.txt` (content hashes of the three data roots, from `p3_data_reference.py`): each stage's golden vectors (layer and table hashes of fixture and shipped worlds), written by the test writer's independent reference in `worldgen/tests/reference/` and read by `worldgen-tests` and `worldgen-cli-tests` (the large cases by the `*-slow` suites). Never regenerated to make a C++ test pass.
+- `worldgen/tests/golden/p1-01-elevation.txt`, `p1-02-hydrology.txt`, `p1-03-climate.txt`, `p1-04-biomes.txt`, `p1-05-resources.txt`, `p1-06-regions.txt`, `p3-01-data.txt` (content hashes of the three data roots, from `p3_data_reference.py`), `p3-02-names.txt` (keyed draws and names, from `p3_names_reference.py`): each stage's golden vectors (layer and table hashes of fixture and shipped worlds), written by the test writer's independent reference in `worldgen/tests/reference/` and read by `worldgen-tests` and `worldgen-cli-tests` (the large cases by the `*-slow` suites). Never regenerated to make a C++ test pass.
 
 Golden values describe the generator's output contract. A change that alters the bytes of any world file or golden vector must bump `GENERATOR_VERSION` (`worldgen/include/worldgen/version.hpp`) and re-record the golden values in the same change; the comparison across presets must pass before they are recorded. A schema change also needs a schema version bump, a spec update and a proposals entry (hard rule 7). Golden files are LF on every platform (`.gitattributes`).
 
