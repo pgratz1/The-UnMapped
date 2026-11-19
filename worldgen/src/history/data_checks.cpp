@@ -115,6 +115,11 @@ std::string age_name_text(std::string_view form, std::string_view plural, std::s
 
 std::vector<data::LoadError> check_history_data(const data::ContentSet& content) {
     std::vector<data::LoadError> out;
+    // D0: at least one race definition.
+    const data::KindContent* races = content.find_kind(data::RACE_KIND);
+    if (races == nullptr || races->definitions.empty()) {
+        out.push_back(race_error("no race is defined; kind 'race' needs at least one definition"));
+    }
     const data::Definition* tuning = content.find(data::HISTORY_KIND, data::HISTORY_CHRONOLOGY_ID);
     for (const std::string& id : data::race_ids_in_order(content)) {
         const data::Definition* race = content.find(data::RACE_KIND, id);
