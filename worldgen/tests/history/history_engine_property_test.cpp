@@ -394,7 +394,8 @@ TEST_CASE("P3-04 16.2 item 16: hand-made tuning within the schema ranges and pac
         for (std::int64_t k = 1; k < np; ++k) {
             // packed close, and sometimes to the last years of the span
             const std::int64_t room = e - 1 - y.back() - (np - k - 1);
-            y.push_back(y.back() + (m.next() % 4 == 0 ? m.in(1, std::max<std::int64_t>(1, room)) : m.in(1, 5)));
+            // room >= 1 by construction; the packed branch is capped by it too (every start <= E - 1)
+            y.push_back(y.back() + (m.next() % 4 == 0 ? m.in(1, room) : m.in(1, std::min<std::int64_t>(5, room))));
         }
         const std::string lv = std::vector<std::string>{"sparse", "normal", "dense"}[static_cast<std::size_t>(c % 3)];
         const wd::ContentSet content = with_engine(t);
