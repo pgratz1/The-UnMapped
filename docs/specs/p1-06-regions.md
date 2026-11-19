@@ -1,6 +1,6 @@
 # P1-06 Regions
 
-Status: draft, spec writer, 2026-11-16, awaiting approval. Phase P1 Geography, stage 6 (`regions`). Design doc section 4 (stage 6: "cells are grouped into named regions of a few square kilometres, the unit the history simulation reasons about"), 5 (civilizations "claim a region"; events have a `region_id`; beast populations per region), 6 (table `region`: `id`, `name`, `biome`, `bounds`, summary statistics). Depends on P0-01 to P0-04, P1-00, P1-02, P1-04 and P1-05. Tuning values marked "guess" and every statistics range are starting points (section 11). Amended 2026-11-18 for the biome variety revision (P1-04 third version, generator 0.9.0): the regions tables are schema version 5 (version 4 is `climate.temp_offset_dc`); the biome set has nine natural biomes, with `region_noun` Fen (fen), Marsh (marsh, was Fen), Heath, Steppe and Carr (wet woodland) besides Wood, Downs, Moor and Peaks (P1-04 4.1); the RG9 example's marsh region is `South Marsh`.
+Status: draft, spec writer, 2026-11-16, awaiting approval. Phase P1 Geography, stage 6 (`regions`). Design doc section 4 (stage 6: "cells are grouped into named regions of a few square kilometres, the unit the history simulation reasons about"), 5 (civilizations "claim a region"; events have a `region_id`; beast populations per region), 6 (table `region`: `id`, `name`, `biome`, `bounds`, summary statistics). Depends on P0-01 to P0-04, P1-00, P1-02, P1-04 and P1-05. Tuning values marked "guess" and every statistics range are starting points (section 11). Amended 2026-11-18 for the biome variety revision (P1-04 third version, generator 0.9.0): the regions tables are schema version 5 (version 4 is `climate.temp_offset_dc`); the biome set has nine natural biomes, with `region_noun` Fen (fen), Marsh (marsh, was Fen), Heath, Steppe and Carr (wet woodland) besides Wood, Downs, Moor and Peaks (P1-04 4.1); the RG9 example's marsh region is `South Marsh`. Amended 2026-11-18 for P1-05's second version (generator 0.10.0): the `region` layer is id 19; `habitability` is now on P1-05's recalibrated scale (median over dry land 0–90, 90th percentile 82–151 on the 0.9.0 worlds; about 60% of dry land is at 0 on steep 512 worlds), which RG2 and RG3 use only by rank, so no rule changes; `habitability_mean` and this spec's statistics are to be re-measured with it.
 
 ## 1. Purpose
 
@@ -26,7 +26,7 @@ Preconditions (fatal "regions: input precondition: …"): layers present, N × N
 
 ## 3. Outputs
 
-- Layer `region` (`u16`, layer id 18 in a full run): the region id of every land cell (`water` ≠ 3), lakes included; 0 on ocean. Catalogue entry made definite: sea and ocean get no regions in P1 (open question 2).
+- Layer `region` (`u16`, layer id 19 in a full run; 18 before P1-05's second version added `forage`): the region id of every land cell (`water` ≠ 3), lakes included; 0 on ocean. Catalogue entry made definite: sea and ocean get no regions in P1 (open question 2).
 - Table `region`: one row per region.
 - Table `region_border`: one row per pair of regions sharing at least one 4-adjacent pair of cells.
 

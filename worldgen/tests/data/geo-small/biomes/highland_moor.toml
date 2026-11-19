@@ -8,6 +8,7 @@ priority = 30
 fallback = false
 fertility = "0.3"
 timber = "0.1"
+forage = "0.25"
 region_noun = "Moor"
 
 [[biome.highland_moor.rules]]

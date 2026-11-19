@@ -9,4 +9,5 @@ fallback = true
 rules = []
 fertility = 1
 timber = "0.15"
+forage = "0.3"
 region_noun = "Downs"

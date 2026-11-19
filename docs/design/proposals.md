@@ -162,7 +162,7 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
 - Problem: the design does not say whether a larger map shows more land at the same scale or the same land in finer detail, nor which features keep their physical size.
 - Proposal: cells are 16 m at every size, so 512, 1024 and 2048 cells are 8.2, 16.4 and 32.8 km. A larger map is more land at the same scale. The continent's outline, its large bays and the layout of mountain belts are specified in fractions of the map, so one continent fills every map; hills, ridges, erosion, rivers, lakes and region sizes are specified in metres and keep their size. State the nominal sizes as 8, 16 and 32 km with 16 m cells.
 - Interim choice: as proposed, in `docs/specs/p1-00-geography-overview.md` section 2.2.
-- Status: open
+- Status: accepted (merged into design.md, 2026-11-18)
 
 ### Climate's latitude span is a fraction of the map
 
@@ -172,7 +172,7 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
 - Problem: a 16 km map spans no real latitude. A gradient per kilometre would give an 8 km world almost no climate variety and a 32 km world four times as much.
 - Proposal: the north-to-south temperature difference is a tuning value per map (a map-fraction quantity), the same at every map size, standing for the larger land the map represents.
 - Interim choice: recorded in p1-00 section 2.2 for the climate spec (second pass).
-- Status: open
+- Status: accepted (merged into design.md, 2026-11-18)
 
 ### Generator tuning is data, and shipped tuning changes bump the version
 
@@ -182,15 +182,17 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
 - Problem: the design says tuning lives in TOML but not where, how it is identified in a world, or whether changing it is a version change.
 - Proposal: tuning is a data kind `worldgen` in `game/data/worldgen/`, one definition per stage, every field required, covered by `content_hash`. A change to the shipped data bumps the PATCH version and re-records the shipped-data golden hashes; algorithm golden tests use a frozen fixture copy so tuning work does not churn them.
 - Interim choice: as proposed, in p1-00 section 6 (needs P0-03 amendment 16 for kinds with a schema per id).
-- Status: open
+- Status: accepted (merged into design.md, 2026-11-18)
 
 ### Rivers are rasters in P1; a river table later if history needs one
 
 - See P1-02 section 9 (the entry is written there in full).
+- Status: accepted (merged into design.md, 2026-11-18)
 
 ### Elevation is final after the elevation stage; hydrology does not carve
 
 - See P1-02 section 9.
+- Status: accepted (merged into design.md, 2026-11-18)
 
 ### Biome categories and the biome table
 
@@ -200,7 +202,7 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
 - Problem: the biome layer needs codes for water cells; the design does not say whether coast, river and peak special cases are separate biomes; a world file does not say what its biome codes mean.
 - Proposal: biome definitions carry a fixed integer `code` and a colour. Categories: the six land biomes plus `ocean` and `lake`. River cells take the biome of their land; coast and peak special cases choose among the six. `blighted_waste` is assigned only by history. The biome stage writes a `biome` table (code, key, name, colour, water) into the world (schema version 2).
 - Interim choice: as proposed, in p1-00 section 6.6 and 9.2.
-- Status: open
+- Status: accepted (merged into design.md, 2026-11-18)
 
 ### The layer catalogue is part of the schema contract
 
@@ -210,7 +212,7 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
 - Problem: layers are rows of the `layer` table, so the DDL does not change when a layer is added, yet a reader depends on each layer's type and units.
 - Proposal: the layer catalogue (name, type, units, meaning) is part of the contract recorded in `schema.md`. Adding a layer needs no schema version bump; changing a catalogued layer does.
 - Interim choice: as proposed, in p1-00 section 4 rule 3.
-- Status: open
+- Status: accepted (merged into design.md, 2026-11-18)
 
 ### P1 schema changes (one entry per phase)
 
@@ -220,7 +222,7 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
 - Problem: the phase's schema changes need one proposals entry (P0-02 5.2 rule 3).
 - Proposal: first pass (elevation, hydrology): none; schema stays at version 1. Second pass: version 2 adds table `biome`; version 3 (or the same bump, if in one branch) adds table `region`. Updated 2026-11-16 with the second-pass specs: version 2 adds table `biome` (P1-04); version 3 adds table `region`, with `bounds` stored as four integer columns `x_min`, `y_min`, `x_max`, `y_max` because tables hold no blobs, and a new table `region_border` (border length, lowest crossing, walkable and river flags per pair of neighbouring regions; P1-06), which is how history finds where a pass or a bridge is worth building. The layer catalogue gains `walk_area` (connected walkable ground; P1-05).
 - Interim choice: as proposed, in p1-00 section 9.
-- Status: open
+- Status: accepted (merged into design.md, 2026-11-18)
 
 ## Phase P2 Godot bring-up and viewer v0 (2026-11-15)
 
@@ -232,7 +234,7 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
 - Problem: Godot writes its cache (`.godot/`) inside the project and loads a GDExtension from a path relative to the project; the cache location cannot be configured. With `game/` in a synced folder, opening it directly writes `.godot/` into the repository, and a link from `game/` to the build tree would be machine-specific and trip CI's clean-checkout check.
 - Proposal: state in section 10 that Godot is always run on a copy of the project assembled under the build tree (`<build>/game/`: links to `game/`'s entries, the extension's output in `bin/`, Godot's `.godot/` cache), and that `game/` is never opened directly.
 - Interim choice: implemented (`gdext/cmake/assemble_project.cmake`); `CLAUDE.md` and `gdext/README.md` describe it. Saving `project.godot` from the editor with safe save breaks its link; the build warns.
-- Status: open
+- Status: accepted (merged into design.md, 2026-11-18)
 
 ### Pinned engine: Godot 4.7.2 and godot-cpp 10.0.0
 
@@ -242,7 +244,7 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
 - Problem: the design gives the rule but not the version.
 - Proposal: record Godot 4.7.2-stable (Terrain3D 1.1.0 states "Supports Godot 4.5-4.8+"; 4.8 was at beta when pinned) and godot-cpp 10.0.0-stable targeting GDExtension API 4.7, vendored in `extern/godot-cpp/`. The extension is an optional part of the build (`UNMAPPED_BUILD_GDEXT`, off by default) so `worldgen` and `worldgen-cli` never need Godot.
 - Interim choice: as proposed; evidence and checksums in `gdext/README.md`, `extern/README.md` and `tools/ci/godot-4.7.2-stable.sha512`.
-- Status: open
+- Status: accepted (merged into design.md, 2026-11-18)
 
 ### Friction writing Godot code purely in C++ (P2 findings)
 
@@ -252,7 +254,7 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
 - Problem: observed while building viewer v0 with godot-cpp 10 and Godot 4.7.2: (1) every method, signal and property visible to Godot needs hand-written registration, and scene-to-code wiring is by node name, checked only at run time; (2) iteration is rebuild then restart, with no hot reload, and godot-cpp adds about 1,100 files and three minutes to a clean build; (3) godot-cpp's defaults clash with a normal C++ library (exceptions off, static MSVC runtime, files written into the source tree) and each needed an override; (4) headless testing has traps: Godot idles instead of exiting if the extension fails to load, and the headless display has no window size, so layouts collapse; (5) Godot changes the working directory to the project, so relative command-line paths break; (6) Godot's integer is 64-bit signed, so unsigned 64-bit layer cells are shown as text; (7) a layout bug was invisible to a headless pixel check and found only in a windowed run; (8) sanitizer builds of the extension are impossible against the stock editor.
 - Proposal: keep C++ only, and plan for it: every screen gets a headless check scene from the start, as the viewer has; section 10's "headless Godot runs for scene tests" becomes one CTest per screen, run where the pinned editor is available; budget CI time and a compiler cache for godot-cpp; revisit hot reload when gameplay iteration starts.
 - Interim choice: all handled in `gdext/` and `extern/CMakeLists.txt`.
-- Status: open
+- Status: accepted (merged into design.md, 2026-11-18)
 
 ### Walkable terrain: slope and flatness as acceptance criteria
 
@@ -272,7 +274,7 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
 - Problem: about a quarter of generated continents had almost no mountains (one small massif on an undivided plain), which leaves dwarves nowhere to live and history no natural borders or passes.
 - Proposal: require, by construction in the elevation stage, that every world has a minimum share of high ground forming at least one range. Do not relax the statistics to admit mountain-light worlds.
 - Interim choice: adopted as a requirement for the elevation redesign.
-- Status: open
+- Status: accepted (merged into design.md, 2026-11-18)
 
 ### High peaks may be inaccessible; history opens the passes
 
@@ -282,7 +284,7 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
 - Problem: making all mountain land walkable (candidate v14) turned every continent into one smooth central massif. The candidate with long, dramatic ranges (v13) has high ground too steep to walk.
 - Proposal: keep the dramatic ranges. Some areas of a map may be unwalkable, at least initially: high peaks and steep range flanks are barriers. Civilizations forge roads and passes through such regions over time, as part of the history simulation, so what the player can reach in the present day depends on what history built. Geography reports how much land is steep and whether natural passes exist; it does not require mountains to be walkable.
 - Interim choice: the elevation stage follows v13 with somewhat more erosion (P1-01); walkability statistics in `report` become descriptions, not limits. This supersedes the entry "Walkable terrain: slope and flatness as acceptance criteria" as a requirement; the statistics stay.
-- Status: open
+- Status: accepted (merged into design.md, 2026-11-18)
 
 ### Natural passes through the ranges
 
@@ -294,7 +296,7 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
 - Interim choice: Paul decided on 2026-11-17 to add natural passes, together with the deferred fix for very steep smooth faces where a range meets the sea (P1-01 limitation 11), as one elevation revision. Until it merges: no passes in P1-01 as first merged. Low coastal cliffs also seal off a few lowland pockets (for example 12 km² on 1024 seed 18); they are left as they are.
 - Update 2026-11-17, after five exploration rounds and two critic reviews (specified in P1-01, generator 0.6.0): passes sit at true saddles of each range's drainage divide and are a lowering of the range's envelope before erosion, so erosion and rivers shape them like any other ground. The cut at a col is capped by one tuning value (500 m, chosen by Paul on 2026-11-17 after comparing 400, 500 and 600; 400 to 600 m is the range that still looks natural), so pass height follows the terrain: naturally low saddles become low gates, others stay high cols. Walkability is an outcome, not a requirement: at 500 m about two passes in five are walkable end to end. Paul accepts this as realistic: history may improve a pass, and a player character with magic may find another way over. The steepest-step bound is 150 m at every map size again.
 - Update 2026-11-17, after the merge of generator 0.6.0: Paul looked at the passes and accepts them as they are. The critic's follow-ups (low gates that cut a range nearly to the plain, a mountain lake sometimes erased on a crossing) are not to be pursued now; they stay listed in docs/reviews/p1-01b-elevation-passes-critic.md.
-- Status: open
+- Status: accepted (merged into design.md, 2026-11-18)
 
 ### Every world's hash depends on the shipped tuning files
 
@@ -304,7 +306,7 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
 - Problem: once the `worldgen` tuning kind is registered (P1-01), the content hash of the loaded data is written into every world, including worlds generated with no geography stage. Any change to a shipped tuning file therefore changes every golden hash, the P0 ones included.
 - Proposal: accept it and say so in section 13: a shipped tuning change is an output change, bumps the generator version and re-records all golden hashes (already the rule in "Generator tuning is data, and shipped tuning changes bump the version").
 - Interim choice: as proposed; `p0-worlds.txt` was re-recorded with generator version 0.3.0.
-- Status: open
+- Status: accepted (merged into design.md, 2026-11-18)
 
 ### Second-pass geography: choices of taste for Paul
 
@@ -314,7 +316,7 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
 - Problem: the climate, biome, resource and region specs (P1-03 to P1-06) had to choose where the design is silent.
 - Proposal: confirm or change each. (1) One prevailing wind per world, drawn uniformly from eight directions, so rain shadows differ between worlds. (2) A cool climate: 5 to 9 °C at sea level north to south, 6.5 °C per km of height, so alpine ground starts near 1,000 m. (3) Five natural biomes only: alpine, highland moor, forest, grassland, marsh; blighted waste stays a history overlay. (4) Resource and habitability scores are absolute, not relative to each map, so a poor world is poor. (5) Habitability weights fertility 45, fresh water 30, timber 15, ore 10; history reweights by race. (6) Regions of about 2 km² (roughly 12, 45 and 180 per map at 512, 1024 and 2048), bordered on ridges and large rivers, with placeholder names such as "East Wood II"; history gives cultural names later. (7) No sea regions; lakes belong to land regions.
 - Interim choice: as listed; all numeric acceptance ranges in these specs are provisional until the first implementation sweep.
-- Status: open
+- Status: accepted (merged into design.md, 2026-11-18)
 
 ### Pass sites are stored in the world file
 
@@ -324,7 +326,7 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
 - Problem: history needs to know where the passes are (places to fortify, tax, fight over, build a road), and they cannot be recovered from the stored layers: a pass is a decision of the elevation stage, not a property the height field shows unambiguously.
 - Proposal: a table `pass`, one row per pass in site order: range id, kind, whether the cut was capped, the col cell, the natural saddle height and the col height, and the crossing path. This is the first table beyond `meta` and `layer`, so the schema goes to version 2 with generator 0.6.0; the planned `biome` table then takes version 3 and `region` with `region_border` version 4.
 - Interim choice: as proposed, specified in P1-01 section 9.1 and P1-00 section 9.3.
-- Status: open
+- Status: accepted (merged into design.md, 2026-11-18)
 
 ### Schema version 3: the biome table and the stored wind direction
 
@@ -334,7 +336,7 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
 - Problem: the biome layer stores codes whose meaning lives in the data files, so a world file needs the biome definitions it was generated with; and the prevailing wind of a world, which the runtime will want for weather and vegetation, was computed by the climate stage but not stored.
 - Proposal: schema version 3, with generator 0.8.0 (the biome stage). Table `biome` (id, key, name, colour, water flag), one row per biome definition, written by the biome stage. Table `climate` (one row: `wind_toward`, the direction the wind blows toward as one of eight codes), written by the climate stage; the climate layers do not change. Both tables exist in every world, empty when their stage did not run. `region` and `region_border` remain planned as version 4.
 - Interim choice: as proposed, specified in P1-04, P1-03 and docs/specs/schema.md.
-- Status: open
+- Status: accepted (merged into design.md, 2026-11-18)
 
 ### Biome thresholds scale with map size
 
@@ -344,7 +346,7 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
 - Problem: rainfall depends on map size (air dries as it crosses land; median land rainfall is about 825, 755 and 680 mm at 512, 1024 and 2048 cells), so one fixed forest threshold made small maps almost all forest and large maps half open country.
 - Proposal: each biome rule's rainfall bounds are multiplied by a per-size factor held in the tuning file (1.125, 1, 0.875), so forest starts at about 810, 720 and 630 mm. Thresholds are not set from each world's own rainfall quantiles: that would give every world the same shares and erase the differences that come from where the ranges lie and which way the wind blows. Measured on 108 worlds: forest 27 to 64% and grassland 16 to 59% of land, every biome present in every world, none above 65%. Marsh still grows with map size (about 1, 2.4 and 5.7% median), because larger maps have more flat lowland; accepted.
 - Interim choice: as proposed, specified in P1-04.
-- Status: open
+- Status: accepted (merged into design.md, 2026-11-18)
 
 ### More natural biomes, per-world temperature, a thinner coastal forest
 
@@ -354,7 +356,7 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
 - Problem: with five natural biomes every range had the same rings (bare peak, moor) on its wet and dry sides, grassland was one undivided kind, rivers crossing open country had bare banks, marsh was thin ribbons that never formed a region, every world had the same temperatures, and the first kilometre of every coast was forest even on the dry side.
 - Proposal (Paul, 2026-11-17: "add all of them for more variety"; yes to temperature; yes to the coast): four additions to the natural biomes: heath (dry upland on the lee side of a range), steppe (the dry heart of a rain shadow), wet woodland (along rivers through open country), and fens (marsh allowed to form broad wetlands, enough to be a homeland). Each world gets its own overall temperature, about 2 °C either way. The coastal rain bonus is reduced so lee coasts read as dry. The design doc's list of six biomes (five natural and blighted waste) grows accordingly; races, beasts and the runtime's planting should take the new biomes into account.
 - Interim choice: to be specified as a revision of P1-03 and P1-04 after the first biome stage merges (generator 0.8.0); calibrated on real worlds and reviewed by the world critic before the spec is fixed.
-- Status: open
+- Status: accepted (merged into design.md, 2026-11-18)
 
 ### Large maps may have unusual worlds
 
@@ -364,7 +366,7 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
 - Problem: a sweep of twenty worlds at the largest map size found two outside elevation's hard acceptance bounds: one with almost no high ground (3% of land above 500 m; one short coastal range on a broad lowland continent) and one with a summit of 2,931 m against an intended maximum of 2,800 m. The mountain guarantee measures the footprint of the mountain belt, not the height reached, and the height scaling leaves the very top unbounded.
 - Proposal (Paul, 2026-11-18): leave it; this is natural variation between worlds. The affected bounds at the largest size become descriptive: an occasional large world is nearly flat or has an unusually tall peak. This qualifies the earlier entry "Every world has real uplands", which still holds at the two smaller sizes.
 - Interim choice: no change to elevation; the acceptance ranges for the largest size are widened in the specs with the next revision, and the two worlds stay recorded in docs/reviews/p1-04-biomes-validation.md.
-- Status: open
+- Status: accepted (merged into design.md, 2026-11-18)
 
 ### Schema version 4: the stored per-world temperature offset
 
@@ -374,4 +376,25 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
 - Problem: each world now has its own overall temperature (Paul's decision of 2026-11-17), which the runtime and the history phase need to know and which cannot be recovered exactly from the temperature layer.
 - Proposal: schema version 4, with generator 0.9.0. Table `climate` gains the column `temp_offset_dc` (tenths of a degree, between −20 and +20 with shipped tuning). Table `biome` keeps its shape and has twelve rows (ocean, lake, nine natural biomes, blighted waste). `region` and `region_border` move to version 5.
 - Interim choice: as proposed, specified in P1-03, P1-04 (third version) and docs/specs/schema.md.
+- Status: accepted (merged into design.md, 2026-11-18)
+
+### Wild food (forage) as a fifth resource score; habitability treats water as a necessity
+
+- Date: 2026-11-18
+- Raised by: spec-writer and world critic, approved by the lead
+- Design doc section: 4 (geography: resources, habitability), 5 (peoples), 6 (history: homelands, settlement)
+- Problem: the resource scores valued land only as farmland, timber or ore, so marsh, fen, wet woodland and coasts were worth nothing, although the design has hunting and fishing feed settlements and wild-land peoples live there. The earlier habitability sketch added water as one bonus among others, so dry ground far from any river could still score well.
+- Proposal: a `forage` score (wild food: game, fowl, fish, reeds), from a per-biome value held as data plus a bonus within 300 m of the sea, a lake or a large river. History uses it as a second food source and for peoples of wild places. Habitability is a weighted mean of fertility (55), forage (20), timber (15) and ore (10), multiplied by a fresh-water factor between 0.25 and 1 and reduced by slope, flooding and very small walkable pockets; there is no separate coast bonus, since the sea's value comes through forage. Steppe fertility is 0.7 and "fertile" land is fertility 0.65 or more, so forest (0.7) counts as clearable farmland. All scores are absolute (0 to 255), not normalized per world, so a harsh world reads as harsh. Small maps are mostly mountain: at the smallest size a world may have well under a third of its land walkable in one piece, and that bound is descriptive there. This revises item (5) of "Second-pass geography: choices of taste for Paul".
+- Interim choice: as proposed, specified in P1-05 (second version), generator 0.10.0. The stage writes layers only; the schema stays at version 4, the layer catalogue gains `forage`, and `region` becomes layer 19. Weights and per-biome values are tuning data and can be changed without a code change.
+- Status: accepted (merged into design.md, 2026-11-18)
+
+### Habitability weights revised after the critic's review (design doc section 4 now out of date)
+
+- Date: 2026-11-18
+- Raised by: world critic, approved by the lead
+- Design doc section: 4 (geography: resources and habitability)
+- Problem: the design doc gives the habitability weights as fertility 55, forage 20, timber 15, ore 10. With those weights forest outscored grassland in every world reviewed, lake shores scored below the land behind them, and at the smallest map size some worlds had no rich ore reachable on foot (`docs/reviews/p1-05-resources-critic.md`).
+- Proposal: weights fertility 70, forage 15, timber 10, ore 5; an alluvial fertility bonus of 0.15; a milder flood penalty (factor 0.75 on ground within 0.5 m of the water level); ore exposure that favours lower, less steep ground. The design doc could give the weights as tuning data ("farmland weighs most") instead of fixed numbers.
+- Interim choice: as proposed, in spec P1-05 revision r2 and generator 0.10.0 (merged). All of it is tuning data in `game/data/worldgen/resources.toml`.
+- Known limits, accepted for now: the banks of large rivers score slightly below their hinterland (wet biomes have low fertility); lowland regions differ little from each other (a fix needs code, for example low-frequency soil variation); coasts score below inland, so ports must come from forage and river mouths in the history phase; rich ore is often on crags nobody can walk to, so history should site mines by "ore near a walk area"; the smallest maps are tight and need homeland fallbacks.
 - Status: open

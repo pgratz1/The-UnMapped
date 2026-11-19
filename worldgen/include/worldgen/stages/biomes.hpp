@@ -111,6 +111,7 @@ struct BiomeDef {
     std::vector<BiomeRule> rules;
     Fx fertility;
     Fx timber;
+    Fx forage;  // P1-05 4.1 (generator 0.10.0); read by the resources stage only
     std::string region_noun;
 
     friend bool operator==(const BiomeDef&, const BiomeDef&) = default;

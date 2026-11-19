@@ -83,6 +83,7 @@ BiomeDef biome_from(const data::Definition& d) {
     }
     b.fertility = r.get_fx("fertility");
     b.timber = r.get_fx("timber");
+    b.forage = r.get_fx("forage");
     b.region_noun = r.get_string("region_noun");
     return b;
 }

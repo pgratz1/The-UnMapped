@@ -65,6 +65,7 @@ fs::path write_data_root(const Sandbox& sb, std::string_view climate = CLIMATE_T
     write_text(root / "worldgen" / "hydrology.toml", HYDROLOGY_TOML);
     write_text(root / "worldgen" / "climate.toml", climate);
     write_text(root / "worldgen" / "biomes.toml", std::string(elev_api::BIOMES_TOML));  // P1-04 4.2
+    write_text(root / "worldgen" / "resources.toml", std::string(elev_api::RESOURCES_TOML));  // P1-05 4.2
     fs::create_directories(root / "biomes");
     write_text(root / "biomes" / "biomes.toml", std::string(elev_api::BIOME_DEFINITIONS_TOML));  // P1-04 4.1
     return root;
@@ -293,7 +294,7 @@ TEST_CASE("cli P1-00 X1, P1-03 3 and 9: generate --until climate at 512; hash, r
 TEST_CASE("cli P1-00 10.1: --until climate is accepted; the next stage is not implemented yet; tuning errors are input errors") {
     Sandbox sb;
     const fs::path data = write_data_root(sb);
-    const ProcessResult b = sb.cli({"generate", "--seed", "0", "--map-size", "512", "--until", "resources", "--data",
+    const ProcessResult b = sb.cli({"generate", "--seed", "0", "--map-size", "512", "--until", "regions", "--data",
                                     u8(data), "--out", u8(sb.file("b.db"))});
     CHECK(b.exit_code == EXIT_USAGE);
     CHECK_FALSE(file_exists(sb.file("b.db")));

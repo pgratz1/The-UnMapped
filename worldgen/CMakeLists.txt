@@ -61,6 +61,7 @@ add_library(worldgen STATIC
     src/stages/elevation_passes.cpp
     src/stages/hydrology.cpp
     src/stages/biomes.cpp
+    src/stages/resources.cpp
     src/stages/climate.cpp
 )
 add_library(worldgen::worldgen ALIAS worldgen)

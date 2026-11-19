@@ -85,7 +85,10 @@ Registered by this stage's implementation (P1-00 6.6). Fields in schema declarat
 | `rules` | array(record(`biome_rule`), 0, 16) | the biome applies where any of its rules matches |
 | `fertility` | fx(0, 1) | agricultural potential of the biome, used by P1-05 |
 | `timber` | fx(0, 1) | usable wood of the biome, used by P1-05 |
+| `forage` | fx(0, 1) | wild food of the biome (fish, fowl, game, reeds), used by P1-05; **added 2026-11-18 by P1-05's second version (generator 0.10.0)** |
 | `region_noun` | string(32) | noun for region names, used by P1-06 (e.g. `Fen`) |
+
+**Amendment for P1-05 (generator 0.10.0, 2026-11-18).** The kind gains the required field `forage`, declared after `timber` and before `region_noun` (canonical encoding, P0-03 8), and steppe's `fertility` becomes `"0.7"` (was `"0.6"`; this section's open question 4, settled by P1-05 on the critic's advice). Every shipped and fixture biome file gains `forage = …` after `timber`, with the values of P1-05 4.1 (ocean 0, lake 0, temperate_forest "0.5", grassland "0.3", marsh "0.8", highland_moor "0.25", alpine "0.05", blighted_waste 0, heath "0.2", steppe "0.35", wet_woodland "0.7", fen "0.6"). The biome stage does not read either field: the `biome` layer and table are unchanged. The listing below shows the 0.9.0 files; read it with these two changes.
 
 Record `biome_rule`: all eleven fields required (the two new ones too: there is no optional-field mechanism; every rule of every shipped and fixture file writes every field). A condition holds when the value lies in the closed interval. **Unbounded sentinels** (lead's decision, 2026-11-17): a bound equal to the extreme value of its field's type, on the side it bounds, means "no limit on that side", and B4 skips that comparison entirely. The inputs can lie outside the field ranges (tq down to −61 °C and up to 51 °C with the jitter, rq up to 20000 mm, S2 tangents up to about 290, `elevation` up to 3276.7 m, hand up to 3276.7 m, d34 = 2^40 on a world without a target river), so without the rule a rule written with full ranges would fail on those cells.
 
@@ -405,7 +408,7 @@ With the shipped scales (sc 1.125 / 1 / 0.875 at 512 / 1024 / 2048) the forest a
 
 - **Fen** fertility 0.25 (waterlogged peat; below marsh's 0.45, which is a narrow margin beside better ground, and above heath's 0.2), timber 0.2 (carr islands, alder and willow, no timber trees in quantity); noun "Fen" (the "Black Fen"). Marsh's noun becomes "Marsh", so that a fen region and a marsh region read differently.
 - **Heath** fertility 0.2 (acid, dry upland soil; below moor's 0.3, which is wetter grazing), timber 0.05 (gorse and scrub); noun "Heath".
-- **Steppe** fertility 0.6 (dry grassland: grazing, and dry grain only in good years; below grassland's 1 and below forest's 0.7, so that a dry interior is poorer farmland than cleared woodland), timber 0.05 (almost treeless); noun "Steppe". The critic noted that 0.7 to 0.75 is defensible if the 2048 interiors must stay fertile; open question 4.
+- **Steppe** fertility 0.6, **0.7 from generator 0.10.0** (P1-05 4.1) (dry grassland: grazing, and dry grain only in good years; below grassland's 1 and below forest's 0.7, so that a dry interior is poorer farmland than cleared woodland), timber 0.05 (almost treeless); noun "Steppe". The critic noted that 0.7 to 0.75 is defensible if the 2048 interiors must stay fertile; open question 4.
 - **Wet woodland** fertility 0.5 (alluvial ground, but wet and wooded; between marsh and forest), timber 0.7 (alder, willow and ash: real wood, poorer than forest's 1); noun "Carr".
 
 ### 4.2 Tuning `worldgen.biomes`

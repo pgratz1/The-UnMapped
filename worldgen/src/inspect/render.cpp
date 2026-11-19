@@ -43,6 +43,7 @@ std::string_view palette_name(Palette palette) noexcept {
         case Palette::temperature: return "temperature";
         case Palette::rainfall: return "rainfall";
         case Palette::biome: return "biome";
+        case Palette::score: return "score";
     }
     return "gray";
 }
@@ -67,6 +68,11 @@ Palette registered_palette(std::string_view layer_name) noexcept {
     if (layer_name == "temperature") return Palette::temperature;  // P1-03 9
     if (layer_name == "rainfall") return Palette::rainfall;        // P1-03 9
     if (layer_name == "biome") return Palette::biome;              // P1-04 9
+    if (layer_name == "fertility" || layer_name == "ore" || layer_name == "timber" || layer_name == "fresh_water" ||
+        layer_name == "forage" || layer_name == "habitability") {
+        return Palette::score;  // P1-05 9
+    }
+    if (layer_name == "walk_area") return Palette::ids;  // P1-05 9
     return Palette::gray;  // P1-00 10.2: every other layer, water_depth included
 }
 
@@ -98,6 +104,7 @@ bool palette_suits(Palette palette, const db::LayerGrid& grid) noexcept {
         case Palette::temperature: return t == db::ElementType::i16;
         case Palette::rainfall: return t == db::ElementType::u16;
         case Palette::biome: return t == db::ElementType::u8;
+        case Palette::score: return t == db::ElementType::u8;
     }
     return false;
 }
@@ -115,6 +122,7 @@ std::string_view palette_requirement(Palette palette) noexcept {
         case Palette::temperature: return "an i16 layer";
         case Palette::rainfall: return "a u16 layer";
         case Palette::biome: return "a u8 layer";
+        case Palette::score: return "a u8 layer";
     }
     return "any layer";
 }
@@ -188,6 +196,10 @@ Rgb temperature_colour(std::int64_t t) {
 
 Rgb rainfall_colour(std::int64_t t) {
     return ramp_unchecked(RAINFALL_STOPS, t);
+}
+
+Rgb score_colour(std::int64_t t) {
+    return ramp_unchecked(SCORE_STOPS, t);
 }
 
 Rgb hypsometric_colour(std::int64_t e) {
@@ -500,6 +512,20 @@ void render_rgb(const db::LayerGrid& grid, Palette palette, std::uint32_t scale,
                     if constexpr (!std::is_signed_v<T>) {
                         fill_buffer(rgb, grid.width, grid.height, scale, [&](std::size_t i) {
                             return rainfall_colour(static_cast<std::int64_t>(cells[i]));
+                        });
+                    }
+                    return;
+                }
+                case Palette::score: {
+                    if constexpr (!std::is_signed_v<T>) {
+                        // One colour per value, then per cell (u8 only, palette_suits).
+                        std::array<Rgb, 256> colours{};
+                        for (std::size_t v = 0; v < colours.size(); ++v) {
+                            colours[v] = score_colour(static_cast<std::int64_t>(v));
+                        }
+                        fill_buffer(rgb, grid.width, grid.height, scale, [&](std::size_t i) {
+                            const std::uint64_t v = as_u64(cells[i]);
+                            return v < colours.size() ? colours[v] : MAGENTA;
                         });
                     }
                     return;

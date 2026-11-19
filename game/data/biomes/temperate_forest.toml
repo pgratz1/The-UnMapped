@@ -8,6 +8,7 @@ priority = 20
 fallback = false
 fertility = "0.7"
 timber = 1
+forage = "0.5"
 region_noun = "Wood"
 
 [[biome.temperate_forest.rules]]

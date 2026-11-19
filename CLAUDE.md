@@ -6,7 +6,7 @@ A single-player, first-person, open-world RPG whose world and history are genera
 
 - **Design doc:** `docs/design/design.md`. It is the specification for the whole project. Read the sections relevant to your task before starting.
 - **Current work:** the world generator prototype, section 13 of the design doc (phases P0 to P6).
-- **Current phase:** P1 Geography. P0 Foundation and P2 (Godot bring-up and viewer v0) are done. The elevation, hydrology, climate and biome stages (specs P1-01 to P1-04) are merged, including the biome variety revision (generator 0.9.0, schema 4); resources and habitability, and regions (specs P1-05, P1-06) follow.
+- **Current phase:** P1 Geography. P0 Foundation and P2 (Godot bring-up and viewer v0) are done. The elevation, hydrology, climate, biome and resources stages (specs P1-01 to P1-05) are merged (generator 0.10.0, schema 4); regions (spec P1-06, schema 5) follows.
 - **Next phase:** P3 History core, after Paul's review of P1.
 
 ## The design doc is read-only
@@ -17,7 +17,7 @@ When the design is wrong, unclear or missing something, add an entry to `docs/de
 
 ## Repository state
 
-The repository follows the layout in section 10 of the design doc. Phase P0 is in place: the `worldgen` library holds the deterministic core, the world database layer, the TOML loader, the P0 test-pattern stage and the inspection code behind `report` and `hash`; `worldgen-cli` has `generate`, `render`, `report` and `hash`. Of phase P1 the shared geography algorithms (`src/geo/`), the stage pipeline and the first four geography stages, `elevation` (spec P1-01, `src/stages/elevation.cpp`, with the pass layout in `src/stages/elevation_passes.cpp`; it also writes table `pass`, schema version 2), `hydrology` (spec P1-02, `src/stages/hydrology.cpp`), `climate` (spec P1-03, `src/stages/climate.cpp`: layers `temperature` and `rainfall`, and the one-row table `climate` with the wind and the per-world temperature offset) and `biomes` (spec P1-04, `src/stages/biomes.cpp`: layer `biome` and table `biome`, nine natural biomes; schema version 4), are in place, with the required tuning kind `worldgen` (ids `elevation`, `hydrology`, `climate` and `biomes`) read from `game/data/worldgen/` and the required data kind `biome` from `game/data/biomes/`. `generate` runs the implemented geography stages by default; `--until none` writes the P0 empty world. No later geography stage (resources onward) or history stage exists yet.
+The repository follows the layout in section 10 of the design doc. Phase P0 is in place: the `worldgen` library holds the deterministic core, the world database layer, the TOML loader, the P0 test-pattern stage and the inspection code behind `report` and `hash`; `worldgen-cli` has `generate`, `render`, `report` and `hash`. Of phase P1 the shared geography algorithms (`src/geo/`), the stage pipeline and the first five geography stages, `elevation` (spec P1-01, `src/stages/elevation.cpp`, with the pass layout in `src/stages/elevation_passes.cpp`; it also writes table `pass`, schema version 2), `hydrology` (spec P1-02, `src/stages/hydrology.cpp`), `climate` (spec P1-03, `src/stages/climate.cpp`: layers `temperature` and `rainfall`, and the one-row table `climate` with the wind and the per-world temperature offset) and `biomes` (spec P1-04, `src/stages/biomes.cpp`: layer `biome` and table `biome`, nine natural biomes; schema version 4) and `resources` (spec P1-05, `src/stages/resources.cpp`: the score layers `fertility`, `ore`, `timber`, `fresh_water`, `forage` and `habitability`, and layer `walk_area`), are in place, with the required tuning kind `worldgen` (ids `elevation`, `hydrology`, `climate`, `biomes` and `resources`) read from `game/data/worldgen/` and the required data kind `biome` from `game/data/biomes/`. `generate` runs the implemented geography stages by default; `--until none` writes the P0 empty world. The last geography stage (regions) and the history stages do not exist yet.
 
 ```
 CMakeLists.txt        top-level build; refuses in-tree builds
@@ -134,9 +134,9 @@ The build tree is `%LOCALAPPDATA%\the-unmapped\build\<source dir name>\<preset>\
 
 | CTest entry | What it runs |
 | --- | --- |
-| `worldgen-tests-elevation-golden`, `-elevation`, `-hydrology`, `-climate`, `-biomes`, `-biomes-inspect` | `worldgen-tests` on that stage's test files |
+| `worldgen-tests-elevation-golden`, `-elevation`, `-hydrology`, `-climate`, `-biomes`, `-biomes-inspect`, `-resources` | `worldgen-tests` on that stage's test files |
 | `worldgen-tests-other` | `worldgen-tests` on every file no group names (core, data, database, geo, pipeline, inspection; a new test file lands here until it is given a group) |
-| `worldgen-cli-tests-hydrology-elevation`, `-passes-climate`, `-biomes-generate` | `worldgen-cli-tests` on those files |
+| `worldgen-cli-tests-hydrology-elevation`, `-passes-climate`, `-biomes`, `-resources-generate` | `worldgen-cli-tests` on those files |
 | `worldgen-cli-tests-other` | `worldgen-cli-tests` on every other file |
 | `worldgen-tests-partition`, `worldgen-cli-tests-partition` | checks with `--count` (and `--count --no-skip`) that the groups and `-other` hold every test case exactly once and that no group is empty |
 | `worldgen-cli-version`, `worldgen-cli-unknown-command` | two quick `worldgen-cli` checks |
@@ -144,15 +144,15 @@ The build tree is `%LOCALAPPDATA%\the-unmapped\build\<source dir name>\<preset>\
 
 `ctest -R '^worldgen-tests'` runs the library entries only. The executables are unchanged: run one directly for the whole set or for options such as `-tc="<name>"`, `-ts=`, `-sf=` or `-s`. A group keeps a stage's files together, since its support headers cache inputs in memory per process; a group that grows past the others is split by naming fewer files. Every entry is safe to run alongside the others: scratch directories are per process (process id, or created atomically) and caches are in memory. Tests write scratch files under the build tree or the system temp directory, never into the source tree. Each `worldgen-tests-*` and `worldgen-cli-tests-*` entry has a CTest timeout of 3600 s on every preset, and `gdext-headless-check` one of 300 s.
 
-Approximate full `ctest` time on a 6-core Linux machine, with the presets' four jobs and with `-j 1`:
+Approximate full `ctest` time on a 6-core Linux machine, with the presets' four jobs:
 
-| Preset | `ctest` (4 jobs) | `ctest -j 1` |
-| --- | --- | --- |
-| `linux-gcc-release`, `linux-clang-release` | about 55 seconds | about two and a half minutes |
-| `linux-gcc-debug`, `linux-clang-debug` | about seven minutes | about eleven minutes |
-| `linux-clang-asan` | about 19 minutes | about 45 minutes |
+| Preset | `ctest` |
+| --- | --- |
+| `linux-gcc-release`, `linux-clang-release` | about 50 seconds |
+| `linux-gcc-debug`, `linux-clang-debug` | about three and a half minutes |
+| `linux-clang-asan` | about 23 minutes |
 
-Measured 2026-11-18 at generator 0.9.0 on a machine running other builds, so take them as upper bounds. Windows times are not measured yet. Under `linux-clang-asan` the longest entries (`worldgen-tests-elevation`, `-hydrology` and `-elevation-golden`) take about 10 minutes each, which is the floor however many jobs run. For quick iteration use `linux-gcc-release` or `linux-clang-release` (run a single doctest executable with `-tc=` or `-ts=` for narrower checks); run both debug presets and `linux-clang-asan` before handing work on.
+Measured 2026-11-18 at generator 0.10.0 on an otherwise quiet machine. Windows times are not measured yet. With `-j 1` it takes two to three times as long (measured at generator 0.9.0: release about two and a half minutes, `linux-clang-asan` about 44). Under `linux-clang-asan` the longest entries (`worldgen-tests-elevation-golden`, `worldgen-cli-tests-hydrology-elevation`, `worldgen-tests-hydrology`) take 9 to 11 minutes each, which is the floor however many jobs run. For quick iteration use `linux-gcc-release` or `linux-clang-release` (run a single doctest executable with `-tc=` or `-ts=` for narrower checks); run both debug presets and `linux-clang-asan` before handing work on.
 
 ### Determinism lint
 
@@ -177,14 +177,14 @@ tools/ci/world-hashes.sh compare linux-gcc-release linux-clang-debug # compare s
 tools/ci/world-hashes.sh cases
 ```
 
-Each preset must be built first (default build tree, or `--build-dir DIR` for `generate` and `expect`). `compare` fails when any preset's text for any case differs from the others or is missing, names the case and the presets of each variant, and prints a `diff -u` of the detail lines, so the differing table or layer is visible. Generating all twelve cases takes about 15 seconds with a release preset, about two minutes with a debug preset and about six minutes with `linux-clang-asan` (the geography cases run the elevation, hydrology, climate and biome stages). It is not part of `ctest`, since one build tree cannot compare compilers.
+Each preset must be built first (default build tree, or `--build-dir DIR` for `generate` and `expect`). `compare` fails when any preset's text for any case differs from the others or is missing, names the case and the presets of each variant, and prints a `diff -u` of the detail lines, so the differing table or layer is visible. Generating all twelve cases takes about 15 seconds with a release preset, about two minutes with a debug preset and about six minutes with `linux-clang-asan` (the geography cases run every implemented geography stage). It is not part of `ctest`, since one build tree cannot compare compilers.
 
 ### Golden values
 
 - `worldgen/tests/golden/core_vectors.txt`: reference outputs of the deterministic core (spec P0-01 13.8), read by `worldgen-tests`.
 - `worldgen/tests/golden/p0-worlds.txt`: SHA-256 of the world file for each P0 case, lines `<case> <hex>` sorted by case name, LF. Read by `worldgen-cli-tests` (skipped while the file is absent) and by `world-hashes.sh expect` in CI. Recorded by the validation specialist. Since the `worldgen` kind is registered, these worlds carry the content hash of the shipped `game/data`, so a change to the shipped tuning changes them too (P1-00 6.4).
 - `worldgen/tests/golden/p1-worlds.txt`: the same for the geography cases of P1-00 14 X5, read by `world-hashes.sh expect` (a note, not a failure, while the file is absent). Recorded by the validation specialist.
-- `worldgen/tests/golden/p1-01-elevation.txt`, `p1-02-hydrology.txt`, `p1-03-climate.txt`, `p1-04-biomes.txt`: each stage's golden vectors (layer and table hashes of fixture and shipped worlds), written by the test writer's independent reference in `worldgen/tests/reference/` and read by `worldgen-tests` and `worldgen-cli-tests` (the large cases by the `*-slow` suites). Never regenerated to make a C++ test pass.
+- `worldgen/tests/golden/p1-01-elevation.txt`, `p1-02-hydrology.txt`, `p1-03-climate.txt`, `p1-04-biomes.txt`, `p1-05-resources.txt`: each stage's golden vectors (layer and table hashes of fixture and shipped worlds), written by the test writer's independent reference in `worldgen/tests/reference/` and read by `worldgen-tests` and `worldgen-cli-tests` (the large cases by the `*-slow` suites). Never regenerated to make a C++ test pass.
 
 Golden values describe the generator's output contract. A change that alters the bytes of any world file or golden vector must bump `GENERATOR_VERSION` (`worldgen/include/worldgen/version.hpp`) and re-record the golden values in the same change; the comparison across presets must pass before they are recorded. A schema change also needs a schema version bump, a spec update and a proposals entry (hard rule 7). Golden files are LF on every platform (`.gitattributes`).
 

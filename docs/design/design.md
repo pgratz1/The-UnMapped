@@ -32,11 +32,11 @@ The first playable version is a vertical slice: one generated world you can walk
 
 | Area | In the first playable version | Deferred |
 | --- | --- | --- |
-| World | One continent, 16 km on a side by default and user-set at world creation, 6 biomes | Multiple continents, oceans to sail, seasons |
+| World | One continent, 16 km on a side by default and user-set at world creation, 9 natural biomes plus blighted waste | Multiple continents, oceans to sail, seasons |
 | History | 6,000 years by default, simulated in active phases with quiet intervals; six races created by the gods in a fixed order, plus beasts and monsters; wars, migrations, settlement founding and ruin | Mortal religions and temples, trade economy, dynasties in depth, artifacts with lineages, history mode |
 | Sites | Cities, villages, ruins, and dungeons placed by history; interiors and dungeons filled with physics objects | Underground realms, megastructures |
 | Play | Walk, fight, cast fixed spells learned from books, loot, level up, read the world's history, and talk to NPCs in text with a local LLM phrasing their lines | Spell research, voice dialogue, crafting, companions, player housing |
-| Quests | Template quests instantiated from historical facts | Multi-stage story arcs, faction reputation |
+| Quests | Template quests instantiated from historical facts | Multi-stage story arcs (through the enrichment pass of section 14), faction reputation |
 | Platforms | Linux and Windows desktop, PC VR through OpenXR | Steam Deck tuning |
 | Assets | Generated assets wherever a generator exists; greybox and CC0 placeholders elsewhere | Final art in the chosen semi-realistic style, audio, music |
 
@@ -78,16 +78,63 @@ Geography is generated first, as a stack of coarse raster maps that later stages
 
 **Scale is compressed.** The map stands for a larger land, in the manner of the Elder Scrolls games. The history simulation counts abstract populations and armies (a city of 20,000, a host of 3,000), and the playable world shows a scaled-down version of each (a few dozen buildings, a few dozen soldiers). Distances are symbolic: a day's walk in play may stand for a week's march in history. The database stores the simulated figures; the runtime applies a per-settlement-kind scale rule.
 
+**Map size means more land.** Cells are 16 m at every size, so maps of 512, 1024 and 2048 cells are 8.2, 16.4 and 32.8 km on a side, nominally 8, 16 and 32 km. A larger map shows more land at the same scale. The continent's outline, its large bays and the layout of its mountain belts are set as fractions of the map, so one continent fills every map. Hills, ridges, erosion, rivers, lakes and regions are set in metres and keep their size.
+
 Stages run in a fixed order, and each writes its layer to the world database:
 
 1. **Elevation.** Layered noise shaped by a continent mask, then hydraulic erosion.
 2. **Hydrology.** Flow accumulation gives rivers and lakes; sea level sets the coast.
 3. **Climate.** Temperature from latitude and elevation; rainfall from prevailing wind and rain shadow.
 4. **Biomes.** A lookup on temperature and rainfall, plus special cases for coast, river and high peaks.
-5. **Resources and habitability.** Per-cell scores for fertility, ore, timber and fresh water. The history simulation uses these to place peoples.
+5. **Resources and habitability.** Per-cell scores for fertility, forage, timber, ore and fresh water, combined into a habitability score. The history simulation uses these to place peoples.
 6. **Regions.** Cells are grouped into named regions of a few square kilometres, the unit the history simulation reasons about.
 
-Starting biomes: temperate forest, grassland, marsh, highland moor, alpine, and blighted waste. The waste is a history output: it marks land ruined by past events.
+There are nine natural biomes: temperate forest, wet woodland, grassland, steppe, heath, highland moor, alpine, marsh and fen. Blighted waste is a tenth, assigned only by history, and marks land ruined by past events. Ocean and lake complete the list a world file stores.
+
+**What phase P1 settled about the land**
+
+These choices came out of building and reviewing the geography stages. The exact rules are in `docs/specs/p1-00` to `p1-06`.
+
+*Mountains and passes*
+
+- **Dramatic ranges are kept.** Long, steep ranges make better worlds than smooth walkable massifs. High peaks and steep flanks are barriers, and some of the map may be unreachable on foot.
+- **History opens the mountains.** Civilizations build roads and improve passes over time, so what the player can reach in the present day depends on what history built. Magic such as levitation is another way over.
+- **Natural passes.** Each range has a few passes at the true saddles of its divide, made by lowering the range there before erosion so rivers shape them like any other ground. The cut is capped at 500 m. About two passes in five are walkable end to end; the rest stay high cols.
+- **Every world has real uplands.** The elevation stage guarantees a minimum share of high ground forming at least one range, at the two smaller map sizes.
+- **Large maps may be unusual.** At the largest size an occasional world is nearly flat or has an extra-tall peak. This is accepted as natural variation.
+- **Slope is reported.** The `report` command gives slope and walkability statistics as descriptions of a world, with no pass or fail.
+
+*Water*
+
+- **One terrain.** Elevation is final after the elevation stage. Hydrology reads it and does not carve it.
+- **Rivers are rasters.** A world stores flow direction, upstream area, a river size class, lake ids and water depth per cell. A table of named rivers arrives with history.
+
+*Climate*
+
+- **A cool, northern land.** Sea-level temperatures run from about 5 to 9 °C north to south, falling 6.5 °C per kilometre of height, so alpine ground starts near 1,000 m. There are no warm or arid lands.
+- **Each world has its own temperature,** shifted by up to about 2 °C either way, and stored in the world file.
+- **One prevailing wind per world,** drawn from eight directions and stored in the world file, so rain shadows fall differently in each world.
+- **Latitude is symbolic.** The north-to-south temperature difference is the same at every map size, standing for the larger land the map represents.
+
+*Biomes*
+
+- **Where each new biome appears.** Heath is dry upland on the lee side of a range, steppe is the dry heart of a rain shadow, wet woodland follows rivers through open country, and fens are broad wetlands large enough to be a homeland.
+- **Coasts.** The coastal rain bonus is small, so lee coasts read as dry.
+- **Thresholds scale with map size.** Larger maps are drier inland, so each biome's rainfall bounds are scaled per size. Shares still vary from world to world: forest covers 27 to 64% of land and grassland 16 to 59% across the worlds measured.
+- **Rivers, coasts and peaks** take one of the nine natural biomes and have no biome of their own.
+
+*Resources and habitability*
+
+- **Five scores per cell:** fertility, forage, timber, ore and fresh water. Forage is wild food (game, fowl, fish, reeds), set per biome with a bonus near the sea, a lake or a large river. It gives marsh, fen, wet woodland and coasts their value.
+- **Scores are absolute,** from 0 to 255, and are not rescaled per world. A harsh world reads as harsh, and worlds differ in how generous they are.
+- **Habitability** is a weighted mean of fertility (55), forage (20), timber (15) and ore (10), multiplied by a fresh-water factor between 0.25 and 1, and reduced by slope, flooding and very small walkable pockets. History reweights it by race.
+
+*Regions*
+
+- **Size and borders.** Regions are about 2 km² each, roughly 12, 45 and 180 per map at the three sizes, bordered on ridges and large rivers.
+- **Names.** Regions carry placeholder names such as "East Wood II" until history gives them cultural names.
+- **Land only.** There are no sea regions, and lakes belong to land regions.
+- **Borders are recorded.** For each pair of neighbouring regions the world stores border length, lowest crossing, and whether it is walkable or a river. History uses this to find where a pass, road or bridge is worth building.
 
 Determinism rules for every stage:
 
@@ -211,6 +258,10 @@ Interaction rules the simulation needs:
 
 **Magic in history.** Some figures are casters. They found towers and libraries, invent named spells, write the spellbooks the player later finds, and sometimes cause disasters such as a blight. Each race has leanings toward certain schools, which shapes where each kind of magic is found.
 
+**Mountains, passes and roads in history.** Ranges are real barriers at the start of history. Passes are stored as sites, and they are places to fortify, tax and fight over. Civilizations improve passes and build roads across steep ground as they grow, which opens land that was unreachable. Region borders tell the simulation where a crossing is cheap and where it needs a road or a bridge.
+
+**Food and homelands.** Forage is a second food source beside farming, so peoples of wild places can live where farmland is poor. Each race's preferred land is expressed over the nine natural biomes: fens and wet woodland suit faeries, uplands and ranges suit dwarves, and so on, set in the race data files.
+
 **Tick loop (active phases)**
 
 1. Settlements grow or shrink from local resources and recent events.
@@ -279,6 +330,18 @@ Rules:
 - `layer` has an integer `id` primary key with a unique `name`, so large blobs are stored efficiently.
 - Layer blobs use a project codec: delta, zigzag and variable-length integers with zero runs, defined in `docs/specs/p0-02-world-db.md`. Raw storage is also supported. A general-purpose compressor may be added later only if it is single-threaded, pinned and proven byte-identical, with a schema bump.
 
+Schema versions so far:
+
+| Version | Generator | Adds |
+| --- | --- | --- |
+| 1 | 0.1.0 | `meta`, `layer` |
+| 2 | 0.6.0 | `pass`: one row per mountain pass, with its range, kind, col cell, saddle and col heights, and crossing path |
+| 3 | 0.8.0 | `biome`: the biome definitions the world was generated with; `climate`: one row holding the prevailing wind |
+| 4 | 0.9.0 | `climate` gains the per-world temperature offset; `biome` has twelve rows |
+| 5 (planned) | With the regions stage | `region`, with bounds as four integer columns, and `region_border` |
+
+The layer catalogue (each layer's name, type, units and meaning) is part of the contract and is kept in `docs/specs/schema.md`. Adding a layer needs no schema version bump; changing a catalogued layer does.
+
 ## 7. Runtime world realization
 
 The game builds playable space on demand from `world.db`, and every piece is a pure function of the world seed and its coordinates. Nothing fine-grained is stored in the database.
@@ -289,7 +352,9 @@ The game builds playable space on demand from `world.db`, and every piece is a p
 - Chunk heightmaps upsample the 16 m elevation layer and add seeded detail noise, then stitch to neighbours.
 - Terrain rendering starts on the Terrain3D plugin, fed region by region through its API. The fallback is custom chunk meshes with distance-based level of detail. The test below decides.
 - Vegetation, rocks and props are scattered per chunk from biome rules, drawn with instancing.
-- Rivers, lakes and roads are carved into chunk heightmaps from the database layers and polylines.
+- Rivers and lakes are carved into chunk heightmaps from the database layers, and roads from their polylines. A river channel is narrower than a 16 m cell, so the runtime traces, smooths and cuts it from the stored flow rasters.
+
+**Steep ground and weather.** Some high ground is too steep to walk, by design. The runtime keeps those slopes as they are; roads and improved passes from history are the built ways through, and spells such as levitate give casters others. The stored prevailing wind and per-world temperature feed weather and vegetation at runtime.
 
 **Terrain approach: Terrain3D first, with a test**
 
@@ -522,7 +587,7 @@ Rules:
 
 - **Grounded.** The prompt tells the model to speak only from the fact sheet. Facts that unlock content (a site location, a quest) come from intents the game checks against the database.
 - **Always optional.** A template renderer produces every line without a model. It is the fallback when the model is disabled, missing or too slow, and it is what milestone 7 ships.
-- **Local only.** No network calls. Models are files the player can swap.
+- **Local only.** Dialogue during play makes no network calls, and models are files the player can swap. The optional enrichment in section 14 is the only feature that may use a hosted model, and only at world creation.
 - **Off the frame path.** Inference runs on its own thread with a bounded share of GPU memory, or on CPU, so VR frame rate holds while an NPC is talking.
 - **Not part of world determinism.** The world is reproducible from its seed; NPC phrasing may vary between runs.
 - **Memory.** Each NPC keeps a short summary of past talks with the player in the save file.
@@ -537,12 +602,12 @@ All code is C++20. The generator is a library with a command-line front end, and
 
 | Piece | Choice | Notes |
 | --- | --- | --- |
-| Engine | Godot 4, pinned in the repo to the newest stable version that Terrain3D supports | Forward+ renderer; OpenXR from core |
+| Engine | Godot 4.7.2 with godot-cpp 10.0.0, the newest stable version Terrain3D supported when pinned | Forward+ renderer; OpenXR from core |
 | Generator language | C++20, CMake | No engine headers in the core library |
 | Game code | C++ through GDExtension for gameplay, interface logic and generation | No GDScript; Godot scenes and resources hold layout, assets and tuning data |
 | Database | SQLite, bundled | One writer (generator), read-only in game |
 | Terrain | Terrain3D plugin, to be confirmed in milestone 2 | Fallback: custom chunk meshes |
-| Tests | doctest for the generator and the game library; headless Godot runs for scene tests | Golden-seed tests for determinism |
+| Tests | doctest for the generator and the game library; one headless check scene per Godot screen, run as a test wherever the pinned editor is available | Golden-seed tests for determinism |
 | Build and CI | CMake presets; GitHub Actions on Linux and Windows | Linux is the primary development platform |
 | License | MIT | Open source with no plan to sell; the repository is public. Godot and Terrain3D are MIT as well |
 | NPC dialogue | llama.cpp linked in C++, small quantized GGUF model | Grammar-constrained output; template fallback; voice engines evaluated at milestone 9 |
@@ -550,6 +615,7 @@ All code is C++20. The generator is a library with a command-line front end, and
 | Data files | TOML | Hand-edited definitions for races, beasts, monsters, cultures, biomes and event rules; SQLite is for generated output only |
 | Dependencies | Vendored in extern/ at pinned versions | SQLite 3.54.1, doctest 2.5.3, toml++ 3.4.0 and stb\_image\_write 1.18, with checksums in extern/README.md; builds work offline. Changing the SQLite version or its compile options is treated like a schema change |
 | World viewer | Built in Godot through the C++ extension | Map layers, timeline, entity and event browser; later the create-world screen and in-game map |
+| Narrative enrichment | Claude through the API, or a local model through llama.cpp, or none | Optional, at world creation only; output is a separate lore file and never the world file |
 
 ```
 the-unmapped/
@@ -599,7 +665,18 @@ Conventions for the handoff:
 - **Later:** a 3D heightmap preview, which leads into terrain streaming; then the create-world screen and the in-game map grow out of it.
 - **Guardrails:** `worldgen` and `worldgen-cli` never depend on Godot. The command-line tool exports map images and a text history report from the start, for automated tests and for use before the viewer exists.
 
-**Existing repository skeleton.** The repository currently holds a custom-engine style skeleton (`src/engine`, `src/render`, `src/platform` and similar). It is to be replaced with the layout above before code is added.
+**Running Godot.** Godot is always run on a copy of the project assembled under the build tree, holding links to the entries of `game/`, the extension's built library, and Godot's own cache. `game/` is never opened directly, which keeps generated files out of the repository. The extension is an optional part of the build, off by default, so `worldgen` and `worldgen-cli` never need Godot.
+
+**Working in C++ only.** Building the viewer showed what the no-GDScript rule costs, and the rule stays.
+
+- Everything Godot can see (methods, signals, properties) needs hand-written registration, and scenes are wired to code by node name, checked only at run time.
+- Iteration is rebuild and restart, with no hot reload. godot-cpp adds about 1,100 files and three minutes to a clean build, so a compiler cache matters.
+- Layout bugs can pass a headless pixel check and show only in a window.
+- Sanitizer builds of the extension cannot load into the stock editor.
+
+The response: every screen gets a headless check scene from the start, continuous integration budgets time and a compiler cache for godot-cpp, and hot reload is revisited when gameplay iteration begins.
+
+**Tuning is data.** Generator tuning lives in `game/data/worldgen/`, one file per stage, and its content hash is written into every world. Changing shipped tuning therefore changes every world file: it bumps the generator version and re-records all golden hashes. Algorithm tests use a frozen copy of the tuning so that tuning work does not disturb them.
 
 ## 11. Milestones
 
@@ -618,6 +695,8 @@ Milestones run in order, and each ends with something that can be checked. The g
 | 8 | History in play | Quests instantiate from hooks; books and dialogue render real history; a local LLM phrases NPC text dialogue from fact sheets with the template fallback intact; journal reveals sites. First playable version complete |
 | 9 | Voice dialogue | The player speaks to NPCs and hears replies, all on local models, in both modes; VR holds 90 Hz while an NPC is speaking |
 | 10 | Spell research | The player composes, researches and casts a new spell within the budget and compatibility rules; a researched spell never beats the cost formula |
+| 11 | Narrative enrichment | A lore file with validated quest lines and chronicles is produced by Claude and, in reduced form, by a local model; the game plays the quest lines; a world with no lore file still plays fully |
+| 12 | Divine script (experimental) | A scripted world is reproducible from seed, settings and script, and the world critic judges scripted worlds against unscripted ones |
 
 Milestones 0 and 1 carry the most design risk, since they decide whether generated history is interesting. Milestones 2 and 3 carry the most technical risk. Milestones 9 and 10 are independent and can run in either order.
 
@@ -645,6 +724,15 @@ Decided so far:
 
 - **License:** MIT, open source, with a public repository.
 - **Phase P0 outcomes:** the numeric core, schema approach, data-file number format, pinned dependency versions and build-output rule are recorded in sections 4, 6 and 10.
+
+* **Mountains:** dramatic ranges with natural passes; some high ground is unwalkable until history builds a way through.
+* **Climate:** a cool northern land, one prevailing wind per world, and a per-world temperature shift.
+* **Biomes:** nine natural biomes plus blighted waste.
+* **Resources:** five absolute scores including forage, with habitability treating fresh water as a necessity.
+* **Regions:** about 2 km² each, land only, with placeholder names until history renames them.
+* **Engine:** Godot 4.7.2 with godot-cpp 10.0.0; C++ only is confirmed after the viewer work.
+
+- **Narrative enrichment:** an optional pass at world creation writes quest lines and lore to a separate file, using Claude, a local model, or neither. A divine script is a later experiment. Details are in section 14.
 
 Still open:
 
@@ -682,9 +770,14 @@ Still open:
 
 * [x] **Seed phrases.** Should a typed seed phrase ignore case and Unicode form, so "Ashen Marches" and "ashen marches" give the same world? Decided: yes. Phrases are lowercased, and everything except letters and digits becomes a space, as section 4 describes. (Milestone 2)
 
+- [ ] **Enrichment cost.** How large is a hosted enrichment run for a default world, and what cap is sensible? Measure on real worlds. (Milestone 11)
+- [ ] **Enrichment models.** Which Claude model for the hosted pass, and which local model is the recommended fallback? (Milestone 11)
+- [ ] **Local fallback scope.** How much should the local pass attempt: full quest lines, or chronicles and rumours only? Decide from output quality. (Milestone 11)
+- [ ] **Bundled lore.** Should the project ship ready-made lore files for a few recommended seeds, so players without any model still see enriched worlds? (Milestone 11)
+
 ## 13. World generator prototype: phases and agent roles
 
-The first block of work delivers milestones 0 and 1 plus the Godot viewer, in seven phases. Each phase ends with a check that can be run, and with a review by Paul in the viewer or the exported images. Status on November 15, 2026: P0 is complete, and P1 and P2 are next.
+The first block of work delivers milestones 0 and 1 plus the Godot viewer, in seven phases. Each phase ends with a check that can be run, and with a review by Paul in the viewer or the exported images. Status on November 18, 2026: P0 and P2 are complete. In P1, elevation, hydrology, climate and biomes are merged, and resources and regions remain.
 
 ### Phases
 
@@ -738,3 +831,63 @@ Work is done by Claude Code subagents with narrow roles, coordinated by a lead s
 ### What the prototype leaves out
 
 Runtime terrain, cities, dungeons as playable spaces, gameplay, dialogue and VR all wait for milestone 2 onward. The prototype ends with a world file, a viewer, and confidence that generated history is worth playing in.
+
+## 14. Narrative enrichment by language models
+
+A language model can make a generated world's stories richer in two optional ways: an enrichment pass that writes quest lines and lore from the finished history, and a divine script that lets the model direct the gods. Both come after the prototype. The game is complete without either.
+
+### Principles
+
+- **The world file is untouched.** Model output never goes into `world.db`, so worlds stay bit-identical for a given seed, settings and generator version.
+- **Structure from the simulation, story from the model.** The simulation decides what happened. The model tells it well and finds the threads worth following.
+- **Everything is validated.** Model output is structured, and every reference must resolve to a real entity, place and year in the world. Anything that fails is regenerated or dropped.
+- **Never during play.** Models with network access run only at world creation. Dialogue in play stays on the small local model of section 9.
+
+### Providers and fallback
+
+The same pass runs on any of three providers, chosen at world creation. All three produce the same file format and go through the same validation.
+
+| Provider | Needs | Expected result |
+| --- | --- | --- |
+| Claude through the API | The player's own API key and a network connection at world creation | The fullest result: long quest lines, distinct voices per race, coherent chronicles |
+| A local model | A model file run through llama.cpp, the same runtime as dialogue. A larger model than the dialogue one is practical here, since the pass can take as long as it needs | A reduced result: shorter quest lines and plainer prose, in smaller batches with tighter validation |
+| None | Nothing | Template quests and template lore from sections 5 and 9, which every world has anyway |
+
+Rules for providers:
+
+- The choice is the player's. Nothing requires a key, and the default is whichever provider is already set up, falling back to none.
+- A key is kept in the player's own configuration, never in a world file, a save or the repository.
+- Before a hosted run starts, the game shows an estimate of its size and a cap the player can set.
+- If a run fails partway, what passed validation is kept and the rest falls back to templates.
+- The lore file records which provider and model wrote it.
+
+### The enrichment pass
+
+After the generator finishes, the pass reads the event log and writes a separate lore file beside the world, keyed to the world's hash.
+
+- **Quest lines.** Multi-stage arcs built on real causal chains in the history: an heirloom lost in a war, the exiled line that wants it, the tomb where it lies. Each step names real entities and sites, and the arc is stored as a graph of steps with conditions.
+- **Chronicles.** A prose history for each race and civilization, written in that people's voice and from its point of view. Two peoples may tell the same war differently.
+- **Lives and legends.** Biographies of notable figures, and legends that have grown around real events.
+- **Books and inscriptions.** Full texts for in-world books, replacing template text where present.
+- **Rumours.** Short leads NPCs can pass on, each pointing at a real quest line or site.
+
+The pass works in pieces (one civilization, one region, one age at a time), each given only the records it needs. During play the small dialogue model performs this material: a quest line's facts go into NPC fact sheets like any others.
+
+Lore files can be shared. Since a seed gives the same world for everyone, a lore file written for that world works for any player who has it.
+
+### The divine script (experimental)
+
+The gods already intervene in history. A divine script lets a model choose those interventions for dramatic effect, where the generator would otherwise pick them from the seed.
+
+- **What it is.** A data file listing interventions: which god, which kind (bless, curse, raise a champion, send a monster, mark a site), roughly when, and at whom. Only intervention kinds the simulation already supports are allowed.
+- **How it is made.** The world is generated once without a script. The model reads that history, writes a script to sharpen it, and the world is generated again with the script as an input.
+- **Determinism.** A world becomes a function of seed, settings and script. The script's hash is stored in the world, and the script travels with it, so the result is reproducible and bit-identical for anyone holding the same script.
+- **Without a script,** the gods act as the seed dictates, exactly as in the base design.
+- **Providers.** The same three as the enrichment pass.
+
+This depends on the intervention system from phase P5, and it is an experiment: it stays only if scripted worlds read better than unscripted ones in the world critic's reviews.
+
+### What is deliberately excluded
+
+- A model deciding events inside the simulation. It breaks reproducibility, and bookkeeping over thousands of years is what the simulation does well.
+- Calls to a hosted model during play, which would add delay, cost and a network dependency to every conversation.

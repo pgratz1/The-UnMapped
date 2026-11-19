@@ -75,17 +75,26 @@ target_sources(worldgen-cli-tests PRIVATE cli_biomes_test.cpp)
 target_compile_definitions(worldgen-cli-tests PRIVATE
     UNMAPPED_P1_04_GOLDEN_PATH="${PROJECT_SOURCE_DIR}/worldgen/tests/golden/p1-04-biomes.txt"
 )
+# generate --until resources, report keys, corrupt resources layers, render
+# with the `score` palette and the render help (P1-05 3 and 9; P1-00 10.1 to
+# 10.3), against the resources golden vectors and pixels decoded from the
+# PNG. Slow checks in the doctest suite "resources-slow".
+target_sources(worldgen-cli-tests PRIVATE cli_resources_test.cpp)
+target_compile_definitions(worldgen-cli-tests PRIVATE
+    UNMAPPED_P1_05_GOLDEN_PATH="${PROJECT_SOURCE_DIR}/worldgen/tests/golden/p1-05-resources.txt"
+)
 
 # CTest entries, as for worldgen-tests (cmake/UnmappedTestShards.cmake):
 # groups of source files run in parallel, worldgen-cli-tests-other for every
 # file not named here, and worldgen-cli-tests-partition. Each test case uses
 # its own Sandbox (counter and process id), so the groups never share a
-# scratch path. Costs are seconds under linux-gcc-release (generator 0.9.0);
+# scratch path. Costs are seconds under linux-gcc-release (generator 0.10.0);
 # timeout 3600 s per entry on every preset.
 unmapped_add_doctest_shards(worldgen-cli-tests
     TIMEOUT 3600
-    SHARD hydrology-elevation 15 "*cli_hydrology_test.cpp,*cli_elevation_test.cpp"
-    SHARD passes-climate 15 "*cli_passes_test.cpp,*cli_climate_test.cpp"
-    SHARD biomes-generate 16 "*cli_biomes_test.cpp,*cli_generate_test.cpp"
-    REST other 12
+    SHARD hydrology-elevation 13 "*cli_hydrology_test.cpp,*cli_elevation_test.cpp"
+    SHARD passes-climate 12 "*cli_passes_test.cpp,*cli_climate_test.cpp"
+    SHARD biomes 9 "*cli_biomes_test.cpp"
+    SHARD resources-generate 10 "*cli_resources_test.cpp,*cli_generate_test.cpp"
+    REST other 10
 )

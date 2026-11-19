@@ -737,7 +737,8 @@ TEST_CASE("P1-04 3, P1-03 C7, P1-00 X1 and X2 (slow): generate at 512, seed 0: l
     const std::string full = dir.file("full.db");
     const std::string clim = dir.file("climate.db");
     const std::string hydro = dir.file("hydrology.db");
-    REQUIRE(worldgen::generate_world(params_for(0, 512, std::nullopt, 4), fixture_content(), full,
+    // --until biomes (0.10.0: the default run continues with resources).
+    REQUIRE(worldgen::generate_world(params_for(0, 512, std::string("biomes"), 4), fixture_content(), full,
                                      worldgen::db::Overwrite::refuse)
                 .ok());
     REQUIRE(worldgen::generate_world(params_for(0, 512, std::string("climate"), 4), fixture_content(), clim,

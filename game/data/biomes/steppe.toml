@@ -6,8 +6,9 @@ water = false
 water_body = "none"
 priority = 15
 fallback = false
-fertility = "0.6"
+fertility = "0.7"
 timber = "0.05"
+forage = "0.35"
 region_noun = "Steppe"
 
 [[biome.steppe.rules]]

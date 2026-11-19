@@ -191,22 +191,43 @@ target_compile_definitions(worldgen-tests PRIVATE
     UNMAPPED_P1_04_GOLDEN_PATH="${CMAKE_CURRENT_SOURCE_DIR}/golden/p1-04-biomes.txt"
 )
 
+# The resources stage (spec P1-05): worked examples of 5.1 and the unit
+# tests of 10.1, `worldgen.resources` with its named checks and the biome
+# field `forage`, golden vectors per step, the invariants of section 6 as
+# property tests, determinism, resume, the stage entry and its
+# preconditions, and the report keys and `score` palette of section 9. The
+# stage API is reached only through p1_05_resources_api.hpp; the test's own
+# R2 to R6 are in p1_05_resources_support.hpp. Golden vectors are generated
+# by reference/p1_resources_reference.py and read in place. Slow checks are
+# in the doctest suite "resources-slow", skipped by default
+# (worldgen-tests -ts=resources-slow --no-skip).
+target_sources(worldgen-tests PRIVATE
+    stages_resources_examples_test.cpp
+    stages_resources_data_test.cpp
+    stages_resources_golden_test.cpp
+    stages_resources_property_test.cpp
+    inspect_resources_test.cpp
+)
+target_compile_definitions(worldgen-tests PRIVATE
+    UNMAPPED_P1_05_GOLDEN_PATH="${CMAKE_CURRENT_SOURCE_DIR}/golden/p1-05-resources.txt"
+)
 # CTest entries (cmake/UnmappedTestShards.cmake): one per group of source
 # files, run in parallel by `ctest -j`, plus worldgen-tests-other for every
 # file not named here and worldgen-tests-partition, which checks that the
 # entries hold every test case exactly once. Groups keep a stage's files
 # together where they share the in-memory caches of the support headers;
-# costs are seconds under linux-gcc-release (generator 0.9.0). A new test
+# costs are seconds under linux-gcc-release (generator 0.10.0). A new test
 # file runs in worldgen-tests-other until it is given a group. Timeout 3600 s
 # per entry on every preset, above CTest's default of 1500 s, so a hang is
 # still caught within an hour.
 unmapped_add_doctest_shards(worldgen-tests
     TIMEOUT 3600
-    SHARD elevation-golden 19 "*stages_elevation_golden_test.cpp"
-    SHARD elevation 15 "*stages_elevation_passes_test.cpp,*stages_elevation_property_test.cpp,*stages_elevation_tuning_test.cpp,*stages_elevation_seams_test.cpp,*stages_elevation_examples_test.cpp"
-    SHARD hydrology 15 "*stages_hydrology_*"
+    SHARD elevation-golden 17 "*stages_elevation_golden_test.cpp"
+    SHARD elevation 14 "*stages_elevation_passes_test.cpp,*stages_elevation_property_test.cpp,*stages_elevation_tuning_test.cpp,*stages_elevation_seams_test.cpp,*stages_elevation_examples_test.cpp"
+    SHARD hydrology 14 "*stages_hydrology_*"
     SHARD climate 16 "*stages_climate_*,*inspect_climate_test.cpp"
-    SHARD biomes 17 "*stages_biomes_*"
+    SHARD biomes 9 "*stages_biomes_*"
     SHARD biomes-inspect 15 "*inspect_biomes_test.cpp"
+    SHARD resources 6 "*stages_resources_*,*inspect_resources_test.cpp"
     REST other 13
 )
