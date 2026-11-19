@@ -578,3 +578,33 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
 - Proposal: famine, plague and succession crises act only in yearly ticks (active phases and flare-ups); quiet steps write growth, foundings and the fading of ruins only, which is the design's peace. Colonists and the survivors of an abandoned settlement move; migrations of whole peoples (refugees) come with conflict (P3-06) or P5.
 - Interim choice: as proposed (`docs/specs/p3-05-peoples.md` 10.5, questions 4 and 6).
 - Status: open
+
+### History: wars are limited, fought for a claimed region, and end with the active phase
+
+- Date: 2026-11-19
+- Raised by: spec-writer (P3-06)
+- Design doc section: 5 (tick loop "declare war, sue for peace", "battles, sieges, sackings"; flare-ups "two expanding borders meet"; quiet intervals)
+- Problem: the design lists wars, sieges and sackings but does not say what a war is fought for, how it ends, or what happens to a war when an active phase gives way to a quiet interval, in which nothing is fought.
+- Proposal: neighbours build strain from their creators' camps, old grudges, land hunger and fear of a giant; strain becomes a claim on one border region, the claim is the casus belli of a war, and the war is fought for that region: it ends when the attacker has it, when a side is exhausted, after 40 years at most, or at the first quiet step after its active phase, by battles won and settlements taken. Wars are declared only in yearly ticks; in quiet intervals strain keeps building and the highest strain is the tension that starts a flare-up, whose war follows without a draw. Relation kinds `enmity` (good against evil, from the younger people's founding), `war` (attacker first) and `peace`; alliances and vassalage wait for figures and factions in P5.
+- Interim choice: as proposed (`docs/specs/p3-06-expansion-conflict.md` 4, 5, 7, questions 1, 2, 5).
+- Status: open
+
+### History: no race is wiped out; newly awakened peoples are sheltered
+
+- Date: 2026-11-19
+- Raised by: spec-writer (P3-06)
+- Design doc section: 5 (Peoples table: every race has a role in play), 13 (P5 exit: every race takes part)
+- Problem: with conquest, the late and small peoples (orcs, faeries, humans) were conquered to extinction in most prototype worlds; the design gives every race a role in play but does not say whether a race may vanish from history.
+- Proposal: the last settlement of a race's last civilization never falls to a siege, and a civilization is not attacked in its first 150 years (it may attack). Civilizations still end by conquest; races do not.
+- Interim choice: as proposed (`docs/specs/p3-06-expansion-conflict.md` 7.2, 7.3, question 4).
+- Status: open
+
+### History: a fighting strength per race; goblins less aggressive than orcs
+
+- Date: 2026-11-19
+- Raised by: spec-writer (P3-06)
+- Design doc section: 5 (races: elves "few in number", goblins "numerous", orcs "strong, warlike"; elves' civilizations "the oldest in the present day")
+- Problem: the race data has readiness for war (`aggression`) but nothing for how well a people fights; without it the few elves fall to the numerous goblins, and with the shipped aggression the goblins, numerous and split into several hordes, start four wars in five while the orcs, the design's warlike race, start one in nine.
+- Proposal: a new race field `prowess_permille` (elves 1600, dwarves 1400, orcs 1300, faeries 1200, humans 1000, goblins 800) scales armies and garrisons; goblin `aggression` 700 → 600; aggression enters the strain rate squared. A data change, not a schema change.
+- Interim choice: as proposed (`docs/specs/p3-06-expansion-conflict.md` 5.2, 6.1, 12.2, questions 3 and 6).
+- Status: open
