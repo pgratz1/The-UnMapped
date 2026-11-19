@@ -144,40 +144,24 @@ TEST_CASE("hashes 8, 12.5: detail hashes of the empty world") {
     const auto d = detail_hashes(w);
     REQUIRE(d.ok());
     CHECK(d.value().schema == p004::p0_schema_hash());
-    // Schema 3: biome and climate (empty) sort before layer, meta and pass;
-    // schema 5: region, region_biome and region_border (empty) follow.
-    REQUIRE(d.value().tables.size() == 8);
-    CHECK(d.value().tables[0].name == "biome");
-    CHECK(d.value().tables[0].digest == p004::empty_biome_table_hash());
-    CHECK(d.value().tables[1].name == "climate");
-    CHECK(d.value().tables[1].digest == p004::empty_climate_table_hash());
-    CHECK(d.value().tables[2].name == "layer");
-    CHECK(d.value().tables[2].digest == p004::layer_table_hash({}));
-    CHECK(d.value().tables[3].name == "meta");
-    // The table meta hash built by hand over the eight known rows (12.5).
-    CHECK(d.value().tables[3].digest == p004::meta_table_hash(p004::meta_rows(0)));
-    CHECK(d.value().tables[4].name == "pass");
-    CHECK(d.value().tables[4].digest == p004::empty_pass_table_hash());
-    CHECK(d.value().tables[5].name == "region");
-    CHECK(d.value().tables[5].digest == p004::empty_region_table_hash());
-    CHECK(d.value().tables[6].name == "region_biome");
-    CHECK(d.value().tables[6].digest == p004::empty_region_biome_table_hash());
-    CHECK(d.value().tables[7].name == "region_border");
-    CHECK(d.value().tables[7].digest == p004::empty_region_border_table_hash());
+    // Schema 6: thirteen tables in ascending name; all but layer and meta
+    // empty (the meta hash built by hand over the sixteen known rows, 12.5).
+    const auto want = p004::empty_world_tables(p004::layer_table_hash({}), p004::meta_table_hash(p004::meta_rows(0)));
+    REQUIRE(d.value().tables.size() == want.size());
+    for (std::size_t k = 0; k < want.size(); ++k) {
+        CAPTURE(want[k].first);
+        CHECK(d.value().tables[k].name == want[k].first);
+        CHECK(d.value().tables[k].digest == want[k].second);
+    }
     CHECK(d.value().layers.empty());
 
     // The --detail text.
     const auto file = worldgen::inspect::hash_file(out);
     REQUIRE(file.ok());
-    const std::string expected = "file " + to_hex(file.value()) + "\nschema " + to_hex(p004::p0_schema_hash()) +
-                                 "\ntable biome " + to_hex(p004::empty_biome_table_hash()) + "\ntable climate " +
-                                 to_hex(p004::empty_climate_table_hash()) +
-                                 "\ntable layer " + to_hex(p004::layer_table_hash({})) + "\ntable meta " +
-                                 to_hex(p004::meta_table_hash(p004::meta_rows(0))) + "\ntable pass " +
-                                 to_hex(p004::empty_pass_table_hash()) + "\ntable region " +
-                                 to_hex(p004::empty_region_table_hash()) + "\ntable region_biome " +
-                                 to_hex(p004::empty_region_biome_table_hash()) + "\ntable region_border " +
-                                 to_hex(p004::empty_region_border_table_hash()) + "\n";
+    std::string expected = "file " + to_hex(file.value()) + "\nschema " + to_hex(p004::p0_schema_hash()) + "\n";
+    for (const auto& [name, digest] : want) {
+        expected += "table " + name + " " + to_hex(digest) + "\n";
+    }
     CHECK(worldgen::inspect::format_detail(file.value(), d.value()) == expected);
 }
 
@@ -193,10 +177,10 @@ TEST_CASE("hashes 8: table meta by hand for other meta contents") {
     REQUIRE(worldgen::generate_world(p, out, Overwrite::refuse).ok());
     const auto d = detail_hashes(open_world(out));
     REQUIRE(d.ok());
-    REQUIRE(d.value().tables.size() == 8);
-    CHECK(d.value().tables[3].digest ==
+    REQUIRE(d.value().tables.size() == 13);
+    CHECK(d.value().tables[6].digest ==
           p004::meta_table_hash(p004::meta_rows(ps.seed, ps.phrase, "test_pattern", "512")));
-    CHECK(d.value().tables[4].digest == p004::pass_table_hash({}));
+    CHECK(d.value().tables[7].digest == p004::pass_table_hash({}));
 }
 
 TEST_CASE("hashes 8, 12.5: detail hashes of a test-pattern world") {
@@ -214,11 +198,11 @@ TEST_CASE("hashes 8, 12.5: detail hashes of a test-pattern world") {
         {2, "test.hash", 256, 256, "u8", worldgen::db::encode_layer_blob(p004::grid_of(256, 256, hash))},
         {3, "test.noise", 256, 256, "i16", worldgen::db::encode_layer_blob(p004::grid_of(256, 256, noise))},
     };
-    REQUIRE(d.value().tables.size() == 8);
-    CHECK(d.value().tables[2].digest == p004::layer_table_hash(rows));
-    CHECK(d.value().tables[4].name == "pass");
-    CHECK(d.value().tables[4].digest == p004::pass_table_hash({}));  // a test-pattern world: empty
-    CHECK(d.value().tables[3].digest == p004::meta_table_hash(p004::meta_rows(0, "", "test_pattern")));
+    REQUIRE(d.value().tables.size() == 13);
+    CHECK(d.value().tables[5].digest == p004::layer_table_hash(rows));
+    CHECK(d.value().tables[7].name == "pass");
+    CHECK(d.value().tables[7].digest == p004::pass_table_hash({}));  // a test-pattern world: empty
+    CHECK(d.value().tables[6].digest == p004::meta_table_hash(p004::meta_rows(0, "", "test_pattern")));
     REQUIRE(d.value().layers.size() == 3);
     CHECK(d.value().layers[0].name == "test.ramp");
     CHECK(d.value().layers[0].digest == p004::layer_hash_u8(256, 256, ramp));
@@ -314,15 +298,13 @@ TEST_CASE("hashes 8: REAL values and tables without a primary key are errors") {
         REQUIRE(worldgen::db::testing::execute_on_file(out, "ANALYZE").ok());
         const auto d = detail_hashes(open_world(out));
         REQUIRE(d.ok());
-        REQUIRE(d.value().tables.size() == 8);
-        CHECK(d.value().tables[0].name == "biome");
-        CHECK(d.value().tables[1].name == "climate");
-        CHECK(d.value().tables[2].name == "layer");
-        CHECK(d.value().tables[3].name == "meta");
-        CHECK(d.value().tables[4].name == "pass");
-        CHECK(d.value().tables[5].name == "region");
-        CHECK(d.value().tables[6].name == "region_biome");
-        CHECK(d.value().tables[7].name == "region_border");
+        const std::vector<std::string> names = {"age",  "biome", "climate",    "culture", "god",
+                                                "layer", "meta", "pass",       "race",    "race_biome",
+                                                "region", "region_biome", "region_border"};
+        REQUIRE(d.value().tables.size() == names.size());
+        for (std::size_t k = 0; k < names.size(); ++k) {
+            CHECK(d.value().tables[k].name == names[k]);
+        }
     }
     SUBCASE("corrupt layer") {
         worldgen::db::WorldWriter writer;
@@ -349,17 +331,19 @@ TEST_CASE("reader raw rows (P0-02 amendment 10): tables, columns, keys, rows") {
 
     const auto tables = w.tables();
     REQUIRE(tables.ok());
-    REQUIRE(tables.value().size() == 8);
-    CHECK(tables.value()[0].name == "biome");
+    REQUIRE(tables.value().size() == 13);
+    CHECK(tables.value()[0].name == "age");
     CHECK(tables.value()[0].row_count == 0U);
-    CHECK(tables.value()[1].name == "climate");
+    CHECK(tables.value()[1].name == "biome");
     CHECK(tables.value()[1].row_count == 0U);
-    CHECK(tables.value()[2].name == "layer");
-    CHECK(tables.value()[2].row_count == 3U);
-    CHECK(tables.value()[3].name == "meta");
-    CHECK(tables.value()[3].row_count == 8U);
-    CHECK(tables.value()[4].name == "pass");
-    CHECK(tables.value()[4].row_count == 0U);
+    CHECK(tables.value()[2].name == "climate");
+    CHECK(tables.value()[2].row_count == 0U);
+    CHECK(tables.value()[5].name == "layer");
+    CHECK(tables.value()[5].row_count == 3U);
+    CHECK(tables.value()[6].name == "meta");
+    CHECK(tables.value()[6].row_count == 16U);
+    CHECK(tables.value()[7].name == "pass");
+    CHECK(tables.value()[7].row_count == 0U);
 
     CHECK(w.table_columns("meta").value() == std::vector<std::string>{"key", "value"});
     CHECK(w.table_columns("layer").value() ==
@@ -462,9 +446,9 @@ TEST_CASE("reader raw rows: primary-key order with BINARY collation, composite k
     e.col_blob(std::vector<std::uint8_t>{0x00});
     const auto d = detail_hashes(w);
     REQUIRE(d.ok());
-    REQUIRE(d.value().tables.size() == 9);
-    CHECK(d.value().tables[4].name == "pair");
-    CHECK(d.value().tables[4].digest == e.digest());
+    REQUIRE(d.value().tables.size() == 14);
+    CHECK(d.value().tables[7].name == "pair");
+    CHECK(d.value().tables[7].digest == e.digest());
     // The schema hash now covers the new table too (and is no longer the P0 one).
     CHECK(d.value().schema != p004::p0_schema_hash());
 }

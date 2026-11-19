@@ -63,6 +63,24 @@ inline constexpr std::string_view DDL_REGION_BORDER =
 inline constexpr std::string_view DDL_REGION_BIOME =
     "CREATE TABLE region_biome (region INTEGER NOT NULL, biome INTEGER NOT NULL, cells INTEGER NOT NULL, PRIMARY KEY "
     "(region, biome)) STRICT, WITHOUT ROWID";
+// The DDL of tables `race`, `race_biome`, `culture`, `god` and `age`
+// (schema version 6), copied from P3-03 5.1.
+inline constexpr std::string_view DDL_RACE =
+    "CREATE TABLE race (id INTEGER PRIMARY KEY, key TEXT NOT NULL UNIQUE, name TEXT NOT NULL, plural TEXT"
+    " NOT NULL, adjective TEXT NOT NULL, camp INTEGER NOT NULL, lifespan_years INTEGER NOT NULL, generati"
+    "on_years INTEGER NOT NULL, culture INTEGER NOT NULL, present INTEGER NOT NULL, awakening_year INTEGE"
+    "R, creator_god INTEGER NOT NULL) STRICT";
+inline constexpr std::string_view DDL_RACE_BIOME =
+    "CREATE TABLE race_biome (race INTEGER NOT NULL, biome INTEGER NOT NULL, weight INTEGER NOT NULL, PRI"
+    "MARY KEY (race, biome)) STRICT, WITHOUT ROWID";
+inline constexpr std::string_view DDL_CULTURE =
+    "CREATE TABLE culture (id INTEGER PRIMARY KEY, key TEXT NOT NULL UNIQUE, name TEXT NOT NULL, race INT"
+    "EGER NOT NULL) STRICT";
+inline constexpr std::string_view DDL_GOD =
+    "CREATE TABLE god (id INTEGER PRIMARY KEY, name TEXT NOT NULL, camp INTEGER NOT NULL) STRICT";
+inline constexpr std::string_view DDL_AGE =
+    "CREATE TABLE age (id INTEGER PRIMARY KEY, race INTEGER NOT NULL, start_year INTEGER NOT NULL, end_ye"
+    "ar INTEGER NOT NULL, name TEXT NOT NULL) STRICT";
 inline constexpr std::string_view EMPTY_CONTENT_HASH =
     "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
 
@@ -168,15 +186,24 @@ private:
 
 using MetaRows = std::vector<std::pair<std::string, std::string>>;
 
-// The eight meta rows of a P0 world in key order (P0-02 8).
+// The sixteen meta rows of a P0 world in key order (P0-02 8; the eight
+// history keys at their defaults since schema 6, P3-03 4.2).
 inline MetaRows meta_rows(std::uint64_t seed, std::string_view phrase = {}, std::string_view stages = {},
                           std::string_view map_size = "1024") {
     return {
         {"content_hash", std::string(EMPTY_CONTENT_HASH)},
         {"format", "the-unmapped-world"},
-        {"generator_version", "0.12.0"},
+        {"generator_version", "0.13.0"},
+        {"param.civs_per_race", "auto"},
+        {"param.divine_activity", "normal"},
+        {"param.divine_script", ""},
+        {"param.event_intensity", "normal"},
+        {"param.history_detail", "normal"},
+        {"param.history_span", "6000"},
         {"param.map_size", std::string(map_size)},
-        {"schema_version", "5"},
+        {"param.monster_pressure", "normal"},
+        {"param.races", "elf,goblin,dwarf,faerie,human,orc"},
+        {"schema_version", "6"},
         {"seed", std::to_string(seed)},
         {"seed_phrase", std::string(phrase)},
         {"stages", std::string(stages)},
@@ -255,55 +282,71 @@ inline worldgen::Sha256Digest empty_climate_table_hash() { return empty_table_ha
 inline worldgen::Sha256Digest empty_region_table_hash() { return empty_table_hash(28); }
 inline worldgen::Sha256Digest empty_region_border_table_hash() { return empty_table_hash(11); }
 inline worldgen::Sha256Digest empty_region_biome_table_hash() { return empty_table_hash(3); }
+// tables race (12 columns), race_biome (3), culture (4), god (3) and age (5)
+// with no rows (schema 6).
+inline worldgen::Sha256Digest empty_race_table_hash() { return empty_table_hash(12); }
+inline worldgen::Sha256Digest empty_race_biome_table_hash() { return empty_table_hash(3); }
+inline worldgen::Sha256Digest empty_culture_table_hash() { return empty_table_hash(4); }
+inline worldgen::Sha256Digest empty_god_table_hash() { return empty_table_hash(3); }
+inline worldgen::Sha256Digest empty_age_table_hash() { return empty_table_hash(5); }
 
-// schema of every world at schema version 5 (the name is the P0 one):
+// schema of every world at schema version 6 (the name is the P0 one):
 // sqlite_schema rows ordered by type, then name: the automatic indexes of
-// biome.key and layer.name (sql NULL, amendment 10), then the tables biome,
-// climate, layer, meta, pass, region, region_biome and region_border with
-// their DDL. rootpage is excluded.
+// biome.key, culture.key, layer.name and race.key (sql NULL, amendment 10),
+// then the thirteen tables with their DDL. rootpage is excluded.
 inline worldgen::Sha256Digest p0_schema_hash() {
     Encoder e;
-    e.col_text("index");
-    e.col_text("sqlite_autoindex_biome_1");
-    e.col_text("biome");
-    e.col_null();
-    e.col_text("index");
-    e.col_text("sqlite_autoindex_layer_1");
-    e.col_text("layer");
-    e.col_null();
-    e.col_text("table");
-    e.col_text("biome");
-    e.col_text("biome");
-    e.col_text(DDL_BIOME);
-    e.col_text("table");
-    e.col_text("climate");
-    e.col_text("climate");
-    e.col_text(DDL_CLIMATE);
-    e.col_text("table");
-    e.col_text("layer");
-    e.col_text("layer");
-    e.col_text(DDL_LAYER);
-    e.col_text("table");
-    e.col_text("meta");
-    e.col_text("meta");
-    e.col_text(DDL_META);
-    e.col_text("table");
-    e.col_text("pass");
-    e.col_text("pass");
-    e.col_text(DDL_PASS);
-    e.col_text("table");
-    e.col_text("region");
-    e.col_text("region");
-    e.col_text(DDL_REGION);
-    e.col_text("table");
-    e.col_text("region_biome");
-    e.col_text("region_biome");
-    e.col_text(DDL_REGION_BIOME);
-    e.col_text("table");
-    e.col_text("region_border");
-    e.col_text("region_border");
-    e.col_text(DDL_REGION_BORDER);
+    const auto index = [&e](std::string_view name, std::string_view table) {
+        e.col_text("index");
+        e.col_text(name);
+        e.col_text(table);
+        e.col_null();
+    };
+    const auto table = [&e](std::string_view name, std::string_view ddl) {
+        e.col_text("table");
+        e.col_text(name);
+        e.col_text(name);
+        e.col_text(ddl);
+    };
+    index("sqlite_autoindex_biome_1", "biome");
+    index("sqlite_autoindex_culture_1", "culture");
+    index("sqlite_autoindex_layer_1", "layer");
+    index("sqlite_autoindex_race_1", "race");
+    table("age", DDL_AGE);
+    table("biome", DDL_BIOME);
+    table("climate", DDL_CLIMATE);
+    table("culture", DDL_CULTURE);
+    table("god", DDL_GOD);
+    table("layer", DDL_LAYER);
+    table("meta", DDL_META);
+    table("pass", DDL_PASS);
+    table("race", DDL_RACE);
+    table("race_biome", DDL_RACE_BIOME);
+    table("region", DDL_REGION);
+    table("region_biome", DDL_REGION_BIOME);
+    table("region_border", DDL_REGION_BORDER);
     return e.digest();
+}
+
+// The `table` lines of hash --detail for a world whose only non-empty
+// tables are layer and meta (schema 6): (name, digest) in ascending name.
+inline std::vector<std::pair<std::string, worldgen::Sha256Digest>> empty_world_tables(
+    const worldgen::Sha256Digest& layer, const worldgen::Sha256Digest& meta) {
+    return {
+        {"age", empty_age_table_hash()},
+        {"biome", empty_biome_table_hash()},
+        {"climate", empty_climate_table_hash()},
+        {"culture", empty_culture_table_hash()},
+        {"god", empty_god_table_hash()},
+        {"layer", layer},
+        {"meta", meta},
+        {"pass", empty_pass_table_hash()},
+        {"race", empty_race_table_hash()},
+        {"race_biome", empty_race_biome_table_hash()},
+        {"region", empty_region_table_hash()},
+        {"region_biome", empty_region_biome_table_hash()},
+        {"region_border", empty_region_border_table_hash()},
+    };
 }
 
 // layer <name>: u32 width, u32 height, u8 type code, then elements
@@ -339,18 +382,31 @@ inline constexpr std::string_view REPORT_SEED_0 =
     "[meta]\n"
     "content_hash = e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\n"
     "format = the-unmapped-world\n"
-    "generator_version = 0.12.0\n"
+    "generator_version = 0.13.0\n"
+    "param.civs_per_race = auto\n"
+    "param.divine_activity = normal\n"
+    "param.divine_script =\n"
+    "param.event_intensity = normal\n"
+    "param.history_detail = normal\n"
+    "param.history_span = 6000\n"
     "param.map_size = 1024\n"
-    "schema_version = 5\n"
+    "param.monster_pressure = normal\n"
+    "param.races = elf,goblin,dwarf,faerie,human,orc\n"
+    "schema_version = 6\n"
     "seed = 0\n"
     "seed_phrase =\n"
     "stages =\n"
     "[tables]\n"
+    "age = 0\n"
     "biome = 0\n"
     "climate = 0\n"
+    "culture = 0\n"
+    "god = 0\n"
     "layer = 0\n"
-    "meta = 8\n"
+    "meta = 16\n"
     "pass = 0\n"
+    "race = 0\n"
+    "race_biome = 0\n"
     "region = 0\n"
     "region_biome = 0\n"
     "region_border = 0\n"

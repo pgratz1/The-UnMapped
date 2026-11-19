@@ -344,23 +344,15 @@ TEST_CASE("cli 12.2: empty world contents (P0-02 8)") {
     }
     const auto tables = w.tables();
     REQUIRE(tables.ok());
-    REQUIRE(tables.value().size() == 8);
-    CHECK(tables.value()[0].name == "biome");
-    CHECK(tables.value()[0].row_count == 0);
-    CHECK(tables.value()[1].name == "climate");
-    CHECK(tables.value()[1].row_count == 0);
-    CHECK(tables.value()[2].name == "layer");
-    CHECK(tables.value()[2].row_count == 0);
-    CHECK(tables.value()[3].name == "meta");
-    CHECK(tables.value()[3].row_count == 8);
-    CHECK(tables.value()[4].name == "pass");
-    CHECK(tables.value()[4].row_count == 0);
-    CHECK(tables.value()[5].name == "region");  // schema 5 (P1-06 3.1)
-    CHECK(tables.value()[5].row_count == 0);
-    CHECK(tables.value()[6].name == "region_biome");
-    CHECK(tables.value()[6].row_count == 0);
-    CHECK(tables.value()[7].name == "region_border");
-    CHECK(tables.value()[7].row_count == 0);
+    // Schema 6 (P3-03 5.1): thirteen tables, all empty but meta (16 rows).
+    const std::vector<std::string> names = {"age",  "biome",      "climate", "culture",      "god",
+                                            "layer", "meta",      "pass",    "race",         "race_biome",
+                                            "region", "region_biome", "region_border"};
+    REQUIRE(tables.value().size() == names.size());
+    for (std::size_t k = 0; k < names.size(); ++k) {
+        CHECK(tables.value()[k].name == names[k]);
+        CHECK(tables.value()[k].row_count == (names[k] == "meta" ? 16U : 0U));
+    }
     const auto layers = w.layers();
     REQUIRE(layers.ok());
     CHECK(layers.value().empty());

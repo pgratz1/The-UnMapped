@@ -368,6 +368,7 @@ std::string golden_world_hash(const dbtest::TempDir& dir, const GoldenCase& c) {
     }
     writer.set_content_hash(dbtest::empty_content_hash());
     writer.set_param_integer("map_size", 1024);
+    dbtest::set_history_defaults(writer);
     const auto status = writer.finalize(out, Overwrite::refuse);
     REQUIRE(status.ok());
     return dbtest::file_sha256(out);
