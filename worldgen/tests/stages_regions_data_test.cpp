@@ -70,7 +70,7 @@ TEST_CASE("P1-06 4: the shipped tuning loads; fields in declaration order with t
     const auto* def = l.content->find("worldgen", "regions");
     REQUIRE(def != nullptr);
     REQUIRE(def->record.size() == region_data::tuning_fields().size());
-    CHECK(region_data::tuning_fields().size() == 13U);
+    CHECK(region_data::tuning_fields().size() == 14U);
     for (std::size_t i = 0; i < def->record.size(); ++i) {
         CHECK(def->record.name_at(i) == region_data::tuning_fields()[i].name);
     }
@@ -90,8 +90,8 @@ TEST_CASE("P1-06 4: the shipped tuning loads; fields in declaration order with t
     CHECK(def->record.get_int("ore_reach_m") == 300);
     CHECK(def->record.get_fx("name_central_frac").raw() == 515396076);
     const auto& names = def->record.get_record("names");
-    REQUIRE(names.size() == 10U);
-    for (std::size_t i = 0; i < 10; ++i) {
+    REQUIRE(names.size() == 11U);
+    for (std::size_t i = 0; i < 11; ++i) {
         CHECK(names.name_at(i) == region_data::name_fields()[i]);
         CHECK(names.get_string(std::string(region_data::name_fields()[i])) == std::string(SHIPPED_WORDS[i]));
     }
@@ -255,4 +255,35 @@ TEST_CASE("P1-06 2 check 4: every shipped region_noun is one word; the biome kin
         region_api::load(std::string(region_data::TUNING_TOML), biome_data::directory({{"temperate_forest.toml", forest}}));
     INFO(all_errors(l));
     CHECK(l.ok());
+}
+
+// --- r2: names.upland and upland_own_noun (4; 10.1 test 4) -----------------------------------------------
+
+TEST_CASE("P1-06 4 (r2), 10.1 test 4: names.upland is required; upland_own_noun is an array of biome refs") {
+    const region_api::Load l = load_tuning({});
+    REQUIRE(l.ok());
+    const auto* def = l.content->find("worldgen", "regions");
+    REQUIRE(def != nullptr);
+    CHECK(def->record.name_at(13) == "upland_own_noun");
+    CHECK(def->record.get_record("names").get_string("upland") == "Fells");
+    // A missing names.upland is a missing-field error.
+    check_rejected(load_tuning({{"names", region_data::names_toml("upland", "", true)}}), "upland");
+    // upland must be a word too.
+    check_rejected(load_tuning({{"names", region_data::names_toml("upland", "fells")}}), std::string(WORD_EXPECTED));
+    // upland_own_noun: required; an unknown biome is a reference error; empty loads; 16 entries load, 17 do not.
+    check_rejected(load_tuning({}, "upland_own_noun"), "upland_own_noun");
+    check_rejected(load_tuning({{"upland_own_noun", "[\"alpine\", \"glacier\"]"}}), "glacier");
+    CHECK(load_tuning({{"upland_own_noun", "[]"}}).ok());
+    std::string sixteen = "[";
+    for (int k = 0; k < 16; ++k) {
+        sixteen += std::string(k ? ", " : "") + "\"alpine\"";
+    }
+    const region_api::Load l16 = load_tuning({{"upland_own_noun", sixteen + "]"}});
+    CHECK_MESSAGE(l16.ok(), all_errors(l16));
+    check_rejected(load_tuning({{"upland_own_noun", sixteen + ", \"heath\"]"}}), "upland_own_noun");
+    check_rejected(load_tuning({{"upland_own_noun", "\"alpine\""}}), "upland_own_noun");
+    // Part of the content hash.
+    const region_api::Load a = load_tuning({{"upland_own_noun", "[\"alpine\"]"}});
+    REQUIRE(a.ok());
+    CHECK(wd::content_hash_hex(*a.content) != wd::content_hash_hex(*l.content));
 }

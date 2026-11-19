@@ -204,10 +204,26 @@ void check_invariants(const std::string& label, const CaseInputs& ci, const Over
     if (!(own.out.biomes == out.biomes)) {
         fail("table region_biome differs from the test's own stage");
     }
+    // Invariant 8 (r2): each pass attached to at most one row, to one exactly
+    // when its path crosses a border.
+    {
+        std::int64_t total = 0;
+        for (const auto& b : out.borders) {
+            total += b.passes;
+        }
+        std::vector<std::int64_t> reg(out.region.begin(), out.region.end());
+        std::int64_t crossing = 0;
+        for (const auto& p : ci.passes) {
+            crossing += own_pass_attachment(g, reg, in.water, p).key ? 1 : 0;
+        }
+        if (total > static_cast<std::int64_t>(ci.passes.size()) || total != crossing) {
+            fail("invariant 8: passes attached");
+        }
+    }
     // Invariant 6: unique names of data words; numerals from II.
     std::set<std::string> names;
     std::set<std::string> sector_words(v.names.begin(), v.names.begin() + 9);
-    std::set<std::string> nouns{v.names[9]};
+    std::set<std::string> nouns{v.names[9], v.names[10]};
     for (const auto& b : definitions().biomes) {
         nouns.insert(b.region_noun);
     }

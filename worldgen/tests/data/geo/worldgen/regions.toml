@@ -14,4 +14,5 @@ region_min_area_m2 = 750000
 ore_rich_min = 128
 ore_reach_m = 300
 name_central_frac = "0.12"
-names = { central = "Central", north = "North", northeast = "Northeast", east = "East", southeast = "Southeast", south = "South", southwest = "Southwest", west = "West", northwest = "Northwest", isle = "Isle" }
+names = { central = "Central", north = "North", northeast = "Northeast", east = "East", southeast = "Southeast", south = "South", southwest = "Southwest", west = "West", northwest = "Northwest", isle = "Isle", upland = "Fells" }
+upland_own_noun = ["alpine", "heath", "highland_moor"]

@@ -422,7 +422,7 @@ TEST_CASE("P1-06 5.1 RG11: names at N = 1024, centroid (500, 480), r_c 123; sect
 }
 
 TEST_CASE("P1-06 RG11: the k-th region with a base name gets numeral k from II on; words come from the tuning") {
-    const Overrides o = {{"names", "Mid/Nor/Norost/Ost/Sudost/Sud/Sudwest/West/Norwest/Holm"}};
+    const Overrides o = {{"names", "Mid/Nor/Norost/Ost/Sudost/Sud/Sudwest/West/Norwest/Holm/Hoch"}};
     const region_api::Tuning t = tuning(o);
     std::vector<region_api::NameInput> in;
     for (int k = 0; k < 12; ++k) {
@@ -454,7 +454,8 @@ TEST_CASE("P1-06 5.1 RG12: the 4 x 3 border row and the pass crossings (pass_id 
     river[g.index(2, 0)] = 6;
     auto path = [&](const std::vector<std::pair<std::int32_t, std::int32_t>>& c) { return path_bytes(g, c); };
     const std::vector<region_api::Pass> passes = {
-        {3, path({{0, 1}, {1, 0}, {2, 1}, {3, 1}})}, {5, path({{1, 2}, {2, 2}})}, {6, path({{0, 0}, {1, 0}, {1, 0}})}};
+        {3, path({{0, 1}, {1, 0}, {2, 1}, {3, 1}}), 1, 0}, {5, path({{1, 2}, {2, 2}}), 2, 2},
+        {6, path({{0, 0}, {1, 0}, {1, 0}}), 1, 0}};
     const region_api::BorderRow want{1, 2, 48, 25, 1, 2, 2, 1, 6, 3, 2};
     CHECK(region_api::borders(g, region, s, walk, water, river, passes, tuning()) ==
           std::vector<region_api::BorderRow>{want});
@@ -508,4 +509,94 @@ TEST_CASE("P0-04 amendment 18 (e): the 3 x 2 example: black cells (1, 0) and (0,
     // An ocean neighbour (0) is not a border.
     const Grid s{3, 1};
     CHECK(border_cells(s, std::vector<std::uint16_t>{1, 0, 2}) == std::vector<bool>{false, false, false});
+}
+
+// --- r2 (section 13) -------------------------------------------------------------------------------
+
+TEST_CASE("P1-06 5.1 RG12 attachment (r2), 10.1 test 9: the crossing nearest the col; ties to the smaller j; none") {
+    const Grid g{9, 1};
+    const std::vector<std::uint16_t> region = {1, 1, 1, 2, 2, 2, 3, 3, 3};
+    const std::vector<std::int64_t> s(9, 0);
+    const std::vector<std::uint16_t> walk(9, 0);
+    const std::vector<std::uint8_t> water(9, WATER_DRY), river(9, 0);
+    std::vector<std::pair<std::int32_t, std::int32_t>> cells;
+    for (std::int32_t x = 0; x < 9; ++x) {
+        cells.emplace_back(x, 0);
+    }
+    const std::vector<std::uint8_t> path = path_bytes(g, cells);
+    auto rows_with = [&](const std::vector<region_api::Pass>& p) {
+        return region_api::borders(g, region, s, walk, water, river, p, tuning());
+    };
+    auto pass_cols = [](const std::vector<region_api::BorderRow>& rows) {
+        std::vector<std::pair<std::int64_t, std::int64_t>> out;
+        for (const auto& r : rows) {
+            out.emplace_back(r.pass_id, r.passes);
+        }
+        return out;
+    };
+    using PC = std::vector<std::pair<std::int64_t, std::int64_t>>;
+    // Col (5, 0), q = 5: d = 2 and 0, attached to (2, 3).
+    CHECK(pass_cols(rows_with({{1, path, 5, 0}})) == PC{{0, 0}, {1, 1}});
+    // Col (4, 0), q = 4: d = 1 and 1, the smaller j wins: (1, 2).
+    CHECK(pass_cols(rows_with({{1, path, 4, 0}})) == PC{{1, 1}, {0, 0}});
+    // Three passes: two on (2, 3), one on (1, 2); Sum of passes = 3 (invariant 8).
+    CHECK(pass_cols(rows_with({{1, path, 5, 0}, {2, path, 4, 0}, {3, path, 6, 0}})) == PC{{2, 1}, {1, 2}});
+    // A path inside one region: attached to none.
+    const std::vector<std::uint16_t> one(9, 1);
+    const std::vector<region_api::Pass> inside = {{1, path, 1, 0}};
+    CHECK(region_api::borders(g, one, s, walk, water, river, inside, tuning()).empty());
+    const std::vector<std::uint16_t> two = {1, 1, 1, 1, 1, 1, 1, 1, 2};
+    const std::vector<region_api::Pass> short_path = {{1, path_bytes(g, {{0, 0}, {1, 0}, {2, 0}}), 1, 0}};
+    CHECK(pass_cols(region_api::borders(g, two, s, walk, water, river, short_path, tuning())) == PC{{0, 0}});
+    // The test's own attachment on the same strip.
+    std::vector<std::int64_t> reg64(region.begin(), region.end());
+    CHECK(own_pass_attachment(g, reg64, water, {1, path, 5, 0}).key == std::make_pair(std::int64_t{2}, std::int64_t{3}));
+    CHECK(own_pass_attachment(g, reg64, water, {1, path, 4, 0}).key == std::make_pair(std::int64_t{1}, std::int64_t{2}));
+    // A col on the path twice: its first position (q = 4 on the way out).
+    std::vector<std::pair<std::int32_t, std::int32_t>> back = cells;
+    for (std::int32_t x = 7; x >= 4; --x) {
+        back.emplace_back(x, 0);
+    }
+    CHECK(pass_cols(rows_with({{1, path_bytes(g, back), 4, 0}})) == PC{{1, 1}, {0, 0}});
+    // The 4 x 3 example: pass 3 (col (1, 0), q = 1) crosses at j = 1, d = 0.
+    const Grid g4{4, 3};
+    const std::vector<std::uint16_t> r4 = {1, 1, 2, 2, 1, 1, 2, 2, 1, 1, 2, 2};
+    const std::vector<std::uint8_t> w4(12, WATER_DRY);
+    std::vector<std::int64_t> r464(r4.begin(), r4.end());
+    const Attachment a = own_pass_attachment(g4, r464, w4, {3, path_bytes(g4, {{0, 1}, {1, 0}, {2, 1}, {3, 1}}), 1, 0});
+    REQUIRE(a.found.size() == 1U);
+    CHECK(a.found[0].d == 0);
+    CHECK(a.found[0].j == 1);
+}
+
+TEST_CASE("P1-06 5.1 RG11 (r2), 10.1 test 9: Mere for regions at least half lake, Fells for upland; precedence") {
+    const region_api::Tuning t = tuning();
+    const Values v = values();
+    // Mere (b): 120 of 200 cells lake; Fells (c): forest-dominated upland;
+    // alpine upland keeps Peaks; an upland region half lake is Mere (b
+    // before c); an isle is Isle whatever its lakes (a first).
+    const std::vector<region_api::NameInput> in = {
+        {520, 470, 4, false},
+        {700, 300, 3, false, 200, 120, 80},
+        {210, 700, 3, false, 100, 0, 24},
+        {230, 720, 7, false, 100, 0, 24},
+        {230, 720, 3, false, 100, 50, 0},
+        {500, 100, 3, true, 10, 10, 0},
+        {800, 480, 6, false, 100, 0, 0},
+        {800, 480, 9, false, 100, 0, 0},
+        {800, 480, 4, false, 100, 0, 25},
+        {800, 480, 4, false, 100, 49, 24},
+    };
+    const std::vector<std::string> want = {"Central Downs", "Northeast Mere", "Southwest Fells", "Southwest Peaks",
+                                           "Southwest Mere", "North Isle",     "East Moor",       "East Heath",
+                                           "East Downs",     "East Fells"};
+    CHECK(region_api::names(in, 500, 480, 1024, t, definitions()) == want);
+    CHECK(own_name_list(in, 500, 480, 123, v, nouns_of(definitions())) == want);
+    // upland_own_noun empty: the alpine upland is Fells too; the Fells word from the tuning.
+    const Overrides o = {{"upland_own_noun", "none"},
+                         {"names", "Central/North/Northeast/East/Southeast/South/Southwest/West/Northwest/Isle/Hoch"}};
+    const std::vector<region_api::NameInput> alp = {{230, 720, 7, false, 100, 0, 24}};
+    CHECK(region_api::names(alp, 500, 480, 1024, tuning(o), definitions()) == std::vector<std::string>{"Southwest Hoch"});
+    CHECK(own_name_list(alp, 500, 480, 123, values(o), nouns_of(definitions())) ==
+          std::vector<std::string>{"Southwest Hoch"});
 }

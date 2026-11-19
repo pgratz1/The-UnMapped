@@ -145,6 +145,10 @@ RegionTuning region_tuning_from(const data::Record& r) {
     t.names.west = n.get_string("west");
     t.names.northwest = n.get_string("northwest");
     t.names.isle = n.get_string("isle");
+    t.names.upland = n.get_string("upland");
+    for (const data::Value& v : r.get_array("upland_own_noun")) {
+        t.upland_own_noun.push_back(v.as_string());
+    }
     return t;
 }
 
@@ -175,7 +179,7 @@ void check_region_tuning(const RegionTuning& t) {
     tuning_field(int_in(t.ore_rich_min, 1, 255), "ore_rich_min");
     tuning_field(int_in(t.ore_reach_m, 0, 10000), "ore_reach_m");
     tuning_field(fx_in(t.name_central_frac, Fx{}, Fx::HALF), "name_central_frac");
-    const std::array<std::pair<const char*, const std::string*>, 10> words = {{
+    const std::array<std::pair<const char*, const std::string*>, 11> words = {{
         {"central", &t.names.central},
         {"north", &t.names.north},
         {"northeast", &t.names.northeast},
@@ -186,10 +190,16 @@ void check_region_tuning(const RegionTuning& t) {
         {"west", &t.names.west},
         {"northwest", &t.names.northwest},
         {"isle", &t.names.isle},
+        {"upland", &t.names.upland},
     }};
     for (const auto& [name, word] : words) {
         tuning_field(is_region_word(*word), std::string("names.") + name);
     }
+    bool ids_ok = t.upland_own_noun.size() <= 16U;
+    for (const std::string& key : t.upland_own_noun) {
+        ids_ok = ids_ok && data::is_valid_id(key);
+    }
+    tuning_field(ids_ok, "upland_own_noun");
     if (t.seed_tile_m > 2 * t.seed_spacing_m) {
         fatal("regions: tuning: seed_tile_m must be at most twice seed_spacing_m");
     }
@@ -797,6 +807,25 @@ std::vector<std::string> region_names(std::span<const RegionNameInput> regions,
         }
         ++regions_on[r.landmass];
     }
+    // RG11 3 (r2): the lake biome's noun and the codes that keep their own
+    // noun in an upland region.
+    const BiomeDef* lake = by_code[definitions.lake_code];
+    if (lake == nullptr) {
+        fatal("region_names: the definitions have no lake biome");
+    }
+    std::array<bool, 256> own_noun{};
+    for (const std::string& key : tuning.upland_own_noun) {
+        bool found = false;
+        for (const BiomeDef& b : definitions.biomes) {
+            if (b.key == key && b.code >= 0 && b.code <= 255) {
+                own_noun[static_cast<std::size_t>(b.code)] = true;
+                found = true;
+            }
+        }
+        if (!found) {
+            fatal_text("regions: tuning: upland_own_noun '" + key + "' is not a loaded biome");
+        }
+    }
     const std::array<std::string_view, 9> sectors = region_sector_words(tuning.names);
     std::map<std::string, std::int64_t> seen;
     std::vector<std::string> out;
@@ -808,8 +837,20 @@ std::vector<std::string> region_names(std::span<const RegionNameInput> regions,
         }
         // 2. Sector; 3. noun.
         const std::uint32_t sector = region_sector(r.seed_x - cx, r.seed_y - cy, r_c);
-        const bool isle = regions_on[r.landmass] == 1U && r.landmass != largest;
-        std::string base = std::string(sectors[sector]) + " " + (isle ? tuning.names.isle : b->region_noun);
+        if (r.cells < 1 || r.lake_cells < 0 || r.walk_cells < 0 || r.lake_cells > r.cells || r.walk_cells > r.cells) {
+            fatal("region_names: cell counts out of range");
+        }
+        // 3. Noun, the first rule that applies (r2): a isle, b mere, c upland,
+        // d the dominant biome's. cells <= 2^24: no overflow.
+        const std::string* noun = &b->region_noun;
+        if (regions_on[r.landmass] == 1U && r.landmass != largest) {
+            noun = &tuning.names.isle;
+        } else if (2 * r.lake_cells >= r.cells) {
+            noun = &lake->region_noun;
+        } else if (4 * r.walk_cells < r.cells && !own_noun[r.biome]) {
+            noun = &tuning.names.upland;
+        }
+        std::string base = std::string(sectors[sector]) + " " + *noun;
         // 4. Numbered in id order.
         const std::int64_t k = ++seen[base];
         out.push_back(k == 1 ? base : base + " " + roman(k));
@@ -909,10 +950,32 @@ std::optional<std::vector<CellIndex>> pass_cells(Grid grid, const db::PassRow& r
     return cells;
 }
 
+// The first position of the pass's col cell in its path, or std::nullopt if
+// the col is outside the grid or not on the path (r2).
+std::optional<std::size_t> col_position(Grid grid, const db::PassRow& row, std::span<const CellIndex> path) {
+    if (row.col_x < 0 || row.col_y < 0 || row.col_x >= grid.width || row.col_y >= grid.height) {
+        return std::nullopt;
+    }
+    const CellIndex col = grid.index(static_cast<std::int32_t>(row.col_x), static_cast<std::int32_t>(row.col_y));
+    for (std::size_t k = 0; k < path.size(); ++k) {
+        if (path[k] == col) {
+            return k;
+        }
+    }
+    return std::nullopt;
+}
+
+// Section 2 check 5 for table pass: every path a chain of cells, then (r2)
+// every col cell on its path; passes in the order given.
 void check_pass_paths(Grid grid, std::span<const db::PassRow> passes) {
     for (const db::PassRow& p : passes) {
         if (!pass_cells(grid, p)) {
             fatal_text(std::string(PRECONDITION) + "pass " + db::format_i64(p.id) + ": path is not a chain of cells");
+        }
+    }
+    for (const db::PassRow& p : passes) {
+        if (!col_position(grid, p, *pass_cells(grid, p))) {
+            fatal_text(std::string(PRECONDITION) + "pass " + db::format_i64(p.id) + ": col cell is not on its path");
         }
     }
 }
@@ -930,54 +993,62 @@ void region_pass_crossings(Grid grid, std::span<const std::uint16_t> region, std
     }
     for (const db::PassRow& p : passes) {
         const std::vector<CellIndex> path = *pass_cells(grid, p);
-        // The step sequence: corners inserted between diagonal steps, equal
-        // consecutive cells skipped.
-        std::vector<CellIndex> seq;
-        seq.reserve(2U * path.size());
-        const auto append = [&seq](CellIndex c) {
-            if (seq.empty() || seq.back() != c) {
-                seq.push_back(c);
-            }
-        };
-        for (std::size_t j = 0; j < path.size(); ++j) {
-            if (j > 0U) {
-                const CellIndex a = path[j - 1U];
-                const CellIndex b = path[j];
-                if (grid.x_of(a) != grid.x_of(b) && grid.y_of(a) != grid.y_of(b)) {
-                    const CellIndex k1 = grid.index(grid.x_of(b), grid.y_of(a));
-                    const CellIndex k2 = grid.index(grid.x_of(a), grid.y_of(b));
-                    if (is_land(water[k1])) {
-                        append(k1);
-                    } else if (is_land(water[k2])) {
-                        append(k2);
-                    }
-                }
-            }
-            append(path[j]);
-        }
-        std::vector<std::size_t> crossed;
-        for (std::size_t j = 1; j < seq.size(); ++j) {
-            const CellIndex u = seq[j - 1U];
-            const CellIndex v = seq[j];
-            const std::int32_t dx = grid.x_of(v) - grid.x_of(u);
-            const std::int32_t dy = grid.y_of(v) - grid.y_of(u);
-            const bool four = (dx == 0) != (dy == 0);
-            if (!four || !is_land(water[u]) || !is_land(water[v]) || region[u] == 0U || region[v] == 0U ||
-                region[u] == region[v]) {
+        const auto q = static_cast<std::int64_t>(*col_position(grid, p, path));
+        // Steps j (c_j -> c_{j+1}) in order, each with its corner inserted
+        // when diagonal (equal cells give no step); the attached crossing is
+        // the one with the smallest (d, j), the first in sequence order on a
+        // tie within a step (r2).
+        bool found = false;
+        std::int64_t best_d = 0;
+        std::size_t best_row = 0;
+        for (std::size_t j = 0; j + 1U < path.size(); ++j) {
+            const CellIndex a = path[j];
+            const CellIndex b = path[j + 1U];
+            if (a == b) {
                 continue;
             }
-            const std::pair<std::int64_t, std::int64_t> key{std::min(region[u], region[v]),
-                                                            std::max(region[u], region[v])};
-            const auto it = row_of.find(key);
-            if (it == row_of.end()) {
-                fatal("region_pass_crossings: a crossing with no border row");
+            std::array<CellIndex, 3> seq{};
+            std::size_t len = 0;
+            seq[len++] = a;
+            if (grid.x_of(a) != grid.x_of(b) && grid.y_of(a) != grid.y_of(b)) {
+                const CellIndex k1 = grid.index(grid.x_of(b), grid.y_of(a));
+                const CellIndex k2 = grid.index(grid.x_of(a), grid.y_of(b));
+                if (is_land(water[k1])) {
+                    seq[len++] = k1;
+                } else if (is_land(water[k2])) {
+                    seq[len++] = k2;
+                }
             }
-            if (std::find(crossed.begin(), crossed.end(), it->second) == crossed.end()) {
-                crossed.push_back(it->second);
+            seq[len++] = b;
+            const auto sj = static_cast<std::int64_t>(j);
+            const std::int64_t d = std::min(sj > q ? sj - q : q - sj, sj + 1 > q ? sj + 1 - q : q - sj - 1);
+            for (std::size_t t = 1; t < len; ++t) {
+                const CellIndex u = seq[t - 1U];
+                const CellIndex v = seq[t];
+                const std::int32_t dx = grid.x_of(v) - grid.x_of(u);
+                const std::int32_t dy = grid.y_of(v) - grid.y_of(u);
+                const bool four = (dx == 0) != (dy == 0);
+                if (!four || !is_land(water[u]) || !is_land(water[v]) || region[u] == 0U || region[v] == 0U ||
+                    region[u] == region[v]) {
+                    continue;
+                }
+                const std::pair<std::int64_t, std::int64_t> key{std::min(region[u], region[v]),
+                                                                std::max(region[u], region[v])};
+                const auto it = row_of.find(key);
+                if (it == row_of.end()) {
+                    fatal("region_pass_crossings: a crossing with no border row");
+                }
+                // Steps come in ascending j, so only a strictly smaller d
+                // replaces the current choice.
+                if (!found || d < best_d) {
+                    found = true;
+                    best_d = d;
+                    best_row = it->second;
+                }
             }
         }
-        for (const std::size_t k : crossed) {
-            db::RegionBorderRow& row = borders[k];
+        if (found) {
+            db::RegionBorderRow& row = borders[best_row];
             if (row.passes == 0 || p.id < row.pass_id) {
                 row.pass_id = p.id;
             }
@@ -1320,7 +1391,8 @@ RegionResult regions_stage(const RegionInputs& in, const BiomeDefinitions& defin
         row.ore_rich_cells = a.ore_rich;
         row.ore_reach_cells = a.ore_reach;
         name_inputs.push_back(RegionNameInput{row.seed_x, row.seed_y, static_cast<std::uint8_t>(dominant),
-                                              static_cast<std::uint32_t>(row.landmass)});
+                                              static_cast<std::uint32_t>(row.landmass), row.cells, row.lake_cells,
+                                              row.walk_cells});
     }
 
     // RG11 (sequential, id order).
