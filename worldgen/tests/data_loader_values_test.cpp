@@ -815,9 +815,10 @@ TEST_CASE("loader registry: ascending name order; production registry has unique
 
     // Section 7.1: a test checks the registry's names and directories are
     // unique and in the name grammar. P1 registers `worldgen` (P1-00 6.1)
-    // and, from P1-04, `biome` (P1-00 6.6).
+    // and, from P1-04, `biome` (P1-00 6.6); P3-01 adds `culture`, `history`
+    // and `race` (P3-01 3 to 5).
     const auto builtin = wd::builtin_kinds();
-    CHECK(builtin.kinds().size() == 2U);
+    CHECK(builtin.kinds().size() == 5U);
     const auto& kinds = builtin.kinds();
     for (std::size_t i = 0; i < kinds.size(); ++i) {
         CHECK(wd::is_valid_name(kinds[i].name));
