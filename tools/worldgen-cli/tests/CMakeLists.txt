@@ -108,6 +108,17 @@ target_compile_definitions(worldgen-cli-tests PRIVATE
     UNMAPPED_TEST_SOURCE_ROOT="${PROJECT_SOURCE_DIR}"
 )
 
+# generate with the chronology stage (P3-03): --until chronology and
+# history, the unknown-stage message, [chronology] and hash --detail against
+# p3-03-chronology.txt, the data checks as input errors, the history flags
+# in meta (test pattern, every value, flag over file), the corrupt cases of
+# report, and the hist-* cases of world-hashes.sh. Slow checks in the
+# doctest suite "chronology-slow".
+target_sources(worldgen-cli-tests PRIVATE cli_chronology_test.cpp)
+target_compile_definitions(worldgen-cli-tests PRIVATE
+    UNMAPPED_P3_03_GOLDEN_PATH="${PROJECT_SOURCE_DIR}/worldgen/tests/golden/p3-03-chronology.txt"
+)
+
 # CTest entries, as for worldgen-tests (cmake/UnmappedTestShards.cmake):
 # groups of source files run in parallel, worldgen-cli-tests-other for every
 # file not named here, and worldgen-cli-tests-partition. Each test case uses
@@ -122,5 +133,6 @@ unmapped_add_doctest_shards(worldgen-cli-tests
     SHARD resources-generate 10 "*cli_resources_test.cpp,*cli_generate_test.cpp"
     SHARD regions 12 "*cli_regions_test.cpp"
     SHARD history-settings 6 "*cli_history_settings_test.cpp"
+    SHARD chronology 20 "*cli_chronology_test.cpp"
     REST other 10
 )
