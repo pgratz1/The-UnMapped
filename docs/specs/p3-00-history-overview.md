@@ -1,6 +1,6 @@
 # P3-00 History overview
 
-Status: **draft, spec writer, 2026-11-19, awaiting the lead's approval.** Phase P3 History core, the counterpart of `p1-00-geography-overview.md`. Design doc sections 5 (History simulation), 6 (World database), 11 (milestone 1), 12 (open questions), 13 (phase P3 and what P4 and P5 add) and 14 (narrative enrichment, the divine script). Depends on P0-01 to P0-04 with their amendments and on the finished geography (P1-00 to P1-06, generator 0.11.0, schema 5). Proposals read: "Paul's decision of 2026-11-19: P1 Geography approved; the critic's recommendations accepted" and the entries before it. Numbers measured for this spec are from the P1-06 validation worlds (`~/.cache/the-unmapped/out/p1-06-validation/`, generator 0.11.0: 512 seeds 0–49, 1024 seeds 0–199, 2048 seeds 0–19) with the script `~/.cache/the-unmapped/out/p3-00-spec/homes.py`.
+Status: **approved by the lead 2026-11-19, with amendment A1** (the event catalogue is stored in the world and exposed by the library: 6.1, 6.3, 11). Corrected the same day while writing P3-01 and P3-02: the version plan (3.2), where the `meta` keys are written (5, 6.1) and which spec introduces the keyed draws (4.6). Phase P3 History core, the counterpart of `p1-00-geography-overview.md`. Design doc sections 5 (History simulation), 6 (World database), 11 (milestone 1), 12 (open questions), 13 (phase P3 and what P4 and P5 add) and 14 (narrative enrichment, the divine script). Depends on P0-01 to P0-04 with their amendments and on the finished geography (P1-00 to P1-06, generator 0.11.0, schema 5). Proposals read: "Paul's decision of 2026-11-19: P1 Geography approved; the critic's recommendations accepted" and the entries before it. Numbers measured for this spec are from the P1-06 validation worlds (`~/.cache/the-unmapped/out/p1-06-validation/`, generator 0.11.0: 512 seeds 0–49, 1024 seeds 0–199, 2048 seeds 0–19) with the script `~/.cache/the-unmapped/out/p3-00-spec/homes.py`.
 
 This overview fixes what every P3 stage spec inherits: the breakdown into specs, the calendar and the simulation loop, the random streams and determinism rules of a simulation, the schema plan, the data kinds, what history reads from geography, the history report, the budget and the validation plan. It does not specify any subsystem's rules: those are the stage specs' (section 3). Values marked "interim" are this spec's reading where the design is silent; section 15 lists them for Paul.
 
@@ -49,7 +49,7 @@ Two new pipeline stages, `chronology` and `history`, follow `regions`. The `hist
 | P3-01 | History data and settings | (loader, `generate` options) | TOML kinds `race`, `culture`, `history` tuning (section 8); world-creation settings | `meta` keys `param.history_*` (6.5); registers the kinds; no table | P0-03 |
 | P3-02 | Names | (library) | culture naming data | a function: (culture, kind, key) → name; uniqueness per world | P3-01 |
 | P3-03 | Chronology | `chronology` | settings, `race` data, seed | tables `race`, `race_biome`, `culture`, `god`, `age` (**schema 6**) | P3-01, P3-02 |
-| P3-04 | Simulation engine | `history` (skeleton) | the whole stored world (geography, chronology tables), `history` tuning | tables `phase`, `event`, `event_participant`, `event_cause`, `event_value`, `civilization`, `settlement`, `settlement_census`, `region_control`, `relation` (**schema 7**, the full P3 DDL); the scheduler of active phases, quiet intervals and flare-ups; the event log writer; awakening events | P3-03 |
+| P3-04 | Simulation engine | `history` (skeleton) | the whole stored world (geography, chronology tables), `history` tuning | tables `event_kind`, `event_kind_role`, `event_kind_value` (A1), `phase`, `event`, `event_participant`, `event_cause`, `event_value`, `civilization`, `settlement`, `settlement_census`, `region_control`, `relation` (**schema 7**, the full P3 DDL); the scheduler of active phases, quiet intervals and flare-ups; the event log writer; awakening events | P3-03 |
 | P3-05 | Peoples | `history` (subsystem) | region tables, `race` preferences | homeland choice at awakening, civilizations, settlement founding, growth and decline, migration, abandonment, quiet-interval drift | P3-04 |
 | P3-06 | Expansion and conflict | `history` (subsystem) | engine state | claims of regions, tension between neighbours, war and peace, battles, sieges, sacking, ruin, conquest; the tension measure that triggers flare-ups | P3-05 |
 | P3-07 | History report | `report --history` | the stored world | text (section 11) | P3-04 (schema 7); its content grows with 05 and 06 |
@@ -62,7 +62,7 @@ Two new pipeline stages, `chronology` and `history`, follow `regions`. The `hist
 - **P3-07** can be written and implemented in parallel with P3-05 and P3-06 once P3-04 is merged; it reads tables only.
 - **P3-05, then P3-06.** Their specs can be written in parallel (P3-06 depends on P3-05's state but not its rules); P3-06 is implemented after P3-05 merges, since conflict needs settlements and territory.
 
-Each merge bumps `GENERATOR_VERSION` (MINOR) and re-records the golden values, as in P1. Interim version plan: 0.12.0 (P3-03), 0.13.0 (P3-04), 0.14.0 (P3-05), 0.15.0 (P3-06), 0.15.x (P3-07: report only, no world byte changes, no bump unless data changes the content hash).
+Each merge that changes world bytes bumps `GENERATOR_VERSION` (MINOR) and re-records the golden values, as in P1. Version plan: **0.12.0 (P3-01**: the new data kinds change every world's `content_hash`; no schema change**)**; P3-02 adds library code and the culture naming data, which P3-01's files already carry, so it changes no world byte and needs no bump; 0.13.0 (P3-03, schema 6); 0.14.0 (P3-04, schema 7); 0.15.0 (P3-05); 0.16.0 (P3-06); P3-07 changes no world byte (its report templates are written by the `history` stage from P3-04 on, A1), so it bumps only if it changes their data.
 
 ## 4. The simulation model
 
@@ -132,7 +132,7 @@ Stream names: `hist.<stage or subsystem>.<decision>` (P0-01 7.3 grammar), regist
 draw(name, year, a, b, k) = hash_words(TAG_HIST, [stream_key(seed, name), year, a, b, k])     // uint64
 ```
 
-with a, b the ids of the entities the decision is about (0 if none) and k a small counter for several draws of one decision. `TAG_HIST` is a new domain tag (P0-01 amendment, P3-04). Helpers, defined once in P3-04: `chance(u, p)` = (u >> 32) < p.raw for `Fx` p in [0, ONE]; `pick(u, n)` = the index (u >> 32) × n >> 32 (integer, no modulo bias beyond 2^-32); `weighted(u, weights)` = the first index whose prefix sum exceeds (u >> 32) × Σ >> 32, over weights in a defined order. Chronology uses the same scheme with year 0.
+with a, b the ids of the entities the decision is about (0 if none) and k a small counter for several draws of one decision. `TAG_HIST` (`UNM:HIST`) is a new domain tag (P0-01 amendment). **P3-02 introduces it and the helpers** (it merges before P3-03 and P3-04 and is the first user of keyed draws; P3-02 4). Helpers: `chance(u, p)` = (u >> 32) < p.raw for `Fx` p in [0, ONE]; `pick(u, n)` = the index (u >> 32) × n >> 32 (integer, no modulo bias beyond 2^-32); `weighted(u, weights)` = the first index whose prefix sum exceeds (u >> 32) × Σ >> 32, over weights in a defined order. Chronology uses the same scheme with year 0.
 
 ## 5. Pipeline, settings and `--until`
 
@@ -156,7 +156,7 @@ with a, b the ids of the entities the decision is about (0 if none) and k a smal
 | Divine activity | `--divine-activity` | `param.divine_activity` | `normal` | `distant`, `normal`, `meddling` | stored, unused until P5 |
 | Divine script | `--divine-script FILE` | `param.divine_script` | empty | SHA-256 of the script file, lower-case hex, or empty | refused in P3 ("divine scripts need phase P5"); the key exists so that the world records "no script" (9.2) |
 
-All eight keys are written in every world from P3-01 on (they are required `meta` keys from schema 6; P5 changes their effect, not the schema). A geography-only world (`--until regions`) still records them.
+P3-01 adds the flags and settings-file keys and validates them; **the eight keys are written into `meta` from P3-03 on, with schema 6** (a new required `meta` key is a schema change, and P3-03 makes the one schema 6 bump; P3-01 changes only `content_hash`). From schema 6 every world records them, a geography-only world (`--until regions`) included; P5 changes their effect, not the schema.
 
 ## 6. Schema plan
 
@@ -165,7 +165,7 @@ All eight keys are written in every world from P3-01 on (they are required `meta
 | Version | Branch | Adds |
 | --- | --- | --- |
 | 6 | P3-03 chronology | `race`, `race_biome`, `culture`, `god`, `age`; required `meta` keys `param.history_*`, `param.civs_per_race`, `param.races`, `param.event_intensity`, `param.monster_pressure`, `param.divine_activity`, `param.divine_script` |
-| 7 | P3-04 engine | `phase`, `event`, `event_participant`, `event_cause`, `event_value`, `civilization`, `settlement`, `settlement_census`, `region_control`, `relation` |
+| 7 | P3-04 engine | `event_kind`, `event_kind_role`, `event_kind_value` (A1), `phase`, `event`, `event_participant`, `event_cause`, `event_value`, `civilization`, `settlement`, `settlement_census`, `region_control`, `relation` |
 
 P3-05 and P3-06 add rows, event kinds and value keys to the catalogue (a catalogue addition is not a schema change, as a layer addition is not: P1-00 4 rule 3), and no columns. A column they find they need is a schema change and goes through the lead. The exact DDL is P3-03's and P3-04's; the outline below is binding on their content (column names may still be adjusted by those specs).
 
@@ -177,7 +177,10 @@ P3-05 and P3-06 add rows, event kinds and value keys to the catalogue (a catalog
 | `god` | `id`, `name`, `camp` | id | **P3 rows: the creator gods only**, one per race, named by P3-02; P5 adds the rest of the pantheon and columns (`domain`) with a bump |
 | `age` | `id` (1–6), `race`, `start_year`, `end_year`, `name` | id | design 6 `age` |
 | `phase` | `id`, `age`, `kind` (4.1), `start_year`, `end_year`, `trigger_event` | id (= time order) | design 6 `phase` |
-| `event` | `id`, `year`, `end_year`, `kind` (TEXT, catalogue key), `phase`, `region`, `settlement`, `salience` | id | the log (6.2) |
+| `event_kind` | `id`, `key`, `caused` (0/1), `salience`, `template` | id | the event catalogue (6.3, A1), one row per kind, written by the `history` stage as `biome` is written by the biome stage |
+| `event_kind_role` | `kind`, `seq`, `role`, `entity_type` | (kind, seq) | the participant roles of each kind, WITHOUT ROWID |
+| `event_kind_value` | `kind`, `seq`, `key` | (kind, seq) | the value keys of each kind, WITHOUT ROWID |
+| `event` | `id`, `year`, `end_year`, `kind` (→ `event_kind.id`), `phase`, `region`, `settlement`, `salience` | id | the log (6.2) |
 | `event_participant` | `event`, `seq`, `entity_type`, `entity_id`, `role` | (event, seq) | WITHOUT ROWID |
 | `event_cause` | `event`, `cause` | (event, cause) | cause < event |
 | `event_value` | `event`, `key`, `value` | (event, key) | integers only; keys per kind in the catalogue |
@@ -187,7 +190,7 @@ P3-05 and P3-06 add rows, event kinds and value keys to the catalogue (a catalog
 | `region_control` | `region`, `from_year`, `to_year`, `civ`, `event` | (region, from_year) | territory by year (6.4) |
 | `relation` | `a_type`, `a_id`, `b_type`, `b_id`, `kind`, `since`, `until`, `since_event` | (a_type, a_id, b_type, b_id, since) | design 6 `relation` with an end year; P3 uses civilization pairs only (kinds: war, peace treaty, vassal…, per P3-06) |
 
-Conventions for all P3 tables: STRICT, no REAL, no BLOB; ids from 1; 0 = none in id columns; NULL only for a year that has not happened (`ended_year`, `ruined_year`, `to_year`, `until`), stated per column; TEXT keys from data or from a catalogue, never free prose (design 6: "the database stores facts and names"). The design's `event.summary` and `event.site_id` are not columns in P3: summaries are rendered from the catalogue's templates (11), sites arrive in P6 (proposals entry). Expected sizes at 1024 (interim, to be measured by P3-04): 5,000–30,000 events, under 1 MB of tables.
+Conventions for all P3 tables: STRICT, no REAL, no BLOB; ids from 1; 0 = none in id columns; NULL only for a year that has not happened (`ended_year`, `ruined_year`, `to_year`, `until`), stated per column; TEXT keys from data or from a catalogue, never free prose (design 6: "the database stores facts and names"). The design's `event.summary` and `event.site_id` are not columns in P3: summaries are rendered from the catalogue's templates (11), sites arrive in P6 (proposals entry). Expected sizes at 1024 (interim, to be measured by P3-04): 5,000–30,000 events, under 1 MB of tables; the three catalogue tables hold a few dozen kinds and a few hundred short rows, a few kilobytes, inside that estimate.
 
 ### 6.2 The event log contract
 
@@ -203,6 +206,10 @@ This is what section 14 needs: every event names its kind, time, place, actors i
 
 A table in P3-04 (extended by P3-05, P3-06 and later P5), one row per kind: key (`awakening`, `civ_founded`, `settlement_founded`, `settlement_grew`, `famine`, `plague`, `abandoned`, `region_claimed`, `war_declared`, `battle`, `siege`, `sacked`, `conquered`, `peace`, `quiet_era`, …), the participant roles, the value keys, whether it is caused or uncaused, its salience rule, and its report template (section 11). The catalogue is part of the schema contract: renaming a kind or changing a role's meaning is a schema change; adding a kind is not. `docs/specs/schema.md` keeps the catalogue summary, as it keeps the layer catalogue.
 
+**The catalogue travels with the world (A1).** The `history` stage writes the catalogue it ran with into `event_kind`, `event_kind_role` and `event_kind_value`: kind ids 1, 2, … in the catalogue's order (P3-04 fixes it; later kinds are appended, never renumbered), the key, the caused flag, the base salience, the report template taken from the loaded `history.report` data, and per kind its roles (with the entity type each takes) and value keys in a defined `seq` order. `event.kind` refers to `event_kind.id`. So a world file is self-describing: the viewer, the game and the enrichment pass list kinds, roles and value keys, and render the same sentences with whatever data set is installed later, from the world alone. Child tables rather than a text encoding in one column: they are STRICT-typed, need no second parser in every reader, and are queried with the same row reader as every other table; they are tiny (a few hundred rows).
+
+**One copy in code (A1).** worldgen's public API exposes the catalogue read-only (`worldgen/history/event_catalogue.hpp`: the compiled catalogue the stage writes, and a reader of the three tables of a world) and the template renderer (`render_event(const HistoryView&, event id) → std::string`, P3-07), both in the `worldgen` library, not in the CLI. The CLI's `report --history`, the viewer's event browser (P4) and the game call them; nobody restates the catalogue or re-implements template rendering (compare the open proposals entry "Viewer: layer units and region names come from a copy of the catalogue").
+
 ### 6.4 Territory and state by year (for P4)
 
 P4's scrubber must show, at any year Y, who holds each region and which settlements exist with what owner and size, without replaying the log:
@@ -215,7 +222,7 @@ P4 needs nothing else for the timeline; events at Y come from `event.year`.
 
 ### 6.5 `meta`
 
-Required from schema 6: the eight `param.*` keys of section 5. From schema 7: `history_end_year` = E (redundant with `param.history_span`, but it is the design's "end year" in `meta`, and P5's history mode would let them differ). `meta.stages` gains `chronology`, `history`.
+Required from schema 6 (written by P3-03): the eight `param.*` keys of section 5. From schema 7: `history_end_year` = E (redundant with `param.history_span`, but it is the design's "end year" in `meta`, and P5's history mode would let them differ). `meta.stages` gains `chronology`, `history`.
 
 ## 7. What history reads from geography
 
@@ -311,6 +318,8 @@ Nothing in P3 writes for the enrichment pass beyond the log contract (6.2) and t
 5. `[chronicle]`: events in id order, those with `salience` ≥ the level's threshold (all at `full`), one line each: `<year> e<id> <kind>: <rendered sentence> [causes e<id>, …]`, the sentence rendered from the kind's template with names, so that the critic can follow causes by id.
 6. `[present]`: the end state: regions held per civilization, settlements by status and kind.
 7. `[stats]`: key = value lines for sweeps (section 12.2), stable names, integers and exact decimals.
+
+**Rendering**: sentences come from `render_event` in the `worldgen` library (6.3, A1), using the templates stored in the world's `event_kind` table, so the report, the viewer and the game print the same sentence for an event whatever data set is installed. The template language (placeholders for roles, values, place and year) is P3-07's.
 
 **Determinism**: the report is part of the cross-platform contract, as `report` and `hash` are (P0-04): UTF-8, LF, no trailing spaces, integer formatting only, templates from data, rows in id order, no locale, no time. Golden: the report text of the golden cases is hashed in the stage golden files (P3-07).
 
