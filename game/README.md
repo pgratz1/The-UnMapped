@@ -9,7 +9,7 @@ The Godot 4 project of The Unmapped: scenes, assets and TOML data, no scripts (d
 | `project.godot` | Project settings. Main scene: the world viewer. |
 | `unmapped.gdextension` | Loads the C++ extension from `res://bin/` (see below). |
 | `unmapped.gdextension.uid` | The resource UID Godot gives the `.gdextension` file; committed as Godot recommends for `.uid` files. |
-| `viewer/viewer.tscn` | World viewer v0: layout only. Its root is `ViewerScreen`, a C++ class; parts the code uses have unique names (`%OpenButton`, `%OpenDialog`, `%FileLabel`, `%LayerList`, `%MetaTree`, `%MapView`, `%StatusLabel`). Rearranging the layout in the editor is safe as long as those names stay. |
+| `viewer/viewer.tscn` | World viewer v0: layout only. Its root is `ViewerScreen`, a C++ class; parts the code uses have unique names (`%OpenButton`, `%OpenDialog`, `%FileLabel`, `%LayerList`, `%MetaTree`, `%MapView`, `%LegendTitle`, `%LegendList`, `%CellLabel`, `%StatusLabel`). Rearranging the layout in the editor is safe as long as those names stay. |
 
 Folders from design doc section 10 (`core/`, `world/`, `rigs/`, `ui/`, `data/`) are added with their first file.
 

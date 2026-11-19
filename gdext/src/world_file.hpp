@@ -81,10 +81,21 @@ public:
     // Why table `biome` cannot be used ("" when it is fine or absent).
     [[nodiscard]] godot::String get_biome_table_problem() const;
 
+    // Table `region` (schema 5, P1-06 3.2), read once by open(): an Array of
+    // Dictionary {id, name, biome, cells} in id order. Empty when the world
+    // has no rows or the table is malformed (then get_region_table_problem()
+    // says why).
+    [[nodiscard]] godot::Array get_region_entries() const;
+    [[nodiscard]] godot::String get_region_table_problem() const;
+    // The name of region id (column `name`); empty when there is no such row.
+    [[nodiscard]] godot::String get_region_name(int64_t id) const;
+
     // The composite images worldgen can build from this world's layers, in
     // worldgen's order: "map" when there is an `elevation` layer, "biomes"
     // when there are also a `biome` layer and a usable table `biome` (P1-00
-    // 10.2, P1-04 9). Their layers are checked only when rendered.
+    // 10.2, P1-04 9), "regions" when there is also a `region` layer (P1-06
+    // 9, P0-04 amendment 18 (e)). Their layers are checked only when
+    // rendered.
     [[nodiscard]] godot::PackedStringArray get_composite_names() const;
 
     // --- C++ only --------------------------------------------------------------
@@ -92,6 +103,11 @@ public:
     [[nodiscard]] const std::vector<worldgen::inspect::BiomeColour>& biome_colours() const noexcept {
         return biome_colours_;
     }
+    [[nodiscard]] const std::vector<worldgen::inspect::BiomeRecord>& biome_records() const noexcept {
+        return biome_records_;
+    }
+    // The record of biome code id, or null.
+    [[nodiscard]] const worldgen::inspect::BiomeRecord* find_biome(std::int64_t id) const noexcept;
     [[nodiscard]] std::vector<worldgen::inspect::Composite> composites() const;
     // Index of the layer called name in layer_infos(), or -1.
     [[nodiscard]] int64_t find_layer(std::string_view name) const;
@@ -104,12 +120,22 @@ private:
     void set_error(const godot::String& code, const godot::String& message);
     void clear_error();
     void read_biome_table();
+    void read_region_table();
+
+    struct RegionRow {
+        std::int64_t id = 0;
+        godot::String name;
+        std::int64_t biome = 0;
+        std::int64_t cells = 0;
+    };
 
     std::optional<worldgen::db::WorldReader> reader_;
     std::vector<worldgen::db::LayerInfo> layers_;
     std::vector<worldgen::inspect::BiomeRecord> biome_records_;
     std::vector<worldgen::inspect::BiomeColour> biome_colours_;
     godot::String biome_table_problem_;
+    std::vector<RegionRow> regions_;  // ascending id
+    godot::String region_table_problem_;
     godot::String path_;
     godot::String error_code_;
     godot::String error_message_;

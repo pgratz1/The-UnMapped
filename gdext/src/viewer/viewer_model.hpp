@@ -11,11 +11,18 @@
 // A view is one map the screen can show: first every layer of the file, in
 // id order (drawn with worldgen's palette for it; the `biome` layer with the
 // world's table `biome`), then every composite worldgen can build from those
-// layers ("map", "biomes"; WorldFile::get_composite_names). It lists whatever
-// the file holds, so layers added by later phases appear without changes
-// here.
+// layers ("map", "biomes", "regions"; WorldFile::get_composite_names). It
+// lists whatever the file holds, so layers added by later phases appear
+// without changes here. Each view has a group (layer_catalogue.hpp:
+// "Composites", "Terrain", "Water", ...) for the list to be grouped by; the
+// order of views is not the order a view shows them in.
+//
+// The model also gives the legend of the selected view and a description of
+// any cell (value in display units, biome and region names), both from the
+// world file's tables and worldgen's palettes.
 
 #include <cstdint>
+#include <string_view>
 #include <vector>
 
 #include <godot_cpp/classes/image.hpp>
@@ -60,8 +67,10 @@ public:
     // The composites (views layer_count .. view_count - 1).
     [[nodiscard]] int64_t get_composite_count() const;
     [[nodiscard]] int64_t get_view_count() const;
-    // Dictionary {kind ("layer" or "composite"), name, width, height,
-    // element_type, palette, codec, encoded_size}. For a layer, the
+    // Dictionary {kind ("layer" or "composite"), name, group, unit, width,
+    // height, element_type, palette, codec, encoded_size}. group is the
+    // title of its group in the layer list; unit the catalogue's unit of a
+    // layer ("" when unknown or for a composite). For a layer, the
     // WorldFile layer info plus kind and palette ("" until decoded); for a
     // composite, name is the composite's ("map"), width and height those of
     // `elevation`, element_type and palette "composite", codec "" and
@@ -83,6 +92,20 @@ public:
     // layer: its exact value in decimal. A composite: "elevation <value>".
     [[nodiscard]] godot::String get_cell_text(int64_t x, int64_t y) const;
 
+    // A description of cell (x, y) for the selected view, one line: the
+    // cell, the view's value in display units (a composite: the elevation),
+    // then, when the world has them, the cell's biome name (table `biome`)
+    // and region id and name (table `region`). Empty outside the map or
+    // without a selection. Decodes `biome` and `region` on first use.
+    godot::String describe_cell(int64_t x, int64_t y);
+
+    // The legend of the selected view: an Array of Dictionary {label,
+    // colours (PackedInt32Array of 0xRRGGBB: one is a swatch, several a
+    // gradient strip)}. Empty without a selection.
+    [[nodiscard]] godot::Array get_legend() const;
+    // A heading for the legend: the view's name and what its colours show.
+    [[nodiscard]] godot::String get_legend_title() const;
+
     // The underlying data-access object.
     [[nodiscard]] godot::Ref<WorldFile> get_world() const;
 
@@ -93,11 +116,15 @@ private:
     void reset_views();
     bool decode_layer(int64_t layer_index);
     bool build_image(int64_t view_index);
+    // The grid of a layer by name, decoded on first use; null if absent or
+    // unreadable.
+    const worldgen::db::LayerGrid* layer_grid(std::string_view name);
 
     godot::Ref<WorldFile> world_;
     std::vector<worldgen::inspect::Composite> composites_;
     std::vector<godot::Ref<WorldLayer>> layers_;   // per layer
     std::vector<godot::Ref<godot::Image>> images_;  // per view
+    godot::Array legend_;                           // of the selected view
     int64_t selected_ = -1;
     godot::String error_code_;
     godot::String error_message_;

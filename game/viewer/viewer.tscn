@@ -33,13 +33,12 @@ autowrap_mode = 1
 
 [node name="LayersHeading" type="Label" parent="Split/Sidebar"]
 layout_mode = 2
-text = "Layers"
+text = "Views"
 
 [node name="LayerList" type="ItemList" parent="Split/Sidebar"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 3
-size_flags_stretch_ratio = 0.6
 
 [node name="MetaHeading" type="Label" parent="Split/Sidebar"]
 layout_mode = 2
@@ -49,6 +48,7 @@ text = "Meta"
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 3
+size_flags_stretch_ratio = 0.35
 columns = 2
 column_titles_visible = true
 hide_root = true
@@ -58,14 +58,44 @@ select_mode = 1
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="MapView" type="LayerMapView" parent="Split/MapArea"]
+[node name="MapRow" type="HBoxContainer" parent="Split/MapArea"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="MapView" type="LayerMapView" parent="Split/MapArea/MapRow"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(256, 256)
 texture_filter = 1
 clip_contents = true
 layout_mode = 2
+size_flags_horizontal = 3
 size_flags_vertical = 3
 focus_mode = 2
+
+[node name="LegendPanel" type="VBoxContainer" parent="Split/MapArea/MapRow"]
+custom_minimum_size = Vector2(250, 0)
+layout_mode = 2
+
+[node name="LegendTitle" type="Label" parent="Split/MapArea/MapRow/LegendPanel"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(250, 0)
+layout_mode = 2
+mouse_filter = 1
+text = "Legend"
+autowrap_mode = 3
+
+[node name="LegendList" type="ItemList" parent="Split/MapArea/MapRow/LegendPanel"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+focus_mode = 0
+fixed_icon_size = Vector2i(40, 14)
+
+[node name="CellLabel" type="Label" parent="Split/MapArea"]
+unique_name_in_owner = true
+layout_mode = 2
+text = " "
+text_overrun_behavior = 3
 
 [node name="StatusLabel" type="Label" parent="Split/MapArea"]
 unique_name_in_owner = true

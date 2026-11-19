@@ -15,7 +15,13 @@
 //     pixel, <reference dir>/<layer name>.png written by
 //     `worldgen-cli render --palette auto --scale 1`; for each composite,
 //     <reference dir>/composite.<name>.png written by `worldgen-cli render
-//     --composite <name>`;
+//     --composite <name>` (map, biomes, regions);
+//   - the layer list groups the views under non-selectable headings,
+//     composites first, and the world opens on the first entry;
+//   - every view has a legend; for `biome`, `biomes` and `regions` it names
+//     every (land) row of table `biome` with its colour;
+//   - hovering a cell of a region describes it: coordinates, elevation in
+//     metres, biome name, region id and name from table `region`;
 //   - opening a missing file and a non-SQLite file give the reader's
 //     distinct errors (file_unreadable, not_sqlite) with a message.
 // Prints one line per check and "UNMAPPED-CHECK: PASS" or "UNMAPPED-CHECK:
