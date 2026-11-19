@@ -659,3 +659,45 @@ and the reference refuses a world whose table `region` differs from
 `p1-06-regions.txt` for the four P1 cases. With the shipped data no region
 name can collide with an age or god name, so the rows of the world cases
 equal those of the seam cases with the same seed and settings.
+
+## P3-04 simulation engine
+
+`p3_engine_reference.py` is an independent reference of
+`docs/specs/p3-04-simulation-engine.md` (with revision r1 of 8.5), written
+from the spec and P3-00 alone, on `core_reference.py`,
+`p3_data_reference.py`, `p3_names_reference.py`, `p3_chronology_reference.py`
+and `p0_world_check.py` as libraries. It computes the scheduler (SC1-SC6,
+E1-E10, floor and cap) for any age list, span, detail level and
+`ForcedTension`, the whole stub world (homes S1, sites S2, names with the
+registry rebuilt from `region`, `age`, `god`), the event log, quiet eras,
+`region_control`, `settlement_census`, the catalogue tables, table hashes in
+`hash --detail` form, the `[history]` lines, and every sentence, with its own
+implementation of the template grammar and renderer (8.4, 8.5).
+
+```
+python3 -B worldgen/tests/reference/p3_engine_reference.py check [--inputs DIR] [--no-golden]
+python3 -B worldgen/tests/reference/p3_engine_reference.py golden [PATH|-] [--inputs DIR]
+python3 -B worldgen/tests/reference/p3_engine_reference.py schedule SEED SPAN [DETAIL] [RACES] [--tension P,V,T]
+python3 -B worldgen/tests/reference/p3_engine_reference.py world DB [--data ROOT] [--tension P,V,T]
+python3 -B worldgen/tests/reference/p3_engine_reference.py check-world DB [--data ROOT]
+```
+
+`golden` writes `worldgen/tests/golden/p3-04-engine.txt`. Its world cases
+read geography from `--until regions` worlds in `--inputs` (default
+`~/.cache/the-unmapped/out/p3-04-tests/inputs/<case>.db`; the four P1 cases
+are checked against `p1-06-regions.txt`); the chronology rows come from the
+P3-03 reference. `check-world` is for the validation sweep on schema-7
+worlds: it recomputes the five chronology and thirteen history tables and
+compares them table by table, re-checks invariants 1, 2, 4, 5 on the stored
+rows, and renders every event from the stored catalogue.
+
+Readings: `history.engine` and `history.report` fall back to the listings
+of spec 4.1 and 4.2 where a root has no such file (the golden depends on
+the shipped files matching them; `check` compares them once they exist); a
+`flare_up` is a point event (`end_year` = `year`); a non-ASCII byte inside
+a placeholder is reported at its own offset; `{@settlement}`'s problem text
+is `{@settlement} needs a kind with a settlement at byte <n>`; in a quiet
+step the phase-end census (6.7 item 4) uses the step's Q5 decision, so a
+quiet row closed by a flare-up ends at that step.
+
+Never regenerate the golden file to make a C++ test pass.
