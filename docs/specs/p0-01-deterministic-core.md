@@ -539,3 +539,7 @@ P1-00 appendix A1 is adopted as part of this spec: the constants `SQRT2` and `IN
 ## 16. Amendment for phase P3 (2026-11-19)
 
 Requested by P3-02 8 and P3-03 15.4. The tag table of 7.2 gains `TAG_HIST`, `UNM:HIST`, 0x545349483A4D4E55 (the keyed draws of P3-00 4.6 and P3-02 4.1). The stream-name registry of 7.3 (`worldgen/include/worldgen/core/streams.hpp`, `all_stream_names` in registration order) gains, after `geo.regions.cost`, `hist.names.god`, `hist.names.civilization`, `hist.names.settlement` (P3-02 4.5) and `hist.chronology.awakening` (P3-03 3, C3): 34 names in all. Registering a stream name changes no world byte.
+
+## 17. Amendment for P3-04 (2026-11-19)
+
+No stream name is added: the `history` stage of P3-04 makes no random decision of its own, and its stub subsystems draw only names on the P3-02 streams `hist.names.civilization` and `hist.names.settlement`. The registry of 7.3 stays at 34 names; P3-05 and P3-06 register theirs.

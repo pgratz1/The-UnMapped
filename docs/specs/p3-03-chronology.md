@@ -511,3 +511,7 @@ Text changes so that the spec says what the implementation (`p3/03-int`) and its
 7. 14, 14.4: `ChronologyResult::god_names` in the seam block; a numeral-fallback god's attempt is `F` in the golden file.
 8. 5.1, 14.5: the empty-world size (18 pages, 73728 bytes; schema text 2928 bytes) is confirmed with the vendored SQLite 3.54.1.
 9. 15: 15.2 to 15.7 applied.
+
+## Revision note r2 (2026-11-19, amendments for P3-04)
+
+Requested by P3-04 18.2; text only, nothing of this stage changes. 4.3: from P3-04 (generator 0.14.0) `--until history` is accepted and is the default, and `--until chronology` no longer gives the default world's bytes (the default also runs `history`; 14.1 item 12's equality holds only at 0.13.0). 5.1: from schema 7 the empty world is 34 pages (P3-04 9.6; P0-02 amendment 19). 8.2: the registry rule is applied by the `history` stage as its first step (P3-04 7.2, "Registry"). The P3-03 audit's guards (`origin/p3/03-audit-guard`) are recorded by the audit, not here.

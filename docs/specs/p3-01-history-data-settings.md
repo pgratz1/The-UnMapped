@@ -309,10 +309,10 @@ Directory `history/`, **required**, a **fixed-id kind** (P0-03 amendment 15), on
 | Id | Spec | Status |
 | --- | --- | --- |
 | `chronology` | P3-03 | **complete here** |
-| `engine` | P3-04 | added by P3-04 |
+| `engine` | P3-04 | added by P3-04 (5.2, r4) |
 | `peoples` | P3-05 | added by P3-05 |
 | `conflict` | P3-06 | added by P3-06 |
-| `report` | P3-07 (with the event templates written from P3-04 on) | added by P3-04 or P3-07, whichever lands first |
+| `report` | P3-04 (the event salience and templates), P3-07 (its report fields) | added by P3-04 (5.3, r4); P3-07 adds fields |
 
 **A not-yet-registered id** is handled exactly as for `worldgen`: the id set of the kind is what the build registers; a definition with any other id is an error at its header, `unknown id 'engine' for kind 'history'; expected one of 'chronology'` (P0-03 amendment 15's message as implemented: the registered ids in ascending order, each in single quotes, separated by `, `), and every registered id must be defined (`missing definition 'history.<id>'`, against the directory). So each data root carries exactly the files of the ids registered by its build: a spec that adds an id adds its file to `game/data/history/` and to the two fixture roots in the same merge. A file for a future id must not be committed early.
 
@@ -335,6 +335,14 @@ awakening_jitter_frac = "0.01"
 awakening_min_gap_years = 100
 age_name_form = "The Age of {plural}"
 ```
+
+### 5.2 `history.engine` (r4, P3-04)
+
+Defined by P3-04 4.1: the quiet step, the per-step event limit, the floor and cap of simulated years, the islet threshold and one record per detail level (`active_years`, `flare_years`, `final_years`, `flare_threshold`), with the named checks `engine_simulated_bounds` and `engine_phase_budget`. Shipped in `game/data/history/engine.toml` and the two fixture roots.
+
+### 5.3 `history.report` (r4, P3-04)
+
+Defined by P3-04 4.2: field `events`, one record per event kind (`kind`, `salience`, `template`), with the named check `report_events` against the compiled event catalogue. Shipped in `game/data/history/report.toml` and the two fixture roots. P3-07 adds its own fields (a data change).
 
 ## 6. World-creation settings
 
@@ -419,7 +427,7 @@ Where the tests are (section 2): 8.1 and the `Settings`-level parts of 8.2 in `w
 1. The shipped data loads; every value of the six races (3.1) and the chronology tuning (5.1) equals the listing (a table transcribed in the test, not read from the files); the six cultures have the `race` and `name` of section 4.
 2. Each per-definition and kind-level check of section 3 fails once on a fixture with its exact message and position; `race_order_dense` is not reported when `race_order_unique` fails; the duplicate- and missing-order behaviour of section 3 holds.
 3. Word grammar on `name`, `plural`, `adjective`: `elf`, `High Elf` fail (P0-03 amendment 17's message).
-4. Fixed-id behaviour: a fixture data root with `history/engine.toml` fails with `unknown id 'engine' for kind 'history'; expected one of 'chronology'`; a root without `history/chronology.toml` fails with `missing definition 'history.chronology'`; a root without `races/` fails as a missing required kind directory.
+4. Fixed-id behaviour: a fixture data root with `history/engine.toml` fails with `unknown id 'engine' for kind 'history'; expected one of 'chronology'` (from P3-04 on, r4: a root with `history/peoples.toml` fails with `unknown id 'peoples' for kind 'history'; expected one of 'chronology', 'engine', 'report'`, and a root missing `engine.toml` or `report.toml` fails with `missing definition 'history.<id>'`); a root without `history/chronology.toml` fails with `missing definition 'history.chronology'`; a root without `races/` fails as a missing required kind directory.
 5. Ranges: each bounded field one step outside its bounds is a range error.
 
 ### 8.2 Settings
@@ -464,3 +472,7 @@ Text changes requested by P3-03 15.7; no behaviour of P3-01's code changes.
 ## Revision note r3 (2026-11-19, after the P3-03 implementation)
 
 Text only in this spec. 3, cross-kind conditions: item 0, P3-03's check D0 (the lead's decision): a data root with no race definition is an input error, exit 3, path `races`, message `no race is defined; kind 'race' needs at least one definition`, first in the D order and refused again at the stage entry; `generate_world`'s FatalError `generate_world: params.history.races is invalid` remains the last line of defence. The other items of P3-03 15.7 were applied in r2.
+
+## Revision note r4 (2026-11-19, amendments for P3-04)
+
+Requested by P3-04 18.2. 5: the ids `engine` and `report` are registered by P3-04 (new 5.2 and 5.3, pointing to P3-04 4.1 and 4.2); every data root then carries `chronology.toml`, `engine.toml` and `report.toml`. 8.1 item 4: the expected fixed-id messages from P3-04 on. The merge changes every root's `content_hash` (`p3-01-data.txt` re-recorded by its reference). No behaviour of P3-01's code changes.

@@ -126,8 +126,8 @@ name(K, c, e, registry):
 | Kind | Stream | Entity id e | Used by |
 | --- | --- | --- | --- |
 | `god` | `hist.names.god` | `god.id` (= the race id of the god's race, one god per race, present or not: P3-03 5.2, r2) | P3-03 |
-| `civilization` | `hist.names.civilization` | `civilization.id` | P3-04, P3-05 |
-| `settlement` | `hist.names.settlement` | `settlement.id` | P3-05 |
+| `civilization` | `hist.names.civilization` | `civilization.id` | P3-04 (stub, S2), P3-05 |
+| `settlement` | `hist.names.settlement` | `settlement.id` | P3-04 (stub, S2), P3-05 |
 
 The **kind order** is the order of this table, god, civilization, settlement, which is also the order of the enumerators of `NameKind` (section 9) and the order of kinds in the golden list (9.3).
 
@@ -370,3 +370,7 @@ Text only. 4.4: the registry also holds the age names (fixed text, numeral fallb
 ## Revision note r3 (2026-11-19, after the P3-03 implementation)
 
 Text only; no behaviour, golden value or world byte changes. 7: the registry is an ordered set (the words allowing a hash set are removed: unordered containers are banned in `worldgen`, and the code uses an ordered set). 4.3: `roman` now lives in `worldgen/core/roman.hpp` as `roman_numeral`, with `history::roman` and `stages::roman` forwarding to it. 8: the P0-01 request is applied (P0-01 section 16).
+
+## Revision note r4 (2026-11-19, amendments for P3-04)
+
+Requested by P3-04 18.2. 4.5: civilization and settlement names are drawn by the `history` stage from P3-04 on (its stub placement, P3-04 7.2, in creation order after the registry is rebuilt from `region`, `age` and `god`), and by P3-05 when it replaces the stub. No rule of this spec changes.

@@ -1,6 +1,6 @@
 # P3-00 History overview
 
-Status: **approved by the lead 2026-11-19, with amendment A1** (the event catalogue is stored in the world and exposed by the library: 6.1, 6.3, 11). Corrected 2026-11-19 for P3-03 (2.1 age ids, 4.6 pointer to P3-02 4.1, 5 `--until history`, 6.1 `race` and `god` rows, 12.4 case timing; see the note at the end); amended 2026-11-19 after the P3-03 implementation (H8: the registry rebuild is the `history` stage's first step; second paragraph of the note). Corrected the same day while writing P3-01 and P3-02: the version plan (3.2), where the `meta` keys are written (5, 6.1) and which spec introduces the keyed draws (4.6). Phase P3 History core, the counterpart of `p1-00-geography-overview.md`. Design doc sections 5 (History simulation), 6 (World database), 11 (milestone 1), 12 (open questions), 13 (phase P3 and what P4 and P5 add) and 14 (narrative enrichment, the divine script). Depends on P0-01 to P0-04 with their amendments and on the finished geography (P1-00 to P1-06, generator 0.11.0, schema 5). Proposals read: "Paul's decision of 2026-11-19: P1 Geography approved; the critic's recommendations accepted" and the entries before it. Numbers measured for this spec are from the P1-06 validation worlds (`~/.cache/the-unmapped/out/p1-06-validation/`, generator 0.11.0: 512 seeds 0–49, 1024 seeds 0–199, 2048 seeds 0–19) with the script `~/.cache/the-unmapped/out/p3-00-spec/homes.py`.
+Status: **approved by the lead 2026-11-19, with amendment A1** (the event catalogue is stored in the world and exposed by the library: 6.1, 6.3, 11). Corrected 2026-11-19 for P3-03 (2.1 age ids, 4.6 pointer to P3-02 4.1, 5 `--until history`, 6.1 `race` and `god` rows, 12.4 case timing; see the note at the end); amended 2026-11-19 after the P3-03 implementation (H8: the registry rebuild is the `history` stage's first step; second paragraph of the note). Corrected the same day while writing P3-01 and P3-02: the version plan (3.2), where the `meta` keys are written (5, 6.1) and which spec introduces the keyed draws (4.6). Corrected 2026-11-19 for P3-04 (4.1, 4.2, 4.4, 5, 6.1, 6.2, 6.3, 6.5, 10, 11, 12.3; see the second correction note at the end). Phase P3 History core, the counterpart of `p1-00-geography-overview.md`. Design doc sections 5 (History simulation), 6 (World database), 11 (milestone 1), 12 (open questions), 13 (phase P3 and what P4 and P5 add) and 14 (narrative enrichment, the divine script). Depends on P0-01 to P0-04 with their amendments and on the finished geography (P1-00 to P1-06, generator 0.11.0, schema 5). Proposals read: "Paul's decision of 2026-11-19: P1 Geography approved; the critic's recommendations accepted" and the entries before it. Numbers measured for this spec are from the P1-06 validation worlds (`~/.cache/the-unmapped/out/p1-06-validation/`, generator 0.11.0: 512 seeds 0–49, 1024 seeds 0–199, 2048 seeds 0–19) with the script `~/.cache/the-unmapped/out/p3-00-spec/homes.py`.
 
 This overview fixes what every P3 stage spec inherits: the breakdown into specs, the calendar and the simulation loop, the random streams and determinism rules of a simulation, the schema plan, the data kinds, what history reads from geography, the history report, the budget and the validation plan. It does not specify any subsystem's rules: those are the stage specs' (section 3). Values marked "interim" are this spec's reading where the design is silent; section 15 lists them for Paul.
 
@@ -72,12 +72,12 @@ The span [0, E) is cut into a **schedule** of phases, each a row of table `phase
 
 | Kind | Code | Steps | Written to the log |
 | --- | --- | --- | --- |
-| Opening active phase | 1 | yearly ticks, from an awakening year for `active_years` years (tuning, by `history_detail`) | the detailed log |
+| Opening active phase | 1 | yearly ticks, from an awakening year for `active_years` years (tuning, by `history_detail`, scaled to the span: P3-04 5.1) | the detailed log |
 | Quiet interval | 2 | quiet steps of `quiet_step_years` (interim 25) years each, from the end of an active phase to the next awakening (or to the final phase) | a few summary events per step at most (design: "four centuries of peace under the same dynasty" is one event spanning several steps; section 4.4) |
 | Flare-up | 3 | yearly ticks for `flare_years` years, inserted into a quiet interval when the tension measure crosses `flare_threshold` at the end of a quiet step | the detailed log; `phase.trigger_event` names the event that raised the tension |
-| Final active phase | 4 | yearly ticks over the last `final_years` years, ending at E − 1 | the detailed log |
+| Final active phase | 4 | yearly ticks over at most the last `final_years` years, ending at E − 1, starting no earlier than the end of the last opening phase (P3-04 5.3) | the detailed log |
 
-Rules: phases tile [0, E) without gaps or overlap, in order; the opening phase of age k starts exactly at race k's awakening year; if two awakenings are closer than `active_years`, the earlier opening phase ends at the later awakening; a quiet interval shorter than one quiet step is a single shorter step; a flare-up never extends past the next awakening or the start of the final phase (it is cut there). The quiet interval resumes after a flare-up as a new `phase` row. The design's "1,200 simulated years of 6,000" is the expected sum of active, flare-up and final years at `history_detail` normal; P3-04 fixes the tuning so that the median over the 1024 sweep is 1000–1400.
+Rules: phases tile [0, E) without gaps or overlap, in order; the opening phase of age k starts exactly at race k's awakening year; if two awakenings are closer than `active_years`, the earlier opening phase ends at the later awakening; a quiet interval shorter than one quiet step is a single shorter step; a flare-up never extends past the next awakening or the start of the final phase (it is cut there). The quiet interval resumes after a flare-up as a new `phase` row. The design's "1,200 simulated years of 6,000" is the expected sum of active, flare-up and final years at `history_detail` normal; P3-04 fixes the tuning so that the median over the 1024 sweep is 1000–1400. (Corrected for P3-04.) `active_years`, `flare_years` and `final_years` are years at the 6,000-year reference span and scale in proportion to E, so the detail level sets the simulated share; a floor (10%) and a cap (45%, flare-ups included) are guaranteed by the scheduler; `phase.end_year` is inclusive; `trigger_event` is the awakening event for an opening phase, the tension's trigger for a flare-up and 0 otherwise. The exact scheduler, with every edge case, is P3-04 5.
 
 **Interim** (proposals entry): the design says a quiet interval advances "in one jump", and also that it "can be interrupted" when tension crosses a threshold. A single jump cannot be interrupted part-way, so a quiet interval is a sequence of quiet steps (25 years each by default) with the tension checked after each.
 
@@ -97,7 +97,7 @@ The design's tick loop, in this fixed order; each step is a function of the stat
 
 Step 6 of the design ("every change is appended to the event log") is not a step: every step appends its events as it makes its changes (4.3). Within a step, entities are processed in ascending id; pairs (a, b) with a < b in lexicographic order; a step that needs a different order (for example by priority) sorts by a strict total order ending in the id (P1-00 D7). An entity created in a step is processed from the next step on, not in the step that created it.
 
-**Awakenings** are not a tick step: at the start of an awakening year, before T1, the engine (P3-04) appends the awakening event and P3-05 places the race's civilizations (10.3).
+**Awakenings** are not a tick step: at the start of an awakening year, before T1, the awakening handler chooses the place (the home region), the engine (P3-04) appends the awakening event carrying it, and P3-05 places the race's civilizations (10.3) (corrected for P3-04: the place is chosen first, P3-04 6.3). The first year of a flare-up likewise starts with an engine step that appends a `flare_up` event.
 
 ### 4.3 State and the event log
 
@@ -107,7 +107,7 @@ Every state change that history must explain is an event. An event is created wi
 
 ### 4.4 Quiet steps
 
-A quiet step of length L years applies, in this order: Q1 population drift toward capacity over L years in closed form (P3-05; integer, no per-year loop needed); Q2 generational turnover counts (ruling lines as a count of generations: `race.generation_years`); Q3 ruin decay (ruined settlements past `ruin_fade_years` are marked faded; they stay rows); Q4 slow expansion: at most `quiet_claims` claims of free neighbouring regions per civilization per step (P3-06), no wars; Q5 the tension measure (P3-06) is evaluated; if ≥ `flare_threshold`, a flare-up starts at the next year. A quiet step writes at most a fixed number of events (`quiet_events_max`, interim 3 per civilization per step), mostly summaries; consecutive quiet steps of one civilization with no change merge into one summary event spanning them (the "four centuries of peace" record), written when the run of quiet steps ends.
+A quiet step of length L years applies, in this order: Q1 population drift toward capacity over L years in closed form (P3-05; integer, no per-year loop needed); Q2 generational turnover counts (ruling lines as a count of generations: `race.generation_years`); Q3 ruin decay (ruined settlements past `ruin_fade_years` are marked faded; they stay rows); Q4 slow expansion: at most `quiet_claims` claims of free neighbouring regions per civilization per step (P3-06), no wars; Q5 the tension measure (P3-06) is evaluated; if ≥ `flare_threshold`, a flare-up starts at the next year; Q6 bookkeeping (P3-04, as T7). Q2 is the engine's (P3-04: generations counted from years and `race.generation_years`). Every event of a quiet step is dated at the step's first year. A quiet step writes at most a fixed number of events (`quiet_events_max`, interim 3 per charged civilization per step, the engine's summaries not counted); consecutive quiet steps of one civilization with no change merge into one summary event spanning them (the "four centuries of peace" record), created at the first step of the run and lengthened while it lasts (corrected for P3-04, 6.6 there).
 
 ### 4.5 Determinism rules specific to simulation
 
@@ -141,7 +141,7 @@ with a, b the ids of the entities the decision is about (0 if none) and k a smal
 | 7 | `chronology` | P3-03 | settings (`meta`), `race`, `culture`, `history.chronology` | `race`, `race_biome`, `culture`, `god`, `age` |
 | 8 | `history` | P3-04 to P3-06 | everything above, `history.*` tuning | the history tables of 6.1 |
 
-`generate` runs every implemented stage by default; `--until regions` gives a geography-only world (the history tables exist and are empty), `--until chronology` stops after the schedule; `--until history` is a usage error ("not implemented yet") until P3-04 implements the stage (P3-03 4.3). `meta.stages` lists the stage names. The thread count does not affect history (H7).
+`generate` runs every implemented stage by default; `--until regions` gives a geography-only world (the history tables exist and are empty), `--until chronology` stops after the schedule; `--until history` was a usage error ("not implemented yet") until P3-04 implemented the stage (P3-03 4.3); from P3-04 it is accepted and is the default. `meta.stages` lists the stage names. The thread count does not affect history (H7).
 
 **Settings** (design 5, "World-creation settings"; P3-01 adds the flags and settings-file keys in `[world]`, P0-03 6 and P0-04 4; exact forms and messages in P3-01 6):
 
@@ -176,25 +176,25 @@ P3-05 and P3-06 add rows, event kinds and value keys to the catalogue (a catalog
 | `culture` | `id`, `key`, `name`, `race` | id | echo; naming data stays in the content hash, not in the table |
 | `god` | `id`, `name`, `camp` | id | **P3 rows: the creator gods only**, one per race, present or not (`id` = race id, P3-03 5.2), named by P3-02; P5 adds the rest of the pantheon and columns (`domain`) with a bump |
 | `age` | `id` (1–6), `race`, `start_year`, `end_year`, `name` | id | design 6 `age` |
-| `phase` | `id`, `age`, `kind` (4.1), `start_year`, `end_year`, `trigger_event` | id (= time order) | design 6 `phase` |
-| `event_kind` | `id`, `key`, `caused` (0/1), `salience`, `template` | id | the event catalogue (6.3, A1), one row per kind, written by the `history` stage as `biome` is written by the biome stage |
-| `event_kind_role` | `kind`, `seq`, `role`, `entity_type` | (kind, seq) | the participant roles of each kind, WITHOUT ROWID |
+| `phase` | `id`, `age`, `kind` (4.1), `start_year`, `end_year` (inclusive), `trigger_event` | id (= time order) | design 6 `phase` |
+| `event_kind` | `id`, `key`, `caused` (0/1), `region_use`, `settlement_use`, `salience`, `template` | id | the event catalogue (6.3, A1), one row per kind, written by the `history` stage as `biome` is written by the biome stage |
+| `event_kind_role` | `kind`, `seq`, `role`, `entity_type` (integer code), `min_count`, `max_count` | (kind, seq) | the participant roles of each kind, WITHOUT ROWID |
 | `event_kind_value` | `kind`, `seq`, `key` | (kind, seq) | the value keys of each kind, WITHOUT ROWID |
 | `event` | `id`, `year`, `end_year`, `kind` (→ `event_kind.id`), `phase`, `region`, `settlement`, `salience` | id | the log (6.2) |
-| `event_participant` | `event`, `seq`, `entity_type`, `entity_id`, `role` | (event, seq) | WITHOUT ROWID |
+| `event_participant` | `event`, `seq`, `role` (= `event_kind_role.seq`), `entity_type` (integer code), `entity_id` | (event, seq) | WITHOUT ROWID |
 | `event_cause` | `event`, `cause` | (event, cause) | cause < event |
-| `event_value` | `event`, `key`, `value` | (event, key) | integers only; keys per kind in the catalogue |
-| `civilization` | `id`, `name`, `race`, `culture`, `home_region`, `founded_year`, `founding_event`, `ended_year`, `ending_event` | id | design 6 `civilization` |
-| `settlement` | `id`, `name`, `x`, `y`, `region`, `founder_civ`, `founded_year`, `founding_event`, and its end state: `owner_civ`, `kind`, `status`, `population`, `ruined_year` | id | design 6 `settlement` (`civ_id` = `owner_civ`) |
+| `event_value` | `event`, `seq` (= `event_kind_value.seq`), `value` | (event, seq) | integers only; every value key of the kind once |
+| `civilization` | `id`, `name`, `race`, `culture`, `home_region`, `capital`, `founded_year`, `founding_event`, `ended_year`, `ending_event` | id | design 6 `civilization` |
+| `settlement` | `id`, `name`, `x`, `y`, `region`, `founder_civ`, `founded_year`, `founding_event`, and its end state: `owner_civ`, `kind`, `status`, `population`, `ruined_year`, `ruin_event` | id | design 6 `settlement` (`civ_id` = `owner_civ`) |
 | `settlement_census` | `settlement`, `year`, `owner_civ`, `kind`, `status`, `population` | (settlement, year) | state by year (6.4) |
 | `region_control` | `region`, `from_year`, `to_year`, `civ`, `event` | (region, from_year) | territory by year (6.4) |
-| `relation` | `a_type`, `a_id`, `b_type`, `b_id`, `kind`, `since`, `until`, `since_event` | (a_type, a_id, b_type, b_id, since) | design 6 `relation` with an end year; P3 uses civilization pairs only (kinds: war, peace treaty, vassal…, per P3-06) |
+| `relation` | `a_type`, `a_id`, `b_type`, `b_id`, `kind`, `since`, `until`, `since_event`, `until_event` | (a_type, a_id, b_type, b_id, kind, since) | design 6 `relation` with an end year; P3 uses civilization pairs only (kinds: war, peace treaty, vassal…, per P3-06) |
 
 Conventions for all P3 tables: STRICT, no REAL, no BLOB; ids from 1; 0 = none in id columns; NULL only for a year that has not happened (`ended_year`, `ruined_year`, `to_year`, `until`), stated per column; TEXT keys from data or from a catalogue, never free prose (design 6: "the database stores facts and names"). The design's `event.summary` and `event.site_id` are not columns in P3: summaries are rendered from the catalogue's templates (11), sites arrive in P6 (proposals entry). Expected sizes at 1024 (interim, to be measured by P3-04): 5,000–30,000 events, under 1 MB of tables; the three catalogue tables hold a few dozen kinds and a few hundred short rows, a few kilobytes, inside that estimate.
 
 ### 6.2 The event log contract
 
-- `id` increases with (year, processing order): every event's year is ≥ its predecessor's (`end_year` of a summary is ≥ its `year`; summaries are dated by their first year, and are appended when written, so a summary's id may follow events of later years only within its own quiet step; P3-04 states the exact rule).
+- `id` increases with (year, processing order): every event's year is ≥ its predecessor's, without exception (corrected for P3-04: a summary is created at the first step of its run and lengthened while the run lasts, so it needs no exception; `end_year` ≥ `year`).
 - **Causes**: each `event_cause.cause` < `event`; causes point to the events that made the event possible or provoked it (the war that led to the siege, the famine that led to the abandonment). Every event other than an awakening and the first events of a stub has at least one cause, or its kind is marked "uncaused" in the catalogue (a random pressure, a founding by expansion). The cause graph is a DAG by construction.
 - **Participants**: `entity_type` from a fixed list (`race`, `god`, `civilization`, `settlement`, `region`; P5 adds `figure`, `faction`, `monster`, `site`), `role` from the kind's catalogue entry (`actor`, `target`, `winner`, `loser`, `founder`, `creator`, …), `seq` 1, 2, … in a defined order.
 - **Values**: integer facts (`population_before`, `population_after`, `dead`, `army`, `years`…), keys from the catalogue.
@@ -204,7 +204,7 @@ This is what section 14 needs: every event names its kind, time, place, actors i
 
 ### 6.3 The event catalogue
 
-A table in P3-04 (extended by P3-05, P3-06 and later P5), one row per kind: key (`awakening`, `civ_founded`, `settlement_founded`, `settlement_grew`, `famine`, `plague`, `abandoned`, `region_claimed`, `war_declared`, `battle`, `siege`, `sacked`, `conquered`, `peace`, `quiet_era`, …), the participant roles, the value keys, whether it is caused or uncaused, its salience rule, and its report template (section 11). The catalogue is part of the schema contract: renaming a kind or changing a role's meaning is a schema change; adding a kind is not. `docs/specs/schema.md` keeps the catalogue summary, as it keeps the layer catalogue.
+A table in P3-04 (extended by P3-05, P3-06 and later P5), one row per kind: key (`awakening`, `civ_founded`, `settlement_founded`, `settlement_grew`, `famine`, `plague`, `abandoned`, `region_claimed`, `war_declared`, `battle`, `siege`, `sacked`, `conquered`, `peace`, `quiet_era`, …), the participant roles, the value keys, whether it is caused or uncaused, its salience rule, and its report template (section 11). The catalogue is part of the schema contract: renaming a kind or changing a role's meaning is a schema change; adding a kind is not (the precise rule is P3-04 8.2: structure in code, base salience and templates in `history.report`; a shipped kind is never edited, a new kind is added instead). `docs/specs/schema.md` keeps the catalogue summary, as it keeps the layer catalogue.
 
 **The catalogue travels with the world (A1).** The `history` stage writes the catalogue it ran with into `event_kind`, `event_kind_role` and `event_kind_value`: kind ids 1, 2, … in the catalogue's order (P3-04 fixes it; later kinds are appended, never renumbered), the key, the caused flag, the base salience, the report template taken from the loaded `history.report` data, and per kind its roles (with the entity type each takes) and value keys in a defined `seq` order. `event.kind` refers to `event_kind.id`. So a world file is self-describing: the viewer, the game and the enrichment pass list kinds, roles and value keys, and render the same sentences with whatever data set is installed later, from the world alone. Child tables rather than a text encoding in one column: they are STRICT-typed, need no second parser in every reader, and are queried with the same row reader as every other table; they are tiny (a few hundred rows).
 
@@ -222,7 +222,7 @@ P4 needs nothing else for the timeline; events at Y come from `event.year`.
 
 ### 6.5 `meta`
 
-Required from schema 6 (written by P3-03): the eight `param.*` keys of section 5. From schema 7: `history_end_year` = E (redundant with `param.history_span`, but it is the design's "end year" in `meta`, and P5's history mode would let them differ). `meta.stages` gains `chronology`, `history`.
+Required from schema 6 (written by P3-03): the eight `param.*` keys of section 5. From schema 7: `history_end_year` = E (redundant with `param.history_span`, but it is the design's "end year" in `meta`, and P5's history mode would let them differ), written by `generate_world` for every world (corrected for P3-04, 9.4 there). `meta.stages` gains `chronology`, `history`.
 
 ## 7. What history reads from geography
 
@@ -298,7 +298,7 @@ Nothing in P3 writes for the enrichment pass beyond the log contract (6.2) and t
 
 ## 10. Rules settled here for every subsystem
 
-1. **Homeland choice** (P3-05): a race scores each eligible region (not an islet, not held by another civilization) as Σ weights × the region's means + biome preferences × biome shares + upland and coast terms; the civilization's home region is the best score with a keyed tie-break; the race's creator god's "place" (design 5 "Creation") is that region. If no region is eligible, the best region by score among all non-islet regions, held or not (the awakening still happens: the exit check's order item must hold on every world).
+1. **Homeland choice** (P3-05; P3-04's stub home rule, P3-04 7.1, is interim and not a reading of this rule): a race scores each eligible region (not an islet, not held by another civilization) as Σ weights × the region's means + biome preferences × biome shares + upland and coast terms; the civilization's home region is the best score with a keyed tie-break; the race's creator god's "place" (design 5 "Creation") is that region. If no region is eligible, the best region by score among all non-islet regions, held or not (the awakening still happens: the exit check's order item must hold on every world).
 2. **Civilizations per race** with `auto`: 1 or 2 by a keyed draw, reduced to 1 when the free eligible regions are fewer than `regions_per_civ` (interim 4) × the civilizations already present plus 2; never 0 for a present race.
 3. **Capacity** of a region for a race: a linear function of its score and dry area (P3-05); settlement populations are integers that move toward capacity at `growth_permille`.
 4. **Region graph travel**: neighbours by `region_border`; open if walkable or crossed by a pass or (from P5) a road; a large-river border (7) costs extra for armies and expansion; costs are integers.
@@ -319,7 +319,7 @@ Nothing in P3 writes for the enrichment pass beyond the log contract (6.2) and t
 6. `[present]`: the end state: regions held per civilization, settlements by status and kind.
 7. `[stats]`: key = value lines for sweeps (section 12.2), stable names, integers and exact decimals.
 
-**Rendering**: sentences come from `render_event` in the `worldgen` library (6.3, A1), using the templates stored in the world's `event_kind` table, so the report, the viewer and the game print the same sentence for an event whatever data set is installed. The template language (placeholders for roles, values, place and year) is P3-07's.
+**Rendering**: sentences come from `render_event` in the `worldgen` library (6.3, A1), using the templates stored in the world's `event_kind` table, so the report, the viewer and the game print the same sentence for an event whatever data set is installed. The template language (placeholders for roles, values, place and year) is P3-04's (8.4 there; corrected for P3-04: the stage writes the templates and `render_event` is library code from P3-04 on).
 
 **Determinism**: the report is part of the cross-platform contract, as `report` and `hash` are (P0-04): UTF-8, LF, no trailing spaces, integer formatting only, templates from data, rows in id order, no locale, no time. Golden: the report text of the golden cases is hashed in the stage golden files (P3-07).
 
@@ -349,9 +349,9 @@ The validation specialist sweeps with shipped data and default settings: 1024 se
 
 - **Order and schedule**: every present race awakens exactly once, in race order, at its scheduled year (P3-03's rule including the seed's jitter), with an `awakening` event and an age row; ages tile [0, E).
 - **Phases**: phases tile [0, E); simulated years (kinds 1, 3, 4) between 10% and 50% of E.
-- **Not empty**: at year E at least one civilization is alive, at least `min_settlements_alive` (interim 3 at 1024, 1 at 512) settlements are not ruined, and every present race founded at least one civilization.
+- **Not empty**: at year E at least one civilization is alive, at least `min_settlements_alive` (interim 3 at 1024, 1 at 512) settlements are not ruined, and every present race founded at least one civilization. (`min_settlements_alive` is checked from P3-05 on: P3-04's stub has one settlement per race.)
 - **Not runaway**: no civilization holds more than `runaway_share` (interim 0.8) of non-islet regions for more than 1,000 consecutive years; events ≤ 200 per simulated year on average; no population above its region's capacity × 2; table sizes under 5 MB at 1024.
-- **Log integrity**: every cause id is smaller than its event's id; every participant and place id exists; years non-decreasing with id except within the summary rule (6.2); each `region_control` region has non-overlapping intervals.
+- **Log integrity**: every cause id is smaller than its event's id; every participant and place id exists; years non-decreasing with id (6.2); each `region_control` region has non-overlapping intervals.
 - **Purity**: the result is independent of `--threads`; `--until chronology` then `history` on the read-back world equals one run.
 
 ### 12.4 Golden cases
@@ -405,3 +405,7 @@ Each with the recommendation and the interim choice the specs follow until he de
 Made with the P3-03 spec; no other content changes. 2.1: age ids are 1 … P over the present races, and with a subset the first present race awakens at year 0. 4.6: P3-02 4.1 is the authoritative wording of the helpers, `weighted` included. 5: `--until history` is refused until P3-04. 6.1: `race` gains `plural`, `adjective` and `culture`, and `creator_god` = `id`; `god` has one row per race, present or not. 12.4: two `hist-*` cases with P3-03, `hist-dense-1024` with P3-04. The registry rule for the history stage is P3-03 8.2.
 
 Amended 2026-11-19 after the P3-03 implementation (P3-03 15.6, the item not yet in the body): H8 (4.5) states that the `history` stage (P3-04) rebuilds the name registry from tables `region`, `age` and `god` as its first step (P3-03 8.2). The other items of P3-03 15.6 (2.1, 6.1, 12.4) were already applied by the correction above.
+
+## Correction note (2026-11-19, for P3-04)
+
+Made with P3-04 (its 18.3), in place; no other content changes. 4.1: phase lengths scale with the span, floor and cap, the final phase after the last opening, inclusive `end_year`, `trigger_event` meanings. 4.2: the awakening's place is chosen before the event; a `flare_up` event at each flare-up's start. 4.4: Q2 is the engine's, new Q6 bookkeeping, quiet-step events dated at the step's start, `quiet_events_max` per charged civilization. 5: `--until history` accepted. 6.1: the column changes of P3-04 9.1 (`region_use`, `settlement_use`, `min_count`, `max_count`, role and value as `seq`, integer entity types, `capital`, `ruin_event`, `until_event`, `kind` in the `relation` key). 6.2 and 12.3: years non-decreasing with id without exception. 6.3 and 11: the catalogue split and the template language are P3-04's. 6.5: `history_end_year` in every world. 10.1: the stub home rule is interim. 12.3: `min_settlements_alive` from P3-05 on.
