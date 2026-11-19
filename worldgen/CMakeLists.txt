@@ -81,6 +81,8 @@ add_library(worldgen STATIC
     src/history/engine.cpp
     src/history/event_catalogue.cpp
     src/history/inputs.cpp
+    src/history/peoples.cpp
+    src/history/peoples_geo.cpp
     src/history/schedule.cpp
     src/history/stubs.cpp
     src/stages/history.cpp

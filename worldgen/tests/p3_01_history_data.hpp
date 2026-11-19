@@ -37,6 +37,7 @@ awakening_share = 0
 lifespan_years = 700
 generation_years = 150
 growth_permille = 3
+density_permille = 300
 site_weights = { fertility = 20, forage = 35, timber = 35, ore = 0, fresh_water = 10 }
 biomes = [
   { biome = "temperate_forest", weight = 500 },
@@ -65,6 +66,7 @@ awakening_share = "0.35"
 lifespan_years = 40
 generation_years = 15
 growth_permille = 20
+density_permille = 900
 site_weights = { fertility = 40, forage = 20, timber = 10, ore = 30, fresh_water = 0 }
 biomes = [
   { biome = "heath", weight = 200 },
@@ -73,6 +75,8 @@ biomes = [
   { biome = "grassland", weight = 100 },
   { biome = "marsh", weight = 100 },
   { biome = "alpine", weight = -400 },
+  { biome = "temperate_forest", weight = -200 },
+  { biome = "wet_woodland", weight = -300 },
 ]
 upland = 100
 coast = -100
@@ -92,6 +96,7 @@ awakening_share = "0.55"
 lifespan_years = 300
 generation_years = 70
 growth_permille = 5
+density_permille = 700
 site_weights = { fertility = 10, forage = 10, timber = 10, ore = 60, fresh_water = 10 }
 biomes = [
   { biome = "alpine", weight = 300 },
@@ -120,18 +125,20 @@ awakening_share = "0.70"
 lifespan_years = 400
 generation_years = 100
 growth_permille = 4
+density_permille = 250
 site_weights = { fertility = 0, forage = 60, timber = 20, ore = 0, fresh_water = 20 }
 biomes = [
-  { biome = "fen", weight = 600 },
-  { biome = "wet_woodland", weight = 600 },
-  { biome = "marsh", weight = 400 },
-  { biome = "temperate_forest", weight = 200 },
-  { biome = "highland_moor", weight = 100 },
+  { biome = "fen", weight = 800 },
+  { biome = "wet_woodland", weight = 800 },
+  { biome = "marsh", weight = 600 },
+  { biome = "temperate_forest", weight = 100 },
+  { biome = "highland_moor", weight = 300 },
   { biome = "grassland", weight = -200 },
   { biome = "alpine", weight = -300 },
   { biome = "steppe", weight = -400 },
+  { biome = "heath", weight = 100 },
 ]
-upland = 0
+upland = 200
 coast = 0
 expansion = 100
 aggression = 50
@@ -149,6 +156,7 @@ awakening_share = "0.83"
 lifespan_years = 70
 generation_years = 25
 growth_permille = 15
+density_permille = 1000
 site_weights = { fertility = 60, forage = 10, timber = 10, ore = 5, fresh_water = 15 }
 biomes = [
   { biome = "grassland", weight = 300 },
@@ -178,6 +186,7 @@ awakening_share = "0.93"
 lifespan_years = 50
 generation_years = 18
 growth_permille = 18
+density_permille = 800
 site_weights = { fertility = 35, forage = 25, timber = 10, ore = 30, fresh_water = 0 }
 biomes = [
   { biome = "steppe", weight = 400 },
@@ -294,6 +303,75 @@ normal = { active_years = 150, flare_years = 50, final_years = 300, flare_thresh
 dense = { active_years = 250, flare_years = 75, final_years = 400, flare_threshold = 700 }
 )";
 
+// history.peoples (P3-05 12.1).
+inline constexpr std::string_view PEOPLES_TOML = R"([history.peoples]
+score_site = 1000
+score_biome = 1000
+score_upland = 1000
+score_coast = 1000
+ore_reach_full = 200
+coast_full = 200
+rough_base = 150
+rough_upland = 600
+people_per_kcell = 2500
+capacity_floor = 400
+capital_weight = 3000
+founding_population = 300
+village_min = 250
+town_min = 1500
+city_min = 8000
+city_max = 25000
+fortress_max = 6000
+kind_shrink_permille = 800
+site_spacing = 32
+region_slots_max = 4
+mouth_class_min = 4
+port_radius = 3
+port_mouth_bonus = 60
+port_coast_bonus = 20
+decline_permille = 100
+recover_permille = 900
+colonist_permille = 120
+colonists_min = 60
+abandon_min = 40
+abandon_frail_max = 1200
+abandon_permille = { hamlet = 300, village = 250, town = 50, city = 0, fortress = 0 }
+found_pressure_permille = 750
+found_rate_permille = 100
+quiet_found_permille = 500
+reach_base = 1
+reach_per_expansion = 3
+expand_min_score = 250
+expand_relative_permille = 700
+expand_min_capacity = 800
+cost_penalty = 100
+pass_cost = 3
+river_cost = 2
+river_border_share_permille = 500
+civs_two_permille = 500
+regions_per_civ = 4
+home_min_hops = 3
+home_min_capacity = 1500
+intensity = { calm = 500, normal = 1000, turbulent = 2000 }
+famine_crowding_permille = 900
+famine_ppm = 2500
+famine_toll_min = 50
+famine_toll_max = 200
+plague_ppm = { hamlet = 300, village = 600, town = 1500, city = 3000, fortress = 600 }
+plague_toll_min = 100
+plague_toll_max = 300
+plague_spread_permille = 200
+plague_spread_toll_permille = 500
+crisis_per_generation_permille = 60
+crisis_loss_permille = 50
+split_min_settlements = 6
+split_min_regions = 3
+split_permille = 300
+ruin_fade_years = 1500
+colony_new_region_salience = 30
+plague_small_salience = 25
+)";
+
 inline constexpr std::string_view REPORT_TOML = R"([history.report]
 events = [
   { kind = "awakening", salience = 100, template = "{creator} awakened the {race:plural} in {@region}." },
@@ -301,6 +379,20 @@ events = [
   { kind = "settlement_founded", salience = 40, template = "{founder} founded {settlement} in {@region}." },
   { kind = "quiet_era", salience = 20, template = "{civilization} passed {years} quiet {years?year|years} ({generations} {generations?generation|generations}), from {@year} to {@end_year}." },
   { kind = "flare_up", salience = 50, template = "In {@year} tensions flared into {years} {years?year|years} of upheaval." },
+  { kind = "colony_founded", salience = 15, template = "{founder} sent settlers from {origin} to found {settlement} in {@region}." },
+  { kind = "became_village", salience = 10, template = "{settlement} grew into a village of {population}." },
+  { kind = "became_town", salience = 18, template = "{settlement} grew into a town of {population}." },
+  { kind = "became_city", salience = 45, template = "{settlement} grew into a city of {population}." },
+  { kind = "settlement_dwindled", salience = 15, template = "{settlement} dwindled to {population} souls." },
+  { kind = "famine", salience = 25, template = "Famine struck {settlement}; {dead} died." },
+  { kind = "plague", salience = 45, template = "Plague broke out in {settlement}; {dead} died." },
+  { kind = "plague_spread", salience = 25, template = "The plague spread to {settlement}; {dead} died." },
+  { kind = "succession_crisis", salience = 40, template = "A succession crisis shook {civilization}." },
+  { kind = "civ_seceded", salience = 70, template = "{civilization} broke away from {from}, taking {settlements} {settlements?settlement|settlements} with it." },
+  { kind = "settlement_abandoned", salience = 55, template = "{settlement} was abandoned; {survivors} {survivors?survivor|survivors} left." },
+  { kind = "capital_moved", salience = 50, template = "{civilization} moved its seat to {settlement}." },
+  { kind = "civ_ended", salience = 85, template = "{civilization} came to an end." },
+  { kind = "ruin_faded", salience = 10, template = "The ruins of {settlement} faded from memory." },
 ]
 )";
 
@@ -344,6 +436,7 @@ inline Files shipped_files() {
     }
     f["history/chronology.toml"] = std::string(CHRONOLOGY_TOML);
     f["history/engine.toml"] = std::string(ENGINE_TOML);
+    f["history/peoples.toml"] = std::string(PEOPLES_TOML);
     f["history/report.toml"] = std::string(REPORT_TOML);
     return f;
 }
@@ -387,6 +480,7 @@ struct Race {
     std::string_view name, plural, adjective, camp;
     std::int64_t awakening_share_raw;  // Fx raw (P0-01 5.6 of the decimal text)
     std::int64_t lifespan_years, generation_years, growth_permille;
+    std::int64_t density_permille;  // P3-05 12.2 (P3-01 r6)
     std::int64_t fertility, forage, timber, ore, fresh_water;  // site_weights
     std::vector<RaceBiome> biomes;
     std::int64_t upland, coast, expansion, aggression;
@@ -399,26 +493,27 @@ struct Race {
 // 3564822856, "0.93" 3994319585 (core_reference.parse_decimal).
 inline const std::vector<Race>& races() {
     static const std::vector<Race> v = {
-        {"dwarf", 3, "Dwarf", "Dwarves", "Dwarven", "neutral", 2362232013, 300, 70, 5, 10, 10, 10, 60, 10,
+        {"dwarf", 3, "Dwarf", "Dwarves", "Dwarven", "neutral", 2362232013, 300, 70, 5, 700, 10, 10, 10, 60, 10,
          {{"alpine", 300}, {"highland_moor", 300}, {"heath", 200}, {"temperate_forest", -100}, {"wet_woodland", -300},
           {"marsh", -400}, {"fen", -400}},
          800, -200, 250, 300, {"hamlet", "village", "town", "city", "fortress"}, "dwarven"},
-        {"elf", 1, "Elf", "Elves", "Elven", "good", 0, 700, 150, 3, 20, 35, 35, 0, 10,
+        {"elf", 1, "Elf", "Elves", "Elven", "good", 0, 700, 150, 3, 300, 20, 35, 35, 0, 10,
          {{"temperate_forest", 500}, {"wet_woodland", 300}, {"grassland", 0}, {"heath", -200}, {"steppe", -300},
           {"highland_moor", -300}, {"alpine", -600}},
          -300, 0, 200, 150, {"hamlet", "village", "town", "city"}, "elven"},
-        {"faerie", 4, "Faerie", "Faeries", "Faerie", "good", 3006477107, 400, 100, 4, 0, 60, 20, 0, 20,
-         {{"fen", 600}, {"wet_woodland", 600}, {"marsh", 400}, {"temperate_forest", 200}, {"highland_moor", 100},
-          {"grassland", -200}, {"alpine", -300}, {"steppe", -400}},
-         0, 0, 100, 50, {"hamlet", "village"}, "faerie"},
-        {"goblin", 2, "Goblin", "Goblins", "Goblin", "evil", 1503238554, 40, 15, 20, 40, 20, 10, 30, 0,
-         {{"heath", 200}, {"highland_moor", 200}, {"steppe", 150}, {"grassland", 100}, {"marsh", 100}, {"alpine", -400}},
+        {"faerie", 4, "Faerie", "Faeries", "Faerie", "good", 3006477107, 400, 100, 4, 250, 0, 60, 20, 0, 20,
+         {{"fen", 800}, {"wet_woodland", 800}, {"marsh", 600}, {"temperate_forest", 100}, {"highland_moor", 300},
+          {"grassland", -200}, {"alpine", -300}, {"steppe", -400}, {"heath", 100}},
+         200, 0, 100, 50, {"hamlet", "village"}, "faerie"},
+        {"goblin", 2, "Goblin", "Goblins", "Goblin", "evil", 1503238554, 40, 15, 20, 900, 40, 20, 10, 30, 0,
+         {{"heath", 200}, {"highland_moor", 200}, {"steppe", 150}, {"grassland", 100}, {"marsh", 100}, {"alpine", -400},
+          {"temperate_forest", -200}, {"wet_woodland", -300}},
          100, -100, 600, 700, {"hamlet", "village", "town", "fortress"}, "goblin"},
-        {"human", 5, "Human", "Humans", "Human", "neutral", 3564822856, 70, 25, 15, 60, 10, 10, 5, 15,
+        {"human", 5, "Human", "Humans", "Human", "neutral", 3564822856, 70, 25, 15, 1000, 60, 10, 10, 5, 15,
          {{"grassland", 300}, {"steppe", 100}, {"temperate_forest", 100}, {"marsh", -100}, {"heath", -100},
           {"fen", -200}, {"highland_moor", -200}, {"alpine", -500}},
          -300, 200, 700, 400, {"hamlet", "village", "town", "city", "fortress"}, "human"},
-        {"orc", 6, "Orc", "Orcs", "Orcish", "evil", 3994319585, 50, 18, 18, 35, 25, 10, 30, 0,
+        {"orc", 6, "Orc", "Orcs", "Orcish", "evil", 3994319585, 50, 18, 18, 800, 35, 25, 10, 30, 0,
          {{"steppe", 400}, {"heath", 200}, {"grassland", 200}, {"highland_moor", 100}, {"temperate_forest", -100},
           {"marsh", -100}, {"fen", -200}, {"wet_woodland", -200}, {"alpine", -300}},
          100, -100, 600, 900, {"hamlet", "village", "town", "fortress"}, "orcish"},
@@ -441,7 +536,7 @@ inline constexpr std::string_view CHRONOLOGY_AGE_NAME_FORM = "The Age of {plural
 inline const std::vector<std::string_view>& race_fields() {
     static const std::vector<std::string_view> v = {
         "order",           "name",      "plural", "adjective", "camp",      "awakening_share", "lifespan_years",
-        "generation_years", "growth_permille", "site_weights", "biomes", "upland", "coast",          "expansion",
+        "generation_years", "growth_permille", "density_permille", "site_weights", "biomes", "upland", "coast",          "expansion",
         "aggression",      "settlement_kinds", "culture"};
     return v;
 }

@@ -8,6 +8,7 @@ awakening_share = 0
 lifespan_years = 700
 generation_years = 150
 growth_permille = 3
+density_permille = 300
 site_weights = { fertility = 20, forage = 35, timber = 35, ore = 0, fresh_water = 10 }
 biomes = [
   { biome = "temperate_forest", weight = 500 },

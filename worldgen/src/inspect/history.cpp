@@ -81,6 +81,11 @@ db::Result<HistoryTables> read_history_tables(const db::WorldReader& world) {
         }
         t.rows[k] = std::move(r.value());
     }
+    db::Result<Rows> races = world.table_rows(db::RACE_TABLE);
+    if (!races.ok()) {
+        return races.error();
+    }
+    t.races = std::move(races.value());
     return t;
 }
 
@@ -219,6 +224,48 @@ HistoryStatsResult history_stats(const HistoryTables& tables, std::int64_t end_y
     }
     st.census_rows = n(rows[10].size());
     st.relations = n(rows[12].size());
+    // P3-05 15.4: per race. Race rows: column 1 id, 2 key.
+    std::vector<std::int64_t> race_ids;
+    for (const std::vector<db::ColumnValue>& row : tables.races) {
+        if (row.size() < 2 || row[0].type != db::ValueType::integer || row[1].type != db::ValueType::text) {
+            result.problem = corrupt(db::RACE_TABLE, row_at(row) + "id or key of the wrong type");
+            return result;
+        }
+        race_ids.push_back(row[0].integer);
+        st.races.push_back(HistoryStats::RaceStats{row[1].bytes, 0, 0, 0});
+    }
+    // The race of each civilization (column 3), by civilization id.
+    const auto race_slot = [&](std::int64_t civ) -> HistoryStats::RaceStats* {
+        for (const std::vector<db::ColumnValue>& c : rows[8]) {
+            if (c[0].integer == civ) {
+                for (std::size_t k = 0; k < race_ids.size(); ++k) {
+                    if (race_ids[k] == c[2].integer) {
+                        return &st.races[k];
+                    }
+                }
+                return nullptr;
+            }
+        }
+        return nullptr;
+    };
+    for (const std::vector<db::ColumnValue>& row : rows[9]) {
+        if (row[10].integer != 1 && row[10].integer != 2) {
+            continue;
+        }
+        st.population += row[11].integer;
+        if (HistoryStats::RaceStats* r = race_slot(row[8].integer)) {
+            r->population += row[11].integer;
+            ++r->settlements_standing;
+        }
+    }
+    for (const std::vector<db::ColumnValue>& row : rows[11]) {
+        if (row[2].type != db::ValueType::null) {
+            continue;
+        }
+        if (HistoryStats::RaceStats* r = race_slot(row[3].integer)) {
+            ++r->regions_held;
+        }
+    }
     return result;
 }
 
@@ -245,6 +292,16 @@ std::string history_section_text(const HistoryStats& st) {
     line("regions_held", st.regions_held);
     line("census_rows", st.census_rows);
     line("relations", st.relations);
+    line("population", st.population);
+    for (const HistoryStats::RaceStats& r : st.races) {
+        line("population_" + r.key, r.population);
+    }
+    for (const HistoryStats::RaceStats& r : st.races) {
+        line("settlements_standing_" + r.key, r.settlements_standing);
+    }
+    for (const HistoryStats::RaceStats& r : st.races) {
+        line("regions_held_" + r.key, r.regions_held);
+    }
     return out;
 }
 

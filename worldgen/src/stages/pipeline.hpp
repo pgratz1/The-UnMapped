@@ -45,6 +45,7 @@ public:
     // The committed rows of the region and chronology tables (P3-04 3.3),
     // in key order.
     struct CommittedRows {
+        std::vector<db::BiomeRow> biomes;  // P3-05 3.2
         std::vector<db::RegionBorderRow> region_borders;
         std::vector<db::RegionBiomeRow> region_biomes;
         std::vector<db::RaceRow> races;

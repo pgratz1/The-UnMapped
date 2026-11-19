@@ -303,6 +303,7 @@ target_sources(worldgen-tests PRIVATE
     history/history_engine_schedule_test.cpp
     history/history_engine_writer_test.cpp
     history/history_engine_state_test.cpp
+    history/peoples_engineer_test.cpp
     history/history_engine_catalogue_test.cpp
     history/history_engine_schema_test.cpp
     history/history_engine_report_test.cpp

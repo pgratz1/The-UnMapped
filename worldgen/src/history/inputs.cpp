@@ -62,6 +62,10 @@ HistoryInputs history_inputs_from(const stages::StageContext& context) {
     in.ages = copy_rows(context.ages());
     in.region_layer = context.layer("region");
     in.water_layer = context.layer("water");
+    in.biomes = copy_rows(context.biomes());
+    in.habitability_layer = context.layer("habitability");
+    in.river_layer = context.layer("river");
+    in.flow_dir_layer = context.layer("flow_dir");
     return in;
 }
 
@@ -95,6 +99,10 @@ HistoryInputs history_inputs_from_world(const db::WorldReader& world, const data
     in.ages = take(db::read_age_rows(world), db::AGE_TABLE);
     in.region_layer = take(world.read_layer("region"), "layer 'region'").grid;
     in.water_layer = take(world.read_layer("water"), "layer 'water'").grid;
+    in.biomes = take(db::read_biome_rows(world), db::BIOME_TABLE);
+    in.habitability_layer = take(world.read_layer("habitability"), "layer 'habitability'").grid;
+    in.river_layer = take(world.read_layer("river"), "layer 'river'").grid;
+    in.flow_dir_layer = take(world.read_layer("flow_dir"), "layer 'flow_dir'").grid;
     return in;
 }
 

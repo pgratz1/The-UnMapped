@@ -1,4 +1,5 @@
-// Stage P3-04 history (spec docs/specs/p3-04-simulation-engine.md).
+// Stage history (specs docs/specs/p3-04-simulation-engine.md and
+// docs/specs/p3-05-peoples.md).
 
 #include "worldgen/stages/history.hpp"
 
@@ -6,7 +7,7 @@
 
 #include "worldgen/core/error.hpp"
 #include "worldgen/history/event_catalogue.hpp"
-#include "worldgen/history/stubs.hpp"
+#include "worldgen/history/peoples.hpp"
 
 namespace worldgen::stages {
 
@@ -18,11 +19,14 @@ HistoryResult history_stage(const data::ContentSet& content, const history::Hist
     const history::EventCatalogue catalogue = history::event_catalogue(content);
     // Items 2, 4 and 5 (the tuning again, then settings and chronology rows).
     (void)history::check_engine_inputs(content, inputs);
-    // The shipped configuration (6.4).
-    history::StubAwakening stub;
+    // The shipped configuration (P3-04 6.4, P3-05 13.1 item 3): the peoples
+    // awakening and subsystem; the stubs remain test seams only.
+    history::PeoplesSubsystem peoples;
+    history::PeoplesAwakening awakening(peoples);
     history::EmptyInterventionSource none;
     history::EngineConfig config;
-    config.awakening = &stub;
+    config.awakening = &awakening;
+    config.subsystems = {&peoples};
     config.interventions = &none;
     config.catalogue = &catalogue;
     return history::run_engine(content, inputs, config);

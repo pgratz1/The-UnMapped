@@ -8,6 +8,7 @@ awakening_share = "0.35"
 lifespan_years = 40
 generation_years = 15
 growth_permille = 20
+density_permille = 900
 site_weights = { fertility = 40, forage = 20, timber = 10, ore = 30, fresh_water = 0 }
 biomes = [
   { biome = "heath", weight = 200 },
@@ -16,6 +17,8 @@ biomes = [
   { biome = "grassland", weight = 100 },
   { biome = "marsh", weight = 100 },
   { biome = "alpine", weight = -400 },
+  { biome = "temperate_forest", weight = -200 },
+  { biome = "wet_woodland", weight = -300 },
 ]
 upland = 100
 coast = -100

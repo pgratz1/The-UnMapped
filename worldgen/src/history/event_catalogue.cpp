@@ -63,6 +63,39 @@ EventCatalogue build_compiled() {
     c.kinds.push_back(KindDef{4, "quiet_era", false, 1, 0, {role(1, "civilization", EntityType::civilization, 1, 1)},
                               {"years", "generations"}, 0, {}});
     c.kinds.push_back(KindDef{5, "flare_up", true, 0, 0, {}, {"years"}, 0, {}});
+    // P3-05 section 11: kinds 6 to 19, every one with a region and a settlement
+    // use of 1 and every role count 1-1.
+    const auto settlement_and_civ = [] {
+        return std::vector<RoleDef>{role(1, "settlement", EntityType::settlement, 1, 1),
+                                    role(2, "civilization", EntityType::civilization, 1, 1)};
+    };
+    c.kinds.push_back(KindDef{6, "colony_founded", false, 1, 1,
+                              {role(1, "settlement", EntityType::settlement, 1, 1),
+                               role(2, "founder", EntityType::civilization, 1, 1),
+                               role(3, "origin", EntityType::settlement, 1, 1)},
+                              {"population"}, 0, {}});
+    c.kinds.push_back(KindDef{7, "became_village", true, 1, 1, settlement_and_civ(), {"population"}, 0, {}});
+    c.kinds.push_back(KindDef{8, "became_town", true, 1, 1, settlement_and_civ(), {"population"}, 0, {}});
+    c.kinds.push_back(KindDef{9, "became_city", true, 1, 1, settlement_and_civ(), {"population"}, 0, {}});
+    c.kinds.push_back(KindDef{10, "settlement_dwindled", false, 1, 1, settlement_and_civ(), {"population"}, 0, {}});
+    c.kinds.push_back(KindDef{11, "famine", false, 1, 1, settlement_and_civ(), {"dead", "population"}, 0, {}});
+    c.kinds.push_back(KindDef{12, "plague", false, 1, 1, settlement_and_civ(), {"dead", "population"}, 0, {}});
+    c.kinds.push_back(KindDef{13, "plague_spread", true, 1, 1, settlement_and_civ(), {"dead", "population"}, 0, {}});
+    c.kinds.push_back(KindDef{14, "succession_crisis", false, 1, 1,
+                              {role(1, "civilization", EntityType::civilization, 1, 1)}, {}, 0, {}});
+    c.kinds.push_back(KindDef{15, "civ_seceded", true, 1, 1,
+                              {role(1, "civilization", EntityType::civilization, 1, 1),
+                               role(2, "from", EntityType::civilization, 1, 1)},
+                              {"settlements"}, 0, {}});
+    c.kinds.push_back(KindDef{16, "settlement_abandoned", true, 1, 1, settlement_and_civ(), {"survivors"}, 0, {}});
+    c.kinds.push_back(KindDef{17, "capital_moved", true, 1, 1,
+                              {role(1, "civilization", EntityType::civilization, 1, 1),
+                               role(2, "settlement", EntityType::settlement, 1, 1)},
+                              {}, 0, {}});
+    c.kinds.push_back(KindDef{18, "civ_ended", true, 1, 1,
+                              {role(1, "civilization", EntityType::civilization, 1, 1)}, {}, 0, {}});
+    c.kinds.push_back(KindDef{19, "ruin_faded", true, 1, 1, {role(1, "settlement", EntityType::settlement, 1, 1)},
+                              {}, 0, {}});
     return c;
 }
 

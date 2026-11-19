@@ -79,6 +79,8 @@ struct BiomeRow {
     std::string name;
     std::int64_t colour = 0;
     std::int64_t water = 0;
+
+    friend bool operator==(const BiomeRow&, const BiomeRow&) = default;
 };
 
 // The one row of table `climate` (P1-03 3, C7; schema 4): id 1, the D8

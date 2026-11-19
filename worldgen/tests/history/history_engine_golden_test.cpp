@@ -68,9 +68,10 @@ void check_world_case(const GoldenWorld& g) {
 // constructors and R1 are extended (3.2).
 std::string first_difference(const eng::HistoryInputs& a, const eng::HistoryInputs& b) {
     const auto& [seed, map_size, params, regions, region_borders, region_biomes, races, race_biomes, cultures, gods,
-                 ages, region_layer, water_layer] = a;
+                 ages, region_layer, water_layer, biomes, habitability_layer, river_layer, flow_dir_layer] = a;
     const auto& [seed2, map_size2, params2, regions2, region_borders2, region_biomes2, races2, race_biomes2, cultures2,
-                 gods2, ages2, region_layer2, water_layer2] = b;
+                 gods2, ages2, region_layer2, water_layer2, biomes2, habitability_layer2, river_layer2,
+                 flow_dir_layer2] = b;
     const auto& [span, detail, civs, prace, intensity, pressure, activity, script] = params;
     const auto& [span2, detail2, civs2, prace2, intensity2, pressure2, activity2, script2] = params2;
     if (seed != seed2) return "seed";
@@ -99,6 +100,14 @@ std::string first_difference(const eng::HistoryInputs& a, const eng::HistoryInpu
         water_layer.values != water_layer2.values) {
         return "water_layer";
     }
+    // P3-05 3.2.
+    if (biomes != biomes2) return "biomes";
+    const auto same = [](const db::LayerGrid& x, const db::LayerGrid& y) {
+        return x.width == y.width && x.height == y.height && x.values == y.values;
+    };
+    if (!same(habitability_layer, habitability_layer2)) return "habitability_layer";
+    if (!same(river_layer, river_layer2)) return "river_layer";
+    if (!same(flow_dir_layer, flow_dir_layer2)) return "flow_dir_layer";
     return a == b ? "" : "operator== (a member the bindings missed)";
 }
 

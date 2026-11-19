@@ -493,7 +493,7 @@ TEST_CASE("cli P3-01 8.3 test 10: --until none worlds differ from 0.11.0 only in
             if (key == "content_hash") {
                 value = golden.at(root);
             } else if (key == "generator_version") {
-                value = "0.14.0";
+                value = "0.15.0";
             }
         }
         const ProcessResult d = sb.cli({"hash", "--db", u8(world), "--detail"});
@@ -516,18 +516,18 @@ TEST_CASE("cli P3-01 8.3 test 10: --until none worlds differ from 0.11.0 only in
             want.replace(at + 1, end - at - 1, key + " = " + value);
         };
         replace_line("content_hash", golden.at(root));
-        replace_line("generator_version", "0.14.0");
+        replace_line("generator_version", "0.15.0");
         const ProcessResult rep = sb.cli({"report", "--db", u8(world)});
         REQUIRE(rep.exit_code == EXIT_OK);
         CHECK(rep.out == want);
     }
 }
 
-TEST_CASE("cli P3-01 7: the version line names the generator and schema (0.14.0 and 7 since P3-04)") {
+TEST_CASE("cli P3-01 7: the version line names the generator and schema (0.15.0 and 7 since P3-05)") {
     Sandbox sb;
     const ProcessResult v = sb.cli({"--version"});
     REQUIRE(v.exit_code == EXIT_OK);
-    CHECK(v.out == std::string("worldgen-cli 0.14.0 schema 7 sqlite ") + worldgen::db::sqlite_library_version() + "\n");
+    CHECK(v.out == std::string("worldgen-cli 0.15.0 schema 7 sqlite ") + worldgen::db::sqlite_library_version() + "\n");
 }
 
 TEST_CASE("cli P3-01 7: the shipped data the CLI reads by default has the golden content hash") {

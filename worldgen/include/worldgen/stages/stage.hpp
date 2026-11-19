@@ -85,6 +85,9 @@ public:
     // order, exactly as written (P3-04 3.3: the history stage reads them).
     // Rows this stage has written itself are not returned.
     [[nodiscard]] std::span<const db::RegionBorderRow> region_borders() const noexcept;
+    // The rows of table `biome` written by earlier stages of this run, in id
+    // order, exactly as written (P3-05 3.2: the history stage reads them).
+    [[nodiscard]] std::span<const db::BiomeRow> biomes() const noexcept;
     [[nodiscard]] std::span<const db::RegionBiomeRow> region_biomes() const noexcept;
     [[nodiscard]] std::span<const db::RaceRow> races() const noexcept;
     [[nodiscard]] std::span<const db::RaceBiomeRow> race_biomes() const noexcept;

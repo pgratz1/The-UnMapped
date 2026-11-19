@@ -40,6 +40,9 @@ struct HistorySectionResult {
 // db::HISTORY_TABLES), each in primary-key order as visited.
 struct HistoryTables {
     std::array<std::vector<std::vector<db::ColumnValue>>, 13> rows;
+    // The rows of table race (P3-03), id order: the per-race keys of P3-05
+    // 15.4.
+    std::vector<std::vector<db::ColumnValue>> races;
 };
 [[nodiscard]] db::Result<HistoryTables> read_history_tables(const db::WorldReader& world);
 
@@ -64,6 +67,18 @@ struct HistoryStats {
     std::int64_t regions_held = 0;
     std::int64_t census_rows = 0;
     std::int64_t relations = 0;
+    // P3-05 15.4, after relations: the population of the standing
+    // settlements, then per race row in id order (present or not) its
+    // population, its standing settlements and its held regions (open
+    // region_control rows), each list in race order.
+    struct RaceStats {
+        std::string key;
+        std::int64_t population = 0;
+        std::int64_t settlements_standing = 0;
+        std::int64_t regions_held = 0;
+    };
+    std::int64_t population = 0;
+    std::vector<RaceStats> races;
 };
 
 // The checks of history_section on tables already read, then the stats.
