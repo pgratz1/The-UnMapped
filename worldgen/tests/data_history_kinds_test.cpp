@@ -223,7 +223,7 @@ TEST_CASE("P3-01 3-5: the production registry holds race, culture and history be
     CHECK(history.directory == "history");
     CHECK(history.required);
     REQUIRE(history.has_fixed_ids());
-    REQUIRE(history.id_schemas.size() == 4U);  // P3-01 5: chronology; engine and report from P3-04; peoples from P3-05
+    REQUIRE(history.id_schemas.size() == 4U);  // P3-01 5: chronology; engine and report from P3-04; peoples P3-05
     CHECK(history.id_schemas[0].id == "chronology");
     CHECK(history.id_schemas[1].id == "engine");
     CHECK(history.id_schemas[2].id == "peoples");
@@ -234,7 +234,7 @@ TEST_CASE("P3-01 3-5: the production registry holds race, culture and history be
     CHECK(chrono->checks()[0].name == "chronology_age_name_form");
     CHECK(history.schema_for("engine") != nullptr);
     CHECK(history.schema_for("peoples") != nullptr);  // P3-05 12.1
-    CHECK(history.schema_for("conflict") == nullptr);
+    CHECK(history.schema_for("conflict") == nullptr);  // P3-06, generator 0.16.0 (P3-01 r7)
 
     const wd::Kind& race = kinds[3];
     CHECK(race.directory == "races");
@@ -315,7 +315,7 @@ TEST_CASE("P3-01 8.1 test 1: game/data and the two fixture roots hold the listin
         CHECK(std::filesystem::is_regular_file(data / f));
     }
     // P3-01 5: "a file for a future id must not be committed early".
-    CHECK(directory_from_disk(data, "history").entries.size() == 4U);
+    CHECK(directory_from_disk(data, "history").entries.size() == 4U);  // no conflict.toml before 0.16.0
 }
 
 TEST_CASE("P3-01 3.1: the races in race order are elves, goblins, dwarves, faeries, humans, orcs (design 5)") {
@@ -499,7 +499,6 @@ TEST_CASE("P3-01 3 race_order_dense: against the directory, naming the smallest 
         f["cultures/goblin.toml"] = history_data::culture_toml(history_data::culture_listings()[3]);
         f["history/chronology.toml"] = std::string(history_data::CHRONOLOGY_TOML);
         f["history/engine.toml"] = std::string(history_data::ENGINE_TOML);
-    f["history/peoples.toml"] = std::string(history_data::PEOPLES_TOML);
         f["history/peoples.toml"] = std::string(history_data::PEOPLES_TOML);
         f["history/report.toml"] = std::string(history_data::REPORT_TOML);
         at_directory(only_error(load(f)), "races", "race_order_dense", "race",
@@ -521,7 +520,6 @@ TEST_CASE("P3-01 3 race_order_dense: against the directory, naming the smallest 
         f["cultures/elven.toml"] = history_data::culture_toml(history_data::culture_listings()[1]);
         f["history/chronology.toml"] = std::string(history_data::CHRONOLOGY_TOML);
         f["history/engine.toml"] = std::string(history_data::ENGINE_TOML);
-    f["history/peoples.toml"] = std::string(history_data::PEOPLES_TOML);
         f["history/peoples.toml"] = std::string(history_data::PEOPLES_TOML);
         f["history/report.toml"] = std::string(history_data::REPORT_TOML);
         const Load l = load(f);
@@ -614,7 +612,7 @@ TEST_CASE("P3-01 3, 4 and P0-03 amendment 17: name, plural, adjective and the cu
 
 TEST_CASE("P3-01 5: a history file for an unregistered id is an error at its header") {
     Files f = history_data::shipped_files();
-    // P3-05 12.1: engine, peoples and report are registered; conflict (P3-06) is not yet.
+    // P3-05 12.1 (P3-01 r6): engine, peoples and report are registered; conflict (P3-06, 0.16.0) is not yet.
     f["history/conflict.toml"] = "[history.conflict]\nstep_years = 1\n";
     const wd::LoadError e = only_error(load(f));
     CHECK(e.path == "history/conflict.toml");
@@ -732,6 +730,9 @@ TEST_CASE("P3-01 8.1 test 5: every bounded race field one step outside its bound
         {"races/orc.toml", "generation_years = 18", "generation_years = 49", "generation_years = 1001", "race.orc.generation_years"},
         {"races/orc.toml", "growth_permille = 18", "growth_permille = 0", "growth_permille = -1", "race.orc.growth_permille"},
         {"races/orc.toml", "growth_permille = 18", "growth_permille = 1000", "growth_permille = 1001", "race.orc.growth_permille"},
+        // P3-05 12.2 item 1: density_permille int(1, 1000), required
+        {"races/orc.toml", "density_permille = 800", "density_permille = 1", "density_permille = 0", "race.orc.density_permille"},
+        {"races/orc.toml", "density_permille = 800", "density_permille = 1000", "density_permille = 1001", "race.orc.density_permille"},
         {"races/orc.toml", "fertility = 35", "fertility = 1000", "fertility = 1001", "race.orc.site_weights.fertility"},
         {"races/orc.toml", "fertility = 35", "fertility = 0", "fertility = -1", "race.orc.site_weights.fertility"},
         {"races/orc.toml", "forage = 25", "forage = 1000", "forage = 1001", "race.orc.site_weights.forage"},

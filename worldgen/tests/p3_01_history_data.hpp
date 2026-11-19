@@ -11,7 +11,10 @@
 // files; these transcriptions are the tests' independent reading.)
 //
 // Mirrors RACE_FILES, NAMING and CHRONOLOGY_FILE of
-// worldgen/tests/reference/p3_data_reference.py.
+// worldgen/tests/reference/p3_data_reference.py. Generator 0.15.0 (P3-05
+// 12.1, 12.2, P3-01 r6): density_permille, the goblin and faerie changes
+// (added biome entries appended at the end of `biomes`, an assumption),
+// history.peoples and the report entries of kinds 6-19.
 
 #include <cstdint>
 #include <map>
@@ -303,7 +306,35 @@ normal = { active_years = 150, flare_years = 50, final_years = 300, flare_thresh
 dense = { active_years = 250, flare_years = 75, final_years = 400, flare_threshold = 700 }
 )";
 
-// history.peoples (P3-05 12.1).
+inline constexpr std::string_view REPORT_TOML = R"([history.report]
+events = [
+  { kind = "awakening", salience = 100, template = "{creator} awakened the {race:plural} in {@region}." },
+  { kind = "civ_founded", salience = 80, template = "The {race:plural} founded {civilization} in {@region}." },
+  { kind = "settlement_founded", salience = 40, template = "{founder} founded {settlement} in {@region}." },
+  { kind = "quiet_era", salience = 20, template = "{civilization} passed {years} quiet {years?year|years} ({generations} {generations?generation|generations}), from {@year} to {@end_year}." },
+  { kind = "flare_up", salience = 50, template = "In {@year} tensions flared into {years} {years?year|years} of upheaval." },
+  { kind = "colony_founded", salience = 15, template = "{founder} sent settlers from {origin} to found {settlement} in {@region}." },
+  { kind = "became_village", salience = 10, template = "{settlement} grew into a village of {population}." },
+  { kind = "became_town", salience = 18, template = "{settlement} grew into a town of {population}." },
+  { kind = "became_city", salience = 45, template = "{settlement} grew into a city of {population}." },
+  { kind = "settlement_dwindled", salience = 15, template = "{settlement} dwindled to {population} souls." },
+  { kind = "famine", salience = 25, template = "Famine struck {settlement}; {dead} died." },
+  { kind = "plague", salience = 45, template = "Plague broke out in {settlement}; {dead} died." },
+  { kind = "plague_spread", salience = 25, template = "The plague spread to {settlement}; {dead} died." },
+  { kind = "succession_crisis", salience = 40, template = "A succession crisis shook {civilization}." },
+  { kind = "civ_seceded", salience = 70, template = "{civilization} broke away from {from}, taking {settlements} {settlements?settlement|settlements} with it." },
+  { kind = "settlement_abandoned", salience = 55, template = "{settlement} was abandoned; {survivors} {survivors?survivor|survivors} left." },
+  { kind = "capital_moved", salience = 50, template = "{civilization} moved its seat to {settlement}." },
+  { kind = "civ_ended", salience = 85, template = "{civilization} came to an end." },
+  { kind = "ruin_faded", salience = 10, template = "The ruins of {settlement} faded from memory." },
+]
+)";
+
+// --- history.peoples (P3-05 12.1, the listing; generator 0.15.0). The
+// fourteen report entries of kinds 6-19 above are P3-05 11's, appended in
+// kind id order (the spec gives no file listing: an assumption shared with
+// p3_data_reference.py) -----------------------------------------------------------
+
 inline constexpr std::string_view PEOPLES_TOML = R"([history.peoples]
 score_site = 1000
 score_biome = 1000
@@ -370,30 +401,6 @@ split_permille = 300
 ruin_fade_years = 1500
 colony_new_region_salience = 30
 plague_small_salience = 25
-)";
-
-inline constexpr std::string_view REPORT_TOML = R"([history.report]
-events = [
-  { kind = "awakening", salience = 100, template = "{creator} awakened the {race:plural} in {@region}." },
-  { kind = "civ_founded", salience = 80, template = "The {race:plural} founded {civilization} in {@region}." },
-  { kind = "settlement_founded", salience = 40, template = "{founder} founded {settlement} in {@region}." },
-  { kind = "quiet_era", salience = 20, template = "{civilization} passed {years} quiet {years?year|years} ({generations} {generations?generation|generations}), from {@year} to {@end_year}." },
-  { kind = "flare_up", salience = 50, template = "In {@year} tensions flared into {years} {years?year|years} of upheaval." },
-  { kind = "colony_founded", salience = 15, template = "{founder} sent settlers from {origin} to found {settlement} in {@region}." },
-  { kind = "became_village", salience = 10, template = "{settlement} grew into a village of {population}." },
-  { kind = "became_town", salience = 18, template = "{settlement} grew into a town of {population}." },
-  { kind = "became_city", salience = 45, template = "{settlement} grew into a city of {population}." },
-  { kind = "settlement_dwindled", salience = 15, template = "{settlement} dwindled to {population} souls." },
-  { kind = "famine", salience = 25, template = "Famine struck {settlement}; {dead} died." },
-  { kind = "plague", salience = 45, template = "Plague broke out in {settlement}; {dead} died." },
-  { kind = "plague_spread", salience = 25, template = "The plague spread to {settlement}; {dead} died." },
-  { kind = "succession_crisis", salience = 40, template = "A succession crisis shook {civilization}." },
-  { kind = "civ_seceded", salience = 70, template = "{civilization} broke away from {from}, taking {settlements} {settlements?settlement|settlements} with it." },
-  { kind = "settlement_abandoned", salience = 55, template = "{settlement} was abandoned; {survivors} {survivors?survivor|survivors} left." },
-  { kind = "capital_moved", salience = 50, template = "{civilization} moved its seat to {settlement}." },
-  { kind = "civ_ended", salience = 85, template = "{civilization} came to an end." },
-  { kind = "ruin_faded", salience = 10, template = "The ruins of {settlement} faded from memory." },
-]
 )";
 
 // --- Culture files (P3-01 4) ------------------------------------------------------
@@ -480,7 +487,7 @@ struct Race {
     std::string_view name, plural, adjective, camp;
     std::int64_t awakening_share_raw;  // Fx raw (P0-01 5.6 of the decimal text)
     std::int64_t lifespan_years, generation_years, growth_permille;
-    std::int64_t density_permille;  // P3-05 12.2 (P3-01 r6)
+    std::int64_t density_permille;  // P3-05 12.2 item 1 (P3-01 r6)
     std::int64_t fertility, forage, timber, ore, fresh_water;  // site_weights
     std::vector<RaceBiome> biomes;
     std::int64_t upland, coast, expansion, aggression;

@@ -1,0 +1,261 @@
+// Spec P3-05 16.3 (golden vectors) and 16.2 items 18 and 20: the world
+// cases of worldgen/tests/golden/p3-05-peoples.txt (written by the
+// independent reference reference/p3_peoples_reference.py): hash --detail's
+// thirteen table lines, the [history] section with the keys of 15.4, the
+// homes of every awakening, sigma and C of every region and race through
+// PeoplesView, the rendered sentences (every event of the 512 cases, the
+// first 300 and last 50 of the 1024 cases); resume (P3-04 Y2) and threads 1
+// and 5 with peoples installed; the sample of 15.2 (hist-peoples-42-1024:
+// its first 60 sentences, 530 events and the end state of the spec) and the
+// hard bounds of 15.5 on the 1024 cases.
+//
+// geo-seed-42-512 runs by default (two worlds: --until chronology and
+// complete); every other case is in the doctest suite "history-slow"
+// (worldgen-tests -ts=history-slow --no-skip). Empty until the
+// implementation's header exists (p3_05_peoples_api.hpp).
+
+#include "p3_05_peoples_support.hpp"
+
+#if UNMAPPED_HAVE_PEOPLES
+
+#include <doctest/doctest.h>
+
+#include <cstdint>
+#include <map>
+#include <string>
+#include <vector>
+
+#include "worldgen/inspect/report.hpp"
+
+namespace {
+
+using namespace peoples_test;
+
+// A world of a golden world case with the shipped data, cached per process.
+std::string world_path(const GCase& g, std::uint32_t threads = 1, const std::string& until = "") {
+    const bool phrase = g.name == "geo-phrase-512";
+    if (g.detail == "normal") {
+        return chrono_test::world(chrono_test::WorldKey{g.seed, phrase ? "the unmapped" : "", g.size, g.span, g.races,
+                                                        until, threads});
+    }
+    static std::map<std::string, std::string> cache;
+    const std::string key = g.name + "/" + std::to_string(threads) + "/" + until;
+    if (const auto it = cache.find(key); it != cache.end()) {
+        return it->second;
+    }
+    chrono_api::Params p = chrono_test::params_with(g.span, chrono_test::races_of_text(g.races));
+    p.detail = g.detail;
+    const std::string path = chrono_test::world_dir().file("p" + std::to_string(cache.size()) + ".db");
+    worldgen::WorldParams wp = chrono_test::world_params(
+        g.seed, g.size, p, shipped(), until.empty() ? std::nullopt : std::optional<std::string>(until), threads);
+    REQUIRE(worldgen::generate_world(wp, shipped(), path, db::Overwrite::refuse).ok());
+    cache[key] = path;
+    return path;
+}
+
+std::string section(const std::string& text, const std::string& header) {
+    const std::size_t at = text.find(header + "\n");
+    if (at == std::string::npos) {
+        return {};
+    }
+    const std::size_t end = text.find("\n[", at + 1);
+    return text.substr(at, end == std::string::npos ? std::string::npos : end + 1 - at);
+}
+
+void check_world_case(const GCase& g) {
+    CAPTURE(g.name);
+    // --until chronology: resume (Y2) and the PeoplesView probe of sigma and C
+    const db::WorldReader part = open_world(world_path(g, 1, "chronology"));
+    const eng::HistoryInputs in = eng::inputs_from_world(part, shipped());
+    PeoplesConfig cfg(shipped());
+    const PeoplesConfig* p = &cfg;
+    bool probed = false;
+    cfg.add_after({eng::Step::t2}, [&](eng::StepContext&) {
+        if (probed) return;
+        probed = true;
+        for (const auto& [key, sc] : g.score) {
+            CAPTURE(key.first);
+            CAPTURE(key.second);
+            CHECK(p->view().score(key.first, key.second) == sc.first);
+            CHECK(p->view().capacity(key.first, key.second) == sc.second);
+        }
+    });
+    const Tables probed_run = eng::run_engine(shipped(), in, cfg.get());
+    CHECK(probed);
+    const Tables resumed = eng::history_stage(shipped(), in);
+    CHECK(probed_run == resumed);
+    // the complete world
+    const db::WorldReader r = open_world(world_path(g));
+    const Tables t = tables_of_world(r);
+    CHECK(resumed == t);  // Y2 with peoples installed (16.2 item 20)
+    const std::map<std::string, std::string> detail = chrono_test::detail_tables(r);
+    CHECK(g.tables.size() == 13U);
+    for (const auto& [name, hex] : g.tables) {
+        CAPTURE(name);
+        CHECK(detail.at(name) == hex);
+    }
+    CHECK(table_hashes(t) == g.tables);
+    CHECK(homes_from_rows(t) == homes_without_n(g));
+    const auto rep = worldgen::inspect::build_report(r);
+    REQUIRE(rep.ok());
+    std::string want = "[history]\n";
+    for (const std::string& l : g.report) {
+        want += l + "\n";
+    }
+    CHECK(section(rep.value(), "[history]") == want);
+    CHECK(report_lines_05(t, in) == g.report);
+    const std::vector<std::string> sent = eng::render_all(r, static_cast<std::int64_t>(t.event.size()));
+    for (const auto& [id, text] : g.sentences) {
+        CAPTURE(id);
+        REQUIRE(static_cast<std::size_t>(id) <= sent.size());
+        CHECK(sent[static_cast<std::size_t>(id - 1)] == text);
+    }
+    if (g.size <= 512) {
+        CHECK(g.sentences.size() == sent.size());
+    }
+}
+
+// 15.5 hard bounds from the rows (the capacity bound with the reference's C).
+void check_hard_bounds(const GCase& g) {
+    CAPTURE(g.name);
+    const db::WorldReader r = open_world(world_path(g));
+    const Tables t = tables_of_world(r);
+    std::int64_t alive = 0, standing = 0;
+    for (const Row& c : t.civilization) alive += is_null(c[8]) ? 1 : 0;
+    for (const Row& s : t.settlement) standing += (at(s, 10) == 1 || at(s, 10) == 2) ? 1 : 0;
+    CHECK(alive >= 1);
+    CHECK(standing >= (g.size >= 1024 ? 3 : 1));
+    std::set<std::int64_t> races_with_civ;
+    std::map<std::int64_t, std::int64_t> civ_race;
+    for (const Row& c : t.civilization) {
+        races_with_civ.insert(at(c, 2));
+        civ_race[at(c, 0)] = at(c, 2);
+    }
+    for (const Row& a : rows_of(r, "age")) {
+        CHECK(races_with_civ.count(a[1].integer) == 1U);
+    }
+    for (const Row& s : t.settlement) {
+        if (at(s, 10) == 1 || at(s, 10) == 2) {
+            CHECK(at(s, 11) <= 2 * g.score.at({at(s, 4), civ_race[at(s, 8)]}).second);
+        }
+    }
+    CHECK(static_cast<std::int64_t>(t.event.size()) * 1000 <= 200 * simulated(t) * 1000);
+}
+
+}  // namespace
+
+TEST_SUITE("history") {
+
+TEST_CASE("P3-05 16.3 item 21, 16.2 item 20: geo-seed-42-512 (tables, [history], homes, sigma and C, sentences, resume)") {
+    check_world_case(golden_case("geo-seed-42-512"));
+}
+
+}  // TEST_SUITE
+
+TEST_SUITE("history-slow" * doctest::skip()) {
+
+TEST_CASE("P3-05 16.3 item 21: the other 512 golden worlds") {
+    for (const char* name : {"geo-seed-0-512", "geo-phrase-512", "hist-span-2000-512"}) {
+        check_world_case(golden_case(name));
+    }
+}
+
+TEST_CASE("P3-05 16.3 item 21, 16.2 item 18: the 1024 golden worlds and the hard bounds of 15.5") {
+    for (const char* name : {"geo-seed-1-1024", "hist-races-elf-orc-1024", "hist-dense-1024", "hist-peoples-42-1024"}) {
+        check_world_case(golden_case(name));
+        check_hard_bounds(golden_case(name));
+    }
+}
+
+TEST_CASE("P3-05 16.2 item 20: threads 1 and 5 give identical history tables") {
+    for (const char* name : {"geo-seed-42-512", "hist-dense-1024"}) {
+        const GCase& g = golden_case(name);
+        CAPTURE(g.name);
+        CHECK(tables_of_world(open_world(world_path(g, 5))) == tables_of_world(open_world(world_path(g, 1))));
+    }
+}
+
+TEST_CASE("P3-05 15.2, 16.3 item 22: the sample of seed 42 at 1024 (first 60 sentences, 530 events, the end state)") {
+    const GCase& g = golden_case("hist-peoples-42-1024");
+    const db::WorldReader r = open_world(world_path(g));
+    const Tables t = tables_of_world(r);
+    CHECK(t.event.size() == 530U);
+    const std::vector<std::string> sent = eng::render_all(r, static_cast<std::int64_t>(t.event.size()));
+    // 15.2 (the spec's lines without their "<span> e<id> <kind>/<salience>:" prefix and [causes])
+    const std::vector<std::string> first = {
+        "Fielie awakened the Elves in West Wood III.",
+        "The Elves founded Finen in West Wood III.",
+        "Finen founded Voeledell in West Wood III.",
+        "The Elves founded The Realm of Ithieglie in Southeast Isle.",
+        "The Realm of Ithieglie founded Mofaesi in Southeast Isle.",
+        "Finen passed 550 quiet years (3 generations), from 150 to 699.",
+        "The Realm of Ithieglie passed 725 quiet years (4 generations), from 150 to 874.",
+        "Voeledell grew into a town of 1520.",
+    };
+    for (std::size_t i = 0; i < first.size(); ++i) {
+        CHECK(sent[i] == first[i]);
+    }
+    for (std::int64_t id = 1; id <= 60; ++id) {
+        CHECK(sent[static_cast<std::size_t>(id - 1)] == g.sentences.at(id));
+    }
+    CHECK(sent[519] == "Plague broke out in Voeledell; 207 died.");
+    CHECK(sent[520] == "The plague spread to Rannve; 68 died.");
+    CHECK(sent[521] == "Rannve was abandoned; 869 survivors left.");
+    // the end state of 15.2: (name, capital, kind of the capital, its population, standing settlements, regions, population)
+    struct End {
+        const char* name;
+        const char* capital;
+        std::int64_t kind, cap_pop, settlements, regions, population;
+    };
+    const std::vector<End> want = {
+        {"Finen", "Voeledell", town, 1316, 11, 3, 11624},
+        {"The Realm of Ithieglie", "Mofaesi", village, 659, 4, 1, 1411},
+        {"The Grork Horde", "Zugnob Hole", town, 6260, 12, 3, 22321},
+        {"The Hold of Dulimin", "Grirnbra", town, 6139, 4, 1, 13898},
+        {"The Narinthri Throne", "Kholikhu", fortress, 3287, 4, 1, 6572},
+        {"The Teeshti Court", "Matia Glade", village, 1499, 8, 5, 6182},
+        {"The Warrens of Dribnark", "Sneezskrub Hole", town, 4595, 4, 1, 9088},
+        {"The Kingdom of Stard", "Meadstead", city, 12212, 17, 8, 108290},
+        {"The Duchy of Dant", "Bildheldham", town, 5006, 5, 2, 20319},
+        {"The Zak-Neez Mob", "Beedruzz", town, 3693, 12, 3, 30892},
+        {"The Ghuughzuz Horde", "Aa'azuugh Fort", town, 4801, 4, 1, 9139},
+        {"The Slig Mob", "Groz", town, 3657, 5, 2, 9913},
+    };
+    REQUIRE(t.civilization.size() == want.size());
+    std::map<std::int64_t, const Row*> st;
+    for (const Row& s : t.settlement) st[at(s, 0)] = &s;
+    for (std::size_t i = 0; i < want.size(); ++i) {
+        const Row& c = t.civilization[i];
+        CAPTURE(want[i].name);
+        CHECK(c[1].bytes == want[i].name);
+        CHECK(is_null(c[8]));
+        const Row& cap = *st.at(at(c, 5));
+        CHECK(cap[1].bytes == want[i].capital);
+        CHECK(at(cap, 9) == want[i].kind);
+        CHECK(at(cap, 11) == want[i].cap_pop);
+        std::int64_t n = 0, pop = 0, held = 0;
+        for (const Row& s : t.settlement) {
+            if (at(s, 8) == at(c, 0) && (at(s, 10) == 1 || at(s, 10) == 2)) {
+                ++n;
+                pop += at(s, 11);
+            }
+        }
+        for (const Row& rc : t.region_control) held += (is_null(rc[2]) && at(rc, 3) == at(c, 0)) ? 1 : 0;
+        CHECK(n == want[i].settlements);
+        CHECK(held == want[i].regions);
+        CHECK(pop == want[i].population);
+    }
+    std::int64_t standing = 0, ruined_n = 0, faded_n = 0;
+    for (const Row& s : t.settlement) {
+        standing += (at(s, 10) == 1 || at(s, 10) == 2) ? 1 : 0;
+        ruined_n += at(s, 10) == ruined ? 1 : 0;
+        faded_n += at(s, 10) == faded ? 1 : 0;
+    }
+    CHECK(standing == 90);
+    CHECK(ruined_n == 1);
+    CHECK(faded_n == 0);
+}
+
+}  // TEST_SUITE
+
+#endif  // UNMAPPED_HAVE_PEOPLES
