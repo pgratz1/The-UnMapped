@@ -46,10 +46,10 @@ The full design is in [`docs/design/design.md`](docs/design/design.md).
 
 | | |
 | --- | --- |
-| **Current phase** | P1 Geography. P0 Foundation and P2 Godot bring-up and viewer v0 are complete |
-| **Next phase** | P3 History core, after P1 |
-| **Current milestone** | Milestone 0, Geography generator: in progress (P1 and P2) |
-| **Work in flight** | P1: elevation and hydrology are merged, so `generate` writes a continent with ranges, passes, rivers and lakes. Elevation followed five rounds of design exploration and two world-critic reviews (`docs/reviews/`): irregular continents, long segmented ranges with 2,000 to 2,500 m peaks, valleys cut by erosion, and a guaranteed share of mountains in every world. Generator 0.6.0 (2026-11-17) added natural passes at saddles of each range's drainage divide, after five more exploration rounds and three critic reviews: a pass is cut by at most 500 m, so naturally low saddles become low gates and others stay high cols, and about two in five are walkable end to end at the default map size. Pass sites are stored in a `pass` table for the history simulation (the first schema change, version 2). Very steep faces are bounded by a final slope-relaxing step. Climate merged the same day (generator 0.7.0): temperature falls with height and from south to north, and each world has one prevailing wind that makes ranges wet on the windward side and dry in the lee. Biomes merged on 2026-11-18 (generator 0.8.0, schema 3): alpine, highland moor, marsh, forest and grassland by rules held as data, with forest thresholds scaled to map size; the biome definitions and the world's wind direction are stored in the world file. A variety revision merged the same day (generator 0.9.0, schema 4; Paul's decisions of 2026-11-17): heath, steppe, wet woodland along large rivers and fens on wet lowland bring the count to nine natural biomes, each world draws its own temperature offset of up to 2 °C either way (stored in the world file), and the coastal forest ring is thinner. Validated on 271 worlds; a world-critic review (`docs/reviews/p1-04b-biome-variety-critic.md`) notes two follow-ups, a visible heath stripe on some worlds and blocky fen patches on the largest maps. Resources and habitability merged on 2026-11-18 (generator 0.10.0, schema still 4): six score layers (fertility, ore, timber, fresh water, forage and habitability, each 0 to 255 and absolute, so a harsh world reads as harsh) and a layer of walkable areas, for the history simulation to place homelands, farms, mines and settlements. Habitability weighs farmland most, then wild food, timber and ore, and treats fresh water as a necessity. Validated on 271 worlds; a world-critic review (`docs/reviews/p1-05-resources-critic.md`) led to a tuning revision before the merge and records the remaining limits. Regions, the last geography stage, is being implemented from its approved spec (`docs/specs/p1-06-regions.md`, schema 5): about 2 km² each, roughly 13, 50 and 200 per map, with borders on ridge crests and large rivers, upland regions for wide massifs, and placeholder names. |
+| **Current phase** | P1 Geography: all six stages are merged; the phase ends with Paul's review. P0 Foundation and P2 Godot bring-up and viewer v0 are complete |
+| **Next phase** | P3 History core, after the P1 review |
+| **Current milestone** | Milestone 0, Geography generator: all geography layers are generated and the file hash is identical on Linux and Windows; awaiting Paul's review |
+| **Work in flight** | P1: elevation and hydrology are merged, so `generate` writes a continent with ranges, passes, rivers and lakes. Elevation followed five rounds of design exploration and two world-critic reviews (`docs/reviews/`): irregular continents, long segmented ranges with 2,000 to 2,500 m peaks, valleys cut by erosion, and a guaranteed share of mountains in every world. Generator 0.6.0 (2026-11-17) added natural passes at saddles of each range's drainage divide, after five more exploration rounds and three critic reviews: a pass is cut by at most 500 m, so naturally low saddles become low gates and others stay high cols, and about two in five are walkable end to end at the default map size. Pass sites are stored in a `pass` table for the history simulation (the first schema change, version 2). Very steep faces are bounded by a final slope-relaxing step. Climate merged the same day (generator 0.7.0): temperature falls with height and from south to north, and each world has one prevailing wind that makes ranges wet on the windward side and dry in the lee. Biomes merged on 2026-11-18 (generator 0.8.0, schema 3): alpine, highland moor, marsh, forest and grassland by rules held as data, with forest thresholds scaled to map size; the biome definitions and the world's wind direction are stored in the world file. A variety revision merged the same day (generator 0.9.0, schema 4; Paul's decisions of 2026-11-17): heath, steppe, wet woodland along large rivers and fens on wet lowland bring the count to nine natural biomes, each world draws its own temperature offset of up to 2 °C either way (stored in the world file), and the coastal forest ring is thinner. Validated on 271 worlds; a world-critic review (`docs/reviews/p1-04b-biome-variety-critic.md`) notes two follow-ups, a visible heath stripe on some worlds and blocky fen patches on the largest maps. Resources and habitability merged on 2026-11-18 (generator 0.10.0, schema still 4): six score layers (fertility, ore, timber, fresh water, forage and habitability, each 0 to 255 and absolute, so a harsh world reads as harsh) and a layer of walkable areas, for the history simulation to place homelands, farms, mines and settlements. Habitability weighs farmland most, then wild food, timber and ore, and treats fresh water as a necessity. Validated on 271 worlds; a world-critic review (`docs/reviews/p1-05-resources-critic.md`) led to a tuning revision before the merge and records the remaining limits. Regions, the last geography stage, merged on 2026-11-19 (generator 0.11.0, schema 5): land is divided into named regions of about 2 km² each, roughly 13, 50 and 200 per map, with borders on ridge crests and large rivers, upland regions of their own for wide massifs, and placeholder names such as "Northwest Steppe II" until history renames them. Three new tables give the history simulation each region's summary (area, biomes, mean resource scores, walkable ground, reachable ore) and each border's length, lowest crossing, river and pass. A world-critic review (`docs/reviews/p1-06-regions-critic.md`) led to a revision before the merge (each pass belongs to one border; mountain and lake regions get fitting names). Validated on 271 worlds (`docs/reviews/p1-06-regions-validation.md`): a default world takes about 9 seconds and 6.5 MB. The viewer gained a regions view, a legend and a description of the cell under the mouse. Next: Paul's review of the geography phase, then P3. |
 | **`main`** | Builds and passes all tests on Linux (GCC, Clang, Clang with sanitizers) and Windows (MSVC), in debug and release |
 
 **What "P0 done" means.** The phase's exit check is that an empty world file is byte-identical across all three compilers and that `worldgen-cli hash` proves it in continuous integration. It does: eight test worlds, six empty and two holding test layers, are identical across all seven build configurations, and each matches its recorded golden hash. CI repeats the comparison on every push. With geography stages merged the comparison covers twelve worlds, four of them full maps with elevation and hydrology at 512 and 1024.
@@ -61,7 +61,8 @@ The full design is in [`docs/design/design.md`](docs/design/design.md).
 
 **Known gaps and notes**
 
-- Geography so far is elevation, hydrology, climate, biomes and resources: no regions yet.
+- Geography is complete as planned: elevation, hydrology, climate, biomes, resources and regions. History does not exist yet.
+- Region limitations (`docs/reviews/p1-06-regions-critic.md`): lowland borders are plain distance borders, not natural lines; some large rivers run inside a region; placeholder names repeat heavily on the largest maps (up to "Northeast Wood XXIX"); islets of any size are regions.
 - Resource score limitations (`docs/reviews/p1-05-resources-critic.md`): the banks of large rivers score slightly below their hinterland, lowland areas differ little from each other, and rich ore is often on crags that cannot be reached on foot. Small maps (512) are mostly mountain and leave little room for homelands.
 - Biome limitations (`docs/reviews/p1-04-biomes-critic.md`), being addressed by the revision in progress: every range has the same ring of moor on its wet and dry sides; the first kilometre of most coasts is forest; marsh is thin ribbons; rivers through grassland have bare banks.
 - At the largest map size about one world in twenty has very little high ground or a peak above the intended maximum (`docs/reviews/p1-04-biomes-validation.md`, defects D1 and D2); to be fixed in elevation.
@@ -82,7 +83,7 @@ The first block of work is the world generator prototype: seven phases, P0 to P6
 | Phase | Delivers | Depends on | Status |
 | --- | --- | --- | --- |
 | **P0 Foundation** | Repository layout, CMake presets, vendored dependencies, CI on three compilers, the deterministic core, the reproducible SQLite layer, the TOML loader, `worldgen-cli` | — | **Done** 2026-11-15, reviewed |
-| **P1 Geography** | Elevation, erosion, hydrology, climate, biomes, resources and regions, each writing its layer; image export per layer | P0 | **In progress** since 2026-11-15: first three specs approved, shared foundation, elevation and hydrology merged (2026-11-16); natural passes merged (2026-11-17, generator 0.6.0, schema 2); climate merged (2026-11-17, generator 0.7.0); biomes merged (2026-11-18, generator 0.8.0, schema 3); biome variety revision merged (2026-11-18, generator 0.9.0, schema 4); resources and habitability merged (2026-11-18, generator 0.10.0); regions remain |
+| **P1 Geography** | Elevation, erosion, hydrology, climate, biomes, resources and regions, each writing its layer; image export per layer | P0 | **In progress** since 2026-11-15: first three specs approved, shared foundation, elevation and hydrology merged (2026-11-16); natural passes merged (2026-11-17, generator 0.6.0, schema 2); climate merged (2026-11-17, generator 0.7.0); biomes merged (2026-11-18, generator 0.8.0, schema 3); biome variety revision merged (2026-11-18, generator 0.9.0, schema 4); resources and habitability merged (2026-11-18, generator 0.10.0); regions merged (2026-11-19, generator 0.11.0, schema 5). All stages are in; Paul's review of the phase is pending |
 | **P2 Godot bring-up and viewer v0** | Godot version pinned, C++ extension building on Linux and Windows, `world.db` reader bound into Godot, 2D map with switchable layers | P0; parallel with P1 | **Done** 2026-11-15, awaiting Paul's hands-on review. Godot 4.7.2 and godot-cpp 10.0.0 pinned; the extension builds and its headless check passes on Linux and Windows |
 | **P3 History core** | Race and culture definitions, ages and the awakening schedule, active phases and quiet intervals, civilizations, settlements, wars, ruin, the event log, a text history report | P1 | Not started |
 | **P4 Viewer v1** | Timeline scrubber, territory by year, settlement and site markers, browser for civilizations and events | P2, P3; parallel with P5 | Not started |
@@ -99,7 +100,7 @@ P0 ██████████ done ──┬─► P1 Geography ░░ in pr
 
 | # | Milestone | Reached when | Status |
 | --- | --- | --- | --- |
-| 0 | Geography generator | `worldgen-cli` writes a world with all geography layers; maps look plausible in image export and in the viewer; identical file hash on Linux and Windows | In progress: foundation (P0) and viewer v0 (P2) done; geography (P1) under way |
+| 0 | Geography generator | `worldgen-cli` writes a world with all geography layers; maps look plausible in image export and in the viewer; identical file hash on Linux and Windows | Criteria met, pending Paul's review: all geography layers are written (P1), the viewer shows them (P2), and the file hash is identical across GCC, Clang and MSVC on Linux and Windows |
 | 1 | History generator | Default history generates in under two minutes; races appear in order; the event log reads as coherent history; sites and quest hooks derived | Not started (P3 to P6) |
 | 2 | Walkable terrain | Godot streams terrain from a world file; the player can cross the map on flat screen without hitches | Not started |
 | 3 | VR parity | The same build starts in VR or flat; the fly-across test holds 90 Hz in VR | Not started |
@@ -135,20 +136,23 @@ $ worldgen-cli generate --seed-phrase "The Unmapped"
 $ worldgen-cli report --db ~/.cache/the-unmapped/out/world-15629206466951235176.db
 # worldgen report v2
 [meta]
-content_hash = 906ab678185b2a157a15b1dc26402772476bd7965e3fdddc92ab6f70a1a96f40
+content_hash = 1543a4aef55105d5df66225432e37a7f39e50846e53741b86f084da283f9c175
 format = the-unmapped-world
-generator_version = 0.10.0
+generator_version = 0.11.0
 param.map_size = 1024
-schema_version = 4
+schema_version = 5
 seed = 15629206466951235176
 seed_phrase = the unmapped
-stages = elevation,hydrology,climate,biomes,resources
+stages = elevation,hydrology,climate,biomes,resources,regions
 [tables]
 biome = 12
 climate = 1
-layer = 18
+layer = 19
 meta = 8
 pass = 3
+region = 51
+region_biome = 255
+region_border = 126
 [layers]
 elevation i16 1024x1024 codec=1 bytes=1175180 min=-2306 max=19803
 water u8 1024x1024 codec=1 bytes=34948 min=0 max=3
@@ -168,6 +172,7 @@ fresh_water u8 1024x1024 codec=1 bytes=360860 min=0 max=255
 forage u8 1024x1024 codec=1 bytes=196390 min=0 max=255
 habitability u8 1024x1024 codec=1 bytes=255314 min=0 max=199
 walk_area u16 1024x1024 codec=1 bytes=24902 min=0 max=2
+region u16 1024x1024 codec=1 bytes=23636 min=0 max=51
 [geography]
 cells = 1048576
 land_cells = 419430
@@ -219,9 +224,17 @@ ore_rich_share = 0.0668
 walk_areas = 2
 walk_main_share = 0.6155
 walk_share = 0.6259
+regions = 51
+region_area_km2 = 0.82 1.78 5.25
+region_borders = 126
+region_borders_walkable = 95
+region_borders_river = 19
+region_borders_pass = 3
+regions_isolated = 0
+regions_upland = 9
 
 $ worldgen-cli hash --db ~/.cache/the-unmapped/out/world-15629206466951235176.db
-ef7dc97caa5ebe1f0886c9a78ec0813f65e5916b7977a8c8c87054f14bb70a06
+816fe43fdba936f85b65f4ff8ac14c0fc3f9fed22cd17f0faac053ec61ef285f
 
 $ worldgen-cli render --db ~/.cache/the-unmapped/out/world-15629206466951235176.db --composite map
 /home/you/.cache/the-unmapped/out/world-15629206466951235176.map.png
@@ -243,7 +256,11 @@ Habitability (`render --layer habitability`), here drawn over the relief: bright
 
 ![Habitability map of the same world](docs/images/p1-habitability.jpg)
 
-A 1024 world takes about 8.5 seconds on six cores. `--until elevation` stops after elevation, `--until none` writes an empty world, and `--test-pattern` writes three small test layers that exercise hashing, noise and the layer codec.
+Regions (`render --composite regions`): the biome map with the borders of this world's 51 regions in black. Borders follow ridge crests in the mountains and large rivers in the lowlands:
+
+![Region map of the same world](docs/images/p1-regions.jpg)
+
+A 1024 world takes about 9 seconds on six cores. `--until elevation` stops after elevation, `--until none` writes an empty world, and `--test-pattern` writes three small test layers that exercise hashing, noise and the layer codec.
 
 | Command | Does |
 | --- | --- |
@@ -286,7 +303,7 @@ B=~/.cache/the-unmapped/build/$(basename "$PWD")/linux-gcc-release
 ~/.cache/the-unmapped/tools/godot-4.7.2-stable/Godot_v4.7.2-stable_linux.x86_64 --path "$B/game" -- ~/.cache/the-unmapped/out/seed42.db
 ```
 
-The viewer lists every layer in the file, shows the selected one as a map with pan and zoom, and lists the metadata. Godot always runs on a copy of the project assembled in the build tree, never on `game/` itself.
+The viewer lists every layer and composite view in the file in groups, shows the selected one as a map with pan and zoom beside a legend, describes the cell under the mouse (coordinates, value, biome and region name), and lists the metadata. Godot always runs on a copy of the project assembled in the build tree, never on `game/` itself.
 
 [`CLAUDE.md`](CLAUDE.md) has the full build and test reference: every preset, the test executables and their run times, the lint, the hash comparison script and where golden values live.
 
