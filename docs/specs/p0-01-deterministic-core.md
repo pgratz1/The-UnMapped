@@ -1,6 +1,6 @@
 # P0-01 Deterministic core
 
-Status: approved by the lead, 2026-11-15; amended the same day after the first implementation and the independent reference (edge cases in 5.4, 5.6, 6.2, 7.3, 8.1, 8.2, 13.3, 13.5, 13.8). Seed phrases are scrubbed (7.3, 13.5) from generator version 0.2.0, per the design doc. Phase P0 Foundation. Design doc sections 4 (determinism rules), 10, 13.
+Status: approved by the lead, 2026-11-15; amended the same day after the first implementation and the independent reference (edge cases in 5.4, 5.6, 6.2, 7.3, 8.1, 8.2, 13.3, 13.5, 13.8). Seed phrases are scrubbed (7.3, 13.5) from generator version 0.2.0, per the design doc. Amended 2026-11-19 for phase P3 (section 16: `TAG_HIST` and the `hist.*` stream names of P3-02 and P3-03). Phase P0 Foundation. Design doc sections 4 (determinism rules), 10, 13.
 
 ## 1. Purpose
 
@@ -535,3 +535,7 @@ FIPS 180-4 vectors: "" → e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca4959
 ## 15. Amendment for phase P1 (2026-11-15)
 
 P1-00 appendix A1 is adopted as part of this spec: the constants `SQRT2` and `INV_SQRT2`, the integer helper `bit_length(uint64)` with its tests, the two additions to the parallel-work rule 4.2 (the thread count is supplied by the caller and never affects a result; work may be split into parts defined by the data), and the note that ridged noise and domain warping are composed from `noise2` and `fbm2` in P1-01 section 4.1. The first-pass geography stages need none of the functions deferred in 9.2.
+
+## 16. Amendment for phase P3 (2026-11-19)
+
+Requested by P3-02 8 and P3-03 15.4. The tag table of 7.2 gains `TAG_HIST`, `UNM:HIST`, 0x545349483A4D4E55 (the keyed draws of P3-00 4.6 and P3-02 4.1). The stream-name registry of 7.3 (`worldgen/include/worldgen/core/streams.hpp`, `all_stream_names` in registration order) gains, after `geo.regions.cost`, `hist.names.god`, `hist.names.civilization`, `hist.names.settlement` (P3-02 4.5) and `hist.chronology.awakening` (P3-03 3, C3): 34 names in all. Registering a stream name changes no world byte.
