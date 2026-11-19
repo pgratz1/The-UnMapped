@@ -190,7 +190,7 @@ void check_invariants(const Rows& r, const Params& p, const std::vector<std::str
         return a.race != b.race ? a.race < b.race : a.biome < b.biome;
     });
     CHECK(r.race_biomes == want);
-    CHECK(r.race_biomes.size() == 45U);
+    CHECK(r.race_biomes.size() == 48U);  // 45 before P3-05 12.2 (goblins +2, faeries +1)
     for (const RaceBiomeRow& b : r.race_biomes) {
         CHECK(b.biome != 1);  // ocean
         CHECK(b.biome != 2);  // lake

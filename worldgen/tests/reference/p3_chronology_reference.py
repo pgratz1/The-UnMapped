@@ -759,8 +759,8 @@ def check_examples(c):
          (42949673, 100, "The Age of {plural}"))
     for cid in data.culture_ids:  # the TOML naming data equals P3-02 5 as the names reference transcribed it
         c.eq("naming %s" % cid, data.cultures[cid]["naming"], pnr.CULTURES[cid])
-    c.eq("race_biome count", sum(len(r["biomes"]) for r in data.races), 45)
-    c.eq("race_biome per race", [len(r["biomes"]) for r in data.races], [7, 6, 7, 8, 8, 9])
+    c.eq("race_biome count", sum(len(r["biomes"]) for r in data.races), 48)  # 45 before P3-05 12.2
+    c.eq("race_biome per race", [len(r["biomes"]) for r in data.races], [7, 8, 7, 9, 8, 9])  # P3-05 12.2
     c.eq("shipped data checks", check_history_data(data), [])
     for root in ("worldgen/tests/data/geo", "worldgen/tests/data/geo-small"):
         d = data_from_root(root)
