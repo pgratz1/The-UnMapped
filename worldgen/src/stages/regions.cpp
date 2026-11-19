@@ -1250,8 +1250,8 @@ RegionResult regions_stage(const RegionInputs& in, const BiomeDefinitions& defin
     for (std::size_t id = 1; id <= r_count; ++id) {
         const RegionAcc& a = acc[id];
         const CellIndex s = out.seeds[numbering.old_of_id[id - 1U] - 1U];
-        if (a.dry == 0 || out.region[s] != id) {
-            fatal("regions: a region without dry land or without its seed");
+        if (out.region[s] != id) {
+            fatal("regions: a region without its seed");
         }
         db::RegionRow& row = out.regions[id - 1U];
         row.id = static_cast<std::int64_t>(id);
@@ -1265,7 +1265,19 @@ RegionResult regions_stage(const RegionInputs& in, const BiomeDefinitions& defin
             }
         }
         if (dominant < 0) {
-            fatal("regions: a region without a land biome");
+            // No cell with a land biome (a hand-made landmass without a site
+            // cell, RG6): the most common code over all its cells, ties to
+            // the smaller code (P1-06 RG10).
+            for (std::size_t code = 0; code < 256U; ++code) {
+                const std::uint32_t c = biome_hist[id * 256U + code];
+                if (c > dominant_cells) {
+                    dominant = static_cast<std::int64_t>(code);
+                    dominant_cells = c;
+                }
+            }
+        }
+        if (dominant < 0) {
+            fatal("regions: a region without cells");
         }
         row.biome = dominant;
         row.x_min = a.x_min;
@@ -1282,23 +1294,27 @@ RegionResult regions_stage(const RegionInputs& in, const BiomeDefinitions& defin
         row.coast_cells = a.coast;
         row.walk_cells = a.walk;
         row.walk_area = most_common(a.walk_counts);
-        row.elev_mean_dm = rha(a.elev_sum, a.dry);
-        row.elev_max_dm = a.elev_max;
-        row.fertility_mean = rha(a.score_sum[0], a.dry);
-        row.forage_mean = rha(a.score_sum[1], a.dry);
-        row.timber_mean = rha(a.score_sum[2], a.dry);
-        row.ore_mean = rha(a.score_sum[3], a.dry);
-        row.fresh_water_mean = rha(a.score_sum[4], a.dry);
-        row.habitability_mean = rha(a.score_sum[5], a.dry);
+        // Values over dry cells; 0 for a region with none (3.2).
+        const auto dry_mean = [&a](std::int64_t sum) { return a.dry == 0 ? 0 : rha(sum, a.dry); };
+        row.elev_mean_dm = dry_mean(a.elev_sum);
+        row.elev_max_dm = a.dry == 0 ? 0 : a.elev_max;
+        row.fertility_mean = dry_mean(a.score_sum[0]);
+        row.forage_mean = dry_mean(a.score_sum[1]);
+        row.timber_mean = dry_mean(a.score_sum[2]);
+        row.ore_mean = dry_mean(a.score_sum[3]);
+        row.fresh_water_mean = dry_mean(a.score_sum[4]);
+        row.habitability_mean = dry_mean(a.score_sum[5]);
         // G1 rank min(n - 1, 90 n div 100) on the dry habitability values.
-        const auto dn = static_cast<std::uint64_t>(a.dry);
-        const std::uint64_t rank = std::min(dn - 1U, (90U * dn) / 100U);
-        std::uint64_t seen = 0;
-        for (std::size_t v = 0; v < 256U; ++v) {
-            seen += hab_hist[id * 256U + v];
-            if (seen > rank) {
-                row.habitability_p90 = static_cast<std::int64_t>(v);
-                break;
+        if (a.dry > 0) {
+            const auto dn = static_cast<std::uint64_t>(a.dry);
+            const std::uint64_t rank = std::min(dn - 1U, (90U * dn) / 100U);
+            std::uint64_t seen = 0;
+            for (std::size_t v = 0; v < 256U; ++v) {
+                seen += hab_hist[id * 256U + v];
+                if (seen > rank) {
+                    row.habitability_p90 = static_cast<std::int64_t>(v);
+                    break;
+                }
             }
         }
         row.ore_rich_cells = a.ore_rich;

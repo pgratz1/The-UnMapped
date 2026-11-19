@@ -262,7 +262,38 @@ db::Result<std::string> build_report(const db::WorldReader& world) {
             }
         }
 
-        // The region layer (P1-06 9): u16 and the size of elevation, whenever
+        // [geography] (P1-00 10.3), when the world has an elevation layer;
+        // appended after the region checks below.
+        std::optional<std::string> geography;
+        if (geo_grids[0]) {
+            const auto ptr = [&geo_grids](std::size_t k) { return geo_grids[k] ? &*geo_grids[k] : nullptr; };
+            GeographyLayers geo;
+            geo.elevation = ptr(0);
+            geo.water = ptr(1);
+            geo.flow_dir = ptr(2);
+            geo.flow_accum = ptr(3);
+            geo.river = ptr(4);
+            geo.lake = ptr(5);
+            geo.temperature = ptr(6);
+            geo.rainfall = ptr(7);
+            geo.passes = passes ? &*passes : nullptr;
+            geo.wind_toward = wind_toward;
+            geo.temp_offset_dc = temp_offset_dc;
+            geo.biome = ptr(8);
+            geo.biomes = biomes ? &*biomes : nullptr;
+            for (std::size_t k = 0; k < geo.resources.size(); ++k) {
+                geo.resources[k] = ptr(RESOURCES_FIRST + k);
+            }
+            std::string problem;
+            std::optional<std::string> section = geography_section(geo, &problem);
+            if (!section) {
+                return db::Error{db::ErrorCode::corrupt_layer, "cannot report geography: " + problem};
+            }
+            geography = std::move(*section);
+        }
+
+        // The region checks (P1-06 9), after every check of the earlier
+        // [geography] groups. The region layer (P1-06 9): u16 and the size of elevation, whenever
         // it exists.
         if (const std::optional<db::LayerGrid>& g = geo_grids[REGION_INDEX]) {
             if (std::optional<std::string> why = region_layer_problem(*g, geo_grids[0] ? &*geo_grids[0] : nullptr)) {
@@ -305,35 +336,13 @@ db::Result<std::string> build_report(const db::WorldReader& world) {
             region_borders = std::move(border.records);
         }
 
-        // [geography] (P1-00 10.3), when the world has an elevation layer.
-        if (geo_grids[0]) {
-            const auto ptr = [&geo_grids](std::size_t k) { return geo_grids[k] ? &*geo_grids[k] : nullptr; };
-            GeographyLayers geo;
-            geo.elevation = ptr(0);
-            geo.water = ptr(1);
-            geo.flow_dir = ptr(2);
-            geo.flow_accum = ptr(3);
-            geo.river = ptr(4);
-            geo.lake = ptr(5);
-            geo.temperature = ptr(6);
-            geo.rainfall = ptr(7);
-            geo.passes = passes ? &*passes : nullptr;
-            geo.wind_toward = wind_toward;
-            geo.temp_offset_dc = temp_offset_dc;
-            geo.biome = ptr(8);
-            geo.biomes = biomes ? &*biomes : nullptr;
-            for (std::size_t k = 0; k < geo.resources.size(); ++k) {
-                geo.resources[k] = ptr(RESOURCES_FIRST + k);
-            }
-            geo.region = ptr(REGION_INDEX);
-            geo.regions = regions ? &*regions : nullptr;
-            geo.region_borders = region_borders ? &*region_borders : nullptr;
-            std::string problem;
-            std::optional<std::string> section = geography_section(geo, &problem);
-            if (!section) {
-                return db::Error{db::ErrorCode::corrupt_layer, "cannot report geography: " + problem};
-            }
-            out += *section;
+        // The region keys close [geography] when the layer and both tables
+        // exist (P1-06 9).
+        if (geography && geo_grids[REGION_INDEX] && regions && region_borders) {
+            *geography += region_lines(*regions, *region_borders);
+        }
+        if (geography) {
+            out += *geography;
         }
         return out;
     } catch (const std::bad_alloc&) {
