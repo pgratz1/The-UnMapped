@@ -66,13 +66,6 @@ wd::LoadError only_error(const std::string& line, bool with_data = false, std::u
     return e;
 }
 
-void check_message(const wd::LoadError& e, std::string_view prefix, std::string_view suffix) {
-    CAPTURE(e.message);
-    CHECK(e.message.substr(0, prefix.size()) == prefix);
-    CHECK(e.message.size() >= prefix.size() + suffix.size());
-    CHECK(e.message.substr(e.message.size() - std::min(e.message.size(), suffix.size())) == suffix);
-}
-
 // The 1-based column of the n-th occurrence (0-based) of `needle` in `line`.
 std::uint32_t column_of(const std::string& line, std::string_view needle, int n = 0) {
     std::size_t at = line.find(needle);
@@ -192,26 +185,36 @@ TEST_CASE("P3-01 8.2 test 8: \"all\" is every race of the loaded data, in race o
         history_api::parse_settings_with_data(PATH, file("races = [\"goblin\"]\n"), *l.content);
     REQUIRE_FALSE(r.ok());
     REQUIRE(r.errors.size() == 1U);
-    const std::string prefix = "'world.races[0]' is \"goblin\", which is not a race id; expected one of ";
-    CHECK(r.errors[0].message.substr(0, prefix.size()) == prefix);
-    CHECK(contains(r.errors[0].message.substr(prefix.size()), "elf"));
-    CHECK(contains(r.errors[0].message.substr(prefix.size()), "orc"));
-    CHECK_FALSE(contains(r.errors[0].message.substr(prefix.size()), "human"));
+    CHECK(r.errors[0].message == "'world.races[0]' is \"goblin\", which is not a race id; expected one of elf, orc");
 }
 
 // --- Errors (6.2, 8.2 test 7) ------------------------------------------------------------
 
+// <found> of P3-01 6.2 for a TOML literal: an integer as written, a string
+// as its text in double quotes, otherwise the kind of value.
+namespace {
+std::string found(std::string_view literal) {
+    if (literal == "true" || literal == "false") {
+        return "a boolean";
+    }
+    if (!literal.empty() && literal[0] == '[') {
+        return "an array";
+    }
+    if (!literal.empty() && literal[0] == '{') {
+        return "a table";
+    }
+    return std::string(literal);  // integers and basic strings without escapes are written as they are shown
+}
+}  // namespace
+
 TEST_CASE("P3-01 6.2: world.history_span errors") {
     const std::string expected = "; expected an integer from 2000 to 12000";
-    for (const char* v : {"1999", "12001", "0", "-6000", "9223372036854775807"}) {
+    for (const char* v : {"1999", "12001", "0", "-6000", "9223372036854775807", "\"6000\"", "\"\"", "true", "[6000]",
+                          "{ years = 6000 }"}) {
         CAPTURE(v);
-        const wd::LoadError e = only_error(std::string("history_span = ") + v);
-        CHECK(e.message == "'world.history_span' is " + std::string(v) + expected);
+        CHECK(only_error(std::string("history_span = ") + v).message == "'world.history_span' is " + found(v) + expected);
     }
-    for (const char* v : {"\"6000\"", "true", "[6000]", "{ years = 6000 }"}) {
-        CAPTURE(v);
-        check_message(only_error(std::string("history_span = ") + v), "'world.history_span' is ", expected);
-    }
+    // A float gets the loader's message only (6.2: no second message).
     CHECK(contains(only_error("history_span = 6000.0").message, "floating-point"));
 }
 
@@ -224,25 +227,25 @@ TEST_CASE("P3-01 6.2: world.history_detail, event_intensity, monster_pressure an
                          Key{"event_intensity", "; expected calm, normal or turbulent"},
                          Key{"monster_pressure", "; expected low, normal or high"},
                          Key{"divine_activity", "; expected distant, normal or meddling"}}) {
-        for (const char* v : {"\"Normal\"", "\"\"", "\"normal \"", "\"extreme\"", "1", "true", "[\"normal\"]"}) {
+        for (const char* v : {"\"Normal\"", "\"\"", "\"normal \"", "\"extreme\"", "1", "-2", "true", "[\"normal\"]",
+                              "{ v = \"normal\" }"}) {
             CAPTURE(k.key);
             CAPTURE(v);
-            check_message(only_error(std::string(k.key) + " = " + v), "'world." + std::string(k.key) + "' is ", k.expected);
+            CHECK(only_error(std::string(k.key) + " = " + v).message ==
+                  "'world." + std::string(k.key) + "' is " + found(v) + k.expected);
         }
+        CAPTURE(k.key);
+        CHECK(contains(only_error(std::string(k.key) + " = 1.5").message, "floating-point"));
     }
 }
 
 TEST_CASE("P3-01 6.2: world.civs_per_race errors") {
     const std::string expected = "; expected \"auto\" or an integer from 1 to 4";
-    for (const char* v : {"0", "5", "-1"}) {
-        CAPTURE(v);
-        CHECK(only_error(std::string("civs_per_race = ") + v).message == "'world.civs_per_race' is " + std::string(v) + expected);
-    }
     // Only the string "auto": a number written as a string is not accepted
     // (6.1: "integer, or the string \"auto\"").
-    for (const char* v : {"\"Auto\"", "\"AUTO\"", "\"\"", "\"2\"", "\"all\"", "true", "[2]"}) {
+    for (const char* v : {"0", "5", "-1", "\"Auto\"", "\"AUTO\"", "\"\"", "\"2\"", "\"all\"", "true", "[2]", "{ n = 2 }"}) {
         CAPTURE(v);
-        check_message(only_error(std::string("civs_per_race = ") + v), "'world.civs_per_race' is ", expected);
+        CHECK(only_error(std::string("civs_per_race = ") + v).message == "'world.civs_per_race' is " + found(v) + expected);
     }
     CHECK(contains(only_error("civs_per_race = 2.0").message, "floating-point"));
 }
@@ -251,52 +254,64 @@ TEST_CASE("P3-01 6.2: world.races errors") {
     const std::string expected = "; expected \"all\" or an array of race ids";
     for (const char* v : {"\"All\"", "\"none\"", "\"\"", "\"elf\"", "1", "true", "{ elf = true }"}) {
         CAPTURE(v);
-        check_message(only_error(std::string("races = ") + v), "'world.races' is ", expected);
+        CHECK(only_error(std::string("races = ") + v).message == "'world.races' is " + found(v) + expected);
     }
-    // An empty array, and elements that are not ids: P3-01 6.2 gives no
-    // message of their own (spec ambiguity reported); an error at the races
-    // line naming the key is required.
-    for (const char* v : {"[]", "[\"Elf\"]", "[\"elf\", 1]", "[\"\"]", "[\"elf orc\"]", "[[\"elf\"]]", "[\"elf,orc\"]"}) {
-        CAPTURE(v);
-        const std::string text = file(std::string("races = ") + v + "\n");
-        const wd::LoadResult<wd::Settings> r = wd::parse_settings(PATH, text);
-        INFO(dump_errors(r.errors));
-        REQUIRE_FALSE(r.ok());
-        for (const wd::LoadError& e : r.errors) {
-            CHECK(e.line == 2U);
-            CHECK(e.message.substr(0, 12) == "'world.races");
-        }
+    // An empty array: at the array.
+    CHECK(only_error("races = []").message == "'world.races' is an empty array" + expected);
+    // An element that is not a string, or not an id: at the element.
+    struct Element {
+        const char* line;
+        const char* element;  // its literal, located in the line
+        int index;
+    };
+    for (const Element& c : {Element{"races = [\"Elf\"]", "\"Elf\"", 0}, Element{"races = [\"elf\", 1]", "1", 1},
+                             Element{"races = [\"\"]", "\"\"", 0}, Element{"races = [\"elf orc\"]", "\"elf orc\"", 0},
+                             Element{"races = [[\"elf\"]]", "[\"elf\"]", 0}, Element{"races = [\"elf,orc\"]", "\"elf,orc\"", 0},
+                             Element{"races = [\"elf\", true]", "true", 1}, Element{"races = [{ id = \"elf\" }]", "{ id = \"elf\" }", 0}}) {
+        CAPTURE(c.line);
+        const std::string line(c.line);
+        const wd::LoadError e = only_error(line, false, column_of(line, c.element));
+        CHECK(e.message == "'world.races[" + std::to_string(c.index) + "]' is " + found(c.element) + "; expected a race id");
     }
+    CHECK(contains(only_error("races = [\"elf\", 1.5]", false, 17).message, "floating-point"));  // at the element
     // A repeated id: at the later element.
     {
         const std::string line = "races = [\"elf\", \"orc\", \"elf\"]";
         const wd::LoadError e = only_error(line, false, column_of(line, "\"elf\"", 1));
         CHECK(e.message == "'world.races[2]' is \"elf\", which is already listed");
     }
-    // An id with no race definition, checked once the data is loaded, at the element.
+    // An id with no race definition, checked once the data is loaded, at the
+    // element; ids in race order separated by ", ".
+    const std::string ids = "elf, goblin, dwarf, faerie, human, orc";
     {
         const std::string line = "races = [\"elf\", \"dragon\"]";
         const wd::LoadError e = only_error(line, true, column_of(line, "\"dragon\""));
-        const std::string prefix = "'world.races[1]' is \"dragon\", which is not a race id; expected one of ";
-        CHECK(e.message.substr(0, prefix.size()) == prefix);
-        // "<ids>": the spec does not give their order or separator; each
-        // loaded id must be named.
-        for (const std::string& id : history_data::race_order()) {
-            CHECK(contains(e.message.substr(prefix.size()), id));
-        }
+        CHECK(e.message == "'world.races[1]' is \"dragon\", which is not a race id; expected one of " + ids);
         // Without the data the same file parses (the check needs the data).
         CHECK(wd::parse_settings(PATH, file(line + "\n")).ok());
     }
+    {  // every unknown element is reported
+        const std::string text = file("races = [\"dragon\", \"elf\", \"wyrm\"]\n");
+        const wd::LoadResult<wd::Settings> r = history_api::parse_settings_with_data(PATH, text, shipped_content());
+        INFO(dump_errors(r.errors));
+        REQUIRE(r.errors.size() == 2U);
+        CHECK(r.errors[0].column == 10U);
+        CHECK(r.errors[0].message == "'world.races[0]' is \"dragon\", which is not a race id; expected one of " + ids);
+        CHECK(r.errors[1].column == 27U);
+        CHECK(r.errors[1].message == "'world.races[2]' is \"wyrm\", which is not a race id; expected one of " + ids);
+    }
 }
 
-TEST_CASE("P3-01 6.2: world.divine_script is refused until P5") {
-    for (const char* v : {"\"script.lua\"", "\"\"", "\"0123456789abcdef\""}) {
+TEST_CASE("P3-01 6.2: world.divine_script is refused until P5, for a value of any type") {
+    for (const char* v : {"\"script.lua\"", "\"\"", "\"0123456789abcdef\"", "1", "true", "[\"a\"]", "{ path = \"a\" }"}) {
         CAPTURE(v);
         CHECK(only_error(std::string("divine_script = ") + v).message ==
               "'world.divine_script' is not supported yet: divine scripts need phase P5");
     }
-    // Any other value is refused too.
-    CHECK_FALSE(wd::parse_settings(PATH, file("divine_script = 1\n")).ok());
+    // A float gets the loader's floating-point message only.
+    const wd::LoadError f = only_error("divine_script = 1.5");
+    CHECK(contains(f.message, "floating-point"));
+    CHECK_FALSE(contains(f.message, "not supported"));
 }
 
 TEST_CASE("P3-01 6.2: an unknown [world] key lists the new keys") {
