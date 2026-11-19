@@ -136,7 +136,7 @@ TEST_CASE("cli P3-04 9.5, 11.1, 16.1 item 14, 16.4 (Y1): default run, --until hi
         {"UPDATE phase SET kind = 7 WHERE id = 2", "corrupt table 'phase': row 2: kind 7"},
         {"UPDATE phase SET end_year = 5998 WHERE id = (SELECT max(id) FROM phase)",
          "corrupt table 'phase': the last phase ends in 5998, expected 5999"},
-        {"UPDATE event SET kind = 9 WHERE id = 1", "corrupt table 'event': row 1: kind 9 is not an event kind"},
+        {"UPDATE event SET kind = 99 WHERE id = 1", "corrupt table 'event': row 1: kind 99 is not an event kind"},
         {"INSERT INTO event_cause VALUES (2, 5)", "corrupt table 'event_cause': row (2, 5): cause not below event"},
     };
     int k = 0;
