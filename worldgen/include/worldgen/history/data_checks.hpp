@@ -24,8 +24,10 @@ inline constexpr std::size_t AGE_NAME_MAX_BYTES = 48;
 // is not rescanned, and any other '{' is copied as it is.
 [[nodiscard]] std::string age_name_text(std::string_view form, std::string_view plural, std::string_view adjective);
 
-// The errors of P3-03 section 6 (D1 to D5), each with path "races", no
-// position and the message of the table of section 6, evaluated for every
+// The errors of P3-03 section 6 (D0 to D5), each with path "races", no
+// position and the message of the table of section 6. D0 first: "no race is
+// defined; kind 'race' needs at least one definition" when the content has
+// no race definition (or no kind race). Then D1 to D5, evaluated for every
 // race definition in race order, each condition in the order D1 (and D2
 // per biome entry, in list order), D3, D4, D5; then sorted and
 // deduplicated (P0-03 9). D4 and D5 use history.chronology's
