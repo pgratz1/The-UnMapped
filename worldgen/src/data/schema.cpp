@@ -48,6 +48,22 @@ StringGrammar id_grammar() noexcept {
     return StringGrammar{"an id ([a-z][a-z0-9_]*, at most 64 bytes)", &is_valid_id};
 }
 
+bool is_valid_word(std::string_view text) noexcept {
+    if (text.empty() || text[0] < 'A' || text[0] > 'Z') {
+        return false;
+    }
+    for (std::size_t i = 1; i < text.size(); ++i) {
+        if (text[i] < 'a' || text[i] > 'z') {
+            return false;
+        }
+    }
+    return true;
+}
+
+StringGrammar word_grammar() noexcept {
+    return StringGrammar{"a word ([A-Z][a-z]*)", &is_valid_word};
+}
+
 // --- Type ---------------------------------------------------------------------
 
 Type Type::integer(std::int64_t min, std::int64_t max) {

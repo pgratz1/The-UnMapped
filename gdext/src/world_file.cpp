@@ -219,6 +219,11 @@ std::vector<worldgen::inspect::Composite> WorldFile::composites() const {
         return result;
     }
     for (const worldgen::inspect::Composite composite : worldgen::inspect::ALL_COMPOSITES) {
+        // The composite regions (P1-06 9 item 2) is not offered yet: the
+        // viewer draws it with the viewer engineer's change.
+        if (composite == worldgen::inspect::Composite::regions) {
+            continue;
+        }
         if (composite == worldgen::inspect::Composite::biomes &&
             (find_layer("biome") < 0 || !biome_table_problem_.is_empty())) {
             continue;

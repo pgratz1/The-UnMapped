@@ -421,8 +421,8 @@ TEST_CASE("P1-00 3, 10.1: resources is the fifth implemented stage; --until reso
     const auto upto = worldgen::stages::geography_stages_until(std::string("resources"));
     REQUIRE(upto.size() == 5U);
     CHECK(upto[4].name == "resources");
-    // regions is not implemented yet (10.3: --until regions exits 2).
-    CHECK(worldgen::stages::check_stage_limit("regions") != worldgen::stages::StageLimitError::none);
+    // regions follows it (P1-06, generator 0.11.0).
+    CHECK(worldgen::stages::check_stage_limit("regions") == worldgen::stages::StageLimitError::none);
 }
 
 // --- Stage entry on a hand-made world (section 2, R7) ---------------------------------------------
@@ -605,10 +605,10 @@ TEST_CASE("P1-05 2, 3, R7: the stage entry reads the seven layers as stored and 
     CHECK(*std::max_element(walk->begin(), walk->end()) == 1);
     CHECK(want.fresh_water[in.grid.index(105, 105)] == 255);
     // The stage writes no table row: table biome stays as the stand-in left
-    // it (empty), and the schema is unchanged (version 4, P1-05 3).
+    // it (empty); P1-05 changed no schema (version 5 since P1-06).
     const dbtest::SqliteFile db(dir.file("ok.db"));
     REQUIRE(db.ok());
-    CHECK(db.rows("PRAGMA user_version") == std::vector<std::vector<std::string>>{{"4"}});
+    CHECK(db.rows("PRAGMA user_version") == std::vector<std::vector<std::string>>{{"5"}});
     CHECK(db.rows("SELECT count(*) FROM biome") == std::vector<std::vector<std::string>>{{"0"}});
 }
 
@@ -712,9 +712,9 @@ TEST_CASE("P1-05 2, 10.1 test 5: each precondition is fatal with its message, le
     }
 }
 
-TEST_CASE("P1-05 3, P1-04 3: the biome table keeps five columns (no forage column); schema version 4") {
-    CHECK(worldgen::db::SCHEMA_VERSION == 4);
-    REQUIRE(worldgen::db::DDL_STATEMENTS.size() == 5U);
+TEST_CASE("P1-05 3, P1-04 3: the biome table keeps five columns (no forage column); schema version 5 (P1-06)") {
+    CHECK(worldgen::db::SCHEMA_VERSION == 5);
+    REQUIRE(worldgen::db::DDL_STATEMENTS.size() == 8U);
     CHECK(worldgen::db::DDL_STATEMENTS[3] ==
           "CREATE TABLE biome (id INTEGER PRIMARY KEY, key TEXT NOT NULL UNIQUE, name TEXT NOT NULL, colour INTEGER "
           "NOT NULL, water INTEGER NOT NULL) STRICT");
@@ -737,7 +737,8 @@ TEST_CASE("P1-05 golden (slow): the cases at N = 512 and 1024") {
 
 TEST_CASE("P1-05 3, 10.3, P1-00 X1 (slow): generate at 512, seed 0: ids 1 to 18, earlier layers as at 0.9.0") {
     dbtest::TempDir dir("resources-512");
-    REQUIRE(worldgen::generate_world(params_for(0, 512, std::nullopt, 4), content(), dir.file("w.db"),
+    // --until resources (0.11.0: the default run continues with regions).
+    REQUIRE(worldgen::generate_world(params_for(0, 512, std::string("resources"), 4), content(), dir.file("w.db"),
                                      worldgen::db::Overwrite::refuse)
                 .ok());
     auto r = worldgen::db::WorldReader::open(dir.file("w.db"));

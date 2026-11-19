@@ -220,10 +220,17 @@ TEST_CASE("cli P1-05 3, P1-00 X1: --until resources at 512: layers 12 to 18; gol
         CAPTURE(name);
         CHECK(hashes.at(name) == bio.at(name));
     }
-    // The default run is --until resources (the last implemented stage).
+    // The default run continues with regions (P1-06, generator 0.11.0): its
+    // layers 1 to 18 are those of --until resources, and `region` follows.
     const fs::path d = w.sb.file("default.db");
     generate(w.sb, w.data, {}, d);
-    CHECK(read_bytes(d) == read_bytes(w.full));
+    const auto dh = layer_hashes(w.sb, d);
+    for (const auto& [name, hash] : hashes) {
+        CAPTURE(name);
+        CHECK(dh.at(name) == hash);
+    }
+    CHECK(dh.size() == hashes.size() + 1U);
+    CHECK(dh.count("region") == 1U);
 }
 
 TEST_CASE("cli P1-05 9: report: the eight resources keys close [geography], with the golden values") {
@@ -344,11 +351,12 @@ TEST_CASE("cli P1-05 9, 10.1 test 7: report refuses a score layer not u8 and wal
     }
 }
 
-TEST_CASE("cli P1-00 10.1: --until resources is accepted; regions, the stage after it, is not implemented yet") {
+TEST_CASE("cli P1-00 10.1: --until resources is accepted; an unknown stage is a usage error") {
     Sandbox sb;
     const fs::path data = write_data_root(sb);
+    // Every geography stage is implemented since P1-06: an unknown name.
     const ProcessResult r = sb.cli({"generate", "--seed", "1", "--map-size", "512", "--data", u8(data), "--until",
-                                    "regions", "--out", u8(sb.file("r.db"))});
+                                    "bogus", "--out", u8(sb.file("r.db"))});
     CHECK(r.exit_code == EXIT_USAGE);
     CHECK_FALSE(file_exists(sb.file("r.db")));
     // A data root without worldgen/resources.toml is an input error (exit 3).
@@ -358,6 +366,7 @@ TEST_CASE("cli P1-00 10.1: --until resources is accepted; regions, the stage aft
     write_text(bare / "worldgen" / "hydrology.toml", HYDROLOGY_TOML);
     write_text(bare / "worldgen" / "climate.toml", std::string(elev_api::CLIMATE_TOML));
     write_text(bare / "worldgen" / "biomes.toml", biome_data::TUNING_TOML);
+    write_text(bare / "worldgen" / "regions.toml", biome_data::REGIONS_TOML);  // P1-06 4
     fs::create_directories(bare / "biomes");
     for (const auto& f : biome_data::shipped_files()) {
         write_text(bare / "biomes" / std::string(f.name), f.text);

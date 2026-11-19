@@ -402,6 +402,43 @@ Region names, a click-to-inspect panel with the table columns, and border or pas
 
 Library seams (interim; the engineer records the final signatures here after implementation, as P1-05 10): `region_step_weight(nz, hand, tuning) → Fx`, `region_candidates(grid, water, habitability, S, seed, tuning)`, `region_seeds(candidates, grid, water, river, tuning) → seeds` (RG5), `region_crosses(grid, border_river, s, c) → bool`, `region_landmass_seeds(...)` (RG6), `region_flood(grid, wt, water, river, seeds, tuning) → (owner, cost)`, `region_merge(grid, owner, water, river, count, min_cells, tuning)`, `region_sector(dx, dy, r_c) → index`, `roman(k)`, `region_names(...)`, `region_borders(...)`, `region_pass_crossings(...)`, `regions_stage(inputs, definitions, passes, tuning, seed, threads)`, `run_regions(context)`. Each raises `FatalError` on a contract violation.
 
+**Seams as implemented** (generator engineer, 2026-11-18; `worldgen/include/worldgen/stages/regions.hpp`, namespace `worldgen::stages`; the comments there state each function's fatal cases):
+
+```
+RegionTuning region_tuning_from(const data::ContentSet&);            // and from a data::Record
+void check_region_tuning(const RegionTuning&);                        // schema ranges (a bad word: "names.<field>"), then the named check
+std::int64_t region_min_cells(const RegionTuning&);
+Fx region_cost_noise(std::uint64_t seed, std::int32_t x, std::int32_t y, const RegionTuning&);   // nz of RG3
+Fx region_step_weight(Fx nz, std::int64_t hand, const RegionTuning&); // RG3; nz in [-ONE, ONE], hand in [0, 131070]
+RegionSite region_site(geo::Grid, geo::CellIndex, std::int64_t habitability, std::int64_t surface, std::uint64_t seed);
+bool region_site_better(const RegionSite& a, const RegionSite& b);   // the site order of 5
+std::vector<RegionSite> region_candidates(geo::Grid, std::span<const std::uint8_t> water,
+    std::span<const std::uint8_t> habitability, std::span<const std::int64_t> surface, std::uint64_t seed, const RegionTuning&);   // RG4, tile order
+std::vector<std::uint8_t> region_border_rivers(geo::Grid, water, river, std::int64_t river_border_class);
+bool region_crosses(geo::Grid, std::span<const std::uint8_t> border_river, geo::CellIndex s, geo::CellIndex c);   // RG5 cross
+std::vector<geo::CellIndex> region_seeds(std::span<const RegionSite> candidates, geo::Grid, water, river, const RegionTuning&);   // RG5
+RegionLandmasses region_landmasses(geo::Grid, water);                 // G2 labels, 8-connected land
+std::vector<geo::CellIndex> region_landmass_seeds(geo::Grid, water, habitability, surface, const RegionLandmasses&,
+    std::vector<geo::CellIndex> seeds, std::uint64_t seed);           // RG6: the extended list
+std::int64_t region_step_cost(geo::Grid, std::span<const Fx> wt, water, border_river, geo::CellIndex c, geo::Direction d, const RegionTuning&);
+RegionFlood region_flood(geo::Grid, std::span<const Fx> wt, water, river, std::span<const geo::CellIndex> seeds, const RegionTuning&);   // RG7: owner (u32), cost (i64, 2^62 unreached)
+std::vector<std::uint32_t> region_merge(geo::Grid, std::span<const std::uint32_t> owner, water, river,
+    std::uint32_t count, std::int64_t min_cells, const RegionTuning&);   // RG8: owners after merging
+RegionNumbering region_renumber(std::span<const std::uint32_t> owner);   // RG9: region (u16), old_of_id
+std::uint32_t region_sector(std::int64_t dx, std::int64_t dy, std::int64_t r_c);   // 0 central, 1 north, 2 northeast, ... 8 northwest
+std::string roman(std::int64_t k);
+std::vector<std::string> region_names(std::span<const RegionNameInput> regions, std::span<const std::uint64_t> landmass_cells,
+    std::uint64_t land_cells, std::uint64_t sum_x, std::uint64_t sum_y, std::int64_t n, const BiomeDefinitions&, const RegionTuning&);   // RG11
+std::vector<db::RegionBorderRow> region_borders(geo::Grid, std::span<const std::uint16_t> region, surface, water, river,
+    std::span<const std::uint16_t> walk_area, const RegionTuning&);   // RG12 without pass columns
+void region_pass_crossings(geo::Grid, region, water, std::span<const db::PassRow> passes, std::vector<db::RegionBorderRow>& borders);
+RegionResult regions_stage(const RegionInputs&, const BiomeDefinitions&, std::span<const db::PassRow> passes,
+    const RegionTuning&, std::uint64_t seed, std::uint32_t threads = 1);   // RG1 to RG13; also hand, weight, flood_owner, seeds (10.4)
+void run_regions(StageContext&);
+```
+
+The rows are `db::RegionRow`, `db::RegionBorderRow`, `db::RegionBiomeRow` (`worldgen/db/writer.hpp`, columns in declared order), written by `StageWriter::write_region`, `write_region_border`, `write_region_biome` in strictly ascending key. The stage reads table `pass` through `StageContext::passes()` (the rows earlier stages of the run wrote, in id order). `regions_stage` takes the map side n of RG11 as the grid width. Order of its fatal checks: threads; the tuning; the region nouns (ascending code); then with the prefix `regions: input precondition: ` the grid, lengths in the order of `RegionInputs`, `water`, `river`, `biome`, the pass paths (`pass <id>: path is not a chain of cells`, in the order given), G7. Through the stage, section 2 item 1 comes first. Word grammar seams: `data::is_valid_word`, `data::word_grammar()` (P0-03 amendment 17). Render seams: `inspect::composite_regions_problem(elevation, water, river, flow_dir, biome, region)`, `inspect::render_composite_regions(elevation, water, river, flow_dir, biome, region, scale, biome_table)`; report: `inspect::read_region_rows`, `read_region_border_rows`, `region_layer_problem`, `region_lines` (`worldgen/inspect/geography.hpp`).
+
 ### 10.1 Unit tests
 
 1. Every worked example of 5.1 exactly, through the seams (owners and costs of each flood case; seeds and the bank exception; merge; sectors, numerals and names; border rows and pass crossings).

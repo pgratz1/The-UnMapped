@@ -165,7 +165,8 @@ constexpr std::string_view RENDER_USAGE =
     "  --layer NAME        layer to render\n"
     "  --composite NAME    map: shaded relief from elevation, with water and river when present;\n"
     "                      biomes: shaded biome colours from layer and table biome, with water\n"
-    "                      and river when present\n"
+    "                      and river when present;\n"
+    "                      regions: the biomes composite with the borders of layer region in black\n"
     "  --out PATH          output PNG (default <build root>/out/<db file stem>.<layer>.png,\n"
     "                      or <db file stem>.<composite>.png for --composite)\n"
     "  --palette P         auto (the layer's registered palette, default), gray, hypsometric,\n"
@@ -716,18 +717,26 @@ Exit run_render(const Options& options) {
     std::optional<db::LayerGrid> river;
     std::optional<db::LayerGrid> flow_dir;
     std::optional<db::LayerGrid> biome;
+    std::optional<db::LayerGrid> region;
     if (composite) {
-        if (*composite == inspect::Composite::biomes) {
+        if (*composite == inspect::Composite::biomes || *composite == inspect::Composite::regions) {
             biome = read_render_layer(world, "biome", progress);  // required (P1-04 9)
         }
         water = read_optional_layer(world, "water", progress);
         river = read_optional_layer(world, "river", progress);
         flow_dir = read_optional_layer(world, "flow_dir", progress);
-        const std::optional<std::string> problem =
+        std::optional<std::string> problem =
             biome ? inspect::composite_biomes_problem(grid, *biome, water ? &*water : nullptr,
                                                       river ? &*river : nullptr, flow_dir ? &*flow_dir : nullptr)
                   : inspect::composite_map_problem(grid, water ? &*water : nullptr, river ? &*river : nullptr,
                                                    flow_dir ? &*flow_dir : nullptr);
+        // The composite regions (P0-04 amendment 18 (e)): the checks of the
+        // composite biomes first, then the layer region.
+        if (!problem && *composite == inspect::Composite::regions) {
+            region = read_render_layer(world, "region", progress);  // required
+            problem = inspect::composite_regions_problem(grid, water ? &*water : nullptr, river ? &*river : nullptr,
+                                                         flow_dir ? &*flow_dir : nullptr, *biome, *region);
+        }
         if (problem) {
             throw Failure(Exit::input, "cannot render the composite " + image_name + ": " + *problem + "; " +
                                            layer_name_list(world));
@@ -760,7 +769,12 @@ Exit run_render(const Options& options) {
     if (composite) {
         progress.note("rendering " + format_u64(width) + " x " + format_u64(height) + " pixels, composite " +
                       image_name);
-        if (biome) {
+        if (region) {
+            const std::vector<inspect::BiomeColour> colours = read_biome_colours(world, progress);
+            rgb = inspect::render_composite_regions(grid, water ? &*water : nullptr, river ? &*river : nullptr,
+                                                    flow_dir ? &*flow_dir : nullptr, *biome, *region, scale,
+                                                    colours);
+        } else if (biome) {
             const std::vector<inspect::BiomeColour> colours = read_biome_colours(world, progress);
             rgb = inspect::render_composite_biomes(grid, *biome, colours, water ? &*water : nullptr,
                                                    river ? &*river : nullptr, flow_dir ? &*flow_dir : nullptr, scale);

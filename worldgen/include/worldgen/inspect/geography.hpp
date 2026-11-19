@@ -487,6 +487,70 @@ struct ResourceCells {
 // Percentiles by the rule of P1-00 10.3. FatalError if a size is wrong.
 [[nodiscard]] std::string resource_lines(const ResourceCells& cells, std::uint32_t w, std::uint32_t h);
 
+// --- Regions (P1-06 9) -------------------------------------------------------------
+
+// What report reads of a row of table `region` (P1-06 3.2).
+struct RegionRecord {
+    std::int64_t id = 0;
+    std::int64_t cells = 0;
+    std::int64_t walk_cells = 0;
+};
+
+// What report reads of a row of table `region_border` (P1-06 3.3).
+struct RegionBorderRecord {
+    std::int64_t a = 0;
+    std::int64_t b = 0;
+    std::int64_t walk_pairs = 0;
+    std::int64_t river_pairs = 0;
+    std::int64_t pass_id = 0;
+};
+
+// The rows of table `region`, checked (P1-06 9; rows in id order, as read):
+// 28 columns, every one an integer except `name` (text); then "cells below
+// 1". Returns the records, or the reason the first bad row fails ("row
+// <id>: <reason>"; reading chosen for the type checks: "row <id>: has <n>
+// columns, expected 28", "row <id>: column <k> is not an integer", "row
+// <id>: name is not text").
+struct RegionTableResult {
+    std::vector<RegionRecord> records;
+    std::optional<std::string> problem;
+};
+[[nodiscard]] RegionTableResult read_region_rows(std::span<const std::vector<db::ColumnValue>> rows);
+
+// The rows of table `region_border`, checked against the region records
+// (P1-06 9; rows in (a, b) order, as read): 11 integer columns (reading
+// chosen: "row (<a>, <b>): has <n> columns, expected 11", "... column <k> is
+// not an integer"); then "a not below b", then "unknown region <id>" for a,
+// then for b. Returns the records, or the first failing row's reason
+// ("row (<a>, <b>): <reason>").
+struct RegionBorderTableResult {
+    std::vector<RegionBorderRecord> records;
+    std::optional<std::string> problem;
+};
+[[nodiscard]] RegionBorderTableResult read_region_border_rows(std::span<const std::vector<db::ColumnValue>> rows,
+                                                              std::span<const RegionRecord> regions);
+
+// Why the region layer cannot be reported (P1-06 9), or std::nullopt: "type
+// <t>, expected u16"; "size <W>x<H>, expected <N>x<N>" when it is not the
+// size of elevation (given, non-null); "not a valid grid".
+[[nodiscard]] std::optional<std::string> region_layer_problem(const db::LayerGrid& region,
+                                                              const db::LayerGrid* elevation);
+
+// The region keys of P1-06 9 in their order, each "<key> = <value>\n":
+//   regions                   the number of region records
+//   region_area_km2           percentiles 0, 50, 100 of cells (P1-00 10.3
+//                             rank rule), each v = RHA(cells 256, 10^4)
+//                             printed v div 100 '.' v mod 100 (two digits);
+//                             "n/a n/a n/a" with no records
+//   region_borders            the number of border records
+//   region_borders_walkable   records with walk_pairs > 0
+//   region_borders_river      records with river_pairs > 0
+//   region_borders_pass       records with pass_id > 0
+//   regions_isolated          regions in no border record
+//   regions_upland            regions with 4 walk_cells < cells
+[[nodiscard]] std::string region_lines(std::span<const RegionRecord> regions,
+                                       std::span<const RegionBorderRecord> borders);
+
 // --- The section ------------------------------------------------------------------
 
 // The layers [geography] reads, from a world (null when absent).
@@ -517,6 +581,12 @@ struct GeographyLayers {
     // RESOURCE_LAYER_NAMES, null when absent; the resources keys are printed
     // only when all seven and water are given.
     std::array<const db::LayerGrid*, 7> resources{};
+    // The region layer (P1-06 3.1) and the rows of tables `region` and
+    // `region_border`; the region keys are printed when the layer and both
+    // row lists are given.
+    const db::LayerGrid* region = nullptr;
+    const std::vector<RegionRecord>* regions = nullptr;
+    const std::vector<RegionBorderRecord>* region_borders = nullptr;
     // True when temperature and rainfall are both present.
     [[nodiscard]] bool has_climate() const noexcept { return temperature != nullptr && rainfall != nullptr; }
     // True when the biome layer and the biome table are both present.
@@ -528,6 +598,10 @@ struct GeographyLayers {
             if (l == nullptr) return false;
         }
         return true;
+    }
+    // True when the region layer and both region tables are given.
+    [[nodiscard]] bool has_regions() const noexcept {
+        return region != nullptr && regions != nullptr && region_borders != nullptr;
     }
     // True when water, flow_dir, flow_accum, river and lake are all present.
     [[nodiscard]] bool has_hydrology() const noexcept {
@@ -553,7 +627,8 @@ struct GeographyLayers {
 // line feed; the hydrology lines only when has_hydrology(), then
 // wind_toward and temp_offset_c when they are set, the climate lines (climate_lines) only when
 // has_climate(), then the biome lines (biome_lines) only when has_biomes(),
-// then the resources lines (resource_lines) only when has_resources().
+// then the resources lines (resource_lines) only when has_resources(), then
+// the region lines (region_lines) only when has_regions().
 // Values that are
 // undefined on the world print as n/a (percentiles with no land or no ocean,
 // ratio4 over 0, coast_ratio with no land). Returns std::nullopt with

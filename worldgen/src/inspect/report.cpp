@@ -148,13 +148,15 @@ db::Result<std::string> build_report(const db::WorldReader& world) {
         }
         // The grids [geography] reads, kept from this pass so that no layer
         // is decoded twice. Layer names are unique (P0-02 5.6).
-        constexpr std::size_t GEO_LAYERS = 16;
+        constexpr std::size_t GEO_LAYERS = 17;
         constexpr std::size_t RESOURCES_FIRST = 9;  // the seven layers of P1-05 3 follow biome
+        constexpr std::size_t REGION_INDEX = 16;    // the layer of P1-06 3.1
         std::optional<db::LayerGrid> geo_grids[GEO_LAYERS];
         static constexpr std::string_view GEO_NAMES[GEO_LAYERS] = {
             "elevation", "water",     "flow_dir", "flow_accum",  "river",  "lake",         "temperature", "rainfall",
-            "biome",     "fertility", "ore",      "timber",      "fresh_water", "forage", "habitability", "walk_area"};
-        static_assert(GEO_LAYERS == RESOURCES_FIRST + RESOURCE_LAYER_NAMES.size());
+            "biome",     "fertility", "ore",      "timber",      "fresh_water", "forage", "habitability", "walk_area",
+            "region"};
+        static_assert(REGION_INDEX == RESOURCES_FIRST + RESOURCE_LAYER_NAMES.size());
         for (const db::LayerInfo& info : layers.value()) {
             db::Result<db::Layer> layer = world.read_layer(info.name);
             if (!layer.ok()) {
@@ -260,6 +262,49 @@ db::Result<std::string> build_report(const db::WorldReader& world) {
             }
         }
 
+        // The region layer (P1-06 9): u16 and the size of elevation, whenever
+        // it exists.
+        if (const std::optional<db::LayerGrid>& g = geo_grids[REGION_INDEX]) {
+            if (std::optional<std::string> why = region_layer_problem(*g, geo_grids[0] ? &*geo_grids[0] : nullptr)) {
+                return db::Error{db::ErrorCode::corrupt_layer, "corrupt layer 'region': " + *why};
+            }
+        }
+
+        // Tables region and region_border (schema 5, P1-06 9): read and
+        // checked whenever they exist, region first (the border rows name
+        // its ids).
+        std::optional<std::vector<RegionRecord>> regions;
+        std::optional<std::vector<RegionBorderRecord>> region_borders;
+        for (const db::TableSummary& t : tables.value()) {
+            if (t.name != db::REGION_TABLE) {
+                continue;
+            }
+            db::Result<std::vector<std::vector<db::ColumnValue>>> rows = world.table_rows(db::REGION_TABLE);
+            if (!rows.ok()) {
+                return rows.error();
+            }
+            RegionTableResult region = read_region_rows(rows.value());
+            if (region.problem) {
+                return db::Error{db::ErrorCode::corrupt_layer, "corrupt table 'region': " + *region.problem};
+            }
+            regions = std::move(region.records);
+        }
+        for (const db::TableSummary& t : tables.value()) {
+            if (t.name != db::REGION_BORDER_TABLE) {
+                continue;
+            }
+            db::Result<std::vector<std::vector<db::ColumnValue>>> rows = world.table_rows(db::REGION_BORDER_TABLE);
+            if (!rows.ok()) {
+                return rows.error();
+            }
+            const std::vector<RegionRecord> none;
+            RegionBorderTableResult border = read_region_border_rows(rows.value(), regions ? *regions : none);
+            if (border.problem) {
+                return db::Error{db::ErrorCode::corrupt_layer, "corrupt table 'region_border': " + *border.problem};
+            }
+            region_borders = std::move(border.records);
+        }
+
         // [geography] (P1-00 10.3), when the world has an elevation layer.
         if (geo_grids[0]) {
             const auto ptr = [&geo_grids](std::size_t k) { return geo_grids[k] ? &*geo_grids[k] : nullptr; };
@@ -280,6 +325,9 @@ db::Result<std::string> build_report(const db::WorldReader& world) {
             for (std::size_t k = 0; k < geo.resources.size(); ++k) {
                 geo.resources[k] = ptr(RESOURCES_FIRST + k);
             }
+            geo.region = ptr(REGION_INDEX);
+            geo.regions = regions ? &*regions : nullptr;
+            geo.region_borders = region_borders ? &*region_borders : nullptr;
             std::string problem;
             std::optional<std::string> section = geography_section(geo, &problem);
             if (!section) {

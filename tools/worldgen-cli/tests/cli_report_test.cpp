@@ -64,7 +64,7 @@ TEST_CASE("cli 12.4: escaping in meta values (test-only world)") {
             s += v.empty() ? k + " =\n" : k + " = " + v + "\n";
         }
         s += line;
-        s += "[tables]\nbiome = 0\nclimate = 0\nlayer = 0\nmeta = 9\npass = 0\n[layers]\n(none)\n";
+        s += "[tables]\nbiome = 0\nclimate = 0\nlayer = 0\nmeta = 9\npass = 0\nregion = 0\nregion_biome = 0\nregion_border = 0\n[layers]\n(none)\n";
         return s;
     };
     SUBCASE("backslash and tab") {
@@ -94,7 +94,7 @@ TEST_CASE("cli 12.4: test-pattern world") {
     const ProcessResult r = sb.cli({"report", "--db", u8(world)});
     REQUIRE(r.exit_code == EXIT_OK);
     const std::vector<std::string> lines = lines_of(r.out);
-    REQUIRE(lines.size() == 20);
+    REQUIRE(lines.size() == 23);
     CHECK(r.out.back() == '\n');
     CHECK(lines[0] == "# worldgen report v2");
     CHECK(lines[1] == "[meta]");
@@ -105,13 +105,16 @@ TEST_CASE("cli 12.4: test-pattern world") {
     CHECK(lines[13] == "layer = 3");
     CHECK(lines[14] == "meta = 8");
     CHECK(lines[15] == "pass = 0");
-    CHECK(lines[16] == "[layers]");
-    CHECK(starts_with(lines[17], "test.ramp u8 256x256 codec=1 bytes="));
-    CHECK(lines[17].substr(lines[17].size() - 14) == " min=0 max=255");
-    CHECK(lines[17] == layer_line("test.ramp", "u8", p004::ramp_cells()));
-    CHECK(lines[18] == layer_line("test.hash", "u8", p004::hash_cells(0)));
-    CHECK(lines[19] == layer_line("test.noise", "i16", p004::noise_cells(0)));
-    MESSAGE("seed-0 pattern report layer lines:\n", lines[17], "\n", lines[18], "\n", lines[19]);
+    CHECK(lines[16] == "region = 0");  // schema 5 (P0-04 amendment 18 (a))
+    CHECK(lines[17] == "region_biome = 0");
+    CHECK(lines[18] == "region_border = 0");
+    CHECK(lines[19] == "[layers]");
+    CHECK(starts_with(lines[20], "test.ramp u8 256x256 codec=1 bytes="));
+    CHECK(lines[20].substr(lines[20].size() - 14) == " min=0 max=255");
+    CHECK(lines[20] == layer_line("test.ramp", "u8", p004::ramp_cells()));
+    CHECK(lines[21] == layer_line("test.hash", "u8", p004::hash_cells(0)));
+    CHECK(lines[22] == layer_line("test.noise", "i16", p004::noise_cells(0)));
+    MESSAGE("seed-0 pattern report layer lines:\n", lines[20], "\n", lines[21], "\n", lines[22]);
 }
 
 TEST_CASE("cli 12.4: --out writes the same bytes as stdout") {

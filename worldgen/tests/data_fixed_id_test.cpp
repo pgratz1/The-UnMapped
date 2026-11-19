@@ -462,10 +462,11 @@ TEST_CASE("fixed-id kinds: the production registry holds worldgen with the imple
     CHECK(k.directory == "worldgen");
     CHECK(k.required);
     REQUIRE(k.has_fixed_ids());
-    REQUIRE(k.id_schemas.size() == 5U);
+    REQUIRE(k.id_schemas.size() == 6U);
     CHECK(k.id_schemas[0].id == "biomes");
     CHECK(k.id_schemas[1].id == "climate");
     CHECK(k.id_schemas[2].id == "elevation");
     CHECK(k.id_schemas[3].id == "hydrology");
-    CHECK(k.id_schemas[4].id == "resources");
+    CHECK(k.id_schemas[4].id == "regions");  // P1-06 4
+    CHECK(k.id_schemas[5].id == "resources");
 }

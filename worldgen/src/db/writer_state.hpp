@@ -6,6 +6,7 @@
 #include <map>
 #include <optional>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "db/sqlite_util.hpp"
@@ -25,6 +26,15 @@ struct WriterState {
     std::int64_t stage_start_biome_id = 0;  // last_biome_id at begin_stage, restored on rollback
     bool climate_written = false;           // table climate (P1-03 C7): its one row
     bool stage_start_climate = false;       // climate_written at begin_stage, restored on rollback
+    // Tables region, region_border, region_biome (P1-06 RG14): the last key
+    // written to each ((0, 0) before the first row) and its value at
+    // begin_stage, restored on rollback.
+    std::int64_t last_region_id = 0;
+    std::int64_t stage_start_region_id = 0;
+    std::pair<std::int64_t, std::int64_t> last_border_key{0, 0};
+    std::pair<std::int64_t, std::int64_t> stage_start_border_key{0, 0};
+    std::pair<std::int64_t, std::int64_t> last_region_biome_key{0, 0};
+    std::pair<std::int64_t, std::int64_t> stage_start_region_biome_key{0, 0};
     std::vector<std::string> stages;              // committed stages, run order
     std::optional<std::uint64_t> seed;
     std::string seed_phrase;                      // empty for a numeric seed

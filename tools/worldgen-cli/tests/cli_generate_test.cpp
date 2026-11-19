@@ -344,7 +344,7 @@ TEST_CASE("cli 12.2: empty world contents (P0-02 8)") {
     }
     const auto tables = w.tables();
     REQUIRE(tables.ok());
-    REQUIRE(tables.value().size() == 5);
+    REQUIRE(tables.value().size() == 8);
     CHECK(tables.value()[0].name == "biome");
     CHECK(tables.value()[0].row_count == 0);
     CHECK(tables.value()[1].name == "climate");
@@ -355,14 +355,22 @@ TEST_CASE("cli 12.2: empty world contents (P0-02 8)") {
     CHECK(tables.value()[3].row_count == 8);
     CHECK(tables.value()[4].name == "pass");
     CHECK(tables.value()[4].row_count == 0);
+    CHECK(tables.value()[5].name == "region");  // schema 5 (P1-06 3.1)
+    CHECK(tables.value()[5].row_count == 0);
+    CHECK(tables.value()[6].name == "region_biome");
+    CHECK(tables.value()[6].row_count == 0);
+    CHECK(tables.value()[7].name == "region_border");
+    CHECK(tables.value()[7].row_count == 0);
     const auto layers = w.layers();
     REQUIRE(layers.ok());
     CHECK(layers.value().empty());
     CHECK(w.stages().empty());
     // Expected size, P0-02 8 and amendment 9; schema version 2 adds the root
     // page of table pass (P1-01 9.1); schema version 3 the root pages of
-    // tables biome and climate and of the automatic index of biome.key.
-    CHECK(fs::file_size(out) == 32768U);
+    // tables biome and climate and of the automatic index of biome.key;
+    // schema version 5 the root pages of the three region tables (P0-02
+    // amendment 17).
+    CHECK(fs::file_size(out) == 45056U);
 }
 
 TEST_CASE("cli 12.2: test pattern") {

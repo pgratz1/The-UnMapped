@@ -316,7 +316,7 @@ TEST_CASE("layout independence: reverse order, insert-then-delete, rolled-back s
 //
 // SHA-256 of the file bytes of the empty world with the content hash of no
 // data, as `worldgen-cli generate` wrote it until the `worldgen` kind was
-// registered (re-recorded for generator 0.9.0, schema version 4; since then the CLI writes the content hash of
+// registered (re-recorded for generator 0.11.0, schema version 5; since then the CLI writes the content hash of
 // the loaded data, P0-03 amendment 17, so the CLI goldens in p0-worlds.txt
 // differ from these). The case names are those of P0-04 section 9. The values are
 // recorded by the validation specialist: until then each is the placeholder
@@ -335,11 +335,11 @@ struct GoldenCase {
 };
 
 constexpr std::array<GoldenCase, 5> GOLDEN_CASES = {{
-    {"empty-phrase", 0, "The Unmapped", "07e9dc39ef8b865fd761bb3e5abc576ba6649ce32301db320558f061ca588753"},
-    {"empty-seed-0", 0, nullptr, "65fd7442d42db746b21119215b33a1fe057bff3f14d6f1e07858608b55f582f7"},
-    {"empty-seed-1", 1, nullptr, "1f64537d18c8ed149e3fcb74256dc3f562bf0fa761c175df2252f94feadb0d7b"},
-    {"empty-seed-42", 42, nullptr, "700212e6ff2afbf708af040925a302f7bc3cc8ea226b76e4ddee6838bc578a9f"},
-    {"empty-seed-max", 18446744073709551615ULL, nullptr, "95efe56ef0d25596408c9b2d8790499f143fa08610b568d2354fa5bbb7595b6d"},
+    {"empty-phrase", 0, "The Unmapped", "43b52e4765d8583df8eb2222d487bbeaaba0d383cf6feb6d2281be90fdc53c69"},
+    {"empty-seed-0", 0, nullptr, "93e5c92e0d50ca370145dd6f18e8bfb5b35326faf93415fde14f5b55ddebff63"},
+    {"empty-seed-1", 1, nullptr, "37c0cd9ade658816775f8ab1d156c930c68aaf7471e8dc068d45e17591f7d856"},
+    {"empty-seed-42", 42, nullptr, "5c74c03ed165a261df65f07c399bbde780d571b2bb3bca742a32910c732a6017"},
+    {"empty-seed-max", 18446744073709551615ULL, nullptr, "cd114fedb1529e0f8eb756f542efaac64db27a7e1fb5fa813f9c7094835cec8d"},
 }};
 
 constexpr bool golden_pending() {

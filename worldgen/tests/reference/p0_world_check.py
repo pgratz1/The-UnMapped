@@ -78,10 +78,30 @@ DDL_BIOME = (b"CREATE TABLE biome (id INTEGER PRIMARY KEY, key TEXT NOT NULL UNI
 # the column temp_offset_dc (P1-03 3, P0-02 amendment 16).
 DDL_CLIMATE = (b"CREATE TABLE climate (id INTEGER PRIMARY KEY, wind_toward INTEGER NOT NULL, "
                b"temp_offset_dc INTEGER NOT NULL) STRICT")
-SCHEMA_VERSION = 4
+# Schema version 5 adds tables region, region_border and region_biome,
+# executed sixth to eighth, after climate (P1-06 3.1, P0-02 amendment 17);
+# every world has them, with no rows in a P0 world. No automatic index.
+DDL_REGION = (b"CREATE TABLE region (id INTEGER PRIMARY KEY, name TEXT NOT NULL, biome INTEGER NOT NULL, "
+              b"x_min INTEGER NOT NULL, y_min INTEGER NOT NULL, x_max INTEGER NOT NULL, y_max INTEGER NOT NULL, "
+              b"seed_x INTEGER NOT NULL, seed_y INTEGER NOT NULL, landmass INTEGER NOT NULL, cells INTEGER NOT NULL, "
+              b"lake_cells INTEGER NOT NULL, river_cells INTEGER NOT NULL, river_class_max INTEGER NOT NULL, "
+              b"coast_cells INTEGER NOT NULL, walk_cells INTEGER NOT NULL, walk_area INTEGER NOT NULL, "
+              b"elev_mean_dm INTEGER NOT NULL, elev_max_dm INTEGER NOT NULL, fertility_mean INTEGER NOT NULL, "
+              b"forage_mean INTEGER NOT NULL, timber_mean INTEGER NOT NULL, ore_mean INTEGER NOT NULL, "
+              b"fresh_water_mean INTEGER NOT NULL, habitability_mean INTEGER NOT NULL, "
+              b"habitability_p90 INTEGER NOT NULL, ore_rich_cells INTEGER NOT NULL, "
+              b"ore_reach_cells INTEGER NOT NULL) STRICT")
+DDL_REGION_BORDER = (b"CREATE TABLE region_border (a INTEGER NOT NULL, b INTEGER NOT NULL, "
+                     b"length_m INTEGER NOT NULL, low_dm INTEGER NOT NULL, low_x INTEGER NOT NULL, "
+                     b"low_y INTEGER NOT NULL, walk_pairs INTEGER NOT NULL, river_pairs INTEGER NOT NULL, "
+                     b"river_class_max INTEGER NOT NULL, pass_id INTEGER NOT NULL, passes INTEGER NOT NULL, "
+                     b"PRIMARY KEY (a, b)) STRICT, WITHOUT ROWID")
+DDL_REGION_BIOME = (b"CREATE TABLE region_biome (region INTEGER NOT NULL, biome INTEGER NOT NULL, "
+                    b"cells INTEGER NOT NULL, PRIMARY KEY (region, biome)) STRICT, WITHOUT ROWID")
+SCHEMA_VERSION = 5
 # The generator version the checked worlds are expected to carry (P0-02 5.5,
 # amendment 12). One edit per version bump; --generator-version overrides it.
-GENERATOR_VERSION = "0.10.0"
+GENERATOR_VERSION = "0.11.0"
 EMPTY_SHA = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
 
 
@@ -390,7 +410,11 @@ def check_world(args):
                     (b"table", b"climate", b"climate", DDL_CLIMATE),
                     (b"table", b"layer", b"layer", DDL_LAYER),
                     (b"table", b"meta", b"meta", DDL_META),
-                    (b"table", b"pass", b"pass", DDL_PASS)], "sqlite_schema rows: %r" % (sch,))
+                    (b"table", b"pass", b"pass", DDL_PASS),
+                    (b"table", b"region", b"region", DDL_REGION),
+                    (b"table", b"region_biome", b"region_biome", DDL_REGION_BIOME),
+                    (b"table", b"region_border", b"region_border", DDL_REGION_BORDER)],
+            "sqlite_schema rows: %r" % (sch,))
     # meta (P0-02 5.5, 8)
     expected_meta = [
         (b"content_hash", args.content_hash.encode()),
@@ -405,16 +429,17 @@ def check_world(args):
     meta = [(k[1], v[1]) for k, v in w["tables"][b"meta"][1]]
     f.check(meta == expected_meta, "meta rows: %r" % (meta,))
     f.check(all(k[0] == "text" and v[0] == "text" for k, v in w["tables"][b"meta"][1]), "meta values are TEXT")
-    f.check(list(w["tables"]) == [b"biome", b"climate", b"layer", b"meta", b"pass"],
-            "tables are biome, climate, layer, meta, pass")
-    for empty in (b"pass", b"biome", b"climate"):
+    f.check(list(w["tables"]) == [b"biome", b"climate", b"layer", b"meta", b"pass", b"region", b"region_biome",
+                                  b"region_border"],
+            "tables are biome, climate, layer, meta, pass, region, region_biome, region_border")
+    for empty in (b"pass", b"biome", b"climate", b"region", b"region_biome", b"region_border"):
         f.check(w["tables"][empty][1] == [], "table %s has no rows in a P0 world" % empty.decode())
     # layers
     layers = w["layers"]
     if not args.test_pattern:
         f.check(layers == [], "no layers in an empty world")
-        f.check(len(data) == 32768, "empty world is 32768 bytes (P0-02 8; 8 pages with tables pass, biome, "
-                "climate and the index of biome.key)")
+        f.check(len(data) == 45056, "empty world is 45056 bytes (P0-02 amendment 17; 11 pages with tables "
+                "pass, biome, climate, region, region_border, region_biome and the index of biome.key)")
     else:
         f.check([(L["id"], L["name"], L["format"], L["width"], L["height"]) for L in layers] == [
             (1, b"test.ramp", b"u8", 256, 256), (2, b"test.hash", b"u8", 256, 256),

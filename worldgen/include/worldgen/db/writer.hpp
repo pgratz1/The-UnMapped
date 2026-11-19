@@ -89,6 +89,69 @@ struct ClimateRow {
     std::int64_t temp_offset_dc = 0;
 };
 
+// One row of table `region` (P1-06 3.2; schema 5), columns in declared
+// order.
+struct RegionRow {
+    std::int64_t id = 0;
+    std::string name;
+    std::int64_t biome = 0;
+    std::int64_t x_min = 0;
+    std::int64_t y_min = 0;
+    std::int64_t x_max = 0;
+    std::int64_t y_max = 0;
+    std::int64_t seed_x = 0;
+    std::int64_t seed_y = 0;
+    std::int64_t landmass = 0;
+    std::int64_t cells = 0;
+    std::int64_t lake_cells = 0;
+    std::int64_t river_cells = 0;
+    std::int64_t river_class_max = 0;
+    std::int64_t coast_cells = 0;
+    std::int64_t walk_cells = 0;
+    std::int64_t walk_area = 0;
+    std::int64_t elev_mean_dm = 0;
+    std::int64_t elev_max_dm = 0;
+    std::int64_t fertility_mean = 0;
+    std::int64_t forage_mean = 0;
+    std::int64_t timber_mean = 0;
+    std::int64_t ore_mean = 0;
+    std::int64_t fresh_water_mean = 0;
+    std::int64_t habitability_mean = 0;
+    std::int64_t habitability_p90 = 0;
+    std::int64_t ore_rich_cells = 0;
+    std::int64_t ore_reach_cells = 0;
+
+    friend bool operator==(const RegionRow&, const RegionRow&) = default;
+};
+
+// One row of table `region_border` (P1-06 3.3; schema 5): a pair of
+// bordering regions a < b.
+struct RegionBorderRow {
+    std::int64_t a = 0;
+    std::int64_t b = 0;
+    std::int64_t length_m = 0;
+    std::int64_t low_dm = 0;
+    std::int64_t low_x = 0;
+    std::int64_t low_y = 0;
+    std::int64_t walk_pairs = 0;
+    std::int64_t river_pairs = 0;
+    std::int64_t river_class_max = 0;
+    std::int64_t pass_id = 0;
+    std::int64_t passes = 0;
+
+    friend bool operator==(const RegionBorderRow&, const RegionBorderRow&) = default;
+};
+
+// One row of table `region_biome` (P1-06 3.3; schema 5): the cells of one
+// biome code in one region.
+struct RegionBiomeRow {
+    std::int64_t region = 0;
+    std::int64_t biome = 0;
+    std::int64_t cells = 0;
+
+    friend bool operator==(const RegionBiomeRow&, const RegionBiomeRow&) = default;
+};
+
 // One stage's transaction on the working database (P0-02 6 step 3).
 // Obtained from WorldWriter::begin_stage; at most one is open at a time.
 // Destroying it without commit() rolls the transaction back and leaves no
@@ -131,6 +194,16 @@ public:
     // stage is closed, the id is not 1, the table already has its row,
     // wind_toward is outside 0..7, or SQLite rejects the row.
     void write_climate(const ClimateRow& row);
+
+    // Insert one row of tables `region`, `region_border` and `region_biome`
+    // (P1-06 RG14). Rows of each table are written in strictly ascending
+    // primary key (id; (a, b); (region, biome)), P0-02 6 step 3. FatalError
+    // if the stage is closed, a key is not above every key written before
+    // to that table, region.id is below 1, region_border has a >= b or a < 1,
+    // region_biome has region < 1, or SQLite rejects the row.
+    void write_region(const RegionRow& row);
+    void write_region_border(const RegionBorderRow& row);
+    void write_region_biome(const RegionBiomeRow& row);
 
     // COMMIT, and append the stage name to meta.stages (P0-02 5.5, 6 step 3).
     // FatalError if already committed or SQLite fails.

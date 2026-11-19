@@ -4,8 +4,8 @@
 // P1 registers the fixed-id kind `worldgen` (P1-00 section 6.1, P0-03
 // amendment 16) with the ids of the first pass, `elevation` (P1-01 section
 // 4.2) and `hydrology` (P1-02 section 4), and of the second pass so far,
-// `climate` (P1-03 section 4), `biomes` (P1-04 section 4.2) and `resources`
-// (P1-05 section 4.2). The later second-pass specs add their ids here.
+// `climate` (P1-03 section 4), `biomes` (P1-04 section 4.2), `resources`
+// (P1-05 section 4.2) and `regions` (P1-06 section 4).
 
 #include <array>
 #include <cstddef>
@@ -101,6 +101,15 @@ std::optional<std::string> check_hab_weights_positive(const Record& r) {
                              r.get_int("hab_weight_timber") + r.get_int("hab_weight_ore");
     if (sum < 1) {
         return std::string("the hab_weight fields must not all be 0");
+    }
+    return std::nullopt;
+}
+
+// P1-06 4 named check regions_tile_fits_spacing.
+std::optional<std::string> check_regions_tile_fits_spacing(const Record& r) {
+    // Both fields are at most 32768: no overflow.
+    if (r.get_int("seed_tile_m") > 2 * r.get_int("seed_spacing_m")) {
+        return std::string("seed_tile_m must be at most twice seed_spacing_m");
     }
     return std::nullopt;
 }
@@ -517,6 +526,40 @@ Schema worldgen_resources_schema() {
     return Schema(std::move(fields), std::move(checks));
 }
 
+Schema region_names_schema() {
+    // P1-06 4, record region_names, in declaration order.
+    std::vector<Field> fields;
+    for (const char* name : {"central", "north", "northeast", "east", "southeast", "south", "southwest", "west",
+                             "northwest", "isle"}) {
+        fields.push_back(Field::required(name, Type::string(32, word_grammar())));
+    }
+    return Schema(std::move(fields));
+}
+
+Schema worldgen_regions_schema() {
+    // P1-06 4, in declaration order (this order fixes the canonical
+    // encoding, P0-03 8).
+    std::vector<Field> fields{
+        Field::required("seed_tile_m", Type::integer(256, 32768)),
+        Field::required("seed_spacing_m", Type::integer(160, 32768)),
+        Field::required("hand_ref_m", Type::integer(1, 10000)),
+        Field::required("cost_noise", geo::fbm_m_type()),
+        Field::required("cost_noise_amp", Type::fixed("0", "0.9")),
+        Field::required("lake_cost_factor", Type::fixed("1", "10")),
+        Field::required("river_border_class", Type::integer(1, 16)),
+        Field::required("river_cost_m", Type::integer(0, 100000)),
+        Field::required("region_min_area_m2", Type::integer(0, 100000000)),
+        Field::required("ore_rich_min", Type::integer(1, 255)),
+        Field::required("ore_reach_m", Type::integer(0, 10000)),
+        Field::required("name_central_frac", Type::fixed("0", "0.5")),
+        Field::required("names", Type::record(region_names_schema())),
+    };
+    std::vector<Check> checks{
+        Check{"regions_tile_fits_spacing", [](const Record& r) { return check_regions_tile_fits_spacing(r); }},
+    };
+    return Schema(std::move(fields), std::move(checks));
+}
+
 KindRegistry builtin_kinds() {
     KindRegistry registry;
     // P1-00 6.1: kind `worldgen`, directory `worldgen`, required, fixed ids.
@@ -527,6 +570,7 @@ KindRegistry builtin_kinds() {
                                           IdSchema{std::string(WORLDGEN_CLIMATE_ID), worldgen_climate_schema()},
                                           IdSchema{std::string(WORLDGEN_BIOMES_ID), worldgen_biomes_schema()},
                                           IdSchema{std::string(WORLDGEN_RESOURCES_ID), worldgen_resources_schema()},
+                                          IdSchema{std::string(WORLDGEN_REGIONS_ID), worldgen_regions_schema()},
                                       }));
     // P1-00 6.6: kind `biome`, directory `biomes`, required, open ids, with
     // the kind-level checks of P1-04 4.1.

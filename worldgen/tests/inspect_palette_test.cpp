@@ -598,7 +598,8 @@ TEST_CASE("palette 10.2: names, registered palettes and auto") {
     CHECK(registered_palette("lake") == Palette::ids);
     CHECK(registered_palette("coast_dist") == Palette::signed_distance);
     CHECK(registered_palette("biome") == Palette::biome);  // P1-04 9
-    for (const char* other : {"water_depth", "test.ramp", "test.noise", "Elevation", "elevation ", "region",
+    CHECK(registered_palette("region") == Palette::ids);  // P1-06 9
+    for (const char* other : {"water_depth", "test.ramp", "test.noise", "Elevation", "elevation ", "regions",
                               "biomes", "Temperature", ""}) {
         INFO("layer '", other, "'");
         CHECK(registered_palette(other) == Palette::gray);
