@@ -18,6 +18,7 @@
 #include <cstdint>
 #include <fstream>
 #include <map>
+#include <set>
 #include <ostream>
 #include <sstream>
 #include <string>
@@ -199,7 +200,7 @@ TEST_CASE("cli P1-06 3, P1-00 X1: the default run at 512 writes ids 1 to 19 and 
     auto rd = worldgen::db::WorldReader::open(u8(w.full));
     REQUIRE(rd.ok());
     CHECK(rd.value().stages() == std::vector<std::string>{"elevation", "hydrology", "climate", "biomes", "resources",
-                                                          "regions", "chronology"});  // P3-03 4.3
+                                                          "regions", "chronology", "history"});  // P3-04 9.5
     const auto infos = rd.value().layers();
     REQUIRE(infos.ok());
     REQUIRE(infos.value().size() == 19U);
@@ -219,8 +220,11 @@ TEST_CASE("cli P1-06 3, P1-00 X1: the default run at 512 writes ids 1 to 19 and 
         }
         hex[l[0] + " " + l[1]] = l[2];
     }
-    CHECK(tables == std::vector<std::string>{"age", "biome", "climate", "culture", "god", "layer", "meta", "pass",
-                                             "race", "race_biome", "region", "region_biome", "region_border"});
+    CHECK(tables == std::vector<std::string>{"age", "biome", "civilization", "climate", "culture", "event", "event_cause",
+                                             "event_kind", "event_kind_role", "event_kind_value", "event_participant",
+                                             "event_value", "god", "layer", "meta", "pass", "phase", "race",
+                                             "race_biome", "region", "region_biome", "region_border",
+                                             "region_control", "relation", "settlement", "settlement_census"});
     REQUIRE_FALSE(layers.empty());
     CHECK(layers.back() == "region");
     CHECK(hex["layer region"] == gold.at("region"));
@@ -244,8 +248,13 @@ TEST_CASE("cli P1-06 3, P1-00 X1: the default run at 512 writes ids 1 to 19 and 
     }
     for (const auto& [key, value] : hex) {
         CAPTURE(key);
-        if (key.rfind("file ", 0) == 0U || key == "table meta" || key == "table age" ||
-            key == "table culture" || key == "table god" || key == "table race" || key == "table race_biome") {
+        static const std::set<std::string> later = {
+            "table age",          "table culture",           "table god",          "table race",
+            "table race_biome",   "table civilization",      "table event",        "table event_cause",
+            "table event_kind",   "table event_kind_role",   "table event_kind_value", "table event_participant",
+            "table event_value",  "table phase",             "table region_control", "table relation",
+            "table settlement",   "table settlement_census"};  // chronology (P3-03) and history (P3-04)
+        if (key.rfind("file ", 0) == 0U || key == "table meta" || later.count(key) != 0U) {
             continue;
         }
         CHECK(until_hex[key] == value);
@@ -278,9 +287,10 @@ TEST_CASE("cli P1-06 9: report: the eight region keys close [geography], with th
     // After the resources keys (P1-00 10.3).
     CHECK(r.out.find("\nwalk_share = ") < r.out.find("\nregions = "));
     // [tables] (P0-04 amendment 18 (a)).
-    CHECK(contains(r.out, "\npass = 0\nrace = 6\nrace_biome = 45\nregion = 14\nregion_biome = "));
+    CHECK(contains(r.out, "\npass = 0\nphase = "));
+    CHECK(contains(r.out, "\nrace = 6\nrace_biome = 45\nregion = 14\nregion_biome = "));
     CHECK(contains(r.out, "\nregion_border = 18\n"));
-    CHECK(contains(r.out, "\nschema_version = 6\n"));
+    CHECK(contains(r.out, "\nschema_version = 7\n"));
 }
 
 TEST_CASE("cli P1-06 10.3: --until resources leaves the three tables empty and no region keys") {
@@ -289,13 +299,13 @@ TEST_CASE("cli P1-06 10.3: --until resources leaves the three tables empty and n
     REQUIRE(r.exit_code == EXIT_OK);
     CHECK(contains(r.out, "\nregion = 0\nregion_biome = 0\nregion_border = 0\n"));
     CHECK_FALSE(contains(r.out, "\nregions = "));
-    // --until none: every table empty, 18 pages (73728 bytes) since schema 6 (P3-03 5.1).
+    // --until none: every table empty, 34 pages (139264 bytes) since schema 7 (P3-04 9.6).
     const fs::path e = w.sb.file("none.db");
     generate(w.sb, w.data, {"--until", "none"}, e);
-    CHECK(read_bytes(e).size() == 73728U);
+    CHECK(read_bytes(e).size() == 139264U);
     const ProcessResult re = w.sb.cli({"report", "--db", u8(e)});
     REQUIRE(re.exit_code == EXIT_OK);
-    CHECK(contains(re.out, "\n[tables]\nage = 0\nbiome = 0\nclimate = 0\nculture = 0\ngod = 0\nlayer = 0\nmeta = 16\npass = 0\nrace = 0\nrace_biome = 0\nregion = 0\n"
+    CHECK(contains(re.out, "\n[tables]\nage = 0\nbiome = 0\ncivilization = 0\nclimate = 0\nculture = 0\nevent = 0\nevent_cause = 0\nevent_kind = 0\nevent_kind_role = 0\nevent_kind_value = 0\nevent_participant = 0\nevent_value = 0\ngod = 0\nlayer = 0\nmeta = 17\npass = 0\nphase = 0\nrace = 0\nrace_biome = 0\nregion = 0\n"
                            "region_biome = 0\nregion_border = 0\n"));
 }
 
@@ -447,7 +457,7 @@ TEST_CASE("cli P0-02 amendment 17, 10.1 test 6: a version 4 world is refused by 
         CAPTURE(args[0]);
         const ProcessResult r = w.sb.cli(args);
         CHECK(r.exit_code == EXIT_INPUT);
-        CHECK(contains(r.err, "world schema version 4, this build reads 6"));
+        CHECK(contains(r.err, "world schema version 4, this build reads 7"));
         CHECK(r.out.empty());
     }
     // Plain `hash` hashes the bytes without opening the world (P0-04 8).
@@ -493,8 +503,10 @@ TEST_CASE("cli P1-06 4, P0-03 amendment 17: bad regions tuning is an input error
 TEST_CASE("cli P1-00 10.1: --until regions is accepted; a stage after it does not exist") {
     Sandbox sb;
     const fs::path data = write_data_root(sb);
+    // Every stage of STAGE_NAMES is implemented since P3-04 (history); an
+    // unknown name stands for a stage that does not exist.
     const ProcessResult r = sb.cli({"generate", "--seed", "1", "--map-size", "512", "--data", u8(data), "--until",
-                                    "history", "--out", u8(sb.file("h.db"))});
+                                    "chronicle", "--out", u8(sb.file("h.db"))});
     CHECK(r.exit_code == EXIT_USAGE);
     CHECK_FALSE(file_exists(sb.file("h.db")));
 }

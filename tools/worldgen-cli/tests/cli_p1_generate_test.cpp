@@ -121,12 +121,10 @@ TEST_CASE("cli P1-00 10.1, X1: an unknown stage name is a usage error") {
     const std::string bogus = usage_error(sb, {"--until", "bogus"});
     CHECK(contains(bogus, "bogus"));
     // Every geography stage of P1-00 3 is implemented since P1-06 (generator
-    // 0.11.0) and chronology since P3-03; history is not implemented yet.
+    // 0.11.0), chronology since P3-03 and history since P3-04.
     for (const std::string_view name : worldgen::stages::STAGE_NAMES) {
         CAPTURE(std::string(name));
-        CHECK(worldgen::stages::check_stage_limit(name) == (name == "history"
-                                                                ? worldgen::stages::StageLimitError::not_implemented
-                                                                : worldgen::stages::StageLimitError::none));
+        CHECK(worldgen::stages::check_stage_limit(name) == worldgen::stages::StageLimitError::none);
     }
     for (const char* name : {"Elevation", "NONE", "", "test_pattern", "elevation,hydrology"}) {
         CAPTURE(name);

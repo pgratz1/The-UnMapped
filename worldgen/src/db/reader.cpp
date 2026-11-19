@@ -88,6 +88,12 @@ std::string_view validate_meta_values(ReaderState& s) {
     if (!is_canonical_version(m.at(std::string(META_GENERATOR_VERSION)))) {
         return META_GENERATOR_VERSION;
     }
+    // history_end_year (P3-04 9.4): canonical decimal here; its equality
+    // with param.history_span is checked after every other key, so that an
+    // invalid param.history_span is reported as itself.
+    if (!parse_canonical_u64(m.at(std::string(META_HISTORY_END_YEAR)))) {
+        return META_HISTORY_END_YEAR;
+    }
     // The history keys (P3-03 4.2) that sort before param.map_size.
     for (const std::string_view key : HISTORY_META_KEYS) {
         if (key < META_PARAM_MAP_SIZE && !is_canonical_history_meta_value(key, m.at(std::string(key)))) {
@@ -125,6 +131,9 @@ std::string_view validate_meta_values(ReaderState& s) {
     }
     if (!parse_stages(m.at(std::string(META_STAGES)), s.stages)) {
         return META_STAGES;
+    }
+    if (m.at(std::string(META_HISTORY_END_YEAR)) != m.at(std::string(META_PARAM_HISTORY_SPAN))) {
+        return META_HISTORY_END_YEAR;
     }
     return {};
 }

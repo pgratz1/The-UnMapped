@@ -47,11 +47,11 @@ set -u
 # The case table of P0-04 section 9 (with amendment 16 (d): the empty-*
 # cases pass --until none) and the geography cases of P1-00 section 14 X5
 # that the implemented stages allow, and the history cases of P3-03 section
-# 13, each list in case-name order (the order of its golden file). Arguments
+# 13 and P3-04 section 15, each list in case-name order (the order of its golden file). Arguments
 # are given in run_generate below.
 P0_CASES='empty-phrase empty-seed-0 empty-seed-0-512 empty-seed-1 empty-seed-42 empty-seed-max pattern-seed-0 pattern-seed-42'
 GEO_CASES='geo-phrase-512 geo-seed-0-512 geo-seed-1-1024 geo-seed-42-512'
-HIST_CASES='hist-races-elf-orc-1024 hist-span-2000-512'
+HIST_CASES='hist-dense-1024 hist-races-elf-orc-1024 hist-span-2000-512'
 CASES="$P0_CASES $GEO_CASES $HIST_CASES"
 
 # Run "worldgen-cli generate" for case $1 writing world file $2. Every case
@@ -68,7 +68,7 @@ run_generate() {
         pattern-seed-0)   "$cli" generate --out "$2" --data "$data_dir" --seed 0 --test-pattern ;;
         pattern-seed-42)  "$cli" generate --out "$2" --data "$data_dir" --seed 42 --test-pattern ;;
         # P1-00 14 X5. Default stages: every implemented stage (the geography
-        # stages and chronology).
+        # stages, chronology and history).
         geo-seed-0-512)   "$cli" generate --out "$2" --data "$data_dir" --seed 0 --map-size 512 ;;
         geo-seed-42-512)  "$cli" generate --out "$2" --data "$data_dir" --seed 42 --map-size 512 ;;
         geo-phrase-512)   "$cli" generate --out "$2" --data "$data_dir" --seed-phrase "The Unmapped" --map-size 512 ;;
@@ -76,6 +76,8 @@ run_generate() {
         # P3-03 13: the span and the race subset change chronology bytes.
         hist-span-2000-512)      "$cli" generate --out "$2" --data "$data_dir" --seed 7 --map-size 512 --history-span 2000 ;;
         hist-races-elf-orc-1024) "$cli" generate --out "$2" --data "$data_dir" --seed 3 --races elf,orc ;;
+        # P3-04 15: the detail level changes history bytes.
+        hist-dense-1024)         "$cli" generate --out "$2" --data "$data_dir" --seed 11 --history-detail dense ;;
         *) echo "world-hashes: internal error: unknown case $1" >&2; return 1 ;;
     esac
 }

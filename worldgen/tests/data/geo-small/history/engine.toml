@@ -1,0 +1,9 @@
+[history.engine]
+quiet_step_years = 25
+quiet_events_max = 3
+simulated_min_permille = 100
+simulated_max_permille = 450
+islet_max_dry_cells = 1172
+sparse = { active_years = 75, flare_years = 30, final_years = 250, flare_threshold = 1500 }
+normal = { active_years = 150, flare_years = 50, final_years = 300, flare_threshold = 1000 }
+dense = { active_years = 250, flare_years = 75, final_years = 400, flare_threshold = 700 }

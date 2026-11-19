@@ -21,6 +21,7 @@
 
 #include "worldgen/db/layer_blob.hpp"
 #include "worldgen/db/result.hpp"
+#include "worldgen/db/writer.hpp"
 
 namespace worldgen::db {
 
@@ -114,7 +115,9 @@ public:
     //   5. meta_key_missing: a key of REQUIRED_META_KEYS absent;
     //   6. meta_value_invalid: a required value not in canonical form, keys
     //      checked in ascending order (the eight history keys of P3-03 4.2
-    //      by is_canonical_history_meta_value; param.races by syntax only).
+    //      by is_canonical_history_meta_value; param.races by syntax only;
+    //      history_end_year canonical decimal in its place, and, after
+    //      every other key, equal to param.history_span, P3-04 9.4).
     // The meta table is read once here; the meta accessors below do no I/O.
     [[nodiscard]] static Result<WorldReader> open(std::string_view path_utf8);
 
@@ -199,5 +202,35 @@ private:
     explicit WorldReader(std::unique_ptr<detail::ReaderState> state) noexcept;
     std::unique_ptr<detail::ReaderState> state_;
 };
+
+// --- Typed rows of the region, chronology and history tables (P3-04 3.2) -----
+//
+// Each reads every row of one table in primary-key order (visit_table_rows)
+// and decodes it into the row type its writer takes, so that a row read
+// back equals the row written. Errors: those of visit_table_rows, and
+// corrupt_layer ("table '<name>': row <n>: <reason>", n counted from 1)
+// when a row has the wrong number of columns, a column of the wrong storage
+// class, or NULL in a column that is not nullable.
+[[nodiscard]] Result<std::vector<RegionRow>> read_region_rows(const WorldReader& world);
+[[nodiscard]] Result<std::vector<RegionBorderRow>> read_region_border_rows(const WorldReader& world);
+[[nodiscard]] Result<std::vector<RegionBiomeRow>> read_region_biome_rows(const WorldReader& world);
+[[nodiscard]] Result<std::vector<RaceRow>> read_race_rows(const WorldReader& world);
+[[nodiscard]] Result<std::vector<RaceBiomeRow>> read_race_biome_rows(const WorldReader& world);
+[[nodiscard]] Result<std::vector<CultureRow>> read_culture_rows(const WorldReader& world);
+[[nodiscard]] Result<std::vector<GodRow>> read_god_rows(const WorldReader& world);
+[[nodiscard]] Result<std::vector<AgeRow>> read_age_rows(const WorldReader& world);
+[[nodiscard]] Result<std::vector<EventKindRow>> read_event_kind_rows(const WorldReader& world);
+[[nodiscard]] Result<std::vector<EventKindRoleRow>> read_event_kind_role_rows(const WorldReader& world);
+[[nodiscard]] Result<std::vector<EventKindValueRow>> read_event_kind_value_rows(const WorldReader& world);
+[[nodiscard]] Result<std::vector<PhaseRow>> read_phase_rows(const WorldReader& world);
+[[nodiscard]] Result<std::vector<EventRow>> read_event_rows(const WorldReader& world);
+[[nodiscard]] Result<std::vector<EventParticipantRow>> read_event_participant_rows(const WorldReader& world);
+[[nodiscard]] Result<std::vector<EventCauseRow>> read_event_cause_rows(const WorldReader& world);
+[[nodiscard]] Result<std::vector<EventValueRow>> read_event_value_rows(const WorldReader& world);
+[[nodiscard]] Result<std::vector<CivilizationRow>> read_civilization_rows(const WorldReader& world);
+[[nodiscard]] Result<std::vector<SettlementRow>> read_settlement_rows(const WorldReader& world);
+[[nodiscard]] Result<std::vector<SettlementCensusRow>> read_settlement_census_rows(const WorldReader& world);
+[[nodiscard]] Result<std::vector<RegionControlRow>> read_region_control_rows(const WorldReader& world);
+[[nodiscard]] Result<std::vector<RelationRow>> read_relation_rows(const WorldReader& world);
 
 }  // namespace worldgen::db

@@ -42,9 +42,10 @@ const char* const DDL_AGE =
     "CREATE TABLE age (id INTEGER PRIMARY KEY, race INTEGER NOT NULL, start_year INTEGER NOT NULL, end_year INTEGER "
     "NOT NULL, name TEXT NOT NULL) STRICT";
 
-const std::vector<std::string>& sixteen_keys() {
+const std::vector<std::string>& required_keys() {
     static const std::vector<std::string> v = {
-        "content_hash",          "format",               "generator_version",    "param.civs_per_race",
+        "content_hash",          "format",               "generator_version",    "history_end_year",
+        "param.civs_per_race",
         "param.divine_activity", "param.divine_script",  "param.event_intensity", "param.history_detail",
         "param.history_span",    "param.map_size",       "param.monster_pressure", "param.races",
         "schema_version",        "seed",                 "seed_phrase",          "stages"};
@@ -87,19 +88,19 @@ TEST_SUITE("chronology") {
 // --- 14.1 item 7 ------------------------------------------------------------------------------
 
 TEST_CASE("P3-03 5.1, 14.1 item 7: SCHEMA_VERSION 6 and the five statements after region_biome's, byte for byte") {
-    CHECK(chrono_api::schema_version() == 6);
+    CHECK(chrono_api::schema_version() == 7);
     const std::vector<std::string> ddl = chrono_api::ddl_statements();
-    REQUIRE(ddl.size() == 13U);
+    REQUIRE(ddl.size() == 26U);  // P3-04 9.1: thirteen more after age's
     CHECK(ddl[7].rfind("CREATE TABLE region_biome ", 0) == 0U);
     CHECK(ddl[8] == DDL_RACE);
     CHECK(ddl[9] == DDL_RACE_BIOME);
     CHECK(ddl[10] == DDL_CULTURE);
     CHECK(ddl[11] == DDL_GOD);
     CHECK(ddl[12] == DDL_AGE);
-    CHECK(chrono_api::required_meta_keys() == sixteen_keys());
+    CHECK(chrono_api::required_meta_keys() == required_keys());
 }
 
-TEST_CASE("P3-03 5.1, 4.3, 14.1 item 7: the empty world: pages, the five empty tables, 16 meta keys") {
+TEST_CASE("P3-03 5.1, 4.3, 14.1 item 7: the empty world: pages, the five empty tables, 17 meta keys (P3-04 9.4)") {
     dbtest::TempDir dir("chronology-empty");
     const std::string path = empty_world(dir, "e.db");
     CHECK(static_cast<std::int64_t>(dbtest::read_file(path).size()) == EMPTY_WORLD_BYTES);
@@ -107,8 +108,8 @@ TEST_CASE("P3-03 5.1, 4.3, 14.1 item 7: the empty world: pages, the five empty t
     REQUIRE(db.ok());
     CHECK(db.rows("PRAGMA page_count") ==
           std::vector<std::vector<std::string>>{{std::to_string(EMPTY_WORLD_PAGES)}});
-    CHECK(db.rows("PRAGMA user_version") == std::vector<std::vector<std::string>>{{"6"}});
-    CHECK(db.rows("SELECT value FROM meta WHERE key = 'schema_version'") == std::vector<std::vector<std::string>>{{"6"}});
+    CHECK(db.rows("PRAGMA user_version") == std::vector<std::vector<std::string>>{{"7"}});
+    CHECK(db.rows("SELECT value FROM meta WHERE key = 'schema_version'") == std::vector<std::vector<std::string>>{{"7"}});
     for (const std::string& t : five_tables()) {
         CAPTURE(t);
         CHECK(db.rows("SELECT count(*) FROM " + t) == std::vector<std::vector<std::string>>{{"0"}});
@@ -117,10 +118,10 @@ TEST_CASE("P3-03 5.1, 4.3, 14.1 item 7: the empty world: pages, the five empty t
     for (const auto& row : db.rows("SELECT key FROM meta ORDER BY key")) {
         keys.push_back(row[0]);
     }
-    CHECK(keys == sixteen_keys());
+    CHECK(keys == required_keys());
     // The statements are stored in execution order, ninth to thirteenth.
     const auto sql = db.rows("SELECT name, sql FROM sqlite_schema WHERE type = 'table' ORDER BY rowid");
-    REQUIRE(sql.size() == 13U);
+    REQUIRE(sql.size() == 26U);
     CHECK(sql[8] == std::vector<std::string>{"race", DDL_RACE});
     CHECK(sql[9] == std::vector<std::string>{"race_biome", DDL_RACE_BIOME});
     CHECK(sql[10] == std::vector<std::string>{"culture", DDL_CULTURE});
@@ -130,7 +131,7 @@ TEST_CASE("P3-03 5.1, 4.3, 14.1 item 7: the empty world: pages, the five empty t
           std::vector<std::vector<std::string>>{{"sqlite_autoindex_culture_1"}, {"sqlite_autoindex_race_1"}});
 }
 
-TEST_CASE("P3-03 4.4, 14.1 item 7: a version 5 file is refused: world schema version 5, this build reads 6") {
+TEST_CASE("P3-03 4.4, 14.1 item 7: a version 5 file is refused: world schema version 5, this build reads 7") {
     dbtest::TempDir dir("chronology-v5");
     for (const char* sql : {"PRAGMA user_version = 5", "UPDATE meta SET value = '5' WHERE key = 'schema_version'"}) {
         CAPTURE(sql);
@@ -139,7 +140,7 @@ TEST_CASE("P3-03 4.4, 14.1 item 7: a version 5 file is refused: world schema ver
         const auto r = worldgen::db::WorldReader::open(path);
         REQUIRE_FALSE(r.ok());
         CHECK(r.code() == worldgen::db::ErrorCode::unsupported_schema_version);
-        CHECK(r.error().message == "world schema version 5, this build reads 6");
+        CHECK(r.error().message == "world schema version 5, this build reads 7");
     }
 }
 
@@ -501,8 +502,32 @@ TEST_CASE("P3-03 9.2, 14.1 item 11: the five table lines of hash --detail; NULL 
     for (const auto& t : d.value().tables) {
         names.push_back(t.name);
     }
-    CHECK(names == std::vector<std::string>{"age", "biome", "climate", "culture", "god", "layer", "meta", "pass", "race",
-                                            "race_biome", "region", "region_biome", "region_border"});
+    CHECK(names == std::vector<std::string>{"age",
+                                            "biome",
+                                            "civilization",
+                                            "climate",
+                                            "culture",
+                                            "event",
+                                            "event_cause",
+                                            "event_kind",
+                                            "event_kind_role",
+                                            "event_kind_value",
+                                            "event_participant",
+                                            "event_value",
+                                            "god",
+                                            "layer",
+                                            "meta",
+                                            "pass",
+                                            "phase",
+                                            "race",
+                                            "race_biome",
+                                            "region",
+                                            "region_biome",
+                                            "region_border",
+                                            "region_control",
+                                            "relation",
+                                            "settlement",
+                                            "settlement_census"});  // schema 7 (P3-04 9.1)
     const Rows rows = chrono_api::stage(shipped(), h, 3, {"North Downs", "East Wood"});
     const std::map<std::string, std::string> want = table_hashes(rows);
     const std::map<std::string, std::string> got = detail_tables(r);

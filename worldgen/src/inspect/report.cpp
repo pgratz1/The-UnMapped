@@ -14,6 +14,7 @@
 #include "worldgen/db/schema.hpp"
 #include "worldgen/inspect/chronology.hpp"
 #include "worldgen/inspect/geography.hpp"
+#include "worldgen/inspect/history.hpp"
 #include "worldgen/inspect/render.hpp"
 
 namespace worldgen::inspect {
@@ -369,10 +370,27 @@ db::Result<std::string> build_report(const db::WorldReader& world) {
         if (chronology.problem) {
             return db::Error{db::ErrorCode::corrupt_layer, *chronology.problem};
         }
+        // The history tables (schema 7, P3-04 11.1): checked after the
+        // [chronology] checks when phase or event has rows; [history]
+        // follows [chronology] when phase has a row.
+        std::int64_t end_year = 0;
+        if (const std::optional<std::string> text = world.meta(db::META_HISTORY_END_YEAR)) {
+            if (const std::optional<std::uint64_t> v = db::parse_canonical_u64(*text)) {
+                end_year = static_cast<std::int64_t>(*v);  // validated by the reader: = param.history_span
+            }
+        }
+        db::Result<HistorySectionResult> history = history_section(world, end_year);
+        if (!history.ok()) {
+            return history.error();
+        }
+        if (history.value().problem) {
+            return db::Error{db::ErrorCode::corrupt_layer, *history.value().problem};
+        }
         if (geography) {
             out += *geography;
         }
         out += chronology.section;
+        out += history.value().section;
         return out;
     } catch (const std::bad_alloc&) {
         return db::Error{db::ErrorCode::out_of_memory, "out of memory while building the report"};

@@ -96,6 +96,9 @@ struct LayerGrid {
     [[nodiscard]] const std::vector<T>* get_if() const noexcept {
         return std::get_if<std::vector<T>>(&values);
     }
+
+    // Same dimensions, element type and cells (P3-04 3.2, R1).
+    friend bool operator==(const LayerGrid&, const LayerGrid&) = default;
 };
 
 // A zero-filled grid of the given type (dimensions not validated).

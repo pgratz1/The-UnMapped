@@ -280,6 +280,30 @@ awakening_min_gap_years = 100
 age_name_form = "The Age of {plural}"
 )";
 
+// --- history.engine and history.report (P3-04 4.1, 4.2; every root carries
+// all fixed ids of kind history, P3-01 5) -----------------------------------------
+
+inline constexpr std::string_view ENGINE_TOML = R"([history.engine]
+quiet_step_years = 25
+quiet_events_max = 3
+simulated_min_permille = 100
+simulated_max_permille = 450
+islet_max_dry_cells = 1172
+sparse = { active_years = 75, flare_years = 30, final_years = 250, flare_threshold = 1500 }
+normal = { active_years = 150, flare_years = 50, final_years = 300, flare_threshold = 1000 }
+dense = { active_years = 250, flare_years = 75, final_years = 400, flare_threshold = 700 }
+)";
+
+inline constexpr std::string_view REPORT_TOML = R"([history.report]
+events = [
+  { kind = "awakening", salience = 100, template = "{creator} awakened the {race:plural} in {@region}." },
+  { kind = "civ_founded", salience = 80, template = "The {race:plural} founded {civilization} in {@region}." },
+  { kind = "settlement_founded", salience = 40, template = "{founder} founded {settlement} in {@region}." },
+  { kind = "quiet_era", salience = 20, template = "{civilization} passed {years} quiet {years?year|years} ({generations} {generations?generation|generations}), from {@year} to {@end_year}." },
+  { kind = "flare_up", salience = 50, template = "In {@year} tensions flared into {years} {years?year|years} of upheaval." },
+]
+)";
+
 // --- Culture files (P3-01 4) ------------------------------------------------------
 
 struct CultureListing {
@@ -319,6 +343,8 @@ inline Files shipped_files() {
         f["cultures/" + std::string(c.id) + ".toml"] = culture_toml(c);
     }
     f["history/chronology.toml"] = std::string(CHRONOLOGY_TOML);
+    f["history/engine.toml"] = std::string(ENGINE_TOML);
+    f["history/report.toml"] = std::string(REPORT_TOML);
     return f;
 }
 

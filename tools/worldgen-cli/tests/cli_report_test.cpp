@@ -64,7 +64,7 @@ TEST_CASE("cli 12.4: escaping in meta values (test-only world)") {
             s += v.empty() ? k + " =\n" : k + " = " + v + "\n";
         }
         s += line;
-        s += "[tables]\nage = 0\nbiome = 0\nclimate = 0\nculture = 0\ngod = 0\nlayer = 0\nmeta = 17\npass = 0\nrace = 0\nrace_biome = 0\nregion = 0\nregion_biome = 0\nregion_border = 0\n[layers]\n(none)\n";
+        s += "[tables]\nage = 0\nbiome = 0\ncivilization = 0\nclimate = 0\nculture = 0\nevent = 0\nevent_cause = 0\nevent_kind = 0\nevent_kind_role = 0\nevent_kind_value = 0\nevent_participant = 0\nevent_value = 0\ngod = 0\nlayer = 0\nmeta = 18\npass = 0\nphase = 0\nrace = 0\nrace_biome = 0\nregion = 0\nregion_biome = 0\nregion_border = 0\nregion_control = 0\nrelation = 0\nsettlement = 0\nsettlement_census = 0\n[layers]\n(none)\n";
         return s;
     };
     SUBCASE("backslash and tab") {
@@ -94,26 +94,30 @@ TEST_CASE("cli 12.4: test-pattern world") {
     const ProcessResult r = sb.cli({"report", "--db", u8(world)});
     REQUIRE(r.exit_code == EXIT_OK);
     const std::vector<std::string> lines = lines_of(r.out);
-    REQUIRE(lines.size() == 36);  // 16 meta rows and 13 tables since schema 6 (P3-03)
+    REQUIRE(lines.size() == 50);  // 17 meta rows and 26 tables since schema 7 (P3-04)
     CHECK(r.out.back() == '\n');
     CHECK(lines[0] == "# worldgen report v2");
     CHECK(lines[1] == "[meta]");
-    CHECK(lines[17] == "stages = test_pattern");
-    CHECK(lines[18] == "[tables]");
-    const std::vector<std::string> tables = {"age = 0",  "biome = 0",      "climate = 0", "culture = 0",
-                                             "god = 0",  "layer = 3",      "meta = 16",   "pass = 0",
-                                             "race = 0", "race_biome = 0", "region = 0",  "region_biome = 0",
-                                             "region_border = 0"};
-    for (std::size_t k = 0; k < tables.size(); ++k) {
-        CHECK(lines[19 + k] == tables[k]);
+    CHECK(lines[18] == "stages = test_pattern");
+    CHECK(lines[19] == "[tables]");
+    std::vector<std::string> tables;
+    for (const char* t : {"age", "biome", "civilization", "climate", "culture", "event", "event_cause", "event_kind",
+                          "event_kind_role", "event_kind_value", "event_participant", "event_value", "god", "layer",
+                          "meta", "pass", "phase", "race", "race_biome", "region", "region_biome", "region_border",
+                          "region_control", "relation", "settlement", "settlement_census"}) {
+        const std::string n(t);
+        tables.push_back(n + " = " + (n == "layer" ? "3" : n == "meta" ? "17" : "0"));
     }
-    CHECK(lines[32] == "[layers]");
-    CHECK(starts_with(lines[33], "test.ramp u8 256x256 codec=1 bytes="));
-    CHECK(lines[33].substr(lines[33].size() - 14) == " min=0 max=255");
-    CHECK(lines[33] == layer_line("test.ramp", "u8", p004::ramp_cells()));
-    CHECK(lines[34] == layer_line("test.hash", "u8", p004::hash_cells(0)));
-    CHECK(lines[35] == layer_line("test.noise", "i16", p004::noise_cells(0)));
-    MESSAGE("seed-0 pattern report layer lines:\n", lines[33], "\n", lines[34], "\n", lines[35]);
+    for (std::size_t k = 0; k < tables.size(); ++k) {
+        CHECK(lines[20 + k] == tables[k]);
+    }
+    CHECK(lines[46] == "[layers]");
+    CHECK(starts_with(lines[47], "test.ramp u8 256x256 codec=1 bytes="));
+    CHECK(lines[47].substr(lines[47].size() - 14) == " min=0 max=255");
+    CHECK(lines[47] == layer_line("test.ramp", "u8", p004::ramp_cells()));
+    CHECK(lines[48] == layer_line("test.hash", "u8", p004::hash_cells(0)));
+    CHECK(lines[49] == layer_line("test.noise", "i16", p004::noise_cells(0)));
+    MESSAGE("seed-0 pattern report layer lines:\n", lines[47], "\n", lines[48], "\n", lines[49]);
 }
 
 TEST_CASE("cli 12.4: --out writes the same bytes as stdout") {

@@ -9,6 +9,7 @@
 #include "worldgen/stages/chronology.hpp"
 #include "worldgen/stages/climate.hpp"
 #include "worldgen/stages/elevation.hpp"
+#include "worldgen/stages/history.hpp"
 #include "worldgen/stages/hydrology.hpp"
 #include "worldgen/stages/regions.hpp"
 #include "worldgen/stages/resources.hpp"
@@ -23,6 +24,7 @@ struct StageContext::State {
     std::vector<detail::StoredLayer> written;  // this stage's layers, in writing order
     std::vector<db::PassRow> written_passes;   // this stage's pass rows, in writing order
     std::vector<db::RegionRow> written_regions;  // this stage's region rows, in writing order
+    detail::Pipeline::CommittedRows written_rows;  // this stage's rows of the tables history reads
 };
 
 StageContext::StageContext(std::unique_ptr<State> state) : state_(std::move(state)) {}
@@ -103,30 +105,117 @@ void StageContext::write_region(const db::RegionRow& row) {
 
 void StageContext::write_region_border(const db::RegionBorderRow& row) {
     state_->stage.write_region_border(row);
+    state_->written_rows.region_borders.push_back(row);
 }
 
 void StageContext::write_region_biome(const db::RegionBiomeRow& row) {
     state_->stage.write_region_biome(row);
+    state_->written_rows.region_biomes.push_back(row);
 }
 
 void StageContext::write_race(const db::RaceRow& row) {
     state_->stage.write_race(row);
+    state_->written_rows.races.push_back(row);
 }
 
 void StageContext::write_race_biome(const db::RaceBiomeRow& row) {
     state_->stage.write_race_biome(row);
+    state_->written_rows.race_biomes.push_back(row);
 }
 
 void StageContext::write_culture(const db::CultureRow& row) {
     state_->stage.write_culture(row);
+    state_->written_rows.cultures.push_back(row);
 }
 
 void StageContext::write_god(const db::GodRow& row) {
     state_->stage.write_god(row);
+    state_->written_rows.gods.push_back(row);
 }
 
 void StageContext::write_age(const db::AgeRow& row) {
     state_->stage.write_age(row);
+    state_->written_rows.ages.push_back(row);
+}
+
+std::span<const db::RegionBorderRow> StageContext::region_borders() const noexcept {
+    return state_->pipeline.rows().region_borders;
+}
+
+std::span<const db::RegionBiomeRow> StageContext::region_biomes() const noexcept {
+    return state_->pipeline.rows().region_biomes;
+}
+
+std::span<const db::RaceRow> StageContext::races() const noexcept {
+    return state_->pipeline.rows().races;
+}
+
+std::span<const db::RaceBiomeRow> StageContext::race_biomes() const noexcept {
+    return state_->pipeline.rows().race_biomes;
+}
+
+std::span<const db::CultureRow> StageContext::cultures() const noexcept {
+    return state_->pipeline.rows().cultures;
+}
+
+std::span<const db::GodRow> StageContext::gods() const noexcept {
+    return state_->pipeline.rows().gods;
+}
+
+std::span<const db::AgeRow> StageContext::ages() const noexcept {
+    return state_->pipeline.rows().ages;
+}
+
+void StageContext::write_event_kind(const db::EventKindRow& row) {
+    state_->stage.write_event_kind(row);
+}
+
+void StageContext::write_event_kind_role(const db::EventKindRoleRow& row) {
+    state_->stage.write_event_kind_role(row);
+}
+
+void StageContext::write_event_kind_value(const db::EventKindValueRow& row) {
+    state_->stage.write_event_kind_value(row);
+}
+
+void StageContext::write_phase(const db::PhaseRow& row) {
+    state_->stage.write_phase(row);
+}
+
+void StageContext::write_event(const db::EventRow& row) {
+    state_->stage.write_event(row);
+}
+
+void StageContext::write_event_participant(const db::EventParticipantRow& row) {
+    state_->stage.write_event_participant(row);
+}
+
+void StageContext::write_event_cause(const db::EventCauseRow& row) {
+    state_->stage.write_event_cause(row);
+}
+
+void StageContext::write_event_value(const db::EventValueRow& row) {
+    state_->stage.write_event_value(row);
+}
+
+void StageContext::write_civilization(const db::CivilizationRow& row) {
+    state_->stage.write_civilization(row);
+}
+
+void StageContext::write_settlement(const db::SettlementRow& row) {
+    state_->stage.write_settlement(row);
+}
+
+void StageContext::write_settlement_census(const db::SettlementCensusRow& row) {
+    state_->stage.write_settlement_census(row);
+}
+
+void StageContext::write_region_control(const db::RegionControlRow& row) {
+    state_->stage.write_region_control(row);
+}
+
+void StageContext::write_relation(const db::RelationRow& row) {
+    state_->stage.write_relation(row);
 }
 
 // --- Pipeline ------------------------------------------------------------------------
@@ -146,7 +235,7 @@ void Pipeline::run(const StageInfo& stage) {
         fatal("generate_world: a stage has no entry point");
     }
     StageContext context(std::make_unique<StageContext::State>(
-        StageContext::State{*this, writer_.begin_stage(stage.name), {}, {}, {}}));
+        StageContext::State{*this, writer_.begin_stage(stage.name), {}, {}, {}, {}}));
     stage.run(context);
     context.state_->stage.commit();
     for (StoredLayer& layer : context.state_->written) {
@@ -161,6 +250,23 @@ void Pipeline::run(const StageInfo& stage) {
         regions_.push_back(std::move(row));
     }
     context.state_->written_regions.clear();
+    rows_.append(std::move(context.state_->written_rows));
+}
+
+void Pipeline::CommittedRows::append(CommittedRows&& more) {
+    const auto move_all = [](auto& to, auto& from) {
+        for (auto& row : from) {
+            to.push_back(std::move(row));
+        }
+        from.clear();
+    };
+    move_all(region_borders, more.region_borders);
+    move_all(region_biomes, more.region_biomes);
+    move_all(races, more.races);
+    move_all(race_biomes, more.race_biomes);
+    move_all(cultures, more.cultures);
+    move_all(gods, more.gods);
+    move_all(ages, more.ages);
 }
 
 }  // namespace detail
@@ -170,7 +276,7 @@ void Pipeline::run(const StageInfo& stage) {
 std::span<const StageInfo> implemented_stages() noexcept {
     // Each stage is added here as it is implemented, in the order of
     // STAGE_NAMES (P1-00 3, P3-00 5).
-    static constexpr std::array<StageInfo, 7> STAGES = {
+    static constexpr std::array<StageInfo, 8> STAGES = {
         StageInfo{ELEVATION_STAGE, &run_elevation},    // P1-01
         StageInfo{HYDROLOGY_STAGE, &run_hydrology},    // P1-02
         StageInfo{CLIMATE_STAGE, &run_climate},        // P1-03
@@ -178,6 +284,7 @@ std::span<const StageInfo> implemented_stages() noexcept {
         StageInfo{RESOURCES_STAGE, &run_resources},    // P1-05
         StageInfo{REGIONS_STAGE, &run_regions},        // P1-06
         StageInfo{CHRONOLOGY_STAGE, &run_chronology},  // P3-03
+        StageInfo{HISTORY_STAGE, &run_history},        // P3-04
     };
     return STAGES;
 }

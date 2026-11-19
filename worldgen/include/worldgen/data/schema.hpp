@@ -405,8 +405,11 @@ inline constexpr std::string_view CULTURE_KIND = "culture";
 inline constexpr std::string_view CULTURE_DIRECTORY = "cultures";
 inline constexpr std::string_view HISTORY_KIND = "history";
 inline constexpr std::string_view HISTORY_DIRECTORY = "history";
-// The ids of kind history registered so far (P3-01 5).
+// The ids of kind history registered so far (P3-01 5; engine and report
+// from P3-04 4.1, 4.2).
 inline constexpr std::string_view HISTORY_CHRONOLOGY_ID = "chronology";
+inline constexpr std::string_view HISTORY_ENGINE_ID = "engine";
+inline constexpr std::string_view HISTORY_REPORT_ID = "report";
 
 // The schema of a race definition (P3-01 3): order int(1, 6); name, plural,
 // adjective string(32, word); camp enum(good, neutral, evil);
@@ -446,5 +449,24 @@ inline constexpr std::string_view HISTORY_CHRONOLOGY_ID = "chronology";
 // age_name_form string(64), all required. Named check
 // chronology_age_name_form.
 [[nodiscard]] Schema history_chronology_schema();
+
+// The schema of definition history.engine (P3-04 4.1): quiet_step_years
+// int(1, 200), quiet_events_max int(1, 100), simulated_min_permille and
+// simulated_max_permille int(100, 500), islet_max_dry_cells int(0, 1000000),
+// sparse, normal, dense record engine_detail {active_years int(1, 2000),
+// flare_years int(1, 1000), final_years int(1, 3000), flare_threshold
+// int(1, 1000000)}; in this order, all required. Named checks, in this
+// order: engine_simulated_bounds, engine_phase_budget.
+[[nodiscard]] Schema history_engine_schema();
+
+// The schema of definition history.report (P3-04 4.2): events
+// array(record report_event {kind string(32, id), salience int(0, 100),
+// template string(256)}, 1, 256), required.
+[[nodiscard]] Schema history_report_schema();
+
+// The kind-level checks of kind history (P3-04 4.2): report_events, run on
+// definition history.report and reported at its header, one failure per
+// message of history::report_events_problems.
+[[nodiscard]] std::vector<KindCheck> history_kind_checks();
 
 }  // namespace worldgen::data
