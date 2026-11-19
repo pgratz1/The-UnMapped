@@ -110,9 +110,8 @@ SPEC_GAPS = (
                                  "village at 300 for races that build villages), as 9.3 item 9 does for colonies."),
     ("11 civ_ended settlement_use 1", "civ_ended carries the abandoned settlement (8.5 item 6) or the settlement "
                                       "ruined last (9.1) as its settlement; the region is that settlement's."),
-    ("10.2 spread 'owned by s's owner'", "OPEN (lead, ruling 6): the reference takes the owner of s at its outbreak "
-                                         "(before the strike); the engineer the owner after the strike, so an "
-                                         "outbreak that abandons s spreads nowhere. SPREAD_OWNER switches."),
+    ("10.2 spread 'owned by s's owner'", "RULED (lead, ruling 6): the owner after the outbreak's strike; an "
+                                         "outbreak that abandons s spreads nowhere (SPREAD_OWNER = after)."),
     ("10 order in T4", "Famine and plague over the settlements first (10.2), then the crises over the "
                        "civilizations (10.3), in the order of the sections."),
     ("10.3 crisis loss and 8.5 (a)", "The capital's crisis loss is not a strike: it records `before`, sets "
@@ -155,9 +154,9 @@ def _k(kid, key, caused, roles, values):
 
 # Lead's ruling 4 (2026-11-19): recovery per year inside Q1. False gives the literal 9.2 reading.
 QUIET_RECOVER_EACH_YEAR = True
-# Lead's ruling 6 is open: the owner whose settlements a plague spreads to. "outbreak": the owner of s at
-# its outbreak (this reference's reading); "after": the owner after the outbreak's strike (the engineer's).
-SPREAD_OWNER = "outbreak"
+# Lead's ruling 6 (2026-11-19): "s's owner" (10.2) is the owner after the outbreak's strike, so an outbreak
+# that abandons s spreads nowhere. "outbreak" (the owner before the strike) is kept for comparison only.
+SPREAD_OWNER = "after"
 
 SET_CIV = (("settlement", SETTLEMENT, 1, 1), ("civilization", CIV, 1, 1))
 PEOPLES_KINDS = (
@@ -2388,7 +2387,7 @@ def stored_rows(conn, table):
 def cmd_check_world(argv):
     global SPREAD_OWNER, QUIET_RECOVER_EACH_YEAR
     path = argv[0]
-    SPREAD_OWNER = opt(argv, "--spread-owner", SPREAD_OWNER)        # outbreak (default) or after
+    SPREAD_OWNER = opt(argv, "--spread-owner", SPREAD_OWNER)        # after (ruling 6, default) or outbreak
     QUIET_RECOVER_EACH_YEAR = opt(argv, "--quiet-recovery", "each-year") == "each-year"   # or end
     dat = data(opt(argv, "--data", "game/data"))
     conn = pchr.open_world(path)

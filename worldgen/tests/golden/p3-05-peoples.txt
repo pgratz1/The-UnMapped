@@ -456,18 +456,18 @@ geo-seed-42-512 homes ra4 y4243 n1 14
 geo-seed-42-512 homes ra5 y4969 n1 4
 geo-seed-42-512 homes ra6 y5596 n1 6
 geo-seed-42-512 table civilization e867df58d545a5d746f63b1e0df522ed546186b3266011c2cff556348cd9712d
-geo-seed-42-512 table event 450cbd718dbd971383b024b130dc6de682f2e842461b10e1831fa72a5b5e85a8
-geo-seed-42-512 table event_cause a97d9931d0f05feb1d2a8b8b348048d3090a417656f9109ba44b8400ebd15315
+geo-seed-42-512 table event 8e61d1b4874e1333b299f25b0f4c0ef84b75c7340781481b4c453b65c6e6391e
+geo-seed-42-512 table event_cause ecd891c0090311ad6632e3d3da29188c2659a8e8410d801ce82cb7ea39ef6619
 geo-seed-42-512 table event_kind 611f2943ecaf2cbdadaf4113267a0e7dcdffb425642e3da1805ee2fb42f992a1
 geo-seed-42-512 table event_kind_role 125939e525f9822ae22bfc666abf7980598f38f622951e8bbc3a8f24b8f590c0
 geo-seed-42-512 table event_kind_value c1e37045bf465b561b36e8ed9be28135f0e331c78d90bb3a070d95bdf0fbcc08
-geo-seed-42-512 table event_participant b9d072b6000be55a3f33713d4f99551608a955d6a52455902a0f015489656622
-geo-seed-42-512 table event_value b2a0cd254c99c55c89f3916687ba71ae14c757cb56d1dea3906b15025f79aafa
+geo-seed-42-512 table event_participant 424d3560c699fb69203d93adc022d11ee5e505520eadda64b74909574bb834a2
+geo-seed-42-512 table event_value ceb8f0291a05dcedb91e095cc45d11bbaf44515636b28531e368a4761774b110
 geo-seed-42-512 table phase 41752a22df92a7e17a903c0037abccffc2426b63cde301ae578d20daeb734556
 geo-seed-42-512 table region_control 2d69c3685c26bddd89422c0c34453bf9bc304850ce84b2add2425931efd33808
 geo-seed-42-512 table relation cbbd5f990c53684d7ae650b40fcb5656e02261b53da5f6a7d8c819c92f2828f8
-geo-seed-42-512 table settlement e72e062ed347c341b56ed32fd4051c7f3c3fb830f83f4143547f928d25a09daa
-geo-seed-42-512 table settlement_census 2ea277f18493a82b470c2631c14688ad1a3b161e10d0dbddb7bbb353de185c33
+geo-seed-42-512 table settlement 4cd8cf334014f5ce3872713d43f393d9483020b0f377dabd53af3c61faecc7e6
+geo-seed-42-512 table settlement_census e7d2a1965d88507c08a1da2332b87737985d298a1fb8227fdf3998b5174c1d5a
 geo-seed-42-512 report end_year = 6000
 geo-seed-42-512 report phases_opening = 6
 geo-seed-42-512 report phases_quiet = 5
@@ -475,7 +475,7 @@ geo-seed-42-512 report phases_flare = 0
 geo-seed-42-512 report phases_final = 1
 geo-seed-42-512 report simulated_years = 1154
 geo-seed-42-512 report simulated_permille = 192
-geo-seed-42-512 report events = 353
+geo-seed-42-512 report events = 349
 geo-seed-42-512 report events_awakening = 6
 geo-seed-42-512 report events_civ_founded = 7
 geo-seed-42-512 report events_settlement_founded = 7
@@ -486,9 +486,9 @@ geo-seed-42-512 report events_became_village = 20
 geo-seed-42-512 report events_became_town = 26
 geo-seed-42-512 report events_became_city = 2
 geo-seed-42-512 report events_settlement_dwindled = 11
-geo-seed-42-512 report events_famine = 78
+geo-seed-42-512 report events_famine = 79
 geo-seed-42-512 report events_plague = 28
-geo-seed-42-512 report events_plague_spread = 47
+geo-seed-42-512 report events_plague_spread = 42
 geo-seed-42-512 report events_succession_crisis = 9
 geo-seed-42-512 report events_civ_seceded = 1
 geo-seed-42-512 report events_settlement_abandoned = 3
@@ -500,11 +500,11 @@ geo-seed-42-512 report civilizations_alive = 8
 geo-seed-42-512 report settlements = 57
 geo-seed-42-512 report settlements_standing = 54
 geo-seed-42-512 report regions_held = 14
-geo-seed-42-512 report census_rows = 654
+geo-seed-42-512 report census_rows = 644
 geo-seed-42-512 report relations = 0
-geo-seed-42-512 report population = 81269
+geo-seed-42-512 report population = 81259
 geo-seed-42-512 report population_elf = 6082
-geo-seed-42-512 report population_goblin = 38298
+geo-seed-42-512 report population_goblin = 38288
 geo-seed-42-512 report population_dwarf = 10588
 geo-seed-42-512 report population_faerie = 2011
 geo-seed-42-512 report population_human = 18825
@@ -790,93 +790,89 @@ geo-seed-42-512 e263 A succession crisis shook The Grork Horde.
 geo-seed-42-512 e264 Famine struck Laesiend; 39 died.
 geo-seed-42-512 e265 Plague broke out in Skrunk Pit; 302 died.
 geo-seed-42-512 e266 Skrunk Pit was abandoned; 781 survivors left.
-geo-seed-42-512 e267 The plague spread to Gob-Skreet; 116 died.
-geo-seed-42-512 e268 The plague spread to Skragg Pit; 137 died.
-geo-seed-42-512 e269 The plague spread to Zeezzbazz; 165 died.
-geo-seed-42-512 e270 The plague spread to Krux; 68 died.
-geo-seed-42-512 e271 The plague spread to Sneeggnox Hole; 62 died.
-geo-seed-42-512 e272 Zeezzbazz grew into a town of 1674.
-geo-seed-42-512 e273 The Warrens of Gutch-Sluz sent settlers from Zeezzbazz to found Zaxdrork in Southwest Downs.
-geo-seed-42-512 e274 Plague broke out in Masri; 52 died.
-geo-seed-42-512 e275 The plague spread to Iennmo; 48 died.
-geo-seed-42-512 e276 The plague spread to Laesiend; 38 died.
-geo-seed-42-512 e277 Zeezzbazz dwindled to 1197 souls.
-geo-seed-42-512 e278 Famine struck Cinmumstead; 544 died.
-geo-seed-42-512 e279 Zaxdrork grew into a village of 253.
-geo-seed-42-512 e280 Thuurkbash grew into a town of 1516.
-geo-seed-42-512 e281 Plague broke out in Voeledell; 373 died.
-geo-seed-42-512 e282 The plague spread to Glathenddell; 36 died.
-geo-seed-42-512 e283 The plague spread to Rannve; 20 died.
-geo-seed-42-512 e284 Famine struck Skognit Hole; 71 died.
-geo-seed-42-512 e285 Famine struck Stisbrelbury; 99 died.
-geo-seed-42-512 e286 Plague broke out in Snozz-Skink; 1344 died.
-geo-seed-42-512 e287 Famine struck Stisbrelbury; 107 died.
-geo-seed-42-512 e288 Famine struck Ashintaswick; 222 died.
-geo-seed-42-512 e289 The Kingdom of Bras sent settlers from Sack to found Edeal in North Downs.
-geo-seed-42-512 e290 Famine struck Beeliemee; 133 died.
-geo-seed-42-512 e291 Famine struck Rannve; 43 died.
-geo-seed-42-512 e292 The Kingdom of Bras sent settlers from Sack to found Brangedford in North Downs.
-geo-seed-42-512 e293 Sack dwindled to 5411 souls.
-geo-seed-42-512 e294 The Kingdom of Bras sent settlers from Sack to found Eduldalinton in North Downs.
-geo-seed-42-512 e295 Famine struck Grirk-Zix Pit; 173 died.
-geo-seed-42-512 e296 Famine struck Shawae; 50 died.
-geo-seed-42-512 e297 A succession crisis shook The Grork Horde.
-geo-seed-42-512 e298 Plague broke out in Realdeadstead; 337 died.
-geo-seed-42-512 e299 The plague spread to Cinmumstead; 453 died.
-geo-seed-42-512 e300 The plague spread to Brangedford; 65 died.
-geo-seed-42-512 e301 Famine struck Iennmo; 96 died.
-geo-seed-42-512 e302 Famine struck Snugg; 561 died.
-geo-seed-42-512 e303 Famine struck Sneeggnox Hole; 84 died.
-geo-seed-42-512 e304 Famine struck Fouflo Hollow; 22 died.
-geo-seed-42-512 e305 Edeal grew into a town of 1506.
-geo-seed-42-512 e306 Famine struck Grin; 183 died.
-geo-seed-42-512 e307 Clan Aark'thuugh sent settlers from Thuurkbash to found Shorkghaz Camp in East Downs.
-geo-seed-42-512 e308 Plague broke out in Sneezskrub Hole; 387 died.
-geo-seed-42-512 e309 The plague spread to Snozz-Skink; 540 died.
-geo-seed-42-512 e310 The plague spread to Snugg; 289 died.
-geo-seed-42-512 e311 Clan Aark'thuugh sent settlers from Thuurkbash to found Ghald'mul in East Downs.
-geo-seed-42-512 e312 Famine struck Beeliemee; 118 died.
-geo-seed-42-512 e313 Famine struck Sneezskrub Hole; 408 died.
-geo-seed-42-512 e314 Famine struck Glalivedell; 50 died.
-geo-seed-42-512 e315 Clan Aark'thuugh sent settlers from Thuurkbash to found Zaamghuugh Fort in East Downs.
-geo-seed-42-512 e316 A succession crisis shook The Kingdom of Bras.
-geo-seed-42-512 e317 Brangedford grew into a town of 1503.
-geo-seed-42-512 e318 Famine struck Krux; 151 died.
-geo-seed-42-512 e319 Famine struck Shawae; 64 died.
-geo-seed-42-512 e320 Famine struck Thoum; 998 died.
-geo-seed-42-512 e321 Eduldalinton grew into a town of 1500.
-geo-seed-42-512 e322 Plague broke out in Minno; 44 died.
-geo-seed-42-512 e323 Famine struck Groz; 134 died.
-geo-seed-42-512 e324 Famine struck Zeezzbazz; 157 died.
-geo-seed-42-512 e325 Famine struck Niskreerk; 121 died.
-geo-seed-42-512 e326 Famine struck Stisbrelbury; 233 died.
-geo-seed-42-512 e327 Famine struck Cesie; 28 died.
-geo-seed-42-512 e328 Famine struck Snugg; 706 died.
-geo-seed-42-512 e329 Plague broke out in Fouflo Hollow; 106 died.
-geo-seed-42-512 e330 The plague spread to Beeliemee; 90 died.
-geo-seed-42-512 e331 Plague broke out in Ghald'mul; 152 died.
-geo-seed-42-512 e332 Plague broke out in Snozz-Skink; 1623 died.
-geo-seed-42-512 e333 The plague spread to Drirk Pit; 136 died.
-geo-seed-42-512 e334 The plague spread to Sneezskrub Hole; 403 died.
-geo-seed-42-512 e335 Famine struck Groz; 124 died.
-geo-seed-42-512 e336 Famine struck Realdeadstead; 208 died.
-geo-seed-42-512 e337 Plague broke out in Brangedford; 415 died.
-geo-seed-42-512 e338 The plague spread to Cinmumstead; 704 died.
-geo-seed-42-512 e339 Plague broke out in Gruz-Keegg; 206 died.
-geo-seed-42-512 e340 The plague spread to Gnark Hole; 119 died.
-geo-seed-42-512 e341 Plague broke out in Snaksnuz Pit; 180 died.
-geo-seed-42-512 e342 Famine struck Niskreerk; 196 died.
-geo-seed-42-512 e343 Famine struck Shorkghaz Camp; 79 died.
-geo-seed-42-512 e344 Famine struck Raenme; 33 died.
-geo-seed-42-512 e345 Famine struck Iennmo; 91 died.
-geo-seed-42-512 e346 Famine struck Rannve; 80 died.
-geo-seed-42-512 e347 Famine struck Mofaesi; 132 died.
-geo-seed-42-512 e348 Plague broke out in Voeledell; 188 died.
-geo-seed-42-512 e349 The plague spread to Rannve; 24 died.
-geo-seed-42-512 e350 Rannve was abandoned; 314 survivors left.
-geo-seed-42-512 e351 A succession crisis shook The Hold of Dulimin.
-geo-seed-42-512 e352 Famine struck Krux; 160 died.
-geo-seed-42-512 e353 Famine struck Realdeadstead; 286 died.
+geo-seed-42-512 e267 Zeezzbazz grew into a town of 1822.
+geo-seed-42-512 e268 The Warrens of Gutch-Sluz sent settlers from Zeezzbazz to found Zaxdrork in Southwest Downs.
+geo-seed-42-512 e269 Plague broke out in Masri; 52 died.
+geo-seed-42-512 e270 The plague spread to Iennmo; 48 died.
+geo-seed-42-512 e271 The plague spread to Laesiend; 38 died.
+geo-seed-42-512 e272 Zaxdrork grew into a village of 253.
+geo-seed-42-512 e273 Famine struck Cinmumstead; 544 died.
+geo-seed-42-512 e274 Zeezzbazz dwindled to 1194 souls.
+geo-seed-42-512 e275 Thuurkbash grew into a town of 1516.
+geo-seed-42-512 e276 Plague broke out in Voeledell; 373 died.
+geo-seed-42-512 e277 The plague spread to Glathenddell; 36 died.
+geo-seed-42-512 e278 The plague spread to Rannve; 20 died.
+geo-seed-42-512 e279 Famine struck Skognit Hole; 71 died.
+geo-seed-42-512 e280 Famine struck Stisbrelbury; 99 died.
+geo-seed-42-512 e281 Plague broke out in Snozz-Skink; 1344 died.
+geo-seed-42-512 e282 Famine struck Stisbrelbury; 107 died.
+geo-seed-42-512 e283 Famine struck Ashintaswick; 222 died.
+geo-seed-42-512 e284 The Kingdom of Bras sent settlers from Sack to found Edeal in North Downs.
+geo-seed-42-512 e285 Famine struck Beeliemee; 133 died.
+geo-seed-42-512 e286 Famine struck Rannve; 43 died.
+geo-seed-42-512 e287 The Kingdom of Bras sent settlers from Sack to found Brangedford in North Downs.
+geo-seed-42-512 e288 Sack dwindled to 5411 souls.
+geo-seed-42-512 e289 The Kingdom of Bras sent settlers from Sack to found Eduldalinton in North Downs.
+geo-seed-42-512 e290 Famine struck Grirk-Zix Pit; 173 died.
+geo-seed-42-512 e291 Famine struck Shawae; 50 died.
+geo-seed-42-512 e292 A succession crisis shook The Grork Horde.
+geo-seed-42-512 e293 Plague broke out in Realdeadstead; 337 died.
+geo-seed-42-512 e294 The plague spread to Cinmumstead; 453 died.
+geo-seed-42-512 e295 The plague spread to Brangedford; 65 died.
+geo-seed-42-512 e296 Famine struck Iennmo; 96 died.
+geo-seed-42-512 e297 Famine struck Snugg; 561 died.
+geo-seed-42-512 e298 Famine struck Sneeggnox Hole; 84 died.
+geo-seed-42-512 e299 Famine struck Fouflo Hollow; 22 died.
+geo-seed-42-512 e300 Edeal grew into a town of 1506.
+geo-seed-42-512 e301 Famine struck Grin; 183 died.
+geo-seed-42-512 e302 Clan Aark'thuugh sent settlers from Thuurkbash to found Shorkghaz Camp in East Downs.
+geo-seed-42-512 e303 Plague broke out in Sneezskrub Hole; 387 died.
+geo-seed-42-512 e304 The plague spread to Snozz-Skink; 540 died.
+geo-seed-42-512 e305 The plague spread to Snugg; 289 died.
+geo-seed-42-512 e306 Clan Aark'thuugh sent settlers from Thuurkbash to found Ghald'mul in East Downs.
+geo-seed-42-512 e307 Famine struck Beeliemee; 118 died.
+geo-seed-42-512 e308 Famine struck Zaxdrork; 179 died.
+geo-seed-42-512 e309 Famine struck Sneezskrub Hole; 408 died.
+geo-seed-42-512 e310 Famine struck Glalivedell; 50 died.
+geo-seed-42-512 e311 Clan Aark'thuugh sent settlers from Thuurkbash to found Zaamghuugh Fort in East Downs.
+geo-seed-42-512 e312 A succession crisis shook The Kingdom of Bras.
+geo-seed-42-512 e313 Brangedford grew into a town of 1503.
+geo-seed-42-512 e314 Famine struck Krux; 151 died.
+geo-seed-42-512 e315 Famine struck Shawae; 64 died.
+geo-seed-42-512 e316 Famine struck Thoum; 998 died.
+geo-seed-42-512 e317 Eduldalinton grew into a town of 1500.
+geo-seed-42-512 e318 Plague broke out in Minno; 44 died.
+geo-seed-42-512 e319 Famine struck Groz; 134 died.
+geo-seed-42-512 e320 Famine struck Zeezzbazz; 157 died.
+geo-seed-42-512 e321 Famine struck Niskreerk; 121 died.
+geo-seed-42-512 e322 Famine struck Stisbrelbury; 233 died.
+geo-seed-42-512 e323 Famine struck Cesie; 28 died.
+geo-seed-42-512 e324 Famine struck Snugg; 706 died.
+geo-seed-42-512 e325 Plague broke out in Fouflo Hollow; 106 died.
+geo-seed-42-512 e326 The plague spread to Beeliemee; 90 died.
+geo-seed-42-512 e327 Plague broke out in Ghald'mul; 152 died.
+geo-seed-42-512 e328 Plague broke out in Snozz-Skink; 1623 died.
+geo-seed-42-512 e329 The plague spread to Drirk Pit; 136 died.
+geo-seed-42-512 e330 The plague spread to Sneezskrub Hole; 403 died.
+geo-seed-42-512 e331 Famine struck Groz; 124 died.
+geo-seed-42-512 e332 Famine struck Realdeadstead; 208 died.
+geo-seed-42-512 e333 Plague broke out in Brangedford; 415 died.
+geo-seed-42-512 e334 The plague spread to Cinmumstead; 704 died.
+geo-seed-42-512 e335 Plague broke out in Gruz-Keegg; 206 died.
+geo-seed-42-512 e336 The plague spread to Gnark Hole; 119 died.
+geo-seed-42-512 e337 Plague broke out in Snaksnuz Pit; 180 died.
+geo-seed-42-512 e338 Famine struck Niskreerk; 196 died.
+geo-seed-42-512 e339 Famine struck Shorkghaz Camp; 79 died.
+geo-seed-42-512 e340 Famine struck Raenme; 33 died.
+geo-seed-42-512 e341 Famine struck Iennmo; 91 died.
+geo-seed-42-512 e342 Famine struck Rannve; 80 died.
+geo-seed-42-512 e343 Famine struck Mofaesi; 132 died.
+geo-seed-42-512 e344 Plague broke out in Voeledell; 188 died.
+geo-seed-42-512 e345 The plague spread to Rannve; 24 died.
+geo-seed-42-512 e346 Rannve was abandoned; 314 survivors left.
+geo-seed-42-512 e347 A succession crisis shook The Hold of Dulimin.
+geo-seed-42-512 e348 Famine struck Krux; 160 died.
+geo-seed-42-512 e349 Famine struck Realdeadstead; 286 died.
 world geo-phrase-512 15629206466951235176 512 6000 all normal
 geo-phrase-512 input_region 206e4501995eacf2ca98728c9ee9eea50e5a6b02334fc8333567770fa9b5f2c4
 geo-phrase-512 score rg1 ra1 -253 400
@@ -2598,18 +2594,18 @@ hist-races-elf-orc-1024 score rg52 ra6 707 4196
 hist-races-elf-orc-1024 homes ra1 y0 n2 4,5
 hist-races-elf-orc-1024 homes ra6 y5602 n1 41
 hist-races-elf-orc-1024 table civilization c2614c7dfa5de7c3f636536b148af903ec935a613efe9fe578e61e2a3cd60fdb
-hist-races-elf-orc-1024 table event a976c27da18554249eef9dfce1448bb9d2e7e072969a988acdaba2596c524404
-hist-races-elf-orc-1024 table event_cause 0f39a62bcb4180effba1d2f8acc894aa6bd298ef140fe407d5cb8120c5edc3e2
+hist-races-elf-orc-1024 table event 7847334c88ddf349906dbad60da668dfad96a9ed0e42c7730daa710faa79d455
+hist-races-elf-orc-1024 table event_cause babcdcec99df1ea7e7fa5c2c498f08e808ba175be078cbc5241a58ff032a0233
 hist-races-elf-orc-1024 table event_kind 611f2943ecaf2cbdadaf4113267a0e7dcdffb425642e3da1805ee2fb42f992a1
 hist-races-elf-orc-1024 table event_kind_role 125939e525f9822ae22bfc666abf7980598f38f622951e8bbc3a8f24b8f590c0
 hist-races-elf-orc-1024 table event_kind_value c1e37045bf465b561b36e8ed9be28135f0e331c78d90bb3a070d95bdf0fbcc08
-hist-races-elf-orc-1024 table event_participant 887deffcc9b956480a2aec7569fd2cb4431b23baf6790e876d3e27f1ced12a65
-hist-races-elf-orc-1024 table event_value f7e0dfb5944f456aa5775f045471258098a0a2fac2e815103fcc07daf73317b0
+hist-races-elf-orc-1024 table event_participant 7faf693704b1e303abdcc244ac3f61d01f36f5effc2a9bddae149608e8ddb08c
+hist-races-elf-orc-1024 table event_value 7314ff1cbc5e64f53880e2642fa63cfa6b53bbd694dac24a5b702e27eb64a262
 hist-races-elf-orc-1024 table phase 812c209dfd0d66231193d1e2994cc6841bf700524d9fae0f9b7c56c2bcfd0dd5
 hist-races-elf-orc-1024 table region_control 09317812bebda484a3804cd01fc0bea590204c3552befcd1f6342b1635b4d796
 hist-races-elf-orc-1024 table relation cbbd5f990c53684d7ae650b40fcb5656e02261b53da5f6a7d8c819c92f2828f8
-hist-races-elf-orc-1024 table settlement 7e48132c474fe363be0abca2937b08df0448989d661551dc888964179099ee07
-hist-races-elf-orc-1024 table settlement_census d4f9cd67550b075c4c685b7e831b2d8aa8d433c9586de8526117955a4950a301
+hist-races-elf-orc-1024 table settlement c676aa6d5f2cedd294db1df39a87497a7bdd4d913fb3d84e5ff0e5e4c37a5d8e
+hist-races-elf-orc-1024 table settlement_census 35f7707e21b1a10e8ab82f99ffdb884adb4c0a0684d185e1fa6bbf51970553d1
 hist-races-elf-orc-1024 report end_year = 6000
 hist-races-elf-orc-1024 report phases_opening = 2
 hist-races-elf-orc-1024 report phases_quiet = 1
@@ -2617,7 +2613,7 @@ hist-races-elf-orc-1024 report phases_flare = 0
 hist-races-elf-orc-1024 report phases_final = 1
 hist-races-elf-orc-1024 report simulated_years = 600
 hist-races-elf-orc-1024 report simulated_permille = 100
-hist-races-elf-orc-1024 report events = 229
+hist-races-elf-orc-1024 report events = 226
 hist-races-elf-orc-1024 report events_awakening = 2
 hist-races-elf-orc-1024 report events_civ_founded = 3
 hist-races-elf-orc-1024 report events_settlement_founded = 3
@@ -2630,7 +2626,7 @@ hist-races-elf-orc-1024 report events_became_city = 0
 hist-races-elf-orc-1024 report events_settlement_dwindled = 6
 hist-races-elf-orc-1024 report events_famine = 24
 hist-races-elf-orc-1024 report events_plague = 13
-hist-races-elf-orc-1024 report events_plague_spread = 46
+hist-races-elf-orc-1024 report events_plague_spread = 43
 hist-races-elf-orc-1024 report events_succession_crisis = 2
 hist-races-elf-orc-1024 report events_civ_seceded = 0
 hist-races-elf-orc-1024 report events_settlement_abandoned = 1
@@ -2642,10 +2638,10 @@ hist-races-elf-orc-1024 report civilizations_alive = 3
 hist-races-elf-orc-1024 report settlements = 45
 hist-races-elf-orc-1024 report settlements_standing = 44
 hist-races-elf-orc-1024 report regions_held = 17
-hist-races-elf-orc-1024 report census_rows = 332
+hist-races-elf-orc-1024 report census_rows = 326
 hist-races-elf-orc-1024 report relations = 0
-hist-races-elf-orc-1024 report population = 65930
-hist-races-elf-orc-1024 report population_elf = 37535
+hist-races-elf-orc-1024 report population = 66126
+hist-races-elf-orc-1024 report population_elf = 37731
 hist-races-elf-orc-1024 report population_goblin = 0
 hist-races-elf-orc-1024 report population_dwarf = 0
 hist-races-elf-orc-1024 report population_faerie = 0
@@ -2891,10 +2887,7 @@ hist-races-elf-orc-1024 e222 Famine struck Aevond; 106 died.
 hist-races-elf-orc-1024 e223 Ol'burk Fort grew into a town of 1515.
 hist-races-elf-orc-1024 e224 Plague broke out in Secael; 192 died.
 hist-races-elf-orc-1024 e225 Secael was abandoned; 995 survivors left.
-hist-races-elf-orc-1024 e226 The plague spread to Foviendell; 47 died.
-hist-races-elf-orc-1024 e227 The plague spread to Sieren; 62 died.
-hist-races-elf-orc-1024 e228 The plague spread to Elilae; 339 died.
-hist-races-elf-orc-1024 e229 Famine struck Lece; 37 died.
+hist-races-elf-orc-1024 e226 Famine struck Lece; 37 died.
 world hist-dense-1024 11 1024 6000 all dense
 hist-dense-1024 input_region ffc9521eba83f741534ba466c0c6eea5b737bf8a9d4611a8f6823f95fa57652a
 hist-dense-1024 score rg1 ra1 -151 400
@@ -9340,19 +9333,19 @@ stress-4 homes ra3 y1081 n4 44
 stress-4 homes ra4 y1396 n4 37
 stress-4 homes ra5 y1667 n4 31
 stress-4 homes ra6 y1880 n4 44
-stress-4 table civilization 1d0835a1b8544cf48cc53e035cf5cf1f2ac99568e4f953f5f812ea0da47fd909
-stress-4 table event 9ba082a86aaa6fe1f265a3121bd22ac0321d57e2bbece7018d73073181beff39
-stress-4 table event_cause 7ba9f9ec30cb023f3540febab932060531ccd7b0764a46222c094e32eaa196e4
+stress-4 table civilization 33f22a4f46441a77b6575c8bbcfbb2881525d79b1b92cf8c148d41cd6207904f
+stress-4 table event 1fd95b5256b64197c44110588d8f1a1d50b1b65629ee0d25548e7b1b8f21c4f7
+stress-4 table event_cause 3363b36f41be46fe80356df74435f5d6a6b89196bb234f9723051cdd091d9959
 stress-4 table event_kind 611f2943ecaf2cbdadaf4113267a0e7dcdffb425642e3da1805ee2fb42f992a1
 stress-4 table event_kind_role 125939e525f9822ae22bfc666abf7980598f38f622951e8bbc3a8f24b8f590c0
 stress-4 table event_kind_value c1e37045bf465b561b36e8ed9be28135f0e331c78d90bb3a070d95bdf0fbcc08
-stress-4 table event_participant 0f5173667074f0c074038784a30a42378279970328884a4dc2ac9d6485aa7fc2
-stress-4 table event_value f978f3c04e311191cab78dd227a5a5f27eec8d7b7cace423c512e6b9665c0574
-stress-4 table phase 6ec989df6323af518268dc2b0d726c8221cae18e0d2b80f2d174295d2cd0a6b5
-stress-4 table region_control 373e461983058f4ba9d86a395a48ad2e784659e68666928aeae3ff435ec7bac7
+stress-4 table event_participant b2620e4f505bb4abf83b52f397799136629c2be3efab95d6146f5c1692073f81
+stress-4 table event_value db7ea58d5f3fd5ab494f434d88506d8638d454421ed038909d53dd70562b05ec
+stress-4 table phase a9a6e373ca3dd2aac2650a960b5b4d76cee3f908b1a3cd3e7e29f5c587186047
+stress-4 table region_control b345763179cc46644175a0dd0673a04b889126d0ab54e14256faa4d2617c297e
 stress-4 table relation cbbd5f990c53684d7ae650b40fcb5656e02261b53da5f6a7d8c819c92f2828f8
-stress-4 table settlement 0bc3296d69bbc5c5713b7328c0347433c326807e20138825b2c2af1a53e21295
-stress-4 table settlement_census cbbcf7016bd4c17f3912a82c75bd2ffdc3bf6ca5af321ec328b00645e81e5d1d
+stress-4 table settlement bb887e3a2edf6177d3e039258f3c123c74ed8e7c21de28db40a32f9113368f1e
+stress-4 table settlement_census 278fa114336a477419f8b83a97e98e8daab704656dfb62ed294161653c587712
 stress-4 report end_year = 2000
 stress-4 report phases_opening = 6
 stress-4 report phases_quiet = 5
@@ -9360,52 +9353,52 @@ stress-4 report phases_flare = 0
 stress-4 report phases_final = 1
 stress-4 report simulated_years = 370
 stress-4 report simulated_permille = 185
-stress-4 report events = 79
+stress-4 report events = 84
 stress-4 report events_awakening = 6
 stress-4 report events_civ_founded = 6
 stress-4 report events_settlement_founded = 6
-stress-4 report events_quiet_era = 2
+stress-4 report events_quiet_era = 4
 stress-4 report events_flare_up = 0
 stress-4 report events_colony_founded = 2
 stress-4 report events_became_village = 0
 stress-4 report events_became_town = 0
 stress-4 report events_became_city = 0
 stress-4 report events_settlement_dwindled = 0
-stress-4 report events_famine = 29
-stress-4 report events_plague = 8
-stress-4 report events_plague_spread = 1
-stress-4 report events_succession_crisis = 3
+stress-4 report events_famine = 34
+stress-4 report events_plague = 7
+stress-4 report events_plague_spread = 0
+stress-4 report events_succession_crisis = 4
 stress-4 report events_civ_seceded = 0
 stress-4 report events_settlement_abandoned = 6
 stress-4 report events_capital_moved = 0
 stress-4 report events_civ_ended = 5
-stress-4 report events_ruin_faded = 5
+stress-4 report events_ruin_faded = 4
 stress-4 report civilizations = 6
 stress-4 report civilizations_alive = 1
 stress-4 report settlements = 8
 stress-4 report settlements_standing = 2
 stress-4 report regions_held = 1
-stress-4 report census_rows = 72
+stress-4 report census_rows = 78
 stress-4 report relations = 0
-stress-4 report population = 250
+stress-4 report population = 234
 stress-4 report population_elf = 0
-stress-4 report population_goblin = 0
+stress-4 report population_goblin = 234
 stress-4 report population_dwarf = 0
 stress-4 report population_faerie = 0
 stress-4 report population_human = 0
-stress-4 report population_orc = 250
+stress-4 report population_orc = 0
 stress-4 report settlements_standing_elf = 0
-stress-4 report settlements_standing_goblin = 0
+stress-4 report settlements_standing_goblin = 2
 stress-4 report settlements_standing_dwarf = 0
 stress-4 report settlements_standing_faerie = 0
 stress-4 report settlements_standing_human = 0
-stress-4 report settlements_standing_orc = 2
+stress-4 report settlements_standing_orc = 0
 stress-4 report regions_held_elf = 0
-stress-4 report regions_held_goblin = 0
+stress-4 report regions_held_goblin = 1
 stress-4 report regions_held_dwarf = 0
 stress-4 report regions_held_faerie = 0
 stress-4 report regions_held_human = 0
-stress-4 report regions_held_orc = 1
+stress-4 report regions_held_orc = 0
 stress-4 stats civ_settlements_max = 2
 stress-4 stats settlements_colonies = 2
 stress-4 stats civilizations_seceded = 0
@@ -9454,40 +9447,45 @@ stress-4 e42 The Fiass Court came to an end.
 stress-4 e43 Famine struck Zak Pit; 20 died.
 stress-4 e44 Plague broke out in Zak Pit; 21 died.
 stress-4 e45 Zak Pit was abandoned; 62 survivors left.
-stress-4 e46 The plague spread to Skeez-Sneeb; 39 died.
-stress-4 e47 Skeez-Sneeb was abandoned; 288 survivors left.
-stress-4 e48 The Not Horde came to an end.
-stress-4 e49 The ruins of Skeez-Sneeb faded from memory.
-stress-4 e50 The ruins of Zak Pit faded from memory.
-stress-4 e51 The ruins of Fleewhia Glade faded from memory.
-stress-4 e52 Hint awakened the Humans in Synthetic 31.
-stress-4 e53 The Humans founded The Duchy of Hean in Synthetic 31.
-stress-4 e54 The Duchy of Hean founded Guckhodton in Synthetic 31.
-stress-4 e55 Famine struck Guckhodton; 47 died.
-stress-4 e56 Famine struck Guckhodton; 27 died.
-stress-4 e57 Famine struck Guckhodton; 55 died.
-stress-4 e58 Famine struck Guckhodton; 41 died.
-stress-4 e59 Famine struck Guckhodton; 12 died.
-stress-4 e60 Guckhodton was abandoned; 230 survivors left.
-stress-4 e61 The Duchy of Hean came to an end.
-stress-4 e62 Ugu awakened the Orcs in Synthetic 44.
-stress-4 e63 The Orcs founded Clan Ghuz in Synthetic 44.
-stress-4 e64 Clan Ghuz founded Zukuruuk in Synthetic 44.
-stress-4 e65 Clan Ghuz sent settlers from Zukuruuk to found Thark in Synthetic 44.
-stress-4 e66 Famine struck Zukuruuk; 34 died.
-stress-4 e67 Famine struck Zukuruuk; 41 died.
-stress-4 e68 Plague broke out in Zukuruuk; 25 died.
-stress-4 e69 Famine struck Thark; 3 died.
-stress-4 e70 Plague broke out in Zukuruuk; 44 died.
-stress-4 e71 Famine struck Zukuruuk; 14 died.
-stress-4 e72 Famine struck Zukuruuk; 9 died.
-stress-4 e73 Famine struck Thark; 19 died.
-stress-4 e74 A succession crisis shook Clan Ghuz.
-stress-4 e75 Famine struck Thark; 10 died.
-stress-4 e76 Plague broke out in Thark; 18 died.
-stress-4 e77 Famine struck Zukuruuk; 8 died.
-stress-4 e78 Famine struck Zukuruuk; 17 died.
-stress-4 e79 Famine struck Thark; 16 died.
+stress-4 e46 The Not Horde passed 200 quiet years (14 generations), from 1446 to 1645.
+stress-4 e47 The ruins of Zak Pit faded from memory.
+stress-4 e48 The ruins of Fleewhia Glade faded from memory.
+stress-4 e49 The Not Horde sent settlers from Skeez-Sneeb to found Slozz in Synthetic 44.
+stress-4 e50 Hint awakened the Humans in Synthetic 31.
+stress-4 e51 The Humans founded The Duchy of Hean in Synthetic 31.
+stress-4 e52 The Duchy of Hean founded Brelwick in Synthetic 31.
+stress-4 e53 Famine struck Slozz; 9 died.
+stress-4 e54 Famine struck Brelwick; 40 died.
+stress-4 e55 Famine struck Brelwick; 46 died.
+stress-4 e56 Brelwick was abandoned; 235 survivors left.
+stress-4 e57 The Duchy of Hean came to an end.
+stress-4 e58 Famine struck Slozz; 6 died.
+stress-4 e59 Famine struck Slozz; 12 died.
+stress-4 e60 Famine struck Slozz; 10 died.
+stress-4 e61 Famine struck Slozz; 3 died.
+stress-4 e62 The Not Horde passed 163 quiet years (11 generations), from 1717 to 1879.
+stress-4 e63 Ugu awakened the Orcs in Synthetic 44.
+stress-4 e64 The Orcs founded Clan Ghuz in Synthetic 44.
+stress-4 e65 Clan Ghuz founded Thark in Synthetic 44.
+stress-4 e66 Famine struck Thark; 40 died.
+stress-4 e67 Famine struck Thark; 12 died.
+stress-4 e68 Thark was abandoned; 198 survivors left.
+stress-4 e69 Clan Ghuz came to an end.
+stress-4 e70 Famine struck Slozz; 6 died.
+stress-4 e71 Famine struck Skeez-Sneeb; 39 died.
+stress-4 e72 Famine struck Slozz; 8 died.
+stress-4 e73 Famine struck Skeez-Sneeb; 38 died.
+stress-4 e74 A succession crisis shook The Not Horde.
+stress-4 e75 Famine struck Skeez-Sneeb; 26 died.
+stress-4 e76 Famine struck Skeez-Sneeb; 19 died.
+stress-4 e77 Famine struck Slozz; 16 died.
+stress-4 e78 A succession crisis shook The Not Horde.
+stress-4 e79 Famine struck Slozz; 7 died.
+stress-4 e80 Famine struck Slozz; 16 died.
+stress-4 e81 Famine struck Slozz; 15 died.
+stress-4 e82 Famine struck Slozz; 5 died.
+stress-4 e83 Plague broke out in Skeez-Sneeb; 32 died.
+stress-4 e84 Plague broke out in Skeez-Sneeb; 24 died.
 stress stress-5 5 6000 elf 4 calm
 stress-5 score rg1 ra1 69 400
 stress-5 score rg1 ra2 465 1070
@@ -10182,19 +10180,19 @@ stress-12 homes ra3 y1098 n1 2
 stress-12 homes ra4 y1384 n1 3
 stress-12 homes ra5 y1652 n1 2
 stress-12 homes ra6 y1852 n1 3
-stress-12 table civilization 7f449b2084996e8f7fc6761a1e9b5cc3b346f2004ab6d070557d00a4518df097
-stress-12 table event f870fec096aeaf9280694c4ac24921d9576cdaf8f8d29686feb174e60e97f347
-stress-12 table event_cause d288c19e3aec862d13f8d315b5c15b188fd7ff72a3acad9aa46432a1c4715a2a
+stress-12 table civilization 71ef32247798da8f5065139fde9c614fc866d23dd02ce3178bf5301c7f3bfd54
+stress-12 table event 3fce786306ea1392e6c759d35b8b2d044e1d19067e7cd6f2cfbee0ba28174a5e
+stress-12 table event_cause 6f732b8e15816fa3f23ac161460763979b61a11a06a10a202633b345496f0f7b
 stress-12 table event_kind 611f2943ecaf2cbdadaf4113267a0e7dcdffb425642e3da1805ee2fb42f992a1
 stress-12 table event_kind_role 125939e525f9822ae22bfc666abf7980598f38f622951e8bbc3a8f24b8f590c0
 stress-12 table event_kind_value c1e37045bf465b561b36e8ed9be28135f0e331c78d90bb3a070d95bdf0fbcc08
-stress-12 table event_participant 4d5ce81fbee4e09a0324481ffc55ad82e6df400e3d6e81c17838b56b64dbd080
-stress-12 table event_value fb5142427183987d213cabac1940a07f6cf0b13122caef1b2292fae9f7d6cc83
-stress-12 table phase 2ed1747310a9493e64eb12460bb184b5cb2d8a66fa76597525ba922fa8efff93
-stress-12 table region_control dc1049cceba6dbb5ce0ea9eb11bb21c6b2f1755c477811bfc15ca30d309b02c2
+stress-12 table event_participant 6c3d9e827cee67b83c5e3fa2a8b455ed071f1c63566ee6519d8b6dd9d57317cc
+stress-12 table event_value 54563339096286aa85a20dca92e2296c6c5ef299086034f21ed3fc22fcecd0bc
+stress-12 table phase 8e58bda445de5faf784dc4f47167bfa0df9a1a8620d51aac691341ae9ec8be51
+stress-12 table region_control dccbf5d949966194b246262b5daa92242b41124cba7b0740db4702919a6302e9
 stress-12 table relation cbbd5f990c53684d7ae650b40fcb5656e02261b53da5f6a7d8c819c92f2828f8
-stress-12 table settlement 1f881d308722539ab3b35c65bc0f86c70642fe6a61400287898eb426fe3cffeb
-stress-12 table settlement_census 53e7eb2b36dde55d8f9a4bd3af2436674b62a3e277c32c58baa3ce32ec4897fb
+stress-12 table settlement 3e41ebbfc4417cbfbc39c2ee777c4ff92371ee1570276f046c81d1c6e68d809c
+stress-12 table settlement_census 91ab4b21cec7dd308a932cf346b907fb4aab23cf7035fd83a653a137e52b5f3b
 stress-12 report end_year = 2000
 stress-12 report phases_opening = 6
 stress-12 report phases_quiet = 5
@@ -10202,11 +10200,11 @@ stress-12 report phases_flare = 0
 stress-12 report phases_final = 1
 stress-12 report simulated_years = 398
 stress-12 report simulated_permille = 199
-stress-12 report events = 218
+stress-12 report events = 216
 stress-12 report events_awakening = 6
 stress-12 report events_civ_founded = 6
 stress-12 report events_settlement_founded = 6
-stress-12 report events_quiet_era = 17
+stress-12 report events_quiet_era = 18
 stress-12 report events_flare_up = 0
 stress-12 report events_colony_founded = 12
 stress-12 report events_became_village = 0
@@ -10215,7 +10213,7 @@ stress-12 report events_became_city = 0
 stress-12 report events_settlement_dwindled = 1
 stress-12 report events_famine = 79
 stress-12 report events_plague = 26
-stress-12 report events_plague_spread = 17
+stress-12 report events_plague_spread = 14
 stress-12 report events_succession_crisis = 13
 stress-12 report events_civ_seceded = 1
 stress-12 report events_settlement_abandoned = 14
@@ -10227,7 +10225,7 @@ stress-12 report civilizations_alive = 2
 stress-12 report settlements = 18
 stress-12 report settlements_standing = 4
 stress-12 report regions_held = 2
-stress-12 report census_rows = 280
+stress-12 report census_rows = 275
 stress-12 report relations = 0
 stress-12 report population = 9700
 stress-12 report population_elf = 0
@@ -10284,191 +10282,189 @@ stress-12 e30 The plague spread to Gneenuz; 48 died.
 stress-12 e31 The Warrens of Snunk sent settlers from Krok Hole to found Drog-Dreezz in Synthetic 4.
 stress-12 e32 Plague broke out in Krok Hole; 389 died.
 stress-12 e33 Krok Hole was abandoned; 3221 survivors left.
-stress-12 e34 The plague spread to Krognirk; 36 died.
-stress-12 e35 The plague spread to Drux; 118 died.
-stress-12 e36 The plague spread to Gneenuz; 127 died.
-stress-12 e37 Famine struck Thidinni Deep; 28 died.
-stress-12 e38 Famine struck Siliefiedell; 420 died.
-stress-12 e39 Famine struck Siliefiedell; 203 died.
-stress-12 e40 Famine struck Drux; 160 died.
-stress-12 e41 Famine struck Gobig; 41 died.
-stress-12 e42 Famine struck Thidinni Deep; 31 died.
-stress-12 e43 Famine struck Thidinni Deep; 37 died.
-stress-12 e44 Famine struck Krognirk; 69 died.
-stress-12 e45 Famine struck Siliefiedell; 156 died.
-stress-12 e46 Plague broke out in Gneekizz; 67 died.
-stress-12 e47 Famine struck Drux; 94 died.
-stress-12 e48 Famine struck Drog-Dreezz; 95 died.
-stress-12 e49 Famine struck Thidinni Deep; 27 died.
-stress-12 e50 Famine struck Siliefiedell; 264 died.
-stress-12 e51 Famine struck Siliefiedell; 83 died.
-stress-12 e52 Famine struck Bik-Zugg Pit; 275 died.
-stress-12 e53 Plague broke out in Drux; 292 died.
-stress-12 e54 Drux grew into a town of 1547.
-stress-12 e55 Gneenuz grew into a town of 1844.
-stress-12 e56 The Realm of Cielathae passed 236 quiet years (2 generations), from 1148 to 1383.
-stress-12 e57 Clan Koudto passed 236 quiet years (4 generations), from 1148 to 1383.
-stress-12 e58 Drog-Dreezz grew into a town of 1943.
-stress-12 e59 The Warrens of Snunk passed 186 quiet years (12 generations), from 1198 to 1383.
-stress-12 e60 The ruins of Krok Hole faded from memory.
-stress-12 e61 Pousk awakened the Faeries in Synthetic 3.
-stress-12 e62 The Faeries founded The Floumia Ring in Synthetic 3.
-stress-12 e63 The Floumia Ring founded Tashy in Synthetic 3.
-stress-12 e64 Famine struck Thidinni Deep; 124 died.
-stress-12 e65 Plague broke out in Tashy; 64 died.
-stress-12 e66 Famine struck Gobig; 48 died.
-stress-12 e67 Famine struck Gneekizz; 32 died.
-stress-12 e68 Famine struck Siliefiedell; 192 died.
-stress-12 e69 Famine struck Krognirk; 84 died.
-stress-12 e70 The Warrens of Snunk sent settlers from Gneenuz to found Gnig in Synthetic 4.
-stress-12 e71 Famine struck Drux; 349 died.
-stress-12 e72 Famine struck Gneekizz; 80 died.
-stress-12 e73 Plague broke out in Thidinni Deep; 70 died.
-stress-12 e74 Famine struck Thidinni Deep; 28 died.
-stress-12 e75 Thidinni Deep was abandoned; 504 survivors left.
-stress-12 e76 Clan Koudto came to an end.
-stress-12 e77 Famine struck Krognirk; 80 died.
-stress-12 e78 Famine struck Tashy; 32 died.
-stress-12 e79 Tashy was abandoned; 239 survivors left.
-stress-12 e80 The Floumia Ring came to an end.
-stress-12 e81 Famine struck Krognirk; 21 died.
-stress-12 e82 Plague broke out in Krognirk; 90 died.
-stress-12 e83 The plague spread to Gneenuz; 287 died.
-stress-12 e84 Plague broke out in Gneenuz; 880 died.
-stress-12 e85 The plague spread to Bik-Zugg Pit; 186 died.
-stress-12 e86 The plague spread to Gneekizz; 48 died.
-stress-12 e87 Famine struck Krognirk; 23 died.
-stress-12 e88 Famine struck Drog-Dreezz; 557 died.
-stress-12 e89 The Realm of Cielathae passed 218 quiet years (2 generations), from 1434 to 1651.
-stress-12 e90 The Warrens of Snunk passed 50 quiet years (3 generations), from 1434 to 1483.
-stress-12 e91 Gnig grew into a town of 1812.
-stress-12 e92 The Warrens of Snunk passed 143 quiet years (9 generations), from 1509 to 1651.
-stress-12 e93 The ruins of Thidinni Deep faded from memory.
-stress-12 e94 The ruins of Tashy faded from memory.
-stress-12 e95 Ashos awakened the Humans in Synthetic 2.
-stress-12 e96 The Humans founded The Sold League in Synthetic 2.
-stress-12 e97 The Sold League founded Brentstead in Synthetic 2.
-stress-12 e98 Famine struck Brentstead; 22 died.
-stress-12 e99 Famine struck Bik-Zugg Pit; 248 died.
-stress-12 e100 Famine struck Bik-Zugg Pit; 240 died.
-stress-12 e101 A succession crisis shook The Sold League.
-stress-12 e102 Famine struck Gnig; 584 died.
-stress-12 e103 Famine struck Drux; 223 died.
-stress-12 e104 Plague broke out in Bik-Zugg Pit; 151 died.
-stress-12 e105 The plague spread to Gneekizz; 40 died.
-stress-12 e106 The plague spread to Gnig; 281 died.
-stress-12 e107 Gnig was abandoned; 2166 survivors left.
-stress-12 e108 Famine struck Gneekizz; 71 died.
-stress-12 e109 Famine struck Gneekizz; 25 died.
-stress-12 e110 Plague broke out in Gneenuz; 822 died.
-stress-12 e111 The plague spread to Drog-Dreezz; 352 died.
-stress-12 e112 Famine struck Gneekizz; 41 died.
-stress-12 e113 Famine struck Drux; 311 died.
-stress-12 e114 Drux was abandoned; 2688 survivors left.
-stress-12 e115 Famine struck Gneekizz; 71 died.
-stress-12 e116 Famine struck Gneekizz; 24 died.
-stress-12 e117 Gneekizz was abandoned; 280 survivors left.
-stress-12 e118 The Warrens of Snunk sent settlers from Gobig to found Sneenk-Nug in Synthetic 5.
-stress-12 e119 Famine struck Brentstead; 43 died.
-stress-12 e120 Famine struck Sneenk-Nug; 5 died.
-stress-12 e121 Famine struck Sneenk-Nug; 15 died.
-stress-12 e122 A succession crisis shook The Warrens of Snunk.
-stress-12 e123 The Zig Mob broke away from The Warrens of Snunk, taking 2 settlements with it.
-stress-12 e124 The Zig Mob sent settlers from Drog-Dreezz to found Zeenkgnix in Synthetic 4.
-stress-12 e125 The Zig Mob sent settlers from Drog-Dreezz to found Skrutch Pit in Synthetic 4.
-stress-12 e126 Plague broke out in Gneenuz; 673 died.
-stress-12 e127 Famine struck Drog-Dreezz; 323 died.
-stress-12 e128 Famine struck Siliefiedell; 523 died.
-stress-12 e129 Famine struck Zeenkgnix; 40 died.
-stress-12 e130 A succession crisis shook The Zig Mob.
-stress-12 e131 Plague broke out in Gobig; 152 died.
-stress-12 e132 Famine struck Gneenuz; 488 died.
-stress-12 e133 Gneenuz was abandoned; 4161 survivors left.
-stress-12 e134 The Zig Mob moved its seat to Zeenkgnix.
-stress-12 e135 A succession crisis shook The Zig Mob.
-stress-12 e136 Zeenkgnix grew into a town of 4384.
-stress-12 e137 Famine struck Bik-Zugg Pit; 111 died.
-stress-12 e138 The Realm of Cielathae passed 150 quiet years (1 generation), from 1702 to 1851.
-stress-12 e139 The Warrens of Snunk passed 150 quiet years (10 generations), from 1702 to 1851.
-stress-12 e140 The Sold League passed 75 quiet years (3 generations), from 1702 to 1776.
-stress-12 e141 The Zig Mob passed 100 quiet years (6 generations), from 1702 to 1801.
-stress-12 e142 Brentstead grew into a town of 1836.
-stress-12 e143 Skrutch Pit grew into a town of 1763.
-stress-12 e144 The Sold League passed 50 quiet years (2 generations), from 1802 to 1851.
-stress-12 e145 The Zig Mob passed 25 quiet years (2 generations), from 1827 to 1851.
-stress-12 e146 Daz'dokh awakened the Orcs in Synthetic 3.
-stress-12 e147 The Orcs founded Clan Az'azark in Synthetic 3.
-stress-12 e148 Clan Az'azark founded Shuulthaal in Synthetic 3.
-stress-12 e149 Famine struck Shuulthaal; 30 died.
-stress-12 e150 A succession crisis shook The Zig Mob.
-stress-12 e151 Famine struck Brentstead; 280 died.
-stress-12 e152 A succession crisis shook The Warrens of Snunk.
-stress-12 e153 Famine struck Gobig; 54 died.
-stress-12 e154 Famine struck Skrutch Pit; 395 died.
-stress-12 e155 Famine struck Krognirk; 39 died.
-stress-12 e156 A succession crisis shook Clan Az'azark.
-stress-12 e157 Plague broke out in Shuulthaal; 68 died.
-stress-12 e158 A succession crisis shook The Warrens of Snunk.
-stress-12 e159 Famine struck Sneenk-Nug; 23 died.
-stress-12 e160 A succession crisis shook The Sold League.
-stress-12 e161 Famine struck Siliefiedell; 151 died.
-stress-12 e162 Plague broke out in Sneenk-Nug; 114 died.
-stress-12 e163 The plague spread to Bik-Zugg Pit; 178 died.
-stress-12 e164 Famine struck Krognirk; 91 died.
-stress-12 e165 Plague broke out in Siliefiedell; 547 died.
-stress-12 e166 Plague broke out in Zeenkgnix; 1754 died.
-stress-12 e167 The plague spread to Skrutch Pit; 283 died.
-stress-12 e168 Plague broke out in Bik-Zugg Pit; 378 died.
-stress-12 e169 Famine struck Skrutch Pit; 323 died.
-stress-12 e170 Plague broke out in Skrutch Pit; 221 died.
-stress-12 e171 Skrutch Pit dwindled to 1149 souls.
-stress-12 e172 Famine struck Drog-Dreezz; 475 died.
-stress-12 e173 A succession crisis shook Clan Az'azark.
-stress-12 e174 Plague broke out in Bik-Zugg Pit; 224 died.
-stress-12 e175 Bik-Zugg Pit was abandoned; 764 survivors left.
-stress-12 e176 The Warrens of Snunk moved its seat to Gobig.
-stress-12 e177 Famine struck Zeenkgnix; 498 died.
-stress-12 e178 Zeenkgnix was abandoned; 5297 survivors left.
-stress-12 e179 The Zig Mob moved its seat to Drog-Dreezz.
-stress-12 e180 A succession crisis shook The Warrens of Snunk.
-stress-12 e181 Plague broke out in Gobig; 180 died.
-stress-12 e182 The plague spread to Krognirk; 56 died.
-stress-12 e183 Famine struck Siliefiedell; 273 died.
-stress-12 e184 Siliefiedell was abandoned; 1668 survivors left.
-stress-12 e185 The Realm of Cielathae came to an end.
-stress-12 e186 Famine struck Shuulthaal; 91 died.
-stress-12 e187 Famine struck Skrutch Pit; 114 died.
-stress-12 e188 Skrutch Pit was abandoned; 1317 survivors left.
-stress-12 e189 Famine struck Sneenk-Nug; 49 died.
-stress-12 e190 Famine struck Shuulthaal; 59 died.
-stress-12 e191 Famine struck Drog-Dreezz; 1765 died.
-stress-12 e192 Plague broke out in Gobig; 153 died.
-stress-12 e193 The Warrens of Snunk sent settlers from Krognirk to found Skink in Synthetic 5.
-stress-12 e194 Famine struck Shuulthaal; 99 died.
-stress-12 e195 Famine struck Shuulthaal; 45 died.
-stress-12 e196 Shuulthaal was abandoned; 426 survivors left.
-stress-12 e197 Clan Az'azark came to an end.
-stress-12 e198 Famine struck Brentstead; 545 died.
-stress-12 e199 Famine struck Krognirk; 57 died.
-stress-12 e200 Famine struck Sneenk-Nug; 55 died.
-stress-12 e201 Plague broke out in Sneenk-Nug; 46 died.
-stress-12 e202 The plague spread to Krognirk; 37 died.
-stress-12 e203 Famine struck Brentstead; 1030 died.
-stress-12 e204 Famine struck Gobig; 240 died.
-stress-12 e205 Plague broke out in Brentstead; 595 died.
-stress-12 e206 Famine struck Krognirk; 67 died.
-stress-12 e207 Krognirk was abandoned; 290 survivors left.
-stress-12 e208 Famine struck Skink; 7 died.
-stress-12 e209 A succession crisis shook The Sold League.
-stress-12 e210 Famine struck Skink; 15 died.
-stress-12 e211 Plague broke out in Gobig; 310 died.
-stress-12 e212 The plague spread to Sneenk-Nug; 32 died.
-stress-12 e213 Famine struck Brentstead; 406 died.
-stress-12 e214 Brentstead was abandoned; 3877 survivors left.
-stress-12 e215 The Sold League came to an end.
-stress-12 e216 Famine struck Skink; 8 died.
-stress-12 e217 Famine struck Skink; 12 died.
-stress-12 e218 Plague broke out in Gobig; 118 died.
+stress-12 e34 Famine struck Thidinni Deep; 28 died.
+stress-12 e35 Famine struck Siliefiedell; 420 died.
+stress-12 e36 Famine struck Siliefiedell; 203 died.
+stress-12 e37 Famine struck Drux; 178 died.
+stress-12 e38 Famine struck Gobig; 41 died.
+stress-12 e39 Famine struck Thidinni Deep; 31 died.
+stress-12 e40 Famine struck Thidinni Deep; 37 died.
+stress-12 e41 Famine struck Krognirk; 75 died.
+stress-12 e42 Famine struck Siliefiedell; 156 died.
+stress-12 e43 Plague broke out in Gneekizz; 67 died.
+stress-12 e44 Famine struck Drux; 103 died.
+stress-12 e45 Famine struck Drog-Dreezz; 95 died.
+stress-12 e46 Famine struck Thidinni Deep; 27 died.
+stress-12 e47 Famine struck Siliefiedell; 264 died.
+stress-12 e48 Famine struck Siliefiedell; 83 died.
+stress-12 e49 Famine struck Bik-Zugg Pit; 275 died.
+stress-12 e50 Gneenuz grew into a town of 1507.
+stress-12 e51 Drux grew into a town of 1510.
+stress-12 e52 Plague broke out in Drux; 321 died.
+stress-12 e53 The Realm of Cielathae passed 236 quiet years (2 generations), from 1148 to 1383.
+stress-12 e54 The Warrens of Snunk passed 25 quiet years (1 generation), from 1148 to 1172.
+stress-12 e55 Clan Koudto passed 236 quiet years (4 generations), from 1148 to 1383.
+stress-12 e56 Drog-Dreezz grew into a town of 1943.
+stress-12 e57 The Warrens of Snunk passed 186 quiet years (12 generations), from 1198 to 1383.
+stress-12 e58 The ruins of Krok Hole faded from memory.
+stress-12 e59 Pousk awakened the Faeries in Synthetic 3.
+stress-12 e60 The Faeries founded The Floumia Ring in Synthetic 3.
+stress-12 e61 The Floumia Ring founded Tashy in Synthetic 3.
+stress-12 e62 Famine struck Thidinni Deep; 124 died.
+stress-12 e63 Plague broke out in Tashy; 64 died.
+stress-12 e64 Famine struck Gobig; 48 died.
+stress-12 e65 Famine struck Gneekizz; 32 died.
+stress-12 e66 Famine struck Siliefiedell; 192 died.
+stress-12 e67 Famine struck Krognirk; 84 died.
+stress-12 e68 The Warrens of Snunk sent settlers from Gneenuz to found Gnig in Synthetic 4.
+stress-12 e69 Famine struck Drux; 349 died.
+stress-12 e70 Famine struck Gneekizz; 80 died.
+stress-12 e71 Plague broke out in Thidinni Deep; 70 died.
+stress-12 e72 Famine struck Thidinni Deep; 28 died.
+stress-12 e73 Thidinni Deep was abandoned; 504 survivors left.
+stress-12 e74 Clan Koudto came to an end.
+stress-12 e75 Famine struck Krognirk; 80 died.
+stress-12 e76 Famine struck Tashy; 32 died.
+stress-12 e77 Tashy was abandoned; 239 survivors left.
+stress-12 e78 The Floumia Ring came to an end.
+stress-12 e79 Famine struck Krognirk; 21 died.
+stress-12 e80 Plague broke out in Krognirk; 90 died.
+stress-12 e81 The plague spread to Gneenuz; 287 died.
+stress-12 e82 Plague broke out in Gneenuz; 881 died.
+stress-12 e83 The plague spread to Bik-Zugg Pit; 186 died.
+stress-12 e84 The plague spread to Gneekizz; 48 died.
+stress-12 e85 Famine struck Krognirk; 23 died.
+stress-12 e86 Famine struck Drog-Dreezz; 557 died.
+stress-12 e87 The Realm of Cielathae passed 218 quiet years (2 generations), from 1434 to 1651.
+stress-12 e88 The Warrens of Snunk passed 50 quiet years (3 generations), from 1434 to 1483.
+stress-12 e89 Gnig grew into a town of 1817.
+stress-12 e90 The Warrens of Snunk passed 143 quiet years (9 generations), from 1509 to 1651.
+stress-12 e91 The ruins of Thidinni Deep faded from memory.
+stress-12 e92 The ruins of Tashy faded from memory.
+stress-12 e93 Ashos awakened the Humans in Synthetic 2.
+stress-12 e94 The Humans founded The Sold League in Synthetic 2.
+stress-12 e95 The Sold League founded Brentstead in Synthetic 2.
+stress-12 e96 Famine struck Brentstead; 22 died.
+stress-12 e97 Famine struck Bik-Zugg Pit; 248 died.
+stress-12 e98 Famine struck Bik-Zugg Pit; 240 died.
+stress-12 e99 A succession crisis shook The Sold League.
+stress-12 e100 Famine struck Gnig; 585 died.
+stress-12 e101 Famine struck Drux; 223 died.
+stress-12 e102 Plague broke out in Bik-Zugg Pit; 151 died.
+stress-12 e103 The plague spread to Gneekizz; 40 died.
+stress-12 e104 The plague spread to Gnig; 281 died.
+stress-12 e105 Gnig was abandoned; 2166 survivors left.
+stress-12 e106 Famine struck Gneekizz; 71 died.
+stress-12 e107 Famine struck Gneekizz; 25 died.
+stress-12 e108 Plague broke out in Gneenuz; 822 died.
+stress-12 e109 The plague spread to Drog-Dreezz; 352 died.
+stress-12 e110 Famine struck Gneekizz; 41 died.
+stress-12 e111 Famine struck Drux; 311 died.
+stress-12 e112 Drux was abandoned; 2688 survivors left.
+stress-12 e113 Famine struck Gneekizz; 71 died.
+stress-12 e114 Famine struck Gneekizz; 24 died.
+stress-12 e115 Gneekizz was abandoned; 280 survivors left.
+stress-12 e116 The Warrens of Snunk sent settlers from Gobig to found Sneenk-Nug in Synthetic 5.
+stress-12 e117 Famine struck Brentstead; 43 died.
+stress-12 e118 Famine struck Sneenk-Nug; 5 died.
+stress-12 e119 Famine struck Sneenk-Nug; 15 died.
+stress-12 e120 A succession crisis shook The Warrens of Snunk.
+stress-12 e121 The Zig Mob broke away from The Warrens of Snunk, taking 2 settlements with it.
+stress-12 e122 The Zig Mob sent settlers from Drog-Dreezz to found Zeenkgnix in Synthetic 4.
+stress-12 e123 The Zig Mob sent settlers from Drog-Dreezz to found Skrutch Pit in Synthetic 4.
+stress-12 e124 Plague broke out in Gneenuz; 673 died.
+stress-12 e125 Famine struck Drog-Dreezz; 323 died.
+stress-12 e126 Famine struck Siliefiedell; 523 died.
+stress-12 e127 Famine struck Zeenkgnix; 40 died.
+stress-12 e128 A succession crisis shook The Zig Mob.
+stress-12 e129 Plague broke out in Gobig; 152 died.
+stress-12 e130 Famine struck Gneenuz; 488 died.
+stress-12 e131 Gneenuz was abandoned; 4161 survivors left.
+stress-12 e132 The Zig Mob moved its seat to Zeenkgnix.
+stress-12 e133 A succession crisis shook The Zig Mob.
+stress-12 e134 Zeenkgnix grew into a town of 4384.
+stress-12 e135 Famine struck Bik-Zugg Pit; 111 died.
+stress-12 e136 The Realm of Cielathae passed 150 quiet years (1 generation), from 1702 to 1851.
+stress-12 e137 The Warrens of Snunk passed 150 quiet years (10 generations), from 1702 to 1851.
+stress-12 e138 The Sold League passed 75 quiet years (3 generations), from 1702 to 1776.
+stress-12 e139 The Zig Mob passed 100 quiet years (6 generations), from 1702 to 1801.
+stress-12 e140 Brentstead grew into a town of 1836.
+stress-12 e141 Skrutch Pit grew into a town of 1763.
+stress-12 e142 The Sold League passed 50 quiet years (2 generations), from 1802 to 1851.
+stress-12 e143 The Zig Mob passed 25 quiet years (2 generations), from 1827 to 1851.
+stress-12 e144 Daz'dokh awakened the Orcs in Synthetic 3.
+stress-12 e145 The Orcs founded Clan Az'azark in Synthetic 3.
+stress-12 e146 Clan Az'azark founded Shuulthaal in Synthetic 3.
+stress-12 e147 Famine struck Shuulthaal; 30 died.
+stress-12 e148 A succession crisis shook The Zig Mob.
+stress-12 e149 Famine struck Brentstead; 280 died.
+stress-12 e150 A succession crisis shook The Warrens of Snunk.
+stress-12 e151 Famine struck Gobig; 54 died.
+stress-12 e152 Famine struck Skrutch Pit; 395 died.
+stress-12 e153 Famine struck Krognirk; 39 died.
+stress-12 e154 A succession crisis shook Clan Az'azark.
+stress-12 e155 Plague broke out in Shuulthaal; 68 died.
+stress-12 e156 A succession crisis shook The Warrens of Snunk.
+stress-12 e157 Famine struck Sneenk-Nug; 23 died.
+stress-12 e158 A succession crisis shook The Sold League.
+stress-12 e159 Famine struck Siliefiedell; 151 died.
+stress-12 e160 Plague broke out in Sneenk-Nug; 114 died.
+stress-12 e161 The plague spread to Bik-Zugg Pit; 178 died.
+stress-12 e162 Famine struck Krognirk; 91 died.
+stress-12 e163 Plague broke out in Siliefiedell; 547 died.
+stress-12 e164 Plague broke out in Zeenkgnix; 1754 died.
+stress-12 e165 The plague spread to Skrutch Pit; 283 died.
+stress-12 e166 Plague broke out in Bik-Zugg Pit; 378 died.
+stress-12 e167 Famine struck Skrutch Pit; 323 died.
+stress-12 e168 Plague broke out in Skrutch Pit; 221 died.
+stress-12 e169 Skrutch Pit dwindled to 1149 souls.
+stress-12 e170 Famine struck Drog-Dreezz; 475 died.
+stress-12 e171 A succession crisis shook Clan Az'azark.
+stress-12 e172 Plague broke out in Bik-Zugg Pit; 224 died.
+stress-12 e173 Bik-Zugg Pit was abandoned; 764 survivors left.
+stress-12 e174 The Warrens of Snunk moved its seat to Gobig.
+stress-12 e175 Famine struck Zeenkgnix; 498 died.
+stress-12 e176 Zeenkgnix was abandoned; 5297 survivors left.
+stress-12 e177 The Zig Mob moved its seat to Drog-Dreezz.
+stress-12 e178 A succession crisis shook The Warrens of Snunk.
+stress-12 e179 Plague broke out in Gobig; 180 died.
+stress-12 e180 The plague spread to Krognirk; 56 died.
+stress-12 e181 Famine struck Siliefiedell; 273 died.
+stress-12 e182 Siliefiedell was abandoned; 1668 survivors left.
+stress-12 e183 The Realm of Cielathae came to an end.
+stress-12 e184 Famine struck Shuulthaal; 91 died.
+stress-12 e185 Famine struck Skrutch Pit; 114 died.
+stress-12 e186 Skrutch Pit was abandoned; 1317 survivors left.
+stress-12 e187 Famine struck Sneenk-Nug; 49 died.
+stress-12 e188 Famine struck Shuulthaal; 59 died.
+stress-12 e189 Famine struck Drog-Dreezz; 1765 died.
+stress-12 e190 Plague broke out in Gobig; 153 died.
+stress-12 e191 The Warrens of Snunk sent settlers from Krognirk to found Skink in Synthetic 5.
+stress-12 e192 Famine struck Shuulthaal; 99 died.
+stress-12 e193 Famine struck Shuulthaal; 45 died.
+stress-12 e194 Shuulthaal was abandoned; 426 survivors left.
+stress-12 e195 Clan Az'azark came to an end.
+stress-12 e196 Famine struck Brentstead; 545 died.
+stress-12 e197 Famine struck Krognirk; 57 died.
+stress-12 e198 Famine struck Sneenk-Nug; 55 died.
+stress-12 e199 Plague broke out in Sneenk-Nug; 46 died.
+stress-12 e200 The plague spread to Krognirk; 37 died.
+stress-12 e201 Famine struck Brentstead; 1030 died.
+stress-12 e202 Famine struck Gobig; 240 died.
+stress-12 e203 Plague broke out in Brentstead; 595 died.
+stress-12 e204 Famine struck Krognirk; 67 died.
+stress-12 e205 Krognirk was abandoned; 290 survivors left.
+stress-12 e206 Famine struck Skink; 7 died.
+stress-12 e207 A succession crisis shook The Sold League.
+stress-12 e208 Famine struck Skink; 15 died.
+stress-12 e209 Plague broke out in Gobig; 310 died.
+stress-12 e210 The plague spread to Sneenk-Nug; 32 died.
+stress-12 e211 Famine struck Brentstead; 406 died.
+stress-12 e212 Brentstead was abandoned; 3877 survivors left.
+stress-12 e213 The Sold League came to an end.
+stress-12 e214 Famine struck Skink; 8 died.
+stress-12 e215 Famine struck Skink; 12 died.
+stress-12 e216 Plague broke out in Gobig; 118 died.
 stress stress-14 14 2000 dwarf,faerie 1 calm
 stress-14 score rg1 ra1 335 400
 stress-14 score rg1 ra2 634 2255
