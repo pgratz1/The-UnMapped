@@ -361,8 +361,9 @@ TEST_CASE("cli 12.2: empty world contents (P0-02 8)") {
     // page of table pass (P1-01 9.1); schema version 3 the root pages of
     // tables biome and climate and of the automatic index of biome.key;
     // schema version 5 the root pages of the three region tables (P0-02
-    // amendment 17).
-    CHECK(fs::file_size(out) == 45056U);
+    // amendment 17); schema version 6 the roots of the five chronology tables
+    // and two key indexes, 18 pages (P3-03 5.1).
+    CHECK(fs::file_size(out) == 73728U);
 }
 
 TEST_CASE("cli 12.2: test pattern") {

@@ -258,7 +258,10 @@ TEST_CASE("cli P1-06 9: report: the eight region keys close [geography], with th
     INFO("stderr: ", r.err);
     REQUIRE(r.exit_code == EXIT_OK);
     const auto gold = golden_case(UNMAPPED_P1_06_GOLDEN_PATH, "shipped-512-s0");
-    const std::vector<std::string> all = lines_of(r.out);
+    // The region keys close [geography]; [chronology] follows it (P3-03 9.1).
+    std::vector<std::string> all = lines_of(r.out);
+    const auto chronology = std::find(all.begin(), all.end(), std::string("[chronology]"));
+    all.erase(chronology, all.end());
     INFO(r.out);
     REQUIRE(all.size() >= REPORT_KEYS.size());
     for (std::size_t k = 0; k < REPORT_KEYS.size(); ++k) {
@@ -275,7 +278,7 @@ TEST_CASE("cli P1-06 9: report: the eight region keys close [geography], with th
     // After the resources keys (P1-00 10.3).
     CHECK(r.out.find("\nwalk_share = ") < r.out.find("\nregions = "));
     // [tables] (P0-04 amendment 18 (a)).
-    CHECK(contains(r.out, "\npass = 0\nrace = 0\nrace_biome = 0\nregion = 14\nregion_biome = "));
+    CHECK(contains(r.out, "\npass = 0\nrace = 6\nrace_biome = 45\nregion = 14\nregion_biome = "));
     CHECK(contains(r.out, "\nregion_border = 18\n"));
     CHECK(contains(r.out, "\nschema_version = 6\n"));
 }

@@ -379,12 +379,19 @@ TEST_CASE("reader raw rows (P0-02 amendment 10): tables, columns, keys, rows") {
     REQUIRE(schema.ok());
     const std::vector<std::vector<ColumnValue>> expected_schema = {
         {text("index"), text("sqlite_autoindex_biome_1"), text("biome"), null_value()},
+        {text("index"), text("sqlite_autoindex_culture_1"), text("culture"), null_value()},
         {text("index"), text("sqlite_autoindex_layer_1"), text("layer"), null_value()},
+        {text("index"), text("sqlite_autoindex_race_1"), text("race"), null_value()},
+        {text("table"), text("age"), text("age"), text(p004::DDL_AGE)},
         {text("table"), text("biome"), text("biome"), text(p004::DDL_BIOME)},
         {text("table"), text("climate"), text("climate"), text(p004::DDL_CLIMATE)},
+        {text("table"), text("culture"), text("culture"), text(p004::DDL_CULTURE)},
+        {text("table"), text("god"), text("god"), text(p004::DDL_GOD)},
         {text("table"), text("layer"), text("layer"), text(p004::DDL_LAYER)},
         {text("table"), text("meta"), text("meta"), text(p004::DDL_META)},
         {text("table"), text("pass"), text("pass"), text(p004::DDL_PASS)},
+        {text("table"), text("race"), text("race"), text(p004::DDL_RACE)},
+        {text("table"), text("race_biome"), text("race_biome"), text(p004::DDL_RACE_BIOME)},
         {text("table"), text("region"), text("region"), text(p004::DDL_REGION)},
         {text("table"), text("region_biome"), text("region_biome"), text(p004::DDL_REGION_BIOME)},
         {text("table"), text("region_border"), text("region_border"), text(p004::DDL_REGION_BORDER)},
@@ -398,7 +405,7 @@ TEST_CASE("reader raw rows (P0-02 amendment 10): tables, columns, keys, rows") {
                  ++visited;
              })
                 .ok());
-    CHECK(visited == 10);
+    CHECK(visited == 17);
     CHECK(std::string(worldgen::db::sqlite_library_version()) == sqlite3_libversion());
 }
 
