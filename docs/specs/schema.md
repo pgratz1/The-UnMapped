@@ -134,4 +134,22 @@ Kinds, roles, value keys and flags are code (`history::compiled_event_catalogue(
 | 4 | `quiet_era` | 0 | 1 | 0 | 1: `civilization`, civilization, 1–1 | 1: `years`; 2: `generations` | P3-04 |
 | 5 | `flare_up` | 1 | 0 | 0 | — | 1: `years` | P3-04 |
 
+**Planned additions, not in the current catalogue** (the table above is the catalogue as implemented, generator 0.14.0). Kinds 6–19 come with P3-05 (generator 0.15.0; P3-05 11, added here by its engineer). Kinds 20–30 come with P3-06 at **generator 0.16.0** (P3-06 11), appended after P3-05's; entity types: civilization 3, settlement 4; every count 1–1 except `parties` 2–2; all caused:
+
+| id | key | caused | region | settlement | roles (seq: role, entity type, min–max) | values (seq: key) | spec |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 20 | `claim` | 1 | 1 | 0 | 1: `claimant`, civilization, 1–1; 2: `holder`, civilization, 1–1 | — | P3-06 |
+| 21 | `war_declared` | 1 | 1 | 0 | 1: `attacker`, civilization, 1–1; 2: `defender`, civilization, 1–1 | — | P3-06 |
+| 22 | `battle` | 1 | 1 | 0 | 1: `winner`, civilization, 1–1; 2: `loser`, civilization, 1–1 | 1: `winner_dead`; 2: `loser_dead` | P3-06 |
+| 23 | `battle_at_pass` | 1 | 1 | 0 | 1: `winner`, civilization, 1–1; 2: `loser`, civilization, 1–1 | 1: `winner_dead`; 2: `loser_dead`; 3: `pass` | P3-06 |
+| 24 | `siege` | 1 | 1 | 1 | 1: `attacker`, civilization, 1–1; 2: `defender`, civilization, 1–1 | 1: `fell` | P3-06 |
+| 25 | `sacked` | 1 | 1 | 1 | 1: `attacker`, civilization, 1–1; 2: `defender`, civilization, 1–1 | 1: `dead`; 2: `survivors` | P3-06 |
+| 26 | `settlement_captured` | 1 | 1 | 1 | 1: `attacker`, civilization, 1–1; 2: `defender`, civilization, 1–1 | 1: `dead`; 2: `fled` | P3-06 |
+| 27 | `peace` | 1 | 0 | 0 | 1: `winner`, civilization, 1–1; 2: `loser`, civilization, 1–1 | 1: `years` | P3-06 |
+| 28 | `truce` | 1 | 0 | 0 | 1: `parties`, civilization, 2–2 | 1: `years` | P3-06 |
+| 29 | `region_ceded` | 1 | 1 | 0 | 1: `from`, civilization, 1–1; 2: `to`, civilization, 1–1 | — | P3-06 |
+| 30 | `civ_conquered` | 1 | 1 | 0 | 1: `civilization`, civilization, 1–1; 2: `conqueror`, civilization, 1–1 | — | P3-06 |
+
+**Relation kinds** (`relation.kind`; text keys, not a schema change): from generator 0.16.0, `enmity` (symmetric, a < b), `war` (asymmetric, a the attacker, b the defender), `peace` (symmetric, a < b), all between civilizations (P3-06 4.3). None exist before 0.16.0. When P3-05 and P3-06 merge, their engineers move their rows into the table above. No schema change; `schema_version` stays 7.
+
 **Schema changes** (P3-04 8.2): renaming, removing or renumbering a kind; adding, removing, renaming or reordering a role or value key of an existing kind; changing a role's entity type or counts, or a kind's `caused`, `region_use` or `settlement_use`; changing the meaning of any of them; changing a code list; any column. **Not a schema change**: appending a kind; changing a template or a base salience (a data change). A shipped kind is never edited: a kind that needs another role or value key is added as a new kind.
