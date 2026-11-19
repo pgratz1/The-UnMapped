@@ -1228,7 +1228,8 @@ def starts_of(seed, span, races):
 def sched_lines(name, starts, span, detail, tension=None):
     en = schedule_phases(starts, span, data().engine, detail, tension)
     b = en.base
-    return ["%s lengths %d %d %d %d %d %d" % (name, b["A"], b["F"], b["L"], b["Q"], b["floor"], b["cap"]),
+    return ["%s starts %s" % (name, ",".join(map(str, starts))),
+            "%s lengths %d %d %d %d %d %d" % (name, b["A"], b["F"], b["L"], b["Q"], b["floor"], b["cap"]),
             "%s phases %s" % (name, fmt_phases(en.phases)), "%s simulated %d" % (name, en.simulated())]
 
 
@@ -1348,6 +1349,7 @@ HEADER = """\
 #       tension "none" or ForcedTension(period,value,trigger) (7.4)
 #   edge <case> <span> <detail> <starts> <tension>
 #       a hand-made schedule (5.6 E1-E10): starts comma separated
+#   <case> starts <y_1,...,y_P>                 the age start years
 #   <case> lengths <A> <F> <L> <Q> <floor_years> <cap_years>      SC1
 #   <case> phases <id:age:kind:start:end|...>   phase rows (5.7), trigger
 #                                               omitted
@@ -1989,7 +1991,9 @@ def cmd_check_world(argv):
     conn = pchr.open_world(path)
     meta = dict(conn.execute("SELECT key, value FROM meta").fetchall())
     c = Checker()
-    c.eq("schema_version", meta.get("schema_version"), str(SCHEMA_VERSION))
+    if meta.get("schema_version") != str(SCHEMA_VERSION):
+        print("%s: schema version %s, check-world reads %d" % (path, meta.get("schema_version"), SCHEMA_VERSION))
+        return 1
     c.eq("history_end_year", meta.get("history_end_year"), meta.get("param.history_span"))
     stages = meta["stages"].split(",") if meta["stages"] else []
     p = pchr.params_from_meta(meta)
