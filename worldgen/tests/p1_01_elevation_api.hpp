@@ -381,6 +381,9 @@ inline constexpr std::string_view RESOURCES_TOML =
     "hab_flood_factor = \"0.75\"\n"
     "hab_pocket_factor = \"0.25\"\n";
 
+// worldgen/regions.toml: the shipped values (P1-06 4).
+inline constexpr std::string_view REGIONS_TOML = biome_data::REGIONS_TOML;
+
 // Adds what the production registry requires besides the stage tunings
 // given by a test: worldgen/biomes.toml when the id `biomes` is registered,
 // worldgen/resources.toml when the id `resources` is, and the directory `biomes` with the twelve definitions when the kind
@@ -400,6 +403,13 @@ inline void add_biome_fixtures(worldgen::data::MemoryDataRoot& root) {
         for (wd::MemoryDirectory& d : root.directories) {
             if (d.name == "worldgen") {
                 d.entries.push_back(wd::MemoryEntry{"resources.toml", std::string(RESOURCES_TOML), false});
+            }
+        }
+    }
+    if (kind != nullptr && kind->schema_for("regions") != nullptr) {  // P1-06 4
+        for (wd::MemoryDirectory& d : root.directories) {
+            if (d.name == "worldgen") {
+                d.entries.push_back(wd::MemoryEntry{"regions.toml", std::string(REGIONS_TOML), false});
             }
         }
     }

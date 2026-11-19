@@ -90,6 +90,9 @@ inline Load load(std::optional<std::string> biomes_tuning, std::optional<worldge
     if (registry.find("worldgen")->schema_for("resources") != nullptr) {  // P1-05 4.2
         dir.entries.push_back(wd::MemoryEntry{"resources.toml", std::string(elev_api::RESOURCES_TOML), false});
     }
+    if (registry.find("worldgen")->schema_for("regions") != nullptr) {  // P1-06 4
+        dir.entries.push_back(wd::MemoryEntry{"regions.toml", std::string(elev_api::REGIONS_TOML), false});
+    }
     wd::MemoryDataRoot root;
     root.directories.push_back(dir);
     if (biomes_dir.has_value()) {

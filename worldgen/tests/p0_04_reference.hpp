@@ -44,6 +44,25 @@ inline constexpr std::string_view DDL_BIOME =
 inline constexpr std::string_view DDL_CLIMATE =
     "CREATE TABLE climate (id INTEGER PRIMARY KEY, wind_toward INTEGER NOT NULL, temp_offset_dc INTEGER NOT NULL) "
     "STRICT";
+// The DDL of tables `region`, `region_border` and `region_biome` (schema
+// version 5), copied from P1-06 3.1.
+inline constexpr std::string_view DDL_REGION =
+    "CREATE TABLE region (id INTEGER PRIMARY KEY, name TEXT NOT NULL, biome INTEGER NOT NULL, x_min INTEGER NOT NULL, "
+    "y_min INTEGER NOT NULL, x_max INTEGER NOT NULL, y_max INTEGER NOT NULL, seed_x INTEGER NOT NULL, seed_y INTEGER "
+    "NOT NULL, landmass INTEGER NOT NULL, cells INTEGER NOT NULL, lake_cells INTEGER NOT NULL, river_cells INTEGER NOT "
+    "NULL, river_class_max INTEGER NOT NULL, coast_cells INTEGER NOT NULL, walk_cells INTEGER NOT NULL, walk_area "
+    "INTEGER NOT NULL, elev_mean_dm INTEGER NOT NULL, elev_max_dm INTEGER NOT NULL, fertility_mean INTEGER NOT NULL, "
+    "forage_mean INTEGER NOT NULL, timber_mean INTEGER NOT NULL, ore_mean INTEGER NOT NULL, fresh_water_mean INTEGER "
+    "NOT NULL, habitability_mean INTEGER NOT NULL, habitability_p90 INTEGER NOT NULL, ore_rich_cells INTEGER NOT NULL, "
+    "ore_reach_cells INTEGER NOT NULL) STRICT";
+inline constexpr std::string_view DDL_REGION_BORDER =
+    "CREATE TABLE region_border (a INTEGER NOT NULL, b INTEGER NOT NULL, length_m INTEGER NOT NULL, low_dm INTEGER NOT "
+    "NULL, low_x INTEGER NOT NULL, low_y INTEGER NOT NULL, walk_pairs INTEGER NOT NULL, river_pairs INTEGER NOT NULL, "
+    "river_class_max INTEGER NOT NULL, pass_id INTEGER NOT NULL, passes INTEGER NOT NULL, PRIMARY KEY (a, b)) STRICT, "
+    "WITHOUT ROWID";
+inline constexpr std::string_view DDL_REGION_BIOME =
+    "CREATE TABLE region_biome (region INTEGER NOT NULL, biome INTEGER NOT NULL, cells INTEGER NOT NULL, PRIMARY KEY "
+    "(region, biome)) STRICT, WITHOUT ROWID";
 inline constexpr std::string_view EMPTY_CONTENT_HASH =
     "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
 
@@ -155,9 +174,9 @@ inline MetaRows meta_rows(std::uint64_t seed, std::string_view phrase = {}, std:
     return {
         {"content_hash", std::string(EMPTY_CONTENT_HASH)},
         {"format", "the-unmapped-world"},
-        {"generator_version", "0.10.0"},
+        {"generator_version", "0.11.0"},
         {"param.map_size", std::string(map_size)},
-        {"schema_version", "4"},
+        {"schema_version", "5"},
         {"seed", std::to_string(seed)},
         {"seed_phrase", std::string(phrase)},
         {"stages", std::string(stages)},
@@ -231,11 +250,17 @@ inline worldgen::Sha256Digest empty_table_hash(std::uint64_t columns) {
 }
 inline worldgen::Sha256Digest empty_biome_table_hash() { return empty_table_hash(5); }
 inline worldgen::Sha256Digest empty_climate_table_hash() { return empty_table_hash(3); }
+// tables region (28 columns), region_border (11) and region_biome (3) with
+// no rows (schema 5).
+inline worldgen::Sha256Digest empty_region_table_hash() { return empty_table_hash(28); }
+inline worldgen::Sha256Digest empty_region_border_table_hash() { return empty_table_hash(11); }
+inline worldgen::Sha256Digest empty_region_biome_table_hash() { return empty_table_hash(3); }
 
-// schema of every world at schema version 4 (the name is the P0 one):
+// schema of every world at schema version 5 (the name is the P0 one):
 // sqlite_schema rows ordered by type, then name: the automatic indexes of
 // biome.key and layer.name (sql NULL, amendment 10), then the tables biome,
-// climate, layer, meta and pass with their DDL. rootpage is excluded.
+// climate, layer, meta, pass, region, region_biome and region_border with
+// their DDL. rootpage is excluded.
 inline worldgen::Sha256Digest p0_schema_hash() {
     Encoder e;
     e.col_text("index");
@@ -266,6 +291,18 @@ inline worldgen::Sha256Digest p0_schema_hash() {
     e.col_text("pass");
     e.col_text("pass");
     e.col_text(DDL_PASS);
+    e.col_text("table");
+    e.col_text("region");
+    e.col_text("region");
+    e.col_text(DDL_REGION);
+    e.col_text("table");
+    e.col_text("region_biome");
+    e.col_text("region_biome");
+    e.col_text(DDL_REGION_BIOME);
+    e.col_text("table");
+    e.col_text("region_border");
+    e.col_text("region_border");
+    e.col_text(DDL_REGION_BORDER);
     return e.digest();
 }
 
@@ -302,9 +339,9 @@ inline constexpr std::string_view REPORT_SEED_0 =
     "[meta]\n"
     "content_hash = e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\n"
     "format = the-unmapped-world\n"
-    "generator_version = 0.10.0\n"
+    "generator_version = 0.11.0\n"
     "param.map_size = 1024\n"
-    "schema_version = 4\n"
+    "schema_version = 5\n"
     "seed = 0\n"
     "seed_phrase =\n"
     "stages =\n"
@@ -314,6 +351,9 @@ inline constexpr std::string_view REPORT_SEED_0 =
     "layer = 0\n"
     "meta = 8\n"
     "pass = 0\n"
+    "region = 0\n"
+    "region_biome = 0\n"
+    "region_border = 0\n"
     "[layers]\n"
     "(none)\n";
 

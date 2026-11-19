@@ -34,6 +34,8 @@ public:
     void run(const StageInfo& stage);
 
     [[nodiscard]] const std::vector<StoredLayer>& layers() const noexcept { return layers_; }
+    // The committed rows of table pass, in id order.
+    [[nodiscard]] const std::vector<db::PassRow>& passes() const noexcept { return passes_; }
     [[nodiscard]] db::WorldWriter& writer() noexcept { return writer_; }
     [[nodiscard]] const data::ContentSet& content() const noexcept { return content_; }
     [[nodiscard]] std::int64_t map_size() const noexcept { return map_size_; }
@@ -45,6 +47,7 @@ private:
     std::int64_t map_size_;
     std::uint32_t threads_;
     std::vector<StoredLayer> layers_;  // committed layers, in id order
+    std::vector<db::PassRow> passes_;  // committed rows of table pass, in id order
 };
 
 }  // namespace worldgen::stages::detail

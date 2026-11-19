@@ -66,6 +66,11 @@ public:
     // missing: the stage list or a fixture world is wrong).
     [[nodiscard]] const db::LayerGrid& layer(std::string_view name) const;
 
+    // The rows of table `pass` written by earlier stages of this run, in id
+    // order, exactly as written (P1-06 2: the regions stage reads them).
+    // Rows this stage has written itself are not returned.
+    [[nodiscard]] std::span<const db::PassRow> passes() const noexcept;
+
     // Writes one of this stage's layers with the next layer id and codec 1
     // (P1-00 4 rules 1 and 2; P0-02 5.6). Layers are written in the order of
     // these calls. FatalError as StageWriter::write_layer (invalid name or
@@ -83,6 +88,13 @@ public:
     // Writes the row of table `climate` (P1-03 C7). FatalError as
     // StageWriter::write_climate.
     void write_climate(const db::ClimateRow& row);
+
+    // Write one row of tables `region`, `region_border` and `region_biome`
+    // (P1-06 RG14), each in ascending key. FatalError as the StageWriter
+    // functions of the same names.
+    void write_region(const db::RegionRow& row);
+    void write_region_border(const db::RegionBorderRow& row);
+    void write_region_biome(const db::RegionBiomeRow& row);
 
 private:
     friend class detail::Pipeline;
@@ -110,8 +122,9 @@ inline constexpr std::array<std::string_view, 6> GEOGRAPHY_STAGE_NAMES = {
 
 // The implemented geography stages, in run order (P1-00 3, 10.1): the stages
 // generate runs by default. Each implemented stage is the next one of
-// GEOGRAPHY_STAGE_NAMES; so far `elevation` (P1-01), `hydrology` (P1-02),
-// `climate` (P1-03), `biomes` (P1-04) and `resources` (P1-05).
+// GEOGRAPHY_STAGE_NAMES: `elevation` (P1-01), `hydrology` (P1-02),
+// `climate` (P1-03), `biomes` (P1-04), `resources` (P1-05) and `regions`
+// (P1-06), all six.
 [[nodiscard]] std::span<const StageInfo> implemented_geography_stages() noexcept;
 
 // --- Stage limit (P1-00 10.1, --until) ------------------------------------------

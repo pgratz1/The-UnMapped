@@ -83,6 +83,17 @@ target_sources(worldgen-cli-tests PRIVATE cli_resources_test.cpp)
 target_compile_definitions(worldgen-cli-tests PRIVATE
     UNMAPPED_P1_05_GOLDEN_PATH="${PROJECT_SOURCE_DIR}/worldgen/tests/golden/p1-05-resources.txt"
 )
+# The default run with the regions stage (ids 1 to 19), hash --detail and
+# report with the three region tables, the region keys, render of the layer
+# region (`ids`) and the composite `regions`, the schema 5 refusal of
+# version 4 worlds and the loader's messages for bad regions tuning (P1-06
+# 3, 4 and 9; P0-02 amendment 17; P0-03 amendment 17; P0-04 amendment 18),
+# against the regions golden vectors and pixels decoded from the PNG. Slow
+# checks in the doctest suite "regions-slow".
+target_sources(worldgen-cli-tests PRIVATE cli_regions_test.cpp)
+target_compile_definitions(worldgen-cli-tests PRIVATE
+    UNMAPPED_P1_06_GOLDEN_PATH="${PROJECT_SOURCE_DIR}/worldgen/tests/golden/p1-06-regions.txt"
+)
 
 # CTest entries, as for worldgen-tests (cmake/UnmappedTestShards.cmake):
 # groups of source files run in parallel, worldgen-cli-tests-other for every
@@ -96,5 +107,6 @@ unmapped_add_doctest_shards(worldgen-cli-tests
     SHARD passes-climate 12 "*cli_passes_test.cpp,*cli_climate_test.cpp"
     SHARD biomes 9 "*cli_biomes_test.cpp"
     SHARD resources-generate 10 "*cli_resources_test.cpp,*cli_generate_test.cpp"
+    SHARD regions 12 "*cli_regions_test.cpp"
     REST other 10
 )

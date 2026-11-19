@@ -18,8 +18,10 @@ namespace worldgen {
 // (P1-03) joined the default pipeline; 0.7.0 until the biome stage (P1-04)
 // joined it with schema 3 (tables biome and climate); 0.8.0 until the biome
 // variety revision (P1-04 third version, P1-03 C2b, schema 4); 0.9.0 until
-// the resources stage (P1-05) joined it; now 0.10.0.
-inline constexpr std::string_view GENERATOR_VERSION = "0.10.0";
+// the resources stage (P1-05) joined it; 0.10.0 until the regions stage
+// (P1-06) joined it with schema 5 (tables region, region_border and
+// region_biome); now 0.11.0.
+inline constexpr std::string_view GENERATOR_VERSION = "0.11.0";
 
 // Returns GENERATOR_VERSION (P0-02 5.5). A world is only guaranteed
 // reproducible under the same generator version (design doc section 4).

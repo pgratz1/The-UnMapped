@@ -1,0 +1,17 @@
+# Tuning of the regions stage (spec docs/specs/p1-06-regions.md section 4).
+# Identical copies in worldgen/tests/data/geo/worldgen/ and
+# worldgen/tests/data/geo-small/worldgen/.
+[worldgen.regions]
+seed_tile_m = 864
+seed_spacing_m = 1200
+hand_ref_m = 25
+cost_noise = { wavelength_m = 1500, octaves = 3, gain = "0.5" }
+cost_noise_amp = "0.5"
+lake_cost_factor = 2
+river_border_class = 6
+river_cost_m = 2000
+region_min_area_m2 = 750000
+ore_rich_min = 128
+ore_reach_m = 300
+name_central_frac = "0.12"
+names = { central = "Central", north = "North", northeast = "Northeast", east = "East", southeast = "Southeast", south = "South", southwest = "Southwest", west = "West", northwest = "Northwest", isle = "Isle" }

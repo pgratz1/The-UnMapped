@@ -14,6 +14,7 @@
 #include <vector>
 
 #include "cli_test_support.hpp"
+#include "worldgen/stages/stage.hpp"
 
 #ifndef UNMAPPED_P0_WORLDS_GOLDEN_PATH
 #error "UNMAPPED_P0_WORLDS_GOLDEN_PATH must be defined by tools/worldgen-cli/tests/CMakeLists.txt"
@@ -115,19 +116,15 @@ TEST_CASE("cli P0-03 7.6, amendment 17: with the required kind worldgen, a nonex
     CHECK(generate_hash(sb, "unset.db", {"--seed", "0", "--until", "none"}, unset) == expected);
 }
 
-TEST_CASE("cli P1-00 10.1, X1: every unimplemented stage name is a usage error, unknown and unimplemented names differ") {
+TEST_CASE("cli P1-00 10.1, X1: an unknown stage name is a usage error") {
     Sandbox sb;
     const std::string bogus = usage_error(sb, {"--until", "bogus"});
     CHECK(contains(bogus, "bogus"));
-    // elevation (P1-01), hydrology (P1-02), climate (P1-03), biomes (P1-04)
-    // and resources (P1-05) are implemented; regions is not yet.
-    for (const char* name : {"regions"}) {
-        CAPTURE(name);
-        const std::string err = usage_error(sb, {"--until", name});
-        CHECK(contains(err, name));
-        // The message for a stage that exists but is not implemented is not
-        // the message for an unknown name.
-        CHECK(first_line_without(err, name) != first_line_without(bogus, "bogus"));
+    // Every geography stage of P1-00 3 is implemented since P1-06 (generator
+    // 0.11.0), so no stage name is "not implemented" any more.
+    for (const std::string_view name : worldgen::stages::GEOGRAPHY_STAGE_NAMES) {
+        CAPTURE(std::string(name));
+        CHECK(worldgen::stages::check_stage_limit(name) == worldgen::stages::StageLimitError::none);
     }
     for (const char* name : {"Elevation", "NONE", "", "test_pattern", "elevation,hydrology"}) {
         CAPTURE(name);

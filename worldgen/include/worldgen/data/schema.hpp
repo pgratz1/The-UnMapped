@@ -53,6 +53,14 @@ struct StringGrammar {
 // The id grammar as a StringGrammar ([a-z][a-z0-9_]*, 1 to 64 bytes).
 [[nodiscard]] StringGrammar id_grammar() noexcept;
 
+// The word grammar (P0-03 amendment 17, P1-06 4): one ASCII capital letter
+// A-Z followed by zero or more ASCII lower-case letters a-z ([A-Z][a-z]*);
+// the empty string does not match. No length limit of its own (the string
+// type's byte cap applies first).
+[[nodiscard]] bool is_valid_word(std::string_view text) noexcept;
+// The word grammar as a StringGrammar, description "a word ([A-Z][a-z]*)".
+[[nodiscard]] StringGrammar word_grammar() noexcept;
+
 // --- Field types (P0-03 section 4) ------------------------------------------
 
 // The type constructor of a field (P0-03 section 4).
@@ -311,6 +319,7 @@ inline constexpr std::string_view WORLDGEN_HYDROLOGY_ID = "hydrology";
 inline constexpr std::string_view WORLDGEN_CLIMATE_ID = "climate";
 inline constexpr std::string_view WORLDGEN_BIOMES_ID = "biomes";
 inline constexpr std::string_view WORLDGEN_RESOURCES_ID = "resources";
+inline constexpr std::string_view WORLDGEN_REGIONS_ID = "regions";
 // Upper bound of worldgen.climate.smooth_radius_m (P1-03 4); the climate
 // stage's overflow argument for C4 depends on it (static_assert there).
 inline constexpr std::int64_t CLIMATE_SMOOTH_RADIUS_MAX_M = 4000;
@@ -372,5 +381,16 @@ inline constexpr std::string_view BIOME_DIRECTORY = "biomes";
 // (each "<lo> must be below <hi>"), hab_weights_positive ("the hab_weight
 // fields must not all be 0").
 [[nodiscard]] Schema worldgen_resources_schema();
+
+// The schema of record `region_names` (P1-06 4): central, north, northeast,
+// east, southeast, south, southwest, west, northwest, isle, each
+// string(32, word), all required, in this order.
+[[nodiscard]] Schema region_names_schema();
+
+// The schema of definition worldgen.regions (P1-06 4): every field of the
+// table of 4 in its order, all required. Named check, a load error at the
+// definition's header (P0-03 7.5):
+//   regions_tile_fits_spacing   seed_tile_m <= 2 seed_spacing_m.
+[[nodiscard]] Schema worldgen_regions_schema();
 
 }  // namespace worldgen::data

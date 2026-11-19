@@ -600,7 +600,7 @@ Changed against the first ranges: `coast_ratio` hard 1.5 → 1.4 and typical 2.0
 | `walk_share` | descriptive | ≥ 0.35 / ≥ 0.52 / ≥ 0.66 | 0.389–0.767 / 0.586–0.833 / 0.736–0.891 | P1-05 |
 | `scores_p90` habitability | ≥ 1 | 85–180 | 95–163 / 141–165 / 153–163 | P1-05 |
 | `regions` (512 / 1024 / 2048; P1-06 second version, prototype on 0.10.0 worlds) | ≥ 1 | 10–18 / 40–62 / 175–225 | 11–16 / 45–56 / 195–204 | P1-06 |
-| `region_area_km2` p50 / p100 | 0.5–5 / ≤ 15 | 1.2–2.6, 1.5–2.7, 1.8–2.3 / ≤ 6.2, 6.7, 7.0 | 1.34–2.43 / 3.10–6.37 | P1-06 |
+| `region_area_km2` p50 / p100 | 0.5–5 / ≤ 15 | 1.3–2.8, 1.5–2.7, 1.8–2.3 / ≤ 6.2, 6.7, 7.0 | 1.45–2.53 / 3.10–6.37 | P1-06 |
 
 **0.9.0 (biome variety):** the climate and biome rows above are the spec writer's re-measurement with the final data on the exploration's 58 calibration worlds (512 seeds 0–19, 1024 seeds 0–29, 2048 seeds 0–7; P1-04 9 and 11.1, P1-03 9), provisional until the revision's validation sweep, which should use the full seed set of this section. That sample lacks the weak-shadow and unusual worlds of the 0.8.0 sweep, so the sweep will widen forest and the upland rows. Earlier note, for 0.8.0: this replaces the earlier sentence "each natural biome at least 0.02 in 90% of seeds and none above 0.6" and the prototype's single biome row: on the real 0.7.0 layers every natural biome is present in all 108 worlds and none exceeds 0.635, but marsh is under 0.01 in 18 of 50 worlds at 512 and grows with map size (P1-04 limitation 3), so the ranges are per biome and per size.
 

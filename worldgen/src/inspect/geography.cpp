@@ -1423,6 +1423,155 @@ bool append_hydrology_lines(const GeographyLayers& layers, std::span<const std::
 
 }  // namespace
 
+// --- Regions (P1-06 9) -------------------------------------------------------------------
+
+RegionTableResult read_region_rows(std::span<const std::vector<db::ColumnValue>> rows) {
+    constexpr std::size_t COLUMNS = 28;
+    constexpr std::size_t NAME = 1;
+    constexpr std::size_t CELLS = 10;
+    constexpr std::size_t WALK_CELLS = 15;
+    RegionTableResult r;
+    for (const std::vector<db::ColumnValue>& row : rows) {
+        const std::string id = (!row.empty() && row[0].type == db::ValueType::integer) ? db::format_i64(row[0].integer)
+                                                                                       : std::string("?");
+        const std::string at = "row " + id + ": ";
+        if (row.size() != COLUMNS) {
+            r.problem = at + "has " + db::format_u64(row.size()) + " columns, expected 28";
+            return r;
+        }
+        for (std::size_t k = 0; k < COLUMNS; ++k) {
+            if (k == NAME) {
+                if (row[k].type != db::ValueType::text) {
+                    r.problem = at + "name is not text";
+                    return r;
+                }
+            } else if (row[k].type != db::ValueType::integer) {
+                r.problem = at + "column " + db::format_u64(k + 1U) + " is not an integer";
+                return r;
+            }
+        }
+        RegionRecord rec{row[0].integer, row[CELLS].integer, row[WALK_CELLS].integer};
+        if (rec.cells < 1) {
+            r.problem = at + "cells below 1";
+            return r;
+        }
+        r.records.push_back(rec);
+    }
+    return r;
+}
+
+RegionBorderTableResult read_region_border_rows(std::span<const std::vector<db::ColumnValue>> rows,
+                                                std::span<const RegionRecord> regions) {
+    constexpr std::size_t COLUMNS = 11;
+    RegionBorderTableResult r;
+    const auto known = [&regions](std::int64_t id) {
+        // Records are in ascending id (primary key order).
+        const auto it = std::lower_bound(regions.begin(), regions.end(), id,
+                                         [](const RegionRecord& rec, std::int64_t v) { return rec.id < v; });
+        return it != regions.end() && it->id == id;
+    };
+    for (const std::vector<db::ColumnValue>& row : rows) {
+        const auto key_part = [&row](std::size_t k) {
+            return (row.size() > k && row[k].type == db::ValueType::integer) ? db::format_i64(row[k].integer)
+                                                                             : std::string("?");
+        };
+        const std::string at = "row (" + key_part(0) + ", " + key_part(1) + "): ";
+        if (row.size() != COLUMNS) {
+            r.problem = at + "has " + db::format_u64(row.size()) + " columns, expected 11";
+            return r;
+        }
+        for (std::size_t k = 0; k < COLUMNS; ++k) {
+            if (row[k].type != db::ValueType::integer) {
+                r.problem = at + "column " + db::format_u64(k + 1U) + " is not an integer";
+                return r;
+            }
+        }
+        RegionBorderRecord rec{row[0].integer, row[1].integer, row[6].integer, row[7].integer, row[9].integer};
+        if (rec.a >= rec.b) {
+            r.problem = at + "a not below b";
+            return r;
+        }
+        if (!known(rec.a)) {
+            r.problem = at + "unknown region " + db::format_i64(rec.a);
+            return r;
+        }
+        if (!known(rec.b)) {
+            r.problem = at + "unknown region " + db::format_i64(rec.b);
+            return r;
+        }
+        r.records.push_back(rec);
+    }
+    return r;
+}
+
+std::optional<std::string> region_layer_problem(const db::LayerGrid& region, const db::LayerGrid* elevation) {
+    return resource_layer_problem(region, "walk_area", elevation);  // the same rule: u16, the size of elevation
+}
+
+namespace {
+
+// km^2 with two decimals of a cell count (P1-06 9): v = RHA(cells 256, 10^4).
+std::string km2_text(std::int64_t cells) {
+    const std::int64_t v = mul_div(cells, 256, 10000);
+    const std::int64_t frac = v % 100;
+    return db::format_i64(v / 100) + "." + (frac < 10 ? "0" : "") + db::format_i64(frac);
+}
+
+}  // namespace
+
+std::string region_lines(std::span<const RegionRecord> regions, std::span<const RegionBorderRecord> borders) {
+    std::string out;
+    line(out, "regions", db::format_u64(regions.size()));
+    if (regions.empty()) {
+        line(out, "region_area_km2", "n/a n/a n/a");
+    } else {
+        std::vector<std::int64_t> cells;
+        cells.reserve(regions.size());
+        for (const RegionRecord& r : regions) {
+            cells.push_back(r.cells);
+        }
+        // determinism-lint: allow(unstable-sort) -- int64 values: equal elements are indistinguishable
+        std::sort(cells.begin(), cells.end());
+        std::string v;
+        for (const std::uint32_t p : {0U, 50U, 100U}) {
+            if (!v.empty()) v += ' ';
+            v += km2_text(cells[percentile_rank(cells.size(), p)]);
+        }
+        line(out, "region_area_km2", v);
+    }
+    line(out, "region_borders", db::format_u64(borders.size()));
+    std::uint64_t walkable = 0;
+    std::uint64_t river = 0;
+    std::uint64_t pass = 0;
+    std::vector<std::int64_t> bordered;
+    for (const RegionBorderRecord& b : borders) {
+        walkable += b.walk_pairs > 0 ? 1U : 0U;
+        river += b.river_pairs > 0 ? 1U : 0U;
+        pass += b.pass_id > 0 ? 1U : 0U;
+        bordered.push_back(b.a);
+        bordered.push_back(b.b);
+    }
+    // determinism-lint: allow(unstable-sort) -- int64 values: equal elements are indistinguishable
+    std::sort(bordered.begin(), bordered.end());
+    line(out, "region_borders_walkable", db::format_u64(walkable));
+    line(out, "region_borders_river", db::format_u64(river));
+    line(out, "region_borders_pass", db::format_u64(pass));
+    std::uint64_t isolated = 0;
+    std::uint64_t upland = 0;
+    for (const RegionRecord& r : regions) {
+        if (!std::binary_search(bordered.begin(), bordered.end(), r.id)) {
+            ++isolated;
+        }
+        // walk_cells <= cells <= 2^24 on any grid: no overflow.
+        if (4 * r.walk_cells < r.cells) {
+            ++upland;
+        }
+    }
+    line(out, "regions_isolated", db::format_u64(isolated));
+    line(out, "regions_upland", db::format_u64(upland));
+    return out;
+}
+
 std::optional<std::string> geography_section(const GeographyLayers& layers, std::string* problem) {
     if (std::optional<std::string> p = geography_layers_problem(layers)) {
         if (problem != nullptr) *problem = *p;
@@ -1506,6 +1655,9 @@ std::optional<std::string> geography_section(const GeographyLayers& layers, std:
         cells.habitability = u8(5);
         cells.walk_area = *layers.resources[6]->get_if<std::uint16_t>();
         out += resource_lines(cells, w, h);
+    }
+    if (layers.has_regions()) {
+        out += region_lines(*layers.regions, *layers.region_borders);
     }
     return out;
 }

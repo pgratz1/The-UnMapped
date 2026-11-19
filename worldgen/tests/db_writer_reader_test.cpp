@@ -92,9 +92,9 @@ Rows expected_empty_meta(const std::string& seed_text, const std::string& phrase
     return {
         {"content_hash", EMPTY_SHA256},
         {"format", "the-unmapped-world"},
-        {"generator_version", "0.10.0"},
+        {"generator_version", "0.11.0"},
         {"param.map_size", "1024"},
-        {"schema_version", "4"},
+        {"schema_version", "5"},
         {"seed", seed_text},
         {"seed_phrase", phrase},
         {"stages", ""},
@@ -126,7 +126,7 @@ void check_header(const std::string& path) {
     CHECK(dbtest::be32(b, 52) == 0);  // largest root page (auto-vacuum)
     CHECK(dbtest::be32(b, 56) == 1);  // text encoding UTF-8
     CHECK(dbtest::be32(b, 60) == static_cast<std::uint32_t>(worldgen::db::SCHEMA_VERSION));  // user version
-    CHECK(dbtest::be32(b, 60) == 4);
+    CHECK(dbtest::be32(b, 60) == 5);
     CHECK(dbtest::be32(b, 64) == 0);           // incremental vacuum
     CHECK(dbtest::be32(b, 68) == 0x554E4D50U);  // application id "UNMP"
     CHECK(b[68] == 'U');
@@ -199,17 +199,20 @@ TEST_CASE("empty world for seed 0: tables, meta rows and values as in section 8 
     // Amendment 14.9: the empty world is 4 pages; schema version 2 adds the
     // root page of table pass (P1-01 9.1), so 5; schema version 3 adds the
     // root pages of tables biome and climate and of the automatic index of
-    // biome.key (UNIQUE), so 8.
-    CHECK(dbtest::read_file(path).size() == 32768);
+    // biome.key (UNIQUE), so 8; schema version 5 adds the root pages of
+    // tables region, region_border and region_biome, so 11 (P0-02 amendment
+    // 17).
+    CHECK(dbtest::read_file(path).size() == 45056);
 
     dbtest::SqliteFile db(path);
     REQUIRE(db.ok());
-    // sqlite_schema: the five tables and the automatic indexes of biome.key
+    // sqlite_schema: the eight tables and the automatic indexes of biome.key
     // and layer.name.
     const Rows schema = db.rows("SELECT type, name, tbl_name FROM sqlite_schema ORDER BY type, name");
     CHECK(schema == Rows{{"index", "sqlite_autoindex_biome_1", "biome"}, {"index", "sqlite_autoindex_layer_1", "layer"},
                          {"table", "biome", "biome"}, {"table", "climate", "climate"}, {"table", "layer", "layer"},
-                         {"table", "meta", "meta"}, {"table", "pass", "pass"}});
+                         {"table", "meta", "meta"}, {"table", "pass", "pass"}, {"table", "region", "region"},
+                         {"table", "region_biome", "region_biome"}, {"table", "region_border", "region_border"}});
     // DDL byte for byte (5.4), and equal to the header's constants.
     CHECK(db.rows("SELECT sql FROM sqlite_schema WHERE name = 'meta'") == Rows{{SPEC_DDL_META}});
     CHECK(db.rows("SELECT sql FROM sqlite_schema WHERE name = 'layer'") == Rows{{SPEC_DDL_LAYER}});
@@ -234,7 +237,7 @@ TEST_CASE("empty world for seed 0: tables, meta rows and values as in section 8 
     CHECK(worldgen::db::DDL_CLIMATE == std::string_view(SPEC_DDL_CLIMATE));
     CHECK(db.rows("SELECT count(*) FROM biome") == Rows{{"0"}});
     CHECK(db.rows("SELECT count(*) FROM climate") == Rows{{"0"}});
-    CHECK(worldgen::db::SCHEMA_VERSION == 4);
+    CHECK(worldgen::db::SCHEMA_VERSION == 5);
 
     // meta: exactly 8 rows, in key order, all TEXT.
     CHECK(db.rows("SELECT key, value FROM meta ORDER BY key") == expected_empty_meta("0", ""));
@@ -244,7 +247,7 @@ TEST_CASE("empty world for seed 0: tables, meta rows and values as in section 8 
     CHECK(db.rows("SELECT count(*) FROM layer") == Rows{{"0"}});
     // Pragmas agree with the header.
     CHECK(db.rows("PRAGMA application_id") == Rows{{"1431194960"}});
-    CHECK(db.rows("PRAGMA user_version") == Rows{{"4"}});
+    CHECK(db.rows("PRAGMA user_version") == Rows{{"5"}});
     CHECK(db.rows("PRAGMA page_size") == Rows{{"4096"}});
     CHECK(db.rows("PRAGMA encoding") == Rows{{"UTF-8"}});
     CHECK(db.rows("PRAGMA auto_vacuum") == Rows{{"0"}});
@@ -262,8 +265,8 @@ TEST_CASE("empty world through the reader (9)") {
     REQUIRE_MESSAGE(opened.ok(), (opened.ok() ? std::string() : opened.error().message));
     const WorldReader& reader = opened.value();
     CHECK(reader.seed() == 0);
-    CHECK(reader.schema_version() == 4);
-    CHECK(reader.generator_version() == "0.10.0");
+    CHECK(reader.schema_version() == 5);
+    CHECK(reader.generator_version() == "0.11.0");
     CHECK(reader.seed_phrase().empty());
     CHECK(reader.map_size() == 1024);
     CHECK(reader.stages().empty());
@@ -778,24 +781,24 @@ TEST_CASE("reader errors are distinct and in the order of section 9 (12.2, 14.2)
         CHECK(open_code(path) == name(ErrorCode::not_world));
         CHECK(dbtest::dir_entries(dir.path()) == before);
     }
-    SUBCASE("user_version 5") {
-        const auto r = WorldReader::open(variant("uv5.db", "PRAGMA user_version = 5"));
+    SUBCASE("user_version 6") {
+        const auto r = WorldReader::open(variant("uv6.db", "PRAGMA user_version = 6"));
         REQUIRE_FALSE(r.ok());
         CHECK(r.code() == ErrorCode::unsupported_schema_version);
         // "world schema version X, this build reads Y"
+        CHECK(r.error().message.find('6') != std::string::npos);
         CHECK(r.error().message.find('5') != std::string::npos);
-        CHECK(r.error().message.find('4') != std::string::npos);
     }
-    SUBCASE("user_version 3: a schema-3 (0.8.0) world is refused (P1-03 3, P0-02 amendment 16)") {
-        const auto r = WorldReader::open(variant("uv3.db", "PRAGMA user_version = 3"));
+    SUBCASE("user_version 4: a schema-4 (0.9.0 to 0.10.0) world is refused (P0-02 amendment 17)") {
+        const auto r = WorldReader::open(variant("uv4.db", "PRAGMA user_version = 4"));
         REQUIRE_FALSE(r.ok());
         CHECK(r.code() == ErrorCode::unsupported_schema_version);
-        CHECK(r.error().message == "world schema version 3, this build reads 4");
+        CHECK(r.error().message == "world schema version 4, this build reads 5");
     }
-    SUBCASE("meta.schema_version 5 and 3") {
-        CHECK(open_code(variant("msv5.db", "UPDATE meta SET value = '5' WHERE key = 'schema_version'")) ==
+    SUBCASE("meta.schema_version 6 and 4") {
+        CHECK(open_code(variant("msv6.db", "UPDATE meta SET value = '6' WHERE key = 'schema_version'")) ==
               name(ErrorCode::unsupported_schema_version));
-        CHECK(open_code(variant("msv3.db", "UPDATE meta SET value = '3' WHERE key = 'schema_version'")) ==
+        CHECK(open_code(variant("msv4.db", "UPDATE meta SET value = '4' WHERE key = 'schema_version'")) ==
               name(ErrorCode::unsupported_schema_version));
     }
     SUBCASE("a world missing seed") {
@@ -886,9 +889,9 @@ TEST_CASE("reader errors are distinct and in the order of section 9 (12.2, 14.2)
         CHECK(r.value().meta_entries().size() == 9);
     }
     SUBCASE("validation order: the earlier check wins") {
-        CHECK(open_code(variant("o1.db", "PRAGMA application_id = 1; PRAGMA user_version = 5")) ==
+        CHECK(open_code(variant("o1.db", "PRAGMA application_id = 1; PRAGMA user_version = 6")) ==
               name(ErrorCode::not_world));
-        CHECK(open_code(variant("o2.db", "PRAGMA user_version = 5; DELETE FROM meta WHERE key = 'seed'")) ==
+        CHECK(open_code(variant("o2.db", "PRAGMA user_version = 6; DELETE FROM meta WHERE key = 'seed'")) ==
               name(ErrorCode::unsupported_schema_version));
         CHECK(open_code(variant("o3.db", "DELETE FROM meta WHERE key = 'seed'; UPDATE meta SET value = '7' WHERE key "
                                          "= 'param.map_size'")) == name(ErrorCode::meta_key_missing));

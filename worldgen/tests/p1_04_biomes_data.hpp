@@ -232,6 +232,32 @@ inline constexpr std::string_view RESOURCES_TOML =
     "hab_flood_factor = \"0.75\"\n"
     "hab_pocket_factor = \"0.25\"\n";
 
+// worldgen.regions (P1-06 4), the shipped file and the fixtures'
+// (identical values). Every data root with a worldgen/ directory must define
+// it once the id is registered (P1-00 6.1).
+inline constexpr std::string_view REGIONS_TOML =
+    "[worldgen.regions]\n"
+    "seed_tile_m = 864\n"
+    "seed_spacing_m = 1200\n"
+    "hand_ref_m = 25\n"
+    "cost_noise = { wavelength_m = 1500, octaves = 3, gain = \"0.5\" }\n"
+    "cost_noise_amp = \"0.5\"\n"
+    "lake_cost_factor = 2\n"
+    "river_border_class = 6\n"
+    "river_cost_m = 2000\n"
+    "region_min_area_m2 = 750000\n"
+    "ore_rich_min = 128\n"
+    "ore_reach_m = 300\n"
+    "name_central_frac = \"0.12\"\n"
+    "names = { central = \"Central\", north = \"North\", northeast = \"Northeast\", east = \"East\", "
+    "southeast = \"Southeast\", south = \"South\", southwest = \"Southwest\", west = \"West\", "
+    "northwest = \"Northwest\", isle = \"Isle\" }\n";
+
+[[nodiscard]] inline bool regions_registered(const worldgen::data::KindRegistry& registry) {
+    const worldgen::data::Kind* k = registry.find("worldgen");
+    return k != nullptr && k->schema_for("regions") != nullptr;
+}
+
 [[nodiscard]] inline bool resources_registered(const worldgen::data::KindRegistry& registry) {
     const worldgen::data::Kind* k = registry.find("worldgen");
     return k != nullptr && k->schema_for("resources") != nullptr;
@@ -258,6 +284,9 @@ inline void add_to(const worldgen::data::KindRegistry& registry, worldgen::data:
         worldgen_dir.entries.push_back(
             worldgen::data::MemoryEntry{"resources.toml", std::string(RESOURCES_TOML), false});
     }
+    if (regions_registered(registry)) {
+        worldgen_dir.entries.push_back(worldgen::data::MemoryEntry{"regions.toml", std::string(REGIONS_TOML), false});
+    }
     if (registered(registry)) {
         root.directories.push_back(directory());
     }
@@ -277,6 +306,9 @@ inline void write_to(const std::filesystem::path& root) {
     }
     if (resources_registered(registry)) {
         write(root / "worldgen" / "resources.toml", RESOURCES_TOML);
+    }
+    if (regions_registered(registry)) {
+        write(root / "worldgen" / "regions.toml", REGIONS_TOML);
     }
     if (registered(registry)) {
         for (const DefinitionFile& f : shipped_files()) {
