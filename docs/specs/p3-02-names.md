@@ -1,6 +1,6 @@
 # P3-02 Names
 
-Status: **approved by the lead 2026-11-19; revised 2026-11-19 (text only, after implementation)**: see the revision note at the end. Phase P3 History core, spec 2 (P3-00 3.1). Design doc sections 5 ("the seed varies the dates, the places and the gods' names"; civilizations, settlements), 6 ("the database stores facts and names"), 14 (every reference a model writes must resolve to a real entity: names must be unique). Depends on P0-01 (hashing, streams), P0-03 (string grammars, named checks), P3-00 (4.6 keyed draws) and P3-01 (the `culture` kind carries this spec's record). It introduces the domain tag `TAG_HIST` and the keyed-draw helpers that every later history spec uses.
+Status: **approved by the lead 2026-11-19; revised 2026-11-19 (text only, after implementation); amended 2026-11-19 for P3-03 (r2)**: see the revision notes at the end. Phase P3 History core, spec 2 (P3-00 3.1). Design doc sections 5 ("the seed varies the dates, the places and the gods' names"; civilizations, settlements), 6 ("the database stores facts and names"), 14 (every reference a model writes must resolve to a real entity: names must be unique). Depends on P0-01 (hashing, streams), P0-03 (string grammars, named checks), P3-00 (4.6 keyed draws) and P3-01 (the `culture` kind carries this spec's record). It introduces the domain tag `TAG_HIST` and the keyed-draw helpers that every later history spec uses.
 
 ## 1. Purpose
 
@@ -116,7 +116,7 @@ name(K, c, e, registry):
 
 ### 4.4 Uniqueness, bounds and order
 
-- **The registry is per world** and holds every name the world has: the caller (P3-03) fills it first with the region names of table `region`, in id order, and then adds every name it generates. Gods, civilizations and settlements share it, so no two named entities of a world share a name, whatever their kind. Regions keep their placeholder names (P1-06), which have a different form (`East Wood II`), so collisions with them are rare but are still avoided.
+- **The registry is per world** and holds every name the world has: the caller (P3-03) fills it first with the region names of table `region`, in id order, and then adds every name it generates (r2: P3-03 8 adds the age names, then the god names; the `history` stage rebuilds it as the set of names in `region`, `age` and `god`, P3-03 8.2). Gods, civilizations and settlements share it, so no two named entities of a world share a name, whatever their kind. Regions keep their placeholder names (P1-06), which have a different form (`East Wood II`), so collisions with them are rare but are still avoided.
 - **Bounds**: at most 64 attempts per name; a name is at most 48 bytes, or 48 + 1 + the numeral after the fallback. **64 bytes is the hard limit**: a fallback name of exactly 64 bytes is accepted, one of 65 bytes or more is fatal with `names: a name longer than 64 bytes` (checked after the numeral is chosen, before the name is added). Every numeral below 4888 has at most 15 bytes (3888, `MMMDCCCLXXXVIII`, is the longest below 4000), and 4888, `MMMMDCCCLXXXVIII`, is the first with 16; so the limit can be reached only by a 48-byte first name whose numbered forms II … MMMMDCCCLXXXVII are all taken, which needs at least 4,887 names in the registry sharing that first name.
 - **Order**: a name depends on the registry at the moment it is drawn, so callers name entities in their creation order (H2): the result is defined because creation order is. A name does not depend on how many draws other decisions made (H4): its draws are keyed by (kind, attempt, culture, entity).
 - **Cost**: at most 64 × (2 + 16) draws per name; worlds have a few hundred named entities.
@@ -125,7 +125,7 @@ name(K, c, e, registry):
 
 | Kind | Stream | Entity id e | Used by |
 | --- | --- | --- | --- |
-| `god` | `hist.names.god` | `god.id` | P3-03 |
+| `god` | `hist.names.god` | `god.id` (= the race id of the god's race, one god per race, present or not: P3-03 5.2, r2) | P3-03 |
 | `civilization` | `hist.names.civilization` | `civilization.id` | P3-04, P3-05 |
 | `settlement` | `hist.names.settlement` | `settlement.id` | P3-05 |
 
@@ -362,3 +362,7 @@ The implementation (`p3/02-names`) and the independent tests (`p3/02-names-tests
 8. 4.2: malformed naming data is ruled out by the loader and fatal in the library, with the messages.
 9. 8: `all_stream_names` grows from 30 to 33; the count test changes with it.
 10. 5.1: the sample protocol is stated; the independent reference reproduces the table.
+
+## Revision note r2 (2026-11-19, amendments for P3-03)
+
+Text only. 4.4: the registry also holds the age names (fixed text, numeral fallback) and is rebuilt by the `history` stage from tables `region`, `age` and `god` (P3-03 8). 4.5: `god.id` equals the race id, every race has a god (P3-03 5.2).
