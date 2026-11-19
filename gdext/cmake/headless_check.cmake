@@ -10,9 +10,10 @@
 #    palette (auto) and scale (1).
 # 2. Real world: worldgen-cli generate --seed 42 --map-size 512 into
 #    WORK_DIR/real/; its layers are listed from `worldgen-cli report`
-#    ([layers]), the layers biome, elevation and rainfall must be among them,
-#    and every layer is rendered to <layer>.png and the composites map and
-#    biomes to composite.<name>.png.
+#    ([layers]), the layers biome, elevation, rainfall and region must be
+#    among them,
+#    and every layer is rendered to <layer>.png and the composites map,
+#    biomes and regions to composite.<name>.png.
 # 3. godot --headless --path PROJECT_DIR --import: the editor loads the
 #    project and the extension and scans the project, as on a first open.
 # 4. For each world: godot --headless --path PROJECT_DIR -- <world> --check
@@ -92,7 +93,7 @@ foreach(_line IN LISTS _report_lines)
 endforeach()
 list(LENGTH _real_layers _real_count)
 message("real world layers (${_real_count}): ${_real_layers}")
-foreach(_required biome elevation rainfall)
+foreach(_required biome elevation rainfall region)
     if(NOT _required IN_LIST _real_layers)
         message(FATAL_ERROR "headless check: the 512 world has no layer '${_required}' (layers: ${_real_layers})")
     endif()
@@ -101,7 +102,7 @@ foreach(_layer IN LISTS _real_layers)
     run_step("render ${_layer}" "${WORLDGEN_CLI}" render --db "${_real_world}" --layer "${_layer}"
         --out "${_real_dir}/${_layer}.png")
 endforeach()
-set(_real_composites map biomes)
+set(_real_composites map biomes regions)
 foreach(_composite IN LISTS _real_composites)
     run_step("render composite ${_composite}" "${WORLDGEN_CLI}" render --db "${_real_world}"
         --composite "${_composite}" --out "${_real_dir}/composite.${_composite}.png")

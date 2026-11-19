@@ -1,5 +1,6 @@
 #include "world_file.hpp"
 
+#include <algorithm>
 #include <exception>
 #include <new>
 #include <string>
@@ -45,6 +46,7 @@ bool WorldFile::open(const godot::String& path) {
         layers_ = std::move(layers.value());
         reader_.emplace(std::move(opened.value()));
         read_biome_table();
+        read_region_table();
     } catch (const std::bad_alloc&) {
         set_error("out_of_memory", "Out of memory while opening " + path);
         return false;
@@ -82,12 +84,45 @@ void WorldFile::read_biome_table() {
     }
 }
 
+void WorldFile::read_region_table() {
+    regions_.clear();
+    region_table_problem_ = godot::String();
+    auto rows = reader_->table_rows(worldgen::db::REGION_TABLE);
+    if (!rows.ok()) {
+        // Before schema 5 there is no table; the reader refuses such files
+        // anyway, but a missing table is not an error here.
+        if (rows.code() != worldgen::db::ErrorCode::table_not_found) {
+            region_table_problem_ = to_godot(rows.error().message);
+        }
+        return;
+    }
+    // worldgen's checks first (column count and types, cells >= 1); its
+    // record leaves out the name, which the viewer takes from column 1.
+    const worldgen::inspect::RegionTableResult table = worldgen::inspect::read_region_rows(rows.value());
+    if (table.problem) {
+        region_table_problem_ = "corrupt table 'region': " + to_godot(*table.problem);
+        return;
+    }
+    // P1-06 3.2 column order: id, name, biome, x_min, ..., landmass, cells.
+    constexpr std::size_t NAME = 1;
+    constexpr std::size_t BIOME = 2;
+    constexpr std::size_t CELLS = 10;
+    for (const auto& row : rows.value()) {
+        regions_.push_back(RegionRow{row[0].integer, to_godot(row[NAME].bytes), row[BIOME].integer,
+                                     row[CELLS].integer});
+    }
+    // Rows come in primary-key order already; keep the lookup independent of it.
+    std::sort(regions_.begin(), regions_.end(), [](const RegionRow& a, const RegionRow& b) { return a.id < b.id; });
+}
+
 void WorldFile::close() {
     reader_.reset();
     layers_.clear();
     biome_records_.clear();
     biome_colours_.clear();
     biome_table_problem_ = godot::String();
+    regions_.clear();
+    region_table_problem_ = godot::String();
     path_ = godot::String();
 }
 
@@ -204,6 +239,38 @@ godot::String WorldFile::get_biome_table_problem() const {
     return biome_table_problem_;
 }
 
+godot::Array WorldFile::get_region_entries() const {
+    godot::Array entries;
+    for (const auto& region : regions_) {
+        godot::Dictionary row;
+        row["id"] = region.id;
+        row["name"] = region.name;
+        row["biome"] = region.biome;
+        row["cells"] = region.cells;
+        entries.push_back(row);
+    }
+    return entries;
+}
+
+godot::String WorldFile::get_region_table_problem() const {
+    return region_table_problem_;
+}
+
+godot::String WorldFile::get_region_name(int64_t id) const {
+    const auto it = std::lower_bound(regions_.begin(), regions_.end(), id,
+                                     [](const RegionRow& row, int64_t key) { return row.id < key; });
+    return it != regions_.end() && it->id == id ? it->name : godot::String();
+}
+
+const worldgen::inspect::BiomeRecord* WorldFile::find_biome(std::int64_t id) const noexcept {
+    for (const auto& record : biome_records_) {
+        if (record.id == id) {
+            return &record;
+        }
+    }
+    return nullptr;
+}
+
 int64_t WorldFile::find_layer(std::string_view name) const {
     for (std::size_t i = 0; i < layers_.size(); ++i) {
         if (layers_[i].name == name) {
@@ -219,13 +286,12 @@ std::vector<worldgen::inspect::Composite> WorldFile::composites() const {
         return result;
     }
     for (const worldgen::inspect::Composite composite : worldgen::inspect::ALL_COMPOSITES) {
-        // The composite regions (P1-06 9 item 2) is not offered yet: the
-        // viewer draws it with the viewer engineer's change.
-        if (composite == worldgen::inspect::Composite::regions) {
+        const bool needs_biome = composite == worldgen::inspect::Composite::biomes ||
+                                 composite == worldgen::inspect::Composite::regions;
+        if (needs_biome && (find_layer("biome") < 0 || !biome_table_problem_.is_empty())) {
             continue;
         }
-        if (composite == worldgen::inspect::Composite::biomes &&
-            (find_layer("biome") < 0 || !biome_table_problem_.is_empty())) {
+        if (composite == worldgen::inspect::Composite::regions && find_layer("region") < 0) {
             continue;
         }
         result.push_back(composite);
@@ -272,6 +338,9 @@ void WorldFile::_bind_methods() {
     ClassDB::bind_method(D_METHOD("read_layer", "name"), &WorldFile::read_layer);
     ClassDB::bind_method(D_METHOD("get_biome_entries"), &WorldFile::get_biome_entries);
     ClassDB::bind_method(D_METHOD("get_biome_table_problem"), &WorldFile::get_biome_table_problem);
+    ClassDB::bind_method(D_METHOD("get_region_entries"), &WorldFile::get_region_entries);
+    ClassDB::bind_method(D_METHOD("get_region_table_problem"), &WorldFile::get_region_table_problem);
+    ClassDB::bind_method(D_METHOD("get_region_name", "id"), &WorldFile::get_region_name);
     ClassDB::bind_method(D_METHOD("get_composite_names"), &WorldFile::get_composite_names);
 }
 

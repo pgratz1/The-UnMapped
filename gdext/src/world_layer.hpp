@@ -84,12 +84,14 @@ private:
                                                       const godot::String& what,
                                                       const std::function<void(std::span<std::uint8_t>)>& fill);
 
-// The layers a composite image is built from (worldgen render_composite_map
-// and render_composite_biomes). elevation is required, biome for the
-// composite biomes; null water, river or flow_dir are absent layers.
+// The layers a composite image is built from (worldgen render_composite_map,
+// render_composite_biomes and render_composite_regions). elevation is
+// required, biome for the composites biomes and regions, region for the
+// composite regions; null water, river or flow_dir are absent layers.
 struct CompositeLayers {
     const worldgen::db::LayerGrid* elevation = nullptr;
     const worldgen::db::LayerGrid* biome = nullptr;
+    const worldgen::db::LayerGrid* region = nullptr;
     const worldgen::db::LayerGrid* water = nullptr;
     const worldgen::db::LayerGrid* river = nullptr;
     const worldgen::db::LayerGrid* flow_dir = nullptr;

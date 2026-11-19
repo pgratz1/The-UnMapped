@@ -81,15 +81,29 @@ godot::Ref<godot::Image> composite_image(worldgen::inspect::Composite composite,
         problem = "the world has no layer 'elevation'";
         return {};
     }
-    if (composite == inspect::Composite::biomes && layers.biome == nullptr) {
+    const bool needs_biome = composite == inspect::Composite::biomes || composite == inspect::Composite::regions;
+    if (needs_biome && layers.biome == nullptr) {
         problem = "the world has no layer 'biome'";
         return {};
     }
-    const std::optional<std::string> unsuitable =
-        composite == inspect::Composite::biomes
-            ? inspect::composite_biomes_problem(*layers.elevation, *layers.biome, layers.water, layers.river,
-                                                layers.flow_dir)
-            : inspect::composite_map_problem(*layers.elevation, layers.water, layers.river, layers.flow_dir);
+    if (composite == inspect::Composite::regions && layers.region == nullptr) {
+        problem = "the world has no layer 'region'";
+        return {};
+    }
+    std::optional<std::string> unsuitable;
+    switch (composite) {
+        case inspect::Composite::map:
+            unsuitable = inspect::composite_map_problem(*layers.elevation, layers.water, layers.river, layers.flow_dir);
+            break;
+        case inspect::Composite::biomes:
+            unsuitable = inspect::composite_biomes_problem(*layers.elevation, *layers.biome, layers.water,
+                                                           layers.river, layers.flow_dir);
+            break;
+        case inspect::Composite::regions:
+            unsuitable = inspect::composite_regions_problem(*layers.elevation, layers.water, layers.river,
+                                                            layers.flow_dir, *layers.biome, *layers.region);
+            break;
+    }
     if (unsuitable) {
         problem = to_godot(*unsuitable);
         return {};
@@ -101,11 +115,20 @@ godot::Ref<godot::Image> composite_image(worldgen::inspect::Composite composite,
     }
     return make_rgb_image(elevation.width, elevation.height, "Composite " + name, [&](std::span<std::uint8_t> out) {
         // The composite functions return their buffer; one copy.
-        const std::vector<std::uint8_t> rgb =
-            composite == inspect::Composite::biomes
-                ? inspect::render_composite_biomes(elevation, *layers.biome, biome_table, layers.water,
-                                                   layers.river, layers.flow_dir, 1U)
-                : inspect::render_composite_map(elevation, layers.water, layers.river, layers.flow_dir, 1U);
+        std::vector<std::uint8_t> rgb;
+        switch (composite) {
+            case inspect::Composite::map:
+                rgb = inspect::render_composite_map(elevation, layers.water, layers.river, layers.flow_dir, 1U);
+                break;
+            case inspect::Composite::biomes:
+                rgb = inspect::render_composite_biomes(elevation, *layers.biome, biome_table, layers.water,
+                                                       layers.river, layers.flow_dir, 1U);
+                break;
+            case inspect::Composite::regions:
+                rgb = inspect::render_composite_regions(elevation, layers.water, layers.river, layers.flow_dir,
+                                                        *layers.biome, *layers.region, 1U, biome_table);
+                break;
+        }
         if (rgb.size() != out.size()) {
             throw std::length_error("composite buffer size differs from the image");
         }

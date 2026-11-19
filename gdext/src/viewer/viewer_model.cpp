@@ -1,10 +1,15 @@
 #include "viewer/viewer_model.hpp"
 
+#include <string>
 #include <string_view>
 
 #include <godot_cpp/core/class_db.hpp>
 #include <godot_cpp/core/object.hpp>
 #include <godot_cpp/core/property_info.hpp>
+#include <godot_cpp/variant/char_string.hpp>
+#include <godot_cpp/variant/packed_int32_array.hpp>
+
+#include "viewer/layer_catalogue.hpp"
 
 namespace unmapped {
 
@@ -12,6 +17,26 @@ namespace {
 
 godot::String to_godot(std::string_view text) {
     return godot::String::utf8(text.data(), static_cast<int64_t>(text.size()));
+}
+
+std::string to_utf8(const godot::String& text) {
+    const godot::CharString utf8 = text.utf8();
+    return {utf8.get_data(), static_cast<std::size_t>(utf8.length())};
+}
+
+godot::Array legend_array(const std::vector<catalogue::LegendEntry>& entries) {
+    godot::Array out;
+    for (const auto& entry : entries) {
+        godot::Dictionary row;
+        row["label"] = to_godot(entry.label);
+        godot::PackedInt32Array colours;
+        for (const std::uint32_t c : entry.colours) {
+            colours.push_back(static_cast<int32_t>(c));
+        }
+        row["colours"] = colours;
+        out.push_back(row);
+    }
+    return out;
 }
 
 }  // namespace
@@ -24,6 +49,7 @@ void ViewerModel::reset_views() {
     composites_.clear();
     layers_.clear();
     images_.clear();
+    legend_.clear();
     selected_ = -1;
 }
 
@@ -100,6 +126,9 @@ godot::Dictionary ViewerModel::get_view_info(int64_t index) const {
     if (index < get_layer_count()) {
         godot::Dictionary info = world_->get_layer_info(index);
         info["kind"] = "layer";
+        const std::string name = to_utf8(info["name"]);
+        info["group"] = to_godot(catalogue::group_title(catalogue::layer_group(name)));
+        info["unit"] = to_godot(catalogue::layer_unit(name));
         const godot::Ref<WorldLayer> layer = get_layer(index);
         info["palette"] = layer.is_valid() ? layer->get_palette() : godot::String();
         return info;
@@ -107,6 +136,8 @@ godot::Dictionary ViewerModel::get_view_info(int64_t index) const {
     const auto composite = composites_[static_cast<std::size_t>(index - get_layer_count())];
     godot::Dictionary info;
     info["kind"] = "composite";
+    info["group"] = to_godot(catalogue::group_title(catalogue::Group::composites));
+    info["unit"] = "";
     info["name"] = to_godot(worldgen::inspect::composite_name(composite));
     const godot::Dictionary elevation = world_->get_layer_info(world_->find_layer("elevation"));
     info["width"] = elevation.get("width", 0);
@@ -170,8 +201,11 @@ bool ViewerModel::build_image(int64_t view_index) {
         return &layers_[static_cast<std::size_t>(index)]->layer().grid;
     };
     parts.elevation = grid("elevation");
-    if (composite == worldgen::inspect::Composite::biomes) {
+    if (composite == worldgen::inspect::Composite::biomes || composite == worldgen::inspect::Composite::regions) {
         parts.biome = grid("biome");
+    }
+    if (composite == worldgen::inspect::Composite::regions) {
+        parts.region = grid("region");
     }
     parts.water = grid("water");
     parts.river = grid("river");
@@ -201,6 +235,14 @@ bool ViewerModel::select_view(int64_t index) {
     error_code_ = godot::String();
     error_message_ = godot::String();
     selected_ = index;
+    if (index < get_layer_count()) {
+        const godot::Ref<WorldLayer> layer = get_layer(index);
+        legend_ = legend_array(catalogue::layer_legend(layer->layer().name, layer->palette(), layer->layer().grid,
+                                                       world_->biome_records()));
+    } else {
+        legend_ = legend_array(catalogue::composite_legend(
+            composites_[static_cast<std::size_t>(index - get_layer_count())], world_->biome_records()));
+    }
     emit_signal("view_selected", index);
     return true;
 }
@@ -239,6 +281,92 @@ godot::String ViewerModel::get_cell_text(int64_t x, int64_t y) const {
     return value.is_empty() ? value : "elevation " + value;
 }
 
+const worldgen::db::LayerGrid* ViewerModel::layer_grid(std::string_view name) {
+    const int64_t index = world_->find_layer(name);
+    if (index < 0 || !decode_layer(index)) {
+        return nullptr;
+    }
+    return &layers_[static_cast<std::size_t>(index)]->layer().grid;
+}
+
+godot::String ViewerModel::describe_cell(int64_t x, int64_t y) {
+    if (selected_ < 0 || x < 0 || y < 0 || x >= (int64_t{1} << 32) || y >= (int64_t{1} << 32)) {
+        return {};
+    }
+    const auto cx = static_cast<std::uint32_t>(x);
+    const auto cy = static_cast<std::uint32_t>(y);
+    const godot::String saved_code = error_code_;  // a failed lazy decode is not the view's error
+    const godot::String saved_message = error_message_;
+
+    const bool is_layer = selected_ < get_layer_count();
+    std::string view_name;
+    std::string value_layer;  // the layer whose value is shown
+    if (is_layer) {
+        view_name = get_layer(selected_)->layer().name;
+        value_layer = view_name;
+    } else {
+        view_name = worldgen::inspect::composite_name(composites_[static_cast<std::size_t>(selected_ - get_layer_count())]);
+        value_layer = "elevation";
+    }
+    const worldgen::db::LayerGrid* value_grid = layer_grid(value_layer);
+    if (value_grid == nullptr || cx >= value_grid->width || cy >= value_grid->height) {
+        error_code_ = saved_code;
+        error_message_ = saved_message;
+        return {};
+    }
+
+    std::string text = "x " + std::to_string(cx) + ", y " + std::to_string(cy) + "   " + value_layer + " ";
+    std::int64_t value = 0;
+    if (catalogue::cell_value(*value_grid, cx, cy, value)) {
+        text += catalogue::format_value(value_layer, value);
+    } else {
+        text += to_utf8(get_layer(world_->find_layer(value_layer))->get_cell_text(x, y));
+    }
+
+    std::int64_t biome = 0;
+    const worldgen::db::LayerGrid* biome_grid = layer_grid("biome");
+    if (biome_grid != nullptr && catalogue::cell_value(*biome_grid, cx, cy, biome)) {
+        const worldgen::inspect::BiomeRecord* record = world_->find_biome(biome);
+        text += "   |   biome " + (record != nullptr ? record->name : "code " + std::to_string(biome));
+    }
+    std::int64_t region = 0;
+    const worldgen::db::LayerGrid* region_grid = layer_grid("region");
+    if (region_grid != nullptr && catalogue::cell_value(*region_grid, cx, cy, region)) {
+        if (region == 0) {
+            text += "   |   no region (ocean)";
+        } else {
+            const std::string name = to_utf8(world_->get_region_name(region));
+            text += "   |   region " + std::to_string(region) + (name.empty() ? std::string() : " " + name);
+        }
+    }
+    error_code_ = saved_code;
+    error_message_ = saved_message;
+    return to_godot(text);
+}
+
+godot::Array ViewerModel::get_legend() const {
+    return legend_;
+}
+
+godot::String ViewerModel::get_legend_title() const {
+    if (selected_ < 0) {
+        return {};
+    }
+    const godot::Dictionary info = get_view_info(selected_);
+    const godot::String name = info["name"];
+    if (info["kind"] == godot::Variant("composite")) {
+        if (name == "map") {
+            return "map: relief shaded by slope";
+        }
+        return name + godot::String(": biome colours shaded by slope") +
+               godot::String(name == "regions" ? ", region borders" : "");
+    }
+    const godot::String unit = info.get("unit", "");
+    // The unit when the catalogue gives one; otherwise the palette.
+    return unit.is_empty() ? name + godot::String(" (palette ") + godot::String(info["palette"]) + godot::String(")")
+                           : name + godot::String(": ") + unit;
+}
+
 godot::Ref<WorldFile> ViewerModel::get_world() const {
     return world_;
 }
@@ -266,6 +394,9 @@ void ViewerModel::_bind_methods() {
     ClassDB::bind_method(D_METHOD("get_view_image", "index"), &ViewerModel::get_view_image);
     ClassDB::bind_method(D_METHOD("get_layer", "index"), &ViewerModel::get_layer);
     ClassDB::bind_method(D_METHOD("get_cell_text", "x", "y"), &ViewerModel::get_cell_text);
+    ClassDB::bind_method(D_METHOD("describe_cell", "x", "y"), &ViewerModel::describe_cell);
+    ClassDB::bind_method(D_METHOD("get_legend"), &ViewerModel::get_legend);
+    ClassDB::bind_method(D_METHOD("get_legend_title"), &ViewerModel::get_legend_title);
     ClassDB::bind_method(D_METHOD("get_world"), &ViewerModel::get_world);
 
     ADD_SIGNAL(MethodInfo("world_opened", PropertyInfo(Variant::STRING, "path")));
