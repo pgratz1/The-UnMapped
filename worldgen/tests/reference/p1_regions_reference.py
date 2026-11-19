@@ -952,6 +952,8 @@ def preconditions(w, h, L, passes, codes):
                         break
         if bad:
             fatal(PRE + "pass %d: path is not a chain of cells" % pid)
+    # Ruling (r2): every path's chain check first, then every col.
+    for pid, path, col in sorted(passes):
         if col is None or not 0 <= col < n or col not in path_cells(path):
             fatal(PRE + "pass %d: col cell is not on its path" % pid)
 
@@ -2034,6 +2036,7 @@ def check_preconditions(c):
     c.eq("col not on path", err(L, [(3, rpt, 9)]), PRE + "pass 3: col cell is not on its path")
     c.eq("col outside grid", err(L, [(3, rpt, 16)]), PRE + "pass 3: col cell is not on its path")
     c.eq("chain checked before col", err(L, [(3, jump, 9)]), PRE + "pass 3: path is not a chain of cells")
+    c.eq("all chains before any col", err(L, [(1, rpt, 9), (2, jump, 5)]), PRE + "pass 2: path is not a chain of cells")
     L2 = dict(L)
     L2["water"] = list(L["water"])
     L2["water"][6] = 4

@@ -629,6 +629,9 @@ TEST_CASE("P1-06 2 check 5, 10.1 test 5: preconditions of the stage seam, each w
           std::string(PRECONDITION) + "pass 7: col cell is not on its path");
     CHECK(error_of(good, {{8, path_bytes(g, {{2, 2}, {4, 2}}), 9, 9}}) ==
           std::string(PRECONDITION) + "pass 8: path is not a chain of cells");
+    // Ruling: every chain before any col (pass 1's col is wrong, pass 2's chain).
+    CHECK(error_of(good, {{1, path_bytes(g, {{2, 2}, {3, 3}}), 4, 4}, {2, path_bytes(g, {{2, 2}, {4, 2}}), 2, 2}}) ==
+          std::string(PRECONDITION) + "pass 2: path is not a chain of cells");
     // G7 with k = 1: a cycle of two cells that never reaches water.
     {
         region_api::Inputs in = good;

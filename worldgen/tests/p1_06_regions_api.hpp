@@ -232,7 +232,7 @@ inline std::vector<std::string> names(std::span<const NameInput> in, std::int64_
         r.seed_x = e.seed_x;
         r.seed_y = e.seed_y;
         r.biome = static_cast<std::uint8_t>(e.biome);
-        // r2 (assumed field names; adapt at integration).
+        // r2: RegionNameInput.cells, lake_cells, walk_cells (spec section 10).
         r.cells = e.cells;
         r.lake_cells = e.lake_cells;
         r.walk_cells = e.walk_cells;
