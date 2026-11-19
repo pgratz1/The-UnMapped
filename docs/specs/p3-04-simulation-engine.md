@@ -1,6 +1,6 @@
 # P3-04 Simulation engine
 
-Status: **approved by the lead 2026-11-19** (the six questions of section 19 go to Paul; the interim choices stand). Written by the spec writer 2026-11-19; amendments 18.2 and 18.3 applied the same day; revision r1 (P3-07's amendments) the same day. Phase P3 History core, spec 4 (P3-00 3.1), pipeline stage 8, `history`, as an engine with stub subsystems. Generator **0.14.0**; **schema version 7** (thirteen new tables, one new required `meta` key, section 9). Design doc sections 5 (deep time, ages, active phases, quiet intervals, flare-ups, records, determinism; creation; entities; tick loop), 6 (tables `phase`, `event`, `event_participant`, `event_cause`, `civilization`, `settlement`, `relation`; `meta` end year), 13 (P3 row and exit check; P4 timeline and territory by year; P5 interventions) and 14 (records a model can narrate and validate; the divine script as an intervention source). Depends on P0-01 to P0-04 with their amendments, P1-06 (region tables), P3-00 (binding; amended in 18.3), P3-01 (kind `history`), P3-02 (keyed draws, names), P3-03 (chronology tables, `HistoryParams`, the registry rule 8.2). Implementation read: `origin/p3/03-int` at 3ddc942 (generator 0.13.0, schema 6). Proposals read: up to "History: with a subset of races the first one present opens history; every race keeps its creator god". Also addresses the P3-03 determinism audit's advisories A1 (fatal guards for schedule invariants) and A2 (H8 must not rest on in-memory values): sections 3.2, 3.3 and 5.6.
+Status: **approved by the lead 2026-11-19** (the six questions of section 19 go to Paul; the interim choices stand). Written by the spec writer 2026-11-19; amendments 18.2 and 18.3 applied the same day; revision r1 (P3-07's amendments) the same day. Phase P3 History core, spec 4 (P3-00 3.1), pipeline stage 8, `history`, as an engine with stub subsystems. Generator **0.14.0**; **schema version 7** (thirteen new tables, one new required `meta` key, section 9). Design doc sections 5 (deep time, ages, active phases, quiet intervals, flare-ups, records, determinism; creation; entities; tick loop), 6 (tables `phase`, `event`, `event_participant`, `event_cause`, `civilization`, `settlement`, `relation`; `meta` end year), 13 (P3 row and exit check; P4 timeline and territory by year; P5 interventions) and 14 (records a model can narrate and validate; the divine script as an intervention source). Depends on P0-01 to P0-04 with their amendments, P1-06 (region tables), P3-00 (binding; amended in 18.3), P3-01 (kind `history`), P3-02 (keyed draws, names), P3-03 (chronology tables, `HistoryParams`, the registry rule 8.2). Implementation read: `origin/p3/03-int` at 3ddc942 (generator 0.13.0, schema 6). Proposals read: up to "History: with a subset of races the first one present opens history; every race keeps its creator god". Also addresses the P3-03 determinism audit's advisories A1 (fatal guards for schedule invariants) and A2 (H8 must not rest on in-memory values): sections 3.2, 3.3 and 5.6. Revision r2 (P3-05's amendments) 2026-11-19.
 
 Numbers in this spec come from the spec writer's exact-integer prototype `~/.cache/the-unmapped/out/p3-04-spec/engine_proto.py` (on the P3-03 and P3-02 references; awakening years over seeds 0–999 and all 63 race subsets) and from the P1-06 validation worlds (`~/.cache/the-unmapped/out/p1-06-validation/`, whose geography is unchanged at 0.13.0). The empty-world size was measured with Python's SQLite 3.46.1 (9.6); the engineer confirms it with the vendored SQLite.
 
@@ -81,6 +81,10 @@ struct HistoryInputs {
     std::vector<db::AgeRow> ages;
     db::LayerGrid region_layer;                      // layer `region`
     db::LayerGrid water_layer;                       // layer `water`
+    std::vector<db::BiomeRow> biomes;                // id order (P3-05 3.2)
+    db::LayerGrid habitability_layer;                // P3-05
+    db::LayerGrid river_layer;                       // P3-05
+    db::LayerGrid flow_dir_layer;                    // P3-05
     friend bool operator==(const HistoryInputs&, const HistoryInputs&) = default;
 };
 }
@@ -336,7 +340,7 @@ A **step** is one of: an awakening (6.3), a flare-up start (6.3), one tick step 
 | Q1 population drift | P3-05 | — |
 | Q2 generations | engine | counted from years (6.6); no state |
 | Q3 ruin decay | P3-05 | — |
-| Q4 slow expansion | P3-06 | — |
+| Q4 slow expansion | P3-05, P3-06 | — |
 | Q5 tension | engine | asks the tension sources (6.5) |
 | Q6 bookkeeping | engine | quiet eras (6.6), then 6.7 |
 
@@ -616,7 +620,7 @@ STRICT, no REAL, no BLOB, no foreign-key clause, no secondary index (P4 loads th
 | `event_value` | `seq`, `value` | `event_kind_value.seq`; every key of the kind has exactly one row |
 | `civilization` | `race`, `culture` | `race.id`, `culture.id` |
 | | `home_region`, `capital` | region id; settlement id or 0 |
-| | `founded_year`, `founding_event`, `ended_year`, `ending_event` | the `civ_founded` event; NULL and 0 while alive |
+| | `founded_year`, `founding_event`, `ended_year`, `ending_event` | the `civ_founded` event (or `civ_seceded` for a civilization born by secession, P3-05 10.3); NULL and 0 while alive |
 | `settlement` | `x`, `y`, `region` | its cell (0 ≤ x, y < N) and region |
 | | `founder_civ`, `founded_year`, `founding_event` | at founding |
 | | `owner_civ`, `kind`, `status`, `population` | end state; `kind` 1 hamlet, 2 village, 3 town, 4 city, 5 fortress; `status` 1 thriving, 2 declining, 3 ruined, 4 faded; `owner_civ` 0 when abandoned |
@@ -921,3 +925,8 @@ Each with the recommendation and the interim choice this spec follows.
 ## Revision note r1 (2026-11-19, amendments for P3-07)
 
 Requested by P3-07 18.1, applied on `p3/07-spec`. 4.2: P3-07 adds no field. 8.5: `HistoryView::load` returns `db::Result<HistoryView>` (a corrupt world is an error value, code `corrupt_layer`, never a `FatalError`, P0-02 9); read accessors for the log, the stored catalogue and names; `load` validates every stored template and every reference of the log, so `render_event` fails only for an id outside the log; kinds the build does not compile are accepted. 11.1: the `[history]` keys are a subset of the history report's `[stats]`. No world byte changes.
+
+## Revision note r2 (2026-11-19, amendments for P3-05)
+
+Made with P3-05 (its 18.2 items 1, 5–7), in place. 3.3: `HistoryInputs` gains `biomes`, `habitability_layer`, `river_layer`, `flow_dir_layer` (both constructors, R1, R2). 6.2: Q4 is shared by P3-05 (foundings in free regions) and P3-06. 6.4: the shipped `EngineConfig` installs P3-05's `PeoplesAwakening` and `PeoplesSubsystem` (steps T1, T2, T4, Q1, Q3, Q4) from generator 0.15.0; the stubs S1–S3 of section 7 remain as test seams only. 9.2: `civilization.founding_event` may be a `civ_seceded` event. The catalogue of 8.2 is extended by P3-05 with kinds 6–19 (appended; no kind of this spec changes).
+

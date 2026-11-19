@@ -1,6 +1,6 @@
 # P3-01 History data and settings
 
-Status: **approved by the lead 2026-11-19; revised 2026-11-19 (text only, after implementation); amended 2026-11-19 for P3-03 (r2); amended again 2026-11-19 after the P3-03 implementation (r3: check D0)**: see the revision notes at the end. Phase P3 History core, spec 1 (P3-00 3.1). Design doc sections 3 (data in TOML), 5 (the six races, their order, camps and timing; "Food and homelands"; world-creation settings), 6 (`meta` holds the settings). Depends on P0-03 (with amendments 15 to 17), P0-04, P1-00 6 and P3-00. Written together with P3-02, which defines the culture naming record that this spec's `culture` kind carries.
+Status: **approved by the lead 2026-11-19; revised 2026-11-19 (text only, after implementation); amended 2026-11-19 for P3-03 (r2); amended again 2026-11-19 after the P3-03 implementation (r3: check D0)**: see the revision notes at the end. Phase P3 History core, spec 1 (P3-00 3.1). Design doc sections 3 (data in TOML), 5 (the six races, their order, camps and timing; "Food and homelands"; world-creation settings), 6 (`meta` holds the settings). Depends on P0-03 (with amendments 15 to 17), P0-04, P1-00 6 and P3-00. Written together with P3-02, which defines the culture naming record that this spec's `culture` kind carries. Amended 2026-11-19 for P3-05 (r6: `density_permille`, field meanings).
 
 ## 1. Purpose
 
@@ -39,16 +39,17 @@ Directory `races/`, **required**, one schema for all definitions. Fields, all re
 | `lifespan_years` | int(1, 10000) | typical lifespan |
 | `generation_years` | int(1, 1000) | length of a generation; ruling lines turn over once per generation in quiet steps (P3-00 4.4) |
 | `growth_permille` | int(0, 1000) | yearly growth of a population toward capacity, per mille (P3-05) |
+| `density_permille` | int(1, 1000) | people a region supports for this race, per mille of the standard (P3-05 5.1; r6) |
 | `site_weights` | record `race_site_weights` | weights of the region means when the race scores a region (P3-00 10.1) |
 | `biomes` | array(record `race_biome`, 0, 16) | biome preferences; a biome not listed has weight 0 |
-| `upland` | int(−1000, 1000) | preference for upland regions (4 × `walk_cells` < `cells`) |
-| `coast` | int(−1000, 1000) | preference for coastal regions (`coast_cells` > 0) |
+| `upland` | int(−1000, 1000) | preference for upland ground, weighted by the region's rough share (P3-05 4.2; r6) |
+| `coast` | int(−1000, 1000) | preference for coastal regions, weighted by the region's coast share (P3-05 4.2; r6) |
 | `expansion` | int(0, 1000) | drive to claim regions (P3-06) |
 | `aggression` | int(0, 1000) | readiness for war (P3-06) |
 | `settlement_kinds` | array(enum(hamlet, village, town, city, fortress), 1, 5) | settlement kinds the race builds |
 | `culture` | ref(culture) | the race's default culture |
 
-Record `race_site_weights`, fields int(0, 1000), in this order: `fertility`, `forage`, `timber`, `ore`, `fresh_water` (each multiplies the region's mean of that score, P1-06 3.2). Record `race_biome`: `biome` ref(biome), `weight` int(−1000, 1000).
+Record `race_site_weights`, fields int(0, 1000), in this order: `fertility`, `forage`, `timber`, `ore`, `fresh_water` (each multiplies the region's mean of that score, P1-06 3.2; `ore` multiplies the reachable-ore score of P3-05 4.1 instead, r6). Record `race_biome`: `biome` ref(biome), `weight` int(−1000, 1000).
 
 Reserved for P5 and not declared now: temperament, magic school leanings, stances toward other races. Adding a field later is a data change (content hash, version bump), not a schema change.
 
@@ -310,7 +311,7 @@ Directory `history/`, **required**, a **fixed-id kind** (P0-03 amendment 15), on
 | --- | --- | --- |
 | `chronology` | P3-03 | **complete here** |
 | `engine` | P3-04 | added by P3-04 (5.2, r4) |
-| `peoples` | P3-05 | added by P3-05 |
+| `peoples` | P3-05 | added by P3-05 (12.1 there, r6) |
 | `conflict` | P3-06 | added by P3-06 |
 | `report` | P3-04 (the event salience and templates) | added by P3-04 (5.3, r4); P3-07 adds no field (P3-07 8; r5) |
 
@@ -480,3 +481,8 @@ Requested by P3-04 18.2. 5: the ids `engine` and `report` are registered by P3-0
 ## Revision note r5 (2026-11-19, amendments for P3-07)
 
 Requested by P3-07 18.5. 5 and 5.3: `history.report` keeps the one field of P3-04; P3-07 adds none. No behaviour, data or world byte changes.
+
+## Revision note r6 (2026-11-19, amendments for P3-05)
+
+Made with P3-05 (its 18.4), in place where marked. Race field `density_permille` int(1, 1000), required, after `growth_permille` (shipped: elf 300, goblin 900, dwarf 700, faerie 250, human 1000, orc 800; the fixture race files gain it). Field meanings: `site_weights.ore` weighs reachable ore, `upland` is weighted by the rough share and `coast` by the coast share (P3-05 4.1, 4.2). Section 3.1's shipped data: goblins gain `temperate_forest` −200 and `wet_woodland` −300; faeries `upland` 200 and biome weights fen 800, wet woodland 800, marsh 600, temperate forest 100, highland moor 300, heath 100 (P3-05 12.2; the TOML blocks of 3.1 are to be read with these values). Section 5: id `peoples` is registered by P3-05; 8.1 item 4's expected list becomes `'chronology', 'engine', 'peoples', 'report'`, and its future-id example `conflict`.
+

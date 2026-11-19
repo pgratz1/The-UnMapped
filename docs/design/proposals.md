@@ -548,3 +548,33 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
 - Proposal: phase lengths are tuned in years at the 6,000-year default and scaled in proportion to the span, so the detail level fixes the share (sparse about 12%, normal about 19-20%, that is 1,110-1,200 of 6,000 before flare-ups, dense about 28%). The final phase is at most its length and starts where the last opening phase ends, so with the shipped numbers the orcs' age is usually active from their awakening to the present. A floor (10%) and a cap (45%, flare-ups included) are guaranteed by the scheduler. Each flare-up is marked by a `flare_up` event.
 - Interim choice: as proposed (`docs/specs/p3-04-simulation-engine.md` sections 4.1 and 5, questions 1 to 3 and 6).
 - Status: open
+
+### History: peoples expand within reach of their capital and spread by secession
+
+- Date: 2026-11-19
+- Raised by: spec-writer (P3-05)
+- Design doc section: 5 (Tick loop: "found a settlement, claim a region"; races: humans "spread quickly over land left open or ruined")
+- Problem: the design does not say how far a civilization expands. Without a limit, in a peaceful history the first two races fill every region they like long before the later races awaken: in the first prototype the elves and goblins held 46 of 50 regions of a 1024 world and the humans awoke on a bare peak.
+- Proposal: a civilization founds settlements only in free regions within a few hops of its capital region (elves, dwarves and faeries 1, goblins and orcs 2, humans 3, from the race's `expansion`), and only in land it rates at least 70% as well as its home. A succession crisis in a large realm may split it, and the new civilization expands from its own capital; that is how a people spreads beyond its reach. At the present about 31 of 49 regions are held at 1024, leaving free land for later races and for conflict.
+- Interim choice: as proposed (`docs/specs/p3-05-peoples.md` 9.3, 10.3, questions 2 and 5).
+- Status: open
+
+### History: a population density per race
+
+- Date: 2026-11-19
+- Raised by: spec-writer (P3-05)
+- Design doc section: 5 (races: elves "few in number", goblins "numerous"; Peoples table)
+- Problem: the race data has no field that says how many of a people a region supports; lifespans and growth rates describe time, not numbers.
+- Proposal: a new race field `density_permille` (elves 300, goblins 900, dwarves 700, faeries 250, humans 1000, orcs 800) scales the capacity of every region for that race. A data change, not a schema change.
+- Interim choice: as proposed (`docs/specs/p3-05-peoples.md` 5.1, 12.2, question 1).
+- Status: open
+
+### History: random pressures act only in active phases; migration waits for conflict
+
+- Date: 2026-11-19
+- Raised by: spec-writer (P3-05)
+- Design doc section: 5 (Quiet intervals: "populations drift toward what the land supports"; tick loop item 4; item 5 "migrations")
+- Problem: the design lists plague, famine and succession crises as tick-loop pressures and migrations among the consequences, but does not say whether quiet intervals have pressures or what a migration is before there are wars.
+- Proposal: famine, plague and succession crises act only in yearly ticks (active phases and flare-ups); quiet steps write growth, foundings and the fading of ruins only, which is the design's peace. Colonists and the survivors of an abandoned settlement move; migrations of whole peoples (refugees) come with conflict (P3-06) or P5.
+- Interim choice: as proposed (`docs/specs/p3-05-peoples.md` 10.5, questions 4 and 6).
+- Status: open
