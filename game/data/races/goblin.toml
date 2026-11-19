@@ -1,0 +1,25 @@
+[race.goblin]
+order = 2
+name = "Goblin"
+plural = "Goblins"
+adjective = "Goblin"
+camp = "evil"
+awakening_share = "0.35"
+lifespan_years = 40
+generation_years = 15
+growth_permille = 20
+site_weights = { fertility = 40, forage = 20, timber = 10, ore = 30, fresh_water = 0 }
+biomes = [
+  { biome = "heath", weight = 200 },
+  { biome = "highland_moor", weight = 200 },
+  { biome = "steppe", weight = 150 },
+  { biome = "grassland", weight = 100 },
+  { biome = "marsh", weight = 100 },
+  { biome = "alpine", weight = -400 },
+]
+upland = 100
+coast = -100
+expansion = 600
+aggression = 700
+settlement_kinds = ["hamlet", "village", "town", "fortress"]
+culture = "goblin"

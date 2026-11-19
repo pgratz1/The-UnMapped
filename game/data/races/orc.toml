@@ -1,0 +1,28 @@
+[race.orc]
+order = 6
+name = "Orc"
+plural = "Orcs"
+adjective = "Orcish"
+camp = "evil"
+awakening_share = "0.93"
+lifespan_years = 50
+generation_years = 18
+growth_permille = 18
+site_weights = { fertility = 35, forage = 25, timber = 10, ore = 30, fresh_water = 0 }
+biomes = [
+  { biome = "steppe", weight = 400 },
+  { biome = "heath", weight = 200 },
+  { biome = "grassland", weight = 200 },
+  { biome = "highland_moor", weight = 100 },
+  { biome = "temperate_forest", weight = -100 },
+  { biome = "marsh", weight = -100 },
+  { biome = "fen", weight = -200 },
+  { biome = "wet_woodland", weight = -200 },
+  { biome = "alpine", weight = -300 },
+]
+upland = 100
+coast = -100
+expansion = 600
+aggression = 900
+settlement_kinds = ["hamlet", "village", "town", "fortress"]
+culture = "orcish"

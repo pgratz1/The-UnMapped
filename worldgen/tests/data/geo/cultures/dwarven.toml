@@ -1,0 +1,15 @@
+[culture.dwarven]
+race = "dwarf"
+name = "Dwarven"
+
+[culture.dwarven.naming]
+onsets = ["d", "b", "th", "k", "g", "br", "dr", "gr", "t", "h", "kh", "n", "m", "thr"]
+nuclei = ["a", "u", "o", "i", "ai", "ou"]
+codas = ["r", "n", "m", "k", "d", "rn", "rd", "rk", "mm", "nd", "rin", "li", "din"]
+patterns = ["ONC", "ONCONC", "ONCONC", "ONCON"]
+min_letters = 4
+max_letters = 10
+forbidden = ["mmm", "rr", "dd", "kk", "rdt", "rkd", "rdd", "mmb", "kdr", "kthr", "dkh", "ndb", "rnk"]
+god_forms = ["{root}"]
+civilization_forms = ["The Hold of {root}", "Clan {root}", "The {root} Throne"]
+settlement_forms = ["{root}", "{root} Deep", "{root} Hold", "{root}"]

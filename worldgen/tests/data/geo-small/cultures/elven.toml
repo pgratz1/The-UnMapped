@@ -1,0 +1,15 @@
+[culture.elven]
+race = "elf"
+name = "Elven"
+
+[culture.elven.naming]
+onsets = ["", "l", "th", "s", "f", "n", "m", "r", "v", "gl", "c", "el", "ith"]
+nuclei = ["a", "e", "i", "ae", "ie", "o"]
+codas = ["", "", "l", "n", "th", "s", "r", "nd", "ll", "nn"]
+patterns = ["ONONC", "ONONC", "ONCON", "ONONON", "NCONC"]
+min_letters = 4
+max_letters = 11
+forbidden = ["aea", "iei", "iae", "eae", "aa", "ii", "ee", "thth", "lll", "nnn", "ea", "ia"]
+god_forms = ["{root}"]
+civilization_forms = ["The Court of {root}", "The Realm of {root}", "{root}"]
+settlement_forms = ["{root}", "{root}", "{root}", "{root}dell"]

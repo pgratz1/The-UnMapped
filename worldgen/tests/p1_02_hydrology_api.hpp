@@ -35,6 +35,7 @@
 
 #include "p1_01_elevation_api.hpp"
 #include "p1_04_biomes_data.hpp"
+#include "p3_01_history_fixture.hpp"
 #include "worldgen/data/content.hpp"
 #include "worldgen/data/load_error.hpp"
 #include "worldgen/data/schema.hpp"
@@ -83,6 +84,7 @@ inline TuningLoad load_tuning_text(std::string_view elevation_toml, std::string_
     wd::MemoryDataRoot root;
     root.directories.push_back(dir);
     elev_api::add_biome_fixtures(root);
+    history_fixture::add_to(root);  // P3-01: the required history kinds
     wd::LoadResult<wd::ContentSet> r = wd::load_content_from_memory(registry, root);
     TuningLoad out;
     out.errors = r.errors;

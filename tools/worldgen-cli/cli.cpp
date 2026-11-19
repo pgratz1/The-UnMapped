@@ -10,6 +10,7 @@
 
 #include <stb_image_write.h>
 
+#include <algorithm>
 #include <chrono>  // determinism-lint: allow(banned-include) -- --verbose timings go to stderr only, never to a world, report or hash (P0-04 4.5)
 #include <cstdint>
 #include <cstdio>
@@ -138,7 +139,9 @@ constexpr std::string_view GENERATE_USAGE =
     "usage: worldgen-cli generate (--seed N | --seed-phrase TEXT) [--out PATH]\n"
     "                             [--map-size 512|1024|2048] [--settings FILE] [--data DIR]\n"
     "                             [--until STAGE|none | --test-pattern] [--threads N]\n"
-    "                             [--force] [--verbose]\n"
+    "                             [--history-span N] [--history-detail D] [--civs-per-race C]\n"
+    "                             [--races LIST] [--event-intensity I] [--monster-pressure M]\n"
+    "                             [--divine-activity A] [--force] [--verbose]\n"
     "\n"
     "  --seed N            the 64-bit world seed: decimal, or 0x and 1 to 16 hex digits\n"
     "  --seed-phrase TEXT  a text phrase from which the seed is derived; letters are\n"
@@ -152,8 +155,22 @@ constexpr std::string_view GENERATE_USAGE =
     "  --test-pattern      run only the P0 test-pattern stage, no geography\n"
     "  --threads N         threads for parallel steps, 1 to 256 (default: hardware threads);\n"
     "                      never changes the output\n"
+    "  --history-span N    years of history, 2000 to 12000 (default 6000)\n"
+    "  --history-detail D  sparse, normal or dense (default normal)\n"
+    "  --civs-per-race C   civilizations per race: auto or 1 to 4 (default auto)\n"
+    "  --races LIST        races present: all, or race ids separated by commas without\n"
+    "                      spaces, e.g. elf,orc (default all)\n"
+    "  --event-intensity I calm, normal or turbulent (default normal)\n"
+    "  --monster-pressure M\n"
+    "                      low, normal or high (default normal)\n"
+    "  --divine-activity A distant, normal or meddling (default normal)\n"
+    "  --divine-script FILE\n"
+    "                      not supported yet: divine scripts need phase P5\n"
     "  --force             replace an existing output file\n"
     "  --verbose           print progress and timings to stderr\n"
+    "\n"
+    "The history settings have no effect yet: no history stage is implemented,\n"
+    "and --test-pattern writes no history.\n"
     "\n"
     "Prints the absolute path of the written file.\n";
 
@@ -353,6 +370,14 @@ const CommandSpec GENERATE{
         {"test-pattern", false},
         {"until", true},
         {"threads", true},
+        {"history-span", true},
+        {"history-detail", true},
+        {"civs-per-race", true},
+        {"races", true},
+        {"event-intensity", true},
+        {"monster-pressure", true},
+        {"divine-activity", true},
+        {"divine-script", true},
         {"force", false},
 #if defined(WORLDGEN_CLI_TEST_HOOKS)
         // Test-hook build only (P0-04 12.2): a fatal error inside the
@@ -426,6 +451,133 @@ worldgen::data::DataRoot data_root_option(const Options& options) {
     return worldgen::data::resolve_data_root(flag, env ? std::optional<std::string_view>(*env) : std::nullopt);
 }
 
+// --- the history flags (P3-01 6.1, 6.2) ---------------------------------------
+
+// The history settings given as flags; each empty when not given.
+struct HistoryFlags {
+    std::optional<std::int64_t> history_span;
+    std::optional<worldgen::data::HistoryDetail> history_detail;
+    bool civs_given = false;
+    std::optional<std::int64_t> civs_per_race;  // with civs_given: empty for auto
+    bool races_given = false;
+    std::optional<std::vector<std::string>> races;  // with races_given: empty for all
+    std::optional<worldgen::data::EventIntensity> event_intensity;
+    std::optional<worldgen::data::MonsterPressure> monster_pressure;
+    std::optional<worldgen::data::DivineActivity> divine_activity;
+};
+
+// One of the three-valued flags: parse is the enum's parse_* function.
+template <typename E>
+std::optional<E> parse_enum_option(const Options& options, std::string_view name, std::string_view expected,
+                                   std::optional<E> (*parse)(std::string_view) noexcept) {
+    const std::string* text = options.value(name);
+    if (text == nullptr) {
+        return std::nullopt;
+    }
+    const std::optional<E> v = parse(*text);
+    if (!v) {
+        usage_error("invalid --" + std::string(name) + " '" + *text + "'; expected " + std::string(expected));
+    }
+    return v;
+}
+
+// Parses the history flags (P3-01 6.2): every form error is a usage error
+// here; unknown race ids are checked once the data is loaded.
+HistoryFlags parse_history_flags(const Options& options) {
+    namespace data = worldgen::data;
+    HistoryFlags flags;
+    if (const std::string* text = options.value("history-span")) {
+        const std::optional<std::uint64_t> v = db::parse_canonical_u64(*text);
+        if (!v || *v > static_cast<std::uint64_t>(data::MAX_HISTORY_SPAN) ||
+            !data::is_valid_history_span(static_cast<std::int64_t>(*v))) {
+            usage_error("invalid --history-span '" + *text + "'; expected an integer from 2000 to 12000");
+        }
+        flags.history_span = static_cast<std::int64_t>(*v);
+    }
+    flags.history_detail =
+        parse_enum_option(options, "history-detail", "sparse, normal or dense", &data::parse_history_detail);
+    if (const std::string* text = options.value("civs-per-race")) {
+        flags.civs_given = true;
+        if (*text != "auto") {
+            const std::optional<std::uint64_t> v = db::parse_canonical_u64(*text);
+            if (!v || *v < static_cast<std::uint64_t>(data::MIN_CIVS_PER_RACE) ||
+                *v > static_cast<std::uint64_t>(data::MAX_CIVS_PER_RACE)) {
+                usage_error("invalid --civs-per-race '" + *text + "'; expected auto or an integer from 1 to 4");
+            }
+            flags.civs_per_race = static_cast<std::int64_t>(*v);
+        }
+    }
+    if (const std::string* text = options.value("races")) {
+        data::RacesText parsed = data::parse_races_text(*text);
+        if (!parsed.ok) {
+            usage_error("invalid --races '" + *text + "'; expected all or a comma-separated list of race ids");
+        }
+        flags.races_given = true;
+        flags.races = std::move(parsed.races);
+    }
+    flags.event_intensity = parse_enum_option(options, "event-intensity", "calm, normal or turbulent",
+                                              &data::parse_event_intensity);
+    flags.monster_pressure =
+        parse_enum_option(options, "monster-pressure", "low, normal or high", &data::parse_monster_pressure);
+    flags.divine_activity =
+        parse_enum_option(options, "divine-activity", "distant, normal or meddling", &data::parse_divine_activity);
+    if (options.value("divine-script") != nullptr) {
+        usage_error("--divine-script is not supported yet: divine scripts need phase P5");
+    }
+    return flags;
+}
+
+// Overrides the file's history keys with the flags, key by key (P3-01 6.1).
+void apply_history_flags(const HistoryFlags& flags, worldgen::data::Settings& settings) {
+    if (flags.history_span) settings.history_span = *flags.history_span;
+    if (flags.history_detail) settings.history_detail = *flags.history_detail;
+    if (flags.civs_given) settings.civs_per_race = flags.civs_per_race;
+    if (flags.races_given) {
+        settings.races = flags.races;
+        settings.races_origins.clear();
+    }
+    if (flags.event_intensity) settings.event_intensity = *flags.event_intensity;
+    if (flags.monster_pressure) settings.monster_pressure = *flags.monster_pressure;
+    if (flags.divine_activity) settings.divine_activity = *flags.divine_activity;
+}
+
+// The race ids of --races that name no race definition: a usage error
+// naming the first, in the order given (P3-01 6.2).
+void check_flag_races(const HistoryFlags& flags, const worldgen::data::ContentSet& content) {
+    if (!flags.races_given || !flags.races) {
+        return;
+    }
+    const std::vector<std::string> known = worldgen::data::race_ids_in_order(content);
+    for (const std::string& id : *flags.races) {
+        if (std::find(known.begin(), known.end(), id) != known.end()) {
+            continue;
+        }
+        std::string list;
+        for (const std::string& k : known) {
+            list += list.empty() ? "" : ", ";
+            list += k;
+        }
+        usage_error("unknown race '" + id + "' in --races; expected all or ids from: " + list);
+    }
+}
+
+// The history settings as one line, for --verbose.
+std::string history_settings_text(const worldgen::data::Settings& s) {
+    namespace data = worldgen::data;
+    std::string races;
+    for (const std::string& id : s.races.value_or(std::vector<std::string>{})) {
+        races += races.empty() ? "" : ",";
+        races += id;
+    }
+    return "history settings: span " + db::format_i64(s.history_span) + ", detail " +
+           std::string(data::history_detail_name(s.history_detail)) + ", civs per race " +
+           (s.civs_per_race ? db::format_i64(*s.civs_per_race) : std::string("auto")) + ", races " + races +
+           ", event intensity " + std::string(data::event_intensity_name(s.event_intensity)) +
+           ", monster pressure " + std::string(data::monster_pressure_name(s.monster_pressure)) +
+           ", divine activity " + std::string(data::divine_activity_name(s.divine_activity)) +
+           " (not used yet: no history stage)";
+}
+
 Exit run_generate(const Options& options) {
     const Progress progress(options.flag("verbose"));
 
@@ -456,6 +608,7 @@ Exit run_generate(const Options& options) {
     }
     std::optional<std::string> until = parse_until_option(options);
     const std::uint32_t threads = parse_threads_option(options);
+    const HistoryFlags history_flags = parse_history_flags(options);
     if (const std::string* dir = options.value("data"); dir != nullptr && dir->empty()) {
         usage_error("--data needs a directory; an empty value names no data root");
     }
@@ -493,6 +646,20 @@ Exit run_generate(const Options& options) {
             throw Failure(Exit::input, "the data needs a data root; pass --data", load_error_lines(content.errors));
         }
     }
+
+    // The history settings (P3-01 6): race ids are checked against the
+    // loaded data, the flags' first (a usage error), then the file's.
+    check_flag_races(history_flags, *content.value);
+    if (const std::string* path = options.value("settings")) {
+        const std::vector<worldgen::data::LoadError> race_errors =
+            worldgen::data::check_settings_races(settings, *content.value);
+        if (!race_errors.empty()) {
+            throw Failure(Exit::input, "invalid settings file '" + *path + "'", load_error_lines(race_errors));
+        }
+    }
+    apply_history_flags(history_flags, settings);
+    worldgen::data::resolve_races(settings, *content.value);
+    progress.note(history_settings_text(settings));
 
     // Seed and parameters: a seed flag replaces both seed keys of the file
     // (P0-03 6); --map-size overrides world.map_size.

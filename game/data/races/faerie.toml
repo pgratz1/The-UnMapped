@@ -1,0 +1,27 @@
+[race.faerie]
+order = 4
+name = "Faerie"
+plural = "Faeries"
+adjective = "Faerie"
+camp = "good"
+awakening_share = "0.70"
+lifespan_years = 400
+generation_years = 100
+growth_permille = 4
+site_weights = { fertility = 0, forage = 60, timber = 20, ore = 0, fresh_water = 20 }
+biomes = [
+  { biome = "fen", weight = 600 },
+  { biome = "wet_woodland", weight = 600 },
+  { biome = "marsh", weight = 400 },
+  { biome = "temperate_forest", weight = 200 },
+  { biome = "highland_moor", weight = 100 },
+  { biome = "grassland", weight = -200 },
+  { biome = "alpine", weight = -300 },
+  { biome = "steppe", weight = -400 },
+]
+upland = 0
+coast = 0
+expansion = 100
+aggression = 50
+settlement_kinds = ["hamlet", "village"]
+culture = "faerie"
