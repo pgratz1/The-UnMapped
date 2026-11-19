@@ -96,6 +96,13 @@ PARALLEL_ALLOWLIST = frozenset({"worldgen/src/core/parallel.cpp"})
 SQL_DIRS = ("worldgen/src/db/", "worldgen/src/inspect/",
             "worldgen/include/worldgen/db/", "worldgen/include/worldgen/inspect/")
 
+# History code (P3-00 4.5, 4.6): the history library and the two history
+# stages, chronology (P3-03) and history (P3-04 to P3-06). Prefixes, so that
+# worldgen/src/stages/history_*.cpp is covered too.
+HISTORY_DIRS = ("worldgen/src/history/", "worldgen/include/worldgen/history/",
+                "worldgen/src/stages/chronology", "worldgen/src/stages/history",
+                "worldgen/include/worldgen/stages/chronology", "worldgen/include/worldgen/stages/history")
+
 MIN_REASON_LEN = 10  # characters; "safe" alone is not a reason
 
 SUPPRESS_RE = re.compile(r"determinism-lint\s*:\s*allow\s*\(([^)]*)\)\s*(?:--\s*(.*))?$")
@@ -554,6 +561,18 @@ RULES: tuple = (
         ".shuffle(, splitmix64_next() in one full expression",
         "two random draws in one full expression: the order of evaluation is unspecified and differs between "
         "compilers; make each draw its own statement (P0-01 4, P1-00 D9)",
+    ),
+    # History (P3-00 4.5 rule H4, 4.6): every random decision is a keyed draw.
+    Rule(
+        "history-sequential-rng",
+        "the sequential generator in history code: Rng, splitmix64_next(, #include \"worldgen/core/rng.hpp\"",
+        "sequential generator in history code: a draw taken from a shared stream shifts every later decision "
+        "when one is added or removed; use a keyed draw, history::draw(stream_key, w0, a, b, k) (P3-00 H4, 4.6)",
+        _rx(r"\bRng\b|\bsplitmix64_next\s*\("),
+        includes=("worldgen/core/rng.hpp",),
+        areas=frozenset({LIB}),
+        only_dirs=HISTORY_DIRS,
+        where="library: " + ", ".join(HISTORY_DIRS) + " (prefixes)",
     ),
     # SQL text in string literals.
     Rule(
