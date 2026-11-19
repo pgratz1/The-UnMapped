@@ -80,6 +80,18 @@ public:
     // names). Rows this stage has written itself are not returned.
     [[nodiscard]] std::span<const db::RegionRow> regions() const noexcept;
 
+    // The rows of tables region_border, region_biome, race, race_biome,
+    // culture, god and age written by earlier stages of this run, in key
+    // order, exactly as written (P3-04 3.3: the history stage reads them).
+    // Rows this stage has written itself are not returned.
+    [[nodiscard]] std::span<const db::RegionBorderRow> region_borders() const noexcept;
+    [[nodiscard]] std::span<const db::RegionBiomeRow> region_biomes() const noexcept;
+    [[nodiscard]] std::span<const db::RaceRow> races() const noexcept;
+    [[nodiscard]] std::span<const db::RaceBiomeRow> race_biomes() const noexcept;
+    [[nodiscard]] std::span<const db::CultureRow> cultures() const noexcept;
+    [[nodiscard]] std::span<const db::GodRow> gods() const noexcept;
+    [[nodiscard]] std::span<const db::AgeRow> ages() const noexcept;
+
     // Writes one of this stage's layers with the next layer id and codec 1
     // (P1-00 4 rules 1 and 2; P0-02 5.6). Layers are written in the order of
     // these calls. FatalError as StageWriter::write_layer (invalid name or
@@ -114,6 +126,23 @@ public:
     void write_god(const db::GodRow& row);
     void write_age(const db::AgeRow& row);
 
+    // Write one row of each of the thirteen history tables (P3-04 9.3),
+    // each in ascending key. FatalError as the StageWriter functions of the
+    // same names.
+    void write_event_kind(const db::EventKindRow& row);
+    void write_event_kind_role(const db::EventKindRoleRow& row);
+    void write_event_kind_value(const db::EventKindValueRow& row);
+    void write_phase(const db::PhaseRow& row);
+    void write_event(const db::EventRow& row);
+    void write_event_participant(const db::EventParticipantRow& row);
+    void write_event_cause(const db::EventCauseRow& row);
+    void write_event_value(const db::EventValueRow& row);
+    void write_civilization(const db::CivilizationRow& row);
+    void write_settlement(const db::SettlementRow& row);
+    void write_settlement_census(const db::SettlementCensusRow& row);
+    void write_region_control(const db::RegionControlRow& row);
+    void write_relation(const db::RelationRow& row);
+
 private:
     friend class detail::Pipeline;
     struct State;
@@ -139,11 +168,12 @@ inline constexpr std::array<std::string_view, 8> STAGE_NAMES = {
     "elevation", "hydrology", "climate", "biomes", "resources", "regions", "chronology", "history",
 };
 
-// The implemented stages, in run order (P1-00 3, 10.1; P3-03 4.3): the
-// stages generate runs by default. Each implemented stage is the next one of
-// STAGE_NAMES: `elevation` (P1-01), `hydrology` (P1-02), `climate` (P1-03),
-// `biomes` (P1-04), `resources` (P1-05), `regions` (P1-06) and
-// `chronology` (P3-03).
+// The implemented stages, in run order (P1-00 3, 10.1; P3-03 4.3; P3-04
+// 9.5): the stages generate runs by default. Each implemented stage is the
+// next one of STAGE_NAMES: `elevation` (P1-01), `hydrology` (P1-02),
+// `climate` (P1-03), `biomes` (P1-04), `resources` (P1-05), `regions`
+// (P1-06), `chronology` (P3-03) and `history` (P3-04, the engine with stub
+// subsystems).
 [[nodiscard]] std::span<const StageInfo> implemented_stages() noexcept;
 
 // The former name of implemented_stages(), from before the history stages.

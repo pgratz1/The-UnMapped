@@ -20,6 +20,7 @@ add_library(worldgen STATIC
     src/db/layer_blob.cpp
     src/db/reader.cpp
     src/db/result.cpp
+    src/db/rows.cpp
     src/db/schema.cpp
     src/db/sqlite_util.cpp
     src/db/testing.cpp
@@ -75,6 +76,15 @@ add_library(worldgen STATIC
     src/history/params.cpp
     src/stages/chronology.cpp
     src/inspect/chronology.cpp
+    # P3-04: the history stage as an engine with stub subsystems, the event
+    # catalogue and its renderer, and the [history] report section.
+    src/history/engine.cpp
+    src/history/event_catalogue.cpp
+    src/history/inputs.cpp
+    src/history/schedule.cpp
+    src/history/stubs.cpp
+    src/stages/history.cpp
+    src/inspect/history.cpp
 )
 add_library(worldgen::worldgen ALIAS worldgen)
 target_include_directories(worldgen

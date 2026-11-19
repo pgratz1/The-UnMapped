@@ -17,6 +17,7 @@
 #include "data/text.hpp"
 #include "worldgen/data/content.hpp"
 #include "worldgen/data/schema.hpp"
+#include "worldgen/history/event_catalogue.hpp"
 
 namespace worldgen::data {
 
@@ -323,6 +324,98 @@ std::optional<std::string> check_chronology_age_name_form(const Record& r) {
     return std::string("age_name_form must contain {plural} or {adjective} and no other placeholder");
 }
 
+// --- history.engine (P3-04 section 4.1) ------------------------------------------------
+
+constexpr std::string_view ENGINE_LEVELS[] = {"sparse", "normal", "dense"};
+
+std::optional<std::string> check_engine_simulated_bounds(const Record& r) {
+    if (r.get_int("simulated_min_permille") <= r.get_int("simulated_max_permille")) {
+        return std::nullopt;
+    }
+    return std::string("simulated_min_permille must not be above simulated_max_permille");
+}
+
+std::optional<std::string> check_engine_phase_budget(const Record& r) {
+    const std::int64_t budget = 6 * r.get_int("simulated_max_permille") - 30;  // at most 2970
+    for (const std::string_view level : ENGINE_LEVELS) {
+        const Record& d = r.get_record(level);
+        if (6 * d.get_int("active_years") + d.get_int("final_years") > budget) {  // at most 15000
+            // U+00D7 MULTIPLICATION SIGN and U+2212 MINUS SIGN, as UTF-8 bytes.
+            return std::string(level) +
+                   ": 6 \xC3\x97 active_years + final_years must not be above 6 \xC3\x97 simulated_max_permille "
+                   "\xE2\x88\x92 30";
+        }
+    }
+    return std::nullopt;
+}
+
+Schema engine_detail_schema() {
+    return Schema(std::vector<Field>{
+        Field::required("active_years", Type::integer(1, 2000)),
+        Field::required("flare_years", Type::integer(1, 1000)),
+        Field::required("final_years", Type::integer(1, 3000)),
+        Field::required("flare_threshold", Type::integer(1, 1000000)),
+    });
+}
+
+// --- history.report (P3-04 section 4.2) ------------------------------------------------
+
+Schema report_event_schema() {
+    return Schema(std::vector<Field>{
+        Field::required("kind", Type::string(32, id_grammar())),
+        Field::required("salience", Type::integer(0, 100)),
+        Field::required("template", Type::string(256)),
+    });
+}
+
+std::vector<KindCheckFailure> check_report_events(std::span<const Definition> defs) {
+    std::vector<KindCheckFailure> out;
+    for (std::size_t i = 0; i < defs.size(); ++i) {
+        if (defs[i].id != HISTORY_REPORT_ID) {
+            continue;
+        }
+        for (std::string& message : history::report_events_problems(defs[i].record)) {
+            out.push_back(KindCheckFailure{i, std::move(message)});
+        }
+    }
+    return out;
+}
+
+}  // namespace
+
+Schema history_engine_schema() {
+    // P3-04 4.1, in declaration order.
+    std::vector<Field> fields{
+        Field::required("quiet_step_years", Type::integer(1, 200)),
+        Field::required("quiet_events_max", Type::integer(1, 100)),
+        Field::required("simulated_min_permille", Type::integer(100, 500)),
+        Field::required("simulated_max_permille", Type::integer(100, 500)),
+        Field::required("islet_max_dry_cells", Type::integer(0, 1000000)),
+        Field::required("sparse", Type::record(engine_detail_schema())),
+        Field::required("normal", Type::record(engine_detail_schema())),
+        Field::required("dense", Type::record(engine_detail_schema())),
+    };
+    std::vector<Check> checks{
+        Check{"engine_simulated_bounds", [](const Record& r) { return check_engine_simulated_bounds(r); }},
+        Check{"engine_phase_budget", [](const Record& r) { return check_engine_phase_budget(r); }},
+    };
+    return Schema(std::move(fields), std::move(checks));
+}
+
+Schema history_report_schema() {
+    // P3-04 4.2.
+    return Schema(std::vector<Field>{
+        Field::required("events", Type::array(Type::record(report_event_schema()), 1, 256)),
+    });
+}
+
+std::vector<KindCheck> history_kind_checks() {
+    std::vector<KindCheck> out;
+    out.push_back(KindCheck{"report_events", [](std::span<const Definition> d) { return check_report_events(d); }});
+    return out;
+}
+
+namespace {
 }  // namespace
 
 Schema race_schema() {

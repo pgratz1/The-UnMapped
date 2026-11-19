@@ -591,10 +591,14 @@ KindRegistry builtin_kinds() {
     registry.add(Kind{std::string(CULTURE_KIND), std::string(CULTURE_DIRECTORY), true, culture_schema()});
     // P3-01 5: kind `history`, directory `history`, required, fixed ids;
     // later P3 specs add their ids.
-    registry.add(Kind::with_fixed_ids(std::string(HISTORY_KIND), std::string(HISTORY_DIRECTORY), true,
-                                      {
-                                          IdSchema{std::string(HISTORY_CHRONOLOGY_ID), history_chronology_schema()},
-                                      }));
+    Kind history = Kind::with_fixed_ids(std::string(HISTORY_KIND), std::string(HISTORY_DIRECTORY), true,
+                                        {
+                                            IdSchema{std::string(HISTORY_CHRONOLOGY_ID), history_chronology_schema()},
+                                            IdSchema{std::string(HISTORY_ENGINE_ID), history_engine_schema()},
+                                            IdSchema{std::string(HISTORY_REPORT_ID), history_report_schema()},
+                                        });
+    history.kind_checks = history_kind_checks();  // P3-04 4.2: report_events
+    registry.add(std::move(history));
     return registry;
 }
 

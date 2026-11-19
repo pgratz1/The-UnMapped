@@ -23,6 +23,9 @@ class WorldReader;
 
 namespace worldgen::history {
 
+// Adding a member: extend history_meta_entries, history_params_from_meta
+// and the field-count test R2 of P3-04 16.3 item 20 (structured bindings of
+// exactly the current member count), which fails to compile until then.
 struct HistoryParams {
     std::int64_t span = data::DEFAULT_HISTORY_SPAN;  // 2000 ... 12000
     data::HistoryDetail detail = data::HistoryDetail::normal;

@@ -1,0 +1,8 @@
+[history.report]
+events = [
+  { kind = "awakening", salience = 100, template = "{creator} awakened the {race:plural} in {@region}." },
+  { kind = "civ_founded", salience = 80, template = "The {race:plural} founded {civilization} in {@region}." },
+  { kind = "settlement_founded", salience = 40, template = "{founder} founded {settlement} in {@region}." },
+  { kind = "quiet_era", salience = 20, template = "{civilization} passed {years} quiet {years?year|years} ({generations} {generations?generation|generations}), from {@year} to {@end_year}." },
+  { kind = "flare_up", salience = 50, template = "In {@year} tensions flared into {years} {years?year|years} of upheaval." },
+]

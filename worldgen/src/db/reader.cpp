@@ -88,6 +88,14 @@ std::string_view validate_meta_values(ReaderState& s) {
     if (!is_canonical_version(m.at(std::string(META_GENERATOR_VERSION)))) {
         return META_GENERATOR_VERSION;
     }
+    // history_end_year (P3-04 9.4): canonical decimal, equal to
+    // param.history_span.
+    {
+        const std::string& end_year = m.at(std::string(META_HISTORY_END_YEAR));
+        if (!parse_canonical_u64(end_year) || end_year != m.at(std::string(META_PARAM_HISTORY_SPAN))) {
+            return META_HISTORY_END_YEAR;
+        }
+    }
     // The history keys (P3-03 4.2) that sort before param.map_size.
     for (const std::string_view key : HISTORY_META_KEYS) {
         if (key < META_PARAM_MAP_SIZE && !is_canonical_history_meta_value(key, m.at(std::string(key)))) {

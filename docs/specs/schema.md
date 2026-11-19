@@ -2,9 +2,9 @@
 
 The contract between the generator and the game (design doc section 6; P0-02). This file holds the full current DDL, the required `meta` keys, the layer catalogue and the changelog. It is updated by every branch that changes the schema (P0-02 5.2) and by every spec that adds a layer.
 
-**Current schema version: 6** (from generator 0.13.0, the chronology merge; version 5 is generator 0.11.0 to 0.12.0, version 4 generator 0.9.0 to 0.10.0, version 3 was generator 0.8.0). `SCHEMA_VERSION` in `worldgen/include/worldgen/db/schema.hpp`; equal to `PRAGMA user_version` and `meta.schema_version`.
+**Current schema version: 7** (from generator 0.14.0, the engine merge; version 6 is generator 0.13.0; version 5 is generator 0.11.0 to 0.12.0, version 4 generator 0.9.0 to 0.10.0, version 3 was generator 0.8.0). `SCHEMA_VERSION` in `worldgen/include/worldgen/db/schema.hpp`; equal to `PRAGMA user_version` and `meta.schema_version`.
 
-## 1. DDL at version 6
+## 1. DDL at version 7
 
 Executed in this order, each as one statement, byte for byte as written (P0-02 5.3, 5.4; `DDL_STATEMENTS` in `worldgen/include/worldgen/db/schema.hpp`):
 
@@ -22,6 +22,19 @@ CREATE TABLE race_biome (race INTEGER NOT NULL, biome INTEGER NOT NULL, weight I
 CREATE TABLE culture (id INTEGER PRIMARY KEY, key TEXT NOT NULL UNIQUE, name TEXT NOT NULL, race INTEGER NOT NULL) STRICT
 CREATE TABLE god (id INTEGER PRIMARY KEY, name TEXT NOT NULL, camp INTEGER NOT NULL) STRICT
 CREATE TABLE age (id INTEGER PRIMARY KEY, race INTEGER NOT NULL, start_year INTEGER NOT NULL, end_year INTEGER NOT NULL, name TEXT NOT NULL) STRICT
+CREATE TABLE event_kind (id INTEGER PRIMARY KEY, key TEXT NOT NULL UNIQUE, caused INTEGER NOT NULL, region_use INTEGER NOT NULL, settlement_use INTEGER NOT NULL, salience INTEGER NOT NULL, template TEXT NOT NULL) STRICT
+CREATE TABLE event_kind_role (kind INTEGER NOT NULL, seq INTEGER NOT NULL, role TEXT NOT NULL, entity_type INTEGER NOT NULL, min_count INTEGER NOT NULL, max_count INTEGER NOT NULL, PRIMARY KEY (kind, seq)) STRICT, WITHOUT ROWID
+CREATE TABLE event_kind_value (kind INTEGER NOT NULL, seq INTEGER NOT NULL, key TEXT NOT NULL, PRIMARY KEY (kind, seq)) STRICT, WITHOUT ROWID
+CREATE TABLE phase (id INTEGER PRIMARY KEY, age INTEGER NOT NULL, kind INTEGER NOT NULL, start_year INTEGER NOT NULL, end_year INTEGER NOT NULL, trigger_event INTEGER NOT NULL) STRICT
+CREATE TABLE event (id INTEGER PRIMARY KEY, year INTEGER NOT NULL, end_year INTEGER NOT NULL, kind INTEGER NOT NULL, phase INTEGER NOT NULL, region INTEGER NOT NULL, settlement INTEGER NOT NULL, salience INTEGER NOT NULL) STRICT
+CREATE TABLE event_participant (event INTEGER NOT NULL, seq INTEGER NOT NULL, role INTEGER NOT NULL, entity_type INTEGER NOT NULL, entity_id INTEGER NOT NULL, PRIMARY KEY (event, seq)) STRICT, WITHOUT ROWID
+CREATE TABLE event_cause (event INTEGER NOT NULL, cause INTEGER NOT NULL, PRIMARY KEY (event, cause)) STRICT, WITHOUT ROWID
+CREATE TABLE event_value (event INTEGER NOT NULL, seq INTEGER NOT NULL, value INTEGER NOT NULL, PRIMARY KEY (event, seq)) STRICT, WITHOUT ROWID
+CREATE TABLE civilization (id INTEGER PRIMARY KEY, name TEXT NOT NULL, race INTEGER NOT NULL, culture INTEGER NOT NULL, home_region INTEGER NOT NULL, capital INTEGER NOT NULL, founded_year INTEGER NOT NULL, founding_event INTEGER NOT NULL, ended_year INTEGER, ending_event INTEGER NOT NULL) STRICT
+CREATE TABLE settlement (id INTEGER PRIMARY KEY, name TEXT NOT NULL, x INTEGER NOT NULL, y INTEGER NOT NULL, region INTEGER NOT NULL, founder_civ INTEGER NOT NULL, founded_year INTEGER NOT NULL, founding_event INTEGER NOT NULL, owner_civ INTEGER NOT NULL, kind INTEGER NOT NULL, status INTEGER NOT NULL, population INTEGER NOT NULL, ruined_year INTEGER, ruin_event INTEGER NOT NULL) STRICT
+CREATE TABLE settlement_census (settlement INTEGER NOT NULL, year INTEGER NOT NULL, owner_civ INTEGER NOT NULL, kind INTEGER NOT NULL, status INTEGER NOT NULL, population INTEGER NOT NULL, PRIMARY KEY (settlement, year)) STRICT, WITHOUT ROWID
+CREATE TABLE region_control (region INTEGER NOT NULL, from_year INTEGER NOT NULL, to_year INTEGER, civ INTEGER NOT NULL, event INTEGER NOT NULL, PRIMARY KEY (region, from_year)) STRICT, WITHOUT ROWID
+CREATE TABLE relation (a_type INTEGER NOT NULL, a_id INTEGER NOT NULL, b_type INTEGER NOT NULL, b_id INTEGER NOT NULL, kind TEXT NOT NULL, since INTEGER NOT NULL, until INTEGER, since_event INTEGER NOT NULL, until_event INTEGER NOT NULL, PRIMARY KEY (a_type, a_id, b_type, b_id, kind, since)) STRICT, WITHOUT ROWID
 ```
 
 `pass` (version 2): one row per natural pass site, written by the elevation stage in `id` order; empty when no site was placed or the stage did not run. Columns and their meaning in `p1-01-elevation.md` section 9.1.
@@ -34,17 +47,27 @@ CREATE TABLE age (id INTEGER PRIMARY KEY, race INTEGER NOT NULL, start_year INTE
 
 `race`, `race_biome`, `culture`, `god`, `age` (version 6): written by the chronology stage in `id`, (`race`, `biome`), `id`, `id`, `id` order; empty when the stage did not run. One row per race definition (present or not), per listed biome preference, per culture definition, per race (its creator god, `id` = race id), and per present race (its age). Columns and their meaning in `p3-03-chronology.md` section 5.2.
 
-SQLite adds the automatic indexes `sqlite_autoindex_layer_1` for `layer.name`, `sqlite_autoindex_biome_1` for `biome.key`, `sqlite_autoindex_race_1` for `race.key` and `sqlite_autoindex_culture_1` for `culture.key`; the version 5 tables add none. The empty world is 18 pages, 73728 bytes (11 at version 5; 8 at versions 3 and 4, P0-02 amendments 15 and 16; the three version 5 tables add one root page each; the version 6 tables add the roots of `race`, `sqlite_autoindex_race_1`, `race_biome`, `culture`, `sqlite_autoindex_culture_1`, `god` and `age`, measured with the vendored SQLite 3.54.1).
+The history tables (version 7), written by the history stage, empty when it did not run (columns and their meaning in `p3-04-simulation-engine.md` 9.2):
+
+- **Catalogue**: `event_kind`, `event_kind_role`, `event_kind_value`, the compiled structure of every event kind with the data's base salience and template (section 6 below), written whether a kind is used or not.
+- **Phases and log**: `phase` (the schedule, `end_year` inclusive; kinds 1 opening, 2 quiet, 3 flare-up, 4 final), `event` (ids in append order, `year` non-decreasing with `id`), `event_participant` (`role` = the role's `seq`, `entity_type` a code), `event_cause` (cause < event), `event_value` (`seq` = the value key's `seq`; one row per key).
+- **Entities**: `civilization`, `settlement`, the end state of the run (settlement `kind` 1 hamlet, 2 village, 3 town, 4 city, 5 fortress; `status` 1 thriving, 2 declining, 3 ruined, 4 faded).
+- **By year**: `settlement_census`, `region_control`, `relation` (P3-04 6.7 and 10).
+
+Entity type codes: 1 race, 2 god, 3 civilization, 4 settlement, 5 region; reserved 6 figure, 7 faction, 8 monster, 9 site (`history::entity_type_key()`). Nullable columns: `civilization.ended_year`, `settlement.ruined_year`, `region_control.to_year`, `relation.until`, NULL while the year has not happened.
+
+SQLite adds the automatic indexes `sqlite_autoindex_layer_1` for `layer.name`, `sqlite_autoindex_biome_1` for `biome.key`, `sqlite_autoindex_race_1` for `race.key`, `sqlite_autoindex_culture_1` for `culture.key` and `sqlite_autoindex_event_kind_1` for `event_kind.key`; the version 5 tables add none. The empty world is 34 pages, 139264 bytes (18 at version 6, 73728 bytes; measured with the vendored SQLite 3.54.1 at generator 0.14.0): its schema text (5839 bytes) no longer fits page 1, so `sqlite_schema` is a two-level b-tree with leaf pages 22 and 23; the thirteen tables and `sqlite_autoindex_event_kind_1` have root pages 19 to 21 and 24 to 34. At version 6 it was 18 pages (11 at version 5; 8 at versions 3 and 4, P0-02 amendments 15 and 16; the three version 5 tables add one root page each; the version 6 tables add the roots of `race`, `sqlite_autoindex_race_1`, `race_biome`, `culture`, `sqlite_autoindex_culture_1`, `god` and `age`, measured with the vendored SQLite 3.54.1).
 
 File settings (P0-02 4): page size 4096, UTF-8, no auto-vacuum, `application_id` 0x554E4D50 (`UNMP`), `user_version` = schema version, written with `VACUUM INTO`. Layer blobs: format version 1, codec 0 (raw) or 1 (delta-varint) (P0-02 7).
 
-## 2. Required `meta` keys at version 6
+## 2. Required `meta` keys at version 7
 
 | Key | Value |
 | --- | --- |
 | `content_hash` | SHA-256 of the loaded data's canonical encoding, 64 lowercase hex digits (P0-03 8) |
 | `format` | `the-unmapped-world` |
 | `generator_version` | `MAJOR.MINOR.PATCH` |
+| `history_end_year` | = `param.history_span` (the year after the last year of history), canonical decimal; readers refuse another value (P3-04 9.4) |
 | `param.civs_per_race` | `auto`, or `1`, `2`, `3`, `4` |
 | `param.divine_activity` | `distant`, `normal` or `meddling` |
 | `param.divine_script` | empty (readers also accept 64 lower-case hex digits, the P5 form) |
@@ -54,7 +77,7 @@ File settings (P0-02 4): page size 4096, UTF-8, no auto-vacuum, `application_id`
 | `param.map_size` | 512, 1024 or 2048 |
 | `param.monster_pressure` | `low`, `normal` or `high` |
 | `param.races` | one or more race ids (P0-03 definition id grammar) in race order, joined by `,` with no spaces, none twice, e.g. `elf,goblin,dwarf,faerie,human,orc` |
-| `schema_version` | `6` |
+| `schema_version` | `7` |
 | `seed` | unsigned decimal |
 | `seed_phrase` | the scrubbed phrase, or empty |
 | `stages` | stage names in run order, comma separated (P1-00 section 3), e.g. `elevation,hydrology` |
@@ -83,11 +106,7 @@ The authoritative catalogue, with value ranges and special values, is P1-00 sect
 
 ## 4. Planned changes
 
-From P1-00 section 9.2 and P3-00 6.1; the DDL becomes final in the spec of the branch that makes the change. Version 6 is in sections 1 and 2.
-
-| Version | Change | Branch |
-| --- | --- | --- |
-| 7 | the history tables of P3-00 6.1 (`event_kind`, `event_kind_role`, `event_kind_value`, `phase`, `event`, `event_participant`, `event_cause`, `event_value`, `civilization`, `settlement`, `settlement_census`, `region_control`, `relation`) and `meta.history_end_year` | P3-04 |
+Versions 6 and 7 are in sections 1 and 2; no schema change is planned. Appending an event kind is not a schema change (section 6).
 
 ## 5. Changelog
 
@@ -101,3 +120,18 @@ From P1-00 section 9.2 and P3-00 6.1; the DDL becomes final in the spec of the b
 | 4 | 2026-11-18 | No schema change (planned, generator 0.10.0, the resources merge): the layer catalogue gains `forage` and the resources layers become real, layer ids 12 to 18 (`region` moves to 19) | P1-05 (second version) 3, P1-00 4 |
 | 5 | 2026-11-18 | 4 → 5 with generator 0.11.0 (planned, the regions merge): tables `region`, `region_border` and `region_biome` added, executed sixth to eighth, after `climate`; `meta.schema_version` and `user_version` 5; readers refuse version 4 worlds; the empty world grows from 8 to 11 pages. `region_biome` and the extended `region` and `region_border` columns are new against the first plan. Proposals "P1 schema changes" (update) | P1-06 (second version) 3, P1-00 9.2 |
 | 6 | 2026-11-19 | 5 → 6 with generator 0.13.0 (planned, the chronology merge): tables `race`, `race_biome`, `culture`, `god`, `age` added, executed ninth to thirteenth; required `meta` keys `param.civs_per_race`, `param.divine_activity`, `param.divine_script`, `param.event_intensity`, `param.history_detail`, `param.history_span`, `param.monster_pressure`, `param.races`; `meta.schema_version` and `user_version` 6; readers refuse version 5 worlds; the empty world grows from 11 to 18 pages. Proposals "History: schema versions 6 and 7" | P3-03 5, 4.2, P3-00 6.1 |
+| 7 | 2026-11-19 | 6 → 7 with generator 0.14.0 (the engine merge): thirteen tables added, executed fourteenth to twenty-sixth; required `meta` key `history_end_year`; readers refuse version 6; the empty world grows from 18 to 34 pages. Proposals "History: schema versions 6 and 7" | P3-04 9, P3-00 6.1 |
+
+## 6. Event catalogue
+
+Kinds, roles, value keys and flags are code (`history::compiled_event_catalogue()`); base salience and templates are data (`history.report`). `region_use`, `settlement_use`: 0 never, 1 always, 2 optional; `caused` 1: every event of the kind has a cause. Kept current by every spec that appends a kind.
+
+| id | key | caused | region | settlement | roles (seq: role, entity type, min–max) | values (seq: key) | spec |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | `awakening` | 0 | 1 | 0 | 1: `race`, race, 1–1; 2: `creator`, god, 1–1 | — | P3-04 |
+| 2 | `civ_founded` | 1 | 1 | 0 | 1: `civilization`, civilization, 1–1; 2: `race`, race, 1–1 | — | P3-04 |
+| 3 | `settlement_founded` | 0 | 1 | 1 | 1: `settlement`, settlement, 1–1; 2: `founder`, civilization, 1–1 | 1: `population` | P3-04 |
+| 4 | `quiet_era` | 0 | 1 | 0 | 1: `civilization`, civilization, 1–1 | 1: `years`; 2: `generations` | P3-04 |
+| 5 | `flare_up` | 1 | 0 | 0 | — | 1: `years` | P3-04 |
+
+**Schema changes** (P3-04 8.2): renaming, removing or renumbering a kind; adding, removing, renaming or reordering a role or value key of an existing kind; changing a role's entity type or counts, or a kind's `caused`, `region_use` or `settlement_use`; changing the meaning of any of them; changing a code list; any column. **Not a schema change**: appending a kind; changing a template or a base salience (a data change). A shipped kind is never edited: a kind that needs another role or value key is added as a new kind.
