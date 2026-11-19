@@ -51,7 +51,8 @@ under a second.
 
 A file under `worldgen/` is **library** code and a file under
 `tools/worldgen-cli/` is **CLI** code. Any other path (an explicit path
-elsewhere, a self-test snippet) gets the rules of both.
+elsewhere, a self-test snippet) gets the rules of both, except
+`history-sequential-rng`, which applies to library history code only.
 
 ## Rules
 
@@ -93,6 +94,12 @@ reason it is safe.
 | `unordered-reduction` | `std::reduce`, `std::transform_reduce`, `std::inclusive_scan`, `std::exclusive_scan`, `std::transform_inclusive_scan`, `std::transform_exclusive_scan` | library, CLI |
 | `heap-order` | **review**: `std::priority_queue`, `std::make_heap`, `std::push_heap`, `std::pop_heap`, `std::sort_heap` (and `std::ranges::` forms). The suppression must show the comparator is a strict total order ending in the push sequence number (D6) | library, CLI |
 | `two-draws` | two random draws on the same generator in one full expression: `.next(`, `.next_u32(`, `.uniform_*(`, `.chance(`, `.chance_ratio(`, `.weighted_index(`, `.shuffle(` on the same receiver text, or `splitmix64_next(` on the same argument (P0-01 4, D9) | library, CLI |
+
+### History (P3-00 4.5, 4.6)
+
+| Rule | Reports | Applies to |
+| --- | --- | --- |
+| `history-sequential-rng` | `Rng` (the type, its constructor and `Rng::from_state`), calls of `splitmix64_next(`, and `#include "worldgen/core/rng.hpp"`. Rule H4: every random decision of the history is a keyed draw, `history::draw(stream_key, w0, a, b, k)` and the helpers `pick`, `chance` and `weighted` (`worldgen/history/draw.hpp`), so that adding or removing one decision shifts no other. A draw from a sequential stream would make every later decision depend on how many draws came before. Added by the P3-02 names audit | library files whose path starts with `worldgen/src/history/`, `worldgen/include/worldgen/history/`, `worldgen/src/stages/chronology`, `worldgen/src/stages/history`, `worldgen/include/worldgen/stages/chronology` or `worldgen/include/worldgen/stages/history` (`HISTORY_DIRS`); not the geography stages, which use `Rng` by P0-01 6. A history stage file with another name must be added to `HISTORY_DIRS` |
 
 ### Platform input and output
 
@@ -217,7 +224,8 @@ nothing. `--self-test` checks that the lint reports exactly the marked
 least one snippet. A C++ snippet whose first lines contain
 `lint-selftest-path: <path>` is scanned as if it were that repository path,
 which selects its area (library, CLI), the allow-lists and the SQL
-directories; other snippets get every rule.
+directories (and the history directories); other snippets get every rule
+but `history-sequential-rng`.
 
 | File | Checks |
 | --- | --- |
@@ -226,6 +234,8 @@ directories; other snippets get every rule.
 | `bad_concurrency.cpp` | `thread`, `shared-state`, `thread-identity`, `hardware-concurrency`, `unordered-reduction`, `heap-order` (and a suppressed heap) |
 | `bad_platform_io.cpp` | `fp-pragma`, `environment`, `directory-iteration`, `number-text`, `stream-format`, `sqlite-value-type`, `unchecked-write`, `two-draws` |
 | `bad_sql.cpp` | the SQL rules, as a file of `worldgen/src/db/`; joined and raw literals; near misses (`VACUUM INTO`, `journal_mode = MEMORY`, `'real'` in an SQL string, `REAL` in a message, lower-case prose) |
+| `bad_history.cpp` | `history-sequential-rng`, as a file of `worldgen/src/history/`: the `rng.hpp` include, `Rng` and `Rng::from_state`, `splitmix64_next(`; near misses (keyed draws, `Rng` in a comment and a literal, identifiers containing the names) |
+| `good_history_scope.cpp` | `Rng` and its header are allowed in a geography stage (`worldgen/src/stages/elevation_selftest.cpp`) |
 | `bad_flags.cmake` | `cmake-fp-flag`, with comments and allowed flags as near misses |
 | `toml_config/` | `toml-config`: a guard and a CMake fixture with one macro missing and one wrong (a source without a guard must also fail) |
 | `good_ignored.cpp` | comments, string/char/raw literals, digit separators, `long long`, identifiers containing banned words, member and other-namespace functions, declarations, the project's own functions |
