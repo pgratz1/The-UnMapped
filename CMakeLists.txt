@@ -63,6 +63,7 @@ set(FETCHCONTENT_FULLY_DISCONNECTED ON CACHE BOOL "No network access during the 
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 include(UnmappedCompilerFlags)
+include(UnmappedTestShards)
 
 option(UNMAPPED_BUILD_TESTS "Build the test executables" ON)
 if(UNMAPPED_BUILD_TESTS)

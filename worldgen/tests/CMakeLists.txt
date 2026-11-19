@@ -36,11 +36,6 @@ target_compile_definitions(worldgen-tests PRIVATE
     UNMAPPED_CORE_VECTORS_PATH="${CMAKE_CURRENT_SOURCE_DIR}/golden/core_vectors.txt"
 )
 
-add_test(NAME worldgen-tests COMMAND worldgen-tests)
-# Explicit timeout, above CTest's default of 1500 s: under linux-clang-asan
-# this one entry takes about 1200 s on 6 cores and grows with every stage.
-# One value for every preset, so a hang is still caught within an hour.
-set_tests_properties(worldgen-tests PROPERTIES TIMEOUT 3600)
 
 # World database layer tests (spec P0-02 section 12). Files they write go
 # under a scratch directory in the build tree, never in the source tree.
@@ -215,4 +210,24 @@ target_sources(worldgen-tests PRIVATE
 )
 target_compile_definitions(worldgen-tests PRIVATE
     UNMAPPED_P1_05_GOLDEN_PATH="${CMAKE_CURRENT_SOURCE_DIR}/golden/p1-05-resources.txt"
+)
+# CTest entries (cmake/UnmappedTestShards.cmake): one per group of source
+# files, run in parallel by `ctest -j`, plus worldgen-tests-other for every
+# file not named here and worldgen-tests-partition, which checks that the
+# entries hold every test case exactly once. Groups keep a stage's files
+# together where they share the in-memory caches of the support headers;
+# costs are seconds under linux-gcc-release (generator 0.10.0). A new test
+# file runs in worldgen-tests-other until it is given a group. Timeout 3600 s
+# per entry on every preset, above CTest's default of 1500 s, so a hang is
+# still caught within an hour.
+unmapped_add_doctest_shards(worldgen-tests
+    TIMEOUT 3600
+    SHARD elevation-golden 17 "*stages_elevation_golden_test.cpp"
+    SHARD elevation 14 "*stages_elevation_passes_test.cpp,*stages_elevation_property_test.cpp,*stages_elevation_tuning_test.cpp,*stages_elevation_seams_test.cpp,*stages_elevation_examples_test.cpp"
+    SHARD hydrology 14 "*stages_hydrology_*"
+    SHARD climate 16 "*stages_climate_*,*inspect_climate_test.cpp"
+    SHARD biomes 9 "*stages_biomes_*"
+    SHARD biomes-inspect 15 "*inspect_biomes_test.cpp"
+    SHARD resources 6 "*stages_resources_*,*inspect_resources_test.cpp"
+    REST other 13
 )
