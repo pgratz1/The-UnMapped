@@ -79,6 +79,7 @@ reason it is safe.
 | `wide-int-type` | `__int128`, `__uint128_t`, `_umul128`, `_mul128`, `_udiv128`, `_div128`, `__umulh`, `__mulh` | library and CLI except `worldgen/src/core/wide.cpp` |
 | `unstable-sort` | **review**: `std::sort`, `std::partial_sort`, `std::partial_sort_copy`, `std::nth_element`, `std::partition` (and `std::ranges::` forms). Suppress with the reason the order is fully determined | library, CLI |
 | `int-abs` | `std::abs(`, `std::labs(`, `std::llabs(`, `std::imaxabs(`, the `::`-qualified forms, and free calls of `labs(`, `llabs(`, `imaxabs(`. Integer abs of the most negative value is undefined, and the integer overloads in the global namespace differ between standard libraries (an `int64` can bind to `int abs(int)`). Unqualified `abs(` is not reported: it is the project's `Fx` abs found by argument-dependent lookup. Added by the P1-01 elevation audit | library, CLI |
+| `pointer-order` | `std::map`, `std::set`, `std::multimap`, `std::multiset` (also `std::pmr::`) whose key type is a pointer; `std::less`, `std::greater`, `std::less_equal`, `std::greater_equal`, `std::compare_three_way` of a pointer type; `std::uintptr_t`, `std::intptr_t`. Addresses differ between runs, allocators and platforms, so an order or a key built from them would too; key by an index, an id or the value. Added by the P1-06 regions audit | library, CLI |
 
 ### Threads and shared state (P0-01 4.2, P1-00 D6, D8, D9, D10)
 
@@ -220,7 +221,7 @@ directories; other snippets get every rule.
 
 | File | Checks |
 | --- | --- |
-| `bad_constructs.cpp` | every P0-01 rule fires on its constructs; also `int-abs` and `packed-bool` |
+| `bad_constructs.cpp` | every P0-01 rule fires on its constructs; also `int-abs`, `packed-bool` and `pointer-order` (with near misses: a pointer as mapped value, an array of pointers, `std::less` of an integer) |
 | `bad_suppressions.cpp` | valid suppressions silence; malformed, reasonless, unknown-rule and unused ones are reported |
 | `bad_concurrency.cpp` | `thread`, `shared-state`, `thread-identity`, `hardware-concurrency`, `unordered-reduction`, `heap-order` (and a suppressed heap) |
 | `bad_platform_io.cpp` | `fp-pragma`, `environment`, `directory-iteration`, `number-text`, `stream-format`, `sqlite-value-type`, `unchecked-write`, `two-draws` |

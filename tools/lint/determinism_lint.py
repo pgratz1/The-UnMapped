@@ -390,6 +390,20 @@ RULES: tuple = (
         _rx(STD + r"(?:pmr\s*::\s*)?vector\s*<\s*bool\s*>|" + STD + r"bitset\b"),
         includes=("bitset",),
     ),
+    # Pointer order (P0-01 4: no dependence on pointer values). Added by the
+    # P1-06 regions audit.
+    Rule(
+        "pointer-order",
+        "std::map/set/multimap/multiset (also std::pmr::) whose key type is a pointer; std::less, greater, "
+        "less_equal, greater_equal, compare_three_way of a pointer type; std::uintptr_t, std::intptr_t",
+        "ordering or keying by pointer value: addresses differ between runs, allocators and platforms, so "
+        "an iteration order or a comparison result would too; key by an index, an id or the value itself "
+        "(P0-01 4)",
+        _rx(STD + r"(?:pmr\s*::\s*)?(?:map|set|multimap|multiset)\s*<\s*(?:const\s+|volatile\s+)*"
+            r"[\w:]+(?:\s*<[^<>;]*>)?\s*(?:const\s*|volatile\s*)*\*"
+            r"|" + STD + r"(?:less|greater|less_equal|greater_equal|compare_three_way)\s*<[^<>;]*\*\s*>"
+            r"|\b(?:std\s*::\s*)?u?intptr_t\b"),
+    ),
     Rule(
         "thread",
         "std::thread, std::jthread, std::async, std::packaged_task, std::promise, std::future, std::execution::, "
