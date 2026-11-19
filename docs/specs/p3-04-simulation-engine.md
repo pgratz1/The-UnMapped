@@ -1,6 +1,6 @@
 # P3-04 Simulation engine
 
-Status: **approved by the lead 2026-11-19** (the six questions of section 19 go to Paul; the interim choices stand). Written by the spec writer 2026-11-19; amendments 18.2 and 18.3 applied the same day; revision r1 (P3-07's amendments) the same day. Phase P3 History core, spec 4 (P3-00 3.1), pipeline stage 8, `history`, as an engine with stub subsystems. Generator **0.14.0**; **schema version 7** (thirteen new tables, one new required `meta` key, section 9). Design doc sections 5 (deep time, ages, active phases, quiet intervals, flare-ups, records, determinism; creation; entities; tick loop), 6 (tables `phase`, `event`, `event_participant`, `event_cause`, `civilization`, `settlement`, `relation`; `meta` end year), 13 (P3 row and exit check; P4 timeline and territory by year; P5 interventions) and 14 (records a model can narrate and validate; the divine script as an intervention source). Depends on P0-01 to P0-04 with their amendments, P1-06 (region tables), P3-00 (binding; amended in 18.3), P3-01 (kind `history`), P3-02 (keyed draws, names), P3-03 (chronology tables, `HistoryParams`, the registry rule 8.2). Implementation read: `origin/p3/03-int` at 3ddc942 (generator 0.13.0, schema 6). Proposals read: up to "History: with a subset of races the first one present opens history; every race keeps its creator god". Also addresses the P3-03 determinism audit's advisories A1 (fatal guards for schedule invariants) and A2 (H8 must not rest on in-memory values): sections 3.2, 3.3 and 5.6.
+Status: **approved by the lead 2026-11-19; corrected after implementation (r3, the lead's rulings of 2026-11-19)** (the six questions of section 19 go to Paul; the interim choices stand). Written by the spec writer 2026-11-19; amendments 18.2 and 18.3 applied the same day; revision r1 (P3-07's amendments) the same day. Phase P3 History core, spec 4 (P3-00 3.1), pipeline stage 8, `history`, as an engine with stub subsystems. Generator **0.14.0**; **schema version 7** (thirteen new tables, one new required `meta` key, section 9). Design doc sections 5 (deep time, ages, active phases, quiet intervals, flare-ups, records, determinism; creation; entities; tick loop), 6 (tables `phase`, `event`, `event_participant`, `event_cause`, `civilization`, `settlement`, `relation`; `meta` end year), 13 (P3 row and exit check; P4 timeline and territory by year; P5 interventions) and 14 (records a model can narrate and validate; the divine script as an intervention source). Depends on P0-01 to P0-04 with their amendments, P1-06 (region tables), P3-00 (binding; amended in 18.3), P3-01 (kind `history`), P3-02 (keyed draws, names), P3-03 (chronology tables, `HistoryParams`, the registry rule 8.2). Implementation read: `origin/p3/03-int` at 3ddc942 (generator 0.13.0, schema 6). Proposals read: up to "History: with a subset of races the first one present opens history; every race keeps its creator god". Also addresses the P3-03 determinism audit's advisories A1 (fatal guards for schedule invariants) and A2 (H8 must not rest on in-memory values): sections 3.2, 3.3 and 5.6. Revision r2 (P3-05's amendments) 2026-11-19.
 
 Numbers in this spec come from the spec writer's exact-integer prototype `~/.cache/the-unmapped/out/p3-04-spec/engine_proto.py` (on the P3-03 and P3-02 references; awakening years over seeds 0–999 and all 63 race subsets) and from the P1-06 validation worlds (`~/.cache/the-unmapped/out/p1-06-validation/`, whose geography is unchanged at 0.13.0). The empty-world size was measured with Python's SQLite 3.46.1 (9.6); the engineer confirms it with the vendored SQLite.
 
@@ -81,11 +81,15 @@ struct HistoryInputs {
     std::vector<db::AgeRow> ages;
     db::LayerGrid region_layer;                      // layer `region`
     db::LayerGrid water_layer;                       // layer `water`
+    std::vector<db::BiomeRow> biomes;                // id order (P3-05 3.2)
+    db::LayerGrid habitability_layer;                // P3-05
+    db::LayerGrid river_layer;                       // P3-05
+    db::LayerGrid flow_dir_layer;                    // P3-05
     friend bool operator==(const HistoryInputs&, const HistoryInputs&) = default;
 };
 }
 namespace worldgen::stages {
-struct HistoryResult;   // the rows of the thirteen tables of 9.1, each in its write order (9.3)
+using HistoryResult = history::HistoryResult;   // r3: defined in history/engine.hpp; the rows of the thirteen tables of 9.1, each in its write order (9.3)
 HistoryResult history_stage(const data::ContentSet&, const history::HistoryInputs&);  // C1 items 2 to 5, then sections 5 to 7
 void run_history(StageContext&);  // C1 item 1, history_stage(content, history_inputs_from(context)), write (9.3)
 }
@@ -99,7 +103,8 @@ P3-05 and P3-06 add members to `HistoryInputs` when they read more (for example 
 2. Tuning (seam guards; unreachable with loaded data): each field of `history.engine` inside its schema range (`history: tuning: <field> outside its schema range`, declaration order, level records as `<level>.<field>`), then its named checks (`history: tuning: <message>`, 4.1).
 3. Catalogue data (seam guard): the named check `report_events` of 4.2 (`history: report: <message>`, the first message).
 4. Settings: `history: settings: history_span <E> outside 2000 to 12000`; `history: settings: param.races does not match the present race rows` (the ids of `params.races` must be the `key`s of the rows with `present` = 1, in id order).
-5. Chronology rows: `history: chronology: <reason>`: the age rows are not ids 1 … P in order; the first `start_year` is not 0; a `start_year` is not the previous `end_year` + 1; the last `end_year` is not E − 1; an age's `race` is not a present race or its `awakening_year` ≠ `start_year`; a `god` row is missing for a present race. (P3-03 guarantees all of these; the engine's schedule depends on them, audit A1.)
+5. Chronology rows: `history: chronology: <reason>`: the age rows are not ids 1 … P in order; the first `start_year` is not 0; a `start_year` is not the previous `end_year` + 1; the last `end_year` is not E − 1; an age's `race` is not a present race or its `awakening_year` ≠ `start_year`; a `god` row is missing for a present race. (P3-03 guarantees all of these; the engine's schedule depends on them, audit A1.) The exact texts of every entry check are in 16.6 (r3).
+6. Region layer (r6, audit A4): the layer `region` of the inputs is N × N (N = `map_size`, 1 ≤ N ≤ the largest layer side) with element type `u16` and a valid grid, else `history: engine: layer 'region' is not <N> x <N> u16`.
 
 ## 4. Tuning and catalogue data
 
@@ -130,7 +135,7 @@ Named checks (per definition, P0-03 7.5, in this order):
 | Check | Condition | Message |
 | --- | --- | --- |
 | `engine_simulated_bounds` | `simulated_min_permille` ≤ `simulated_max_permille` | `simulated_min_permille must not be above simulated_max_permille` |
-| `engine_phase_budget` | for each level in the order sparse, normal, dense: 6 × `active_years` + `final_years` ≤ 6 × `simulated_max_permille` − 30 | `<level>: 6 × active_years + final_years must not be above 6 × simulated_max_permille − 30` |
+| `engine_phase_budget` | for each level in the order sparse, normal, dense: 6 × `active_years` + `final_years` ≤ 6 × `simulated_max_permille` − 30 | `<level>: 6 x active_years + final_years must not be above 6 x simulated_max_permille - 30` (ASCII: `x` and `-`, r3) |
 
 `engine_phase_budget` makes the cap unreachable by the fixed phases alone for any span 2000–12000 and at most six races (`race.order` ≤ 6): scaling rounds each of the seven lengths by at most half a year, and 30 reference years are at least 10 scaled years at E = 2000 (5.1). Shipped: 700 / 1200 / 1900 against 2670.
 
@@ -157,7 +162,7 @@ P3-04 lands first and defines one field; P3-07 adds none (r1: its selection cons
 
 Record `report_event`, in this order: `kind` string(32, the P0-03 definition id grammar); `salience` int(0, 100), the kind's base salience; `template` string(256), the English sentence (grammar 8.4).
 
-Named check `report_events` (per definition), messages in this order: for each entry i in array order: `events[<i>]: kind '<key>' is not an event kind` (not in the compiled catalogue), `events[<i>]: kind '<key>' is already listed at events[<j>]` (j the first), `events[<i>]: template: <problem>` (8.4, the first problem of that template); then for each compiled kind in id order without an entry: `event kind '<key>' has no entry`. Each message is reported (the check reports all, as `race_order_unique` does). A named check of one kind may consult the compiled catalogue: it is code of the library, not another kind.
+Check `report_events` (r3: a **kind-level check of kind `history`**, P0-03 amendment 16, reported at the header of `history.report`'s definition in the P0-03 7.5 form `<path>:<line>:<column>: error: check 'report_events' failed for 'history.report': <message>`), messages in this order: for each entry i in array order: `events[<i>]: kind '<key>' is not an event kind` (not in the compiled catalogue), `events[<i>]: kind '<key>' is already listed at events[<j>]` (j the first), `events[<i>]: template: <problem>` (8.4, the first problem of that template); then for each compiled kind in id order without an entry: `event kind '<key>' has no entry`. Each message is reported (the check reports all, as `race_order_unique` does). A check of one kind may consult the compiled catalogue: it is code of the library, not another kind.
 
 ```toml
 # game/data/history/report.toml and the fixtures under worldgen/tests/data/geo*/history/
@@ -182,9 +187,11 @@ E = the span; P present races; y_1 = 0 < y_2 < … < y_P the age `start_year`s (
 ```
 scale(v) = max(1, (v × E + 3000) div 6000)        // years at the reference span, rounded half up
 A = scale(d.active_years)   F = scale(d.flare_years)   L = scale(d.final_years)   Q = quiet_step_years (not scaled)
-floor_years = (simulated_min_permille × E + 999) div 1000      // ceil
-cap_years   = (simulated_max_permille × E) div 1000            // floor
+cap_years   = (simulated_max_permille × E) div 1000                          // floor
+floor_years = min((simulated_min_permille × E + 999) div 1000, cap_years)    // ceil, never above the cap (r3)
 ```
+
+The floor is capped because the two roundings differ: with both permilles 100 (allowed by `simulated_min_permille` ≤ `simulated_max_permille`, the only tuning check on them), level `normal` = {`active_years` 10, `flare_years` 1, `final_years` 10}, span 2001 and one race, ceil(200.1) = 201 > floor(200.1) = 200, so floor_years = cap_years = 200.
 
 **Why lengths scale with the span** (decision; question 1). The design gives "about 1,200 simulated years" for the default span and allows spans of 2,000 to 12,000, and P3-00 bounds the simulated share to 10–50% on every world. Fixed lengths cannot satisfy both: 1,200 fixed years are 60% of a 2,000-year span and 10% of a 12,000-year one. Scaling keeps the share a property of the detail level alone (table in 5.5), so a short history is a compressed one and a long one has longer eras, not more of them. The quiet step is a resolution, not a length, and stays 25 years.
 
@@ -242,7 +249,7 @@ while cur < q_e:
                 flare_total += f; cur = s + f; break                   // the interval resumes as a new quiet row
 ```
 
-Steps of a resumed row are counted from its own start (`cur`), not aligned to the earlier row. A flare-up may follow the first step of a resumed row (E9); P3-06's tension measure decides whether it does. Guards (fatal, `history: schedule: <what>`): a step length < 1; a flare length outside [1, q_e − s]; a phase row with `end_year` < `start_year`; and, after the run, the rows not tiling [0, E) contiguously in id order, or simulated years outside [floor_years, cap_years].
+Steps of a resumed row are counted from its own start (`cur`), not aligned to the earlier row. A flare-up may follow the first step of a resumed row (E9); P3-06's tension measure decides whether it does. Guards (fatal, `history: schedule: <what>`): a step length < 1; a flare length outside [1, q_e − s]; a phase row with `end_year` < `start_year`; and, after the run, the rows not tiling [0, E) contiguously in id order, or simulated years outside [floor_years, cap_years]. Exact texts in 16.6 (r3).
 
 **Simulated years** (kinds 1, 3 and 4) with the shipped data, all six races, seeds 0–999, no flare-up (the stubs' tension is 0); per mille of E in brackets:
 
@@ -280,7 +287,7 @@ Phase ids 1, 2, … in time order; `age` = the age containing `start_year` (a ph
 ```cpp
 namespace worldgen::history {
 enum class EntityType : std::int64_t { race = 1, god = 2, civilization = 3, settlement = 4, region = 5 };  // 6 figure, 7 faction, 8 monster, 9 site: reserved (P5, P6)
-enum class PhaseKind : std::int64_t { opening = 1, quiet = 2, flare = 3, final = 4 };
+enum class PhaseKind : std::int64_t { opening = 1, quiet = 2, flare = 3, final = 4 };   // r3: declared in history/schedule.hpp
 enum class SettlementKind : std::int64_t { hamlet = 1, village = 2, town = 3, city = 4, fortress = 5 };   // P3-01 race enum order
 enum class SettlementStatus : std::int64_t { thriving = 1, declining = 2, ruined = 3, faded = 4 };
 
@@ -318,7 +325,7 @@ public:
 }
 ```
 
-**Bounds** (H6; each fatal `history: bound: <what> exceeds <n>`): civilizations ≤ 4096, settlements ≤ 1,000,000, events ≤ 10,000,000, participants per event ≤ 64, causes per event ≤ 64, population in [0, 2^31 − 1], ids < 2^31. Relation keys: `kind` matches the P0-03 definition id grammar; a symmetric relation is stored with (a_type, a_id) < (b_type, b_id), an asymmetric one with the subject as a (P3-06 lists its kinds and which are symmetric). A setter that names a missing entity, a settlement of a region ≠ the settlement's own, or an ended civilization as owner is fatal (`history: state: <what>`).
+**Bounds** (H6; each fatal `history: bound: <what> exceeds <n>`): civilizations ≤ 4096, settlements ≤ 1,000,000, events ≤ 10,000,000, participants per event ≤ 64, causes per event ≤ 64, population in [0, 2^31 − 1], ids < 2^31. Relation keys: `kind` matches the P0-03 definition id grammar; a symmetric relation is stored with (a_type, a_id) < (b_type, b_id), an asymmetric one with the subject as a (P3-06 lists its kinds and which are symmetric). A setter that names a missing entity or an ended civilization as owner is fatal (`history: state: <what>`). "A settlement of a region other than its own" (r3): `found_settlement` checks that the cell (x, y) lies on the map and that the `region` layer's value at it is the given region, `history: state: found_settlement: cell (<x>, <y>) lies in region <r'>, not <r>`. The check is unconditional (r6): 3.4 item 6 guarantees the layer is N × N `u16` before the run, so no layer shape skips it. The full message list is 16.6.
 
 ### 6.2 Steps and their order
 
@@ -336,7 +343,7 @@ A **step** is one of: an awakening (6.3), a flare-up start (6.3), one tick step 
 | Q1 population drift | P3-05 | — |
 | Q2 generations | engine | counted from years (6.6); no state |
 | Q3 ruin decay | P3-05 | — |
-| Q4 slow expansion | P3-06 | — |
+| Q4 slow expansion | P3-05, P3-06 | — |
 | Q5 tension | engine | asks the tension sources (6.5) |
 | Q6 bookkeeping | engine | quiet eras (6.6), then 6.7 |
 
@@ -348,13 +355,13 @@ Q6 is new against P3-00 4.4 (amendment 18.3): the bookkeeping that T7 does in a 
 
 **Awakening** of age k's race r at y_k (before T1 of y_k; one step): (a) `place` = the awakening handler's `awakening_place(r)` (7.1); (b) append event `awakening` (year y_k, region `place`, participants race r as `race` and god `race.creator_god` as `creator`, no cause); (c) set the opening phase's `trigger_event` to its id; (d) the handler's `awaken(r, awakening_event)` (7.2). P3-00 4.2 puts the event before the placement; the place is chosen first so that the event carries it (design 5: "an event with a god, a year and a place"; P3-00 10.1: the place is the home region). No state changes before (b).
 
-**Flare-up start** at the first year of each flare-up (before T1; one step): append event `flare_up` (region 0, value `years` = the phase's length, cause = the trigger event).
+**Flare-up start** at the first year of each flare-up (before T1; one step): append event `flare_up`, a **point event** (`end_year` = `year` = the flare-up's first year; region 0, value `years` = the phase's length, cause = the trigger event). It takes an event id like any other, so when flare-ups occur the awakening events are not at consecutive ids and an opening phase's `trigger_event` is not predictable from the age number alone. Example (r3): ages at 0 and 520, span 6000, `normal`, an awakening handler that founds nothing (so no quiet eras), `ForcedTension(500, 1000, 1)`: phases 1 opening 0–149, 2 quiet 150–499, 3 flare-up 500–519 (cut at the awakening), 4 opening 520–669, …; events e1 `awakening` (year 0), e2 `flare_up` (year 500, cause e1), e3 `awakening` (year 520); phase 4's `trigger_event` is 3.
 
 ### 6.4 The step seam
 
 ```cpp
 namespace worldgen::history {
-enum class Step : std::uint8_t { t1 = 1, t2, t3, t4, t5, t6, t7, q1, q2, q3, q4, q5, q6 };
+enum class Step : std::uint8_t { t1 = 1, t2, t3, t4, t5, t6, t7, q1, q2, q3, q4, q5, q6, awakening, flare };  // 14, 15: the engine's own steps of 6.3 (r3)
 
 struct Participant { std::string_view role; EntityType type; std::int64_t id; };
 struct EventSpec {
@@ -377,7 +384,7 @@ public:
     const State& state() const; State& state();  // mutations through the State API only
     bool visible(const Civilization&) const; bool visible(const Settlement&) const;
     std::int64_t append(const EventSpec&);       // the event writer, 6.6; returns the new id
-    std::int64_t quiet_events_left(std::int64_t civ) const;   // 6.6
+    std::int64_t quiet_events_left(std::int64_t civ) const;   // 6.6; outside a quiet step: quiet_events_max (r3)
     std::uint64_t draw(std::uint64_t stream_key, std::uint64_t a, std::uint64_t b, std::uint64_t k) const;  // draw(key, year(), a, b, k), P3-02 4.1
 };
 
@@ -393,7 +400,7 @@ public:
     virtual std::int64_t awakening_place(const StepContext&, std::int64_t race) = 0;   // a region id; no state change
     virtual void awaken(StepContext&, std::int64_t race, std::int64_t awakening_event) = 0;
 };
-struct TensionReport { std::int64_t value = 0; std::int64_t trigger_event = 0; };
+struct TensionReport { std::int64_t value = 0; std::int64_t trigger_event = 0; };   // r3: declared in history/schedule.hpp
 class TensionSource {                            // P3-06
 public:
     virtual ~TensionSource() = default;
@@ -410,22 +417,24 @@ HistoryResult run_engine(const data::ContentSet&, const HistoryInputs&, const En
 }
 ```
 
-What a subsystem receives: the step, the year (and length), the phase, the read-only inputs, geography view and data, the state, the event writer and keyed draws. What it may change: the state through `State`'s calls and its own members; nothing else (not the schedule, not another subsystem's members, not an earlier event). The shipped `EngineConfig` of P3-04 is: awakening = the stub (7), no subsystems, no tension source, the empty intervention source, the compiled catalogue with the data's templates. P3-05 and P3-06 replace the stub and add subsystems in the order peoples, conflict; P5 appends.
+**Engine-owned steps** (r3): T5, T7, Q2, Q5, Q6 and the two engine steps `awakening` and `flare` are the engine's. A subsystem whose `steps()` lists one of them, or a value outside 1–13, is refused when the engine is configured, fatal `history: engine: a subsystem lists step <n>, which is not a subsystem step` (`<n>` the enumerator's number). `quiet_events_left` returns `quiet_events_max` outside quiet steps (r3).
+
+What a subsystem receives: the step, the year (and length), the phase, the read-only inputs, geography view and data, the state, the event writer and keyed draws. What it may change: the state through `State`'s calls and its own members; nothing else (not the schedule, not another subsystem's members, not an earlier event). The shipped `EngineConfig` of P3-04 is: awakening = the stub (7), no subsystems, no tension source, the empty intervention source, the compiled catalogue with the data's templates. P3-05 and P3-06 replace the stub and add subsystems in the order peoples, conflict; P5 appends. **From generator 0.16.0** (P3-06 8.2, r4) the shipped configuration also installs `ConflictSubsystem` after `PeoplesSubsystem` (steps T2, T6, Q4) and as the only tension source; before 0.16.0 there is no tension source.
 
 ### 6.5 Tension
 
-In Q5 the engine calls each tension source in config order; the step's tension is the largest `value`, its trigger that of the first source reporting it. A report with value < 0, or a trigger outside [1, the last event id] when value ≥ the threshold, is fatal (`history: tension: <what>`). The tension of a step that ends its interval is not asked for (SC6). With no source the tension is 0 and no flare-up happens: so in the shipped P3-04 world `phase` has no kind 3 rows, and the flare-up path is exercised by the test source of 7.4.
+In Q5 the engine calls each tension source in config order; the step's tension is the largest `value`, its trigger that of the first source reporting it. A report with value < 0, or a trigger outside [1, the last event id] when value ≥ the threshold, is fatal (`history: tension: <what>`, texts in 16.6). The tension of a step that ends its interval is not asked for (SC6). With no source the tension is 0 and no flare-up happens: so in the shipped P3-04 world `phase` has no kind 3 rows, and the flare-up path is exercised by the test source of 7.4.
 
 ### 6.6 The event writer
 
-`append` assigns the next id (1, 2, … in append order, H2), stores the event in memory and returns the id. It checks, fatal `history: event <id> (<kind>): <what>`:
+`append` assigns the next id (1, 2, … in append order, H2), stores the event in memory and returns the id. It checks, fatal `history: event <id> (<kind>): <what>` (the `<what>` texts are in 16.6, r3):
 
 | # | Check |
 | --- | --- |
 | W1 | the kind is in the catalogue |
 | W2 | year: in a tick, `year` = the tick year; in a quiet step, `year` = the step's start (every event of a quiet step is dated at its start); `year` ≤ `end_year` ≤ E − 1, and in a quiet step `end_year` ≤ the step's last year (the engine's `quiet_era` is lengthened afterwards, 6.6) |
 | W3 | `year` ≥ the year of the previous event (so years never decrease with id) |
-| W4 | participants: each role is a role of the kind, with its entity type; per role the count is within [`min_count`, `max_count`] (0 = unbounded); in ascending role seq; each id exists (races and gods: a row; civilizations, settlements: created; regions: a row) |
+| W4 | participants: each role is a role of the kind, with its entity type; per role the count is within [`min_count`, `max_count`] (0 = unbounded); in ascending role seq; each id exists (races and gods: a row; regions: a row; civilizations, settlements: created, **or equal to the next id about to be created**, r3: the writer then checks, before the next step begins, that the entity was founded, `history: event <id> (<kind>): <type> <id> was not founded in the step that named it`) |
 | W5 | values: exactly one per value key of the kind |
 | W6 | causes: strictly ascending, each in [1, id − 1]; non-empty if the kind is `caused` |
 | W7 | region and settlement against the kind's `region_use` / `settlement_use` (0 must be 0, 1 must be an existing id, 2 either); a settlement given with a region must lie in it |
@@ -448,6 +457,18 @@ At the end of every tick year (T7) and quiet step (after the quiet eras in Q6), 
 4. **Phase end**: if this tick or step ends the phase (its last year is the phase's `end_year`), a census row at `year` = `end_year` for every settlement whose last row differs from its current state in any of the four values (population included). At most one row per (settlement, year): a phase-end row that would repeat the row of item 3 in the same year is not written (it would be identical).
 
 **End of the run** (after year E − 1): open `region_control` rows keep `to_year` NULL; open relations keep `until` NULL; the `civilization` and `settlement` rows hold the end state (`owner_civ`, `kind`, `status`, `population`, `ruined_year`, `ruin_event`, `capital`, `ended_year`, `ending_event`); `phase` rows as built.
+
+### 6.9 Rules for subsystems (normative; from the P3-04 determinism audit, r5)
+
+The audit of the engine (`docs/reviews/p3-04-simulation-engine-determinism-audit.md` on `p3/04-audit`, A1, A2, N1–N5) found the engine itself safe and named hazards for the subsystems that plug into it. Every subsystem (P3-05, P3-06, P5) follows these rules; the subsystem specs state how they meet them.
+
+1. **No live iteration across a creation or a relation change (A1).** Never call `found_civilization`, `found_settlement`, `open_relation` or `close_relation` inside a loop over `civs()`, `settlements()` or `relations()`, and never keep a reference, pointer or span obtained from `State` across such a call. Iterate ids up to a count taken before the loop (`for (id = 1; id <= n; ++id)`, re-fetching `civ(id)` after any founding), or collect the changes and apply them after the loop; for relations, copy the keys first. A subsystem's members hold ids, never references into `State`. The vectors grow differently under different standard libraries (libstdc++ and libc++ double their capacity, MSVC's grows by half), so a violation can read freed memory on one platform and not another. The lint rule `history-live-iteration` reports the range-for form; references held across a founding remain an audit item.
+2. **`tension()` is a pure read (A2).** The engine does not call it for the step that ends a quiet interval (SC6, E3), so anything a source accumulated inside it would depend on where awakenings fall. A tension source accumulates in its subsystem steps and `tension()` reports what is stored.
+3. **Fixed subsystem order (N1).** `EngineConfig::subsystems` is a vector filled in a fixed order in code (`stages/history.cpp`), never from a container ordered by pointer. Shipped: peoples, then conflict (from 0.16.0). A subsystem whose `steps()` lists one step twice is refused when the engine is configured, fatal `history: engine: a subsystem lists step <n> twice` (`<n>` the step's number, 1 for T1; r6). Two different subsystems may list the same step (peoples and conflict share T2 and Q4).
+4. **Visibility in shared steps (N2).** `civs()` and `settlements()` return every entity, also those created in the current step; a subsystem reads entities through `visible()` (6.2). In a step shared by two subsystems, each spec states what it sees of the other's same-step changes: entities created earlier in the step are invisible; region owners, populations and statuses are live state.
+5. **Draw keys (N3).** `draw(stream, a, b, k)` fixes w0 to the step's year, so two decisions on one stream with equal (a, b, k) in different steps of one year get the same value. One declared stream per decision kind; a, b are entity ids or ids stored in the world, k a decision ordinal; never a position in a filtered or sorted list.
+6. **Symmetric relations are normalized by the subsystem (N4).** `open_relation` stores the key as given; a subsystem stores a symmetric relation with (a_type, a_id) < (b_type, b_id), through one helper.
+7. **Net change per bookkeeping (N5, 6.7).** A relation closed and reopened before the next bookkeeping (T7 of the same tick year, or Q6 of the same quiet step) leaves its row unchanged and keeps its first `since_event`; a region whose owner is set several times records the last owner and the last `owner_event`. A subsystem that must record such a change does not make it within one year (P3-06 7.3 delays the first battle of a war to the year after its declaration for this reason).
 
 ### 6.8 Divine interventions (P3-00 9.2)
 
@@ -481,9 +502,9 @@ The stub ignores race preferences (P3-05's homeland rule, P3-00 10.1, replaces i
 
 For race r (civilization id c = the number of civilizations + 1, settlement id s likewise), in one step:
 
-1. name n_c = `make_name(naming of r's culture, NameKind::civilization, seed, culture.id, c, registry)` (P3-02 4.3); append `civ_founded` (region = home, participants c as `civilization`, r as `race`, cause the awakening event); `found_civilization`; if the home region is free, `set_region_owner(home, c, civ_founded)`.
+1. name n_c = `make_name(naming of r's culture, NameKind::civilization, seed, culture.id, c, registry)` (P3-02 4.3); append `civ_founded` (region = home, participants c as `civilization`, r as `race`, cause the awakening event), then `found_civilization` (the event names c before it exists; W4 accepts the next id, r3); if the home region is free, `set_region_owner(home, c, civ_founded)`.
 2. site: the home region's seed cell (`seed_x`, `seed_y`) if no settlement stands on it; otherwise the first cell in row-major order (y, then x) of the region's bounding box whose `region` layer value is the region's id, whose `water` layer value is not 2 (lake), and on which no settlement stands (fatal `history: stub: no settlement site in region <id>` if none; unreachable for a non-islet region).
-3. name n_s = `make_name(…, NameKind::settlement, seed, culture.id, s, registry)`; append `settlement_founded` (region = home, settlement = s, participants s as `settlement`, c as `founder`, value `population` = 200, cause `civ_founded`); `found_settlement` with kind = the first entry of r's `settlement_kinds` (shipped: `hamlet` for every race), status `thriving`, population 200; `set_capital(c, s)`.
+3. name n_s = `make_name(…, NameKind::settlement, seed, culture.id, s, registry)`; append `settlement_founded` (region = home, settlement = s, participants s as `settlement`, c as `founder`, value `population` = 200, cause `civ_founded`), then `found_settlement` (likewise) with kind = the first entry of r's `settlement_kinds` (shipped: `hamlet` for every race), status `thriving`, population 200; `set_capital(c, s)`.
 
 `param.civs_per_race` is ignored by the stub (one civilization per present race); P3-05 applies it.
 
@@ -495,7 +516,7 @@ No subsystem runs in any tick or quiet step; populations stay 200; no relation i
 
 ### 7.4 S4 The test tension source (test seam, not shipped)
 
-`history::testing::ForcedTension(period, value, trigger)`: reports `value` when the quiet step's end year (its start + length) is a multiple of `period`, else 0; the trigger is the fixed event id `trigger`. It is reachable only through `run_engine` with a test `EngineConfig`; `run_history` never installs it. Golden cases use `ForcedTension(500, 1000, 1)` and `ForcedTension(1, 5000, 1)` (16.4).
+`history::testing::ForcedTension(period, value, trigger)`: reports `value` when the quiet step's end year (its start + length) is a multiple of `period`, else 0; the trigger is the fixed event id `trigger`. It is reachable only through `run_engine` with a test `EngineConfig`; `run_history` never installs it. Golden cases use `ForcedTension(500, 1000, 1)` and `ForcedTension(1, 5000, 1)` (16.4). A period that no quiet step end meets forces nothing (r3): `dense`, span 2000, one race: A = 83, L = 133, the quiet interval [83, 1867) has steps ending at 108, 133, …, all ≡ 8 (mod 25) except the interval's end 1867, where no flare-up starts; so `ForcedTension(25, 5000, 1)` gives no flare-up and 216 simulated years.
 
 ## 8. The event catalogue
 
@@ -505,7 +526,7 @@ No subsystem runs in any tick or quiet step; populations stay 200; no relation i
 
 ### 8.2 Compiled catalogue at P3-04
 
-Kind ids in this order; later specs append (P3-05 from 6), never renumber. Entity type codes as 6.1. `region_use`, `settlement_use`: 0 never, 1 always, 2 optional. `caused`: 1 = every event of the kind has a cause.
+Kind ids in this order; later specs append (P3-05 from 6, P3-06 kinds 20–30 from generator 0.16.0, r4), never renumber. Entity type codes as 6.1. `region_use`, `settlement_use`: 0 never, 1 always, 2 optional. `caused`: 1 = every event of the kind has a cause.
 
 | id | key | caused | region | settlement | roles (seq: role, entity type, min–max) | values (seq: key) | written by |
 | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -550,7 +571,7 @@ form        = "name" | "plural" | "adjective" | "all"            // plural, adje
 word        = zero or more bytes other than "{", "}", "|", "?"
 ```
 
-Problems reported by `template_problem` (the first, scanning left to right; `<n>` = the byte offset of the `{` or `}`, from 0): `unmatched } at byte <n>`; `unclosed placeholder at byte <n>`; `unknown placeholder '{<body>}' at byte <n>` (body not of the grammar, or naming no role or value of the kind); `form '<form>' needs a race role at byte <n>`; `{@region} needs a kind with a region at byte <n>` (`region_use` ≠ 1), and the same for `{@settlement}`; `role '<role>' may have no participant at byte <n>` (a role with `min_count` 0 used without `:all`); and, after the scan, `the template is empty`. Templates are ASCII (names are, P3-02); a non-ASCII byte is `non-ASCII byte at byte <n>`.
+Problems reported by `template_problem` (the first, scanning left to right; `<n>` = the byte offset of the `{` or `}`, from 0, except for a non-ASCII byte, reported at its own offset, also inside a placeholder, r3; a placeholder's body runs to the next `}`, and a `{` before that `}` makes the placeholder unclosed, r3; within one placeholder the race-role form check comes before the `min_count` check, r3): `unmatched } at byte <n>`; `unclosed placeholder at byte <n>`; `unknown placeholder '{<body>}' at byte <n>` (body not of the grammar, or naming no role or value of the kind); `form '<form>' needs a race role at byte <n>`; `{@region} needs a kind with a region at byte <n>` (`region_use` ≠ 1), and the same for `{@settlement}`; `role '<role>' may have no participant at byte <n>` (a role with `min_count` 0 used without `:all`); and, after the scan, `the template is empty`. Templates are ASCII (names are, P3-02); a non-ASCII byte is `non-ASCII byte at byte <n>`.
 
 ### 8.5 Rendering
 
@@ -616,7 +637,7 @@ STRICT, no REAL, no BLOB, no foreign-key clause, no secondary index (P4 loads th
 | `event_value` | `seq`, `value` | `event_kind_value.seq`; every key of the kind has exactly one row |
 | `civilization` | `race`, `culture` | `race.id`, `culture.id` |
 | | `home_region`, `capital` | region id; settlement id or 0 |
-| | `founded_year`, `founding_event`, `ended_year`, `ending_event` | the `civ_founded` event; NULL and 0 while alive |
+| | `founded_year`, `founding_event`, `ended_year`, `ending_event` | the `civ_founded` event (or `civ_seceded` for a civilization born by secession, P3-05 10.3); NULL and 0 while alive |
 | `settlement` | `x`, `y`, `region` | its cell (0 ≤ x, y < N) and region |
 | | `founder_civ`, `founded_year`, `founding_event` | at founding |
 | | `owner_civ`, `kind`, `status`, `population` | end state; `kind` 1 hamlet, 2 village, 3 town, 4 city, 5 fortress; `status` 1 thriving, 2 declining, 3 ruined, 4 faded; `owner_civ` 0 when abandoned |
@@ -633,7 +654,7 @@ One stage transaction, through new `StageContext` writers (`write_event_kind`, `
 
 ### 9.4 `meta.history_end_year`
 
-A new **required** key, = E, canonical decimal (P0-02 5.5), written by `generate_world` for every world with the eight `param.*` keys (P3-03 4.1 step 3; so the empty and test-pattern worlds have it too). The reader checks it equals `param.history_span` ("meta value invalid", exit 3, the existing message `world file '<path>' has an invalid value '<value>' for meta key 'history_end_year'`); P5's history mode may relax that. `REQUIRED_META_KEYS`, ascending: `content_hash`, `format`, `generator_version`, `history_end_year`, `param.civs_per_race`, … , `stages` (17 keys).
+A new **required** key, = E, canonical decimal (P0-02 5.5), written by `generate_world` for every world with the eight `param.*` keys (P3-03 4.1 step 3; so the empty and test-pattern worlds have it too). The writer derives it from `param.history_span` (r3: no separate setter; `finalize` writes it). The reader checks its canonical decimal form in its place among the required keys, and its equality with `param.history_span` after every other key has been checked (r3) ("meta value invalid", exit 3, the existing message `world file '<path>' has an invalid value '<value>' for meta key 'history_end_year'`); P5's history mode may relax that. `REQUIRED_META_KEYS`, ascending: `content_hash`, `format`, `generator_version`, `history_end_year`, `param.civs_per_race`, … , `stages` (17 keys).
 
 ### 9.5 Worlds at schema 7
 
@@ -709,7 +730,7 @@ census_rows = 6
 relations = 0
 ```
 
-Report format stays v2 (P3-03 9.1's reasoning). Every key of `[history]` is also a key of the history report's `[stats]`, with the same definition (r1; P3-07 9). **Corrupt data** (exit 3, nothing on stdout, after the `[chronology]` checks, when `phase` or `event` has rows; first failure, in this order): row shapes as P3-03 9.1 (only the four nullable columns may be NULL); `corrupt table 'phase': row <id>: <reason>` (`id not consecutive`, `start_year <s>, expected <x>`, `end_year below start_year`, `kind <k>`), `corrupt table 'phase': the last phase ends in <e>, expected <E − 1>`; `corrupt table 'event': row <id>: <reason>` (`id not consecutive`, `year <y> below the previous event's <p>`, `end_year below year`, `kind <k> is not an event kind`); `corrupt table 'event_cause': row (<e>, <c>): cause not below event`. Everything else (participants against roles, templates) is P3-07's `report --history`, which owns the history format (P3-00 11).
+Report format stays v2 (P3-03 9.1's reasoning). Every key of `[history]` is also a key of the history report's `[stats]`, with the same definition (r1; P3-07 9). **Corrupt data** (exit 3, nothing on stdout, after the `[chronology]` checks, when `phase` or `event` has rows; first failure, in this order): row shapes as P3-03 9.1 (only the four nullable columns may be NULL); `corrupt table 'phase': row <id>: <reason>` (in this order per row: `id not consecutive`, `start_year <s>, expected <x>`, `end_year below start_year`, `kind <k>`, then, before any arithmetic on the row's years (r6, audit A3), `end_year <e> above <E - 1>` for a row other than the last), `corrupt table 'phase': the last phase ends in <e>, expected <E - 1>` (for the last row with `end_year` > E − 1 the same check reports this message, and after the loop it reports a last row ending below E − 1); `corrupt table 'event': row <id>: <reason>` (`id not consecutive`, `year <y> below the previous event's <p>`, `end_year below year`, `kind <k> is not an event kind`); `corrupt table 'event_cause': row (<e>, <c>): cause not below event`. Everything else (participants against roles, templates) is P3-07's `report --history`, which owns the history format (P3-00 11).
 
 ### 11.2 `hash --detail`
 
@@ -829,6 +850,33 @@ The empty world of 9.6 (34 pages, 139264 bytes; schema text 5839 bytes; two `sql
 
 **Final signatures** (engineer): `worldgen/include/worldgen/history/{inputs,schedule,engine,stubs,event_catalogue}.hpp`, `worldgen/include/worldgen/stages/history.hpp`, `worldgen/include/worldgen/inspect/history.hpp`, typed row readers `db::read_<table>_rows` in `db/reader.hpp`. `HistoryResult` is `history::HistoryResult` (`stages::HistoryResult` is an alias); `PhaseKind` and `TensionReport` live in `history/schedule.hpp`; `Step` has two more enumerators, `awakening` and `flare`, for the engine's own steps of 6.3. `HistoryView::load` errors (r1): code `corrupt_layer`, message `corrupt table '<table>': <detail>` (for example `corrupt table 'event': row 7: kind 9 is not an event kind`, `corrupt table 'event_kind': row 4: template: unclosed placeholder at byte 3`, `corrupt table 'event_participant': row (3, 1): civilization 9 does not exist`); a table that cannot be read returns the reader's own error. The `[history]` values are `inspect::history_stats` over `inspect::read_history_tables` (11.1 r1).
 
+### 16.6 Fatal messages (normative, r3)
+
+Every `FatalError` text of the engine, the stage and the stubs, as implemented on `p3/04-int` and confirmed by the lead's ruling of 2026-11-19. Tests compare these texts exactly; where another section names a message, this list is the authority. All texts are ASCII (messages are part of the cross-platform contract). `<...>` are decimal integers unless stated; `<E - 1>` and similar placeholders print one number.
+
+| Group | Messages |
+| --- | --- |
+| Entry (3.4 item 1) | `history: input precondition: no region rows`; `history: input precondition: no age rows`; `history: input precondition: region ids are not 1 to <n>`; `history: input precondition: a region_border row names a region that does not exist` |
+| Tuning (3.4 item 2, 4.1) | `history: tuning: the content has no definition history.engine`; `history: tuning: <field> outside its schema range` (level fields as `<level>.<field>`); `history: tuning: simulated_min_permille must not be above simulated_max_permille`; `history: tuning: <level>: 6 x active_years + final_years must not be above 6 x simulated_max_permille - 30` |
+| Catalogue data (3.4 item 3) | `history: report: the content has no definition history.report`; `history: report: <message>` (the first message of `report_events`, 4.2) |
+| Settings (3.4 item 4) | `history: settings: history_span <E> outside 2000 to 12000`; `history: settings: param.races does not match the present race rows` |
+| Chronology rows (3.4 item 5) | `history: chronology: the age rows are not ids 1 to <P> in order`; `history: chronology: age <id>: the first start_year is <s>, expected 0`; `history: chronology: age <id>: start_year <s> is not the previous end_year + 1`; `history: chronology: age <id>: end_year below start_year`; `history: chronology: age <id>: race <r> is not a present race`; `history: chronology: age <id>: race <r> awakens in <y>, expected its start_year <s>` (`<y>` is `no year` for a NULL `awakening_year`); `history: chronology: the last end_year is <e>, expected <E - 1>`; `history: chronology: no god row for present race <r>` |
+| Region layer (3.4 item 6; r6) | `history: engine: layer 'region' is not <N> x <N> u16` |
+| Resume (3.2) | `history: resume: schema version <v>, this build reads 7`; `history: resume: the world's data content hash differs from the loaded data`; `history: resume: the world was generated by <version>, this build is <version>`; `history: resume: meta.stages is '<stages>', expected the stages up to chronology`; `history: resume: <what>: <reader message>` (a table or layer the reader cannot return) |
+| Schedule (5) | `history: schedule: span <E> below 2`; `history: schedule: the age start years must begin at 0`; `history: schedule: the age start years must increase`; `history: schedule: an age starts at or after the span`; `history: schedule: scheduled active years <sched> above the cap <cap>`; `history: schedule: quiet step length <n> below 1`; `history: schedule: flare-up length <f> outside [1, <m>]`; `history: schedule: phase <id> ends before it starts`; `history: schedule: phase rows do not tile [0, <E>) at phase <id>`; `history: schedule: phase rows do not tile [0, <E>) at the end`; `history: schedule: simulated years <n> outside [<floor>, <cap>]` |
+| Engine configuration (6.4) | `history: engine: the configuration needs an awakening handler, an intervention source and a catalogue`; `history: engine: a subsystem is null`; `history: engine: a tension source is null`; `history: engine: a subsystem lists step <n>, which is not a subsystem step`; `history: engine: a subsystem lists step <n> twice` (r6) |
+| Engine bookkeeping (6.7; internal guards) | `history: engine: a relation vanished without a closing event`; `history: engine: two census rows of settlement <s> in year <y>` |
+| Awakening (6.3) | `history: awakening: the place <r> of race <race> is not a region` |
+| Tension (6.5) | `history: tension: value <v> below 0`; `history: tension: trigger event <t> outside [1, <n>]` |
+| Bounds (6.1) | `history: bound: civilizations exceeds 4096`; `history: bound: settlements exceeds 1000000`; `history: bound: events exceeds 10000000`; `history: bound: participants per event exceeds 64`; `history: bound: causes per event exceeds 64`; `history: bound: population exceeds 2147483647`; `history: bound: steps exceed 2^64 - 1` |
+| Event writer (6.6), prefix `history: event <id> (<kind>): ` | W1 `the kind is not in the catalogue`; W2 `year <y>, expected <x>`, `end_year <e> outside [<y>, <max>]`; W3 `year <y> below the previous event's <p>`; W4 `'<role>' is not a role of the kind`, `participant <i> of role '<role>' is a <type>, expected a <type>`, `participants are not in ascending role seq`, `<type> <id> does not exist`, `role '<role>' has <n> participants, expected <min> to <max>` (`<max>` is `any` for 0), `<type> <id> was not founded in the step that named it` (checked before the next step, 7.2); W5 `<n> values, expected <m>`; W6 `cause <c> outside [1, <id - 1>]`, `causes are not strictly ascending`, `the kind needs a cause`; W7 `the kind has no <region|settlement>, but <region|settlement> <v> is given`, `the kind needs a <region|settlement>; <v> is not one`, `<region|settlement> <v> does not exist`, `settlement <s> does not lie in region <r>`, `settlement <s> was not founded in the step that named it`; W8 `salience <v> outside [0, 100]`; W9 `civilization <c> has no quiet events left in this step` (`<type>` is the entity type key: `race`, `god`, `civilization`, `settlement`, `region`) |
+| State (6.1), prefix `history: state: ` | `<call>: event <e> does not exist`; `<call>: civilization <c> does not exist`; `<call>: civilization <c> has ended`; `<call>: settlement <s> does not exist`; `civilization <c> does not exist`; `settlement <s> does not exist`; `region <r> does not exist`; `race <r> has no generation_years above 0`; `found_civilization: race <r> does not exist`; `found_civilization: culture <c> does not exist`; `found_civilization: region <r> does not exist`; `found_settlement: cell (<x>, <y>) is outside the map`; `found_settlement: region <r> does not exist`; `found_settlement: cell (<x>, <y>) lies in region <r'>, not <r>`; `found_settlement: kind is not a settlement kind`; `set_region_owner: region <r> does not exist`; `set_settlement_kind: kind is not a settlement kind`; `set_settlement_status: status is not a settlement status`; `open_relation: kind '<kind>' is not of the definition id grammar`; `open_relation: an entity of the relation does not exist`; `open_relation: relation '<kind>' is already open`; `close_relation: relation '<kind>' is not open` (`<call>` is the `State` function: `found_civilization`, `found_settlement`, `set_region_owner`, `set_settlement_owner`, `set_settlement_kind`, `set_settlement_status`, `set_population`, `set_capital`, `end_civilization`, `open_relation`, `close_relation`) |
+| Stub (7) | `history: stub: no region`; `history: stub: no settlement site in region <r>`; `history: stub: race <r> has no row`; `history: stub: culture <c> has no row`; `history: stub: race '<key>' or culture '<key>' is not in the content`; `history: stub: race '<key>' has no settlement kind`; `history: stub: '<text>' is not a settlement kind`; `history: stub: the civilization id is not the expected one`; `history: stub: the settlement id is not the expected one`; test seam: `ForcedTension: period below 1` |
+| Catalogue (8.2; self-checks of the compiled catalogue and of `read_event_catalogue`) | `compiled_event_catalogue: kind <id> has a bad id or key`; `compiled_event_catalogue: kind key '<key>' is used twice`; `compiled_event_catalogue: kind '<key>' has a region or settlement use outside 0 to 2`; `compiled_event_catalogue: kind '<key>' has a bad role '<role>'`; `compiled_event_catalogue: kind '<key>' has a bad value key '<key>'`; `compiled_event_catalogue: kind '<key>' repeats a role or value key`; `read_event_catalogue: event_kind ids are not 1, 2, ... at id <id>`; `read_event_catalogue: event_kind_role row (<kind>, <seq>) is not valid`; `read_event_catalogue: event_kind_value row (<kind>, <seq>) is not valid` |
+| Rendering (8.5), prefix `render_event: event <id>: ` | `not in the log` (the only one reachable through `HistoryView::load`, r1); guards for a view built otherwise: `kind <k> is not an event kind`, `no name for <type> <id>`, `no participant with role '<role>'`, `no region <r>`, `no settlement <s>` |
+
+Template problems (8.4) and the `report_events` messages (4.2) are listed in those sections; `HistoryView::load`'s corrupt-table errors are error values, not fatal (16.5, r1).
+
 ## 17. Worked example: seed 42, 1024, span 6000, normal, all races
 
 Chronology (P3-03 7.1): ages start 0, 2074, 3242, 4243, 4969, 5596. SC1: A = 150, F = 50, L = 300, Q = 25, floor 600, cap 2700. SC2: openings end 150, 2224, 3392, 4393, 5119, 5746. SC3: S_f = max(5700, 5746) = 5746 (E4). SC4: scheduled 900 + 254 = 1154 ≥ 600.
@@ -921,3 +969,23 @@ Each with the recommendation and the interim choice this spec follows.
 ## Revision note r1 (2026-11-19, amendments for P3-07)
 
 Requested by P3-07 18.1, applied on `p3/07-spec`. 4.2: P3-07 adds no field. 8.5: `HistoryView::load` returns `db::Result<HistoryView>` (a corrupt world is an error value, code `corrupt_layer`, never a `FatalError`, P0-02 9); read accessors for the log, the stored catalogue and names; `load` validates every stored template and every reference of the log, so `render_event` fails only for an id outside the log; kinds the build does not compile are accepted. 11.1: the `[history]` keys are a subset of the history report's `[stats]`. No world byte changes.
+
+## Revision note r2 (2026-11-19, amendments for P3-05)
+
+Made with P3-05 (its 18.2 items 1, 5–7), in place. 3.3: `HistoryInputs` gains `biomes`, `habitability_layer`, `river_layer`, `flow_dir_layer` (both constructors, R1, R2). 6.2: Q4 is shared by P3-05 (foundings in free regions) and P3-06. 6.4: the shipped `EngineConfig` installs P3-05's `PeoplesAwakening` and `PeoplesSubsystem` (steps T1, T2, T4, Q1, Q3, Q4) from generator 0.15.0; the stubs S1–S3 of section 7 remain as test seams only. 9.2: `civilization.founding_event` may be a `civ_seceded` event. The catalogue of 8.2 is extended by P3-05 with kinds 6–19 (appended; no kind of this spec changes).
+
+## Revision note r3 (2026-11-19, corrections after implementation)
+
+The lead's rulings of 2026-11-19 on the questions the implementation (`p3/04-int`) raised; text brought in line with them, no new open question. 5.1 (and 5.4): floor_years = min(ceil(min_permille × E / 1000), cap_years), with the example of both permilles 100, `normal` {10, 1, 10}, span 2001, one race (floor = cap = 200); the tuning check stays min ≤ max. 4.1: the `engine_phase_budget` message is ASCII (`x`, `-`); 11.1's `<E - 1>` likewise; P3-07's messages checked and corrected (its r2), P3-05's are ASCII already. 4.2: `report_events` is a kind-level check of kind `history`, reported at `history.report`'s header in the P0-03 7.5 form. 6.4: `Step` gains `awakening` and `flare` (14, 15); a subsystem listing an engine-owned step (T5, T7, Q2, Q5, Q6, `awakening`, `flare`) is refused with `history: engine: a subsystem lists step <n>, which is not a subsystem step`; `quiet_events_left` returns `quiet_events_max` outside quiet steps. 6.6 W4 and 7.2: the writer accepts the next id about to be created for a civilization or settlement and checks before the next step that it was founded; the stub appends each event before creating its entity. 6.3: `flare_up` is a point event and takes an id, so awakening events are not consecutive when flare-ups occur (example: ages 0 and 520, phase 4's trigger is e3). 7.4: a forced period no step end meets forces nothing (dense, span 2000, one race: 216 simulated years). 8.4: a `{` inside a placeholder leaves it unclosed; a non-ASCII byte is reported at its own offset, also inside a placeholder; the race-role form check precedes the `min_count` check. 6.1: `found_settlement` checks the cell's region in the `region` layer. 9.4: the writer derives `history_end_year` from `param.history_span`; the reader checks its form in place and its equality with the span after every other key. 3.3, 6.1, 6.4: `HistoryResult` is `history::HistoryResult` with an alias in `stages`; `PhaseKind` and `TensionReport` are declared in `history/schedule.hpp`. New 16.6: the normative list of fatal messages, as implemented; 3.4, 5.5, 6.5 and 6.6 point to it. No world byte or golden value changes.
+
+## Revision note r4 (2026-11-19, amendments for P3-06)
+
+Made with P3-06 (its 18.5 item 2), in place. 6.4: **from generator 0.16.0** the shipped `EngineConfig` installs `ConflictSubsystem` after `PeoplesSubsystem`, with steps T2, T6, Q4 (all subsystem steps, so the r3 check accepts them), and as the only tension source (6.5), so flare-ups occur in shipped worlds from 0.16.0 on. 8.2: P3-06 appends kinds 20–30 (P3-06 11) from 0.16.0. No engine rule, message or golden value of this spec changes.
+
+## Revision note r5 (2026-11-19, rules from the determinism audit)
+
+Requested by the lead after the P3-04 determinism audit (advisories A1, A2, notes N1–N5). New 6.9: the normative rules for subsystems (no live iteration across a creation or relation change; `tension()` a pure read; fixed subsystem order and the refusal of a step listed twice, whose message the engineer adds to 16.6; visibility in shared steps; draw keys from ids; symmetric relations normalized by the subsystem; net change per bookkeeping). No engine rule, world byte or golden value changes; the duplicate-step refusal is a configuration guard that shipped configurations never trip.
+
+## Revision note r6 (2026-11-19, hardening after the audit)
+
+The engineer's follow-up to the determinism audit, as implemented on `p3/04-int` at fa87955; text only, no world byte changes. 3.4 item 6 and 16.6: the region-layer precondition `history: engine: layer 'region' is not <N> x <N> u16`, checked after the chronology rows (A4); 6.1: `found_settlement`'s cell-region check is therefore unconditional. 6.9 and 16.6: `history: engine: a subsystem lists step <n> twice` (`<n>` the step number); two different subsystems may list one step. 11.1: each phase row's `end_year` is checked against `history_end_year` − 1 before any arithmetic (A3): `row <id>: end_year <e> above <E - 1>` on a row other than the last, the existing last-phase message on the last.
