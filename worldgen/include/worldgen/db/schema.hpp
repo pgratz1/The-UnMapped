@@ -1,11 +1,13 @@
 #pragma once
 
-// World database schema, version 5 (spec P0-02 sections 4.2, 5;
+// World database schema, version 6 (spec P0-02 sections 4.2, 5;
 // docs/specs/schema.md; table `pass` from P1-01 section 9.1, schema 2;
 // tables `biome` and `climate` from P1-04 section 3 and P1-03 section 3,
 // schema 3; column climate.temp_offset_dc, schema 4, P0-02 amendment 16;
 // tables `region`, `region_border` and `region_biome` from P1-06 section 3,
-// schema 5, P0-02 amendment 17).
+// schema 5, P0-02 amendment 17; tables `race`, `race_biome`, `culture`,
+// `god` and `age` and the eight history `meta` keys from P3-03 sections 4.2
+// and 5, schema 6, P0-02 amendment 18).
 //
 // The DDL strings below are stored verbatim in sqlite_schema and are
 // therefore part of every world file. Each is one line with single spaces,
@@ -21,7 +23,7 @@ namespace worldgen::db {
 
 // The schema version (P0-02 5.2 rule 1). Written to PRAGMA user_version
 // and meta.schema_version; a reader supports exactly this version.
-inline constexpr std::int64_t SCHEMA_VERSION = 5;
+inline constexpr std::int64_t SCHEMA_VERSION = 6;
 
 // PRAGMA application_id of every world file: 0x554E4D50, ASCII "UNMP"
 // (P0-02 4.2, header offset 68 in 6.1).
@@ -97,18 +99,59 @@ inline constexpr std::string_view REGION_TABLE = "region";
 inline constexpr std::string_view REGION_BORDER_TABLE = "region_border";
 inline constexpr std::string_view REGION_BIOME_TABLE = "region_biome";
 
+// DDL of the chronology tables (P3-03 5.1, schema version 6), executed
+// ninth to thirteenth: written by the chronology stage, empty when it did
+// not run. race: one row per race definition (present or not); race_biome:
+// one row per listed biome preference; culture: one row per culture
+// definition; god: one row per race (its creator god, id = race id); age:
+// one row per present race. awakening_year is NULL exactly for an absent
+// race.
+inline constexpr std::string_view DDL_RACE =
+    "CREATE TABLE race (id INTEGER PRIMARY KEY, key TEXT NOT NULL UNIQUE, name TEXT NOT NULL, plural TEXT NOT NULL, "
+    "adjective TEXT NOT NULL, camp INTEGER NOT NULL, lifespan_years INTEGER NOT NULL, generation_years INTEGER NOT "
+    "NULL, culture INTEGER NOT NULL, present INTEGER NOT NULL, awakening_year INTEGER, creator_god INTEGER NOT NULL) "
+    "STRICT";
+inline constexpr std::string_view DDL_RACE_BIOME =
+    "CREATE TABLE race_biome (race INTEGER NOT NULL, biome INTEGER NOT NULL, weight INTEGER NOT NULL, "
+    "PRIMARY KEY (race, biome)) STRICT, WITHOUT ROWID";
+inline constexpr std::string_view DDL_CULTURE =
+    "CREATE TABLE culture (id INTEGER PRIMARY KEY, key TEXT NOT NULL UNIQUE, name TEXT NOT NULL, race INTEGER NOT "
+    "NULL) STRICT";
+inline constexpr std::string_view DDL_GOD =
+    "CREATE TABLE god (id INTEGER PRIMARY KEY, name TEXT NOT NULL, camp INTEGER NOT NULL) STRICT";
+inline constexpr std::string_view DDL_AGE =
+    "CREATE TABLE age (id INTEGER PRIMARY KEY, race INTEGER NOT NULL, start_year INTEGER NOT NULL, end_year INTEGER "
+    "NOT NULL, name TEXT NOT NULL) STRICT";
+
+// The names of the five chronology tables (P3-03 5.1).
+inline constexpr std::string_view RACE_TABLE = "race";
+inline constexpr std::string_view RACE_BIOME_TABLE = "race_biome";
+inline constexpr std::string_view CULTURE_TABLE = "culture";
+inline constexpr std::string_view GOD_TABLE = "god";
+inline constexpr std::string_view AGE_TABLE = "age";
+
 // The DDL statements in execution order (P0-02 5.4, section 6 step 2;
-// schema 5: meta, layer, pass, biome, climate, region, region_border,
-// region_biome).
-inline constexpr std::array<std::string_view, 8> DDL_STATEMENTS = {
-    DDL_META, DDL_LAYER, DDL_PASS, DDL_BIOME, DDL_CLIMATE, DDL_REGION, DDL_REGION_BORDER, DDL_REGION_BIOME};
+// schema 6: meta, layer, pass, biome, climate, region, region_border,
+// region_biome, race, race_biome, culture, god, age).
+inline constexpr std::array<std::string_view, 13> DDL_STATEMENTS = {
+    DDL_META,       DDL_LAYER,         DDL_PASS,         DDL_BIOME, DDL_CLIMATE,
+    DDL_REGION,     DDL_REGION_BORDER, DDL_REGION_BIOME, DDL_RACE,  DDL_RACE_BIOME,
+    DDL_CULTURE,    DDL_GOD,           DDL_AGE};
 
 // --- meta keys (P0-02 5.5) --------------------------------------------------
 
 inline constexpr std::string_view META_CONTENT_HASH = "content_hash";        // 64 lowercase hex digits
 inline constexpr std::string_view META_FORMAT = "format";                    // literal WORLD_FORMAT
 inline constexpr std::string_view META_GENERATOR_VERSION = "generator_version";  // MAJOR.MINOR.PATCH
+inline constexpr std::string_view META_PARAM_CIVS_PER_RACE = "param.civs_per_race";      // auto, 1 ... 4
+inline constexpr std::string_view META_PARAM_DIVINE_ACTIVITY = "param.divine_activity";  // distant, normal, meddling
+inline constexpr std::string_view META_PARAM_DIVINE_SCRIPT = "param.divine_script";      // empty or 64 lower-case hex
+inline constexpr std::string_view META_PARAM_EVENT_INTENSITY = "param.event_intensity";  // calm, normal, turbulent
+inline constexpr std::string_view META_PARAM_HISTORY_DETAIL = "param.history_detail";    // sparse, normal, dense
+inline constexpr std::string_view META_PARAM_HISTORY_SPAN = "param.history_span";        // 2000 ... 12000
 inline constexpr std::string_view META_PARAM_MAP_SIZE = "param.map_size";    // 512, 1024 or 2048
+inline constexpr std::string_view META_PARAM_MONSTER_PRESSURE = "param.monster_pressure";  // low, normal, high
+inline constexpr std::string_view META_PARAM_RACES = "param.races";          // race ids joined by ','
 inline constexpr std::string_view META_SCHEMA_VERSION = "schema_version";    // decimal, = user_version
 inline constexpr std::string_view META_SEED = "seed";                        // unsigned decimal
 inline constexpr std::string_view META_SEED_PHRASE = "seed_phrase";          // scrubbed phrase or empty
@@ -125,10 +168,47 @@ inline constexpr std::array<std::int64_t, 3> ALLOWED_MAP_SIZES = {512, 1024, 204
 
 // Every key required at SCHEMA_VERSION, in ascending byte order, which is
 // the order the writer inserts them (P0-02 5.5, section 6 step 4).
-inline constexpr std::array<std::string_view, 8> REQUIRED_META_KEYS = {
-    META_CONTENT_HASH, META_FORMAT,     META_GENERATOR_VERSION, META_PARAM_MAP_SIZE,
-    META_SCHEMA_VERSION, META_SEED, META_SEED_PHRASE, META_STAGES,
+inline constexpr std::array<std::string_view, 16> REQUIRED_META_KEYS = {
+    META_CONTENT_HASH,
+    META_FORMAT,
+    META_GENERATOR_VERSION,
+    META_PARAM_CIVS_PER_RACE,
+    META_PARAM_DIVINE_ACTIVITY,
+    META_PARAM_DIVINE_SCRIPT,
+    META_PARAM_EVENT_INTENSITY,
+    META_PARAM_HISTORY_DETAIL,
+    META_PARAM_HISTORY_SPAN,
+    META_PARAM_MAP_SIZE,
+    META_PARAM_MONSTER_PRESSURE,
+    META_PARAM_RACES,
+    META_SCHEMA_VERSION,
+    META_SEED,
+    META_SEED_PHRASE,
+    META_STAGES,
 };
+
+// The eight history settings keys of P3-03 4.2, in ascending byte order
+// (also the order of history::history_meta_entries).
+inline constexpr std::array<std::string_view, 8> HISTORY_META_KEYS = {
+    META_PARAM_CIVS_PER_RACE, META_PARAM_DIVINE_ACTIVITY, META_PARAM_DIVINE_SCRIPT,   META_PARAM_EVENT_INTENSITY,
+    META_PARAM_HISTORY_DETAIL, META_PARAM_HISTORY_SPAN,  META_PARAM_MONSTER_PRESSURE, META_PARAM_RACES,
+};
+
+// True if key is one of HISTORY_META_KEYS.
+[[nodiscard]] bool is_history_meta_key(std::string_view key) noexcept;
+
+// True if value is the canonical text of history key `key` (P3-03 4.2):
+//   param.civs_per_race     "auto", "1", "2", "3" or "4"
+//   param.divine_activity   "distant", "normal" or "meddling"
+//   param.divine_script     empty, or 64 lower-case hex digits (the P5 form)
+//   param.event_intensity   "calm", "normal" or "turbulent"
+//   param.history_detail    "sparse", "normal" or "dense"
+//   param.history_span      canonical decimal 2000 ... 12000
+//   param.monster_pressure  "low", "normal" or "high"
+//   param.races             one or more ids of the P0-03 definition id
+//                           grammar joined by ',', none twice
+// False for any other key.
+[[nodiscard]] bool is_canonical_history_meta_value(std::string_view key, std::string_view value);
 
 // True if key matches [a-z][a-z0-9_]*(\.[a-z][a-z0-9_]*)* (P0-02 5.5). No
 // length limit is specified for meta keys.

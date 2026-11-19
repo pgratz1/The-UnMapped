@@ -109,7 +109,7 @@ TEST_CASE("P1-04 9, 10.1 test 10: biome_share and biome_patches on a hand-made 6
     CHECK(ends_with(text, "\nbiome_share = " + share + "\nbiome_patches = 7\n"));
     // [tables], ascending name: biome, climate, layer, meta, pass and the
     // three region tables of schema 5.
-    CHECK(text.find("\n[tables]\nbiome = 12\nclimate = 0\nlayer = 2\nmeta = 8\npass = 0\nregion = 0\nregion_biome = "
+    CHECK(text.find("\n[tables]\nage = 0\nbiome = 12\nclimate = 0\nculture = 0\ngod = 0\nlayer = 2\nmeta = 16\npass = 0\nrace = 0\nrace_biome = 0\nregion = 0\nregion_biome = "
                     "0\nregion_border = 0\n[layers]\n") != std::string::npos);
     // No climate row: no wind_toward, no temp_offset_c.
     CHECK(text.find("wind_toward") == std::string::npos);
@@ -133,7 +133,7 @@ TEST_CASE("P1-04 9: the biome keys need the biome layer; without it they are abs
     const std::string text = report_of(world(dir, "w.db", std::string(ROWS_SQL), false));
     CHECK(text.find("biome_share") == std::string::npos);
     CHECK(text.find("biome_patches") == std::string::npos);
-    CHECK(text.find("\n[tables]\nbiome = 12\nclimate = 0\n") != std::string::npos);
+    CHECK(text.find("\n[tables]\nage = 0\nbiome = 12\nclimate = 0\n") != std::string::npos);
 }
 
 TEST_CASE("P1-03 9: wind_toward from table climate, first of the climate group, without climate layers") {

@@ -16,6 +16,7 @@
 #include "worldgen/core/error.hpp"
 #include "worldgen/core/hash.hpp"
 #include "worldgen/core/parallel.hpp"
+#include "worldgen/core/roman.hpp"
 #include "worldgen/core/streams.hpp"
 #include "worldgen/data/schema.hpp"
 #include "worldgen/db/layer_blob.hpp"
@@ -743,32 +744,7 @@ std::uint32_t region_sector(std::int64_t dx, std::int64_t dy, std::int64_t r_c) 
 }
 
 std::string roman(std::int64_t k) {
-    if (k < 1 || k > 100000) {
-        fatal("roman: k outside [1, 100000]");
-    }
-    static constexpr std::array<std::pair<std::int64_t, const char*>, 13> PARTS = {{
-        {1000, "M"},
-        {900, "CM"},
-        {500, "D"},
-        {400, "CD"},
-        {100, "C"},
-        {90, "XC"},
-        {50, "L"},
-        {40, "XL"},
-        {10, "X"},
-        {9, "IX"},
-        {5, "V"},
-        {4, "IV"},
-        {1, "I"},
-    }};
-    std::string out;
-    for (const auto& [value, text] : PARTS) {
-        while (k >= value) {
-            out += text;
-            k -= value;
-        }
-    }
-    return out;
+    return roman_numeral(k);  // shared with the history library (core/roman.hpp)
 }
 
 std::vector<std::string> region_names(std::span<const RegionNameInput> regions,

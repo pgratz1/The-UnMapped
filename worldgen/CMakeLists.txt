@@ -12,6 +12,7 @@ add_library(worldgen STATIC
     src/core/math.cpp
     src/core/noise.cpp
     src/core/rng.cpp
+    src/core/roman.cpp
     src/core/sha256.cpp
     src/core/wide.cpp
     # World database layer, spec P0-02.
@@ -68,6 +69,12 @@ add_library(worldgen STATIC
     # History (P3-02 onward): keyed draws and the name generator.
     src/history/draw.cpp
     src/history/names.cpp
+    # P3-03: the history settings, the data checks across kinds and the
+    # chronology stage with its report section.
+    src/history/data_checks.cpp
+    src/history/params.cpp
+    src/stages/chronology.cpp
+    src/inspect/chronology.cpp
 )
 add_library(worldgen::worldgen ALIAS worldgen)
 target_include_directories(worldgen

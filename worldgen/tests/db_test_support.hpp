@@ -147,12 +147,27 @@ inline worldgen::Sha256Digest empty_content_hash() {
     return worldgen::sha256(std::string_view{});
 }
 
+// The eight history keys at their defaults (P3-03 4.2), required from
+// schema 6.
+inline void set_history_defaults(worldgen::db::WorldWriter& writer) {
+    writer.set_param_text("civs_per_race", "auto");
+    writer.set_param_text("divine_activity", "normal");
+    writer.set_param_text("divine_script", "");
+    writer.set_param_text("event_intensity", "normal");
+    writer.set_param_text("history_detail", "normal");
+    writer.set_param_text("history_span", "6000");
+    writer.set_param_text("monster_pressure", "normal");
+    writer.set_param_text("races", "elf,goblin,dwarf,faerie,human,orc");
+}
+
 // Sets the values every world needs, as `worldgen-cli generate` does for an
-// empty world (P0-02 8): numeric seed, empty content hash, map size 1024.
+// empty world (P0-02 8): numeric seed, empty content hash, map size 1024,
+// the history defaults (schema 6).
 inline void set_standard_meta(worldgen::db::WorldWriter& writer, std::uint64_t seed) {
     writer.set_seed(seed);
     writer.set_content_hash(empty_content_hash());
     writer.set_param_integer("map_size", 1024);
+    set_history_defaults(writer);
 }
 
 // Writes an empty world for a numeric seed; REQUIREs nothing, returns status.

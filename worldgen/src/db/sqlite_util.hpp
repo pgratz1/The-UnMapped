@@ -49,6 +49,7 @@ public:
     [[nodiscard]] sqlite3_stmt* get() const noexcept { return stmt_; }
 
     int bind_int64(int index, std::int64_t value) noexcept;
+    int bind_null(int index) noexcept;
     // Text as UTF-8 with an explicit byte length (P0-02 5.3); copied by SQLite.
     int bind_text(int index, std::string_view text) noexcept;
     // Blob with an explicit byte length (P0-02 5.3); copied by SQLite.

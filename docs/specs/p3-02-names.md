@@ -1,6 +1,6 @@
 # P3-02 Names
 
-Status: **approved by the lead 2026-11-19; revised 2026-11-19 (text only, after implementation); amended 2026-11-19 for P3-03 (r2)**: see the revision notes at the end. Phase P3 History core, spec 2 (P3-00 3.1). Design doc sections 5 ("the seed varies the dates, the places and the gods' names"; civilizations, settlements), 6 ("the database stores facts and names"), 14 (every reference a model writes must resolve to a real entity: names must be unique). Depends on P0-01 (hashing, streams), P0-03 (string grammars, named checks), P3-00 (4.6 keyed draws) and P3-01 (the `culture` kind carries this spec's record). It introduces the domain tag `TAG_HIST` and the keyed-draw helpers that every later history spec uses.
+Status: **approved by the lead 2026-11-19; revised 2026-11-19 (text only, after implementation); amended 2026-11-19 for P3-03 (r2); revised 2026-11-19 after the P3-03 implementation (r3: 7 registry container, 4.3 `roman` location, 8 P0-01 request applied)**: see the revision notes at the end. Phase P3 History core, spec 2 (P3-00 3.1). Design doc sections 5 ("the seed varies the dates, the places and the gods' names"; civilizations, settlements), 6 ("the database stores facts and names"), 14 (every reference a model writes must resolve to a real entity: names must be unique). Depends on P0-01 (hashing, streams), P0-03 (string grammars, named checks), P3-00 (4.6 keyed draws) and P3-01 (the `culture` kind carries this spec's record). It introduces the domain tag `TAG_HIST` and the keyed-draw helpers that every later history spec uses.
 
 ## 1. Purpose
 
@@ -112,7 +112,7 @@ name(K, c, e, registry):
     n = first + " " + roman(k); add n to registry; return n
 ```
 
-`roman(k)` is P1-06 RG11's (subtractive form, thousands as repeated M), and like P1-06's it is fatal for k outside [1, 100000] (`roman: k outside [1, 100000]`). The registry is a set of names compared as exact bytes; adding a name it already holds changes nothing.
+`roman(k)` is P1-06 RG11's (subtractive form, thousands as repeated M), and like P1-06's it is fatal for k outside [1, 100000] (`roman: k outside [1, 100000]`). From P3-03 on there is one implementation, `worldgen::roman_numeral` in `worldgen/core/roman.hpp`; `history::roman` and `stages::roman` forward to it. The registry is a set of names compared as exact bytes; adding a name it already holds changes nothing.
 
 ### 4.4 Uniqueness, bounds and order
 
@@ -263,11 +263,11 @@ Weak spots visible in the samples, left for tuning with Paul's taste: some human
 
 ## 7. Determinism notes
 
-Integer arithmetic only (`uint64` hashes, a `uint128` product in `weighted`); string operations on ASCII bytes; the registry is an ordered set or a hash set used only for membership (never iterated, so H3 holds); no locale-dependent case mapping (upper-casing is `a`–`z` to `A`–`Z` by arithmetic).
+Integer arithmetic only (`uint64` hashes, a `uint128` product in `weighted`); string operations on ASCII bytes; the registry is an ordered set used only for membership (never iterated, so H3 holds; unordered containers are banned in `worldgen`, P0-01 4 and the determinism lint rule `unordered-container`); no locale-dependent case mapping (upper-casing is `a`–`z` to `A`–`Z` by arithmetic).
 
 ## 8. Amendments requested
 
-- **P0-01**: the tag table gains `TAG_HIST`, `UNM:HIST`, 0x545349483A4D4E55; the stream-name list gains the three `hist.names.*` names (P0-01 7.3; names registered in `streams.hpp`, appended to `all_stream_names` after `geo.regions.cost` in the order god, civilization, settlement). `all_stream_names` grows from 30 to 33 entries; a test that asserts the exact count changes with it (today `worldgen/tests/stages_climate_offset_test.cpp`, 30 → 33). Registering a stream name changes no world byte.
+- **P0-01**: the tag table gains `TAG_HIST`, `UNM:HIST`, 0x545349483A4D4E55; the stream-name list gains the three `hist.names.*` names (P0-01 7.3; names registered in `streams.hpp`, appended to `all_stream_names` after `geo.regions.cost` in the order god, civilization, settlement). `all_stream_names` grows from 30 to 33 entries; a test that asserts the exact count changes with it (today `worldgen/tests/stages_climate_offset_test.cpp`, 30 → 33). Registering a stream name changes no world byte. (Applied as P0-01 section 16, 2026-11-19, with P3-03's `hist.chronology.awakening`: 34 names.)
 - **P3-00 4.6**: done on this branch: P3-02 introduces `TAG_HIST` and the helpers. P3-00 4.6's one-line description of `weighted` is equivalent to 4.1's; 4.1 is the authoritative wording, with the bounds stated there.
 
 ## 9. Tests required
@@ -366,3 +366,7 @@ The implementation (`p3/02-names`) and the independent tests (`p3/02-names-tests
 ## Revision note r2 (2026-11-19, amendments for P3-03)
 
 Text only. 4.4: the registry also holds the age names (fixed text, numeral fallback) and is rebuilt by the `history` stage from tables `region`, `age` and `god` (P3-03 8). 4.5: `god.id` equals the race id, every race has a god (P3-03 5.2).
+
+## Revision note r3 (2026-11-19, after the P3-03 implementation)
+
+Text only; no behaviour, golden value or world byte changes. 7: the registry is an ordered set (the words allowing a hash set are removed: unordered containers are banned in `worldgen`, and the code uses an ordered set). 4.3: `roman` now lives in `worldgen/core/roman.hpp` as `roman_numeral`, with `history::roman` and `stages::roman` forwarding to it. 8: the P0-01 request is applied (P0-01 section 16).

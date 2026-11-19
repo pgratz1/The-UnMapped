@@ -44,6 +44,8 @@
 #include "worldgen/db/utf8_path.hpp"
 #include "worldgen/db/writer.hpp"
 #include "worldgen/generate.hpp"
+#include "worldgen/history/data_checks.hpp"
+#include "worldgen/history/params.hpp"
 #include "worldgen/inspect/geography.hpp"
 #include "worldgen/inspect/hashes.hpp"
 #include "worldgen/inspect/render.hpp"
@@ -150,8 +152,9 @@ constexpr std::string_view GENERATE_USAGE =
     "  --map-size N        map side in cells: 512, 1024 or 2048 (default from settings, else 1024)\n"
     "  --settings FILE     world settings file; flags override it key by key\n"
     "  --data DIR          data root (default UNMAPPED_DATA_DIR, else the source tree's game/data)\n"
-    "  --until STAGE       run the geography stages up to and including STAGE;\n"
-    "                      'none' runs no stage (default: every implemented stage)\n"
+    "  --until STAGE       run the stages up to and including STAGE (elevation ...\n"
+    "                      regions, chronology); 'none' runs no stage (default: every\n"
+    "                      implemented stage)\n"
     "  --test-pattern      run only the P0 test-pattern stage, no geography\n"
     "  --threads N         threads for parallel steps, 1 to 256 (default: hardware threads);\n"
     "                      never changes the output\n"
@@ -169,8 +172,9 @@ constexpr std::string_view GENERATE_USAGE =
     "  --force             replace an existing output file\n"
     "  --verbose           print progress and timings to stderr\n"
     "\n"
-    "The history settings have no effect yet: no history stage is implemented,\n"
-    "and --test-pattern writes no history.\n"
+    "The history settings are recorded in every world. The chronology stage uses\n"
+    "the span and the races; the others take effect with the history stage.\n"
+    "--test-pattern records them and writes no history.\n"
     "\n"
     "Prints the absolute path of the written file.\n";
 
@@ -407,7 +411,7 @@ std::optional<std::string> parse_until_option(const Options& options) {
             break;
     }
     std::string names;
-    for (const std::string_view name : worldgen::stages::GEOGRAPHY_STAGE_NAMES) {
+    for (const std::string_view name : worldgen::stages::STAGE_NAMES) {
         names += names.empty() ? "" : ", ";
         names += name;
     }
@@ -574,8 +578,7 @@ std::string history_settings_text(const worldgen::data::Settings& s) {
            (s.civs_per_race ? db::format_i64(*s.civs_per_race) : std::string("auto")) + ", races " + races +
            ", event intensity " + std::string(data::event_intensity_name(s.event_intensity)) +
            ", monster pressure " + std::string(data::monster_pressure_name(s.monster_pressure)) +
-           ", divine activity " + std::string(data::divine_activity_name(s.divine_activity)) +
-           " (not used yet: no history stage)";
+           ", divine activity " + std::string(data::divine_activity_name(s.divine_activity));
 }
 
 Exit run_generate(const Options& options) {
@@ -646,6 +649,12 @@ Exit run_generate(const Options& options) {
             throw Failure(Exit::input, "the data needs a data root; pass --data", load_error_lines(content.errors));
         }
     }
+    // The data checks across kinds (P3-03 6): an input error whatever the
+    // plan, --until none and --test-pattern included.
+    if (const std::vector<worldgen::data::LoadError> data_errors = worldgen::history::check_history_data(*content.value);
+        !data_errors.empty()) {
+        throw Failure(Exit::input, "invalid data in '" + data_root.path + "'", load_error_lines(data_errors));
+    }
 
     // The history settings (P3-01 6): race ids are checked against the
     // loaded data, the flags' first (a usage error), then the file's.
@@ -677,6 +686,7 @@ Exit run_generate(const Options& options) {
     params.content_hash = worldgen::data::content_hash(*content.value);
     params.test_pattern = options.flag("test-pattern");
     params.until = std::move(until);
+    params.history = worldgen::history::history_params_from(settings);  // P3-03 4.1 step 1
     params.threads = threads;
 
     // Output path (P0-04 4.3).

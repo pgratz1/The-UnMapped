@@ -5,9 +5,10 @@
 // --until none worlds of the three data roots, whose only change is
 // meta.content_hash and meta.generator_version.
 //
-// Written from the specs only. P3-01 writes no meta key and no table (6.3,
-// 7), so a valid setting must not change a byte of the world: each accepted
-// value is checked against the world generated without it.
+// Written from the specs only. P3-01 wrote no meta key and no table (6.3,
+// 7); from P3-03 (4.1, 4.2) every world records the eight settings in meta,
+// so an accepted value changes exactly the meta value of its key: each world
+// is checked against the world generated without it, table meta aside.
 
 #include <doctest/doctest.h>
 
@@ -47,6 +48,51 @@ std::string world_hash(const Sandbox& sb, const std::string& name, const std::ve
     INFO("args: ", name, " stderr: ", r.err);
     REQUIRE(r.exit_code == EXIT_OK);
     return file_sha256_hex(sb.file(name));
+}
+
+// What a world shows apart from the bytes: the hash --detail lines other
+// than `file` and `table meta`, and the [meta] lines of report as a map.
+struct WorldView {
+    std::vector<std::string> detail;
+    std::map<std::string, std::string> meta;
+};
+
+WorldView world_view(const Sandbox& sb, const std::string& name, const std::vector<std::string>& args,
+                     bool until_none = true) {
+    (void)world_hash(sb, name, args, until_none);
+    WorldView v;
+    const ProcessResult d = sb.cli({"hash", "--db", u8(sb.file(name)), "--detail"});
+    REQUIRE(d.exit_code == EXIT_OK);
+    for (const std::string& line : lines_of(d.out)) {
+        if (!starts_with(line, "file ") && !starts_with(line, "table meta ")) {
+            v.detail.push_back(line);
+        }
+    }
+    const ProcessResult r = sb.cli({"report", "--db", u8(sb.file(name))});
+    REQUIRE(r.exit_code == EXIT_OK);
+    bool in_meta = false;
+    for (const std::string& line : lines_of(r.out)) {
+        if (starts_with(line, "[")) {
+            in_meta = line == "[meta]";
+            continue;
+        }
+        if (in_meta) {
+            const std::size_t eq = line.find(" =");
+            REQUIRE(eq != std::string::npos);
+            v.meta[line.substr(0, eq)] = eq + 2 < line.size() ? line.substr(eq + 3) : std::string();
+        }
+    }
+    return v;
+}
+
+// base with the values of `changes` (full meta keys) replaced.
+std::map<std::string, std::string> with_meta(std::map<std::string, std::string> base,
+                                             const std::vector<std::pair<std::string, std::string>>& changes) {
+    for (const auto& [key, value] : changes) {
+        REQUIRE(base.count(key) == 1U);
+        base[key] = value;
+    }
+    return base;
 }
 
 std::string joined(const std::vector<std::string>& args) {
@@ -106,27 +152,61 @@ std::vector<std::string> input_error(const Sandbox& sb, const std::string& name,
 
 // --- 8.2 test 6: flags ----------------------------------------------------------------------
 
-TEST_CASE("cli P3-01 6.1, 8.2 test 6: every valid flag value is accepted and changes no byte of the world") {
+TEST_CASE("cli P3-01 6.1, 8.2 test 6, P3-03 4.2: every valid flag value is accepted and changes only its meta value") {
     Sandbox sb;
-    const std::string base = world_hash(sb, "base.db", {});
-    const std::vector<std::vector<std::string>> cases = {
-        {"--history-span", "2000"},       {"--history-span", "6000"},      {"--history-span", "12000"},
-        {"--history-span", "7777"},       {"--history-detail", "sparse"},  {"--history-detail", "normal"},
-        {"--history-detail", "dense"},    {"--civs-per-race", "auto"},     {"--civs-per-race", "1"},
-        {"--civs-per-race", "2"},         {"--civs-per-race", "3"},        {"--civs-per-race", "4"},
-        {"--races", "all"},               {"--races", "elf"},              {"--races", "elf,orc"},
-        {"--races", "orc,elf"},           {"--races", "orc,human,faerie,dwarf,goblin,elf"},
-        {"--event-intensity", "calm"},    {"--event-intensity", "normal"}, {"--event-intensity", "turbulent"},
-        {"--monster-pressure", "low"},    {"--monster-pressure", "normal"}, {"--monster-pressure", "high"},
-        {"--divine-activity", "distant"}, {"--divine-activity", "normal"}, {"--divine-activity", "meddling"},
-        {"--history-span", "2000", "--history-detail", "dense", "--civs-per-race", "4", "--races", "goblin,orc",
-         "--event-intensity", "turbulent", "--monster-pressure", "high", "--divine-activity", "meddling"},
+    const WorldView base = world_view(sb, "base.db", {});
+    using Change = std::vector<std::pair<std::string, std::string>>;
+    struct Case {
+        std::vector<std::string> args;
+        Change meta;
+    };
+    const std::string all = "elf,goblin,dwarf,faerie,human,orc";
+    const std::vector<Case> cases = {
+        {{"--history-span", "2000"}, {{"param.history_span", "2000"}}},
+        {{"--history-span", "6000"}, {}},
+        {{"--history-span", "12000"}, {{"param.history_span", "12000"}}},
+        {{"--history-span", "7777"}, {{"param.history_span", "7777"}}},
+        {{"--history-detail", "sparse"}, {{"param.history_detail", "sparse"}}},
+        {{"--history-detail", "normal"}, {}},
+        {{"--history-detail", "dense"}, {{"param.history_detail", "dense"}}},
+        {{"--civs-per-race", "auto"}, {}},
+        {{"--civs-per-race", "1"}, {{"param.civs_per_race", "1"}}},
+        {{"--civs-per-race", "2"}, {{"param.civs_per_race", "2"}}},
+        {{"--civs-per-race", "3"}, {{"param.civs_per_race", "3"}}},
+        {{"--civs-per-race", "4"}, {{"param.civs_per_race", "4"}}},
+        {{"--races", "all"}, {{"param.races", all}}},
+        {{"--races", "elf"}, {{"param.races", "elf"}}},
+        {{"--races", "elf,orc"}, {{"param.races", "elf,orc"}}},
+        {{"--races", "orc,elf"}, {{"param.races", "elf,orc"}}},
+        {{"--races", "orc,human,faerie,dwarf,goblin,elf"}, {{"param.races", all}}},
+        {{"--event-intensity", "calm"}, {{"param.event_intensity", "calm"}}},
+        {{"--event-intensity", "normal"}, {}},
+        {{"--event-intensity", "turbulent"}, {{"param.event_intensity", "turbulent"}}},
+        {{"--monster-pressure", "low"}, {{"param.monster_pressure", "low"}}},
+        {{"--monster-pressure", "normal"}, {}},
+        {{"--monster-pressure", "high"}, {{"param.monster_pressure", "high"}}},
+        {{"--divine-activity", "distant"}, {{"param.divine_activity", "distant"}}},
+        {{"--divine-activity", "normal"}, {}},
+        {{"--divine-activity", "meddling"}, {{"param.divine_activity", "meddling"}}},
+        {{"--history-span", "2000", "--history-detail", "dense", "--civs-per-race", "4", "--races", "goblin,orc",
+          "--event-intensity", "turbulent", "--monster-pressure", "high", "--divine-activity", "meddling"},
+         {{"param.history_span", "2000"},
+          {"param.history_detail", "dense"},
+          {"param.civs_per_race", "4"},
+          {"param.races", "goblin,orc"},
+          {"param.event_intensity", "turbulent"},
+          {"param.monster_pressure", "high"},
+          {"param.divine_activity", "meddling"}}},
     };
     int k = 0;
-    for (const auto& args : cases) {
-        CAPTURE(joined(args));
-        CHECK(world_hash(sb, "w" + std::to_string(k++) + ".db", args) == base);
+    for (const Case& c : cases) {
+        CAPTURE(joined(c.args));
+        const WorldView v = world_view(sb, "w" + std::to_string(k++) + ".db", c.args);
+        CHECK(v.detail == base.detail);
+        CHECK(v.meta == with_meta(base.meta, c.meta));
     }
+    // A value equal to the default gives the default world byte for byte.
+    CHECK(world_hash(sb, "same.db", {"--history-span", "6000", "--races", "all"}) == world_hash(sb, "base2.db", {}));
 }
 
 TEST_CASE("cli P3-01 6.2: --history-span errors") {
@@ -215,14 +295,22 @@ TEST_CASE("cli P0-04 4.1: a history flag without a value, or given twice, is a u
     usage_any(sb, {"--civs-per-race", "auto", "--civs-per-race", "auto"});
 }
 
-TEST_CASE("cli P3-01 6.2: --test-pattern accepts the history flags and ignores them") {
+TEST_CASE("cli P3-01 6.2, P3-03 4.3: --test-pattern accepts the history flags and records them, nothing else") {
     Sandbox sb;
-    const std::string base = world_hash(sb, "tp.db", {"--test-pattern"}, false);
-    CHECK(world_hash(sb, "tp-flags.db",
-                     {"--test-pattern", "--history-span", "12000", "--history-detail", "sparse", "--civs-per-race", "1",
-                      "--races", "orc", "--event-intensity", "calm", "--monster-pressure", "low", "--divine-activity",
-                      "distant"},
-                     false) == base);
+    const WorldView base = world_view(sb, "tp.db", {"--test-pattern"}, false);
+    const WorldView flags = world_view(sb, "tp-flags.db",
+                                       {"--test-pattern", "--history-span", "12000", "--history-detail", "sparse",
+                                        "--civs-per-race", "1", "--races", "orc", "--event-intensity", "calm",
+                                        "--monster-pressure", "low", "--divine-activity", "distant"},
+                                       false);
+    CHECK(flags.detail == base.detail);
+    CHECK(flags.meta == with_meta(base.meta, {{"param.history_span", "12000"},
+                                              {"param.history_detail", "sparse"},
+                                              {"param.civs_per_race", "1"},
+                                              {"param.races", "orc"},
+                                              {"param.event_intensity", "calm"},
+                                              {"param.monster_pressure", "low"},
+                                              {"param.divine_activity", "distant"}}));
     // The values are still validated.
     const ProcessResult r =
         sb.cli({"generate", "--seed", "0", "--test-pattern", "--history-span", "100", "--out", u8(sb.file("bad.db"))});
@@ -248,31 +336,40 @@ TEST_CASE("cli P3-01 2: generate --help lists the history flags") {
 
 // --- 8.2 test 7: settings-file keys through generate --------------------------------------
 
-TEST_CASE("cli P3-01 6.1, 8.2 test 7: valid settings-file values are accepted and change no byte of the world") {
+TEST_CASE("cli P3-01 6.1, 8.2 test 7, P3-03 4.2: valid settings-file values are accepted and change only their meta values") {
     Sandbox sb;
-    const std::string base = world_hash(sb, "base.db", {});
-    const std::vector<std::string> bodies = {
-        "history_span = 2000\n",
-        "history_span = 12000\nhistory_detail = \"dense\"\n",
-        "civs_per_race = \"auto\"\n",
-        "civs_per_race = 3\n",
-        "races = \"all\"\n",
-        "races = [\"orc\", \"elf\"]\n",
-        "event_intensity = \"turbulent\"\nmonster_pressure = \"low\"\ndivine_activity = \"meddling\"\n",
+    const WorldView base = world_view(sb, "base.db", {});
+    using Change = std::vector<std::pair<std::string, std::string>>;
+    const std::vector<std::pair<std::string, Change>> bodies = {
+        {"history_span = 2000\n", {{"param.history_span", "2000"}}},
+        {"history_span = 12000\nhistory_detail = \"dense\"\n",
+         {{"param.history_span", "12000"}, {"param.history_detail", "dense"}}},
+        {"civs_per_race = \"auto\"\n", {}},
+        {"civs_per_race = 3\n", {{"param.civs_per_race", "3"}}},
+        {"races = \"all\"\n", {}},
+        {"races = [\"orc\", \"elf\"]\n", {{"param.races", "elf,orc"}}},
+        {"event_intensity = \"turbulent\"\nmonster_pressure = \"low\"\ndivine_activity = \"meddling\"\n",
+         {{"param.event_intensity", "turbulent"}, {"param.monster_pressure", "low"}, {"param.divine_activity", "meddling"}}},
     };
     int k = 0;
-    for (const std::string& body : bodies) {
+    for (const auto& [body, change] : bodies) {
         CAPTURE(body);
         const fs::path settings = sb.file("s" + std::to_string(k) + ".toml");
         write_text(settings, "[world]\n" + body);
-        CHECK(world_hash(sb, "f" + std::to_string(k++) + ".db", {"--settings", u8(settings)}) == base);
+        const WorldView v = world_view(sb, "f" + std::to_string(k++) + ".db", {"--settings", u8(settings)});
+        CHECK(v.detail == base.detail);
+        CHECK(v.meta == with_meta(base.meta, change));
     }
-    // A flag beside a file key (flags override key by key, 6.1). P3-01
-    // writes neither value into the world, so only acceptance is visible
-    // here; which value wins is visible from P3-03 on (meta keys).
+    // A flag beside a file key: the flag wins, key by key (6.1), visible in
+    // meta from P3-03 on.
     const fs::path settings = sb.file("both.toml");
-    write_text(settings, "[world]\nhistory_span = 2000\nraces = [\"elf\"]\n");
-    CHECK(world_hash(sb, "both.db", {"--settings", u8(settings), "--history-span", "12000", "--races", "orc"}) == base);
+    write_text(settings, "[world]\nhistory_span = 2000\nraces = [\"elf\"]\ncivs_per_race = 2\n");
+    const WorldView both =
+        world_view(sb, "both.db", {"--settings", u8(settings), "--history-span", "12000", "--races", "orc"});
+    CHECK(both.detail == base.detail);
+    CHECK(both.meta == with_meta(base.meta, {{"param.history_span", "12000"},
+                                             {"param.races", "orc"},
+                                             {"param.civs_per_race", "2"}}));
 }
 
 TEST_CASE("cli P3-01 6.2, 8.2 test 7: settings-file errors are input errors at the value") {
@@ -393,24 +490,20 @@ TEST_CASE("cli P3-01 8.3 test 10: --until none worlds differ from 0.11.0 only in
             if (key == "content_hash") {
                 value = golden.at(root);
             } else if (key == "generator_version") {
-                value = "0.12.0";
+                value = "0.13.0";
             }
         }
         const ProcessResult d = sb.cli({"hash", "--db", u8(world), "--detail"});
         INFO("stderr: ", d.err);
         REQUIRE(d.exit_code == EXIT_OK);
         const std::vector<std::string> lines = lines_of(d.out);
-        REQUIRE(lines.size() == 10U);
+        const auto tables = p004::empty_world_tables(p004::layer_table_hash({}), p004::meta_table_hash(rows));
+        REQUIRE(lines.size() == 2U + tables.size());
         CHECK(lines[0] == "file " + file_sha256_hex(world));
         CHECK(lines[1] == "schema " + worldgen::to_hex(p004::p0_schema_hash()));
-        CHECK(lines[2] == "table biome " + worldgen::to_hex(p004::empty_biome_table_hash()));
-        CHECK(lines[3] == "table climate " + worldgen::to_hex(p004::empty_climate_table_hash()));
-        CHECK(lines[4] == "table layer " + worldgen::to_hex(p004::layer_table_hash({})));
-        CHECK(lines[5] == "table meta " + worldgen::to_hex(p004::meta_table_hash(rows)));
-        CHECK(lines[6] == "table pass " + worldgen::to_hex(p004::empty_pass_table_hash()));
-        CHECK(lines[7] == "table region " + worldgen::to_hex(p004::empty_region_table_hash()));
-        CHECK(lines[8] == "table region_biome " + worldgen::to_hex(p004::empty_region_biome_table_hash()));
-        CHECK(lines[9] == "table region_border " + worldgen::to_hex(p004::empty_region_border_table_hash()));
+        for (std::size_t k = 0; k < tables.size(); ++k) {
+            CHECK(lines[2 + k] == "table " + tables[k].first + " " + worldgen::to_hex(tables[k].second));
+        }
         // The report: the 0.11.0 text of P0-04 7 with the two values replaced.
         std::string want(p004::REPORT_SEED_0);
         const auto replace_line = [&](const std::string& key, const std::string& value) {
@@ -420,18 +513,18 @@ TEST_CASE("cli P3-01 8.3 test 10: --until none worlds differ from 0.11.0 only in
             want.replace(at + 1, end - at - 1, key + " = " + value);
         };
         replace_line("content_hash", golden.at(root));
-        replace_line("generator_version", "0.12.0");
+        replace_line("generator_version", "0.13.0");
         const ProcessResult rep = sb.cli({"report", "--db", u8(world)});
         REQUIRE(rep.exit_code == EXIT_OK);
         CHECK(rep.out == want);
     }
 }
 
-TEST_CASE("cli P3-01 7: the version line names generator 0.12.0 and schema 5") {
+TEST_CASE("cli P3-01 7: the version line names the generator and schema (0.13.0 and 6 since P3-03)") {
     Sandbox sb;
     const ProcessResult v = sb.cli({"--version"});
     REQUIRE(v.exit_code == EXIT_OK);
-    CHECK(v.out == std::string("worldgen-cli 0.12.0 schema 5 sqlite ") + worldgen::db::sqlite_library_version() + "\n");
+    CHECK(v.out == std::string("worldgen-cli 0.13.0 schema 6 sqlite ") + worldgen::db::sqlite_library_version() + "\n");
 }
 
 TEST_CASE("cli P3-01 7: the shipped data the CLI reads by default has the golden content hash") {

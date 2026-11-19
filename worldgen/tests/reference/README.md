@@ -615,3 +615,47 @@ is fatal when the sum exceeds 2^63 − 1 (4.1, P3-00 H6), `roman` outside
 lines, the `attempt` lines print `- -` for the root and name of an invalid
 attempt (unspecified, 4.2), and the header says 250 earlier names. No name
 list or SHA-256 line changed.
+
+## P3-03 chronology
+
+`p3_chronology_reference.py` is an independent exact-integer implementation
+of `docs/specs/p3-03-chronology.md`: the data checks D1 to D5 of section 6,
+the entry checks of C1, the bounds of C2, the awakening schedule of C3 (one
+keyed draw per later race on `hist.chronology.awakening`, the sequential
+clamp), the ages of C4 with the numeral fallback, the creator gods of C5
+with the registry order of 8.1 (region names, then age names, then god
+names), the rows of tables `race`, `race_biome`, `culture`, `god` and `age`
+in row order, the eight `meta` keys of 4.2 with the reader's syntax check,
+the `[chronology]` keys of 9.1, and the P0-04 8 logical table hashes. It is
+written from the spec alone and uses `core_reference.py` (hashing, decimal
+parse), `p3_names_reference.py` (`draw`, `pick`, `make_name`, `roman`) and
+`p3_data_reference.py` (reading a data root with `tomllib`) as libraries.
+It writes `worldgen/tests/golden/p3-03-chronology.txt`, read by the doctest
+files `worldgen/tests/history/history_chronology_*` and by
+`tools/worldgen-cli/tests/cli_chronology_test.cpp`.
+
+```
+python3 -B worldgen/tests/reference/p3_chronology_reference.py check
+python3 -B worldgen/tests/reference/p3_chronology_reference.py golden [PATH|-] [--inputs DIR]
+python3 -B worldgen/tests/reference/p3_chronology_reference.py schedule SEED SPAN [RACES]
+python3 -B worldgen/tests/reference/p3_chronology_reference.py check-world DB [--data ROOT]
+```
+
+`check` reproduces every worked example of 7.1 (K_aw, u, pick, d, base and
+year per race, ages, gods with attempts, the subsets, the collisions, the
+clamp, G = 333), the data checks on the shipped data and each failing once
+on edited data, the C1 messages, the 63 subsets at seed 42, a property
+sweep (seeds 0-99, five spans, 63 subsets), the statistics claims of 7 C3
+and 12 on seeds 0-1999 (no clamp; least gaps 161 / 483 / 966; every value
+of base +- jmax occurs for goblins and orcs; 4 of 30 god names at attempt
+> 0), and the committed golden file against a fresh computation (about
+3 s). `check-world` recomputes the five tables of a schema-6 world from its
+`meta` and its region names, for the validation sweep of P3-03 12.
+
+The world cases of the golden file need the region names of six geography
+worlds (`--inputs`, default `~/.cache/the-unmapped/out/p3-03-tests/inputs/`,
+`<case>.db`); any generator from 0.11.0 on gives the same table `region`,
+and the reference refuses a world whose table `region` differs from
+`p1-06-regions.txt` for the four P1 cases. With the shipped data no region
+name can collide with an age or god name, so the rows of the world cases
+equal those of the seam cases with the same seed and settings.

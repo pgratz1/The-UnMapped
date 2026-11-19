@@ -57,7 +57,8 @@ struct FixtureLayer {
 inline constexpr std::string_view FIXTURE_STAGE = "test_fixture";
 
 // Writes a valid world (meta as an empty P0 world for that seed:
-// param.map_size 1024, empty content hash) whose layer table holds the given
+// param.map_size 1024, the eight history keys of HistoryParams{} (P3-03
+// 4.1), empty content hash) whose layer table holds the given
 // layers, ids 1, 2, ... in the order given, written by one stage
 // "test_fixture" (so meta.stages = test_fixture). Test-only fixtures of
 // P0-04 12.3 (a constant layer; a synthetic i16 layer with values -32767, 0,

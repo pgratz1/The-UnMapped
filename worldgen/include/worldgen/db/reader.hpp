@@ -112,7 +112,9 @@ public:
     //   4. unsupported_schema_version: user_version or meta.schema_version
     //      != SCHEMA_VERSION ("world schema version X, this build reads Y");
     //   5. meta_key_missing: a key of REQUIRED_META_KEYS absent;
-    //   6. meta_value_invalid: a required value not in canonical form.
+    //   6. meta_value_invalid: a required value not in canonical form, keys
+    //      checked in ascending order (the eight history keys of P3-03 4.2
+    //      by is_canonical_history_meta_value; param.races by syntax only).
     // The meta table is read once here; the meta accessors below do no I/O.
     [[nodiscard]] static Result<WorldReader> open(std::string_view path_utf8);
 

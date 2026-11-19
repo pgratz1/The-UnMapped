@@ -27,10 +27,21 @@ std::vector<stages::StageInfo> geography_plan(const WorldParams& params) {
     if (params.until && stages::check_stage_limit(*params.until) != stages::StageLimitError::none) {
         fatal("generate_world: the stage limit is not 'none' or an implemented stage name");
     }
-    return stages::geography_stages_until(params.until);
+    return stages::stages_until(params.until);
 }
 
 }  // namespace
+
+namespace stages::detail {
+
+void write_history_params(db::WorldWriter& writer, const history::HistoryParams& history) {
+    const std::string_view prefix = db::META_PARAM_PREFIX;
+    for (const auto& [key, value] : history::history_meta_entries(history)) {
+        writer.set_param_text(key.substr(prefix.size()), value);
+    }
+}
+
+}  // namespace stages::detail
 
 std::vector<std::string_view> planned_stages(const WorldParams& params) {
     std::vector<std::string_view> names;
@@ -83,6 +94,10 @@ db::Status generate_world(const WorldParams& params, const data::ContentSet& con
     if (params.threads < 1U || params.threads > MAX_THREADS) {
         fatal("generate_world: thread count outside [1, 256]");
     }
+    // P3-03 4.1 step 2: the history settings, before any work.
+    if (const std::string_view bad = history::history_params_problem(params.history); !bad.empty()) {
+        throw FatalError("generate_world: params.history." + std::string(bad) + " is invalid");
+    }
     // Fail early on the output location, before any work (P0-04 4.4).
     if (db::Status pre = db::WorldWriter::check_output(out_utf8, overwrite); !pre.ok()) {
         return pre;
@@ -100,13 +115,15 @@ db::Status generate_world(const WorldParams& params, const data::ContentSet& con
     }
     writer.set_content_hash(params.content_hash);
     writer.set_param_integer("map_size", params.map_size);  // FatalError unless 512, 1024, 2048
+    // P3-03 4.1 step 3: the eight history keys, for every world.
+    write_history_params(writer, params.history);
 
     // Step 3: the stages in their fixed order, each in its own transaction
     // (P0-04 5.1, P1-00 3).
     if (params.test_pattern) {
         run_test_pattern(writer, fault);
     } else {
-        Pipeline pipeline(writer, content, params.map_size, params.threads);
+        Pipeline pipeline(writer, content, params.map_size, params.threads, params.history);
         for (const StageInfo& stage : geography) {
             pipeline.run(stage);
         }
@@ -144,6 +161,7 @@ db::Status write_fixture_world(std::string_view out_utf8, std::uint64_t seed, st
     writer.set_seed(seed);
     writer.set_content_hash(sha256(std::string_view{}));
     writer.set_param_integer("map_size", 1024);
+    detail::write_history_params(writer, history::HistoryParams{});  // the defaults (P3-03 4.1)
     if (!layers.empty()) {
         db::StageWriter stage = writer.begin_stage(FIXTURE_STAGE);
         std::int64_t id = writer.next_layer_id();

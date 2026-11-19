@@ -310,8 +310,8 @@ TEST_CASE("cli P1-04 9, P1-03 9: report: [tables], wind_toward first of the clim
     INFO("stderr: ", r.err);
     REQUIRE(r.exit_code == EXIT_OK);
     const std::string& t = r.out;
-    CHECK(contains(t, "\n[tables]\nbiome = 12\nclimate = 1\nlayer = 11\nmeta = 8\npass = "));
-    CHECK(contains(t, "\nschema_version = 5\n"));
+    CHECK(contains(t, "\n[tables]\nage = 0\nbiome = 12\nclimate = 1\nculture = 0\ngod = 0\nlayer = 11\nmeta = 16\npass = "));
+    CHECK(contains(t, "\nschema_version = 6\n"));
     CHECK(contains(t, "\nwind_toward = SE\ntemp_offset_c = 2.0\ntemperature_c = "));
     // P1-04 9's example line for 512 seed 0 (ten keys in code order).
     CHECK(contains(t, "\nbiome_share = temperate_forest:0.5810 grassland:0.1447 marsh:0.0068 highland_moor:0.0882 "
@@ -340,7 +340,7 @@ TEST_CASE("cli P1-04 9, P1-03 9: report: [tables], wind_toward first of the clim
     // The climate world: one climate row, empty biome table, no biome keys.
     const ProcessResult c = w.sb.cli({"report", "--db", u8(w.climate)});
     REQUIRE(c.exit_code == EXIT_OK);
-    CHECK(contains(c.out, "\n[tables]\nbiome = 0\nclimate = 1\nlayer = 10\n"));
+    CHECK(contains(c.out, "\n[tables]\nage = 0\nbiome = 0\nclimate = 1\nculture = 0\ngod = 0\nlayer = 10\n"));
     CHECK(contains(c.out, "\nwind_toward = SE\ntemp_offset_c = 2.0\n"));
     CHECK_FALSE(contains(c.out, "biome_share"));
 }
@@ -359,10 +359,10 @@ TEST_CASE("cli P1-04 3: --until none, --until hydrology and the test pattern hav
         generate(sb, data, c.extra, out);
         const ProcessResult r = sb.cli({"report", "--db", u8(out)});
         REQUIRE(r.exit_code == EXIT_OK);
-        CHECK(contains(r.out, "\n[tables]\nbiome = 0\nclimate = 0\n"));
+        CHECK(contains(r.out, "\n[tables]\nage = 0\nbiome = 0\nclimate = 0\n"));
         CHECK_FALSE(contains(r.out, "wind_toward"));
         CHECK_FALSE(contains(r.out, "temp_offset_c"));
-        CHECK(contains(r.out, "\nschema_version = 5\n"));
+        CHECK(contains(r.out, "\nschema_version = 6\n"));
     }
 }
 
@@ -421,7 +421,7 @@ TEST_CASE("cli P1-03 3, P0-02 amendment 16: a schema-3 world is refused by repor
         const ProcessResult r = w.sb.cli(args);
         CHECK(r.exit_code != EXIT_OK);
         CHECK(r.out.empty());
-        CHECK(contains(r.err, "world schema version 3, this build reads 5"));
+        CHECK(contains(r.err, "world schema version 3, this build reads 6"));
     }
     CHECK_FALSE(fs::exists(w.sb.file("schema3.png")));
     // Plain `hash` hashes the file's bytes without opening it as a world

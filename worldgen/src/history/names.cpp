@@ -7,9 +7,9 @@
 
 #include "worldgen/core/error.hpp"
 #include "worldgen/core/hash.hpp"
+#include "worldgen/core/roman.hpp"
 #include "worldgen/core/streams.hpp"
 #include "worldgen/history/draw.hpp"
-#include "worldgen/stages/regions.hpp"
 
 namespace worldgen::history {
 
@@ -260,7 +260,7 @@ std::string roman(std::uint64_t k) {
     if (k < 1 || k > 100000) {
         fatal("roman: k outside [1, 100000]");
     }
-    return stages::roman(static_cast<std::int64_t>(k));
+    return roman_numeral(static_cast<std::int64_t>(k));
 }
 
 }  // namespace worldgen::history

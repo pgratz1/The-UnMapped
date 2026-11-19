@@ -264,7 +264,8 @@ struct RegionNumbering {
 [[nodiscard]] std::uint32_t region_sector(std::int64_t dx, std::int64_t dy, std::int64_t r_c);
 
 // The Roman numeral of k (standard subtractive form; thousands as repeated
-// M). Fatal if k < 1 or k > 100000.
+// M). Fatal if k < 1 or k > 100000. Forwards to worldgen::roman_numeral
+// (core/roman.hpp), which the history library shares.
 [[nodiscard]] std::string roman(std::int64_t k);
 
 // What RG11 needs of each region, in id order.

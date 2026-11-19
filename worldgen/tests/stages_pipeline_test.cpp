@@ -345,14 +345,16 @@ TEST_CASE("pipeline: no stages gives the P0 empty world; a stage that writes not
 
 // --- Stage list and limits (P1-00 3, 10.1) ---------------------------------------------
 
-TEST_CASE("stages P1-00 3: the geography stage names, in run order") {
-    const std::vector<std::string_view> names(st::GEOGRAPHY_STAGE_NAMES.begin(), st::GEOGRAPHY_STAGE_NAMES.end());
-    CHECK(names == std::vector<std::string_view>{"elevation", "hydrology", "climate", "biomes", "resources", "regions"});
+TEST_CASE("stages P1-00 3, P3-03 4.3: the stage names, in run order") {
+    const std::vector<std::string_view> names(st::STAGE_NAMES.begin(), st::STAGE_NAMES.end());
+    CHECK(names == std::vector<std::string_view>{"elevation", "hydrology", "climate", "biomes", "resources", "regions",
+                                                 "chronology", "history"});
     CHECK(st::UNTIL_NONE == "none");
     // Implemented: elevation (P1-01), hydrology (P1-02), climate (P1-03),
-    // biomes (P1-04), resources (P1-05) and regions (P1-06).
-    const auto implemented = st::implemented_geography_stages();
-    REQUIRE(implemented.size() == 6U);
+    // biomes (P1-04), resources (P1-05), regions (P1-06) and chronology
+    // (P3-03).
+    const auto implemented = st::implemented_stages();
+    REQUIRE(implemented.size() == 7U);
     CHECK(implemented[0].name == "elevation");
     CHECK(implemented[0].run != nullptr);
     CHECK(implemented[1].name == "hydrology");
@@ -365,6 +367,8 @@ TEST_CASE("stages P1-00 3: the geography stage names, in run order") {
     CHECK(implemented[4].run != nullptr);
     CHECK(implemented[5].name == "regions");
     CHECK(implemented[5].run != nullptr);
+    CHECK(implemented[6].name == "chronology");
+    CHECK(implemented[6].run != nullptr);
 }
 
 TEST_CASE("stages P1-00 10.1: check_stage_limit") {
@@ -375,9 +379,11 @@ TEST_CASE("stages P1-00 10.1: check_stage_limit") {
     CHECK(st::check_stage_limit("biomes") == st::StageLimitError::none);
     CHECK(st::check_stage_limit("resources") == st::StageLimitError::none);
     CHECK(st::check_stage_limit("regions") == st::StageLimitError::none);
-    for (const std::string_view name : st::GEOGRAPHY_STAGE_NAMES) {
+    CHECK(st::check_stage_limit("chronology") == st::StageLimitError::none);
+    CHECK(st::check_stage_limit("history") == st::StageLimitError::not_implemented);
+    for (const std::string_view name : st::STAGE_NAMES) {
         if (name == "elevation" || name == "hydrology" || name == "climate" || name == "biomes" ||
-            name == "resources" || name == "regions") {
+            name == "resources" || name == "regions" || name == "chronology") {
             continue;
         }
         CAPTURE(std::string(name));
@@ -391,43 +397,48 @@ TEST_CASE("stages P1-00 10.1: check_stage_limit") {
     }
 }
 
-TEST_CASE("stages P1-00 10.1: geography_stages_until") {
-    const auto all = st::geography_stages_until(std::nullopt);
-    REQUIRE(all.size() == 6U);
+TEST_CASE("stages P1-00 10.1: stages_until") {
+    const auto all = st::stages_until(std::nullopt);
+    REQUIRE(all.size() == 7U);
     CHECK(all[0].name == "elevation");
     CHECK(all[1].name == "hydrology");
     CHECK(all[2].name == "climate");
     CHECK(all[3].name == "biomes");
     CHECK(all[4].name == "resources");
     CHECK(all[5].name == "regions");
-    CHECK(st::geography_stages_until(std::string("none")).empty());
-    const auto upto = st::geography_stages_until(std::string("elevation"));
+    CHECK(all[6].name == "chronology");
+    CHECK(st::stages_until(std::string("none")).empty());
+    const auto upto = st::stages_until(std::string("elevation"));
     REQUIRE(upto.size() == 1U);
     CHECK(upto[0].name == "elevation");
-    const auto both = st::geography_stages_until(std::string("hydrology"));
+    const auto both = st::stages_until(std::string("hydrology"));
     REQUIRE(both.size() == 2U);
     CHECK(both[0].name == "elevation");
     CHECK(both[1].name == "hydrology");
-    const auto three = st::geography_stages_until(std::string("climate"));
+    const auto three = st::stages_until(std::string("climate"));
     REQUIRE(three.size() == 3U);
     CHECK(three[2].name == "climate");
-    const auto four = st::geography_stages_until(std::string("biomes"));
+    const auto four = st::stages_until(std::string("biomes"));
     REQUIRE(four.size() == 4U);
     CHECK(four[3].name == "biomes");
-    const auto five = st::geography_stages_until(std::string("resources"));
+    const auto five = st::stages_until(std::string("resources"));
     REQUIRE(five.size() == 5U);
     CHECK(five[4].name == "resources");
-    const auto six = st::geography_stages_until(std::string("regions"));
+    const auto six = st::stages_until(std::string("regions"));
     REQUIRE(six.size() == 6U);
     CHECK(six[5].name == "regions");
-    CHECK_THROWS_AS(static_cast<void>(st::geography_stages_until(std::string("bogus"))), worldgen::FatalError);
+    const auto seven = st::stages_until(std::string("chronology"));
+    REQUIRE(seven.size() == 7U);
+    CHECK(seven[6].name == "chronology");
+    CHECK_THROWS_AS(static_cast<void>(st::stages_until(std::string("bogus"))), worldgen::FatalError);
+    CHECK_THROWS_AS(static_cast<void>(st::stages_until(std::string("history"))), worldgen::FatalError);
 }
 
 TEST_CASE("generate P0-04 5.1, P1-00 10.1: planned_stages") {
     worldgen::WorldParams p;
     p.content_hash = worldgen::sha256(std::string_view{});
     CHECK(worldgen::planned_stages(p) == std::vector<std::string_view>{"elevation", "hydrology", "climate", "biomes",
-                                                                        "resources", "regions"});  // every stage
+                                                                        "resources", "regions", "chronology"});  // every stage
     p.until = std::string("regions");
     CHECK(worldgen::planned_stages(p) ==
           std::vector<std::string_view>{"elevation", "hydrology", "climate", "biomes", "resources", "regions"});
@@ -477,10 +488,10 @@ TEST_CASE("generate P1-00 10.1: --until none and every thread count give the P0 
     REQUIRE_FALSE(bytes.empty());
     CHECK(dbtest::read_file(dir.file("content.db")) == bytes);
     // The empty world of seed 0 with the content hash of no data, generator
-    // 0.12.0 (schema version 5). The CLI case empty-seed-0 of P0-04 section 9 carries the content
+    // 0.13.0 (schema version 6). The CLI case empty-seed-0 of P0-04 section 9 carries the content
     // hash of the shipped data since the `worldgen` kind was registered
     // (P0-03 amendment 17), so it differs from this value.
-    CHECK(worldgen::sha256_hex(bytes) == "d4f8a4198a329311a6332349b145e2a6f3fb63c455dd6e6d9d674ebae3ee9d92");
+    CHECK(worldgen::sha256_hex(bytes) == "c5326b79c220b1e615ff334022a783113bf92ae45b7d052dcc49e0870074fed2");
     // The test pattern at several thread counts: identical bytes.
     worldgen::WorldParams t;
     t.seed = 0;
@@ -493,7 +504,7 @@ TEST_CASE("generate P1-00 10.1: --until none and every thread count give the P0 
     const auto tp = dbtest::read_file(dir.file("tp1.db"));
     CHECK(dbtest::read_file(dir.file("tp2.db")) == tp);
     CHECK(dbtest::read_file(dir.file("tp5.db")) == tp);
-    CHECK(worldgen::sha256_hex(tp) == "c3f8028b7e0a7eb731fc9583dbf6c228197aefd4f9a3bbc19c8cb9e24d46f129");  // content hash of no data, generator 0.12.0
+    CHECK(worldgen::sha256_hex(tp) == "6169c66020b10a16f5f46b105c497be51cee254e976b3d243895cef6add86551");  // content hash of no data, generator 0.13.0
 }
 
 TEST_CASE("generate: an unusable stage limit, or a content hash that does not match, is fatal and leaves nothing") {

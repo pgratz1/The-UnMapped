@@ -88,6 +88,12 @@ std::string_view validate_meta_values(ReaderState& s) {
     if (!is_canonical_version(m.at(std::string(META_GENERATOR_VERSION)))) {
         return META_GENERATOR_VERSION;
     }
+    // The history keys (P3-03 4.2) that sort before param.map_size.
+    for (const std::string_view key : HISTORY_META_KEYS) {
+        if (key < META_PARAM_MAP_SIZE && !is_canonical_history_meta_value(key, m.at(std::string(key)))) {
+            return key;
+        }
+    }
     const std::optional<std::uint64_t> map_size = parse_canonical_u64(m.at(std::string(META_PARAM_MAP_SIZE)));
     bool map_size_ok = false;
     for (const std::int64_t allowed : ALLOWED_MAP_SIZES) {
@@ -97,6 +103,11 @@ std::string_view validate_meta_values(ReaderState& s) {
         return META_PARAM_MAP_SIZE;
     }
     s.map_size = static_cast<std::uint32_t>(*map_size);
+    for (const std::string_view key : HISTORY_META_KEYS) {
+        if (key > META_PARAM_MAP_SIZE && !is_canonical_history_meta_value(key, m.at(std::string(key)))) {
+            return key;
+        }
+    }
     const std::optional<std::uint64_t> seed = parse_canonical_u64(m.at(std::string(META_SEED)));
     if (!seed) {
         return META_SEED;

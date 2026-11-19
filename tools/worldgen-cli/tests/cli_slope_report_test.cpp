@@ -44,7 +44,7 @@ TEST_CASE("cli 10.3: report on the slope world, byte for byte") {
     for (const auto& [k, v] : p004::meta_rows(0, {}, "test_fixture")) {
         expected += v.empty() ? k + " =\n" : k + " = " + v + "\n";
     }
-    expected += "[tables]\nbiome = 0\nclimate = 0\nlayer = 1\nmeta = 8\npass = 0\nregion = 0\nregion_biome = 0\nregion_border = 0\n[layers]\nelevation i16 7x6 codec=1 bytes=" +
+    expected += "[tables]\nage = 0\nbiome = 0\nclimate = 0\nculture = 0\ngod = 0\nlayer = 1\nmeta = 16\npass = 0\nrace = 0\nrace_biome = 0\nregion = 0\nregion_biome = 0\nregion_border = 0\n[layers]\nelevation i16 7x6 codec=1 bytes=" +
                 std::to_string(worldgen::db::encode_layer_blob(g).size()) + " min=-40 max=5400\n" +
                 p100::with_empty_pass_lines(p100::SLOPE_GEOGRAPHY);
     CHECK(r.out == expected);

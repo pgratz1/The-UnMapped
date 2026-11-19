@@ -11,6 +11,7 @@
 #include "worldgen/core/noise.hpp"     // noise2, fbm2 (8)
 #include "worldgen/core/parallel.hpp"  // run_blocks, map_blocks (4.2 as amended in 15)
 #include "worldgen/core/rng.hpp"       // splitmix64_next, Rng (6)
+#include "worldgen/core/roman.hpp"     // roman_numeral (P1-06 RG11, P3-02 4.3)
 #include "worldgen/core/sha256.hpp"    // Sha256, sha256, to_hex (10)
 #include "worldgen/core/streams.hpp"   // stream-name registry (7.3)
 #include "worldgen/core/wide.hpp"      // U128, mul_u64_wide, divmod_u128_u64 (5.3)
