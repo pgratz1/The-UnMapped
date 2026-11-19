@@ -1,6 +1,6 @@
 # P3-01 History data and settings
 
-Status: **approved by the lead 2026-11-19; revised 2026-11-19 (text only, after implementation); amended 2026-11-19 for P3-03 (r2)**: see the revision notes at the end. Phase P3 History core, spec 1 (P3-00 3.1). Design doc sections 3 (data in TOML), 5 (the six races, their order, camps and timing; "Food and homelands"; world-creation settings), 6 (`meta` holds the settings). Depends on P0-03 (with amendments 15 to 17), P0-04, P1-00 6 and P3-00. Written together with P3-02, which defines the culture naming record that this spec's `culture` kind carries.
+Status: **approved by the lead 2026-11-19; revised 2026-11-19 (text only, after implementation); amended 2026-11-19 for P3-03 (r2); amended again 2026-11-19 after the P3-03 implementation (r3: check D0)**: see the revision notes at the end. Phase P3 History core, spec 1 (P3-00 3.1). Design doc sections 3 (data in TOML), 5 (the six races, their order, camps and timing; "Food and homelands"; world-creation settings), 6 (`meta` holds the settings). Depends on P0-03 (with amendments 15 to 17), P0-04, P1-00 6 and P3-00. Written together with P3-02, which defines the culture naming record that this spec's `culture` kind carries.
 
 ## 1. Purpose
 
@@ -76,7 +76,9 @@ Reserved for P5 and not declared now: temperament, magic school leanings, stance
 - The per-definition uniqueness checks `race_biomes_unique` and `race_settlement_kinds_unique` report the **first repeat only** (the smallest later index i), one message per check and definition; `race_order_unique` reports every later definition, one message each.
 - Side effect of P0-03 amendment 16 (kind-level checks run over the definitions that passed type validation): a race with any field error (a wrong type, a value out of bounds, a missing required or an unknown key) is left out of the kind-level checks, so its order counts as missing. Such an error in the race of order k < n (n races) therefore also yields `race_order_dense` (`… <k> is missing`), and the race of order k + 1 is not compared by `race_awakening_order`.
 
-**Cross-kind conditions**, which the loader cannot check (a named check sees one kind): checked by `check_history_data` (P3-03 6): in `generate` right after the data is loaded, as input errors (exit 3, path `races`, no position), and again at the entry of the `chronology` stage as a guard (fatal, prefix `chronology: data: `). Amended by P3-03 (r2): the full list, D1 to D5, and the messages are in P3-03 6; in short:
+**Cross-kind conditions**, which the loader cannot check (a named check sees one kind): checked by `check_history_data` (P3-03 6): in `generate` right after the data is loaded, as input errors (exit 3, path `races`, no position), and again at the entry of the `chronology` stage as a guard (fatal, prefix `chronology: data: `). Amended by P3-03 (r2, r3): the full list, D0 to D5, and the messages are in P3-03 6; in short:
+
+0. (P3-03 D0) the data defines at least one race: `no race is defined; kind 'race' needs at least one definition` (checked first; through the loader the required-kind error of `races/` already comes first, P3-03 6);
 
 1. every `biomes[i].biome` is a land biome (`water` false): `race '<id>' prefers water biome '<biome id>'`;
 2. the race's `culture` belongs to it (`culture.race` = the race): `race '<id>' has culture '<culture id>' of race '<other id>'`;
@@ -458,3 +460,7 @@ Text changes requested by P3-03 15.7; no behaviour of P3-01's code changes.
 1. 3, cross-kind conditions: checked by `check_history_data` in `generate` (input error, exit 3) and at the stage as a guard; P3-03 adds D2 (natural biome) and D4, D5 (age names); item 3 is implied by item 2.
 2. 6.2: `--test-pattern` worlds record the history flags in `meta` from P3-03 on.
 3. 6.3: the keys reach the stage through `HistoryParams` in `WorldParams` and are written by `generate_world` for every world (P3-03 4.1).
+
+## Revision note r3 (2026-11-19, after the P3-03 implementation)
+
+Text only in this spec. 3, cross-kind conditions: item 0, P3-03's check D0 (the lead's decision): a data root with no race definition is an input error, exit 3, path `races`, message `no race is defined; kind 'race' needs at least one definition`, first in the D order and refused again at the stage entry; `generate_world`'s FatalError `generate_world: params.history.races is invalid` remains the last line of defence. The other items of P3-03 15.7 were applied in r2.

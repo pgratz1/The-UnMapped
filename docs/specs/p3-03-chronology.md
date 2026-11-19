@@ -1,6 +1,6 @@
 # P3-03 Chronology
 
-Status: **approved by the lead 2026-11-19** (the six questions of section 16 go to Paul; the interim choices stand). Written by the spec writer 2026-11-19. Phase P3 History core, spec 3 (P3-00 3.1), pipeline stage 7, `chronology`. Generator **0.13.0**; **schema version 6** (five new tables and eight new required `meta` keys, section 5). Design doc sections 5 (the six ages, gods and the order of the races, the awakening table, world-creation settings), 6 (tables `race`, `god`, `age`; `meta` holds the settings) and 14 (every name a model writes must resolve: names unique). Depends on P0-01 to P0-04 with their amendments, P1-06 (table `region`), P3-00 (binding: 2.1 calendar, 4.5 H1–H8, 4.6 keyed draws, 5, 6.1, 6.5, 12.3, 12.4), P3-01 (kinds `race`, `culture`, `history.chronology`; `Settings`) and P3-02 (keyed draws, names, registry). Implementation state read: `origin/p3/01-int` (`data::Settings` carries the history settings, `WorldParams` does not) and `origin/p3/02-names` (`worldgen/history/names.hpp`). Proposals read: up to "Paul's decisions of 2026-11-19: the P3 interim choices are accepted; names are ASCII and unique". Numbers in this spec come from the spec writer's exact-integer prototype `~/.cache/the-unmapped/out/p3-03-spec/chrono_ref.py` (on `core_reference` and the P3-02 reference) and from a 0.12.0 world, `~/.cache/the-unmapped/out/p3-03-spec/s42-1024.db`.
+Status: **approved by the lead 2026-11-19** (the six questions of section 16 go to Paul; the interim choices stand); **revised 2026-11-19 after implementation** (text, and check D0 by the lead's decision): see the revision note at the end. Written by the spec writer 2026-11-19. Phase P3 History core, spec 3 (P3-00 3.1), pipeline stage 7, `chronology`. Generator **0.13.0**; **schema version 6** (five new tables and eight new required `meta` keys, section 5). Design doc sections 5 (the six ages, gods and the order of the races, the awakening table, world-creation settings), 6 (tables `race`, `god`, `age`; `meta` holds the settings) and 14 (every name a model writes must resolve: names unique). Depends on P0-01 to P0-04 with their amendments, P1-06 (table `region`), P3-00 (binding: 2.1 calendar, 4.5 H1–H8, 4.6 keyed draws, 5, 6.1, 6.5, 12.3, 12.4), P3-01 (kinds `race`, `culture`, `history.chronology`; `Settings`) and P3-02 (keyed draws, names, registry). Implementation state read: `origin/p3/01-int` (`data::Settings` carries the history settings, `WorldParams` does not) and `origin/p3/02-names` (`worldgen/history/names.hpp`). Proposals read: up to "Paul's decisions of 2026-11-19: the P3 interim choices are accepted; names are ASCII and unique". Numbers in this spec come from the spec writer's exact-integer prototype `~/.cache/the-unmapped/out/p3-03-spec/chrono_ref.py` (on `core_reference` and the P3-02 reference) and from a 0.12.0 world, `~/.cache/the-unmapped/out/p3-03-spec/s42-1024.db`.
 
 ## 1. Purpose
 
@@ -58,9 +58,10 @@ struct HistoryParams {
     std::string divine_script;                                  // empty in P3
     friend bool operator==(const HistoryParams&, const HistoryParams&) = default;
 };
-HistoryParams history_params_from(const data::Settings&);       // FatalError unless races are resolved (resolve_races ran)
+HistoryParams history_params_from(const data::Settings&);       // FatalError `history_params_from: the races are not resolved` unless resolve_races ran
 std::vector<std::pair<std::string_view, std::string>> history_meta_entries(const HistoryParams&);  // the eight keys of 4.2, ascending key
-HistoryParams history_params_from_meta(const db::WorldReader&); // inverse of history_meta_entries (for resume tests and P3-04)
+HistoryParams history_params_from_meta(const db::WorldReader&); // inverse of history_meta_entries (for resume tests and P3-04);
+                                                                // FatalError `history_params_from_meta: meta key '<key>' is missing or not canonical`
 }
 // worldgen/include/worldgen/generate.hpp: struct WorldParams { …; history::HistoryParams history; };
 ```
@@ -68,11 +69,11 @@ HistoryParams history_params_from_meta(const db::WorldReader&); // inverse of hi
 The default `races` is the design's roster in its fixed order (design 5); the CLI always replaces it with `resolve_races`' result. Flow:
 
 1. `generate` (CLI): settings and flags are merged and `resolve_races` runs (P3-01, as on `p3/01-int`); then `params.history = history_params_from(settings)`.
-2. `generate_world` checks `params.history` before any work (with the existing checks of `params`): span in [2000, 12000], `civs_per_race` unset or in [1, 4], `races` non-empty, each in the definition id grammar of P0-03, no id twice, `divine_script` empty or 64 lower-case hex digits; FatalError `generate_world: params.history.<field> is invalid` otherwise. Whether the ids name loaded races, in race order, is the stage's check (7, C1), since a world that does not run the stage needs no race data.
+2. `generate_world` checks `params.history` before any work (with the existing checks of `params`): span in [2000, 12000], `civs_per_race` unset or in [1, 4], `races` non-empty, each in the definition id grammar of P0-03, no id twice, `divine_script` empty or 64 lower-case hex digits; FatalError `generate_world: params.history.<field> is invalid` otherwise, `<field>` the first invalid one of `span`, `civs_per_race`, `races`, `divine_script` (`history_params_problem`, 14). Whether the ids name loaded races, in race order, is the stage's check (7, C1), since a world that does not run the stage needs no race data.
 3. `generate_world` writes the eight keys into `meta` for **every** world, with the other world-creation settings (after `param.map_size`), through `WorldWriter::set_param_text(name, value)` with the text of `history_meta_entries`. So the empty world, the test-pattern world and a geography-only world record them too (P3-00 5: "every world records them").
 4. The pipeline hands the same `HistoryParams` to each stage's context: `StageContext::history_params()`. Since the stage sees exactly what `meta` records, a run resumed from a stored world (`history_params_from_meta`) sees the same values (H8).
 
-`WorldWriter::set_param_text(name, value)`: sets `meta.param.<name>` = value; FatalError if `param.<name>` is one of the eight keys and the value is not in its canonical form (4.2), or the name is invalid (as `set_param_integer`); `map_size` stays integer-only. Every required key must be set before `finalize` (FatalError `WorldWriter::finalize: meta key '<key>' was not set`, the key the first missing in ascending order), as `param.map_size` is now. The test helper `write_fixture_world` sets the defaults of `HistoryParams`.
+`WorldWriter::set_param_text(name, value)`: sets `meta.param.<name>` = value; FatalError if `param.<name>` is one of the eight keys and the value is not in its canonical form (4.2), `WorldWriter::set_param_text: '<value>' is not the canonical form of a value of meta key 'param.<name>'`, or the name is invalid (as `set_param_integer`); `map_size` stays integer-only (`WorldWriter::set_param_text: map_size is an integer parameter`, as `set_param_decimal` already refuses it). `set_param_integer` and `set_param_decimal` apply the same canonical-form check to the eight keys, with the same text under their own name (`WorldWriter::set_param_integer: '<value>' …`, `WorldWriter::set_param_decimal: '<value>' …`, the value as the writer would store it). Every required `param.*` key must be set before `finalize`: FatalError `WorldWriter::finalize: meta key '<key>' was not set`, naming the first missing one in ascending key order; this also replaces the old message for `param.map_size` (`WorldWriter::finalize: param.map_size not set`). The test helper `write_fixture_world` sets the defaults of `HistoryParams`.
 
 ### 4.2 The eight keys and their canonical text
 
@@ -89,7 +90,7 @@ The default `races` is the design's roster in its fixed order (design 5); the CL
 
 Defaults (no flag, no settings key): `auto`, `normal`, empty, `normal`, `normal`, `6000`, `normal`, and every loaded race in race order (with the shipped data the six ids above).
 
-The reader validates the eight values at open, as it validates `param.map_size` (P0-02 amendment 2): a value outside its canonical form is "meta value invalid", exit 3, with the reader's existing message `world file '<path>' has an invalid value '<value>' for meta key '<key>'`. The reader cannot know the data, so it checks only the syntax of `param.races`; that its ids are the present rows of table `race` in id order is invariant 1 (10).
+The reader validates the eight values at open, as it validates `param.map_size` (P0-02 amendment 2): a value outside its canonical form is "meta value invalid", exit 3, with the reader's existing message `world file '<path>' has an invalid value '<value>' for meta key '<key>'`; a missing key is the error value `meta_key_missing` with the reader's existing text `world file '<path>' has no meta key '<key>'` (exit 3). The reader cannot know the data, so it checks only the syntax of `param.races`; that its ids are the present rows of table `race` in id order is invariant 1 (10).
 
 `REQUIRED_META_KEYS` becomes, in ascending byte order (the order the writer inserts them): `content_hash`, `format`, `generator_version`, `param.civs_per_race`, `param.divine_activity`, `param.divine_script`, `param.event_intensity`, `param.history_detail`, `param.history_span`, `param.map_size`, `param.monster_pressure`, `param.races`, `schema_version`, `seed`, `seed_phrase`, `stages` (16 keys).
 
@@ -125,7 +126,7 @@ CREATE TABLE god (id INTEGER PRIMARY KEY, name TEXT NOT NULL, camp INTEGER NOT N
 CREATE TABLE age (id INTEGER PRIMARY KEY, race INTEGER NOT NULL, start_year INTEGER NOT NULL, end_year INTEGER NOT NULL, name TEXT NOT NULL) STRICT
 ```
 
-Every world of schema 6 has the five tables, empty when the stage did not run (4.3). `race.key` and `culture.key` are `UNIQUE`, as `biome.key` is (the echo tables are looked up by key), so SQLite adds `sqlite_autoindex_race_1` and `sqlite_autoindex_culture_1`; names are not `UNIQUE` (as `region.name`; uniqueness is invariant 8, checked by tests). **The empty world grows from 11 to 18 pages, 73728 bytes**: the root pages of `race`, `sqlite_autoindex_race_1`, `race_biome`, `culture`, `sqlite_autoindex_culture_1`, `god` and `age` (measured with `VACUUM INTO` on the 0.12.0 empty world plus the five statements and the eight `meta` rows, Python's SQLite 3.46.1; to be confirmed with the vendored 3.54.1 before use, 14.5). The `sqlite_schema` text is then 2928 bytes, still on page 1 (P3-04 adds thirteen tables and must measure again). No foreign-key clauses; references are invariants (10). `awakening_year` is the only nullable column of P3 so far (P3-00 6.1 conventions: NULL only for a year that has not happened). No REAL, no BLOB.
+Every world of schema 6 has the five tables, empty when the stage did not run (4.3). `race.key` and `culture.key` are `UNIQUE`, as `biome.key` is (the echo tables are looked up by key), so SQLite adds `sqlite_autoindex_race_1` and `sqlite_autoindex_culture_1`; names are not `UNIQUE` (as `region.name`; uniqueness is invariant 8, checked by tests). **The empty world grows from 11 to 18 pages, 73728 bytes**: the root pages of `race`, `sqlite_autoindex_race_1`, `race_biome`, `culture`, `sqlite_autoindex_culture_1`, `god` and `age` (measured with `VACUUM INTO` on the 0.12.0 empty world plus the five statements and the eight `meta` rows, and confirmed on the `--until none` world written by the vendored SQLite 3.54.1, 14.5). The `sqlite_schema` text is then 2928 bytes, still on page 1 (P3-04 adds thirteen tables and must measure again). No foreign-key clauses; references are invariants (10). `awakening_year` is the only nullable column of P3 so far (P3-00 6.1 conventions: NULL only for a year that has not happened). No REAL, no BLOB.
 
 ### 5.2 Columns
 
@@ -166,21 +167,24 @@ P3-01 3 deferred to this stage the conditions a per-kind check cannot see. **The
 std::vector<data::LoadError> check_history_data(const data::ContentSet&);   // sorted as P0-03 9
 ```
 
-Each error has path `races` (the kind directory), no position, and one of these messages; conditions are evaluated for every race definition (present or not), in race order, each condition in this order; the list is then sorted and deduplicated by the P0-03 9 rule (so, sharing path and position, by message bytes):
+Each error has path `races` (the kind directory), no position, and one of these messages; D0 is evaluated first, once for the data; D1 to D5 for every race definition (present or not), in race order, each condition in this order; the list is then sorted and deduplicated by the P0-03 9 rule (so, sharing path and position, by message bytes):
 
 | # | Condition (fails when) | Message |
 | --- | --- | --- |
+| D0 | the data has no `race` definition | `no race is defined; kind 'race' needs at least one definition` (new; the lead's decision 2026-11-19) |
 | D1 | a `biomes[i].biome` has `water` true | `race '<id>' prefers water biome '<biome id>'` (P3-01 3 item 1) |
 | D2 | a `biomes[i].biome` has `water` false but is not **natural**: natural = `fallback` true or `rules` non-empty, i.e. a biome the biome stage can assign (`blighted_waste` is not: `rules = []`, `fallback = false`; history assigns it, P1-04 1) | `race '<id>' prefers biome '<biome id>', which no geography stage assigns` (new) |
 | D3 | the race's `culture` has `race` ≠ the race | `race '<id>' has culture '<culture id>' of race '<other id>'` (P3-01 3 item 2) |
 | D4 | the race's age name (C4 step 1, before any numeral) is longer than 48 bytes | `race '<id>' has the age name '<name>', which is longer than 48 bytes` (new) |
 | D5 | the race's age name has a byte other than `A`–`Z`, `a`–`z`, space, `'`, `-`, or starts or ends with a space, or has two spaces in a row | `race '<id>' has the age name '<name>', which is not ASCII letters with single spaces, ' and -` (new; Paul's decision 13, names ASCII) |
 
+D0: a data root with zero race definitions is an input error (exit 3 in the CLI). Through the loader it is caught earlier: kind `race` is required, so a `races/` directory without definitions is already the loader's error `required kind 'race' has no definitions in 'races/'` (P0-03, exit 3, printed under `invalid data in '<data root>'`), and a missing directory `the directory of required kind 'race' is missing`; D0 guards a `ContentSet` built otherwise. At the stage entry such data is refused by C1 item 3, which comes before item 4 (`chronology: settings: no race present` for an empty list, else `chronology: settings: unknown race '<id>'` for its first id), so D0's own text is not what the stage prints. `generate_world`'s FatalError `generate_world: params.history.races is invalid` (an empty `races`, 4.1 step 2) remains the last line of defence.
+
 P3-01 3 item 3 ("every race has at least one culture") is implied by D3: `culture` is a required ref, and if it names a culture of this race the race has one. It has no message of its own.
 
 D4 and D5 exist because `age_name_form` is `string(64)` without a grammar and the plural and adjective are up to 32 bytes each: the shipped form cannot fail (`The Age of Faeries`, 18 bytes), but an edited form could produce a name the P3-02 contract does not allow (48 bytes leaves room for a numeral, P3-02 4.4). A name produced in D4 or D5's message is printed as it is; the loader's string rules already exclude control characters.
 
-CLI form (P0-04 4.5): `worldgen-cli: error: invalid data in '<data root>'`, then one line per error, `races: error: <message>`, exit 3, no world written. With the shipped data and the two fixture roots none fails; the tests make each fail once (14.1 item 6).
+CLI form (P0-04 4.5): `worldgen-cli: error: invalid data in '<data root>'`, `<data root>` printed exactly as the loader's own `invalid data in` error prints it: the root as resolved and not normalized (the `--data` value as given, else `UNMAPPED_DATA_DIR`, else the `game/data` path recorded at configure time; P0-03 7.6, P1-00 6.3); then one line per error, `races: error: <message>`, exit 3, no world written. With the shipped data and the two fixture roots none fails; the tests make each fail once (14.1 item 6).
 
 ## 7. Algorithm
 
@@ -188,9 +192,11 @@ E = `span`; the present races r_1 … r_P are the definitions whose ids are in `
 
 ### C1. Entry checks (fatal, in this order)
 
+The stage entry `run_chronology` applies all four items. The seam `chronology_stage` (14) applies items 2 to 4 only and accepts an empty region list (14.3 item 21); `run_chronology` checks item 1 and then calls it.
+
 1. `chronology: input precondition: no region rows` if no `region` row was written by an earlier stage (the stage needs the regions stage; a world always has at least one region).
 2. Tuning (seam guards, unreachable with loaded data): each field inside its schema range of P3-01 5.1 (`chronology: tuning: <field> outside its schema range`, declaration order), then the named check (`chronology: tuning: age_name_form must contain {plural} or {adjective} and no other placeholder`).
-3. Settings (seam guards): `chronology: settings: history_span <E> outside 2000 to 12000`; `chronology: settings: no race present` (empty list); `chronology: settings: unknown race '<id>'` (first id, in list order, with no definition); `chronology: settings: races not in race order at '<id>'` (the first id whose order is not above the previous one's; a repeated id fails here).
+3. Settings (seam guards), checked in this order: span, empty list, unknown ids (the first in list order), race order: `chronology: settings: history_span <E> outside 2000 to 12000`; `chronology: settings: no race present` (empty list); `chronology: settings: unknown race '<id>'` (first id, in list order, with no definition); `chronology: settings: races not in race order at '<id>'` (the first id whose order is not above the previous one's; a repeated id fails here).
 4. Data: `chronology: data: <message>` with the first error of `check_history_data` (6).
 
 ### C2. Bounds of the schedule
@@ -314,7 +320,7 @@ gods = 6
 
 The report format stays **v2** (P1-00 appendix C item 20: the number changes once a format has shipped in recorded goldens; no golden records report text). Names are left to the history report (P3-07 `[ages]`).
 
-**Corrupt data**, each exit 3 with nothing on stdout, checked after every `[geography]` check, whenever table `race` or `age` has rows, first failure reported, in this order: (1) `race` rows in id order: `corrupt table 'race': row <id>: present is <v>` (not 0 or 1), `corrupt table 'race': row <id>: awakening_year does not match present` (NULL exactly when `present` is 0); (2) `age` rows in id order, with E = `param.history_span`: `corrupt table 'age': row <id>: <reason>`, reasons `id not consecutive` (the first row's id is not 1 or a row's id is not the previous + 1), `race <r> is not a present race`, `start_year <s>, expected <x>` (x = 0 for the first row, else the previous `end_year` + 1), `end_year below start_year`, `race <r> awakens in <y>` (its `awakening_year` ≠ `start_year`); then `corrupt table 'age': the last age ends in <e>, expected <E − 1>` and `corrupt table 'age': <rows> rows for <p> present races`. `report` does not recompute the schedule from the data.
+**Corrupt data**, each exit 3 with nothing on stdout, checked after every `[geography]` check, whenever table `race` or `age` has rows, first failure reported, in this order: (1) `race` rows in id order: `corrupt table 'race': row <id>: present is <v>` (not 0 or 1), `corrupt table 'race': row <id>: awakening_year does not match present` (NULL exactly when `present` is 0); (2) `age` rows in id order, with E = `param.history_span`: `corrupt table 'age': row <id>: <reason>`, reasons `id not consecutive` (the first row's id is not 1 or a row's id is not the previous + 1), `race <r> is not a present race`, `start_year <s>, expected <x>` (x = 0 for the first row, else the previous `end_year` + 1), `end_year below start_year`, `race <r> awakens in <y>` (its `awakening_year` ≠ `start_year`); then `corrupt table 'age': the last age ends in <e>, expected <E − 1>` (when `age` has rows) and `corrupt table 'age': <rows> rows for <p> present races`. The row-count check also applies when table `age` is empty and `race` has rows: present races without age rows are corrupt (`corrupt table 'age': 0 rows for <p> present races`, p ≥ 1), because a chronology run writes both tables and a world stopped before the chronology has both empty. With both tables empty there is no `[chronology]` section and no check (and with `race` rows none of which is present and `age` empty, `0 rows for 0 present races` holds and no section is printed). Before these value checks each row's shape is checked: `corrupt table '<t>': row <id>: has <k> columns, expected <n>`, `… column <k> is not text`, `… column <k> is not an integer` (only `race.awakening_year` may be NULL; `<id>` is `?` when the id itself is not an integer). `report` does not recompute the schedule from the data.
 
 ### 9.2 `hash --detail`
 
@@ -371,7 +377,7 @@ No floating point, no unordered iteration, no `Rng`. Overflow: |raw| of a share 
 
 ## 14. Tests required
 
-For the independent test writer; seams (interim; the engineer records the final signatures here after implementation). **Final signatures** (engineer, 2026-11-19): as below, with these differences. `ChronologyTuning`, `AwakeningBounds` and the five row types have defaulted `operator==`; `ChronologyResult` has a sixth member `std::vector<history::NameChoice> god_names` (god id order: the accepted attempt, and `fallback` for a numeral); `stages::age_name_text` is `using history::age_name_text` (declared in `worldgen/history/data_checks.hpp`, so that the data checks need no stage header); `check_chronology_tuning(const ChronologyTuning&)` is public (C1 item 2); `history::history_params_problem(const HistoryParams&)` returns the first invalid field name (`span`, `civs_per_race`, `races`, `divine_script`) or an empty view; `StageContext::regions()` returns `std::span<const db::RegionRow>`; the stage list is `stages::STAGE_NAMES`, `implemented_stages()` and `stages_until()` (the former names `implemented_geography_stages()` and `geography_stages_until()` remain as inline aliases); `roman` is `worldgen::roman_numeral` in `worldgen/core/roman.hpp`, with `stages::roman` and `history::roman` forwarding to it.
+For the independent test writer; seams (interim; the engineer records the final signatures here after implementation). **Final signatures** (engineer, 2026-11-19): as below, with these differences. `ChronologyTuning`, `AwakeningBounds` and the five row types have defaulted `operator==`; `ChronologyResult` has a sixth member, `std::vector<history::NameChoice> god_names`: one entry per god in god id order, holding the accepted name, the attempt that gave it and `fallback` true when the numeral fallback was used (shown in the block below); `stages::age_name_text` is `using history::age_name_text` (declared in `worldgen/history/data_checks.hpp`, so that the data checks need no stage header); `check_chronology_tuning(const ChronologyTuning&)` is public (C1 item 2); `history::history_params_problem(const HistoryParams&)` returns the first invalid field name (`span`, `civs_per_race`, `races`, `divine_script`) or an empty view; `StageContext::regions()` returns `std::span<const db::RegionRow>`; the stage list is `stages::STAGE_NAMES`, `implemented_stages()` and `stages_until()` (the former names `implemented_geography_stages()` and `geography_stages_until()` remain as inline aliases); `roman` is `worldgen::roman_numeral` in `worldgen/core/roman.hpp`, with `stages::roman` and `history::roman` forwarding to it.
 
 ```cpp
 namespace worldgen::stages {
@@ -383,9 +389,10 @@ std::vector<std::int64_t> awakening_years(std::uint64_t seed, std::int64_t span,
     std::span<const std::int64_t> present_ids, std::span<const Fx> present_shares, const ChronologyTuning&);   // C3
 std::string age_name_text(std::string_view form, std::string_view plural, std::string_view adjective);        // C4 step 1
 struct ChronologyResult { std::vector<db::RaceRow> races; std::vector<db::RaceBiomeRow> race_biomes;
-    std::vector<db::CultureRow> cultures; std::vector<db::GodRow> gods; std::vector<db::AgeRow> ages; };
+    std::vector<db::CultureRow> cultures; std::vector<db::GodRow> gods; std::vector<db::AgeRow> ages;
+    std::vector<history::NameChoice> god_names; };                    // god id order: accepted attempt, fallback flag
 ChronologyResult chronology_stage(const data::ContentSet&, const history::HistoryParams&, std::uint64_t seed,
-    std::span<const std::string> region_names);                                                               // C1 to C5
+    std::span<const std::string> region_names);                                                               // C1 items 2 to 4, C2 to C5
 void run_chronology(StageContext&);
 }
 ```
@@ -409,7 +416,7 @@ void run_chronology(StageContext&);
 
 13. Seeds 0–999 × spans 2000, 2001, 6000, 11999, 12000 × the 63 subsets of the shipped races, through `awakening_years`: invariants 2 and 3 and C3 recomputed by independent code (315,000 schedules; microseconds each).
 14. Hand-made race data with shares packed close (random shares in [0, 1) sorted, seeds 0–999, gap 1–2000, jitter up to 0.05): invariant 2 always; the clamp keeps strict order.
-15. Invariants 1 and 4 to 9 on the fixture worlds (N = 128, fixture data, seeds 0–15) and on the four P1 golden worlds.
+15. Invariants 1 and 4 to 9 on fixture worlds built with the test seam `stages::testing::generate_world_with_stages` from a synthetic regions stage that writes hand-made region rows (names chosen per seed, some colliding with the god and age names) followed by the chronology stage: both fixture data roots, seeds 0–15, spans and race subsets varied by seed; the stored rows also equal `chronology_stage` on the stored region names. The four P1 golden worlds are covered by the world cases of 14.4, whose table hashes come from the independent reference.
 
 ### 14.3 Determinism tests
 
@@ -423,7 +430,7 @@ void run_chronology(StageContext&);
 ### 14.4 Golden values
 
 22. `worldgen/tests/golden/p3-03-chronology.txt`, written by the test writer's **independent reference** `worldgen/tests/reference/p3_chronology_reference.py` (from this spec, using `core_reference` for hashing and the P3-02 reference `p3_names_reference.py` for names; not derived from the C++):
-    - **Seam cases** (no geography; region names as listed): seeds 0, 1, 42, 2^64 − 1 and `phrase_seed("the unmapped")` × spans 2000, 6000, 12000 × races `all`, `elf,orc`, `orc`, `goblin,dwarf,human`, region list empty; plus the collision case of 7.1. Per case one line `<case> years <y…>`, one `<case> ages <id:race:start:end:name|…>`, one `<case> gods <id:name:attempt|…>`, and the logical hashes (P0-04 8 encoding) of the five tables.
+    - **Seam cases** (no geography; region names as listed): seeds 0, 1, 42, 2^64 − 1 and `phrase_seed("the unmapped")` × spans 2000, 6000, 12000 × races `all`, `elf,orc`, `orc`, `goblin,dwarf,human`, region list empty; plus the collision case of 7.1. Per case one line `<case> years <y…>`, one `<case> ages <id:race:start:end:name|…>`, one `<case> gods <id:name:attempt|…>` (`attempt` the accepted attempt, `F` when the numeral fallback gave the name), and the logical hashes (P0-04 8 encoding) of the five tables.
     - **World cases**: the four P1 golden cases (512 seed 0, 512 seed 42, 512 phrase "The Unmapped", 1024 seed 1, shipped data) and the two `hist-*` cases: the logical hashes of the five tables and the eight `meta` values, region names taken from the stored world (the P1-06 golden already pins them). The 1024 cases are read by a `*-slow` suite.
     The C++ must reproduce every line. The 7.1 examples must appear unchanged in it (the test writer states where).
 
@@ -431,9 +438,11 @@ void run_chronology(StageContext&);
 
 ### 14.5 Measured values to confirm
 
-The empty-world size of 5.1 (**18 pages, 73728 bytes**) is the spec writer's measurement with Python's SQLite 3.46.1, not the vendored 3.54.1. The engineer confirms it with the vendored build (`--until none`, `PRAGMA page_count`) **before** writing it into a test or into `schema.md`. If it differs, the engineer reports the measured value and the root-page list to the lead, and this spec (5.1, 14.1 item 7, 15.1, 15.2) is corrected; the DDL and the code are not changed to reach the figure. **Confirmed** (engineer, 2026-11-19): `--until none` written by the vendored SQLite 3.54.1 is 18 pages, 73728 bytes, root pages 2 to 18 in the order of 15.2, and the `sqlite_schema` SQL text is 2928 bytes.
+The empty-world size of 5.1 (**18 pages, 73728 bytes**) was first measured by the spec writer with Python's SQLite 3.46.1. **Confirmed** (engineer, 2026-11-19): `--until none` written by the vendored SQLite 3.54.1 is 18 pages, 73728 bytes, root pages 2 to 18 in the order of 15.2, and the `sqlite_schema` SQL text is 2928 bytes.
 
 ## 15. Amendments requested (the engineer applies 15.1; the lead the others)
+
+Applied: 15.1 by the engineer with the implementation; 15.2 to 15.7 on 2026-11-19 (P0-02 amendment 18, P0-04 amendment 19, P0-01 section 16, P1-00 appendix C item 23, P3-00 correction note, P3-01 revision note r2 and r3).
 
 ### 15.1 `docs/specs/schema.md`
 
@@ -488,3 +497,17 @@ Each with the recommendation and the interim choice this spec follows.
 ## Appendix A. Proposals entry (added to `docs/design/proposals.md` with this spec)
 
 "History: with a subset of races the first one present opens history; every race keeps its creator god" (questions 1 and 2). Schema 6 itself is recorded in "History: schema versions 6 and 7".
+
+## Revision note (2026-11-19, after implementation)
+
+Text changes so that the spec says what the implementation (`p3/03-int`) and its independent tests do, and one check added by the lead. No golden value or world byte changes.
+
+1. 6: check **D0** (the lead's decision): no `race` definition is an input error, `no race is defined; kind 'race' needs at least one definition`, path `races`, first in the D order (to be implemented: `check_history_data` on `p3/03-int` at 14f6f0a does not have it yet); how the loader's required-kind error and C1 item 3 come first in practice, and `generate_world`'s FatalError as the last line of defence.
+2. 9.1: the row-count check applies with an empty `age` table and present races (`0 rows for <p> present races`); both tables empty gives no section; the row-shape messages.
+3. 4.1, 4.2: the message texts of `set_param_text`, `set_param_integer`, `set_param_decimal`, `finalize` (the first missing `param.*` key, replacing the old `param.map_size` message), `generate_world`, `history_params_from`, `history_params_from_meta`, and `meta_key_missing`.
+4. C1: `run_chronology` applies all of C1, the seam `chronology_stage` items 2 to 4 and accepts an empty region list; the order of the settings checks.
+5. 14.2 item 15: fixture worlds through `generate_world_with_stages` with a synthetic regions stage (not N = 128 through `generate_world`).
+6. 6: `invalid data in '<data root>'` prints the root as the loader's error does.
+7. 14, 14.4: `ChronologyResult::god_names` in the seam block; a numeral-fallback god's attempt is `F` in the golden file.
+8. 5.1, 14.5: the empty-world size (18 pages, 73728 bytes; schema text 2928 bytes) is confirmed with the vendored SQLite 3.54.1.
+9. 15: 15.2 to 15.7 applied.
