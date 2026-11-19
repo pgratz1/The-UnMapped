@@ -398,3 +398,13 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
 - Interim choice: as proposed, in spec P1-05 revision r2 and generator 0.10.0 (merged). All of it is tuning data in `game/data/worldgen/resources.toml`.
 - Known limits, accepted for now: the banks of large rivers score slightly below their hinterland (wet biomes have low fertility); lowland regions differ little from each other (a fix needs code, for example low-frequency soil variation); coasts score below inland, so ports must come from forage and river mouths in the history phase; rich ore is often on crags nobody can walk to, so history should site mines by "ore near a walk area"; the smallest maps are tight and need homeland fallbacks.
 - Status: open
+
+### Paul's decisions of 2026-11-18: heath stripe, fen patches and habitability limits stay as they are
+
+- Date: 2026-11-18
+- Raised by: lead, decided by Paul
+- Design doc section: 4 (geography: biomes, resources and habitability)
+- Problem: two world-critic follow-ups were open. Biomes: heath shows as a stripe along mountain flanks on some worlds, and fens are blocky patches on the largest maps (`docs/reviews/p1-04b-biome-variety-critic.md`). Resources: the limits listed in the entry above (river banks below their hinterland, little contrast between lowlands, habitability falling to zero along the sharp line where mountain flanks begin).
+- Proposal: none needed in the design doc.
+- Interim choice: Paul decided to leave the heath stripe and the fens as they are, and to accept the habitability limits for now. Soil variation between lowlands is to be reconsidered only if the regions stage or the history phase needs more contrast. The explored alternatives (a height-above-valley term for heath, with or without noise) stay on branch `p1/04c-heath-fen-explore` and are not merged.
+- Status: decided
