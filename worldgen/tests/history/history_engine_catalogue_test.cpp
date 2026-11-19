@@ -215,10 +215,13 @@ TEST_CASE("P3-04 4.2, 16.1 item 11: the named check report_events through the lo
         CHECK(e.path == "history/report.toml");
         CHECK(e.line == 1U);  // the definition's table header
     }
-    // The check reports all its messages; the golden lists them in the check's order.
+    // The check reports all its messages (the loader sorts them, P0-03 9).
+    // P0-03 7.5: a per-definition check failure is reported as
+    // "check '<name>' failed for '<kind>.<id>': <message>".
     for (const std::string& m : golden().report_events) {
         CAPTURE(m);
-        CHECK(std::find(got.begin(), got.end(), m) != got.end());
+        const std::string full = "check 'report_events' failed for 'history.report': " + m;
+        CHECK(std::find(got.begin(), got.end(), full) != got.end());
     }
     CHECK(got.size() == golden().report_events.size());
 }

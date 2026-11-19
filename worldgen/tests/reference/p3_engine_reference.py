@@ -19,13 +19,9 @@ p3_chronology_reference.py (P3-03: the schedule, the five chronology
 tables, table hashes, worlds read with sqlite3), p0_world_check.py (P0-02
 layer blob decoding).
 
-The shipped data files game/data/history/engine.toml and report.toml do
-not exist on the base this reference was written on (they are the
-engineer's deliverable). Where a root has no such file, the listings of
-spec 4.1 and 4.2, transcribed below (ENGINE_TOML, REPORT_TOML), stand in
-for it, and a note says so. The golden file therefore depends on the
-shipped files holding exactly those values; `check` compares the files on
-disk with the listings once they exist.
+The listings of spec 4.1 and 4.2 are transcribed below (ENGINE_TOML,
+REPORT_TOML); `check` compares the data files on disk (read through
+p3_data_reference, which holds the kind schemas) with them.
 
 Python 3 standard library only, arbitrary-precision integers, no floating
 point.
@@ -125,42 +121,14 @@ of upheaval." },
 ]
 """
 
-I, S = pdr.INT, pdr.STR
-ENGINE_DETAIL = pdr.REC((("active_years", I), ("flare_years", I), ("final_years", I), ("flare_threshold", I)))
-ENGINE = (("quiet_step_years", I), ("quiet_events_max", I), ("simulated_min_permille", I),
-          ("simulated_max_permille", I), ("islet_max_dry_cells", I), ("sparse", ENGINE_DETAIL),
-          ("normal", ENGINE_DETAIL), ("dense", ENGINE_DETAIL))
-REPORT_EVENT = pdr.REC((("kind", S), ("salience", I), ("template", S)))
-REPORT = (("events", pdr.ARR(REPORT_EVENT)),)
-
-# Schema ranges of 4.1 and 4.2 (the loader's; the stage's seam guards repeat them, 3.4 item 2).
+# Schema ranges of 4.1 (the loader's; the stage's seam guards repeat them,
+# 3.4 item 2). The kind schemas themselves are p3_data_reference's.
 ENGINE_RANGES = (("quiet_step_years", 1, 200), ("quiet_events_max", 1, 100), ("simulated_min_permille", 100, 500),
                  ("simulated_max_permille", 100, 500), ("islet_max_dry_cells", 0, 1000000))
 DETAIL_RANGES = (("active_years", 1, 2000), ("flare_years", 1, 1000), ("final_years", 1, 3000),
                  ("flare_threshold", 1, 1000000))
 DETAILS = ("sparse", "normal", "dense")
-
-# Teach the data reference the two new fixed ids, and let a root without
-# the files (this base) fall back to the listings above.
-pdr.KINDS["history"] = ("history", dict(pdr.KINDS["history"][1], engine=ENGINE, report=REPORT))
-_ORIG_READ = pdr.read_kind_files
-FALLBACK_USED = set()
-
-
-def _read_kind_files(root, kind, from_spec):
-    files = _ORIG_READ(root, kind, from_spec)
-    if kind == "history" and files is not None:
-        names = {n for n, _ in files}
-        files = list(files)
-        for name, text in (("engine.toml", ENGINE_TOML), ("report.toml", REPORT_TOML)):
-            if name not in names:
-                FALLBACK_USED.add((root, name))
-                files.append((name, text))
-        files.sort(key=lambda kv: kv[0].encode())
-    return files
-
-
-pdr.read_kind_files = _read_kind_files
+FALLBACK_USED = set()  # kept for the notes of cmd_check; the data files exist since the integration
 
 
 class Data:
@@ -452,7 +420,9 @@ def scale(v, e):
 def lengths(e, eng, detail):
     d = eng[detail]
     return dict(A=scale(d["active_years"], e), F=scale(d["flare_years"], e), L=scale(d["final_years"], e),
-                Q=eng["quiet_step_years"], floor=(eng["simulated_min_permille"] * e + 999) // 1000,
+                Q=eng["quiet_step_years"],
+                # lead's ruling (spec defect 5.1/5.4): the floor is clamped to the cap
+                floor=min((eng["simulated_min_permille"] * e + 999) // 1000, (eng["simulated_max_permille"] * e) // 1000),
                 cap=(eng["simulated_max_permille"] * e) // 1000, threshold=d["flare_threshold"])
 
 
@@ -709,8 +679,8 @@ def entry_checks(dat, inp, eng=None, report=None, stage_entry=True):
     for lvl in DETAILS:
         d = eng[lvl]
         if 6 * d["active_years"] + d["final_years"] > 6 * eng["simulated_max_permille"] - 30:
-            return ("history: tuning: %s: 6 × active_years + final_years must not be above "
-                    "6 × simulated_max_permille − 30" % lvl)
+            return ("history: tuning: %s: 6 x active_years + final_years must not be above "
+                    "6 x simulated_max_permille - 30" % lvl)
     msgs = report_events_messages(report)
     if msgs:
         return "history: report: " + msgs[0]
@@ -1755,8 +1725,8 @@ def check_entry(c):
     eng = copy.deepcopy(dat.engine)
     eng["normal"]["active_years"] = 400
     c.eq("tuning budget", entry_checks(dat, inp, eng=eng),
-         "history: tuning: normal: 6 × active_years + final_years must not be above 6 × "
-         "simulated_max_permille − 30")
+         "history: tuning: normal: 6 x active_years + final_years must not be above 6 x "
+         "simulated_max_permille - 30")
     c.eq("report", entry_checks(dat, inp, report=REPORT_CHECK_CASE),
          "history: report: events[1]: kind 'battle' is not an event kind")
     inp2 = synthetic_inputs([0, 2074], 6000)
