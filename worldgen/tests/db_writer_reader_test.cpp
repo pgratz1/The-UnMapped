@@ -92,7 +92,7 @@ Rows expected_empty_meta(const std::string& seed_text, const std::string& phrase
     return {
         {"content_hash", EMPTY_SHA256},
         {"format", "the-unmapped-world"},
-        {"generator_version", "0.11.0"},
+        {"generator_version", "0.12.0"},
         {"param.map_size", "1024"},
         {"schema_version", "5"},
         {"seed", seed_text},
@@ -266,7 +266,7 @@ TEST_CASE("empty world through the reader (9)") {
     const WorldReader& reader = opened.value();
     CHECK(reader.seed() == 0);
     CHECK(reader.schema_version() == 5);
-    CHECK(reader.generator_version() == "0.11.0");
+    CHECK(reader.generator_version() == "0.12.0");
     CHECK(reader.seed_phrase().empty());
     CHECK(reader.map_size() == 1024);
     CHECK(reader.stages().empty());

@@ -27,6 +27,9 @@ target_compile_definitions(worldgen-cli-tests PRIVATE
     UNMAPPED_CLI_TEST_TMP_ROOT="${CMAKE_CURRENT_BINARY_DIR}/cli-test-tmp"
     # Golden world hashes (P0-04 section 9), read in place, never written.
     UNMAPPED_P0_WORLDS_GOLDEN_PATH="${PROJECT_SOURCE_DIR}/worldgen/tests/golden/p0-worlds.txt"
+    # P3-01: the history data directories that data roots built by the
+    # tests copy (p3_01_history_fixture.hpp), read in place.
+    UNMAPPED_HISTORY_FIXTURE_DIR="${PROJECT_SOURCE_DIR}/worldgen/tests/data/geo"
 )
 
 
@@ -95,6 +98,16 @@ target_compile_definitions(worldgen-cli-tests PRIVATE
     UNMAPPED_P1_06_GOLDEN_PATH="${PROJECT_SOURCE_DIR}/worldgen/tests/golden/p1-06-regions.txt"
 )
 
+# generate with the world-creation settings of P3-01 6 (flags and settings
+# keys, their usage and input errors) and the --until none worlds of the
+# three data roots against the content hashes of p3-01-data.txt (P3-01 8.2,
+# 8.3). Shares p3_01_history_*.hpp with the library tests.
+target_sources(worldgen-cli-tests PRIVATE cli_history_settings_test.cpp)
+target_compile_definitions(worldgen-cli-tests PRIVATE
+    UNMAPPED_P3_01_GOLDEN_PATH="${PROJECT_SOURCE_DIR}/worldgen/tests/golden/p3-01-data.txt"
+    UNMAPPED_TEST_SOURCE_ROOT="${PROJECT_SOURCE_DIR}"
+)
+
 # CTest entries, as for worldgen-tests (cmake/UnmappedTestShards.cmake):
 # groups of source files run in parallel, worldgen-cli-tests-other for every
 # file not named here, and worldgen-cli-tests-partition. Each test case uses
@@ -108,5 +121,6 @@ unmapped_add_doctest_shards(worldgen-cli-tests
     SHARD biomes 9 "*cli_biomes_test.cpp"
     SHARD resources-generate 10 "*cli_resources_test.cpp,*cli_generate_test.cpp"
     SHARD regions 12 "*cli_regions_test.cpp"
+    SHARD history-settings 6 "*cli_history_settings_test.cpp"
     REST other 10
 )

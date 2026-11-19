@@ -16,6 +16,7 @@
 #include <utility>
 #include <vector>
 
+#include "p3_01_history_fixture.hpp"
 #include "worldgen/data/content.hpp"
 #include "worldgen/data/schema.hpp"
 
@@ -315,7 +316,7 @@ inline void write_to(const std::filesystem::path& root) {
         for (const DefinitionFile& f : shipped_files()) {
             write(root / "biomes" / std::string(f.name), f.text);
         }
-    }
+    }    history_fixture::copy_to(root);  // P3-01: the required history kinds
 }
 
 }  // namespace biome_data

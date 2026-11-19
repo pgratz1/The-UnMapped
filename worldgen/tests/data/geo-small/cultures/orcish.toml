@@ -1,0 +1,15 @@
+[culture.orcish]
+race = "orc"
+name = "Orcish"
+
+[culture.orcish.naming]
+onsets = ["gh", "gr", "ug", "m", "k", "z", "sh", "b", "d", "th", "kr", "ur", "az"]
+nuclei = ["a", "u", "o", "aa", "uu"]
+codas = ["g", "sh", "k", "rz", "z", "gh", "rk", "l", "m", "", "kh", "ld"]
+patterns = ["ONC", "ONC", "ONC'ONC", "ONCONC", "NC'ONC"]
+min_letters = 3
+max_letters = 10
+forbidden = ["aaa", "uuu", "ghgh", "shsh"]
+god_forms = ["{root}"]
+civilization_forms = ["The {root} Horde", "Clan {root}", "The Warband of {root}"]
+settlement_forms = ["{root}", "{root} Camp", "{root}", "{root} Fort"]

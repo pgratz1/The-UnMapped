@@ -304,7 +304,9 @@ private:
 // `worldgen`, required) with the ids `elevation` (P1-01 4.2),
 // `hydrology` (P1-02 4), `climate` (P1-03 4) and `biomes` (P1-04 4.2),
 // and the open kind `biome` (P1-00 6.6, P1-04 4.1: directory `biomes`,
-// required, with its kind-level checks). Because a required kind is
+// required, with its kind-level checks), and from P3-01 the open kinds
+// `race` and `culture` and the fixed-id kind `history` (id `chronology`),
+// all required (P3-01 3 to 5). Because a required kind is
 // registered, every world needs a data root and its content_hash is the
 // hash of the loaded data (P0-03 amendment 17).
 [[nodiscard]] KindRegistry builtin_kinds();
@@ -392,5 +394,57 @@ inline constexpr std::string_view BIOME_DIRECTORY = "biomes";
 // definition's header (P0-03 7.5):
 //   regions_tile_fits_spacing   seed_tile_m <= 2 seed_spacing_m.
 [[nodiscard]] Schema worldgen_regions_schema();
+
+// --- The history kinds (P3-01 sections 3 to 5) --------------------------------
+
+// Kind names and directories: race (races/), culture (cultures/), history
+// (history/, fixed ids), all required.
+inline constexpr std::string_view RACE_KIND = "race";
+inline constexpr std::string_view RACE_DIRECTORY = "races";
+inline constexpr std::string_view CULTURE_KIND = "culture";
+inline constexpr std::string_view CULTURE_DIRECTORY = "cultures";
+inline constexpr std::string_view HISTORY_KIND = "history";
+inline constexpr std::string_view HISTORY_DIRECTORY = "history";
+// The ids of kind history registered so far (P3-01 5).
+inline constexpr std::string_view HISTORY_CHRONOLOGY_ID = "chronology";
+
+// The schema of a race definition (P3-01 3): order int(1, 6); name, plural,
+// adjective string(32, word); camp enum(good, neutral, evil);
+// awakening_share fx(0, 1); lifespan_years int(1, 10000); generation_years
+// int(1, 1000); growth_permille int(0, 1000); site_weights record
+// race_site_weights (fertility, forage, timber, ore, fresh_water, each
+// int(0, 1000)); biomes array(record race_biome {biome ref(biome), weight
+// int(-1000, 1000)}, 0, 16); upland, coast int(-1000, 1000); expansion,
+// aggression int(0, 1000); settlement_kinds array(enum(hamlet, village,
+// town, city, fortress), 1, 5); culture ref(culture); in this order, all
+// required. Named checks, in this order: race_generation_below_lifespan,
+// race_site_weights_positive, race_biomes_unique,
+// race_settlement_kinds_unique.
+[[nodiscard]] Schema race_schema();
+
+// The kind-level checks of kind race (P3-01 3), in this order:
+// race_order_unique, race_order_dense (not reported when two definitions
+// share an order), race_awakening_order.
+[[nodiscard]] std::vector<KindCheck> race_kind_checks();
+
+// The schema of record culture_naming (P3-02 3): onsets, nuclei, codas
+// array(string(8, syllable), 1, 64); patterns array(string(16,
+// name_pattern), 1, 16); min_letters, max_letters int(1, 32); forbidden
+// array(string(8, syllable), 0, 32); god_forms, civilization_forms,
+// settlement_forms array(string(48, name_form), 1, 8); in this order, all
+// required.
+[[nodiscard]] Schema culture_naming_schema();
+
+// The schema of a culture definition (P3-01 4): race ref(race), name
+// string(32, word), naming record culture_naming, all required. Named
+// checks of P3-02 3, in this order: naming_nuclei_nonempty,
+// naming_letters_ordered, naming_forbidden_nonempty.
+[[nodiscard]] Schema culture_schema();
+
+// The schema of definition history.chronology (P3-01 5.1):
+// awakening_jitter_frac fx(0, 0.05), awakening_min_gap_years int(1, 2000),
+// age_name_form string(64), all required. Named check
+// chronology_age_name_form.
+[[nodiscard]] Schema history_chronology_schema();
 
 }  // namespace worldgen::data

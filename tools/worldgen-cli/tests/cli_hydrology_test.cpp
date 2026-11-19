@@ -21,6 +21,7 @@
 #include <string_view>
 #include <vector>
 
+#include "p3_01_history_fixture.hpp"
 #include "cli_test_support.hpp"
 #include "p1_01_elevation_api.hpp"
 #include "p1_01_elevation_support.hpp"
@@ -40,6 +41,7 @@ fs::path write_data_root(const Sandbox& sb) {
     write_text(root / "worldgen" / "regions.toml", std::string(elev_api::REGIONS_TOML));      // P1-06 4
     fs::create_directories(root / "biomes");
     write_text(root / "biomes" / "biomes.toml", std::string(elev_api::BIOME_DEFINITIONS_TOML));  // P1-04 4.1
+    history_fixture::copy_to(root);  // P3-01: the required history kinds
     return root;
 }
 

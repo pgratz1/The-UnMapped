@@ -1,0 +1,3 @@
+game/data be84128b97d680b504ebbacf3143adf58504c713b36994561b5cb6de2f74f65e
+worldgen/tests/data/geo be84128b97d680b504ebbacf3143adf58504c713b36994561b5cb6de2f74f65e
+worldgen/tests/data/geo-small 47a8bccd729512359935d07ee5c949de4257ad1d43a2cf9ee2ab2ab6fb52c340

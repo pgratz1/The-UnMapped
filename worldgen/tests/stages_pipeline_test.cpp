@@ -22,6 +22,7 @@
 
 #include "data_loader_support.hpp"
 #include "db_test_support.hpp"
+#include "p3_01_history_fixture.hpp"
 #include "worldgen/core/error.hpp"
 #include "worldgen/core/sha256.hpp"
 #include "worldgen/data/data.hpp"
@@ -165,6 +166,7 @@ wd::ContentSet tune_content() {
     reg.add(wd::Kind::with_fixed_ids("tune", "tunes", true, std::move(ids)));
     wd::MemoryDataRoot root;
     root.directories.push_back(loader_test::dir("tunes", {loader_test::file("t.toml", "[tune.only]\nx = 4\n")}));
+    history_fixture::add_to(root);  // P3-01: the required history kinds
     auto r = wd::load_content_from_memory(reg, root);
     REQUIRE(r.ok());
     return *r.value;
@@ -475,10 +477,10 @@ TEST_CASE("generate P1-00 10.1: --until none and every thread count give the P0 
     REQUIRE_FALSE(bytes.empty());
     CHECK(dbtest::read_file(dir.file("content.db")) == bytes);
     // The empty world of seed 0 with the content hash of no data, generator
-    // 0.11.0 (schema version 5). The CLI case empty-seed-0 of P0-04 section 9 carries the content
+    // 0.12.0 (schema version 5). The CLI case empty-seed-0 of P0-04 section 9 carries the content
     // hash of the shipped data since the `worldgen` kind was registered
     // (P0-03 amendment 17), so it differs from this value.
-    CHECK(worldgen::sha256_hex(bytes) == "93e5c92e0d50ca370145dd6f18e8bfb5b35326faf93415fde14f5b55ddebff63");
+    CHECK(worldgen::sha256_hex(bytes) == "d4f8a4198a329311a6332349b145e2a6f3fb63c455dd6e6d9d674ebae3ee9d92");
     // The test pattern at several thread counts: identical bytes.
     worldgen::WorldParams t;
     t.seed = 0;
@@ -491,7 +493,7 @@ TEST_CASE("generate P1-00 10.1: --until none and every thread count give the P0 
     const auto tp = dbtest::read_file(dir.file("tp1.db"));
     CHECK(dbtest::read_file(dir.file("tp2.db")) == tp);
     CHECK(dbtest::read_file(dir.file("tp5.db")) == tp);
-    CHECK(worldgen::sha256_hex(tp) == "76a547b5464dacf6d3c5d87eed127d83b8ea06baba2f5601800ea9ac5703a735");  // content hash of no data, generator 0.11.0
+    CHECK(worldgen::sha256_hex(tp) == "c3f8028b7e0a7eb731fc9583dbf6c228197aefd4f9a3bbc19c8cb9e24d46f129");  // content hash of no data, generator 0.12.0
 }
 
 TEST_CASE("generate: an unusable stage limit, or a content hash that does not match, is fatal and leaves nothing") {

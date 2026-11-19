@@ -53,6 +53,9 @@ target_compile_definitions(worldgen-tests PRIVATE
 # tree; tests never write there (scratch files go to the system temp dir).
 target_compile_definitions(worldgen-tests PRIVATE
     UNMAPPED_LOADER_FIXTURE_DIR="${CMAKE_CURRENT_SOURCE_DIR}/data/loader"
+    # P3-01: the history data directories that data roots built by the P1
+    # tests copy (p3_01_history_fixture.hpp), read in place.
+    UNMAPPED_HISTORY_FIXTURE_DIR="${CMAKE_CURRENT_SOURCE_DIR}/data/geo"
 )
 
 # worldgen-cli library parts (spec P0-04 section 12, amendment 12): the
@@ -232,6 +235,21 @@ target_sources(worldgen-tests PRIVATE
 )
 target_compile_definitions(worldgen-tests PRIVATE
     UNMAPPED_P1_06_GOLDEN_PATH="${CMAKE_CURRENT_SOURCE_DIR}/golden/p1-06-regions.txt"
+)
+# History data and settings (spec P3-01): the kinds race, culture (with the
+# culture_naming record of P3-02 3) and history, their named and kind-level
+# checks, the shipped data against the spec listings, the world-creation
+# settings in the settings file, and the content hash of the three data
+# roots against the golden file written by reference/p3_data_reference.py.
+# The listings are transcribed in p3_01_history_data.hpp; API the spec does
+# not name is reached only through p3_01_history_data_api.hpp.
+target_sources(worldgen-tests PRIVATE
+    data_history_kinds_test.cpp
+    data_history_settings_test.cpp
+    data_history_golden_test.cpp
+)
+target_compile_definitions(worldgen-tests PRIVATE
+    UNMAPPED_P3_01_GOLDEN_PATH="${CMAKE_CURRENT_SOURCE_DIR}/golden/p3-01-data.txt"
 )
 # CTest entries (cmake/UnmappedTestShards.cmake): one per group of source
 # files, run in parallel by `ctest -j`, plus worldgen-tests-other for every

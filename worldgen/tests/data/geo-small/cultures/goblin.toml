@@ -1,0 +1,15 @@
+[culture.goblin]
+race = "goblin"
+name = "Goblin"
+
+[culture.goblin.naming]
+onsets = ["g", "gr", "sn", "k", "kr", "z", "sk", "b", "n", "gn", "dr", "sl", "skr"]
+nuclei = ["a", "i", "u", "o", "ee"]
+codas = ["k", "g", "b", "z", "t", "x", "nk", "rk", "gg", "zz", "tch"]
+patterns = ["ONC", "ONC", "ONCONC", "ONC-ONC", "ONONC"]
+min_letters = 3
+max_letters = 10
+forbidden = ["eee", "ggg", "zzz", "xg", "xk"]
+god_forms = ["{root}"]
+civilization_forms = ["The {root} Horde", "The Warrens of {root}", "The {root} Mob"]
+settlement_forms = ["{root}", "{root}", "{root} Pit", "{root} Hole"]
