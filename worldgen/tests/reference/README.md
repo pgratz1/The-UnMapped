@@ -576,3 +576,35 @@ the content hash of a generator 0.11.0 data root. It was compared with the
 `content_hash` that the 0.11.0 `worldgen-cli report` prints for a world
 generated from each of the three roots, and agreed for all three
 (`1543a4ae…` for game/data and geo, `c39875a8…` for geo-small).
+
+## P3-02 names
+
+`p3_names_reference.py` is an independent exact-integer implementation of
+`docs/specs/p3-02-names.md` (keyed draws `draw`, `pick`, `chance`,
+`weighted` and `TAG_HIST` of 4.1; one attempt of 4.2 with Cap and the
+validity rules; the registry, the 64-attempt bound and the numeral fallback
+of 4.3 and 4.4; the six shipped naming blocks of section 5, transcribed; the
+grammars and named checks of section 3), written from the spec alone, with
+hashing from `core_reference.py` and Roman numerals from P1-06 RG11 4. It
+writes `worldgen/tests/golden/p3-02-names.txt`, read by the doctest files in
+`worldgen/tests/history/`.
+
+```
+python3 -B worldgen/tests/reference/p3_names_reference.py check
+python3 -B worldgen/tests/reference/p3_names_reference.py golden [PATH|-]
+python3 -B worldgen/tests/reference/p3_names_reference.py samples
+python3 -B worldgen/tests/reference/p3_names_reference.py sweep [COUNT]
+```
+
+`check` reproduces every value of the worked example of 4.6 (stream key,
+u(0) to u(6), picks, root, `Focoth` on collision, 61 distinct valid names
+and `Iensath II` on the full registry, and the four seed-42 vectors), the
+helper values of 9.1 item 2, a second method for `pick` (bracketing) and
+`weighted` (P3-00 4.6's wording), and invariant 1 and uniqueness on the
+golden lists (about 3 s). `samples` runs the protocol of 5.1 (seed 0, one
+registry per culture) and compares with the table of 5.1: all 168 names
+agree. `sweep 2000` is 9.2 item 8: 0 fallbacks for every shipped culture
+and kind, seeds 0 and 1 (about 2 minutes).
+
+The test cultures `tiny` (two names, Ba and Da) and `never` (no valid root)
+are defined both here and in `worldgen/tests/history/p3_02_names_support.hpp`.
