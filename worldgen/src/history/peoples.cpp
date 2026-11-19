@@ -276,7 +276,7 @@ std::vector<std::int64_t> PeoplesSubsystem::homes(const StepContext& ctx, std::i
     for (std::int64_t r = 1; r <= nr; ++r) {
         keyed.emplace_back(-g.score(r, race), ctx.draw(key(HOME), word(race), word(r), 0), r);
     }
-    std::sort(keyed.begin(), keyed.end());
+    std::stable_sort(keyed.begin(), keyed.end());  // keys are distinct (the region id)
     std::vector<std::int64_t> order;
     for (const auto& k : keyed) {
         order.push_back(std::get<2>(k));

@@ -253,7 +253,7 @@ void check_stub_world(std::uint64_t seed, std::int64_t span, const std::vector<s
     p.detail = detail;
     const std::vector<worldgen::stages::StageInfo> stages = {
         {"hydrology", &synthetic_hydrology}, {"regions", &synthetic_regions}, chrono_api::stage_info(),
-        eng::stage_info()};
+        eng::stub_stage_info()};  // stub worlds (P3-04 7); the shipped stage is peoples since 0.15.0
     worldgen::WorldParams wp = chrono_test::world_params(seed, s.n, p, shipped());
     const auto st = worldgen::stages::testing::generate_world_with_stages(wp, shipped(), stages, path,
                                                                          db::Overwrite::replace);

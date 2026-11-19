@@ -187,7 +187,7 @@ void check_shipped_values(const wd::ContentSet& c) {
     }
     const wd::KindContent* history = c.find_kind("history");
     REQUIRE(history != nullptr);
-    REQUIRE(history->definitions.size() == 3U);  // chronology, engine, report (P3-04 4)
+    REQUIRE(history->definitions.size() == 4U);  // chronology, engine, peoples (P3-05 12.1), report (P3-04 4)
     const wd::Definition& chrono = history->definitions[0];
     CHECK(chrono.id == "chronology");
     REQUIRE(chrono.record.size() == 3U);
@@ -223,16 +223,18 @@ TEST_CASE("P3-01 3-5: the production registry holds race, culture and history be
     CHECK(history.directory == "history");
     CHECK(history.required);
     REQUIRE(history.has_fixed_ids());
-    REQUIRE(history.id_schemas.size() == 3U);  // P3-01 5: chronology; engine and report from P3-04
+    REQUIRE(history.id_schemas.size() == 4U);  // P3-01 5: chronology; engine and report from P3-04; peoples from P3-05
     CHECK(history.id_schemas[0].id == "chronology");
     CHECK(history.id_schemas[1].id == "engine");
-    CHECK(history.id_schemas[2].id == "report");
+    CHECK(history.id_schemas[2].id == "peoples");
+    CHECK(history.id_schemas[3].id == "report");
     const wd::Schema* chrono = history.schema_for("chronology");
     REQUIRE(chrono != nullptr);
     REQUIRE(chrono->checks().size() == 1U);
     CHECK(chrono->checks()[0].name == "chronology_age_name_form");
     CHECK(history.schema_for("engine") != nullptr);
-    CHECK(history.schema_for("peoples") == nullptr);
+    CHECK(history.schema_for("peoples") != nullptr);  // P3-05 12.1
+    CHECK(history.schema_for("conflict") == nullptr);
 
     const wd::Kind& race = kinds[3];
     CHECK(race.directory == "races");
