@@ -386,11 +386,17 @@ Example (512 seed 0, prototype): `regions = 14`, `region_area_km2 = 0.06 1.69 3.
 
 The design's "roughly 12, 45 and 180" is met in area (median region 1.9–2.1 km², mean land per region 2.0–2.2 km²); the counts run a little above it (49 and 200) because land covers about 40% of a 1024 map (107 km²) and 2048 maps have 431 km² of land. A seed spacing of 1250 m would bring the counts to the design's figures at about 2.3 km² per region (12, question 3).
 
-**Palette**: `region` is registered with `ids` (P1-00 10.2), as `lake` and `walk_area`.
+**Palette**: `render --layer region` uses `ids` (P1-00 10.2) under `auto`, as `lake` and `walk_area`: 0 → (0, 0, 0); v ≥ 1 → h = mix64(v), channel j = 64 + floor(((h >> 8j) & 0xFF) × 191 / 255).
 
-**Composite `regions`** (`--composite regions`, default output `<stem>.regions.png`): the `biomes` composite (P1-04 9), then every land cell whose E or S neighbour is a land cell of another region is drawn (0, 0, 0). Needs `region` in addition to the `biomes` composite's layers; a `region` layer that is not `u16` or not the size of `elevation` is refused as the `biomes` composite refuses its `biome` layer (`cannot render the composite regions: layer 'region' is <t>, expected u16; …`). Without `region`, the reader's missing-layer error (exit 3). `render --help` and the `--composite` list name `regions` (P1-00 10.2).
+**Composite `regions`**: exact rule, validation and messages in P0-04 amendment 18 (e): the `biomes` composite, then (0, 0, 0) on every cell with `region` v > 0 whose E or S neighbour has a `region` value w > 0, w ≠ v.
 
-**Viewer (for the viewer engineer).** The headless check compares every layer the report lists with `render`: the viewer must draw `region` with `ids` before this stage merges. The composite `regions` and the region names (from table `region`) are viewer features for later; the check does not require them.
+**Viewer (owner: viewer engineer), required for this stage's merge:**
+
+1. List the layer `region` (it appears in `report`) and draw it with `ids`, pixel for pixel as `render --layer region`; the headless check compares every layer the report lists, so it fails without this.
+2. Offer the composite `regions` beside `map` and `biomes`, drawn exactly as P0-04 amendment 18 (e), and extend `gdext-headless-check` to compare it with `render --composite regions` on the real world (`--seed 42 --map-size 512`), as it does for `biomes`. On a world without a `region` layer the viewer does not offer it.
+3. Read the schema 5 world (the reader refuses version 4 files; regenerate test worlds).
+
+Region names, a click-to-inspect panel with the table columns, and border or pass overlays are later viewer features, not required here.
 
 ## 10. Tests required
 
