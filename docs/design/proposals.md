@@ -548,3 +548,63 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
 - Proposal: phase lengths are tuned in years at the 6,000-year default and scaled in proportion to the span, so the detail level fixes the share (sparse about 12%, normal about 19-20%, that is 1,110-1,200 of 6,000 before flare-ups, dense about 28%). The final phase is at most its length and starts where the last opening phase ends, so with the shipped numbers the orcs' age is usually active from their awakening to the present. A floor (10%) and a cap (45%, flare-ups included) are guaranteed by the scheduler. Each flare-up is marked by a `flare_up` event.
 - Interim choice: as proposed (`docs/specs/p3-04-simulation-engine.md` sections 4.1 and 5, questions 1 to 3 and 6).
 - Status: open
+
+### History: peoples expand within reach of their capital and spread by secession
+
+- Date: 2026-11-19
+- Raised by: spec-writer (P3-05)
+- Design doc section: 5 (Tick loop: "found a settlement, claim a region"; races: humans "spread quickly over land left open or ruined")
+- Problem: the design does not say how far a civilization expands. Without a limit, in a peaceful history the first two races fill every region they like long before the later races awaken: in the first prototype the elves and goblins held 46 of 50 regions of a 1024 world and the humans awoke on a bare peak.
+- Proposal: a civilization founds settlements only in free regions within a few hops of its capital region (elves, dwarves and faeries 1, goblins and orcs 2, humans 3, from the race's `expansion`), and only in land it rates at least 70% as well as its home. A succession crisis in a large realm may split it, and the new civilization expands from its own capital; that is how a people spreads beyond its reach. At the present about 31 of 49 regions are held at 1024, leaving free land for later races and for conflict.
+- Interim choice: as proposed (`docs/specs/p3-05-peoples.md` 9.3, 10.3, questions 2 and 5).
+- Status: open
+
+### History: a population density per race
+
+- Date: 2026-11-19
+- Raised by: spec-writer (P3-05)
+- Design doc section: 5 (races: elves "few in number", goblins "numerous"; Peoples table)
+- Problem: the race data has no field that says how many of a people a region supports; lifespans and growth rates describe time, not numbers.
+- Proposal: a new race field `density_permille` (elves 300, goblins 900, dwarves 700, faeries 250, humans 1000, orcs 800) scales the capacity of every region for that race. A data change, not a schema change.
+- Interim choice: as proposed (`docs/specs/p3-05-peoples.md` 5.1, 12.2, question 1).
+- Status: open
+
+### History: random pressures act only in active phases; migration waits for conflict
+
+- Date: 2026-11-19
+- Raised by: spec-writer (P3-05)
+- Design doc section: 5 (Quiet intervals: "populations drift toward what the land supports"; tick loop item 4; item 5 "migrations")
+- Problem: the design lists plague, famine and succession crises as tick-loop pressures and migrations among the consequences, but does not say whether quiet intervals have pressures or what a migration is before there are wars.
+- Proposal: famine, plague and succession crises act only in yearly ticks (active phases and flare-ups); quiet steps write growth, foundings and the fading of ruins only, which is the design's peace. Colonists and the survivors of an abandoned settlement move; migrations of whole peoples (refugees) come with conflict (P3-06) or P5.
+- Interim choice: as proposed (`docs/specs/p3-05-peoples.md` 10.5, questions 4 and 6).
+- Status: open
+
+### History: wars are limited, fought for a claimed region, and end with the active phase
+
+- Date: 2026-11-19
+- Raised by: spec-writer (P3-06)
+- Design doc section: 5 (tick loop "declare war, sue for peace", "battles, sieges, sackings"; flare-ups "two expanding borders meet"; quiet intervals)
+- Problem: the design lists wars, sieges and sackings but does not say what a war is fought for, how it ends, or what happens to a war when an active phase gives way to a quiet interval, in which nothing is fought.
+- Proposal: neighbours build strain from their creators' camps, old grudges, land hunger and fear of a giant; strain becomes a claim on one border region, the claim is the casus belli of a war, and the war is fought for that region: it ends when the attacker has it, when a side is exhausted, after 40 years at most, or at the first quiet step after its active phase, by battles won and settlements taken. Wars are declared only in yearly ticks; in quiet intervals strain keeps building and the highest strain is the tension that starts a flare-up, whose war follows without a draw. Relation kinds `enmity` (good against evil, from the younger people's founding), `war` (attacker first) and `peace`; alliances and vassalage wait for figures and factions in P5.
+- Interim choice: as proposed (`docs/specs/p3-06-expansion-conflict.md` 4, 5, 7, questions 1, 2, 5).
+- Status: open
+
+### History: no race is wiped out; newly awakened peoples are sheltered
+
+- Date: 2026-11-19
+- Raised by: spec-writer (P3-06)
+- Design doc section: 5 (Peoples table: every race has a role in play), 13 (P5 exit: every race takes part)
+- Problem: with conquest, the late and small peoples (orcs, faeries, humans) were conquered to extinction in most prototype worlds; the design gives every race a role in play but does not say whether a race may vanish from history.
+- Proposal: the last settlement of a race's last civilization never falls to a siege, and a civilization is not attacked in its first 150 years (it may attack). Civilizations still end by conquest; races do not.
+- Interim choice: as proposed (`docs/specs/p3-06-expansion-conflict.md` 7.2, 7.3, question 4).
+- Status: open
+
+### History: a fighting strength per race; goblins less aggressive than orcs
+
+- Date: 2026-11-19
+- Raised by: spec-writer (P3-06)
+- Design doc section: 5 (races: elves "few in number", goblins "numerous", orcs "strong, warlike"; elves' civilizations "the oldest in the present day")
+- Problem: the race data has readiness for war (`aggression`) but nothing for how well a people fights; without it the few elves fall to the numerous goblins, and with the shipped aggression the goblins, numerous and split into several hordes, start four wars in five while the orcs, the design's warlike race, start one in seven.
+- Proposal: a new race field `prowess_permille` (elves 1600, dwarves 1400, orcs 1300, faeries 1200, humans 1000, goblins 800) scales armies and garrisons; goblin `aggression` 700 → 600; aggression enters the strain rate squared. A data change, not a schema change.
+- Interim choice: as proposed (`docs/specs/p3-06-expansion-conflict.md` 5.2, 6.1, 12.2, questions 3 and 6).
+- Status: open
