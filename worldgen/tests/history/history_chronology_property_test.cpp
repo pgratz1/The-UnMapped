@@ -312,7 +312,7 @@ TEST_CASE("P3-03 14.3 item 17, H8: --until regions, read back, then chronology_s
             CHECK(rows_of(g, t).empty());
         }
         CHECK(meta_or(g, "stages") == "elevation,hydrology,climate,biomes,resources,regions");
-        CHECK(meta_or(f, "stages") == "elevation,hydrology,climate,biomes,resources,regions,chronology");
+        CHECK(meta_or(f, "stages") == "elevation,hydrology,climate,biomes,resources,regions,chronology,history");  // P3-04 9.5
         const Params p = chrono_api::params_from_meta(g);
         CHECK(p == params_with(span, races_of_text(races)));
         CHECK(chrono_api::params_from_meta(f) == p);

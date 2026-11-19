@@ -186,7 +186,7 @@ void check_shipped_values(const wd::ContentSet& c) {
     }
     const wd::KindContent* history = c.find_kind("history");
     REQUIRE(history != nullptr);
-    REQUIRE(history->definitions.size() == 1U);
+    REQUIRE(history->definitions.size() == 3U);  // chronology, engine, report (P3-04 4)
     const wd::Definition& chrono = history->definitions[0];
     CHECK(chrono.id == "chronology");
     REQUIRE(chrono.record.size() == 3U);
@@ -222,13 +222,16 @@ TEST_CASE("P3-01 3-5: the production registry holds race, culture and history be
     CHECK(history.directory == "history");
     CHECK(history.required);
     REQUIRE(history.has_fixed_ids());
-    REQUIRE(history.id_schemas.size() == 1U);  // P3-01 5: only chronology until P3-04
+    REQUIRE(history.id_schemas.size() == 3U);  // P3-01 5: chronology; engine and report from P3-04
     CHECK(history.id_schemas[0].id == "chronology");
+    CHECK(history.id_schemas[1].id == "engine");
+    CHECK(history.id_schemas[2].id == "report");
     const wd::Schema* chrono = history.schema_for("chronology");
     REQUIRE(chrono != nullptr);
     REQUIRE(chrono->checks().size() == 1U);
     CHECK(chrono->checks()[0].name == "chronology_age_name_form");
-    CHECK(history.schema_for("engine") == nullptr);
+    CHECK(history.schema_for("engine") != nullptr);
+    CHECK(history.schema_for("peoples") == nullptr);
 
     const wd::Kind& race = kinds[3];
     CHECK(race.directory == "races");
@@ -303,12 +306,13 @@ TEST_CASE("P3-01 8.1 test 1: game/data and the two fixture roots hold the listin
     for (const char* f : {"races/elf.toml", "races/goblin.toml", "races/dwarf.toml", "races/faerie.toml",
                           "races/human.toml", "races/orc.toml", "cultures/dwarven.toml", "cultures/elven.toml",
                           "cultures/faerie.toml", "cultures/goblin.toml", "cultures/human.toml",
-                          "cultures/orcish.toml", "history/chronology.toml"}) {
+                          "cultures/orcish.toml", "history/chronology.toml", "history/engine.toml",
+                          "history/report.toml"}) {
         CAPTURE(f);
         CHECK(std::filesystem::is_regular_file(data / f));
     }
     // P3-01 5: "a file for a future id must not be committed early".
-    CHECK(directory_from_disk(data, "history").entries.size() == 1U);
+    CHECK(directory_from_disk(data, "history").entries.size() == 3U);
 }
 
 TEST_CASE("P3-01 3.1: the races in race order are elves, goblins, dwarves, faeries, humans, orcs (design 5)") {
@@ -491,6 +495,8 @@ TEST_CASE("P3-01 3 race_order_dense: against the directory, naming the smallest 
         f["races/goblin.toml"] = std::string(history_data::GOBLIN_TOML);
         f["cultures/goblin.toml"] = history_data::culture_toml(history_data::culture_listings()[3]);
         f["history/chronology.toml"] = std::string(history_data::CHRONOLOGY_TOML);
+        f["history/engine.toml"] = std::string(history_data::ENGINE_TOML);
+        f["history/report.toml"] = std::string(history_data::REPORT_TOML);
         at_directory(only_error(load(f)), "races", "race_order_dense", "race",
                      "orders must be 1 to 1 without gaps; 1 is missing");
     }
@@ -509,6 +515,8 @@ TEST_CASE("P3-01 3 race_order_dense: against the directory, naming the smallest 
         f["races/elf.toml"] = std::string(history_data::ELF_TOML);
         f["cultures/elven.toml"] = history_data::culture_toml(history_data::culture_listings()[1]);
         f["history/chronology.toml"] = std::string(history_data::CHRONOLOGY_TOML);
+        f["history/engine.toml"] = std::string(history_data::ENGINE_TOML);
+        f["history/report.toml"] = std::string(history_data::REPORT_TOML);
         const Load l = load(f);
         INFO(dump(l));
         CHECK(l.ok());
@@ -599,13 +607,14 @@ TEST_CASE("P3-01 3, 4 and P0-03 amendment 17: name, plural, adjective and the cu
 
 TEST_CASE("P3-01 5: a history file for an unregistered id is an error at its header") {
     Files f = history_data::shipped_files();
-    f["history/engine.toml"] = "[history.engine]\nstep_years = 1\n";
+    // P3-04 4.2: engine and report are registered; peoples (P3-05) is not yet.
+    f["history/peoples.toml"] = "[history.peoples]\nstep_years = 1\n";
     const wd::LoadError e = only_error(load(f));
-    CHECK(e.path == "history/engine.toml");
+    CHECK(e.path == "history/peoples.toml");
     CHECK(e.line == 1U);
     CHECK(e.column == 1U);
     // P3-01 5 (revised): the registered ids, each in single quotes.
-    CHECK(e.message == "unknown id 'engine' for kind 'history'; expected one of 'chronology'");
+    CHECK(e.message == "unknown id 'peoples' for kind 'history'; expected one of 'chronology', 'engine', 'report'");
 }
 
 TEST_CASE("P3-01 5: history/ without chronology.toml is a missing definition against the directory") {

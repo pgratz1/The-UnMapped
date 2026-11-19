@@ -138,14 +138,15 @@ TEST_CASE("P3-03 9.1, 14.1 item 10: race rows with an empty age table are corrup
           "corrupt table 'age': 0 rows for 3 present races");
 }
 
-TEST_CASE("P3-03 9.1, 14.1 item 10: [tables] lists the 13 tables and [meta] the 16 keys") {
+TEST_CASE("P3-03 9.1, 14.1 item 10: [tables] lists the 26 tables and [meta] the 17 keys (P3-04)") {
     Worlds w;
     const auto r = report_of(w.make(""));
     REQUIRE(r.ok());
     const std::string tables = section(r.value(), "[tables]");
     CHECK(tables ==
-          "[tables]\nage = 0\nbiome = 0\nclimate = 0\nculture = 0\ngod = 0\nlayer = 0\nmeta = 16\npass = 0\nrace = 0\n"
-          "race_biome = 0\nregion = 0\nregion_biome = 0\nregion_border = 0\n");
+          "[tables]\nage = 0\nbiome = 0\ncivilization = 0\nclimate = 0\nculture = 0\nevent = 0\nevent_cause = 0\nevent_kind = 0\nevent_kind_role = 0\nevent_kind_value = 0\nevent_participant = 0\nevent_value = 0\ngod = 0\nlayer = 0\nmeta = 17\npass = 0\nphase = 0\nrace = 0\n"
+          "race_biome = 0\nregion = 0\nregion_biome = 0\nregion_border = 0\nregion_control = 0\nrelation = 0\n"
+          "settlement = 0\nsettlement_census = 0\n");
     const std::string meta = section(r.value(), "[meta]");
     for (const std::string& k : eight_keys()) {
         CAPTURE(k);
@@ -197,7 +198,8 @@ TEST_CASE("P3-03 9.1, 14.1 item 10: each corrupt case, with its message") {
         {"UPDATE race SET present = 1, awakening_year = 5500 WHERE id = 5",
          "corrupt table 'age': 3 rows for 4 present races"},
         // the span is param.history_span
-        {"UPDATE meta SET value = '7000' WHERE key = 'param.history_span'",
+        // (history_end_year with it: the reader requires them equal, P3-04 9.4)
+        {"UPDATE meta SET value = '7000' WHERE key IN ('param.history_span', 'history_end_year')",
          "corrupt table 'age': the last age ends in 5999, expected 6999"},
     };
     for (const Case& c : cases) {

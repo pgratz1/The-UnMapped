@@ -344,14 +344,16 @@ TEST_CASE("cli 12.2: empty world contents (P0-02 8)") {
     }
     const auto tables = w.tables();
     REQUIRE(tables.ok());
-    // Schema 6 (P3-03 5.1): thirteen tables, all empty but meta (16 rows).
-    const std::vector<std::string> names = {"age",  "biome",      "climate", "culture",      "god",
-                                            "layer", "meta",      "pass",    "race",         "race_biome",
-                                            "region", "region_biome", "region_border"};
+    // Schema 7 (P3-04 9.1): twenty-six tables, all empty but meta (17 rows).
+    const std::vector<std::string> names = {"age", "biome", "civilization", "climate", "culture", "event", "event_cause",
+                                            "event_kind", "event_kind_role", "event_kind_value", "event_participant",
+                                            "event_value", "god", "layer", "meta", "pass", "phase", "race",
+                                            "race_biome", "region", "region_biome", "region_border",
+                                            "region_control", "relation", "settlement", "settlement_census"};
     REQUIRE(tables.value().size() == names.size());
     for (std::size_t k = 0; k < names.size(); ++k) {
         CHECK(tables.value()[k].name == names[k]);
-        CHECK(tables.value()[k].row_count == (names[k] == "meta" ? 16U : 0U));
+        CHECK(tables.value()[k].row_count == (names[k] == "meta" ? 17U : 0U));
     }
     const auto layers = w.layers();
     REQUIRE(layers.ok());
@@ -363,7 +365,7 @@ TEST_CASE("cli 12.2: empty world contents (P0-02 8)") {
     // schema version 5 the root pages of the three region tables (P0-02
     // amendment 17); schema version 6 the roots of the five chronology tables
     // and two key indexes, 18 pages (P3-03 5.1).
-    CHECK(fs::file_size(out) == 73728U);
+    CHECK(fs::file_size(out) == 139264U);
 }
 
 TEST_CASE("cli 12.2: test pattern") {

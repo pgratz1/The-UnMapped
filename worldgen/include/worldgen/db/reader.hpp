@@ -115,7 +115,9 @@ public:
     //   5. meta_key_missing: a key of REQUIRED_META_KEYS absent;
     //   6. meta_value_invalid: a required value not in canonical form, keys
     //      checked in ascending order (the eight history keys of P3-03 4.2
-    //      by is_canonical_history_meta_value; param.races by syntax only).
+    //      by is_canonical_history_meta_value; param.races by syntax only;
+    //      history_end_year canonical decimal in its place, and, after
+    //      every other key, equal to param.history_span, P3-04 9.4).
     // The meta table is read once here; the meta accessors below do no I/O.
     [[nodiscard]] static Result<WorldReader> open(std::string_view path_utf8);
 
