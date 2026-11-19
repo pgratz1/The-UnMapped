@@ -36,7 +36,7 @@ P3-06 gives the history its conflicts. Civilizations hold dispositions toward ea
 | Peoples | `PeoplesView` (P3-05 13): `score`, `capacity`, `neighbours`, `population`, `regions`, `settlements`, `wanted_held`, `hunger` | everything numeric about peoples |
 | State | P3-04 `State`: civilizations (`race`, `capital`, `founded_year`, `founding_event`, `ended_year`, `ending_event`), settlements, `RegionState` (`owner`, `owner_event`), relations | everything else |
 | Settings | `param.history_detail` (only through the engine: the flare-up threshold is the engine's) | — |
-| Tuning | `history.conflict` (12.1), `history.peoples` (`expand_*`, `reach_*` through `wanted_held`; `cost_penalty`) | everything numeric |
+| Tuning | `history.conflict` (12.1); `history.peoples` only through `PeoplesView` (`wanted_held`, `hunger`) and its `intensity` record (5.2) | everything numeric |
 
 Not read: the `pass` table. A battle at a pass records the border's `pass_id` (11, kind `battle_at_pass`); P6 locates the battlefield at the pass's col (`pass.col_x`, `col_y`, P3-00 7 "Passes", decided) from that id. `HistoryInputs` gains nothing (P3-04 R1 and R2 are unchanged).
 
@@ -253,7 +253,7 @@ Then 7.7 for this war, before the next war.
 
 ### 7.4 Casualties
 
-`casualties(c, dead, e)`: ss = c's standing visible settlements ascending, T = Σ P over ss (if T = 0 or dead = 0: nothing); dead = min(dead, T) (never binding with shipped tuning: dead ≤ force ≤ T × 0.25 × 1.6 × 0.25); each s loses dead × P_s div T; the remainder goes from the most populous settlement after those losses (then smaller id), at most its population; `set_population` for each; `note_reduction(s, e)` for every s of ss (P3-05 13: the cause of a later abandonment). Status is not changed (a war is not a P3-05 pressure; P3-05's recovery rule needs no `before`). The war's dead of c += dead.
+`casualties(c, dead, e)`: ss = c's standing visible settlements ascending, T = Σ P over ss (if T = 0 or dead = 0: nothing); dead = min(dead, T) (never binding with shipped tuning: force ≤ T × 250‰ × 1600‰ = 0.4 T, so dead ≤ 0.1 T); each s loses dead × P_s div T; the remainder goes from the most populous settlement after those losses (then smaller id), at most its population; `set_population` for each; `note_reduction(s, e)` for every s of ss (P3-05 13: the cause of a later abandonment). Status is not changed (a war is not a P3-05 pressure; P3-05's recovery rule needs no `before`). The war's dead of c += dead.
 
 ### 7.5 Falls: sacking and capture
 
@@ -375,7 +375,7 @@ So a reader can walk every war back: conquest → sack → siege → battle → 
 
 **Report requirements** (P3-07 20): `sacked` is the ruined row's `ruin_event` (75, a capital 90) and `civ_conquered` the ended row's `ending_event` (90), both ≥ 20 and above every other event of a civilization except a capital's sack, so they rank among its milestones (P3-07 7.3). The war relation kind is `war` (asymmetric); `enmity` and `peace` are symmetric (4.3). No kind needs a new report block or line (format v1).
 
-**Saliences and the summary.** P3-07's summary shows at most 250 events, from the smallest salience that fits (7.4). With conflict a 1024 log grows to about 800 events and the threshold to about 40 (15.3): shown are awakenings, foundings, capitals, claims (45), declarations (70), sacks and captures, peace and truces, cessions, conquests, secessions, endings, cities and town plagues (45), moved capitals (50) and crises (40); hidden are battles (30, 35 at a pass) and sieges (25), which the `full` level lists, colonies, and the peoples' smaller events. A war at `summary` reads: claim, flare-up, declaration, sacks or captures, peace, cession.
+**Saliences and the summary.** P3-07's summary shows at most 250 events, from the smallest salience that fits (7.4). With conflict a 1024 log grows to about 800 events and the threshold to 26–46, median 31 (15.3): shown are awakenings, foundings, capitals, claims (45), declarations (70), sacks and captures, peace and truces, cessions, conquests, secessions, endings, cities and town plagues (45), moved capitals (50) and crises (40); hidden are battles (30, 35 at a pass) and sieges (25), which the `full` level lists, colonies, and the peoples' smaller events. A war at `summary` reads: claim, flare-up, declaration, sacks or captures, peace, cession.
 
 Rendered samples (seed 42, 1024): `The Grork Horde laid claim to Southwest Wood, held by Finen.` · `The Grork Horde declared war on Finen over Southwest Wood.` · `Finen defeated The Grork Horde in Southwest Wood; 912 of the defeated and 110 of the victors fell.` · `Finen besieged Groz of The Grork Horde; it fell.` · `Finen sacked Groz of The Grork Horde; 513 died and 1197 fled.` · `The Grork Horde sued Finen for peace after 10 years of war.` · `The Grork Horde and The Hold of Dulimin made peace after 18 years of war, neither the victor.` · `The Kingdom of Stard took Geexdronk Pit from The Zak-Neez Mob; 503 died and 0 fled.`
 
@@ -679,7 +679,24 @@ The sample reads as P3-00 13 asks: the goblins quarrel with the elves over the w
 
 **Whole worlds** (min / median / max):
 
-VARTABLE
+| Sweep | wars | battles | sacked | taken | civs ended | ruined (by sack) | flare-ups | simulated years | events | events / sim. year (max) | share max ‰ | over 800‰ years | bounds |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1024, seeds 0-49 | 7 / 22 / 42 | 18 / 71 / 148 | 1 / 12 / 35 | 0 / 6 / 20 | 0 / 1 / 4 | 1 / 13 / 36 (1 / 12 / 35) | 0 / 2 / 5 | 1122 / 1273 / 1450 | 430 / 817 / 1439 | 1.13 | 301 | 0 | none |
+| 512, seeds 0-19 | 6 / 27 / 45 | 27 / 105 / 209 | 2 / 12 / 21 | 0 / 5 / 13 | 0 / 1 / 2 | 2 / 13 / 22 (2 / 12 / 21) | 0 / 3 / 5 | 1132 / 1275 / 1411 | 247 / 618 / 773 | 0.58 | 636 | 0 | none |
+| 2048, seeds 0-4 | 2 / 11 / 21 | 10 / 48 / 82 | 0 / 6 / 16 | 0 / 3 / 7 | 0 / 0 / 1 | 1 / 12 / 17 (0 / 6 / 16) | 0 / 1 / 2 | 1148 / 1250 / 1270 | 597 / 808 / 1043 | 0.82 | 123 | 0 | none |
+| 1024 turbulent | 8 / 46 / 123 | 30 / 164 / 540 | 3 / 22 / 47 | 1 / 16 / 60 | 0 / 2 / 9 | 5 / 26 / 51 (3 / 22 / 47) | 0 / 6 / 12 | 1162 / 1434 / 1773 | 562 / 1476 / 3208 | 1.94 | 422 | 0 | none |
+| 1024 calm | 4 / 13 / 38 | 12 / 42 / 118 | 0 / 8 / 22 | 0 / 3 / 11 | 0 / 0 / 1 | 0 / 8 / 22 (0 / 8 / 22) | 0 / 0 / 2 | 1118 / 1200 / 1300 | 331 / 539 / 911 | 0.76 | 326 | 0 | none |
+| 1024 civs-per-race 4 | 36 / 93 / 195 | 132 / 322 / 781 | 20 / 45 / 75 | 8 / 30 / 56 | 6 / 11 / 16 | 21 / 49 / 75 (20 / 45 / 75) | 1 / 6 / 11 | 1250 / 1427 / 1750 | 1063 / 2182 / 3311 | 1.97 | 387 | 0 | none |
+| 1024 races elf,goblin | 0 / 5 / 16 | 0 / 17 / 76 | 0 / 3 / 9 | 0 / 0 / 14 | 0 / 0 / 3 | 0 / 4 / 10 (0 / 3 / 9) | 0 / 3 / 7 | 600 / 750 / 950 | 108 / 313 / 643 | 0.76 | 255 | 0 | none |
+| 1024 races elf,orc | 0 / 1 / 3 | 0 / 2 / 11 | 0 / 0 / 2 | 0 / 0 / 1 | 0 / 0 / 1 | 0 / 1 / 4 (0 / 0 / 2) | 0 / 0 / 0 | 600 / 600 / 600 | 34 / 151 / 263 | 0.44 | 224 | 0 | none |
+| 1024 span 2000 | 0 / 5 / 16 | 0 / 14 / 54 | 0 / 2 / 6 | 0 / 0 / 6 | 0 / 1 / 3 | 0 / 2 / 7 (0 / 2 / 6) | 0 / 0 / 1 | 370 / 390 / 408 | 75 / 229 / 410 | 1.01 | 215 | 0 | none |
+| 1024 span 12000 | 12 / 51 / 171 | 47 / 196 / 606 | 4 / 31 / 104 | 5 / 19 / 69 | 0 / 3 / 9 | 6 / 37 / 111 (4 / 31 / 104) | 0 / 6 / 10 | 2224 / 2886 / 3330 | 833 / 1907 / 3924 | 1.18 | 448 | 0 | none |
+| 1024 dense | 7 / 27 / 103 | 24 / 81 / 413 | 3 / 15 / 40 | 0 / 7 / 52 | 0 / 1 / 9 | 4 / 16 / 45 (3 / 15 / 40) | 0 / 3 / 9 | 1612 / 1926 / 2244 | 354 / 913 / 2561 | 1.20 | 319 | 0 | none |
+| no prowess (all 1000), seeds 0-19 | 10 / 19 / 40 | 36 / 70 / 143 | 2 / 14 / 23 | 1 / 6 / 22 | 0 / 1 / 4 | 4 / 15 / 25 (2 / 14 / 23) | 1 / 3 / 3 | 1169 / 1297 / 1350 | 493 / 791 / 1285 | 0.99 | 291 | 0 | none |
+| no refuge, no shelter, seeds 0-19 | 7 / 15 / 34 | 20 / 48 / 132 | 1 / 11 / 29 | 0 / 5 / 19 | 1 / 2 / 6 | 1 / 11 / 29 (1 / 11 / 29) | 0 / 2 / 4 | 1112 / 1250 / 1395 | 382 / 710 / 1329 | 1.03 | 319 | 0 | none |
+| goblin aggression 700, seeds 0-19 | 12 / 21 / 61 | 34 / 72 / 205 | 4 / 15 / 29 | 1 / 6 / 30 | 0 / 2 / 3 | 4 / 15 / 31 (4 / 15 / 29) | 1 / 4 / 6 | 1232 / 1350 / 1495 | 527 / 856 / 1455 | 1.10 | 301 | 0 | none |
+
+The last three rows are the counterfactuals of 12.2 and question 4 (everything else shipped). P3-05's figures without conflict (its 15.3) are the baseline: ruins 0 / 1 / 4, no civilization ended, 310 / 564 / 966 events at 1024.
 
 All hard bounds hold on every world of every sweep (15.5). At 1024 (seeds 0–49):
 
@@ -697,7 +714,7 @@ All hard bounds hold on every world of every sweep (15.5). At 1024 (seeds 0–49
 | relations | rows 17 / 54 / 98: `enmity` 11, `war` 23, `peace` 21 a world on average |
 | shares | largest share of the non-islet land ever held by one civilization 96 / 187 / 301 ‰; `share_over_500_years` 0 on every world |
 | events | 430 / 817 / 1,439; 0.62 per simulated year (max 1.13) |
-| summary threshold | THRESH |
+| summary threshold | 26 / 31 / 46 (P3-07 7.4; 139 / 212 / 250 events shown) |
 
 **Race characters** (P3-00 13; 1024, 50 worlds):
 
@@ -737,10 +754,10 @@ Claims, battles and sieges are counted by P3-07's `events_<key>` lines. Strain, 
 | not empty | P3-05 15.5's | at least 51 standing settlements at 1024, 27 at 512 |
 | races | `races_alive` = the present races (`last_refuge` 1) | every world |
 | runaway | `share_over_800_years` ≤ 1000 | 0 on every world of every sweep; the largest share ever held by one civilization was 301‰ at 1024 and 636‰ at 512 (a 13-region world) |
-| events | `events_per_1000_simulated_years` ≤ 200000 | at most MAXEV per simulated year (`turbulent`) |
-| phases | `simulated_permille` ≤ 450 (P3-04's cap) | at most MAXSIM simulated years of 6,000 |
+| events | `events_per_1000_simulated_years` ≤ 200000 | at most 1.97 per simulated year (`--civs-per-race 4`; 1.13 at default settings) |
+| phases | `simulated_permille` ≤ 450 (P3-04's cap) | at most 374‰ (`dense`, 2,244 of 6,000 years); 295‰ at `turbulent`, 277‰ at span 12000, 242‰ at default settings |
 | capacity | P ≤ 2 × C(R, owner race) for every standing settlement after every step (this spec's tests) | holds in every world |
-| sizes | history tables under 5 MB at 1024 | at most 3,208 events (`turbulent`): well under 1 MB |
+| sizes | history tables under 5 MB at 1024 | at most 3,311 events (`--civs-per-race 4`; 3,924 at span 12000): well under 1 MB |
 
 **Typical ranges** (1024, default settings; outside them is a finding, not a defect): wars 10–40; flare-ups 0–5, simulated years 1,120–1,450; sacked 5–30; civilizations ended 0–4; ruins mostly (≥ 80%) by sacking; events 450–1,500; summary threshold 26–46; every race alive; elves 4–40 standing settlements.
 
@@ -802,7 +819,7 @@ The test builds this state through the seams, runs the pure functions and one T2
 ### 16.3 Golden vectors
 
 19. `worldgen/tests/golden/p3-06-conflict.txt`, written by the reference: for the four P1 golden cases and the three `hist-*` cases: (a) the logical hashes of the thirteen history tables; (b) the war lines of 16; (c) the tension of every quiet step (`<case> q<start> <value> e<trigger>`); (d) the `[stats]` lines of 15.4; (e) the rendered sentence of every event of the 512 cases and of every event of kinds 20–30 of the 1024 cases (`*-slow` suite). The C++ must match every line.
-20. The sample of 15.2 (seed 42 at 1024, default settings) is a golden case of its own, `hist-conflict-42-1024`, in `p3-06-conflict.txt` only: its war list and the sixty summary lines of 15.2 must equal the spec's (prototype and reference are independent; a difference is resolved before merge). P3-05's `hist-peoples-42-1024` is re-recorded with conflict installed (its first 60 sentences before the first claim are unchanged: conflict appends nothing before year 2148 in that world).
+20. The sample of 15.2 (seed 42 at 1024, default settings) is a golden case of its own, `hist-conflict-42-1024`, in `p3-06-conflict.txt` only: its war list and the sixty summary lines of 15.2 must equal the spec's (prototype and reference are independent; a difference is resolved before merge). P3-05's `hist-peoples-42-1024` is re-recorded with conflict installed (its events e1–e37 are unchanged: conflict appends nothing before its first claim, e38 in year 2148, and changes no peoples state before it).
 
 ### 16.4 Performance
 
@@ -865,7 +882,7 @@ Each with the recommendation and the interim choice this spec follows.
 5. **Coalition by fear instead of alliances; no vassals** (4.3, 5.1). Recommendation and interim: yes in P3; alliances and vassalage come with figures and factions (P5), as new relation kinds without a schema change.
 6. **Aggression squared** (5.2). The race field's 0–1000 range is read as readiness, and its square drives strain, so orcs (900) quarrel nine times as fast as dwarves (300) and thirty times as fast as elves (150). Recommendation and interim: yes; the linear reading made goblins and orcs nearly equal and left elves and faeries starting wars.
 7. **Armies march two borders** (5.1). Recommendation and interim: `march_hops` 2; with 1 a quarter of the 1024 worlds had no goblin–elf war and the median world two (P3-05's homes keep the two peoples apart); with 2 the median world has eight and 9 of 50 none.
-8. **The event log is far smaller than P3-00 6.1's estimate.** P3-00 expected 5,000–30,000 events at 1024; P3-05 and P3-06 together give 430 / 817 / 1,439 at 1024 and up to 3,208 at `turbulent`. Recommendation: correct P3-00's expectation to "500–2,000 events (3,500 at `turbulent`), well under 1 MB"; the 200-per-simulated-year bound is three orders of magnitude away. Interim: no rule changes; P5's subsystems add their own.
+8. **The event log is far smaller than P3-00 6.1's estimate.** P3-00 expected 5,000–30,000 events at 1024; P3-05 and P3-06 together give 430 / 817 / 1,439 at 1024 and up to 3,924 at span 12000. Recommendation: correct P3-00's expectation to "400–1,500 events at default settings, up to about 4,000 with the heavier settings (`turbulent`, four civilizations per race, span 12000), well under 1 MB"; the 200-per-simulated-year bound is three orders of magnitude away. Interim: no rule changes; P5's subsystems add their own.
 9. **Humans on land left open or ruined** (9). Humans spread over open land (P3-05) and resettle sacked regions within their reach, but the old wars are mostly fought far from the farmland where humans awaken, so few human settlements stand on ruined ground (40 of 762 human settlements; 40 of 357 human regions had another holder before). Recommendation: accept in P3; P5's refugee migration (P3-05 question 6) is the stronger reading. Interim: as specified.
 10. **"A world already at war" when the dwarves arrive** (9). Measured as a war open within 50 years either side of the dwarven awakening: 30 of 50 worlds at 1024. Recommendation: accept; the rest of the worlds have their goblin–elf wars earlier or later in the goblin age, and every world has the `enmity` rows. Alternative: an awakening raises every hostile pair's strain (a rule the design does not state).
 
