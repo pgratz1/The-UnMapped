@@ -260,7 +260,7 @@ inline Geo make_synthetic(std::uint64_t seed) {
     g.hab.assign(N, 0);
     g.river.assign(N, 0);
     g.flow.assign(N, 8);
-    auto at_ = [n](std::int64_t x, std::int64_t y) { return static_cast<std::size_t>(y * n + x); };
+    auto at_ = [=](std::int64_t x, std::int64_t y) { return static_cast<std::size_t>(y * n + x); };
     for (std::int64_t y = 0; y < n; ++y) {
         for (std::int64_t x = 0; x < ocean; ++x) {
             g.water[at_(x, y)] = 3;
