@@ -226,6 +226,77 @@ def _matching_paren(code: str, open_pos: int) -> int:
     return -1
 
 
+def _matching_brace(code: str, open_pos: int) -> int:
+    """Index of the '}' matching the '{' at open_pos, or -1."""
+    depth = 0
+    for k in range(open_pos, len(code)):
+        ch = code[k]
+        if ch == "{":
+            depth += 1
+        elif ch == "}":
+            depth -= 1
+            if depth == 0:
+                return k
+    return -1
+
+
+def _range_for_colon(header: str) -> int:
+    """Offset of the ':' of a range-for header (top level, not '::'), or -1
+    for a classic for (a top-level ';') or no colon."""
+    depth = 0
+    k = 0
+    while k < len(header):
+        ch = header[k]
+        if ch in "([{":
+            depth += 1
+        elif ch in ")]}":
+            depth -= 1
+        elif ch == ";" and depth == 0:
+            return -1
+        elif ch == ":":
+            if header[k + 1:k + 2] == ":":
+                k += 2
+                continue
+            if depth == 0:
+                return k
+        k += 1
+    return -1
+
+
+# The live entity containers of history::State (P3-04 6.1) and the calls
+# that change them: found_* appends to the civilization or settlement
+# vector (a reallocation invalidates every iterator, span and reference
+# into it), open_relation / close_relation insert into and erase from the
+# relation map (an erase invalidates the iterator of the erased key).
+_LIVE_RANGE = re.compile(r"(?:(?:\.|->)\s*(?:civs|settlements|relations)\s*\(\s*\)|\b(?:civs_|settlements_|relations_))\s*$")
+_LIVE_MUTATOR = re.compile(r"\b(?:found_civilization|found_settlement|open_relation|close_relation)\s*\(")
+
+
+def _live_iteration(code: str, m: re.Match) -> bool:
+    """For history-live-iteration: True if this 'for (' is a range-for over
+    State::civs(), settlements() or relations() (or the members civs_,
+    settlements_, relations_) whose body calls found_civilization,
+    found_settlement, open_relation or close_relation."""
+    open_pos = m.end() - 1
+    close = _matching_paren(code, open_pos)
+    if close < 0:
+        return False
+    header = code[open_pos + 1:close]
+    colon = _range_for_colon(header)
+    if colon < 0 or not _LIVE_RANGE.search(header[colon + 1:].rstrip()):
+        return False
+    k = close + 1
+    while k < len(code) and code[k].isspace():
+        k += 1
+    if k < len(code) and code[k] == "{":
+        end = _matching_brace(code, k)
+        body = code[k:end if end >= 0 else len(code)]
+    else:
+        end = code.find(";", k)
+        body = code[k:end if end >= 0 else len(code)]
+    return bool(_LIVE_MUTATOR.search(body))
+
+
 _STMT_START_CHARS = (";", "{", "}", ")", ":")
 _VOID_CAST_TAIL = re.compile(r"static_cast\s*<\s*void\s*>\s*\(\s*$")
 
@@ -570,6 +641,21 @@ RULES: tuple = (
         "when one is added or removed; use a keyed draw, history::draw(stream_key, w0, a, b, k) (P3-00 H4, 4.6)",
         _rx(r"\bRng\b|\bsplitmix64_next\s*\("),
         includes=("worldgen/core/rng.hpp",),
+        areas=frozenset({LIB}),
+        only_dirs=HISTORY_DIRS,
+        where="library: " + ", ".join(HISTORY_DIRS) + " (prefixes)",
+    ),
+    # History state (P3-04 6.1, 6.2). Added by the P3-04 engine audit.
+    Rule(
+        "history-live-iteration",
+        "a range-for over State::civs(), settlements() or relations() (or civs_, settlements_, relations_) "
+        "whose body calls found_civilization(, found_settlement(, open_relation( or close_relation(",
+        "the loop changes the container it iterates: founding appends to the civilization or settlement vector "
+        "(a reallocation invalidates the loop's iterators, and when it happens depends on the standard "
+        "library's growth factor), close_relation erases from the relation map; iterate over ids up to a count "
+        "taken before the loop, or collect the changes and apply them after it (P3-04 6.1, 6.2)",
+        _rx(r"\bfor\s*\("),
+        filter=_live_iteration,
         areas=frozenset({LIB}),
         only_dirs=HISTORY_DIRS,
         where="library: " + ", ".join(HISTORY_DIRS) + " (prefixes)",
