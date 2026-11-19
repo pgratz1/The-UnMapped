@@ -101,7 +101,7 @@ DDL_REGION_BIOME = (b"CREATE TABLE region_biome (region INTEGER NOT NULL, biome 
 SCHEMA_VERSION = 5
 # The generator version the checked worlds are expected to carry (P0-02 5.5,
 # amendment 12). One edit per version bump; --generator-version overrides it.
-GENERATOR_VERSION = "0.11.0"
+GENERATOR_VERSION = "0.12.0"
 EMPTY_SHA = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
 
 
