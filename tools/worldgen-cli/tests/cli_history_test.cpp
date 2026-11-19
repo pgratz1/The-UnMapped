@@ -78,11 +78,14 @@ std::string run_ok(const Sandbox& sb, const std::vector<std::string>& args) {
     return r.out;
 }
 
-void check_golden_world(const Sandbox& sb, const std::string& name, const std::vector<std::string>& args) {
-    CAPTURE(name);
+fs::path generate_case(const Sandbox& sb, const std::string& name, const std::vector<std::string>& args) {
     std::vector<std::string> full = {"--data", u8(source_root() / "game" / "data"), "--out", u8(sb.file(name + ".db"))};
     full.insert(full.end(), args.begin(), args.end());
-    const fs::path db = sb.generate(full);
+    return sb.generate(full);
+}
+
+void check_golden_db(const Sandbox& sb, const std::string& name, const fs::path& db) {
+    CAPTURE(name);
     const std::string detail = run_ok(sb, {"hash", "--db", u8(db), "--detail"});
     std::string rep = "[history]\n";
     std::size_t tables = 0;
@@ -106,48 +109,25 @@ void check_golden_world(const Sandbox& sb, const std::string& name, const std::v
     CHECK(report.find("\n[", c + 1) == h - 1);
 }
 
+void check_golden_world(const Sandbox& sb, const std::string& name, const std::vector<std::string>& args) {
+    check_golden_db(sb, name, generate_case(sb, name, args));
+}
+
 }  // namespace
 
 TEST_SUITE("history") {
 
-TEST_CASE("cli P3-04 9.5, 16.1 item 14 (Y1): the default run ends in history; --until history gives the same bytes") {
+// One generated 512 world (seed 42) serves Y1, the golden case geo-seed-42-512 and the corrupt cases, so
+// that the default CTest entry stays fast; the other golden worlds are in history-slow.
+TEST_CASE("cli P3-04 9.5, 11.1, 16.1 item 14, 16.4 (Y1): default run, --until history, golden seed 42, corrupt tables") {
     Sandbox sb;
-    const fs::path a = sb.generate({"--seed", "42", "--map-size", "512", "--out", u8(sb.file("default.db"))});
-    const fs::path b =
-        sb.generate({"--seed", "42", "--map-size", "512", "--until", "history", "--out", u8(sb.file("until.db"))});
+    const fs::path a = generate_case(sb, "geo-seed-42-512", {"--seed", "42", "--map-size", "512"});
+    const fs::path b = generate_case(sb, "until", {"--seed", "42", "--map-size", "512", "--until", "history"});
     CHECK(read_bytes(a) == read_bytes(b));
     CHECK(meta_of(a, "stages") == ALL_STAGES);
     CHECK(meta_of(a, "history_end_year") == "6000");
     CHECK(meta_of(a, "schema_version") == "7");
-}
-
-TEST_CASE("cli P3-04 9.5, 16.1 item 14: --until chronology and --until regions leave the thirteen tables empty") {
-    Sandbox sb;
-    for (const char* until : {"chronology", "regions", "none"}) {
-        CAPTURE(until);
-        const fs::path db = sb.generate({"--seed", "42", "--map-size", "512", "--history-span", "2500", "--until", until,
-                                         "--out", u8(sb.file(std::string(until) + ".db"))});
-        const std::string report = run_ok(sb, {"report", "--db", u8(db)});
-        const std::string tables = section(report, "[tables]");
-        for (const std::string& t : NEW_TABLES) {
-            CHECK_MESSAGE(contains(tables, "\n" + t + " = 0\n"), t);
-        }
-        CHECK(section(report, "[history]").empty());
-        CHECK(meta_of(db, "history_end_year") == "2500");
-    }
-}
-
-TEST_CASE("cli P3-04 11.1, 11.2, 16.4: [history] and hash --detail of the 512 golden worlds") {
-    Sandbox sb;
-    check_golden_world(sb, "geo-seed-42-512", {"--seed", "42", "--map-size", "512"});
-    check_golden_world(sb, "geo-seed-0-512", {"--seed", "0", "--map-size", "512"});
-    check_golden_world(sb, "geo-phrase-512", {"--seed-phrase", "The Unmapped", "--map-size", "512"});
-    check_golden_world(sb, "hist-span-2000-512", {"--seed", "7", "--map-size", "512", "--history-span", "2000"});
-}
-
-TEST_CASE("cli P3-04 11.1: corrupt history tables are exit 3 with nothing on stdout") {
-    Sandbox sb;
-    const fs::path base = sb.generate({"--seed", "42", "--map-size", "512", "--out", u8(sb.file("base.db"))});
+    check_golden_db(sb, "geo-seed-42-512", a);
     struct Case {
         const char* sql;
         const char* message;
@@ -163,12 +143,28 @@ TEST_CASE("cli P3-04 11.1: corrupt history tables are exit 3 with nothing on std
     for (const Case& c : cases) {
         CAPTURE(c.sql);
         const fs::path db = sb.file("c" + std::to_string(k++) + ".db");
-        fs::copy_file(base, db, fs::copy_options::overwrite_existing);
+        fs::copy_file(a, db, fs::copy_options::overwrite_existing);
         REQUIRE(worldgen::db::testing::execute_on_file(u8(db), c.sql).ok());
         const ProcessResult r = sb.cli({"report", "--db", u8(db)});
         CHECK(r.exit_code == EXIT_INPUT);
         CHECK(r.out.empty());
         CHECK(r.err == std::string("worldgen-cli: error: ") + c.message + "\n");
+    }
+}
+
+TEST_CASE("cli P3-04 9.5, 16.1 item 14: --until chronology and --until none leave the thirteen tables empty") {
+    Sandbox sb;
+    for (const char* until : {"chronology", "none"}) {  // --until regions: P3-03's CLI tests
+        CAPTURE(until);
+        const fs::path db = sb.generate({"--seed", "42", "--map-size", "512", "--history-span", "2500", "--until", until,
+                                         "--out", u8(sb.file(std::string(until) + ".db"))});
+        const std::string report = run_ok(sb, {"report", "--db", u8(db)});
+        const std::string tables = section(report, "[tables]");
+        for (const std::string& t : NEW_TABLES) {
+            CHECK_MESSAGE(contains(tables, "\n" + t + " = 0\n"), t);
+        }
+        CHECK(section(report, "[history]").empty());
+        CHECK(meta_of(db, "history_end_year") == "2500");
     }
 }
 
@@ -211,6 +207,13 @@ TEST_CASE("cli P3-04 15: world-hashes.sh lists fifteen cases, hist-dense-1024 wi
 }  // TEST_SUITE
 
 TEST_SUITE("history-slow" * doctest::skip()) {
+
+TEST_CASE("cli P3-04 11.1, 11.2, 16.4: [history] and hash --detail of the other 512 golden worlds") {
+    Sandbox sb;
+    check_golden_world(sb, "geo-seed-0-512", {"--seed", "0", "--map-size", "512"});
+    check_golden_world(sb, "geo-phrase-512", {"--seed-phrase", "The Unmapped", "--map-size", "512"});
+    check_golden_world(sb, "hist-span-2000-512", {"--seed", "7", "--map-size", "512", "--history-span", "2000"});
+}
 
 TEST_CASE("cli P3-04 11.1, 11.2, 16.4: [history] and hash --detail of the 1024 golden worlds") {
     Sandbox sb;

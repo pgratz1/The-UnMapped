@@ -10,6 +10,7 @@
 #include <doctest/doctest.h>
 
 #include <cstdint>
+#include <functional>
 #include <ostream>
 #include <string>
 #include <vector>
@@ -43,6 +44,42 @@ std::unique_ptr<eng::TensionSource> tension_of(const std::string& s) {
     const std::string in = s.substr(s.find('(') + 1, s.find(')') - s.find('(') - 1);
     const std::vector<std::int64_t> v = ints(in);
     return forced(v.at(0), v.at(1), v.at(2));
+}
+
+// The schedule cases of the golden file selected by `pick`, through run_engine; returns how many ran.
+std::size_t check_golden_scheds(const std::function<bool(const GoldenSched&)>& pick) {
+    std::size_t n = 0;
+    for (const GoldenSched& s : golden().scheds) {
+        if (!pick(s)) {
+            continue;
+        }
+        CAPTURE(s.header);
+        REQUIRE(!s.starts.empty());
+        const Tables t = schedule(s.starts, s.span, s.detail, tension_of(s.tension));
+        CHECK(phases_text(t) == s.phases);
+        CHECK(simulated(t) == s.simulated);
+        // opening phases carry their awakening events (5.7), the others 0 or the tension's trigger; the
+        // awakening of an opening phase is the event of kind 1 dated at its first year (flare_up events of
+        // 6.3 take ids between them)
+        for (const Row& r : t.phase) {
+            if (at(r, 2) == 1) {
+                std::int64_t aw = 0;
+                for (const Row& e : t.event) {
+                    if (at(e, 3) == 1 && at(e, 1) == at(r, 3)) {
+                        aw = at(e, 0);
+                    }
+                }
+                CHECK(aw != 0);
+                CHECK(at(r, 5) == aw);
+            } else if (at(r, 2) == 3) {
+                CHECK(at(r, 5) == 1);
+            } else {
+                CHECK(at(r, 5) == 0);
+            }
+        }
+        ++n;
+    }
+    return n;
 }
 
 }  // namespace
@@ -227,36 +264,12 @@ TEST_CASE("P3-04 17: the worked example's schedule (seed 42, span 6000, normal) 
     CHECK(simulated(g) == 2700);
 }
 
-TEST_CASE("P3-04 16.4: every schedule case of the golden file through run_engine") {
-    std::size_t n = 0;
-    for (const GoldenSched& s : golden().scheds) {
-        CAPTURE(s.header);
-        REQUIRE(!s.starts.empty());
-        const Tables t = schedule(s.starts, s.span, s.detail, tension_of(s.tension));
-        CHECK(phases_text(t) == s.phases);
-        CHECK(simulated(t) == s.simulated);
-        // opening phases carry their awakening events (5.7), the others 0 or the tension's trigger; the
-        // awakening of an opening phase is the event of kind 1 dated at its first year (flare_up events of
-        // 6.3 take ids between them)
-        for (const Row& r : t.phase) {
-            if (at(r, 2) == 1) {
-                std::int64_t aw = 0;
-                for (const Row& e : t.event) {
-                    if (at(e, 3) == 1 && at(e, 1) == at(r, 3)) {
-                        aw = at(e, 0);
-                    }
-                }
-                CHECK(aw != 0);
-                CHECK(at(r, 5) == aw);
-            } else if (at(r, 2) == 3) {
-                CHECK(at(r, 5) == 1);
-            } else {
-                CHECK(at(r, 5) == 0);
-            }
-        }
-        ++n;
-    }
-    CHECK(n > 300U);
+TEST_CASE("P3-04 16.4: the golden schedule cases of seed 42 and every edge case through run_engine") {
+    // A fixed sample (all of it in history-slow): the edge cases E1-E10 and every case of seed 42 (spans,
+    // levels, race sets, both ForcedTension variants).
+    const std::size_t n = check_golden_scheds(
+        [](const GoldenSched& s) { return s.races.empty() || s.name.rfind("sched-42-", 0) == 0; });
+    CHECK(n >= 50U);
 }
 
 TEST_CASE("P3-04 3.4 items 2 to 5, 16.1 item 3: entry checks of history_stage with their messages, in order") {
@@ -409,6 +422,14 @@ TEST_CASE("P3-04 6.5: tension guards: a negative value, a trigger outside the lo
     const Tables t = eng::run_engine(shipped(), inputs_for(starts, 6000), cfg.get());
     CHECK(str(std::vector<Row>(t.phase.begin() + 1, t.phase.begin() + 4)) ==
           str(irows({{2, 1, 2, 150, 174, 0}, {3, 1, 3, 175, 224, 2}, {4, 1, 2, 225, 2073, 0}})));
+}
+
+}  // TEST_SUITE
+
+TEST_SUITE("history-slow" * doctest::skip()) {
+
+TEST_CASE("P3-04 16.4: every schedule case of the golden file through run_engine") {
+    CHECK(check_golden_scheds([](const GoldenSched&) { return true; }) > 300U);
 }
 
 }  // TEST_SUITE
