@@ -109,3 +109,37 @@ TEST_CASE("P3-05 engineer: score terms use floor division, capacity has its floo
     CHECK(h::region_score(g, r, t) == 1000);
     CHECK(h::region_capacity(g, r, t) == std::int64_t{2000} * 1000 * 1000 * 2500 / 1000000000);
 }
+
+// Timing of the history stage (P3-05 16.4) on stored worlds run up to
+// chronology: UNMAPPED_PEOPLES_BENCH holds their paths separated by ':'.
+// Skipped by default: worldgen-tests -ts=peoples-bench --no-skip.
+#include <chrono>
+#include <cstdlib>
+#include <string>
+
+#include "p3_04_engine_support.hpp"
+#include "worldgen/stages/history.hpp"
+
+TEST_SUITE("peoples-bench" * doctest::skip()) {
+TEST_CASE("P3-05 engineer: history stage time") {
+    const char* list = std::getenv("UNMAPPED_PEOPLES_BENCH");
+    REQUIRE(list != nullptr);
+    std::string paths = list;
+    std::size_t at = 0;
+    while (at <= paths.size()) {
+        const std::size_t end = std::min(paths.find(':', at), paths.size());
+        const std::string path = paths.substr(at, end - at);
+        at = end + 1;
+        if (path.empty()) {
+            continue;
+        }
+        const worldgen::db::WorldReader world = engine_test::open_world(path);
+        const h::HistoryInputs in = h::history_inputs_from_world(world, engine_test::shipped());
+        const auto t0 = std::chrono::steady_clock::now();
+        const worldgen::stages::HistoryResult r = worldgen::stages::history_stage(engine_test::shipped(), in);
+        const auto t1 = std::chrono::steady_clock::now();
+        MESSAGE(path << ": history " << std::chrono::duration_cast<std::chrono::milliseconds>(t1 - t0).count()
+                     << " ms, " << r.events.size() << " events");
+    }
+}
+}
