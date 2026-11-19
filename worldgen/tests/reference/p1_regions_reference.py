@@ -103,9 +103,10 @@ def dec(text):
 # ---------------------------------------------------------------------------
 
 NAME_FIELDS = ("central", "north", "northeast", "east", "southeast", "south", "southwest", "west", "northwest",
-               "isle")
+               "isle", "upland")
 SHIPPED_NAMES = ("Central", "North", "Northeast", "East", "Southeast", "South", "Southwest", "West", "Northwest",
-                 "Isle")
+                 "Isle", "Fells")
+SHIPPED_UPLAND_OWN = ("alpine", "heath", "highland_moor")
 
 # (field, kind, lo, hi, shipped text): kind int | fx | fbm | names; bounds as text.
 TUNING = [
@@ -122,6 +123,7 @@ TUNING = [
     ("ore_reach_m", "int", "0", "10000", "300"),
     ("name_central_frac", "fx", "0", "0.5", "0.12"),
     ("names", "names", None, None, None),
+    ("upland_own_noun", "keys", None, None, None),  # r2: array(ref(biome), 0, 16)
 ]
 KIND = {f: k for f, k, _, _, _ in TUNING}
 
@@ -134,6 +136,8 @@ def parse_value(kind, text):
     if kind == "fbm":
         a, b, c = text.split("/")
         return (int(a), int(b), dec(c))
+    if kind == "keys":
+        return () if text == "none" else tuple(text.split("/"))
     if kind == "names":
         words = text.split("/")
         if len(words) != len(NAME_FIELDS):
@@ -145,13 +149,14 @@ def parse_value(kind, text):
 def shipped_tuning():
     t = {}
     for f, k, _, _, v in TUNING:
-        t[f] = SHIPPED_NAMES if k == "names" else parse_value(k, v)
+        t[f] = SHIPPED_NAMES if k == "names" else SHIPPED_UPLAND_OWN if k == "keys" else parse_value(k, v)
     return t
 
 
 def tuning_of(overrides):
     """overrides: list of (field, text); fx as decimal text, cost_noise as
-    wavelength/octaves/gain, names as the ten words joined by '/'."""
+    wavelength/octaves/gain, names as the eleven words joined by '/',
+    upland_own_noun as biome keys joined by '/' ("none": empty)."""
     t = shipped_tuning()
     for f, v in overrides:
         t[f] = parse_value(KIND[f], v)
@@ -191,8 +196,11 @@ def check_tuning(t):
             wl, oc, g = v
             if not (64 <= wl <= 65536 and 1 <= oc <= 10 and dec("0.0625") <= g <= ONE):
                 fatal("regions: tuning: %s outside its schema range" % f)
+        elif k == "keys":
+            if len(v) > 16:
+                fatal("regions: tuning: %s outside its schema range" % f)
         elif k == "names":
-            if len(v) != 10 or not all(word_ok(x) for x in v):
+            if len(v) != 11 or not all(word_ok(x) for x in v):
                 fatal("regions: tuning: %s outside its schema range" % f)
     if not t["seed_tile_m"] <= 2 * t["seed_spacing_m"]:
         fatal("regions: tuning: seed_tile_m must be at most twice seed_spacing_m")
@@ -701,38 +709,58 @@ def centroid(w, h, water):
     return er.rha(sx, n), er.rha(sy, n)
 
 
-def name_list(entries, cx, cy, rc, words, noun, stats=None):
-    """RG11 steps 2 to 4 for entries (seed_x, seed_y, biome, isle) in id
-    order."""
+def name_list(entries, cx, cy, rc, words, noun, mere_noun, own, stats=None):
+    """RG11 steps 2 to 4 for entries (seed_x, seed_y, biome code, isle,
+    mere, upland) in id order; own: the codes of upland_own_noun. Noun rules
+    (r2) in order: a isle, b mere (2 lake_cells >= cells), c upland unless
+    the dominant biome is in upland_own_noun, d the dominant biome's noun."""
     seen = {}
     out = []
-    for sx, sy, biome, isle in entries:
+    for sx, sy, biome, isle, mere, upland in entries:
         sec = sector(sx - cx, sy - cy, rc)
-        nn = words[9] if isle else noun[biome]
+        if isle:
+            nn, rule = words[9], "isle"
+        elif mere:
+            nn, rule = mere_noun, "mere"
+        elif upland and biome not in own:
+            nn, rule = words[10], "fells"
+        else:
+            nn, rule = noun[biome], None
         base = words[sec] + " " + nn
         k = seen.get(base, 0) + 1
         seen[base] = k
         out.append(base if k == 1 else base + " " + roman(k))
         if stats is not None:
-            for flag, key in ((isle, "isle"), (sec == 0, "central"), (k >= 2, "numbered")):
+            for flag, key in ((rule == "isle", "isle"), (rule == "mere", "mere"), (rule == "fells", "fells"),
+                              (sec == 0, "central"), (k >= 2, "numbered")):
                 if flag:
                     stats[key] = stats.get(key, 0) + 1
     return out
 
 
+def lake_noun(defs):
+    """The region_noun of the definition with water_body "lake"."""
+    for code, key, _, nn in defs:
+        if br.shipped_definitions().get(key, {}).get("water_body") == "lake":
+            return nn
+    fatal("regions: no lake definition")
+
+
 def names(rows, w, h, water, landmass_cells, t, defs, stats=None):
     """RG11 for the rows in id order (each with seed_x, seed_y, landmass,
-    biome); N is the grid width (square maps)."""
+    biome, cells, lake_cells, walk_cells); N is the grid width."""
     noun = {c: nn for c, _, _, nn in defs}
+    code_of = {key: c for c, key, _, _ in defs}
+    own = set(code_of[k] for k in t["upland_own_noun"])
     cx, cy = centroid(w, h, water)
     rc = er.round_int(t["name_central_frac"] * w)
     per_lm = {}
     for r in rows:
         per_lm[r["landmass"]] = per_lm.get(r["landmass"], 0) + 1
     largest = min(landmass_cells.items(), key=lambda kv: (-kv[1], kv[0]))[0]
-    entries = [(r["seed_x"], r["seed_y"], r["biome"], per_lm[r["landmass"]] == 1 and r["landmass"] != largest)
-               for r in rows]
-    return name_list(entries, cx, cy, rc, t["names"], noun, stats)
+    entries = [(r["seed_x"], r["seed_y"], r["biome"], per_lm[r["landmass"]] == 1 and r["landmass"] != largest,
+                2 * r["lake_cells"] >= r["cells"], 4 * r["walk_cells"] < r["cells"]) for r in rows]
+    return name_list(entries, cx, cy, rc, t["names"], noun, lake_noun(defs), own, stats)
 
 
 # ---------------------------------------------------------------------------
@@ -803,24 +831,59 @@ def pass_steps(w, cells, water):
     return seq
 
 
+def pass_steps_j(w, cells, water):
+    """pass_steps with, for each sequence cell, the step j that produced it
+    (the step from c_j to c_j+1; its corner included); -1 for c_0."""
+    def land(i):
+        return water[i] != WATER_OCEAN
+    seq = []
+    def add(i, j):
+        if not seq or seq[-1][0] != i:
+            seq.append((i, j))
+    for j, c in enumerate(cells):
+        if j > 0:
+            p = cells[j - 1]
+            px, py, qx, qy = p % w, p // w, c % w, c // w
+            if px != qx and py != qy:
+                c1 = py * w + qx
+                c2 = qy * w + px
+                if land(c1):
+                    add(c1, j - 1)
+                elif land(c2):
+                    add(c2, j - 1)
+        add(c, j - 1)
+    return seq
+
+
+def pass_attachment(w, region, water, path, col):
+    """RG12 (r2): (row key or None, every crossing as (d, j, order, key))."""
+    cells = path_cells(path)
+    q = cells.index(col)
+    seq = pass_steps_j(w, cells, water)
+    found = []
+    for k in range(len(seq) - 1):
+        (u, _), (v, j) = seq[k], seq[k + 1]
+        ux, uy, vx, vy = u % w, u // w, v % w, v // w
+        if abs(ux - vx) + abs(uy - vy) != 1:
+            continue
+        ru, rv = region[u], region[v]
+        if ru == 0 or rv == 0 or ru == rv:
+            continue
+        d = min(abs(j - q), abs(j + 1 - q))
+        found.append((d, j, k, (min(ru, rv), max(ru, rv))))
+    if not found:
+        return None, found
+    return min(found)[3], found
+
+
 def pass_crossings(w, h, region, water, passes, rows):
-    """Adds pass_id and passes to the border rows; returns the number of
-    (pass, row) crossings."""
+    """Adds pass_id and passes to the border rows (r2: each pass on at most
+    one row); returns the number of attached passes."""
     total = 0
-    for pid, path in sorted(passes):
-        seq = pass_steps(w, path_cells(path), water)
-        crossed = set()
-        for u, v in zip(seq, seq[1:]):
-            ux, uy, vx, vy = u % w, u // w, v % w, v // w
-            if abs(ux - vx) + abs(uy - vy) != 1:
-                continue
-            ru, rv = region[u], region[v]
-            if ru == 0 or rv == 0 or ru == rv:
-                continue
-            crossed.add((min(ru, rv), max(ru, rv)))
-        for key in crossed:
-            r = rows[key]
-            r["_passes"].add(pid)
+    for pid, path, col in sorted(passes):
+        key, _ = pass_attachment(w, region, water, path, col)
+        if key is not None:
+            rows[key]["_passes"].add(pid)
             total += 1
     for r in rows.values():
         r["passes"] = len(r["_passes"])
@@ -874,7 +937,7 @@ def preconditions(w, h, L, passes, codes):
     for i, v in enumerate(L["biome"]):
         if v not in codes:
             fatal(PRE + "biome value %d at (%d, %d) has no definition" % (v, i % w, i // w))
-    for pid, path in sorted(passes):
+    for pid, path, col in sorted(passes):
         bad = len(path) == 0 or len(path) % 4 != 0
         if not bad:
             cells = path_cells(path)
@@ -889,6 +952,8 @@ def preconditions(w, h, L, passes, codes):
                         break
         if bad:
             fatal(PRE + "pass %d: path is not a chain of cells" % pid)
+        if col is None or not 0 <= col < n or col not in path_cells(path):
+            fatal(PRE + "pass %d: col cell is not on its path" % pid)
 
 
 # ---------------------------------------------------------------------------
@@ -954,6 +1019,8 @@ def regions(w, h, L, passes, t, seed, defs=None, second=False):
         r["name"] = s
     brows = border_rows(w, h, region, S, walk, water, river, border)
     stats["crossings"] = pass_crossings(w, h, region, water, passes, brows)
+    stats["crossed"] = sum(len(set(k for _, _, _, k in pass_attachment(w, region, water, path, col)[1]))
+                           for _, path, col in passes)
     if second:
         b2 = border_rows_second(w, h, region, S, walk, water, river, border)
         b1 = {k: (r["length_m"], r["low_dm"], r["low_x"], r["low_y"], r["walk_pairs"], r["river_pairs"],
@@ -1073,8 +1140,8 @@ def passes_hash(passes):
     if not passes:
         return "-"
     b = bytearray()
-    for pid, path in sorted(passes):
-        b += struct.pack("<qq", pid, len(path)) + path
+    for pid, path, col in sorted(passes):
+        b += struct.pack("<qqq", pid, col, len(path)) + path
     return hashlib.sha256(bytes(b)).hexdigest()
 
 
@@ -1238,19 +1305,20 @@ def synthetic_passes(name, w):
         return b"".join((y * w + x).to_bytes(4, "little") for x, y in cells)
     if name == "X":
         return [
-            (1, path([(x, 20) for x in range(2, 38)])),                       # west to east along row 20
-            (2, path([(k, k) for k in range(4, 36)])),                        # the main diagonal
-            (4, path([(20, y) for y in range(2, 38)])),                       # north to south along column 20
+            (1, path([(x, 20) for x in range(2, 38)]), 20 * w + 30),          # west to east along row 20
+            (2, path([(k, k) for k in range(4, 36)]), 10 * w + 10),           # the main diagonal
+            (4, path([(20, y) for y in range(2, 38)]), 2 * w + 20),           # north to south along column 20
             (7, path([(10, 30), (11, 29), (11, 29), (12, 30), (13, 29), (14, 30), (13, 31), (12, 32),
-                      (11, 31), (10, 30)])),                                  # a zigzag loop back to its start
-            (9, path([(35, 4), (34, 5), (33, 6), (32, 7), (31, 8), (30, 9), (29, 10), (28, 11)])),  # anti-diagonal
+                      (11, 31), (10, 30)]), 30 * w + 10),                     # a zigzag loop back to its start
+            (9, path([(35, 4), (34, 5), (33, 6), (32, 7), (31, 8), (30, 9), (29, 10), (28, 11)]),
+             8 * w + 31),                                                     # anti-diagonal
         ]
     raise KeyError(name)
 
 
 T40 = [("seed_tile_m", "256"), ("seed_spacing_m", "200"), ("region_min_area_m2", "16384")]
 T128 = [("seed_tile_m", "256"), ("seed_spacing_m", "400"), ("region_min_area_m2", "65536")]
-WORDS = "Mid/Nor/Norost/Ost/Sudost/Sud/Sudwest/West/Norwest/Holm"
+WORDS = "Mid/Nor/Norost/Ost/Sudost/Sud/Sudwest/West/Norwest/Holm/Hoch"
 
 # (name, p1-05 case, regions overrides, passes ("world" or a synthetic set), why)
 GOLDEN_CASES = [
@@ -1286,6 +1354,13 @@ GOLDEN_CASES = [
     ("designed-2-names", "designed-2", T40 + [("name_central_frac", "0.5"), ("names", WORDS)], "world",
      "other words, central radius half the map"),
     ("designed-3-central0", "designed-3", T40 + [("name_central_frac", "0")], "world", "no central sector"),
+    ("designed-1-ownnone", "designed-1", T40 + [("upland_own_noun", "none")], "world",
+     "r2: upland_own_noun empty: every upland region is Fells"),
+    ("designed-3-ownall", "designed-3", T40 + [("upland_own_noun", "temperate_forest/grassland/alpine/heath")], "world",
+     "r2: forest and grassland keep their noun in upland regions"),
+    ("designed-0-lakemerge", "designed-0", T40 + [("region_min_area_m2", "0"), ("seed_spacing_m", "160"),
+                                                  ("seed_tile_m", "256"), ("lake_cost_factor", "1")], "world",
+     "r2: small regions and cheap lakes: Fells regions"),
     ("designed-0-tile", "designed-0", [("seed_tile_m", "640"), ("seed_spacing_m", "320"),
                                        ("region_min_area_m2", "16384")], "world",
      "one tile covers the map (40 cells): one candidate"),
@@ -1318,7 +1393,8 @@ LARGE_CASES = [
 
 def case_result(name, base, overrides, passes_src, db_dir=None, second=False):
     w, h, L, rows, seed = case_inputs(base, db_dir)
-    passes = [(r["id"], r["path"]) for r in rows] if passes_src == "world" else synthetic_passes(passes_src, w)
+    passes = ([(r["id"], r["path"], r["col_y"] * w + r["col_x"]) for r in rows] if passes_src == "world"
+              else synthetic_passes(passes_src, w))
     t = tuning_of(overrides)
     return seed, regions(w, h, L, passes, t, seed, second=second)
 
@@ -1326,7 +1402,7 @@ def case_result(name, base, overrides, passes_src, db_dir=None, second=False):
 def coverage(r):
     st = r["stats"]
     keys = ("greedy", "landmass_seeds", "rejected", "bank", "merges", "isle", "central", "numbered", "crossings",
-            "lake_cells", "border_river_cells", "corner")
+            "lake_cells", "border_river_cells", "corner", "mere", "fells", "crossed")
     return ",".join("%s:%d" % (k, st.get(k, 0)) for k in keys)
 
 
@@ -1360,7 +1436,8 @@ def case_items(r):
 
 GOLDEN_HEADER = """\
 # P1-06 regions golden vectors for generator 0.11.0 (spec second version,
-# 2026-11-18, schema 5), generated by
+# 2026-11-18, revision r2: one border per pass, the Mere and Fells nouns;
+# schema 5), generated by
 # worldgen/tests/reference/p1_regions_reference.py golden, an independent
 # exact-integer reference written from docs/specs/p1-06-regions.md and P1-00
 # alone. The thirteen input layers of each case are those of the named case
@@ -1377,21 +1454,24 @@ GOLDEN_HEADER = """\
 #       stage's world seed is <seed>. Biome definitions: the shipped twelve.
 #       Tuning: the shipped worldgen.regions of 4 with <overrides>, "-" or
 #       comma-separated field=value (fx values as decimal text; cost_noise as
-#       wavelength_m/octaves/gain; names as the ten words central/north/
-#       northeast/east/southeast/south/southwest/west/northwest/isle).
+#       wavelength_m/octaves/gain; names as the eleven words central/north/
+#       northeast/east/southeast/south/southwest/west/northwest/isle/upland;
+#       upland_own_noun as biome keys joined by "/", "none" for empty).
 #       <passes>: "world" = the world's table pass (none on the designed and
 #       terrace fixtures), or a synthetic table of the reference
-#       (synthetic_passes: "X" on a 40-wide grid, ids 1, 2, 4, 7, 9:
-#       1 row 20 x 2..37; 2 (k, k) k 4..35; 4 column 20 y 2..37; 7 (10,30)
-#       (11,29) (11,29) (12,30) (13,29) (14,30) (13,31) (12,32) (11,31)
-#       (10,30); 9 (35-k, 4+k) k 0..7).
+#       (synthetic_passes: "X" on a 40-wide grid, ids 1, 2, 4, 7, 9, col in
+#       brackets: 1 row 20 x 2..37 [(30, 20)]; 2 (k, k) k 4..35 [(10, 10)];
+#       4 column 20 y 2..37 [(20, 2)]; 7 (10,30) (11,29) (11,29) (12,30)
+#       (13,29) (14,30) (13,31) (12,32) (11,31) (10,30) [(10, 30)];
+#       9 (35-k, 4+k) k 0..7 [(31, 8)]).
 #   <name> <item> <value>                 one value, items in step order
 # Items, in step order (the test reports the first that differs):
 #   elevation water water_depth flow_dir river biome fertility ore timber
 #   fresh_water forage habitability walk_area
 #                P0-04 8 layer hash of each input layer
-#   passes       SHA-256 over the pass rows in id order, each id and path
-#                length in bytes as int64 LE followed by the path; "-" if none
+#   passes       SHA-256 over the pass rows in id order, each id, col cell
+#                index (col_y N + col_x) and path length in bytes as int64
+#                LE followed by the path; "-" if none
 #   hand         SHA-256 of G7 with k = 1 per cell, int64 LE, index order
 #   noise        SHA-256 of RG3's nz raw on land cells, 0 on ocean, int64 LE
 #   wt           SHA-256 of RG3's wt raw on land cells, 0 on ocean, int64 LE
@@ -1408,9 +1488,11 @@ GOLDEN_HEADER = """\
 #   cover        counts: greedy seeds, landmass seeds, rejected candidates,
 #                bank (near but across a border river: a check passed by
 #                the bank rule), merges, isle names, central names, numbered
-#                names, crossings ((pass, row) pairs), lake cells, border
-#                river cells, corner (diagonal land steps between two border
-#                river cells)
+#                names, crossings (passes attached to a row, RG12 r2), lake
+#                cells, border river cells, corner (diagonal land steps
+#                between two border river cells), mere and fells (names by
+#                RG11 3 b and c, r2), crossed ((pass, row) pairs crossed by a
+#                path, before the attachment)
 #   regions region_area_km2 region_borders region_borders_walkable
 #   region_borders_river region_borders_pass regions_isolated regions_upland
 #                the report values of P1-06 9, spaces written as "_"
@@ -1631,10 +1713,27 @@ def check_rg11(c):
     c.eq("RG11 frac raw", t["name_central_frac"], 515396076)
     c.eq("RG11 r_c", rc, 123)
     noun = {code: nn for code, _, _, nn in shipped_defs()}
-    entries = [(520, 470, 4, False), (800, 500, 3, False), (200, 200, 7, False), (510, 900, 5, False),
-               (790, 560, 3, False), (500, 100, 3, True)]
-    c.eq("RG11 names", name_list(entries, 500, 480, rc, t["names"], noun),
-         ["Central Downs", "East Wood", "Northwest Peaks", "South Marsh", "East Wood II", "North Isle"])
+    own = {7, 9, 6}  # alpine, heath, highland_moor
+    entries = [(520, 470, 4, False, False, False), (800, 500, 3, False, False, False),
+               (200, 200, 7, False, False, False), (510, 900, 5, False, False, False),
+               (790, 560, 3, False, False, False), (500, 100, 3, True, False, False),
+               # r2: rules b and c.
+               (700, 300, 3, False, 2 * 120 >= 200, False), (210, 700, 3, False, False, True),
+               (230, 720, 7, False, False, True), (230, 720, 3, False, True, True)]
+    c.eq("RG11 names", name_list(entries, 500, 480, rc, t["names"], noun, lake_noun(shipped_defs()), own),
+         ["Central Downs", "East Wood", "Northwest Peaks", "South Marsh", "East Wood II", "North Isle",
+          "Northeast Mere", "Southwest Fells", "Southwest Peaks", "Southwest Mere"])
+    c.eq("RG11 sector of (210, 700)", NAME_FIELDS[sector(210 - 500, 700 - 480, rc)], "southwest")
+    c.eq("RG11 isle before mere and upland",
+         name_list([(500, 100, 3, True, True, True)], 500, 480, rc, t["names"], noun, "Mere", own), ["North Isle"])
+    c.eq("RG11 upland moor and heath keep their noun",
+         name_list([(800, 480, 6, False, False, True), (800, 480, 9, False, False, True),
+                    (800, 480, 4, False, False, True)], 500, 480, rc, t["names"], noun, "Mere", own),
+         ["East Moor", "East Heath", "East Fells"])
+    c.eq("RG11 upland_own_noun empty: alpine upland is Fells",
+         name_list([(800, 480, 7, False, False, True)], 500, 480, rc, t["names"], noun, "Mere", set()),
+         ["East Fells"])
+    c.eq("RG11 lake noun", lake_noun(shipped_defs()), "Mere")
     secs = [NAME_FIELDS[sector(dx, dy, 0)] for dx, dy in ((10, 4), (10, 5), (-3, -7), (0, -9), (4, 10), (5, 12))]
     c.eq("RG11 sectors", secs, ["east", "southeast", "northwest", "north", "south", "southeast"])
     c.eq("RG11 roman", [roman(k) for k in (1, 2, 4, 9, 14, 40, 90, 400, 1994, 4000)],
@@ -1680,9 +1779,29 @@ def check_rg12(c):
     c.eq("RG12 steps", pass_steps(W, path_cells(p3), water), [4, 5, 1, 2, 6, 7])
     p5 = b"".join(i.to_bytes(4, "little") for i in (2 * W + 1, 2 * W + 2))
     p6 = b"".join(i.to_bytes(4, "little") for i in (0, 1, 1))  # inside region 1 only
-    n = pass_crossings(W, H, region, water, [(3, p3), (5, p5), (6, p6)], rows)
+    n = pass_crossings(W, H, region, water, [(3, p3, 0 * W + 1), (5, p5, 2 * W + 1), (6, p6, 1)], rows)
     c.eq("RG12 pass_id, passes", (rows[(1, 2)]["pass_id"], rows[(1, 2)]["passes"]), (3, 2))
-    c.eq("RG12 crossings", n, 2)
+    c.eq("RG12 attached passes", n, 2)
+    key, found = pass_attachment(W, region, water, p3, 0 * W + 1)
+    c.eq("RG12 pass 3 crossing: step 1, d 0", [(d, j) for d, j, _, _ in found], [(0, 1)])
+    # Attachment examples of 5.1 (r2): a 9 x 1 strip, regions of three cells.
+    strip = [1, 1, 1, 2, 2, 2, 3, 3, 3]
+    sw = [WATER_DRY] * 9
+    path9 = b"".join(i.to_bytes(4, "little") for i in range(9))
+    for col, want, ds in ((5, (2, 3), [(2, 2), (0, 5)]), (4, (1, 2), [(1, 2), (1, 5)])):
+        key, found = pass_attachment(9, strip, sw, path9, col)
+        c.eq("RG12 attachment col %d" % col, key, want)
+        c.eq("RG12 attachment col %d (d, j)" % col, [(d, j) for d, j, _, _ in found], ds)
+    key, found = pass_attachment(9, [1] * 9, sw, path9, 1)
+    c.eq("RG12 attachment: no crossing", (key, found), (None, []))
+    rows9 = border_rows(9, 1, strip, [0] * 9, [0] * 9, sw, [0] * 9, [0] * 9)
+    c.eq("RG12 attachment rows", pass_crossings(9, 1, strip, sw, [(1, path9, 5), (2, path9, 4), (3, path9, 6)], rows9), 3)
+    c.eq("RG12 attachment rows' columns", sorted((k, r["pass_id"], r["passes"]) for k, r in rows9.items()),
+         [((1, 2), 2, 1), ((2, 3), 1, 2)])
+    # The col occurring twice: its first position. Path 0..8 then back to 4:
+    # q = 4 (first), so the crossing at j = 2 (d 1) beats the back crossing.
+    back = b"".join(i.to_bytes(4, "little") for i in list(range(9)) + [7, 6, 5, 4])
+    c.eq("RG12 col twice", pass_attachment(9, strip, sw, back, 4)[0], (1, 2))
     # The corner rule's second choice and a diagonal step with no land corner.
     water2 = [WATER_DRY] * 12
     water2[0 * W + 2] = WATER_OCEAN  # (2, 0) ocean: the step (1,0)->(2,1) takes (1, 1)
@@ -1850,6 +1969,39 @@ def check_lake_only(c):
     return r
 
 
+def check_mere(c):
+    """RG11 3 b (r2) on the RG6 fixture: the mainland's east half (x 7..12)
+    a lake, so its one region is exactly half lake: Mere."""
+    w, h, L, t = rg6_fixture()
+    for y in range(1, 7):
+        for x in range(7, 13):
+            i = y * w + x
+            L["water"][i] = WATER_LAKE
+            L["water_depth"][i] = 5
+            L["biome"][i] = 2
+            L["habitability"][i] = 0
+            L["walk_area"][i] = 0
+    r = regions(w, h, L, [], t, 0, second=True)
+    row = r["rows"][0]
+    c.eq("mere row", (row["cells"], row["lake_cells"], row["walk_cells"], row["biome"]), (72, 36, 36, 4))
+    c.eq("mere names", [x["name"] for x in r["rows"]], ["West Mere", "East Isle", "East Isle II"])
+    # One lake cell fewer: Downs.
+    i = 6 * w + 12
+    L["water"][i] = WATER_DRY
+    L["water_depth"][i] = 0
+    L["biome"][i] = 4
+    L["habitability"][i] = 10
+    L["walk_area"][i] = 1
+    r = regions(w, h, L, [], t, 0)
+    c.eq("not mere", r["rows"][0]["name"], "West Downs")
+    # Upland (no walkable cell) and half lake: Mere before Fells.
+    w, h, L, t = rg6_fixture()
+    for i in range(w * h):
+        L["walk_area"][i] = 0
+    r = regions(w, h, L, [], t, 0)
+    c.eq("upland grassland is Fells", r["rows"][0]["name"], "West Fells")
+
+
 def check_preconditions(c):
     w, h, L = make_world(["-5 -5 -5 -5", "-5 10 12 -5", "-5 14 16 -5", "-5 -5 -5 -5"],
                          ["3 3 3 3", "3 0 0 3", "3 0 0 3", "3 3 3 3"])
@@ -1869,15 +2021,19 @@ def check_preconditions(c):
     L2["biome"] = list(L["biome"])
     L2["biome"][5] = 13
     c.eq("biome no definition", err(L2), PRE + "biome value 13 at (1, 1) has no definition")
-    c.eq("pass of 6 bytes", err(L, [(4, b"\x05\x00\x00\x00\x06\x00")]), PRE + "pass 4: path is not a chain of cells")
+    c.eq("pass of 6 bytes", err(L, [(4, b"\x05\x00\x00\x00\x06\x00", 5)]), PRE + "pass 4: path is not a chain of cells")
     jump = b"".join(i.to_bytes(4, "little") for i in (5, 7))
-    c.eq("pass jump", err(L, [(2, jump)]), PRE + "pass 2: path is not a chain of cells")
-    c.eq("pass empty", err(L, [(1, b"")]), PRE + "pass 1: path is not a chain of cells")
+    c.eq("pass jump", err(L, [(2, jump, 5)]), PRE + "pass 2: path is not a chain of cells")
+    c.eq("pass empty", err(L, [(1, b"", 5)]), PRE + "pass 1: path is not a chain of cells")
     big = (16).to_bytes(4, "little")
-    c.eq("pass index", err(L, [(1, big)]), PRE + "pass 1: path is not a chain of cells")
+    c.eq("pass index", err(L, [(1, big, 5)]), PRE + "pass 1: path is not a chain of cells")
     wrap = b"".join(i.to_bytes(4, "little") for i in (7, 8))  # (3, 1) -> (0, 2): not neighbours
-    c.eq("pass wrap", err(L, [(1, wrap)]), PRE + "pass 1: path is not a chain of cells")
-    c.eq("pass repeat ok", err(L, [(1, b"".join(i.to_bytes(4, "little") for i in (5, 5, 6, 10)))]), None)
+    c.eq("pass wrap", err(L, [(1, wrap, 7)]), PRE + "pass 1: path is not a chain of cells")
+    rpt = b"".join(i.to_bytes(4, "little") for i in (5, 5, 6, 10))
+    c.eq("pass repeat ok", err(L, [(1, rpt, 6)]), None)
+    c.eq("col not on path", err(L, [(3, rpt, 9)]), PRE + "pass 3: col cell is not on its path")
+    c.eq("col outside grid", err(L, [(3, rpt, 16)]), PRE + "pass 3: col cell is not on its path")
+    c.eq("chain checked before col", err(L, [(3, jump, 9)]), PRE + "pass 3: path is not a chain of cells")
     L2 = dict(L)
     L2["water"] = list(L["water"])
     L2["water"][6] = 4
@@ -1965,10 +2121,16 @@ def check_invariants(c, label, r):
         if sum(cnt for rid, _, cnt in r["biome_rows"] if rid == row["id"]) != row["cells"]:
             c.ok("%s inv5 biome rows of %d" % (label, row["id"]), False)
     c.ok("%s inv5 border keys" % label, all(b["a"] < b["b"] for b in r["borders"]))
+    # 8 (r2): each pass attached to at most one row, to one exactly when its
+    # path crosses a border.
+    total = sum(b["passes"] for b in r["borders"])
+    c.ok("%s inv8 sum" % label, total <= len(r["passes"]))
+    crossing = sum(1 for _, path, col in r["passes"] if pass_attachment(w, region, water, path, col)[1])
+    c.eq("%s inv8 attached" % label, total, crossing)
     # 6.
     names_ = [row["name"] for row in rows]
     c.eq("%s inv6 unique" % label, len(set(names_)), len(names_))
-    nouns = set(nn for _, _, _, nn in shipped_defs()) | {t["names"][9]}
+    nouns = set(nn for _, _, _, nn in shipped_defs()) | {t["names"][9], t["names"][10]}
     for nm in names_:
         p = nm.split(" ")
         ok = (len(p) in (2, 3) and p[0] in t["names"][:9] and p[1] in nouns and
@@ -2000,6 +2162,7 @@ def check_all(quick):
     check_preconditions(c)
     check_rg6_rg9(c)
     check_lake_only(c)
+    check_mere(c)
     check_designed(c, quick)
     sys.stderr.write("%d checks passed, %d failed\n" % (c.passes, c.fails))
     return 1 if c.fails else 0
@@ -2016,7 +2179,7 @@ def world_report(path):
         seed = int(con.execute("SELECT value FROM meta WHERE key = 'seed'").fetchone()[0])
     finally:
         con.close()
-    passes = [(x["id"], x["path"]) for x in rows]
+    passes = [(x["id"], x["path"], x["col_y"] * n + x["col_x"]) for x in rows]
     r = regions(n, n, L, passes, shipped_tuning(), seed)
     rep = report_items(r)
     river_cells = [i for i in range(n * n) if r["border"][i]]

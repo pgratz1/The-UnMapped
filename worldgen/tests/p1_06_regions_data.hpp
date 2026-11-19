@@ -40,7 +40,8 @@ inline constexpr std::string_view TUNING_TOML =
     "name_central_frac = \"0.12\"\n"
     "names = { central = \"Central\", north = \"North\", northeast = \"Northeast\", east = \"East\", southeast = "
     "\"Southeast\", south = \"South\", southwest = \"Southwest\", west = \"West\", northwest = \"Northwest\", isle = "
-    "\"Isle\" }\n";
+    "\"Isle\", upland = \"Fells\" }\n"
+    "upland_own_noun = [\"alpine\", \"heath\", \"highland_moor\"]\n";
 
 // The test-only tuning of P1-06 10.2 for N = 128 worlds: tiles of 256 m,
 // seeds 400 m apart, regions of at least 65536 m^2 (256 cells).
@@ -60,7 +61,8 @@ inline constexpr std::string_view TEST128_TOML =
     "name_central_frac = \"0.12\"\n"
     "names = { central = \"Central\", north = \"North\", northeast = \"Northeast\", east = \"East\", southeast = "
     "\"Southeast\", south = \"South\", southwest = \"Southwest\", west = \"West\", northwest = \"Northwest\", isle = "
-    "\"Isle\" }\n";
+    "\"Isle\", upland = \"Fells\" }\n"
+    "upland_own_noun = [\"alpine\", \"heath\", \"highland_moor\"]\n";
 
 // The fields of 4 in declaration order with their shipped TOML text, their
 // kind ("int", "fx", "fbm" or "names") and their bounds as written in 4
@@ -76,7 +78,7 @@ struct FieldText {
 inline constexpr std::string_view SHIPPED_NAMES_TOML =
     "{ central = \"Central\", north = \"North\", northeast = \"Northeast\", east = \"East\", southeast = "
     "\"Southeast\", south = \"South\", southwest = \"Southwest\", west = \"West\", northwest = \"Northwest\", isle = "
-    "\"Isle\" }";
+    "\"Isle\", upland = \"Fells\" }";
 
 inline const std::vector<FieldText>& tuning_fields() {
     static const std::vector<FieldText> f = {
@@ -93,6 +95,7 @@ inline const std::vector<FieldText>& tuning_fields() {
         {"ore_reach_m", "300", "int", "0", "10000"},
         {"name_central_frac", "\"0.12\"", "fx", "0", "0.5"},
         {"names", SHIPPED_NAMES_TOML, "names", "", ""},
+        {"upland_own_noun", "[\"alpine\", \"heath\", \"highland_moor\"]", "keys", "", ""},  // r2
     };
     return f;
 }
@@ -100,7 +103,7 @@ inline const std::vector<FieldText>& tuning_fields() {
 // The ten fields of record `region_names`, in declaration order.
 inline const std::vector<std::string_view>& name_fields() {
     static const std::vector<std::string_view> f = {"central", "north",     "northeast", "east", "southeast",
-                                                    "south",   "southwest", "west",      "northwest", "isle"};
+                                                    "south",   "southwest", "west",      "northwest", "isle", "upland"};
     return f;
 }
 
@@ -127,7 +130,7 @@ inline std::string tuning_toml(const std::vector<std::pair<std::string, std::str
 // A `names` record with one word replaced (or one field left out).
 inline std::string names_toml(std::string_view field = {}, std::string_view word = {}, bool omit = false) {
     static const std::vector<std::string_view> words = {"Central", "North", "Northeast", "East", "Southeast",
-                                                        "South",   "Southwest", "West", "Northwest", "Isle"};
+                                                        "South",   "Southwest", "West", "Northwest", "Isle", "Fells"};
     std::string s = "{ ";
     bool first = true;
     for (std::size_t k = 0; k < name_fields().size(); ++k) {

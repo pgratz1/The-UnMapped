@@ -212,9 +212,12 @@ inline int sector(std::int64_t dx, std::int64_t dy, std::int64_t rc) {
 }
 inline std::string roman(std::int64_t k) { return worldgen::stages::roman(k); }
 
+// cells, lake_cells and walk_cells decide RG11 3 b (Mere) and c (upland,
+// r2); the defaults make neither apply.
 struct NameInput {
     std::int64_t seed_x = 0, seed_y = 0, biome = 0;
     bool isle = false;
+    std::int64_t cells = 1, lake_cells = 0, walk_cells = 1;
 };
 // RG11 2 to 4 with the land centroid (cx, cy) and map side n given: the
 // seam computes the centroid from the land sums and the isles from the
@@ -229,6 +232,10 @@ inline std::vector<std::string> names(std::span<const NameInput> in, std::int64_
         r.seed_x = e.seed_x;
         r.seed_y = e.seed_y;
         r.biome = static_cast<std::uint8_t>(e.biome);
+        // r2 (assumed field names; adapt at integration).
+        r.cells = e.cells;
+        r.lake_cells = e.lake_cells;
+        r.walk_cells = e.walk_cells;
         if (e.isle) {
             lm_cells.push_back(1);
             r.landmass = static_cast<std::uint32_t>(lm_cells.size());
@@ -268,6 +275,7 @@ struct BiomeRow {
 struct Pass {
     std::int64_t id = 0;
     std::vector<std::uint8_t> path;  // u32 LE cell indices
+    std::int64_t col_x = 0, col_y = 0;  // the col cell (r2: on the path)
 };
 
 inline std::vector<worldgen::db::PassRow> pass_rows(std::span<const Pass> passes) {
@@ -276,6 +284,8 @@ inline std::vector<worldgen::db::PassRow> pass_rows(std::span<const Pass> passes
         worldgen::db::PassRow r;
         r.id = p.id;
         r.path = p.path;
+        r.col_x = p.col_x;
+        r.col_y = p.col_y;
         out.push_back(std::move(r));
     }
     return out;

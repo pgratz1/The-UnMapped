@@ -76,7 +76,7 @@ std::vector<std::pair<std::string, std::string>> items_of(const CaseInputs& ci, 
     out.emplace_back("forage", u8_hash(g, in.forage));
     out.emplace_back("habitability", u8_hash(g, in.habitability));
     out.emplace_back("walk_area", u16_hash(g, in.walk_area));
-    out.emplace_back("passes", passes_hash(ci.passes));
+    out.emplace_back("passes", passes_hash(ci.passes, g));
     const Own own = own_regions(in, ci.passes, v, c.seed);
     // RG2: G7 with k = 1 through the shared seam.
     const std::vector<std::int64_t> hand = biome_api::hand(g, own.surface, in.water, in.river, in.flow_dir, 1);
@@ -240,8 +240,10 @@ CaseInputs world_inputs_of(const worldgen::db::WorldReader& r, std::int32_t n) {
     REQUIRE(rows.ok());
     for (const auto& row : rows.value()) {
         REQUIRE(row.size() == 9U);
-        ci.passes.push_back(region_api::Pass{
-            row[0].integer, std::vector<std::uint8_t>(row[8].bytes.begin(), row[8].bytes.end())});
+        // Columns of table pass: id, range_id, kind, capped, col_x, col_y, saddle_dm, col_dm, path.
+        ci.passes.push_back(region_api::Pass{row[0].integer,
+                                             std::vector<std::uint8_t>(row[8].bytes.begin(), row[8].bytes.end()),
+                                             row[4].integer, row[5].integer});
     }
     return ci;
 }
@@ -619,7 +621,14 @@ TEST_CASE("P1-06 2 check 5, 10.1 test 5: preconditions of the stage seam, each w
     CHECK(error_of(good, {{5, path_bytes(g, {{19, 2}, {0, 3}})}}) ==
           std::string(PRECONDITION) + "pass 5: path is not a chain of cells");
     // Equal consecutive cells and a diagonal step are a chain.
-    CHECK(error_of(good, {{6, path_bytes(g, {{2, 2}, {2, 2}, {3, 3}})}}).empty());
+    CHECK(error_of(good, {{6, path_bytes(g, {{2, 2}, {2, 2}, {3, 3}}), 3, 3}}).empty());
+    // r2: the col cell on the path (inside the grid), after the chain check.
+    CHECK(error_of(good, {{7, path_bytes(g, {{2, 2}, {3, 3}}), 4, 4}}) ==
+          std::string(PRECONDITION) + "pass 7: col cell is not on its path");
+    CHECK(error_of(good, {{7, path_bytes(g, {{2, 2}, {3, 3}}), 25, 3}}) ==
+          std::string(PRECONDITION) + "pass 7: col cell is not on its path");
+    CHECK(error_of(good, {{8, path_bytes(g, {{2, 2}, {4, 2}}), 9, 9}}) ==
+          std::string(PRECONDITION) + "pass 8: path is not a chain of cells");
     // G7 with k = 1: a cycle of two cells that never reaches water.
     {
         region_api::Inputs in = good;
@@ -728,7 +737,7 @@ std::vector<region_api::Pass> entry_passes(Grid g) {
     for (std::int32_t k = 0; k < 300; ++k) {
         b.emplace_back(60 + k, 80 + k);
     }
-    return {region_api::Pass{1, path_bytes(g, a)}, region_api::Pass{2, path_bytes(g, b)}};
+    return {region_api::Pass{1, path_bytes(g, a), 250, 200}, region_api::Pass{2, path_bytes(g, b), 200, 220}};
 }
 
 void set_entry(const region_api::Inputs& in, const std::vector<region_api::Pass>& passes) {
@@ -893,6 +902,10 @@ TEST_CASE("P1-06 2, 10.1 test 5: each precondition at the stage entry is fatal w
     fresh();
     entry().passes[0].path = path_bytes(in.grid, {{40, 200}, {41, 200}, {43, 200}});
     CHECK(entry_error(dir, "f.db") == std::string(PRECONDITION) + "pass 1: path is not a chain of cells");
+    // r2: a col cell not on its path.
+    fresh();
+    entry().passes[0].col_x = 30;
+    CHECK(entry_error(dir, "g.db") == std::string(PRECONDITION) + "pass 1: col cell is not on its path");
     // No file and no .partial is left.
     CHECK(dbtest::dir_entries(dir.path()).empty());
 }

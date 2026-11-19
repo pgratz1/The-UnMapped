@@ -88,8 +88,8 @@ inline std::int64_t own_rha(std::int64_t n, std::int64_t d) {
 
 // --- Tuning values (section 4) -------------------------------------------------------------------
 
-inline constexpr std::array<std::string_view, 10> SHIPPED_WORDS = {
-    "Central", "North", "Northeast", "East", "Southeast", "South", "Southwest", "West", "Northwest", "Isle"};
+inline constexpr std::array<std::string_view, 11> SHIPPED_WORDS = {
+    "Central", "North", "Northeast", "East", "Southeast", "South", "Southwest", "West", "Northwest", "Isle", "Fells"};
 
 struct Values {
     std::int64_t seed_tile_m = 864;
@@ -104,7 +104,8 @@ struct Values {
     std::int64_t ore_rich_min = 128;
     std::int64_t ore_reach_m = 300;
     std::int64_t name_central_frac = 515396076;  // "0.12"
-    std::array<std::string, 10> names{};
+    std::array<std::string, 11> names{};
+    std::vector<std::string> upland_own_noun = {"alpine", "heath", "highland_moor"};  // r2
 
     [[nodiscard]] std::int64_t min_cells() const { return (region_min_area_m2 + 255) / 256; }
 };
@@ -122,10 +123,11 @@ inline std::vector<std::string> split(const std::string& s, char sep) {
 }
 
 // Overrides as in the golden file: an integer, an fx as decimal text,
-// cost_noise as wavelength/octaves/gain, names as ten words joined by '/'.
+// cost_noise as wavelength/octaves/gain, names as eleven words joined by
+// '/', upland_own_noun as biome keys joined by '/' ("none": empty).
 inline Values values(const Overrides& o = {}) {
     Values v;
-    for (std::size_t k = 0; k < 10; ++k) {
+    for (std::size_t k = 0; k < 11; ++k) {
         v.names[k] = std::string(SHIPPED_WORDS[k]);
     }
     for (const auto& [k, t] : o) {
@@ -158,10 +160,12 @@ inline Values values(const Overrides& o = {}) {
             v.name_central_frac = fx_of(t);
         } else if (k == "names") {
             const auto p = split(t, '/');
-            REQUIRE(p.size() == 10U);
-            for (std::size_t i = 0; i < 10; ++i) {
+            REQUIRE(p.size() == 11U);
+            for (std::size_t i = 0; i < 11; ++i) {
                 v.names[i] = p[i];
             }
+        } else if (k == "upland_own_noun") {
+            v.upland_own_noun = t == "none" ? std::vector<std::string>{} : split(t, '/');
         } else {
             FAIL("unknown regions field " << k);
         }
@@ -181,10 +185,19 @@ inline Overrides toml_overrides(const Overrides& o) {
         } else if (k == "names") {
             const auto p = split(t, '/');
             std::string s = "{ ";
-            for (std::size_t i = 0; i < 10; ++i) {
+            for (std::size_t i = 0; i < 11; ++i) {
                 s += (i ? ", " : "") + std::string(region_data::name_fields()[i]) + " = \"" + p[i] + "\"";
             }
             out.emplace_back(k, s + " }");
+        } else if (k == "upland_own_noun") {
+            std::string s = "[";
+            if (t != "none") {
+                const auto p = split(t, '/');
+                for (std::size_t i = 0; i < p.size(); ++i) {
+                    s += (i ? ", " : "") + std::string("\"") + p[i] + "\"";
+                }
+            }
+            out.emplace_back(k, s + "]");
         } else {
             out.emplace_back(k, t);
         }
@@ -225,11 +238,13 @@ inline region_api::Tuning tuning(const Overrides& o = {}) { return region_api::t
 struct Noun {
     bool water = false;
     std::string noun;
+    std::string key;
+    bool lake = false;  // water_body "lake"
 };
 inline std::map<std::int64_t, Noun> nouns_of(const region_api::Definitions& d) {
     std::map<std::int64_t, Noun> out;
     for (const auto& b : d.biomes) {
-        out[b.code] = Noun{b.water, b.region_noun};
+        out[b.code] = Noun{b.water, b.region_noun, b.key, b.water_body == worldgen::stages::WaterBody::lake};
     }
     return out;
 }
@@ -676,9 +691,22 @@ inline std::vector<std::string> own_name_list(std::span<const region_api::NameIn
                                               const std::map<std::int64_t, Noun>& nouns) {
     std::map<std::string, std::int64_t> seen;
     std::vector<std::string> out;
+    std::string mere;
+    for (const auto& [code, nn] : nouns) {
+        if (nn.lake) {
+            mere = nn.noun;
+        }
+    }
     for (const auto& e : in) {
         const int sec = own_sector(e.seed_x - cx, e.seed_y - cy, rc);
-        const std::string noun = e.isle ? v.names[9] : nouns.at(e.biome).noun;
+        // RG11 3 (r2): a isle, b at least half lake, c upland unless the
+        // dominant biome is in upland_own_noun, d the dominant biome.
+        const bool own = std::find(v.upland_own_noun.begin(), v.upland_own_noun.end(), nouns.at(e.biome).key) !=
+                         v.upland_own_noun.end();
+        const std::string noun = e.isle                           ? v.names[9]
+                                 : 2 * e.lake_cells >= e.cells    ? mere
+                                 : 4 * e.walk_cells < e.cells && !own ? v.names[10]
+                                                                  : nouns.at(e.biome).noun;
         const std::string base = v.names[static_cast<std::size_t>(sec)] + " " + noun;
         const std::int64_t k = ++seen[base];
         out.push_back(k == 1 ? base : base + " " + own_roman(k));
@@ -736,6 +764,83 @@ inline std::vector<std::int64_t> own_pass_steps(Grid g, std::span<const std::int
     return seq;
 }
 
+// RG12's step sequence with, per cell, the step j that produced it (the
+// step from c_j to c_j+1, its corner included; -1 for c_0).
+inline std::vector<std::pair<std::int64_t, std::int64_t>> own_pass_steps_j(Grid g, std::span<const std::int64_t> cells,
+                                                                          std::span<const std::uint8_t> water) {
+    std::vector<std::pair<std::int64_t, std::int64_t>> seq;
+    auto add = [&](std::int64_t i, std::int64_t j) {
+        if (seq.empty() || seq.back().first != i) {
+            seq.emplace_back(i, j);
+        }
+    };
+    for (std::size_t j = 0; j < cells.size(); ++j) {
+        const auto jj = static_cast<std::int64_t>(j) - 1;
+        if (j > 0) {
+            const auto p = static_cast<worldgen::geo::CellIndex>(cells[j - 1]);
+            const auto c = static_cast<worldgen::geo::CellIndex>(cells[j]);
+            if (g.x_of(p) != g.x_of(c) && g.y_of(p) != g.y_of(c)) {
+                const auto c1 = static_cast<std::int64_t>(g.index(g.x_of(c), g.y_of(p)));
+                const auto c2 = static_cast<std::int64_t>(g.index(g.x_of(p), g.y_of(c)));
+                if (is_land(water[uz(c1)])) {
+                    add(c1, jj);
+                } else if (is_land(water[uz(c2)])) {
+                    add(c2, jj);
+                }
+            }
+        }
+        add(cells[j], jj);
+    }
+    return seq;
+}
+
+struct Crossing {
+    std::int64_t d = 0, j = 0, order = 0;
+    std::pair<std::int64_t, std::int64_t> key;
+};
+struct Attachment {
+    std::optional<std::pair<std::int64_t, std::int64_t>> key;
+    std::vector<Crossing> found;
+};
+
+// RG12 attachment (r2): the crossing with the smallest (d, j), then the
+// first in sequence order; q the first position of the col on the path.
+inline Attachment own_pass_attachment(Grid g, std::span<const std::int64_t> region, std::span<const std::uint8_t> water,
+                                      const region_api::Pass& p) {
+    const std::vector<std::int64_t> cells = path_cells(p.path);
+    const auto col = static_cast<std::int64_t>(g.index(static_cast<std::int32_t>(p.col_x), static_cast<std::int32_t>(p.col_y)));
+    const auto it = std::find(cells.begin(), cells.end(), col);
+    REQUIRE_MESSAGE(it != cells.end(), "pass " << p.id << ": col not on the path");
+    const std::int64_t q = it - cells.begin();
+    const auto seq = own_pass_steps_j(g, cells, water);
+    Attachment a;
+    for (std::size_t k = 0; k + 1 < seq.size(); ++k) {
+        const auto u = static_cast<worldgen::geo::CellIndex>(seq[k].first);
+        const auto w = static_cast<worldgen::geo::CellIndex>(seq[k + 1].first);
+        const std::int64_t ddx = g.x_of(u) - g.x_of(w), ddy = g.y_of(u) - g.y_of(w);
+        if ((ddx < 0 ? -ddx : ddx) + (ddy < 0 ? -ddy : ddy) != 1) {
+            continue;
+        }
+        const std::int64_t ru = region[uz(seq[k].first)], rw = region[uz(seq[k + 1].first)];
+        if (ru == 0 || rw == 0 || ru == rw) {
+            continue;
+        }
+        const std::int64_t j = seq[k + 1].second;
+        const std::int64_t d = std::min(j > q ? j - q : q - j, j + 1 > q ? j + 1 - q : q - j - 1);
+        a.found.push_back(Crossing{d, j, static_cast<std::int64_t>(k), std::minmax(ru, rw)});
+    }
+    const Crossing* best = nullptr;
+    for (const auto& c : a.found) {
+        if (best == nullptr || std::tie(c.d, c.j, c.order) < std::tie(best->d, best->j, best->order)) {
+            best = &c;
+        }
+    }
+    if (best != nullptr) {
+        a.key = best->key;
+    }
+    return a;
+}
+
 inline std::vector<region_api::BorderRow> own_borders(Grid g, std::span<const std::int64_t> region,
                                                       std::span<const std::int64_t> s,
                                                       std::span<const std::uint16_t> walk,
@@ -743,7 +848,8 @@ inline std::vector<region_api::BorderRow> own_borders(Grid g, std::span<const st
                                                       std::span<const std::uint8_t> river,
                                                       std::span<const std::uint8_t> border,
                                                       std::span<const region_api::Pass> passes,
-                                                      std::int64_t* crossings = nullptr) {
+                                                      std::int64_t* crossings = nullptr,
+                                                      std::int64_t* crossed_pairs = nullptr) {
     std::map<std::pair<std::int64_t, std::int64_t>, region_api::BorderRow> rows;
     std::map<std::pair<std::int64_t, std::int64_t>, bool> seen_low;
     for_each_border_pair(g, region, [&](std::size_t c, std::size_t m) {
@@ -781,26 +887,19 @@ inline std::vector<region_api::BorderRow> own_borders(Grid g, std::span<const st
     }
     std::sort(order.begin(), order.end(), [](const auto* a, const auto* b) { return a->id < b->id; });
     for (const auto* p : order) {
-        const std::vector<std::int64_t> seq = own_pass_steps(g, path_cells(p->path), water);
-        std::set<std::pair<std::int64_t, std::int64_t>> here;
-        for (std::size_t k = 0; k + 1 < seq.size(); ++k) {
-            const auto u = static_cast<worldgen::geo::CellIndex>(seq[k]);
-            const auto w = static_cast<worldgen::geo::CellIndex>(seq[k + 1]);
-            const std::int64_t ddx = g.x_of(u) - g.x_of(w), ddy = g.y_of(u) - g.y_of(w);
-            if ((ddx < 0 ? -ddx : ddx) + (ddy < 0 ? -ddy : ddy) != 1) {
-                continue;
-            }
-            const std::int64_t ru = region[uz(seq[k])], rw = region[uz(seq[k + 1])];
-            if (ru == 0 || rw == 0 || ru == rw) {
-                continue;
-            }
-            here.insert(std::minmax(ru, rw));
-        }
-        for (const auto& key : here) {
-            crossed[key].insert(p->id);
+        const auto att = own_pass_attachment(g, region, water, *p);
+        if (att.key) {
+            crossed[*att.key].insert(p->id);
             if (crossings != nullptr) {
                 ++*crossings;
             }
+        }
+        if (crossed_pairs != nullptr) {
+            std::set<std::pair<std::int64_t, std::int64_t>> keys;
+            for (const auto& c : att.found) {
+                keys.insert(c.key);
+            }
+            *crossed_pairs += static_cast<std::int64_t>(keys.size());
         }
     }
     std::vector<region_api::BorderRow> out;
@@ -819,7 +918,8 @@ inline std::vector<region_api::BorderRow> own_borders(Grid g, std::span<const st
 
 struct OwnStats {
     std::int64_t greedy = 0, landmass_seeds = 0, rejected = 0, bank = 0, merges = 0, isle = 0, central = 0,
-                 numbered = 0, crossings = 0, lake_cells = 0, border_river_cells = 0, corner = 0;
+                 numbered = 0, crossings = 0, lake_cells = 0, border_river_cells = 0, corner = 0, mere = 0, fells = 0,
+                 crossed = 0;
 };
 
 struct Own {
@@ -1056,8 +1156,14 @@ inline Own own_regions(const region_api::Inputs& in, std::span<const region_api:
         std::vector<region_api::NameInput> ni;
         for (const auto& row : o.out.regions) {
             const bool isle = per_lm[row.landmass] == 1 && row.landmass != largest->second;
-            ni.push_back(region_api::NameInput{row.seed_x, row.seed_y, row.biome, isle});
+            ni.push_back(region_api::NameInput{row.seed_x, row.seed_y, row.biome, isle, row.cells, row.lake_cells,
+                                               row.walk_cells});
             o.stats.isle += isle ? 1 : 0;
+            const bool mere = !isle && 2 * row.lake_cells >= row.cells;
+            const bool own_noun = std::find(v.upland_own_noun.begin(), v.upland_own_noun.end(),
+                                            nouns.at(row.biome).key) != v.upland_own_noun.end();
+            o.stats.mere += mere ? 1 : 0;
+            o.stats.fells += !isle && !mere && 4 * row.walk_cells < row.cells && !own_noun ? 1 : 0;
             o.stats.central += own_sector(row.seed_x - cx, row.seed_y - cy, rc) == 0 ? 1 : 0;
         }
         const std::vector<std::string> nm = own_name_list(ni, cx, cy, rc, v, nouns);
@@ -1068,7 +1174,7 @@ inline Own own_regions(const region_api::Inputs& in, std::span<const region_api:
     }
     // RG12.
     o.out.borders = own_borders(g, region, o.surface, in.walk_area, in.water, in.river, border, passes,
-                                &o.stats.crossings);
+                                &o.stats.crossings, &o.stats.crossed);
     o.stats.greedy = static_cast<std::int64_t>(o.greedy.size());
     o.stats.landmass_seeds = static_cast<std::int64_t>(o.seeds.size() - o.greedy.size());
     o.stats.rejected = ss.rejected;
@@ -1098,7 +1204,9 @@ inline std::string cover_of(const OwnStats& s) {
            ",merges:" + std::to_string(s.merges) + ",isle:" + std::to_string(s.isle) +
            ",central:" + std::to_string(s.central) + ",numbered:" + std::to_string(s.numbered) +
            ",crossings:" + std::to_string(s.crossings) + ",lake_cells:" + std::to_string(s.lake_cells) +
-           ",border_river_cells:" + std::to_string(s.border_river_cells) + ",corner:" + std::to_string(s.corner);
+           ",border_river_cells:" + std::to_string(s.border_river_cells) + ",corner:" + std::to_string(s.corner) +
+           ",mere:" + std::to_string(s.mere) + ",fells:" + std::to_string(s.fells) +
+           ",crossed:" + std::to_string(s.crossed);
 }
 
 // --- Hashes (P0-04 8; golden items) --------------------------------------------------------------
@@ -1172,7 +1280,9 @@ inline std::string biome_table_hash(const std::vector<region_api::BiomeRow>& row
 }
 
 // Golden item `passes`.
-inline std::string passes_hash(std::span<const region_api::Pass> passes) {
+// r2: each row's id, col cell index (col_y W + col_x) and path length as
+// int64 LE, then the path.
+inline std::string passes_hash(std::span<const region_api::Pass> passes, Grid g) {
     if (passes.empty()) {
         return "-";
     }
@@ -1184,6 +1294,7 @@ inline std::string passes_hash(std::span<const region_api::Pass> passes) {
     worldgen::Sha256 h;
     for (const auto* p : v) {
         elev_test::put_le(h, static_cast<std::uint64_t>(p->id), 8);
+        elev_test::put_le(h, static_cast<std::uint64_t>(p->col_y * g.width + p->col_x), 8);
         elev_test::put_le(h, p->path.size(), 8);
         h.update(std::span<const std::uint8_t>(p->path));
     }
@@ -1296,6 +1407,8 @@ inline region_api::Inputs from_resources(const resource_api::Inputs& r, const re
 // Table pass of an N x N world of the elevation fixture (the rows the
 // elevation stage writes: id s + 1, path = the site's axis; P1-01 9.1),
 // through the elevation seams of p1_01_elevation_api.hpp.
+inline Grid g_of_n(std::int32_t n) { return Grid{n, n}; }
+
 inline std::vector<region_api::Pass> world_passes(std::uint64_t seed, std::int32_t n, bool small) {
     static std::map<std::tuple<std::uint64_t, std::int32_t, bool>, std::vector<region_api::Pass>> cache;
     const auto key = std::make_tuple(seed, n, small);
@@ -1311,6 +1424,8 @@ inline std::vector<region_api::Pass> world_passes(std::uint64_t seed, std::int32
     for (std::size_t s = 0; s < h.passes.sites.size(); ++s) {
         region_api::Pass p;
         p.id = static_cast<std::int64_t>(s) + 1;
+        p.col_x = g_of_n(n).x_of(h.passes.sites[s].col);
+        p.col_y = g_of_n(n).y_of(h.passes.sites[s].col);
         for (const auto c : h.passes.sites[s].axis) {
             const auto u = static_cast<std::uint32_t>(c);
             for (std::uint32_t b = 0; b < 4; ++b) {
@@ -1341,9 +1456,10 @@ inline std::vector<region_api::Pass> synthetic_passes(std::string_view name, Gri
         anti.emplace_back(35 - k, 4 + k);
     }
     const P loop = {{10, 30}, {11, 29}, {11, 29}, {12, 30}, {13, 29}, {14, 30}, {13, 31}, {12, 32}, {11, 31}, {10, 30}};
-    return {region_api::Pass{1, path_bytes(g, row)}, region_api::Pass{2, path_bytes(g, diag)},
-            region_api::Pass{4, path_bytes(g, col)}, region_api::Pass{7, path_bytes(g, loop)},
-            region_api::Pass{9, path_bytes(g, anti)}};
+    // Cols (r2) as in the reference's synthetic_passes.
+    return {region_api::Pass{1, path_bytes(g, row), 30, 20}, region_api::Pass{2, path_bytes(g, diag), 10, 10},
+            region_api::Pass{4, path_bytes(g, col), 20, 2}, region_api::Pass{7, path_bytes(g, loop), 10, 30},
+            region_api::Pass{9, path_bytes(g, anti), 31, 8}};
 }
 
 // --- Golden file (worldgen/tests/golden/p1-06-regions.txt) ---------------------------------------
