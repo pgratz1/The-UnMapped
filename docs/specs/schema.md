@@ -2,9 +2,9 @@
 
 The contract between the generator and the game (design doc section 6; P0-02). This file holds the full current DDL, the required `meta` keys, the layer catalogue and the changelog. It is updated by every branch that changes the schema (P0-02 5.2) and by every spec that adds a layer.
 
-**Current schema version: 4** (from generator 0.9.0, the biome variety merge; this file describes version 4 ahead of that merge; version 3 was generator 0.8.0). `SCHEMA_VERSION` in `worldgen/include/worldgen/db/schema.hpp`; equal to `PRAGMA user_version` and `meta.schema_version`.
+**Current schema version: 5** (from generator 0.11.0, the regions merge; this file describes version 5 ahead of that merge, from P1-06's second version; version 4 is generator 0.9.0 to 0.10.0, version 3 was generator 0.8.0). `SCHEMA_VERSION` in `worldgen/include/worldgen/db/schema.hpp`; equal to `PRAGMA user_version` and `meta.schema_version`.
 
-## 1. DDL at version 4
+## 1. DDL at version 5
 
 Executed in this order, each as one statement, byte for byte as written (P0-02 5.3, 5.4; `DDL_STATEMENTS` in `worldgen/include/worldgen/db/schema.hpp`):
 
@@ -14,6 +14,9 @@ CREATE TABLE layer (id INTEGER PRIMARY KEY, name TEXT NOT NULL UNIQUE, width INT
 CREATE TABLE pass (id INTEGER PRIMARY KEY, range_id INTEGER NOT NULL, kind INTEGER NOT NULL, capped INTEGER NOT NULL, col_x INTEGER NOT NULL, col_y INTEGER NOT NULL, saddle_dm INTEGER NOT NULL, col_dm INTEGER NOT NULL, path BLOB NOT NULL) STRICT
 CREATE TABLE biome (id INTEGER PRIMARY KEY, key TEXT NOT NULL UNIQUE, name TEXT NOT NULL, colour INTEGER NOT NULL, water INTEGER NOT NULL) STRICT
 CREATE TABLE climate (id INTEGER PRIMARY KEY, wind_toward INTEGER NOT NULL, temp_offset_dc INTEGER NOT NULL) STRICT
+CREATE TABLE region (id INTEGER PRIMARY KEY, name TEXT NOT NULL, biome INTEGER NOT NULL, x_min INTEGER NOT NULL, y_min INTEGER NOT NULL, x_max INTEGER NOT NULL, y_max INTEGER NOT NULL, seed_x INTEGER NOT NULL, seed_y INTEGER NOT NULL, landmass INTEGER NOT NULL, cells INTEGER NOT NULL, lake_cells INTEGER NOT NULL, river_cells INTEGER NOT NULL, river_class_max INTEGER NOT NULL, coast_cells INTEGER NOT NULL, walk_cells INTEGER NOT NULL, walk_area INTEGER NOT NULL, elev_mean_dm INTEGER NOT NULL, elev_max_dm INTEGER NOT NULL, fertility_mean INTEGER NOT NULL, forage_mean INTEGER NOT NULL, timber_mean INTEGER NOT NULL, ore_mean INTEGER NOT NULL, fresh_water_mean INTEGER NOT NULL, habitability_mean INTEGER NOT NULL, habitability_p90 INTEGER NOT NULL, ore_rich_cells INTEGER NOT NULL, ore_reach_cells INTEGER NOT NULL) STRICT
+CREATE TABLE region_border (a INTEGER NOT NULL, b INTEGER NOT NULL, length_m INTEGER NOT NULL, low_dm INTEGER NOT NULL, low_x INTEGER NOT NULL, low_y INTEGER NOT NULL, walk_pairs INTEGER NOT NULL, river_pairs INTEGER NOT NULL, river_class_max INTEGER NOT NULL, pass_id INTEGER NOT NULL, passes INTEGER NOT NULL, PRIMARY KEY (a, b)) STRICT, WITHOUT ROWID
+CREATE TABLE region_biome (region INTEGER NOT NULL, biome INTEGER NOT NULL, cells INTEGER NOT NULL, PRIMARY KEY (region, biome)) STRICT, WITHOUT ROWID
 ```
 
 `pass` (version 2): one row per natural pass site, written by the elevation stage in `id` order; empty when no site was placed or the stage did not run. Columns and their meaning in `p1-01-elevation.md` section 9.1.
@@ -22,11 +25,13 @@ CREATE TABLE climate (id INTEGER PRIMARY KEY, wind_toward INTEGER NOT NULL, temp
 
 `climate` (version 3; column `temp_offset_dc` from version 4): one row, `id` 1, `wind_toward` = the prevailing wind's D8 code (0 E, 1 SE, 2 S, 3 SW, 4 W, 5 NW, 6 N, 7 NE), the direction it blows toward, and `temp_offset_dc` = the world's temperature offset in tenths of a degree Celsius (−50..50; −20..20 with the shipped tuning), written by the climate stage; empty when the stage did not run (P1-03 3, C2b, C7).
 
-SQLite adds the automatic indexes `sqlite_autoindex_layer_1` for `layer.name` and `sqlite_autoindex_biome_1` for `biome.key`. The empty world is 8 pages, 32768 bytes (P0-02 amendments 15 and 16: the version 4 column adds no page).
+`region`, `region_border`, `region_biome` (version 5): written by the regions stage in `id`, (`a`, `b`) and (`region`, `biome`) order; empty when the stage did not run. One row per region, per pair of regions sharing a 4-adjacent cell pair, and per region and biome code present. Columns and their meaning in `p1-06-regions.md` section 3.
+
+SQLite adds the automatic indexes `sqlite_autoindex_layer_1` for `layer.name` and `sqlite_autoindex_biome_1` for `biome.key`; the version 5 tables add none. The empty world is 11 pages, 45056 bytes (8 at versions 3 and 4, P0-02 amendments 15 and 16; the three version 5 tables add one root page each).
 
 File settings (P0-02 4): page size 4096, UTF-8, no auto-vacuum, `application_id` 0x554E4D50 (`UNMP`), `user_version` = schema version, written with `VACUUM INTO`. Layer blobs: format version 1, codec 0 (raw) or 1 (delta-varint) (P0-02 7).
 
-## 2. Required `meta` keys at version 4
+## 2. Required `meta` keys at version 5
 
 | Key | Value |
 | --- | --- |
@@ -34,7 +39,7 @@ File settings (P0-02 4): page size 4096, UTF-8, no auto-vacuum, `application_id`
 | `format` | `the-unmapped-world` |
 | `generator_version` | `MAJOR.MINOR.PATCH` |
 | `param.map_size` | 512, 1024 or 2048 |
-| `schema_version` | `4` |
+| `schema_version` | `5` |
 | `seed` | unsigned decimal |
 | `seed_phrase` | the scrubbed phrase, or empty |
 | `stages` | stage names in run order, comma separated (P1-00 section 3), e.g. `elevation,hydrology` |
@@ -58,16 +63,16 @@ The authoritative catalogue, with value ranges and special values, is P1-00 sect
 | `biome` | `u8` | biome code (table `biome`) | `biomes` | P1 (schema 3, generator 0.8.0) |
 | `fertility`, `ore`, `timber`, `fresh_water`, `forage`, `habitability` | `u8` | score 0 to 255 on an absolute scale (P1-05) | `resources` | planned for generator 0.10.0 (`forage` added 2026-11-18); no schema change |
 | `walk_area` | `u16` | walkable-area id, 0 none (P1-05) | `resources` | planned (added 2026-11-16) |
-| `region` | `u16` | region id (table `region`), 0 on ocean | `regions` | planned |
+| `region` | `u16` | region id (table `region`), 0 on ocean only (lakes and rivers belong to regions) | `regions` | planned for generator 0.11.0 (layer id 19) |
 | `test.ramp`, `test.hash`, `test.noise` | `u8`, `u8`, `i16` | P0 test pattern, 256 × 256 (P0-04 5.2) | `test_pattern` | P0 (schema 1) |
 
 ## 4. Planned changes
 
-From P1-00 section 9.2; the DDL becomes final in the spec of the branch that makes the change. Version 4 is in sections 1 and 2.
+From P1-00 section 9.2; the DDL becomes final in the spec of the branch that makes the change. Version 5 is in sections 1 and 2.
 
 | Version | Change | Branch |
 | --- | --- | --- |
-| 5 | tables `region` and `region_border` (DDL proposed in `p1-06-regions.md` section 3; planned as version 4 until the variety revision took 4) | regions (P1 second pass) |
+| — | none planned for P1 after version 5 | |
 
 ## 5. Changelog
 
@@ -79,3 +84,4 @@ From P1-00 section 9.2; the DDL becomes final in the spec of the branch that mak
 | 3 | 2026-11-17 | 2 → 3 with generator 0.8.0 (the biomes merge): tables `biome` (one row per biome definition, written by the biome stage) and `climate` (one row with the prevailing wind `wind_toward`, written by the climate stage) added, executed fourth and fifth, after `pass`; `meta.schema_version` and `user_version` 3; the empty world grows from 5 to 8 pages (`biome`, `sqlite_autoindex_biome_1`, `climate`; P0-02 amendment 15). Proposals "P1 schema changes" | P1-04 (second version) 3, P1-03 3, P1-00 9.2 |
 | 4 | 2026-11-18 | 3 → 4 with generator 0.9.0 (the biome variety merge): table `climate` gains `temp_offset_dc INTEGER NOT NULL` (the per-world temperature offset in tenths of a degree); its DDL statement is replaced in place (still fifth); `meta.schema_version` and `user_version` 4; readers refuse version 3 worlds; the empty world stays 8 pages (P0-02 amendment 16). Planned `region` and `region_border` move to version 5. Proposals "More natural biomes, per-world temperature, a thinner coastal forest" | P1-03 3, P1-04 (third version) 3 and appendix B, P1-00 9.2 |
 | 4 | 2026-11-18 | No schema change (planned, generator 0.10.0, the resources merge): the layer catalogue gains `forage` and the resources layers become real, layer ids 12 to 18 (`region` moves to 19) | P1-05 (second version) 3, P1-00 4 |
+| 5 | 2026-11-18 | 4 → 5 with generator 0.11.0 (planned, the regions merge): tables `region`, `region_border` and `region_biome` added, executed sixth to eighth, after `climate`; `meta.schema_version` and `user_version` 5; readers refuse version 4 worlds; the empty world grows from 8 to 11 pages. `region_biome` and the extended `region` and `region_border` columns are new against the first plan. Proposals "P1 schema changes" (update) | P1-06 (second version) 3, P1-00 9.2 |
