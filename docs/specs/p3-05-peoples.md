@@ -510,6 +510,18 @@ public:
 - **Ending by conquest**: P3-06 appends its own kind `civ_conquered` (30, roles `civilization` and `conqueror`, P3-06 11), not `civ_ended` (r1). A civilization with no standing settlement at the start of T1 is ended by peoples with cause its last settlement's `ruin_event` (the rule of 8.5 item 6, applied to P3-06's sackings that left none).
 - **Quiet steps**: P3-06's Q4 (P3-00 4.4) may claim only after peoples' foundings of the same step; P3-05 does not claim held land in Q4 and has no pressures there.
 
+### 13.1 Implementation rules from the P3-04 audit (normative; r2)
+
+P3-04 6.9's rules, as P3-05 meets them:
+
+1. **A1, loops.** P3-05 founds civilizations in an awakening (7.3) and by secession (10.3, inside the T4 loop over civilizations) and settlements in T2 and Q4 (9.3, inside the loop over civilizations) and at awakenings. Every such loop runs over ids up to the count taken before it (a civilization or settlement created in the loop is not processed in it anyway, P3-04 6.2) and re-fetches `civ(id)` / `settlement(id)` after a founding; no reference, pointer or span into `State` is kept across `found_civilization` or `found_settlement`, nor in a member between steps (members hold ids: `before`, last reduction, `hunger` are keyed by id). The spread loop of 10.2 and the abandonment of 8.5 found nothing. P3-05 opens and closes no relation.
+2. **A2.** P3-05 has no tension source.
+3. **N1, order.** Shipped `EngineConfig::subsystems` = peoples, then conflict (P3-06, from 0.16.0), in that fixed order in `stages/history.cpp`. Per step: T1, T4, Q1, Q3 peoples only; **T2 and Q4 peoples first, then conflict**; T6 conflict only. `steps()` lists T1, T2, T4, Q1, Q3, Q4, each once.
+4. **N2, shared steps (T2, Q4).** Peoples runs first and sees none of conflict's same-step changes (there are none yet); conflict's changes of earlier steps are live state. What conflict sees of peoples' part of the same step is stated in P3-06 8.3. Peoples reads its own entities through `visible()` everywhere except the destinations of 8.5 items 2, 5, 6 (the stated exception).
+5. **N3, draw keys.** Every key is built from ids and the year: `home` (race, region), `civs` (race, 0), `found` and `outward` (civilization, 0), `famine`, `famine_toll`, `plague`, `plague_toll`, `abandon` (settlement, 0), the spread's toll (target settlement, 1: a fixed discriminator, not a position), `plague_spread` (origin settlement, target settlement), `crisis` and `split` (civilization, 0). No key is a position in a list.
+6. **N4.** P3-05 stores no relation.
+7. **N5, regions.** Within one step a region's owner can change more than once only through P3-05's own sequence (an abandonment's release in T4 and a later secession's transfer in the same T4 do not touch the same region: a released region has no settlement of the seceding part); if it does, the last change and its event are recorded (P3-04 6.7). Two civilizations never colonize the same free region in one T2: the first founding makes it held, and the later civilization's outward test reads the live owner.
+
 ## 14. Invariants
 
 For every seed, setting, data set within the schemas, and map size:
@@ -846,3 +858,7 @@ A tension calibrated so that "a boxed-in civilization with a wanted neighbour" i
 ## Revision note r1 (2026-11-19, amendments for P3-06)
 
 Requested by P3-06 18.1, applied on `p3/06-spec` after the lead approved P3-06. **What P3-05's implementer at 0.15.0 does: only the restructuring of 8.5 into `ruin(s, e)` (items 2–5) and `abandon` (item 1, `ruin`, item 6), with `PeoplesSubsystem::ruin` public in 13.** It changes no world byte, no golden value and no data. Everything else below describes how P3-06 (generator 0.16.0) uses the seam, and ships nothing at 0.15.0: 13 "Ruin by sacking" (P3-06 calls `ruin`; the `ruin_event` is the `sacked` event) and "Ending by conquest" (kind `civ_conquered`, not `civ_ended`); 14 invariant 4 (no exception: P3-06 moves regions only with settlements) and invariant 7 (`sacked` as a ruin event, from 0.16.0); 20's hook paragraph. Section 15's measurements remain those of a world without conflict (0.15.0); P3-06 15 has the 0.16.0 figures. P3-06's race field `prowess_permille`, goblin `aggression` 600 and tuning id `conflict` are **not** part of 0.15.0 (P3-01 r7).
+
+## Revision note r2 (2026-11-19, rules from the P3-04 audit)
+
+New 13.1: how P3-05 meets P3-04 6.9 (the determinism audit's A1, A2, N1–N5): loops over ids counted before a founding, members holding ids, the fixed order peoples then conflict and which subsystem runs first in each shared step, visibility, draw keys (every key checked: all ids, none a position), no relations, regions changing hands within a step. Normative for the implementer at 0.15.0; no rule, number or world byte changes.

@@ -139,7 +139,7 @@ The structs list the fields the report needs; the engineer may add members. `dig
 ### 5.2 Order of checks in `build_history_report` (first failure reported)
 
 1. **History present.** Let `h` = `meta.stages` names `history` (the comma-separated list contains the item `history`). If not `h` and `phase` and `event` are empty: `db::ErrorCode::history_missing` with the message of section 4 (without the `worldgen-cli: error: ` prefix). If not `h` and `phase` or `event` has a row: `corrupt table '<t>': <n> rows, but meta.stages does not name history` (t the first of `phase`, `event` with rows). If `h` and `phase` is empty: `corrupt table 'phase': no rows, but meta.stages names history`.
-2. **The world report's checks**, through the same library functions the world report uses, with their messages unchanged: P3-03 9.1 (tables `race`, `age`), then P3-04 11.1 (tables `phase`, `event`, `event_cause`). Not restated here.
+2. **The world report's checks**, through the same library functions the world report uses, with their messages unchanged: P3-03 9.1 (tables `race`, `age`), then P3-04 11.1 (tables `phase`, `event`, `event_cause`; from P3-04 r6 the phase rows' `end_year` is bounded by `history_end_year` − 1 before any arithmetic, `corrupt table 'phase': row <id>: end_year <e> above <E - 1>`, so the `[stats]` sums over phases, which share 11.1's definitions, cannot overflow). Not restated here.
 3. **This spec's checks** (5.3), in `read_history_tables`.
 4. **`HistoryView::load`** (P3-04 8.5 with amendment 18.1): participants against the catalogue's roles and entity types, values, referenced ids of the log, templates. Its messages are passed through unchanged. Not restated here.
 5. Compute (`digest_history`) and format (section 6): cannot fail except by running out of memory (`ErrorCode::out_of_memory`, exit 1, as the world report).
@@ -976,3 +976,7 @@ Text only, no behaviour change. Messages and output formats are part of the cros
 ## Revision note r3 (2026-11-19, amendments for P3-06)
 
 Made with P3-06 (its 18.4), in place: section 9 gains nine keys and one family of six per-race lines after `civilizations_seceded` (10.3 rule 1; format stays v1): `relations_enmity`, `relations_peace`, `war_years_total`, `war_years_max`, `civilizations_conquered`, `settlements_sacked`, `settlements_captured`, `regions_conquered`, `races_alive` and the six `wars_attacker_<race key>` lines (one per `race` row). They are defined over kinds and relation kinds that exist from generator 0.16.0; on an earlier world they print 0 (and `races_alive` the races with a living civilization). Section 20 item 1 is met by P3-06 4.3: `war` is asymmetric (a the attacker), `enmity` and `peace` symmetric. The illustrative excerpt of 17 stays illustrative: P3-06's kinds are `claim`, `war_declared`, `battle`, `siege`, `sacked`, `peace`, `truce`, `civ_conquered` and others (P3-06 11), not `region_claimed` or `civ_ended` by conquest. No world byte changes.
+
+## Revision note r4 (2026-11-19, P3-04 r6)
+
+5.2 item 2 notes P3-04 r6's bound on phase `end_year` (audit A3), which the shared phase definitions of `[stats]` rely on. The corrupt-data list of this spec is otherwise unchanged and agrees with P3-04 11.1 (it delegates the `phase`, `event` and `event_cause` checks to it). No world byte or report text of a valid world changes.
