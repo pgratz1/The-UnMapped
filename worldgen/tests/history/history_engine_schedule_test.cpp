@@ -10,6 +10,7 @@
 #include <doctest/doctest.h>
 
 #include <cstdint>
+#include <functional>
 #include <ostream>
 #include <string>
 #include <vector>
@@ -43,6 +44,42 @@ std::unique_ptr<eng::TensionSource> tension_of(const std::string& s) {
     const std::string in = s.substr(s.find('(') + 1, s.find(')') - s.find('(') - 1);
     const std::vector<std::int64_t> v = ints(in);
     return forced(v.at(0), v.at(1), v.at(2));
+}
+
+// The schedule cases of the golden file selected by `pick`, through run_engine; returns how many ran.
+std::size_t check_golden_scheds(const std::function<bool(const GoldenSched&)>& pick) {
+    std::size_t n = 0;
+    for (const GoldenSched& s : golden().scheds) {
+        if (!pick(s)) {
+            continue;
+        }
+        CAPTURE(s.header);
+        REQUIRE(!s.starts.empty());
+        const Tables t = schedule(s.starts, s.span, s.detail, tension_of(s.tension));
+        CHECK(phases_text(t) == s.phases);
+        CHECK(simulated(t) == s.simulated);
+        // opening phases carry their awakening events (5.7), the others 0 or the tension's trigger; the
+        // awakening of an opening phase is the event of kind 1 dated at its first year (flare_up events of
+        // 6.3 take ids between them)
+        for (const Row& r : t.phase) {
+            if (at(r, 2) == 1) {
+                std::int64_t aw = 0;
+                for (const Row& e : t.event) {
+                    if (at(e, 3) == 1 && at(e, 1) == at(r, 3)) {
+                        aw = at(e, 0);
+                    }
+                }
+                CHECK(aw != 0);
+                CHECK(at(r, 5) == aw);
+            } else if (at(r, 2) == 3) {
+                CHECK(at(r, 5) == 1);
+            } else {
+                CHECK(at(r, 5) == 0);
+            }
+        }
+        ++n;
+    }
+    return n;
 }
 
 }  // namespace
@@ -144,7 +181,7 @@ TEST_CASE("P3-04 5.6, 16.1 item 2: edge cases E1 to E10 on hand-made age lists")
             REQUIRE(t.phase.size() >= 4U);
             CHECK(str(std::vector<Row>(t.phase.begin(), t.phase.begin() + 4)) ==
                   str(irows({{1, 1, 1, 0, 149, 1}, {2, 1, 2, 150, 499, 0}, {3, 1, 3, 500, 519, 1},
-                             {4, 2, 1, 520, 669, 2}})));
+                             {4, 2, 1, 520, 669, 3}})));  // e2 is the flare-up's event (6.3), e3 the awakening
             continue;
         }
         CHECK(str(t.phase) == str(irows(c.phases)));
@@ -183,9 +220,13 @@ TEST_CASE("P3-04 5.6, 16.1 item 2: edge cases E1 to E10 on hand-made age lists")
             }
         }
     }
-    // E8: the cap shortens the last flare-up: dense at 2000 (A 83, F 25, L 133, cap 900), one race.
+    // E8: the cap shortens the last flare-up: dense at 2000 (A 83, F 25, L 133, cap 900), one race,
+    // a flare-up after every step (period 1: the quiet steps start at 83, so no step end is a multiple
+    // of 25 and ForcedTension(25, ...) would never fire).
     {
-        const Tables t = schedule({0}, 2000, "dense", forced(25, 5000, 1));
+        const Tables none = schedule({0}, 2000, "dense", forced(25, 5000, 1));
+        CHECK(simulated(none) == 216);
+        const Tables t = schedule({0}, 2000, "dense", forced(1, 5000, 1));
         CHECK(simulated(t) == 900);
         std::int64_t last = 0;
         for (const Row& r : t.phase) {
@@ -193,7 +234,7 @@ TEST_CASE("P3-04 5.6, 16.1 item 2: edge cases E1 to E10 on hand-made age lists")
                 last = at(r, 4) - at(r, 3) + 1;
             }
         }
-        // base 83 + 133 = 216 < floor 200? no: 216; room 684 = 27 x 25 + 9: the last flare-up is 9 years.
+        // base 83 + 133 = 216 (above the floor 200); room 684 = 27 x 25 + 9: the last flare-up is 9 years.
         CHECK(last == 9);
     }
 }
@@ -223,28 +264,12 @@ TEST_CASE("P3-04 17: the worked example's schedule (seed 42, span 6000, normal) 
     CHECK(simulated(g) == 2700);
 }
 
-TEST_CASE("P3-04 16.4: every schedule case of the golden file through run_engine") {
-    std::size_t n = 0;
-    for (const GoldenSched& s : golden().scheds) {
-        CAPTURE(s.header);
-        REQUIRE(!s.starts.empty());
-        const Tables t = schedule(s.starts, s.span, s.detail, tension_of(s.tension));
-        CHECK(phases_text(t) == s.phases);
-        CHECK(simulated(t) == s.simulated);
-        // opening phases carry their awakening events (5.7), the others 0 or the tension's trigger
-        std::int64_t k = 0;
-        for (const Row& r : t.phase) {
-            if (at(r, 2) == 1) {
-                CHECK(at(r, 5) == ++k);
-            } else if (at(r, 2) == 3) {
-                CHECK(at(r, 5) == 1);
-            } else {
-                CHECK(at(r, 5) == 0);
-            }
-        }
-        ++n;
-    }
-    CHECK(n > 300U);
+TEST_CASE("P3-04 16.4: the golden schedule cases of seed 42 and every edge case through run_engine") {
+    // A fixed sample (all of it in history-slow): the edge cases E1-E10 and every case of seed 42 (spans,
+    // levels, race sets, both ForcedTension variants).
+    const std::size_t n = check_golden_scheds(
+        [](const GoldenSched& s) { return s.races.empty() || s.name.rfind("sched-42-", 0) == 0; });
+    CHECK(n >= 50U);
 }
 
 TEST_CASE("P3-04 3.4 items 2 to 5, 16.1 item 3: entry checks of history_stage with their messages, in order") {
@@ -270,13 +295,13 @@ TEST_CASE("P3-04 3.4 items 2 to 5, 16.1 item 3: entry checks of history_stage wi
         t.simulated_min_permille = 460;
         CHECK(stage_error(with_engine(t), in) ==
               "history: tuning: simulated_min_permille must not be above simulated_max_permille");
-        // engine_phase_budget, levels in the order sparse, normal, dense (U+00D7 and U+2212 as in 4.1)
+        // engine_phase_budget, levels in the order sparse, normal, dense (ASCII x and -: the lead's ruling)
         t = EngineTuning{};
         t.normal.active_years = 400;
         t.dense.active_years = 500;
         CHECK(stage_error(with_engine(t), in) ==
-              "history: tuning: normal: 6 \xC3\x97 active_years + final_years must not be above 6 \xC3\x97 "
-              "simulated_max_permille \xE2\x88\x92 30");
+              "history: tuning: normal: 6 x active_years + final_years must not be above 6 x "
+              "simulated_max_permille - 30");
         // a range error comes before a named check
         t.quiet_events_max = 101;
         CHECK(stage_error(with_engine(t), in) == "history: tuning: quiet_events_max outside its schema range");
@@ -360,8 +385,8 @@ TEST_CASE("P3-04 5.4, 16.1 item 3: the cap guard; a tuning with 6A + L above the
     t.normal.active_years = 500;
     const std::vector<std::int64_t> starts = {0, 1000, 2000, 3000, 4000, 5000};
     const std::string budget =
-        "history: tuning: normal: 6 \xC3\x97 active_years + final_years must not be above 6 \xC3\x97 "
-        "simulated_max_permille \xE2\x88\x92 30";
+        "history: tuning: normal: 6 x active_years + final_years must not be above 6 x "
+        "simulated_max_permille - 30";
     CHECK(fatal_of([&] { (void)eng::history_stage(with_engine(t), inputs_for(starts, 6000)); }) == budget);
     const std::string e = fatal_of([&] { (void)schedule(starts, 6000, "normal", nullptr, with_engine(t)); });
     CAPTURE(e);
@@ -384,17 +409,27 @@ TEST_CASE("P3-04 6.5: tension guards: a negative value, a trigger outside the lo
     CHECK(with(1000, 1) == "<no error>");
     // Two sources: the step's tension is the largest value, its trigger that of the first source reporting it.
     Config cfg;
-    cfg.handler = std::make_unique<TestHandler>(false);
+    // (With the founding handler e1-e3 exist at year 0, so triggers 2 and 3 are in the log: 6.5 checks
+    // every report at or above the threshold, not only the chosen one.)
+    cfg.handler = std::make_unique<TestHandler>(true);
     cfg.add_tension(std::make_unique<FnTension>([](const eng::StepContext&) { return eng::TensionReport{500, 0}; }));
-    cfg.add_tension(std::make_unique<FnTension>([](const eng::StepContext& c) {
-        return eng::TensionReport{c.year() == 150 ? 1000 : 0, 1};
-    }));
     cfg.add_tension(std::make_unique<FnTension>([](const eng::StepContext& c) {
         return eng::TensionReport{c.year() == 150 ? 1000 : 0, 2};
     }));
+    cfg.add_tension(std::make_unique<FnTension>([](const eng::StepContext& c) {
+        return eng::TensionReport{c.year() == 150 ? 1000 : 0, 3};
+    }));
     const Tables t = eng::run_engine(shipped(), inputs_for(starts, 6000), cfg.get());
     CHECK(str(std::vector<Row>(t.phase.begin() + 1, t.phase.begin() + 4)) ==
-          str(irows({{2, 1, 2, 150, 174, 0}, {3, 1, 3, 175, 224, 1}, {4, 1, 2, 225, 2073, 0}})));
+          str(irows({{2, 1, 2, 150, 174, 0}, {3, 1, 3, 175, 224, 2}, {4, 1, 2, 225, 2073, 0}})));
+}
+
+}  // TEST_SUITE
+
+TEST_SUITE("history-slow" * doctest::skip()) {
+
+TEST_CASE("P3-04 16.4: every schedule case of the golden file through run_engine") {
+    CHECK(check_golden_scheds([](const GoldenSched&) { return true; }) > 300U);
 }
 
 }  // TEST_SUITE

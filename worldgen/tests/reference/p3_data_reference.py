@@ -11,7 +11,9 @@ it with SHA-256 (core_reference.sha256_hex, cross-checked with hashlib).
 Schemas, in declaration order (the order fixes the encoding):
   biome     P1-00 6.6 with P1-04 4.1 and P1-05 4.1 (`forage` after `timber`)
   culture   P3-01 4, record `culture_naming` of P3-02 3
-  history   P3-01 5.1 (fixed id `chronology`)
+  history   P3-01 5.1 (fixed id `chronology`); P3-04 4.1 and 4.2 (fixed
+            ids `engine`, record `engine_detail`, and `report`, record
+            `report_event`)
   race      P3-01 3
   worldgen  P1-01 4.2 (with the records of P1-01 4.1), P1-02 4, P1-03 4,
             P1-04 4.2, P1-05 4.2, P1-06 4 (fixed ids)
@@ -19,7 +21,8 @@ Kinds are encoded in ascending name: biome, culture, history, race, worldgen
 (P3-01 7).
 
 The spec listings of P3-01 3.1, 4 and 5.1 and P3-02 5 are transcribed below
-(RACE_FILES, CULTURE_FILES, CHRONOLOGY_FILE). The golden file is computed
+(RACE_FILES, CULTURE_FILES, HISTORY_FILES with the listings of P3-04 4.1
+and 4.2). The golden file is computed
 from the TOML files on disk; `--from-spec` uses the transcribed listings for
 a root whose races/, cultures/ or history/ directory does not exist yet (the
 data files are the generator engineer's deliverable). `check` verifies that
@@ -178,6 +181,18 @@ CULTURE = (("race", STR), ("name", STR), ("naming", CULTURE_NAMING))
 # P3-01 5.1.
 CHRONOLOGY = (("awakening_jitter_frac", FX), ("awakening_min_gap_years", INT), ("age_name_form", STR))
 
+# P3-04 4.1: history.engine, fields in table order; record engine_detail in
+# its stated order (active_years, flare_years, final_years, flare_threshold).
+ENGINE_DETAIL = REC(fields("active_years:I flare_years:I final_years:I flare_threshold:I"))
+ENGINE = fields("quiet_step_years:I quiet_events_max:I simulated_min_permille:I simulated_max_permille:I "
+                "islet_max_dry_cells:I") + (("sparse", ENGINE_DETAIL), ("normal", ENGINE_DETAIL),
+                                            ("dense", ENGINE_DETAIL))
+
+# P3-04 4.2: history.report, one field `events`, an array of record
+# report_event (kind string, salience int, template string).
+REPORT_EVENT = REC(fields("kind:S salience:I template:S"))
+REPORT = (("events", ARR(REPORT_EVENT)),)
+
 # P3-01 3.
 RACE_SITE_WEIGHTS = REC(fields("fertility:I forage:I timber:I ore:I fresh_water:I"))
 RACE_BIOME = REC(fields("biome:S weight:I"))
@@ -193,7 +208,7 @@ RACE = (
 KINDS = {
     "biome": ("biomes", BIOME),
     "culture": ("cultures", CULTURE),
-    "history": ("history", {"chronology": CHRONOLOGY}),
+    "history": ("history", {"chronology": CHRONOLOGY, "engine": ENGINE, "report": REPORT}),
     "race": ("races", RACE),
     "worldgen": ("worldgen", {
         "biomes": BIOMES_TUNING, "climate": CLIMATE, "elevation": ELEVATION, "hydrology": HYDROLOGY,
@@ -464,7 +479,35 @@ age_name_form = "The Age of {plural}"
 """,
 }
 
-SPEC_FILES = {"race": RACE_FILES, "culture": CULTURE_FILES, "history": CHRONOLOGY_FILE}
+# P3-04 4.1 and 4.2, the two listings.
+ENGINE_FILE = {
+    "engine.toml": """[history.engine]
+quiet_step_years = 25
+quiet_events_max = 3
+simulated_min_permille = 100
+simulated_max_permille = 450
+islet_max_dry_cells = 1172
+sparse = { active_years = 75, flare_years = 30, final_years = 250, flare_threshold = 1500 }
+normal = { active_years = 150, flare_years = 50, final_years = 300, flare_threshold = 1000 }
+dense = { active_years = 250, flare_years = 75, final_years = 400, flare_threshold = 700 }
+""",
+}
+REPORT_FILE = {
+    "report.toml": """[history.report]
+events = [
+  { kind = "awakening", salience = 100, template = "{creator} awakened the {race:plural} in {@region}." },
+  { kind = "civ_founded", salience = 80, template = "The {race:plural} founded {civilization} in {@region}." },
+  { kind = "settlement_founded", salience = 40, template = "{founder} founded {settlement} in {@region}." },
+  { kind = "quiet_era", salience = 20, template = "{civilization} passed {years} quiet {years?year|years} \
+({generations} {generations?generation|generations}), from {@year} to {@end_year}." },
+  { kind = "flare_up", salience = 50, template = "In {@year} tensions flared into {years} {years?year|years} \
+of upheaval." },
+]
+""",
+}
+HISTORY_FILES = dict(CHRONOLOGY_FILE, **ENGINE_FILE, **REPORT_FILE)
+
+SPEC_FILES = {"race": RACE_FILES, "culture": CULTURE_FILES, "history": HISTORY_FILES}
 
 # ---------------------------------------------------------------------------
 # Loading and validation (types only: what the encoding needs)
@@ -693,6 +736,9 @@ def check_spec_invariants(c):
     for cid, cu in cultures.items():
         check_record(CULTURE, cu, "culture." + cid)
     check_record(CHRONOLOGY, parsed_spec("history")["chronology"], "history.chronology")
+    check_record(ENGINE, parsed_spec("history")["engine"], "history.engine")
+    check_record(REPORT, parsed_spec("history")["report"], "history.report")
+    c.eq("history ids", sorted(parsed_spec("history")), ["chronology", "engine", "report"])
     c.eq("six races", sorted(races), ["dwarf", "elf", "faerie", "goblin", "human", "orc"])
     c.eq("six cultures", sorted(cultures), ["dwarven", "elven", "faerie", "goblin", "human", "orcish"])
     by_order = sorted(races.items(), key=lambda kv: kv[1]["order"])

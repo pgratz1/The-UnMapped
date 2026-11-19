@@ -333,6 +333,7 @@ unmapped_add_doctest_shards(worldgen-tests
     SHARD regions 20 "*stages_regions_*,*inspect_regions_test.cpp"
     SHARD history 5 "*history_draw_test.cpp,*history_names_*"
     SHARD chronology 15 "*history_chronology_*"
-    SHARD engine 20 "*history_engine_*"
+    SHARD engine-worlds 25 "*history_engine_golden_test.cpp"
+    SHARD engine 15 "*history_engine_schedule_test.cpp,*history_engine_writer_test.cpp,*history_engine_state_test.cpp,*history_engine_report_test.cpp,*history_engine_property_test.cpp,*history_engine_catalogue_test.cpp,*history_engine_schema_test.cpp"
     REST other 13
 )

@@ -169,27 +169,19 @@ TEST_CASE("P3-04 9.5, 16.1 item 12: a version 6 file is refused: world schema ve
 
 TEST_CASE("P3-04 9.4, 9.5: meta.history_end_year in every world kind; refused when it differs from the span") {
     dbtest::TempDir dir("engine-end-year");
-    struct Kind {
-        std::string name, until;
-        std::int64_t span;
-    };
-    for (const Kind& k : {Kind{"none", "none", 2000}, Kind{"regions", "regions", 6000},
-                          Kind{"chronology", "chronology", 12000}, Kind{"default", "", 2500}}) {
-        CAPTURE(k.name);
-        const std::string path = generated(dir, k.name + ".db", k.until, k.span);
+    // Empty worlds (cheap) at three spans.
+    for (const std::int64_t span : {2000, 2500, 12000}) {
+        CAPTURE(span);
+        const std::string path = generated(dir, "none-" + std::to_string(span) + ".db", "none", span);
         const db::WorldReader r = open_world(path);
-        CHECK(r.meta("history_end_year").value_or("<absent>") == std::to_string(k.span));
+        CHECK(r.meta("history_end_year").value_or("<absent>") == std::to_string(span));
         CHECK(r.meta("schema_version").value_or("") == "7");
-        const std::vector<std::string> stages = r.stages();
-        if (k.name == "default") {
-            CHECK((!stages.empty() && stages.back() == "history"));
-        }
-        if (k.name != "default") {
-            for (const std::string& t : ddl_tables()) {
-                CHECK_MESSAGE(rows_of(r, t).empty(), t);
-            }
+        for (const std::string& t : ddl_tables()) {
+            CHECK_MESSAGE(rows_of(r, t).empty(), t);
         }
     }
+    // The geography, chronology and full worlds: history_engine_golden_test.cpp (resume refusals) and
+    // cli_history_test.cpp (--until chronology, the default run).
     // test-pattern world
     {
         const std::string path = dir.file("pattern.db");

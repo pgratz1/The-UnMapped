@@ -761,6 +761,9 @@ inline OwnBase own_base(const std::vector<std::int64_t>& y, std::int64_t e, cons
     auto sc = [&](std::int64_t v) { return std::max<std::int64_t>(1, (v * e + 3000) / 6000); };
     OwnBase b{sc(d.active_years), sc(d.flare_years), sc(d.final_years), t.quiet_step_years,
               (t.simulated_min_permille * e + 999) / 1000, (t.simulated_max_permille * e) / 1000, 0, 0, {}};
+    // Lead's ruling (spec defect 5.1/5.4): the floor is clamped to the cap
+    // (simulated_min_permille = simulated_max_permille can give ceil > floor).
+    b.floor = std::min(b.floor, b.cap);
     const std::size_t p = y.size();
     for (std::size_t k = 0; k + 1 < p; ++k) {
         b.ends.push_back(std::min(y[k] + b.a, y[k + 1]));

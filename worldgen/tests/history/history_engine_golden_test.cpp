@@ -138,30 +138,23 @@ void check_resume(const GoldenWorld& g) {
 
 }  // namespace
 
+// The default suite runs one 512 world case (geo-seed-42-512: every world it needs is generated once per
+// process and shared with the other tests of the engine group); the other world cases are in the slow
+// suite, so that the default CTest entry stays fast under every preset.
+bool default_case(const GoldenWorld& g) { return g.name == "geo-seed-42-512"; }
+
 TEST_SUITE("history") {
 
-TEST_CASE("P3-04 16.4: the 512 world cases: tables, [history], phases and every sentence") {
-    for (const GoldenWorld& g : golden().worlds) {
-        if (g.map_size == 512 && g.tension == "none") {
-            check_world_case(g);
-        }
-    }
+TEST_CASE("P3-04 16.4: the 512 world case geo-seed-42-512: tables, [history], phases and every sentence") {
+    check_world_case(golden().world("geo-seed-42-512"));
 }
 
-TEST_CASE("P3-04 16.3 item 19 (R1), item 20 (R2): HistoryInputs from the pipeline equals from the world (512)") {
-    for (const GoldenWorld& g : golden().worlds) {
-        if (g.map_size == 512 && g.tension == "none") {
-            check_r1(g);
-        }
-    }
+TEST_CASE("P3-04 16.3 item 19 (R1), item 20 (R2): HistoryInputs from the pipeline equals from the world (geo-seed-42-512)") {
+    check_r1(golden().world("geo-seed-42-512"));
 }
 
-TEST_CASE("P3-04 16.3 item 21 (Y2): resume from a --until chronology world equals one run (512)") {
-    for (const GoldenWorld& g : golden().worlds) {
-        if (g.map_size == 512 && g.tension == "none") {
-            check_resume(g);
-        }
-    }
+TEST_CASE("P3-04 16.3 item 21 (Y2): resume from a --until chronology world equals one run (geo-seed-42-512)") {
+    check_resume(golden().world("geo-seed-42-512"));
 }
 
 TEST_CASE("P3-04 3.2, 16.3 item 21: each refusal of history_inputs_from_world") {
@@ -195,25 +188,44 @@ TEST_CASE("P3-04 3.2, 16.3 item 21: each refusal of history_inputs_from_world") 
         CHECK(fatal_of([&] { (void)eng::inputs_from_world(w, shipped()); }) ==
               "history: resume: meta.stages is 'elevation,hydrology,climate,biomes,resources,regions,chronology,"
               "history', expected the stages up to chronology");
-        const db::WorldReader geo = open_world(world_of(g, 1, "regions"));
-        CHECK(fatal_of([&] { (void)eng::inputs_from_world(geo, shipped()); }) ==
-              "history: resume: meta.stages is 'elevation,hydrology,climate,biomes,resources,regions', expected the "
-              "stages up to chronology");
+        // a geography-only world: history-slow (one more world to generate)
     }
     // The schema refusal ("history: resume: schema version <v>, this build reads 7") cannot be reached:
     // WorldReader::open already refuses another version (history_engine_schema_test.cpp).
 }
 
-TEST_CASE("P3-04 16.3 item 18, 14.1: threads 1, 2 and 5 give identical history tables") {
+TEST_CASE("P3-04 16.3 item 18, 14.1: threads 1 and 5 give identical history tables (2 in history-slow)") {
     const GoldenWorld& g = golden().world("geo-seed-42-512");
     const Tables one = tables_of_world(open_world(world_of(g, 1)));
-    CHECK(tables_of_world(open_world(world_of(g, 2))) == one);
     CHECK(tables_of_world(open_world(world_of(g, 5))) == one);
 }
 
 }  // TEST_SUITE
 
 TEST_SUITE("history-slow" * doctest::skip()) {
+
+TEST_CASE("P3-04 16.4, 16.3 items 19, 21: the other 512 world cases: tables, sentences, R1 and Y2") {
+    for (const GoldenWorld& g : golden().worlds) {
+        if (g.map_size == 512 && g.tension == "none" && !default_case(g)) {
+            check_world_case(g);
+            check_r1(g);
+            check_resume(g);
+        }
+    }
+}
+
+TEST_CASE("P3-04 3.2: resume refuses a geography-only world") {
+    const GoldenWorld& g = golden().world("geo-seed-42-512");
+    const db::WorldReader geo = open_world(world_of(g, 1, "regions"));
+    CHECK(fatal_of([&] { (void)eng::inputs_from_world(geo, shipped()); }) ==
+          "history: resume: meta.stages is 'elevation,hydrology,climate,biomes,resources,regions', expected the "
+          "stages up to chronology");
+}
+
+TEST_CASE("P3-04 16.3 item 18: threads 2 gives the tables of threads 1") {
+    const GoldenWorld& g = golden().world("geo-seed-42-512");
+    CHECK(tables_of_world(open_world(world_of(g, 2))) == tables_of_world(open_world(world_of(g, 1))));
+}
 
 TEST_CASE("P3-04 16.4: the 1024 world cases: tables, [history], phases and every sentence") {
     for (const GoldenWorld& g : golden().worlds) {

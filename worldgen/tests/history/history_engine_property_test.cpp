@@ -12,6 +12,7 @@
 #include <doctest/doctest.h>
 
 #include <cstdint>
+#include <functional>
 #include <set>
 #include <string>
 #include <vector>
@@ -363,17 +364,11 @@ void check_stub_world(std::uint64_t seed, std::int64_t span, const std::vector<s
     CHECK(eng::render_all(r, static_cast<std::int64_t>(t.event.size())).size() == t.event.size());
 }
 
-}  // namespace
-
-TEST_SUITE("history") {
-
-TEST_CASE("P3-04 12 invariant 1, 16.2 item 15: the scheduler over seeds 0-3, five spans, three levels, the subsets") {
-    sweep(4);
-}
-
-TEST_CASE("P3-04 16.2 item 16: hand-made tuning within the schema ranges and packed starts") {
+// 16.2 item 16: hand-made tuning cases 0 ... count - 1 from one test-owned
+// sequence; run_case selects which are run.
+void hand_made_tuning(int count, const std::function<bool(int)>& run_case) {
     Mix m{20261119};
-    for (int c = 0; c < 200; ++c) {
+    for (int c = 0; c < count; ++c) {
         CAPTURE(c);
         EngineTuning t;
         t.quiet_step_years = m.in(1, 200);
@@ -394,17 +389,34 @@ TEST_CASE("P3-04 16.2 item 16: hand-made tuning within the schema ranges and pac
         for (std::int64_t k = 1; k < np; ++k) {
             // packed close, and sometimes to the last years of the span
             const std::int64_t room = e - 1 - y.back() - (np - k - 1);
-            y.push_back(y.back() + (m.next() % 4 == 0 ? m.in(1, std::max<std::int64_t>(1, room)) : m.in(1, 5)));
+            // room >= 1 by construction; the packed branch is capped by it too (every start <= E - 1)
+            y.push_back(y.back() + (m.next() % 4 == 0 ? m.in(1, room) : m.in(1, std::min<std::int64_t>(5, room))));
         }
         const std::string lv = std::vector<std::string>{"sparse", "normal", "dense"}[static_cast<std::size_t>(c % 3)];
         const wd::ContentSet content = with_engine(t);
         const std::int64_t period = c % 2 == 0 ? 0 : 25 * m.in(1, 7);
+        if (!run_case(c)) {
+            continue;  // the sequence is drawn for every case, so case numbers do not depend on the selection
+        }
         Tables got;
         CHECK(fatal_of([&] { got = run(y, e, lv, period, content); }) == "<no error>");
         const Detail d = detail_of(t, lv);
         check_invariant_1(got, y, e, own_base(y, e, d, t));
         CHECK(got_text(got) == own_text(own_phases(y, e, d, t, period, 5000)));
     }
+}
+
+}  // namespace
+
+TEST_SUITE("history") {
+
+TEST_CASE("P3-04 12 invariant 1, 16.2 item 15: the scheduler over seed 0, five spans, three levels, a third of the subsets") {
+    sweep(1);
+}
+
+TEST_CASE("P3-04 16.2 item 16: hand-made tuning and packed starts, cases 0-39 and the defect cases 90, 141, 163") {
+    // 90 and 141: floor above the cap before the clamp (lead's ruling); 163: packed starts past E - 1.
+    hand_made_tuning(200, [](int c) { return c < 40 || c == 90 || c == 141 || c == 163; });
 }
 
 TEST_CASE("P3-04 16.2 item 17: stub worlds on synthetic geography, seeds 0-15") {
@@ -421,5 +433,9 @@ TEST_CASE("P3-04 16.2 item 17: stub worlds on synthetic geography, seeds 0-15") 
 TEST_SUITE("history-slow" * doctest::skip()) {
 
 TEST_CASE("P3-04 16.2 item 15: the scheduler sweep over seeds 0-99") { sweep(100); }
+
+TEST_CASE("P3-04 16.2 item 16: hand-made tuning and packed starts, cases 0-999") {
+    hand_made_tuning(1000, [](int) { return true; });
+}
 
 }  // TEST_SUITE
