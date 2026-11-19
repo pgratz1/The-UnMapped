@@ -133,11 +133,11 @@ For each ordered pair (a, b), a ≠ b, both alive and visible, in contact, **not
 
 ```
 rate(a, b)    = g × g div 1000 × drive(a, b) div 1000 × (1000 div k(a, b)) div 1000     // evaluated left to right
-strain(a, b) += rate(a, b) × years × p,   p = tick_strain_permille in T2 (years 1), quiet_strain_permille in Q4 (years L)
+strain(a, b) += rate(a, b) × years × p × I div 1000,   p = tick_strain_permille in T2 (years 1), quiet_strain_permille in Q4 (years L)
 strain(a, b)  = min(strain(a, b), strain_max × 1000)
 ```
 
-Strain is in milli-units: `strain div 1000` is on the engine's tension scale (1000 = "a flare-up is due", P3-04 4.1). Aggression enters squared: readiness for war decides both how fast a people's grievances grow and, through drive, against whom (orcs 900: 810; goblins 600: 360; humans 400: 160; dwarves 300: 90; elves 150: 22; faeries 50: 2). Contact over a pass or a large river (cost 3) builds strain at a third of the rate over a walkable border: ranges and rivers keep peoples apart (design 5 "ranges are real barriers"). Pairs not in contact, at war or in truce keep their strain unchanged. A strain is reset to 0 for both directions of a pair when a war between them starts or ends (7.2, 7.7).
+I is the event intensity multiplier of P3-05 10.1 (`history.peoples.intensity`: calm 500, normal 1000, turbulent 2000 for `param.event_intensity`): a turbulent world quarrels twice as fast. Strain is in milli-units: `strain div 1000` is on the engine's tension scale (1000 = "a flare-up is due", P3-04 4.1). Aggression enters squared: readiness for war decides both how fast a people's grievances grow and, through drive, against whom (orcs 900: 810; goblins 600: 360; humans 400: 160; dwarves 300: 90; elves 150: 22; faeries 50: 2). Contact over a pass or a large river (cost 3) builds strain at a third of the rate over a walkable border: ranges and rivers keep peoples apart (design 5 "ranges are real barriers"). Pairs not in contact, at war or in truce keep their strain unchanged. A strain is reset to 0 for both directions of a pair when a war between them starts or ends (7.2, 7.7).
 
 Quiet steps build strain at `quiet_strain_permille` (shipped 6) against ticks' `tick_strain_permille` (25): the quiet interval is the design's peace, in which grievances grow slowly until a flare-up; active phases are when "the new race settles, meets its neighbours, and the first wars and alliances form" (design 5).
 
@@ -197,7 +197,7 @@ def(R)   = 1000 + terrain_defense × cover(R) div 1000
          + fort_defense      if y has a standing visible fortress in R
 ```
 
-Woods, wetlands and rough ground favour the defender: an elven forest doubles nothing but adds half. A pass held against an army doubles the defence (design 5 "passes are places to fortify and fight over"); lowland borders are political and give nothing (P3-00 7, decided).
+Woods, wetlands and rough ground favour the defender: an army fighting into an elven forest or a dwarven upland meets twice its foe's strength. A pass held against an army doubles the defence (design 5 "passes are places to fortify and fight over"); lowland borders are political and give nothing (P3-00 7, decided).
 
 ## 7. War
 
@@ -273,9 +273,10 @@ A fallen settlement t of y, taken by x in region R:
 
 After 7.3 for a war that is still open, in this order:
 
-1. **Exhaustion**: the sides with dead × 1000 ≥ `exhaustion_permille` × max(1, pop0). If any: s = the war score (below); if both are exhausted, or s = 0, or the exhausted side is not the one s favours, the war ends with s's outcome; if the one exhausted side leads on score, the war ends in a truce (a winning side that has bled itself white stops, but does not lose).
-2. **No front** (6.2): ends with s's outcome.
-3. **Length**: Y − start ≥ `war_max_years`: ends with s's outcome.
+1. **Aim achieved**: if the defender b neither holds the goal G nor has a standing settlement in it (it was sacked or taken, 7.5), the attacker wins. Wars are limited: the attacker fights for its goal and stops when it has it (6.2 makes the goal its target whenever it can reach it).
+2. **Exhaustion**: the sides with dead × 1000 ≥ `exhaustion_permille` × max(1, pop0). If any: s = the war score (below); if both are exhausted, or s = 0, or the exhausted side is not the one s favours, the war ends with s's outcome; if the one exhausted side leads on score, the war ends in a truce (a winning side that has bled itself white stops, but does not lose).
+3. **No front** (6.2): ends with s's outcome.
+4. **Length**: Y − start ≥ `war_max_years`: ends with s's outcome.
 
 **War score**: (battles won by a − by b) + 2 × (settlements taken by a − by b): positive → a wins, negative → b wins, 0 → truce.
 
@@ -335,4 +336,303 @@ MEASURE-RUNAWAY
 
 Strain never decays: any two neighbours with drive > 0 (every pair below +200 disposition, every pair with want or fear) quarrel eventually; grudges decay, so old enemies of one camp make peace in the long run while good and evil stay enemies; P3-05's growth and foundings keep presence and hunger changing; the flare-up rule turns accumulated strain into an active phase. MEASURE-STAGNATION
 
-DRAFT-REST
+## 11. Event kinds (appended to the catalogue after P3-05's 6–19)
+
+Ids continue P3-05's; roles and values in `seq` order; entity types as P3-04 6.1 (`civilization` 3, `settlement` 4); every count 1–1 except `parties` 2–2. Every kind is **caused** (`caused` = 1). Base salience is data (`history.report`), shipped as listed; templates as listed (P3-04 8.4 grammar; `\|` is a table escape for `|`).
+
+| id | key | region | settlement | roles | values | salience | template |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 20 | `claim` | 1 | 0 | 1 `claimant`, 2 `holder` | — | 45 | `{claimant} laid claim to {@region}, held by {holder}.` |
+| 21 | `war_declared` | 1 | 0 | 1 `attacker`, 2 `defender` | — | 70 | `{attacker} declared war on {defender} over {@region}.` |
+| 22 | `battle` | 1 | 0 | 1 `winner`, 2 `loser` | `winner_dead`, `loser_dead` | 30 | `{winner} defeated {loser} in {@region}; {loser_dead} of the defeated and {winner_dead} of the victors fell.` |
+| 23 | `battle_at_pass` | 1 | 0 | 1 `winner`, 2 `loser` | `winner_dead`, `loser_dead`, `pass` | 35 | `{winner} defeated {loser} at the pass into {@region}; {loser_dead} of the defeated and {winner_dead} of the victors fell.` |
+| 24 | `siege` | 1 | 1 | 1 `attacker`, 2 `defender` | `fell` | 25 | `{attacker} besieged {@settlement} of {defender}; it {fell?fell\|held}.` |
+| 25 | `sacked` | 1 | 1 | 1 `attacker`, 2 `defender` | `dead`, `survivors` | 75 (90 a capital) | `{attacker} sacked {@settlement} of {defender}; {dead} died and {survivors} fled.` |
+| 26 | `settlement_captured` | 1 | 1 | 1 `attacker`, 2 `defender` | `dead`, `fled` | 60 (80 a capital) | `{attacker} took {@settlement} from {defender}; {dead} died and {fled} fled.` |
+| 27 | `peace` | 0 | 0 | 1 `winner`, 2 `loser` | `years` | 60 | `{loser} sued {winner} for peace after {years} {years?year\|years} of war.` |
+| 28 | `truce` | 0 | 0 | 1 `parties` (2–2) | `years` | 50 | `{parties:all} made peace after {years} {years?year\|years} of war, neither the victor.` |
+| 29 | `region_ceded` | 1 | 0 | 1 `from`, 2 `to` | — | 55 | `{from} ceded {@region} to {to}.` |
+| 30 | `civ_conquered` | 1 | 0 | 1 `civilization`, 2 `conqueror` | — | 90 | `{civilization} fell to {conqueror}.` |
+
+`settlement_use` 1 means the event's settlement column is the settlement concerned (not a role: P3-04 W7 checks it lies in the region). Kinds of P3-05 that P3-06 also emits, unchanged: `capital_moved` (17) after a capture (7.5 item 3) and, through `ruin`, after a sack. P3-06 never emits `civ_ended` (18): a civilization it ends gets `civ_conquered`, which names the conqueror (P3-05 13 allowed kind 18; a new kind is the only way to add the `conqueror` role, P3-04 8.2).
+
+**Cause rules** (every cause is an earlier event, W6):
+
+| Kind | Causes |
+| --- | --- |
+| `claim` | the region's `owner_event` (the event by which the holder got it: its founding, colony, capture or cession), or the founding of the holder's settlement there |
+| `war_declared` | the claim (the casus belli), and the pair's last `peace` or `truce` if any |
+| `battle`, `battle_at_pass` | the war's `war_declared` |
+| `siege` | the battle it followed |
+| `sacked`, `settlement_captured` | the siege |
+| `peace`, `truce` | the war's last event (its declaration, last battle, siege, sack or capture) |
+| `region_ceded` | the peace |
+| `civ_conquered` | the sack or capture of the last settlement |
+| `capital_moved` (17) | the sack or capture of the old capital |
+| `flare_up` (engine) | the claim reported by the tension (5.4) |
+
+So a reader can walk every war back: conquest → sack → siege → battle → declaration → claim → the founding of the coveted settlement.
+
+**Report requirements** (P3-07 20): `sacked` is the ruined row's `ruin_event` (75, a capital 90) and `civ_conquered` the ended row's `ending_event` (90), both ≥ 20 and above every other event of a civilization except a capital's sack, so they rank among its milestones (P3-07 7.3). The war relation kind is `war` (asymmetric); `enmity` and `peace` are symmetric (4.3). No kind needs a new report block or line (format v1).
+
+**Saliences and the summary.** P3-07's summary shows at most 250 events, from the smallest salience that fits (7.4). With conflict a 1024 log grows to about 800 events and the threshold to about 40 (15.3): shown are awakenings, foundings, capitals, claims (45), declarations (70), sacks and captures, peace and truces, cessions, conquests, secessions, endings, cities and town plagues (45), moved capitals (50) and crises (40); hidden are battles (30, 35 at a pass) and sieges (25), which the `full` level lists, colonies, and the peoples' smaller events. A war at `summary` reads: claim, flare-up, declaration, sacks or captures, peace, cession.
+
+Rendered samples (seed 42, 1024): SAMPLES
+
+## 12. Tuning and race data
+
+### 12.1 `history.conflict` (new id of kind `history`, P3-01 5)
+
+All fields required. Status: **taste** (tuned on the sweep), **calibration** (scale), **decided** (by P3-00, Paul or the design), **bound** (a guard).
+
+| Field | Type | Shipped | Status | Meaning |
+| --- | --- | --- | --- | --- |
+| `camp` | record {`good_good`, `good_neutral`, `good_evil`, `neutral_neutral`, `neutral_evil`, `evil_evil`} int(−1000, 1000) | 400, −150, −700, 100, −250, 300 | decided (P3-00 10.6) in sign, taste in size | starting disposition by camp pair (4.1) |
+| `enmity_max` | int(−1000, 1000) | −500 | taste | camp disposition at or below which a pair gets an `enmity` row (4.3) |
+| `border_friction` | int(0, 2000) | 200 | taste | drive of any contact (5.1) |
+| `want_weight` | int(0, 2000) | 500 | taste | drive of land hunger against a holder of wanted land (5.1) |
+| `hunger_full` | int(1, 100000) | 300 | taste | years of hunger at which `want` is full (5.1) |
+| `fear_share`, `fear_weight` | int(0, 999), int(0, 2000) | 400, 1000 | taste | the coalition against a giant (5.1) |
+| `tick_strain_permille`, `quiet_strain_permille` | int(0, 1000) | 25, 6 | calibration | strain per year in ticks and in quiet steps (5.2) |
+| `strain_max` | int(1, 1000000) | 5000 | bound | cap of a strain, tension units (5.2) |
+| `claim_strain` | int(1, 1000000) | 300 | taste | strain of a claim (5.3) |
+| `declare_min`, `declare_span` | int(0, 1000000), int(1, 1000000) | 300, 600 | taste | strain at which declarations start and become certain-rate (7.2) |
+| `declare_permille` | int(0, 1000) | 150 | taste | yearly chance at full strain and odds (7.2) |
+| `declare_ratio` | int(1, 10000) | 1000 | taste | force ratio of full odds before aggression (7.2) |
+| `shelter_years` | int(0, 1000) | 150 | taste | years after its founding during which a civilization is not attacked (7.2) |
+| `march_hops` | int(1, 4) | 2 | taste | borders an army crosses to reach a foe (5.1, 6.2) |
+| `cost_penalty` | int(0, 10000) | 100 | taste | crossing cost against land value in choosing a target (5.3, 6.2) |
+| `levy_permille` | record {hamlet, village, town, city, fortress} int(0, 1000) | 100, 100, 100, 80, 250 | calibration | people under arms (6.1) |
+| `terrain_defense`, `pass_defense`, `river_defense`, `fort_defense` | int(0, 10000) | 1000, 1000, 500, 500 | taste | defence (6.3) |
+| `battle_permille` | int(0, 1000) | 300 | taste | yearly chance of a battle in a war (7.3) |
+| `loss_loser_permille`, `loss_winner_permille` | int(0, 1000) | 250, 80 | taste | casualties of a battle (7.3) |
+| `garrison_permille` | int(0, 1000) | 300 | taste | defenders of a settlement per mille of its people (7.3) |
+| `walls_permille` | record {hamlet, village, town, city, fortress} int(1, 100000) | 1000, 1500, 2500, 4000, 6000 | taste | walls by kind (7.3) |
+| `capital_walls` | int(0, 100000) | 2000 | taste | added walls of a capital (7.3) |
+| `sack_base`, `sack_hostility` | int(0, 1000), int(0, 2000) | 200, 1000 | taste | chance of a sack over a capture (7.5) |
+| `sack_toll_permille`, `capture_toll_permille` | int(0, 1000) | 300, 100 | taste | killed in a sack, in a capture (7.5) |
+| `exhaustion_permille` | int(1, 1000) | 80 | taste | dead of a side per mille of its people that ends a war (7.7) |
+| `war_max_years` | int(1, 1000) | 40 | taste | longest war (7.7) |
+| `truce_years` | int(0, 10000) | 200 | taste | years after a peace without strain or war (5.2, 7.2) |
+| `war_grudge`, `capture_grudge`, `secession_grudge` | int(0, 2000) | 150, 50, 300 | taste | grudges (4.2) |
+| `grudge_decay_per_century` | int(0, 10000) | 50 | taste | grudge forgotten per century (4.2) |
+| `last_refuge` | int(0, 1) | 1 | decided (9; question 4) | the last settlement of a race's last civilization never falls (7.3) |
+| `capital_sacked_salience`, `capital_captured_salience` | int(0, 100) | 90, 80 | taste | salience of the fall of a capital (7.5) |
+
+Named checks (per definition, in this order; messages as given):
+
+| Check | Condition | Message |
+| --- | --- | --- |
+| `conflict_declare` | `claim_strain` ≤ `declare_min` | `claim_strain must not be above declare_min` (a declaration needs a claim, 7.2) |
+| `conflict_strain_max` | `declare_min` + `declare_span` ≤ `strain_max` | `declare_min + declare_span must not be above strain_max` |
+
+```toml
+# game/data/history/conflict.toml and the fixtures under worldgen/tests/data/geo*/history/
+[history.conflict]
+camp = { good_good = 400, good_neutral = -150, good_evil = -700, neutral_neutral = 100, neutral_evil = -250, evil_evil = 300 }
+enmity_max = -500
+border_friction = 200
+want_weight = 500
+hunger_full = 300
+fear_share = 400
+fear_weight = 1000
+tick_strain_permille = 25
+quiet_strain_permille = 6
+strain_max = 5000
+claim_strain = 300
+declare_min = 300
+declare_span = 600
+declare_permille = 150
+declare_ratio = 1000
+shelter_years = 150
+march_hops = 2
+cost_penalty = 100
+levy_permille = { hamlet = 100, village = 100, town = 100, city = 80, fortress = 250 }
+terrain_defense = 1000
+pass_defense = 1000
+river_defense = 500
+fort_defense = 500
+battle_permille = 300
+loss_loser_permille = 250
+loss_winner_permille = 80
+garrison_permille = 300
+walls_permille = { hamlet = 1000, village = 1500, town = 2500, city = 4000, fortress = 6000 }
+capital_walls = 2000
+sack_base = 200
+sack_hostility = 1000
+sack_toll_permille = 300
+capture_toll_permille = 100
+exhaustion_permille = 80
+war_max_years = 40
+truce_years = 200
+war_grudge = 150
+capture_grudge = 50
+secession_grudge = 300
+grudge_decay_per_century = 50
+last_refuge = 1
+capital_sacked_salience = 90
+capital_captured_salience = 80
+```
+
+With the new id, every data root carries `chronology.toml`, `conflict.toml`, `engine.toml`, `peoples.toml` and `report.toml` (P3-01 5's rule); P3-01's unknown-id test expects `'chronology', 'conflict', 'engine', 'peoples', 'report'` (amendment 18.3). The field names in sections 5–7 use the short forms `loss_loser` = `loss_loser_permille`, `sack_toll` = `sack_toll_permille`, `capture_toll` = `capture_toll_permille`, `walls_permille`, `levy_permille`.
+
+### 12.2 Race data (a data change in this merge)
+
+1. **New field** `prowess_permille` int(1, 4000), required, after `aggression` (P3-01 amendment 18.3): elf 1600, goblin 800, dwarf 1400, faerie 1200, human 1000, orc 1300 (6.1). `aggression` is readiness for war; nothing in the race data says how well a people fights, and without it the few elves (density 300) fall to the numerous goblins (900) in every world: in the first prototype run without it, PRE-PROWESS. Elves and dwarves are old, long-lived and skilled; faeries hidden in wild places; orcs "strong, warlike" (design 5); goblins numerous rather than strong.
+2. **Goblins**: `aggression` 700 → **600**. With 700 the goblins (numerous, the second people, and split into several hordes by P3-05's secessions) were the attacker in four of five wars of a world and the orcs, the design's warlike latecomers, in one of fifteen; squared aggression (5.2) at 600 against the orcs' 900 makes the orcs' strain grow 2.25 times as fast as the goblins' and leaves the goblins the elves' first enemy.
+3. Unchanged: every other field and race.
+
+These change every world's `content_hash` (P1-00 6.4); P3-01's content-hash lines are re-recorded with this merge by their reference.
+
+## 13. The seam with peoples (P3-05 13) and the subsystem's interface
+
+```cpp
+namespace worldgen::history {
+class ConflictSubsystem final : public Subsystem, public TensionSource {
+public:
+    ConflictSubsystem(PeoplesSubsystem& peoples, const data::ContentSet&);   // reads history.conflict, history.peoples, races
+    std::span<const Step> steps() const override;                          // T2, T6, Q4
+    void run(StepContext&) override;
+    TensionReport tension(const StepContext&) override;                     // 5.4, const in effect
+    // test seams (not used by run_history): the pure functions of 5.1, 6.1, 6.3, 7.3, 7.4 on a hand-made State
+};
+}
+```
+
+What P3-06 uses of P3-05: `PeoplesView` (`score`, `capacity`, `neighbours`, `population`, `regions`, `settlements`, `wanted_held`, `hunger`), `note_reduction` (7.4), and the new `ruin` (amendment 18.1, 7.5). What it changes through `State`: populations (casualties, sacks, captures, refugees), settlement owners (captures, cessions), statuses (through `ruin`), region owners (conquest, cession, release through `ruin`), capitals (`capital_moved` after a capture), civilization ends (`civ_conquered`), relations. Everything P3-05's 20 forbids stays untouched: its kinds, its members, foundings into free land, the step order.
+
+**P3-05's rules see P3-06's changes from the next step** (P3-05 13): a captured town grows toward its new owner's share and may dwindle to the new owner's ladder (a goblin-held elven city is capped at a goblin town's size); a sacked region is free land for P3-05's outward foundings of any people within reach, which is how "land left open or ruined" is resettled; a settlement left below `abandon_min` by casualties is abandoned in the next T1 with the battle as its cause.
+
+## 14. Invariants
+
+For every seed, setting, data set within the schemas and map size, with P3-05's invariants (as amended in 18.1):
+
+1. **Relations**: every `relation` row has `a_type` = `b_type` = 3 and kind `enmity`, `war` or `peace`; `enmity` and `peace` rows have a_id < b_id, `war` rows a = the attacker; at most one `enmity` row per pair; a pair's `war` rows do not overlap, nor its `peace` rows, and a `war` and a `peace` row of one pair overlap in no year (the peace closes at the declaration year, the war at the peace year: P3-04 10's half-open intervals); every row's `since_event` is of the kinds of 4.3, every closed row's `until_event` too; an `enmity` row's `since` is the younger side's `founded_year`.
+2. **Wars**: every `war_declared` has a `claim` of its attacker on its defender as its first cause, dated earlier or the same year; every war ends by exactly one of: a `peace` or `truce` caused by its last event, the `civ_conquered` or `civ_ended` of a side, or the end of history (open row); no `battle`, `siege`, `sacked` or `settlement_captured` event lies in a quiet phase; every `peace`, `truce`, `region_ceded` in a quiet phase is dated at its first step's start.
+3. **Falls**: every `sacked` and `settlement_captured` is caused by a `siege` with `fell` 1 of the same settlement and year, which is caused by a `battle` or `battle_at_pass` of the same year won by the siege's attacker; every ruined settlement's `ruin_event` is a `settlement_abandoned` or a `sacked`.
+4. **Ends**: every `civ_conquered` ends its civilization (`ending_event`), is caused by a fall of that civilization's last standing settlement, and names a conqueror alive at that year; an ended civilization has no open relation and holds no region.
+5. **Territory**: a region's owner has a standing settlement in it (P3-05 invariant 4, now without its exception); every change of a region's owner by P3-06 is a `settlement_captured` or a `region_ceded`.
+6. **Capacity**: every standing settlement has P ≤ 2 × C(R, owner race) after every step (P3-00 12.3).
+7. **Races**: with `last_refuge` 1, every present race has an alive civilization at the present.
+8. **Tension**: every flare-up's trigger is a `claim`; the claim's pair had strain ≥ the threshold at that quiet step (the reference recomputes it).
+9. **Draw independence** (P3-00 Y3): a test-only extra draw on any `hist.conflict.*` stream before a decision changes nothing else.
+
+DRAFT-MEAS
+
+## 16. Tests required
+
+For the independent test writer; the engineer records final signatures here after implementation.
+
+**What the reference must reproduce.** The reference `worldgen/tests/reference/p3_conflict_reference.py` (Python, exact integers, on `core_reference`, `p3_names_reference`, `p3_chronology_reference`, `p3_engine_reference` and `p3_peoples_reference`) is written **from this spec alone**, without reading or porting the C++. From a world's stored geography, chronology rows and the data root it computes **every row of all thirteen history tables** with peoples and conflict installed (P3-04's scheduler with this spec's tension, SC5/SC6), and compares them with the world byte for byte through the logical table hashes (P0-04 8), row by row on a mismatch. It also prints per war one line (declaration, sides, goal, battles, falls, outcome), the tension of every quiet step that has one, and the `[stats]` lines of 15.4. The spec writer's prototype (`conflict.py`) is not the reference; where it and this text differ, the text rules and the difference is reported to the lead.
+
+### 16.1 Unit tests (seams on hand-made state)
+
+**Worked example W1 (a war on three regions, by hand).** Regions R1, R2, R3 in a row, borders (1, 2) and (2, 3) walkable (cost 1), no river, cover 0 (grassland, no rough ground); N = 3 non-islet regions. Civilization 1 (elves: good, aggression 150, prowess 1600) holds R2 and R3: s1 its capital, a town of 2,000 in R3, and s2 a village of 500 in R2. Civilization 2 (goblins: evil, aggression 600, prowess 800) holds R1: s3, its capital, a town of 6,000. No grudge, hunger 0, `wanted_held`(2) = ∅; the view's σ for goblins: R2 500, R3 600; shipped tuning; civilization 1 founded at year 0, civilization 2 at year 0 with `shelter_years` passed.
+
+| Quantity | Value |
+| --- | --- |
+| d(1, 2), h | −700, 700 |
+| share(1), fear(1) | 666, 1000 × 266 div 600 = 443 |
+| drive(2 → 1), drive(1 → 2) | 200 + 700 + 0 + 443 = 1343; 200 + 700 = 900 |
+| front(2, 1) | (R2, 1, R1), (R3, 2, R2); k = 1 |
+| rate(2 → 1) | 600 × 600 div 1000 = 360; × 1343 div 1000 = 483; × 1000 div 1000 = 483 |
+| strain per tick year | 483 × 25 = 12,075 milli |
+| claim | in the 25th tick year (301,875 ≥ 300,000); region: keys (1, −400, 2) and (1, −400, 3), so R2; cause R2's `owner_event` |
+| force(2), force(1) | 6000 × 100 div 1000 × 800 div 1000 = 480; (200 + 50) × 1600 div 1000 = 400 |
+| declaration at year 50 (strain 603,750, s = 603) | p = 150 × (303 × 1000 div 600 = 505) div 1000 = 75; odds: 400 × 1000 div 1000 × 400 div 1000 = 160, 480,000 div 160 = 3000, so 1000; p = 75‰ |
+| battle in R2 | A = 480, D = 400, def = 1000, D' = 400, p = 480,000 div 880 = 545‰ |
+| if civilization 2 wins | dead_L = 100, dead_W = 38; civilization 1 loses 80 at s1 and 20 at s2; civilization 2 loses 38 at s3 |
+| siege of s2 | walls 1500; G = 480 × 300 div 1000 = 144, × 1600 div 1000 = 230, × 1500 div 1000 = 345; A2 = 442; ps = 442,000 div 787 = 561‰ |
+| if it falls | sack chance 200 + 700 = 900‰; a sack kills 480 × 300 div 1000 = 144, 336 flee to s1 (room permitting); R2 is released; the aim is achieved: `peace` (winner 2, loser 1); no cession (R2 no longer held by 1); grudge 50 + 150 = 200, so d = −900 |
+| if it is taken instead | 48 die; s2 passes to civilization 2 with 432 (if 2 × C(R2, goblin) ≥ 432), R2 to civilization 2; aim achieved |
+
+The test builds this state through the seams, runs the pure functions and one T2/T6 sequence with the reference's draws, and checks every line of the table (both branches of each draw through hand-made `ConflictTuning` values of 0 and 1000 where needed: `battle_permille` 1000, `sack_base` 0 or 1000 with `sack_hostility` 0).
+
+1. Disposition and grudges: the camp table for every camp pair; secession grudge; capture and war grudges; decay at L = 25 (12 per step at 50 per century) and the floor at 0.
+2. Front: shared region (cost 1); one border; two borders through a third civilization's region and through an islet; a pass (cost 3) against a two-border walkable path (cost 2: the path wins); `march_hops` 1 and 2; ties of (cost, last region).
+3. Drive and rate: each term alone; friendly pair (d ≥ friction) with drive 0; fear at share 400 (0) and 1000 (`fear_weight`); left-to-right integer evaluation of the rate; cap at `strain_max`; intensity calm and turbulent.
+4. Claims: threshold exactly at `claim_strain`; region choice with and without `wanted_held`; the cause when the holder has the region and when it has only a settlement there; no claim during a truce, a war, without budget in a quiet step.
+5. Tension: the largest strain among claimed pairs; ties by (a, b); pairs without a claim, at war, in truce, out of contact ignored; value 0 and trigger 0 when there is none; read-only (state hash before and after).
+6. Declarations: shelter; at most one war as attacker; odds for aggression 150, 600, 900; the flare-up war without a draw in the first T2 of a flare-up only; goal re-choice when the claim region is gone; the closing of the pair's `peace` row.
+7. Battles: initiative swap when x has no front; goal targeting; def with each bonus; `battle_at_pass` with `pass`; casualties' distribution with a remainder; `note_reduction` on every settlement of the side.
+8. Sieges and falls: capital walls; `last_refuge` on the last settlement of a race and not on the last of a civilization whose race lives on; sack with refugees and region release; capture with the 2 × C cap and its refugees; capital moved after a capture; conquest with its relation closings.
+9. Ends of war: each of 7.7's items once (aim, both exhausted, exhausted leader → truce, exhausted loser → peace, no front, length); cession and its conditions (attacker wins, goal still held, not the capital's region); 7.8's quiet-step end, with and without budget.
+10. Housekeeping: relations of a civilization ended by P3-05's decline closed with its `civ_ended`; `enmity` opened once per pair, for good–evil only with the shipped table.
+11. Catalogue: kinds 20–30 equal section 11 transcribed; templates pass `template_problem`; `history.report` lists every kind.
+12. Tuning: each field's range, each named check's message once, the unknown-id expectation of P3-01 (12.1).
+13. Race data: `prowess_permille` required and ranged (P3-01's loader tests); the goblin aggression 600.
+14. P3-05's `ruin` (18.1): items 2–5 with the given event; `abandon` unchanged on P3-05's fixture worlds (its golden vectors at 0.15.0 still pass with conflict not installed).
+
+### 16.2 Property tests
+
+15. Over the fixture worlds (P3-04 16.2 item 17's synthetic regions stage: 2 to 60 regions, islets, barriers, passes, river borders) × seeds 0–15 × spans 2000, 6000 × races all, `elf,goblin`, `elf,orc`, `dwarf,faerie` × `civs_per_race` auto, 4 × intensities: invariants 1–9 of 14 and P3-05's; rows equal the reference.
+16. On the 1024 golden cases: the hard bounds of 15.5.
+17. Y3 for each `hist.conflict.*` stream; Y4 with conflict installed (relations opened in two different orders in one step give the same rows).
+18. Threads 1 and 5 identical; resume (P3-04 Y2) with conflict installed.
+
+### 16.3 Golden vectors
+
+19. `worldgen/tests/golden/p3-06-conflict.txt`, written by the reference: for the four P1 golden cases and the three `hist-*` cases: (a) the logical hashes of the thirteen history tables; (b) the war lines of 16; (c) the tension of every quiet step (`<case> q<start> <value> e<trigger>`); (d) the `[stats]` lines of 15.4; (e) the rendered sentence of every event of the 512 cases and of every event of kinds 20–30 of the 1024 cases (`*-slow` suite). The C++ must match every line.
+20. The sample of 15.2 (seed 42 at 1024, default settings) is a golden case of its own, `hist-conflict-42-1024`, in `p3-06-conflict.txt` only: its war list and the sixty summary lines of 15.2 must equal the spec's (prototype and reference are independent; a difference is resolved before merge). P3-05's `hist-peoples-42-1024` is re-recorded with conflict installed (its first 60 sentences before the first claim are unchanged: conflict appends nothing before year 2148 in that world).
+
+### 16.4 Performance
+
+`history` at 1024 with peoples and conflict (prototype: PERF in Python, single-threaded): budget **4 s** in a release build (P3-00 12.1 gives 15 s for P3-04 to P3-06 together; P3-05's own budget is 2 s), 512: 1 s, 2048: 16 s. Costs per tick year: the fronts of every ordered pair of alive civilizations (about 100 pairs × a two-border search over about 30 presence regions), `wanted_held` per civilization, and per open war a battle; per quiet step the same strain update once. A microbenchmark tagged like P3-04 14.3's reports it. The engineer may cache presence and fronts per step (they change only with ownership), which this text permits because they are pure functions of the step's state.
+
+## 17. Determinism notes
+
+| Concern | Rule |
+| --- | --- |
+| Arithmetic | `int64` only; floor division (`floor_div`) wherever a numerator can be negative (d, drive before its max); products bounded: rate ≤ 1000 × 5000 × 1000 / 10^6, strain ≤ 5 × 10^6, force × 1000 < 2^41 |
+| Order | civilizations ascending; ordered pairs (a, b) ascending; wars by declaration event id; relations by `RelationKey`; settlements ascending; front entries by region id, paths by (cost, last region) |
+| Snapshots | `wanted_held`, holdings and shares for the strain update from the step's start; owners and populations live elsewhere, in the stated order |
+| Draws | all keyed (H4) with the stored declaration event id as the war key; no draw depends on another's outcome except through state |
+| Containers | ordered maps keyed by integers or integer pairs; no unordered container |
+| Visibility | entities created in a step are not processed in it (P3-04 6.2); refugees may join a settlement created earlier in the step (P3-05 8.5's exception) |
+
+Lint impact: none expected.
+
+## 18. Amendments requested
+
+To be applied with the lead's approval, each in its spec's convention. **18.1 first: P3-05 is about to be implemented.**
+
+### 18.1 P3-05 (peoples) — apply before P3-05 is implemented
+
+1. **New hook** `PeoplesSubsystem::ruin(std::int64_t settlement, std::int64_t event)`: performs 8.5 items 2–5 for the settlement with `event` in place of the abandonment event (survivors to the owner's nearest other standing settlement up to its room; `set_population(s, 0)`, `set_settlement_status(s, ruined, event)` so that `ruin_event` = `event`, `set_settlement_owner(s, 0, event)`; the release of the region; the capital move with `capital_moved` caused by `event`), and **not** item 6 (the caller ends the civilization). `abandon(s, cause)` becomes: append `settlement_abandoned`, `ruin(s, that event)`, then item 6. No behaviour of a P3-05 world changes (a refactor; P3-05's golden vectors at 0.15.0 are unaffected).
+2. 13 "Ruin by sacking": P3-06 calls `ruin(settlement, sack event)`, not `abandon`; the ruined row's `ruin_event` is the `sacked` event (P3-07 20 item 3).
+3. 13 "Ending by conquest": P3-06 appends its own kind `civ_conquered` (30, roles `civilization` and `conqueror`), not `civ_ended`.
+4. 14 invariant 4: the exception "(P3-05 alone; P3-06 may hold regions without settlements)" becomes "with P3-06 too: P3-06 transfers regions only with settlements (P3-06 14 item 5)"; invariant 7: a ruined row's `ruin_event` is a `settlement_abandoned` or (from P3-06) a `sacked`.
+5. 15: the measurements are those of a world without conflict (0.15.0); P3-06 15 gives the 0.16.0 figures.
+
+### 18.2 P0-01 (stream list)
+
+The registry gains, after `hist.peoples.split`, `hist.conflict.declare`, `hist.conflict.battle`, `hist.conflict.battle_win`, `hist.conflict.siege`, `hist.conflict.sack` (51 names). No world byte changes by registration.
+
+### 18.3 P3-01 (data)
+
+1. Race field `prowess_permille` int(1, 4000), required, after `aggression`: "fighting strength of the race's people, per mille of the standard (P3-06 6.1)"; shipped values 12.2; the fixture race files gain it.
+2. Goblin `aggression` 600 (section 3.1's shipped data).
+3. Field meaning of `aggression`: readiness for war, which P3-06 squares in the strain rate (5.2) and uses against the odds of a declaration (7.2); of `expansion`: unchanged (P3-05).
+4. Section 5's id table: `conflict` "added by P3-06 (12.1 there)"; 8.1 item 4's expected list `'chronology', 'conflict', 'engine', 'peoples', 'report'`, and a future-id example that is not registered (for example `monsters`).
+
+### 18.4 P3-07 (appended keys; format stays v1)
+
+Section 9 gains, after `civilizations_seceded`, the keys of 15.4 in that order with those definitions. 20 item 1 is met by 4.3 (`war` asymmetric, `enmity` and `peace` symmetric). The illustrative excerpt of 17 stays illustrative (its kinds `region_claimed` and `civ_ended`-by-conquest are not P3-06's).
+
+### 18.5 P3-00, P3-04, `schema.md`
+
+1. **P3-00 6.1** (`relation` row note): kinds `enmity`, `war`, `peace` (P3-06 4.3); vassalage and alliances deferred. **10.5**: a sacked settlement is ruined (its survivors flee) or a fallen one changes owner; a civilization with no standing settlement left by conquest ends with `civ_conquered`. **10.6**: the 3 × 3 table's shipped values (4.1). **4.4** Q4: P3-06 ends open wars and builds strain and claims (7.8).
+2. **P3-04 6.4**: the shipped `EngineConfig` installs `ConflictSubsystem` after `PeoplesSubsystem` (steps T2, T6, Q4) and as the only tension source, from generator 0.16.0; 8.2: the catalogue is extended by P3-06 with kinds 20–30. No engine rule changes.
+3. **`schema.md`** (the engineer): the catalogue table gains kinds 20–30 (structure only); the relation kinds `enmity` (symmetric), `war` (asymmetric, a the attacker), `peace` (symmetric). No schema change; `schema_version` stays 7.
+
+## 19. Open questions for Paul
+
+Each with the recommendation and the interim choice this spec follows.
+
+QUESTIONS
+
+## Appendix A. Proposals entries (added to `docs/design/proposals.md` with this spec)
+
+- "History: wars are limited, fought for a claimed region, and end with the active phase" (questions 1 and 2).
+- "History: no race is wiped out; newly awakened peoples are sheltered" (question 4).
+- "History: a fighting strength per race; goblins less aggressive than orcs" (question 3).
