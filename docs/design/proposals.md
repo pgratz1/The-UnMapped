@@ -448,3 +448,73 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
 - Proposal: none; a record. Paul read the review, accepted its recommendations and approved P1. For P3 this means: the default map size, 1024, is the reference size for tuning and judging history, since 512 worlds have room for few peoples and suit a short history, not all six races; history locates a pass by its col (`pass.col_x`, `col_y`) and the `region` layer; a border counts as a river border by the share of its length that follows the river, not by any river pair; islets below about 0.3 km² are ignored as homes; homelands in wild uplands are chosen by region and biome, since little of that ground is walkable; ports come from history (forage and river mouths), since coasts score below the interior; lowland borders are political lines.
 - Interim choice: the P3 specs follow these points.
 - Status: decided
+
+### History: quiet intervals advance in steps so that flare-ups can interrupt them
+
+- Date: 2026-11-19
+- Raised by: spec-writer (P3-00)
+- Design doc section: 5 (Deep time: quiet intervals, flare-ups)
+- Problem: a quiet interval "advances the world in one jump", yet it "can be interrupted" when a tension measure crosses a threshold. A single jump cannot be interrupted part-way, and the design does not say how often tension is checked.
+- Proposal: a quiet interval is a sequence of quiet steps (25 years by default, tuning); after each step the tension measure is evaluated and, above the threshold, a flare-up (a short active phase) starts the next year. Consecutive quiet steps without change are written as one summary event spanning them.
+- Interim choice: as proposed, in `docs/specs/p3-00-history-overview.md` 4.1 and 4.4.
+- Status: open
+
+### History: the calendar starts at the first elven awakening
+
+- Date: 2026-11-19
+- Raised by: spec-writer (P3-00)
+- Design doc section: 5 (Deep time, awakening table), 6 (`meta` end year)
+- Problem: the design gives years relative to the span ("year 0", "around year 2,100") but does not fix year 0 or the present, nor whether there are months.
+- Proposal: years are integers; year 0 is the first elven awakening; the present is year E, the history span (6,000 by default), stored as `meta.history_end_year`; events within a year are ordered by event id. Eras shown to players are derived at runtime.
+- Interim choice: as proposed (P3-00 2.1).
+- Status: open
+
+### History: P3 creates only the creator gods
+
+- Date: 2026-11-19
+- Raised by: spec-writer (P3-00)
+- Design doc section: 5 (Gods and the order of the races), 13 (P3 and P5 rows)
+- Problem: each awakening is "an event with a god, a year and a place", but the pantheon and god interventions are phase P5.
+- Proposal: P3 writes one named creator god per race (with its camp) into table `god`, so that awakening events name their creator; the rest of the pantheon, domains and interventions come with P5, which adds columns with a schema bump. P3 defines the seam for interventions and for the divine script (design 14): an intervention source consulted once per tick, empty in P3; `meta.param.divine_script` records the script's hash or nothing.
+- Interim choice: as proposed (P3-00 9.2).
+- Status: open
+
+### History: territory is held by whole regions
+
+- Date: 2026-11-19
+- Raised by: spec-writer (P3-00)
+- Design doc section: 5 (claim a region), 13 (P4 territory overlay by year)
+- Problem: the design does not say at what grain territory is held, and P4's timeline must show it at any year cheaply.
+- Proposal: a region is held by at most one civilization at a time; table `region_control` stores ownership intervals (region, from year, to year, civilization, causing event), and `settlement_census` the settlement states by year, so a viewer answers any year without replaying the log.
+- Interim choice: as proposed (P3-00 6.4).
+- Status: open
+
+### History: the event log stores facts, not summaries
+
+- Date: 2026-11-19
+- Raised by: spec-writer (P3-00)
+- Design doc section: 6 (table `event`: `summary`, `site_id`), 14 (enrichment needs structure)
+- Problem: the design's `event` table has a `summary` column, while its rules say that text shown to players is generated at runtime from records and templates. Sites do not exist before P6.
+- Proposal: `event` holds kind, year and end year, phase, region, settlement and a salience score; participants with roles, integer values and causes are in `event_participant`, `event_value` and `event_cause`. Sentences are rendered from a catalogue of event kinds with templates (data), in the history report, the viewer and the game. `site_id` is added with the sites in P6. The catalogue of kinds, roles and value keys is part of the schema contract, as the layer catalogue is.
+- Interim choice: as proposed (P3-00 6.2, 6.3).
+- Status: open
+
+### History: event rules are code with TOML tuning in P3; roads and improved passes wait for P5
+
+- Date: 2026-11-19
+- Raised by: spec-writer (P3-00)
+- Design doc section: 3 / 5 (event rules as hand-edited TOML; tick loop "build a road"; "Mountains, passes and roads in history"), 13 (P3 row)
+- Problem: the design lists event rules among the TOML data and puts road building and pass improvement in the tick loop, while the P3 row of section 13 lists civilizations, settlements, wars and ruin only.
+- Proposal: in P3 the rules are code from the stage specs, with every number in TOML tuning (kind `history`) and the report templates in data; whether conditions and effects should become data is decided in P5, once it is clear which rules need to vary. Roads and improved passes come with P5 (table `road`); P3 treats passes as fixed crossings.
+- Interim choice: as proposed (P3-00 8.4, 15).
+- Status: open
+
+### History: schema versions 6 and 7
+
+- Date: 2026-11-19
+- Raised by: spec-writer (P3-00)
+- Design doc section: 6 (table list, schema versions)
+- Problem: the design's table list is the target for all phases; P3 needs a subset, some tables the list does not have, and the `meta` keys for the world-creation settings.
+- Proposal: schema 6 (chronology): `race`, `race_biome` (new: preferred biomes as rows), `culture`, `god` (creator gods), `age`, and the world-creation settings as required `meta` keys (including those P5 will use, so they need no later bump). Schema 7 (history engine): `phase`, `event`, `event_participant`, `event_cause`, `event_value` (new), `civilization`, `settlement`, `settlement_census` (new), `region_control` (new), `relation` (with an end year). The later P3 stages add rows and catalogue entries, not columns.
+- Interim choice: as proposed (P3-00 6.1); exact DDL in the P3-03 and P3-04 specs.
+- Status: open
