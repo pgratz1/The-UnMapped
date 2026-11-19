@@ -201,10 +201,10 @@ void PeoplesSubsystem::run(StepContext& ctx) {
         case Step::q4: foundings(ctx); break;
         case Step::t4: pressures(ctx); break;
         case Step::q1:
-            // 9.2: the yearly growth L times, then recovery, abandonment and
-            // kind changes once.
-            grow_years(ctx, ctx.years(), false);
-            recover_all(ctx);
+            // 9.2: the yearly growth and recovery of T1 L times (invariant 9:
+            // a quiet step of L years equals L tick years without pressures),
+            // then abandonment and kind changes once.
+            grow_years(ctx, ctx.years(), true);
             abandon_small(ctx);
             change_kinds(ctx);
             break;
@@ -451,18 +451,6 @@ void PeoplesSubsystem::grow_years(StepContext& ctx, std::int64_t years, bool rec
                     state.set_settlement_status(id, SettlementStatus::thriving, t.founding_event);
                 }
             }
-        }
-    }
-}
-
-void PeoplesSubsystem::recover_all(StepContext& ctx) {
-    State& state = ctx.state();
-    const std::int64_t n = settlement_count(state);
-    for (std::int64_t id = 1; id <= n; ++id) {
-        const Settlement& t = state.settlement(id);
-        if (t.status == SettlementStatus::declining && ctx.visible(t) &&
-            checked_mul(t.population, 1000) >= checked_mul(tuning_.recover_permille, get(before_, id))) {
-            state.set_settlement_status(id, SettlementStatus::thriving, t.founding_event);
         }
     }
 }

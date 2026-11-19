@@ -292,7 +292,6 @@ private:
     // T1 (and one year of Q1 without the end-of-step rules).
     void end_empty_civilizations(StepContext& context);
     void grow_years(StepContext& context, std::int64_t years, bool recover_each_year);
-    void recover_all(StepContext& context);
     void abandon_small(StepContext& context);
     void change_kinds(StepContext& context);
     void foundings(StepContext& context);
