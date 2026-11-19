@@ -148,11 +148,11 @@ Approximate full `ctest` time on a 6-core Linux machine, with the presets' four 
 
 | Preset | `ctest` |
 | --- | --- |
-| `linux-gcc-release`, `linux-clang-release` | about 50 seconds |
-| `linux-gcc-debug`, `linux-clang-debug` | about three and a half minutes |
-| `linux-clang-asan` | about 23 minutes |
+| `linux-gcc-release`, `linux-clang-release` | about 55 seconds |
+| `linux-gcc-debug`, `linux-clang-debug` | about four minutes |
+| `linux-clang-asan` | about 17 minutes |
 
-Measured 2026-11-18 at generator 0.10.0 on an otherwise quiet machine. Windows times are not measured yet. With `-j 1` it takes two to three times as long (measured at generator 0.9.0: release about two and a half minutes, `linux-clang-asan` about 44). Under `linux-clang-asan` the longest entries (`worldgen-tests-elevation-golden`, `worldgen-cli-tests-hydrology-elevation`, `worldgen-tests-hydrology`) take 9 to 11 minutes each, which is the floor however many jobs run. For quick iteration use `linux-gcc-release` or `linux-clang-release` (run a single doctest executable with `-tc=` or `-ts=` for narrower checks); run both debug presets and `linux-clang-asan` before handing work on.
+Measured 2026-11-19 at generator 0.11.0 on an otherwise quiet machine (`linux-gcc-release` 53 s, `linux-gcc-debug` 223 s, `linux-clang-debug` 235 s, `linux-clang-asan` 996 s). Windows times are not measured locally; CI job times vary by up to a factor of two between runs with the hosted runner's speed (`docs/reviews/ci-job-time-variance.md`). With `-j 1` it takes two to three times as long (measured at generator 0.9.0: release about two and a half minutes, `linux-clang-asan` about 44). Under `linux-clang-asan` the longest entries (`worldgen-tests-elevation-golden`, `worldgen-cli-tests-hydrology-elevation`, `worldgen-tests-hydrology`) take 6 to 7 minutes each, which is the floor however many jobs run. For quick iteration use `linux-gcc-release` or `linux-clang-release` (run a single doctest executable with `-tc=` or `-ts=` for narrower checks); run both debug presets and `linux-clang-asan` before handing work on.
 
 ### Determinism lint
 
