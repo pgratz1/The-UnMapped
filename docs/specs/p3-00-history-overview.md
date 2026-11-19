@@ -62,7 +62,7 @@ Two new pipeline stages, `chronology` and `history`, follow `regions`. The `hist
 - **P3-07** can be written and implemented in parallel with P3-05 and P3-06 once P3-04 is merged; it reads tables only.
 - **P3-05, then P3-06.** Their specs can be written in parallel (P3-06 depends on P3-05's state but not its rules); P3-06 is implemented after P3-05 merges, since conflict needs settlements and territory.
 
-Each merge that changes world bytes bumps `GENERATOR_VERSION` (MINOR) and re-records the golden values, as in P1. Version plan: **0.12.0 (P3-01**: the new data kinds change every world's `content_hash`; no schema change**)**; P3-02 adds library code and the culture naming data, which P3-01's files already carry, so it changes no world byte and needs no bump; 0.13.0 (P3-03, schema 6); 0.14.0 (P3-04, schema 7); 0.15.0 (P3-05); 0.16.0 (P3-06); P3-07 changes no world byte (its report templates are written by the `history` stage from P3-04 on, A1), so it bumps only if it changes their data.
+Each merge that changes world bytes bumps `GENERATOR_VERSION` (MINOR) and re-records the golden values, as in P1. Version plan: **0.12.0 (P3-01**: the new data kinds change every world's `content_hash`; no schema change**)**; P3-02 adds library code and the culture naming data, which P3-01's files already carry, so it changes no world byte and needs no bump; 0.13.0 (P3-03, schema 6); 0.14.0 (P3-04, schema 7); 0.15.0 (P3-05); 0.16.0 (P3-06); P3-07 changes no world byte (its report templates are written by the `history` stage from P3-04 on, A1) and adds no data field (P3-07 3.2, 8), so it needs no version bump.
 
 ## 4. The simulation model
 
@@ -309,15 +309,15 @@ Nothing in P3 writes for the enrichment pass beyond the log contract (6.2) and t
 
 **Interface** (P0-04 7 "Later" announced it): `worldgen-cli report --db PATH --history [--level summary|full] [--out PATH] [--force]`, a separate text format `# worldgen history v1`, printed instead of the world report. Interim: an option of `report`, not a new subcommand, since it reads the same file with the same reader and output rules (proposals entry; P3-07 may propose otherwise).
 
-**Content** (P3-07 fixes the exact format):
+**Content** (P3-07 fixes the exact format, ids and grammar; corrected for P3-07: the output is ASCII, a subset of UTF-8; the report reads the world only and its selection constants are part of the format, not `history.report` data):
 
 1. `[settings]`: seed, phrase, span, detail, races, civilizations per race, generator version.
 2. `[ages]`: one line per age (race, start and end year, creator god).
 3. `[phases]`: one line per phase (kind, years, trigger event id).
 4. `[civilizations]`: one block per civilization: name, race, home region (id and name), founded, ended or alive, peak regions and population with years, settlements founded, wars fought, fate.
-5. `[chronicle]`: events in id order, those with `salience` ≥ the level's threshold (all at `full`), one line each: `<year> e<id> <kind>: <rendered sentence> [causes e<id>, …]`, the sentence rendered from the kind's template with names, so that the critic can follow causes by id.
+5. `[chronicle]`: events in id order under age and phase headings, at `summary` those with `salience` ≥ a threshold set by a budget on the number of events (P3-07 7.4), all at `full`, one line each: `<span> e<id> <kind>/<salience>: <rendered sentence> {<places, participants, values>} [causes e<id>, …]`, the sentence rendered from the kind's template with names, so that the critic can follow causes by id.
 6. `[present]`: the end state: regions held per civilization, settlements by status and kind.
-7. `[stats]`: key = value lines for sweeps (section 12.2), stable names, integers and exact decimals.
+7. `[stats]`: key = value lines for sweeps (section 12.2), stable names, integers only (ratios as per mille, P3-07 9).
 
 **Rendering**: sentences come from `render_event` in the `worldgen` library (6.3, A1), using the templates stored in the world's `event_kind` table, so the report, the viewer and the game print the same sentence for an event whatever data set is installed. The template language (placeholders for roles, values, place and year) is P3-04's (8.4 there; corrected for P3-04: the stage writes the templates and `render_event` is library code from P3-04 on).
 
@@ -356,7 +356,7 @@ The validation specialist sweeps with shipped data and default settings: 1024 se
 
 ### 12.4 Golden cases
 
-The geography cases of `world-hashes.sh` (P1-00 14 X5) run every stage by default, so from P3-03 on they are full-history worlds; their hashes are re-recorded at each P3 merge. Added cases: `hist-span-2000-512` (`--seed 7 --map-size 512 --history-span 2000`) and `hist-races-elf-orc-1024` (`--seed 3 --races elf,orc`) with P3-03 (golden file `p3-worlds.txt`), and `hist-dense-1024` (`--seed 11 --history-detail dense`) with P3-04, where the detail level first changes table bytes; so that the settings paths are compared across compilers. Each stage spec adds golden vectors of its own (P1 style: table hashes of fixture and shipped worlds, written by the test writer's independent reference); P3-07 adds the report text hashes.
+The geography cases of `world-hashes.sh` (P1-00 14 X5) run every stage by default, so from P3-03 on they are full-history worlds; their hashes are re-recorded at each P3 merge. Added cases: `hist-span-2000-512` (`--seed 7 --map-size 512 --history-span 2000`) and `hist-races-elf-orc-1024` (`--seed 3 --races elf,orc`) with P3-03 (golden file `p3-worlds.txt`), and `hist-dense-1024` (`--seed 11 --history-detail dense`) with P3-04, where the detail level first changes table bytes; so that the settings paths are compared across compilers. Each stage spec adds golden vectors of its own (P1 style: table hashes of fixture and shipped worlds, written by the test writer's independent reference); P3-07 adds the report text hashes (`p3-07-report.txt`: the history cases and hand-made fixtures, P3-07 14.4).
 
 ### 12.5 Tests that span stages
 
@@ -409,3 +409,7 @@ Amended 2026-11-19 after the P3-03 implementation (P3-03 15.6, the item not yet 
 ## Correction note (2026-11-19, for P3-04)
 
 Made with P3-04 (its 18.3), in place; no other content changes. 4.1: phase lengths scale with the span, floor and cap, the final phase after the last opening, inclusive `end_year`, `trigger_event` meanings. 4.2: the awakening's place is chosen before the event; a `flare_up` event at each flare-up's start. 4.4: Q2 is the engine's, new Q6 bookkeeping, quiet-step events dated at the step's start, `quiet_events_max` per charged civilization. 5: `--until history` accepted. 6.1: the column changes of P3-04 9.1 (`region_use`, `settlement_use`, `min_count`, `max_count`, role and value as `seq`, integer entity types, `capital`, `ruin_event`, `until_event`, `kind` in the `relation` key). 6.2 and 12.3: years non-decreasing with id without exception. 6.3 and 11: the catalogue split and the template language are P3-04's. 6.5: `history_end_year` in every world. 10.1: the stub home rule is interim. 12.3: `min_settlements_alive` from P3-05 on.
+
+## Correction note (2026-11-19, for P3-07)
+
+Made with P3-07 (its 18.4), in place; no other content changes. 3.2: P3-07 adds no data field and needs no version bump. 11: the exact format is P3-07's; ASCII output; the chronicle line carries references and the salience and is grouped by age and phase; the summary level is a budget on salience; `[stats]` holds integers only, ratios as per mille; the report reads no data. 12.4: P3-07's golden file `p3-07-report.txt`.

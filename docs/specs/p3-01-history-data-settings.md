@@ -312,7 +312,7 @@ Directory `history/`, **required**, a **fixed-id kind** (P0-03 amendment 15), on
 | `engine` | P3-04 | added by P3-04 (5.2, r4) |
 | `peoples` | P3-05 | added by P3-05 |
 | `conflict` | P3-06 | added by P3-06 |
-| `report` | P3-04 (the event salience and templates), P3-07 (its report fields) | added by P3-04 (5.3, r4); P3-07 adds fields |
+| `report` | P3-04 (the event salience and templates) | added by P3-04 (5.3, r4); P3-07 adds no field (P3-07 8; r5) |
 
 **A not-yet-registered id** is handled exactly as for `worldgen`: the id set of the kind is what the build registers; a definition with any other id is an error at its header, `unknown id 'engine' for kind 'history'; expected one of 'chronology'` (P0-03 amendment 15's message as implemented: the registered ids in ascending order, each in single quotes, separated by `, `), and every registered id must be defined (`missing definition 'history.<id>'`, against the directory). So each data root carries exactly the files of the ids registered by its build: a spec that adds an id adds its file to `game/data/history/` and to the two fixture roots in the same merge. A file for a future id must not be committed early.
 
@@ -342,7 +342,7 @@ Defined by P3-04 4.1: the quiet step, the per-step event limit, the floor and ca
 
 ### 5.3 `history.report` (r4, P3-04)
 
-Defined by P3-04 4.2: field `events`, one record per event kind (`kind`, `salience`, `template`), with the named check `report_events` against the compiled event catalogue. Shipped in `game/data/history/report.toml` and the two fixture roots. P3-07 adds its own fields (a data change).
+Defined by P3-04 4.2: field `events`, one record per event kind (`kind`, `salience`, `template`), with the named check `report_events` against the compiled event catalogue. Shipped in `game/data/history/report.toml` and the two fixture roots. P3-07 adds no field: its selection constants are part of the report format, since the report reads the world only (P3-07 3.2, 8; r5).
 
 ## 6. World-creation settings
 
@@ -476,3 +476,7 @@ Text only in this spec. 3, cross-kind conditions: item 0, P3-03's check D0 (the 
 ## Revision note r4 (2026-11-19, amendments for P3-04)
 
 Requested by P3-04 18.2. 5: the ids `engine` and `report` are registered by P3-04 (new 5.2 and 5.3, pointing to P3-04 4.1 and 4.2); every data root then carries `chronology.toml`, `engine.toml` and `report.toml`. 8.1 item 4: the expected fixed-id messages from P3-04 on. The merge changes every root's `content_hash` (`p3-01-data.txt` re-recorded by its reference). No behaviour of P3-01's code changes.
+
+## Revision note r5 (2026-11-19, amendments for P3-07)
+
+Requested by P3-07 18.5. 5 and 5.3: `history.report` keeps the one field of P3-04; P3-07 adds none. No behaviour, data or world byte changes.
