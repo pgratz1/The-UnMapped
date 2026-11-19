@@ -187,10 +187,10 @@ TEST_CASE("P1-03 6 invariants 1 and 8, 10.2: the offset is a shift; rainfall and
     }
 }
 
-TEST_CASE("P1-03 C2b, P1-00 3: the stream geo.climate.temp_offset is registered; 30 stream names in all (0.11.0)") {
+TEST_CASE("P1-03 C2b, P1-00 3: the stream geo.climate.temp_offset is registered; 33 stream names in all (0.11.0, P3-02)") {
     const auto& names = worldgen::streams::all_stream_names;
     CHECK(std::find(names.begin(), names.end(), STREAM_OFFSET) != names.end());
-    CHECK(names.size() == 30U);  // P1-04 appendix B: the 0.8.0 26 plus one; P1-05 geo.resources.ore; P1-06 two
+    CHECK(names.size() == 33U);  // P1-04 appendix B: the 0.8.0 26 plus one; P1-05 geo.resources.ore; P1-06 two; P3-02 three
     // The biome exploration's streams are not registered (P1-04 0, appendix B).
     CHECK(std::find(names.begin(), names.end(), std::string_view("geo.biomes.wet_jitter")) == names.end());
     CHECK(std::find(names.begin(), names.end(), std::string_view("geo.biomes.elev_jitter")) == names.end());

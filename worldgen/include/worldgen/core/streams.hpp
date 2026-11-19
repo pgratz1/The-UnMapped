@@ -74,8 +74,15 @@ inline constexpr std::string_view geo_resources_ore = "geo.resources.ore";
 inline constexpr std::string_view geo_regions_seed = "geo.regions.seed";
 inline constexpr std::string_view geo_regions_cost = "geo.regions.cost";
 
+// Keys of the name generator (P3-02 4.5): the stream keys of the keyed
+// draws history::draw(stream_key, attempt, culture, entity, j), one per name
+// kind. No Rng.
+inline constexpr std::string_view hist_names_god = "hist.names.god";
+inline constexpr std::string_view hist_names_civilization = "hist.names.civilization";
+inline constexpr std::string_view hist_names_settlement = "hist.names.settlement";
+
 // Every registered name, in registration order.
-inline constexpr std::array<std::string_view, 30> all_stream_names = {
+inline constexpr std::array<std::string_view, 33> all_stream_names = {
     test_hash,
     test_noise,
     test_wide,
@@ -106,6 +113,9 @@ inline constexpr std::array<std::string_view, 30> all_stream_names = {
     geo_resources_ore,
     geo_regions_seed,
     geo_regions_cost,
+    hist_names_god,
+    hist_names_civilization,
+    hist_names_settlement,
 };
 
 }  // namespace worldgen::streams
