@@ -313,12 +313,12 @@ P3-06 installs as the second subsystem (`EngineConfig::subsystems` = peoples, co
 
 | Character | Rule and data that produce it | Measured (15) |
 | --- | --- | --- |
-| Goblins hostile to elves from their first year | camp table good–evil −700: an `enmity` row from the goblins' founding year (4.3); the fastest strain of any older pair (5.4); sacks over captures at h = 700 (7.5) | MEASURE-GOBLIN |
-| Dwarves arrive into a world already at war | dwarves are neutral (wary, −150/−250); their awakening opens an active phase in which the strain the goblins and elves built in the quiet centuries turns into declarations (declare_min below the flare threshold) | MEASURE-DWARF |
-| Humans spread over land left open or ruined | sacks free regions (7.5 item 2) and P3-05's outward foundings resettle free land; humans reach 3 hops | MEASURE-HUMAN |
-| Orcs open the last age of conflict | aggression 900 (810 squared, the largest); evil against everyone but goblins; strong (prowess 1300); their age is active to the present (P3-04 E4) | MEASURE-ORC |
-| Elves old and few, oldest in the present | prowess 1600 in forest cover; capitals walled; `last_refuge` | MEASURE-ELF |
-| No race wiped out | `last_refuge` (7.3 item 7) and `shelter_years` (7.2) | MEASURE-EXTINCT |
+| Goblins hostile to elves from their first year | camp table good–evil −700: an `enmity` row from the goblins' founding year (4.3); the fastest strain of any older pair (5.4); sacks over captures at h = 700 (7.5) | `enmity` from the goblins' founding in every world; goblin–elf wars 0 / 8 / 20 a world (15.3) |
+| Dwarves arrive into a world already at war | dwarves are neutral (wary, −150/−250); their awakening opens an active phase in which the strain the goblins and elves built in the quiet centuries turns into declarations (declare_min below the flare threshold) | a war within 50 years of the awakening in 30 of 50 worlds (15.3; question 10) |
+| Humans spread over land left open or ruined | sacks free regions (7.5 item 2) and P3-05's outward foundings resettle free land; humans reach 3 hops | humans the largest people; 15 standing settlements against 11 without war; 5% of human settlements on ruined ground (question 9) |
+| Orcs open the last age of conflict | aggression 900 (810 squared, the largest); evil against everyone but goblins; strong (prowess 1300); their age is active to the present (P3-04 E4) | 53% of all wars fall in the orc age, 3.0 a century against 0.19 before; orcs the attackers at 0.73 wars a century, the highest rate |
+| Elves old and few, oldest in the present | prowess 1600 in forest cover; capitals walled; `last_refuge` | the first elven realm alive in 49 of 50 worlds; 12 elven settlements at the median against 20 without war |
+| No race wiped out | `last_refuge` (7.3 item 7) and `shelter_years` (7.2) | no race extinct in any sweep; without them NOREFUGE (question 4) |
 
 ## 10. Anti-runaway and anti-stagnation
 
@@ -330,11 +330,11 @@ P3-06 installs as the second subsystem (`EngineConfig::subsystems` = peoples, co
 4. **Exhaustion and limited war** (7.7): wars end after `war_max_years` at most, by exhaustion long before; peace cedes at most the goal region.
 5. **Defence**: walls, capitals, terrain and passes make the last cities of a people the hardest to take.
 
-MEASURE-RUNAWAY
+Measured: no civilization ever held more than 301‰ of the non-islet land at 1024 (median of the worlds' largest 187‰), 636‰ at 512, 123‰ at 2048; `share_over_500_years` is 0 on every swept world, so the 80% / 1,000-year bound (P3-00 12.3) holds with a wide margin (15.5).
 
 ### 10.2 What stops the world from freezing
 
-Strain never decays: any two neighbours with drive > 0 (every pair below +200 disposition, every pair with want or fear) quarrel eventually; grudges decay, so old enemies of one camp make peace in the long run while good and evil stay enemies; P3-05's growth and foundings keep presence and hunger changing; the flare-up rule turns accumulated strain into an active phase. MEASURE-STAGNATION
+Strain never decays: any two neighbours with drive > 0 (every pair below +200 disposition, every pair with want or fear) quarrel eventually; grudges decay, so old enemies of one camp make peace in the long run while good and evil stay enemies; P3-05's growth and foundings keep presence and hunger changing; the flare-up rule turns accumulated strain into an active phase. Measured: every 1024 world has wars (7 at least); 44 of 50 have at least one flare-up, and half of all wars fall in the last age.
 
 ## 11. Event kinds (appended to the catalogue after P3-05's 6–19)
 
@@ -377,7 +377,7 @@ So a reader can walk every war back: conquest → sack → siege → battle → 
 
 **Saliences and the summary.** P3-07's summary shows at most 250 events, from the smallest salience that fits (7.4). With conflict a 1024 log grows to about 800 events and the threshold to about 40 (15.3): shown are awakenings, foundings, capitals, claims (45), declarations (70), sacks and captures, peace and truces, cessions, conquests, secessions, endings, cities and town plagues (45), moved capitals (50) and crises (40); hidden are battles (30, 35 at a pass) and sieges (25), which the `full` level lists, colonies, and the peoples' smaller events. A war at `summary` reads: claim, flare-up, declaration, sacks or captures, peace, cession.
 
-Rendered samples (seed 42, 1024): SAMPLES
+Rendered samples (seed 42, 1024): `The Grork Horde laid claim to Southwest Wood, held by Finen.` · `The Grork Horde declared war on Finen over Southwest Wood.` · `Finen defeated The Grork Horde in Southwest Wood; 912 of the defeated and 110 of the victors fell.` · `Finen besieged Groz of The Grork Horde; it fell.` · `Finen sacked Groz of The Grork Horde; 513 died and 1197 fled.` · `The Grork Horde sued Finen for peace after 10 years of war.` · `The Grork Horde and The Hold of Dulimin made peace after 18 years of war, neither the victor.` · `The Kingdom of Stard took Geexdronk Pit from The Zak-Neez Mob; 503 died and 0 fled.`
 
 ## 12. Tuning and race data
 
@@ -508,7 +508,7 @@ What P3-06 uses of P3-05: `PeoplesView` (`score`, `capacity`, `neighbours`, `pop
 For every seed, setting, data set within the schemas and map size, with P3-05's invariants (as amended in 18.1):
 
 1. **Relations**: every `relation` row has `a_type` = `b_type` = 3 and kind `enmity`, `war` or `peace`; `enmity` and `peace` rows have a_id < b_id, `war` rows a = the attacker; at most one `enmity` row per pair; a pair's `war` rows do not overlap, nor its `peace` rows, and a `war` and a `peace` row of one pair overlap in no year (the peace closes at the declaration year, the war at the peace year: P3-04 10's half-open intervals); every row's `since_event` is of the kinds of 4.3, every closed row's `until_event` too; an `enmity` row's `since` is the younger side's `founded_year`.
-2. **Wars**: every `war_declared` has a `claim` of its attacker on its defender as its first cause, dated earlier or the same year; every war ends by exactly one of: a `peace` or `truce` caused by its last event, the `civ_conquered` or `civ_ended` of a side, or the end of history (open row); no `battle`, `siege`, `sacked` or `settlement_captured` event lies in a quiet phase; every `peace`, `truce`, `region_ceded` in a quiet phase is dated at its first step's start.
+2. **Wars**: every `war_declared` has among its causes a `claim` of its attacker on its defender, dated earlier or the same year; every war ends by exactly one of: a `peace` or `truce` caused by its last event, the `civ_conquered` or `civ_ended` of a side, or the end of history (open row); no `battle`, `siege`, `sacked` or `settlement_captured` event lies in a quiet phase; every `peace`, `truce`, `region_ceded` in a quiet phase is dated at its first step's start.
 3. **Falls**: every `sacked` and `settlement_captured` is caused by a `siege` with `fell` 1 of the same settlement and year, which is caused by a `battle` or `battle_at_pass` of the same year won by the siege's attacker; every ruined settlement's `ruin_event` is a `settlement_abandoned` or a `sacked`.
 4. **Ends**: every `civ_conquered` ends its civilization (`ending_event`), is caused by a fall of that civilization's last standing settlement, and names a conqueror alive at that year; an ended civilization has no open relation and holds no region.
 5. **Territory**: a region's owner has a standing settlement in it (P3-05 invariant 4, now without its exception); every change of a region's owner by P3-06 is a `settlement_captured` or a `region_ceded`.
@@ -517,7 +517,236 @@ For every seed, setting, data set within the schemas and map size, with P3-05's 
 8. **Tension**: every flare-up's trigger is a `claim`; the claim's pair had strain ≥ the threshold at that quiet step (the reference recomputes it).
 9. **Draw independence** (P3-00 Y3): a test-only extra draw on any `hist.conflict.*` stream before a decision changes nothing else.
 
-DRAFT-MEAS
+## 15. Measurements (prototype)
+
+### 15.1 Method
+
+The prototype runs P3-05's prototype unchanged with P3-06 installed in the steps of 8.2 and a dynamic scheduler (P3-04 SC1–SC4 for the base schedule, SC5–SC6 with this spec's tension for quiet rows and flare-ups). It emulates the engine's bookkeeping only as far as the statistics need (region holders by step for the shares of P3-07 7.5; relation rows). Sweeps: 1024 seeds 0–49 (the reference), 512 seeds 0–19, 2048 seeds 0–4, and 1024 seeds 0–49 with each setting of 15.3's table; three counterfactual sweeps for the decisions of 12.2 and 9.
+
+### 15.2 Sample: seed 42, 1024, default settings
+
+Ages as P3-04 17 (2074 goblins, 3242 dwarves, 4243 faeries, 4969 humans, 5596 orcs). 926 events (P3-05's world had 530) over 1304 simulated years (0.71 per simulated year): three flare-ups, 2949–2998 (trigger e75, the Grork Horde's claim on Southwest Wood, strain 1025), 3817–3866 (e145, the Horde's claim on South Wood II of the Hold of Dulimin) and 4818–4867 (e239, the Horde's claim on East Wood III of the Teeshti Court). Summary threshold 41, 241 events shown.
+
+**Civilizations and their fates** (at year 6000; all twelve survive in this world, the median 1024 world ends one):
+
+| Civilization | Race, founded | Fate |
+| --- | --- | --- |
+| c1 Finen | elves, 0 | alive: 3 regions, 9 settlements, 6,017 people (11 settlements and 11,624 without conflict); the goblins' first enemy, sacked in six wars over Southwest Wood, victorious in two |
+| c2 The Realm of Ithieglie | elves, 0 | alive: 1 region (Southeast Isle), 4 settlements, 1,411; never at war (an island) |
+| c3 The Grork Horde | goblins, 2074 | alive: 4 regions, 13 settlements, 25,707; attacker in 17 wars, three of its parts broke away |
+| c4 The Hold of Dulimin | dwarves, 3242 | alive: South Wood II, 5 settlements, 13,249; attacked eleven times by three goblin hordes, never lost its hold |
+| c5 The Narinthri Throne | dwarves, 3242 | alive: Northwest Peaks, 4 settlements, 5,822; never at war (behind the peaks) |
+| c6 The Teeshti Court | faeries, 4243 | alive: 1 region, 4 settlements, 2,409; its capital sacked three times |
+| c7 The Warrens of Dribnark | goblins, 4392 (from c3) | alive: 1 region, 3 settlements, 7,037 |
+| c8 The Kingdom of Stard | humans, 4969 | alive: 8 regions, 16 settlements, 127,841; took two goblin towns |
+| c9 The Duchy of Dant | humans, 4969 | alive: 2 regions, 5 settlements, 20,185; held off the orcs twice |
+| c10 The Zak-Neez Mob | goblins, 5097 (from c3) | alive: 4 regions, 12 settlements, 25,599 |
+| c11 The Ghuughzuz Horde | orcs, 5596 | alive: 1 region, 4 settlements, 8,632; four wars in its first 360 years |
+| c12 The Slig Mob | goblins, 5637 (from c3) | alive: 1 region, 1 settlement, 2,360; lost three towns to its parent |
+
+**Every war** (declaration event, years, attacker on defender, goal, casus belli, outcome):
+
+- e43, 2220–2224: The Grork Horde (c3) on Finen (c1) over Southwest Wood, claim e38 (2148); 0 battles, 0 sacked, 0 taken; end of the active phase, no victor.
+- e94, 2949–2956: The Grork Horde (c3) on Finen (c1) over Southwest Wood, claim e75 (2574); 2 battles, 1 sacked, 0 taken; aim taken, won by The Grork Horde.
+- e135, 3286–3288: The Grork Horde (c3) on Finen (c1) over Southwest Wood, claim e128 (3259); 1 battles, 1 sacked, 0 taken; aim taken, won by The Grork Horde.
+- e173, 3817–3835: The Grork Horde (c3) on The Hold of Dulimin (c4) over South Wood II, claim e145 (3316); 4 battles, 0 sacked, 0 taken; exhaustion, no victor.
+- e187, 3842–3852: The Grork Horde (c3) on Finen (c1) over Southwest Wood, claim e170 (3617); 5 battles, 1 sacked, 0 taken; exhaustion, won by Finen.
+- e226, 4274–4276: The Grork Horde (c3) on Finen (c1) over Southwest Wood, claim e213 (4192); 2 battles, 1 sacked, 0 taken; aim taken, won by The Grork Horde.
+- e240, 4318–4327: The Grork Horde (c3) on The Hold of Dulimin (c4) over South Wood II, claim e220 (4266); 4 battles, 0 sacked, 0 taken; exhaustion, won by The Grork Horde.
+- e296, 4818–4822: The Grork Horde (c3) on The Teeshti Court (c6) over East Wood III, claim e239 (4317); 4 battles, 1 sacked, 0 taken; exhaustion, won by The Grork Horde.
+- e308, 4826–4837: The Warrens of Dribnark (c7) on The Hold of Dulimin (c4) over South Wood II, claim e286 (4593); 4 battles, 0 sacked, 0 taken; exhaustion, no victor.
+- e314, 4834–4836: The Grork Horde (c3) on Finen (c1) over Southwest Wood, claim e284 (4593); 1 battles, 1 sacked, 0 taken; aim taken, won by The Grork Horde.
+- e325, 4838–4853: The Warrens of Dribnark (c7) on The Teeshti Court (c6) over East Wood III, claim e289 (4693); 4 battles, 0 sacked, 0 taken; exhaustion, won by The Warrens of Dribnark.
+- e333, 4853–4862: The Grork Horde (c3) on The Warrens of Dribnark (c7) over South Wood, claim e285 (4593); 5 battles, 0 sacked, 0 taken; exhaustion, won by The Grork Horde.
+- e365, 4982–4995: The Grork Horde (c3) on The Hold of Dulimin (c4) over South Wood II, claim e307 (4823); 4 battles, 0 sacked, 0 taken; exhaustion, won by The Grork Horde.
+- e397, 5082–5103: The Grork Horde (c3) on Finen (c1) over Southwest Wood, claim e390 (5065); 4 battles, 0 sacked, 0 taken; exhaustion, no victor.
+- e422, 5118–5119: The Warrens of Dribnark (c7) on The Hold of Dulimin (c4) over South Wood II, claim e391 (5068); 0 battles, 0 sacked, 0 taken; end of the active phase, no victor.
+- e520, 5596–5620: The Warrens of Dribnark (c7) on The Teeshti Court (c6) over East Wood III, claim e424 (5119); 7 battles, 0 sacked, 0 taken; exhaustion, no victor.
+- e521, 5597–5624: The Grork Horde (c3) on The Zak-Neez Mob (c10) over South Downs, claim e444 (5219); 6 battles, 0 sacked, 1 taken; exhaustion, no victor.
+- e524, 5601–5629: The Zak-Neez Mob (c10) on The Teeshti Court (c6) over East Wood III, claim e457 (5294); 5 battles, 3 sacked, 0 taken; exhaustion, won by The Zak-Neez Mob.
+- e570, 5625–5633: The Warrens of Dribnark (c7) on The Hold of Dulimin (c4) over South Wood II, claim e489 (5444); 4 battles, 0 sacked, 0 taken; exhaustion, no victor.
+- e581, 5630–5631: The Grork Horde (c3) on Finen (c1) over Southwest Wood, claim e483 (5419); 1 battles, 1 sacked, 0 taken; aim taken, won by The Grork Horde.
+- e610, 5657–5669: The Ghuughzuz Horde (c11) on Finen (c1) over West Wood III, claim e574 (5628); 3 battles, 0 sacked, 0 taken; exhaustion, won by Finen.
+- e612, 5662–5676: The Warrens of Dribnark (c7) on The Zak-Neez Mob (c10) over South Downs, claim e475 (5369); 5 battles, 0 sacked, 1 taken; exhaustion, won by The Zak-Neez Mob.
+- e615, 5664–5684: The Grork Horde (c3) on The Hold of Dulimin (c4) over South Wood II, claim e500 (5494); 4 battles, 0 sacked, 0 taken; exhaustion, won by The Grork Horde.
+- e638, 5675–5679: The Ghuughzuz Horde (c11) on The Duchy of Dant (c9) over Northwest Downs II, claim e575 (5628); 3 battles, 0 sacked, 0 taken; exhaustion, won by The Duchy of Dant.
+- e663, 5688–5703: The Zak-Neez Mob (c10) on The Kingdom of Stard (c8) over North Downs III, claim e523 (5599); 6 battles, 1 sacked, 2 taken; exhaustion, won by The Kingdom of Stard.
+- e681, 5707–5724: The Slig Mob (c12) on Finen (c1) over West Wood II, claim e651 (5680); 4 battles, 1 sacked, 0 taken; exhaustion, won by Finen.
+- e685, 5713–5728: The Zak-Neez Mob (c10) on The Hold of Dulimin (c4) over South Wood II, claim e529 (5608); 4 battles, 0 sacked, 0 taken; exhaustion, no victor.
+- e716, 5766–5777: The Hold of Dulimin (c4) on Finen (c1) over Southwest Wood, claim e442 (5194); 4 battles, 0 sacked, 0 taken; exhaustion, no victor.
+- e736, 5802–5817: The Grork Horde (c3) on The Slig Mob (c12) over West Downs II, claim e661 (5685); 5 battles, 1 sacked, 3 taken; aim taken, won by The Grork Horde.
+- e780, 5871–5878: The Warrens of Dribnark (c7) on The Hold of Dulimin (c4) over South Wood II, claim e776 (5862); 4 battles, 0 sacked, 0 taken; exhaustion, no victor.
+- e790, 5883–5892: The Grork Horde (c3) on Finen (c1) over Southwest Wood, claim e774 (5857); 4 battles, 0 sacked, 0 taken; exhaustion, no victor.
+- e794, 5887–5902: The Zak-Neez Mob (c10) on The Teeshti Court (c6) over East Wood V, claim e772 (5856); 4 battles, 1 sacked, 0 taken; exhaustion, won by The Zak-Neez Mob.
+- e808, 5900–5910: The Grork Horde (c3) on The Zak-Neez Mob (c10) over South Downs, claim e781 (5873); 6 battles, 2 sacked, 0 taken; exhaustion, won by The Zak-Neez Mob.
+- e842, 5933–5949: The Ghuughzuz Horde (c11) on The Duchy of Dant (c9) over Northwest Downs II, claim e818 (5903); 4 battles, 0 sacked, 0 taken; exhaustion, no victor.
+- e845, 5942–5953: The Grork Horde (c3) on The Kingdom of Stard (c8) over Northeast Downs V, claim e768 (5842); 4 battles, 1 sacked, 0 taken; no front, won by The Kingdom of Stard.
+- e863, 5951–5953: The Ghuughzuz Horde (c11) on Finen (c1) over West Wood III, claim e806 (5897); 3 battles, 0 sacked, 0 taken; exhaustion, won by The Ghuughzuz Horde.
+- e880, 5964–5990: The Zak-Neez Mob (c10) on The Kingdom of Stard (c8) over North Downs III, claim e858 (5946); 6 battles, 1 sacked, 0 taken; exhaustion, won by The Kingdom of Stard.
+- e893, 5976–5986: The Grork Horde (c3) on The Hold of Dulimin (c4) over South Wood II, claim e843 (5939); 5 battles, 0 sacked, 1 taken; exhaustion, no victor.
+- e925, 5998–open: The Warrens of Dribnark (c7) on The Zak-Neez Mob (c10) over South Downs, claim e841 (5931); 1 battles, 0 sacked, 0 taken; still open at 6000, no victor.
+
+**Sixty lines of the summary chronicle** (P3-07 6.7's line format; from the goblin awakening; the war e187 below runs from casus belli e170 to peace e197):
+
+```
+2074 e34 awakening/100: Krok awakened the Goblins in Southwest Steppe. {@rg36 race=ra2 creator=g2}
+2074 e35 civ_founded/80: The Goblins founded The Grork Horde in Southwest Steppe. {@rg36 civilization=c3 race=ra2} [causes e34]
+2148 e38 claim/45: The Grork Horde laid claim to Southwest Wood, held by Finen. {@rg35 claimant=c3 holder=c1} [causes e25]
+2220 e43 war_declared/70: The Grork Horde declared war on Finen over Southwest Wood. {@rg35 attacker=c3 defender=c1} [causes e38]
+2224 e44 truce/50: Finen and The Grork Horde made peace after 4 years of war, neither the victor. {parties=c1 parties=c3 years=4} [causes e43]
+2574 e75 claim/45: The Grork Horde laid claim to Southwest Wood, held by Finen. {@rg35 claimant=c3 holder=c1} [causes e25]
+2949 e93 flare_up/50: In 2949 tensions flared into 50 years of upheaval. {years=50} [causes e75]
+2949 e94 war_declared/70: The Grork Horde declared war on Finen over Southwest Wood. {@rg35 attacker=c3 defender=c1} [causes e44, e75]
+2956 e99 sacked/75: The Grork Horde sacked Glathenddell of Finen; 1113 died and 2599 fled. {@rg35 @s9 attacker=c3 defender=c1 dead=1113 survivors=2599} [causes e98]
+2956 e100 peace/60: Finen sued The Grork Horde for peace after 7 years of war. {winner=c3 loser=c1 years=7} [causes e99]
+3242 e122 awakening/100: Bronhak awakened the Dwarves in South Wood II. {@rg44 race=ra3 creator=g3}
+3242 e123 civ_founded/80: The Dwarves founded The Hold of Dulimin in South Wood II. {@rg44 civilization=c4 race=ra3} [causes e122]
+3242 e125 civ_founded/80: The Dwarves founded The Narinthri Throne in Northwest Peaks. {@rg15 civilization=c5 race=ra3} [causes e122]
+3259 e128 claim/45: The Grork Horde laid claim to Southwest Wood, held by Finen. {@rg35 claimant=c3 holder=c1} [causes e102]
+3274 e130 plague/45: Plague broke out in Niskreerk; 515 died. {@rg36 @s15 settlement=s15 civilization=c3 dead=515 population=1571}
+3286 e135 war_declared/70: The Grork Horde declared war on Finen over Southwest Wood. {@rg35 attacker=c3 defender=c1} [causes e100, e128]
+3288 e138 sacked/75: The Grork Horde sacked Assill of Finen; 176 died and 411 fled. {@rg35 @s29 attacker=c3 defender=c1 dead=176 survivors=411} [causes e137]
+3288 e139 peace/60: Finen sued The Grork Horde for peace after 2 years of war. {winner=c3 loser=c1 years=2} [causes e138]
+3294 e142 plague/45: Plague broke out in Skreek Pit; 335 died. {@rg32 @s22 settlement=s22 civilization=c3 dead=335 population=2060}
+3316 e145 claim/45: The Grork Horde laid claim to South Wood II, held by The Hold of Dulimin. {@rg44 claimant=c3 holder=c4} [causes e124]
+3338 e151 plague/45: Plague broke out in Grak-Kutch; 619 died. {@rg42 @s24 settlement=s24 civilization=c3 dead=619 population=1633}
+3341 e153 plague/45: Plague broke out in Skrunk Pit; 308 died. {@rg31 @s33 settlement=s33 civilization=c3 dead=308 population=1519}
+3362 e157 plague/45: Plague broke out in Voeledell; 298 died. {@rg27 @s1 settlement=s1 civilization=c1 dead=298 population=1502}
+3617 e170 claim/45: The Grork Horde laid claim to Southwest Wood, held by Finen. {@rg35 claimant=c3 holder=c1} [causes e140]
+3817 e172 flare_up/50: In 3817 tensions flared into 50 years of upheaval. {years=50} [causes e145]
+3817 e173 war_declared/70: The Grork Horde declared war on The Hold of Dulimin over South Wood II. {@rg44 attacker=c3 defender=c4} [causes e145]
+3829 e177 plague/45: Plague broke out in Beedruzz; 567 died. {@rg32 @s13 settlement=s13 civilization=c3 dead=567 population=1780}
+3835 e186 truce/50: The Grork Horde and The Hold of Dulimin made peace after 18 years of war, neither the victor. {parties=c3 parties=c4 years=18} [causes e185]
+3842 e187 war_declared/70: The Grork Horde declared war on Finen over Southwest Wood. {@rg35 attacker=c3 defender=c1} [causes e139, e170]
+3852 e196 sacked/75: Finen sacked Groz of The Grork Horde; 513 died and 1197 fled. {@rg31 @s18 attacker=c1 defender=c3 dead=513 survivors=1197} [causes e195]
+3852 e197 peace/60: The Grork Horde sued Finen for peace after 10 years of war. {winner=c1 loser=c3 years=10} [causes e196]
+4042 e207 became_city/45: Kholikhu grew into a city of 8545. {@rg44 @s36 settlement=s36 civilization=c4 population=8545} [causes e124]
+4192 e213 claim/45: The Grork Horde laid claim to Southwest Wood, held by Finen. {@rg35 claimant=c3 holder=c1} [causes e140]
+4243 e216 awakening/100: Syfiash awakened the Faeries in East Wood III. {@rg26 race=ra4 creator=g4}
+4243 e217 civ_founded/80: The Faeries founded The Teeshti Court in East Wood III. {@rg26 civilization=c6 race=ra4} [causes e216]
+4266 e220 claim/45: The Grork Horde laid claim to South Wood II, held by The Hold of Dulimin. {@rg44 claimant=c3 holder=c4} [causes e124]
+4269 e221 plague/45: Plague broke out in Zugnob Hole; 995 died. {@rg36 @s11 settlement=s11 civilization=c3 dead=995 population=5265}
+4274 e226 war_declared/70: The Grork Horde declared war on Finen over Southwest Wood. {@rg35 attacker=c3 defender=c1} [causes e197, e213]
+4276 e231 sacked/75: The Grork Horde sacked Thaeglaethi of Finen; 526 died and 1230 fled. {@rg35 @s38 attacker=c3 defender=c1 dead=526 survivors=1230} [causes e230]
+4276 e232 peace/60: Finen sued The Grork Horde for peace after 2 years of war. {winner=c3 loser=c1 years=2} [causes e231]
+4317 e239 claim/45: The Grork Horde laid claim to East Wood III, held by The Teeshti Court. {@rg26 claimant=c3 holder=c6} [causes e218]
+4318 e240 war_declared/70: The Grork Horde declared war on The Hold of Dulimin over South Wood II. {@rg44 attacker=c3 defender=c4} [causes e186, e220]
+4327 e251 peace/60: The Hold of Dulimin sued The Grork Horde for peace after 9 years of war. {winner=c3 loser=c4 years=9} [causes e250]
+4369 e255 plague/45: Plague broke out in Snozz-Skink; 288 died. {@rg36 @s12 settlement=s12 civilization=c3 dead=288 population=1461}
+4389 e263 plague/45: Plague broke out in Beedrux Pit; 194 died. {@rg23 @s26 settlement=s26 civilization=c3 dead=194 population=1386}
+4392 e268 civ_seceded/70: The Warrens of Dribnark broke away from The Grork Horde, taking 4 settlements with it. {@rg42 @s23 civilization=c7 from=c3 settlements=4} [causes e267]
+4593 e284 claim/45: The Grork Horde laid claim to Southwest Wood, held by Finen. {@rg35 claimant=c3 holder=c1} [causes e237]
+4593 e285 claim/45: The Grork Horde laid claim to South Wood, held by The Warrens of Dribnark. {@rg42 claimant=c3 holder=c7} [causes e268]
+4593 e286 claim/45: The Warrens of Dribnark laid claim to South Wood II, held by The Hold of Dulimin. {@rg44 claimant=c7 holder=c4} [causes e124]
+4693 e289 claim/45: The Warrens of Dribnark laid claim to East Wood III, held by The Teeshti Court. {@rg26 claimant=c7 holder=c6} [causes e218]
+4718 e290 claim/45: The Warrens of Dribnark laid claim to South Downs, held by The Grork Horde. {@rg32 claimant=c7 holder=c3} [causes e49]
+4818 e295 flare_up/50: In 4818 tensions flared into 50 years of upheaval. {years=50} [causes e239]
+4818 e296 war_declared/70: The Grork Horde declared war on The Teeshti Court over East Wood III. {@rg26 attacker=c3 defender=c6} [causes e239]
+4821 e301 sacked/90: The Grork Horde sacked Shawae of The Teeshti Court; 401 died and 937 fled. {@rg26 @s42 attacker=c3 defender=c6 dead=401 survivors=937} [causes e300]
+4821 e302 capital_moved/50: The Teeshti Court moved its seat to Fieshpia. {@rg26 @s48 civilization=c6 settlement=s48} [causes e301]
+4822 e306 peace/60: The Teeshti Court sued The Grork Horde for peace after 4 years of war. {winner=c3 loser=c6 years=4} [causes e305]
+4823 e307 claim/45: The Grork Horde laid claim to South Wood II, held by The Hold of Dulimin. {@rg44 claimant=c3 holder=c4} [causes e124]
+4826 e308 war_declared/70: The Warrens of Dribnark declared war on The Hold of Dulimin over South Wood II. {@rg44 attacker=c7 defender=c4} [causes e286]
+4834 e314 war_declared/70: The Grork Horde declared war on Finen over Southwest Wood. {@rg35 attacker=c3 defender=c1} [causes e232, e284]
+4836 e317 sacked/75: The Grork Horde sacked Athnael of Finen; 184 died and 430 fled. {@rg35 @s44 attacker=c3 defender=c1 dead=184 survivors=430} [causes e316]
+```
+
+**One war at the `full` level** (e170 to e197; the Hold of Dulimin's war of 3817–3835 falls between the claim and the declaration and is left in, since the strain of the Horde against Finen waited for that war to end: one offensive war at a time, 7.2):
+
+```
+3617 e170 claim/45: The Grork Horde laid claim to Southwest Wood, held by Finen. {@rg35 claimant=c3 holder=c1} [causes e140]
+3817 e173 war_declared/70: The Grork Horde declared war on The Hold of Dulimin over South Wood II. {@rg44 attacker=c3 defender=c4} [causes e145]
+3824 e175 battle/30: The Hold of Dulimin defeated The Grork Horde in South Wood II; 991 of the defeated and 47 of the victors fell. {@rg44 winner=c4 loser=c3 winner_dead=47 loser_dead=991} [causes e173]
+3825 e176 battle/30: The Grork Horde defeated The Hold of Dulimin in Southwest Downs II; 148 of the defeated and 311 of the victors fell. {@rg41 winner=c3 loser=c4 winner_dead=311 loser_dead=148} [causes e173]
+3833 e184 battle/30: The Hold of Dulimin defeated The Grork Horde in South Wood II; 923 of the defeated and 47 of the victors fell. {@rg44 winner=c4 loser=c3 winner_dead=47 loser_dead=923} [causes e173]
+3835 e185 battle/30: The Grork Horde defeated The Hold of Dulimin in Southwest Downs II; 146 of the defeated and 290 of the victors fell. {@rg41 winner=c3 loser=c4 winner_dead=290 loser_dead=146} [causes e173]
+3835 e186 truce/50: The Grork Horde and The Hold of Dulimin made peace after 18 years of war, neither the victor. {parties=c3 parties=c4 years=18} [causes e185]
+3842 e187 war_declared/70: The Grork Horde declared war on Finen over Southwest Wood. {@rg35 attacker=c3 defender=c1} [causes e139, e170]
+3842 e188 battle/30: Finen defeated The Grork Horde in Southwest Wood; 912 of the defeated and 110 of the victors fell. {@rg35 winner=c1 loser=c3 winner_dead=110 loser_dead=912} [causes e187]
+3845 e189 battle/30: The Grork Horde defeated Finen in West Downs II; 341 of the defeated and 287 of the victors fell. {@rg31 winner=c3 loser=c1 winner_dead=287 loser_dead=341} [causes e187]
+3849 e191 battle/30: Finen defeated The Grork Horde in Southwest Wood; 896 of the defeated and 105 of the victors fell. {@rg35 winner=c1 loser=c3 winner_dead=105 loser_dead=896} [causes e187]
+3850 e192 battle/30: Finen defeated The Grork Horde in West Downs II; 881 of the defeated and 104 of the victors fell. {@rg31 winner=c1 loser=c3 winner_dead=104 loser_dead=881} [causes e187]
+3850 e193 siege/25: Finen besieged Groz of The Grork Horde; it held. {@rg31 @s18 attacker=c1 defender=c3 fell=0} [causes e192]
+3852 e194 battle/30: Finen defeated The Grork Horde in West Downs II; 868 of the defeated and 102 of the victors fell. {@rg31 winner=c1 loser=c3 winner_dead=102 loser_dead=868} [causes e187]
+3852 e195 siege/25: Finen besieged Groz of The Grork Horde; it fell. {@rg31 @s18 attacker=c1 defender=c3 fell=1} [causes e194]
+3852 e196 sacked/75: Finen sacked Groz of The Grork Horde; 513 died and 1197 fled. {@rg31 @s18 attacker=c1 defender=c3 dead=513 survivors=1197} [causes e195]
+3852 e197 peace/60: The Grork Horde sued Finen for peace after 10 years of war. {winner=c1 loser=c3 years=10} [causes e196]
+```
+
+The sample reads as P3-00 13 asks: the goblins quarrel with the elves over the wood between them within 74 years of their awakening and fight for it in six wars over 3,700 years; the elves lose outer villages and twice throw the Horde back and sack a goblin town; the dwarves arrive in 3242 to a feud whose last war ended in 2956 and whose next claim comes in 3259, and are drawn in from 3817; the faeries' court is sacked by two hordes; the humans fill the downs and take goblin towns; the orcs, 60 years after their awakening, attack the elves and the human duchy. What it lacks: no civilization ends (the median world ends one; 15.3), and the first war (e43) is declared four years before the goblins' opening phase ends and closes without a battle.
+
+### 15.3 Sweep statistics
+
+**Whole worlds** (min / median / max):
+
+VARTABLE
+
+All hard bounds hold on every world of every sweep (15.5). At 1024 (seeds 0–49):
+
+| Statistic | Value |
+| --- | --- |
+| wars per world | 7 / 22 / 42; length 0 / 9 / 40 years (1,136 wars) |
+| how wars end | exhaustion 74%, aim taken 16%, conquest of a side 4%, end of the active phase 3%, open at the present 2%, no front or length 1% |
+| attackers | goblins 76% of wars, orcs 13%, humans 7%, dwarves 3%, elves and faeries never; per century of their existence orcs start 0.73 wars a world, goblins 0.45 |
+| claims, flare-ups | claims 9 / 27 / 52; flare-ups 0 / 2 / 5 (6 worlds none, 3 worlds five); simulated years 1122 / 1273 / 1450 (P3-00 4.1's median band 1000–1400 holds) |
+| falls | sacked 1 / 12 / 35, taken 0 / 6 / 20, cessions 0 / 2 / 8; regions changing hands 2 / 9 / 19 |
+| ruins | 1 / 13 / 36 per world, **92% by sacking** (P3-05 alone: 0 / 1 / 4, all by abandonment) |
+| civilizations ended | 0 / 1 / 4; at least one in 28 of 50 worlds; all by conquest; by race: goblins 27 of 141, faeries 10 of 64, dwarves 5 of 75, elves 3 of 87, orcs 2 of 53, humans 1 of 76 |
+| races extinct | none (`last_refuge`) |
+| standing settlements at the present, by race (P3-05 alone in brackets) | elves 12 (20), goblins 33 (33), dwarves 5 (7), faeries 5 (7), humans 15 (11), orcs 5 (5) |
+| relations | rows 17 / 54 / 98: `enmity` 11, `war` 23, `peace` 21 a world on average |
+| shares | largest share of the non-islet land ever held by one civilization 96 / 187 / 301 ‰; `share_over_500_years` 0 on every world |
+| events | 430 / 817 / 1,439; 0.62 per simulated year (max 1.13) |
+| summary threshold | THRESH |
+
+**Race characters** (P3-00 13; 1024, 50 worlds):
+
+| Character | Measured |
+| --- | --- |
+| goblins hostile to elves from their first year | an `enmity` row from the goblins' founding in every world with both; goblin–elf wars 0 / 8 / 20 per world (none in 9 worlds, where the two never come within two borders); first such war within 200 years of the goblin awakening in 19 worlds, median 500 years |
+| dwarves arrive into a world already at war | a war open within 50 years either side of the dwarven awakening in 30 of 50 worlds (open at the awakening in 5, declared in the dwarves' first 25 years in 24) |
+| humans spread over land left open or ruined | human settlements 4 / 14 / 35; 40 of 762 stand in a region where a settlement had been ruined before their founding, 40 of 357 human regions had another holder before; humans took 122 settlements by capture or cession |
+| orcs open the last age of conflict | 53% of all wars are declared in the orc age (the last 7% of the span): 3.0 wars a century there against 0.19 before; orcs declare a war within 100 years of their awakening in 29 worlds (none in 6); they are the attackers in 13% of all wars and 0.73 a century |
+| elves old and few, oldest in the present | Finen-like first elven realm alive at the present in 49 of 50 worlds; elves hold 12 settlements at the median against 20 without war |
+| no world empty or dominated | 51 standing settlements at least; no civilization above 30% of the land |
+
+### 15.4 Report keys
+
+**History report `[stats]`** (P3-07 9 and 10.3 rule 1: appended at the end of the table, after `civilizations_seceded`), integers only, in this order:
+
+| Key | Definition |
+| --- | --- |
+| `relations_enmity`, `relations_peace` | rows of `relation` of kind `enmity`, of kind `peace` |
+| `war_years_total` | Σ over `war` rows of (`until`, or E when NULL) − `since` |
+| `war_years_max` | the largest of those; 0 when there is none |
+| `civilizations_conquered` | civilizations whose `ending_event` is of kind `civ_conquered` |
+| `settlements_sacked` | settlements whose `ruin_event` is of kind `sacked` |
+| `settlements_captured` | distinct `event.settlement` of events of kind `settlement_captured` |
+| `regions_conquered` | `region_control` rows whose `event` is of kind `settlement_captured` or `region_ceded` |
+| `races_alive` | `race` rows with at least one civilization with `ended_year` NULL |
+| `wars_attacker_<race key>` | one line per `race` row in id order: `war` rows whose `a_id` is a civilization of that race |
+
+Claims, battles and sieges are counted by P3-07's `events_<key>` lines. Strain, tension, force and capacity are not stored and are checked by this spec's tests (P3-07 20 item 2). The world report's `[history]` is unchanged.
+
+### 15.5 Hard bounds and typical ranges (the validation sweep, P3-00 12.2)
+
+**Hard bounds** (defects on any seed, P3-00 12.3; from `[stats]` and the tables):
+
+| Bound | Rule | Measured (every swept world) |
+| --- | --- | --- |
+| not empty | P3-05 15.5's | at least 51 standing settlements at 1024, 27 at 512 |
+| races | `races_alive` = the present races (`last_refuge` 1) | every world |
+| runaway | `share_over_800_years` ≤ 1000 | 0 on every world of every sweep; the largest share ever held by one civilization was 301‰ at 1024 and 636‰ at 512 (a 13-region world) |
+| events | `events_per_1000_simulated_years` ≤ 200000 | at most MAXEV per simulated year (`turbulent`) |
+| phases | `simulated_permille` ≤ 450 (P3-04's cap) | at most MAXSIM simulated years of 6,000 |
+| capacity | P ≤ 2 × C(R, owner race) for every standing settlement after every step (this spec's tests) | holds in every world |
+| sizes | history tables under 5 MB at 1024 | at most 3,208 events (`turbulent`): well under 1 MB |
+
+**Typical ranges** (1024, default settings; outside them is a finding, not a defect): wars 10–40; flare-ups 0–5, simulated years 1,120–1,450; sacked 5–30; civilizations ended 0–4; ruins mostly (≥ 80%) by sacking; events 450–1,500; summary threshold 26–46; every race alive; elves 4–40 standing settlements.
+
+### 15.6 For the validation specialist
+
+Sweeps with shipped data and default settings, release build, from `report --history`'s `[stats]`: **1024 seeds 0–199**, **512 seeds 0–49**, **2048 seeds 0–19**; and 1024 seeds 0–49 with each setting of 15.3's table (`--event-intensity calm` and `turbulent`, `--civs-per-race 4`, `--races elf,goblin` and `elf,orc`, `--history-span 2000` and `12000`, `--history-detail dense`), plus P3-05's `--civs-per-race 1` and `--races elf`. On every world: the hard bounds of 15.5 and P3-05's; purity (threads 1 and 5, resume). A median more than 20% away from 15.3's is a finding for the spec writer. Performance: 16.4 at 1024 seeds 0–19.
 
 ## 16. Tests required
 
@@ -577,7 +806,7 @@ The test builds this state through the seams, runs the pure functions and one T2
 
 ### 16.4 Performance
 
-`history` at 1024 with peoples and conflict (prototype: PERF in Python, single-threaded): budget **4 s** in a release build (P3-00 12.1 gives 15 s for P3-04 to P3-06 together; P3-05's own budget is 2 s), 512: 1 s, 2048: 16 s. Costs per tick year: the fronts of every ordered pair of alive civilizations (about 100 pairs × a two-border search over about 30 presence regions), `wanted_held` per civilization, and per open war a battle; per quiet step the same strain update once. A microbenchmark tagged like P3-04 14.3's reports it. The engineer may cache presence and fronts per step (they change only with ownership), which this text permits because they are pure functions of the step's state.
+`history` at 1024 with peoples and conflict (prototype: about 2.2 s per world on top of P3-05's 3.4 s of CPU time in Python, single-threaded): budget **4 s** in a release build (P3-00 12.1 gives 15 s for P3-04 to P3-06 together; P3-05's own budget is 2 s), 512: 1 s, 2048: 16 s. Costs per tick year: the fronts of every ordered pair of alive civilizations (about 100 pairs × a two-border search over about 30 presence regions), `wanted_held` per civilization, and per open war a battle; per quiet step the same strain update once. A microbenchmark tagged like P3-04 14.3's reports it. The engineer may cache presence and fronts per step (they change only with ownership), which this text permits because they are pure functions of the step's state.
 
 ## 17. Determinism notes
 
@@ -629,7 +858,16 @@ Section 9 gains, after `civilizations_seceded`, the keys of 15.4 in that order w
 
 Each with the recommendation and the interim choice this spec follows.
 
-QUESTIONS
+1. **Limited wars that end with the active phase** (7.7, 7.8). A war is fought for one claimed region and ends when the attacker has it, when a side is exhausted, after 40 years at most, or at the first quiet step after its active phase, by the war score. Recommendation and interim: yes. A war carried through a quiet interval would be a war of centuries with no battle in it; ending it at the quiet step reads as the design's "four centuries of peace". Cost: a war declared in the last years of an active phase may end after a few years without a battle (35 of 1,136 wars at 1024, 3%, end that way).
+2. **Wars only in yearly ticks; strain builds in quiet steps; a flare-up always brings its war** (5.2, 7.2). Recommendation and interim: yes (P3-00 4.4 already has no wars in quiet steps). The flare-up's pair declares without a draw in the flare-up's first year, so a flare-up never passes without the conflict that caused it.
+3. **A fighting strength per race and goblins less aggressive** (12.2). New race field `prowess_permille` (elves 1600, dwarves 1400, orcs 1300, faeries 1200, humans 1000, goblins 800) and goblin `aggression` 700 → 600. Recommendation and interim: yes. Without prowess, NOPROW. With goblin aggression 700, GOB700.
+4. **No race is wiped out** (7.3 item 7, 7.2 `shelter_years`). The last settlement of a race's last civilization never falls, and a civilization is not attacked in its first 150 years. Recommendation and interim: yes: design 5 gives every race a role in play (townsfolk, traders, enemies) and P5's exit check needs every race to take part; a race that survives as a single walled town is still a history. Without the guard and the shelter, NOREFUGE. Alternative: allow extinction and let P5/P6 treat an extinct race as history only.
+5. **Coalition by fear instead of alliances; no vassals** (4.3, 5.1). Recommendation and interim: yes in P3; alliances and vassalage come with figures and factions (P5), as new relation kinds without a schema change.
+6. **Aggression squared** (5.2). The race field's 0–1000 range is read as readiness, and its square drives strain, so orcs (900) quarrel nine times as fast as dwarves (300) and thirty times as fast as elves (150). Recommendation and interim: yes; the linear reading made goblins and orcs nearly equal and left elves and faeries starting wars.
+7. **Armies march two borders** (5.1). Recommendation and interim: `march_hops` 2; with 1 a quarter of the 1024 worlds had no goblin–elf war and the median world two (P3-05's homes keep the two peoples apart); with 2 the median world has eight and 9 of 50 none.
+8. **The event log is far smaller than P3-00 6.1's estimate.** P3-00 expected 5,000–30,000 events at 1024; P3-05 and P3-06 together give 430 / 817 / 1,439 at 1024 and up to 3,208 at `turbulent`. Recommendation: correct P3-00's expectation to "500–2,000 events (3,500 at `turbulent`), well under 1 MB"; the 200-per-simulated-year bound is three orders of magnitude away. Interim: no rule changes; P5's subsystems add their own.
+9. **Humans on land left open or ruined** (9). Humans spread over open land (P3-05) and resettle sacked regions within their reach, but the old wars are mostly fought far from the farmland where humans awaken, so few human settlements stand on ruined ground (40 of 762 human settlements; 40 of 357 human regions had another holder before). Recommendation: accept in P3; P5's refugee migration (P3-05 question 6) is the stronger reading. Interim: as specified.
+10. **"A world already at war" when the dwarves arrive** (9). Measured as a war open within 50 years either side of the dwarven awakening: 30 of 50 worlds at 1024. Recommendation: accept; the rest of the worlds have their goblin–elf wars earlier or later in the goblin age, and every world has the `enmity` rows. Alternative: an awakening raises every hostile pair's strain (a rule the design does not state).
 
 ## Appendix A. Proposals entries (added to `docs/design/proposals.md` with this spec)
 
