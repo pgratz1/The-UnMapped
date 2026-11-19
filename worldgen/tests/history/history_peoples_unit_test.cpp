@@ -461,8 +461,18 @@ TEST_CASE("P3-05 8.5 r1, 13: ruin(s, e) applies items 2-5 with e and does not en
     CHECK(ended_causes == std::vector<std::int64_t>{e_ruin2});
     CHECK(at(t.civilization[0], 8) == 6);
     CHECK(at(t.civilization[0], 9) == at(*ended[0], 0));
-    CHECK(at(t.settlement[0], 13) == e_ruin);
-    CHECK(at(t.settlement[1], 13) == e_ruin2);
+    // both ruins fade within the span (1500 years, quiet steps from 50): the rows are cleared (lead's
+    // ruling 3) and each ruin_faded is caused by the ruin event the hook was given
+    std::set<std::int64_t> fade_causes;
+    for (const Row& e : t.event) {
+        if (at(e, 3) != k_ruin_faded) continue;
+        for (const Row& c : t.event_cause) {
+            if (at(c, 0) == at(e, 0)) fade_causes.insert(at(c, 1));
+        }
+    }
+    CHECK(fade_causes == std::set<std::int64_t>{e_ruin, e_ruin2});
+    CHECK(at(t.settlement[0], 10) == faded);
+    CHECK(at(t.settlement[0], 13) == 0);
 }
 
 TEST_CASE("P3-05 13, 8.5 (b): note_reduction makes P3-06's event the cause of a later abandonment in T1") {

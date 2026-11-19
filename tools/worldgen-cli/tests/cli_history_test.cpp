@@ -40,22 +40,6 @@ const std::vector<std::string> NEW_TABLES = {
     "civilization", "event", "event_cause", "event_kind", "event_kind_role", "event_kind_value", "event_participant",
     "event_value", "phase", "region_control", "relation", "settlement", "settlement_census"};
 
-// "<case> <item> <rest>" lines of the golden file for one world case.
-std::vector<std::pair<std::string, std::string>> golden_items(const std::string& name) {
-    static const std::string text = read_text(fs::path(UNMAPPED_P3_04_GOLDEN_PATH));
-    std::vector<std::pair<std::string, std::string>> out;
-    for (const std::string& line : lines_of(text)) {
-        if (!starts_with(line, name + " ")) {
-            continue;
-        }
-        const std::string rest = line.substr(name.size() + 1);
-        const std::size_t sp = rest.find(' ');
-        out.emplace_back(rest.substr(0, sp), sp == std::string::npos ? std::string() : rest.substr(sp + 1));
-    }
-    REQUIRE_MESSAGE(!out.empty(), "no golden case " << name);
-    return out;
-}
-
 std::string section(const std::string& text, const std::string& header) {
     const std::size_t at = text.find(header + "\n");
     if (at == std::string::npos) {
@@ -84,35 +68,6 @@ fs::path generate_case(const Sandbox& sb, const std::string& name, const std::ve
     return sb.generate(full);
 }
 
-void check_golden_db(const Sandbox& sb, const std::string& name, const fs::path& db) {
-    CAPTURE(name);
-    const std::string detail = run_ok(sb, {"hash", "--db", u8(db), "--detail"});
-    std::string rep = "[history]\n";
-    std::size_t tables = 0;
-    for (const auto& [item, value] : golden_items(name)) {
-        if (item == "table") {
-            CAPTURE(value);
-            CHECK(contains(detail, "\ntable " + value + "\n"));
-            ++tables;
-        }
-        if (item == "report") {
-            rep += value + "\n";
-        }
-    }
-    CHECK(tables == 13U);
-    const std::string report = run_ok(sb, {"report", "--db", u8(db)});
-    CHECK(section(report, "[history]") == rep);
-    const std::size_t c = report.find("[chronology]\n");
-    const std::size_t h = report.find("[history]\n");
-    REQUIRE(c != std::string::npos);
-    REQUIRE(h != std::string::npos);
-    CHECK(report.find("\n[", c + 1) == h - 1);
-}
-
-void check_golden_world(const Sandbox& sb, const std::string& name, const std::vector<std::string>& args) {
-    check_golden_db(sb, name, generate_case(sb, name, args));
-}
-
 }  // namespace
 
 TEST_SUITE("history") {
@@ -127,7 +82,9 @@ TEST_CASE("cli P3-04 9.5, 11.1, 16.1 item 14, 16.4 (Y1): default run, --until hi
     CHECK(meta_of(a, "stages") == ALL_STAGES);
     CHECK(meta_of(a, "history_end_year") == "6000");
     CHECK(meta_of(a, "schema_version") == "7");
-    check_golden_db(sb, "geo-seed-42-512", a);
+    // The shipped history stage is peoples since 0.15.0: the golden comparison of this world is
+    // cli_history_peoples_test.cpp's (p3-05-peoples.txt); p3-04-engine.txt describes stub worlds, which the
+    // CLI cannot generate.
     struct Case {
         const char* sql;
         const char* message;
@@ -206,21 +163,6 @@ TEST_CASE("cli P3-04 15: world-hashes.sh lists fifteen cases, hist-dense-1024 wi
 
 }  // TEST_SUITE
 
-TEST_SUITE("history-slow" * doctest::skip()) {
+// The history-slow cases that compared shipped worlds with p3-04-engine.txt are retired at 0.15.0 (P3-05:
+// the shipped stage is peoples); cli_history_peoples_test.cpp compares the same worlds with p3-05-peoples.txt.
 
-TEST_CASE("cli P3-04 11.1, 11.2, 16.4: [history] and hash --detail of the other 512 golden worlds") {
-    Sandbox sb;
-    check_golden_world(sb, "geo-seed-0-512", {"--seed", "0", "--map-size", "512"});
-    check_golden_world(sb, "geo-phrase-512", {"--seed-phrase", "The Unmapped", "--map-size", "512"});
-    check_golden_world(sb, "hist-span-2000-512", {"--seed", "7", "--map-size", "512", "--history-span", "2000"});
-}
-
-TEST_CASE("cli P3-04 11.1, 11.2, 16.4: [history] and hash --detail of the 1024 golden worlds") {
-    Sandbox sb;
-    check_golden_world(sb, "geo-seed-1-1024", {"--seed", "1"});
-    check_golden_world(sb, "hist-races-elf-orc-1024", {"--seed", "3", "--races", "elf,orc"});
-    check_golden_world(sb, "hist-dense-1024", {"--seed", "11", "--history-detail", "dense"});
-    check_golden_world(sb, "example-42-1024", {"--seed", "42"});
-}
-
-}  // TEST_SUITE
