@@ -65,7 +65,7 @@ struct ScheduleLengths {
     std::int64_t flare = 0;        // F
     std::int64_t final_years = 0;  // L
     std::int64_t quiet_step = 0;   // Q (not scaled)
-    std::int64_t floor_years = 0;  // ceil(simulated_min_permille E / 1000)
+    std::int64_t floor_years = 0;  // min(ceil(simulated_min_permille E / 1000), cap_years)
     std::int64_t cap_years = 0;    // floor(simulated_max_permille E / 1000)
     std::int64_t flare_threshold = 0;
 

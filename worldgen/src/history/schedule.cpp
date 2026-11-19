@@ -121,8 +121,11 @@ ScheduleLengths schedule_lengths(std::int64_t span, const EngineTuning& tuning, 
     l.flare = scale_years(d.flare_years, span);
     l.final_years = scale_years(d.final_years, span);
     l.quiet_step = tuning.quiet_step_years;
-    l.floor_years = (tuning.simulated_min_permille * span + 999) / 1000;
     l.cap_years = (tuning.simulated_max_permille * span) / 1000;
+    // Clamped to the cap (lead's ruling, 2026-11-19): with min = max permille
+    // and E x permille not a multiple of 1000 the rounded-up floor would be
+    // the cap + 1.
+    l.floor_years = std::min((tuning.simulated_min_permille * span + 999) / 1000, l.cap_years);
     l.flare_threshold = d.flare_threshold;
     return l;
 }
