@@ -63,3 +63,17 @@ void f(std::vector<int>& v, Gen& g, Obj& o) {
 std::vector<bool> flags1;  // expect: packed-bool
 std::pmr::vector< bool > flags2;  // expect: packed-bool
 std::bitset<64> flags3;  // expect: packed-bool
+
+std::map<const Node*, int> by_node;  // expect: pointer-order
+std::set<Node *> nodes;  // expect: pointer-order
+std::pmr::multimap<ns::Node const*, int> by_node2;  // expect: pointer-order
+std::map<std::vector<int>*, int> by_vec;  // expect: pointer-order
+std::set<Node*, std::less<Node*>> nodes2;  // expect: pointer-order
+bool before = std::less<const Node*>{}(p, q);  // expect: pointer-order
+auto addr = reinterpret_cast<std::uintptr_t>(p);  // expect: pointer-order
+intptr_t addr2 = 0;  // expect: pointer-order
+std::map<std::uint32_t, Node*> by_id;
+std::set<std::pair<int, int>> pairs;
+std::array<const Node*, 256> by_code{};
+std::map<std::string, std::int64_t> seen;
+bool lt = std::less<std::int64_t>{}(a, b);
