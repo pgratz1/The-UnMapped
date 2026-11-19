@@ -36,7 +36,7 @@ The first playable version is a vertical slice: one generated world you can walk
 | History | 6,000 years by default, simulated in active phases with quiet intervals; six races created by the gods in a fixed order, plus beasts and monsters; wars, migrations, settlement founding and ruin | Mortal religions and temples, trade economy, dynasties in depth, artifacts with lineages, history mode |
 | Sites | Cities, villages, ruins, and dungeons placed by history; interiors and dungeons filled with physics objects | Underground realms, megastructures |
 | Play | Walk, fight, cast fixed spells learned from books, loot, level up, read the world's history, and talk to NPCs in text with a local LLM phrasing their lines | Spell research, voice dialogue, crafting, companions, player housing |
-| Quests | Template quests instantiated from historical facts | Multi-stage story arcs, faction reputation |
+| Quests | Template quests instantiated from historical facts | Multi-stage story arcs (through the enrichment pass of section 14), faction reputation |
 | Platforms | Linux and Windows desktop, PC VR through OpenXR | Steam Deck tuning |
 | Assets | Generated assets wherever a generator exists; greybox and CC0 placeholders elsewhere | Final art in the chosen semi-realistic style, audio, music |
 
@@ -587,7 +587,7 @@ Rules:
 
 - **Grounded.** The prompt tells the model to speak only from the fact sheet. Facts that unlock content (a site location, a quest) come from intents the game checks against the database.
 - **Always optional.** A template renderer produces every line without a model. It is the fallback when the model is disabled, missing or too slow, and it is what milestone 7 ships.
-- **Local only.** No network calls. Models are files the player can swap.
+- **Local only.** Dialogue during play makes no network calls, and models are files the player can swap. The optional enrichment in section 14 is the only feature that may use a hosted model, and only at world creation.
 - **Off the frame path.** Inference runs on its own thread with a bounded share of GPU memory, or on CPU, so VR frame rate holds while an NPC is talking.
 - **Not part of world determinism.** The world is reproducible from its seed; NPC phrasing may vary between runs.
 - **Memory.** Each NPC keeps a short summary of past talks with the player in the save file.
@@ -615,6 +615,7 @@ All code is C++20. The generator is a library with a command-line front end, and
 | Data files | TOML | Hand-edited definitions for races, beasts, monsters, cultures, biomes and event rules; SQLite is for generated output only |
 | Dependencies | Vendored in extern/ at pinned versions | SQLite 3.54.1, doctest 2.5.3, toml++ 3.4.0 and stb\_image\_write 1.18, with checksums in extern/README.md; builds work offline. Changing the SQLite version or its compile options is treated like a schema change |
 | World viewer | Built in Godot through the C++ extension | Map layers, timeline, entity and event browser; later the create-world screen and in-game map |
+| Narrative enrichment | Claude through the API, or a local model through llama.cpp, or none | Optional, at world creation only; output is a separate lore file and never the world file |
 
 ```
 the-unmapped/
@@ -694,6 +695,8 @@ Milestones run in order, and each ends with something that can be checked. The g
 | 8 | History in play | Quests instantiate from hooks; books and dialogue render real history; a local LLM phrases NPC text dialogue from fact sheets with the template fallback intact; journal reveals sites. First playable version complete |
 | 9 | Voice dialogue | The player speaks to NPCs and hears replies, all on local models, in both modes; VR holds 90 Hz while an NPC is speaking |
 | 10 | Spell research | The player composes, researches and casts a new spell within the budget and compatibility rules; a researched spell never beats the cost formula |
+| 11 | Narrative enrichment | A lore file with validated quest lines and chronicles is produced by Claude and, in reduced form, by a local model; the game plays the quest lines; a world with no lore file still plays fully |
+| 12 | Divine script (experimental) | A scripted world is reproducible from seed, settings and script, and the world critic judges scripted worlds against unscripted ones |
 
 Milestones 0 and 1 carry the most design risk, since they decide whether generated history is interesting. Milestones 2 and 3 carry the most technical risk. Milestones 9 and 10 are independent and can run in either order.
 
@@ -728,6 +731,8 @@ Decided so far:
 * **Resources:** five absolute scores including forage, with habitability treating fresh water as a necessity.
 * **Regions:** about 2 km² each, land only, with placeholder names until history renames them.
 * **Engine:** Godot 4.7.2 with godot-cpp 10.0.0; C++ only is confirmed after the viewer work.
+
+- **Narrative enrichment:** an optional pass at world creation writes quest lines and lore to a separate file, using Claude, a local model, or neither. A divine script is a later experiment. Details are in section 14.
 
 Still open:
 
@@ -764,6 +769,11 @@ Still open:
 - [ ] **Fast travel.** Only the recall spell is assumed. Should non-casters get an alternative, such as paid carriage between settlements? (Milestone 7)
 
 * [x] **Seed phrases.** Should a typed seed phrase ignore case and Unicode form, so "Ashen Marches" and "ashen marches" give the same world? Decided: yes. Phrases are lowercased, and everything except letters and digits becomes a space, as section 4 describes. (Milestone 2)
+
+- [ ] **Enrichment cost.** How large is a hosted enrichment run for a default world, and what cap is sensible? Measure on real worlds. (Milestone 11)
+- [ ] **Enrichment models.** Which Claude model for the hosted pass, and which local model is the recommended fallback? (Milestone 11)
+- [ ] **Local fallback scope.** How much should the local pass attempt: full quest lines, or chronicles and rumours only? Decide from output quality. (Milestone 11)
+- [ ] **Bundled lore.** Should the project ship ready-made lore files for a few recommended seeds, so players without any model still see enriched worlds? (Milestone 11)
 
 ## 13. World generator prototype: phases and agent roles
 
@@ -821,3 +831,63 @@ Work is done by Claude Code subagents with narrow roles, coordinated by a lead s
 ### What the prototype leaves out
 
 Runtime terrain, cities, dungeons as playable spaces, gameplay, dialogue and VR all wait for milestone 2 onward. The prototype ends with a world file, a viewer, and confidence that generated history is worth playing in.
+
+## 14. Narrative enrichment by language models
+
+A language model can make a generated world's stories richer in two optional ways: an enrichment pass that writes quest lines and lore from the finished history, and a divine script that lets the model direct the gods. Both come after the prototype. The game is complete without either.
+
+### Principles
+
+- **The world file is untouched.** Model output never goes into `world.db`, so worlds stay bit-identical for a given seed, settings and generator version.
+- **Structure from the simulation, story from the model.** The simulation decides what happened. The model tells it well and finds the threads worth following.
+- **Everything is validated.** Model output is structured, and every reference must resolve to a real entity, place and year in the world. Anything that fails is regenerated or dropped.
+- **Never during play.** Models with network access run only at world creation. Dialogue in play stays on the small local model of section 9.
+
+### Providers and fallback
+
+The same pass runs on any of three providers, chosen at world creation. All three produce the same file format and go through the same validation.
+
+| Provider | Needs | Expected result |
+| --- | --- | --- |
+| Claude through the API | The player's own API key and a network connection at world creation | The fullest result: long quest lines, distinct voices per race, coherent chronicles |
+| A local model | A model file run through llama.cpp, the same runtime as dialogue. A larger model than the dialogue one is practical here, since the pass can take as long as it needs | A reduced result: shorter quest lines and plainer prose, in smaller batches with tighter validation |
+| None | Nothing | Template quests and template lore from sections 5 and 9, which every world has anyway |
+
+Rules for providers:
+
+- The choice is the player's. Nothing requires a key, and the default is whichever provider is already set up, falling back to none.
+- A key is kept in the player's own configuration, never in a world file, a save or the repository.
+- Before a hosted run starts, the game shows an estimate of its size and a cap the player can set.
+- If a run fails partway, what passed validation is kept and the rest falls back to templates.
+- The lore file records which provider and model wrote it.
+
+### The enrichment pass
+
+After the generator finishes, the pass reads the event log and writes a separate lore file beside the world, keyed to the world's hash.
+
+- **Quest lines.** Multi-stage arcs built on real causal chains in the history: an heirloom lost in a war, the exiled line that wants it, the tomb where it lies. Each step names real entities and sites, and the arc is stored as a graph of steps with conditions.
+- **Chronicles.** A prose history for each race and civilization, written in that people's voice and from its point of view. Two peoples may tell the same war differently.
+- **Lives and legends.** Biographies of notable figures, and legends that have grown around real events.
+- **Books and inscriptions.** Full texts for in-world books, replacing template text where present.
+- **Rumours.** Short leads NPCs can pass on, each pointing at a real quest line or site.
+
+The pass works in pieces (one civilization, one region, one age at a time), each given only the records it needs. During play the small dialogue model performs this material: a quest line's facts go into NPC fact sheets like any others.
+
+Lore files can be shared. Since a seed gives the same world for everyone, a lore file written for that world works for any player who has it.
+
+### The divine script (experimental)
+
+The gods already intervene in history. A divine script lets a model choose those interventions for dramatic effect, where the generator would otherwise pick them from the seed.
+
+- **What it is.** A data file listing interventions: which god, which kind (bless, curse, raise a champion, send a monster, mark a site), roughly when, and at whom. Only intervention kinds the simulation already supports are allowed.
+- **How it is made.** The world is generated once without a script. The model reads that history, writes a script to sharpen it, and the world is generated again with the script as an input.
+- **Determinism.** A world becomes a function of seed, settings and script. The script's hash is stored in the world, and the script travels with it, so the result is reproducible and bit-identical for anyone holding the same script.
+- **Without a script,** the gods act as the seed dictates, exactly as in the base design.
+- **Providers.** The same three as the enrichment pass.
+
+This depends on the intervention system from phase P5, and it is an experiment: it stays only if scripted worlds read better than unscripted ones in the world critic's reviews.
+
+### What is deliberately excluded
+
+- A model deciding events inside the simulation. It breaks reproducibility, and bookkeeping over thousands of years is what the simulation does well.
+- Calls to a hosted model during play, which would add delay, cost and a network dependency to every conversation.
