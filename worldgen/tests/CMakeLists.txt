@@ -285,6 +285,7 @@ target_sources(worldgen-tests PRIVATE
     history/history_chronology_report_test.cpp
     history/history_chronology_property_test.cpp
     history/history_chronology_golden_test.cpp
+    history/history_chronology_guard_test.cpp
 )
 target_compile_definitions(worldgen-tests PRIVATE
     UNMAPPED_P3_03_GOLDEN_PATH="${CMAKE_CURRENT_SOURCE_DIR}/golden/p3-03-chronology.txt"
