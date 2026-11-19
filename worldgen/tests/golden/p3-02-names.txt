@@ -10,9 +10,10 @@
 #   pick <u hex> <n> <index|FATAL>
 #   chance <u hex> <p raw> <true|false|FATAL>
 #   weighted <u hex> <w,w,...|-> <index|FATAL>            (- is the empty list)
-#   roman <k> <numeral>
+#   roman <k> <numeral|FATAL>
 #   cap <root> <Cap(root)>
-#   attempt <seed> <culture> <kind> <c> <e> <t> <valid 0|1> <root|-> <name>
+#   attempt <seed> <culture> <kind> <c> <e> <t> <valid 0|1> <root> <name>  (- - when invalid:
+#       an invalid attempt's root and name are unspecified, spec 4.2)
 #   step <seed> <culture> <kind> <c> <e> <t> <j> <u hex> <n> <index> <symbol> <piece|->
 #       every draw of the attempt (symbol form, pattern, O, N, C)
 #   scenario <label> <seed> <preload count> then preload <label> <name> lines (sorted),
@@ -25,7 +26,8 @@
 #       order (c = 1..6), kinds in the order god, civilization, settlement, entities 1..50
 #   sha256 <seed> <hex>  of the seed's name lines joined by LF (no trailing LF)
 # Where 4.6 falls: its seed-0 elven settlement 1 tuple is the line '0 elven settlement 1 0
-# Iensath' of the list (the registry then holds 200 earlier names, none of them Iensath);
+# Iensath' of the list (the registry then holds 250 earlier names,
+# dwarven 150, elven god and civilization 100, none of them Iensath);
 # its empty-registry, collision and fallback cases are scenarios empty, collide and full;
 # its seed-42 vectors are scenario seed42.
 tag TAG_HIST 0x545349483a4d4e55
@@ -97,7 +99,14 @@ weighted 0xffffffffffffffff 1,0 0
 weighted 0x0000000000000000 0,1 1
 weighted 0x8000000000000000 1,1 1
 weighted 0x7fffffffffffffff 1,1 0
-weighted 0xffffffffffffffff 4611686018427387904,4611686018427387904,1 1
+weighted 0xffffffffffffffff 4611686018427387904,4611686018427387902,1 1
+weighted 0x0000000000000000 4611686018427387904,4611686018427387902,1 0
+weighted 0xffffffffffffffff 9223372036854775807 0
+weighted 0xffffffffffffffff 9223372036854775807,0 0
+weighted 0x0000000000000000 1,4611686018427387904 0
+weighted 0xffffffffffffffff 1,4611686018427387904 1
+weighted 0x8000000000000000 2147483648,1,2147483647 1
+weighted 0x7fffffffffffffff 2147483648,1,2147483647 0
 weighted 0x8000000100000000 1,1,1 1
 weighted 0x5555555500000000 1,1,1 0
 weighted 0x5555555600000000 1,1,1 1
@@ -105,6 +114,9 @@ weighted 0x0000000000000000 - FATAL
 weighted 0x0000000000000000 0 FATAL
 weighted 0x0000000000000000 0,0,0 FATAL
 weighted 0x0000000000000000 1,-1,3 FATAL
+weighted 0xffffffffffffffff 4611686018427387904,4611686018427387904,1 FATAL
+weighted 0x0000000000000000 4611686018427387904,4611686018427387904 FATAL
+weighted 0x0000000000000000 9223372036854775807,1 FATAL
 roman 1 I
 roman 2 II
 roman 3 III
@@ -117,8 +129,13 @@ roman 49 XLIX
 roman 90 XC
 roman 400 CD
 roman 1994 MCMXCIV
+roman 3888 MMMDCCCLXXXVIII
 roman 3999 MMMCMXCIX
 roman 4000 MMMM
+roman 4888 MMMMDCCCLXXXVIII
+roman 100000 MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM
+roman 0 FATAL
+roman 100001 FATAL
 cap gnink-snunk Gnink-Snunk
 cap uruld'duuld Uruld'duuld
 cap iensath Iensath
@@ -164,7 +181,7 @@ step 42 dwarven god 1 1 0 1 0x0f181cef4569011d 4 0 pattern ONC
 step 42 dwarven god 1 1 0 2 0xbc5282480478a343 14 10 O kh
 step 42 dwarven god 1 1 0 3 0x7af8441beb1648f8 6 2 N o
 step 42 dwarven god 1 1 0 4 0x8d3eb212fcb7f377 13 7 C rk
-attempt 42 goblin civilization 4 3 0 0 druxgitch The Druxgitch Horde
+attempt 42 goblin civilization 4 3 0 0 - -
 step 42 goblin civilization 4 3 0 0 0x50bc92cebde7cbec 3 0 form The_{root}_Horde
 step 42 goblin civilization 4 3 0 1 0x7cdd5e2c6e464530 5 2 pattern ONCONC
 step 42 goblin civilization 4 3 0 2 0xc74fa64446041d56 13 10 O dr

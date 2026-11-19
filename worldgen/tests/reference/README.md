@@ -569,3 +569,10 @@ and kind, seeds 0 and 1 (about 2 minutes).
 
 The test cultures `tiny` (two names, Ba and Da) and `never` (no valid root)
 are defined both here and in `worldgen/tests/history/p3_02_names_support.hpp`.
+
+Revision of 2026-11-19 (spec text revised after implementation): `weighted`
+is fatal when the sum exceeds 2^63 − 1 (4.1, P3-00 H6), `roman` outside
+[1, 100000] (4.3); the golden file gains the matching `weighted` and `roman`
+lines, the `attempt` lines print `- -` for the root and name of an invalid
+attempt (unspecified, 4.2), and the header says 250 earlier names. No name
+list or SHA-256 line changed.
