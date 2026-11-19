@@ -408,3 +408,23 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
 - Proposal: none needed in the design doc.
 - Interim choice: Paul decided to leave the heath stripe and the fens as they are, and to accept the habitability limits for now. Soil variation between lowlands is to be reconsidered only if the regions stage or the history phase needs more contrast. The explored alternatives (a height-above-valley term for heath, with or without noise) stay on branch `p1/04c-heath-fen-explore` and are not merged.
 - Status: decided
+
+### Schema version 5: regions, region borders and biome counts per region
+
+- Date: 2026-11-18
+- Raised by: spec-writer, approved by the lead
+- Design doc section: 4 (Regions), 6 (table list, schema versions)
+- Problem: the design plans schema version 5 with tables `region` and `region_border`, without their columns. Beast placement and race preferences need the biome mix of a region, not only its dominant biome, and history needs to know where ore can be reached.
+- Proposal: schema version 5, with the regions stage, adds `region` (id, name, dominant biome, bounds as four integer columns, seed cell, landmass, cell counts of lake, river, coast and walkable ground, largest river class, main walk area, mean and highest elevation, the means of the six resource scores, the 90th percentile of habitability, and counts of rich ore and of rich ore within 300 m of walkable ground), `region_border` (one row per pair of neighbouring regions: border length, the height and cell of the lowest crossing, walkable and large-river pair counts, largest river class, and the smallest id and number of natural passes crossing it) and `region_biome` (cells of each biome in each region; new, not in the design's table list).
+- Interim choice: as proposed, specified in P1-06 and `docs/specs/schema.md`; generator 0.11.0.
+- Status: open
+
+### Regions: how borders, large rivers, uplands and counts are settled
+
+- Date: 2026-11-18
+- Raised by: spec-writer, approved by the lead
+- Design doc section: 4 (Regions)
+- Problem: the design says regions are "bordered on ridges and large rivers" and "roughly 12, 45 and 180 per map", but not how borders are found, what a large river is, or what happens to mountain land. A prototype on generator 0.10.0 worlds showed that a climbing cost puts borders along contour lines, not ridges.
+- Proposal: (1) borders come from a travel cost that is cheap along valleys and dear over ridges (cost weighted by height above the nearest stream); (2) a large river drains more than about 4 km², and its two banks belong to different regions where both have a settlement site; (3) add "Mountain massifs wider than about a kilometre form upland regions of their own; narrower ranges are divided along their crest between the regions on either side"; (4) counts: with 2 km² regions the measured counts are 13, 49 and 200, since land is about 40% of the map. Either say "about 2 km² each, roughly 13, 50 and 200 per map", or keep 12, 45 and 180 and accept regions of about 2.3 km². Paul's choice. (5) Placeholder names have the form "Northwest Wood II" (sector, biome noun, numeral), built from data; islands of any size are regions.
+- Interim choice: as proposed, with 2 km² regions (seed spacing 1200 m, a tuning value), specified in P1-06.
+- Status: open
