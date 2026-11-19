@@ -1,6 +1,6 @@
 # P3-04 Simulation engine
 
-Status: **approved by the lead 2026-11-19** (the six questions of section 19 go to Paul; the interim choices stand). Written by the spec writer 2026-11-19; amendments 18.2 and 18.3 applied the same day. Phase P3 History core, spec 4 (P3-00 3.1), pipeline stage 8, `history`, as an engine with stub subsystems. Generator **0.14.0**; **schema version 7** (thirteen new tables, one new required `meta` key, section 9). Design doc sections 5 (deep time, ages, active phases, quiet intervals, flare-ups, records, determinism; creation; entities; tick loop), 6 (tables `phase`, `event`, `event_participant`, `event_cause`, `civilization`, `settlement`, `relation`; `meta` end year), 13 (P3 row and exit check; P4 timeline and territory by year; P5 interventions) and 14 (records a model can narrate and validate; the divine script as an intervention source). Depends on P0-01 to P0-04 with their amendments, P1-06 (region tables), P3-00 (binding; amended in 18.3), P3-01 (kind `history`), P3-02 (keyed draws, names), P3-03 (chronology tables, `HistoryParams`, the registry rule 8.2). Implementation read: `origin/p3/03-int` at 3ddc942 (generator 0.13.0, schema 6). Proposals read: up to "History: with a subset of races the first one present opens history; every race keeps its creator god". Also addresses the P3-03 determinism audit's advisories A1 (fatal guards for schedule invariants) and A2 (H8 must not rest on in-memory values): sections 3.2, 3.3 and 5.6.
+Status: **approved by the lead 2026-11-19** (the six questions of section 19 go to Paul; the interim choices stand). Written by the spec writer 2026-11-19; amendments 18.2 and 18.3 applied the same day; revision r1 (P3-07's amendments) the same day. Phase P3 History core, spec 4 (P3-00 3.1), pipeline stage 8, `history`, as an engine with stub subsystems. Generator **0.14.0**; **schema version 7** (thirteen new tables, one new required `meta` key, section 9). Design doc sections 5 (deep time, ages, active phases, quiet intervals, flare-ups, records, determinism; creation; entities; tick loop), 6 (tables `phase`, `event`, `event_participant`, `event_cause`, `civilization`, `settlement`, `relation`; `meta` end year), 13 (P3 row and exit check; P4 timeline and territory by year; P5 interventions) and 14 (records a model can narrate and validate; the divine script as an intervention source). Depends on P0-01 to P0-04 with their amendments, P1-06 (region tables), P3-00 (binding; amended in 18.3), P3-01 (kind `history`), P3-02 (keyed draws, names), P3-03 (chronology tables, `HistoryParams`, the registry rule 8.2). Implementation read: `origin/p3/03-int` at 3ddc942 (generator 0.13.0, schema 6). Proposals read: up to "History: with a subset of races the first one present opens history; every race keeps its creator god". Also addresses the P3-03 determinism audit's advisories A1 (fatal guards for schedule invariants) and A2 (H8 must not rest on in-memory values): sections 3.2, 3.3 and 5.6.
 
 Numbers in this spec come from the spec writer's exact-integer prototype `~/.cache/the-unmapped/out/p3-04-spec/engine_proto.py` (on the P3-03 and P3-02 references; awakening years over seeds 0–999 and all 63 race subsets) and from the P1-06 validation worlds (`~/.cache/the-unmapped/out/p1-06-validation/`, whose geography is unchanged at 0.13.0). The empty-world size was measured with Python's SQLite 3.46.1 (9.6); the engineer confirms it with the vendored SQLite.
 
@@ -149,7 +149,7 @@ dense = { active_years = 250, flare_years = 75, final_years = 400, flare_thresho
 
 ### 4.2 `history.report` (new id; P3-01 5 says "P3-04 or P3-07, whichever lands first")
 
-P3-04 lands first and defines one field; P3-07 adds its own fields (report levels) later, a data change.
+P3-04 lands first and defines one field; P3-07 adds none (r1: its selection constants are part of the report format, P3-07 8).
 
 | Field | Type | Meaning |
 | --- | --- | --- |
@@ -558,15 +558,19 @@ Problems reported by `template_problem` (the first, scanning left to right; `<n>
 namespace worldgen::history {
 class HistoryView {          // the history tables of a world in memory, read once
 public:
-    static HistoryView load(const db::WorldReader&);   // FatalError `history view: <table>: <reason>` on a corrupt reference
-    const EventCatalogue& catalogue() const;           // as stored
-    // events with participants, values, causes; entity names by type and id
+    // r1 (P3-07 18.1): errors as values, never FatalError: code corrupt_layer, message
+    // `corrupt table '<table>': <detail>` (wording recorded in 16 by the engineer).
+    static db::Result<HistoryView> load(const db::WorldReader&);
+    const EventCatalogue& catalogue() const;           // as stored: kind keys, role keys, value keys
+    // read accessors (names are the engineer's): the number of events; per event its row (year, end_year,
+    // kind, phase, region, settlement, salience), participants (seq, role seq, entity type, id) in seq order,
+    // values in seq order, causes ascending; the display name of an entity by type and id (8.3), none for 6-9
 };
 std::string render_event(const HistoryView&, std::int64_t event_id);
 }
 ```
 
-`render_event` scans the event's kind's **stored** template left to right and appends: literal bytes; `{` for `{{`, `}` for `}}`; for `{role}` / `{role:name}` the display name of the first participant with that role (lowest participant `seq`); `{role:plural}`, `{role:adjective}` the race's plural or adjective; `{role:all}` the names of all participants with that role in `seq` order joined as `A`, `A and B`, `A, B and C` (`, ` between all but the last two, ` and ` before the last; empty text for none); `{value}` the value in decimal (`-` for a negative, no leading zeros); `{value?w1|w2}` w1 if the value is 1, else w2; `{@year}`, `{@end_year}` in decimal; `{@region}`, `{@settlement}` the display name of the event's region or settlement. No other transformation: no capitalization, no trimming, no locale. An event id outside the log, or a stored template with a problem, is fatal (`render_event: event <id>: <reason>`). P3-07's report, P4's event browser and the game call this function; nobody re-implements it (P3-00 6.3).
+`render_event` scans the event's kind's **stored** template left to right and appends: literal bytes; `{` for `{{`, `}` for `}}`; for `{role}` / `{role:name}` the display name of the first participant with that role (lowest participant `seq`); `{role:plural}`, `{role:adjective}` the race's plural or adjective; `{role:all}` the names of all participants with that role in `seq` order joined as `A`, `A and B`, `A, B and C` (`, ` between all but the last two, ` and ` before the last; empty text for none); `{value}` the value in decimal (`-` for a negative, no leading zeros); `{value?w1|w2}` w1 if the value is 1, else w2; `{@year}`, `{@end_year}` in decimal; `{@region}`, `{@settlement}` the display name of the event's region or settlement. No other transformation: no capitalization, no trimming, no locale. An event id outside the log is fatal (`render_event: event <id>: <reason>`): a caller's bug. **`HistoryView::load` validates** (r1, P3-07 18.1), so that rendering a loaded view cannot fail on stored data: every stored template (`template_problem` against its stored kind), the catalogue tables against each other, and every reference of the log (event kinds, participant role seq and entity type against the kind's roles and counts, values one per key, causes below the event, the ids of races, gods, civilizations, settlements and regions it names); a failure is an error value (above), exit 3 in the CLI. It accepts every kind present in the world's catalogue tables, including kinds the running build does not compile (a world of a later generator of the same schema, or a test fixture): the world is self-describing (A1); the compiled catalogue is used only by the writer. P3-07's report, P4's event browser and the game call this function; nobody re-implements it (P3-00 6.3).
 
 Seed 42, 1024, the first events of 17: `Fielie awakened the Elves in Northeast Downs IV.` · `The Elves founded Finen in Northeast Downs IV.` · `Finen founded Voeledell in Northeast Downs IV.` · `Finen passed 1924 quiet years (12 generations), from 150 to 2073.`
 
@@ -705,7 +709,7 @@ census_rows = 6
 relations = 0
 ```
 
-Report format stays v2 (P3-03 9.1's reasoning). **Corrupt data** (exit 3, nothing on stdout, after the `[chronology]` checks, when `phase` or `event` has rows; first failure, in this order): row shapes as P3-03 9.1 (only the four nullable columns may be NULL); `corrupt table 'phase': row <id>: <reason>` (`id not consecutive`, `start_year <s>, expected <x>`, `end_year below start_year`, `kind <k>`), `corrupt table 'phase': the last phase ends in <e>, expected <E − 1>`; `corrupt table 'event': row <id>: <reason>` (`id not consecutive`, `year <y> below the previous event's <p>`, `end_year below year`, `kind <k> is not an event kind`); `corrupt table 'event_cause': row (<e>, <c>): cause not below event`. Everything else (participants against roles, templates) is P3-07's `report --history`, which owns the history format (P3-00 11).
+Report format stays v2 (P3-03 9.1's reasoning). Every key of `[history]` is also a key of the history report's `[stats]`, with the same definition (r1; P3-07 9). **Corrupt data** (exit 3, nothing on stdout, after the `[chronology]` checks, when `phase` or `event` has rows; first failure, in this order): row shapes as P3-03 9.1 (only the four nullable columns may be NULL); `corrupt table 'phase': row <id>: <reason>` (`id not consecutive`, `start_year <s>, expected <x>`, `end_year below start_year`, `kind <k>`), `corrupt table 'phase': the last phase ends in <e>, expected <E − 1>`; `corrupt table 'event': row <id>: <reason>` (`id not consecutive`, `year <y> below the previous event's <p>`, `end_year below year`, `kind <k> is not an event kind`); `corrupt table 'event_cause': row (<e>, <c>): cause not below event`. Everything else (participants against roles, templates) is P3-07's `report --history`, which owns the history format (P3-00 11).
 
 ### 11.2 `hash --detail`
 
@@ -909,3 +913,7 @@ Each with the recommendation and the interim choice this spec follows.
 ## Appendix A. Proposals entry (added to `docs/design/proposals.md` with this spec)
 
 "History: active phases scale with the history span; the detail level sets the simulated share" (questions 1 to 3). Schema 7 itself is recorded in "History: schema versions 6 and 7"; its column details are this spec's 9.1.
+
+## Revision note r1 (2026-11-19, amendments for P3-07)
+
+Requested by P3-07 18.1, applied on `p3/07-spec`. 4.2: P3-07 adds no field. 8.5: `HistoryView::load` returns `db::Result<HistoryView>` (a corrupt world is an error value, code `corrupt_layer`, never a `FatalError`, P0-02 9); read accessors for the log, the stored catalogue and names; `load` validates every stored template and every reference of the log, so `render_event` fails only for an id outside the log; kinds the build does not compile are accepted. 11.1: the `[history]` keys are a subset of the history report's `[stats]`. No world byte changes.
