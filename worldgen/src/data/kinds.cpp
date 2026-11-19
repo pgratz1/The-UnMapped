@@ -530,7 +530,7 @@ Schema region_names_schema() {
     // P1-06 4, record region_names, in declaration order.
     std::vector<Field> fields;
     for (const char* name : {"central", "north", "northeast", "east", "southeast", "south", "southwest", "west",
-                             "northwest", "isle"}) {
+                             "northwest", "isle", "upland"}) {
         fields.push_back(Field::required(name, Type::string(32, word_grammar())));
     }
     return Schema(std::move(fields));
@@ -553,6 +553,7 @@ Schema worldgen_regions_schema() {
         Field::required("ore_reach_m", Type::integer(0, 10000)),
         Field::required("name_central_frac", Type::fixed("0", "0.5")),
         Field::required("names", Type::record(region_names_schema())),
+        Field::required("upland_own_noun", Type::array(Type::reference(std::string(BIOME_KIND)), 0, 16)),  // r2
     };
     std::vector<Check> checks{
         Check{"regions_tile_fits_spacing", [](const Record& r) { return check_regions_tile_fits_spacing(r); }},

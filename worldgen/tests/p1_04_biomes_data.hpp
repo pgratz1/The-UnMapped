@@ -251,7 +251,8 @@ inline constexpr std::string_view REGIONS_TOML =
     "name_central_frac = \"0.12\"\n"
     "names = { central = \"Central\", north = \"North\", northeast = \"Northeast\", east = \"East\", "
     "southeast = \"Southeast\", south = \"South\", southwest = \"Southwest\", west = \"West\", "
-    "northwest = \"Northwest\", isle = \"Isle\" }\n";
+    "northwest = \"Northwest\", isle = \"Isle\", upland = \"Fells\" }\n"
+    "upland_own_noun = [\"alpine\", \"heath\", \"highland_moor\"]\n";
 
 [[nodiscard]] inline bool regions_registered(const worldgen::data::KindRegistry& registry) {
     const worldgen::data::Kind* k = registry.find("worldgen");
