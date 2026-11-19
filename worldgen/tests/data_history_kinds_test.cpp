@@ -358,20 +358,19 @@ TEST_CASE("P3-01 3 race_biomes_unique: the later index, naming the first") {
                                                  last + "  { biome = \"temperate_forest\", weight = 1 },\n"))),
                   "races/elf.toml", "race_biomes_unique", "race.elf",
                   "biomes[7]: biome 'temperate_forest' is already listed at biomes[0]");
-    // A biome listed three times. A per-definition check gives one message
-    // (P0-03 7.5), and P3-01 3 does not say whether a third occurrence is
-    // reported too (ambiguity reported): the first repeat must be, naming
-    // the first index; a second error, if any, names the first index too.
-    const Load l = load(shipped_edited("races/elf.toml", last,
-                                       last + "  { biome = \"heath\", weight = 1 },\n  { biome = \"heath\", weight = 2 },\n"));
-    INFO(dump(l));
-    REQUIRE((l.errors.size() == 1U || l.errors.size() == 2U));
-    at_definition(l.errors[0], "races/elf.toml", "race_biomes_unique", "race.elf",
+    // A biome listed three times, and a second biome repeated: the first
+    // repeat only (P3-01 3, revised: the smallest later index).
+    at_definition(only_error(load(shipped_edited(
+                      "races/elf.toml", last,
+                      last + "  { biome = \"heath\", weight = 1 },\n  { biome = \"heath\", weight = 2 },\n"
+                             "  { biome = \"steppe\", weight = 3 },\n"))),
+                  "races/elf.toml", "race_biomes_unique", "race.elf",
                   "biomes[7]: biome 'heath' is already listed at biomes[3]");
-    if (l.errors.size() == 2U) {
-        at_definition(l.errors[1], "races/elf.toml", "race_biomes_unique", "race.elf",
-                      "biomes[8]: biome 'heath' is already listed at biomes[3]");
-    }
+    // The smallest later index decides, not the first biome listed.
+    at_definition(only_error(load(shipped_edited("races/elf.toml", last,
+                                                 last + "  { biome = \"steppe\", weight = 1 },\n  { biome = \"temperate_forest\", weight = 2 },\n"))),
+                  "races/elf.toml", "race_biomes_unique", "race.elf",
+                  "biomes[7]: biome 'steppe' is already listed at biomes[4]");
 }
 
 TEST_CASE("P3-01 3 race_settlement_kinds_unique") {
@@ -383,6 +382,11 @@ TEST_CASE("P3-01 3 race_settlement_kinds_unique") {
                                                  "[\"village\", \"village\"]"))),
                   "races/faerie.toml", "race_settlement_kinds_unique", "race.faerie",
                   "settlement_kinds[1]: 'village' is already listed");
+    // Several repeats: the first only (P3-01 3, revised).
+    at_definition(only_error(load(shipped_edited("races/elf.toml", "[\"hamlet\", \"village\", \"town\", \"city\"]",
+                                                 "[\"town\", \"hamlet\", \"hamlet\", \"town\", \"town\"]"))),
+                  "races/elf.toml", "race_settlement_kinds_unique", "race.elf",
+                  "settlement_kinds[2]: 'hamlet' is already listed");
 }
 
 TEST_CASE("P3-01 3: the four per-definition checks failing together give four errors at the header") {
@@ -408,33 +412,69 @@ TEST_CASE("P3-01 3: the four per-definition checks failing together give four er
 // --- 8.1 test 2: kind-level checks (P3-01 3) ---------------------------------------------
 
 TEST_CASE("P3-01 3 race_order_unique: at each later definition; race_order_dense is then not reported") {
-    {
-        const Load l = load(shipped_edited("races/orc.toml", "order = 6", "order = 5"));
-        INFO(dump(l));
-        REQUIRE_FALSE(l.ok());
-        const auto unique = errors_of_check(l, "race_order_unique");
-        REQUIRE(unique.size() == 1U);
-        at_definition(unique[0], "races/orc.toml", "race_order_unique", "race.orc", "order 5 is also used by 'race.human'");
-        CHECK(errors_of_check(l, "race_order_dense").empty());
-        // P3-01 3 does not say whether race_awakening_order runs on
-        // duplicate orders (spec ambiguity reported); any other error must
-        // come from it.
-        for (const wd::LoadError& e : l.errors) {
-            CAPTURE(e.to_string());
-            CHECK((contains(e.message, "check 'race_order_unique'") || contains(e.message, "check 'race_awakening_order'")));
-        }
+    {  // orc takes order 5: the orc (later than human) only. Both order-5 races
+       // are compared with faerie (order 4) and pass.
+        at_definition(only_error(load(shipped_edited("races/orc.toml", "order = 6", "order = 5"))), "races/orc.toml",
+                      "race_order_unique", "race.orc", "order 5 is also used by 'race.human'");
     }
-    {  // three share order 5: two errors, both naming the first in canonical id order (as biome_code_unique)
+    {  // three share order 5: one error per later race, each naming the
+       // earliest by id (goblin). Order 2 is now missing, so dwarf (order 3)
+       // is compared with nothing; goblin (order 5, share 0.35) is compared
+       // with faerie (order 4, 0.70) and fails. race_order_dense: not reported.
         Files f = shipped_edited("races/orc.toml", "order = 6", "order = 5");
         f = edited(f, "races/goblin.toml", "order = 2", "order = 5");
         const Load l = load(f);
         INFO(dump(l));
-        const auto unique = errors_of_check(l, "race_order_unique");
-        REQUIRE(unique.size() == 2U);
-        at_definition(unique[0], "races/human.toml", "race_order_unique", "race.human",
+        REQUIRE(l.errors.size() == 3U);
+        at_definition(l.errors[0], "races/goblin.toml", "race_awakening_order", "race.goblin",
+                      "awakening_share must be above that of 'race.faerie' (order 4)");
+        at_definition(l.errors[1], "races/human.toml", "race_order_unique", "race.human",
                       "order 5 is also used by 'race.goblin'");
-        at_definition(unique[1], "races/orc.toml", "race_order_unique", "race.orc", "order 5 is also used by 'race.goblin'");
-        CHECK(errors_of_check(l, "race_order_dense").empty());
+        at_definition(l.errors[2], "races/orc.toml", "race_order_unique", "race.orc", "order 5 is also used by 'race.goblin'");
+    }
+    {  // two races of order 1: each is checked against 0 (goblin fails); order
+       // 2 is missing, so dwarf is compared with nothing.
+        const Load l = load(shipped_edited("races/goblin.toml", "order = 2", "order = 1"));
+        INFO(dump(l));
+        REQUIRE(l.errors.size() == 2U);
+        at_definition(l.errors[0], "races/goblin.toml", "race_awakening_order", "race.goblin",
+                      "the race of order 1 must have awakening_share 0");
+        at_definition(l.errors[1], "races/goblin.toml", "race_order_unique", "race.goblin",
+                      "order 1 is also used by 'race.elf'");
+    }
+    {  // the earliest by id names the duplicate even when it is not the
+       // earlier file or the smaller share: dwarf takes order 2 beside goblin.
+        at_definition(only_error(load(shipped_edited("races/dwarf.toml", "order = 3", "order = 2"))), "races/goblin.toml",
+                      "race_order_unique", "race.goblin", "order 2 is also used by 'race.dwarf'");
+    }
+}
+
+TEST_CASE("P3-01 3 race_awakening_order: a race of order k is compared with the earliest (by id) race of order k - 1") {
+    // dwarf and faerie share order 4 (dwarf 0.55, faerie 0.70); human (order
+    // 5) is compared with dwarf only.
+    Files f = shipped_edited("races/dwarf.toml", "order = 3", "order = 4");
+    {  // human 0.60: above dwarf's 0.55 though below faerie's 0.70: no awakening error
+        const Load l = load(edited(f, "races/human.toml", "awakening_share = \"0.83\"", "awakening_share = \"0.60\""));
+        at_definition(only_error(l), "races/faerie.toml", "race_order_unique", "race.faerie",
+                      "order 4 is also used by 'race.dwarf'");
+    }
+    {  // human 0.50: below dwarf's
+        const Load l = load(edited(f, "races/human.toml", "awakening_share = \"0.83\"", "awakening_share = \"0.50\""));
+        INFO(dump(l));
+        REQUIRE(l.errors.size() == 2U);
+        at_definition(l.errors[0], "races/faerie.toml", "race_order_unique", "race.faerie",
+                      "order 4 is also used by 'race.dwarf'");
+        at_definition(l.errors[1], "races/human.toml", "race_awakening_order", "race.human",
+                      "awakening_share must be above that of 'race.dwarf' (order 4)");
+    }
+    {  // with no race of order k - 1 there is nothing to compare with: without
+       // the dwarves (order 3), faerie at 0.30 (below goblin) gives only the gap.
+        Files g = history_data::shipped_files();
+        g.erase("races/dwarf.toml");
+        g.erase("cultures/dwarven.toml");
+        g = edited(g, "races/faerie.toml", "awakening_share = \"0.70\"", "awakening_share = \"0.30\"");
+        at_directory(only_error(load(g)), "races", "race_order_dense", "race",
+                     "orders must be 1 to 5 without gaps; 3 is missing");
     }
 }
 
@@ -495,6 +535,20 @@ TEST_CASE("P3-01 3 race_awakening_order: order 1 at 0, shares strictly increasin
     CHECK(load(shipped_edited("races/orc.toml", "awakening_share = \"0.93\"", "awakening_share = 1")).ok());
 }
 
+TEST_CASE("P3-01 3 (revised): a field error leaves a race out of the kind-level checks, so its order counts as missing") {
+    // goblin (order 2) has an unknown key: race_order_dense reports 2 as
+    // missing, and dwarf (order 3, share lowered below goblin's) is compared
+    // with nothing.
+    Files f = shipped_edited("races/goblin.toml", "upland = 100\n", "upland = 100\ntemperament = 3\n");
+    f = edited(f, "races/dwarf.toml", "awakening_share = \"0.55\"", "awakening_share = \"0.30\"");
+    const Load l = load(f);
+    INFO(dump(l));
+    REQUIRE(l.errors.size() == 2U);
+    at_directory(l.errors[0], "races", "race_order_dense", "race", "orders must be 1 to 5 without gaps; 2 is missing");
+    CHECK(l.errors[1].path == "races/goblin.toml");
+    CHECK(contains(l.errors[1].message, "race.goblin.temperament"));
+}
+
 TEST_CASE("P3-01 3 and P0-03 amendment 16: kind-level checks see only definitions that passed type validation") {
     // The orc definition fails type validation (unknown key): the remaining
     // five have orders 1 to 5, so no kind-level check fails.
@@ -550,14 +604,8 @@ TEST_CASE("P3-01 5: a history file for an unregistered id is an error at its hea
     CHECK(e.path == "history/engine.toml");
     CHECK(e.line == 1U);
     CHECK(e.column == 1U);
-    // P3-01 5 writes "expected one of chronology"; the P0-03 amendment 15
-    // message it cites quotes the ids ("expected one of 'alpha_stage',
-    // 'beta_stage'", data_fixed_id_test.cpp). Either is accepted here; the
-    // difference is reported as a spec defect.
-    const std::string prefix = "unknown id 'engine' for kind 'history'; expected one of ";
-    CHECK(e.message.substr(0, prefix.size()) == prefix);
-    const std::string rest = e.message.substr(std::min(prefix.size(), e.message.size()));
-    CHECK((rest == "'chronology'" || rest == "chronology"));
+    // P3-01 5 (revised): the registered ids, each in single quotes.
+    CHECK(e.message == "unknown id 'engine' for kind 'history'; expected one of 'chronology'");
 }
 
 TEST_CASE("P3-01 5: history/ without chronology.toml is a missing definition against the directory") {
