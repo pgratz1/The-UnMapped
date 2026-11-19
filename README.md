@@ -92,7 +92,7 @@ The first block of work is the world generator prototype: seven phases, P0 to P6
 
 ```
 P0 ██████████ done ──┬─► P1 Geography ██ done ──► P3 History core ──┬─► P5 History depth ──┬─► P6 Derivation
-                     │      (you are here)                                 │                      │
+                     │                              (you are here)         │                      │
                      └─► P2 Viewer v0 ██ done ─────────────────────────────┴─► P4 Viewer v1 ──────┘
 ```
 
