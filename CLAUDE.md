@@ -6,8 +6,8 @@ A single-player, first-person, open-world RPG whose world and history are genera
 
 - **Design doc:** `docs/design/design.md`. It is the specification for the whole project. Read the sections relevant to your task before starting.
 - **Current work:** the world generator prototype, section 13 of the design doc (phases P0 to P6).
-- **Current phase:** P1 Geography. P0 Foundation and P2 (Godot bring-up and viewer v0) are done. All six geography stages (specs P1-01 to P1-06) are merged (generator 0.11.0, schema 5); the phase ends with Paul's review.
-- **Next phase:** P3 History core, after Paul's review of P1.
+- **Current phase:** P3 History core, started 2026-11-19 with the overview spec (P3-00). P0 Foundation, P1 Geography (specs P1-01 to P1-06, generator 0.11.0, schema 5; approved by Paul on 2026-11-19) and P2 (Godot bring-up and viewer v0) are done. The reference map size for history is 1024.
+- **Next phases:** P4 Viewer v1 and P5 History depth, in parallel, after Paul's review of P3.
 
 ## The design doc is read-only
 

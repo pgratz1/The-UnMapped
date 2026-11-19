@@ -438,3 +438,13 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
 - Proposal: worldgen gains a public, read-only layer catalogue (name, unit, decimal scale, special values) beside `registered_palette`, and the region record carries `name`. The create-world screen and the in-game map will need the same information, so it belongs with the data rather than in each screen.
 - Interim choice: the viewer keeps its copy of the units of P1-00 4 and reads the name column itself; a layer it does not know is shown under "Other" with its raw value.
 - Status: open
+
+### Paul's decision of 2026-11-19: P1 Geography approved; the critic's recommendations accepted
+
+- Date: 2026-11-19
+- Raised by: lead, recording Paul's decision
+- Design doc section: 4 (geography), 5 (history), 13 (phases)
+- Problem: phase P1 ends with Paul's review. The world critic's review of the finished geography (`docs/reviews/p1-06-regions-critic.md`) closes with recommendations for the history phase.
+- Proposal: none; a record. Paul read the review, accepted its recommendations and approved P1. For P3 this means: the default map size, 1024, is the reference size for tuning and judging history, since 512 worlds have room for few peoples and suit a short history, not all six races; history locates a pass by its col (`pass.col_x`, `col_y`) and the `region` layer; a border counts as a river border by the share of its length that follows the river, not by any river pair; islets below about 0.3 km² are ignored as homes; homelands in wild uplands are chosen by region and biome, since little of that ground is walkable; ports come from history (forage and river mouths), since coasts score below the interior; lowland borders are political lines.
+- Interim choice: the P3 specs follow these points.
+- Status: decided
