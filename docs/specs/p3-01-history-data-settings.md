@@ -1,6 +1,6 @@
 # P3-01 History data and settings
 
-Status: **approved by the lead 2026-11-19; revised 2026-11-19 (text only, after implementation)**: see the revision note at the end. Phase P3 History core, spec 1 (P3-00 3.1). Design doc sections 3 (data in TOML), 5 (the six races, their order, camps and timing; "Food and homelands"; world-creation settings), 6 (`meta` holds the settings). Depends on P0-03 (with amendments 15 to 17), P0-04, P1-00 6 and P3-00. Written together with P3-02, which defines the culture naming record that this spec's `culture` kind carries.
+Status: **approved by the lead 2026-11-19; revised 2026-11-19 (text only, after implementation); amended 2026-11-19 for P3-03 (r2)**: see the revision notes at the end. Phase P3 History core, spec 1 (P3-00 3.1). Design doc sections 3 (data in TOML), 5 (the six races, their order, camps and timing; "Food and homelands"; world-creation settings), 6 (`meta` holds the settings). Depends on P0-03 (with amendments 15 to 17), P0-04, P1-00 6 and P3-00. Written together with P3-02, which defines the culture naming record that this spec's `culture` kind carries.
 
 ## 1. Purpose
 
@@ -76,11 +76,13 @@ Reserved for P5 and not declared now: temperament, magic school leanings, stance
 - The per-definition uniqueness checks `race_biomes_unique` and `race_settlement_kinds_unique` report the **first repeat only** (the smallest later index i), one message per check and definition; `race_order_unique` reports every later definition, one message each.
 - Side effect of P0-03 amendment 16 (kind-level checks run over the definitions that passed type validation): a race with any field error (a wrong type, a value out of bounds, a missing required or an unknown key) is left out of the kind-level checks, so its order counts as missing. Such an error in the race of order k < n (n races) therefore also yields `race_order_dense` (`… <k> is missing`), and the race of order k + 1 is not compared by `race_awakening_order`.
 
-**Cross-kind conditions**, which the loader cannot check (a named check sees one kind): checked at the entry of the `chronology` stage (P3-03), each fatal with the prefix `chronology: data: `, in race order:
+**Cross-kind conditions**, which the loader cannot check (a named check sees one kind): checked by `check_history_data` (P3-03 6): in `generate` right after the data is loaded, as input errors (exit 3, path `races`, no position), and again at the entry of the `chronology` stage as a guard (fatal, prefix `chronology: data: `). Amended by P3-03 (r2): the full list, D1 to D5, and the messages are in P3-03 6; in short:
 
 1. every `biomes[i].biome` is a land biome (`water` false): `race '<id>' prefers water biome '<biome id>'`;
 2. the race's `culture` belongs to it (`culture.race` = the race): `race '<id>' has culture '<culture id>' of race '<other id>'`;
-3. every race has at least one culture.
+3. every race has at least one culture (implied by 2, no message of its own);
+4. (P3-03 D2) every preferred biome is natural (one the biome stage can assign; not `blighted_waste`);
+5. (P3-03 D4, D5) the race's age name from `age_name_form` is at most 48 bytes of ASCII letters, single spaces, `'` and `-`.
 
 With the shipped data none can fail; the P3-03 tests make each fail once.
 
@@ -381,11 +383,11 @@ Settings file: input errors (exit 3) at the value's position, in the loader's fo
 
 **Order of the race checks.** Every form error of a flag (including `--races`) is a usage error found before the settings file and the data are read (P0-04 4.1). After the data is loaded, the unknown ids of `--races` are checked first (exit 2), then those of the settings file's `world.races` (exit 3). **The file's race ids are checked even when `--races` overrides them**: a settings file naming an unknown race fails with exit 3 whatever `--races` says; when both name unknown races, the flag's usage error (exit 2) is the one reported.
 
-`--test-pattern` with any history flag: the flags are accepted and have no effect (the test pattern writes no history); interim, since the settings are world-creation settings like `--map-size`, which `--test-pattern` also accepts.
+`--test-pattern` with any history flag: the flags are accepted and have no effect on any table or layer (the test pattern writes no history); from P3-03 on they are recorded in `meta` like every world's settings (P3-03 4.3, r2); interim, since the settings are world-creation settings like `--map-size`, which `--test-pattern` also accepts.
 
 ### 6.3 The `meta` keys
 
-`Settings` (`worldgen/include/worldgen/data/settings.hpp`) carries the eight values from P3-01 on, after the flags have been applied and `world.races` put in race order. They are **not in `WorldParams` yet**, and nothing in P3-01 passes them to a stage; P3-03 decides how they reach the `chronology` stage. **They are written into `meta` by the `chronology` stage's merge, P3-03, with schema 6** (P3-00 5 and 6.5, corrected): a new required `meta` key is a schema change, and P3-03 makes the one bump to schema 6. P3-01 changes no table and no `meta` key.
+`Settings` (`worldgen/include/worldgen/data/settings.hpp`) carries the eight values from P3-01 on, after the flags have been applied and `world.races` put in race order. They are **not in `WorldParams` yet**, and nothing in P3-01 passes them to a stage; P3-03 decides how they reach the `chronology` stage. (r2: P3-03 4.1 decides: `history::HistoryParams` in `WorldParams`, and `generate_world` writes the eight keys for every world, test-pattern and `--until none` worlds included.) **They are written into `meta` from the `chronology` stage's merge, P3-03, with schema 6** (P3-00 5 and 6.5, corrected): a new required `meta` key is a schema change, and P3-03 makes the one bump to schema 6. P3-01 changes no table and no `meta` key.
 
 | Key | Value text |
 | --- | --- |
@@ -448,3 +450,11 @@ The implementation and the independent tests (merged on `p3/01-int`) agreed; thi
 6. 5.1: the `history.chronology` fields are required; the Default column is the shipped value.
 7. 6.3: `Settings` carries the values; they are not in `WorldParams`; P3-03 decides how they reach the stage.
 8. 2, 8: the test files and the CTest entries `worldgen-cli-tests-history-settings` and (P3-02) `worldgen-tests-history`.
+
+## Revision note r2 (2026-11-19, amendments for P3-03)
+
+Text changes requested by P3-03 15.7; no behaviour of P3-01's code changes.
+
+1. 3, cross-kind conditions: checked by `check_history_data` in `generate` (input error, exit 3) and at the stage as a guard; P3-03 adds D2 (natural biome) and D4, D5 (age names); item 3 is implied by item 2.
+2. 6.2: `--test-pattern` worlds record the history flags in `meta` from P3-03 on.
+3. 6.3: the keys reach the stage through `HistoryParams` in `WorldParams` and are written by `generate_world` for every world (P3-03 4.1).
