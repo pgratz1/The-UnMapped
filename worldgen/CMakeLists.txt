@@ -64,6 +64,9 @@ add_library(worldgen STATIC
     src/stages/regions.cpp
     src/stages/resources.cpp
     src/stages/climate.cpp
+    # History (P3-02 onward): keyed draws and the name generator.
+    src/history/draw.cpp
+    src/history/names.cpp
 )
 add_library(worldgen::worldgen ALIAS worldgen)
 target_include_directories(worldgen
