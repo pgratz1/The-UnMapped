@@ -257,7 +257,6 @@ struct NameInput {
 // seam computes the centroid from the land sums and the isles from the
 // landmass sizes, so the regions not marked isle are put on landmass 1 (the
 // largest) and each isle on a landmass of its own of one cell.
-#if !UNMAPPED_P3_08_API
 inline std::vector<std::string> names(std::span<const NameInput> in, std::int64_t cx, std::int64_t cy, std::int64_t n,
                                       const Tuning& t, const Definitions& d) {
     std::vector<worldgen::stages::RegionNameInput> v;
@@ -294,7 +293,6 @@ inline const worldgen::stages::PlacenameData& fixture_placenames() {
     }();
     return data;
 }
-#endif
 
 // --- Tables (3.2, 3.3) ----------------------------------------------------------------------------
 

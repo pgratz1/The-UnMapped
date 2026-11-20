@@ -1026,6 +1026,10 @@ def read_kind_files(root, kind, from_spec):
         # listings stand in for them (noted by `check`).
         PRE_015_USED.add(os.path.join(root, directory))
         return sorted(SPEC_FILES[kind].items(), key=lambda kv: kv[0].encode())
+    if DATA_VERSION == "0.16.0" and kind in SPEC_FILES and SPEC_FALLBACK and not pre_017(path, kind):
+        # The disk holds 0.17.0 files: the 0.16.0 listings stand in for them.
+        PRE_015_USED.add(os.path.join(root, directory))
+        return sorted(SPEC_FILES[kind].items(), key=lambda kv: kv[0].encode())
     if DATA_VERSION == "0.16.0" and kind in ("race", "history") and SPEC_FALLBACK and pre_015(path, kind):
         # P3-06 (0.16.0): the shipped race and history files are the
         # engineer's deliverable; while the disk holds older (0.15.0) files
@@ -1156,6 +1160,9 @@ def load_root(root, kinds=None, from_spec=False):
             # engineer; the shipped values of the spec's block stand in.
             PRE_015_USED.add(os.path.join(root, "worldgen/regions"))
             defs["regions"] = dict(defs["regions"], **REGIONS_017_VALUES)
+        if DATA_VERSION == "0.16.0" and kind == "worldgen" and "regions" in defs:
+            # 0.17.0 regions.toml on disk: the two r3 records are not 0.16.0 fields.
+            defs["regions"] = {k: v for k, v in defs["regions"].items() if k not in REGIONS_017_VALUES}
         for did, table in defs.items():
             if isinstance(schema, dict):
                 if did not in schema:
