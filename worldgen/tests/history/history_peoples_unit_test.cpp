@@ -262,8 +262,9 @@ TEST_CASE("P3-05 4.2, 5.1, 16.1 item 1: each term alone, floor division, the fit
     full.ore_reach_cells = 200;
     full.walk_cells = 4000;  // rough 0: no upland term for humans (upland -300)
     const std::vector<Case> cases = {
-        // area = 3000 + 1000 x 270 div 1000 = 3270; C = 3270 x 1000 x 250 x 2500 div 10^9 = 2043
-        {"faeries on fen", fen, {{1, 12, 4000}}, "faerie", 4, 1242, 2043},
+        // P3-05 r6 12.3 (0.17.0): fen weight 300 (800 before), so sigma = 1242 - 500 = 742, fit 742;
+        // area = 3000 + 1000 x 270 div 1000 = 3270; C = 3270 x 742 x 250 x 2500 div 10^9 = 1516
+        {"faeries on fen", fen, {{1, 12, 4000}}, "faerie", 4, 742, 1516},
         // dwarves: S = 0, B = 0, U = 800 x 1000 div 1000 = 800; area 4000 x 630 div 1000 = 2520; C = 2520 x 800 x 700 x 2500 div 10^9 = 3528
         {"dwarves on bare rough upland", bare, {}, "dwarf", 3, 800, 3528},
         // elves: heath 5 permille (-200 x 5 = -1000 div 1000 = -1), grassland 0: sigma -1, fit 0, C the floor 400

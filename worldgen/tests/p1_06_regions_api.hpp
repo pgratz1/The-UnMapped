@@ -92,25 +92,8 @@ inline Load load(std::optional<std::string> regions_tuning, std::optional<worldg
         root.directories.push_back(*biomes_dir);
     }
     history_fixture::add_to(root);  // P3-01: the required history kinds
-#if UNMAPPED_P3_08_API
-    // P1-06 r3 4.1: the required kind `placename` (the shipped files; the
-    // fixture copies are identical).
-    {
-        wd::MemoryDirectory pn{"placenames", {}};
-        for (const auto& e : std::filesystem::directory_iterator(
-                 std::filesystem::path(UNMAPPED_TEST_SOURCE_ROOT) / "game" / "data" / "placenames")) {
-            if (e.path().extension() == ".toml") {
-                std::ifstream in(e.path(), std::ios::binary);
-                std::ostringstream ss;
-                ss << in.rdbuf();
-                pn.entries.push_back(wd::MemoryEntry{e.path().filename().string(), ss.str(), false});
-            }
-        }
-        std::sort(pn.entries.begin(), pn.entries.end(),
-                  [](const wd::MemoryEntry& a, const wd::MemoryEntry& b) { return a.name < b.name; });
-        root.directories.push_back(std::move(pn));
-    }
-#endif
+    // P1-06 r3 4.1: placename (and name_filter) come with add_to (P3-08: the
+    // fixture directories, byte-identical copies of game/data's).
     wd::LoadResult<wd::ContentSet> r = wd::load_content_from_memory(registry, root);
     Load out;
     out.errors = r.errors;
@@ -470,9 +453,16 @@ inline Load load_with_placenames(std::optional<worldgen::data::MemoryDirectory> 
     dir.entries.push_back(wd::MemoryEntry{"regions.toml", std::string(region_data::TUNING_TOML), false});
     root.directories.push_back(dir);
     root.directories.push_back(biome_data::directory());
-    history_fixture::add_to(root);
+    // The given placenames/ first: add_to (P3-08) adds the fixture's only for a
+    // directory not present; without one, placenames/ is removed after it.
     if (pn.has_value()) {
         root.directories.push_back(*pn);
+    }
+    history_fixture::add_to(root);
+    if (!pn.has_value()) {
+        root.directories.erase(std::remove_if(root.directories.begin(), root.directories.end(),
+                                              [](const wd::MemoryDirectory& d) { return d.name == "placenames"; }),
+                               root.directories.end());
     }
     wd::LoadResult<wd::ContentSet> r = wd::load_content_from_memory(registry, root);
     Load out;

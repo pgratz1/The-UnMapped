@@ -363,8 +363,13 @@ TEST_CASE("P3-05 r6 10.2, 10.3, 14 item 13, 16.1a 17g 17h: saliences by toll and
             // 17h: the sentence names the capital (the event's settlement) and the civilization
             const auto it = g.sentences.find(id);
             REQUIRE(it != g.sentences.end());
-            CHECK(it->second == "A succession crisis at " + stl_name.at(at(*e, 6)) + " shook " +
-                                    civ_name.at(participant(t, id, 1)) + ".");
+            // P3-04 r10 8.5: a leading "The " of a name mid-sentence is written "the ".
+            const auto mid = [](std::string n) {
+                if (n.rfind("The ", 0) == 0) n[0] = 't';
+                return n;
+            };
+            CHECK(it->second == "A succession crisis at " + mid(stl_name.at(at(*e, 6))) + " shook " +
+                                    mid(civ_name.at(participant(t, id, 1))) + ".");
         }
     }
     // the stress cases reach both saliences of each kind

@@ -435,9 +435,11 @@ inline std::vector<ReportEntry> shipped_report() {
         {"awakening", 100, "{creator} awakened the {race:plural} in {@region}."},
         {"civ_founded", 80, "The {race:plural} founded {civilization} in {@region}."},
         {"settlement_founded", 40, "{founder} founded {settlement} in {@region}."},
+        // P3-04 r10 4.2 (generator 0.17.0): the three-word form for generations.
         {"quiet_era", 20,
-         "{civilization} passed {years} quiet {years?year|years} ({generations} {generations?generation|generations}), "
-         "from {@year} to {@end_year}."},
+         "{civilization} passed {years} quiet {years?year|years}, from {@year} to {@end_year}"
+         "{generations?, under one generation of rulers|, in which one new generation of rulers came to power"
+         "|, in which # new generations of rulers came to power}."},
         {"flare_up", 50, "In {@year} tensions flared into {years} {years?year|years} of upheaval."},
     };
 }

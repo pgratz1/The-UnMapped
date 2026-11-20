@@ -400,6 +400,9 @@ TEST_CASE("P3-02 11.7 item 1: a data root without name_filters/ is a required-ki
 }
 
 TEST_CASE("P3-02 11.7 item 2: the grammar filter_word and the three checks of 11.2, each once with its message") {
+    // The kind checks of 11.2 are reported at the offending definition (the first entry's, by 11.2's
+    // order), as P3-01's race_order_unique is: 11.2 gives the messages, not the position (integration
+    // reading, 2026-11-20).
     const std::string desc = "lower-case letters a-z, 2 to 16 of them";
     for (const std::string bad : {"Ni", "a", "ab1"}) {
         CAPTURE(bad);
@@ -422,13 +425,12 @@ TEST_CASE("P3-02 11.7 item 2: the grammar filter_word and the three checks of 11
     filters_fail({{"x.toml", filter_toml("x", {"qa", "qb", "qa"}, {}, {})}},
                  "error: check 'name_filter_unique' failed for 'name_filter.x': anywhere[2] 'qa' repeats anywhere[0]");
     filters_fail({{"a.toml", filter_toml("a", {"qx"}, {}, {})}, {"b.toml", filter_toml("b", {"qx"}, {}, {})}},
-                 "name_filters: error: check 'name_filter_distinct' failed for kind 'name_filter': "
-                 "anywhere 'qx' is in 'a' and 'b'");
+                 "error: check 'name_filter_distinct' failed for 'name_filter.b': anywhere 'qx' is in 'a' and 'b'");
     filters_fail({{"a.toml", filter_toml("a", {"qb"}, {"zqb"}, {})}},
-                 "name_filters: error: check 'name_filter_not_redundant' failed for kind 'name_filter': "
+                 "error: check 'name_filter_not_redundant' failed for 'name_filter.a': "
                  "'a' at_start 'zqb' is already rejected by anywhere 'qb' of 'a'");
     filters_fail({{"a.toml", filter_toml("a", {}, {}, {"qdx"})}, {"b.toml", filter_toml("b", {}, {"qd"}, {})}},
-                 "name_filters: error: check 'name_filter_not_redundant' failed for kind 'name_filter': "
+                 "error: check 'name_filter_not_redundant' failed for 'name_filter.a': "
                  "'a' whole 'qdx' is already rejected by at_start 'qd' of 'b'");
     // All three lists empty: loads, and the filter rejects nothing.
     const wd::LoadResult<wd::ContentSet> r = load_with_filters({{"x.toml", filter_toml("x", {}, {}, {})}});

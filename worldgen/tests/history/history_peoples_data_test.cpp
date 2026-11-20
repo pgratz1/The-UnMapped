@@ -274,21 +274,23 @@ TEST_CASE("P3-05 r6 6.2, P3-01 r8 (1): cell_weights is required, after site_weig
     }
     // the shipped content holds the same records
     CHECK(shipped_content().find_kind("race")->definitions.size() == race->definitions.size());
-    // required, and each field int(0, 1000)
+    // required, and each field int(0, 1000). On orc (order 6): a definition failing type validation is
+    // left out of the kind checks (P0-03 amendment 16), so editing dwarf (order 3) would add a
+    // race_order_dense error (integration fix).
     Files f = history_data::shipped_files();
-    std::string& dw = f["races/dwarf.toml"];
+    std::string& dw = f["races/orc.toml"];
     const std::size_t at = dw.find("cell_weights = ");
     REQUIRE(at != std::string::npos);
     const std::size_t end = dw.find('\n', at);
     Files missing = f;
-    missing["races/dwarf.toml"].erase(at, end - at + 1);
+    missing["races/orc.toml"].erase(at, end - at + 1);
     CHECK(contains(one_error(load(missing)).message, "cell_weights"));
     Files high = f;
-    high["races/dwarf.toml"].replace(at, end - at, "cell_weights = { ore = 1001, height = 600 }");
-    CHECK(contains(one_error(load(high)).message, "race.dwarf.cell_weights.ore"));
+    high["races/orc.toml"].replace(at, end - at, "cell_weights = { ore = 1001, height = 0 }");
+    CHECK(contains(one_error(load(high)).message, "race.orc.cell_weights.ore"));
     Files low = f;
-    low["races/dwarf.toml"].replace(at, end - at, "cell_weights = { ore = 400, height = -1 }");
-    CHECK(contains(one_error(load(low)).message, "race.dwarf.cell_weights.height"));
+    low["races/orc.toml"].replace(at, end - at, "cell_weights = { ore = 0, height = -1 }");
+    CHECK(contains(one_error(load(low)).message, "race.orc.cell_weights.height"));
 }
 
 TEST_CASE("P3-06 12.2, 16.1 item 13 / P3-01 r7: prowess_permille and goblin aggression 600 at 0.16.0") {
