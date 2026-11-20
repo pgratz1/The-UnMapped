@@ -7,8 +7,10 @@
 // and an independent shape check of invariant 1 (section 6). No library
 // symbol is used here except through p3_02_names_api.hpp.
 
+#include <algorithm>
 #include <array>
 #include <cstdint>
+#include <filesystem>
 #include <fstream>
 #include <functional>
 #include <map>
@@ -20,6 +22,8 @@
 #include <vector>
 
 #include "p3_02_names_api.hpp"
+
+#include <toml.hpp>
 
 namespace names_test {
 
@@ -78,7 +82,9 @@ inline std::uint64_t culture_number(std::string_view id) {
     return 1;  // test cultures
 }
 
-inline Naming shipped_naming(std::string_view id) {
+// The shipped naming of r4 (0.15.0, 0.16.0): section 5 as transcribed, without
+// god_patterns. shipped_naming below is r5's (11.4).
+inline Naming shipped_naming_r4(std::string_view id) {
     Naming n;
     if (id == "dwarven") {
         n.onsets = {"d", "b", "th", "k", "g", "br", "dr", "gr", "t", "h", "kh", "n", "m", "thr"};
@@ -168,9 +174,56 @@ inline Naming shipped_naming(std::string_view id) {
         n.god_forms = {"{root}"};
         n.civilization_forms = {"{root}"};
         n.settlement_forms = {"{root}"};
+    } else if (id == "filt") {
+        // r5 test culture (11.7 item 8; also in the reference): the 20 roots
+        // b/d/g/k/m + a/o + ""/n; with the test filter (anywhere = [ba])
+        // Ba and Ban are rejected.
+        n.onsets = {"b", "d", "g", "k", "m"};
+        n.nuclei = {"a", "o"};
+        n.codas = {"", "n"};
+        n.patterns = {"ONC"};
+        n.min_letters = 2;
+        n.max_letters = 3;
+        n.god_forms = {"{root}"};
+        n.civilization_forms = {"{root}"};
+        n.settlement_forms = {"{root}"};
     } else {
         throw std::runtime_error("unknown culture " + std::string(id));
     }
+    return n;
+}
+
+// The shipped naming of r5 (P3-02 11.4, generator 0.17.0): god_patterns after
+// patterns (each culture's patterns without the one-nucleus shapes, repeats
+// kept; transcribed from 11.4) and the elven third form `The House of {root}`.
+// A test culture gets god_patterns = patterns, which with the empty filter
+// gives r4's names exactly (11.4).
+inline Naming shipped_naming(std::string_view id) {
+    Naming n = shipped_naming_r4(id);
+    if (id == "dwarven") {
+        n.god_patterns = {"ONCONC", "ONCONC", "ONCON"};
+    } else if (id == "elven") {
+        n.god_patterns = {"ONONC", "ONONC", "ONCON", "ONONON", "NCONC"};
+        n.civilization_forms = {"The Court of {root}", "The Realm of {root}", "The House of {root}"};
+    } else if (id == "faerie") {
+        n.god_patterns = {"ONON", "ONONON", "ONONC", "ONCON"};
+    } else if (id == "goblin") {
+        n.god_patterns = {"ONCONC", "ONC-ONC", "ONONC"};
+    } else if (id == "human") {
+        n.god_patterns = {"ONCONC"};
+    } else if (id == "orcish") {
+        n.god_patterns = {"ONC'ONC", "ONCONC", "NC'ONC"};
+    } else {
+        n.god_patterns = n.patterns;
+    }
+    return n;
+}
+
+// 11.7 item 7: r4's shipped data in r5's form (god_patterns = patterns, the
+// r4 elven forms); with the empty filter it gives every r4 name.
+inline Naming r4_equivalent(std::string_view id) {
+    Naming n = shipped_naming_r4(id);
+    n.god_patterns = n.patterns;
     return n;
 }
 
@@ -276,6 +329,138 @@ inline bool shape_ok(const Naming& n, Kind k, std::string_view name, bool* numbe
                 return true;
             }
         }
+    }
+    return false;
+}
+
+// --- 11.2, 11.3 the filter, test-owned --------------------------------------------------------------
+
+using names_api::Filter;
+
+// The test filter of 11.7 item 8 (also in the reference): rejects every root word holding "ba".
+inline Filter test_filter() { return Filter{{"ba"}, {}, {}}; }
+
+// The shipped filter (game/data/name_filters/, P3-02 r5 11.2), read here with
+// toml++ (syntax only), independently of the library's loader: the union of
+// every definition's three lists, file and definition order kept.
+inline void read_filter_file_into(const std::filesystem::path& path, Filter& f) {
+    {
+        const toml::table t = toml::parse_file(path.string());
+        const toml::table* defs = t["name_filter"].as_table();
+        if (defs == nullptr) throw std::runtime_error("no [name_filter] in " + path.string());
+        for (const auto& [id, def] : *defs) {
+            (void)id;
+            const std::array<std::pair<const char*, std::vector<std::string>*>, 3> lists = {
+                {{"anywhere", &f.anywhere}, {"at_start", &f.at_start}, {"whole", &f.whole}}};
+            for (const auto& [field, out] : lists) {
+                const toml::array* a = (*def.as_table())[field].as_array();
+                if (a == nullptr) throw std::runtime_error(std::string("no ") + field + " in " + path.string());
+                for (const auto& v : *a) out->push_back(std::string(*v.value<std::string_view>()));
+            }
+        }
+    }
+}
+
+// One file's lists (11.7 item 1's sort convention).
+inline Filter read_filter_dir_file(const std::filesystem::path& path) {
+    Filter f;
+    read_filter_file_into(path, f);
+    return f;
+}
+
+inline Filter read_filter_dir(const std::filesystem::path& dir) {
+    Filter f;
+    std::vector<std::filesystem::path> files;
+    for (const auto& e : std::filesystem::directory_iterator(dir)) {
+        if (e.path().extension() == ".toml") files.push_back(e.path());
+    }
+    std::sort(files.begin(), files.end());
+    for (const auto& path : files) read_filter_file_into(path, f);
+    return f;
+}
+
+inline const Filter& shipped_filter() {
+    static const Filter f =
+        read_filter_dir(std::filesystem::path(UNMAPPED_TEST_SOURCE_ROOT) / "game" / "data" / "name_filters");
+    return f;
+}
+
+// 11.3 written again here: W of an attempt's form and root.
+inline std::string ref_root_word(std::string_view form, std::string_view root) {
+    const std::size_t at = form.find("{root}");
+    std::string_view a = form.substr(0, at);
+    std::string_view b = form.substr(at + 6);
+    const std::size_t sa = a.rfind(' ');
+    if (sa != std::string_view::npos) a = a.substr(sa + 1);
+    const std::size_t sb = b.find(' ');
+    if (sb != std::string_view::npos) b = b.substr(0, sb);
+    return lower(a) + std::string(root) + lower(b);
+}
+
+// filtered(W) of 11.3 written again here.
+inline bool ref_filtered(const Filter& f, std::string_view w) {
+    std::string squeezed;
+    std::vector<std::string> parts(1);
+    for (const char c : w) {
+        if (c != '\'' && c != '-') squeezed.push_back(c);
+        if (c >= 'a' && c <= 'z') {
+            parts.back().push_back(c);
+        } else if (!parts.back().empty()) {
+            parts.emplace_back();
+        }
+    }
+    if (parts.back().empty()) parts.pop_back();
+    for (const std::string& e : f.anywhere) {
+        if (squeezed.find(e) != std::string::npos) return true;
+    }
+    for (const std::string& p : parts) {
+        for (const std::string& e : f.at_start) {
+            if (p.compare(0, e.size(), e) == 0) return true;
+        }
+        for (const std::string& e : f.whole) {
+            if (p == e) return true;
+        }
+    }
+    return false;
+}
+
+// Invariant 5 recomputed from a generated name: true when every way of
+// reading the name (numeral stripped) as form + valid root has a filtered W.
+inline bool name_root_filtered(const Naming& n, Kind k, std::string_view name, const Filter& f) {
+    std::string_view base = name;
+    std::string_view head;
+    std::uint64_t num = 0;
+    if (split_numeral(name, head, num)) base = head;
+    bool any = false;
+    for (const std::string& form : forms_of(n, k)) {
+        const std::size_t at = form.find("{root}");
+        const std::string_view pre = std::string_view(form).substr(0, at);
+        const std::string_view post = std::string_view(form).substr(at + 6);
+        if (base.size() < pre.size() + post.size() + 1) continue;
+        if (base.substr(0, pre.size()) != pre || base.substr(base.size() - post.size()) != post) continue;
+        const std::string root = lower(base.substr(pre.size(), base.size() - pre.size() - post.size()));
+        if (!root_valid(n, root)) continue;
+        any = true;
+        if (!ref_filtered(f, ref_root_word(form, root))) return false;
+    }
+    return any;
+}
+
+// 11.7 item 9: a god root parses as one of the culture's god_patterns.
+inline bool parses_as(const Naming& n, std::string_view pat, std::string_view root) {
+    if (pat.empty()) return root.empty();
+    const char s0 = pat[0];
+    if (s0 == '\'' || s0 == '-') return !root.empty() && root[0] == s0 && parses_as(n, pat.substr(1), root.substr(1));
+    const std::vector<std::string>& arr = s0 == 'O' ? n.onsets : s0 == 'N' ? n.nuclei : n.codas;
+    for (const std::string& piece : arr) {
+        if (root.substr(0, piece.size()) == piece && parses_as(n, pat.substr(1), root.substr(piece.size()))) return true;
+    }
+    return false;
+}
+inline bool god_root_parses(const Naming& n, std::string_view name) {
+    const std::string root = lower(name);
+    for (const std::string& pat : n.god_patterns.value_or(n.patterns)) {
+        if (parses_as(n, pat, root)) return true;
     }
     return false;
 }

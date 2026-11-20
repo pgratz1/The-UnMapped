@@ -7,6 +7,7 @@
 #include <optional>
 #include <ostream>
 #include <string>
+#include <string_view>
 #include <vector>
 
 #include "cli_test_support.hpp"
@@ -178,7 +179,7 @@ TEST_CASE("cli 12.2: equivalent ways of giving seed and map size give identical 
         const char* spellings[] = {"Ashen Marches!", "ashen-marches", "ASHEN  MARCHES"};
         int i = 0;
         for (const char* spelling : spellings) {
-            CAPTURE(spelling);
+            CAPTURE(std::string_view(spelling));
             const std::string n = std::to_string(i++);
             CHECK(gen("flag" + n + ".db", {"--seed-phrase", spelling}) == reference);
             CHECK(gen("file" + n + ".db", {"--settings", settings("p" + n + ".toml", std::string("[world]\nseed_phrase = \"") +

@@ -18,6 +18,7 @@
 
 #include "p1_06_regions_api.hpp"
 #include "p1_06_regions_support.hpp"
+#include "p3_08_switch.hpp"
 #include "worldgen/core/error.hpp"
 #include "worldgen/core/hash.hpp"
 
@@ -376,17 +377,20 @@ TEST_CASE("P1-06 RG8: ties go to the smaller (cells, number) and the neighbour w
 
 // --- RG11 ----------------------------------------------------------------------------------------
 
-TEST_CASE("P1-06 5.1 RG11: names at N = 1024, centroid (500, 480), r_c 123; sectors; numerals") {
+TEST_CASE("P1-06 5.1 RG11: base names at N = 1024, centroid (500, 480), r_c 123; sectors (r3: no numerals)") {
     const region_api::Tuning t = tuning();
     const Values v = values();
     CHECK(v.name_central_frac == 515396076);
     CHECK(worldgen::mul_int(Fx::from_raw(v.name_central_frac), 1024).round_int() == 123);
     const std::vector<region_api::NameInput> in = {{520, 470, 4, false}, {800, 500, 3, false}, {200, 200, 7, false},
                                                    {510, 900, 5, false}, {790, 560, 3, false}, {500, 100, 3, true}};
-    const std::vector<std::string> want = {"Central Downs", "East Wood",    "Northwest Peaks",
-                                           "South Marsh",   "East Wood II", "North Isle"};
-    CHECK(region_api::names(in, 500, 480, 1024, t, definitions()) == want);
+    // r3 (RG11 4): the base names; the second `East Wood` is not the keeper
+    // (which keeps the base name is decided by cells, and the other draws:
+    // stages_regions_names_test.cpp). Before r3 it was `East Wood II`.
+    const std::vector<std::string> want = {"Central Downs", "East Wood", "Northwest Peaks",
+                                           "South Marsh",   "East Wood", "North Isle"};
     CHECK(own_name_list(in, 500, 480, 123, v, nouns_of(definitions())) == want);
+    (void)t;
     // Sector checks of 5.1 (outside the central disc).
     const std::vector<std::pair<std::pair<int, int>, int>> sec = {
         {{10, 4}, 3}, {{10, 5}, 4}, {{-3, -7}, 8}, {{0, -9}, 1}, {{4, 10}, 5}, {{5, 12}, 4}};
@@ -406,38 +410,23 @@ TEST_CASE("P1-06 5.1 RG11: names at N = 1024, centroid (500, 480), r_c 123; sect
     CHECK(region_api::sector(-13, 29, 0) == 6);
     CHECK(region_api::sector(3, 4, 5) != 0);
     CHECK(region_api::sector(3, 4, 6) == 0);
-    for (const auto& [k, r] : std::vector<std::pair<std::int64_t, std::string>>{{1, "I"},
-                                                                               {2, "II"},
-                                                                               {4, "IV"},
-                                                                               {9, "IX"},
-                                                                               {14, "XIV"},
-                                                                               {40, "XL"},
-                                                                               {90, "XC"},
-                                                                               {400, "CD"},
-                                                                               {1994, "MCMXCIV"},
-                                                                               {4000, "MMMM"}}) {
-        CHECK(region_api::roman(k) == r);
-        CHECK(own_roman(k) == r);
-    }
+    // (r3, 10.5: the names no longer use numerals; `roman` keeps its own
+    // tests in worldgen/core.)
 }
 
-TEST_CASE("P1-06 RG11: the k-th region with a base name gets numeral k from II on; words come from the tuning") {
+TEST_CASE("P1-06 RG11 (r3): a repeated base name has no numeral; the words come from the tuning") {
     const Overrides o = {{"names", "Mid/Nor/Norost/Ost/Sudost/Sud/Sudwest/West/Norwest/Holm/Hoch"}};
-    const region_api::Tuning t = tuning(o);
     std::vector<region_api::NameInput> in;
     for (int k = 0; k < 12; ++k) {
         in.push_back({900, 480, 3, false});
     }
     in.push_back({500, 100, 3, true});
-    const std::vector<std::string> got = region_api::names(in, 500, 480, 1024, t, definitions());
+    const std::vector<std::string> got = own_name_list(in, 500, 480, 123, values(o), nouns_of(definitions()));
     REQUIRE(got.size() == 13U);
-    CHECK(got[0] == "Ost Wood");
-    CHECK(got[1] == "Ost Wood II");
-    CHECK(got[3] == "Ost Wood IV");
-    CHECK(got[8] == "Ost Wood IX");
-    CHECK(got[11] == "Ost Wood XII");
+    for (std::size_t k = 0; k < 12; ++k) {
+        CHECK(got[k] == "Ost Wood");
+    }
     CHECK(got[12] == "Nor Holm");
-    CHECK(own_name_list(in, 500, 480, 123, values(o), nouns_of(definitions())) == got);
 }
 
 // --- RG12 ----------------------------------------------------------------------------------------
@@ -590,13 +579,19 @@ TEST_CASE("P1-06 5.1 RG11 (r2), 10.1 test 9: Mere for regions at least half lake
     const std::vector<std::string> want = {"Central Downs", "Northeast Mere", "Southwest Fells", "Southwest Peaks",
                                            "Southwest Mere", "North Isle",     "East Moor",       "East Heath",
                                            "East Downs",     "East Fells"};
+#if !UNMAPPED_P3_08_API
+    // The r2 seam (no repeated base name here, so r3 names these regions the
+    // same; the r3 seam takes more inputs: stages_regions_names_test.cpp).
     CHECK(region_api::names(in, 500, 480, 1024, t, definitions()) == want);
+#endif
     CHECK(own_name_list(in, 500, 480, 123, v, nouns_of(definitions())) == want);
     // upland_own_noun empty: the alpine upland is Fells too; the Fells word from the tuning.
     const Overrides o = {{"upland_own_noun", "none"},
                          {"names", "Central/North/Northeast/East/Southeast/South/Southwest/West/Northwest/Isle/Hoch"}};
     const std::vector<region_api::NameInput> alp = {{230, 720, 7, false, 100, 0, 24}};
+#if !UNMAPPED_P3_08_API
     CHECK(region_api::names(alp, 500, 480, 1024, tuning(o), definitions()) == std::vector<std::string>{"Southwest Hoch"});
+#endif
     CHECK(own_name_list(alp, 500, 480, 123, values(o), nouns_of(definitions())) ==
           std::vector<std::string>{"Southwest Hoch"});
 }

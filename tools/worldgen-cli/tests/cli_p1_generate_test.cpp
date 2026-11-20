@@ -127,7 +127,7 @@ TEST_CASE("cli P1-00 10.1, X1: an unknown stage name is a usage error") {
         CHECK(worldgen::stages::check_stage_limit(name) == worldgen::stages::StageLimitError::none);
     }
     for (const char* name : {"Elevation", "NONE", "", "test_pattern", "elevation,hydrology"}) {
-        CAPTURE(name);
+        CAPTURE(std::string_view(name));
         const std::string err = usage_error(sb, {"--until", name});
         if (std::string_view(name).size() > 0U) {
             CHECK(first_line_without(err, name) == first_line_without(bogus, "bogus"));
@@ -150,13 +150,13 @@ TEST_CASE("cli P1-00 10.1: --threads accepts 1 to 256 in decimal without leading
     Sandbox sb;
     const std::string expected = golden("empty-seed-0");
     for (const char* n : {"1", "2", "9", "10", "100", "255", "256"}) {
-        CAPTURE(n);
+        CAPTURE(std::string_view(n));
         CHECK(generate_hash(sb, std::string("t") + n + ".db", {"--seed", "0", "--until", "none", "--threads", n}) ==
               expected);
     }
     for (const char* bad : {"0", "257", "1000", "01", "001", "-1", "+1", "", " 1", "1 ", "abc", "1.5", "0x10", "4294967297",
                             "18446744073709551617", "1e2"}) {
-        CAPTURE(bad);
+        CAPTURE(std::string_view(bad));
         usage_error(sb, {"--threads", bad});
     }
     usage_error(sb, {"--threads"});
@@ -167,7 +167,7 @@ TEST_CASE("cli P1-00 10.1, D10, X3: --threads never changes the output (test-pat
     Sandbox sb;
     const std::string expected = golden("pattern-seed-0");
     for (const char* n : {"1", "2", "5"}) {
-        CAPTURE(n);
+        CAPTURE(std::string_view(n));
         CHECK(generate_hash(sb, std::string("p") + n + ".db", {"--seed", "0", "--test-pattern", "--threads", n}) ==
               expected);
     }

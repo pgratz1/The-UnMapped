@@ -23,10 +23,17 @@
 // A contract violation throws worldgen::FatalError: "regions: input
 // precondition: " for the stage (P1-06 section 2).
 
+#include <algorithm>
+#include <array>
 #include <cstdint>
+#include <filesystem>
+#include <fstream>
 #include <optional>
+#include <set>
 #include <span>
+#include <sstream>
 #include <string>
+#include <string_view>
 #include <utility>
 #include <vector>
 
@@ -38,6 +45,7 @@
 #include "p1_05_resources_data.hpp"
 #include "p1_06_regions_data.hpp"
 #include "p3_01_history_fixture.hpp"
+#include "p3_08_switch.hpp"
 #include "worldgen/core/fx.hpp"
 #include "worldgen/data/content.hpp"
 #include "worldgen/data/load_error.hpp"
@@ -84,6 +92,8 @@ inline Load load(std::optional<std::string> regions_tuning, std::optional<worldg
         root.directories.push_back(*biomes_dir);
     }
     history_fixture::add_to(root);  // P3-01: the required history kinds
+    // P1-06 r3 4.1: placename (and name_filter) come with add_to (P3-08: the
+    // fixture directories, byte-identical copies of game/data's).
     wd::LoadResult<wd::ContentSet> r = wd::load_content_from_memory(registry, root);
     Load out;
     out.errors = r.errors;
@@ -212,7 +222,12 @@ inline std::vector<std::int64_t> merge(Grid g, std::span<const std::int64_t> own
 inline int sector(std::int64_t dx, std::int64_t dy, std::int64_t rc) {
     return static_cast<int>(worldgen::stages::region_sector(dx, dy, rc));
 }
+#if !UNMAPPED_P3_08_API
+// r2 seams, replaced by r3 (10.5): roman leaves the names (worldgen/core
+// keeps it), region_names gains the trait inputs, the placename data and
+// the seed (the r3 wrappers are at the end of this file).
 inline std::string roman(std::int64_t k) { return worldgen::stages::roman(k); }
+#endif
 
 // cells, lake_cells and walk_cells decide RG11 3 b (Mere) and c (upland,
 // r2); the defaults make neither apply.
@@ -246,8 +261,20 @@ inline std::vector<std::string> names(std::span<const NameInput> in, std::int64_
         }
         v.push_back(r);
     }
-    return worldgen::stages::region_names(v, lm_cells, 1, static_cast<std::uint64_t>(cx), static_cast<std::uint64_t>(cy),
-                                          n, d, t);
+    // P3-08 (P1-06 r3): the base names of RG11 1 to 4; region_names now
+    // also draws the names of non-keepers.
+    return worldgen::stages::region_base_names(v, lm_cells, 1, static_cast<std::uint64_t>(cx),
+                                               static_cast<std::uint64_t>(cy), n, d, t);
+}
+
+// P3-08 (P1-06 r3): the placename data of the committed fixture root
+// worldgen/tests/data/geo, loaded once.
+inline const worldgen::stages::PlacenameData& fixture_placenames() {
+    static const worldgen::stages::PlacenameData data = [] {
+        auto r = worldgen::data::load_content(worldgen::data::builtin_kinds(), history_fixture::fixture_root());
+        return r.ok() ? worldgen::stages::placename_data_from(*r.value) : worldgen::stages::PlacenameData{};
+    }();
+    return data;
 }
 
 // --- Tables (3.2, 3.3) ----------------------------------------------------------------------------
@@ -335,13 +362,28 @@ struct Output {
     friend bool operator==(const Output&, const Output&) = default;
 };
 
+#if UNMAPPED_P3_08_API
+// --- RG11 r3 seams (interim names of P1-06 10.5; adapted at integration) ------------------------
+
+inline const worldgen::data::ContentSet& r3_content() {
+    static const Load l = load(std::string(region_data::TUNING_TOML), biome_data::directory());
+    REQUIRE(l.ok());
+    return *l.content;
+}
+using Placenames = decltype(worldgen::stages::placename_data_from(std::declval<const worldgen::data::ContentSet&>()));
+inline const Placenames& placenames() {
+    static const Placenames p = worldgen::stages::placename_data_from(r3_content());
+    return p;
+}
+#endif
+
 inline Output stage(const Inputs& in, const Definitions& d, std::span<const Pass> passes, const Tuning& t,
                     std::uint64_t seed, std::uint32_t threads) {
     const worldgen::stages::RegionInputs ri{in.grid,      in.elevation, in.water,       in.water_depth, in.flow_dir,
                                             in.river,     in.biome,     in.fertility,   in.ore,         in.timber,
                                             in.fresh_water, in.forage,  in.habitability, in.walk_area};
     const std::vector<worldgen::db::PassRow> pr = pass_rows(passes);
-    auto r = worldgen::stages::regions_stage(ri, d, pr, t, seed, threads);
+    auto r = worldgen::stages::regions_stage(ri, d, fixture_placenames(), pr, t, seed, threads);
     Output out;
     out.region = std::move(r.region);
     for (const auto& x : r.regions) {
@@ -380,5 +422,145 @@ inline std::vector<std::uint8_t> composite(const worldgen::db::LayerGrid& elevat
                                            const worldgen::db::LayerGrid* flow_dir, std::uint32_t scale) {
     return worldgen::inspect::render_composite_regions(elevation, water, river, flow_dir, biome, region, scale, table);
 }
+
+#if UNMAPPED_P3_08_API
+// --- RG11 r3 seams (P1-06 10.5 "Seams", interim; adapt to the engineer's
+// recorded signatures at integration) ------------------------------------------------------------
+//
+//   placename_data_from(const data::ContentSet&)          the data reader
+//   region_traits(row, has_pass, tuning) -> bitset          RG11 5, trait order
+//   region_name_attempt(key, id, t, land, common, traits, tuning) -> (valid, name)
+//   region_name_valid(form, values, common) -> bool        V1 to V6
+//   region_name_fallback(land, common, used) -> name       RG11 8
+//   regions_stage(inputs, definitions, placenames, passes, tuning, seed, threads)
+//
+// The tests below this header use only these wrappers, with plain types:
+// a land, the common definition or a trait by its placename id or trait
+// name, traits as names in trait order, values as strings.
+
+// A data root as load() makes it, with the given placenames/ directory
+// instead of the shipped one (std::nullopt: none).
+inline Load load_with_placenames(std::optional<worldgen::data::MemoryDirectory> pn) {
+    namespace wd = worldgen::data;
+    const wd::KindRegistry registry = wd::builtin_kinds();
+    wd::MemoryDataRoot root;
+    wd::MemoryDirectory dir{"worldgen", {}};
+    dir.entries.push_back(wd::MemoryEntry{"elevation.toml", elev_test::elevation_toml(), false});
+    dir.entries.push_back(wd::MemoryEntry{"hydrology.toml", hydro_test::hydrology_toml(hydro_test::SHIPPED_AREA), false});
+    dir.entries.push_back(wd::MemoryEntry{"climate.toml", std::string(climate_test::SHIPPED_TOML), false});
+    dir.entries.push_back(wd::MemoryEntry{"biomes.toml", std::string(biome_data::TUNING_TOML), false});
+    dir.entries.push_back(wd::MemoryEntry{"resources.toml", std::string(resource_data::TUNING_TOML), false});
+    dir.entries.push_back(wd::MemoryEntry{"regions.toml", std::string(region_data::TUNING_TOML), false});
+    root.directories.push_back(dir);
+    root.directories.push_back(biome_data::directory());
+    // The given placenames/ first: add_to (P3-08) adds the fixture's only for a
+    // directory not present; without one, placenames/ is removed after it.
+    if (pn.has_value()) {
+        root.directories.push_back(*pn);
+    }
+    history_fixture::add_to(root);
+    if (!pn.has_value()) {
+        root.directories.erase(std::remove_if(root.directories.begin(), root.directories.end(),
+                                              [](const wd::MemoryDirectory& d) { return d.name == "placenames"; }),
+                               root.directories.end());
+    }
+    wd::LoadResult<wd::ContentSet> r = wd::load_content_from_memory(registry, root);
+    Load out;
+    out.errors = r.errors;
+    if (r.ok()) {
+        out.content = std::move(*r.value);
+    }
+    return out;
+}
+
+inline Placenames placenames_of(const worldgen::data::ContentSet& c) { return worldgen::stages::placename_data_from(c); }
+
+// Lookups in the engineer's PlacenameData (definitions in ascending id).
+inline const worldgen::stages::PlacenameDef& def_of(const Placenames& pn, std::string_view id) {
+    for (const auto& d : pn.definitions) {
+        if (d.id == id) return d;
+    }
+    FAIL("no placename definition " << std::string(id));
+    return pn.definitions.front();
+}
+inline const worldgen::stages::PlacenameDef& common_of(const Placenames& pn) {
+    for (const auto& d : pn.definitions) {
+        if (d.role == worldgen::stages::PlaceRole::common) return d;
+    }
+    FAIL("no common placename definition");
+    return pn.definitions.front();
+}
+// The trait definitions of the named traits, in trait order.
+inline std::vector<const worldgen::stages::PlacenameDef*> trait_defs_of(const Placenames& pn,
+                                                                         const std::vector<std::string>& names) {
+    std::vector<const worldgen::stages::PlacenameDef*> out;
+    for (std::size_t i = 0; i < worldgen::stages::REGION_TRAIT_COUNT; ++i) {
+        const std::string_view tn = worldgen::stages::REGION_TRAIT_NAMES[i];
+        if (std::find(names.begin(), names.end(), tn) == names.end()) continue;
+        for (const auto& d : pn.definitions) {
+            if (d.role == worldgen::stages::PlaceRole::trait && d.trait == static_cast<std::int64_t>(i)) {
+                out.push_back(&d);
+            }
+        }
+    }
+    return out;
+}
+
+// RG11 5: the traits a row holds, as names in trait order.
+inline std::vector<std::string> traits(const worldgen::db::RegionRow& row, bool has_pass, const Tuning& t) {
+    worldgen::stages::RegionNameInput in{};
+    in.cells = row.cells;
+    in.lake_cells = row.lake_cells;
+    in.coast_cells = row.coast_cells;
+    in.river_class_max = row.river_class_max;
+    in.elev_mean_dm = row.elev_mean_dm;
+    in.ore_rich_cells = row.ore_rich_cells;
+    in.habitability_mean = row.habitability_mean;
+    in.fertility_mean = row.fertility_mean;
+    in.has_pass = has_pass;
+    const worldgen::stages::RegionTraits bits = worldgen::stages::region_traits(in, t);
+    std::vector<std::string> out;
+    for (std::size_t i = 0; i < bits.size(); ++i) {
+        if (bits[i]) out.emplace_back(worldgen::stages::REGION_TRAIT_NAMES[i]);
+    }
+    return out;
+}
+
+// RG11 6 and 7: attempt t of region id for the land `land` with the given
+// traits (names, trait order), K_name of (seed, n).
+inline std::pair<bool, std::string> name_attempt(const Placenames& pn, std::uint64_t seed, std::uint64_t n,
+                                                 std::int64_t id, std::int64_t t, std::string_view land,
+                                                 const std::vector<std::string>& traits, const Tuning& tu) {
+    const std::uint64_t key = worldgen::substream(worldgen::stream_key(seed, "geo.regions.name"), n);
+    const std::vector<const worldgen::stages::PlacenameDef*> td = trait_defs_of(pn, traits);
+    const auto r = worldgen::stages::region_name_attempt(key, id, t, def_of(pn, land), common_of(pn),
+                                                         std::span<const worldgen::stages::PlacenameDef* const>(td), tu);
+    return {r.valid, r.name};
+}
+
+// V1 to V6 of a form and its slot values (in slot order).
+inline bool name_valid(const Placenames& pn, std::string_view form, const std::vector<std::string>& values) {
+    worldgen::stages::PlaceSlotValues sv;
+    std::size_t at = 0;
+    std::size_t k = 0;
+    while ((at = form.find('{', at)) != std::string_view::npos) {
+        const std::size_t end = form.find('}', at);
+        const std::string_view slot = form.substr(at, end - at + 1);
+        std::size_t list = 0;
+        for (std::size_t i = 0; i < worldgen::stages::PLACE_LIST_COUNT; ++i) {
+            if (worldgen::stages::PLACE_SLOT_TEXTS[i] == slot) list = i;
+        }
+        sv.emplace_back(list, values.at(k++));
+        at = end + 1;
+    }
+    return worldgen::stages::region_name_valid(form, sv, common_of(pn));
+}
+
+// RG11 8 ("" when every compound is taken).
+inline std::string name_fallback(const Placenames& pn, std::string_view land, const std::set<std::string>& used) {
+    const std::set<std::string, std::less<>> u(used.begin(), used.end());
+    return worldgen::stages::region_name_fallback(def_of(pn, land), common_of(pn), u).value_or("");
+}
+#endif
 
 }  // namespace region_api

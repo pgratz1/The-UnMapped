@@ -619,7 +619,7 @@ TEST_CASE("P1-01 10.4.2: with the neutral settings the golden file holds the thi
         const WorldRun rb = from_golden(b);
         for (const char* item : {"c", "nb", "ns", "ocean", "land_cells", "floor", "scale"}) {
             CAPTURE(a);
-            CAPTURE(item);
+            CAPTURE(std::string_view(item));
             std::string va;
             std::string vb;
             for (const auto& kv : ra.items) {

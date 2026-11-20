@@ -70,7 +70,8 @@ TEST_CASE("P1-06 4: the shipped tuning loads; fields in declaration order with t
     const auto* def = l.content->find("worldgen", "regions");
     REQUIRE(def != nullptr);
     REQUIRE(def->record.size() == region_data::tuning_fields().size());
-    CHECK(region_data::tuning_fields().size() == 14U);
+    // r3 adds name_pool_weights and name_traits (generator 0.17.0).
+    CHECK(region_data::tuning_fields().size() == (UNMAPPED_P3_08_API ? 16U : 14U));
     for (std::size_t i = 0; i < def->record.size(); ++i) {
         CHECK(def->record.name_at(i) == region_data::tuning_fields()[i].name);
     }
@@ -188,7 +189,7 @@ TEST_CASE("P1-06 4, 10.1 test 4: each field one step outside its bounds is a ran
 
 TEST_CASE("P1-06 4, 10.1 test 4: a names word `east` or `North West` fails the word grammar at the value") {
     for (const char* bad : {"east", "North West", "North-West", "NORTH", "North2", "N\xC3\xB6rth"}) {
-        CAPTURE(bad);
+        CAPTURE(std::string_view(bad));
         const region_api::Load l = load_tuning({{"names", region_data::names_toml("east", bad)}});
         const std::string text = all_errors(l);
         INFO(text);

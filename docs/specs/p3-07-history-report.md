@@ -984,7 +984,7 @@ The **unit** U(e) of an event e is e together with its **companions**, found fro
 | `sacked`, `settlement_captured` | every event of kind `capital_moved`, `refugees_settled` or `civ_conquered` that has e among its causes |
 | any other kind | none |
 
-Companions are not followed further (a companion's own companions are not added, except as listed: the war's ending brings its cession or tribute). Kinds absent from a world's catalogue simply never occur. The kind keys are those of P3-06 11 and P3-06 20 (amendment r8 there: kinds 32 `refugees_settled` and 33 `tribute`, after P3-08's kind 31); the report finds them by key in the stored catalogue, never by id.
+Companions are not followed further (a companion's own companions are not added, except as listed: the war's ending brings its cession or tribute). Kinds absent from a world's catalogue simply never occur. The kind keys are those of P3-06 11 and P3-06 20 (amendment r9 there: kinds 32 `refugees_settled` and 33 `tribute`, after P3-08's kind 31); the report finds them by key in the stored catalogue, never by id.
 
 ### 21.3 The summary set and its threshold (replaces 7.4; 6.7's "an event is shown when its `salience` ≥ T"; 13 item 2)
 

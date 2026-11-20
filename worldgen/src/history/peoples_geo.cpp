@@ -35,27 +35,45 @@ PeoplesByKind by_kind(const data::Record& r) {
                          r.get_int("fortress")};
 }
 
-// The cells of a u8 or u16 layer of N x N, widened.
+// The cells of a layer of N x N of its catalogue type (P3-05 16.0a, r7:
+// the message names that type), widened.
 class Cells {
 public:
-    Cells(const db::LayerGrid& g, std::string_view name, std::int64_t n) {
+    Cells(const db::LayerGrid& g, std::string_view name, std::int64_t n, db::ElementType type) {
         const auto side = static_cast<std::uint32_t>(n);
-        if (g.width == side && g.height == side) {
+        if (g.width == side && g.height == side && g.type() == type) {
             u8_ = g.get_if<std::uint8_t>();
             u16_ = g.get_if<std::uint16_t>();
+            i16_ = g.get_if<std::int16_t>();
         }
-        if (u8_ == nullptr && u16_ == nullptr) {
+        if (u8_ == nullptr && u16_ == nullptr && i16_ == nullptr) {
             fail("history: peoples: layer '" + std::string(name) + "' is not " + int_text(n) + " x " + int_text(n) +
-                 " u8 or u16");
+                 " " + type_text(type));
         }
     }
     [[nodiscard]] std::int64_t at(std::size_t i) const {
-        return u8_ != nullptr ? static_cast<std::int64_t>((*u8_)[i]) : static_cast<std::int64_t>((*u16_)[i]);
+        if (u8_ != nullptr) {
+            return static_cast<std::int64_t>((*u8_)[i]);
+        }
+        if (u16_ != nullptr) {
+            return static_cast<std::int64_t>((*u16_)[i]);
+        }
+        return static_cast<std::int64_t>((*i16_)[i]);
     }
 
 private:
+    static std::string type_text(db::ElementType type) {
+        switch (type) {
+            case db::ElementType::u8: return "u8";
+            case db::ElementType::u16: return "u16";
+            case db::ElementType::i16: return "i16";
+            default: break;
+        }
+        return "of its catalogue type";
+    }
     const std::vector<std::uint8_t>* u8_ = nullptr;
     const std::vector<std::uint16_t>* u16_ = nullptr;
+    const std::vector<std::int16_t>* i16_ = nullptr;
 };
 
 // Chebyshev dilation by `radius` inside the grid: out(c) = 1 if a set cell
@@ -193,6 +211,8 @@ PeoplesTuning peoples_tuning_from(const data::ContentSet& content) {
     t.ruin_fade_years = r.get_int("ruin_fade_years");
     t.colony_new_region_salience = r.get_int("colony_new_region_salience");
     t.plague_small_salience = r.get_int("plague_small_salience");
+    t.plague_major_dead = r.get_int("plague_major_dead");
+    t.crisis_small_salience = r.get_int("crisis_small_salience");
     return t;
 }
 
@@ -200,6 +220,10 @@ PeoplesTuning peoples_tuning_from(const data::ContentSet& content) {
 
 bool PeoplesRace::builds_kind(SettlementKind kind) const noexcept {
     return builds[static_cast<std::size_t>(kind)] != 0;
+}
+
+bool PeoplesRace::has_cell_term() const noexcept {
+    return cell_ore != 0 || cell_height != 0;
 }
 
 bool PeoplesRace::has_ladder() const noexcept {
@@ -242,6 +266,9 @@ PeoplesRace peoples_race(const db::RaceRow& row, std::span<const db::RaceBiomeRo
     r.growth_permille = d.get_int("growth_permille");
     r.expansion = d.get_int("expansion");
     r.density_permille = d.get_int("density_permille");
+    const data::Record& cw = d.get_record("cell_weights");  // P3-01 r8
+    r.cell_ore = cw.get_int("ore");
+    r.cell_height = cw.get_int("height");
     for (const data::Value& v : d.get_array("settlement_kinds")) {
         r.builds[static_cast<std::size_t>(kind_of_text(v.as_string()))] = 1;
     }
@@ -272,6 +299,7 @@ PeoplesRegion peoples_region(const db::RegionRow& row, std::span<const db::Regio
     r.forage_mean = row.forage_mean;
     r.timber_mean = row.timber_mean;
     r.fresh_water_mean = row.fresh_water_mean;
+    r.elev_max_dm = row.elev_max_dm;
     r.seed_x = row.seed_x;
     r.seed_y = row.seed_y;
     r.x_min = row.x_min;
@@ -422,16 +450,19 @@ std::int64_t kind_cap(const PeoplesRace& race, SettlementKind kind, const People
 
 std::int64_t grow_population(std::int64_t p, std::int64_t share, std::int64_t g, std::int64_t cap,
                              std::int64_t decline_permille) {
-    if (p < share) {
+    // r6 (9.1): the target is min(share, cap), so an excess over the kind
+    // cap drains like an excess over the share.
+    const std::int64_t target = std::min(share, cap);
+    if (p < target) {
         const std::int64_t num = checked_add(checked_mul(checked_mul(p, g), share - p), checked_mul(500, share));
         std::int64_t d = floor_div(num, checked_mul(1000, share));
         if (g > 0) {
             d = std::max<std::int64_t>(1, d);
         }
-        return std::min(p + d, std::max(p, cap));
+        return std::min(p + d, cap);
     }
-    if (p > share) {
-        return p - std::max<std::int64_t>(1, floor_div(checked_mul(p - share, decline_permille), 1000));
+    if (p > target) {
+        return p - std::max<std::int64_t>(1, floor_div(checked_mul(p - target, decline_permille), 1000));
     }
     return p;
 }
@@ -444,20 +475,30 @@ PeoplesGeo::PeoplesGeo(const HistoryInputs& in, const data::ContentSet& content,
     const std::int64_t n = n_;
     const auto cells = static_cast<std::size_t>(n * n);
     // Layers (the region layer is N x N u16, checked by the engine).
-    const Cells region(in.region_layer, "region", n);
-    const Cells water(in.water_layer, "water", n);
-    const Cells hab(in.habitability_layer, "habitability", n);
-    const Cells river(in.river_layer, "river", n);
-    const Cells flow(in.flow_dir_layer, "flow_dir", n);
+    const Cells region(in.region_layer, "region", n, db::ElementType::u16);
+    const Cells water(in.water_layer, "water", n, db::ElementType::u8);
+    const Cells hab(in.habitability_layer, "habitability", n, db::ElementType::u8);
+    const Cells river(in.river_layer, "river", n, db::ElementType::u8);
+    const Cells flow(in.flow_dir_layer, "flow_dir", n, db::ElementType::u8);
+    // r6: the cell term of 6.2 and the fortress cell rule of 8.4.
+    const Cells elevation(in.elevation_layer, "elevation", n, db::ElementType::i16);
+    const Cells ore(in.ore_layer, "ore", n, db::ElementType::u8);
+    const Cells walk(in.walk_area_layer, "walk_area", n, db::ElementType::u16);
     region_layer_.resize(cells);
     water_.resize(cells);
     habitability_.resize(cells);
+    elevation_.resize(cells);
+    ore_.resize(cells);
+    walk_area_.resize(cells);
     mouth_.assign(cells, 0);
     std::vector<std::uint8_t> sea(cells, 0);
     for (std::size_t i = 0; i < cells; ++i) {
         region_layer_[i] = static_cast<std::uint16_t>(region.at(i));
         water_[i] = static_cast<std::uint8_t>(std::min<std::int64_t>(255, water.at(i)));
         habitability_[i] = static_cast<std::uint16_t>(hab.at(i));
+        elevation_[i] = static_cast<std::int16_t>(elevation.at(i));
+        ore_[i] = static_cast<std::uint16_t>(ore.at(i));
+        walk_area_[i] = static_cast<std::uint16_t>(walk.at(i));
         sea[i] = static_cast<std::uint8_t>(water.at(i) == WATER_OCEAN);
     }
     // 6.1: mouth cells.
@@ -601,12 +642,26 @@ bool PeoplesGeo::near_sea(std::int64_t x, std::int64_t y) const {
     return near_sea_[cell(x, y)] != 0;
 }
 
+bool PeoplesGeo::walkable(std::int64_t x, std::int64_t y) const {
+    return walk_area_[cell(x, y)] != 0;
+}
+
 std::int64_t PeoplesGeo::site_value(std::int64_t x, std::int64_t y, std::int64_t race_id) const {
     const std::size_t i = cell(x, y);
+    const PeoplesRace& r = race(race_id);
     const std::int64_t bonus = near_mouth_[i] != 0 ? tuning_.port_mouth_bonus
                                : near_sea_[i] != 0 ? tuning_.port_coast_bonus
                                                    : 0;
-    return static_cast<std::int64_t>(habitability_[i]) + floor_div(bonus * (1000 + race(race_id).coast), 1000);
+    std::int64_t v = static_cast<std::int64_t>(habitability_[i]) + floor_div(bonus * (1000 + r.coast), 1000);
+    if (r.has_cell_term()) {
+        // r6 (6.2 item 2): the cell's ore and its height in its region.
+        const std::int64_t reg = region_layer_[i];
+        const std::int64_t elev_max = reg >= 1 && reg <= region_count() ? region(reg).elev_max_dm : 0;
+        const std::int64_t hgt = std::min<std::int64_t>(
+            255, floor_div(std::max<std::int64_t>(0, elevation_[i]) * 255, std::max<std::int64_t>(1, elev_max)));
+        v += floor_div(r.cell_ore * static_cast<std::int64_t>(ore_[i]) + r.cell_height * hgt, 1000);
+    }
+    return v;
 }
 
 const std::vector<std::uint32_t>& PeoplesGeo::candidates(std::int64_t region_id, std::int64_t race_id) const {
@@ -660,8 +715,9 @@ std::optional<SiteCell> PeoplesGeo::site(std::int64_t region_id, std::int64_t ra
         }
         return true;
     };
-    // 1. The seed cell, if it is a free candidate.
-    if (reg.seed_x >= 0 && reg.seed_y >= 0 && reg.seed_x < n_ && reg.seed_y < n_) {
+    // 1. The seed cell, if it is a free candidate; r6: only for a race
+    // without a cell term.
+    if (!race(race_id).has_cell_term() && reg.seed_x >= 0 && reg.seed_y >= 0 && reg.seed_x < n_ && reg.seed_y < n_) {
         const std::size_t i = cell(reg.seed_x, reg.seed_y);
         if (region_layer_[i] == region_id && water_[i] == WATER_LAND && free(reg.seed_x, reg.seed_y)) {
             return SiteCell{reg.seed_x, reg.seed_y};

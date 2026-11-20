@@ -6,7 +6,7 @@
 // message and the edges that pass; the event kinds 20-30 of 11 transcribed
 // (keys, caused, region and settlement use, roles with counts, values,
 // salience, template) and their templates; the report lists every kind;
-// the five hist.conflict streams after hist.peoples.split (51 names).
+// the five hist.conflict streams after hist.peoples.split (51 names at 0.16.0, 52 from P3-08).
 // The race-data items of 12.2 are in history_peoples_data_test.cpp and
 // data_history_kinds_test.cpp (P3-01 tests).
 //
@@ -134,7 +134,7 @@ TEST_CASE("P3-06 12.1: history.conflict loads with the listing's 43 fields in ta
 
 TEST_CASE("P3-06 16.1 item 12: every history.conflict field one step outside its range is a range error") {
     for (const Range& rg : ranges()) {
-        CAPTURE(rg.field);
+        CAPTURE(std::string_view(rg.field));
         const std::string line = listing_line(rg.field);
         const bool record = line.find('{') != std::string::npos;
         auto with = [&](std::int64_t v) {
@@ -156,7 +156,7 @@ TEST_CASE("P3-06 16.1 item 12: every history.conflict field one step outside its
 
 TEST_CASE("P3-06 12.1: every history.conflict field is required and no other key is accepted") {
     for (const Range& rg : ranges()) {
-        CAPTURE(rg.field);
+        CAPTURE(std::string_view(rg.field));
         const std::string line = listing_line(rg.field);
         const wd::LoadError e = one_error(load(with_conflict_edit(line + "\n", "")));
         CHECK(e.message == "missing required field 'history.conflict." + std::string(rg.field) + "'");
@@ -179,7 +179,7 @@ TEST_CASE("P3-06 12.1, 16.1 item 12: each named check of history.conflict once, 
              {"declare_span = 600", "declare_span = 4701", "conflict_strain_max",
               "declare_min + declare_span must not be above strain_max"},
          }) {
-        CAPTURE(c.to);
+        CAPTURE(std::string_view(c.to));
         const wd::LoadError e = one_error(load(with_conflict_edit(c.from, c.to)));
         CHECK(e.path == "history/conflict.toml");
         CHECK(e.line == 1U);
@@ -189,7 +189,7 @@ TEST_CASE("P3-06 12.1, 16.1 item 12: each named check of history.conflict once, 
     CHECK(load(with_conflict_edit("strain_max = 5000", "strain_max = 900")).ok());
 }
 
-TEST_CASE("P3-06 11, 16.1 item 11: the compiled kinds 20-30 equal section 11; templates parse; report lists them") {
+TEST_CASE("P3-06 11 (r7), 16.1 item 11: the compiled kinds 20-30 equal section 11; templates parse; report lists them") {
     using ET = eng::EntityType;
     const ET C = ET::civilization;
     struct K {
@@ -214,7 +214,8 @@ TEST_CASE("P3-06 11, 16.1 item 11: the compiled kinds 20-30 equal section 11; te
         {"sacked", 1, 1, {{"attacker", 1}, {"defender", 1}}, {"dead", "survivors"}, 75,
          "{attacker} sacked {@settlement} of {defender}; {dead} died and {survivors} fled."},
         {"settlement_captured", 1, 1, {{"attacker", 1}, {"defender", 1}}, {"dead", "fled"}, 60,
-         "{attacker} took {@settlement} from {defender}; {dead} died and {fled} fled."},
+         // r7 (0.17.0): no "and 0 fled", P3-04 r10's three-word form
+         "{attacker} took {@settlement} from {defender}; {dead} died{fled?| and one fled| and # fled}."},
         {"peace", 0, 0, {{"winner", 1}, {"loser", 1}}, {"years"}, 60,
          "{loser} sued {winner} for peace after {years} {years?year|years} of war."},
         {"truce", 0, 0, {{"parties", 2}}, {"years"}, 50,
@@ -223,12 +224,12 @@ TEST_CASE("P3-06 11, 16.1 item 11: the compiled kinds 20-30 equal section 11; te
         {"civ_conquered", 1, 0, {{"civilization", 1}, {"conqueror", 1}}, {}, 90, "{civilization} fell to {conqueror}."},
     };
     const eng::EventCatalogue& compiled = eng::compiled();
-    REQUIRE(compiled.kinds.size() == 30U);
+    REQUIRE(compiled.kinds.size() == 31U);  // P3-05 r6 appends kind 31 after kinds 20-30 (0.17.0)
     const eng::EventCatalogue cat = eng::catalogue_of(engine_test::shipped());
-    REQUIRE(cat.kinds.size() == 30U);
+    REQUIRE(cat.kinds.size() == 31U);
     for (std::size_t i = 0; i < want.size(); ++i) {
         const K& w = want[i];
-        CAPTURE(w.key);
+        CAPTURE(std::string_view(w.key));
         for (const eng::KindDef* k : {&compiled.kinds[i + 19], &cat.kinds[i + 19]}) {
             CHECK(k->id == static_cast<std::int64_t>(i) + 20);
             CHECK(k->key == w.key);
@@ -257,9 +258,9 @@ TEST_CASE("P3-06 11, 16.1 item 11: the compiled kinds 20-30 equal section 11; te
     CHECK(compiled.kinds[18].key == "ruin_faded");
 }
 
-TEST_CASE("P3-06 3.3, 18.2: the five hist.conflict streams follow hist.peoples.split, 51 names in all") {
+TEST_CASE("P3-06 3.3, 18.2: the five hist.conflict streams follow hist.peoples.split, 52 names in all (P0-01 amendment 20)") {
     const auto names = worldgen::streams::all_stream_names;
-    REQUIRE(names.size() == 51U);
+    REQUIRE(names.size() == 52U);  // 51 at 0.16.0; P1-06 r4 adds geo.regions.name
     std::size_t at = names.size();
     for (std::size_t i = 0; i < names.size(); ++i) {
         if (names[i] == "hist.peoples.split") at = i;

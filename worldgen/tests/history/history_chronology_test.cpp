@@ -1,6 +1,8 @@
 // Unit tests of spec P3-03 (chronology), section 14.1 items 1 to 6 and
 // 14.3 items 18 and 19: the worked examples of 7.1 through the seams (u,
-// pick, d and year per race; ages; gods with their attempts; the
+// pick, d and year per race; ages; gods with their attempts (from generator
+// 0.17.0 the gods of P3-03 r3: drawn with the name filter and god_patterns,
+// P3-02 11.6's table; the 7.1 text keeps r4's names); the
 // collision and clamp cases), C2, the 63 subsets at seed 42, the age names
 // of C4, the entry checks of C1 and the data checks of section 6 at the
 // library and at the stage. Written from the spec only; the library is
@@ -91,9 +93,9 @@ TEST_CASE("P3-03 7.1, 14.1 item 1: seed 42, span 6000: K_aw, base, u, pick, d an
     CHECK(ages_text(r.ages) ==
           "1:1:0:2073:The Age of Elves|2:2:2074:3241:The Age of Goblins|3:3:3242:4242:The Age of Dwarves|"
           "4:4:4243:4968:The Age of Faeries|5:5:4969:5595:The Age of Humans|6:6:5596:5999:The Age of Orcs");
-    CHECK(god_names(r) == std::vector<std::string>{"Fielie", "Krok", "Bronhak", "Syfiash", "Wealstuld", "Kruu"});
-    CHECK(replay_gods(r, 42, {}, shipped()) == "1:Fielie:0|2:Krok:0|3:Bronhak:1|4:Syfiash:0|5:Wealstuld:0|6:Kruu:0");
-    CHECK(chrono_api::god_choices(shipped(), Params{}, 42, {}) == "1:Fielie:0|2:Krok:0|3:Bronhak:1|4:Syfiash:0|5:Wealstuld:0|6:Kruu:0");
+    CHECK(god_names(r) == std::vector<std::string>{"Fielie", "Krokzit", "Bronhak", "Syfiash", "Wealstuld", "Ogh'krak"});
+    CHECK(replay_gods(r, 42, {}, shipped()) == "1:Fielie:0|2:Krokzit:0|3:Bronhak:1|4:Syfiash:0|5:Wealstuld:0|6:Ogh'krak:1");
+    CHECK(chrono_api::god_choices(shipped(), Params{}, 42, {}) == "1:Fielie:0|2:Krokzit:0|3:Bronhak:1|4:Syfiash:0|5:Wealstuld:0|6:Ogh'krak:1");
 }
 
 TEST_CASE("P3-03 7.1, 14.1 item 1: seed 0 and seed 1, span 6000") {
@@ -106,9 +108,9 @@ TEST_CASE("P3-03 7.1, 14.1 item 1: seed 0 and seed 1, span 6000") {
         CHECK(d == std::vector<std::int64_t>{-32, -35, -22, 23, -46});
         const Rows r = chrono_api::stage(shipped(), Params{}, 0, {});
         CHECK(years_of_rows(r) == std::vector<std::int64_t>{0, 2068, 3265, 4178, 5003, 5534});
-        CHECK(god_names(r) == std::vector<std::string>{"Saene", "Kruskux", "Nurnthaimm", "Whaia", "Steldhil", "Bald"});
+        CHECK(god_names(r) == std::vector<std::string>{"Saene", "Kruskux", "Nurnthaimm", "Whaia", "Steldhil", "Uruld'kruum"});
         CHECK(replay_gods(r, 0, {}, shipped()) ==
-              "1:Saene:0|2:Kruskux:0|3:Nurnthaimm:0|4:Whaia:1|5:Steldhil:0|6:Bald:0");
+              "1:Saene:0|2:Kruskux:0|3:Nurnthaimm:0|4:Whaia:1|5:Steldhil:0|6:Uruld'kruum:1");
     }
     {
         const std::vector<OwnStep> s = own_shipped_schedule(1, 6000, six());
@@ -120,7 +122,7 @@ TEST_CASE("P3-03 7.1, 14.1 item 1: seed 0 and seed 1, span 6000") {
         const Rows r = chrono_api::stage(shipped(), Params{}, 1, {});
         CHECK(years_of_rows(r) == std::vector<std::int64_t>{0, 2071, 3341, 4178, 4934, 5580});
         CHECK(god_names(r) ==
-              std::vector<std::string>{"Laesiel", "Gragg-Gnurk", "Khummhor", "Synmia", "Steck", "Kaag"});
+              std::vector<std::string>{"Laesiel", "Gragg-Gnurk", "Khummhor", "Synmia", "Steckwint", "Kaag'azak"});
     }
 }
 
@@ -140,7 +142,7 @@ TEST_CASE("P3-03 7.1, 14.1 item 1: seed 7, span 2000 (hist-span-2000-512)") {
         ends.push_back(a.end_year);
     }
     CHECK(ends == std::vector<std::int64_t>{687, 1113, 1408, 1643, 1878, 1999});
-    CHECK(god_names(r) == std::vector<std::string>{"Vanir", "Grux", "Mammga", "Ouwheefy", "Gord", "Maark'zaagh"});
+    CHECK(god_names(r) == std::vector<std::string>{"Onveth", "Buzork", "Mammga", "Ouwheefy", "Gordman", "Maarkzaagh"});
 }
 
 TEST_CASE("P3-03 7.1, 14.1 item 1: seed 3, --races elf,orc (hist-races-elf-orc-1024)") {
@@ -151,9 +153,9 @@ TEST_CASE("P3-03 7.1, 14.1 item 1: seed 3, --races elf,orc (hist-races-elf-orc-1
     CHECK(s[1].d == 22);
     const Rows r = chrono_api::stage(shipped(), params_with(6000, {"elf", "orc"}), 3, {});
     CHECK(ages_text(r.ages) == "1:1:0:5601:The Age of Elves|2:6:5602:5999:The Age of Orcs");
-    CHECK(god_names(r) == std::vector<std::string>{"Vaennela", "Buzz", "Nonthom", "Pyia", "Alis", "Uguuggrush"});
-    CHECK(replay_gods(r, 3, {}, shipped()) == "1:Vaennela:0|2:Buzz:0|3:Nonthom:1|4:Pyia:0|5:Alis:1|6:Uguuggrush:0");
-    CHECK(chrono_api::god_choices(shipped(), params_with(6000, {"elf", "orc"}), 3, {}) == "1:Vaennela:0|2:Buzz:0|3:Nonthom:1|4:Pyia:0|5:Alis:1|6:Uguuggrush:0");
+    CHECK(god_names(r) == std::vector<std::string>{"Vaennela", "Sluskat", "Nonthom", "Pyia", "Bulwan", "A'ghaz"});
+    CHECK(replay_gods(r, 3, {}, shipped()) == "1:Vaennela:0|2:Sluskat:1|3:Nonthom:1|4:Pyia:0|5:Bulwan:0|6:A'ghaz:0");
+    CHECK(chrono_api::god_choices(shipped(), params_with(6000, {"elf", "orc"}), 3, {}) == "1:Vaennela:0|2:Sluskat:1|3:Nonthom:1|4:Pyia:0|5:Bulwan:0|6:A'ghaz:0");
     REQUIRE(r.races.size() == 6U);
     for (std::size_t i = 1; i <= 4; ++i) {
         CAPTURE(i);
@@ -170,12 +172,12 @@ TEST_CASE("P3-03 7.1, 14.1 item 1: seed 42 goblin,dwarf,human; seed 2^64-1 span 
         const Rows r = chrono_api::stage(shipped(), params_with(6000, {"goblin", "dwarf", "human"}), 42, {});
         CHECK(ages_text(r.ages) ==
               "1:2:0:3241:The Age of Goblins|2:3:3242:4968:The Age of Dwarves|3:5:4969:5999:The Age of Humans");
-        CHECK(god_names(r) == std::vector<std::string>{"Fielie", "Krok", "Bronhak", "Syfiash", "Wealstuld", "Kruu"});
+        CHECK(god_names(r) == std::vector<std::string>{"Fielie", "Krokzit", "Bronhak", "Syfiash", "Wealstuld", "Ogh'krak"});
     }
     {
         const Rows r = chrono_api::stage(shipped(), params_with(12000, {"orc"}), M64, {});
         CHECK(ages_text(r.ages) == "1:6:0:11999:The Age of Orcs");
-        CHECK(god_names(r) == std::vector<std::string>{"Ciefa", "Slogob", "Narinnadin", "Oupoubia", "Hard", "Kruurz"});
+        CHECK(god_names(r) == std::vector<std::string>{"Ciefa", "Slogob", "Narinnadin", "Oupoubia", "Hardcald", "Kruurz'gruu"});
     }
 }
 
@@ -189,12 +191,12 @@ TEST_CASE("P3-03 7.1, 14.1 item 1: collisions with preloaded region names") {
     }
     REQUIRE(r.gods.size() == 6U);
     CHECK(r.gods[0].name == "Mical");
-    CHECK(r.gods[1].name == "Zatch");
+    CHECK(r.gods[1].name == "Krokzit");  // r3: the r5 goblin god no longer meets the region "Krok"
     const std::string replay = replay_gods(r, 42, regions, shipped());
-    CHECK(replay.substr(0, replay.find("|3:")) == "1:Mical:2|2:Zatch:1");
+    CHECK(replay.substr(0, replay.find("|3:")) == "1:Mical:2|2:Krokzit:0");
     const std::string choices = chrono_api::god_choices(shipped(), Params{}, 42, regions);
     CHECK(choices == replay);
-    CHECK(choices.substr(0, choices.find("|3:")) == "1:Mical:2|2:Zatch:1");
+    CHECK(choices.substr(0, choices.find("|3:")) == "1:Mical:2|2:Krokzit:0");
     // Every name of the world is distinct (invariant 8).
     std::set<std::string> all(regions.begin(), regions.end());
     for (const AgeRow& a : r.ages) {
@@ -462,9 +464,9 @@ TEST_CASE("P3-03 14.3 item 19: chronology_stage twice gives the same rows; no re
     const Rows b = chrono_api::stage(shipped(), Params{}, 42, collision_regions());
     CHECK(a == b);
     // A call in between with other region names does not leak into the next call.
-    (void)chrono_api::stage(shipped(), Params{}, 42, {"Fielie", "Krok", "Bronhak", "Syfiash", "Wealstuld", "Kruu"});
+    (void)chrono_api::stage(shipped(), Params{}, 42, {"Fielie", "Krokzit", "Bronhak", "Syfiash", "Wealstuld", "Ogh'krak"});
     const Rows c = chrono_api::stage(shipped(), Params{}, 42, {});
-    CHECK(god_names(c) == std::vector<std::string>{"Fielie", "Krok", "Bronhak", "Syfiash", "Wealstuld", "Kruu"});
+    CHECK(god_names(c) == std::vector<std::string>{"Fielie", "Krokzit", "Bronhak", "Syfiash", "Wealstuld", "Ogh'krak"});
     CHECK(chrono_api::stage(shipped(), Params{}, 42, collision_regions()) == a);
 }
 
@@ -478,6 +480,44 @@ TEST_CASE("P3-03 14.3 item 18: an extra keyed draw on another stream changes not
     CHECK(sink != 0);
     CHECK(chrono_api::stage(shipped(), Params{}, 7, {}) == before);
     CHECK(years_of_rows(before) == years_of(own_shipped_schedule(7, 6000, six())));
+}
+
+
+TEST_CASE("P3-03 r3, P3-02 11.3 and 11.7 item 4: names_form_text refuses a form whose fixed text holds a filtered fragment") {
+    // The stage check of P3-02 r5 11.3 (r6: every fixed word too), after the data checks and before
+    // any name is drawn. Each fixture form is written as a concatenation, so the source holds no
+    // offensive word whole. The message is 11.3's text, prefix `history:` (an assumption: P3-03 r3
+    // gives the check, not a chronology wording).
+    struct FormCase {
+        std::string form;
+        std::string entry;
+    };
+    const std::vector<FormCase> cases = {{"{root}" + std::string("co") + "ck", std::string("co") + "ck"},
+                                         {std::string("Sh") + "it" + "{root}", std::string("sh") + "it"},
+                                         {"The Scrap" + std::string("yard of {root}"), std::string("cr") + "ap"},
+                                         {"The Snot" + std::string("ty Court of {root}"), std::string("sn") + "ot"}};
+    for (const FormCase& fc : cases) {
+        CAPTURE(fc.entry.size());
+        const wd::ContentSet c = edited_content(
+            {{"cultures", "human.toml", "settlement_forms = [\"{root}\", \"{root}ford\"",
+              "settlement_forms = [\"" + fc.form + "\", \"{root}ford\""}});
+        CHECK(stage_error(Params{}, c) == "history: culture 'human' settlement_forms[0] '" + fc.form +
+                                              "' holds the filtered text '" + fc.entry + "'");
+    }
+    // A data check failing as well wins: names_form_text runs after D1-D5.
+    const wd::ContentSet both = edited_content(
+        {{"cultures", "human.toml", "settlement_forms = [\"{root}\", \"{root}ford\"",
+          "settlement_forms = [\"" + cases[1].form + "\", \"{root}ford\""},
+         {"races", "orc.toml", "  { biome = \"alpine\", weight = -300 },",
+          "  { biome = \"alpine\", weight = -300 },\n  { biome = \"ocean\", weight = 1 },"}});
+    CHECK(stage_error(Params{}, both) == "chronology: data: race 'orc' prefers water biome 'ocean'");
+    // {root}ford passes: its fused letters are inside the root word, which the filter tests per attempt.
+    const wd::ContentSet ok = edited_content(
+        {{"cultures", "human.toml", "settlement_forms = [\"{root}\", \"{root}ford\"",
+          "settlement_forms = [\"{root}ford\", \"{root}ford\""}});
+    CHECK(stage_error(Params{}, ok).empty());
+    // The shipped forms pass (P3-02 11.3 lists their fixed words).
+    CHECK(stage_error(Params{}, shipped()).empty());
 }
 
 }  // TEST_SUITE

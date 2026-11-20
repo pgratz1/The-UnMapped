@@ -28,6 +28,7 @@
 #include <cstdint>
 #include <map>
 #include <string>
+#include <string_view>
 #include <vector>
 
 #include "worldgen/inspect/report.hpp"
@@ -178,6 +179,88 @@ TEST_CASE("P3-05 16.3 item 21, 16.2 item 18: the 1024 golden worlds and the hard
     }
 }
 
+TEST_CASE("P3-05 r6 6.2, 8.4: on a real 1024 world dwarves found fortresses off the walkable ground and ladder kinds on it") {
+    // seed 42 at 1024 (peoples only), real layers elevation, ore and walk_area: the reference founds eight
+    // dwarven settlements, five fortresses and three of ladder kinds (the cell rule does not make every
+    // dwarven founding a fortress)
+    const GCase& g = golden_case("hist-peoples-42-1024");
+    const db::WorldReader r = open_world(world_path(g));
+    const Tables t = tables_of_world(r);
+    const auto walk = r.read_layer("walk_area");
+    REQUIRE(walk.ok());
+    const auto& wa = std::get<std::vector<std::uint16_t>>(walk.value().grid.values);
+    std::map<std::int64_t, std::int64_t> civ_race, first_kind;
+    for (const Row& c : t.civilization) civ_race[at(c, 0)] = at(c, 2);
+    for (const Row& c : t.settlement_census) first_kind.emplace(at(c, 0), at(c, 3));
+    std::int64_t forts = 0, ladder = 0;
+    for (const Row& s : t.settlement) {
+        if (civ_race.at(at(s, 5)) != 3) continue;
+        const bool fort = first_kind.at(at(s, 0)) == fortress;
+        (fort ? forts : ladder) += 1;
+        if (wa.at(static_cast<std::size_t>(at(s, 3) * 1024 + at(s, 2))) == 0) {
+            CHECK_MESSAGE(fort, "dwarven settlement " << at(s, 0) << " on walk_area 0 is not a fortress");
+        }
+    }
+    CHECK(forts == 5);
+    CHECK(ladder == 3);
+}
+
+TEST_CASE("P3-05 16.2 item 20: threads 1 and 5 give identical history tables") {
+    for (const char* name : {"geo-seed-42-512", "hist-dense-1024"}) {
+        const GCase& g = golden_case(name);
+        CAPTURE(g.name);
+        CHECK(tables_of_world(open_world(world_path(g, 5))) == tables_of_world(open_world(world_path(g, 1))));
+    }
+}
+
+// The sample of 15.2 (seed 42 at 1024: its first 60 sentences, 530 events and the end state) is the
+// prototype's 0.15.0 measurement, reproduced through 0.16.0; P3-05 r6 changes it (region names of P1-06 r3,
+// names of P3-02 r5, the r6 rules), and the spec keeps the 0.15.0 text. From 0.17.0 the case
+// hist-peoples-42-1024 is checked against the golden file like the other 1024 worlds (above).
+
+}  // TEST_SUITE
+
+TEST_SUITE("history-slow" * doctest::skip()) {
+
+TEST_CASE("P3-05 16.3 item 21: the other 512 golden worlds") {
+    for (const char* name : {"geo-seed-0-512", "geo-phrase-512", "hist-span-2000-512"}) {
+        check_world_case(golden_case(name));
+    }
+}
+
+TEST_CASE("P3-05 16.3 item 21, 16.2 item 18: the 1024 golden worlds and the hard bounds of 15.5") {
+    for (const char* name : {"geo-seed-1-1024", "hist-races-elf-orc-1024", "hist-dense-1024", "hist-peoples-42-1024"}) {
+        check_world_case(golden_case(name));
+        check_hard_bounds(golden_case(name));
+    }
+}
+
+TEST_CASE("P3-05 r6 6.2, 8.4: on a real 1024 world dwarves found fortresses off the walkable ground and ladder kinds on it") {
+    // seed 42 at 1024 (peoples only), real layers elevation, ore and walk_area: the reference founds eight
+    // dwarven settlements, five fortresses and three of ladder kinds (the cell rule does not make every
+    // dwarven founding a fortress)
+    const GCase& g = golden_case("hist-peoples-42-1024");
+    const db::WorldReader r = open_world(world_path(g));
+    const Tables t = tables_of_world(r);
+    const auto walk = r.read_layer("walk_area");
+    REQUIRE(walk.ok());
+    const auto& wa = std::get<std::vector<std::uint16_t>>(walk.value().grid.values);
+    std::map<std::int64_t, std::int64_t> civ_race, first_kind;
+    for (const Row& c : t.civilization) civ_race[at(c, 0)] = at(c, 2);
+    for (const Row& c : t.settlement_census) first_kind.emplace(at(c, 0), at(c, 3));
+    std::int64_t forts = 0, ladder = 0;
+    for (const Row& s : t.settlement) {
+        if (civ_race.at(at(s, 5)) != 3) continue;
+        const bool fort = first_kind.at(at(s, 0)) == fortress;
+        (fort ? forts : ladder) += 1;
+        if (wa.at(static_cast<std::size_t>(at(s, 3) * 1024 + at(s, 2))) == 0) {
+            CHECK_MESSAGE(fort, "dwarven settlement " << at(s, 0) << " on walk_area 0 is not a fortress");
+        }
+    }
+    CHECK(forts == 5);
+    CHECK(ladder == 3);
+}
+
 TEST_CASE("P3-05 16.2 item 20: threads 1 and 5 give identical history tables") {
     for (const char* name : {"geo-seed-42-512", "hist-dense-1024"}) {
         const GCase& g = golden_case(name);
@@ -237,7 +320,7 @@ TEST_CASE("P3-05 15.2, 16.3 item 22: the sample of seed 42 at 1024 (first 60 sen
     for (const Row& s : t.settlement) st[at(s, 0)] = &s;
     for (std::size_t i = 0; i < want.size(); ++i) {
         const Row& c = t.civilization[i];
-        CAPTURE(want[i].name);
+        CAPTURE(std::string_view(want[i].name));
         CHECK(c[1].bytes == want[i].name);
         CHECK(is_null(c[8]));
         const Row& cap = *st.at(at(c, 5));

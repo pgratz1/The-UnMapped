@@ -161,7 +161,7 @@ TEST_CASE("P1-03 4: the shipped file and both fixture files hold the values of s
     const std::filesystem::path root(UNMAPPED_TEST_SOURCE_ROOT);
     for (const char* rel : {"game/data/worldgen/climate.toml", "worldgen/tests/data/geo/worldgen/climate.toml",
                             "worldgen/tests/data/geo-small/worldgen/climate.toml"}) {
-        CAPTURE(rel);
+        CAPTURE(std::string_view(rel));
         const std::string text = read_text(root / rel);
         // Every line of the TOML block of section 4 (comments may differ).
         std::istringstream lines{std::string(SHIPPED_TOML)};

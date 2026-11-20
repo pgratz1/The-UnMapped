@@ -13,6 +13,7 @@
 #include <functional>
 #include <ostream>
 #include <string>
+#include <string_view>
 #include <utility>
 #include <vector>
 
@@ -134,7 +135,7 @@ TEST_CASE("P3-03 5.1, 4.3, 14.1 item 7: the empty world: pages, the five empty t
 TEST_CASE("P3-03 4.4, 14.1 item 7: a version 5 file is refused: world schema version 5, this build reads 7") {
     dbtest::TempDir dir("chronology-v5");
     for (const char* sql : {"PRAGMA user_version = 5", "UPDATE meta SET value = '5' WHERE key = 'schema_version'"}) {
-        CAPTURE(sql);
+        CAPTURE(std::string_view(sql));
         const std::string path = empty_world(dir, std::string("w") + (sql[0] == 'P' ? "1" : "2") + ".db");
         REQUIRE(worldgen::db::testing::execute_on_file(path, sql).ok());
         const auto r = worldgen::db::WorldReader::open(path);
@@ -396,7 +397,7 @@ TEST_CASE("P3-03 4.1, 14.1 item 8: set_param_text refuses a non-canonical value 
                   "' is not the canonical form of a value of meta key 'param." + name + "'");
     }
     for (const char* name : {"history_detail", "races", "history_span"}) {
-        CAPTURE(name);
+        CAPTURE(std::string_view(name));
         worldgen::db::WorldWriter w;
         CHECK(fatal_of([&] { chrono_api::set_param_decimal(w, name, "0.5"); }) ==
               "WorldWriter::set_param_decimal: '0.5' is not the canonical form of a value of meta key 'param." +

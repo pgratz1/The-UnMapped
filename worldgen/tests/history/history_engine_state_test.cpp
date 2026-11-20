@@ -2,9 +2,10 @@
 // the step seam (a test subsystem and tension sources plugged through
 // EngineConfig), "created in a step, processed from the next step on",
 // bookkeeping of region_control, relation and settlement_census driven by a
-// test subsystem (rows written here by hand from 6.7), quiet eras broken by
-// a charged event, a flare-up and an awakening, generations across a
-// generation boundary, the intervention seam (every intervention dropped
+// test subsystem (rows written here by hand from 6.7), quiet eras (r10,
+// generator 0.17.0: not broken by an event charged to the civilization; broken
+// by a flare-up and an awakening; an ended civilization keeps the era of its
+// last full step), generations across a generation boundary, the intervention seam (every intervention dropped
 // in P3), Y3 draw independence, Y4 insertion order, and history_stage twice.
 
 #include <doctest/doctest.h>
@@ -171,9 +172,11 @@ TEST_CASE("P3-04 6.7, 16.1 item 6: bookkeeping of region control, relations and 
     CHECK(t.civilization[1][8].type == db::ValueType::null);
 }
 
-TEST_CASE("P3-04 6.6, 16.1 item 7: quiet eras broken by a charged event, a flare-up and an awakening") {
+TEST_CASE("P3-04 6.6 r10, 16.1 item 7: a charged event does not break a quiet era; a flare-up and an awakening do") {
     // elf at 0, goblin at 1000, span 2000, normal (A 50, F 17, L 100, Q 25), ForcedTension(500, 1000, 1);
-    // a test subsystem charges one event to civilization 1 in the quiet step starting at 150.
+    // a test subsystem charges one event to civilization 1 in the quiet step starting at 150. From r10
+    // (generator 0.17.0) the event does not close civilization 1's era: one era per civilization and
+    // quiet phase row (before r10 the era 50-149 closed and 175-499 opened).
     FnSubsystem q({Step::q1}, [](eng::StepContext& ctx) {
         if (ctx.year() == 150) {
             (void)change(ctx, 1);
@@ -183,46 +186,94 @@ TEST_CASE("P3-04 6.6, 16.1 item 7: quiet eras broken by a charged event, a flare
     cfg.subsystems = {&q};
     cfg.add_tension(eng::forced_tension(500, 1000, 1));
     const Tables t = eng::run_engine(shipped(), inputs_for({0, 1000}, 2000), cfg.get());
+    // The opening phase of the goblins is triggered by their awakening, now event 8.
     CHECK(phases_text(t, true) ==
-          "1:1:1:0:49:1|2:1:2:50:499:0|3:1:3:500:516:1|4:1:2:517:999:0|5:2:1:1000:1049:9|6:2:2:1050:1499:0|"
+          "1:1:1:0:49:1|2:1:2:50:499:0|3:1:3:500:516:1|4:1:2:517:999:0|5:2:1:1000:1049:8|6:2:2:1050:1499:0|"
           "7:2:3:1500:1516:1|8:2:2:1517:1899:0|9:2:4:1900:1999:0");
     CHECK(str(t.event) == str(irows({{1, 0, 0, 1, 1, 1, 0, 100},
                                      {2, 0, 0, 2, 1, 1, 0, 80},
                                      {3, 0, 0, 3, 1, 1, 1, 40},
-                                     {4, 50, 149, 4, 2, 1, 0, 20},
+                                     {4, 50, 499, 4, 2, 1, 0, 20},
                                      {5, 150, 150, 6, 2, 0, 0, 10},
-                                     {6, 175, 499, 4, 2, 1, 0, 20},
-                                     {7, 500, 500, 5, 3, 0, 0, 50},
-                                     {8, 517, 999, 4, 4, 1, 0, 20},
-                                     {9, 1000, 1000, 1, 5, 1, 0, 100},
-                                     {10, 1000, 1000, 2, 5, 1, 0, 80},
-                                     {11, 1000, 1000, 3, 5, 1, 2, 40},
+                                     {6, 500, 500, 5, 3, 0, 0, 50},
+                                     {7, 517, 999, 4, 4, 1, 0, 20},
+                                     {8, 1000, 1000, 1, 5, 1, 0, 100},
+                                     {9, 1000, 1000, 2, 5, 1, 0, 80},
+                                     {10, 1000, 1000, 3, 5, 1, 2, 40},
+                                     {11, 1050, 1499, 4, 6, 1, 0, 20},
                                      {12, 1050, 1499, 4, 6, 1, 0, 20},
-                                     {13, 1050, 1499, 4, 6, 1, 0, 20},
-                                     {14, 1500, 1500, 5, 7, 0, 0, 50},
-                                     {15, 1517, 1899, 4, 8, 1, 0, 20},
-                                     {16, 1517, 1899, 4, 8, 1, 0, 20}})));
+                                     {13, 1500, 1500, 5, 7, 0, 0, 50},
+                                     {14, 1517, 1899, 4, 8, 1, 0, 20},
+                                     {15, 1517, 1899, 4, 8, 1, 0, 20}})));
     // years and generations: elves 150 years a generation (founded 0), goblins 15 (founded 1000)
     CHECK(str(t.event_value) == str(irows({{3, 1, 200},
-                                           {4, 1, 100}, {4, 2, 1},
-                                           {6, 1, 325}, {6, 2, 2},
-                                           {7, 1, 17},
-                                           {8, 1, 483}, {8, 2, 3},
-                                           {11, 1, 200},
-                                           {12, 1, 450}, {12, 2, 3},
-                                           {13, 1, 450}, {13, 2, 30},
-                                           {14, 1, 17},
-                                           {15, 1, 383}, {15, 2, 2},
-                                           {16, 1, 383}, {16, 2, 26}})));
-    CHECK(str(t.event_cause) == str(irows({{2, 1}, {3, 2}, {7, 1}, {10, 9}, {11, 10}, {14, 1}})));
+                                           {4, 1, 450}, {4, 2, 3},
+                                           {6, 1, 17},
+                                           {7, 1, 483}, {7, 2, 3},
+                                           {10, 1, 200},
+                                           {11, 1, 450}, {11, 2, 3},
+                                           {12, 1, 450}, {12, 2, 30},
+                                           {13, 1, 17},
+                                           {14, 1, 383}, {14, 2, 2},
+                                           {15, 1, 383}, {15, 2, 26}})));
+    CHECK(str(t.event_cause) == str(irows({{2, 1}, {3, 2}, {6, 1}, {9, 8}, {10, 9}, {13, 1}})));
     CHECK(str(t.event_participant) ==
           str(irows({{1, 1, 1, 1, 1}, {1, 2, 2, 2, 1}, {2, 1, 1, 3, 1}, {2, 2, 2, 1, 1}, {3, 1, 1, 4, 1},
-                     {3, 2, 2, 3, 1}, {4, 1, 1, 3, 1}, {5, 1, 1, 3, 1}, {6, 1, 1, 3, 1}, {8, 1, 1, 3, 1},
-                     {9, 1, 1, 1, 2}, {9, 2, 2, 2, 2}, {10, 1, 1, 3, 2}, {10, 2, 2, 1, 2}, {11, 1, 1, 4, 2},
-                     {11, 2, 2, 3, 2}, {12, 1, 1, 3, 1}, {13, 1, 1, 3, 2}, {15, 1, 1, 3, 1}, {16, 1, 1, 3, 2}})));
+                     {3, 2, 2, 3, 1}, {4, 1, 1, 3, 1}, {5, 1, 1, 3, 1}, {7, 1, 1, 3, 1},
+                     {8, 1, 1, 1, 2}, {8, 2, 2, 2, 2}, {9, 1, 1, 3, 2}, {9, 2, 2, 1, 2}, {10, 1, 1, 4, 2},
+                     {10, 2, 2, 3, 2}, {11, 1, 1, 3, 1}, {12, 1, 1, 3, 2}, {14, 1, 1, 3, 1}, {15, 1, 1, 3, 2}})));
     // The test kind is written to the catalogue tables (9.3: every kind of the config's catalogue).
     REQUIRE(t.event_kind.size() == 6U);
     CHECK(t.event_kind[5][1].bytes == "test_change");
+}
+
+TEST_CASE("P3-04 6.6 r10, 16.1 item 7: an event charged in every second quiet step leaves one era per quiet row") {
+    // One race (elves at 0), span 2000, no tension: rows opening 0-49, quiet 50-1849, final 1850-1999
+    // (the floor of 5.5 lengthens the final phase; the reference's scheduler gives the same rows).
+    FnSubsystem q({Step::q1}, [](eng::StepContext& ctx) {
+        if (((ctx.year() - 50) / 25) % 2 == 0) {
+            (void)change(ctx, 1);
+        }
+    });
+    Config cfg;
+    cfg.subsystems = {&q};
+    const Tables t = eng::run_engine(shipped(), inputs_for({0}, 2000), cfg.get());
+    const std::vector<Row> eras = rows_where_kind(t, 4);
+    REQUIRE(eras.size() == 1U);
+    CHECK(at(eras[0], 1) == 50);
+    CHECK(at(eras[0], 2) == 1849);
+    // years 1800, generations g(1850) - g(50) = 12 - 0 = 12 (elves: 150 years a generation)
+    std::vector<std::int64_t> vals;
+    for (const Row& v : t.event_value) {
+        if (at(v, 0) == at(eras[0], 0)) vals.push_back(at(v, 2));
+    }
+    CHECK(vals == std::vector<std::int64_t>{1800, 12});
+    // The charged events are separate events dated inside the era (36 of the 72 quiet steps).
+    CHECK(rows_where_kind(t, 6).size() == 36U);
+}
+
+TEST_CASE("P3-04 6.6 r10, 16.1 item 7: a civilization ended in a quiet step keeps the era of its last full step") {
+    // Elves at 0, span 2000, no tension. In the quiet step starting at 300 a test subsystem ends
+    // civilization 1: its era (opened at 50) is not lengthened in that step or later, so it ends at
+    // 299 (years 250, generations g(300) - g(50) = 2), and no later era is opened for it.
+    FnSubsystem q({Step::q1}, [](eng::StepContext& ctx) {
+        if (ctx.year() == 300) {
+            const std::int64_t e = change(ctx, 1);
+            ctx.state().end_civilization(1, e);
+        }
+    });
+    Config cfg;
+    cfg.subsystems = {&q};
+    const Tables t = eng::run_engine(shipped(), inputs_for({0}, 2000), cfg.get());
+    const std::vector<Row> eras = rows_where_kind(t, 4);
+    REQUIRE(eras.size() == 1U);
+    CHECK(at(eras[0], 1) == 50);
+    CHECK(at(eras[0], 2) == 299);
+    std::vector<std::int64_t> vals;
+    for (const Row& v : t.event_value) {
+        if (at(v, 0) == at(eras[0], 0)) vals.push_back(at(v, 2));
+    }
+    CHECK(vals == std::vector<std::int64_t>{250, 2});
 }
 
 TEST_CASE("P3-04 6.8, 16.1 item 8: the intervention seam; every intervention is dropped in P3") {

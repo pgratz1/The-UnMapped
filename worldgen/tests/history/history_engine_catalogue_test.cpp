@@ -15,6 +15,7 @@
 #include <algorithm>
 #include <cstdint>
 #include <string>
+#include <string_view>
 #include <vector>
 
 #include "p3_04_engine_support.hpp"
@@ -327,7 +328,7 @@ TEST_CASE("P3-04 8.5 r1: HistoryView::load refuses corrupt history tables with a
         {"a region that does not exist", "UPDATE event SET region = 999 WHERE id = 1;", ""},
     };
     for (const Case& c : cases) {
-        CAPTURE(c.label);
+        CAPTURE(std::string_view(c.label));
         const std::string path = world_with(std::string("corrupt-") + std::to_string(&c - cases.data()) + ".db", c.sql);
         auto opened = db::WorldReader::open(path);
         REQUIRE(opened.ok());

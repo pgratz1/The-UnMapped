@@ -11,6 +11,18 @@ numerals follow P1-06 RG11 4 (written out here again from that text).
 Python 3 standard library only, arbitrary-precision integers, no floating
 point.
 
+Revision r5/r6 (P3-02 section 11, shipped with P3-08, generator 0.17.0;
+the default rules): the name filter of 11.2 and 11.3 (root_word,
+name_filtered, read from game/data/name_filters/ with tomllib), the stage
+check names_form_text with r6's fixed words, god_patterns and the elven
+form `The House of {root}` of 11.4 (CULTURES_R5), and a filtered attempt
+skipped like any invalid one (the next keyed attempt; 11.3 "How a rejected
+name is redrawn"). `--rules r4` (or use_rules("r4")) gives the 0.15.0 and
+0.16.0 names and reproduces the 0.16.0 golden file byte for byte. The
+golden file of r5 keeps every keyed-draw vector of 4.1 unchanged and adds
+the filter lines described in its header; the critics' stems are checked
+here and in the C++ only as concatenations, never stored.
+
 Usage (from the repository root; -B keeps __pycache__ out of the tree):
 
     python3 -B worldgen/tests/reference/p3_names_reference.py check
@@ -269,6 +281,33 @@ CULTURES = {
         ["The {root} Horde", "Clan {root}", "The Warband of {root}"],
         ["{root}", "{root} Camp", "{root}", "{root} Fort"]),
 }
+CULTURES_R4 = CULTURES
+
+# r5 (P3-02 11.4, shipped with P3-08, generator 0.17.0): god_patterns after
+# patterns, the elven third civilization form. Transcribed from 11.4.
+GOD_PATTERNS = {
+    "dwarven": ["ONCONC", "ONCONC", "ONCON"],
+    "elven": ["ONONC", "ONONC", "ONCON", "ONONON", "NCONC"],
+    "faerie": ["ONON", "ONONON", "ONONC", "ONCON"],
+    "goblin": ["ONCONC", "ONC-ONC", "ONONC"],
+    "human": ["ONCONC"],
+    "orcish": ["ONC'ONC", "ONCONC", "NC'ONC"],
+}
+
+
+def with_god_patterns(d, god_patterns):
+    """A culture_naming dict with god_patterns inserted after patterns (the
+    declaration order of 11.4)."""
+    out = {}
+    for k, v in d.items():
+        out[k] = v
+        if k == "patterns":
+            out["god_patterns"] = list(god_patterns)
+    return out
+
+
+CULTURES_R5 = {cid: with_god_patterns(d, GOD_PATTERNS[cid]) for cid, d in CULTURES_R4.items()}
+CULTURES_R5["elven"]["civilization_forms"] = ["The Court of {root}", "The Realm of {root}", "The House of {root}"]
 CULTURE_ORDER = ("dwarven", "elven", "faerie", "goblin", "human", "orcish")  # canonical id order, c = 1..6
 CULTURE_NUMBER = {cid: i + 1 for i, cid in enumerate(CULTURE_ORDER)}
 
@@ -277,7 +316,160 @@ CULTURE_NUMBER = {cid: i + 1 for i, cid in enumerate(CULTURE_ORDER)}
 TINY = naming(["b", "d"], ["a"], [""], ["ON"], 2, 2, [], ["{root}"], ["{root}"], ["{root}"])
 # "never": a one-letter root can never reach min_letters 30.
 NEVER = naming(["b"], ["a"], [""], ["N"], 30, 32, [], ["{root}"], ["{root}"], ["{root}"])
-TEST_CULTURES = {"tiny": TINY, "never": NEVER}
+# r5 test culture and filter (11.7 item 8; also in p3_02_names_support.hpp):
+# "filt" makes the 20 roots b/d/g/k/m + a/o + ""/n; the test filter rejects
+# every root word containing "ba" (Ba, Ban), 2 of the 20.
+FILT = naming(["b", "d", "g", "k", "m"], ["a", "o"], ["", "n"], ["ONC"], 2, 3, [], ["{root}"], ["{root}"],
+              ["{root}"])
+TEST_CULTURES = {"tiny": TINY, "never": NEVER, "filt": FILT}
+TEST_FILTER_ANYWHERE = ["ba"]
+
+
+# ---------------------------------------------------------------------------
+# 11.2, 11.3 The name filter (r5)
+# ---------------------------------------------------------------------------
+
+class NameFilter:
+    """The effective lists of 11.2: the unions over all definitions (only
+    membership matters, 11.2)."""
+
+    def __init__(self, anywhere=(), at_start=(), whole=()):
+        self.anywhere = sorted(set(anywhere))
+        self.at_start = sorted(set(at_start))
+        self.whole = set(whole)
+
+    def __repr__(self):
+        return "NameFilter(%d, %d, %d)" % (len(self.anywhere), len(self.at_start), len(self.whole))
+
+
+EMPTY_FILTER = NameFilter()
+REPO = os.path.normpath(os.path.join(_HERE, "..", "..", ".."))
+
+
+def filter_from_dir(path):
+    """The effective filter of a name_filters/ directory, read with tomllib."""
+    import tomllib
+    a, s_, w = [], [], []
+    for name in sorted(os.listdir(path)):
+        if not name.endswith(".toml"):
+            continue
+        with open(os.path.join(path, name), "rb") as f:
+            for _, t in tomllib.load(f).get("name_filter", {}).items():
+                a += t["anywhere"]
+                s_ += t["at_start"]
+                w += t["whole"]
+    return NameFilter(a, s_, w)
+
+
+_SHIPPED_FILTER = None
+
+
+def shipped_filter():
+    global _SHIPPED_FILTER
+    if _SHIPPED_FILTER is None:
+        _SHIPPED_FILTER = filter_from_dir(os.path.join(REPO, "game", "data", "name_filters"))
+    return _SHIPPED_FILTER
+
+
+def lower(s):
+    """lower of 11.3: A-Z to a-z, nothing else."""
+    return "".join(chr(ord(ch) + 32) if "A" <= ch <= "Z" else ch for ch in s)
+
+
+def root_word(form, root):
+    """W of 11.3: the letters of the form fused to the root, lower-cased,
+    around the root (R before Cap)."""
+    a, b = form.split("{root}", 1)
+    a1 = a[a.rfind(" ") + 1:] if " " in a else a
+    b1 = b[:b.find(" ")] if " " in b else b
+    return lower(a1) + root + lower(b1)
+
+
+def word_parts(w):
+    """The maximal non-empty runs of letters a-z (W split at ' and -)."""
+    parts, cur = [], ""
+    for ch in w:
+        if "a" <= ch <= "z":
+            cur += ch
+        else:
+            if cur:
+                parts.append(cur)
+            cur = ""
+    if cur:
+        parts.append(cur)
+    return parts
+
+
+def name_filtered(filt, w):
+    """filtered(W) of 11.3."""
+    squeezed = w.replace("'", "").replace("-", "")
+    if any(e in squeezed for e in filt.anywhere):
+        return True
+    parts = word_parts(w)
+    if any(p.startswith(e) for p in parts for e in filt.at_start):
+        return True
+    return any(p in filt.whole for p in parts)
+
+
+def form_text_problem(filt, cid, kind, i, form):
+    """names_form_text of 11.3 (r6) for one form: the message, or None."""
+    a, b = form.split("{root}", 1)
+    cut_a = a.rfind(" ") + 1 if " " in a else 0
+    cut_b = b.find(" ") if " " in b else len(b)
+    a1, b1 = a[cut_a:], b[:cut_b]
+
+    def letters(x):
+        return lower(x).replace("'", "").replace("-", "")
+    sa, sb = letters(a1), letters(b1)
+    for e in filt.anywhere:
+        if e in sa or e in sb:
+            return "history: culture '%s' %s_forms[%d] '%s' holds the filtered text '%s'" % (cid, kind, i, form, e)
+    if sa:
+        for e in filt.at_start:
+            if sa.startswith(e):
+                return "history: culture '%s' %s_forms[%d] '%s' holds the filtered text '%s'" % (cid, kind, i, form, e)
+    fixed = [x for x in a[:cut_a].split(" ") if x] + [x for x in b[cut_b:].split(" ") if x]
+    for word in fixed:
+        lw = letters(word)
+        for e in filt.anywhere:
+            if e in lw:
+                return "history: culture '%s' %s_forms[%d] '%s' holds the filtered text '%s'" % (cid, kind, i, form, e)
+        for e in filt.at_start:
+            if lw.startswith(e):
+                return "history: culture '%s' %s_forms[%d] '%s' holds the filtered text '%s'" % (cid, kind, i, form, e)
+    return None
+
+
+def names_form_text(filt, cultures):
+    """The stage check names_form_text (11.3): cultures {id: naming}; raises
+    FatalError with the first problem (culture ascending id, kind god,
+    civilization, settlement, form index)."""
+    for cid in sorted(cultures, key=lambda x: x.encode()):
+        d = cultures[cid]
+        for kind in KINDS:
+            for i, form in enumerate(d[kind + "_forms"]):
+                msg = form_text_problem(filt, cid, kind, i, form)
+                if msg:
+                    fatal(msg)
+
+
+# The rules this module applies: "r5" (default, P3-08, generator 0.17.0:
+# god_patterns, the name filter, the House form) or "r4" (0.15.0 and
+# 0.16.0). use_rules("r4") reproduces the 0.16.0 names exactly.
+RULES = None
+CULTURES = None
+FILTER = None
+
+
+def use_rules(r):
+    global RULES, CULTURES, FILTER
+    if r == "r5":
+        CULTURES, FILTER = CULTURES_R5, shipped_filter()
+    elif r == "r4":
+        CULTURES, FILTER = CULTURES_R4, EMPTY_FILTER
+    else:
+        raise ValueError(r)
+    RULES = r
 
 
 # ---------------------------------------------------------------------------
@@ -309,8 +501,14 @@ def root_valid(d, root):
     return True
 
 
-def attempt(d, kind, seed, c, e, t, trace=None):
-    """(valid, name) of 4.2; trace, if a list, receives (j, u, n, index, symbol, piece)."""
+def attempt(d, kind, seed, c, e, t, trace=None, filt=None, flags=None):
+    """(valid, name, root) of 4.2 with r5's filter (11.3) and god_patterns
+    (11.4); trace, if a list, receives (j, u, n, index, symbol, piece);
+    flags, if a dict, receives "filtered" (the r4 rules pass and the filter
+    rejects). filt None: the module's FILTER. A naming without god_patterns
+    (r4 data) draws god shapes from patterns."""
+    if filt is None:
+        filt = FILTER
     s_key = cr.stream_key(seed, STREAMS[kind])
     forms = d[kind + "_forms"]
 
@@ -323,10 +521,13 @@ def attempt(d, kind, seed, c, e, t, trace=None):
     if trace is not None:
         trace.append((0, u0, len(forms), fi, "form", form))
     u1 = u(1)
-    pi = pick(u1, len(d["patterns"]))
-    pattern = d["patterns"][pi]
+    pats = d["god_patterns"] if kind == "god" and "god_patterns" in d else d["patterns"]
+    if not pats:
+        fatal("names: a naming list is empty")
+    pi = pick(u1, len(pats))
+    pattern = pats[pi]
     if trace is not None:
-        trace.append((1, u1, len(d["patterns"]), pi, "pattern", pattern))
+        trace.append((1, u1, len(pats), pi, "pattern", pattern))
     root = ""
     j = 2
     for s in pattern:
@@ -343,7 +544,10 @@ def attempt(d, kind, seed, c, e, t, trace=None):
     valid = root_valid(d, root)
     name = form.replace("{root}", cap(root), 1)
     valid = valid and len(name) <= 48
-    return valid, name, root
+    filtered = valid and name_filtered(filt, root_word(form, root))
+    if flags is not None:
+        flags["filtered"] = filtered
+    return valid and not filtered, name, root
 
 
 ROMAN = ((1000, "M"), (900, "CM"), (500, "D"), (400, "CD"), (100, "C"), (90, "XC"), (50, "L"), (40, "XL"),
@@ -361,11 +565,12 @@ def roman(k):
     return "".join(out)
 
 
-def make_name(d, culture_id, kind, seed, c, e, registry):
-    """4.3; returns (name, attempt number or 'F'); adds the name to registry (a set)."""
+def make_name(d, culture_id, kind, seed, c, e, registry, filt=None):
+    """4.3; returns (name, attempt number or 'F'); adds the name to registry
+    (a set). A filtered attempt is an invalid attempt (11.3)."""
     first = None
     for t in range(64):
-        valid, n, _ = attempt(d, kind, seed, c, e, t)
+        valid, n, _ = attempt(d, kind, seed, c, e, t, filt=filt)
         if not valid:
             continue
         if first is None:
@@ -493,6 +698,53 @@ def scenarios():
     return out
 
 
+def test_filter():
+    return NameFilter(TEST_FILTER_ANYWHERE)
+
+
+def filt_entity(want_filtered, want_valid_at=None, seed=0):
+    """The smallest entity e of culture filt (c = 1, settlement) whose
+    attempts 0 .. want_filtered - 1 are all filtered by the test filter (and,
+    if given, attempt want_valid_at is valid and unfiltered)."""
+    f = test_filter()
+    for e in range(1, 100000):
+        ok = True
+        for t in range(want_filtered):
+            fl = {}
+            v, _, _ = attempt(FILT, "settlement", seed, 1, e, t, filt=f, flags=fl)
+            ok = ok and fl["filtered"]
+        if ok and want_valid_at is not None:
+            ok = attempt(FILT, "settlement", seed, 1, e, want_valid_at, filt=f)[0]
+        if ok:
+            return e
+    raise AssertionError("no such entity")
+
+
+def filt_names():
+    """Every valid root name of culture filt with the r4 rules, sorted."""
+    out = set()
+    for o in FILT["onsets"]:
+        for n in FILT["nuclei"]:
+            for c in FILT["codas"]:
+                out.add(cap(o + n + c))
+    return sorted(out)
+
+
+def r5_scenarios():
+    """Scenarios of 11.7 item 8 on culture filt with the test filter."""
+    out = []
+    e1 = filt_entity(1)
+    unfiltered = [n for n in filt_names() if not name_filtered(test_filter(), lower(n))]
+    out.append(("filtered", 0, "filt", "settlement", unfiltered, [e1]))
+    e2 = filt_entity(2, 2)
+    out.append(("redraw_alone", 0, "filt", "settlement", [], [e2]))
+    # Other entities first (shipped human names, some of whose attempts are
+    # filtered, none of them two or three letters): e2 still takes attempt 2.
+    out.append(("redraw_after", 0, None, None, [], [("human", "settlement", e) for e in range(1, 6)]
+                + [("human", "civilization", e) for e in range(1, 6)] + [("filt", "settlement", e2)]))
+    return out
+
+
 def run_scenario(sc):
     label, seed, cid, kind, preload, items = sc
     reg = set(preload)
@@ -504,20 +756,32 @@ def run_scenario(sc):
             icid, ikind, e = cid, kind, it
         d = CULTURES.get(icid) or TEST_CULTURES[icid]
         c = CULTURE_NUMBER.get(icid, 1)
-        n, t = make_name(d, icid, ikind, seed, c, e, reg)
+        f = test_filter() if icid == "filt" else None
+        n, t = make_name(d, icid, ikind, seed, c, e, reg, filt=f)
         res.append((icid, ikind, c, e, t, n))
     return res
 
 
-def name_list(seed):
+def name_list(seed, cultures=None, filt=None):
+    cultures = cultures or CULTURES
     reg = set()
     lines = []
     for cid in CULTURE_ORDER:
         for kind in KINDS:
             for e in range(1, GOLDEN_ENTITIES + 1):
-                n, t = make_name(CULTURES[cid], cid, kind, seed, CULTURE_NUMBER[cid], e, reg)
+                n, t = make_name(cultures[cid], cid, kind, seed, CULTURE_NUMBER[cid], e, reg, filt=filt)
                 lines.append("%d %s %s %d %s %s" % (seed, cid, kind, e, t, n))
     return lines
+
+
+def r4_equivalent_cultures():
+    """11.7 item 7: the r5 shipped cultures with god_patterns = patterns and
+    the r4 elven forms; with the empty filter they give r4's names."""
+    return {cid: with_god_patterns(CULTURES_R4[cid], CULTURES_R4[cid]["patterns"]) for cid in CULTURE_ORDER}
+
+
+def list_sha(lines):
+    return hashlib.sha256("\n".join(lines).encode("ascii")).hexdigest()
 
 
 def hx(v):
@@ -548,6 +812,20 @@ def golden_text():
     o.append("#   then result <label> <culture> <kind> <c> <e> <attempt|F> <name>, in naming order;")
     o.append("#       one registry per scenario; test cultures tiny and never are defined in the reference")
     o.append("#       and in worldgen/tests/history/p3_02_names_support.hpp")
+    if RULES == "r5":
+        o.append("#   r5 (P3-02 11, generator 0.17.0): attempts and lists use god_patterns and the shipped")
+        o.append("#       name filter of game/data/name_filters/; the elven third form is The House of {root}")
+        o.append("#   fattempt <seed> <culture> <kind> <c> <e> <t> <valid 0|1> <filtered 0|1> <name|->")
+        o.append("#       attempts with the filter (11.3, 11.5 NameAttempt::filtered); culture filt uses the")
+        o.append("#       test filter (anywhere = [ba]), every shipped culture the shipped filter")
+        o.append("#   rootword <form with _ for space> <root> <W>     root_word of 11.3")
+        o.append("#   filter <W> <0|1>   name_filtered(shipped filter, W) on benign words (the critics' stems")
+        o.append("#       are tested in the C++, written as concatenations, never stored here)")
+        o.append("#   formtext <culture> <kind> <i> <ok|message>  names_form_text of 11.3 on the shipped forms")
+        o.append("#   scenarios filtered, redraw_alone, redraw_after (11.7 item 8) use culture filt, defined in")
+        o.append("#       the reference and in p3_02_names_support.hpp, with the test filter")
+        o.append("#   r4sha256 <seed> <hex>  11.7 item 7: the list lines of that seed computed with the empty filter,")
+        o.append("#       god_patterns = patterns and the r4 elven forms (the 0.16.0 list, whose sha256 line it equals)")
     o.append("#   fatal <culture> <kind> <seed> <c> <e> <message>")
     o.append("#   <seed> <culture> <kind> <entity> <attempt|F> <name>   (spec 9.3 item 10)")
     o.append("#       for seeds 0 and 42, one registry per seed starting empty, cultures in canonical id")
@@ -597,7 +875,41 @@ def golden_text():
                 piece = piece.replace(" ", "_")
             o.append("step %d %s %s %d %d %d %d %s %d %d %s %s" % (seed, cid, kind, c, e, t, j, hx(uj), nn, idx, sym,
                                                                    piece or "-"))
-    for sc in scenarios():
+    if RULES == "r5":
+        fcases = [(0, "filt", "settlement", 1, filt_entity(1), 0)]
+        e2 = filt_entity(2, 2)
+        fcases += [(0, "filt", "settlement", 1, e2, t) for t in range(3)]
+        # shipped cultures: the first filtered attempt of each kind at seed 42 (entities 1..)
+        for cid in CULTURE_ORDER:
+            for kind in KINDS:
+                for e in range(1, 2000):
+                    fl = {}
+                    attempt(CULTURES[cid], kind, 42, CULTURE_NUMBER[cid], e, 0, flags=fl)
+                    if fl["filtered"]:
+                        fcases.append((42, cid, kind, CULTURE_NUMBER[cid], e, 0))
+                        fcases.append((42, cid, kind, CULTURE_NUMBER[cid], e, 1))
+                        break
+        for seed, cid, kind, c, e, t in fcases:
+            fl = {}
+            f = test_filter() if cid == "filt" else None
+            d = CULTURES.get(cid) or TEST_CULTURES[cid]
+            v, n, _ = attempt(d, kind, seed, c, e, t, filt=f, flags=fl)
+            # a filtered attempt's name is not printed (it may be offensive; it is the invalid case)
+            o.append("fattempt %d %s %s %d %d %d %d %d %s" % (seed, cid, kind, c, e, t, 1 if v else 0,
+                                                             1 if fl["filtered"] else 0, n if v else "-"))
+        for form, root in (("The Hold of {root}", "dur"), ("{root}ford", "ced"), ("Ny{root} Pit", "ash"),
+                           ("{root}", "ug'kaal"), ("The {root} Throne", "gnink-snunk"), ("The Realm of {root}",
+                                                                                           "arthos")):
+            o.append("rootword %s %s %s" % (form.replace(" ", "_"), root, root_word(form, root)))
+        for w in ("stard", "iensath", "grork", "arthos", "ascumbrin", "focoth", "khorkhound", "bag", "dog", "baa",
+                  "gord", "vanir", "dork", "bald", "buzz"):
+            o.append("filter %s %d" % (w, 1 if name_filtered(FILTER, w) else 0))
+        for cid in CULTURE_ORDER:
+            for kind in KINDS:
+                for i, form in enumerate(CULTURES[cid][kind + "_forms"]):
+                    o.append("formtext %s %s %d %s" % (cid, kind, i, form_text_problem(FILTER, cid, kind, i, form)
+                                                       or "ok"))
+    for sc in scenarios() + (r5_scenarios() if RULES == "r5" else []):
         label, seed, _, _, preload, _ = sc
         o.append("scenario %s %d %d" % (label, seed, len(preload)))
         for p in sorted(preload):
@@ -613,7 +925,10 @@ def golden_text():
     for seed in GOLDEN_SEEDS:
         lines = name_list(seed)
         o.extend(lines)
-        o.append("sha256 %d %s" % (seed, hashlib.sha256("\n".join(lines).encode("ascii")).hexdigest()))
+        o.append("sha256 %d %s" % (seed, list_sha(lines)))
+    if RULES == "r5":
+        for seed in GOLDEN_SEEDS:
+            o.append("r4sha256 %d %s" % (seed, list_sha(name_list(seed, r4_equivalent_cultures(), EMPTY_FILTER))))
     return "\n".join(o) + "\n"
 
 
@@ -655,6 +970,86 @@ SAMPLES = {
 }
 
 
+# P3-02 11.6, "Sample names of 5.1 under r5", transcribed.
+SAMPLES_R5 = {
+    "dwarven": ("Moumka, Thoumdaili, Makmoudin Deep, Brummthu, Gromka, Kaird Deep, Khaili Hold, Kili, Thoum Hold, "
+                "Nodin, Gondhark, Turnbruk Deep, Kidinkorn, Tharndramm Hold, Grangrak, Houmm Deep, Doknirk, Gali, "
+                "Nailimim Deep, Tairdbra Hold",
+                "The Kourdbrar Throne; The Hold of Didin; Clan Durgarin; Clan Drourd; Clan Drailimai",
+                "Brommgrai, Groumtoun, Nurnthaimm"),
+    "elven": ("Iensath, Onaeme, Ierrael, Elonoma, Fievos, Mielae, Asvathdell, Lafin, Laevo, Leithiedell, Orith, "
+              "Voglael, Mievife, Iefann, Cellve, Fimo, Londcae, Rienel, Nathol, Siendnie",
+              "The House of Nife; The Court of Nothind; The House of Aesoth; The House of Riefifie; "
+              "The Court of Thiesaell",
+              "Saene, Fiendse, Ithonnfa"),
+    "faerie": ("Liapa, Wiatwiesk Glade, Twamae Glade, Ybeeie Hollow, Biafloss Glade, Pieshaep Hollow, Teelan, "
+               "Meeie Hollow, Sywysh Hollow, Iatysk, Wiepysk, Miemo Hollow, Mapoufee, Feetop Hollow, Showhie Hollow, "
+               "Mawhiap Hollow, Athfli Hollow, Whywo, Fliaposk Hollow, Whosy Hollow",
+               "The Lyp Ring; The Watiafia Court; The Bouss Ring; The Wosk Ring; The Twiwhiwou Ring",
+               "Fiwhall, Fiabo, Biensho"),
+    "goblin": ("Krot Pit, Slograb Pit, Gnink-Snunk, Zux, Grunkgnuzz Pit, Grizz-Skeeb, Slank-Skrox, Drobskeet, "
+               "Bozz Pit, Sluggatch Hole, Bux-Kreeb, Sniz, Slak, Zug-Gok, Gunitch, Skrizuz, Droggkazz Hole, "
+               "Slobeerk, Snok, Kruskreezz Hole",
+               "The Gnazz Horde; The Baskeeb Mob; The Grodratch Horde; The Krunkgirk Horde; The Warrens of Gnonk",
+               "Zab-Skreeb, Kruskux, Nugnug"),
+    "human": ("Deanham, Alantton, Cickham, Gackwick, Brir, Tackbury, Gurdton, Studford, Ceambury, Buld, "
+              "Silstudstead, Tirdwick, Dack, Stastint, Moldstead, Edumford, Tontstead, Ceanbir, Durdton, Durdbury",
+              "The Duchy of Ashem; The Kingdom of Ashos; The Kingdom of Edes; The Duchy of Ceam; The Duchy of Circon",
+              "Wasbrid, Histold, Edostold"),
+    "orcish": ("Kaak Fort, Zaarz Camp, Grush, Zaakugaag, Uruld'duuld, Shaazazuug, Kark Fort, Azol'urash Fort, "
+               "Karzthogh, Uromgha, Maag, Uul'krakh Camp, Og'buurk Camp, Zaalduruz Camp, Mak, Duld'sha Fort, "
+               "Shuum Fort, Ghorz Fort, Duuldkrosh Fort, Aag'urog Fort",
+               "Clan Kram'krorz; The Azakhdam Horde; The Urogh'krorz Horde; The Burk'zork Horde; "
+               "The Warband of Maakurokh",
+               "Ug'krarz, Og'uraag, Uruuk'krush"),
+}
+
+# P3-02 11.6 "Gods before and after", column r5 (race order elf, goblin,
+# dwarf, faerie, human, orc; god entity = race order; empty registry).
+GODS_R5 = {
+    0: "Saene, Kruskux, Nurnthaimm, Whaia, Steldhil, Uruld'kruum",
+    1: "Laesiel, Gragg-Gnurk, Khummhor, Synmia, Steckwint, Kaag'azak",
+    2: "Saeriemi, Gagg-Sneegg, Broumnoud, Biewie, Stenedock, Bogh'grum",
+    3: "Vaennela, Sluskat, Nonthom, Pyia, Bulwan, A'ghaz",
+    4: "Meven, Kukunk, Bornthirin, Wiabie, Dalcold, Ugu'azug",
+    5: "Fieniesie, Batgnax, Dirinbad, Sabiwhi, Tolashud, Grammam",
+    6: "Ithielell, Droxsloz, Groligu, Whaetwia, Dearbrol, Kaaghaag",
+    7: "Onveth, Buzork, Mammga, Ouwheefy, Gordman, Maarkzaagh",
+    8: "Saelome, Grotbib, Mairnbu, Twybo, Madgil, Uush'muum",
+    9: "Lisael, Skozazz, Nurntond, Whaeouwhia, Geadashid, Um'daz",
+    42: "Fielie, Krokzit, Bronhak, Syfiash, Wealstuld, Ogh'krak",
+}
+GOD_RACE_CULTURES = ("elven", "goblin", "dwarven", "faerie", "human", "orcish")
+
+# P3-02 11.6 "Elven realms before and after", column r5 (civilizations 1, 2).
+REALMS_R5 = {
+    0: ("The House of Nife", "The Court of Nothind"), 1: ("The House of Glaefaenn", "The Court of Iethfe"),
+    2: ("The House of Ithasfa", "The Court of Ienriend"), 3: ("The House of Roelaele", "The House of Vefal"),
+    4: ("The Court of Meithiell", "The Realm of Sices"), 5: ("The Realm of Saethoth", "The House of Vamiel"),
+    6: ("The Realm of Mocaen", "The House of Folisae"), 7: ("The Realm of Ienngleth", "The Realm of Rasglae"),
+    8: ("The Realm of Gliethil", "The Realm of Thalri"), 9: ("The House of Motheme", "The Realm of Ilcienn"),
+}
+
+
+def god_parses(d, name):
+    """11.7 item 9: the god root (form {root}) parses as one of god_patterns."""
+    root = lower(name)
+    for pat in d["god_patterns"]:
+        if parse_pattern(d, pat, root):
+            return True
+    return False
+
+
+def parse_pattern(d, pat, root):
+    if not pat:
+        return root == ""
+    s0 = pat[0]
+    if s0 in SEP:
+        return root.startswith(s0) and parse_pattern(d, pat[1:], root[1:])
+    arr = d[{"O": "onsets", "N": "nuclei", "C": "codas"}[s0]]
+    return any(root.startswith(p) and parse_pattern(d, pat[1:], root[len(p):]) for p in set(arr))
+
+
 def sample_names(cid):
     reg = set()
     d = CULTURES[cid]
@@ -669,13 +1064,14 @@ def compare_samples(out):
     bad = 0
     for cid in CULTURE_ORDER:
         s, v, g = sample_names(cid)
-        es, ev, eg = SAMPLES[cid]
+        es, ev, eg = (SAMPLES_R5 if RULES == "r5" else SAMPLES)[cid]
         for label, got, exp in (("settlements", s, es.split(", ")), ("civilizations", v, ev.split("; ")),
                                 ("gods", g, eg.split(", "))):
             for i, (a, b) in enumerate(zip(got, exp)):
                 if a != b:
                     bad += 1
-                    out.write("DIFF %s %s %d: reference %r, spec 5.1 %r\n" % (cid, label, i + 1, a, b))
+                    out.write("DIFF %s %s %d: reference %r, spec %s %r\n" % (cid, label, i + 1, a,
+                                                                              "11.6" if RULES == "r5" else "5.1", b))
             if len(got) != len(exp):
                 bad += 1
                 out.write("DIFF %s %s: count %d vs %d\n" % (cid, label, len(got), len(exp)))
@@ -729,7 +1125,8 @@ def check_all():
     ck.eq("4.6 fallback", make_name(CULTURES["elven"], "elven", "settlement", 0, 2, 1, set(full)), ("Iensath II", "F"))
     sc = [x for x in scenarios() if x[0] == "seed42"][0]
     got = [(r[5], r[4]) for r in run_scenario(sc)]
-    ck.eq("4.6 seed 42 names", [g[0] for g in got], ["Khork", "The Grork Horde", "Deantwick", "Ol'uraakh Fort"])
+    ck.eq("4.6 seed 42 names", [g[0] for g in got],
+          ["Khorkhound" if RULES == "r5" else "Khork", "The Grork Horde", "Deantwick", "Ol'uraakh Fort"])
     ck.eq("4.6 seed 42 goblin attempt", got[1][1], 1)
     ck.eq("4.6 seed 42 dwarven attempt", got[0][1], 0)
     ck.eq("4.6 seed 42 goblin attempt 0 invalid",
@@ -794,8 +1191,116 @@ def check_all():
             if not name_shape_ok(CULTURES[parts[1]], parts[2], parts[5]):
                 ck.eq("shape %s" % ln, False, True)
         ck.eq("4.6 in list", ("%d elven settlement 1 0 Iensath" % 0) in lines, seed == 0)
+    if RULES == "r5":
+        check_r5(ck)
     sys.stdout.write("%d checks, %d failures\n" % (ck.count, ck.failures))
     return 1 if ck.failures else 0
+
+
+def check_r5(ck):
+    """P3-02 11 (r5, r6): the examples of 11.3, the vectors and tables of
+    11.6, the rule on hand-made data (11.7 items 4-8), invariant 5 and item 9
+    on the golden lists, r4 reproduced (item 7)."""
+    f = FILTER
+    # 11.3 examples with the shipped lists (the offensive ones as concatenations).
+    for w, exp in (("cock" + "ford", True), ("bum" + "dou", True), ("but-skrotch", True), ("ugh'kaal", True),
+                   ("bag", True), ("stard", False), ("cum" + "brin", True), ("ascum" + "brin", False)):
+        ck.eq("11.3 example %s" % w, name_filtered(f, w), exp)
+    ck.eq("11.3 Bag Hole: W is the root", root_word("{root} Hole", "bag"), "bag")
+    # 11.7 item 5.
+    ck.eq("root_word The Hold of", root_word("The Hold of {root}", "dur"), "dur")
+    ck.eq("root_word {root}ford", root_word("{root}ford", "ced"), "cedford")
+    ck.eq("root_word Ny{root} Pit", root_word("Ny{root} Pit", "ash"), "nyash")
+    # 11.7 item 6, hand-made filter.
+    hf = NameFilter(["ab"], ["cd"], ["ef"])
+    for w, exp in (("xaby", True), ("a-by", True), ("xcdy", False), ("xx-cdy", True), ("cd", True), ("ef", True),
+                   ("efx", False), ("x'ef", True)):
+        ck.eq("11.7 item 6 %s" % w, name_filtered(hf, w), exp)
+    # ASSUMPTION (11.7 item 6 reads "XEF (after lower-casing in root_word) yes"): W of a form
+    # "X{root}F" with root "e" is "xef", which no list entry of the item's filter matches (whole
+    # "ef" is not "xef"). The reading taken: the case shows that root_word lower-cases the form's
+    # fused capitals, so a form "E{root}" with root "f" gives W "ef", rejected as whole "ef"
+    # (without the lower-casing the part would be "f").
+    ck.eq("11.7 item 6 XEF as written is not filtered", name_filtered(hf, root_word("X{root}F", "e")), False)
+    ck.eq("11.7 item 6 fused capitals lower-cased by root_word", name_filtered(hf, root_word("E{root}", "f")), True)
+    ck.eq("11.7 item 6 empty filter", any(name_filtered(EMPTY_FILTER, w) for w in ("xaby", "cd", "ef")), False)
+    # 11.7 item 10 (r6): the per-word guard.
+    ck.eq("The Realm of Arthos not filtered", name_filtered(f, root_word("The Realm of {root}", "arthos")), False)
+    # 11.7 item 4 and the r6 fixtures of 11.3 (names_form_text).
+    for form, entry in (("{root}" + "cock", "cock"), ("Shit" + "{root}", "shit"), ("The Scrap" + "yard of {root}",
+                                                                                 "crap"),
+                        ("The Snot" + "ty Court of {root}", "snot")):
+        try:
+            names_form_text(f, {"x": dict(CULTURES["human"], settlement_forms=[form])})
+            ck.eq("names_form_text refuses %s" % form, "passed", "fatal")
+        except FatalError as ex:
+            ck.eq("names_form_text message for %s" % form, str(ex),
+                  "history: culture 'x' settlement_forms[0] '%s' holds the filtered text '%s'" % (form, entry))
+    try:
+        names_form_text(f, {"x": dict(CULTURES["human"], settlement_forms=["{root}ford"])})
+        names_form_text(f, CULTURES)
+        ck.eq("names_form_text passes {root}ford and the shipped forms", True, True)
+    except FatalError as ex:
+        ck.eq("names_form_text passes the shipped forms", str(ex), "")
+    # 11.6 tables.
+    bad = compare_samples(sys.stdout)
+    ck.eq("11.6 sample table under r5", bad, 0)
+    for seed, row in GODS_R5.items():
+        got = [make_name(CULTURES[cid], cid, "god", seed, CULTURE_NUMBER[cid], i + 1, set())[0]
+               for i, cid in enumerate(GOD_RACE_CULTURES)]
+        ck.eq("11.6 gods seed %d" % seed, ", ".join(got), row)
+    for seed, row in REALMS_R5.items():
+        got = tuple(make_name(CULTURES["elven"], "elven", "civilization", seed, 2, e, set())[0] for e in (1, 2))
+        ck.eq("11.6 realms seed %d" % seed, got, row)
+    # 11.7 item 7: r4 reproduced with the empty filter and god_patterns = patterns.
+    saved = list_sha(name_list(0, r4_equivalent_cultures(), EMPTY_FILTER))
+    ck.eq("11.7 item 7 r4 list seed 0 (0.16.0 sha256)", saved,
+          "7b81d85d11630b64f27f7eb16dc9f0815b764a0fc8ee60d506f68686a04942b9")
+    ck.eq("11.7 item 7 r4 list seed 42 (0.16.0 sha256)", list_sha(name_list(42, r4_equivalent_cultures(), EMPTY_FILTER)),
+          "8403dc92b716ecfb7c22bb9589d3e487aecaf08a43ffc81a89a370f0f4f80f4c")
+    # 11.7 item 8.
+    sc = {x[0]: x for x in r5_scenarios()}
+    r = run_scenario(sc["filtered"])
+    ck.eq("item 8 filtered: fallback of the first unfiltered valid attempt", r[0][4], "F")
+    e1 = r[0][3]
+    first = None
+    for t in range(64):
+        v, n, _ = attempt(FILT, "settlement", 0, 1, e1, t, filt=test_filter())
+        if v:
+            first = n
+            break
+    ck.eq("item 8 filtered: the numeral is on the first unfiltered name", r[0][5], first + " II")
+    ck.eq("item 8 redraw: alone = after others", run_scenario(sc["redraw_alone"])[0][4:],
+          run_scenario(sc["redraw_after"])[-1][4:])
+    ck.eq("item 8 redraw: attempt 2", run_scenario(sc["redraw_alone"])[0][4], 2)
+    # Invariant 5 and item 9 on the golden lists.
+    for seed in GOLDEN_SEEDS:
+        for ln in name_list(seed):
+            sd, cid, kind, e, t, name = ln.split(" ", 5)
+            d = CULTURES[cid]
+            ck.eq("invariant 5 %s" % ln, root_filtered_of(d, kind, name), False)
+            if kind == "god" and t != "F":
+                ck.eq("item 9 god parses %s" % ln, god_parses(d, name), True)
+            if kind == "civilization":
+                ck.eq("item 9 no bare realm %s" % ln, " " in name, True)
+
+
+def root_filtered_of(d, kind, name):
+    """Invariant 5 recomputed from a name: some form of the kind reproduces
+    the name (numeral stripped) with a root whose W is filtered."""
+    base = name
+    if " " in name:
+        head, tail = name.rsplit(" ", 1)
+        if tail and all(ch in "IVXLCDM" for ch in tail):
+            base = head
+    hits = []
+    for form in d[kind + "_forms"]:
+        pre, post = form.split("{root}")
+        if len(base) >= len(pre) + len(post) and base.startswith(pre) and base.endswith(post):
+            root = lower(base[len(pre):len(base) - len(post)] if post else base[len(pre):])
+            if root and root_valid(d, root):
+                hits.append(name_filtered(FILTER, root_word(form, root)))
+    return bool(hits) and all(hits)
 
 
 def sweep(count):
@@ -808,6 +1313,10 @@ def sweep(count):
                 for e in range(1, count + 1):
                     n, t = make_name(CULTURES[cid], cid, kind, seed, CULTURE_NUMBER[cid], e, reg)
                     assert name_shape_ok(CULTURES[cid], kind, n), n
+                    if RULES == "r5":
+                        assert not root_filtered_of(CULTURES[cid], kind, n), "invariant 5"
+                        assert kind != "god" or t == "F" or god_parses(CULTURES[cid], n), "god pattern"
+                        assert kind != "civilization" or " " in n, "bare realm"
                     if t == "F":
                         fb += 1
                     else:
@@ -816,7 +1325,14 @@ def sweep(count):
                                  % (seed, cid, kind, len(reg), fb, worst))
 
 
+use_rules("r5")
+
+
 def main(argv):
+    if "--rules" in argv:
+        i = argv.index("--rules")
+        use_rules(argv[i + 1])
+        argv = argv[:i] + argv[i + 2:]
     if len(argv) >= 2 and argv[1] == "check":
         return check_all()
     if len(argv) >= 2 and argv[1] == "golden":
@@ -834,7 +1350,7 @@ def main(argv):
             sys.stdout.write("%s (%d)\n  %s\n  %s\n  %s\n" % (cid, CULTURE_NUMBER[cid], ", ".join(s), "; ".join(v),
                                                               ", ".join(g)))
         bad = compare_samples(sys.stdout)
-        sys.stdout.write("%d differences from spec 5.1\n" % bad)
+        sys.stdout.write("%d differences from spec %s\n" % (bad, "11.6 (r5)" if RULES == "r5" else "5.1"))
         return 1 if bad else 0
     if len(argv) >= 2 and argv[1] == "sweep":
         sweep(int(argv[2]) if len(argv) >= 3 else 2000)

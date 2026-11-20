@@ -124,6 +124,14 @@ Schema race_site_weights_schema() {
     return Schema(std::move(fields));
 }
 
+// P3-01 r8 (generator 0.17.0): record race_cell_weights.
+Schema race_cell_weights_schema() {
+    return Schema(std::vector<Field>{
+        Field::required("ore", Type::integer(0, 1000)),
+        Field::required("height", Type::integer(0, 1000)),
+    });
+}
+
 Schema race_biome_schema() {
     return Schema(std::vector<Field>{
         Field::required("biome", Type::reference(std::string(BIOME_KIND))),
@@ -285,6 +293,17 @@ std::optional<std::string> check_naming_forbidden_nonempty(const Record& r) {
     for (std::size_t i = 0; i < forbidden.size(); ++i) {
         if (forbidden[i].as_string().empty()) {
             return "naming.forbidden[" + uint_text(i) + "] must not be empty";
+        }
+    }
+    return std::nullopt;
+}
+
+// P3-02 r5 11.4: every civilization form holds a word besides {root}.
+std::optional<std::string> check_naming_realm_forms(const Record& r) {
+    const std::vector<Value>& forms = r.get_record("naming").get_array("civilization_forms");
+    for (std::size_t i = 0; i < forms.size(); ++i) {
+        if (forms[i].as_string().find(' ') == std::string::npos) {
+            return "naming.civilization_forms[" + uint_text(i) + "] must hold a word besides {root}";
         }
     }
     return std::nullopt;
@@ -504,6 +523,8 @@ Schema history_peoples_schema() {
         i("ruin_fade_years", 1, 100000),
         i("colony_new_region_salience", 0, 100),
         i("plague_small_salience", 0, 100),
+        i("plague_major_dead", 0, 1000000),   // r6 (generator 0.17.0)
+        i("crisis_small_salience", 0, 100),   // r6 (generator 0.17.0)
     };
     std::vector<Check> checks{
         Check{"peoples_ladder", [](const Record& r) { return check_peoples_ladder(r); }},
@@ -650,6 +671,7 @@ Schema race_schema() {
         Field::required("growth_permille", Type::integer(0, 1000)),
         Field::required("density_permille", Type::integer(1, 1000)),  // P3-05 12.2
         Field::required("site_weights", Type::record(race_site_weights_schema())),
+        Field::required("cell_weights", Type::record(race_cell_weights_schema())),  // P3-01 r8
         Field::required("biomes", Type::array(Type::record(race_biome_schema()), 0, 16)),
         Field::required("upland", Type::integer(-1000, 1000)),
         Field::required("coast", Type::integer(-1000, 1000)),
@@ -689,6 +711,8 @@ Schema culture_naming_schema() {
         Field::required("nuclei", syllables(1, 64)),
         Field::required("codas", syllables(1, 64)),
         Field::required("patterns", Type::array(Type::string(16, name_pattern_grammar()), 1, 16)),
+        // P3-02 r5 11.4 (generator 0.17.0): the shapes of a god's root.
+        Field::required("god_patterns", Type::array(Type::string(16, name_pattern_grammar()), 1, 16)),
         Field::required("min_letters", Type::integer(1, 32)),
         Field::required("max_letters", Type::integer(1, 32)),
         Field::required("forbidden", syllables(0, 32)),
@@ -711,6 +735,7 @@ Schema culture_schema() {
         Check{"naming_nuclei_nonempty", [](const Record& r) { return check_naming_nuclei_nonempty(r); }},
         Check{"naming_letters_ordered", [](const Record& r) { return check_naming_letters_ordered(r); }},
         Check{"naming_forbidden_nonempty", [](const Record& r) { return check_naming_forbidden_nonempty(r); }},
+        Check{"naming_realm_forms", [](const Record& r) { return check_naming_realm_forms(r); }},  // P3-02 r5
     };
     return Schema(std::move(fields), std::move(checks));
 }

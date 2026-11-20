@@ -18,10 +18,26 @@
 #include <utility>
 #include <vector>
 
+#include "p3_08_switch.hpp"
 #include "worldgen/data/content.hpp"
 #include "worldgen/data/schema.hpp"
 
 namespace region_data {
+
+// P1-06 4 (r3): the two name records, added to the shipped file and the
+// fixtures with the implementation (generator 0.17.0); the 0.16.0 loader
+// refuses them, so they are in the text only with the P3-08 API.
+#define UNMAPPED_P1_06_R3_POOLS                                                                                     \
+    "name_pool_weights = { nouns = [0, 1, 0], suffixes = [0, 4, 1], prefixes = [6, 3, 2], adjectives = [6, 3, 2], " \
+    "features = [5, 1, 2], possessors = [8, 1, 1], places = [8, 1, 1], objects = [6, 3, 2] }"
+#define UNMAPPED_P1_06_R3_TRAITS                                                                                    \
+    "{ coast_cells = 128, river_class = 7, lake_permille = 125, high_mean_m = 400, ore_rich_cells = 1000, "         \
+    "barren_hab_max = 20, fertile_min = 200 }"
+#if UNMAPPED_P3_08_API
+#define UNMAPPED_P1_06_R3_LINES UNMAPPED_P1_06_R3_POOLS "\nname_traits = " UNMAPPED_P1_06_R3_TRAITS "\n"
+#else
+#define UNMAPPED_P1_06_R3_LINES ""
+#endif
 
 // P1-06 4, the shipped file and the fixtures' (identical).
 inline constexpr std::string_view TUNING_TOML =
@@ -41,7 +57,7 @@ inline constexpr std::string_view TUNING_TOML =
     "names = { central = \"Central\", north = \"North\", northeast = \"Northeast\", east = \"East\", southeast = "
     "\"Southeast\", south = \"South\", southwest = \"Southwest\", west = \"West\", northwest = \"Northwest\", isle = "
     "\"Isle\", upland = \"Fells\" }\n"
-    "upland_own_noun = [\"alpine\", \"heath\", \"highland_moor\"]\n";
+    "upland_own_noun = [\"alpine\", \"heath\", \"highland_moor\"]\n" UNMAPPED_P1_06_R3_LINES;
 
 // The test-only tuning of P1-06 10.2 for N = 128 worlds: tiles of 256 m,
 // seeds 400 m apart, regions of at least 65536 m^2 (256 cells).
@@ -62,7 +78,7 @@ inline constexpr std::string_view TEST128_TOML =
     "names = { central = \"Central\", north = \"North\", northeast = \"Northeast\", east = \"East\", southeast = "
     "\"Southeast\", south = \"South\", southwest = \"Southwest\", west = \"West\", northwest = \"Northwest\", isle = "
     "\"Isle\", upland = \"Fells\" }\n"
-    "upland_own_noun = [\"alpine\", \"heath\", \"highland_moor\"]\n";
+    "upland_own_noun = [\"alpine\", \"heath\", \"highland_moor\"]\n" UNMAPPED_P1_06_R3_LINES;
 
 // The fields of 4 in declaration order with their shipped TOML text, their
 // kind ("int", "fx", "fbm" or "names") and their bounds as written in 4
@@ -96,6 +112,11 @@ inline const std::vector<FieldText>& tuning_fields() {
         {"name_central_frac", "\"0.12\"", "fx", "0", "0.5"},
         {"names", SHIPPED_NAMES_TOML, "names", "", ""},
         {"upland_own_noun", "[\"alpine\", \"heath\", \"highland_moor\"]", "keys", "", ""},  // r2
+#if UNMAPPED_P3_08_API
+        // r3 (generator 0.17.0): records name_pools and name_traits.
+        {"name_pool_weights", std::string_view(UNMAPPED_P1_06_R3_POOLS).substr(20), "pools", "", ""},
+        {"name_traits", UNMAPPED_P1_06_R3_TRAITS, "traits", "", ""},
+#endif
     };
     return f;
 }

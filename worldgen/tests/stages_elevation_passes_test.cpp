@@ -981,7 +981,7 @@ const std::vector<std::uint64_t>& coverage_seeds() {
 void check_coverage(const Coverage& cov) {
     for (const char* rule : {"coast", "barrier", "side", "chord", "tarn_crossing", "col_tarn", "summit_top", "zone_p90",
                              "feet", "shoulders", "site"}) {
-        CAPTURE(rule);
+        CAPTURE(std::string_view(rule));
         CHECK(cov.rules.count(rule) == 1U);
     }
     CHECK(cov.rules.count("along_divide") + cov.rules.count("along_crest") >= 1U);  // rule (e)

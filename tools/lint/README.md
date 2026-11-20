@@ -76,6 +76,7 @@ reason it is safe.
 | `std-hash` | `std::hash` | library, CLI |
 | `unordered-container` | `std::unordered_map/set/multimap/multiset` (also `std::pmr::`) | library, CLI |
 | `locale` | calls of `setlocale(`; `std::locale`; `.imbue(` / `->imbue(` | library, CLI |
+| `ctype` | `#include` of `<cctype>`, `<ctype.h>`, `<cwctype>`, `<wctype.h>`; calls of `isalpha(`, `isdigit(`, `isspace(`, `islower(`, `isupper(`, ... `tolower(`, `toupper(` and the wide forms (`iswalpha(`, `towlower(`, `wctype(`, ...), free, `std::` or `::`. They follow the C locale's `LC_CTYPE`, and a negative `char` (a byte of 0x80 or more where `char` is signed) is undefined behaviour; compare explicit ASCII ranges instead (added by the P3-08 audit) | library, CLI |
 | `long-type` | `long`, `unsigned long`, `signed long`, `long int` (not `long long`; `long double` is `float-type`) | library, CLI |
 | `wchar-type` | `wchar_t` | library, CLI |
 | `wide-int-type` | `__int128`, `__uint128_t`, `_umul128`, `_mul128`, `_udiv128`, `_div128`, `__umulh`, `__mulh` | library and CLI except `worldgen/src/core/wide.cpp` |
@@ -232,7 +233,7 @@ but `history-sequential-rng`, `history-live-iteration` and `history-held-referen
 
 | File | Checks |
 | --- | --- |
-| `bad_constructs.cpp` | every P0-01 rule fires on its constructs; also `int-abs`, `packed-bool` and `pointer-order` (with near misses: a pointer as mapped value, an array of pointers, `std::less` of an integer) |
+| `bad_constructs.cpp` | every P0-01 rule fires on its constructs; also `ctype`, `int-abs`, `packed-bool` and `pointer-order` (with near misses: a pointer as mapped value, an array of pointers, `std::less` of an integer) |
 | `bad_suppressions.cpp` | valid suppressions silence; malformed, reasonless, unknown-rule and unused ones are reported |
 | `bad_concurrency.cpp` | `thread`, `shared-state`, `thread-identity`, `hardware-concurrency`, `unordered-reduction`, `heap-order` (and a suppressed heap) |
 | `bad_platform_io.cpp` | `fp-pragma`, `environment`, `directory-iteration`, `number-text`, `stream-format`, `sqlite-value-type`, `unchecked-write`, `two-draws` |
@@ -244,7 +245,7 @@ but `history-sequential-rng`, `history-live-iteration` and `history-held-referen
 | `bad_flags.cmake` | `cmake-fp-flag`, with comments and allowed flags as near misses |
 | `toml_config/` | `toml-config`: a guard and a CMake fixture with one macro missing and one wrong (a source without a guard must also fail) |
 | `good_ignored.cpp` | comments, string/char/raw literals, digit separators, `long long`, identifiers containing banned words, member and other-namespace functions, declarations, the project's own functions |
-| `good_new_ignored.cpp` | the same for the P1 rules: banned names in comments and literals, identifiers that contain them, members, used write results, one draw per statement, sequenced draws and draws on two generators; the project's `Fx` `abs` (unqualified and namespaced), members and other namespaces' `abs`/`labs`, `std::vector<std::uint8_t>` and other namespaces' `vector<bool>` |
+| `good_new_ignored.cpp` | the same for the P1 rules and `ctype` (the project's `to_lower` and `is_lower`, a member `tolower`, another namespace's `toupper`): banned names in comments and literals, identifiers that contain them, members, used write results, one draw per statement, sequenced draws and draws on two generators; the project's `Fx` `abs` (unqualified and namespaced), members and other namespaces' `abs`/`labs`, `std::vector<std::uint8_t>` and other namespaces' `vector<bool>` |
 | `good_wide_allowlisted.cpp` | `__int128` is allowed in `wide.cpp`; other rules still apply |
 | `good_parallel_allowlisted.cpp` | threads and atomics are allowed in `parallel.cpp`; thread identity, `hardware_concurrency` and other rules still apply |
 | `good_cli_scope.cpp` | as CLI code: `getenv` and SQL text are not reported; threads, `number-text` and `unchecked-write` are; suppressed `<thread>` and `hardware_concurrency` |

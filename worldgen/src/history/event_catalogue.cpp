@@ -116,6 +116,13 @@ EventCatalogue build_compiled() {
                               {"years"}, 0, {}});
     c.kinds.push_back(KindDef{29, "region_ceded", true, 1, 0, two("from", "to"), {}, 0, {}});
     c.kinds.push_back(KindDef{30, "civ_conquered", true, 1, 0, two("civilization", "conqueror"), {}, 0, {}});
+    // P3-05 r6 section 11 (generator 0.17.0): kind 31, an abandonment whose
+    // survivors reached another settlement.
+    c.kinds.push_back(KindDef{31, "settlement_abandoned_to", true, 1, 1,
+                              {role(1, "settlement", EntityType::settlement, 1, 1),
+                               role(2, "civilization", EntityType::civilization, 1, 1),
+                               role(3, "destination", EntityType::settlement, 1, 1)},
+                              {"settled", "lost"}, 0, {}});
     return c;
 }
 
@@ -171,6 +178,8 @@ struct Token {
     Form form = Form::name;     // role
     std::string word_one;       // choice: the word for 1
     std::string word_other;     // choice: the word otherwise
+    std::string word_zero;      // three-word choice (r10): the word for 0
+    bool three = false;         // three-word choice: w0 | w1 | w2, '#' is the value
 };
 
 struct Parsed {
@@ -209,15 +218,36 @@ std::optional<std::string> classify(const KindDef& kind, std::string_view body, 
     if (const std::size_t q = body.find('?'); q != std::string_view::npos) {
         const std::string_view name = body.substr(0, q);
         const std::string_view rest = body.substr(q + 1);
-        const std::size_t bar = rest.find('|');
-        if (bar == std::string_view::npos || kind.value_seq(name) == 0 || !is_word(rest.substr(0, bar)) ||
-            !is_word(rest.substr(bar + 1))) {
+        // Two words w1|w2, or (r10) three words w0|w1|w2; more bars are unknown.
+        std::vector<std::string_view> words;
+        std::size_t from = 0;
+        while (true) {
+            const std::size_t bar = rest.find('|', from);
+            words.push_back(rest.substr(from, bar == std::string_view::npos ? std::string_view::npos : bar - from));
+            if (bar == std::string_view::npos) {
+                break;
+            }
+            from = bar + 1;
+        }
+        if (words.size() < 2U || words.size() > 3U || kind.value_seq(name) == 0) {
             return unknown;
+        }
+        for (const std::string_view w : words) {
+            if (!is_word(w)) {
+                return unknown;
+            }
         }
         out.type = TokenType::choice;
         out.text = std::string(name);
-        out.word_one = std::string(rest.substr(0, bar));
-        out.word_other = std::string(rest.substr(bar + 1));
+        if (words.size() == 3U) {
+            out.three = true;
+            out.word_zero = std::string(words[0]);
+            out.word_one = std::string(words[1]);
+            out.word_other = std::string(words[2]);
+        } else {
+            out.word_one = std::string(words[0]);
+            out.word_other = std::string(words[1]);
+        }
         return std::nullopt;
     }
     std::string_view name = body;
@@ -265,7 +295,9 @@ Parsed parse_template(const KindDef& kind, std::string_view t) {
     std::string literal;
     const auto flush = [&] {
         if (!literal.empty()) {
-            p.tokens.push_back(Token{TokenType::literal, std::move(literal), Form::name, {}, {}});
+            Token token;
+            token.text = std::move(literal);
+            p.tokens.push_back(std::move(token));
             literal.clear();
         }
     };
@@ -785,6 +817,18 @@ std::string render_event(const HistoryView& view, std::int64_t event_id) {
         return e->values[static_cast<std::size_t>(seq - 1)];  // every value present (HistoryView::load)
     };
     std::string out;
+    // r10 (P1-06 r3 14.7): a name's leading "The " is written "the " unless
+    // the name is appended at a sentence start (offset 0 or after ". ").
+    const auto append_name = [&out](const std::string& name) {
+        constexpr std::string_view THE = "The ";
+        const bool sentence_start = out.empty() || (out.size() >= 2U && out.compare(out.size() - 2U, 2U, ". ") == 0);
+        if (!sentence_start && name.size() >= THE.size() && name.compare(0, THE.size(), THE) == 0) {
+            out += "the ";
+            out.append(name, THE.size(), std::string::npos);
+        } else {
+            out += name;
+        }
+    };
     for (const Token& t : parsed.tokens) {
         switch (t.type) {
             case TokenType::literal: out += t.text; break;
@@ -801,18 +845,38 @@ std::string render_event(const HistoryView& view, std::int64_t event_id) {
                         if (i > 0) {
                             out += i + 1 == ps.size() ? " and " : ", ";
                         }
-                        out += name_of(*ps[i], Form::name);
+                        append_name(name_of(*ps[i], Form::name));
                     }
                 } else {
                     if (ps.empty()) {
                         fail(at + "no participant with role '" + t.text + "'");
                     }
-                    out += name_of(*ps.front(), t.form);
+                    if (t.form == Form::name) {
+                        append_name(name_of(*ps.front(), t.form));
+                    } else {
+                        out += name_of(*ps.front(), t.form);  // race words are copied as they are
+                    }
                 }
                 break;
             }
             case TokenType::value: out += int_text(value_of(t.text)); break;
-            case TokenType::choice: out += value_of(t.text) == 1 ? t.word_one : t.word_other; break;
+            case TokenType::choice: {
+                const std::int64_t v = value_of(t.text);
+                if (!t.three) {
+                    out += v == 1 ? t.word_one : t.word_other;
+                    break;
+                }
+                // r10: w0 for 0, w1 for 1, w2 otherwise; '#' is the value.
+                const std::string& word = v == 0 ? t.word_zero : v == 1 ? t.word_one : t.word_other;
+                for (const char c : word) {
+                    if (c == '#') {
+                        out += int_text(v);
+                    } else {
+                        out += c;
+                    }
+                }
+                break;
+            }
             case TokenType::year: out += int_text(e->row.year); break;
             case TokenType::end_year: out += int_text(e->row.end_year); break;
             case TokenType::region: {
@@ -820,7 +884,7 @@ std::string render_event(const HistoryView& view, std::int64_t event_id) {
                 if (s == nullptr) {
                     fail(at + "no region " + int_text(e->row.region));
                 }
-                out += *s;
+                append_name(*s);
                 break;
             }
             case TokenType::settlement: {
@@ -828,7 +892,7 @@ std::string render_event(const HistoryView& view, std::int64_t event_id) {
                 if (s == nullptr) {
                     fail(at + "no settlement " + int_text(e->row.settlement));
                 }
-                out += *s;
+                append_name(*s);
                 break;
             }
         }

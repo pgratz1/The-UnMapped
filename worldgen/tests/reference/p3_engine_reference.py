@@ -83,8 +83,8 @@ FatalError = cr.FatalError
 M64 = (1 << 64) - 1
 REPO = os.path.normpath(os.path.join(_HERE, "..", "..", ".."))
 GOLDEN = os.path.join(REPO, "worldgen", "tests", "golden", "p3-04-engine.txt")
-DEFAULT_INPUTS = os.path.join(os.path.expanduser("~"), ".cache", "the-unmapped", "out", "p3-04-tests", "inputs")
-GENERATOR_VERSION = "0.16.0"  # P3-06: the 0.16.0 catalogue (30 kinds) and report data
+DEFAULT_INPUTS = os.path.join(os.path.expanduser("~"), ".cache", "the-unmapped", "out", "p3-08-tests", "inputs")
+GENERATOR_VERSION = "0.17.0"  # P3-08: the catalogue of 31 kinds, r10 rendering and quiet eras
 SCHEMA_VERSION = 7
 
 
@@ -194,6 +194,11 @@ def spec_engine():
 
 
 def spec_report():
+    """The history.report listing of the active version: 0.16.0's is REPORT_TOML (and
+    p3_data_reference's 0.16.0 listing); from 0.17.0 the data reference's listing,
+    derived from it by the template edits of P3-04 r10 4.2, P3-05 r6 11 and P3-06 r7 11."""
+    if ENGINE_VERSION == "0.17.0":
+        return [(e["kind"], e["salience"], e["template"]) for e in pdr.parsed_spec("history")["report"]["events"]]
     return [(e["kind"], e["salience"], e["template"]) for e in tomllib.loads(REPORT_TOML)["history"]["report"]["events"]]
 
 
@@ -260,6 +265,43 @@ COMPILED = (
     kind_def(29, "region_ceded", 1, 1, 0, (("from", CIV, 1, 1), ("to", CIV, 1, 1)), ()),
     kind_def(30, "civ_conquered", 1, 1, 0, (("civilization", CIV, 1, 1), ("conqueror", CIV, 1, 1)), ()),
 )
+# P3-05 r6 11 (generator 0.17.0): kind 31, caused, region_use and
+# settlement_use 1, every count 1-1.
+KIND_31 = kind_def(31, "settlement_abandoned_to", 1, 1, 1, (("settlement", SETTLEMENT, 1, 1),
+                                                            ("civilization", CIV, 1, 1),
+                                                            ("destination", SETTLEMENT, 1, 1)), ("settled", "lost"))
+COMPILED_016 = COMPILED
+COMPILED_017 = COMPILED + (KIND_31,)
+
+# P3-04 r10 (generator 0.17.0, P3-08), each switchable so that the 0.16.0
+# goldens can still be reproduced (use_version("0.16.0")):
+#   RENDER_R10      8.4/8.5: the three-word value form {v?w0|w1|w2} with #,
+#                   and a leading "The " of a name lower-cased mid-sentence;
+#   QUIET_ERA_R10   6.6: events charged to a civilization do not close its
+#                   era (one era per civilization and quiet phase row). The
+#                   stub engine charges no event, so only the subsystems'
+#                   quiet_step (P3-05, P3-06 references) read it.
+RENDER_R10 = True
+QUIET_ERA_R10 = True
+ENGINE_VERSION = None
+
+
+def use_version(v):
+    """Serve generator v's rules and data: "0.17.0" (default; P3-08) or
+    "0.16.0" (the catalogue of 30 kinds, r9 rendering and quiet eras, the
+    0.16.0 data and P3-02 r4 names). Clears the cached data roots."""
+    global COMPILED, RENDER_R10, QUIET_ERA_R10, GENERATOR_VERSION, ENGINE_VERSION
+    if v not in ("0.16.0", "0.17.0"):
+        raise ValueError(v)
+    new = v == "0.17.0"
+    COMPILED = COMPILED_017 if new else COMPILED_016
+    RENDER_R10 = QUIET_ERA_R10 = new
+    GENERATOR_VERSION = v
+    ENGINE_VERSION = v
+    pdr.use_version(v)
+    pnr.use_rules("r5" if new else "r4")
+    pchr._SHIPPED = None
+    _DATA.clear()
 
 
 P3_06_KEYS = ['claim', 'war_declared', 'battle', 'battle_at_pass', 'siege', 'sacked', 'settlement_captured',
@@ -316,10 +358,10 @@ def placeholder_problem(kind, body, at):
         return unknown
     if "?" in body:
         v, rest = body.split("?", 1)
-        if v not in values or rest.count("|") != 1:
+        bars = rest.count("|")
+        if v not in values or not (bars == 1 or (bars == 2 and RENDER_R10)):
             return unknown
-        w1, w2 = rest.split("|")
-        if not (_is_word(w1) and _is_word(w2)):
+        if not all(_is_word(w) for w in rest.split("|")):
             return unknown
         return None
     if "|" in body:
@@ -436,6 +478,15 @@ def render(view, eid):
         return [(t, x) for (_s, rs, t, x) in parts if rs == role_seq[role]]
 
     out = []
+
+    def put_name(nm):
+        # 8.5 r10: a leading "The " of a name appended mid-sentence becomes "the ".
+        if RENDER_R10 and nm.startswith("The "):
+            so_far = "".join(out)
+            if not (so_far == "" or so_far.endswith(". ")):
+                nm = "the " + nm[4:]
+        out.append(nm)
+
     b = templ
     i = 0
     n = len(b)
@@ -461,13 +512,17 @@ def render(view, eid):
         elif body == "@end_year":
             out.append(str(ev["end_year"]))
         elif body == "@region":
-            out.append(view["name"](REGION, ev["region"], "name"))
+            put_name(view["name"](REGION, ev["region"], "name"))
         elif body == "@settlement":
-            out.append(view["name"](SETTLEMENT, ev["settlement"], "name"))
+            put_name(view["name"](SETTLEMENT, ev["settlement"], "name"))
         elif "?" in body:
             v, rest = body.split("?", 1)
-            w1, w2 = rest.split("|")
-            out.append(w1 if ev["values"][val_seq[v]] == 1 else w2)
+            ws = rest.split("|")
+            x = ev["values"][val_seq[v]]
+            if len(ws) == 3:   # r10: w0 for 0, w1 for 1, w2 otherwise; # is the value in the chosen word
+                out.append((ws[0] if x == 0 else ws[1] if x == 1 else ws[2]).replace("#", str(x)))
+            else:
+                out.append(ws[0] if x == 1 else ws[1])
         else:
             role, form = (body.split(":", 1) + ["name"])[:2] if ":" in body else (body, None)
             if form is None:
@@ -478,7 +533,14 @@ def render(view, eid):
                     continue
             ps = of_role(role)
             if form == "all":
-                out.append(join_all([view["name"](t, x, "name") for t, x in ps]))
+                # each name judged at the offset where it is appended (8.5 r10)
+                for k, (t, x) in enumerate(ps):
+                    if k > 0:
+                        out.append(" and " if k == len(ps) - 1 else ", ")
+                    put_name(view["name"](t, x, "name"))
+            elif form == "name":
+                t, x = ps[0]
+                put_name(view["name"](t, x, form))
             else:
                 t, x = ps[0]
                 out.append(view["name"](t, x, form))
@@ -1460,12 +1522,35 @@ TEMPLATE_CASES = (
     ("test_optional", "{@settlement}"),
     ("test_optional", "{actor:plural}"),
 )
+# r10 (P3-04 16.1 item 10): the three-word form is valid, four words are not;
+# # is an ordinary byte. Appended only from 0.17.0, so 0.16.0 stays reproducible.
+TEMPLATE_CASES_R10 = (
+    ("flare_up", "{years?|one|#}"),
+    ("flare_up", "{years?none|one|# of them|}"),
+    ("flare_up", "{years?a|b|c|d}"),
+    ("flare_up", "{years?a#|b#|c#}"),
+    ("flare_up", "{years?x{y|b|c}"),
+    ("quiet_era", "{civilization} passed {years} quiet {years?year|years}, from {@year} to {@end_year}"
+                  "{generations?, under one generation of rulers|, in which one new generation of rulers came to power"
+                  "|, in which # new generations of rulers came to power}."),
+    ("quiet_era", "{nothing?a|b|c}"),
+)
+
+
+def template_cases():
+    return TEMPLATE_CASES + (TEMPLATE_CASES_R10 if ENGINE_VERSION == "0.17.0" else ())
 
 
 def template_kind(key):
     return TEST_KIND if key == "test_optional" else find_kind(COMPILED, key)
 
 
+HEADER_017 = """\
+# P3-04 engine golden vectors for generator 0.17.0 (schema 7; P3-08): the stub engine (run_engine
+# with the stub configuration) on the 0.17.0 catalogue of 31 kinds (P3-05 11 and r6, P3-06 11),
+# with P3-04 r10 (names inside a sentence, the three-word value form, the quiet_era template of
+# 4.2, one quiet era per civilization and quiet row), P3-02 r5 names (filter, god patterns, the
+# elven House form) and P1-06 r3 region names (the input worlds' table region). Spec"""
 HEADER = """\
 # P3-04 engine golden vectors for generator 0.16.0 (schema 7): the stub engine (run_engine with
 # the stub configuration) on the 0.16.0 catalogue of 30 kinds (P3-05 11, P3-06 11). Spec
@@ -1545,7 +1630,10 @@ HEADER = """\
 
 def golden_text(inputs):
     dat = data()
-    o = [HEADER.rstrip("\n")]
+    head = HEADER.rstrip("\n")
+    if ENGINE_VERSION == "0.17.0":
+        head = HEADER_017 + "\n" + "\n".join(head.splitlines()[2:])
+    o = [head]
     for seed in SEAM_SEEDS:
         for span in SEAM_SPANS:
             for detail in DETAILS:
@@ -1580,7 +1668,7 @@ def golden_text(inputs):
         res = world_case("example-42-1024", 42, 1024, 6000, "all", "normal", inputs, t)
         o.append("world %s 42 1024 6000 all normal %s" % (name, t.label().replace(" ", "")))
         o += world_lines(name, res)
-    for key, text in TEMPLATE_CASES:
+    for key, text in template_cases():
         b = text.encode("latin-1")
         p = template_problem(template_kind(key), b)
         o.append("template %s %s %s" % (key, b.hex() if b else "-", p if p is not None else "ok"))
@@ -1829,6 +1917,120 @@ def check_example(c, inputs):
     c.eq("17 ft500 flare sentence", st[4], "In 500 tensions flared into 50 years of upheaval.")
 
 
+OLD_INPUTS = os.path.join(os.path.expanduser("~"), ".cache", "the-unmapped", "out", "p3-04-tests", "inputs")
+
+
+def check_example_r10(c, inputs):
+    """17 and 8.5 at 0.17.0 (r10; P1-06 r3 region names, P3-02 r5 names):
+    seed 42 at 1024. ASSUMPTION (spec contradiction): P3-04 r10 8.5's example
+    keeps the elven realm `Finen`, but P3-02 r5 11.4 gives the elves' third
+    civilization form as `The House of {root}` (the form index is kept, 11.4:
+    `Nife` -> `The House of Nife`), so the realm is `The House of Finen` and
+    the example's second to fourth sentences read with it; the reference
+    follows P3-02 r5 and the r10 renderer (`founded the House of Finen`)."""
+    path = os.path.join(inputs, "example-42-1024.db")
+    if not os.path.exists(path):
+        print("note: %s missing; the r10 world part of 17 is not checked" % path)
+        return
+    res = world_case("example-42-1024", 42, 1024, 6000, "all", "normal", inputs)
+    w = res["_world"]
+    c.eq("r10 17 homes", [x["home_region"] for x in w.civs], [12, 10, 14, 30, 18, 4])
+    regname = {r["id"]: r["name"] for r in res["_inputs"].regions}
+    c.eq("r10 region 12 (P1-06 r3, P3-04 r10 8.5)", regname[12], "Witchgate Barrows")
+    c.eq("r10 region 10 (P1-06 5.1 Knelldown)", regname[10], "Knelldown")
+    c.eq("r10 civ names (P3-02 r5: The House of)", [x["name"] for x in w.civs],
+         ["The House of Finen", "The Skib Horde", "The Kaindnimm Throne", "The Circle of Fysoli",
+          "The Kingdom of Alird", "The Warband of Baaldkrok"])
+    c.eq("r10 17 events", len(res["event"]), 33)
+    st = sentences(res, res["_inputs"])
+    c.eq("r10 8.5 first sentences", st[:4], [
+        "Fielie awakened the Elves in Witchgate Barrows.",
+        "The Elves founded the House of Finen in Witchgate Barrows.",
+        "The House of Finen founded Voeledell in Witchgate Barrows.",
+        "The House of Finen passed 1924 quiet years, from 150 to 2073, in which 12 new generations of rulers came to "
+        "power."])
+    c.eq("r10 11.1 example", report_lines(res, 6000)[12:14], ["events_quiet_era = 15", "events_flare_up = 0"])
+    c.eq("r10 11.1 kind 31 key", "events_settlement_abandoned_to = 0" in report_lines(res, 6000), True)
+
+
+def check_render_r10(c):
+    """P3-04 16.1 item 10 (r10) in the reference: the three-word form and
+    names inside a sentence, on hand-made views (the examples of 8.5 and of
+    P1-06 r3 14.7)."""
+    names = {}
+
+    def view_of(kind_key, templ, parts, values=None, region=0, settlement=0, kind=None):
+        k = dict(kind or find_kind(COMPILED, kind_key), templ=templ)
+        return dict(catalogue={k["id"]: k}, name=lambda t, x, form: names[(t, x)],
+                    events={1: dict(year=10, end_year=12, kind=k["id"], region=region, settlement=settlement,
+                                    participants=parts, values=values or {})})
+
+    def r(*a, **kw):
+        return render(view_of(*a, **kw), 1)
+    # three-word form: 0, 1, 2, -1; # replaced in the chosen word only; # kept in the two-word form
+    for v, want in ((0, "x."), (1, "x and one fled."), (2, "x and 2 fled."), (-1, "x and -1 fled."),
+                    (12, "x and 12 fled.")):
+        c.eq("r10 three-word %d" % v, r("flare_up", "x{years?| and one fled| and # fled}.", [], {1: v}), want)
+    c.eq("r10 # in w0 and w1 replaced too", [r("flare_up", "{years?#a|#b|#c}", [], {1: v}) for v in (0, 1, 5)],
+         ["0a", "1b", "5c"])
+    c.eq("r10 # kept in the two-word form", [r("flare_up", "{years?#|##}", [], {1: v}) for v in (1, 3)], ["#", "##"])
+    c.eq("r10 four words unknown", template_problem(find_kind(COMPILED, "flare_up"), "{years?a|b|c|d}"),
+         "unknown placeholder '{years?a|b|c|d}' at byte 0")
+    # names inside a sentence
+    names.update({(GOD, 1): "Fielie", (RACE, 1): None, (REGION, 5): "The Scarred Downs", (CIV, 1): "The Skib Horde",
+                  (CIV, 2): "The Hold of Durgarin", (REGION, 6): "The Grove of the Hunt", (CIV, 3): "The Court of Saene",
+                  (CIV, 4): "The Warrens of Bonk-Gitch", (REGION, 7): "West Wood", (CIV, 5): "Clan Durgarin",
+                  (SETTLEMENT, 8): "Makmoudin Deep", (REGION, 9): "The Ashen Downs", (CIV, 6): "Thebes",
+                  (CIV, 7): "There Hollow", (CIV, 8): "The", (CIV, 9): "THE Mob", (CIV, 10): "The A",
+                  (CIV, 11): "The B", (CIV, 12): "The C"})
+    racef = dict(name="Elf", plural="Elves", adjective="Elven")
+    gob = dict(name="Goblin", plural="Goblins", adjective="Goblin")
+
+    def nm(t, x, form):
+        if t == RACE:
+            return (racef if x == 1 else gob)[form]
+        return names[(t, x)]
+
+    def rr(kind_key, templ, parts, values=None, region=0, settlement=0, kind=None):
+        v = view_of(kind_key, templ, parts, values, region, settlement, kind)
+        v["name"] = nm
+        return render(v, 1)
+    c.eq("r10 8.5 awakening", rr("awakening", "{creator} awakened the {race:plural} in {@region}.",
+                                 [(1, 1, RACE, 1), (2, 2, GOD, 1)], region=5),
+         "Fielie awakened the Elves in the Scarred Downs.")
+    c.eq("r10 8.5 war", rr("war_declared", "{attacker} declared war on {defender} over {@region}.",
+                           [(1, 1, CIV, 1), (2, 2, CIV, 2)], region=6),
+         "The Skib Horde declared war on the Hold of Durgarin over the Grove of the Hunt.")
+    c.eq("r10 8.5 literal The", rr("civ_founded", "The {race:plural} founded {civilization} in {@region}.",
+                                   [(1, 1, CIV, 4), (2, 2, RACE, 2)], region=7),
+         "The Goblins founded the Warrens of Bonk-Gitch in West Wood.")
+    c.eq("r10 8.5 truce", rr("truce", "{parties:all} made peace after {years} {years?year|years} of war, neither "
+                                      "the victor.", [(1, 1, CIV, 1), (2, 1, CIV, 3)], {1: 12}),
+         "The Skib Horde and the Court of Saene made peace after 12 years of war, neither the victor.")
+    c.eq("r10 14.7 sentence start", rr("civ_ended", "{civilization} came to an end.", [(1, 1, CIV, 1)]),
+         "The Skib Horde came to an end.")
+    c.eq("r10 14.7 siege", rr("siege", "{attacker} besieged {@settlement} of {defender}; it {fell?fell|held}.",
+                              [(1, 1, CIV, 5), (2, 2, CIV, 4)], {1: 1}, settlement=8),
+         "Clan Durgarin besieged Makmoudin Deep of the Warrens of Bonk-Gitch; it fell.")
+    c.eq("r10 14.7 claim", rr("claim", "{claimant} laid claim to {@region}, held by {holder}.",
+                              [(1, 1, CIV, 5), (2, 2, CIV, 3)], region=9),
+         "Clan Durgarin laid claim to the Ashen Downs, held by the Court of Saene.")
+    for cid, want in ((6, "x Thebes"), (7, "x There Hollow"), (8, "x The"), (9, "x THE Mob")):
+        c.eq("r10 unchanged %s" % want, rr("civ_ended", "x {civilization}", [(1, 1, CIV, cid)]), want)
+    c.eq("r10 after '. ' keeps the capital", rr("civ_ended", "It ended. {civilization} was no more.",
+                                               [(1, 1, CIV, 1)]), "It ended. The Skib Horde was no more.")
+    for sep in (": ", "; ", "(", ", ", "x and "):
+        c.eq("r10 after %r lower-cased" % sep, rr("civ_ended", "a" + sep + "{civilization}", [(1, 1, CIV, 1)]),
+             "a" + sep + "the Skib Horde")
+    tk = dict(find_kind(COMPILED, "truce"), roles=[dict(seq=1, role="parties", type=CIV, min=0, max=9)])
+    c.eq("r10 :all at the start", rr("truce", "{parties:all} met.", [(1, 1, CIV, 10), (2, 1, CIV, 11), (3, 1, CIV, 12)],
+                                     {1: 1}, kind=tk), "The A, the B and the C met.")
+    c.eq("r10 :all mid-sentence", rr("truce", "Met: {parties:all}.", [(1, 1, CIV, 10), (2, 1, CIV, 11),
+                                                                     (3, 1, CIV, 12)], {1: 1}, kind=tk),
+         "Met: the A, the B and the C.")
+    c.eq("r10 stored names unchanged", names[(CIV, 1)], "The Skib Horde")
+
+
 def check_templates(c):
     k = find_kind(COMPILED, "awakening")
     c.eq("t ok", template_problem(k, "{creator} awakened the {race:plural} in {@region}."), None)
@@ -1852,7 +2054,8 @@ def check_templates(c):
         "events[2]: kind 'awakening' is already listed at events[0]",
         "events[3]: template: unclosed placeholder at byte 0",
         "events[4]: template: the template is empty",
-        "event kind 'flare_up' has no entry"] + ["event kind '%s' has no entry" % k for k in P3_05_KEYS + P3_06_KEYS])
+        "event kind 'flare_up' has no entry"] + ["event kind '%s' has no entry" % k for k in P3_05_KEYS + P3_06_KEYS
+                                                 + (["settlement_abandoned_to"] if ENGINE_VERSION == "0.17.0" else [])])
     # rendering on a hand-made view: :all with 0..3, ? with 0, 1, 2
     cat = {99: dict(TEST_KIND, region_use=1, templ="[{actor:all}] {people:plural}/{people:adjective}/{people} at {@region}: "
                                      "{count} {count?thing|things} {{ok}} {@year}-{@end_year}")}
@@ -2005,8 +2208,17 @@ def cmd_check(argv):
     check_data(c)
     check_scale(c)
     check_edges(c)
-    check_example(c, inputs)
+    # 17 as written (generator 0.14.0 to 0.16.0): the 0.16.0 rules on the 0.16.0 inputs.
+    saved = ENGINE_VERSION
+    use_version("0.16.0")
+    try:
+        check_example(c, OLD_INPUTS)
+        check_templates(c)
+    finally:
+        use_version(saved)
+    check_example_r10(c, inputs)
     check_templates(c)
+    check_render_r10(c)
     check_relation_bookkeeping(c)
     check_entry(c)
     check_stub_sets(c)
@@ -2169,7 +2381,14 @@ def cmd_check_world(argv):
     return 1 if c.failures else 0
 
 
+use_version("0.17.0")
+
+
 def main(argv):
+    if "--version" in argv:
+        i = argv.index("--version")
+        use_version(argv[i + 1])
+        argv = argv[:i] + argv[i + 2:]
     if not argv:
         print(__doc__)
         return 2

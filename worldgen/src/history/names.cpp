@@ -3,7 +3,11 @@
 #include "worldgen/history/names.hpp"
 
 #include <optional>
+#include <string>
 #include <utility>
+
+#include "worldgen/data/schema.hpp"
+#include "worldgen/db/schema.hpp"
 
 #include "worldgen/core/error.hpp"
 #include "worldgen/core/hash.hpp"
@@ -97,11 +101,69 @@ constexpr std::string_view ROOT_SLOT = "{root}";
     return out;
 }
 
-[[nodiscard]] NameAttempt attempt_with_key(const CultureNaming& naming, NameKind kind, std::uint64_t key,
-                                           std::uint64_t culture, std::uint64_t entity, std::uint64_t attempt) {
+[[nodiscard]] char to_lower(char c) noexcept {
+    return (c >= 'A' && c <= 'Z') ? static_cast<char>(c - 'A' + 'a') : c;
+}
+
+[[nodiscard]] std::string lower_text(std::string_view s) {
+    std::string out(s);
+    for (char& c : out) {
+        c = to_lower(c);
+    }
+    return out;
+}
+
+// The letters of a text without ' and - (S of 11.3).
+[[nodiscard]] std::string squeezed(std::string_view s) {
+    std::string out;
+    for (const char c : s) {
+        if (!is_separator(c)) {
+            out += c;
+        }
+    }
+    return out;
+}
+
+[[nodiscard]] bool starts_with(std::string_view text, std::string_view prefix) noexcept {
+    return text.substr(0, prefix.size()) == prefix;
+}
+
+// The first entry of `list` found inside `text`, or nullptr.
+[[nodiscard]] const std::string* first_inside(const std::vector<std::string>& list, std::string_view text) {
+    for (const std::string& e : list) {
+        if (text.find(e) != std::string_view::npos) {
+            return &e;
+        }
+    }
+    return nullptr;
+}
+
+// The first entry of `list` that `text` starts with, or nullptr.
+[[nodiscard]] const std::string* first_start(const std::vector<std::string>& list, std::string_view text) {
+    for (const std::string& e : list) {
+        if (starts_with(text, e)) {
+            return &e;
+        }
+    }
+    return nullptr;
+}
+
+// A form split at its one {root}: (A, B). Fatal unless it holds exactly one.
+[[nodiscard]] std::pair<std::string_view, std::string_view> split_form(std::string_view form) {
+    const std::size_t at = form.find(ROOT_SLOT);
+    if (at == std::string_view::npos || form.find(ROOT_SLOT, at + 1) != std::string_view::npos) {
+        fatal("names: a name form must hold exactly one {root}");
+    }
+    return {form.substr(0, at), form.substr(at + ROOT_SLOT.size())};
+}
+
+[[nodiscard]] NameAttempt attempt_with_key(const CultureNaming& naming, const NameFilter& filter, NameKind kind,
+                                           std::uint64_t key, std::uint64_t culture, std::uint64_t entity,
+                                           std::uint64_t attempt) {
     const auto u = [&](std::uint64_t j) { return draw(key, attempt, culture, entity, j); };
     const std::string& form = pick_from(name_forms(naming, kind), u(0));
-    const std::string& pattern = pick_from(naming.patterns, u(1));
+    // r5 (11.4): gods take their shape from god_patterns.
+    const std::string& pattern = pick_from(kind == NameKind::god ? naming.god_patterns : naming.patterns, u(1));
     NameAttempt out;
     std::uint64_t j = 2;
     for (const char s : pattern) {
@@ -128,7 +190,17 @@ constexpr std::string_view ROOT_SLOT = "{root}";
     }
     out.name = fill_form(form, capitalize_root(out.root));
     out.valid = root_valid(naming, out.root) && out.name.size() <= NAME_ATTEMPT_MAX_BYTES;
+    // r5 (11.3): the root word must pass the name filter.
+    if (out.valid && name_filtered(filter, root_word(form, out.root))) {
+        out.valid = false;
+        out.filtered = true;
+    }
     return out;
+}
+
+const NameFilter& empty_filter() {
+    static const NameFilter none;
+    return none;
 }
 
 }  // namespace
@@ -139,6 +211,7 @@ CultureNaming culture_naming_from(const data::Record& naming) {
     out.nuclei = string_list(naming, "nuclei");
     out.codas = string_list(naming, "codas");
     out.patterns = string_list(naming, "patterns");
+    out.god_patterns = string_list(naming, "god_patterns");  // r5
     out.min_letters = naming.get_int("min_letters");
     out.max_letters = naming.get_int("max_letters");
     out.forbidden = string_list(naming, "forbidden");
@@ -197,9 +270,128 @@ std::string capitalize_root(std::string_view root) {
     return out;
 }
 
+NameFilter name_filter_from(const data::ContentSet& content) {
+    NameFilter out;
+    const data::KindContent* kind = content.find_kind(data::NAME_FILTER_KIND);
+    if (kind == nullptr) {
+        return out;
+    }
+    for (const data::Definition& d : kind->definitions) {  // ascending id
+        for (const std::string& e : string_list(d.record, "anywhere")) out.anywhere.push_back(e);
+        for (const std::string& e : string_list(d.record, "at_start")) out.at_start.push_back(e);
+        for (const std::string& e : string_list(d.record, "whole")) out.whole.push_back(e);
+    }
+    return out;
+}
+
+std::string root_word(std::string_view form, std::string_view root) {
+    const auto [a, b] = split_form(form);
+    const std::size_t last_space = a.rfind(' ');
+    const std::string_view a1 = last_space == std::string_view::npos ? a : a.substr(last_space + 1);
+    const std::string_view b1 = b.substr(0, b.find(' '));
+    return lower_text(a1) + std::string(root) + lower_text(b1);
+}
+
+bool name_filtered(const NameFilter& filter, std::string_view w) {
+    if (first_inside(filter.anywhere, squeezed(w)) != nullptr) {
+        return true;
+    }
+    // The parts: maximal runs of a-z, W split at ' and -.
+    std::size_t i = 0;
+    while (i < w.size()) {
+        if (!is_lower(w[i])) {
+            ++i;
+            continue;
+        }
+        std::size_t j = i;
+        while (j < w.size() && is_lower(w[j])) {
+            ++j;
+        }
+        const std::string_view part = w.substr(i, j - i);
+        if (first_start(filter.at_start, part) != nullptr) {
+            return true;
+        }
+        for (const std::string& e : filter.whole) {
+            if (part == e) {
+                return true;
+            }
+        }
+        i = j;
+    }
+    return false;
+}
+
+std::optional<std::string> names_form_text_problem(const data::ContentSet& content, const NameFilter& filter) {
+    const data::KindContent* cultures = content.find_kind(data::CULTURE_KIND);
+    if (cultures == nullptr) {
+        return std::nullopt;
+    }
+    for (const data::Definition& c : cultures->definitions) {  // ascending id
+        const CultureNaming naming = culture_naming_from(c.record.get_record("naming"));
+        for (const NameKind kind : {NameKind::god, NameKind::civilization, NameKind::settlement}) {
+            const std::vector<std::string>& forms = name_forms(naming, kind);
+            for (std::size_t i = 0; i < forms.size(); ++i) {
+                const auto [a, b] = split_form(forms[i]);
+                const std::size_t last_space = a.rfind(' ');
+                const std::string_view a1 = last_space == std::string_view::npos ? a : a.substr(last_space + 1);
+                const std::size_t first_space = b.find(' ');
+                const std::string_view b1 = b.substr(0, first_space);
+                const std::string sa = squeezed(lower_text(a1));
+                const std::string sb = squeezed(lower_text(b1));
+                const std::string* hit = first_inside(filter.anywhere, sa);
+                if (hit == nullptr) hit = first_inside(filter.anywhere, sb);
+                if (hit == nullptr && !sa.empty()) hit = first_start(filter.at_start, sa);
+                // r6: the fixed words, A before A' and B after B'.
+                std::vector<std::string> fixed;
+                const auto add_words = [&fixed](std::string_view text) {
+                    std::size_t from = 0;
+                    while (from <= text.size()) {
+                        const std::size_t sp = text.find(' ', from);
+                        const std::string_view w = text.substr(from, sp == std::string_view::npos ? text.size() - from
+                                                                                                   : sp - from);
+                        if (!w.empty()) {
+                            fixed.push_back(squeezed(lower_text(w)));
+                        }
+                        if (sp == std::string_view::npos) {
+                            break;
+                        }
+                        from = sp + 1;
+                    }
+                };
+                if (last_space != std::string_view::npos) {
+                    add_words(a.substr(0, last_space));
+                }
+                if (first_space != std::string_view::npos) {
+                    add_words(b.substr(first_space + 1));
+                }
+                for (const std::string& w : fixed) {
+                    if (hit == nullptr) hit = first_inside(filter.anywhere, w);
+                    if (hit == nullptr) hit = first_start(filter.at_start, w);
+                }
+                if (hit != nullptr) {
+                    return "history: culture '" + c.id + "' " + std::string(name_kind_text(kind)) + "_forms[" +
+                           db::format_u64(static_cast<std::uint64_t>(i)) + "] '" + forms[i] + "' holds the filtered text '" + *hit + "'";
+                }
+            }
+        }
+    }
+    return std::nullopt;
+}
+
+void check_names_form_text(const data::ContentSet& content, const NameFilter& filter) {
+    if (std::optional<std::string> problem = names_form_text_problem(content, filter)) {
+        throw FatalError(*problem);
+    }
+}
+
+NameAttempt name_attempt(const CultureNaming& naming, const NameFilter& filter, NameKind kind, std::uint64_t seed,
+                         std::uint64_t culture, std::uint64_t entity, std::uint64_t attempt) {
+    return attempt_with_key(naming, filter, kind, stream_key(seed, name_stream(kind)), culture, entity, attempt);
+}
+
 NameAttempt name_attempt(const CultureNaming& naming, NameKind kind, std::uint64_t seed, std::uint64_t culture,
                          std::uint64_t entity, std::uint64_t attempt) {
-    return attempt_with_key(naming, kind, stream_key(seed, name_stream(kind)), culture, entity, attempt);
+    return name_attempt(naming, empty_filter(), kind, seed, culture, entity, attempt);
 }
 
 bool NameRegistry::contains(std::string_view name) const {
@@ -214,12 +406,15 @@ std::size_t NameRegistry::size() const noexcept {
     return names_.size();
 }
 
-NameChoice choose_name(const CultureNaming& naming, std::string_view culture_id, NameKind kind, std::uint64_t seed,
-                       std::uint64_t culture, std::uint64_t entity, NameRegistry& registry) {
+NameChoice choose_name(const CultureNaming& naming, const NameFilter& filter, std::string_view culture_id,
+                       NameKind kind, std::uint64_t seed, std::uint64_t culture, std::uint64_t entity,
+                       NameRegistry& registry) {
     const std::uint64_t key = stream_key(seed, name_stream(kind));
     std::optional<NameChoice> first;
     for (std::uint64_t t = 0; t < NAME_ATTEMPTS; ++t) {
-        NameAttempt a = attempt_with_key(naming, kind, key, culture, entity, t);
+        // A filtered attempt is invalid: skipped, never the fallback's first
+        // name (11.3); the next attempt is drawn with its own keys.
+        NameAttempt a = attempt_with_key(naming, filter, kind, key, culture, entity, t);
         if (!a.valid) {
             continue;
         }
@@ -251,9 +446,20 @@ NameChoice choose_name(const CultureNaming& naming, std::string_view culture_id,
     return std::move(*first);
 }
 
+NameChoice choose_name(const CultureNaming& naming, std::string_view culture_id, NameKind kind, std::uint64_t seed,
+                       std::uint64_t culture, std::uint64_t entity, NameRegistry& registry) {
+    return choose_name(naming, empty_filter(), culture_id, kind, seed, culture, entity, registry);
+}
+
+std::string make_name(const CultureNaming& naming, const NameFilter& filter, std::string_view culture_id,
+                      NameKind kind, std::uint64_t seed, std::uint64_t culture, std::uint64_t entity,
+                      NameRegistry& registry) {
+    return choose_name(naming, filter, culture_id, kind, seed, culture, entity, registry).name;
+}
+
 std::string make_name(const CultureNaming& naming, std::string_view culture_id, NameKind kind, std::uint64_t seed,
                       std::uint64_t culture, std::uint64_t entity, NameRegistry& registry) {
-    return choose_name(naming, culture_id, kind, seed, culture, entity, registry).name;
+    return make_name(naming, empty_filter(), culture_id, kind, seed, culture, entity, registry);
 }
 
 std::string roman(std::uint64_t k) {

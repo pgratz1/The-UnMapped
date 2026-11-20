@@ -491,7 +491,7 @@ TEST_CASE("geography 10.3 slope: planes in each direction, inland and at the gri
                           Case{"rising south", 0, 10, 400}, Case{"rising north", 0, -10, 400},
                           Case{"diagonal SE", 10, 10, 800}, Case{"diagonal NE", 10, -10, 800},
                           Case{"steeper diagonal", 30, 40, 10000}}) {
-        CAPTURE(c.name);
+        CAPTURE(std::string_view(c.name));
         const Cells e = plane(w, h, 2000, c.a, c.b);
         for (std::uint32_t y = 0; y < h; ++y) {
             for (std::uint32_t x = 0; x < w; ++x) {

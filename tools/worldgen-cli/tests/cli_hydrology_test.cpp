@@ -176,7 +176,7 @@ TEST_CASE("cli P1-00 X1, P1-02 H9, P1-00 10.2, 10.3: generate --until hydrology 
     // the elevation-only one (seed 0 at 512 has lakes and rivers, golden
     // case shipped-512-s0); every hydrology layer renders under auto.
     for (const char* db : {"h.db", "e.db"}) {
-        CAPTURE(db);
+        CAPTURE(std::string_view(db));
         const ProcessResult r = sb.cli({"render", "--db", u8(sb.file(db)), "--composite", "map"});
         INFO("stderr: ", r.err);
         REQUIRE(r.exit_code == EXIT_OK);
@@ -214,7 +214,7 @@ TEST_CASE("cli P1-00 X3 (slow): generate at 512, seeds 0 and 42, --threads 1, 2 
     Sandbox sb;
     const fs::path data = write_data_root(sb);
     for (const char* seed : {"0", "42"}) {
-        CAPTURE(seed);
+        CAPTURE(std::string_view(seed));
         for (const char* threads : {"1", "2", "5"}) {
             generate(sb, data, {"--seed", seed, "--threads", threads}, std::string("s") + seed + "-" + threads + ".db");
         }

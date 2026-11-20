@@ -66,8 +66,12 @@ ONE = 1 << 32
 M64 = (1 << 64) - 1
 REPO = os.path.normpath(os.path.join(_HERE, "..", "..", ".."))
 GOLDEN = os.path.join(REPO, "worldgen", "tests", "golden", "p3-03-chronology.txt")
-DEFAULT_INPUTS = os.path.join(os.path.expanduser("~"), ".cache", "the-unmapped", "out", "p3-03-tests", "inputs")
+DEFAULT_INPUTS = os.path.join(os.path.expanduser("~"), ".cache", "the-unmapped", "out", "p3-08-tests", "inputs")
 
+# The P3-08 input worlds (the 0.16.0 inputs with P1-06 r3 region names) are
+# complete when the regions writer has left this marker.
+INPUTS_READY = os.path.join(os.path.expanduser("~"), ".cache", "the-unmapped", "out", "p3-08-tests", "markers",
+                            "inputs-ready")
 AWAKENING_STREAM = "hist.chronology.awakening"  # 3: K_aw
 GOD_STREAM = "hist.names.god"                   # P3-02 4.5
 CAMPS = {"good": 0, "neutral": 1, "evil": 2}    # 5.2 race.camp
@@ -109,7 +113,8 @@ class Data:
 
 
 def data_from_root(root):
-    content = pdr.load_root(root, kinds=("biome", "culture", "history", "race"))
+    v017 = pdr.DATA_VERSION == "0.17.0"
+    content = pdr.load_root(root, kinds=("biome", "culture", "history", "race") + (("name_filter",) if v017 else ()))
     races = []
     for rid, t in content["race"]:
         races.append(dict(id=rid, order=t["order"], name=t["name"], plural=t["plural"], adjective=t["adjective"],
@@ -122,7 +127,18 @@ def data_from_root(root):
     ch = dict(content["history"])["chronology"]
     tuning = dict(jitter=fx_raw(ch["awakening_jitter_frac"]), gap=ch["awakening_min_gap_years"],
                   form=ch["age_name_form"])
-    return Data(races, cultures, biomes, tuning)
+    d = Data(races, cultures, biomes, tuning)
+    # P3-02 r5 11.2 (0.17.0): the effective filter, the union of every
+    # name_filter definition; empty for 0.16.0 data.
+    d.filter = pnr.EMPTY_FILTER
+    if v017:
+        a, b, w = [], [], []
+        for _, t in content["name_filter"]:
+            a += t["anywhere"]
+            b += t["at_start"]
+            w += t["whole"]
+        d.filter = pnr.NameFilter(a, b, w)
+    return d
 
 
 _SHIPPED = None
@@ -138,10 +154,12 @@ def shipped():
 def edited(data, races=None, tuning=None, cultures=None, biomes=None):
     """A copy of data with replaced parts (dicts copied, not shared)."""
     import copy
-    return Data(copy.deepcopy(races if races is not None else data.races),
-                copy.deepcopy(cultures if cultures is not None else data.cultures),
-                copy.deepcopy(biomes if biomes is not None else data.biomes),
-                dict(tuning if tuning is not None else data.tuning))
+    d = Data(copy.deepcopy(races if races is not None else data.races),
+             copy.deepcopy(cultures if cultures is not None else data.cultures),
+             copy.deepcopy(biomes if biomes is not None else data.biomes),
+             dict(tuning if tuning is not None else data.tuning))
+    d.filter = getattr(data, "filter", pnr.EMPTY_FILTER)
+    return d
 
 
 # ---------------------------------------------------------------------------
@@ -348,6 +366,14 @@ def entry_checks(data, p, region_names):
     errs = check_history_data(data)
     if errs:
         return "chronology: data: " + errs[0][1]
+    # P3-03 r3: P3-02 r5's stage check names_form_text, after the checks of
+    # the culture data and before any name is drawn. ASSUMPTION (spec gap):
+    # the message is 11.3's text as written, with its prefix `history:`.
+    try:
+        pnr.names_form_text(getattr(data, "filter", pnr.EMPTY_FILTER),
+                            {cid: cu["naming"] for cid, cu in data.cultures.items()})
+    except pnr.FatalError as ex:
+        return str(ex)
     return None
 
 
@@ -393,7 +419,8 @@ def chronology(data, p, seed, region_names, stage_entry=True):
     for r in data.races:
         cid = r["culture"]
         c = data.culture_number[cid]
-        name, t = pnr.make_name(data.cultures[cid]["naming"], cid, "god", seed, c, r["order"], registry)
+        name, t = pnr.make_name(data.cultures[cid]["naming"], cid, "god", seed, c, r["order"], registry,
+                                filt=getattr(data, "filter", pnr.EMPTY_FILTER))
         gods.append((r["order"], name, CAMPS[r["camp"]]))
         attempts.append(t)
     races = []
@@ -1004,13 +1031,74 @@ def check_statistics(c, seeds=2000):
     c.eq("gods at attempt > 0", n, 4)
 
 
+class version:
+    """Context: serve data version v (p3_data_reference) with the names
+    rules of that version (P3-02 r4 for 0.16.0, r5 for 0.17.0)."""
+
+    def __init__(self, v):
+        self.v = v
+
+    def __enter__(self):
+        global _SHIPPED
+        self.saved = (pdr.DATA_VERSION, pnr.RULES, _SHIPPED)
+        pdr.use_version(self.v)
+        pnr.use_rules("r5" if self.v == "0.17.0" else "r4")
+        _SHIPPED = None
+        return self
+
+    def __exit__(self, *a):
+        global _SHIPPED
+        pdr.use_version(self.saved[0])
+        pnr.use_rules(self.saved[1])
+        _SHIPPED = self.saved[2]
+        return False
+
+
+def check_r3(c):
+    """P3-03 r3 (generator 0.17.0): gods with the filter and god_patterns
+    (P3-02 11.6's god table, drawn by this stage in race order with an
+    empty region list), and the stage check names_form_text."""
+    data = shipped()
+    for seed, row in pnr.GODS_R5.items():
+        res = stage_with_regions(data, params(), seed, [])
+        c.eq("r3 gods seed %d (P3-02 11.6)" % seed, ", ".join(g[1] for g in res["god"]), row)
+    c.eq("r3 shipped data passes names_form_text", entry_checks(data, params(), ["x"]), None)
+    for form, entry in (("{root}" + "cock", "cock"), ("Shit" + "{root}", "shit"),
+                        ("The Scrap" + "yard of {root}", "crap"), ("The Snot" + "ty Court of {root}", "snot")):
+        cu = dict(data.cultures)
+        cu["human"] = dict(cu["human"], naming=dict(cu["human"]["naming"], settlement_forms=[form]))
+        d = edited(data, cultures=cu)
+        c.eq("r3 names_form_text refuses %s" % form, entry_checks(d, params(), ["x"]),
+             "history: culture 'human' settlement_forms[0] '%s' holds the filtered text '%s'" % (form, entry))
+        try:
+            stage_with_regions(d, params(), 42, [])
+            c.eq("r3 names_form_text is fatal before any name", "passed", "fatal")
+        except FatalError:
+            pass
+    # A data check failing earlier wins (names_form_text comes after them).
+    races = [dict(r) for r in data.races]
+    races[0]["culture"] = "orcish"  # D3
+    cu = dict(data.cultures)
+    cu["human"] = dict(cu["human"], naming=dict(cu["human"]["naming"], settlement_forms=["Shit" + "{root}"]))
+    msg = entry_checks(edited(data, races=races, cultures=cu), params(), ["x"])
+    c.eq("r3 names_form_text after the data checks: %s" % msg, msg is not None and msg.startswith("chronology: data: "),
+         True)
+
+
 def cmd_check():
     c = Checker()
-    check_examples(c)
-    check_data_checks(c)
+    # The worked examples, data checks and statistics of 7.1, 7 and 12 are
+    # those of P3-02 r4 (0.13.0 to 0.16.0): they run on the 0.16.0 data and
+    # rules; r3's changes (0.17.0) are checked by check_r3, the properties on
+    # both, and the golden file on 0.17.0.
+    with version("0.16.0"):
+        check_examples(c)
+        check_data_checks(c)
+        check_properties(c)
+        check_statistics(c)
+    check_r3(c)
     check_properties(c)
-    check_statistics(c)
-    if os.path.exists(GOLDEN) and os.path.isdir(DEFAULT_INPUTS):
+    if os.path.exists(GOLDEN) and os.path.exists(INPUTS_READY):
         with open(GOLDEN, "rb") as f:
             c.eq("golden file current", f.read().decode(), golden_text(DEFAULT_INPUTS))
     else:

@@ -73,6 +73,8 @@ inline constexpr std::string_view geo_resources_ore = "geo.resources.ore";
 // of the seed-site tie-break and the noise key of the step cost (no Rng).
 inline constexpr std::string_view geo_regions_seed = "geo.regions.seed";
 inline constexpr std::string_view geo_regions_cost = "geo.regions.cost";
+// P1-06 r3 RG11: the region name draws (P0-01 amendment 20, P3-08).
+inline constexpr std::string_view geo_regions_name = "geo.regions.name";
 
 // Keys of the name generator (P3-02 4.5): the stream keys of the keyed
 // draws history::draw(stream_key, attempt, culture, entity, j), one per name
@@ -108,7 +110,7 @@ inline constexpr std::string_view hist_conflict_battle_win = "hist.conflict.batt
 inline constexpr std::string_view hist_conflict_siege = "hist.conflict.siege";
 inline constexpr std::string_view hist_conflict_sack = "hist.conflict.sack";
 // Every registered name, in registration order.
-inline constexpr std::array<std::string_view, 51> all_stream_names = {
+inline constexpr std::array<std::string_view, 52> all_stream_names = {
     test_hash,
     test_noise,
     test_wide,
@@ -139,6 +141,7 @@ inline constexpr std::array<std::string_view, 51> all_stream_names = {
     geo_resources_ore,
     geo_regions_seed,
     geo_regions_cost,
+    geo_regions_name,
     hist_names_god,
     hist_names_civilization,
     hist_names_settlement,

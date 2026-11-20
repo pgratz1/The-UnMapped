@@ -1,0 +1,26 @@
+# Name filter: sexual, scatological and crude words, crude body-part words
+# and hateful terms (spec docs/specs/p3-02-names.md, revision r5, section 11;
+# not yet shipped: the loader ignores this directory until kind `name_filter`
+# is registered). Matching as in slurs.toml: anywhere = inside a root word,
+# at_start = at the start of a root word, whole = a root word exactly.
+# Lower-case a-z only, 2 to 16 letters; keep each list sorted, no duplicates.
+
+[name_filter.crude]
+anywhere = [
+  "anus", "arse", "bastard", "beetch", "bitch", "bollo", "boner", "boob",
+  "butt", "cack", "clit", "cock", "crap", "crotch", "cuck", "cunt", "dick",
+  "dild", "fart", "felch", "fellat", "fuck", "fuk", "hitler", "horny", "jizz",
+  "krotch", "kunt", "lmao", "lol", "nazi", "orgas", "penis", "phuk", "piss",
+  "poop", "porn", "prick", "pube", "puke", "queef", "rape", "rectum",
+  "schlong", "scrot", "semen", "sex", "shit", "shyt", "sick", "skank", "slut",
+  "smeg", "snatch", "sperm", "spunk", "terd", "testic", "tits", "titt",
+  "turd", "twat", "vagin", "vomit", "vulva", "wank", "whore", "wtf",
+]
+at_start = [
+  "anal", "ass", "boog", "bum", "cum", "dik", "dung", "hump", "knob", "pee",
+  "poo", "puss", "shag", "slag", "snot", "tit",
+]
+whole = [
+  "bimbo", "bonk", "dong", "kak", "labia", "nob", "nuts", "pantie", "panty",
+  "pus", "sissy", "sod", "weenie", "willy",
+]

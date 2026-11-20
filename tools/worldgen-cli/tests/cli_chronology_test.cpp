@@ -260,7 +260,7 @@ TEST_CASE("cli P3-03 6, 14.1 item 6: each data check is an input error, also wit
     Sandbox sb;
     int k = 0;
     for (const DataCase& dc : data_cases()) {
-        CAPTURE(dc.label);
+        CAPTURE(std::string_view(dc.label));
         const fs::path data = edited_data(sb, std::string("data-") + dc.label, dc.file, dc.from, dc.to);
         for (const std::vector<std::string>& plan :
              {std::vector<std::string>{}, std::vector<std::string>{"--until", "none"},
