@@ -416,7 +416,7 @@ TEST_CASE("P1-06 r3 RG11 6, 10.5 unit 5: an empty pool weighs 0; weighted at a p
     }
     // P3-02 4.1: the smallest i with (u >> 32) W < 2^32 (w0 + ... + wi).
     const std::vector<std::int64_t> w = {1, 1};
-    CHECK(rn::weighted((std::uint64_t{1} << 31U) - 1U << 32U, w) == 0U);
+    CHECK(rn::weighted(((std::uint64_t{1} << 31U) - 1U) << 32U, w) == 0U);
     CHECK(rn::weighted(std::uint64_t{1} << 63U, w) == 1U);  // high word exactly 2^31: the boundary
     const std::vector<std::int64_t> w3 = {6, 3, 2};
     // (u >> 32) = ceil(6 x 2^32 / 11) is the first high word of pool 1.
@@ -476,7 +476,7 @@ TEST_CASE("P1-06 r3 RG11 8, 10.5 unit 6: a drawn name equal to a keeper's base n
     c.lists[2] = {"Ash"};
     rn::PlaceDef l = fixture_land("wood", {{"East {noun}", 1}});
     l.lists[0] = {"Wood"};
-    l.lists[1] = {"holt"};
+    l.lists[1] = {"wold"};
     d.defs = {c, l};
     std::vector<rn::NamedRegion> regions(2);
     regions[0].id = 1;
@@ -488,7 +488,7 @@ TEST_CASE("P1-06 r3 RG11 8, 10.5 unit 6: a drawn name equal to a keeper's base n
     regions[1].cells = 40;
     const auto got = rn::name_regions(regions, 3, 128, d, rn::NameTuning{});
     REQUIRE(got.has_value());
-    CHECK(got->names == std::vector<std::string>{"East Wood", "Ashholt"});
+    CHECK(got->names == std::vector<std::string>{"East Wood", "Ashwold"});
     CHECK(got->how == std::vector<std::string>{"K", "F"});
 }
 
@@ -857,11 +857,12 @@ TEST_CASE("P1-06 r3 4, 10.5 unit 7: the tuning records name_pools and name_trait
              {"high_mean_m", 0, 10000},     {"ore_rich_cells", 0, 100000000}, {"barren_hab_max", -1, 255},
              {"fertile_min", 0, 256}}) {
         CAPTURE(f);
-        auto with = [&, f = f](std::int64_t v) {
+        const std::string fld = f;
+        auto with = [fld](std::int64_t v) {
             std::string t = UNMAPPED_P1_06_R3_TRAITS;
-            const std::size_t p = t.find(f + " = ");
+            const std::size_t p = t.find(fld + " = ");
             const std::size_t e = t.find_first_of(",}", p);
-            return t.substr(0, p) + f + " = " + std::to_string(v) + t.substr(e);
+            return t.substr(0, p) + fld + " = " + std::to_string(v) + t.substr(e);
         };
         CHECK(load("name_traits", with(lo)).ok());
         CHECK(load("name_traits", with(hi)).ok());
