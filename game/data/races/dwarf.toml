@@ -8,6 +8,7 @@ awakening_share = "0.55"
 lifespan_years = 300
 generation_years = 70
 growth_permille = 5
+density_permille = 700
 site_weights = { fertility = 10, forage = 10, timber = 10, ore = 60, fresh_water = 10 }
 biomes = [
   { biome = "alpine", weight = 300 },

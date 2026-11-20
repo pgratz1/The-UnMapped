@@ -288,7 +288,7 @@ TEST_CASE("cli P1-06 9: report: the eight region keys close [geography], with th
     CHECK(r.out.find("\nwalk_share = ") < r.out.find("\nregions = "));
     // [tables] (P0-04 amendment 18 (a)).
     CHECK(contains(r.out, "\npass = 0\nphase = "));
-    CHECK(contains(r.out, "\nrace = 6\nrace_biome = 45\nregion = 14\nregion_biome = "));
+    CHECK(contains(r.out, "\nrace = 6\nrace_biome = 48\nregion = 14\nregion_biome = "));
     CHECK(contains(r.out, "\nregion_border = 18\n"));
     CHECK(contains(r.out, "\nschema_version = 7\n"));
 }

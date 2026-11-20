@@ -260,7 +260,7 @@ Then 7.7 for this war, before the next war.
 A fallen settlement t of y, taken by x in region R:
 
 1. **Sack or capture**: sack if `chance_pm(draw(hist.conflict.sack, Y, w, t, 0), min(1000, sack_base + h(x, y) × sack_hostility div 1000))`. Hatred sacks (goblins against elves, h = 700: 900‰), neighbours of one camp take (h = 0: 200‰).
-2. **Sack**: dead = P_t × `sack_toll` div 1000; P_t −= dead; append `sacked` (region R, settlement t; participants x as `attacker`, y as `defender`; values `dead`, `survivors` = P_t; cause the siege; salience `capital_sacked_salience` if t is y's capital, else the base); then `PeoplesSubsystem::ruin(t, that event)` (amendment 18.1): the survivors join y's nearest other standing settlement up to its room and the rest are lost, t is ruined with `ruin_event` = the sack and no owner, y's hold on R is released if y has no other standing settlement there, and y's capital moves if t was it.
+2. **Sack**: dead = P_t × `sack_toll` div 1000; P_t −= dead; append `sacked` (region R, settlement t; participants x as `attacker`, y as `defender`; values `dead`, `survivors` = P_t; cause the siege; salience `capital_sacked_salience` if t is y's capital, else the base); then `PeoplesSubsystem::ruin(ctx, t, that event)` (amendment 18.1; P3-05 r3 adds the step context): the survivors join y's nearest other standing settlement up to its room and the rest are lost, t is ruined with `ruin_event` = the sack and no owner, y's hold on R is released if y has no other standing settlement there, and y's capital moves if t was it.
 3. **Capture**: dead = P_t × `capture_toll` div 1000; P_t −= dead; excess = max(0, P_t − 2 × C(R, r_x)) (P3-00 12.3's bound for the new owner's race); append `settlement_captured` (region R, settlement t; participants x as `attacker`, y as `defender`; values `dead`, `fled` = excess; cause the siege; salience `capital_captured_salience` if t is y's capital, else the base); P_t −= excess and the excess joins y's nearest other standing settlement as in P3-05 8.5 item 2; `set_population`; `set_settlement_owner(t, x, e)`; if y holds R and has no other standing settlement in R, `set_region_owner(R, x, e)` (**conquest of the region**); if t was y's capital, P3-05 8.5 item 5's rule (most populous standing settlement, then smaller id; `capital_moved`, cause e).
 4. The war's settlements taken by x += 1; grudge{x, y} += `capture_grudge`; the war's last event = e.
 5. If y has no standing settlement left: 7.6 with cause e.
@@ -320,6 +320,22 @@ P3-04 6.9's rules, as P3-06 meets them:
 5. **N3, draw keys.** `declare` (attacker, defender), `battle` and `battle_win` (the war's declaration event id, 0), `siege` and `sack` (declaration event id, besieged settlement). One battle per war per year, so (w, 0) is unique within a year; a settlement is besieged at most once per war per year. All ids (the declaration event id is stored in the world); no key is a position.
 6. **N4.** `enmity` and `peace` are opened and closed through one helper that orders the pair (lower civilization id first); `war` is stored as (attacker, defender).
 7. **N5, net change.** P3-06 never closes and reopens one relation before the same bookkeeping: a war is not fought in its declaration year (7.3), so it cannot end then, and its pair's `peace` row, closed by the declaration, is reopened at the earliest in the next year; a truce of `truce_years` ≥ 1 keeps a new war from closing a `peace` opened in the same year; `enmity` is opened once per pair and closed only by the end of a side, which `shelter_years` keeps out of its founding year. A region can change owner twice in one T6 (two wars' captures in declaration order, or a sack's release followed by nothing): the last change and its event are recorded, the events stay in the log. Peoples and conflict never set the same region's owner in one step (in T2 conflict sets none; in Q4 a cession concerns a held region, which peoples does not colonize).
+
+### 8.4 What P3-06 respects in the peoples code (normative; from the P3-05 determinism audit, r4)
+
+The audit of P3-05 (`docs/reviews/p3-05-peoples-determinism-audit.md` on `p3/05-audit`) lists what conflict must respect; each item with how P3-06's rules meet it:
+
+1. **Order and visibility.** Conflict is installed after peoples; in T2 and Q4 peoples' same-step foundings are live state (their regions' owners) but invisible entities to conflict. Met: 8.3 items 3 and 4.
+2. **`ruin`** needs a standing, owned settlement, may append `capital_moved` and does not end the civilization; in a quiet step its caller must check the budget for every event it causes. Met: P3-06 calls `ruin` only for a sack (7.5 item 2), only in T6, on a settlement that is standing and owned at the call; it never ruins in a quiet step. A later rule that ruins in Q4 must first check `quiet_events_left` for the `sacked`, the possible `capital_moved` and the possible `civ_conquered` of the charged civilizations.
+3. **End what conflict empties.** A civilization left with no standing settlement and no ruin on record stops the next T1 (`history: peoples: civilization <c> has no standing settlement and none was ruined`). Met: 7.5 item 5 appends `civ_conquered` in the same T6 whenever a sack **or a capture** leaves the defender with no standing settlement (the capture path transfers the last settlement and ends the civilization at once; the prototype does the same). A cession never takes the last settlement (the loser's capital region is never ceded, 7.7). Casualties never empty a settlement (7.4 takes at most 0.1 of a side's people); a settlement they leave below `abandon_min` is abandoned by P3-05 in the next T1 with `civ_ended` as usual.
+4. **Ruin only in T6, or end at once.** Met: sacks happen only in T6 (7.3–7.5); T2 and Q4 ruin nothing; a civilization emptied in T6 is ended in the same step (item 3), so the next year's T4 crisis never meets a ruined capital.
+5. **Regions with settlements; `note_reduction`; `set_population`.** Met: a region changes owner only by a capture of the defender's last standing settlement there, a cession with its settlements, or `ruin`'s release (14 item 5); 7.4 calls `note_reduction` for every settlement of a side after casualties; every population change (casualties, sack and capture tolls, refugees, capture and cession excess) goes through `set_population`.
+6. **Own streams, keys from ids and the year.** Met: 3.3 and 8.3 item 5.
+7. **`share` and `wanted_held` once per civilization per step** (each scans every settlement or region). Met: P3-06 calls `wanted_held` once per alive civilization at the start of each strain update (5.3's snapshot) and never calls `share`; `population`, `regions` and `settlements` are called once per side per war event that needs them, and an implementation may cache them per step.
+8. **Ids, not references, across steps** (lint rules `history-held-reference` and `history-live-iteration`). Met: 8.3 item 1.
+9. **No `homes()`.** Met: P3-06 never calls it (homes are P3-05's awakening).
+
+Checking P3-06 against items 3 and 4 found no gap: the capture path already ends the civilization in the same step, and no rule ruins outside T6. No behaviour or number changes.
 
 ## 9. The race characters (design 5; P3-00 13)
 
@@ -502,7 +518,7 @@ These change every world's `content_hash` (P1-00 6.4); P3-01's content-hash line
 namespace worldgen::history {
 class ConflictSubsystem final : public Subsystem, public TensionSource {
 public:
-    ConflictSubsystem(PeoplesSubsystem& peoples, const data::ContentSet&);   // reads history.conflict, history.peoples, races
+    ConflictSubsystem(PeoplesSubsystem& peoples, const data::ContentSet&);   // reads history.conflict, history.peoples, races; holds no State between steps (P3-05 r3)
     std::span<const Step> steps() const override;                          // T2, T6, Q4
     void run(StepContext&) override;
     TensionReport tension(const StepContext&) override;                     // 5.4, const in effect
@@ -511,7 +527,7 @@ public:
 }
 ```
 
-What P3-06 uses of P3-05: `PeoplesView` (`score`, `capacity`, `neighbours`, `population`, `regions`, `settlements`, `wanted_held`, `hunger`), `note_reduction` (7.4), and the new `ruin` (amendment 18.1, 7.5). What it changes through `State`: populations (casualties, sacks, captures, refugees), settlement owners (captures, cessions), statuses (through `ruin`), region owners (conquest, cession, release through `ruin`), capitals (`capital_moved` after a capture), civilization ends (`civ_conquered`), relations. Everything P3-05's 20 forbids stays untouched: its kinds, its members, foundings into free land, the step order.
+What P3-06 uses of P3-05: `PeoplesView` (`score`, `capacity`, `neighbours`, `hunger`, and the state readers `population`, `regions`, `settlements`, `wanted_held`, which take the step's `StepContext`, P3-05 r3), `note_reduction` (7.4), and the new `ruin` (amendment 18.1, 7.5). What it changes through `State`: populations (casualties, sacks, captures, refugees), settlement owners (captures, cessions), statuses (through `ruin`), region owners (conquest, cession, release through `ruin`), capitals (`capital_moved` after a capture), civilization ends (`civ_conquered`), relations. Everything P3-05's 20 forbids stays untouched: its kinds, its members, foundings into free land, the step order.
 
 **P3-05's rules see P3-06's changes from the next step** (P3-05 13): a captured town grows toward its new owner's share and may dwindle to the new owner's ladder (a goblin-held elven city is capped at a goblin town's size); a sacked region is free land for P3-05's outward foundings of any people within reach, which is how "land left open or ruined" is resettled; a settlement left below `abandon_min` by casualties is abandoned in the next T1 with the battle as its cause.
 
@@ -864,7 +880,7 @@ Lint impact: none expected.
 
 ### 18.1 P3-05 (peoples) — applied as P3-05 r1 (8.5, 13, 14, note); item 1 is the only part of 0.15.0
 
-1. **New hook** `PeoplesSubsystem::ruin(std::int64_t settlement, std::int64_t event)`: performs 8.5 items 2–5 for the settlement with `event` in place of the abandonment event (survivors to the owner's nearest other standing settlement up to its room; `set_population(s, 0)`, `set_settlement_status(s, ruined, event)` so that `ruin_event` = `event`, `set_settlement_owner(s, 0, event)`; the release of the region; the capital move with `capital_moved` caused by `event`), and **not** item 6 (the caller ends the civilization). `abandon(s, cause)` becomes: append `settlement_abandoned`, `ruin(s, that event)`, then item 6. No behaviour of a P3-05 world changes (a refactor; P3-05's golden vectors at 0.15.0 are unaffected).
+1. **New hook** `PeoplesSubsystem::ruin(std::int64_t settlement, std::int64_t event)` (as implemented, P3-05 r3: `ruin(StepContext&, settlement, event)`): performs 8.5 items 2–5 for the settlement with `event` in place of the abandonment event (survivors to the owner's nearest other standing settlement up to its room; `set_population(s, 0)`, `set_settlement_status(s, ruined, event)` so that `ruin_event` = `event`, `set_settlement_owner(s, 0, event)`; the release of the region; the capital move with `capital_moved` caused by `event`), and **not** item 6 (the caller ends the civilization). `abandon(s, cause)` becomes: append `settlement_abandoned`, `ruin(s, that event)`, then item 6. No behaviour of a P3-05 world changes (a refactor; P3-05's golden vectors at 0.15.0 are unaffected).
 2. 13 "Ruin by sacking": P3-06 calls `ruin(settlement, sack event)`, not `abandon`; the ruined row's `ruin_event` is the `sacked` event (P3-07 20 item 3).
 3. 13 "Ending by conquest": P3-06 appends its own kind `civ_conquered` (30, roles `civilization` and `conqueror`), not `civ_ended`.
 4. 14 invariant 4: the exception "(P3-05 alone; P3-06 may hold regions without settlements)" becomes "with P3-06 too: P3-06 transfers regions only with settlements (P3-06 14 item 5)"; invariant 7: a ruined row's `ruin_event` is a `settlement_abandoned` or (from P3-06) a `sacked`.
@@ -919,3 +935,11 @@ Approved by the lead as the basis for implementation. Section 18 applied to P3-0
 ## Revision note r2 (2026-11-19, rules from the P3-04 audit)
 
 New 8.3: how P3-06 meets P3-04 6.9 (the determinism audit's A1, A2, N1–N5). Two rule changes follow from it: (1) **a war has no battle in its declaration year** (7.3), so that no `war` row opens and closes before one bookkeeping (N5; before, 54 of 1,136 wars at 1024 ended in the year they began and would have left no `war` row and an unbroken `peace` row); (2) a cession transfers the loser's **visible** settlements in the goal region (N2; the prototype had included a settlement peoples founded earlier in the same quiet step). A2: strain was already accumulated only in T2 and Q4 and `tension()` already a pure read, in the text and in the prototype; no number depended on it. N3: every draw key is built from ids. The prototype was rerun with both changes; the sample and the sweep statistics of 15 are the new figures.
+
+## Revision note r3 (2026-11-19, P3-05's implementation rulings)
+
+7.5 and 13: `PeoplesSubsystem::ruin` and the `PeoplesView` state readers take the step's `StepContext` (P3-05 r3); P3-06's member holds the subsystem, never `State`. A sacked settlement passed to `ruin` must be standing and owned, which 7.5's order guarantees (the sack event is appended and the population set before the call). No rule or number changes.
+
+## Revision note r4 (2026-11-19, the P3-05 audit)
+
+New 8.4: what P3-06 respects in the peoples code, from the P3-05 determinism audit (items 1–9), each with the rule that meets it. Checking items 3 (end a civilization whose last settlement is sacked or taken, in the same step) and 4 (ruin only in T6) against 7.3–7.7 found no gap; no rule, prototype behaviour or number changes.

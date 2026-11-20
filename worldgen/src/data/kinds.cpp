@@ -595,6 +595,7 @@ KindRegistry builtin_kinds() {
                                         {
                                             IdSchema{std::string(HISTORY_CHRONOLOGY_ID), history_chronology_schema()},
                                             IdSchema{std::string(HISTORY_ENGINE_ID), history_engine_schema()},
+                                            IdSchema{std::string(HISTORY_PEOPLES_ID), history_peoples_schema()},
                                             IdSchema{std::string(HISTORY_REPORT_ID), history_report_schema()},
                                         });
     history.kind_checks = history_kind_checks();  // P3-04 4.2: report_events

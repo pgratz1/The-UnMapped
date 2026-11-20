@@ -75,7 +75,8 @@ TEST_SUITE("history") {
 
 TEST_CASE("P3-04 8.2, 16.1 item 9: the compiled catalogue is 8.2 transcribed; keys distinct and of the id grammar") {
     const eng::EventCatalogue& c = eng::compiled();
-    REQUIRE(c.kinds.size() == 5U);
+    // P3-05 appends kinds 6-19 (generator 0.15.0); its own tests check them.
+    REQUIRE(c.kinds.size() >= 5U);
     struct Want {
         std::int64_t id;
         const char* key;
@@ -134,7 +135,7 @@ TEST_CASE("P3-04 8.2, 16.1 item 9: the compiled catalogue is 8.2 transcribed; ke
 TEST_CASE("P3-04 8.1, 16.1 item 9: event_catalogue(shipped) carries the salience and templates of 4.2") {
     const eng::EventCatalogue c = eng::catalogue_of(shipped());
     const std::vector<ReportEntry> r = shipped_report();
-    REQUIRE(c.kinds.size() == r.size());
+    REQUIRE(c.kinds.size() >= r.size());  // P3-05 appends kinds 6-19 (0.15.0), checked by its tests
     for (std::size_t i = 0; i < r.size(); ++i) {
         CAPTURE(r[i].kind);
         CHECK(c.kinds[i].key == r[i].kind);
@@ -226,18 +227,18 @@ TEST_CASE("P3-04 4.2, 16.1 item 11: the named check report_events through the lo
     CHECK(got.size() == golden().report_events.size());
 }
 
-TEST_CASE("P3-04 4.2 (P3-01 8.1 item 4): an unknown history id lists 'chronology', 'engine', 'report'") {
+TEST_CASE("P3-04 4.2 (P3-01 8.1 item 4, P3-05 12.1): an unknown history id lists 'chronology', 'engine', 'peoples', 'report'") {
     wd::MemoryDataRoot root = chrono_test::shipped_memory_root();
     for (wd::MemoryDirectory& d : root.directories) {
         if (d.name == "history") {
-            d.entries.push_back(wd::MemoryEntry{"peoples.toml", "[history.peoples]\nx = 1\n", false});
+            d.entries.push_back(wd::MemoryEntry{"conflict.toml", "[history.conflict]\nx = 1\n", false});
         }
     }
     const auto r = wd::load_content_from_memory(wd::builtin_kinds(), root);
     REQUIRE_FALSE(r.ok());
     const std::string text = chrono_test::errors_text(r.errors);
     CAPTURE(text);
-    CHECK(text.find("expected one of 'chronology', 'engine', 'report'") != std::string::npos);
+    CHECK(text.find("expected one of 'chronology', 'engine', 'peoples', 'report'") != std::string::npos);
 }
 
 TEST_CASE("P3-04 8.5 r1: render_event of hand-made events of a kind this build does not compile") {
@@ -247,17 +248,19 @@ TEST_CASE("P3-04 8.5 r1: render_event of hand-made events of a kind this build d
     const std::int64_t last_phase = static_cast<std::int64_t>(rows_of(base, "phase").size());
     const std::string region1 = rows_of(base, "region").at(0).at(1).bytes;
     const auto races = rows_of(base, "race");
-    // Kind 6 `test_omen`: uncaused, region always, no settlement; role people (race, 0-unbounded),
+    // The next kind id after the compiled ones (6 at P3-04; 20 since P3-05 appended 6-19).
+    const std::string kid = std::to_string(rows_of(base, "event_kind").size() + 1);
+    // Kind <kid> `test_omen`: uncaused, region always, no settlement; role people (race, 0-unbounded),
     // value count. Events n+1 ... n+4 at year 5999 with 0, 1, 2, 3 people and counts 0, 1, 2, -5.
     std::string sql =
-        "INSERT INTO event_kind VALUES (6, 'test_omen', 0, 1, 0, 30, "
+        "INSERT INTO event_kind VALUES (" + kid + ", 'test_omen', 0, 1, 0, 30, "
         "'[{people:all}] saw an omen over {@region} in {@year}-{@end_year}: {count} {count?star|stars} {{!}}');"
-        "INSERT INTO event_kind_role VALUES (6, 1, 'people', 1, 0, 0);"
-        "INSERT INTO event_kind_value VALUES (6, 1, 'count');";
+        "INSERT INTO event_kind_role VALUES (" + kid + ", 1, 'people', 1, 0, 0);"
+        "INSERT INTO event_kind_value VALUES (" + kid + ", 1, 'count');";
     const std::vector<std::int64_t> counts = {0, 1, 2, -5};
     for (std::int64_t k = 0; k < 4; ++k) {
         const std::string id = std::to_string(n + 1 + k);
-        sql += "INSERT INTO event VALUES (" + id + ", 5999, 5999, 6, " + std::to_string(last_phase) + ", 1, 0, 30);";
+        sql += "INSERT INTO event VALUES (" + id + ", 5999, 5999, " + kid + ", " + std::to_string(last_phase) + ", 1, 0, 30);";
         for (std::int64_t p = 1; p <= k; ++p) {
             sql += "INSERT INTO event_participant VALUES (" + id + ", " + std::to_string(p) + ", 1, 1, " +
                    std::to_string(p) + ");";
@@ -274,11 +277,11 @@ TEST_CASE("P3-04 8.5 r1: render_event of hand-made events of a kind this build d
     CHECK(eng::render(r, n + 2) == "[" + a + "]" + tail + "1 star {!}");
     CHECK(eng::render(r, n + 3) == "[" + a + " and " + b + "]" + tail + "2 stars {!}");
     CHECK(eng::render(r, n + 4) == "[" + a + ", " + b + " and " + c + "]" + tail + "-5 stars {!}");
-    // The stored catalogue, not the compiled one: kind 6 is read back.
+    // The stored catalogue, not the compiled one: kind <kid> is read back.
     const eng::EventCatalogue cat = eng::catalogue_of_world(r);
-    REQUIRE(cat.kinds.size() == 6U);
-    CHECK(cat.kinds[5].key == "test_omen");
-    CHECK(cat.kinds[5].salience == 30);
+    REQUIRE(std::to_string(cat.kinds.size()) == kid);
+    CHECK(cat.kinds.back().key == "test_omen");
+    CHECK(cat.kinds.back().salience == 30);
     // An id outside the log is fatal (a caller's bug).
     for (const std::int64_t bad : {std::int64_t{0}, n + 5, std::int64_t{-1}}) {
         const std::string e = fatal_of([&] { (void)eng::render(r, bad); });
@@ -314,8 +317,8 @@ TEST_CASE("P3-04 8.5 r1: HistoryView::load refuses corrupt history tables with a
     const std::vector<Case> cases = {
         {"template with a problem", "UPDATE event_kind SET template = '{race' WHERE id = 1;", "event_kind"},
         {"template of a role the kind lacks", "UPDATE event_kind SET template = '{ruler}' WHERE id = 2;", "event_kind"},
-        {"role row of a missing kind", "INSERT INTO event_kind_role VALUES (9, 1, 'x', 1, 1, 1);", ""},
-        {"event of a missing kind", "UPDATE event SET kind = 9 WHERE id = 1;", ""},
+        {"role row of a missing kind", "INSERT INTO event_kind_role VALUES (99, 1, 'x', 1, 1, 1);", ""},
+        {"event of a missing kind", "UPDATE event SET kind = 99 WHERE id = 1;", ""},
         {"participant of a missing civilization", "UPDATE event_participant SET entity_id = 99 WHERE event = 2 AND seq = 1;", ""},
         {"participant role seq not of the kind", "UPDATE event_participant SET role = 7 WHERE event = 1 AND seq = 2;", ""},
         {"participant entity type not of the role", "UPDATE event_participant SET entity_type = 3 WHERE event = 1 AND seq = 1;", ""},

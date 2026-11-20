@@ -38,6 +38,10 @@ struct HistoryInputs {
     std::vector<db::AgeRow> ages;                    // id order
     db::LayerGrid region_layer;                      // layer `region`
     db::LayerGrid water_layer;                       // layer `water`
+    std::vector<db::BiomeRow> biomes;                // id order (P3-05 3.2)
+    db::LayerGrid habitability_layer;                // layer `habitability`
+    db::LayerGrid river_layer;                       // layer `river`
+    db::LayerGrid flow_dir_layer;                    // layer `flow_dir`
 
     friend bool operator==(const HistoryInputs&, const HistoryInputs&) = default;
 };
@@ -45,8 +49,8 @@ struct HistoryInputs {
 // The rows, layers and settings of the stored world the stage reads, from
 // the pipeline's context: StageContext::seed(), map_size(),
 // history_params() and the committed rows and layers of earlier stages.
-// FatalError (StageContext::layer) when layer `region` or `water` was not
-// written by an earlier stage.
+// FatalError (StageContext::layer) when layer `region`, `water`,
+// `habitability`, `river` or `flow_dir` was not written by an earlier stage.
 [[nodiscard]] HistoryInputs history_inputs_from(const stages::StageContext& context);
 
 // The same from a world file (resume): meta parsed (history_params_from_meta),

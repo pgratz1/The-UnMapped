@@ -107,6 +107,18 @@ Result<std::vector<Row>> read_rows(const WorldReader& world, std::string_view ta
 
 }  // namespace
 
+Result<std::vector<BiomeRow>> read_biome_rows(const WorldReader& world) {
+    return read_rows<BiomeRow>(world, BIOME_TABLE, [](Columns& c) {
+        BiomeRow r;
+        r.id = c.integer();
+        r.key = c.text();
+        r.name = c.text();
+        r.colour = c.integer();
+        r.water = c.integer();
+        return r;
+    });
+}
+
 Result<std::vector<RegionRow>> read_region_rows(const WorldReader& world) {
     return read_rows<RegionRow>(world, REGION_TABLE, [](Columns& c) {
         RegionRow r;

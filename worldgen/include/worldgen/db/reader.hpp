@@ -211,6 +211,7 @@ private:
 // corrupt_layer ("table '<name>': row <n>: <reason>", n counted from 1)
 // when a row has the wrong number of columns, a column of the wrong storage
 // class, or NULL in a column that is not nullable.
+[[nodiscard]] Result<std::vector<BiomeRow>> read_biome_rows(const WorldReader& world);
 [[nodiscard]] Result<std::vector<RegionRow>> read_region_rows(const WorldReader& world);
 [[nodiscard]] Result<std::vector<RegionBorderRow>> read_region_border_rows(const WorldReader& world);
 [[nodiscard]] Result<std::vector<RegionBiomeRow>> read_region_biome_rows(const WorldReader& world);

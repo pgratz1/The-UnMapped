@@ -406,15 +406,17 @@ inline constexpr std::string_view CULTURE_DIRECTORY = "cultures";
 inline constexpr std::string_view HISTORY_KIND = "history";
 inline constexpr std::string_view HISTORY_DIRECTORY = "history";
 // The ids of kind history registered so far (P3-01 5; engine and report
-// from P3-04 4.1, 4.2).
+// from P3-04 4.1, 4.2; peoples from P3-05 12.1).
 inline constexpr std::string_view HISTORY_CHRONOLOGY_ID = "chronology";
 inline constexpr std::string_view HISTORY_ENGINE_ID = "engine";
+inline constexpr std::string_view HISTORY_PEOPLES_ID = "peoples";  // P3-05 12.1
 inline constexpr std::string_view HISTORY_REPORT_ID = "report";
 
 // The schema of a race definition (P3-01 3): order int(1, 6); name, plural,
 // adjective string(32, word); camp enum(good, neutral, evil);
 // awakening_share fx(0, 1); lifespan_years int(1, 10000); generation_years
-// int(1, 1000); growth_permille int(0, 1000); site_weights record
+// int(1, 1000); growth_permille int(0, 1000); density_permille int(1,
+// 1000) (P3-05 12.2); site_weights record
 // race_site_weights (fertility, forage, timber, ore, fresh_water, each
 // int(0, 1000)); biomes array(record race_biome {biome ref(biome), weight
 // int(-1000, 1000)}, 0, 16); upland, coast int(-1000, 1000); expansion,
@@ -458,6 +460,13 @@ inline constexpr std::string_view HISTORY_REPORT_ID = "report";
 // int(1, 1000000)}; in this order, all required. Named checks, in this
 // order: engine_simulated_bounds, engine_phase_budget.
 [[nodiscard]] Schema history_engine_schema();
+
+// The schema of definition history.peoples (P3-05 12.1): the fields of
+// that table in its order, all required; abandon_permille and plague_ppm
+// records {hamlet, village, town, city, fortress}, intensity a record
+// {calm, normal, turbulent}. Named checks, in this order: peoples_ladder,
+// peoples_tolls, peoples_floor, peoples_colonists.
+[[nodiscard]] Schema history_peoples_schema();
 
 // The schema of definition history.report (P3-04 4.2): events
 // array(record report_event {kind string(32, id), salience int(0, 100),

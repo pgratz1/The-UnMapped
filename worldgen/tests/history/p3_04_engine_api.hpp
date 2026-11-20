@@ -226,6 +226,49 @@ inline worldgen::stages::StageInfo stage_info() {
     return worldgen::stages::StageInfo{"history", &worldgen::stages::run_history};
 }
 
+// The P3-04 stage with the stub configuration (7): since generator 0.15.0
+// the shipped stage installs the peoples subsystem (P3-05 13.1), so the
+// stub-world tests run the engine with the stub through this seam. The
+// layers P3-05 adds to the inputs are read when present (a synthetic
+// geography may not write them; the stub does not read them).
+inline void run_stub_history(worldgen::stages::StageContext& ctx) {
+    if (ctx.regions().empty()) {
+        throw worldgen::FatalError("history: input precondition: no region rows");
+    }
+    if (ctx.ages().empty()) {
+        throw worldgen::FatalError("history: input precondition: no age rows");
+    }
+    HistoryInputs in;
+    in.seed = ctx.seed();
+    in.map_size = ctx.map_size();
+    in.params = ctx.history_params();
+    in.regions.assign(ctx.regions().begin(), ctx.regions().end());
+    in.region_borders.assign(ctx.region_borders().begin(), ctx.region_borders().end());
+    in.region_biomes.assign(ctx.region_biomes().begin(), ctx.region_biomes().end());
+    in.races.assign(ctx.races().begin(), ctx.races().end());
+    in.race_biomes.assign(ctx.race_biomes().begin(), ctx.race_biomes().end());
+    in.cultures.assign(ctx.cultures().begin(), ctx.cultures().end());
+    in.gods.assign(ctx.gods().begin(), ctx.gods().end());
+    in.ages.assign(ctx.ages().begin(), ctx.ages().end());
+    in.region_layer = ctx.layer("region");
+    in.water_layer = ctx.layer("water");
+    in.biomes.assign(ctx.biomes().begin(), ctx.biomes().end());
+    const h::EngineTuning tuning = h::engine_tuning_from(ctx.content());
+    h::check_engine_tuning(tuning);
+    const h::EventCatalogue catalogue = h::event_catalogue(ctx.content());
+    (void)h::check_engine_inputs(ctx.content(), in);
+    h::StubAwakening stub;
+    h::EmptyInterventionSource none;
+    EngineConfig config;
+    config.awakening = &stub;
+    config.interventions = &none;
+    config.catalogue = &catalogue;
+    worldgen::stages::write_history_result(ctx, h::run_engine(ctx.content(), in, config));
+}
+inline worldgen::stages::StageInfo stub_stage_info() {
+    return worldgen::stages::StageInfo{"history", &run_stub_history};
+}
+
 // The stub (7.1, 7.2). GUESS: type name and header.
 inline std::unique_ptr<AwakeningHandler> make_stub() { return std::make_unique<h::StubAwakening>(); }
 

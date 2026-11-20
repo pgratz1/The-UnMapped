@@ -128,6 +128,14 @@ target_compile_definitions(worldgen-cli-tests PRIVATE
     UNMAPPED_P3_04_GOLDEN_PATH="${PROJECT_SOURCE_DIR}/worldgen/tests/golden/p3-04-engine.txt"
 )
 
+# generate with peoples (P3-05): a golden world's [history] (15.4 keys) and
+# hash --detail against p3-05-peoples.txt, --threads 5, the settings that
+# now reach the world, --until chronology. Slow checks in "history-slow".
+target_sources(worldgen-cli-tests PRIVATE cli_history_peoples_test.cpp)
+target_compile_definitions(worldgen-cli-tests PRIVATE
+    UNMAPPED_P3_05_GOLDEN_PATH="${PROJECT_SOURCE_DIR}/worldgen/tests/golden/p3-05-peoples.txt"
+)
+
 # CTest entries, as for worldgen-tests (cmake/UnmappedTestShards.cmake):
 # groups of source files run in parallel, worldgen-cli-tests-other for every
 # file not named here, and worldgen-cli-tests-partition. Each test case uses
@@ -144,5 +152,6 @@ unmapped_add_doctest_shards(worldgen-cli-tests
     SHARD history-settings 6 "*cli_history_settings_test.cpp"
     SHARD chronology 20 "*cli_chronology_test.cpp"
     SHARD engine 15 "*cli_history_test.cpp"
+    SHARD peoples 27 "*cli_history_peoples_test.cpp"
     REST other 10
 )

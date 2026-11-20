@@ -25,8 +25,11 @@ namespace worldgen {
 // chronology stage (P3-03) joined it with schema 6 (tables race,
 // race_biome, culture, god and age, eight history meta keys); 0.13.0 until
 // the history stage (P3-04, the engine with stub subsystems) joined it with
-// schema 7 (thirteen history tables, meta key history_end_year); now 0.14.0.
-inline constexpr std::string_view GENERATOR_VERSION = "0.14.0";
+// schema 7 (thirteen history tables, meta key history_end_year); 0.14.0
+// until the peoples subsystem (P3-05: awakenings, growth, foundings,
+// pressures, secession; event kinds 6 to 19, tuning history.peoples, race
+// field density_permille) replaced the stubs; now 0.15.0.
+inline constexpr std::string_view GENERATOR_VERSION = "0.15.0";
 
 // Returns GENERATOR_VERSION (P0-02 5.5). A world is only guaranteed
 // reproducible under the same generator version (design doc section 4).

@@ -381,7 +381,138 @@ std::vector<KindCheckFailure> check_report_events(std::span<const Definition> de
     return out;
 }
 
+// --- history.peoples (P3-05 section 12.1) ----------------------------------------------
+
+Schema peoples_kind_schema(std::int64_t max) {
+    return Schema(std::vector<Field>{
+        Field::required("hamlet", Type::integer(0, max)),
+        Field::required("village", Type::integer(0, max)),
+        Field::required("town", Type::integer(0, max)),
+        Field::required("city", Type::integer(0, max)),
+        Field::required("fortress", Type::integer(0, max)),
+    });
+}
+
+Schema peoples_intensity_schema() {
+    return Schema(std::vector<Field>{
+        Field::required("calm", Type::integer(0, 10000)),
+        Field::required("normal", Type::integer(0, 10000)),
+        Field::required("turbulent", Type::integer(0, 10000)),
+    });
+}
+
+std::optional<std::string> check_peoples_ladder(const Record& r) {
+    if (r.get_int("village_min") < r.get_int("town_min") && r.get_int("town_min") < r.get_int("city_min") &&
+        r.get_int("city_min") <= r.get_int("city_max")) {
+        return std::nullopt;
+    }
+    return std::string("village_min, town_min, city_min must increase and city_max must not be below city_min");
+}
+
+std::optional<std::string> check_peoples_tolls(const Record& r) {
+    if (r.get_int("famine_toll_min") <= r.get_int("famine_toll_max") &&
+        r.get_int("plague_toll_min") <= r.get_int("plague_toll_max")) {
+        return std::nullopt;
+    }
+    return std::string("a toll minimum must not be above its maximum");
+}
+
+std::optional<std::string> check_peoples_floor(const Record& r) {
+    if (r.get_int("capacity_floor") >= r.get_int("founding_population")) {
+        return std::nullopt;
+    }
+    return std::string("capacity_floor must not be below founding_population");
+}
+
+std::optional<std::string> check_peoples_colonists(const Record& r) {
+    if (r.get_int("abandon_min") < r.get_int("colonists_min")) {
+        return std::nullopt;
+    }
+    return std::string("colonists_min must be above abandon_min");
+}
+
 }  // namespace
+
+Schema history_peoples_schema() {
+    // P3-05 12.1, in the table's order.
+    const auto i = [](std::string_view name, std::int64_t min, std::int64_t max) {
+        return Field::required(std::string(name), Type::integer(min, max));
+    };
+    std::vector<Field> fields{
+        i("score_site", 0, 2000),
+        i("score_biome", 0, 2000),
+        i("score_upland", 0, 2000),
+        i("score_coast", 0, 2000),
+        i("ore_reach_full", 1, 100000),
+        i("coast_full", 1, 100000),
+        i("rough_base", 0, 1000),
+        i("rough_upland", 0, 1000),
+        i("people_per_kcell", 1, 100000),
+        i("capacity_floor", 1, 100000),
+        i("capital_weight", 1000, 10000),
+        i("founding_population", 1, 10000),
+        i("village_min", 1, 1000000),
+        i("town_min", 1, 1000000),
+        i("city_min", 1, 1000000),
+        i("city_max", 1, 1000000),
+        i("fortress_max", 1, 1000000),
+        i("kind_shrink_permille", 0, 1000),
+        i("site_spacing", 1, 1000),
+        i("region_slots_max", 1, 64),
+        i("mouth_class_min", 1, 15),
+        i("port_radius", 0, 16),
+        i("port_mouth_bonus", 0, 255),
+        i("port_coast_bonus", 0, 255),
+        i("decline_permille", 1, 1000),
+        i("recover_permille", 0, 1000),
+        i("colonist_permille", 1, 1000),
+        i("colonists_min", 1, 10000),
+        i("abandon_min", 1, 10000),
+        i("abandon_frail_max", 1, 1000000),
+        Field::required("abandon_permille", Type::record(peoples_kind_schema(1000))),
+        i("found_pressure_permille", 1, 2000),
+        i("found_rate_permille", 0, 1000),
+        i("quiet_found_permille", 0, 1000),
+        i("reach_base", 0, 64),
+        i("reach_per_expansion", 0, 64),
+        i("expand_min_score", -3000, 4000),
+        i("expand_relative_permille", 0, 1000),
+        i("expand_min_capacity", 0, 1000000),
+        i("cost_penalty", 0, 10000),
+        i("pass_cost", 1, 100),
+        i("river_cost", 0, 100),
+        i("river_border_share_permille", 0, 1000),
+        i("civs_two_permille", 0, 1000),
+        i("regions_per_civ", 0, 100),
+        i("home_min_hops", 1, 64),
+        i("home_min_capacity", 0, 1000000),
+        Field::required("intensity", Type::record(peoples_intensity_schema())),
+        i("famine_crowding_permille", 0, 2000),
+        i("famine_ppm", 0, 1000000),
+        i("famine_toll_min", 0, 1000),
+        i("famine_toll_max", 0, 1000),
+        Field::required("plague_ppm", Type::record(peoples_kind_schema(1000000))),
+        i("plague_toll_min", 0, 1000),
+        i("plague_toll_max", 0, 1000),
+        i("plague_spread_permille", 0, 1000),
+        i("plague_spread_toll_permille", 0, 1000),
+        i("crisis_per_generation_permille", 0, 1000),
+        i("crisis_loss_permille", 0, 1000),
+        i("split_min_settlements", 2, 1000),
+        i("split_min_regions", 2, 1000),
+        i("split_permille", 0, 1000),
+        i("ruin_fade_years", 1, 100000),
+        i("colony_new_region_salience", 0, 100),
+        i("plague_small_salience", 0, 100),
+    };
+    std::vector<Check> checks{
+        Check{"peoples_ladder", [](const Record& r) { return check_peoples_ladder(r); }},
+        Check{"peoples_tolls", [](const Record& r) { return check_peoples_tolls(r); }},
+        Check{"peoples_floor", [](const Record& r) { return check_peoples_floor(r); }},
+        Check{"peoples_colonists", [](const Record& r) { return check_peoples_colonists(r); }},
+    };
+    return Schema(std::move(fields), std::move(checks));
+}
 
 Schema history_engine_schema() {
     // P3-04 4.1, in declaration order.
@@ -431,6 +562,7 @@ Schema race_schema() {
         Field::required("lifespan_years", Type::integer(1, 10000)),
         Field::required("generation_years", Type::integer(1, 1000)),
         Field::required("growth_permille", Type::integer(0, 1000)),
+        Field::required("density_permille", Type::integer(1, 1000)),  // P3-05 12.2
         Field::required("site_weights", Type::record(race_site_weights_schema())),
         Field::required("biomes", Type::array(Type::record(race_biome_schema()), 0, 16)),
         Field::required("upland", Type::integer(-1000, 1000)),

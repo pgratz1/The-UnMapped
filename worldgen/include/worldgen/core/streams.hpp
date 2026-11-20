@@ -85,8 +85,24 @@ inline constexpr std::string_view hist_names_settlement = "hist.names.settlement
 // race's awakening shift, history::draw(stream_key, 0, race id, 0, 0). No
 // Rng.
 inline constexpr std::string_view hist_chronology_awakening = "hist.chronology.awakening";
+
+// Keys of the peoples subsystem of stage history (P3-05 3.3): the keyed
+// draws history::draw(stream_key, year, a, b, k), one stream per decision
+// kind. No Rng.
+inline constexpr std::string_view hist_peoples_home = "hist.peoples.home";
+inline constexpr std::string_view hist_peoples_civs = "hist.peoples.civs";
+inline constexpr std::string_view hist_peoples_found = "hist.peoples.found";
+inline constexpr std::string_view hist_peoples_outward = "hist.peoples.outward";
+inline constexpr std::string_view hist_peoples_famine = "hist.peoples.famine";
+inline constexpr std::string_view hist_peoples_famine_toll = "hist.peoples.famine_toll";
+inline constexpr std::string_view hist_peoples_plague = "hist.peoples.plague";
+inline constexpr std::string_view hist_peoples_plague_toll = "hist.peoples.plague_toll";
+inline constexpr std::string_view hist_peoples_plague_spread = "hist.peoples.plague_spread";
+inline constexpr std::string_view hist_peoples_abandon = "hist.peoples.abandon";
+inline constexpr std::string_view hist_peoples_crisis = "hist.peoples.crisis";
+inline constexpr std::string_view hist_peoples_split = "hist.peoples.split";
 // Every registered name, in registration order.
-inline constexpr std::array<std::string_view, 34> all_stream_names = {
+inline constexpr std::array<std::string_view, 46> all_stream_names = {
     test_hash,
     test_noise,
     test_wide,
@@ -121,6 +137,18 @@ inline constexpr std::array<std::string_view, 34> all_stream_names = {
     hist_names_civilization,
     hist_names_settlement,
     hist_chronology_awakening,
+    hist_peoples_home,
+    hist_peoples_civs,
+    hist_peoples_found,
+    hist_peoples_outward,
+    hist_peoples_famine,
+    hist_peoples_famine_toll,
+    hist_peoples_plague,
+    hist_peoples_plague_toll,
+    hist_peoples_plague_spread,
+    hist_peoples_abandon,
+    hist_peoples_crisis,
+    hist_peoples_split,
 };
 
 }  // namespace worldgen::streams

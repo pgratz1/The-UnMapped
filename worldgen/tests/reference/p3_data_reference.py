@@ -193,12 +193,68 @@ ENGINE = fields("quiet_step_years:I quiet_events_max:I simulated_min_permille:I 
 REPORT_EVENT = REC(fields("kind:S salience:I template:S"))
 REPORT = (("events", ARR(REPORT_EVENT)),)
 
+# P3-05 12.1: history.peoples, fields in table order (= the listing's order);
+# record abandon_permille and plague_ppm {hamlet, village, town, city,
+# fortress}, record intensity {calm, normal, turbulent}. The ranges are the
+# table's (PEOPLES_RANGES, for the tests of 16.1 item 15).
+PEOPLES_BY_KIND = REC(fields("hamlet:I village:I town:I city:I fortress:I"))
+PEOPLES_INTENSITY = REC(fields("calm:I normal:I turbulent:I"))
+PEOPLES_RANGES = (
+    ("score_site", 0, 2000), ("score_biome", 0, 2000), ("score_upland", 0, 2000), ("score_coast", 0, 2000),
+    ("ore_reach_full", 1, 100000), ("coast_full", 1, 100000), ("rough_base", 0, 1000), ("rough_upland", 0, 1000),
+    ("people_per_kcell", 1, 100000), ("capacity_floor", 1, 100000), ("capital_weight", 1000, 10000),
+    ("founding_population", 1, 10000), ("village_min", 1, 1000000), ("town_min", 1, 1000000),
+    ("city_min", 1, 1000000), ("city_max", 1, 1000000), ("fortress_max", 1, 1000000),
+    ("kind_shrink_permille", 0, 1000), ("site_spacing", 1, 1000), ("region_slots_max", 1, 64),
+    ("mouth_class_min", 1, 15), ("port_radius", 0, 16), ("port_mouth_bonus", 0, 255), ("port_coast_bonus", 0, 255),
+    ("decline_permille", 1, 1000), ("recover_permille", 0, 1000), ("colonist_permille", 1, 1000),
+    ("colonists_min", 1, 10000), ("abandon_min", 1, 10000), ("abandon_frail_max", 1, 1000000),
+    ("abandon_permille", 0, 1000), ("found_pressure_permille", 1, 2000), ("found_rate_permille", 0, 1000),
+    ("quiet_found_permille", 0, 1000), ("reach_base", 0, 64), ("reach_per_expansion", 0, 64),
+    ("expand_min_score", -3000, 4000), ("expand_relative_permille", 0, 1000), ("expand_min_capacity", 0, 1000000),
+    ("cost_penalty", 0, 10000), ("pass_cost", 1, 100), ("river_cost", 0, 100),
+    ("river_border_share_permille", 0, 1000), ("civs_two_permille", 0, 1000), ("regions_per_civ", 0, 100),
+    ("home_min_hops", 1, 64), ("home_min_capacity", 0, 1000000), ("intensity", 0, 10000),
+    ("famine_crowding_permille", 0, 2000), ("famine_ppm", 0, 1000000), ("famine_toll_min", 0, 1000),
+    ("famine_toll_max", 0, 1000), ("plague_ppm", 0, 1000000), ("plague_toll_min", 0, 1000),
+    ("plague_toll_max", 0, 1000), ("plague_spread_permille", 0, 1000), ("plague_spread_toll_permille", 0, 1000),
+    ("crisis_per_generation_permille", 0, 1000), ("crisis_loss_permille", 0, 1000),
+    ("split_min_settlements", 2, 1000), ("split_min_regions", 2, 1000), ("split_permille", 0, 1000),
+    ("ruin_fade_years", 1, 100000), ("colony_new_region_salience", 0, 100), ("plague_small_salience", 0, 100),
+)
+PEOPLES_RECORDS = {"abandon_permille": PEOPLES_BY_KIND, "plague_ppm": PEOPLES_BY_KIND,
+                   "intensity": PEOPLES_INTENSITY}
+PEOPLES = tuple((n, PEOPLES_RECORDS.get(n, INT)) for n, _, _ in PEOPLES_RANGES)
+assert len(PEOPLES) == 65
+# P3-05 12.1 named checks, in order: (name, message).
+PEOPLES_CHECKS = (
+    ("peoples_ladder", "village_min, town_min, city_min must increase and city_max must not be below city_min"),
+    ("peoples_tolls", "a toll minimum must not be above its maximum"),
+    ("peoples_floor", "capacity_floor must not be below founding_population"),
+    ("peoples_colonists", "colonists_min must be above abandon_min"),
+)
+
+
+def peoples_check_messages(t):
+    """The named checks of P3-05 12.1 that fail for a history.peoples table."""
+    out = []
+    if not (t["village_min"] < t["town_min"] < t["city_min"] <= t["city_max"]):
+        out.append(PEOPLES_CHECKS[0][1])
+    if not (t["famine_toll_min"] <= t["famine_toll_max"] and t["plague_toll_min"] <= t["plague_toll_max"]):
+        out.append(PEOPLES_CHECKS[1][1])
+    if not (t["capacity_floor"] >= t["founding_population"]):
+        out.append(PEOPLES_CHECKS[2][1])
+    if not (t["abandon_min"] < t["colonists_min"]):
+        out.append(PEOPLES_CHECKS[3][1])
+    return out
+
 # P3-01 3.
 RACE_SITE_WEIGHTS = REC(fields("fertility:I forage:I timber:I ore:I fresh_water:I"))
 RACE_BIOME = REC(fields("biome:S weight:I"))
 RACE = (
     ("order", INT), ("name", STR), ("plural", STR), ("adjective", STR), ("camp", STR), ("awakening_share", FX),
     ("lifespan_years", INT), ("generation_years", INT), ("growth_permille", INT),
+    ("density_permille", INT),  # P3-05 12.2 item 1 / P3-01 r6: after growth_permille
     ("site_weights", RACE_SITE_WEIGHTS), ("biomes", ARR(RACE_BIOME)), ("upland", INT), ("coast", INT),
     ("expansion", INT), ("aggression", INT), ("settlement_kinds", ARR(STR)), ("culture", STR),
 )
@@ -208,7 +264,8 @@ RACE = (
 KINDS = {
     "biome": ("biomes", BIOME),
     "culture": ("cultures", CULTURE),
-    "history": ("history", {"chronology": CHRONOLOGY, "engine": ENGINE, "report": REPORT}),
+    "history": ("history", {"chronology": CHRONOLOGY, "engine": ENGINE, "peoples": PEOPLES,
+                             "report": REPORT}),
     "race": ("races", RACE),
     "worldgen": ("worldgen", {
         "biomes": BIOMES_TUNING, "climate": CLIMATE, "elevation": ELEVATION, "hydrology": HYDROLOGY,
@@ -232,6 +289,7 @@ awakening_share = 0
 lifespan_years = 700
 generation_years = 150
 growth_permille = 3
+density_permille = 300
 site_weights = { fertility = 20, forage = 35, timber = 35, ore = 0, fresh_water = 10 }
 biomes = [
   { biome = "temperate_forest", weight = 500 },
@@ -259,6 +317,7 @@ awakening_share = "0.35"
 lifespan_years = 40
 generation_years = 15
 growth_permille = 20
+density_permille = 900
 site_weights = { fertility = 40, forage = 20, timber = 10, ore = 30, fresh_water = 0 }
 biomes = [
   { biome = "heath", weight = 200 },
@@ -267,6 +326,8 @@ biomes = [
   { biome = "grassland", weight = 100 },
   { biome = "marsh", weight = 100 },
   { biome = "alpine", weight = -400 },
+  { biome = "temperate_forest", weight = -200 },
+  { biome = "wet_woodland", weight = -300 },
 ]
 upland = 100
 coast = -100
@@ -285,6 +346,7 @@ awakening_share = "0.55"
 lifespan_years = 300
 generation_years = 70
 growth_permille = 5
+density_permille = 700
 site_weights = { fertility = 10, forage = 10, timber = 10, ore = 60, fresh_water = 10 }
 biomes = [
   { biome = "alpine", weight = 300 },
@@ -312,18 +374,20 @@ awakening_share = "0.70"
 lifespan_years = 400
 generation_years = 100
 growth_permille = 4
+density_permille = 250
 site_weights = { fertility = 0, forage = 60, timber = 20, ore = 0, fresh_water = 20 }
 biomes = [
-  { biome = "fen", weight = 600 },
-  { biome = "wet_woodland", weight = 600 },
-  { biome = "marsh", weight = 400 },
-  { biome = "temperate_forest", weight = 200 },
-  { biome = "highland_moor", weight = 100 },
+  { biome = "fen", weight = 800 },
+  { biome = "wet_woodland", weight = 800 },
+  { biome = "marsh", weight = 600 },
+  { biome = "temperate_forest", weight = 100 },
+  { biome = "highland_moor", weight = 300 },
   { biome = "grassland", weight = -200 },
   { biome = "alpine", weight = -300 },
   { biome = "steppe", weight = -400 },
+  { biome = "heath", weight = 100 },
 ]
-upland = 0
+upland = 200
 coast = 0
 expansion = 100
 aggression = 50
@@ -340,6 +404,7 @@ awakening_share = "0.83"
 lifespan_years = 70
 generation_years = 25
 growth_permille = 15
+density_permille = 1000
 site_weights = { fertility = 60, forage = 10, timber = 10, ore = 5, fresh_water = 15 }
 biomes = [
   { biome = "grassland", weight = 300 },
@@ -368,6 +433,7 @@ awakening_share = "0.93"
 lifespan_years = 50
 generation_years = 18
 growth_permille = 18
+density_permille = 800
 site_weights = { fertility = 35, forage = 25, timber = 10, ore = 30, fresh_water = 0 }
 biomes = [
   { biome = "steppe", weight = 400 },
@@ -502,10 +568,98 @@ events = [
 ({generations} {generations?generation|generations}), from {@year} to {@end_year}." },
   { kind = "flare_up", salience = 50, template = "In {@year} tensions flared into {years} {years?year|years} \
 of upheaval." },
+  { kind = "colony_founded", salience = 15, template = "{founder} sent settlers from {origin} to found {settlement} in {@region}." },
+  { kind = "became_village", salience = 10, template = "{settlement} grew into a village of {population}." },
+  { kind = "became_town", salience = 18, template = "{settlement} grew into a town of {population}." },
+  { kind = "became_city", salience = 45, template = "{settlement} grew into a city of {population}." },
+  { kind = "settlement_dwindled", salience = 15, template = "{settlement} dwindled to {population} souls." },
+  { kind = "famine", salience = 25, template = "Famine struck {settlement}; {dead} died." },
+  { kind = "plague", salience = 45, template = "Plague broke out in {settlement}; {dead} died." },
+  { kind = "plague_spread", salience = 25, template = "The plague spread to {settlement}; {dead} died." },
+  { kind = "succession_crisis", salience = 40, template = "A succession crisis shook {civilization}." },
+  { kind = "civ_seceded", salience = 70, template = "{civilization} broke away from {from}, taking {settlements} {settlements?settlement|settlements} with it." },
+  { kind = "settlement_abandoned", salience = 55, template = "{settlement} was abandoned; {survivors} {survivors?survivor|survivors} left." },
+  { kind = "capital_moved", salience = 50, template = "{civilization} moved its seat to {settlement}." },
+  { kind = "civ_ended", salience = 85, template = "{civilization} came to an end." },
+  { kind = "ruin_faded", salience = 10, template = "The ruins of {settlement} faded from memory." },
 ]
 """,
 }
-HISTORY_FILES = dict(CHRONOLOGY_FILE, **ENGINE_FILE, **REPORT_FILE)
+# P3-05 12.1, the listing, verbatim from the spec.
+PEOPLES_FILE = {
+    "peoples.toml": """[history.peoples]
+score_site = 1000
+score_biome = 1000
+score_upland = 1000
+score_coast = 1000
+ore_reach_full = 200
+coast_full = 200
+rough_base = 150
+rough_upland = 600
+people_per_kcell = 2500
+capacity_floor = 400
+capital_weight = 3000
+founding_population = 300
+village_min = 250
+town_min = 1500
+city_min = 8000
+city_max = 25000
+fortress_max = 6000
+kind_shrink_permille = 800
+site_spacing = 32
+region_slots_max = 4
+mouth_class_min = 4
+port_radius = 3
+port_mouth_bonus = 60
+port_coast_bonus = 20
+decline_permille = 100
+recover_permille = 900
+colonist_permille = 120
+colonists_min = 60
+abandon_min = 40
+abandon_frail_max = 1200
+abandon_permille = { hamlet = 300, village = 250, town = 50, city = 0, fortress = 0 }
+found_pressure_permille = 750
+found_rate_permille = 100
+quiet_found_permille = 500
+reach_base = 1
+reach_per_expansion = 3
+expand_min_score = 250
+expand_relative_permille = 700
+expand_min_capacity = 800
+cost_penalty = 100
+pass_cost = 3
+river_cost = 2
+river_border_share_permille = 500
+civs_two_permille = 500
+regions_per_civ = 4
+home_min_hops = 3
+home_min_capacity = 1500
+intensity = { calm = 500, normal = 1000, turbulent = 2000 }
+famine_crowding_permille = 900
+famine_ppm = 2500
+famine_toll_min = 50
+famine_toll_max = 200
+plague_ppm = { hamlet = 300, village = 600, town = 1500, city = 3000, fortress = 600 }
+plague_toll_min = 100
+plague_toll_max = 300
+plague_spread_permille = 200
+plague_spread_toll_permille = 500
+crisis_per_generation_permille = 60
+crisis_loss_permille = 50
+split_min_settlements = 6
+split_min_regions = 3
+split_permille = 300
+ruin_fade_years = 1500
+colony_new_region_salience = 30
+plague_small_salience = 25
+""",
+}
+# P3-05 11: the fourteen report entries of kinds 6-19 (salience and
+# template of the table; `\|` there is a plain `|`). ASSUMPTION (spec gap):
+# the spec gives the entries but not their place in report.toml; they are
+# appended after the five P3-04 entries in kind id order.
+HISTORY_FILES = dict(CHRONOLOGY_FILE, **ENGINE_FILE, **PEOPLES_FILE, **REPORT_FILE)
 
 SPEC_FILES = {"race": RACE_FILES, "culture": CULTURE_FILES, "history": HISTORY_FILES}
 
@@ -535,6 +689,12 @@ def read_kind_files(root, kind, from_spec):
         if from_spec and kind in SPEC_FILES:
             return sorted(SPEC_FILES[kind].items(), key=lambda kv: kv[0].encode())
         return None
+    if kind in ("race", "history") and SPEC_FALLBACK and pre_015(path, kind):
+        # P3-05 (0.15.0): the shipped race and history files are the
+        # engineer's deliverable; while the disk holds the 0.14.0 files the
+        # spec listings stand in for them (noted by `check`).
+        PRE_015_USED.add(os.path.join(root, directory))
+        return sorted(SPEC_FILES[kind].items(), key=lambda kv: kv[0].encode())
     names = []
     for name in os.listdir(path):
         if name.startswith(".") or not name.endswith(".toml"):
@@ -547,6 +707,24 @@ def read_kind_files(root, kind, from_spec):
         with open(os.path.join(path, name), "rb") as f:
             out.append((name, f.read().decode("utf-8")))
     return out
+
+
+# A root whose races/ has no `density_permille` or whose history/ has no
+# peoples.toml is a 0.14.0 root (P3-05 12.1, 12.2); with SPEC_FALLBACK the
+# listings of this file replace it.
+SPEC_FALLBACK = True
+PRE_015_USED = set()
+
+
+def pre_015(path, kind):
+    names = [n for n in os.listdir(path) if n.endswith(".toml")]
+    if kind == "history":
+        return "peoples.toml" not in names
+    for n in names:
+        with open(os.path.join(path, n), encoding="utf-8") as f:
+            if "density_permille" not in f.read():
+                return True
+    return False
 
 
 def check_value(t, v, key):
@@ -738,7 +916,23 @@ def check_spec_invariants(c):
     check_record(CHRONOLOGY, parsed_spec("history")["chronology"], "history.chronology")
     check_record(ENGINE, parsed_spec("history")["engine"], "history.engine")
     check_record(REPORT, parsed_spec("history")["report"], "history.report")
-    c.eq("history ids", sorted(parsed_spec("history")), ["chronology", "engine", "report"])
+    check_record(PEOPLES, parsed_spec("history")["peoples"], "history.peoples")
+    c.eq("history ids", sorted(parsed_spec("history")), ["chronology", "engine", "peoples", "report"])
+    pe = parsed_spec("history")["peoples"]
+    c.eq("history.peoples passes its named checks (P3-05 12.1)", peoples_check_messages(pe), [])
+    for n, lo, hi in PEOPLES_RANGES:
+        vals = list(pe[n].values()) if isinstance(pe[n], dict) else [pe[n]]
+        c.ok("history.peoples.%s inside its range" % n, all(lo <= v <= hi for v in vals))
+    c.eq("report lists kinds 1-19 in id order (P3-05 11)", [e["kind"] for e in parsed_spec("history")["report"]["events"]],
+         ["awakening", "civ_founded", "settlement_founded", "quiet_era", "flare_up", "colony_founded",
+          "became_village", "became_town", "became_city", "settlement_dwindled", "famine", "plague",
+          "plague_spread", "succession_crisis", "civ_seceded", "settlement_abandoned", "capital_moved", "civ_ended",
+          "ruin_faded"])
+    c.eq("densities (P3-05 12.2)", {k: v["density_permille"] for k, v in races.items()},
+         dict(elf=300, goblin=900, dwarf=700, faerie=250, human=1000, orc=800))
+    c.ok("no 0.16.0 field prowess_permille (P3-01 r7)", all("prowess_permille" not in v for v in races.values()))
+    c.eq("goblin aggression stays 700 at 0.15.0 (P3-01 r7)", races["goblin"]["aggression"], 700)
+    c.ok("no 0.16.0 id conflict", "conflict" not in parsed_spec("history"))
     c.eq("six races", sorted(races), ["dwarf", "elf", "faerie", "goblin", "human", "orc"])
     c.eq("six cultures", sorted(cultures), ["dwarven", "elven", "faerie", "goblin", "human", "orcish"])
     by_order = sorted(races.items(), key=lambda kv: kv[1]["order"])
@@ -784,6 +978,9 @@ def check_disk(c):
             files = read_kind_files(root, kind, False)
             if files is None:
                 print("note: %s/%s/ does not exist yet; the listings stand in for it" % (root, KINDS[kind][0]))
+                continue
+            if os.path.join(root, KINDS[kind][0]) in PRE_015_USED:
+                print("note: %s/%s/ holds 0.14.0 files; the P3-05 listings stand in for it" % (root, KINDS[kind][0]))
                 continue
             present += 1
             defs = {}

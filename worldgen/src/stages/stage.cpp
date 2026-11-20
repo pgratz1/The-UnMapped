@@ -88,6 +88,11 @@ void StageContext::write_pass(const db::PassRow& row) {
 
 void StageContext::write_biome(const db::BiomeRow& row) {
     state_->stage.write_biome(row);
+    state_->written_rows.biomes.push_back(row);
+}
+
+std::span<const db::BiomeRow> StageContext::biomes() const noexcept {
+    return state_->pipeline.rows().biomes;
 }
 
 void StageContext::write_climate(const db::ClimateRow& row) {
@@ -260,6 +265,7 @@ void Pipeline::CommittedRows::append(CommittedRows&& more) {
         }
         from.clear();
     };
+    move_all(biomes, more.biomes);
     move_all(region_borders, more.region_borders);
     move_all(region_biomes, more.region_biomes);
     move_all(races, more.races);

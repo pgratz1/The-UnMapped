@@ -175,6 +175,7 @@ TEST_CASE("P3-01 8.2 test 8: \"all\" is every race of the loaded data, in race o
     f["cultures/orcish.toml"] = history_data::culture_toml(history_data::culture_listings()[5]);
     f["history/chronology.toml"] = std::string(history_data::CHRONOLOGY_TOML);
     f["history/engine.toml"] = std::string(history_data::ENGINE_TOML);
+    f["history/peoples.toml"] = std::string(history_data::PEOPLES_TOML);
     f["history/report.toml"] = std::string(history_data::REPORT_TOML);
     const Load l = load(f);
     INFO(dump(l));
