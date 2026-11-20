@@ -439,6 +439,9 @@ inline void check_invariants_06(const Tables& t, const eng::HistoryInputs& in, s
             CHECK((at(e, 1) - at(*x.ph.at(at(e, 4)), 3)) % quiet_step_years == 0);
         }
         if (k == k_battle || k == k_battle_at_pass) {
+            // r7 7.3 item 4 (0.17.0): with the shipped loss_winner 80 <= loss_loser 250 the victors never lose
+            // more than the defeated (dead_W from the smaller force)
+            CHECK(x.values.at(id).at(1) <= x.values.at(id).at(2));
             REQUIRE(x.causes.at(id).size() == 1U);
             CHECK(x.kind(x.causes.at(id)[0]) == k_war_declared);
         }
@@ -483,7 +486,10 @@ inline void check_invariants_06(const Tables& t, const eng::HistoryInputs& in, s
         }
     }
     for (const Row& s : t.settlement) {
-        if (at(s, 10) == ruined) CHECK((x.kind(at(s, 13)) == k_settlement_abandoned || x.kind(at(s, 13)) == k_sacked));
+        if (at(s, 10) == ruined) {
+            CHECK((x.kind(at(s, 13)) == k_settlement_abandoned || x.kind(at(s, 13)) == k_settlement_abandoned_to ||
+                   x.kind(at(s, 13)) == k_sacked));
+        }
     }
     // 5 territory
     for (const Row& r : t.region_control) {
@@ -498,6 +504,8 @@ inline void check_invariants_06(const Tables& t, const eng::HistoryInputs& in, s
             CHECK_MESSAGE(alive, "race " << a.race << " has no alive civilization");
         }
     }
+    // P3-05 14 r6 items (6 as D1 reads it, 11, 12, 13) with conflict installed
+    check_invariants_r6(t, 40, nullptr);
     // 8 every flare-up's trigger is a claim
     for (const Row& p : t.phase) {
         if (at(p, 2) == 3) CHECK(x.kind(at(p, 5)) == k_claim);
@@ -514,6 +522,60 @@ inline void check_invariants_06(const Tables& t, const eng::HistoryInputs& in, s
             CHECK_FALSE((x.kind(at(s, 7)) == k_colony_founded && at(s, 6) == at(e, 1)));
         }
     }
+}
+
+// P3-06 16.2 item 18a (r7, the 0.16.0 validation's F1): below the first claim the log with conflict (t)
+// equals the peoples-only log (pt) row for row in event, event_participant, event_cause and event_value,
+// except the quiet_era events open in the quiet step of the first claim, whose end_year (not below the
+// claim's year), years and generations may be smaller. With no claim, every history table but the three
+// catalogue tables and relation (conflict opens enmity rows without a claim: the reading of the reference)
+// is equal. Returns the number of excepted eras.
+inline std::int64_t check_peoples_prefix(const Tables& t, const Tables& pt) {
+    std::int64_t first = 0;
+    for (const Row& e : t.event) {
+        if (at(e, 3) == k_claim) {
+            first = at(e, 0);
+            break;
+        }
+    }
+    if (first == 0) {
+        CHECK(t.phase == pt.phase);
+        CHECK(t.event == pt.event);
+        CHECK(t.event_participant == pt.event_participant);
+        CHECK(t.event_cause == pt.event_cause);
+        CHECK(t.event_value == pt.event_value);
+        CHECK(t.civilization == pt.civilization);
+        CHECK(t.settlement == pt.settlement);
+        CHECK(t.settlement_census == pt.settlement_census);
+        CHECK(t.region_control == pt.region_control);
+        return 0;
+    }
+    const std::int64_t claim_year = at(t.event[static_cast<std::size_t>(first - 1)], 1);
+    std::set<std::int64_t> excepted;
+    REQUIRE(pt.event.size() >= static_cast<std::size_t>(first - 1));
+    for (std::size_t i = 0; i + 1 < static_cast<std::size_t>(first); ++i) {
+        const Row& a = t.event[i];
+        const Row& b = pt.event[i];
+        if (a == b) continue;
+        CAPTURE(at(a, 0));
+        const bool era = at(a, 3) == k_quiet_era && at(b, 3) == k_quiet_era && at(a, 1) == at(b, 1) &&
+                         a[4] == b[4] && a[5] == b[5] && a[6] == b[6] && a[7] == b[7] && at(a, 2) >= claim_year &&
+                         at(a, 2) <= at(b, 2);
+        CHECK_MESSAGE(era, "event " << at(a, 0) << " below the first claim e" << first << " differs: " << str(a)
+                                    << " against " << str(b));
+        if (era) excepted.insert(at(a, 0));
+    }
+    auto below = [first](const std::vector<Row>& rows, const std::set<std::int64_t>& skip) {
+        std::vector<Row> out;
+        for (const Row& r : rows) {
+            if (at(r, 0) < first && skip.count(at(r, 0)) == 0) out.push_back(r);
+        }
+        return out;
+    };
+    CHECK(below(t.event_participant, {}) == below(pt.event_participant, {}));
+    CHECK(below(t.event_cause, {}) == below(pt.event_cause, {}));
+    CHECK(below(t.event_value, excepted) == below(pt.event_value, excepted));
+    return static_cast<std::int64_t>(excepted.size());
 }
 
 }  // namespace conflict_test

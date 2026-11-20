@@ -86,6 +86,8 @@ const std::vector<Range>& ranges() {
         {"crisis_per_generation_permille", 0, 1000}, {"crisis_loss_permille", 0, 1000},
         {"split_min_settlements", 2, 1000}, {"split_min_regions", 2, 1000}, {"split_permille", 0, 1000},
         {"ruin_fade_years", 1, 100000}, {"colony_new_region_salience", 0, 100}, {"plague_small_salience", 0, 100},
+        // r6 (0.17.0, P3-08): after plague_small_salience
+        {"plague_major_dead", 0, 1000000}, {"crisis_small_salience", 0, 100},
     };
     return v;
 }
@@ -101,7 +103,7 @@ std::string listing_line(std::string_view field) {
 
 }  // namespace
 
-TEST_CASE("P3-05 12.1: history.peoples loads with the listing's 65 fields in table order and values") {
+TEST_CASE("P3-05 12.1 (r6): history.peoples loads with the listing's 67 fields in table order and values") {
     const Load l = load(history_data::shipped_files());
     INFO(dump(l));
     REQUIRE(l.ok());
@@ -120,6 +122,11 @@ TEST_CASE("P3-05 12.1: history.peoples loads with the listing's 65 fields in tab
     CHECK(r.get_record("plague_ppm").get_int("city") == 3000);
     CHECK(r.get_record("intensity").get_int("turbulent") == 2000);
     CHECK(r.get_int("plague_small_salience") == 25);
+    // r6 (0.17.0): the halved rates and the two new fields
+    CHECK(r.get_int("famine_ppm") == 1250);
+    CHECK(r.get_int("plague_spread_permille") == 100);
+    CHECK(r.get_int("plague_major_dead") == 1000);
+    CHECK(r.get_int("crisis_small_salience") == 25);
     // the shipped content (game/data) holds the same record (12.1: identical copies)
     CHECK(peoples_record(shipped_content()) == r);
 }
@@ -214,7 +221,7 @@ TEST_CASE("P3-05 16.1 item 16, 12.2 item 1: density_permille is required, int(1,
     CHECK(one_error(load(f)).message == "missing required field 'race.orc.density_permille'");
 }
 
-TEST_CASE("P3-05 12.2 items 2 and 3: the goblin and faerie biome weights and faerie upland of 0.15.0") {
+TEST_CASE("P3-05 12.2 item 2, 12.3 (r6): the goblin biome weights of 0.15.0 and the faerie weights of 0.17.0") {
     const Load l = load(history_data::shipped_files());
     REQUIRE(l.ok());
     const wd::KindContent* race = l.content->find_kind("race");
@@ -234,17 +241,54 @@ TEST_CASE("P3-05 12.2 items 2 and 3: the goblin and faerie biome weights and fae
     CHECK(gob.at("wet_woodland") == -300);
     CHECK(gob.size() == 8U);
     const auto fae = weights("faerie");
-    CHECK(fae.at("fen") == 800);
-    CHECK(fae.at("wet_woodland") == 800);
-    CHECK(fae.at("marsh") == 600);
-    CHECK(fae.at("temperate_forest") == 100);
-    CHECK(fae.at("highland_moor") == 300);
-    CHECK(fae.at("heath") == 100);
-    CHECK(fae.at("grassland") == -200);
-    CHECK(fae.size() == 9U);
+    // 12.3 candidate A (shipped from 0.17.0, P3-08 item 4): nine rows, heath kept with weight 0
+    const std::map<std::string, std::int64_t> want_fae = {
+        {"temperate_forest", 800}, {"wet_woodland", 800}, {"fen", 300},       {"marsh", 200},  {"highland_moor", 100},
+        {"heath", 0},              {"grassland", -300},   {"alpine", -400},   {"steppe", -400}};
+    CHECK(fae == want_fae);
     for (const wd::Definition& d : race->definitions) {
         if (d.id == "faerie") CHECK(d.record.get_int("upland") == 200);
     }
+}
+
+TEST_CASE("P3-05 r6 6.2, P3-01 r8 (1): cell_weights is required, after site_weights; dwarves 400, 600, the rest 0") {
+    const Load l = load(history_data::shipped_files());
+    INFO(dump(l));
+    REQUIRE(l.ok());
+    const wd::KindContent* race = l.content->find_kind("race");
+    REQUIRE(race != nullptr);
+    for (const wd::Definition& d : race->definitions) {
+        CAPTURE(d.id);
+        const wd::Record& cw = d.record.get_record("cell_weights");
+        CHECK(cw.size() == 2U);
+        CHECK(cw.name_at(0) == "ore");
+        CHECK(cw.name_at(1) == "height");
+        CHECK(cw.get_int("ore") == (d.id == "dwarf" ? 400 : 0));
+        CHECK(cw.get_int("height") == (d.id == "dwarf" ? 600 : 0));
+        std::size_t sw = 0, c = 0;
+        for (std::size_t i = 0; i < d.record.size(); ++i) {
+            if (d.record.name_at(i) == "site_weights") sw = i;
+            if (d.record.name_at(i) == "cell_weights") c = i;
+        }
+        CHECK(c == sw + 1);
+    }
+    // the shipped content holds the same records
+    CHECK(shipped_content().find_kind("race")->definitions.size() == race->definitions.size());
+    // required, and each field int(0, 1000)
+    Files f = history_data::shipped_files();
+    std::string& dw = f["races/dwarf.toml"];
+    const std::size_t at = dw.find("cell_weights = ");
+    REQUIRE(at != std::string::npos);
+    const std::size_t end = dw.find('\n', at);
+    Files missing = f;
+    missing["races/dwarf.toml"].erase(at, end - at + 1);
+    CHECK(contains(one_error(load(missing)).message, "cell_weights"));
+    Files high = f;
+    high["races/dwarf.toml"].replace(at, end - at, "cell_weights = { ore = 1001, height = 600 }");
+    CHECK(contains(one_error(load(high)).message, "race.dwarf.cell_weights.ore"));
+    Files low = f;
+    low["races/dwarf.toml"].replace(at, end - at, "cell_weights = { ore = 400, height = -1 }");
+    CHECK(contains(one_error(load(low)).message, "race.dwarf.cell_weights.height"));
 }
 
 TEST_CASE("P3-06 12.2, 16.1 item 13 / P3-01 r7: prowess_permille and goblin aggression 600 at 0.16.0") {
