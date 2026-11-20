@@ -1,8 +1,7 @@
 #pragma once
 
 // Shared by the two files of the P3-04 16.3 and 16.4 world cases
-// (history_engine_golden_test.cpp: the 512 cases; history_engine_golden_1024_test.cpp:
-// the 1024 cases), split so that each CTest entry holds about half of the run
+// (history_engine_golden_test.cpp and history_engine_golden_resume_test.cpp), split so that each CTest entry holds about half of the run
 // time (P3-08 4 item 1). The helpers moved here unchanged.
 
 #include <doctest/doctest.h>
