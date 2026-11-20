@@ -157,6 +157,31 @@ TEST_CASE("P3-06 r9 20.13 item 5 from rows: weariness violations found on a hand
     CHECK(weary_violations(t, 3).empty());
 }
 
+TEST_CASE("P3-06 r11 20.23, 20.13 item 12 from rows: wars in progress count toward weariness") {
+    // two truces of c2's R5 (count 2), then c1 declares (e30, open) and c3 declares while it is open (e40)
+    Tables t;
+    t.event = {ev(10, 100, k_war_declared, 5), ev(11, 110, k_truce, 0), ev(20, 200, k_war_declared, 5),
+               ev(21, 210, k_truce, 0), ev(30, 300, k_war_declared, 5), ev(40, 301, k_war_declared, 5),
+               ev(41, 320, k_truce, 0)};
+    for (const auto& [e, a] : std::vector<std::pair<std::int64_t, std::int64_t>>{{10, 1}, {20, 3}, {30, 1}, {40, 3}}) {
+        t.event_participant.push_back(part(e, 1, a));
+        t.event_participant.push_back(part(e, 2, 2));
+    }
+    t.relation = {{I(3), I(1), I(3), I(2), T("war"), I(100), I(110), I(10), I(11)},
+                  {I(3), I(3), I(3), I(2), T("war"), I(200), I(210), I(20), I(21)},
+                  {I(3), I(1), I(3), I(2), T("war"), I(300), N(), I(30), N()},
+                  {I(3), I(3), I(3), I(2), T("war"), I(301), I(320), I(40), I(41)}};
+    t.region_control = {{I(5), I(0), N(), I(2), I(1)}};
+    CHECK(weary_violations(t, 3) == std::vector<std::int64_t>{40});  // 2 futile + 1 open = 3
+    CHECK(weary_violations(t, 4).empty());
+    CHECK(weary_violations(t, 0).empty());
+    // the first war's goal changed hands meanwhile (the count resets): only the open war counts, 1 < 3
+    t.region_control = {{I(5), I(0), I(250), I(2), I(1)}, {I(5), I(250), N(), I(2), I(1)}};
+    CHECK(weary_violations(t, 3).empty());
+    // weary_wars 1: e20 follows one futile war (no change by 200); e40 meets the open e30
+    CHECK(weary_violations(t, 1) == std::vector<std::int64_t>{20, 40});
+}
+
 #if UNMAPPED_P3_09_DIGEST
 
 TEST_CASE("P3-07 r8 21.4 (P3-09): history_note equals the golden notes of the world cases; no note elsewhere") {

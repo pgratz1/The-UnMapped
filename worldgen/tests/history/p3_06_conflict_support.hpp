@@ -670,7 +670,7 @@ inline std::int64_t race_field(const wd::ContentSet& c, const std::string& key, 
     return 0;
 }
 
-// 20.13 item 5, sound and conservative from the rows (the reference's weary_violations): per (defender, region)
+// 20.13 items 5 and 12 (r11 20.23: with the wars open over (defender, region)), sound and conservative from the rows (the reference's weary_violations): per (defender, region)
 // the wars ended by peace or truce, in id order, during whose span (and since the previous one) the region's
 // owner never changed count; a claim or declaration naming (defender, region) after `weary` of them, with no
 // change since the last, is a violation.
@@ -725,7 +725,15 @@ inline std::vector<std::int64_t> weary_violations(const Tables& t, std::int64_t 
             }
             last = d.y1;
         }
-        if (run >= weary && last >= 0 && !any_in(g, last, at(e, 1))) out.push_back(at(e, 0));
+        // r11 20.23 (invariant 12): the wars over (b, g) open at e, by any attacker, count too
+        std::int64_t open = 0;
+        for (const Row& r : t.relation) {
+            if (r[4].bytes != "war" || at(r, 7) >= at(e, 0)) continue;
+            if (at(*x.ev.at(at(r, 7)), 5) != g || x.role1(at(r, 7), 2) != b) continue;
+            open += (is_null(r[6]) || at(r, 8) > at(e, 0)) ? 1 : 0;
+        }
+        const std::int64_t now = (last >= 0 && !any_in(g, last, at(e, 1))) ? run : 0;
+        if (now + open >= weary) out.push_back(at(e, 0));
     }
     return out;
 }
