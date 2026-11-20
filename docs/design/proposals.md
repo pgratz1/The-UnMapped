@@ -567,7 +567,7 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
 - Problem: the race data has no field that says how many of a people a region supports; lifespans and growth rates describe time, not numbers.
 - Proposal: a new race field `density_permille` (elves 300, goblins 900, dwarves 700, faeries 250, humans 1000, orcs 800) scales the capacity of every region for that race. A data change, not a schema change.
 - Interim choice: as proposed (`docs/specs/p3-05-peoples.md` 5.1, 12.2, question 1).
-- Status: open
+- Status: accepted by Paul, 2026-11-19 (deriving density from age appeals to him but would be hard to tune; the explicit field stays); design doc to be updated
 
 ### History: random pressures act only in active phases; migration waits for conflict
 
@@ -608,3 +608,25 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
 - Proposal: a new race field `prowess_permille` (elves 1600, dwarves 1400, orcs 1300, faeries 1200, humans 1000, goblins 800) scales armies and garrisons; goblin `aggression` 700 → 600; aggression enters the strain rate squared. A data change, not a schema change.
 - Interim choice: as proposed (`docs/specs/p3-06-expansion-conflict.md` 5.2, 6.1, 12.2, questions 3 and 6).
 - Status: open
+
+### Paul's decisions of 2026-11-19 on the peoples questions: density stays a field; faeries live in forest, wet or not
+
+- Date: 2026-11-19
+- Raised by: lead, recording Paul's decision
+- Design doc section: 5 (races; Peoples table)
+- Problem: `docs/specs/p3-05-peoples.md` section 19 put eight questions to Paul. He answered questions 1 and 7; the other six stand open with their interim choices.
+- Decision:
+  1. Question 1 (population density per race): the interim choice stands, a race field `density_permille`. Paul likes the idea of deriving density from a race's age but expects it to be hard to tune.
+  2. Question 7 (faeries): faeries definitely live in forested land, and the forest does not have to be wet. The shipped weights at 0.15.0 favour wet land (`fen` 800, `wet_woodland` 800, `marsh` 600, `temperate_forest` 100), so this is a data change: forest biomes become the faeries' first preference whether wet or dry. It changes where faeries awaken and settle, so it changes world bytes and comes with a generator version bump.
+- Interim choice: the 0.15.0 weights ship as validated; the faerie weights are re-tuned as a separate data change (spec amendment to P3-05 12.2 with a measured sweep) after P3-06 is integrated, before Paul's review of P3.
+- Status: question 1 accepted; question 7 decided, data change pending
+
+### Races: sub-peoples with their own lands (dark elves underground, hill dwarves above ground)
+
+- Date: 2026-11-19
+- Raised by: Paul (recorded by the lead)
+- Design doc section: 5 (races and cultures), 4 (geography: nothing underground yet)
+- Problem: each race has one culture and one set of land preferences. Paul suggests that some elves could be dark elves living underground, and some dwarves hill dwarves living above ground in hillier country. The design doc has no notion of a branch of a race with different lands.
+- Proposal: allow a race several cultures, each with its own biome and site preferences, settlement kinds and name syllables; a civilization takes one culture at its founding (a second civilization of a race, or one born by secession, may take another). Hill dwarves fit the present geography (upland and hill regions above ground). Dark elves need somewhere underground: geography has no caves or underground layer, so either a first approximation (mountain and pass regions, settlements flagged as underground) or a later geography addition. Both touch the data kinds `race` and `culture` (schema of the data files, and table `culture`), so they need a spec.
+- Interim choice: none taken; P3 continues with one culture per race. Suggested home: P5 History depth, or an earlier small stage if Paul wants hill dwarves sooner.
+- Status: open (for the design conversation)
