@@ -898,8 +898,8 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
 - Design doc section: 4 (regions: placeholder names until history gives cultural names)
 - Problem: Paul decided on 2026-11-19 that the largest region of each base name keeps the plain sector-and-noun name ("East Wood"). The largest region is often the most fought over, so the busiest regions carry the plainest names (seed 42 at 1024 keeps seven compass Woods, three of them side by side where the main feud is fought), and small maps stay mostly plain: 83% of regions at 512, 42% at 1024, 15% at 2048 (the P3-08 validation sweep's region rows).
 - Proposal: keep one plain name per kind of land: the largest region of each land noun keeps its compass name (one "… Wood", one "… Downs" per world), every other region draws a name. Measured on the same rows: 33% plain at 512, 12% at 1024, 4% at 2048. Alternatives measured: plain names only for a base name that occurs once (68%, 18%, 4%); the middle-sized region of each base name keeps it instead of the largest (shares unchanged).
-- Interim choice: unchanged (the largest region of each base name), as decided; `docs/specs/p1-06-regions.md` r6 15.5 has the measurements and the rule text is ready to change in RG11 4.
-- Status: open (question 1 of `docs/specs/p3-10-followups.md`)
+- Interim choice: unchanged until Paul answered; `docs/specs/p1-06-regions.md` r6 15.5 had the measurements.
+- Status: accepted by Paul 2026-11-20 (see "Paul's decision of 2026-11-20: the P3-10 questions go with their recommendations"); normative in `docs/specs/p1-06-regions.md` r7 15.5
 
 ### History: one quiet line for the world
 
@@ -909,4 +909,20 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
 - Problem: since P3-08 each civilization writes one `quiet_era` per quiet stretch, but every civilization writes its own line for the same stretch with the same years. In 40 default worlds at generator 0.18.0 every quiet row's eras share their years: 1,640 lines in 325 rows; with four civilizations per race a row holds up to 12 identical lines (0.17.0).
 - Proposal: one world-level event per quiet stretch (`quiet_stretch`, P3-04 r12 20.1), with every living realm as a participant and their number as a value ("For 425 years, from 3392 to 3816, the land was quiet, and 5 realms kept the peace."). The per-realm count of ruling generations is derivable from the stored rows and is printed by the history report in each realm's milestones. Alternative: keep per-realm eras and hide those shorter than about 100 years in the report (25% of the lines at 0.18.0).
 - Interim choice: the world-level line, in the P3-10 change (generator 0.19.0; `docs/specs/p3-10-followups.md` question 2).
-- Status: open
+- Status: accepted by Paul 2026-11-20 (see "Paul's decision of 2026-11-20: the P3-10 questions go with their recommendations")
+
+### Paul's decision of 2026-11-20: the P3-10 questions go with their recommendations
+
+- Date: 2026-11-20
+- Raised by: lead, recording Paul's decision
+- Design doc section: 4 (regions), 5 (history: how it reads, where peoples settle)
+- Problem: the P3-10 change spec (`docs/specs/p3-10-followups.md`, branch `p3/10-spec`: the follow-ups of the world critic's review of P3-08) put questions to Paul; the lead presented five with recommendations.
+- Decision: Paul's words: "Yes I agree with the recommendations on all five." So:
+  1. **Plain compass names.** One plain name per land type per world, kept by that land type's largest region ("East Wood"); every other region draws a name. This replaces the earlier rule that the largest region of each base name keeps it (decision of 2026-11-19, region name question 1). Measured by the spec writer: plain names fall from 83% / 42% / 15% of regions at map sizes 512 / 1024 / 2048 to 33% / 12% / 4%.
+  2. **Quiet eras.** One world-level line per quiet stretch, with the realms that passed it as participants, instead of a line per realm.
+  3. **Thousands separators** in the numbers of rendered sentences from 1,000 on, not in years.
+  4. **Faerie and dwarven sites** as specified: faeries drawn inland and away from the coast, dwarves without a harbour bonus and with habitability in the site value. The lead watches the measured side effect (humans lost 15% of standing settlements in 20 worlds) in validation.
+  5. **Two comic names stay** unfiltered ("Mammga", "The Twiwhiwou Ring"): each comes from an ordinary syllable of its culture.
+  The lead also accepts the spec's technical question (a template placeholder for the cause clause of abandonment and dwindling sentences).
+- Interim choice: none needed. P3-10 (generator 0.19.0) is implemented after P3-09.
+- Status: accepted
