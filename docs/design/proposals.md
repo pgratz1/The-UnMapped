@@ -718,3 +718,19 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
   10. "A world already at war when the dwarves arrive" holds in about 30 of 50 worlds and is accepted; no rule is added to force it.
 - Interim choice: none needed; all ten are as specified and implemented for generator 0.16.0 (in integration).
 - Status: accepted; design doc sections 5 and 13 to be updated
+
+### Paul's decision of 2026-11-19: the history report questions go with their recommendations
+
+- Date: 2026-11-19
+- Raised by: lead, recording Paul's decision
+- Design doc section: 13 (P3: a text history report)
+- Problem: `docs/specs/p3-07-history-report.md` section 19 put six questions to Paul.
+- Decision: Paul's words, after accepting the conflict questions: "And on the history-report.md also." So:
+  1. The summary budget (250 events), the minimum salience (20) and the milestone count (6) are constants of the report format, not tuning; what matters is steered by the per-kind base salience, which is data stored in every world.
+  2. The summary level has at most 250 event lines, none below salience 20, the threshold rising with the size of the log.
+  3. No filters in report format v1.
+  4. A world without history is refused (exit 3), not given a partial report.
+  5. The report uses the islet threshold 1172 as a constant; if that tuning value ever changes, an islet flag is stored in the world with that change.
+  6. The report goes to standard output by default.
+- Interim choice: none needed; all six are as specified; P3-07 is not yet implemented.
+- Status: accepted
