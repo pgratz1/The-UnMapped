@@ -1735,9 +1735,13 @@ def stats21_lines(res, inp):
     for (b, g), ds in groups.items():
         changes = [y for rc in res["region_control"] if rc[0] == g for y in (rc[1], rc[2]) if y is not None]
         run = 0
+        prev_hi = None
         for d in sorted(ds):
             lo, hi = span[d]
-            if any(lo <= y <= hi for y in changes):
+            # the lead's ruling (follows the weariness rule): a change of owner between two wars breaks the run too
+            wlo = lo if prev_hi is None else min(lo, prev_hi)
+            prev_hi = hi
+            if any(wlo <= y <= hi for y in changes):
                 run = 0
             else:
                 run += 1

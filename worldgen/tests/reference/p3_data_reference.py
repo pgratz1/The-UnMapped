@@ -1671,10 +1671,10 @@ def check_copied_kinds(c):
     c.eq("name_filter ids (P3-02 r5 11.2)", [d for d, _ in content], ["crude", "famous", "slurs", "words"])
     c.eq("name_filter sizes (P3-02 r5 11.2)",
          {d: tuple(len(t[f]) for f in ("anywhere", "at_start", "whole")) for d, t in content},
-         dict(slurs=(33, 19, 6), crude=(68, 16, 14), words=(0, 0, 392 if at_least("0.18.0") else 647),
-              famous=(0, 0, 101)))   # P3-02 r8 11.11 (0.18.0): the short word list, 392 (647 before)
+         dict(slurs=(33, 19, 6), crude=(68, 16, 14), words=(0, 0, 393 if at_least("0.18.0") else 647),
+              famous=(0, 0, 101)))   # P3-02 r8 11.11 (0.18.0): the short word list, 393 (647 before)
     eff = [len(set(w for _, t in content for w in t[f])) for f in ("anywhere", "at_start", "whole")]
-    c.eq("effective list sizes (P3-02 r5 11.2, r8 11.11)", eff, [101, 35, 513 if at_least("0.18.0") else 768])
+    c.eq("effective list sizes (P3-02 r5 11.2, r8 11.11)", eff, [101, 35, 514 if at_least("0.18.0") else 768])
     c.eq("shipped name_filter passes its checks", name_filter_messages(content), [])
     for d, t in content:
         for f in ("anywhere", "at_start", "whole"):

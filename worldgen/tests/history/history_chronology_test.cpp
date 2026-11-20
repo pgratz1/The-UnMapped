@@ -93,9 +93,9 @@ TEST_CASE("P3-03 7.1, 14.1 item 1: seed 42, span 6000: K_aw, base, u, pick, d an
     CHECK(ages_text(r.ages) ==
           "1:1:0:2073:The Age of Elves|2:2:2074:3241:The Age of Goblins|3:3:3242:4242:The Age of Dwarves|"
           "4:4:4243:4968:The Age of Faeries|5:5:4969:5595:The Age of Humans|6:6:5596:5999:The Age of Orcs");
-    CHECK(god_names(r) == std::vector<std::string>{"Fielie", "Krokzit", "Bronhak", "Syfiash", "Wealstuld", "Kruu'mold"});
-    CHECK(replay_gods(r, 42, {}, shipped()) == "1:Fielie:0|2:Krokzit:0|3:Bronhak:1|4:Syfiash:0|5:Wealstuld:0|6:Kruu'mold:0");
-    CHECK(chrono_api::god_choices(shipped(), Params{}, 42, {}) == "1:Fielie:0|2:Krokzit:0|3:Bronhak:1|4:Syfiash:0|5:Wealstuld:0|6:Kruu'mold:0");
+    CHECK(god_names(r) == std::vector<std::string>{"Fielie", "Krokzit", "Bronhak", "Syfiash", "Wealstuld", "Ogh'krak"});
+    CHECK(replay_gods(r, 42, {}, shipped()) == "1:Fielie:0|2:Krokzit:0|3:Bronhak:1|4:Syfiash:0|5:Wealstuld:0|6:Ogh'krak:1");
+    CHECK(chrono_api::god_choices(shipped(), Params{}, 42, {}) == "1:Fielie:0|2:Krokzit:0|3:Bronhak:1|4:Syfiash:0|5:Wealstuld:0|6:Ogh'krak:1");
 }
 
 TEST_CASE("P3-03 7.1, 14.1 item 1: seed 0 and seed 1, span 6000") {
@@ -172,7 +172,7 @@ TEST_CASE("P3-03 7.1, 14.1 item 1: seed 42 goblin,dwarf,human; seed 2^64-1 span 
         const Rows r = chrono_api::stage(shipped(), params_with(6000, {"goblin", "dwarf", "human"}), 42, {});
         CHECK(ages_text(r.ages) ==
               "1:2:0:3241:The Age of Goblins|2:3:3242:4968:The Age of Dwarves|3:5:4969:5999:The Age of Humans");
-        CHECK(god_names(r) == std::vector<std::string>{"Fielie", "Krokzit", "Bronhak", "Syfiash", "Wealstuld", "Kruu'mold"});
+        CHECK(god_names(r) == std::vector<std::string>{"Fielie", "Krokzit", "Bronhak", "Syfiash", "Wealstuld", "Ogh'krak"});
     }
     {
         const Rows r = chrono_api::stage(shipped(), params_with(12000, {"orc"}), M64, {});
@@ -464,9 +464,9 @@ TEST_CASE("P3-03 14.3 item 19: chronology_stage twice gives the same rows; no re
     const Rows b = chrono_api::stage(shipped(), Params{}, 42, collision_regions());
     CHECK(a == b);
     // A call in between with other region names does not leak into the next call.
-    (void)chrono_api::stage(shipped(), Params{}, 42, {"Fielie", "Krokzit", "Bronhak", "Syfiash", "Wealstuld", "Kruu'mold"});
+    (void)chrono_api::stage(shipped(), Params{}, 42, {"Fielie", "Krokzit", "Bronhak", "Syfiash", "Wealstuld", "Ogh'krak"});
     const Rows c = chrono_api::stage(shipped(), Params{}, 42, {});
-    CHECK(god_names(c) == std::vector<std::string>{"Fielie", "Krokzit", "Bronhak", "Syfiash", "Wealstuld", "Kruu'mold"});
+    CHECK(god_names(c) == std::vector<std::string>{"Fielie", "Krokzit", "Bronhak", "Syfiash", "Wealstuld", "Ogh'krak"});
     CHECK(chrono_api::stage(shipped(), Params{}, 42, collision_regions()) == a);
 }
 

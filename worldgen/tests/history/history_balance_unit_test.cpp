@@ -125,6 +125,11 @@ TEST_CASE("P3-07 r8 21.5 (P3-09): the six [stats] keys on a hand-made log with h
     CHECK(l[2] == "wars_same_goal_max = 3");
     CHECK(l[6] == "wars_unfound = 1");
     CHECK(l[7] == "refuges_held_no_destination = 1");
+    // the lead's ruling on wars_same_goal_unchanged_max: a change of R5's owner between w1 (ends 110) and w2
+    // (from 200), in 150, breaks the run: w1 1, w2 0, w3 0 (305 in its span): the longest run is 1
+    t.region_control = {{I(5), I(0), I(150), I(2), I(1)}, {I(5), I(150), I(305), I(2), I(1)},
+                        {I(5), I(305), N(), I(1), I(33)}, {I(7), I(0), N(), I(2), I(1)}};
+    CHECK(stats_lines_21(t, in)[3] == "wars_same_goal_unchanged_max = 1");
     // no war: 0 for every war key; no people, no regions: 0 for the shares
     Tables empty;
     CHECK(stats_lines_21(empty, in) == std::vector<std::string>{

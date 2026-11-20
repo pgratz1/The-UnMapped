@@ -302,12 +302,16 @@ inline std::vector<std::string> stats_lines_21(const Tables& t, const eng::Histo
             changes.push_back(at(rc, 1));
             if (!is_null(rc[2])) changes.push_back(at(rc, 2));
         }
-        std::int64_t run = 0;
+        std::int64_t run = 0, prev_hi = -1;
         for (const std::int64_t d : ds) {  // id order
             const Row& r = *war_row.at(d);
             const std::int64_t lo = at(r, 5), hi = is_null(r[6]) ? E : at(r, 6);
+            // the lead's ruling (follows the weariness rule, 20.23): a change of owner between two wars of the
+            // run breaks it too, so the window starts at the previous war's end
+            const std::int64_t wlo = prev_hi < 0 ? lo : std::min(lo, prev_hi);
+            prev_hi = hi;
             bool moved = false;
-            for (const std::int64_t y : changes) moved = moved || (lo <= y && y <= hi);
+            for (const std::int64_t y : changes) moved = moved || (wlo <= y && y <= hi);
             run = moved ? 0 : run + 1;
             unchanged_max = std::max(unchanged_max, run);
         }

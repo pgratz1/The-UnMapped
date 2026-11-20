@@ -977,7 +977,7 @@ SAMPLES = {
               "Silstudstead, Tirdwick, Dack, Stastint, Moldstead, Edumford, Tontstead, Ceanbir, Durdton, Durdbury",
               "The Duchy of Ashem; The Kingdom of Ashos; The Duchy of Hick; The Duchy of Wick; The Duchy of Circon",
               "Simbear, Histold, Edostold"),
-    "orcish": ("Kaak Fort, Zaarz Camp, Grush, Zaakugaag, Uruld'duuld, Uu'mold Fort, Kark Fort, Azol'urash Fort, "
+    "orcish": ("Kaak Fort, Zaarz Camp, Grush, Zaakugaag, Uruld'duuld, Shaazazuug, Kark Fort, Azol'urash Fort, "
                "Karzthogh, Uromgha, Maag, Uul'krakh Camp, Og'buurk Camp, Zaalduruz Camp, Mak, Duld'sha Fort, "
                "Shuum Fort, Ghorz Fort, Duuldkrosh Fort, Aag'urog Fort",
                "Clan Kram'krorz; The Azakhdam Horde; The Urogh'krorz Horde; The Burk'zork Horde; "
@@ -1012,7 +1012,7 @@ SAMPLES_R5 = {
               "Silstudstead, Tirdwick, Dack, Stastint, Moldstead, Edumford, Tontstead, Ceanbir, Durdton, Durdbury",
               "The Duchy of Ashem; The Kingdom of Ashos; The Kingdom of Edes; The Duchy of Wick; The Duchy of Circon",
               "Wasbrid, Histold, Edostold"),
-    "orcish": ("Kaak Fort, Zaarz Camp, Grush, Zaakugaag, Uruld'duuld, Uu'mold Fort, Kark Fort, Azol'urash Fort, "
+    "orcish": ("Kaak Fort, Zaarz Camp, Grush, Zaakugaag, Uruld'duuld, Shaazazuug, Kark Fort, Azol'urash Fort, "
                "Karzthogh, Uromgha, Maag, Uul'krakh Camp, Og'buurk Camp, Zaalduruz Camp, Mak, Duld'sha Fort, "
                "Shuum Fort, Ghorz Fort, Duuldkrosh Fort, Aag'urog Fort",
                "Clan Kram'krorz; The Azakhdam Horde; The Urogh'krorz Horde; The Burk'zork Horde; "
@@ -1033,7 +1033,7 @@ GODS_R5 = {
     7: "Onveth, Buzork, Mammga, Ouwheefy, Gordman, Maarkzaagh",
     8: "Saelome, Grotbib, Mairnbu, Twybo, Madgil, Uush'muum",
     9: "Lisael, Skozazz, Nurntond, Whaeouwhia, Geadashid, Um'daz",
-    42: "Fielie, Krokzit, Bronhak, Syfiash, Wealstuld, Kruu'mold",
+    42: "Fielie, Krokzit, Bronhak, Syfiash, Wealstuld, Ogh'krak",
 }
 GOD_RACE_CULTURES = ("elven", "goblin", "dwarven", "faerie", "human", "orcish")
 
@@ -1262,7 +1262,7 @@ def check_r5(ck):
     sf = shipped_filter()
     for w in ("gold", "thorn", "moss", "iron", "ash", "grub", "sleet", "horn"):
         ck.eq("r8 anchor %s passes" % w, name_filtered(sf, w), False)
-    for w in ("also", "went", "movie", "dork", "zit", "old"):
+    for w in ("also", "went", "movie", "dork", "zit", "old", "mold"):
         ck.eq("r8 anchor %s is rejected" % w, name_filtered(sf, w), True)
     # 11.6 tables.
     bad = compare_samples(sys.stdout)
