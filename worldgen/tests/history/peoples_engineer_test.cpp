@@ -115,16 +115,42 @@ TEST_CASE("P3-05 engineer: score terms use floor division, capacity has its floo
 // Skipped by default: worldgen-tests -ts=peoples-bench --no-skip.
 #include <chrono>
 #include <cstdlib>
+#include <optional>
 #include <string>
 
 #include "p3_04_engine_support.hpp"
 #include "worldgen/stages/history.hpp"
 
+namespace {
+
+// An environment variable, portably (the form of db_determinism_test.cpp's
+// get_env: MSVC deprecates std::getenv, C4996).
+std::optional<std::string> bench_env(const char* name) {
+#if defined(_MSC_VER)
+    char* value = nullptr;
+    std::size_t len = 0;
+    if (_dupenv_s(&value, &len, name) != 0 || value == nullptr) {
+        return std::nullopt;
+    }
+    std::string out(value);
+    std::free(value);
+    return out;
+#else
+    const char* value = std::getenv(name);
+    if (value == nullptr) {
+        return std::nullopt;
+    }
+    return std::string(value);
+#endif
+}
+
+}  // namespace
+
 TEST_SUITE("peoples-bench" * doctest::skip()) {
 TEST_CASE("P3-05 engineer: history stage time") {
-    const char* list = std::getenv("UNMAPPED_PEOPLES_BENCH");
-    REQUIRE(list != nullptr);
-    std::string paths = list;
+    const std::optional<std::string> list = bench_env("UNMAPPED_PEOPLES_BENCH");
+    REQUIRE(list.has_value());
+    std::string paths = *list;
     std::size_t at = 0;
     while (at <= paths.size()) {
         const std::size_t end = std::min(paths.find(':', at), paths.size());
