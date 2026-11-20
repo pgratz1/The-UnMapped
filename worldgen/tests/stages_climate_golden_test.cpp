@@ -151,7 +151,7 @@ void run_case(const GoldenCase& c) {
         const std::optional<hydro_test::GoldenCase> hg = hydrology_golden_of(c);
         if (hg.has_value()) {
             for (const char* item : {"elevation", "water", "water_depth", "coast_dist"}) {
-                CAPTURE(item);
+                CAPTURE(std::string_view(item));
                 REQUIRE_MESSAGE(c.get(item) == hg->get(item),
                                 "the climate golden input differs from the hydrology golden value: an upstream "
                                 "change, re-record the goldens together (P1-03 10.4)");
@@ -251,7 +251,7 @@ TEST_CASE("P1-03 golden: the file covers every wind code, lakes, the mountain fl
     }
     for (const char* want : {"shipped-128-s0", "shipped-128-s9", "small-128-s0", "small-128-s1", "small-128-s2",
                              "shipped-128-s42", "random-0", "shipped-64-s0-w7"}) {
-        CAPTURE(want);
+        CAPTURE(std::string_view(want));
         CHECK(std::find(names.begin(), names.end(), want) != names.end());
     }
     for (std::size_t k = 0; k < 8; ++k) {
@@ -579,7 +579,7 @@ TEST_CASE("P1-03 2, C7: the stage entry reads exactly elevation, water, water_de
 TEST_CASE("P1-03 2, 10.1 test 7: each precondition violation is fatal at the stage entry with the prefix, leaving no file") {
     dbtest::TempDir dir("climate-entry-bad");
     auto expect_fatal = [&](const char* what, bool prefix) {
-        CAPTURE(what);
+        CAPTURE(std::string_view(what));
         const std::string err = entry_error(dir, "bad.db");
         CHECK_FALSE(err.empty());
         if (prefix) {

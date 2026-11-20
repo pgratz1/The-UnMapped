@@ -99,4 +99,13 @@ Fx abs_values(Fx s, Fx n, const Obj& o) {
 // Thread identity of other kinds of objects is not matched by name alone.
 std::uint64_t ident = node.id + layer.id;
 
+// ctype (P3-08 audit) near misses: the project's ASCII helpers, members,
+// other namespaces, declarations and text. std::tolower(c) isalpha(c)
+char to_lower(char c);
+bool is_lower(char c);
+char lowered = to_lower('A') + is_lower('a');
+char m1 = word.tolower();
+char m2 = ascii::toupper('a');
+constexpr std::string_view s5 = "std::tolower(c) isdigit(c) <cctype>";
+
 }  // namespace worldgen

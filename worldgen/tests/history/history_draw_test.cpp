@@ -82,16 +82,19 @@ TEST_CASE("P3-02 4.5, 8: the three hist.names streams are registered and keyed a
         }
         CHECK_MESSAGE(found, name);
     }
-    // Revised 8: appended after geo.regions.cost in the order god, civilization, settlement.
+    // Revised 8: appended after geo.regions.cost in the order god, civilization, settlement;
+    // P0-01 amendment 20 (P1-06 r4, generator 0.17.0) puts geo.regions.name
+    // directly after geo.regions.cost, so the three follow it.
     const auto& all = worldgen::streams::all_stream_names;
     std::size_t at = all.size();
     for (std::size_t i = 0; i < all.size(); ++i) {
         if (all[i] == "geo.regions.cost") at = i;
     }
-    REQUIRE(at + 3 < all.size());
-    CHECK(all[at + 1] == "hist.names.god");
-    CHECK(all[at + 2] == "hist.names.civilization");
-    CHECK(all[at + 3] == "hist.names.settlement");
+    REQUIRE(at + 4 < all.size());
+    CHECK(all[at + 1] == "geo.regions.name");
+    CHECK(all[at + 2] == "hist.names.god");
+    CHECK(all[at + 3] == "hist.names.civilization");
+    CHECK(all[at + 4] == "hist.names.settlement");
     const auto& lines = golden_lines("stream");
     REQUIRE(lines.size() == 9);
     for (const std::string& line : lines) {

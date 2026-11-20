@@ -134,6 +134,14 @@ void check_race(const wd::Definition& d, const history_data::Race& want) {
     CHECK(sw.get_int("timber") == want.timber);
     CHECK(sw.get_int("ore") == want.ore);
     CHECK(sw.get_int("fresh_water") == want.fresh_water);
+    // P3-01 r8 (1) (generator 0.17.0): record race_cell_weights {ore, height}.
+    const wd::Record& cw = r.get_record("cell_weights");
+    REQUIRE(cw.size() == 2U);
+    for (std::size_t i = 0; i < cw.size(); ++i) {
+        CHECK(cw.name_at(i) == history_data::cell_weight_fields()[i]);
+    }
+    CHECK(cw.get_int("ore") == want.cell_ore);
+    CHECK(cw.get_int("height") == want.cell_height);
     const auto& biomes = r.get_array("biomes");
     REQUIRE(biomes.size() == want.biomes.size());
     for (std::size_t i = 0; i < biomes.size(); ++i) {
@@ -207,13 +215,23 @@ void check_shipped_values(const wd::ContentSet& c) {
 TEST_CASE("P3-01 3-5: the production registry holds race, culture and history beside biome and worldgen") {
     const wd::KindRegistry r = wd::builtin_kinds();
     const auto& kinds = r.kinds();
-    REQUIRE(kinds.size() == 5U);
-    // Ascending name (P0-03 7.1): the encoding order of P3-01 7.
+    REQUIRE(kinds.size() == 7U);
+    // Ascending name (P0-03 7.1): the encoding order of P3-01 7; from
+    // generator 0.17.0 name_filter (P3-02 r5 11.2) and placename (P1-06 r3
+    // 4.1) between history and race (P3-01 r8 (4)).
     CHECK(kinds[0].name == "biome");
     CHECK(kinds[1].name == "culture");
     CHECK(kinds[2].name == "history");
-    CHECK(kinds[3].name == "race");
-    CHECK(kinds[4].name == "worldgen");
+    CHECK(kinds[3].name == "name_filter");
+    CHECK(kinds[4].name == "placename");
+    CHECK(kinds[5].name == "race");
+    CHECK(kinds[6].name == "worldgen");
+    CHECK(kinds[3].directory == "name_filters");
+    CHECK(kinds[3].required);
+    CHECK_FALSE(kinds[3].has_fixed_ids());
+    CHECK(kinds[4].directory == "placenames");
+    CHECK(kinds[4].required);
+    CHECK_FALSE(kinds[4].has_fixed_ids());
 
     const wd::Kind& culture = kinds[1];
     CHECK(culture.directory == "cultures");
@@ -241,7 +259,7 @@ TEST_CASE("P3-01 3-5: the production registry holds race, culture and history be
     CHECK(history.schema_for("conflict")->checks()[0].name == "conflict_declare");
     CHECK(history.schema_for("conflict")->checks()[1].name == "conflict_strain_max");
 
-    const wd::Kind& race = kinds[3];
+    const wd::Kind& race = kinds[5];
     CHECK(race.directory == "races");
     CHECK(race.required);
     CHECK_FALSE(race.has_fixed_ids());
@@ -281,7 +299,7 @@ TEST_CASE("P3-01 8.1 test 1: game/data and the two fixture roots hold the listin
     const Load want = load(history_data::shipped_files());
     REQUIRE(want.ok());
     for (const char* base : {"game/data", "worldgen/tests/data/geo", "worldgen/tests/data/geo-small"}) {
-        CAPTURE(base);
+        CAPTURE(std::string_view(base));
         const Load got = load_disk(source_root() / base);
         INFO(dump(got));
         REQUIRE(got.ok());
@@ -289,7 +307,7 @@ TEST_CASE("P3-01 8.1 test 1: game/data and the two fixture roots hold the listin
         // Every validated value of the new kinds, the naming blocks of
         // P3-02 5 included, equals the transcription.
         for (const char* kind : {"race", "culture", "history"}) {
-            CAPTURE(kind);
+            CAPTURE(std::string_view(kind));
             const wd::KindContent* a = got.content->find_kind(kind);
             const wd::KindContent* b = want.content->find_kind(kind);
             REQUIRE(a != nullptr);
@@ -298,7 +316,8 @@ TEST_CASE("P3-01 8.1 test 1: game/data and the two fixture roots hold the listin
         }
         // P3-01 2: "identical copies under worldgen/tests/data/geo/ and
         // worldgen/tests/data/geo-small/": byte for byte, file by file.
-        for (const char* d : {"races", "cultures", "history"}) {
+        // P3-08 (0.17.0): name_filters/ and placenames/ too (P3-02 r5 11.2, P1-06 r3 4.1).
+        for (const char* d : {"races", "cultures", "history", "name_filters", "placenames"}) {
             const wd::MemoryDirectory shipped = directory_from_disk(source_root() / "game" / "data", d);
             const wd::MemoryDirectory copy = directory_from_disk(source_root() / base, d);
             REQUIRE(copy.entries.size() == shipped.entries.size());
@@ -315,8 +334,15 @@ TEST_CASE("P3-01 8.1 test 1: game/data and the two fixture roots hold the listin
                           "races/human.toml", "races/orc.toml", "cultures/dwarven.toml", "cultures/elven.toml",
                           "cultures/faerie.toml", "cultures/goblin.toml", "cultures/human.toml",
                           "cultures/orcish.toml", "history/chronology.toml", "history/conflict.toml",
-                          "history/engine.toml", "history/peoples.toml", "history/report.toml"}) {
-        CAPTURE(f);
+                          "history/engine.toml", "history/peoples.toml", "history/report.toml",
+                          // P3-01 r8 (4): the name_filter and placename files (P3-02 r5 11.2, P1-06 r3 4.1)
+                          "name_filters/crude.toml", "name_filters/famous.toml", "name_filters/slurs.toml",
+                          "name_filters/words.toml", "placenames/carr.toml", "placenames/common.toml",
+                          "placenames/downs.toml", "placenames/fells.toml", "placenames/fen.toml", "placenames/heath.toml",
+                          "placenames/isle.toml", "placenames/marsh.toml", "placenames/mere.toml", "placenames/moor.toml",
+                          "placenames/peaks.toml", "placenames/steppe.toml", "placenames/traits.toml",
+                          "placenames/waste.toml", "placenames/wood.toml"}) {
+        CAPTURE(std::string_view(f));
         CHECK(std::filesystem::is_regular_file(data / f));
     }
     // P3-01 5: "a file for a future id must not be committed early".
@@ -600,8 +626,8 @@ TEST_CASE("P3-01 3, 4 and P0-03 amendment 17: name, plural, adjective and the cu
     for (const Case& c : cases) {
         const std::string field(std::string_view(c.from).substr(0, std::string_view(c.from).find(' ')));
         for (const char* bad : {"elf", "High Elf", "ELF", "Elf2", "Elf-kin", ""}) {
-            CAPTURE(c.key);
-            CAPTURE(bad);
+            CAPTURE(std::string_view(c.key));
+            CAPTURE(std::string_view(bad));
             const Load l = load(shipped_edited(c.path, c.from, field + " = \"" + bad + "\""));
             value_error(l, c.path, c.line, static_cast<std::uint32_t>(field.size() + 4),
                         "'" + std::string(c.key) + "' is \"" + bad +
@@ -648,7 +674,7 @@ TEST_CASE("P3-01 5: history/ without chronology.toml is a missing definition aga
 
 TEST_CASE("P3-01 3-5: races/, cultures/ and history/ are required kind directories") {
     for (const char* d : {"races", "cultures", "history"}) {
-        CAPTURE(d);
+        CAPTURE(std::string_view(d));
         Files f;
         for (const auto& [path, text] : history_data::shipped_files()) {
             if (path.substr(0, path.find('/')) != d) {
@@ -756,6 +782,11 @@ TEST_CASE("P3-01 8.1 test 5: every bounded race field one step outside its bound
         {"races/orc.toml", "expansion = 600", "expansion = 1000", "expansion = 1001", "race.orc.expansion"},
         {"races/orc.toml", "aggression = 900", "aggression = 0", "aggression = -1", "race.orc.aggression"},
         {"races/orc.toml", "aggression = 900", "aggression = 1000", "aggression = 1001", "race.orc.aggression"},
+        // P3-01 r8 (1) (generator 0.17.0): cell_weights {ore, height}, each int(0, 1000)
+        {"races/orc.toml", "cell_weights = { ore = 0, height = 0 }", "cell_weights = { ore = 1000, height = 0 }",
+         "cell_weights = { ore = 1001, height = 0 }", "race.orc.cell_weights.ore"},
+        {"races/orc.toml", "cell_weights = { ore = 0, height = 0 }", "cell_weights = { ore = 0, height = 1000 }",
+         "cell_weights = { ore = 0, height = -1 }", "race.orc.cell_weights.height"},
         // P3-06 12.2 item 1 (P3-01 r7): prowess_permille int(1, 4000)
         {"races/orc.toml", "prowess_permille = 1300", "prowess_permille = 1", "prowess_permille = 0", "race.orc.prowess_permille"},
         {"races/orc.toml", "prowess_permille = 1300", "prowess_permille = 4000", "prowess_permille = 4001", "race.orc.prowess_permille"},
@@ -772,7 +803,7 @@ TEST_CASE("P3-01 8.1 test 5: every bounded race field one step outside its bound
         {"races/orc.toml", "name = \"Orc\"", "name = \"Orc\"", "name = 3", "race.orc.name"},
     };
     for (const Edit& e : edits) {
-        CAPTURE(e.bad);
+        CAPTURE(std::string_view(e.bad));
         const Load good = load(shipped_edited(e.path, e.from, e.ok));
         CHECK_MESSAGE(good.ok(), dump(good));
         const Load bad = load(shipped_edited(e.path, e.from, e.bad));
@@ -883,7 +914,7 @@ TEST_CASE("P3-01 5.1: history.chronology bounds, required fields and chronology_
              {"awakening_min_gap_years = 100", "awakening_min_gap_years = 2000", "awakening_min_gap_years = 2001",
               "history.chronology.awakening_min_gap_years", 3},
          }) {
-        CAPTURE(e.bad);
+        CAPTURE(std::string_view(e.bad));
         CHECK(load(shipped_edited(path, e.from, e.ok)).ok());
         const wd::LoadError err = only_error(load(shipped_edited(path, e.from, e.bad)));
         CHECK(err.path == path);
@@ -899,12 +930,12 @@ TEST_CASE("P3-01 5.1: history.chronology bounds, required fields and chronology_
     const wd::LoadError e65 = only_error(load(shipped_edited(path, form, "age_name_form = \"" + sixty_four + "xx\"")));
     CHECK(contains(e65.message, "'history.chronology.age_name_form' is 65 bytes long"));
     for (const char* good : {"The {adjective} Age", "{plural}", "Age of {plural} and {adjective}", "{plural}{plural}"}) {
-        CAPTURE(good);
+        CAPTURE(std::string_view(good));
         CHECK(load(shipped_edited(path, form, std::string("age_name_form = \"") + good + "\"")).ok());
     }
     for (const char* bad : {"The Age", "", "The Age of {name}", "The Age of {plural} {", "{Plural}", "{plural} {root}",
                             "The Age of {plural"}) {
-        CAPTURE(bad);
+        CAPTURE(std::string_view(bad));
         at_definition(only_error(load(shipped_edited(path, form, std::string("age_name_form = \"") + bad + "\""))), path,
                       "chronology_age_name_form", "history.chronology",
                       "age_name_form must contain {plural} or {adjective} and no other placeholder");
@@ -912,7 +943,7 @@ TEST_CASE("P3-01 5.1: history.chronology bounds, required fields and chronology_
     // Every field is required (P3-01 5 "like worldgen"; P1-00 6.1: no code defaults).
     for (const char* line : {"awakening_jitter_frac = \"0.01\"\n", "awakening_min_gap_years = 100\n",
                              "age_name_form = \"The Age of {plural}\"\n"}) {
-        CAPTURE(line);
+        CAPTURE(std::string_view(line));
         const wd::LoadError e = only_error(load(shipped_edited(path, line, "")));
         CHECK(e.line == 1U);
         CHECK(contains(e.message, "missing required field 'history.chronology."));
@@ -966,7 +997,7 @@ TEST_CASE("P3-01 4, P3-02 3: the culture_naming record's grammars, lengths and n
         {"god_forms = [\"{root}\"]", "god_forms = [\"{name}\"]", "god_forms", "culture.elven.naming.god_forms[0]", "\"{name}\"" + form},
     };
     for (const Case& c : grammar) {
-        CAPTURE(c.to);
+        CAPTURE(std::string_view(c.to));
         const wd::LoadError e = only_error(load(shipped_edited(path, c.from, c.to)));
         CHECK(e.path == path);
         CHECK(e.line == naming_line(c.field));

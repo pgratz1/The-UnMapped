@@ -285,7 +285,7 @@ TEST_CASE("cli P1-04 3, P1-00 X1: --until biomes at 512: layer 11 biome; earlier
     CHECK(lc.at("temperature") == g3.at("temperature"));
     CHECK(lc.at("rainfall") == g3.at("rainfall"));
     for (const char* in : {"elevation", "water", "water_depth", "flow_dir", "river", "coast_dist"}) {
-        CAPTURE(in);
+        CAPTURE(std::string_view(in));
         CHECK(lf.at(in) == g4.at(in));
     }
     const auto tf = detail(w.sb, w.full, "table");
@@ -354,7 +354,7 @@ TEST_CASE("cli P1-04 3: --until none, --until hydrology and the test pattern hav
     };
     for (const Case& c : {Case{{"--until", "none"}, "none.db"}, Case{{"--until", "hydrology"}, "hydro.db"},
                           Case{{"--test-pattern"}, "pattern.db"}}) {
-        CAPTURE(c.name);
+        CAPTURE(std::string_view(c.name));
         const fs::path out = sb.file(c.name);
         generate(sb, data, c.extra, out);
         const ProcessResult r = sb.cli({"report", "--db", u8(out)});
@@ -386,7 +386,7 @@ TEST_CASE("cli P1-03 9: a malformed climate table is a corrupt-table error: exit
     };
     int k = 0;
     for (const Bad& b : bads) {
-        CAPTURE(b.what);
+        CAPTURE(std::string_view(b.what));
         const fs::path bad = w.sb.file("badclimate" + std::to_string(k++) + ".db");
         fs::copy_file(w.climate, bad);
         REQUIRE(worldgen::db::testing::execute_on_file(u8(bad), b.sql).ok());
@@ -596,7 +596,7 @@ TEST_CASE("cli P1-04 9, 10.1 test 10: report refuses malformed biome rows and a 
     };
     int k = 0;
     for (const Bad& x : bads) {
-        CAPTURE(x.sql);
+        CAPTURE(std::string_view(x.sql));
         const fs::path bad = w.sb.file("badbiome" + std::to_string(k++) + ".db");
         fs::copy_file(w.full, bad);
         REQUIRE(worldgen::db::testing::execute_on_file(u8(bad), x.sql).ok());

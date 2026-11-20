@@ -13,6 +13,17 @@
 // fallback cases are the scenarios "empty", "collide" and "full"; its
 // seed-42 vectors are the scenario "seed42". The library is reached only
 // through p3_02_names_api.hpp.
+//
+// From generator 0.17.0 (P3-08) the golden file is r5's (P3-02 11): the
+// attempt, step, scenario and list lines are drawn with god_patterns and the
+// shipped name filter (read here independently from game/data/name_filters/
+// with toml++), and the file adds the filter lines of 11.7 (fattempt,
+// rootword, filter, the scenarios filtered, redraw_alone and redraw_after,
+// r4sha256). Tests of r5 behaviour fail until the library implements it;
+// the seams of 11.5 (root_word, name_filtered, the filter argument) are used
+// only with UNMAPPED_P3_08_API 1 (p3_08_switch.hpp) and otherwise throw
+// names_api::ApiMissing. The critics' stems are written as concatenations of
+// their parts, never whole (P3-02 11.7 item 10).
 
 #include <doctest/doctest.h>
 
@@ -45,13 +56,14 @@ namespace {
 // `name` with attempt token `tok` ("F" or a number) is what 4.3 gives on the
 // registry `before`, judged with name_attempt alone.
 void check_attempt_rule(const Naming& n, Kind k, std::uint64_t seed, std::uint64_t c, std::uint64_t e,
-                        const Registry& before, const std::string& tok, const std::string& name) {
+                        const Registry& before, const std::string& tok, const std::string& name,
+                        const names_api::Filter& f = names_api::Filter{}) {
     CAPTURE(tok);
     CAPTURE(name);
     std::string first;
     bool have_first = false;
     for (std::uint64_t t = 0; t < 64; ++t) {
-        const names_api::Attempt a = names_api::attempt(n, k, seed, c, e, t);
+        const names_api::Attempt a = names_api::attempt(n, k, seed, c, e, t, f);
         if (!a.valid) continue;
         if (!have_first) {
             first = a.name;
@@ -124,7 +136,8 @@ TEST_CASE("P3-02 4.6: the golden attempt and step lines (4.6 and the seed-42 tup
         const auto t = split(line, 10);
         const Naming n = shipped_naming(t[2]);
         const Kind k = kind_of(t[3]);
-        const names_api::Attempt a = names_api::attempt(n, k, dec_u(t[1]), dec_u(t[4]), dec_u(t[5]), dec_u(t[6]));
+        const names_api::Attempt a = names_api::attempt(n, k, dec_u(t[1]), dec_u(t[4]), dec_u(t[5]), dec_u(t[6]),
+                                                        names_test::shipped_filter());
         CHECK(a.valid == (t[7] == "1"));
         // An invalid attempt's name and root are unspecified (4.2): compared only when valid.
         if (a.valid) {
@@ -178,13 +191,17 @@ TEST_CASE("P3-02 4.6, 9.1 test 3: collision gives Focoth (attempt 1); 61 names t
     }
 }
 
-TEST_CASE("P3-02 4.6: the seed-42 vectors in one registry, in order") {
+TEST_CASE("P3-02 4.6, 11.6 (r5): the seed-42 vectors in one registry, in order (god Khorkhound, r4 Khork)") {
+    const names_api::Filter& f = names_test::shipped_filter();
     Registry r;
-    CHECK(names_api::make_name(shipped_naming("dwarven"), "dwarven", Kind::god, 42, 1, 1, r) == "Khork");
-    CHECK_FALSE(names_api::attempt(shipped_naming("goblin"), Kind::civilization, 42, 4, 3, 0).valid);
-    CHECK(names_api::make_name(shipped_naming("goblin"), "goblin", Kind::civilization, 42, 4, 3, r) == "The Grork Horde");
-    CHECK(names_api::make_name(shipped_naming("human"), "human", Kind::settlement, 42, 5, 17, r) == "Deantwick");
-    CHECK(names_api::make_name(shipped_naming("orcish"), "orcish", Kind::settlement, 42, 6, 200, r) == "Ol'uraakh Fort");
+    CHECK(names_api::make_name(shipped_naming("dwarven"), "dwarven", Kind::god, 42, 1, 1, r, f) == "Khorkhound");
+    CHECK_FALSE(names_api::attempt(shipped_naming("goblin"), Kind::civilization, 42, 4, 3, 0, f).valid);
+    CHECK(names_api::make_name(shipped_naming("goblin"), "goblin", Kind::civilization, 42, 4, 3, r, f) == "The Grork Horde");
+    CHECK(names_api::make_name(shipped_naming("human"), "human", Kind::settlement, 42, 5, 17, r, f) == "Deantwick");
+    CHECK(names_api::make_name(shipped_naming("orcish"), "orcish", Kind::settlement, 42, 6, 200, r, f) == "Ol'uraakh Fort");
+    // r4 (11.7 item 7): with the empty filter and god_patterns = patterns, the r4 vector.
+    Registry r4;
+    CHECK(names_api::make_name(names_test::r4_equivalent("dwarven"), "dwarven", Kind::god, 42, 1, 1, r4) == "Khork");
 }
 
 // --- 9.1 test 4: validity rules on hand-made data ------------------------------------------------------
@@ -422,12 +439,14 @@ TEST_CASE("P3-02 4.3, 4.4: the registry scenarios of the golden file (retries, n
             const Kind k = kind_of(t[3]);
             const std::uint64_t c = dec_u(t[4]);
             const std::uint64_t e = dec_u(t[5]);
-            check_attempt_rule(n, k, seed, c, e, copy_of(mirror), t[6], t[7]);
+            // r5: the shipped filter, except culture filt with the test filter (11.7 item 8).
+            const names_api::Filter f = t[2] == "filt" ? names_test::test_filter() : names_test::shipped_filter();
+            check_attempt_rule(n, k, seed, c, e, copy_of(mirror), t[6], t[7], f);
             CHECK_FALSE(reg.contains(t[7]));
-            CHECK(names_api::make_name(n, t[2], k, seed, c, e, reg) == t[7]);
+            CHECK(names_api::make_name(n, t[2], k, seed, c, e, reg, f) == t[7]);
             CHECK(reg.contains(t[7]));
             // choose_name: same name, the attempt token, and for a fallback the first valid attempt.
-            const names_api::Choice ch = names_api::choose_name(n, t[2], k, seed, c, e, reg2);
+            const names_api::Choice ch = names_api::choose_name(n, t[2], k, seed, c, e, reg2, f);
             CHECK(ch.name == t[7]);
             CHECK(reg2.contains(t[7]));
             CHECK(ch.fallback == (t[6] == "F"));
@@ -436,7 +455,7 @@ TEST_CASE("P3-02 4.3, 4.4: the registry scenarios of the golden file (retries, n
             } else {
                 std::uint64_t first = 64;
                 for (std::uint64_t a = 0; a < 64 && first == 64; ++a) {
-                    if (names_api::attempt(n, k, seed, c, e, a).valid) first = a;
+                    if (names_api::attempt(n, k, seed, c, e, a, f).valid) first = a;
                 }
                 CHECK(ch.attempt == first);
             }
@@ -446,8 +465,8 @@ TEST_CASE("P3-02 4.3, 4.4: the registry scenarios of the golden file (retries, n
             retries += (t[6] != "F" && t[6] != "0") ? 1 : 0;
         }
     }
-    CHECK(scenarios == 8);
-    CHECK(results == 24);
+    CHECK(scenarios == 11);  // the 8 of r4 and filtered, redraw_alone, redraw_after (r5, 11.7 item 8)
+    CHECK(results == 37);
     CHECK(fallbacks >= 8);
     CHECK(retries >= 4);
 }
@@ -464,6 +483,7 @@ TEST_CASE("P3-02 9.3 test 10: seeds 0 and 42, every shipped culture and kind, en
         std::string joined;
         for (const std::string_view cid : names_test::CULTURE_IDS) {
             const Naming n = shipped_naming(cid);
+            const names_api::Filter& f = names_test::shipped_filter();
             for (const Kind k : names_test::KINDS) {
                 for (std::uint64_t e = 1; e <= 50; ++e) {
                     REQUIRE(next < expected.size());
@@ -475,14 +495,15 @@ TEST_CASE("P3-02 9.3 test 10: seeds 0 and 42, every shipped culture and kind, en
                     REQUIRE(kind_of(t[2]) == k);
                     REQUIRE(dec_u(t[3]) == e);
                     // choose_name gives the name and the attempt token of 9.3 directly.
-                    const names_api::Choice ch = names_api::choose_name(n, cid, k, seed, culture_number(cid), e, reg);
+                    const names_api::Choice ch =
+                        names_api::choose_name(n, cid, k, seed, culture_number(cid), e, reg, f);
                     const std::string& got = ch.name;
                     CHECK(got == t[5]);
                     CHECK(ch.fallback == (t[4] == "F"));
                     if (t[4] != "F") CHECK(ch.attempt == dec_u(t[4]));
                     // The attempt token: checked against a second registry that
                     // holds exactly the names before this one.
-                    check_attempt_rule(n, k, seed, culture_number(cid), e, before, t[4], t[5]);
+                    check_attempt_rule(n, k, seed, culture_number(cid), e, before, t[4], t[5], f);
                     before.add(got);
                     const std::string mine = std::to_string(seed) + " " + std::string(cid) + " " +
                                              std::string(names_test::kind_name(k)) + " " + std::to_string(e) + " " +
@@ -511,7 +532,8 @@ TEST_CASE("P3-02 9.3 test 10: seeds 0 and 42, every shipped culture and kind, en
 
 // --- 5.1 sample names --------------------------------------------------------------------------------
 
-TEST_CASE("P3-02 5.1: the sample table (seed 0, one registry per culture: settlements 1-20, civilizations 1-5, gods 1-3)") {
+TEST_CASE("P3-02 11.6 (r5): the sample table under r5 (seed 0, one registry per culture: settlements 1-20, civilizations 1-5, gods 1-3)") {
+    // The 5.1 protocol with r5's rules; the table of 11.6 "Sample names of 5.1 under r5".
     struct Sample {
         std::string_view culture;
         std::vector<std::string> names;
@@ -524,38 +546,39 @@ TEST_CASE("P3-02 5.1: the sample table (seed 0, one registry per culture: settle
                      "Nurnthaimm"}},
         {"elven", {"Iensath", "Onaeme", "Ierrael", "Elonoma", "Fievos", "Mielae", "Asvathdell", "Lafin", "Laevo",
                    "Leithiedell", "Orith", "Voglael", "Mievife", "Iefann", "Cellve", "Fimo", "Londcae", "Rienel",
-                   "Nathol", "Siendnie", "Nife", "The Court of Nothind", "Aesoth", "Riefifie",
+                   "Nathol", "Siendnie", "The House of Nife", "The Court of Nothind", "The House of Aesoth", "The House of Riefifie",
                    "The Court of Thiesaell", "Saene", "Fiendse", "Ithonnfa"}},
-        {"faerie", {"Liapa", "Wiatwiesk Glade", "Twamae Glade", "Lip", "Biafloss Glade", "Pieshaep Hollow", "Teelan",
+        {"faerie", {"Liapa", "Wiatwiesk Glade", "Twamae Glade", "Ybeeie Hollow", "Biafloss Glade", "Pieshaep Hollow", "Teelan",
                     "Meeie Hollow", "Sywysh Hollow", "Iatysk", "Wiepysk", "Miemo Hollow", "Mapoufee", "Feetop Hollow",
                     "Showhie Hollow", "Mawhiap Hollow", "Athfli Hollow", "Whywo", "Fliaposk Hollow", "Whosy Hollow",
                     "The Lyp Ring", "The Watiafia Court", "The Bouss Ring", "The Wosk Ring", "The Twiwhiwou Ring",
                     "Fiwhall", "Fiabo", "Biensho"}},
         {"goblin", {"Krot Pit", "Slograb Pit", "Gnink-Snunk", "Zux", "Grunkgnuzz Pit", "Grizz-Skeeb", "Slank-Skrox",
-                    "Drobskeet", "Bag Hole", "Sluggatch Hole", "Bux-Kreeb", "Sniz", "Slak", "Zug-Gok", "Gunitch",
-                    "Slagreeg Hole", "Droggkazz Hole", "Slobeerk", "Snotgab", "Kruskreezz Hole", "The Gnazz Horde",
-                    "The Warrens of Bonk-Gitch", "The Grodratch Horde", "The Krunkgirk Horde", "The Warrens of Gnonk",
-                    "Zabskreeb", "Kruskux", "Bazz"}},
+                    "Drobskeet", "Bozz Pit", "Sluggatch Hole", "Bux-Kreeb", "Sniz", "Slak", "Zug-Gok", "Gunitch",
+                    "Skrizuz", "Droggkazz Hole", "Slobeerk", "Snok", "Kruskreezz Hole", "The Gnazz Horde",
+                    "The Baskeeb Mob", "The Grodratch Horde", "The Krunkgirk Horde", "The Warrens of Gnonk",
+                    "Zab-Skreeb", "Kruskux", "Nugnug"}},
         {"human", {"Deanham", "Alantton", "Cickham", "Gackwick", "Brir", "Tackbury", "Gurdton", "Studford", "Ceambury",
                    "Buld", "Silstudstead", "Tirdwick", "Dack", "Stastint", "Moldstead", "Edumford", "Tontstead",
-                   "Ceanbir", "Durdton", "Durdbury", "The Duchy of Ashem", "The Kingdom of Ashos", "The Duchy of Hick",
-                   "The Duchy of Wick", "The Duchy of Circon", "Simbear", "Histold", "Edostold"}},
-        {"orcish", {"Kaak Fort", "Zaarz Camp", "Grush", "Zaakugaag", "Uruld'duuld", "Uu'mold Fort", "Kark Fort",
+                   "Ceanbir", "Durdton", "Durdbury", "The Duchy of Ashem", "The Kingdom of Ashos", "The Kingdom of Edes",
+                   "The Duchy of Ceam", "The Duchy of Circon", "Wasbrid", "Histold", "Edostold"}},
+        {"orcish", {"Kaak Fort", "Zaarz Camp", "Grush", "Zaakugaag", "Uruld'duuld", "Shaazazuug", "Kark Fort",
                     "Azol'urash Fort", "Karzthogh", "Uromgha", "Maag", "Uul'krakh Camp", "Og'buurk Camp",
                     "Zaalduruz Camp", "Mak", "Duld'sha Fort", "Shuum Fort", "Ghorz Fort", "Duuldkrosh Fort",
                     "Aag'urog Fort", "Clan Kram'krorz", "The Azakhdam Horde", "The Urogh'krorz Horde",
-                    "The Burk'zork Horde", "The Warband of Maakurokh", "Ugh'kaal", "Og'uraag", "Uruuk"}},
+                    "The Burk'zork Horde", "The Warband of Maakurokh", "Ug'krarz", "Og'uraag", "Uruuk'krush"}},
     };
     for (const Sample& s : table) {
         CAPTURE(s.culture);
         REQUIRE(s.names.size() == 28);
         const Naming n = shipped_naming(s.culture);
         const std::uint64_t c = culture_number(s.culture);
+        const names_api::Filter& f = names_test::shipped_filter();
         Registry reg;
         std::size_t i = 0;
-        for (std::uint64_t e = 1; e <= 20; ++e) CHECK(names_api::make_name(n, s.culture, Kind::settlement, 0, c, e, reg) == s.names[i++]);
-        for (std::uint64_t e = 1; e <= 5; ++e) CHECK(names_api::make_name(n, s.culture, Kind::civilization, 0, c, e, reg) == s.names[i++]);
-        for (std::uint64_t e = 1; e <= 3; ++e) CHECK(names_api::make_name(n, s.culture, Kind::god, 0, c, e, reg) == s.names[i++]);
+        for (std::uint64_t e = 1; e <= 20; ++e) CHECK(names_api::make_name(n, s.culture, Kind::settlement, 0, c, e, reg, f) == s.names[i++]);
+        for (std::uint64_t e = 1; e <= 5; ++e) CHECK(names_api::make_name(n, s.culture, Kind::civilization, 0, c, e, reg, f) == s.names[i++]);
+        for (std::uint64_t e = 1; e <= 3; ++e) CHECK(names_api::make_name(n, s.culture, Kind::god, 0, c, e, reg, f) == s.names[i++]);
     }
 }
 
@@ -625,6 +648,7 @@ TEST_CASE("P3-02 4.2 (revised): malformed naming data is fatal in the library, w
                          worldgen::FatalError);
     n = shipped_naming("tiny");
     n.patterns = {"OX"};
+    n.god_patterns.reset();  // r5: the god draws from god_patterns; unset, it is patterns
     CHECK_THROWS_WITH_AS((void)names_api::attempt(n, Kind::god, 0, 1, 1, 0),
                          "names: a name pattern holds a symbol other than O, N, C, ' and -", worldgen::FatalError);
     n = shipped_naming("tiny");
@@ -637,6 +661,7 @@ TEST_CASE("P3-02 4.2 (revised): malformed naming data is fatal in the library, w
                          worldgen::FatalError);
     n = shipped_naming("tiny");
     n.patterns.clear();
+    n.god_patterns.reset();
     CHECK_THROWS_WITH_AS((void)names_api::attempt(n, Kind::god, 0, 1, 1, 0), "names: a naming list is empty",
                          worldgen::FatalError);
     // make_name passes it on.
@@ -649,6 +674,236 @@ TEST_CASE("P3-02 4.2 (revised): malformed naming data is fatal in the library, w
     const names_api::Attempt a = names_api::attempt(n, Kind::god, 0, 1, 1, 0);
     CHECK(a.valid);
     CHECK((a.name == "Ba" || a.name == "Da"));
+}
+
+
+// --- r5 (P3-02 11, generator 0.17.0): the name filter, god_patterns, realm forms ----------------------
+
+TEST_CASE("P3-02 11.7 item 5: root_word is the root with the form's letters fused to it, lower-cased") {
+    CHECK(names_api::root_word("The Hold of {root}", "dur") == "dur");
+    CHECK(names_api::root_word("{root}ford", "ced") == "cedford");
+    CHECK(names_api::root_word("Ny{root} Pit", "ash") == "nyash");
+    CHECK(names_api::root_word("{root}", "ug'kaal") == "ug'kaal");
+    for (const std::string& line : golden_lines("rootword")) {
+        CAPTURE(line);
+        const auto t = split(line, 4);
+        std::string form = t[1];
+        for (char& c : form) {
+            if (c == '_') c = ' ';
+        }
+        CHECK(names_api::root_word(form, t[2]) == t[3]);
+        CHECK(names_test::ref_root_word(form, t[2]) == t[3]);
+    }
+}
+
+TEST_CASE("P3-02 11.7 item 6: name_filtered on a hand-made filter (anywhere ab, at_start cd, whole ef)") {
+    const names_api::Filter f{{"ab"}, {"cd"}, {"ef"}};
+    struct Case {
+        const char* w;
+        bool filtered;
+    };
+    for (const Case& c : std::vector<Case>{{"xaby", true}, {"a-by", true}, {"xcdy", false}, {"xx-cdy", true},
+                                           {"cd", true},   {"ef", true},   {"efx", false},  {"x'ef", true}}) {
+        CAPTURE(c.w);
+        CHECK(names_api::name_filtered(f, c.w) == c.filtered);
+        CHECK(names_test::ref_filtered(f, c.w) == c.filtered);
+    }
+    // "XEF (after lower-casing in root_word)": root_word lower-cases the form's fused capitals.
+    // ASSUMPTION: as written, W of form "X{root}F" with root "e" is "xef", which none of the three
+    // entries matches; the lower-casing is shown by form "E{root}", root "f": W "ef", whole "ef".
+    CHECK(names_api::root_word("X{root}F", "e") == "xef");
+    CHECK_FALSE(names_api::name_filtered(f, names_api::root_word("X{root}F", "e")));
+    CHECK(names_api::name_filtered(f, names_api::root_word("E{root}", "f")));
+    // The empty filter rejects nothing.
+    for (const char* w : {"xaby", "cd", "ef", "x'ef"}) CHECK_FALSE(names_api::name_filtered(names_api::Filter{}, w));
+}
+
+TEST_CASE("P3-02 11.3, 11.7 item 10: the critics' examples are rejected as root words of their forms (stems as concatenations)") {
+    const names_api::Filter& f = names_test::shipped_filter();
+    // Root words W of 11.3, each written as a concatenation of its parts.
+    const std::vector<std::string> rejected = {
+        std::string("co") + "ck" + "ford", std::string("co") + "ck" + "ton", std::string("ca") + "ck" + "ford",
+        std::string("bu") + "m" + "dou",   std::string("but") + "-" + "skrotch", std::string("sn") + "ot" + "gab",
+        "bag", "dog", std::string("do") + "rk", "baa", "bald", "buzz", "gord", "vanir",
+        std::string("n") + "igg" + "snib", std::string("sn") + "ig", std::string("drin") + "igg",
+        // r6: P3-02 11.7 item 10's additions (the masked letters restored only here, as concatenations).
+        std::string("tu") + "rd" + "stead", std::string("krob-") + "sn" + "igg", std::string("guz-") + "gn" + "igg",
+        std::string("nik-") + "gn" + "igg", std::string("gn") + "ig" + "sneet", std::string("kreets") + "l" + "ut",
+        std::string("s") + "l" + "ut" + "keeb", std::string("gn") + "azi" + "tch",
+        // 11.3's examples
+        std::string("ugh") + "'kaal", std::string("cu") + "m" + "brin"};
+    for (std::size_t i = 0; i < rejected.size(); ++i) {
+        CAPTURE(i);  // the index, not the word
+        CHECK(names_api::name_filtered(f, rejected[i]));
+        CHECK(names_test::ref_filtered(f, rejected[i]));
+    }
+    for (const std::string& w : std::vector<std::string>{"stard", "iensath", "grork", std::string("ascu") + "m" + "brin"}) {
+        CAPTURE(w);
+        CHECK_FALSE(names_api::name_filtered(f, w));
+        CHECK_FALSE(names_test::ref_filtered(f, w));
+    }
+    // r6: the per-word guard: The Realm of Arthos is not filtered (its W is "arthos").
+    CHECK(names_api::root_word("The Realm of {root}", "arthos") == "arthos");
+    CHECK_FALSE(names_api::name_filtered(f, names_api::root_word("The Realm of {root}", "arthos")));
+    // The golden filter lines (benign words only).
+    for (const std::string& line : golden_lines("filter")) {
+        CAPTURE(line);
+        const auto t = split(line, 3);
+        CHECK(names_api::name_filtered(f, t[1]) == (t[2] == "1"));
+        CHECK(names_test::ref_filtered(f, t[1]) == (t[2] == "1"));
+    }
+}
+
+TEST_CASE("P3-02 11.7 item 8: an attempt rejected only by the filter has valid false and filtered true (golden fattempt lines)") {
+    const auto& lines = golden_lines("fattempt");
+    REQUIRE(lines.size() >= 4);
+    int filtered = 0;
+    for (const std::string& line : lines) {
+        CAPTURE(line);
+        const auto t = split(line, 10);
+        const Naming n = shipped_naming(t[2]);
+        const names_api::Filter f = t[2] == "filt" ? names_test::test_filter() : names_test::shipped_filter();
+        const names_api::Attempt a =
+            names_api::attempt(n, kind_of(t[3]), dec_u(t[1]), dec_u(t[4]), dec_u(t[5]), dec_u(t[6]), f);
+        CHECK(a.valid == (t[7] == "1"));
+        CHECK(a.filtered == (t[8] == "1"));
+        if (a.valid) CHECK(a.name == t[9]);
+        if (a.filtered) {
+            ++filtered;
+            // The same attempt without the filter is valid (the r4 rules pass).
+            CHECK(names_api::attempt(n, kind_of(t[3]), dec_u(t[1]), dec_u(t[4]), dec_u(t[5]), dec_u(t[6])).valid);
+        }
+    }
+    CHECK(filtered >= 4);
+}
+
+TEST_CASE("P3-02 11.7 item 8 (r6): a redraw depends on (kind, attempt, culture, entity) only") {
+    // Culture filt with the test filter: the first entity whose attempts 0 and 1 are filtered and
+    // whose attempt 2 is valid (the reference's search; scenario redraw_alone gives it).
+    const Naming filt = shipped_naming("filt");
+    const names_api::Filter tf = names_test::test_filter();
+    std::uint64_t e2 = 0;
+    for (std::uint64_t e = 1; e < 100000 && e2 == 0; ++e) {
+        if (names_api::attempt(filt, Kind::settlement, 0, 1, e, 0, tf).filtered &&
+            names_api::attempt(filt, Kind::settlement, 0, 1, e, 1, tf).filtered &&
+            names_api::attempt(filt, Kind::settlement, 0, 1, e, 2, tf).valid) {
+            e2 = e;
+        }
+    }
+    REQUIRE(e2 != 0);
+    const std::string alone = [&] {
+        Registry r;
+        return names_api::make_name(filt, "filt", Kind::settlement, 0, 1, e2, r, tf);
+    }();
+    CHECK(alone == names_api::attempt(filt, Kind::settlement, 0, 1, e2, 2, tf).name);
+    // Others named first, with their own filtered attempts: the same name.
+    Registry r;
+    const names_api::Filter& sf = names_test::shipped_filter();
+    for (std::uint64_t e = 1; e <= 5; ++e) {
+        (void)names_api::make_name(shipped_naming("human"), "human", Kind::settlement, 0, 5, e, r, sf);
+        (void)names_api::make_name(shipped_naming("human"), "human", Kind::civilization, 0, 5, e, r, sf);
+    }
+    CHECK(names_api::make_name(filt, "filt", Kind::settlement, 0, 1, e2, r, tf) == alone);
+    // The fallback numbers the first unfiltered valid name (scenario "filtered" checks the golden case).
+    std::uint64_t e1 = 0;
+    for (std::uint64_t e = 1; e < 100000 && e1 == 0; ++e) {
+        if (names_api::attempt(filt, Kind::settlement, 0, 1, e, 0, tf).filtered) e1 = e;
+    }
+    REQUIRE(e1 != 0);
+    Registry full;
+    for (const char* o : {"B", "D", "G", "K", "M"}) {
+        for (const char* nu : {"a", "o"}) {
+            for (const char* co : {"", "n"}) {
+                const std::string nm = std::string(o) + nu + co;
+                if (!names_test::ref_filtered(tf, names_test::lower(nm))) full.add(nm);
+            }
+        }
+    }
+    CHECK(full.size() == 18);
+    std::string first;
+    for (std::uint64_t t = 0; t < 64 && first.empty(); ++t) {
+        const names_api::Attempt a = names_api::attempt(filt, Kind::settlement, 0, 1, e1, t, tf);
+        if (a.valid) first = a.name;
+    }
+    REQUIRE_FALSE(first.empty());
+    const names_api::Choice ch = names_api::choose_name(filt, "filt", Kind::settlement, 0, 1, e1, full, tf);
+    CHECK(ch.fallback);
+    CHECK(ch.name == first + " II");
+}
+
+TEST_CASE("P3-02 11.7 item 7: with the empty filter and god_patterns = patterns every r4 name is reproduced") {
+    // The r4sha256 lines hold the 0.16.0 lists' SHA-256 (seed 0 and 42).
+    const auto& lines = golden_lines("r4sha256");
+    REQUIRE(lines.size() == 2);
+    for (const std::string& line : lines) {
+        CAPTURE(line);
+        const auto t = split(line, 3);
+        const std::uint64_t seed = dec_u(t[1]);
+        Registry reg;
+        std::string joined;
+        for (const std::string_view cid : names_test::CULTURE_IDS) {
+            const Naming n = names_test::r4_equivalent(cid);
+            for (const Kind k : names_test::KINDS) {
+                for (std::uint64_t e = 1; e <= 50; ++e) {
+                    const names_api::Choice ch = names_api::choose_name(n, cid, k, seed, culture_number(cid), e, reg);
+                    if (!joined.empty()) joined += "\n";
+                    joined += std::to_string(seed) + " " + std::string(cid) + " " +
+                              std::string(names_test::kind_name(k)) + " " + std::to_string(e) + " " +
+                              (ch.fallback ? std::string("F") : std::to_string(ch.attempt)) + " " + ch.name;
+                }
+            }
+        }
+        CHECK(worldgen::sha256_hex(joined) == t[2]);
+    }
+}
+
+TEST_CASE("P3-02 11.4, 11.6: gods draw their shape from god_patterns; the elven realms have a realm form") {
+    // The 11.6 god table (race order elf, goblin, dwarf, faerie, human, orc; god entity = race order).
+    const std::vector<std::pair<std::uint64_t, std::vector<std::string>>> gods = {
+        {0, {"Saene", "Kruskux", "Nurnthaimm", "Whaia", "Steldhil", "Uruld'kruum"}},
+        {7, {"Onveth", "Buzork", "Mammga", "Ouwheefy", "Gordman", "Maarkzaagh"}},
+        {42, {"Fielie", "Krokzit", "Bronhak", "Syfiash", "Wealstuld", "Ogh'krak"}}};
+    const std::vector<std::string_view> by_race = {"elven", "goblin", "dwarven", "faerie", "human", "orcish"};
+    const names_api::Filter& f = names_test::shipped_filter();
+    for (const auto& [seed, want] : gods) {
+        CAPTURE(seed);
+        for (std::size_t i = 0; i < by_race.size(); ++i) {
+            Registry r;
+            CHECK(names_api::make_name(shipped_naming(by_race[i]), by_race[i], Kind::god, seed, culture_number(by_race[i]),
+                                       i + 1, r, f) == want[i]);
+        }
+    }
+    // The 11.6 realm table, seeds 0 and 3 (civilizations 1 and 2, empty registry).
+    for (const auto& [seed, want] : std::vector<std::pair<std::uint64_t, std::pair<std::string, std::string>>>{
+             {0, {"The House of Nife", "The Court of Nothind"}}, {3, {"The House of Roelaele", "The House of Vefal"}}}) {
+        Registry r1;
+        Registry r2;
+        CHECK(names_api::make_name(shipped_naming("elven"), "elven", Kind::civilization, seed, 2, 1, r1, f) == want.first);
+        CHECK(names_api::make_name(shipped_naming("elven"), "elven", Kind::civilization, seed, 2, 2, r2, f) == want.second);
+    }
+    // A god drawn from god_patterns, not patterns: a tiny culture whose patterns make one-letter
+    // roots and whose god_patterns make two-letter ones.
+    Naming n = shipped_naming("tiny");
+    n.patterns = {"N"};
+    n.min_letters = 1;
+    n.god_patterns = std::vector<std::string>{"ON"};
+    const names_api::Attempt g = names_api::attempt(n, Kind::god, 0, 1, 1, 0);
+    CHECK(g.valid);
+    CHECK(g.root.size() == 2);
+    CHECK(names_api::attempt(n, Kind::settlement, 0, 1, 1, 0).root == "a");
+    // An empty god_patterns is fatal like the other lists (11.4).
+    n.god_patterns = std::vector<std::string>{};
+    CHECK_THROWS_WITH_AS((void)names_api::attempt(n, Kind::god, 0, 1, 1, 0), "names: a naming list is empty",
+                         worldgen::FatalError);
+}
+
+TEST_CASE("P3-02 11.2, 11.5: the library's effective filter equals the union of the shipped files") {
+    // The test reads game/data/name_filters/ with toml++; the library builds its filter from the
+    // loaded content set (name_filter_from). Compared as sets (only membership matters, 11.2).
+    const names_api::Filter& mine = names_test::shipped_filter();
+    CHECK(std::set<std::string>(mine.anywhere.begin(), mine.anywhere.end()).size() == 101);
+    CHECK(std::set<std::string>(mine.at_start.begin(), mine.at_start.end()).size() == 35);
+    CHECK(std::set<std::string>(mine.whole.begin(), mine.whole.end()).size() == 768);
 }
 
 }  // TEST_SUITE

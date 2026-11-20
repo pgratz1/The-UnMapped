@@ -46,6 +46,8 @@ enum Kind : std::int64_t {
     k_became_village, k_became_town, k_became_city, k_settlement_dwindled, k_famine, k_plague, k_plague_spread,
     k_succession_crisis, k_civ_seceded, k_settlement_abandoned, k_capital_moved, k_civ_ended, k_ruin_faded
 };
+// P3-05 r6 11 (generator 0.17.0): kind 31, appended after P3-06's kinds 20-30.
+constexpr std::int64_t k_settlement_abandoned_to = 31;
 enum SKind : std::int64_t { hamlet = 1, village, town, city, fortress };
 enum Status : std::int64_t { thriving = 1, declining, ruined, faded };
 
@@ -197,6 +199,10 @@ struct Geo {
     std::vector<db::RegionBiomeRow> region_biomes;
     std::vector<std::uint16_t> region;
     std::vector<std::uint8_t> water, hab, river, flow;
+    // P3-05 r6 (generator 0.17.0): the layers of the cell term (6.2) and the fortress cell rule (8.4)
+    std::vector<std::int16_t> elevation;
+    std::vector<std::uint8_t> ore;
+    std::vector<std::uint16_t> walk_area;
 };
 
 // splitmix64, the reference's Mix (test-owned, not the project's generator).
@@ -390,6 +396,32 @@ inline Geo make_synthetic(std::uint64_t seed) {
     }
     std::sort(g.borders.begin(), g.borders.end(),
               [](const auto& x, const auto& y) { return x.a != y.a ? x.a < y.a : x.b < y.b; });
+    // r6: elevation, ore and walk_area and the regions' elev_max_dm from a second sequence (the reference's
+    // make_synthetic): one draw per cell in index order, every earlier value of the geography unchanged.
+    Mix m2{0x5EED1000ULL + seed};
+    g.elevation.assign(N, 0);
+    g.ore.assign(N, 0);
+    g.walk_area.assign(N, 0);
+    std::map<std::int64_t, std::int64_t> emax;
+    for (std::size_t i = 0; i < N; ++i) {
+        const std::uint64_t v = m2.next();
+        if (g.water[i] == 3) {
+            g.elevation[i] = static_cast<std::int16_t>(-1 - static_cast<std::int64_t>(v % 500));
+            continue;
+        }
+        const auto e = static_cast<std::int64_t>(1 + v % 3000);
+        g.elevation[i] = static_cast<std::int16_t>(e);
+        g.ore[i] = static_cast<std::uint8_t>((v >> 16) % 256);
+        g.walk_area[i] = ((v >> 32) % 3 == 0) ? std::uint16_t{0} : static_cast<std::uint16_t>(1 + (v >> 40) % 1000);
+        if (g.water[i] == 0) {
+            std::int64_t& top = emax[g.region[i]];
+            top = std::max(top, e);
+        }
+    }
+    for (db::RegionRow& r : g.regions) {
+        const auto it = emax.find(r.id);
+        r.elev_max_dm = it == emax.end() ? 0 : it->second;
+    }
     return g;
 }
 
@@ -404,6 +436,9 @@ inline Geo hand_made(std::int64_t n, std::vector<db::RegionRow> regions) {
     g.hab.assign(N, 0);
     g.river.assign(N, 0);
     g.flow.assign(N, 8);
+    g.elevation.assign(N, 1);   // r6: elevation 1 dm, no ore, walkable (the reference's unit_geo)
+    g.ore.assign(N, 0);
+    g.walk_area.assign(N, 1);
     for (const auto& r : regions) {
         for (std::int64_t y = r.y_min; y <= r.y_max; ++y) {
             for (std::int64_t x = r.x_min; x <= r.x_max; ++x) {
@@ -511,6 +546,8 @@ inline eng::HistoryInputs inputs_of(const Geo& g, std::uint64_t seed, const Sett
     in.water_layer = grid_of(db::ElementType::u8, g.n, g.water);
     ppl::set_peoples_inputs(in, biome_rows(), grid_of(db::ElementType::u8, g.n, g.hab),
                             grid_of(db::ElementType::u8, g.n, g.river), grid_of(db::ElementType::u8, g.n, g.flow));
+    ppl::set_r6_inputs(in, grid_of(db::ElementType::i16, g.n, g.elevation), grid_of(db::ElementType::u8, g.n, g.ore),
+                       grid_of(db::ElementType::u16, g.n, g.walk_area));
     return in;
 }
 
@@ -700,11 +737,129 @@ inline std::vector<std::string> homes_without_n(const GCase& c) {
     return out;
 }
 
+// --- Invariants of r6 (generator 0.17.0) from rows --------------------------------------------------------
+
+// The settlement kinds of the shipped races by race id (P3-01 3.1: 1 elf, 2 goblin, 3 dwarf, 4 faerie,
+// 5 human, 6 orc), for 14 item 6 as r6 reads it.
+inline std::set<std::int64_t> race_kinds(std::int64_t race) {
+    switch (race) {
+        case 1: return {hamlet, village, town, city};
+        case 2: return {hamlet, village, town, fortress};
+        case 3: return {hamlet, village, town, city, fortress};
+        case 4: return {hamlet, village};
+        case 5: return {hamlet, village, town, city, fortress};
+        case 6: return {hamlet, village, town, fortress};
+        default: FAIL("no race " << race); return {};
+    }
+}
+
+// The synthetic geography of a golden case (nullptr for a world case).
+inline const Geo* synthetic_geo(const GCase& g) {
+    static std::map<std::string, Geo> cache;
+    if (g.kind == "world") return nullptr;
+    auto it = cache.find(g.name);
+    if (it == cache.end()) it = cache.emplace(g.name, make_synthetic(g.seed)).first;
+    return &it->second;
+}
+
+// P3-05 14 r6 items, from rows: 6 (kinds built by an owner's race, the P3-06 validation's D1; a dwarven
+// settlement founded on a cell with walk_area 0 is a fortress, when the geography is known), 11 (a chance
+// abandonment never ends its civilization), 12 (settled >= 1 and a destination of the civilization), 13
+// (plague and crisis saliences with the shipped plague_major_dead 1000 and small saliences 25).
+inline void check_invariants_r6(const Tables& t, std::int64_t abandon_min, const Geo* geo) {
+    std::map<std::int64_t, std::vector<std::int64_t>> causes;
+    for (const Row& c : t.event_cause) causes[at(c, 0)].push_back(at(c, 1));
+    std::map<std::int64_t, std::map<std::int64_t, std::int64_t>> vals, part;
+    for (const Row& v : t.event_value) vals[at(v, 0)][at(v, 1)] = at(v, 2);
+    for (const Row& p : t.event_participant) part[at(p, 0)][at(p, 2)] = at(p, 4);
+    std::map<std::int64_t, std::int64_t> civ_race, base;
+    for (const Row& c : t.civilization) civ_race[at(c, 0)] = at(c, 2);
+    for (const Row& k : t.event_kind) base[at(k, 0)] = at(k, 5);
+    // 6 (D1): every census row's kind is built by the race of an owner up to its year
+    std::map<std::int64_t, std::vector<std::pair<std::int64_t, std::int64_t>>> owners;  // s -> (year, race)
+    for (const Row& s : t.settlement) owners[at(s, 0)].push_back({at(s, 6), civ_race.at(at(s, 5))});
+    for (const Row& r : t.settlement_census) {
+        if (at(r, 2) != 0) owners[at(r, 0)].push_back({at(r, 1), civ_race.at(at(r, 2))});
+    }
+    for (const Row& r : t.settlement_census) {
+        std::set<std::int64_t> built;
+        for (const auto& [y, race] : owners.at(at(r, 0))) {
+            if (y <= at(r, 1)) {
+                const std::set<std::int64_t> k = race_kinds(race);
+                built.insert(k.begin(), k.end());
+            }
+        }
+        CHECK_MESSAGE(built.count(at(r, 3)) == 1U, "settlement " << at(r, 0) << " kind " << at(r, 3) << " in "
+                                                                 << at(r, 1) << " built by no owner's race");
+    }
+    if (geo != nullptr) {
+        std::map<std::int64_t, std::vector<std::int64_t>> kinds;
+        for (const Row& r : t.settlement_census) kinds[at(r, 0)].push_back(at(r, 3));
+        for (const Row& s : t.settlement) {
+            const auto c = static_cast<std::size_t>(at(s, 3) * geo->n + at(s, 2));
+            if (civ_race.at(at(s, 5)) == 3 && geo->walk_area.at(c) == 0) {
+                const std::vector<std::int64_t>& ks = kinds.at(at(s, 0));
+                CHECK_MESSAGE(std::all_of(ks.begin(), ks.end(), [](std::int64_t k) { return k == fortress; }),
+                              "dwarven settlement " << at(s, 0) << " off the walkable ground is not a fortress");
+            }
+        }
+    }
+    // 11
+    std::set<std::int64_t> ends_caused_by;
+    for (const Row& e : t.event) {
+        if (at(e, 3) == k_civ_ended) {
+            for (const std::int64_t c : causes[at(e, 0)]) ends_caused_by.insert(c);
+        }
+    }
+    for (const Row& e : t.event) {
+        const std::int64_t k = at(e, 3), id = at(e, 0);
+        if (k != k_settlement_abandoned && k != k_settlement_abandoned_to) continue;
+        const std::int64_t pop = k == k_settlement_abandoned ? vals[id].at(1) : vals[id].at(1) + vals[id].at(2);
+        if (pop >= abandon_min) {
+            CHECK_MESSAGE(ends_caused_by.count(id) == 0U, "chance abandonment e" << id << " ended its civilization");
+        }
+        // 12 (rows)
+        if (k == k_settlement_abandoned_to) {
+            CHECK(vals[id].at(1) >= 1);
+            CHECK(vals[id].at(2) >= 0);
+            const std::int64_t d = part[id].at(3);
+            CHECK(d != at(e, 6));
+            bool owned = false;
+            for (const Row& r : t.settlement_census) {
+                owned = owned || (at(r, 0) == d && at(r, 1) <= at(e, 1) && at(r, 2) == part[id].at(2));
+            }
+            CHECK_MESSAGE(owned, "destination " << d << " of e" << id << " never owned by its civilization");
+        }
+    }
+    // 13
+    std::map<std::int64_t, std::int64_t> spread;
+    std::set<std::int64_t> split;
+    for (const Row& e : t.event) {
+        if (at(e, 3) == k_plague_spread) {
+            for (const std::int64_t c : causes[at(e, 0)]) spread[c] += vals[at(e, 0)].at(1);
+        }
+        if (at(e, 3) == k_civ_seceded) {
+            for (const std::int64_t c : causes[at(e, 0)]) split.insert(c);
+        }
+    }
+    for (const Row& e : t.event) {
+        const std::int64_t id = at(e, 0);
+        if (at(e, 3) == k_plague) {
+            const std::int64_t total = vals[id].at(1) + spread[id];
+            CHECK_MESSAGE(at(e, 7) == (total >= 1000 ? base.at(k_plague) : 25),
+                          "plague e" << id << " salience " << at(e, 7) << " total dead " << total);
+        }
+        if (at(e, 3) == k_succession_crisis) {
+            CHECK_MESSAGE(at(e, 7) == (split.count(id) == 1U ? base.at(k_succession_crisis) : 25),
+                          "crisis e" << id << " salience " << at(e, 7));
+        }
+    }
+}
+
 // --- Invariants of 14 from rows (items 1-8; 9 and 10 are tests of their own) --------------------------
 
 inline void check_invariants(const Tables& t, const eng::HistoryInputs& in, const GCase& g, std::int64_t fade_years,
                              std::int64_t abandon_min) {
-    (void)abandon_min;
     std::map<std::int64_t, const Row*> ev, st, cv, ph;
     for (const Row& r : t.event) ev[at(r, 0)] = &r;
     for (const Row& r : t.settlement) st[at(r, 0)] = &r;
@@ -780,7 +935,7 @@ inline void check_invariants(const Tables& t, const eng::HistoryInputs& in, cons
             }
         }
     }
-    // 6: a fortress stays a fortress (census)
+    // 6: a fortress stays a fortress (census); r6: kinds built by an owner's race (check_invariants_r6)
     std::map<std::int64_t, std::vector<std::int64_t>> kinds;
     for (const Row& r : t.settlement_census) kinds[at(r, 0)].push_back(at(r, 3));
     for (const auto& [s, ks] : kinds) {
@@ -788,10 +943,11 @@ inline void check_invariants(const Tables& t, const eng::HistoryInputs& in, cons
             CHECK(std::all_of(ks.begin(), ks.end(), [](std::int64_t k) { return k == fortress; }));
         }
     }
-    // 7
+    auto ruin_kind = [](std::int64_t k) { return k == k_settlement_abandoned || k == k_settlement_abandoned_to; };
+    // 7 (r6: kind 31 is a ruin event too)
     for (const Row& s : t.settlement) {
         if (at(s, 10) == ruined) {
-            CHECK(kind(at(s, 13)) == k_settlement_abandoned);
+            CHECK(ruin_kind(kind(at(s, 13))));
         }
         if (at(s, 10) == faded) {
             REQUIRE(faded_by.count(at(s, 0)) == 1U);
@@ -802,15 +958,15 @@ inline void check_invariants(const Tables& t, const eng::HistoryInputs& in, cons
             CHECK(at(s, 13) == 0);
             REQUIRE(causes[f].size() == 1U);
             const Row& ruin = *ev.at(causes[f][0]);
-            CHECK(at(ruin, 3) == k_settlement_abandoned);
+            CHECK(ruin_kind(at(ruin, 3)));
             CHECK(at(ruin, 6) == at(s, 0));
             CHECK(at(*ev.at(f), 1) >= at(ruin, 1) + fade_years);
         }
     }
-    // 8: no event of 11 except kinds 6-10, 16-19 in a quiet phase; causes of the caused kinds
+    // 8: no event of 11 except kinds 6-10, 16-19 and 31 in a quiet phase; causes of the caused kinds
     for (const Row& e : t.event) {
         const std::int64_t k = at(e, 3);
-        if (k >= 6 && at(*ph.at(at(e, 4)), 2) == 2) {
+        if (k >= 6 && k <= k_ruin_faded && at(*ph.at(at(e, 4)), 2) == 2) {
             CHECK_MESSAGE(!(k >= k_famine && k <= k_civ_seceded), "event " << at(e, 0) << " kind " << k << " in a quiet step");
         }
         const std::vector<std::int64_t>& cs = causes[at(e, 0)];
@@ -821,14 +977,19 @@ inline void check_invariants(const Tables& t, const eng::HistoryInputs& in, cons
         } else if (k == k_civ_seceded) {
             CHECK((cs.size() == 1U && kind(cs[0]) == k_succession_crisis));
         } else if (k == k_capital_moved || k == k_civ_ended || k == k_ruin_faded) {
-            CHECK((cs.size() == 1U && kind(cs[0]) == k_settlement_abandoned));
-        } else if (k == k_settlement_abandoned) {
-            REQUIRE(cs.size() == 1U);
-            const std::int64_t ck = kind(cs[0]);
-            CHECK((ck == k_famine || ck == k_plague || ck == k_plague_spread || ck == k_succession_crisis ||
-                   ck == k_settlement_founded || ck == k_colony_founded));
+            CHECK((cs.size() == 1U && ruin_kind(kind(cs[0]))));
+        } else if (ruin_kind(k)) {
+            // r6 8.5: the blow (or the last reduction, else the founding) and the decline start, ascending
+            REQUIRE((cs.size() == 1U || cs.size() == 2U));
+            CHECK(std::is_sorted(cs.begin(), cs.end()));
+            for (const std::int64_t c : cs) {
+                const std::int64_t ck = kind(c);
+                CHECK((ck == k_famine || ck == k_plague || ck == k_plague_spread || ck == k_succession_crisis ||
+                       ck == k_settlement_founded || ck == k_colony_founded));
+            }
         }
     }
+    check_invariants_r6(t, abandon_min, synthetic_geo(g));
 }
 
 }  // namespace peoples_test

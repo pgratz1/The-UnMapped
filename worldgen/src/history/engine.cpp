@@ -569,15 +569,14 @@ private:
         charged_.clear();
     }
 
-    // 6.6: the engine's summary of the quiet years of each civilization.
+    // 6.6: the engine's summary of the quiet years of each civilization. r10
+    // (generator 0.17.0): events charged to a civilization do not close its
+    // era, so it has at most one era per quiet phase row; an ended
+    // civilization's era keeps the end of its last full step.
     void quiet_eras(std::int64_t last) {
         for (std::size_t i = 0; i < state_.civs_.size(); ++i) {
             const Civilization& c = state_.civs_[i];
             if (c.ended_year) {
-                continue;
-            }
-            if (charged_.find(c.id) != charged_.end()) {
-                open_eras_.erase(c.id);  // later steps open a new one
                 continue;
             }
             if (const auto open = open_eras_.find(c.id); open != open_eras_.end()) {

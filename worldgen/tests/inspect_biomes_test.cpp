@@ -184,7 +184,7 @@ TEST_CASE("P1-03 9: a malformed climate table is a corrupt-data error naming tab
     };
     int kr = 0;
     for (const Reason& rr : reasons) {
-        CAPTURE(rr.reason);
+        CAPTURE(std::string_view(rr.reason));
         const std::string out = world(dir, "r" + std::to_string(kr++) + ".db", std::string(ROWS_SQL) + rr.sql);
         auto w = worldgen::db::WorldReader::open(out);
         REQUIRE(w.ok());
@@ -194,7 +194,7 @@ TEST_CASE("P1-03 9: a malformed climate table is a corrupt-data error naming tab
     }
     // The bounds themselves are accepted.
     for (const char* ok : {"INSERT INTO climate VALUES (1, 7, 50);", "INSERT INTO climate VALUES (1, 0, -50);"}) {
-        CAPTURE(ok);
+        CAPTURE(std::string_view(ok));
         const std::string text = report_of(world(dir, "ok" + std::to_string(kr++) + ".db", std::string(ROWS_SQL) + ok));
         CHECK(text.find("temp_offset_c = ") != std::string::npos);
     }
@@ -206,7 +206,7 @@ TEST_CASE("P1-03 9: a malformed climate table is a corrupt-data error naming tab
     };
     int k = 0;
     for (const Bad& b : bads) {
-        CAPTURE(b.what);
+        CAPTURE(std::string_view(b.what));
         const std::string out = world(dir, "b" + std::to_string(k++) + ".db", std::string(ROWS_SQL) + b.sql);
         auto w = worldgen::db::WorldReader::open(out);
         REQUIRE(w.ok());
@@ -260,7 +260,7 @@ TEST_CASE("P1-04 9: every row of table biome is checked, in ascending id, first 
     };
     int k = 0;
     for (const Bad& b : bads) {
-        CAPTURE(b.what);
+        CAPTURE(std::string_view(b.what));
         // With the layer and without it: rows are checked either way.
         for (const bool layer : {true, false}) {
             CAPTURE(layer);

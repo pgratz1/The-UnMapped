@@ -19,6 +19,7 @@
 #include <map>
 #include <ostream>
 #include <string>
+#include <string_view>
 #include <vector>
 
 #include "p3_03_chronology_support.hpp"
@@ -121,7 +122,7 @@ TEST_CASE("P3-03 14.4 item 22: the golden file holds every case the spec lists")
     for (const char* name : {"geo-seed-0-512", "geo-seed-42-512", "geo-phrase-512", "geo-seed-1-1024",
                              "hist-span-2000-512", "hist-races-elf-orc-1024", "collision-42-6000-all",
                              "seam-42-6000-all", "seam-18446744073709551615-12000-orc"}) {
-        CAPTURE(name);
+        CAPTURE(std::string_view(name));
         CHECK(g.find(name).name == name);
     }
     CHECK(g.sched.size() == 34U * 5U * 10U);
@@ -129,7 +130,8 @@ TEST_CASE("P3-03 14.4 item 22: the golden file holds every case the spec lists")
     // 7.1's seed 42 example, as the file states it.
     const GoldenCase& c = g.find("seam-42-6000-all");
     CHECK(item(c, "years") == "0 2074 3242 4243 4969 5596");
-    CHECK(item(c, "gods") == "1:Fielie:0|2:Krok:0|3:Bronhak:1|4:Syfiash:0|5:Wealstuld:0|6:Kruu:0");
+    // r3 (0.17.0): P3-02 11.6's seed-42 gods (7.1 lists r4's: Krok, Kruu).
+    CHECK(item(c, "gods") == "1:Fielie:0|2:Krokzit:0|3:Bronhak:1|4:Syfiash:0|5:Wealstuld:0|6:Ogh'krak:1");
 }
 
 TEST_CASE("P3-03 14.4 item 22: seam cases through chronology_stage") {

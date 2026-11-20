@@ -2,7 +2,8 @@
 """Independent exact-integer reference of the P1-06 regions stage.
 
 Written by the test writer from docs/specs/p1-06-regions.md (second
-version, generator 0.11.0, schema 5: RG1 to RG14, the layer `region`, the
+version, generator 0.11.0, schema 5; revisions r3 and r4, generator 0.17.0:
+RG11's drawn region names from the data kind `placename`, no numerals; RG1 to RG14, the layer `region`, the
 tables `region`, `region_border` and `region_biome`, the report keys and
 the `ids` palette and `regions` composite of section 9, P0-04 amendment 18)
 and docs/specs/p1-00-geography-overview.md (G1, G2, G6, G7 with k = 1,
@@ -41,6 +42,12 @@ Usage (from the repository root; -B keeps __pycache__ out of the tree):
 
     python3 -B worldgen/tests/reference/p1_regions_reference.py case NAME [--db-dir DIR]
         Print the items of one golden case.
+
+    python3 -B worldgen/tests/reference/p1_regions_reference.py names DB...
+    python3 -B worldgen/tests/reference/p1_regions_reference.py rename-db SRC DST
+        (r3, generator 0.17.0) RG11 r3 on the region and border rows of a
+        stored world: print the names, or copy the world with only
+        region.name replaced (the history references' inputs).
 
     python3 -B worldgen/tests/reference/p1_regions_reference.py world DB...
         Run the stage on the stored layers of 0.10.0 world files (any size)
@@ -729,7 +736,7 @@ def name_list(entries, cx, cy, rc, words, noun, mere_noun, own, stats=None):
         base = words[sec] + " " + nn
         k = seen.get(base, 0) + 1
         seen[base] = k
-        out.append(base if k == 1 else base + " " + roman(k))
+        out.append(base)  # r3: no numeral (the base name; RG11 4)
         if stats is not None:
             for flag, key in ((rule == "isle", "isle"), (rule == "mere", "mere"), (rule == "fells", "fells"),
                               (sec == 0, "central"), (k >= 2, "numbered")):
@@ -746,21 +753,526 @@ def lake_noun(defs):
     fatal("regions: no lake definition")
 
 
-def names(rows, w, h, water, landmass_cells, t, defs, stats=None):
-    """RG11 for the rows in id order (each with seed_x, seed_y, landmass,
-    biome, cells, lake_cells, walk_cells); N is the grid width."""
-    noun = {c: nn for c, _, _, nn in defs}
-    code_of = {key: c for c, key, _, _ in defs}
-    own = set(code_of[k] for k in t["upland_own_noun"])
-    cx, cy = centroid(w, h, water)
-    rc = er.round_int(t["name_central_frac"] * w)
+def base_entries(rows, landmass_cells):
+    """(seed_x, seed_y, biome, isle, mere, upland) per row, id order."""
     per_lm = {}
     for r in rows:
         per_lm[r["landmass"]] = per_lm.get(r["landmass"], 0) + 1
     largest = min(landmass_cells.items(), key=lambda kv: (-kv[1], kv[0]))[0]
-    entries = [(r["seed_x"], r["seed_y"], r["biome"], per_lm[r["landmass"]] == 1 and r["landmass"] != largest,
-                2 * r["lake_cells"] >= r["cells"], 4 * r["walk_cells"] < r["cells"]) for r in rows]
-    return name_list(entries, cx, cy, rc, t["names"], noun, lake_noun(defs), own, stats)
+    return [(r["seed_x"], r["seed_y"], r["biome"], per_lm[r["landmass"]] == 1 and r["landmass"] != largest,
+             2 * r["lake_cells"] >= r["cells"], 4 * r["walk_cells"] < r["cells"]) for r in rows]
+
+
+def base_and_land(entries, cx, cy, rc, words, defs, own, mere_noun, pn):
+    """RG11 1-4 (r3): (base name, land definition id) per entry, no numeral.
+    pn: the placename data (placename_data)."""
+    noun = {c: nn for c, _, _, nn in defs}
+    key_of = {c: k for c, k, _, _ in defs}
+    water_of = {c: wat for c, _, wat, _ in defs}
+    out = []
+    for sx, sy, biome, isle, mere, upland in entries:
+        sec = sector(sx - cx, sy - cy, rc)
+        if isle:
+            nn, land = words[9], pn["special"]["isle"]
+        elif mere:
+            nn, land = mere_noun, pn["special"]["lake"]
+        elif upland and biome not in own:
+            nn, land = words[10], pn["special"]["upland"]
+        else:
+            nn = noun[biome]
+            land = pn["special"]["lake"] if water_of[biome] else pn["by_biome"].get(key_of[biome])
+            if land is None:
+                fatal("regions: placename: biome '%s' has no land definition" % key_of[biome])
+        out.append((words[sec] + " " + nn, land))
+    return out
+
+
+def names(rows, w, h, water, landmass_cells, t, defs, stats=None, brows=None, seed=0, pn=None):
+    """RG11 for the rows in id order (each with seed_x, seed_y, landmass,
+    biome, cells, lake_cells, walk_cells and the trait columns); N is the
+    grid width. r3: brows (border rows with `passes`) and the world seed are
+    needed for the draws. Returns the names; stats gains the counts and
+    the per-region attempt record (`name_how`)."""
+    code_of = {key: c for c, key, _, _ in defs}
+    own = set(code_of[k] for k in t["upland_own_noun"])
+    cx, cy = centroid(w, h, water)
+    rc = er.round_int(t["name_central_frac"] * w)
+    entries = base_entries(rows, landmass_cells)
+    pn = placename_data() if pn is None else pn
+    bl = base_and_land(entries, cx, cy, rc, t["names"], defs, own, lake_noun(defs), pn)
+    if stats is not None:
+        # The cover counts of r2 (numbered names of r2 = drawn names of r3:
+        # the same regions, every non-first region of a base name).
+        seen = {}
+        for (sx, sy, biome, isle, mere, upland), (base, _) in zip(entries, bl):
+            sec = sector(sx - cx, sy - cy, rc)
+            k = seen.get(base, 0) + 1
+            seen[base] = k
+            rule = "isle" if isle else "mere" if mere else "fells" if (upland and biome not in own) else None
+            for flag, key in ((rule == "isle", "isle"), (rule == "mere", "mere"), (rule == "fells", "fells"),
+                              (sec == 0, "central"), (k >= 2, "numbered")):
+                if flag:
+                    stats[key] = stats.get(key, 0) + 1
+    passed = set()
+    for b in (brows or []):
+        if b["passes"] > 0:
+            passed.add(b["a"])
+            passed.add(b["b"])
+    out, how = rg11_r3(rows, bl, passed, seed, w, pn, t)
+    if stats is not None:
+        stats["name_how"] = how
+    return out
+
+
+# ---------------------------------------------------------------------------
+# RG11 r3: drawn names (data kind `placename`, 4.1; tuning name_pools and
+# name_traits, 4)
+# ---------------------------------------------------------------------------
+
+STREAM_NAME = "geo.regions.name"
+PN_LISTS = ("nouns", "suffixes", "prefixes", "adjectives", "features", "possessors", "places", "objects")
+SLOT_LIST = {"noun": "nouns", "suffix": "suffixes", "prefix": "prefixes", "adjective": "adjectives",
+             "feature": "features", "possessor": "possessors", "place": "places", "object": "objects"}
+TRAITS = ("coast", "river", "lake", "high", "ore", "pass", "barren", "fertile")  # trait order (RG11 5)
+SPECIALS = ("none", "isle", "lake", "upland")
+ROLES = ("common", "land", "trait")
+# P1-06 4 (r3): the shipped block; stands in while game/data/worldgen/regions.toml
+# lacks the two fields (the engineer adds them with the implementation).
+SHIPPED_POOLS = {"nouns": (0, 1, 0), "suffixes": (0, 4, 1), "prefixes": (6, 3, 2), "adjectives": (6, 3, 2),
+                 "features": (5, 1, 2), "possessors": (8, 1, 1), "places": (8, 1, 1), "objects": (6, 3, 2)}
+SHIPPED_TRAITS = {"coast_cells": 128, "river_class": 7, "lake_permille": 125, "high_mean_m": 400,
+                  "ore_rich_cells": 1000, "barren_hab_max": 20, "fertile_min": 200}
+TRAIT_RANGES = (("coast_cells", 0, 100000000), ("river_class", 1, 16), ("lake_permille", 1, 1000),
+                ("high_mean_m", 0, 10000), ("ore_rich_cells", 0, 100000000), ("barren_hab_max", -1, 255),
+                ("fertile_min", 0, 256))
+PLACENAMES_DIR = os.path.join(_HERE, "..", "..", "..", "game", "data", "placenames")
+FIELD_ORDER = ("role", "biomes", "special", "trait", "forms") + PN_LISTS + ("forbidden", "excluded")
+
+
+def k_name(seed, n):
+    """K_name = substream(stream_key(seed, "geo.regions.name"), N) (P1-06 2, r3)."""
+    return cr.substream(cr.stream_key(seed, STREAM_NAME), n)
+
+
+def pick(u, n):
+    """P3-02 4.1."""
+    return ((u >> 32) * n) >> 32
+
+
+def weighted(u, w):
+    """P3-02 4.1: the smallest i with (u >> 32) W < 2^32 (w0 + ... + wi)."""
+    total = sum(w)
+    if total <= 0:
+        fatal("regions: weighted: weights sum to 0")
+    hi = (u >> 32) * total
+    acc = 0
+    for i, x in enumerate(w):
+        acc += x
+        if hi < (acc << 32):
+            return i
+    raise AssertionError("weighted")
+
+
+def read_placename_files(directory=None):
+    """{id: table} of every *.toml of a placenames directory (tomllib)."""
+    import tomllib
+    directory = PLACENAMES_DIR if directory is None else directory
+    defs = {}
+    for name in sorted(os.listdir(directory), key=lambda s: s.encode()):
+        if not name.endswith(".toml"):
+            continue
+        with open(os.path.join(directory, name), "rb") as f:
+            doc = tomllib.load(f)
+        for did, table in doc.get("placename", {}).items():
+            if did in defs:
+                fatal("placename: duplicate id '%s'" % did)
+            defs[did] = table
+    return defs
+
+
+def placename_data(defs=None):
+    """The definitions with the lookups RG11 needs: common, lands by biome
+    and special, traits by trait (each a definition dict with 'id')."""
+    defs = read_placename_files() if defs is None else defs
+    out = {"defs": defs, "by_biome": {}, "special": {}, "trait": {}, "common": None}
+    for did in sorted(defs, key=lambda s: s.encode()):
+        d = dict(defs[did])
+        d["id"] = did
+        if d["role"] == "common":
+            out["common"] = d
+        elif d["role"] == "land":
+            for b in d["biomes"]:
+                out["by_biome"][b] = d
+            if d["special"] != "none":
+                out["special"][d["special"]] = d
+        elif d["role"] == "trait":
+            out["trait"][d["trait"]] = d
+    return out
+
+
+# --- 4.1 grammars ---------------------------------------------------------
+
+def g_word(s, n):
+    return word_ok(s) and len(s) <= n
+
+
+def g_element(s, n):
+    return isinstance(s, str) and 1 <= len(s) <= n and all("a" <= ch <= "z" for ch in s)
+
+
+def g_object(s, n):
+    if not isinstance(s, str) or len(s) > n:
+        return False
+    return word_ok(s[4:]) if s.startswith("the ") else word_ok(s)
+
+
+def _spaces_ok(s):
+    return s and s[0] != " " and s[-1] != " " and "  " not in s
+
+
+def g_place_name(s, n):
+    if not isinstance(s, str) or not 1 <= len(s) <= n or not _spaces_ok(s):
+        return False
+    if not (("A" <= s[0] <= "Z") or ("a" <= s[0] <= "z")):
+        return False
+    return all(("A" <= ch <= "Z") or ("a" <= ch <= "z") or ch in " '" for ch in s)
+
+
+def parse_form(form):
+    """[("lit", text) | ("slot", name)], or None if not of the place_form
+    grammar (literals: letters, space, '; slots of SLOT_LIST; at least one
+    slot, none twice; no other braces; no leading, trailing, double space)."""
+    if not isinstance(form, str) or not _spaces_ok(form):
+        return None
+    toks = []
+    i = 0
+    lit = ""
+    seen = set()
+    while i < len(form):
+        ch = form[i]
+        if ch == "{":
+            j = form.find("}", i)
+            if j < 0:
+                return None
+            s = form[i + 1:j]
+            if s not in SLOT_LIST or s in seen:
+                return None
+            seen.add(s)
+            if lit:
+                toks.append(("lit", lit))
+                lit = ""
+            toks.append(("slot", s))
+            i = j + 1
+            continue
+        if ch == "}":
+            return None
+        if not (("A" <= ch <= "Z") or ("a" <= ch <= "z") or ch in " '"):
+            return None
+        lit += ch
+        i += 1
+    if lit:
+        toks.append(("lit", lit))
+    if not seen:
+        return None
+    return toks
+
+
+def g_form(s, n):
+    return isinstance(s, str) and len(s) <= n and parse_form(s) is not None
+
+
+LIST_GRAMMAR = {"nouns": (g_word, 24, "word"), "suffixes": (g_element, 24, "element"),
+                "prefixes": (g_word, 24, "word"), "adjectives": (g_word, 24, "word"),
+                "features": (g_element, 24, "element"), "possessors": (g_word, 24, "word"),
+                "places": (g_word, 24, "word"), "objects": (g_object, 32, "name_object"),
+                "forbidden": (g_element, 16, "element"), "excluded": (g_place_name, 48, "place_name")}
+LIST_MAX = dict((f, 1024) for f in PN_LISTS)
+LIST_MAX.update(forbidden=64, excluded=1024)
+
+
+def placename_problem(defs, biome_keys):
+    """The first problem of the loader's checks of 4.1 (types and grammars,
+    then the named checks per definition in id order, then the kind checks),
+    as (check, id or None, message); None when the data passes."""
+    ids = sorted(defs, key=lambda s: s.encode())
+    for did in ids:
+        d = defs[did]
+        for k in d:
+            if k not in FIELD_ORDER:
+                return ("schema", did, "unknown key '%s'" % k)
+        for f in FIELD_ORDER:
+            if f not in d:
+                return ("schema", did, "missing required field '%s'" % f)
+        if d["role"] not in ROLES:
+            return ("schema", did, "role")
+        if d["special"] not in SPECIALS:
+            return ("schema", did, "special")
+        if d["trait"] not in ("none",) + TRAITS:
+            return ("schema", did, "trait")
+        if len(d["biomes"]) > 16 or any(b not in biome_keys for b in d["biomes"]):
+            return ("schema", did, "biomes")
+        if len(d["forms"]) > 16:
+            return ("schema", did, "forms")
+        for i, fm in enumerate(d["forms"]):
+            if not isinstance(fm, dict) or set(fm) != {"form", "weight"}:
+                return ("schema", did, "forms[%d]" % i)
+            if not g_form(fm["form"], 48):
+                return ("grammar", did, "forms[%d].form" % i)
+            if not isinstance(fm["weight"], int) or not 1 <= fm["weight"] <= 1000:
+                return ("schema", did, "forms[%d].weight" % i)
+        for f in PN_LISTS + ("forbidden", "excluded"):
+            g, n, gname = LIST_GRAMMAR[f]
+            if len(d[f]) > LIST_MAX[f]:
+                return ("schema", did, "%s too long" % f)
+            for j, s in enumerate(d[f]):
+                if not g(s, n):
+                    return ("grammar", did, "%s[%d] '%s' is not a %s" % (f, j, s, gname))
+    for did in ids:
+        d = defs[did]
+        msg = role_fields_problem(d)
+        if msg:
+            return ("placename_role_fields", did, msg)
+        for f in ("biomes",) + PN_LISTS + ("forbidden", "excluded", "forms"):
+            vals = [x["form"] for x in d[f]] if f == "forms" else d[f]
+            first = {}
+            for j, v in enumerate(vals):
+                if v in first:
+                    return ("placename_lists_unique", did, "%s[%d] '%s' repeats %s[%d]" % (f, j, v, f, first[v]))
+                first[v] = j
+    commons = [i for i in ids if defs[i]["role"] == "common"]
+    if len(commons) != 1:
+        return ("placename_one_common", None, "there must be exactly one common definition, found %d" % len(commons))
+    seen_b, seen_s, seen_t = {}, {}, {}
+    for did in ids:
+        d = defs[did]
+        if d["role"] == "land":
+            for b in d["biomes"]:
+                if b in seen_b:
+                    return ("placename_lands_distinct", None, "biome '%s' is in '%s' and '%s'" % (b, seen_b[b], did))
+                seen_b[b] = did
+        if d["special"] != "none":
+            if d["special"] in seen_s:
+                return ("placename_lands_distinct", None,
+                        "special '%s' is in '%s' and '%s'" % (d["special"], seen_s[d["special"]], did))
+            seen_s[d["special"]] = did
+        if d["trait"] != "none":
+            if d["trait"] in seen_t:
+                return ("placename_lands_distinct", None,
+                        "trait '%s' is in '%s' and '%s'" % (d["trait"], seen_t[d["trait"]], did))
+            seen_t[d["trait"]] = did
+    c = defs[commons[0]]
+    for f, n in (("prefixes", 100), ("adjectives", 100), ("features", 16), ("possessors", 32), ("places", 16),
+                 ("objects", 32)):
+        if len(c[f]) < n:
+            return ("placename_common_sizes", None,
+                    "the common definition needs at least %d %s, has %d" % (n, f, len(c[f])))
+    return None
+
+
+def role_fields_problem(d):
+    """placename_role_fields: the first failing condition in the order written."""
+    role = d["role"]
+    def need(f, state):
+        v = d[f]
+        ok = {"empty": v == [] if isinstance(v, list) else None, "none": v == "none",
+              "non-empty": isinstance(v, list) and len(v) > 0, "not none": v != "none"}[state]
+        return None if ok else "a %s definition must have %s %s" % (role, f, state)
+    if role == "common":
+        for f, s in (("biomes", "empty"), ("special", "none"), ("trait", "none"), ("forms", "empty"),
+                     ("nouns", "empty")):
+            m = need(f, s)
+            if m:
+                return m
+    elif role == "land":
+        m = need("trait", "none")
+        if m:
+            return m
+        hb, hs = len(d["biomes"]) > 0, d["special"] != "none"
+        if hb and hs:
+            return "a land definition must name biomes or a special, not both"
+        if not hb and not hs:
+            return "a land definition must name biomes or a special, not neither"
+        for f, s in (("forms", "non-empty"), ("nouns", "non-empty"), ("suffixes", "non-empty"),
+                     ("forbidden", "empty"), ("excluded", "empty")):
+            m = need(f, s)
+            if m:
+                return m
+    else:
+        for f, s in (("trait", "not none"), ("biomes", "empty"), ("special", "none"), ("forms", "empty"),
+                     ("nouns", "empty"), ("forbidden", "empty"), ("excluded", "empty")):
+            m = need(f, s)
+            if m:
+                return m
+    return None
+
+
+def check_4a(pn, defs_biomes, pools):
+    """Stage check 4a (r3), messages with the prefix 'regions: placename: '.
+    defs_biomes: (code, key, water, noun) ascending code."""
+    P = "regions: placename: "
+    lands = [d for d in (dict(v, id=k) for k, v in pn["defs"].items()) if d["role"] == "land"]
+    for code, key, water, _ in sorted(defs_biomes):
+        if water:
+            continue
+        if sum(1 for d in lands if key in d["biomes"]) != 1:
+            fatal(P + "biome '%s' has no land definition" % key)
+    for s in ("isle", "lake", "upland"):
+        if not any(d["special"] == s for d in lands):
+            fatal(P + "no land definition for '%s'" % s)
+    common = pn["common"]
+    for d in sorted(lands, key=lambda x: x["id"].encode()):
+        for i, fm in enumerate(d["forms"]):
+            for kind, s in parse_form(fm["form"]):
+                if kind != "slot":
+                    continue
+                L = SLOT_LIST[s]
+                w0, w1, _ = pools[L]
+                if not ((w0 > 0 and common[L]) or (w1 > 0 and d[L])):
+                    fatal(P + "'%s' form %d slot '%s' has no words" % (d["id"], i, s))
+
+
+# --- RG11 5 to 8 ------------------------------------------------------------
+
+def region_traits(row, has_pass, nt):
+    """The traits a region holds, in trait order (RG11 5)."""
+    held = {
+        "coast": row["coast_cells"] >= nt["coast_cells"],
+        "river": row["river_class_max"] >= nt["river_class"],
+        "lake": row["lake_cells"] > 0 and 1000 * row["lake_cells"] >= nt["lake_permille"] * row["cells"],
+        "high": row["elev_mean_dm"] >= 10 * nt["high_mean_m"],
+        "ore": row["ore_rich_cells"] >= nt["ore_rich_cells"],
+        "pass": bool(has_pass),
+        "barren": row["habitability_mean"] <= nt["barren_hab_max"],
+        "fertile": row["fertility_mean"] >= nt["fertile_min"],
+    }
+    return [tr for tr in TRAITS if held[tr]]
+
+
+VOWELS = "aeiou"
+
+
+def name_valid(toks, values, common):
+    """V1 to V6 of RG11 7 for a form (parsed) and its slot values (in slot
+    order); returns (valid, rule failed or None)."""
+    vals = iter(values)
+    parts = []
+    for kind, s in toks:
+        parts.append((kind, s if kind == "lit" else next(vals)))
+    name = "".join(v for _, v in parts)
+    for (k1, x), (k2, y) in zip(parts, parts[1:]):
+        if k1 == "slot" and k2 == "slot":
+            x, y = x.lower(), y.lower()
+            if x[-1] == y[0] or (x[-1] in VOWELS and y[0] in VOWELS) or len(x) + len(y) > 12:
+                return False, "V1"
+    low = name.lower()
+    for i in range(len(low) - 2):
+        if low[i] == low[i + 1] == low[i + 2] and "a" <= low[i] <= "z":
+            return False, "V2"
+    sv = [v.lower() for k, v in parts if k == "slot"]
+    for i in range(len(sv)):
+        for j in range(len(sv)):
+            if i != j and sv[i] in sv[j]:
+                return False, "V3"
+    for wd in low.split(" "):
+        if any(f in wd for f in common["forbidden"]):
+            return False, "V4"
+    if name in common["excluded"]:
+        return False, "V5"
+    one = set(e for e in common["excluded"] if " " not in e)
+    if any(wd in one for wd in name.split(" ")):
+        return False, "V5"
+    if len(name.encode()) > 48:
+        return False, "V6"
+    return True, None
+
+
+def pools_for(slot_list, land, common, trait_defs, pw):
+    P = (common[slot_list], land[slot_list], [x for td in trait_defs for x in td[slot_list]])
+    w = [pw[slot_list][i] if len(P[i]) > 0 else 0 for i in range(3)]
+    return P, w
+
+
+def name_attempt(key, rid, t, land, common, trait_defs, pw, trace=None):
+    """One attempt t of RG11 6 and 7: (valid, name, rule). trace: a list to
+    receive (k, u, choice) records."""
+    def u(k):
+        v = cr.hash_at3(key, rid, t, k)
+        return v
+    F = land["forms"]
+    u0 = u(0)
+    fi = weighted(u0, [f["weight"] for f in F])
+    form = F[fi]["form"]
+    if trace is not None:
+        trace.append(("form", u0, fi, form))
+    toks = parse_form(form)
+    k = 1
+    values = []
+    for kind, s in toks:
+        if kind != "slot":
+            continue
+        P, w = pools_for(SLOT_LIST[s], land, common, trait_defs, pw)
+        ua, ub = u(k), u(k + 1)
+        p = weighted(ua, w)
+        idx = pick(ub, len(P[p]))
+        values.append(P[p][idx])
+        if trace is not None:
+            trace.append((s, ua, tuple(w), p, len(P[p]), ub, idx, P[p][idx]))
+        k += 2
+    ok, rule = name_valid(toks, values, common)
+    parts = iter(values)
+    name = "".join(v if kd == "lit" else next(parts) for kd, v in toks)
+    return ok, name, rule
+
+
+FALLBACK_TOKS = [("slot", "prefix"), ("slot", "suffix")]
+
+
+def name_fallback(land, common, used):
+    for p in common["prefixes"] + land["prefixes"]:
+        for s in land["suffixes"] + common["suffixes"]:
+            n = p + s
+            if name_valid(FALLBACK_TOKS, [p, s], common)[0] and n not in used:
+                return n
+    return None
+
+
+def rg11_r3(rows, bl, passed, seed, n, pn, t):
+    """RG11 4 and 8: keepers, then the draws in id order. bl: (base, land)
+    per row. Returns (names, how) with how 'K', 'F' or the attempt number."""
+    pw = t.get("name_pool_weights", SHIPPED_POOLS)
+    nt = t.get("name_traits", SHIPPED_TRAITS)
+    key = k_name(seed, n)
+    best = {}
+    for row, (base, _) in zip(rows, bl):
+        b = best.get(base)
+        if b is None or (row["cells"], -row["id"]) > (b["cells"], -b["id"]):
+            best[base] = row
+    keeper = {b["id"] for b in best.values()}
+    used = set(best)
+    out, how = [], []
+    common = pn["common"]
+    for row, (base, land) in zip(rows, bl):
+        if row["id"] in keeper:
+            out.append(base)
+            how.append("K")
+            continue
+        trs = region_traits(row, row["id"] in passed, nt)
+        tdefs = [pn["trait"][tr] for tr in trs if tr in pn["trait"]]
+        got = None
+        for att in range(64):
+            ok, nm, _ = name_attempt(key, row["id"], att, land, common, tdefs, pw)
+            if ok and nm not in used:
+                got = (nm, str(att))
+                break
+        if got is None:
+            nm = name_fallback(land, common, used)
+            if nm is None:
+                fatal("regions: no free name for region %d" % row["id"])
+            got = (nm, "F")
+        used.add(got[0])
+        out.append(got[0])
+        how.append(got[1])
+    return out, how
 
 
 # ---------------------------------------------------------------------------
@@ -1016,11 +1528,12 @@ def regions(w, h, L, passes, t, seed, defs=None, second=False):
     for i in range(n):
         if landmass[i]:
             lm_cells[landmass[i]] = lm_cells.get(landmass[i], 0) + 1
-    nm = names(rows, w, h, water, lm_cells, t, defs, stats) if rows else []
-    for r, s in zip(rows, nm):
-        r["name"] = s
     brows = border_rows(w, h, region, S, walk, water, river, border)
     stats["crossings"] = pass_crossings(w, h, region, water, passes, brows)
+    # RG11 after RG12 (r3: the pass trait reads the border rows).
+    nm = names(rows, w, h, water, lm_cells, t, defs, stats, list(brows.values()), seed) if rows else []
+    for r, s in zip(rows, nm):
+        r["name"] = s
     stats["crossed"] = sum(len(set(k for _, _, _, k in pass_attachment(w, region, water, path, col)[1]))
                            for _, path, col in passes)
     if second:
@@ -1165,6 +1678,8 @@ def read_golden(path):
                 continue
             if tok[0] == "case":
                 out[tok[1]] = {"line": tok, "items": {}}
+            elif tok[1] in ("names", "name_attempts"):
+                out[tok[0]]["items"][tok[1]] = line.rstrip("\n").split(" ", 2)[2]
             else:
                 out[tok[0]]["items"][tok[1]] = tok[2]
     return out
@@ -1433,13 +1948,19 @@ def case_items(r):
     items.append(("cover", coverage(r)))
     for k, v in report_items(r):
         items.append((k, v.replace(" ", "_")))
+    # r3 (10.5 "Golden values"): every region's name, and how it was named
+    # (K keeper, F fallback, else the accepted attempt).
+    items.append(("names", "|".join("%d:%s" % (row["id"], row["name"]) for row in r["rows"]) or "-"))
+    items.append(("name_attempts", "|".join("%d:%s" % (row["id"], hw) for row, hw in
+                                            zip(r["rows"], r["stats"].get("name_how", []))) or "-"))
     return items
 
 
 GOLDEN_HEADER = """\
-# P1-06 regions golden vectors for generator 0.11.0 (spec second version,
+# P1-06 regions golden vectors for generator 0.17.0 (spec second version,
 # 2026-11-18, revision r2: one border per pass, the Mere and Fells nouns;
-# schema 5), generated by
+# revisions r3 and r4, shipped with P3-08: region names drawn from the
+# placename lists, no numerals; schema 5), generated by
 # worldgen/tests/reference/p1_regions_reference.py golden, an independent
 # exact-integer reference written from docs/specs/p1-06-regions.md and P1-00
 # alone. The thirteen input layers of each case are those of the named case
@@ -1454,6 +1975,9 @@ GOLDEN_HEADER = """\
 #       upstream layers and seven resources layers are used (its own
 #       resources tuning); <fixture>, <N>, <seed> repeat its case line; the
 #       stage's world seed is <seed>. Biome definitions: the shipped twelve.
+#       Placename definitions (r3): game/data/placenames/ (the fixture roots
+#       hold identical copies). Tuning records name_pools and name_traits:
+#       the shipped values of P1-06 4 (r3) in every case.
 #       Tuning: the shipped worldgen.regions of 4 with <overrides>, "-" or
 #       comma-separated field=value (fx values as decimal text; cost_noise as
 #       wavelength_m/octaves/gain; names as the eleven words central/north/
@@ -1490,14 +2014,21 @@ GOLDEN_HEADER = """\
 #   cover        counts: greedy seeds, landmass seeds, rejected candidates,
 #                bank (near but across a border river: a check passed by
 #                the bank rule), merges, isle names, central names, numbered
-#                names, crossings (passes attached to a row, RG12 r2), lake
-#                cells, border river cells, corner (diagonal land steps
-#                between two border river cells), mere and fells (names by
+#                (r3: drawn; the same regions as the numbered names of r2,
+#                every region of a base name but its first), crossings
+#                (passes attached to a row, RG12 r2), lake cells, border
+#                river cells, corner (diagonal land steps between two
+#                border river cells), mere and fells (names by
 #                RG11 3 b and c, r2), crossed ((pass, row) pairs crossed by a
 #                path, before the attachment)
 #   regions region_area_km2 region_borders region_borders_walkable
 #   region_borders_river region_borders_pass regions_isolated regions_upland
 #                the report values of P1-06 9, spaces written as "_"
+#   names        (r3) every region in id order, "<id>:<name>" joined by "|";
+#                the value is the rest of the line and holds spaces
+#   name_attempts (r3) every region in id order, "<id>:<how>" joined by "|":
+#                K the keeper of its base name, F the fallback of RG11 8, or
+#                the accepted attempt t
 #
 """
 
@@ -1722,8 +2253,8 @@ def check_rg11(c):
                # r2: rules b and c.
                (700, 300, 3, False, 2 * 120 >= 200, False), (210, 700, 3, False, False, True),
                (230, 720, 7, False, False, True), (230, 720, 3, False, True, True)]
-    c.eq("RG11 names", name_list(entries, 500, 480, rc, t["names"], noun, lake_noun(shipped_defs()), own),
-         ["Central Downs", "East Wood", "Northwest Peaks", "South Marsh", "East Wood II", "North Isle",
+    c.eq("RG11 base names", name_list(entries, 500, 480, rc, t["names"], noun, lake_noun(shipped_defs()), own),
+         ["Central Downs", "East Wood", "Northwest Peaks", "South Marsh", "East Wood", "North Isle",
           "Northeast Mere", "Southwest Fells", "Southwest Peaks", "Southwest Mere"])
     c.eq("RG11 sector of (210, 700)", NAME_FIELDS[sector(210 - 500, 700 - 480, rc)], "southwest")
     c.eq("RG11 isle before mere and upland",
@@ -1751,6 +2282,222 @@ def check_rg11(c):
     c.eq("RG11 d2 = rc2 is not central", NAME_FIELDS[sector(3, 4, 5)], "northeast" if False else
          NAME_FIELDS[sector(3, 4, 0)])
     c.eq("RG11 d2 < rc2 central", NAME_FIELDS[sector(3, 4, 6)], "central")
+
+
+EXAMPLE_42_1024 = os.path.join(os.path.expanduser("~"), ".cache", "the-unmapped", "out", "p3-06-tests", "inputs",
+                               "example-42-1024.db")
+
+# P1-06 14.4: 1024 seed 42, every region (id, new name, land, traits, how).
+TABLE_14_4 = """\
+1|The Scarred Downs|downs|coast|t0
+2|The Sour Plain|downs|coast|t0
+3|The Rises of Hares|downs||t0
+4|Warlord's Rises|downs|fertile|t0
+5|Northwest Steppe|steppe|coast,high,ore,barren|plain
+6|North Downs|downs|river,fertile|plain
+7|The Windswept Wolds|downs|fertile|t0
+8|Northwest Downs|downs|ore|plain
+9|Northwest Heath|heath|high,barren|plain
+10|Knelldown|downs|river,fertile|t0
+11|Beggar's Plain|downs|fertile|t0
+12|Witchgate Barrows|downs|river,fertile|t0
+13|North Heath|heath|high,barren|plain
+14|Northeast Wood|wood|river|plain
+15|Northwest Peaks|peaks|high,ore,barren|plain
+16|Steward's Vale|downs|river|t0
+17|Wrecker's Reach|wood|coast|t0
+18|Northeast Downs|downs|river,fertile|plain
+19|The Shaw of Widows|wood||t0
+20|West Peaks|peaks|lake,high|plain
+21|Central Heath|heath|high,ore,barren|plain
+22|West Wood|wood||plain
+23|Central Wood|wood|lake,high,ore|plain
+24|Drover's Sorrow|wood|river|t0
+25|Central Downs|downs||plain
+26|East Wood|wood|river|plain
+27|Sprayridge Thicket|wood|coast,river|t0
+28|East Downs|downs|river|plain
+29|Dawthorn Woods|wood|ore,barren|t0
+30|Vetchdown|downs|river,lake,fertile|t0
+31|West Downs|downs|lake,fertile|plain
+32|South Downs|downs|high,ore|plain
+33|The Sorrowing Shaw|wood||t0
+34|Southeast Wood|wood||plain
+35|The Wood of Stags|wood||t0
+36|Southwest Steppe|steppe||plain
+37|The Brake of the Forgotten|wood||t0
+38|Southwest Downs|downs|high|plain
+39|Harrowholt|wood|coast|t0
+40|Prince's Vow|wood||t1
+41|Larkfell|downs|high,ore,pass,barren|t0
+42|Stranger's Oath|wood||t0
+43|Southwest Wood|wood|coast|plain
+44|South Wood|wood|high,pass|plain
+45|Badgerhorn Wood|wood||t0
+46|The Tangle of Yews|wood||t0
+47|Thistlehorn Shaw|wood||t0
+48|South Fells|fells|high,barren|plain
+49|The Gnarled Forest|wood|coast,barren|t0
+50|Southeast Isle|isle|coast|plain"""
+
+# 14.3: distinct valid names per land (no trait; one word; every trait).
+SPACE_14_3 = {"wood": (70880, 1332, 127225), "carr": (53285, 976, 92792), "downs": (49230, 914, 88609),
+              "marsh": (41451, 801, 71992), "fen": (51444, 984, 90767), "moor": (37905, 878, 68962),
+              "heath": (33174, 783, 60050), "peaks": (60610, 1282, 107103), "waste": (38279, 636, 69015),
+              "steppe": (38242, 626, 69460), "isle": (33367, 630, 58364), "mere": (43866, 761, 76472),
+              "fells": (48932, 1065, 86451)}
+
+
+# The same with the shipped (r4) forbidden list of 21 entries: computed by
+# this reference (not in the spec).
+SPACE_R4 = {"carr": (53253, 976, 92752), "downs": (49198, 914, 88569), "fells": (48899, 1064, 86410),
+            "fen": (51412, 984, 90727), "heath": (33154, 783, 60025), "isle": (33346, 629, 58338),
+            "marsh": (41426, 800, 71961), "mere": (43838, 761, 76437), "moor": (37881, 877, 68932),
+            "peaks": (60570, 1282, 107053), "steppe": (38216, 624, 69428), "waste": (38255, 636, 68985),
+            "wood": (70835, 1331, 127169)}
+
+
+def land_space(land, common, trait_defs, pw):
+    """Every distinct valid name a land can make over its forms and every
+    pool of non-zero weight (14.3's enumeration): (all, one-word)."""
+    import itertools
+    names_all = set()
+    one = set()
+    for fm in land["forms"]:
+        toks = parse_form(fm["form"])
+        lists = []
+        for kind, s in toks:
+            if kind == "slot":
+                P, w = pools_for(SLOT_LIST[s], land, common, trait_defs, pw)
+                vals = []
+                for i in range(3):
+                    if w[i] > 0:
+                        vals.extend(P[i])
+                lists.append(sorted(set(vals)))
+        for combo in itertools.product(*lists):
+            ok, _ = name_valid(toks, list(combo), common)
+            if ok:
+                it = iter(combo)
+                nm = "".join(v if k == "lit" else next(it) for k, v in toks)
+                names_all.add(nm)
+                if " " not in nm:
+                    one.add(nm)
+    return len(names_all), len(one)
+
+
+def check_rg11_r3(c, quick=False):
+    """P1-06 5.1 (r3) draw examples, 14.4's table, 14.3's space sizes,
+    the validity examples, check 4a and the loader checks on the shipped
+    placename files."""
+    t = shipped_tuning()
+    pn = placename_data()
+    key = k_name(42, 1024)
+    c.eq("RG11 r3 stream_key(42, geo.regions.name)", cr.stream_key(42, STREAM_NAME), 0x224A148B98263929)
+    c.eq("RG11 r3 K_name(42, 1024)", key, 0xE1A9F22A266E243A)
+    uw = {(1, 0, 0): 0x6859A960857622CB, (1, 0, 1): 0x7EE3FBE2B3DAA4E4, (1, 0, 2): 0xA731588330C4201D,
+          (1, 0, 3): 0xE72102C4301D4A38, (1, 0, 4): 0x26E0EFE6AE26CED5,
+          (10, 0, 0): 0x42002C340A52E948, (10, 0, 1): 0x2056F9F4076F2CC2, (10, 0, 2): 0x80DC08382FB40AEE,
+          (10, 0, 3): 0xA85791F9B2BC6F64, (10, 0, 4): 0x672EF6DA06D6A3DA,
+          (39, 0, 2): 0x673CC715D61964E8, (39, 0, 4): 0x99255536F43A47E7,
+          (40, 0, 0): 0x1DAD0A4F3DA9416D, (40, 0, 1): 0xD767ECABF011F7C6, (40, 0, 2): 0x2574A736E868C8E5,
+          (40, 0, 3): 0x21EE6D0295292197, (40, 0, 4): 0xA4FFEA0405079A69,
+          (40, 1, 0): 0xF8C4AD91FCA3D645, (40, 1, 1): 0xB4FB47D898CFA306, (40, 1, 2): 0xA07474902FABD7AE,
+          (40, 1, 3): 0xDC51F8D891CC3346, (40, 1, 4): 0xF07596C36D36F72F}
+    for (r, at, k), v in sorted(uw.items()):
+        c.eq("RG11 r3 u(%d) region %d attempt %d" % (k, r, at), cr.hash_at3(key, r, at, k), v)
+    pw, common = SHIPPED_POOLS, pn["common"]
+    land = {d: pn["defs"][d] for d in pn["defs"]}
+    def L(x):
+        return dict(land[x], id=x)
+    tr = pn["trait"]
+    cases = [(1, "downs", ["coast"], 0, (True, "The Scarred Downs"),
+              [("form", 1), ("adjective", (6, 3, 2), 0, 159, 103, "Scarred"), ("noun", (0, 1, 0), 1, 8, 1, "Downs")]),
+             (10, "downs", ["river", "fertile"], 0, (True, "Knelldown"),
+              [("form", 0), ("prefix", (6, 3, 2), 0, 156, 78, "Knell"), ("suffix", (0, 4, 1), 1, 6, 2, "down")]),
+             (39, "wood", ["coast"], 0, (True, "Harrowholt"),
+              [("form", 0), ("prefix", None, 0, 156, 62, "Harrow"), ("suffix", None, 1, 8, 4, "holt")]),
+             (40, "wood", [], 0, (False, "Birchhurst"),
+              [("form", 0), ("prefix", (6, 3, 0), 1, 23, 3, "Birch"), ("suffix", (0, 4, 0), 1, 8, 5, "hurst")]),
+             (40, "wood", [], 1, (True, "Prince's Vow"),
+              [("form", 5), ("possessor", (8, 0, 0), 0, 94, 58, "Prince"), ("place", (8, 0, 0), 0, 52, 48, "Vow")])]
+    for rid, ld, trs, at, want, steps in cases:
+        trace = []
+        ok, nm, rule = name_attempt(key, rid, at, L(ld), common, [tr[x] for x in trs], pw, trace)
+        c.eq("RG11 r3 region %d attempt %d name" % (rid, at), (ok, nm), want)
+        c.eq("RG11 r3 region %d attempt %d form" % (rid, at), trace[0][2], steps[0][1])
+        for got, st in zip(trace[1:], steps[1:]):
+            s, wts, pool, size, idx, word = st
+            c.eq("RG11 r3 region %d attempt %d slot %s" % (rid, at, s),
+                 (got[0], got[3], got[4], got[6], got[7]) + ((got[2],) if wts else ()),
+                 (s, pool, size, idx, word) + ((wts,) if wts else ()))
+        if rid == 40 and at == 0:
+            c.eq("RG11 r3 Birchhurst fails V1", rule, "V1")
+    ok, nm, _ = name_attempt(key, 1, 1, L("downs"), common, [tr["coast"]], pw)
+    c.eq("RG11 r3 region 1 attempt 1", nm, "Fletcher's Wolds")
+    # Validity examples of 5.1.
+    def v(form, vals):
+        return name_valid(parse_form(form), vals, common)
+    for form, vals, rule in ((("{prefix}{suffix}"), ["Birch", "hurst"], "V1"),
+                             ("{prefix}{suffix}", ["Bramble", "edge"], "V1"),
+                             ("{prefix}{suffix}", ["Hallow", "well"], "V1"),
+                             ("{prefix}{suffix}", ["Bramble", "alder"], "V1"),
+                             ("{prefix}{suffix}", ["Hemlock", "hollow"], "V1"),
+                             ("The {adjective} {noun}", ["Hollow", "Hollow"], "V3"),
+                             ("{prefix}{feature} {noun}", ["Fen", "moss", "Moss"], "V3"),
+                             ("The {noun} of {object}", ["Wood", "Woods"], "V3"),
+                             ("{prefix}{suffix}", ["Black", "wood"], "V5"),
+                             ("The {adjective} {noun}", ["Haunted", "Forest"], "V5"),
+                             ("{prefix}{feature} {noun}", ["Black", "rock", "Downs"], "V5"),
+                             ("{prefix}{suffix}", ["Holly", "wood"], "V5"),
+                             ("{prefix}{suffix}", ["Bone", "reach"], "V4"),
+                             ("{prefix}{suffix}", ["Dun", "grove"], "V4"),
+                             ("{prefix}{suffix}", ["Adder", "bog"], None),
+                             ("{prefix}{suffix}", ["Thistle", "horn"], None),
+                             ("{prefix}{suffix}", ["Bracken", "stone"], None)):
+        c.eq("RG11 r3 validity %s %r" % (form, vals), v(form, vals)[1], rule)
+    c.eq("RG11 r3 fallback fen", name_fallback(L("fen"), common, set()), "Adderbog")
+    c.eq("RG11 r3 fen suffixes", L("fen")["suffixes"], ["bog", "fen", "mire", "moss", "quag", "sike"])
+    c.eq("RG11 r3 forbidden has boner and dung, 21 entries, sorted (r4)",
+         ("boner" in common["forbidden"], "dung" in common["forbidden"], len(common["forbidden"]),
+          common["forbidden"] == sorted(common["forbidden"])), (True, True, 21, True))
+    c.eq("4.1 loader checks pass on the shipped files", placename_problem(pn["defs"], set(br.shipped_definitions())),
+         None)
+    try:
+        check_4a(pn, shipped_defs(), SHIPPED_POOLS)
+        c.ok("check 4a passes on the shipped files", True)
+    except FatalError as e:
+        c.ok("check 4a passes on the shipped files: %s" % e, False)
+    # Sizes of 4.1.
+    counts = {f: len(common[f]) for f in PN_LISTS}
+    c.eq("4.1 common sizes", counts, dict(nouns=0, suffixes=0, prefixes=156, adjectives=159, features=33,
+                                          possessors=94, places=52, objects=78))
+    # (4.1's table says 79 common objects and 141 distinct objects; the
+    # normative files hold 78 and 140: the files rule, the table is off by one.)
+    c.eq("4.1 excluded entries", len(common["excluded"]), 90)
+    distinct = {f: len(set(x for d in pn["defs"].values() for x in d[f])) for f in PN_LISTS}
+    c.eq("4.1 distinct words over all definitions", distinct,
+         dict(nouns=87, suffixes=67, prefixes=282, adjectives=222, features=50, possessors=105, places=70,
+              objects=140))
+    # 14.4 on the 0.16.0 world of 1024 seed 42 (region and border rows of r2).
+    if os.path.exists(EXAMPLE_42_1024):
+        rows, nm, how, traits, bases, lands = world_names(EXAMPLE_42_1024, pn, t)
+        check_stored_bases(EXAMPLE_42_1024, rows, bases)
+        got = "\n".join("%d|%s|%s|%s|%s" % (r["id"], n, ld, ",".join(trs), "plain" if hw == "K" else "t" + hw)
+                        for r, n, hw, trs, ld in zip(rows, nm, how, traits, lands))
+        c.eq("14.4 1024 seed 42, every region", got, TABLE_14_4)
+    else:
+        sys.stderr.write("note: %s missing; 14.4 not checked\n" % EXAMPLE_42_1024)
+    if not quick:
+        # 14.3 was measured with r3's 19 forbidden entries (before r4 added
+        # boner and dung): reproduced exactly with those two removed; with
+        # the shipped 21 the reference's own counts are SPACE_R4.
+        r3common = dict(common, forbidden=[f for f in common["forbidden"] if f not in ("boner", "dung")])
+        alltr = [tr[x] for x in TRAITS if x in tr]
+        for ld in sorted(SPACE_14_3):
+            for label, cm, want in (("r3 lists", r3common, SPACE_14_3[ld]), ("r4 lists", common, SPACE_R4[ld])):
+                got0 = land_space(L(ld), cm, [], pw)
+                gotall = land_space(L(ld), cm, alltr, pw)[0]
+                c.eq("14.3 space of %s (%s)" % (ld, label), (got0[0], got0[1], gotall), want)
 
 
 def check_rg12(c):
@@ -1940,7 +2687,8 @@ def check_rg6_rg9(c):
     c.eq("RG9 seeds of ids", [(row["seed_x"], row["seed_y"]) for row in r["rows"]], [(5, 4), (14, 3), (17, 6)])
     c.eq("RG6 rows", [(row["cells"], row["lake_cells"], row["river_cells"], row["landmass"]) for row in r["rows"]],
          [(72, 0, 0, 1), (2, 0, 0, 2), (2, 1, 1, 3)])
-    c.eq("RG11 names", [row["name"] for row in r["rows"]], ["West Downs", "East Isle", "East Isle II"])
+    c.eq("RG11 names", [row["name"] for row in r["rows"]], ["West Downs", "East Isle", "Adderlaw Rock"])
+    check_invariant6(c, "RG6 fixture", r)  # r3: the drawn name checked independently
     c.eq("RG10 river islet", (r["rows"][2]["river_class_max"], r["rows"][2]["walk_cells"],
                               r["rows"][2]["elev_mean_dm"], r["rows"][2]["biomes"]), (1, 1, 5, [(2, 1), (4, 1)]))
     c.eq("RG10 islet p90", (r["rows"][1]["habitability_mean"], r["rows"][1]["habitability_p90"]), (125, 200))
@@ -1966,7 +2714,8 @@ def check_lake_only(c):
     c.eq("lake-only row", (row["id"], row["cells"], row["lake_cells"], row["biome"], row["walk_area"], row["walk_cells"],
                            row["elev_mean_dm"], row["elev_max_dm"], row["habitability_mean"], row["habitability_p90"],
                            row["fresh_water_mean"], row["ore_rich_cells"]), (2, 1, 1, 2, 0, 0, 0, 0, 0, 0, 0, 0))
-    c.eq("lake-only names", [x["name"] for x in r["rows"]], ["West Downs", "East Isle", "East Isle II", "East Isle III"])
+    c.eq("lake-only names", [x["name"] for x in r["rows"]], ["West Downs", "The Sable Isle", "East Isle", "Woemere"])
+    check_invariant6(c, "lake-only fixture", r)  # r3
     check_invariants(c, "lake-only", r)
     return r
 
@@ -1986,7 +2735,8 @@ def check_mere(c):
     r = regions(w, h, L, [], t, 0, second=True)
     row = r["rows"][0]
     c.eq("mere row", (row["cells"], row["lake_cells"], row["walk_cells"], row["biome"]), (72, 36, 36, 4))
-    c.eq("mere names", [x["name"] for x in r["rows"]], ["West Mere", "East Isle", "East Isle II"])
+    c.eq("mere names", [x["name"] for x in r["rows"]], ["West Mere", "East Isle", "Adderlaw Rock"])
+    check_invariant6(c, "mere fixture", r)  # r3
     # One lake cell fewer: Downs.
     i = 6 * w + 12
     L["water"][i] = WATER_DRY
@@ -2130,16 +2880,95 @@ def check_invariants(c, label, r):
     c.ok("%s inv8 sum" % label, total <= len(r["passes"]))
     crossing = sum(1 for _, path, col in r["passes"] if pass_attachment(w, region, water, path, col)[1])
     c.eq("%s inv8 attached" % label, total, crossing)
-    # 6.
-    names_ = [row["name"] for row in rows]
-    c.eq("%s inv6 unique" % label, len(set(names_)), len(names_))
-    nouns = set(nn for _, _, _, nn in shipped_defs()) | {t["names"][9], t["names"][10]}
-    for nm in names_:
-        p = nm.split(" ")
-        ok = (len(p) in (2, 3) and p[0] in t["names"][:9] and p[1] in nouns and
-              (len(p) == 2 or (p[2] != "I" and any(roman(k) == p[2] for k in range(2, 400)))))
+    # 6 (r3).
+    check_invariant6(c, label, r)
+
+
+def form_parses(toks, name, choices):
+    """Values (one per slot) from choices[slot] that make name, or None;
+    plain backtracking over the form's tokens."""
+    def go(i, pos, acc):
+        if i == len(toks):
+            return acc if pos == len(name) else None
+        kind, s = toks[i]
+        if kind == "lit":
+            return go(i + 1, pos + len(s), acc) if name.startswith(s, pos) else None
+        for v in choices[s]:
+            if name.startswith(v, pos):
+                got = go(i + 1, pos + len(v), acc + [v])
+                if got is not None:
+                    return got
+        return None
+    return go(0, 0, [])
+
+
+def check_invariant6(c, label, r):
+    """Invariant 6 (r3), by code independent of rg11_r3: unique names, no
+    numeral; each base name in use held by exactly one region, the largest
+    (ties to the smaller id); every other name one of its land's forms with
+    each slot value from a pool of that region (common, land, its traits,
+    weight > 0), V1 to V6, and no base name in use."""
+    t = r["t"]
+    rows = r["rows"]
+    pn = placename_data()
+    defs = shipped_defs()
+    w, h, water = r["w"], r["h"], r["L"]["water"]
+    lm = {}
+    for row in rows:
+        lm[row["landmass"]] = lm.get(row["landmass"], 0) + row["cells"]
+    code_of = {key: cc for cc, key, _, _ in defs}
+    own = set(code_of[k] for k in t["upland_own_noun"])
+    cx, cy = centroid(w, h, water)
+    rc = er.round_int(t["name_central_frac"] * w)
+    bl = base_and_land(base_entries(rows, lm), cx, cy, rc, t["names"], defs, own, lake_noun(defs), pn)
+    nm = [row["name"] for row in rows]
+    c.eq("%s inv6 unique" % label, len(set(nm)), len(nm))
+    for x in nm:
+        if any(tok and all(ch in "IVXLCDM" for ch in tok) for tok in x.split(" ")):
+            c.ok("%s inv6 numeral in %r" % (label, x), False)
+    groups = {}
+    for row, (base, _) in zip(rows, bl):
+        groups.setdefault(base, []).append(row)
+    bases = set(groups)
+    keep = {}
+    for base, g in groups.items():
+        keep[base] = max(g, key=lambda x: (x["cells"], -x["id"]))["id"]
+    passed = set()
+    for b in r["borders"]:
+        if b["passes"] > 0:
+            passed.update((b["a"], b["b"]))
+    nt = t.get("name_traits", SHIPPED_TRAITS)
+    pw = t.get("name_pool_weights", SHIPPED_POOLS)
+    for row, (base, land) in zip(rows, bl):
+        name = row["name"]
+        if keep[base] == row["id"]:
+            if name != base:
+                c.ok("%s inv6 keeper %d named %r, not %r" % (label, row["id"], name, base), False)
+            continue
+        if name in bases:
+            c.ok("%s inv6 drawn name %r is a base name in use" % (label, name), False)
+        trs = [pn["trait"][x] for x in region_traits(row, row["id"] in passed, nt) if x in pn["trait"]]
+        ok = False
+        for fm in land["forms"]:
+            toks = parse_form(fm["form"])
+            choices = {}
+            for kind, s in toks:
+                if kind == "slot":
+                    P, wts = pools_for(SLOT_LIST[s], land, pn["common"], trs, pw)
+                    vals = set()
+                    for i in range(3):
+                        if wts[i] > 0:
+                            vals.update(P[i])
+                    choices[s] = sorted(vals, key=len, reverse=True)
+            vals = form_parses(toks, name, choices)
+            if vals is not None and name_valid(toks, vals, pn["common"])[0]:
+                ok = True
+                break
         if not ok:
-            c.ok("%s inv6 name %r" % (label, nm), False)
+            # (the fallback form {prefix}{suffix} over P and S is one of the
+            # shipped forms, so the same parse covers it)
+            c.ok("%s inv6 region %d name %r is not a valid name of land %s" % (label, row["id"], name, land["id"]),
+                 False)
 
 
 def check_designed(c, quick):
@@ -2159,6 +2988,7 @@ def check_all(quick):
     check_rg5(c)
     check_rg8(c)
     check_rg11(c)
+    check_rg11_r3(c, quick)
     check_rg12(c)
     check_words(c)
     check_tuning_errors(c)
@@ -2196,7 +3026,141 @@ def world_report(path):
     return n, seed, rep, r, (on_border, len(river_cells))
 
 
+def db_meta(con):
+    return {k: v for k, v in con.execute("SELECT key, value FROM meta")}
+
+
+def strip_numeral(name):
+    p = name.split(" ")
+    if len(p) == 3 and p[2] and all(ch in "IVXLCDM" for ch in p[2]):
+        return " ".join(p[:2])
+    return name
+
+
+def world_names(path, pn=None, t=None):
+    """RG11 r3 on a stored world (any generator from 0.11.0, whose region
+    and border rows r3 leaves unchanged): the world seed from meta, N the
+    width of layer `water`, the land centroid from that layer, the region
+    and border rows from the tables. Returns (rows, names, how, traits,
+    bases); the stored names (r2, with numerals) are checked against the
+    recomputed base names."""
+    t = shipped_tuning() if t is None else t
+    pn = placename_data() if pn is None else pn
+    defs = shipped_defs()
+    con = sqlite3.connect("file:%s?mode=ro" % path, uri=True)
+    try:
+        meta = db_meta(con)
+        seed = int(meta["seed"])
+        blob = con.execute("SELECT data FROM layer WHERE name = 'water'").fetchone()[0]
+        tcode, w, h, water = br.decode_blob(bytes(blob))
+        water = list(water)
+        cols = [c for c in REGION_COLUMNS]
+        rows = [dict(zip(cols, r)) for r in con.execute("SELECT %s FROM region ORDER BY id" % ", ".join(cols))]
+        brows = [{"a": a, "b": b, "passes": p} for a, b, p in
+                 con.execute("SELECT a, b, passes FROM region_border ORDER BY a, b")]
+    finally:
+        con.close()
+    lm = {}
+    for r in rows:
+        lm[r["landmass"]] = lm.get(r["landmass"], 0) + r["cells"]
+    code_of = {key: c for c, key, _, _ in defs}
+    own = set(code_of[k] for k in t["upland_own_noun"])
+    cx, cy = centroid(w, h, water)
+    rc = er.round_int(t["name_central_frac"] * w)
+    bl = base_and_land(base_entries(rows, lm), cx, cy, rc, t["names"], defs, own, lake_noun(defs), pn)
+    passed = set()
+    for b in brows:
+        if b["passes"] > 0:
+            passed.add(b["a"])
+            passed.add(b["b"])
+    nm, how = rg11_r3(rows, bl, passed, seed, w, pn, t)
+    nt = t.get("name_traits", SHIPPED_TRAITS)
+    traits = [region_traits(r, r["id"] in passed, nt) for r in rows]
+    return rows, nm, how, traits, [b for b, _ in bl], [ld["id"] for _, ld in bl]
+
+
+def check_stored_bases(path, rows, bases):
+    """A world of 0.11.0 to 0.16.0 stores the r2 names: base name plus a
+    numeral for the k-th repeat; the r3 base names must agree."""
+    bad = [(r["id"], r["name"], b) for r, b in zip(rows, bases) if strip_numeral(r["name"]) != b]
+    if bad:
+        fatal("%s: stored r2 names disagree with the recomputed base names: %r" % (path, bad[:5]))
+
+
+def rename_db(src, dst):
+    """Copy a world file and replace the `name` column of table `region` by
+    the r3 names (nothing else changes)."""
+    import shutil
+    rows, nm, how, _, bases, _ = world_names(src)
+    check_stored_bases(src, rows, bases)
+    tmp = dst + ".tmp"
+    shutil.copyfile(src, tmp)
+    con = sqlite3.connect(tmp)
+    try:
+        for r, n in zip(rows, nm):
+            con.execute("UPDATE region SET name = ? WHERE id = ?", (n, r["id"]))
+        con.commit()
+    finally:
+        con.close()
+    os.replace(tmp, dst)
+    return rows, nm, how
+
+
+def r3_golden_guard(old_path, new_text):
+    """P1-06 10.5 and P3-08 5: against the 0.11.0-0.16.0 file, r3 may move
+    only table_region (and only where a base name repeats, cover's
+    `numbered` > 0) and adds the names and name_attempts lines; every
+    other line of every case is byte-identical."""
+    import tempfile
+    old = read_golden(old_path)
+    with tempfile.NamedTemporaryFile("w", suffix=".txt", delete=False) as f:
+        f.write(new_text)
+        tmp = f.name
+    try:
+        new = read_golden(tmp)
+    finally:
+        os.unlink(tmp)
+    out = []
+    if sorted(old) != sorted(new):
+        out.append("case lists differ")
+    for case in sorted(old):
+        if case not in new:
+            continue
+        a, b = old[case], new[case]
+        if a["line"] != b["line"]:
+            out.append("%s: case line differs" % case)
+        cover = dict(kv.split(":") for kv in b["items"]["cover"].split(","))
+        for item in sorted(set(a["items"]) | set(b["items"])):
+            if item in ("names", "name_attempts"):
+                if item not in b["items"]:
+                    out.append("%s: no %s line" % (case, item))
+                continue
+            va, vb = a["items"].get(item), b["items"].get(item)
+            if item == "table_region":
+                if (va != vb) != (int(cover["numbered"]) > 0):
+                    out.append("%s: table_region %s although numbered = %s" % (
+                        case, "moved" if va != vb else "unchanged", cover["numbered"]))
+                continue
+            if va != vb:
+                out.append("%s: %s differs" % (case, item))
+    return out
+
+
 def main(argv):
+    if len(argv) >= 4 and argv[1] == "rename-db":
+        rows, nm, how = rename_db(argv[2], argv[3])
+        drawn = sum(1 for x in how if x != "K")
+        print("%s: %d regions, %d keep their base name, %d drawn, fallback %d, highest attempt %s" % (
+            os.path.basename(argv[2]), len(rows), len(rows) - drawn, drawn, how.count("F"),
+            max([int(x) for x in how if x not in ("K", "F")], default=-1)))
+        return 0
+    if len(argv) >= 3 and argv[1] == "names":
+        for path in argv[2:]:
+            rows, nm, how, traits, bases, lands = world_names(path)
+            for r, n, hw, tr, b, ld in zip(rows, nm, how, traits, bases, lands):
+                print("%d|%s|%s|%s|%s|%s|%s" % (r["id"], r["name"], n, ld, ",".join(tr),
+                                               "plain" if hw == "K" else ("t" + hw if hw != "F" else "F"), b))
+        return 0
     if len(argv) >= 2 and argv[1] == "check":
         return check_all("--quick" in argv)
     if len(argv) >= 2 and argv[1] == "golden":
@@ -2207,10 +3171,23 @@ def main(argv):
             k = rest.index("--db-dir")
             db_dir = rest[k + 1]
             rest = rest[:k] + rest[k + 2:]
+        against = None
+        if "--against" in rest:
+            k = rest.index("--against")
+            against = rest[k + 1]
+            rest = rest[:k] + rest[k + 2:]
         rest = [a for a in rest if a != "--large"]
         if rest:
             path = rest[0]
         text = golden_text(large="--large" in argv, db_dir=db_dir)
+        old = against if against else path
+        if old != "-":
+            if os.path.exists(old):
+                problems = r3_golden_guard(old, text)
+                if problems:
+                    sys.stderr.write("golden: r3 guard failed against %s:\n  %s\n" % (old, "\n  ".join(problems)))
+                    return 1
+                sys.stderr.write("golden: r3 guard passed against %s\n" % old)
         if path == "-":
             sys.stdout.write(text)
         else:

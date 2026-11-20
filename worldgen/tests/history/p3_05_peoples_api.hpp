@@ -44,6 +44,7 @@
 #include <string_view>
 #include <vector>
 
+#include "../p3_08_switch.hpp"
 #include "p3_04_engine_api.hpp"
 #include "worldgen/core/streams.hpp"
 #include "worldgen/history/peoples.hpp"
@@ -94,6 +95,31 @@ inline void set_peoples_inputs(eng::HistoryInputs& in, std::vector<worldgen::db:
     in.habitability_layer = std::move(habitability);
     in.river_layer = std::move(river);
     in.flow_dir_layer = std::move(flow_dir);
+    // P3-05 r6 3.2 (P3-08): elevation, ore and walk_area, all zero, of the
+    // habitability layer's size.
+    in.elevation_layer.width = in.habitability_layer.width;
+    in.elevation_layer.height = in.habitability_layer.height;
+    in.elevation_layer.values =
+        std::vector<std::int16_t>(static_cast<std::size_t>(in.habitability_layer.cell_count()), 0);
+    in.ore_layer.width = in.habitability_layer.width;
+    in.ore_layer.height = in.habitability_layer.height;
+    in.ore_layer.values = std::vector<std::uint8_t>(static_cast<std::size_t>(in.habitability_layer.cell_count()), 0);
+    in.walk_area_layer.width = in.habitability_layer.width;  // u16 (P3-05 r7 16.0a)
+    in.walk_area_layer.height = in.habitability_layer.height;
+    in.walk_area_layer.values =
+        std::vector<std::uint16_t>(static_cast<std::size_t>(in.habitability_layer.cell_count()), 0);
+}
+
+// P3-05 r6 3.2 (generator 0.17.0): the three layers after flow_dir_layer, names of the spec. With the
+// 0.16.0 library (UNMAPPED_P3_08_API 0) the layers are not passed: the tests that need them are guarded.
+inline void set_r6_inputs([[maybe_unused]] eng::HistoryInputs& in, [[maybe_unused]] worldgen::db::LayerGrid elevation,
+                          [[maybe_unused]] worldgen::db::LayerGrid ore,
+                          [[maybe_unused]] worldgen::db::LayerGrid walk_area) {
+#if UNMAPPED_P3_08_API
+    in.elevation_layer = std::move(elevation);
+    in.ore_layer = std::move(ore);
+    in.walk_area_layer = std::move(walk_area);
+#endif
 }
 
 }  // namespace ppl

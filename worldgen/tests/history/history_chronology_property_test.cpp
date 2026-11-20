@@ -14,6 +14,7 @@
 
 #include <algorithm>
 #include <cstdlib>
+#include <string_view>
 #include <tuple>
 #include <cstdint>
 #include <map>
@@ -253,7 +254,7 @@ TEST_CASE("P3-03 14.2 item 15: invariants 1, 4 to 9 through the stage entry on t
             const std::vector<std::string>& races = subsets[seed % subsets.size()];
             const std::int64_t span = seed % 3 == 0 ? 2000 : (seed % 3 == 1 ? 6000 : 12000);
             const Params p = params_with(span, races);
-            CAPTURE(label);
+            CAPTURE(std::string_view(label));
             CAPTURE(seed);
             const Rows clean = chrono_api::stage(*content, p, seed, {});
             const std::vector<std::string> regions = region_list(seed, clean);
@@ -322,7 +323,7 @@ TEST_CASE("P3-03 14.3 item 17, H8: --until regions, read back, then chronology_s
         const std::map<std::string, std::string> hg = detail_tables(g);
         const std::map<std::string, std::string> hf = detail_tables(f);
         for (const char* t : {"region", "region_border", "region_biome", "biome", "climate", "pass", "layer"}) {
-            CAPTURE(t);
+            CAPTURE(std::string_view(t));
             CHECK(hg.at(t) == hf.at(t));
         }
     }

@@ -271,7 +271,7 @@ TEST_CASE("P1-04 golden: the default cases cover every biome, every live conditi
     CHECK(defaults >= 30U);
     // Every natural biome (third version: nine) is assigned somewhere.
     for (const char* code : {"3", "4", "5", "6", "7", "9", "10", "11", "12"}) {
-        CAPTURE(code);
+        CAPTURE(std::string_view(code));
         CHECK(totals[code] > 0);
     }
     // Every live condition of every rule is the sole failure somewhere.
@@ -280,7 +280,7 @@ TEST_CASE("P1-04 golden: the default cases cover every biome, every live conditi
           "marsh.0.rain", "marsh.0.elev", "marsh.0.slope", "marsh.0.hand", "temperate_forest.0.rain", "fen.0.rain",
           "fen.0.elev", "fen.0.slope", "fen.0.hand", "fen.0.wet", "heath.0.temp", "heath.0.elev", "steppe.0.rain",
           "wet_woodland.0.rain", "wet_woodland.0.elev", "wet_woodland.0.hand", "wet_woodland.0.rdist"}) {
-        CAPTURE(cond);
+        CAPTURE(std::string_view(cond));
         CHECK(sole.count(cond) == 1U);
     }
     CHECK(ties);
@@ -293,7 +293,7 @@ TEST_CASE("P1-04 golden: the default cases cover every biome, every live conditi
                           "wet_window_m=0", "wet_window_m=47", "wet_window_m=63", "wet_window_m=2000",
                           "wet_scale_512=1.5", "wet_scale_512=4", "wet_scale_512=0.25", "river_dist_class_min=1",
                           "river_dist_class_min=15"}) {
-        CAPTURE(o);
+        CAPTURE(std::string_view(o));
         CHECK(overridden.count(o) == 1U);
     }
 }
@@ -573,7 +573,7 @@ TEST_CASE("P1-04 2, B6, 10.1 test 7: the stage entry reads the eight layers as s
 TEST_CASE("P1-04 2, 10.1 test 9: each precondition violation is fatal with the prefix, leaving no file") {
     dbtest::TempDir dir("biomes-entry-bad");
     auto expect_fatal = [&](const char* what) {
-        CAPTURE(what);
+        CAPTURE(std::string_view(what));
         const std::string err = entry_error(dir, "bad.db");
         CHECK_FALSE(err.empty());
         CHECK(std::string_view(err).substr(0, PRECONDITION.size()) == PRECONDITION);

@@ -53,6 +53,18 @@ Usage (from the repository root; -B keeps __pycache__ out of the tree):
         generated from that root prints, so the transcription of the older
         schemas can be cross-checked against the 0.11.0 build.
 
+Generator 0.17.0 (P3-08): the module serves the 0.17.0 schemas by default
+(kinds name_filter and placename, race field cell_weights, culture field
+god_patterns, the two history.peoples fields, the two worldgen.regions
+records) and the 0.17.0 listings (SPEC_FILES_017, derived from the 0.16.0
+ones by the edits the specs state). While a root on disk holds 0.16.0
+files, the 0.17.0 listings stand in for races/, cultures/ and history/,
+game/data's name_filters/ and placenames/ for a fixture root without them,
+and P1-06 4's shipped name_pool_weights and name_traits for a regions.toml
+without them; `check` prints a note for each. `--version 0.16.0` (or
+use_version("0.16.0")) serves the 0.16.0 schemas and listings, and
+reproduces the 0.16.0 golden file and the content_hash of a 0.16.0 world.
+
 Never regenerate the golden file to make a C++ test pass.
 """
 
@@ -171,6 +183,21 @@ REGIONS = fields(
     "seed_tile_m:I seed_spacing_m:I hand_ref_m:I cost_noise:W cost_noise_amp:F lake_cost_factor:F "
     "river_border_class:I river_cost_m:I region_min_area_m2:I ore_rich_min:I ore_reach_m:I "
     "name_central_frac:F") + (("names", REGION_NAMES), ("upland_own_noun", ARR(STR)))
+# P1-06 r3 4 (generator 0.17.0, P3-08): records name_pools and name_traits
+# after upland_own_noun, fields in their stated order.
+NAME_POOLS = REC(tuple((n, ARR(INT)) for n in
+                       ("nouns", "suffixes", "prefixes", "adjectives", "features", "possessors", "places", "objects")))
+NAME_TRAITS = REC(fields("coast_cells:I river_class:I lake_permille:I high_mean_m:I ore_rich_cells:I "
+                         "barren_hab_max:I fertile_min:I"))
+REGIONS_017 = REGIONS + (("name_pool_weights", NAME_POOLS), ("name_traits", NAME_TRAITS))
+# The shipped values of P1-06 4's block (r3), standing in for a regions.toml
+# of 0.16.0 that does not have them yet.
+REGIONS_017_VALUES = {
+    "name_pool_weights": dict(nouns=[0, 1, 0], suffixes=[0, 4, 1], prefixes=[6, 3, 2], adjectives=[6, 3, 2],
+                              features=[5, 1, 2], possessors=[8, 1, 1], places=[8, 1, 1], objects=[6, 3, 2]),
+    "name_traits": dict(coast_cells=128, river_class=7, lake_permille=125, high_mean_m=400, ore_rich_cells=1000,
+                        barren_hab_max=20, fertile_min=200),
+}
 
 # P3-02 3: record culture_naming.
 CULTURE_NAMING = REC((
@@ -178,9 +205,12 @@ CULTURE_NAMING = REC((
     ("min_letters", INT), ("max_letters", INT), ("forbidden", ARR(STR)), ("god_forms", ARR(STR)),
     ("civilization_forms", ARR(STR)), ("settlement_forms", ARR(STR)),
 ))
+# P3-02 r5 11.4 (0.17.0): `god_patterns` directly after `patterns`.
+CULTURE_NAMING_017 = REC(CULTURE_NAMING[1][:4] + (("god_patterns", ARR(STR)),) + CULTURE_NAMING[1][4:])
 
 # P3-01 4.
 CULTURE = (("race", STR), ("name", STR), ("naming", CULTURE_NAMING))
+CULTURE_017 = (("race", STR), ("name", STR), ("naming", CULTURE_NAMING_017))
 
 # P3-01 5.1.
 CHRONOLOGY = (("awakening_jitter_frac", FX), ("awakening_min_gap_years", INT), ("age_name_form", STR))
@@ -226,10 +256,15 @@ PEOPLES_RANGES = (
     ("split_min_settlements", 2, 1000), ("split_min_regions", 2, 1000), ("split_permille", 0, 1000),
     ("ruin_fade_years", 1, 100000), ("colony_new_region_salience", 0, 100), ("plague_small_salience", 0, 100),
 )
+# P3-05 r6 12.1 (0.17.0): two fields after plague_small_salience.
+PEOPLES_RANGES_016 = PEOPLES_RANGES
+PEOPLES_RANGES_017 = PEOPLES_RANGES + (("plague_major_dead", 0, 1000000), ("crisis_small_salience", 0, 100))
 PEOPLES_RECORDS = {"abandon_permille": PEOPLES_BY_KIND, "plague_ppm": PEOPLES_BY_KIND,
                    "intensity": PEOPLES_INTENSITY}
 PEOPLES = tuple((n, PEOPLES_RECORDS.get(n, INT)) for n, _, _ in PEOPLES_RANGES)
 assert len(PEOPLES) == 65
+PEOPLES_017 = tuple((n, PEOPLES_RECORDS.get(n, INT)) for n, _, _ in PEOPLES_RANGES_017)
+assert len(PEOPLES_017) == 67
 # P3-05 12.1 named checks, in order: (name, message).
 PEOPLES_CHECKS = (
     ("peoples_ladder", "village_min, town_min, city_min must increase and city_max must not be below city_min"),
@@ -304,6 +339,18 @@ RACE = (
     ("prowess_permille", INT),  # P3-06 12.2 item 1 / P3-01 r7 (generator 0.16.0): after aggression
     ("settlement_kinds", ARR(STR)), ("culture", STR),
 )
+# P3-01 r8 (1) (0.17.0): record race_cell_weights {ore, height} after site_weights.
+RACE_CELL_WEIGHTS = REC(fields("ore:I height:I"))
+RACE_017 = RACE[:11] + (("cell_weights", RACE_CELL_WEIGHTS),) + RACE[11:]
+assert RACE_017[10][0] == "site_weights" and RACE_017[12][0] == "biomes"
+
+# P3-02 r5 11.2 (0.17.0): kind name_filter, three lists.
+NAME_FILTER = (("anywhere", ARR(STR)), ("at_start", ARR(STR)), ("whole", ARR(STR)))
+# P1-06 r3 4.1 (0.17.0): kind placename, record place_form {form, weight}.
+PLACE_FORM = REC(fields("form:S weight:I"))
+PLACENAME = (("role", STR), ("biomes", ARR(STR)), ("special", STR), ("trait", STR), ("forms", ARR(PLACE_FORM))) + tuple(
+    (n, ARR(STR)) for n in ("nouns", "suffixes", "prefixes", "adjectives", "features", "possessors", "places",
+                            "objects", "forbidden", "excluded"))
 
 # Kinds: name -> (directory, schema). A schema is a tuple of fields (open
 # kind) or a dict id -> fields (fixed-id kind).
@@ -318,7 +365,25 @@ KINDS = {
         "regions": REGIONS, "resources": RESOURCES,
     }),
 }
+KINDS_016 = KINDS
+KINDS_017 = {
+    "biome": ("biomes", BIOME),
+    "culture": ("cultures", CULTURE_017),
+    "history": ("history", {"chronology": CHRONOLOGY, "conflict": CONFLICT, "engine": ENGINE,
+                             "peoples": PEOPLES_017, "report": REPORT}),
+    "name_filter": ("name_filters", NAME_FILTER),
+    "placename": ("placenames", PLACENAME),
+    "race": ("races", RACE_017),
+    "worldgen": ("worldgen", {
+        "biomes": BIOMES_TUNING, "climate": CLIMATE, "elevation": ELEVATION, "hydrology": HYDROLOGY,
+        "regions": REGIONS_017, "resources": RESOURCES,
+    }),
+}
 NEW_KINDS = ("culture", "history", "race")
+# Kinds whose shipped files are normative and committed (P1-06 r3 4.1,
+# P3-02 r5 11.2): the fixture roots get identical copies with the
+# implementation; game/data's files stand in for a root without them.
+COPIED_KINDS = ("name_filter", "placename")
 
 # ---------------------------------------------------------------------------
 # Spec listings (P3-01 3.1, 4, 5.1; P3-02 5), transcribed
@@ -775,6 +840,151 @@ capital_captured_salience = 80
 HISTORY_FILES = dict(CHRONOLOGY_FILE, **CONFLICT_FILE, **ENGINE_FILE, **PEOPLES_FILE, **REPORT_FILE)
 
 SPEC_FILES = {"race": RACE_FILES, "culture": CULTURE_FILES, "history": HISTORY_FILES}
+SPEC_FILES_016 = SPEC_FILES
+
+
+# ---------------------------------------------------------------------------
+# The 0.17.0 listings (P3-08), derived from the 0.16.0 ones by the edits the
+# specs state, so that each edit is visible here:
+#   races     P3-01 r8 (1): cell_weights after site_weights (dwarf 400/600,
+#             every other race 0/0); r8 (2) and P3-05 r6 12.3: the faerie
+#             biome weights of candidate A (nine rows, heath kept at 0).
+#   cultures  P3-02 r5 11.4: god_patterns after patterns; the elven third
+#             civilization form `The House of {root}`.
+#   peoples   P3-05 r6 12.1: famine_ppm 1250, plague_spread_permille 100,
+#             plague_major_dead 1000 and crisis_small_salience 25 after
+#             plague_small_salience.
+#   report    P3-04 r10 4.2 (quiet_era), P3-05 r6 11 (kinds 14, 16, 31),
+#             P3-06 r7 11 (kind 26). ASSUMPTION (spec gap): kind 31's entry
+#             is appended after civ_conquered (kind id order, as for the
+#             earlier kinds); the specs give the entry, not its place.
+# ---------------------------------------------------------------------------
+
+
+def _edit(text, old, new):
+    assert text.count(old) == 1, old
+    return text.replace(old, new)
+
+
+CELL_WEIGHTS_017 = {"dwarf": (400, 600)}
+FAERIE_BIOMES_016 = """biomes = [
+  { biome = "fen", weight = 800 },
+  { biome = "wet_woodland", weight = 800 },
+  { biome = "marsh", weight = 600 },
+  { biome = "temperate_forest", weight = 100 },
+  { biome = "highland_moor", weight = 300 },
+  { biome = "grassland", weight = -200 },
+  { biome = "alpine", weight = -300 },
+  { biome = "steppe", weight = -400 },
+  { biome = "heath", weight = 100 },
+]
+"""
+FAERIE_BIOMES_017 = """biomes = [
+  { biome = "temperate_forest", weight = 800 },
+  { biome = "wet_woodland", weight = 800 },
+  { biome = "fen", weight = 300 },
+  { biome = "marsh", weight = 200 },
+  { biome = "highland_moor", weight = 100 },
+  { biome = "heath", weight = 0 },
+  { biome = "grassland", weight = -300 },
+  { biome = "alpine", weight = -400 },
+  { biome = "steppe", weight = -400 },
+]
+"""
+
+
+def _race_017(name, text):
+    rid = name[:-5]
+    ore, height = CELL_WEIGHTS_017.get(rid, (0, 0))
+    line = [l for l in text.splitlines(True) if l.startswith("site_weights = ")][0]
+    text = _edit(text, line, line + "cell_weights = { ore = %d, height = %d }\n" % (ore, height))
+    if rid == "faerie":
+        text = _edit(text, FAERIE_BIOMES_016, FAERIE_BIOMES_017)
+    return text
+
+
+RACE_FILES_017 = {n: _race_017(n, t) for n, t in RACE_FILES.items()}
+
+# P3-02 r5 11.4, verbatim.
+GOD_PATTERNS_017 = {
+    "dwarven": '["ONCONC", "ONCONC", "ONCON"]',
+    "elven": '["ONONC", "ONONC", "ONCON", "ONONON", "NCONC"]',
+    "faerie": '["ONON", "ONONON", "ONONC", "ONCON"]',
+    "goblin": '["ONCONC", "ONC-ONC", "ONONC"]',
+    "human": '["ONCONC"]',
+    "orcish": '["ONC\'ONC", "ONCONC", "NC\'ONC"]',
+}
+
+
+def _naming_017(cid, text):
+    line = [l for l in text.splitlines(True) if l.startswith("patterns = ")][0]
+    text = _edit(text, line, line + "god_patterns = %s\n" % GOD_PATTERNS_017[cid])
+    if cid == "elven":
+        text = _edit(text, 'civilization_forms = ["The Court of {root}", "The Realm of {root}", "{root}"]',
+                     'civilization_forms = ["The Court of {root}", "The Realm of {root}", "The House of {root}"]')
+    return text
+
+
+NAMING_017 = {cid: _naming_017(cid, t) for cid, t in NAMING.items()}
+CULTURE_FILES_017 = {
+    cid + ".toml": '[culture.%s]\nrace = "%s"\nname = "%s"\n\n[culture.%s.naming]\n%s'
+    % (cid, race, name, cid, NAMING_017[cid])
+    for cid, (race, name) in CULTURE_RACE_NAME.items()
+}
+
+_pe = PEOPLES_FILE["peoples.toml"]
+_pe = _edit(_pe, "famine_ppm = 2500\n", "famine_ppm = 1250\n")
+_pe = _edit(_pe, "plague_spread_permille = 200\n", "plague_spread_permille = 100\n")
+_pe = _edit(_pe, "plague_small_salience = 25\n",
+            "plague_small_salience = 25\nplague_major_dead = 1000\ncrisis_small_salience = 25\n")
+PEOPLES_FILE_017 = {"peoples.toml": _pe}
+
+# The templates the 0.17.0 specs change (kind key -> (old, new)), and kind 31.
+TEMPLATES_017 = {
+    "quiet_era": ("{civilization} passed {years} quiet {years?year|years} "
+                  "({generations} {generations?generation|generations}), from {@year} to {@end_year}.",
+                  "{civilization} passed {years} quiet {years?year|years}, from {@year} to {@end_year}"
+                  "{generations?, under one generation of rulers|, in which one new generation of rulers came to power"
+                  "|, in which # new generations of rulers came to power}."),
+    "succession_crisis": ("A succession crisis shook {civilization}.",
+                          "A succession crisis at {@settlement} shook {civilization}."),
+    "settlement_abandoned": ("{settlement} was abandoned; {survivors} {survivors?survivor|survivors} left.",
+                             "{settlement} was abandoned; {survivors?no one survived|its one survivor was scattered"
+                             "|its # survivors were scattered}."),
+    "settlement_captured": ("{attacker} took {@settlement} from {defender}; {dead} died and {fled} fled.",
+                            "{attacker} took {@settlement} from {defender}; {dead} died"
+                            "{fled?| and one fled| and # fled}."),
+}
+KIND31_ENTRY = ('  { kind = "settlement_abandoned_to", salience = 55, template = "{settlement} was abandoned; '
+                '{settled} {settled?survivor|survivors} went to {destination}'
+                '{lost?|, and one was lost|, and # were lost}." },\n')
+_re = REPORT_FILE["report.toml"]
+for _k, (_old, _new) in TEMPLATES_017.items():
+    _re = _edit(_re, _old, _new)
+_last = [l for l in _re.splitlines(True) if '"civ_conquered"' in l][0]
+_re = _edit(_re, _last, _last + KIND31_ENTRY)
+REPORT_FILE_017 = {"report.toml": _re}
+HISTORY_FILES_017 = dict(CHRONOLOGY_FILE, **CONFLICT_FILE, **ENGINE_FILE, **PEOPLES_FILE_017, **REPORT_FILE_017)
+SPEC_FILES_017 = {"race": RACE_FILES_017, "culture": CULTURE_FILES_017, "history": HISTORY_FILES_017}
+
+# The data version this module serves: "0.17.0" (default, P3-08) or
+# "0.16.0" (use_version), so that the references can still reproduce the
+# 0.16.0 worlds and goldens.
+DATA_VERSION = None
+
+
+def use_version(v):
+    global DATA_VERSION, KINDS, SPEC_FILES
+    if v == "0.17.0":
+        KINDS, SPEC_FILES = KINDS_017, SPEC_FILES_017
+    elif v == "0.16.0":
+        KINDS, SPEC_FILES = KINDS_016, SPEC_FILES_016
+    else:
+        raise ValueError(v)
+    DATA_VERSION = v
+
+
+use_version("0.17.0")
 
 # ---------------------------------------------------------------------------
 # Loading and validation (types only: what the encoding needs)
@@ -801,13 +1011,35 @@ def read_kind_files(root, kind, from_spec):
     if not os.path.isdir(path):
         if from_spec and kind in SPEC_FILES:
             return sorted(SPEC_FILES[kind].items(), key=lambda kv: kv[0].encode())
+        if DATA_VERSION == "0.17.0" and kind in COPIED_KINDS and SPEC_FALLBACK:
+            # P1-06 r3 4.1, P3-02 r5 11.2: the fixture roots get identical
+            # copies of the shipped (normative, committed) files with the
+            # implementation; until then game/data's files stand in.
+            shipped = os.path.join(REPO, "game", "data", directory)
+            if os.path.isdir(shipped) and os.path.normpath(shipped) != os.path.normpath(path):
+                PRE_015_USED.add(os.path.join(root, directory))
+                return read_dir_files(shipped, directory)
         return None
-    if kind in ("race", "history") and SPEC_FALLBACK and pre_015(path, kind):
+    if DATA_VERSION == "0.17.0" and kind in SPEC_FILES and SPEC_FALLBACK and pre_017(path, kind):
+        # P3-08 (0.17.0): the race, culture and history files are the
+        # engineer's deliverable; while the disk holds 0.16.0 files the 0.17.0
+        # listings stand in for them (noted by `check`).
+        PRE_015_USED.add(os.path.join(root, directory))
+        return sorted(SPEC_FILES[kind].items(), key=lambda kv: kv[0].encode())
+    if DATA_VERSION == "0.16.0" and kind in SPEC_FILES and SPEC_FALLBACK and not pre_017(path, kind):
+        # The disk holds 0.17.0 files: the 0.16.0 listings stand in for them.
+        PRE_015_USED.add(os.path.join(root, directory))
+        return sorted(SPEC_FILES[kind].items(), key=lambda kv: kv[0].encode())
+    if DATA_VERSION == "0.16.0" and kind in ("race", "history") and SPEC_FALLBACK and pre_015(path, kind):
         # P3-06 (0.16.0): the shipped race and history files are the
         # engineer's deliverable; while the disk holds older (0.15.0) files
         # the spec listings stand in for them (noted by `check`).
         PRE_015_USED.add(os.path.join(root, directory))
         return sorted(SPEC_FILES[kind].items(), key=lambda kv: kv[0].encode())
+    return read_dir_files(path, directory)
+
+
+def read_dir_files(path, directory):
     names = []
     for name in os.listdir(path):
         if name.startswith(".") or not name.endswith(".toml"):
@@ -820,6 +1052,22 @@ def read_kind_files(root, kind, from_spec):
         with open(os.path.join(path, name), "rb") as f:
             out.append((name, f.read().decode("utf-8")))
     return out
+
+
+def pre_017(path, kind):
+    """A race, culture or history directory older than 0.17.0 (P3-08): no
+    `cell_weights` in a race file, no `god_patterns` in a culture file, no
+    kind 31 entry in report.toml or no `plague_major_dead` in peoples.toml."""
+    names = [n for n in os.listdir(path) if n.endswith(".toml")]
+    texts = {}
+    for n in names:
+        with open(os.path.join(path, n), encoding="utf-8") as f:
+            texts[n] = f.read()
+    if kind == "history":
+        return ("settlement_abandoned_to" not in texts.get("report.toml", "")
+                or "plague_major_dead" not in texts.get("peoples.toml", ""))
+    word = {"race": "cell_weights", "culture": "god_patterns"}[kind]
+    return any(word not in t for t in texts.values())
 
 
 # A root whose races/ has no `prowess_permille` or whose history/ has no
@@ -906,6 +1154,15 @@ def load_root(root, kinds=None, from_spec=False):
                     raise DataError("duplicate id '%s.%s'" % (kind, did))
                 defs[did] = table
         schema = KINDS[kind][1]
+        if (DATA_VERSION == "0.17.0" and kind == "worldgen" and SPEC_FALLBACK and "regions" in defs
+                and not any(k in defs["regions"] for k in REGIONS_017_VALUES)):
+            # P1-06 r3 4: the two records are written into regions.toml by the
+            # engineer; the shipped values of the spec's block stand in.
+            PRE_015_USED.add(os.path.join(root, "worldgen/regions"))
+            defs["regions"] = dict(defs["regions"], **REGIONS_017_VALUES)
+        if DATA_VERSION == "0.16.0" and kind == "worldgen" and "regions" in defs:
+            # 0.17.0 regions.toml on disk: the two r3 records are not 0.16.0 fields.
+            defs["regions"] = {k: v for k, v in defs["regions"].items() if k not in REGIONS_017_VALUES}
         for did, table in defs.items():
             if isinstance(schema, dict):
                 if did not in schema:
@@ -1024,13 +1281,13 @@ def check_spec_invariants(c):
     races = parsed_spec("race")
     cultures = parsed_spec("culture")
     for rid, r in races.items():
-        check_record(RACE, r, "race." + rid)
+        check_record(KINDS["race"][1], r, "race." + rid)
     for cid, cu in cultures.items():
-        check_record(CULTURE, cu, "culture." + cid)
+        check_record(KINDS["culture"][1], cu, "culture." + cid)
     check_record(CHRONOLOGY, parsed_spec("history")["chronology"], "history.chronology")
     check_record(ENGINE, parsed_spec("history")["engine"], "history.engine")
     check_record(REPORT, parsed_spec("history")["report"], "history.report")
-    check_record(PEOPLES, parsed_spec("history")["peoples"], "history.peoples")
+    check_record(KINDS["history"][1]["peoples"], parsed_spec("history")["peoples"], "history.peoples")
     check_record(CONFLICT, parsed_spec("history")["conflict"], "history.conflict")
     c.eq("history ids", sorted(parsed_spec("history")), ["chronology", "conflict", "engine", "peoples", "report"])
     co = parsed_spec("history")["conflict"]
@@ -1040,16 +1297,20 @@ def check_spec_invariants(c):
         c.ok("history.conflict.%s inside its range" % n, all(lo <= v <= hi for v in vals))
     pe = parsed_spec("history")["peoples"]
     c.eq("history.peoples passes its named checks (P3-05 12.1)", peoples_check_messages(pe), [])
-    for n, lo, hi in PEOPLES_RANGES:
+    for n, lo, hi in (PEOPLES_RANGES_017 if DATA_VERSION == "0.17.0" else PEOPLES_RANGES):
         vals = list(pe[n].values()) if isinstance(pe[n], dict) else [pe[n]]
         c.ok("history.peoples.%s inside its range" % n, all(lo <= v <= hi for v in vals))
-    c.eq("report lists kinds 1-30 in id order (P3-05 11, P3-06 11)",
+    kinds30 = ["awakening", "civ_founded", "settlement_founded", "quiet_era", "flare_up", "colony_founded",
+               "became_village", "became_town", "became_city", "settlement_dwindled", "famine", "plague",
+               "plague_spread", "succession_crisis", "civ_seceded", "settlement_abandoned", "capital_moved",
+               "civ_ended", "ruin_faded", "claim", "war_declared", "battle", "battle_at_pass", "siege", "sacked",
+               "settlement_captured", "peace", "truce", "region_ceded", "civ_conquered"]
+    c.eq("report lists kinds 1-%d in id order (P3-05 11, P3-06 11%s)"
+         % (31 if DATA_VERSION == "0.17.0" else 30, ", P3-05 r6 11" if DATA_VERSION == "0.17.0" else ""),
          [e["kind"] for e in parsed_spec("history")["report"]["events"]],
-         ["awakening", "civ_founded", "settlement_founded", "quiet_era", "flare_up", "colony_founded",
-          "became_village", "became_town", "became_city", "settlement_dwindled", "famine", "plague",
-          "plague_spread", "succession_crisis", "civ_seceded", "settlement_abandoned", "capital_moved", "civ_ended",
-          "ruin_faded", "claim", "war_declared", "battle", "battle_at_pass", "siege", "sacked",
-          "settlement_captured", "peace", "truce", "region_ceded", "civ_conquered"])
+         kinds30 + (["settlement_abandoned_to"] if DATA_VERSION == "0.17.0" else []))
+    if DATA_VERSION == "0.17.0":
+        check_spec_017(c, races, cultures)
     c.eq("densities (P3-05 12.2)", {k: v["density_permille"] for k, v in races.items()},
          dict(elf=300, goblin=900, dwarf=700, faerie=250, human=1000, orc=800))
     c.eq("prowess_permille (P3-06 12.2)", {k: v["prowess_permille"] for k, v in races.items()},
@@ -1095,6 +1356,146 @@ def check_spec_invariants(c):
          and form.replace("{plural}", "").replace("{adjective}", "").count("{") == 0)
 
 
+def check_spec_017(c, races, cultures):
+    """The 0.17.0 listings say what P3-01 r8, P3-02 r5 11.4, P3-04 r10 4.2,
+    P3-05 r6 11, 12.1, 12.3 and P3-06 r7 11 state."""
+    c.eq("cell_weights (P3-01 r8 (1))", {k: (v["cell_weights"]["ore"], v["cell_weights"]["height"])
+                                        for k, v in races.items()},
+         dict(elf=(0, 0), goblin=(0, 0), dwarf=(400, 600), faerie=(0, 0), human=(0, 0), orc=(0, 0)))
+    c.eq("cell_weights follows site_weights in every listing (P3-01 r8)",
+         [list(v).index("cell_weights") - list(v).index("site_weights") for v in races.values()], [1] * 6)
+    c.eq("faerie biomes (P3-05 r6 12.3, candidate A, nine rows in this order)",
+         [(b["biome"], b["weight"]) for b in races["faerie"]["biomes"]],
+         [("temperate_forest", 800), ("wet_woodland", 800), ("fen", 300), ("marsh", 200), ("highland_moor", 100),
+          ("heath", 0), ("grassland", -300), ("alpine", -400), ("steppe", -400)])
+    for cid, cu in cultures.items():
+        n = cu["naming"]
+        one_nucleus = [q for q in n["patterns"] if q.count("N") <= 1]
+        c.eq("%s: god_patterns = patterns without the one-nucleus shapes, repeats kept (P3-02 r5 11.4)" % cid,
+             n["god_patterns"], [q for q in n["patterns"] if q not in one_nucleus])
+        c.eq("%s: god_patterns follows patterns" % cid, list(n).index("god_patterns") - list(n).index("patterns"), 1)
+        c.ok("%s: naming_realm_forms (every civilization form holds a word besides {root})" % cid,
+             all(" " in f for f in n["civilization_forms"]))
+    c.eq("elven civilization forms (P3-02 r5 11.4)", cultures["elven"]["naming"]["civilization_forms"],
+         ["The Court of {root}", "The Realm of {root}", "The House of {root}"])
+    pe = parsed_spec("history")["peoples"]
+    c.eq("history.peoples r6 values (P3-05 r6 12.1)",
+         {k: pe[k] for k in ("famine_ppm", "plague_spread_permille", "plague_major_dead", "crisis_small_salience")},
+         dict(famine_ppm=1250, plague_spread_permille=100, plague_major_dead=1000, crisis_small_salience=25))
+    c.eq("history.peoples ends with the two r6 fields", list(pe)[-3:],
+         ["plague_small_salience", "plague_major_dead", "crisis_small_salience"])
+    ev = {e["kind"]: e for e in parsed_spec("history")["report"]["events"]}
+    for k, (_, new) in TEMPLATES_017.items():
+        c.eq("report template of %s (0.17.0)" % k, ev[k]["template"], new)
+    c.eq("kind 31 entry (P3-05 r6 11)", (ev["settlement_abandoned_to"]["salience"],
+                                         ev["settlement_abandoned_to"]["template"]),
+         (55, "{settlement} was abandoned; {settled} {settled?survivor|survivors} went to {destination}"
+              "{lost?|, and one was lost|, and # were lost}."))
+    c.eq("crisis and abandonment saliences unchanged (P3-05 r6 11: bases 40, 55)",
+         (ev["succession_crisis"]["salience"], ev["settlement_abandoned"]["salience"], ev["plague"]["salience"]),
+         (40, 55, 45))
+
+
+FILTER_WORD = set("abcdefghijklmnopqrstuvwxyz")
+
+
+def name_filter_messages(defs):
+    """The named and kind checks of P3-02 r5 11.2 on [(id, table)] ascending
+    id: the first failing message of each check, in order, as
+    "<check>: <message>" (the loader's prefix is not reproduced)."""
+    out = []
+    lists = ("anywhere", "at_start", "whole")
+    for did, t in defs:
+        for f in lists:
+            for j, w in enumerate(t[f]):
+                if not (2 <= len(w) <= 16 and set(w) <= FILTER_WORD):
+                    out.append("grammar: %s.%s[%d] '%s'" % (did, f, j, w))
+        msg = None
+        for f in lists:
+            seen = {}
+            for j, w in enumerate(t[f]):
+                if w in seen and msg is None:
+                    msg = "%s[%d] '%s' repeats %s[%d]" % (f, j, w, f, seen[w])
+                seen.setdefault(w, j)
+        if msg:
+            out.append("name_filter_unique: '%s': %s" % (did, msg))
+    msg = None
+    for i, (d1, t1) in enumerate(defs):
+        for f in lists:
+            for w in t1[f]:
+                for d2, t2 in defs[i + 1:]:
+                    if msg is None and w in t2[f]:
+                        msg = "%s '%s' is in '%s' and '%s'" % (f, w, d1, d2)
+    if msg:
+        out.append("name_filter_distinct: " + msg)
+    msg = None
+    for d1, t1 in defs:
+        for f in ("at_start", "whole"):
+            for w in t1[f]:
+                if msg is not None:
+                    break
+                cover = None
+                for d2, t2 in defs:
+                    for f2 in lists:
+                        for w2 in t2[f2]:
+                            if cover is None and (
+                                    (f2 == "anywhere" and w2 in w) or (f == "whole" and f2 == "at_start"
+                                                                        and w.startswith(w2))):
+                                cover = (f2, w2, d2)
+                if cover:
+                    msg = "'%s' %s '%s' is already rejected by %s '%s' of '%s'" % (d1, f, w, cover[0], cover[1],
+                                                                                  cover[2])
+    if msg:
+        out.append("name_filter_not_redundant: " + msg)
+    return out
+
+
+def check_copied_kinds(c):
+    """P3-02 r5 11.2 and P1-06 r3 4.1: the shipped name_filter (and
+    placename) files load; their fixture copies, where they exist, are
+    byte-identical; the name_filter lists pass their checks, are sorted and
+    have the sizes of 11.2."""
+    for kind in COPIED_KINDS:
+        directory = KINDS[kind][0]
+        shipped = read_dir_files(os.path.join(REPO, "game", "data", directory), directory)
+        c.ok("game/data/%s/ exists and is not empty" % directory, bool(shipped))
+        for root in ROOTS[1:]:
+            path = os.path.join(REPO, root, directory)
+            if not os.path.isdir(path):
+                print("note: %s/%s/ does not exist yet; game/data's files stand in for it" % (root, directory))
+                continue
+            c.eq("%s/%s/ is a byte-identical copy of game/data's" % (root, directory),
+                 read_dir_files(path, directory), shipped)
+    content = load_root("game/data", ["name_filter"])["name_filter"]
+    c.eq("name_filter ids (P3-02 r5 11.2)", [d for d, _ in content], ["crude", "famous", "slurs", "words"])
+    c.eq("name_filter sizes (P3-02 r5 11.2)",
+         {d: tuple(len(t[f]) for f in ("anywhere", "at_start", "whole")) for d, t in content},
+         dict(slurs=(33, 19, 6), crude=(68, 16, 14), words=(0, 0, 647), famous=(0, 0, 101)))
+    eff = [len(set(w for _, t in content for w in t[f])) for f in ("anywhere", "at_start", "whole")]
+    c.eq("effective list sizes 101, 35, 768 (P3-02 r5 11.2)", eff, [101, 35, 768])
+    c.eq("shipped name_filter passes its checks", name_filter_messages(content), [])
+    for d, t in content:
+        for f in ("anywhere", "at_start", "whole"):
+            c.ok("name_filter.%s.%s sorted (convention, 11.7 item 1)" % (d, f), t[f] == sorted(t[f]))
+    # Each check fails once (P3-02 r5 11.7 item 2), on hand-made data.
+    bad = [("a", dict(anywhere=["ab", "cd", "ab"], at_start=[], whole=[]))]
+    c.eq("name_filter_unique message", name_filter_messages(bad),
+         ["name_filter_unique: 'a': anywhere[2] 'ab' repeats anywhere[0]"])
+    bad = [("a", dict(anywhere=["xy"], at_start=[], whole=[])), ("b", dict(anywhere=["xy"], at_start=[], whole=[]))]
+    c.eq("name_filter_distinct message", name_filter_messages(bad),
+         ["name_filter_distinct: anywhere 'xy' is in 'a' and 'b'"])
+    bad = [("a", dict(anywhere=["ab"], at_start=["cab"], whole=[])), ("b", dict(anywhere=[], at_start=[], whole=[]))]
+    c.eq("name_filter_not_redundant (anywhere inside at_start)", name_filter_messages(bad),
+         ["name_filter_not_redundant: 'a' at_start 'cab' is already rejected by anywhere 'ab' of 'a'"])
+    bad = [("a", dict(anywhere=[], at_start=[], whole=["cdx"])), ("b", dict(anywhere=[], at_start=["cd"], whole=[]))]
+    c.eq("name_filter_not_redundant (whole starts with at_start)", name_filter_messages(bad),
+         ["name_filter_not_redundant: 'a' whole 'cdx' is already rejected by at_start 'cd' of 'b'"])
+    for w in ("Ni", "a", "abcdefghijklmnopq", "ab1"):
+        c.eq("filter_word grammar refuses %r" % w,
+             name_filter_messages([("a", dict(anywhere=[w], at_start=[], whole=[]))]),
+             ["grammar: a.anywhere[0] '%s'" % w])
+
+
 def check_disk(c):
     """Files on disk, where the new directories exist, hold exactly the
     listings' values (P3-01 2: identical copies in the fixture roots)."""
@@ -1106,7 +1507,8 @@ def check_disk(c):
                 print("note: %s/%s/ does not exist yet; the listings stand in for it" % (root, KINDS[kind][0]))
                 continue
             if os.path.join(root, KINDS[kind][0]) in PRE_015_USED:
-                print("note: %s/%s/ holds pre-0.16.0 files; the P3-06 listings stand in for it" % (root, KINDS[kind][0]))
+                print("note: %s/%s/ holds files older than %s; the %s listings stand in for it"
+                      % (root, KINDS[kind][0], DATA_VERSION, DATA_VERSION))
                 continue
             present += 1
             defs = {}
@@ -1156,6 +1558,8 @@ def cmd_check():
     self_test(c)
     check_spec_invariants(c)
     present = check_disk(c)
+    if DATA_VERSION == "0.17.0":
+        check_copied_kinds(c)
     # The three roots differ only where the geo-small elevation tuning does
     # (P1-00 6.4); the new kinds are identical in all three.
     fresh = golden_text(from_spec=present < len(ROOTS) * len(NEW_KINDS))
@@ -1175,6 +1579,10 @@ def main(argv):
     args = argv[1:]
     from_spec = "--from-spec" in args
     args = [a for a in args if a != "--from-spec"]
+    if "--version" in args:
+        i = args.index("--version")
+        use_version(args[i + 1])
+        del args[i:i + 2]
     if not args:
         print(__doc__)
         return 2

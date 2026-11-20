@@ -91,7 +91,7 @@ TEST_CASE("P3-01 6.1: without the keys every setting has its default; all races 
 
 TEST_CASE("P3-01 6.1: world.history_span takes integers 2000 to 12000") {
     for (const char* v : {"2000", "2001", "6000", "11999", "12000", "0x1770", "6_000"}) {
-        CAPTURE(v);
+        CAPTURE(std::string_view(v));
         const std::string text(v);
         history_api::History want = history_api::defaults();
         want.history_span = (text == "0x1770" || text == "6_000") ? "6000" : text;  // any TOML integer form
@@ -158,7 +158,7 @@ TEST_CASE("P3-01 6.1, 8.2 test 8: the --races flag text normalizes as the settin
     CHECK(history_api::races_from_flag("human,dwarf", c) == std::optional<std::string>(parsed("races = [\"dwarf\", \"human\"]\n").races));
     // The invalid forms of 6.2.
     for (const char* bad : {"", ",", "elf,", ",elf", "elf,,orc", "Elf", "elf orc", "elf, orc", "elf,elf", "ALL"}) {
-        CAPTURE(bad);
+        CAPTURE(std::string_view(bad));
         CHECK_FALSE(history_api::races_from_flag(bad, c).has_value());
     }
 }
@@ -215,7 +215,7 @@ TEST_CASE("P3-01 6.2: world.history_span errors") {
     const std::string expected = "; expected an integer from 2000 to 12000";
     for (const char* v : {"1999", "12001", "0", "-6000", "9223372036854775807", "\"6000\"", "\"\"", "true", "[6000]",
                           "{ years = 6000 }"}) {
-        CAPTURE(v);
+        CAPTURE(std::string_view(v));
         CHECK(only_error(std::string("history_span = ") + v).message == "'world.history_span' is " + found(v) + expected);
     }
     // A float gets the loader's message only (6.2: no second message).
@@ -233,12 +233,12 @@ TEST_CASE("P3-01 6.2: world.history_detail, event_intensity, monster_pressure an
                          Key{"divine_activity", "; expected distant, normal or meddling"}}) {
         for (const char* v : {"\"Normal\"", "\"\"", "\"normal \"", "\"extreme\"", "1", "-2", "true", "[\"normal\"]",
                               "{ v = \"normal\" }"}) {
-            CAPTURE(k.key);
-            CAPTURE(v);
+            CAPTURE(std::string_view(k.key));
+            CAPTURE(std::string_view(v));
             CHECK(only_error(std::string(k.key) + " = " + v).message ==
                   "'world." + std::string(k.key) + "' is " + found(v) + k.expected);
         }
-        CAPTURE(k.key);
+        CAPTURE(std::string_view(k.key));
         CHECK(contains(only_error(std::string(k.key) + " = 1.5").message, "floating-point"));
     }
 }
@@ -248,7 +248,7 @@ TEST_CASE("P3-01 6.2: world.civs_per_race errors") {
     // Only the string "auto": a number written as a string is not accepted
     // (6.1: "integer, or the string \"auto\"").
     for (const char* v : {"0", "5", "-1", "\"Auto\"", "\"AUTO\"", "\"\"", "\"2\"", "\"all\"", "true", "[2]", "{ n = 2 }"}) {
-        CAPTURE(v);
+        CAPTURE(std::string_view(v));
         CHECK(only_error(std::string("civs_per_race = ") + v).message == "'world.civs_per_race' is " + found(v) + expected);
     }
     CHECK(contains(only_error("civs_per_race = 2.0").message, "floating-point"));
@@ -257,7 +257,7 @@ TEST_CASE("P3-01 6.2: world.civs_per_race errors") {
 TEST_CASE("P3-01 6.2: world.races errors") {
     const std::string expected = "; expected \"all\" or an array of race ids";
     for (const char* v : {"\"All\"", "\"none\"", "\"\"", "\"elf\"", "1", "true", "{ elf = true }"}) {
-        CAPTURE(v);
+        CAPTURE(std::string_view(v));
         CHECK(only_error(std::string("races = ") + v).message == "'world.races' is " + found(v) + expected);
     }
     // An empty array: at the array.
@@ -272,7 +272,7 @@ TEST_CASE("P3-01 6.2: world.races errors") {
                              Element{"races = [\"\"]", "\"\"", 0}, Element{"races = [\"elf orc\"]", "\"elf orc\"", 0},
                              Element{"races = [[\"elf\"]]", "[\"elf\"]", 0}, Element{"races = [\"elf,orc\"]", "\"elf,orc\"", 0},
                              Element{"races = [\"elf\", true]", "true", 1}, Element{"races = [{ id = \"elf\" }]", "{ id = \"elf\" }", 0}}) {
-        CAPTURE(c.line);
+        CAPTURE(std::string_view(c.line));
         const std::string line(c.line);
         const wd::LoadError e = only_error(line, false, column_of(line, c.element));
         CHECK(e.message == "'world.races[" + std::to_string(c.index) + "]' is " + found(c.element) + "; expected a race id");
@@ -308,7 +308,7 @@ TEST_CASE("P3-01 6.2: world.races errors") {
 
 TEST_CASE("P3-01 6.2: world.divine_script is refused until P5, for a value of any type") {
     for (const char* v : {"\"script.lua\"", "\"\"", "\"0123456789abcdef\"", "1", "true", "[\"a\"]", "{ path = \"a\" }"}) {
-        CAPTURE(v);
+        CAPTURE(std::string_view(v));
         CHECK(only_error(std::string("divine_script = ") + v).message ==
               "'world.divine_script' is not supported yet: divine scripts need phase P5");
     }

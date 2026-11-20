@@ -48,13 +48,13 @@ home_min_hops = 3
 home_min_capacity = 1500
 intensity = { calm = 500, normal = 1000, turbulent = 2000 }
 famine_crowding_permille = 900
-famine_ppm = 2500
+famine_ppm = 1250
 famine_toll_min = 50
 famine_toll_max = 200
 plague_ppm = { hamlet = 300, village = 600, town = 1500, city = 3000, fortress = 600 }
 plague_toll_min = 100
 plague_toll_max = 300
-plague_spread_permille = 200
+plague_spread_permille = 100
 plague_spread_toll_permille = 500
 crisis_per_generation_permille = 60
 crisis_loss_permille = 50
@@ -64,3 +64,5 @@ split_permille = 300
 ruin_fade_years = 1500
 colony_new_region_salience = 30
 plague_small_salience = 25
+plague_major_dead = 1000
+crisis_small_salience = 25

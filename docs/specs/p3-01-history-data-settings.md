@@ -41,6 +41,7 @@ Directory `races/`, **required**, one schema for all definitions. Fields, all re
 | `growth_permille` | int(0, 1000) | yearly growth of a population toward capacity, per mille (P3-05) |
 | `density_permille` | int(1, 1000) | people a region supports for this race, per mille of the standard (P3-05 5.1; r6) |
 | `site_weights` | record `race_site_weights` | weights of the region means when the race scores a region (P3-00 10.1) |
+| `cell_weights` | record `race_cell_weights` | **from generator 0.17.0 (P3-08; r8), not before**: weights of a cell's ore and height when the race chooses a settlement site inside a region (P3-05 6.2, r6); shipped dwarf ore 400, height 600, every other race 0 and 0 |
 | `biomes` | array(record `race_biome`, 0, 16) | biome preferences; a biome not listed has weight 0 |
 | `upland` | int(−1000, 1000) | preference for upland ground, weighted by the region's rough share (P3-05 4.2; r6) |
 | `coast` | int(−1000, 1000) | preference for coastal regions, weighted by the region's coast share (P3-05 4.2; r6) |
@@ -49,6 +50,8 @@ Directory `races/`, **required**, one schema for all definitions. Fields, all re
 | `prowess_permille` | int(1, 4000) | **from generator 0.16.0 (P3-06; r7), not before**: fighting strength of the race's people, per mille of the standard (P3-06 6.1); shipped elf 1600, goblin 800, dwarf 1400, faerie 1200, human 1000, orc 1300 |
 | `settlement_kinds` | array(enum(hamlet, village, town, city, fortress), 1, 5) | settlement kinds the race builds |
 | `culture` | ref(culture) | the race's default culture |
+
+Record `race_cell_weights` (r8), fields int(0, 1000), both required, in this order: `ore` (multiplies the cell's `ore` score, 0–255), `height` (multiplies the cell's height in its region, 0–255, P3-05 6.2). Both 0 means the race keeps the region's seed cell as its first site (P3-05 6.2 item 1).
 
 Record `race_site_weights`, fields int(0, 1000), in this order: `fertility`, `forage`, `timber`, `ore`, `fresh_water` (each multiplies the region's mean of that score, P1-06 3.2; `ore` multiplies the reachable-ore score of P3-05 4.1 instead, r6). Record `race_biome`: `biome` ref(biome), `weight` int(−1000, 1000).
 
@@ -490,3 +493,7 @@ Made with P3-05 (its 18.4), in place where marked. Race field `density_permille`
 ## Revision note r7 (2026-11-19, amendments for P3-06)
 
 Made with P3-06 (its 18.3), in place where marked; **every change takes effect at generator 0.16.0 with the P3-06 merge and is not part of P3-05's 0.15.0 data**. Race field `prowess_permille` int(1, 4000), required, after `aggression` (shipped: elf 1600, goblin 800, dwarf 1400, faerie 1200, human 1000, orc 1300; the fixture race files gain it). Goblin `aggression` 700 → 600 (section 3.1's goblin block is annotated, its value stays 700 until 0.16.0). Field meaning of `aggression` made precise (squared in the strain rate, used against the declaration odds); `expansion` unchanged. Section 5: id `conflict` is registered by P3-06; 8.1 item 4's expected list becomes `'chronology', 'conflict', 'engine', 'peoples', 'report'` and its future-id example an unregistered id such as `monsters`.
+
+## Revision note r8 (2026-11-20, amendments for P3-08; generator 0.17.0)
+
+Made with P3-08 (`docs/specs/p3-08-followups.md`), in place where marked; **every change takes effect at generator 0.17.0 and is not part of the 0.16.0 data**. (1) Race field `cell_weights`, record `race_cell_weights` {`ore`, `height`} int(0, 1000), required, after `site_weights`: shipped dwarf `{ ore = 400, height = 600 }`, elf, goblin, faerie, human and orc `{ ore = 0, height = 0 }` (P3-05 6.2 and 8.4, r6); the fixture race files gain it. (2) Section 3.1's faerie biome weights become P3-05 12.3's (temperate forest 800, wet woodland 800, fen 300, marsh 200, highland moor 100, heath 0, grassland −300, alpine −400, steppe −400; nine rows, the heath row kept with weight 0); read the TOML blocks of 3.1 with these values. (3) The culture record `culture_naming` gains `god_patterns` after `patterns` and the kind `culture` the check `naming_realm_forms`, the elven civilization forms gain `The House of {root}` in place of the bare `{root}` (P3-02 r5 11.4; fields, checks and data defined there only). (4) A new required data kind `name_filter` (P3-02 r5 11.2) and a new required data kind `placename` (P1-06 r3 4.1) join `biome`, `culture`, `history`, `race` and `worldgen` in every data root; P3-01's listing test of the shipped files (8.3 test 9) gains their files. Every content hash changes.

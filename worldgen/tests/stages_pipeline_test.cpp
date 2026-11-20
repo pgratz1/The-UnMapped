@@ -462,7 +462,7 @@ TEST_CASE("generate P0-04 5.1, P1-00 10.1: planned_stages") {
     CHECK(worldgen::planned_stages(p) == std::vector<std::string_view>{"test_pattern"});
     // --test-pattern with --until is refused, whatever the limit.
     for (const char* until : {"none", "elevation", "bogus"}) {
-        CAPTURE(until);
+        CAPTURE(std::string_view(until));
         p.until = std::string(until);
         CHECK_THROWS_AS(static_cast<void>(worldgen::planned_stages(p)), worldgen::FatalError);
     }
@@ -490,10 +490,10 @@ TEST_CASE("generate P1-00 10.1: --until none and every thread count give the P0 
     REQUIRE_FALSE(bytes.empty());
     CHECK(dbtest::read_file(dir.file("content.db")) == bytes);
     // The empty world of seed 0 with the content hash of no data, generator
-    // 0.16.0 (schema version 7). The CLI case empty-seed-0 of P0-04 section 9 carries the content
+    // 0.17.0 (schema version 7). The CLI case empty-seed-0 of P0-04 section 9 carries the content
     // hash of the shipped data since the `worldgen` kind was registered
     // (P0-03 amendment 17), so it differs from this value.
-    CHECK(worldgen::sha256_hex(bytes) == "3573d3e9d4da02c516625465702cc8ebbaaef2611fa2f32fca93f8ea1e9c0755");
+    CHECK(worldgen::sha256_hex(bytes) == "ec7d066b0f8a27c866897ad01aa8c4a7ee0376c420b4596d85f4f6e8570a9348");
     // The test pattern at several thread counts: identical bytes.
     worldgen::WorldParams t;
     t.seed = 0;
@@ -506,7 +506,7 @@ TEST_CASE("generate P1-00 10.1: --until none and every thread count give the P0 
     const auto tp = dbtest::read_file(dir.file("tp1.db"));
     CHECK(dbtest::read_file(dir.file("tp2.db")) == tp);
     CHECK(dbtest::read_file(dir.file("tp5.db")) == tp);
-    CHECK(worldgen::sha256_hex(tp) == "d0bf691163bef3e79b4b4068914b01ffdd4257c2c1dbbdb2499c5fdca0e98df4");  // content hash of no data, generator 0.16.0
+    CHECK(worldgen::sha256_hex(tp) == "d74f50a32c9b269ecf1fab8018f39f32046b0ba04858c1cc2bfd2b023f9867e0");  // content hash of no data, generator 0.17.0
 }
 
 TEST_CASE("generate: an unusable stage limit, or a content hash that does not match, is fatal and leaves nothing") {
@@ -515,7 +515,7 @@ TEST_CASE("generate: an unusable stage limit, or a content hash that does not ma
     p.seed = 0;
     p.content_hash = worldgen::sha256(std::string_view{});
     for (const char* until : {"Regions", "bogus"}) {  // every geography stage is implemented (P1-06)
-        CAPTURE(until);
+        CAPTURE(std::string_view(until));
         p.until = std::string(until);
         CHECK_THROWS_AS(static_cast<void>(worldgen::generate_world(p, dir.file("w.db"), wdb::Overwrite::refuse)),
                         worldgen::FatalError);

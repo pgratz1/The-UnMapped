@@ -67,6 +67,7 @@ struct PeoplesTuning {
     std::int64_t split_min_settlements = 2, split_min_regions = 2, split_permille = 0;
     std::int64_t ruin_fade_years = 1;
     std::int64_t colony_new_region_salience = 0, plague_small_salience = 0;
+    std::int64_t plague_major_dead = 0, crisis_small_salience = 0;  // r6 (generator 0.17.0)
 };
 
 // The loaded definition (validated by the loader). FatalError "history:
@@ -86,12 +87,15 @@ struct PeoplesRace {
     std::int64_t w_fertility = 0, w_forage = 0, w_timber = 0, w_ore = 0, w_fresh_water = 0;  // site_weights
     std::int64_t upland = 0, coast = 0, growth_permille = 0, expansion = 0, density_permille = 1;
     std::int64_t generation_years = 1;
+    std::int64_t cell_ore = 0, cell_height = 0;  // r6: cell_weights (P3-01 r8)
     std::array<std::uint8_t, 6> builds{};      // index: SettlementKind code (1 to 5); 1 if built
     std::vector<db::RaceBiomeRow> biomes;      // its race_biome rows, ascending biome
 
     [[nodiscard]] bool builds_kind(SettlementKind kind) const noexcept;
     // Some ladder kind (hamlet, village, town, city) is built.
     [[nodiscard]] bool has_ladder() const noexcept;
+    // r6: cell_weights not both 0 (6.2, 8.4).
+    [[nodiscard]] bool has_cell_term() const noexcept;
 };
 
 // The race of row `race` with the content's definitions. FatalError
@@ -111,6 +115,7 @@ struct PeoplesRegion {
     std::int64_t coast_m = 0;   // per mille
     std::int64_t fertility_mean = 0, forage_mean = 0, timber_mean = 0, fresh_water_mean = 0;
     std::int64_t seed_x = 0, seed_y = 0, x_min = 0, y_min = 0, x_max = 0, y_max = 0;
+    std::int64_t elev_max_dm = 0;  // r6: the region row's largest dry-cell elevation (6.2)
     std::vector<std::pair<std::int64_t, std::int64_t>> shares;  // (biome code, share_b per mille), ascending biome
 };
 
@@ -189,8 +194,11 @@ public:
     [[nodiscard]] bool is_mouth(std::int64_t x, std::int64_t y) const;
     [[nodiscard]] bool near_mouth(std::int64_t x, std::int64_t y) const;
     [[nodiscard]] bool near_sea(std::int64_t x, std::int64_t y) const;
-    // habitability(c) + port(c, r) (6.1, 6.2 item 2).
+    // v(c, r) of 6.2 item 2: habitability(c) + port(c, r) + (r6) the cell
+    // term (cell_ore x ore(c) + cell_height x hgt(c)) div 1000.
     [[nodiscard]] std::int64_t site_value(std::int64_t x, std::int64_t y, std::int64_t race) const;
+    // r6 (8.4): walk_area(c) > 0.
+    [[nodiscard]] bool walkable(std::int64_t x, std::int64_t y) const;
     // The site of 6.2 in `region` for `race` against the given settlements
     // (statuses 1 to 3 keep their spacing; with `relaxed`, item 3: any cell
     // no settlement stands on). nullopt when there is none (item 4 is the
@@ -214,6 +222,9 @@ private:
     std::vector<std::uint16_t> region_layer_;
     std::vector<std::uint8_t> water_;
     std::vector<std::uint16_t> habitability_;
+    std::vector<std::int16_t> elevation_;   // r6
+    std::vector<std::uint16_t> ore_;        // r6
+    std::vector<std::uint16_t> walk_area_;  // r6
     std::vector<std::uint8_t> mouth_;
     std::vector<std::uint8_t> near_mouth_;
     std::vector<std::uint8_t> near_sea_;
@@ -311,7 +322,50 @@ private:
     [[nodiscard]] std::int64_t abandon_events(const State& state, std::int64_t settlement) const;
     void end_civilization(StepContext& context, std::int64_t civ, std::int64_t region, std::int64_t settlement,
                           std::int64_t cause);
-    void crisis(StepContext& context, std::int64_t civ, std::int64_t event);
+    // 10.3: the split test (r6: made before the crisis event is written).
+    struct SplitPlan {
+        std::vector<std::int64_t> part;     // the seceding regions
+        std::vector<std::int64_t> leaving;  // the settlements that leave
+        std::size_t mine = 0;               // c's standing visible settlements
+    };
+    [[nodiscard]] SplitPlan plan_split(const StepContext& context, std::int64_t civ) const;
+    void crisis(StepContext& context, std::int64_t civ, std::int64_t event, const SplitPlan& plan);
+    // r6 (10.2): the total dead of an outbreak and its spreads, planned.
+    [[nodiscard]] std::int64_t planned_plague_dead(const StepContext& context, std::int64_t origin, std::int64_t toll,
+                                                   const std::vector<std::uint8_t>& struck) const;
+    // The settlements a strike's rules read: the state, or (the plague plan,
+    // 10.2) a copy of the populations and of which settlements of the owner
+    // stand, indexed by id.
+    struct SettlementsNow {
+        const State& state;
+        const std::vector<std::int64_t>* pop = nullptr;
+        const std::vector<std::uint8_t>* up_mask = nullptr;
+        // Standing and owned by `owner` (the copy: standing in it).
+        [[nodiscard]] bool up(std::int64_t id, std::int64_t owner) const;
+        [[nodiscard]] std::int64_t population(std::int64_t id) const;
+    };
+    // The outcome of a blow of `toll` per mille (10.4 with 8.5 (a)).
+    struct StrikeResult {
+        std::int64_t dead = 0;
+        std::int64_t after = 0;
+        bool abandoned = false;
+    };
+    [[nodiscard]] StrikeResult strike_result(const StepContext& context, const SettlementsNow& now,
+                                             std::int64_t settlement, std::int64_t toll) const;
+    // 10.2: the toll of a spread from origin to target, nullopt if its draw fails.
+    [[nodiscard]] std::optional<std::int64_t> spread_toll(const StepContext& context, std::int64_t origin,
+                                                          std::int64_t target) const;
+    // Another standing settlement of the settlement's owner exists.
+    [[nodiscard]] bool other_standing(const SettlementsNow& now, std::int64_t settlement) const;
+    // The owner's nearest other standing settlement (squared distance, then
+    // id), 0 if none.
+    [[nodiscard]] std::int64_t nearest_standing(const SettlementsNow& now, std::int64_t settlement) const;
+    // 8.5 item 2: max(0, 2 C(R_t, race) - P_t).
+    [[nodiscard]] std::int64_t refugee_room(const SettlementsNow& now, std::int64_t destination,
+                                            std::int64_t race) const;
+    // 8.4: the kind of a new settlement (r6: the fortress cell rule).
+    [[nodiscard]] SettlementKind founding_kind(std::int64_t race, std::int64_t region, const SiteCell& site,
+                                               std::int64_t population) const;
     [[nodiscard]] std::optional<std::int64_t> outward_target(const StepContext& context, std::int64_t civ,
                                                              bool require_free, std::vector<std::int64_t>* all) const;
     [[nodiscard]] std::string next_name(const StepContext& context, std::int64_t race, NameKind kind,
@@ -321,6 +375,7 @@ private:
     PeoplesTuning tuning_;
     std::optional<PeoplesGeo> geo_;
     NameRegistry registry_;
+    NameFilter filter_;  // P3-02 r5: the world's name filter
     std::array<std::uint64_t, 12> keys_{};
     std::int64_t intensity_ = 1000;
     bool prepared_ = false;
@@ -330,6 +385,7 @@ private:
     // Members keyed by id (index id - 1).
     std::vector<std::int64_t> before_;          // per settlement: P just before the first blow
     std::vector<std::int64_t> last_reduction_;  // per settlement: event, 0 none
+    std::vector<std::int64_t> decline_start_;   // r6, per settlement: the blow that last began its decline
     std::vector<std::int64_t> ruined_owner_;    // per settlement: the owner when it was ruined
     std::vector<std::int64_t> ruined_year_;     // per settlement: the year it was ruined
     std::vector<std::int64_t> ruin_event_;      // per settlement: its ruin event

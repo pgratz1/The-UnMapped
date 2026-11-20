@@ -348,3 +348,14 @@ Decisions by the lead on points raised by the generator engineer. Where these di
     (d) **CI.** `world-hashes.sh` gains the case `hist-dense-1024` (`--seed 11 --history-detail dense`), fifteen cases in all, its hash in `p3-worlds.txt`.
 
 21. **`report --history`** (P3-07 4 and 18.3, 2026-11-19; no world byte changes). (a) Synopsis: `worldgen-cli report --db PATH [--history [--level summary|full]] [--out PATH] [--force] [--verbose]`. `--history` prints the history report, format `# worldgen history v1` (P3-07 6), instead of the world report; `--level` (`summary`, the default, or `full`) needs `--history`. Usage errors (exit 2): `--level needs --history`; `invalid --level '<text>'; expected summary or full`. `report --help` gains the lines `  --history           print the history report (format '# worldgen history v1') instead of the world report` and `  --level LEVEL       with --history: summary (default) or full`. `--out` and `--force` behave as for the world report. (b) A world without history is an input error (exit 3, nothing on stdout, no file): `worldgen-cli: error: world file '<path>' has no history (stages: <stages or none>); generate it with the history stage`; corrupt history tables are input errors with the messages of P3-07 5.2 and 5.3. (c) The "Later" note of section 7 is fulfilled by P3-07. (d) Section 10's invariant "`report` and `hash` output is byte-identical across platforms" covers `report --history`. (e) The exit code table's input errors include "a world without history given to `report --history`".
+22. **`generate --help`: which history settings act** (P3-08, 2026-11-20; the P3-06 validation's F2; no world byte changes). Since generator 0.15.0 the history stage also reads `--civs-per-race` and `--event-intensity` (P3-05 7.2, 10.1), but the closing paragraph of `generate --help` still said the history stage uses the span and the detail and "the others take effect with later history subsystems". From the P3-08 change the paragraph reads, line breaks as shown:
+
+    ```
+    The history settings are recorded in every world. The chronology stage uses
+    the span and the races; the history stage uses the span, the detail, the
+    civilizations per race and the event intensity. The monster pressure and
+    the divine activity take effect with later history subsystems (phase P5).
+    --test-pattern records them and writes no history.
+    ```
+
+    Every other line of the usage text is unchanged. Test: the CLI test that compares `generate --help` with its expected text (or, if there is none, a new one in `tools/worldgen-cli/tests/`) checks these five lines.

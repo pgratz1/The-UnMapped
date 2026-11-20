@@ -88,7 +88,17 @@ FatalError = cr.FatalError
 REPO = pe.REPO
 GOLDEN = os.path.join(REPO, "worldgen", "tests", "golden", "p3-06-conflict.txt")
 DEFAULT_INPUTS = os.path.join(os.path.expanduser("~"), ".cache", "the-unmapped", "out", "p3-06-tests", "inputs")
-GENERATOR_VERSION = "0.16.0"
+GENERATOR_VERSION = "0.17.0"
+
+# P3-06 r7 (generator 0.17.0): the rule change behind a flag, as pp.FLAGS for P3-05 r6; legacy() turns
+# every P3-08 rule flag of both files off (the 0.16.0 rules).
+FLAGS = dict(loss=True)   # 7.3 item 4: dead_W = min(F_W, F_L) x loss_winner div 1000
+
+
+def legacy(on=True):
+    pp.legacy(on)
+    for k in FLAGS:
+        FLAGS[k] = not on
 
 RACE, GOD, CIV, SETTLEMENT, REGION = pe.RACE, pe.GOD, pe.CIV, pe.SETTLEMENT, pe.REGION
 OPENING, QUIET, FLARE, FINAL = pe.OPENING, pe.QUIET, pe.FLARE, pe.FINAL
@@ -143,6 +153,9 @@ SPEC_GAPS = (
     ("15.4 settlements_sacked", "Counted from current rows: a sacked ruin that has faded no longer has a ruin_event "
                                 "(P3-05 ruling 3), so it is not counted."),
     ("15.4 war_years_total E", "E = param.history_span (meta.history_end_year)."),
+    ("16.2 item 18a no claim", "A world with no claim equals the peoples-only world in every history table but "
+                               "the three catalogue tables AND relation: conflict's housekeeping opens enmity rows "
+                               "without any claim (hist-races-elf-orc-1024 has them)."),
     ("14 item 4 conqueror alive", "Alive at the conquest: ended_year NULL, or later than the year, or the same year "
                                   "with an ending event after the conquest."),
 )
@@ -169,8 +182,8 @@ CONFLICT_KINDS = (
     _k(29, "region_ceded", 1, 0, (("from", CIV, 1, 1), ("to", CIV, 1, 1)), ()),
     _k(30, "civ_conquered", 1, 0, (("civilization", CIV, 1, 1), ("conqueror", CIV, 1, 1)), ()),
 )
-COMPILED = tuple(pe.COMPILED)
-assert list(COMPILED[19:]) == list(CONFLICT_KINDS) and len(COMPILED) == 30
+COMPILED = pp.COMPILED      # kinds 1-31 (P3-05 r6 appends 31 after P3-06's 20-30)
+assert list(COMPILED[19:30]) == list(CONFLICT_KINDS) and len(COMPILED) == 31
 KIND_ID = {k["key"]: k["id"] for k in COMPILED}
 KEY_OF = {k["id"]: k["key"] for k in COMPILED}
 K = KIND_ID
@@ -184,7 +197,8 @@ SPEC_REPORT = (
                            "{winner_dead} of the victors fell."),
     ("siege", 25, "{attacker} besieged {@settlement} of {defender}; it {fell?fell|held}."),
     ("sacked", 75, "{attacker} sacked {@settlement} of {defender}; {dead} died and {survivors} fled."),
-    ("settlement_captured", 60, "{attacker} took {@settlement} from {defender}; {dead} died and {fled} fled."),
+    ("settlement_captured", 60, "{attacker} took {@settlement} from {defender}; {dead} died{fled?| and one fled| "
+                                "and # fled}."),   # r7 (0.16.0: "...; {dead} died and {fled} fled.")
     ("peace", 60, "{loser} sued {winner} for peace after {years} {years?year|years} of war."),
     ("truce", 50, "{parties:all} made peace after {years} {years?year|years} of war, neither the victor."),
     ("region_ceded", 55, "{from} ceded {@region} to {to}."),
@@ -395,22 +409,7 @@ class World(pp.World):
         self.begin()          # Q5
         self.begin()          # Q6
         self.quiet_used = None
-        for civ in self.civs:
-            if civ["ended_year"] is not None:
-                continue
-            if civ["id"] in self.charged:
-                self.open_era.pop(civ["id"], None)
-                continue
-            idx = self.open_era.get(civ["id"])
-            if idx is not None:
-                self.events[idx]["end_year"] = last
-            else:
-                eid = self.append("quiet_era", start, last, region=civ["home_region"],
-                                  participants=(("civilization", CIV, civ["id"]),), values=(0, 0))
-                idx = eid - 1
-                self.open_era[civ["id"]] = idx
-            ev = self.events[idx]
-            ev["values"] = {1: ev["end_year"] - ev["year"] + 1, 2: self.generations(civ, ev["year"], ev["end_year"])}
+        self.quiet_eras(start, last)        # P3-04 6.6 (r10 behind pp.FLAGS["quiet"])
         self.bookkeeping(start, phase_end, last)
         if phase_end:
             self.open_era = {}
@@ -940,7 +939,8 @@ class World(pp.World):
         xwin = chance_pm(self.draw("hist.conflict.battle_win", w, 0, 0), p)
         W, L, FW, FL = (x, y, A, D) if xwin else (y, x, D, A)
         dead_l = FL * t["loss_loser_permille"] // 1000
-        dead_w = FW * t["loss_winner_permille"] // 1000
+        # r7 7.3 item 4: the victors lose loss_winner of the smaller force (before r7, of their own force)
+        dead_w = (min(FW, FL) if FLAGS["loss"] else FW) * t["loss_winner_permille"] // 1000
         if pass_id:
             e = self.append("battle_at_pass", region=r, participants=(("winner", CIV, W), ("loser", CIV, L)),
                             values=(dead_w, dead_l, pass_id), causes=(w,))
@@ -1422,12 +1422,9 @@ def check_peoples_invariants(c, res, inp, w, label):
         else:
             c.true("%s P3-05 inv 5 ended c%d empty" % (label, x[0]), not mine and not any(
                 r[2] is None and r[3] == x[0] for r in res["region_control"]))
-    for r in res["settlement_census"]:
-        s = sts[r[0]]
-        built = set(w.pd.race[civs[s[5]][2]]["kinds"])
-        if r[2]:
-            built |= set(w.pd.race[civs[r[2]][2]]["kinds"])
-        c.true("%s P3-05 inv 6 s%d kind %d built" % (label, r[0], r[3]), r[3] in built)
+    # P3-05 inv 6 as r6 reads it (the P3-06 validation's D1; the 0.16.0 check took the founder's and the
+    # row's owner's races only, which fails for ruins and for settlements captured twice)
+    pp.check_kinds_built(c, res, w, label + " P3-05")
     cen = {}
     for r in res["settlement_census"]:
         cen.setdefault(r[0], []).append(r)
@@ -1437,21 +1434,24 @@ def check_peoples_invariants(c, res, inp, w, label):
     for s in res["settlement"]:
         if s[10] == RUINED:
             c.true("%s P3-05 inv 7 s%d ruin event" % (label, s[0]), kind[s[13]] in (K["settlement_abandoned"],
+                                                                                   K["settlement_abandoned_to"],
                                                                                    K["sacked"]))
         if s[10] == FADED:
             fades = [e for e in res["event"] if e[3] == K["ruin_faded"] and e[6] == s[0]]
             ok = len(fades) == 1 and len(causes.get(fades[0][0], [])) == 1
             if ok:
                 ruin = ev[causes[fades[0][0]][0]]
-                ok = (ruin[3] in (K["settlement_abandoned"], K["sacked"]) and ruin[6] == s[0] and
+                ok = (ruin[3] in (K["settlement_abandoned"], K["settlement_abandoned_to"], K["sacked"]) and ruin[6] == s[0] and
                       fades[0][1] >= ruin[1] + t["ruin_fade_years"] and s[12] is None and s[13] == 0)
             c.true("%s P3-05 inv 7 s%d faded" % (label, s[0]), ok)
     red = ("famine", "plague", "plague_spread", "succession_crisis", "battle", "battle_at_pass")
     want_cause = {
         "plague_spread": ("plague",), "civ_seceded": ("succession_crisis",),
         "settlement_abandoned": red + ("settlement_founded", "colony_founded"),
-        "capital_moved": ("settlement_abandoned", "sacked", "settlement_captured"),
-        "civ_ended": ("settlement_abandoned",), "ruin_faded": ("settlement_abandoned", "sacked"),
+        "settlement_abandoned_to": red + ("settlement_founded", "colony_founded"),
+        "capital_moved": ("settlement_abandoned", "settlement_abandoned_to", "sacked", "settlement_captured"),
+        "civ_ended": ("settlement_abandoned", "settlement_abandoned_to"),
+        "ruin_faded": ("settlement_abandoned", "settlement_abandoned_to", "sacked"),
         "settlement_dwindled": red,
     }
     for e in res["event"]:
@@ -1464,6 +1464,7 @@ def check_peoples_invariants(c, res, inp, w, label):
                    all(KEY_OF[kind[x]] in want_cause[key] for x in cs) and (cs or key == "settlement_dwindled"))
         if e[3] >= 6 and ph[e[4]][2] == QUIET:
             c.true("%s inv 8/14.2 e%d %s not in a quiet step" % (label, e[0], key), e[3] in QUIET_KINDS)
+    pp.check_r6_invariants(c, res, inp, w, label + " P3-05")
 
 
 def check_invariants(c, res, inp, w, label, last_refuge=True, threshold=None):
@@ -1580,6 +1581,12 @@ def check_invariants(c, res, inp, w, label, last_refuge=True, threshold=None):
             c.true("%s 11 e%d claim cause" % (label, e[0]), len(cs) == 1 and KEY_OF[kind[cs[0]]] in (
                 "civ_founded", "settlement_founded", "colony_founded", "civ_seceded", "settlement_captured",
                 "region_ceded"))
+    # r7 7.3 item 4: with loss_winner <= loss_loser the victors never lose more than the defeated
+    if FLAGS["loss"] and w.ct["loss_winner_permille"] <= w.ct["loss_loser_permille"]:
+        for e in res["event"]:
+            if e[3] in (K["battle"], K["battle_at_pass"]):
+                c.true("%s r7 e%d the victors lose no more than the defeated" % (label, e[0]),
+                       vals[e[0]][1] <= vals[e[0]][2])
     # 3 falls
     for e in res["event"]:
         if e[3] not in (K["sacked"], K["settlement_captured"]):
@@ -1696,7 +1703,7 @@ def world_case(name, seed, size, span, races, detail, inputs_dir, dat=None, civs
     path = os.path.join(inputs_dir, INPUT_OF.get(name, name) + ".db")
     conn = pchr.open_world(path)
     h, _rows = pchr.world_table_hash(conn, "region")
-    if name in pe.P1_06_CASE:
+    if name in pe.P1_06_CASE and pp.FLAGS["dest"]:   # the 0.16.0 inputs (--legacy) predate P1-06 r3
         want = pchr.p1_06_region_hash(pe.P1_06_CASE[name])
         if h != want:
             fatal("%s: table region %s differs from p1-06-regions.txt %s" % (path, h, want))
@@ -1999,17 +2006,19 @@ def check_w1(c):
             c.eq("W1 elves win: no siege", "siege" in keys, False)
             continue
         b = ev[1]
-        c.eq("W1 %s: battle won by 2, dead 38 and 100" % branch, ([p[3] for p in b["participants"]], b["values"]),
-             ([2, 1], {1: 38, 2: 100}))
+        dw = 32 if FLAGS["loss"] else 38     # r7: min(480, 400) x 80 div 1000 = 32 (0.16.0: 480 x 80 div 1000)
+        c.eq("W1 %s: battle won by 2, dead %d and 100" % (branch, dw), ([p[3] for p in b["participants"]], b["values"]),
+             ([2, 1], {1: dw, 2: 100}))
         c.eq("W1 %s: siege of s2 fell" % branch, (keys[2], ev[2]["settlement"], ev[2]["values"]),
              ("siege", 2, {1: 1}))
-        c.eq("W1 %s: G 345, A2 442, ps 561" % branch, (w.garrison(dict(w.stl(2), population=480), 1),
-                                                       w.siege_p(442, 345)), (345, 561))
+        c.eq("W1 %s: G 345, A2 %d, ps" % (branch, 480 - dw), (w.garrison(dict(w.stl(2), population=480), 1),
+                                                               w.siege_p(480 - dw, 345)),
+             (345, 564 if FLAGS["loss"] else 561))
         if branch == "sack":
             c.eq("W1 sack: values (144 dead, 336 survivors)", (keys[3], ev[3]["values"]), ("sacked", {1: 144, 2: 336}))
             c.eq("W1 sack: casualties 80 at s1 then 336 fled to s1 (room permitting)", w.stl(1)["population"],
                  min(1920 + 336, max(1920, 2 * w.geo.capacity(3, 1))))
-            c.eq("W1 sack: s3 lost 38", w.stl(3)["population"], 5962)
+            c.eq("W1 sack: s3 lost dead_W", w.stl(3)["population"], 6000 - dw)
             c.eq("W1 sack: s2 ruined by the sack, R2 released", (w.stl(2)["status"], w.stl(2)["ruin_event"],
                                                                   w.owner[2][0]), (RUINED, ev[3]["id"], 0))
         else:
@@ -2024,7 +2033,50 @@ def check_w1(c):
              [sym_key(1, 2, "enmity"), sym_key(1, 2, "peace")])
 
 
+def check_units_r7(c):
+    """16.1 (r7): the victors' dead from the smaller force; the capture sentence; P3-05 r6 17e's
+    note_reduction never sets a decline start."""
+    t = data().conflict
+    lw, ll = t["loss_winner_permille"], t["loss_loser_permille"]
+    for fw, fl, want in ((900, 300, (24, 75)), (300, 900, (24, 225)), (1200, 400, (400 * 80 // 1000, 100))):
+        got = (min(fw, fl) * lw // 1000, fl * ll // 1000)
+        c.eq("16.1 r7 F_W %d F_L %d: dead_W, dead_L" % (fw, fl), got, want)
+    c.eq("16.1 r7 F_W = 3 F_L: dead_W = F_L x 80 div 1000", min(1200, 400) * lw // 1000, 400 * 80 // 1000)
+    # the capture sentence with fled 0, 1, 12 (the shipped template through render)
+    tmpl = [e for e in data().report if e[0] == "settlement_captured"][0][2]
+    if FLAGS["loss"]:
+        c.eq("11 r7 capture template (data)", tmpl, SPEC_REPORT[6][2])
+    for fled, want in ((0, "The Grork Horde took Tyfie Glade from the Teeshti Court; 135 died."),
+                       (1, "The Grork Horde took Tyfie Glade from the Teeshti Court; 135 died and one fled."),
+                       (12, "The Grork Horde took Tyfie Glade from the Teeshti Court; 135 died and 12 fled.")):
+        c.eq("16.1 r7 capture sentence, fled %d" % fled, capture_sentence(fled), want)
+    # note_reduction (casualties) never sets the decline start (P3-05 r6 17e)
+    w = w1()
+    before = dict(w.decline_start)
+    w.casualties(1, 100, len(w.events), None)
+    c.eq("P3-05 r6 17e casualties set no decline start", w.decline_start, before)
+
+
+def capture_sentence(fled):
+    """A settlement_captured event (dead 135) of the Grork Horde against the Teeshti Court, rendered."""
+    w = w1()
+    w.civ(2)["name"] = "The Grork Horde"
+    w.civ(1)["name"] = "The Teeshti Court"
+    w.stl(2)["name"] = "Tyfie Glade"
+    e = w.append("settlement_captured", region=2, settlement=2, participants=(("attacker", CIV, 2),
+                                                                             ("defender", CIV, 1)),
+                 values=(135, fled), causes=(1,))
+    res = pp.rows_of(w, pp.event_catalogue(w.pd.report), [])
+    view = pe.view_from_rows(res, [(r["id"], r["name"]) for r in w.inp.regions], w.inp.races, w.inp.gods)
+    try:
+        return pe.render(view, e)
+    except FatalError as x:
+        return "render failed: %s" % x
+
+
 def check_units(c):
+    if FLAGS["loss"]:
+        check_units_r7(c)
     dat = data()
     # 12.1 tuning
     c.eq("12.1 history.conflict = the listing", dat.conflict, pdr.parsed_spec("history")["conflict"])
@@ -2040,7 +2092,9 @@ def check_units(c):
     c.eq("16.4 strain_max", tuning_problem(dict(dat.conflict, strain_max=899)),
          "history: tuning: declare_min + declare_span must not be above strain_max")
     # 11 catalogue and report
-    c.eq("11 report entries 20-30", [e for e in dat.report[19:]], list(SPEC_REPORT))
+    want = [(k, sal, "{attacker} took {@settlement} from {defender}; {dead} died and {fled} fled."
+             if (k == "settlement_captured" and not FLAGS["loss"]) else tm) for k, sal, tm in SPEC_REPORT]
+    c.eq("11 report entries 20-30", [e for e in dat.report[19:30]], want)
     c.eq("11 report_events on the 0.16.0 report", pp.report_events_messages(dat.report), [])
     for k in CONFLICT_KINDS:
         c.eq("11 template of %s parses" % k["key"], pe.template_problem(k, dict((e[0], e[2]) for e in dat.report)[k["key"]]),
@@ -2177,6 +2231,54 @@ def check_peoples_only(c, dat):
         c.eq("syn-%d peoples-only configuration = the P3-05 reference" % seed, table_hashes(b), table_hashes(a))
 
 
+def check_prefix(c, res, pres, label):
+    """16.2 item 18a (r7, the 0.16.0 validation's F1): below the first claim the log with conflict equals
+    the peoples-only log row for row in event, event_participant, event_cause and event_value, except the
+    quiet_era events open in the quiet step of the first claim, whose end_year, years and generations may be
+    smaller. A world with no claim equals the peoples-only world in every history table but the three
+    catalogue tables and relation (READING: conflict's housekeeping opens enmity rows without a claim).
+    Returns the number of excepted eras."""
+    claims = [e[0] for e in res["event"] if e[3] == K["claim"]]
+    if not claims:
+        for t in TABLES:
+            if t in ("event_kind", "event_kind_role", "event_kind_value", "relation"):
+                continue
+            c.eq("%s 18a no claim: table %s equals the peoples-only one" % (label, t), res[t], pres[t])
+        return 0
+    first = claims[0]
+    cy = res["event"][first - 1][1]
+
+    def by(t, n):
+        out = {}
+        for r in t:
+            if r[0] < n:
+                out.setdefault(r[0], []).append(r)
+        return out
+    pe_ = {e[0]: e for e in pres["event"] if e[0] < first}
+    ce_ = {e[0]: e for e in res["event"] if e[0] < first}
+    excepted = set()
+    ok_events = len(pe_) == len(ce_)
+    for i, a in ce_.items():
+        b = pe_.get(i)
+        if a == b:
+            continue
+        if b is not None and a[3] == K["quiet_era"] and a[:2] == b[:2] and a[3:] == b[3:] and cy <= a[2] <= b[2]:
+            excepted.add(i)
+            continue
+        ok_events = False
+        print("  %s 18a first difference at e%d: %r against peoples-only %r" % (label, i, a, b))
+        break
+    c.true("%s 18a events below the first claim e%d" % (label, first), ok_events)
+    for t in ("event_participant", "event_cause"):
+        c.eq("%s 18a %s below the first claim" % (label, t), by(res[t], first), by(pres[t], first))
+    va, vb = by(res["event_value"], first), by(pres["event_value"], first)
+    for i in excepted:
+        va.pop(i, None)
+        vb.pop(i, None)
+    c.eq("%s 18a event_value below the first claim (excepted eras aside)" % label, va, vb)
+    return len(excepted)
+
+
 def all_cases(inputs, quick=False):
     """(header line, name, res, all sentences) for every golden case, in file order."""
     dat = data()
@@ -2249,10 +2351,18 @@ def cmd_check(argv):
             if r[6] is not None and r[5] == r[6]:
                 guards["same-year " + r[4]] = guards.get("same-year " + r[4], 0) + 1
                 print("same-year row %s %s" % (name, r))
+        for (oe, planned, actual) in w.plague_plans:
+            if planned != actual:
+                guards["plague plan != strikes"] = guards.get("plague plan != strikes", 0) + 1
+                print("note: %s plague e%d planned %d dead, struck %d (10.2: a spread target changed by an earlier "
+                      "strike of the same outbreak)" % (name, oe, planned, actual))
+        if name.startswith("syn-") or head.startswith("world"):
+            pres = history_stage(w.pd, inp, conflict=False)
+            guards["18a eras"] = guards.get("18a eras", 0) + check_prefix(c, res, pres, name)
         if name.startswith("syn-") and int(name[4:]) < 3:
             res2 = history_stage(w.pd, inp, extra_draw=True)
             c.eq("%s 14 item 9 draw independence" % name, table_hashes(res2), table_hashes(res))
-        if name == "hist-conflict-42-1024":
+        if name == "hist-conflict-42-1024" and not FLAGS["loss"]:   # the sample of 15.2 is 0.16.0's
             check_example(c, res)
             pres = pp.world_case("hist-peoples-42-1024", 42, 1024, 6000, "all", "normal", inputs)
             c.eq("16.3 item 20: e1-e37 of hist-peoples-42-1024 unchanged with conflict",
@@ -2270,6 +2380,7 @@ def cmd_check(argv):
         c.true("a case holds a war row opened and closed in one year (8.3 item 7, P3-04 6.7 r9)",
                guards.get("same-year war", 0) > 0)
     print("stress reach: %s; refuge %d, shelter %d" % (sorted(stress.items()), guards["refuge"], guards["shelter"]))
+    print("guards: %s" % sorted(guards.items()))
     if not quick and os.path.isdir(inputs) and "--write" in argv:
         with open(GOLDEN, "wb") as f:
             f.write(("\n".join(o) + "\n").encode())
@@ -2353,7 +2464,7 @@ def cmd_check_world(argv):
     if meta.get("schema_version") != "7":
         print("%s: schema version %s, check-world reads 7" % (path, meta.get("schema_version")))
         return 1
-    c.eq("generator_version", meta.get("generator_version"), GENERATOR_VERSION)
+    c.eq("generator_version", meta.get("generator_version"), GENERATOR_VERSION if FLAGS["loss"] else "0.16.0")
     stages = meta["stages"].split(",") if meta["stages"] else []
     p = pchr.params_from_meta(meta)
     inp, chron = inputs_for(dat, conn, p, int(meta["seed"]), int(meta["param.map_size"]))
@@ -2404,6 +2515,10 @@ def cmd_synthetic(argv):
 
 
 def main(argv):
+    # --legacy: every P3-08 rule flag off (the 0.16.0 rules; with 0.16.0 data and names the 0.16.0 worlds)
+    if "--legacy" in argv:
+        argv = [a for a in argv if a != "--legacy"]
+        legacy()
     if not argv:
         print(__doc__)
         return 2

@@ -10,6 +10,7 @@ generation_years = 18
 growth_permille = 18
 density_permille = 800
 site_weights = { fertility = 35, forage = 25, timber = 10, ore = 30, fresh_water = 0 }
+cell_weights = { ore = 0, height = 0 }
 biomes = [
   { biome = "steppe", weight = 400 },
   { biome = "heath", weight = 200 },

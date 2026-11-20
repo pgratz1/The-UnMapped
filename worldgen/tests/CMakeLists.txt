@@ -231,6 +231,7 @@ target_sources(worldgen-tests PRIVATE
     stages_regions_data_test.cpp
     stages_regions_golden_test.cpp
     stages_regions_property_test.cpp
+    stages_regions_names_test.cpp
     inspect_regions_test.cpp
 )
 target_compile_definitions(worldgen-tests PRIVATE
@@ -305,11 +306,15 @@ target_sources(worldgen-tests PRIVATE
     history/history_engine_state_test.cpp
     history/peoples_engineer_test.cpp
     history/conflict_engineer_test.cpp
+    history/p3_08_engineer_test.cpp
     history/relation_bookkeeping_engineer_test.cpp
     history/history_engine_catalogue_test.cpp
+    history/history_engine_render_test.cpp
     history/history_engine_schema_test.cpp
     history/history_engine_report_test.cpp
     history/history_engine_golden_test.cpp
+    history/history_engine_golden_resume_test.cpp
+    history/history_engine_bench_test.cpp
     history/history_engine_property_test.cpp
     history/engine_hardening_test.cpp
 )
@@ -331,6 +336,7 @@ target_sources(worldgen-tests PRIVATE
     history/history_peoples_unit_test.cpp
     history/history_peoples_property_test.cpp
     history/history_peoples_golden_test.cpp
+    history/history_peoples_r6_test.cpp
 )
 target_compile_definitions(worldgen-tests PRIVATE
     UNMAPPED_P3_05_GOLDEN_PATH="${CMAKE_CURRENT_SOURCE_DIR}/golden/p3-05-peoples.txt"
@@ -375,9 +381,11 @@ unmapped_add_doctest_shards(worldgen-tests
     SHARD resources 6 "*stages_resources_*,*inspect_resources_test.cpp"
     SHARD regions 20 "*stages_regions_*,*inspect_regions_test.cpp"
     SHARD history 5 "*history_draw_test.cpp,*history_names_*"
-    SHARD chronology 15 "*history_chronology_*"
-    SHARD engine-worlds 25 "*history_engine_golden_test.cpp"
-    SHARD engine 15 "*history_engine_schedule_test.cpp,*history_engine_writer_test.cpp,*history_engine_state_test.cpp,*history_engine_report_test.cpp,*history_engine_property_test.cpp,*history_engine_catalogue_test.cpp,*history_engine_schema_test.cpp"
+    SHARD chronology 26 "*history_chronology_golden_test.cpp,*history_chronology_test.cpp,*history_chronology_guard_test.cpp"
+    SHARD chronology-property 31 "*history_chronology_property_test.cpp,*history_chronology_schema_test.cpp,*history_chronology_report_test.cpp"
+    SHARD engine-worlds 14 "*history_engine_golden_test.cpp"
+    SHARD engine-worlds-resume 21 "*history_engine_golden_resume_test.cpp"
+    SHARD engine 15 "*history_engine_schedule_test.cpp,*history_engine_writer_test.cpp,*history_engine_state_test.cpp,*history_engine_report_test.cpp,*history_engine_property_test.cpp,*history_engine_catalogue_test.cpp,*history_engine_schema_test.cpp,*history_engine_bench_test.cpp,*history_engine_render_test.cpp"
     SHARD peoples 25 "*history_peoples_*"
     SHARD conflict 25 "*history_conflict_data_test.cpp,*history_conflict_unit_test.cpp,*history_conflict_property_test.cpp"
     SHARD conflict-worlds 25 "*history_conflict_golden_test.cpp"

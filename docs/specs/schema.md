@@ -123,6 +123,7 @@ Versions 6 and 7 are in sections 1 and 2; no schema change is planned. Appending
 | 7 | 2026-11-19 | 6 → 7 with generator 0.14.0 (the engine merge): thirteen tables added, executed fourteenth to twenty-sixth; required `meta` key `history_end_year`; readers refuse version 6; the empty world grows from 18 to 34 pages. Proposals "History: schema versions 6 and 7" | P3-04 9, P3-00 6.1 |
 | 7 | 2026-11-19 | No schema change (generator 0.15.0, the peoples merge): the event catalogue gains kinds 6–19 (section 6); the history tables now hold the rows of the peoples subsystem | P3-05 11, 18.1 |
 | 7 | 2026-11-19 | No schema change (generator 0.16.0, the conflict merge): the event catalogue gains kinds 20–30 (section 6); table `relation` holds rows of kinds `enmity`, `war` and `peace` | P3-06 11, 4.3, 18.5 |
+| 7 | 2026-11-20 | No schema change (generator 0.17.0, the P3-08 change): the event catalogue gains kind 31 `settlement_abandoned_to` (section 6); templates may use the three-word value form `{value?w0\|w1\|w2}` (P3-04 r10 8.4) | P3-08 8, P3-05 r6 11 |
 
 ## 6. Event catalogue
 
@@ -160,8 +161,9 @@ Kinds, roles, value keys and flags are code (`history::compiled_event_catalogue(
 | 28 | `truce` | 1 | 0 | 0 | 1: `parties`, civilization, 2–2 | 1: `years` | P3-06 |
 | 29 | `region_ceded` | 1 | 1 | 0 | 1: `from`, civilization, 1–1; 2: `to`, civilization, 1–1 | — | P3-06 |
 | 30 | `civ_conquered` | 1 | 1 | 0 | 1: `civilization`, civilization, 1–1; 2: `conqueror`, civilization, 1–1 | — | P3-06 |
+| 31 | `settlement_abandoned_to` | 1 | 1 | 1 | 1: `settlement`, settlement, 1–1; 2: `civilization`, civilization, 1–1; 3: `destination`, settlement, 1–1 | 1: `settled`; 2: `lost` | P3-05 r6 |
 
-Kinds 1–5 are P3-04's, 6–19 P3-05's (generator 0.15.0), 20–30 P3-06's (generator 0.16.0, P3-06 11); in kinds 20–30 every count is 1–1 except `parties` 2–2, and every kind is caused.
+Kinds 1–5 are P3-04's, 6–19 P3-05's (generator 0.15.0), 20–30 P3-06's (generator 0.16.0, P3-06 11); in kinds 20–30 every count is 1–1 except `parties` 2–2, and every kind is caused. Kind 31 is P3-05 r6's (generator 0.17.0, the P3-08 change): an abandonment whose survivors reached another settlement; from 0.17.0 kind 16 is written only when none did.
 
 **Relation kinds** (`relation.kind`; text keys, not a schema change): from generator 0.16.0, `enmity` (symmetric, a < b), `war` (asymmetric, a the attacker, b the defender), `peace` (symmetric, a < b), all between civilizations (`a_type` = `b_type` = 3; P3-06 4.3). None exist before 0.16.0. No schema change; `schema_version` stays 7.
 

@@ -14,6 +14,7 @@
 #include <map>
 #include <optional>
 #include <string>
+#include <string_view>
 #include <vector>
 
 #include "p3_04_engine_support.hpp"
@@ -157,7 +158,7 @@ TEST_CASE("P3-04 9.5, 16.1 item 12: a version 6 file is refused: world schema ve
     dbtest::TempDir dir("engine-v6");
     int k = 0;
     for (const char* sql : {"PRAGMA user_version = 6", "UPDATE meta SET value = '6' WHERE key = 'schema_version'"}) {
-        CAPTURE(sql);
+        CAPTURE(std::string_view(sql));
         const std::string path = generated(dir, "w" + std::to_string(k++) + ".db", "none");
         REQUIRE(worldgen::db::testing::execute_on_file(path, sql).ok());
         const auto r = db::WorldReader::open(path);
@@ -180,7 +181,7 @@ TEST_CASE("P3-04 9.4, 9.5: meta.history_end_year in every world kind; refused wh
             CHECK_MESSAGE(rows_of(r, t).empty(), t);
         }
     }
-    // The geography, chronology and full worlds: history_engine_golden_test.cpp (resume refusals) and
+    // The geography, chronology and full worlds: history_engine_golden_resume_test.cpp (resume refusals) and
     // cli_history_test.cpp (--until chronology, the default run).
     // test-pattern world
     {
@@ -192,7 +193,7 @@ TEST_CASE("P3-04 9.4, 9.5: meta.history_end_year in every world kind; refused wh
     }
     int nbad = 0;
     for (const char* bad : {"5999", "06000", "6000 ", ""}) {
-        CAPTURE(bad);
+        CAPTURE(std::string_view(bad));
         const std::string path = generated(dir, "bad" + std::to_string(nbad++) + ".db", "none");
         REQUIRE(worldgen::db::testing::execute_on_file(
                     path, std::string("UPDATE meta SET value = '") + bad + "' WHERE key = 'history_end_year'")

@@ -47,12 +47,16 @@ std::string first_valid(const names_api::Namer& namer, Kind k, std::uint64_t see
 
 TEST_SUITE("history-names-property") {
 
-TEST_CASE("P3-02 9.2 test 8: 2,000 names per shipped culture and kind, seeds 0 and 1: unique, invariant 1") {
+TEST_CASE("P3-02 9.2 test 8, 11.7 item 9: 2,000 names per shipped culture and kind, seeds 0 and 1: unique, invariants 1 and 5") {
+    // r5 (generator 0.17.0): drawn with god_patterns and the shipped filter; no root word is
+    // filtered (invariant 5, by the test's own code of 11.3), every god root parses as one of its
+    // culture's god_patterns, no civilization name is a bare root. A filtered name is reported by
+    // its entity number only (the text could be offensive).
     std::ostringstream report;  // the fallback share, reported once (9.2 test 8)
     for (const std::uint64_t seed : {std::uint64_t{0}, std::uint64_t{1}}) {
         for (const std::string_view cid : names_test::CULTURE_IDS) {
             const Naming n = shipped_naming(cid);
-            const names_api::Namer namer(n);
+            const names_api::Namer namer(n, names_test::shipped_filter());
             for (const Kind k : names_test::KINDS) {
                 CAPTURE(seed);
                 CAPTURE(cid);
@@ -72,6 +76,17 @@ TEST_CASE("P3-02 9.2 test 8: 2,000 names per shipped culture and kind, seeds 0 a
                         break;
                     }
                     numbered_count += numbered ? 1 : 0;
+                    if (names_test::name_root_filtered(n, k, name, names_test::shipped_filter())) {
+                        FAIL_CHECK("invariant 5: the root word of entity " << e << " is filtered");
+                        all_ok = false;
+                        break;
+                    }
+                    if (k == Kind::god && !numbered && !names_test::god_root_parses(n, name)) {
+                        FAIL_CHECK("11.7 item 9: god " << e << " '" << name << "' is not of the god_patterns");
+                    }
+                    if (k == Kind::civilization && name.find(' ') == std::string::npos) {
+                        FAIL_CHECK("11.7 item 9: civilization " << e << " '" << name << "' is a bare root");
+                    }
                 }
                 CHECK(all_ok);
                 CHECK(seen.size() == 2000);

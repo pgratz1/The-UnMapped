@@ -20,6 +20,7 @@
 #include <cstdint>
 #include <set>
 #include <string>
+#include <string_view>
 #include <vector>
 
 #include "worldgen/core/streams.hpp"
@@ -88,7 +89,7 @@ Settings humans_2000() {
 
 TEST_SUITE("history") {
 
-TEST_CASE("P3-05 11, 16.1 item 14: the compiled catalogue appends kinds 6-19 exactly as section 11") {
+TEST_CASE("P3-05 11, 16.1 item 14, 16.1a 17i: the compiled catalogue appends kinds 6-19 and 31 exactly as section 11") {
     using ET = eng::EntityType;
     struct K {
         const char* key;
@@ -116,23 +117,28 @@ TEST_CASE("P3-05 11, 16.1 item 14: the compiled catalogue appends kinds 6-19 exa
          "Plague broke out in {settlement}; {dead} died."},
         {"plague_spread", true, {{"settlement", S}, {"civilization", C}}, {"dead", "population"}, 25,
          "The plague spread to {settlement}; {dead} died."},
-        {"succession_crisis", false, {{"civilization", C}}, {}, 40, "A succession crisis shook {civilization}."},
+        // r6 (0.17.0): the crisis sentence names the capital
+        {"succession_crisis", false, {{"civilization", C}}, {}, 40,
+         "A succession crisis at {@settlement} shook {civilization}."},
         {"civ_seceded", true, {{"civilization", C}, {"from", C}}, {"settlements"}, 70,
          "{civilization} broke away from {from}, taking {settlements} {settlements?settlement|settlements} with it."},
+        // r6: kind 16 only when no survivor reaches another settlement (P3-04 r10's three-word form)
         {"settlement_abandoned", true, {{"settlement", S}, {"civilization", C}}, {"survivors"}, 55,
-         "{settlement} was abandoned; {survivors} {survivors?survivor|survivors} left."},
+         "{settlement} was abandoned; {survivors?no one survived|its one survivor was scattered|its # survivors were "
+         "scattered}."},
         {"capital_moved", true, {{"civilization", C}, {"settlement", S}}, {}, 50,
          "{civilization} moved its seat to {settlement}."},
         {"civ_ended", true, {{"civilization", C}}, {}, 85, "{civilization} came to an end."},
         {"ruin_faded", true, {{"settlement", S}}, {}, 10, "The ruins of {settlement} faded from memory."},
     };
     const eng::EventCatalogue& compiled = eng::compiled();
-    REQUIRE(compiled.kinds.size() == 30U);  // P3-06 11 appends kinds 20-30 at 0.16.0 (P3-04 8.2 r4)
+    // P3-06 11 appends kinds 20-30 at 0.16.0 (P3-04 8.2 r4), P3-05 r6 kind 31 at 0.17.0
+    REQUIRE(compiled.kinds.size() == 31U);
     const eng::EventCatalogue cat = eng::catalogue_of(shipped());
-    REQUIRE(cat.kinds.size() == 30U);
+    REQUIRE(cat.kinds.size() == 31U);
     for (std::size_t i = 0; i < want.size(); ++i) {
         const K& w = want[i];
-        CAPTURE(w.key);
+        CAPTURE(std::string_view(w.key));
         for (const eng::KindDef* k : {&compiled.kinds[i + 5], &cat.kinds[i + 5]}) {
             CHECK(k->id == static_cast<std::int64_t>(i) + 6);
             CHECK(k->key == w.key);
@@ -156,14 +162,39 @@ TEST_CASE("P3-05 11, 16.1 item 14: the compiled catalogue appends kinds 6-19 exa
         CHECK(cat.kinds[i + 5].templ == w.templ);
         CHECK(eng::template_problem(cat.kinds[i + 5], w.templ) == std::nullopt);
     }
+    // 17i: kind 31 settlement_abandoned_to (r6 11): caused, region and settlement use 1, three 1-1 roles
+    for (const eng::KindDef* k : {&compiled.kinds[30], &cat.kinds[30]}) {
+        CHECK(k->id == 31);
+        CHECK(k->key == "settlement_abandoned_to");
+        CHECK(k->caused);
+        CHECK(k->region_use == 1);
+        CHECK(k->settlement_use == 1);
+        REQUIRE(k->roles.size() == 3U);
+        const std::pair<const char*, ET> roles[3] = {{"settlement", S}, {"civilization", C}, {"destination", S}};
+        for (std::size_t r = 0; r < 3; ++r) {
+            CHECK(k->roles[r].seq == static_cast<std::int64_t>(r) + 1);
+            CHECK(k->roles[r].role == roles[r].first);
+            CHECK(k->roles[r].type == roles[r].second);
+            CHECK(k->roles[r].min_count == 1);
+            CHECK(k->roles[r].max_count == 1);
+        }
+        CHECK(k->values == std::vector<std::string>{"settled", "lost"});
+    }
+    const char* t31 = "{settlement} was abandoned; {settled} {settled?survivor|survivors} went to {destination}"
+                      "{lost?|, and one was lost|, and # were lost}.";
+    CHECK(cat.kinds[30].salience == 55);
+    CHECK(cat.kinds[30].templ == t31);  // history.report lists it (data)
+    CHECK(eng::template_problem(cat.kinds[30], t31) == std::nullopt);
     // P3-04's five kinds are unchanged (a shipped kind is never edited, P3-04 8.2).
     CHECK(compiled.kinds[0].key == "awakening");
     CHECK(compiled.kinds[4].key == "flare_up");
 }
 
-TEST_CASE("P3-05 3.3: the twelve hist.peoples streams follow hist.chronology.awakening (51 names from 0.16.0)") {
+TEST_CASE("P3-05 3.3: the twelve hist.peoples streams follow hist.chronology.awakening (52 names from 0.17.0)") {
     const auto names = ppl::registered_streams();
-    REQUIRE(names.size() == 51U);  // P3-06 3.3 appends five hist.conflict names (P0-01 19)
+    // P3-06 3.3 appends five hist.conflict names (P0-01 19); P0-01 amendment 20 (0.17.0) inserts
+    // geo.regions.name after geo.regions.cost
+    REQUIRE(names.size() == 52U);
     std::size_t at = 0;
     for (std::size_t i = 0; i < names.size(); ++i) {
         if (names[i] == "hist.chronology.awakening") at = i;
@@ -231,8 +262,9 @@ TEST_CASE("P3-05 4.2, 5.1, 16.1 item 1: each term alone, floor division, the fit
     full.ore_reach_cells = 200;
     full.walk_cells = 4000;  // rough 0: no upland term for humans (upland -300)
     const std::vector<Case> cases = {
-        // area = 3000 + 1000 x 270 div 1000 = 3270; C = 3270 x 1000 x 250 x 2500 div 10^9 = 2043
-        {"faeries on fen", fen, {{1, 12, 4000}}, "faerie", 4, 1242, 2043},
+        // P3-05 r6 12.3 (0.17.0): fen weight 300 (800 before), so sigma = 1242 - 500 = 742, fit 742;
+        // area = 3000 + 1000 x 270 div 1000 = 3270; C = 3270 x 742 x 250 x 2500 div 10^9 = 1516
+        {"faeries on fen", fen, {{1, 12, 4000}}, "faerie", 4, 742, 1516},
         // dwarves: S = 0, B = 0, U = 800 x 1000 div 1000 = 800; area 4000 x 630 div 1000 = 2520; C = 2520 x 800 x 700 x 2500 div 10^9 = 3528
         {"dwarves on bare rough upland", bare, {}, "dwarf", 3, 800, 3528},
         // elves: heath 5 permille (-200 x 5 = -1000 div 1000 = -1), grassland 0: sigma -1, fit 0, C the floor 400
@@ -241,7 +273,7 @@ TEST_CASE("P3-05 4.2, 5.1, 16.1 item 1: each term alone, floor division, the fit
         {"humans on full farmland", full, {{1, 4, 4000}}, "human", 5, 1300, 10000},
     };
     for (const Case& c : cases) {
-        CAPTURE(c.what);
+        CAPTURE(std::string_view(c.what));
         Geo g = hand_made(64, {c.r});
         g.region_biomes = c.biomes;
         Settings s;

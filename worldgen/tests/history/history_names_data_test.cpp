@@ -9,14 +9,21 @@
 // culture file is replaced by a variant written by this test in the file
 // form of P3-01 4. These tests need P3-01 merged first (P3-02 2: merge
 // order P3-01, then P3-02).
+//
+// From generator 0.17.0 (P3-08, P3-02 r5 11.2 and 11.4): the naming blocks
+// hold god_patterns and the elven House form, kind name_filter is required,
+// and the tests of 11.7 items 1 to 3 are here. They fail until the loader
+// knows the kind and the field.
 
 #include <doctest/doctest.h>
 
 #include <algorithm>
+#include <array>
 #include <cstdint>
 #include <filesystem>
 #include <fstream>
 #include <functional>
+#include <set>
 #include <sstream>
 #include <string>
 #include <string_view>
@@ -86,6 +93,7 @@ std::string culture_toml(std::string_view id, std::string_view race, std::string
     o << "nuclei = " << toml_array(n.nuclei) << "\n";
     o << "codas = " << toml_array(n.codas) << "\n";
     o << "patterns = " << toml_array(n.patterns) << "\n";
+    if (n.god_patterns.has_value()) o << "god_patterns = " << toml_array(*n.god_patterns) << "\n";  // r5 (11.4)
     o << "min_letters = " << n.min_letters << "\n";
     o << "max_letters = " << n.max_letters << "\n";
     o << "forbidden = " << toml_array(n.forbidden) << "\n";
@@ -279,6 +287,185 @@ TEST_CASE("P3-02 3: array bounds of the naming fields") {
     n = shipped_naming("elven");
     n.max_letters = 33;
     CHECK_FALSE(load_with_elven(n).ok);
+}
+
+}  // TEST_SUITE
+
+// --- r5 (P3-02 11.2, 11.4, 11.7 items 1-3; generator 0.17.0) ---------------------------------------
+
+namespace {
+
+// The shipped root in memory with name_filters/ replaced by `files` (name -> text).
+wd::LoadResult<wd::ContentSet> load_with_filters(const std::vector<std::pair<std::string, std::string>>& files) {
+    wd::MemoryDataRoot root = shipped_in_memory();
+    bool replaced = false;
+    for (wd::MemoryDirectory& d : root.directories) {
+        if (d.name != "name_filters") continue;
+        d.entries.clear();
+        for (const auto& [name, text] : files) d.entries.push_back(wd::MemoryEntry{name, text, false});
+        replaced = true;
+    }
+    REQUIRE(replaced);
+    return wd::load_content_from_memory(wd::builtin_kinds(), root);
+}
+
+std::string filter_toml(std::string_view id, const std::vector<std::string>& anywhere,
+                        const std::vector<std::string>& at_start, const std::vector<std::string>& whole) {
+    return "[name_filter." + std::string(id) + "]\nanywhere = " + toml_array(anywhere) + "\nat_start = " +
+           toml_array(at_start) + "\nwhole = " + toml_array(whole) + "\n";
+}
+
+std::string errors_of(const wd::LoadResult<wd::ContentSet>& r) {
+    std::string out;
+    for (const wd::LoadError& e : r.errors) out += e.to_string() + "\n";
+    return out;
+}
+
+void filters_fail(const std::vector<std::pair<std::string, std::string>>& files, std::string_view mention) {
+    const wd::LoadResult<wd::ContentSet> r = load_with_filters(files);
+    const std::string e = errors_of(r);
+    INFO(e);
+    CHECK_FALSE(r.ok());
+    CHECK(r.errors.size() == 1U);
+    CHECK(e.find(std::string(mention)) != std::string::npos);
+}
+
+}  // namespace
+
+TEST_SUITE("history-names-data") {
+
+TEST_CASE("P3-02 11.7 item 1: the shipped name_filters/ loads: four definitions, the effective lists of 11.2") {
+    const wd::LoadResult<wd::ContentSet> r = wd::load_content(wd::builtin_kinds(), data_root());
+    INFO(errors_of(r));
+    REQUIRE(r.ok());
+    const wd::KindContent* kind = r.value->find_kind("name_filter");
+    REQUIRE(kind != nullptr);
+    REQUIRE(kind->definitions.size() == 4U);
+    const std::vector<std::string_view> ids = {"crude", "famous", "slurs", "words"};
+    for (std::size_t i = 0; i < 4; ++i) CHECK(kind->definitions[i].id == ids[i]);
+    // Sizes of 11.2 per definition: anywhere, at_start, whole.
+    const std::vector<std::array<std::size_t, 3>> sizes = {{68, 16, 14}, {0, 0, 101}, {33, 19, 6}, {0, 0, 647}};
+    for (std::size_t i = 0; i < 4; ++i) {
+        CAPTURE(ids[i]);
+        const wd::Record& rec = kind->definitions[i].record;
+        CHECK(rec.get_array("anywhere").size() == sizes[i][0]);
+        CHECK(rec.get_array("at_start").size() == sizes[i][1]);
+        CHECK(rec.get_array("whole").size() == sizes[i][2]);
+    }
+    // The library's effective filter (name_filter_from) is the union of the files, read by the test.
+    const names_api::Filter lib = names_api::filter_from_content(*r.value);
+    const names_api::Filter& mine = names_test::shipped_filter();
+    using Set = std::set<std::string>;
+    CHECK(Set(lib.anywhere.begin(), lib.anywhere.end()) == Set(mine.anywhere.begin(), mine.anywhere.end()));
+    CHECK(Set(lib.at_start.begin(), lib.at_start.end()) == Set(mine.at_start.begin(), mine.at_start.end()));
+    CHECK(Set(lib.whole.begin(), lib.whole.end()) == Set(mine.whole.begin(), mine.whole.end()));
+}
+
+TEST_CASE("P3-02 11.7 item 1: every shipped name_filter list is sorted; the fixture copies are byte-identical") {
+    const std::filesystem::path dir = data_root() / "name_filters";
+    std::vector<std::filesystem::path> files;
+    for (const auto& e : std::filesystem::directory_iterator(dir)) files.push_back(e.path());
+    std::sort(files.begin(), files.end());
+    REQUIRE(files.size() == 4U);
+    for (const auto& f : files) {
+        CAPTURE(f.filename().string());
+        const names_api::Filter one = names_test::read_filter_dir_file(f);
+        for (const std::vector<std::string>* l : {&one.anywhere, &one.at_start, &one.whole}) {
+            CHECK(std::is_sorted(l->begin(), l->end()));
+        }
+        for (const char* fixture : {"worldgen/tests/data/geo", "worldgen/tests/data/geo-small"}) {
+            CAPTURE(fixture);
+            const std::filesystem::path copy =
+                std::filesystem::path(UNMAPPED_TEST_SOURCE_ROOT) / fixture / "name_filters" / f.filename();
+            CHECK(std::filesystem::is_regular_file(copy));
+            CHECK(read_file(copy) == read_file(f));
+        }
+    }
+}
+
+TEST_CASE("P3-02 11.7 item 1: a data root without name_filters/ is a required-kind error") {
+    wd::MemoryDataRoot root = shipped_in_memory();
+    root.directories.erase(std::remove_if(root.directories.begin(), root.directories.end(),
+                                          [](const wd::MemoryDirectory& d) { return d.name == "name_filters"; }),
+                           root.directories.end());
+    const wd::LoadResult<wd::ContentSet> r = wd::load_content_from_memory(wd::builtin_kinds(), root);
+    INFO(errors_of(r));
+    REQUIRE_FALSE(r.ok());
+    bool found = false;
+    for (const wd::LoadError& e : r.errors) {
+        found = found || (e.path == "name_filters" && e.line == 0U &&
+                          e.message.find("required kind 'name_filter'") != std::string::npos);
+    }
+    CHECK(found);
+}
+
+TEST_CASE("P3-02 11.7 item 2: the grammar filter_word and the three checks of 11.2, each once with its message") {
+    // The kind checks of 11.2 are reported at the offending definition (the first entry's, by 11.2's
+    // order), as P3-01's race_order_unique is: 11.2 gives the messages, not the position (integration
+    // reading, 2026-11-20).
+    const std::string desc = "lower-case letters a-z, 2 to 16 of them";
+    for (const std::string bad : {"Ni", "a", "ab1"}) {
+        CAPTURE(bad);
+        filters_fail({{"x.toml", filter_toml("x", {bad}, {}, {})}}, desc);
+    }
+    // 17 letters: outside string(16, filter_word).
+    {
+        const wd::LoadResult<wd::ContentSet> r = load_with_filters({{"x.toml", filter_toml("x", {std::string(17, 'q')}, {}, {})}});
+        INFO(errors_of(r));
+        CHECK_FALSE(r.ok());
+        CHECK(errors_of(r).find("name_filter.x.anywhere[0]") != std::string::npos);
+    }
+    // Two-letter and sixteen-letter entries load.
+    {
+        const wd::LoadResult<wd::ContentSet> r =
+            load_with_filters({{"x.toml", filter_toml("x", {"qq", std::string(16, 'q')}, {}, {})}});
+        INFO(errors_of(r));
+        CHECK(r.ok());
+    }
+    filters_fail({{"x.toml", filter_toml("x", {"qa", "qb", "qa"}, {}, {})}},
+                 "error: check 'name_filter_unique' failed for 'name_filter.x': anywhere[2] 'qa' repeats anywhere[0]");
+    filters_fail({{"a.toml", filter_toml("a", {"qx"}, {}, {})}, {"b.toml", filter_toml("b", {"qx"}, {}, {})}},
+                 "error: check 'name_filter_distinct' failed for 'name_filter.b': anywhere 'qx' is in 'a' and 'b'");
+    filters_fail({{"a.toml", filter_toml("a", {"qb"}, {"zqb"}, {})}},
+                 "error: check 'name_filter_not_redundant' failed for 'name_filter.a': "
+                 "'a' at_start 'zqb' is already rejected by anywhere 'qb' of 'a'");
+    filters_fail({{"a.toml", filter_toml("a", {}, {}, {"qdx"})}, {"b.toml", filter_toml("b", {}, {"qd"}, {})}},
+                 "error: check 'name_filter_not_redundant' failed for 'name_filter.a': "
+                 "'a' whole 'qdx' is already rejected by at_start 'qd' of 'b'");
+    // All three lists empty: loads, and the filter rejects nothing.
+    const wd::LoadResult<wd::ContentSet> r = load_with_filters({{"x.toml", filter_toml("x", {}, {}, {})}});
+    INFO(errors_of(r));
+    CHECK(r.ok());
+}
+
+TEST_CASE("P3-02 11.7 item 3: naming_realm_forms and god_patterns' grammar, bounds and presence") {
+    Naming n = shipped_naming("elven");
+    n.civilization_forms = {"{root}"};
+    check_fails(n, check_text("naming_realm_forms", "naming.civilization_forms[0] must hold a word besides {root}"));
+    n = shipped_naming("elven");
+    n.civilization_forms = {"The Court of {root}", "{root}ia"};
+    check_fails(n, check_text("naming_realm_forms", "naming.civilization_forms[1] must hold a word besides {root}"));
+    n = shipped_naming("elven");
+    n.god_patterns.reset();  // the field missing
+    {
+        const Loaded l = load_with_elven(n);
+        INFO(l.errors);
+        CHECK_FALSE(l.ok);
+        CHECK(l.errors.find("god_patterns") != std::string::npos);
+    }
+    n = shipped_naming("elven");
+    n.god_patterns = std::vector<std::string>{};  // array(..., 1, 16)
+    CHECK_FALSE(load_with_elven(n).ok);
+    n.god_patterns = std::vector<std::string>(17, "ON");
+    CHECK_FALSE(load_with_elven(n).ok);
+    n.god_patterns = std::vector<std::string>(16, "ON");
+    CHECK(load_with_elven(n).ok);
+    for (const std::string bad : {"OC", "'ON", "ONX"}) {
+        CAPTURE(bad);
+        n = shipped_naming("elven");
+        (*n.god_patterns)[0] = bad;
+        check_fails(n, PATTERN);
+    }
 }
 
 }  // TEST_SUITE

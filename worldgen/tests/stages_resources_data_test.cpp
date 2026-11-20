@@ -166,7 +166,7 @@ TEST_CASE("P1-05 4.2, 10.1 test 4: each ordered pair, equal and reversed, fails 
     };
     auto text = [](const Pair& p, const char* v) { return p.is_int ? std::string(v) : "\"" + std::string(v) + "\""; };
     for (const Pair& p : pairs) {
-        CAPTURE(p.check);
+        CAPTURE(std::string_view(p.check));
         const std::string message = std::string(p.lo) + " must be below " + p.hi;
         // a < b: loads.
         CHECK(load_tuning({{p.lo, text(p, p.a)}, {p.hi, text(p, p.b)}}).ok());
@@ -324,7 +324,7 @@ TEST_CASE("P1-05 4.1, 4.2, P1-00 6.4: the shipped and fixture files hold the dat
     const resource_api::Load want = load_defs({});
     REQUIRE(want.ok());
     for (const char* base : {"game/data", "worldgen/tests/data/geo", "worldgen/tests/data/geo-small"}) {
-        CAPTURE(base);
+        CAPTURE(std::string_view(base));
         const std::string tuning_text = read_text(root / base / "worldgen" / "resources.toml");
         std::istringstream lines{std::string(resource_data::TUNING_TOML)};
         std::string line;

@@ -10,6 +10,7 @@ generation_years = 70
 growth_permille = 5
 density_permille = 700
 site_weights = { fertility = 10, forage = 10, timber = 10, ore = 60, fresh_water = 10 }
+cell_weights = { ore = 400, height = 600 }
 biomes = [
   { biome = "alpine", weight = 300 },
   { biome = "highland_moor", weight = 300 },

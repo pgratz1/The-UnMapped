@@ -435,9 +435,11 @@ inline std::vector<ReportEntry> shipped_report() {
         {"awakening", 100, "{creator} awakened the {race:plural} in {@region}."},
         {"civ_founded", 80, "The {race:plural} founded {civilization} in {@region}."},
         {"settlement_founded", 40, "{founder} founded {settlement} in {@region}."},
+        // P3-04 r10 4.2 (generator 0.17.0): the three-word form for generations.
         {"quiet_era", 20,
-         "{civilization} passed {years} quiet {years?year|years} ({generations} {generations?generation|generations}), "
-         "from {@year} to {@end_year}."},
+         "{civilization} passed {years} quiet {years?year|years}, from {@year} to {@end_year}"
+         "{generations?, under one generation of rulers|, in which one new generation of rulers came to power"
+         "|, in which # new generations of rulers came to power}."},
         {"flare_up", 50, "In {@year} tensions flared into {years} {years?year|years} of upheaval."},
     };
 }
@@ -606,6 +608,15 @@ inline eng::HistoryInputs inputs_for(const std::vector<std::int64_t>& starts, st
     in.habitability_layer = wat;
     in.river_layer = wat;
     in.flow_dir_layer = wat;
+    // P3-05 r6 3.2 (P3-08, generator 0.17.0): elevation (i16), ore, walk_area,
+    // all zero.
+    in.elevation_layer.width = wat.width;
+    in.elevation_layer.height = wat.height;
+    in.elevation_layer.values = std::vector<std::int16_t>(static_cast<std::size_t>(wat.cell_count()), 0);
+    in.ore_layer = wat;
+    in.walk_area_layer.width = wat.width;  // u16, its catalogue type (P3-05 r7 16.0a)
+    in.walk_area_layer.height = wat.height;
+    in.walk_area_layer.values = std::vector<std::uint16_t>(static_cast<std::size_t>(wat.cell_count()), 0);
     return in;
 }
 

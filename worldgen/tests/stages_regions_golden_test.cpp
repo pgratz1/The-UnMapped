@@ -78,6 +78,13 @@ std::vector<std::pair<std::string, std::string>> items_of(const CaseInputs& ci, 
     out.emplace_back("walk_area", u16_hash(g, in.walk_area));
     out.emplace_back("passes", passes_hash(ci.passes, g));
     const Own own = own_regions(in, ci.passes, v, c.seed);
+    // r3: the test's own RG11 (p1_06_regions_names.hpp, written from the
+    // spec) agrees with the Python reference's golden lines, whatever the
+    // stage does (a cross-check of the two independent implementations).
+    CHECK_MESSAGE(region_table_hash(own.out.regions) == c.get("table_region"), "own table_region of " << c.name);
+    CHECK_MESSAGE(names_line(own.out.regions) == c.get("names"), "own names of " << c.name);
+    CHECK_MESSAGE(attempts_line(own.out.regions, own.name_how) == c.get("name_attempts"),
+                  "own name_attempts of " << c.name);
     // RG2: G7 with k = 1 through the shared seam.
     const std::vector<std::int64_t> hand = biome_api::hand(g, own.surface, in.water, in.river, in.flow_dir, 1);
     CHECK(hand == own.hand);
@@ -168,6 +175,10 @@ std::vector<std::pair<std::string, std::string>> items_of(const CaseInputs& ci, 
         std::replace(val.begin(), val.end(), ' ', '_');
         out.emplace_back(k, val);
     }
+    // r3 (10.5): the stage's names; how each was named by the test's own
+    // RG11 (the stage does not report its attempts).
+    out.emplace_back("names", names_line(o.regions));
+    out.emplace_back("name_attempts", attempts_line(own.out.regions, own.name_how));
     return out;
 }
 
@@ -311,7 +322,7 @@ TEST_CASE("P1-06 golden: the default cases reach every branch of RG5 to RG12") {
     // N >= 512 cases and the RG6 fixture test reach) is reached below 512.
     for (const char* k : {"greedy", "rejected", "bank", "merges", "central", "numbered", "crossings", "lake_cells",
                           "border_river_cells", "corner"}) {
-        CAPTURE(k);
+        CAPTURE(std::string_view(k));
         CHECK(total[k] > 0);
     }
     std::map<std::string, std::int64_t> large;
@@ -355,7 +366,7 @@ TEST_CASE("P1-06 9: the report example of 512 seed 0 and 1024 seed 0 (golden val
 
 TEST_CASE("P1-06 10.3, D10: 1, 2, 5 and 256 threads give identical output (N = 128; designed fixture)") {
     for (const char* name : {"shipped-128-s42-t", "small-128-s2-t", "designed-1-passes"}) {
-        CAPTURE(name);
+        CAPTURE(std::string_view(name));
         const GoldenCase* c = find_case(name);
         REQUIRE(c != nullptr);
         const CaseInputs ci = case_inputs(*c);
@@ -514,7 +525,9 @@ TEST_CASE("P1-06 10.1 tests 2, 3: RG6 adds the mainland's best site, then a rive
     CHECK(o.borders.empty());
     CHECK(o.regions[0].name == "West Downs");
     CHECK(o.regions[1].name == "East Isle");
-    CHECK(o.regions[2].name == "East Isle II");
+    // r3: the smaller `East Isle` draws a name of land `isle` (before r3
+    // `East Isle II`); the reference's rg6_fixture gives the same.
+    CHECK(o.regions[2].name == "Adderlaw Rock");
     CHECK(report_values(o.regions, o.borders)[1].second == "0.00 0.00 0.02");
     CHECK(own_regions(in, {}, values(RG6_TUNING), 0).out == o);
 }
@@ -549,7 +562,8 @@ TEST_CASE("P1-06 3.2, RG6, RG10 (ruling): a one-cell lake islet is a region with
     for (const auto& x : o.regions) {
         names.push_back(x.name);
     }
-    CHECK(names == std::vector<std::string>{"West Downs", "East Isle", "East Isle II", "East Isle III"});
+    // r3 (the reference's lake-only fixture; before r3 `East Isle II`, `East Isle III`).
+    CHECK(names == std::vector<std::string>{"West Downs", "The Sable Isle", "East Isle", "Woemere"});
     CHECK(own_regions(in, {}, values(RG6_TUNING), 0).out == o);
 }
 
@@ -859,7 +873,7 @@ TEST_CASE("P1-06 2, 3, RG14: the stage entry reads the thirteen layers and table
     REQUIRE(db.ok());
     CHECK(db.rows("PRAGMA user_version") == std::vector<std::vector<std::string>>{{"7"}});
     for (const char* table : {"region", "region_border", "region_biome"}) {
-        CAPTURE(table);
+        CAPTURE(std::string_view(table));
         const auto rows = db.rows(std::string("SELECT count(*) FROM ") + table);
         CHECK(rows[0][0] != "0");
     }
@@ -938,7 +952,7 @@ TEST_CASE("P0-02 amendment 17, 10.1 test 6: --until none: three empty region tab
     CHECK(db.rows("PRAGMA user_version") == std::vector<std::vector<std::string>>{{"7"}});
     CHECK(db.rows("SELECT value FROM meta WHERE key = 'schema_version'") == std::vector<std::vector<std::string>>{{"7"}});
     for (const char* table : {"region", "region_border", "region_biome"}) {
-        CAPTURE(table);
+        CAPTURE(std::string_view(table));
         CHECK(db.rows(std::string("SELECT count(*) FROM ") + table) == std::vector<std::vector<std::string>>{{"0"}});
     }
     // The three statements of 3.1, byte for byte, after climate's.
@@ -972,7 +986,7 @@ TEST_CASE("P0-02 amendment 17, 10.1 test 6: --until none: three empty region tab
 TEST_CASE("P0-02 amendment 17, 10.1 test 6: a version 4 file is refused: world schema version 4, this build reads 7") {
     dbtest::TempDir dir("regions-schema4");
     for (const char* sql : {"PRAGMA user_version = 4", "UPDATE meta SET value = '4' WHERE key = 'schema_version'"}) {
-        CAPTURE(sql);
+        CAPTURE(std::string_view(sql));
         const std::string path = dir.file(std::string("w") + (sql[0] == 'P' ? "1" : "2") + ".db");
         REQUIRE(worldgen::generate_world(params_for(1, 512, std::string("none")), content(), path,
                                          worldgen::db::Overwrite::refuse)

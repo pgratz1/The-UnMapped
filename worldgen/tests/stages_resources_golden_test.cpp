@@ -783,7 +783,7 @@ TEST_CASE("P1-05 3, 10.3, P1-00 X1 (slow): generate at 512, seed 0: ids 1 to 18,
     };
     for (const char* name : {"elevation", "water", "water_depth", "flow_dir", "river", "rainfall", "biome",
                              "fertility", "ore", "timber", "fresh_water", "forage", "habitability", "walk_area"}) {
-        CAPTURE(name);
+        CAPTURE(std::string_view(name));
         CHECK(hash_of(name) == c->get(name));
     }
     // The input hashes of the resources golden case are those of the biome

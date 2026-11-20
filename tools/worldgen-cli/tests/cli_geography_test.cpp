@@ -85,7 +85,7 @@ TEST_CASE("cli 10.2: render --layer under auto picks the registered palette") {
     for (const Case& c : {Case{"elevation", "hypsometric"}, Case{"water", "water"}, Case{"flow_dir", "direction"},
                           Case{"flow_accum", "log2"}, Case{"river", "river"}, Case{"lake", "ids"},
                           Case{"coast_dist", "signed"}, Case{"water_depth", "gray"}}) {
-        CAPTURE(c.layer);
+        CAPTURE(std::string_view(c.layer));
         // Default output path and the default palette, auto.
         const ProcessResult r = render(sb, world, {"--layer", c.layer});
         INFO("stderr: ", r.err);
@@ -130,7 +130,7 @@ TEST_CASE("cli appendix C 1: auto falls back to gray when the registered palette
     layers.push_back({"river", p100::grid<std::uint8_t>(3, 1, {0, 16, 2}), Codec::delta_varint});
     const fs::path world = world_of(sb, "odd.db", layers);
     for (const char* layer : {"elevation", "river"}) {
-        CAPTURE(layer);
+        CAPTURE(std::string_view(layer));
         const fs::path a = sb.file(std::string(layer) + ".auto.png");
         const fs::path g = sb.file(std::string(layer) + ".gray.png");
         REQUIRE(render(sb, world, {"--layer", layer, "--out", u8(a)}).exit_code == EXIT_OK);
@@ -151,8 +151,8 @@ TEST_CASE("cli appendix C 1: a named palette that does not suit the layer is a u
                           Case{"elevation", "direction", "u8"}, Case{"elevation", "river", "u8"},
                           Case{"elevation", "log2", "unsigned"}, Case{"elevation", "ids", "unsigned"},
                           Case{"flow_accum", "signed", "signed"}, Case{"lake", "water", "u8"}}) {
-        CAPTURE(c.layer);
-        CAPTURE(c.palette);
+        CAPTURE(std::string_view(c.layer));
+        CAPTURE(std::string_view(c.palette));
         const ProcessResult r = render(sb, world, {"--layer", c.layer, "--palette", c.palette});
         CHECK(r.exit_code == EXIT_USAGE);
         CHECK(r.out.empty());
@@ -241,7 +241,7 @@ TEST_CASE("cli appendix C 4: composite and option errors") {
     }
     SUBCASE("--palette with --composite") {
         for (const char* p : {"auto", "gray", "hypsometric"}) {
-            CAPTURE(p);
+            CAPTURE(std::string_view(p));
             const ProcessResult r = render(sb, world, {"--composite", "map", "--palette", p});
             CHECK(r.exit_code == EXIT_USAGE);
             CHECK(r.out.empty());
@@ -279,7 +279,7 @@ TEST_CASE("cli appendix C 4: composite and option errors") {
         };
         for (const Case& k : {Case{"a.db", &a, "elevation"}, Case{"b.db", &b, "water"}, Case{"c.db", &c, "river"},
                               Case{"d.db", &d, "water"}}) {
-            CAPTURE(k.file);
+            CAPTURE(std::string_view(k.file));
             const fs::path w = world_of(sb, k.file, *k.layers);
             const ProcessResult r = render(sb, w, {"--composite", "map"});
             CHECK(r.exit_code == EXIT_INPUT);
@@ -396,7 +396,7 @@ TEST_CASE("cli: report text and render buffers do not depend on the layers' code
     CHECK(without_codec(a.out) == without_codec(b.out));
     for (const char* layer : {"elevation", "water", "water_depth", "flow_dir", "flow_accum", "river", "lake",
                               "coast_dist"}) {
-        CAPTURE(layer);
+        CAPTURE(std::string_view(layer));
         REQUIRE(render(sb, raw, {"--layer", layer}).exit_code == EXIT_OK);
         REQUIRE(render(sb, varint, {"--layer", layer}).exit_code == EXIT_OK);
         CHECK(read_bytes(sb.out_dir() / (std::string("raw.") + layer + ".png")) ==

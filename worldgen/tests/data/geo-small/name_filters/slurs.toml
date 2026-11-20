@@ -1,0 +1,27 @@
+# Name filter: slurs (spec docs/specs/p3-02-names.md, revision r5, section 11;
+# not yet shipped: the loader ignores this directory until kind `name_filter`
+# is registered). Fragments of ethnic, racial, religious, homophobic and
+# disability slurs and their close spellings, kept as short as matching
+# allows. A generated name is redrawn when one of its root words (the words
+# that hold letters of the drawn root, split at ' and -):
+#   anywhere: contains the fragment;
+#   at_start: starts with it (fragments harmless inside longer words);
+#   whole:    is exactly it.
+# Lower-case a-z only, 2 to 16 letters; keep each list sorted, no duplicates.
+
+[name_filter.slurs]
+anywhere = [
+  "chink", "coolie", "darkie", "darky", "fagg", "golliw", "gringo", "honkie",
+  "hymie", "igger", "injun", "jigab", "jigg", "kaffir", "kafir", "kike",
+  "kyke", "lesbo", "negr", "nig", "nyg", "pickan", "pikey", "polack",
+  "raghead", "redskin", "retard", "shemale", "spast", "spick", "squaw",
+  "trann", "wetback",
+]
+at_start = [
+  "boong", "coon", "crip", "dago", "dyke", "fag", "gook", "gyp", "heeb",
+  "homo", "kraut", "mong", "neeg", "paki", "poof", "spaz", "spic", "wog",
+  "wop",
+]
+whole = [
+  "abo", "gimp", "jap", "spas", "tard", "yid",
+]

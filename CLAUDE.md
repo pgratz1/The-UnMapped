@@ -134,7 +134,7 @@ The build tree is `%LOCALAPPDATA%\the-unmapped\build\<source dir name>\<preset>\
 
 | CTest entry | What it runs |
 | --- | --- |
-| `worldgen-tests-elevation-golden`, `-elevation`, `-hydrology`, `-climate`, `-biomes`, `-biomes-inspect`, `-resources`, `-regions`, `-history`, `-chronology`, `-engine`, `-engine-worlds`, `-peoples`, `-conflict`, `-conflict-worlds` | `worldgen-tests` on that stage's test files (`-history`: the keyed draws and names tests under `worldgen/tests/history/`) |
+| `worldgen-tests-elevation-golden`, `-elevation`, `-hydrology`, `-climate`, `-biomes`, `-biomes-inspect`, `-resources`, `-regions`, `-history`, `-chronology`, `-chronology-property`, `-engine`, `-engine-worlds`, `-engine-worlds-resume`, `-peoples`, `-conflict`, `-conflict-worlds` | `worldgen-tests` on that stage's test files (`-history`: the keyed draws and names tests under `worldgen/tests/history/`; `-chronology`: the golden, unit and guard files, `-chronology-property`: the property, schema and report files; `-engine-worlds`: the 512 world case and threads, `-engine-worlds-resume`: R1, resume and, in the slow suite, the 1024 cases; `-engine` also holds the skipped suite `engine-bench`) |
 | `worldgen-tests-other` | `worldgen-tests` on every file no group names (core, data, database, geo, pipeline, inspection; a new test file lands here until it is given a group) |
 | `worldgen-cli-tests-hydrology-elevation`, `-passes-climate`, `-biomes`, `-resources-generate`, `-regions`, `-history-settings`, `-chronology`, `-engine`, `-conflict` | `worldgen-cli-tests` on those files |
 | `worldgen-cli-tests-other` | `worldgen-cli-tests` on every other file |

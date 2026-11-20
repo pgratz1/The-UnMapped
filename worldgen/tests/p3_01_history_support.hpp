@@ -58,10 +58,15 @@ inline wd::MemoryDirectory directory_from_disk(const std::filesystem::path& root
     return d;
 }
 
-// biomes/ and worldgen/ of the shipped game/data, read once per process.
+// biomes/ and worldgen/ of the shipped game/data, read once per process;
+// from generator 0.17.0 (P3-08) also the required kinds name_filter
+// (P3-02 r5 11.2) and placename (P1-06 r3 4.1), whose shipped files are
+// normative and committed.
 inline const std::vector<wd::MemoryDirectory>& geography_directories() {
     static const std::vector<wd::MemoryDirectory> dirs = {
         directory_from_disk(source_root() / "game" / "data", "biomes"),
+        directory_from_disk(source_root() / "game" / "data", "name_filters"),
+        directory_from_disk(source_root() / "game" / "data", "placenames"),
         directory_from_disk(source_root() / "game" / "data", "worldgen"),
     };
     return dirs;
