@@ -15620,7 +15620,7 @@ stress-7 table event_participant 95ec27e06a2d322f4577cae58aa8aae9b8f2cf682a02cc2
 stress-7 table event_value a98a1fc194237379a6bc9cdc53c1792034e941c74e488637a2868b1e93c34ec8
 stress-7 table phase 0bcf59980f96de1172ae4b66799343048680dc919ae6b0e785c270107e0c3ce0
 stress-7 table region_control 74bb9e7e427675739796c287387dcaccf568a9b199af416d3277d79b8d6e4789
-stress-7 table relation e7b2119bd6d7facc88dbc66d72300880ff8e46f571eaaf425b622a1c2a5419ea
+stress-7 table relation e5798d657354cd200916d51a40b6796454979ca6c5806b26d1d2ad8dee6069ae
 stress-7 table settlement e717bb22e20603cdb0d49562ad419d5e81f2a876b2394dbb6e607a99c96b5abe
 stress-7 table settlement_census 1c482b0fcdadc696fc72be522c1dfeebee97d60d4f2f462794673bc623d1f776
 stress-7 report end_year = 6000
@@ -15667,7 +15667,7 @@ stress-7 report settlements = 39
 stress-7 report settlements_standing = 11
 stress-7 report regions_held = 7
 stress-7 report census_rows = 1572
-stress-7 report relations = 981
+stress-7 report relations = 982
 stress-7 report population = 9052
 stress-7 report population_elf = 94
 stress-7 report population_goblin = 5249
@@ -15691,7 +15691,7 @@ stress-7 stats civ_settlements_max = 4
 stress-7 stats settlements_colonies = 26
 stress-7 stats civilizations_seceded = 48
 stress-7 stats relations_enmity = 96
-stress-7 stats relations_peace = 407
+stress-7 stats relations_peace = 408
 stress-7 stats war_years_total = 4251
 stress-7 stats war_years_max = 25
 stress-7 stats civilizations_conquered = 54
@@ -16708,7 +16708,7 @@ stress-12 table event_participant b9eb69ceba55b3544a275c5df10925a98c3aa6d7d5796e
 stress-12 table event_value cf78ad42ed79d654c772d9eb157795a119478dffd9c4f2b2fad90f54e6ed949a
 stress-12 table phase 9b2f7cada7bd9e9eef720b305b56313ff719908293f62a8b5054c04cb5abda2e
 stress-12 table region_control 69f657c93eb0d9d4e2f0a0bd3c715cde12a569064be8c26c7799e2d532fa5aeb
-stress-12 table relation 06260b0c3ec0b9dfa7ea5f223f9a1f70953123c250c6e221df852c2e66643b05
+stress-12 table relation ab7c8f0d3272e587cca74db5271868946167f7c53be1d3a500f0cba0fafae840
 stress-12 table settlement f36d14b6a9ba40948636eb218bdc6262d0199547c7a6c99696df4c777af9caa3
 stress-12 table settlement_census 22eead233601bc7e213dfdd4ac041ec1277c661bbc669c4b937b42bca6788c83
 stress-12 report end_year = 2000
@@ -16755,7 +16755,7 @@ stress-12 report settlements = 26
 stress-12 report settlements_standing = 14
 stress-12 report regions_held = 5
 stress-12 report census_rows = 543
-stress-12 report relations = 91
+stress-12 report relations = 92
 stress-12 report population = 25443
 stress-12 report population_elf = 0
 stress-12 report population_goblin = 24273
@@ -16779,7 +16779,7 @@ stress-12 stats civ_settlements_max = 8
 stress-12 stats settlements_colonies = 21
 stress-12 stats civilizations_seceded = 7
 stress-12 stats relations_enmity = 0
-stress-12 stats relations_peace = 39
+stress-12 stats relations_peace = 40
 stress-12 stats war_years_total = 359
 stress-12 stats war_years_max = 17
 stress-12 stats civilizations_conquered = 8
@@ -16917,7 +16917,7 @@ stress-13 table event_participant 027cc9c42aeab5680a46d56a1a3eaa2448775bb5565a31
 stress-13 table event_value a4625ed88649ef21dfe38f2c461a60a79476ea6c313a9d3fbe22b24c13654b40
 stress-13 table phase 4cd365202d740b56cb3c3d90c67d16430ad0b18980d8432fa27a675c3a48110f
 stress-13 table region_control d139a9c3169c50ca09a9d0ad9ba3c9a23977137963e61af389579b0975cb3f07
-stress-13 table relation 53c5ae3032e8291de92b1702bbf1f15129a4d9fd3b89ee8210408f60e165f503
+stress-13 table relation 0156c18e3183507f7acb6da35d9c15d429a0986cfec7f31cb46c243fafa42730
 stress-13 table settlement e34623287020743bd6a95d80367036be41caeb858822244a5162ea5ffb9a5917
 stress-13 table settlement_census 9018ecdb31116bda4168decd6ebddeb5acf7dacbe8595e54fd8ef71f4a3d9396
 stress-13 report end_year = 6000
@@ -16964,7 +16964,7 @@ stress-13 report settlements = 40
 stress-13 report settlements_standing = 11
 stress-13 report regions_held = 5
 stress-13 report census_rows = 1168
-stress-13 report relations = 173
+stress-13 report relations = 174
 stress-13 report population = 10335
 stress-13 report population_elf = 0
 stress-13 report population_goblin = 7754
@@ -16997,7 +16997,7 @@ stress-13 stats settlements_captured = 19
 stress-13 stats regions_conquered = 30
 stress-13 stats races_alive = 3
 stress-13 stats wars_attacker_elf = 0
-stress-13 stats wars_attacker_goblin = 99
+stress-13 stats wars_attacker_goblin = 100
 stress-13 stats wars_attacker_dwarf = 0
 stress-13 stats wars_attacker_faerie = 0
 stress-13 stats wars_attacker_human = 5
@@ -18075,7 +18075,7 @@ norefuge-13 table event_participant d210b6572d8e5fae5c8f192538b95c5eb014c69d8614
 norefuge-13 table event_value eb6b0696f69bb4fc3cbd8eeeff7e2b00c62a65d92f327181e537439bdacd4bc8
 norefuge-13 table phase 24a96241ac0fc132c16d64de10f4fc22bab3c109ab4ce0aa16c532eede2e15e3
 norefuge-13 table region_control f1656e5c0eca07ab431d29cab69d26435ea646b6bc92e4a653ab237433ce3bbc
-norefuge-13 table relation 8624069b805e7da4b65d1579388cbd465f6ef0a5d5425988c923c287ca35692c
+norefuge-13 table relation f6c59af9f367f890ef4fd44bc7e42d8b2e40afde18edbe15bb7dcac7e3504bda
 norefuge-13 table settlement cec741861ecf4250f3a85b65bb39adf7317c362eca1a7b08139d274761c0d56d
 norefuge-13 table settlement_census 112652c95899901d9f52e2ec40edf071cb385c997df2dd192b2ee8e35367a13d
 norefuge-13 report end_year = 6000
@@ -18122,7 +18122,7 @@ norefuge-13 report settlements = 35
 norefuge-13 report settlements_standing = 11
 norefuge-13 report regions_held = 5
 norefuge-13 report census_rows = 948
-norefuge-13 report relations = 134
+norefuge-13 report relations = 135
 norefuge-13 report population = 11072
 norefuge-13 report population_elf = 0
 norefuge-13 report population_goblin = 8182
@@ -18146,7 +18146,7 @@ norefuge-13 stats civ_settlements_max = 3
 norefuge-13 stats settlements_colonies = 26
 norefuge-13 stats civilizations_seceded = 38
 norefuge-13 stats relations_enmity = 0
-norefuge-13 stats relations_peace = 39
+norefuge-13 stats relations_peace = 40
 norefuge-13 stats war_years_total = 554
 norefuge-13 stats war_years_max = 16
 norefuge-13 stats civilizations_conquered = 41
