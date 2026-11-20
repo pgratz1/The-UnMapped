@@ -701,3 +701,52 @@ step the phase-end census (6.7 item 4) uses the step's Q5 decision, so a
 quiet row closed by a flare-up ends at that step.
 
 Never regenerate the golden file to make a C++ test pass.
+
+## P3-05 peoples and P3-06 expansion and conflict (generator 0.16.0)
+
+`p3_peoples_reference.py` (P3-05) and `p3_conflict_reference.py` (P3-06) are
+independent references written from their specs and the P3-04 seam alone.
+The conflict reference extends the peoples one: it runs the whole 0.16.0
+history (peoples, then conflict in T2, T6 and Q4; conflict the one tension
+source, asked by the engine in Q5 between Q4 and Q6) and writes every row of
+the thirteen tables, `relation` included (P3-04 6.7 item 2, net change per
+bookkeeping). It reproduces the sample of P3-06 15.2 (seed 42 at 1024: 1030
+events, the five flare-ups and their triggers, the 38 wars, the end state,
+the sixty summary lines and the full-level excerpt, compared with the spec
+text in `check`).
+
+```
+python3 -B worldgen/tests/reference/p3_conflict_reference.py check [--inputs DIR] [--quick] [--write]
+python3 -B worldgen/tests/reference/p3_conflict_reference.py golden [PATH|-] [--inputs DIR]
+python3 -B worldgen/tests/reference/p3_conflict_reference.py world DB [--data ROOT] [--span E] [--races R] [--detail D] [--civs C] [--intensity I]
+python3 -B worldgen/tests/reference/p3_conflict_reference.py check-world DB [--data ROOT]
+python3 -B worldgen/tests/reference/p3_conflict_reference.py synthetic SEED [--stress]
+python3 -B worldgen/tests/reference/p3_conflict_reference.py gaps
+```
+
+`golden` writes `worldgen/tests/golden/p3-06-conflict.txt`: the eight
+golden worlds of P3-06 16.3 plus two 512 cases with `--event-intensity
+turbulent` and `--civs-per-race 4`, sixteen synthetic geographies (P3-05's
+`make_synthetic`), twelve stress cases (a conflict tuning that reaches every
+kind 20-30, flare-ups, battles at passes, `last_refuge` and the shelter) and
+three `norefuge` cases (the stress tuning without the guards: a race dies
+out). World cases read geography from `--inputs` (default
+`~/.cache/the-unmapped/out/p3-06-tests/inputs/<case>.db`, any world up to
+regions or chronology; `example-42-1024.db` is the input of
+`hist-conflict-42-1024`, `geo-seed-42-512.db` of the two settings cases).
+`check` runs the hand-made units (the worked example W1 of 16.1, fronts,
+defence, decay, tension, odds, casualties, the 16.4 tuning messages), the
+invariants of 14 and P3-05's (as amended by P3-06 18.1) and the hard bounds
+on every case, draw independence, the peoples-only configuration against
+the P3-05 reference, and the sample of 15.2; full `check` takes about
+5 minutes on a quiet machine, `--quick` under 2. `check-world` is for the
+validation sweep on 0.16.0 worlds.
+
+Since 0.16.0 `p3-05-peoples.txt` holds the peoples-only configuration
+(run_engine with peoples alone) and `p3-04-engine.txt` the stub
+configuration, both on the catalogue of 30 kinds; `p3_data_reference.py`
+knows `history.conflict`, `prowess_permille` and goblin aggression 600, and
+stands the spec listings in for data roots older than 0.16.0. The readings
+taken where the spec is open are printed by `gaps`.
+
+Never regenerate the golden files to make a C++ test pass.

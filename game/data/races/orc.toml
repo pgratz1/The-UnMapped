@@ -25,5 +25,6 @@ upland = 100
 coast = -100
 expansion = 600
 aggression = 900
+prowess_permille = 1300
 settlement_kinds = ["hamlet", "village", "town", "fortress"]
 culture = "orcish"

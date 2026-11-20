@@ -101,8 +101,14 @@ inline constexpr std::string_view hist_peoples_plague_spread = "hist.peoples.pla
 inline constexpr std::string_view hist_peoples_abandon = "hist.peoples.abandon";
 inline constexpr std::string_view hist_peoples_crisis = "hist.peoples.crisis";
 inline constexpr std::string_view hist_peoples_split = "hist.peoples.split";
+// P3-06 3.3: the conflict streams (P0-01 section 19).
+inline constexpr std::string_view hist_conflict_declare = "hist.conflict.declare";
+inline constexpr std::string_view hist_conflict_battle = "hist.conflict.battle";
+inline constexpr std::string_view hist_conflict_battle_win = "hist.conflict.battle_win";
+inline constexpr std::string_view hist_conflict_siege = "hist.conflict.siege";
+inline constexpr std::string_view hist_conflict_sack = "hist.conflict.sack";
 // Every registered name, in registration order.
-inline constexpr std::array<std::string_view, 46> all_stream_names = {
+inline constexpr std::array<std::string_view, 51> all_stream_names = {
     test_hash,
     test_noise,
     test_wide,
@@ -149,6 +155,11 @@ inline constexpr std::array<std::string_view, 46> all_stream_names = {
     hist_peoples_abandon,
     hist_peoples_crisis,
     hist_peoples_split,
+    hist_conflict_declare,
+    hist_conflict_battle,
+    hist_conflict_battle_win,
+    hist_conflict_siege,
+    hist_conflict_sack,
 };
 
 }  // namespace worldgen::streams

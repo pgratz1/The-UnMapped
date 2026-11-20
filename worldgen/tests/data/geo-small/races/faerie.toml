@@ -25,5 +25,6 @@ upland = 200
 coast = 0
 expansion = 100
 aggression = 50
+prowess_permille = 1200
 settlement_kinds = ["hamlet", "village"]
 culture = "faerie"

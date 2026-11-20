@@ -96,6 +96,26 @@ EventCatalogue build_compiled() {
                               {role(1, "civilization", EntityType::civilization, 1, 1)}, {}, 0, {}});
     c.kinds.push_back(KindDef{19, "ruin_faded", true, 1, 1, {role(1, "settlement", EntityType::settlement, 1, 1)},
                               {}, 0, {}});
+    // P3-06 section 11: kinds 20 to 30, every one caused, every role count
+    // 1-1 except parties 2-2.
+    const auto two = [](std::string_view first, std::string_view second) {
+        return std::vector<RoleDef>{role(1, first, EntityType::civilization, 1, 1),
+                                    role(2, second, EntityType::civilization, 1, 1)};
+    };
+    c.kinds.push_back(KindDef{20, "claim", true, 1, 0, two("claimant", "holder"), {}, 0, {}});
+    c.kinds.push_back(KindDef{21, "war_declared", true, 1, 0, two("attacker", "defender"), {}, 0, {}});
+    c.kinds.push_back(KindDef{22, "battle", true, 1, 0, two("winner", "loser"), {"winner_dead", "loser_dead"}, 0, {}});
+    c.kinds.push_back(KindDef{23, "battle_at_pass", true, 1, 0, two("winner", "loser"),
+                              {"winner_dead", "loser_dead", "pass"}, 0, {}});
+    c.kinds.push_back(KindDef{24, "siege", true, 1, 1, two("attacker", "defender"), {"fell"}, 0, {}});
+    c.kinds.push_back(KindDef{25, "sacked", true, 1, 1, two("attacker", "defender"), {"dead", "survivors"}, 0, {}});
+    c.kinds.push_back(
+        KindDef{26, "settlement_captured", true, 1, 1, two("attacker", "defender"), {"dead", "fled"}, 0, {}});
+    c.kinds.push_back(KindDef{27, "peace", true, 0, 0, two("winner", "loser"), {"years"}, 0, {}});
+    c.kinds.push_back(KindDef{28, "truce", true, 0, 0, {role(1, "parties", EntityType::civilization, 2, 2)},
+                              {"years"}, 0, {}});
+    c.kinds.push_back(KindDef{29, "region_ceded", true, 1, 0, two("from", "to"), {}, 0, {}});
+    c.kinds.push_back(KindDef{30, "civ_conquered", true, 1, 0, two("civilization", "conqueror"), {}, 0, {}});
     return c;
 }
 

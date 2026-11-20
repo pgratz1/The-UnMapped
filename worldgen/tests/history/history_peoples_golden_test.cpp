@@ -9,6 +9,11 @@
 // its first 60 sentences, 530 events and the end state of the spec) and the
 // hard bounds of 15.5 on the 1024 cases.
 //
+// Since generator 0.16.0 the worlds are the peoples-only configuration
+// (p3_05_peoples_support.hpp, peoples_world: every stage up to chronology,
+// then the engine with peoples alone); the shipped stage with conflict is
+// tested against p3-06-conflict.txt by the P3-06 tests.
+//
 // geo-seed-42-512 runs by default (two worlds: --until chronology and
 // complete); every other case is in the doctest suite "history-slow"
 // (worldgen-tests -ts=history-slow --no-skip). Empty until the
@@ -31,9 +36,16 @@ namespace {
 
 using namespace peoples_test;
 
-// A world of a golden world case with the shipped data, cached per process.
+// A world of a golden world case with the shipped data, cached per process: up to chronology (until
+// "chronology"), or the peoples-only history (the P3-05 golden file's since generator 0.16.0; the shipped
+// stage adds conflict, P3-06, whose golden worlds are p3-06-conflict.txt).
 std::string world_path(const GCase& g, std::uint32_t threads = 1, const std::string& until = "") {
     const bool phrase = g.name == "geo-phrase-512";
+    chrono_api::Params p = chrono_test::params_with(g.span, chrono_test::races_of_text(g.races));
+    p.detail = g.detail;
+    if (until.empty()) {
+        return peoples_world(g.name, g.seed, phrase ? "the unmapped" : "", g.size, p, threads);
+    }
     if (g.detail == "normal") {
         return chrono_test::world(chrono_test::WorldKey{g.seed, phrase ? "the unmapped" : "", g.size, g.span, g.races,
                                                         until, threads});
@@ -43,11 +55,9 @@ std::string world_path(const GCase& g, std::uint32_t threads = 1, const std::str
     if (const auto it = cache.find(key); it != cache.end()) {
         return it->second;
     }
-    chrono_api::Params p = chrono_test::params_with(g.span, chrono_test::races_of_text(g.races));
-    p.detail = g.detail;
     const std::string path = chrono_test::world_dir().file("p" + std::to_string(cache.size()) + ".db");
-    worldgen::WorldParams wp = chrono_test::world_params(
-        g.seed, g.size, p, shipped(), until.empty() ? std::nullopt : std::optional<std::string>(until), threads);
+    worldgen::WorldParams wp = chrono_test::world_params(g.seed, g.size, p, shipped(), std::optional<std::string>(until),
+                                                         threads);
     REQUIRE(worldgen::generate_world(wp, shipped(), path, db::Overwrite::refuse).ok());
     cache[key] = path;
     return path;
@@ -82,12 +92,13 @@ void check_world_case(const GCase& g) {
     });
     const Tables probed_run = eng::run_engine(shipped(), in, cfg.get());
     CHECK(probed);
-    const Tables resumed = eng::history_stage(shipped(), in);
+    PeoplesConfig plain(shipped());
+    const Tables resumed = eng::run_engine(shipped(), in, plain.get());
     CHECK(probed_run == resumed);
     // the complete world
     const db::WorldReader r = open_world(world_path(g));
     const Tables t = tables_of_world(r);
-    CHECK(resumed == t);  // Y2 with peoples installed (16.2 item 20)
+    CHECK(resumed == t);  // Y2 with peoples installed (16.2 item 20; the peoples-only stage since 0.16.0)
     const std::map<std::string, std::string> detail = chrono_test::detail_tables(r);
     CHECK(g.tables.size() == 13U);
     for (const auto& [name, hex] : g.tables) {

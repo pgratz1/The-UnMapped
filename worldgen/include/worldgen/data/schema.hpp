@@ -406,8 +406,9 @@ inline constexpr std::string_view CULTURE_DIRECTORY = "cultures";
 inline constexpr std::string_view HISTORY_KIND = "history";
 inline constexpr std::string_view HISTORY_DIRECTORY = "history";
 // The ids of kind history registered so far (P3-01 5; engine and report
-// from P3-04 4.1, 4.2; peoples from P3-05 12.1).
+// from P3-04 4.1, 4.2; peoples from P3-05 12.1; conflict from P3-06 12.1).
 inline constexpr std::string_view HISTORY_CHRONOLOGY_ID = "chronology";
+inline constexpr std::string_view HISTORY_CONFLICT_ID = "conflict";  // P3-06 12.1
 inline constexpr std::string_view HISTORY_ENGINE_ID = "engine";
 inline constexpr std::string_view HISTORY_PEOPLES_ID = "peoples";  // P3-05 12.1
 inline constexpr std::string_view HISTORY_REPORT_ID = "report";
@@ -420,7 +421,8 @@ inline constexpr std::string_view HISTORY_REPORT_ID = "report";
 // race_site_weights (fertility, forage, timber, ore, fresh_water, each
 // int(0, 1000)); biomes array(record race_biome {biome ref(biome), weight
 // int(-1000, 1000)}, 0, 16); upland, coast int(-1000, 1000); expansion,
-// aggression int(0, 1000); settlement_kinds array(enum(hamlet, village,
+// aggression int(0, 1000); prowess_permille int(1, 4000) (P3-06 12.2);
+// settlement_kinds array(enum(hamlet, village,
 // town, city, fortress), 1, 5); culture ref(culture); in this order, all
 // required. Named checks, in this order: race_generation_below_lifespan,
 // race_site_weights_positive, race_biomes_unique,
@@ -460,6 +462,14 @@ inline constexpr std::string_view HISTORY_REPORT_ID = "report";
 // int(1, 1000000)}; in this order, all required. Named checks, in this
 // order: engine_simulated_bounds, engine_phase_budget.
 [[nodiscard]] Schema history_engine_schema();
+
+// The schema of definition history.conflict (P3-06 12.1): the fields of
+// that table in its order, all required; camp a record {good_good,
+// good_neutral, good_evil, neutral_neutral, neutral_evil, evil_evil},
+// levy_permille and walls_permille records {hamlet, village, town, city,
+// fortress}. Named checks, in this order: conflict_declare,
+// conflict_strain_max.
+[[nodiscard]] Schema history_conflict_schema();
 
 // The schema of definition history.peoples (P3-05 12.1): the fields of
 // that table in its order, all required; abandon_permille and plague_ppm

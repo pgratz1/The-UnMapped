@@ -148,6 +148,7 @@ void check_race(const wd::Definition& d, const history_data::Race& want) {
     CHECK(r.get_int("coast") == want.coast);
     CHECK(r.get_int("expansion") == want.expansion);
     CHECK(r.get_int("aggression") == want.aggression);
+    CHECK(r.get_int("prowess_permille") == want.prowess_permille);  // P3-06 12.2 (P3-01 r7)
     const auto& kinds = r.get_array("settlement_kinds");
     REQUIRE(kinds.size() == want.settlement_kinds.size());
     for (std::size_t i = 0; i < kinds.size(); ++i) {
@@ -187,7 +188,7 @@ void check_shipped_values(const wd::ContentSet& c) {
     }
     const wd::KindContent* history = c.find_kind("history");
     REQUIRE(history != nullptr);
-    REQUIRE(history->definitions.size() == 4U);  // chronology, engine, peoples (P3-05 12.1), report (P3-04 4)
+    REQUIRE(history->definitions.size() == 5U);  // chronology, conflict (P3-06 12.1), engine, peoples (P3-05 12.1), report (P3-04 4)
     const wd::Definition& chrono = history->definitions[0];
     CHECK(chrono.id == "chronology");
     REQUIRE(chrono.record.size() == 3U);
@@ -223,18 +224,22 @@ TEST_CASE("P3-01 3-5: the production registry holds race, culture and history be
     CHECK(history.directory == "history");
     CHECK(history.required);
     REQUIRE(history.has_fixed_ids());
-    REQUIRE(history.id_schemas.size() == 4U);  // P3-01 5: chronology; engine and report from P3-04; peoples P3-05
+    REQUIRE(history.id_schemas.size() == 5U);  // P3-01 5: chronology; engine and report from P3-04; peoples P3-05; conflict P3-06
     CHECK(history.id_schemas[0].id == "chronology");
-    CHECK(history.id_schemas[1].id == "engine");
-    CHECK(history.id_schemas[2].id == "peoples");
-    CHECK(history.id_schemas[3].id == "report");
+    CHECK(history.id_schemas[1].id == "conflict");
+    CHECK(history.id_schemas[2].id == "engine");
+    CHECK(history.id_schemas[3].id == "peoples");
+    CHECK(history.id_schemas[4].id == "report");
     const wd::Schema* chrono = history.schema_for("chronology");
     REQUIRE(chrono != nullptr);
     REQUIRE(chrono->checks().size() == 1U);
     CHECK(chrono->checks()[0].name == "chronology_age_name_form");
     CHECK(history.schema_for("engine") != nullptr);
     CHECK(history.schema_for("peoples") != nullptr);  // P3-05 12.1
-    CHECK(history.schema_for("conflict") == nullptr);  // P3-06, generator 0.16.0 (P3-01 r7)
+    REQUIRE(history.schema_for("conflict") != nullptr);  // P3-06 12.1, generator 0.16.0 (P3-01 r7)
+    REQUIRE(history.schema_for("conflict")->checks().size() == 2U);
+    CHECK(history.schema_for("conflict")->checks()[0].name == "conflict_declare");
+    CHECK(history.schema_for("conflict")->checks()[1].name == "conflict_strain_max");
 
     const wd::Kind& race = kinds[3];
     CHECK(race.directory == "races");
@@ -309,13 +314,13 @@ TEST_CASE("P3-01 8.1 test 1: game/data and the two fixture roots hold the listin
     for (const char* f : {"races/elf.toml", "races/goblin.toml", "races/dwarf.toml", "races/faerie.toml",
                           "races/human.toml", "races/orc.toml", "cultures/dwarven.toml", "cultures/elven.toml",
                           "cultures/faerie.toml", "cultures/goblin.toml", "cultures/human.toml",
-                          "cultures/orcish.toml", "history/chronology.toml", "history/engine.toml",
-                          "history/peoples.toml", "history/report.toml"}) {
+                          "cultures/orcish.toml", "history/chronology.toml", "history/conflict.toml",
+                          "history/engine.toml", "history/peoples.toml", "history/report.toml"}) {
         CAPTURE(f);
         CHECK(std::filesystem::is_regular_file(data / f));
     }
     // P3-01 5: "a file for a future id must not be committed early".
-    CHECK(directory_from_disk(data, "history").entries.size() == 4U);  // no conflict.toml before 0.16.0
+    CHECK(directory_from_disk(data, "history").entries.size() == 5U);  // conflict.toml from 0.16.0 (P3-06 12.1)
 }
 
 TEST_CASE("P3-01 3.1: the races in race order are elves, goblins, dwarves, faeries, humans, orcs (design 5)") {
@@ -500,6 +505,7 @@ TEST_CASE("P3-01 3 race_order_dense: against the directory, naming the smallest 
         f["history/chronology.toml"] = std::string(history_data::CHRONOLOGY_TOML);
         f["history/engine.toml"] = std::string(history_data::ENGINE_TOML);
         f["history/peoples.toml"] = std::string(history_data::PEOPLES_TOML);
+        f["history/conflict.toml"] = std::string(history_data::CONFLICT_TOML);
         f["history/report.toml"] = std::string(history_data::REPORT_TOML);
         at_directory(only_error(load(f)), "races", "race_order_dense", "race",
                      "orders must be 1 to 1 without gaps; 1 is missing");
@@ -521,6 +527,7 @@ TEST_CASE("P3-01 3 race_order_dense: against the directory, naming the smallest 
         f["history/chronology.toml"] = std::string(history_data::CHRONOLOGY_TOML);
         f["history/engine.toml"] = std::string(history_data::ENGINE_TOML);
         f["history/peoples.toml"] = std::string(history_data::PEOPLES_TOML);
+        f["history/conflict.toml"] = std::string(history_data::CONFLICT_TOML);
         f["history/report.toml"] = std::string(history_data::REPORT_TOML);
         const Load l = load(f);
         INFO(dump(l));
@@ -612,15 +619,15 @@ TEST_CASE("P3-01 3, 4 and P0-03 amendment 17: name, plural, adjective and the cu
 
 TEST_CASE("P3-01 5: a history file for an unregistered id is an error at its header") {
     Files f = history_data::shipped_files();
-    // P3-05 12.1 (P3-01 r6): engine, peoples and report are registered; conflict (P3-06, 0.16.0) is not yet.
-    f["history/conflict.toml"] = "[history.conflict]\nstep_years = 1\n";
+    // P3-06 12.1 (P3-01 r7): conflict is registered from 0.16.0; a future id (monsters) is not.
+    f["history/monsters.toml"] = "[history.monsters]\nstep_years = 1\n";
     const wd::LoadError e = only_error(load(f));
-    CHECK(e.path == "history/conflict.toml");
+    CHECK(e.path == "history/monsters.toml");
     CHECK(e.line == 1U);
     CHECK(e.column == 1U);
     // P3-01 5 (revised): the registered ids, each in single quotes.
     CHECK(e.message ==
-          "unknown id 'conflict' for kind 'history'; expected one of 'chronology', 'engine', 'peoples', 'report'");
+          "unknown id 'monsters' for kind 'history'; expected one of 'chronology', 'conflict', 'engine', 'peoples', 'report'");
 }
 
 TEST_CASE("P3-01 5: history/ without chronology.toml is a missing definition against the directory") {
@@ -749,6 +756,9 @@ TEST_CASE("P3-01 8.1 test 5: every bounded race field one step outside its bound
         {"races/orc.toml", "expansion = 600", "expansion = 1000", "expansion = 1001", "race.orc.expansion"},
         {"races/orc.toml", "aggression = 900", "aggression = 0", "aggression = -1", "race.orc.aggression"},
         {"races/orc.toml", "aggression = 900", "aggression = 1000", "aggression = 1001", "race.orc.aggression"},
+        // P3-06 12.2 item 1 (P3-01 r7): prowess_permille int(1, 4000)
+        {"races/orc.toml", "prowess_permille = 1300", "prowess_permille = 1", "prowess_permille = 0", "race.orc.prowess_permille"},
+        {"races/orc.toml", "prowess_permille = 1300", "prowess_permille = 4000", "prowess_permille = 4001", "race.orc.prowess_permille"},
         // fx(0, 1): one raw step is below the decimal resolution, so the
         // nearest decimals outside are used (raw ONE + 4 and -4). Below 0
         // the awakening check would fail too, but the definition is not

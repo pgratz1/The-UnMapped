@@ -177,7 +177,15 @@ private:
     std::vector<Settlement> settlements_;
     std::vector<RegionState> regions_;
     std::map<RelationKey, RelationState> relations_;
-    std::map<RelationKey, std::int64_t> closed_;  // closed since the last bookkeeping: the closing event
+    // Every open_relation and close_relation since the last bookkeeping, in
+    // call order (6.7: each opening gets a row, also one closed again before
+    // the bookkeeping).
+    struct RelationOp {
+        bool open = false;
+        RelationKey key;
+        std::int64_t event = 0;
+    };
+    std::vector<RelationOp> relation_ops_;
 };
 
 // --- The step seam (6.4) -------------------------------------------------------------
@@ -231,6 +239,12 @@ public:
     // draw(stream_key, year(), a, b, k) (P3-02 4.1).
     [[nodiscard]] std::uint64_t draw(std::uint64_t stream_key, std::uint64_t a, std::uint64_t b,
                                      std::uint64_t k) const noexcept;
+    // Read-only access to the log (P3-06 8.1 item 2: the parent of a
+    // secession is the `from` of its civ_seceded). The key of event `event`'s
+    // kind; the entity id of its first participant in role `role`, 0 when it
+    // has none. FatalError "history: state: event <e> does not exist".
+    [[nodiscard]] std::string_view event_kind(std::int64_t event) const;
+    [[nodiscard]] std::int64_t event_participant(std::int64_t event, std::string_view role) const;
 
 private:
     friend class Engine;

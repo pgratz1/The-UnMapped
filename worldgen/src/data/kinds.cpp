@@ -594,6 +594,7 @@ KindRegistry builtin_kinds() {
     Kind history = Kind::with_fixed_ids(std::string(HISTORY_KIND), std::string(HISTORY_DIRECTORY), true,
                                         {
                                             IdSchema{std::string(HISTORY_CHRONOLOGY_ID), history_chronology_schema()},
+                                            IdSchema{std::string(HISTORY_CONFLICT_ID), history_conflict_schema()},
                                             IdSchema{std::string(HISTORY_ENGINE_ID), history_engine_schema()},
                                             IdSchema{std::string(HISTORY_PEOPLES_ID), history_peoples_schema()},
                                             IdSchema{std::string(HISTORY_REPORT_ID), history_report_schema()},

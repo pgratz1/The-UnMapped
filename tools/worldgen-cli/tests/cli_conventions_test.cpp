@@ -239,7 +239,7 @@ TEST_CASE("cli 4.1: --version and --help") {
     const ProcessResult v = sb.cli({"--version"});
     CHECK(v.exit_code == EXIT_OK);
     CHECK(v.err.empty());
-    CHECK(v.out == std::string("worldgen-cli 0.15.0 schema 7 sqlite ") + worldgen::db::sqlite_library_version() + "\n");
+    CHECK(v.out == std::string("worldgen-cli 0.16.0 schema 7 sqlite ") + worldgen::db::sqlite_library_version() + "\n");
 
     const ProcessResult h = sb.cli({"--help"});
     CHECK(h.exit_code == EXIT_OK);

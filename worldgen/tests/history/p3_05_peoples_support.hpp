@@ -29,6 +29,8 @@
 #include <vector>
 
 #include "p3_04_engine_support.hpp"
+#include "worldgen/stages/history.hpp"
+#include "worldgen/stages/testing.hpp"
 
 #ifndef UNMAPPED_P3_05_GOLDEN_PATH
 #error "UNMAPPED_P3_05_GOLDEN_PATH must name worldgen/tests/golden/p3-05-peoples.txt"
@@ -563,6 +565,39 @@ struct PeoplesConfig {
     }
     [[nodiscard]] const ppl::PeoplesView& view() const { return peoples.sub->view(); }
 };
+
+// --- The peoples-only history stage (generator 0.16.0) -----------------------------------------------
+
+// Since 0.16.0 the shipped history stage installs conflict after peoples (P3-06 8.2). The P3-05 golden
+// worlds are the peoples-only configuration: every stage up to chronology, then this stage (the engine
+// with PeoplesAwakening and PeoplesSubsystem only, no tension source), as the P3-04 tests do with the stub.
+inline void run_peoples_history(worldgen::stages::StageContext& ctx) {
+    const eng::HistoryInputs in = eng::inputs_from_context(ctx);
+    PeoplesConfig cfg(ctx.content());
+    worldgen::stages::write_history_result(ctx, worldgen::history::run_engine(ctx.content(), in, cfg.get()));
+}
+inline worldgen::stages::StageInfo peoples_stage_info() {
+    return worldgen::stages::StageInfo{"history", &run_peoples_history};
+}
+
+// A peoples-only world of the shipped data, cached per process by (name, threads).
+inline std::string peoples_world(const std::string& name, std::uint64_t seed, const std::string& phrase,
+                                 std::int64_t size, const chrono_api::Params& p, std::uint32_t threads = 1) {
+    static std::map<std::string, std::string> cache;
+    const std::string key = name + "/" + std::to_string(threads);
+    if (const auto it = cache.find(key); it != cache.end()) {
+        return it->second;
+    }
+    static dbtest::TempDir dir("peoples-only-worlds");
+    std::vector<worldgen::stages::StageInfo> stages = worldgen::stages::stages_until(std::string("chronology"));
+    stages.push_back(peoples_stage_info());
+    worldgen::WorldParams wp = chrono_test::world_params(seed, size, p, shipped(), std::nullopt, threads);
+    wp.seed_phrase = phrase;
+    const std::string path = dir.file("p" + std::to_string(cache.size()) + ".db");
+    REQUIRE(worldgen::stages::testing::generate_world_with_stages(wp, shipped(), stages, path).ok());
+    cache[key] = path;
+    return path;
+}
 
 // --- Lines from rows ---------------------------------------------------------------------------------
 

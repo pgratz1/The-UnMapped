@@ -514,6 +514,92 @@ Schema history_peoples_schema() {
     return Schema(std::move(fields), std::move(checks));
 }
 
+Schema history_conflict_schema() {
+    // P3-06 12.1, in the table's order.
+    const auto i = [](std::string_view name, std::int64_t min, std::int64_t max) {
+        return Field::required(std::string(name), Type::integer(min, max));
+    };
+    const auto camp = Schema(std::vector<Field>{
+        i("good_good", -1000, 1000),
+        i("good_neutral", -1000, 1000),
+        i("good_evil", -1000, 1000),
+        i("neutral_neutral", -1000, 1000),
+        i("neutral_evil", -1000, 1000),
+        i("evil_evil", -1000, 1000),
+    });
+    const auto by_kind = [&i](std::int64_t min, std::int64_t max) {
+        return Schema(std::vector<Field>{
+            i("hamlet", min, max),
+            i("village", min, max),
+            i("town", min, max),
+            i("city", min, max),
+            i("fortress", min, max),
+        });
+    };
+    std::vector<Field> fields{
+        Field::required("camp", Type::record(camp)),
+        i("enmity_max", -1000, 1000),
+        i("border_friction", 0, 2000),
+        i("want_weight", 0, 2000),
+        i("hunger_full", 1, 100000),
+        i("fear_share", 0, 999),
+        i("fear_weight", 0, 2000),
+        i("tick_strain_permille", 0, 1000),
+        i("quiet_strain_permille", 0, 1000),
+        i("strain_max", 1, 1000000),
+        i("claim_strain", 1, 1000000),
+        i("declare_min", 0, 1000000),
+        i("declare_span", 1, 1000000),
+        i("declare_permille", 0, 1000),
+        i("declare_ratio", 1, 10000),
+        i("shelter_years", 0, 1000),
+        i("march_hops", 1, 4),
+        i("cost_penalty", 0, 10000),
+        Field::required("levy_permille", Type::record(by_kind(0, 1000))),
+        i("terrain_defense", 0, 10000),
+        i("pass_defense", 0, 10000),
+        i("river_defense", 0, 10000),
+        i("fort_defense", 0, 10000),
+        i("battle_permille", 0, 1000),
+        i("loss_loser_permille", 0, 1000),
+        i("loss_winner_permille", 0, 1000),
+        i("garrison_permille", 0, 1000),
+        Field::required("walls_permille", Type::record(by_kind(1, 100000))),
+        i("capital_walls", 0, 100000),
+        i("sack_base", 0, 1000),
+        i("sack_hostility", 0, 2000),
+        i("sack_toll_permille", 0, 1000),
+        i("capture_toll_permille", 0, 1000),
+        i("exhaustion_permille", 1, 1000),
+        i("war_max_years", 1, 1000),
+        i("truce_years", 0, 10000),
+        i("war_grudge", 0, 2000),
+        i("capture_grudge", 0, 2000),
+        i("secession_grudge", 0, 2000),
+        i("grudge_decay_per_century", 0, 10000),
+        i("last_refuge", 0, 1),
+        i("capital_sacked_salience", 0, 100),
+        i("capital_captured_salience", 0, 100),
+    };
+    std::vector<Check> checks{
+        Check{"conflict_declare",
+              [](const Record& r) -> std::optional<std::string> {
+                  if (r.get_int("claim_strain") <= r.get_int("declare_min")) {
+                      return std::nullopt;
+                  }
+                  return std::string("claim_strain must not be above declare_min");
+              }},
+        Check{"conflict_strain_max",
+              [](const Record& r) -> std::optional<std::string> {
+                  if (r.get_int("declare_min") + r.get_int("declare_span") <= r.get_int("strain_max")) {
+                      return std::nullopt;
+                  }
+                  return std::string("declare_min + declare_span must not be above strain_max");
+              }},
+    };
+    return Schema(std::move(fields), std::move(checks));
+}
+
 Schema history_engine_schema() {
     // P3-04 4.1, in declaration order.
     std::vector<Field> fields{
@@ -569,6 +655,7 @@ Schema race_schema() {
         Field::required("coast", Type::integer(-1000, 1000)),
         Field::required("expansion", Type::integer(0, 1000)),
         Field::required("aggression", Type::integer(0, 1000)),
+        Field::required("prowess_permille", Type::integer(1, 4000)),  // P3-06 12.2
         Field::required("settlement_kinds",
                         Type::array(Type::enumeration({"hamlet", "village", "town", "city", "fortress"}), 1, 5)),
         Field::required("culture", Type::reference(std::string(CULTURE_KIND))),

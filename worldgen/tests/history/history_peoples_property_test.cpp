@@ -12,7 +12,9 @@
 // hand-made world; invariant 10 is in history_peoples_unit_test.cpp.
 //
 // Written from the spec only. No world file is generated (inputs are built
-// in memory), so the whole set runs by default.
+// in memory), so the whole set runs by default. Since generator 0.16.0 the
+// shipped stage adds conflict (P3-06): these cases run the peoples-only
+// configuration (PeoplesConfig through run_engine), as the golden file does.
 
 #include "p3_05_peoples_support.hpp"
 
@@ -43,7 +45,8 @@ void check_case(const GCase& g) {
     CAPTURE(g.name);
     const wd::ContentSet& c = content_of(g);
     const eng::HistoryInputs in = synthetic_inputs(g);
-    const Tables t = eng::history_stage(c, in);
+    PeoplesConfig cfg(c);  // the peoples-only configuration (the golden file's since 0.16.0)
+    const Tables t = eng::run_engine(c, in, cfg.get());
     const std::map<std::string, std::string> h = table_hashes(t);
     for (const auto& [name, hex] : g.tables) {
         CAPTURE(name);
@@ -78,7 +81,8 @@ TEST_CASE("P3-05 8.5, 8.6, 10.3, 14: the stress cases equal the reference and re
         if (g.kind != "stress") continue;
         check_case(g);
         ++n;
-        const Tables t = eng::history_stage(content_of(g), synthetic_inputs(g));
+        PeoplesConfig cfg(content_of(g));
+        const Tables t = eng::run_engine(content_of(g), synthetic_inputs(g), cfg.get());
         for (const Row& e : t.event) {
             kinds[at(e, 3)] += 1;
         }
