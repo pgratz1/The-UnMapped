@@ -46,7 +46,7 @@ The full design is in [`docs/design/design.md`](docs/design/design.md).
 
 | | |
 | --- | --- |
-| **Current phase** | P3 History core, started 2026-11-19: the overview and the first three stage specs are approved. History data and settings (P3-01) merged on 2026-11-19 (generator 0.12.0): the six races, their cultures and the history tuning are data files, and `generate` accepts the world-creation settings (history span, detail, races present and others), which do not change a world yet. Names (P3-02) merged the same day (no world change): a library that builds names for gods, civilizations and settlements from each culture's syllables, unique across a world, and the keyed random draws every history decision uses. Chronology (P3-03) merged on 2026-11-19 (generator 0.13.0, schema 6): a world now records which races are present, the year each awakens, the ages between, and a named creator god for each race. All seven stage specs are approved. The simulation engine (P3-04) merged on 2026-11-19 (generator 0.14.0, schema 7): the history stage divides the span into simulated phases and quiet intervals and writes an event log with causes, civilizations, settlements and region control; Peoples (P3-05) merged on 2026-11-20 (generator 0.15.0): each race founds civilizations in the lands that suit it, settlements grow from hamlets to cities, peoples colonise within reach of their capitals, famine and plague strike in active phases, realms split by secession and failing settlements are abandoned; a default world has about ten civilizations, ninety settlements and 550 events. Expansion and conflict (P3-06: claims, wars, sieges, sackings, conquest; 0.16.0) is implemented, tested and audited and is in validation; the history report (P3-07) is specified and not yet implemented. Decided and scheduled after P3-06: region names without numerals, drawn from large word lists, and faeries moved firmly into forest. P0 Foundation, P1 Geography (reviewed and approved by Paul on 2026-11-19) and P2 Godot bring-up and viewer v0 are complete |
+| **Current phase** | P3 History core, started 2026-11-19: the overview and the first three stage specs are approved. History data and settings (P3-01) merged on 2026-11-19 (generator 0.12.0): the six races, their cultures and the history tuning are data files, and `generate` accepts the world-creation settings (history span, detail, races present and others), which do not change a world yet. Names (P3-02) merged the same day (no world change): a library that builds names for gods, civilizations and settlements from each culture's syllables, unique across a world, and the keyed random draws every history decision uses. Chronology (P3-03) merged on 2026-11-19 (generator 0.13.0, schema 6): a world now records which races are present, the year each awakens, the ages between, and a named creator god for each race. All seven stage specs are approved. The simulation engine (P3-04) merged on 2026-11-19 (generator 0.14.0, schema 7): the history stage divides the span into simulated phases and quiet intervals and writes an event log with causes, civilizations, settlements and region control; Peoples (P3-05) merged on 2026-11-20 (generator 0.15.0): each race founds civilizations in the lands that suit it, settlements grow from hamlets to cities, peoples colonise within reach of their capitals, famine and plague strike in active phases, realms split by secession and failing settlements are abandoned; a default world has about ten civilizations, ninety settlements and 550 events. Expansion and conflict (P3-06) merged on 2026-11-20 (generator 0.16.0): civilizations claim neighbouring land and go to war over it, with battles, sieges, sacked and captured settlements, truces and ceded regions; a default world has about 24 wars and 820 events, and most ruins are now made by war. Two follow-up changes from the world-critic reviews are being specified: names and peoples (P3-08, 0.17.0: region names without numerals, a names filter, faeries in forest, dwarves in uplands) and conflict balance (P3-09, 0.18.0: a last refuge that can fall, wars that always change something, peoples other than goblins starting wars); the history report (P3-07) is specified and not yet implemented. P0 Foundation, P1 Geography (reviewed and approved by Paul on 2026-11-19) and P2 Godot bring-up and viewer v0 are complete |
 | **Next phase** | P4 Viewer v1 and P5 History depth, in parallel, after P3 |
 | **Current milestone** | Milestone 0, Geography generator: met and approved by Paul on 2026-11-19. Now working towards milestone 1, History generator |
 | **Work in flight** | P1: elevation and hydrology are merged, so `generate` writes a continent with ranges, passes, rivers and lakes. Elevation followed five rounds of design exploration and two world-critic reviews (`docs/reviews/`): irregular continents, long segmented ranges with 2,000 to 2,500 m peaks, valleys cut by erosion, and a guaranteed share of mountains in every world. Generator 0.6.0 (2026-11-17) added natural passes at saddles of each range's drainage divide, after five more exploration rounds and three critic reviews: a pass is cut by at most 500 m, so naturally low saddles become low gates and others stay high cols, and about two in five are walkable end to end at the default map size. Pass sites are stored in a `pass` table for the history simulation (the first schema change, version 2). Very steep faces are bounded by a final slope-relaxing step. Climate merged the same day (generator 0.7.0): temperature falls with height and from south to north, and each world has one prevailing wind that makes ranges wet on the windward side and dry in the lee. Biomes merged on 2026-11-18 (generator 0.8.0, schema 3): alpine, highland moor, marsh, forest and grassland by rules held as data, with forest thresholds scaled to map size; the biome definitions and the world's wind direction are stored in the world file. A variety revision merged the same day (generator 0.9.0, schema 4; Paul's decisions of 2026-11-17): heath, steppe, wet woodland along large rivers and fens on wet lowland bring the count to nine natural biomes, each world draws its own temperature offset of up to 2 °C either way (stored in the world file), and the coastal forest ring is thinner. Validated on 271 worlds; a world-critic review (`docs/reviews/p1-04b-biome-variety-critic.md`) notes two follow-ups, a visible heath stripe on some worlds and blocky fen patches on the largest maps. Resources and habitability merged on 2026-11-18 (generator 0.10.0, schema still 4): six score layers (fertility, ore, timber, fresh water, forage and habitability, each 0 to 255 and absolute, so a harsh world reads as harsh) and a layer of walkable areas, for the history simulation to place homelands, farms, mines and settlements. Habitability weighs farmland most, then wild food, timber and ore, and treats fresh water as a necessity. Validated on 271 worlds; a world-critic review (`docs/reviews/p1-05-resources-critic.md`) led to a tuning revision before the merge and records the remaining limits. Regions, the last geography stage, merged on 2026-11-19 (generator 0.11.0, schema 5): land is divided into named regions of about 2 km² each, roughly 13, 50 and 200 per map, with borders on ridge crests and large rivers, upland regions of their own for wide massifs, and placeholder names such as "Northwest Steppe II" until history renames them. Three new tables give the history simulation each region's summary (area, biomes, mean resource scores, walkable ground, reachable ore) and each border's length, lowest crossing, river and pass. A world-critic review (`docs/reviews/p1-06-regions-critic.md`) led to a revision before the merge (each pass belongs to one border; mountain and lake regions get fitting names). Validated on 271 worlds (`docs/reviews/p1-06-regions-validation.md`): a default world takes about 9 seconds and 6.5 MB. The viewer gained a regions view, a legend and a description of the cell under the mouse. Paul reviewed and approved the geography phase on 2026-11-19 and accepted the world critic's recommendations, among them the default map size (1024) as the reference size for history. P3 History core started the same day with its overview spec: the shared model of years, ages, peoples and the event log that the history stages build on. |
@@ -85,7 +85,7 @@ The first block of work is the world generator prototype: seven phases, P0 to P6
 | **P0 Foundation** | Repository layout, CMake presets, vendored dependencies, CI on three compilers, the deterministic core, the reproducible SQLite layer, the TOML loader, `worldgen-cli` | — | **Done** 2026-11-15, reviewed |
 | **P1 Geography** | Elevation, erosion, hydrology, climate, biomes, resources and regions, each writing its layer; image export per layer | P0 | **In progress** since 2026-11-15: first three specs approved, shared foundation, elevation and hydrology merged (2026-11-16); natural passes merged (2026-11-17, generator 0.6.0, schema 2); climate merged (2026-11-17, generator 0.7.0); biomes merged (2026-11-18, generator 0.8.0, schema 3); biome variety revision merged (2026-11-18, generator 0.9.0, schema 4); resources and habitability merged (2026-11-18, generator 0.10.0); regions merged (2026-11-19, generator 0.11.0, schema 5). **Done** 2026-11-19, reviewed and approved by Paul |
 | **P2 Godot bring-up and viewer v0** | Godot version pinned, C++ extension building on Linux and Windows, `world.db` reader bound into Godot, 2D map with switchable layers | P0; parallel with P1 | **Done** 2026-11-15, awaiting Paul's hands-on review. Godot 4.7.2 and godot-cpp 10.0.0 pinned; the extension builds and its headless check passes on Linux and Windows |
-| **P3 History core** | Race and culture definitions, ages and the awakening schedule, active phases and quiet intervals, civilizations, settlements, wars, ruin, the event log, a text history report | P1 | **In progress** since 2026-11-19: overview and all seven stage specs approved; history data and settings (generator 0.12.0), names, and chronology (generator 0.13.0, schema 6) merged (2026-11-19); simulation engine (generator 0.14.0, schema 7) merged (2026-11-19); peoples (generator 0.15.0) merged (2026-11-20); conflict implemented and audited, in validation; the history report specified |
+| **P3 History core** | Race and culture definitions, ages and the awakening schedule, active phases and quiet intervals, civilizations, settlements, wars, ruin, the event log, a text history report | P1 | **In progress** since 2026-11-19: overview and all seven stage specs approved; history data and settings (generator 0.12.0), names, and chronology (generator 0.13.0, schema 6) merged (2026-11-19); simulation engine (generator 0.14.0, schema 7) merged (2026-11-19); peoples (generator 0.15.0) merged (2026-11-20); conflict (generator 0.16.0) merged (2026-11-20); the history report specified |
 | **P4 Viewer v1** | Timeline scrubber, territory by year, settlement and site markers, browser for civilizations and events | P2, P3; parallel with P5 | Not started |
 | **P5 History depth** | God interventions, beast populations, named monsters, figures and factions, race relations, casters and spellbooks | P3 | Not started |
 | **P6 Derivation and polish** | Sites, dungeon records, quest hooks and spellbook placement derived from history; world-creation settings on the command line; 3D heightmap preview | P4, P5 | Not started |
@@ -127,7 +127,7 @@ Around them: about 300 automated test cases, 2,201 golden vectors for the core p
 
 ## What works today
 
-`worldgen-cli` writes world files and inspects them. A generated world currently holds a table of mountain passes and a table of biome definitions, the world's wind direction and temperature offset, and eleven geography layers (elevation; water, water depth, flow direction, flow accumulation, rivers, lakes and distance to the coast from hydrology; temperature and rainfall from climate; biomes) on a 512, 1024 or 2048 cell map at 16 m per cell. Since generator 0.13.0 it also holds the first history tables: the races present, the year each awakens, the ages between, and a named creator god for each race. Since 0.14.0 it also holds a history: phases, an event log with causes, civilizations, settlements with their populations, and which civilization holds each region; since 0.15.0 that history is of peoples growing, colonising, suffering famine and plague, and splitting (no wars yet).
+`worldgen-cli` writes world files and inspects them. A generated world currently holds a table of mountain passes and a table of biome definitions, the world's wind direction and temperature offset, and eleven geography layers (elevation; water, water depth, flow direction, flow accumulation, rivers, lakes and distance to the coast from hydrology; temperature and rainfall from climate; biomes) on a 512, 1024 or 2048 cell map at 16 m per cell. Since generator 0.13.0 it also holds the first history tables: the races present, the year each awakens, the ages between, and a named creator god for each race. Since 0.14.0 it also holds a history: phases, an event log with causes, civilizations, settlements with their populations, and which civilization holds each region; since 0.15.0 that history is of peoples growing, colonising, suffering famine and plague, and splitting; since 0.16.0 they also press claims on each other's land and fight wars, with battles, sieges, sacked and captured settlements, truces and ceded regions.
 
 ```
 $ worldgen-cli generate --seed-phrase "The Unmapped"
@@ -136,9 +136,9 @@ $ worldgen-cli generate --seed-phrase "The Unmapped"
 $ worldgen-cli report --db ~/.cache/the-unmapped/out/world-15629206466951235176.db
 # worldgen report v2
 [meta]
-content_hash = cae3e6934c4cd2221a8c4f0e787eb255efa68008f713b7a1c6c7876f8574b821
+content_hash = 676a3ed5cc2bc7bee2d6346ed34c7919af6a97fc12643f0ee50eef62e438365c
 format = the-unmapped-world
-generator_version = 0.15.0
+generator_version = 0.16.0
 history_end_year = 6000
 param.civs_per_race = auto
 param.divine_activity = normal
@@ -156,30 +156,30 @@ stages = elevation,hydrology,climate,biomes,resources,regions,chronology,history
 [tables]
 age = 6
 biome = 12
-civilization = 10
+civilization = 12
 climate = 1
 culture = 6
-event = 516
-event_cause = 192
-event_kind = 19
-event_kind_role = 33
-event_kind_value = 17
-event_participant = 1038
-event_value = 823
+event = 1000
+event_cause = 616
+event_kind = 30
+event_kind_role = 54
+event_kind_value = 29
+event_participant = 1980
+event_value = 1430
 god = 6
 layer = 19
 meta = 17
 pass = 3
-phase = 12
+phase = 22
 race = 6
 race_biome = 48
 region = 51
 region_biome = 255
 region_border = 126
-region_control = 32
-relation = 0
-settlement = 86
-settlement_census = 1099
+region_control = 46
+relation = 70
+settlement = 106
+settlement_census = 1868
 [layers]
 elevation i16 1024x1024 codec=1 bytes=1175180 min=-2306 max=19803
 water u8 1024x1024 codec=1 bytes=34948 min=0 max=3
@@ -268,60 +268,71 @@ gods = 6
 [history]
 end_year = 6000
 phases_opening = 6
-phases_quiet = 5
-phases_flare = 0
+phases_quiet = 10
+phases_flare = 5
 phases_final = 1
-simulated_years = 1112
-simulated_permille = 185
-events = 516
+simulated_years = 1362
+simulated_permille = 227
+events = 1000
 events_awakening = 6
-events_civ_founded = 8
-events_settlement_founded = 8
-events_quiet_era = 61
-events_flare_up = 0
-events_colony_founded = 78
-events_became_village = 12
-events_became_town = 54
-events_became_city = 2
-events_settlement_dwindled = 3
-events_famine = 97
-events_plague = 70
-events_plague_spread = 104
-events_succession_crisis = 11
-events_civ_seceded = 2
+events_civ_founded = 9
+events_settlement_founded = 9
+events_quiet_era = 82
+events_flare_up = 5
+events_colony_founded = 97
+events_became_village = 16
+events_became_town = 73
+events_became_city = 3
+events_settlement_dwindled = 7
+events_famine = 117
+events_plague = 79
+events_plague_spread = 137
+events_succession_crisis = 19
+events_civ_seceded = 3
 events_settlement_abandoned = 0
-events_capital_moved = 0
+events_capital_moved = 17
 events_civ_ended = 0
-events_ruin_faded = 0
-civilizations = 10
-civilizations_alive = 10
-settlements = 86
+events_ruin_faded = 6
+events_claim = 38
+events_war_declared = 30
+events_battle = 112
+events_battle_at_pass = 0
+events_siege = 67
+events_sacked = 20
+events_settlement_captured = 15
+events_peace = 22
+events_truce = 4
+events_region_ceded = 4
+events_civ_conquered = 3
+civilizations = 12
+civilizations_alive = 9
+settlements = 106
 settlements_standing = 86
 regions_held = 29
-census_rows = 1099
-relations = 0
-population = 189186
-population_elf = 7652
-population_goblin = 118228
-population_dwarf = 10075
-population_faerie = 8172
-population_human = 37663
-population_orc = 7396
-settlements_standing_elf = 6
-settlements_standing_goblin = 51
-settlements_standing_dwarf = 4
-settlements_standing_faerie = 12
-settlements_standing_human = 8
+census_rows = 1868
+relations = 70
+population = 200822
+population_elf = 2639
+population_goblin = 121995
+population_dwarf = 10884
+population_faerie = 2374
+population_human = 55374
+population_orc = 7556
+settlements_standing_elf = 2
+settlements_standing_goblin = 57
+settlements_standing_dwarf = 5
+settlements_standing_faerie = 6
+settlements_standing_human = 11
 settlements_standing_orc = 5
-regions_held_elf = 2
-regions_held_goblin = 16
-regions_held_dwarf = 1
-regions_held_faerie = 6
-regions_held_human = 2
+regions_held_elf = 1
+regions_held_goblin = 17
+regions_held_dwarf = 2
+regions_held_faerie = 3
+regions_held_human = 4
 regions_held_orc = 2
 
 $ worldgen-cli hash --db ~/.cache/the-unmapped/out/world-15629206466951235176.db
-e0d30998f8cf264a1d4318a78fa497324714d8ee3c287af80cfb3ab1a936830a
+9e1c254b9a02fa14e65e812823e6376df000fa817e9a22d25d984bdd6bc038a8
 
 $ worldgen-cli render --db ~/.cache/the-unmapped/out/world-15629206466951235176.db --composite map
 /home/you/.cache/the-unmapped/out/world-15629206466951235176.map.png

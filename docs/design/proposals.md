@@ -780,6 +780,77 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
 - Interim choice: as proposed, for the P3-08 implementation; the questions to Paul are in `docs/specs/p3-08-followups.md` 10.
 - Status: open
 
+### History: four rule changes proposed by the world critic's review of conflict
+
+- Date: 2026-11-20
+- Raised by: lead, from the world critic's review of P3-06 (`docs/reviews/p3-06-conflict-world-critic.md`)
+- Design doc section: 5 (history: wars, ruin, the elder peoples), 13 (P3)
+- Problem: conflict (generator 0.16.0) gives the history causes, endings and ruins, and the review found nothing that blocks its merge. It found four things the design does not settle:
+  1. **The last refuge cannot fall.** A people's last settlement is protected so that no race goes extinct. The guard is in use in 92 of 100 default worlds; one village holds 32 sieges in 352 years. It reads as absurd.
+  2. **Only goblins act.** Goblins declare 81% of wars at defaults; elves and faeries declare none, however much they have lost, and orcs lose three times as often as they win.
+  3. **Many wars change nothing.** 42% of default wars end with no sack, capture, cession or conquest, and the same pair fights over the same region up to 17 times.
+  4. **A race can win though no civilization does.** The runaway guard measures land share per civilization only; in 38 of 100 default worlds one race has at least 60% of all people.
+- Proposal:
+  1. A last refuge falls: its survivors flee and found a hidden hamlet elsewhere. The guard stays only when there is nowhere to flee.
+  2. Land lost by capture, sack or cession leaves a revenge claim that acts whatever the race's aggression, so elves retake ruins and dwarves avenge their holds. Orcs are made able to win their age (a larger levy, or a limit on declaring against much stronger foes).
+  3. A won war always costs the loser: land, tribute, or a longer truce for a pair that keeps fighting over the same goal.
+  4. Runaway is also measured per race, in the spec's sweep statistics and the validation sweep.
+- Interim choice: P3-06 merges as specified. Points 1 to 4 are being specified as their own change, P3-09 "conflict balance" (generator 0.18.0, branch `p3/09-spec`), at the spec writer's most reasonable reading, after the already decided names and peoples follow-ups (P3-08, generator 0.17.0). The P3-09 spec will list the decisions for Paul to confirm before it is implemented.
+- Status: accepted by Paul on 2026-11-20 (see "Paul's decision of 2026-11-20: the P3-09 conflict balance questions")
+
+### Paul's decisions of 2026-11-20 on the name filter questions
+
+- Date: 2026-11-20
+- Raised by: lead, recording Paul's decision
+- Design doc section: 5 (names of gods, peoples and places)
+- Problem: the names filter amendment (`docs/specs/p3-02-names.md` section 11.10) put seven questions to Paul.
+- Decision: Paul's words: "on 1, the short reject list is correct, the happy accidents should be preserved. I accept the rest of your recommendations on the names." So:
+  1. The English-word list is the short one: only words that are crude, comic or modern-sounding are rejected (about 150). Ordinary English words that fit the setting stay as name roots ("The Kingdom of Gold", "Thorn Deep", "Moss Hollow"). The slur and crude-fragment lists are separate and unchanged.
+  2. Region names do not share the filter; they keep their own exclusion list.
+  3. No edits to the syllable lists; the filter does the work.
+  4. Gods use each culture's `god_patterns` (its multi-syllable shapes). Epithets wait for the pantheon in P5.
+  5. The elven bare realm form is "The House of {root}".
+  6. Orcish two-letter apostrophe parts ("Am'gash") stay.
+  7. The filter lists are plain text in the repository.
+- Interim choice: points 2 to 7 are as shipped with P3-08 (generator 0.17.0). Point 1 differs from what P3-08 ships (the full list of 647 words): the short list is a data change to `game/data/name_filters/words.toml` that changes worlds, and ships with the next change after P3-08.
+- Status: accepted; point 1 scheduled after P3-08
+
+### Paul's decision of 2026-11-20: the P3-08 tuning questions go with their recommendations
+
+- Date: 2026-11-20
+- Raised by: lead, recording Paul's decision
+- Design doc section: 5 (history: settlements, famine and plague, war), 13 (P3)
+- Problem: the P3-08 change spec (`docs/specs/p3-08-followups.md` section 10, branch `p3/08-spec`) put five tuning questions to Paul.
+- Decision: Paul's words: "I accept all your recommendations in P3-08 tuning." So:
+  1. Dwarven sites: dwarves take the high, ore-rich part of their regions (cell weights ore 400, height 600); most dwarven foundings are fortresses.
+  2. Battle losses are computed from the smaller force, so a victor never loses more than the defeated, accepting that more sieges succeed.
+  3. One quiet era per civilization per quiet stretch.
+  4. Famine and plague-spread rates are halved.
+  5. The sentence templates gain the three-word form (a wording chosen by a value).
+- Interim choice: none needed; all five are as implemented in P3-08 (generator 0.17.0), which is in validation. The validation sweep and the world critic's review check whether the darker battles or the dwarven fortresses overshoot.
+- Status: accepted
+
+### Paul's decision of 2026-11-20: the P3-09 conflict balance questions go with the lead's recommendations
+
+- Date: 2026-11-20
+- Raised by: lead, recording Paul's decision
+- Design doc section: 5 (history: wars, ruin, the elder peoples), 13 (P3)
+- Problem: the P3-09 change spec (`docs/specs/p3-09-conflict-balance.md` section 8, branch `p3/09-spec`) put eleven questions to Paul, four of them design-level (the entry "four rule changes proposed by the world critic's review of conflict").
+- Decision: Paul's words: "I accept all your recommendations on P3-09 conflict balance." The lead's recommendations were the spec's, so:
+  1. A race's last refuge falls into flight: it is sacked and its survivors found a settlement in hiding up to three borders away, out of every army's sight for 300 years, found again without an event. The old guard holds only when no free land is in reach.
+  2. A lost war always costs the loser, also when the defender wins: the goal, else the loser's best non-capital region in the winner's reach, else a tribute of 100 permille of its people, carried off. Tribute as people is taken now and does not wait for wealth in P5.
+  3. Revenge claims: a people that lost a settlement or region fights the taker at aggression at least 400 while the grudge lasts.
+  4. Runaway is also measured per race, as statistics with typical ranges, not a hard bound; the share is watched in the validation sweep.
+  5. Orcs starting about 25% of the wars of their own age is accepted, since they now win more than they lose.
+  6. Faeries never strike back.
+  7. The race fields `muster_permille`, `conceal_min` and `home_defense_permille`, with the shipped values.
+  8. Local levies, odds weighed by terrain, an odds minimum that also stops flare-ups, and a shorter truce for the most warlike.
+  9. Armies cross three borders against an enemy of the other camp.
+  10. No conflict rule for map size; the automatic setting founds more civilizations per race on a larger map.
+  11. The history report's summary: a per-age floor of 20, a shown declaration always with its ending, claims at salience 35, the notes; within the 250-line budget and minimum salience 20. The fill step is added only if the P3-07 implementer's measurements confirm it.
+- Interim choice: none needed. The spec's figures were measured on a prototype at 0.16.0 and are re-measured after implementation on top of P3-08.
+- Status: accepted; implementation follows P3-08
+
 ### History: conflict balance beyond the four rule changes (P3-09)
 
 - Date: 2026-11-20
@@ -787,5 +858,5 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
 - Design doc section: 5 (faeries "hidden communities in wild places"; orcs "strong, warlike", "their coming opens the most recent age of conflict"; goblins "hostile to elves from the first year"; "old wars leave grudges"), 2 (map size means more land), 13 (P3 exit: the history reads as coherent history)
 - Problem: besides the four design-level changes of the lead's entry (flight of the last refuge, revenge, a cost for every lost war, runaway measured per race), the review's findings need rules the design does not state: faeries are besieged dozens of times in open view; orcs, the most warlike people, lose three wars in four in their own age; the same defender is attacked over the same wood up to 17 times; the goblin–elf feud is missing in a fifth of worlds; a 2048 world is nearly at peace; the summary drops whole ages and war endings.
 - Proposal: specified in `docs/specs/p3-09-conflict-balance.md` (generator 0.18.0, no schema change; normative text in P3-06 20, P3-05 21, P3-01 3.2, P3-07 21): faerie settlements in their forest are concealed from armies, elves and faeries defend their own land more strongly (race fields `conceal_min`, `home_defense_permille`); orcs muster four times the standard levy (race field `muster_permille`), battles are fought with the levies near the battlefield, a people declares only wars whose odds, weighed by the terrain, reach a minimum, and peoples more warlike than goblins keep shorter truces; a defender that has withstood three wars over one region is not attacked over it again until it changes hands; good and evil armies cross three borders to reach each other; a larger map founds more realms per race; the history report's summary shows at least 20 events per age and every shown war with its ending.
-- Interim choice: as proposed, for the P3-09 implementation; the questions to Paul are in `docs/specs/p3-09-conflict-balance.md` 8 (items 5–11).
-- Status: open
+- Interim choice: as proposed, for the P3-09 implementation; the questions to Paul were `docs/specs/p3-09-conflict-balance.md` 8 (items 5–11).
+- Status: accepted by Paul on 2026-11-20 (see "Paul's decision of 2026-11-20: the P3-09 conflict balance questions go with the lead's recommendations")
