@@ -474,6 +474,75 @@ With the new id, every data root carries `chronology.toml`, `engine.toml`, `peop
 
 These change the `race_biome` rows (P3-03) and every world's `content_hash`: P3-03's table golden lines for `race_biome` and P3-01's content-hash lines are re-recorded with this merge by their references (15.5).
 
+### 12.3 Faerie weights after Paul's decision (amendment r5; **not yet shipped: data change scheduled after P3-06, with a generator version bump**)
+
+Paul's decision of 2026-11-19 on question 7: "Faeries definitely need to be in forested lands, doesn't have to be wet." The 0.15.0 weights of 12.2 item 3 put fen and wet woodland first (800) and plain forest last but one (100). This amendment changes the faerie race file only, as its own data change after P3-06 is integrated: it changes every world's `content_hash`, the `race_biome` rows and where faeries live, so it needs a `GENERATOR_VERSION` bump and re-recorded golden values. The 0.15.0 and 0.16.0 data stay as they are until then; nothing here applies to them.
+
+**Recommended weights (candidate A)**, replacing the faerie `biomes` array; `upland` 200, `coast`, `site_weights`, `density_permille`, `awakening_share`, `expansion` unchanged:
+
+| Biome | 0.15.0 | A (recommended) |
+| --- | --- | --- |
+| `temperate_forest` | 100 | **800** |
+| `wet_woodland` | 800 | **800** |
+| `fen` | 800 | 300 |
+| `marsh` | 600 | 200 |
+| `highland_moor` | 300 | 100 |
+| `heath` | 100 | 0 |
+| `grassland` | −200 | −300 |
+| `alpine` | −300 | −400 |
+| `steppe` | −400 | −400 |
+
+Forest is the first preference, wet or dry, with one weight for both (Paul: "doesn't have to be wet"); fen and marsh stay liked, below forest, as the wild places of design 5.
+
+**Candidates measured** (prototypes `peoples.py` and `conflict.py` with `fae.py`, `~/.cache/the-unmapped/out/p3-06-spec/`): B = forest 700, wet woodland 900, fen 400, marsh 300, moor 200, heath 100, grassland −300, alpine −300, steppe −400 (wet still slightly first); C = forest 900, wet woodland 900, fen 200, marsh 100, moor 0, heath −100, grassland −400, alpine and steppe −500, `upland` 100, `site_weights` forage 50, timber 40, fresh water 10.
+
+**Where faeries awaken** (homes of every faerie civilization founded at an awakening; medians of the home's shares, ‰; "best is elven": the region of the highest faerie σ among non-islet regions with C ≥ `home_min_capacity`, held or not, is held by elves at the faerie awakening; "home / best" the faerie home's σ against that region's, ‰, in those worlds):
+
+| 1024, seeds 0–49, peoples alone | 0.15.0 | A | B | C |
+| --- | --- | --- | --- | --- |
+| homes | 61 | 64 | 65 | 63 |
+| forest (temperate + wet woodland) | 829 | 983 | 981 | 992 |
+| wetland (wet woodland, fen, marsh) | 88 | 6 | 7 | 3 |
+| homes with fen + marsh above forest | 1 | 0 | 0 | 0 |
+| dominant biome forest | 60 of 61 | 64 of 64 | 65 of 65 | 63 of 63 |
+| habitability, capacity of the home | 79, 3,215 | 80, 3,533 | 80, 3,408 | 80, 3,148 |
+| best faerie region elven | 16 of 50 | 35 | 36 | 42 |
+| home / best when elven | 841 / 952 / 985 | 870 / 978 / 999 | 870 / 977 / 999 | 857 / 986 / 999 |
+| faerie population (min / median / max) | 1,817 / 6,182 / 15,097 | 2,723 / 6,114 / 15,396 | 2,723 / 6,114 / 14,737 | 2,465 / 5,655 / 14,478 |
+| faerie settlements standing | 3 / 7 / 17 | 4 / 8 / 19 | 4 / 8 / 19 | 4 / 8 / 18 |
+| faerie regions held | 1 / 4 / 9 | 1 / 3 / 7 | 1 / 3 / 7 | 1 / 3 / 7 |
+| elven settlements standing (median) | 20 | 19.5 | 19.5 | 19 |
+
+| 512, seeds 0–19, peoples alone | 0.15.0 | A | B | C |
+| --- | --- | --- | --- | --- |
+| forest share of the home | 702 | 713 | 713 | 713 |
+| homes not forest-dominated (grassland) | 3 of 20 | 3 | 3 | 3 |
+| awakenings with no eligible region (fallback home) | 2 | 2 | 2 | 2 |
+| best faerie region elven | 12 of 20 | 17 | 17 | 17 |
+| home / best when elven | 436 / 858 / 978 | 312 / 820 / 984 | 314 / 831 / 986 | 234 / 801 / 970 |
+| faerie population | 810 / 2,789 / 4,261 | 1,116 / 3,583 / 5,432 | 1,045 / 3,629 / 5,432 | 948 / 3,312 / 5,205 |
+
+**With conflict** (P3-06 prototype as of P3-06 r2: no battle in a war's declaration year):
+
+| | 1024: 0.15.0 | 1024: A | 512: 0.15.0 | 512: A |
+| --- | --- | --- | --- | --- |
+| faerie population | 295 / 2,641 / 14,608 | 417 / 3,321 / 13,956 | 300 / 1,274 / 4,075 | 178 / 1,442 / 5,333 |
+| faerie settlements standing | 1 / 4 / 16 | 1 / 5 / 18 | 1 / 1 / 6 | 1 / 2 / 6 |
+| faerie civilizations conquered | 8 of 62 | 4 of 64 | 0 of 20 | 0 of 20 |
+| wars against faeries | 0 / 4 / 9 | 0 / 3 / 12 | 1 / 5 / 11 | 1 / 6 / 10 |
+| faerie capitals sacked | 0 / 1 / 8 | 0 / 1 / 8 | 0 / 1 / 6 | 0 / 2 / 5 |
+| `last_refuge` uses for a faerie settlement (all races) | 88 (183) | 114 (203) | 146 (209) | 111 (197) |
+| worlds where the refuge saved a faerie settlement | 18 | 16 | 16 | 13 |
+| wars, simulated years (medians) | 23, 1,293 | 24, 1,277 | 27, 1,275 | 27, 1,275 |
+
+**Bounds.** Every hard bound of 15.5 (not empty, capacity, events, runaway, sizes) and of P3-06 14 / 15.5 (races alive, runaway, events, phases, capacity) holds on every world of every candidate, with and without conflict; no race goes extinct.
+
+**Reading.** All three candidates put every 1024 faerie home in forest (median forest share 980–992‰ against 829‰) and none in a fen or marsh. The elves, four thousand years earlier, already hold the faeries' best forest in 35 of 50 worlds (A) against 16 before, since both peoples now want the same land; the faeries then take a forest of 98% of its value (median), so they are not pushed to poor land at 1024. At 512 they are, as before and in every candidate (3 of 20 homes on grassland, 2 awakenings with no eligible region): the small maps' forest is gone to the elves by the faerie awakening. Population and settlements barely move (6,114 against 6,182). A is recommended: it states the decision most directly (one weight for dry and wet forest), keeps the faeries' liking for wild wetland second, and changes nothing else; B is indistinguishable in every measure; C crowds the faeries hardest into elven forest (42 of 50) and lowers their population for no gain.
+
+**No other adjustment needed.** `awakening_share` (0.70), reach (1 hop, `expansion` 100) and `home_min_capacity` (1500) keep "few, hidden, in the woods" true: at 1024 every awakening finds an eligible forest region and faerie realms stay at a median of 8 settlements; moving the awakening earlier would put the faeries' choice before the elves have spread and is not what the design's order says.
+
+**Consequences for P3-06's numbers** (P3-06 section 15 is not rewritten until the change ships): the faerie rows and every per-world figure move, because the faeries' homes and neighbours change: faerie standing settlements (4 → 5), faerie civilizations conquered (8 → 4 of about 63), wars against faeries (median 4 → 3, maximum 9 → 12), `last_refuge` uses; the whole-world medians move slightly (wars 23 → 24, simulated years 1,293 → 1,277, events 815 → about 830); the seed 42 sample changes (the Teeshti Court awakens in another region, of 983‰ forest; 1,051 events, 44 wars, 12 of them against faeries, against 1,030, 38 and 6), so P3-06 15.2, 15.3, the golden case `hist-conflict-42-1024` and every world hash are re-recorded with the data change.
+
 ## 13. The seam for P3-06
 
 P3-05 owns the state of peoples; P3-06 reads it through a read-only view and changes the world only through P3-04's `State` and the two hooks below.
@@ -856,13 +925,13 @@ Section 9 gains, after `wars_open`, the keys of 15.4 in that order with those de
 
 ## 19. Open questions for Paul
 
-1. **Population density per race** (5.1, 12.2): a new race field `density_permille`. Recommendation and interim: yes; elves 300 and faeries 250 against humans 1000 makes "few in number" a number. Alternative: derive density from lifespan.
+1. **Population density per race** (5.1, 12.2): a new race field `density_permille`. Recommendation and interim: yes; elves 300 and faeries 250 against humans 1000 makes "few in number" a number. Alternative: derive density from lifespan. **Answered by Paul (2026-11-19): the interim choice stands**, a field (he likes deriving density from a race's age but expects it to be hard to tune).
 2. **Reach from the capital** (9.3): a people expands only a few hops from its seat, and spreads farther by splitting. Recommendation and interim: yes (elves 1 hop, humans 3); without it the first two races fill the continent before the humans awaken.
 3. **`civs_per_race` 1–4 is a request**: a second civilization needs free land three hops from the first (7.2). Recommendation and interim: yes; at 512 an explicit 4 often gives 2.
 4. **No pressures in quiet steps** (10.5): famine, plague and crises happen only in active phases and flare-ups. Recommendation and interim: yes, it is the design's peace; quiet steps write growth, foundings and fading.
 5. **Secession as the outcome of some crises** (10.3): a crisis in a large realm may split it. Recommendation and interim: yes; it gives P3-06 rivals of one race and the design's "factions" a forerunner.
 6. **Migration deferred** (1): colonists and survivors move; whole peoples do not. Recommendation and interim: refugee migration with P3-06 (after sackings) or P5.
-7. **Faeries in forest**: wetland-rich regions are rare (median one per 1024 world), so faeries mostly live in the wettest free woodland. Recommendation and interim: accept; a stronger preference would leave them landless on most worlds.
+7. **Faeries in forest**: wetland-rich regions are rare (median one per 1024 world), so faeries mostly live in the wettest free woodland. Recommendation and interim: accept; a stronger preference would leave them landless on most worlds. **Answered by Paul (2026-11-19): "Faeries definitely need to be in forested lands, doesn't have to be wet."** The weights are re-tuned in 12.3 (candidate A), as a data change after P3-06.
 8. **A plague that empties a settlement** (10.2, r3): should the outbreak still spread to its neighbours? Recommendation and interim: no, as measured (the prototype and the implementation agree; an emptied town has no one left to carry it). Alternative: spread from the outbreak's event regardless.
 
 ## 20. For the P3-06 spec writer
@@ -907,3 +976,7 @@ The lead's rulings on the questions the implementation (`p3/05-int`, b62c1cf) ra
 ## Revision note r4 (2026-11-19, the P3-05 audit)
 
 10.4: a settlement struck twice in one T4 while declining repeats the same abandonment draw (the audit's N6; as specified). The audit's N5 (9.2's recovery "once at the end") was already corrected by r3: recovery is applied each year inside Q1. What P3-06 must respect in this code is recorded in P3-06 8.4. No rule or world byte changes.
+
+## Revision note r5 (2026-11-19, Paul's answers on questions 1 and 7)
+
+Questions 1 (density stays a field) and 7 (faeries in forest, wet or not) answered. New 12.3: the recommended faerie biome weights (candidate A: temperate forest and wet woodland 800, fen 300, marsh 200, moor 100, heath 0, grassland −300, alpine and steppe −400), measured against two other candidates at 1024 seeds 0–49 and 512 seeds 0–19 with peoples alone and with conflict, the bounds, and the P3-06 figures that move. **Not yet shipped**: a data change scheduled after P3-06, with a generator version bump; the 0.15.0 and 0.16.0 data are unchanged.
