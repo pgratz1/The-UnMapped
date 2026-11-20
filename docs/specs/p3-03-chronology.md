@@ -244,34 +244,34 @@ Section 5.3.
 
 ### 7.1 Worked examples
 
-Computed by the prototype; the test writer's reference must reproduce them independently. Shipped data and tuning, no region name colliding.
+Computed by the prototype; the test writer's reference must reproduce them independently. (r4: the god names are those of generator 0.17.0, P3-02 r5's `god_patterns` and name filter, computed by the spec writer with the P3-08 test writer's `p3_chronology_reference.py` on `p3/08-tests` (3f660b8) and P3-08's data; the years, ages and the elven, dwarven, faerie and human gods of seed 42 are unchanged.) Shipped data and tuning, no region name colliding.
 
 **Seed 42, span 6000, all races.** K_aw = 0xA7284FA6D2415A60; jmax 60 (pick over 121 values); share raws: goblin 1503238554, dwarf 2362232013, faerie 3006477107, human 3564822856, orc 3994319585.
 
 | Race | base | u | pick | d | year | Age (id, years, name) | God (id, name, attempt) |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | elf | 0 | — | — | — | **0** | 1, 0–2073, The Age of Elves | 1, **Fielie**, 0 |
-| goblin | 2100 | 0x48F251C73BC89E2C | 34 | −26 | **2074** | 2, 2074–3241, The Age of Goblins | 2, **Krok**, 0 |
-| dwarf | 3300 | 0x04C4CCA630137EBA | 2 | −58 | **3242** | 3, 3242–4242, The Age of Dwarves | 3, **Bronhak**, 1 |
+| goblin | 2100 | 0x48F251C73BC89E2C | 34 | −26 | **2074** | 2, 2074–3241, The Age of Goblins | 2, **Krokzit**, 0 (r4; `Krok` before 0.17.0) |
+| dwarf | 3300 | 0x04C4CCA630137EBA | 2 | −58 | **3242** | 3, 3242–4242, The Age of Dwarves | 3, **Bronhak**, 1 (r4: still attempt 1) |
 | faerie | 4200 | 0xDA392A12D57DEAEB | 103 | 43 | **4243** | 4, 4243–4968, The Age of Faeries | 4, **Syfiash**, 0 |
 | human | 4980 | 0x67CC0B87B4CE8D5A | 49 | −11 | **4969** | 5, 4969–5595, The Age of Humans | 5, **Wealstuld**, 0 |
-| orc | 5580 | 0xA1211F03C3A8FF14 | 76 | 16 | **5596** | 6, 5596–5999, The Age of Orcs | 6, **Kruu**, 0 |
+| orc | 5580 | 0xA1211F03C3A8FF14 | 76 | 16 | **5596** | 6, 5596–5999, The Age of Orcs | 6, **Ogh'krak**, 1 (r4; `Kruu`, attempt 0, before 0.17.0) |
 
 The 1024 world of seed 42 (0.12.0, 50 regions, `North Downs`, `North Downs II`, …) changes nothing here: no region name equals a god or age name.
 
-**Seed 0, span 6000, all races**: years 0, 2068, 3265, 4178, 5003, 5534 (d = −32, −35, −22, 23, −46); gods Saene, Kruskux, Nurnthaimm, Whaia (attempt 1), Steldhil, Bald. (Saene, Kruskux and Nurnthaimm are the god samples of P3-02 5.1 for entities 1, 2 and 3 of their cultures.)
+**Seed 0, span 6000, all races**: years 0, 2068, 3265, 4178, 5003, 5534 (d = −32, −35, −22, 23, −46); gods Saene, Kruskux, Nurnthaimm, Whaia (attempt 1), Steldhil, Uruld'kruum (attempt 1) (r4; the sixth was `Bald` before 0.17.0). (Saene, Kruskux and Nurnthaimm are the god samples of P3-02 5.1 for entities 1, 2 and 3 of their cultures.)
 
-**Seed 1, span 6000**: years 0, 2071, 3341, 4178, 4934, 5580 (d = −29, 41, −22, −46, 0); gods Laesiel, Gragg-Gnurk, Khummhor, Synmia, Steck, Kaag.
+**Seed 1, span 6000**: years 0, 2071, 3341, 4178, 4934, 5580 (d = −29, 41, −22, −46, 0); gods Laesiel, Gragg-Gnurk, Khummhor, Synmia, Steckwint, Kaag'azak (r4; `Steck`, `Kaag` before 0.17.0).
 
-**Seed 7, span 2000** (the `hist-span-2000-512` case): jmax 20, bases 0, 700, 1100, 1400, 1660, 1860; years 0, 688, 1114, 1409, 1644, 1879; ages end 687, 1113, 1408, 1643, 1878, 1999; gods Vanir, Grux, Mammga, Ouwheefy, Gord, Maark'zaagh.
+**Seed 7, span 2000** (the `hist-span-2000-512` case): jmax 20, bases 0, 700, 1100, 1400, 1660, 1860; years 0, 688, 1114, 1409, 1644, 1879; ages end 687, 1113, 1408, 1643, 1878, 1999; gods Onveth, Buzork, Mammga, Ouwheefy, Gordman, Maarkzaagh (r4; `Vanir`, `Grux`, `Gord`, `Maark'zaagh` before 0.17.0).
 
-**Seed 3, span 6000, `--races elf,orc`** (the `hist-races-elf-orc-1024` case): orc u = 0xAEA8CB7C6C7550B5, d = 22, year 5602; ages (1, race 1, 0–5601, The Age of Elves), (2, race 6, 5602–5999, The Age of Orcs); six gods Vaennela, Buzz, Nonthom (attempt 1), Pyia, Alis (attempt 1), Uguuggrush; `race` rows 2–5 `present` 0, `awakening_year` NULL, `creator_god` 2–5.
+**Seed 3, span 6000, `--races elf,orc`** (the `hist-races-elf-orc-1024` case): orc u = 0xAEA8CB7C6C7550B5, d = 22, year 5602; ages (1, race 1, 0–5601, The Age of Elves), (2, race 6, 5602–5999, The Age of Orcs); six gods Vaennela, Sluskat (attempt 1), Nonthom (attempt 1), Pyia, Bulwan, A'ghaz (r4; `Buzz`, `Alis` (attempt 1), `Uguuggrush` before 0.17.0); `race` rows 2–5 `present` 0, `awakening_year` NULL, `creator_god` 2–5.
 
-**Seed 42, `--races goblin,dwarf,human`**: goblins at 0 (base 2100 ignored), dwarves 3242 and humans 4969 (the same draws as in the full world); ages (1, race 2, 0–3241), (2, race 3, 3242–4968), (3, race 5, 4969–5999); gods as in the full world (Fielie … Kruu).
+**Seed 42, `--races goblin,dwarf,human`**: goblins at 0 (base 2100 ignored), dwarves 3242 and humans 4969 (the same draws as in the full world); ages (1, race 2, 0–3241), (2, race 3, 3242–4968), (3, race 5, 4969–5999); gods as in the full world (Fielie … Ogh'krak; r4).
 
-**Seed 2^64 − 1, span 12000, `--races orc`**: one age (1, race 6, 0–11999, The Age of Orcs); gods Ciefa, Slogob, Narinnadin, Oupoubia, Hard, Kruurz.
+**Seed 2^64 − 1, span 12000, `--races orc`**: one age (1, race 6, 0–11999, The Age of Orcs); gods Ciefa, Slogob, Narinnadin, Oupoubia, Hardcald, Kruurz'gruu (r4; `Hard`, `Kruurz` before 0.17.0).
 
-**Collisions** (seed 42, span 6000, all races, registry preloaded with the region names `Fielie`, `The Age of Elves`, `Krok`, `Krok II`): age 1 is **The Age of Elves II**; god 1 is **Mical** (attempt 2: attempt 0 gives `Fielie`, taken), god 2 is **Zatch** (attempt 1).
+**Collisions** (seed 42, span 6000, all races, registry preloaded with the region names `Fielie`, `The Age of Elves`, `Krokzit`, `Krokzit II`; r4: `Krok`, `Krok II` before 0.17.0): age 1 is **The Age of Elves II**; god 1 is **Mical** (attempt 2: attempt 0 gives `Fielie`, taken), god 2 is **Zatchgnozz** (attempt 1: attempt 0 gives `Krokzit`, taken; before 0.17.0 god 2 was `Zatch`).
 
 **Clamp** (hand-made data, span 6000, gap 100, jitter 0): shares 0, 0.5, 0.501, 0.999 → bases 0, 3000, 3006, 5994; years 0, 3000, 3100 (lo), 5900 (hi = 6000 − 100). With gap 2000 and six races at span 2000: G = 333.
 
@@ -516,6 +516,8 @@ Text changes so that the spec says what the implementation (`p3/03-int`) and its
 
 Requested by P3-04 18.2; text only, nothing of this stage changes. 4.3: from P3-04 (generator 0.14.0) `--until history` is accepted and is the default, and `--until chronology` no longer gives the default world's bytes (the default also runs `history`; 14.1 item 12's equality holds only at 0.13.0). 5.1: from schema 7 the empty world is 34 pages (P3-04 9.6; P0-02 amendment 19). 8.2: the registry rule is applied by the `history` stage as its first step (P3-04 7.2, "Registry"). The P3-03 audit's guards (`origin/p3/03-audit-guard`) are recorded by the audit, not here.
 
-## Revision note r3 (2026-11-20, amendments for P3-08; generator 0.17.0)
+## Revision note r3 (2026-11-20, amendments for P3-08; generator 0.17.0; r4 the same day)
 
 Requested by P1-06 r3 14.6 item 2 and P3-02 r5 11.8; takes effect with the P3-08 change (`docs/specs/p3-08-followups.md`). Section 2 and 14.3 item 21: region names of P1-06 r3 can have the form of a god name, so "the chronology does not depend on the region names" holds on the golden worlds, not by form; the test is unchanged. The stage's input checks gain P3-02 r5's `names_form_text` (P3-02 11.3, r6: the forms' fixed text holds no filtered fragment), after the existing checks of the culture data and before any name is drawn; god names are drawn with the name filter and the culture's `god_patterns` (P3-02 11.3, 11.4), so the `god` rows and `p3-03-chronology.txt` change (re-recorded by the reference with P3-08).
+
+**r4 (2026-11-20, after the P3-08 implementation).** 7.1's god names and the collision example are 0.17.0's (above). `names_form_text`'s failure in this stage is fatal with P3-02 11.3's message exactly, with no `chronology:` prefix: `history: culture '<id>' <kind>_forms[<i>] '<form>' holds the filtered text '<entry>'` (the check belongs to the names library and is shared with the history stage; both writers implemented it so). It runs after the existing checks of the culture data and before any name is drawn.
