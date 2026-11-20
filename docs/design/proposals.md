@@ -767,3 +767,20 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
   4. Runaway is also measured per race, in the spec's sweep statistics and the validation sweep.
 - Interim choice: P3-06 merges as specified. Points 1 to 4 are being specified as their own change, P3-09 "conflict balance" (generator 0.18.0, branch `p3/09-spec`), at the spec writer's most reasonable reading, after the already decided names and peoples follow-ups (P3-08, generator 0.17.0). The P3-09 spec will list the decisions for Paul to confirm before it is implemented.
 - Status: open
+
+### Paul's decisions of 2026-11-20 on the name filter questions
+
+- Date: 2026-11-20
+- Raised by: lead, recording Paul's decision
+- Design doc section: 5 (names of gods, peoples and places)
+- Problem: the names filter amendment (`docs/specs/p3-02-names.md` section 11.10) put seven questions to Paul.
+- Decision: Paul's words: "on 1, the short reject list is correct, the happy accidents should be preserved. I accept the rest of your recommendations on the names." So:
+  1. The English-word list is the short one: only words that are crude, comic or modern-sounding are rejected (about 150). Ordinary English words that fit the setting stay as name roots ("The Kingdom of Gold", "Thorn Deep", "Moss Hollow"). The slur and crude-fragment lists are separate and unchanged.
+  2. Region names do not share the filter; they keep their own exclusion list.
+  3. No edits to the syllable lists; the filter does the work.
+  4. Gods use each culture's `god_patterns` (its multi-syllable shapes). Epithets wait for the pantheon in P5.
+  5. The elven bare realm form is "The House of {root}".
+  6. Orcish two-letter apostrophe parts ("Am'gash") stay.
+  7. The filter lists are plain text in the repository.
+- Interim choice: points 2 to 7 are as shipped with P3-08 (generator 0.17.0). Point 1 differs from what P3-08 ships (the full list of 647 words): the short list is a data change to `game/data/name_filters/words.toml` that changes worlds, and ships with the next change after P3-08.
+- Status: accepted; point 1 scheduled after P3-08
