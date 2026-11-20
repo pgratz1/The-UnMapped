@@ -308,8 +308,8 @@ TEST_CASE("P3-04 3.4 items 2 to 5, 16.1 item 3: entry checks of history_stage wi
     }
     {
         std::vector<ReportEntry> r = shipped_report();
-        r.insert(r.begin() + 1, ReportEntry{"battle", 10, "x"});
-        CHECK(stage_error(with_report(r), in) == "history: report: events[1]: kind 'battle' is not an event kind");
+        r.insert(r.begin() + 1, ReportEntry{"duel", 10, "x"});  // ("battle" is a kind of P3-06 since 0.16.0)
+        CHECK(stage_error(with_report(r), in) == "history: report: events[1]: kind 'duel' is not an event kind");
         r = shipped_report();
         r[2].templ = "{founder:plural}";
         CHECK(stage_error(with_report(r), in) ==

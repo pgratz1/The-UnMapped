@@ -5,7 +5,9 @@ Written by the test writer from docs/specs/p3-05-peoples.md (r2) alone,
 with the engine seam of docs/specs/p3-04-simulation-engine.md (r6: 6, 7,
 8, 16.6), without reading any implementation and without the spec
 writer's prototype. It reproduces the history stage of generator 0.15.0
-(schema 7): the peoples awakening handler (7) and the peoples subsystem
+(schema 7), which is at 0.16.0 the peoples-only configuration (P3-06 adds
+conflict to the shipped stage; p3_conflict_reference.py extends this file;
+the catalogue is P3-06's 30 kinds): the peoples awakening handler (7) and the peoples subsystem
 (steps T1, T2, T4, Q1, Q3, Q4; sections 4 to 10) on the P3-04 engine of
 p3_engine_reference.py (scheduler SC1-SC6, event writer, quiet eras,
 bookkeeping, catalogue, template grammar, renderer), and writes every row

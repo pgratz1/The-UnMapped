@@ -26,7 +26,7 @@ point.
 
 Usage (from the repository root; -B keeps __pycache__ out of the tree):
 
-    python3 -B worldgen/tests/reference/p3_conflict_reference.py check [--inputs DIR] [--quick]
+    python3 -B worldgen/tests/reference/p3_conflict_reference.py check [--inputs DIR] [--quick] [--write]
         Self-checks: the data (history.conflict = the listing, the race
         changes, the catalogue of kinds 20-30 and the report entries), the
         worked example W1 of 16.1 and hand-made units, the invariants of 14
@@ -34,7 +34,9 @@ Usage (from the repository root; -B keeps __pycache__ out of the tree):
         cases, draw independence (14 item 9), the sample of 15.2 (seed 42 at
         1024: the war list and the sixty summary lines), and the committed
         golden file against a fresh computation (skipped with --quick, which
-        also runs fewer synthetic seeds). Exit 1 on any disagreement.
+        also runs fewer synthetic seeds and only one 1024 world; --write
+        writes the golden file from the run instead of comparing). Exit 1
+        on any disagreement.
 
     python3 -B worldgen/tests/reference/p3_conflict_reference.py golden [PATH|-] [--inputs DIR]
         Writes worldgen/tests/golden/p3-06-conflict.txt. World cases read
@@ -1370,10 +1372,8 @@ STRESS_PEOPLES = dict(found_rate_permille=1000, split_min_settlements=2, split_m
                       crisis_per_generation_permille=300)
 STRESS_CONFLICT = dict(border_friction=600, tick_strain_permille=400, quiet_strain_permille=100, claim_strain=100,
                        declare_min=100, declare_span=200, declare_permille=600, shelter_years=60, march_hops=3,
-                       battle_permille=900, garrison_permille=40, walls_permille=dict(hamlet=1000, village=1000,
-                                                                                     town=1200, city=1500,
-                                                                                     fortress=2000),
-                       capital_walls=500, exhaustion_permille=400, war_max_years=25, truce_years=40)
+                       battle_permille=900, garrison_permille=200, exhaustion_permille=150, war_max_years=25,
+                       truce_years=40)
 STRESS_SEEDS = (0, 1, 2, 3, 4, 5, 6, 7, 9, 12, 13, 14)
 STRESS_CASES = {s: ((2000, 6000)[s % 2], ("all", "elf,goblin", "goblin,human,orc", "all")[(s // 2) % 4],
                     ("auto", "4")[(s // 4) % 2], ("normal", "turbulent", "calm")[s % 3]) for s in STRESS_SEEDS}
@@ -1381,6 +1381,15 @@ STRESS_CASES = {s: ((2000, 6000)[s % 2], ("all", "elf,goblin", "goblin,human,orc
 
 def stress_data(dat=None):
     return edited(dat or data(), conflict=STRESS_CONFLICT, peoples=STRESS_PEOPLES)
+
+
+# The guards' counterfactual (9, question 4): the stress tuning with last_refuge 0 and shelter_years 0.
+NOREFUGE_SEEDS = (5, 12, 13)
+
+
+def norefuge_data(dat=None):
+    return edited(dat or data(), conflict=dict(STRESS_CONFLICT, last_refuge=0, shelter_years=0),
+                  peoples=STRESS_PEOPLES)
 
 
 # ---------------------------------------------------------------------------
@@ -1584,6 +1593,11 @@ def check_invariants(c, res, inp, w, label, last_refuge=True, threshold=None):
                    kind[cs[0]] == K["war_declared"])
         if key == "claim":
             cs = causes.get(e[0], [])
+            # 8.3 item 4: a colony of the same step is no claim cause, unless it is the region's
+            # owner_event (its ownership is live state)
+            c.true("%s 8.3 item 4 e%d claim cause not a colony of the same step" % (label, e[0]),
+                   not any(kind[x] == K["colony_founded"] and ev[x][1] == e[1] and
+                           not any(r[0] == e[5] and r[4] == x for r in res["region_control"]) for x in cs))
             c.true("%s 11 e%d claim cause" % (label, e[0]), len(cs) == 1 and KEY_OF[kind[cs[0]]] in (
                 "civ_founded", "settlement_founded", "colony_founded", "civ_seceded", "settlement_captured",
                 "region_ceded"))
@@ -1687,11 +1701,18 @@ def share_over(res, inp, w, limit_permille):
 # Golden cases (16.3)
 # ---------------------------------------------------------------------------
 
-WORLD_CASES = tuple(pe.WORLD_CASES) + (("hist-conflict-42-1024", 42, 1024, 6000, "all", "normal"),)
-INPUT_OF = {"hist-conflict-42-1024": "example-42-1024"}
+# (name, seed, size, span, races, detail, civs, intensity): the cases of 16.3 item 19 and 20, and two
+# 512 cases of the settings that P3-06 makes matter (--event-intensity, --civs-per-race; 16.2 item 15).
+WORLD_CASES = tuple(c + ("auto", "normal") for c in pe.WORLD_CASES) + (
+    ("hist-conflict-42-1024", 42, 1024, 6000, "all", "normal", "auto", "normal"),
+    ("hist-conflict-turbulent-512", 42, 512, 6000, "all", "normal", "auto", "turbulent"),
+    ("hist-conflict-civs4-512", 42, 512, 6000, "all", "normal", "4", "normal"),
+)
+INPUT_OF = {"hist-conflict-42-1024": "example-42-1024", "hist-conflict-turbulent-512": "geo-seed-42-512",
+            "hist-conflict-civs4-512": "geo-seed-42-512"}
 
 
-def world_case(name, seed, size, span, races, detail, inputs_dir, dat=None, civs=None, intensity="normal"):
+def world_case(name, seed, size, span, races, detail, inputs_dir, dat=None, civs="auto", intensity="normal"):
     dat = dat or data()
     path = os.path.join(inputs_dir, INPUT_OF.get(name, name) + ".db")
     conn = pchr.open_world(path)
@@ -1703,7 +1724,8 @@ def world_case(name, seed, size, span, races, detail, inputs_dir, dat=None, civs
     meta = dict(conn.execute("SELECT key, value FROM meta").fetchall())
     if int(meta["seed"]) != seed or int(meta["param.map_size"]) != size:
         fatal("%s: seed or map size differs from the case" % path)
-    p = pchr.params(span=span, races=pchr.races_of(races, dat.chron), detail=detail, civs=civs, intensity=intensity)
+    p = pchr.params(span=span, races=pchr.races_of(races, dat.chron), detail=detail, civs=pp.civs_param(civs),
+                    intensity=intensity)
     inp, _chron = inputs_for(dat, conn, p, seed, size)
     inp.peoples_layers()
     conn.close()
@@ -1726,7 +1748,7 @@ def case_lines(name, res, all_sentences):
         o.append("%s stats %s" % (name, line))
     o += war_lines(name, res)
     o += tension_lines(name, res)
-    sents = sentences(res, inp)
+    sents = sentences(res, inp) if all_sentences is not None else []
     for e, text in zip(res["event"], sents):
         if all_sentences or e[3] >= 20:
             o.append("%s e%d %s" % (name, e[0], text))
@@ -1749,11 +1771,12 @@ HEADER = """\
 #
 # Format: ASCII, LF, tokens separated by one space; a sentence runs to the
 # end of the line.
-#   world <case> <seed> <map size> <span> <races> <detail>
+#   world <case> <seed> <map size> <span> <races> <detail> <civs> <intensity>
 #       a world case (16.3 item 19): the four P1 golden cases, the three
-#       hist-* cases and hist-conflict-42-1024 (16.3 item 20, the sample of
-#       15.2), generated with the shipped data and these settings, other
-#       settings default (civs auto, intensity normal)
+#       hist-* cases, hist-conflict-42-1024 (16.3 item 20, the sample of
+#       15.2), and hist-conflict-turbulent-512 and hist-conflict-civs4-512
+#       (seed 42 at 512 with --event-intensity turbulent, --civs-per-race 4),
+#       generated with the shipped data and these settings
 #   synthetic <case> <seed> <span> <races> <civs> <intensity>
 #       a synthetic geography (16.2 item 15; P3-05's make_synthetic(seed) in
 #       p3_peoples_reference.py and p3_05_peoples_support.hpp), map 192,
@@ -1769,9 +1792,11 @@ HEADER = """\
 #                  quiet_strain_permille 100, claim_strain 100, declare_min
 #                  100, declare_span 200, declare_permille 600, shelter_years
 #                  60, march_hops 3, battle_permille 900, garrison_permille
-#                  40, walls_permille {1000, 1000, 1200, 1500, 2000},
-#                  capital_walls 500, exhaustion_permille 400, war_max_years
-#                  25, truce_years 40
+#                  200, exhaustion_permille 150, war_max_years 25,
+#                  truce_years 40
+#   norefuge <case> <seed> <span> <races> <civs> <intensity>
+#       as stress, with last_refuge 0 and shelter_years 0 (the guards'
+#       counterfactual of 9 and question 4)
 #   <case> input_region <hex>        P0-04 8 hash of the input's table region
 #   <case> table <table> <hex>       the thirteen history tables (P0-04 8)
 #   <case> report <line>             [history] after its header (P3-04 11.1
@@ -1789,9 +1814,10 @@ HEADER = """\
 #   <case> q<start> <value> e<trigger>
 #                                    the tension of every quiet step the
 #                                    engine asks (5.4; 16.3 (c))
-#   <case> e<id> <sentence>          render_event: every event of the 512,
-#                                    synthetic and stress cases, the events
-#                                    of kinds 20-30 of the 1024 cases
+#   <case> e<id> <sentence>          render_event: every event of the 512 and
+#                                    synthetic cases, the events of kinds
+#                                    20-30 of the 1024 cases (none of the
+#                                    stress cases: their tables carry them)
 """
 
 
@@ -2176,11 +2202,12 @@ def all_cases(inputs, quick=False):
     """(header line, name, res, all sentences) for every golden case, in file order."""
     dat = data()
     if os.path.isdir(inputs):
-        for name, seed, size, span, races, detail in WORLD_CASES:
+        for name, seed, size, span, races, detail, civs, intensity in WORLD_CASES:
             if quick and size > 512 and name != "hist-conflict-42-1024":
                 continue
-            res = world_case(name, seed, size, span, races, detail, inputs, dat)
-            yield "world %s %d %d %d %s %s" % (name, seed, size, span, races, detail), name, res, size <= 512
+            res = world_case(name, seed, size, span, races, detail, inputs, dat, civs, intensity)
+            yield ("world %s %d %d %d %s %s %s %s" % (name, seed, size, span, races, detail, civs, intensity), name, res,
+                   size <= 512)
     for seed in (SYN_SEEDS[:6] if quick else SYN_SEEDS):
         span, races, civs, intensity = synthetic_case(seed)
         inp, _g = synthetic_inputs(seed, dat)
@@ -2193,7 +2220,14 @@ def all_cases(inputs, quick=False):
         inp, _g = synthetic_inputs(seed, sdat, STRESS_CASES[seed])
         res = history_stage(sdat, inp)
         name = "stress-%d" % seed
-        yield "stress %s %d %d %s %s %s" % (name, seed, span, races, civs, intensity), name, res, True
+        yield "stress %s %d %d %s %s %s" % (name, seed, span, races, civs, intensity), name, res, None
+    ndat = norefuge_data(dat)
+    for seed in (NOREFUGE_SEEDS[:1] if quick else NOREFUGE_SEEDS):
+        span, races, civs, intensity = STRESS_CASES[seed]
+        inp, _g = synthetic_inputs(seed, ndat, STRESS_CASES[seed])
+        res = history_stage(ndat, inp)
+        name = "norefuge-%d" % seed
+        yield "norefuge %s %d %d %s %s %s" % (name, seed, span, races, civs, intensity), name, res, None
 
 
 def golden_text(inputs, quick=False):  # noqa: F811 (one pass over all_cases)
@@ -2220,6 +2254,9 @@ def cmd_check(argv):
         w = res["_world"]
         check_invariants(c, res, inp, w, name, last_refuge=w.ct["last_refuge"] == 1)
         hard_bounds(c, res, inp, name)
+        if name.startswith("norefuge"):
+            extinct = [a[1] for a in inp.ages if not any(x[2] == a[1] and x[8] is None for x in res["civilization"])]
+            guards["extinct"] = guards.get("extinct", 0) + (1 if extinct else 0)
         o.append(head)
         o += case_lines(name, res, alls)
         for k, v in kind_counts(res).items():
@@ -2245,8 +2282,13 @@ def cmd_check(argv):
         c.true("the stress cases reach %s" % k, stress.get(k, 0) > 0)
     c.true("the stress cases reach last_refuge (a fallen siege held)", guards["refuge"] > 0)
     c.true("the stress cases reach shelter_years (a claimed neighbour sheltered)", guards["shelter"] > 0)
+    c.true("without the guards a race dies out (9, question 4)", guards.get("extinct", 0) > 0)
     print("stress reach: %s; refuge %d, shelter %d" % (sorted(stress.items()), guards["refuge"], guards["shelter"]))
-    if not quick and os.path.isdir(inputs):
+    if not quick and os.path.isdir(inputs) and "--write" in argv:
+        with open(GOLDEN, "wb") as f:
+            f.write(("\n".join(o) + "\n").encode())
+        print("note: wrote %s (check --write: the golden is this run's text)" % GOLDEN)
+    elif not quick and os.path.isdir(inputs):
         fresh = "\n".join(o) + "\n"
         if os.path.exists(GOLDEN):
             with open(GOLDEN, "rb") as f:
