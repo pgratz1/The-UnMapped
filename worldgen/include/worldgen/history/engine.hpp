@@ -177,7 +177,15 @@ private:
     std::vector<Settlement> settlements_;
     std::vector<RegionState> regions_;
     std::map<RelationKey, RelationState> relations_;
-    std::map<RelationKey, std::int64_t> closed_;  // closed since the last bookkeeping: the closing event
+    // Every open_relation and close_relation since the last bookkeeping, in
+    // call order (6.7: each opening gets a row, also one closed again before
+    // the bookkeeping).
+    struct RelationOp {
+        bool open = false;
+        RelationKey key;
+        std::int64_t event = 0;
+    };
+    std::vector<RelationOp> relation_ops_;
 };
 
 // --- The step seam (6.4) -------------------------------------------------------------

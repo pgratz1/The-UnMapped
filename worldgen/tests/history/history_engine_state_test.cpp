@@ -132,7 +132,7 @@ TEST_CASE("P3-04 6.7, 16.1 item 6: bookkeeping of region control, relations and 
                 break;
             case 5: st.open_relation(war, change(ctx)); break;   // e11
             case 6: st.close_relation(war, change(ctx)); break;  // e12
-            case 7:  // opened and closed within one year: nothing recorded (e13, e14)
+            case 7:  // opened and closed within one year: a row with since = until (P3-06 ruling; e13, e14)
                 st.open_relation(peace, change(ctx));
                 st.close_relation(peace, change(ctx));
                 break;
@@ -148,7 +148,9 @@ TEST_CASE("P3-04 6.7, 16.1 item 6: bookkeeping of region control, relations and 
     const Tables t =
         eng::run_engine(shipped(), inputs_for({0}, 2000, "normal", {"elf"}, three_regions()), cfg.get());
     CHECK(str(t.region_control) == str(irows({{2, 2, 4, 2, 6}, {3, 4, NUL, 1, 10}})));
-    CHECK(str(t.relation) == str(std::vector<Row>{{eng::I(3), eng::I(1), eng::I(3), eng::I(2), eng::T("war"),
+    CHECK(str(t.relation) == str(std::vector<Row>{{eng::I(3), eng::I(1), eng::I(3), eng::I(2), eng::T("peace"),
+                                                  eng::I(7), eng::I(7), eng::I(13), eng::I(14)},
+                                                 {eng::I(3), eng::I(1), eng::I(3), eng::I(2), eng::T("war"),
                                                   eng::I(5), eng::I(6), eng::I(11), eng::I(12)}}));
     CHECK(str(t.settlement_census) == str(irows({{1, 0, 1, 1, 1, 200},
                                                  {1, 8, 1, 2, 1, 200},

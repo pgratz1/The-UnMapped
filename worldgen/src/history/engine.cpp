@@ -5,6 +5,8 @@
 #include <algorithm>
 #include <array>
 #include <limits>
+#include <map>
+#include <set>
 #include <string>
 #include <tuple>
 #include <utility>
@@ -759,31 +761,40 @@ private:
             }
             recorded_owner_[r] = now.owner;
         }
-        // 2. Relations: the union of the recorded and the current keys, in order.
-        auto cur = state_.relations_.begin();
-        auto rec = open_relations_.begin();
-        while (cur != state_.relations_.end() || rec != open_relations_.end()) {
-            if (rec == open_relations_.end() || (cur != state_.relations_.end() && cur->first < rec->first)) {
-                const RelationKey& k = cur->first;
-                open_relations_.emplace(k, relation_rows_.size());
-                relation_rows_.push_back(db::RelationRow{k.a_type, k.a_id, k.b_type, k.b_id, k.kind, y, std::nullopt,
-                                                         cur->second.event, 0});
-                ++cur;
-            } else if (cur == state_.relations_.end() || rec->first < cur->first) {
-                const auto closed = state_.closed_.find(rec->first);
-                if (closed == state_.closed_.end()) {
-                    fail("history: engine: a relation vanished without a closing event");
+        // 2. Relations: every opening and closing since the last bookkeeping,
+        // in call order. A relation opened and closed again before this
+        // bookkeeping gets a row with since = until = y (P3-06 ruling); one
+        // opened twice would need two rows with one primary key (a_type,
+        // a_id, b_type, b_id, kind, since) and is fatal.
+        std::set<RelationKey> opened_now;
+        for (const State::RelationOp& op : state_.relation_ops_) {
+            const RelationKey& k = op.key;
+            if (op.open) {
+                if (!opened_now.insert(k).second) {
+                    fail("history: state: relation '" + k.kind + "' of " + int_text(k.a_type) + " " +
+                         int_text(k.a_id) + " and " + int_text(k.b_type) + " " + int_text(k.b_id) +
+                         " opened twice before one bookkeeping");
+                }
+                open_relations_[k] = relation_rows_.size();
+                relation_rows_.push_back(
+                    db::RelationRow{k.a_type, k.a_id, k.b_type, k.b_id, k.kind, y, std::nullopt, op.event, 0});
+            } else {
+                const auto rec = open_relations_.find(k);
+                if (rec == open_relations_.end()) {
+                    fail("history: engine: a relation was closed that has no row");
                 }
                 db::RelationRow& row = relation_rows_[rec->second];
                 row.until = y;
-                row.until_event = closed->second;
-                rec = open_relations_.erase(rec);
-            } else {
-                ++cur;
-                ++rec;
+                row.until_event = op.event;
+                open_relations_.erase(rec);
             }
         }
-        state_.closed_.clear();
+        state_.relation_ops_.clear();
+        if (open_relations_.size() != state_.relations_.size() ||
+            !std::equal(open_relations_.begin(), open_relations_.end(), state_.relations_.begin(),
+                        [](const auto& a, const auto& b) { return a.first == b.first; })) {
+            fail("history: engine: a relation vanished without a closing event");
+        }
         // 3. Census.
         last_census_.resize(state_.settlements_.size());
         for (std::size_t i = 0; i < state_.settlements_.size(); ++i) {
@@ -1075,6 +1086,7 @@ void State::open_relation(RelationKey key, std::int64_t event) {
     if (relations_.find(key) != relations_.end()) {
         fail("history: state: open_relation: relation '" + key.kind + "' is already open");
     }
+    relation_ops_.push_back(RelationOp{true, key, event});
     relations_.emplace(std::move(key), RelationState{event});
 }
 
@@ -1085,7 +1097,7 @@ void State::close_relation(const RelationKey& key, std::int64_t event) {
         fail("history: state: close_relation: relation '" + key.kind + "' is not open");
     }
     relations_.erase(it);
-    closed_[key] = event;
+    relation_ops_.push_back(RelationOp{false, key, event});
 }
 
 // --- StepContext ---------------------------------------------------------------------------
