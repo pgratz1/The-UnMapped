@@ -311,7 +311,7 @@ TEST_CASE("P1-06 golden: the default cases reach every branch of RG5 to RG12") {
     // N >= 512 cases and the RG6 fixture test reach) is reached below 512.
     for (const char* k : {"greedy", "rejected", "bank", "merges", "central", "numbered", "crossings", "lake_cells",
                           "border_river_cells", "corner"}) {
-        CAPTURE(k);
+        CAPTURE(std::string_view(k));
         CHECK(total[k] > 0);
     }
     std::map<std::string, std::int64_t> large;
@@ -355,7 +355,7 @@ TEST_CASE("P1-06 9: the report example of 512 seed 0 and 1024 seed 0 (golden val
 
 TEST_CASE("P1-06 10.3, D10: 1, 2, 5 and 256 threads give identical output (N = 128; designed fixture)") {
     for (const char* name : {"shipped-128-s42-t", "small-128-s2-t", "designed-1-passes"}) {
-        CAPTURE(name);
+        CAPTURE(std::string_view(name));
         const GoldenCase* c = find_case(name);
         REQUIRE(c != nullptr);
         const CaseInputs ci = case_inputs(*c);
@@ -859,7 +859,7 @@ TEST_CASE("P1-06 2, 3, RG14: the stage entry reads the thirteen layers and table
     REQUIRE(db.ok());
     CHECK(db.rows("PRAGMA user_version") == std::vector<std::vector<std::string>>{{"7"}});
     for (const char* table : {"region", "region_border", "region_biome"}) {
-        CAPTURE(table);
+        CAPTURE(std::string_view(table));
         const auto rows = db.rows(std::string("SELECT count(*) FROM ") + table);
         CHECK(rows[0][0] != "0");
     }
@@ -938,7 +938,7 @@ TEST_CASE("P0-02 amendment 17, 10.1 test 6: --until none: three empty region tab
     CHECK(db.rows("PRAGMA user_version") == std::vector<std::vector<std::string>>{{"7"}});
     CHECK(db.rows("SELECT value FROM meta WHERE key = 'schema_version'") == std::vector<std::vector<std::string>>{{"7"}});
     for (const char* table : {"region", "region_border", "region_biome"}) {
-        CAPTURE(table);
+        CAPTURE(std::string_view(table));
         CHECK(db.rows(std::string("SELECT count(*) FROM ") + table) == std::vector<std::vector<std::string>>{{"0"}});
     }
     // The three statements of 3.1, byte for byte, after climate's.
@@ -972,7 +972,7 @@ TEST_CASE("P0-02 amendment 17, 10.1 test 6: --until none: three empty region tab
 TEST_CASE("P0-02 amendment 17, 10.1 test 6: a version 4 file is refused: world schema version 4, this build reads 7") {
     dbtest::TempDir dir("regions-schema4");
     for (const char* sql : {"PRAGMA user_version = 4", "UPDATE meta SET value = '4' WHERE key = 'schema_version'"}) {
-        CAPTURE(sql);
+        CAPTURE(std::string_view(sql));
         const std::string path = dir.file(std::string("w") + (sql[0] == 'P' ? "1" : "2") + ".db");
         REQUIRE(worldgen::generate_world(params_for(1, 512, std::string("none")), content(), path,
                                          worldgen::db::Overwrite::refuse)

@@ -28,6 +28,7 @@
 #include <cstdint>
 #include <map>
 #include <string>
+#include <string_view>
 #include <vector>
 
 #include "worldgen/inspect/report.hpp"
@@ -237,7 +238,7 @@ TEST_CASE("P3-05 15.2, 16.3 item 22: the sample of seed 42 at 1024 (first 60 sen
     for (const Row& s : t.settlement) st[at(s, 0)] = &s;
     for (std::size_t i = 0; i < want.size(); ++i) {
         const Row& c = t.civilization[i];
-        CAPTURE(want[i].name);
+        CAPTURE(std::string_view(want[i].name));
         CHECK(c[1].bytes == want[i].name);
         CHECK(is_null(c[8]));
         const Row& cap = *st.at(at(c, 5));

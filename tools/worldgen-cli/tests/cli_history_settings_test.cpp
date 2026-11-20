@@ -216,7 +216,7 @@ TEST_CASE("cli P3-01 6.2: --history-span errors") {
     Sandbox sb;
     for (const char* v : {"1999", "12001", "0", "-6000", "+6000", "06000", "6000.0", "6e3", "0x1770", " 6000", "6000 ", "",
                           "abc", "6_000", "18446744073709551616"}) {
-        CAPTURE(v);
+        CAPTURE(std::string_view(v));
         usage(sb, {"--history-span", v},
               std::string("invalid --history-span '") + v + "'; expected an integer from 2000 to 12000");
     }
@@ -231,8 +231,8 @@ TEST_CASE("cli P3-01 6.2: --history-detail, --event-intensity, --monster-pressur
     for (const Flag& f : {Flag{"history-detail", "sparse, normal or dense"}, Flag{"event-intensity", "calm, normal or turbulent"},
                           Flag{"monster-pressure", "low, normal or high"}, Flag{"divine-activity", "distant, normal or meddling"}}) {
         for (const char* v : {"Normal", "NORMAL", "", "normal ", "extreme", "1"}) {
-            CAPTURE(f.name);
-            CAPTURE(v);
+            CAPTURE(std::string_view(f.name));
+            CAPTURE(std::string_view(v));
             usage(sb, {std::string("--") + f.name, v},
                   std::string("invalid --") + f.name + " '" + v + "'; expected " + f.expected);
         }
@@ -245,7 +245,7 @@ TEST_CASE("cli P3-01 6.2: --history-detail, --event-intensity, --monster-pressur
 TEST_CASE("cli P3-01 6.2: --civs-per-race errors") {
     Sandbox sb;
     for (const char* v : {"0", "5", "-1", "+1", "01", "1.0", "Auto", "AUTO", "", "two", "all"}) {
-        CAPTURE(v);
+        CAPTURE(std::string_view(v));
         usage(sb, {"--civs-per-race", v}, std::string("invalid --civs-per-race '") + v + "'; expected auto or an integer from 1 to 4");
     }
 }
@@ -254,7 +254,7 @@ TEST_CASE("cli P3-01 6.2: --races errors: empty list, empty item, not an id, rep
     Sandbox sb;
     for (const char* v : {"", ",", "elf,", ",elf", "elf,,orc", "Elf", "elf orc", "elf, orc", "1elf", "elf;orc", "elf,elf",
                           "orc,elf,orc", "ALL"}) {
-        CAPTURE(v);
+        CAPTURE(std::string_view(v));
         usage(sb, {"--races", v}, std::string("invalid --races '") + v + "'; expected all or a comma-separated list of race ids");
     }
 }
@@ -290,7 +290,7 @@ TEST_CASE("cli P0-04 4.1: a history flag without a value, or given twice, is a u
     Sandbox sb;
     for (const char* flag : {"--history-span", "--history-detail", "--civs-per-race", "--races", "--event-intensity",
                              "--monster-pressure", "--divine-activity", "--divine-script"}) {
-        CAPTURE(flag);
+        CAPTURE(std::string_view(flag));
         usage_any(sb, {flag});
     }
     usage_any(sb, {"--history-span", "6000", "--history-span", "6000"});
@@ -328,13 +328,33 @@ TEST_CASE("cli P3-01 2: generate --help lists the history flags") {
     REQUIRE(r.exit_code == EXIT_OK);
     for (const char* flag : {"--history-span", "--history-detail", "--civs-per-race", "--races", "--event-intensity",
                              "--monster-pressure", "--divine-activity", "--divine-script"}) {
-        CAPTURE(flag);
+        CAPTURE(std::string_view(flag));
         CHECK(contains(r.out, flag));
     }
     // --help wins over invalid values (P0-04 amendment 2).
     const ProcessResult h = sb.cli({"generate", "--history-span", "1", "--races", "", "--divine-script", "x", "--help"});
     CHECK(h.exit_code == EXIT_OK);
     CHECK(h.out == r.out);
+}
+
+// P0-04 amendment 22 (P3-08, generator 0.17.0; the P3-06 validation's F2): the closing paragraph of
+// `generate --help` names the settings the history stage reads since 0.15.0. Its five lines, with the
+// line breaks of the spec, followed by the blank line before the final sentence. Fails until the
+// P3-08 implementation changes the usage text.
+TEST_CASE("cli P0-04 amendment 22: generate --help says which history settings act") {
+    Sandbox sb;
+    const ProcessResult r = sb.cli({"generate", "--help"});
+    REQUIRE(r.exit_code == EXIT_OK);
+    const std::string paragraph =
+        "\n"
+        "The history settings are recorded in every world. The chronology stage uses\n"
+        "the span and the races; the history stage uses the span, the detail, the\n"
+        "civilizations per race and the event intensity. The monster pressure and\n"
+        "the divine activity take effect with later history subsystems (phase P5).\n"
+        "--test-pattern records them and writes no history.\n"
+        "\n";
+    CHECK(contains(r.out, paragraph));
+    CHECK_FALSE(contains(r.out, "others take effect with later history subsystems"));
 }
 
 // --- 8.2 test 7: settings-file keys through generate --------------------------------------
@@ -452,7 +472,7 @@ TEST_CASE("cli P3-01 6.2: the file's race ids are checked even when --races over
         u8(settings) + ":2:17: error: 'world.races[1]' is \"dragon\", which is not a race id; expected one of " + ids;
     // A valid --races does not hide the file's unknown id: exit 3.
     for (const char* flag : {"all", "elf", "orc,elf"}) {
-        CAPTURE(flag);
+        CAPTURE(std::string_view(flag));
         const fs::path out = sb.file("o.db");
         const ProcessResult r =
             sb.cli({"generate", "--seed", "0", "--until", "none", "--settings", u8(settings), "--races", flag, "--out", u8(out)});
@@ -479,7 +499,7 @@ TEST_CASE("cli P3-01 6.2: the file's race ids are checked even when --races over
 TEST_CASE("cli P3-01 8.3 test 10: --until none worlds differ from 0.11.0 only in content_hash and generator_version") {
     const auto golden = history_test::golden_hashes();
     for (const char* root : {"game/data", "worldgen/tests/data/geo", "worldgen/tests/data/geo-small"}) {
-        CAPTURE(root);
+        CAPTURE(std::string_view(root));
         Sandbox sb;
         const fs::path data = from_u8(UNMAPPED_TEST_SOURCE_ROOT) / from_u8(root);
         const fs::path world = sb.file("none.db");

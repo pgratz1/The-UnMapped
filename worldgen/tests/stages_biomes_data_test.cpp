@@ -129,7 +129,7 @@ TEST_CASE("P1-04 4.1: the shipped definitions load; fields in declaration order 
                                                  "elev_min_m",  "elev_max_m", "slope_max",   "hand_max_m",
                                                  "coast_max_m", "river_dist_max_m", "wet_frac_min"};
     for (const char* id : {"fen", "wet_woodland", "temperate_forest", "alpine"}) {
-        CAPTURE(id);
+        CAPTURE(std::string_view(id));
         const auto& rules = l.content->find("biome", id)->record.get_array("rules");
         REQUIRE(rules.size() == 1U);
         const auto& r = rules[0].as_record();
@@ -236,7 +236,7 @@ TEST_CASE("P1-04 4.1, 4.2, P1-00 6.4: the fixture files hold the shipped definit
     const biome_api::Load want = load_defs({});
     REQUIRE(want.ok());
     for (const char* base : {"game/data", "worldgen/tests/data/geo", "worldgen/tests/data/geo-small"}) {
-        CAPTURE(base);
+        CAPTURE(std::string_view(base));
         const std::string tuning_text = read_text(root / base / "worldgen" / "biomes.toml");
         std::istringstream lines{std::string(biome_data::TUNING_TOML)};
         std::string line;
@@ -428,7 +428,7 @@ TEST_CASE("P1-04 10.1 test 6: a float literal in a rule is a P0-03 error; a miss
     // 0.9.0: river_dist_max_m and wet_frac_min are required in every rule
     // (no optional-field mechanism, 4.1), reported at the rule's header.
     for (const char* field : {"river_dist_max_m = 32767\n", "wet_frac_min = 0\n"}) {
-        CAPTURE(field);
+        CAPTURE(std::string_view(field));
         const wd::LoadError m = only_error(load_defs({{"marsh.toml", edited("marsh.toml", field, "")}}));
         CHECK(m.path == "biomes/marsh.toml");
         CHECK(m.line == 14U);
@@ -482,7 +482,7 @@ TEST_CASE("P1-04 4.1: every bound of the definition and rule fields rejects one 
         {"marsh.toml", "water = false", "water = false", "water = 0"},
     };
     for (const Edit& e : edits) {
-        CAPTURE(e.bad);
+        CAPTURE(std::string_view(e.bad));
         const biome_api::Load good = load_defs({{e.file, edited(e.file, e.from, e.ok)}});
         CHECK_MESSAGE(good.ok(), all_errors(good));
         check_rejected(load_defs({{e.file, edited(e.file, e.from, e.bad)}}), "");
@@ -517,7 +517,7 @@ TEST_CASE("P1-04 4.2, 10.1 test 6: each tuning bound rejects one step outside") 
         {"wet_scale_1024", false, "0.25", "4"},    {"wet_scale_2048", false, "0.25", "4"},
     };
     for (const Bound& b : bounds) {
-        CAPTURE(b.field);
+        CAPTURE(std::string_view(b.field));
         const std::string f(b.field);
         if (b.is_int) {
             const std::int64_t lo = std::stoll(b.lo), hi = std::stoll(b.hi);

@@ -261,7 +261,7 @@ TEST_CASE("cli P1-00 10.3, P0-04 4.5: report refuses a malformed row of table pa
     };
     int k = 0;
     for (const Bad& b : bads) {
-        CAPTURE(b.what);
+        CAPTURE(std::string_view(b.what));
         const fs::path bad = sb.file("bad" + std::to_string(k++) + ".db");
         fs::copy_file(world, bad);
         REQUIRE(worldgen::db::testing::execute_on_file(u8(bad), b.sql).ok());

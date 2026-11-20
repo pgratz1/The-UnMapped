@@ -270,8 +270,8 @@ TEST_CASE("changing TZ, LANG and LC_ALL does not change the bytes (10, 12.3)") {
     };
     int index = 0;
     for (const Env& e : envs) {
-        CAPTURE(e.tz);
-        CAPTURE(e.lang);
+        CAPTURE(std::string_view(e.tz));
+        CAPTURE(std::string_view(e.lang));
         const std::string out = dir.file("env" + std::to_string(index++) + ".db");
         {
             EnvOverride tz("TZ", e.tz);
@@ -379,7 +379,7 @@ std::string golden_world_hash(const dbtest::TempDir& dir, const GoldenCase& c) {
 TEST_CASE("golden: empty-world hashes match the recorded values (12.4)" * doctest::skip(golden_pending())) {
     dbtest::TempDir dir("golden-compare");
     for (const auto& c : GOLDEN_CASES) {
-        CAPTURE(c.name);
+        CAPTURE(std::string_view(c.name));
         REQUIRE_MESSAGE(c.sha256 != GOLDEN_PLACEHOLDER, "golden hash not recorded yet");
         CHECK(golden_world_hash(dir, c) == std::string(c.sha256));
     }

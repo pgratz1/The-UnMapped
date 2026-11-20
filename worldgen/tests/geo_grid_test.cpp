@@ -11,6 +11,7 @@
 #include <cstdint>
 #include <ostream>
 #include <set>
+#include <string_view>
 #include <utility>
 #include <vector>
 
@@ -44,7 +45,7 @@ constexpr std::array<D8Row, 8> D8_TABLE = {{
 
 TEST_CASE("P1-00 2.3: D8 codes, offsets and names") {
     for (const D8Row& row : D8_TABLE) {
-        CAPTURE(row.name);
+        CAPTURE(std::string_view(row.name));
         const auto code = static_cast<std::size_t>(row.code);
         CHECK(geo::D8_DX[code] == row.dx);
         CHECK(geo::D8_DY[code] == row.dy);

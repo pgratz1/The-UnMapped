@@ -299,7 +299,7 @@ TEST_CASE("P3-01 8.1 test 1: game/data and the two fixture roots hold the listin
     const Load want = load(history_data::shipped_files());
     REQUIRE(want.ok());
     for (const char* base : {"game/data", "worldgen/tests/data/geo", "worldgen/tests/data/geo-small"}) {
-        CAPTURE(base);
+        CAPTURE(std::string_view(base));
         const Load got = load_disk(source_root() / base);
         INFO(dump(got));
         REQUIRE(got.ok());
@@ -307,7 +307,7 @@ TEST_CASE("P3-01 8.1 test 1: game/data and the two fixture roots hold the listin
         // Every validated value of the new kinds, the naming blocks of
         // P3-02 5 included, equals the transcription.
         for (const char* kind : {"race", "culture", "history"}) {
-            CAPTURE(kind);
+            CAPTURE(std::string_view(kind));
             const wd::KindContent* a = got.content->find_kind(kind);
             const wd::KindContent* b = want.content->find_kind(kind);
             REQUIRE(a != nullptr);
@@ -342,7 +342,7 @@ TEST_CASE("P3-01 8.1 test 1: game/data and the two fixture roots hold the listin
                           "placenames/isle.toml", "placenames/marsh.toml", "placenames/mere.toml", "placenames/moor.toml",
                           "placenames/peaks.toml", "placenames/steppe.toml", "placenames/traits.toml",
                           "placenames/waste.toml", "placenames/wood.toml"}) {
-        CAPTURE(f);
+        CAPTURE(std::string_view(f));
         CHECK(std::filesystem::is_regular_file(data / f));
     }
     // P3-01 5: "a file for a future id must not be committed early".
@@ -626,8 +626,8 @@ TEST_CASE("P3-01 3, 4 and P0-03 amendment 17: name, plural, adjective and the cu
     for (const Case& c : cases) {
         const std::string field(std::string_view(c.from).substr(0, std::string_view(c.from).find(' ')));
         for (const char* bad : {"elf", "High Elf", "ELF", "Elf2", "Elf-kin", ""}) {
-            CAPTURE(c.key);
-            CAPTURE(bad);
+            CAPTURE(std::string_view(c.key));
+            CAPTURE(std::string_view(bad));
             const Load l = load(shipped_edited(c.path, c.from, field + " = \"" + bad + "\""));
             value_error(l, c.path, c.line, static_cast<std::uint32_t>(field.size() + 4),
                         "'" + std::string(c.key) + "' is \"" + bad +
@@ -674,7 +674,7 @@ TEST_CASE("P3-01 5: history/ without chronology.toml is a missing definition aga
 
 TEST_CASE("P3-01 3-5: races/, cultures/ and history/ are required kind directories") {
     for (const char* d : {"races", "cultures", "history"}) {
-        CAPTURE(d);
+        CAPTURE(std::string_view(d));
         Files f;
         for (const auto& [path, text] : history_data::shipped_files()) {
             if (path.substr(0, path.find('/')) != d) {
@@ -803,7 +803,7 @@ TEST_CASE("P3-01 8.1 test 5: every bounded race field one step outside its bound
         {"races/orc.toml", "name = \"Orc\"", "name = \"Orc\"", "name = 3", "race.orc.name"},
     };
     for (const Edit& e : edits) {
-        CAPTURE(e.bad);
+        CAPTURE(std::string_view(e.bad));
         const Load good = load(shipped_edited(e.path, e.from, e.ok));
         CHECK_MESSAGE(good.ok(), dump(good));
         const Load bad = load(shipped_edited(e.path, e.from, e.bad));
@@ -914,7 +914,7 @@ TEST_CASE("P3-01 5.1: history.chronology bounds, required fields and chronology_
              {"awakening_min_gap_years = 100", "awakening_min_gap_years = 2000", "awakening_min_gap_years = 2001",
               "history.chronology.awakening_min_gap_years", 3},
          }) {
-        CAPTURE(e.bad);
+        CAPTURE(std::string_view(e.bad));
         CHECK(load(shipped_edited(path, e.from, e.ok)).ok());
         const wd::LoadError err = only_error(load(shipped_edited(path, e.from, e.bad)));
         CHECK(err.path == path);
@@ -930,12 +930,12 @@ TEST_CASE("P3-01 5.1: history.chronology bounds, required fields and chronology_
     const wd::LoadError e65 = only_error(load(shipped_edited(path, form, "age_name_form = \"" + sixty_four + "xx\"")));
     CHECK(contains(e65.message, "'history.chronology.age_name_form' is 65 bytes long"));
     for (const char* good : {"The {adjective} Age", "{plural}", "Age of {plural} and {adjective}", "{plural}{plural}"}) {
-        CAPTURE(good);
+        CAPTURE(std::string_view(good));
         CHECK(load(shipped_edited(path, form, std::string("age_name_form = \"") + good + "\"")).ok());
     }
     for (const char* bad : {"The Age", "", "The Age of {name}", "The Age of {plural} {", "{Plural}", "{plural} {root}",
                             "The Age of {plural"}) {
-        CAPTURE(bad);
+        CAPTURE(std::string_view(bad));
         at_definition(only_error(load(shipped_edited(path, form, std::string("age_name_form = \"") + bad + "\""))), path,
                       "chronology_age_name_form", "history.chronology",
                       "age_name_form must contain {plural} or {adjective} and no other placeholder");
@@ -943,7 +943,7 @@ TEST_CASE("P3-01 5.1: history.chronology bounds, required fields and chronology_
     // Every field is required (P3-01 5 "like worldgen"; P1-00 6.1: no code defaults).
     for (const char* line : {"awakening_jitter_frac = \"0.01\"\n", "awakening_min_gap_years = 100\n",
                              "age_name_form = \"The Age of {plural}\"\n"}) {
-        CAPTURE(line);
+        CAPTURE(std::string_view(line));
         const wd::LoadError e = only_error(load(shipped_edited(path, line, "")));
         CHECK(e.line == 1U);
         CHECK(contains(e.message, "missing required field 'history.chronology."));
@@ -997,7 +997,7 @@ TEST_CASE("P3-01 4, P3-02 3: the culture_naming record's grammars, lengths and n
         {"god_forms = [\"{root}\"]", "god_forms = [\"{name}\"]", "god_forms", "culture.elven.naming.god_forms[0]", "\"{name}\"" + form},
     };
     for (const Case& c : grammar) {
-        CAPTURE(c.to);
+        CAPTURE(std::string_view(c.to));
         const wd::LoadError e = only_error(load(shipped_edited(path, c.from, c.to)));
         CHECK(e.path == path);
         CHECK(e.line == naming_line(c.field));

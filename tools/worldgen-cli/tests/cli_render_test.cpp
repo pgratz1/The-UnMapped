@@ -9,6 +9,7 @@
 #include <cstdint>
 #include <ostream>
 #include <string>
+#include <string_view>
 #include <vector>
 
 #include "cli_test_support.hpp"
@@ -45,7 +46,7 @@ TEST_CASE("cli 12.3: render a test-pattern layer") {
 
     SUBCASE("default output path <root>/out/<stem>.<layer>.png") {
         for (const char* layer : {"test.ramp", "test.hash", "test.noise"}) {
-            CAPTURE(layer);
+            CAPTURE(std::string_view(layer));
             const ProcessResult r = sb.cli({"render", "--db", u8(world), "--layer", layer});
             INFO("stderr: ", r.err);
             REQUIRE(r.exit_code == EXIT_OK);
@@ -77,7 +78,7 @@ TEST_CASE("cli 12.3: render a test-pattern layer") {
     }
     SUBCASE("bad options") {
         for (const char* scale : {"0", "17", "03", "-1", "", "1.5", "x"}) {
-            CAPTURE(scale);
+            CAPTURE(std::string_view(scale));
             const ProcessResult r = sb.cli({"render", "--db", u8(world), "--layer", "test.ramp", "--scale", scale});
             CHECK(r.exit_code == EXIT_USAGE);
         }

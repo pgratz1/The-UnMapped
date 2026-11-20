@@ -218,7 +218,7 @@ TEST_CASE("cli P1-05 3, P1-00 X1: --until resources at 512: layers 12 to 18; gol
     // The layers before the stage are those of 0.9.0 (p1-04-biomes.txt).
     for (const char* name : {"elevation", "water", "water_depth", "flow_dir", "river", "coast_dist", "temperature",
                              "rainfall", "biome"}) {
-        CAPTURE(name);
+        CAPTURE(std::string_view(name));
         CHECK(hashes.at(name) == bio.at(name));
     }
     // The default run continues with regions (P1-06, generator 0.11.0): its
@@ -268,7 +268,7 @@ TEST_CASE("cli P1-05 9, 10.1 test 8: render --layer of each score layer uses `sc
     auto rd = worldgen::db::WorldReader::open(u8(w.full));
     REQUIRE(rd.ok());
     for (const char* name : {"fertility", "ore", "timber", "fresh_water", "forage", "habitability"}) {
-        CAPTURE(name);
+        CAPTURE(std::string_view(name));
         const std::vector<std::uint8_t> v = layer_of<std::uint8_t>(rd.value(), name);
         const fs::path a = w.sb.file(std::string(name) + ".auto.png");
         const fs::path n = w.sb.file(std::string(name) + ".named.png");
@@ -297,7 +297,7 @@ TEST_CASE("cli P1-05 9, 10.1 test 8: render --layer of each score layer uses `sc
 TEST_CASE("cli P1-05 9, 10.1 test 8: --palette score on a layer that is not u8 exits 2; render --help lists score") {
     Worlds& w = worlds();
     for (const char* layer : {"elevation", "walk_area", "rainfall"}) {
-        CAPTURE(layer);
+        CAPTURE(std::string_view(layer));
         const ProcessResult r = w.sb.cli({"render", "--db", u8(w.full), "--layer", layer, "--palette", "score", "--out",
                                           u8(w.sb.file(std::string("bad-") + layer + ".png"))});
         CHECK(r.exit_code == EXIT_USAGE);
@@ -330,7 +330,7 @@ TEST_CASE("cli P1-05 9, 10.1 test 7: report refuses a score layer not u8 and wal
     };
     int k = 0;
     for (const Case& c : cases) {
-        CAPTURE(c.layer);
+        CAPTURE(std::string_view(c.layer));
         std::vector<worldgen::stages::testing::FixtureLayer> layers;
         layers.push_back({"elevation", worldgen::db::LayerGrid{n, n, std::vector<std::int16_t>(n * n, 50)}, Codec::delta_varint});
         layers.push_back({"water", worldgen::db::LayerGrid{n, n, std::vector<std::uint8_t>(n * n, 0)}, Codec::delta_varint});

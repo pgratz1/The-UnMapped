@@ -20,6 +20,7 @@
 #include <cstdint>
 #include <set>
 #include <string>
+#include <string_view>
 #include <vector>
 
 #include "worldgen/core/streams.hpp"
@@ -132,7 +133,7 @@ TEST_CASE("P3-05 11, 16.1 item 14: the compiled catalogue appends kinds 6-19 exa
     REQUIRE(cat.kinds.size() == 30U);
     for (std::size_t i = 0; i < want.size(); ++i) {
         const K& w = want[i];
-        CAPTURE(w.key);
+        CAPTURE(std::string_view(w.key));
         for (const eng::KindDef* k : {&compiled.kinds[i + 5], &cat.kinds[i + 5]}) {
             CHECK(k->id == static_cast<std::int64_t>(i) + 6);
             CHECK(k->key == w.key);
@@ -241,7 +242,7 @@ TEST_CASE("P3-05 4.2, 5.1, 16.1 item 1: each term alone, floor division, the fit
         {"humans on full farmland", full, {{1, 4, 4000}}, "human", 5, 1300, 10000},
     };
     for (const Case& c : cases) {
-        CAPTURE(c.what);
+        CAPTURE(std::string_view(c.what));
         Geo g = hand_made(64, {c.r});
         g.region_biomes = c.biomes;
         Settings s;

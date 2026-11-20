@@ -188,7 +188,7 @@ TEST_CASE("P1-06 4, 10.1 test 4: each field one step outside its bounds is a ran
 
 TEST_CASE("P1-06 4, 10.1 test 4: a names word `east` or `North West` fails the word grammar at the value") {
     for (const char* bad : {"east", "North West", "North-West", "NORTH", "North2", "N\xC3\xB6rth"}) {
-        CAPTURE(bad);
+        CAPTURE(std::string_view(bad));
         const region_api::Load l = load_tuning({{"names", region_data::names_toml("east", bad)}});
         const std::string text = all_errors(l);
         INFO(text);

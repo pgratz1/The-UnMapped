@@ -10,6 +10,7 @@
 #include <limits>
 #include <span>
 #include <string>
+#include <string_view>
 #include <vector>
 
 #include "worldgen/core/error.hpp"
@@ -168,7 +169,7 @@ TEST_CASE("element type codes, names and sizes (7.1, 5.6)") {
         {ElementType::u64, 7, "u64", 8}, {ElementType::i64, 8, "i64", 8},
     };
     for (const Row& r : rows) {
-        CAPTURE(r.name);
+        CAPTURE(std::string_view(r.name));
         CHECK(static_cast<std::uint8_t>(r.type) == r.code);
         CHECK(worldgen::db::element_type_from_code(r.code) == r.type);
         CHECK(worldgen::db::element_type_name(r.type) == r.name);

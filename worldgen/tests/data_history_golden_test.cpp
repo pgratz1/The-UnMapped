@@ -11,6 +11,7 @@
 #include <map>
 #include <ostream>
 #include <string>
+#include <string_view>
 
 #include "p3_01_history_data.hpp"
 #include "p3_01_history_support.hpp"
@@ -24,7 +25,7 @@ TEST_CASE("P3-01 8.3 test 9: the golden file names the three roots") {
     const auto g = golden_hashes();
     REQUIRE(g.size() == 3U);
     for (const char* root : {"game/data", "worldgen/tests/data/geo", "worldgen/tests/data/geo-small"}) {
-        CAPTURE(root);
+        CAPTURE(std::string_view(root));
         REQUIRE(g.count(root) == 1U);
         CHECK(g.at(root).size() == 64U);
     }
@@ -37,7 +38,7 @@ TEST_CASE("P3-01 8.3 test 9: the golden file names the three roots") {
 TEST_CASE("P3-01 8.3 test 9: content_hash of each data root equals the reference's") {
     const auto g = golden_hashes();
     for (const char* root : {"game/data", "worldgen/tests/data/geo", "worldgen/tests/data/geo-small"}) {
-        CAPTURE(root);
+        CAPTURE(std::string_view(root));
         const Load l = load_disk(source_root() / root);
         INFO(dump(l));
         REQUIRE(l.ok());

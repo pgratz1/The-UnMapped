@@ -249,7 +249,7 @@ TEST_CASE("cli P1-00 X1, P1-03 3 and 9: generate --until climate at 512; hash, r
     }
     if (!g.empty()) {
         for (const char* key : {"temperature_c", "rainfall_mm", "land_below_0c", "rain_contrast"}) {
-            CAPTURE(key);
+            CAPTURE(std::string_view(key));
             std::string v = g.at(key);
             std::replace(v.begin(), v.end(), '_', ' ');
             CHECK(contains(rep.out, "\n" + std::string(key) + " = " + v + "\n"));
@@ -264,7 +264,7 @@ TEST_CASE("cli P1-00 X1, P1-03 3 and 9: generate --until climate at 512; hash, r
     // render: each new layer under auto uses its registered palette, the same
     // as the named palette, and not gray.
     for (const char* layer : {"temperature", "rainfall"}) {
-        CAPTURE(layer);
+        CAPTURE(std::string_view(layer));
         const fs::path a = sb.file(std::string(layer) + ".auto.png");
         const fs::path n = sb.file(std::string(layer) + ".named.png");
         const fs::path gr = sb.file(std::string(layer) + ".gray.png");
@@ -330,7 +330,7 @@ TEST_CASE("cli P1-00 X3 (slow): --until climate at 512, seeds 0 and 42, --thread
     Sandbox sb;
     const fs::path data = write_data_root(sb);
     for (const char* seed : {"0", "42"}) {
-        CAPTURE(seed);
+        CAPTURE(std::string_view(seed));
         for (const char* threads : {"1", "2", "5"}) {
             generate(sb, data, {"--seed", seed, "--until", "climate", "--threads", threads},
                      std::string("s") + seed + "-" + threads + ".db");

@@ -234,7 +234,7 @@ TEST_CASE("cli P1-06 3, P1-00 X1: the default run at 512 writes ids 1 to 19 and 
     // The thirteen inputs are those of 0.10.0 (the golden case's input items).
     for (const char* name : {"elevation", "water", "water_depth", "flow_dir", "river", "biome", "fertility", "ore",
                              "timber", "fresh_water", "forage", "habitability", "walk_area"}) {
-        CAPTURE(name);
+        CAPTURE(std::string_view(name));
         CHECK(hex[std::string("layer ") + name] == gold.at(name));
     }
     // --until regions is the default run without the chronology stage
@@ -549,7 +549,7 @@ TEST_CASE("cli P1-06 10.4 (slow): the phrase world at 512 and 1024 seed 1: golde
         {{"--seed", "1", "--map-size", "1024"}, "shipped-1024-s1"},
     };
     for (const Run& run : runs) {
-        CAPTURE(run.name);
+        CAPTURE(std::string_view(run.name));
         const fs::path out = sb.file(std::string(run.name) + ".db");
         std::vector<std::string> args = {"generate", "--data", u8(data), "--threads", "4", "--out", u8(out)};
         args.insert(args.end(), run.args.begin(), run.args.end());

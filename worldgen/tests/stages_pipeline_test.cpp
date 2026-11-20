@@ -462,7 +462,7 @@ TEST_CASE("generate P0-04 5.1, P1-00 10.1: planned_stages") {
     CHECK(worldgen::planned_stages(p) == std::vector<std::string_view>{"test_pattern"});
     // --test-pattern with --until is refused, whatever the limit.
     for (const char* until : {"none", "elevation", "bogus"}) {
-        CAPTURE(until);
+        CAPTURE(std::string_view(until));
         p.until = std::string(until);
         CHECK_THROWS_AS(static_cast<void>(worldgen::planned_stages(p)), worldgen::FatalError);
     }
@@ -515,7 +515,7 @@ TEST_CASE("generate: an unusable stage limit, or a content hash that does not ma
     p.seed = 0;
     p.content_hash = worldgen::sha256(std::string_view{});
     for (const char* until : {"Regions", "bogus"}) {  // every geography stage is implemented (P1-06)
-        CAPTURE(until);
+        CAPTURE(std::string_view(until));
         p.until = std::string(until);
         CHECK_THROWS_AS(static_cast<void>(worldgen::generate_world(p, dir.file("w.db"), wdb::Overwrite::refuse)),
                         worldgen::FatalError);

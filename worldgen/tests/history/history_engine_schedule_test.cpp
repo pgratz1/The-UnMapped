@@ -13,6 +13,7 @@
 #include <functional>
 #include <ostream>
 #include <string>
+#include <string_view>
 #include <vector>
 
 #include "p3_04_engine_support.hpp"
@@ -175,7 +176,7 @@ TEST_CASE("P3-04 5.6, 16.1 item 2: edge cases E1 to E10 on hand-made age lists")
          {{1, 1, 1, 0, 24, 1}, {2, 1, 2, 25, 1824, 0}, {3, 1, 4, 1825, 1999, 0}}, 200},
     };
     for (const Case& c : cases) {
-        CAPTURE(c.name);
+        CAPTURE(std::string_view(c.name));
         const Tables t = schedule(c.starts, c.span, c.level, c.period ? forced(c.period, c.value, 1) : nullptr);
         if (std::string(c.name) == "E3") {
             REQUIRE(t.phase.size() >= 4U);

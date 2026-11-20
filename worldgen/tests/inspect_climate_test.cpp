@@ -333,7 +333,7 @@ TEST_CASE("P1-03 9, P1-00 appendix C 6: no land gives n/a; p10 = 0 gives rain_co
 TEST_CASE("P1-03 9: without both climate layers there are no climate lines") {
     dbtest::TempDir dir("climate-report-partial");
     for (const char* only : {"temperature", "rainfall", "neither"}) {
-        CAPTURE(only);
+        CAPTURE(std::string_view(only));
         const std::string out = dir.file(std::string(only) + ".db");
         std::vector<FixtureLayer> layers;
         layers.push_back({"elevation", p100::grid(6, 2, six_by_two_elevation()), Codec::delta_varint});
@@ -347,7 +347,7 @@ TEST_CASE("P1-03 9: without both climate layers there are no climate lines") {
         REQUIRE(worldgen::stages::testing::write_fixture_world(out, 1, layers).ok());
         const std::string r = report_of(out);
         for (const char* key : {"temperature_c", "rainfall_mm", "land_below_0c", "rain_contrast"}) {
-            CAPTURE(key);
+            CAPTURE(std::string_view(key));
             CHECK(r.find(std::string("\n") + key + " = ") == std::string::npos);
         }
     }

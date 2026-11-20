@@ -11,6 +11,7 @@
 #include <optional>
 #include <set>
 #include <string>
+#include <string_view>
 #include <utility>
 #include <vector>
 
@@ -335,7 +336,7 @@ TEST_CASE("seed canonical text (5.5, 12.2)") {
     dbtest::TempDir dir("seed-text");
     int index = 0;
     for (const Case& c : cases) {
-        CAPTURE(c.text);
+        CAPTURE(std::string_view(c.text));
         const std::string path = dir.file("w" + std::to_string(index++) + ".db");
         REQUIRE(dbtest::write_empty_world(path, c.seed).ok());
         dbtest::SqliteFile db(path);
@@ -701,7 +702,7 @@ TEST_CASE("a layer row that disagrees with its blob is corrupt for list and read
     };
     int index = 0;
     for (const Case& c : cases) {
-        CAPTURE(c.label);
+        CAPTURE(std::string_view(c.label));
         const std::string file = dir.file("c" + std::to_string(index++) + ".db");
         {
             WorldWriter writer;
@@ -872,8 +873,8 @@ TEST_CASE("reader errors are distinct and in the order of section 9 (12.2, 14.2)
         };
         int i = 0;
         for (const auto& [key, value] : bad) {
-            CAPTURE(key);
-            CAPTURE(value);
+            CAPTURE(std::string_view(key));
+            CAPTURE(std::string_view(value));
             CHECK(open_code(variant("inv" + std::to_string(i++) + ".db",
                                     std::string("UPDATE meta SET value = '") + value + "' WHERE key = '" + key + "'")) ==
                   name(ErrorCode::meta_value_invalid));

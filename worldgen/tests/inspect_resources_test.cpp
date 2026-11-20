@@ -301,7 +301,7 @@ TEST_CASE("P1-05 9, 10.1 test 8: the score palette at its stops and t = 100; reg
         CHECK(Rgb{px[3 * i], px[3 * i + 1], px[3 * i + 2]} == want);
     }
     for (const char* name : {"fertility", "ore", "timber", "fresh_water", "forage", "habitability"}) {
-        CAPTURE(name);
+        CAPTURE(std::string_view(name));
         CHECK(worldgen::inspect::registered_palette(name) == p);
         CHECK(worldgen::inspect::auto_palette(name, g) == p);
     }

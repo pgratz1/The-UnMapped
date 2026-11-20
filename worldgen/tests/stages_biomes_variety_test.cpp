@@ -293,7 +293,7 @@ TEST_CASE("P1-04 5.1, 10.1 test 2: the lookups V1 to P6 through biome_lookup, ea
     const Values v = values();
     const biome_api::Tuning t = tuning();
     for (const Case& c : cases) {
-        CAPTURE(c.name);
+        CAPTURE(std::string_view(c.name));
         const Jittered j = own_jitter(c.temp, c.rain, 0, 0, v);
         const std::int64_t sc = biome_api::rain_scale(t, c.n);
         const std::int64_t ws = biome_api::wet_scale(t, c.n);
@@ -304,7 +304,7 @@ TEST_CASE("P1-04 5.1, 10.1 test 2: the lookups V1 to P6 through biome_lookup, ea
         const Cell cell{j.tq, j.rq, c.elev, c.s2, c.hand, c.coast, c.d34, c.count, c.total};
         CHECK(own_lookup(shipped_defs(), sc, cell, nullptr, ws) == code_of(c.biome));
         for (const auto& [key, cond] : c.soles) {
-            CAPTURE(key);
+            CAPTURE(std::string_view(key));
             CHECK(failures(def_of(key).rules.front(), sc, cell, ws) == bit(cond));
             // Through the seam: the rule alone does not match.
             const biome_api::Rule r = biome_api::rule_of(shipped_definitions(), key);
@@ -337,7 +337,7 @@ TEST_CASE("P1-04 5.1, 10.1 test 2: the second version's B1 to B21 with count / t
     const Values v = values();
     const biome_api::Tuning t = tuning();
     for (const B& c : cases) {
-        CAPTURE(c.name);
+        CAPTURE(std::string_view(c.name));
         const Jittered j = own_jitter(c.temp, c.rain, 0, 0, v);
         const std::int64_t sc = biome_api::rain_scale(t, c.n);
         const std::int64_t ws = biome_api::wet_scale(t, c.n);

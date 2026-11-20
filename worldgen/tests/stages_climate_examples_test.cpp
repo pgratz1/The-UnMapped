@@ -497,7 +497,7 @@ bool guard_allows(Grid g, std::int64_t r) {
 
 template <typename F>
 void expect_prefixed_fatal(F&& f, const char* what) {
-    CAPTURE(what);
+    CAPTURE(std::string_view(what));
     try {
         static_cast<void>(f());
         FAIL("no fatal error");
@@ -1100,7 +1100,7 @@ TEST_CASE("P1-03 2, C1, 10.1 test 7: input preconditions are fatal with the clim
         return std::string_view(e.what()).substr(0, PRECONDITION.size()) == PRECONDITION;
     };
     auto fatal_with_prefix = [&](const Inputs& in, const char* what) {
-        CAPTURE(what);
+        CAPTURE(std::string_view(what));
         try {
             static_cast<void>(stage_layers(in, t, 0, THREADS));
             FAIL("climate_layers: no fatal error");
