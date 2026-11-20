@@ -143,7 +143,7 @@ So no size rule is needed for 512 (the massacre came from the futile and endless
 | Target | `FINE` | Met |
 | --- | --- | --- |
 | hollow wars below 25% | 24% (1024), 18% (512 with `FIN`) | yes, narrowly at 1024 |
-| at most 3 wars per (defender, goal) without a change of owner | 4 in 2 of 40 worlds (claims made before the third war ended, declared after it) | nearly; P3-06 20.2 item 2 re-checks weariness at the declaration in the reference text, which the prototype did as well; the remaining cases are a third and a fourth war open at once against one defender over one region by two attackers |
+| at most 3 wars per (defender, goal) without a change of owner | a run of 4 in 2 of 40 worlds (1024), 2 of 30 (512) | nearly; weariness is checked at the claim and again at the declaration (P3-06 20.2), so a fourth war needs wars of two attackers open over one region at once; the 2 cases were not traced (validation checks `wars_same_goal_unchanged_max`) |
 | orcs win at least as often as they lose | 39 won, 30 lost | yes |
 | orcs start at least a third of the orc age's wars | 25% | **no** (question 5) |
 | elves and faeries start some wars after losses | elves 10, faeries 0 in 40 worlds | elves yes; faeries no (concealed, they are rarely wronged; question 6) |
