@@ -537,7 +537,7 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
 - Problem: the design dates each awakening as a share of the span, with the elves at year 0, and allows any subset of races, but does not say when history starts if the elves are left out, or whether the god of a race that is left out exists.
 - Proposal: the first present race awakens at year 0; every later present race keeps its own share of the span and its own small shift from the seed, so its date does not depend on which other races were chosen. Ages are numbered over the present races only. Every race has its creator god in the world, present or not, so a god keeps its name whichever races are chosen; a god whose race is absent created nothing in that world.
 - Interim choice: as proposed (`docs/specs/p3-03-chronology.md` C3, 5.2, questions 1 and 2).
-- Status: open
+- Status: accepted by Paul, 2026-11-19 (interim choice stands); design doc to be updated
 
 ### History: active phases scale with the history span; the detail level sets the simulated share
 
@@ -666,3 +666,19 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
 - Decision: replace the numeral with names drawn from a large hand-written set held in data (TOML). A spec amendment to P1-06 RG11 defines the scheme and the word lists; it changes the `name` column of table `region`, so it changes world bytes and comes with a generator version bump. No schema change.
 - Interim choice: the amendment is written now; it is implemented after P3-06 is integrated (together with the faerie data change or just before it), before Paul's review of P3.
 - Status: decided; spec amendment in progress
+
+### Paul's decision of 2026-11-19: the chronology questions go with their recommendations
+
+- Date: 2026-11-19
+- Raised by: lead, recording Paul's decision
+- Design doc section: 5 (races, ages, creator gods)
+- Problem: `docs/specs/p3-03-chronology.md` section 16 put six questions to Paul.
+- Decision: Paul's words: "In the chronology.md file I accept all the recommendations." So:
+  1. With a subset of races that leaves out the elves, the first present race awakens at year 0 and each later race keeps its own share of the span.
+  2. Every race keeps its creator god in table `god`, with the same name and id whichever races are chosen; a god whose race is absent created nothing in that world.
+  3. Data errors across kinds are input errors (exit 3, before generating), not stage failures.
+  4. Test-pattern worlds record the history settings they were given.
+  5. The world-hash cases `hist-span-2000-512` and `hist-races-elf-orc-1024` came with chronology, `hist-dense-1024` with the engine.
+  6. The world report gained `[chronology]` without a format bump (report v2).
+- Interim choice: none needed; all six are as implemented at generator 0.13.0.
+- Status: accepted; design doc section 5 to be updated for points 1 and 2
