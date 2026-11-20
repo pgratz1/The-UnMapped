@@ -779,3 +779,38 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
 - Proposal: specified in `docs/specs/p3-08-followups.md` (generator 0.17.0, no schema change): a per-race cell term in the site choice (dwarves: ore and height) and dwarven holds off the walkable ground are fortresses (P3-05 r6 6.2, 8.4); a new event kind `settlement_abandoned_to` naming the destination, and the decline's first blow as a second cause (P3-05 r6 8.5); one quiet era per civilization and quiet stretch (P3-04 r10 6.6); victors' losses from the smaller force (P3-06 r7 7.3); a three-word template form that drops a clause whose number is 0 (P3-04 r10 8.4); saliences by toll and outcome (P3-05 r6 10.2, 10.3); no chance abandonment of a last settlement (P3-05 r6 8.5). Plus the volume change of P3-08 6.4.
 - Interim choice: as proposed, for the P3-08 implementation; the questions to Paul are in `docs/specs/p3-08-followups.md` 10.
 - Status: open
+
+### History: four rule changes proposed by the world critic's review of conflict
+
+- Date: 2026-11-20
+- Raised by: lead, from the world critic's review of P3-06 (`docs/reviews/p3-06-conflict-world-critic.md`)
+- Design doc section: 5 (history: wars, ruin, the elder peoples), 13 (P3)
+- Problem: conflict (generator 0.16.0) gives the history causes, endings and ruins, and the review found nothing that blocks its merge. It found four things the design does not settle:
+  1. **The last refuge cannot fall.** A people's last settlement is protected so that no race goes extinct. The guard is in use in 92 of 100 default worlds; one village holds 32 sieges in 352 years. It reads as absurd.
+  2. **Only goblins act.** Goblins declare 81% of wars at defaults; elves and faeries declare none, however much they have lost, and orcs lose three times as often as they win.
+  3. **Many wars change nothing.** 42% of default wars end with no sack, capture, cession or conquest, and the same pair fights over the same region up to 17 times.
+  4. **A race can win though no civilization does.** The runaway guard measures land share per civilization only; in 38 of 100 default worlds one race has at least 60% of all people.
+- Proposal:
+  1. A last refuge falls: its survivors flee and found a hidden hamlet elsewhere. The guard stays only when there is nowhere to flee.
+  2. Land lost by capture, sack or cession leaves a revenge claim that acts whatever the race's aggression, so elves retake ruins and dwarves avenge their holds. Orcs are made able to win their age (a larger levy, or a limit on declaring against much stronger foes).
+  3. A won war always costs the loser: land, tribute, or a longer truce for a pair that keeps fighting over the same goal.
+  4. Runaway is also measured per race, in the spec's sweep statistics and the validation sweep.
+- Interim choice: P3-06 merges as specified. Points 1 to 4 are being specified as their own change, P3-09 "conflict balance" (generator 0.18.0, branch `p3/09-spec`), at the spec writer's most reasonable reading, after the already decided names and peoples follow-ups (P3-08, generator 0.17.0). The P3-09 spec will list the decisions for Paul to confirm before it is implemented.
+- Status: open
+
+### Paul's decisions of 2026-11-20 on the name filter questions
+
+- Date: 2026-11-20
+- Raised by: lead, recording Paul's decision
+- Design doc section: 5 (names of gods, peoples and places)
+- Problem: the names filter amendment (`docs/specs/p3-02-names.md` section 11.10) put seven questions to Paul.
+- Decision: Paul's words: "on 1, the short reject list is correct, the happy accidents should be preserved. I accept the rest of your recommendations on the names." So:
+  1. The English-word list is the short one: only words that are crude, comic or modern-sounding are rejected (about 150). Ordinary English words that fit the setting stay as name roots ("The Kingdom of Gold", "Thorn Deep", "Moss Hollow"). The slur and crude-fragment lists are separate and unchanged.
+  2. Region names do not share the filter; they keep their own exclusion list.
+  3. No edits to the syllable lists; the filter does the work.
+  4. Gods use each culture's `god_patterns` (its multi-syllable shapes). Epithets wait for the pantheon in P5.
+  5. The elven bare realm form is "The House of {root}".
+  6. Orcish two-letter apostrophe parts ("Am'gash") stay.
+  7. The filter lists are plain text in the repository.
+- Interim choice: points 2 to 7 are as shipped with P3-08 (generator 0.17.0). Point 1 differs from what P3-08 ships (the full list of 647 words): the short list is a data change to `game/data/name_filters/words.toml` that changes worlds, and ships with the next change after P3-08.
+- Status: accepted; point 1 scheduled after P3-08
