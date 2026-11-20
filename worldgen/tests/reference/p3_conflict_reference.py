@@ -88,7 +88,17 @@ FatalError = cr.FatalError
 REPO = pe.REPO
 GOLDEN = os.path.join(REPO, "worldgen", "tests", "golden", "p3-06-conflict.txt")
 DEFAULT_INPUTS = os.path.join(os.path.expanduser("~"), ".cache", "the-unmapped", "out", "p3-06-tests", "inputs")
-GENERATOR_VERSION = "0.16.0"
+GENERATOR_VERSION = "0.17.0"
+
+# P3-06 r7 (generator 0.17.0): the rule change behind a flag, as pp.FLAGS for P3-05 r6; legacy() turns
+# every P3-08 rule flag of both files off (the 0.16.0 rules).
+FLAGS = dict(loss=True)   # 7.3 item 4: dead_W = min(F_W, F_L) x loss_winner div 1000
+
+
+def legacy(on=True):
+    pp.legacy(on)
+    for k in FLAGS:
+        FLAGS[k] = not on
 
 RACE, GOD, CIV, SETTLEMENT, REGION = pe.RACE, pe.GOD, pe.CIV, pe.SETTLEMENT, pe.REGION
 OPENING, QUIET, FLARE, FINAL = pe.OPENING, pe.QUIET, pe.FLARE, pe.FINAL
@@ -169,8 +179,8 @@ CONFLICT_KINDS = (
     _k(29, "region_ceded", 1, 0, (("from", CIV, 1, 1), ("to", CIV, 1, 1)), ()),
     _k(30, "civ_conquered", 1, 0, (("civilization", CIV, 1, 1), ("conqueror", CIV, 1, 1)), ()),
 )
-COMPILED = tuple(pe.COMPILED)
-assert list(COMPILED[19:]) == list(CONFLICT_KINDS) and len(COMPILED) == 30
+COMPILED = pp.COMPILED      # kinds 1-31 (P3-05 r6 appends 31 after P3-06's 20-30)
+assert list(COMPILED[19:30]) == list(CONFLICT_KINDS) and len(COMPILED) == 31
 KIND_ID = {k["key"]: k["id"] for k in COMPILED}
 KEY_OF = {k["id"]: k["key"] for k in COMPILED}
 K = KIND_ID
@@ -184,7 +194,8 @@ SPEC_REPORT = (
                            "{winner_dead} of the victors fell."),
     ("siege", 25, "{attacker} besieged {@settlement} of {defender}; it {fell?fell|held}."),
     ("sacked", 75, "{attacker} sacked {@settlement} of {defender}; {dead} died and {survivors} fled."),
-    ("settlement_captured", 60, "{attacker} took {@settlement} from {defender}; {dead} died and {fled} fled."),
+    ("settlement_captured", 60, "{attacker} took {@settlement} from {defender}; {dead} died{fled?| and one fled| "
+                                "and # fled}."),   # r7 (0.16.0: "...; {dead} died and {fled} fled.")
     ("peace", 60, "{loser} sued {winner} for peace after {years} {years?year|years} of war."),
     ("truce", 50, "{parties:all} made peace after {years} {years?year|years} of war, neither the victor."),
     ("region_ceded", 55, "{from} ceded {@region} to {to}."),
@@ -395,22 +406,7 @@ class World(pp.World):
         self.begin()          # Q5
         self.begin()          # Q6
         self.quiet_used = None
-        for civ in self.civs:
-            if civ["ended_year"] is not None:
-                continue
-            if civ["id"] in self.charged:
-                self.open_era.pop(civ["id"], None)
-                continue
-            idx = self.open_era.get(civ["id"])
-            if idx is not None:
-                self.events[idx]["end_year"] = last
-            else:
-                eid = self.append("quiet_era", start, last, region=civ["home_region"],
-                                  participants=(("civilization", CIV, civ["id"]),), values=(0, 0))
-                idx = eid - 1
-                self.open_era[civ["id"]] = idx
-            ev = self.events[idx]
-            ev["values"] = {1: ev["end_year"] - ev["year"] + 1, 2: self.generations(civ, ev["year"], ev["end_year"])}
+        self.quiet_eras(start, last)        # P3-04 6.6 (r10 behind pp.FLAGS["quiet"])
         self.bookkeeping(start, phase_end, last)
         if phase_end:
             self.open_era = {}
@@ -940,7 +936,8 @@ class World(pp.World):
         xwin = chance_pm(self.draw("hist.conflict.battle_win", w, 0, 0), p)
         W, L, FW, FL = (x, y, A, D) if xwin else (y, x, D, A)
         dead_l = FL * t["loss_loser_permille"] // 1000
-        dead_w = FW * t["loss_winner_permille"] // 1000
+        # r7 7.3 item 4: the victors lose loss_winner of the smaller force (before r7, of their own force)
+        dead_w = (min(FW, FL) if FLAGS["loss"] else FW) * t["loss_winner_permille"] // 1000
         if pass_id:
             e = self.append("battle_at_pass", region=r, participants=(("winner", CIV, W), ("loser", CIV, L)),
                             values=(dead_w, dead_l, pass_id), causes=(w,))
@@ -1422,12 +1419,9 @@ def check_peoples_invariants(c, res, inp, w, label):
         else:
             c.true("%s P3-05 inv 5 ended c%d empty" % (label, x[0]), not mine and not any(
                 r[2] is None and r[3] == x[0] for r in res["region_control"]))
-    for r in res["settlement_census"]:
-        s = sts[r[0]]
-        built = set(w.pd.race[civs[s[5]][2]]["kinds"])
-        if r[2]:
-            built |= set(w.pd.race[civs[r[2]][2]]["kinds"])
-        c.true("%s P3-05 inv 6 s%d kind %d built" % (label, r[0], r[3]), r[3] in built)
+    # P3-05 inv 6 as r6 reads it (the P3-06 validation's D1; the 0.16.0 check took the founder's and the
+    # row's owner's races only, which fails for ruins and for settlements captured twice)
+    pp.check_kinds_built(c, res, w, label + " P3-05")
     cen = {}
     for r in res["settlement_census"]:
         cen.setdefault(r[0], []).append(r)
@@ -1437,21 +1431,24 @@ def check_peoples_invariants(c, res, inp, w, label):
     for s in res["settlement"]:
         if s[10] == RUINED:
             c.true("%s P3-05 inv 7 s%d ruin event" % (label, s[0]), kind[s[13]] in (K["settlement_abandoned"],
+                                                                                   K["settlement_abandoned_to"],
                                                                                    K["sacked"]))
         if s[10] == FADED:
             fades = [e for e in res["event"] if e[3] == K["ruin_faded"] and e[6] == s[0]]
             ok = len(fades) == 1 and len(causes.get(fades[0][0], [])) == 1
             if ok:
                 ruin = ev[causes[fades[0][0]][0]]
-                ok = (ruin[3] in (K["settlement_abandoned"], K["sacked"]) and ruin[6] == s[0] and
+                ok = (ruin[3] in (K["settlement_abandoned"], K["settlement_abandoned_to"], K["sacked"]) and ruin[6] == s[0] and
                       fades[0][1] >= ruin[1] + t["ruin_fade_years"] and s[12] is None and s[13] == 0)
             c.true("%s P3-05 inv 7 s%d faded" % (label, s[0]), ok)
     red = ("famine", "plague", "plague_spread", "succession_crisis", "battle", "battle_at_pass")
     want_cause = {
         "plague_spread": ("plague",), "civ_seceded": ("succession_crisis",),
         "settlement_abandoned": red + ("settlement_founded", "colony_founded"),
-        "capital_moved": ("settlement_abandoned", "sacked", "settlement_captured"),
-        "civ_ended": ("settlement_abandoned",), "ruin_faded": ("settlement_abandoned", "sacked"),
+        "settlement_abandoned_to": red + ("settlement_founded", "colony_founded"),
+        "capital_moved": ("settlement_abandoned", "settlement_abandoned_to", "sacked", "settlement_captured"),
+        "civ_ended": ("settlement_abandoned", "settlement_abandoned_to"),
+        "ruin_faded": ("settlement_abandoned", "settlement_abandoned_to", "sacked"),
         "settlement_dwindled": red,
     }
     for e in res["event"]:
@@ -1464,6 +1461,7 @@ def check_peoples_invariants(c, res, inp, w, label):
                    all(KEY_OF[kind[x]] in want_cause[key] for x in cs) and (cs or key == "settlement_dwindled"))
         if e[3] >= 6 and ph[e[4]][2] == QUIET:
             c.true("%s inv 8/14.2 e%d %s not in a quiet step" % (label, e[0], key), e[3] in QUIET_KINDS)
+    pp.check_r6_invariants(c, res, inp, w, label + " P3-05")
 
 
 def check_invariants(c, res, inp, w, label, last_refuge=True, threshold=None):
@@ -2353,7 +2351,7 @@ def cmd_check_world(argv):
     if meta.get("schema_version") != "7":
         print("%s: schema version %s, check-world reads 7" % (path, meta.get("schema_version")))
         return 1
-    c.eq("generator_version", meta.get("generator_version"), GENERATOR_VERSION)
+    c.eq("generator_version", meta.get("generator_version"), GENERATOR_VERSION if FLAGS["loss"] else "0.16.0")
     stages = meta["stages"].split(",") if meta["stages"] else []
     p = pchr.params_from_meta(meta)
     inp, chron = inputs_for(dat, conn, p, int(meta["seed"]), int(meta["param.map_size"]))
@@ -2404,6 +2402,10 @@ def cmd_synthetic(argv):
 
 
 def main(argv):
+    # --legacy: every P3-08 rule flag off (the 0.16.0 rules; with 0.16.0 data and names the 0.16.0 worlds)
+    if "--legacy" in argv:
+        argv = [a for a in argv if a != "--legacy"]
+        legacy()
     if not argv:
         print(__doc__)
         return 2

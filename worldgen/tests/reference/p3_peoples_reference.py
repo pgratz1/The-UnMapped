@@ -86,8 +86,34 @@ FatalError = cr.FatalError
 REPO = pe.REPO
 GOLDEN = os.path.join(REPO, "worldgen", "tests", "golden", "p3-05-peoples.txt")
 DEFAULT_INPUTS = pe.DEFAULT_INPUTS
-GENERATOR_VERSION = "0.16.0"  # P3-06: the catalogue of 30 kinds; peoples rows unchanged
+GENERATOR_VERSION = "0.17.0"  # P3-08: P3-05 r6 rules, kind 31, P3-04 r10 quiet eras
 ONE = 1 << 32
+
+# ---------------------------------------------------------------------------
+# P3-05 r6 (generator 0.17.0, docs/specs/p3-08-followups.md) and P3-04 r10's
+# quiet eras: each rule change behind a flag, so that with every flag off
+# (legacy()) and the 0.16.0 data, names and engine the reference reproduces
+# the 0.16.0 worlds and goldens. The data-only changes of r6 (faerie
+# weights, famine_ppm 1250, plague_spread_permille 100, templates) come from
+# the data root (p3_data_reference.py).
+# ---------------------------------------------------------------------------
+FLAGS = dict(
+    cell=True,          # 6.2: the per-race cell term, no seed-cell rule for a race with one
+    fortress_cell=True,  # 8.4: a founding with a cell term on a cell with walk_area 0 is a fortress
+    last=True,          # 8.5 (a): no chance abandonment of a civilization's last standing settlement
+    causes=True,        # 8.5: the abandonment's causes gain the decline start
+    dest=True,          # 8.5 item 1: kind 31 settlement_abandoned_to when a survivor reaches a destination
+    cap=True,           # 9.1: the target T_s = min(C_s, kind_cap(s))
+    plague_sal=True,    # 10.2: the outbreak's salience by its planned total toll
+    crisis_sal=True,    # 10.3: the split test first; a crisis that does not split has crisis_small_salience
+    quiet=True,         # P3-04 r10 6.6: a civilization's quiet era is not closed by its own events
+)
+
+
+def legacy(on=True):
+    """Every r6 / r10 flag off (the 0.16.0 rules) or on (0.17.0)."""
+    for k in FLAGS:
+        FLAGS[k] = not on
 
 RACE, GOD, CIV, SETTLEMENT, REGION = pe.RACE, pe.GOD, pe.CIV, pe.SETTLEMENT, pe.REGION
 OPENING, QUIET, FLARE, FINAL = pe.OPENING, pe.QUIET, pe.FLARE, pe.FINAL
@@ -178,13 +204,26 @@ PEOPLES_KINDS = (
     _k(18, "civ_ended", 1, (("civilization", CIV, 1, 1),), ()),
     _k(19, "ruin_faded", 1, (("settlement", SETTLEMENT, 1, 1),), ()),
 )
-# p3_engine_reference.py carries the 0.16.0 catalogue (kinds 1-30, P3-06 11 appended); this file's own
-# transcription of section 11 must equal its kinds 6-19.
-COMPILED = tuple(pe.COMPILED)
-assert list(COMPILED[5:19]) == list(PEOPLES_KINDS) and len(COMPILED) == 30
+# P3-05 r6 11: kind 31, appended after P3-06's kinds 20-30 (generator 0.17.0).
+KIND31 = pe.kind_def(31, "settlement_abandoned_to", 1, 1, 1,
+                     (("settlement", SETTLEMENT, 1, 1), ("civilization", CIV, 1, 1),
+                      ("destination", SETTLEMENT, 1, 1)), ("settled", "lost"))
+# p3_engine_reference.py carries the catalogue (kinds 1-30 at 0.16.0; 31 from 0.17.0 once its own
+# transcription has it); this file's transcription of section 11 must equal its kinds 6-19 and 31.
+assert list(pe.COMPILED[5:19]) == list(PEOPLES_KINDS) and len(pe.COMPILED) in (30, 31)
+assert len(pe.COMPILED) == 30 or pe.COMPILED[30] == KIND31, "engine reference kind 31 differs from P3-05 r6 11"
+COMPILED_016 = tuple(pe.COMPILED[:30])
+COMPILED_017 = COMPILED_016 + (KIND31,)
+# COMPILED (every kind id a row may hold) is the 0.17.0 list; the catalogue a run writes is
+# catalogue_kinds(), which drops kind 31 when FLAGS["dest"] is off (the 0.16.0 catalogue).
+COMPILED = COMPILED_017
 KIND_ID = {k["key"]: k["id"] for k in COMPILED}
+
+
+def catalogue_kinds():
+    return COMPILED_017 if FLAGS["dest"] else COMPILED_016
 # Quiet-step kinds (14 item 8): 6-10, 16-19 (and P3-04's quiet_era).
-QUIET_KINDS = {6, 7, 8, 9, 10, 16, 17, 18, 19}
+QUIET_KINDS = {6, 7, 8, 9, 10, 16, 17, 18, 19, 31}   # 31: r6, an abandonment of 9.2 in Q1
 
 SPEC_REPORT = (
     ("colony_founded", 15, "{founder} sent settlers from {origin} to found {settlement} in {@region}."),
@@ -195,18 +234,27 @@ SPEC_REPORT = (
     ("famine", 25, "Famine struck {settlement}; {dead} died."),
     ("plague", 45, "Plague broke out in {settlement}; {dead} died."),
     ("plague_spread", 25, "The plague spread to {settlement}; {dead} died."),
-    ("succession_crisis", 40, "A succession crisis shook {civilization}."),
+    ("succession_crisis", 40, "A succession crisis at {@settlement} shook {civilization}."),   # r6
     ("civ_seceded", 70, "{civilization} broke away from {from}, taking {settlements} "
                         "{settlements?settlement|settlements} with it."),
-    ("settlement_abandoned", 55, "{settlement} was abandoned; {survivors} {survivors?survivor|survivors} left."),
+    ("settlement_abandoned", 55, "{settlement} was abandoned; {survivors?no one survived|its one survivor was "
+                                 "scattered|its # survivors were scattered}."),   # r6
     ("capital_moved", 50, "{civilization} moved its seat to {settlement}."),
     ("civ_ended", 85, "{civilization} came to an end."),
     ("ruin_faded", 10, "The ruins of {settlement} faded from memory."),
 )
+# The 0.16.0 texts of the two templates r6 changes (kinds 14 and 16).
+SPEC_REPORT_016 = {
+    "succession_crisis": "A succession crisis shook {civilization}.",
+    "settlement_abandoned": "{settlement} was abandoned; {survivors} {survivors?survivor|survivors} left.",
+}
+# P3-05 r6 11: kind 31's entry (appended after kind 30's).
+SPEC_REPORT_31 = ("settlement_abandoned_to", 55, "{settlement} was abandoned; {settled} {settled?survivor|survivors} "
+                  "went to {destination}{lost?|, and one was lost|, and # were lost}.")
 
 
 def compiled_catalogue():
-    return copy.deepcopy(list(COMPILED))
+    return copy.deepcopy(list(catalogue_kinds()))
 
 
 def event_catalogue(report):
@@ -221,7 +269,7 @@ def event_catalogue(report):
 def report_events_messages(report):
     """P3-04 4.2 check report_events against the 0.15.0 catalogue."""
     saved = pe.COMPILED
-    pe.COMPILED = COMPILED
+    pe.COMPILED = catalogue_kinds()
     try:
         return pe.report_events_messages(report)
     finally:
@@ -272,7 +320,9 @@ class Data:
                                   growth=t["growth_permille"], expansion=t["expansion"],
                                   kinds=[KIND_CODE[k] for k in t["settlement_kinds"]],
                                   density=t["density_permille"], generation=t["generation_years"],
-                                  culture=t["culture"])
+                                  culture=t["culture"],
+                                  # P3-01 r8 / P3-05 r6 6.2 (0.17.0): absent in a 0.16.0 root, read as 0, 0
+                                  cell=dict(t.get("cell_weights", dict(ore=0, height=0))))
 
 
 _DATA = {}
@@ -304,9 +354,9 @@ def edited(dat, peoples=None, races=None, engine=None):
 
 REGION_COLS = ("id", "name", "x_min", "y_min", "x_max", "y_max", "seed_x", "seed_y", "cells", "lake_cells",
                "walk_cells", "habitability_mean", "coast_cells", "fertility_mean", "forage_mean", "timber_mean",
-               "fresh_water_mean", "ore_reach_cells")
+               "fresh_water_mean", "ore_reach_cells", "elev_max_dm")   # elev_max_dm: r6 6.2
 BORDER_COLS = ("a", "b", "length_m", "walk_pairs", "river_pairs", "pass_id")
-LAYERS = ("region", "water", "habitability", "river", "flow_dir")
+LAYERS = ("region", "water", "habitability", "river", "flow_dir", "elevation", "ore", "walk_area")   # r6 3.2
 
 
 class Inputs(pe.Inputs):
@@ -331,14 +381,26 @@ def world_geo(conn):
     for name in LAYERS:
         row = conn.execute("SELECT data FROM layer WHERE name = ?", (name,)).fetchone()
         blobs[name] = row[0] if row else None
-    cache = {}
+    cache = LazyLayers(blobs)
 
     def layers():
-        if not cache:
-            for name, blob in blobs.items():
-                cache[name] = pwc.decode_blob(blob)[4] if blob is not None else None
         return cache
     return regions, borders, rb, biomes, layers
+
+
+class LazyLayers(dict):
+    """Layer values decoded on first use (the r6 layers elevation, ore and walk_area are read only for a
+    race with a cell term)."""
+
+    def __init__(self, blobs):
+        super().__init__()
+        self.blobs = blobs
+
+    def __missing__(self, name):
+        blob = self.blobs.get(name)
+        v = pwc.decode_blob(blob)[4] if blob is not None else None
+        self[name] = v
+        return v
 
 
 def inputs_for(dat, conn, p, seed, size):
@@ -521,24 +583,52 @@ class Geo:
             b = 0
         return b * (1000 + self.dat.race[race]["coast"]) // 1000
 
+    def cell_weights(self, race):
+        """(cell_ore_r, cell_height_r) of P3-05 r6 6.2; (0, 0) with FLAGS["cell"] off (0.16.0)."""
+        if not FLAGS["cell"]:
+            return 0, 0
+        cw = self.dat.race[race]["cell"]
+        return cw["ore"], cw["height"]
+
+    def has_cell_term(self, race):
+        return self.cell_weights(race) != (0, 0)
+
+    def hgt(self, i, rid):
+        """r6 6.2: the cell's height in its region, 0-255."""
+        e = self.layers()["elevation"][i]
+        return min(255, max(0, e) * 255 // max(1, self.reg[rid]["elev_max_dm"]))
+
+    def value(self, i, rid, race):
+        """r6 6.2: v(c, r) = habitability(c) + port(c, r) + (cell_ore_r ore(c) + cell_height_r hgt(c)) div 1000."""
+        lay = self.layers()
+        v = lay["habitability"][i] + self.port(i, race)
+        co, ch = self.cell_weights(race)
+        if (co, ch) != (0, 0):
+            v += (co * lay["ore"][i] + ch * self.hgt(i, rid)) // 1000
+        return v
+
     def candidates(self, rid, race):
         """[(value, index)] of the region's candidates, value descending, index ascending."""
         coast = self.dat.race[race]["coast"]
-        key = (rid, coast)
+        key = (rid, coast, self.cell_weights(race))
         if key not in self._cand:
             lay = self.layers()
             n = self.n
-            reg, wat, hab = lay["region"], lay["water"], lay["habitability"]
+            reg, wat = lay["region"], lay["water"]
             r = self.reg[rid]
             out = []
             for y in range(r["y_min"], r["y_max"] + 1):
                 for x in range(r["x_min"], r["x_max"] + 1):
                     i = y * n + x
                     if reg[i] == rid and wat[i] == 0:
-                        out.append((-(hab[i] + self.port(i, race)), i))
+                        out.append((-self.value(i, rid, race), i))
             out.sort()
             self._cand[key] = [(-v, i) for v, i in out]
         return self._cand[key]
+
+    def walkable(self, x, y):
+        """r6 8.4: walk_area(c) > 0."""
+        return self.layers()["walk_area"][y * self.n + x] > 0
 
     def is_candidate(self, rid, x, y):
         lay = self.layers()
@@ -572,6 +662,8 @@ class World(pe.World):
         self.before = {}           # settlement -> population before the first blow while thriving
         self.last_red = {}         # settlement -> last reduction event
         self.ruined_from = {}      # settlement -> civilization that lost it
+        self.decline_start = {}    # r6 8.5: settlement -> the event that last turned it from thriving to declining
+        self.plague_plans = []     # r6 10.2: (outbreak event, planned total, actual total) for the checks
         self.extra_draw = extra_draw
         self.keys = {s: cr.stream_key(inp.seed, s) for s in STREAMS}
         self.intensity = self.t["intensity"][inp.params["intensity"]]
@@ -691,9 +783,13 @@ class World(pe.World):
         return {HAMLET: t["village_min"] - 1, VILLAGE: t["town_min"] - 1, CITY: t["city_max"],
                 TOWN: t["city_min"] - 1, FORTRESS: t["fortress_max"]}[top]
 
-    def founding_kind(self, race, rid, pop):
-        if FORTRESS in self.pd.race[race]["kinds"] and self.geo.upland(rid):
-            return FORTRESS
+    def founding_kind(self, race, rid, pop, x, y):
+        if FORTRESS in self.pd.race[race]["kinds"]:
+            if self.geo.upland(rid):
+                return FORTRESS
+            # r6 8.4: a race with a cell term founding on a cell off the walkable ground
+            if FLAGS["fortress_cell"] and self.geo.has_cell_term(race) and not self.geo.walkable(x, y):
+                return FORTRESS
         return self.ladder(race, pop)   # READING (SPEC_GAPS 7.3) for capitals
 
     # --- 5.2 shares
@@ -726,7 +822,9 @@ class World(pe.World):
                     return False
             return True
         r = self.geo.reg[rid]
-        if self.geo.is_candidate(rid, r["seed_x"], r["seed_y"]) and free(r["seed_x"], r["seed_y"]):
+        # r6 6.2 item 1: the seed cell only for a race whose cell_weights are both 0
+        if not self.geo.has_cell_term(race) and self.geo.is_candidate(rid, r["seed_x"], r["seed_y"]) and \
+                free(r["seed_x"], r["seed_y"]):
             return r["seed_x"], r["seed_y"], "seed"
         cands = self.geo.candidates(rid, race)
         for _v, i in cands:
@@ -811,7 +909,7 @@ class World(pe.World):
             e_set = self.append("settlement_founded", region=h, settlement=s,
                                 participants=(("settlement", SETTLEMENT, s), ("founder", CIV, c)), values=(pop,),
                                 causes=(e_civ,))
-            self.found_settlement(x, y, h, c, self.founding_kind(race_id, h, pop), pop, n_s, e_set)
+            self.found_settlement(x, y, h, c, self.founding_kind(race_id, h, pop, x, y), pop, n_s, e_set)
             self.civ(c)["capital"] = s
             self.site_how[s] = how
             self.name_attempts.append((c, t_c, s, t_s, how))
@@ -828,21 +926,39 @@ class World(pe.World):
         for s in self.settlements:
             if not self.standing(s) or not self.visible(s):
                 continue
-            p = s["population"]
-            cs = sh[s["id"]]
-            g = self.pd.race[self.race_of(s)]["growth"]
-            if p < cs:
+            s["population"] = self.grown(s, sh[s["id"]])
+            if recover:
+                self.recover(s)
+
+    def grown(self, s, cs):
+        """9.1: one year of growth or decline of s with share cs (r6: the target T_s = min(C_s, kind_cap))."""
+        p = s["population"]
+        g = self.pd.race[self.race_of(s)]["growth"]
+        cap = self.kind_cap(s)
+        if FLAGS["cap"] and p > cap:
+            # 14 item 3 (r6): a settlement above its kind cap at the start of a year loses at least 1 in it
+            p2 = p - max(1, (p - min(cs, cap)) * self.t["decline_permille"] // 1000)
+            if not p2 < p:
+                self.checks.append("14 item 3 (r6): settlement %d above its cap %d kept %d in %d" %
+                                   (s["id"], cap, p, self.year))
+        if FLAGS["cap"]:
+            ts = min(cs, cap)
+            if p < ts:
                 d = (p * g * (cs - p) + 500 * cs) // (1000 * cs)
                 if g > 0:
                     d = max(1, d)
-                p2 = min(p + d, max(p, self.kind_cap(s)))
-            elif p > cs:
-                p2 = p - max(1, (p - cs) * self.t["decline_permille"] // 1000)
-            else:
-                p2 = p
-            s["population"] = p2
-            if recover:
-                self.recover(s)
+                return min(p + d, cap)
+            if p > ts:
+                return p - max(1, (p - ts) * self.t["decline_permille"] // 1000)
+            return p
+        if p < cs:
+            d = (p * g * (cs - p) + 500 * cs) // (1000 * cs)
+            if g > 0:
+                d = max(1, d)
+            return min(p + d, max(p, cap))
+        if p > cs:
+            return p - max(1, (p - cs) * self.t["decline_permille"] // 1000)
+        return p
 
     def recover(self, s):
         if s["status"] == DECLINING and s["population"] * 1000 >= self.t["recover_permille"] * self.before.get(s["id"], 0):
@@ -864,19 +980,7 @@ class World(pe.World):
         for s in self.settlements:
             if not self.standing(s) or not self.visible(s):
                 continue
-            p = s["population"]
-            cs = sh[s["id"]]
-            g = self.pd.race[self.race_of(s)]["growth"]
-            if p < cs:
-                d = (p * g * (cs - p) + 500 * cs) // (1000 * cs)
-                if g > 0:
-                    d = max(1, d)
-                p2 = min(p + d, max(p, self.kind_cap(s)))
-            elif p > cs:
-                p2 = p - max(1, (p - cs) * self.t["decline_permille"] // 1000)
-            else:
-                p2 = p
-            s["population"] = p2
+            s["population"] = self.grown(s, sh[s["id"]])
             self.recover(s)
         self.abandon_b()
         self.kind_changes()
@@ -970,12 +1074,60 @@ class World(pe.World):
                         participants=(("civilization", CIV, c), ("settlement", SETTLEMENT, nc["id"])), causes=(e,))
             self.civ(c)["capital"] = nc["id"]
 
+    def destination(self, s):
+        """8.5 item 1 (r6): (t, settled) for s's survivors: t the nearest other standing settlement of its owner
+        (squared cell distance, then id) or None, settled = min(P, max(0, 2 C(R_t, r) - P_t))."""
+        c = s["owner_civ"]
+        race = self.civ(c)["race"]
+        others = [t for t in self.standing_of(c) if t["id"] != s["id"]]
+        if not others:
+            return None, 0
+        t = min(others, key=lambda t: ((t["x"] - s["x"]) ** 2 + (t["y"] - s["y"]) ** 2, t["id"]))
+        room = max(0, 2 * self.geo.capacity(t["region"], race) - t["population"])
+        return t, min(s["population"], room)
+
+    def check_destination(self, s, t, settled):
+        """14 item 12 (r6), in the run: the destination recomputed by a second scan."""
+        c = s["owner_civ"]
+        best = None
+        for u in self.settlements:
+            if u["id"] == s["id"] or u["owner_civ"] != c or u["status"] not in (THRIVING, DECLINING):
+                continue
+            k = ((u["x"] - s["x"]) ** 2 + (u["y"] - s["y"]) ** 2, u["id"])
+            if best is None or k < best[0]:
+                best = (k, u)
+        if best is None:
+            ok = t is None and settled == 0
+        else:
+            u = best[1]
+            room = 2 * self.geo.capacity(u["region"], self.civ(c)["race"]) - u["population"]
+            ok = t is u and settled == max(0, min(s["population"], room))
+        if not ok:
+            self.checks.append("14 item 12 (r6): destination of settlement %d in %d" % (s["id"], self.year))
+
     def abandon(self, sid, cause):
         s = self.stl(sid)
         c = s["owner_civ"]
-        e = self.append("settlement_abandoned", region=s["region"], settlement=sid,
-                        participants=(("settlement", SETTLEMENT, sid), ("civilization", CIV, c)),
-                        values=(s["population"],), causes=(cause,))
+        causes = (cause,)
+        if FLAGS["causes"] and s["status"] == DECLINING and sid in self.decline_start:
+            # r6 8.5 causes: the blow (or last reduction / founding) and the decline start, ascending, no repeats
+            causes = tuple(sorted({cause, self.decline_start[sid]}))
+        t, settled = self.destination(s) if FLAGS["dest"] else (None, 0)
+        p = s["population"]
+        if FLAGS["dest"]:
+            self.check_destination(s, t, settled)
+        if FLAGS["causes"] and s["status"] == DECLINING and sid in self.decline_start and \
+                self.decline_start[sid] not in causes:
+            self.checks.append("14 item 12 (r6): abandonment of %d without its decline start" % sid)
+        if settled >= 1:
+            e = self.append("settlement_abandoned_to", region=s["region"], settlement=sid,
+                            participants=(("settlement", SETTLEMENT, sid), ("civilization", CIV, c),
+                                          ("destination", SETTLEMENT, t["id"])),
+                            values=(settled, p - settled), causes=causes)
+        else:
+            e = self.append("settlement_abandoned", region=s["region"], settlement=sid,
+                            participants=(("settlement", SETTLEMENT, sid), ("civilization", CIV, c)),
+                            values=(p,), causes=causes)
         self.ruin(sid, e)
         if not self.standing_of(c):
             e2 = self.append("civ_ended", region=s["region"], settlement=sid,
@@ -1072,7 +1224,7 @@ class World(pe.World):
                             participants=(("settlement", SETTLEMENT, s), ("founder", CIV, cid),
                                           ("origin", SETTLEMENT, src["id"])), values=(n,),
                             salience=(t["colony_new_region_salience"] if was_free else None))
-            self.found_settlement(x, y, rid, cid, self.founding_kind(race, rid, n), n, n_s, e)
+            self.found_settlement(x, y, rid, cid, self.founding_kind(race, rid, n, x, y), n, n_s, e)
             self.site_how[s] = how
             if was_free:
                 self.set_owner(rid, cid, e)
@@ -1089,6 +1241,8 @@ class World(pe.World):
         e = self.append(kind, region=s["region"], settlement=s["id"],
                         participants=(("settlement", SETTLEMENT, s["id"]), ("civilization", CIV, c)),
                         values=(dead, s["population"]), causes=causes, salience=salience)
+        if not was_declining:
+            self.decline_start[s["id"]] = e      # r6 8.5: the blow that found it thriving
         s["status"] = DECLINING
         self.last_red[s["id"]] = e
         # 8.5 (a)
@@ -1096,10 +1250,20 @@ class World(pe.World):
         p2 = s["population"]
         if p2 < t["abandon_min"]:
             self.abandon(s["id"], e)
-        elif was_declining and p2 < t["abandon_frail_max"]:
-            if chance_pm(self.draw("hist.peoples.abandon", s["id"], 0, 0), t["abandon_permille"][KIND_KEY[s["kind"]]]):
+        elif was_declining and p2 < t["abandon_frail_max"] and self.chance_abandon_allowed(s):
+            if self.abandon_draw(s):
                 self.abandon(s["id"], e)
         return e
+
+    def chance_abandon_allowed(self, s):
+        """r6 8.5 (a): the chance is not drawn for a civilization's last standing settlement (the settlements
+        created earlier in the step count)."""
+        if not FLAGS["last"]:
+            return True
+        return any(t["id"] != s["id"] for t in self.standing_of(s["owner_civ"]))
+
+    def abandon_draw(self, s):
+        return chance_pm(self.draw("hist.peoples.abandon", s["id"], 0, 0), self.t["abandon_permille"][KIND_KEY[s["kind"]]])
 
     def t4(self):
         self.begin()
@@ -1126,7 +1290,13 @@ class World(pe.World):
                 owner = s["owner_civ"]          # READING (SPEC_GAPS 10.2)
                 small = s["kind"] in (HAMLET, VILLAGE)
                 toll = t["plague_toll_min"] + pnr.pick(self.draw("hist.peoples.plague_toll", sid, 0, 0), tr_p)
-                o = self.strike(s, "plague", toll, (), salience=(t["plague_small_salience"] if small else None))
+                if FLAGS["plague_sal"]:
+                    planned = self.plague_plan(s, toll, struck, nset, tr_p)
+                    sal = None if planned >= t["plague_major_dead"] else t["plague_small_salience"]
+                else:
+                    sal = t["plague_small_salience"] if small else None
+                o = self.strike(s, "plague", toll, (), salience=sal)
+                actual = self.events[o - 1]["values"][1]
                 if SPREAD_OWNER == "after":
                     owner = s["owner_civ"]
                 struck.add(sid)
@@ -1140,8 +1310,11 @@ class World(pe.World):
                     if chance_pm(self.draw("hist.peoples.plague_spread", sid, uid, 0), t["plague_spread_permille"]):
                         toll = (t["plague_toll_min"] + pnr.pick(self.draw("hist.peoples.plague_toll", uid, 1, 0), tr_p)) \
                             * t["plague_spread_toll_permille"] // 1000
-                        self.strike(u, "plague_spread", toll, (o,))
+                        e_u = self.strike(u, "plague_spread", toll, (o,))
+                        actual += self.events[e_u - 1]["values"][1]
                         struck.add(uid)
+                if FLAGS["plague_sal"]:
+                    self.plague_plans.append((o, planned, actual))
         ncivs = len(self.civs)
         for cid in range(1, ncivs + 1):
             c = self.civ(cid)
@@ -1151,26 +1324,70 @@ class World(pe.World):
             if not chance_ppm(self.draw("hist.peoples.crisis", cid, 0, 0), rate):
                 continue
             cap = self.stl(c["capital"])
-            e = self.append("succession_crisis", region=cap["region"], settlement=cap["id"],
-                            participants=(("civilization", CIV, cid),))
-            if self.try_split(cid, e):
+            if FLAGS["crisis_sal"]:
+                # r6 10.3: the split test first (its conditions and draw do not depend on e)
+                plan = self.split_plan(cid)
+                e = self.append("succession_crisis", region=cap["region"], settlement=cap["id"],
+                                participants=(("civilization", CIV, cid),),
+                                salience=(None if plan is not None else t["crisis_small_salience"]))
+                split = plan is not None and self.do_split(cid, e, plan)
+            else:
+                e = self.append("succession_crisis", region=cap["region"], settlement=cap["id"],
+                                participants=(("civilization", CIV, cid),))
+                split = self.try_split(cid, e)
+            if split:
                 continue
             p = cap["population"]
             if cap["status"] == THRIVING:
                 self.before[cap["id"]] = p
+                self.decline_start[cap["id"]] = e     # r6 8.5: a crisis loss that found it thriving
             cap["population"] = p - p * t["crisis_loss_permille"] // 1000
             cap["status"] = DECLINING
             self.last_red[cap["id"]] = e
 
+    def plague_plan(self, s, toll, struck, nset, tr_p):
+        """r6 10.2: the outbreak planned before it is written; returns total = dead_0 + sum of dead_u over the
+        planned spreads (none if s is emptied). No state changes."""
+        t = self.t
+        p = s["population"]
+        dead0 = p * toll // 1000
+        rest = p - dead0
+        emptied = rest < t["abandon_min"]
+        if not emptied and s["status"] == DECLINING and rest < t["abandon_frail_max"] and \
+                self.chance_abandon_allowed(s):
+            emptied = self.abandon_draw(s)
+        total = dead0
+        if emptied:
+            return total
+        owner = s["owner_civ"]
+        sid = s["id"]
+        area = {s["region"]} | {r for r, _c in self.geo.nb[s["region"]]}
+        for uid in range(1, nset + 1):
+            u = self.stl(uid)
+            if uid == sid or uid in struck or not self.standing(u) or not self.visible(u):
+                continue
+            if u["owner_civ"] != owner or u["region"] not in area:
+                continue
+            if chance_pm(self.draw("hist.peoples.plague_spread", sid, uid, 0), t["plague_spread_permille"]):
+                tu = (t["plague_toll_min"] + pnr.pick(self.draw("hist.peoples.plague_toll", uid, 1, 0), tr_p)) \
+                    * t["plague_spread_toll_permille"] // 1000
+                total += u["population"] * tu // 1000
+        return total
+
     def try_split(self, cid, e):
+        plan = self.split_plan(cid)
+        return plan is not None and self.do_split(cid, e, plan)
+
+    def split_plan(self, cid):
+        """10.3 split test: (mine, held, part, leaving) when the crisis splits the realm, else None."""
         t = self.t
         c = self.civ(cid)
         mine = self.standing_of(cid, include_new=False)
         held = self.held(cid)
         if len(mine) < t["split_min_settlements"] or len(held) < t["split_min_regions"]:
-            return False
+            return None
         if not chance_pm(self.draw("hist.peoples.split", cid, 0, 0), t["split_permille"]):
-            return False
+            return None
         hs = set(held)
         INF = 1 << 62
 
@@ -1194,7 +1411,12 @@ class World(pe.World):
         part = [r for r in held if dfar.get(r, INF) < dcap.get(r, INF)]
         leaving = [s for s in mine if s["region"] in part]
         if not leaving or len(leaving) == len(mine):
-            return False
+            return None
+        return part, leaving
+
+    def do_split(self, cid, e, plan):
+        c = self.civ(cid)
+        part, leaving = plan
         newcap = min(leaving, key=lambda s: (-s["population"], s["id"]))
         c2 = len(self.civs) + 1
         cnum = c["culture"]
@@ -1253,10 +1475,19 @@ class World(pe.World):
         self.begin()          # Q5
         self.begin()          # Q6
         self.quiet_used = None
+        self.quiet_eras(start, last)
+        self.bookkeeping(start, phase_end, last)
+        if phase_end:
+            self.open_era = {}
+        self.check_state()
+
+    def quiet_eras(self, start, last):
+        """P3-04 6.6 (Q6). r10 (FLAGS["quiet"]): an event charged to the civilization does not close its era,
+        so it has one era per quiet phase row; before r10 a charged civilization's era was closed."""
         for civ in self.civs:
             if civ["ended_year"] is not None:
                 continue
-            if civ["id"] in self.charged:
+            if civ["id"] in self.charged and not FLAGS["quiet"]:
                 self.open_era.pop(civ["id"], None)
                 continue
             idx = self.open_era.get(civ["id"])
@@ -1269,10 +1500,6 @@ class World(pe.World):
                 self.open_era[civ["id"]] = idx
             ev = self.events[idx]
             ev["values"] = {1: ev["end_year"] - ev["year"] + 1, 2: self.generations(civ, ev["year"], ev["end_year"])}
-        self.bookkeeping(start, phase_end, last)
-        if phase_end:
-            self.open_era = {}
-        self.check_state()
 
     # in-run invariants (14 items 3, 4, 5)
     def check_state(self):
@@ -1343,7 +1570,7 @@ def history_stage(dat, inp, tension=None, extra_draw=False):
 def entry_checks(dat, inp):
     """P3-04 3.4 (the report check against the 0.15.0 catalogue)."""
     saved = pe.COMPILED
-    pe.COMPILED = COMPILED
+    pe.COMPILED = catalogue_kinds()
     try:
         return pe.entry_checks(dat.base, inp, dat.engine, dat.report, True)
     finally:
@@ -1555,7 +1782,31 @@ def make_synthetic(seed):
                                     walk_pairs=walk_pairs, river_pairs=max(0, river_pairs), pass_id=pass_id))
     borders.sort(key=lambda r: (r["a"], r["b"]))
     biomes = {1: 1, 2: 1, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0, 10: 0, 11: 0, 12: 0}
-    lay = dict(region=region, water=water, habitability=hab, river=river, flow_dir=flow)
+    # r6 (generator 0.17.0): the layers elevation, ore and walk_area and the region column elev_max_dm,
+    # from a second sequence so that every earlier value of the geography is unchanged: one draw per cell
+    # in index order; ocean cells elevation -1 - v % 500, ore 0, walk_area 0; other cells elevation
+    # 1 + v % 3000 (decimetres), ore (v >> 16) % 256, walk_area 0 when (v >> 32) % 3 == 0, else
+    # 1 + (v >> 40) % 1000; elev_max_dm the largest elevation over the region's cells with water 0 (0 if
+    # it has none).
+    m2 = Mix(0x5EED1000 + seed)
+    elev = [0] * (n * n)
+    ore = [0] * (n * n)
+    walk_area = [0] * (n * n)
+    emax = {}
+    for i in range(n * n):
+        v = m2.next()
+        if water[i] == 3:
+            elev[i] = -1 - v % 500
+            continue
+        elev[i] = 1 + v % 3000
+        ore[i] = (v >> 16) % 256
+        walk_area[i] = 0 if (v >> 32) % 3 == 0 else 1 + (v >> 40) % 1000
+        if water[i] == 0:
+            emax[region[i]] = max(emax.get(region[i], 0), elev[i])
+    for reg in regions:
+        reg["elev_max_dm"] = emax.get(reg["id"], 0)
+    lay = dict(region=region, water=water, habitability=hab, river=river, flow_dir=flow, elevation=elev, ore=ore,
+               walk_area=walk_area)
     return dict(n=n, regions=regions, borders=borders, region_biomes=biomes_rows, biomes=biomes, layers=lay)
 
 
@@ -1643,7 +1894,7 @@ def check_invariants(c, res, inp, w, label):
     ss = res["settlement"]
     ruined_by = {}   # settlement -> its settlement_abandoned event (a faded row no longer names it)
     for e in res["event"]:
-        if e[3] == KIND_ID["settlement_abandoned"]:
+        if e[3] in (KIND_ID["settlement_abandoned"], KIND_ID["settlement_abandoned_to"]):
             ruined_by[e[6]] = e[0]
     for i in range(len(ss)):
         for j in range(i + 1, len(ss)):
@@ -1675,7 +1926,7 @@ def check_invariants(c, res, inp, w, label):
         else:
             c.true("%s inv 5 ended c%d empty" % (label, x[0]), not mine and not any(
                 r[2] is None and r[3] == x[0] for r in res["region_control"]))
-    # 6: kinds through the census
+    # 6: kinds through the census (r6, the P3-06 validation's D1: a kind built by a race that has owned it)
     cen = {}
     for r in res["settlement_census"]:
         cen.setdefault(r[0], []).append(r)
@@ -1683,8 +1934,7 @@ def check_invariants(c, res, inp, w, label):
         ks = [r[3] for r in cen[s[0]]]
         if ks[0] == FORTRESS:
             c.true("%s inv 6 fortress s%d stays" % (label, s[0]), all(k == FORTRESS for k in ks))
-        built = w.pd.race[civs[s[5]][2]]["kinds"]
-        c.true("%s inv 6 s%d kinds built" % (label, s[0]), all(k in built for k in ks))
+    check_kinds_built(c, res, w, label)
     for e in res["event"]:
         key = COMPILED[e[3] - 1]["key"]
         if key.startswith("became_") or key == "settlement_dwindled":
@@ -1694,27 +1944,27 @@ def check_invariants(c, res, inp, w, label):
             if before and at:
                 up = at[-1][3] > before[-1][3]
                 c.true("%s inv 6 e%d %s direction" % (label, e[0], key), up == key.startswith("became_"))
-    # 7
+    # 7 (r6: kind 31 is a ruin event too)
+    ruin_kinds = (KIND_ID["settlement_abandoned"], KIND_ID["settlement_abandoned_to"])
     for s in ss:
         if s[10] == RUINED:
-            c.true("%s inv 7 s%d ruin event" % (label, s[0]), kind[s[13]] == KIND_ID["settlement_abandoned"])
+            c.true("%s inv 7 s%d ruin event" % (label, s[0]), kind[s[13]] in ruin_kinds)
         if s[10] == FADED:
             fades = [e for e in res["event"] if e[3] == KIND_ID["ruin_faded"] and e[6] == s[0]]
             ok = len(fades) == 1 and len(causes.get(fades[0][0], [])) == 1
             if ok:
                 ruin = ev[causes[fades[0][0]][0]]
-                ok = (ruin[3] == KIND_ID["settlement_abandoned"] and ruin[6] == s[0] and
+                ok = (ruin[3] in ruin_kinds and ruin[6] == s[0] and
                       fades[0][1] >= ruin[1] + t["ruin_fade_years"] and s[12] is None and s[13] == 0)
             c.true("%s inv 7 s%d faded (cause its ruin event, cleared row)" % (label, s[0]), ok)
     # 8
+    blows = ("famine", "plague", "plague_spread", "succession_crisis")
+    ab = ("settlement_abandoned", "settlement_abandoned_to")
     want_cause = {
         "became_village": None, "became_town": None, "became_city": None, "plague_spread": ("plague",),
-        "civ_seceded": ("succession_crisis",), "settlement_abandoned": ("famine", "plague", "plague_spread",
-                                                                        "succession_crisis", "settlement_founded",
-                                                                        "colony_founded"),
-        "capital_moved": ("settlement_abandoned",), "civ_ended": ("settlement_abandoned",),
-        "ruin_faded": ("settlement_abandoned",), "settlement_dwindled": ("famine", "plague", "plague_spread",
-                                                                         "succession_crisis"),
+        "civ_seceded": ("succession_crisis",), "settlement_abandoned": blows + ("settlement_founded", "colony_founded"),
+        "settlement_abandoned_to": blows + ("settlement_founded", "colony_founded"),
+        "capital_moved": ab, "civ_ended": ab, "ruin_faded": ab, "settlement_dwindled": blows,
     }
     keys = {k["id"]: k["key"] for k in COMPILED}
     for e in res["event"]:
@@ -1728,6 +1978,114 @@ def check_invariants(c, res, inp, w, label):
                      all(keys[kind[x]] in want_cause[key] for x in cs) and (cs or key == "settlement_dwindled"))
         if e[3] >= 6 and ph[e[4]][2] == QUIET:
             c.true("%s inv 8 e%d %s not in a quiet step" % (label, e[0], key), e[3] in QUIET_KINDS)
+    check_r6_invariants(c, res, inp, w, label)
+
+
+def races_of_owners(res):
+    """{settlement: [(year, race)] of every civilization that has owned it up to a year}: the founder at
+    its founding and every census row's owner_civ (0 for a ruin: the owner before it stays)."""
+    civ_race = {x[0]: x[2] for x in res["civilization"]}
+    out = {}
+    for s in res["settlement"]:
+        out[s[0]] = [(s[6], civ_race[s[5]])]
+    for r in res["settlement_census"]:
+        if r[2]:
+            out[r[0]].append((r[1], civ_race[r[2]]))
+    return out
+
+
+def check_kinds_built(c, res, w, label):
+    """14 item 6 as r6 reads it (the P3-06 validation's D1): every census row's kind is a kind built by a
+    race that has owned the settlement by that year (the founder's race or the race of any later owner;
+    for a ruined or faded row, the owners before the ruin)."""
+    owners = races_of_owners(res)
+    for r in res["settlement_census"]:
+        races = {race for (y, race) in owners[r[0]] if y <= r[1]}
+        built = set()
+        for race in races:
+            built |= set(w.pd.race[race]["kinds"])
+        c.true("%s inv 6 s%d kind %d in %d built by an owner's race %s" % (label, r[0], r[3], r[1], sorted(races)),
+               r[3] in built)
+
+
+def check_r6_invariants(c, res, inp, w, label):
+    """P3-05 14 r6 items: 6 (a dwarven settlement off the walkable ground is a fortress), 11, 12 (rows; the
+    rest is checked in the run, w.checks), 13. Only with the r6 flags on."""
+    t = w.t
+    kind = {e[0]: e[3] for e in res["event"]}
+    ev = {e[0]: e for e in res["event"]}
+    vals = {}
+    for v in res["event_value"]:
+        vals.setdefault(v[0], {})[v[1]] = v[2]
+    parts = {}
+    for p in res["event_participant"]:
+        parts.setdefault(p[0], {})[p[2]] = p[4]
+    causes = {}
+    for (e, cc) in res["event_cause"]:
+        causes.setdefault(e, []).append(cc)
+    civs = {x[0]: x for x in res["civilization"]}
+    cen = {}
+    for r in res["settlement_census"]:
+        cen.setdefault(r[0], []).append(r)
+    base = {k[0]: k[5] for k in res["event_kind"]}
+    k16, k31 = KIND_ID["settlement_abandoned"], KIND_ID["settlement_abandoned_to"]
+    # 6 (r6): a settlement founded by a race with a cell term (and fortress among its kinds) on a cell with
+    # walk_area 0 is a fortress
+    if FLAGS["fortress_cell"] and FLAGS["cell"]:
+        lay = inp.peoples_layers()
+        n = inp.map_size
+        for s in res["settlement"]:
+            race = civs[s[5]][2]
+            if w.geo.has_cell_term(race) and FORTRESS in w.pd.race[race]["kinds"] and \
+                    lay["walk_area"][s[3] * n + s[2]] == 0:
+                c.true("%s inv 6 (r6) s%d off the walkable ground is a fortress" % (label, s[0]),
+                       all(r[3] == FORTRESS for r in cen[s[0]]))
+    # 11: a chance abandonment (population >= abandon_min) never ends its civilization
+    if FLAGS["last"]:
+        ended_by = {}
+        for e in res["event"]:
+            if e[3] == KIND_ID["civ_ended"]:
+                for x in causes.get(e[0], []):
+                    ended_by[x] = e[0]
+        for e in res["event"]:
+            if e[3] in (k16, k31):
+                pop = vals[e[0]][1] if e[3] == k16 else vals[e[0]][1] + vals[e[0]][2]
+                if pop >= t["abandon_min"]:
+                    c.true("%s inv 11 e%d a chance abandonment ends no civilization" % (label, e[0]),
+                           e[0] not in ended_by)
+    # 12 (rows): settled >= 1, lost >= 0, the destination another settlement owned by the civilization
+    if FLAGS["dest"]:
+        for e in res["event"]:
+            if e[3] != k31:
+                continue
+            d = parts[e[0]].get(3)
+            civ = parts[e[0]].get(2)
+            ok = vals[e[0]][1] >= 1 and vals[e[0]][2] >= 0 and d is not None and d != e[6]
+            if ok:
+                rows = [r for r in cen[d] if r[1] <= e[1]]
+                prev = [r for r in rows if r[1] < e[1]]
+                st = [r for r in (rows[-1:] + prev[-1:])]
+                ok = any(r[2] == civ and r[4] in (THRIVING, DECLINING) for r in st) or \
+                    (not prev and res["settlement"][d - 1][5] == civ)
+            c.true("%s inv 12 e%d settlement_abandoned_to destination" % (label, e[0]), ok)
+    # 13: saliences
+    if FLAGS["plague_sal"]:
+        spread = {}
+        for e in res["event"]:
+            if e[3] == KIND_ID["plague_spread"]:
+                for x in causes.get(e[0], []):
+                    spread[x] = spread.get(x, 0) + vals[e[0]][1]
+        for e in res["event"]:
+            if e[3] == KIND_ID["plague"]:
+                total = vals[e[0]][1] + spread.get(e[0], 0)
+                want = base[KIND_ID["plague"]] if total >= t["plague_major_dead"] else t["plague_small_salience"]
+                c.true("%s inv 13 e%d plague salience %d (total dead %d)" % (label, e[0], e[7], total), e[7] == want)
+    if FLAGS["crisis_sal"]:
+        split = {x for e in res["event"] if e[3] == KIND_ID["civ_seceded"] for x in causes.get(e[0], [])}
+        for e in res["event"]:
+            if e[3] == KIND_ID["succession_crisis"]:
+                want = base[KIND_ID["succession_crisis"]] if e[0] in split else t["crisis_small_salience"]
+                c.true("%s inv 13 e%d crisis salience" % (label, e[0]), e[7] == want)
 
 
 # ---------------------------------------------------------------------------
@@ -2009,7 +2367,8 @@ def unit_geo(regions=None, borders=(), region_biomes=(), races=("elf",), dat=Non
     for i, r in enumerate(regions or [dict()]):
         d = dict(id=i + 1, name="Unit %d" % (i + 1), x_min=0, y_min=0, x_max=n - 1, y_max=n - 1, seed_x=1,
                  seed_y=1, cells=4000, lake_cells=0, walk_cells=3000, habitability_mean=50, coast_cells=0,
-                 fertility_mean=100, forage_mean=100, timber_mean=100, fresh_water_mean=100, ore_reach_cells=0)
+                 fertility_mean=100, forage_mean=100, timber_mean=100, fresh_water_mean=100, ore_reach_cells=0,
+                 elev_max_dm=0)
         d.update(r)
         regs.append(d)
     p = pchr.params(span=span, races=pchr.races_of(",".join(races), dat.chron), civs=civs_param(civs),
@@ -2023,6 +2382,10 @@ def unit_geo(regions=None, borders=(), region_biomes=(), races=("elf",), dat=Non
                     reg[y * n + x] = r["id"]
         layers = dict(region=reg, water=[0] * (n * n), habitability=[0] * (n * n), river=[0] * (n * n),
                       flow_dir=[8] * (n * n))
+    # r6: elevation 1 dm, ore 0, walkable everywhere unless the case gives them
+    layers.setdefault("elevation", [1] * (n * n))
+    layers.setdefault("ore", [0] * (n * n))
+    layers.setdefault("walk_area", [1] * (n * n))
     ages = chron["age"]
     races_rows = chron["race"]
     if starts is not None:
@@ -2405,7 +2768,7 @@ def cmd_check_world(argv):
     if meta.get("schema_version") != "7":
         print("%s: schema version %s, check-world reads 7" % (path, meta.get("schema_version")))
         return 1
-    c.eq("generator_version", meta.get("generator_version"), GENERATOR_VERSION)
+    c.eq("generator_version", meta.get("generator_version"), GENERATOR_VERSION if FLAGS["dest"] else "0.16.0")
     stages = meta["stages"].split(",") if meta["stages"] else []
     p = pchr.params_from_meta(meta)
     inp, chron = inputs_for(dat, conn, p, int(meta["seed"]), int(meta["param.map_size"]))
@@ -2451,6 +2814,10 @@ def cmd_synthetic(argv):
 
 
 def main(argv):
+    # --legacy: every P3-08 rule flag off (the 0.16.0 rules; with 0.16.0 data and names the 0.16.0 worlds)
+    if "--legacy" in argv:
+        argv = [a for a in argv if a != "--legacy"]
+        legacy()
     if not argv:
         print(__doc__)
         return 2
