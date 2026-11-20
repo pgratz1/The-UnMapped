@@ -557,7 +557,7 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
 - Problem: the design does not say how far a civilization expands. Without a limit, in a peaceful history the first two races fill every region they like long before the later races awaken: in the first prototype the elves and goblins held 46 of 50 regions of a 1024 world and the humans awoke on a bare peak.
 - Proposal: a civilization founds settlements only in free regions within a few hops of its capital region (elves, dwarves and faeries 1, goblins and orcs 2, humans 3, from the race's `expansion`), and only in land it rates at least 70% as well as its home. A succession crisis in a large realm may split it, and the new civilization expands from its own capital; that is how a people spreads beyond its reach. At the present about 31 of 49 regions are held at 1024, leaving free land for later races and for conflict.
 - Interim choice: as proposed (`docs/specs/p3-05-peoples.md` 9.3, 10.3, questions 2 and 5).
-- Status: open
+- Status: accepted by Paul, 2026-11-19 (interim choice stands); design doc to be updated
 
 ### History: a population density per race
 
@@ -577,7 +577,7 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
 - Problem: the design lists plague, famine and succession crises as tick-loop pressures and migrations among the consequences, but does not say whether quiet intervals have pressures or what a migration is before there are wars.
 - Proposal: famine, plague and succession crises act only in yearly ticks (active phases and flare-ups); quiet steps write growth, foundings and the fading of ruins only, which is the design's peace. Colonists and the survivors of an abandoned settlement move; migrations of whole peoples (refugees) come with conflict (P3-06) or P5.
 - Interim choice: as proposed (`docs/specs/p3-05-peoples.md` 10.5, questions 4 and 6).
-- Status: open
+- Status: accepted by Paul, 2026-11-19 (interim choice stands); design doc to be updated
 
 ### History: wars are limited, fought for a claimed region, and end with the active phase
 
@@ -630,3 +630,19 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
 - Proposal: allow a race several cultures, each with its own biome and site preferences, settlement kinds and name syllables; a civilization takes one culture at its founding (a second civilization of a race, or one born by secession, may take another). Hill dwarves fit the present geography (upland and hill regions above ground). Dark elves need somewhere underground: geography has no caves or underground layer, so either a first approximation (mountain and pass regions, settlements flagged as underground) or a later geography addition. Both touch the data kinds `race` and `culture` (schema of the data files, and table `culture`), so they need a spec.
 - Interim choice: none taken; P3 continues with one culture per race. Suggested home: P5 History depth, or an earlier small stage if Paul wants hill dwarves sooner.
 - Status: open (for the design conversation)
+
+### Paul's decision of 2026-11-19: the remaining peoples questions go with their recommendations
+
+- Date: 2026-11-19
+- Raised by: lead, recording Paul's decision
+- Design doc section: 5 (Peoples; tick loop; quiet intervals)
+- Problem: after questions 1 and 7, six questions of `docs/specs/p3-05-peoples.md` section 19 were still open.
+- Decision: Paul's words: "The rest in peoples.md can go with their recommended resolution." So:
+  2. Reach from the capital: a people expands only a few hops from its seat and spreads farther by splitting. Accepted.
+  3. `--civs-per-race` 1 to 4 is a request; a second civilization needs free land three hops from the first. Accepted.
+  4. No famine, plague or crisis in quiet steps; they write growth, foundings and fading. Accepted.
+  5. Secession as the outcome of some crises. Accepted.
+  6. Migration of whole peoples deferred; refugee migration with conflict or P5. Accepted.
+  8. A plague that empties a settlement does not spread to its neighbours. Accepted.
+- Interim choice: none needed; the spec as implemented at 0.15.0 stands. Only question 7 (faeries in forest) leads to a change.
+- Status: accepted; design doc sections 5 and 6 to be updated
