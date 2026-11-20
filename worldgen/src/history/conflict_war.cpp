@@ -38,7 +38,7 @@ void ConflictSubsystem::fight(StepContext& ctx) {
             continue;  // a war has no battle in its declaration year (7.3, r2)
         }
         const Fought f = battle(ctx, i);
-        if (wars_[i].open) {
+        if (f != Fought::ended && wars_[i].open) {
             end_checks(ctx, i, f == Fought::no_front);
         }
     }
@@ -56,10 +56,7 @@ ConflictSubsystem::Fought ConflictSubsystem::battle(StepContext& ctx, std::size_
             return Fought::no_front;
         }
     }
-    if (!chance_pm(ctx.draw(keys_[BATTLE], word(w0.declared), 0, 0), tuning_.battle_permille)) {
-        return Fought::no_battle;
-    }
-    // 6.2: the target.
+    // 6.2: the target (no draw; chosen before the search and the battle draw).
     FrontEntry target{};
     bool goal_found = false;
     if (x == w0.attacker) {
@@ -74,6 +71,26 @@ ConflictSubsystem::Fought ConflictSubsystem::battle(StepContext& ctx, std::size_
         target = best_target(ctx, race_of_civ(ctx, x).id, fr);
     }
     const std::int64_t region = target.region;
+    // r10 20.17 item 1: y's settlements there all concealed: x must find them.
+    const std::vector<std::int64_t> there = seen_settlements(ctx, y, region);
+    const bool all_concealed = !there.empty() && std::all_of(there.begin(), there.end(), [&](std::int64_t id) {
+        return concealed(ctx.state(), ctx.state().settlement(id));
+    });
+    if (all_concealed) {
+        if (!chance_pm(ctx.draw(keys_[SEARCH], word(w0.declared), word(region), 0), tuning_.find_permille)) {
+            ConflictWar& w = wars_[i];
+            w.unfound += 1;
+            if (w.unfound >= tuning_.search_years) {
+                abandon_search(ctx, i, x, y, region);
+                return Fought::ended;
+            }
+            return Fought::no_battle;
+        }
+        wars_[i].unfound = 0;
+    }
+    if (!chance_pm(ctx.draw(keys_[BATTLE], word(w0.declared), 0, 0), tuning_.battle_permille)) {
+        return Fought::no_battle;
+    }
     // 6.3: the defence (r9: with home defence).
     const auto [def, pass_id] = defence_at(ctx, y, target);
     const bool at_pass = pass_id != 0;
@@ -86,7 +103,7 @@ ConflictSubsystem::Fought ConflictSubsystem::battle(StepContext& ctx, std::size_
     const std::int64_t loser = x_wins ? y : x;
     const std::int64_t f_winner = x_wins ? attack : defend;
     const std::int64_t f_loser = x_wins ? defend : attack;
-    const std::int64_t dead_loser = floor_div(checked_mul(f_loser, tuning_.loss_loser_permille), 1000);
+    const std::int64_t dead_loser = loser_dead_of(tuning_, f_winner, f_loser);  // r10 20.16
     // r7 (P3-08): the victors lose loss_winner of the smaller force.
     const std::int64_t dead_winner =
         floor_div(checked_mul(std::min(f_winner, f_loser), tuning_.loss_winner_permille), 1000);
@@ -105,6 +122,7 @@ ConflictSubsystem::Fought ConflictSubsystem::battle(StepContext& ctx, std::size_
         w.dead[side(w, winner)] = checked_add(w.dead[side(w, winner)], dw);
         w.dead[side(w, loser)] = checked_add(w.dead[side(w, loser)], dl);
         w.won[side(w, winner)] += 1;
+        w.last_battle_winner = winner;
         w.last_event = ev;
         w.initiative = winner;
     }
@@ -135,6 +153,7 @@ void ConflictSubsystem::siege(StepContext& ctx, std::size_t i, std::int64_t x, s
     const std::int64_t w = wars_[i].declared;
     bool fell = chance_pm(ctx.draw(keys_[SIEGE], word(w), word(t), 0), ps);
     std::optional<Flight> flight;
+    std::int64_t held_reason = 0;  // r10 20.22: 1 nowhere to flee, 2 too few to flee
     if (fell && tuning_.last_refuge != 0 && last_refuge_of(state, y)) {
         // r9 20.1: a fallen last refuge flees when it can, else the guard holds.
         fell = false;
@@ -142,10 +161,13 @@ void ConflictSubsystem::siege(StepContext& ctx, std::size_t i, std::int64_t x, s
             flight = flight_plan(ctx, x, y, t);
             fell = flight && flight->people >= peoples_.tuning().abandon_min;
         }
+        if (!fell) {
+            held_reason = flight ? 2 : 1;
+        }
     }
-    EventSpec e = point_event(ctx, "siege", region, t);
+    EventSpec e = point_event(ctx, held_reason != 0 ? "refuge_held" : "siege", region, t);
     e.participants = {civ_role("attacker", x), civ_role("defender", y)};
-    e.values = {fell ? 1 : 0};
+    e.values = {held_reason != 0 ? held_reason : (fell ? 1 : 0)};
     e.causes = {battle_event};
     const std::int64_t ev = ctx.append(e);
     wars_[i].last_event = ev;
@@ -210,6 +232,10 @@ void ConflictSubsystem::flee(StepContext& ctx, std::size_t i, std::int64_t x, st
     const std::int64_t race = state.civ(y).race;
     // 1. The sack (no sack draw: a refuge that falls is always sacked).
     const std::int64_t p = state.settlement(t).population;
+    {
+        ConflictWar& war = wars_[i];  // r10 20.15 item 1
+        war.taken_people[side(war, x)] = checked_add(war.taken_people[side(war, x)], p);
+    }
     const std::int64_t dead = floor_div(checked_mul(p, tuning_.sack_toll_permille), 1000);
     state.set_population(t, p - dead);
     EventSpec e = point_event(ctx, "sacked", region, t);
@@ -262,6 +288,10 @@ void ConflictSubsystem::fall(StepContext& ctx, std::size_t i, std::int64_t x, st
     const bool capital = state.civ(y).capital == t;
     const std::int64_t w = wars_[i].declared;
     const std::int64_t h = hostility(disposition_of(ctx, x, y));
+    {
+        ConflictWar& war = wars_[i];  // r10 20.15 item 1: the people taken, before the toll
+        war.taken_people[side(war, x)] = checked_add(war.taken_people[side(war, x)], state.settlement(t).population);
+    }
     const std::int64_t sack_pm =
         std::min<std::int64_t>(1000, checked_add(tuning_.sack_base, floor_div(checked_mul(h, tuning_.sack_hostility), 1000)));
     const bool sack = chance_pm(ctx.draw(keys_[SACK], word(w), word(t), 0), sack_pm);
@@ -429,6 +459,10 @@ std::int64_t ConflictSubsystem::casualties(StepContext& ctx, std::int64_t civ, s
         pops.push_back(state.settlement(id).population);
         total = checked_add(total, pops.back());
     }
+    // r10 20.20 item 1: a race's last refuge keeps at least abandon_min.
+    if (last_refuge_of(state, civ)) {
+        dead = std::max<std::int64_t>(0, std::min(dead, total - peoples_.tuning().abandon_min));
+    }
     if (total == 0 || dead <= 0) {
         return 0;
     }
@@ -455,14 +489,14 @@ void ConflictSubsystem::end_checks(StepContext& ctx, std::size_t i, bool no_fron
     };
     const bool ex_a = exhausted(0);
     const bool ex_b = exhausted(1);
-    const std::int64_t by_score = score_winner(w);
+    // r10 20.15: the score of dead and people taken; the winner of the last
+    // battle never loses an ending decided by the score.
+    const std::int64_t by_score = unless_last_battle(w, score_winner(w));
     if (ex_a || ex_b) {
-        const std::int64_t tired = ex_a ? w.attacker : w.defender;
-        if ((ex_a && ex_b) || by_score == 0 || tired != by_score) {
-            (void)end_war(ctx, i, by_score);
-        } else {
-            (void)end_war(ctx, i, 0);  // the exhausted side leads: a truce
-        }
+        // An exhausted side that leads wins (war_won); a peace is sued for
+        // only by an exhausted loser (items 2 and 4).
+        const bool loser_exhausted = by_score != 0 && (by_score == w.attacker ? ex_b : ex_a);
+        (void)end_war(ctx, i, by_score, loser_exhausted);
         return;
     }
     // Aim achieved: the defender neither holds the goal nor has a standing settlement in it.
@@ -473,15 +507,15 @@ void ConflictSubsystem::end_checks(StepContext& ctx, std::size_t i, bool no_fron
         defender_there = defender_there || (s.owner_civ == w.defender && standing(s) && s.region == w.goal);
     }
     if (!defender_there) {
-        (void)end_war(ctx, i, w.attacker);
+        (void)end_war(ctx, i, w.attacker, false);  // aim achieved: no last-battle rule
         return;
     }
     if (no_front || ctx.year() - w.start >= tuning_.war_max_years) {
-        (void)end_war(ctx, i, by_score);
+        (void)end_war(ctx, i, by_score, false);
     }
 }
 
-bool ConflictSubsystem::end_war(StepContext& ctx, std::size_t i, std::int64_t winner) {
+bool ConflictSubsystem::end_war(StepContext& ctx, std::size_t i, std::int64_t winner, bool sued) {
     State& state = ctx.state();
     const ConflictWar w = wars_[i];
     const bool quiet = ctx.step() == Step::q4;
@@ -491,7 +525,7 @@ bool ConflictSubsystem::end_war(StepContext& ctx, std::size_t i, std::int64_t wi
     std::int64_t loser = 0;
     bool ceding = false;
     Cost cost;
-    EventSpec e = point_event(ctx, winner != 0 ? "peace" : "truce", 0, 0);
+    EventSpec e = point_event(ctx, winner == 0 ? "truce" : (sued ? "peace" : "war_won"), 0, 0);
     e.values = {years};
     e.causes = {w.last_event};
     if (winner != 0) {
@@ -515,12 +549,7 @@ bool ConflictSubsystem::end_war(StepContext& ctx, std::size_t i, std::int64_t wi
         e.participants = {civ_role("parties", p.first), civ_role("parties", p.second)};
     }
     const std::int64_t ev = ctx.append(e);
-    state.close_relation(civ_relation(a, b, "war"), ev);
-    state.open_relation(symmetric_relation(a, b, "peace"), ev);
-    last_peace_[ordered(a, b)] = Peace{ctx.year(), ev};
-    add_grudge(a, b, tuning_.war_grudge);
-    drop_pair(a, b);
-    wars_[i].open = false;
+    close_war(ctx, i, ev);
     if (ceding) {
         cede(ctx, w.goal, loser, winner, ev);  // cession of the goal (7.7)
     } else if (cost.region != 0) {
@@ -536,6 +565,31 @@ bool ConflictSubsystem::end_war(StepContext& ctx, std::size_t i, std::int64_t wi
     }
     note_futile(ctx, w);  // r9 20.4
     return true;
+}
+
+void ConflictSubsystem::close_war(StepContext& ctx, std::size_t i, std::int64_t ev) {
+    State& state = ctx.state();
+    const std::int64_t a = wars_[i].attacker;
+    const std::int64_t b = wars_[i].defender;
+    state.close_relation(civ_relation(a, b, "war"), ev);
+    state.open_relation(symmetric_relation(a, b, "peace"), ev);
+    last_peace_[ordered(a, b)] = Peace{ctx.year(), ev};
+    add_grudge(a, b, tuning_.war_grudge);
+    drop_pair(a, b);
+    wars_[i].open = false;
+}
+
+// r10 20.17 item 2: the searcher gives up; a truce without cost (T6 only).
+void ConflictSubsystem::abandon_search(StepContext& ctx, std::size_t i, std::int64_t x, std::int64_t y,
+                                       std::int64_t region) {
+    const ConflictWar w = wars_[i];
+    EventSpec e = point_event(ctx, "search_abandoned", region, 0);
+    e.participants = {civ_role("searcher", x), civ_role("hidden", y)};
+    e.values = {ctx.year() - w.start};
+    e.causes = {w.last_event};
+    const std::int64_t ev = ctx.append(e);
+    close_war(ctx, i, ev);
+    note_futile(ctx, w);  // 20.4: the goal unchanged by an unfound war counts
 }
 
 // 7.7's cession (and r9 20.3 item 1's): the loser's standing visible

@@ -80,6 +80,8 @@ struct ConflictTuning {
     std::int64_t refuge_flight = 0, flight_hops = 1, hidden_years = 0, weary_wars = 0, tribute_permille = 0;
     std::int64_t revenge_aggression = 0, levy_hops = 16, odds_floor = 0, odds_min = 0;
     std::int64_t truce_break_aggression = 999, enmity_hops = 1;
+    // r10 20.19 (P3-09 r3): the kill bound, the search for a concealed people.
+    std::int64_t kill_max_permille = 10000, find_permille = 1000, search_years = 100;
     std::int64_t capital_sacked_salience = 0, capital_captured_salience = 0;
 };
 
@@ -204,8 +206,14 @@ struct DefenceTerms {
 // `dead`, already capped at the total; the remainder from the most populous
 // after the shares (then the first), at most its population.
 [[nodiscard]] std::vector<std::int64_t> casualty_losses(std::span<const std::int64_t> populations, std::int64_t dead);
-// The war score of 7.7: positive the attacker leads.
+// The war score of 7.7 (0.16.0 to r9): positive the attacker leads.
 [[nodiscard]] std::int64_t war_score(std::int64_t won_a, std::int64_t won_b, std::int64_t taken_a, std::int64_t taken_b);
+// r10 20.15 item 1: s = (dead(b) - dead(a)) + (taken(a) - taken(b)), with
+// taken the people of the settlements each side took; positive a leads.
+[[nodiscard]] std::int64_t war_score_people(std::int64_t dead_a, std::int64_t dead_b, std::int64_t taken_a,
+                                            std::int64_t taken_b);
+// r10 20.16: the defeated's dead, min(F_L x loss_loser, F_W x kill_max) div 1000.
+[[nodiscard]] std::int64_t loser_dead_of(const ConflictTuning& t, std::int64_t force_winner, std::int64_t force_loser);
 
 // --- The subsystem (13) ----------------------------------------------------------------------
 
@@ -225,6 +233,11 @@ struct ConflictWar {
     std::array<std::int64_t, 2> taken{};
     std::array<std::int64_t, 2> dead{};
     std::array<std::int64_t, 2> pop0{};
+    // r10 (20.15, 20.17): people of the settlements taken (before the toll),
+    // the winner of the war's latest battle (0 none), failed searches in a row.
+    std::array<std::int64_t, 2> taken_people{};
+    std::int64_t last_battle_winner = 0;
+    std::int64_t unfound = 0;
 };
 
 class ConflictSubsystem final : public Subsystem, public TensionSource {
@@ -335,7 +348,7 @@ private:
     void quiet_ends(StepContext& context);
 
     // War (conflict_war.cpp; 7.3 to 7.7).
-    enum class Fought : std::uint8_t { no_front, no_battle, battle };
+    enum class Fought : std::uint8_t { no_front, no_battle, battle, ended };
     Fought battle(StepContext& context, std::size_t war);
     void siege(StepContext& context, std::size_t war, std::int64_t x, std::int64_t y, std::int64_t region,
                std::int64_t attack, std::int64_t dead_x, std::int64_t battle_event);
@@ -349,10 +362,18 @@ private:
     std::int64_t casualties(StepContext& context, std::int64_t civ, std::int64_t dead, std::int64_t event);
     void refugees(StepContext& context, std::int64_t civ, std::int64_t from_settlement, std::int64_t people);
     void end_checks(StepContext& context, std::size_t war, bool no_front);
-    // 7.7: ends the war with winner (0 a truce); false when a quiet step's
-    // budget does not allow it (the war stays open).
-    bool end_war(StepContext& context, std::size_t war, std::int64_t winner);
+    // 7.7: ends the war with winner (0 a truce); `sued` writes a peace (the
+    // loser is exhausted), else a war_won (r10 20.15 item 4); false when a
+    // quiet step's budget does not allow it (the war stays open).
+    bool end_war(StepContext& context, std::size_t war, std::int64_t winner, bool sued);
+    // r10 20.17 item 2: the war ends unfound, as a truce without cost.
+    void abandon_search(StepContext& context, std::size_t war, std::int64_t x, std::int64_t y, std::int64_t region);
+    // The war's relation changes, last_peace, grudge and strains after its end event.
+    void close_war(StepContext& context, std::size_t war, std::int64_t event);
     [[nodiscard]] std::int64_t score_winner(const ConflictWar& w) const;
+    // r10 20.15 item 3: an ending decided by the score never makes the winner
+    // of the war's last battle the loser (a truce, 0, instead).
+    [[nodiscard]] std::int64_t unless_last_battle(const ConflictWar& w, std::int64_t winner) const;
     void add_grudge(std::int64_t a, std::int64_t b, std::int64_t amount);
     void drop_pair(std::int64_t a, std::int64_t b);  // strains 0, claims dropped, both directions
     void close_relations_of(StepContext& context, std::int64_t civ, std::int64_t event);
@@ -360,7 +381,7 @@ private:
     PeoplesSubsystem& peoples_;
     ConflictTuning tuning_;
     bool prepared_ = false;
-    std::array<std::uint64_t, 5> keys_{};
+    std::array<std::uint64_t, 6> keys_{};
     std::int64_t intensity_ = 1000;
     std::vector<ConflictRace> races_;          // race row order (ascending id)
     ConflictGraph graph_;                      // open borders, index region - 1

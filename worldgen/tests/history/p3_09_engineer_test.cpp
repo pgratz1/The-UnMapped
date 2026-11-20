@@ -50,6 +50,9 @@ h::ConflictTuning tuning_09() {
     t.odds_min = 700;
     t.truce_break_aggression = 600;
     t.enmity_hops = 3;
+    t.kill_max_permille = 500;  // r10 20.19
+    t.find_permille = 250;
+    t.search_years = 3;
     return t;
 }
 
@@ -145,4 +148,29 @@ TEST_CASE("P3-09 engineer: the ordinals of the war note (P3-07 r8 21.4 item 3)")
     CHECK(h::history_ordinal(101) == "101st");
     CHECK(h::history_ordinal(111) == "111th");
     CHECK(h::history_ordinal(112) == "112th");
+}
+
+TEST_CASE("P3-09 r3 engineer: the war score of dead and people taken, and the kill bound (20.15, 20.16)") {
+    // s = (dead(b) - dead(a)) + (taken(a) - taken(b)): Dulimin killed 991 for 44.
+    CHECK(h::war_score_people(991, 44, 0, 0) == -947);
+    CHECK(h::war_score_people(44, 991, 0, 0) == 947);
+    CHECK(h::war_score_people(100, 50, 50, 0) == 0);
+    CHECK(h::war_score_people(10, 0, 0, 300) == -310);
+    h::ConflictTuning t = tuning_09();
+    t.loss_loser_permille = 250;
+    t.kill_max_permille = 500;
+    // F_W = F_L / 20: 2000 defenders bound by 100 victors to 50 dead (not 500).
+    CHECK(h::loser_dead_of(t, 100, 2000) == 50);
+    CHECK(h::loser_dead_of(t, 2000, 100) == 25);
+    CHECK(h::loser_dead_of(t, 0, 100) == 0);
+    t.kill_max_permille = 1;
+    CHECK(fatal_of(t).empty());
+    t.kill_max_permille = 10001;
+    CHECK(fatal_of(t) == "history: tuning: conflict.kill_max_permille outside its schema range");
+    t = tuning_09();
+    t.search_years = 0;
+    CHECK(fatal_of(t) == "history: tuning: conflict.search_years outside its schema range");
+    t = tuning_09();
+    t.find_permille = 1001;
+    CHECK(fatal_of(t) == "history: tuning: conflict.find_permille outside its schema range");
 }

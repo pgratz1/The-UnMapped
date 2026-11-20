@@ -613,6 +613,10 @@ Schema history_conflict_schema() {
         i("odds_min", 0, 1000),
         i("truce_break_aggression", 0, 999),
         i("enmity_hops", 1, 4),
+        // P3-06 r10 20.19 (P3-09 r3).
+        i("kill_max_permille", 1, 10000),
+        i("find_permille", 0, 1000),
+        i("search_years", 1, 100),
         i("capital_sacked_salience", 0, 100),
         i("capital_captured_salience", 0, 100),
     };

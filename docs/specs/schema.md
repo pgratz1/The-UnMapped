@@ -167,6 +167,9 @@ Kinds, roles, value keys and flags are code (`history::compiled_event_catalogue(
 | 31 | `settlement_abandoned_to` | 1 | 1 | 1 | 1: `settlement`, settlement, 1–1; 2: `civilization`, civilization, 1–1; 3: `destination`, settlement, 1–1 | 1: `settled`; 2: `lost` | P3-05 r6 |
 | 32 | `refugees_settled` | 1 | 1 | 1 | 1: `settlement`, settlement, 1–1; 2: `founder`, civilization, 1–1; 3: `origin`, settlement, 1–1 | 1: `population` | P3-06 r9 |
 | 33 | `tribute` | 1 | 0 | 0 | 1: `payer`, civilization, 1–1; 2: `payee`, civilization, 1–1 | 1: `people` | P3-06 r9 |
+| 34 | `war_won` | 1 | 0 | 0 | 1: `winner`, civilization, 1–1; 2: `loser`, civilization, 1–1 | 1: `years` | P3-06 r10 |
+| 35 | `search_abandoned` | 1 | 1 | 0 | 1: `searcher`, civilization, 1–1; 2: `hidden`, civilization, 1–1 | 1: `years` | P3-06 r10 |
+| 36 | `refuge_held` | 1 | 1 | 1 | 1: `attacker`, civilization, 1–1; 2: `defender`, civilization, 1–1 | 1: `reason` | P3-06 r10 |
 
 Kinds 1–5 are P3-04's, 6–19 P3-05's (generator 0.15.0), 20–30 P3-06's (generator 0.16.0, P3-06 11); in kinds 20–30 every count is 1–1 except `parties` 2–2, and every kind is caused. Kind 31 is P3-05 r6's (generator 0.17.0, the P3-08 change): an abandonment whose survivors reached another settlement; from 0.17.0 kind 16 is written only when none did. Kinds 32 `refugees_settled` and 33 `tribute` are P3-06 r9's (generator 0.18.0, the P3-09 change): the survivors of a fallen last refuge found a hidden settlement; a loser with no region to cede pays people.
 

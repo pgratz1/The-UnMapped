@@ -381,6 +381,9 @@ private:
                                                           std::int64_t target) const;
     // Another standing settlement of the settlement's owner exists.
     [[nodiscard]] bool other_standing(const SettlementsNow& now, std::int64_t settlement) const;
+    // r9 (21 item 6): the settlement is its race's last refuge (its owner's
+    // only standing settlement, the owner the only alive civilization of its race).
+    [[nodiscard]] bool race_last_refuge(const SettlementsNow& now, std::int64_t settlement) const;
     // The owner's nearest other standing settlement (squared distance, then
     // id), 0 if none.
     [[nodiscard]] std::int64_t nearest_standing(const SettlementsNow& now, std::int64_t settlement) const;
