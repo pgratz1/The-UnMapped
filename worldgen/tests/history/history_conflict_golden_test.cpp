@@ -117,7 +117,8 @@ void check_hard_bounds(const CCase& g, const char* peoples_case) {
     CAPTURE(g.name);
     const db::WorldReader r = open_world(world_path(g));
     const Tables t = tables_of_world(r);
-    const eng::HistoryInputs in = eng::inputs_from_world(r, shipped());
+    // the inputs of the --until chronology world (a complete world is refused as a resume input, P3-04 3.2)
+    const eng::HistoryInputs in = eng::inputs_from_world(open_world(world_path(g, 1, "chronology")), shipped());
     std::int64_t alive = 0, standing = 0;
     for (const Row& c : t.civilization) alive += is_null(c[8]) ? 1 : 0;
     for (const Row& s : t.settlement) standing += (at(s, 10) == 1 || at(s, 10) == 2) ? 1 : 0;
