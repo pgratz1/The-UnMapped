@@ -114,7 +114,7 @@ FLAGS = dict(
     search=True,    # 20.17: concealed settlements are present but must be found (replaces 20.7 item 1's hiding)
     floor=True,     # 20.20 item 1: casualties never take a race's last refuge below abandon_min
     held=True,      # 20.22: refuge_held (kind 36) instead of the siege when the guard holds
-    weary_open=True,  # 20.23 (r3, as the lead stated it; not yet in the spec text here): futile + open >= weary
+    weary_open=True,  # r11 20.23: futile + the wars open over (D, G) >= weary_wars
 )
 FLAGS_017 = ("loss",)
 
@@ -234,8 +234,8 @@ SPEC_GAPS = (
     ("r9 20.13 item 2", "Closed by r10 20.20 (the finding of stress cases 1, 12, 14 at r2); checked as an ordinary "
                         "invariant again."),
     # r10 (P3-09 r3)
-    ("r10 20.22 refuge_flight 0", "With refuge_flight = 0 (the guard of 0.16.0) the held siege stays a `siege` with "
-                                  "fell 0: refuge_held's reasons (no destination, too few) presuppose the flight rule."),
+    ("r10 20.22 refuge_flight 0", "SETTLED by r11 20.24 item 1: with refuge_flight = 0 the guard writes refuge_held, "
+                                  "reason 1 (the reference first wrote a siege with fell 0)."),
     ("r10 20.17 who searches", "x is the side of 7.3's battle (the war's initiative, or the other side when it has no "
                                "front); y the side whose settlements at R are concealed; one search per war per T6, "
                                "key (w, R); a year with no search (a battlefield needing none) leaves `unfound` as it "
@@ -1264,6 +1264,7 @@ class World(pp.World):
         ps = self.siege_p(A2, G)
         fell = chance_pm(self.draw("hist.conflict.siege", w, ts["id"], 0), ps)
         flight = None
+        dest = None
         if t["last_refuge"] == 1 and fell:
             race = self.race_c(y)
             alive_same = [c["id"] for c in self.civs if c["ended_year"] is None and c["race"] == race]
@@ -1283,8 +1284,9 @@ class World(pp.World):
                 if flight is None:
                     fell = False
                     self.refuge_saves += 1
-                    if FLAGS["held"] and FLAGS["flight"] and t["refuge_flight"] == 1:
-                        # r10 20.22: the guard holds and says why (1 no destination, 2 too few survivors)
+                    if FLAGS["held"]:
+                        # r10 20.22: the guard holds and says why (1 no destination, 2 too few survivors); with
+                        # refuge_flight 0 (or before the flight rule) reason 1 (r11 20.24 item 1)
                         reason = 1 if dest is None else 2
                         eh = self.append("refuge_held", region=r, settlement=ts["id"],
                                          participants=(("attacker", CIV, x), ("defender", CIV, y)), values=(reason,),
@@ -1305,7 +1307,7 @@ class World(pp.World):
     def conceal_search(self, war, x, y, r):
         """Before the battle draw: when every standing visible settlement of y in R is concealed, x searches.
         Returns True when the year's fighting stops here (not found, or the war given up)."""
-        ys = [s for s in self.svis(y) if s["region"] == r]
+        ys = [s for s in self.svis_seen(y) if s["region"] == r]   # r11 20.24 item 2: not hidden
         if not ys or not all(self.concealed(s) for s in ys):
             return False
         found = chance_pm(self.draw("hist.conflict.search", war["w"], r, 0), self.ct["find_permille"])
@@ -3389,7 +3391,8 @@ def check_units_r9(c):
     w = flight_case(conflict=dict(refuge_flight=0))
     n0 = len(w.events)
     w.c_t6()
-    c.eq("20.1 refuge_flight 0: the guard of 0.16.0", w.events[n0 + 1]["values"], {1: 0})
+    c.eq("20.1 refuge_flight 0: the guard holds; r11 20.24 item 1: refuge_held, reason 1",
+         (KEY_OF[w.events[n0 + 1]["kind"]], w.events[n0 + 1]["values"]), ("refuge_held", {1: 1}))
     check_units_r9_goals(c)
     check_units_r9_odds(c)
 
@@ -3818,6 +3821,32 @@ def check_units_r10(c):
     w.c_t6()
     c.true("20.17 a region with a settlement not concealed needs no search", "battle" in
            [KEY_OF[e["kind"]] for e in w.events[n0:]] and not w.search_log)
+    # --- r11 20.23: weariness counts wars in progress
+    w = r9_world(regions=4, races=("elf", "goblin"))
+    add_civ(w, 2, 1)
+    add_civ(w, 2, 4)
+    add_civ(w, 1, 2)
+    add_stl(w, 1, 1, TOWN, 3000)
+    add_stl(w, 2, 4, TOWN, 3000)
+    add_stl(w, 3, 2, TOWN, 300)
+    add_stl(w, 3, 3, VILLAGE, 200)
+    w.civ(1)["capital"], w.civ(2)["capital"], w.civ(3)["capital"] = 1, 2, 3
+    w.futile[(3, 3)] = (2, 3)
+    c.true("20.23 count 2 and no open war: R3 allowed", any(e[0] == 3 for e in w.allowed(2, 3, w.front(2, 3))))
+    claim_war(w, 1, 3, 3)
+    c.eq("20.23 c1's war over R3 is open", (w.wars[-1]["goal"], w.wars[-1]["open"]), (3, True))
+    c.true("20.23 count 2 + 1 open: c2 cannot claim or declare over R3",
+           not any(e[0] == 3 for e in w.allowed(2, 3, w.front(2, 3))))
+    w.claim[(2, 3)] = (5, 3)
+    e2 = w.declare(2, 3, False)
+    c.true("20.23 c2's declaration over the weary R3 is re-chosen or dropped",
+           e2 is None or w.events[e2 - 1]["region"] != 3)
+    w.wars[0]["open"] = False
+    c.true("20.23 once that war ends the count reads 2 again: allowed", any(e[0] == 3 for e in w.allowed(2, 3, [(3, 1, 3)])))
+    w.ct["weary_wars"] = 0
+    w.wars[0]["open"] = True
+    w.futile[(3, 3)] = (9, 3)
+    c.true("20.23 weary_wars 0 blocks nothing", any(e[0] == 3 for e in w.allowed(2, 3, [(3, 1, 3)])))
     # --- 20.20 item 1: the last refuge's floor
     w, war = r10_war()
     w.civs[2]["ended_year"] = 1000      # c2 is now its race's last refuge
