@@ -619,7 +619,7 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
   1. Question 1 (population density per race): the interim choice stands, a race field `density_permille`. Paul likes the idea of deriving density from a race's age but expects it to be hard to tune.
   2. Question 7 (faeries): faeries definitely live in forested land, and the forest does not have to be wet. The shipped weights at 0.15.0 favour wet land (`fen` 800, `wet_woodland` 800, `marsh` 600, `temperate_forest` 100), so this is a data change: forest biomes become the faeries' first preference whether wet or dry. It changes where faeries awaken and settle, so it changes world bytes and comes with a generator version bump.
 - Interim choice: the 0.15.0 weights ship as validated; the faerie weights are re-tuned as a separate data change (spec amendment to P3-05 12.2 with a measured sweep) after P3-06 is integrated, before Paul's review of P3.
-- Status: question 1 accepted; question 7 decided, data change pending. Paul confirmed the timing on 2026-11-19: the faerie change ships after P3-06, as its own data change
+- Status: question 1 accepted; question 7 decided, data change pending. Paul confirmed the timing on 2026-11-19: the faerie change ships after P3-06, as its own data change. 2026-11-20: specified to ship with the P3-08 follow-up change (`docs/specs/p3-08-followups.md` item 4, P3-05 r6 12.3, generator 0.17.0)
 
 ### Races: sub-peoples with their own lands (dark elves underground, hill dwarves above ground)
 
@@ -748,7 +748,7 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
   4. The word lists are data Paul may edit (`game/data/placenames/`); no decision needed.
   5. Trait steering stays as shipped.
 - Interim choice: none needed. Point 2 is a change to the sentence renderer (spec P3-04 8.4), specified and implemented together with the region names.
-- Status: accepted; implementation scheduled after P3-06
+- Status: accepted; implementation scheduled after P3-06; 2026-11-20: specified for the P3-08 follow-up change (`docs/specs/p3-08-followups.md` items 1 and 2: P1-06 r4, P3-04 r10 8.5, P3-07 r7)
 
 ### Region names: who keeps the plain name, and "The" inside history sentences
 
@@ -768,4 +768,14 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
 - Problem: names are built from per-culture syllables with no check on what the result spells. In eight reviewed worlds the generator made a goblin settlement whose first syllables form a racial slur (and two near misses), human towns starting with a crude word for a body part, and gods with ordinary English names ("Bald", "Buzz", "Gord"). Gods use the same short shapes as villages ("Krok", "Sten"), and 7 of 14 elven realms had bare one-word names, so a realm reads like a town ("Finen founded Voeledell").
 - Proposal: three rules, specified in `docs/specs/p3-02-names.md` r5 section 11. (1) **Names are filtered**: a drawn name is redrawn when the word that holds its root contains a listed fragment (anywhere, or at a word start), or is exactly a listed word; the lists are shared data for every culture (`game/data/name_filters/`: slurs, crude words, ordinary English words the syllables can produce, famous real and fictional names). (2) **Gods have their own style**: each culture names its gods from its own list of root shapes, shipped as the culture's shapes of two or more syllables, so no god is a one-syllable word. (3) **Every realm name has a realm form**: no culture names a civilization with a bare root (a loader check); the elven bare form becomes "The House of {root}".
 - Interim choice: as proposed; ships in the follow-up change after P3-06 together with the region names and the faerie weights, with that change's generator version bump. No schema change. The region namer keeps its own word checks (P1-06 V4, V5), since the history lists' fragments reject ordinary English words such as "night" and "tithe".
-- Status: open; spec amendment written (P3-02 r5, branch `p3/02-names-filter`), questions in P3-02 11.10
+- Status: open; spec amendment written (P3-02 r5, branch `p3/02-names-filter`), questions in P3-02 11.10; 2026-11-20: ships with the P3-08 follow-up change (P3-02 r6: every word of the rendered name covered, the redraw stated; generator 0.17.0); the questions stay open
+
+### History: dwarves settle high ground; abandonment names where the survivors went; one quiet era per quiet stretch
+
+- Date: 2026-11-20
+- Raised by: spec writer (P3-08), after the world critics' reviews of P3-05 and P3-06 (`docs/reviews/p3-05-peoples-world-critic.md` F1–F4, `docs/reviews/p3-06-conflict-world-critic.md` F8, section 5)
+- Design doc section: 5 (dwarves "in the uplands", faeries "hidden communities in wild places", quiet intervals "four centuries of peace under the same dynasty", abandonment and ruins), 6 (text rendered from records and templates), 14 (records a model can narrate)
+- Problem: (1) every race settles the lowest farmland of its region, so dwarves build lowland forest cities; (2) an abandoned settlement's survivors and the blow that began its decline are not recorded, so the log reads as a people walking away after a small blow; (3) a quiet era closes at every event of its civilization, so the log fills with 25-year eras and "(0 generations)"; (4) victors of a lopsided battle lose more than the defeated; (5) a capture sentence ends "and 0 fled"; (6) small plagues and crises without outcome crowd the summary; (7) a people's last village can be abandoned by a coin toss.
+- Proposal: specified in `docs/specs/p3-08-followups.md` (generator 0.17.0, no schema change): a per-race cell term in the site choice (dwarves: ore and height) and dwarven holds off the walkable ground are fortresses (P3-05 r6 6.2, 8.4); a new event kind `settlement_abandoned_to` naming the destination, and the decline's first blow as a second cause (P3-05 r6 8.5); one quiet era per civilization and quiet stretch (P3-04 r10 6.6); victors' losses from the smaller force (P3-06 r7 7.3); a three-word template form that drops a clause whose number is 0 (P3-04 r10 8.4); saliences by toll and outcome (P3-05 r6 10.2, 10.3); no chance abandonment of a last settlement (P3-05 r6 8.5). Plus the volume change of P3-08 6.4.
+- Interim choice: as proposed, for the P3-08 implementation; the questions to Paul are in `docs/specs/p3-08-followups.md` 10.
+- Status: open

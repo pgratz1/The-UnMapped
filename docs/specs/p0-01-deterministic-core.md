@@ -551,3 +551,7 @@ Requested by P3-05 3.3. The stream-name registry of 7.3 gains, after `hist.chron
 ## 19. Amendment for P3-06 (2026-11-19)
 
 Requested by P3-06 3.3 and 18.2. The stream-name registry of 7.3 gains, after `hist.peoples.split`, in this order: `hist.conflict.declare`, `hist.conflict.battle`, `hist.conflict.battle_win`, `hist.conflict.siege`, `hist.conflict.sack`: 51 names in all, from the P3-06 merge (generator 0.16.0). Registering a stream name changes no world byte.
+
+## 20. Amendment for P3-08 (2026-11-20)
+
+Requested by P1-06 r4 14.8 (the region names of P1-06 r3, shipped with P3-08, generator 0.17.0). The stream-name registry of 7.3 gains `geo.regions.name` directly after `geo.regions.cost` (so the `geo.*` names stay together; the later names keep their order): 52 names in all. The key is used as `substream(stream_key(seed, "geo.regions.name"), N)` (P1-06 2). The rest of P3-08 adds no stream: the dwarven site term, the abandonment destinations and the rule changes make no new random decision. Registering a stream name changes no world byte.

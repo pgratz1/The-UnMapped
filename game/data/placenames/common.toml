@@ -127,9 +127,9 @@ objects = [
 # A name none of whose words (lower-cased) contains one of these is kept;
 # guards compounds against words nobody wants on a map.
 forbidden = [
-  "anus", "arse", "butt", "cock", "crap", "cunt", "dick", "fart", "fuck",
-  "nazi", "piss", "porn", "rape", "shit", "slut", "tits", "turd", "twat",
-  "wank",
+  "anus", "arse", "boner", "butt", "cock", "crap", "cunt", "dick", "dung",
+  "fart", "fuck", "nazi", "piss", "porn", "rape", "shit", "slut", "tits",
+  "turd", "twat", "wank",
 ]
 
 # Names the lists can make that belong to real places, existing fiction or
