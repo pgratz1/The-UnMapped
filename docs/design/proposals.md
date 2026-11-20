@@ -537,7 +537,7 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
 - Problem: the design dates each awakening as a share of the span, with the elves at year 0, and allows any subset of races, but does not say when history starts if the elves are left out, or whether the god of a race that is left out exists.
 - Proposal: the first present race awakens at year 0; every later present race keeps its own share of the span and its own small shift from the seed, so its date does not depend on which other races were chosen. Ages are numbered over the present races only. Every race has its creator god in the world, present or not, so a god keeps its name whichever races are chosen; a god whose race is absent created nothing in that world.
 - Interim choice: as proposed (`docs/specs/p3-03-chronology.md` C3, 5.2, questions 1 and 2).
-- Status: open
+- Status: accepted by Paul, 2026-11-19 (interim choice stands); design doc to be updated
 
 ### History: active phases scale with the history span; the detail level sets the simulated share
 
@@ -547,7 +547,7 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
 - Problem: the design gives the simulated years for the default span only. Fixed phase lengths cannot keep the share of simulated years sensible across the span range: 1,200 years would be 60% of a 2,000-year history and 10% of a 12,000-year one. The design also does not say how the last race's opening phase and the final phase meet when the last age is short.
 - Proposal: phase lengths are tuned in years at the 6,000-year default and scaled in proportion to the span, so the detail level fixes the share (sparse about 12%, normal about 19-20%, that is 1,110-1,200 of 6,000 before flare-ups, dense about 28%). The final phase is at most its length and starts where the last opening phase ends, so with the shipped numbers the orcs' age is usually active from their awakening to the present. A floor (10%) and a cap (45%, flare-ups included) are guaranteed by the scheduler. Each flare-up is marked by a `flare_up` event.
 - Interim choice: as proposed (`docs/specs/p3-04-simulation-engine.md` sections 4.1 and 5, questions 1 to 3 and 6).
-- Status: open
+- Status: accepted by Paul, 2026-11-19 (interim choice stands); design doc to be updated
 
 ### History: peoples expand within reach of their capital and spread by secession
 
@@ -587,7 +587,7 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
 - Problem: the design lists wars, sieges and sackings but does not say what a war is fought for, how it ends, or what happens to a war when an active phase gives way to a quiet interval, in which nothing is fought.
 - Proposal: neighbours build strain from their creators' camps, old grudges, land hunger and fear of a giant; strain becomes a claim on one border region, the claim is the casus belli of a war, and the war is fought for that region: it ends when the attacker has it, when a side is exhausted, after 40 years at most, or at the first quiet step after its active phase, by battles won and settlements taken. Wars are declared only in yearly ticks; in quiet intervals strain keeps building and the highest strain is the tension that starts a flare-up, whose war follows without a draw. Relation kinds `enmity` (good against evil, from the younger people's founding), `war` (attacker first) and `peace`; alliances and vassalage wait for figures and factions in P5.
 - Interim choice: as proposed (`docs/specs/p3-06-expansion-conflict.md` 4, 5, 7, questions 1, 2, 5).
-- Status: open
+- Status: accepted by Paul, 2026-11-19 (interim choice stands); design doc to be updated
 
 ### History: no race is wiped out; newly awakened peoples are sheltered
 
@@ -597,7 +597,7 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
 - Problem: with conquest, the late and small peoples (orcs, faeries, humans) were conquered to extinction in most prototype worlds; the design gives every race a role in play but does not say whether a race may vanish from history.
 - Proposal: the last settlement of a race's last civilization never falls to a siege, and a civilization is not attacked in its first 150 years (it may attack). Civilizations still end by conquest; races do not.
 - Interim choice: as proposed (`docs/specs/p3-06-expansion-conflict.md` 7.2, 7.3, question 4).
-- Status: open
+- Status: accepted by Paul, 2026-11-19 (interim choice stands); design doc to be updated
 
 ### History: a fighting strength per race; goblins less aggressive than orcs
 
@@ -607,7 +607,7 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
 - Problem: the race data has readiness for war (`aggression`) but nothing for how well a people fights; without it the few elves fall to the numerous goblins, and with the shipped aggression the goblins, numerous and split into several hordes, start four wars in five while the orcs, the design's warlike race, start one in seven.
 - Proposal: a new race field `prowess_permille` (elves 1600, dwarves 1400, orcs 1300, faeries 1200, humans 1000, goblins 800) scales armies and garrisons; goblin `aggression` 700 → 600; aggression enters the strain rate squared. A data change, not a schema change.
 - Interim choice: as proposed (`docs/specs/p3-06-expansion-conflict.md` 5.2, 6.1, 12.2, questions 3 and 6).
-- Status: open
+- Status: accepted by Paul, 2026-11-19 (interim choice stands); design doc to be updated
 
 ### Paul's decisions of 2026-11-19 on the peoples questions: density stays a field; faeries live in forest, wet or not
 
@@ -655,7 +655,7 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
 - Problem: the design has no account of where magical artifacts come from. Paul wants them made in response to conflicts, so that each has a history within those conflicts and with the people who made it.
 - Proposal: an artifact is an entity of history with its own table (maker civilization and settlement, the event that occasioned it, kind, name, and a chain of holders and places). It is created by an event whose cause is a conflict event (a war declared, a siege endured, a capital sacked, a long enmity), and it then moves through later events: carried to battle, captured in a sack, lost when a settlement is ruined, hidden, recovered. Where it lies at the present is a site and a quest hook for derivation. The conflict events it needs exist from P3-06 (wars, battles, sieges, sackings, conquests); makers want the figures and casters of P5.
 - Interim choice: not in P3. Suggested home: P5 History depth, with figures and casters, built on P3-06's event log; a schema change (new tables and event kinds) with its own spec. If Paul wants a first version sooner, a small stage after P3-07 could make artifacts from wars alone, with civilizations as makers.
-- Status: open (for the design conversation; Paul to say now or later)
+- Status: open for the design conversation; timing decided by Paul on 2026-11-19: artifacts wait for P5
 
 ### Paul's decision of 2026-11-19: region names get identity; no numbered names
 
@@ -665,7 +665,90 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
 - Problem: regions are named by a sector word and a noun, with a Roman numeral when the base name repeats (spec P1-06 RG11). Paul: "East Wood" is fine but "West Wood III" is pretty boring; the names should come from a large set chosen at random so that regions have more identity, and should not rely on numbering.
 - Decision: replace the numeral with names drawn from a large hand-written set held in data (TOML). A spec amendment to P1-06 RG11 defines the scheme and the word lists; it changes the `name` column of table `region`, so it changes world bytes and comes with a generator version bump. No schema change.
 - Interim choice: the amendment is written now; it is implemented after P3-06 is integrated (together with the faerie data change or just before it), before Paul's review of P3.
-- Status: decided; spec amendment in progress
+- Status: decided; spec amendment written (P1-06 r3, branch `p1/06-region-names`); its questions answered below
+
+### Paul's decision of 2026-11-19: the chronology questions go with their recommendations
+
+- Date: 2026-11-19
+- Raised by: lead, recording Paul's decision
+- Design doc section: 5 (races, ages, creator gods)
+- Problem: `docs/specs/p3-03-chronology.md` section 16 put six questions to Paul.
+- Decision: Paul's words: "In the chronology.md file I accept all the recommendations." So:
+  1. With a subset of races that leaves out the elves, the first present race awakens at year 0 and each later race keeps its own share of the span.
+  2. Every race keeps its creator god in table `god`, with the same name and id whichever races are chosen; a god whose race is absent created nothing in that world.
+  3. Data errors across kinds are input errors (exit 3, before generating), not stage failures.
+  4. Test-pattern worlds record the history settings they were given.
+  5. The world-hash cases `hist-span-2000-512` and `hist-races-elf-orc-1024` came with chronology, `hist-dense-1024` with the engine.
+  6. The world report gained `[chronology]` without a format bump (report v2).
+- Interim choice: none needed; all six are as implemented at generator 0.13.0.
+- Status: accepted; design doc section 5 to be updated for points 1 and 2
+
+### Paul's decision of 2026-11-19: the simulation engine questions go with their recommendations
+
+- Date: 2026-11-19
+- Raised by: lead, recording Paul's decision
+- Design doc section: 5 (active phases, quiet intervals, flare-ups, the event log)
+- Problem: `docs/specs/p3-04-simulation-engine.md` section 19 put six questions to Paul.
+- Decision: Paul's words: "all the p3-04-simulation-engine.md recommendations are accepted." So:
+  1. Phase lengths scale with the history span; the detail level fixes the share of simulated years (sparse about 12%, normal 19 to 20%, dense 27 to 29%).
+  2. The last age is mostly active: the orcs' opening phase usually runs into the final phase, the design's "most recent age of conflict".
+  3. The simulated share has a floor of 10% and a cap of 45%, as tuning, guaranteed by the scheduler.
+  4. The event catalogue is code; templates and salience are data.
+  5. Resume is a library seam, not a `generate --resume` option, until P5's history mode needs a command.
+  6. A `flare_up` event marks each flare-up.
+- Interim choice: none needed; all six are as implemented at generator 0.14.0.
+- Status: accepted; design doc section 5 to be updated for points 1 to 3 and 6
+
+### Paul's decision of 2026-11-19: the expansion and conflict questions go with their recommendations
+
+- Date: 2026-11-19
+- Raised by: lead, recording Paul's decision
+- Design doc section: 5 (wars, flare-ups, quiet intervals, race characters), 13 (P5 exit: every race takes part)
+- Problem: `docs/specs/p3-06-expansion-conflict.md` section 19 put ten questions to Paul.
+- Decision: Paul's words: "also accept all the ones in p3-06-expansion-conflict.md." So:
+  1. Wars are limited: fought for one claimed region, ended when the attacker has it, when a side is exhausted, after 40 years at most, or at the first quiet step after their active phase.
+  2. Wars happen only in yearly ticks; strain builds in quiet steps; a flare-up always brings its war.
+  3. A fighting strength per race, `prowess_permille` (elves 1600, dwarves 1400, orcs 1300, faeries 1200, humans 1000, goblins 800), and goblin `aggression` 700 to 600.
+  4. No race is wiped out: the last settlement of a race's last civilization never falls, and a civilization is not attacked in its first 150 years.
+  5. Coalition by fear in place of alliances; no vassals in P3; alliances and vassalage come with figures and factions in P5.
+  6. Aggression enters strain squared.
+  7. Armies march across two borders.
+  8. The event-count expectation of P3-00 6.1 is corrected to about 400 to 1,500 events at default settings and up to about 4,000 with the heavier settings.
+  9. Humans on land left open or ruined is weak in P3 and accepted; refugee migration in P5 is the stronger reading.
+  10. "A world already at war when the dwarves arrive" holds in about 30 of 50 worlds and is accepted; no rule is added to force it.
+- Interim choice: none needed; all ten are as specified and implemented for generator 0.16.0 (in integration).
+- Status: accepted; design doc sections 5 and 13 to be updated
+
+### Paul's decision of 2026-11-19: the history report questions go with their recommendations
+
+- Date: 2026-11-19
+- Raised by: lead, recording Paul's decision
+- Design doc section: 13 (P3: a text history report)
+- Problem: `docs/specs/p3-07-history-report.md` section 19 put six questions to Paul.
+- Decision: Paul's words, after accepting the conflict questions: "And on the history-report.md also." So:
+  1. The summary budget (250 events), the minimum salience (20) and the milestone count (6) are constants of the report format, not tuning; what matters is steered by the per-kind base salience, which is data stored in every world.
+  2. The summary level has at most 250 event lines, none below salience 20, the threshold rising with the size of the log.
+  3. No filters in report format v1.
+  4. A world without history is refused (exit 3), not given a partial report.
+  5. The report uses the islet threshold 1172 as a constant; if that tuning value ever changes, an islet flag is stored in the world with that change.
+  6. The report goes to standard output by default.
+- Interim choice: none needed; all six are as specified; P3-07 is not yet implemented.
+- Status: accepted
+
+### Paul's decisions of 2026-11-19 on the region name questions
+
+- Date: 2026-11-19
+- Raised by: lead, recording Paul's decision
+- Design doc section: 4 (regions), 5 (how history sentences read)
+- Problem: the region names amendment (`docs/specs/p1-06-regions.md` r3, section 14) put five questions to Paul.
+- Decision:
+  1. The largest region of each base name keeps the plain name ("East Wood"); the others draw a name.
+  2. A leading "The" of a name is lower-cased in the middle of a sentence ("awakened the Elves in the Scarred Downs"); names are stored capitalised. This applies to any entity name a sentence renders, civilizations included, and not at the start of a sentence.
+  3. Only famous real places and well-known fiction and game names are excluded; incidental coincidences with obscure real places are not a concern.
+  4. The word lists are data Paul may edit (`game/data/placenames/`); no decision needed.
+  5. Trait steering stays as shipped.
+- Interim choice: none needed. Point 2 is a change to the sentence renderer (spec P3-04 8.4), specified and implemented together with the region names.
+- Status: accepted; implementation scheduled after P3-06
 
 ### Region names: who keeps the plain name, and "The" inside history sentences
 
@@ -675,4 +758,4 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
 - Problem: with names drawn from hand-written lists (Paul's decision above), two choices are left. (1) Which regions keep the plain sector-and-noun name ("East Wood"): one per base name, or none. (2) Many drawn names begin with "The" ("The Scarred Downs"), stored capitalised as civilization names already are ("The Warrens of Bonk-Gitch"), so sentences read "Fielie awakened the Elves in The Scarred Downs."
 - Proposal: (1) the largest region of each base name keeps it, every other region draws a name (45% plain at 1024, 16% at 2048). (2) Names are stored with the capital; the sentence renderer of the history report lower-cases a leading "The " of any entity name inside a sentence, for regions and civilizations alike.
 - Interim choice: (1) as proposed (`docs/specs/p1-06-regions.md` r3, RG11 4); (2) stored names as proposed, sentences unchanged until the report spec takes the rule up (P1-06 r3 14.5 question 2).
-- Status: open
+- Status: accepted by Paul 2026-11-19 (both points as proposed): see "Paul's decisions of 2026-11-19 on the region name questions"; point 2 is specified in `docs/specs/p1-06-regions.md` r3 14.6
