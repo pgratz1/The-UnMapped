@@ -1,6 +1,6 @@
 # P3-02 Names
 
-Status: **approved by the lead 2026-11-19; revised 2026-11-19 (text only, after implementation); amended 2026-11-19 for P3-03 (r2); revised 2026-11-19 after the P3-03 implementation (r3: 7 registry container, 4.3 `roman` location, 8 P0-01 request applied)**: see the revision notes at the end. Phase P3 History core, spec 2 (P3-00 3.1). Design doc sections 5 ("the seed varies the dates, the places and the gods' names"; civilizations, settlements), 6 ("the database stores facts and names"), 14 (every reference a model writes must resolve to a real entity: names must be unique). Depends on P0-01 (hashing, streams), P0-03 (string grammars, named checks), P3-00 (4.6 keyed draws) and P3-01 (the `culture` kind carries this spec's record). It introduces the domain tag `TAG_HIST` and the keyed-draw helpers that every later history spec uses.
+Status: **approved by the lead 2026-11-19; revised 2026-11-19 (text only, after implementation); amended 2026-11-19 for P3-03 (r2); revised 2026-11-19 after the P3-03 implementation (r3: 7 registry container, 4.3 `roman` location, 8 P0-01 request applied); amendment r5 drafted 2026-11-20 by the spec writer, **not yet shipped** (section 11: name filter, god patterns, realm forms; ships with the follow-up change after P3-06)**: see the revision notes at the end. Phase P3 History core, spec 2 (P3-00 3.1). Design doc sections 5 ("the seed varies the dates, the places and the gods' names"; civilizations, settlements), 6 ("the database stores facts and names"), 14 (every reference a model writes must resolve to a real entity: names must be unique). Depends on P0-01 (hashing, streams), P0-03 (string grammars, named checks), P3-00 (4.6 keyed draws) and P3-01 (the `culture` kind carries this spec's record). It introduces the domain tag `TAG_HIST` and the keyed-draw helpers that every later history spec uses.
 
 ## 1. Purpose
 
@@ -23,7 +23,7 @@ The `culture_naming` record **type** (field list and grammars of section 3) is r
 
 ## 3. The naming data: record `culture_naming`
 
-Fields, all required, in this declaration order (canonical encoding, P0-03 8):
+Fields, all required, in this declaration order (canonical encoding, P0-03 8). *r5, not yet shipped: `god_patterns` after `patterns`, and the check `naming_realm_forms` (11.4).*
 
 | Field | Type | Meaning |
 | --- | --- | --- |
@@ -32,7 +32,7 @@ Fields, all required, in this declaration order (canonical encoding, P0-03 8):
 | `codas` | array(string(8, syllable), 1, 64) | syllable ends; `""` allowed |
 | `patterns` | array(string(16, name_pattern), 1, 16) | shapes of a root word, picked uniformly; repeat an entry to weight it |
 | `min_letters`, `max_letters` | int(1, 32) | bounds on the letters of a root (separators not counted) |
-| `forbidden` | array(string(8, syllable), 0, 32) | substrings a root must not contain |
+| `forbidden` | array(string(8, syllable), 0, 32) | substrings a root must not contain (phonotactics; the shared name filter of r5 is separate, 11.2) |
 | `god_forms`, `civilization_forms`, `settlement_forms` | array(string(48, name_form), 1, 8) | templates for each kind, picked uniformly; repeat an entry to weight it |
 
 String grammars (kind-local `StringGrammar`s, defined here and registered by P3-01 with the record; descriptions as printed in error messages):
@@ -92,6 +92,8 @@ valid = valid and |name| ≤ 48 bytes
 ```
 
 Cap(root) upper-cases the first character of the root if it is a letter, and every letter that directly follows a `-`; a letter after `'` stays lower case (`Uruld'duuld`, `Gnink-Snunk`). (An empty onset or coda can put two separators side by side or a separator at an end; such an attempt is invalid.)
+
+*r5, not yet shipped: gods take their pattern from `god_patterns`, and `valid` also requires that the root word passes the name filter (11.3, 11.4).*
 
 **An invalid attempt** has `valid` false; its `name` (and `root`, section 9) are unspecified and must not be relied on by callers or tests. Only `valid` is defined for it.
 
@@ -252,6 +254,8 @@ The table follows this protocol: seed 0; **one registry per culture**, starting 
 | `human` (5) | Deanham, Alantton, Cickham, Gackwick, Brir, Tackbury, Gurdton, Studford, Ceambury, Buld, Silstudstead, Tirdwick, Dack, Stastint, Moldstead, Edumford, Tontstead, Ceanbir, Durdton, Durdbury | The Duchy of Ashem; The Kingdom of Ashos; The Duchy of Hick; The Duchy of Wick; The Duchy of Circon | Simbear, Histold, Edostold |
 | `orcish` (6) | Kaak Fort, Zaarz Camp, Grush, Zaakugaag, Uruld'duuld, Uu'mold Fort, Kark Fort, Azol'urash Fort, Karzthogh, Uromgha, Maag, Uul'krakh Camp, Og'buurk Camp, Zaalduruz Camp, Mak, Duld'sha Fort, Shuum Fort, Ghorz Fort, Duuldkrosh Fort, Aag'urog Fort | Clan Kram'krorz; The Azakhdam Horde; The Urogh'krorz Horde; The Burk'zork Horde; The Warband of Maakurokh | Ugh'kaal, Og'uraag, Uruuk |
 
+*r5, not yet shipped: each block gains `god_patterns`, the elven `civilization_forms` lose the bare `{root}` (11.4); the r5 sample table is in 11.6.*
+
 Weak spots visible in the samples, left for tuning with Paul's taste: some human roots are clipped (`Brir`, `Buld`, `Stastint`); elven names lean on `ie`; faerie settlement forms use `Hollow` often (two of four forms carry a suffix). Each is a data change in one block.
 
 ## 6. Invariants
@@ -348,6 +352,303 @@ std::string roman(std::uint64_t k);      // P1-06 RG11; fatal outside [1, 100000
 2. **ASCII only.** Recommendation: approve; diacritics (`Elrond` vs `Eärendil`) would bring Unicode normalization into the report contract, the registry comparison and every reader. Revisit if Paul wants them, with NFC as the rule.
 3. **Names unique across kinds** (a civilization and a settlement never share a name). Recommendation: approve; it keeps every reference in the log and in enrichment output unambiguous. Real histories reuse names (a city and its realm); history can express that with a form such as `The Kingdom of {root}` around a settlement's root in a later revision.
 
+## 11. Amendment r5: name filter, god patterns, realm forms (**not yet shipped**)
+
+**Not yet shipped.** This section is normative for the change that ships it, the follow-up after P3-06 that also carries the region names (P1-06 r3) and the faerie weights (P3-05 12.3), with that change's generator version bump. Until then sections 1 to 10 describe the shipped behaviour (generator 0.15.0 and 0.16.0) and the C++, the reference and every golden follow them. The data files of 11.2 are committed at their final paths now, because a loader that does not know a kind never reads its directory (P0-03 7.2): they change no world until kind `name_filter` is registered. The culture changes of 11.4 cannot be committed now (the loader refuses an unknown key `god_patterns`), so their text is given here, ready to apply.
+
+Why: the world critic's review of P3-05 (`docs/reviews/p3-05-peoples-world-critic.md` F5) found, in eight worlds, a goblin settlement name whose first syllables form a racial slur plus two near misses, human towns starting with a crude word for a body part, gods named with ordinary English words ("Bald", "Buzz", "Gord"), gods with village-short names ("Krok", "Sten", "Alis"), and 7 of 14 elven realms with a bare one-word name. Design-level record: `docs/design/proposals.md`, "Names: generated names are filtered; gods have their own style; every realm name has a realm form".
+
+### 11.1 What changes
+
+| Area | r4 (shipped) | r5 |
+| --- | --- | --- |
+| Validity of an attempt (4.2) | letters, culture `forbidden`, separators, 48 bytes | the same, **and the root word passes the name filter** (11.3) |
+| Data | kind `culture` | new required kind **`name_filter`** (11.2), shared by every culture; `culture_naming` gains **`god_patterns`** (11.4) |
+| God roots | shapes from `patterns` | shapes from **`god_patterns`** (shipped: the culture's shapes with two or more nuclei) |
+| Elven civilization forms | `The Court of {root}`, `The Realm of {root}`, `{root}` | `The Court of {root}`, `The Realm of {root}`, **`The House of {root}`** |
+| Loader checks | three `naming_*` checks | plus **`naming_realm_forms`** (11.4), the `name_filter` checks (11.2) and the stage check `names_form_text` (11.3) |
+| Schema | 7 | **unchanged** (no table or column changes; only values) |
+
+### 11.2 Data kind `name_filter`
+
+A new kind (P0-03 7.1): name **`name_filter`**, directory **`name_filters`**, **required**, open ids. Kinds are processed in ascending name order, so it comes after `history` and before `placename` and `race`. Shipped files (normative, committed with this revision): `game/data/name_filters/slurs.toml` (id `slurs`), `crude.toml` (`crude`), `words.toml` (`words`), `famous.toml` (`famous`). The fixture roots `worldgen/tests/data/geo/` and `worldgen/tests/data/geo-small/` get identical copies with the implementation (every data root that loads holds every required kind).
+
+**Fields**, all required, in this declaration order (the canonical encoding, P0-03 8):
+
+| Field | Type | Meaning (11.3) |
+| --- | --- | --- |
+| `anywhere` | array(string(16, filter_word), 0, 4096) | fragments rejected anywhere in the root word, across `'` and `-` |
+| `at_start` | array(string(16, filter_word), 0, 4096) | fragments rejected at the start of a part of the root word |
+| `whole` | array(string(16, filter_word), 0, 4096) | words rejected when a part of the root word is exactly the word |
+
+Grammar `filter_word` (kind-local): two to sixteen ASCII lower-case letters `[a-z]{2,16}`; description `lower-case letters a-z, 2 to 16 of them`.
+
+**Named checks**, per definition (`… failed for 'name_filter.<id>': <message>`):
+
+| Check | Condition | Message |
+| --- | --- | --- |
+| `name_filter_unique` | no entry twice within one list | `<field>[<j>] '<value>' repeats <field>[<i>]` (first list in declaration order, first repeat j, its first occurrence i) |
+
+**Kind checks** (all definitions, ascending id), in this order:
+
+| Check | Condition | Message |
+| --- | --- | --- |
+| `name_filter_distinct` | no entry is in the same list of two definitions | `<field> '<value>' is in '<id1>' and '<id2>'` (first such entry by definition id, then list, then position; ids ascending) |
+| `name_filter_not_redundant` | no `at_start` or `whole` entry contains an `anywhere` entry as a substring, and no `whole` entry starts with an `at_start` entry (such an entry can never change a result) | `'<id>' <field> '<value>' is already rejected by <field2> '<value2>' of '<id2>'` (first offending entry by definition id, list `at_start` before `whole`, position; for it, the first covering entry by definition id, list, position) |
+
+**The effective lists** are the unions over all definitions. The rule of 11.3 tests membership only, so the order of entries and the split into definitions and files never change a name; they do change `content_hash` (a moved entry changes the canonical encoding), as for any data edit. A list may be empty; with all three empty the filter rejects nothing.
+
+**Sizes of the shipped lists** (entries): `slurs` 33 anywhere, 19 at_start, 6 whole; `crude` 68, 16, 14; `words` 0, 0, 647; `famous` 0, 0, 101. Effective: 101 anywhere, 35 at_start, 768 whole. The slur and crude entries are kept to the shortest fragment that matches (`nig`, not the full words), so that the file is not a list of offensive text. `words` holds every lower-case word of the system English word lists (`/usr/share/dict/american-english` and `british-english`) of three or more letters that a shipped culture reaches as a root part with probability at least 10^-5 per attempt (11.6), plus 14 comic words added by hand (`gord`, `pypy`, `bap`, `dud`, ...). Two-letter words are left out on purpose: orcish apostrophe parts (`Am'gash`, `Um'daz`) read as orcish, not English. `famous` holds gods of real religions, well-known names of fiction and games, famous places and peoples, and common modern first names that the shipped syllables reach (`thor`, `isis`, `vanir`, `durin`, `elrond`, `greek`, `stan`), after Paul's rule for region names (only famous names are excluded).
+
+**Content hash.** `name_filter` is a new required kind, so `content_hash` changes for every world, including the P0 empty worlds (P0-03 8).
+
+### 11.3 The filter rule
+
+For an attempt of 4.2 with form F and root R (R before Cap), split F at `{root}` into A and B. Then:
+
+```
+A' = the part of A after its last space (all of A if it has no space)
+B' = the part of B before its first space (all of B if it has no space)
+W  = lower(A') + R + lower(B')             // the root word; lower maps A-Z to a-z, nothing else
+S  = W with every ' and - removed
+parts = the maximal non-empty runs of letters a-z in W   (W split at ' and -)
+filtered(W) = some e in anywhere is a substring of S
+           or some p in parts starts with some e in at_start
+           or some p in parts equals some e in whole
+```
+
+4.2's validity becomes `valid = (r4 validity) and not filtered(W)`. Only the root word is tested: the other words of the name are the form's fixed text (`The`, `Hold`, `Hollow`), and the Roman numeral of 4.3's fallback is not part of an attempt (the fallback numbers the first valid attempt's name, which passed the filter). Examples with the shipped lists: `Cockford` (W `cockford`; anywhere `cock`), `Bumdou` (at_start `bum`), `But-Skrotch` (parts `but`, `skrotch`: whole `but`, and anywhere `krotch`), `Ugh'kaal` (part `ugh`, whole), `Bag Hole` (W `bag`, whole); `Stard` passes (whole `tard` does not equal `stard`), `Cumbrin` is filtered (at_start `cum`) while `Ascumbrin` is not.
+
+A filtered attempt is an invalid attempt for every purpose of 4.3 (it is skipped; its name is never the fallback's first name), and the fatal message of 4.3 is unchanged. Invariant 6 gains: **5. No generated name's root word is filtered.**
+
+**Stage check `names_form_text`** (the history stage, with the culture and filter data, before any name is drawn; P3-03's input checks gain it): for every culture (ascending id), kind (god, civilization, settlement) and form i, with A', B' as above and S_A, S_B their lower-cased letters without `'` and `-`: no `anywhere` entry is a substring of S_A or of S_B, and S_A (if not empty) does not start with an `at_start` entry. Otherwise fatal: `history: culture '<id>' <kind>_forms[<i>] '<form>' holds the filtered text '<entry>'`. Such a form would reject every attempt, or reject them for its own fixed letters. The shipped forms pass (their fixed letters inside the root word are `dell`, `ford`, `ton`, `bury`, `wick`, `ham`, `stead`).
+
+**Determinism.** Byte comparisons of ASCII strings, no locale, membership tests only (the lists are ordered `std::vector`s or ordered sets, never unordered containers); the result does not depend on list order.
+
+### 11.4 Culture naming: `god_patterns` and realm forms
+
+**New field of `culture_naming`** (section 3), declared directly after `patterns` (so the field order becomes `onsets`, `nuclei`, `codas`, `patterns`, `god_patterns`, `min_letters`, ...):
+
+| Field | Type | Meaning |
+| --- | --- | --- |
+| `god_patterns` | array(string(16, name_pattern), 1, 16) | shapes of a god's root, picked uniformly; repeat an entry to weight it |
+
+4.2 changes in one line: `pattern = P[pick(u(1), |P|)]` with P = D.`god_patterns` for K = god and D.`patterns` otherwise. Every other draw is as before. (With `god_patterns` equal to `patterns` and empty filter lists, r5 gives r4's names exactly, which the tests use.) The library treats an empty `god_patterns` like the other lists of 4.2 (`names: a naming list is empty`).
+
+**New named check of kind `culture`**, after the three of section 3:
+
+| Check | Condition | Message |
+| --- | --- | --- |
+| `naming_realm_forms` | every `civilization_forms` entry contains a space (a word besides the root's) | `naming.civilization_forms[<i>] must hold a word besides {root}` |
+
+**Shipped data** (applied to `game/data/cultures/<id>.toml` and both fixture copies with the implementation; a line `god_patterns = …` after `patterns` in each culture, and one changed line for the elves):
+
+```toml
+# dwarven
+god_patterns = ["ONCONC", "ONCONC", "ONCON"]
+# elven
+god_patterns = ["ONONC", "ONONC", "ONCON", "ONONON", "NCONC"]
+civilization_forms = ["The Court of {root}", "The Realm of {root}", "The House of {root}"]
+# faerie
+god_patterns = ["ONON", "ONONON", "ONONC", "ONCON"]
+# goblin
+god_patterns = ["ONCONC", "ONC-ONC", "ONONC"]
+# human
+god_patterns = ["ONCONC"]
+# orcish
+god_patterns = ["ONC'ONC", "ONCONC", "NC'ONC"]
+```
+
+Each culture's `god_patterns` is its `patterns` without the one-nucleus shapes (`ONC`, and the elves have none), keeping the repeats. This is the smallest rule that works: no god root is one syllable, it is data (Paul can give gods longer or stranger shapes per culture), and it costs one field. The elven third form keeps its index, so an elven realm that had a form keeps its name and only the bare ones change (`Nife` → `The House of Nife`).
+
+### 11.5 Seams (interim; the engineer records the final signatures)
+
+```cpp
+namespace worldgen::history {
+struct NameFilter { std::vector<std::string> anywhere, at_start, whole; };   // effective lists (11.2)
+NameFilter name_filter_from(const data::ContentSet&);                      // union in ascending definition id
+std::string root_word(std::string_view form, std::string_view root);       // W of 11.3
+bool name_filtered(const NameFilter&, std::string_view root_word);         // filtered(W)
+// CultureNaming gains std::vector<std::string> god_patterns, after patterns.
+// NameAttempt gains bool filtered: true when the r4 rules pass and the filter rejects (valid is then false).
+NameAttempt name_attempt(const CultureNaming&, const NameFilter&, NameKind, std::uint64_t seed,
+                         std::uint64_t culture, std::uint64_t entity, std::uint64_t attempt);
+std::string make_name(const CultureNaming&, const NameFilter&, std::string_view culture_id, NameKind, ...);
+NameChoice choose_name(const CultureNaming&, const NameFilter&, std::string_view culture_id, NameKind, ...);
+}
+```
+
+The three callers (`stages/chronology.cpp` for gods, `history/stubs.cpp` and `history/peoples.cpp` for civilizations and settlements) pass the world's filter, built once per world from the loaded data.
+
+### 11.6 Measurements
+
+Prototype `~/.cache/the-unmapped/out/p3-02-names-filter/` (`nfilter.py` the rule of 11.3, `r5.py` the r5 attempt on the test writer's reference `p3_names_reference.py`, `space.py` an exact enumeration of every root a culture can draw with its probability, `measure.py`, `sample.py`, `residual.py`, `gods.py`, `realms.py`, `placescan.py`, `edits.py`). Rates are the share of attempts that pass the r4 rules and that the filter rejects.
+
+**Exact rejection rates** (enumeration of the whole root space; god rows with `god_patterns`):
+
+| Culture | God | Civilization | Settlement | Main entries |
+| --- | --- | --- | --- | --- |
+| dwarven | 0.53% | 2.89% | 2.89% | words (2.45%), `bum`, `turd`, `dik`, `durin` |
+| elven | 1.58% | 1.58% | 1.46% | `lol` (0.88%), words, `nig`, `fag` |
+| faerie | 2.19% | 5.17% | 5.17% | words (3.2%), `pee` (0.87%), `shit`, `twat`, `tit` |
+| goblin | 11.89% | 12.96% | 12.96% | words (9.4%), `nig` (1.4%), `slut`, `neeg`, `slag`, `krotch`, `snot` |
+| human | 3.49% | 19.12% | 5.14% | words (16.3% of realms: bare English roots), `lol`, `turd`, `dick`, `cunt`, `sick`, `cock` |
+| orcish | 7.57% | 6.49% | 6.49% | words (6.0%: `ugh`, `old`, `ash`, `ark` parts), `shag`, `bum`, `baal` |
+
+Without the `words` and `famous` lists (slurs and crude only) the rates are dwarven 0.47%, elven 1.09%, faerie 1.95%, goblin 3.88%, human 2.01% (settlements 1.92%), orcish 0.62%.
+
+**Keyed-draw sample** (`sample.py`: per culture and kind, seeds 0–399 × entities 1–500 = 200,000 names, one registry per seed, culture and kind; so registries of 500 names, more than any real world): agrees with the exact rates within 0.05 points.
+
+| Culture | Kind | Attempts | Invalid (r4) | Filtered | Filtered share | Registry repeats | Most attempts for one name | Fallbacks |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| dwarven | god | 273,438 | 72,214 | 1,103 | 0.55% | 121 | 9 | 0 |
+| dwarven | civilization | 270,298 | 62,953 | 6,013 | 2.90% | 1,332 | 9 | 0 |
+| dwarven | settlement | 270,627 | 63,057 | 6,008 | 2.89% | 1,562 | 10 | 0 |
+| elven | god | 227,512 | 23,903 | 3,136 | 1.54% | 473 | 6 | 0 |
+| elven | civilization | 227,513 | 24,170 | 3,219 | 1.58% | 124 | 8 | 0 |
+| elven | settlement | 227,023 | 23,822 | 2,894 | 1.42% | 307 | 6 | 0 |
+| faerie | god | 209,320 | 4,297 | 4,446 | 2.17% | 577 | 5 | 0 |
+| faerie | civilization | 219,083 | 7,314 | 10,996 | 5.19% | 773 | 6 | 0 |
+| faerie | settlement | 219,275 | 7,403 | 10,965 | 5.18% | 907 | 5 | 0 |
+| goblin | god | 253,324 | 26,078 | 27,024 | 11.89% | 222 | 8 | 0 |
+| goblin | civilization | 250,996 | 15,553 | 30,569 | 12.98% | 4,874 | 7 | 0 |
+| goblin | settlement | 251,518 | 15,402 | 30,632 | 12.97% | 5,484 | 8 | 0 |
+| human | god | 241,430 | 33,988 | 7,362 | 3.55% | 80 | 8 | 0 |
+| human | civilization | 375,051 | 107,109 | 51,232 | 19.12% | 16,710 | 16 | 0 |
+| human | settlement | 304,007 | 86,706 | 11,081 | 5.10% | 6,220 | 12 | 0 |
+| orcish | god | 234,036 | 17,474 | 16,404 | 7.57% | 158 | 6 | 0 |
+| orcish | civilization | 230,348 | 12,154 | 14,171 | 6.49% | 4,023 | 7 | 0 |
+| orcish | settlement | 230,927 | 12,034 | 14,288 | 6.53% | 4,605 | 7 | 0 |
+
+(Measured before the last four hand-added `crude` words, `pantie`, `panty`, `sissy`, `weenie`, whose reach is below 10^-5 per attempt in total.)
+
+**The 64-attempt bound is never neared.** The worst case is human civilizations: an attempt succeeds with probability 0.7147 × (1 − 0.1912) = 0.578, so all 64 fail with probability 0.422^64 ≈ 10^-24 on an empty registry; the most attempts any of the 3.6 million sampled names needed was 16, and no name took the numeral fallback.
+
+**Which syllables cause the hits.** No single syllable causes most of a culture's offensive hits (slurs and crude lists); the largest shares are goblin nucleus `i` (`nig`, with onsets `n`, `sn`, `gn` and a following `g`), human coda `ck` (`cock`, `dick`, `sick`, `cack`), faerie onset `p` (`pee`, `piss`), dwarven nucleus `u` (`bum`, `turd`, `kunt`, `dung`) and orcish onset `sh` (`shag`). Removing one syllable (exact, settlements, offensive share before → after): goblin coda `tch` 3.88% → 3.25%, goblin onset `n` → 3.20%; human coda `ck` 1.92% → 1.21%; faerie onset `p` 1.95% → 1.10%; dwarven nucleus `u` 0.47% → 0.13%; orcish onset `sh` 0.62% → 0.32%. **Recommendation: no syllable edits.** Each edit removes at most half of a culture's hits, changes its sound and every name, and the filter is needed anyway (the goblin slur comes from three onsets and two codas around one nucleus). If Paul wants fewer redraws in one culture, dwarven `u` is the cheapest (it is the culture's only rounded vowel besides `o` and `ou`, so the sound would change most there; not recommended for that reason).
+
+**Residual dictionary collisions** after filtering: the 50 most likely root parts per culture that are still words of the system English lists (probability per attempt, over the three kinds equally; most below 10^-5 each). Paul can judge whether any should join `words`:
+
+| Culture | Residual share of names | Words | The 50 most likely, most likely first |
+| --- | --- | --- | --- |
+| `dwarven` | 0.012% | 59 | burkha, dunno, dingo, burka, bongo, bingo, karma, kinda, gamma, gumbo, gonna, grandma, tango, tundra, hairdo, nimbi, manga, mango, manna, mambo, mamma, momma, bargain, barman, barmaid, bantam, bunkum, bonbon, bombard, bodkin, bourbon, gunman, gourmand, drunkard, grandad, grammar, tartar, tartan, tankard, tannin, turban, turbid, turgid, harbor, harbour, hangar, handgun, handmaid, humdrum, margin |
+| `elven` | 0.223% | 451 | allies, inner, lain, lair, lathes, lather, lases, laser, lanes, lamas, lames, lamer, laces, lacier, leis, lethal, lemon, level, lever, levies, lies, lion, lilies, lither, lifer, linen, lines, liner, limes, limier, limos, liras, liven, lives, liver, liefer, loan, loath, loin, loon, loses, loser, loner, loves, lover, local, their, theses, thesis, themes |
+| `faerie` | 0.022% | 164 | into, ally, ani, any, anti, only, onto, pinto, pithy, piano, pansy, pony, poppa, poppy, filly, foully, folly, wino, wanly, lassie, lasso, silly, sally, sappy, sassy, soppy, tiny, tipsy, teeny, teensy, tally, tansy, tony, billy, ballsy, bani, banshee, bassi, basso, bounty, bony, bossy, shiny, shanty, whiny, whisky, wholly, flinty, flippy, floppy |
+| `goblin` | 0.002% | 4 | kabob, bigot, nabob, zigzag |
+| `human` | 0.040% | 628 | banded, banged, bantam, banter, badder, badger, badges, barbed, barber, barged, barges, barman, barrack, barren, barred, barrel, barter, bashed, bashes, basses, bassos, basted, bastes, balded, balsas, balsam, backward, bender, bedded, bedder, bedrock, bedstead, bested, bestir, belted, binder, binged, binges, bidden, bidder, birded, bilges, bimbos, bonbon, bonded, bonged, bongos, border, boredom, bossed |
+| `orcish` | 1.750% | 20 | am, um, oz, tho, ma, mu, mo, do, magma, mammal, mamma, mambo, madam, momma, modal, muumuu, bozo, dado, dogma, dodo |
+
+Fused words (root plus form letters, such as `{root}ford`) that are dictionary words: one, `Badminton` (human, probability below 10^-8).
+
+**Gods before and after** (race ids in awakening order: elf, goblin, dwarf, faerie, human, orc; empty registry). Rule A is this amendment (`god_patterns` + filter); alternative B keeps `patterns` and raises gods' `min_letters` to 6 (with the filter):
+
+| Seed | r4 (shipped 0.15.0) | r5 (god patterns + filter) | alternative B (min 6 letters + filter) |
+| --- | --- | --- | --- |
+| 0 | Saene, Kruskux, Nurnthaimm, Whaia, Steldhil, Bald | Saene, Kruskux, Nurnthaimm, Whaia, Steldhil, Uruld'kruum | Elaethienie, Kruskux, Nurnthaimm, Twaetwiss, Steldhil, Zaa'thash |
+| 1 | Laesiel, Gragg-Gnurk, Khummhor, Synmia, Steck, Kaag | Laesiel, Gragg-Gnurk, Khummhor, Synmia, Steckwint, Kaag'azak | Laesiel, Gragg-Gnurk, Khummhor, Synmia, Dentgerd, Dold'azogh |
+| 2 | Saeriemi, Gagg, Broumnoud, Biewie, Sten, Bogh | Saeriemi, Gagg-Sneegg, Broumnoud, Biewie, Stenedock, Bogh'grum | Saeriemi, Skigg-Grug, Broumnoud, Biewie, Daldbreas, Muugazag |
+| 3 | Vaennela, Buzz, Nonthom, Pyia, Alis, Uguuggrush | Vaennela, Sluskat, Nonthom, Pyia, Bulwan, A'ghaz | Vaennela, Sluskat, Nonthom, Wafielou, Tentceas, Uguuggrush |
+| 4 | Meven, Kukunk, Bornthirin, Wiabie, Hint, Ugu | Meven, Kukunk, Bornthirin, Wiabie, Dalcold, Ugu'azug | Aesaer, Kukunk, Bornthirin, Wiabie, Asheald, Ugaark |
+| 5 | Fieniesie, Bat, Dirinbad, Sabiwhi, Tolashud, Grammam | Fieniesie, Batgnax, Dirinbad, Sabiwhi, Tolashud, Grammam | Fieniesie, Grigneetch, Dirinbad, Sabiwhi, Tolashud, Grammam |
+| 6 | Ithielell, Drox, Groligu, Whaetwia, Dearbrol, Kaa'ghaag | Ithielell, Droxsloz, Groligu, Whaetwia, Dearbrol, Kaaghaag | Ithielell, Kakgog, Groligu, Whaetwia, Dearbrol, Kaa'ghaag |
+| 7 | Vanir, Grux, Mammga, Ouwheefy, Gord, Maark'zaagh | Onveth, Buzork, Mammga, Ouwheefy, Gordman, Maarkzaagh | Onveth, Bogsnagg, Mammga, Ouwheefy, Gordbick, Maark'zaagh |
+| 8 | Saelome, Bunkgnog, Mairnbud, Twybo, Breck, Krakkraa | Saelome, Grotbib, Mairnbu, Twybo, Madgil, Uush'muum | Saelome, Bunkgnog, Mairnbud, Wountie, Edimbron, Krakkraa |
+| 9 | Lisael, Grink, Nurntond, Whaeouwhia, Gead, Kaalugogh | Lisael, Skozazz, Nurntond, Whaeouwhia, Geadashid, Um'daz | Lisael, Kreekrat, Nurntond, Whaeouwhia, Brirdbead, Kaalugogh |
+| 42 | Fielie, Krok, Bronhak, Syfiash, Wealstuld, Kruu | Fielie, Krokzit, Bronhak, Syfiash, Wealstuld, Ogh'krak | Fielie, Gragdreex, Bronhak, Syfiash, Wealstuld, Ogh'krak |
+
+| Culture | r4 mean letters | r4 share <= 4 letters | r5 mean | r5 share <= 4 | r5 min..max |
+| --- | --- | --- | --- | --- | --- |
+| elven | 6.70 | 5.6% | 6.72 | 5.3% | 4..11 |
+| goblin | 6.53 | 23.7% | 8.06 | 0.0% | 5..10 |
+| dwarven | 7.24 | 11.1% | 8.16 | 0.0% | 5..10 |
+| faerie | 6.40 | 15.5% | 6.89 | 5.9% | 3..10 |
+| human | 5.41 | 44.3% | 7.63 | 0.0% | 6..9 |
+| orcish | 6.61 | 21.1% | 8.15 | 0.5% | 3..10 |
+
+Rule A keeps every god that already had two syllables and lengthens the short ones from the same draws (`Krok` → `Krokzit`, `Steck` → `Steckwint`, `Bald` → `Uruld'kruum`, `Vanir` → `Onveth`); B replaces them with longer, often worse roots (`Brirdbead`, `Tentceas`). A leaves some English-looking human compounds (`Gordman`, `Dalcold`, `Stenedock`), since the human syllables are English by design.
+
+**Elven realms before and after** (seeds 0–9, civilizations 1 and 2, empty registry): 8 of 20 were bare; after, none.
+
+| Seed | Civ | r4 | r5 |
+| --- | --- | --- | --- |
+| 0 | 1 | Nife | The House of Nife |
+| 0 | 2 | The Court of Nothind | The Court of Nothind |
+| 1 | 1 | Glaefaenn | The House of Glaefaenn |
+| 1 | 2 | The Court of Iethfe | The Court of Iethfe |
+| 2 | 1 | Ithasfa | The House of Ithasfa |
+| 2 | 2 | The Court of Ienriend | The Court of Ienriend |
+| 3 | 1 | Roelaele | The House of Roelaele |
+| 3 | 2 | Vefal | The House of Vefal |
+| 4 | 1 | The Court of Meithiell | The Court of Meithiell |
+| 4 | 2 | The Realm of Sices | The Realm of Sices |
+| 5 | 1 | The Realm of Saethoth | The Realm of Saethoth |
+| 5 | 2 | Vamiel | The House of Vamiel |
+| 6 | 1 | The Realm of Mocaen | The Realm of Mocaen |
+| 6 | 2 | Folisae | The House of Folisae |
+| 7 | 1 | The Realm of Ienngleth | The Realm of Ienngleth |
+| 7 | 2 | The Realm of Rasglae | The Realm of Rasglae |
+| 8 | 1 | The Realm of Gliethil | The Realm of Gliethil |
+| 8 | 2 | The Realm of Thalri | The Realm of Thalri |
+| 9 | 1 | Motheme | The House of Motheme |
+| 9 | 2 | The Realm of Ilcienn | The Realm of Ilcienn |
+
+**Sample names of 5.1 under r5** (same protocol). The reference transcribes this table in place of 5.1's when r5 ships:
+
+| Culture (c) | Settlements 1–20 | Civilizations 1–5 | Gods 1–3 |
+| --- | --- | --- | --- |
+| `dwarven` (1) | Moumka, Thoumdaili, Makmoudin Deep, Brummthu, Gromka, Kaird Deep, Khaili Hold, Kili, Thoum Hold, Nodin, Gondhark, Turnbruk Deep, Kidinkorn, Tharndramm Hold, Grangrak, Houmm Deep, Doknirk, Gali, Nailimim Deep, Tairdbra Hold | The Kourdbrar Throne; The Hold of Didin; Clan Durgarin; Clan Drourd; Clan Drailimai | Brommgrai, Groumtoun, Nurnthaimm |
+| `elven` (2) | Iensath, Onaeme, Ierrael, Elonoma, Fievos, Mielae, Asvathdell, Lafin, Laevo, Leithiedell, Orith, Voglael, Mievife, Iefann, Cellve, Fimo, Londcae, Rienel, Nathol, Siendnie | The House of Nife; The Court of Nothind; The House of Aesoth; The House of Riefifie; The Court of Thiesaell | Saene, Fiendse, Ithonnfa |
+| `faerie` (3) | Liapa, Wiatwiesk Glade, Twamae Glade, Ybeeie Hollow, Biafloss Glade, Pieshaep Hollow, Teelan, Meeie Hollow, Sywysh Hollow, Iatysk, Wiepysk, Miemo Hollow, Mapoufee, Feetop Hollow, Showhie Hollow, Mawhiap Hollow, Athfli Hollow, Whywo, Fliaposk Hollow, Whosy Hollow | The Lyp Ring; The Watiafia Court; The Bouss Ring; The Wosk Ring; The Twiwhiwou Ring | Fiwhall, Fiabo, Biensho |
+| `goblin` (4) | Krot Pit, Slograb Pit, Gnink-Snunk, Zux, Grunkgnuzz Pit, Grizz-Skeeb, Slank-Skrox, Drobskeet, Bozz Pit, Sluggatch Hole, Bux-Kreeb, Sniz, Slak, Zug-Gok, Gunitch, Skrizuz, Droggkazz Hole, Slobeerk, Snok, Kruskreezz Hole | The Gnazz Horde; The Baskeeb Mob; The Grodratch Horde; The Krunkgirk Horde; The Warrens of Gnonk | Zab-Skreeb, Kruskux, Nugnug |
+| `human` (5) | Deanham, Alantton, Cickham, Gackwick, Brir, Tackbury, Gurdton, Studford, Ceambury, Buld, Silstudstead, Tirdwick, Dack, Stastint, Moldstead, Edumford, Tontstead, Ceanbir, Durdton, Durdbury | The Duchy of Ashem; The Kingdom of Ashos; The Kingdom of Edes; The Duchy of Ceam; The Duchy of Circon | Wasbrid, Histold, Edostold |
+| `orcish` (6) | Kaak Fort, Zaarz Camp, Grush, Zaakugaag, Uruld'duuld, Shaazazuug, Kark Fort, Azol'urash Fort, Karzthogh, Uromgha, Maag, Uul'krakh Camp, Og'buurk Camp, Zaalduruz Camp, Mak, Duld'sha Fort, Shuum Fort, Ghorz Fort, Duuldkrosh Fort, Aag'urog Fort | Clan Kram'krorz; The Azakhdam Horde; The Urogh'krorz Horde; The Burk'zork Horde; The Warband of Maakurokh | Ug'krarz, Og'uraag, Uruuk'krush |
+
+**Vectors of 4.6 under r5**: seed 0 elven settlement 1 is unchanged (`Iensath`, collision `Focoth`); seed 42: god, dwarven (c 1), e 1 → **`Khorkhound`** (attempt 0; r4 `Khork`); `The Grork Horde`, `Deantwick` and `Ol'uraakh Fort` are unchanged.
+
+**Region names (P1-06 r3).** The r5 lists were run over every word of the 15 `placename` files on `origin/p1/06-region-names` (837 distinct words) and every one-word compound `{prefix}{suffix}` and `{prefix}{feature}` over the union of all definitions (26,507, a superset of the reachable ones). `famous`: no hits. `slurs` + `crude`: 12 words and 542 compounds, almost all false positives on English: `night`, `knight`, `benighted` (`nig`), `sickle`, `sexton`, `tithe`, `pool`, `slag`, `gravedigger`, and compounds such as `Pinegrove` (`negr`), `Frostwater` (`twat`), `Bitterdale` (`terd`), `Boarseam` (`arse`). The compounds that do read badly are `Wanknoll`, `Wanknott`, `Wanknowe` (already rejected by P1-06's own `forbidden` entry `wank`), `Bonereach`, `Boneridge`, `Bonerigg`, `Bonerock`, `Bonereed` (`boner`) and `Dungate`, `Dungap`, `Dungrass`, `Dungrove`, `Dungill` (`Dun` + g…). `words` rejects 57 single words by design (region names are English). Every entry of P1-06's `forbidden` is already rejected by the r5 lists. **Recommendation: the region namer does not share this data**: its words are hand-written English, the history fragments are tuned for invented syllables and reject ordinary words, and P1-06 V4 and V5 already guard compounds. Instead P1-06's `common.forbidden` gains `boner` and `dung` in the same shipped change (a data edit of P1-06 r3; neither occurs in a single list word, so only the compounds above are affected).
+
+### 11.7 Tests required (for the test writer)
+
+Data and loader:
+1. The shipped `game/data/name_filters/` loads; the fixture copies are byte-identical; every list is sorted (a convention test, as P1-06's); a data root without `name_filters/` is a required-kind error.
+2. Each check of 11.2 fails once with its message: a grammar failure (`Ni`, `a`, a 17-letter entry, `ab1`), `name_filter_unique`, `name_filter_distinct`, both branches of `name_filter_not_redundant`.
+3. `naming_realm_forms` fails for `civilization_forms = ["{root}"]` and for `["{root}ia"]`; `god_patterns` missing, empty, or with a bad pattern fails as the other pattern fields do.
+4. `names_form_text`: a culture with settlement form `{root}cock` and one with `Shit{root}` are fatal with the message of 11.3; `{root}ford` passes.
+
+Rule (hand-made filter and naming data):
+5. `root_word`: `The Hold of {root}` → the root; `{root}ford` → root + `ford`; `Ny{root} Pit` → `ny` + root.
+6. `name_filtered` with anywhere `[ab]`, at_start `[cd]`, whole `[ef]`: `xaby` yes, `a-by` yes (across `-`), `xcdy` no, `xx-cdy` yes, `cd` yes, `ef` yes, `efx` no, `x'ef` yes, `XEF` (after lower-casing in `root_word`) yes; an empty filter rejects nothing.
+7. With empty lists and `god_patterns` = `patterns`, every name of `p3-02-names.txt` (r4) is reproduced: r5 is r4 there.
+8. An attempt rejected only by the filter has `valid` false and `filtered` true; it is skipped by `make_name`, and the fallback numbers the first unfiltered valid name (hand-made data where attempt 0 is filtered and every later valid name is in the registry).
+
+Shipped data:
+9. Property, per culture and kind, 2,000 names (seeds 0 and 1, as 9.2 item 8): no root word is filtered (invariant 5, recomputed by the test's own code of 11.3), every god root parses as one of its culture's `god_patterns` (so it has at least two nuclei with the shipped data), no civilization name is a bare root.
+10. The critic's examples are rejected as root words of their forms: `cockford`, `cockton`, `cackford`, `bumdou`, `but-skrotch`, `snotgab`, `bag`, `dog`, `dork`, `baa`, `bald`, `buzz`, `gord`, `vanir`, the goblin slur example (`n` + `igg` + `snib`, written in the test as a concatenation) and its near misses `snig`, `drinigg`; and `stard`, `iensath`, `grork` pass.
+
+Goldens:
+11. `p3-02-names.txt` is regenerated by the updated reference (`p3_names_reference.py` gains 11.3 and 11.4, written from this text), with the scenarios of 9.3 plus `filtered` (item 8's case) and the r5 vectors of 11.6; the reference's `samples` command compares with the r5 table of 11.6.
+
+### 11.8 Consequences
+
+- **Generator version**: one bump for the combined follow-up change (region names, faerie weights, this amendment): 0.17.0 if P3-06 merges as 0.16.0.
+- **Every world file changes**: `content_hash` (new required kind; new culture field), so `p0-worlds.txt`, `p1-worlds.txt` and `p3-worlds.txt` are re-recorded after the cross-preset comparison, and `p3-01-data.txt` (content hashes of the three data roots) is re-recorded; P3-01's spec listings of the culture files gain `god_patterns` and the elven form, and the listings test (P3-01 8.3 test 9) gains the `name_filter` files.
+- **Names change**: every god whose r4 pattern had one nucleus, every name whose r4 root word is filtered, every bare elven realm, and every later name whose attempt or registry content moves with them. So `p3-02-names.txt`, `p3-03-chronology.txt` (god names), `p3-04-engine.txt` (sentences with god, civilization and settlement names), `p3-05-peoples.txt`, and every P3-06 or P3-07 golden that stores names or rendered text are regenerated by their references. The P1 stage goldens (`p1-01` to `p1-06`) hash layers and tables that do not change.
+- **No schema change** (schema 7): tables and columns are unchanged; `docs/specs/schema.md` needs no edit.
+- **P3-03**: its input checks gain `names_form_text` (11.3); its god naming call passes the filter. **P3-04, P3-05**: their `make_name` calls pass the filter. **P0-03**: the kind list gains `name_filter` and the grammar `filter_word` (kind-local). **P3-01**: the culture record gains `god_patterns` and the check `naming_realm_forms`.
+
+### 11.9 Not addressed here
+
+The critic's other name findings stay open for a later data or rule change: 43 of 176 elven settlements end in `-dell` and half of goblin settlements end in ` Pit` or ` Hole` (a per-world cap on a repeated suffix); same-core pairs in one world (`Skreek Pit` and `Skreek Hole`; the registry compares whole names); goblin and orcish stems overlap (`Grork`).
+
+### 11.10 Open questions (for Paul; each with a recommendation and the interim choice)
+
+1. **How wide is the English-word rule?** r5 rejects every ordinary English word the syllables reach with probability at least 10^-5 (647 words), in every kind, so roots are always invented words and English comes only from the forms (`Hold`, `Glade`). The cost: evocative bare roots go too (`The Kingdom of Gold`, `Thorn Deep`, `Moss Hollow`), and human realms are redrawn 16% of the time. The alternative is a hand-curated list of only the comic words (about 150). Recommendation and interim: the full list, as shipped in `words.toml`; Paul can delete any word he likes.
+2. **Region names**: share the filter data or not? Recommendation and interim: not shared; P1-06's `common.forbidden` gains `boner` and `dung` (11.6).
+3. **Syllable edits.** Recommendation and interim: none (11.6); the filter does the work.
+4. **God style.** Recommendation and interim: rule A, `god_patterns` per culture, shipped as the culture's multi-syllable shapes. B (a minimum of six letters) is the alternative; a domain epithet ("Krok the Gnawer") waits for P5's pantheon.
+5. **The elven third realm form.** Recommendation and interim: `The House of {root}`. Alternatives: `The Kingdom of {root}` (human already uses it), `The Hidden Realm of {root}`, `{root} under the Leaves`.
+6. **Orcish two-letter apostrophe parts** (`Am'gash`, `Um'daz`, `Do'grak`) are allowed; 1.75% of orcish names have one. Recommendation and interim: keep them.
+7. **The lists are public text** in a public repository. Recommendation and interim: plain short fragments, as shipped. Storing only hashes of the fragments would need every substring of every root word hashed at match time and would make the lists impossible to review or edit by hand.
+
 ## Revision note (2026-11-19, text only, after implementation)
 
 The implementation (`p3/02-names`) and the independent tests (`p3/02-names-tests`) agreed; this revision makes the text say what they do. No behaviour, golden value or world byte changes.
@@ -374,3 +675,7 @@ Text only; no behaviour, golden value or world byte changes. 7: the registry is 
 ## Revision note r4 (2026-11-19, amendments for P3-04)
 
 Requested by P3-04 18.2. 4.5: civilization and settlement names are drawn by the `history` stage from P3-04 on (its stub placement, P3-04 7.2, in creation order after the registry is rebuilt from `region`, `age` and `god`), and by P3-05 when it replaces the stub. No rule of this spec changes.
+
+## Revision note r5 (2026-11-20, amendment, not yet shipped)
+
+After the world critic's review of P3-05 (F5: a slur-like goblin name, crude human town names, comic English god names, short gods, bare elven realms). New section 11, normative for the follow-up change after P3-06 and not before: (1) a shared name filter, new required data kind `name_filter` (`game/data/name_filters/`, four files committed now, ignored by the current loader), rejecting an attempt whose root word contains an `anywhere` fragment, has a part starting with an `at_start` fragment, or has a part equal to a `whole` word; (2) `culture_naming.god_patterns`, shipped as each culture's multi-syllable shapes; (3) the elven bare realm form becomes `The House of {root}`, and a loader check requires every civilization form to hold a word besides the root. Measurements, samples before and after, the region-name scan, tests, consequences (generator bump, every world hash and the name and sentence goldens; no schema change) and seven questions for Paul are in 11.6 to 11.10. Pointers in sections 3, 4.2 and 5 mark what r5 changes; nothing else in sections 1 to 10 changes until r5 ships.
