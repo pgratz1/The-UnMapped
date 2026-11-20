@@ -767,8 +767,6 @@ inline const Geo* synthetic_geo(const GCase& g) {
 // abandonment never ends its civilization), 12 (settled >= 1 and a destination of the civilization), 13
 // (plague and crisis saliences with the shipped plague_major_dead 1000 and small saliences 25).
 inline void check_invariants_r6(const Tables& t, std::int64_t abandon_min, const Geo* geo) {
-    std::map<std::int64_t, const Row*> ev;
-    for (const Row& r : t.event) ev[at(r, 0)] = &r;
     std::map<std::int64_t, std::vector<std::int64_t>> causes;
     for (const Row& c : t.event_cause) causes[at(c, 0)].push_back(at(c, 1));
     std::map<std::int64_t, std::map<std::int64_t, std::int64_t>> vals, part;

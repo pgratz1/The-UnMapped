@@ -2342,6 +2342,11 @@ def cmd_check(argv):
             if r[6] is not None and r[5] == r[6]:
                 guards["same-year " + r[4]] = guards.get("same-year " + r[4], 0) + 1
                 print("same-year row %s %s" % (name, r))
+        for (o, planned, actual) in w.plague_plans:
+            if planned != actual:
+                guards["plague plan != strikes"] = guards.get("plague plan != strikes", 0) + 1
+                print("note: %s plague e%d planned %d dead, struck %d (10.2: a spread target changed by an earlier "
+                      "strike of the same outbreak)" % (name, o, planned, actual))
         if name.startswith("syn-") or head.startswith("world"):
             pres = history_stage(w.pd, inp, conflict=False)
             guards["18a eras"] = guards.get("18a eras", 0) + check_prefix(c, res, pres, name)
@@ -2366,6 +2371,7 @@ def cmd_check(argv):
         c.true("a case holds a war row opened and closed in one year (8.3 item 7, P3-04 6.7 r9)",
                guards.get("same-year war", 0) > 0)
     print("stress reach: %s; refuge %d, shelter %d" % (sorted(stress.items()), guards["refuge"], guards["shelter"]))
+    print("guards: %s" % sorted(guards.items()))
     if not quick and os.path.isdir(inputs) and "--write" in argv:
         with open(GOLDEN, "wb") as f:
             f.write(("\n".join(o) + "\n").encode())
