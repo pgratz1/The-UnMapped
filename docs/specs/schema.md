@@ -122,6 +122,7 @@ Versions 6 and 7 are in sections 1 and 2; no schema change is planned. Appending
 | 6 | 2026-11-19 | 5 → 6 with generator 0.13.0 (planned, the chronology merge): tables `race`, `race_biome`, `culture`, `god`, `age` added, executed ninth to thirteenth; required `meta` keys `param.civs_per_race`, `param.divine_activity`, `param.divine_script`, `param.event_intensity`, `param.history_detail`, `param.history_span`, `param.monster_pressure`, `param.races`; `meta.schema_version` and `user_version` 6; readers refuse version 5 worlds; the empty world grows from 11 to 18 pages. Proposals "History: schema versions 6 and 7" | P3-03 5, 4.2, P3-00 6.1 |
 | 7 | 2026-11-19 | 6 → 7 with generator 0.14.0 (the engine merge): thirteen tables added, executed fourteenth to twenty-sixth; required `meta` key `history_end_year`; readers refuse version 6; the empty world grows from 18 to 34 pages. Proposals "History: schema versions 6 and 7" | P3-04 9, P3-00 6.1 |
 | 7 | 2026-11-19 | No schema change (generator 0.15.0, the peoples merge): the event catalogue gains kinds 6–19 (section 6); the history tables now hold the rows of the peoples subsystem | P3-05 11, 18.1 |
+| 7 | 2026-11-19 | No schema change (generator 0.16.0, the conflict merge): the event catalogue gains kinds 20–30 (section 6); table `relation` holds rows of kinds `enmity`, `war` and `peace` | P3-06 11, 4.3, 18.5 |
 
 ## 6. Event catalogue
 
@@ -148,11 +149,6 @@ Kinds, roles, value keys and flags are code (`history::compiled_event_catalogue(
 | 17 | `capital_moved` | 1 | 1 | 1 | 1: `civilization`, civilization, 1–1; 2: `settlement`, settlement, 1–1 | — | P3-05 |
 | 18 | `civ_ended` | 1 | 1 | 1 | 1: `civilization`, civilization, 1–1 | — | P3-05 |
 | 19 | `ruin_faded` | 1 | 1 | 1 | 1: `settlement`, settlement, 1–1 | — | P3-05 |
-
-**Planned additions, not in the current catalogue** (the table above is the catalogue as implemented, generator 0.15.0: kinds 1–5 of P3-04 and 6–19 of P3-05 11). Kinds 20–30 come with P3-06 at **generator 0.16.0** (P3-06 11), appended after P3-05's; entity types: civilization 3, settlement 4; every count 1–1 except `parties` 2–2; all caused:
-
-| id | key | caused | region | settlement | roles (seq: role, entity type, min–max) | values (seq: key) | spec |
-| --- | --- | --- | --- | --- | --- | --- | --- |
 | 20 | `claim` | 1 | 1 | 0 | 1: `claimant`, civilization, 1–1; 2: `holder`, civilization, 1–1 | — | P3-06 |
 | 21 | `war_declared` | 1 | 1 | 0 | 1: `attacker`, civilization, 1–1; 2: `defender`, civilization, 1–1 | — | P3-06 |
 | 22 | `battle` | 1 | 1 | 0 | 1: `winner`, civilization, 1–1; 2: `loser`, civilization, 1–1 | 1: `winner_dead`; 2: `loser_dead` | P3-06 |
@@ -165,6 +161,8 @@ Kinds, roles, value keys and flags are code (`history::compiled_event_catalogue(
 | 29 | `region_ceded` | 1 | 1 | 0 | 1: `from`, civilization, 1–1; 2: `to`, civilization, 1–1 | — | P3-06 |
 | 30 | `civ_conquered` | 1 | 1 | 0 | 1: `civilization`, civilization, 1–1; 2: `conqueror`, civilization, 1–1 | — | P3-06 |
 
-**Relation kinds** (`relation.kind`; text keys, not a schema change): from generator 0.16.0, `enmity` (symmetric, a < b), `war` (asymmetric, a the attacker, b the defender), `peace` (symmetric, a < b), all between civilizations (P3-06 4.3). None exist before 0.16.0. When P3-06 merges, its engineer moves its rows into the table above (P3-05's are there since generator 0.15.0). No schema change; `schema_version` stays 7.
+Kinds 1–5 are P3-04's, 6–19 P3-05's (generator 0.15.0), 20–30 P3-06's (generator 0.16.0, P3-06 11); in kinds 20–30 every count is 1–1 except `parties` 2–2, and every kind is caused.
+
+**Relation kinds** (`relation.kind`; text keys, not a schema change): from generator 0.16.0, `enmity` (symmetric, a < b), `war` (asymmetric, a the attacker, b the defender), `peace` (symmetric, a < b), all between civilizations (`a_type` = `b_type` = 3; P3-06 4.3). None exist before 0.16.0. No schema change; `schema_version` stays 7.
 
 **Schema changes** (P3-04 8.2): renaming, removing or renumbering a kind; adding, removing, renaming or reordering a role or value key of an existing kind; changing a role's entity type or counts, or a kind's `caused`, `region_use` or `settlement_use`; changing the meaning of any of them; changing a code list; any column. **Not a schema change**: appending a kind; changing a template or a base salience (a data change). A shipped kind is never edited: a kind that needs another role or value key is added as a new kind.

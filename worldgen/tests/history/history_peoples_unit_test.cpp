@@ -161,9 +161,9 @@ TEST_CASE("P3-05 11, 16.1 item 14: the compiled catalogue appends kinds 6-19 exa
     CHECK(compiled.kinds[4].key == "flare_up");
 }
 
-TEST_CASE("P3-05 3.3: the twelve hist.peoples streams follow hist.chronology.awakening, 46 names in all") {
+TEST_CASE("P3-05 3.3: the twelve hist.peoples streams follow hist.chronology.awakening, 51 names in all (P3-06 adds five)") {
     const auto names = ppl::registered_streams();
-    REQUIRE(names.size() == 46U);
+    REQUIRE(names.size() == 51U);
     std::size_t at = 0;
     for (std::size_t i = 0; i < names.size(); ++i) {
         if (names[i] == "hist.chronology.awakening") at = i;

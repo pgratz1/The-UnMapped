@@ -227,18 +227,18 @@ TEST_CASE("P3-04 4.2, 16.1 item 11: the named check report_events through the lo
     CHECK(got.size() == golden().report_events.size());
 }
 
-TEST_CASE("P3-04 4.2 (P3-01 8.1 item 4, P3-05 12.1): an unknown history id lists 'chronology', 'engine', 'peoples', 'report'") {
+TEST_CASE("P3-04 4.2 (P3-01 8.1 item 4, P3-05 12.1): an unknown history id lists 'chronology', 'conflict', 'engine', 'peoples', 'report'") {
     wd::MemoryDataRoot root = chrono_test::shipped_memory_root();
     for (wd::MemoryDirectory& d : root.directories) {
         if (d.name == "history") {
-            d.entries.push_back(wd::MemoryEntry{"conflict.toml", "[history.conflict]\nx = 1\n", false});
+            d.entries.push_back(wd::MemoryEntry{"monsters.toml", "[history.monsters]\nx = 1\n", false});
         }
     }
     const auto r = wd::load_content_from_memory(wd::builtin_kinds(), root);
     REQUIRE_FALSE(r.ok());
     const std::string text = chrono_test::errors_text(r.errors);
     CAPTURE(text);
-    CHECK(text.find("expected one of 'chronology', 'engine', 'peoples', 'report'") != std::string::npos);
+    CHECK(text.find("expected one of 'chronology', 'conflict', 'engine', 'peoples', 'report'") != std::string::npos);
 }
 
 TEST_CASE("P3-04 8.5 r1: render_event of hand-made events of a kind this build does not compile") {

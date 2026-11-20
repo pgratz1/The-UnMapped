@@ -324,6 +324,24 @@ public:
 
     std::int64_t append(const EventSpec& spec) { return append_event(spec, false); }
 
+    // P3-06 8.1 item 2: the stored log, read-only.
+    [[nodiscard]] std::string_view event_kind(std::int64_t event) const {
+        return config_.catalogue->find_id(stored(event).row.kind)->key;
+    }
+    [[nodiscard]] std::int64_t event_participant(std::int64_t event, std::string_view role) const {
+        const StoredEvent& e = stored(event);
+        const RoleDef* r = config_.catalogue->find_id(e.row.kind)->find_role(role);
+        if (r == nullptr) {
+            return 0;
+        }
+        for (const db::EventParticipantRow& p : e.participants) {
+            if (p.role == r->seq) {
+                return p.entity_id;
+            }
+        }
+        return 0;
+    }
+
 private:
     static constexpr std::size_t NONE = std::numeric_limits<std::size_t>::max();
 
@@ -333,6 +351,13 @@ private:
         std::vector<std::int64_t> values;
         std::vector<std::int64_t> causes;
     };
+
+    [[nodiscard]] const StoredEvent& stored(std::int64_t event) const {
+        if (event < 1 || event > last_event()) {
+            fail("history: state: event " + int_text(event) + " does not exist");
+        }
+        return events_[static_cast<std::size_t>(event - 1)];
+    }
 
     // --- Steps ------------------------------------------------------------------------
 
@@ -1115,6 +1140,14 @@ bool StepContext::visible(const Settlement& s) const noexcept {
 
 std::int64_t StepContext::append(const EventSpec& spec) {
     return engine_.append(spec);
+}
+
+std::string_view StepContext::event_kind(std::int64_t event) const {
+    return engine_.event_kind(event);
+}
+
+std::int64_t StepContext::event_participant(std::int64_t event, std::string_view role) const {
+    return engine_.event_participant(event, role);
 }
 
 std::int64_t StepContext::quiet_events_left(std::int64_t civ) const {

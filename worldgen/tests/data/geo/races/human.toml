@@ -24,5 +24,6 @@ upland = -300
 coast = 200
 expansion = 700
 aggression = 400
+prowess_permille = 1000
 settlement_kinds = ["hamlet", "village", "town", "city", "fortress"]
 culture = "human"

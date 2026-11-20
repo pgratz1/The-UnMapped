@@ -612,15 +612,15 @@ TEST_CASE("P3-01 3, 4 and P0-03 amendment 17: name, plural, adjective and the cu
 
 TEST_CASE("P3-01 5: a history file for an unregistered id is an error at its header") {
     Files f = history_data::shipped_files();
-    // P3-05 12.1 (P3-01 r6): engine, peoples and report are registered; conflict (P3-06, 0.16.0) is not yet.
-    f["history/conflict.toml"] = "[history.conflict]\nstep_years = 1\n";
+    // P3-06 12.1 (P3-01 r7): conflict is registered from 0.16.0; a future id (monsters) is not.
+    f["history/monsters.toml"] = "[history.monsters]\nstep_years = 1\n";
     const wd::LoadError e = only_error(load(f));
-    CHECK(e.path == "history/conflict.toml");
+    CHECK(e.path == "history/monsters.toml");
     CHECK(e.line == 1U);
     CHECK(e.column == 1U);
     // P3-01 5 (revised): the registered ids, each in single quotes.
     CHECK(e.message ==
-          "unknown id 'conflict' for kind 'history'; expected one of 'chronology', 'engine', 'peoples', 'report'");
+          "unknown id 'monsters' for kind 'history'; expected one of 'chronology', 'conflict', 'engine', 'peoples', 'report'");
 }
 
 TEST_CASE("P3-01 5: history/ without chronology.toml is a missing definition against the directory") {

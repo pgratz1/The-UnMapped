@@ -13,6 +13,7 @@
 #include <doctest/doctest.h>
 
 #include <cstdint>
+#include <map>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -246,29 +247,26 @@ TEST_CASE("P3-05 12.2 items 2 and 3: the goblin and faerie biome weights and fae
     }
 }
 
-TEST_CASE("P3-05 r1 / P3-01 r7: the 0.16.0 items are absent at 0.15.0") {
+TEST_CASE("P3-05 r1 / P3-01 r7: the 0.16.0 items are present at 0.16.0 (P3-06 12)") {
     const wd::ContentSet& c = shipped_content();
     const wd::KindContent* race = c.find_kind("race");
     REQUIRE(race != nullptr);
+    const std::map<std::string, std::int64_t> prowess = {{"elf", 1600},   {"goblin", 800}, {"dwarf", 1400},
+                                                         {"faerie", 1200}, {"human", 1000}, {"orc", 1300}};
     for (const wd::Definition& d : race->definitions) {
         CAPTURE(d.id);
-        CHECK(d.record.find("prowess_permille") == nullptr);
+        REQUIRE(d.record.find("prowess_permille") != nullptr);
+        CHECK(d.record.get_int("prowess_permille") == prowess.at(d.id));
         if (d.id == "goblin") {
-            CHECK(d.record.get_int("aggression") == 700);
+            CHECK(d.record.get_int("aggression") == 600);
         }
     }
-    // prowess_permille is not a field of the race kind at 0.15.0
-    Files f = history_data::shipped_files();
-    // on orc (order 6): a type error leaves orders 1 to 5 for the kind-level checks (as the P3-01 tests)
-    std::string& orc = f["races/orc.toml"];
-    orc.replace(orc.find("aggression = 900\n"), 17, "aggression = 900\nprowess_permille = 1300\n");
-    CHECK(contains(one_error(load(f)).message, "prowess_permille"));
-    // history id conflict is not registered (the P3-01 unknown-id test names the list)
+    // history id conflict is registered (the P3-01 unknown-id test names the list)
     const wd::KindContent* hist = c.find_kind("history");
     REQUIRE(hist != nullptr);
     std::vector<std::string> ids;
     for (const wd::Definition& d : hist->definitions) {
         ids.push_back(d.id);
     }
-    CHECK(ids == std::vector<std::string>{"chronology", "engine", "peoples", "report"});
+    CHECK(ids == std::vector<std::string>{"chronology", "conflict", "engine", "peoples", "report"});
 }

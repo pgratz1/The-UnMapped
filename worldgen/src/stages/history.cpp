@@ -1,11 +1,12 @@
 // Stage history (specs docs/specs/p3-04-simulation-engine.md and
-// docs/specs/p3-05-peoples.md).
+// docs/specs/p3-05-peoples.md, docs/specs/p3-06-expansion-conflict.md).
 
 #include "worldgen/stages/history.hpp"
 
 #include <string>
 
 #include "worldgen/core/error.hpp"
+#include "worldgen/history/conflict.hpp"
 #include "worldgen/history/event_catalogue.hpp"
 #include "worldgen/history/peoples.hpp"
 
@@ -19,14 +20,17 @@ HistoryResult history_stage(const data::ContentSet& content, const history::Hist
     const history::EventCatalogue catalogue = history::event_catalogue(content);
     // Items 2, 4 and 5 (the tuning again, then settings and chronology rows).
     (void)history::check_engine_inputs(content, inputs);
-    // The shipped configuration (P3-04 6.4, P3-05 13.1 item 3): the peoples
-    // awakening and subsystem; the stubs remain test seams only.
+    // The shipped configuration (P3-04 6.4, P3-05 13.1 item 3, P3-06 8.3
+    // item 3): the peoples awakening and subsystem, then conflict, which is
+    // the one tension source; the stubs remain test seams only.
     history::PeoplesSubsystem peoples;
     history::PeoplesAwakening awakening(peoples);
+    history::ConflictSubsystem conflict(peoples, content);
     history::EmptyInterventionSource none;
     history::EngineConfig config;
     config.awakening = &awakening;
-    config.subsystems = {&peoples};
+    config.subsystems = {&peoples, &conflict};
+    config.tension = {&conflict};
     config.interventions = &none;
     config.catalogue = &catalogue;
     return history::run_engine(content, inputs, config);

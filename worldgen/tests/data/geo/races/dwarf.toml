@@ -23,5 +23,6 @@ upland = 800
 coast = -200
 expansion = 250
 aggression = 300
+prowess_permille = 1400
 settlement_kinds = ["hamlet", "village", "town", "city", "fortress"]
 culture = "dwarven"
