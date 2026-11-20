@@ -880,3 +880,19 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
   2. Mountain peoples get history of their own: delvings, lost holds and mines as events, not only wars.
 - Interim choice: neither is specified. Both suit P5 History depth (the first also needs the record of renamed places that sites and quests in P6 would use). The grim share of drawn region names can be lowered in data before then.
 - Status: open
+
+### Paul's decision of 2026-11-20: the P3-10 questions go with their recommendations
+
+- Date: 2026-11-20
+- Raised by: lead, recording Paul's decision
+- Design doc section: 4 (regions), 5 (history: how it reads, where peoples settle)
+- Problem: the P3-10 change spec (`docs/specs/p3-10-followups.md`, branch `p3/10-spec`: the follow-ups of the world critic's review of P3-08) put questions to Paul; the lead presented five with recommendations.
+- Decision: Paul's words: "Yes I agree with the recommendations on all five." So:
+  1. **Plain compass names.** One plain name per land type per world, kept by that land type's largest region ("East Wood"); every other region draws a name. This replaces the earlier rule that the largest region of each base name keeps it (decision of 2026-11-19, region name question 1). Measured by the spec writer: plain names fall from 83% / 42% / 15% of regions at map sizes 512 / 1024 / 2048 to 33% / 12% / 4%.
+  2. **Quiet eras.** One world-level line per quiet stretch, with the realms that passed it as participants, instead of a line per realm.
+  3. **Thousands separators** in the numbers of rendered sentences from 1,000 on, not in years.
+  4. **Faerie and dwarven sites** as specified: faeries drawn inland and away from the coast, dwarves without a harbour bonus and with habitability in the site value. The lead watches the measured side effect (humans lost 15% of standing settlements in 20 worlds) in validation.
+  5. **Two comic names stay** unfiltered ("Mammga", "The Twiwhiwou Ring"): each comes from an ordinary syllable of its culture.
+  The lead also accepts the spec's technical question (a template placeholder for the cause clause of abandonment and dwindling sentences).
+- Interim choice: none needed. P3-10 (generator 0.19.0) is implemented after P3-09.
+- Status: accepted
