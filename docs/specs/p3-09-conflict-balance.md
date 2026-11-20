@@ -136,7 +136,26 @@ So no size rule is needed for 512 (the massacre came from the futile and endless
 
 ### 5.4 Heavier settings (seeds 0–9)
 
-[HEAVY]
+`--civs-per-race 4`, 1024, seeds 0–9 (the validation's `civs4` worlds; `base017` rules against `FINE`):
+
+| Statistic | `base017` | `FINE` |
+| --- | --- | --- |
+| wars per world | 48 / 82 / 136 | 51 / 67.5 / 107 |
+| hollow wars | 357 of 947 (37%) | 135 of 709 (19%) |
+| longest futile run over one (defender, goal), per world | 4 / 9.5 / 16 | 3 / 3 / 5 |
+| goblin share of wars; elven attackers | 83%; 0 | 81%; 39 |
+| orc wars won / lost; orc share of the orc age | 2 / 20; 14% | 18 / 8; 23% |
+| faerie, elven standing settlements (median); worlds with one | 1, 8; 6, 1 | 18, 18.5; 0, 0 |
+| human standing settlements (median) | 22.5 | 9 |
+| civilizations ended (median) | 12.5 | 5 |
+| sieges of a last refuge / held | 105 / 72 | 2 / 0 |
+| flare-ups; simulated years (min / median / max) | 3 / 7 / 9; 1,298 / 1,471 / 1,563 | 7 / 11 / 17; 1,550 / 1,672 / 1,905 |
+| events (median) | 2,204 | 2,368 |
+| largest race share of people ≥ 600‰ (worlds) | 4 | 4 |
+
+With four civilizations per race the rules end fewer realms (5 against 12.5) and keep the elves and faeries, but the humans lose ground (median 9 against 22.5: they are the goblins' and orcs' new neighbours, and wars now cost land), and the odds minimum lets strain build to more flare-ups (11 against 7; the simulated share stays at most 1,905 of 6,000 years, 318‰, under P3-04's cap of 450‰). Both are findings for the 0.18.0 validation, not defects.
+
+`turbulent`: not measured by this spec (the run did not finish in time); validation measures it.
 
 ### 5.5 Targets
 
@@ -154,7 +173,7 @@ So no size rule is needed for 512 (the massacre came from the futile and endless
 
 ### 5.6 What validation re-measures at 0.18.0
 
-On the sweeps of P3-06 15.6 (1024 seeds 0–199, 512 seeds 0–49, 2048 seeds 0–19 and the settings rows), from `[stats]` and the tables: `wars_hollow_permille` (target < 250), `wars_same_goal_unchanged_max` (≤ 3 in ≥ 90% of worlds), `race_population_share_max_permille` and `race_regions_share_max_permille` (distribution; ≥ 700 in at most 10% of worlds), `wars_attacker_<race>` (goblins first, elves > 0), orc wars won and lost and the orc age's attackers (computed from the tables, P3-06 20.11), `settlements_standing_faerie` and `_elf` (worlds with 1: at most 5%), `events_refugees_settled`, `events_tribute`, worlds without a goblin–elf war, the first war and the longest quiet stretch after the goblins' awakening, `simulated_permille` and `events` against P3-06 15.5's bounds, `races_alive`, and the summary measures of P3-07 21 (5.7). A median more than 20% from 5.2's `FINE` column is a finding for the spec writer, not a defect: P3-08's unemulated changes move the dwarves and the logs.
+On the sweeps of P3-06 15.6 (1024 seeds 0–199, 512 seeds 0–49, 2048 seeds 0–19 and the settings rows), from `[stats]` and the tables: `wars_hollow_permille` (target < 250), `wars_same_goal_unchanged_max` (≤ 3 in ≥ 90% of worlds), `race_population_share_max_permille` and `race_regions_share_max_permille` (distribution; people ≥ 700‰ in at most a quarter of worlds: 9 of 40 with `FINE`, 4 with `base017`), `wars_attacker_<race>` (goblins first, elves > 0), orc wars won and lost and the orc age's attackers (computed from the tables, P3-06 20.11), `settlements_standing_faerie` and `_elf` (worlds with 1: at most 5%), `events_refugees_settled`, `events_tribute`, worlds without a goblin–elf war, the first war and the longest quiet stretch after the goblins' awakening, `simulated_permille` and `events` against P3-06 15.5's bounds, `races_alive`, and the summary measures of P3-07 21 (5.7). A median more than 20% from 5.2's `FINE` column is a finding for the spec writer, not a defect: P3-08's unemulated changes move the dwarves and the logs.
 
 ### 5.7 The summary (P3-07 21)
 
@@ -168,7 +187,7 @@ The selection of P3-07 21 against 7.4's threshold-only rule, computed by the pro
 | conflict and capital moves, ‰ of shown | 533 | 503 | 496 | 450 |
 | claims shown | 22 | 17 | 23.5 | 22 |
 
-Seed 42 (0.16.0 log): 3, 8, 12, 28, 30, 74 events per age become 20, 20, 20, 28, 30, 74 (192 shown, T 46). At default settings no shown war lost its ending under either rule (the thresholds stay at or below 46, under `truce` 50 and `peace` 60); the companions matter when T rises above 50, as with four civilizations per race (5.4). With the claim at 35 and a median threshold of 31, claims stay visible in small logs (median 22 shown): the note in the declaration makes them redundant only where the threshold rises.
+Seed 42 (0.16.0 log): 3, 8, 12, 28, 30, 74 events per age become 20, 20, 20, 28, 30, 74 (192 shown, T 46). With four civilizations per race (seeds 0–9, `FINE`), where the thresholds are high, the companions matter: under the threshold alone 275 shown declarations lack their ending and 164 sacks or captures their moved capital (339 and 329 with `base017`); under 21 none. The cost: the companions make the set grow in steps as t falls, so T rises (46 / 71 / 71 against 46 / 51 / 61) and fewer events are shown (127 / 144.5 / 240 against 196 / 223.5 / 245). A fill step (after T, add whole units of the next candidates in rank order while the set stays within 250) would recover most of that budget; it is not in 21 because it was not measured (question 11). At default settings no shown war lost its ending under either rule (the thresholds stay at or below 46, under `truce` 50 and `peace` 60); the companions matter when T rises above 50, as with four civilizations per race (5.4). With the claim at 35 and a median threshold of 31, claims stay visible in small logs (median 22 shown): the note in the declaration makes them redundant only where the threshold rises.
 
 ## 6. Golden values
 
@@ -185,14 +204,14 @@ Each with the recommendation and the interim choice (the rule as specified).
 1. **The last refuge falls into flight** (P3-06 20.1; one of the four design-level changes). A race's last settlement falls and is sacked; its survivors found a settlement in hiding up to three borders away, out of every army's sight for 300 years; the 0.16.0 guard holds only when no free land is in reach. Recommendation: yes; the alternative (no war against a last refuge) leaves 161 of 216 sieges and hides the problem rather than telling it. Sub-questions: 300 hidden years; three borders; the refuge found without an event when the years run out (recommended: no event, the year follows from the log).
 2. **A lost war always costs the loser** (20.3; design-level). A cession of the goal, else of the loser's best non-capital region in the winner's reach, else a tribute of 100‰ of its people (carried off: no one gains them, since P3 counts no wealth or slaves); also when the defender wins. Recommendation: yes. Sub-question: is "people carried off" the right content of a tribute in P3, or should tribute wait for wealth in P5 and a winner with nothing to take get only a longer truce (measured: hollow wars would then be about 30%, `G3`).
 3. **Revenge regardless of aggression** (20.5; design-level). Recommendation: yes, at aggression 400 while the grudge lasts.
-4. **Runaway measured per race** (20.11, P3-07 21.5; design-level). Recommendation: yes, as statistics with typical ranges, not a hard bound. With these rules the most populous race holds ≥ 60% of all people in 12 of 40 worlds (10 before): the costs of war move land toward the strong; worth watching in the 200-world sweep.
+4. **Runaway measured per race** (20.11, P3-07 21.5; design-level). Recommendation: yes, as statistics with typical ranges, not a hard bound. With these rules the most populous race holds ≥ 60% of all people in 12 of 40 worlds (10 before) and ≥ 70% in 9 (4 before; at most 832‰): the costs of war move land and people toward the strong. Recommendation: accept for P3 and watch it in the 200-world sweep; if Paul wants a bound, the fear term of 5.1 could count a race's share as well as a civilization's (not measured).
 5. **The orcs' share of their own age** (20.6). The rules make orcs win (39 won, 30 lost) but they start 25% of the orc age's wars, not a third: they arrive late, few (a horde of about 5,000) and next to kingdoms six times their size, and a people that only declares wars it can win declares fewer. Options: accept 25% (recommended: the orcs now win their wars and are attacked in return, which reads as "the most recent age of conflict"); lower `odds_min` to 500 (36%, but orcs then lose 55 of 83); or more orc civilizations at their awakening (a P3-05 change).
 6. **Faeries never strike back** (20.5, 20.7). Concealed in forest, faeries are rarely wronged and start no wars. Recommendation: accept; "hidden communities in wild places" (design 5) are not avengers. 
 7. **New race fields `muster_permille`, `conceal_min`, `home_defense_permille`** (20.7, 20.12) with shipped orc muster 4000 (40% of the people under arms), faerie concealment where their biome term is ≥ 400, elven and faerie home defence 1500 and 2000. Recommendation: yes; they are data, like `prowess_permille`.
 8. **Local levies, odds weighed by terrain, an odds minimum that also stops flare-ups, a shorter orc truce** (20.6). Recommendation: yes; each was needed for the orcs to win (5.2), and the flare-up rule prevents a world from cycling on an unpursuable claim (one world of 40 ran 15 flare-ups without it).
 9. **Armies cross three borders against an enemy of the other camp** (20.8). Recommendation: yes; it halves the worlds without a goblin–elf war. The alternative of the review (an awakening raises every hostile pair's strain) does nothing for pairs that are not in contact, which is why the feud is missing.
 10. **No map-size rule** (20.8, 5.3). Recommendation: no conflict rule for map size; instead `auto` founds more civilizations per race on a larger map (P3-05 21 item 5: + N div 90, at most + 2), since a larger map is more land (design 2) and its peace comes from realms too far apart, not from armies marching too little (2048 with every pair at three borders: 11 wars, as with two). The 512 map needs nothing more (5.3). Alternative: leave `auto` alone and accept a quieter 2048.
-11. **The summary** (P3-07 21): a per-age floor of 20, a declaration always shown with its ending, claims at 35, the notes. Within Paul's 250-line budget and minimum salience 20 (accepted 2026-11-19): the floor and companions take room from high-salience events instead of raising the budget. Recommendation: yes.
+11. **The summary** (P3-07 21): a per-age floor of 20, a declaration always shown with its ending, claims at 35, the notes. Within Paul's 250-line budget and minimum salience 20 (accepted 2026-11-19): the floor and companions take room from high-salience events instead of raising the budget. Recommendation: yes. Sub-question: in large logs the companions raise the threshold and leave part of the budget unused (5.7: 144 of 250 shown at the median with four civilizations per race); a fill step after the threshold would use it, at the cost of a less simple rule ("everything at or above T, plus"). Recommendation: add the fill step if the P3-07 implementer's measurements confirm it; interim: not specified.
 
 ## 9. Proposals
 
