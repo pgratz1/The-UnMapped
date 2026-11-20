@@ -1997,17 +1997,19 @@ def check_w1(c):
             c.eq("W1 elves win: no siege", "siege" in keys, False)
             continue
         b = ev[1]
-        c.eq("W1 %s: battle won by 2, dead 38 and 100" % branch, ([p[3] for p in b["participants"]], b["values"]),
-             ([2, 1], {1: 38, 2: 100}))
+        dw = 32 if FLAGS["loss"] else 38     # r7: min(480, 400) x 80 div 1000 = 32 (0.16.0: 480 x 80 div 1000)
+        c.eq("W1 %s: battle won by 2, dead %d and 100" % (branch, dw), ([p[3] for p in b["participants"]], b["values"]),
+             ([2, 1], {1: dw, 2: 100}))
         c.eq("W1 %s: siege of s2 fell" % branch, (keys[2], ev[2]["settlement"], ev[2]["values"]),
              ("siege", 2, {1: 1}))
-        c.eq("W1 %s: G 345, A2 442, ps 561" % branch, (w.garrison(dict(w.stl(2), population=480), 1),
-                                                       w.siege_p(442, 345)), (345, 561))
+        c.eq("W1 %s: G 345, A2 %d, ps" % (branch, 480 - dw), (w.garrison(dict(w.stl(2), population=480), 1),
+                                                               w.siege_p(480 - dw, 345)),
+             (345, 564 if FLAGS["loss"] else 561))
         if branch == "sack":
             c.eq("W1 sack: values (144 dead, 336 survivors)", (keys[3], ev[3]["values"]), ("sacked", {1: 144, 2: 336}))
             c.eq("W1 sack: casualties 80 at s1 then 336 fled to s1 (room permitting)", w.stl(1)["population"],
                  min(1920 + 336, max(1920, 2 * w.geo.capacity(3, 1))))
-            c.eq("W1 sack: s3 lost 38", w.stl(3)["population"], 5962)
+            c.eq("W1 sack: s3 lost dead_W", w.stl(3)["population"], 6000 - dw)
             c.eq("W1 sack: s2 ruined by the sack, R2 released", (w.stl(2)["status"], w.stl(2)["ruin_event"],
                                                                   w.owner[2][0]), (RUINED, ev[3]["id"], 0))
         else:
@@ -2022,7 +2024,50 @@ def check_w1(c):
              [sym_key(1, 2, "enmity"), sym_key(1, 2, "peace")])
 
 
+def check_units_r7(c):
+    """16.1 (r7): the victors' dead from the smaller force; the capture sentence; P3-05 r6 17e's
+    note_reduction never sets a decline start."""
+    t = data().conflict
+    lw, ll = t["loss_winner_permille"], t["loss_loser_permille"]
+    for fw, fl, want in ((900, 300, (24, 75)), (300, 900, (24, 225)), (1200, 400, (400 * 80 // 1000, 100))):
+        got = (min(fw, fl) * lw // 1000, fl * ll // 1000)
+        c.eq("16.1 r7 F_W %d F_L %d: dead_W, dead_L" % (fw, fl), got, want)
+    c.eq("16.1 r7 F_W = 3 F_L: dead_W = F_L x 80 div 1000", min(1200, 400) * lw // 1000, 400 * 80 // 1000)
+    # the capture sentence with fled 0, 1, 12 (the shipped template through render)
+    tmpl = [e for e in data().report if e[0] == "settlement_captured"][0][2]
+    if FLAGS["loss"]:
+        c.eq("11 r7 capture template (data)", tmpl, SPEC_REPORT[6][2])
+    for fled, want in ((0, "The Grork Horde took Tyfie Glade from the Teeshti Court; 135 died."),
+                       (1, "The Grork Horde took Tyfie Glade from the Teeshti Court; 135 died and one fled."),
+                       (12, "The Grork Horde took Tyfie Glade from the Teeshti Court; 135 died and 12 fled.")):
+        c.eq("16.1 r7 capture sentence, fled %d" % fled, capture_sentence(fled), want)
+    # note_reduction (casualties) never sets the decline start (P3-05 r6 17e)
+    w = w1()
+    before = dict(w.decline_start)
+    w.casualties(1, 100, len(w.events), None)
+    c.eq("P3-05 r6 17e casualties set no decline start", w.decline_start, before)
+
+
+def capture_sentence(fled):
+    """A settlement_captured event (dead 135) of the Grork Horde against the Teeshti Court, rendered."""
+    w = w1()
+    w.civ(2)["name"] = "The Grork Horde"
+    w.civ(1)["name"] = "The Teeshti Court"
+    w.stl(2)["name"] = "Tyfie Glade"
+    e = w.append("settlement_captured", region=2, settlement=2, participants=(("attacker", CIV, 2),
+                                                                             ("defender", CIV, 1)),
+                 values=(135, fled), causes=(1,))
+    res = pp.rows_of(w, pp.event_catalogue(w.pd.report), [])
+    view = pe.view_from_rows(res, [(r["id"], r["name"]) for r in w.inp.regions], w.inp.races, w.inp.gods)
+    try:
+        return pe.render(view, e)
+    except FatalError as x:
+        return "render failed: %s" % x
+
+
 def check_units(c):
+    if FLAGS["loss"]:
+        check_units_r7(c)
     dat = data()
     # 12.1 tuning
     c.eq("12.1 history.conflict = the listing", dat.conflict, pdr.parsed_spec("history")["conflict"])
@@ -2038,7 +2083,9 @@ def check_units(c):
     c.eq("16.4 strain_max", tuning_problem(dict(dat.conflict, strain_max=899)),
          "history: tuning: declare_min + declare_span must not be above strain_max")
     # 11 catalogue and report
-    c.eq("11 report entries 20-30", [e for e in dat.report[19:]], list(SPEC_REPORT))
+    want = [(k, sal, "{attacker} took {@settlement} from {defender}; {dead} died and {fled} fled."
+             if (k == "settlement_captured" and not FLAGS["loss"]) else tm) for k, sal, tm in SPEC_REPORT]
+    c.eq("11 report entries 20-30", [e for e in dat.report[19:30]], want)
     c.eq("11 report_events on the 0.16.0 report", pp.report_events_messages(dat.report), [])
     for k in CONFLICT_KINDS:
         c.eq("11 template of %s parses" % k["key"], pe.template_problem(k, dict((e[0], e[2]) for e in dat.report)[k["key"]]),
@@ -2175,6 +2222,54 @@ def check_peoples_only(c, dat):
         c.eq("syn-%d peoples-only configuration = the P3-05 reference" % seed, table_hashes(b), table_hashes(a))
 
 
+def check_prefix(c, res, pres, label):
+    """16.2 item 18a (r7, the 0.16.0 validation's F1): below the first claim the log with conflict equals
+    the peoples-only log row for row in event, event_participant, event_cause and event_value, except the
+    quiet_era events open in the quiet step of the first claim, whose end_year, years and generations may be
+    smaller. A world with no claim equals the peoples-only world in every history table but the three
+    catalogue tables and relation (READING: conflict's housekeeping opens enmity rows without a claim).
+    Returns the number of excepted eras."""
+    claims = [e[0] for e in res["event"] if e[3] == K["claim"]]
+    if not claims:
+        for t in TABLES:
+            if t in ("event_kind", "event_kind_role", "event_kind_value", "relation"):
+                continue
+            c.eq("%s 18a no claim: table %s equals the peoples-only one" % (label, t), res[t], pres[t])
+        return 0
+    first = claims[0]
+    cy = res["event"][first - 1][1]
+
+    def by(t, n):
+        out = {}
+        for r in t:
+            if r[0] < n:
+                out.setdefault(r[0], []).append(r)
+        return out
+    pe_ = {e[0]: e for e in pres["event"] if e[0] < first}
+    ce_ = {e[0]: e for e in res["event"] if e[0] < first}
+    excepted = set()
+    ok_events = len(pe_) == len(ce_)
+    for i, a in ce_.items():
+        b = pe_.get(i)
+        if a == b:
+            continue
+        if b is not None and a[3] == K["quiet_era"] and a[:2] == b[:2] and a[3:] == b[3:] and cy <= a[2] <= b[2]:
+            excepted.add(i)
+            continue
+        ok_events = False
+        print("  %s 18a first difference at e%d: %r against peoples-only %r" % (label, i, a, b))
+        break
+    c.true("%s 18a events below the first claim e%d" % (label, first), ok_events)
+    for t in ("event_participant", "event_cause"):
+        c.eq("%s 18a %s below the first claim" % (label, t), by(res[t], first), by(pres[t], first))
+    va, vb = by(res["event_value"], first), by(pres["event_value"], first)
+    for i in excepted:
+        va.pop(i, None)
+        vb.pop(i, None)
+    c.eq("%s 18a event_value below the first claim (excepted eras aside)" % label, va, vb)
+    return len(excepted)
+
+
 def all_cases(inputs, quick=False):
     """(header line, name, res, all sentences) for every golden case, in file order."""
     dat = data()
@@ -2247,10 +2342,13 @@ def cmd_check(argv):
             if r[6] is not None and r[5] == r[6]:
                 guards["same-year " + r[4]] = guards.get("same-year " + r[4], 0) + 1
                 print("same-year row %s %s" % (name, r))
+        if name.startswith("syn-") or head.startswith("world"):
+            pres = history_stage(w.pd, inp, conflict=False)
+            guards["18a eras"] = guards.get("18a eras", 0) + check_prefix(c, res, pres, name)
         if name.startswith("syn-") and int(name[4:]) < 3:
             res2 = history_stage(w.pd, inp, extra_draw=True)
             c.eq("%s 14 item 9 draw independence" % name, table_hashes(res2), table_hashes(res))
-        if name == "hist-conflict-42-1024":
+        if name == "hist-conflict-42-1024" and not FLAGS["loss"]:   # the sample of 15.2 is 0.16.0's
             check_example(c, res)
             pres = pp.world_case("hist-peoples-42-1024", 42, 1024, 6000, "all", "normal", inputs)
             c.eq("16.3 item 20: e1-e37 of hist-peoples-42-1024 unchanged with conflict",
