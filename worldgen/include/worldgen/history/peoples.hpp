@@ -333,14 +333,36 @@ private:
     // r6 (10.2): the total dead of an outbreak and its spreads, planned.
     [[nodiscard]] std::int64_t planned_plague_dead(const StepContext& context, std::int64_t origin, std::int64_t toll,
                                                    const std::vector<std::uint8_t>& struck) const;
-    // 8.5 (a)'s chance (r6: not for a last settlement).
-    [[nodiscard]] bool frail_abandon(const StepContext& context, std::int64_t settlement, std::int64_t after,
-                                     bool was_declining, SettlementKind kind) const;
+    // The settlements a strike's rules read: the state, or (the plague plan,
+    // 10.2) a copy of the populations and of which settlements of the owner
+    // stand, indexed by id.
+    struct SettlementsNow {
+        const State& state;
+        const std::vector<std::int64_t>* pop = nullptr;
+        const std::vector<std::uint8_t>* up_mask = nullptr;
+        // Standing and owned by `owner` (the copy: standing in it).
+        [[nodiscard]] bool up(std::int64_t id, std::int64_t owner) const;
+        [[nodiscard]] std::int64_t population(std::int64_t id) const;
+    };
+    // The outcome of a blow of `toll` per mille (10.4 with 8.5 (a)).
+    struct StrikeResult {
+        std::int64_t dead = 0;
+        std::int64_t after = 0;
+        bool abandoned = false;
+    };
+    [[nodiscard]] StrikeResult strike_result(const StepContext& context, const SettlementsNow& now,
+                                             std::int64_t settlement, std::int64_t toll) const;
+    // 10.2: the toll of a spread from origin to target, nullopt if its draw fails.
+    [[nodiscard]] std::optional<std::int64_t> spread_toll(const StepContext& context, std::int64_t origin,
+                                                          std::int64_t target) const;
     // Another standing settlement of the settlement's owner exists.
-    [[nodiscard]] bool has_other_standing(const State& state, std::int64_t settlement) const;
+    [[nodiscard]] bool other_standing(const SettlementsNow& now, std::int64_t settlement) const;
     // The owner's nearest other standing settlement (squared distance, then
     // id), 0 if none.
-    [[nodiscard]] std::int64_t nearest_other(const State& state, std::int64_t settlement) const;
+    [[nodiscard]] std::int64_t nearest_standing(const SettlementsNow& now, std::int64_t settlement) const;
+    // 8.5 item 2: max(0, 2 C(R_t, race) - P_t).
+    [[nodiscard]] std::int64_t refugee_room(const SettlementsNow& now, std::int64_t destination,
+                                            std::int64_t race) const;
     // 8.4: the kind of a new settlement (r6: the fortress cell rule).
     [[nodiscard]] SettlementKind founding_kind(std::int64_t race, std::int64_t region, const SiteCell& site,
                                                std::int64_t population) const;

@@ -614,7 +614,9 @@ inline eng::HistoryInputs inputs_for(const std::vector<std::int64_t>& starts, st
     in.elevation_layer.height = wat.height;
     in.elevation_layer.values = std::vector<std::int16_t>(static_cast<std::size_t>(wat.cell_count()), 0);
     in.ore_layer = wat;
-    in.walk_area_layer = wat;
+    in.walk_area_layer.width = wat.width;  // u16, its catalogue type (P3-05 r7 16.0a)
+    in.walk_area_layer.height = wat.height;
+    in.walk_area_layer.values = std::vector<std::uint16_t>(static_cast<std::size_t>(wat.cell_count()), 0);
     return in;
 }
 

@@ -547,29 +547,14 @@ void PeoplesSubsystem::ruin(StepContext& ctx, std::int64_t settlement, std::int6
     const std::int64_t c = s0.owner_civ;
     const std::int64_t p = s0.population;
     const std::int64_t region = s0.region;
-    const std::int64_t sx = s0.x;
-    const std::int64_t sy = s0.y;
-    const std::int64_t race = race_of_civ(state, c);
     const std::int64_t n = settlement_count(state);
-    // 2. The survivors join the nearest other standing settlement of c.
-    std::int64_t nearest = 0;
-    std::int64_t nearest_d = 0;
-    for (std::int64_t id = 1; id <= n; ++id) {
-        const Settlement& t = state.settlement(id);
-        if (id == settlement || !standing(t) || t.owner_civ != c) {
-            continue;
-        }
-        const std::int64_t d = (t.x - sx) * (t.x - sx) + (t.y - sy) * (t.y - sy);
-        if (nearest == 0 || d < nearest_d) {
-            nearest = id;
-            nearest_d = d;
-        }
-    }
+    // 2. The survivors join the nearest other standing settlement of c, up
+    // to its room (the rule the plague plan replays, 10.2).
+    const SettlementsNow now{state, nullptr, nullptr};
+    const std::int64_t nearest = nearest_standing(now, settlement);
     if (nearest != 0) {
-        const Settlement& t = state.settlement(nearest);
-        const std::int64_t room =
-            std::max<std::int64_t>(0, checked_sub(checked_mul(2, geo().capacity(t.region, race)), t.population));
-        state.set_population(nearest, checked_add(t.population, std::min(p, room)));
+        const std::int64_t room = refugee_room(now, nearest, race_of_civ(state, c));
+        state.set_population(nearest, checked_add(state.settlement(nearest).population, std::min(p, room)));
     }
     // 3. The ruin.
     state.set_population(settlement, 0);
@@ -622,26 +607,37 @@ void PeoplesSubsystem::end_civilization(StepContext& ctx, std::int64_t civ, std:
     }
 }
 
-bool PeoplesSubsystem::has_other_standing(const State& state, std::int64_t settlement) const {
-    const std::int64_t c = state.settlement(settlement).owner_civ;
-    for (std::int64_t id = 1; id <= settlement_count(state); ++id) {
-        const Settlement& t = state.settlement(id);
-        if (id != settlement && standing(t) && t.owner_civ == c) {
+bool PeoplesSubsystem::SettlementsNow::up(std::int64_t id, std::int64_t owner) const {
+    if (up_mask != nullptr) {
+        return (*up_mask)[static_cast<std::size_t>(id)] != 0;
+    }
+    const Settlement& t = state.settlement(id);
+    return standing(t) && t.owner_civ == owner;
+}
+
+std::int64_t PeoplesSubsystem::SettlementsNow::population(std::int64_t id) const {
+    return pop != nullptr ? (*pop)[static_cast<std::size_t>(id)] : state.settlement(id).population;
+}
+
+bool PeoplesSubsystem::other_standing(const SettlementsNow& now, std::int64_t settlement) const {
+    const std::int64_t c = now.state.settlement(settlement).owner_civ;
+    for (std::int64_t id = 1; id <= settlement_count(now.state); ++id) {
+        if (id != settlement && now.up(id, c)) {
             return true;
         }
     }
     return false;
 }
 
-std::int64_t PeoplesSubsystem::nearest_other(const State& state, std::int64_t settlement) const {
-    const Settlement& s = state.settlement(settlement);
+std::int64_t PeoplesSubsystem::nearest_standing(const SettlementsNow& now, std::int64_t settlement) const {
+    const Settlement& s = now.state.settlement(settlement);
     std::int64_t nearest = 0;
     std::int64_t nearest_d = 0;
-    for (std::int64_t id = 1; id <= settlement_count(state); ++id) {
-        const Settlement& t = state.settlement(id);
-        if (id == settlement || !standing(t) || t.owner_civ != s.owner_civ) {
+    for (std::int64_t id = 1; id <= settlement_count(now.state); ++id) {
+        if (id == settlement || !now.up(id, s.owner_civ)) {
             continue;
         }
+        const Settlement& t = now.state.settlement(id);
         const std::int64_t d = (t.x - s.x) * (t.x - s.x) + (t.y - s.y) * (t.y - s.y);
         if (nearest == 0 || d < nearest_d) {
             nearest = id;
@@ -649,6 +645,30 @@ std::int64_t PeoplesSubsystem::nearest_other(const State& state, std::int64_t se
         }
     }
     return nearest;
+}
+
+std::int64_t PeoplesSubsystem::refugee_room(const SettlementsNow& now, std::int64_t destination,
+                                            std::int64_t race) const {
+    return std::max<std::int64_t>(
+        0, checked_sub(checked_mul(2, geo().capacity(now.state.settlement(destination).region, race)),
+                       now.population(destination)));
+}
+
+PeoplesSubsystem::StrikeResult PeoplesSubsystem::strike_result(const StepContext& ctx, const SettlementsNow& now,
+                                                               std::int64_t settlement, std::int64_t toll) const {
+    const Settlement& s = now.state.settlement(settlement);
+    StrikeResult r;
+    const std::int64_t p = now.population(settlement);
+    r.dead = floor_div(checked_mul(p, toll), 1000);
+    r.after = p - r.dead;
+    // 8.5 (a): below abandon_min, or the chance of a struck, already declining
+    // settlement below abandon_frail_max; r6: never by chance for the
+    // civilization's only standing settlement (no draw is made then).
+    const bool was_declining = s.status == SettlementStatus::declining;
+    r.abandoned = r.after < tuning_.abandon_min ||
+                  (was_declining && r.after < tuning_.abandon_frail_max && other_standing(now, settlement) &&
+                   chance_pm(ctx.draw(key(ABANDON), word(settlement), 0, 0), tuning_.abandon_permille.of(s.kind)));
+    return r;
 }
 
 void PeoplesSubsystem::abandon(StepContext& ctx, std::int64_t settlement, std::int64_t cause) {
@@ -669,13 +689,11 @@ void PeoplesSubsystem::abandon(StepContext& ctx, std::int64_t settlement, std::i
     }
     // 1. The event (r6): with a destination when survivors reach another
     // standing settlement of c (kind 31), else kind 16.
-    const std::int64_t dest = nearest_other(state, settlement);
+    const SettlementsNow now{state, nullptr, nullptr};
+    const std::int64_t dest = nearest_standing(now, settlement);
     std::int64_t settled = 0;
     if (dest != 0) {
-        const Settlement& d = state.settlement(dest);
-        const std::int64_t room = std::max<std::int64_t>(
-            0, checked_sub(checked_mul(2, geo().capacity(d.region, race_of_civ(state, c))), d.population));
-        settled = std::min(p, room);
+        settled = std::min(p, refugee_room(now, dest, race_of_civ(state, c)));
     }
     EventSpec e = point_event(ctx, settled >= 1 ? "settlement_abandoned_to" : "settlement_abandoned", region,
                               settlement);
@@ -878,22 +896,22 @@ void PeoplesSubsystem::foundings(StepContext& ctx) {
 std::int64_t PeoplesSubsystem::strike(StepContext& ctx, std::int64_t settlement, std::string_view kind, std::int64_t toll,
                               std::int64_t cause, std::optional<std::int64_t> salience) {
     State& state = ctx.state();
+    // The outcome (dead, survivors, abandoned) by the rule the plague plan
+    // replays (10.2), decided on the state before the blow.
+    const StrikeResult r = strike_result(ctx, SettlementsNow{state, nullptr, nullptr}, settlement, toll);
     const Settlement& s = state.settlement(settlement);
     const std::int64_t p = s.population;
-    const std::int64_t dead = floor_div(checked_mul(p, toll), 1000);
     const bool was_declining = s.status == SettlementStatus::declining;
-    const SettlementKind settlement_kind = s.kind;
     const std::int64_t owner = s.owner_civ;
     const std::int64_t region = s.region;
     if (!was_declining) {
         slot(before_, settlement) = p;
     }
-    const std::int64_t after = p - dead;
-    state.set_population(settlement, after);
+    state.set_population(settlement, r.after);
     EventSpec e = point_event(ctx, kind, region, settlement);
     e.participants = {Participant{"settlement", EntityType::settlement, settlement},
                       Participant{"civilization", EntityType::civilization, owner}};
-    e.values = {dead, after};
+    e.values = {r.dead, r.after};
     if (cause != 0) {
         e.causes = {cause};
     }
@@ -905,42 +923,41 @@ std::int64_t PeoplesSubsystem::strike(StepContext& ctx, std::int64_t settlement,
         slot(decline_start_, settlement) = ev;  // r6 (8.5): the blow that began the decline
     }
     // 8.5 (a).
-    if (after < tuning_.abandon_min || frail_abandon(ctx, settlement, after, was_declining, settlement_kind)) {
+    if (r.abandoned) {
         abandon(ctx, settlement, ev);
     }
     return ev;
 }
 
-bool PeoplesSubsystem::frail_abandon(const StepContext& ctx, std::int64_t settlement, std::int64_t after,
-                                     bool was_declining, SettlementKind kind) const {
-    // 8.5 (a): the chance abandonment of a struck, already declining
-    // settlement below abandon_frail_max; r6: never of its civilization's
-    // only standing settlement (no draw is made then).
-    return was_declining && after < tuning_.abandon_frail_max && has_other_standing(ctx.state(), settlement) &&
-           chance_pm(ctx.draw(key(ABANDON), word(settlement), 0, 0), tuning_.abandon_permille.of(kind));
+std::optional<std::int64_t> PeoplesSubsystem::spread_toll(const StepContext& ctx, std::int64_t origin,
+                                                          std::int64_t target) const {
+    // 10.2: the spread draw from origin to target, then the target's toll.
+    if (!chance_pm(ctx.draw(key(PLAGUE_SPREAD), word(origin), word(target), 0), tuning_.plague_spread_permille)) {
+        return std::nullopt;
+    }
+    const std::int64_t range = tuning_.plague_toll_max - tuning_.plague_toll_min + 1;
+    const std::int64_t base =
+        tuning_.plague_toll_min +
+        static_cast<std::int64_t>(pick(ctx.draw(key(PLAGUE_TOLL), word(target), 1, 0), word(range)));
+    return floor_div(checked_mul(base, tuning_.plague_spread_toll_permille), 1000);
 }
 
 std::int64_t PeoplesSubsystem::planned_plague_dead(const StepContext& ctx, std::int64_t origin, std::int64_t toll,
                                                    const std::vector<std::uint8_t>& struck) const {
-    // r6 (10.2): the outbreak's dead and, unless it empties its settlement,
-    // the dead of every spread whose draw succeeds, with the populations the
-    // strikes will meet. The plan replays the strikes on a copy of the
-    // populations: a spread that abandons its target sends survivors to the
-    // owner's nearest standing settlement (8.5 item 2), which a later spread
-    // may strike. No state changes and no keyed draw differs from the
-    // strikes', so the plan and the strikes agree.
+    // r6/r7 (10.2): the outbreak's dead and, unless it empties its
+    // settlement, the dead of every spread whose draw succeeds, with the
+    // populations the strikes will meet. The plan replays the strikes on a
+    // copy of the populations with the same helpers the strikes use
+    // (strike_result, spread_toll, nearest_standing, refugee_room): a spread
+    // that abandons its target sends survivors to the owner's nearest
+    // standing settlement (8.5 item 2), which a later spread may strike. No
+    // state changes, so the plan and the strikes agree (invariant 13).
     const State& state = ctx.state();
     const PeoplesGeo& g = geo();
     const std::int64_t n = settlement_count(state);
     const Settlement& s = state.settlement(origin);
     const std::int64_t c = s.owner_civ;
-    const std::int64_t p0 = s.population;
-    const std::int64_t dead0 = floor_div(checked_mul(p0, toll), 1000);
-    const bool declining0 = s.status == SettlementStatus::declining;
-    if (p0 - dead0 < tuning_.abandon_min || frail_abandon(ctx, origin, p0 - dead0, declining0, s.kind)) {
-        return dead0;  // emptied: no spread
-    }
-    // The standing settlements of c and their populations after the outbreak.
+    // The standing settlements of c and their populations.
     std::vector<std::int64_t> pop(static_cast<std::size_t>(n) + 1, 0);
     std::vector<std::uint8_t> up(static_cast<std::size_t>(n) + 1, 0);
     for (std::int64_t id = 1; id <= n; ++id) {
@@ -950,67 +967,40 @@ std::int64_t PeoplesSubsystem::planned_plague_dead(const StepContext& ctx, std::
             up[static_cast<std::size_t>(id)] = 1;
         }
     }
-    pop[static_cast<std::size_t>(origin)] = p0 - dead0;
-    const auto others_up = [&](std::int64_t u) {
-        for (std::int64_t id = 1; id <= n; ++id) {
-            if (id != u && up[static_cast<std::size_t>(id)] != 0) {
-                return true;
-            }
-        }
-        return false;
-    };
+    const SettlementsNow now{state, &pop, &up};
+    const StrikeResult outbreak = strike_result(ctx, now, origin, toll);
+    if (outbreak.abandoned) {
+        return outbreak.dead;  // emptied: no spread
+    }
+    pop[static_cast<std::size_t>(origin)] = outbreak.after;
     std::vector<std::int64_t> regions{s.region};
     for (const PeoplesNeighbour& nb : g.neighbours(s.region)) {
         regions.push_back(nb.region);
     }
-    const std::int64_t plague_range = tuning_.plague_toll_max - tuning_.plague_toll_min + 1;
     const std::int64_t race = race_of_civ(state, c);
-    std::int64_t total = dead0;
+    std::int64_t total = outbreak.dead;
     for (std::int64_t u = 1; u <= n; ++u) {
         const Settlement& t = state.settlement(u);
         if (u == origin || struck[static_cast<std::size_t>(u)] != 0 || up[static_cast<std::size_t>(u)] == 0 ||
             !ctx.visible(t) || std::find(regions.begin(), regions.end(), t.region) == regions.end()) {
             continue;
         }
-        if (!chance_pm(ctx.draw(key(PLAGUE_SPREAD), word(origin), word(u), 0), tuning_.plague_spread_permille)) {
+        const std::optional<std::int64_t> toll_u = spread_toll(ctx, origin, u);
+        if (!toll_u) {
             continue;
         }
-        const std::int64_t base =
-            tuning_.plague_toll_min +
-            static_cast<std::int64_t>(pick(ctx.draw(key(PLAGUE_TOLL), word(u), 1, 0), word(plague_range)));
-        const std::int64_t toll_u = floor_div(checked_mul(base, tuning_.plague_spread_toll_permille), 1000);
-        const std::int64_t p = pop[static_cast<std::size_t>(u)];
-        const std::int64_t dead = floor_div(checked_mul(p, toll_u), 1000);
-        total = checked_add(total, dead);
-        const std::int64_t after = p - dead;
-        pop[static_cast<std::size_t>(u)] = after;
-        const bool declining = t.status == SettlementStatus::declining;
-        const bool abandoned =
-            after < tuning_.abandon_min ||
-            (declining && after < tuning_.abandon_frail_max && others_up(u) &&
-             chance_pm(ctx.draw(key(ABANDON), word(u), 0, 0), tuning_.abandon_permille.of(t.kind)));
-        if (!abandoned) {
+        const StrikeResult r = strike_result(ctx, now, u, *toll_u);
+        total = checked_add(total, r.dead);
+        pop[static_cast<std::size_t>(u)] = r.after;
+        if (!r.abandoned) {
             continue;
         }
-        // 8.5 item 2: the survivors join the nearest other standing settlement.
-        std::int64_t nearest = 0;
-        std::int64_t nearest_d = 0;
-        for (std::int64_t id = 1; id <= n; ++id) {
-            if (id == u || up[static_cast<std::size_t>(id)] == 0) {
-                continue;
-            }
-            const Settlement& v = state.settlement(id);
-            const std::int64_t d = (v.x - t.x) * (v.x - t.x) + (v.y - t.y) * (v.y - t.y);
-            if (nearest == 0 || d < nearest_d) {
-                nearest = id;
-                nearest_d = d;
-            }
-        }
+        // 8.5 item 2 (ruin): the survivors join the nearest other standing
+        // settlement, up to its room.
+        const std::int64_t nearest = nearest_standing(now, u);
         if (nearest != 0) {
             std::int64_t& q = pop[static_cast<std::size_t>(nearest)];
-            const std::int64_t room = std::max<std::int64_t>(
-                0, checked_sub(checked_mul(2, g.capacity(state.settlement(nearest).region, race)), q));
-            q = checked_add(q, std::min(after, room));
+            q = checked_add(q, std::min(r.after, refugee_room(now, nearest, race)));
         }
         up[static_cast<std::size_t>(u)] = 0;
         pop[static_cast<std::size_t>(u)] = 0;
@@ -1082,14 +1072,11 @@ void PeoplesSubsystem::pressures(StepContext& ctx) {
                 t.owner_civ != owner || std::find(regions.begin(), regions.end(), t.region) == regions.end()) {
                 continue;
             }
-            if (!chance_pm(ctx.draw(key(PLAGUE_SPREAD), word(id), word(u), 0), tuning_.plague_spread_permille)) {
+            const std::optional<std::int64_t> toll_u = spread_toll(ctx, id, u);
+            if (!toll_u) {
                 continue;
             }
-            const std::int64_t base =
-                tuning_.plague_toll_min +
-                static_cast<std::int64_t>(pick(ctx.draw(key(PLAGUE_TOLL), word(u), 1, 0), word(plague_range)));
-            (void)strike(ctx, u, "plague_spread", floor_div(checked_mul(base, tuning_.plague_spread_toll_permille), 1000),
-                   outbreak, std::nullopt);
+            (void)strike(ctx, u, "plague_spread", *toll_u, outbreak, std::nullopt);
             struck[static_cast<std::size_t>(u)] = 1;
         }
     }
