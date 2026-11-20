@@ -331,6 +331,7 @@ target_sources(worldgen-tests PRIVATE
     history/history_peoples_unit_test.cpp
     history/history_peoples_property_test.cpp
     history/history_peoples_golden_test.cpp
+    history/history_peoples_r6_test.cpp
 )
 target_compile_definitions(worldgen-tests PRIVATE
     UNMAPPED_P3_05_GOLDEN_PATH="${CMAKE_CURRENT_SOURCE_DIR}/golden/p3-05-peoples.txt"

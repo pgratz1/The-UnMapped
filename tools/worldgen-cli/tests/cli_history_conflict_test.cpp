@@ -107,6 +107,7 @@ std::string check_golden_db(const Sandbox& sb, const std::string& name, const fs
     // the conflict kinds have their events_<key> lines (P3-04 11.1 over the 0.16.0 catalogue)
     CHECK(contains(rep, "\nevents_claim = "));
     CHECK(contains(rep, "\nevents_civ_conquered = "));
+    CHECK(contains(rep, "\nevents_settlement_abandoned_to = "));  // P3-05 r6 kind 31 (0.17.0)
     return section(report, "[history]");
 }
 
@@ -117,7 +118,7 @@ TEST_SUITE("history") {
 TEST_CASE("cli P3-06 16.3, 16.2 item 18: the golden world geo-seed-42-512, --until history, --threads 5") {
     Sandbox sb;
     const fs::path a = generate_case(sb, "geo-seed-42-512", {"--seed", "42", "--map-size", "512"});
-    CHECK(meta_of(a, "generator_version") == "0.16.0");
+    CHECK(meta_of(a, "generator_version") == "0.17.0");  // P3-08
     CHECK(meta_of(a, "schema_version") == "7");
     check_golden_db(sb, "geo-seed-42-512", a);
     const fs::path b = generate_case(sb, "threads", {"--seed", "42", "--map-size", "512", "--threads", "5"});

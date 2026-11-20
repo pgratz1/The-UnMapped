@@ -750,3 +750,40 @@ stands the spec listings in for data roots older than 0.16.0. The readings
 taken where the spec is open are printed by `gaps`.
 
 Never regenerate the golden files to make a C++ test pass.
+
+### Generator 0.17.0 (P3-08: P3-05 r6, P3-06 r7)
+
+Both references implement the P3-08 rules from P3-05 r6 and P3-06 r7, each
+behind a flag (`p3_peoples_reference.FLAGS`: `cell` and `fortress_cell`,
+6.2 and 8.4; `last`, `causes`, `dest`, 8.5 with kind 31
+`settlement_abandoned_to`; `cap`, 9.1; `plague_sal`, `crisis_sal`, 10.2 and
+10.3; `quiet`, P3-04 r10 6.6; `p3_conflict_reference.FLAGS`: `loss`, 7.3
+item 4). `--legacy` (or `legacy()`) turns every flag off and switches the
+engine, data and names references to 0.16.0 (`pe.use_version`): then
+`golden` reproduces the committed 0.16.0 files `p3-05-peoples.txt` and
+`p3-06-conflict.txt` byte for byte from the 0.16.0 inputs
+(`~/.cache/the-unmapped/out/p3-06-tests/inputs`; checked at P3-08).
+
+The synthetic geography gains the layers `elevation`, `ore` and `walk_area`
+and the region column `elev_max_dm` from a second sequence (seed
+`0x5EED1000 + seed`, one draw per cell), so every earlier value of
+`make_synthetic` is unchanged (the C++ `make_synthetic` builds the same).
+The goldens were regenerated with the inputs of P1-06 r3's region names:
+
+```
+python3 -B worldgen/tests/reference/p3_peoples_reference.py golden --inputs ~/.cache/the-unmapped/out/p3-08-tests/inputs
+python3 -B worldgen/tests/reference/p3_conflict_reference.py golden --inputs ~/.cache/the-unmapped/out/p3-08-tests/inputs
+python3 -B worldgen/tests/reference/p3_peoples_reference.py compare-016 OLD_P3-05_FILE --inputs DIR
+```
+
+`compare-016` asserts P3-08 5 against the 0.16.0 file: score lines move
+only for faeries; a home line of another race moves only where each 0.16.0
+home is a home again or not eligible (held) at that awakening in the
+0.17.0 run (it prints the holder and the counts of 7.2). `check` adds the
+units of P3-05 16.1a (17a-17i) and P3-06 16.1 (r7: the victors' dead from
+the smaller force, the capture sentence with `fled` 0, 1, 12), the r6
+invariants (6 as the P3-06 validation's D1 reads it, 11, 12 with an in-run
+recomputation of the destination, 13), and the peoples-only prefix of
+P3-06 16.2 item 18a on every world and synthetic case (`check_prefix`).
+The 15.2 samples of both specs are 0.16.0 measurements and are checked only
+with `--legacy`.
