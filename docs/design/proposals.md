@@ -813,7 +813,7 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
   6. Orcish two-letter apostrophe parts ("Am'gash") stay.
   7. The filter lists are plain text in the repository.
 - Interim choice: points 2 to 7 are as shipped with P3-08 (generator 0.17.0). Point 1 differs from what P3-08 ships (the full list of 647 words): the short list is a data change to `game/data/name_filters/words.toml` that changes worlds, and ships with the next change after P3-08.
-- Status: accepted; point 1 scheduled after P3-08
+- Status: accepted; point 1 scheduled after P3-08; 2026-11-20: point 1 specified (`docs/specs/p3-02-names.md` r8, section 11.11, branch `p3/10-word-list`): `words.toml` holds 393 of the 647 words (with `mold` restored by the lead's interim choice) (crude, comic or modern-sounding words, and function words, inflected forms and plain slips), 254 are released; a data change only (no code, no schema change), shipping with P3-09 (0.18.0) or alone as 0.17.1
 
 ### Paul's decision of 2026-11-20: the P3-08 tuning questions go with their recommendations
 
