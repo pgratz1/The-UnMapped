@@ -269,7 +269,7 @@ c<id> <name>
 - `capital`: `civilization.capital` when ≠ 0 (its end state), else `none`.
 - `peak regions`, `peak population`: 7.1, 7.2.
 - `settlements`: f = settlements with `founder_civ` = c; h = standing settlements with `owner_civ` = c; r = settlements with `founder_civ` = c and status 3 or 4.
-- `relations`: R = the `relation` rows with (`a_type` = 3 and `a_id` = c) or (`b_type` = 3 and `b_id` = c). The count line lists each kind present in R once, in ascending byte order of the kind, with its count, separated by `, `. Then one line per row of R, ordered by (`since`, `a_type`, `a_id`, `b_type`, `b_id`, `kind`) ascending: a closed row `    <kind>: <a ref>, <b ref>, <since>-<until - 1>, e<since_event> to e<until_event>`, an open row (`until` NULL) `    <kind>: <a ref>, <b ref>, since <since>, e<since_event>`. Both entities are printed in stored order (a, then b), whichever is c, so a symmetric relation reads the same in both civilizations' blocks; `until - 1` is the last year of the relation (P3-04 10: in force for `since` ≤ Y < `until`).
+- `relations`: R = the `relation` rows with (`a_type` = 3 and `a_id` = c) or (`b_type` = 3 and `b_id` = c). The count line lists each kind present in R once, in ascending byte order of the kind, with its count, separated by `, `. Then one line per row of R, ordered by (`since`, `a_type`, `a_id`, `b_type`, `b_id`, `kind`) ascending: a closed row `    <kind>: <a ref>, <b ref>, <since>-<until - 1>, e<since_event> to e<until_event>` (when `until` = `since`, a relation that began and ended within one year, P3-04 6.7 r9, the span prints `<since>-<since>`, not `<since>-<since - 1>`; r6), an open row (`until` NULL) `    <kind>: <a ref>, <b ref>, since <since>, e<since_event>`. Both entities are printed in stored order (a, then b), whichever is c, so a symmetric relation reads the same in both civilizations' blocks; `until - 1` is the last year of the relation (P3-04 10: in force for `since` ≤ Y < `until`).
 - `events`: the number of events with at least one participant of type 3 and id c.
 - `fate`: `alive in` when `ended_year` is NULL: regions = rows of `region_control` with `civ` = c and `to_year` NULL; h as above; p = Σ `population` of the standing settlements with `owner_civ` = c. Otherwise `ended in`, with the sentence of the ending event.
 - `milestones:` is always printed; its lines (7.3) are the short form of a chronicle line: span, id, kind key and sentence, without salience, references or causes.
@@ -984,3 +984,7 @@ Made with P3-06 (its 18.4), in place: section 9 gains nine keys and one family o
 ## Revision note r5 (2026-11-19, faded rows)
 
 The illustrative excerpt of 17 is corrected: a faded settlement's `ruined_year` and `ruin_event` are cleared on fading (P3-04 9.2: they hold only while the row is ruined; P3-05 r3), so its `[present]` line carries no `, ruined <year>, e<event>` part. The format is unchanged.
+
+## Revision note r6 (2026-11-19, same-year relation rows)
+
+6.6: a closed relation row with `until` = `since` (opened and closed before one bookkeeping, P3-04 6.7 r9; reachable from P3-06 on) prints its span as `<since>-<since>`. Format stays v1: no world before 0.16.0 has such a row.
