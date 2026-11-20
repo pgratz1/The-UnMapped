@@ -18,6 +18,15 @@
 // (P3-06 12.1, 12.2, P3-01 r7): prowess_permille after aggression, goblin
 // aggression 600, history.conflict and the report entries of kinds 20-30
 // (appended after ruin_faded in kind id order, the same assumption).
+// Generator 0.17.0 (P3-08; P3-01 r8, P3-02 r5 11.4, P3-04 r10 4.2, P3-05 r6
+// 11, 12.1, 12.3, P3-06 r7 11): race field cell_weights after site_weights
+// (dwarf 400/600, every other race 0/0), the faerie biome weights of P3-05
+// 12.3, culture field god_patterns after patterns and the elven `The House
+// of {root}`, history.peoples famine_ppm 1250, plague_spread_permille 100,
+// plague_major_dead and crisis_small_salience, the templates of kinds 4, 14,
+// 16 and 26, and kind 31's entry appended after civ_conquered (kind id
+// order, the same assumption). Mirrors SPEC_FILES_017 of
+// p3_data_reference.py.
 
 #include <cstdint>
 #include <map>
@@ -45,6 +54,7 @@ generation_years = 150
 growth_permille = 3
 density_permille = 300
 site_weights = { fertility = 20, forage = 35, timber = 35, ore = 0, fresh_water = 10 }
+cell_weights = { ore = 0, height = 0 }
 biomes = [
   { biome = "temperate_forest", weight = 500 },
   { biome = "wet_woodland", weight = 300 },
@@ -75,6 +85,7 @@ generation_years = 15
 growth_permille = 20
 density_permille = 900
 site_weights = { fertility = 40, forage = 20, timber = 10, ore = 30, fresh_water = 0 }
+cell_weights = { ore = 0, height = 0 }
 biomes = [
   { biome = "heath", weight = 200 },
   { biome = "highland_moor", weight = 200 },
@@ -106,6 +117,7 @@ generation_years = 70
 growth_permille = 5
 density_permille = 700
 site_weights = { fertility = 10, forage = 10, timber = 10, ore = 60, fresh_water = 10 }
+cell_weights = { ore = 400, height = 600 }
 biomes = [
   { biome = "alpine", weight = 300 },
   { biome = "highland_moor", weight = 300 },
@@ -136,16 +148,17 @@ generation_years = 100
 growth_permille = 4
 density_permille = 250
 site_weights = { fertility = 0, forage = 60, timber = 20, ore = 0, fresh_water = 20 }
+cell_weights = { ore = 0, height = 0 }
 biomes = [
-  { biome = "fen", weight = 800 },
+  { biome = "temperate_forest", weight = 800 },
   { biome = "wet_woodland", weight = 800 },
-  { biome = "marsh", weight = 600 },
-  { biome = "temperate_forest", weight = 100 },
-  { biome = "highland_moor", weight = 300 },
-  { biome = "grassland", weight = -200 },
-  { biome = "alpine", weight = -300 },
+  { biome = "fen", weight = 300 },
+  { biome = "marsh", weight = 200 },
+  { biome = "highland_moor", weight = 100 },
+  { biome = "heath", weight = 0 },
+  { biome = "grassland", weight = -300 },
+  { biome = "alpine", weight = -400 },
   { biome = "steppe", weight = -400 },
-  { biome = "heath", weight = 100 },
 ]
 upland = 200
 coast = 0
@@ -168,6 +181,7 @@ generation_years = 25
 growth_permille = 15
 density_permille = 1000
 site_weights = { fertility = 60, forage = 10, timber = 10, ore = 5, fresh_water = 15 }
+cell_weights = { ore = 0, height = 0 }
 biomes = [
   { biome = "grassland", weight = 300 },
   { biome = "steppe", weight = 100 },
@@ -199,6 +213,7 @@ generation_years = 18
 growth_permille = 18
 density_permille = 800
 site_weights = { fertility = 35, forage = 25, timber = 10, ore = 30, fresh_water = 0 }
+cell_weights = { ore = 0, height = 0 }
 biomes = [
   { biome = "steppe", weight = 400 },
   { biome = "heath", weight = 200 },
@@ -225,6 +240,7 @@ inline constexpr std::string_view DWARVEN_NAMING = R"(onsets = ["d", "b", "th", 
 nuclei = ["a", "u", "o", "i", "ai", "ou"]
 codas = ["r", "n", "m", "k", "d", "rn", "rd", "rk", "mm", "nd", "rin", "li", "din"]
 patterns = ["ONC", "ONCONC", "ONCONC", "ONCON"]
+god_patterns = ["ONCONC", "ONCONC", "ONCON"]
 min_letters = 4
 max_letters = 10
 forbidden = ["mmm", "rr", "dd", "kk", "rdt", "rkd", "rdd", "mmb", "kdr", "kthr", "dkh", "ndb", "rnk"]
@@ -237,11 +253,12 @@ inline constexpr std::string_view ELVEN_NAMING = R"(onsets = ["", "l", "th", "s"
 nuclei = ["a", "e", "i", "ae", "ie", "o"]
 codas = ["", "", "l", "n", "th", "s", "r", "nd", "ll", "nn"]
 patterns = ["ONONC", "ONONC", "ONCON", "ONONON", "NCONC"]
+god_patterns = ["ONONC", "ONONC", "ONCON", "ONONON", "NCONC"]
 min_letters = 4
 max_letters = 11
 forbidden = ["aea", "iei", "iae", "eae", "aa", "ii", "ee", "thth", "lll", "nnn", "ea", "ia"]
 god_forms = ["{root}"]
-civilization_forms = ["The Court of {root}", "The Realm of {root}", "{root}"]
+civilization_forms = ["The Court of {root}", "The Realm of {root}", "The House of {root}"]
 settlement_forms = ["{root}", "{root}", "{root}", "{root}dell"]
 )";
 
@@ -249,6 +266,7 @@ inline constexpr std::string_view FAERIE_NAMING = R"(onsets = ["", "p", "f", "w"
 nuclei = ["i", "ee", "ie", "ia", "a", "y", "ae", "ou", "o"]
 codas = ["", "", "ll", "n", "sh", "th", "p", "sk", "ss"]
 patterns = ["ONON", "ONONON", "ONC", "ONONC", "ONCON"]
+god_patterns = ["ONON", "ONONON", "ONONC", "ONCON"]
 min_letters = 3
 max_letters = 10
 forbidden = ["eee", "iee", "yy", "ouou", "shsh"]
@@ -261,6 +279,7 @@ inline constexpr std::string_view GOBLIN_NAMING = R"(onsets = ["g", "gr", "sn", 
 nuclei = ["a", "i", "u", "o", "ee"]
 codas = ["k", "g", "b", "z", "t", "x", "nk", "rk", "gg", "zz", "tch"]
 patterns = ["ONC", "ONC", "ONCONC", "ONC-ONC", "ONONC"]
+god_patterns = ["ONCONC", "ONC-ONC", "ONONC"]
 min_letters = 3
 max_letters = 10
 forbidden = ["eee", "ggg", "zzz", "xg", "xk"]
@@ -273,6 +292,7 @@ inline constexpr std::string_view HUMAN_NAMING = R"(onsets = ["b", "c", "d", "g"
 nuclei = ["a", "e", "i", "o", "u", "ea"]
 codas = ["n", "d", "r", "s", "l", "rd", "ck", "ld", "m", "nt"]
 patterns = ["ONC", "ONC", "ONCONC", "ONC"]
+god_patterns = ["ONCONC"]
 min_letters = 4
 max_letters = 9
 forbidden = ["eae", "aea", "ckc", "ldl", "ntd", "rdd", "ckb", "ckm"]
@@ -285,6 +305,7 @@ inline constexpr std::string_view ORCISH_NAMING = R"(onsets = ["gh", "gr", "ug",
 nuclei = ["a", "u", "o", "aa", "uu"]
 codas = ["g", "sh", "k", "rz", "z", "gh", "rk", "l", "m", "", "kh", "ld"]
 patterns = ["ONC", "ONC", "ONC'ONC", "ONCONC", "NC'ONC"]
+god_patterns = ["ONC'ONC", "ONCONC", "NC'ONC"]
 min_letters = 3
 max_letters = 10
 forbidden = ["aaa", "uuu", "ghgh", "shsh"]
@@ -320,7 +341,7 @@ events = [
   { kind = "awakening", salience = 100, template = "{creator} awakened the {race:plural} in {@region}." },
   { kind = "civ_founded", salience = 80, template = "The {race:plural} founded {civilization} in {@region}." },
   { kind = "settlement_founded", salience = 40, template = "{founder} founded {settlement} in {@region}." },
-  { kind = "quiet_era", salience = 20, template = "{civilization} passed {years} quiet {years?year|years} ({generations} {generations?generation|generations}), from {@year} to {@end_year}." },
+  { kind = "quiet_era", salience = 20, template = "{civilization} passed {years} quiet {years?year|years}, from {@year} to {@end_year}{generations?, under one generation of rulers|, in which one new generation of rulers came to power|, in which # new generations of rulers came to power}." },
   { kind = "flare_up", salience = 50, template = "In {@year} tensions flared into {years} {years?year|years} of upheaval." },
   { kind = "colony_founded", salience = 15, template = "{founder} sent settlers from {origin} to found {settlement} in {@region}." },
   { kind = "became_village", salience = 10, template = "{settlement} grew into a village of {population}." },
@@ -330,9 +351,9 @@ events = [
   { kind = "famine", salience = 25, template = "Famine struck {settlement}; {dead} died." },
   { kind = "plague", salience = 45, template = "Plague broke out in {settlement}; {dead} died." },
   { kind = "plague_spread", salience = 25, template = "The plague spread to {settlement}; {dead} died." },
-  { kind = "succession_crisis", salience = 40, template = "A succession crisis shook {civilization}." },
+  { kind = "succession_crisis", salience = 40, template = "A succession crisis at {@settlement} shook {civilization}." },
   { kind = "civ_seceded", salience = 70, template = "{civilization} broke away from {from}, taking {settlements} {settlements?settlement|settlements} with it." },
-  { kind = "settlement_abandoned", salience = 55, template = "{settlement} was abandoned; {survivors} {survivors?survivor|survivors} left." },
+  { kind = "settlement_abandoned", salience = 55, template = "{settlement} was abandoned; {survivors?no one survived|its one survivor was scattered|its # survivors were scattered}." },
   { kind = "capital_moved", salience = 50, template = "{civilization} moved its seat to {settlement}." },
   { kind = "civ_ended", salience = 85, template = "{civilization} came to an end." },
   { kind = "ruin_faded", salience = 10, template = "The ruins of {settlement} faded from memory." },
@@ -342,11 +363,12 @@ events = [
   { kind = "battle_at_pass", salience = 35, template = "{winner} defeated {loser} at the pass into {@region}; {loser_dead} of the defeated and {winner_dead} of the victors fell." },
   { kind = "siege", salience = 25, template = "{attacker} besieged {@settlement} of {defender}; it {fell?fell|held}." },
   { kind = "sacked", salience = 75, template = "{attacker} sacked {@settlement} of {defender}; {dead} died and {survivors} fled." },
-  { kind = "settlement_captured", salience = 60, template = "{attacker} took {@settlement} from {defender}; {dead} died and {fled} fled." },
+  { kind = "settlement_captured", salience = 60, template = "{attacker} took {@settlement} from {defender}; {dead} died{fled?| and one fled| and # fled}." },
   { kind = "peace", salience = 60, template = "{loser} sued {winner} for peace after {years} {years?year|years} of war." },
   { kind = "truce", salience = 50, template = "{parties:all} made peace after {years} {years?year|years} of war, neither the victor." },
   { kind = "region_ceded", salience = 55, template = "{from} ceded {@region} to {to}." },
   { kind = "civ_conquered", salience = 90, template = "{civilization} fell to {conqueror}." },
+  { kind = "settlement_abandoned_to", salience = 55, template = "{settlement} was abandoned; {settled} {settled?survivor|survivors} went to {destination}{lost?|, and one was lost|, and # were lost}." },
 ]
 )";
 
@@ -453,13 +475,13 @@ home_min_hops = 3
 home_min_capacity = 1500
 intensity = { calm = 500, normal = 1000, turbulent = 2000 }
 famine_crowding_permille = 900
-famine_ppm = 2500
+famine_ppm = 1250
 famine_toll_min = 50
 famine_toll_max = 200
 plague_ppm = { hamlet = 300, village = 600, town = 1500, city = 3000, fortress = 600 }
 plague_toll_min = 100
 plague_toll_max = 300
-plague_spread_permille = 200
+plague_spread_permille = 100
 plague_spread_toll_permille = 500
 crisis_per_generation_permille = 60
 crisis_loss_permille = 50
@@ -469,6 +491,8 @@ split_permille = 300
 ruin_fade_years = 1500
 colony_new_region_salience = 30
 plague_small_salience = 25
+plague_major_dead = 1000
+crisis_small_salience = 25
 )";
 
 // --- Culture files (P3-01 4) ------------------------------------------------------
@@ -558,6 +582,7 @@ struct Race {
     std::int64_t lifespan_years, generation_years, growth_permille;
     std::int64_t density_permille;  // P3-05 12.2 item 1 (P3-01 r6)
     std::int64_t fertility, forage, timber, ore, fresh_water;  // site_weights
+    std::int64_t cell_ore, cell_height;  // cell_weights (P3-01 r8 (1), generator 0.17.0)
     std::vector<RaceBiome> biomes;
     std::int64_t upland, coast, expansion, aggression;
     std::int64_t prowess_permille;  // P3-06 12.2 item 1 (P3-01 r7, generator 0.16.0)
@@ -570,27 +595,27 @@ struct Race {
 // 3564822856, "0.93" 3994319585 (core_reference.parse_decimal).
 inline const std::vector<Race>& races() {
     static const std::vector<Race> v = {
-        {"dwarf", 3, "Dwarf", "Dwarves", "Dwarven", "neutral", 2362232013, 300, 70, 5, 700, 10, 10, 10, 60, 10,
+        {"dwarf", 3, "Dwarf", "Dwarves", "Dwarven", "neutral", 2362232013, 300, 70, 5, 700, 10, 10, 10, 60, 10, 400, 600,
          {{"alpine", 300}, {"highland_moor", 300}, {"heath", 200}, {"temperate_forest", -100}, {"wet_woodland", -300},
           {"marsh", -400}, {"fen", -400}},
          800, -200, 250, 300, 1400, {"hamlet", "village", "town", "city", "fortress"}, "dwarven"},
-        {"elf", 1, "Elf", "Elves", "Elven", "good", 0, 700, 150, 3, 300, 20, 35, 35, 0, 10,
+        {"elf", 1, "Elf", "Elves", "Elven", "good", 0, 700, 150, 3, 300, 20, 35, 35, 0, 10, 0, 0,
          {{"temperate_forest", 500}, {"wet_woodland", 300}, {"grassland", 0}, {"heath", -200}, {"steppe", -300},
           {"highland_moor", -300}, {"alpine", -600}},
          -300, 0, 200, 150, 1600, {"hamlet", "village", "town", "city"}, "elven"},
-        {"faerie", 4, "Faerie", "Faeries", "Faerie", "good", 3006477107, 400, 100, 4, 250, 0, 60, 20, 0, 20,
-         {{"fen", 800}, {"wet_woodland", 800}, {"marsh", 600}, {"temperate_forest", 100}, {"highland_moor", 300},
-          {"grassland", -200}, {"alpine", -300}, {"steppe", -400}, {"heath", 100}},
+        {"faerie", 4, "Faerie", "Faeries", "Faerie", "good", 3006477107, 400, 100, 4, 250, 0, 60, 20, 0, 20, 0, 0,
+         {{"temperate_forest", 800}, {"wet_woodland", 800}, {"fen", 300}, {"marsh", 200}, {"highland_moor", 100},
+          {"heath", 0}, {"grassland", -300}, {"alpine", -400}, {"steppe", -400}},
          200, 0, 100, 50, 1200, {"hamlet", "village"}, "faerie"},
-        {"goblin", 2, "Goblin", "Goblins", "Goblin", "evil", 1503238554, 40, 15, 20, 900, 40, 20, 10, 30, 0,
+        {"goblin", 2, "Goblin", "Goblins", "Goblin", "evil", 1503238554, 40, 15, 20, 900, 40, 20, 10, 30, 0, 0, 0,
          {{"heath", 200}, {"highland_moor", 200}, {"steppe", 150}, {"grassland", 100}, {"marsh", 100}, {"alpine", -400},
           {"temperate_forest", -200}, {"wet_woodland", -300}},
          100, -100, 600, 600, 800, {"hamlet", "village", "town", "fortress"}, "goblin"},
-        {"human", 5, "Human", "Humans", "Human", "neutral", 3564822856, 70, 25, 15, 1000, 60, 10, 10, 5, 15,
+        {"human", 5, "Human", "Humans", "Human", "neutral", 3564822856, 70, 25, 15, 1000, 60, 10, 10, 5, 15, 0, 0,
          {{"grassland", 300}, {"steppe", 100}, {"temperate_forest", 100}, {"marsh", -100}, {"heath", -100},
           {"fen", -200}, {"highland_moor", -200}, {"alpine", -500}},
          -300, 200, 700, 400, 1000, {"hamlet", "village", "town", "city", "fortress"}, "human"},
-        {"orc", 6, "Orc", "Orcs", "Orcish", "evil", 3994319585, 50, 18, 18, 800, 35, 25, 10, 30, 0,
+        {"orc", 6, "Orc", "Orcs", "Orcish", "evil", 3994319585, 50, 18, 18, 800, 35, 25, 10, 30, 0, 0, 0,
          {{"steppe", 400}, {"heath", 200}, {"grassland", 200}, {"highland_moor", 100}, {"temperate_forest", -100},
           {"marsh", -100}, {"fen", -200}, {"wet_woodland", -200}, {"alpine", -300}},
          100, -100, 600, 900, 1300, {"hamlet", "village", "town", "fortress"}, "orcish"},
@@ -613,8 +638,13 @@ inline constexpr std::string_view CHRONOLOGY_AGE_NAME_FORM = "The Age of {plural
 inline const std::vector<std::string_view>& race_fields() {
     static const std::vector<std::string_view> v = {
         "order",           "name",      "plural", "adjective", "camp",      "awakening_share", "lifespan_years",
-        "generation_years", "growth_permille", "density_permille", "site_weights", "biomes", "upland", "coast",          "expansion",
+        "generation_years", "growth_permille", "density_permille", "site_weights", "cell_weights", "biomes", "upland", "coast",          "expansion",
         "aggression",      "prowess_permille", "settlement_kinds", "culture"};
+    return v;
+}
+// P3-01 r8 (1): record race_cell_weights.
+inline const std::vector<std::string_view>& cell_weight_fields() {
+    static const std::vector<std::string_view> v = {"ore", "height"};
     return v;
 }
 inline const std::vector<std::string_view>& site_weight_fields() {
@@ -626,7 +656,7 @@ inline const std::vector<std::string_view>& culture_fields() {
     return v;
 }
 inline const std::vector<std::string_view>& naming_fields() {
-    static const std::vector<std::string_view> v = {"onsets",          "nuclei",      "codas",     "patterns",
+    static const std::vector<std::string_view> v = {"onsets",          "nuclei",      "codas",     "patterns", "god_patterns",
                                                      "min_letters",     "max_letters", "forbidden", "god_forms",
                                                      "civilization_forms", "settlement_forms"};
     return v;

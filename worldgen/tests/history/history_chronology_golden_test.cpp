@@ -129,7 +129,8 @@ TEST_CASE("P3-03 14.4 item 22: the golden file holds every case the spec lists")
     // 7.1's seed 42 example, as the file states it.
     const GoldenCase& c = g.find("seam-42-6000-all");
     CHECK(item(c, "years") == "0 2074 3242 4243 4969 5596");
-    CHECK(item(c, "gods") == "1:Fielie:0|2:Krok:0|3:Bronhak:1|4:Syfiash:0|5:Wealstuld:0|6:Kruu:0");
+    // r3 (0.17.0): P3-02 11.6's seed-42 gods (7.1 lists r4's: Krok, Kruu).
+    CHECK(item(c, "gods") == "1:Fielie:0|2:Krokzit:0|3:Bronhak:1|4:Syfiash:0|5:Wealstuld:0|6:Ogh'krak:1");
 }
 
 TEST_CASE("P3-03 14.4 item 22: seam cases through chronology_stage") {

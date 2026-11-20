@@ -774,7 +774,8 @@ inline std::string trace_text(const std::vector<OwnStep>& s) {
 }
 
 // The registry of 8.1 replayed with the P3-02 library: region names, the age
-// names of `rows`, then each god named in id order by choose_name; returns
+// names of `rows`, then each god named in id order by choose_name (r3: with the
+// shipped name filter and the culture's god_patterns); returns
 // "id:name:attempt|..." ("F" for the numeral fallback). An independent
 // reading of C5 against the stage's god rows.
 inline std::string replay_gods(const Rows& rows, std::uint64_t seed, const std::vector<std::string>& regions,
@@ -791,10 +792,12 @@ inline std::string replay_gods(const Rows& rows, std::uint64_t seed, const std::
         const wd::Definition* culture = content.find(wd::CULTURE_KIND, r->culture);
         REQUIRE(culture != nullptr);
         const names_api::Naming n = names_api::naming_from_record(culture->record.get_record("naming"));
+        // P3-03 r3 (0.17.0): gods are drawn with the world's name filter (P3-02 r5 11.3); every
+        // data root the tests use holds game/data's name_filters/ (identical copies).
         const names_api::Choice ch =
             names_api::choose_name(n, r->culture, names_api::Kind::god, seed,
                                    static_cast<std::uint64_t>(culture_number(r->culture)),
-                                   static_cast<std::uint64_t>(r->order), reg);
+                                   static_cast<std::uint64_t>(r->order), reg, names_test::shipped_filter());
         out += (out.empty() ? "" : "|") + std::to_string(r->order) + ":" + ch.name + ":" +
                (ch.fallback ? std::string("F") : std::to_string(ch.attempt));
     }

@@ -134,6 +134,14 @@ void check_race(const wd::Definition& d, const history_data::Race& want) {
     CHECK(sw.get_int("timber") == want.timber);
     CHECK(sw.get_int("ore") == want.ore);
     CHECK(sw.get_int("fresh_water") == want.fresh_water);
+    // P3-01 r8 (1) (generator 0.17.0): record race_cell_weights {ore, height}.
+    const wd::Record& cw = r.get_record("cell_weights");
+    REQUIRE(cw.size() == 2U);
+    for (std::size_t i = 0; i < cw.size(); ++i) {
+        CHECK(cw.name_at(i) == history_data::cell_weight_fields()[i]);
+    }
+    CHECK(cw.get_int("ore") == want.cell_ore);
+    CHECK(cw.get_int("height") == want.cell_height);
     const auto& biomes = r.get_array("biomes");
     REQUIRE(biomes.size() == want.biomes.size());
     for (std::size_t i = 0; i < biomes.size(); ++i) {
@@ -207,13 +215,23 @@ void check_shipped_values(const wd::ContentSet& c) {
 TEST_CASE("P3-01 3-5: the production registry holds race, culture and history beside biome and worldgen") {
     const wd::KindRegistry r = wd::builtin_kinds();
     const auto& kinds = r.kinds();
-    REQUIRE(kinds.size() == 5U);
-    // Ascending name (P0-03 7.1): the encoding order of P3-01 7.
+    REQUIRE(kinds.size() == 7U);
+    // Ascending name (P0-03 7.1): the encoding order of P3-01 7; from
+    // generator 0.17.0 name_filter (P3-02 r5 11.2) and placename (P1-06 r3
+    // 4.1) between history and race (P3-01 r8 (4)).
     CHECK(kinds[0].name == "biome");
     CHECK(kinds[1].name == "culture");
     CHECK(kinds[2].name == "history");
-    CHECK(kinds[3].name == "race");
-    CHECK(kinds[4].name == "worldgen");
+    CHECK(kinds[3].name == "name_filter");
+    CHECK(kinds[4].name == "placename");
+    CHECK(kinds[5].name == "race");
+    CHECK(kinds[6].name == "worldgen");
+    CHECK(kinds[3].directory == "name_filters");
+    CHECK(kinds[3].required);
+    CHECK_FALSE(kinds[3].has_fixed_ids());
+    CHECK(kinds[4].directory == "placenames");
+    CHECK(kinds[4].required);
+    CHECK_FALSE(kinds[4].has_fixed_ids());
 
     const wd::Kind& culture = kinds[1];
     CHECK(culture.directory == "cultures");
@@ -241,7 +259,7 @@ TEST_CASE("P3-01 3-5: the production registry holds race, culture and history be
     CHECK(history.schema_for("conflict")->checks()[0].name == "conflict_declare");
     CHECK(history.schema_for("conflict")->checks()[1].name == "conflict_strain_max");
 
-    const wd::Kind& race = kinds[3];
+    const wd::Kind& race = kinds[5];
     CHECK(race.directory == "races");
     CHECK(race.required);
     CHECK_FALSE(race.has_fixed_ids());
@@ -298,7 +316,8 @@ TEST_CASE("P3-01 8.1 test 1: game/data and the two fixture roots hold the listin
         }
         // P3-01 2: "identical copies under worldgen/tests/data/geo/ and
         // worldgen/tests/data/geo-small/": byte for byte, file by file.
-        for (const char* d : {"races", "cultures", "history"}) {
+        // P3-08 (0.17.0): name_filters/ and placenames/ too (P3-02 r5 11.2, P1-06 r3 4.1).
+        for (const char* d : {"races", "cultures", "history", "name_filters", "placenames"}) {
             const wd::MemoryDirectory shipped = directory_from_disk(source_root() / "game" / "data", d);
             const wd::MemoryDirectory copy = directory_from_disk(source_root() / base, d);
             REQUIRE(copy.entries.size() == shipped.entries.size());
@@ -315,7 +334,14 @@ TEST_CASE("P3-01 8.1 test 1: game/data and the two fixture roots hold the listin
                           "races/human.toml", "races/orc.toml", "cultures/dwarven.toml", "cultures/elven.toml",
                           "cultures/faerie.toml", "cultures/goblin.toml", "cultures/human.toml",
                           "cultures/orcish.toml", "history/chronology.toml", "history/conflict.toml",
-                          "history/engine.toml", "history/peoples.toml", "history/report.toml"}) {
+                          "history/engine.toml", "history/peoples.toml", "history/report.toml",
+                          // P3-01 r8 (4): the name_filter and placename files (P3-02 r5 11.2, P1-06 r3 4.1)
+                          "name_filters/crude.toml", "name_filters/famous.toml", "name_filters/slurs.toml",
+                          "name_filters/words.toml", "placenames/carr.toml", "placenames/common.toml",
+                          "placenames/downs.toml", "placenames/fells.toml", "placenames/fen.toml", "placenames/heath.toml",
+                          "placenames/isle.toml", "placenames/marsh.toml", "placenames/mere.toml", "placenames/moor.toml",
+                          "placenames/peaks.toml", "placenames/steppe.toml", "placenames/traits.toml",
+                          "placenames/waste.toml", "placenames/wood.toml"}) {
         CAPTURE(f);
         CHECK(std::filesystem::is_regular_file(data / f));
     }
@@ -756,6 +782,11 @@ TEST_CASE("P3-01 8.1 test 5: every bounded race field one step outside its bound
         {"races/orc.toml", "expansion = 600", "expansion = 1000", "expansion = 1001", "race.orc.expansion"},
         {"races/orc.toml", "aggression = 900", "aggression = 0", "aggression = -1", "race.orc.aggression"},
         {"races/orc.toml", "aggression = 900", "aggression = 1000", "aggression = 1001", "race.orc.aggression"},
+        // P3-01 r8 (1) (generator 0.17.0): cell_weights {ore, height}, each int(0, 1000)
+        {"races/orc.toml", "cell_weights = { ore = 0, height = 0 }", "cell_weights = { ore = 1000, height = 0 }",
+         "cell_weights = { ore = 1001, height = 0 }", "race.orc.cell_weights.ore"},
+        {"races/orc.toml", "cell_weights = { ore = 0, height = 0 }", "cell_weights = { ore = 0, height = 1000 }",
+         "cell_weights = { ore = 0, height = -1 }", "race.orc.cell_weights.height"},
         // P3-06 12.2 item 1 (P3-01 r7): prowess_permille int(1, 4000)
         {"races/orc.toml", "prowess_permille = 1300", "prowess_permille = 1", "prowess_permille = 0", "race.orc.prowess_permille"},
         {"races/orc.toml", "prowess_permille = 1300", "prowess_permille = 4000", "prowess_permille = 4001", "race.orc.prowess_permille"},

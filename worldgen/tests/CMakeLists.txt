@@ -307,6 +307,7 @@ target_sources(worldgen-tests PRIVATE
     history/conflict_engineer_test.cpp
     history/relation_bookkeeping_engineer_test.cpp
     history/history_engine_catalogue_test.cpp
+    history/history_engine_render_test.cpp
     history/history_engine_schema_test.cpp
     history/history_engine_report_test.cpp
     history/history_engine_golden_test.cpp
@@ -377,7 +378,7 @@ unmapped_add_doctest_shards(worldgen-tests
     SHARD history 5 "*history_draw_test.cpp,*history_names_*"
     SHARD chronology 15 "*history_chronology_*"
     SHARD engine-worlds 25 "*history_engine_golden_test.cpp"
-    SHARD engine 15 "*history_engine_schedule_test.cpp,*history_engine_writer_test.cpp,*history_engine_state_test.cpp,*history_engine_report_test.cpp,*history_engine_property_test.cpp,*history_engine_catalogue_test.cpp,*history_engine_schema_test.cpp"
+    SHARD engine 15 "*history_engine_schedule_test.cpp,*history_engine_writer_test.cpp,*history_engine_state_test.cpp,*history_engine_report_test.cpp,*history_engine_property_test.cpp,*history_engine_catalogue_test.cpp,*history_engine_schema_test.cpp,*history_engine_render_test.cpp"
     SHARD peoples 25 "*history_peoples_*"
     SHARD conflict 25 "*history_conflict_data_test.cpp,*history_conflict_unit_test.cpp,*history_conflict_property_test.cpp"
     SHARD conflict-worlds 25 "*history_conflict_golden_test.cpp"
