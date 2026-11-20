@@ -35,24 +35,20 @@ PeoplesByKind by_kind(const data::Record& r) {
                          r.get_int("fortress")};
 }
 
-// The cells of a u8 or u16 layer of N x N (and, r6, the i16 layer
-// elevation), widened. The message of 16.0a names u8 and u16 for every
-// layer.
+// The cells of a layer of N x N of its catalogue type (P3-05 16.0a, r7:
+// the message names that type), widened.
 class Cells {
 public:
-    Cells(const db::LayerGrid& g, std::string_view name, std::int64_t n, bool signed_16 = false) {
+    Cells(const db::LayerGrid& g, std::string_view name, std::int64_t n, db::ElementType type) {
         const auto side = static_cast<std::uint32_t>(n);
-        if (g.width == side && g.height == side) {
-            if (signed_16) {
-                i16_ = g.get_if<std::int16_t>();
-            } else {
-                u8_ = g.get_if<std::uint8_t>();
-                u16_ = g.get_if<std::uint16_t>();
-            }
+        if (g.width == side && g.height == side && g.type() == type) {
+            u8_ = g.get_if<std::uint8_t>();
+            u16_ = g.get_if<std::uint16_t>();
+            i16_ = g.get_if<std::int16_t>();
         }
         if (u8_ == nullptr && u16_ == nullptr && i16_ == nullptr) {
             fail("history: peoples: layer '" + std::string(name) + "' is not " + int_text(n) + " x " + int_text(n) +
-                 " u8 or u16");
+                 " " + type_text(type));
         }
     }
     [[nodiscard]] std::int64_t at(std::size_t i) const {
@@ -66,6 +62,15 @@ public:
     }
 
 private:
+    static std::string type_text(db::ElementType type) {
+        switch (type) {
+            case db::ElementType::u8: return "u8";
+            case db::ElementType::u16: return "u16";
+            case db::ElementType::i16: return "i16";
+            default: break;
+        }
+        return "of its catalogue type";
+    }
     const std::vector<std::uint8_t>* u8_ = nullptr;
     const std::vector<std::uint16_t>* u16_ = nullptr;
     const std::vector<std::int16_t>* i16_ = nullptr;
@@ -470,15 +475,15 @@ PeoplesGeo::PeoplesGeo(const HistoryInputs& in, const data::ContentSet& content,
     const std::int64_t n = n_;
     const auto cells = static_cast<std::size_t>(n * n);
     // Layers (the region layer is N x N u16, checked by the engine).
-    const Cells region(in.region_layer, "region", n);
-    const Cells water(in.water_layer, "water", n);
-    const Cells hab(in.habitability_layer, "habitability", n);
-    const Cells river(in.river_layer, "river", n);
-    const Cells flow(in.flow_dir_layer, "flow_dir", n);
+    const Cells region(in.region_layer, "region", n, db::ElementType::u16);
+    const Cells water(in.water_layer, "water", n, db::ElementType::u8);
+    const Cells hab(in.habitability_layer, "habitability", n, db::ElementType::u8);
+    const Cells river(in.river_layer, "river", n, db::ElementType::u8);
+    const Cells flow(in.flow_dir_layer, "flow_dir", n, db::ElementType::u8);
     // r6: the cell term of 6.2 and the fortress cell rule of 8.4.
-    const Cells elevation(in.elevation_layer, "elevation", n, true);
-    const Cells ore(in.ore_layer, "ore", n);
-    const Cells walk(in.walk_area_layer, "walk_area", n);
+    const Cells elevation(in.elevation_layer, "elevation", n, db::ElementType::i16);
+    const Cells ore(in.ore_layer, "ore", n, db::ElementType::u8);
+    const Cells walk(in.walk_area_layer, "walk_area", n, db::ElementType::u16);
     region_layer_.resize(cells);
     water_.resize(cells);
     habitability_.resize(cells);
