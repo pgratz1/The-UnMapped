@@ -51,6 +51,10 @@ constexpr std::int64_t k_settlement_abandoned_to = 31;
 // P3-06 r9 20.9 (generator 0.18.0, P3-09)
 constexpr std::int64_t k_refugees_settled = 32;
 constexpr std::int64_t k_tribute = 33;
+// P3-06 r10 20.15, 20.17, 20.22 (P3-09 r3)
+constexpr std::int64_t k_war_won = 34;
+constexpr std::int64_t k_search_abandoned = 35;
+constexpr std::int64_t k_refuge_held = 36;
 enum SKind : std::int64_t { hamlet = 1, village, town, city, fortress };
 enum Status : std::int64_t { thriving = 1, declining, ruined, faded };
 

@@ -1,6 +1,6 @@
 // Spec P3-09 (generator 0.18.0): units that need no world.
 //
-//   - P3-07 r8 21.5's six [stats] keys on a hand-made fixture with hand-counted values (the test-support
+//   - P3-07 r8 21.5's six [stats] keys and 21.8's two on a hand-made fixture with hand-counted values (the test-support
 //     derivation from rows that the golden tests compare with the reference's [stats] lines; P3-07 is not
 //     implemented, so these keys are checked from rows until it is).
 //   - P3-07 r8 21.4 history_note on the golden worlds, and ordinal() (guarded: needs
@@ -104,13 +104,34 @@ TEST_CASE("P3-07 r8 21.5 (P3-09): the six [stats] keys on a hand-made log with h
                                        "wars_hollow = 2", "wars_hollow_permille = 500", "wars_same_goal_max = 3",
                                        "wars_same_goal_unchanged_max = 2", "race_population_share_max_permille = 700",
                                        // held: R5 by c1 (goblin), R7 by c2 (elf)
-                                       "race_regions_share_max_permille = 500"});
+                                       "race_regions_share_max_permille = 500", "wars_unfound = 0",
+                                       "refuges_held_no_destination = 0"});
+    // P3-07 r8 21.8: a fifth war w5 e50 (c1, R8) given up (search_abandoned e51) is counted apart: hollow stays 2
+    // of the 4 that found their enemy (500); two refuge_held events, one of reason 1
+    t.event.push_back(ev(50, 500, k_war_declared, 8));
+    t.event.push_back(ev(51, 503, k_search_abandoned, 8));
+    t.event.push_back(ev(52, 600, k_refuge_held, 7));
+    t.event.push_back(ev(53, 610, k_refuge_held, 7));
+    t.event_participant.push_back(part(50, 1, 1));
+    t.event_participant.push_back(part(50, 2, 2));
+    t.event_value.push_back({I(52), I(1), I(1)});
+    t.event_value.push_back({I(53), I(1), I(2)});
+    t.event_cause.push_back(cause(51, 50));
+    t.relation.push_back({I(3), I(1), I(3), I(2), T("war"), I(500), I(503), I(50), I(51)});
+    const std::vector<std::string> l = stats_lines_21(t, in);
+    REQUIRE(l.size() == 8U);
+    CHECK(l[0] == "wars_hollow = 2");
+    CHECK(l[1] == "wars_hollow_permille = 500");
+    CHECK(l[2] == "wars_same_goal_max = 3");
+    CHECK(l[6] == "wars_unfound = 1");
+    CHECK(l[7] == "refuges_held_no_destination = 1");
     // no war: 0 for every war key; no people, no regions: 0 for the shares
     Tables empty;
     CHECK(stats_lines_21(empty, in) == std::vector<std::string>{
                                            "wars_hollow = 0", "wars_hollow_permille = 0", "wars_same_goal_max = 0",
                                            "wars_same_goal_unchanged_max = 0", "race_population_share_max_permille = 0",
-                                           "race_regions_share_max_permille = 0"});
+                                           "race_regions_share_max_permille = 0", "wars_unfound = 0",
+                                           "refuges_held_no_destination = 0"});
 }
 
 TEST_CASE("P3-06 r9 20.13 item 5 from rows: weariness violations found on a hand-made log, none after a change") {
@@ -173,6 +194,9 @@ TEST_CASE("P3-06 r9 20.9 (seam): the r9 tuning fields and the conflict_enmity_ho
     CHECK(t.odds_min == 700);
     CHECK(t.truce_break_aggression == 600);
     CHECK(t.enmity_hops == 3);
+    CHECK(t.kill_max_permille == 500);  // r10 20.19
+    CHECK(t.find_permille == 250);
+    CHECK(t.search_years == 3);
     h::check_conflict_tuning(t);
     t.enmity_hops = 1;
     CHECK(fatal_of([&] { h::check_conflict_tuning(t); }) == "history: tuning: enmity_hops must not be below march_hops");
@@ -189,8 +213,8 @@ TEST_CASE("P3-06 r9 20.12 (seam): ConflictRace carries muster, conceal_min and h
     worldgen::history::ConflictRace r;
     r.muster = 4000;
     r.conceal_min = 400;
-    r.home_defense = 2000;
-    CHECK(r.muster + r.conceal_min + r.home_defense == 6400);
+    r.home_defense = 0;  // faerie, r10 20.17 item 3
+    CHECK(r.muster + r.conceal_min + r.home_defense == 4400);
 }
 
 TEST_CASE("P3-05 r8 21 item 1 (seam): the PeoplesView readers and settlement_name have the stated signatures") {

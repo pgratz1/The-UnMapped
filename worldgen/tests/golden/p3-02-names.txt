@@ -232,10 +232,10 @@ fattempt 0 filt settlement 1 17 1 0 1 -
 fattempt 0 filt settlement 1 17 2 1 0 Ka
 fattempt 42 dwarven god 1 192 0 0 1 -
 fattempt 42 dwarven god 1 192 1 1 0 Tairkmi
-fattempt 42 dwarven civilization 1 2 0 0 1 -
-fattempt 42 dwarven civilization 1 2 1 1 0 The Gunthrand Throne
-fattempt 42 dwarven settlement 1 30 0 0 1 -
-fattempt 42 dwarven settlement 1 30 1 1 0 Malika
+fattempt 42 dwarven civilization 1 83 0 0 1 -
+fattempt 42 dwarven civilization 1 83 1 1 0 The Hold of Thid
+fattempt 42 dwarven settlement 1 97 0 0 1 -
+fattempt 42 dwarven settlement 1 97 1 1 0 Hondthun
 fattempt 42 elven god 2 79 0 0 1 -
 fattempt 42 elven god 2 79 1 1 0 Glaith
 fattempt 42 elven civilization 2 27 0 0 1 -
@@ -244,8 +244,8 @@ fattempt 42 elven settlement 2 8 0 0 1 -
 fattempt 42 elven settlement 2 8 1 1 0 Ciennfae
 fattempt 42 faerie god 3 8 0 0 1 -
 fattempt 42 faerie god 3 8 1 1 0 Timiass
-fattempt 42 faerie civilization 3 11 0 0 1 -
-fattempt 42 faerie civilization 3 11 1 1 0 The Twitouie Ring
+fattempt 42 faerie civilization 3 15 0 0 1 -
+fattempt 42 faerie civilization 3 15 1 1 0 The Circle of Tyshia
 fattempt 42 faerie settlement 3 45 0 0 1 -
 fattempt 42 faerie settlement 3 45 1 1 0 Biatwian
 fattempt 42 goblin god 4 13 0 0 1 -
@@ -529,7 +529,7 @@ result redraw_after human settlement 5 5 0 Brir
 result redraw_after human civilization 5 1 0 The Duchy of Ashem
 result redraw_after human civilization 5 2 2 The Kingdom of Ashos
 result redraw_after human civilization 5 3 2 The Kingdom of Edes
-result redraw_after human civilization 5 4 2 The Duchy of Ceam
+result redraw_after human civilization 5 4 0 The Duchy of Wick
 result redraw_after human civilization 5 5 3 The Duchy of Circon
 result redraw_after filt settlement 1 17 2 Ka
 fatal never god 0 1 1 names: culture 'never' produced no valid god name in 64 attempts
@@ -592,7 +592,7 @@ fatal never settlement 0 1 1 names: culture 'never' produced no valid settlement
 0 dwarven civilization 5 0 Clan Drailimai
 0 dwarven civilization 6 0 Clan Kukdum
 0 dwarven civilization 7 0 The Thurindrid Throne
-0 dwarven civilization 8 1 The Hold of Thrarin
+0 dwarven civilization 8 0 The Hold of Barn
 0 dwarven civilization 9 1 Clan Thrantouli
 0 dwarven civilization 10 0 The Thainbri Throne
 0 dwarven civilization 11 0 The Maligali Throne
@@ -624,7 +624,7 @@ fatal never settlement 0 1 1 names: culture 'never' produced no valid settlement
 0 dwarven civilization 37 1 Clan Horkgar
 0 dwarven civilization 38 0 The Brorinhain Throne
 0 dwarven civilization 39 0 The Hold of Goud
-0 dwarven civilization 40 2 The Hold of Kholithird
+0 dwarven civilization 40 0 Clan Thrum
 0 dwarven civilization 41 0 The Brarinmu Throne
 0 dwarven civilization 42 1 The Hold of Nuntod
 0 dwarven civilization 43 0 The Madinmond Throne
@@ -905,7 +905,7 @@ fatal never settlement 0 1 1 names: culture 'never' produced no valid settlement
 0 faerie civilization 18 0 The Circle of Sian
 0 faerie civilization 19 0 The Circle of Liwosh
 0 faerie civilization 20 0 The Shosi Ring
-0 faerie civilization 21 1 The Shishee Court
+0 faerie civilization 21 0 The Wish Court
 0 faerie civilization 22 0 The Circle of Saebiep
 0 faerie civilization 23 0 The Circle of Fithwie
 0 faerie civilization 24 0 The Foubeess Court
@@ -970,7 +970,7 @@ fatal never settlement 0 1 1 names: culture 'never' produced no valid settlement
 0 faerie settlement 33 0 Whoutwa
 0 faerie settlement 34 0 Lyma
 0 faerie settlement 35 0 Boflia
-0 faerie settlement 36 1 Opop Hollow
+0 faerie settlement 36 0 Boll
 0 faerie settlement 37 0 Twiepa
 0 faerie settlement 38 0 Loshwo
 0 faerie settlement 39 0 Shieisae
@@ -1057,7 +1057,7 @@ fatal never settlement 0 1 1 names: culture 'never' produced no valid settlement
 0 goblin civilization 20 0 The Gnot Mob
 0 goblin civilization 21 0 The Warrens of Gix
 0 goblin civilization 22 0 The Warrens of Drobkrig
-0 goblin civilization 23 1 The Gnaz Horde
+0 goblin civilization 23 0 The Warrens of Kit-Slirk
 0 goblin civilization 24 1 The Warrens of Snutch
 0 goblin civilization 25 0 The Bigg-Bogg Horde
 0 goblin civilization 26 0 The Warrens of Burkbot
@@ -1114,7 +1114,7 @@ fatal never settlement 0 1 1 names: culture 'never' produced no valid settlement
 0 goblin settlement 27 1 Skoggnit
 0 goblin settlement 28 0 Snikob
 0 goblin settlement 29 0 Grax Pit
-0 goblin settlement 30 1 Sleekrazz Pit
+0 goblin settlement 30 0 Nub Pit
 0 goblin settlement 31 1 Zot-Sleeg Pit
 0 goblin settlement 32 0 Karkkonk Pit
 0 goblin settlement 33 0 Krik
@@ -1125,7 +1125,7 @@ fatal never settlement 0 1 1 names: culture 'never' produced no valid settlement
 0 goblin settlement 38 0 Skax-Zux Pit
 0 goblin settlement 39 0 Drigragg
 0 goblin settlement 40 0 Drotch
-0 goblin settlement 41 1 Slaskrig Pit
+0 goblin settlement 41 0 Nix Hole
 0 goblin settlement 42 0 Kratch Pit
 0 goblin settlement 43 0 Skox-Keerk
 0 goblin settlement 44 1 Slugnink
@@ -1188,7 +1188,7 @@ fatal never settlement 0 1 1 names: culture 'never' produced no valid settlement
 0 human civilization 1 0 The Duchy of Ashem
 0 human civilization 2 2 The Kingdom of Ashos
 0 human civilization 3 2 The Kingdom of Edes
-0 human civilization 4 2 The Duchy of Ceam
+0 human civilization 4 0 The Duchy of Wick
 0 human civilization 5 3 The Duchy of Circon
 0 human civilization 6 0 The Duchy of Cear
 0 human civilization 7 0 The Duchy of Deas
@@ -1197,7 +1197,7 @@ fatal never settlement 0 1 1 names: culture 'never' produced no valid settlement
 0 human civilization 10 0 The Duchy of Cild
 0 human civilization 11 1 The Kingdom of Deld
 0 human civilization 12 0 The Kingdom of Brird
-0 human civilization 13 4 The Duchy of Alin
+0 human civilization 13 2 The Ward League
 0 human civilization 14 0 The Duchy of Bront
 0 human civilization 15 1 The Duchy of Centteam
 0 human civilization 16 3 The Alor League
@@ -1207,13 +1207,13 @@ fatal never settlement 0 1 1 names: culture 'never' produced no valid settlement
 0 human civilization 20 1 The Stin League
 0 human civilization 21 3 The Duchy of Aleam
 0 human civilization 22 2 The Duchy of Mard
-0 human civilization 23 1 The Guldbrack League
+0 human civilization 23 0 The Kingdom of Brim
 0 human civilization 24 0 The Kingdom of Cear
 0 human civilization 25 1 The Kingdom of Ashant
-0 human civilization 26 1 The Duchy of Meard
+0 human civilization 26 0 The Kingdom of Stead
 0 human civilization 27 1 The Kingdom of Doldran
 0 human civilization 28 1 The Duchy of Wongal
-0 human civilization 29 1 The Duchy of Dodmock
+0 human civilization 29 0 The Herd League
 0 human civilization 30 0 The Duchy of Ashel
 0 human civilization 31 0 The Kingdom of Aleas
 0 human civilization 32 2 The Hurd League
@@ -1227,7 +1227,7 @@ fatal never settlement 0 1 1 names: culture 'never' produced no valid settlement
 0 human civilization 40 0 The Duchy of Wirtol
 0 human civilization 41 2 The Kingdom of Alod
 0 human civilization 42 0 The Alesmeard League
-0 human civilization 43 2 The Duchy of Reas
+0 human civilization 43 0 The Kingdom of Cold
 0 human civilization 44 1 The Stod League
 0 human civilization 45 0 The Duchy of Suld
 0 human civilization 46 1 The Kingdom of Ashud
@@ -1312,7 +1312,7 @@ fatal never settlement 0 1 1 names: culture 'never' produced no valid settlement
 0 orcish god 25 0 Zuulkro
 0 orcish god 26 0 Bakshuugh
 0 orcish god 27 0 Uruuzshogh
-0 orcish god 28 3 Aza'shom
+0 orcish god 28 2 Shaash'bark
 0 orcish god 29 0 Uruu'uruukh
 0 orcish god 30 0 Aakh'shuul
 0 orcish god 31 0 Baalghosh
@@ -1325,7 +1325,7 @@ fatal never settlement 0 1 1 names: culture 'never' produced no valid settlement
 0 orcish god 38 0 Azug'buush
 0 orcish god 39 0 Aag'krark
 0 orcish god 40 0 Ghaark'mol
-0 orcish god 41 1 Uguul'kog
+0 orcish god 41 0 Ogh'dam
 0 orcish god 42 0 Kuuldmoz
 0 orcish god 43 0 Zaa'zaak
 0 orcish god 44 0 Daaz'kuugh
@@ -1348,7 +1348,7 @@ fatal never settlement 0 1 1 names: culture 'never' produced no valid settlement
 0 orcish civilization 11 0 The U'thogh Horde
 0 orcish civilization 12 1 Clan Dok'uraak
 0 orcish civilization 13 0 The Warband of Azal
-0 orcish civilization 14 1 The Warband of Zuld
+0 orcish civilization 14 0 The Warband of Murk
 0 orcish civilization 15 0 Clan Kold'ko
 0 orcish civilization 16 0 The Thalmork Horde
 0 orcish civilization 17 0 The Warband of Uld'kuuk
@@ -1390,7 +1390,7 @@ fatal never settlement 0 1 1 names: culture 'never' produced no valid settlement
 0 orcish settlement 3 0 Grush
 0 orcish settlement 4 0 Zaakugaag
 0 orcish settlement 5 0 Uruld'duuld
-0 orcish settlement 6 1 Shaazazuug
+0 orcish settlement 6 0 Uu'mold Fort
 0 orcish settlement 7 0 Kark Fort
 0 orcish settlement 8 0 Azol'urash Fort
 0 orcish settlement 9 0 Karzthogh
@@ -1435,7 +1435,7 @@ fatal never settlement 0 1 1 names: culture 'never' produced no valid settlement
 0 orcish settlement 48 0 Ghark
 0 orcish settlement 49 0 Urald Camp
 0 orcish settlement 50 0 Azol'uguuz
-sha256 0 887ec65a71933500fc0f0a939de15e2f216e00a222ccddb890305bbe2b741391
+sha256 0 280cd652769804684d375d02836aeb719847d8323cc30a3dc3c5b3390c6a48cd
 42 dwarven god 1 0 Khorkhound
 42 dwarven god 2 1 Grirtoum
 42 dwarven god 3 1 Bronhak
@@ -1487,7 +1487,7 @@ sha256 0 887ec65a71933500fc0f0a939de15e2f216e00a222ccddb890305bbe2b741391
 42 dwarven god 49 0 Khintho
 42 dwarven god 50 0 Korinkirk
 42 dwarven civilization 1 0 The Gadho Throne
-42 dwarven civilization 2 1 The Gunthrand Throne
+42 dwarven civilization 2 0 The Hound Throne
 42 dwarven civilization 3 0 The Kaindnimm Throne
 42 dwarven civilization 4 0 The Hold of Dulimin
 42 dwarven civilization 5 0 The Narinthri Throne
@@ -1565,7 +1565,7 @@ sha256 0 887ec65a71933500fc0f0a939de15e2f216e00a222ccddb890305bbe2b741391
 42 dwarven settlement 27 1 Grairnmod Hold
 42 dwarven settlement 28 0 Thoum
 42 dwarven settlement 29 0 Khord
-42 dwarven settlement 30 1 Malika
+42 dwarven settlement 30 0 Grin
 42 dwarven settlement 31 0 Toukmairk
 42 dwarven settlement 32 0 Khilikhi
 42 dwarven settlement 33 0 Gudbrain
@@ -1796,7 +1796,7 @@ sha256 0 887ec65a71933500fc0f0a939de15e2f216e00a222ccddb890305bbe2b741391
 42 faerie civilization 8 0 The Shaesia Ring
 42 faerie civilization 9 0 The Wouwha Ring
 42 faerie civilization 10 0 The Twielie Ring
-42 faerie civilization 11 1 The Twitouie Ring
+42 faerie civilization 11 0 The Circle of Sheep
 42 faerie civilization 12 0 The Whaliwhee Court
 42 faerie civilization 13 0 The Taflie Court
 42 faerie civilization 14 0 The Wiesiwia Ring
@@ -1982,7 +1982,7 @@ sha256 0 887ec65a71933500fc0f0a939de15e2f216e00a222ccddb890305bbe2b741391
 42 goblin civilization 44 0 The Sloskrik Mob
 42 goblin civilization 45 0 The Warrens of Zodreek
 42 goblin civilization 46 0 The Grat-Gurk Horde
-42 goblin civilization 47 1 The Kronk Mob
+42 goblin civilization 47 0 The Slug Horde
 42 goblin civilization 48 0 The Warrens of Burk
 42 goblin civilization 49 0 The Gnislag Horde
 42 goblin civilization 50 0 The Warrens of Beekrix
@@ -2027,14 +2027,14 @@ sha256 0 887ec65a71933500fc0f0a939de15e2f216e00a222ccddb890305bbe2b741391
 42 goblin settlement 39 0 Skognit Hole
 42 goblin settlement 40 0 Graz Pit
 42 goblin settlement 41 0 Snaksnuz Pit
-42 goblin settlement 42 2 Drux-Zeek Pit
+42 goblin settlement 42 1 Kit
 42 goblin settlement 43 0 Krux
 42 goblin settlement 44 0 Sneeggnox Hole
 42 goblin settlement 45 0 Gnark Hole
 42 goblin settlement 46 0 Krik
 42 goblin settlement 47 0 Zat
 42 goblin settlement 48 0 Sligg Pit
-42 goblin settlement 49 1 Gnabbogg
+42 goblin settlement 49 0 Sleet
 42 goblin settlement 50 0 Drax-Gork Pit
 42 human god 1 1 Wudguck
 42 human god 2 0 Besbent
@@ -2089,7 +2089,7 @@ sha256 0 887ec65a71933500fc0f0a939de15e2f216e00a222ccddb890305bbe2b741391
 42 human civilization 1 1 The Brold League
 42 human civilization 2 1 The Kingdom of Seack
 42 human civilization 3 2 The Duchy of Alont
-42 human civilization 4 1 The Duchy of Stembes
+42 human civilization 4 0 The Duchy of Ashes
 42 human civilization 5 0 The Kingdom of Alird
 42 human civilization 6 0 The Brurweck League
 42 human civilization 7 2 The Duchy of Stin
@@ -2098,7 +2098,7 @@ sha256 0 887ec65a71933500fc0f0a939de15e2f216e00a222ccddb890305bbe2b741391
 42 human civilization 10 1 The Duchy of Ashin
 42 human civilization 11 0 The Cerwel League
 42 human civilization 12 0 The Cerd League
-42 human civilization 13 1 The Kingdom of Ceald
+42 human civilization 13 0 The Tent League
 42 human civilization 14 0 The Kingdom of Dealdmis
 42 human civilization 15 0 The Kingdom of Reld
 42 human civilization 16 0 The Kingdom of Stol
@@ -2131,7 +2131,7 @@ sha256 0 887ec65a71933500fc0f0a939de15e2f216e00a222ccddb890305bbe2b741391
 42 human civilization 43 1 The Duchy of Edol
 42 human civilization 44 0 The Duchy of Alincald
 42 human civilization 45 0 The Kingdom of Alid
-42 human civilization 46 3 The Alambrunt League
+42 human civilization 46 0 The Duchy of Bold
 42 human civilization 47 0 The Geas League
 42 human civilization 48 0 The Wentteam League
 42 human civilization 49 0 The Duchy of Deant
@@ -2181,7 +2181,7 @@ sha256 0 887ec65a71933500fc0f0a939de15e2f216e00a222ccddb890305bbe2b741391
 42 human settlement 43 0 Hent
 42 human settlement 44 0 Meanton
 42 human settlement 45 0 Ashackham
-42 human settlement 46 2 Brontrurham
+42 human settlement 46 1 Sack
 42 human settlement 47 2 Stisbrelbury
 42 human settlement 48 0 Realdeadstead
 42 human settlement 49 0 Ashintaswick
@@ -2191,11 +2191,11 @@ sha256 0 887ec65a71933500fc0f0a939de15e2f216e00a222ccddb890305bbe2b741391
 42 orcish god 3 0 Osh'krag
 42 orcish god 4 1 Uraakzuuld
 42 orcish god 5 0 Uguk'kold
-42 orcish god 6 1 Ogh'krak
-42 orcish god 7 1 Azorkazoz
+42 orcish god 6 0 Kruu'mold
+42 orcish god 7 0 Muug'murk
 42 orcish god 8 0 Ugaalshom
-42 orcish god 9 1 Uld'ghal
-42 orcish god 10 2 Ugoz'mo
+42 orcish god 9 0 Og'bog
+42 orcish god 10 1 Aag'dark
 42 orcish god 11 0 Ol'ghuum
 42 orcish god 12 0 Osh'muld
 42 orcish god 13 1 Ush'zagh
@@ -2328,14 +2328,14 @@ sha256 0 887ec65a71933500fc0f0a939de15e2f216e00a222ccddb890305bbe2b741391
 42 orcish settlement 40 0 Zaarz'kruul Camp
 42 orcish settlement 41 0 Thak'thurk
 42 orcish settlement 42 0 Aakh'ghaagh
-42 orcish settlement 43 1 Uroghmosh Fort
+42 orcish settlement 43 0 Ash'azak
 42 orcish settlement 44 0 Maaghgragh Fort
 42 orcish settlement 45 0 Gruug Fort
 42 orcish settlement 46 0 Azuuk Camp
-42 orcish settlement 47 1 Ghush
+42 orcish settlement 47 0 Ark'muuz
 42 orcish settlement 48 0 Aal'uraaz Fort
 42 orcish settlement 49 0 Orz'grom Camp
 42 orcish settlement 50 0 Thuurkbash
-sha256 42 a7886f306270a4843ee27f4a895518eb3816cf8fbdc801917d31463a894185e2
+sha256 42 6d67931eef8936dac2a684f3a2f0674b98bc106a1feeec14ae0ab3689ccc56cf
 r4sha256 0 7b81d85d11630b64f27f7eb16dc9f0815b764a0fc8ee60d506f68686a04942b9
 r4sha256 42 8403dc92b716ecfb7c22bb9589d3e487aecaf08a43ffc81a89a370f0f4f80f4c

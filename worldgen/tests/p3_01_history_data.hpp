@@ -30,7 +30,10 @@
 // conceal_min and home_defense_permille after prowess_permille, the eleven
 // history.conflict fields after last_refuge, regions_per_extra_civ and
 // civs_extra_max after regions_per_civ, claim salience 35 and the entries of
-// kinds 32 and 33 appended after kind 31's (the same assumption). Mirrors
+// kinds 32 and 33 appended after kind 31's (the same assumption); P3-09 r3
+// (P3-06 r10 20.19, P3-01 r10 3.3): kill_max_permille, find_permille and
+// search_years after enmity_hops, faerie home_defense_permille 0, kinds 34-36
+// appended after 33. Mirrors
 // SPEC_FILES_018 of p3_data_reference.py.
 
 #include <cstdint>
@@ -181,7 +184,7 @@ aggression = 50
 prowess_permille = 1200
 muster_permille = 1000
 conceal_min = 400
-home_defense_permille = 2000
+home_defense_permille = 0
 settlement_kinds = ["hamlet", "village"]
 culture = "faerie"
 )";
@@ -394,6 +397,9 @@ events = [
   { kind = "settlement_abandoned_to", salience = 55, template = "{settlement} was abandoned; {settled} {settled?survivor|survivors} went to {destination}{lost?|, and one was lost|, and # were lost}." },
   { kind = "refugees_settled", salience = 65, template = "The survivors of {origin} fled into hiding and founded {@settlement} in {@region}." },
   { kind = "tribute", salience = 50, template = "{payer} paid tribute to {payee}; {people} {people?was|were} carried off." },
+  { kind = "war_won", salience = 60, template = "{winner} prevailed over {loser} after {years} {years?year|years} of war." },
+  { kind = "search_abandoned", salience = 40, template = "{searcher} searched {@region} for {hidden} and found no one; the war ended after {years} {years?year|years}." },
+  { kind = "refuge_held", salience = 25, template = "{attacker} besieged {@settlement} of {defender}; with {reason?nowhere to flee|too few to flee}, its people held on." },
 ]
 )";
 
@@ -452,6 +458,9 @@ odds_floor = 500
 odds_min = 700
 truce_break_aggression = 600
 enmity_hops = 3
+kill_max_permille = 500
+find_permille = 250
+search_years = 3
 capital_sacked_salience = 90
 capital_captured_salience = 80
 )";
@@ -646,7 +655,7 @@ inline const std::vector<Race>& races() {
         {"faerie", 4, "Faerie", "Faeries", "Faerie", "good", 3006477107, 400, 100, 4, 250, 0, 60, 20, 0, 20, 0, 0,
          {{"temperate_forest", 800}, {"wet_woodland", 800}, {"fen", 300}, {"marsh", 200}, {"highland_moor", 100},
           {"heath", 0}, {"grassland", -300}, {"alpine", -400}, {"steppe", -400}},
-         200, 0, 100, 50, 1200, 1000, 400, 2000, {"hamlet", "village"}, "faerie"},
+         200, 0, 100, 50, 1200, 1000, 400, 0, {"hamlet", "village"}, "faerie"},  // home 0: P3-01 r10 3.3
         {"goblin", 2, "Goblin", "Goblins", "Goblin", "evil", 1503238554, 40, 15, 20, 900, 40, 20, 10, 30, 0, 0, 0,
          {{"heath", 200}, {"highland_moor", 200}, {"steppe", 150}, {"grassland", 100}, {"marsh", 100}, {"alpine", -400},
           {"temperate_forest", -200}, {"wet_woodland", -300}},

@@ -274,9 +274,13 @@ KIND_31 = kind_def(31, "settlement_abandoned_to", 1, 1, 1, (("settlement", SETTL
 KIND_32 = kind_def(32, "refugees_settled", 1, 1, 1, (("settlement", SETTLEMENT, 1, 1), ("founder", CIV, 1, 1),
                                                      ("origin", SETTLEMENT, 1, 1)), ("population",))
 KIND_33 = kind_def(33, "tribute", 1, 0, 0, (("payer", CIV, 1, 1), ("payee", CIV, 1, 1)), ("people",))
+# P3-06 r10 20.15, 20.17, 20.22 (P3-09 r3): kinds 34-36, caused, every count 1-1.
+KIND_34 = kind_def(34, "war_won", 1, 0, 0, (("winner", CIV, 1, 1), ("loser", CIV, 1, 1)), ("years",))
+KIND_35 = kind_def(35, "search_abandoned", 1, 1, 0, (("searcher", CIV, 1, 1), ("hidden", CIV, 1, 1)), ("years",))
+KIND_36 = kind_def(36, "refuge_held", 1, 1, 1, (("attacker", CIV, 1, 1), ("defender", CIV, 1, 1)), ("reason",))
 COMPILED_016 = COMPILED
 COMPILED_017 = COMPILED + (KIND_31,)
-COMPILED_018 = COMPILED_017 + (KIND_32, KIND_33)
+COMPILED_018 = COMPILED_017 + (KIND_32, KIND_33, KIND_34, KIND_35, KIND_36)
 
 # P3-04 r10 (generator 0.17.0, P3-08), each switchable so that the 0.16.0
 # goldens can still be reproduced (use_version("0.16.0")):
@@ -314,6 +318,9 @@ def use_version(v):
     GENERATOR_VERSION = v
     ENGINE_VERSION = v
     pdr.use_version(v)
+    # P3-09 item 8: the word list of the version (0.18.0 on disk; before, P3-08's, from git)
+    pnr.FILTER_COMMIT = None if v == "0.18.0" else pdr.NAME_FILTERS_017_COMMIT
+    pnr._SHIPPED_FILTER = None
     pnr.use_rules("r5" if new else "r4")
     pchr._SHIPPED = None
     _DATA.clear()
@@ -1562,8 +1569,8 @@ def template_kind(key):
 
 HEADER_018 = """\
 # P3-04 engine golden vectors for generator 0.18.0 (schema 7; P3-09): the stub engine (run_engine
-# with the stub configuration) on the 0.18.0 catalogue of 33 kinds (P3-05 11 and r6, P3-06 11 and
-# r9 20.9: kinds 32 refugees_settled and 33 tribute; claim salience 35), with P3-04 r10 (names
+# with the stub configuration) on the 0.18.0 catalogue of 36 kinds (P3-05 11 and r6, P3-06 11, r9
+# 20.9 and r10: kinds 32-36; claim salience 35; P3-02 r8's word list), with P3-04 r10 (names
 # inside a sentence, the three-word value form, the quiet_era template of 4.2, one quiet era per
 # civilization and quiet row), P3-02 r5 names (filter, god patterns, the elven House form) and
 # P1-06 r3 region names (the input worlds' table region). Spec"""
@@ -2080,7 +2087,8 @@ def check_templates(c):
         "events[4]: template: the template is empty",
         "event kind 'flare_up' has no entry"] + ["event kind '%s' has no entry" % k for k in P3_05_KEYS + P3_06_KEYS
                                                  + (["settlement_abandoned_to"] if at_least("0.17.0") else [])
-                                                 + (["refugees_settled", "tribute"] if at_least("0.18.0") else [])])
+                                                 + (["refugees_settled", "tribute", "war_won", "search_abandoned",
+                                                     "refuge_held"] if at_least("0.18.0") else [])])
     # rendering on a hand-made view: :all with 0..3, ? with 0, 1, 2
     cat = {99: dict(TEST_KIND, region_use=1, templ="[{actor:all}] {people:plural}/{people:adjective}/{people} at {@region}: "
                                      "{count} {count?thing|things} {{ok}} {@year}-{@end_year}")}

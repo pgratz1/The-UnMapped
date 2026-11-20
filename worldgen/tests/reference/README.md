@@ -935,6 +935,7 @@ python3 -B worldgen/tests/reference/p3_data_reference.py golden - --version 0.17
 python3 -B worldgen/tests/reference/p3_engine_reference.py golden - --version 0.17.0 --inputs $I
 python3 -B worldgen/tests/reference/p3_peoples_reference.py golden - --version 0.17.0 --inputs $I
 python3 -B worldgen/tests/reference/p3_conflict_reference.py golden - --version 0.17.0 --inputs $I
+python3 -B worldgen/tests/reference/p3_names_reference.py golden - --version 0.17.0
 ```
 
 - `p3_data_reference.py`: `SPEC_FILES_018` (three race fields after
@@ -965,14 +966,26 @@ one command per reference, in this order:
 ```
 python3 -B worldgen/tests/reference/p3_data_reference.py golden
 python3 -B worldgen/tests/reference/p3_names_reference.py golden
-python3 -B worldgen/tests/reference/p3_chronology_reference.py golden --inputs ~/.cache/the-unmapped/out/p3-03-tests/inputs
+python3 -B worldgen/tests/reference/p3_chronology_reference.py golden
 python3 -B worldgen/tests/reference/p3_engine_reference.py golden --inputs $I
 python3 -B worldgen/tests/reference/p3_peoples_reference.py golden --inputs $I
 python3 -B worldgen/tests/reference/p3_conflict_reference.py check --write --inputs $I
 ```
 
-Known finding (`KNOWN_EXTINCT_018`): in the stress cases 1, 12 and 14
-(fixture tuning) the orcs, their race's last refuge, are bled below
-`abandon_min` by battle losses while the guard holds and are then
-abandoned by P3-05 8.5 (b); 20.1 and P3-09 10 guard flights and tributes,
-not battles. Reported; checked as a finding, not a failure.
+### P3-09 r3 (P3-06 r10 20.15-20.22, P3-05 r9 21 item 6, P3-07 r8 21.8, P3-01 r10 3.3)
+
+Flags `score`, `kill`, `search`, `floor`, `held` (conflict) and
+`refuge_floor` (peoples); kinds 34 `war_won`, 35 `search_abandoned`, 36
+`refuge_held`; the stream `hist.conflict.search`; the three conflict fields
+after `enmity_hops`; faerie home defence 0; `[stats]` `wars_unfound` and
+`refuges_held_no_destination`; the hand-made units of 20.19
+(`check_units_r10`) and the invariants 7-11 and T3 from the rows
+(`check_invariants_r10`). The r2 finding (stress cases 1, 12, 14: a race
+bled out behind its guard) is closed by 20.20 and checked as an ordinary
+invariant.
+
+The short word list (P3-02 r8 11.11) is read from disk at 0.18.0; at 0.17.0
+the name filter is read from git at d750d15 (`NAME_FILTERS_017_COMMIT` in
+`p3_data_reference.py`, `FILTER_COMMIT` in `p3_names_reference.py`), so the
+0.17.0 goldens stay reproducible after the data change. `p3_names_reference.py`
+takes `--version 0.17.0` too.

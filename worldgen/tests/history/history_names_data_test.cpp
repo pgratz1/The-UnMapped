@@ -344,7 +344,7 @@ TEST_CASE("P3-02 11.7 item 1: the shipped name_filters/ loads: four definitions,
     const std::vector<std::string_view> ids = {"crude", "famous", "slurs", "words"};
     for (std::size_t i = 0; i < 4; ++i) CHECK(kind->definitions[i].id == ids[i]);
     // Sizes of 11.2 per definition: anywhere, at_start, whole.
-    const std::vector<std::array<std::size_t, 3>> sizes = {{68, 16, 14}, {0, 0, 101}, {33, 19, 6}, {0, 0, 647}};
+    const std::vector<std::array<std::size_t, 3>> sizes = {{68, 16, 14}, {0, 0, 101}, {33, 19, 6}, {0, 0, 392}};  // words: 392 from P3-02 r8 11.11 (647 at 0.17.0)
     for (std::size_t i = 0; i < 4; ++i) {
         CAPTURE(ids[i]);
         const wd::Record& rec = kind->definitions[i].record;
@@ -359,6 +359,23 @@ TEST_CASE("P3-02 11.7 item 1: the shipped name_filters/ loads: four definitions,
     CHECK(Set(lib.anywhere.begin(), lib.anywhere.end()) == Set(mine.anywhere.begin(), mine.anywhere.end()));
     CHECK(Set(lib.at_start.begin(), lib.at_start.end()) == Set(mine.at_start.begin(), mine.at_start.end()));
     CHECK(Set(lib.whole.begin(), lib.whole.end()) == Set(mine.whole.begin(), mine.whole.end()));
+}
+
+TEST_CASE("P3-02 r8 11.11.5 item 5: the anchors of the short word list with the shipped filter") {
+    // 11.11.1: ordinary words that fit the setting pass as bare root words; the listed slips and comic or
+    // modern words are rejected. The words are written plainly; none is offensive.
+    const wd::LoadResult<wd::ContentSet> r = wd::load_content(wd::builtin_kinds(), data_root());
+    INFO(errors_of(r));
+    REQUIRE(r.ok());
+    const names_api::Filter lib = names_api::filter_from_content(*r.value);
+    for (const char* w : {"gold", "thorn", "moss", "iron", "ash", "grub", "sleet", "horn"}) {
+        CAPTURE(std::string_view(w));
+        CHECK_FALSE(names_api::name_filtered(lib, w));
+    }
+    for (const char* w : {"also", "went", "movie", "dork", "zit", "old"}) {
+        CAPTURE(std::string_view(w));
+        CHECK(names_api::name_filtered(lib, w));
+    }
 }
 
 TEST_CASE("P3-02 11.7 item 1: every shipped name_filter list is sorted; the fixture copies are byte-identical") {

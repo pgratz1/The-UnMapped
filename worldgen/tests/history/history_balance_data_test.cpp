@@ -55,11 +55,13 @@ std::int64_t index_of(const wd::Record& r, std::string_view field) {
 
 TEST_SUITE("history") {
 
-TEST_CASE("P3-06 r9 20.9: the eleven history.conflict fields follow last_refuge in order, with the shipped values") {
+TEST_CASE("P3-06 r9 20.9, r10 20.19: the fourteen new history.conflict fields follow last_refuge in order, shipped values") {
     const std::vector<std::pair<const char*, std::int64_t>> want = {
         {"refuge_flight", 1}, {"flight_hops", 3}, {"hidden_years", 300}, {"weary_wars", 3}, {"tribute_permille", 100},
         {"revenge_aggression", 400}, {"levy_hops", 3}, {"odds_floor", 500}, {"odds_min", 700},
-        {"truce_break_aggression", 600}, {"enmity_hops", 3}};
+        {"truce_break_aggression", 600}, {"enmity_hops", 3},
+        // r10 20.19 (P3-09 r3)
+        {"kill_max_permille", 500}, {"find_permille", 250}, {"search_years", 3}};
     for (const wd::ContentSet* c : {&shipped_content()}) {
         const wd::Record& r = history_record(*c, "conflict");
         const std::int64_t at = index_of(r, "last_refuge");
@@ -89,7 +91,7 @@ TEST_CASE("P3-06 r9 20.12, P3-01 r9 3.2: muster_permille, conceal_min, home_defe
         const char* race;
         std::int64_t muster, conceal, home;
     };
-    const std::vector<W> want = {{"dwarf", 1000, 1001, 0}, {"elf", 1000, 1001, 1500}, {"faerie", 1000, 400, 2000},
+    const std::vector<W> want = {{"dwarf", 1000, 1001, 0}, {"elf", 1000, 1001, 1500}, {"faerie", 1000, 400, 0},  // r10 20.17 item 3, P3-01 r10 3.3: was 2000
                                  {"goblin", 1000, 1001, 0}, {"human", 1000, 1001, 0}, {"orc", 4000, 1001, 0}};
     const wd::KindContent* race = shipped_content().find_kind("race");
     REQUIRE(race != nullptr);
@@ -125,9 +127,9 @@ TEST_CASE("P3-05 r8 21 item 5: regions_per_extra_civ 90 and civs_extra_max 2 fol
 TEST_CASE("P3-06 r9 20.9: kinds 32 refugees_settled and 33 tribute after kind 31; claim salience 35") {
     using ET = eng::EntityType;
     const eng::EventCatalogue& compiled = eng::compiled();
-    REQUIRE(compiled.kinds.size() == 33U);
+    REQUIRE(compiled.kinds.size() == 36U);
     const eng::EventCatalogue cat = eng::catalogue_of(engine_test::shipped());
-    REQUIRE(cat.kinds.size() == 33U);
+    REQUIRE(cat.kinds.size() == 36U);
     for (const eng::EventCatalogue* c : {&compiled, &cat}) {
         const eng::KindDef& k32 = c->kinds[31];
         CHECK(k32.id == 32);
@@ -183,22 +185,80 @@ TEST_CASE("P3-06 r9 20.9: kinds 32 refugees_settled and 33 tribute after kind 31
     CHECK(cat.kinds[16].salience == 50);   // capital_moved
 }
 
-TEST_CASE("P3-06 r9 20.9: history.report lists kinds 1-33 in kind id order (32 and 33 appended after 31)") {
+TEST_CASE("P3-06 r9 20.9, r10 20.21 item 9: history.report lists kinds 1-36 in kind id order") {
     const wd::Record& r = history_record(shipped_content(), "report");
     const auto& events = r.get_array("events");
-    REQUIRE(events.size() == 33U);
+    REQUIRE(events.size() == 36U);
     const eng::EventCatalogue& compiled = eng::compiled();
     for (std::size_t i = 0; i < events.size(); ++i) {
         CHECK(events[i].as_record().get_string("kind") == compiled.kinds[i].key);
     }
 }
 
-TEST_CASE("P3-06 r9 20.10: no new random stream (52 names, the five hist.conflict streams unchanged)") {
+TEST_CASE("P3-06 r9 20.10, r10 20.17 item 5: one new stream, hist.conflict.search, after hist.conflict.sack (53)") {
     const auto names = worldgen::streams::all_stream_names;
-    CHECK(names.size() == 52U);
-    std::size_t conflict = 0;
-    for (const auto& n : names) conflict += std::string_view(n).rfind("hist.conflict.", 0) == 0 ? 1U : 0U;
-    CHECK(conflict == 5U);
+    CHECK(names.size() == 53U);
+    std::size_t conflict = 0, sack = 0, search = 0;
+    for (std::size_t i = 0; i < names.size(); ++i) {
+        const std::string_view n(names[i]);
+        conflict += n.rfind("hist.conflict.", 0) == 0 ? 1U : 0U;
+        if (n == "hist.conflict.sack") sack = i;
+        if (n == "hist.conflict.search") search = i;
+    }
+    CHECK(conflict == 6U);
+    CHECK(search == sack + 1);
+}
+
+TEST_CASE("P3-06 r10 20.15, 20.17, 20.22: kinds 34 war_won, 35 search_abandoned, 36 refuge_held") {
+    using ET = eng::EntityType;
+    struct K {
+        std::int64_t id;
+        const char* key;
+        std::int64_t region_use, settlement_use;
+        const char* r1;
+        const char* r2;
+        const char* value;
+        std::int64_t salience;
+        const char* templ;
+    };
+    const std::vector<K> want = {
+        {34, "war_won", 0, 0, "winner", "loser", "years", 60,
+         "{winner} prevailed over {loser} after {years} {years?year|years} of war."},
+        {35, "search_abandoned", 1, 0, "searcher", "hidden", "years", 40,
+         "{searcher} searched {@region} for {hidden} and found no one; the war ended after {years} {years?year|years}."},
+        {36, "refuge_held", 1, 1, "attacker", "defender", "reason", 25,
+         "{attacker} besieged {@settlement} of {defender}; with {reason?nowhere to flee|too few to flee}, its people "
+         "held on."},
+    };
+    const eng::EventCatalogue& compiled = eng::compiled();
+    REQUIRE(compiled.kinds.size() == 36U);
+    const eng::EventCatalogue cat = eng::catalogue_of(engine_test::shipped());
+    REQUIRE(cat.kinds.size() == 36U);
+    for (const K& w : want) {
+        CAPTURE(std::string_view(w.key));
+        for (const eng::EventCatalogue* c : {&compiled, &cat}) {
+            const eng::KindDef& k = c->kinds[static_cast<std::size_t>(w.id - 1)];
+            CHECK(k.id == w.id);
+            CHECK(k.key == w.key);
+            CHECK(k.caused);
+            CHECK(k.region_use == w.region_use);
+            CHECK(k.settlement_use == w.settlement_use);
+            REQUIRE(k.roles.size() == 2U);
+            CHECK(k.roles[0].role == w.r1);
+            CHECK(k.roles[1].role == w.r2);
+            for (const auto& r : k.roles) {
+                CHECK(r.type == ET::civilization);
+                CHECK(r.min_count == 1);
+                CHECK(r.max_count == 1);
+            }
+            REQUIRE(k.values.size() == 1U);
+            CHECK(k.values[0] == w.value);
+        }
+        const eng::KindDef& k = cat.kinds[static_cast<std::size_t>(w.id - 1)];
+        CHECK(k.salience == w.salience);
+        CHECK(k.templ == w.templ);
+        CHECK(eng::template_problem(k, k.templ) == std::nullopt);
+    }
 }
 
 }  // TEST_SUITE

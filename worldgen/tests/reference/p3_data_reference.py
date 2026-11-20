@@ -330,11 +330,13 @@ CONFLICT_NEW_018 = (
     ("refuge_flight", 0, 1), ("flight_hops", 1, 8), ("hidden_years", 0, 10000), ("weary_wars", 0, 100),
     ("tribute_permille", 0, 1000), ("revenge_aggression", 0, 1000), ("levy_hops", 0, 16), ("odds_floor", 0, 1000),
     ("odds_min", 0, 1000), ("truce_break_aggression", 0, 999), ("enmity_hops", 1, 4),
+    # r10 20.19 (P3-09 r3): after enmity_hops
+    ("kill_max_permille", 1, 10000), ("find_permille", 0, 1000), ("search_years", 1, 100),
 )
 _i = [n for n, _, _ in CONFLICT_RANGES].index("last_refuge") + 1
 CONFLICT_RANGES_018 = CONFLICT_RANGES[:_i] + CONFLICT_NEW_018 + CONFLICT_RANGES[_i:]
 CONFLICT_018 = tuple((n, CONFLICT_RECORDS.get(n, INT)) for n, _, _ in CONFLICT_RANGES_018)
-assert len(CONFLICT_018) == 54 and CONFLICT_018[_i][0] == "refuge_flight"
+assert len(CONFLICT_018) == 57 and CONFLICT_018[_i][0] == "refuge_flight"
 CONFLICT_CHECKS_018 = CONFLICT_CHECKS + (("conflict_enmity_hops", "enmity_hops must not be below march_hops"),)
 
 
@@ -1026,7 +1028,7 @@ SPEC_FILES_017 = {"race": RACE_FILES_017, "culture": CULTURE_FILES_017, "history
 
 RACE_FIELDS_018_VALUES = {
     "elf": (1000, 1001, 1500), "goblin": (1000, 1001, 0), "dwarf": (1000, 1001, 0),
-    "faerie": (1000, 400, 2000), "human": (1000, 1001, 0), "orc": (4000, 1001, 0),
+    "faerie": (1000, 400, 0), "human": (1000, 1001, 0), "orc": (4000, 1001, 0),   # faerie home 0: P3-01 r10 3.3
 }
 
 
@@ -1041,7 +1043,7 @@ RACE_FILES_018 = {n: _race_018(n, t) for n, t in RACE_FILES_017.items()}
 CONFLICT_018_VALUES = (("refuge_flight", 1), ("flight_hops", 3), ("hidden_years", 300), ("weary_wars", 3),
                        ("tribute_permille", 100), ("revenge_aggression", 400), ("levy_hops", 3),
                        ("odds_floor", 500), ("odds_min", 700), ("truce_break_aggression", 600),
-                       ("enmity_hops", 3))
+                       ("enmity_hops", 3), ("kill_max_permille", 500), ("find_permille", 250), ("search_years", 3))
 assert [n for n, _ in CONFLICT_018_VALUES] == [n for n, _, _ in CONFLICT_NEW_018]
 CONFLICT_FILE_018 = {"conflict.toml": _edit(CONFLICT_FILE["conflict.toml"], "last_refuge = 1\n", "last_refuge = 1\n" +
                                             "".join("%s = %d\n" % kv for kv in CONFLICT_018_VALUES))}
@@ -1053,7 +1055,14 @@ KIND33_ENTRY = ('  { kind = "tribute", salience = 50, template = "{payer} paid t
                 '{people?was|were} carried off." },\n')
 _re = _edit(REPORT_FILE_017["report.toml"], '{ kind = "claim", salience = 45,', '{ kind = "claim", salience = 35,')
 _last = [l for l in _re.splitlines(True) if '"settlement_abandoned_to"' in l][0]
-_re = _edit(_re, _last, _last + KIND32_ENTRY + KIND33_ENTRY)
+# r10 20.15, 20.17, 20.22 (P3-09 r3): kinds 34-36, appended after 33 (20.21 item 9)
+KIND34_ENTRY = ('  { kind = "war_won", salience = 60, template = "{winner} prevailed over {loser} after {years} '
+                '{years?year|years} of war." },\n')
+KIND35_ENTRY = ('  { kind = "search_abandoned", salience = 40, template = "{searcher} searched {@region} for {hidden} '
+                'and found no one; the war ended after {years} {years?year|years}." },\n')
+KIND36_ENTRY = ('  { kind = "refuge_held", salience = 25, template = "{attacker} besieged {@settlement} of {defender}; '
+                'with {reason?nowhere to flee|too few to flee}, its people held on." },\n')
+_re = _edit(_re, _last, _last + KIND32_ENTRY + KIND33_ENTRY + KIND34_ENTRY + KIND35_ENTRY + KIND36_ENTRY)
 REPORT_FILE_018 = {"report.toml": _re}
 HISTORY_FILES_018 = dict(CHRONOLOGY_FILE, **CONFLICT_FILE_018, **ENGINE_FILE, **PEOPLES_FILE_018, **REPORT_FILE_018)
 SPEC_FILES_018 = {"race": RACE_FILES_018, "culture": CULTURE_FILES_017, "history": HISTORY_FILES_018}
@@ -1129,7 +1138,29 @@ def read_kind_files(root, kind, from_spec):
     return read_dir_files(path, directory)
 
 
+# P3-09 item 8 (0.18.0): the short word list replaces game/data/name_filters/words.toml (and its fixture copies).
+# A version before 0.18.0 reads the name_filter files as they were at the P3-08 commit below (from git), so
+# that the 0.17.0 goldens stay reproducible after the data change.
+NAME_FILTERS_017_COMMIT = "d750d15"
+
+
+def legacy_filter_files(path, directory):
+    import subprocess
+    rel = os.path.relpath(path, REPO).replace(os.sep, "/")
+    names = subprocess.run(["git", "-C", REPO, "ls-tree", "--name-only", NAME_FILTERS_017_COMMIT + ":" + rel],
+                           check=True, capture_output=True, text=True).stdout.split()
+    out = []
+    for name in sorted((n for n in names if n.endswith(".toml")), key=lambda n: n.encode()):
+        text = subprocess.run(["git", "-C", REPO, "show", "%s:%s/%s" % (NAME_FILTERS_017_COMMIT, rel, name)],
+                              check=True, capture_output=True).stdout.decode("utf-8")
+        out.append((name, text))
+    return out
+
+
 def read_dir_files(path, directory):
+    if directory == "name_filters" and DATA_VERSION != "0.18.0" and os.path.isdir(path) and \
+            os.path.normpath(path).startswith(os.path.normpath(REPO)):
+        return legacy_filter_files(path, directory)
     names = []
     for name in os.listdir(path):
         if name.startswith(".") or not name.endswith(".toml"):
@@ -1172,7 +1203,9 @@ def pre_018(path, kind):
             with open(os.path.join(path, n), encoding="utf-8") as f:
                 texts[n] = f.read()
     if kind == "history":
-        return ("refuge_flight" not in texts.get("conflict.toml", "")
+        return ("kill_max_permille" not in texts.get("conflict.toml", "")
+                or "refuge_held" not in texts.get("report.toml", "")
+                or "refuge_flight" not in texts.get("conflict.toml", "")
                 or "regions_per_extra_civ" not in texts.get("peoples.toml", "")
                 or "refugees_settled" not in texts.get("report.toml", ""))
     return any("muster_permille" not in t for t in texts.values())
@@ -1431,7 +1464,7 @@ def check_spec_invariants(c):
                "civ_ended", "ruin_faded", "claim", "war_declared", "battle", "battle_at_pass", "siege", "sacked",
                "settlement_captured", "peace", "truce", "region_ceded", "civ_conquered"]
     later = (["settlement_abandoned_to"] if at_least("0.17.0") else []) + \
-        (["refugees_settled", "tribute"] if at_least("0.18.0") else [])
+        (["refugees_settled", "tribute", "war_won", "search_abandoned", "refuge_held"] if at_least("0.18.0") else [])
     c.eq("report lists kinds 1-%d in id order (P3-05 11, P3-06 11%s)"
          % (30 + len(later), (", P3-05 r6 11" if at_least("0.17.0") else "") +
             (", P3-06 r9 20.9" if at_least("0.18.0") else "")),
@@ -1498,10 +1531,10 @@ def check_spec_018(c, races):
             c.ok("race %s.%s inside int(%d, %d)" % (k, n, lo, hi), lo <= v[n] <= hi)
     co = parsed_spec("history")["conflict"]
     i = list(co).index("last_refuge")
-    c.eq("history.conflict: the eleven r9 fields after last_refuge, in order, shipped values (20.9)",
-         [(n, co[n]) for n in list(co)[i + 1:i + 12]], list(CONFLICT_018_VALUES))
-    c.eq("history.conflict: capital_sacked_salience follows enmity_hops", list(co)[i + 12], "capital_sacked_salience")
-    c.eq("history.conflict has 54 fields", len(co), 54)
+    c.eq("history.conflict: the eleven r9 and three r10 fields after last_refuge, in order, shipped values",
+         [(n, co[n]) for n in list(co)[i + 1:i + 15]], list(CONFLICT_018_VALUES))
+    c.eq("history.conflict: capital_sacked_salience follows search_years", list(co)[i + 15], "capital_sacked_salience")
+    c.eq("history.conflict has 57 fields", len(co), 57)
     pe = parsed_spec("history")["peoples"]
     j = list(pe).index("regions_per_civ")
     c.eq("history.peoples: regions_per_extra_civ 90 and civs_extra_max 2 after regions_per_civ (P3-05 r8 21 item 5)",
@@ -1513,7 +1546,9 @@ def check_spec_018(c, races):
     c.eq("kind 33 entry (P3-06 r9 20.9)", (ev["tribute"]["salience"], ev["tribute"]["template"]),
          (50, "{payer} paid tribute to {payee}; {people} {people?was|were} carried off."))
     c.eq("every other report entry as at 0.17.0", [e for e in parsed_spec("history")["report"]["events"]
-                                                    if e["kind"] not in ("claim", "refugees_settled", "tribute")],
+                                                    if e["kind"] not in ("claim", "refugees_settled", "tribute",
+                                                                         "war_won", "search_abandoned",
+                                                                         "refuge_held")],
          [e for e in tomllib.loads(REPORT_FILE_017["report.toml"])["history"]["report"]["events"]
           if e["kind"] != "claim"])
     # the named check conflict_enmity_hops, once failing and at its edge (20.9)
@@ -1636,9 +1671,10 @@ def check_copied_kinds(c):
     c.eq("name_filter ids (P3-02 r5 11.2)", [d for d, _ in content], ["crude", "famous", "slurs", "words"])
     c.eq("name_filter sizes (P3-02 r5 11.2)",
          {d: tuple(len(t[f]) for f in ("anywhere", "at_start", "whole")) for d, t in content},
-         dict(slurs=(33, 19, 6), crude=(68, 16, 14), words=(0, 0, 647), famous=(0, 0, 101)))
+         dict(slurs=(33, 19, 6), crude=(68, 16, 14), words=(0, 0, 392 if at_least("0.18.0") else 647),
+              famous=(0, 0, 101)))   # P3-02 r8 11.11 (0.18.0): the short word list, 392 (647 before)
     eff = [len(set(w for _, t in content for w in t[f])) for f in ("anywhere", "at_start", "whole")]
-    c.eq("effective list sizes 101, 35, 768 (P3-02 r5 11.2)", eff, [101, 35, 768])
+    c.eq("effective list sizes (P3-02 r5 11.2, r8 11.11)", eff, [101, 35, 513 if at_least("0.18.0") else 768])
     c.eq("shipped name_filter passes its checks", name_filter_messages(content), [])
     for d, t in content:
         for f in ("anywhere", "at_start", "whole"):

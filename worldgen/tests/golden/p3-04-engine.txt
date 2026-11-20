@@ -1,6 +1,6 @@
 # P3-04 engine golden vectors for generator 0.18.0 (schema 7; P3-09): the stub engine (run_engine
-# with the stub configuration) on the 0.18.0 catalogue of 33 kinds (P3-05 11 and r6, P3-06 11 and
-# r9 20.9: kinds 32 refugees_settled and 33 tribute; claim salience 35), with P3-04 r10 (names
+# with the stub configuration) on the 0.18.0 catalogue of 36 kinds (P3-05 11 and r6, P3-06 11, r9
+# 20.9 and r10: kinds 32-36; claim salience 35; P3-02 r8's word list), with P3-04 r10 (names
 # inside a sentence, the three-word value form, the quiet_era template of 4.2, one quiet era per
 # civilization and quiet row), P3-02 r5 names (filter, god patterns, the elven House form) and
 # P1-06 r3 region names (the input worlds' table region). Spec
@@ -1836,15 +1836,15 @@ geo-seed-0-512 regions 14
 geo-seed-0-512 table civilization 8ce43c370079fcab05dbae62bcb6ab7a9a5021f9e4759ccbc6502ebe9788a739
 geo-seed-0-512 table event 86eb4d89dddfd61949938e697a5a2a87b93baab55bed273edf7124d93997a933
 geo-seed-0-512 table event_cause b07a6195b5ae669f9145c8bab11e4a400e5e0dbba9f5ea76a066cab16335526d
-geo-seed-0-512 table event_kind b6e466a521fd96b702089532729c1714965030229d2a558a19df094dfb9d9969
-geo-seed-0-512 table event_kind_role d6f783d767471275ae6d4ddb721dc7e58a8e25a04d7031115dd629aa192943cb
-geo-seed-0-512 table event_kind_value c7534369147777035a99a00c45319a9f834b1cc70daf535c3e7f3e5aa6de3947
+geo-seed-0-512 table event_kind 597ed5b0fcd34fc10fd84f7e04e8c16df3ebec801046f2a1c6072df2c15034fc
+geo-seed-0-512 table event_kind_role a72cdc51e6ddc171c3712eb1d7a8f5009cb4759a8561d2785712deadfe36e0fb
+geo-seed-0-512 table event_kind_value 0ed4ada6d848301b2b0ed1ef17d4073d78b84697102d243ea2be48a25b672be3
 geo-seed-0-512 table event_participant 18ddf5ff07a3459b02625b2bd25beb96205ee3ed8425da189d31dd8f276a7f5b
 geo-seed-0-512 table event_value ad5952c3b355192a907866827d3f7d9eff52c6aa354af5f1519543222602d501
 geo-seed-0-512 table phase 2025149618743653c395aa95bb57b39387fbb133b91d2a0baf53978136aeb81d
 geo-seed-0-512 table region_control 0fd8b35797452c3c63504881bcded57d6a5930399a0f0796b28871f2383f4564
 geo-seed-0-512 table relation cbbd5f990c53684d7ae650b40fcb5656e02261b53da5f6a7d8c819c92f2828f8
-geo-seed-0-512 table settlement 98923f0da9ceaa74279c5379b478228c7e446c4fe78205133198844e0eb9887e
+geo-seed-0-512 table settlement 8cf4f0cc592b58ade20adea47e1bcbb2881eb099bf89c22775d0b29d662bc7d5
 geo-seed-0-512 table settlement_census 62a922e64633aed5632292cc303451551a1439186ee04f34fdf526b74b58c1f4
 geo-seed-0-512 report end_year = 6000
 geo-seed-0-512 report phases_opening = 6
@@ -1887,6 +1887,9 @@ geo-seed-0-512 report events_civ_conquered = 0
 geo-seed-0-512 report events_settlement_abandoned_to = 0
 geo-seed-0-512 report events_refugees_settled = 0
 geo-seed-0-512 report events_tribute = 0
+geo-seed-0-512 report events_war_won = 0
+geo-seed-0-512 report events_search_abandoned = 0
+geo-seed-0-512 report events_refuge_held = 0
 geo-seed-0-512 report civilizations = 6
 geo-seed-0-512 report civilizations_alive = 6
 geo-seed-0-512 report settlements = 6
@@ -1919,7 +1922,7 @@ geo-seed-0-512 names c2:1 s2:0 site:seed
 geo-seed-0-512 names c3:0 s3:1 site:seed
 geo-seed-0-512 names c4:0 s4:1 site:seed
 geo-seed-0-512 names c5:3 s5:0 site:seed
-geo-seed-0-512 names c6:0 s6:1 site:seed
+geo-seed-0-512 names c6:0 s6:0 site:seed
 geo-seed-0-512 e1 Saene awakened the Elves in Northeast Wood.
 geo-seed-0-512 e2 The Elves founded the House of Nife in Northeast Wood.
 geo-seed-0-512 e3 The House of Nife founded Iensath in Northeast Wood.
@@ -1952,7 +1955,7 @@ geo-seed-0-512 e29 The Wosk Ring passed 381 quiet years, from 5153 to 5533, in w
 geo-seed-0-512 e30 The Duchy of Circon passed 381 quiet years, from 5153 to 5533, in which 15 new generations of rulers came to power.
 geo-seed-0-512 e31 Uruld'kruum awakened the Orcs in East Steppe.
 geo-seed-0-512 e32 The Orcs founded the Warband of Ghom in East Steppe.
-geo-seed-0-512 e33 The Warband of Ghom founded Shaazazuug in East Steppe.
+geo-seed-0-512 e33 The Warband of Ghom founded Uu'mold Fort in East Steppe.
 geo-seed-0-512 e34 The House of Nife passed 16 quiet years, from 5684 to 5699, in which one new generation of rulers came to power.
 geo-seed-0-512 e35 The Baskeeb Mob passed 16 quiet years, from 5684 to 5699, in which one new generation of rulers came to power.
 geo-seed-0-512 e36 Clan Durgarin passed 16 quiet years, from 5684 to 5699, under one generation of rulers.
@@ -1965,9 +1968,9 @@ geo-seed-42-512 regions 15
 geo-seed-42-512 table civilization 4188fbf4ca5ae4f37c6bd2cd8dcee8217c0bdcd859cf8313231a54bfb022ee43
 geo-seed-42-512 table event 1cb8744a9408902d3314063e71ab6ba2715297dbb27ec406799689a41a879bb2
 geo-seed-42-512 table event_cause b07a6195b5ae669f9145c8bab11e4a400e5e0dbba9f5ea76a066cab16335526d
-geo-seed-42-512 table event_kind b6e466a521fd96b702089532729c1714965030229d2a558a19df094dfb9d9969
-geo-seed-42-512 table event_kind_role d6f783d767471275ae6d4ddb721dc7e58a8e25a04d7031115dd629aa192943cb
-geo-seed-42-512 table event_kind_value c7534369147777035a99a00c45319a9f834b1cc70daf535c3e7f3e5aa6de3947
+geo-seed-42-512 table event_kind 597ed5b0fcd34fc10fd84f7e04e8c16df3ebec801046f2a1c6072df2c15034fc
+geo-seed-42-512 table event_kind_role a72cdc51e6ddc171c3712eb1d7a8f5009cb4759a8561d2785712deadfe36e0fb
+geo-seed-42-512 table event_kind_value 0ed4ada6d848301b2b0ed1ef17d4073d78b84697102d243ea2be48a25b672be3
 geo-seed-42-512 table event_participant 9c010a88e269adf485c9c2dc10948d90ba00c5b4fffc661b024b670ab5ddeabf
 geo-seed-42-512 table event_value f5eeb0cdabc702d6227857f81438f3296b0e53290dd330c8cb7d43dc3c15ca6c
 geo-seed-42-512 table phase ac05888e48cf0579e4f1d50a93dbd837b8bde9b41e66e40d623fa8e5a1d4302f
@@ -2016,6 +2019,9 @@ geo-seed-42-512 report events_civ_conquered = 0
 geo-seed-42-512 report events_settlement_abandoned_to = 0
 geo-seed-42-512 report events_refugees_settled = 0
 geo-seed-42-512 report events_tribute = 0
+geo-seed-42-512 report events_war_won = 0
+geo-seed-42-512 report events_search_abandoned = 0
+geo-seed-42-512 report events_refuge_held = 0
 geo-seed-42-512 report civilizations = 6
 geo-seed-42-512 report civilizations_alive = 6
 geo-seed-42-512 report settlements = 6
@@ -2079,7 +2085,7 @@ geo-seed-42-512 e27 The Skib Horde passed 477 quiet years, from 5119 to 5595, in
 geo-seed-42-512 e28 The Kaindnimm Throne passed 477 quiet years, from 5119 to 5595, in which 7 new generations of rulers came to power.
 geo-seed-42-512 e29 The Circle of Fysoli passed 477 quiet years, from 5119 to 5595, in which 5 new generations of rulers came to power.
 geo-seed-42-512 e30 The Kingdom of Alird passed 477 quiet years, from 5119 to 5595, in which 19 new generations of rulers came to power.
-geo-seed-42-512 e31 Ogh'krak awakened the Orcs in Bitterstrand Wolds.
+geo-seed-42-512 e31 Kruu'mold awakened the Orcs in Bitterstrand Wolds.
 geo-seed-42-512 e32 The Orcs founded the Warband of Baaldkrok in Bitterstrand Wolds.
 geo-seed-42-512 e33 The Warband of Baaldkrok founded Uld'kag in Bitterstrand Wolds.
 world geo-phrase-512 15629206466951235176 512 6000 all normal none
@@ -2088,9 +2094,9 @@ geo-phrase-512 regions 13
 geo-phrase-512 table civilization 95cd394dcdbb39bd9281ab3203663b0cabe3282c7dfdeab4e2b864e02bc90258
 geo-phrase-512 table event ac31634d3e27892e77e78afd53a3fb33b174eeaa514850e404673de1ca786bc7
 geo-phrase-512 table event_cause b07a6195b5ae669f9145c8bab11e4a400e5e0dbba9f5ea76a066cab16335526d
-geo-phrase-512 table event_kind b6e466a521fd96b702089532729c1714965030229d2a558a19df094dfb9d9969
-geo-phrase-512 table event_kind_role d6f783d767471275ae6d4ddb721dc7e58a8e25a04d7031115dd629aa192943cb
-geo-phrase-512 table event_kind_value c7534369147777035a99a00c45319a9f834b1cc70daf535c3e7f3e5aa6de3947
+geo-phrase-512 table event_kind 597ed5b0fcd34fc10fd84f7e04e8c16df3ebec801046f2a1c6072df2c15034fc
+geo-phrase-512 table event_kind_role a72cdc51e6ddc171c3712eb1d7a8f5009cb4759a8561d2785712deadfe36e0fb
+geo-phrase-512 table event_kind_value 0ed4ada6d848301b2b0ed1ef17d4073d78b84697102d243ea2be48a25b672be3
 geo-phrase-512 table event_participant 9c010a88e269adf485c9c2dc10948d90ba00c5b4fffc661b024b670ab5ddeabf
 geo-phrase-512 table event_value 3fe13d605ee2e22c37fc4eac6cf25dddc26fc7673511aa18b0070df5a704987d
 geo-phrase-512 table phase 618700316ce46ac26cff533f48ea3aeea3209cd3b2b25504c1bc19173e37032e
@@ -2139,6 +2145,9 @@ geo-phrase-512 report events_civ_conquered = 0
 geo-phrase-512 report events_settlement_abandoned_to = 0
 geo-phrase-512 report events_refugees_settled = 0
 geo-phrase-512 report events_tribute = 0
+geo-phrase-512 report events_war_won = 0
+geo-phrase-512 report events_search_abandoned = 0
+geo-phrase-512 report events_refuge_held = 0
 geo-phrase-512 report civilizations = 6
 geo-phrase-512 report civilizations_alive = 6
 geo-phrase-512 report settlements = 6
@@ -2211,9 +2220,9 @@ geo-seed-1-1024 regions 55
 geo-seed-1-1024 table civilization ff8def187fa01fd6b899726d57d29ac83c85742ea2f24c7dee782370fe2d17ad
 geo-seed-1-1024 table event 59049fa4a0db142d5da2879740a2aeac4289293d9b8eb4d7d5f15973c0a7482e
 geo-seed-1-1024 table event_cause b07a6195b5ae669f9145c8bab11e4a400e5e0dbba9f5ea76a066cab16335526d
-geo-seed-1-1024 table event_kind b6e466a521fd96b702089532729c1714965030229d2a558a19df094dfb9d9969
-geo-seed-1-1024 table event_kind_role d6f783d767471275ae6d4ddb721dc7e58a8e25a04d7031115dd629aa192943cb
-geo-seed-1-1024 table event_kind_value c7534369147777035a99a00c45319a9f834b1cc70daf535c3e7f3e5aa6de3947
+geo-seed-1-1024 table event_kind 597ed5b0fcd34fc10fd84f7e04e8c16df3ebec801046f2a1c6072df2c15034fc
+geo-seed-1-1024 table event_kind_role a72cdc51e6ddc171c3712eb1d7a8f5009cb4759a8561d2785712deadfe36e0fb
+geo-seed-1-1024 table event_kind_value 0ed4ada6d848301b2b0ed1ef17d4073d78b84697102d243ea2be48a25b672be3
 geo-seed-1-1024 table event_participant 9c010a88e269adf485c9c2dc10948d90ba00c5b4fffc661b024b670ab5ddeabf
 geo-seed-1-1024 table event_value 2df8831992e17b67c0585cf6a962f6958b9862be6c5bb6f511c3746378755e1e
 geo-seed-1-1024 table phase be41745c7fc910117efe5c8d968a9a73619e5e237ec17925d6d56f853ffce1c4
@@ -2262,6 +2271,9 @@ geo-seed-1-1024 report events_civ_conquered = 0
 geo-seed-1-1024 report events_settlement_abandoned_to = 0
 geo-seed-1-1024 report events_refugees_settled = 0
 geo-seed-1-1024 report events_tribute = 0
+geo-seed-1-1024 report events_war_won = 0
+geo-seed-1-1024 report events_search_abandoned = 0
+geo-seed-1-1024 report events_refuge_held = 0
 geo-seed-1-1024 report civilizations = 6
 geo-seed-1-1024 report civilizations_alive = 6
 geo-seed-1-1024 report settlements = 6
@@ -2334,9 +2346,9 @@ hist-span-2000-512 regions 13
 hist-span-2000-512 table civilization 3fd0273bbf1779c1ec3fee36f73e62ef99ce08692f36f2ddda5e5ab012f8b98f
 hist-span-2000-512 table event a6ecce0dfdc5486975f19489b0a1eb0a193849f81a18de612ed6709aa42fd37e
 hist-span-2000-512 table event_cause b07a6195b5ae669f9145c8bab11e4a400e5e0dbba9f5ea76a066cab16335526d
-hist-span-2000-512 table event_kind b6e466a521fd96b702089532729c1714965030229d2a558a19df094dfb9d9969
-hist-span-2000-512 table event_kind_role d6f783d767471275ae6d4ddb721dc7e58a8e25a04d7031115dd629aa192943cb
-hist-span-2000-512 table event_kind_value c7534369147777035a99a00c45319a9f834b1cc70daf535c3e7f3e5aa6de3947
+hist-span-2000-512 table event_kind 597ed5b0fcd34fc10fd84f7e04e8c16df3ebec801046f2a1c6072df2c15034fc
+hist-span-2000-512 table event_kind_role a72cdc51e6ddc171c3712eb1d7a8f5009cb4759a8561d2785712deadfe36e0fb
+hist-span-2000-512 table event_kind_value 0ed4ada6d848301b2b0ed1ef17d4073d78b84697102d243ea2be48a25b672be3
 hist-span-2000-512 table event_participant 9c010a88e269adf485c9c2dc10948d90ba00c5b4fffc661b024b670ab5ddeabf
 hist-span-2000-512 table event_value f10dd37e7690a07bff2abcd210b8367be122f9c803a6eac053709701a4d2612c
 hist-span-2000-512 table phase 5bb77ac1f65c7ab81cd2c1036c17227cd81a22b93b82737f5e28d65a43c73b69
@@ -2385,6 +2397,9 @@ hist-span-2000-512 report events_civ_conquered = 0
 hist-span-2000-512 report events_settlement_abandoned_to = 0
 hist-span-2000-512 report events_refugees_settled = 0
 hist-span-2000-512 report events_tribute = 0
+hist-span-2000-512 report events_war_won = 0
+hist-span-2000-512 report events_search_abandoned = 0
+hist-span-2000-512 report events_refuge_held = 0
 hist-span-2000-512 report civilizations = 6
 hist-span-2000-512 report civilizations_alive = 6
 hist-span-2000-512 report settlements = 6
@@ -2457,9 +2472,9 @@ hist-races-elf-orc-1024 regions 52
 hist-races-elf-orc-1024 table civilization 985ee17f384da9e83986aebb48eb7d0652fb5eb7e5cb60e49053c9ffefbd02fb
 hist-races-elf-orc-1024 table event f3db0c43e11d3e56ce10a17d0a8e5e43942399ad298d3b46d897e5fac2303eb0
 hist-races-elf-orc-1024 table event_cause d6cc5f9faf6085dd4a3fbc702286b167d0d6e5cea87f0033ac112815db81a6c9
-hist-races-elf-orc-1024 table event_kind b6e466a521fd96b702089532729c1714965030229d2a558a19df094dfb9d9969
-hist-races-elf-orc-1024 table event_kind_role d6f783d767471275ae6d4ddb721dc7e58a8e25a04d7031115dd629aa192943cb
-hist-races-elf-orc-1024 table event_kind_value c7534369147777035a99a00c45319a9f834b1cc70daf535c3e7f3e5aa6de3947
+hist-races-elf-orc-1024 table event_kind 597ed5b0fcd34fc10fd84f7e04e8c16df3ebec801046f2a1c6072df2c15034fc
+hist-races-elf-orc-1024 table event_kind_role a72cdc51e6ddc171c3712eb1d7a8f5009cb4759a8561d2785712deadfe36e0fb
+hist-races-elf-orc-1024 table event_kind_value 0ed4ada6d848301b2b0ed1ef17d4073d78b84697102d243ea2be48a25b672be3
 hist-races-elf-orc-1024 table event_participant eccbdf1fe43ac9a7a3b55380947f9d65d83ad44f3fe38070cfb3a4c630d9dbd1
 hist-races-elf-orc-1024 table event_value afdeb7ef5eebdb67f4ffb2ad9035b50ffa34fbb5d03a171e8db4109dc89652f8
 hist-races-elf-orc-1024 table phase 59641304b7aee2aebd2313f6602ec7fdce6b261b3223a7027557593f9ebde85f
@@ -2508,6 +2523,9 @@ hist-races-elf-orc-1024 report events_civ_conquered = 0
 hist-races-elf-orc-1024 report events_settlement_abandoned_to = 0
 hist-races-elf-orc-1024 report events_refugees_settled = 0
 hist-races-elf-orc-1024 report events_tribute = 0
+hist-races-elf-orc-1024 report events_war_won = 0
+hist-races-elf-orc-1024 report events_search_abandoned = 0
+hist-races-elf-orc-1024 report events_refuge_held = 0
 hist-races-elf-orc-1024 report civilizations = 2
 hist-races-elf-orc-1024 report civilizations_alive = 2
 hist-races-elf-orc-1024 report settlements = 2
@@ -2550,9 +2568,9 @@ hist-dense-1024 regions 52
 hist-dense-1024 table civilization f8dce5018ee6a5d43df76b3ecc5cae395c03af2d121f328f522da78e60fe44e1
 hist-dense-1024 table event 52f0c2b643c7c1bfde0868500233369bd0da09600b6e1bf4a7b8ff2379854325
 hist-dense-1024 table event_cause b07a6195b5ae669f9145c8bab11e4a400e5e0dbba9f5ea76a066cab16335526d
-hist-dense-1024 table event_kind b6e466a521fd96b702089532729c1714965030229d2a558a19df094dfb9d9969
-hist-dense-1024 table event_kind_role d6f783d767471275ae6d4ddb721dc7e58a8e25a04d7031115dd629aa192943cb
-hist-dense-1024 table event_kind_value c7534369147777035a99a00c45319a9f834b1cc70daf535c3e7f3e5aa6de3947
+hist-dense-1024 table event_kind 597ed5b0fcd34fc10fd84f7e04e8c16df3ebec801046f2a1c6072df2c15034fc
+hist-dense-1024 table event_kind_role a72cdc51e6ddc171c3712eb1d7a8f5009cb4759a8561d2785712deadfe36e0fb
+hist-dense-1024 table event_kind_value 0ed4ada6d848301b2b0ed1ef17d4073d78b84697102d243ea2be48a25b672be3
 hist-dense-1024 table event_participant 9c010a88e269adf485c9c2dc10948d90ba00c5b4fffc661b024b670ab5ddeabf
 hist-dense-1024 table event_value 5be54b7d29cb470aeedaebfaa6a49098f2ad5091b3e810592c366d1cd2c08a58
 hist-dense-1024 table phase 54a6dedd647d51c71327c8a5ea31632d311f9f7dd390ac7ae63bb469f47707c8
@@ -2601,6 +2619,9 @@ hist-dense-1024 report events_civ_conquered = 0
 hist-dense-1024 report events_settlement_abandoned_to = 0
 hist-dense-1024 report events_refugees_settled = 0
 hist-dense-1024 report events_tribute = 0
+hist-dense-1024 report events_war_won = 0
+hist-dense-1024 report events_search_abandoned = 0
+hist-dense-1024 report events_refuge_held = 0
 hist-dense-1024 report civilizations = 6
 hist-dense-1024 report civilizations_alive = 6
 hist-dense-1024 report settlements = 6
@@ -2673,9 +2694,9 @@ example-42-1024 regions 50
 example-42-1024 table civilization 76d307e114bc14124e3e30f60e41f92749f1c1597908cff417804097b30ff306
 example-42-1024 table event 17473579b71f165721744eeef0d16a9eb7d5db67693289869e010b02d22791c3
 example-42-1024 table event_cause b07a6195b5ae669f9145c8bab11e4a400e5e0dbba9f5ea76a066cab16335526d
-example-42-1024 table event_kind b6e466a521fd96b702089532729c1714965030229d2a558a19df094dfb9d9969
-example-42-1024 table event_kind_role d6f783d767471275ae6d4ddb721dc7e58a8e25a04d7031115dd629aa192943cb
-example-42-1024 table event_kind_value c7534369147777035a99a00c45319a9f834b1cc70daf535c3e7f3e5aa6de3947
+example-42-1024 table event_kind 597ed5b0fcd34fc10fd84f7e04e8c16df3ebec801046f2a1c6072df2c15034fc
+example-42-1024 table event_kind_role a72cdc51e6ddc171c3712eb1d7a8f5009cb4759a8561d2785712deadfe36e0fb
+example-42-1024 table event_kind_value 0ed4ada6d848301b2b0ed1ef17d4073d78b84697102d243ea2be48a25b672be3
 example-42-1024 table event_participant 9c010a88e269adf485c9c2dc10948d90ba00c5b4fffc661b024b670ab5ddeabf
 example-42-1024 table event_value f5eeb0cdabc702d6227857f81438f3296b0e53290dd330c8cb7d43dc3c15ca6c
 example-42-1024 table phase ac05888e48cf0579e4f1d50a93dbd837b8bde9b41e66e40d623fa8e5a1d4302f
@@ -2724,6 +2745,9 @@ example-42-1024 report events_civ_conquered = 0
 example-42-1024 report events_settlement_abandoned_to = 0
 example-42-1024 report events_refugees_settled = 0
 example-42-1024 report events_tribute = 0
+example-42-1024 report events_war_won = 0
+example-42-1024 report events_search_abandoned = 0
+example-42-1024 report events_refuge_held = 0
 example-42-1024 report civilizations = 6
 example-42-1024 report civilizations_alive = 6
 example-42-1024 report settlements = 6
@@ -2787,7 +2811,7 @@ example-42-1024 e27 The Skib Horde passed 477 quiet years, from 5119 to 5595, in
 example-42-1024 e28 The Kaindnimm Throne passed 477 quiet years, from 5119 to 5595, in which 7 new generations of rulers came to power.
 example-42-1024 e29 The Circle of Fysoli passed 477 quiet years, from 5119 to 5595, in which 5 new generations of rulers came to power.
 example-42-1024 e30 The Kingdom of Alird passed 477 quiet years, from 5119 to 5595, in which 19 new generations of rulers came to power.
-example-42-1024 e31 Ogh'krak awakened the Orcs in Warlord's Rises.
+example-42-1024 e31 Kruu'mold awakened the Orcs in Warlord's Rises.
 example-42-1024 e32 The Orcs founded the Warband of Baaldkrok in Warlord's Rises.
 example-42-1024 e33 The Warband of Baaldkrok founded Uld'kag in Warlord's Rises.
 world example-42-1024-ft500 42 1024 6000 all normal ForcedTension(500,1000,1)
@@ -2796,9 +2820,9 @@ example-42-1024-ft500 regions 50
 example-42-1024-ft500 table civilization a84a83bdc241d13c1c501a8fb1340fa309a9b92f9d89853e01198054028c6511
 example-42-1024-ft500 table event 742b79013eb6c7d12b77c75ce7149d08a48799184c62574db3bd3bedf763d1be
 example-42-1024-ft500 table event_cause ee352835d27399f7524688c533978ca1e7705d7ea481d22fa98a8093c2f4c910
-example-42-1024-ft500 table event_kind b6e466a521fd96b702089532729c1714965030229d2a558a19df094dfb9d9969
-example-42-1024-ft500 table event_kind_role d6f783d767471275ae6d4ddb721dc7e58a8e25a04d7031115dd629aa192943cb
-example-42-1024-ft500 table event_kind_value c7534369147777035a99a00c45319a9f834b1cc70daf535c3e7f3e5aa6de3947
+example-42-1024-ft500 table event_kind 597ed5b0fcd34fc10fd84f7e04e8c16df3ebec801046f2a1c6072df2c15034fc
+example-42-1024-ft500 table event_kind_role a72cdc51e6ddc171c3712eb1d7a8f5009cb4759a8561d2785712deadfe36e0fb
+example-42-1024-ft500 table event_kind_value 0ed4ada6d848301b2b0ed1ef17d4073d78b84697102d243ea2be48a25b672be3
 example-42-1024-ft500 table event_participant 62040b09412afbde1725c452174f094d95b77eb39d2866a440ecde6b01b2be8a
 example-42-1024-ft500 table event_value 6256a3a14ed081e4e5c174fed3d3a75f1cd76ed4c75a815ed1b48afe07e015ff
 example-42-1024-ft500 table phase 3c17cfffd062c1132a4efb872f0ef35794d909cec8f446ca54b58af4a8de7871
@@ -2847,6 +2871,9 @@ example-42-1024-ft500 report events_civ_conquered = 0
 example-42-1024-ft500 report events_settlement_abandoned_to = 0
 example-42-1024-ft500 report events_refugees_settled = 0
 example-42-1024-ft500 report events_tribute = 0
+example-42-1024-ft500 report events_war_won = 0
+example-42-1024-ft500 report events_search_abandoned = 0
+example-42-1024-ft500 report events_refuge_held = 0
 example-42-1024-ft500 report civilizations = 6
 example-42-1024-ft500 report civilizations_alive = 6
 example-42-1024-ft500 report settlements = 6
@@ -2918,7 +2945,7 @@ example-42-1024-ft500 e35 The Skib Horde passed 477 quiet years, from 5119 to 55
 example-42-1024-ft500 e36 The Kaindnimm Throne passed 477 quiet years, from 5119 to 5595, in which 7 new generations of rulers came to power.
 example-42-1024-ft500 e37 The Circle of Fysoli passed 477 quiet years, from 5119 to 5595, in which 5 new generations of rulers came to power.
 example-42-1024-ft500 e38 The Kingdom of Alird passed 477 quiet years, from 5119 to 5595, in which 19 new generations of rulers came to power.
-example-42-1024-ft500 e39 Ogh'krak awakened the Orcs in Warlord's Rises.
+example-42-1024-ft500 e39 Kruu'mold awakened the Orcs in Warlord's Rises.
 example-42-1024-ft500 e40 The Orcs founded the Warband of Baaldkrok in Warlord's Rises.
 example-42-1024-ft500 e41 The Warband of Baaldkrok founded Uld'kag in Warlord's Rises.
 world example-42-1024-ft1 42 1024 6000 all normal ForcedTension(1,5000,1)
@@ -2927,9 +2954,9 @@ example-42-1024-ft1 regions 50
 example-42-1024-ft1 table civilization a264d256dc7ab49c82242958ad76113a1967f8836f0f78a4b4d20a1bc041a1af
 example-42-1024-ft1 table event a688d6869cbace237e74e0724f4a7071dead6c78a407f67fb7aa2fb9c1e9c659
 example-42-1024-ft1 table event_cause cd487c4ce81a9bc353a954b8d04fd879d3a948a3b23ffb0e4e29a1acdfe5434d
-example-42-1024-ft1 table event_kind b6e466a521fd96b702089532729c1714965030229d2a558a19df094dfb9d9969
-example-42-1024-ft1 table event_kind_role d6f783d767471275ae6d4ddb721dc7e58a8e25a04d7031115dd629aa192943cb
-example-42-1024-ft1 table event_kind_value c7534369147777035a99a00c45319a9f834b1cc70daf535c3e7f3e5aa6de3947
+example-42-1024-ft1 table event_kind 597ed5b0fcd34fc10fd84f7e04e8c16df3ebec801046f2a1c6072df2c15034fc
+example-42-1024-ft1 table event_kind_role a72cdc51e6ddc171c3712eb1d7a8f5009cb4759a8561d2785712deadfe36e0fb
+example-42-1024-ft1 table event_kind_value 0ed4ada6d848301b2b0ed1ef17d4073d78b84697102d243ea2be48a25b672be3
 example-42-1024-ft1 table event_participant 9d76b5db849d4ba4efb1f4456bbfd49c4f0a761c8998cd69ca14ee7846769c6b
 example-42-1024-ft1 table event_value f440fa90fbc975daca47b45835c88356bb54df8088280ad2716f84f7fafc4fdc
 example-42-1024-ft1 table phase adbd3d57792398480bbee3b2866ca7017e0f7051924247c4349def64d0534927
@@ -2978,6 +3005,9 @@ example-42-1024-ft1 report events_civ_conquered = 0
 example-42-1024-ft1 report events_settlement_abandoned_to = 0
 example-42-1024-ft1 report events_refugees_settled = 0
 example-42-1024-ft1 report events_tribute = 0
+example-42-1024-ft1 report events_war_won = 0
+example-42-1024-ft1 report events_search_abandoned = 0
+example-42-1024-ft1 report events_refuge_held = 0
 example-42-1024-ft1 report civilizations = 6
 example-42-1024-ft1 report civilizations_alive = 6
 example-42-1024-ft1 report settlements = 6
@@ -3110,7 +3140,7 @@ example-42-1024-ft1 e96 The Skib Horde passed 477 quiet years, from 5119 to 5595
 example-42-1024-ft1 e97 The Kaindnimm Throne passed 477 quiet years, from 5119 to 5595, in which 7 new generations of rulers came to power.
 example-42-1024-ft1 e98 The Circle of Fysoli passed 477 quiet years, from 5119 to 5595, in which 5 new generations of rulers came to power.
 example-42-1024-ft1 e99 The Kingdom of Alird passed 477 quiet years, from 5119 to 5595, in which 19 new generations of rulers came to power.
-example-42-1024-ft1 e100 Ogh'krak awakened the Orcs in Warlord's Rises.
+example-42-1024-ft1 e100 Kruu'mold awakened the Orcs in Warlord's Rises.
 example-42-1024-ft1 e101 The Orcs founded the Warband of Baaldkrok in Warlord's Rises.
 example-42-1024-ft1 e102 The Warband of Baaldkrok founded Uld'kag in Warlord's Rises.
 template awakening 7b63726561746f727d206177616b656e656420746865207b726163653a706c7572616c7d20696e207b40726567696f6e7d2e ok
@@ -3192,3 +3222,6 @@ report_events event kind 'civ_conquered' has no entry
 report_events event kind 'settlement_abandoned_to' has no entry
 report_events event kind 'refugees_settled' has no entry
 report_events event kind 'tribute' has no entry
+report_events event kind 'war_won' has no entry
+report_events event kind 'search_abandoned' has no entry
+report_events event kind 'refuge_held' has no entry

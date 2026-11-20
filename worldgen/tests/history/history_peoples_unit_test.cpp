@@ -134,9 +134,9 @@ TEST_CASE("P3-05 11, 16.1 item 14, 16.1a 17i: the compiled catalogue appends kin
     const eng::EventCatalogue& compiled = eng::compiled();
     // P3-06 11 appends kinds 20-30 at 0.16.0 (P3-04 8.2 r4), P3-05 r6 kind 31 at 0.17.0, P3-06 r9 20.9
     // kinds 32 and 33 at 0.18.0
-    REQUIRE(compiled.kinds.size() == 33U);
+    REQUIRE(compiled.kinds.size() == 36U);  // r10: kinds 34-36
     const eng::EventCatalogue cat = eng::catalogue_of(shipped());
-    REQUIRE(cat.kinds.size() == 33U);
+    REQUIRE(cat.kinds.size() == 36U);
     for (std::size_t i = 0; i < want.size(); ++i) {
         const K& w = want[i];
         CAPTURE(std::string_view(w.key));
@@ -191,11 +191,11 @@ TEST_CASE("P3-05 11, 16.1 item 14, 16.1a 17i: the compiled catalogue appends kin
     CHECK(compiled.kinds[4].key == "flare_up");
 }
 
-TEST_CASE("P3-05 3.3: the twelve hist.peoples streams follow hist.chronology.awakening (52 names from 0.17.0)") {
+TEST_CASE("P3-05 3.3: the twelve hist.peoples streams follow hist.chronology.awakening (53 names from 0.18.0)") {
     const auto names = ppl::registered_streams();
     // P3-06 3.3 appends five hist.conflict names (P0-01 19); P0-01 amendment 20 (0.17.0) inserts
-    // geo.regions.name after geo.regions.cost
-    REQUIRE(names.size() == 52U);
+    // geo.regions.name after geo.regions.cost; P3-06 r10 20.17 (0.18.0) hist.conflict.search
+    REQUIRE(names.size() == 53U);
     std::size_t at = 0;
     for (std::size_t i = 0; i < names.size(); ++i) {
         if (names[i] == "hist.chronology.awakening") at = i;
