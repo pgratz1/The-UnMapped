@@ -948,6 +948,183 @@ Each with the recommendation and the interim choice this spec follows.
 9. **Humans on land left open or ruined** (9). Humans spread over open land (P3-05) and resettle sacked regions within their reach, but the old wars are mostly fought far from the farmland where humans awaken, so few human settlements stand on ruined ground (40 of 762 human settlements; 40 of 357 human regions had another holder before). Recommendation: accept in P3; P5's refugee migration (P3-05 question 6) is the stronger reading. Interim: as specified.
 10. **"A world already at war" when the dwarves arrive** (9). Measured as a war open within 50 years either side of the dwarven awakening: 30 of 50 worlds at 1024. Recommendation: accept; the rest of the worlds have their goblin–elf wars earlier or later in the goblin age, and every world has the `enmity` rows. Alternative: an awakening raises every hostile pair's strain (a rule the design does not state).
 
+## 20. Conflict balance (amendment r8, P3-09, generator 0.18.0)
+
+Written 2026-11-20 by the spec writer for change P3-09 "conflict balance" (`docs/specs/p3-09-conflict-balance.md`), in answer to the world critic's review of this stage at 0.16.0 (`docs/reviews/p3-06-conflict-world-critic.md`: findings F1, F2, F3, F5, F6, F7, F9; suggestions 1, 3–6, 8–10). **Normative from generator 0.18.0, not before.** It builds on r7 (P3-08, generator 0.17.0: the victors' losses from the smaller force, the capture sentence; and P3-05 r6: the faerie forest weights, dwarven upland sites). Where this section and sections 4–17 differ, this section rules; each item names what it replaces. Four of its rules are design-level and wait for Paul (`docs/design/proposals.md`, "four rule changes proposed by the world critic's review of conflict"; P3-09 8): flight of the last refuge (20.1), the cost of a lost war (20.3), revenge (20.5) and runaway measured per race (20.11). The interim choice is the rule as written here.
+
+**Measurements.** Figures marked *(m16)* come from the spec writer's prototype `~/.cache/the-unmapped/out/p3-09-spec/proto.py` and its variants (a subclass of the test writer's reference `p3_conflict_reference.py`, which reproduces 0.16.0 row for row), run on the geography of the 0.16.0 validation sweep (`~/.cache/the-unmapped/out/p3-06-validation/sweep/`), with two parts of P3-08 emulated: the victors' losses from the smaller force (r7 7.3) and the faerie weights of P3-05 12.3 (a copy of `game/data`). P3-08's other changes (dwarven upland sites, quiet eras, halved famine and plague spread, names, kind 31) were not emulated. Every figure is "measured at 0.16.0 with that emulation" and is **re-measured at 0.18.0** by the statistic named with it (P3-09 5). Unless stated otherwise: 1024, default settings, seeds 0–39.
+
+### 20.1 The last refuge falls into flight (replaces the last line of 7.3 item 7; F2, suggestion 5)
+
+**Last refuge.** A settlement t of civilization y is a *last refuge* when t is y's only standing settlement and y is the only alive civilization of its race (as 7.3 item 7).
+
+**Siege of a last refuge.** When the siege draw of 7.3 item 7 says the last refuge t fell and `last_refuge` = 1:
+
+1. if `refuge_flight` = 1 and a flight destination exists (below), t **falls into flight**: the `siege` event has `fell` = 1 and the flight procedure follows instead of 7.5;
+2. otherwise the guard holds as before: `fell` = 0 ("there is nowhere to flee").
+
+**Flight destination** (pure; no draw). Candidates D: every region with no owner, not an islet, D ≠ the region R_t of t, `hops`(R_t)(D) ≤ `flight_hops` (P3-05 4.4's border hops over the open borders), and C(D, r_y) ≥ `expand_min_capacity` (P3-05 12.1). For each, h_x(D) = min over the regions P of `presence(x)` of `hops`(P)(D), or `march_hops` + 1 when unreachable, capped at `march_hops` + 1 (every region beyond the attacker's reach is equally safe). Order the candidates by (−h_x(D), −σ(D, r_y), D) ascending (farthest from the attacker, then the best land, then the smaller id); the destination is the first with a site by P3-05 6.2 (not relaxed). None: no destination.
+
+**Flight procedure** (T6 only, right after the `siege` event e_s; x the besieger, w the war):
+
+1. dead = P_t × `sack_toll` div 1000; P_t −= dead (`set_population`); append `sacked` (region R_t, settlement t; participants x `attacker`, y `defender`; values `dead`, `survivors` = P_t; cause e_s; salience `capital_sacked_salience`, t being y's capital). No sack draw is taken: a refuge that falls is always sacked.
+2. n = min(P_t, 2 × C(D, r_y)); h = the next settlement id; its name as P3-05 names a colony (P3-02, kind settlement, y's culture, entity h); append `refugees_settled` (32; region D, settlement h; participants h `settlement`, y `founder`, t `origin`; value `population` = n; cause the sack); `found_settlement` at the site (status thriving, population n, owner y, kind by P3-05 9.3 item 9: 8.4's fortress rule or `ladder(r_y, n)`); `set_region_owner(D, y, refugees_settled)`; `hidden_until[h]` = Y + `hidden_years`.
+3. P_t −= n (`set_population`); `PeoplesSubsystem::ruin(ctx, t, sack)`: the rest (P_t > 0 only when n was capped) finds h full and is lost; t is ruined with `ruin_event` = the sack, R_t released, and y's capital moves to h with `capital_moved` caused by the sack (P3-05 8.5 item 5; h is a destination created earlier in the step, the stated exception).
+4. The war: settlements taken by x += 1; grudge{x, y} += `capture_grudge`; `wronged`(y, x) gains R_t (20.5); the war's last event = the `refugees_settled`. y is not conquered (h stands). 7.7 follows as usual (aim achieved when the goal was R_t).
+
+**Hidden settlements** (new; 5.1, 6.2, 7.3). A settlement s is *hidden* in year Y when Y < `hidden_until[s]` (a fled refuge) or when it is *concealed* (20.7). A hidden settlement:
+
+- counts in no presence: `presence(c)` (5.1) = the regions of c's standing visible settlements that are not hidden, together with the regions c holds in which c has no hidden settlement (a region whose only settlements of c are hidden is out of everyone's sight); so a hidden settlement's region is never in a front, never a claim region, battlefield, war goal or siege target, and a civilization all of whose settlements are hidden is in contact with no one (its strains stop growing, its open wars end by 7.7 item 3, no front);
+- still counts in its owner's force (6.1), population (`PeoplesView`), and region holdings (shares, fear, `region_control`); P3-05 treats it as any settlement (growth, foundings: its colonies are not hidden);
+- is never besieged, so it is never a last refuge under siege while hidden.
+
+When Y reaches `hidden_until[h]` the refuge is *found*: it is an ordinary settlement from then on. No event marks it (the year follows from the `refugees_settled` event and the tuning). `hidden_until` is a member (ordered map by settlement id), set only here.
+
+**Invariant** (14 item 7 restated): with `last_refuge` 1, no race present goes extinct by conflict: a last refuge either holds or flees, the flight never ends its civilization, and a hidden refuge cannot be attacked. (P3-05's abandonment no longer drops a civilization's only settlement by chance, P3-05 r6 8.5 (a).)
+
+**Why flight and not "no claim on a last refuge"** (the review's second option). Measured *(m16)*: with flight, sieges of a last refuge fall from 216 to 88 in 40 worlds, none is held by the guard, 52 refuges flee (never for want of a destination), hollow wars fall from 40% to 32% and faeries end with one settlement in 3 worlds instead of 6. With the alternative (no claim or declaration against a civilization that is its race's last refuge, strains kept) 161 sieges of a last refuge remain and 102 are held by the guard (wars declared before the defender became a last refuge, and battles that reach the refuge on the way to another goal), hollow wars 38%, faeries with one settlement in 8 worlds. The alternative hides the symptom; flight turns it into a story (a ruin, a sack with a cause, a hidden hamlet to find) and fits design 5's "hidden communities in wild places".
+
+### 20.2 War goals (amends 5.3 and 7.2's goal re-choice; F1, suggestion 1a)
+
+**Allowed goals** of a against b: the entries of `front(a, b)`, without the regions b is *weary of* (20.4), and without the region of b's capital unless that leaves none (then the capital region is the only allowed goal: a war of plunder, whose cost to the loser is 20.3's).
+
+1. **Claims** (5.3): the claim region is the allowed goal with the smallest key (0 if R ∈ `wronged`(a, b) and b holds R, else 1; 0 if R ∈ `wanted_held(a)` and b holds R, else 1; −(σ(R, r_a) − `cost_penalty` × cost); R). No allowed goal: no claim.
+2. **Declarations** (7.2, "Declaring"): if the claim region is no longer an allowed goal, or b neither holds it nor has a standing visible settlement in it, the goal is the allowed goal with the smallest 6.2 target key; if there is none, the claim is dropped and no war is declared (the draw was taken; nothing else changes).
+
+### 20.3 The cost of a lost war (amends 7.7 "Cession"; F1, suggestion 1b)
+
+After the `peace` of a war won by W over L (either side: the attacker or the defender may win), when 7.7's cession of the goal did not happen:
+
+1. **Cession of another region.** Candidates: the regions R held by L, in `front(W, L)`, other than the region of L's capital. If any: G' = the one with the smallest 6.2 target key for W; append `region_ceded` (region G'; participants L `from`, W `to`; cause the peace) and transfer as 7.7's cession (each standing visible settlement of L in G', ascending id, gives its excess over 2 × C(G', r_W) to L's nearest other standing settlement and passes to W; `set_region_owner(G', W, cession)`); `wronged`(L, W) gains G'.
+2. **Otherwise tribute.** n = Σ P over L's standing visible settlements that are not hidden × `tribute_permille` div 1000; if n > 0: append `tribute` (33; no region; participants L `payer`, W `payee`; value `people` = n; cause the peace), then `casualties(L, n, tribute)` (7.4: the people are taken from L's settlements in proportion, `note_reduction` on each; W gains no people: P3 has no wealth or captives to count, and the event is the record lore needs).
+
+A truce costs nothing. In a quiet step (7.8) an end that would cede or take tribute waits, like a cession, until both the winner and the loser have quiet-event budget (the loser is charged: it is the first civilization participant of `region_ceded` and `tribute`). *(m16: the prototype skipped the cost instead of waiting when the loser had no budget; budgets of 2 per step make this rare. The reference implements the wait.)*
+
+Measured *(m16; configurations of P3-09 5.1)*: with 20.1–20.5 and 20.7's home defence (configuration G5), hollow wars (no sack, capture, cession, tribute or conquest) are 15% of 821 wars against 40% of 911 at the baseline, and attacker victories that gained nothing 1 of 392 against 124 of 460, with 160 cessions of 20.3 and 336 tributes in 40 worlds; costing only the attacker's victories (G3) leaves 32% hollow. With every rule of this section (configuration FINE) 24% of 736 wars are hollow, 0 of 387 attacker victories gain nothing, 139 cessions of 20.3 and 224 tributes.
+
+### 20.4 War weariness (new; amends 5.3; F1, suggestion 1c)
+
+`futile[(b, G)]` (member; ordered map keyed by (defender id, region id)) = (count, owner). When a war with defender b and goal G ends by peace or truce (7.7, 7.8), and G's owner at that moment is the owner G had at the declaration (recorded in the war), the count rises by 1 and the owner is recorded; a count whose recorded owner differs from G's current owner reads as 0 (any change of owner resets it). b is **weary of** G for every claimant while the count read is ≥ `weary_wars` (shipped 3): G is not an allowed goal against b (20.2). The count is per defender and region, over all attackers: the measured repetition is several hordes of one people against one wood, not one pair.
+
+Measured *(m16)*: the longest run of consecutive wars over one (defender, goal) that left the goal's owner unchanged is, per world, 1 / 3 / 4 (min / median / max) and above 3 in 2 of 40 worlds with every rule (FINE; against 1 / 5 / 12 and 26 worlds at the baseline). Counted per pair instead of per defender (configuration F) the maximum was 7 and 13 worlds exceeded 3, because several hordes of one people take turns at one wood.
+
+### 20.5 Revenge (amends 5.2, 5.3, 7.2; F3, suggestion 3)
+
+`wronged(a, b)` (member; ordered map from (a, b) to an ordered set of region ids): a region is added when b sacks or captures a settlement of a there (7.5, 20.1), or a cedes it to b (7.7, 20.3). While `wronged(a, b)` is not empty and grudge{a, b} > 0, a's **effective aggression** against b is g'(a, b) = max(g_a, `revenge_aggression`) (shipped 400); g' replaces g in the rate of 5.2 and in the odds of 7.2. The set is never emptied; the grudge's decay (4.2) ends the revenge. Claims prefer wronged land still held by b (20.2 item 1). The flare-up war, the declaration chance and everything else are unchanged.
+
+So a people of any temper strikes back at whoever took its towns, at the pace of a moderately warlike one (400² / 1000 = 160 against the elves' own 22), and only while the wound is fresh. Measured *(m16)*: elves declare 17 wars in 40 worlds with revenge and the costs alone (configuration D; 0 at the baseline) and 10 with every rule (FINE: 20.6's odds minimum holds back the weaker side); faeries none (concealed, they are rarely wronged); goblins still declare 74% of all wars.
+
+### 20.6 Orcs that win their age (amends 6.1 and 7.2; F3, suggestion 4)
+
+Four rules, which together make the orcs' wars ones they can win (design 5: "strong, warlike"; "their coming opens the most recent age of conflict"):
+
+1. **Muster** (6.1). force(c) = levy(c) × `prowess_permille`(r_c) div 1000 × `muster_permille`(r_c) div 1000 (race field, 20.12; shipped orc **4000**, every other race 1000: an orc horde puts 40% of its people in the field). The exhaustion test of 7.7 item 1 reads pop0 × `muster_permille` div 1000 for each side: a people that arms more of itself bears proportionally more losses before it breaks (without this, a large muster only makes the orcs bleed out faster: 26 won against 60 lost with muster 4000 and the unscaled test, *m16*).
+2. **Local levies** (7.3 item 3). In a battle at R each side fights with its *local force*: the levy over its standing visible settlements s with `hops`(R)(R_s) ≤ `levy_hops` (shipped 3), times prowess and muster, divided by its open wars. A realm defends a border with the levies of the lands near it, not with its whole people; a sprawling kingdom is weaker at its far edge, a compact horde is not. Declarations, odds and exhaustion keep the whole force and population.
+3. **Odds** (7.2 item 3). The target's force in the odds is weighted by the defence of the claimed region G: fb = force(b) × def(G) div 1000, with def by 6.3 for the entry of G in `front(a, b)` (1000 if G is not in it); the aggression term is m = max(1000 − g', `odds_floor`) (shipped 500); odds = min(1000, force(a) × 1000 div max(1, fb × `declare_ratio` div 1000 × m div 1000)). If odds < `odds_min` (shipped 700) there is no declaration and no draw. **The tension (5.4) and the flare pair (7.2 item 2) skip a claim whose odds are below `odds_min`**: a quarrel a people cannot pursue does not flare up (without this rule one world of 40 ran fifteen flare-ups on a claim no one could act on, 2,478 events, *m16* seed 29). The odds are a pure read of the step's state, so `tension()` stays a pure read.
+4. **Truce** (5.2, 7.2). The truce that bars a's strain and declarations against b after their last peace is directional: a is past it when Y ≥ the peace year + `truce_years` × min(1000, (1000 − g_a) × 1000 div (1000 − `truce_break_aggression`)) div 1000 (shipped 600). Only a people more warlike than the goblins keeps a shorter truce: the orcs (900) 50 years, everyone else 200. 5.4's "past their truce" is a's.
+
+Measured *(m16)*: orcs win 39 and lose 30 of their wars that end in a peace (19 and 84 before); they are attacked in 6 wars (0 before); they start 25% of the wars of the orc age (24% before: 83 of 320) and goblins 48% (59% before), goblins 74% of all wars (76%). **The target "orcs start a third of the orc age's wars" is not met**: it was reached only by letting orcs declare against stronger foes (36% with `odds_min` 500 and no tension rule, at 28 won against 55 lost); winning and starting a third pull against each other with a horde of 5,000 against kingdoms of 30,000 (P3-09 question 5).
+
+### 20.7 Faeries hidden, elves' home ground (amends 6.3, 7.3; F5, suggestion 6)
+
+Two race fields (P3-01 amendment, 20.12), both on P3-05 4.2's biome term B(R, r) (Σ over the race's biome weights of weight × share div 1000, from −1000 to 1000):
+
+1. **Concealment** `conceal_min` int(0, 1001): a standing settlement of race r in region R is **concealed** (hidden, 20.1) while B(R, r) ≥ `conceal_min(r)`; 1001 = never. Shipped: faerie **400**, every other race 1001. With P3-05 12.3's weights a faerie settlement in a region about half or more forest or wet woodland is out of sight; one in open land is not.
+2. **Home defence** `home_defense_permille` int(0, 10000): the defender's terrain in its own preferred land. 6.3's def(R) gains + `home_defense(r_y)` × max(0, B(R, r_y)) div 1000, and the garrison of 7.3 item 7 is multiplied by (1000 + `home_defense(r_t)` × max(0, B(R_t, r_t)) div 1000) div 1000 (r_t the besieged settlement's owner race; applied after the walls, left to right). Shipped: elf **1500**, faerie **2000**, every other race 0 (dwarves already have the rough ground of `cover`, and P3-05 r6 puts them in uplands).
+
+Measured *(m16)*: home defence alone left the faeries with one settlement in 3–6 of 40 worlds (configurations F to H1; they lost 101 of 115 wars against them in G5: a faerie court of 5,000 fields 600); concealment at 400 brings it to **0 of 40** (H2, and FINE: faerie standing settlements 4 / 8 / 18, P3-05's median of 8 without conflict, against 1 / 5 / 18 and 6 worlds with one at the baseline), while their settlements in open land are still fought over. Elves with every rule: 3 / 9 / 45 standing settlements and **none** of 40 worlds with one (baseline 1 / 12 / 44 and 3); the costs of 20.3 take land from elves, home defence, local levies and the early feud's shorter wars give some back.
+
+### 20.8 The early feud and map size (F7, F9; suggestions 9 and 10)
+
+1. **Enmity hops** (5.1, 6.2). For an ordered pair (a, b) with an `enmity` row (4.3, opened or closed: the pair was ever of hostile camps), `front(a, b)` searches paths of at most `enmity_hops` (shipped **3**) borders instead of `march_hops` (2); every other pair keeps `march_hops`. The goblins and the elves, the good and the evil, find each other one valley further; neutral peoples do not. Measured *(m16)*: worlds without a goblin–elf war 4 of 40 (8 without this rule, 6 at the baseline); worlds whose first war comes more than 1,000 years after the goblins' awakening 15 (21; 18); worlds with 1,500 years or more without a declaration after it 9 (11; 10). The review's alternative (an awakening raises every hostile pair's strain) does nothing for a pair that is not in contact, which is the reason the feud is missing; it is not adopted. The remaining 4 worlds have the two peoples more than three borders apart (their homes are chosen by P3-05's homeland rule, design 5's "goblins hostile to elves from the first year" then stays a relation row).
+2. **Map size: no conflict rule; more realms on a larger map** (P3-05 21 item 5). The rules of 20.1–20.7 remove most of what made 512 "a massacre" without a size rule *(m16, 512 seeds 0–29, `base017` against every rule)*: hollow wars 58% → 16%, the most futile wars over one goal 17 → 3, sieges of a last refuge 578 (302 held) → 157 (76 held, every one for want of free land: a 512 map has about 12 regions), faeries with one settlement 16 → 1 of 30 worlds, elves 6 → 3, humans 7 → 4; orcs, however, end with one settlement in 8 worlds (3 before). At 2048 (seeds 0–4) the rules leave a world nearly at peace (9 wars median at the baseline, 11 with every rule; armies crossing three borders change nothing there, 11 with `march_hops` 3 for every pair): the peoples are as many as at 1024 on four times the land (about 200 non-islet regions against 50; design 2: "a larger map shows more land at the same scale"). With four civilizations per race at 2048 (the explicit setting, as an approximation of P3-05 21 item 5) the five worlds have 17 / 41 / 64 wars, a goblin–elf war in every world, 15% hollow wars, 1–5 civilizations ended and 1,431 / 2,583 / 3,135 events: the tone of 1024 repeated across a larger land. So the scaling belongs to how many realms a race founds, not to how far armies march.
+
+### 20.9 Data: tuning, kinds, saliences
+
+`history.conflict` (12.1) gains, after `last_refuge`, in this order (all required):
+
+| Field | Type | Shipped | Status | Meaning |
+| --- | --- | --- | --- | --- |
+| `refuge_flight` | int(0, 1) | 1 | decided (Paul, pending: P3-09 question 1) | a fallen last refuge flees (20.1); 0: the guard of 0.16.0 |
+| `flight_hops` | int(1, 8) | 3 | taste | farthest flight in borders (20.1) |
+| `hidden_years` | int(0, 10000) | 300 | taste | years a fled refuge stays hidden (20.1) |
+| `weary_wars` | int(0, 100) | 3 | taste | futile wars over one region after which its defender is weary of it; 0 = never (20.4) |
+| `tribute_permille` | int(0, 1000) | 100 | taste | people taken from a loser with no region to cede (20.3) |
+| `revenge_aggression` | int(0, 1000) | 400 | taste | effective aggression against whoever wronged a people (20.5) |
+| `levy_hops` | int(0, 16) | 3 | taste | borders from the battlefield within which a side's settlements fight (20.6) |
+| `odds_floor` | int(0, 1000) | 500 | taste | floor of (1000 − aggression) in the odds (20.6) |
+| `odds_min` | int(0, 1000) | 700 | taste | no declaration, and no flare-up, below these odds (20.6) |
+| `truce_break_aggression` | int(0, 999) | 600 | taste | aggression above which a people's truce is shorter (20.6) |
+| `enmity_hops` | int(1, 4) | 3 | taste | borders an army crosses against a civilization it has an `enmity` row with (20.8); a named check `conflict_enmity_hops`: `enmity_hops` ≥ `march_hops`, message `enmity_hops must not be below march_hops` |
+
+Named check added: `conflict_enmity_hops` (above), after the two of 12.1. The race kind gains `muster_permille`, `conceal_min` and `home_defense_permille` (20.12).
+
+**Event kinds** appended after P3-08's kind 31 (`settlement_abandoned_to`, P3-05 r6); caused, every count 1–1:
+
+| id | key | region | settlement | roles | values | salience | template |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 32 | `refugees_settled` | 1 | 1 | 1 `settlement`, 2 `founder`, 3 `origin` | `population` | 65 | `The survivors of {origin} fled into hiding and founded {@settlement} in {@region}.` |
+| 33 | `tribute` | 0 | 0 | 1 `payer`, 2 `payee` | `people` | 50 | `{payer} paid tribute to {payee}; {people} {people?was\|were} carried off.` |
+
+Cause rules (11): `refugees_settled` ← the sack of the refuge; `tribute` ← the peace; `region_ceded` of 20.3 ← the peace (as 7.7's); `capital_moved` ← the sack (20.1 item 3). Saliences and templates are data in `history.report` (and the fixtures). **`claim` salience 45 → 35** (P3-07 21.6): with the claim year in the declaration's note, a claim followed by its war is redundant at summary level.
+
+`docs/specs/schema.md`: the catalogue gains kinds 32 and 33 (the engineer, at the merge). No schema change: appending kinds is not one (P3-04 8.2), and every other new fact is a member of the subsystem or a value of a new kind (`schema_version` stays 7).
+
+### 20.10 Order, implementation rules and determinism
+
+- **Steps**: 20.1's flight, 20.3's costs and 20.4's counts happen where the events they follow happen (T6 for the flight; T6 and Q4 for the end of a war); 20.2 in the claims (T2, Q4) and declarations (T2); 20.5 in the strain updates and declarations; 20.7 in battles and sieges (T6) and in presence (everywhere). Nothing runs in another step; `tension()` stays a pure read (5.4: hidden settlements change presence, hence contact, before the read).
+- **P3-04 6.9 / 8.3 item 1 (A1).** P3-06 now founds a settlement (20.1 item 2). The founding happens inside T6's loop over the subsystem's own war list (ids, not `State`'s lists), never inside a loop over `civs()`, `settlements()` or `relations()`; after `found_settlement` every settlement is re-fetched by id (t for the `ruin` call); no reference into `State` is held across it (lint rules `history-live-iteration`, `history-held-reference`). 8.4 item 2: `ruin` is still called only in T6, on a standing owned settlement.
+- **8.2**: the founded refuge is created in T6 and not processed by any rule of that step except as `ruin`'s destination (P3-05 8.5's exception); P3-05 first sees it in the next T1.
+- **Draws**: none new. The flight takes no draw (a fallen refuge is always sacked); 20.2–20.7 are pure. Every draw keeps its key (8.3 item 5), so a world whose history never reaches a new rule differs only from the first point where one applies.
+- **Orders**: candidates and maps ascending by integer keys (regions, civilizations, settlements, (defender, region)); `hops` from P3-05 4.4.
+- **Arithmetic**: int64; the new products are bounded (force × 10000 / 1000, garrison × 11000 / 1000, population × 1000).
+
+### 20.11 Statistics (amends 15.4–15.6; F6, suggestion 8)
+
+P3-07 21.5 appends six `[stats]` keys: `wars_hollow`, `wars_hollow_permille`, `wars_same_goal_max`, `wars_same_goal_unchanged_max`, `race_population_share_max_permille`, `race_regions_share_max_permille` (definitions there). `events_refugees_settled` and `events_tribute` come with the kinds (P3-07 9's `events_<key>`).
+
+**Typical ranges** (15.5) gain, at 1024 with default settings (outside them is a finding, not a defect): `wars_hollow_permille` below 250; `wars_same_goal_unchanged_max` at most 3 in at least 90% of worlds; `race_population_share_max_permille` below 700 in at least 90% of worlds; faeries and elves each with one standing settlement in at most 5% of worlds; no sieges of a last refuge held by the guard except when no destination exists (counted by the reference, not stored).
+
+**Validation** (15.6) measures these on the 1024, 512 and 2048 sweeps, and in addition, from the tables: attackers by race (`wars_attacker_<race>`), orc wars won and lost (peace events with an orc civilization as winner or loser), the attackers of the orc age (wars declared at or after the orcs' awakening year), the years from the goblins' awakening to the first war and the longest stretch without a declaration after it, worlds without a goblin–elf war, and the standing settlements per race (`settlements_standing_<race>`); the spec writer's prototype figures are in P3-09 5.
+
+### 20.12 Race data and P3-01 (amendment)
+
+Three race fields, required, after `prowess_permille` (P3-01 r9): `muster_permille` int(1, 10000) (6.1, 20.6), `conceal_min` int(0, 1001) (20.7), `home_defense_permille` int(0, 10000) (20.7). Shipped:
+
+| Race | `muster_permille` | `conceal_min` | `home_defense_permille` |
+| --- | --- | --- | --- |
+| elf | 1000 | 1001 | 1500 |
+| goblin | 1000 | 1001 | 0 |
+| dwarf | 1000 | 1001 | 0 |
+| faerie | 1000 | 400 | 2000 |
+| human | 1000 | 1001 | 0 |
+| orc | 4000 | 1001 | 0 |
+
+The fixture race files gain the same values. These change every world's `content_hash`.
+
+### 20.13 Invariants (amends 14)
+
+1. Item 5 (territory): every change of a region's owner by P3-06 is a `settlement_captured`, a `region_ceded` (7.7 or 20.3) or a `refugees_settled` (into a free region).
+2. Item 7: every present race has an alive civilization at the present (unchanged, now with flight).
+3. New: every `refugees_settled` is caused by a `sacked` of the same year whose settlement is the event's `origin`, whose defender is the event's `founder` and was then its race's last refuge; its settlement is never the settlement of a `siege` dated before its year + `hidden_years`, nor in the region of a `battle`, `claim` or `war_declared` against its founder in those years while it is the founder's only settlement there.
+4. New: every `tribute` is caused by a `peace` whose loser is its `payer` and whose winner is its `payee`; no `region_ceded` of 20.3 and `tribute` follow the same peace together; the ceded region of 20.3 is not the loser's capital region.
+5. New: no claim and no declaration names a region whose defender was weary of it at that step (the reference recomputes the counts from the log).
+6. New: no settlement that is concealed at a siege's year is that siege's settlement.
+
+### 20.14 Tests required (adds to 16)
+
+For the independent test writer; the reference `p3_conflict_reference.py` gains every rule of this section (from this text).
+
+1. Units: flight destination order (−h_x, −σ, id) with the cap at `march_hops` + 1, the hop limit, capacity and islet exclusions, the first candidate without a site skipped; no destination → the guard holds; the flight procedure's events, populations (n capped at 2C, the rest lost), capital move and region owners; hidden: no presence, no front, no siege, found at `hidden_until`; a civilization wholly hidden loses contact and its war ends by no front.
+2. Goals: the capital region excluded unless alone; the declaration's re-choice; a claim dropped when no allowed goal remains.
+3. Costs: cession of the best non-capital region in front for a winning attacker and for a winning defender; tribute when none; truce costs nothing; the quiet-step wait for the loser's budget.
+4. Weariness: the count, its reset on a change of owner, per defender over two attackers, the exclusion at the third futile war.
+5. Revenge: g' in the rate and the odds, only while wronged and grudge > 0; the claim key's first component.
+6. Orcs and odds: muster in force and in the exhaustion test; local force with settlements at `levy_hops` and one beyond; the odds weighted by the goal's defence, the floor, `odds_min` (699, 700) with no draw below it; tension and flare pair skipping such claims (a read-only check: state hash before and after); the directional truce (orc 50 years, goblin 200) in strain, claims and declarations; `enmity_hops` in `front` for an enmity pair only.
+7. Concealment and home defence: B at the threshold (399, 400), def and garrison with home defence, a concealed settlement never besieged and its region out of presence.
+8. Invariants 20.13 on the property worlds of 16.2 item 15 and on the golden cases; the extra golden case `hist-conflict-flight` of the test writer (a world with flights and found refuges).
+9. Golden: every P3-06 golden vector re-recorded at 0.18.0 (P3-09 6).
+
 ## Appendix A. Proposals entries (added to `docs/design/proposals.md` with this spec)
 
 - "History: wars are limited, fought for a claimed region, and end with the active phase" (questions 1 and 2).
@@ -981,3 +1158,7 @@ Recorded after the implementation (`p3/06-conflict`, matching the prototype on s
 ## Revision note r7 (2026-11-20, for P3-08; generator 0.17.0)
 
 Normative for the P3-08 change (`docs/specs/p3-08-followups.md`), not before it. Rules: 7.3 item 4, the victors' dead are `loss_winner` of the smaller of the two forces (the world critic's F8 and suggestion 7); 11, the `settlement_captured` template drops "and 0 fled" with P3-04 r10's three-word form (data). Text: 7.4 and 8.4 item 3, casualties can empty settlements under legal non-shipped tuning, and what follows (the audit's A1); 8.3 item 4, a loser's same-step Q4 colony in a ceded region stays the loser's (the audit's A2); 8.3 item 7, same-year relation rows also in `calm` and `span12000` (the validation's F7); 14 item 3, the new ruin event kind 31 of P3-05 r6; 16.2 item 18a, the log equals the peoples-only log below the first claim except the eras of that claim's quiet step (the validation's F1); 15.3 and 15.5, the 100-world figures of the 0.16.0 validation and typical ranges at its 5th to 95th percentiles (F3). The 0.16.0 figures of 15 stay as measured; P3-08's validation re-measures them for 0.17.0.
+
+## Revision note r8 (2026-11-20, conflict balance; for P3-09, generator 0.18.0)
+
+New section 20 (P3-09, `docs/specs/p3-09-conflict-balance.md`; the world critic's review of 0.16.0), normative from generator 0.18.0: a fallen last refuge flees into hiding (`refugees_settled`, kind 32; hidden settlements, 20.1); war goals avoid the defender's capital (20.2); a lost war costs the loser a region or a tribute (`tribute`, kind 33; 20.3); war weariness per defender and region (20.4); revenge (20.5); orc muster, local levies, odds weighed by terrain with a floor and a minimum that also stops flare-ups, a shorter truce for peoples more warlike than goblins (20.6); faerie concealment and elven and faerie home defence (20.7); enmity hops and the map-size reading (20.8); eleven tuning fields, three race fields, the two kinds, `claim` salience 35 (20.9, 20.12); order and determinism (20.10); statistics (20.11); invariants (20.13); tests (20.14). Sections 1–19 keep describing 0.16.0 and 0.17.0 where 20 does not replace them. Figures are the spec writer's prototype at 0.16.0 with P3-08 partly emulated, to be re-measured at 0.18.0 (P3-09 5.6).

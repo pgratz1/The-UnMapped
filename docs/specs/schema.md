@@ -108,6 +108,8 @@ The authoritative catalogue, with value ranges and special values, is P1-00 sect
 
 Versions 6 and 7 are in sections 1 and 2; no schema change is planned. Appending an event kind is not a schema change (section 6).
 
+From generator 0.18.0 (P3-09, `docs/specs/p3-06-expansion-conflict.md` 20.9), appended to the catalogue of section 6 by the engineer at the merge: 32 `refugees_settled` (caused 1, region 1, settlement 1; roles 1 `settlement` settlement 1–1, 2 `founder` civilization 1–1, 3 `origin` settlement 1–1; value 1 `population`) and 33 `tribute` (caused 1, region 0, settlement 0; roles 1 `payer` civilization 1–1, 2 `payee` civilization 1–1; value 1 `people`). No schema change.
+
 ## 5. Changelog
 
 | Version | Date | Change | Spec |

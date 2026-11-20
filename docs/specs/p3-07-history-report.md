@@ -961,7 +961,7 @@ Binding on those specs, which are being written in parallel with this one:
 3. Every event that ends a civilization or ruins a settlement is that row's `ending_event` or `ruin_event`, and its salience is at least 20 and high enough to rank among the civilization's milestones (7.3); the illustrative excerpt of 17 uses 85–90.
 4. No new event kind may be needed by the report: a kind is printed from its stored template, roles and values (A1). A spec that wants a new block or line in the report asks for a `v2` (10.3).
 
-## 21. Summary selection, war notes and the P3-09 statistics (amendment r7, P3-09; before implementation)
+## 21. Summary selection, war notes and the P3-09 statistics (amendment r8, P3-09, generator 0.18.0; before implementation)
 
 Written 2026-11-20 by the spec writer for change P3-09 "conflict balance" (`docs/specs/p3-09-conflict-balance.md`), in answer to the world critic's review of P3-06 (`docs/reviews/p3-06-conflict-world-critic.md`, finding F4 and suggestions 2 and 8). P3-07 is not implemented yet, so this section is part of format v1 as it will first be implemented: no `v2` is needed and no report text exists that changes. **Where this section and sections 5–13 differ, this section rules**; the sections it replaces are named in each item. It changes no world byte (the report reads the world only); the salience change of claims (21.6) is a data change of P3-06's and belongs to generator 0.18.0.
 
@@ -984,7 +984,7 @@ The **unit** U(e) of an event e is e together with its **companions**, found fro
 | `sacked`, `settlement_captured` | every event of kind `capital_moved`, `refugees_settled` or `civ_conquered` that has e among its causes |
 | any other kind | none |
 
-Companions are not followed further (a companion's own companions are not added, except as listed: the war's ending brings its cession or tribute). Kinds absent from a world's catalogue simply never occur. The kind keys are those of P3-06 11 and P3-06 20 (amendment r8 there: `refugees_settled`, `tribute`); the report finds them by key in the stored catalogue, never by id.
+Companions are not followed further (a companion's own companions are not added, except as listed: the war's ending brings its cession or tribute). Kinds absent from a world's catalogue simply never occur. The kind keys are those of P3-06 11 and P3-06 20 (amendment r8 there: kinds 32 `refugees_settled` and 33 `tribute`, after P3-08's kind 31); the report finds them by key in the stored catalogue, never by id.
 
 ### 21.3 The summary set and its threshold (replaces 7.4; 6.7's "an event is shown when its `salience` ≥ T"; 13 item 2)
 
@@ -997,7 +997,7 @@ Companions are not followed further (a companion's own companions are not added,
 7. **Invariant 13 item 2** becomes: at `summary`, the event lines are exactly the summary set of item 3; every shown `war_declared` with a closed `war` row has its ending shown; every shown `sacked` or `settlement_captured` has its `capital_moved` and `refugees_settled` shown; each age with at least 20 candidates shows at least 20 events of its years; `shown` ≤ 250 unless T = 100.
 8. Constants (section 8 gains one row): `SUMMARY_AGE_FLOOR` = 20, used in 21.3. It is part of format v1 like the others.
 
-**Measured** (prototype, 1024, default settings, seeds 0–39; the 0.16.0 log with the P3-08 data approximation of `docs/specs/p3-09-conflict-balance.md` 5.1; 0.18.0 figures in 21.7): see 21.7.
+**Measured**: see 21.7.
 
 ### 21.4 Notes after a sentence (new; 6.7's event line, 6.1 "Sentences", 13 item 4)
 
@@ -1013,7 +1013,7 @@ The sentence is still `render_event` byte for byte (13 item 4 holds for the sent
 2. **`flare_up`.** c = the event's first cause. If c is of kind `claim`, with claimant A (role `claimant`), holder B (role `holder`) and region R (`event.region` of c): note `<A> pressed its claim to <R> against <B>.` with A at the start of a sentence and R, B in its middle. Otherwise no note.
 3. `ordinal(n)`: `second`, `third`, `fourth`, `fifth`, `sixth`, `seventh`, `eighth`, `ninth`, `tenth` for n = 2–10; for n ≥ 11 the decimal number followed by `th` when n mod 100 is 11, 12 or 13, else `st`, `nd`, `rd` for n mod 10 = 1, 2, 3, else `th` (`11th`, `21st`, `22nd`, `23rd`, `101st`, `111th`).
 
-Examples (seed 42, 1024, the 0.16.0 log; names as P3-08 will render them):
+Examples (seed 42, 1024, the 0.16.0 log and its numbered region names; from 0.17.0 the regions carry P1-06 r3's names):
 
 ```
 2949 e93 flare_up/50: In 2949 tensions flared into 50 years of upheaval. (The Grork Horde pressed its claim to Southwest Wood against Finen.) {years=50} [causes e75]
@@ -1043,7 +1043,7 @@ The validation sweep reads them (P3-06 15.6 as amended by P3-06 20.9).
 
 ### 21.7 Measured effect
 
-Filled in by `docs/specs/p3-09-conflict-balance.md` 5.6, which gives the summary figures of the 0.18.0 rules (prototype).
+`docs/specs/p3-09-conflict-balance.md` 5.7 gives the figures (the spec writer's prototype, which computes this selection from the log; 1024, default settings, seeds 0–39; the 0.16.0 rules and the expected 0.18.0 rules): the median world shows 223 events (142 at least, 248 at most) at a median threshold of 31; its six ages show a median of 19.5, 20, 26, 27.5, 30.5 and 83 events, against 5, 16.5, 27.5, 28.5, 31 and 89 under 7.4's threshold alone; seed 42's first three ages go from 3, 8 and 12 events to 20 each. The companions add nothing at default settings (no shown war lost its ending there) and matter when the threshold rises above 50, as with four civilizations per race (P3-09 5.4).
 
 ## Appendix A. Proposals
 
@@ -1076,3 +1076,7 @@ The illustrative excerpt of 17 is corrected: a faded settlement's `ruined_year` 
 ## Revision note r7 (2026-11-20, names inside sentences; for P3-08)
 
 Text only (P1-06 r3 14.7, Appendix B.2; P3-04 r10 8.5). 6.1 "Sentences": the report prints `render_event`'s text unchanged, so a `The …` name mid-sentence is lower-cased there and nowhere else; every name printed as a field keeps its stored capital. 13 invariant 4 names the case. Format stays v1; no world byte changes. The golden report hashes (14.4) are recorded with P3-08's worlds and renderer (generator 0.17.0). The sample of 16 and the excerpt of 17 predate P3-04 r10 and P1-06 r3 (their region names and some sentences differ from what 0.17.0 prints); section 14.4 already makes section 16 equal the output of the generator current when P3-07 is implemented, so the sample is re-made then; this revision changes neither section.
+
+## Revision note r8 (2026-11-20, summary selection and war notes; for P3-09)
+
+New section 21 (P3-09, `docs/specs/p3-09-conflict-balance.md`; the P3-06 world critic's F4 and suggestions 2 and 8), before implementation, so format v1 as first implemented: the summary set is the per-age floor of 20 events plus the threshold set, each event with its companions (a declaration with its ending and the ending's cession or tribute, a sack or capture with the moved capital, the refugees and the conquest it caused), replacing 7.4's threshold-only rule; a note in parentheses after the sentence of `war_declared` (claim year, ordinal of the war between the pair) and of `flare_up` (claimant, region, holder), from the library function `history_note`; six `[stats]` keys appended (hollow wars, wars over one goal, race shares); constant `SUMMARY_AGE_FLOOR` = 20. The claim salience 35 is P3-06's data (r8 there). No world byte changes by this section.
