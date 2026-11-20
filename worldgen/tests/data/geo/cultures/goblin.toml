@@ -7,6 +7,7 @@ onsets = ["g", "gr", "sn", "k", "kr", "z", "sk", "b", "n", "gn", "dr", "sl", "sk
 nuclei = ["a", "i", "u", "o", "ee"]
 codas = ["k", "g", "b", "z", "t", "x", "nk", "rk", "gg", "zz", "tch"]
 patterns = ["ONC", "ONC", "ONCONC", "ONC-ONC", "ONONC"]
+god_patterns = ["ONCONC", "ONC-ONC", "ONONC"]
 min_letters = 3
 max_letters = 10
 forbidden = ["eee", "ggg", "zzz", "xg", "xk"]

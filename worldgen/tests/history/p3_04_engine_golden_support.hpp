@@ -87,10 +87,11 @@ inline void check_world_case(const GoldenWorld& g) {
 // constructors and R1 are extended (3.2).
 inline std::string first_difference(const eng::HistoryInputs& a, const eng::HistoryInputs& b) {
     const auto& [seed, map_size, params, regions, region_borders, region_biomes, races, race_biomes, cultures, gods,
-                 ages, region_layer, water_layer, biomes, habitability_layer, river_layer, flow_dir_layer] = a;
+                 ages, region_layer, water_layer, biomes, habitability_layer, river_layer, flow_dir_layer,
+                 elevation_layer, ore_layer, walk_area_layer] = a;
     const auto& [seed2, map_size2, params2, regions2, region_borders2, region_biomes2, races2, race_biomes2, cultures2,
                  gods2, ages2, region_layer2, water_layer2, biomes2, habitability_layer2, river_layer2,
-                 flow_dir_layer2] = b;
+                 flow_dir_layer2, elevation_layer2, ore_layer2, walk_area_layer2] = b;
     const auto& [span, detail, civs, prace, intensity, pressure, activity, script] = params;
     const auto& [span2, detail2, civs2, prace2, intensity2, pressure2, activity2, script2] = params2;
     if (seed != seed2) return "seed";
@@ -127,6 +128,10 @@ inline std::string first_difference(const eng::HistoryInputs& a, const eng::Hist
     if (!same(habitability_layer, habitability_layer2)) return "habitability_layer";
     if (!same(river_layer, river_layer2)) return "river_layer";
     if (!same(flow_dir_layer, flow_dir_layer2)) return "flow_dir_layer";
+    // P3-05 r6 3.2 (generator 0.17.0).
+    if (!same(elevation_layer, elevation_layer2)) return "elevation_layer";
+    if (!same(ore_layer, ore_layer2)) return "ore_layer";
+    if (!same(walk_area_layer, walk_area_layer2)) return "walk_area_layer";
     return a == b ? "" : "operator== (a member the bindings missed)";
 }
 

@@ -95,6 +95,16 @@ inline void set_peoples_inputs(eng::HistoryInputs& in, std::vector<worldgen::db:
     in.habitability_layer = std::move(habitability);
     in.river_layer = std::move(river);
     in.flow_dir_layer = std::move(flow_dir);
+    // P3-05 r6 3.2 (P3-08): elevation, ore and walk_area, all zero, of the
+    // habitability layer's size.
+    in.elevation_layer.width = in.habitability_layer.width;
+    in.elevation_layer.height = in.habitability_layer.height;
+    in.elevation_layer.values =
+        std::vector<std::int16_t>(static_cast<std::size_t>(in.habitability_layer.cell_count()), 0);
+    in.ore_layer.width = in.habitability_layer.width;
+    in.ore_layer.height = in.habitability_layer.height;
+    in.ore_layer.values = std::vector<std::uint8_t>(static_cast<std::size_t>(in.habitability_layer.cell_count()), 0);
+    in.walk_area_layer = in.ore_layer;
 }
 
 // P3-05 r6 3.2 (generator 0.17.0): the three layers after flow_dir_layer, names of the spec. With the

@@ -539,6 +539,30 @@ Schema region_names_schema() {
     return Schema(std::move(fields));
 }
 
+Schema region_name_pools_schema() {
+    // P1-06 4 (r3), record name_pools: the [common, land, trait] weights of
+    // each word list, in declaration order.
+    std::vector<Field> fields;
+    for (const char* name :
+         {"nouns", "suffixes", "prefixes", "adjectives", "features", "possessors", "places", "objects"}) {
+        fields.push_back(Field::required(name, Type::array(Type::integer(0, 1000), 3, 3)));
+    }
+    return Schema(std::move(fields));
+}
+
+Schema region_name_traits_schema() {
+    // P1-06 4 (r3), record name_traits, in declaration order.
+    return Schema(std::vector<Field>{
+        Field::required("coast_cells", Type::integer(0, 100000000)),
+        Field::required("river_class", Type::integer(1, 16)),
+        Field::required("lake_permille", Type::integer(1, 1000)),
+        Field::required("high_mean_m", Type::integer(0, 10000)),
+        Field::required("ore_rich_cells", Type::integer(0, 100000000)),
+        Field::required("barren_hab_max", Type::integer(-1, 255)),
+        Field::required("fertile_min", Type::integer(0, 256)),
+    });
+}
+
 Schema worldgen_regions_schema() {
     // P1-06 4, in declaration order (this order fixes the canonical
     // encoding, P0-03 8).
@@ -557,6 +581,8 @@ Schema worldgen_regions_schema() {
         Field::required("name_central_frac", Type::fixed("0", "0.5")),
         Field::required("names", Type::record(region_names_schema())),
         Field::required("upland_own_noun", Type::array(Type::reference(std::string(BIOME_KIND)), 0, 16)),  // r2
+        Field::required("name_pool_weights", Type::record(region_name_pools_schema())),  // r3
+        Field::required("name_traits", Type::record(region_name_traits_schema())),       // r3
     };
     std::vector<Check> checks{
         Check{"regions_tile_fits_spacing", [](const Record& r) { return check_regions_tile_fits_spacing(r); }},
@@ -601,6 +627,15 @@ KindRegistry builtin_kinds() {
                                         });
     history.kind_checks = history_kind_checks();  // P3-04 4.2: report_events
     registry.add(std::move(history));
+    // P3-08 (generator 0.17.0): kind `placename` (P1-06 r3 4.1) and kind
+    // `name_filter` (P3-02 r5 11.2), both required, open ids; their schemas
+    // are in kinds_names.cpp.
+    Kind placename{std::string(PLACENAME_KIND), std::string(PLACENAME_DIRECTORY), true, placename_schema()};
+    placename.kind_checks = placename_kind_checks();
+    registry.add(std::move(placename));
+    Kind name_filter{std::string(NAME_FILTER_KIND), std::string(NAME_FILTER_DIRECTORY), true, name_filter_schema()};
+    name_filter.kind_checks = name_filter_kind_checks();
+    registry.add(std::move(name_filter));
     return registry;
 }
 

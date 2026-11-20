@@ -606,6 +606,13 @@ inline eng::HistoryInputs inputs_for(const std::vector<std::int64_t>& starts, st
     in.habitability_layer = wat;
     in.river_layer = wat;
     in.flow_dir_layer = wat;
+    // P3-05 r6 3.2 (P3-08, generator 0.17.0): elevation (i16), ore, walk_area,
+    // all zero.
+    in.elevation_layer.width = wat.width;
+    in.elevation_layer.height = wat.height;
+    in.elevation_layer.values = std::vector<std::int16_t>(static_cast<std::size_t>(wat.cell_count()), 0);
+    in.ore_layer = wat;
+    in.walk_area_layer = wat;
     return in;
 }
 

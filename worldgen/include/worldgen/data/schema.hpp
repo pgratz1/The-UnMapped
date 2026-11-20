@@ -395,6 +395,15 @@ inline constexpr std::string_view BIOME_DIRECTORY = "biomes";
 //   regions_tile_fits_spacing   seed_tile_m <= 2 seed_spacing_m.
 [[nodiscard]] Schema worldgen_regions_schema();
 
+// The records of worldgen.regions added by P1-06 r3: name_pools (nouns,
+// suffixes, prefixes, adjectives, features, possessors, places, objects,
+// each array(int(0, 1000), 3, 3)) and name_traits (coast_cells int(0, 10^8),
+// river_class int(1, 16), lake_permille int(1, 1000), high_mean_m int(0,
+// 10000), ore_rich_cells int(0, 10^8), barren_hab_max int(-1, 255),
+// fertile_min int(0, 256)).
+[[nodiscard]] Schema region_name_pools_schema();
+[[nodiscard]] Schema region_name_traits_schema();
+
 // --- The history kinds (P3-01 sections 3 to 5) --------------------------------
 
 // Kind names and directories: race (races/), culture (cultures/), history
@@ -487,5 +496,37 @@ inline constexpr std::string_view HISTORY_REPORT_ID = "report";
 // definition history.report and reported at its header, one failure per
 // message of history::report_events_problems.
 [[nodiscard]] std::vector<KindCheck> history_kind_checks();
+
+// --- The name kinds of P3-08 (generator 0.17.0) ------------------------------
+
+// Kind placename (P1-06 r3 4.1), directory placenames/, required, open ids;
+// kind name_filter (P3-02 r5 11.2), directory name_filters/, required, open
+// ids.
+inline constexpr std::string_view PLACENAME_KIND = "placename";
+inline constexpr std::string_view PLACENAME_DIRECTORY = "placenames";
+inline constexpr std::string_view NAME_FILTER_KIND = "name_filter";
+inline constexpr std::string_view NAME_FILTER_DIRECTORY = "name_filters";
+
+// The schema of a placename definition (P1-06 4.1): role, biomes, special,
+// trait, forms (record place_form {form, weight}), nouns, suffixes,
+// prefixes, adjectives, features, possessors, places, objects, forbidden,
+// excluded, in this order, all required, with the kind-local grammars
+// element, name_object, place_name and place_form. Named checks, in this
+// order: placename_role_fields, placename_lists_unique.
+[[nodiscard]] Schema placename_schema();
+
+// The kind-level checks of kind placename (P1-06 4.1), in this order:
+// placename_one_common, placename_lands_distinct, placename_common_sizes.
+[[nodiscard]] std::vector<KindCheck> placename_kind_checks();
+
+// The schema of a name_filter definition (P3-02 11.2): anywhere, at_start,
+// whole, each array(string(16, filter_word), 0, 4096), all required. Named
+// check name_filter_unique.
+[[nodiscard]] Schema name_filter_schema();
+
+// The kind-level checks of kind name_filter (P3-02 11.2), in this order:
+// name_filter_distinct, name_filter_not_redundant (each reports its first
+// failure only).
+[[nodiscard]] std::vector<KindCheck> name_filter_kind_checks();
 
 }  // namespace worldgen::data

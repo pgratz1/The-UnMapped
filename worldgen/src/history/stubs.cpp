@@ -138,12 +138,13 @@ void StubAwakening::awaken(StepContext& context, std::int64_t race, std::int64_t
         fail("history: stub: race '" + r.key + "' or culture '" + culture.key + "' is not in the content");
     }
     const CultureNaming naming = culture_naming_from(culture_def->record.get_record("naming"));
+    const NameFilter filter = name_filter_from(context.content());  // P3-02 r5
     const std::uint64_t seed = in.seed;
     const auto culture_number = static_cast<std::uint64_t>(culture.id);
 
     // 1. The civilization.
     const auto c = static_cast<std::int64_t>(state.civs().size()) + 1;
-    std::string civ_name = make_name(naming, culture.key, NameKind::civilization, seed, culture_number,
+    std::string civ_name = make_name(naming, filter, culture.key, NameKind::civilization, seed, culture_number,
                                      static_cast<std::uint64_t>(c), registry_);
     EventSpec founded;
     founded.kind = "civ_founded";
@@ -185,7 +186,7 @@ void StubAwakening::awaken(StepContext& context, std::int64_t race, std::int64_t
 
     // 3. The settlement.
     const auto s = static_cast<std::int64_t>(state.settlements().size()) + 1;
-    std::string settlement_name = make_name(naming, culture.key, NameKind::settlement, seed, culture_number,
+    std::string settlement_name = make_name(naming, filter, culture.key, NameKind::settlement, seed, culture_number,
                                             static_cast<std::uint64_t>(s), registry_);
     EventSpec settled;
     settled.kind = "settlement_founded";

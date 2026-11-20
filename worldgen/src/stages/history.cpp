@@ -8,6 +8,7 @@
 #include "worldgen/core/error.hpp"
 #include "worldgen/history/conflict.hpp"
 #include "worldgen/history/event_catalogue.hpp"
+#include "worldgen/history/names.hpp"
 #include "worldgen/history/peoples.hpp"
 
 namespace worldgen::stages {
@@ -20,6 +21,9 @@ HistoryResult history_stage(const data::ContentSet& content, const history::Hist
     const history::EventCatalogue catalogue = history::event_catalogue(content);
     // Items 2, 4 and 5 (the tuning again, then settings and chronology rows).
     (void)history::check_engine_inputs(content, inputs);
+    // P3-02 r5 11.3 (r6): the stage check names_form_text, before any name
+    // is drawn.
+    history::check_names_form_text(content, history::name_filter_from(content));
     // The shipped configuration (P3-04 6.4, P3-05 13.1 item 3, P3-06 8.3
     // item 3): the peoples awakening and subsystem, then conflict, which is
     // the one tension source; the stubs remain test seams only.

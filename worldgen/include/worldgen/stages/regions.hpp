@@ -21,10 +21,15 @@
 // schedules the G6 row blocks of RG3 (P1-00 D10): no result depends on it.
 
 #include <array>
+#include <cstddef>
 #include <cstdint>
+#include <functional>
+#include <optional>
+#include <set>
 #include <span>
 #include <string>
 #include <string_view>
+#include <utility>
 #include <vector>
 
 #include "worldgen/core/fx.hpp"
@@ -73,6 +78,29 @@ struct RegionNames {
     friend bool operator==(const RegionNames&, const RegionNames&) = default;
 };
 
+// The word lists of a placename definition and the slots of a place form,
+// in the order of record name_pools (P1-06 4, r3): index 0 nouns ({noun}),
+// 1 suffixes ({suffix}), 2 prefixes, 3 adjectives, 4 features, 5
+// possessors, 6 places, 7 objects.
+inline constexpr std::size_t PLACE_LIST_COUNT = 8;
+inline constexpr std::array<std::string_view, PLACE_LIST_COUNT> PLACE_LIST_FIELDS = {
+    "nouns", "suffixes", "prefixes", "adjectives", "features", "possessors", "places", "objects"};
+inline constexpr std::array<std::string_view, PLACE_LIST_COUNT> PLACE_SLOT_TEXTS = {
+    "{noun}", "{suffix}", "{prefix}", "{adjective}", "{feature}", "{possessor}", "{place}", "{object}"};
+
+// Record name_traits (P1-06 4, r3), in declaration order.
+struct RegionNameTraits {
+    std::int64_t coast_cells = 0;
+    std::int64_t river_class = 16;
+    std::int64_t lake_permille = 1000;
+    std::int64_t high_mean_m = 0;
+    std::int64_t ore_rich_cells = 0;
+    std::int64_t barren_hab_max = -1;
+    std::int64_t fertile_min = 256;
+
+    friend bool operator==(const RegionNameTraits&, const RegionNameTraits&) = default;
+};
+
 // The fields of definition `worldgen.regions`, in schema declaration order.
 struct RegionTuning {
     std::int64_t seed_tile_m = 0;
@@ -91,6 +119,11 @@ struct RegionTuning {
     // r2: biome keys (definition ids) whose noun an upland region keeps
     // (RG11 3c), at most 16, in data order.
     std::vector<std::string> upland_own_noun;
+    // r3: record name_pools, [list][pool] with pools 0 common, 1 land, 2
+    // trait (RG11 6), lists in the order of PLACE_LIST_FIELDS.
+    std::array<std::array<std::int64_t, 3>, PLACE_LIST_COUNT> name_pool_weights{};
+    // r3: record name_traits (RG11 5).
+    RegionNameTraits name_traits;
 
     friend bool operator==(const RegionTuning&, const RegionTuning&) = default;
 };
@@ -268,6 +301,62 @@ struct RegionNumbering {
 // (core/roman.hpp), which the history library shares.
 [[nodiscard]] std::string roman(std::int64_t k);
 
+// --- RG11 r3: the placename data (P1-06 4.1) -------------------------------------------------
+
+enum class PlaceRole : std::uint8_t { common, land, trait };
+enum class PlaceSpecial : std::uint8_t { none, isle, lake, upland };
+
+// The eight traits of RG11 5, in trait order (the order of the `trait`
+// enumeration of 4.1; index 0 to 7).
+inline constexpr std::size_t REGION_TRAIT_COUNT = 8;
+inline constexpr std::array<std::string_view, REGION_TRAIT_COUNT> REGION_TRAIT_NAMES = {
+    "coast", "river", "lake", "high", "ore", "pass", "barren", "fertile"};
+
+struct PlaceForm {
+    std::string form;
+    std::int64_t weight = 1;
+
+    friend bool operator==(const PlaceForm&, const PlaceForm&) = default;
+};
+
+// One placename definition.
+struct PlacenameDef {
+    std::string id;
+    PlaceRole role = PlaceRole::common;
+    std::vector<std::string> biomes;  // biome keys (role land)
+    PlaceSpecial special = PlaceSpecial::none;
+    std::int64_t trait = -1;  // -1 none, else the index in REGION_TRAIT_NAMES
+    std::vector<PlaceForm> forms;
+    std::array<std::vector<std::string>, PLACE_LIST_COUNT> lists;  // PLACE_LIST_FIELDS order
+    std::vector<std::string> forbidden;
+    std::vector<std::string> excluded;
+
+    friend bool operator==(const PlacenameDef&, const PlacenameDef&) = default;
+};
+
+// Every definition of kind placename, in canonical (ascending id) order.
+struct PlacenameData {
+    std::vector<PlacenameDef> definitions;
+
+    friend bool operator==(const PlacenameData&, const PlacenameData&) = default;
+};
+
+// The placename definitions of loaded content (validated by the loader), in
+// ascending id. An empty list when the kind has no definition.
+[[nodiscard]] PlacenameData placename_data_from(const data::ContentSet& content);
+
+// Section 2 check 4a (r3), each fatal with the prefix "regions: placename: ":
+// a common definition exists ("there must be exactly one common
+// definition"); (i) every biome with water = false, ascending code, is in
+// the biomes of a land definition ("biome '<key>' has no land definition");
+// (ii) a land definition for isle, lake, upland ("no land definition for
+// '<special>'"); (iii) every slot of every form of every land definition
+// (ascending id; form index from 0) can be filled without traits ("'<id>'
+// form <i> slot '<slot>' has no words", the slot with its braces).
+void check_placename_data(const PlacenameData& data, const BiomeDefinitions& definitions, const RegionTuning& tuning);
+
+// --- RG11 r3: one region's name -------------------------------------------------------------------
+
 // What RG11 needs of each region, in id order.
 struct RegionNameInput {
     std::int64_t seed_x = 0;
@@ -279,22 +368,95 @@ struct RegionNameInput {
     std::int64_t cells = 1;
     std::int64_t lake_cells = 0;
     std::int64_t walk_cells = 1;
+    // r3 (RG11 5): the figures the traits test, and whether a border row
+    // with passes > 0 touches the region.
+    std::int64_t coast_cells = 0;
+    std::int64_t river_class_max = 0;
+    std::int64_t elev_mean_dm = 0;
+    std::int64_t ore_rich_cells = 0;
+    std::int64_t habitability_mean = 0;
+    std::int64_t fertility_mean = 0;
+    bool has_pass = false;
 };
 
-// RG11 for regions in id order. land_cells, sum_x and sum_y are over the
-// land cells of the map; landmass_cells[k - 1] is the size of landmass k;
-// n is the map side. Nouns by RG11 3 (r2): isle; the lake biome's noun if
-// 2 lake_cells >= cells; upland if 4 walk_cells < cells and the dominant
-// biome's key is not in upland_own_noun; else the dominant biome's noun.
-// Fatal if a region's biome has no definition, a landmass is out of range,
-// the tuning fails, land_cells is 0, or an upland_own_noun key names no
-// loaded biome ("regions: tuning: upland_own_noun '<key>' is not a loaded
-// biome").
+// RG11 5: the traits a region holds, indexed by REGION_TRAIT_NAMES.
+using RegionTraits = std::array<bool, REGION_TRAIT_COUNT>;
+[[nodiscard]] RegionTraits region_traits(const RegionNameInput& region, const RegionTuning& tuning);
+
+// The slot values of one filled form, in the order the slots appear in the
+// form (left to right): (list index of PLACE_LIST_FIELDS, value).
+using PlaceSlotValues = std::vector<std::pair<std::size_t, std::string>>;
+
+// The form with each slot replaced by its value. Fatal if a slot of the
+// form has no value or the form is not of the place_form grammar.
+[[nodiscard]] std::string region_fill_form(std::string_view form, const PlaceSlotValues& values);
+
+// RG11 7: V1 to V6 for a form filled with `values` (one per slot, in slot
+// order) against the common definition's forbidden and excluded lists.
+[[nodiscard]] bool region_name_valid(std::string_view form, const PlaceSlotValues& values,
+                                     const PlacenameDef& common);
+
+// One attempt of RG11 6 and 7: the name of attempt t for region id r, and
+// whether it is valid (V1 to V6). An invalid attempt's name is not
+// specified (P3-02 4.2's convention). `traits` are the region's trait
+// definitions in trait order. k_name = substream(stream_key(seed,
+// "geo.regions.name"), N).
+struct RegionNameAttempt {
+    bool valid = false;
+    std::string name;
+};
+[[nodiscard]] RegionNameAttempt region_name_attempt(std::uint64_t k_name, std::int64_t region, std::int64_t attempt,
+                                                    const PlacenameDef& land, const PlacenameDef& common,
+                                                    std::span<const PlacenameDef* const> traits,
+                                                    const RegionTuning& tuning);
+
+// RG11 8 fallback: the first compound P[i] + S[j] (P = common prefixes then
+// the land's, S = the land's suffixes then the common ones, i outer) that
+// passes V1 to V6 as {prefix}{suffix} and is not in `used`; std::nullopt
+// when there is none.
+[[nodiscard]] std::optional<std::string> region_name_fallback(const PlacenameDef& land, const PlacenameDef& common,
+                                                              const std::set<std::string, std::less<>>& used);
+
+// How a region got its name (golden lines of P1-06 10.5): kept its base
+// name, the accepted attempt t, or the fallback.
+struct RegionNameChoice {
+    std::string name;
+    bool keeper = false;
+    bool fallback = false;
+    std::int64_t attempt = 0;
+};
+
+// RG11 1 to 4 without the draws: the base name (sector word, one space,
+// noun) of every region, in id order. Fatal if a region's biome has no
+// definition, a landmass is out of range, the tuning fails, land_cells is 0,
+// or an upland_own_noun key names no loaded biome ("regions: tuning:
+// upland_own_noun '<key>' is not a loaded biome").
+[[nodiscard]] std::vector<std::string> region_base_names(std::span<const RegionNameInput> regions,
+                                                         std::span<const std::uint64_t> landmass_cells,
+                                                         std::uint64_t land_cells, std::uint64_t sum_x,
+                                                         std::uint64_t sum_y, std::int64_t n,
+                                                         const BiomeDefinitions& definitions,
+                                                         const RegionTuning& tuning);
+
+// RG11 r3 for regions in id order: base names and lands (1 to 3), keepers
+// (4), traits (5), the draws keyed by seed and n (6, 7), uniqueness and the
+// fallback (8). land_cells, sum_x and sum_y are over the land cells of the
+// map; landmass_cells[k - 1] is the size of landmass k; n is the map side.
+// Fatal as region_base_names, check_placename_data, and "regions: no free
+// name for region <id>".
+[[nodiscard]] std::vector<RegionNameChoice> region_name_choices(
+    std::span<const RegionNameInput> regions, std::span<const std::uint64_t> landmass_cells, std::uint64_t land_cells,
+    std::uint64_t sum_x, std::uint64_t sum_y, std::int64_t n, const BiomeDefinitions& definitions,
+    const PlacenameData& placenames, const RegionTuning& tuning, std::uint64_t seed);
+
+// The names of region_name_choices.
 [[nodiscard]] std::vector<std::string> region_names(std::span<const RegionNameInput> regions,
                                                     std::span<const std::uint64_t> landmass_cells,
                                                     std::uint64_t land_cells, std::uint64_t sum_x,
                                                     std::uint64_t sum_y, std::int64_t n,
-                                                    const BiomeDefinitions& definitions, const RegionTuning& tuning);
+                                                    const BiomeDefinitions& definitions,
+                                                    const PlacenameData& placenames, const RegionTuning& tuning,
+                                                    std::uint64_t seed);
 
 // --- RG12, RG13: borders, passes, biome counts --------------------------------------------------
 
@@ -355,6 +517,7 @@ struct RegionResult {
     std::vector<Fx> weight;                         // RG3, every land cell, 0 elsewhere
     std::vector<std::uint32_t> flood_owner;         // RG7 owners before merging
     std::vector<geo::CellIndex> seeds;              // RG5 + RG6, seed order
+    std::vector<RegionNameChoice> names;            // RG11 r3, id order (10.5 golden lines)
 };
 
 // RG1 to RG13 on a W x H grid (n = W, the map side of RG11, taken as the
@@ -362,15 +525,16 @@ struct RegionResult {
 // outside [1, 256] ("regions: thread count outside [1, 256]"); the tuning
 // (check_region_tuning); a biome region_noun that is not one word
 // ("regions: biome '<key>' has a region_noun that is not one word", ascending
-// code); then with the prefix "regions: input precondition: ": the grid
+// code); r3: check_placename_data (check 4a); then with the prefix
+// "regions: input precondition: ": the grid
 // checks; "<name> length is not width * height" (first input of the wrong
 // length, order of RegionInputs); "water value <v> at (<x>, <y>)"; "river
 // value <v> at (<x>, <y>)"; "biome value <v> at (<x>, <y>) has no
 // definition"; "pass <id>: path is not a chain of cells" (passes in the
 // order given); G7 ("G7: ...").
 [[nodiscard]] RegionResult regions_stage(const RegionInputs& inputs, const BiomeDefinitions& definitions,
-                                         std::span<const db::PassRow> passes, const RegionTuning& tuning,
-                                         std::uint64_t seed, std::uint32_t threads = 1);
+                                         const PlacenameData& placenames, std::span<const db::PassRow> passes,
+                                         const RegionTuning& tuning, std::uint64_t seed, std::uint32_t threads = 1);
 
 // The stage entry point (P1-06 RG14, P1-00 3): reads the biome definitions,
 // worldgen.regions, the thirteen stored input layers (section 2 item 1:

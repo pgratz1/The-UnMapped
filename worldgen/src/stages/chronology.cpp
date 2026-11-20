@@ -250,6 +250,10 @@ ChronologyResult chronology_stage(const data::ContentSet& content, const history
     if (const std::vector<data::LoadError> errors = history::check_history_data(content); !errors.empty()) {
         fail("chronology: data: " + errors.front().message);
     }
+    // P3-02 r5 11.3 (P3-03 r3): the forms' fixed text holds no filtered
+    // fragment, checked before any name is drawn.
+    const history::NameFilter filter = history::name_filter_from(content);
+    history::check_names_form_text(content, filter);
 
     // C2, C3.
     std::vector<std::int64_t> present_ids;
@@ -320,8 +324,8 @@ ChronologyResult chronology_stage(const data::ContentSet& content, const history
         const data::Definition* culture_def = content.find(data::CULTURE_KIND, culture_id);
         const history::CultureNaming naming = history::culture_naming_from(culture_def->record.get_record("naming"));
         history::NameChoice choice =
-            history::choose_name(naming, culture_id, history::NameKind::god, seed, static_cast<std::uint64_t>(culture),
-                                 static_cast<std::uint64_t>(id), registry);
+            history::choose_name(naming, filter, culture_id, history::NameKind::god, seed,
+                                 static_cast<std::uint64_t>(culture), static_cast<std::uint64_t>(id), registry);
         out.gods.push_back(db::GodRow{id, choice.name, camp_code(r->record.get_string("camp"))});
         out.god_names.push_back(std::move(choice));
     }

@@ -10,11 +10,13 @@
 #include <cstddef>
 #include <cstdint>
 #include <functional>
+#include <optional>
 #include <set>
 #include <string>
 #include <string_view>
 #include <vector>
 
+#include "worldgen/data/content.hpp"
 #include "worldgen/data/value.hpp"
 
 namespace worldgen::history {
@@ -26,6 +28,7 @@ struct CultureNaming {
     std::vector<std::string> nuclei;    // "" not allowed
     std::vector<std::string> codas;     // "" allowed
     std::vector<std::string> patterns;  // symbols O, N, C, ' and -
+    std::vector<std::string> god_patterns;  // r5 (P3-02 11.4): the shapes of a god's root
     std::int64_t min_letters = 1;       // letters a-z of a root, separators not counted
     std::int64_t max_letters = 32;
     std::vector<std::string> forbidden;  // substrings a root must not contain
@@ -70,7 +73,44 @@ struct NameAttempt {
     bool valid = false;
     std::string name;
     std::string root;
+    // r5 (P3-02 11.5): true when the r4 rules pass and the name filter
+    // rejects the root word (valid is then false).
+    bool filtered = false;
 };
+
+// The name filter of P3-02 r5 11.2: the effective lists, the unions over
+// every name_filter definition in ascending id. Membership only: the order
+// of entries never changes a result.
+struct NameFilter {
+    std::vector<std::string> anywhere;
+    std::vector<std::string> at_start;
+    std::vector<std::string> whole;
+};
+
+// The effective lists of loaded content (every definition of kind
+// name_filter, ascending id). Empty lists when the kind has none.
+[[nodiscard]] NameFilter name_filter_from(const data::ContentSet& content);
+
+// W of P3-02 11.3: lower(A') + root + lower(B'), with A the form before
+// {root} and A' its part after the last space, B the form after {root} and
+// B' its part before the first space. Fatal unless the form holds exactly
+// one {root}.
+[[nodiscard]] std::string root_word(std::string_view form, std::string_view root);
+
+// filtered(W) of P3-02 11.3: an `anywhere` entry inside W without its ' and
+// -, a part of W (the runs of a-z between ' and -) starting with an
+// `at_start` entry, or a part equal to a `whole` entry.
+[[nodiscard]] bool name_filtered(const NameFilter& filter, std::string_view root_word);
+
+// The stage check names_form_text of P3-02 11.3 (r6): for every culture
+// (ascending id), kind (god, civilization, settlement) and form, the form's
+// letters fused to the root (A', B') and its fixed words hold no filtered
+// fragment. The first failure as "history: culture '<id>' <kind>_forms[<i>]
+// '<form>' holds the filtered text '<entry>'", or std::nullopt.
+[[nodiscard]] std::optional<std::string> names_form_text_problem(const data::ContentSet& content,
+                                                                 const NameFilter& filter);
+// names_form_text_problem as a FatalError.
+void check_names_form_text(const data::ContentSet& content, const NameFilter& filter);
 
 // Cap(root) of P3-02 4.2: upper-cases the first character if it is a
 // letter a-z and every letter a-z that directly follows a '-'.
@@ -80,6 +120,13 @@ struct NameAttempt {
 // attempt, culture, entity, j). Fatal if a list it picks from is empty, a
 // pattern holds a symbol other than O, N, C, ' and -, or the chosen form
 // does not hold exactly one {root}.
+// r5: gods take their pattern from god_patterns, every other kind from
+// patterns; an attempt that passes the r4 rules is also invalid (and
+// `filtered`) when its root word is filtered.
+[[nodiscard]] NameAttempt name_attempt(const CultureNaming& naming, const NameFilter& filter, NameKind kind,
+                                       std::uint64_t seed, std::uint64_t culture, std::uint64_t entity,
+                                       std::uint64_t attempt);
+// The same with an empty filter.
 [[nodiscard]] NameAttempt name_attempt(const CultureNaming& naming, NameKind kind, std::uint64_t seed,
                                        std::uint64_t culture, std::uint64_t entity, std::uint64_t attempt);
 
@@ -103,6 +150,10 @@ private:
 // entity id e. Fatal ("names: culture '<culture_id>' produced no valid <K>
 // name in 64 attempts") if no attempt is valid, and ("names: a name longer
 // than 64 bytes") if the result exceeds NAME_MAX_BYTES.
+[[nodiscard]] std::string make_name(const CultureNaming& naming, const NameFilter& filter, std::string_view culture_id,
+                                    NameKind kind, std::uint64_t seed, std::uint64_t culture, std::uint64_t entity,
+                                    NameRegistry& registry);
+// The same with an empty filter.
 [[nodiscard]] std::string make_name(const CultureNaming& naming, std::string_view culture_id, NameKind kind,
                                     std::uint64_t seed, std::uint64_t culture, std::uint64_t entity,
                                     NameRegistry& registry);
@@ -115,6 +166,10 @@ struct NameChoice {
     std::uint64_t attempt = 0;
     bool fallback = false;
 };
+[[nodiscard]] NameChoice choose_name(const CultureNaming& naming, const NameFilter& filter,
+                                     std::string_view culture_id, NameKind kind, std::uint64_t seed,
+                                     std::uint64_t culture, std::uint64_t entity, NameRegistry& registry);
+// The same with an empty filter.
 [[nodiscard]] NameChoice choose_name(const CultureNaming& naming, std::string_view culture_id, NameKind kind,
                                      std::uint64_t seed, std::uint64_t culture, std::uint64_t entity,
                                      NameRegistry& registry);

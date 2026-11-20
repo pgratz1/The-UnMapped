@@ -173,9 +173,10 @@ constexpr std::string_view GENERATE_USAGE =
     "  --verbose           print progress and timings to stderr\n"
     "\n"
     "The history settings are recorded in every world. The chronology stage uses\n"
-    "the span and the races, the history stage the span and the detail; the\n"
-    "others take effect with later history subsystems. --test-pattern records\n"
-    "them and writes no history.\n"
+    "the span and the races; the history stage uses the span, the detail, the\n"
+    "civilizations per race and the event intensity. The monster pressure and\n"
+    "the divine activity take effect with later history subsystems (phase P5).\n"
+    "--test-pattern records them and writes no history.\n"
     "\n"
     "Prints the absolute path of the written file.\n";
 
