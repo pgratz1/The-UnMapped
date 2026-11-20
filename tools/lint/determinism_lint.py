@@ -272,6 +272,76 @@ _LIVE_RANGE = re.compile(r"(?:(?:\.|->)\s*(?:civs|settlements|relations)\s*\(\s*
 _LIVE_MUTATOR = re.compile(r"\b(?:found_civilization|found_settlement|open_relation|close_relation)\s*\(")
 
 
+# Founding by proxy (added by the P3-09 conflict balance audit). A function
+# defined in the same file whose body calls found_civilization( or
+# found_settlement( (directly, or through another such function of the
+# file) founds too: P3-09's flight founds a settlement in flee(), which
+# siege() calls, which battle() calls, which fight() calls inside a loop.
+# The two history rules treat a call of such a function as a founding.
+# Same file only: a helper defined elsewhere is still not seen.
+_DEF_NAME = re.compile(r"\b(?P<name>[A-Za-z_]\w*)\s*\(")
+_NOT_FUNCTIONS = frozenset({
+    "if", "for", "while", "switch", "catch", "return", "sizeof", "alignof", "decltype", "static_assert",
+    "noexcept", "requires", "defined", "throw", "new", "delete", "co_return", "co_await",
+})
+_DEF_TAIL = re.compile(r"\s*(?:(?:const|noexcept|override|final|volatile|&&?)\b\s*|&\s*)*(?:->[^;{}()]*)?\{")
+_CALL_NAME = re.compile(r"\b([A-Za-z_]\w*)\s*\(")
+_proxy_cache: dict = {}
+
+
+def _function_bodies(code: str) -> list:
+    """(name, body start, body end) of every function definition in the
+    lexed code: a name, its parameter list, optional qualifiers, then '{'."""
+    out: list = []
+    for m in _DEF_NAME.finditer(code):
+        name = m.group("name")
+        if name in _NOT_FUNCTIONS:
+            continue
+        close = _matching_paren(code, m.end() - 1)
+        if close < 0:
+            continue
+        t = _DEF_TAIL.match(code, close + 1)
+        if not t:
+            continue
+        brace = t.end() - 1
+        end = _matching_brace(code, brace)
+        out.append((name, brace, end if end >= 0 else len(code)))
+    return out
+
+
+def _founding_proxies(code: str) -> frozenset:
+    """Names of the functions of this file that found, transitively."""
+    hit = _proxy_cache.get(code)
+    if hit is not None:
+        return hit
+    bodies = _function_bodies(code)
+    calls = {}
+    founders = set()
+    for name, start, end in bodies:
+        body = code[start:end]
+        calls.setdefault(name, set()).update(c for c in _CALL_NAME.findall(body) if c != name)
+        if _FOUNDING.search(body):
+            founders.add(name)
+    changed = True
+    while changed:
+        changed = False
+        for name, called in calls.items():
+            if name not in founders and called & founders:
+                founders.add(name)
+                changed = True
+    result = frozenset(founders - {"found_civilization", "found_settlement"})
+    _proxy_cache[code] = result
+    return result
+
+
+def _founding_call(code: str) -> re.Pattern:
+    """found_civilization( / found_settlement( or a call of a founding proxy."""
+    names = sorted(_founding_proxies(code))
+    if not names:
+        return _FOUNDING
+    return re.compile(r"\bfound_(?:civilization|settlement)\s*\(|\b(?:" + "|".join(map(re.escape, names)) + r")\s*\(")
+
+
 def _live_iteration(code: str, m: re.Match) -> bool:
     """For history-live-iteration: True if this 'for (' is a range-for over
     State::civs(), settlements() or relations() (or the members civs_,
@@ -294,7 +364,12 @@ def _live_iteration(code: str, m: re.Match) -> bool:
     else:
         end = code.find(";", k)
         body = code[k:end if end >= 0 else len(code)]
-    return bool(_LIVE_MUTATOR.search(body))
+    if _LIVE_MUTATOR.search(body):
+        return True
+    # A founding proxy matters for the vectors only (civs, settlements).
+    if re.search(r"relations", header[colon + 1:]):
+        return False
+    return bool(_founding_call(code).search(body))
 
 
 _FOUNDING = re.compile(r"\bfound_(?:civilization|settlement)\s*\(")
@@ -322,7 +397,7 @@ def _held_reference(code: str, m: re.Match) -> bool:
     name = m.group("ref") or m.group("span") or m.group("auto")
     end = _block_end(code, m.end())
     use = re.compile(r"\b" + re.escape(name) + r"\b")
-    for f in _FOUNDING.finditer(code, m.end(), end):
+    for f in _founding_call(code).finditer(code, m.end(), end):
         close = _matching_paren(code, f.end() - 1)
         if close < 0 or close >= end:
             continue

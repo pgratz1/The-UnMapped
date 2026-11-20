@@ -813,7 +813,7 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
   6. Orcish two-letter apostrophe parts ("Am'gash") stay.
   7. The filter lists are plain text in the repository.
 - Interim choice: points 2 to 7 are as shipped with P3-08 (generator 0.17.0). Point 1 differs from what P3-08 ships (the full list of 647 words): the short list is a data change to `game/data/name_filters/words.toml` that changes worlds, and ships with the next change after P3-08.
-- Status: accepted; point 1 scheduled after P3-08; 2026-11-20: point 1 specified (`docs/specs/p3-02-names.md` r8, section 11.11, branch `p3/10-word-list`): `words.toml` holds 392 of the 647 words (crude, comic or modern-sounding words, and function words, inflected forms and plain slips), 255 are released; a data change only (no code, no schema change), shipping with P3-09 (0.18.0) or alone as 0.17.1
+- Status: accepted; point 1 scheduled after P3-08; 2026-11-20: point 1 specified (`docs/specs/p3-02-names.md` r8, section 11.11, branch `p3/10-word-list`): `words.toml` holds 393 of the 647 words (with `mold` restored by the lead's interim choice) (crude, comic or modern-sounding words, and function words, inflected forms and plain slips), 254 are released; a data change only (no code, no schema change), shipping with P3-09 (0.18.0) or alone as 0.17.1
 
 ### Paul's decision of 2026-11-20: the P3-08 tuning questions go with their recommendations
 
@@ -876,3 +876,17 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
   3. Alliances and trade as a relation between civilizations: aligned peoples in contact form partnerships that add to both sides' growth and strength, and an ally may join a partner's war or battle.
 - Interim choice: points 1 and 2 are added to the P3-09 "conflict balance" change (generator 0.18.0), which is being implemented, as an amendment to its spec; with P3-09's rule that a lost war always costs the loser, point 1 would otherwise make a victorious defender cede land. Point 3 is a new system (new relation kinds, a notion of wealth, allied armies) and is proposed for P5 History depth, with the artifacts made in response to conflicts; it is not specified in P3 unless Paul wants it earlier.
 - Status: 1 and 2 accepted for P3-09 (Paul's notes are the decision; the rule details are the spec writer's and are measured); 3 decided by Paul on 2026-11-20: "P5 is where the alliances and trade and wealth should go." It joins "race relations and mixed settlements" in P5 History depth, with the artifacts made in response to conflicts.
+
+### History: two ideas from the world critic's review of P3-08
+
+- Date: 2026-11-20
+- Raised by: lead, from the world critic's review of P3-08 (`docs/reviews/p3-08-followups-world-critic.md`)
+- Design doc section: 4 (regions), 5 (history: the peoples)
+- Problem: the review found P3-08 acceptable with follow-ups, nothing blocking. Most follow-ups are wording and data and are scheduled as a change after P3-09. Two are design-level:
+  1. **Region names are drawn before history and never change.** Grim names are dense (15 of 29 drawn names in one world), so the elves' untroubled homeland of 6,000 years can be "Dreadlaw Hurst", while the largest and most fought-over regions keep plain compass names ("North Downs").
+  2. **Upland dwarves have fallen silent.** On high, ore-rich ground they are out of everyone's reach: one dwarven realm has 17 events in 2,700 years, no wars and two lines in the summary. History only happens to mountain peoples when someone brings a war to them.
+- Proposal:
+  1. History renames regions: a region's defining event (a great sack, a long war, a founding, a plague) can give it its present-day name, with the old name kept in the record.
+  2. Mountain peoples get history of their own: delvings, lost holds and mines as events, not only wars.
+- Interim choice: neither is specified. Both suit P5 History depth (the first also needs the record of renamed places that sites and quests in P6 would use). The grim share of drawn region names can be lowered in data before then.
+- Status: open
