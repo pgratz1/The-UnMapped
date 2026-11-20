@@ -665,7 +665,7 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
 - Problem: regions are named by a sector word and a noun, with a Roman numeral when the base name repeats (spec P1-06 RG11). Paul: "East Wood" is fine but "West Wood III" is pretty boring; the names should come from a large set chosen at random so that regions have more identity, and should not rely on numbering.
 - Decision: replace the numeral with names drawn from a large hand-written set held in data (TOML). A spec amendment to P1-06 RG11 defines the scheme and the word lists; it changes the `name` column of table `region`, so it changes world bytes and comes with a generator version bump. No schema change.
 - Interim choice: the amendment is written now; it is implemented after P3-06 is integrated (together with the faerie data change or just before it), before Paul's review of P3.
-- Status: decided; spec amendment in progress
+- Status: decided; spec amendment written (P1-06 r3, branch `p1/06-region-names`); its questions answered below
 
 ### Paul's decision of 2026-11-19: the chronology questions go with their recommendations
 
@@ -734,3 +734,18 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
   6. The report goes to standard output by default.
 - Interim choice: none needed; all six are as specified; P3-07 is not yet implemented.
 - Status: accepted
+
+### Paul's decisions of 2026-11-19 on the region name questions
+
+- Date: 2026-11-19
+- Raised by: lead, recording Paul's decision
+- Design doc section: 4 (regions), 5 (how history sentences read)
+- Problem: the region names amendment (`docs/specs/p1-06-regions.md` r3, section 14) put five questions to Paul.
+- Decision:
+  1. The largest region of each base name keeps the plain name ("East Wood"); the others draw a name.
+  2. A leading "The" of a name is lower-cased in the middle of a sentence ("awakened the Elves in the Scarred Downs"); names are stored capitalised. This applies to any entity name a sentence renders, civilizations included, and not at the start of a sentence.
+  3. Only famous real places and well-known fiction and game names are excluded; incidental coincidences with obscure real places are not a concern.
+  4. The word lists are data Paul may edit (`game/data/placenames/`); no decision needed.
+  5. Trait steering stays as shipped.
+- Interim choice: none needed. Point 2 is a change to the sentence renderer (spec P3-04 8.4), specified and implemented together with the region names.
+- Status: accepted; implementation scheduled after P3-06
