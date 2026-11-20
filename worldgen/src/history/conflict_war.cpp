@@ -550,6 +550,7 @@ bool ConflictSubsystem::end_war(StepContext& ctx, std::size_t i, std::int64_t wi
     }
     const std::int64_t ev = ctx.append(e);
     close_war(ctx, i, ev);
+    note_futile(ctx, w);  // r9 20.4, at the end event (r10 20.21 item 6)
     if (ceding) {
         cede(ctx, w.goal, loser, winner, ev);  // cession of the goal (7.7)
     } else if (cost.region != 0) {
@@ -563,7 +564,6 @@ bool ConflictSubsystem::end_war(StepContext& ctx, std::size_t i, std::int64_t wi
         const std::int64_t tev = ctx.append(t);
         (void)casualties(ctx, loser, cost.tribute, tev);
     }
-    note_futile(ctx, w);  // r9 20.4
     return true;
 }
 
