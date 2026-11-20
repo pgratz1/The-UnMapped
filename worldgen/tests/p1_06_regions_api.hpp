@@ -485,15 +485,53 @@ inline Load load_with_placenames(std::optional<worldgen::data::MemoryDirectory> 
 
 inline Placenames placenames_of(const worldgen::data::ContentSet& c) { return worldgen::stages::placename_data_from(c); }
 
+// Lookups in the engineer's PlacenameData (definitions in ascending id).
+inline const worldgen::stages::PlacenameDef& def_of(const Placenames& pn, std::string_view id) {
+    for (const auto& d : pn.definitions) {
+        if (d.id == id) return d;
+    }
+    FAIL("no placename definition " << std::string(id));
+    return pn.definitions.front();
+}
+inline const worldgen::stages::PlacenameDef& common_of(const Placenames& pn) {
+    for (const auto& d : pn.definitions) {
+        if (d.role == worldgen::stages::PlaceRole::common) return d;
+    }
+    FAIL("no common placename definition");
+    return pn.definitions.front();
+}
+// The trait definitions of the named traits, in trait order.
+inline std::vector<const worldgen::stages::PlacenameDef*> trait_defs_of(const Placenames& pn,
+                                                                         const std::vector<std::string>& names) {
+    std::vector<const worldgen::stages::PlacenameDef*> out;
+    for (std::size_t i = 0; i < worldgen::stages::REGION_TRAIT_COUNT; ++i) {
+        const std::string_view tn = worldgen::stages::REGION_TRAIT_NAMES[i];
+        if (std::find(names.begin(), names.end(), tn) == names.end()) continue;
+        for (const auto& d : pn.definitions) {
+            if (d.role == worldgen::stages::PlaceRole::trait && d.trait == static_cast<std::int64_t>(i)) {
+                out.push_back(&d);
+            }
+        }
+    }
+    return out;
+}
+
 // RG11 5: the traits a row holds, as names in trait order.
 inline std::vector<std::string> traits(const worldgen::db::RegionRow& row, bool has_pass, const Tuning& t) {
-    const auto bits = worldgen::stages::region_traits(row, has_pass, t);
-    static const std::array<const char*, 8> names = {"coast", "river", "lake", "high", "ore", "pass", "barren", "fertile"};
+    worldgen::stages::RegionNameInput in{};
+    in.cells = row.cells;
+    in.lake_cells = row.lake_cells;
+    in.coast_cells = row.coast_cells;
+    in.river_class_max = row.river_class_max;
+    in.elev_mean_dm = row.elev_mean_dm;
+    in.ore_rich_cells = row.ore_rich_cells;
+    in.habitability_mean = row.habitability_mean;
+    in.fertility_mean = row.fertility_mean;
+    in.has_pass = has_pass;
+    const worldgen::stages::RegionTraits bits = worldgen::stages::region_traits(in, t);
     std::vector<std::string> out;
-    for (std::size_t i = 0; i < names.size(); ++i) {
-        if (bits.test(i)) {
-            out.emplace_back(names[i]);
-        }
+    for (std::size_t i = 0; i < bits.size(); ++i) {
+        if (bits[i]) out.emplace_back(worldgen::stages::REGION_TRAIT_NAMES[i]);
     }
     return out;
 }
@@ -504,18 +542,34 @@ inline std::pair<bool, std::string> name_attempt(const Placenames& pn, std::uint
                                                  std::int64_t id, std::int64_t t, std::string_view land,
                                                  const std::vector<std::string>& traits, const Tuning& tu) {
     const std::uint64_t key = worldgen::substream(worldgen::stream_key(seed, "geo.regions.name"), n);
-    const auto r = worldgen::stages::region_name_attempt(key, id, t, pn.land(land), pn.common(), pn.traits(traits), tu);
+    const std::vector<const worldgen::stages::PlacenameDef*> td = trait_defs_of(pn, traits);
+    const auto r = worldgen::stages::region_name_attempt(key, id, t, def_of(pn, land), common_of(pn),
+                                                         std::span<const worldgen::stages::PlacenameDef* const>(td), tu);
     return {r.valid, r.name};
 }
 
 // V1 to V6 of a form and its slot values (in slot order).
 inline bool name_valid(const Placenames& pn, std::string_view form, const std::vector<std::string>& values) {
-    return worldgen::stages::region_name_valid(form, values, pn.common());
+    worldgen::stages::PlaceSlotValues sv;
+    std::size_t at = 0;
+    std::size_t k = 0;
+    while ((at = form.find('{', at)) != std::string_view::npos) {
+        const std::size_t end = form.find('}', at);
+        const std::string_view slot = form.substr(at, end - at + 1);
+        std::size_t list = 0;
+        for (std::size_t i = 0; i < worldgen::stages::PLACE_LIST_COUNT; ++i) {
+            if (worldgen::stages::PLACE_SLOT_TEXTS[i] == slot) list = i;
+        }
+        sv.emplace_back(list, values.at(k++));
+        at = end + 1;
+    }
+    return worldgen::stages::region_name_valid(form, sv, common_of(pn));
 }
 
-// RG11 8.
+// RG11 8 ("" when every compound is taken).
 inline std::string name_fallback(const Placenames& pn, std::string_view land, const std::set<std::string>& used) {
-    return worldgen::stages::region_name_fallback(pn.land(land), pn.common(), used);
+    const std::set<std::string, std::less<>> u(used.begin(), used.end());
+    return worldgen::stages::region_name_fallback(def_of(pn, land), common_of(pn), u).value_or("");
 }
 #endif
 

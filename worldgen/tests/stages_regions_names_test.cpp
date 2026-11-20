@@ -919,7 +919,7 @@ TEST_CASE("P1-06 r3 2 check 4a, 10.5 unit 8: each message") {
         region_api::load(region_data::tuning_toml({{"name_pool_weights", pools}}), biome_data::directory());
     REQUIRE(tl.ok());
     CHECK(stage_error(shipped_pn_dir(), region_api::tuning_from(*tl.content)) ==
-          "regions: placename: 'downs' form 2 slot 'feature' has no words");
+          "regions: placename: 'downs' form 2 slot '{feature}' has no words");
     CHECK(stage_error(shipped_pn_dir(), t).empty());
 }
 
