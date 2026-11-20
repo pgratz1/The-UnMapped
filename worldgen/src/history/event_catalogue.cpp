@@ -123,6 +123,15 @@ EventCatalogue build_compiled() {
                                role(2, "civilization", EntityType::civilization, 1, 1),
                                role(3, "destination", EntityType::settlement, 1, 1)},
                               {"settled", "lost"}, 0, {}});
+    // P3-06 r9 20.9 (P3-09, generator 0.18.0): kind 32, the survivors of a
+    // fallen last refuge found a hidden settlement; kind 33, a loser with no
+    // region to cede pays people.
+    c.kinds.push_back(KindDef{32, "refugees_settled", true, 1, 1,
+                              {role(1, "settlement", EntityType::settlement, 1, 1),
+                               role(2, "founder", EntityType::civilization, 1, 1),
+                               role(3, "origin", EntityType::settlement, 1, 1)},
+                              {"population"}, 0, {}});
+    c.kinds.push_back(KindDef{33, "tribute", true, 0, 0, two("payer", "payee"), {"people"}, 0, {}});
     return c;
 }
 

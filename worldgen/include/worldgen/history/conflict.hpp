@@ -72,6 +72,14 @@ struct ConflictTuning {
     std::int64_t exhaustion_permille = 1, war_max_years = 1, truce_years = 0;
     std::int64_t war_grudge = 0, capture_grudge = 0, secession_grudge = 0, grudge_decay_per_century = 0;
     std::int64_t last_refuge = 0;
+    // r9 20.9 (P3-09, generator 0.18.0). The defaults of a hand-made tuning
+    // leave 0.17.0's rules (no flight, no weariness, tribute or revenge,
+    // levies from every reachable settlement, no odds minimum, the full
+    // truce), except that a truce shortens by nothing only below aggression
+    // 999.
+    std::int64_t refuge_flight = 0, flight_hops = 1, hidden_years = 0, weary_wars = 0, tribute_permille = 0;
+    std::int64_t revenge_aggression = 0, levy_hops = 16, odds_floor = 0, odds_min = 0;
+    std::int64_t truce_break_aggression = 999, enmity_hops = 1;
     std::int64_t capital_sacked_salience = 0, capital_captured_salience = 0;
 };
 
@@ -83,8 +91,9 @@ struct ConflictTuning {
 // the loader (16.4), in the table's order: "history: tuning:
 // conflict.<field> outside its schema range" (record fields as
 // conflict.<record>.<field>), then "history: tuning: claim_strain must not be
-// above declare_min" and "history: tuning: declare_min + declare_span must
-// not be above strain_max".
+// above declare_min", "history: tuning: declare_min + declare_span must
+// not be above strain_max" and (r9) "history: tuning: enmity_hops must not
+// be below march_hops".
 void check_conflict_tuning(const ConflictTuning& tuning);
 
 // --- Pure rules (test seams; 4, 5.1, 5.2, 6, 7.4, 7.7) -------------------------------------------
@@ -96,6 +105,10 @@ struct ConflictRace {
     std::int64_t camp = 0;        // 0 good, 1 neutral, 2 evil (P3-03 race.camp)
     std::int64_t aggression = 0;  // P3-01
     std::int64_t prowess = 1000;  // prowess_permille (12.2)
+    // r9 20.12 (P3-01 r9 3.2, generator 0.18.0).
+    std::int64_t muster = 1000;        // muster_permille (20.6)
+    std::int64_t conceal_min = 1001;   // 20.7; 1001 never
+    std::int64_t home_defense = 0;     // home_defense_permille (20.7)
 };
 
 // One entry of front(x, y) (5.1): the region R of y's presence, the cost of
@@ -146,9 +159,22 @@ struct ReachTable {
 [[nodiscard]] std::int64_t declare_permille(const ConflictTuning& t, std::int64_t s, std::int64_t force_a,
                                             std::int64_t force_b, std::int64_t aggression_a);
 // force(c) of 6.1 from (population, kind) of its standing visible
-// settlements and its race's prowess.
+// settlements and its race's prowess (and, r9 20.6 item 1, muster: levy x
+// prowess div 1000 x muster div 1000; the three-argument form is muster 1000).
 [[nodiscard]] std::int64_t force_of(const ConflictTuning& t, std::span<const std::pair<std::int64_t, SettlementKind>> settlements,
                                     std::int64_t prowess);
+[[nodiscard]] std::int64_t force_of(const ConflictTuning& t, std::span<const std::pair<std::int64_t, SettlementKind>> settlements,
+                                    std::int64_t prowess, std::int64_t muster);
+// r9 20.6 item 3: the odds of a declaration, from a's force, b's force
+// weighted by the defence of the claimed region (fb = force(b) x def div
+// 1000, computed by the caller) and a's effective aggression g'.
+[[nodiscard]] std::int64_t declare_odds(const ConflictTuning& t, std::int64_t force_a, std::int64_t weighted_force_b,
+                                        std::int64_t aggression);
+// r9: the declaration chance of 7.2 item 3 for strain s (tension units) at
+// those odds: 0 below declare_min.
+[[nodiscard]] std::int64_t declare_chance(const ConflictTuning& t, std::int64_t s, std::int64_t odds);
+// r9 20.6 item 4: the years of a's truce after a peace (aggression g_a).
+[[nodiscard]] std::int64_t truce_length(const ConflictTuning& t, std::int64_t aggression);
 // cover(R) of 6.3 (rough and the four shares, per mille).
 [[nodiscard]] std::int64_t cover_of(const PeoplesRegion& region, std::span<const std::int64_t> cover_biomes);
 // def(R) of 6.3.
@@ -157,6 +183,10 @@ struct DefenceTerms {
     bool pass = false;   // R_from != R, walk_pairs = 0, pass_id > 0
     bool river = false;  // R_from != R, a large-river border
     bool fort = false;   // the defender has a standing visible fortress in R
+    // r9 20.7 item 2: the defender's race's home_defense_permille and its
+    // biome term B(R, r_y); adds home_defense x max(0, B) div 1000.
+    std::int64_t home_defense = 0;
+    std::int64_t biome_term = 0;
 };
 [[nodiscard]] std::int64_t defence_of(const ConflictTuning& t, const DefenceTerms& terms);
 // The win chance p of 7.3 item 3.
@@ -164,6 +194,11 @@ struct DefenceTerms {
 // The garrison G and the fall chance ps of 7.3 item 7.
 [[nodiscard]] std::int64_t garrison_of(const ConflictTuning& t, std::int64_t population, std::int64_t prowess,
                                        SettlementKind kind, bool capital);
+// r9 20.7 item 2: the garrison with home defence, G x (1000 + home_defense x
+// max(0, B) div 1000) div 1000 after the walls.
+[[nodiscard]] std::int64_t garrison_of(const ConflictTuning& t, std::int64_t population, std::int64_t prowess,
+                                       SettlementKind kind, bool capital, std::int64_t home_defense,
+                                       std::int64_t biome_term);
 [[nodiscard]] std::int64_t siege_permille_of(std::int64_t attack_left, std::int64_t garrison);
 // 7.4: the losses of each settlement (populations in ascending id) for
 // `dead`, already capped at the total; the remainder from the most populous
@@ -183,6 +218,7 @@ struct ConflictWar {
     std::int64_t start = 0;
     std::int64_t last_event = 0;
     std::int64_t initiative = 0;
+    std::int64_t goal_owner = 0;  // r9 20.4: the goal's owner at the declaration
     bool open = true;
     // Per side, index 0 the attacker, 1 the defender.
     std::array<std::int64_t, 2> won{};
@@ -216,6 +252,12 @@ public:
     [[nodiscard]] std::int64_t strain(std::int64_t a, std::int64_t b) const;
     [[nodiscard]] std::int64_t grudge(std::int64_t a, std::int64_t b) const;
     [[nodiscard]] std::optional<std::pair<std::int64_t, std::int64_t>> claim(std::int64_t a, std::int64_t b) const;
+    // r9 (20.1, 20.4, 20.5): the year until which a fled refuge is hidden
+    // (0 none), the futile count of (defender, region) as read now (0 when
+    // the recorded owner is not the region's owner), wronged(a, b).
+    [[nodiscard]] std::int64_t hidden_until(std::int64_t settlement) const;
+    [[nodiscard]] std::int64_t futile_count(const StepContext& context, std::int64_t defender, std::int64_t region) const;
+    [[nodiscard]] std::vector<std::int64_t> wronged(std::int64_t a, std::int64_t b) const;
 
 private:
     struct Claim {
@@ -226,6 +268,21 @@ private:
         std::int64_t year = 0;
         std::int64_t event = 0;
     };
+    struct Futile {
+        std::int64_t count = 0;
+        std::int64_t owner = 0;
+    };
+    // 20.1: where the survivors of a fallen last refuge would flee.
+    struct Flight {
+        std::int64_t region = 0;
+        SiteCell site;
+        std::int64_t people = 0;  // n of item 2
+    };
+    // 20.3: what a lost war costs the loser when the goal is not ceded.
+    struct Cost {
+        std::int64_t region = 0;   // a region to cede, 0 none
+        std::int64_t tribute = 0;  // people, when no region
+    };
 
     void prepare(const StepContext& context);
     [[nodiscard]] const ConflictRace& race_of_civ(const StepContext& context, std::int64_t civ) const;
@@ -234,7 +291,28 @@ private:
     [[nodiscard]] std::vector<std::int64_t> presence(const StepContext& context, std::int64_t civ) const;
     [[nodiscard]] std::vector<std::int64_t> visible_settlements(const StepContext& context, std::int64_t civ,
                                                                 std::int64_t region) const;
+    // r9: hidden (20.1) and concealed (20.7) settlements; the visible
+    // settlements that are not hidden.
+    [[nodiscard]] bool concealed(const State& state, const Settlement& s) const;
+    [[nodiscard]] bool hidden(const StepContext& context, std::int64_t settlement) const;
+    [[nodiscard]] std::vector<std::int64_t> seen_settlements(const StepContext& context, std::int64_t civ,
+                                                             std::int64_t region) const;
+    [[nodiscard]] bool last_refuge_of(const State& state, std::int64_t civ) const;
     [[nodiscard]] std::int64_t force(const StepContext& context, std::int64_t civ) const;
+    // r9 20.6 item 2: the local force at a battlefield, divided by open wars.
+    [[nodiscard]] std::int64_t local_force(const StepContext& context, std::int64_t civ, std::int64_t region) const;
+    [[nodiscard]] std::int64_t front_hops(std::int64_t a, std::int64_t b) const;
+    [[nodiscard]] std::int64_t effective_aggression(std::int64_t a, std::int64_t b, std::int64_t aggression) const;
+    // 6.3 (with r9's home defence) of entry e against defender y: def and the pass id (0 none).
+    [[nodiscard]] std::pair<std::int64_t, std::int64_t> defence_at(const StepContext& context, std::int64_t y,
+                                                                   const FrontEntry& e) const;
+    [[nodiscard]] std::int64_t odds_of(const StepContext& context, std::int64_t a, std::int64_t b) const;
+    [[nodiscard]] bool weary(const StepContext& context, std::int64_t defender, std::int64_t region) const;
+    [[nodiscard]] std::vector<FrontEntry> allowed_goals(const StepContext& context, std::int64_t b,
+                                                        std::span<const FrontEntry> front) const;
+    [[nodiscard]] std::optional<Flight> flight_plan(const StepContext& context, std::int64_t x, std::int64_t y,
+                                                    std::int64_t t) const;
+    [[nodiscard]] Cost cost_plan(const StepContext& context, std::int64_t winner, std::int64_t loser) const;
     [[nodiscard]] std::int64_t open_wars_of(std::int64_t civ) const;
     [[nodiscard]] bool at_war(std::int64_t a, std::int64_t b) const;
     [[nodiscard]] bool attacking(std::int64_t a) const;
@@ -263,6 +341,10 @@ private:
                std::int64_t attack, std::int64_t dead_x, std::int64_t battle_event);
     void fall(StepContext& context, std::size_t war, std::int64_t x, std::int64_t y, std::int64_t settlement,
               std::int64_t siege_event);
+    void flee(StepContext& context, std::size_t war, std::int64_t x, std::int64_t y, std::int64_t settlement,
+              std::int64_t siege_event, const Flight& plan);
+    void cede(StepContext& context, std::int64_t region, std::int64_t loser, std::int64_t winner, std::int64_t cause);
+    void note_futile(const StepContext& context, const ConflictWar& w);
     void conquer(StepContext& context, std::int64_t y, std::int64_t x, std::int64_t cause, std::int64_t region);
     std::int64_t casualties(StepContext& context, std::int64_t civ, std::int64_t dead, std::int64_t event);
     void refugees(StepContext& context, std::int64_t civ, std::int64_t from_settlement, std::int64_t people);
@@ -295,6 +377,11 @@ private:
     std::set<Pair> enmity_opened_;
     std::set<std::int64_t> seen_;
     std::map<Pair, std::int64_t> contact_;      // this step's contact cost k, set in each strain update
+    // r9 (P3-09): fled refuges (settlement -> year found again), futile wars
+    // per (defender, region), regions a was wronged of by b.
+    std::map<std::int64_t, std::int64_t> hidden_until_;
+    std::map<Pair, Futile> futile_;
+    std::map<Pair, std::set<std::int64_t>> wronged_;
     std::int64_t last_t2_phase_ = 0;
 };
 

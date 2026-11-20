@@ -58,6 +58,7 @@ struct PeoplesTuning {
     std::int64_t expand_min_score = 0, expand_relative_permille = 0, expand_min_capacity = 0;
     std::int64_t cost_penalty = 0, pass_cost = 1, river_cost = 0, river_border_share_permille = 0;
     std::int64_t civs_two_permille = 0, regions_per_civ = 0, home_min_hops = 1, home_min_capacity = 0;
+    std::int64_t regions_per_extra_civ = 1, civs_extra_max = 0;  // P3-05 r8 21 item 5 (generator 0.18.0)
     std::int64_t intensity_calm = 0, intensity_normal = 0, intensity_turbulent = 0;
     std::int64_t famine_crowding_permille = 0, famine_ppm = 0, famine_toll_min = 0, famine_toll_max = 0;
     PeoplesByKind plague_ppm;
@@ -126,6 +127,8 @@ struct PeoplesRegion {
                                            std::span<const db::BiomeRow> biomes, const PeoplesTuning& tuning,
                                            std::int64_t islet_max_dry_cells);
 
+// The biome term B(R, r) of 4.2, in [-1000, 1000]; P3-06 20.7 reads it too.
+[[nodiscard]] std::int64_t region_biome_term(const PeoplesRegion& region, const PeoplesRace& race);
 // sigma(R, r) of 4.2, in [-3000, 4000] with the shipped multipliers.
 [[nodiscard]] std::int64_t region_score(const PeoplesRegion& region, const PeoplesRace& race,
                                         const PeoplesTuning& tuning);
@@ -186,6 +189,10 @@ public:
     [[nodiscard]] const PeoplesRace& race(std::int64_t id) const;
     [[nodiscard]] std::int64_t score(std::int64_t region, std::int64_t race) const;
     [[nodiscard]] std::int64_t capacity(std::int64_t region, std::int64_t race) const;
+    // B(R, r) of 4.2 (P3-06 20.7: concealment and home defence).
+    [[nodiscard]] std::int64_t biome_term(std::int64_t region, std::int64_t race) const;
+    // The regions that are not islets (P3-05 21 item 5).
+    [[nodiscard]] std::int64_t non_islet_count() const noexcept;
     [[nodiscard]] std::span<const PeoplesNeighbour> neighbours(std::int64_t region) const;
     // Breadth-first hop distances from `from` over open borders, index
     // region id - 1, -1 when unreachable.
@@ -217,6 +224,7 @@ private:
     std::vector<PeoplesRace> races_;                 // race row order (ascending id)
     std::vector<std::int64_t> score_;                // [race index * regions + region - 1]
     std::vector<std::int64_t> capacity_;
+    std::vector<std::int64_t> biome_term_;           // B (4.2), same index
     std::vector<std::vector<PeoplesNeighbour>> neighbours_;
     mutable std::vector<std::vector<std::int64_t>> hops_;  // empty until computed
     std::vector<std::uint16_t> region_layer_;
@@ -259,6 +267,17 @@ public:
     [[nodiscard]] std::vector<std::int64_t> wanted_held(const StepContext& context, std::int64_t civ) const;
     [[nodiscard]] std::int64_t hunger(std::int64_t civ) const;              // 9.3 item 4
     [[nodiscard]] std::int64_t last_reduction(std::int64_t settlement) const;  // 10.4; 0 none
+    // r8 (21 item 1, generator 0.18.0): the site of 6.2 in `region` for `race`
+    // against the step's settlements, not relaxed; the kind of 8.4 (r6) a
+    // settlement of `population` founded on that site would have; the hop
+    // distances of 4.4 from `region` (index region id - 1, -1 unreachable);
+    // the biome term B of 4.2.
+    [[nodiscard]] std::optional<SiteCell> site(const StepContext& context, std::int64_t region,
+                                               std::int64_t race) const;
+    [[nodiscard]] SettlementKind founding_kind(std::int64_t race, std::int64_t region, const SiteCell& site,
+                                               std::int64_t population) const;
+    [[nodiscard]] const std::vector<std::int64_t>& hops(std::int64_t region) const;
+    [[nodiscard]] std::int64_t biome_term(std::int64_t region, std::int64_t race) const;
 
 private:
     friend class PeoplesSubsystem;
@@ -285,6 +304,11 @@ public:
     // settlement must be standing and owned. FatalError "history: peoples:
     // ruin: settlement <s> is not standing".
     void ruin(StepContext& context, std::int64_t settlement, std::int64_t event);
+    // r8 (21 item 1): the name of settlement `settlement_id` of `race`, drawn
+    // as a colony's (next_name, NameKind::settlement, through the name
+    // filter), from the one registry.
+    [[nodiscard]] std::string settlement_name(const StepContext& context, std::int64_t race,
+                                              std::int64_t settlement_id);
 
     // The homes of an awakening of `race` now (7.1, 7.2): no state change.
     // Cached within one step for awakening_place and awaken; awaken clears

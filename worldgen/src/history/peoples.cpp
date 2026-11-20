@@ -302,6 +302,8 @@ std::vector<std::int64_t> PeoplesSubsystem::homes(const StepContext& ctx, std::i
         n = *setting;
     } else {
         n = 1 + (chance_pm(ctx.draw(key(CIVS), word(race), 0, 0), tuning_.civs_two_permille) ? 1 : 0);
+        // r8 (21 item 5, generator 0.18.0): more realms on a larger map.
+        n += std::min(tuning_.civs_extra_max, floor_div(g.non_islet_count(), tuning_.regions_per_extra_civ));
         if (eligible_count < tuning_.regions_per_civ * alive + 2) {
             n = 1;
         }
@@ -1318,6 +1320,29 @@ std::int64_t PeoplesView::hunger(std::int64_t civ) const {
 
 std::int64_t PeoplesView::last_reduction(std::int64_t settlement) const {
     return get(owner_.last_reduction_, settlement);
+}
+
+std::optional<SiteCell> PeoplesView::site(const StepContext& context, std::int64_t region, std::int64_t race) const {
+    return owner_.geo().site(region, race, context.state().settlements(), false);
+}
+
+SettlementKind PeoplesView::founding_kind(std::int64_t race, std::int64_t region, const SiteCell& site,
+                                          std::int64_t population) const {
+    return owner_.founding_kind(race, region, site, population);
+}
+
+const std::vector<std::int64_t>& PeoplesView::hops(std::int64_t region) const {
+    return owner_.geo().hops(region);
+}
+
+std::int64_t PeoplesView::biome_term(std::int64_t region, std::int64_t race) const {
+    return owner_.geo().biome_term(region, race);
+}
+
+std::string PeoplesSubsystem::settlement_name(const StepContext& context, std::int64_t race,
+                                              std::int64_t settlement_id) {
+    prepare(context);
+    return next_name(context, race, NameKind::settlement, settlement_id);
 }
 
 }  // namespace worldgen::history

@@ -503,6 +503,8 @@ Schema history_peoples_schema() {
         i("river_border_share_permille", 0, 1000),
         i("civs_two_permille", 0, 1000),
         i("regions_per_civ", 0, 100),
+        i("regions_per_extra_civ", 1, 100000),  // P3-05 r8 21 item 5 (generator 0.18.0)
+        i("civs_extra_max", 0, 3),
         i("home_min_hops", 1, 64),
         i("home_min_capacity", 0, 1000000),
         Field::required("intensity", Type::record(peoples_intensity_schema())),
@@ -599,6 +601,18 @@ Schema history_conflict_schema() {
         i("secession_grudge", 0, 2000),
         i("grudge_decay_per_century", 0, 10000),
         i("last_refuge", 0, 1),
+        // P3-06 r9 20.9 (P3-09, generator 0.18.0), in the table's order.
+        i("refuge_flight", 0, 1),
+        i("flight_hops", 1, 8),
+        i("hidden_years", 0, 10000),
+        i("weary_wars", 0, 100),
+        i("tribute_permille", 0, 1000),
+        i("revenge_aggression", 0, 1000),
+        i("levy_hops", 0, 16),
+        i("odds_floor", 0, 1000),
+        i("odds_min", 0, 1000),
+        i("truce_break_aggression", 0, 999),
+        i("enmity_hops", 1, 4),
         i("capital_sacked_salience", 0, 100),
         i("capital_captured_salience", 0, 100),
     };
@@ -616,6 +630,13 @@ Schema history_conflict_schema() {
                       return std::nullopt;
                   }
                   return std::string("declare_min + declare_span must not be above strain_max");
+              }},
+        Check{"conflict_enmity_hops",  // P3-06 r9 20.9
+              [](const Record& r) -> std::optional<std::string> {
+                  if (r.get_int("enmity_hops") >= r.get_int("march_hops")) {
+                      return std::nullopt;
+                  }
+                  return std::string("enmity_hops must not be below march_hops");
               }},
     };
     return Schema(std::move(fields), std::move(checks));
@@ -678,6 +699,10 @@ Schema race_schema() {
         Field::required("expansion", Type::integer(0, 1000)),
         Field::required("aggression", Type::integer(0, 1000)),
         Field::required("prowess_permille", Type::integer(1, 4000)),  // P3-06 12.2
+        // P3-01 r9 3.2 (P3-06 20.12, generator 0.18.0)
+        Field::required("muster_permille", Type::integer(1, 10000)),
+        Field::required("conceal_min", Type::integer(0, 1001)),
+        Field::required("home_defense_permille", Type::integer(0, 10000)),
         Field::required("settlement_kinds",
                         Type::array(Type::enumeration({"hamlet", "village", "town", "city", "fortress"}), 1, 5)),
         Field::required("culture", Type::reference(std::string(CULTURE_KIND))),
