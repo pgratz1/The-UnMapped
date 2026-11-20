@@ -50,7 +50,7 @@ TEST_CASE("P3-05 engineer: growth rule of 9.1") {
     CHECK(h::grow_population(10, 100000, 1, 24999, 100) == 11);
     CHECK(h::grow_population(10, 100000, 0, 24999, 100) == 10);
     CHECK(h::grow_population(1499, 5000, 20, 1499, 100) == 1499);
-    CHECK(h::grow_population(1600, 5000, 20, 1499, 100) == 1600);  // above the cap: kept, not cut
+    CHECK(h::grow_population(1600, 5000, 20, 1499, 100) == 1590);  // P3-05 r6 9.1: above the cap it drains
     // P > C: lose a tenth of the excess, at least 1.
     CHECK(h::grow_population(1100, 1000, 15, 24999, 100) == 1090);
     CHECK(h::grow_population(1005, 1000, 15, 24999, 100) == 1004);

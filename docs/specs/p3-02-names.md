@@ -491,6 +491,8 @@ NameChoice choose_name(const CultureNaming&, const NameFilter&, std::string_view
 
 The three callers (`stages/chronology.cpp` for gods, `history/stubs.cpp` and `history/peoples.cpp` for civilizations and settlements) pass the world's filter, built once per world from the loaded data.
 
+**As implemented** (generator engineer, P3-08, 2026-11-20; `worldgen/include/worldgen/history/names.hpp`): the seams above, with `NameAttempt::filtered`; `name_attempt`, `make_name` and `choose_name` take the filter as their second parameter, and the overloads without it (an empty filter) remain, so r4 callers and tests compile; `std::optional<std::string> names_form_text_problem(const data::ContentSet&, const NameFilter&)` and `check_names_form_text(...)` (the FatalError) are the stage check, run by `chronology_stage` after `check_history_data` and by `history_stage` after `check_engine_inputs`, both with the message of 11.3 unchanged (prefix `history:` also in the chronology stage).
+
 ### 11.6 Measurements
 
 Prototype `~/.cache/the-unmapped/out/p3-02-names-filter/` (`nfilter.py` the rule of 11.3, `r5.py` the r5 attempt on the test writer's reference `p3_names_reference.py`, `space.py` an exact enumeration of every root a culture can draw with its probability, `measure.py`, `sample.py`, `residual.py`, `gods.py`, `realms.py`, `placescan.py`, `edits.py`). Rates are the share of attempts that pass the r4 rules and that the filter rejects.
