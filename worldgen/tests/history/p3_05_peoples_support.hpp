@@ -414,8 +414,8 @@ inline Geo make_synthetic(std::uint64_t seed) {
         g.ore[i] = static_cast<std::uint8_t>((v >> 16) % 256);
         g.walk_area[i] = ((v >> 32) % 3 == 0) ? std::uint16_t{0} : static_cast<std::uint16_t>(1 + (v >> 40) % 1000);
         if (g.water[i] == 0) {
-            std::int64_t& m = emax[g.region[i]];
-            m = std::max(m, e);
+            std::int64_t& top = emax[g.region[i]];
+            top = std::max(top, e);
         }
     }
     for (db::RegionRow& r : g.regions) {
