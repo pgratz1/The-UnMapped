@@ -1,0 +1,146 @@
+# Region names: words for a region's character (spec
+# docs/specs/p1-06-regions.md, revision r3, RG11 and section 4.1). Kind
+# `placename`, role "trait": at most one definition per trait. A region has
+# a trait when its table `region` figures pass the trait's test (tuning
+# worldgen.regions, record name_traits); the lists of all its traits, in the
+# order coast, river, lake, high, ore, pass, barren, fertile, form pool 2 of
+# every slot. Nouns stay with the land, so every trait's `nouns` is empty.
+
+[placename.trait_coast]
+role = "trait"
+biomes = []
+special = "none"
+trait = "coast"
+forms = []
+nouns = []
+suffixes = ["strand"]
+prefixes = [
+  "Brine", "Gull", "Kelp", "Salt", "Shingle", "Spray", "Tern", "Tide",
+  "Wrack",
+]
+adjectives = ["Drowned", "Salt", "Windswept", "Wrecked"]
+features = ["mouth", "strand"]
+possessors = ["Gull", "Wrecker"]
+places = ["Landing", "Strand"]
+objects = ["Gulls", "Tides", "Wreckers", "Wrecks", "the Drowned"]
+forbidden = []
+excluded = []
+
+[placename.trait_river]
+role = "trait"
+biomes = []
+special = "none"
+trait = "river"
+forms = []
+nouns = []
+suffixes = ["bourne", "ford", "wash"]
+prefixes = ["Ferry", "Flood", "Ford", "Otter", "Spate", "Weir"]
+adjectives = ["Flooded", "Riven"]
+features = ["bourne", "ford", "wash"]
+possessors = ["Ferryman", "Fisher"]
+places = ["Ferry", "Ford", "Weir"]
+objects = ["Floods", "Fords", "the Ferry"]
+forbidden = []
+excluded = []
+
+[placename.trait_lake]
+role = "trait"
+biomes = []
+special = "none"
+trait = "lake"
+forms = []
+nouns = []
+suffixes = ["mere", "tarn"]
+prefixes = ["Glass", "Grebe", "Pike", "Teal"]
+adjectives = ["Drowned", "Sunken"]
+features = ["mere", "pool", "tarn"]
+possessors = ["Fisher"]
+places = ["Shore", "Tarn"]
+objects = ["Pikes", "the Drowned", "the Mere"]
+forbidden = []
+excluded = []
+
+[placename.trait_high]
+role = "trait"
+biomes = []
+special = "none"
+trait = "high"
+forms = []
+nouns = []
+suffixes = ["fell", "scar"]
+prefixes = ["Cloud", "Eagle", "Ice", "Rime", "Scree", "Snow"]
+adjectives = ["Frozen", "High", "Hoary", "Snowbound"]
+features = ["crag", "fell", "knott"]
+possessors = ["Eagle"]
+places = ["Brow", "Crag", "Height"]
+objects = ["Eagles", "Frost", "the Storm"]
+forbidden = []
+excluded = []
+
+[placename.trait_ore]
+role = "trait"
+biomes = []
+special = "none"
+trait = "ore"
+forms = []
+nouns = []
+suffixes = []
+prefixes = ["Copper", "Iron", "Lead", "Silver", "Slag", "Tin"]
+adjectives = ["Iron", "Rusted", "Veined"]
+features = ["delve", "seam"]
+possessors = ["Delver", "Miner", "Smith"]
+places = ["Delving", "Seam"]
+objects = ["Iron", "Rust", "Slag", "the Deep"]
+forbidden = []
+excluded = []
+
+[placename.trait_pass]
+role = "trait"
+biomes = []
+special = "none"
+trait = "pass"
+forms = []
+nouns = []
+suffixes = []
+prefixes = []
+adjectives = ["Guarded", "Narrow"]
+features = ["gap", "gate", "pass"]
+possessors = ["Gatekeeper", "Sentinel"]
+places = ["Gap", "Gate", "Pass", "Stair"]
+objects = ["Gates", "the Gate", "the Pass"]
+forbidden = []
+excluded = []
+
+[placename.trait_barren]
+role = "trait"
+biomes = []
+special = "none"
+trait = "barren"
+forms = []
+nouns = []
+suffixes = []
+prefixes = ["Dearth", "Famine", "Hunger", "Starve", "Want"]
+adjectives = ["Bare", "Barren", "Hungry", "Starved"]
+features = []
+possessors = ["Beggar", "Pauper"]
+places = ["Dole", "Hunger", "Want"]
+objects = ["Famine", "Hunger", "the Starved"]
+forbidden = []
+excluded = []
+
+[placename.trait_fertile]
+role = "trait"
+biomes = []
+special = "none"
+trait = "fertile"
+forms = []
+nouns = []
+suffixes = []
+prefixes = ["Barley", "Corn", "Fallow", "Glean", "Honey", "Sheaf", "Sickle"]
+adjectives = ["Fallow", "Gleaned", "Reaped"]
+features = ["field", "furrow"]
+possessors = ["Gleaner", "Reaper", "Sower"]
+places = ["Acre", "Furrow", "Harvest", "Sheaf"]
+objects = ["Scythes", "Sheaves", "Tithes", "the Harvest"]
+forbidden = []
+excluded = []
