@@ -153,6 +153,9 @@ SPEC_GAPS = (
     ("15.4 settlements_sacked", "Counted from current rows: a sacked ruin that has faded no longer has a ruin_event "
                                 "(P3-05 ruling 3), so it is not counted."),
     ("15.4 war_years_total E", "E = param.history_span (meta.history_end_year)."),
+    ("16.2 item 18a no claim", "A world with no claim equals the peoples-only world in every history table but "
+                               "the three catalogue tables AND relation: conflict's housekeeping opens enmity rows "
+                               "without any claim (hist-races-elf-orc-1024 has them)."),
     ("14 item 4 conqueror alive", "Alive at the conquest: ended_year NULL, or later than the year, or the same year "
                                   "with an ending event after the conquest."),
 )
