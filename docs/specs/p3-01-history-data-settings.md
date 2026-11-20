@@ -294,6 +294,10 @@ Three race fields, required, after `prowess_permille` (in this order), **from ge
 
 Section 3.1's TOML blocks are read with these three lines added after `prowess_permille` (for example the faerie block: `muster_permille = 1000`, `conceal_min = 400`, `home_defense_permille = 2000`). Every content hash changes.
 
+### 3.3 Faerie home defence from P3-09 r3 (r10)
+
+From P3-09 r3 (P3-06 20.17 item 3) the faerie `home_defense_permille` is **0**, not 2000: faeries are protected by not being found, not by winning. Every other value of 3.2's table stands (elves 1500).
+
 ## 4. Kind `culture`
 
 Directory `cultures/`, **required**. Fields, all required, in this order:
@@ -513,3 +517,7 @@ Made with P3-08 (`docs/specs/p3-08-followups.md`), in place where marked; **ever
 ## Revision note r9 (2026-11-20, amendments for P3-09; generator 0.18.0)
 
 New section 3.2 (P3-09; P3-06 20.12): race fields `muster_permille`, `conceal_min` and `home_defense_permille`, required, after `prowess_permille`, from generator 0.18.0 (orc muster 4000; faerie concealment at 400; elven and faerie home defence 1500 and 2000). `history.conflict` gains eleven fields (P3-06 20.9: `refuge_flight`, `flight_hops`, `hidden_years`, `weary_wars`, `tribute_permille`, `revenge_aggression`, `levy_hops`, `odds_floor`, `odds_min`, `truce_break_aggression`, `enmity_hops`); the id list of 5 is unchanged. Loader tests (8.1) cover each new race field's range and its absence.
+
+## Revision note r10 (2026-11-20, for P3-09 r3; generator 0.18.0)
+
+New 3.3: faerie `home_defense_permille` 0 (P3-06 20.17). No field changes.

@@ -20,6 +20,11 @@ The world critic's review of P3-06 at 0.16.0 (`docs/reviews/p3-06-conflict-world
 | 6 | Sweep statistics (F6, suggestion 8) | `[stats]` keys `wars_hollow`, `wars_hollow_permille`, `wars_same_goal_max`, `wars_same_goal_unchanged_max`, `race_population_share_max_permille`, `race_regions_share_max_permille`; typical ranges and validation measures | P3-07 21.5; P3-06 20.11 | no (report only) |
 | 7 | Summary selection (F4, suggestion 2) | Per-age floor of 20 events; a shown declaration brings its ending and the ending's cession or tribute, a shown sack or capture its moved capital, refugees and conquest; claim salience 45 → 35; a note after the declaration ("Claimed since 2574. The second war between them.") and after the flare-up ("The Grork Horde pressed its claim to Southwest Wood against Finen.") | P3-07 21 (r8); the salience in P3-06 20.9 | the salience only |
 | 8 | Short English-word list of the name filter (Paul's decision 1 on the name filter questions, `docs/design/proposals.md` "Paul's decisions of 2026-11-20 on the name filter questions") | `game/data/name_filters/words.toml` becomes the short list (about 150 crude, comic or modern-sounding words) in place of P3-08's 647; ordinary English words that fit the setting stay possible as name roots. Data only, produced by another spec writer on branch `p3/10-word-list` (the data file and a P3-02 revision); **the engineer merges that branch into the P3-09 implementation branch** and does not edit the list. It changes every `content_hash`, the names drawn wherever a rejected word now passes, every world hash and the names goldens (`p3-02-names.txt`, `p3-01-data.txt`), and through the names every history golden | P3-02 (revision on `p3/10-word-list`); this table | yes |
+| 9 | Who won the war (Paul's note 1 of 2026-11-20: a defender sued for peace right after winning the last battle) | The war score counts the dead inflicted and the people taken. An exhausted side that leads wins. The winner of the war's last battle never loses an ending decided by the score (a truce instead). `peace` ("sued for peace") only when the loser is exhausted; otherwise kind 34 `war_won` ("prevailed over") | P3-06 20.15 | yes |
+| 10 | Battle losses bounded (Paul's note 2) | The defeated's dead are at most half the victors' (local) force (`kill_max_permille` 500) | P3-06 20.16 | yes |
+| 11 | Faeries are not found (Paul's note 2) | Concealed settlements are in presence but must be found: 250‰ a year. Unfound: no battle, no siege; after 3 years the war ends with kind 35 `search_abandoned` (counted apart from hollow wars). Faerie home defence 0 (elves keep 1500). One notion: hidden (a fled refuge, out of presence) and concealed (present, must be found) | P3-06 20.17; P3-01 3.3 | yes |
+| 12 | A race's last refuge is never emptied (the test writer's extinction case) | Casualties never take it below `abandon_min`; P3-05 8.5 never abandons it | P3-06 20.20; P3-05 21 item 6 | yes |
+| 13 | T3 checkable from the rows | A refuge the guard holds writes kind 36 `refuge_held` with a `reason` instead of a `siege` | P3-06 20.22; P3-07 21.8 | yes |
 
 ## 3. What it touches (for the engineer)
 
@@ -27,7 +32,8 @@ The world critic's review of P3-06 at 0.16.0 (`docs/reviews/p3-06-conflict-world
 | --- | --- |
 | Conflict | `worldgen/src/history/conflict.cpp`, `conflict_war.cpp`, `worldgen/include/worldgen/history/conflict.hpp` (members `hidden_until`, `futile`, `wronged`; flight, costs, odds, local force, truce, concealment) |
 | Peoples seam | `worldgen/src/history/peoples.cpp`, `peoples.hpp`: `PeoplesView::site`, `founding_kind`, `hops`, `settlement_name` (P3-05 21) |
-| Catalogue | `event_catalogue.cpp`: kinds 32 `refugees_settled`, 33 `tribute` |
+| Catalogue | `event_catalogue.cpp`: kinds 32 `refugees_settled`, 33 `tribute`; from r3: 34 `war_won`, 35 `search_abandoned`, 36 `refuge_held` |
+| Streams | `streams.hpp`: `hist.conflict.search` after `hist.conflict.sack` (r3; P0-01's list) |
 | Data | `game/data/history/conflict.toml` (+11 fields, 20.9), `game/data/history/peoples.toml` (+2 fields, P3-05 21 item 5), `game/data/history/report.toml` (two entries, `claim` 35), `game/data/races/*.toml` (three fields, 20.12); the same in `worldgen/tests/data/geo*/` |
 | Data kinds | `src/data/kinds_history.cpp`: the race fields and the `history.conflict` fields with their ranges |
 | Report | P3-07 is not implemented: its implementer follows 21 (r8) from the start |
@@ -47,7 +53,8 @@ One branch, one engineer and one test writer working from the stage specs separa
 | 3 | Flight of the last refuge (with the P3-05 seam) | P3-06 20.1; P3-05 21 |
 | 4 | Goals, the cost of a lost war, weariness | P3-06 20.2–20.4 |
 | 5 | Revenge, muster, local levies, odds, truce, enmity hops; `auto` by map size | P3-06 20.5, 20.6, 20.8; P3-05 21 item 5 |
-| 6 | Invariants and tests | P3-06 20.13, 20.14 |
+| 5a | r3: the war score, last battle and `war_won`; the kill bound; the search and `search_abandoned`; the last refuge's floor (with P3-05 21 item 6); `refuge_held` | P3-06 20.15–20.17, 20.20, 20.22 |
+| 6 | Invariants and tests | P3-06 20.13, 20.14, 20.19 |
 | 7 | Statistics (report keys, with the P3-07 implementation or as reference-only checks before it) | P3-07 21.5; P3-06 20.11 |
 | 8 | Goldens and figures; validation sweep; world critic | 6, 7 below |
 
@@ -68,6 +75,26 @@ The test writer extends `p3_conflict_reference.py` from P3-06 20 alone (not from
 | T5 | orcs win at least as often as they lose: over the sweep, peaces with an orc civilization as `winner` ≥ peaces with one as `loser` | 39 against 30 |
 
 The other figures (faeries and elves with one settlement, goblin–elf wars, orcs' share of their age, race shares, the summary) are typical ranges (P3-06 20.11), not acceptance targets.
+
+**From r3** the targets read:
+- **T1**: `wars_hollow_permille` < 250, counted over the wars that found their enemy (P3-07 21.8: a war ended by `search_abandoned` is neither hollow nor counted in the denominator; `wars_unfound` is reported beside it).
+- **T3**: checked from the rows: every `refuge_held` of reason 1 has no destination by the reference's recomputation, and no `siege` of a last refuge has `fell` 0 where the draw said it fell. Validation counts `refuges_held_no_destination` and runs the reference.
+- **T6** (new; Paul's note 1): no `peace` or `war_won` whose loser won the war's last battle, unless the war ended by aim.
+- **T7** (new; Paul's note 2): no battle with `loser_dead` above `kill_max_permille` × the victors' local force.
+
+The prototype figures for all seven, **measured at 0.17.0** with every r3 rule (P3-06 20.18, configuration `L0`, 1024 seeds 0–39):
+
+| Target | r3 prototype | r2 prototype at 0.17.0 (`F17`) |
+| --- | --- | --- |
+| T1 | 22% (185 of 807; 169 wars unfound) | 23% |
+| T2 | 0 worlds above 3 | 0 |
+| T3 | 0 of 46 sieges of a last refuge held with a destination | 0 of 53 |
+| T4 | 0 worlds | 0 |
+| T5 | 52 won, 35 lost | 55, 24 |
+| T6 | 0 (5 endings by aim) | 29 |
+| T7 | 0 (21 battles bounded) | 15 over the bound |
+
+At 0.16.0 with emulation (r2, `FINE`) the figures were T1 24%, T2 2 worlds, T3 0, T4 0, T5 39/30.
 
 
 ### 5.1 Method and configurations
@@ -253,3 +280,23 @@ First version, for the lead's approval.
 ## Revision note r2 (2026-11-20, decided; P3-08 as built)
 
 Paul accepted all eleven recommendations: section 8 closed, the status set to decided. Merged `origin/p3/08-int` and `origin/main`; the P3-09 amendments renumbered after P3-08's fixes (P3-05 r8, P3-06 r9; P3-01 r9 and P3-07 r8 unchanged). New item 8 (the short word list, from `p3/10-word-list`). Section 5 states that every figure is a prototype figure at 0.16.0 and lists the acceptance targets T1–T5. New section 10: checked against P3-08 as built, with two rule changes for the no-extinction invariant (a flight needs `abandon_min` survivors; no tribute from a last refuge) and text corrections of the seam.
+
+## 11. The prototype against the text (r3; the P3-09 test writer's findings)
+
+The test writer's first pass (`origin/p3/09-tests` d45dd89) followed the text and listed where the spec writer's prototype did not. Each difference, whether it can move T1–T5, and what was done:
+
+| Difference | Can it move T1–T5? | Done for r3 |
+| --- | --- | --- |
+| The refuge's kind: `ladder(race, n)` in the prototype, P3-05 8.4 r6's cell rule in the text | Barely: a fortress refuge (dwarves on high ground) has walls 6000 and a levy of 250‰, so later sieges of it fall less often | prototype follows the text |
+| No `abandon_min` condition on a flight, no tribute exemption for a last refuge | T3 and T4: a flight of too few would end the race; in the measured worlds none did | prototype follows the text (20.1, 20.3) |
+| In a quiet step the cost of a lost war was skipped, not waited for | T1: a skipped cost leaves a won war hollow | prototype waits (20.3) |
+| A dropped claim dropped both directions | T1, T2 slightly: the other side's claim and its strain toward a declaration were lost | prototype drops one direction (20.2) |
+| Presence counted only visible settlements; the front cache was not keyed by year | No: hidden settlements are created in T6 and expire between steps, and the cache key has the step counter, so a stale entry cannot be read; counting a same-step colony changes contact only when that colony is concealed or hidden in its first step | prototype counts every standing settlement (20.21 item 1) |
+| Kind ids 31/32 in the prototype | No (ids only) | text: 32, 33 (and 34–36) |
+| No race-level floor on casualties or abandonment (the extinction case) | T4 under non-shipped tuning (the test writer's stress cases) | 20.20 item 1 prototyped; item 2 (P3-05) not |
+
+**Readings** the test writer took where the text was open are confirmed in P3-06 20.21 (all nine; none corrected).
+
+## Revision note r3 (2026-11-20, Paul's notes on a generated history; the test writer's first pass)
+
+Items 9–13: who won the war (score of dead and people taken, the exhausted leader wins, the last battle's winner never loses, kind 34 `war_won`); the bound on the defeated's dead; faeries not found (search, kind 35 `search_abandoned`, faerie home defence 0); a race's last refuge never emptied (closing the test writer's extinction case); kind 36 `refuge_held` for T3. Targets T1 and T3 restated, T6 and T7 added. Every figure re-measured at 0.17.0 with a prototype that now reproduces 0.17.0 exactly and follows the text where it did not (section 11). Normative text in P3-06 r10 (20.15–20.22), P3-05 r9 (21 item 6), P3-07 r9 (21.8), P3-01 r10 (3.3). No section of r2 was reorganised or renumbered.
