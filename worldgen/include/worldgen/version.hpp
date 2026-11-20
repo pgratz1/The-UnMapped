@@ -31,8 +31,12 @@ namespace worldgen {
 // field density_permille) replaced the stubs; 0.15.0 until the conflict
 // subsystem (P3-06: strain, claims, wars, battles, sieges, conquest; event
 // kinds 20 to 30, tuning history.conflict, race field prowess_permille,
-// goblin aggression 600) joined it; now 0.16.0.
-inline constexpr std::string_view GENERATOR_VERSION = "0.17.0";
+// goblin aggression 600) joined it; 0.16.0 until the P3-08 follow-ups
+// (names, peoples: kind 31); 0.17.0 until the P3-09 conflict balance
+// (flight of a last refuge, costs of a lost war, weariness, revenge,
+// muster, local levies, concealment, home defence: kinds 32 and 33, eleven
+// history.conflict fields, three race fields); now 0.18.0.
+inline constexpr std::string_view GENERATOR_VERSION = "0.18.0";
 
 // Returns GENERATOR_VERSION (P0-02 5.5). A world is only guaranteed
 // reproducible under the same generator version (design doc section 4).

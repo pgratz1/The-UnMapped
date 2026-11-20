@@ -302,6 +302,8 @@ std::vector<std::int64_t> PeoplesSubsystem::homes(const StepContext& ctx, std::i
         n = *setting;
     } else {
         n = 1 + (chance_pm(ctx.draw(key(CIVS), word(race), 0, 0), tuning_.civs_two_permille) ? 1 : 0);
+        // r8 (21 item 5, generator 0.18.0): more realms on a larger map.
+        n += std::min(tuning_.civs_extra_max, floor_div(g.non_islet_count(), tuning_.regions_per_extra_civ));
         if (eligible_count < tuning_.regions_per_civ * alive + 2) {
             n = 1;
         }
@@ -488,8 +490,9 @@ void PeoplesSubsystem::abandon_small(StepContext& ctx) {
     const bool quiet = quiet_step(ctx);
     for (std::int64_t id = 1; id <= n; ++id) {
         const Settlement& s = state.settlement(id);
-        if (!standing(s) || !ctx.visible(s) || s.population >= tuning_.abandon_min) {
-            continue;
+        if (!standing(s) || !ctx.visible(s) || s.population >= tuning_.abandon_min ||
+            race_last_refuge(SettlementsNow{state, nullptr, nullptr}, id)) {
+            continue;  // r9 (21 item 6): a race's last refuge stays
         }
         if (quiet && ctx.quiet_events_left(s.owner_civ) < abandon_events(state, id)) {
             continue;  // waits for the next step (8.5)
@@ -619,6 +622,21 @@ std::int64_t PeoplesSubsystem::SettlementsNow::population(std::int64_t id) const
     return pop != nullptr ? (*pop)[static_cast<std::size_t>(id)] : state.settlement(id).population;
 }
 
+bool PeoplesSubsystem::race_last_refuge(const SettlementsNow& now, std::int64_t settlement) const {
+    if (other_standing(now, settlement)) {
+        return false;
+    }
+    const State& state = now.state;
+    const std::int64_t c = state.settlement(settlement).owner_civ;
+    const std::int64_t race = state.civ(c).race;
+    for (std::int64_t id = 1; id <= civ_count(state); ++id) {
+        if (id != c && !state.civ(id).ended_year && state.civ(id).race == race) {
+            return false;
+        }
+    }
+    return true;
+}
+
 bool PeoplesSubsystem::other_standing(const SettlementsNow& now, std::int64_t settlement) const {
     const std::int64_t c = now.state.settlement(settlement).owner_civ;
     for (std::int64_t id = 1; id <= settlement_count(now.state); ++id) {
@@ -665,9 +683,11 @@ PeoplesSubsystem::StrikeResult PeoplesSubsystem::strike_result(const StepContext
     // settlement below abandon_frail_max; r6: never by chance for the
     // civilization's only standing settlement (no draw is made then).
     const bool was_declining = s.status == SettlementStatus::declining;
-    r.abandoned = r.after < tuning_.abandon_min ||
+    // r9 (21 item 6, generator 0.18.0): a race's last refuge is never
+    // abandoned (no draw is made for it either: it has no other settlement).
+    r.abandoned = !race_last_refuge(now, settlement) && (r.after < tuning_.abandon_min ||
                   (was_declining && r.after < tuning_.abandon_frail_max && other_standing(now, settlement) &&
-                   chance_pm(ctx.draw(key(ABANDON), word(settlement), 0, 0), tuning_.abandon_permille.of(s.kind)));
+                   chance_pm(ctx.draw(key(ABANDON), word(settlement), 0, 0), tuning_.abandon_permille.of(s.kind))));
     return r;
 }
 
@@ -1318,6 +1338,29 @@ std::int64_t PeoplesView::hunger(std::int64_t civ) const {
 
 std::int64_t PeoplesView::last_reduction(std::int64_t settlement) const {
     return get(owner_.last_reduction_, settlement);
+}
+
+std::optional<SiteCell> PeoplesView::site(const StepContext& context, std::int64_t region, std::int64_t race) const {
+    return owner_.geo().site(region, race, context.state().settlements(), false);
+}
+
+SettlementKind PeoplesView::founding_kind(std::int64_t race, std::int64_t region, const SiteCell& site,
+                                          std::int64_t population) const {
+    return owner_.founding_kind(race, region, site, population);
+}
+
+const std::vector<std::int64_t>& PeoplesView::hops(std::int64_t region) const {
+    return owner_.geo().hops(region);
+}
+
+std::int64_t PeoplesView::biome_term(std::int64_t region, std::int64_t race) const {
+    return owner_.geo().biome_term(region, race);
+}
+
+std::string PeoplesSubsystem::settlement_name(const StepContext& context, std::int64_t race,
+                                              std::int64_t settlement_id) {
+    prepare(context);
+    return next_name(context, race, NameKind::settlement, settlement_id);
 }
 
 }  // namespace worldgen::history

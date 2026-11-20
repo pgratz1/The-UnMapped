@@ -188,6 +188,8 @@ PeoplesTuning peoples_tuning_from(const data::ContentSet& content) {
     t.river_border_share_permille = r.get_int("river_border_share_permille");
     t.civs_two_permille = r.get_int("civs_two_permille");
     t.regions_per_civ = r.get_int("regions_per_civ");
+    t.regions_per_extra_civ = r.get_int("regions_per_extra_civ");  // r8 (generator 0.18.0)
+    t.civs_extra_max = r.get_int("civs_extra_max");
     t.home_min_hops = r.get_int("home_min_hops");
     t.home_min_capacity = r.get_int("home_min_capacity");
     const data::Record& intensity = r.get_record("intensity");
@@ -332,6 +334,18 @@ PeoplesRegion peoples_region(const db::RegionRow& row, std::span<const db::Regio
     return r;
 }
 
+std::int64_t region_biome_term(const PeoplesRegion& g, const PeoplesRace& r) {
+    std::int64_t b_num = 0;
+    for (const db::RaceBiomeRow& w : r.biomes) {
+        for (const auto& [biome, share] : g.shares) {
+            if (biome == w.biome) {
+                b_num = checked_add(b_num, checked_mul(w.weight, share));
+            }
+        }
+    }
+    return floor_div(b_num, 1000);
+}
+
 std::int64_t region_score(const PeoplesRegion& g, const PeoplesRace& r, const PeoplesTuning& t) {
     const std::int64_t wsum = r.w_fertility + r.w_forage + r.w_timber + r.w_ore + r.w_fresh_water;
     std::int64_t s_num = 0;
@@ -342,15 +356,7 @@ std::int64_t region_score(const PeoplesRegion& g, const PeoplesRace& r, const Pe
     s_num = checked_add(s_num, checked_mul(r.w_fresh_water, g.fresh_water_mean));
     // race_site_weights_positive (P3-01) makes wsum > 0.
     const std::int64_t S = wsum > 0 ? floor_div(checked_mul(s_num, 1000), checked_mul(255, wsum)) : 0;
-    std::int64_t b_num = 0;
-    for (const db::RaceBiomeRow& w : r.biomes) {
-        for (const auto& [biome, share] : g.shares) {
-            if (biome == w.biome) {
-                b_num = checked_add(b_num, checked_mul(w.weight, share));
-            }
-        }
-    }
-    const std::int64_t B = floor_div(b_num, 1000);
+    const std::int64_t B = region_biome_term(g, r);
     const std::int64_t U = floor_div(checked_mul(r.upland, g.rough), 1000);
     const std::int64_t C = floor_div(checked_mul(r.coast, g.coast_m), 1000);
     std::int64_t sum = checked_mul(t.score_site, S);
@@ -541,10 +547,12 @@ PeoplesGeo::PeoplesGeo(const HistoryInputs& in, const data::ContentSet& content,
     }
     score_.resize(races_.size() * nr);
     capacity_.resize(races_.size() * nr);
+    biome_term_.resize(races_.size() * nr);
     for (std::size_t k = 0; k < races_.size(); ++k) {
         for (std::size_t j = 0; j < nr; ++j) {
             score_[k * nr + j] = region_score(regions_[j], races_[k], tuning_);
             capacity_[k * nr + j] = region_capacity(regions_[j], races_[k], tuning_);
+            biome_term_[k * nr + j] = region_biome_term(regions_[j], races_[k]);
         }
     }
     // Open borders.
@@ -594,6 +602,19 @@ std::int64_t PeoplesGeo::score(std::int64_t region_id, std::int64_t race) const 
 std::int64_t PeoplesGeo::capacity(std::int64_t region_id, std::int64_t race) const {
     (void)region(region_id);
     return capacity_[race_index(race) * regions_.size() + static_cast<std::size_t>(region_id - 1)];
+}
+
+std::int64_t PeoplesGeo::biome_term(std::int64_t region_id, std::int64_t race) const {
+    (void)region(region_id);
+    return biome_term_[race_index(race) * regions_.size() + static_cast<std::size_t>(region_id - 1)];
+}
+
+std::int64_t PeoplesGeo::non_islet_count() const noexcept {
+    std::int64_t n = 0;
+    for (const PeoplesRegion& r : regions_) {
+        n += r.islet ? 0 : 1;
+    }
+    return n;
 }
 
 std::span<const PeoplesNeighbour> PeoplesGeo::neighbours(std::int64_t region_id) const {
