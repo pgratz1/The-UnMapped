@@ -60,12 +60,12 @@ case seam-0-2000-all seam 0 2000 all none
 seam-0-2000-all years 0 689 1088 1392 1668 1844
 seam-0-2000-all trace 1:0:-:-:-:0|2:700:3cd314374a949b1c:9:-11:689|3:1100:36ee444deb96edb2:8:-12:1088|4:1400:506ba1f72aa35875:12:-8:1392|5:1660:b05414cc77d2dcce:28:8:1668|6:1860:1dd5c54d0bbf56ed:4:-16:1844
 seam-0-2000-all ages 1:1:0:688:The Age of Elves|2:2:689:1087:The Age of Goblins|3:3:1088:1391:The Age of Dwarves|4:4:1392:1667:The Age of Faeries|5:5:1668:1843:The Age of Humans|6:6:1844:1999:The Age of Orcs
-seam-0-2000-all gods 1:Saene:0|2:Kruskux:0|3:Nurnthaimm:0|4:Whaia:1|5:Steldhil:0|6:Bald:0
+seam-0-2000-all gods 1:Saene:0|2:Kruskux:0|3:Nurnthaimm:0|4:Whaia:1|5:Steldhil:0|6:Uruld'kruum:1
 seam-0-2000-all table age 3c57ce6f10bb25298cbeabd11360b82d4c2ba970d8bc20e57ba05bd6eff488f8
 seam-0-2000-all table culture 4baeca8a6b5289022be301e62e42b0ae2f2b3a29f143b53d19476594a8df8eca
-seam-0-2000-all table god fc337dc043faebf3fc756b3590793aef5a5dd30dac0ac22577310ac28ca1ae68
+seam-0-2000-all table god 5123ce7e5441c60f6b47e9902697fab1d051c43dbebfe45fe296c2be66f98030
 seam-0-2000-all table race 87bded7fcb2ff26a877530a14b8b76838f25e908e16ad935aea09e08019e994d
-seam-0-2000-all table race_biome 6384a2ff364520ff56f7fa113e942baee745e793dce536585341a09de5ceaddd
+seam-0-2000-all table race_biome 9ec6bc90b035e8b082727d2dd855a48c7b683aea77ced25ba0b966d31a945ea4
 seam-0-2000-all meta param.civs_per_race=auto
 seam-0-2000-all meta param.divine_activity=normal
 seam-0-2000-all meta param.divine_script=
@@ -83,12 +83,12 @@ case seam-0-2000-elf,orc seam 0 2000 elf,orc none
 seam-0-2000-elf,orc years 0 1844
 seam-0-2000-elf,orc trace 1:0:-:-:-:0|6:1860:1dd5c54d0bbf56ed:4:-16:1844
 seam-0-2000-elf,orc ages 1:1:0:1843:The Age of Elves|2:6:1844:1999:The Age of Orcs
-seam-0-2000-elf,orc gods 1:Saene:0|2:Kruskux:0|3:Nurnthaimm:0|4:Whaia:1|5:Steldhil:0|6:Bald:0
+seam-0-2000-elf,orc gods 1:Saene:0|2:Kruskux:0|3:Nurnthaimm:0|4:Whaia:1|5:Steldhil:0|6:Uruld'kruum:1
 seam-0-2000-elf,orc table age 5a792faf523c77f06788e1218cd384cd37e3c70a2ad9e5321e5869f617fc52c6
 seam-0-2000-elf,orc table culture 4baeca8a6b5289022be301e62e42b0ae2f2b3a29f143b53d19476594a8df8eca
-seam-0-2000-elf,orc table god fc337dc043faebf3fc756b3590793aef5a5dd30dac0ac22577310ac28ca1ae68
+seam-0-2000-elf,orc table god 5123ce7e5441c60f6b47e9902697fab1d051c43dbebfe45fe296c2be66f98030
 seam-0-2000-elf,orc table race 21a208907bb14273ec67c656eb7327631e29b8683d9948d11aabca2f09cafcc7
-seam-0-2000-elf,orc table race_biome 6384a2ff364520ff56f7fa113e942baee745e793dce536585341a09de5ceaddd
+seam-0-2000-elf,orc table race_biome 9ec6bc90b035e8b082727d2dd855a48c7b683aea77ced25ba0b966d31a945ea4
 seam-0-2000-elf,orc meta param.civs_per_race=auto
 seam-0-2000-elf,orc meta param.divine_activity=normal
 seam-0-2000-elf,orc meta param.divine_script=
@@ -106,12 +106,12 @@ case seam-0-2000-orc seam 0 2000 orc none
 seam-0-2000-orc years 0
 seam-0-2000-orc trace 6:1860:-:-:-:0
 seam-0-2000-orc ages 1:6:0:1999:The Age of Orcs
-seam-0-2000-orc gods 1:Saene:0|2:Kruskux:0|3:Nurnthaimm:0|4:Whaia:1|5:Steldhil:0|6:Bald:0
+seam-0-2000-orc gods 1:Saene:0|2:Kruskux:0|3:Nurnthaimm:0|4:Whaia:1|5:Steldhil:0|6:Uruld'kruum:1
 seam-0-2000-orc table age be68ba0c1a48b144160ecd74221dda4cf21285b14983769c58eaf360bfe87575
 seam-0-2000-orc table culture 4baeca8a6b5289022be301e62e42b0ae2f2b3a29f143b53d19476594a8df8eca
-seam-0-2000-orc table god fc337dc043faebf3fc756b3590793aef5a5dd30dac0ac22577310ac28ca1ae68
+seam-0-2000-orc table god 5123ce7e5441c60f6b47e9902697fab1d051c43dbebfe45fe296c2be66f98030
 seam-0-2000-orc table race d91fde04053b4c36d20bd439b870982f5dd584c1b61824762937ac109ac32ac0
-seam-0-2000-orc table race_biome 6384a2ff364520ff56f7fa113e942baee745e793dce536585341a09de5ceaddd
+seam-0-2000-orc table race_biome 9ec6bc90b035e8b082727d2dd855a48c7b683aea77ced25ba0b966d31a945ea4
 seam-0-2000-orc meta param.civs_per_race=auto
 seam-0-2000-orc meta param.divine_activity=normal
 seam-0-2000-orc meta param.divine_script=
@@ -129,12 +129,12 @@ case seam-0-2000-goblin,dwarf,human seam 0 2000 goblin,dwarf,human none
 seam-0-2000-goblin,dwarf,human years 0 1088 1668
 seam-0-2000-goblin,dwarf,human trace 2:700:-:-:-:0|3:1100:36ee444deb96edb2:8:-12:1088|5:1660:b05414cc77d2dcce:28:8:1668
 seam-0-2000-goblin,dwarf,human ages 1:2:0:1087:The Age of Goblins|2:3:1088:1667:The Age of Dwarves|3:5:1668:1999:The Age of Humans
-seam-0-2000-goblin,dwarf,human gods 1:Saene:0|2:Kruskux:0|3:Nurnthaimm:0|4:Whaia:1|5:Steldhil:0|6:Bald:0
+seam-0-2000-goblin,dwarf,human gods 1:Saene:0|2:Kruskux:0|3:Nurnthaimm:0|4:Whaia:1|5:Steldhil:0|6:Uruld'kruum:1
 seam-0-2000-goblin,dwarf,human table age 9593758ae8246ae26c7a9ba313f80551e418e86eb15fe875bc913463af341899
 seam-0-2000-goblin,dwarf,human table culture 4baeca8a6b5289022be301e62e42b0ae2f2b3a29f143b53d19476594a8df8eca
-seam-0-2000-goblin,dwarf,human table god fc337dc043faebf3fc756b3590793aef5a5dd30dac0ac22577310ac28ca1ae68
+seam-0-2000-goblin,dwarf,human table god 5123ce7e5441c60f6b47e9902697fab1d051c43dbebfe45fe296c2be66f98030
 seam-0-2000-goblin,dwarf,human table race 965bc556df4697d0fde1b9f2a6b08233907a53a31e2a2a531d7cd1c3918cfcdb
-seam-0-2000-goblin,dwarf,human table race_biome 6384a2ff364520ff56f7fa113e942baee745e793dce536585341a09de5ceaddd
+seam-0-2000-goblin,dwarf,human table race_biome 9ec6bc90b035e8b082727d2dd855a48c7b683aea77ced25ba0b966d31a945ea4
 seam-0-2000-goblin,dwarf,human meta param.civs_per_race=auto
 seam-0-2000-goblin,dwarf,human meta param.divine_activity=normal
 seam-0-2000-goblin,dwarf,human meta param.divine_script=
@@ -152,12 +152,12 @@ case seam-0-6000-all seam 0 6000 all none
 seam-0-6000-all years 0 2068 3265 4178 5003 5534
 seam-0-6000-all trace 1:0:-:-:-:0|2:2100:3cd314374a949b1c:28:-32:2068|3:3300:36ee444deb96edb2:25:-35:3265|4:4200:506ba1f72aa35875:38:-22:4178|5:4980:b05414cc77d2dcce:83:23:5003|6:5580:1dd5c54d0bbf56ed:14:-46:5534
 seam-0-6000-all ages 1:1:0:2067:The Age of Elves|2:2:2068:3264:The Age of Goblins|3:3:3265:4177:The Age of Dwarves|4:4:4178:5002:The Age of Faeries|5:5:5003:5533:The Age of Humans|6:6:5534:5999:The Age of Orcs
-seam-0-6000-all gods 1:Saene:0|2:Kruskux:0|3:Nurnthaimm:0|4:Whaia:1|5:Steldhil:0|6:Bald:0
+seam-0-6000-all gods 1:Saene:0|2:Kruskux:0|3:Nurnthaimm:0|4:Whaia:1|5:Steldhil:0|6:Uruld'kruum:1
 seam-0-6000-all table age 3a5762b264358b02b80ab57069635a56be8f32e5e8b6fb8fb4c9cff813475882
 seam-0-6000-all table culture 4baeca8a6b5289022be301e62e42b0ae2f2b3a29f143b53d19476594a8df8eca
-seam-0-6000-all table god fc337dc043faebf3fc756b3590793aef5a5dd30dac0ac22577310ac28ca1ae68
+seam-0-6000-all table god 5123ce7e5441c60f6b47e9902697fab1d051c43dbebfe45fe296c2be66f98030
 seam-0-6000-all table race 62ae5c6f270a61c0a2a526e9743979e56de54e85365663127a913fc339e1fd43
-seam-0-6000-all table race_biome 6384a2ff364520ff56f7fa113e942baee745e793dce536585341a09de5ceaddd
+seam-0-6000-all table race_biome 9ec6bc90b035e8b082727d2dd855a48c7b683aea77ced25ba0b966d31a945ea4
 seam-0-6000-all meta param.civs_per_race=auto
 seam-0-6000-all meta param.divine_activity=normal
 seam-0-6000-all meta param.divine_script=
@@ -175,12 +175,12 @@ case seam-0-6000-elf,orc seam 0 6000 elf,orc none
 seam-0-6000-elf,orc years 0 5534
 seam-0-6000-elf,orc trace 1:0:-:-:-:0|6:5580:1dd5c54d0bbf56ed:14:-46:5534
 seam-0-6000-elf,orc ages 1:1:0:5533:The Age of Elves|2:6:5534:5999:The Age of Orcs
-seam-0-6000-elf,orc gods 1:Saene:0|2:Kruskux:0|3:Nurnthaimm:0|4:Whaia:1|5:Steldhil:0|6:Bald:0
+seam-0-6000-elf,orc gods 1:Saene:0|2:Kruskux:0|3:Nurnthaimm:0|4:Whaia:1|5:Steldhil:0|6:Uruld'kruum:1
 seam-0-6000-elf,orc table age f1f3720c4436ff9483dcab6cbb0558ae4da5f9aea02fbeec7d5c61c74df30ab3
 seam-0-6000-elf,orc table culture 4baeca8a6b5289022be301e62e42b0ae2f2b3a29f143b53d19476594a8df8eca
-seam-0-6000-elf,orc table god fc337dc043faebf3fc756b3590793aef5a5dd30dac0ac22577310ac28ca1ae68
+seam-0-6000-elf,orc table god 5123ce7e5441c60f6b47e9902697fab1d051c43dbebfe45fe296c2be66f98030
 seam-0-6000-elf,orc table race d972c5fb0081d661e29057e43918b75416aa0168f04cfd64f9320997a4f9c1f7
-seam-0-6000-elf,orc table race_biome 6384a2ff364520ff56f7fa113e942baee745e793dce536585341a09de5ceaddd
+seam-0-6000-elf,orc table race_biome 9ec6bc90b035e8b082727d2dd855a48c7b683aea77ced25ba0b966d31a945ea4
 seam-0-6000-elf,orc meta param.civs_per_race=auto
 seam-0-6000-elf,orc meta param.divine_activity=normal
 seam-0-6000-elf,orc meta param.divine_script=
@@ -198,12 +198,12 @@ case seam-0-6000-orc seam 0 6000 orc none
 seam-0-6000-orc years 0
 seam-0-6000-orc trace 6:5580:-:-:-:0
 seam-0-6000-orc ages 1:6:0:5999:The Age of Orcs
-seam-0-6000-orc gods 1:Saene:0|2:Kruskux:0|3:Nurnthaimm:0|4:Whaia:1|5:Steldhil:0|6:Bald:0
+seam-0-6000-orc gods 1:Saene:0|2:Kruskux:0|3:Nurnthaimm:0|4:Whaia:1|5:Steldhil:0|6:Uruld'kruum:1
 seam-0-6000-orc table age 2aa12e427cbeaf6fd65b994e8ce3fba33e959cbfd2b879c484b54f61b7bae80d
 seam-0-6000-orc table culture 4baeca8a6b5289022be301e62e42b0ae2f2b3a29f143b53d19476594a8df8eca
-seam-0-6000-orc table god fc337dc043faebf3fc756b3590793aef5a5dd30dac0ac22577310ac28ca1ae68
+seam-0-6000-orc table god 5123ce7e5441c60f6b47e9902697fab1d051c43dbebfe45fe296c2be66f98030
 seam-0-6000-orc table race d91fde04053b4c36d20bd439b870982f5dd584c1b61824762937ac109ac32ac0
-seam-0-6000-orc table race_biome 6384a2ff364520ff56f7fa113e942baee745e793dce536585341a09de5ceaddd
+seam-0-6000-orc table race_biome 9ec6bc90b035e8b082727d2dd855a48c7b683aea77ced25ba0b966d31a945ea4
 seam-0-6000-orc meta param.civs_per_race=auto
 seam-0-6000-orc meta param.divine_activity=normal
 seam-0-6000-orc meta param.divine_script=
@@ -221,12 +221,12 @@ case seam-0-6000-goblin,dwarf,human seam 0 6000 goblin,dwarf,human none
 seam-0-6000-goblin,dwarf,human years 0 3265 5003
 seam-0-6000-goblin,dwarf,human trace 2:2100:-:-:-:0|3:3300:36ee444deb96edb2:25:-35:3265|5:4980:b05414cc77d2dcce:83:23:5003
 seam-0-6000-goblin,dwarf,human ages 1:2:0:3264:The Age of Goblins|2:3:3265:5002:The Age of Dwarves|3:5:5003:5999:The Age of Humans
-seam-0-6000-goblin,dwarf,human gods 1:Saene:0|2:Kruskux:0|3:Nurnthaimm:0|4:Whaia:1|5:Steldhil:0|6:Bald:0
+seam-0-6000-goblin,dwarf,human gods 1:Saene:0|2:Kruskux:0|3:Nurnthaimm:0|4:Whaia:1|5:Steldhil:0|6:Uruld'kruum:1
 seam-0-6000-goblin,dwarf,human table age 782e4fefa858d1df7e75121c99248d57ac4653be6c54064aa1a6384c3d8d8ea5
 seam-0-6000-goblin,dwarf,human table culture 4baeca8a6b5289022be301e62e42b0ae2f2b3a29f143b53d19476594a8df8eca
-seam-0-6000-goblin,dwarf,human table god fc337dc043faebf3fc756b3590793aef5a5dd30dac0ac22577310ac28ca1ae68
+seam-0-6000-goblin,dwarf,human table god 5123ce7e5441c60f6b47e9902697fab1d051c43dbebfe45fe296c2be66f98030
 seam-0-6000-goblin,dwarf,human table race b0a10ff447751c0b16fada35fb0eaa75ce87b0e906089f794851dc678feb4f43
-seam-0-6000-goblin,dwarf,human table race_biome 6384a2ff364520ff56f7fa113e942baee745e793dce536585341a09de5ceaddd
+seam-0-6000-goblin,dwarf,human table race_biome 9ec6bc90b035e8b082727d2dd855a48c7b683aea77ced25ba0b966d31a945ea4
 seam-0-6000-goblin,dwarf,human meta param.civs_per_race=auto
 seam-0-6000-goblin,dwarf,human meta param.divine_activity=normal
 seam-0-6000-goblin,dwarf,human meta param.divine_script=
@@ -244,12 +244,12 @@ case seam-0-12000-all seam 0 12000 all none
 seam-0-12000-all years 0 4137 6531 8355 10005 11068
 seam-0-12000-all trace 1:0:-:-:-:0|2:4200:3cd314374a949b1c:57:-63:4137|3:6600:36ee444deb96edb2:51:-69:6531|4:8400:506ba1f72aa35875:75:-45:8355|5:9960:b05414cc77d2dcce:165:45:10005|6:11160:1dd5c54d0bbf56ed:28:-92:11068
 seam-0-12000-all ages 1:1:0:4136:The Age of Elves|2:2:4137:6530:The Age of Goblins|3:3:6531:8354:The Age of Dwarves|4:4:8355:10004:The Age of Faeries|5:5:10005:11067:The Age of Humans|6:6:11068:11999:The Age of Orcs
-seam-0-12000-all gods 1:Saene:0|2:Kruskux:0|3:Nurnthaimm:0|4:Whaia:1|5:Steldhil:0|6:Bald:0
+seam-0-12000-all gods 1:Saene:0|2:Kruskux:0|3:Nurnthaimm:0|4:Whaia:1|5:Steldhil:0|6:Uruld'kruum:1
 seam-0-12000-all table age 3b5194ecb1950caeab37a738c1797ef4a19077f3345b7e571d9e483953c069dd
 seam-0-12000-all table culture 4baeca8a6b5289022be301e62e42b0ae2f2b3a29f143b53d19476594a8df8eca
-seam-0-12000-all table god fc337dc043faebf3fc756b3590793aef5a5dd30dac0ac22577310ac28ca1ae68
+seam-0-12000-all table god 5123ce7e5441c60f6b47e9902697fab1d051c43dbebfe45fe296c2be66f98030
 seam-0-12000-all table race ff2912cbf3080faad7cb421b85267b35a16acac3d224b4407d00cca1d07aa24f
-seam-0-12000-all table race_biome 6384a2ff364520ff56f7fa113e942baee745e793dce536585341a09de5ceaddd
+seam-0-12000-all table race_biome 9ec6bc90b035e8b082727d2dd855a48c7b683aea77ced25ba0b966d31a945ea4
 seam-0-12000-all meta param.civs_per_race=auto
 seam-0-12000-all meta param.divine_activity=normal
 seam-0-12000-all meta param.divine_script=
@@ -267,12 +267,12 @@ case seam-0-12000-elf,orc seam 0 12000 elf,orc none
 seam-0-12000-elf,orc years 0 11068
 seam-0-12000-elf,orc trace 1:0:-:-:-:0|6:11160:1dd5c54d0bbf56ed:28:-92:11068
 seam-0-12000-elf,orc ages 1:1:0:11067:The Age of Elves|2:6:11068:11999:The Age of Orcs
-seam-0-12000-elf,orc gods 1:Saene:0|2:Kruskux:0|3:Nurnthaimm:0|4:Whaia:1|5:Steldhil:0|6:Bald:0
+seam-0-12000-elf,orc gods 1:Saene:0|2:Kruskux:0|3:Nurnthaimm:0|4:Whaia:1|5:Steldhil:0|6:Uruld'kruum:1
 seam-0-12000-elf,orc table age a6850d9372ca89537e55a0db6746164b2b5dea03ce932114f9764391d3c4f3e2
 seam-0-12000-elf,orc table culture 4baeca8a6b5289022be301e62e42b0ae2f2b3a29f143b53d19476594a8df8eca
-seam-0-12000-elf,orc table god fc337dc043faebf3fc756b3590793aef5a5dd30dac0ac22577310ac28ca1ae68
+seam-0-12000-elf,orc table god 5123ce7e5441c60f6b47e9902697fab1d051c43dbebfe45fe296c2be66f98030
 seam-0-12000-elf,orc table race d3bd14c63079f5a9ab5aec277fae86f2dfa6c3e7c68ca75f13b90d4e09efe2fc
-seam-0-12000-elf,orc table race_biome 6384a2ff364520ff56f7fa113e942baee745e793dce536585341a09de5ceaddd
+seam-0-12000-elf,orc table race_biome 9ec6bc90b035e8b082727d2dd855a48c7b683aea77ced25ba0b966d31a945ea4
 seam-0-12000-elf,orc meta param.civs_per_race=auto
 seam-0-12000-elf,orc meta param.divine_activity=normal
 seam-0-12000-elf,orc meta param.divine_script=
@@ -290,12 +290,12 @@ case seam-0-12000-orc seam 0 12000 orc none
 seam-0-12000-orc years 0
 seam-0-12000-orc trace 6:11160:-:-:-:0
 seam-0-12000-orc ages 1:6:0:11999:The Age of Orcs
-seam-0-12000-orc gods 1:Saene:0|2:Kruskux:0|3:Nurnthaimm:0|4:Whaia:1|5:Steldhil:0|6:Bald:0
+seam-0-12000-orc gods 1:Saene:0|2:Kruskux:0|3:Nurnthaimm:0|4:Whaia:1|5:Steldhil:0|6:Uruld'kruum:1
 seam-0-12000-orc table age d402b7517b293c5ef0c7373343dd9814008bf85d04103ea79f510ff8e85e8338
 seam-0-12000-orc table culture 4baeca8a6b5289022be301e62e42b0ae2f2b3a29f143b53d19476594a8df8eca
-seam-0-12000-orc table god fc337dc043faebf3fc756b3590793aef5a5dd30dac0ac22577310ac28ca1ae68
+seam-0-12000-orc table god 5123ce7e5441c60f6b47e9902697fab1d051c43dbebfe45fe296c2be66f98030
 seam-0-12000-orc table race d91fde04053b4c36d20bd439b870982f5dd584c1b61824762937ac109ac32ac0
-seam-0-12000-orc table race_biome 6384a2ff364520ff56f7fa113e942baee745e793dce536585341a09de5ceaddd
+seam-0-12000-orc table race_biome 9ec6bc90b035e8b082727d2dd855a48c7b683aea77ced25ba0b966d31a945ea4
 seam-0-12000-orc meta param.civs_per_race=auto
 seam-0-12000-orc meta param.divine_activity=normal
 seam-0-12000-orc meta param.divine_script=
@@ -313,12 +313,12 @@ case seam-0-12000-goblin,dwarf,human seam 0 12000 goblin,dwarf,human none
 seam-0-12000-goblin,dwarf,human years 0 6531 10005
 seam-0-12000-goblin,dwarf,human trace 2:4200:-:-:-:0|3:6600:36ee444deb96edb2:51:-69:6531|5:9960:b05414cc77d2dcce:165:45:10005
 seam-0-12000-goblin,dwarf,human ages 1:2:0:6530:The Age of Goblins|2:3:6531:10004:The Age of Dwarves|3:5:10005:11999:The Age of Humans
-seam-0-12000-goblin,dwarf,human gods 1:Saene:0|2:Kruskux:0|3:Nurnthaimm:0|4:Whaia:1|5:Steldhil:0|6:Bald:0
+seam-0-12000-goblin,dwarf,human gods 1:Saene:0|2:Kruskux:0|3:Nurnthaimm:0|4:Whaia:1|5:Steldhil:0|6:Uruld'kruum:1
 seam-0-12000-goblin,dwarf,human table age 4fc0fa190366b3648d1a967f087732aa54533bf8f034ed33102382ca060e0c69
 seam-0-12000-goblin,dwarf,human table culture 4baeca8a6b5289022be301e62e42b0ae2f2b3a29f143b53d19476594a8df8eca
-seam-0-12000-goblin,dwarf,human table god fc337dc043faebf3fc756b3590793aef5a5dd30dac0ac22577310ac28ca1ae68
+seam-0-12000-goblin,dwarf,human table god 5123ce7e5441c60f6b47e9902697fab1d051c43dbebfe45fe296c2be66f98030
 seam-0-12000-goblin,dwarf,human table race e5f510cebe0c715d66ddedb26a2d5c77ad957836b73bb6b32c0eb33d863f8fd8
-seam-0-12000-goblin,dwarf,human table race_biome 6384a2ff364520ff56f7fa113e942baee745e793dce536585341a09de5ceaddd
+seam-0-12000-goblin,dwarf,human table race_biome 9ec6bc90b035e8b082727d2dd855a48c7b683aea77ced25ba0b966d31a945ea4
 seam-0-12000-goblin,dwarf,human meta param.civs_per_race=auto
 seam-0-12000-goblin,dwarf,human meta param.divine_activity=normal
 seam-0-12000-goblin,dwarf,human meta param.divine_script=
@@ -336,12 +336,12 @@ case seam-1-2000-all seam 1 2000 all none
 seam-1-2000-all years 0 690 1114 1392 1644 1860
 seam-1-2000-all trace 1:0:-:-:-:0|2:700:43116755471ad202:10:-10:690|3:1100:d7004a9f3dda63c5:34:14:1114|4:1400:50e63fa55eec59b0:12:-8:1392|5:1660:1f21bae0d8a9c4e6:4:-16:1644|6:1860:80ede25356406b1d:20:0:1860
 seam-1-2000-all ages 1:1:0:689:The Age of Elves|2:2:690:1113:The Age of Goblins|3:3:1114:1391:The Age of Dwarves|4:4:1392:1643:The Age of Faeries|5:5:1644:1859:The Age of Humans|6:6:1860:1999:The Age of Orcs
-seam-1-2000-all gods 1:Laesiel:0|2:Gragg-Gnurk:0|3:Khummhor:0|4:Synmia:0|5:Steck:0|6:Kaag:0
+seam-1-2000-all gods 1:Laesiel:0|2:Gragg-Gnurk:0|3:Khummhor:0|4:Synmia:0|5:Steckwint:0|6:Kaag'azak:0
 seam-1-2000-all table age 661c9ba4c98de062147db2c92ae7dc513f787e578da71fe9871200e283307d68
 seam-1-2000-all table culture 4baeca8a6b5289022be301e62e42b0ae2f2b3a29f143b53d19476594a8df8eca
-seam-1-2000-all table god 6873fc5a5293539583c66e85a9554d75316d81d2a1ff94045aa1b73c77097ff9
+seam-1-2000-all table god f626494da4579c645da78e03ba2d278f9bb72f615030ddf8bc54eac5bc19425d
 seam-1-2000-all table race 158876946cd99231a0bbde2623defe0de8941dc185c38279ad2381521e5dfc42
-seam-1-2000-all table race_biome 6384a2ff364520ff56f7fa113e942baee745e793dce536585341a09de5ceaddd
+seam-1-2000-all table race_biome 9ec6bc90b035e8b082727d2dd855a48c7b683aea77ced25ba0b966d31a945ea4
 seam-1-2000-all meta param.civs_per_race=auto
 seam-1-2000-all meta param.divine_activity=normal
 seam-1-2000-all meta param.divine_script=
@@ -359,12 +359,12 @@ case seam-1-2000-elf,orc seam 1 2000 elf,orc none
 seam-1-2000-elf,orc years 0 1860
 seam-1-2000-elf,orc trace 1:0:-:-:-:0|6:1860:80ede25356406b1d:20:0:1860
 seam-1-2000-elf,orc ages 1:1:0:1859:The Age of Elves|2:6:1860:1999:The Age of Orcs
-seam-1-2000-elf,orc gods 1:Laesiel:0|2:Gragg-Gnurk:0|3:Khummhor:0|4:Synmia:0|5:Steck:0|6:Kaag:0
+seam-1-2000-elf,orc gods 1:Laesiel:0|2:Gragg-Gnurk:0|3:Khummhor:0|4:Synmia:0|5:Steckwint:0|6:Kaag'azak:0
 seam-1-2000-elf,orc table age 73f3fb669fe5de31f0d33e1b70fde8c1b660f728e576755f63e7879f758c8174
 seam-1-2000-elf,orc table culture 4baeca8a6b5289022be301e62e42b0ae2f2b3a29f143b53d19476594a8df8eca
-seam-1-2000-elf,orc table god 6873fc5a5293539583c66e85a9554d75316d81d2a1ff94045aa1b73c77097ff9
+seam-1-2000-elf,orc table god f626494da4579c645da78e03ba2d278f9bb72f615030ddf8bc54eac5bc19425d
 seam-1-2000-elf,orc table race d0b550617b6643afd09fd143d1e0e38f276f6975e86b31c368a85d9ffe4caf0a
-seam-1-2000-elf,orc table race_biome 6384a2ff364520ff56f7fa113e942baee745e793dce536585341a09de5ceaddd
+seam-1-2000-elf,orc table race_biome 9ec6bc90b035e8b082727d2dd855a48c7b683aea77ced25ba0b966d31a945ea4
 seam-1-2000-elf,orc meta param.civs_per_race=auto
 seam-1-2000-elf,orc meta param.divine_activity=normal
 seam-1-2000-elf,orc meta param.divine_script=
@@ -382,12 +382,12 @@ case seam-1-2000-orc seam 1 2000 orc none
 seam-1-2000-orc years 0
 seam-1-2000-orc trace 6:1860:-:-:-:0
 seam-1-2000-orc ages 1:6:0:1999:The Age of Orcs
-seam-1-2000-orc gods 1:Laesiel:0|2:Gragg-Gnurk:0|3:Khummhor:0|4:Synmia:0|5:Steck:0|6:Kaag:0
+seam-1-2000-orc gods 1:Laesiel:0|2:Gragg-Gnurk:0|3:Khummhor:0|4:Synmia:0|5:Steckwint:0|6:Kaag'azak:0
 seam-1-2000-orc table age be68ba0c1a48b144160ecd74221dda4cf21285b14983769c58eaf360bfe87575
 seam-1-2000-orc table culture 4baeca8a6b5289022be301e62e42b0ae2f2b3a29f143b53d19476594a8df8eca
-seam-1-2000-orc table god 6873fc5a5293539583c66e85a9554d75316d81d2a1ff94045aa1b73c77097ff9
+seam-1-2000-orc table god f626494da4579c645da78e03ba2d278f9bb72f615030ddf8bc54eac5bc19425d
 seam-1-2000-orc table race d91fde04053b4c36d20bd439b870982f5dd584c1b61824762937ac109ac32ac0
-seam-1-2000-orc table race_biome 6384a2ff364520ff56f7fa113e942baee745e793dce536585341a09de5ceaddd
+seam-1-2000-orc table race_biome 9ec6bc90b035e8b082727d2dd855a48c7b683aea77ced25ba0b966d31a945ea4
 seam-1-2000-orc meta param.civs_per_race=auto
 seam-1-2000-orc meta param.divine_activity=normal
 seam-1-2000-orc meta param.divine_script=
@@ -405,12 +405,12 @@ case seam-1-2000-goblin,dwarf,human seam 1 2000 goblin,dwarf,human none
 seam-1-2000-goblin,dwarf,human years 0 1114 1644
 seam-1-2000-goblin,dwarf,human trace 2:700:-:-:-:0|3:1100:d7004a9f3dda63c5:34:14:1114|5:1660:1f21bae0d8a9c4e6:4:-16:1644
 seam-1-2000-goblin,dwarf,human ages 1:2:0:1113:The Age of Goblins|2:3:1114:1643:The Age of Dwarves|3:5:1644:1999:The Age of Humans
-seam-1-2000-goblin,dwarf,human gods 1:Laesiel:0|2:Gragg-Gnurk:0|3:Khummhor:0|4:Synmia:0|5:Steck:0|6:Kaag:0
+seam-1-2000-goblin,dwarf,human gods 1:Laesiel:0|2:Gragg-Gnurk:0|3:Khummhor:0|4:Synmia:0|5:Steckwint:0|6:Kaag'azak:0
 seam-1-2000-goblin,dwarf,human table age 44674e529cdae0f42a2784e3d12bd05c1ee8e897b1874aa3398803a07f3922a5
 seam-1-2000-goblin,dwarf,human table culture 4baeca8a6b5289022be301e62e42b0ae2f2b3a29f143b53d19476594a8df8eca
-seam-1-2000-goblin,dwarf,human table god 6873fc5a5293539583c66e85a9554d75316d81d2a1ff94045aa1b73c77097ff9
+seam-1-2000-goblin,dwarf,human table god f626494da4579c645da78e03ba2d278f9bb72f615030ddf8bc54eac5bc19425d
 seam-1-2000-goblin,dwarf,human table race 128fc064814abf6ef0c206ac76e9da1d57d59d9f37cc8fb0aff17e669cbc3522
-seam-1-2000-goblin,dwarf,human table race_biome 6384a2ff364520ff56f7fa113e942baee745e793dce536585341a09de5ceaddd
+seam-1-2000-goblin,dwarf,human table race_biome 9ec6bc90b035e8b082727d2dd855a48c7b683aea77ced25ba0b966d31a945ea4
 seam-1-2000-goblin,dwarf,human meta param.civs_per_race=auto
 seam-1-2000-goblin,dwarf,human meta param.divine_activity=normal
 seam-1-2000-goblin,dwarf,human meta param.divine_script=
@@ -428,12 +428,12 @@ case seam-1-6000-all seam 1 6000 all none
 seam-1-6000-all years 0 2071 3341 4178 4934 5580
 seam-1-6000-all trace 1:0:-:-:-:0|2:2100:43116755471ad202:31:-29:2071|3:3300:d7004a9f3dda63c5:101:41:3341|4:4200:50e63fa55eec59b0:38:-22:4178|5:4980:1f21bae0d8a9c4e6:14:-46:4934|6:5580:80ede25356406b1d:60:0:5580
 seam-1-6000-all ages 1:1:0:2070:The Age of Elves|2:2:2071:3340:The Age of Goblins|3:3:3341:4177:The Age of Dwarves|4:4:4178:4933:The Age of Faeries|5:5:4934:5579:The Age of Humans|6:6:5580:5999:The Age of Orcs
-seam-1-6000-all gods 1:Laesiel:0|2:Gragg-Gnurk:0|3:Khummhor:0|4:Synmia:0|5:Steck:0|6:Kaag:0
+seam-1-6000-all gods 1:Laesiel:0|2:Gragg-Gnurk:0|3:Khummhor:0|4:Synmia:0|5:Steckwint:0|6:Kaag'azak:0
 seam-1-6000-all table age 2549ef22110a337ff8d3101ac82750f92013ee776abc03a7f7b1b99f875b61fb
 seam-1-6000-all table culture 4baeca8a6b5289022be301e62e42b0ae2f2b3a29f143b53d19476594a8df8eca
-seam-1-6000-all table god 6873fc5a5293539583c66e85a9554d75316d81d2a1ff94045aa1b73c77097ff9
+seam-1-6000-all table god f626494da4579c645da78e03ba2d278f9bb72f615030ddf8bc54eac5bc19425d
 seam-1-6000-all table race 3a1a6540bc01ed871bdb5711efaa09b07dc51944ed31dede179636d16a1c1575
-seam-1-6000-all table race_biome 6384a2ff364520ff56f7fa113e942baee745e793dce536585341a09de5ceaddd
+seam-1-6000-all table race_biome 9ec6bc90b035e8b082727d2dd855a48c7b683aea77ced25ba0b966d31a945ea4
 seam-1-6000-all meta param.civs_per_race=auto
 seam-1-6000-all meta param.divine_activity=normal
 seam-1-6000-all meta param.divine_script=
@@ -451,12 +451,12 @@ case seam-1-6000-elf,orc seam 1 6000 elf,orc none
 seam-1-6000-elf,orc years 0 5580
 seam-1-6000-elf,orc trace 1:0:-:-:-:0|6:5580:80ede25356406b1d:60:0:5580
 seam-1-6000-elf,orc ages 1:1:0:5579:The Age of Elves|2:6:5580:5999:The Age of Orcs
-seam-1-6000-elf,orc gods 1:Laesiel:0|2:Gragg-Gnurk:0|3:Khummhor:0|4:Synmia:0|5:Steck:0|6:Kaag:0
+seam-1-6000-elf,orc gods 1:Laesiel:0|2:Gragg-Gnurk:0|3:Khummhor:0|4:Synmia:0|5:Steckwint:0|6:Kaag'azak:0
 seam-1-6000-elf,orc table age d274c9aef3a4a1ecc67d1b3e7573e1ef39a0cc39b6769fb20339ab7c73261ee8
 seam-1-6000-elf,orc table culture 4baeca8a6b5289022be301e62e42b0ae2f2b3a29f143b53d19476594a8df8eca
-seam-1-6000-elf,orc table god 6873fc5a5293539583c66e85a9554d75316d81d2a1ff94045aa1b73c77097ff9
+seam-1-6000-elf,orc table god f626494da4579c645da78e03ba2d278f9bb72f615030ddf8bc54eac5bc19425d
 seam-1-6000-elf,orc table race 0cee495ab80091780329a0e05435c3dafe0371218cf66d9b67a484a6e4369fa3
-seam-1-6000-elf,orc table race_biome 6384a2ff364520ff56f7fa113e942baee745e793dce536585341a09de5ceaddd
+seam-1-6000-elf,orc table race_biome 9ec6bc90b035e8b082727d2dd855a48c7b683aea77ced25ba0b966d31a945ea4
 seam-1-6000-elf,orc meta param.civs_per_race=auto
 seam-1-6000-elf,orc meta param.divine_activity=normal
 seam-1-6000-elf,orc meta param.divine_script=
@@ -474,12 +474,12 @@ case seam-1-6000-orc seam 1 6000 orc none
 seam-1-6000-orc years 0
 seam-1-6000-orc trace 6:5580:-:-:-:0
 seam-1-6000-orc ages 1:6:0:5999:The Age of Orcs
-seam-1-6000-orc gods 1:Laesiel:0|2:Gragg-Gnurk:0|3:Khummhor:0|4:Synmia:0|5:Steck:0|6:Kaag:0
+seam-1-6000-orc gods 1:Laesiel:0|2:Gragg-Gnurk:0|3:Khummhor:0|4:Synmia:0|5:Steckwint:0|6:Kaag'azak:0
 seam-1-6000-orc table age 2aa12e427cbeaf6fd65b994e8ce3fba33e959cbfd2b879c484b54f61b7bae80d
 seam-1-6000-orc table culture 4baeca8a6b5289022be301e62e42b0ae2f2b3a29f143b53d19476594a8df8eca
-seam-1-6000-orc table god 6873fc5a5293539583c66e85a9554d75316d81d2a1ff94045aa1b73c77097ff9
+seam-1-6000-orc table god f626494da4579c645da78e03ba2d278f9bb72f615030ddf8bc54eac5bc19425d
 seam-1-6000-orc table race d91fde04053b4c36d20bd439b870982f5dd584c1b61824762937ac109ac32ac0
-seam-1-6000-orc table race_biome 6384a2ff364520ff56f7fa113e942baee745e793dce536585341a09de5ceaddd
+seam-1-6000-orc table race_biome 9ec6bc90b035e8b082727d2dd855a48c7b683aea77ced25ba0b966d31a945ea4
 seam-1-6000-orc meta param.civs_per_race=auto
 seam-1-6000-orc meta param.divine_activity=normal
 seam-1-6000-orc meta param.divine_script=
@@ -497,12 +497,12 @@ case seam-1-6000-goblin,dwarf,human seam 1 6000 goblin,dwarf,human none
 seam-1-6000-goblin,dwarf,human years 0 3341 4934
 seam-1-6000-goblin,dwarf,human trace 2:2100:-:-:-:0|3:3300:d7004a9f3dda63c5:101:41:3341|5:4980:1f21bae0d8a9c4e6:14:-46:4934
 seam-1-6000-goblin,dwarf,human ages 1:2:0:3340:The Age of Goblins|2:3:3341:4933:The Age of Dwarves|3:5:4934:5999:The Age of Humans
-seam-1-6000-goblin,dwarf,human gods 1:Laesiel:0|2:Gragg-Gnurk:0|3:Khummhor:0|4:Synmia:0|5:Steck:0|6:Kaag:0
+seam-1-6000-goblin,dwarf,human gods 1:Laesiel:0|2:Gragg-Gnurk:0|3:Khummhor:0|4:Synmia:0|5:Steckwint:0|6:Kaag'azak:0
 seam-1-6000-goblin,dwarf,human table age f38735f5801b719c8ecebff6f04cc269dae2295894c66868bdd85b5901b7b796
 seam-1-6000-goblin,dwarf,human table culture 4baeca8a6b5289022be301e62e42b0ae2f2b3a29f143b53d19476594a8df8eca
-seam-1-6000-goblin,dwarf,human table god 6873fc5a5293539583c66e85a9554d75316d81d2a1ff94045aa1b73c77097ff9
+seam-1-6000-goblin,dwarf,human table god f626494da4579c645da78e03ba2d278f9bb72f615030ddf8bc54eac5bc19425d
 seam-1-6000-goblin,dwarf,human table race 043aef2552fc70b68a44e99edec556c76660e3a409dd799e4376bb08349fb158
-seam-1-6000-goblin,dwarf,human table race_biome 6384a2ff364520ff56f7fa113e942baee745e793dce536585341a09de5ceaddd
+seam-1-6000-goblin,dwarf,human table race_biome 9ec6bc90b035e8b082727d2dd855a48c7b683aea77ced25ba0b966d31a945ea4
 seam-1-6000-goblin,dwarf,human meta param.civs_per_race=auto
 seam-1-6000-goblin,dwarf,human meta param.divine_activity=normal
 seam-1-6000-goblin,dwarf,human meta param.divine_script=
@@ -520,12 +520,12 @@ case seam-1-12000-all seam 1 12000 all none
 seam-1-12000-all years 0 4143 6682 8356 9869 11161
 seam-1-12000-all trace 1:0:-:-:-:0|2:4200:43116755471ad202:63:-57:4143|3:6600:d7004a9f3dda63c5:202:82:6682|4:8400:50e63fa55eec59b0:76:-44:8356|5:9960:1f21bae0d8a9c4e6:29:-91:9869|6:11160:80ede25356406b1d:121:1:11161
 seam-1-12000-all ages 1:1:0:4142:The Age of Elves|2:2:4143:6681:The Age of Goblins|3:3:6682:8355:The Age of Dwarves|4:4:8356:9868:The Age of Faeries|5:5:9869:11160:The Age of Humans|6:6:11161:11999:The Age of Orcs
-seam-1-12000-all gods 1:Laesiel:0|2:Gragg-Gnurk:0|3:Khummhor:0|4:Synmia:0|5:Steck:0|6:Kaag:0
+seam-1-12000-all gods 1:Laesiel:0|2:Gragg-Gnurk:0|3:Khummhor:0|4:Synmia:0|5:Steckwint:0|6:Kaag'azak:0
 seam-1-12000-all table age f81e3600abffbd340269eaeabc01a2078f78cc2e5cdafa6df92be9d01f16064a
 seam-1-12000-all table culture 4baeca8a6b5289022be301e62e42b0ae2f2b3a29f143b53d19476594a8df8eca
-seam-1-12000-all table god 6873fc5a5293539583c66e85a9554d75316d81d2a1ff94045aa1b73c77097ff9
+seam-1-12000-all table god f626494da4579c645da78e03ba2d278f9bb72f615030ddf8bc54eac5bc19425d
 seam-1-12000-all table race 8e8a78259d0d7d6323820f7b7ee8681951165a0d0ed0409fb3cd3f8e5bf4606c
-seam-1-12000-all table race_biome 6384a2ff364520ff56f7fa113e942baee745e793dce536585341a09de5ceaddd
+seam-1-12000-all table race_biome 9ec6bc90b035e8b082727d2dd855a48c7b683aea77ced25ba0b966d31a945ea4
 seam-1-12000-all meta param.civs_per_race=auto
 seam-1-12000-all meta param.divine_activity=normal
 seam-1-12000-all meta param.divine_script=
@@ -543,12 +543,12 @@ case seam-1-12000-elf,orc seam 1 12000 elf,orc none
 seam-1-12000-elf,orc years 0 11161
 seam-1-12000-elf,orc trace 1:0:-:-:-:0|6:11160:80ede25356406b1d:121:1:11161
 seam-1-12000-elf,orc ages 1:1:0:11160:The Age of Elves|2:6:11161:11999:The Age of Orcs
-seam-1-12000-elf,orc gods 1:Laesiel:0|2:Gragg-Gnurk:0|3:Khummhor:0|4:Synmia:0|5:Steck:0|6:Kaag:0
+seam-1-12000-elf,orc gods 1:Laesiel:0|2:Gragg-Gnurk:0|3:Khummhor:0|4:Synmia:0|5:Steckwint:0|6:Kaag'azak:0
 seam-1-12000-elf,orc table age 4322b67527e313257c661071e051b694f282a74c81e6c8c8e47e1db1f9ddd170
 seam-1-12000-elf,orc table culture 4baeca8a6b5289022be301e62e42b0ae2f2b3a29f143b53d19476594a8df8eca
-seam-1-12000-elf,orc table god 6873fc5a5293539583c66e85a9554d75316d81d2a1ff94045aa1b73c77097ff9
+seam-1-12000-elf,orc table god f626494da4579c645da78e03ba2d278f9bb72f615030ddf8bc54eac5bc19425d
 seam-1-12000-elf,orc table race 57e0e38d6fdc86f7c0b6bd33488aa33010a4c3db81b061cde7cb0c3f547927f3
-seam-1-12000-elf,orc table race_biome 6384a2ff364520ff56f7fa113e942baee745e793dce536585341a09de5ceaddd
+seam-1-12000-elf,orc table race_biome 9ec6bc90b035e8b082727d2dd855a48c7b683aea77ced25ba0b966d31a945ea4
 seam-1-12000-elf,orc meta param.civs_per_race=auto
 seam-1-12000-elf,orc meta param.divine_activity=normal
 seam-1-12000-elf,orc meta param.divine_script=
@@ -566,12 +566,12 @@ case seam-1-12000-orc seam 1 12000 orc none
 seam-1-12000-orc years 0
 seam-1-12000-orc trace 6:11160:-:-:-:0
 seam-1-12000-orc ages 1:6:0:11999:The Age of Orcs
-seam-1-12000-orc gods 1:Laesiel:0|2:Gragg-Gnurk:0|3:Khummhor:0|4:Synmia:0|5:Steck:0|6:Kaag:0
+seam-1-12000-orc gods 1:Laesiel:0|2:Gragg-Gnurk:0|3:Khummhor:0|4:Synmia:0|5:Steckwint:0|6:Kaag'azak:0
 seam-1-12000-orc table age d402b7517b293c5ef0c7373343dd9814008bf85d04103ea79f510ff8e85e8338
 seam-1-12000-orc table culture 4baeca8a6b5289022be301e62e42b0ae2f2b3a29f143b53d19476594a8df8eca
-seam-1-12000-orc table god 6873fc5a5293539583c66e85a9554d75316d81d2a1ff94045aa1b73c77097ff9
+seam-1-12000-orc table god f626494da4579c645da78e03ba2d278f9bb72f615030ddf8bc54eac5bc19425d
 seam-1-12000-orc table race d91fde04053b4c36d20bd439b870982f5dd584c1b61824762937ac109ac32ac0
-seam-1-12000-orc table race_biome 6384a2ff364520ff56f7fa113e942baee745e793dce536585341a09de5ceaddd
+seam-1-12000-orc table race_biome 9ec6bc90b035e8b082727d2dd855a48c7b683aea77ced25ba0b966d31a945ea4
 seam-1-12000-orc meta param.civs_per_race=auto
 seam-1-12000-orc meta param.divine_activity=normal
 seam-1-12000-orc meta param.divine_script=
@@ -589,12 +589,12 @@ case seam-1-12000-goblin,dwarf,human seam 1 12000 goblin,dwarf,human none
 seam-1-12000-goblin,dwarf,human years 0 6682 9869
 seam-1-12000-goblin,dwarf,human trace 2:4200:-:-:-:0|3:6600:d7004a9f3dda63c5:202:82:6682|5:9960:1f21bae0d8a9c4e6:29:-91:9869
 seam-1-12000-goblin,dwarf,human ages 1:2:0:6681:The Age of Goblins|2:3:6682:9868:The Age of Dwarves|3:5:9869:11999:The Age of Humans
-seam-1-12000-goblin,dwarf,human gods 1:Laesiel:0|2:Gragg-Gnurk:0|3:Khummhor:0|4:Synmia:0|5:Steck:0|6:Kaag:0
+seam-1-12000-goblin,dwarf,human gods 1:Laesiel:0|2:Gragg-Gnurk:0|3:Khummhor:0|4:Synmia:0|5:Steckwint:0|6:Kaag'azak:0
 seam-1-12000-goblin,dwarf,human table age e3e3147fea122089cd1410028399911618a54baee501e64a5049d4172224d509
 seam-1-12000-goblin,dwarf,human table culture 4baeca8a6b5289022be301e62e42b0ae2f2b3a29f143b53d19476594a8df8eca
-seam-1-12000-goblin,dwarf,human table god 6873fc5a5293539583c66e85a9554d75316d81d2a1ff94045aa1b73c77097ff9
+seam-1-12000-goblin,dwarf,human table god f626494da4579c645da78e03ba2d278f9bb72f615030ddf8bc54eac5bc19425d
 seam-1-12000-goblin,dwarf,human table race 23b08803b2de7184c6fd2d76c729153cc7658d11d6ee23c9bda4cce5a2ee3bb9
-seam-1-12000-goblin,dwarf,human table race_biome 6384a2ff364520ff56f7fa113e942baee745e793dce536585341a09de5ceaddd
+seam-1-12000-goblin,dwarf,human table race_biome 9ec6bc90b035e8b082727d2dd855a48c7b683aea77ced25ba0b966d31a945ea4
 seam-1-12000-goblin,dwarf,human meta param.civs_per_race=auto
 seam-1-12000-goblin,dwarf,human meta param.divine_activity=normal
 seam-1-12000-goblin,dwarf,human meta param.divine_script=
@@ -612,12 +612,12 @@ case seam-42-2000-all seam 42 2000 all none
 seam-42-2000-all years 0 691 1080 1414 1656 1865
 seam-42-2000-all trace 1:0:-:-:-:0|2:700:48f251c73bc89e2c:11:-9:691|3:1100:04c4cca630137eba:0:-20:1080|4:1400:da392a12d57deaeb:34:14:1414|5:1660:67cc0b87b4ce8d5a:16:-4:1656|6:1860:a1211f03c3a8ff14:25:5:1865
 seam-42-2000-all ages 1:1:0:690:The Age of Elves|2:2:691:1079:The Age of Goblins|3:3:1080:1413:The Age of Dwarves|4:4:1414:1655:The Age of Faeries|5:5:1656:1864:The Age of Humans|6:6:1865:1999:The Age of Orcs
-seam-42-2000-all gods 1:Fielie:0|2:Krok:0|3:Bronhak:1|4:Syfiash:0|5:Wealstuld:0|6:Kruu:0
+seam-42-2000-all gods 1:Fielie:0|2:Krokzit:0|3:Bronhak:1|4:Syfiash:0|5:Wealstuld:0|6:Ogh'krak:1
 seam-42-2000-all table age 3d8999254d266ea7bc22d104faef9b0029985d1b4e7fa47f096db70ca6862a1d
 seam-42-2000-all table culture 4baeca8a6b5289022be301e62e42b0ae2f2b3a29f143b53d19476594a8df8eca
-seam-42-2000-all table god 20176d03ad1c9bf967e65efc68c323d393019f2af8148af7eda790c39c65a636
+seam-42-2000-all table god 53daf36e99ab2ebc744131a70e57034d145d9058ece8011a3b598f7e15ee8b97
 seam-42-2000-all table race 63071b7184acaef14911419fd59a681bc27a3c6ca24925550b4d8e9283d8c06c
-seam-42-2000-all table race_biome 6384a2ff364520ff56f7fa113e942baee745e793dce536585341a09de5ceaddd
+seam-42-2000-all table race_biome 9ec6bc90b035e8b082727d2dd855a48c7b683aea77ced25ba0b966d31a945ea4
 seam-42-2000-all meta param.civs_per_race=auto
 seam-42-2000-all meta param.divine_activity=normal
 seam-42-2000-all meta param.divine_script=
@@ -635,12 +635,12 @@ case seam-42-2000-elf,orc seam 42 2000 elf,orc none
 seam-42-2000-elf,orc years 0 1865
 seam-42-2000-elf,orc trace 1:0:-:-:-:0|6:1860:a1211f03c3a8ff14:25:5:1865
 seam-42-2000-elf,orc ages 1:1:0:1864:The Age of Elves|2:6:1865:1999:The Age of Orcs
-seam-42-2000-elf,orc gods 1:Fielie:0|2:Krok:0|3:Bronhak:1|4:Syfiash:0|5:Wealstuld:0|6:Kruu:0
+seam-42-2000-elf,orc gods 1:Fielie:0|2:Krokzit:0|3:Bronhak:1|4:Syfiash:0|5:Wealstuld:0|6:Ogh'krak:1
 seam-42-2000-elf,orc table age b30fa6e7ad0a4edd889bf71d2df36345f23532d60c8236f20957b7dc81ad0378
 seam-42-2000-elf,orc table culture 4baeca8a6b5289022be301e62e42b0ae2f2b3a29f143b53d19476594a8df8eca
-seam-42-2000-elf,orc table god 20176d03ad1c9bf967e65efc68c323d393019f2af8148af7eda790c39c65a636
+seam-42-2000-elf,orc table god 53daf36e99ab2ebc744131a70e57034d145d9058ece8011a3b598f7e15ee8b97
 seam-42-2000-elf,orc table race 28538ab6d97cab19c1a3c5ef6eba01ae10e8a6638bbd4e3018a783b69dd8daa9
-seam-42-2000-elf,orc table race_biome 6384a2ff364520ff56f7fa113e942baee745e793dce536585341a09de5ceaddd
+seam-42-2000-elf,orc table race_biome 9ec6bc90b035e8b082727d2dd855a48c7b683aea77ced25ba0b966d31a945ea4
 seam-42-2000-elf,orc meta param.civs_per_race=auto
 seam-42-2000-elf,orc meta param.divine_activity=normal
 seam-42-2000-elf,orc meta param.divine_script=
@@ -658,12 +658,12 @@ case seam-42-2000-orc seam 42 2000 orc none
 seam-42-2000-orc years 0
 seam-42-2000-orc trace 6:1860:-:-:-:0
 seam-42-2000-orc ages 1:6:0:1999:The Age of Orcs
-seam-42-2000-orc gods 1:Fielie:0|2:Krok:0|3:Bronhak:1|4:Syfiash:0|5:Wealstuld:0|6:Kruu:0
+seam-42-2000-orc gods 1:Fielie:0|2:Krokzit:0|3:Bronhak:1|4:Syfiash:0|5:Wealstuld:0|6:Ogh'krak:1
 seam-42-2000-orc table age be68ba0c1a48b144160ecd74221dda4cf21285b14983769c58eaf360bfe87575
 seam-42-2000-orc table culture 4baeca8a6b5289022be301e62e42b0ae2f2b3a29f143b53d19476594a8df8eca
-seam-42-2000-orc table god 20176d03ad1c9bf967e65efc68c323d393019f2af8148af7eda790c39c65a636
+seam-42-2000-orc table god 53daf36e99ab2ebc744131a70e57034d145d9058ece8011a3b598f7e15ee8b97
 seam-42-2000-orc table race d91fde04053b4c36d20bd439b870982f5dd584c1b61824762937ac109ac32ac0
-seam-42-2000-orc table race_biome 6384a2ff364520ff56f7fa113e942baee745e793dce536585341a09de5ceaddd
+seam-42-2000-orc table race_biome 9ec6bc90b035e8b082727d2dd855a48c7b683aea77ced25ba0b966d31a945ea4
 seam-42-2000-orc meta param.civs_per_race=auto
 seam-42-2000-orc meta param.divine_activity=normal
 seam-42-2000-orc meta param.divine_script=
@@ -681,12 +681,12 @@ case seam-42-2000-goblin,dwarf,human seam 42 2000 goblin,dwarf,human none
 seam-42-2000-goblin,dwarf,human years 0 1080 1656
 seam-42-2000-goblin,dwarf,human trace 2:700:-:-:-:0|3:1100:04c4cca630137eba:0:-20:1080|5:1660:67cc0b87b4ce8d5a:16:-4:1656
 seam-42-2000-goblin,dwarf,human ages 1:2:0:1079:The Age of Goblins|2:3:1080:1655:The Age of Dwarves|3:5:1656:1999:The Age of Humans
-seam-42-2000-goblin,dwarf,human gods 1:Fielie:0|2:Krok:0|3:Bronhak:1|4:Syfiash:0|5:Wealstuld:0|6:Kruu:0
+seam-42-2000-goblin,dwarf,human gods 1:Fielie:0|2:Krokzit:0|3:Bronhak:1|4:Syfiash:0|5:Wealstuld:0|6:Ogh'krak:1
 seam-42-2000-goblin,dwarf,human table age 986d2b426ed9eef83da2b467f7afc378f285d4aafd34291a6b3f608b16516734
 seam-42-2000-goblin,dwarf,human table culture 4baeca8a6b5289022be301e62e42b0ae2f2b3a29f143b53d19476594a8df8eca
-seam-42-2000-goblin,dwarf,human table god 20176d03ad1c9bf967e65efc68c323d393019f2af8148af7eda790c39c65a636
+seam-42-2000-goblin,dwarf,human table god 53daf36e99ab2ebc744131a70e57034d145d9058ece8011a3b598f7e15ee8b97
 seam-42-2000-goblin,dwarf,human table race 0cfad5039879b96d304dd0f85edaf2b5d34931cfac4c393c6daab3830191cf34
-seam-42-2000-goblin,dwarf,human table race_biome 6384a2ff364520ff56f7fa113e942baee745e793dce536585341a09de5ceaddd
+seam-42-2000-goblin,dwarf,human table race_biome 9ec6bc90b035e8b082727d2dd855a48c7b683aea77ced25ba0b966d31a945ea4
 seam-42-2000-goblin,dwarf,human meta param.civs_per_race=auto
 seam-42-2000-goblin,dwarf,human meta param.divine_activity=normal
 seam-42-2000-goblin,dwarf,human meta param.divine_script=
@@ -704,12 +704,12 @@ case seam-42-6000-all seam 42 6000 all none
 seam-42-6000-all years 0 2074 3242 4243 4969 5596
 seam-42-6000-all trace 1:0:-:-:-:0|2:2100:48f251c73bc89e2c:34:-26:2074|3:3300:04c4cca630137eba:2:-58:3242|4:4200:da392a12d57deaeb:103:43:4243|5:4980:67cc0b87b4ce8d5a:49:-11:4969|6:5580:a1211f03c3a8ff14:76:16:5596
 seam-42-6000-all ages 1:1:0:2073:The Age of Elves|2:2:2074:3241:The Age of Goblins|3:3:3242:4242:The Age of Dwarves|4:4:4243:4968:The Age of Faeries|5:5:4969:5595:The Age of Humans|6:6:5596:5999:The Age of Orcs
-seam-42-6000-all gods 1:Fielie:0|2:Krok:0|3:Bronhak:1|4:Syfiash:0|5:Wealstuld:0|6:Kruu:0
+seam-42-6000-all gods 1:Fielie:0|2:Krokzit:0|3:Bronhak:1|4:Syfiash:0|5:Wealstuld:0|6:Ogh'krak:1
 seam-42-6000-all table age 1c0d576c9713ae27121af908f0951bd2e199c2e98a51e4a4e540500310870ab0
 seam-42-6000-all table culture 4baeca8a6b5289022be301e62e42b0ae2f2b3a29f143b53d19476594a8df8eca
-seam-42-6000-all table god 20176d03ad1c9bf967e65efc68c323d393019f2af8148af7eda790c39c65a636
+seam-42-6000-all table god 53daf36e99ab2ebc744131a70e57034d145d9058ece8011a3b598f7e15ee8b97
 seam-42-6000-all table race 8fb14d1d73ae65d213a53320c833fbcf35df3e6d20737527e086c7789c59ea09
-seam-42-6000-all table race_biome 6384a2ff364520ff56f7fa113e942baee745e793dce536585341a09de5ceaddd
+seam-42-6000-all table race_biome 9ec6bc90b035e8b082727d2dd855a48c7b683aea77ced25ba0b966d31a945ea4
 seam-42-6000-all meta param.civs_per_race=auto
 seam-42-6000-all meta param.divine_activity=normal
 seam-42-6000-all meta param.divine_script=
@@ -727,12 +727,12 @@ case seam-42-6000-elf,orc seam 42 6000 elf,orc none
 seam-42-6000-elf,orc years 0 5596
 seam-42-6000-elf,orc trace 1:0:-:-:-:0|6:5580:a1211f03c3a8ff14:76:16:5596
 seam-42-6000-elf,orc ages 1:1:0:5595:The Age of Elves|2:6:5596:5999:The Age of Orcs
-seam-42-6000-elf,orc gods 1:Fielie:0|2:Krok:0|3:Bronhak:1|4:Syfiash:0|5:Wealstuld:0|6:Kruu:0
+seam-42-6000-elf,orc gods 1:Fielie:0|2:Krokzit:0|3:Bronhak:1|4:Syfiash:0|5:Wealstuld:0|6:Ogh'krak:1
 seam-42-6000-elf,orc table age 4801bf470a6ee737fb1c3d3e4c195f42c9ca7ea2517f41b6f98800cd83b8cd47
 seam-42-6000-elf,orc table culture 4baeca8a6b5289022be301e62e42b0ae2f2b3a29f143b53d19476594a8df8eca
-seam-42-6000-elf,orc table god 20176d03ad1c9bf967e65efc68c323d393019f2af8148af7eda790c39c65a636
+seam-42-6000-elf,orc table god 53daf36e99ab2ebc744131a70e57034d145d9058ece8011a3b598f7e15ee8b97
 seam-42-6000-elf,orc table race 322eba7fe1aee80496744b2eac4b72b5bfdae8ec8256f6334c19114614401a4d
-seam-42-6000-elf,orc table race_biome 6384a2ff364520ff56f7fa113e942baee745e793dce536585341a09de5ceaddd
+seam-42-6000-elf,orc table race_biome 9ec6bc90b035e8b082727d2dd855a48c7b683aea77ced25ba0b966d31a945ea4
 seam-42-6000-elf,orc meta param.civs_per_race=auto
 seam-42-6000-elf,orc meta param.divine_activity=normal
 seam-42-6000-elf,orc meta param.divine_script=
@@ -750,12 +750,12 @@ case seam-42-6000-orc seam 42 6000 orc none
 seam-42-6000-orc years 0
 seam-42-6000-orc trace 6:5580:-:-:-:0
 seam-42-6000-orc ages 1:6:0:5999:The Age of Orcs
-seam-42-6000-orc gods 1:Fielie:0|2:Krok:0|3:Bronhak:1|4:Syfiash:0|5:Wealstuld:0|6:Kruu:0
+seam-42-6000-orc gods 1:Fielie:0|2:Krokzit:0|3:Bronhak:1|4:Syfiash:0|5:Wealstuld:0|6:Ogh'krak:1
 seam-42-6000-orc table age 2aa12e427cbeaf6fd65b994e8ce3fba33e959cbfd2b879c484b54f61b7bae80d
 seam-42-6000-orc table culture 4baeca8a6b5289022be301e62e42b0ae2f2b3a29f143b53d19476594a8df8eca
-seam-42-6000-orc table god 20176d03ad1c9bf967e65efc68c323d393019f2af8148af7eda790c39c65a636
+seam-42-6000-orc table god 53daf36e99ab2ebc744131a70e57034d145d9058ece8011a3b598f7e15ee8b97
 seam-42-6000-orc table race d91fde04053b4c36d20bd439b870982f5dd584c1b61824762937ac109ac32ac0
-seam-42-6000-orc table race_biome 6384a2ff364520ff56f7fa113e942baee745e793dce536585341a09de5ceaddd
+seam-42-6000-orc table race_biome 9ec6bc90b035e8b082727d2dd855a48c7b683aea77ced25ba0b966d31a945ea4
 seam-42-6000-orc meta param.civs_per_race=auto
 seam-42-6000-orc meta param.divine_activity=normal
 seam-42-6000-orc meta param.divine_script=
@@ -773,12 +773,12 @@ case seam-42-6000-goblin,dwarf,human seam 42 6000 goblin,dwarf,human none
 seam-42-6000-goblin,dwarf,human years 0 3242 4969
 seam-42-6000-goblin,dwarf,human trace 2:2100:-:-:-:0|3:3300:04c4cca630137eba:2:-58:3242|5:4980:67cc0b87b4ce8d5a:49:-11:4969
 seam-42-6000-goblin,dwarf,human ages 1:2:0:3241:The Age of Goblins|2:3:3242:4968:The Age of Dwarves|3:5:4969:5999:The Age of Humans
-seam-42-6000-goblin,dwarf,human gods 1:Fielie:0|2:Krok:0|3:Bronhak:1|4:Syfiash:0|5:Wealstuld:0|6:Kruu:0
+seam-42-6000-goblin,dwarf,human gods 1:Fielie:0|2:Krokzit:0|3:Bronhak:1|4:Syfiash:0|5:Wealstuld:0|6:Ogh'krak:1
 seam-42-6000-goblin,dwarf,human table age ea686843badc7f5a682c555dd343a026043f55299838a075d9c8c721fc25ee24
 seam-42-6000-goblin,dwarf,human table culture 4baeca8a6b5289022be301e62e42b0ae2f2b3a29f143b53d19476594a8df8eca
-seam-42-6000-goblin,dwarf,human table god 20176d03ad1c9bf967e65efc68c323d393019f2af8148af7eda790c39c65a636
+seam-42-6000-goblin,dwarf,human table god 53daf36e99ab2ebc744131a70e57034d145d9058ece8011a3b598f7e15ee8b97
 seam-42-6000-goblin,dwarf,human table race 63bb72e45709de14ca3c3e62ee1a2f2aa7a18014fa46a3a4b3ec76f3182cbdf9
-seam-42-6000-goblin,dwarf,human table race_biome 6384a2ff364520ff56f7fa113e942baee745e793dce536585341a09de5ceaddd
+seam-42-6000-goblin,dwarf,human table race_biome 9ec6bc90b035e8b082727d2dd855a48c7b683aea77ced25ba0b966d31a945ea4
 seam-42-6000-goblin,dwarf,human meta param.civs_per_race=auto
 seam-42-6000-goblin,dwarf,human meta param.divine_activity=normal
 seam-42-6000-goblin,dwarf,human meta param.divine_script=
@@ -796,12 +796,12 @@ case seam-42-12000-all seam 42 12000 all none
 seam-42-12000-all years 0 4148 6484 8485 9937 11191
 seam-42-12000-all trace 1:0:-:-:-:0|2:4200:48f251c73bc89e2c:68:-52:4148|3:6600:04c4cca630137eba:4:-116:6484|4:8400:da392a12d57deaeb:205:85:8485|5:9960:67cc0b87b4ce8d5a:97:-23:9937|6:11160:a1211f03c3a8ff14:151:31:11191
 seam-42-12000-all ages 1:1:0:4147:The Age of Elves|2:2:4148:6483:The Age of Goblins|3:3:6484:8484:The Age of Dwarves|4:4:8485:9936:The Age of Faeries|5:5:9937:11190:The Age of Humans|6:6:11191:11999:The Age of Orcs
-seam-42-12000-all gods 1:Fielie:0|2:Krok:0|3:Bronhak:1|4:Syfiash:0|5:Wealstuld:0|6:Kruu:0
+seam-42-12000-all gods 1:Fielie:0|2:Krokzit:0|3:Bronhak:1|4:Syfiash:0|5:Wealstuld:0|6:Ogh'krak:1
 seam-42-12000-all table age a20cf9e39df08052f3af08fa45699721eaa828120af34be2481d37b5d0fa4944
 seam-42-12000-all table culture 4baeca8a6b5289022be301e62e42b0ae2f2b3a29f143b53d19476594a8df8eca
-seam-42-12000-all table god 20176d03ad1c9bf967e65efc68c323d393019f2af8148af7eda790c39c65a636
+seam-42-12000-all table god 53daf36e99ab2ebc744131a70e57034d145d9058ece8011a3b598f7e15ee8b97
 seam-42-12000-all table race 4deecf86ba7f38895d9ead3b595e87b3ebe7c4fab3c4947adea3dc68e39f033f
-seam-42-12000-all table race_biome 6384a2ff364520ff56f7fa113e942baee745e793dce536585341a09de5ceaddd
+seam-42-12000-all table race_biome 9ec6bc90b035e8b082727d2dd855a48c7b683aea77ced25ba0b966d31a945ea4
 seam-42-12000-all meta param.civs_per_race=auto
 seam-42-12000-all meta param.divine_activity=normal
 seam-42-12000-all meta param.divine_script=
@@ -819,12 +819,12 @@ case seam-42-12000-elf,orc seam 42 12000 elf,orc none
 seam-42-12000-elf,orc years 0 11191
 seam-42-12000-elf,orc trace 1:0:-:-:-:0|6:11160:a1211f03c3a8ff14:151:31:11191
 seam-42-12000-elf,orc ages 1:1:0:11190:The Age of Elves|2:6:11191:11999:The Age of Orcs
-seam-42-12000-elf,orc gods 1:Fielie:0|2:Krok:0|3:Bronhak:1|4:Syfiash:0|5:Wealstuld:0|6:Kruu:0
+seam-42-12000-elf,orc gods 1:Fielie:0|2:Krokzit:0|3:Bronhak:1|4:Syfiash:0|5:Wealstuld:0|6:Ogh'krak:1
 seam-42-12000-elf,orc table age f0c4a34e6feb3dd0aaf589acfde173fedd68faa8b714d35766ab51fa8d05c758
 seam-42-12000-elf,orc table culture 4baeca8a6b5289022be301e62e42b0ae2f2b3a29f143b53d19476594a8df8eca
-seam-42-12000-elf,orc table god 20176d03ad1c9bf967e65efc68c323d393019f2af8148af7eda790c39c65a636
+seam-42-12000-elf,orc table god 53daf36e99ab2ebc744131a70e57034d145d9058ece8011a3b598f7e15ee8b97
 seam-42-12000-elf,orc table race c85bc29f86c79524e938eb6c9b892ac51b129c7bbc00d9066ad04911bbda60b6
-seam-42-12000-elf,orc table race_biome 6384a2ff364520ff56f7fa113e942baee745e793dce536585341a09de5ceaddd
+seam-42-12000-elf,orc table race_biome 9ec6bc90b035e8b082727d2dd855a48c7b683aea77ced25ba0b966d31a945ea4
 seam-42-12000-elf,orc meta param.civs_per_race=auto
 seam-42-12000-elf,orc meta param.divine_activity=normal
 seam-42-12000-elf,orc meta param.divine_script=
@@ -842,12 +842,12 @@ case seam-42-12000-orc seam 42 12000 orc none
 seam-42-12000-orc years 0
 seam-42-12000-orc trace 6:11160:-:-:-:0
 seam-42-12000-orc ages 1:6:0:11999:The Age of Orcs
-seam-42-12000-orc gods 1:Fielie:0|2:Krok:0|3:Bronhak:1|4:Syfiash:0|5:Wealstuld:0|6:Kruu:0
+seam-42-12000-orc gods 1:Fielie:0|2:Krokzit:0|3:Bronhak:1|4:Syfiash:0|5:Wealstuld:0|6:Ogh'krak:1
 seam-42-12000-orc table age d402b7517b293c5ef0c7373343dd9814008bf85d04103ea79f510ff8e85e8338
 seam-42-12000-orc table culture 4baeca8a6b5289022be301e62e42b0ae2f2b3a29f143b53d19476594a8df8eca
-seam-42-12000-orc table god 20176d03ad1c9bf967e65efc68c323d393019f2af8148af7eda790c39c65a636
+seam-42-12000-orc table god 53daf36e99ab2ebc744131a70e57034d145d9058ece8011a3b598f7e15ee8b97
 seam-42-12000-orc table race d91fde04053b4c36d20bd439b870982f5dd584c1b61824762937ac109ac32ac0
-seam-42-12000-orc table race_biome 6384a2ff364520ff56f7fa113e942baee745e793dce536585341a09de5ceaddd
+seam-42-12000-orc table race_biome 9ec6bc90b035e8b082727d2dd855a48c7b683aea77ced25ba0b966d31a945ea4
 seam-42-12000-orc meta param.civs_per_race=auto
 seam-42-12000-orc meta param.divine_activity=normal
 seam-42-12000-orc meta param.divine_script=
@@ -865,12 +865,12 @@ case seam-42-12000-goblin,dwarf,human seam 42 12000 goblin,dwarf,human none
 seam-42-12000-goblin,dwarf,human years 0 6484 9937
 seam-42-12000-goblin,dwarf,human trace 2:4200:-:-:-:0|3:6600:04c4cca630137eba:4:-116:6484|5:9960:67cc0b87b4ce8d5a:97:-23:9937
 seam-42-12000-goblin,dwarf,human ages 1:2:0:6483:The Age of Goblins|2:3:6484:9936:The Age of Dwarves|3:5:9937:11999:The Age of Humans
-seam-42-12000-goblin,dwarf,human gods 1:Fielie:0|2:Krok:0|3:Bronhak:1|4:Syfiash:0|5:Wealstuld:0|6:Kruu:0
+seam-42-12000-goblin,dwarf,human gods 1:Fielie:0|2:Krokzit:0|3:Bronhak:1|4:Syfiash:0|5:Wealstuld:0|6:Ogh'krak:1
 seam-42-12000-goblin,dwarf,human table age dd135f001727bea24905da70ffbd8ab3aa72b90eb855c3c347d99469d3d1414a
 seam-42-12000-goblin,dwarf,human table culture 4baeca8a6b5289022be301e62e42b0ae2f2b3a29f143b53d19476594a8df8eca
-seam-42-12000-goblin,dwarf,human table god 20176d03ad1c9bf967e65efc68c323d393019f2af8148af7eda790c39c65a636
+seam-42-12000-goblin,dwarf,human table god 53daf36e99ab2ebc744131a70e57034d145d9058ece8011a3b598f7e15ee8b97
 seam-42-12000-goblin,dwarf,human table race a1902129012e089bebf3fa55288a105407de78fe47425bb3f7a54595da5a5c21
-seam-42-12000-goblin,dwarf,human table race_biome 6384a2ff364520ff56f7fa113e942baee745e793dce536585341a09de5ceaddd
+seam-42-12000-goblin,dwarf,human table race_biome 9ec6bc90b035e8b082727d2dd855a48c7b683aea77ced25ba0b966d31a945ea4
 seam-42-12000-goblin,dwarf,human meta param.civs_per_race=auto
 seam-42-12000-goblin,dwarf,human meta param.divine_activity=normal
 seam-42-12000-goblin,dwarf,human meta param.divine_script=
@@ -888,12 +888,12 @@ case seam-18446744073709551615-2000-all seam 18446744073709551615 2000 all none
 seam-18446744073709551615-2000-all years 0 681 1105 1419 1661 1858
 seam-18446744073709551615-2000-all trace 1:0:-:-:-:0|2:700:067561f35b0aca69:1:-19:681|3:1100:a0f98a43e702ddd4:25:5:1105|4:1400:f473f4d4b269e890:39:19:1419|5:1660:83d5e81fb3104511:21:1:1661|6:1860:710286931d6ec05d:18:-2:1858
 seam-18446744073709551615-2000-all ages 1:1:0:680:The Age of Elves|2:2:681:1104:The Age of Goblins|3:3:1105:1418:The Age of Dwarves|4:4:1419:1660:The Age of Faeries|5:5:1661:1857:The Age of Humans|6:6:1858:1999:The Age of Orcs
-seam-18446744073709551615-2000-all gods 1:Ciefa:0|2:Slogob:0|3:Narinnadin:1|4:Oupoubia:0|5:Hard:0|6:Kruurz:0
+seam-18446744073709551615-2000-all gods 1:Ciefa:0|2:Slogob:0|3:Narinnadin:1|4:Oupoubia:0|5:Hardcald:0|6:Kruurz'gruu:0
 seam-18446744073709551615-2000-all table age bae438cba8128c7cb8c69b43acf8540e2878a506b4c2b4d5fa0ed3de6842b075
 seam-18446744073709551615-2000-all table culture 4baeca8a6b5289022be301e62e42b0ae2f2b3a29f143b53d19476594a8df8eca
-seam-18446744073709551615-2000-all table god 115a7762d865387b73f201512c73fa3755305b18d5ae6d23d2697f1c46c3433f
+seam-18446744073709551615-2000-all table god 71827ed0250995d901e3c2120c12ecdfcaf37484471386c40aa7a58b788cefb8
 seam-18446744073709551615-2000-all table race d45386cde73a263be9d9c1712fc3ffa2126174f7cc9afc1964e1095b8ef644c6
-seam-18446744073709551615-2000-all table race_biome 6384a2ff364520ff56f7fa113e942baee745e793dce536585341a09de5ceaddd
+seam-18446744073709551615-2000-all table race_biome 9ec6bc90b035e8b082727d2dd855a48c7b683aea77ced25ba0b966d31a945ea4
 seam-18446744073709551615-2000-all meta param.civs_per_race=auto
 seam-18446744073709551615-2000-all meta param.divine_activity=normal
 seam-18446744073709551615-2000-all meta param.divine_script=
@@ -911,12 +911,12 @@ case seam-18446744073709551615-2000-elf,orc seam 18446744073709551615 2000 elf,o
 seam-18446744073709551615-2000-elf,orc years 0 1858
 seam-18446744073709551615-2000-elf,orc trace 1:0:-:-:-:0|6:1860:710286931d6ec05d:18:-2:1858
 seam-18446744073709551615-2000-elf,orc ages 1:1:0:1857:The Age of Elves|2:6:1858:1999:The Age of Orcs
-seam-18446744073709551615-2000-elf,orc gods 1:Ciefa:0|2:Slogob:0|3:Narinnadin:1|4:Oupoubia:0|5:Hard:0|6:Kruurz:0
+seam-18446744073709551615-2000-elf,orc gods 1:Ciefa:0|2:Slogob:0|3:Narinnadin:1|4:Oupoubia:0|5:Hardcald:0|6:Kruurz'gruu:0
 seam-18446744073709551615-2000-elf,orc table age f2f027fa2b974ee5b891b75240e79e52effe3146f718f5dcb74bc3e28f22502c
 seam-18446744073709551615-2000-elf,orc table culture 4baeca8a6b5289022be301e62e42b0ae2f2b3a29f143b53d19476594a8df8eca
-seam-18446744073709551615-2000-elf,orc table god 115a7762d865387b73f201512c73fa3755305b18d5ae6d23d2697f1c46c3433f
+seam-18446744073709551615-2000-elf,orc table god 71827ed0250995d901e3c2120c12ecdfcaf37484471386c40aa7a58b788cefb8
 seam-18446744073709551615-2000-elf,orc table race 79a53959158c5eee7a5dbfa3bd49b783fd0172a56a3a611a23ce09420cbe2c5a
-seam-18446744073709551615-2000-elf,orc table race_biome 6384a2ff364520ff56f7fa113e942baee745e793dce536585341a09de5ceaddd
+seam-18446744073709551615-2000-elf,orc table race_biome 9ec6bc90b035e8b082727d2dd855a48c7b683aea77ced25ba0b966d31a945ea4
 seam-18446744073709551615-2000-elf,orc meta param.civs_per_race=auto
 seam-18446744073709551615-2000-elf,orc meta param.divine_activity=normal
 seam-18446744073709551615-2000-elf,orc meta param.divine_script=
@@ -934,12 +934,12 @@ case seam-18446744073709551615-2000-orc seam 18446744073709551615 2000 orc none
 seam-18446744073709551615-2000-orc years 0
 seam-18446744073709551615-2000-orc trace 6:1860:-:-:-:0
 seam-18446744073709551615-2000-orc ages 1:6:0:1999:The Age of Orcs
-seam-18446744073709551615-2000-orc gods 1:Ciefa:0|2:Slogob:0|3:Narinnadin:1|4:Oupoubia:0|5:Hard:0|6:Kruurz:0
+seam-18446744073709551615-2000-orc gods 1:Ciefa:0|2:Slogob:0|3:Narinnadin:1|4:Oupoubia:0|5:Hardcald:0|6:Kruurz'gruu:0
 seam-18446744073709551615-2000-orc table age be68ba0c1a48b144160ecd74221dda4cf21285b14983769c58eaf360bfe87575
 seam-18446744073709551615-2000-orc table culture 4baeca8a6b5289022be301e62e42b0ae2f2b3a29f143b53d19476594a8df8eca
-seam-18446744073709551615-2000-orc table god 115a7762d865387b73f201512c73fa3755305b18d5ae6d23d2697f1c46c3433f
+seam-18446744073709551615-2000-orc table god 71827ed0250995d901e3c2120c12ecdfcaf37484471386c40aa7a58b788cefb8
 seam-18446744073709551615-2000-orc table race d91fde04053b4c36d20bd439b870982f5dd584c1b61824762937ac109ac32ac0
-seam-18446744073709551615-2000-orc table race_biome 6384a2ff364520ff56f7fa113e942baee745e793dce536585341a09de5ceaddd
+seam-18446744073709551615-2000-orc table race_biome 9ec6bc90b035e8b082727d2dd855a48c7b683aea77ced25ba0b966d31a945ea4
 seam-18446744073709551615-2000-orc meta param.civs_per_race=auto
 seam-18446744073709551615-2000-orc meta param.divine_activity=normal
 seam-18446744073709551615-2000-orc meta param.divine_script=
@@ -957,12 +957,12 @@ case seam-18446744073709551615-2000-goblin,dwarf,human seam 18446744073709551615
 seam-18446744073709551615-2000-goblin,dwarf,human years 0 1105 1661
 seam-18446744073709551615-2000-goblin,dwarf,human trace 2:700:-:-:-:0|3:1100:a0f98a43e702ddd4:25:5:1105|5:1660:83d5e81fb3104511:21:1:1661
 seam-18446744073709551615-2000-goblin,dwarf,human ages 1:2:0:1104:The Age of Goblins|2:3:1105:1660:The Age of Dwarves|3:5:1661:1999:The Age of Humans
-seam-18446744073709551615-2000-goblin,dwarf,human gods 1:Ciefa:0|2:Slogob:0|3:Narinnadin:1|4:Oupoubia:0|5:Hard:0|6:Kruurz:0
+seam-18446744073709551615-2000-goblin,dwarf,human gods 1:Ciefa:0|2:Slogob:0|3:Narinnadin:1|4:Oupoubia:0|5:Hardcald:0|6:Kruurz'gruu:0
 seam-18446744073709551615-2000-goblin,dwarf,human table age 661c9fa4ab058c1700f59232a672bec12e69592612a922632864d0e41a0bd482
 seam-18446744073709551615-2000-goblin,dwarf,human table culture 4baeca8a6b5289022be301e62e42b0ae2f2b3a29f143b53d19476594a8df8eca
-seam-18446744073709551615-2000-goblin,dwarf,human table god 115a7762d865387b73f201512c73fa3755305b18d5ae6d23d2697f1c46c3433f
+seam-18446744073709551615-2000-goblin,dwarf,human table god 71827ed0250995d901e3c2120c12ecdfcaf37484471386c40aa7a58b788cefb8
 seam-18446744073709551615-2000-goblin,dwarf,human table race 12dcfd94ee87a9158a75b5e397df378715641e868d96679b092659bf4a316009
-seam-18446744073709551615-2000-goblin,dwarf,human table race_biome 6384a2ff364520ff56f7fa113e942baee745e793dce536585341a09de5ceaddd
+seam-18446744073709551615-2000-goblin,dwarf,human table race_biome 9ec6bc90b035e8b082727d2dd855a48c7b683aea77ced25ba0b966d31a945ea4
 seam-18446744073709551615-2000-goblin,dwarf,human meta param.civs_per_race=auto
 seam-18446744073709551615-2000-goblin,dwarf,human meta param.divine_activity=normal
 seam-18446744073709551615-2000-goblin,dwarf,human meta param.divine_script=
@@ -980,12 +980,12 @@ case seam-18446744073709551615-6000-all seam 18446744073709551615 6000 all none
 seam-18446744073709551615-6000-all years 0 2043 3316 4255 4982 5573
 seam-18446744073709551615-6000-all trace 1:0:-:-:-:0|2:2100:067561f35b0aca69:3:-57:2043|3:3300:a0f98a43e702ddd4:76:16:3316|4:4200:f473f4d4b269e890:115:55:4255|5:4980:83d5e81fb3104511:62:2:4982|6:5580:710286931d6ec05d:53:-7:5573
 seam-18446744073709551615-6000-all ages 1:1:0:2042:The Age of Elves|2:2:2043:3315:The Age of Goblins|3:3:3316:4254:The Age of Dwarves|4:4:4255:4981:The Age of Faeries|5:5:4982:5572:The Age of Humans|6:6:5573:5999:The Age of Orcs
-seam-18446744073709551615-6000-all gods 1:Ciefa:0|2:Slogob:0|3:Narinnadin:1|4:Oupoubia:0|5:Hard:0|6:Kruurz:0
+seam-18446744073709551615-6000-all gods 1:Ciefa:0|2:Slogob:0|3:Narinnadin:1|4:Oupoubia:0|5:Hardcald:0|6:Kruurz'gruu:0
 seam-18446744073709551615-6000-all table age ed9c534df16a3391c3f6efbcaa48d0e4a93c75e3c304ace15a1c815b8cb56660
 seam-18446744073709551615-6000-all table culture 4baeca8a6b5289022be301e62e42b0ae2f2b3a29f143b53d19476594a8df8eca
-seam-18446744073709551615-6000-all table god 115a7762d865387b73f201512c73fa3755305b18d5ae6d23d2697f1c46c3433f
+seam-18446744073709551615-6000-all table god 71827ed0250995d901e3c2120c12ecdfcaf37484471386c40aa7a58b788cefb8
 seam-18446744073709551615-6000-all table race 60705c3d56ff851155b94557599214307111132c19ed084b05a917d487c24343
-seam-18446744073709551615-6000-all table race_biome 6384a2ff364520ff56f7fa113e942baee745e793dce536585341a09de5ceaddd
+seam-18446744073709551615-6000-all table race_biome 9ec6bc90b035e8b082727d2dd855a48c7b683aea77ced25ba0b966d31a945ea4
 seam-18446744073709551615-6000-all meta param.civs_per_race=auto
 seam-18446744073709551615-6000-all meta param.divine_activity=normal
 seam-18446744073709551615-6000-all meta param.divine_script=
@@ -1003,12 +1003,12 @@ case seam-18446744073709551615-6000-elf,orc seam 18446744073709551615 6000 elf,o
 seam-18446744073709551615-6000-elf,orc years 0 5573
 seam-18446744073709551615-6000-elf,orc trace 1:0:-:-:-:0|6:5580:710286931d6ec05d:53:-7:5573
 seam-18446744073709551615-6000-elf,orc ages 1:1:0:5572:The Age of Elves|2:6:5573:5999:The Age of Orcs
-seam-18446744073709551615-6000-elf,orc gods 1:Ciefa:0|2:Slogob:0|3:Narinnadin:1|4:Oupoubia:0|5:Hard:0|6:Kruurz:0
+seam-18446744073709551615-6000-elf,orc gods 1:Ciefa:0|2:Slogob:0|3:Narinnadin:1|4:Oupoubia:0|5:Hardcald:0|6:Kruurz'gruu:0
 seam-18446744073709551615-6000-elf,orc table age b0f8adf91dcda8cd1b6d73ed9d8add155df0d509e61e6f906dd5280ae4f5220c
 seam-18446744073709551615-6000-elf,orc table culture 4baeca8a6b5289022be301e62e42b0ae2f2b3a29f143b53d19476594a8df8eca
-seam-18446744073709551615-6000-elf,orc table god 115a7762d865387b73f201512c73fa3755305b18d5ae6d23d2697f1c46c3433f
+seam-18446744073709551615-6000-elf,orc table god 71827ed0250995d901e3c2120c12ecdfcaf37484471386c40aa7a58b788cefb8
 seam-18446744073709551615-6000-elf,orc table race dbf619ba3dcf0e623b48b47aea2c7b1f157e4590223df2690b680d676e1904fa
-seam-18446744073709551615-6000-elf,orc table race_biome 6384a2ff364520ff56f7fa113e942baee745e793dce536585341a09de5ceaddd
+seam-18446744073709551615-6000-elf,orc table race_biome 9ec6bc90b035e8b082727d2dd855a48c7b683aea77ced25ba0b966d31a945ea4
 seam-18446744073709551615-6000-elf,orc meta param.civs_per_race=auto
 seam-18446744073709551615-6000-elf,orc meta param.divine_activity=normal
 seam-18446744073709551615-6000-elf,orc meta param.divine_script=
@@ -1026,12 +1026,12 @@ case seam-18446744073709551615-6000-orc seam 18446744073709551615 6000 orc none
 seam-18446744073709551615-6000-orc years 0
 seam-18446744073709551615-6000-orc trace 6:5580:-:-:-:0
 seam-18446744073709551615-6000-orc ages 1:6:0:5999:The Age of Orcs
-seam-18446744073709551615-6000-orc gods 1:Ciefa:0|2:Slogob:0|3:Narinnadin:1|4:Oupoubia:0|5:Hard:0|6:Kruurz:0
+seam-18446744073709551615-6000-orc gods 1:Ciefa:0|2:Slogob:0|3:Narinnadin:1|4:Oupoubia:0|5:Hardcald:0|6:Kruurz'gruu:0
 seam-18446744073709551615-6000-orc table age 2aa12e427cbeaf6fd65b994e8ce3fba33e959cbfd2b879c484b54f61b7bae80d
 seam-18446744073709551615-6000-orc table culture 4baeca8a6b5289022be301e62e42b0ae2f2b3a29f143b53d19476594a8df8eca
-seam-18446744073709551615-6000-orc table god 115a7762d865387b73f201512c73fa3755305b18d5ae6d23d2697f1c46c3433f
+seam-18446744073709551615-6000-orc table god 71827ed0250995d901e3c2120c12ecdfcaf37484471386c40aa7a58b788cefb8
 seam-18446744073709551615-6000-orc table race d91fde04053b4c36d20bd439b870982f5dd584c1b61824762937ac109ac32ac0
-seam-18446744073709551615-6000-orc table race_biome 6384a2ff364520ff56f7fa113e942baee745e793dce536585341a09de5ceaddd
+seam-18446744073709551615-6000-orc table race_biome 9ec6bc90b035e8b082727d2dd855a48c7b683aea77ced25ba0b966d31a945ea4
 seam-18446744073709551615-6000-orc meta param.civs_per_race=auto
 seam-18446744073709551615-6000-orc meta param.divine_activity=normal
 seam-18446744073709551615-6000-orc meta param.divine_script=
@@ -1049,12 +1049,12 @@ case seam-18446744073709551615-6000-goblin,dwarf,human seam 18446744073709551615
 seam-18446744073709551615-6000-goblin,dwarf,human years 0 3316 4982
 seam-18446744073709551615-6000-goblin,dwarf,human trace 2:2100:-:-:-:0|3:3300:a0f98a43e702ddd4:76:16:3316|5:4980:83d5e81fb3104511:62:2:4982
 seam-18446744073709551615-6000-goblin,dwarf,human ages 1:2:0:3315:The Age of Goblins|2:3:3316:4981:The Age of Dwarves|3:5:4982:5999:The Age of Humans
-seam-18446744073709551615-6000-goblin,dwarf,human gods 1:Ciefa:0|2:Slogob:0|3:Narinnadin:1|4:Oupoubia:0|5:Hard:0|6:Kruurz:0
+seam-18446744073709551615-6000-goblin,dwarf,human gods 1:Ciefa:0|2:Slogob:0|3:Narinnadin:1|4:Oupoubia:0|5:Hardcald:0|6:Kruurz'gruu:0
 seam-18446744073709551615-6000-goblin,dwarf,human table age d71bd3f4bb24973f8993d6e4456669aaee4f6120bb39d572ad3563efe463c101
 seam-18446744073709551615-6000-goblin,dwarf,human table culture 4baeca8a6b5289022be301e62e42b0ae2f2b3a29f143b53d19476594a8df8eca
-seam-18446744073709551615-6000-goblin,dwarf,human table god 115a7762d865387b73f201512c73fa3755305b18d5ae6d23d2697f1c46c3433f
+seam-18446744073709551615-6000-goblin,dwarf,human table god 71827ed0250995d901e3c2120c12ecdfcaf37484471386c40aa7a58b788cefb8
 seam-18446744073709551615-6000-goblin,dwarf,human table race 5696bec49e9541a69003bd5bc2fcb682a49183aff82e16d2ba35b0a79ec606c9
-seam-18446744073709551615-6000-goblin,dwarf,human table race_biome 6384a2ff364520ff56f7fa113e942baee745e793dce536585341a09de5ceaddd
+seam-18446744073709551615-6000-goblin,dwarf,human table race_biome 9ec6bc90b035e8b082727d2dd855a48c7b683aea77ced25ba0b966d31a945ea4
 seam-18446744073709551615-6000-goblin,dwarf,human meta param.civs_per_race=auto
 seam-18446744073709551615-6000-goblin,dwarf,human meta param.divine_activity=normal
 seam-18446744073709551615-6000-goblin,dwarf,human meta param.divine_script=
@@ -1072,12 +1072,12 @@ case seam-18446744073709551615-12000-all seam 18446744073709551615 12000 all non
 seam-18446744073709551615-12000-all years 0 4086 6631 8510 9964 11146
 seam-18446744073709551615-12000-all trace 1:0:-:-:-:0|2:4200:067561f35b0aca69:6:-114:4086|3:6600:a0f98a43e702ddd4:151:31:6631|4:8400:f473f4d4b269e890:230:110:8510|5:9960:83d5e81fb3104511:124:4:9964|6:11160:710286931d6ec05d:106:-14:11146
 seam-18446744073709551615-12000-all ages 1:1:0:4085:The Age of Elves|2:2:4086:6630:The Age of Goblins|3:3:6631:8509:The Age of Dwarves|4:4:8510:9963:The Age of Faeries|5:5:9964:11145:The Age of Humans|6:6:11146:11999:The Age of Orcs
-seam-18446744073709551615-12000-all gods 1:Ciefa:0|2:Slogob:0|3:Narinnadin:1|4:Oupoubia:0|5:Hard:0|6:Kruurz:0
+seam-18446744073709551615-12000-all gods 1:Ciefa:0|2:Slogob:0|3:Narinnadin:1|4:Oupoubia:0|5:Hardcald:0|6:Kruurz'gruu:0
 seam-18446744073709551615-12000-all table age bfa673500d88e1f415d7008e2ae65b6d96660548ce5ce23168b1432c73400431
 seam-18446744073709551615-12000-all table culture 4baeca8a6b5289022be301e62e42b0ae2f2b3a29f143b53d19476594a8df8eca
-seam-18446744073709551615-12000-all table god 115a7762d865387b73f201512c73fa3755305b18d5ae6d23d2697f1c46c3433f
+seam-18446744073709551615-12000-all table god 71827ed0250995d901e3c2120c12ecdfcaf37484471386c40aa7a58b788cefb8
 seam-18446744073709551615-12000-all table race 6bb64acffa1a69c6e7588bcd55702c8f3e911bcb4c6720f81162ddf3b18dd13d
-seam-18446744073709551615-12000-all table race_biome 6384a2ff364520ff56f7fa113e942baee745e793dce536585341a09de5ceaddd
+seam-18446744073709551615-12000-all table race_biome 9ec6bc90b035e8b082727d2dd855a48c7b683aea77ced25ba0b966d31a945ea4
 seam-18446744073709551615-12000-all meta param.civs_per_race=auto
 seam-18446744073709551615-12000-all meta param.divine_activity=normal
 seam-18446744073709551615-12000-all meta param.divine_script=
@@ -1095,12 +1095,12 @@ case seam-18446744073709551615-12000-elf,orc seam 18446744073709551615 12000 elf
 seam-18446744073709551615-12000-elf,orc years 0 11146
 seam-18446744073709551615-12000-elf,orc trace 1:0:-:-:-:0|6:11160:710286931d6ec05d:106:-14:11146
 seam-18446744073709551615-12000-elf,orc ages 1:1:0:11145:The Age of Elves|2:6:11146:11999:The Age of Orcs
-seam-18446744073709551615-12000-elf,orc gods 1:Ciefa:0|2:Slogob:0|3:Narinnadin:1|4:Oupoubia:0|5:Hard:0|6:Kruurz:0
+seam-18446744073709551615-12000-elf,orc gods 1:Ciefa:0|2:Slogob:0|3:Narinnadin:1|4:Oupoubia:0|5:Hardcald:0|6:Kruurz'gruu:0
 seam-18446744073709551615-12000-elf,orc table age 8bebf2af9f2fcbe025fee7e1b4bb14bcda9c431c54fa7786e746f604c3d8e2e9
 seam-18446744073709551615-12000-elf,orc table culture 4baeca8a6b5289022be301e62e42b0ae2f2b3a29f143b53d19476594a8df8eca
-seam-18446744073709551615-12000-elf,orc table god 115a7762d865387b73f201512c73fa3755305b18d5ae6d23d2697f1c46c3433f
+seam-18446744073709551615-12000-elf,orc table god 71827ed0250995d901e3c2120c12ecdfcaf37484471386c40aa7a58b788cefb8
 seam-18446744073709551615-12000-elf,orc table race 2cbabb2f23e3528f80780447e60a187adbb0b152875a7cb2ecc5c0fc0a5055d5
-seam-18446744073709551615-12000-elf,orc table race_biome 6384a2ff364520ff56f7fa113e942baee745e793dce536585341a09de5ceaddd
+seam-18446744073709551615-12000-elf,orc table race_biome 9ec6bc90b035e8b082727d2dd855a48c7b683aea77ced25ba0b966d31a945ea4
 seam-18446744073709551615-12000-elf,orc meta param.civs_per_race=auto
 seam-18446744073709551615-12000-elf,orc meta param.divine_activity=normal
 seam-18446744073709551615-12000-elf,orc meta param.divine_script=
@@ -1118,12 +1118,12 @@ case seam-18446744073709551615-12000-orc seam 18446744073709551615 12000 orc non
 seam-18446744073709551615-12000-orc years 0
 seam-18446744073709551615-12000-orc trace 6:11160:-:-:-:0
 seam-18446744073709551615-12000-orc ages 1:6:0:11999:The Age of Orcs
-seam-18446744073709551615-12000-orc gods 1:Ciefa:0|2:Slogob:0|3:Narinnadin:1|4:Oupoubia:0|5:Hard:0|6:Kruurz:0
+seam-18446744073709551615-12000-orc gods 1:Ciefa:0|2:Slogob:0|3:Narinnadin:1|4:Oupoubia:0|5:Hardcald:0|6:Kruurz'gruu:0
 seam-18446744073709551615-12000-orc table age d402b7517b293c5ef0c7373343dd9814008bf85d04103ea79f510ff8e85e8338
 seam-18446744073709551615-12000-orc table culture 4baeca8a6b5289022be301e62e42b0ae2f2b3a29f143b53d19476594a8df8eca
-seam-18446744073709551615-12000-orc table god 115a7762d865387b73f201512c73fa3755305b18d5ae6d23d2697f1c46c3433f
+seam-18446744073709551615-12000-orc table god 71827ed0250995d901e3c2120c12ecdfcaf37484471386c40aa7a58b788cefb8
 seam-18446744073709551615-12000-orc table race d91fde04053b4c36d20bd439b870982f5dd584c1b61824762937ac109ac32ac0
-seam-18446744073709551615-12000-orc table race_biome 6384a2ff364520ff56f7fa113e942baee745e793dce536585341a09de5ceaddd
+seam-18446744073709551615-12000-orc table race_biome 9ec6bc90b035e8b082727d2dd855a48c7b683aea77ced25ba0b966d31a945ea4
 seam-18446744073709551615-12000-orc meta param.civs_per_race=auto
 seam-18446744073709551615-12000-orc meta param.divine_activity=normal
 seam-18446744073709551615-12000-orc meta param.divine_script=
@@ -1141,12 +1141,12 @@ case seam-18446744073709551615-12000-goblin,dwarf,human seam 1844674407370955161
 seam-18446744073709551615-12000-goblin,dwarf,human years 0 6631 9964
 seam-18446744073709551615-12000-goblin,dwarf,human trace 2:4200:-:-:-:0|3:6600:a0f98a43e702ddd4:151:31:6631|5:9960:83d5e81fb3104511:124:4:9964
 seam-18446744073709551615-12000-goblin,dwarf,human ages 1:2:0:6630:The Age of Goblins|2:3:6631:9963:The Age of Dwarves|3:5:9964:11999:The Age of Humans
-seam-18446744073709551615-12000-goblin,dwarf,human gods 1:Ciefa:0|2:Slogob:0|3:Narinnadin:1|4:Oupoubia:0|5:Hard:0|6:Kruurz:0
+seam-18446744073709551615-12000-goblin,dwarf,human gods 1:Ciefa:0|2:Slogob:0|3:Narinnadin:1|4:Oupoubia:0|5:Hardcald:0|6:Kruurz'gruu:0
 seam-18446744073709551615-12000-goblin,dwarf,human table age 760666d4f911590242679db7a2c5739e5fe103fbe40ced70ca3c5dd4fc2198be
 seam-18446744073709551615-12000-goblin,dwarf,human table culture 4baeca8a6b5289022be301e62e42b0ae2f2b3a29f143b53d19476594a8df8eca
-seam-18446744073709551615-12000-goblin,dwarf,human table god 115a7762d865387b73f201512c73fa3755305b18d5ae6d23d2697f1c46c3433f
+seam-18446744073709551615-12000-goblin,dwarf,human table god 71827ed0250995d901e3c2120c12ecdfcaf37484471386c40aa7a58b788cefb8
 seam-18446744073709551615-12000-goblin,dwarf,human table race ede40eae6e12e9e3318d49c959d04352d4a2145eeb7a296f0d9092d165d58ba2
-seam-18446744073709551615-12000-goblin,dwarf,human table race_biome 6384a2ff364520ff56f7fa113e942baee745e793dce536585341a09de5ceaddd
+seam-18446744073709551615-12000-goblin,dwarf,human table race_biome 9ec6bc90b035e8b082727d2dd855a48c7b683aea77ced25ba0b966d31a945ea4
 seam-18446744073709551615-12000-goblin,dwarf,human meta param.civs_per_race=auto
 seam-18446744073709551615-12000-goblin,dwarf,human meta param.divine_activity=normal
 seam-18446744073709551615-12000-goblin,dwarf,human meta param.divine_script=
@@ -1164,12 +1164,12 @@ case seam-15629206466951235176-2000-all seam 15629206466951235176 2000 all none
 seam-15629206466951235176-2000-all years 0 698 1109 1409 1679 1880
 seam-15629206466951235176-2000-all trace 1:0:-:-:-:0|2:700:741c6932186a1b35:18:-2:698|3:1100:b9b70c1f0db3ee72:29:9:1109|4:1400:b7c83fa823ba673b:29:9:1409|5:1660:f69ba009da261d05:39:19:1679|6:1860:fb9d01bda8ac64d2:40:20:1880
 seam-15629206466951235176-2000-all ages 1:1:0:697:The Age of Elves|2:2:698:1108:The Age of Goblins|3:3:1109:1408:The Age of Dwarves|4:4:1409:1678:The Age of Faeries|5:5:1679:1879:The Age of Humans|6:6:1880:1999:The Age of Orcs
-seam-15629206466951235176-2000-all gods 1:Esis:0|2:Sluslug:0|3:Nukgarin:0|4:Sofoush:0|5:Bird:0|6:Uul'duk:0
+seam-15629206466951235176-2000-all gods 1:Esis:0|2:Sluslug:0|3:Nukgarin:0|4:Sofoush:0|5:Birdsten:0|6:Uul'duk:0
 seam-15629206466951235176-2000-all table age ef2ab877b727aae61e69e8eade507cff690cd7760da03e7613584845d5e00eec
 seam-15629206466951235176-2000-all table culture 4baeca8a6b5289022be301e62e42b0ae2f2b3a29f143b53d19476594a8df8eca
-seam-15629206466951235176-2000-all table god da78be5d5d0b0820dd852890860aafd7c1f4988338e34f9cf8b52999bea15ead
+seam-15629206466951235176-2000-all table god 52af2187d563b4138c51619d616b2f5bedb7b8bbf45ec9f53fc99d41b760362f
 seam-15629206466951235176-2000-all table race 3c3f63cdcb1a2c5ad2a570d81cde6d4121a96e0ce7e424769974710ab381a0c3
-seam-15629206466951235176-2000-all table race_biome 6384a2ff364520ff56f7fa113e942baee745e793dce536585341a09de5ceaddd
+seam-15629206466951235176-2000-all table race_biome 9ec6bc90b035e8b082727d2dd855a48c7b683aea77ced25ba0b966d31a945ea4
 seam-15629206466951235176-2000-all meta param.civs_per_race=auto
 seam-15629206466951235176-2000-all meta param.divine_activity=normal
 seam-15629206466951235176-2000-all meta param.divine_script=
@@ -1187,12 +1187,12 @@ case seam-15629206466951235176-2000-elf,orc seam 15629206466951235176 2000 elf,o
 seam-15629206466951235176-2000-elf,orc years 0 1880
 seam-15629206466951235176-2000-elf,orc trace 1:0:-:-:-:0|6:1860:fb9d01bda8ac64d2:40:20:1880
 seam-15629206466951235176-2000-elf,orc ages 1:1:0:1879:The Age of Elves|2:6:1880:1999:The Age of Orcs
-seam-15629206466951235176-2000-elf,orc gods 1:Esis:0|2:Sluslug:0|3:Nukgarin:0|4:Sofoush:0|5:Bird:0|6:Uul'duk:0
+seam-15629206466951235176-2000-elf,orc gods 1:Esis:0|2:Sluslug:0|3:Nukgarin:0|4:Sofoush:0|5:Birdsten:0|6:Uul'duk:0
 seam-15629206466951235176-2000-elf,orc table age 9c67d26e68fbdbceb597bc25b0076b12d639770c4022872d975e3eb30da118d5
 seam-15629206466951235176-2000-elf,orc table culture 4baeca8a6b5289022be301e62e42b0ae2f2b3a29f143b53d19476594a8df8eca
-seam-15629206466951235176-2000-elf,orc table god da78be5d5d0b0820dd852890860aafd7c1f4988338e34f9cf8b52999bea15ead
+seam-15629206466951235176-2000-elf,orc table god 52af2187d563b4138c51619d616b2f5bedb7b8bbf45ec9f53fc99d41b760362f
 seam-15629206466951235176-2000-elf,orc table race 380dbe9c196c4cadd57d2622f350114f3acfae30dac176c80874ec53e33c5dd3
-seam-15629206466951235176-2000-elf,orc table race_biome 6384a2ff364520ff56f7fa113e942baee745e793dce536585341a09de5ceaddd
+seam-15629206466951235176-2000-elf,orc table race_biome 9ec6bc90b035e8b082727d2dd855a48c7b683aea77ced25ba0b966d31a945ea4
 seam-15629206466951235176-2000-elf,orc meta param.civs_per_race=auto
 seam-15629206466951235176-2000-elf,orc meta param.divine_activity=normal
 seam-15629206466951235176-2000-elf,orc meta param.divine_script=
@@ -1210,12 +1210,12 @@ case seam-15629206466951235176-2000-orc seam 15629206466951235176 2000 orc none
 seam-15629206466951235176-2000-orc years 0
 seam-15629206466951235176-2000-orc trace 6:1860:-:-:-:0
 seam-15629206466951235176-2000-orc ages 1:6:0:1999:The Age of Orcs
-seam-15629206466951235176-2000-orc gods 1:Esis:0|2:Sluslug:0|3:Nukgarin:0|4:Sofoush:0|5:Bird:0|6:Uul'duk:0
+seam-15629206466951235176-2000-orc gods 1:Esis:0|2:Sluslug:0|3:Nukgarin:0|4:Sofoush:0|5:Birdsten:0|6:Uul'duk:0
 seam-15629206466951235176-2000-orc table age be68ba0c1a48b144160ecd74221dda4cf21285b14983769c58eaf360bfe87575
 seam-15629206466951235176-2000-orc table culture 4baeca8a6b5289022be301e62e42b0ae2f2b3a29f143b53d19476594a8df8eca
-seam-15629206466951235176-2000-orc table god da78be5d5d0b0820dd852890860aafd7c1f4988338e34f9cf8b52999bea15ead
+seam-15629206466951235176-2000-orc table god 52af2187d563b4138c51619d616b2f5bedb7b8bbf45ec9f53fc99d41b760362f
 seam-15629206466951235176-2000-orc table race d91fde04053b4c36d20bd439b870982f5dd584c1b61824762937ac109ac32ac0
-seam-15629206466951235176-2000-orc table race_biome 6384a2ff364520ff56f7fa113e942baee745e793dce536585341a09de5ceaddd
+seam-15629206466951235176-2000-orc table race_biome 9ec6bc90b035e8b082727d2dd855a48c7b683aea77ced25ba0b966d31a945ea4
 seam-15629206466951235176-2000-orc meta param.civs_per_race=auto
 seam-15629206466951235176-2000-orc meta param.divine_activity=normal
 seam-15629206466951235176-2000-orc meta param.divine_script=
@@ -1233,12 +1233,12 @@ case seam-15629206466951235176-2000-goblin,dwarf,human seam 15629206466951235176
 seam-15629206466951235176-2000-goblin,dwarf,human years 0 1109 1679
 seam-15629206466951235176-2000-goblin,dwarf,human trace 2:700:-:-:-:0|3:1100:b9b70c1f0db3ee72:29:9:1109|5:1660:f69ba009da261d05:39:19:1679
 seam-15629206466951235176-2000-goblin,dwarf,human ages 1:2:0:1108:The Age of Goblins|2:3:1109:1678:The Age of Dwarves|3:5:1679:1999:The Age of Humans
-seam-15629206466951235176-2000-goblin,dwarf,human gods 1:Esis:0|2:Sluslug:0|3:Nukgarin:0|4:Sofoush:0|5:Bird:0|6:Uul'duk:0
+seam-15629206466951235176-2000-goblin,dwarf,human gods 1:Esis:0|2:Sluslug:0|3:Nukgarin:0|4:Sofoush:0|5:Birdsten:0|6:Uul'duk:0
 seam-15629206466951235176-2000-goblin,dwarf,human table age 67bf3c7375605832614563fcbdb9d3df3747ac27614f99417dfa7bcfdfbb987d
 seam-15629206466951235176-2000-goblin,dwarf,human table culture 4baeca8a6b5289022be301e62e42b0ae2f2b3a29f143b53d19476594a8df8eca
-seam-15629206466951235176-2000-goblin,dwarf,human table god da78be5d5d0b0820dd852890860aafd7c1f4988338e34f9cf8b52999bea15ead
+seam-15629206466951235176-2000-goblin,dwarf,human table god 52af2187d563b4138c51619d616b2f5bedb7b8bbf45ec9f53fc99d41b760362f
 seam-15629206466951235176-2000-goblin,dwarf,human table race 03e06327ca9d8d55703e0745b0c30fc4c5c95b450c95267d8936bc4a1c76ff68
-seam-15629206466951235176-2000-goblin,dwarf,human table race_biome 6384a2ff364520ff56f7fa113e942baee745e793dce536585341a09de5ceaddd
+seam-15629206466951235176-2000-goblin,dwarf,human table race_biome 9ec6bc90b035e8b082727d2dd855a48c7b683aea77ced25ba0b966d31a945ea4
 seam-15629206466951235176-2000-goblin,dwarf,human meta param.civs_per_race=auto
 seam-15629206466951235176-2000-goblin,dwarf,human meta param.divine_activity=normal
 seam-15629206466951235176-2000-goblin,dwarf,human meta param.divine_script=
@@ -1256,12 +1256,12 @@ case seam-15629206466951235176-6000-all seam 15629206466951235176 6000 all none
 seam-15629206466951235176-6000-all years 0 2094 3327 4226 5036 5638
 seam-15629206466951235176-6000-all trace 1:0:-:-:-:0|2:2100:741c6932186a1b35:54:-6:2094|3:3300:b9b70c1f0db3ee72:87:27:3327|4:4200:b7c83fa823ba673b:86:26:4226|5:4980:f69ba009da261d05:116:56:5036|6:5580:fb9d01bda8ac64d2:118:58:5638
 seam-15629206466951235176-6000-all ages 1:1:0:2093:The Age of Elves|2:2:2094:3326:The Age of Goblins|3:3:3327:4225:The Age of Dwarves|4:4:4226:5035:The Age of Faeries|5:5:5036:5637:The Age of Humans|6:6:5638:5999:The Age of Orcs
-seam-15629206466951235176-6000-all gods 1:Esis:0|2:Sluslug:0|3:Nukgarin:0|4:Sofoush:0|5:Bird:0|6:Uul'duk:0
+seam-15629206466951235176-6000-all gods 1:Esis:0|2:Sluslug:0|3:Nukgarin:0|4:Sofoush:0|5:Birdsten:0|6:Uul'duk:0
 seam-15629206466951235176-6000-all table age 9eb5e9445b7bbc77e92f9f191f4cc7c687a1c7944b05b508ed8e28e5b1bd43eb
 seam-15629206466951235176-6000-all table culture 4baeca8a6b5289022be301e62e42b0ae2f2b3a29f143b53d19476594a8df8eca
-seam-15629206466951235176-6000-all table god da78be5d5d0b0820dd852890860aafd7c1f4988338e34f9cf8b52999bea15ead
+seam-15629206466951235176-6000-all table god 52af2187d563b4138c51619d616b2f5bedb7b8bbf45ec9f53fc99d41b760362f
 seam-15629206466951235176-6000-all table race 079acbbc6210a5ae7fd8e173a1f9277334c7c74070b09051774805a80f6bccbd
-seam-15629206466951235176-6000-all table race_biome 6384a2ff364520ff56f7fa113e942baee745e793dce536585341a09de5ceaddd
+seam-15629206466951235176-6000-all table race_biome 9ec6bc90b035e8b082727d2dd855a48c7b683aea77ced25ba0b966d31a945ea4
 seam-15629206466951235176-6000-all meta param.civs_per_race=auto
 seam-15629206466951235176-6000-all meta param.divine_activity=normal
 seam-15629206466951235176-6000-all meta param.divine_script=
@@ -1279,12 +1279,12 @@ case seam-15629206466951235176-6000-elf,orc seam 15629206466951235176 6000 elf,o
 seam-15629206466951235176-6000-elf,orc years 0 5638
 seam-15629206466951235176-6000-elf,orc trace 1:0:-:-:-:0|6:5580:fb9d01bda8ac64d2:118:58:5638
 seam-15629206466951235176-6000-elf,orc ages 1:1:0:5637:The Age of Elves|2:6:5638:5999:The Age of Orcs
-seam-15629206466951235176-6000-elf,orc gods 1:Esis:0|2:Sluslug:0|3:Nukgarin:0|4:Sofoush:0|5:Bird:0|6:Uul'duk:0
+seam-15629206466951235176-6000-elf,orc gods 1:Esis:0|2:Sluslug:0|3:Nukgarin:0|4:Sofoush:0|5:Birdsten:0|6:Uul'duk:0
 seam-15629206466951235176-6000-elf,orc table age 225eda0c96759ad7414fa082832378bc5fd888e526466ed7d1531f0266dd571b
 seam-15629206466951235176-6000-elf,orc table culture 4baeca8a6b5289022be301e62e42b0ae2f2b3a29f143b53d19476594a8df8eca
-seam-15629206466951235176-6000-elf,orc table god da78be5d5d0b0820dd852890860aafd7c1f4988338e34f9cf8b52999bea15ead
+seam-15629206466951235176-6000-elf,orc table god 52af2187d563b4138c51619d616b2f5bedb7b8bbf45ec9f53fc99d41b760362f
 seam-15629206466951235176-6000-elf,orc table race b58d3bf3b4761b9656d5fbfc3b861361392f2c376f20940db2307728de15ef8c
-seam-15629206466951235176-6000-elf,orc table race_biome 6384a2ff364520ff56f7fa113e942baee745e793dce536585341a09de5ceaddd
+seam-15629206466951235176-6000-elf,orc table race_biome 9ec6bc90b035e8b082727d2dd855a48c7b683aea77ced25ba0b966d31a945ea4
 seam-15629206466951235176-6000-elf,orc meta param.civs_per_race=auto
 seam-15629206466951235176-6000-elf,orc meta param.divine_activity=normal
 seam-15629206466951235176-6000-elf,orc meta param.divine_script=
@@ -1302,12 +1302,12 @@ case seam-15629206466951235176-6000-orc seam 15629206466951235176 6000 orc none
 seam-15629206466951235176-6000-orc years 0
 seam-15629206466951235176-6000-orc trace 6:5580:-:-:-:0
 seam-15629206466951235176-6000-orc ages 1:6:0:5999:The Age of Orcs
-seam-15629206466951235176-6000-orc gods 1:Esis:0|2:Sluslug:0|3:Nukgarin:0|4:Sofoush:0|5:Bird:0|6:Uul'duk:0
+seam-15629206466951235176-6000-orc gods 1:Esis:0|2:Sluslug:0|3:Nukgarin:0|4:Sofoush:0|5:Birdsten:0|6:Uul'duk:0
 seam-15629206466951235176-6000-orc table age 2aa12e427cbeaf6fd65b994e8ce3fba33e959cbfd2b879c484b54f61b7bae80d
 seam-15629206466951235176-6000-orc table culture 4baeca8a6b5289022be301e62e42b0ae2f2b3a29f143b53d19476594a8df8eca
-seam-15629206466951235176-6000-orc table god da78be5d5d0b0820dd852890860aafd7c1f4988338e34f9cf8b52999bea15ead
+seam-15629206466951235176-6000-orc table god 52af2187d563b4138c51619d616b2f5bedb7b8bbf45ec9f53fc99d41b760362f
 seam-15629206466951235176-6000-orc table race d91fde04053b4c36d20bd439b870982f5dd584c1b61824762937ac109ac32ac0
-seam-15629206466951235176-6000-orc table race_biome 6384a2ff364520ff56f7fa113e942baee745e793dce536585341a09de5ceaddd
+seam-15629206466951235176-6000-orc table race_biome 9ec6bc90b035e8b082727d2dd855a48c7b683aea77ced25ba0b966d31a945ea4
 seam-15629206466951235176-6000-orc meta param.civs_per_race=auto
 seam-15629206466951235176-6000-orc meta param.divine_activity=normal
 seam-15629206466951235176-6000-orc meta param.divine_script=
@@ -1325,12 +1325,12 @@ case seam-15629206466951235176-6000-goblin,dwarf,human seam 15629206466951235176
 seam-15629206466951235176-6000-goblin,dwarf,human years 0 3327 5036
 seam-15629206466951235176-6000-goblin,dwarf,human trace 2:2100:-:-:-:0|3:3300:b9b70c1f0db3ee72:87:27:3327|5:4980:f69ba009da261d05:116:56:5036
 seam-15629206466951235176-6000-goblin,dwarf,human ages 1:2:0:3326:The Age of Goblins|2:3:3327:5035:The Age of Dwarves|3:5:5036:5999:The Age of Humans
-seam-15629206466951235176-6000-goblin,dwarf,human gods 1:Esis:0|2:Sluslug:0|3:Nukgarin:0|4:Sofoush:0|5:Bird:0|6:Uul'duk:0
+seam-15629206466951235176-6000-goblin,dwarf,human gods 1:Esis:0|2:Sluslug:0|3:Nukgarin:0|4:Sofoush:0|5:Birdsten:0|6:Uul'duk:0
 seam-15629206466951235176-6000-goblin,dwarf,human table age 80b74954495709463976a722b02019988c44c0acc3fe94079ef6060e3df2b299
 seam-15629206466951235176-6000-goblin,dwarf,human table culture 4baeca8a6b5289022be301e62e42b0ae2f2b3a29f143b53d19476594a8df8eca
-seam-15629206466951235176-6000-goblin,dwarf,human table god da78be5d5d0b0820dd852890860aafd7c1f4988338e34f9cf8b52999bea15ead
+seam-15629206466951235176-6000-goblin,dwarf,human table god 52af2187d563b4138c51619d616b2f5bedb7b8bbf45ec9f53fc99d41b760362f
 seam-15629206466951235176-6000-goblin,dwarf,human table race f38dab50594dcb4dfeaa9551fb6c3cf42b4adaafff6b7f9d04942de0a69e735d
-seam-15629206466951235176-6000-goblin,dwarf,human table race_biome 6384a2ff364520ff56f7fa113e942baee745e793dce536585341a09de5ceaddd
+seam-15629206466951235176-6000-goblin,dwarf,human table race_biome 9ec6bc90b035e8b082727d2dd855a48c7b683aea77ced25ba0b966d31a945ea4
 seam-15629206466951235176-6000-goblin,dwarf,human meta param.civs_per_race=auto
 seam-15629206466951235176-6000-goblin,dwarf,human meta param.divine_activity=normal
 seam-15629206466951235176-6000-goblin,dwarf,human meta param.divine_script=
@@ -1348,12 +1348,12 @@ case seam-15629206466951235176-12000-all seam 15629206466951235176 12000 all non
 seam-15629206466951235176-12000-all years 0 4189 6654 8453 10072 11276
 seam-15629206466951235176-12000-all trace 1:0:-:-:-:0|2:4200:741c6932186a1b35:109:-11:4189|3:6600:b9b70c1f0db3ee72:174:54:6654|4:8400:b7c83fa823ba673b:173:53:8453|5:9960:f69ba009da261d05:232:112:10072|6:11160:fb9d01bda8ac64d2:236:116:11276
 seam-15629206466951235176-12000-all ages 1:1:0:4188:The Age of Elves|2:2:4189:6653:The Age of Goblins|3:3:6654:8452:The Age of Dwarves|4:4:8453:10071:The Age of Faeries|5:5:10072:11275:The Age of Humans|6:6:11276:11999:The Age of Orcs
-seam-15629206466951235176-12000-all gods 1:Esis:0|2:Sluslug:0|3:Nukgarin:0|4:Sofoush:0|5:Bird:0|6:Uul'duk:0
+seam-15629206466951235176-12000-all gods 1:Esis:0|2:Sluslug:0|3:Nukgarin:0|4:Sofoush:0|5:Birdsten:0|6:Uul'duk:0
 seam-15629206466951235176-12000-all table age eb2f192acbbfb51fc7b5588bec3918dd6cd43940f72ef697a9b63677243094f9
 seam-15629206466951235176-12000-all table culture 4baeca8a6b5289022be301e62e42b0ae2f2b3a29f143b53d19476594a8df8eca
-seam-15629206466951235176-12000-all table god da78be5d5d0b0820dd852890860aafd7c1f4988338e34f9cf8b52999bea15ead
+seam-15629206466951235176-12000-all table god 52af2187d563b4138c51619d616b2f5bedb7b8bbf45ec9f53fc99d41b760362f
 seam-15629206466951235176-12000-all table race 7e79b82ba8d9f515b59b92e2d479e3c54d2960250f9b5edc814f25fede9df1ae
-seam-15629206466951235176-12000-all table race_biome 6384a2ff364520ff56f7fa113e942baee745e793dce536585341a09de5ceaddd
+seam-15629206466951235176-12000-all table race_biome 9ec6bc90b035e8b082727d2dd855a48c7b683aea77ced25ba0b966d31a945ea4
 seam-15629206466951235176-12000-all meta param.civs_per_race=auto
 seam-15629206466951235176-12000-all meta param.divine_activity=normal
 seam-15629206466951235176-12000-all meta param.divine_script=
@@ -1371,12 +1371,12 @@ case seam-15629206466951235176-12000-elf,orc seam 15629206466951235176 12000 elf
 seam-15629206466951235176-12000-elf,orc years 0 11276
 seam-15629206466951235176-12000-elf,orc trace 1:0:-:-:-:0|6:11160:fb9d01bda8ac64d2:236:116:11276
 seam-15629206466951235176-12000-elf,orc ages 1:1:0:11275:The Age of Elves|2:6:11276:11999:The Age of Orcs
-seam-15629206466951235176-12000-elf,orc gods 1:Esis:0|2:Sluslug:0|3:Nukgarin:0|4:Sofoush:0|5:Bird:0|6:Uul'duk:0
+seam-15629206466951235176-12000-elf,orc gods 1:Esis:0|2:Sluslug:0|3:Nukgarin:0|4:Sofoush:0|5:Birdsten:0|6:Uul'duk:0
 seam-15629206466951235176-12000-elf,orc table age 4a9a471dd87c6b64e66ccde298807a27de7e05c8a81f0aad278a034de57f262b
 seam-15629206466951235176-12000-elf,orc table culture 4baeca8a6b5289022be301e62e42b0ae2f2b3a29f143b53d19476594a8df8eca
-seam-15629206466951235176-12000-elf,orc table god da78be5d5d0b0820dd852890860aafd7c1f4988338e34f9cf8b52999bea15ead
+seam-15629206466951235176-12000-elf,orc table god 52af2187d563b4138c51619d616b2f5bedb7b8bbf45ec9f53fc99d41b760362f
 seam-15629206466951235176-12000-elf,orc table race c912c7c7e1ecb6ebd247bf9c3249d0e5d6e5620b93fd33f6538cdd44974e2716
-seam-15629206466951235176-12000-elf,orc table race_biome 6384a2ff364520ff56f7fa113e942baee745e793dce536585341a09de5ceaddd
+seam-15629206466951235176-12000-elf,orc table race_biome 9ec6bc90b035e8b082727d2dd855a48c7b683aea77ced25ba0b966d31a945ea4
 seam-15629206466951235176-12000-elf,orc meta param.civs_per_race=auto
 seam-15629206466951235176-12000-elf,orc meta param.divine_activity=normal
 seam-15629206466951235176-12000-elf,orc meta param.divine_script=
@@ -1394,12 +1394,12 @@ case seam-15629206466951235176-12000-orc seam 15629206466951235176 12000 orc non
 seam-15629206466951235176-12000-orc years 0
 seam-15629206466951235176-12000-orc trace 6:11160:-:-:-:0
 seam-15629206466951235176-12000-orc ages 1:6:0:11999:The Age of Orcs
-seam-15629206466951235176-12000-orc gods 1:Esis:0|2:Sluslug:0|3:Nukgarin:0|4:Sofoush:0|5:Bird:0|6:Uul'duk:0
+seam-15629206466951235176-12000-orc gods 1:Esis:0|2:Sluslug:0|3:Nukgarin:0|4:Sofoush:0|5:Birdsten:0|6:Uul'duk:0
 seam-15629206466951235176-12000-orc table age d402b7517b293c5ef0c7373343dd9814008bf85d04103ea79f510ff8e85e8338
 seam-15629206466951235176-12000-orc table culture 4baeca8a6b5289022be301e62e42b0ae2f2b3a29f143b53d19476594a8df8eca
-seam-15629206466951235176-12000-orc table god da78be5d5d0b0820dd852890860aafd7c1f4988338e34f9cf8b52999bea15ead
+seam-15629206466951235176-12000-orc table god 52af2187d563b4138c51619d616b2f5bedb7b8bbf45ec9f53fc99d41b760362f
 seam-15629206466951235176-12000-orc table race d91fde04053b4c36d20bd439b870982f5dd584c1b61824762937ac109ac32ac0
-seam-15629206466951235176-12000-orc table race_biome 6384a2ff364520ff56f7fa113e942baee745e793dce536585341a09de5ceaddd
+seam-15629206466951235176-12000-orc table race_biome 9ec6bc90b035e8b082727d2dd855a48c7b683aea77ced25ba0b966d31a945ea4
 seam-15629206466951235176-12000-orc meta param.civs_per_race=auto
 seam-15629206466951235176-12000-orc meta param.divine_activity=normal
 seam-15629206466951235176-12000-orc meta param.divine_script=
@@ -1417,12 +1417,12 @@ case seam-15629206466951235176-12000-goblin,dwarf,human seam 1562920646695123517
 seam-15629206466951235176-12000-goblin,dwarf,human years 0 6654 10072
 seam-15629206466951235176-12000-goblin,dwarf,human trace 2:4200:-:-:-:0|3:6600:b9b70c1f0db3ee72:174:54:6654|5:9960:f69ba009da261d05:232:112:10072
 seam-15629206466951235176-12000-goblin,dwarf,human ages 1:2:0:6653:The Age of Goblins|2:3:6654:10071:The Age of Dwarves|3:5:10072:11999:The Age of Humans
-seam-15629206466951235176-12000-goblin,dwarf,human gods 1:Esis:0|2:Sluslug:0|3:Nukgarin:0|4:Sofoush:0|5:Bird:0|6:Uul'duk:0
+seam-15629206466951235176-12000-goblin,dwarf,human gods 1:Esis:0|2:Sluslug:0|3:Nukgarin:0|4:Sofoush:0|5:Birdsten:0|6:Uul'duk:0
 seam-15629206466951235176-12000-goblin,dwarf,human table age 1d76dbd0ce8a06be20684a986c62cf3cb444b8c0b7a38a110c89057ec0667339
 seam-15629206466951235176-12000-goblin,dwarf,human table culture 4baeca8a6b5289022be301e62e42b0ae2f2b3a29f143b53d19476594a8df8eca
-seam-15629206466951235176-12000-goblin,dwarf,human table god da78be5d5d0b0820dd852890860aafd7c1f4988338e34f9cf8b52999bea15ead
+seam-15629206466951235176-12000-goblin,dwarf,human table god 52af2187d563b4138c51619d616b2f5bedb7b8bbf45ec9f53fc99d41b760362f
 seam-15629206466951235176-12000-goblin,dwarf,human table race bd83292dc93572c029db2c08faecbcea38da4eef91f87ca92887d1e69e24228d
-seam-15629206466951235176-12000-goblin,dwarf,human table race_biome 6384a2ff364520ff56f7fa113e942baee745e793dce536585341a09de5ceaddd
+seam-15629206466951235176-12000-goblin,dwarf,human table race_biome 9ec6bc90b035e8b082727d2dd855a48c7b683aea77ced25ba0b966d31a945ea4
 seam-15629206466951235176-12000-goblin,dwarf,human meta param.civs_per_race=auto
 seam-15629206466951235176-12000-goblin,dwarf,human meta param.divine_activity=normal
 seam-15629206466951235176-12000-goblin,dwarf,human meta param.divine_script=
@@ -1440,12 +1440,12 @@ case collision-42-6000-all seam 42 6000 all collision
 collision-42-6000-all years 0 2074 3242 4243 4969 5596
 collision-42-6000-all trace 1:0:-:-:-:0|2:2100:48f251c73bc89e2c:34:-26:2074|3:3300:04c4cca630137eba:2:-58:3242|4:4200:da392a12d57deaeb:103:43:4243|5:4980:67cc0b87b4ce8d5a:49:-11:4969|6:5580:a1211f03c3a8ff14:76:16:5596
 collision-42-6000-all ages 1:1:0:2073:The Age of Elves II|2:2:2074:3241:The Age of Goblins|3:3:3242:4242:The Age of Dwarves|4:4:4243:4968:The Age of Faeries|5:5:4969:5595:The Age of Humans|6:6:5596:5999:The Age of Orcs
-collision-42-6000-all gods 1:Mical:2|2:Zatch:1|3:Bronhak:1|4:Syfiash:0|5:Wealstuld:0|6:Kruu:0
+collision-42-6000-all gods 1:Mical:2|2:Krokzit:0|3:Bronhak:1|4:Syfiash:0|5:Wealstuld:0|6:Ogh'krak:1
 collision-42-6000-all table age c029875c4f0f542e788b41258df81ee607202a0e072e54722debf64b402130e0
 collision-42-6000-all table culture 4baeca8a6b5289022be301e62e42b0ae2f2b3a29f143b53d19476594a8df8eca
-collision-42-6000-all table god 1ba59a6bb25fa8f18b41927463cd4e713bdebfce682244d03f0b0d5cc43f2284
+collision-42-6000-all table god 1a8348771330c8bcba3a3c26adf75f901f38d1b49c307eb4289241e7ff509764
 collision-42-6000-all table race 8fb14d1d73ae65d213a53320c833fbcf35df3e6d20737527e086c7789c59ea09
-collision-42-6000-all table race_biome 6384a2ff364520ff56f7fa113e942baee745e793dce536585341a09de5ceaddd
+collision-42-6000-all table race_biome 9ec6bc90b035e8b082727d2dd855a48c7b683aea77ced25ba0b966d31a945ea4
 collision-42-6000-all meta param.civs_per_race=auto
 collision-42-6000-all meta param.divine_activity=normal
 collision-42-6000-all meta param.divine_script=
@@ -1460,17 +1460,17 @@ collision-42-6000-all report age_years = 2074 1168 1001 726 627 404
 collision-42-6000-all report age_years_min = 404
 collision-42-6000-all report gods = 6
 case geo-seed-0-512 world 0 512 6000 all
-geo-seed-0-512 input_region 31ad64306d5b844184f12bf9866b72f8569c418f8a4d0fd9747590456905d0e7
+geo-seed-0-512 input_region d5695c9f12e2aed1390ff1f39f663fb454e1ad9fa5a3e199ff61e64a157172ba
 geo-seed-0-512 regions 14
 geo-seed-0-512 years 0 2068 3265 4178 5003 5534
 geo-seed-0-512 trace 1:0:-:-:-:0|2:2100:3cd314374a949b1c:28:-32:2068|3:3300:36ee444deb96edb2:25:-35:3265|4:4200:506ba1f72aa35875:38:-22:4178|5:4980:b05414cc77d2dcce:83:23:5003|6:5580:1dd5c54d0bbf56ed:14:-46:5534
 geo-seed-0-512 ages 1:1:0:2067:The Age of Elves|2:2:2068:3264:The Age of Goblins|3:3:3265:4177:The Age of Dwarves|4:4:4178:5002:The Age of Faeries|5:5:5003:5533:The Age of Humans|6:6:5534:5999:The Age of Orcs
-geo-seed-0-512 gods 1:Saene:0|2:Kruskux:0|3:Nurnthaimm:0|4:Whaia:1|5:Steldhil:0|6:Bald:0
+geo-seed-0-512 gods 1:Saene:0|2:Kruskux:0|3:Nurnthaimm:0|4:Whaia:1|5:Steldhil:0|6:Uruld'kruum:1
 geo-seed-0-512 table age 3a5762b264358b02b80ab57069635a56be8f32e5e8b6fb8fb4c9cff813475882
 geo-seed-0-512 table culture 4baeca8a6b5289022be301e62e42b0ae2f2b3a29f143b53d19476594a8df8eca
-geo-seed-0-512 table god fc337dc043faebf3fc756b3590793aef5a5dd30dac0ac22577310ac28ca1ae68
+geo-seed-0-512 table god 5123ce7e5441c60f6b47e9902697fab1d051c43dbebfe45fe296c2be66f98030
 geo-seed-0-512 table race 62ae5c6f270a61c0a2a526e9743979e56de54e85365663127a913fc339e1fd43
-geo-seed-0-512 table race_biome 6384a2ff364520ff56f7fa113e942baee745e793dce536585341a09de5ceaddd
+geo-seed-0-512 table race_biome 9ec6bc90b035e8b082727d2dd855a48c7b683aea77ced25ba0b966d31a945ea4
 geo-seed-0-512 meta param.civs_per_race=auto
 geo-seed-0-512 meta param.divine_activity=normal
 geo-seed-0-512 meta param.divine_script=
@@ -1485,17 +1485,17 @@ geo-seed-0-512 report age_years = 2068 1197 913 825 531 466
 geo-seed-0-512 report age_years_min = 466
 geo-seed-0-512 report gods = 6
 case geo-seed-42-512 world 42 512 6000 all
-geo-seed-42-512 input_region 44b1a8614f2370328bbe648510031219564c130149011cd18191bba6e17dbfb5
+geo-seed-42-512 input_region 2192964bf962038c34262d8085cec26c0c4d5b376923b7c3c4e7f3b0c59fd0bb
 geo-seed-42-512 regions 15
 geo-seed-42-512 years 0 2074 3242 4243 4969 5596
 geo-seed-42-512 trace 1:0:-:-:-:0|2:2100:48f251c73bc89e2c:34:-26:2074|3:3300:04c4cca630137eba:2:-58:3242|4:4200:da392a12d57deaeb:103:43:4243|5:4980:67cc0b87b4ce8d5a:49:-11:4969|6:5580:a1211f03c3a8ff14:76:16:5596
 geo-seed-42-512 ages 1:1:0:2073:The Age of Elves|2:2:2074:3241:The Age of Goblins|3:3:3242:4242:The Age of Dwarves|4:4:4243:4968:The Age of Faeries|5:5:4969:5595:The Age of Humans|6:6:5596:5999:The Age of Orcs
-geo-seed-42-512 gods 1:Fielie:0|2:Krok:0|3:Bronhak:1|4:Syfiash:0|5:Wealstuld:0|6:Kruu:0
+geo-seed-42-512 gods 1:Fielie:0|2:Krokzit:0|3:Bronhak:1|4:Syfiash:0|5:Wealstuld:0|6:Ogh'krak:1
 geo-seed-42-512 table age 1c0d576c9713ae27121af908f0951bd2e199c2e98a51e4a4e540500310870ab0
 geo-seed-42-512 table culture 4baeca8a6b5289022be301e62e42b0ae2f2b3a29f143b53d19476594a8df8eca
-geo-seed-42-512 table god 20176d03ad1c9bf967e65efc68c323d393019f2af8148af7eda790c39c65a636
+geo-seed-42-512 table god 53daf36e99ab2ebc744131a70e57034d145d9058ece8011a3b598f7e15ee8b97
 geo-seed-42-512 table race 8fb14d1d73ae65d213a53320c833fbcf35df3e6d20737527e086c7789c59ea09
-geo-seed-42-512 table race_biome 6384a2ff364520ff56f7fa113e942baee745e793dce536585341a09de5ceaddd
+geo-seed-42-512 table race_biome 9ec6bc90b035e8b082727d2dd855a48c7b683aea77ced25ba0b966d31a945ea4
 geo-seed-42-512 meta param.civs_per_race=auto
 geo-seed-42-512 meta param.divine_activity=normal
 geo-seed-42-512 meta param.divine_script=
@@ -1510,17 +1510,17 @@ geo-seed-42-512 report age_years = 2074 1168 1001 726 627 404
 geo-seed-42-512 report age_years_min = 404
 geo-seed-42-512 report gods = 6
 case geo-phrase-512 world 15629206466951235176 512 6000 all
-geo-phrase-512 input_region 206e4501995eacf2ca98728c9ee9eea50e5a6b02334fc8333567770fa9b5f2c4
+geo-phrase-512 input_region 94eb257b590e9415ce2ca66e367e88587b46c6bd8261a0df55d1efcdf85a8761
 geo-phrase-512 regions 13
 geo-phrase-512 years 0 2094 3327 4226 5036 5638
 geo-phrase-512 trace 1:0:-:-:-:0|2:2100:741c6932186a1b35:54:-6:2094|3:3300:b9b70c1f0db3ee72:87:27:3327|4:4200:b7c83fa823ba673b:86:26:4226|5:4980:f69ba009da261d05:116:56:5036|6:5580:fb9d01bda8ac64d2:118:58:5638
 geo-phrase-512 ages 1:1:0:2093:The Age of Elves|2:2:2094:3326:The Age of Goblins|3:3:3327:4225:The Age of Dwarves|4:4:4226:5035:The Age of Faeries|5:5:5036:5637:The Age of Humans|6:6:5638:5999:The Age of Orcs
-geo-phrase-512 gods 1:Esis:0|2:Sluslug:0|3:Nukgarin:0|4:Sofoush:0|5:Bird:0|6:Uul'duk:0
+geo-phrase-512 gods 1:Esis:0|2:Sluslug:0|3:Nukgarin:0|4:Sofoush:0|5:Birdsten:0|6:Uul'duk:0
 geo-phrase-512 table age 9eb5e9445b7bbc77e92f9f191f4cc7c687a1c7944b05b508ed8e28e5b1bd43eb
 geo-phrase-512 table culture 4baeca8a6b5289022be301e62e42b0ae2f2b3a29f143b53d19476594a8df8eca
-geo-phrase-512 table god da78be5d5d0b0820dd852890860aafd7c1f4988338e34f9cf8b52999bea15ead
+geo-phrase-512 table god 52af2187d563b4138c51619d616b2f5bedb7b8bbf45ec9f53fc99d41b760362f
 geo-phrase-512 table race 079acbbc6210a5ae7fd8e173a1f9277334c7c74070b09051774805a80f6bccbd
-geo-phrase-512 table race_biome 6384a2ff364520ff56f7fa113e942baee745e793dce536585341a09de5ceaddd
+geo-phrase-512 table race_biome 9ec6bc90b035e8b082727d2dd855a48c7b683aea77ced25ba0b966d31a945ea4
 geo-phrase-512 meta param.civs_per_race=auto
 geo-phrase-512 meta param.divine_activity=normal
 geo-phrase-512 meta param.divine_script=
@@ -1535,17 +1535,17 @@ geo-phrase-512 report age_years = 2094 1233 899 810 602 362
 geo-phrase-512 report age_years_min = 362
 geo-phrase-512 report gods = 6
 case geo-seed-1-1024 world 1 1024 6000 all
-geo-seed-1-1024 input_region 60c198b43fcdc084da2470c23dd95d177aeecbb8837388cd6dbb8a9bfe954caf
+geo-seed-1-1024 input_region e0fe891b56c3db811d02278dd6141f1dcc483cc93b8c51dd72927a5105b98c29
 geo-seed-1-1024 regions 55
 geo-seed-1-1024 years 0 2071 3341 4178 4934 5580
 geo-seed-1-1024 trace 1:0:-:-:-:0|2:2100:43116755471ad202:31:-29:2071|3:3300:d7004a9f3dda63c5:101:41:3341|4:4200:50e63fa55eec59b0:38:-22:4178|5:4980:1f21bae0d8a9c4e6:14:-46:4934|6:5580:80ede25356406b1d:60:0:5580
 geo-seed-1-1024 ages 1:1:0:2070:The Age of Elves|2:2:2071:3340:The Age of Goblins|3:3:3341:4177:The Age of Dwarves|4:4:4178:4933:The Age of Faeries|5:5:4934:5579:The Age of Humans|6:6:5580:5999:The Age of Orcs
-geo-seed-1-1024 gods 1:Laesiel:0|2:Gragg-Gnurk:0|3:Khummhor:0|4:Synmia:0|5:Steck:0|6:Kaag:0
+geo-seed-1-1024 gods 1:Laesiel:0|2:Gragg-Gnurk:0|3:Khummhor:0|4:Synmia:0|5:Steckwint:0|6:Kaag'azak:0
 geo-seed-1-1024 table age 2549ef22110a337ff8d3101ac82750f92013ee776abc03a7f7b1b99f875b61fb
 geo-seed-1-1024 table culture 4baeca8a6b5289022be301e62e42b0ae2f2b3a29f143b53d19476594a8df8eca
-geo-seed-1-1024 table god 6873fc5a5293539583c66e85a9554d75316d81d2a1ff94045aa1b73c77097ff9
+geo-seed-1-1024 table god f626494da4579c645da78e03ba2d278f9bb72f615030ddf8bc54eac5bc19425d
 geo-seed-1-1024 table race 3a1a6540bc01ed871bdb5711efaa09b07dc51944ed31dede179636d16a1c1575
-geo-seed-1-1024 table race_biome 6384a2ff364520ff56f7fa113e942baee745e793dce536585341a09de5ceaddd
+geo-seed-1-1024 table race_biome 9ec6bc90b035e8b082727d2dd855a48c7b683aea77ced25ba0b966d31a945ea4
 geo-seed-1-1024 meta param.civs_per_race=auto
 geo-seed-1-1024 meta param.divine_activity=normal
 geo-seed-1-1024 meta param.divine_script=
@@ -1560,17 +1560,17 @@ geo-seed-1-1024 report age_years = 2071 1270 837 756 646 420
 geo-seed-1-1024 report age_years_min = 420
 geo-seed-1-1024 report gods = 6
 case hist-span-2000-512 world 7 512 2000 all
-hist-span-2000-512 input_region c96499e3bdd6d2e028e28d24cf3b1ad4672597b1269405bafd9b0c4069ea116f
+hist-span-2000-512 input_region 0b5b6a081f0aa3a7e315c2b2cb438da176f91484678aa7348a09b7893676b6a0
 hist-span-2000-512 regions 13
 hist-span-2000-512 years 0 688 1114 1409 1644 1879
 hist-span-2000-512 trace 1:0:-:-:-:0|2:700:36de754cde789afc:8:-12:688|3:1100:d461969a44206fd2:34:14:1114|4:1400:b68a1049f255c347:29:9:1409|5:1660:1a02c434e7ed95bc:4:-16:1644|6:1860:f88a01fb1652f77b:39:19:1879
 hist-span-2000-512 ages 1:1:0:687:The Age of Elves|2:2:688:1113:The Age of Goblins|3:3:1114:1408:The Age of Dwarves|4:4:1409:1643:The Age of Faeries|5:5:1644:1878:The Age of Humans|6:6:1879:1999:The Age of Orcs
-hist-span-2000-512 gods 1:Vanir:0|2:Grux:0|3:Mammga:0|4:Ouwheefy:0|5:Gord:0|6:Maark'zaagh:0
+hist-span-2000-512 gods 1:Onveth:1|2:Buzork:1|3:Mammga:0|4:Ouwheefy:0|5:Gordman:0|6:Maarkzaagh:0
 hist-span-2000-512 table age cdd709d608e399eef5e87eb46d5f799d013c4095240e478a4956a575a74b942b
 hist-span-2000-512 table culture 4baeca8a6b5289022be301e62e42b0ae2f2b3a29f143b53d19476594a8df8eca
-hist-span-2000-512 table god 6303f98144272c9f9058bcd1243d2d5b93265c95af1ee160e793306b0b064764
+hist-span-2000-512 table god b25bc22e14774d8c5a4fcc5fab61840419e27fa8fbb5a05490b38e0f17afe4a2
 hist-span-2000-512 table race 56f9b7d686e8e2b767c8dcc52d9640dfc0e60e8c2e9e7d0d36eb42337b005e4a
-hist-span-2000-512 table race_biome 6384a2ff364520ff56f7fa113e942baee745e793dce536585341a09de5ceaddd
+hist-span-2000-512 table race_biome 9ec6bc90b035e8b082727d2dd855a48c7b683aea77ced25ba0b966d31a945ea4
 hist-span-2000-512 meta param.civs_per_race=auto
 hist-span-2000-512 meta param.divine_activity=normal
 hist-span-2000-512 meta param.divine_script=
@@ -1585,17 +1585,17 @@ hist-span-2000-512 report age_years = 688 426 295 235 235 121
 hist-span-2000-512 report age_years_min = 121
 hist-span-2000-512 report gods = 6
 case hist-races-elf-orc-1024 world 3 1024 6000 elf,orc
-hist-races-elf-orc-1024 input_region b523e4609b148f12917c6fb65ae6d18d972545e9db7b3470da1c54f741372092
+hist-races-elf-orc-1024 input_region ef92fe1e92d256a1474da3b81891519640b449b875f365d3314c09c8d375b5e5
 hist-races-elf-orc-1024 regions 52
 hist-races-elf-orc-1024 years 0 5602
 hist-races-elf-orc-1024 trace 1:0:-:-:-:0|6:5580:aea8cb7c6c7550b5:82:22:5602
 hist-races-elf-orc-1024 ages 1:1:0:5601:The Age of Elves|2:6:5602:5999:The Age of Orcs
-hist-races-elf-orc-1024 gods 1:Vaennela:0|2:Buzz:0|3:Nonthom:1|4:Pyia:0|5:Alis:1|6:Uguuggrush:0
+hist-races-elf-orc-1024 gods 1:Vaennela:0|2:Sluskat:1|3:Nonthom:1|4:Pyia:0|5:Bulwan:0|6:A'ghaz:0
 hist-races-elf-orc-1024 table age 52a4f6596f6cd0e8d341fb3d6fceb68ca4faad268511e9f2d530f1163f6a55c4
 hist-races-elf-orc-1024 table culture 4baeca8a6b5289022be301e62e42b0ae2f2b3a29f143b53d19476594a8df8eca
-hist-races-elf-orc-1024 table god 724658ee2039f4228b9e7182980935a1dfa4619eca4b58e3db18608ed0753e30
+hist-races-elf-orc-1024 table god dbfd67b7fa6678b26662cba8dfbb0f2dd91f907b7dceee9d34b7d55b5ed97f92
 hist-races-elf-orc-1024 table race 08e7fc2e91aa84bfb778ecdc709ad3f7ad070054ccb0016d66971c4940dbe6c5
-hist-races-elf-orc-1024 table race_biome 6384a2ff364520ff56f7fa113e942baee745e793dce536585341a09de5ceaddd
+hist-races-elf-orc-1024 table race_biome 9ec6bc90b035e8b082727d2dd855a48c7b683aea77ced25ba0b966d31a945ea4
 hist-races-elf-orc-1024 meta param.civs_per_race=auto
 hist-races-elf-orc-1024 meta param.divine_activity=normal
 hist-races-elf-orc-1024 meta param.divine_script=

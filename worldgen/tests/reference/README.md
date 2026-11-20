@@ -702,6 +702,67 @@ quiet row closed by a flare-up ends at that step.
 
 Never regenerate the golden file to make a C++ test pass.
 
+## Generator 0.17.0 (P3-08): data, names, chronology, engine
+
+Written from `docs/specs/p3-08-followups.md` and the stage-spec revisions it
+names (P3-01 r8, P3-02 r5/r6 section 11, P3-03 r3, P3-04 r10), without the
+engineer's branch. Each of the four references serves 0.17.0 by default and
+keeps 0.16.0 behind a switch, which reproduces the committed 0.16.0 golden
+files byte for byte (checked before the 0.17.0 files were written):
+
+```
+python3 -B worldgen/tests/reference/p3_data_reference.py golden - --version 0.16.0
+python3 -B worldgen/tests/reference/p3_names_reference.py golden - --rules r4
+python3 -B worldgen/tests/reference/p3_engine_reference.py golden - --version 0.16.0 \
+    --inputs ~/.cache/the-unmapped/out/p3-04-tests/inputs
+```
+
+- `p3_data_reference.py`: kinds `name_filter` and `placename`, race field
+  `cell_weights`, culture field `god_patterns`, `history.peoples`
+  `plague_major_dead` and `crisis_small_salience`, `worldgen.regions`
+  `name_pool_weights` and `name_traits`. The 0.17.0 listings are derived
+  from the 0.16.0 ones by the edits the specs state (`SPEC_FILES_017`); they
+  stand in while the disk holds 0.16.0 files, as do game/data's
+  `name_filters/` and `placenames/` for a fixture root without them and P1-06
+  4's two records for a `regions.toml` without them (each noted by `check`).
+  `check` adds the 0.17.0 listing facts and the `name_filter` checks of
+  P3-02 11.2 (sizes, effective sizes 101 / 35 / 768, sorted lists, each
+  check failing once). `--version 0.16.0` also gives the content hash
+  `676a3ed5…` that a 0.16.0 world reports.
+- `p3_names_reference.py`: the rule of 11.3 (`root_word`, `name_filtered`),
+  `names_form_text` with r6's fixed words, `god_patterns` and the elven
+  `The House of {root}` (`CULTURES_R5`), a filtered attempt skipped like any
+  invalid one. `check` reproduces 11.3's examples (offensive ones written as
+  concatenations), 11.7 items 4 to 8 and 10, the r5 sample table, the god
+  and realm tables and the seed-42 `Khorkhound` of 11.6, invariant 5 and
+  item 9 on the golden lists, and item 7 (r4's lists, as 0.16.0's sha256
+  lines, from the empty filter with `god_patterns` = `patterns`). `samples`
+  compares with 11.6's table (0 differences); `sweep 2000`: no fallback, no
+  filtered root word, every god root of its culture's `god_patterns`, no bare
+  realm (about 2 minutes). The golden file keeps every keyed-draw vector of
+  4.1 and adds `fattempt`, `rootword`, `filter`, `formtext`, the scenarios
+  `filtered`, `redraw_alone`, `redraw_after` (test culture `filt`, test
+  filter `anywhere = [ba]`) and `r4sha256`; no offensive stem is stored.
+- `p3_chronology_reference.py`: gods drawn with the world's filter and
+  `god_patterns`; `names_form_text` after the data checks D1 to D5 (message
+  as 11.3 writes it, prefix `history:`). The 7.1 examples, data checks and
+  statistics run on the 0.16.0 rules (they are r4's), the properties on both,
+  `check_r3` the god table of P3-02 11.6 through the stage. Only `god` and
+  `race_biome` table hashes, the `gods` lines and `input_region` move.
+- `p3_engine_reference.py`: kind 31 in the catalogue, the three-word value
+  form, names inside a sentence (`render`), the r10 `quiet_era` template;
+  `QUIET_ERA_R10` is read by the peoples and conflict references' quiet
+  steps (the stub charges no event). `check` keeps 17 as written on the
+  0.16.0 rules and inputs, and adds `check_example_r10` (seed 42 at 1024 on
+  the renamed inputs) and `check_render_r10` (16.1 item 10). In the golden
+  file the schedule cases, `phase`, `event`, `event_participant` and the
+  other row tables of the stub worlds are unchanged; `event_kind*`,
+  `civilization`, `settlement`, the names, sentences and `report` lines move.
+
+The history world cases read `~/.cache/the-unmapped/out/p3-08-tests/inputs/`:
+the P3-06 test inputs with table `region`'s names replaced by P1-06 r3's
+(`p1_regions_reference.py rename-db`; nothing else changed).
+
 ## P3-05 peoples and P3-06 expansion and conflict (generator 0.16.0)
 
 `p3_peoples_reference.py` (P3-05) and `p3_conflict_reference.py` (P3-06) are
