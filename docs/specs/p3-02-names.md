@@ -400,7 +400,7 @@ Grammar `filter_word` (kind-local): two to sixteen ASCII lower-case letters `[a-
 
 **The effective lists** are the unions over all definitions. The rule of 11.3 tests membership only, so the order of entries and the split into definitions and files never change a name; they do change `content_hash` (a moved entry changes the canonical encoding), as for any data edit. A list may be empty; with all three empty the filter rejects nothing.
 
-**Sizes of the shipped lists** (entries; r8, Paul's short list, 11.11): `slurs` 33 anywhere, 19 at_start, 6 whole; `crude` 68, 16, 14; `words` 0, 0, **392**; `famous` 0, 0, 101. Effective: 101 anywhere, 35 at_start, **513** whole. The slur and crude entries are kept to the shortest fragment that matches (`nig`, not the full words), so that the file is not a list of offensive text. **`words` (r8) holds the English words that make a name read as a joke or an error: crude, comic or modern-sounding words, and function words and inflected forms** (11.11 gives the rule, the classes and every word). Ordinary English words that fit the setting are not on it and stay as name roots (`The Kingdom of Gold`, `Thorn Deep`, `Moss Hollow`). (r5 to r7, generator 0.17.0: `words` held 647 entries, every lower-case word of the system English word lists (`/usr/share/dict/american-english` and `british-english`) of three or more letters that a shipped culture reaches as a root part with probability at least 10^-5 per attempt (11.6), plus 14 comic words added by hand (`gord`, `pypy`, `bap`, `dud`, ...); the r8 list is a subset of it.) Two-letter words are left out on purpose: orcish apostrophe parts (`Am'gash`, `Um'daz`) read as orcish, not English. `famous` holds gods of real religions, well-known names of fiction and games, famous places and peoples, and common modern first names that the shipped syllables reach (`thor`, `isis`, `vanir`, `durin`, `elrond`, `greek`, `stan`), after Paul's rule for region names (only famous names are excluded).
+**Sizes of the shipped lists** (entries; r8, Paul's short list, 11.11): `slurs` 33 anywhere, 19 at_start, 6 whole; `crude` 68, 16, 14; `words` 0, 0, **393**; `famous` 0, 0, 101. Effective: 101 anywhere, 35 at_start, **514** whole. The slur and crude entries are kept to the shortest fragment that matches (`nig`, not the full words), so that the file is not a list of offensive text. **`words` (r8) holds the English words that make a name read as a joke or an error: crude, comic or modern-sounding words, and function words and inflected forms** (11.11 gives the rule, the classes and every word). Ordinary English words that fit the setting are not on it and stay as name roots (`The Kingdom of Gold`, `Thorn Deep`, `Moss Hollow`). (r5 to r7, generator 0.17.0: `words` held 647 entries, every lower-case word of the system English word lists (`/usr/share/dict/american-english` and `british-english`) of three or more letters that a shipped culture reaches as a root part with probability at least 10^-5 per attempt (11.6), plus 14 comic words added by hand (`gord`, `pypy`, `bap`, `dud`, ...); the r8 list is a subset of it.) Two-letter words are left out on purpose: orcish apostrophe parts (`Am'gash`, `Um'daz`) read as orcish, not English. `famous` holds gods of real religions, well-known names of fiction and games, famous places and peoples, and common modern first names that the shipped syllables reach (`thor`, `isis`, `vanir`, `durin`, `elrond`, `greek`, `stan`), after Paul's rule for region names (only famous names are excluded).
 
 **Content hash.** `name_filter` is a new required kind, so `content_hash` changes for every world, including the P0 empty worlds (P0-03 8).
 
@@ -497,7 +497,7 @@ The three callers (`stages/chronology.cpp` for gods, `history/stubs.cpp` and `hi
 
 ### 11.6 Measurements
 
-(r8) The figures of this section are for the full `words` list of r5 to r7 (647 words, generator 0.17.0) and stay as its record. The short list of r8 (392 words) is measured in 11.11.3: exact rates, the 50-world comparison and samples.
+(r8) The figures of this section are for the full `words` list of r5 to r7 (647 words, generator 0.17.0) and stay as its record. The short list of r8 (393 words; measured in 11.11.3 with 392, `mold` released) is measured in 11.11.3: exact rates, the 50-world comparison and samples.
 
 Prototype `~/.cache/the-unmapped/out/p3-02-names-filter/` (`nfilter.py` the rule of 11.3, `r5.py` the r5 attempt on the test writer's reference `p3_names_reference.py`, `space.py` an exact enumeration of every root a culture can draw with its probability, `measure.py`, `sample.py`, `residual.py`, `gods.py`, `realms.py`, `placescan.py`, `edits.py`). Rates are the share of attempts that pass the r4 rules and that the filter rejects.
 
@@ -689,7 +689,7 @@ In short: **crude, comic or modern-sounding words, plus the words whose names re
 
 The candidate words are the 647 of r5 (every lower-case word of the system English lists of three or more letters that a shipped culture reaches as a root part with probability at least 10^-5 per attempt, plus 14 comic words added by hand). Each was judged by the rule above; a word the cultures cannot reach does no harm and needs no entry. After a syllable edit, the reach measurement of 11.6 gives the new candidates, and each is judged by the same rule.
 
-**The shipped list** (normative): 392 entries, all from the 647; 255 released. Sizes of 11.2 become `words` 0, 0, 392; effective `whole` 513. Every entry and its reason, and every released word, are in 11.11.7. No entry is itself offensive (offensive fragments live in `slurs` and `crude`), so the spec writes every word plainly; none needed masking.
+**The shipped list** (normative): 393 entries, all from the 647; 254 released (`mold` restored to the list by the lead's interim choice, 2026-11-20, after the measurements of 11.11.3). Sizes of 11.2 become `words` 0, 0, 393; effective `whole` 514. Every entry and its reason, and every released word, are in 11.11.7. No entry is itself offensive (offensive fragments live in `slurs` and `crude`), so the spec writes every word plainly; none needed masking.
 
 **Loader checks.** The new list passes `name_filter_unique`, `name_filter_distinct` and `name_filter_not_redundant` (it is a subset of a list that passed them; removing entries cannot create a repeat or a covering entry). It stays sorted, so the convention test of 11.7 item 1 holds.
 
@@ -699,7 +699,7 @@ Spec writer, 2026-11-20 (`~/.cache/the-unmapped/out/p3-10-words/`: `decide.py` t
 
 #### 11.11.3 Measurements
 
-**Exact redraw rates** (share of the attempts that pass the r4 rules and that the filter rejects, by enumeration of each culture's root space as in 11.6; gods with `god_patterns`). "full" is r5 to r7 (647 words), "short" is r8 (392 words), "none" is the filter with no `words` list at all (slurs, crude and famous only):
+**Exact redraw rates** (share of the attempts that pass the r4 rules and that the filter rejects, by enumeration of each culture's root space as in 11.6; gods with `god_patterns`). "full" is r5 to r7 (647 words), "short" is r8 as measured (392 words, `mold` released; the shipped 393 differ by `mold` only), "none" is the filter with no `words` list at all (slurs, crude and famous only):
 
 | Culture | God full / short / none | Civilization full / short / none | Settlement full / short / none |
 | --- | --- | --- | --- |
@@ -754,9 +754,11 @@ The redraw figures of the worlds are shares of names, the exact rates above shar
 - human: 955 of 36000 names released (2.65%); top words dead 29, bear 27, mead 26, bold 25, alum 24, cold 23, steam 23, gild 23. The Duchy of Wick (civ); The Ward League (civ); The Kingdom of Brim (civ); The Kingdom of Stead (civ); The Herd League (civ); The Kingdom of Cold (civ); The Mead League (civ); The Kingdom of Bard (civ); The Kingdom of Rock (civ); The Rack League (civ); The Kingdom of Weal (civ); Sear (set); The Duchy of Gird (civ); The Kingdom of Beam (civ).
 - orcish: 855 of 36000 names released (2.38%); top words ark 165, ash 129, murk 66, mold 60, bold 57, bark 55, dark 55, dash 51. Uu'mold Fort (set); The Warband of Murk (civ); The Dam Horde (civ); The Ash'uguuk Horde (civ); The Warband of Mogh'bold (civ); Shaash'bark (god); Bush'gruush (set); The Warband of Dash'ugaagh (civ); The Ak'dark Horde (civ); Mak'bog (god); Ark'graa (god); Shark'ghuuz (god); Bash'gro (set).
 
+(The samples above were drawn with `mold` released; with the shipped list `Kruu'mold`, `The Uush'mold Horde` and the other `mold` names are redrawn.)
+
 **Names that read badly** in the first reading of these samples put their word back on the list (11.11.2, 31 words). Of the names above, none reads as crude or comic to the spec writer; the weakest are `The Mold League` and `The Duchy of Mold` (human; `mold` is kept released, 11.11.6), `Man Glade`, `Boll` and `The Kingdom of Beam`.
 
-**The sample table of 11.6** (5.1's names under r5) changes in two places with r8, by `p3_names_reference.py --rules r5 samples`: human civilization 4 `The Duchy of Ceam` becomes **`The Duchy of Wick`**, orcish settlement 6 `Shaazazuug` becomes **`Uu'mold Fort`**; every other name and the vectors of 4.6 are unchanged. The test writer regenerates the table's golden with the reference and updates 11.6's table with the two names when the change ships.
+**The sample table of 11.6** (5.1's names under r5) changes in one place with the shipped list of r8 (393 words), as the test writer's reference golden on `origin/p3/09-int` (`worldgen/tests/golden/p3-02-names.txt`) records it: human civilization 4 `The Duchy of Ceam` becomes **`The Duchy of Wick`**. Orcish settlement 6 stays `Shaazazuug` (with `mold` released, while 11.11.3 was measured, it had become `Uu'mold Fort`), and the seed 42 orcish god stays `Ogh'krak` at attempt 1. Every other name and the vectors of 4.6 are unchanged.
 
 #### 11.11.4 Consequences
 
@@ -770,8 +772,8 @@ The redraw figures of the worlds are shares of names, the exact rates above shar
 
 Tests that encode the list's size or members:
 
-1. `worldgen/tests/history/history_names_data_test.cpp`, the shipped-filter test (11.2 sizes per definition): `{0, 0, 647}` for `words` becomes `{0, 0, 392}`.
-2. `worldgen/tests/reference/p3_data_reference.py` (the `name_filter` sizes check, `words=(0, 0, 647)`): becomes `(0, 0, 392)`; then `p3-01-data.txt` is re-recorded from it.
+1. `worldgen/tests/history/history_names_data_test.cpp`, the shipped-filter test (11.2 sizes per definition): `{0, 0, 647}` for `words` becomes `{0, 0, 393}`.
+2. `worldgen/tests/reference/p3_data_reference.py` (the `name_filter` sizes check, `words=(0, 0, 647)`): becomes `(0, 0, 393)`; then `p3-01-data.txt` is re-recorded from it.
 3. `worldgen/tests/golden/p3-02-names.txt`: regenerated by `p3_names_reference.py golden` (it reads the shipped `name_filters/`); its `filter` lines are unchanged in value (the critic stems `bag`, `dog`, `baa`, `gord`, `vanir`, `dork`, `bald`, `buzz` are all still rejected, and the benign words still pass), so 11.7 item 10's C++ list in `history_names_test.cpp` needs no edit.
 4. 11.7 item 1 (sorted lists, byte-identical fixtures) and item 9 (no root word filtered, recomputed by the test's own rule from the shipped files) need no edit: they read the files.
 5. New: a check of 11.11.1's anchors with the shipped filter (C++ and the reference): the bare root words `gold`, `thorn`, `moss`, `iron`, `ash`, `grub`, `sleet`, `horn` are **not** filtered; `also`, `went`, `movie`, `dork`, `zit`, `old` **are**. The words are written plainly; none is offensive. (No test should pin the whole list: it is hand data that Paul edits.)
@@ -786,7 +788,7 @@ Paul may move any of these; each is one line of `words.toml`.
 - `old`: kept (reject). Plain adjective; `Old Fort` and `The Old Horde` read well, but the orcish compounds the syllables make most often (`Old'sho`, `Old'zarz Camp`; `old` is 0.6% of orcish god attempts) read as an English word glued to an orcish one.
 - `man`: released. A realm `The Kingdom of Man` would be a happy accident; `Man Glade` (faerie, in the sample) is weaker.
 - `mine`: released. Reads as the dwarven noun (`Mine Deep`), not the pronoun.
-- `mold`: released. `Kruu'mold`, `The Mold League`; mould is a fitting dark word, and the American spelling is the only oddity.
+- `mold`: **kept** (restored to the list by the lead's interim choice, 2026-11-20; it was released when 11.11.3 was measured). `The Mold League` and `The Duchy of Mold` read as household mould.
 - `teeth`: released. A grim word that fits goblins and orcs (`Teeth Pit`); the other body parts are kept.
 - `beard`: kept (put back). A human town called `Beard` reads as a joke.
 - `lay`: kept. The ballad sense fits, but the crude modern sense is the common one.
@@ -804,15 +806,15 @@ Paul may move any of these; each is one line of `words.toml`.
 
 The review file `~/.cache/the-unmapped/out/p3-10-words/word-decisions.md` holds the same lists. To move a word, edit `words.toml` (sorted) and say so in a revision note.
 
-##### Kept on the reject list (392)
+##### Kept on the reject list (393)
 
 **Crude or bodily (29)**: sexual double meanings, bodily functions, and body parts, whose bare names read as a joke ("The Realm of Nose", "Gut Pit").
 
 `bap`, `beard`, `brain`, `bras`, `burp`, `come`, `face`, `gob`, `gut`, `hair`, `hand`, `head`, `kink`, `lay`, `lice`, `lip`, `mouth`, `nose`, `oral`, `pap`, `rear`, `shin`, `slit`, `sore`, `stud`, `suck`, `tibia`, `wee`, `zit`.
 
-**Comic, childish or slang (125)**: interjections and noises, nicknames and insults, baby talk, slang, and comic food and household things ("Dork", "Bag Hole", "The Sock League", "Whoa").
+**Comic, childish or slang (126)**: interjections and noises, nicknames and insults, baby talk, slang, and comic food and household things ("Dork", "Bag Hole", "The Sock League", "Whoa"; `mold`, restored by the lead's interim choice: "The Mold League" reads as household mould).
 
-`aces`, `alas`, `baa`, `baby`, `bag`, `bald`, `ball`, `bead`, `bean`, `beefy`, `beep`, `beet`, `bib`, `big`, `bloke`, `bob`, `boo`, `bop`, `bosh`, `botch`, `box`, `boy`, `bro`, `bug`, `bunk`, `butch`, `buzz`, `curd`, `darn`, `dog`, `dork`, `drain`, `drink`, `drunk`, `duck`, `dud`, `dude`, `dweeb`, `fatso`, `fie`, `fishy`, `flan`, `flap`, `flashy`, `flip`, `flop`, `fly`, `foo`, `fop`, `gab`, `gag`, `geek`, `geez`, `gent`, `gonk`, `goof`, `gord`, `grab`, `grog`, `gunk`, `heck`, `hick`, `lame`, `lard`, `lousy`, `love`, `mama`, `mash`, `mime`, `mom`, `moo`, `mop`, `mousy`, `muck`, `mug`, `mum`, `mush`, `nab`, `nag`, `nark`, `nerd`, `nit`, `nut`, `ogle`, `ogles`, `papa`, `pie`, `pop`, `posh`, `poss`, `pypy`, `rant`, `sass`, `sham`, `shoo`, `showy`, `shush`, `skunk`, `slob`, `snark`, `snit`, `snitch`, `snob`, `snub`, `snug`, `sock`, `soup`, `soupy`, `stick`, `stir`, `teas`, `thud`, `tick`, `toss`, `toupee`, `toy`, `twee`, `ugh`, `vase`, `wack`, `weepy`, `whisk`, `whoa`, `win`, `woo`.
+`aces`, `alas`, `baa`, `baby`, `bag`, `bald`, `ball`, `bead`, `bean`, `beefy`, `beep`, `beet`, `bib`, `big`, `bloke`, `bob`, `boo`, `bop`, `bosh`, `botch`, `box`, `boy`, `bro`, `bug`, `bunk`, `butch`, `buzz`, `curd`, `darn`, `dog`, `dork`, `drain`, `drink`, `drunk`, `duck`, `dud`, `dude`, `dweeb`, `fatso`, `fie`, `fishy`, `flan`, `flap`, `flashy`, `flip`, `flop`, `fly`, `foo`, `fop`, `gab`, `gag`, `geek`, `geez`, `gent`, `gonk`, `goof`, `gord`, `grab`, `grog`, `gunk`, `heck`, `hick`, `lame`, `lard`, `lousy`, `love`, `mama`, `mash`, `mime`, `mold`, `mom`, `moo`, `mop`, `mousy`, `muck`, `mug`, `mum`, `mush`, `nab`, `nag`, `nark`, `nerd`, `nit`, `nut`, `ogle`, `ogles`, `papa`, `pie`, `pop`, `posh`, `poss`, `pypy`, `rant`, `sass`, `sham`, `shoo`, `showy`, `shush`, `skunk`, `slob`, `snark`, `snit`, `snitch`, `snob`, `snub`, `snug`, `sock`, `soup`, `soupy`, `stick`, `stir`, `teas`, `thud`, `tick`, `toss`, `toupee`, `toy`, `twee`, `ugh`, `vase`, `wack`, `weepy`, `whisk`, `whoa`, `win`, `woo`.
 
 **Modern or anachronistic (116)**: technology, money and trade, modern slang and abbreviations, real-world titles, modern first names, famous names ("The House of Movie", "The Rent League", "Clan Khan", "The Bob Horde").
 
@@ -822,11 +824,11 @@ The review file `~/.cache/the-unmapped/out/p3-10-words/word-decisions.md` holds 
 
 `all`, `also`, `amend`, `ashed`, `ask`, `aver`, `back`, `been`, `bent`, `born`, `both`, `bred`, `brunt`, `but`, `came`, `care`, `dear`, `dint`, `drank`, `dug`, `either`, `else`, `emend`, `even`, `ever`, `fill`, `fine`, `five`, `fore`, `gain`, `got`, `greet`, `ground`, `hard`, `heal`, `hear`, `heard`, `held`, `hint`, `hold`, `hour`, `ices`, `icier`, `kind`, `lie`, `lii`, `line`, `lop`, `lose`, `main`, `may`, `mean`, `meant`, `mild`, `mile`, `mind`, `miss`, `more`, `move`, `name`, `nice`, `niece`, `nine`, `none`, `not`, `noun`, `old`, `once`, `ones`, `other`, `over`, `rare`, `read`, `real`, `rife`, `rile`, `safe`, `same`, `sane`, `save`, `say`, `see`, `seen`, `sent`, `shall`, `shy`, `shyly`, `sip`, `slunk`, `sold`, `some`, `son`, `south`, `steal`, `stint`, `stuck`, `stun`, `than`, `there`, `these`, `thieve`, `thine`, `third`, `those`, `told`, `ton`, `too`, `top`, `two`, `want`, `way`, `wean`, `wear`, `went`, `who`, `why`, `will`, `with`, `won`, `wont`, `word`, `you`.
 
-##### Released: allowed as name roots (255)
+##### Released: allowed as name roots (254)
 
 **Materials, minerals and metals (15)**: `alum`, `ash`, `ashen`, `ashes`, `ashy`, `brick`, `gold`, `grit`, `iron`, `lava`, `lime`, `mica`, `ores`, `slab`, `tin`.
 
-**Plants and growing things (17)**: `bark`, `cane`, `gourd`, `grain`, `iris`, `ivies`, `lily`, `mint`, `mold`, `moss`, `osier`, `posy`, `rose`, `sap`, `stem`, `thorn`, `vine`.
+**Plants and growing things (16)**: `bark`, `cane`, `gourd`, `grain`, `iris`, `ivies`, `lily`, `mint`, `moss`, `osier`, `posy`, `rose`, `sap`, `stem`, `thorn`, `vine`.
 
 **Animals (22)**: `bat`, `bear`, `bee`, `bird`, `boa`, `buck`, `fish`, `gnat`, `grub`, `herd`, `hind`, `horn`, `hound`, `mane`, `mare`, `mice`, `mole`, `moth`, `shark`, `sheep`, `slug`, `vole`.
 
@@ -892,3 +894,7 @@ Text only. 11.7 item 6: the lower-casing case is form `E{root}`, root `f`, word 
 ## Revision note r8 (2026-11-20, amendment: the short English-word list)
 
 Paul's decision on 11.10 question 1 (the short list; questions 2 to 7 accepted as shipped). New section 11.11: the rule for `words` entries (crude, comic or modern-sounding words, and function words, inflected forms and plain slips whose names read as an error; a neutral word in doubt is permitted), the shipped list (392 of the 647 r5 words; 255 released), how it was made, measurements (exact rates, 50 worlds at 1024, samples), consequences (a data change only: no code, no schema change; every world hash and the name and text goldens change; generator bump with the change that ships it, P3-09 as 0.18.0 or alone as 0.17.1), the tests to update, the choices made in doubt and every word with its reason. 11.2's sizes and description of `words`, 11.6 (a pointer) and 11.10 (closed) are updated. `game/data/name_filters/words.toml` and its two fixture copies hold the new list on branch `p3/10-word-list`.
+
+## Revision note r9 (2026-11-20, `mold` back on the list; with P3-09)
+
+Text and data corrections in 11.11 after the lead's interim choice to restore `mold` to the reject list. The list is 393 words (254 released) and the effective `whole` list 514. `mold` moves from the released plants to the kept comic words in 11.11.7, and 11.11.6 is updated. The 11.6 sample table changes in one place only (`The Duchy of Wick`); orcish settlement 6 stays `Shaazazuug` and the seed 42 orcish god `Ogh'krak`, as the test writer's reference golden on `origin/p3/09-int` records. The measurements of 11.11.3 were taken with `mold` released and are kept as they were.

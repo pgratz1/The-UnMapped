@@ -1053,6 +1053,9 @@ P3-06 20.15–20.22 (r10 there) add kinds 34 `war_won` (a war won where the lose
 2. **`wars_hollow`** (21.5) excludes the wars whose u is a `search_abandoned`. New key **`wars_unfound`**, appended after `race_regions_share_max_permille`, counts them. `wars_hollow_permille` = floor(1000 × `wars_hollow` / (the number of `war_declared` events − `wars_unfound`)): a war that never found its enemy is neither hollow nor a war that changed something, and it is counted apart.
 3. New key **`refuges_held_no_destination`**, appended after `wars_unfound`: events of kind `refuge_held` with `reason` 1. Validation checks each with the reference (P3-06 20.22).
 4. Invariant 13 item 7 of 21.3: "every shown `war_declared` with a closed `war` row has its ending shown" covers the new endings.
+5. (r10) **`wars_same_goal_unchanged_max`** (21.5) is redefined to follow the weariness rule (P3-06 20.4, 20.23): any change of the region's owner breaks the run, also one between two wars. For one defender D and region G, take the `war_declared` events with defender D and region G in id order. A run is a sequence of consecutive such wars w_i … w_j such that no `region_control` row of G has `from_year` or `to_year` in [since(w_i), until(w_j)] (until = E for an open row). The key is the length of the longest run over all (D, G); 0 when there is none. This replaces 21.5's definition, which checked each war's own span only and missed a change of owner between two wars.
+6. (r10) **Events by kind**: `[stats]` prints `events_war_won`, `events_search_abandoned` and `events_refuge_held` after `events_tribute`, by kind id (9: one line per catalogue kind). They need no rule here. The war line words of the conflict golden (`won-c<W>`, `-ceded`, `-tribute`, `truce`, `unfound`, P3-06 20.26) are the reference's, not a report line: the report prints wars as `war` relation rows (6.6) and their endings as event lines.
+7. (r10) **The summary's companions** (21.2 with item 1 above) name every ending kind: a shown `war_declared` brings its `peace`, `war_won`, `truce`, `search_abandoned`, `civ_conquered` or `civ_ended`; a `peace` or `war_won` brings its `region_ceded` or `tribute`. A `refuge_held` (salience 25) has no companions and is no companion: it is the siege of a refuge, and a siege is shown only at its own salience.
 
 ## Appendix A. Proposals
 
@@ -1093,3 +1096,7 @@ New section 21 (P3-09, `docs/specs/p3-09-conflict-balance.md`, decided by Paul 2
 ## Revision note r9 (2026-11-20, war endings and searches; for P3-09 r3)
 
 New 21.8: kinds 34 `war_won`, 35 `search_abandoned` and 36 `refuge_held` (P3-06 r10) in the summary units and the statistics; `wars_hollow_permille` counted over the wars that found their enemy; two keys, `wars_unfound` and `refuges_held_no_destination`. No world byte changes by this section.
+
+## Revision note r10 (2026-11-20, text after the P3-09 integration)
+
+21.8 items 5–7: `wars_same_goal_unchanged_max` breaks a run at any change of the region's owner, also between two wars (the lead's ruling); the `events_<key>` lines of kinds 34–36; the companions name every ending kind, and `refuge_held` is neither a head nor a companion. No world byte changes.
