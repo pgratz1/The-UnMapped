@@ -175,6 +175,15 @@ SPEC_GAPS = (
                              "temperate_forest, wet_woodland; faerie heath) are appended at the end of `biomes`. "
                              "This decides the content hash (p3-01-data.txt), not any world table."),
     ("11 report.toml", "The fourteen new entries are appended after the five of P3-04 in kind id order."),
+    ("10.2 r6 the plan", "RULED (lead, P3-08 integration): 'no state changes between the plan and the strikes' does not "
+                         "hold (a spread that abandons its target sends its survivors to a later target); the plan "
+                         "replays the strikes in order on a copy of the populations, with the 8.5 transfer."),
+    ("14 item 11 r6", "Checked as: no civ_ended is caused by an abandonment of abandon_min or more people (the "
+                      "'same step' wording would also forbid a second, unrelated abandonment ending the realm)."),
+    ("14 item 12 r6", "From rows only settled >= 1 and a destination the civilization has owned; nearest-and-room "
+                      "and the decline start are recomputed in the run (World.check_destination)."),
+    ("8.4 r6 'such a race with a cell term'", "A race whose settlement_kinds include fortress and whose cell_weights "
+                                              "are not both 0; the founding cell's walk_area is 0."),
     ("15.4 regions_held_<race>", "Counted from the open region_control rows (to_year NULL) by the race of their "
                                  "civ."),
 )
@@ -1385,19 +1394,43 @@ class World(pe.World):
         total = dead0
         if emptied:
             return total
+        # The lead's ruling (P3-08 integration): "no state changes between the plan and the strikes" does not
+        # hold: a spread strike can abandon its target (8.5 (a)), whose survivors join the owner's nearest
+        # other standing settlement (8.5 item 2), which may be a later target. The plan replays the strikes
+        # in order on a copy of the populations, with that transfer and the keyed draws the strikes use, so
+        # the planned toll equals the real toll (14 item 13).
         owner = s["owner_civ"]
         sid = s["id"]
+        race = self.civ(owner)["race"]
+        pop = {u["id"]: u["population"] for u in self.settlements}
+        pop[sid] = rest
+        gone = set()
         area = {s["region"]} | {r for r, _c in self.geo.nb[s["region"]]}
         for uid in range(1, nset + 1):
             u = self.stl(uid)
-            if uid == sid or uid in struck or not self.standing(u) or not self.visible(u):
+            if uid == sid or uid in struck or uid in gone or not self.standing(u) or not self.visible(u):
                 continue
             if u["owner_civ"] != owner or u["region"] not in area:
                 continue
-            if chance_pm(self.draw("hist.peoples.plague_spread", sid, uid, 0), t["plague_spread_permille"]):
-                tu = (t["plague_toll_min"] + pnr.pick(self.draw("hist.peoples.plague_toll", uid, 1, 0), tr_p)) \
-                    * t["plague_spread_toll_permille"] // 1000
-                total += u["population"] * tu // 1000
+            if not chance_pm(self.draw("hist.peoples.plague_spread", sid, uid, 0), t["plague_spread_permille"]):
+                continue
+            tu = (t["plague_toll_min"] + pnr.pick(self.draw("hist.peoples.plague_toll", uid, 1, 0), tr_p)) \
+                * t["plague_spread_toll_permille"] // 1000
+            dead = pop[uid] * tu // 1000
+            total += dead
+            pop[uid] -= dead
+            # 8.5 (a) for u (the origin stands, so u is never its owner's last settlement)
+            left = pop[uid] < t["abandon_min"]
+            if not left and u["status"] == DECLINING and pop[uid] < t["abandon_frail_max"]:
+                left = self.abandon_draw(u)
+            if left:
+                others = [x for x in self.standing_of(owner) if x["id"] != uid and x["id"] not in gone]
+                if others:
+                    d = min(others, key=lambda x: ((x["x"] - u["x"]) ** 2 + (x["y"] - u["y"]) ** 2, x["id"]))
+                    room = max(0, 2 * self.geo.capacity(d["region"], race) - pop[d["id"]])
+                    pop[d["id"]] += min(pop[uid], room)
+                pop[uid] = 0
+                gone.add(uid)
         return total
 
     def try_split(self, cid, e):
@@ -2934,6 +2967,21 @@ def check_units_r6(c):
         a = plague_case(k)[1]
         b = plague_case(k, plan=False)[1]
         c.eq("17g the plan and the strikes agree (%d spreads)" % k, a, b)
+    # the lead's ruling: a spread that abandons its target sends survivors to a later target; the plan replays it
+    pe_r = dict(plague_spread_permille=1000, plague_toll_min=100, plague_toll_max=100,
+                plague_spread_toll_permille=1000)
+    w = r6_world(races=("human",), regions=big, peoples=pe_r)
+    civ = r6_civ(w, HUMAN)
+    s = r6_stl(w, civ, 1, CITY, 8000, 10, 10)
+    r6_stl(w, civ, 1, VILLAGE, 43, 40, 40)             # 43 - 4 = 39 < abandon_min: abandoned, 39 go to s3
+    r6_stl(w, civ, 1, CITY, 1955, 41, 40)              # nearest to s2; struck after it at 1955 + 39 = 1994
+    o = w.outbreak(w.stl(s), 100, set(), len(w.settlements), 1)
+    dead = [w.events[i - 1]["values"][1] for i in range(o, len(w.events) + 1)
+            if r6_kind(w, i) in ("plague", "plague_spread")]
+    c.eq("17g ruling: the later target is struck with the refugees (1994 x 100 div 1000)", dead, [800, 4, 199])
+    c.eq("17g ruling: planned toll = struck toll", w.plague_plans[-1][1:], (1003, 1003))
+    c.eq("17g ruling: salience 45 by the replayed plan (from the populations before: 800 + 4 + 195 = 999, 25)",
+         w.events[o - 1]["salience"], 45)
     # --- 17h crisis salience (10.3)
     regs3 = [dict(x_min=0, x_max=19, seed_x=1, cells=1280, walk_cells=1280),
              dict(x_min=20, x_max=39, seed_x=21, cells=1280, walk_cells=1280),
