@@ -647,40 +647,9 @@ inline std::string peoples_world(const std::string& name, std::uint64_t seed, co
 
 inline bool is_null(const Cell& c) { return c.type == db::ValueType::null; }
 
-// P3-04 11.1 with P3-05 15.4 appended.
+// P3-04 11.1 with P3-05 15.4 appended (engine_test::history_lines).
 inline std::vector<std::string> report_lines_05(const Tables& t, const eng::HistoryInputs& in) {
-    std::vector<std::string> o = report_lines(t, in.params.span);
-    if (o.empty()) {
-        return o;
-    }
-    std::map<std::int64_t, std::int64_t> civ_race;
-    for (const Row& c : t.civilization) {
-        civ_race[at(c, 0)] = at(c, 2);
-    }
-    auto standing = [](const Row& s) { return at(s, 10) == 1 || at(s, 10) == 2; };
-    std::int64_t pop = 0;
-    for (const Row& s : t.settlement) {
-        pop += standing(s) ? at(s, 11) : 0;
-    }
-    o.push_back("population = " + std::to_string(pop));
-    for (const char* what : {"population_", "settlements_standing_", "regions_held_"}) {
-        for (const db::RaceRow& r : in.races) {
-            std::int64_t v = 0;
-            if (std::string(what) == "regions_held_") {
-                for (const Row& rc : t.region_control) {
-                    v += (is_null(rc[2]) && civ_race[at(rc, 3)] == r.id) ? 1 : 0;
-                }
-            } else {
-                for (const Row& s : t.settlement) {
-                    if (standing(s) && civ_race[at(s, 8)] == r.id) {
-                        v += std::string(what) == "population_" ? at(s, 11) : 1;
-                    }
-                }
-            }
-            o.push_back(std::string(what) + r.key + " = " + std::to_string(v));
-        }
-    }
-    return o;
+    return history_lines(t, in);
 }
 
 inline std::vector<std::string> stats_lines(const Tables& t) {

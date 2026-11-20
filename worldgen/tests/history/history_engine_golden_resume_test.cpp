@@ -103,8 +103,8 @@ TEST_CASE("P3-04 17, 16.4: example-42-1024 with ForcedTension(500, 1000, 1) and 
         const Tables t = eng::run_engine(shipped(), in, cfg.get());
         CHECK(table_hashes(t) == g.tables);
         CHECK(phases_text(t, true) == g.phases);
-        std::vector<std::string> lines = report_lines(t, 6000);
-        CHECK(lines == g.report);
+        // the whole [history] section, as the golden's "report" lines: 11.1 and P3-05 15.4 (span 6000)
+        CHECK(history_lines(t, in) == g.report);
     }
 }
 

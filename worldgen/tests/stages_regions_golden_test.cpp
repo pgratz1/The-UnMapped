@@ -1028,7 +1028,9 @@ TEST_CASE("P1-06 golden (slow): the cases at N = 512 and 1024, on the layers of 
 
 TEST_CASE("P1-06 3, 10.3, P1-00 X1, X2 (slow): generate at 512, seed 42: ids 1 to 19; resume after resources") {
     dbtest::TempDir dir("regions-512");
-    REQUIRE(worldgen::generate_world(params_for(42, 512, std::nullopt, 4), content(), dir.file("w.db"),
+    // --until regions with 4 threads against 1 thread (0.13.0 on: the default run continues with chronology
+    // and history, as for resources at 0.11.0).
+    REQUIRE(worldgen::generate_world(params_for(42, 512, std::string("regions"), 4), content(), dir.file("w.db"),
                                      worldgen::db::Overwrite::refuse)
                 .ok());
     REQUIRE(worldgen::generate_world(params_for(42, 512, std::string("regions"), 1), content(), dir.file("u.db"),
