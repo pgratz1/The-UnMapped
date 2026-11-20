@@ -619,7 +619,7 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
   1. Question 1 (population density per race): the interim choice stands, a race field `density_permille`. Paul likes the idea of deriving density from a race's age but expects it to be hard to tune.
   2. Question 7 (faeries): faeries definitely live in forested land, and the forest does not have to be wet. The shipped weights at 0.15.0 favour wet land (`fen` 800, `wet_woodland` 800, `marsh` 600, `temperate_forest` 100), so this is a data change: forest biomes become the faeries' first preference whether wet or dry. It changes where faeries awaken and settle, so it changes world bytes and comes with a generator version bump.
 - Interim choice: the 0.15.0 weights ship as validated; the faerie weights are re-tuned as a separate data change (spec amendment to P3-05 12.2 with a measured sweep) after P3-06 is integrated, before Paul's review of P3.
-- Status: question 1 accepted; question 7 decided, data change pending
+- Status: question 1 accepted; question 7 decided, data change pending. Paul confirmed the timing on 2026-11-19: the faerie change ships after P3-06, as its own data change
 
 ### Races: sub-peoples with their own lands (dark elves underground, hill dwarves above ground)
 
