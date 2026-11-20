@@ -1,6 +1,6 @@
 # P3-09 Conflict balance
 
-Status: **draft for the lead's approval, 2026-11-20** (written by the spec writer on `p3/09-spec`, cut from `origin/p3/06-final`, with `origin/p3/08-spec` at e747e68 merged). Phase P3 History core, a change spec after P3-06 (expansion and conflict, generator 0.16.0) and P3-08 (names and peoples follow-ups, generator 0.17.0), which lands first. Generator **0.18.0**. **No schema change**: schema stays 7; the change appends two event kinds (32, 33), adds tuning fields and race fields (data), changes one base salience (data), and keeps every other new fact in the conflict subsystem's members, derivable from the log (8 below). Four of its rules are design-level and wait for Paul (`docs/design/proposals.md`, "four rule changes proposed by the world critic's review of conflict", the lead's entry); they are specified at the most reasonable reading, and section 8 lists every decision Paul should confirm.
+Status: **decided, ready for implementation (2026-11-20)**. Paul accepted every recommendation of section 8 ("I accept all your recommendations on P3-09 conflict balance"; `docs/design/proposals.md`, "Paul's decision of 2026-11-20: the P3-09 conflict balance questions go with the lead's recommendations"). Written by the spec writer on `p3/09-spec`, cut from `origin/p3/06-final`, with `origin/p3/08-spec`, `origin/p3/08-int` (P3-08 as implemented, dae7b96) and `origin/main` merged. Phase P3 History core, a change spec after P3-06 (expansion and conflict, generator 0.16.0) and P3-08 (names and peoples follow-ups, generator 0.17.0), which is implemented and lands first. Generator **0.18.0**. **No schema change**: schema stays 7; the change appends two event kinds (32, 33), adds tuning fields and race fields (data), changes one base salience and the name filter's word list (data), and keeps every other new fact in the conflict subsystem's members, derivable from the log.
 
 This spec is short on purpose. It lists every item, names the stage-spec section that holds its normative text (each stage spec stays the single source for its stage, amended with a new revision and a revision note), gives the order of implementation, the effect on output and goldens, the tests to add and the statistics to re-measure.
 
@@ -19,6 +19,7 @@ The world critic's review of P3-06 at 0.16.0 (`docs/reviews/p3-06-conflict-world
 | 5 | Early feud, long peace, map size (F7, F9, suggestions 9 and 10) | Armies cross three borders, not two, against a civilization they have an `enmity` row with (`enmity_hops`); no conflict rule for map size (5.3: the other rules remove the 512 massacre); `auto` founds more realms per race on a larger map (+1 per 90 non-islet regions, at most +2: 2048 only) | P3-06 20.8; P3-05 21 item 5 | yes (2048 also from the founding) |
 | 6 | Sweep statistics (F6, suggestion 8) | `[stats]` keys `wars_hollow`, `wars_hollow_permille`, `wars_same_goal_max`, `wars_same_goal_unchanged_max`, `race_population_share_max_permille`, `race_regions_share_max_permille`; typical ranges and validation measures | P3-07 21.5; P3-06 20.11 | no (report only) |
 | 7 | Summary selection (F4, suggestion 2) | Per-age floor of 20 events; a shown declaration brings its ending and the ending's cession or tribute, a shown sack or capture its moved capital, refugees and conquest; claim salience 45 → 35; a note after the declaration ("Claimed since 2574. The second war between them.") and after the flare-up ("The Grork Horde pressed its claim to Southwest Wood against Finen.") | P3-07 21 (r8); the salience in P3-06 20.9 | the salience only |
+| 8 | Short English-word list of the name filter (Paul's decision 1 on the name filter questions, `docs/design/proposals.md` "Paul's decisions of 2026-11-20 on the name filter questions") | `game/data/name_filters/words.toml` becomes the short list (about 150 crude, comic or modern-sounding words) in place of P3-08's 647; ordinary English words that fit the setting stay possible as name roots. Data only, produced by another spec writer on branch `p3/10-word-list` (the data file and a P3-02 revision); **the engineer merges that branch into the P3-09 implementation branch** and does not edit the list. It changes every `content_hash`, the names drawn wherever a rejected word now passes, every world hash and the names goldens (`p3-02-names.txt`, `p3-01-data.txt`), and through the names every history golden | P3-02 (revision on `p3/10-word-list`); this table | yes |
 
 ## 3. What it touches (for the engineer)
 
@@ -40,6 +41,7 @@ One branch, one engineer and one test writer working from the stage specs separa
 
 | Step | What | Spec |
 | --- | --- | --- |
+| 0 | Merge `p3/10-word-list` (the short word list, item 8): data only | P3-02 (that branch) |
 | 1 | Data: race fields, `history.conflict` fields, kinds 32 and 33 with their report entries, `claim` 35 | P3-01 3.2; P3-06 20.9, 20.12 |
 | 2 | Hidden settlements and presence; concealment; home defence | P3-06 20.1 (hidden), 20.7 |
 | 3 | Flight of the last refuge (with the P3-05 seam) | P3-06 20.1; P3-05 21 |
@@ -52,6 +54,21 @@ One branch, one engineer and one test writer working from the stage specs separa
 The test writer extends `p3_conflict_reference.py` from P3-06 20 alone (not from the C++ and not from the spec writer's prototype).
 
 ## 5. Measured effect (prototype, at 0.16.0 with P3-08 emulated)
+
+**Every figure in this section and in P3-06 20 is a prototype figure at generator 0.16.0** (with two parts of P3-08 emulated, 5.1). None was measured on the C++ or on 0.17.0's worlds. The engineer re-measures them on the implementation (the reference's world command over 1024 seeds 0–39 is enough before handing on), and validation re-measures them at 0.18.0 on its sweeps (5.6). A figure that moves is not a defect; an **acceptance target** that is missed is a finding that goes back to the spec writer before merge.
+
+**Acceptance targets** (1024, default settings, the 0.18.0 validation sweep; checked from `[stats]`, the tables and the reference):
+
+| # | Target | Prototype (`FINE`, seeds 0–39) |
+| --- | --- | --- |
+| T1 | hollow wars below 25% (`wars_hollow_permille` < 250 over the sweep) | 24% |
+| T2 | at most 3 consecutive wars per (defender, goal) without a change of owner (`wars_same_goal_unchanged_max` ≤ 3) in at least 95% of worlds | 38 of 40 |
+| T3 | no last refuge holds a siege while a flight destination with enough survivors exists (the reference counts sieges held by the guard with a destination: 0) | 0 of 41 sieges |
+| T4 | no race extinct (`races_alive` = the present races; P3-06 14 item 7) in every world of every sweep | 0 worlds |
+| T5 | orcs win at least as often as they lose: over the sweep, peaces with an orc civilization as `winner` ≥ peaces with one as `loser` | 39 against 30 |
+
+The other figures (faeries and elves with one settlement, goblin–elf wars, orcs' share of their age, race shares, the summary) are typical ranges (P3-06 20.11), not acceptance targets.
+
 
 ### 5.1 Method and configurations
 
@@ -164,8 +181,8 @@ With four civilizations per race the rules end fewer realms (5 against 12.5) and
 | hollow wars below 25% | 24% (1024), 18% (512 with `FIN`) | yes, narrowly at 1024 |
 | at most 3 wars per (defender, goal) without a change of owner | a run of 4 in 2 of 40 worlds (1024), 2 of 30 (512) | nearly; weariness is checked at the claim and again at the declaration (P3-06 20.2), so a fourth war needs wars of two attackers open over one region at once; the 2 cases were not traced (validation checks `wars_same_goal_unchanged_max`) |
 | orcs win at least as often as they lose | 39 won, 30 lost | yes |
-| orcs start at least a third of the orc age's wars | 25% | **no** (question 5) |
-| elves and faeries start some wars after losses | elves 10, faeries 0 in 40 worlds | elves yes; faeries no (concealed, they are rarely wronged; question 6) |
+| orcs start at least a third of the orc age's wars | 25% | **no**, accepted (decision 8.5) |
+| elves and faeries start some wars after losses | elves 10, faeries 0 in 40 worlds | elves yes; faeries no (concealed, they are rarely wronged; accepted, decision 8.6) |
 | goblins remain the most warlike | 74% of all wars, 48% of the orc age's | yes |
 | faeries with one settlement in at most 5% of worlds | 0 of 40 | yes |
 | elves with one settlement in at most 5% of worlds | 0 of 40 | yes |
@@ -187,36 +204,52 @@ The selection of P3-07 21 against 7.4's threshold-only rule, computed by the pro
 | conflict and capital moves, ‰ of shown | 533 | 503 | 496 | 450 |
 | claims shown | 22 | 17 | 23.5 | 22 |
 
-Seed 42 (0.16.0 log): 3, 8, 12, 28, 30, 74 events per age become 20, 20, 20, 28, 30, 74 (192 shown, T 46). With four civilizations per race (seeds 0–9, `FINE`), where the thresholds are high, the companions matter: under the threshold alone 275 shown declarations lack their ending and 164 sacks or captures their moved capital (339 and 329 with `base017`); under 21 none. The cost: the companions make the set grow in steps as t falls, so T rises (46 / 71 / 71 against 46 / 51 / 61) and fewer events are shown (127 / 144.5 / 240 against 196 / 223.5 / 245). A fill step (after T, add whole units of the next candidates in rank order while the set stays within 250) would recover most of that budget; it is not in 21 because it was not measured (question 11). At default settings no shown war lost its ending under either rule (the thresholds stay at or below 46, under `truce` 50 and `peace` 60); the companions matter when T rises above 50, as with four civilizations per race (5.4). With the claim at 35 and a median threshold of 31, claims stay visible in small logs (median 22 shown): the note in the declaration makes them redundant only where the threshold rises.
+Seed 42 (0.16.0 log): 3, 8, 12, 28, 30, 74 events per age become 20, 20, 20, 28, 30, 74 (192 shown, T 46). With four civilizations per race (seeds 0–9, `FINE`), where the thresholds are high, the companions matter: under the threshold alone 275 shown declarations lack their ending and 164 sacks or captures their moved capital (339 and 329 with `base017`); under 21 none. The cost: the companions make the set grow in steps as t falls, so T rises (46 / 71 / 71 against 46 / 51 / 61) and fewer events are shown (127 / 144.5 / 240 against 196 / 223.5 / 245). A fill step (after T, add whole units of the next candidates in rank order while the set stays within 250) would recover most of that budget; it is not in 21 because it was not measured (decision 8.11). At default settings no shown war lost its ending under either rule (the thresholds stay at or below 46, under `truce` 50 and `peace` 60); the companions matter when T rises above 50, as with four civilizations per race (5.4). With the claim at 35 and a median threshold of 31, claims stay visible in small logs (median 22 shown): the note in the declaration makes them redundant only where the threshold rises.
 
 ## 6. Golden values
 
-Every world with history changes from 0.17.0: the `history.conflict` and race data change every `content_hash`, the catalogue gains kinds 32 and 33 and the `claim` salience changes in every world with conflict, and the history tables change from the first point where a new rule applies (in practice the first claim). Re-recorded once, after the cross-preset comparison: `p0-worlds.txt`, `p1-worlds.txt`, `p3-worlds.txt`, `p3-01-data.txt`, `p3-04-engine.txt` (the catalogue tables), `p3-05-peoples.txt` (the peoples-only configuration cases carry the catalogue), `p3-06-conflict.txt` (every line), and P3-07's report goldens if P3-07 is implemented by then. Golden vectors of P1 stages and `p3-02-names.txt`, `p3-03-chronology.txt` do not change by this spec. Never regenerated to make a C++ test pass.
+Every world with history changes from 0.17.0: the `history.conflict` and race data change every `content_hash`, the catalogue gains kinds 32 and 33 and the `claim` salience changes in every world with conflict, and the history tables change from the first point where a new rule applies (in practice the first claim). Re-recorded once, after the cross-preset comparison: `p0-worlds.txt`, `p1-worlds.txt`, `p3-worlds.txt`, `p3-01-data.txt`, `p3-04-engine.txt` (the catalogue tables), `p3-05-peoples.txt` (the peoples-only configuration cases carry the catalogue), `p3-06-conflict.txt` (every line), and P3-07's report goldens if P3-07 is implemented by then. Golden vectors of P1 stages and `p3-03-chronology.txt` do not change by P3-06 20; `p3-02-names.txt` and the god, civilization and settlement names in every golden do change by item 8 (the word list). Never regenerated to make a C++ test pass.
 
 ## 7. Tests (additions)
 
 P3-06 20.14 lists them (flight, hidden, goals, costs, weariness, revenge, orcs and odds, concealment and home defence, invariants 20.13, a golden case with flights). P3-07's tests (14) gain: the units of 21.2 on fixture H1 (a war with its ending, a cession and a tribute caused by the peace, a sack with its moved capital); the floor with an age of fewer than 20 candidates and one of more; the threshold when the floor alone is near the budget (a fixture of eight ages); the notes (claim the same year, ordinal 2, 11, 21, 22, 23, 111; a flare-up whose trigger is not a claim: no note); the six new `[stats]` keys on a fixture with hand-counted values; invariant 13 item 2 as amended.
 
-## 8. Questions for Paul
+## 8. Decisions (questions to Paul, closed 2026-11-20)
 
-Each with the recommendation and the interim choice (the rule as specified).
+Paul accepted every recommendation ("I accept all your recommendations on P3-09 conflict balance"; `docs/design/proposals.md`, "Paul's decision of 2026-11-20: the P3-09 conflict balance questions go with the lead's recommendations"). Each question is **decided** as the rule now written:
 
-1. **The last refuge falls into flight** (P3-06 20.1; one of the four design-level changes). A race's last settlement falls and is sacked; its survivors found a settlement in hiding up to three borders away, out of every army's sight for 300 years; the 0.16.0 guard holds only when no free land is in reach. Recommendation: yes; the alternative (no war against a last refuge) leaves 161 of 216 sieges and hides the problem rather than telling it. Sub-questions: 300 hidden years; three borders; the refuge found without an event when the years run out (recommended: no event, the year follows from the log).
-2. **A lost war always costs the loser** (20.3; design-level). A cession of the goal, else of the loser's best non-capital region in the winner's reach, else a tribute of 100‰ of its people (carried off: no one gains them, since P3 counts no wealth or slaves); also when the defender wins. Recommendation: yes. Sub-question: is "people carried off" the right content of a tribute in P3, or should tribute wait for wealth in P5 and a winner with nothing to take get only a longer truce (measured: hollow wars would then be about 30%, `G3`).
-3. **Revenge regardless of aggression** (20.5; design-level). Recommendation: yes, at aggression 400 while the grudge lasts.
-4. **Runaway measured per race** (20.11, P3-07 21.5; design-level). Recommendation: yes, as statistics with typical ranges, not a hard bound. With these rules the most populous race holds ≥ 60% of all people in 12 of 40 worlds (10 before) and ≥ 70% in 9 (4 before; at most 832‰): the costs of war move land and people toward the strong. Recommendation: accept for P3 and watch it in the 200-world sweep; if Paul wants a bound, the fear term of 5.1 could count a race's share as well as a civilization's (not measured).
-5. **The orcs' share of their own age** (20.6). The rules make orcs win (39 won, 30 lost) but they start 25% of the orc age's wars, not a third: they arrive late, few (a horde of about 5,000) and next to kingdoms six times their size, and a people that only declares wars it can win declares fewer. Options: accept 25% (recommended: the orcs now win their wars and are attacked in return, which reads as "the most recent age of conflict"); lower `odds_min` to 500 (36%, but orcs then lose 55 of 83); or more orc civilizations at their awakening (a P3-05 change).
-6. **Faeries never strike back** (20.5, 20.7). Concealed in forest, faeries are rarely wronged and start no wars. Recommendation: accept; "hidden communities in wild places" (design 5) are not avengers. 
-7. **New race fields `muster_permille`, `conceal_min`, `home_defense_permille`** (20.7, 20.12) with shipped orc muster 4000 (40% of the people under arms), faerie concealment where their biome term is ≥ 400, elven and faerie home defence 1500 and 2000. Recommendation: yes; they are data, like `prowess_permille`.
-8. **Local levies, odds weighed by terrain, an odds minimum that also stops flare-ups, a shorter orc truce** (20.6). Recommendation: yes; each was needed for the orcs to win (5.2), and the flare-up rule prevents a world from cycling on an unpursuable claim (one world of 40 ran 15 flare-ups without it).
-9. **Armies cross three borders against an enemy of the other camp** (20.8). Recommendation: yes; it halves the worlds without a goblin–elf war. The alternative of the review (an awakening raises every hostile pair's strain) does nothing for pairs that are not in contact, which is why the feud is missing.
-10. **No map-size rule** (20.8, 5.3). Recommendation: no conflict rule for map size; instead `auto` founds more civilizations per race on a larger map (P3-05 21 item 5: + N div 90, at most + 2), since a larger map is more land (design 2) and its peace comes from realms too far apart, not from armies marching too little (2048 with every pair at three borders: 11 wars, as with two). The 512 map needs nothing more (5.3). Alternative: leave `auto` alone and accept a quieter 2048.
-11. **The summary** (P3-07 21): a per-age floor of 20, a declaration always shown with its ending, claims at 35, the notes. Within Paul's 250-line budget and minimum salience 20 (accepted 2026-11-19): the floor and companions take room from high-salience events instead of raising the budget. Recommendation: yes. Sub-question: in large logs the companions raise the threshold and leave part of the budget unused (5.7: 144 of 250 shown at the median with four civilizations per race); a fill step after the threshold would use it, at the cost of a less simple rule ("everything at or above T, plus"). Recommendation: add the fill step if the P3-07 implementer's measurements confirm it; interim: not specified.
+1. **Decided: the last refuge falls into flight** (P3-06 20.1): sacked, its survivors found a settlement in hiding within three borders, out of every army's sight for 300 years and found again without an event; the guard holds only when no free land is in reach (or, from the P3-08 alignment of 10, the survivors would be too few to settle).
+2. **Decided: a lost war always costs the loser**, also when the defender wins (20.3): the goal, else the loser's best non-capital region in the winner's reach, else a tribute of 100‰ of its people, carried off; tribute as people now, not waiting for wealth in P5.
+3. **Decided: revenge** at aggression at least 400 while the grudge lasts (20.5).
+4. **Decided: runaway measured per race** as statistics with typical ranges, not a hard bound (20.11, P3-07 21.5); watched in the validation sweep.
+5. **Decided: the orcs' share of their own age** of about 25% is accepted; they win more than they lose (20.6; target T5).
+6. **Decided: faeries never strike back** (20.5, 20.7).
+7. **Decided: the race fields** `muster_permille`, `conceal_min`, `home_defense_permille` with the shipped values (20.12; P3-01 3.2).
+8. **Decided: local levies, odds weighed by terrain, an odds minimum that also stops flare-ups, a shorter truce for the most warlike** (20.6).
+9. **Decided: armies cross three borders against an enemy of the other camp** (20.8 item 1).
+10. **Decided: no conflict rule for map size**; `auto` founds more civilizations per race on a larger map (20.8 item 2; P3-05 21 item 5).
+11. **Decided: the summary** of P3-07 21: per-age floor 20, a shown declaration always with its ending, claims at 35, the notes, within 250 lines and minimum salience 20. The fill step is added only if the P3-07 implementer's measurements confirm it (not specified now).
 
 ## 9. Proposals
 
-The lead's entry "four rule changes proposed by the world critic's review of conflict" covers questions 1–4. This spec adds one entry for the rest, "History: conflict balance beyond the four rule changes (P3-09)" (questions 5–11), status open.
+The lead's entry "four rule changes proposed by the world critic's review of conflict" covers questions 1–4. This spec added one entry for the rest, "History: conflict balance beyond the four rule changes (P3-09)" (questions 5–11), now accepted with Paul's decision entry. The word list (item 8) is recorded in "Paul's decisions of 2026-11-20 on the name filter questions".
+
+## 10. Checked against P3-08 as implemented (`p3/08-int`, dae7b96)
+
+| P3-08 as built | Effect on P3-09 |
+| --- | --- |
+| The victors' losses from the smaller force (P3-06 r7 7.3) | Already in the prototype; with local levies (20.6 item 2) the forces compared are the local ones (text added) |
+| Kind 31 `settlement_abandoned_to` with a destination, chosen by `nearest_standing` and `refugee_room` (P3-05 8.5 item 1) | A flight is not an abandonment and writes no kind 31: the survivors found a new settlement (kind 32, with `origin`); the remainder goes through `ruin`, whose destination is the same 8.5 item 1 rule and is the new refuge (20.1 item 3, text added). Kind ids 32 and 33 follow 31 |
+| The last settlement is never abandoned by chance, but the deterministic rule below `abandon_min` applies to it (P3-05 r6 8.5 (a), (b)) | **Rule change**: a flight needs at least `abandon_min` survivors to settle, else the guard holds (20.1); a last refuge pays no tribute (20.3). Without them a refuge or a tribute could leave a race's only settlement below `abandon_min`, to be abandoned in the next T1, ending the race. The prototype ran without these conditions and saw no extinction (T4), so no figure changes by them as far as was measured |
+| The plague plan is a replay of the outbreak's strikes (P3-05 r7 10.2); shared helpers `strike_result`, `other_standing` | No interaction: P3-09's people losses (tribute) go through 7.4's casualties, not strikes; a hidden settlement takes plague and famine like any other |
+| `founding_kind` depends on the site cell (8.4 r6); names through `next_name` and the name filter | The P3-05 seam (21 item 1) exposes them as built (text corrected) |
+| One quiet era per quiet stretch (P3-04 r10/r11 6.6) | No interaction: the costs of a war ended in Q4 are charged to the loser (W9) and wait for budget like a cession (20.3) |
+| The three-word template form (P3-04 r10 8.4) | Available; kind 33's template uses the two-word form (`people` ≥ 1 always) |
 
 ## Revision note r1 (2026-11-20)
 
 First version, for the lead's approval.
+
+## Revision note r2 (2026-11-20, decided; P3-08 as built)
+
+Paul accepted all eleven recommendations: section 8 closed, the status set to decided. Merged `origin/p3/08-int` and `origin/main`; the P3-09 amendments renumbered after P3-08's fixes (P3-05 r8, P3-06 r9; P3-01 r9 and P3-07 r8 unchanged). New item 8 (the short word list, from `p3/10-word-list`). Section 5 states that every figure is a prototype figure at 0.16.0 and lists the acceptance targets T1–T5. New section 10: checked against P3-08 as built, with two rule changes for the no-extinction invariant (a flight needs `abandon_min` survivors; no tribute from a last refuge) and text corrections of the seam.
