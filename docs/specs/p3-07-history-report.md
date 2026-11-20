@@ -1045,6 +1045,15 @@ The validation sweep reads them (P3-06 15.6 as amended by P3-06 20.9).
 
 `docs/specs/p3-09-conflict-balance.md` 5.7 gives the figures (the spec writer's prototype, which computes this selection from the log; 1024, default settings, seeds 0–39; the 0.16.0 rules and the expected 0.18.0 rules): the median world shows 223 events (142 at least, 248 at most) at a median threshold of 31; its six ages show a median of 19.5, 20, 26, 27.5, 30.5 and 83 events, against 5, 16.5, 27.5, 28.5, 31 and 89 under 7.4's threshold alone; seed 42's first three ages go from 3, 8 and 12 events to 20 each. The companions add nothing at default settings (no shown war lost its ending there) and matter when the threshold rises above 50, as with four civilizations per race (P3-09 5.4).
 
+### 21.8 War endings and searches (amendment r9, P3-09 r3, generator 0.18.0)
+
+P3-06 20.15–20.22 (r10 there) add kinds 34 `war_won` (a war won where the loser did not sue for peace), 35 `search_abandoned` (a war against a hidden people that found no one) and 36 `refuge_held` (a last refuge that held for want of a place to flee). This section amends 21 for them; nothing else changes.
+
+1. **Units** (21.2): the row "`peace`, `truce`" reads "`peace`, `war_won`, `truce`". A declaration's ending (the `war` row's `until_event`) may be any of `peace`, `war_won`, `truce`, `search_abandoned`, `civ_conquered`, `civ_ended`, and is its companion in every case. Wherever 21 says "the peace" of a war, `war_won` is meant too: 21.5's "u", and the cession or tribute caused by it.
+2. **`wars_hollow`** (21.5) excludes the wars whose u is a `search_abandoned`. New key **`wars_unfound`**, appended after `race_regions_share_max_permille`, counts them. `wars_hollow_permille` = floor(1000 × `wars_hollow` / (the number of `war_declared` events − `wars_unfound`)): a war that never found its enemy is neither hollow nor a war that changed something, and it is counted apart.
+3. New key **`refuges_held_no_destination`**, appended after `wars_unfound`: events of kind `refuge_held` with `reason` 1. Validation checks each with the reference (P3-06 20.22).
+4. Invariant 13 item 7 of 21.3: "every shown `war_declared` with a closed `war` row has its ending shown" covers the new endings.
+
 ## Appendix A. Proposals
 
 No proposals entry is needed: the report realizes design 13's "text history report" within design 6's rule (text from records and templates) and does not change the design. Its relation to design 14's chronicles (a deterministic template report for checking the history, not prose for players) is stated in section 1.
@@ -1080,3 +1089,7 @@ Text only (P1-06 r3 14.7, Appendix B.2; P3-04 r10 8.5). 6.1 "Sentences": the rep
 ## Revision note r8 (2026-11-20, summary selection and war notes; for P3-09)
 
 New section 21 (P3-09, `docs/specs/p3-09-conflict-balance.md`, decided by Paul 2026-11-20; the P3-06 world critic's F4 and suggestions 2 and 8), before implementation, so format v1 as first implemented: the summary set is the per-age floor of 20 events plus the threshold set, each event with its companions (a declaration with its ending and the ending's cession or tribute, a sack or capture with the moved capital, the refugees and the conquest it caused), replacing 7.4's threshold-only rule; a note in parentheses after the sentence of `war_declared` (claim year, ordinal of the war between the pair) and of `flare_up` (claimant, region, holder), from the library function `history_note`; six `[stats]` keys appended (hollow wars, wars over one goal, race shares); constant `SUMMARY_AGE_FLOOR` = 20. The claim salience 35 is P3-06's data (r8 there). No world byte changes by this section.
+
+## Revision note r9 (2026-11-20, war endings and searches; for P3-09 r3)
+
+New 21.8: kinds 34 `war_won`, 35 `search_abandoned` and 36 `refuge_held` (P3-06 r10) in the summary units and the statistics; `wars_hollow_permille` counted over the wars that found their enemy; two keys, `wars_unfound` and `refuges_held_no_destination`. No world byte changes by this section.
