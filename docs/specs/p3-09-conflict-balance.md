@@ -25,6 +25,7 @@ The world critic's review of P3-06 at 0.16.0 (`docs/reviews/p3-06-conflict-world
 | 11 | Faeries are not found (Paul's note 2) | Concealed settlements are in presence but must be found: 250‰ a year. Unfound: no battle, no siege; after 3 years the war ends with kind 35 `search_abandoned` (counted apart from hollow wars). Faerie home defence 0 (elves keep 1500). One notion: hidden (a fled refuge, out of presence) and concealed (present, must be found) | P3-06 20.17; P3-01 3.3 | yes |
 | 12 | A race's last refuge is never emptied (the test writer's extinction case) | Casualties never take it below `abandon_min`; P3-05 8.5 never abandons it | P3-06 20.20; P3-05 21 item 6 | yes |
 | 13 | T3 checkable from the rows | A refuge the guard holds writes kind 36 `refuge_held` with a `reason` instead of a `siege` | P3-06 20.22; P3-07 21.8 | yes |
+| 14 | Weariness counts wars in progress (the engineer's T2 finding: 4 of 40 worlds above 3 at 0.18.0; the lead's ruling) | A defender is weary of a region while the futile wars over it plus the wars over it still open reach 3; checked at the claim and the declaration. T2 then holds in every world (invariant 20.13 (12)) | P3-06 20.23 | yes |
 
 ## 3. What it touches (for the engineer)
 
@@ -300,3 +301,7 @@ The test writer's first pass (`origin/p3/09-tests` d45dd89) followed the text an
 ## Revision note r3 (2026-11-20, Paul's notes on a generated history; the test writer's first pass)
 
 Items 9–13: who won the war (score of dead and people taken, the exhausted leader wins, the last battle's winner never loses, kind 34 `war_won`); the bound on the defeated's dead; faeries not found (search, kind 35 `search_abandoned`, faerie home defence 0); a race's last refuge never emptied (closing the test writer's extinction case); kind 36 `refuge_held` for T3. Targets T1 and T3 restated, T6 and T7 added. Every figure re-measured at 0.17.0 with a prototype that now reproduces 0.17.0 exactly and follows the text where it did not (section 11). Normative text in P3-06 r10 (20.15–20.22), P3-05 r9 (21 item 6), P3-07 r9 (21.8), P3-01 r10 (3.3). No section of r2 was reorganised or renumbered.
+
+## Revision note r4 (2026-11-20, weariness counts wars in progress)
+
+Item 14 (P3-06 20.23, r11): the engineer's implementation of r3 at 0.18.0 (`origin/p3/09-impl` 845793e, 1024 seeds 0–39) met T1 (221‰), T3, T4, T5 (51/32), T6 and T7, but missed T2 (4 of 40 worlds above 3, at most 6, mostly faerie regions searched in turn by several hordes). The lead's ruling makes open wars count toward weariness. T2 becomes an invariant of every world and is still checked by validation. Not re-measured by the spec writer. P3-06 20.24 confirms three of the engineer's readings. P3-06 20.25: the typical ranges are reset from this change's validation sweep (P3-08's suggested 0.17.0 ranges recorded); plague's summary share was measured at 83‰ against 121‰ predicted.

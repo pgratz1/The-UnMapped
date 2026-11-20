@@ -1272,6 +1272,38 @@ Every other siege, including a last refuge's siege whose draw said it held, stay
 
 **T3 from the rows.** Every `refuge_held` of reason 1 must have no free, non-islet region within `flight_hops` of R_t whose capacity for the defender's race is at least `expand_min_capacity` and that has a site. The reference recomputes this from the tables and the data (region owners at that year from `region_control`). Validation counts `refuge_held` by reason and runs the reference's check. A refuge that falls into flight is visible as a `refugees_settled`.
 
+### 20.23 Weariness counts wars in progress (r11; amends 20.4 and 20.2; the lead's ruling on the engineer's T2 finding)
+
+The implementation of r10 (`origin/p3/09-impl` 845793e, generator 0.18.0, 1024 seeds 0–39) met every target but T2: 4 of 40 worlds had a run above 3 wars over one (defender, goal) without a change of owner (at most 6).
+
+The cause: 20.4's count rises only when a war ends, and 20.2 checks it at the claim and the declaration. So several attackers can each claim and declare over the same (defender, region) while the count still reads 2. Most such runs were against faerie regions, which several hordes search in turn and give up (seed 2: four `search_abandoned` wars over one region).
+
+**Rule** (the lead's ruling, 2026-11-20). Let `futile(D, G)` be 20.4's count as read today (reset by any change of G's owner), and `open(D, G)` the number of wars open at that moment with defender D and goal G, by any attacker. D is **weary of** G, for every claimant, while `futile(D, G) + open(D, G)` ≥ `weary_wars`. This applies at both points where weariness is read:
+
+1. **Claims** (5.3 with 20.2 item 1): a weary G is not an allowed goal, so no claim on G against D is raised.
+2. **Declarations** (7.2 with 20.2 item 2): when the claim's region is weary at the declaration, the goal is re-chosen among the allowed goals, or the claim is dropped and no war is declared.
+
+`open(D, G)` counts a war from its `war_declared` until its ending event (any of 4.3's war-closing events and 20.15's, 20.17's endings), and by its stored goal (7.1; a goal re-chosen at the declaration is the war's goal). It is read live: a war declared earlier in the same T2 counts for a later declaration in that T2, in ascending attacker order (7.2). Nothing else about weariness changes: the count, its reset, the cession candidates of 20.3 (not restricted by weariness) and `weary_wars` = 3.
+
+**Invariant** (adds to 20.13): (12) for every `war_declared` with defender D and region G, the number of wars over (D, G) declared earlier that ended leaving G's owner unchanged since the last change of G's owner, plus the number of wars over (D, G) still open at that declaration, is below `weary_wars`. The reference recomputes it from the log and `region_control`. In consequence `wars_same_goal_unchanged_max` ≤ `weary_wars` in every world, and T2 becomes a property of every world rather than a sweep target.
+
+**Tests** (adds to 20.14): two attackers, one defender, one region; the second attacker cannot claim or declare while the first's war is open and the count is 2; it can once that war ends with a change of owner, or once the count is reset; a declaration in the same T2 by a lower-id attacker blocks a higher-id attacker's declaration over the same (D, G); with `weary_wars` 0 nothing is blocked.
+
+**Not measured by the spec writer.** No prototype run was made for r11 (the lead's instruction); the engineer's implementation measures it.
+
+### 20.24 Readings of the engineer, settled (r11)
+
+Each is **confirmed** as the rule:
+
+1. 20.22: with `refuge_flight` = 0, a fallen last refuge held by the guard writes `refuge_held` with `reason` 1 (no flight destination: flight is off, so there is none).
+2. 20.17 item 1: the search considers the attacked side's standing, visible, not hidden settlements in the battlefield region; when there are none, no search is made (the year goes on as 7.3, and the battle, if any, has no siege target).
+3. 20.17: after a failed search that does not end the war (`unfound` < `search_years`), 7.7's end checks still run in that T6, so a war can end the same year by exhaustion, aim, no front or length.
+
+### 20.25 Statistics notes (r11; text only, from the P3-08 validation)
+
+1. **Typical ranges of 15.5 predate P3-08.** P3-08 halved famine and plague spread and merged quiet eras, so 15.5's ranges no longer describe a default world. The P3-08 validation suggests, from the 5th–95th percentiles of 100 default 1024 worlds at 0.17.0: events 400–1,250, wars 9–53, flare-ups 0–6. These move again at 0.18.0 (20.18: more wars, the searches), so **every typical range of 15.5 and 20.11 is to be reset from the 5th–95th percentiles of the P3-09 validation sweep at 0.18.0**. Until then, an outlier from 15.5 is not a finding.
+2. **Plague in the summary.** P3-08 predicted that plague would be 121‰ of the summary's events after its salience change (P3-05 r6 10.2). The P3-08 validation measured 83‰. The summary figures of P3-07 21 and P3-09 5.7 do not depend on that prediction; validation reports the measured share at 0.18.0.
+
 ## Appendix A. Proposals entries (added to `docs/design/proposals.md` with this spec)
 
 - "History: wars are limited, fought for a claimed region, and end with the active phase" (questions 1 and 2).
@@ -1327,3 +1359,7 @@ New subsections 20.15–20.22, after 20.14; nothing before them is reorganised o
 - 20.22: kind 36 `refuge_held` with a `reason`, so that T3 can be checked from the rows.
 
 New stream `hist.conflict.search`; new tuning `kill_max_permille`, `find_permille`, `search_years`.
+
+## Revision note r11 (2026-11-20, weariness counts wars in progress; the engineer's readings)
+
+New 20.23 (the lead's ruling on T2): a defender is weary of a region while the futile count plus the wars over it still open reaches `weary_wars`, at the claim and at the declaration; invariant (12) and its tests. New 20.24: three readings of the engineer confirmed. New 20.25: the typical ranges of 15.5 to be reset from the P3-09 validation sweep; plague's measured summary share (83‰ against 121‰ predicted). Nothing before 20.23 is changed or renumbered.
