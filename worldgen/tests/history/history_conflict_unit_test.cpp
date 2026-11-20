@@ -199,6 +199,49 @@ TEST_CASE("P3-06 16.2 item 17 (Y4): relations opened in two orders in one step g
     CHECK(test_rows > 0U);
 }
 
+TEST_CASE("P3-04 6.4 r8: StepContext::event_kind and event_participant read the log; an unknown id is fatal") {
+    const CCase& g = conflict_case("syn-1");
+    const eng::HistoryInputs in = synthetic_inputs(g);
+    ConflictConfig cfg(shipped());
+    std::vector<std::string> kinds;
+    std::vector<std::int64_t> claimants, nobody;
+    std::string unknown;
+    std::int64_t last = 0;
+    cfg.add_after({Step::t6}, [&kinds, &claimants, &nobody, &unknown, &last](eng::StepContext& ctx) {
+        if (!kinds.empty()) return;
+        // the log so far: every event id below the next one
+        std::int64_t n = 1;
+        for (;; ++n) {
+            const std::string m = fatal_of([&] { (void)ctx.event_kind(n); });
+            if (m != "<no error>") {
+                unknown = m;
+                break;
+            }
+            kinds.emplace_back(ctx.event_kind(n));
+            claimants.push_back(ctx.event_participant(n, "claimant"));
+            nobody.push_back(ctx.event_participant(n, "no_such_role"));
+        }
+        last = n;
+    });
+    const Tables t = eng::run_engine(shipped(), in, cfg.get());
+    REQUIRE_FALSE(kinds.empty());
+    CHECK(unknown == "history: state: event " + std::to_string(last) + " does not exist");
+    const Index x(t);
+    const eng::EventCatalogue& cat = eng::compiled();
+    for (std::size_t i = 0; i < kinds.size(); ++i) {
+        const std::int64_t e = static_cast<std::int64_t>(i) + 1;
+        CAPTURE(e);
+        CHECK(kinds[i] == cat.kinds[static_cast<std::size_t>(x.kind(e) - 1)].key);
+        CHECK(claimants[i] == (x.kind(e) == k_claim ? x.role1(e, 1) : 0));
+        CHECK(nobody[i] == 0);
+    }
+    CHECK(fatal_of([&] {
+              ConflictConfig c2(shipped());
+              c2.add_after({Step::t2}, [](eng::StepContext& ctx) { (void)ctx.event_participant(0, "race"); });
+              (void)eng::run_engine(shipped(), in, c2.get());
+          }) == "history: state: event 0 does not exist");
+}
+
 TEST_CASE("P3-06 7.3 item 7, 7.2, 9, question 4: without last_refuge and shelter a race dies out; with them none") {
     std::size_t extinct_cases = 0, n = 0;
     for (const CCase& g : conflict_golden()) {

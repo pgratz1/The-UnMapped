@@ -823,6 +823,12 @@ class World:
         self.open_era = {}            # civ -> event index
         self.layers = None
         self.name_attempts = []
+        # 6.1 relations and 6.7 item 2 (r9): the open relations, the calls since the last bookkeeping
+        # in call order, and the rows
+        self.relations = {}        # RelationKey -> opening event
+        self.rel_log = []          # ("open" | "close", key, event)
+        self.rel_rows = []         # [a_type, a_id, b_type, b_id, kind, since, until, since_event, until_event]
+        self.rel_open_row = {}     # key -> index of its open row
         self.extra_draw = extra_draw
 
     # --- the event writer (6.6), with the checks the stub can reach
@@ -945,6 +951,42 @@ class World:
     def tick(self, eng_run, year, phase_end):
         self.bookkeeping(year, phase_end)
 
+    # --- 6.1 open_relation / close_relation (the stub never calls them; P3-06 does)
+    def open_relation(self, key, e):
+        if key in self.relations:
+            fatal("history: state: open_relation: the relation is open")
+        if any(op == "open" and k == key for op, k, _e in self.rel_log):
+            fatal("history: state: relation '%s' of %d %d and %d %d opened twice before one bookkeeping" %
+                  (key[4], key[0], key[1], key[2], key[3]))
+        self.relations[key] = e
+        self.rel_log.append(("open", key, e))
+
+    def close_relation(self, key, e):
+        if key not in self.relations:
+            fatal("history: state: close_relation: the relation is not open")
+        del self.relations[key]
+        self.rel_log.append(("close", key, e))
+
+    def relation_bookkeeping(self, y):
+        """6.7 item 2 (r9): walk the calls since the last bookkeeping in call order."""
+        for op, key, e in self.rel_log:
+            if op == "open":
+                self.rel_open_row[key] = len(self.rel_rows)
+                self.rel_rows.append([key[0], key[1], key[2], key[3], key[4], y, None, e, 0])
+            else:
+                if key not in self.rel_open_row:
+                    fatal("history: engine: a relation was closed that has no row")
+                row = self.rel_rows[self.rel_open_row.pop(key)]
+                row[6] = y
+                row[8] = e
+        self.rel_log = []
+        if set(self.rel_open_row) != set(self.relations):
+            fatal("history: engine: a relation vanished without a closing event")
+
+    def relation_table(self):
+        """The rows stable-sorted by the primary key (9.3)."""
+        return sorted((tuple(r) for r in self.rel_rows), key=lambda r: (r[0], r[1], r[2], r[3], r[4].encode(), r[5]))
+
     def bookkeeping(self, y, phase_end, end_year=None):
         """6.7 at year y; item 4's phase-end rows are dated at the phase's end_year (the step's last year
         in a quiet step: fixed at the P3-05 integration, the stub worlds never reached it)."""
@@ -958,6 +1000,7 @@ class World:
                     self.rc_open[rid] = len(self.region_control)
                     self.region_control.append([rid, y, None, own, ev])
                 self.recorded_owner[rid] = own
+        self.relation_bookkeeping(y)
         written = set()
         for s in self.settlements:
             cur = (s["owner_civ"], s["kind"], s["status"], s["population"])
@@ -1036,12 +1079,46 @@ def history_stage(dat, inp, tension=None, stage_entry=True, eng=None, report=Non
                      s["ruin_event"]) for s in w.settlements],
         settlement_census=sorted(w.census),
         region_control=sorted(tuple(r) for r in w.region_control),
-        relation=[],
+        relation=w.relation_table(),
     )
     res["_world"] = w
     res["_engine"] = en
     res["_catalogue"] = cat
     return res
+
+
+def check_relation_bookkeeping(c):
+    """16.1 item 6 (r9): the worked row, closed and reopened, opened twice, a close without a row."""
+    inp = synthetic_inputs([0], 2000)
+    dat = data()
+    w = World(dat, inp, event_catalogue(dat.report), dat.engine)
+    k = (CIV, 1, CIV, 2, "peace")
+    w.open_relation(k, 13)
+    w.close_relation(k, 14)
+    w.relation_bookkeeping(7)
+    c.eq("6.7 item 2 r9: opened and closed in year 7", w.relation_table(), [(3, 1, 3, 2, "peace", 7, 7, 13, 14)])
+    w.open_relation(k, 15)
+    w.relation_bookkeeping(8)
+    w.close_relation(k, 16)
+    w.open_relation(k, 17)
+    w.relation_bookkeeping(9)
+    c.eq("6.7 item 2 r9: closed and reopened in one bookkeeping: two rows", w.relation_table(),
+         [(3, 1, 3, 2, "peace", 7, 7, 13, 14), (3, 1, 3, 2, "peace", 8, 9, 15, 16),
+          (3, 1, 3, 2, "peace", 9, None, 17, 0)])
+    w.close_relation(k, 18)
+
+    def twice():
+        w.open_relation(k, 19)
+        w.close_relation(k, 20)
+        w.open_relation(k, 21)
+    expect_fatal(c, "6.7 item 2 r9: opened twice", twice,
+                 "history: state: relation 'peace' of 3 1 and 3 2 opened twice before one bookkeeping")
+    w2 = World(dat, inp, event_catalogue(dat.report), dat.engine)
+    w2.relations[k] = 1
+    w2.rel_log.append(("close", k, 2))
+    del w2.relations[k]
+    expect_fatal(c, "6.7 item 2 r9: a close without a row", lambda: w2.relation_bookkeeping(1),
+                 "history: engine: a relation was closed that has no row")
 
 
 # ---------------------------------------------------------------------------
@@ -1930,6 +2007,7 @@ def cmd_check(argv):
     check_edges(c)
     check_example(c, inputs)
     check_templates(c)
+    check_relation_bookkeeping(c)
     check_entry(c)
     check_stub_sets(c)
     check_properties(c)

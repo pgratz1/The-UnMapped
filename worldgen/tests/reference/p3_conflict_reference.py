@@ -344,10 +344,6 @@ class World(pp.World):
         self.last_t2_phase = 0
         self.phase_kind = 0
         self.contact = {}          # (a, b) -> k, as computed in the last strain update
-        self.relations = {}        # RelationKey -> opening event (P3-04 State)
-        self.rel_closed = {}       # RelationKey -> closing event since the last bookkeeping
-        self.rel_rows = []         # [a_type, a_id, b_type, b_id, kind, since, until, since_event, until_event]
-        self.rel_open_row = {}     # RelationKey -> index of its open row
         self.version = 0           # bumped by every owner or status change (front cache)
         self._fcache = {}
         self.tension_log = []      # (step start, value, trigger)
@@ -429,30 +425,10 @@ class World(pp.World):
         self.version += 1
 
     def open_rel(self, key, e):
-        if key in self.relations:
-            fatal("history: state: open_relation: the relation is open")
-        self.relations[key] = e
+        self.open_relation(key, e)      # P3-04 State (6.7 item 2, r9: calls replayed in order)
 
     def close_rel(self, key, e):
-        if key not in self.relations:
-            fatal("history: state: close_relation: the relation is not open")
-        del self.relations[key]
-        self.rel_closed[key] = e
-
-    def bookkeeping(self, y, phase_end, end_year=None):
-        super().bookkeeping(y, phase_end, end_year)
-        # 6.7 item 2: relations, in RelationKey order over the union of the recorded and current keys
-        keys = set(self.relations) | set(self.rel_open_row)
-        for k in sorted(keys, key=key_order):
-            now, rec = k in self.relations, k in self.rel_open_row
-            if now and not rec:
-                self.rel_open_row[k] = len(self.rel_rows)
-                self.rel_rows.append([k[0], k[1], k[2], k[3], k[4], y, None, self.relations[k], 0])
-            elif rec and not now:
-                row = self.rel_rows[self.rel_open_row.pop(k)]
-                row[6] = y
-                row[8] = self.rel_closed[k]
-        self.rel_closed = {}
+        self.close_relation(key, e)
 
     def alive(self, c):
         return self.civ(c)["ended_year"] is None
@@ -1139,7 +1115,7 @@ def history_stage(dat, inp, extra_draw=False, conflict=True):
                      s["ruin_event"]) for s in w.settlements],
         settlement_census=sorted(w.census),
         region_control=sorted(tuple(r) for r in w.region_control),
-        relation=sorted((tuple(r) for r in w.rel_rows), key=lambda r: (r[0], r[1], r[2], r[3], r[4].encode(), r[5])),
+        relation=w.relation_table(),
     )
     res["_world"] = w
     res["_engine"] = en
@@ -1570,7 +1546,10 @@ def check_invariants(c, res, inp, w, label, last_refuge=True, threshold=None):
             else:
                 ended = role(u, 1)[0]
                 c.true(lab + " ended by the end of a side", ended in (a, b) and civs[ended][9] == u)
-            c.true(lab + " no war ends in its declaration year (7.3)", r[6] > r[5])
+            # 7.3: no war ends in its declaration year by peace or truce; a side conquered by another war in
+            # that year's T6 closes it in the same year (8.3 item 7, P3-04 6.7 r9: since = until)
+            c.true(lab + " no war ends in its declaration year by peace (7.3)",
+                   r[6] > r[5] or KEY_OF[kind[r[8]]] in ("civ_conquered", "civ_ended"))
     for e in res["event"]:
         key = KEY_OF[e[3]]
         if key in ("battle", "battle_at_pass", "siege", "sacked", "settlement_captured"):
@@ -2266,6 +2245,10 @@ def cmd_check(argv):
                 stress[k] = stress.get(k, 0) + v
             guards["refuge"] += w.refuge_saves
             guards["shelter"] += w.shelter_blocks
+        for r in res["relation"]:
+            if r[6] is not None and r[5] == r[6]:
+                guards["same-year " + r[4]] = guards.get("same-year " + r[4], 0) + 1
+                print("same-year row %s %s" % (name, r))
         if name.startswith("syn-") and int(name[4:]) < 3:
             res2 = history_stage(w.pd, inp, extra_draw=True)
             c.eq("%s 14 item 9 draw independence" % name, table_hashes(res2), table_hashes(res))
@@ -2283,6 +2266,9 @@ def cmd_check(argv):
     c.true("the stress cases reach last_refuge (a fallen siege held)", guards["refuge"] > 0)
     c.true("the stress cases reach shelter_years (a claimed neighbour sheltered)", guards["shelter"] > 0)
     c.true("without the guards a race dies out (9, question 4)", guards.get("extinct", 0) > 0)
+    if not quick:
+        c.true("a case holds a war row opened and closed in one year (8.3 item 7, P3-04 6.7 r9)",
+               guards.get("same-year war", 0) > 0)
     print("stress reach: %s; refuge %d, shelter %d" % (sorted(stress.items()), guards["refuge"], guards["shelter"]))
     if not quick and os.path.isdir(inputs) and "--write" in argv:
         with open(GOLDEN, "wb") as f:

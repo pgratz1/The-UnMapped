@@ -396,7 +396,9 @@ inline void check_invariants_06(const Tables& t, const eng::HistoryInputs& in, s
             CHECK(x.year(at(r, 7)) == at(r, 5));
             if (uk != 0) {
                 CHECK((uk == k_peace || uk == k_truce || uk == 18 || uk == k_civ_conquered));
-                CHECK(at(r, 6) > at(r, 5));  // 7.3: no war ends in its declaration year (N5)
+                // 7.3: no war ends in its declaration year by peace or truce; a side conquered by another
+                // war of that year's T6 closes it with since = until (8.3 item 7, P3-04 6.7 r9)
+                CHECK((at(r, 6) > at(r, 5) || uk == 18 || uk == k_civ_conquered));
             }
             war_row[at(r, 7)] = &r;
         } else {
