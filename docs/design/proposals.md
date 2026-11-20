@@ -646,3 +646,23 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
   8. A plague that empties a settlement does not spread to its neighbours. Accepted.
 - Interim choice: none needed; the spec as implemented at 0.15.0 stands. Only question 7 (faeries in forest) leads to a change.
 - Status: accepted; design doc sections 5 and 6 to be updated
+
+### History: magical artifacts are made in response to conflicts
+
+- Date: 2026-11-19
+- Raised by: Paul (recorded by the lead); Paul is not sure whether it is for now or later
+- Design doc section: 5 (history: figures, casters, wars), 6 (derivation: sites and quest hooks)
+- Problem: the design has no account of where magical artifacts come from. Paul wants them made in response to conflicts, so that each has a history within those conflicts and with the people who made it.
+- Proposal: an artifact is an entity of history with its own table (maker civilization and settlement, the event that occasioned it, kind, name, and a chain of holders and places). It is created by an event whose cause is a conflict event (a war declared, a siege endured, a capital sacked, a long enmity), and it then moves through later events: carried to battle, captured in a sack, lost when a settlement is ruined, hidden, recovered. Where it lies at the present is a site and a quest hook for derivation. The conflict events it needs exist from P3-06 (wars, battles, sieges, sackings, conquests); makers want the figures and casters of P5.
+- Interim choice: not in P3. Suggested home: P5 History depth, with figures and casters, built on P3-06's event log; a schema change (new tables and event kinds) with its own spec. If Paul wants a first version sooner, a small stage after P3-07 could make artifacts from wars alone, with civilizations as makers.
+- Status: open (for the design conversation; Paul to say now or later)
+
+### Paul's decision of 2026-11-19: region names get identity; no numbered names
+
+- Date: 2026-11-19
+- Raised by: lead, recording Paul's decision
+- Design doc section: 4 (regions)
+- Problem: regions are named by a sector word and a noun, with a Roman numeral when the base name repeats (spec P1-06 RG11). Paul: "East Wood" is fine but "West Wood III" is pretty boring; the names should come from a large set chosen at random so that regions have more identity, and should not rely on numbering.
+- Decision: replace the numeral with names drawn from a large hand-written set held in data (TOML). A spec amendment to P1-06 RG11 defines the scheme and the word lists; it changes the `name` column of table `region`, so it changes world bytes and comes with a generator version bump. No schema change.
+- Interim choice: the amendment is written now; it is implemented after P3-06 is integrated (together with the faerie data change or just before it), before Paul's review of P3.
+- Status: decided; spec amendment in progress
