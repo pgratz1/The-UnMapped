@@ -749,3 +749,13 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
   5. Trait steering stays as shipped.
 - Interim choice: none needed. Point 2 is a change to the sentence renderer (spec P3-04 8.4), specified and implemented together with the region names.
 - Status: accepted; implementation scheduled after P3-06
+
+### Names: generated names are filtered; gods have their own style; every realm name has a realm form
+
+- Date: 2026-11-20
+- Raised by: spec writer, after the world critic's review of P3-05 (`docs/reviews/p3-05-peoples-world-critic.md` F5)
+- Design doc section: 5 (the seed varies the gods' names; civilizations and settlements are named), 14 (records a model can narrate)
+- Problem: names are built from per-culture syllables with no check on what the result spells. In eight reviewed worlds the generator made a goblin settlement whose first syllables form a racial slur (and two near misses), human towns starting with a crude word for a body part, and gods with ordinary English names ("Bald", "Buzz", "Gord"). Gods use the same short shapes as villages ("Krok", "Sten"), and 7 of 14 elven realms had bare one-word names, so a realm reads like a town ("Finen founded Voeledell").
+- Proposal: three rules, specified in `docs/specs/p3-02-names.md` r5 section 11. (1) **Names are filtered**: a drawn name is redrawn when the word that holds its root contains a listed fragment (anywhere, or at a word start), or is exactly a listed word; the lists are shared data for every culture (`game/data/name_filters/`: slurs, crude words, ordinary English words the syllables can produce, famous real and fictional names). (2) **Gods have their own style**: each culture names its gods from its own list of root shapes, shipped as the culture's shapes of two or more syllables, so no god is a one-syllable word. (3) **Every realm name has a realm form**: no culture names a civilization with a bare root (a loader check); the elven bare form becomes "The House of {root}".
+- Interim choice: as proposed; ships in the follow-up change after P3-06 together with the region names and the faerie weights, with that change's generator version bump. No schema change. The region namer keeps its own word checks (P1-06 V4, V5), since the history lists' fragments reject ordinary English words such as "night" and "tithe".
+- Status: open; spec amendment written (P3-02 r5, branch `p3/02-names-filter`), questions in P3-02 11.10
