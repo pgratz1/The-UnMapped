@@ -547,7 +547,7 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
 - Problem: the design gives the simulated years for the default span only. Fixed phase lengths cannot keep the share of simulated years sensible across the span range: 1,200 years would be 60% of a 2,000-year history and 10% of a 12,000-year one. The design also does not say how the last race's opening phase and the final phase meet when the last age is short.
 - Proposal: phase lengths are tuned in years at the 6,000-year default and scaled in proportion to the span, so the detail level fixes the share (sparse about 12%, normal about 19-20%, that is 1,110-1,200 of 6,000 before flare-ups, dense about 28%). The final phase is at most its length and starts where the last opening phase ends, so with the shipped numbers the orcs' age is usually active from their awakening to the present. A floor (10%) and a cap (45%, flare-ups included) are guaranteed by the scheduler. Each flare-up is marked by a `flare_up` event.
 - Interim choice: as proposed (`docs/specs/p3-04-simulation-engine.md` sections 4.1 and 5, questions 1 to 3 and 6).
-- Status: open
+- Status: accepted by Paul, 2026-11-19 (interim choice stands); design doc to be updated
 
 ### History: peoples expand within reach of their capital and spread by secession
 
@@ -682,3 +682,19 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
   6. The world report gained `[chronology]` without a format bump (report v2).
 - Interim choice: none needed; all six are as implemented at generator 0.13.0.
 - Status: accepted; design doc section 5 to be updated for points 1 and 2
+
+### Paul's decision of 2026-11-19: the simulation engine questions go with their recommendations
+
+- Date: 2026-11-19
+- Raised by: lead, recording Paul's decision
+- Design doc section: 5 (active phases, quiet intervals, flare-ups, the event log)
+- Problem: `docs/specs/p3-04-simulation-engine.md` section 19 put six questions to Paul.
+- Decision: Paul's words: "all the p3-04-simulation-engine.md recommendations are accepted." So:
+  1. Phase lengths scale with the history span; the detail level fixes the share of simulated years (sparse about 12%, normal 19 to 20%, dense 27 to 29%).
+  2. The last age is mostly active: the orcs' opening phase usually runs into the final phase, the design's "most recent age of conflict".
+  3. The simulated share has a floor of 10% and a cap of 45%, as tuning, guaranteed by the scheduler.
+  4. The event catalogue is code; templates and salience are data.
+  5. Resume is a library seam, not a `generate --resume` option, until P5's history mode needs a command.
+  6. A `flare_up` event marks each flare-up.
+- Interim choice: none needed; all six are as implemented at generator 0.14.0.
+- Status: accepted; design doc section 5 to be updated for points 1 to 3 and 6
