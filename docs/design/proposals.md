@@ -587,7 +587,7 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
 - Problem: the design lists wars, sieges and sackings but does not say what a war is fought for, how it ends, or what happens to a war when an active phase gives way to a quiet interval, in which nothing is fought.
 - Proposal: neighbours build strain from their creators' camps, old grudges, land hunger and fear of a giant; strain becomes a claim on one border region, the claim is the casus belli of a war, and the war is fought for that region: it ends when the attacker has it, when a side is exhausted, after 40 years at most, or at the first quiet step after its active phase, by battles won and settlements taken. Wars are declared only in yearly ticks; in quiet intervals strain keeps building and the highest strain is the tension that starts a flare-up, whose war follows without a draw. Relation kinds `enmity` (good against evil, from the younger people's founding), `war` (attacker first) and `peace`; alliances and vassalage wait for figures and factions in P5.
 - Interim choice: as proposed (`docs/specs/p3-06-expansion-conflict.md` 4, 5, 7, questions 1, 2, 5).
-- Status: open
+- Status: accepted by Paul, 2026-11-19 (interim choice stands); design doc to be updated
 
 ### History: no race is wiped out; newly awakened peoples are sheltered
 
@@ -597,7 +597,7 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
 - Problem: with conquest, the late and small peoples (orcs, faeries, humans) were conquered to extinction in most prototype worlds; the design gives every race a role in play but does not say whether a race may vanish from history.
 - Proposal: the last settlement of a race's last civilization never falls to a siege, and a civilization is not attacked in its first 150 years (it may attack). Civilizations still end by conquest; races do not.
 - Interim choice: as proposed (`docs/specs/p3-06-expansion-conflict.md` 7.2, 7.3, question 4).
-- Status: open
+- Status: accepted by Paul, 2026-11-19 (interim choice stands); design doc to be updated
 
 ### History: a fighting strength per race; goblins less aggressive than orcs
 
@@ -607,7 +607,7 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
 - Problem: the race data has readiness for war (`aggression`) but nothing for how well a people fights; without it the few elves fall to the numerous goblins, and with the shipped aggression the goblins, numerous and split into several hordes, start four wars in five while the orcs, the design's warlike race, start one in seven.
 - Proposal: a new race field `prowess_permille` (elves 1600, dwarves 1400, orcs 1300, faeries 1200, humans 1000, goblins 800) scales armies and garrisons; goblin `aggression` 700 → 600; aggression enters the strain rate squared. A data change, not a schema change.
 - Interim choice: as proposed (`docs/specs/p3-06-expansion-conflict.md` 5.2, 6.1, 12.2, questions 3 and 6).
-- Status: open
+- Status: accepted by Paul, 2026-11-19 (interim choice stands); design doc to be updated
 
 ### Paul's decisions of 2026-11-19 on the peoples questions: density stays a field; faeries live in forest, wet or not
 
@@ -698,3 +698,23 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
   6. A `flare_up` event marks each flare-up.
 - Interim choice: none needed; all six are as implemented at generator 0.14.0.
 - Status: accepted; design doc section 5 to be updated for points 1 to 3 and 6
+
+### Paul's decision of 2026-11-19: the expansion and conflict questions go with their recommendations
+
+- Date: 2026-11-19
+- Raised by: lead, recording Paul's decision
+- Design doc section: 5 (wars, flare-ups, quiet intervals, race characters), 13 (P5 exit: every race takes part)
+- Problem: `docs/specs/p3-06-expansion-conflict.md` section 19 put ten questions to Paul.
+- Decision: Paul's words: "also accept all the ones in p3-06-expansion-conflict.md." So:
+  1. Wars are limited: fought for one claimed region, ended when the attacker has it, when a side is exhausted, after 40 years at most, or at the first quiet step after their active phase.
+  2. Wars happen only in yearly ticks; strain builds in quiet steps; a flare-up always brings its war.
+  3. A fighting strength per race, `prowess_permille` (elves 1600, dwarves 1400, orcs 1300, faeries 1200, humans 1000, goblins 800), and goblin `aggression` 700 to 600.
+  4. No race is wiped out: the last settlement of a race's last civilization never falls, and a civilization is not attacked in its first 150 years.
+  5. Coalition by fear in place of alliances; no vassals in P3; alliances and vassalage come with figures and factions in P5.
+  6. Aggression enters strain squared.
+  7. Armies march across two borders.
+  8. The event-count expectation of P3-00 6.1 is corrected to about 400 to 1,500 events at default settings and up to about 4,000 with the heavier settings.
+  9. Humans on land left open or ruined is weak in P3 and accepted; refugee migration in P5 is the stronger reading.
+  10. "A world already at war when the dwarves arrive" holds in about 30 of 50 worlds and is accepted; no rule is added to force it.
+- Interim choice: none needed; all ten are as specified and implemented for generator 0.16.0 (in integration).
+- Status: accepted; design doc sections 5 and 13 to be updated
