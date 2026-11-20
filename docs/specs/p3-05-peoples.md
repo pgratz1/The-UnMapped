@@ -1,6 +1,6 @@
 # P3-05 Peoples
 
-Status: **approved by the lead 2026-11-19** (the seven questions of section 19 go to Paul; the interim choices stand). **Revision r6 (2026-11-20, for P3-08, generator 0.17.0; `docs/specs/p3-08-followups.md`)**: the faerie weights of 12.3 ship; dwarves choose high, ore-rich cells (6.2, 8.4); a civilization's last settlement is not abandoned by chance; abandonment names its destination and the blow that began the decline (8.5, new kind 31); refugees above a kind cap drain (9.1); saliences of plague and succession crisis (10.2, 10.3); famine and plague-spread rates halved for the log's volume (10.2, 12.1); invariant 6 read for captured settlements (14); the 100-seed figures of the P3-05 validation (15); see the revision note. Written by the spec writer 2026-11-19; amended 2026-11-19 for P3-06 (r1, r2) and after implementation (r3; notes at the end), note at the end); the amendments of section 18 applied the same day on `p3/05-spec` (P3-00 correction note for P3-05, P3-04 r2, P0-01 section 18, P3-01 r6, P3-07 r1; `schema.md` is the engineer's), after merging `origin/p3/07-spec` at 1cb9d48. Phase P3 History core, spec 5 (P3-00 3.1 row P3-05), a subsystem of pipeline stage 8, `history`. Generator **0.15.0**; **no schema change** (schema stays 7: P3-05 appends event kinds 6–19 to the catalogue and writes rows, never columns; P3-04 8.2). Design doc sections 4 ("Scale is compressed": a city of 20,000; resources and habitability; regions), 5 (the six races and their characters; "Food and homelands"; entities; the tick loop items 1, 2 and 4; quiet intervals; world-creation settings `civs_per_race` and `event_intensity`), 6 (`civilization`, `settlement`), 13 (P3 row) and 14 (records a model can narrate). Depends on P3-00 (binding; amended in 18.2), P0-01 (stream list, 18.3), P3-01 (kind `race`; amended in 18.4: one new field, three field meanings made precise), P3-02 (keyed draws, names), P3-03 (chronology rows), P3-04 (engine, step seam, `State`, event writer, catalogue; amended in 18.2) and P3-07 (report: section 9's statistics, section 20's requirements; amended in 18.5). Branch read: `origin/p3/04-spec` at 4a00615 for P3-00 to P3-04, `origin/p3/07-spec` at 1cb9d48 for P3-07. Proposals read: up to "History: active phases scale with the history span". Reviews read: `docs/reviews/p1-05-resources-critic.md` 7 and `docs/reviews/p1-06-regions-critic.md` 6–7.
+Status: **approved by the lead 2026-11-19** (the seven questions of section 19 go to Paul; the interim choices stand). **Revision r11 (2026-11-20, for P3-10, generator 0.19.0; `docs/specs/p3-10-followups.md`): section 22.** **Revision r6 (2026-11-20, for P3-08, generator 0.17.0; `docs/specs/p3-08-followups.md`)**: the faerie weights of 12.3 ship; dwarves choose high, ore-rich cells (6.2, 8.4); a civilization's last settlement is not abandoned by chance; abandonment names its destination and the blow that began the decline (8.5, new kind 31); refugees above a kind cap drain (9.1); saliences of plague and succession crisis (10.2, 10.3); famine and plague-spread rates halved for the log's volume (10.2, 12.1); invariant 6 read for captured settlements (14); the 100-seed figures of the P3-05 validation (15); see the revision note. Written by the spec writer 2026-11-19; amended 2026-11-19 for P3-06 (r1, r2) and after implementation (r3; notes at the end), note at the end); the amendments of section 18 applied the same day on `p3/05-spec` (P3-00 correction note for P3-05, P3-04 r2, P0-01 section 18, P3-01 r6, P3-07 r1; `schema.md` is the engineer's), after merging `origin/p3/07-spec` at 1cb9d48. Phase P3 History core, spec 5 (P3-00 3.1 row P3-05), a subsystem of pipeline stage 8, `history`. Generator **0.15.0**; **no schema change** (schema stays 7: P3-05 appends event kinds 6–19 to the catalogue and writes rows, never columns; P3-04 8.2). Design doc sections 4 ("Scale is compressed": a city of 20,000; resources and habitability; regions), 5 (the six races and their characters; "Food and homelands"; entities; the tick loop items 1, 2 and 4; quiet intervals; world-creation settings `civs_per_race` and `event_intensity`), 6 (`civilization`, `settlement`), 13 (P3 row) and 14 (records a model can narrate). Depends on P3-00 (binding; amended in 18.2), P0-01 (stream list, 18.3), P3-01 (kind `race`; amended in 18.4: one new field, three field meanings made precise), P3-02 (keyed draws, names), P3-03 (chronology rows), P3-04 (engine, step seam, `State`, event writer, catalogue; amended in 18.2) and P3-07 (report: section 9's statistics, section 20's requirements; amended in 18.5). Branch read: `origin/p3/04-spec` at 4a00615 for P3-00 to P3-04, `origin/p3/07-spec` at 1cb9d48 for P3-07. Proposals read: up to "History: active phases scale with the history span". Reviews read: `docs/reviews/p1-05-resources-critic.md` 7 and `docs/reviews/p1-06-regions-critic.md` 6–7.
 
 Numbers in this spec come from the spec writer's exact-integer prototype `~/.cache/the-unmapped/out/p3-05-spec/peoples.py` (on the P3-02 and P3-03 references for names and chronology and the P3-04 prototype `engine_proto.py` for the schedule, quiet steps and quiet eras), run on the P1-06 validation worlds `~/.cache/the-unmapped/out/p1-06-validation/` (geography unchanged since 0.11.0): 1024 seeds 0–49 (the reference sweep), 512 seeds 0–49, 2048 seeds 0–19, and 1024 seeds 0–49 with each non-default setting of section 15.3. The prototype is evidence, not the reference: the test writer's reference is written from this text (16).
 
@@ -1047,6 +1047,121 @@ Written 2026-11-20 for change P3-09 "conflict balance" (`docs/specs/p3-09-confli
 5. **More realms on a larger map** (7.2, `auto`; P3-06 20.8 item 2; the P3-06 critic's F9). `auto` becomes n = 1 + [chance_pm(draw(hist.peoples.civs, Y, r, 0, 0), `civs_two_permille`)] + min(`civs_extra_max`, N div `regions_per_extra_civ`), N the number of non-islet regions; then n = 1 if `free` < `regions_per_civ` × `alive` + 2, as before; explicit settings 1–4 unchanged. New `history.peoples` fields after `regions_per_civ`: `regions_per_extra_civ` int(1, 100000), shipped 90 (taste), and `civs_extra_max` int(0, 3), shipped 2 (bound). The draw and its key are unchanged; N div 90 is 0 at 512 (about 12 non-islet regions) and at 1024 (49–53 at seeds 0–4), so those worlds are unchanged by this item, and 2 at 2048 (194–202 at seeds 0–4: three or four civilizations per race, before the free-land check). *Measured (m16) only with the explicit setting 4 at 2048 seeds 0–4* (P3-06 20.8 item 2); the rule's own figures are measured at 0.18.0 (P3-09 5.6). 7.2's second paragraph (later homes at `home_min_hops` from earlier ones) bounds the count by the land.
 6. **A race's last refuge is never abandoned** (r9; P3-06 20.20, closing the extinction defect the P3-09 test writer found). A standing settlement that is its race's last refuge (its civilization's only standing settlement, and that civilization the only alive one of its race) is not abandoned by 8.5 (a), neither by chance nor below `abandon_min`, nor by 8.5 (b). It stays standing with its few people; 9.1 grows or recovers it. This is per race and covers the deterministic rule. r6's rule, that a civilization's last settlement is never abandoned *by chance*, is per civilization and stays as it is. With it, 8.5 item 6 never ends the last civilization of a race. No other rule of peoples changes. *Not prototyped* (the spec writer's prototype applied only P3-06 20.20 item 1); no race ended in any measured world.
 
+## 22. Wording and site follow-ups (amendment r11, P3-10, generator 0.19.0)
+
+Normative for the change P3-10 (`docs/specs/p3-10-followups.md`), from generator **0.19.0**, not before; written after the world critic's review of P3-08 (`docs/reviews/p3-08-followups-world-critic.md`, F1, F2, F4, F5, F9). Each item amends the section it names; those sections describe generators 0.15.0 to 0.18.0. No schema change.
+
+### 22.1 The outbreak carries its total (amends 10.2 and 11; kind 37)
+
+Since r6/r7 an outbreak's salience comes from the total toll of the outbreak and its spreads (10.2's replayed plan), but kind 12's sentence gives only the first settlement's dead: in the 13 critic worlds at 0.17.0, 53 of the 153 salience-45 plagues shown in the summaries state fewer than 1,000 dead (seed 11, e551: "Plague broke out in Gork-Skreeg Hole; 23 died." at salience 45). The planned values exist when the outbreak is appended, but kind 12 has no value key for them and a shipped kind is never edited (P3-04 8.2), so from 0.19.0 every outbreak is written as the new kind **37 `plague_outbreak`** (P3-04 20.4): roles 1 `settlement`, 2 `civilization`; values
+
+| seq | key | value |
+| --- | --- | --- |
+| 1 | `dead` | the outbreak's own dead in s (kind 12's `dead`) |
+| 2 | `population` | s's population after the strike (kind 12's `population`) |
+| 3 | `total` | the plan's total: `dead` + Σ dead_u over the planned spreads (10.2, r7; equal to the real toll, invariant 13) |
+| 4 | `reached` | the number of planned spreads: the `plague_spread` events the outbreak will cause (0 when it spreads nowhere or empties s) |
+
+Everything else of 10.2 is unchanged: the same strike, the same plan, the same salience rule on `total` (45 if `total` ≥ `plague_major_dead`, else `plague_small_salience`), the same spreads (kind 13, caused by the outbreak), the same draws. Kind 12 stays in the catalogue and is not written from 0.19.0. Every rule that names "a plague" or kind 12 (8.3's decline start, 8.5's causes, 10.4, 15.4's keys, P3-07's plague counts, P3-07 22.1) applies to kind 37 in a 0.19.0 world. Template (data; salience 45 as kind 12's):
+
+```
+Plague broke out in {settlement}{reached?| and spread to one other settlement| and spread to # other settlements}; {total} died{reached?|| in all}.
+```
+
+`Plague broke out in Gork-Skreeg Hole and spread to 3 other settlements; 1,084 died in all.` (illustrative) · with no spread: `Plague broke out in Raenme; 120 died.` Measured on the stored logs (`total` and `reached` are computed from the outbreak's caused spreads): 1024 default at 0.18.0 (seeds 0 to 39), 2,939 outbreaks, 1,543 with at least one spread (955 one, 388 two, 157 three, 43 four or more); of the 760 at salience 45 the median own toll is 1,020 and the median total 1,446, and 370 state fewer than 1,000 dead today, none will (the total is at least 1,000 by the salience rule).
+
+### 22.2 Causes are remembered for `cause_memory_years` (amends 8.2, 8.5 and 11's cause rules)
+
+A dwindling cites its last reduction event, and an abandonment its last reduction and its decline start, however old (the critic's F9: seed 42 at 0.17.0, e246 "Glathenddell dwindled to 1142 souls" cites e226, a battle 218 years earlier; F2: Glathenddell's abandonment e432 cites a plague 863 years earlier). New `history.peoples` field **`cause_memory_years`** int(0, 100000), shipped **50** (taste), appended after `civs_extra_max`. With Y the year of the event being written:
+
+1. A **last reduction event** r is cited only when Y − year(r) ≤ `cause_memory_years`; an older one is treated as none.
+2. A **decline start** d (8.5 "Causes") is cited only when Y − year(d) ≤ `cause_memory_years`.
+3. **A dwindling** (8.2) cites, in this order: its last reduction event (item 1); else the settlement's last `colony_founded` event with it as `origin` and Y − year ≤ `cause_memory_years` (the colonists it sent are why it shrank: Glathenddell sent three colonies in the hundred years before it dwindled); else no cause.
+4. **An abandonment** (8.5) keeps its rule: (a) the blow of this year (always recent), (b) the last reduction event by item 1, else the founding event; plus the decline start by item 2.
+
+With P3-06 21.1 (a reduction is noted only where people were lost) a cited battle or tribute took people from the settlement within the last 50 years. Measured on the stored logs (1024 default, 0.18.0, seeds 0 to 39): of 513 dwindles, 381 cite a reduction of the last 50 years, 108 cite a colony instead, 24 cite nothing (38 cited nothing before; 94 cited only causes older than 50 years, up to 2,291 years old); of 23 abandonments (all kind 31), 5 lose a cause older than 50 years and keep at least one (no abandonment falls back to its founding event).
+
+### 22.3 The sentence names the cause (amends 11's templates of kinds 10, 16 and 31; data)
+
+With P3-04 20.2's `{@causes:…}`, and the map M = `famine=famine,plague=plague,plague_outbreak=plague,plague_spread=plague,succession_crisis=strife,battle=war,battle_at_pass=war,tribute=tribute` (every kind that can be a last reduction event or a decline start: 10.4's strikes, 10.3's crisis loss, P3-06 7.4's battles and P3-06 20.3's tribute through `note_reduction`; a sack ruins its settlement itself and a capture moves it to another owner without `note_reduction`, so neither is ever the cause of a dwindling or an abandonment; at 0.18.0 the 23 abandonments of 40 worlds cite famine, plague and plague spread only, and the 513 dwindles also battles, tribute and crises):
+
+```
+10 settlement_dwindled:       {@causes:M,colony_founded=emigration|Weakened by |, }{settlement} dwindled to {population} souls.
+16 settlement_abandoned:      {@causes:M|Weakened by |, }{settlement} was abandoned; {survivors?no one survived|its one survivor was scattered|its # survivors were scattered}.
+31 settlement_abandoned_to:   {@causes:M|Weakened by |, }{settlement} was abandoned; {settled} {settled?survivor|survivors} went to {destination}{lost?|, and one was lost|, and # were lost}.
+```
+
+(M written out in full in the data.) A founding event as the only cause (a settlement that never thrived) maps to nothing, so the sentence starts with the settlement. Examples (illustrative, after 0.17.0's seed 23 e899 and seed 42 e246): `Weakened by famine and plague, Ithononiedell was abandoned; 489 survivors went to Elaethaer.` · `Weakened by emigration, Glathenddell dwindled to 1,142 souls.` · `Weakened by war, Krux dwindled to 412 souls.` The summary threshold hides the causes (salience 25) but the reason is now in the shown line (F2). At 0.18.0 (40 worlds) every one of the 23 abandonments and 489 of the 513 dwindles get a clause.
+
+### 22.4 Moved seats and secessions without "its" (amends 11's templates of kinds 15 and 17; data)
+
+"The Warrens of Zeez moved its seat" does not agree (the goblin form `The Warrens of {root}` is the one plural realm form among the shipped cultures). The two templates whose pronoun refers to a civilization are reworded so that no pronoun is needed:
+
+```
+15 civ_seceded:     {civilization} broke away from {from} with {settlements} {settlements?settlement|settlements}.
+17 capital_moved:   The seat of {civilization} moved to {settlement}.
+```
+
+`The seat of the Warrens of Zeez moved to Gnog Pit.` At 0.18.0 (40 worlds) 30 of 181 moved capitals and 24 of 82 secessions are of a Warrens realm.
+
+### 22.5 Sites of faeries and dwarves (amends 5.1, 6.1, 6.2; race data)
+
+Why: at 0.18.0, 54% of faerie settlements (99 of 181) stand within 300 m (18 cells, Chebyshev) of the sea (1024 default seeds 0 to 19, 181 founded; the critic measured 51% at 0.17.0), the forest interior behind them empty; and dwarves still found fortresses at the sea (7 of 158 dwarven settlements below 30 m, 5 of them fortresses; seed 7's Clan Nirgurn has holds at 0, 1 and 2 m on cells 1 cell from the sea, rank 0 in their upland regions). Both come from the site value of 6.2: habitability peaks on the shore, the port bonus adds to it, and a race without a cell term starts every region at its seed cell, its most habitable lowest site.
+
+**The site value** (replaces 6.2 item 2's formula; 6.1's `port` unchanged), with the race's `cell_weights` (P3-01 3.4) `ore`, `height`, `inland`, `port`, `habitability` written cw_o, cw_h, cw_i, cw_p, cw_a:
+
+```
+v(c, r) = habitability(c) × cw_a div 1000
+        + port(c, r) × cw_p div 1000
+        + (cw_o × ore(c) + cw_h × hgt(c)) div 1000
+        + cw_i × min(inland_cap, sea_d(c)) × 255 div (inland_cap × 1000)
+```
+
+Each `div` is a floor of non-negative integers, in this order of terms; products stay below 2^30. With the neutral record (cw_a = cw_p = 1000, the rest 0) v is r6's value exactly. **sea_d(c)** is the Chebyshev distance in cells from c to the nearest cell with `water` = 3 (the sea), capped at `inland_cap`: a multi-source breadth-first search over the 8-neighbour grid from every sea cell, unit steps, stopped at `inland_cap` (on a grid without obstacles this is exactly the Chebyshev distance); cells at `inland_cap` or farther, and every cell of a world without sea, have `inland_cap`. It is computed once per world, in the peoples geography, only when a present race has cw_i > 0. New `history.peoples` field **`inland_cap`** int(1, 256), shipped **20** (320 m; taste), appended after `cause_memory_years`.
+
+A race **has a cell term** when its record differs from the neutral one (P3-01 3.4); 6.2 item 1 (the seed cell first) applies only to a race without one, and 8.4's cell rule to a race with one that builds fortresses (only the dwarves among the shipped races).
+
+**Shipped data** (race files):
+
+- **Faeries**: `cell_weights` `inland` 400, `port` 0 (the rest neutral), and race field `coast` 0 → **−500** (P3-01 3.1's table): coastal regions score lower for faeries (σ's C term, 4.2), and the shore loses its bonus within a region. "Hidden communities in wild places" (design 5).
+- **Dwarves**: `cell_weights` `port` 0, `habitability` 500 (ore 400 and height 600 stay): lowland farmland counts at half when a dwarf chooses a home site, and the sea adds nothing. Region capacity (5.1) is unchanged: counting walkable ground at half in 5.1 as well (variant `walk` 500 below) moved no more holds off the lowland and cost the dwarves a quarter of their people.
+
+Measured with the harness of `docs/specs/p3-10-followups.md` 6 (the P3-09 conflict reference at 0.18.0 with the variants switched on), 1024 default, seeds 0 to 19; "≤ 300 m" is sea_d ≤ 18; medians per world for standing settlements and population:
+
+| Variant | faeries ≤ 300 m of the sea | ≤ 48 m (the port radius) | in temperate forest | faerie standing; population | dwarves below 30 m (fortresses) | dwarven median elevation rank | dwarven in the lowest quarter of their region | dwarven standing; population |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 0.18.0 | 99 of 181 (54%) | 46% | 92% | 6; 4,351 | 7 (5) of 158 | 0.73 | 41 | 8; 18,784 |
+| faerie `port` 0 | 94 of 181 (51%) | 40% | 92% | 6; 4,351 | — | — | — | — |
+| faerie `port` 0, `inland` 400 | 53 of 181 (29%) | 7% | 90% | 6; 4,367 | — | — | — | — |
+| the same, `inland` 600, `inland_cap` 40 | 54 of 181 (29%) | 6% | 91% | 6; 4,367 | — | — | — | — |
+| the same (400, 20), faerie `coast` −1000 | 7 of 162 (4%) | 1% | 78% | 5; 4,526 | — | — | — | — |
+| **the same (400, 20), faerie `coast` −500** | **20 of 192 (10%)** | **3%** | **84%** | **7; 5,824** | — | — | — | — |
+| dwarf `port` 0, `habitability` 500 | — | — | — | — | **0 (0) of 162** | **0.88** | **10** | **8; 18,784** |
+| dwarf as above and walkable ground at 500‰ in 5.1 | — | — | — | — | 0 (0) of 154 | 0.87 | 8 | 6; 14,332 |
+| **both, as shipped** (with P3-02 12.2's name rule) | **22 of 196 (11%)** | **4%** | **84%** | **8; 5,824** | **0 (0) of 166** | **0.88** | **10** | **8; 18,595** |
+
+Over the 20 worlds together (standing settlements at the present, 0.18.0 → shipped): elves 185 → 205, goblins 861 → 809, dwarves 163 → 207, faeries 161 → 169, humans 293 → 248, orcs 116 → 110; declarations 479 → 476. The keyed war draws reshuffle when the log changes (the dwarven change alone moves goblins 861 → 806), so single counts move by up to about a tenth by chance; the humans' fall (−15%, −9% of their people) follows mostly the faeries' move inland (the faerie change alone: humans 293 → 257) and is a measure for the validation sweep (`docs/specs/p3-10-followups.md` 9 item 4).
+
+The cell term alone leaves 29% of faerie homes near the sea: those regions are narrow coastal woods with no free inland site; the region's coast term moves the people. With −1000 the faeries leave too much forest (78%) and found fewer settlements; −500 keeps 84% in forest and more people. No faerie settlement stands in fen, marsh or wet woodland in any variant: their homes are forest regions (P3-05 12.3's weights, temperate forest and wet woodland both 800, Paul's decision "faeries live in forest, wet or not"), and wet woodland cells are rare in them. Dwarven realms mostly in the lowest quarter of their region: 0 of 28 at 0.18.0 already (the critic's 9 of 144 was 0.17.0), 0 with the change.
+
+Unit tests (16.1a): the neutral record gives r6's v on every cell of fixture world U1; sea_d on a 5 × 5 grid with one sea cell at a corner is the Chebyshev distance capped at `inland_cap`; a faerie site in a coastal fixture region with an inland free cell chooses the inland cell; a dwarf with `habitability` 500 and `port` 0 prefers a hill cell of habitability 60 and height 255 to a shore cell of habitability 200 (v 30 + 153 = 183 against 100 + 0 = 100 with ore 0); the faerie, with a cell term, does not take the region's seed cell first.
+
+### 22.6 Kind 16 and the "were lost" clause still occur (P3-08 validation F6)
+
+Kind 16 `settlement_abandoned` is written when no survivor reaches another settlement (8.5 item 1): the civilization has no other standing settlement (the deterministic rule P < `abandon_min` on a civilization's last settlement, while another civilization of its race lives, 21 item 6), or the nearest one has no room (P_t ≥ 2 C(R_t, r)). Kind 31's `, and # were lost` needs a destination with room for fewer than all survivors. Neither occurred in the 375 worlds of the P3-08 validation sweep (0.17.0) nor in the 40 default worlds of 0.18.0 (23 abandonments, all kind 31, `lost` 0), because the last settlement of a realm is almost always its capital, which is rarely below 40 people, and a destination is rarely at twice its share. Both remain reachable by the rules (P3-05 16.1a's r6 cases construct them) and are the only correct sentences for those cases, so they are **kept**, with their templates (22.3 adds the cause clause to kind 16).
+
+### 22.7 One last-refuge predicate (P3-09 audit advisory A2; no output change)
+
+`PeoplesSubsystem::race_last_refuge` (21 item 6) and `ConflictSubsystem::last_refuge_of` (P3-06 20.20) are one predicate from 0.19.0: `bool race_last_refuge(const SettlementsNow& now, std::int64_t civ) const` on the peoples subsystem, true when `civ` has exactly one standing settlement in `now` and no other civilization of its race is alive (`ended_year` read from the live state); the per-settlement uses of 8.5 and 10.2's plan call it with the settlement's owner and require the settlement to be that one standing settlement; conflict calls it with a view of the live state. The plague plan keeps passing its copy (`up` mask), as the audit checked (N7). No world byte changes; the determinism auditor confirms on the P3-09 audit's eight cases.
+
+### 22.8 Tests (amends 16.1a)
+
+1. 22.1: an outbreak with two planned spreads killing 300 and 120 after its own 600: kind 37 with `dead` 600, `total` 1020, `reached` 2, salience 45, sentence `… and spread to 2 other settlements; 1,020 died in all.`; one with no spread: `…; 120 died.`, `reached` 0, salience 25; an outbreak that empties s: `reached` 0; no kind 12 event in any 0.19.0 world; invariant 13 with `total`.
+2. 22.2: a dwindling 49, 50 and 51 years after a battle that took people from the settlement: the battle is its cause, the cause, no cause; with a colony sent 30 years before and no recent reduction: the colony is its cause; an abandonment whose decline start is 51 years old cites only the blow.
+3. 22.3, 22.4: the templates render the examples above; an abandonment with only its founding event as cause starts with the settlement's name.
+4. 22.5: the cell-term and capacity unit cases listed there.
+5. Golden: `p3-05-peoples.txt` is re-recorded by the reference (every history line; the σ and C lines change only for faeries, whose `coast` enters σ, 22.5).
+
 ## Appendix A. Proposals entries (added to `docs/design/proposals.md` with this spec)
 
 - "History: peoples expand within reach of their capital and spread by secession" (questions 2 and 5).
@@ -1094,3 +1209,7 @@ Section 21 item 6: 8.5 (a) and (b) do not abandon a settlement that is its race'
 ## Revision note r10 (2026-11-20, the seam as built)
 
 21 item 1: `settlement_name` is stated as built: a public non-const member of `PeoplesSubsystem`, internal to the history subsystems, called only by P3-06's flight. No rule changes.
+
+## Revision note r11 (2026-11-20, wording and site follow-ups; for P3-10, generator 0.19.0)
+
+New section 22 (`docs/specs/p3-10-followups.md`), normative from generator 0.19.0: every outbreak is kind 37 `plague_outbreak` with its total and the settlements it reached (22.1); causes remembered for `cause_memory_years` (50), a dwindling citing the colony it sent (22.2); the cause clause in kinds 10, 16 and 31 (22.3); kinds 15 and 17 without "its" (22.4); the site value with `inland`, `port` and `habitability` weights, faerie and dwarven data (22.5); kind 16 kept (22.6); one last-refuge predicate (22.7); tests (22.8). New `history.peoples` fields `cause_memory_years` and `inland_cap`, appended after `civs_extra_max`. No earlier section is renumbered.

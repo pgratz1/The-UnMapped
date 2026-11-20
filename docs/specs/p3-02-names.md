@@ -1,6 +1,6 @@
 # P3-02 Names
 
-Status: **approved by the lead 2026-11-19; revised 2026-11-19 (text only, after implementation); amended 2026-11-19 for P3-03 (r2); revised 2026-11-19 after the P3-03 implementation (r3: 7 registry container, 4.3 `roman` location, 8 P0-01 request applied); amendment r5 drafted 2026-11-20 by the spec writer (section 11: name filter, god patterns, realm forms); **r6 (2026-11-20): r5 ships with the P3-08 change, generator 0.17.0 (`docs/specs/p3-08-followups.md`), with the filter applied to every word of the rendered name and the redraw stated (11.3, 11.6)**; the seven questions of 11.10 are open with Paul, their interim choices stand**: see the revision notes at the end. Phase P3 History core, spec 2 (P3-00 3.1). Design doc sections 5 ("the seed varies the dates, the places and the gods' names"; civilizations, settlements), 6 ("the database stores facts and names"), 14 (every reference a model writes must resolve to a real entity: names must be unique). Depends on P0-01 (hashing, streams), P0-03 (string grammars, named checks), P3-00 (4.6 keyed draws) and P3-01 (the `culture` kind carries this spec's record). It introduces the domain tag `TAG_HIST` and the keyed-draw helpers that every later history spec uses.
+Status: **approved by the lead 2026-11-19; revised 2026-11-19 (text only, after implementation); amended 2026-11-19 for P3-03 (r2); revised 2026-11-19 after the P3-03 implementation (r3: 7 registry container, 4.3 `roman` location, 8 P0-01 request applied); amendment r5 drafted 2026-11-20 by the spec writer (section 11: name filter, god patterns, realm forms); **r6 (2026-11-20): r5 ships with the P3-08 change, generator 0.17.0 (`docs/specs/p3-08-followups.md`), with the filter applied to every word of the rendered name and the redraw stated (11.3, 11.6)**; the seven questions of 11.10 are open with Paul, their interim choices stand; **r10 (2026-11-20, P3-10, generator 0.19.0): section 12, filter entries and near-identical names**: see the revision notes at the end. Phase P3 History core, spec 2 (P3-00 3.1). Design doc sections 5 ("the seed varies the dates, the places and the gods' names"; civilizations, settlements), 6 ("the database stores facts and names"), 14 (every reference a model writes must resolve to a real entity: names must be unique). Depends on P0-01 (hashing, streams), P0-03 (string grammars, named checks), P3-00 (4.6 keyed draws) and P3-01 (the `culture` kind carries this spec's record). It introduces the domain tag `TAG_HIST` and the keyed-draw helpers that every later history spec uses.
 
 ## 1. Purpose
 
@@ -852,6 +852,64 @@ The review file `~/.cache/the-unmapped/out/p3-10-words/word-decisions.md` holds 
 
 Released at first, then returned to the reject list because a name in the measurement sample (11.11.3) read badly: `bead`, `beard`, `bent`, `bit`, `bunt`, `curd`, `deck`, `drain`, `drink`, `flap`, `foci`, `fora`, `gent`, `grab`, `hard`, `hock`, `lien`, `loci`, `mass`, `mile`, `muck`, `nib`, `novae`, `old`, `sham`, `soli`, `stick`, `stir`, `stock`, `tick`, `weld`. They are counted above.
 
+## 12. Amendment r10: comic names and near-identical names (P3-10, generator 0.19.0)
+
+Normative for the change P3-10 (`docs/specs/p3-10-followups.md`), from generator **0.19.0**, not before; written after the world critic's review of P3-08 (`docs/reviews/p3-08-followups-world-critic.md` F6). Two parts: entries added to the filter lists (data) and a uniqueness rule on a name's core in the history stage (rule). No schema change.
+
+### 12.1 Filter entries (data; `game/data/name_filters/` and both fixture copies)
+
+The review lists names that read as comic or English by accident. Each was checked against 59,400 names drawn with the shipped 0.18.0 data and lists (the names reference `worldgen/tests/reference/p3_names_reference.py`, `make_name` for entities 1 to 1,500 of each culture and kind, 1 to 300 for gods, seeds 0, 1 and 2; script `~/.cache/the-unmapped/out/p3-10-spec/an/frag.py`): a general fragment is added where every name it would reject reads as the critic's example does, and a one-off is left where the fragment is a culture's own syllable.
+
+| Name (world, 0.17.0) | Entry | List | Names of the 59,400 it rejects (examples) |
+| --- | --- | --- | --- |
+| `Suckford` (seed 1) | `suck` | `crude.anywhere` (and `words.whole` loses `suck`) | 12 (`Suckbury`, `The Duchy of Suckdud`, `Gulsuckton`) |
+| `Shiety Glade` (seed 3) | `shiet` | `crude.anywhere` | 16 (`Shietwo Hollow`, `The Circle of Shietae`) |
+| `Realdeadstead` (seed 42 at 512) | `dead` | `words.anywhere` | 40 (`Deadstead`, `Curedeadstead`, `The Kingdom of Dead`) |
+| "The Timhack League" (seed 1) | `hack` | `words.anywhere` (and `words.whole` loses `hack`) | 26 (`Hackford`, `Ashackstead`) |
+| `Whop` (seed 42) | `whop` | `words.anywhere` | 13 (`The Whop Court`, `Whopia Hollow`) |
+| god `Flopfia` (seed 11) | `flop` | `words.anywhere` (and `words.whole` loses `flop`) | 11 (`The Circle of Flopfy`, `Leeflop Glade`) |
+| god `Gordman` (seed 7) | `gord` | `words.at_start` (and `words.whole` loses `gord`) | 13 (`Gordford`, `Clan Gordgou`) |
+| god `Grammam` (seed 5) | `gramma` | `words.anywhere` | the `gramma…` names (`Grammaik Hold`); `Gramm` and `The Gramm Throne` pass |
+
+Left, with the reason: "The Twiwhiwou Ring" (`twiw` is a faerie syllable pair; 12 names, all faerie, read as faerie); god `Mammga` (`mamm` is a dwarven syllable, 18 names such as `Kaidinmamm Hold`; `Mammga` alone reads as "mamma", a one-off not worth a rule); `tim` (66 names, most of them sound: `Timmthorin`; the critic's "Timhack" goes by `hack`). The whole entries removed are made redundant by the new entries (11.2's check `name_filter_not_redundant` would refuse them). Sizes after the edit: `crude` 70 anywhere, 16 at_start, 14 whole; `words` 5 anywhere, 1 at_start, 389 whole. The edit rejects about 0.24% of the drawn names of the sample (141 of 59,400, before overlaps); a rejected name is redrawn as 11.3 says.
+
+### 12.2 No near-identical names in one world (amends 4.3 and 4.4)
+
+Same-core names in one world read as the same place twice (`Skat` and `Skat Pit`, seed 11; `Skreek Pit` and `Skreek Hole`, seed 2; `The Slig Mob` and `Sligg Pit`, seed 42; the critic counted 49 pairs one letter apart in 8 worlds at 0.17.0).
+
+**The core** of a valid attempt is its root R (4.2) with every `'` and `-` removed (letters a–z only; R is lower case before Cap). The history stage keeps, beside the registry, the set K of the cores of the civilization and settlement names it has drawn (gods and regions are not in K: gods are drawn by the chronology stage, and region names are English words). A core k is **near** K when some core of K equals k or is at Levenshtein distance 1 from it (one letter inserted, deleted or replaced). 4.3 becomes, for kinds `civilization` and `settlement` in the history stage:
+
+```
+    for t = 0, 1, …, 63:
+        (valid, n, core) = attempt(t)
+        if not valid: continue
+        if first is none: first = (n, core)
+        if n is not in registry and core is not near K: add n to registry; add core to K; return n
+    … fallback as before, numbering first's name; add first's core to K
+```
+
+So a near attempt is skipped like a name already in the registry: it can still be the fallback's first name (the fallback stays exact, and its numeral keeps the name unique), and the fatal message of 4.3 is reached only when no attempt is valid, as before. Gods (P3-03) keep 4.3 unchanged. The rule applies at every core length: a variant that spared cores of three letters or fewer (where one letter apart is the goblin and orcish syllables' nature, `Kuz`, `Kaz`) was measured and costs as much while leaving pairs (below). Comparing a core with every core of K costs |K| comparisons of short strings per attempt: at most a few thousand per name in the largest worlds (2048, four civilizations per race).
+
+**Measured** with the conflict reference at 0.18.0 (`worldgen/tests/reference/p3_conflict_reference.py`, which reproduces the 0.18.0 worlds row for row; checked on seed 42 at 1024) and the rule switched on by a harness (`~/.cache/the-unmapped/out/p3-10-spec/h10.py`; names do not change the simulation), 1024 default, seeds 0 to 19 (2,222 civilization and settlement names at 0.18.0; each rule was run together with one of P3-05 22.5's faerie site variants, which changes the settlements slightly, 2,218 to 2,222 names, and no name rule):
+
+| Rule | pairs with equal cores | pairs one letter apart | names redrawn (attempt > 0) | extra attempts | fallbacks |
+| --- | --- | --- | --- | --- | --- |
+| none (0.18.0) | 14 | 123 | 383 | — | 0 |
+| equal cores only | 0 | 121 | 396 | +19 | 0 |
+| distance 1 from 4 letters, equal below | 0 | 9 | 465 | +144 | 0 |
+| **distance 1 at every length** (the rule) | **0** | **0** | **471** | **+155** | **0** |
+
+So the rule redraws 88 more names of about 2,220 (4%), about 0.07 more attempts per name, and no world needed the fallback. With every P3-10 change on (P3-05 22.5 as shipped): 2,189 names, 0 pairs equal or one letter apart, 464 redrawn, no fallback. ("Redrawn" counts names whose accepted attempt is not attempt 0, for any reason: a filtered root, a name in the registry, a near core.)
+
+Rejected: equality of cores alone (it leaves `The Slig Mob` beside `Sligg Pit`); an edit distance of 2 (`Nili` and `Muli`), not measured, since at three- and four-letter cores it would forbid most of a syllable set.
+
+### 12.3 Invariants and tests
+
+- Invariant (adds to 6): **6. No two civilization or settlement names of a world have cores that are equal or one letter apart**, except a fallback name (numbered) and the names its first valid attempt was near.
+- Unit tests: a registry holding the core `skat` rejects an attempt with root `skat` (`Skat Pit`) and accepts the next attempt; with `slig` in K, root `sligg` is skipped (distance 1); with `kuz` in K, roots `kuzz`, `kaz` and `kuz` are skipped and `kazz` passes (distance 2); a world whose every attempt is near K falls back to the first valid name with a numeral; gods are not affected.
+- Filter data: the eight entries of 12.1 reject the names in the table; `Gramm` passes; `name_filter_not_redundant` passes on the shipped lists.
+- Golden: `p3-02-names.txt` is re-recorded by the reference (the filter entries change names; the core rule is a history-stage rule and is checked through `p3-05-peoples.txt` and `p3-06-conflict.txt`, whose names change).
+
 ## Revision note (2026-11-19, text only, after implementation)
 
 The implementation (`p3/02-names`) and the independent tests (`p3/02-names-tests`) agreed; this revision makes the text say what they do. No behaviour, golden value or world byte changes.
@@ -898,3 +956,7 @@ Paul's decision on 11.10 question 1 (the short list; questions 2 to 7 accepted a
 ## Revision note r9 (2026-11-20, `mold` back on the list; with P3-09)
 
 Text and data corrections in 11.11 after the lead's interim choice to restore `mold` to the reject list. The list is 393 words (254 released) and the effective `whole` list 514. `mold` moves from the released plants to the kept comic words in 11.11.7, and 11.11.6 is updated. The 11.6 sample table changes in one place only (`The Duchy of Wick`); orcish settlement 6 stays `Shaazazuug` and the seed 42 orcish god `Ogh'krak`, as the test writer's reference golden on `origin/p3/09-int` records. The measurements of 11.11.3 were taken with `mold` released and are kept as they were.
+
+## Revision note r10 (2026-11-20, comic and near-identical names; for P3-10, generator 0.19.0)
+
+New section 12 (`docs/specs/p3-10-followups.md`): eight filter entries for the names the P3-08 world critic listed, with three `whole` entries removed as redundant (12.1, data); no two civilization or settlement names of a world with cores equal or one letter apart (12.2, amends 4.3 and 4.4 for the history stage); invariant 6, tests (12.3). No earlier section is renumbered.

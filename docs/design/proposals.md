@@ -890,3 +890,23 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
   2. Mountain peoples get history of their own: delvings, lost holds and mines as events, not only wars.
 - Interim choice: neither is specified. Both suit P5 History depth (the first also needs the record of renamed places that sites and quests in P6 would use). The grim share of drawn region names can be lowered in data before then.
 - Status: open
+
+### Region names: the plain compass name, a second look
+
+- Date: 2026-11-20
+- Raised by: spec writer (P3-10), from the world critic's review of P3-08 (`docs/reviews/p3-08-followups-world-critic.md` F7)
+- Design doc section: 4 (regions: placeholder names until history gives cultural names)
+- Problem: Paul decided on 2026-11-19 that the largest region of each base name keeps the plain sector-and-noun name ("East Wood"). The largest region is often the most fought over, so the busiest regions carry the plainest names (seed 42 at 1024 keeps seven compass Woods, three of them side by side where the main feud is fought), and small maps stay mostly plain: 83% of regions at 512, 42% at 1024, 15% at 2048 (the P3-08 validation sweep's region rows).
+- Proposal: keep one plain name per kind of land: the largest region of each land noun keeps its compass name (one "… Wood", one "… Downs" per world), every other region draws a name. Measured on the same rows: 33% plain at 512, 12% at 1024, 4% at 2048. Alternatives measured: plain names only for a base name that occurs once (68%, 18%, 4%); the middle-sized region of each base name keeps it instead of the largest (shares unchanged).
+- Interim choice: unchanged (the largest region of each base name), as decided; `docs/specs/p1-06-regions.md` r6 15.5 has the measurements and the rule text is ready to change in RG11 4.
+- Status: open (question 1 of `docs/specs/p3-10-followups.md`)
+
+### History: one quiet line for the world
+
+- Date: 2026-11-20
+- Raised by: lead and spec writer (P3-10), from the world critic's review of P3-08 (F3)
+- Design doc section: 5 (quiet intervals: "four centuries of peace under the same dynasty"), 6 (text rendered from records)
+- Problem: since P3-08 each civilization writes one `quiet_era` per quiet stretch, but every civilization writes its own line for the same stretch with the same years. In 40 default worlds at generator 0.18.0 every quiet row's eras share their years: 1,640 lines in 325 rows; with four civilizations per race a row holds up to 12 identical lines (0.17.0).
+- Proposal: one world-level event per quiet stretch (`quiet_stretch`, P3-04 r12 20.1), with every living realm as a participant and their number as a value ("For 425 years, from 3392 to 3816, the land was quiet, and 5 realms kept the peace."). The per-realm count of ruling generations is derivable from the stored rows and is printed by the history report in each realm's milestones. Alternative: keep per-realm eras and hide those shorter than about 100 years in the report (25% of the lines at 0.18.0).
+- Interim choice: the world-level line, in the P3-10 change (generator 0.19.0; `docs/specs/p3-10-followups.md` question 2).
+- Status: open
