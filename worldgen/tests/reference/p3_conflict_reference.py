@@ -394,6 +394,9 @@ class Engine(pe.Engine):
                 flare = 0
                 trig = 0
                 if end != qe and self.tension is not None:
+                    # Q5 is a step of its own (P3-04 6.2): what Q4 created is visible to the tension's reads (r9
+                    # 20.6 item 3's odds read forces); the hook's Q5 begin() is then not repeated
+                    self.hooks.q5_begin(self)
                     tv, trig = self.tension(s, ln)
                     if tv < 0:
                         fatal("history: tension: value %d below 0" % tv)
@@ -421,7 +424,12 @@ class Engine(pe.Engine):
 
 class Hooks(pe.StubHooks):
     def quiet_a(self, eng, start, length, row_start):
+        self.w.q5_done = False
         self.w.quiet_a(eng, start, length, row_start)
+
+    def q5_begin(self, eng):
+        self.w.begin()            # Q5
+        self.w.q5_done = True
 
     def quiet_b(self, eng, start, length, phase_end, row_start):
         self.w.quiet_b(eng, start, length, phase_end, row_start)
@@ -524,7 +532,9 @@ class World(pp.World):
 
     def quiet_b(self, eng_run, start, length, phase_end, row_start):
         last = start + length - 1
-        self.begin()          # Q5
+        if not getattr(self, "q5_done", False):
+            self.begin()      # Q5 (when the engine asked no tension)
+        self.q5_done = False
         self.begin()          # Q6
         self.quiet_used = None
         self.quiet_eras(start, last)        # P3-04 6.6 (r10 behind pp.FLAGS["quiet"])

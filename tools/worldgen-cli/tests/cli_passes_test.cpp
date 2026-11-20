@@ -187,7 +187,7 @@ TEST_CASE("cli P1-01 9.1, P1-00 10.3: a world with a pass (512, seed 42): rows, 
     REQUIRE(rep.exit_code == EXIT_OK);
     CHECK(contains(rep.out, "\nschema_version = 7\n"));
     CHECK(contains(rep.out, "\ngenerator_version = " + std::string(worldgen::GENERATOR_VERSION) + "\n"));
-    CHECK(std::string(worldgen::GENERATOR_VERSION) == "0.17.0");  // P3-08
+    CHECK(std::string(worldgen::GENERATOR_VERSION) == "0.18.0");  // P3-09
     CHECK(contains(rep.out, "\n[tables]\nage = 0\nbiome = 0\ncivilization = 0\nclimate = 0\nculture = 0\nevent = 0\nevent_cause = 0\nevent_kind = 0\nevent_kind_role = 0\nevent_kind_value = 0\nevent_participant = 0\nevent_value = 0\ngod = 0\nlayer = 1\nmeta = 17\npass = " + std::to_string(rows.size()) +
                                 "\nphase = 0\nrace = 0\nrace_biome = 0\nregion = 0\nregion_biome = 0\nregion_border = 0\nregion_control = 0\nrelation = 0\nsettlement = 0\nsettlement_census = 0\n[layers]\n"));
     const std::vector<std::string> want =

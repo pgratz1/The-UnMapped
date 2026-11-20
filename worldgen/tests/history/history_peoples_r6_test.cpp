@@ -185,21 +185,19 @@ TEST_CASE("P3-05 r6 8.4, 16.1a 17b: a dwarven founding off the walkable ground i
     CHECK(at(gb.settlement[0], 9) != fortress);  // no cell term: the ladder
 }
 
-TEST_CASE("P3-05 r6 8.5 (a), 16.1a 17c: a last settlement is never abandoned by chance; with a second it is") {
+TEST_CASE("P3-05 r6 8.5 (a), r9 21 item 6, 16.1a 17c: a race's last refuge is never abandoned; with a second it is by chance") {
     const Geo g = two_regions();
     const eng::HistoryInputs in = inputs_of(g, 0, one_race("human"), plague_content());
     {
-        // one settlement: struck every year; the chance is not drawn, so it is abandoned only below abandon_min,
-        // as kind 16 (no other settlement), and the civilization ends
+        // one settlement, struck every year: the chance is not drawn (r6), and from 0.18.0 (P3-05 r9 21 item 6)
+        // it is its race's last refuge, so it is not abandoned below abandon_min either: it stands, the
+        // civilization does not end (until 0.17.0 it was abandoned as kind 16 and the civilization ended)
         PeoplesConfig cfg(plague_content());
         const Tables t = eng::run_engine(plague_content(), in, cfg.get());
-        const auto ab = events_of(t, k_settlement_abandoned);
-        REQUIRE(ab.size() == 1U);
-        CHECK(values_of(t, at(*ab[0], 0)).at(1) < 40);
+        CHECK(events_of(t, k_settlement_abandoned).empty());
         CHECK(events_of(t, k_settlement_abandoned_to).empty());
-        const auto end = events_of(t, k_civ_ended);
-        REQUIRE(end.size() == 1U);
-        CHECK(causes_of(t, at(*end[0], 0)) == std::vector<std::int64_t>{at(*ab[0], 0)});
+        CHECK(events_of(t, k_civ_ended).empty());
+        CHECK(is_null(t.civilization[0][8]));
     }
     {
         // a second settlement founded earlier in the same step (T4, before peoples) once the capital is

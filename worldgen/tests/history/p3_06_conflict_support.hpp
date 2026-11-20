@@ -876,17 +876,16 @@ inline void check_invariants_10(const Tables& t, const wd::ContentSet& content) 
             REQUIRE(war_of_end.count(id) == 1U);
             const std::int64_t d = war_of_end.at(id);
             const std::int64_t winner = x.role1(id, 1), loser = x.role1(id, 2);
-            bool aim = false;  // the attacker took (sacked, captured, drove into flight) a settlement of the goal
+            // an ending by aim (7.7 item 2) needs the defender no longer holding the goal: an attacker's win
+            // where the defender holds no region_control row of the goal at the ending's year may be by aim
+            bool aim = false;
             if (winner == x.role1(d, 1)) {
-                for (const std::int64_t b : x.kids(d)) {
-                    for (const std::int64_t sg : x.kids(b)) {
-                        if (x.kind(sg) != k_siege) continue;
-                        for (const std::int64_t f : x.kids(sg)) {
-                            aim = aim || ((x.kind(f) == k_sacked || x.kind(f) == k_settlement_captured) &&
-                                          at(*x.ev.at(f), 5) == at(*x.ev.at(d), 5));
-                        }
-                    }
+                const std::int64_t g = at(*x.ev.at(d), 5), y = at(e, 1), def = x.role1(d, 2);
+                bool holds = false;
+                for (const Row& rc : t.region_control) {
+                    holds = holds || (at(rc, 0) == g && at(rc, 3) == def && at(rc, 1) <= y && (is_null(rc[2]) || at(rc, 2) > y));
                 }
+                aim = !holds;
             }
             CHECK_MESSAGE((aim || last_battle_winner(x, d) != loser),
                           "e" << id << ": the loser c" << loser << " won the war's last battle (T6)");

@@ -259,9 +259,10 @@ TEST_CASE("P3-01 3-5: the production registry holds race, culture and history be
     CHECK(history.schema_for("engine") != nullptr);
     CHECK(history.schema_for("peoples") != nullptr);  // P3-05 12.1
     REQUIRE(history.schema_for("conflict") != nullptr);  // P3-06 12.1, generator 0.16.0 (P3-01 r7)
-    REQUIRE(history.schema_for("conflict")->checks().size() == 2U);
+    REQUIRE(history.schema_for("conflict")->checks().size() == 3U);  // r9 20.9 adds conflict_enmity_hops
     CHECK(history.schema_for("conflict")->checks()[0].name == "conflict_declare");
     CHECK(history.schema_for("conflict")->checks()[1].name == "conflict_strain_max");
+    CHECK(history.schema_for("conflict")->checks()[2].name == "conflict_enmity_hops");
 
     const wd::Kind& race = kinds[5];
     CHECK(race.directory == "races");
