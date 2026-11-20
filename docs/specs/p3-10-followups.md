@@ -1,6 +1,6 @@
 # P3-10 Wording and site follow-ups
 
-Status: **draft for the lead's approval, 2026-11-20** (written by the spec writer on `p3/10-spec`, cut from `origin/p3/09-int` with `origin/p3/09-audit` and `origin/main` merged). Phase P3 History core, a change spec after P3-09 (conflict balance, generator 0.18.0, implemented and in validation) and before P3-07 (the history report, specified, not implemented). Generator **0.19.0**. **No schema change**: schema stays 7; the change appends two event kinds (37, 38), stops writing two (4, 12), changes templates, saliences and lists (data), adds three race fields and two tuning fields (data), and extends the template grammar with one placeholder that was invalid before, as P3-08 did (section 8).
+Status: **decided, ready for implementation (2026-11-20)**: Paul accepted every recommendation of section 10 ("Yes I agree with the recommendations on all five"; `docs/design/proposals.md`, "Paul's decision of 2026-11-20: the P3-10 questions go with their recommendations"), and the lead accepted the grammar extension (question 3). Draft (written by the spec writer on `p3/10-spec`, cut from `origin/p3/09-int` with `origin/p3/09-audit` and `origin/main` merged). Phase P3 History core, a change spec after P3-09 (conflict balance, generator 0.18.0, implemented and in validation) and before P3-07 (the history report, specified, not implemented). Generator **0.19.0**. **No schema change**: schema stays 7; the change appends two event kinds (37, 38), stops writing two (4, 12), changes templates, saliences and lists (data), adds three race fields and two tuning fields (data), and extends the template grammar with one placeholder that was invalid before, as P3-08 did (section 8).
 
 This spec is short on purpose. It lists every item, names the stage-spec section that holds its normative text (each stage spec stays the single source for its stage, amended with a new revision, a bounded new section and a revision note; nothing is renumbered), gives the order of implementation, the effect on output and goldens, the tests to add, the statistics to re-measure and the questions for the owner. Every figure is stated with the worlds it was measured on (section 6); figures measured at 0.17.0 are marked *(0.17.0)*, since P3-09 may move them.
 
@@ -17,7 +17,7 @@ The world critic's review of P3-08 (`docs/reviews/p3-08-followups-world-critic.m
 | 3 | Quiet eras (F3) | One world-level `quiet_stretch` event (kind 38) per quiet phase row, with every living realm as participant and their count; generations of rulers derivable, printed by P3-07 in a realm's milestones; kind 4 no longer written | P3-04 r12 20.1; `docs/specs/p3-07-history-report.md` r11 22.2 | yes |
 | 4 | Faeries off the shore (F4) | Race field `cell_weights` gains `port`, `habitability` and `inland` (a cell's distance from the sea, Chebyshev, capped); faeries `port` 0, `inland` 400 (`inland_cap` 20 cells, 320 m) and race `coast` −500, so they also lose the region seed cell as first site: 54% → 10% of faerie settlements within 300 m of the sea | P3-05 r11 22.5; `docs/specs/p3-01-history-data-settings.md` r11 | yes |
 | 5 | Dwarves (F5) | Dwarves `port` 0 and `habitability` 500 in the site value (lowland counted at half when scoring a home site): dwarven settlements below 30 m 7 → 0 of about 160; region capacity unchanged (a lowland discount there cost a quarter of the dwarves' people and moved no more holds) | P3-05 r11 22.5; P3-01 r11 | yes |
-| 6 | Region names (F7) | Data: church words out, two thirds of the grim words moved from `common` to `trait_barren`, `-hanger`, `High`, lowland `Gap`/`Cleft` out; rule V7: one use of a word stem per world. The plain-name rule is a question for Paul (interim unchanged) | `docs/specs/p1-06-regions.md` r6 section 15 | yes |
+| 6 | Region names (F7) | Data: church words out, two thirds of the grim words moved from `common` to `trait_barren`, `-hanger`, `High`, lowland `Gap`/`Cleft` out; rule V7: one use of a word stem per world; **one plain compass name per land noun**, kept by that noun's largest region (Paul's decision; 83% / 42% / 15% plain at 512 / 1024 / 2048 become 33% / 12% / 4%) | `docs/specs/p1-06-regions.md` r6 section 15, r7 15.7 | yes |
 | 7 | Names (F6) | Eight filter entries (`suck`, `shiet`, `dead`, `hack`, `whop`, `flop`, `gord`, `gramma`); a core uniqueness rule: no two civilization or settlement names of a world whose cores (roots without `'` and `-`) are equal or one letter apart | `docs/specs/p3-02-names.md` r10 section 12 | yes |
 | 8 | Wording (F9) | Thousands separators in rendered values (not in years); battle sentences without "0 of the victors"; moved seats and secessions without "its"; the flare-up's parties stay in P3-07's note, reworded (the one place); `note_reduction` only where people were lost and causes bounded by item 2's memory, so a dwindling no longer cites an unrelated old battle | P3-04 r12 20.3; `docs/specs/p3-06-expansion-conflict.md` r13 21.1, 21.2; P3-05 r11 22.2, 22.4; P3-07 r11 22.3, 22.4 | yes |
 | 9 | P3-09 audit A1, A2 | A1: `flight_plan` copies its hop row; the cache's fixed outer size documented. A2: one last-refuge predicate in peoples | P3-06 r13 21.3, 21.4; P3-05 r11 22.7 | no |
@@ -38,7 +38,7 @@ One branch, one engineer and one test writer working from the stage specs separa
 | 5 | Templates (data): kinds 10, 15, 16, 17, 22, 23, 31, 37, 38 | P3-05 22.3, 22.4; P3-06 21.2; P3-04 20.1 | templates; content hash |
 | 6 | Sites: the `cell_weights` fields and the inland distance (22.5); race data | P3-05 r11 22.5; P3-01 r11 | sites, everything after |
 | 7 | Names: filter entries (data) and the core rule | P3-02 r10 | names; content hash |
-| 8 | Region names: the list edits (data) and V7 | P1-06 r6 | `region.name`; content hash |
+| 8 | Region names: the list edits (data), V7 and the keeper per land noun | P1-06 r6, r7 15.7 | `region.name`; content hash |
 | 9 | Goldens and figures: re-record every golden of section 5; README hash; `docs/specs/schema.md` (kinds 37, 38) | 5 | — |
 
 The test writer updates, from the specs and not from the C++: `p3_engine_reference.py` (P3-04 20.1–20.4), `p3_peoples_reference.py` (P3-05 22), `p3_conflict_reference.py` (P3-06 21), `p3_names_reference.py` and the history references' naming (P3-02 12), `p1_regions_reference.py` (P1-06 15), `p3_data_reference.py` (the new fields and lists).
@@ -64,7 +64,7 @@ The test writer updates, from the specs and not from the C++: `p3_engine_referen
 | `p0-worlds.txt`, `p1-worlds.txt`, `p3-worlds.txt` | yes, by the validation specialist after the cross-preset comparison | every case | — |
 | `GOLDEN_CASES` (`db_determinism_test.cpp`), `stages_pipeline_test.cpp`'s hashes, README's `--seed-phrase "The Unmapped"` hash | yes | `content_hash`, names | — |
 | `core_vectors.txt`, `p1-01-elevation.txt` … `p1-05-resources.txt` | no (except item 3 of 4, new lines) | — | every existing line |
-| `p1-06-regions.txt` | yes, by the reference | the `region` table hash wherever a name is drawn | the `region` layer, `region_border`, `region_biome` |
+| `p1-06-regions.txt` | yes, by the reference | the `region` table hash of 33 of its 43 cases (every case in which a land noun occurs twice or a name is drawn; P1-06 15.6 lists them) | the `region` layer, `region_border`, `region_biome` |
 | `p3-01-data.txt` | yes | the data roots' content hashes | — |
 | `p3-02-names.txt` | yes | names the new filter entries reject | names they do not reach |
 | `p3-03-chronology.txt` | yes | `god` names the filter entries reach; `race_biome` unchanged | `race`, `culture`, `age`, the awakening years |
@@ -122,7 +122,7 @@ P3-02 12.1 and 12.2 have the tables. Filter entries: about 0.24% of drawn names 
 
 ### 6.4 Region names
 
-P1-06 15.5 has the table: grim drawn names 13% → 8% at 1024 and 14% → 6% at 2048, church words 72 → 1 (a false match), repeated stems 75 → 26 (1024, 100 worlds) and 145 → 41 (2048, 5 worlds), attempts per drawn name 0.11 (max 4) and 0.64 (max 9), no fallback; the plain-name options of question 1.
+P1-06 15.5 and 15.7 have the tables. With the keeper per land noun (15.7): plain names 33% / 12% / 4% at 512 / 1024 / 2048, drawn names 63 → 261, 2,863 → 4,328, 837 → 951, attempts per drawn name 0.07 (max 1), 0.14 (max 6), 0.75 (max 11), no fallback, grim drawn names 11% / 9% / 7%. Without it (r6 alone): grim drawn names 13% → 8% at 1024 and 14% → 6% at 2048, church words 72 → 1 (a false match), repeated stems 75 → 26 (1024, 100 worlds) and 145 → 41 (2048, 5 worlds), attempts per drawn name 0.11 (max 4) and 0.64 (max 9), no fallback.
 
 ## 7. Tests to add
 
@@ -133,7 +133,7 @@ Each stage spec lists its own; in summary:
 - P3-06 21.5: `note_reduction` only with a loss; the battle sentence with (4, 0), (37, 1), (491, 14), (0, 0); A1 and A2 byte-identical.
 - P3-07 22.6: the generations note; the reworded flare-up note; the new `events_` lines.
 - P3-02 12.3: the filter entries; the core rule (equal, distance 1, fallback, gods unaffected); invariant 6.
-- P1-06 15.6: the list edits; V7.
+- P1-06 15.6: the list edits; V7; the keeper per land noun.
 - Build: the partition check counts SLOW entries; `ctest --preset linux-gcc-release` lists no slow entry, `ctest --preset linux-gcc-release-slow -N` lists only them.
 
 ## 8. Schema
@@ -152,21 +152,23 @@ On the sweeps of P3-06 15.6 at 0.19.0, against section 6 and P3-09's acceptance 
 1. Quiet lines per world and per quiet row (one), `realms` against the living civilizations.
 2. Outbreaks: `total` equals the sum of the outbreak's and its spreads' `dead` (invariant 13); salience-45 outbreaks with `total` < 1,000 (must be 0).
 3. Abandonments and dwindles with a cause clause; causes older than 50 years (must be 0 for reductions and decline starts).
-4. Faeries: share of settlements within 300 m (18 cells, Chebyshev) of the sea (target below 20%), forest share, standing settlements and population, worlds with one settlement; humans' standing settlements and population against 0.18.0 (−15% and −9% in the 20 measured worlds).
+4. Faeries (and the watch item of decision 5): share of settlements within 300 m (18 cells, Chebyshev) of the sea (target below 20%), forest share, standing settlements and population, worlds with one settlement; humans' standing settlements and population against 0.18.0 (−15% and −9% in the 20 measured worlds).
 5. Dwarves: settlements below 30 m, fortresses below 30 m, median elevation rank, realms mostly in the lowest quarter of their region, standing settlements, population, cities.
 6. Names: equal-core pairs (must be 0), pairs one letter apart, redraws per name, fallbacks; filtered names (P3-02 invariant 5).
-7. Region names: P1-06 15.5's measures at 512, 1024 and 2048.
+7. Region names: P1-06 15.5's and 15.7's measures at 512, 1024 and 2048: plain share, attempts, fallbacks (must be 0), grim share, repeats; one keeper per land noun in every world (invariant 6 as restated).
 8. The summary: per-age floor and threshold (P3-07 21) with kinds 37 and 38.
 
-## 10. Questions for Paul (each with the recommendation and the interim choice)
+## 10. Decisions (questions to Paul, closed 2026-11-20)
 
-1. **The plain compass name** (P1-06 15.5). The largest region of each base name keeps its plain name (Paul's decision of 2026-11-19), which puts the plainest names on the busiest regions and leaves small maps 83% plain. Recommendation: **one plain name per land noun** (the largest region of each noun keeps it: one `… Wood`, one `… Downs` per world; plain share 33% at 512, 12% at 1024, 4% at 2048). Alternatives measured: only unique base names (68%, 18%, 4%); a middling region instead of the largest (shares unchanged). Interim: **unchanged**.
-2. **One quiet line for the world** (item 3; P3-04 20.1). Recommendation and interim: **one `quiet_stretch` per quiet phase row** (325 lines instead of 1,640 in 40 worlds; the generations of each realm move to P3-07's milestones). Alternative: keep per-realm eras and let P3-07 hide eras shorter than about 100 years (it cannot be decided when an era is written, because a quiet row's end is known only when it ends): removes 414 of 1,640 lines at 0.18.0 (25%) and 736 of 2,296 at four civilizations per race *(0.17.0)* (32%), and leaves identical lines for every longer row. A per-culture word for rulers ("48 warlords rose and fell") is not proposed: the world-level line carries no per-realm count.
-3. **The cause clause needs a grammar extension** (item 2; section 8). Recommendation and interim: `{@causes:…}`. Alternative: no grammar change, and P3-07's summary shows an abandonment's causes as companions (the causes, salience 25, would then be shown in the summary).
-4. **Thousands separators** (item 8; P3-04 20.3). Recommendation and interim: commas for values of 1,000 or more in sentences ("a city of 20,000", design 4), never in years or in the report's own numbers. Alternative: separators only from 10,000.
-5. **Faerie and dwarven sites** (items 4, 5; P3-05 22.5). Recommendation and interim: as specified (faeries leave the shore, 54% → 11% within 300 m; no dwarven settlement below 30 m). Alternatives measured: faerie `coast` −1000 (4% near the sea, but 78% in forest and fewer settlements) or 0 (29% near the sea); a lowland discount in the dwarves' capacity as well (no further effect on sites, a quarter fewer dwarves). Watch: humans lose 15% of their settlements in the 20 measured worlds.
-6. **Comic names left as one-offs** (P3-02 12.1): `Mammga` and "The Twiwhiwou Ring" are left because their fragments are the dwarven and faerie syllables. Recommendation and interim: leave them.
+Paul accepted every recommendation ("Yes I agree with the recommendations on all five"; `docs/design/proposals.md`, "Paul's decision of 2026-11-20: the P3-10 questions go with their recommendations"); the lead accepted the grammar extension. Each question is **decided** as the rule now written:
+
+1. **Decided: one plain compass name per land noun**, kept by that noun's largest region, ties to the smaller id; every other region draws a name (P1-06 r7 15.7, replacing the keeper per base name of Paul's decision of 2026-11-19). Plain names 33% / 12% / 4% at 512 / 1024 / 2048; no fallback with V7.
+2. **Decided: one world-level `quiet_stretch` per quiet phase row** (P3-04 20.1); generations of rulers in P3-07's milestones.
+3. **Decided (the lead): the `{@causes:…}` placeholder** for the cause clause (P3-04 20.2).
+4. **Decided: thousands separators from 1,000, in sentences only**, never in years or the report's own numbers (P3-04 20.3).
+5. **Decided: the faerie and dwarven site data as specified** (P3-05 22.5). **Watch item for validation**: humans' standing settlements and population against 0.18.0 (−15% and −9% in the 20 measured worlds; section 9 item 4); the lead follows it in validation.
+6. **Decided: `Mammga` and "The Twiwhiwou Ring" stay unfiltered** (P3-02 12.1).
 
 ## 11. Proposals
 
-Two entries in `docs/design/proposals.md`: "Region names: the plain compass name, a second look" (question 1) and "History: one quiet line for the world" (question 2). The other items are wording and data within earlier decisions.
+Two entries in `docs/design/proposals.md`, both accepted with Paul's decision entry of 2026-11-20: "Region names: the plain compass name, a second look" (question 1) and "History: one quiet line for the world" (question 2). The other items are wording and data within earlier decisions.
