@@ -7,7 +7,7 @@
 // own merge on the region graph, its own border rows and pass crossings,
 // p1_06_regions_support.hpp), the others directly on the output (a BFS per
 // region for connectivity, the G2 labels for the landmass, recounts of
-// every column, the name grammar).
+// every column; r3: the names of invariant 6 by the test's own RG11).
 //
 // Seeds 0 to 63 at N = 128 with the shipped and the test-only tuning of
 // 10.2 run in the suite "regions-slow":
@@ -220,22 +220,55 @@ void check_invariants(const std::string& label, const CaseInputs& ci, const Over
             fail("invariant 8: passes attached");
         }
     }
-    // Invariant 6: unique names of data words; numerals from II.
-    std::set<std::string> names;
-    std::set<std::string> sector_words(v.names.begin(), v.names.begin() + 9);
-    std::set<std::string> nouns{v.names[9], v.names[10]};
-    for (const auto& b : definitions().biomes) {
-        nouns.insert(b.region_noun);
+    // Invariant 6 (r3): names unique, no numeral; each base name in use held
+    // by exactly one region, the largest (ties to the smaller id); every
+    // other name one of its land's forms filled from the region's pools
+    // (common, land, its traits; weight > 0), valid by V1 to V6, and no base
+    // name in use. Bases, lands and traits by the test's own RG11 1 to 5.
+    {
+        std::set<std::string> names;
+        const std::set<std::string> base_set(own.bases.begin(), own.bases.end());
+        std::map<std::string, std::pair<std::int64_t, std::int64_t>> best;  // base -> (cells, -id)
+        for (std::size_t k = 0; k < out.regions.size() && k < own.bases.size(); ++k) {
+            const auto& row = out.regions[k];
+            auto it = best.find(own.bases[k]);
+            if (it == best.end() || std::make_pair(row.cells, -row.id) > it->second) {
+                best[own.bases[k]] = std::make_pair(row.cells, -row.id);
+            }
+        }
+        const region_names::PlaceData& pd = region_names::shipped();
+        const region_names::NameTuning nt{};
+        for (std::size_t k = 0; k < out.regions.size(); ++k) {
+            const auto& row = out.regions[k];
+            if (!names.insert(row.name).second) {
+                fail("duplicate name");
+            }
+            for (const std::string& w : words_of(row.name)) {
+                if (w == "I" || is_numeral_from_2(w)) {
+                    fail("a Roman numeral in a name: " + row.name);
+                }
+            }
+            if (k >= own.bases.size()) {
+                fail("no own base name");
+                continue;
+            }
+            const std::string& base = own.bases[k];
+            if (best[base].second == -row.id) {
+                if (row.name != base) {
+                    fail("the keeper does not hold its base name: " + row.name);
+                }
+                continue;
+            }
+            if (base_set.count(row.name) != 0U) {
+                fail("a drawn name equals a base name in use: " + row.name);
+            }
+            const auto td = region_names::trait_defs(pd, region_names::traits_of(own.trait_rows[k], nt));
+            if (!region_names::parses_as_land_name(row.name, *own.lands[k], pd.common(), td, nt)) {
+                fail("not a valid name of its land: " + row.name);
+            }
+        }
     }
     for (const auto& row : out.regions) {
-        if (!names.insert(row.name).second) {
-            fail("duplicate name");
-        }
-        const std::vector<std::string> w = words_of(row.name);
-        if (w.size() < 2 || w.size() > 3 || sector_words.count(w[0]) == 0U || nouns.count(w[1]) == 0U ||
-            (w.size() == 3 && !is_numeral_from_2(w[2]))) {
-            fail("name grammar: " + row.name);
-        }
         if (row.biome < 1 || own.out.regions.empty()) {
             fail("biome");
         }

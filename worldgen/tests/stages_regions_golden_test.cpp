@@ -78,6 +78,13 @@ std::vector<std::pair<std::string, std::string>> items_of(const CaseInputs& ci, 
     out.emplace_back("walk_area", u16_hash(g, in.walk_area));
     out.emplace_back("passes", passes_hash(ci.passes, g));
     const Own own = own_regions(in, ci.passes, v, c.seed);
+    // r3: the test's own RG11 (p1_06_regions_names.hpp, written from the
+    // spec) agrees with the Python reference's golden lines, whatever the
+    // stage does (a cross-check of the two independent implementations).
+    CHECK_MESSAGE(region_table_hash(own.out.regions) == c.get("table_region"), "own table_region of " << c.name);
+    CHECK_MESSAGE(names_line(own.out.regions) == c.get("names"), "own names of " << c.name);
+    CHECK_MESSAGE(attempts_line(own.out.regions, own.name_how) == c.get("name_attempts"),
+                  "own name_attempts of " << c.name);
     // RG2: G7 with k = 1 through the shared seam.
     const std::vector<std::int64_t> hand = biome_api::hand(g, own.surface, in.water, in.river, in.flow_dir, 1);
     CHECK(hand == own.hand);
@@ -168,6 +175,10 @@ std::vector<std::pair<std::string, std::string>> items_of(const CaseInputs& ci, 
         std::replace(val.begin(), val.end(), ' ', '_');
         out.emplace_back(k, val);
     }
+    // r3 (10.5): the stage's names; how each was named by the test's own
+    // RG11 (the stage does not report its attempts).
+    out.emplace_back("names", names_line(o.regions));
+    out.emplace_back("name_attempts", attempts_line(own.out.regions, own.name_how));
     return out;
 }
 
@@ -514,7 +525,9 @@ TEST_CASE("P1-06 10.1 tests 2, 3: RG6 adds the mainland's best site, then a rive
     CHECK(o.borders.empty());
     CHECK(o.regions[0].name == "West Downs");
     CHECK(o.regions[1].name == "East Isle");
-    CHECK(o.regions[2].name == "East Isle II");
+    // r3: the smaller `East Isle` draws a name of land `isle` (before r3
+    // `East Isle II`); the reference's rg6_fixture gives the same.
+    CHECK(o.regions[2].name == "Adderlaw Rock");
     CHECK(report_values(o.regions, o.borders)[1].second == "0.00 0.00 0.02");
     CHECK(own_regions(in, {}, values(RG6_TUNING), 0).out == o);
 }
@@ -549,7 +562,8 @@ TEST_CASE("P1-06 3.2, RG6, RG10 (ruling): a one-cell lake islet is a region with
     for (const auto& x : o.regions) {
         names.push_back(x.name);
     }
-    CHECK(names == std::vector<std::string>{"West Downs", "East Isle", "East Isle II", "East Isle III"});
+    // r3 (the reference's lake-only fixture; before r3 `East Isle II`, `East Isle III`).
+    CHECK(names == std::vector<std::string>{"West Downs", "The Sable Isle", "East Isle", "Woemere"});
     CHECK(own_regions(in, {}, values(RG6_TUNING), 0).out == o);
 }
 

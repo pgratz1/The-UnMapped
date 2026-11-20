@@ -70,7 +70,8 @@ TEST_CASE("P1-06 4: the shipped tuning loads; fields in declaration order with t
     const auto* def = l.content->find("worldgen", "regions");
     REQUIRE(def != nullptr);
     REQUIRE(def->record.size() == region_data::tuning_fields().size());
-    CHECK(region_data::tuning_fields().size() == 14U);
+    // r3 adds name_pool_weights and name_traits (generator 0.17.0).
+    CHECK(region_data::tuning_fields().size() == (UNMAPPED_P3_08_API ? 16U : 14U));
     for (std::size_t i = 0; i < def->record.size(); ++i) {
         CHECK(def->record.name_at(i) == region_data::tuning_fields()[i].name);
     }
