@@ -452,6 +452,23 @@ RULES: tuple = (
         _rx(r"\b(?P<fn>setlocale)\s*\(|\bstd\s*::\s*locale\b|(?:\.|->)\s*imbue\s*\("),
         filter=_free_call,
     ),
+    # Character classification and case mapping (added by the P3-08 audit):
+    # the <cctype> and <cwctype> functions follow the C locale (LC_CTYPE), and
+    # passing a negative char (a byte >= 0x80 where char is signed: GCC and
+    # Clang on x86, MSVC) is undefined behaviour, so lower-casing a name with
+    # them could differ between platforms or crash. The project classifies
+    # ASCII by explicit ranges (data/text.hpp, history/names.cpp).
+    Rule(
+        "ctype",
+        "#include of <cctype>, <ctype.h>, <cwctype>, <wctype.h>; calls of isalpha(, isdigit(, ... tolower(, "
+        "toupper( and the wide forms (also std:: and ::)",
+        "locale-dependent character classification or case mapping in the output path, undefined for a "
+        "negative char; compare explicit ASCII ranges such as c >= 'A' && c <= 'Z' (P0-01 4)",
+        _rx(r"\b(?P<fn>isw?(?:alnum|alpha|blank|cntrl|digit|graph|lower|print|punct|space|upper|xdigit)"
+            r"|tow?(?:lower|upper)|iswctype|towctrans|wctype|wctrans)\s*\("),
+        filter=_free_call,
+        includes=("cctype", "ctype.h", "cwctype", "wctype.h"),
+    ),
     Rule(
         "long-type",
         "long, unsigned long, long int (not long long, not long double)",

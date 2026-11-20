@@ -9,6 +9,8 @@
 #include <unordered_set>  // expect: banned-include
 #include <locale>  // expect: banned-include
 #include <math.h>  // expect: banned-include
+#include <cctype>  // expect: ctype
+#include <wctype.h>  // expect: ctype
 #include <cstdint>
 #include <algorithm>
 
@@ -44,6 +46,10 @@ void f(std::vector<int>& v, Gen& g, Obj& o) {
     std::unordered_map<int, int> m;  // expect: unordered-container
     setlocale(LC_ALL, "");  // expect: locale
     std::cout.imbue(std::locale(""));  // expect: locale, stream-format
+    char lc = std::tolower(c0);  // expect: ctype
+    if (isalpha(c0) || ::isdigit(c0)) {}  // expect: ctype
+    auto wu = towupper(wc0);  // expect: ctype
+    bool sp = std::isspace(static_cast<unsigned char>(c0));  // expect: ctype
     auto s = std::sqrt(2);  // expect: std-math
     auto p = std::pow(2, 3);  // expect: std-math
     std::sort(v.begin(), v.end());  // expect: unstable-sort
