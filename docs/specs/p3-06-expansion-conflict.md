@@ -1127,6 +1127,151 @@ For the independent test writer; the reference `p3_conflict_reference.py` gains 
 8. Invariants 20.13 on the property worlds of 16.2 item 15 and on the golden cases; the extra golden case `hist-conflict-flight` of the test writer (a world with flights and found refuges).
 9. Golden: every P3-06 golden vector re-recorded at 0.18.0 (P3-09 6).
 
+### 20.15 Who won the war (r10; replaces 7.7's "War score"; Paul's note 1 of 2026-11-20)
+
+Paul, reading seed 42 at 0.17.0: in 3826 the Hold of Dulimin killed 991 goblins for 44 of its own (e146) and then "sued for peace" (e147). Its own 44 dead took it over `exhaustion_permille`, and the score of 7.7 (battles won, not their size) stood 2:1 for the goblins from two small battles. With 20.3 that defender would also cede land. Three rules (`docs/design/proposals.md`, "Paul's notes of 2026-11-20 from reading a generated history", points 1 and 2, accepted for P3-09):
+
+1. **The war score weighs the scale of the fighting.** For a war with attacker a and defender b:
+
+   ```
+   s = (dead(b) − dead(a)) + (taken(a) − taken(b))
+   ```
+
+   Here dead(c) is the war's dead of c (7.4: c's casualties in the war's battles; a tribute's people are not war dead), and taken(c) is the sum of P, at the moment of the fall and before its toll, of every settlement c took in this war (sacked, captured or fallen into flight, 7.5 and 20.1). s > 0: a won; s < 0: b won; 0: a truce. The score counts people killed and people taken: what the war did, not how many skirmishes went each way. (A draw band, a truce whenever |s| is within 10% or 3% of all the dead, was measured and not adopted: it adds truces, and so hollow wars: 20.18.)
+2. **An exhausted side that leads wins** (replaces the truce of 7.7 item 1 for "the one exhausted side leads on score"). The war ends with that side as winner: it has bled, but it has done more harm than it took. The other side, not exhausted, has not yielded, so the event is a `war_won` (item 4), not a `peace`. Both sides exhausted, or the exhausted side behind: 7.7 item 1 as before.
+3. **The winner of the last battle does not lose.** In every ending decided by the score (7.7 items 1, 3 and 4, and 7.8's end in a quiet step), if the side the score names as loser won the war's most recent battle, the war ends in a `truce` instead. An ending by aim achieved (7.7 item 2) is unchanged: a defender that has lost its goal has lost, whatever its last battle. (Measured against the variant "only when the last battle was in the ending's own step": 20.18.)
+4. **"Sued for peace" only when the loser yields.** Kind 27 `peace` (`{loser} sued {winner} for peace after …`) is written only when the loser is exhausted: an ending by exhaustion in which both sides are exhausted, or the one exhausted side is the one the score disfavours. That side is the one that asks. Every other ending with a winner (item 2's exhausted leader, aim achieved, no front, length, the quiet step's end) writes the new kind **34 `war_won`** (no region; roles 1 `winner`, 2 `loser`; value `years`; caused; salience 60; template `{winner} prevailed over {loser} after {years} {years?year|years} of war.`), with the same causes, relation changes, `last_peace` and grudge as a `peace`.
+
+   Wherever P3-06 20, P3-07 21 or P3-09 name "the peace" of a war, a `war_won` is meant too. This covers 20.3's costs (cause: the `peace` or `war_won`), 20.4's count, P3-07 21.2's units (the row "`peace`, `truce`" reads "`peace`, `war_won`, `truce`"), P3-07 21.5's definitions, and the invariants of 14 item 2 and 20.13 item 4. 11's cause rule for `peace` and `truce` holds for `war_won`.
+
+### 20.16 Battle losses bounded by the victors (r10; amends 7.3 item 4)
+
+dead_L = min(F_L × `loss_loser_permille` div 1000, F_W × `kill_max_permille` div 1000), with F_W and F_L the sides' local forces (20.6 item 2); dead_W as r7 (from the smaller force). Shipped `kill_max_permille` **500**: a host kills at most half its own number in one battle. Without the bound, forty defenders in a strong position that win the draw kill a quarter of a horde of thousands (seed 42 at 0.17.0, 4424, e225: 881 goblins and 4 faeries fell).
+
+### 20.17 Faeries are not found (r10; replaces 20.7 item 1 and the "concealed" case of 20.1's hidden settlements; Paul's note 2)
+
+Paul: "maybe instead of getting involved in lots of battles the Faeries could be so hard to find that they often can't be conquered?" Concealment becomes a search, and faeries are protected by not being found, not by winning.
+
+**One notion, two strengths.** A settlement is out of an army's reach in one of two ways:
+
+- **Hidden** (20.1, unchanged): a fled refuge, for `hidden_years`. It is out of every presence, so no one quarrels with it, claims it or marches on it.
+- **Concealed**: a standing settlement of race r in region R with B(R, r) ≥ `conceal_min(r)` (20.7; faerie 400). It is now **in presence like any settlement**: its people are known, quarrelled with, claimed and warred on. But an army must find it before it can fight there:
+
+1. **Search** (7.3, before item 2's battle draw). When the battlefield R of 6.2 holds standing visible settlements of the side being attacked, y, and every one of them is concealed, x searches: found if chance_pm(draw(`hist.conflict.search`, Y, w, R, 0), `find_permille`) (shipped **250**).
+   - Not found: no battle and no siege this year, and the war's `unfound` count rises by 1.
+   - Found: `unfound` = 0 and the year goes on as 7.3, in which the siege may take a concealed settlement.
+   - A region where y also has a settlement that is not concealed needs no search.
+2. **Giving up.** When `unfound` reaches `search_years` (shipped **3**), the war ends in this T6, before 7.7: append **35 `search_abandoned`** (region R; roles 1 `searcher` (x), 2 `hidden` (y); value `years` = Y − start; caused by the war's last event; salience **40**; template `{searcher} searched {@region} for {hidden} and found no one; the war ended after {years} {years?year|years}.`).
+   - It is then treated as a truce (7.7 "Ending in a truce": `war` row closed, `peace` row opened, `last_peace`, `war_grudge`, strains and claims cleared), with no cost (20.3 needs a winner).
+   - It counts in 20.4's weariness like any war that left the goal unchanged.
+   - One event per war, at its end, and none for each failed search. A reader meets "the horde searched the Tangle of Yews and found no one" once per such war, below the summary's usual threshold (P3-07 21: shown when T ≤ 40, as companion of a shown declaration).
+3. **Faerie home defence 0.** `home_defense_permille` of the faerie becomes **0** (20.12's table: was 2000); the elves keep 1500 (decided). A faerie host that is found fights as what it is, a small people.
+4. **Statistics.** A war ended by `search_abandoned` is **not hollow**: it is the faeries' way of not being conquered. P3-07 21.5's `wars_hollow` excludes wars whose `war` row's `until_event` is a `search_abandoned`; a new key `wars_unfound` (appended after `race_regions_share_max_permille`) counts them. Acceptance target T1 (P3-09 5) is `wars_hollow_permille` < 250 with that definition. P3-09 5 also reports wars_unfound separately.
+5. **Stream** `hist.conflict.search`, registered after `hist.conflict.sack` (P0-01's stream list; registration changes no world byte). Key (w, R): one search per war per year.
+
+### 20.18 Measured (r10)
+
+**Prototype at 0.17.0.** The test writer's reference on the merged branch is now P3-08's, generator 0.17.0. The spec writer's prototype (`~/.cache/the-unmapped/out/p3-09-spec/proto_v7.py`, a subclass of it, run with the shipped `game/data`) reproduces the 0.17.0 world exactly (seed 42 at 1024: 847 events and 41 wars, as the 0.17.0 C++ world of the P3-08 validation). So these figures are **measured at 0.17.0**; the r2 figures of 20.1–20.8 were at 0.16.0 with P3-08 emulated.
+
+The prototype now follows the text where the test writer found it did not (P3-09 11):
+- the refuge's kind by P3-05 8.4's cell rule;
+- the `abandon_min` condition of 20.1 and the last refuge's exemption from tribute;
+- a quiet-step end that waits for the loser's budget;
+- a dropped claim in one direction only;
+- presence counting every standing settlement;
+- 20.20 item 1 (20.20 item 2 is P3-05's and is not prototyped).
+
+1024, default settings, seeds 0–39. `B17` is 0.17.0 as shipped; `F17` is every rule of r2 (P3-09 as decided); `L0` is every rule of r2 and r10 as written.
+
+| Statistic | `B17` | `F17` (r2) | **`L0` (r10)** |
+| --- | --- | --- | --- |
+| wars per world (min / median / max) | 7 / 21.5 / 59 | 3 / 17 / 40 | 8 / 23.5 / 45 |
+| wars ended unfound (`search_abandoned`) | — | — | 169 |
+| hollow wars, of wars that found their enemy (T1) | 399 of 974 (40%) | 172 of 740 (23%) | **185 of 807 (22%)** |
+| worlds with a run of more than 3 futile wars over one (defender, goal) (T2) | 28 | 0 | **0** |
+| sieges of a last refuge held while a destination existed (T3) | 163 of 278 held (no flight rule) | 0 of 53 | **0 of 46** |
+| worlds with a race extinct (T4) | 0 | 0 | **0** |
+| orc wars won / lost (T5) | 17 / 91 | 55 / 24 | **52 / 35** |
+| endings with a winner whose loser won the war's last battle | 58 of 720 | 29 of 482 | **5 of 524** (endings by aim, which item 3 allows) |
+| endings: `peace` / `war_won` / truce / unfound | 536 / 184 / 195 / 0 (`war_won` not yet a kind: endings that are not by exhaustion) | 298 / 184 / 219 / 0 | 303 / 221 / 244 / 169 |
+| battles in which a victor of less than a tenth of the loser's force killed more than half its own number | 46 | 15 | **0** (21 bounded by 20.16) |
+| battles with faeries (per world median; total) | 7.5; 451 | 0; 0 (fully concealed) | **3; 124** |
+| searches; failed | — | — | 1,019; 749 |
+| faerie standing settlements (median); worlds with 1 | 5; 6 | 8; 0 | **7; 0** |
+| elven standing settlements (median); worlds with 1 | 11.5; 4 | 8; 4 | 8; 2 |
+| goblin share of wars; orc share of the orc age | 76%; 24% | 73%; 28% | 73%; 27% |
+| worlds without a goblin–elf war | 7 | 3 | 2 |
+| events (median); simulated years (median) | 652; 1,284 | 620; 1,297 | 690; 1,311 |
+
+Variants measured and not adopted (same seeds; each as `L0` but **without item 2** of 20.15, the exhausted leader's win, and with a draw band of 10% of all the dead, unless stated):
+- **`N1b`** (that base): hollow 29% of wars that found their enemy.
+- **`S30`** (band 3%): 28%.
+- **`S0`** (no band): 26%. The new score and item 3 make more truces, and truces are hollow; item 2 turns most of them into wins, which brings `L0` to 22%.
+- **`SV1`** (no band, with 7.7's battle-count score): hollow 25%, but orcs win 29 and lose 34, so T5 fails: the count favours the many small victories of the larger people.
+- **`N2`** (item 3 only within the ending's own step): 10 endings still have a loser that won the last battle.
+- **`N4`** (no claims on a region where the holder is wholly concealed): only 3 wars end unfound and faeries fight 1 battle in 40 worlds, but hollow wars are 32% and wars fall to 786. Not adopted: Paul's reading is that faeries are warred on and not found, not that no one wars on them.
+- **`N3`** (`find_permille` 150): 198 wars end unfound and faeries fight 61 battles; 250 is kept.
+
+At 512, seeds 0–29 (`B512` 0.17.0, `L0_512` r10): hollow wars of wars that found their enemy 58% → 31% (T1 is a 1024 target; 512 stays harsher); runs above 3 in 27 → 4 worlds; refuges held while a destination existed 291 of 549 → 0 (75 held for want of land); no race extinct; orcs 23 / 80 → 30 / 21; faeries with one settlement 15 → 2 worlds, elves 7 → 0; faerie battles 685 → 178.
+
+### 20.19 Data and tests (r10)
+
+- `history.conflict` gains, after `enmity_hops`: `kill_max_permille` int(1, 10000) 500 (taste, 20.16), `find_permille` int(0, 1000) 250 (taste, 20.17), `search_years` int(1, 100) 3 (taste, 20.17). Race data: faerie `home_defense_permille` 0 (P3-01 3.2's table as amended in r10 there).
+- Kinds 34 `war_won`, 35 `search_abandoned` (above) and 36 `refuge_held` (20.22; region 1, settlement 1, caused, roles 1 `attacker` and 2 `defender` civilization 1–1, value `reason`), appended after 33; `history.report` entries; `docs/specs/schema.md`.
+- Invariants (adds to 20.13):
+  - (7) every `peace` follows an ending by exhaustion, and its loser was exhausted;
+  - (8) no `peace` or `war_won` has as loser the winner of its war's last `battle` or `battle_at_pass`, unless the ending was by aim (the goal no longer the defender's);
+  - (9) every battle's `loser_dead` ≤ the victors' local force × `kill_max_permille` div 1000 (the reference recomputes the force);
+  - (10) every `search_abandoned` follows `search_years` searches without a find (the reference counts them);
+  - (11) no `battle` or `siege` lies in a region where, at that year, the defender's only standing settlements were concealed, unless the search of that year found them (the reference replays the draw).
+- Tests (adds to 20.14):
+  - the score with dead and people taken (s = 0 a truce); the exhausted leader as winner (`war_won`);
+  - the last-battle truce, and the aim exception;
+  - `peace` against `war_won` for each ending;
+  - the kill bound with F_W = F_L / 20;
+  - search found and not found (`find_permille` 0 and 1000), `unfound` reset by a find, the end at `search_years`, a region with a concealed and a visible settlement (no search), and the truce bookkeeping of `search_abandoned`;
+  - golden: `p3-06-conflict.txt` re-recorded.
+
+### 20.20 A race's last refuge is never emptied (r10; closes a defect of 20.13 item 2 found by the test writer)
+
+The test writer's stress cases 1, 12 and 14 (`origin/p3/09-tests`, fixture tuning, not shipped) end a race. The orcs are their race's last refuge, and the guard holds every siege, but battle casualties bring the refuge below `abandon_min`. P3-05 8.5 (b) then abandons it in the next T1. 20.1 and P3-09 10 protected flights and tributes, not casualties; local levies draw every battle's dead from that one settlement. Two rules close it:
+
+1. **Casualties** (7.4): when c is its race's last refuge (one standing settlement, the only alive civilization of its race), dead = min(dead, P − `abandon_min`), at least 0. The battle's recorded values (`winner_dead`, `loser_dead`) stay as computed (16.0 reading 3); the war's dead add the people actually removed.
+2. **Abandonment** (P3-05 8.5 (a) and (b), amended in P3-05 21 item 6): a settlement that is its race's last refuge is not abandoned, by chance or by the rule below `abandon_min`. It stays standing with its few people and grows by 9.1, or recovers.
+
+   This is wider than P3-08's rule: "a civilization's last settlement is never abandoned by chance" (P3-05 r6 8.5 (a)) is per civilization and only about the chance. This rule is per race, deterministic, and covers every cause (P3-05's famine and plague, P3-06's casualties).
+
+   P3-05 8.5 item 6 then never ends the race's last civilization by abandonment, so with 20.1, 20.3 and item 1 no race ends by any rule (20.13 item 2 holds for all legal tuning).
+
+The bound on the defeated's dead (20.16) lowers losses but does not close the gap: a refuge that loses battle after battle still reaches `abandon_min` without item 1.
+
+### 20.21 Readings of the test writer, settled (r10)
+
+The test writer's reference (`p3_conflict_reference.py gaps`, `origin/p3/09-tests` d45dd89) took these readings where the text was open. Each is **confirmed** as the rule unless corrected:
+
+1. 20.1 presence: "the regions c holds in which c has a hidden settlement" counts every standing settlement of c, including a colony peoples founded earlier in the same step. Confirmed.
+2. 20.1: the cap of h_x(D) stays `march_hops` + 1 for every pair, also when the pair's fronts use `enmity_hops` (20.8). Confirmed: the flight flees the attacker's ordinary reach.
+3. Hidden settlements (fled refuges; from r10 not concealed ones, which are in presence) still count for 7.7 item 2's aim test, for the transfer of "each standing visible settlement" in a cession (7.7, 20.3) and for casualties (7.4). They are excluded only from presence, siege targets, claim causes (5.3) and the tribute's n (20.3). Confirmed.
+4. 20.2 item 2: a dropped claim removes a's claim on b only, not b's on a. Confirmed.
+5. 20.3: the cession candidates come from `front(W, L)`, and regions the loser is weary of (20.4) are not excluded (weariness bars claims, not peace terms). In a quiet step the war's end waits for the loser's budget whenever any cost would follow. Confirmed.
+6. 20.4: the count updates at the war's end event (`peace`, `war_won`, `truce` or `search_abandoned`). Confirmed.
+7. 20.6 item 3: the odds use the claim's region before the goal is re-chosen (20.2 item 2); the defence is 1000 when that region is not in `front(a, b)`. Confirmed.
+8. 20.7: a settlement's race is its owner's race (P3-05 `race_of`). Confirmed.
+9. Report order: kinds 32, 33 after P3-08's 31, then 34, 35, 36 (r10); P3-07 9's `events_<key>` lines follow ids. Confirmed.
+
+### 20.22 A refuge that holds says why (r10; makes T3 checkable)
+
+When the guard holds a fallen last refuge (20.1 item 2), the step writes **36 `refuge_held`** in place of the `siege`:
+
+- region and settlement t; roles 1 `attacker`, 2 `defender`;
+- value `reason`: 1 = no flight destination, 2 = too few survivors to settle;
+- caused by the battle; salience 25;
+- template `{attacker} besieged {@settlement} of {defender}; with {reason?nowhere to flee|too few to flee}, its people held on.`
+
+Every other siege, including a last refuge's siege whose draw said it held, stays a `siege` with `fell` 0. 14 item 3 and 20.13 item 3 read "a `siege` or `refuge_held`" where they name the siege a fall is caused by (a `refuge_held` is never followed by a fall).
+
+**T3 from the rows.** Every `refuge_held` of reason 1 must have no free, non-islet region within `flight_hops` of R_t whose capacity for the defender's race is at least `expand_min_capacity` and that has a site. The reference recomputes this from the tables and the data (region owners at that year from `region_control`). Validation counts `refuge_held` by reason and runs the reference's check. A refuge that falls into flight is visible as a `refugees_settled`.
+
 ## Appendix A. Proposals entries (added to `docs/design/proposals.md` with this spec)
 
 - "History: wars are limited, fought for a claimed region, and end with the active phase" (questions 1 and 2).
@@ -1168,3 +1313,17 @@ Text only. 11's rendered samples, the capture example of r7 and the sample of 15
 ## Revision note r9 (2026-11-20, conflict balance; for P3-09, generator 0.18.0)
 
 New section 20 (P3-09, `docs/specs/p3-09-conflict-balance.md`; the world critic's review of 0.16.0; decided by Paul 2026-11-20; checked against P3-08 as built, P3-09 10: a flight needs `abandon_min` survivors, a last refuge pays no tribute), normative from generator 0.18.0: a fallen last refuge flees into hiding (`refugees_settled`, kind 32; hidden settlements, 20.1); war goals avoid the defender's capital (20.2); a lost war costs the loser a region or a tribute (`tribute`, kind 33; 20.3); war weariness per defender and region (20.4); revenge (20.5); orc muster, local levies, odds weighed by terrain with a floor and a minimum that also stops flare-ups, a shorter truce for peoples more warlike than goblins (20.6); faerie concealment and elven and faerie home defence (20.7); enmity hops and the map-size reading (20.8); eleven tuning fields, three race fields, the two kinds, `claim` salience 35 (20.9, 20.12); order and determinism (20.10); statistics (20.11); invariants (20.13); tests (20.14). Sections 1–19 keep describing 0.16.0 and 0.17.0 where 20 does not replace them. Figures are the spec writer's prototype at 0.16.0 with P3-08 partly emulated, to be re-measured at 0.18.0 (P3-09 5.6).
+
+## Revision note r10 (2026-11-20, Paul's notes on a generated history and the test writer's findings; for P3-09 r3, generator 0.18.0)
+
+New subsections 20.15–20.22, after 20.14; nothing before them is reorganised or renumbered, and where they differ from 20.1–20.14 they rule.
+- 20.15: the war score counts the dead inflicted and the people taken; an exhausted side that leads wins; the winner of the war's last battle never loses an ending decided by the score; `peace` only when the loser is exhausted, else the new kind 34 `war_won`.
+- 20.16: the defeated's dead are bounded by half the victors' force.
+- 20.17: concealed settlements are in presence but must be found (`find_permille` 250 a year); after 3 years unfound the war ends with kind 35 `search_abandoned`; faerie home defence 0.
+- 20.18: measured at 0.17.0.
+- 20.19: data, invariants, tests.
+- 20.20: a race's last refuge is never taken below `abandon_min` by casualties nor abandoned (the test writer's extinction case).
+- 20.21: the test writer's readings confirmed.
+- 20.22: kind 36 `refuge_held` with a `reason`, so that T3 can be checked from the rows.
+
+New stream `hist.conflict.search`; new tuning `kill_max_permille`, `find_permille`, `search_years`.
