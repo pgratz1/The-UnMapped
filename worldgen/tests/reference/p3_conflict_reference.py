@@ -204,6 +204,28 @@ SPEC_GAPS = (
                                "without any claim (hist-races-elf-orc-1024 has them)."),
     ("14 item 4 conqueror alive", "Alive at the conquest: ended_year NULL, or later than the year, or the same year "
                                   "with an ending event after the conquest."),
+    # r9 (P3-09, generator 0.18.0)
+    ("r9 20.1 presence", "'c has a hidden settlement' in R counts every standing settlement of c, a colony founded "
+                         "earlier in the step included (concealment belongs to the place); the prototype counted "
+                         "visible settlements only."),
+    ("r9 20.1 h_x cap", "h_x(D) is capped at march_hops + 1 for every pair, also an enmity pair whose fronts use "
+                        "enmity_hops (the text names march_hops)."),
+    ("r9 20.1 hidden where", "A hidden settlement is no siege target and no claim cause; the aim test of 7.7, 7.7's "
+                             "and 20.3's transfer of 'each standing visible settlement' and the casualties of 7.4 "
+                             "(battles, tributes) still include hidden settlements (the text changes only presence, "
+                             "targets and the tribute's n)."),
+    ("r9 20.2 dropped claim", "'the claim is dropped' removes a's claim on b only (the prototype dropped both "
+                              "directions); strains are kept."),
+    ("r9 20.3 front", "The cession candidates of 20.3 are read from front(W, L) as it stands after the peace, with "
+                      "the pair's hops and hidden settlements out of presence; weary regions are not excluded."),
+    ("r9 20.3 quiet wait", "In Q4 an end waits for the loser's budget when 7.7's cession, 20.3's cession or a "
+                           "tribute of n > 0 would follow (no wait when L is a last refuge or n = 0)."),
+    ("r9 20.4 moment", "The futile count is updated at the peace or truce, before any cession (equivalent for reads)."),
+    ("r9 20.6 odds region", "The odds weigh the defence of the claim region G (the claim's region, before 20.2's "
+                            "re-choice); 1000 when G is not in front(a, b)."),
+    ("r9 20.7 race", "A settlement's race (concealment, home defence) is its owner's race."),
+    ("r9 20.13 item 2", "FINDING, not a reading: a last refuge whose guard holds can be bled below abandon_min by "
+                        "battles and abandoned by P3-05 8.5 (b) (stress cases 1, 12, 14)."),
 )
 
 
