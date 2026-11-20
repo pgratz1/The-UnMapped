@@ -59,6 +59,21 @@ h::ConflictTuning shipped_tuning() {
     t.secession_grudge = 300;
     t.grudge_decay_per_century = 50;
     t.last_refuge = 1;
+    // r9 20.9 and r10 20.19 (generator 0.18.0), shipped.
+    t.refuge_flight = 1;
+    t.flight_hops = 3;
+    t.hidden_years = 300;
+    t.weary_wars = 3;
+    t.tribute_permille = 100;
+    t.revenge_aggression = 400;
+    t.levy_hops = 3;
+    t.odds_floor = 500;
+    t.odds_min = 700;
+    t.truce_break_aggression = 600;
+    t.enmity_hops = 3;
+    t.kill_max_permille = 500;
+    t.find_permille = 250;
+    t.search_years = 3;
     t.capital_sacked_salience = 90;
     t.capital_captured_salience = 80;
     return t;

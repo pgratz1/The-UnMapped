@@ -644,11 +644,13 @@ std::vector<std::int64_t> ConflictSubsystem::presence(const StepContext& ctx, st
         if (s.owner_civ != civ || !standing(s)) {
             continue;
         }
-        // r10 20.21 item 1: every standing settlement counts, also one
-        // founded earlier in this step (a refuge of this T6 hides its region).
+        // 20.1 with 5.1 and 8.3 item 4: a visible settlement that is not
+        // hidden puts its region in presence; a hidden one hides a held
+        // region whether or not the engine shows it yet (20.21 item 1: a
+        // refuge founded earlier in this T6 counts).
         if (hidden(ctx, id)) {
             hiding[static_cast<std::size_t>(s.region)] = 1;
-        } else {
+        } else if (ctx.visible(s)) {
             seen[static_cast<std::size_t>(s.region)] = 1;
         }
     }
