@@ -190,9 +190,11 @@ TEST_CASE("P3-05 11, 16.1 item 14, 16.1a 17i: the compiled catalogue appends kin
     CHECK(compiled.kinds[4].key == "flare_up");
 }
 
-TEST_CASE("P3-05 3.3: the twelve hist.peoples streams follow hist.chronology.awakening (51 names from 0.16.0)") {
+TEST_CASE("P3-05 3.3: the twelve hist.peoples streams follow hist.chronology.awakening (52 names from 0.17.0)") {
     const auto names = ppl::registered_streams();
-    REQUIRE(names.size() == 51U);  // P3-06 3.3 appends five hist.conflict names (P0-01 19)
+    // P3-06 3.3 appends five hist.conflict names (P0-01 19); P0-01 amendment 20 (0.17.0) inserts
+    // geo.regions.name after geo.regions.cost
+    REQUIRE(names.size() == 52U);
     std::size_t at = 0;
     for (std::size_t i = 0; i < names.size(); ++i) {
         if (names[i] == "hist.chronology.awakening") at = i;
