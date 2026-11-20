@@ -1249,7 +1249,11 @@ The bound on the defeated's dead (20.16) lowers losses but does not close the ga
 
 The test writer's reference (`p3_conflict_reference.py gaps`, `origin/p3/09-tests` d45dd89) took these readings where the text was open. Each is **confirmed** as the rule unless corrected:
 
-1. 20.1 presence: "the regions c holds in which c has a hidden settlement" counts every standing settlement of c, including a colony peoples founded earlier in the same step. Confirmed.
+1. 20.1 presence (reworded in r12, the lead's ruling on the engineer's and the test writer's readings). `presence(c)` has two parts, and only the second looks at invisible settlements:
+   - (a) the regions of c's standing **visible** settlements that are not hidden. A colony peoples founded earlier in the same step is not visible (8.3 item 4), so it puts no region into presence;
+   - (b) the regions c **holds**, except a held region in which c has a hidden settlement. For "has a hidden settlement" every standing settlement of c counts, visible or not.
+
+   Nothing else in presence counts an invisible settlement. **Q5 is a step of its own** (P3-04 6.2), so colonies peoples founded in Q4 are visible in Q5: the forces that 20.6's odds read for the tension (5.4) and the flare pair count them.
 2. 20.1: the cap of h_x(D) stays `march_hops` + 1 for every pair, also when the pair's fronts use `enmity_hops` (20.8). Confirmed: the flight flees the attacker's ordinary reach.
 3. Hidden settlements (fled refuges; from r10 not concealed ones, which are in presence) still count for 7.7 item 2's aim test, for the transfer of "each standing visible settlement" in a cession (7.7, 20.3) and for casualties (7.4). They are excluded only from presence, siege targets, claim causes (5.3) and the tribute's n (20.3). Confirmed.
 4. 20.2 item 2: a dropped claim removes a's claim on b only, not b's on a. Confirmed.
@@ -1303,6 +1307,17 @@ Each is **confirmed** as the rule:
 
 1. **Typical ranges of 15.5 predate P3-08.** P3-08 halved famine and plague spread and merged quiet eras, so 15.5's ranges no longer describe a default world. The P3-08 validation suggests, from the 5th–95th percentiles of 100 default 1024 worlds at 0.17.0: events 400–1,250, wars 9–53, flare-ups 0–6. These move again at 0.18.0 (20.18: more wars, the searches), so **every typical range of 15.5 and 20.11 is to be reset from the 5th–95th percentiles of the P3-09 validation sweep at 0.18.0**. Until then, an outlier from 15.5 is not a finding.
 2. **Plague in the summary.** P3-08 predicted that plague would be 121‰ of the summary's events after its salience change (P3-05 r6 10.2). The P3-08 validation measured 83‰. The summary figures of P3-07 21 and P3-09 5.7 do not depend on that prediction; validation reports the measured share at 0.18.0.
+
+### 20.26 War lines of the golden (r12; amends 16.0 reading 12 for r10)
+
+The reference's war lines (16.0 item 12; `p3-06-conflict.txt` (b)) gain one `<how>` word and two outcome forms, as the test writer's reference writes them on `origin/p3/09-int`:
+- `<how>` **`unfound`**: the war ended by `search_abandoned` (20.17); its `<outcome>` is **`unfound`**.
+- `<outcome>` **`won-c<W>`** for a war won by W, whether its ending event is a `peace` or a `war_won` (20.15); the ending's kind is in the event lines.
+  - **`-ceded`** is appended for a cession of 7.7 or 20.3;
+  - **`-tribute`** is appended for a tribute (20.3).
+- An exhausted leader's win (20.15 item 2) is `exhaustion` with `won-c<W>`.
+
+Other words unchanged: `exhaustion`, `aim`, `no-front`, `length`, `quiet`, `conquest`, `ended`, `open`; outcomes `truce` and `-`. A `refuge_held` (20.22) is not a war ending and does not appear in a war line.
 
 ## Appendix A. Proposals entries (added to `docs/design/proposals.md` with this spec)
 
@@ -1363,3 +1378,9 @@ New stream `hist.conflict.search`; new tuning `kill_max_permille`, `find_permill
 ## Revision note r11 (2026-11-20, weariness counts wars in progress; the engineer's readings)
 
 New 20.23 (the lead's ruling on T2): a defender is weary of a region while the futile count plus the wars over it still open reaches `weary_wars`, at the claim and at the declaration; invariant (12) and its tests. New 20.24: three readings of the engineer confirmed. New 20.25: the typical ranges of 15.5 to be reset from the P3-09 validation sweep; plague's measured summary share (83‰ against 121‰ predicted). Nothing before 20.23 is changed or renumbered.
+
+## Revision note r12 (2026-11-20, text after the P3-09 integration)
+
+Text only, no rule change.
+- 20.21 item 1 is reworded so that it cannot be over-read (the lead's ruling): a colony founded earlier in the same step does not put its region into presence; it counts only for whether a held region has a hidden settlement. Q5 is its own step, so Q4's colonies count in the odds read there.
+- New 20.26: the war lines' `unfound`, `won-c<W>` for `peace` and `war_won`, and `-tribute`.

@@ -70,7 +70,7 @@ The test writer extends `p3_conflict_reference.py` from P3-06 20 alone (not from
 | # | Target | Prototype (`FINE`, seeds 0–39) |
 | --- | --- | --- |
 | T1 | hollow wars below 25% (`wars_hollow_permille` < 250 over the sweep) | 24% |
-| T2 | at most 3 consecutive wars per (defender, goal) without a change of owner (`wars_same_goal_unchanged_max` ≤ 3) in at least 95% of worlds | 38 of 40 |
+| T2 | at most 3 consecutive wars per (defender, goal) without a change of owner, any change of the region's owner breaking the run, also one between two wars (`wars_same_goal_unchanged_max` ≤ 3, P3-07 21.8 item 5); from r4 an invariant of every world (P3-06 20.23) | 38 of 40 |
 | T3 | no last refuge holds a siege while a flight destination with enough survivors exists (the reference counts sieges held by the guard with a destination: 0) | 0 of 41 sieges |
 | T4 | no race extinct (`races_alive` = the present races; P3-06 14 item 7) in every world of every sweep | 0 worlds |
 | T5 | orcs win at least as often as they lose: over the sweep, peaces with an orc civilization as `winner` ≥ peaces with one as `loser` | 39 against 30 |
@@ -305,3 +305,12 @@ Items 9–13: who won the war (score of dead and people taken, the exhausted lea
 ## Revision note r4 (2026-11-20, weariness counts wars in progress)
 
 Item 14 (P3-06 20.23, r11): the engineer's implementation of r3 at 0.18.0 (`origin/p3/09-impl` 845793e, 1024 seeds 0–39) met T1 (221‰), T3, T4, T5 (51/32), T6 and T7, but missed T2 (4 of 40 worlds above 3, at most 6, mostly faerie regions searched in turn by several hordes). The lead's ruling makes open wars count toward weariness. T2 becomes an invariant of every world and is still checked by validation. Not re-measured by the spec writer. P3-06 20.24 confirms three of the engineer's readings. P3-06 20.25: the typical ranges are reset from this change's validation sweep (P3-08's suggested 0.17.0 ranges recorded); plague's summary share was measured at 83‰ against 121‰ predicted.
+
+## Revision note r5 (2026-11-20, text after the P3-09 integration)
+
+Text only.
+- T2 reads with P3-07 21.8 item 5's definition: any change of owner breaks a run.
+- Presence and Q5 are clarified in P3-06 20.21 item 1 (r12).
+- War-line words are added in P3-06 20.26.
+- The P3-05 seam is stated as built (21 item 1).
+- P3-02 r9: `mold` is back on the list (393 words), and the shipped `words.toml` and its `geo-small` copy are taken from `origin/p3/09-int`. Item 8's list is now 393 words.
