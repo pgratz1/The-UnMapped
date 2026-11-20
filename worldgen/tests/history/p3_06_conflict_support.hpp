@@ -521,6 +521,60 @@ inline void check_invariants_06(const Tables& t, const eng::HistoryInputs& in, s
     }
 }
 
+// P3-06 16.2 item 18a (r7, the 0.16.0 validation's F1): below the first claim the log with conflict (t)
+// equals the peoples-only log (pt) row for row in event, event_participant, event_cause and event_value,
+// except the quiet_era events open in the quiet step of the first claim, whose end_year (not below the
+// claim's year), years and generations may be smaller. With no claim, every history table but the three
+// catalogue tables and relation (conflict opens enmity rows without a claim: the reading of the reference)
+// is equal. Returns the number of excepted eras.
+inline std::int64_t check_peoples_prefix(const Tables& t, const Tables& pt) {
+    std::int64_t first = 0;
+    for (const Row& e : t.event) {
+        if (at(e, 3) == k_claim) {
+            first = at(e, 0);
+            break;
+        }
+    }
+    if (first == 0) {
+        CHECK(t.phase == pt.phase);
+        CHECK(t.event == pt.event);
+        CHECK(t.event_participant == pt.event_participant);
+        CHECK(t.event_cause == pt.event_cause);
+        CHECK(t.event_value == pt.event_value);
+        CHECK(t.civilization == pt.civilization);
+        CHECK(t.settlement == pt.settlement);
+        CHECK(t.settlement_census == pt.settlement_census);
+        CHECK(t.region_control == pt.region_control);
+        return 0;
+    }
+    const std::int64_t claim_year = at(t.event[static_cast<std::size_t>(first - 1)], 1);
+    std::set<std::int64_t> excepted;
+    REQUIRE(pt.event.size() >= static_cast<std::size_t>(first - 1));
+    for (std::size_t i = 0; i + 1 < static_cast<std::size_t>(first); ++i) {
+        const Row& a = t.event[i];
+        const Row& b = pt.event[i];
+        if (a == b) continue;
+        CAPTURE(at(a, 0));
+        const bool era = at(a, 3) == k_quiet_era && at(b, 3) == k_quiet_era && at(a, 1) == at(b, 1) &&
+                         a[4] == b[4] && a[5] == b[5] && a[6] == b[6] && a[7] == b[7] && at(a, 2) >= claim_year &&
+                         at(a, 2) <= at(b, 2);
+        CHECK_MESSAGE(era, "event " << at(a, 0) << " below the first claim e" << first << " differs: " << str(a)
+                                    << " against " << str(b));
+        if (era) excepted.insert(at(a, 0));
+    }
+    auto below = [first](const std::vector<Row>& rows, const std::set<std::int64_t>& skip) {
+        std::vector<Row> out;
+        for (const Row& r : rows) {
+            if (at(r, 0) < first && skip.count(at(r, 0)) == 0) out.push_back(r);
+        }
+        return out;
+    };
+    CHECK(below(t.event_participant, {}) == below(pt.event_participant, {}));
+    CHECK(below(t.event_cause, {}) == below(pt.event_cause, {}));
+    CHECK(below(t.event_value, excepted) == below(pt.event_value, excepted));
+    return static_cast<std::int64_t>(excepted.size());
+}
+
 }  // namespace conflict_test
 
 #if UNMAPPED_HAVE_CONFLICT

@@ -75,6 +75,22 @@ TEST_CASE("P3-06 14, 16.2 item 15: the sixteen synthetic geographies equal the r
     CHECK(n == 16U);
 }
 
+TEST_CASE("P3-06 16.2 item 18a (r7): below the first claim the log equals the peoples-only log (synthetic cases)") {
+    std::size_t n = 0;
+    for (const CCase& g : conflict_golden()) {
+        if (g.kind != "synthetic") continue;
+        CAPTURE(g.name);
+        const wd::ContentSet& c = content_of(g);
+        const eng::HistoryInputs in = synthetic_inputs(g);
+        const Tables t = eng::history_stage(c, in);
+        peoples_test::PeoplesConfig cfg(c);
+        const Tables pt = eng::run_engine(c, in, cfg.get());
+        (void)check_peoples_prefix(t, pt);
+        ++n;
+    }
+    CHECK(n == 16U);
+}
+
 TEST_CASE("P3-06 7, 14: the stress cases equal the reference and reach every conflict event kind") {
     std::size_t n = 0;
     std::map<std::int64_t, std::int64_t> kinds;

@@ -189,7 +189,7 @@ TEST_CASE("P3-06 12.1, 16.1 item 12: each named check of history.conflict once, 
     CHECK(load(with_conflict_edit("strain_max = 5000", "strain_max = 900")).ok());
 }
 
-TEST_CASE("P3-06 11, 16.1 item 11: the compiled kinds 20-30 equal section 11; templates parse; report lists them") {
+TEST_CASE("P3-06 11 (r7), 16.1 item 11: the compiled kinds 20-30 equal section 11; templates parse; report lists them") {
     using ET = eng::EntityType;
     const ET C = ET::civilization;
     struct K {
@@ -214,7 +214,8 @@ TEST_CASE("P3-06 11, 16.1 item 11: the compiled kinds 20-30 equal section 11; te
         {"sacked", 1, 1, {{"attacker", 1}, {"defender", 1}}, {"dead", "survivors"}, 75,
          "{attacker} sacked {@settlement} of {defender}; {dead} died and {survivors} fled."},
         {"settlement_captured", 1, 1, {{"attacker", 1}, {"defender", 1}}, {"dead", "fled"}, 60,
-         "{attacker} took {@settlement} from {defender}; {dead} died and {fled} fled."},
+         // r7 (0.17.0): no "and 0 fled", P3-04 r10's three-word form
+         "{attacker} took {@settlement} from {defender}; {dead} died{fled?| and one fled| and # fled}."},
         {"peace", 0, 0, {{"winner", 1}, {"loser", 1}}, {"years"}, 60,
          "{loser} sued {winner} for peace after {years} {years?year|years} of war."},
         {"truce", 0, 0, {{"parties", 2}}, {"years"}, 50,
@@ -223,9 +224,9 @@ TEST_CASE("P3-06 11, 16.1 item 11: the compiled kinds 20-30 equal section 11; te
         {"civ_conquered", 1, 0, {{"civilization", 1}, {"conqueror", 1}}, {}, 90, "{civilization} fell to {conqueror}."},
     };
     const eng::EventCatalogue& compiled = eng::compiled();
-    REQUIRE(compiled.kinds.size() == 30U);
+    REQUIRE(compiled.kinds.size() == 31U);  // P3-05 r6 appends kind 31 after kinds 20-30 (0.17.0)
     const eng::EventCatalogue cat = eng::catalogue_of(engine_test::shipped());
-    REQUIRE(cat.kinds.size() == 30U);
+    REQUIRE(cat.kinds.size() == 31U);
     for (std::size_t i = 0; i < want.size(); ++i) {
         const K& w = want[i];
         CAPTURE(w.key);

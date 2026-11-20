@@ -202,6 +202,46 @@ TEST_CASE("P3-06 16.3 item 19, 16.2 item 16: the 1024 golden worlds and the hard
     }
 }
 
+// The sample of 15.2 (seed 42 at 1024: 1030 events, the five flare-ups, the end state, the wars and the
+// quoted sentences) is generator 0.16.0's (P3-06 r7 15: "The 0.16.0 figures of 15 stay as measured"); from
+// 0.17.0 (P3-08) the case is checked against the golden file like every other world, and 16.3 item 20
+// becomes the peoples-only prefix of 16.2 item 18a (r7).
+TEST_CASE("P3-06 16.3 item 20, 16.2 item 18a (r7): seed 42 at 1024 below its first claim is the peoples-only log") {
+    const CCase& g = conflict_case("hist-conflict-42-1024");
+    const Tables t = tables_of_world(open_world(world_path(g)));
+    const GCase& pg = peoples_test::golden_case("hist-peoples-42-1024");
+    chrono_api::Params p = chrono_test::params_with(pg.span, chrono_test::races_of_text(pg.races));
+    const Tables pt = tables_of_world(open_world(peoples_test::peoples_world(pg.name, 42, "", 1024, p)));
+    (void)check_peoples_prefix(t, pt);
+}
+
+}  // TEST_SUITE
+
+TEST_SUITE("history-slow" * doctest::skip()) {
+
+TEST_CASE("P3-06 16.3 item 19: the other 512 golden worlds, with --event-intensity turbulent and --civs-per-race 4") {
+    for (const char* name : {"geo-seed-0-512", "geo-phrase-512", "hist-span-2000-512", "hist-conflict-turbulent-512",
+                             "hist-conflict-civs4-512"}) {
+        check_world_case(conflict_case(name));
+    }
+    // the two settings reach the conflict history (P3-06 5.2: intensity scales strain; 16.2 item 15)
+    const auto& base = conflict_case("geo-seed-42-512");
+    CHECK(conflict_case("hist-conflict-turbulent-512").tables.at("relation") != base.tables.at("relation"));
+    CHECK(conflict_case("hist-conflict-civs4-512").tables.at("relation") != base.tables.at("relation"));
+}
+
+TEST_CASE("P3-06 16.3 item 19, 16.2 item 16: the 1024 golden worlds and the hard bounds of 15.5") {
+    const std::vector<std::pair<const char*, const char*>> cases = {
+        {"geo-seed-1-1024", "geo-seed-1-1024"},
+        {"hist-races-elf-orc-1024", "hist-races-elf-orc-1024"},
+        {"hist-dense-1024", "hist-dense-1024"},
+        {"hist-conflict-42-1024", "hist-peoples-42-1024"}};
+    for (const auto& [name, peoples] : cases) {
+        check_world_case(conflict_case(name));
+        check_hard_bounds(conflict_case(name), peoples);
+    }
+}
+
 TEST_CASE("P3-06 15.2, 16.3 item 20: the sample of seed 42 at 1024") {
     const CCase& g = conflict_case("hist-conflict-42-1024");
     const db::WorldReader r = open_world(world_path(g));

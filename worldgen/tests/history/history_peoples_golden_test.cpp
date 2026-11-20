@@ -186,6 +186,36 @@ TEST_CASE("P3-05 16.2 item 20: threads 1 and 5 give identical history tables") {
     }
 }
 
+// The sample of 15.2 (seed 42 at 1024: its first 60 sentences, 530 events and the end state) is the
+// prototype's 0.15.0 measurement, reproduced through 0.16.0; P3-05 r6 changes it (region names of P1-06 r3,
+// names of P3-02 r5, the r6 rules), and the spec keeps the 0.15.0 text. From 0.17.0 the case
+// hist-peoples-42-1024 is checked against the golden file like the other 1024 worlds (above).
+
+}  // TEST_SUITE
+
+TEST_SUITE("history-slow" * doctest::skip()) {
+
+TEST_CASE("P3-05 16.3 item 21: the other 512 golden worlds") {
+    for (const char* name : {"geo-seed-0-512", "geo-phrase-512", "hist-span-2000-512"}) {
+        check_world_case(golden_case(name));
+    }
+}
+
+TEST_CASE("P3-05 16.3 item 21, 16.2 item 18: the 1024 golden worlds and the hard bounds of 15.5") {
+    for (const char* name : {"geo-seed-1-1024", "hist-races-elf-orc-1024", "hist-dense-1024", "hist-peoples-42-1024"}) {
+        check_world_case(golden_case(name));
+        check_hard_bounds(golden_case(name));
+    }
+}
+
+TEST_CASE("P3-05 16.2 item 20: threads 1 and 5 give identical history tables") {
+    for (const char* name : {"geo-seed-42-512", "hist-dense-1024"}) {
+        const GCase& g = golden_case(name);
+        CAPTURE(g.name);
+        CHECK(tables_of_world(open_world(world_path(g, 5))) == tables_of_world(open_world(world_path(g, 1))));
+    }
+}
+
 TEST_CASE("P3-05 15.2, 16.3 item 22: the sample of seed 42 at 1024 (first 60 sentences, 530 events, the end state)") {
     const GCase& g = golden_case("hist-peoples-42-1024");
     const db::WorldReader r = open_world(world_path(g));

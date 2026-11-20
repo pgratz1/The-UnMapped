@@ -665,6 +665,7 @@ class World(pe.World):
         self.quiet_used = None
         self.charged = set()
         self.homes_log = []        # (race, year, [homes], n requested)
+        self.homes_state = []      # (race, year, {region: owner}, [eligible regions in order]) at each awakening
         self.site_how = {}         # settlement -> seed / best / relaxed
         self.hunger = {}           # civ -> years
         self.hunger_max = 0
@@ -873,6 +874,7 @@ class World(pe.World):
                 n = 1
         else:
             n = setting
+        self.homes_state.append((race, self.year, {rid: self.owner[rid][0] for rid in self.geo.ids}, list(el)))
         homes = [first]
         while len(homes) < n:
             nxt = None
@@ -3105,6 +3107,58 @@ def stored_rows(conn, table):
     return [tuple(r) for r in rows]
 
 
+def cmd_compare_016(argv):
+    """P3-08 5: against the 0.16.0 golden file OLD, the score lines move only for faeries (race 4) and the
+    homes only for faeries or where a home of 0.16.0 is not eligible at that awakening in the 0.17.0 run
+    (held by a civilization: the history before it differs). Recomputes every case; exit 1 otherwise."""
+    old = open(argv[0], encoding="utf-8").read().splitlines()
+    inputs = opt(argv, "--inputs", DEFAULT_INPUTS)
+    new = open(GOLDEN, encoding="utf-8").read().splitlines()
+    c = Checker()
+
+    def sel(lines, kw):
+        return {l for l in lines if (" %s " % kw) in l and not l.startswith("#")}
+    for l in sorted(sel(old, "score") - sel(new, "score")):
+        c.true("P3-08 5: a non-faerie score line moved: %s" % l, " ra4 " in l)
+    changed = {}
+    for l in sorted(sel(old, "homes") - sel(new, "homes")):
+        w = l.split()
+        if w[2] != "ra4":
+            changed.setdefault(w[0], []).append((int(w[2][2:]), int(w[3][1:]), [int(x) for x in w[5].split(",")]))
+    dat = data()
+    for name, items in sorted(changed.items()):
+        if name.startswith("syn-") or name.startswith("stress-"):
+            seed = int(name.split("-")[1])
+            d = edited(dat, peoples=STRESS) if name.startswith("stress-") else dat
+            inp, _g = synthetic_inputs(seed, d)
+            res = history_stage(d, inp)
+        else:
+            case = [x for x in WORLD_CASES if x[0] == name][0]
+            res = world_case(*case, inputs)
+        w = res["_world"]
+        for race, year, homes in items:
+            st = [x for x in w.homes_state if x[0] == race]
+            now = [x for x in w.homes_log if x[0] == race]
+            ok = bool(st) and bool(now)
+            why = []
+            if ok:
+                owners, el = st[0][2], st[0][3]
+                for h in homes:
+                    if h in now[0][2]:
+                        why.append("rg%d still a home" % h)
+                    elif h not in el:
+                        why.append("rg%d held by c%d at y%d" % (h, owners[h], st[0][1]))
+                    else:
+                        ok = False
+                alive = sum(1 for x in w.civs if x["ended_year"] is None or x["ended_year"] > st[0][1])
+                why.append("0.17.0 homes %s (n %d; %d eligible, %d alive)" % (now[0][2], now[0][3], len(el), alive))
+            print("%s ra%d (0.16.0 y%d homes %s): %s" % (name, race, year, homes, "; ".join(why) or "not explained"))
+            c.true("%s ra%d: every 0.16.0 home is a home again or not eligible at the 0.17.0 awakening" % (name, race),
+                   ok)
+    print("%d checks, %d failures" % (c.count, c.failures))
+    return 1 if c.failures else 0
+
+
 def cmd_check_world(argv):
     global SPREAD_OWNER, QUIET_RECOVER_EACH_YEAR
     path = argv[0]
@@ -3179,6 +3233,8 @@ def main(argv):
         return cmd_world(argv[1:])
     if cmd == "check-world":
         return cmd_check_world(argv[1:])
+    if cmd == "compare-016":
+        return cmd_compare_016(argv[1:])
     if cmd == "synthetic":
         return cmd_synthetic(argv[1:])
     if cmd == "gaps":
