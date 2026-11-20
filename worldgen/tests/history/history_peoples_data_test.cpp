@@ -126,7 +126,7 @@ TEST_CASE("P3-05 12.1: history.peoples loads with the listing's 65 fields in tab
 
 TEST_CASE("P3-05 16.1 item 15: every history.peoples field one step outside its range is a range error") {
     for (const Range& rg : ranges()) {
-        CAPTURE(rg.field);
+        CAPTURE(std::string_view(rg.field));
         const std::string line = listing_line(rg.field);
         const bool record = line.find('{') != std::string::npos;
         auto with = [&](std::int64_t v) {
@@ -168,7 +168,7 @@ TEST_CASE("P3-05 12.1: each named check of history.peoples once, with its messag
              {"capacity_floor = 400", "capacity_floor = 299", "peoples_floor", "capacity_floor must not be below founding_population"},
              {"abandon_min = 40", "abandon_min = 60", "peoples_colonists", "colonists_min must be above abandon_min"},
          }) {
-        CAPTURE(c.to);
+        CAPTURE(std::string_view(c.to));
         const wd::LoadError e = one_error(load(with_peoples_edit(c.from, c.to)));
         CHECK(e.path == "history/peoples.toml");
         CHECK(e.line == 1U);
@@ -183,7 +183,7 @@ TEST_CASE("P3-05 12.1: each named check of history.peoples once, with its messag
 
 TEST_CASE("P3-05 12.1: every history.peoples field is required and no other key is accepted") {
     for (const Range& rg : ranges()) {
-        CAPTURE(rg.field);
+        CAPTURE(std::string_view(rg.field));
         const std::string line = listing_line(rg.field);
         const wd::LoadError e = one_error(load(with_peoples_edit(line + "\n", "")));
         CHECK(e.message == "missing required field 'history.peoples." + std::string(rg.field) + "'");

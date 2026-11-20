@@ -17,6 +17,7 @@
 #include <cstdint>
 #include <ostream>
 #include <string>
+#include <string_view>
 #include <system_error>
 #include <vector>
 
@@ -192,7 +193,7 @@ TEST_CASE("cli audit: a dangling symbolic link at --out counts as existing") {
         {"report", {"report", "--db", u8(world)}},
     };
     for (const Case& c : cases) {
-        CAPTURE(c.name);
+        CAPTURE(std::string_view(c.name));
         const fs::path target = sb.file(std::string(c.name) + "-target");
         const fs::path link = sb.file(std::string(c.name) + "-link");
         REQUIRE(make_symlink(target, link));

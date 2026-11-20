@@ -349,7 +349,7 @@ TEST_CASE("reader raw rows (P0-02 amendment 10): tables, columns, keys, rows") {
     CHECK(w.primary_key_columns("meta").value() == std::vector<std::string>{"key"});
     CHECK(w.primary_key_columns("layer").value() == std::vector<std::string>{"id"});
     for (const char* missing : {"nope", "Meta", "META"}) {
-        CAPTURE(missing);
+        CAPTURE(std::string_view(missing));
         const auto r = w.table_columns(missing);
         REQUIRE(!r.ok());
         CHECK(r.code() == ErrorCode::table_not_found);

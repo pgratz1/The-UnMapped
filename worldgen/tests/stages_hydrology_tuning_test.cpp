@@ -115,7 +115,7 @@ TEST_CASE("P1-02 4, P1-00 6.4: the shipped file and both fixture files hold rive
     const std::filesystem::path root(UNMAPPED_TEST_SOURCE_ROOT);
     for (const char* rel : {"game/data/worldgen/hydrology.toml", "worldgen/tests/data/geo/worldgen/hydrology.toml",
                             "worldgen/tests/data/geo-small/worldgen/hydrology.toml"}) {
-        CAPTURE(rel);
+        CAPTURE(std::string_view(rel));
         const std::string text = read_text(root / rel);
         CHECK(text.find("[worldgen.hydrology]") != std::string::npos);
         CHECK(text.find("river_min_area_m2 = 125000") != std::string::npos);
@@ -145,7 +145,7 @@ TEST_CASE("P1-02 4, P1-01 4.1: flat_noise bounds: wavelength_m int(64, 65536), o
     for (const char* ok : {"{ wavelength_m = 64, octaves = 1, gain = \"0.5\" }",
                            "{ wavelength_m = 65536, octaves = 10, gain = 1 }",
                            "{ wavelength_m = 400, octaves = 1, gain = \"0.0625\" }"}) {
-        CAPTURE(ok);
+        CAPTURE(std::string_view(ok));
         const hydro_api::TuningLoad l = load(hydrology_toml(SHIPPED_AREA, ok));
         CHECK_MESSAGE(l.ok(), all_errors(l));
     }

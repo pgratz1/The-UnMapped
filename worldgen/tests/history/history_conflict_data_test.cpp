@@ -134,7 +134,7 @@ TEST_CASE("P3-06 12.1: history.conflict loads with the listing's 43 fields in ta
 
 TEST_CASE("P3-06 16.1 item 12: every history.conflict field one step outside its range is a range error") {
     for (const Range& rg : ranges()) {
-        CAPTURE(rg.field);
+        CAPTURE(std::string_view(rg.field));
         const std::string line = listing_line(rg.field);
         const bool record = line.find('{') != std::string::npos;
         auto with = [&](std::int64_t v) {
@@ -156,7 +156,7 @@ TEST_CASE("P3-06 16.1 item 12: every history.conflict field one step outside its
 
 TEST_CASE("P3-06 12.1: every history.conflict field is required and no other key is accepted") {
     for (const Range& rg : ranges()) {
-        CAPTURE(rg.field);
+        CAPTURE(std::string_view(rg.field));
         const std::string line = listing_line(rg.field);
         const wd::LoadError e = one_error(load(with_conflict_edit(line + "\n", "")));
         CHECK(e.message == "missing required field 'history.conflict." + std::string(rg.field) + "'");
@@ -179,7 +179,7 @@ TEST_CASE("P3-06 12.1, 16.1 item 12: each named check of history.conflict once, 
              {"declare_span = 600", "declare_span = 4701", "conflict_strain_max",
               "declare_min + declare_span must not be above strain_max"},
          }) {
-        CAPTURE(c.to);
+        CAPTURE(std::string_view(c.to));
         const wd::LoadError e = one_error(load(with_conflict_edit(c.from, c.to)));
         CHECK(e.path == "history/conflict.toml");
         CHECK(e.line == 1U);
@@ -228,7 +228,7 @@ TEST_CASE("P3-06 11, 16.1 item 11: the compiled kinds 20-30 equal section 11; te
     REQUIRE(cat.kinds.size() == 30U);
     for (std::size_t i = 0; i < want.size(); ++i) {
         const K& w = want[i];
-        CAPTURE(w.key);
+        CAPTURE(std::string_view(w.key));
         for (const eng::KindDef* k : {&compiled.kinds[i + 19], &cat.kinds[i + 19]}) {
             CHECK(k->id == static_cast<std::int64_t>(i) + 20);
             CHECK(k->key == w.key);

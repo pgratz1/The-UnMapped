@@ -240,7 +240,7 @@ TEST_CASE("P1-04 5.1, 10.1 test 2: the lookups B1 to B21 and S1 to S6 with the s
     const biome_api::Tuning t = tuning();
     REQUIRE(lookups().size() == 27U);
     for (const Lookup& c : lookups()) {
-        CAPTURE(c.name);
+        CAPTURE(std::string_view(c.name));
         const Jittered j = own_jitter(c.temp, c.rain, c.nt, c.nr, v);
         if (c.tq != NONE) {
             CHECK(j.tq == c.tq);
@@ -549,7 +549,7 @@ TEST_CASE("P1-04 4.1, B4: a rule field outside its schema range is fatal through
     add("wet_frac_min", [](biome_api::Rule& r) { r = biome_api::with_wet_frac_min_raw(r, -1); });
     const biome_api::Inputs in = designed_inputs(0);
     for (const Bad& b : bads) {
-        CAPTURE(b.field);
+        CAPTURE(std::string_view(b.field));
         const std::string want = std::string("biomes: rule: ") + b.field + " outside its schema range";
         CHECK(fatal_message([&] { (void)biome_api::rule_matches(b.rule, ONE, 8 * ONE, 900 * ONE, 30, 100, 8, 200); }) ==
               want);

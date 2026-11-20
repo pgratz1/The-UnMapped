@@ -32,6 +32,7 @@
 #include <map>
 #include <set>
 #include <string>
+#include <string_view>
 #include <vector>
 
 #include "worldgen/inspect/report.hpp"
@@ -238,7 +239,7 @@ TEST_CASE("P3-06 15.2, 16.3 item 20: the sample of seed 42 at 1024") {
     const Index x(t);
     for (std::size_t i = 0; i < want.size(); ++i) {
         const Row& c = t.civilization[i];
-        CAPTURE(want[i].name);
+        CAPTURE(std::string_view(want[i].name));
         CHECK(c[1].bytes == want[i].name);
         if (want[i].ended == 0) {
             CHECK(is_null(c[8]));

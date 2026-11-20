@@ -98,7 +98,7 @@ TEST_CASE("cli P3-04 9.5, 11.1, 16.1 item 14, 16.4 (Y1): default run, --until hi
     };
     int k = 0;
     for (const Case& c : cases) {
-        CAPTURE(c.sql);
+        CAPTURE(std::string_view(c.sql));
         const fs::path db = sb.file("c" + std::to_string(k++) + ".db");
         fs::copy_file(a, db, fs::copy_options::overwrite_existing);
         REQUIRE(worldgen::db::testing::execute_on_file(u8(db), c.sql).ok());
@@ -112,7 +112,7 @@ TEST_CASE("cli P3-04 9.5, 11.1, 16.1 item 14, 16.4 (Y1): default run, --until hi
 TEST_CASE("cli P3-04 9.5, 16.1 item 14: --until chronology and --until none leave the thirteen tables empty") {
     Sandbox sb;
     for (const char* until : {"chronology", "none"}) {  // --until regions: P3-03's CLI tests
-        CAPTURE(until);
+        CAPTURE(std::string_view(until));
         const fs::path db = sb.generate({"--seed", "42", "--map-size", "512", "--history-span", "2500", "--until", until,
                                          "--out", u8(sb.file(std::string(until) + ".db"))});
         const std::string report = run_ok(sb, {"report", "--db", u8(db)});

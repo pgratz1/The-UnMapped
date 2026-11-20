@@ -316,7 +316,7 @@ TEST_CASE("P1-02 8.4 golden: the file holds the 8.4 library case and the coverag
     for (const char* want : {"shipped-128-s0", "shipped-128-s9", "small-128-s0", "small-128-s2", "small-128-s2-t100",
                              "small-128-s2-tie0", "shipped-512-s0", "shipped-512-s42", "shipped-512-phrase", "shipped-1024-s1",
                              "random-0"}) {
-        CAPTURE(want);
+        CAPTURE(std::string_view(want));
         CHECK(std::find(names.begin(), names.end(), want) != names.end());
     }
     for (const auto& c : golden()) {
@@ -368,7 +368,7 @@ TEST_CASE("P1-02 6 invariant 11, 8.4: golden cases of one world agree on the lak
             ++groups;
             for (const char* item : {"elevation", "L", "lakes", "lake_levels", "lake_cells", "dl", "do",
                                      "water_depth", "lake", "coast_dist"}) {
-                CAPTURE(item);
+                CAPTURE(std::string_view(item));
                 CHECK(a.get(item) == b.get(item));
             }
         }

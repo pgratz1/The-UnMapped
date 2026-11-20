@@ -159,7 +159,7 @@ TEST_CASE("P1-05 5.1 R4: fertility (fb, S2, hand) with sf and al") {
     for (const Row r : {Row{"1", 9216, 20, 163}, Row{"1", 0, 0, 255}, Row{"0.7", 0, 0, 205}, Row{"0.7", 0, 60, 178},
                         Row{"0.7", 22118, 100, 3}, Row{"0.45", 0, 5, 130}, Row{"0.45", 0, 4, 131},
                         Row{"1", 30000, 0, 0}, Row{"0.3", 3318, 49, 77}}) {
-        CAPTURE(r.fb);
+        CAPTURE(std::string_view(r.fb));
         CAPTURE(r.s2);
         CAPTURE(r.hand);
         CHECK(int{resource_api::fertility(D(r.fb), r.s2, r.hand, shipped())} == r.want);
@@ -185,7 +185,7 @@ TEST_CASE("P1-05 5.1 R4: timber (tb, S2)") {
     const Values v = values();
     for (const Row r : {Row{"1", 9216, 255}, Row{"1", 50205, 255}, Row{"1", 102400, 146}, Row{"0.15", 0, 38},
                         Row{"0.7", 250000, 0}}) {
-        CAPTURE(r.tb);
+        CAPTURE(std::string_view(r.tb));
         CAPTURE(r.s2);
         CHECK(int{resource_api::timber(D(r.tb), r.s2, shipped())} == r.want);
         CHECK(int{own_timber(D(r.tb), r.s2, v)} == r.want);
@@ -203,7 +203,7 @@ TEST_CASE("P1-05 5.1 R4: forage (gb, dg) and the fish term") {
     const Values v = values();
     for (const Row r : {Row{"0.8", 0, 255}, Row{"0.5", 0, 204}, Row{"0.3", 16, 149}, Row{"0.3", 150, 115},
                         Row{"0.05", 299, 13}, Row{"0.3", 300, 77}, Row{"0.2", 5000, 51}}) {
-        CAPTURE(r.gb);
+        CAPTURE(std::string_view(r.gb));
         CAPTURE(r.dg);
         CHECK(int{resource_api::forage(D(r.gb), r.dg, shipped())} == r.want);
         CHECK(int{own_forage(D(r.gb), r.dg, v)} == r.want);
@@ -226,7 +226,7 @@ TEST_CASE("P1-05 5.1 R4: ore (elevation, S2, noise) with eu, su, vn") {
                         Row{15000, 20000, "0.05", 46}, Row{4500, 9216, "0.15", 87}, Row{8000, 102400, "-0.04", 0}}) {
         CAPTURE(r.e);
         CAPTURE(r.s2);
-        CAPTURE(r.noise);
+        CAPTURE(std::string_view(r.noise));
         CHECK(int{resource_api::ore(r.e, r.s2, D(r.noise), shipped())} == r.want);
         CHECK(int{own_ore(r.e, r.s2, D(r.noise), v)} == r.want);
     }

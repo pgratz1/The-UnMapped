@@ -43,7 +43,7 @@ TEST_CASE("cli P1-00 X1, X3: generate --until elevation at 512 writes one elevat
     Sandbox sb;
     const fs::path data = write_data_root(sb);
     for (const char* threads : {"2", "5"}) {
-        CAPTURE(threads);
+        CAPTURE(std::string_view(threads));
         const ProcessResult r = sb.cli({"generate", "--seed", "0", "--map-size", "512", "--until", "elevation",
                                         "--data", u8(data), "--threads", threads, "--out",
                                         u8(sb.file(std::string("t") + threads + ".db"))});
