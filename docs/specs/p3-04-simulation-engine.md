@@ -384,6 +384,8 @@ public:
     const State& state() const; State& state();  // mutations through the State API only
     bool visible(const Civilization&) const; bool visible(const Settlement&) const;
     std::int64_t append(const EventSpec&);       // the event writer, 6.6; returns the new id
+    std::string_view event_kind(std::int64_t event) const;    // r8: the key of an event's kind; fatal `history: state: event <e> does not exist`
+    std::int64_t event_participant(std::int64_t event, std::string_view role) const;   // r8: the id of the first participant with that role (0 if none); same fatal
     std::int64_t quiet_events_left(std::int64_t civ) const;   // 6.6; outside a quiet step: quiet_events_max (r3)
     std::uint64_t draw(std::uint64_t stream_key, std::uint64_t a, std::uint64_t b, std::uint64_t k) const;  // draw(key, year(), a, b, k), P3-02 4.1
 };
@@ -452,7 +454,7 @@ In Q5 the engine calls each tension source in config order; the step's tension i
 At the end of every tick year (T7) and quiet step (after the quiet eras in Q6), with Y = the tick year or the step's start:
 
 1. **Regions**, ascending id: if the owner differs from the owner last recorded, the open `region_control` interval of the region (if any) gets `to_year` = Y, and if the new owner ≠ 0 an interval opens with `from_year` = Y, `civ` = owner, `event` = `owner_event`. Changes within one tick or step that leave the owner as it was record nothing (the last change of the year wins; the events stay in the log).
-2. **Relations**, in `RelationKey` order over the union of the recorded and the current keys: a key present now and not recorded opens a row (`since` = Y, `since_event` = its event); a key recorded and gone closes its row (`until` = Y, `until_event` = the closing event).
+2. **Relations**, in `RelationKey` order over the union of the recorded and the current keys: a key present now and not recorded opens a row (`since` = Y, `since_event` = its event); a key recorded and gone closes its row (`until` = Y, `until_event` = the closing event). **A relation opened and closed within one step still gets its row** (r8): `State` records every `open_relation` and `close_relation` of the step, not only the net state, so such a relation is written with `since` = `until` = Y, its opening event and its closing event. (A relation closed and reopened within one step keeps item 2's net rule, 6.9 item 7; an open-close-open sequence in one step is not reached by P3-05 or P3-06.)
 3. **Census**, ascending settlement id: a row (`year` = Y, the current owner, kind, status, population) for a settlement with no census row yet, or whose owner, kind or status differs from its last row.
 4. **Phase end**: if this tick or step ends the phase (its last year is the phase's `end_year`), a census row at `year` = `end_year` for every settlement whose last row differs from its current state in any of the four values (population included). At most one row per (settlement, year): a phase-end row that would repeat the row of item 3 in the same year is not written (it would be identical).
 
@@ -993,3 +995,7 @@ The engineer's follow-up to the determinism audit, as implemented on `p3/04-int`
 ## Revision note r7 (2026-11-19, after validation)
 
 From the P3-04 validation; text only. 14.2: the stub world's typical event count is 33 or 39 at `normal` (about 30% of worlds have six quiet rows and 39 events). 16.2 item 15: the scheduler property test runs seeds 0-99 by default and 0-999 in the `history-slow` suite. 14.3: the engine-time microbenchmark is a tagged doctest case skipped by default, still to be written.
+
+## Revision note r8 (2026-11-19, for the P3-06 implementation)
+
+6.4: `StepContext` gains two read-only accessors, `event_kind(id)` and `event_participant(id, role)`, fatal `history: state: event <e> does not exist` for an unknown id (P3-06 8.1 item 2 reads a `civ_seceded` event's `from` with them). 6.7 item 2: a relation opened and closed within one step still gets its `relation` row (`since` = `until`, both events), from opens and closes recorded per step in `State`; P3-06 reaches it on three paths (P3-06 8.3 item 7). No existing world changes: no P3-04 or P3-05 world opens and closes a relation in one step.
