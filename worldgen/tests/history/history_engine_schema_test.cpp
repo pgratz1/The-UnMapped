@@ -181,7 +181,7 @@ TEST_CASE("P3-04 9.4, 9.5: meta.history_end_year in every world kind; refused wh
             CHECK_MESSAGE(rows_of(r, t).empty(), t);
         }
     }
-    // The geography, chronology and full worlds: history_engine_golden_test.cpp (resume refusals) and
+    // The geography, chronology and full worlds: history_engine_golden_resume_test.cpp (resume refusals) and
     // cli_history_test.cpp (--until chronology, the default run).
     // test-pattern world
     {
