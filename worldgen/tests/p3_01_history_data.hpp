@@ -15,8 +15,9 @@
 // 12.1, 12.2, P3-01 r6): density_permille, the goblin and faerie changes
 // (added biome entries appended at the end of `biomes`, an assumption),
 // history.peoples and the report entries of kinds 6-19. Generator 0.16.0
-// (P3-06 12, P3-01 r7): prowess_permille after aggression, goblin
-// aggression 600, history.conflict and the report entries of kinds 20-30.
+// (P3-06 12.1, 12.2, P3-01 r7): prowess_permille after aggression, goblin
+// aggression 600, history.conflict and the report entries of kinds 20-30
+// (appended after ruin_faded in kind id order, the same assumption).
 
 #include <cstdint>
 #include <map>
@@ -349,6 +350,54 @@ events = [
 ]
 )";
 
+// --- history.conflict (P3-06 12.1, the listing; generator 0.16.0) -----------------
+
+inline constexpr std::string_view CONFLICT_TOML = R"([history.conflict]
+camp = { good_good = 400, good_neutral = -150, good_evil = -700, neutral_neutral = 100, neutral_evil = -250, evil_evil = 300 }
+enmity_max = -500
+border_friction = 200
+want_weight = 500
+hunger_full = 300
+fear_share = 400
+fear_weight = 1000
+tick_strain_permille = 25
+quiet_strain_permille = 6
+strain_max = 5000
+claim_strain = 300
+declare_min = 300
+declare_span = 600
+declare_permille = 150
+declare_ratio = 1000
+shelter_years = 150
+march_hops = 2
+cost_penalty = 100
+levy_permille = { hamlet = 100, village = 100, town = 100, city = 80, fortress = 250 }
+terrain_defense = 1000
+pass_defense = 1000
+river_defense = 500
+fort_defense = 500
+battle_permille = 300
+loss_loser_permille = 250
+loss_winner_permille = 80
+garrison_permille = 300
+walls_permille = { hamlet = 1000, village = 1500, town = 2500, city = 4000, fortress = 6000 }
+capital_walls = 2000
+sack_base = 200
+sack_hostility = 1000
+sack_toll_permille = 300
+capture_toll_permille = 100
+exhaustion_permille = 80
+war_max_years = 40
+truce_years = 200
+war_grudge = 150
+capture_grudge = 50
+secession_grudge = 300
+grudge_decay_per_century = 50
+last_refuge = 1
+capital_sacked_salience = 90
+capital_captured_salience = 80
+)";
+
 // --- history.peoples (P3-05 12.1, the listing; generator 0.15.0). The
 // fourteen report entries of kinds 6-19 above are P3-05 11's, appended in
 // kind id order (the spec gives no file listing: an assumption shared with
@@ -420,56 +469,6 @@ split_permille = 300
 ruin_fade_years = 1500
 colony_new_region_salience = 30
 plague_small_salience = 25
-)";
-
-// --- history.conflict (P3-06 12.1, the listing; generator 0.16.0). The
-// eleven report entries of kinds 20-30 above are P3-06 11's, appended in
-// kind id order ---------------------------------------------------------------------
-
-inline constexpr std::string_view CONFLICT_TOML = R"([history.conflict]
-camp = { good_good = 400, good_neutral = -150, good_evil = -700, neutral_neutral = 100, neutral_evil = -250, evil_evil = 300 }
-enmity_max = -500
-border_friction = 200
-want_weight = 500
-hunger_full = 300
-fear_share = 400
-fear_weight = 1000
-tick_strain_permille = 25
-quiet_strain_permille = 6
-strain_max = 5000
-claim_strain = 300
-declare_min = 300
-declare_span = 600
-declare_permille = 150
-declare_ratio = 1000
-shelter_years = 150
-march_hops = 2
-cost_penalty = 100
-levy_permille = { hamlet = 100, village = 100, town = 100, city = 80, fortress = 250 }
-terrain_defense = 1000
-pass_defense = 1000
-river_defense = 500
-fort_defense = 500
-battle_permille = 300
-loss_loser_permille = 250
-loss_winner_permille = 80
-garrison_permille = 300
-walls_permille = { hamlet = 1000, village = 1500, town = 2500, city = 4000, fortress = 6000 }
-capital_walls = 2000
-sack_base = 200
-sack_hostility = 1000
-sack_toll_permille = 300
-capture_toll_permille = 100
-exhaustion_permille = 80
-war_max_years = 40
-truce_years = 200
-war_grudge = 150
-capture_grudge = 50
-secession_grudge = 300
-grudge_decay_per_century = 50
-last_refuge = 1
-capital_sacked_salience = 90
-capital_captured_salience = 80
 )";
 
 // --- Culture files (P3-01 4) ------------------------------------------------------
@@ -561,7 +560,7 @@ struct Race {
     std::int64_t fertility, forage, timber, ore, fresh_water;  // site_weights
     std::vector<RaceBiome> biomes;
     std::int64_t upland, coast, expansion, aggression;
-    std::int64_t prowess_permille;  // P3-06 12.2 item 1 (P3-01 r7)
+    std::int64_t prowess_permille;  // P3-06 12.2 item 1 (P3-01 r7, generator 0.16.0)
     std::vector<std::string_view> settlement_kinds;
     std::string_view culture;
 };

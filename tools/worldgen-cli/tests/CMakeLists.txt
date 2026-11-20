@@ -128,12 +128,14 @@ target_compile_definitions(worldgen-cli-tests PRIVATE
     UNMAPPED_P3_04_GOLDEN_PATH="${PROJECT_SOURCE_DIR}/worldgen/tests/golden/p3-04-engine.txt"
 )
 
-# generate with peoples (P3-05): a golden world's [history] (15.4 keys) and
-# hash --detail against p3-05-peoples.txt, --threads 5, the settings that
-# now reach the world, --until chronology. Slow checks in "history-slow".
-target_sources(worldgen-cli-tests PRIVATE cli_history_peoples_test.cpp)
+# generate with peoples and conflict (P3-06, generator 0.16.0; replaces the
+# P3-05 file, whose golden worlds are the peoples-only configuration checked
+# through the library): a golden world's [history] and hash --detail against
+# p3-06-conflict.txt, --threads 5, --event-intensity and --civs-per-race,
+# --until chronology. Slow checks in "history-slow".
+target_sources(worldgen-cli-tests PRIVATE cli_history_conflict_test.cpp)
 target_compile_definitions(worldgen-cli-tests PRIVATE
-    UNMAPPED_P3_05_GOLDEN_PATH="${PROJECT_SOURCE_DIR}/worldgen/tests/golden/p3-05-peoples.txt"
+    UNMAPPED_P3_06_GOLDEN_PATH="${PROJECT_SOURCE_DIR}/worldgen/tests/golden/p3-06-conflict.txt"
 )
 
 # CTest entries, as for worldgen-tests (cmake/UnmappedTestShards.cmake):
@@ -152,6 +154,6 @@ unmapped_add_doctest_shards(worldgen-cli-tests
     SHARD history-settings 6 "*cli_history_settings_test.cpp"
     SHARD chronology 20 "*cli_chronology_test.cpp"
     SHARD engine 15 "*cli_history_test.cpp"
-    SHARD peoples 27 "*cli_history_peoples_test.cpp"
+    SHARD conflict 27 "*cli_history_conflict_test.cpp"
     REST other 10
 )

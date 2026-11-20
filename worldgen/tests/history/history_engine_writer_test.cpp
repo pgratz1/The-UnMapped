@@ -90,7 +90,7 @@ TEST_CASE("P3-04 6.6: valid events of each shipped kind and of a test kind are a
 
 TEST_CASE("P3-04 6.6 W1, W2, W3: kind, year rules") {
     const std::string p4 = "history: event 4 (";
-    CHECK(prefixed(tick(ev("battle", 1)), p4 + "battle): "));
+    CHECK(prefixed(tick(ev("duel", 1)), p4 + "duel): "));  // not in the catalogue ("battle" is, since 0.16.0)
     CHECK(prefixed(tick(ev("test_change", 2)), p4 + "test_change): "));  // W2: not the tick year
     EventSpec e = ev("test_change", 1);
     e.end_year = 0;  // W2: end_year below year

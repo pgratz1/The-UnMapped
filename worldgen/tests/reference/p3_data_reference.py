@@ -13,8 +13,10 @@ Schemas, in declaration order (the order fixes the encoding):
   culture   P3-01 4, record `culture_naming` of P3-02 3
   history   P3-01 5.1 (fixed id `chronology`); P3-04 4.1 and 4.2 (fixed
             ids `engine`, record `engine_detail`, and `report`, record
-            `report_event`)
-  race      P3-01 3
+            `report_event`); P3-05 12.1 (`peoples`); P3-06 12.1 (`conflict`,
+            generator 0.16.0)
+  race      P3-01 3 with `density_permille` (P3-05 12.2) and
+            `prowess_permille` after `aggression` (P3-06 12.2, 0.16.0)
   worldgen  P1-01 4.2 (with the records of P1-01 4.1), P1-02 4, P1-03 4,
             P1-04 4.2, P1-05 4.2, P1-06 4 (fixed ids)
 Kinds are encoded in ascending name: biome, culture, history, race, worldgen
@@ -22,7 +24,9 @@ Kinds are encoded in ascending name: biome, culture, history, race, worldgen
 
 The spec listings of P3-01 3.1, 4 and 5.1 and P3-02 5 are transcribed below
 (RACE_FILES, CULTURE_FILES, HISTORY_FILES with the listings of P3-04 4.1
-and 4.2). The golden file is computed
+and 4.2, P3-05 12.1 and P3-06 12.1; the race listings carry the 0.16.0
+values of P3-06 12.2: prowess_permille, goblin aggression 600; report.toml
+carries the 30 entries of kinds 1-30 in kind id order). The golden file is computed
 from the TOML files on disk; `--from-spec` uses the transcribed listings for
 a root whose races/, cultures/ or history/ directory does not exist yet (the
 data files are the generator engineer's deliverable). `check` verifies that
@@ -248,6 +252,46 @@ def peoples_check_messages(t):
         out.append(PEOPLES_CHECKS[3][1])
     return out
 
+# P3-06 12.1 (generator 0.16.0): history.conflict, fields in table order (=
+# the listing's order); records camp {good_good, good_neutral, good_evil,
+# neutral_neutral, neutral_evil, evil_evil}, levy_permille and walls_permille
+# {hamlet, village, town, city, fortress}. CONFLICT_RANGES are the table's.
+CONFLICT_CAMP = REC(fields("good_good:I good_neutral:I good_evil:I neutral_neutral:I neutral_evil:I evil_evil:I"))
+CONFLICT_RANGES = (
+    ("camp", -1000, 1000), ("enmity_max", -1000, 1000), ("border_friction", 0, 2000), ("want_weight", 0, 2000),
+    ("hunger_full", 1, 100000), ("fear_share", 0, 999), ("fear_weight", 0, 2000),
+    ("tick_strain_permille", 0, 1000), ("quiet_strain_permille", 0, 1000), ("strain_max", 1, 1000000),
+    ("claim_strain", 1, 1000000), ("declare_min", 0, 1000000), ("declare_span", 1, 1000000),
+    ("declare_permille", 0, 1000), ("declare_ratio", 1, 10000), ("shelter_years", 0, 1000), ("march_hops", 1, 4),
+    ("cost_penalty", 0, 10000), ("levy_permille", 0, 1000), ("terrain_defense", 0, 10000),
+    ("pass_defense", 0, 10000), ("river_defense", 0, 10000), ("fort_defense", 0, 10000),
+    ("battle_permille", 0, 1000), ("loss_loser_permille", 0, 1000), ("loss_winner_permille", 0, 1000),
+    ("garrison_permille", 0, 1000), ("walls_permille", 1, 100000), ("capital_walls", 0, 100000),
+    ("sack_base", 0, 1000), ("sack_hostility", 0, 2000), ("sack_toll_permille", 0, 1000),
+    ("capture_toll_permille", 0, 1000), ("exhaustion_permille", 1, 1000), ("war_max_years", 1, 1000),
+    ("truce_years", 0, 10000), ("war_grudge", 0, 2000), ("capture_grudge", 0, 2000), ("secession_grudge", 0, 2000),
+    ("grudge_decay_per_century", 0, 10000), ("last_refuge", 0, 1), ("capital_sacked_salience", 0, 100),
+    ("capital_captured_salience", 0, 100),
+)
+CONFLICT_RECORDS = {"camp": CONFLICT_CAMP, "levy_permille": PEOPLES_BY_KIND, "walls_permille": PEOPLES_BY_KIND}
+CONFLICT = tuple((n, CONFLICT_RECORDS.get(n, INT)) for n, _, _ in CONFLICT_RANGES)
+assert len(CONFLICT) == 43
+# P3-06 12.1 named checks, in order: (name, message).
+CONFLICT_CHECKS = (
+    ("conflict_declare", "claim_strain must not be above declare_min"),
+    ("conflict_strain_max", "declare_min + declare_span must not be above strain_max"),
+)
+
+
+def conflict_check_messages(t):
+    """The named checks of P3-06 12.1 that fail for a history.conflict table."""
+    out = []
+    if not (t["claim_strain"] <= t["declare_min"]):
+        out.append(CONFLICT_CHECKS[0][1])
+    if not (t["declare_min"] + t["declare_span"] <= t["strain_max"]):
+        out.append(CONFLICT_CHECKS[1][1])
+    return out
+
 # P3-01 3.
 RACE_SITE_WEIGHTS = REC(fields("fertility:I forage:I timber:I ore:I fresh_water:I"))
 RACE_BIOME = REC(fields("biome:S weight:I"))
@@ -256,7 +300,9 @@ RACE = (
     ("lifespan_years", INT), ("generation_years", INT), ("growth_permille", INT),
     ("density_permille", INT),  # P3-05 12.2 item 1 / P3-01 r6: after growth_permille
     ("site_weights", RACE_SITE_WEIGHTS), ("biomes", ARR(RACE_BIOME)), ("upland", INT), ("coast", INT),
-    ("expansion", INT), ("aggression", INT), ("settlement_kinds", ARR(STR)), ("culture", STR),
+    ("expansion", INT), ("aggression", INT),
+    ("prowess_permille", INT),  # P3-06 12.2 item 1 / P3-01 r7 (generator 0.16.0): after aggression
+    ("settlement_kinds", ARR(STR)), ("culture", STR),
 )
 
 # Kinds: name -> (directory, schema). A schema is a tuple of fields (open
@@ -264,8 +310,8 @@ RACE = (
 KINDS = {
     "biome": ("biomes", BIOME),
     "culture": ("cultures", CULTURE),
-    "history": ("history", {"chronology": CHRONOLOGY, "engine": ENGINE, "peoples": PEOPLES,
-                             "report": REPORT}),
+    "history": ("history", {"chronology": CHRONOLOGY, "conflict": CONFLICT, "engine": ENGINE,
+                             "peoples": PEOPLES, "report": REPORT}),
     "race": ("races", RACE),
     "worldgen": ("worldgen", {
         "biomes": BIOMES_TUNING, "climate": CLIMATE, "elevation": ELEVATION, "hydrology": HYDROLOGY,
@@ -304,6 +350,7 @@ upland = -300
 coast = 0
 expansion = 200
 aggression = 150
+prowess_permille = 1600
 settlement_kinds = ["hamlet", "village", "town", "city"]
 culture = "elven"
 """,
@@ -332,7 +379,8 @@ biomes = [
 upland = 100
 coast = -100
 expansion = 600
-aggression = 700
+aggression = 600
+prowess_permille = 800
 settlement_kinds = ["hamlet", "village", "town", "fortress"]
 culture = "goblin"
 """,
@@ -361,6 +409,7 @@ upland = 800
 coast = -200
 expansion = 250
 aggression = 300
+prowess_permille = 1400
 settlement_kinds = ["hamlet", "village", "town", "city", "fortress"]
 culture = "dwarven"
 """,
@@ -391,6 +440,7 @@ upland = 200
 coast = 0
 expansion = 100
 aggression = 50
+prowess_permille = 1200
 settlement_kinds = ["hamlet", "village"]
 culture = "faerie"
 """,
@@ -420,6 +470,7 @@ upland = -300
 coast = 200
 expansion = 700
 aggression = 400
+prowess_permille = 1000
 settlement_kinds = ["hamlet", "village", "town", "city", "fortress"]
 culture = "human"
 """,
@@ -450,6 +501,7 @@ upland = 100
 coast = -100
 expansion = 600
 aggression = 900
+prowess_permille = 1300
 settlement_kinds = ["hamlet", "village", "town", "fortress"]
 culture = "orcish"
 """,
@@ -582,6 +634,17 @@ of upheaval." },
   { kind = "capital_moved", salience = 50, template = "{civilization} moved its seat to {settlement}." },
   { kind = "civ_ended", salience = 85, template = "{civilization} came to an end." },
   { kind = "ruin_faded", salience = 10, template = "The ruins of {settlement} faded from memory." },
+  { kind = "claim", salience = 45, template = "{claimant} laid claim to {@region}, held by {holder}." },
+  { kind = "war_declared", salience = 70, template = "{attacker} declared war on {defender} over {@region}." },
+  { kind = "battle", salience = 30, template = "{winner} defeated {loser} in {@region}; {loser_dead} of the defeated and {winner_dead} of the victors fell." },
+  { kind = "battle_at_pass", salience = 35, template = "{winner} defeated {loser} at the pass into {@region}; {loser_dead} of the defeated and {winner_dead} of the victors fell." },
+  { kind = "siege", salience = 25, template = "{attacker} besieged {@settlement} of {defender}; it {fell?fell|held}." },
+  { kind = "sacked", salience = 75, template = "{attacker} sacked {@settlement} of {defender}; {dead} died and {survivors} fled." },
+  { kind = "settlement_captured", salience = 60, template = "{attacker} took {@settlement} from {defender}; {dead} died and {fled} fled." },
+  { kind = "peace", salience = 60, template = "{loser} sued {winner} for peace after {years} {years?year|years} of war." },
+  { kind = "truce", salience = 50, template = "{parties:all} made peace after {years} {years?year|years} of war, neither the victor." },
+  { kind = "region_ceded", salience = 55, template = "{from} ceded {@region} to {to}." },
+  { kind = "civ_conquered", salience = 90, template = "{civilization} fell to {conqueror}." },
 ]
 """,
 }
@@ -655,11 +718,61 @@ colony_new_region_salience = 30
 plague_small_salience = 25
 """,
 }
+# P3-06 12.1, the listing, verbatim from the spec (generator 0.16.0).
+CONFLICT_FILE = {
+    "conflict.toml": """[history.conflict]
+camp = { good_good = 400, good_neutral = -150, good_evil = -700, neutral_neutral = 100, neutral_evil = -250, evil_evil = 300 }
+enmity_max = -500
+border_friction = 200
+want_weight = 500
+hunger_full = 300
+fear_share = 400
+fear_weight = 1000
+tick_strain_permille = 25
+quiet_strain_permille = 6
+strain_max = 5000
+claim_strain = 300
+declare_min = 300
+declare_span = 600
+declare_permille = 150
+declare_ratio = 1000
+shelter_years = 150
+march_hops = 2
+cost_penalty = 100
+levy_permille = { hamlet = 100, village = 100, town = 100, city = 80, fortress = 250 }
+terrain_defense = 1000
+pass_defense = 1000
+river_defense = 500
+fort_defense = 500
+battle_permille = 300
+loss_loser_permille = 250
+loss_winner_permille = 80
+garrison_permille = 300
+walls_permille = { hamlet = 1000, village = 1500, town = 2500, city = 4000, fortress = 6000 }
+capital_walls = 2000
+sack_base = 200
+sack_hostility = 1000
+sack_toll_permille = 300
+capture_toll_permille = 100
+exhaustion_permille = 80
+war_max_years = 40
+truce_years = 200
+war_grudge = 150
+capture_grudge = 50
+secession_grudge = 300
+grudge_decay_per_century = 50
+last_refuge = 1
+capital_sacked_salience = 90
+capital_captured_salience = 80
+""",
+}
 # P3-05 11: the fourteen report entries of kinds 6-19 (salience and
 # template of the table; `\|` there is a plain `|`). ASSUMPTION (spec gap):
 # the spec gives the entries but not their place in report.toml; they are
-# appended after the five P3-04 entries in kind id order.
-HISTORY_FILES = dict(CHRONOLOGY_FILE, **ENGINE_FILE, **PEOPLES_FILE, **REPORT_FILE)
+# appended after the five P3-04 entries in kind id order. The same for the
+# eleven entries of kinds 20-30 of P3-06 11 (0.16.0): appended after
+# ruin_faded in kind id order.
+HISTORY_FILES = dict(CHRONOLOGY_FILE, **CONFLICT_FILE, **ENGINE_FILE, **PEOPLES_FILE, **REPORT_FILE)
 
 SPEC_FILES = {"race": RACE_FILES, "culture": CULTURE_FILES, "history": HISTORY_FILES}
 
@@ -690,9 +803,9 @@ def read_kind_files(root, kind, from_spec):
             return sorted(SPEC_FILES[kind].items(), key=lambda kv: kv[0].encode())
         return None
     if kind in ("race", "history") and SPEC_FALLBACK and pre_015(path, kind):
-        # P3-05 (0.15.0): the shipped race and history files are the
-        # engineer's deliverable; while the disk holds the 0.14.0 files the
-        # spec listings stand in for them (noted by `check`).
+        # P3-06 (0.16.0): the shipped race and history files are the
+        # engineer's deliverable; while the disk holds older (0.15.0) files
+        # the spec listings stand in for them (noted by `check`).
         PRE_015_USED.add(os.path.join(root, directory))
         return sorted(SPEC_FILES[kind].items(), key=lambda kv: kv[0].encode())
     names = []
@@ -709,9 +822,10 @@ def read_kind_files(root, kind, from_spec):
     return out
 
 
-# A root whose races/ has no `density_permille` or whose history/ has no
-# peoples.toml is a 0.14.0 root (P3-05 12.1, 12.2); with SPEC_FALLBACK the
-# listings of this file replace it.
+# A root whose races/ has no `prowess_permille` or whose history/ has no
+# conflict.toml is a root older than 0.16.0 (P3-06 12.1, 12.2); with
+# SPEC_FALLBACK the listings of this file replace it. (PRE_015_USED keeps
+# its name for the callers.)
 SPEC_FALLBACK = True
 PRE_015_USED = set()
 
@@ -719,10 +833,10 @@ PRE_015_USED = set()
 def pre_015(path, kind):
     names = [n for n in os.listdir(path) if n.endswith(".toml")]
     if kind == "history":
-        return "peoples.toml" not in names
+        return "conflict.toml" not in names
     for n in names:
         with open(os.path.join(path, n), encoding="utf-8") as f:
-            if "density_permille" not in f.read():
+            if "prowess_permille" not in f.read():
                 return True
     return False
 
@@ -917,22 +1031,34 @@ def check_spec_invariants(c):
     check_record(ENGINE, parsed_spec("history")["engine"], "history.engine")
     check_record(REPORT, parsed_spec("history")["report"], "history.report")
     check_record(PEOPLES, parsed_spec("history")["peoples"], "history.peoples")
-    c.eq("history ids", sorted(parsed_spec("history")), ["chronology", "engine", "peoples", "report"])
+    check_record(CONFLICT, parsed_spec("history")["conflict"], "history.conflict")
+    c.eq("history ids", sorted(parsed_spec("history")), ["chronology", "conflict", "engine", "peoples", "report"])
+    co = parsed_spec("history")["conflict"]
+    c.eq("history.conflict passes its named checks (P3-06 12.1)", conflict_check_messages(co), [])
+    for n, lo, hi in CONFLICT_RANGES:
+        vals = list(co[n].values()) if isinstance(co[n], dict) else [co[n]]
+        c.ok("history.conflict.%s inside its range" % n, all(lo <= v <= hi for v in vals))
     pe = parsed_spec("history")["peoples"]
     c.eq("history.peoples passes its named checks (P3-05 12.1)", peoples_check_messages(pe), [])
     for n, lo, hi in PEOPLES_RANGES:
         vals = list(pe[n].values()) if isinstance(pe[n], dict) else [pe[n]]
         c.ok("history.peoples.%s inside its range" % n, all(lo <= v <= hi for v in vals))
-    c.eq("report lists kinds 1-19 in id order (P3-05 11)", [e["kind"] for e in parsed_spec("history")["report"]["events"]],
+    c.eq("report lists kinds 1-30 in id order (P3-05 11, P3-06 11)",
+         [e["kind"] for e in parsed_spec("history")["report"]["events"]],
          ["awakening", "civ_founded", "settlement_founded", "quiet_era", "flare_up", "colony_founded",
           "became_village", "became_town", "became_city", "settlement_dwindled", "famine", "plague",
           "plague_spread", "succession_crisis", "civ_seceded", "settlement_abandoned", "capital_moved", "civ_ended",
-          "ruin_faded"])
+          "ruin_faded", "claim", "war_declared", "battle", "battle_at_pass", "siege", "sacked",
+          "settlement_captured", "peace", "truce", "region_ceded", "civ_conquered"])
     c.eq("densities (P3-05 12.2)", {k: v["density_permille"] for k, v in races.items()},
          dict(elf=300, goblin=900, dwarf=700, faerie=250, human=1000, orc=800))
-    c.ok("no 0.16.0 field prowess_permille (P3-01 r7)", all("prowess_permille" not in v for v in races.values()))
-    c.eq("goblin aggression stays 700 at 0.15.0 (P3-01 r7)", races["goblin"]["aggression"], 700)
-    c.ok("no 0.16.0 id conflict", "conflict" not in parsed_spec("history"))
+    c.eq("prowess_permille (P3-06 12.2)", {k: v["prowess_permille"] for k, v in races.items()},
+         dict(elf=1600, goblin=800, dwarf=1400, faerie=1200, human=1000, orc=1300))
+    c.ok("prowess_permille inside int(1, 4000)", all(1 <= v["prowess_permille"] <= 4000 for v in races.values()))
+    c.eq("aggression (P3-06 12.2: goblins 700 -> 600)", {k: v["aggression"] for k, v in races.items()},
+         dict(elf=150, goblin=600, dwarf=300, faerie=50, human=400, orc=900))
+    c.eq("prowess_permille follows aggression in every listing (P3-01 r7)",
+         [list(v).index("prowess_permille") - list(v).index("aggression") for v in races.values()], [1] * 6)
     c.eq("six races", sorted(races), ["dwarf", "elf", "faerie", "goblin", "human", "orc"])
     c.eq("six cultures", sorted(cultures), ["dwarven", "elven", "faerie", "goblin", "human", "orcish"])
     by_order = sorted(races.items(), key=lambda kv: kv[1]["order"])
@@ -980,7 +1106,7 @@ def check_disk(c):
                 print("note: %s/%s/ does not exist yet; the listings stand in for it" % (root, KINDS[kind][0]))
                 continue
             if os.path.join(root, KINDS[kind][0]) in PRE_015_USED:
-                print("note: %s/%s/ holds 0.14.0 files; the P3-05 listings stand in for it" % (root, KINDS[kind][0]))
+                print("note: %s/%s/ holds pre-0.16.0 files; the P3-06 listings stand in for it" % (root, KINDS[kind][0]))
                 continue
             present += 1
             defs = {}

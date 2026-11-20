@@ -523,7 +523,7 @@ TEST_CASE("cli P3-01 8.3 test 10: --until none worlds differ from 0.11.0 only in
     }
 }
 
-TEST_CASE("cli P3-01 7: the version line names the generator and schema (0.16.0 and 7 since P3-06)") {
+TEST_CASE("cli P3-01 7: the version line names the generator and schema (0.16.0 and 7 since P3-05; 0.16.0 is P3-06)") {
     Sandbox sb;
     const ProcessResult v = sb.cli({"--version"});
     REQUIRE(v.exit_code == EXIT_OK);

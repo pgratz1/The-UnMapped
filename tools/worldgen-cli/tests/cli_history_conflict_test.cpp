@@ -1,12 +1,18 @@
-// worldgen-cli with the peoples of spec P3-05 (generator 0.15.0): the
-// default run (= --until history) of a golden world against
-// worldgen/tests/golden/p3-05-peoples.txt (hash --detail's thirteen table
-// lines, report's [history] with the keys of 15.4, placed after
-// [chronology]), --threads 5 byte-identical (16.2 item 20), --until
-// chronology leaves the history tables empty, the settings civs_per_race
-// and event_intensity now reach the world (3.1), and the generator version.
+// worldgen-cli with expansion and conflict of spec P3-06 (generator 0.16.0;
+// the shipped history stage is peoples, then conflict): the default run (=
+// --until history) of a golden world against
+// worldgen/tests/golden/p3-06-conflict.txt (hash --detail's thirteen table
+// lines, report's [history] placed after [chronology]), --threads 5
+// byte-identical (16.2 item 18), the settings that P3-06 makes matter
+// (--event-intensity turbulent, --civs-per-race 4: golden cases of their
+// own, 5.2 and 16.2 item 15), --until chronology leaves the history tables
+// empty, and the generator version.
 //
-// Written from the spec only. These cases need no P3-05 header and compile
+// Replaces cli_history_peoples_test.cpp of P3-05: since 0.16.0 the CLI
+// writes the conflict history, so the P3-05 golden worlds (the peoples-only
+// configuration) are checked through the library only.
+//
+// Written from the spec only. These cases need no P3-06 header and compile
 // before the implementation exists; they fail until it lands. The other
 // golden worlds are in the doctest suite "history-slow".
 
@@ -19,8 +25,8 @@
 #include "cli_test_support.hpp"
 #include "worldgen/db/reader.hpp"
 
-#ifndef UNMAPPED_P3_05_GOLDEN_PATH
-#error "UNMAPPED_P3_05_GOLDEN_PATH must name worldgen/tests/golden/p3-05-peoples.txt"
+#ifndef UNMAPPED_P3_06_GOLDEN_PATH
+#error "UNMAPPED_P3_06_GOLDEN_PATH must name worldgen/tests/golden/p3-06-conflict.txt"
 #endif
 #ifndef UNMAPPED_TEST_SOURCE_ROOT
 #error "UNMAPPED_TEST_SOURCE_ROOT must name the repository root"
@@ -33,7 +39,7 @@ using namespace clitest;
 fs::path source_root() { return fs::path(UNMAPPED_TEST_SOURCE_ROOT); }
 
 std::vector<std::pair<std::string, std::string>> golden_items(const std::string& name) {
-    static const std::string text = read_text(fs::path(UNMAPPED_P3_05_GOLDEN_PATH));
+    static const std::string text = read_text(fs::path(UNMAPPED_P3_06_GOLDEN_PATH));
     std::vector<std::pair<std::string, std::string>> out;
     for (const std::string& line : lines_of(text)) {
         if (!starts_with(line, name + " ")) {
@@ -75,7 +81,7 @@ fs::path generate_case(const Sandbox& sb, const std::string& name, const std::ve
     return sb.generate(full);
 }
 
-void check_golden_db(const Sandbox& sb, const std::string& name, const fs::path& db) {
+std::string check_golden_db(const Sandbox& sb, const std::string& name, const fs::path& db) {
     CAPTURE(name);
     const std::string detail = run_ok(sb, {"hash", "--db", u8(db), "--detail"});
     std::string rep = "[history]\n";
@@ -98,18 +104,17 @@ void check_golden_db(const Sandbox& sb, const std::string& name, const fs::path&
     REQUIRE(c != std::string::npos);
     REQUIRE(h != std::string::npos);
     CHECK(report.find("\n[", c + 1) == h - 1);
-    // 15.4: population, then population_<race>, settlements_standing_<race>, regions_held_<race> after relations
-    CHECK(contains(rep, "\nrelations = 0\npopulation = "));
-    CHECK(contains(rep, "\npopulation_elf = "));
-    CHECK(contains(rep, "\nsettlements_standing_orc = "));
-    CHECK(contains(rep, "\nregions_held_orc = "));
+    // the conflict kinds have their events_<key> lines (P3-04 11.1 over the 0.16.0 catalogue)
+    CHECK(contains(rep, "\nevents_claim = "));
+    CHECK(contains(rep, "\nevents_civ_conquered = "));
+    return section(report, "[history]");
 }
 
 }  // namespace
 
 TEST_SUITE("history") {
 
-TEST_CASE("cli P3-05 16.3, 16.2 item 20: the golden world geo-seed-42-512, --until history, --threads 5") {
+TEST_CASE("cli P3-06 16.3, 16.2 item 18: the golden world geo-seed-42-512, --until history, --threads 5") {
     Sandbox sb;
     const fs::path a = generate_case(sb, "geo-seed-42-512", {"--seed", "42", "--map-size", "512"});
     CHECK(meta_of(a, "generator_version") == "0.16.0");
@@ -117,39 +122,40 @@ TEST_CASE("cli P3-05 16.3, 16.2 item 20: the golden world geo-seed-42-512, --unt
     check_golden_db(sb, "geo-seed-42-512", a);
     const fs::path b = generate_case(sb, "threads", {"--seed", "42", "--map-size", "512", "--threads", "5"});
     CHECK(read_bytes(a) == read_bytes(b));
-}
-
-TEST_CASE("cli P3-05 3.1: --event-intensity and --civs-per-race reach the history; --until chronology leaves it empty") {
-    Sandbox sb;
-    const fs::path base = generate_case(sb, "hist-span-2000-512", {"--seed", "7", "--map-size", "512", "--history-span", "2000"});
-    check_golden_db(sb, "hist-span-2000-512", base);
-    const fs::path busy = generate_case(sb, "busy", {"--seed", "7", "--map-size", "512", "--history-span", "2000",
-                                                     "--event-intensity", "turbulent", "--civs-per-race", "4"});
-    const std::string r0 = section(run_ok(sb, {"report", "--db", u8(base)}), "[history]");
-    const std::string r1 = section(run_ok(sb, {"report", "--db", u8(busy)}), "[history]");
-    CHECK(r0 != r1);
-    const fs::path chron = generate_case(sb, "chron", {"--seed", "7", "--map-size", "512", "--history-span", "2000",
-                                                       "--until", "chronology"});
+    const fs::path chron = generate_case(sb, "chron", {"--seed", "42", "--map-size", "512", "--until", "chronology"});
     const std::string rep = run_ok(sb, {"report", "--db", u8(chron)});
     CHECK(section(rep, "[history]").empty());
-    CHECK(contains(section(rep, "[tables]"), "\nsettlement = 0\n"));
+    CHECK(contains(section(rep, "[tables]"), "\nrelation = 0\n"));
+}
+
+TEST_CASE("cli P3-06 5.2, 16.2 item 15: --event-intensity turbulent and --civs-per-race 4 reach the conflict history") {
+    Sandbox sb;
+    const std::string t = check_golden_db(
+        sb, "hist-conflict-turbulent-512",
+        generate_case(sb, "turbulent", {"--seed", "42", "--map-size", "512", "--event-intensity", "turbulent"}));
+    const std::string c4 = check_golden_db(
+        sb, "hist-conflict-civs4-512",
+        generate_case(sb, "civs4", {"--seed", "42", "--map-size", "512", "--civs-per-race", "4"}));
+    CHECK(t != c4);
 }
 
 }  // TEST_SUITE
 
 TEST_SUITE("history-slow" * doctest::skip()) {
 
-TEST_CASE("cli P3-05 16.3: [history] and hash --detail of the other golden worlds") {
+TEST_CASE("cli P3-06 16.3: [history] and hash --detail of the other golden worlds") {
     Sandbox sb;
     check_golden_db(sb, "geo-seed-0-512", generate_case(sb, "geo-seed-0-512", {"--seed", "0", "--map-size", "512"}));
     check_golden_db(sb, "geo-phrase-512",
                     generate_case(sb, "geo-phrase-512", {"--seed-phrase", "The Unmapped", "--map-size", "512"}));
+    check_golden_db(sb, "hist-span-2000-512",
+                    generate_case(sb, "hist-span-2000-512", {"--seed", "7", "--map-size", "512", "--history-span", "2000"}));
     check_golden_db(sb, "geo-seed-1-1024", generate_case(sb, "geo-seed-1-1024", {"--seed", "1"}));
     check_golden_db(sb, "hist-races-elf-orc-1024",
                     generate_case(sb, "hist-races-elf-orc-1024", {"--seed", "3", "--races", "elf,orc"}));
     check_golden_db(sb, "hist-dense-1024",
                     generate_case(sb, "hist-dense-1024", {"--seed", "11", "--history-detail", "dense"}));
-    check_golden_db(sb, "hist-peoples-42-1024", generate_case(sb, "hist-peoples-42-1024", {"--seed", "42"}));
+    check_golden_db(sb, "hist-conflict-42-1024", generate_case(sb, "hist-conflict-42-1024", {"--seed", "42"}));
 }
 
 }  // TEST_SUITE
