@@ -483,7 +483,10 @@ inline void check_invariants_06(const Tables& t, const eng::HistoryInputs& in, s
         }
     }
     for (const Row& s : t.settlement) {
-        if (at(s, 10) == ruined) CHECK((x.kind(at(s, 13)) == k_settlement_abandoned || x.kind(at(s, 13)) == k_sacked));
+        if (at(s, 10) == ruined) {
+            CHECK((x.kind(at(s, 13)) == k_settlement_abandoned || x.kind(at(s, 13)) == k_settlement_abandoned_to ||
+                   x.kind(at(s, 13)) == k_sacked));
+        }
     }
     // 5 territory
     for (const Row& r : t.region_control) {
@@ -498,6 +501,8 @@ inline void check_invariants_06(const Tables& t, const eng::HistoryInputs& in, s
             CHECK_MESSAGE(alive, "race " << a.race << " has no alive civilization");
         }
     }
+    // P3-05 14 r6 items (6 as D1 reads it, 11, 12, 13) with conflict installed
+    check_invariants_r6(t, 40, nullptr);
     // 8 every flare-up's trigger is a claim
     for (const Row& p : t.phase) {
         if (at(p, 2) == 3) CHECK(x.kind(at(p, 5)) == k_claim);

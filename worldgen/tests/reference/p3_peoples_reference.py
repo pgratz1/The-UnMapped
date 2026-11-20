@@ -2131,7 +2131,7 @@ def world_case(name, seed, size, span, races, detail, inputs_dir, dat=None):
     path = os.path.join(inputs_dir, INPUT_OF.get(name, name) + ".db")
     conn = pchr.open_world(path)
     h, _rows = pchr.world_table_hash(conn, "region")
-    if name in pe.P1_06_CASE:
+    if name in pe.P1_06_CASE and FLAGS["dest"]:   # the 0.16.0 inputs (--legacy) predate P1-06 r3
         want = pchr.p1_06_region_hash(pe.P1_06_CASE[name])
         if h != want:
             fatal("%s: table region %s differs from p1-06-regions.txt %s" % (path, h, want))

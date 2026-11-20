@@ -88,7 +88,7 @@ Settings humans_2000() {
 
 TEST_SUITE("history") {
 
-TEST_CASE("P3-05 11, 16.1 item 14: the compiled catalogue appends kinds 6-19 exactly as section 11") {
+TEST_CASE("P3-05 11, 16.1 item 14, 16.1a 17i: the compiled catalogue appends kinds 6-19 and 31 exactly as section 11") {
     using ET = eng::EntityType;
     struct K {
         const char* key;
@@ -116,20 +116,25 @@ TEST_CASE("P3-05 11, 16.1 item 14: the compiled catalogue appends kinds 6-19 exa
          "Plague broke out in {settlement}; {dead} died."},
         {"plague_spread", true, {{"settlement", S}, {"civilization", C}}, {"dead", "population"}, 25,
          "The plague spread to {settlement}; {dead} died."},
-        {"succession_crisis", false, {{"civilization", C}}, {}, 40, "A succession crisis shook {civilization}."},
+        // r6 (0.17.0): the crisis sentence names the capital
+        {"succession_crisis", false, {{"civilization", C}}, {}, 40,
+         "A succession crisis at {@settlement} shook {civilization}."},
         {"civ_seceded", true, {{"civilization", C}, {"from", C}}, {"settlements"}, 70,
          "{civilization} broke away from {from}, taking {settlements} {settlements?settlement|settlements} with it."},
+        // r6: kind 16 only when no survivor reaches another settlement (P3-04 r10's three-word form)
         {"settlement_abandoned", true, {{"settlement", S}, {"civilization", C}}, {"survivors"}, 55,
-         "{settlement} was abandoned; {survivors} {survivors?survivor|survivors} left."},
+         "{settlement} was abandoned; {survivors?no one survived|its one survivor was scattered|its # survivors were "
+         "scattered}."},
         {"capital_moved", true, {{"civilization", C}, {"settlement", S}}, {}, 50,
          "{civilization} moved its seat to {settlement}."},
         {"civ_ended", true, {{"civilization", C}}, {}, 85, "{civilization} came to an end."},
         {"ruin_faded", true, {{"settlement", S}}, {}, 10, "The ruins of {settlement} faded from memory."},
     };
     const eng::EventCatalogue& compiled = eng::compiled();
-    REQUIRE(compiled.kinds.size() == 30U);  // P3-06 11 appends kinds 20-30 at 0.16.0 (P3-04 8.2 r4)
+    // P3-06 11 appends kinds 20-30 at 0.16.0 (P3-04 8.2 r4), P3-05 r6 kind 31 at 0.17.0
+    REQUIRE(compiled.kinds.size() == 31U);
     const eng::EventCatalogue cat = eng::catalogue_of(shipped());
-    REQUIRE(cat.kinds.size() == 30U);
+    REQUIRE(cat.kinds.size() == 31U);
     for (std::size_t i = 0; i < want.size(); ++i) {
         const K& w = want[i];
         CAPTURE(w.key);
@@ -156,6 +161,29 @@ TEST_CASE("P3-05 11, 16.1 item 14: the compiled catalogue appends kinds 6-19 exa
         CHECK(cat.kinds[i + 5].templ == w.templ);
         CHECK(eng::template_problem(cat.kinds[i + 5], w.templ) == std::nullopt);
     }
+    // 17i: kind 31 settlement_abandoned_to (r6 11): caused, region and settlement use 1, three 1-1 roles
+    for (const eng::KindDef* k : {&compiled.kinds[30], &cat.kinds[30]}) {
+        CHECK(k->id == 31);
+        CHECK(k->key == "settlement_abandoned_to");
+        CHECK(k->caused);
+        CHECK(k->region_use == 1);
+        CHECK(k->settlement_use == 1);
+        REQUIRE(k->roles.size() == 3U);
+        const std::pair<const char*, ET> roles[3] = {{"settlement", S}, {"civilization", C}, {"destination", S}};
+        for (std::size_t r = 0; r < 3; ++r) {
+            CHECK(k->roles[r].seq == static_cast<std::int64_t>(r) + 1);
+            CHECK(k->roles[r].role == roles[r].first);
+            CHECK(k->roles[r].type == roles[r].second);
+            CHECK(k->roles[r].min_count == 1);
+            CHECK(k->roles[r].max_count == 1);
+        }
+        CHECK(k->values == std::vector<std::string>{"settled", "lost"});
+    }
+    const char* t31 = "{settlement} was abandoned; {settled} {settled?survivor|survivors} went to {destination}"
+                      "{lost?|, and one was lost|, and # were lost}.";
+    CHECK(cat.kinds[30].salience == 55);
+    CHECK(cat.kinds[30].templ == t31);  // history.report lists it (data)
+    CHECK(eng::template_problem(cat.kinds[30], t31) == std::nullopt);
     // P3-04's five kinds are unchanged (a shipped kind is never edited, P3-04 8.2).
     CHECK(compiled.kinds[0].key == "awakening");
     CHECK(compiled.kinds[4].key == "flare_up");
