@@ -246,8 +246,20 @@ inline std::vector<std::string> names(std::span<const NameInput> in, std::int64_
         }
         v.push_back(r);
     }
-    return worldgen::stages::region_names(v, lm_cells, 1, static_cast<std::uint64_t>(cx), static_cast<std::uint64_t>(cy),
-                                          n, d, t);
+    // P3-08 (P1-06 r3): the base names of RG11 1 to 4; region_names now
+    // also draws the names of non-keepers.
+    return worldgen::stages::region_base_names(v, lm_cells, 1, static_cast<std::uint64_t>(cx),
+                                               static_cast<std::uint64_t>(cy), n, d, t);
+}
+
+// P3-08 (P1-06 r3): the placename data of the committed fixture root
+// worldgen/tests/data/geo, loaded once.
+inline const worldgen::stages::PlacenameData& fixture_placenames() {
+    static const worldgen::stages::PlacenameData data = [] {
+        auto r = worldgen::data::load_content(worldgen::data::builtin_kinds(), history_fixture::fixture_root());
+        return r.ok() ? worldgen::stages::placename_data_from(*r.value) : worldgen::stages::PlacenameData{};
+    }();
+    return data;
 }
 
 // --- Tables (3.2, 3.3) ----------------------------------------------------------------------------
@@ -341,7 +353,7 @@ inline Output stage(const Inputs& in, const Definitions& d, std::span<const Pass
                                             in.river,     in.biome,     in.fertility,   in.ore,         in.timber,
                                             in.fresh_water, in.forage,  in.habitability, in.walk_area};
     const std::vector<worldgen::db::PassRow> pr = pass_rows(passes);
-    auto r = worldgen::stages::regions_stage(ri, d, pr, t, seed, threads);
+    auto r = worldgen::stages::regions_stage(ri, d, fixture_placenames(), pr, t, seed, threads);
     Output out;
     out.region = std::move(r.region);
     for (const auto& x : r.regions) {

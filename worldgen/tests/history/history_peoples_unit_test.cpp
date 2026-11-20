@@ -163,7 +163,7 @@ TEST_CASE("P3-05 11, 16.1 item 14: the compiled catalogue appends kinds 6-19 exa
 
 TEST_CASE("P3-05 3.3: the twelve hist.peoples streams follow hist.chronology.awakening (51 names from 0.16.0)") {
     const auto names = ppl::registered_streams();
-    REQUIRE(names.size() == 51U);  // P3-06 3.3 appends five hist.conflict names (P0-01 19)
+    REQUIRE(names.size() == 52U);  // P3-06 3.3 appends five hist.conflict names (P0-01 19); P0-01 20 geo.regions.name
     std::size_t at = 0;
     for (std::size_t i = 0; i < names.size(); ++i) {
         if (names[i] == "hist.chronology.awakening") at = i;

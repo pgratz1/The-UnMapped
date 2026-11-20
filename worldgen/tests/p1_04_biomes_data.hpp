@@ -253,7 +253,12 @@ inline constexpr std::string_view REGIONS_TOML =
     "names = { central = \"Central\", north = \"North\", northeast = \"Northeast\", east = \"East\", "
     "southeast = \"Southeast\", south = \"South\", southwest = \"Southwest\", west = \"West\", "
     "northwest = \"Northwest\", isle = \"Isle\", upland = \"Fells\" }\n"
-    "upland_own_noun = [\"alpine\", \"heath\", \"highland_moor\"]\n";
+    "upland_own_noun = [\"alpine\", \"heath\", \"highland_moor\"]\n"
+    // P1-06 r3 (P3-08): the two name records.
+    "name_pool_weights = { nouns = [0, 1, 0], suffixes = [0, 4, 1], prefixes = [6, 3, 2], adjectives = [6, 3, 2], "
+    "features = [5, 1, 2], possessors = [8, 1, 1], places = [8, 1, 1], objects = [6, 3, 2] }\n"
+    "name_traits = { coast_cells = 128, river_class = 7, lake_permille = 125, high_mean_m = 400, "
+    "ore_rich_cells = 1000, barren_hab_max = 20, fertile_min = 200 }\n";
 
 [[nodiscard]] inline bool regions_registered(const worldgen::data::KindRegistry& registry) {
     const worldgen::data::Kind* k = registry.find("worldgen");

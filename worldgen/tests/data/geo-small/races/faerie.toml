@@ -10,16 +10,17 @@ generation_years = 100
 growth_permille = 4
 density_permille = 250
 site_weights = { fertility = 0, forage = 60, timber = 20, ore = 0, fresh_water = 20 }
+cell_weights = { ore = 0, height = 0 }
 biomes = [
-  { biome = "fen", weight = 800 },
+  { biome = "temperate_forest", weight = 800 },
   { biome = "wet_woodland", weight = 800 },
-  { biome = "marsh", weight = 600 },
-  { biome = "temperate_forest", weight = 100 },
-  { biome = "highland_moor", weight = 300 },
-  { biome = "grassland", weight = -200 },
-  { biome = "alpine", weight = -300 },
+  { biome = "fen", weight = 300 },
+  { biome = "marsh", weight = 200 },
+  { biome = "highland_moor", weight = 100 },
+  { biome = "heath", weight = 0 },
+  { biome = "grassland", weight = -300 },
+  { biome = "alpine", weight = -400 },
   { biome = "steppe", weight = -400 },
-  { biome = "heath", weight = 100 },
 ]
 upland = 200
 coast = 0

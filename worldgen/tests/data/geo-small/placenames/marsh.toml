@@ -1,0 +1,42 @@
+# Region names of one land (spec docs/specs/p1-06-regions.md, revision r3,
+# RG11 and section 4.1). Marsh (noun Marsh).
+# Pool 1 of every slot for the regions of this land; common.toml is pool 0
+# and the region's traits (traits.toml) pool 2. Lists sorted, no duplicates.
+
+[placename.marsh]
+role = "land"
+biomes = ["marsh"]
+special = "none"
+trait = "none"
+forms = [
+  { form = "{prefix}{suffix}", weight = 30 },
+  { form = "The {adjective} {noun}", weight = 22 },
+  { form = "{prefix}{feature} {noun}", weight = 22 },
+  { form = "The {noun} of {object}", weight = 12 },
+  { form = "{possessor}'s {noun}", weight = 9 },
+  { form = "{possessor}'s {place}", weight = 5 },
+]
+nouns = [
+  "Flats", "Levels", "Marsh", "Marshes", "Reeds", "Slough",
+]
+suffixes = [
+  "fleet", "marsh", "reed", "slough", "wash",
+]
+prefixes = [
+  "Ague", "Bittern", "Brack", "Curlew", "Eel", "Fever", "Heron", "Leech",
+  "Reed", "Rush", "Sedge", "Silt", "Snipe", "Teal",
+]
+adjectives = [
+  "Brackish", "Drowned", "Fetid", "Murky", "Rank", "Sodden", "Stagnant",
+  "Sunken",
+]
+features = [
+  "mire", "pool",
+]
+possessors = []
+places = []
+objects = [
+  "Bitterns", "Eels", "Fevers", "Herons", "Leeches", "Reeds", "the Drowned",
+]
+forbidden = []
+excluded = []

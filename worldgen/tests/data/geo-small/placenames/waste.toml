@@ -1,0 +1,40 @@
+# Region names of one land (spec docs/specs/p1-06-regions.md, revision r3,
+# RG11 and section 4.1). Blighted waste (noun Waste).
+# Pool 1 of every slot for the regions of this land; common.toml is pool 0
+# and the region's traits (traits.toml) pool 2. Lists sorted, no duplicates.
+
+[placename.waste]
+role = "land"
+biomes = ["blighted_waste"]
+special = "none"
+trait = "none"
+forms = [
+  { form = "{prefix}{suffix}", weight = 30 },
+  { form = "The {adjective} {noun}", weight = 22 },
+  { form = "{prefix}{feature} {noun}", weight = 22 },
+  { form = "The {noun} of {object}", weight = 12 },
+  { form = "{possessor}'s {noun}", weight = 9 },
+  { form = "{possessor}'s {place}", weight = 5 },
+]
+nouns = [
+  "Barrens", "Blight", "Scald", "Waste", "Wastes", "Wilds",
+]
+suffixes = [
+  "blight", "scald", "scar", "waste",
+]
+prefixes = [
+  "Bile", "Blight", "Canker", "Carrion", "Murrain", "Rot", "Slag", "Sulphur",
+  "Vulture",
+]
+adjectives = [
+  "Barren", "Blighted", "Cankered", "Lifeless", "Poisoned", "Rotting",
+  "Scorched", "Wasted",
+]
+features = []
+possessors = []
+places = []
+objects = [
+  "Carrion", "Flies", "Plagues", "Rot", "Vultures", "the Blight",
+]
+forbidden = []
+excluded = []

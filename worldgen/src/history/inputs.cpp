@@ -66,6 +66,9 @@ HistoryInputs history_inputs_from(const stages::StageContext& context) {
     in.habitability_layer = context.layer("habitability");
     in.river_layer = context.layer("river");
     in.flow_dir_layer = context.layer("flow_dir");
+    in.elevation_layer = context.layer("elevation");
+    in.ore_layer = context.layer("ore");
+    in.walk_area_layer = context.layer("walk_area");
     return in;
 }
 
@@ -103,6 +106,9 @@ HistoryInputs history_inputs_from_world(const db::WorldReader& world, const data
     in.habitability_layer = take(world.read_layer("habitability"), "layer 'habitability'").grid;
     in.river_layer = take(world.read_layer("river"), "layer 'river'").grid;
     in.flow_dir_layer = take(world.read_layer("flow_dir"), "layer 'flow_dir'").grid;
+    in.elevation_layer = take(world.read_layer("elevation"), "layer 'elevation'").grid;
+    in.ore_layer = take(world.read_layer("ore"), "layer 'ore'").grid;
+    in.walk_area_layer = take(world.read_layer("walk_area"), "layer 'walk_area'").grid;
     return in;
 }
 

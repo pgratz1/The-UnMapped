@@ -32,7 +32,7 @@ namespace worldgen {
 // subsystem (P3-06: strain, claims, wars, battles, sieges, conquest; event
 // kinds 20 to 30, tuning history.conflict, race field prowess_permille,
 // goblin aggression 600) joined it; now 0.16.0.
-inline constexpr std::string_view GENERATOR_VERSION = "0.16.0";
+inline constexpr std::string_view GENERATOR_VERSION = "0.17.0";
 
 // Returns GENERATOR_VERSION (P0-02 5.5). A world is only guaranteed
 // reproducible under the same generator version (design doc section 4).

@@ -42,6 +42,9 @@ struct HistoryInputs {
     db::LayerGrid habitability_layer;                // layer `habitability`
     db::LayerGrid river_layer;                       // layer `river`
     db::LayerGrid flow_dir_layer;                    // layer `flow_dir`
+    db::LayerGrid elevation_layer;                   // layer `elevation` (P3-05 r6 3.2, generator 0.17.0)
+    db::LayerGrid ore_layer;                         // layer `ore` (r6)
+    db::LayerGrid walk_area_layer;                   // layer `walk_area` (r6)
 
     friend bool operator==(const HistoryInputs&, const HistoryInputs&) = default;
 };
@@ -50,7 +53,8 @@ struct HistoryInputs {
 // the pipeline's context: StageContext::seed(), map_size(),
 // history_params() and the committed rows and layers of earlier stages.
 // FatalError (StageContext::layer) when layer `region`, `water`,
-// `habitability`, `river` or `flow_dir` was not written by an earlier stage.
+// `habitability`, `river`, `flow_dir`, `elevation`, `ore` or `walk_area` was
+// not written by an earlier stage.
 [[nodiscard]] HistoryInputs history_inputs_from(const stages::StageContext& context);
 
 // The same from a world file (resume): meta parsed (history_params_from_meta),

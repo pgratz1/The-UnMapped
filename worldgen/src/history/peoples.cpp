@@ -154,6 +154,7 @@ void PeoplesSubsystem::prepare(const StepContext& ctx) {
     const std::int64_t islet = engine_tuning_from(ctx.content()).islet_max_dry_cells;
     const HistoryInputs& in = ctx.inputs();
     geo_.emplace(in, ctx.content(), tuning_, islet);
+    filter_ = name_filter_from(ctx.content());  // P3-02 r5
     // P3-03 8.2: the registry from the stored names (as the stub, P3-04 7.2).
     for (const db::RegionRow& r : in.regions) {
         registry_.add(r.name);
@@ -185,7 +186,8 @@ const PeoplesGeo& PeoplesSubsystem::geo() const {
 std::string PeoplesSubsystem::next_name(const StepContext& ctx, std::int64_t race, NameKind kind,
                                         std::int64_t entity) {
     const PeoplesRace& r = geo().race(race);
-    return make_name(r.naming, r.culture_key, kind, ctx.inputs().seed, word(r.culture), word(entity), registry_);
+    return make_name(r.naming, filter_, r.culture_key, kind, ctx.inputs().seed, word(r.culture), word(entity),
+                     registry_);
 }
 
 void PeoplesSubsystem::run(StepContext& ctx) {
@@ -371,9 +373,7 @@ void PeoplesSubsystem::awaken(StepContext& ctx, std::int64_t race, std::int64_t 
         // 3. The settlement.
         const std::int64_t s = settlement_count(state) + 1;
         std::string settlement_name = next_name(ctx, race, NameKind::settlement, s);
-        const SettlementKind kind = r.builds_kind(SettlementKind::fortress) && g.region(home).upland
-                                        ? SettlementKind::fortress
-                                        : ladder_kind(r, tuning_.founding_population, tuning_);
+        const SettlementKind kind = founding_kind(race, home, *site, tuning_.founding_population);
         EventSpec settled = point_event(ctx, "settlement_founded", home, s);
         settled.participants = {Participant{"settlement", EntityType::settlement, s},
                                 Participant{"founder", EntityType::civilization, c}};
@@ -398,6 +398,17 @@ std::int64_t PeoplesAwakening::awakening_place(const StepContext& context, std::
 
 void PeoplesAwakening::awaken(StepContext& context, std::int64_t race, std::int64_t awakening_event) {
     peoples_.awaken(context, race, awakening_event);
+}
+
+SettlementKind PeoplesSubsystem::founding_kind(std::int64_t race, std::int64_t region, const SiteCell& site,
+                                              std::int64_t population) const {
+    const PeoplesGeo& g = geo();
+    const PeoplesRace& r = g.race(race);
+    // 8.4: a race that builds fortresses founds one in an upland region, and
+    // (r6) a race with a cell term on a cell off the walkable ground.
+    const bool fortress = r.builds_kind(SettlementKind::fortress) &&
+                          (g.region(region).upland || (r.has_cell_term() && !g.walkable(site.x, site.y)));
+    return fortress ? SettlementKind::fortress : ladder_kind(r, population, tuning_);
 }
 
 // --- T1 and Q1: growth, recovery, abandonment, kinds (8.2, 8.3, 8.5 (b), 9.1, 9.2) ------------------
@@ -611,17 +622,72 @@ void PeoplesSubsystem::end_civilization(StepContext& ctx, std::int64_t civ, std:
     }
 }
 
+bool PeoplesSubsystem::has_other_standing(const State& state, std::int64_t settlement) const {
+    const std::int64_t c = state.settlement(settlement).owner_civ;
+    for (std::int64_t id = 1; id <= settlement_count(state); ++id) {
+        const Settlement& t = state.settlement(id);
+        if (id != settlement && standing(t) && t.owner_civ == c) {
+            return true;
+        }
+    }
+    return false;
+}
+
+std::int64_t PeoplesSubsystem::nearest_other(const State& state, std::int64_t settlement) const {
+    const Settlement& s = state.settlement(settlement);
+    std::int64_t nearest = 0;
+    std::int64_t nearest_d = 0;
+    for (std::int64_t id = 1; id <= settlement_count(state); ++id) {
+        const Settlement& t = state.settlement(id);
+        if (id == settlement || !standing(t) || t.owner_civ != s.owner_civ) {
+            continue;
+        }
+        const std::int64_t d = (t.x - s.x) * (t.x - s.x) + (t.y - s.y) * (t.y - s.y);
+        if (nearest == 0 || d < nearest_d) {
+            nearest = id;
+            nearest_d = d;
+        }
+    }
+    return nearest;
+}
+
 void PeoplesSubsystem::abandon(StepContext& ctx, std::int64_t settlement, std::int64_t cause) {
     State& state = ctx.state();
     const Settlement& s = state.settlement(settlement);
     const std::int64_t c = s.owner_civ;
     const std::int64_t region = s.region;
-    // 1. The event.
-    EventSpec e = point_event(ctx, "settlement_abandoned", region, settlement);
+    const std::int64_t p = s.population;
+    // r6: the causes, ascending without repeats: the blow (or last reduction,
+    // or founding) and, when s is declining, its decline start.
+    std::vector<std::int64_t> causes{cause};
+    if (s.status == SettlementStatus::declining) {
+        const std::int64_t start = get(decline_start_, settlement);
+        if (start != 0 && start != cause) {
+            causes.push_back(start);
+            std::stable_sort(causes.begin(), causes.end());
+        }
+    }
+    // 1. The event (r6): with a destination when survivors reach another
+    // standing settlement of c (kind 31), else kind 16.
+    const std::int64_t dest = nearest_other(state, settlement);
+    std::int64_t settled = 0;
+    if (dest != 0) {
+        const Settlement& d = state.settlement(dest);
+        const std::int64_t room = std::max<std::int64_t>(
+            0, checked_sub(checked_mul(2, geo().capacity(d.region, race_of_civ(state, c))), d.population));
+        settled = std::min(p, room);
+    }
+    EventSpec e = point_event(ctx, settled >= 1 ? "settlement_abandoned_to" : "settlement_abandoned", region,
+                              settlement);
     e.participants = {Participant{"settlement", EntityType::settlement, settlement},
                       Participant{"civilization", EntityType::civilization, c}};
-    e.values = {s.population};
-    e.causes = {cause};
+    if (settled >= 1) {
+        e.participants.push_back(Participant{"destination", EntityType::settlement, dest});
+        e.values = {settled, p - settled};
+    } else {
+        e.values = {p};
+    }
+    e.causes = causes;
     const std::int64_t ev = ctx.append(e);
     // 2 to 5.
     ruin(ctx, settlement, ev);
@@ -786,9 +852,7 @@ void PeoplesSubsystem::foundings(StepContext& ctx) {
         state.set_population(source, source_p - colonists);
         const std::int64_t s = settlement_count(state) + 1;
         std::string name = next_name(ctx, race, NameKind::settlement, s);
-        const SettlementKind kind = r.builds_kind(SettlementKind::fortress) && g.region(region).upland
-                                        ? SettlementKind::fortress
-                                        : ladder_kind(r, colonists, tuning_);
+        const SettlementKind kind = founding_kind(race, region, target.second, colonists);
         const bool was_free = state.region(region).owner == 0;
         EventSpec e = point_event(ctx, "colony_founded", region, s);
         e.participants = {Participant{"settlement", EntityType::settlement, s},
@@ -837,15 +901,121 @@ std::int64_t PeoplesSubsystem::strike(StepContext& ctx, std::int64_t settlement,
     const std::int64_t ev = ctx.append(e);
     state.set_settlement_status(settlement, SettlementStatus::declining, ev);
     slot(last_reduction_, settlement) = ev;
+    if (!was_declining) {
+        slot(decline_start_, settlement) = ev;  // r6 (8.5): the blow that began the decline
+    }
     // 8.5 (a).
-    if (after < tuning_.abandon_min) {
-        abandon(ctx, settlement, ev);
-    } else if (was_declining && after < tuning_.abandon_frail_max &&
-               chance_pm(ctx.draw(key(ABANDON), word(settlement), 0, 0),
-                         tuning_.abandon_permille.of(settlement_kind))) {
+    if (after < tuning_.abandon_min || frail_abandon(ctx, settlement, after, was_declining, settlement_kind)) {
         abandon(ctx, settlement, ev);
     }
     return ev;
+}
+
+bool PeoplesSubsystem::frail_abandon(const StepContext& ctx, std::int64_t settlement, std::int64_t after,
+                                     bool was_declining, SettlementKind kind) const {
+    // 8.5 (a): the chance abandonment of a struck, already declining
+    // settlement below abandon_frail_max; r6: never of its civilization's
+    // only standing settlement (no draw is made then).
+    return was_declining && after < tuning_.abandon_frail_max && has_other_standing(ctx.state(), settlement) &&
+           chance_pm(ctx.draw(key(ABANDON), word(settlement), 0, 0), tuning_.abandon_permille.of(kind));
+}
+
+std::int64_t PeoplesSubsystem::planned_plague_dead(const StepContext& ctx, std::int64_t origin, std::int64_t toll,
+                                                   const std::vector<std::uint8_t>& struck) const {
+    // r6 (10.2): the outbreak's dead and, unless it empties its settlement,
+    // the dead of every spread whose draw succeeds, with the populations the
+    // strikes will meet. The plan replays the strikes on a copy of the
+    // populations: a spread that abandons its target sends survivors to the
+    // owner's nearest standing settlement (8.5 item 2), which a later spread
+    // may strike. No state changes and no keyed draw differs from the
+    // strikes', so the plan and the strikes agree.
+    const State& state = ctx.state();
+    const PeoplesGeo& g = geo();
+    const std::int64_t n = settlement_count(state);
+    const Settlement& s = state.settlement(origin);
+    const std::int64_t c = s.owner_civ;
+    const std::int64_t p0 = s.population;
+    const std::int64_t dead0 = floor_div(checked_mul(p0, toll), 1000);
+    const bool declining0 = s.status == SettlementStatus::declining;
+    if (p0 - dead0 < tuning_.abandon_min || frail_abandon(ctx, origin, p0 - dead0, declining0, s.kind)) {
+        return dead0;  // emptied: no spread
+    }
+    // The standing settlements of c and their populations after the outbreak.
+    std::vector<std::int64_t> pop(static_cast<std::size_t>(n) + 1, 0);
+    std::vector<std::uint8_t> up(static_cast<std::size_t>(n) + 1, 0);
+    for (std::int64_t id = 1; id <= n; ++id) {
+        const Settlement& t = state.settlement(id);
+        if (standing(t) && t.owner_civ == c) {
+            pop[static_cast<std::size_t>(id)] = t.population;
+            up[static_cast<std::size_t>(id)] = 1;
+        }
+    }
+    pop[static_cast<std::size_t>(origin)] = p0 - dead0;
+    const auto others_up = [&](std::int64_t u) {
+        for (std::int64_t id = 1; id <= n; ++id) {
+            if (id != u && up[static_cast<std::size_t>(id)] != 0) {
+                return true;
+            }
+        }
+        return false;
+    };
+    std::vector<std::int64_t> regions{s.region};
+    for (const PeoplesNeighbour& nb : g.neighbours(s.region)) {
+        regions.push_back(nb.region);
+    }
+    const std::int64_t plague_range = tuning_.plague_toll_max - tuning_.plague_toll_min + 1;
+    const std::int64_t race = race_of_civ(state, c);
+    std::int64_t total = dead0;
+    for (std::int64_t u = 1; u <= n; ++u) {
+        const Settlement& t = state.settlement(u);
+        if (u == origin || struck[static_cast<std::size_t>(u)] != 0 || up[static_cast<std::size_t>(u)] == 0 ||
+            !ctx.visible(t) || std::find(regions.begin(), regions.end(), t.region) == regions.end()) {
+            continue;
+        }
+        if (!chance_pm(ctx.draw(key(PLAGUE_SPREAD), word(origin), word(u), 0), tuning_.plague_spread_permille)) {
+            continue;
+        }
+        const std::int64_t base =
+            tuning_.plague_toll_min +
+            static_cast<std::int64_t>(pick(ctx.draw(key(PLAGUE_TOLL), word(u), 1, 0), word(plague_range)));
+        const std::int64_t toll_u = floor_div(checked_mul(base, tuning_.plague_spread_toll_permille), 1000);
+        const std::int64_t p = pop[static_cast<std::size_t>(u)];
+        const std::int64_t dead = floor_div(checked_mul(p, toll_u), 1000);
+        total = checked_add(total, dead);
+        const std::int64_t after = p - dead;
+        pop[static_cast<std::size_t>(u)] = after;
+        const bool declining = t.status == SettlementStatus::declining;
+        const bool abandoned =
+            after < tuning_.abandon_min ||
+            (declining && after < tuning_.abandon_frail_max && others_up(u) &&
+             chance_pm(ctx.draw(key(ABANDON), word(u), 0, 0), tuning_.abandon_permille.of(t.kind)));
+        if (!abandoned) {
+            continue;
+        }
+        // 8.5 item 2: the survivors join the nearest other standing settlement.
+        std::int64_t nearest = 0;
+        std::int64_t nearest_d = 0;
+        for (std::int64_t id = 1; id <= n; ++id) {
+            if (id == u || up[static_cast<std::size_t>(id)] == 0) {
+                continue;
+            }
+            const Settlement& v = state.settlement(id);
+            const std::int64_t d = (v.x - t.x) * (v.x - t.x) + (v.y - t.y) * (v.y - t.y);
+            if (nearest == 0 || d < nearest_d) {
+                nearest = id;
+                nearest_d = d;
+            }
+        }
+        if (nearest != 0) {
+            std::int64_t& q = pop[static_cast<std::size_t>(nearest)];
+            const std::int64_t room = std::max<std::int64_t>(
+                0, checked_sub(checked_mul(2, g.capacity(state.settlement(nearest).region, race)), q));
+            q = checked_add(q, std::min(after, room));
+        }
+        up[static_cast<std::size_t>(u)] = 0;
+        pop[static_cast<std::size_t>(u)] = 0;
+    }
+    return total;
 }
 
 void PeoplesSubsystem::pressures(StepContext& ctx) {
@@ -889,10 +1059,13 @@ void PeoplesSubsystem::pressures(StepContext& ctx) {
         const std::int64_t toll =
             tuning_.plague_toll_min +
             static_cast<std::int64_t>(pick(ctx.draw(key(PLAGUE_TOLL), word(id), 0, 0), word(plague_range)));
-        const bool small = kind == SettlementKind::hamlet || kind == SettlementKind::village;
+        // r6 (10.2): the outbreak's salience by the total toll of the
+        // outbreak and its spreads, planned before it is written.
+        const std::int64_t total = planned_plague_dead(ctx, id, toll, struck);
         const std::int64_t outbreak =
             strike(ctx, id, "plague", toll, 0,
-                   small ? std::optional<std::int64_t>(tuning_.plague_small_salience) : std::nullopt);
+                   total >= tuning_.plague_major_dead ? std::nullopt
+                                                      : std::optional<std::int64_t>(tuning_.plague_small_salience));
         struck[static_cast<std::size_t>(id)] = 1;
         // The spread, to the owner's settlements in the region and its open neighbours.
         const std::int64_t owner = state.settlement(id).owner_civ;  // 0 if the outbreak emptied it
@@ -938,12 +1111,19 @@ void PeoplesSubsystem::pressures(StepContext& ctx) {
         const Settlement& cap = state.settlement(capital);
         EventSpec e = point_event(ctx, "succession_crisis", cap.region, capital);
         e.participants = {Participant{"civilization", EntityType::civilization, c}};
-        crisis(ctx, c, ctx.append(e));
+        // r6 (10.3): the split test first; a crisis that does not split has
+        // crisis_small_salience.
+        const SplitPlan plan = plan_split(ctx, c);
+        const bool splits = !plan.leaving.empty() && plan.leaving.size() < plan.mine;
+        if (!splits) {
+            e.salience = tuning_.crisis_small_salience;
+        }
+        crisis(ctx, c, ctx.append(e), plan);
     }
 }
 
-void PeoplesSubsystem::crisis(StepContext& ctx, std::int64_t c, std::int64_t event) {
-    State& state = ctx.state();
+PeoplesSubsystem::SplitPlan PeoplesSubsystem::plan_split(const StepContext& ctx, std::int64_t c) const {
+    const State& state = ctx.state();
     const PeoplesGeo& g = geo();
     const std::int64_t ns = settlement_count(state);
     const std::int64_t nr = g.region_count();
@@ -961,8 +1141,10 @@ void PeoplesSubsystem::crisis(StepContext& ctx, std::int64_t c, std::int64_t eve
         }
     }
     const std::int64_t capital = state.civ(c).capital;
-    std::vector<std::int64_t> part;
-    std::vector<std::int64_t> leaving;
+    SplitPlan plan;
+    plan.mine = mine.size();
+    std::vector<std::int64_t>& part = plan.part;
+    std::vector<std::int64_t>& leaving = plan.leaving;
     if (static_cast<std::int64_t>(mine.size()) >= tuning_.split_min_settlements &&
         static_cast<std::int64_t>(held.size()) >= tuning_.split_min_regions &&
         chance_pm(ctx.draw(key(SPLIT), word(c), 0, 0), tuning_.split_permille)) {
@@ -1009,7 +1191,15 @@ void PeoplesSubsystem::crisis(StepContext& ctx, std::int64_t c, std::int64_t eve
             }
         }
     }
-    if (!leaving.empty() && leaving.size() < mine.size()) {
+    return plan;
+}
+
+void PeoplesSubsystem::crisis(StepContext& ctx, std::int64_t c, std::int64_t event, const SplitPlan& plan) {
+    State& state = ctx.state();
+    const std::int64_t capital = state.civ(c).capital;
+    const std::vector<std::int64_t>& part = plan.part;
+    const std::vector<std::int64_t>& leaving = plan.leaving;
+    if (!leaving.empty() && leaving.size() < plan.mine) {
         // Secession.
         std::int64_t new_capital = leaving.front();
         for (const std::int64_t id : leaving) {
@@ -1046,6 +1236,7 @@ void PeoplesSubsystem::crisis(StepContext& ctx, std::int64_t c, std::int64_t eve
     const std::int64_t p = cap.population;
     if (cap.status == SettlementStatus::thriving) {
         slot(before_, capital) = p;
+        slot(decline_start_, capital) = event;  // r6 (8.5): a crisis loss that found it thriving
     }
     state.set_population(capital, p - floor_div(checked_mul(p, tuning_.crisis_loss_permille), 1000));
     state.set_settlement_status(capital, SettlementStatus::declining, event);

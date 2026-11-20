@@ -259,7 +259,7 @@ TEST_CASE("P3-06 11, 16.1 item 11: the compiled kinds 20-30 equal section 11; te
 
 TEST_CASE("P3-06 3.3, 18.2: the five hist.conflict streams follow hist.peoples.split, 51 names in all") {
     const auto names = worldgen::streams::all_stream_names;
-    REQUIRE(names.size() == 51U);
+    REQUIRE(names.size() == 52U);  // P0-01 20 (P3-08): geo.regions.name
     std::size_t at = names.size();
     for (std::size_t i = 0; i < names.size(); ++i) {
         if (names[i] == "hist.peoples.split") at = i;

@@ -100,7 +100,9 @@ ConflictSubsystem::Fought ConflictSubsystem::battle(StepContext& ctx, std::size_
     const std::int64_t f_winner = x_wins ? attack : defend;
     const std::int64_t f_loser = x_wins ? defend : attack;
     const std::int64_t dead_loser = floor_div(checked_mul(f_loser, tuning_.loss_loser_permille), 1000);
-    const std::int64_t dead_winner = floor_div(checked_mul(f_winner, tuning_.loss_winner_permille), 1000);
+    // r7 (P3-08): the victors lose loss_winner of the smaller force.
+    const std::int64_t dead_winner =
+        floor_div(checked_mul(std::min(f_winner, f_loser), tuning_.loss_winner_permille), 1000);
     EventSpec e = point_event(ctx, terms.pass ? "battle_at_pass" : "battle", region, 0);
     e.participants = {civ_role("winner", winner), civ_role("loser", loser)};
     e.values = {dead_winner, dead_loser};
