@@ -84,7 +84,7 @@ M64 = (1 << 64) - 1
 REPO = os.path.normpath(os.path.join(_HERE, "..", "..", ".."))
 GOLDEN = os.path.join(REPO, "worldgen", "tests", "golden", "p3-04-engine.txt")
 DEFAULT_INPUTS = os.path.join(os.path.expanduser("~"), ".cache", "the-unmapped", "out", "p3-04-tests", "inputs")
-GENERATOR_VERSION = "0.15.0"  # P3-05: the 0.15.0 catalogue (19 kinds) and report data
+GENERATOR_VERSION = "0.16.0"  # P3-06: the 0.16.0 catalogue (30 kinds) and report data
 SCHEMA_VERSION = 7
 
 
@@ -134,6 +134,22 @@ of upheaval." },
   { kind = "capital_moved", salience = 50, template = "{civilization} moved its seat to {settlement}." },
   { kind = "civ_ended", salience = 85, template = "{civilization} came to an end." },
   { kind = "ruin_faded", salience = 10, template = "The ruins of {settlement} faded from memory." },
+  { kind = "claim", salience = 45, template = "{claimant} laid claim to {@region}, held by {holder}." },
+  { kind = "war_declared", salience = 70, template = "{attacker} declared war on {defender} over {@region}." },
+  { kind = "battle", salience = 30, template = "{winner} defeated {loser} in {@region}; {loser_dead} of the defeated \
+and {winner_dead} of the victors fell." },
+  { kind = "battle_at_pass", salience = 35, template = "{winner} defeated {loser} at the pass into {@region}; \
+{loser_dead} of the defeated and {winner_dead} of the victors fell." },
+  { kind = "siege", salience = 25, template = "{attacker} besieged {@settlement} of {defender}; it {fell?fell|held}." },
+  { kind = "sacked", salience = 75, template = "{attacker} sacked {@settlement} of {defender}; {dead} died and \
+{survivors} fled." },
+  { kind = "settlement_captured", salience = 60, template = "{attacker} took {@settlement} from {defender}; {dead} \
+died and {fled} fled." },
+  { kind = "peace", salience = 60, template = "{loser} sued {winner} for peace after {years} {years?year|years} of war." },
+  { kind = "truce", salience = 50, template = "{parties:all} made peace after {years} {years?year|years} of war, \
+neither the victor." },
+  { kind = "region_ceded", salience = 55, template = "{from} ceded {@region} to {to}." },
+  { kind = "civ_conquered", salience = 90, template = "{civilization} fell to {conqueror}." },
 ]
 """
 
@@ -228,9 +244,26 @@ COMPILED = (
     kind_def(17, "capital_moved", 1, 1, 1, (("civilization", CIV, 1, 1), ("settlement", SETTLEMENT, 1, 1)), ()),
     kind_def(18, "civ_ended", 1, 1, 1, (("civilization", CIV, 1, 1),), ()),
     kind_def(19, "ruin_faded", 1, 1, 1, (("settlement", SETTLEMENT, 1, 1),), ()),
+    # P3-06 11 (generator 0.16.0): kinds 20-30, every kind caused, region_use and settlement_use as the
+    # table's columns, every count 1-1 except parties 2-2.
+    kind_def(20, "claim", 1, 1, 0, (("claimant", CIV, 1, 1), ("holder", CIV, 1, 1)), ()),
+    kind_def(21, "war_declared", 1, 1, 0, (("attacker", CIV, 1, 1), ("defender", CIV, 1, 1)), ()),
+    kind_def(22, "battle", 1, 1, 0, (("winner", CIV, 1, 1), ("loser", CIV, 1, 1)), ("winner_dead", "loser_dead")),
+    kind_def(23, "battle_at_pass", 1, 1, 0, (("winner", CIV, 1, 1), ("loser", CIV, 1, 1)),
+             ("winner_dead", "loser_dead", "pass")),
+    kind_def(24, "siege", 1, 1, 1, (("attacker", CIV, 1, 1), ("defender", CIV, 1, 1)), ("fell",)),
+    kind_def(25, "sacked", 1, 1, 1, (("attacker", CIV, 1, 1), ("defender", CIV, 1, 1)), ("dead", "survivors")),
+    kind_def(26, "settlement_captured", 1, 1, 1, (("attacker", CIV, 1, 1), ("defender", CIV, 1, 1)),
+             ("dead", "fled")),
+    kind_def(27, "peace", 1, 0, 0, (("winner", CIV, 1, 1), ("loser", CIV, 1, 1)), ("years",)),
+    kind_def(28, "truce", 1, 0, 0, (("parties", CIV, 2, 2),), ("years",)),
+    kind_def(29, "region_ceded", 1, 1, 0, (("from", CIV, 1, 1), ("to", CIV, 1, 1)), ()),
+    kind_def(30, "civ_conquered", 1, 1, 0, (("civilization", CIV, 1, 1), ("conqueror", CIV, 1, 1)), ()),
 )
 
 
+P3_06_KEYS = ['claim', 'war_declared', 'battle', 'battle_at_pass', 'siege', 'sacked', 'settlement_captured',
+              'peace', 'truce', 'region_ceded', 'civ_conquered']
 P3_05_KEYS = ['colony_founded', 'became_village', 'became_town', 'became_city', 'settlement_dwindled', 'famine', 'plague', 'plague_spread', 'succession_crisis', 'civ_seceded', 'settlement_abandoned', 'capital_moved', 'civ_ended', 'ruin_faded']
 
 
@@ -1068,7 +1101,7 @@ def table_hashes(res):
 
 def report_lines(res, end_year, races=None):
     """11.1: the [history] section, or [] when `phase` is empty; with the race rows, the keys P3-05 15.4
-    appends after `relations` (every 0.15.0 world with phases prints them)."""
+    appends after `relations` (every world from 0.15.0 with phases prints them)."""
     ph = res["phase"]
     if not ph:
         return []
@@ -1357,8 +1390,8 @@ def template_kind(key):
 
 
 HEADER = """\
-# P3-04 engine golden vectors for generator 0.15.0 (schema 7): the stub engine (run_engine with
-# the stub configuration) on the 0.15.0 catalogue of 19 kinds (P3-05 11). Spec
+# P3-04 engine golden vectors for generator 0.16.0 (schema 7): the stub engine (run_engine with
+# the stub configuration) on the 0.16.0 catalogue of 30 kinds (P3-05 11, P3-06 11). Spec
 # docs/specs/p3-04-simulation-engine.md approved 2026-11-19, generated by
 # worldgen/tests/reference/p3_engine_reference.py golden, an independent
 # exact-integer reference written from the spec and P3-00 alone (with
@@ -1483,7 +1516,7 @@ def golden_text(inputs):
 # every message of report_events once.
 REPORT_CHECK_CASE = (
     ("awakening", 100, "{creator} awakened the {race:plural} in {@region}."),
-    ("battle", 10, "x"),
+    ("duel", 10, "x"),          # an unknown kind ("battle" until 0.15.0; a kind of P3-06 since 0.16.0)
     ("awakening", 100, "again"),
     ("civ_founded", 80, "{race:plural"),
     ("settlement_founded", 40, ""),
@@ -1702,7 +1735,7 @@ def check_example(c, inputs):
         "[history]", "end_year = 6000", "phases_opening = 6", "phases_quiet = 5", "phases_flare = 0",
         "phases_final = 1", "simulated_years = 1154", "simulated_permille = 192", "events = 33",
         "events_awakening = 6", "events_civ_founded = 6", "events_settlement_founded = 6", "events_quiet_era = 15",
-        "events_flare_up = 0"] + ["events_%s = 0" % k for k in P3_05_KEYS] + ["civilizations = 6", "civilizations_alive = 6", "settlements = 6",
+        "events_flare_up = 0"] + ["events_%s = 0" % k for k in P3_05_KEYS + P3_06_KEYS] + ["civilizations = 6", "civilizations_alive = 6", "settlements = 6",
         "settlements_standing = 6", "regions_held = 6", "census_rows = 6", "relations = 0"])
     res = world_case("example-42-1024", 42, 1024, 6000, "all", "normal", inputs, ForcedTension(500, 1000, 1))
     ev = res["event"]
@@ -1738,11 +1771,11 @@ def check_templates(c):
     c.eq("join", [join_all([]), join_all(["A"]), join_all(["A", "B"]), join_all(["A", "B", "C"])],
          ["", "A", "A and B", "A, B and C"])
     c.eq("report_events messages", report_events_messages(REPORT_CHECK_CASE), [
-        "events[1]: kind 'battle' is not an event kind",
+        "events[1]: kind 'duel' is not an event kind",
         "events[2]: kind 'awakening' is already listed at events[0]",
         "events[3]: template: unclosed placeholder at byte 0",
         "events[4]: template: the template is empty",
-        "event kind 'flare_up' has no entry"] + ["event kind '%s' has no entry" % k for k in P3_05_KEYS])
+        "event kind 'flare_up' has no entry"] + ["event kind '%s' has no entry" % k for k in P3_05_KEYS + P3_06_KEYS])
     # rendering on a hand-made view: :all with 0..3, ? with 0, 1, 2
     cat = {99: dict(TEST_KIND, region_use=1, templ="[{actor:all}] {people:plural}/{people:adjective}/{people} at {@region}: "
                                      "{count} {count?thing|things} {{ok}} {@year}-{@end_year}")}
@@ -1787,7 +1820,7 @@ def check_entry(c):
          "history: tuning: normal: 6 x active_years + final_years must not be above 6 x "
          "simulated_max_permille - 30")
     c.eq("report", entry_checks(dat, inp, report=REPORT_CHECK_CASE),
-         "history: report: events[1]: kind 'battle' is not an event kind")
+         "history: report: events[1]: kind 'duel' is not an event kind")
     inp2 = synthetic_inputs([0, 2074], 6000)
     inp2.params = dict(inp2.params, span=1999)
     c.eq("span", entry_checks(dat, inp2), "history: settings: history_span 1999 outside 2000 to 12000")

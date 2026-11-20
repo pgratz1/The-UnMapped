@@ -127,9 +127,9 @@ TEST_CASE("P3-05 11, 16.1 item 14: the compiled catalogue appends kinds 6-19 exa
         {"ruin_faded", true, {{"settlement", S}}, {}, 10, "The ruins of {settlement} faded from memory."},
     };
     const eng::EventCatalogue& compiled = eng::compiled();
-    REQUIRE(compiled.kinds.size() == 19U);  // no kind 20-30 before 0.16.0 (P3-04 8.2 r4)
+    REQUIRE(compiled.kinds.size() == 30U);  // P3-06 11 appends kinds 20-30 at 0.16.0 (P3-04 8.2 r4)
     const eng::EventCatalogue cat = eng::catalogue_of(shipped());
-    REQUIRE(cat.kinds.size() == 19U);
+    REQUIRE(cat.kinds.size() == 30U);
     for (std::size_t i = 0; i < want.size(); ++i) {
         const K& w = want[i];
         CAPTURE(w.key);
@@ -161,9 +161,9 @@ TEST_CASE("P3-05 11, 16.1 item 14: the compiled catalogue appends kinds 6-19 exa
     CHECK(compiled.kinds[4].key == "flare_up");
 }
 
-TEST_CASE("P3-05 3.3: the twelve hist.peoples streams follow hist.chronology.awakening, 46 names in all") {
+TEST_CASE("P3-05 3.3: the twelve hist.peoples streams follow hist.chronology.awakening (51 names from 0.16.0)") {
     const auto names = ppl::registered_streams();
-    REQUIRE(names.size() == 46U);
+    REQUIRE(names.size() == 51U);  // P3-06 3.3 appends five hist.conflict names (P0-01 19)
     std::size_t at = 0;
     for (std::size_t i = 0; i < names.size(); ++i) {
         if (names[i] == "hist.chronology.awakening") at = i;
@@ -174,14 +174,16 @@ TEST_CASE("P3-05 3.3: the twelve hist.peoples streams follow hist.chronology.awa
     }
 }
 
-TEST_CASE("P3-05 13, P3-04 6.4: the shipped stage is the peoples configuration (handler, then the subsystem)") {
+TEST_CASE("P3-05 13, P3-04 6.4: the peoples configuration (handler, then the subsystem) is the golden file's") {
+    // Since generator 0.16.0 the shipped stage adds conflict (P3-06 8.2, tested there); the P3-05 golden
+    // cases are the peoples-only configuration.
     const GCase& g = golden_case("syn-0");
     const eng::HistoryInputs in = synthetic_inputs(g);
     PeoplesConfig cfg(shipped());
     const Tables a = run_with(cfg, shipped(), in);
-    const Tables b = eng::history_stage(shipped(), in);
-    CHECK(str(a.event) == str(b.event));
-    CHECK(a == b);
+    PeoplesConfig cfg2(shipped());
+    CHECK(a == run_with(cfg2, shipped(), in));
+    CHECK(table_hashes(a) == g.tables);
 }
 
 TEST_CASE("P3-05 4, 5, 16.1 item 1: PeoplesView score and capacity equal the reference on synthetic geography") {
