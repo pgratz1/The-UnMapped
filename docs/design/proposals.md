@@ -784,3 +784,18 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
   7. The filter lists are plain text in the repository.
 - Interim choice: points 2 to 7 are as shipped with P3-08 (generator 0.17.0). Point 1 differs from what P3-08 ships (the full list of 647 words): the short list is a data change to `game/data/name_filters/words.toml` that changes worlds, and ships with the next change after P3-08.
 - Status: accepted; point 1 scheduled after P3-08
+
+### Paul's decision of 2026-11-20: the P3-08 tuning questions go with their recommendations
+
+- Date: 2026-11-20
+- Raised by: lead, recording Paul's decision
+- Design doc section: 5 (history: settlements, famine and plague, war), 13 (P3)
+- Problem: the P3-08 change spec (`docs/specs/p3-08-followups.md` section 10, branch `p3/08-spec`) put five tuning questions to Paul.
+- Decision: Paul's words: "I accept all your recommendations in P3-08 tuning." So:
+  1. Dwarven sites: dwarves take the high, ore-rich part of their regions (cell weights ore 400, height 600); most dwarven foundings are fortresses.
+  2. Battle losses are computed from the smaller force, so a victor never loses more than the defeated, accepting that more sieges succeed.
+  3. One quiet era per civilization per quiet stretch.
+  4. Famine and plague-spread rates are halved.
+  5. The sentence templates gain the three-word form (a wording chosen by a value).
+- Interim choice: none needed; all five are as implemented in P3-08 (generator 0.17.0), which is in validation. The validation sweep and the world critic's review check whether the darker battles or the dwarven fortresses overshoot.
+- Status: accepted
