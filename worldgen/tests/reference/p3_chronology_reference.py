@@ -113,7 +113,7 @@ class Data:
 
 
 def data_from_root(root):
-    v017 = pdr.DATA_VERSION == "0.17.0"
+    v017 = pdr.at_least("0.17.0")   # P3-03 r3 from 0.17.0 (and later)
     content = pdr.load_root(root, kinds=("biome", "culture", "history", "race") + (("name_filter",) if v017 else ()))
     races = []
     for rid, t in content["race"]:
@@ -1042,7 +1042,7 @@ class version:
         global _SHIPPED
         self.saved = (pdr.DATA_VERSION, pnr.RULES, _SHIPPED)
         pdr.use_version(self.v)
-        pnr.use_rules("r5" if self.v == "0.17.0" else "r4")
+        pnr.use_rules("r4" if self.v == "0.16.0" else "r5")
         _SHIPPED = None
         return self
 

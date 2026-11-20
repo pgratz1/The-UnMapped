@@ -144,9 +144,9 @@ geo-seed-0-512 homes ra6 y5534 n1 9
 geo-seed-0-512 table civilization 9074dbaf2023d1ce350ac1b5447731eb2729fb33c77f88bef002ce1de27d3c59
 geo-seed-0-512 table event ba5978ab3e94f05e28f4dd78eea024ee21f37d1bab4f3fad49f8cfd78a36bc26
 geo-seed-0-512 table event_cause 5f8c6d619d284e41b669a93c26c3449072b6e6753c2f4cc5aae60fcf44e1ff57
-geo-seed-0-512 table event_kind c51f995a98efd2947f096f162bd85a224528e0138d28b9999a9c83a245f45786
-geo-seed-0-512 table event_kind_role bc566753d2e7d43e4d062a0bcd55a104707becf9f775f8a60eaa63a6afd1daf2
-geo-seed-0-512 table event_kind_value 781821ff7e1ee9c8d9159b8746873a36236bedb9eed25ff734efcb3dff1970a2
+geo-seed-0-512 table event_kind b6e466a521fd96b702089532729c1714965030229d2a558a19df094dfb9d9969
+geo-seed-0-512 table event_kind_role d6f783d767471275ae6d4ddb721dc7e58a8e25a04d7031115dd629aa192943cb
+geo-seed-0-512 table event_kind_value c7534369147777035a99a00c45319a9f834b1cc70daf535c3e7f3e5aa6de3947
 geo-seed-0-512 table event_participant 359d98270615cdc5eff716971dfc084db6b18fd2db8f9b9d7539fa6cfbf5d8ac
 geo-seed-0-512 table event_value ee4c347dd8727b04a3773ec21ebe257a02a1f11a2a4a8cbd7c8d171f9b079464
 geo-seed-0-512 table phase 028924ab8c555c85d0a5b5f4ae4f899104d6151b9a0f58040e771577f6cb931f
@@ -193,6 +193,8 @@ geo-seed-0-512 report events_truce = 0
 geo-seed-0-512 report events_region_ceded = 0
 geo-seed-0-512 report events_civ_conquered = 0
 geo-seed-0-512 report events_settlement_abandoned_to = 0
+geo-seed-0-512 report events_refugees_settled = 0
+geo-seed-0-512 report events_tribute = 0
 geo-seed-0-512 report civilizations = 6
 geo-seed-0-512 report civilizations_alive = 6
 geo-seed-0-512 report settlements = 33
@@ -442,9 +444,9 @@ geo-seed-42-512 homes ra6 y5596 n1 6
 geo-seed-42-512 table civilization ef587cf132f892ea79d403b085de7e9d0b9b2f078415236a7b5e2f70e25e1a3a
 geo-seed-42-512 table event 77dbc6f6a515385c0eaea09168631f08eccee4f912b8401f81845dc053275884
 geo-seed-42-512 table event_cause 9ca3d0ebfb69ae3f0d8ac60a9e380e3d529adfba9a0dc1624fcb204dd79c9515
-geo-seed-42-512 table event_kind c51f995a98efd2947f096f162bd85a224528e0138d28b9999a9c83a245f45786
-geo-seed-42-512 table event_kind_role bc566753d2e7d43e4d062a0bcd55a104707becf9f775f8a60eaa63a6afd1daf2
-geo-seed-42-512 table event_kind_value 781821ff7e1ee9c8d9159b8746873a36236bedb9eed25ff734efcb3dff1970a2
+geo-seed-42-512 table event_kind b6e466a521fd96b702089532729c1714965030229d2a558a19df094dfb9d9969
+geo-seed-42-512 table event_kind_role d6f783d767471275ae6d4ddb721dc7e58a8e25a04d7031115dd629aa192943cb
+geo-seed-42-512 table event_kind_value c7534369147777035a99a00c45319a9f834b1cc70daf535c3e7f3e5aa6de3947
 geo-seed-42-512 table event_participant 08e997996b5b28e46fee8bfe71af64751146b5c77a016dc3fc3cad9ab2850da4
 geo-seed-42-512 table event_value c5b69c910d1d71ffdece5072d37d712ce0665f13fbd71343883d80f3196db816
 geo-seed-42-512 table phase 70b5e6781599176734737c3220e5be215b12d1e57a602a72faa25bbd905dacd2
@@ -491,6 +493,8 @@ geo-seed-42-512 report events_truce = 0
 geo-seed-42-512 report events_region_ceded = 0
 geo-seed-42-512 report events_civ_conquered = 0
 geo-seed-42-512 report events_settlement_abandoned_to = 1
+geo-seed-42-512 report events_refugees_settled = 0
+geo-seed-42-512 report events_tribute = 0
 geo-seed-42-512 report civilizations = 8
 geo-seed-42-512 report civilizations_alive = 8
 geo-seed-42-512 report settlements = 55
@@ -847,9 +851,9 @@ geo-phrase-512 homes ra6 y5638 n1 1
 geo-phrase-512 table civilization 6e9cbdc5eac3b50afa53853c81c6a2ebc343f8b50b1449ad369c748452cfa619
 geo-phrase-512 table event f985902789efc30597cd53cf88f727c3700a704f70169f96d7b8765e1e9235b6
 geo-phrase-512 table event_cause b3dffdd14fc1743f7e76b33127a3b3c3217176280c4a653aa260c81ab697a1fc
-geo-phrase-512 table event_kind c51f995a98efd2947f096f162bd85a224528e0138d28b9999a9c83a245f45786
-geo-phrase-512 table event_kind_role bc566753d2e7d43e4d062a0bcd55a104707becf9f775f8a60eaa63a6afd1daf2
-geo-phrase-512 table event_kind_value 781821ff7e1ee9c8d9159b8746873a36236bedb9eed25ff734efcb3dff1970a2
+geo-phrase-512 table event_kind b6e466a521fd96b702089532729c1714965030229d2a558a19df094dfb9d9969
+geo-phrase-512 table event_kind_role d6f783d767471275ae6d4ddb721dc7e58a8e25a04d7031115dd629aa192943cb
+geo-phrase-512 table event_kind_value c7534369147777035a99a00c45319a9f834b1cc70daf535c3e7f3e5aa6de3947
 geo-phrase-512 table event_participant d8151ac5870560db80ac62771efc4d0f02693f9fbe588c923dcb0e34971a5319
 geo-phrase-512 table event_value 2ea311985f370b87249b327ce72f4d81d728638605ca16f92bf4ce3870262023
 geo-phrase-512 table phase 5516e1a1d014f35777e6c4064c57a1c019973d0a1c7535485945a4be7fc96a09
@@ -896,6 +900,8 @@ geo-phrase-512 report events_truce = 0
 geo-phrase-512 report events_region_ceded = 0
 geo-phrase-512 report events_civ_conquered = 0
 geo-phrase-512 report events_settlement_abandoned_to = 0
+geo-phrase-512 report events_refugees_settled = 0
+geo-phrase-512 report events_tribute = 0
 geo-phrase-512 report civilizations = 7
 geo-phrase-512 report civilizations_alive = 7
 geo-phrase-512 report settlements = 38
@@ -1431,9 +1437,9 @@ geo-seed-1-1024 homes ra6 y5580 n1 27
 geo-seed-1-1024 table civilization 8d9939b00d3a87c3ca7679f2428340246f97750a5f5d1aa98356212fcd92189f
 geo-seed-1-1024 table event 0fe0219e123ac2924d40edfe3ae15508f5942687508c1daa2936253c7395df17
 geo-seed-1-1024 table event_cause d9085bb9da1f39c611dac2eff64fdbf25efb42b094c6587aeaa4e4fae1b7512d
-geo-seed-1-1024 table event_kind c51f995a98efd2947f096f162bd85a224528e0138d28b9999a9c83a245f45786
-geo-seed-1-1024 table event_kind_role bc566753d2e7d43e4d062a0bcd55a104707becf9f775f8a60eaa63a6afd1daf2
-geo-seed-1-1024 table event_kind_value 781821ff7e1ee9c8d9159b8746873a36236bedb9eed25ff734efcb3dff1970a2
+geo-seed-1-1024 table event_kind b6e466a521fd96b702089532729c1714965030229d2a558a19df094dfb9d9969
+geo-seed-1-1024 table event_kind_role d6f783d767471275ae6d4ddb721dc7e58a8e25a04d7031115dd629aa192943cb
+geo-seed-1-1024 table event_kind_value c7534369147777035a99a00c45319a9f834b1cc70daf535c3e7f3e5aa6de3947
 geo-seed-1-1024 table event_participant 4626e1587047334f05ea48cfa6902cbb83eb620925ec4602918c6ec28daf4727
 geo-seed-1-1024 table event_value 81428c5606646916e6276278b043b5b66ad7e7f1b03d2e1b7ce2fb841075728f
 geo-seed-1-1024 table phase 33db9fa16cdb3f0e6224cd0c23688140f3d0698131aa5f24cd88a3eb14fba77a
@@ -1480,6 +1486,8 @@ geo-seed-1-1024 report events_truce = 0
 geo-seed-1-1024 report events_region_ceded = 0
 geo-seed-1-1024 report events_civ_conquered = 0
 geo-seed-1-1024 report events_settlement_abandoned_to = 0
+geo-seed-1-1024 report events_refugees_settled = 0
+geo-seed-1-1024 report events_tribute = 0
 geo-seed-1-1024 report civilizations = 12
 geo-seed-1-1024 report civilizations_alive = 12
 geo-seed-1-1024 report settlements = 109
@@ -1948,9 +1956,9 @@ hist-span-2000-512 homes ra6 y1879 n1 12
 hist-span-2000-512 table civilization 7b7bd377edce46e5807582ee0b7210859756f1eb980361cc5b8b2e9e78c38f42
 hist-span-2000-512 table event 85f18eb7633c0419ef4d70681d60a5a94056c0758f0ebf73d6f015e3a0c23d11
 hist-span-2000-512 table event_cause bd116687bcbbee23c8b9669856b2930b5960a555a2d6017bc2baea2b894d2172
-hist-span-2000-512 table event_kind c51f995a98efd2947f096f162bd85a224528e0138d28b9999a9c83a245f45786
-hist-span-2000-512 table event_kind_role bc566753d2e7d43e4d062a0bcd55a104707becf9f775f8a60eaa63a6afd1daf2
-hist-span-2000-512 table event_kind_value 781821ff7e1ee9c8d9159b8746873a36236bedb9eed25ff734efcb3dff1970a2
+hist-span-2000-512 table event_kind b6e466a521fd96b702089532729c1714965030229d2a558a19df094dfb9d9969
+hist-span-2000-512 table event_kind_role d6f783d767471275ae6d4ddb721dc7e58a8e25a04d7031115dd629aa192943cb
+hist-span-2000-512 table event_kind_value c7534369147777035a99a00c45319a9f834b1cc70daf535c3e7f3e5aa6de3947
 hist-span-2000-512 table event_participant 629b1c9f60a5b94720c8fca80dfe23e165f21308161a9def09d921e03410e45f
 hist-span-2000-512 table event_value 6759064136947c162bb68f069d94722455e59043bd85f61da44f3421cf0f670a
 hist-span-2000-512 table phase a46f5ab9f166b745bcb145a63feecea71d930cfaa06dac1369acfea13d70ee6d
@@ -1997,6 +2005,8 @@ hist-span-2000-512 report events_truce = 0
 hist-span-2000-512 report events_region_ceded = 0
 hist-span-2000-512 report events_civ_conquered = 0
 hist-span-2000-512 report events_settlement_abandoned_to = 0
+hist-span-2000-512 report events_refugees_settled = 0
+hist-span-2000-512 report events_tribute = 0
 hist-span-2000-512 report civilizations = 7
 hist-span-2000-512 report civilizations_alive = 7
 hist-span-2000-512 report settlements = 36
@@ -2447,9 +2457,9 @@ hist-races-elf-orc-1024 homes ra6 y5602 n1 41
 hist-races-elf-orc-1024 table civilization f3814b0b68c55db29957ec9566b9de7e7a57015a504336c000b96bed675067be
 hist-races-elf-orc-1024 table event 2ec2b6e3817f8356f59c6c814160c3b0257c843fb4b5198da63866864e28456b
 hist-races-elf-orc-1024 table event_cause 95b6494a9148c506e30d660a337070358041d0200763dd7ef3310d1f69008aa2
-hist-races-elf-orc-1024 table event_kind c51f995a98efd2947f096f162bd85a224528e0138d28b9999a9c83a245f45786
-hist-races-elf-orc-1024 table event_kind_role bc566753d2e7d43e4d062a0bcd55a104707becf9f775f8a60eaa63a6afd1daf2
-hist-races-elf-orc-1024 table event_kind_value 781821ff7e1ee9c8d9159b8746873a36236bedb9eed25ff734efcb3dff1970a2
+hist-races-elf-orc-1024 table event_kind b6e466a521fd96b702089532729c1714965030229d2a558a19df094dfb9d9969
+hist-races-elf-orc-1024 table event_kind_role d6f783d767471275ae6d4ddb721dc7e58a8e25a04d7031115dd629aa192943cb
+hist-races-elf-orc-1024 table event_kind_value c7534369147777035a99a00c45319a9f834b1cc70daf535c3e7f3e5aa6de3947
 hist-races-elf-orc-1024 table event_participant 8df0715e4de0c9f22e7f55453e9ec19304dc8fa358b08dd2b5e3d975fcee5f31
 hist-races-elf-orc-1024 table event_value a210e7f401dc06a6700a121db2d7bf801978866155e4d95542ae9b43d24c7d02
 hist-races-elf-orc-1024 table phase bd84e8ffe2a370665f017bdf019d6764a4224f45f9badd905c569cf1490ae550
@@ -2496,6 +2506,8 @@ hist-races-elf-orc-1024 report events_truce = 0
 hist-races-elf-orc-1024 report events_region_ceded = 0
 hist-races-elf-orc-1024 report events_civ_conquered = 0
 hist-races-elf-orc-1024 report events_settlement_abandoned_to = 0
+hist-races-elf-orc-1024 report events_refugees_settled = 0
+hist-races-elf-orc-1024 report events_tribute = 0
 hist-races-elf-orc-1024 report civilizations = 3
 hist-races-elf-orc-1024 report civilizations_alive = 3
 hist-races-elf-orc-1024 report settlements = 45
@@ -2993,9 +3005,9 @@ hist-dense-1024 homes ra6 y5618 n1 14
 hist-dense-1024 table civilization 2072853abc55c3d33ce8e79180d0b1228ebd9c30658297fd502465753e6d446d
 hist-dense-1024 table event b501e1f29633169844744367513d55d627f5d7962d26051931ebb9cbffaadefd
 hist-dense-1024 table event_cause 164a425b70363d6ec4c34efd279b9a511cc111bacdf98117eb9d855d330d2e1c
-hist-dense-1024 table event_kind c51f995a98efd2947f096f162bd85a224528e0138d28b9999a9c83a245f45786
-hist-dense-1024 table event_kind_role bc566753d2e7d43e4d062a0bcd55a104707becf9f775f8a60eaa63a6afd1daf2
-hist-dense-1024 table event_kind_value 781821ff7e1ee9c8d9159b8746873a36236bedb9eed25ff734efcb3dff1970a2
+hist-dense-1024 table event_kind b6e466a521fd96b702089532729c1714965030229d2a558a19df094dfb9d9969
+hist-dense-1024 table event_kind_role d6f783d767471275ae6d4ddb721dc7e58a8e25a04d7031115dd629aa192943cb
+hist-dense-1024 table event_kind_value c7534369147777035a99a00c45319a9f834b1cc70daf535c3e7f3e5aa6de3947
 hist-dense-1024 table event_participant 7bec7ed70fbe9bb9fce37aebf1750e44f81b515c55890d066cfb6816d1c7a090
 hist-dense-1024 table event_value b756959e38cb874c5826d19488ba40dde1610cdfbeefe9b23e7443deb7c2c915
 hist-dense-1024 table phase e3d438aa49e58058ddb5a361cd62e840cfb750024bb9c164c49bfbf8bcc526bc
@@ -3042,6 +3054,8 @@ hist-dense-1024 report events_truce = 0
 hist-dense-1024 report events_region_ceded = 0
 hist-dense-1024 report events_civ_conquered = 0
 hist-dense-1024 report events_settlement_abandoned_to = 0
+hist-dense-1024 report events_refugees_settled = 0
+hist-dense-1024 report events_tribute = 0
 hist-dense-1024 report civilizations = 10
 hist-dense-1024 report civilizations_alive = 10
 hist-dense-1024 report settlements = 89
@@ -3732,9 +3746,9 @@ hist-peoples-42-1024 homes ra6 y5596 n1 8
 hist-peoples-42-1024 table civilization f498f30ff45f3cc2f32e4da53ca78390e069a1f33e3bc9ced02873ad2a50c17b
 hist-peoples-42-1024 table event 1541bc451ed9f688c40be7e2a7d097efea09557044f28837e7cf57e8c11d9e1d
 hist-peoples-42-1024 table event_cause 3dfb2e2d5b0cf817ae01860d068f1a5ad01b1ba14f35695c8a634e5e10425aa1
-hist-peoples-42-1024 table event_kind c51f995a98efd2947f096f162bd85a224528e0138d28b9999a9c83a245f45786
-hist-peoples-42-1024 table event_kind_role bc566753d2e7d43e4d062a0bcd55a104707becf9f775f8a60eaa63a6afd1daf2
-hist-peoples-42-1024 table event_kind_value 781821ff7e1ee9c8d9159b8746873a36236bedb9eed25ff734efcb3dff1970a2
+hist-peoples-42-1024 table event_kind b6e466a521fd96b702089532729c1714965030229d2a558a19df094dfb9d9969
+hist-peoples-42-1024 table event_kind_role d6f783d767471275ae6d4ddb721dc7e58a8e25a04d7031115dd629aa192943cb
+hist-peoples-42-1024 table event_kind_value c7534369147777035a99a00c45319a9f834b1cc70daf535c3e7f3e5aa6de3947
 hist-peoples-42-1024 table event_participant 768ef3d423267225e9dd8b4b480a972d4b9e8e9eda5e2e0aafc8725d8146e3f0
 hist-peoples-42-1024 table event_value f722b7b07e2d5b74c8cd097f819de91ef58d0fa02f113d387f89bb952ae3de93
 hist-peoples-42-1024 table phase 59b00a6024161a54d4bfafed0a94942dd31ee723026a52bbc3b385f5339070d6
@@ -3781,6 +3795,8 @@ hist-peoples-42-1024 report events_truce = 0
 hist-peoples-42-1024 report events_region_ceded = 0
 hist-peoples-42-1024 report events_civ_conquered = 0
 hist-peoples-42-1024 report events_settlement_abandoned_to = 0
+hist-peoples-42-1024 report events_refugees_settled = 0
+hist-peoples-42-1024 report events_tribute = 0
 hist-peoples-42-1024 report civilizations = 12
 hist-peoples-42-1024 report civilizations_alive = 12
 hist-peoples-42-1024 report settlements = 96
@@ -4320,9 +4336,9 @@ syn-0 homes ra6 y1844 n1 25
 syn-0 table civilization 8455be8fd58526d89dc488d7823bfcfee8fb98498eccecc7e2e3e47b0d3e9ae3
 syn-0 table event c76f355bcbaca45c5c1a38f96f147c3279931a5f13843150cb8622c7ddbb1e05
 syn-0 table event_cause f9be9bac7b6a6662c247f2dbe348db2d7f857368b947f56362b27538e612f01b
-syn-0 table event_kind c51f995a98efd2947f096f162bd85a224528e0138d28b9999a9c83a245f45786
-syn-0 table event_kind_role bc566753d2e7d43e4d062a0bcd55a104707becf9f775f8a60eaa63a6afd1daf2
-syn-0 table event_kind_value 781821ff7e1ee9c8d9159b8746873a36236bedb9eed25ff734efcb3dff1970a2
+syn-0 table event_kind b6e466a521fd96b702089532729c1714965030229d2a558a19df094dfb9d9969
+syn-0 table event_kind_role d6f783d767471275ae6d4ddb721dc7e58a8e25a04d7031115dd629aa192943cb
+syn-0 table event_kind_value c7534369147777035a99a00c45319a9f834b1cc70daf535c3e7f3e5aa6de3947
 syn-0 table event_participant 94fbfceda1666eb878bbd785c5a86018fcdc93597477a7970b44f4bf77128ea7
 syn-0 table event_value b1722305b695de54f245103cfe2af5284556383093ee27e63d0be2306595c073
 syn-0 table phase ad3fb2b4287e871cdc905d368d4396153b2887b47735ea33cc0f4554c376ab68
@@ -4369,6 +4385,8 @@ syn-0 report events_truce = 0
 syn-0 report events_region_ceded = 0
 syn-0 report events_civ_conquered = 0
 syn-0 report events_settlement_abandoned_to = 0
+syn-0 report events_refugees_settled = 0
+syn-0 report events_tribute = 0
 syn-0 report civilizations = 6
 syn-0 report civilizations_alive = 6
 syn-0 report settlements = 13
@@ -4468,9 +4486,9 @@ syn-1 homes ra1 y0 n1 1
 syn-1 table civilization 4446eb5ac0b26614d404d5e31b920d0f6873638f361eda3c44eaacbf30ff172c
 syn-1 table event f7015332d33199f4987822e659b9acc99db8216b2082aae1d620774bf5d4b1cb
 syn-1 table event_cause ed79cd863bb68d57c722efe5869aa5301f7ec367e614f300d084dded58718653
-syn-1 table event_kind c51f995a98efd2947f096f162bd85a224528e0138d28b9999a9c83a245f45786
-syn-1 table event_kind_role bc566753d2e7d43e4d062a0bcd55a104707becf9f775f8a60eaa63a6afd1daf2
-syn-1 table event_kind_value 781821ff7e1ee9c8d9159b8746873a36236bedb9eed25ff734efcb3dff1970a2
+syn-1 table event_kind b6e466a521fd96b702089532729c1714965030229d2a558a19df094dfb9d9969
+syn-1 table event_kind_role d6f783d767471275ae6d4ddb721dc7e58a8e25a04d7031115dd629aa192943cb
+syn-1 table event_kind_value c7534369147777035a99a00c45319a9f834b1cc70daf535c3e7f3e5aa6de3947
 syn-1 table event_participant 7b1d9f87b7853dd6b517a343b158658acb36a4d5813bc5b4d7f9bb7a443e80a2
 syn-1 table event_value 866554da9df14ed713d26705bc312f16f6f7b310682aba044e727bb3ba9468d2
 syn-1 table phase 90795a24abc4f0fb42bfe3503793797ff687a273caac3d6f96049fe9b4acbc18
@@ -4517,6 +4535,8 @@ syn-1 report events_truce = 0
 syn-1 report events_region_ceded = 0
 syn-1 report events_civ_conquered = 0
 syn-1 report events_settlement_abandoned_to = 0
+syn-1 report events_refugees_settled = 0
+syn-1 report events_tribute = 0
 syn-1 report civilizations = 1
 syn-1 report civilizations_alive = 1
 syn-1 report settlements = 4
@@ -4617,9 +4637,9 @@ syn-2 homes ra4 y1390 n1 6
 syn-2 table civilization fc11514b523cca63bc6c1c75131950d5dc144722deb1b9c608a3e1e430792a2f
 syn-2 table event a455153c0efecd843900147561fdf072a437e4b0db8efb45a8416b718514e8d6
 syn-2 table event_cause 68d2e0e0ad96c771f760ec023981cc4b7ef5385530f9ca0b29e063fb37286511
-syn-2 table event_kind c51f995a98efd2947f096f162bd85a224528e0138d28b9999a9c83a245f45786
-syn-2 table event_kind_role bc566753d2e7d43e4d062a0bcd55a104707becf9f775f8a60eaa63a6afd1daf2
-syn-2 table event_kind_value 781821ff7e1ee9c8d9159b8746873a36236bedb9eed25ff734efcb3dff1970a2
+syn-2 table event_kind b6e466a521fd96b702089532729c1714965030229d2a558a19df094dfb9d9969
+syn-2 table event_kind_role d6f783d767471275ae6d4ddb721dc7e58a8e25a04d7031115dd629aa192943cb
+syn-2 table event_kind_value c7534369147777035a99a00c45319a9f834b1cc70daf535c3e7f3e5aa6de3947
 syn-2 table event_participant a099192d069c18fffc93990c3d8b25c3e1ff32fdd249803315029fdaa62f2bae
 syn-2 table event_value 44a48526d5391687553c6e006c15fd07611afaa954a5923901681b78446b651b
 syn-2 table phase 9445d660875a92c29b2944d82ad1e363bd575b179222c2a403ce6167c35c681b
@@ -4666,6 +4686,8 @@ syn-2 report events_truce = 0
 syn-2 report events_region_ceded = 0
 syn-2 report events_civ_conquered = 0
 syn-2 report events_settlement_abandoned_to = 0
+syn-2 report events_refugees_settled = 0
+syn-2 report events_tribute = 0
 syn-2 report civilizations = 2
 syn-2 report civilizations_alive = 2
 syn-2 report settlements = 5
@@ -4864,9 +4886,9 @@ syn-3 homes ra6 y5602 n1 12
 syn-3 table civilization db527b0dd70601d3968375c619f88db4b890728cc2e999709fdec0a54de8fa60
 syn-3 table event 460836e81e03640eebe9f7b3842768fdd3e4c965f97cec684190d5502aa6e130
 syn-3 table event_cause 23f29caa1ea50c72792ae1d7a9fa1069487a90549714c155652315bfce665732
-syn-3 table event_kind c51f995a98efd2947f096f162bd85a224528e0138d28b9999a9c83a245f45786
-syn-3 table event_kind_role bc566753d2e7d43e4d062a0bcd55a104707becf9f775f8a60eaa63a6afd1daf2
-syn-3 table event_kind_value 781821ff7e1ee9c8d9159b8746873a36236bedb9eed25ff734efcb3dff1970a2
+syn-3 table event_kind b6e466a521fd96b702089532729c1714965030229d2a558a19df094dfb9d9969
+syn-3 table event_kind_role d6f783d767471275ae6d4ddb721dc7e58a8e25a04d7031115dd629aa192943cb
+syn-3 table event_kind_value c7534369147777035a99a00c45319a9f834b1cc70daf535c3e7f3e5aa6de3947
 syn-3 table event_participant 8f6f83a1ebfcc38683e731c89bba8fa763413cac47394149a293369e24ba1b69
 syn-3 table event_value 475c2c8793d1c32dc855ed9d14a5391095574230757fe71ccf0ade945f591ccc
 syn-3 table phase c18c8e927ac3ba4de23f54a9de245646edf68081d6ab93887824aabf17882296
@@ -4913,6 +4935,8 @@ syn-3 report events_truce = 0
 syn-3 report events_region_ceded = 0
 syn-3 report events_civ_conquered = 0
 syn-3 report events_settlement_abandoned_to = 0
+syn-3 report events_refugees_settled = 0
+syn-3 report events_tribute = 0
 syn-3 report civilizations = 3
 syn-3 report civilizations_alive = 3
 syn-3 report settlements = 9
@@ -5282,9 +5306,9 @@ syn-4 homes ra6 y1880 n4 44
 syn-4 table civilization df1256413a98c12eb01539e81d3569b900c87f17fbeaf2dd712154ebbf8b0037
 syn-4 table event 3858a3f1bdbc1ba545831a0cc65f0cbee71e50debe8afa097eaae8f7baa6eb1d
 syn-4 table event_cause d6dfa8d2ff87ade63ee15bc561a57d5aa9ad788bfc919272e6e5f262d9e292b7
-syn-4 table event_kind c51f995a98efd2947f096f162bd85a224528e0138d28b9999a9c83a245f45786
-syn-4 table event_kind_role bc566753d2e7d43e4d062a0bcd55a104707becf9f775f8a60eaa63a6afd1daf2
-syn-4 table event_kind_value 781821ff7e1ee9c8d9159b8746873a36236bedb9eed25ff734efcb3dff1970a2
+syn-4 table event_kind b6e466a521fd96b702089532729c1714965030229d2a558a19df094dfb9d9969
+syn-4 table event_kind_role d6f783d767471275ae6d4ddb721dc7e58a8e25a04d7031115dd629aa192943cb
+syn-4 table event_kind_value c7534369147777035a99a00c45319a9f834b1cc70daf535c3e7f3e5aa6de3947
 syn-4 table event_participant fe9bb86c8a7550b0ac82185e190c64ae2584f4c4926ffc8dea5539cd71eb0e7e
 syn-4 table event_value 0be2cc0f31ec574fa2e041f9e4f40206f37b3120f7da901a553ae23cec0b2883
 syn-4 table phase c62c5da93501c686f0839dc2bf95c394cb4a1998fe4bb7ca8e6c0bb4d82603a6
@@ -5331,6 +5355,8 @@ syn-4 report events_truce = 0
 syn-4 report events_region_ceded = 0
 syn-4 report events_civ_conquered = 0
 syn-4 report events_settlement_abandoned_to = 1
+syn-4 report events_refugees_settled = 0
+syn-4 report events_tribute = 0
 syn-4 report civilizations = 6
 syn-4 report civilizations_alive = 6
 syn-4 report settlements = 8
@@ -5513,9 +5539,9 @@ syn-5 homes ra1 y0 n4 6
 syn-5 table civilization 16a88ae8d82d2d228ca13f163b39992ef653cb8c626861478e0be64f0865b3c5
 syn-5 table event 3c3b4578bb94a89a1a6dcca37f9df990b313760ad4c346231b53f123c64314a4
 syn-5 table event_cause 30ce76f41019e620fbad00d06d3a13d4d6b915938fbf249f141bc7ce4656f5b4
-syn-5 table event_kind c51f995a98efd2947f096f162bd85a224528e0138d28b9999a9c83a245f45786
-syn-5 table event_kind_role bc566753d2e7d43e4d062a0bcd55a104707becf9f775f8a60eaa63a6afd1daf2
-syn-5 table event_kind_value 781821ff7e1ee9c8d9159b8746873a36236bedb9eed25ff734efcb3dff1970a2
+syn-5 table event_kind b6e466a521fd96b702089532729c1714965030229d2a558a19df094dfb9d9969
+syn-5 table event_kind_role d6f783d767471275ae6d4ddb721dc7e58a8e25a04d7031115dd629aa192943cb
+syn-5 table event_kind_value c7534369147777035a99a00c45319a9f834b1cc70daf535c3e7f3e5aa6de3947
 syn-5 table event_participant 40f9317fe60d8acb789c3669bd62ff096a8b099bf8ce111eb18a67ac0af61921
 syn-5 table event_value 044de2652bd438c5f5cae48dffb79a5d7ae0b58e275a8690e8ea108b129aea7f
 syn-5 table phase 90795a24abc4f0fb42bfe3503793797ff687a273caac3d6f96049fe9b4acbc18
@@ -5562,6 +5588,8 @@ syn-5 report events_truce = 0
 syn-5 report events_region_ceded = 0
 syn-5 report events_civ_conquered = 0
 syn-5 report events_settlement_abandoned_to = 0
+syn-5 report events_refugees_settled = 0
+syn-5 report events_tribute = 0
 syn-5 report civilizations = 1
 syn-5 report civilizations_alive = 1
 syn-5 report settlements = 4
@@ -5750,9 +5778,9 @@ syn-6 homes ra4 y1407 n1 14
 syn-6 table civilization 426438e9731cfb1fd3697fdbb6992fbb643f929f597bba107aff9ded69b57934
 syn-6 table event 17991d03ba36db725f9576e5b01d7f5077db2cdbfe42539162a7c1b871d39731
 syn-6 table event_cause ad1ab910f74d1b5d76ce991492b6db268d32c8950df21ec6f8a066709979c4da
-syn-6 table event_kind c51f995a98efd2947f096f162bd85a224528e0138d28b9999a9c83a245f45786
-syn-6 table event_kind_role bc566753d2e7d43e4d062a0bcd55a104707becf9f775f8a60eaa63a6afd1daf2
-syn-6 table event_kind_value 781821ff7e1ee9c8d9159b8746873a36236bedb9eed25ff734efcb3dff1970a2
+syn-6 table event_kind b6e466a521fd96b702089532729c1714965030229d2a558a19df094dfb9d9969
+syn-6 table event_kind_role d6f783d767471275ae6d4ddb721dc7e58a8e25a04d7031115dd629aa192943cb
+syn-6 table event_kind_value c7534369147777035a99a00c45319a9f834b1cc70daf535c3e7f3e5aa6de3947
 syn-6 table event_participant 67e93bda5e106f772dee7c31180b0583647264577c950caea55ca74586c4ede5
 syn-6 table event_value d1a9e2b011581ac92636c1a6007e9ddbac607a5ad5b41653cbc881b0aa294e79
 syn-6 table phase b7bcb5c9404e25917c06996f8ffa97a69260089ab7f293c8ed2fc752d2a19da6
@@ -5799,6 +5827,8 @@ syn-6 report events_truce = 0
 syn-6 report events_region_ceded = 0
 syn-6 report events_civ_conquered = 0
 syn-6 report events_settlement_abandoned_to = 0
+syn-6 report events_refugees_settled = 0
+syn-6 report events_tribute = 0
 syn-6 report civilizations = 3
 syn-6 report civilizations_alive = 3
 syn-6 report settlements = 6
@@ -5953,9 +5983,9 @@ syn-7 homes ra6 y5637 n1 15
 syn-7 table civilization c2297cb936e0d2288ffb034aad52fef08078895d0da3b96dc072048ec2e20251
 syn-7 table event 174f029a96fce2189481d43462fcd85d6775da956dc28063021e3a004c7ef001
 syn-7 table event_cause 4439a35998daeadaf2fe4bdeb97e91764302b1084b2acf65e58bfc3799ebb2f8
-syn-7 table event_kind c51f995a98efd2947f096f162bd85a224528e0138d28b9999a9c83a245f45786
-syn-7 table event_kind_role bc566753d2e7d43e4d062a0bcd55a104707becf9f775f8a60eaa63a6afd1daf2
-syn-7 table event_kind_value 781821ff7e1ee9c8d9159b8746873a36236bedb9eed25ff734efcb3dff1970a2
+syn-7 table event_kind b6e466a521fd96b702089532729c1714965030229d2a558a19df094dfb9d9969
+syn-7 table event_kind_role d6f783d767471275ae6d4ddb721dc7e58a8e25a04d7031115dd629aa192943cb
+syn-7 table event_kind_value c7534369147777035a99a00c45319a9f834b1cc70daf535c3e7f3e5aa6de3947
 syn-7 table event_participant bd502a78a24baeacb7161a3c4b3076fc6364f5c763ade88068482ecfcd0be87f
 syn-7 table event_value 03c0a05a7f0a49a87a6a5008902ea085fa569bbb90e21b658ac683b7954f6928
 syn-7 table phase 8dd6d165e808548750b0edbda764d8f4f1b5e9a2f84407ef694cf6086d23ad60
@@ -6002,6 +6032,8 @@ syn-7 report events_truce = 0
 syn-7 report events_region_ceded = 0
 syn-7 report events_civ_conquered = 0
 syn-7 report events_settlement_abandoned_to = 0
+syn-7 report events_refugees_settled = 0
+syn-7 report events_tribute = 0
 syn-7 report civilizations = 4
 syn-7 report civilizations_alive = 4
 syn-7 report settlements = 19
@@ -6164,9 +6196,9 @@ syn-8 homes ra6 y1842 n1 3
 syn-8 table civilization de2877188bbc97bf8eebac2f2ff3b3d1daa13620b1afeed9066175f88489e154
 syn-8 table event 2351bd6db65cc2890fa50972bed9ec8308716961e58175ffae34123355e0dc38
 syn-8 table event_cause 1c39cf96f3bbf86a836950a87eb7cea7deda7a8db07a737681ded93bbfe4bd8e
-syn-8 table event_kind c51f995a98efd2947f096f162bd85a224528e0138d28b9999a9c83a245f45786
-syn-8 table event_kind_role bc566753d2e7d43e4d062a0bcd55a104707becf9f775f8a60eaa63a6afd1daf2
-syn-8 table event_kind_value 781821ff7e1ee9c8d9159b8746873a36236bedb9eed25ff734efcb3dff1970a2
+syn-8 table event_kind b6e466a521fd96b702089532729c1714965030229d2a558a19df094dfb9d9969
+syn-8 table event_kind_role d6f783d767471275ae6d4ddb721dc7e58a8e25a04d7031115dd629aa192943cb
+syn-8 table event_kind_value c7534369147777035a99a00c45319a9f834b1cc70daf535c3e7f3e5aa6de3947
 syn-8 table event_participant 714569ec1606adca369617ab244d35352d88d968af68cf1f7c970030af93e007
 syn-8 table event_value a886fc7a6dbabd7b50bbe6f2b9fe4bf2c2c08f2e6aba5d3db0cb778a43003d84
 syn-8 table phase e0e0e55fe6426b8308506112b8d50028c11278202794a9dd3ce633b136db75e3
@@ -6213,6 +6245,8 @@ syn-8 report events_truce = 0
 syn-8 report events_region_ceded = 0
 syn-8 report events_civ_conquered = 0
 syn-8 report events_settlement_abandoned_to = 0
+syn-8 report events_refugees_settled = 0
+syn-8 report events_tribute = 0
 syn-8 report civilizations = 6
 syn-8 report civilizations_alive = 6
 syn-8 report settlements = 20
@@ -6584,9 +6618,9 @@ syn-9 homes ra1 y0 n1 17
 syn-9 table civilization 7bc68118557e4402e4b7dc9f18b873382cddedcdc377a3b4b2f981b3c27318b7
 syn-9 table event 6d3b56201d5463172fa723181cd6596c84eb7933d19781723c22ab1d45022826
 syn-9 table event_cause 90bb939533bf9ed46996d6f2190346c6ca7ef8dfc09caf11b381af6b7130c07f
-syn-9 table event_kind c51f995a98efd2947f096f162bd85a224528e0138d28b9999a9c83a245f45786
-syn-9 table event_kind_role bc566753d2e7d43e4d062a0bcd55a104707becf9f775f8a60eaa63a6afd1daf2
-syn-9 table event_kind_value 781821ff7e1ee9c8d9159b8746873a36236bedb9eed25ff734efcb3dff1970a2
+syn-9 table event_kind b6e466a521fd96b702089532729c1714965030229d2a558a19df094dfb9d9969
+syn-9 table event_kind_role d6f783d767471275ae6d4ddb721dc7e58a8e25a04d7031115dd629aa192943cb
+syn-9 table event_kind_value c7534369147777035a99a00c45319a9f834b1cc70daf535c3e7f3e5aa6de3947
 syn-9 table event_participant 3b922b3dfef251793066db2420c4cd653ada5aeedcad7dad280141348544daf9
 syn-9 table event_value afdd935db0bd796928864619105788e8dfca60ea6aefa669c4ad4707e57c9c8f
 syn-9 table phase 90795a24abc4f0fb42bfe3503793797ff687a273caac3d6f96049fe9b4acbc18
@@ -6633,6 +6667,8 @@ syn-9 report events_truce = 0
 syn-9 report events_region_ceded = 0
 syn-9 report events_civ_conquered = 0
 syn-9 report events_settlement_abandoned_to = 0
+syn-9 report events_refugees_settled = 0
+syn-9 report events_tribute = 0
 syn-9 report civilizations = 1
 syn-9 report civilizations_alive = 1
 syn-9 report settlements = 2
@@ -6699,9 +6735,9 @@ syn-10 homes ra4 y1397 n4 4
 syn-10 table civilization de2e486f452d09b03a4717cb265e82e14a209de4dd3644850efe1c2f0e2b879e
 syn-10 table event 6ed1a4fa2bd55db4c2f187e960ca3d3c78901de5c1b8b89a6f8e3336d2a8f895
 syn-10 table event_cause 457a507f403afe707bbcdcdc6d1fcf7b30978d43b743b10de9a98769497ebaec
-syn-10 table event_kind c51f995a98efd2947f096f162bd85a224528e0138d28b9999a9c83a245f45786
-syn-10 table event_kind_role bc566753d2e7d43e4d062a0bcd55a104707becf9f775f8a60eaa63a6afd1daf2
-syn-10 table event_kind_value 781821ff7e1ee9c8d9159b8746873a36236bedb9eed25ff734efcb3dff1970a2
+syn-10 table event_kind b6e466a521fd96b702089532729c1714965030229d2a558a19df094dfb9d9969
+syn-10 table event_kind_role d6f783d767471275ae6d4ddb721dc7e58a8e25a04d7031115dd629aa192943cb
+syn-10 table event_kind_value c7534369147777035a99a00c45319a9f834b1cc70daf535c3e7f3e5aa6de3947
 syn-10 table event_participant c458f75c4bc144116fa8297a781542e6c7979b6e00a87b4312a653398b3d14e1
 syn-10 table event_value 0ff86400cea3d30ee4faa34c00435235dc33987d20597c68b13f29bf82922336
 syn-10 table phase 97110c3629b87e37a6a8f53763ff57928fe3967533aa650674f553b847ed1cdb
@@ -6748,6 +6784,8 @@ syn-10 report events_truce = 0
 syn-10 report events_region_ceded = 0
 syn-10 report events_civ_conquered = 0
 syn-10 report events_settlement_abandoned_to = 0
+syn-10 report events_refugees_settled = 0
+syn-10 report events_tribute = 0
 syn-10 report civilizations = 2
 syn-10 report civilizations_alive = 2
 syn-10 report settlements = 8
@@ -6859,9 +6897,9 @@ syn-11 homes ra6 y5618 n4 9
 syn-11 table civilization 7a9cbce962f01324c8432cb1e58c5cfd1156866411c62b29bef611748ec845bc
 syn-11 table event f7c05b634658a8d587d4f101aa224e7b3e5ddfa3dc8a7fbea80d8a661ed680a2
 syn-11 table event_cause 3425a2d44a70c44ccd5a624705622b087f35a920c634e2c489ea84528755b73a
-syn-11 table event_kind c51f995a98efd2947f096f162bd85a224528e0138d28b9999a9c83a245f45786
-syn-11 table event_kind_role bc566753d2e7d43e4d062a0bcd55a104707becf9f775f8a60eaa63a6afd1daf2
-syn-11 table event_kind_value 781821ff7e1ee9c8d9159b8746873a36236bedb9eed25ff734efcb3dff1970a2
+syn-11 table event_kind b6e466a521fd96b702089532729c1714965030229d2a558a19df094dfb9d9969
+syn-11 table event_kind_role d6f783d767471275ae6d4ddb721dc7e58a8e25a04d7031115dd629aa192943cb
+syn-11 table event_kind_value c7534369147777035a99a00c45319a9f834b1cc70daf535c3e7f3e5aa6de3947
 syn-11 table event_participant a6c747e390729d35f7ff4362155b80f8ca8cd3632b9eb828c1d92f56bde69efd
 syn-11 table event_value 75a75121e82b88fdc37f797c9244ef4df3b9c9d61275ce90d16a663e5063a50f
 syn-11 table phase 22fb9a8fe77da1251c01fef146adf7fae95ebe7fc786844ae8dd5689ca765c0a
@@ -6908,6 +6946,8 @@ syn-11 report events_truce = 0
 syn-11 report events_region_ceded = 0
 syn-11 report events_civ_conquered = 0
 syn-11 report events_settlement_abandoned_to = 0
+syn-11 report events_refugees_settled = 0
+syn-11 report events_tribute = 0
 syn-11 report civilizations = 4
 syn-11 report civilizations_alive = 4
 syn-11 report settlements = 24
@@ -7062,9 +7102,9 @@ syn-12 homes ra6 y1852 n1 5
 syn-12 table civilization e63f81ce4b3055ae5dbe6cfc00694186310cc0c4bdb70cf51e31a615e87b38c4
 syn-12 table event 94bbd8d4dccb2f9e0677933f845ddc40aa402a2a49a86058af776611feac9ff9
 syn-12 table event_cause 80a0f7ccbd2feb205a485e517e184ae12acd548f3ce42603522aa77f3b7c78bf
-syn-12 table event_kind c51f995a98efd2947f096f162bd85a224528e0138d28b9999a9c83a245f45786
-syn-12 table event_kind_role bc566753d2e7d43e4d062a0bcd55a104707becf9f775f8a60eaa63a6afd1daf2
-syn-12 table event_kind_value 781821ff7e1ee9c8d9159b8746873a36236bedb9eed25ff734efcb3dff1970a2
+syn-12 table event_kind b6e466a521fd96b702089532729c1714965030229d2a558a19df094dfb9d9969
+syn-12 table event_kind_role d6f783d767471275ae6d4ddb721dc7e58a8e25a04d7031115dd629aa192943cb
+syn-12 table event_kind_value c7534369147777035a99a00c45319a9f834b1cc70daf535c3e7f3e5aa6de3947
 syn-12 table event_participant c3e2d2a5f48ed38d634b67fcfd420c5b23e2ad7d9449b682c1b518a9319c5fee
 syn-12 table event_value 70574d0b7c378820ec83cc691a647d3129287132116fdc12eb0984c996a9b741
 syn-12 table phase d2700e6ed25b9a2ddce9575b001675758ee3217fd1c7bf262cddf00cfc833e7d
@@ -7111,6 +7151,8 @@ syn-12 report events_truce = 0
 syn-12 report events_region_ceded = 0
 syn-12 report events_civ_conquered = 0
 syn-12 report events_settlement_abandoned_to = 0
+syn-12 report events_refugees_settled = 0
+syn-12 report events_tribute = 0
 syn-12 report civilizations = 6
 syn-12 report civilizations_alive = 6
 syn-12 report settlements = 20
@@ -7324,9 +7366,9 @@ syn-13 homes ra1 y0 n1 1
 syn-13 table civilization 857ba71ab0f5a7a2ec1b4226fc93cb6f746f03614d6d4cd86b8af5e3c32f279c
 syn-13 table event b1f6e6e6d532550dab704c3bc59fe7e8c12b5301fd830ef4015093bd0e9b25eb
 syn-13 table event_cause 90bb939533bf9ed46996d6f2190346c6ca7ef8dfc09caf11b381af6b7130c07f
-syn-13 table event_kind c51f995a98efd2947f096f162bd85a224528e0138d28b9999a9c83a245f45786
-syn-13 table event_kind_role bc566753d2e7d43e4d062a0bcd55a104707becf9f775f8a60eaa63a6afd1daf2
-syn-13 table event_kind_value 781821ff7e1ee9c8d9159b8746873a36236bedb9eed25ff734efcb3dff1970a2
+syn-13 table event_kind b6e466a521fd96b702089532729c1714965030229d2a558a19df094dfb9d9969
+syn-13 table event_kind_role d6f783d767471275ae6d4ddb721dc7e58a8e25a04d7031115dd629aa192943cb
+syn-13 table event_kind_value c7534369147777035a99a00c45319a9f834b1cc70daf535c3e7f3e5aa6de3947
 syn-13 table event_participant 939b379e5ea5fcf3a06c1ec770b209ce8c5a48c07a157e5e79c1d28d7c7bd782
 syn-13 table event_value b99058c56ace57e54fd3c7ffd596597f9b3b5635008de41ef0ab13f9f0588a31
 syn-13 table phase 90795a24abc4f0fb42bfe3503793797ff687a273caac3d6f96049fe9b4acbc18
@@ -7373,6 +7415,8 @@ syn-13 report events_truce = 0
 syn-13 report events_region_ceded = 0
 syn-13 report events_civ_conquered = 0
 syn-13 report events_settlement_abandoned_to = 0
+syn-13 report events_refugees_settled = 0
+syn-13 report events_tribute = 0
 syn-13 report civilizations = 1
 syn-13 report civilizations_alive = 1
 syn-13 report settlements = 3
@@ -7514,9 +7558,9 @@ syn-14 homes ra4 y1409 n1 11
 syn-14 table civilization c59cacc03fa6759eb5a437056c95d7bf826b115732ff90f1b2be3c43854b120c
 syn-14 table event 1c3cfb40fff25b2633cd2059ba7be5f7ade0701253d0606e69501502b60d48cd
 syn-14 table event_cause 7d00ac2f87d575dcb9e2c345351dedee82bae69d939931742e55b1d2a2d1167b
-syn-14 table event_kind c51f995a98efd2947f096f162bd85a224528e0138d28b9999a9c83a245f45786
-syn-14 table event_kind_role bc566753d2e7d43e4d062a0bcd55a104707becf9f775f8a60eaa63a6afd1daf2
-syn-14 table event_kind_value 781821ff7e1ee9c8d9159b8746873a36236bedb9eed25ff734efcb3dff1970a2
+syn-14 table event_kind b6e466a521fd96b702089532729c1714965030229d2a558a19df094dfb9d9969
+syn-14 table event_kind_role d6f783d767471275ae6d4ddb721dc7e58a8e25a04d7031115dd629aa192943cb
+syn-14 table event_kind_value c7534369147777035a99a00c45319a9f834b1cc70daf535c3e7f3e5aa6de3947
 syn-14 table event_participant 2efd56af0ac662faa52aa3b3df27ffb0368662b5f569f2c2cffd55384a8e38be
 syn-14 table event_value 1acae49c74733f616fc97d7ec58a7d0f427596041e317c8cccf46d718dbaa032
 syn-14 table phase 8db0c970afd1cb9b3361610078440e85f6c11359b7dd19570d743bb841ae8431
@@ -7563,6 +7607,8 @@ syn-14 report events_truce = 0
 syn-14 report events_region_ceded = 0
 syn-14 report events_civ_conquered = 0
 syn-14 report events_settlement_abandoned_to = 0
+syn-14 report events_refugees_settled = 0
+syn-14 report events_tribute = 0
 syn-14 report civilizations = 2
 syn-14 report civilizations_alive = 2
 syn-14 report settlements = 5
@@ -7805,9 +7851,9 @@ syn-15 homes ra6 y5520 n1 28
 syn-15 table civilization a55037dbdaa6805f44e1506184f84d9e39945503f32dbb324f81957184e6e508
 syn-15 table event 1bcfd704f08fba2505df6673642dd1fabef591bd2da9c6a816cc7dc798e5e784
 syn-15 table event_cause ca888a49935430f0c0381847b08685ac67ab0c8bb98f3c0ea5743d6801fa7894
-syn-15 table event_kind c51f995a98efd2947f096f162bd85a224528e0138d28b9999a9c83a245f45786
-syn-15 table event_kind_role bc566753d2e7d43e4d062a0bcd55a104707becf9f775f8a60eaa63a6afd1daf2
-syn-15 table event_kind_value 781821ff7e1ee9c8d9159b8746873a36236bedb9eed25ff734efcb3dff1970a2
+syn-15 table event_kind b6e466a521fd96b702089532729c1714965030229d2a558a19df094dfb9d9969
+syn-15 table event_kind_role d6f783d767471275ae6d4ddb721dc7e58a8e25a04d7031115dd629aa192943cb
+syn-15 table event_kind_value c7534369147777035a99a00c45319a9f834b1cc70daf535c3e7f3e5aa6de3947
 syn-15 table event_participant 8fe32ab5c4dea38ce16902a7b19de89abc5cd32d728929ebc635a33d29500d5a
 syn-15 table event_value 4fc24b9468b6a225efa44bb977bb697228336d12897f32951448814967dbd9b6
 syn-15 table phase 9414d37412d75a4d160a235e7f552eed9795ef6455024d86b5baab1bba71f4ff
@@ -7854,6 +7900,8 @@ syn-15 report events_truce = 0
 syn-15 report events_region_ceded = 0
 syn-15 report events_civ_conquered = 0
 syn-15 report events_settlement_abandoned_to = 0
+syn-15 report events_refugees_settled = 0
+syn-15 report events_tribute = 0
 syn-15 report civilizations = 3
 syn-15 report civilizations_alive = 3
 syn-15 report settlements = 6
@@ -8085,9 +8133,9 @@ stress-0 homes ra6 y1844 n1 25
 stress-0 table civilization d1fc327c972d56c5ac41981e17933d704e5148d56f2ff92b5f628adb6ef7e6c3
 stress-0 table event 8b006eb136451d3c0c95d19fbd6205dde04454218b8bd09bcf38958d0fb5dabe
 stress-0 table event_cause 1abb4738968cdbc0b664d6d646447f7ab01abc51b3dbd23a0cd621e3d4de3db2
-stress-0 table event_kind c51f995a98efd2947f096f162bd85a224528e0138d28b9999a9c83a245f45786
-stress-0 table event_kind_role bc566753d2e7d43e4d062a0bcd55a104707becf9f775f8a60eaa63a6afd1daf2
-stress-0 table event_kind_value 781821ff7e1ee9c8d9159b8746873a36236bedb9eed25ff734efcb3dff1970a2
+stress-0 table event_kind b6e466a521fd96b702089532729c1714965030229d2a558a19df094dfb9d9969
+stress-0 table event_kind_role d6f783d767471275ae6d4ddb721dc7e58a8e25a04d7031115dd629aa192943cb
+stress-0 table event_kind_value c7534369147777035a99a00c45319a9f834b1cc70daf535c3e7f3e5aa6de3947
 stress-0 table event_participant d5c0f484c17807ff112c334e37124cf677ad2184a59ab1316d8d5b607b57653d
 stress-0 table event_value 795de2450d2d3768d3c8d53d7a36ccc971e6ec53357832d74256b25bf9c4e54e
 stress-0 table phase 3f410b5cb420b90068a9e0408fc930bc7b812412016d616b3dfb0a4b109b2ea7
@@ -8134,6 +8182,8 @@ stress-0 report events_truce = 0
 stress-0 report events_region_ceded = 0
 stress-0 report events_civ_conquered = 0
 stress-0 report events_settlement_abandoned_to = 11
+stress-0 report events_refugees_settled = 0
+stress-0 report events_tribute = 0
 stress-0 report civilizations = 6
 stress-0 report civilizations_alive = 6
 stress-0 report settlements = 17
@@ -8478,9 +8528,9 @@ stress-1 homes ra1 y0 n1 1
 stress-1 table civilization 81509aa6ef0cfd9d4ed7a4df9f5d60699666e0ab2f493d986328379124db44e7
 stress-1 table event 069333f7cfd7a6e8a95145d6fa9e7552c1324377af6eb245f41d8879389c12dd
 stress-1 table event_cause f623afcfcd4e4160dc1467dd0fa68cd2a0946f0047a5fd69f66110b7a8f15921
-stress-1 table event_kind c51f995a98efd2947f096f162bd85a224528e0138d28b9999a9c83a245f45786
-stress-1 table event_kind_role bc566753d2e7d43e4d062a0bcd55a104707becf9f775f8a60eaa63a6afd1daf2
-stress-1 table event_kind_value 781821ff7e1ee9c8d9159b8746873a36236bedb9eed25ff734efcb3dff1970a2
+stress-1 table event_kind b6e466a521fd96b702089532729c1714965030229d2a558a19df094dfb9d9969
+stress-1 table event_kind_role d6f783d767471275ae6d4ddb721dc7e58a8e25a04d7031115dd629aa192943cb
+stress-1 table event_kind_value c7534369147777035a99a00c45319a9f834b1cc70daf535c3e7f3e5aa6de3947
 stress-1 table event_participant 09e8ab988ce88eb6b59af3c2b52d597a9c26e74f51f9636a4ae00155c4a6c136
 stress-1 table event_value 1080d875c15918181a2b9adcc458b0f375cd8ba99c7c670e0d9aa5d6f3f24d88
 stress-1 table phase 90795a24abc4f0fb42bfe3503793797ff687a273caac3d6f96049fe9b4acbc18
@@ -8527,6 +8577,8 @@ stress-1 report events_truce = 0
 stress-1 report events_region_ceded = 0
 stress-1 report events_civ_conquered = 0
 stress-1 report events_settlement_abandoned_to = 6
+stress-1 report events_refugees_settled = 0
+stress-1 report events_tribute = 0
 stress-1 report civilizations = 1
 stress-1 report civilizations_alive = 1
 stress-1 report settlements = 7
@@ -8707,9 +8759,9 @@ stress-2 homes ra4 y1390 n1 6
 stress-2 table civilization 9af4197ec9c3d0ab60b01d4548cface2ba5c0d52771031faf90c4e1e843aeb70
 stress-2 table event b000d1bf83942bdb7f7fdf6064c147131a27826c7b7b9617721d5579bcfe9213
 stress-2 table event_cause f45dd3dcdaff4fbd2e16d7dade287492a9f76fca1be4f60a0a596c0901bc3ac7
-stress-2 table event_kind c51f995a98efd2947f096f162bd85a224528e0138d28b9999a9c83a245f45786
-stress-2 table event_kind_role bc566753d2e7d43e4d062a0bcd55a104707becf9f775f8a60eaa63a6afd1daf2
-stress-2 table event_kind_value 781821ff7e1ee9c8d9159b8746873a36236bedb9eed25ff734efcb3dff1970a2
+stress-2 table event_kind b6e466a521fd96b702089532729c1714965030229d2a558a19df094dfb9d9969
+stress-2 table event_kind_role d6f783d767471275ae6d4ddb721dc7e58a8e25a04d7031115dd629aa192943cb
+stress-2 table event_kind_value c7534369147777035a99a00c45319a9f834b1cc70daf535c3e7f3e5aa6de3947
 stress-2 table event_participant 7fe7c70af731ea753c6c7fb5bd5dd5cdc970fe1a392ced33ee78e5d7d3dd4513
 stress-2 table event_value 29a6426ded2294158fab2b4d1dee7240b2bd03aa37ceb0e1cf970c7f7bf288fc
 stress-2 table phase 768dd613dd1cdfde9b02faa66c6d2b12bac27b813eb398d3308456429de875ab
@@ -8756,6 +8808,8 @@ stress-2 report events_truce = 0
 stress-2 report events_region_ceded = 0
 stress-2 report events_civ_conquered = 0
 stress-2 report events_settlement_abandoned_to = 3
+stress-2 report events_refugees_settled = 0
+stress-2 report events_tribute = 0
 stress-2 report civilizations = 2
 stress-2 report civilizations_alive = 2
 stress-2 report settlements = 7
@@ -9027,9 +9081,9 @@ stress-3 homes ra6 y5602 n1 12
 stress-3 table civilization 331373881e0a98dd550392b7e68dfec2e863895b11257562da68febae1bce73e
 stress-3 table event b72cae3ecb6a1615f70fa7cb42dfb5f2ff0b461b645c23167aa2dfa8149e8698
 stress-3 table event_cause d8d5cd96f691d7d263db186db199867ae9d3bc57f62beb823c99549867170e69
-stress-3 table event_kind c51f995a98efd2947f096f162bd85a224528e0138d28b9999a9c83a245f45786
-stress-3 table event_kind_role bc566753d2e7d43e4d062a0bcd55a104707becf9f775f8a60eaa63a6afd1daf2
-stress-3 table event_kind_value 781821ff7e1ee9c8d9159b8746873a36236bedb9eed25ff734efcb3dff1970a2
+stress-3 table event_kind b6e466a521fd96b702089532729c1714965030229d2a558a19df094dfb9d9969
+stress-3 table event_kind_role d6f783d767471275ae6d4ddb721dc7e58a8e25a04d7031115dd629aa192943cb
+stress-3 table event_kind_value c7534369147777035a99a00c45319a9f834b1cc70daf535c3e7f3e5aa6de3947
 stress-3 table event_participant 49db21743b50966ec5788663de4539c7287aeb35ae95fba4d38733ab197a6fa9
 stress-3 table event_value 4c0d49c532798003cbd3792d8cc92e696514784c95fdd1da3b0bfc93c77dc5f1
 stress-3 table phase fa794ced217516363d2660b999eab9f148f575930c8747d00c26369da05e2102
@@ -9076,6 +9130,8 @@ stress-3 report events_truce = 0
 stress-3 report events_region_ceded = 0
 stress-3 report events_civ_conquered = 0
 stress-3 report events_settlement_abandoned_to = 7
+stress-3 report events_refugees_settled = 0
+stress-3 report events_tribute = 0
 stress-3 report civilizations = 3
 stress-3 report civilizations_alive = 3
 stress-3 report settlements = 11
@@ -9582,9 +9638,9 @@ stress-4 homes ra6 y1880 n4 44
 stress-4 table civilization c1d10c25fc1f0cb0b5683c51d06fa2820a961ca4a848fc8d8ef60e0215e3f5ec
 stress-4 table event 515143f1aba51a7e8abea5158aff5de89db809185e1861abf5ca8fdc872108f8
 stress-4 table event_cause 96f70c806c9e5822ce7963964d808c9d6b90d4a15aea5c9e31ec170901ef1e79
-stress-4 table event_kind c51f995a98efd2947f096f162bd85a224528e0138d28b9999a9c83a245f45786
-stress-4 table event_kind_role bc566753d2e7d43e4d062a0bcd55a104707becf9f775f8a60eaa63a6afd1daf2
-stress-4 table event_kind_value 781821ff7e1ee9c8d9159b8746873a36236bedb9eed25ff734efcb3dff1970a2
+stress-4 table event_kind b6e466a521fd96b702089532729c1714965030229d2a558a19df094dfb9d9969
+stress-4 table event_kind_role d6f783d767471275ae6d4ddb721dc7e58a8e25a04d7031115dd629aa192943cb
+stress-4 table event_kind_value c7534369147777035a99a00c45319a9f834b1cc70daf535c3e7f3e5aa6de3947
 stress-4 table event_participant f3d4d14b3a7b14a6b785d15abc60e455669e3b97b9a7853aeb3e00260ceea49a
 stress-4 table event_value ca8c86a052ee17999e44249ab2d7b63a5cb7d4556a6063d2cb727d4a255e3fd1
 stress-4 table phase fefd82f64eac7d68a044ca5bed3befcaf96d68b780550230cec57e4a513bb2f1
@@ -9631,6 +9687,8 @@ stress-4 report events_truce = 0
 stress-4 report events_region_ceded = 0
 stress-4 report events_civ_conquered = 0
 stress-4 report events_settlement_abandoned_to = 3
+stress-4 report events_refugees_settled = 0
+stress-4 report events_tribute = 0
 stress-4 report civilizations = 6
 stress-4 report civilizations_alive = 6
 stress-4 report settlements = 9
@@ -9899,9 +9957,9 @@ stress-5 homes ra1 y0 n4 6
 stress-5 table civilization 388f181467083e75fd8c46971e18620b0be155ab5ba7bda4f400bf03ebed9a7f
 stress-5 table event a4790842e18e5399cc800bfceea5e0c0de0ad511272940c80e0c07694eba8600
 stress-5 table event_cause c8385ab95b70ea1cf5b751efb852b8598c07703426789d522fbe5c870e7ae018
-stress-5 table event_kind c51f995a98efd2947f096f162bd85a224528e0138d28b9999a9c83a245f45786
-stress-5 table event_kind_role bc566753d2e7d43e4d062a0bcd55a104707becf9f775f8a60eaa63a6afd1daf2
-stress-5 table event_kind_value 781821ff7e1ee9c8d9159b8746873a36236bedb9eed25ff734efcb3dff1970a2
+stress-5 table event_kind b6e466a521fd96b702089532729c1714965030229d2a558a19df094dfb9d9969
+stress-5 table event_kind_role d6f783d767471275ae6d4ddb721dc7e58a8e25a04d7031115dd629aa192943cb
+stress-5 table event_kind_value c7534369147777035a99a00c45319a9f834b1cc70daf535c3e7f3e5aa6de3947
 stress-5 table event_participant 6efdc71d12582c561975b4feeec4902395fd83911daacb50fc06eba041d078dc
 stress-5 table event_value e235dde8dca5483cf0a8f01278457f807cba6b6221b94a17b771f6279949bac1
 stress-5 table phase 90795a24abc4f0fb42bfe3503793797ff687a273caac3d6f96049fe9b4acbc18
@@ -9948,6 +10006,8 @@ stress-5 report events_truce = 0
 stress-5 report events_region_ceded = 0
 stress-5 report events_civ_conquered = 0
 stress-5 report events_settlement_abandoned_to = 4
+stress-5 report events_refugees_settled = 0
+stress-5 report events_tribute = 0
 stress-5 report civilizations = 1
 stress-5 report civilizations_alive = 1
 stress-5 report settlements = 5
@@ -10172,9 +10232,9 @@ stress-6 homes ra4 y1407 n1 14
 stress-6 table civilization 8f11fdefa4593e959ab5c49e29893d73e5fbcf4beafe2be644abd81f05f87012
 stress-6 table event 00df0850b7b96413e16b58acf304fc6a8860d39cfa6af0af9b8991c5a39d86c7
 stress-6 table event_cause 2685d2f7f97a06ffec709a02429b42b66c33dbd3630153484c7ffbf5bd045423
-stress-6 table event_kind c51f995a98efd2947f096f162bd85a224528e0138d28b9999a9c83a245f45786
-stress-6 table event_kind_role bc566753d2e7d43e4d062a0bcd55a104707becf9f775f8a60eaa63a6afd1daf2
-stress-6 table event_kind_value 781821ff7e1ee9c8d9159b8746873a36236bedb9eed25ff734efcb3dff1970a2
+stress-6 table event_kind b6e466a521fd96b702089532729c1714965030229d2a558a19df094dfb9d9969
+stress-6 table event_kind_role d6f783d767471275ae6d4ddb721dc7e58a8e25a04d7031115dd629aa192943cb
+stress-6 table event_kind_value c7534369147777035a99a00c45319a9f834b1cc70daf535c3e7f3e5aa6de3947
 stress-6 table event_participant 7566b5ba029282381bc5db3d7753d63f19036fe8a6e9a6f6ca489a0a308f0979
 stress-6 table event_value 1becf1003bc37b5e8ce15c7b1eeac7adb5bce6f9fb150aeeb2cc046038799a96
 stress-6 table phase adcfb0725d78860be88557ee907030b8f14e3653da182f3ab04f3d23ecfe1b67
@@ -10221,6 +10281,8 @@ stress-6 report events_truce = 0
 stress-6 report events_region_ceded = 0
 stress-6 report events_civ_conquered = 0
 stress-6 report events_settlement_abandoned_to = 4
+stress-6 report events_refugees_settled = 0
+stress-6 report events_tribute = 0
 stress-6 report civilizations = 3
 stress-6 report civilizations_alive = 3
 stress-6 report settlements = 7
@@ -10491,9 +10553,9 @@ stress-7 homes ra6 y5637 n1 15
 stress-7 table civilization 47e857f97206f3959fcab535d47aa87b65f9f1ded6e473536465be1232d7143f
 stress-7 table event 2560a89245b6a2c006d6204f9a64478de2da8a970dcc0760dfebe0691f28236c
 stress-7 table event_cause aceb1d10fa56706fe613123110ec5a9ad646f9f710ec96ab6e2a1ee3a5e40bb7
-stress-7 table event_kind c51f995a98efd2947f096f162bd85a224528e0138d28b9999a9c83a245f45786
-stress-7 table event_kind_role bc566753d2e7d43e4d062a0bcd55a104707becf9f775f8a60eaa63a6afd1daf2
-stress-7 table event_kind_value 781821ff7e1ee9c8d9159b8746873a36236bedb9eed25ff734efcb3dff1970a2
+stress-7 table event_kind b6e466a521fd96b702089532729c1714965030229d2a558a19df094dfb9d9969
+stress-7 table event_kind_role d6f783d767471275ae6d4ddb721dc7e58a8e25a04d7031115dd629aa192943cb
+stress-7 table event_kind_value c7534369147777035a99a00c45319a9f834b1cc70daf535c3e7f3e5aa6de3947
 stress-7 table event_participant 1f2bb12d654ac2d5919c4c42f984ed7cae6e17136b173674baa4e6dea8a83fec
 stress-7 table event_value ff8dc3a305d0bb4d40c5e0a2c79a9eb8889ed09403d492c6f6c9bb1c82faabc3
 stress-7 table phase bec2970a166216be6d6c0cc4e2202dab635cc59e70f4370a4ad6c0470e9265cf
@@ -10540,6 +10602,8 @@ stress-7 report events_truce = 0
 stress-7 report events_region_ceded = 0
 stress-7 report events_civ_conquered = 0
 stress-7 report events_settlement_abandoned_to = 17
+stress-7 report events_refugees_settled = 0
+stress-7 report events_tribute = 0
 stress-7 report civilizations = 7
 stress-7 report civilizations_alive = 1
 stress-7 report settlements = 24
@@ -11484,9 +11548,9 @@ stress-12 homes ra6 y1852 n1 5
 stress-12 table civilization a1cfd8658885e7f06625110a8fafc825b33d28ba19ff4703d61fc1fe0e524a66
 stress-12 table event 9d2d3867b3fc01622337cb23b0fb5ea7e9dd68655a104512bd764ec63b216b99
 stress-12 table event_cause a3893b48a04980802f9005641d946c12677ff027b7bb777695bc07a0639f4673
-stress-12 table event_kind c51f995a98efd2947f096f162bd85a224528e0138d28b9999a9c83a245f45786
-stress-12 table event_kind_role bc566753d2e7d43e4d062a0bcd55a104707becf9f775f8a60eaa63a6afd1daf2
-stress-12 table event_kind_value 781821ff7e1ee9c8d9159b8746873a36236bedb9eed25ff734efcb3dff1970a2
+stress-12 table event_kind b6e466a521fd96b702089532729c1714965030229d2a558a19df094dfb9d9969
+stress-12 table event_kind_role d6f783d767471275ae6d4ddb721dc7e58a8e25a04d7031115dd629aa192943cb
+stress-12 table event_kind_value c7534369147777035a99a00c45319a9f834b1cc70daf535c3e7f3e5aa6de3947
 stress-12 table event_participant 22b91877a0cb87f026cda9267301dfba6cf541e94a8d5aefb5cfa8fa78bc2b04
 stress-12 table event_value d31986dc29aff8cf992196ab19bfaa6f58f5c455eb83b33f6ebc1312239da1af
 stress-12 table phase 8754ca052d33ca91da216a1fd82ac5910454ad1d6578f50cc644f8549729b481
@@ -11533,6 +11597,8 @@ stress-12 report events_truce = 0
 stress-12 report events_region_ceded = 0
 stress-12 report events_civ_conquered = 0
 stress-12 report events_settlement_abandoned_to = 9
+stress-12 report events_refugees_settled = 0
+stress-12 report events_tribute = 0
 stress-12 report civilizations = 7
 stress-12 report civilizations_alive = 7
 stress-12 report settlements = 17
@@ -11892,9 +11958,9 @@ stress-14 homes ra4 y1409 n1 11
 stress-14 table civilization a70f192d05d8ad02fb1d5c83fd6c8867161476774f51127dec911fcfc621c852
 stress-14 table event 4a4409a200fa21328f0f7437e1a164451a91886f14b0494c32c3122cb95ba414
 stress-14 table event_cause c003b37ee1f7d69c8b7509fad789bcfc524683e5b8edadef9622be085136fed6
-stress-14 table event_kind c51f995a98efd2947f096f162bd85a224528e0138d28b9999a9c83a245f45786
-stress-14 table event_kind_role bc566753d2e7d43e4d062a0bcd55a104707becf9f775f8a60eaa63a6afd1daf2
-stress-14 table event_kind_value 781821ff7e1ee9c8d9159b8746873a36236bedb9eed25ff734efcb3dff1970a2
+stress-14 table event_kind b6e466a521fd96b702089532729c1714965030229d2a558a19df094dfb9d9969
+stress-14 table event_kind_role d6f783d767471275ae6d4ddb721dc7e58a8e25a04d7031115dd629aa192943cb
+stress-14 table event_kind_value c7534369147777035a99a00c45319a9f834b1cc70daf535c3e7f3e5aa6de3947
 stress-14 table event_participant b5d6d95573e44358b0c67754994f32486ca93ee8d99355b4d85c6d53f9bcb0d2
 stress-14 table event_value 2a04207293e529ed58160a48d7950d00006ab41c2dca62501a845897208f085a
 stress-14 table phase 0ef460512ef04791caf94dce29d615082b6488ee373bfe6ac93b44ec857467ed
@@ -11941,6 +12007,8 @@ stress-14 report events_truce = 0
 stress-14 report events_region_ceded = 0
 stress-14 report events_civ_conquered = 0
 stress-14 report events_settlement_abandoned_to = 3
+stress-14 report events_refugees_settled = 0
+stress-14 report events_tribute = 0
 stress-14 report civilizations = 3
 stress-14 report civilizations_alive = 3
 stress-14 report settlements = 8

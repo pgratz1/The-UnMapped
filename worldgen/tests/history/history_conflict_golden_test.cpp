@@ -110,6 +110,9 @@ void check_world_case(const CCase& g) {
     for (const Row& e : t.event) conflict_events += at(e, 3) >= k_claim ? 1U : 0U;
     CHECK(g.sentences.size() == (g.size <= 512 ? sent.size() : conflict_events));
     check_invariants_06(t, in, 25, true);
+    check_invariants_09(t, in, shipped());  // P3-06 r9 20.13 (generator 0.18.0)
+    // P3-07 r8 21 (reference-only until P3-07 is implemented): the golden notes and summary of the case exist
+    CHECK_FALSE(g.summary.empty());
 }
 
 // 15.5 hard bounds from the rows; the capacity bound with the reference's C of the P3-05 golden file

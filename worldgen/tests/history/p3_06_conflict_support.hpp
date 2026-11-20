@@ -56,6 +56,9 @@ struct CCase {
     std::vector<std::string> wars;     // "e<w> <start>-<end> c<a> c<b> rg<g> claim e<c> battles n sacked n taken n <how> <outcome>"
     std::map<std::int64_t, std::pair<std::int64_t, std::int64_t>> tension;  // quiet step start -> (value, trigger)
     std::map<std::int64_t, std::string> sentences;
+    // P3-09 (generator 0.18.0): P3-07 r8 21.4's notes and 21.3's summary line of the world and synthetic cases
+    std::map<std::int64_t, std::string> notes;
+    std::string summary;  // "threshold <T> shown <n> ages <n1,...>"
 };
 
 inline const std::vector<CCase>& conflict_golden() {
@@ -107,6 +110,10 @@ inline const std::vector<CCase>& conflict_golden() {
                 c.stats.push_back(rest.substr(6));
             } else if (w[1] == "war") {
                 c.wars.push_back(rest.substr(4));
+            } else if (w[1] == "note") {
+                c.notes[std::stoll(w[2].substr(1))] = rest.substr(5 + w[2].size() + 1);
+            } else if (w[1] == "summary") {
+                c.summary = rest.substr(8);
             } else if (w[1].size() > 1 && w[1][0] == 'q') {
                 c.tension[std::stoll(w[1].substr(1))] = {std::stoll(w[2]), std::stoll(w[3].substr(1))};
             } else if (w[1].size() > 1 && w[1][0] == 'e') {
@@ -247,6 +254,87 @@ struct Index {
     }
 };
 
+// P3-07 r8 21.5 (P3-09, generator 0.18.0): the six [stats] keys appended after wars_attacker_<race>, from the
+// rows. "The war of d": the battles caused by d, the sieges caused by those, the falls caused by those, and the
+// war row's until_event u with the cessions and tributes caused by u.
+inline std::vector<std::string> stats_lines_21(const Tables& t, const eng::HistoryInputs& in) {
+    const Index x(t);
+    const std::int64_t E = in.params.span;
+    std::map<std::int64_t, const Row*> war_row;
+    for (const Row& r : t.relation) {
+        if (r[4].bytes == "war") war_row[at(r, 7)] = &r;
+    }
+    std::int64_t decl = 0, hollow = 0;
+    std::map<std::pair<std::int64_t, std::int64_t>, std::vector<std::int64_t>> groups;  // (defender, region) -> wars
+    for (const Row& e : t.event) {
+        if (at(e, 3) != k_war_declared) continue;
+        const std::int64_t d = at(e, 0);
+        ++decl;
+        groups[{x.role1(d, 2), at(e, 5)}].push_back(d);
+        bool changed = false;
+        for (const std::int64_t b : x.kids(d)) {
+            if (x.kind(b) != k_battle && x.kind(b) != k_battle_at_pass) continue;
+            for (const std::int64_t sg : x.kids(b)) {
+                if (x.kind(sg) != k_siege) continue;
+                for (const std::int64_t f : x.kids(sg)) {
+                    changed = changed || x.kind(f) == k_sacked || x.kind(f) == k_settlement_captured;
+                }
+            }
+        }
+        const auto it = war_row.find(d);
+        if (it != war_row.end() && !is_null((*it->second)[6])) {
+            const std::int64_t u = at(*it->second, 8);
+            changed = changed || x.kind(u) == k_civ_conquered;
+            for (const std::int64_t k : x.kids(u)) changed = changed || x.kind(k) == k_region_ceded || x.kind(k) == k_tribute;
+        }
+        hollow += changed ? 0 : 1;
+    }
+    std::int64_t same_max = 0, unchanged_max = 0;
+    for (const auto& [key, ds] : groups) {
+        same_max = std::max<std::int64_t>(same_max, static_cast<std::int64_t>(ds.size()));
+        std::vector<std::int64_t> changes;
+        for (const Row& rc : t.region_control) {
+            if (at(rc, 0) != key.second) continue;
+            changes.push_back(at(rc, 1));
+            if (!is_null(rc[2])) changes.push_back(at(rc, 2));
+        }
+        std::int64_t run = 0;
+        for (const std::int64_t d : ds) {  // id order
+            const Row& r = *war_row.at(d);
+            const std::int64_t lo = at(r, 5), hi = is_null(r[6]) ? E : at(r, 6);
+            bool moved = false;
+            for (const std::int64_t y : changes) moved = moved || (lo <= y && y <= hi);
+            run = moved ? 0 : run + 1;
+            unchanged_max = std::max(unchanged_max, run);
+        }
+    }
+    std::map<std::int64_t, std::int64_t> civ_race;
+    for (const Row& c : t.civilization) civ_race[at(c, 0)] = at(c, 2);
+    std::int64_t pop = 0, held = 0;
+    std::map<std::int64_t, std::int64_t> pop_r, held_r;
+    for (const Row& s : t.settlement) {
+        if (at(s, 10) != 1 && at(s, 10) != 2) continue;
+        pop += at(s, 11);
+        pop_r[civ_race[at(s, 8)]] += at(s, 11);
+    }
+    for (const Row& rc : t.region_control) {
+        if (!is_null(rc[2])) continue;
+        ++held;
+        held_r[civ_race[at(rc, 3)]] += 1;
+    }
+    std::int64_t pshare = 0, rshare = 0;
+    for (const db::RaceRow& r : in.races) {
+        if (pop > 0) pshare = std::max(pshare, pop_r[r.id] * 1000 / pop);
+        if (held > 0) rshare = std::max(rshare, held_r[r.id] * 1000 / held);
+    }
+    return {"wars_hollow = " + std::to_string(hollow),
+            "wars_hollow_permille = " + std::to_string(decl > 0 ? 1000 * hollow / decl : 0),
+            "wars_same_goal_max = " + std::to_string(same_max),
+            "wars_same_goal_unchanged_max = " + std::to_string(unchanged_max),
+            "race_population_share_max_permille = " + std::to_string(pshare),
+            "race_regions_share_max_permille = " + std::to_string(rshare)};
+}
+
 // P3-05 15.4's three keys, then P3-06 15.4's, in order.
 inline std::vector<std::string> stats_lines_06(const Tables& t, const eng::HistoryInputs& in) {
     std::vector<std::string> o = stats_lines(t);
@@ -294,6 +382,7 @@ inline std::vector<std::string> stats_lines_06(const Tables& t, const eng::Histo
         }
         o.push_back("wars_attacker_" + r.key + " = " + std::to_string(n));
     }
+    for (const std::string& l : stats_lines_21(t, in)) o.push_back(l);
     return o;
 }
 
@@ -345,6 +434,9 @@ inline std::vector<std::string> war_lines_from_rows(const Tables& t) {
                 outcome = "won-c" + std::to_string(x.role1(u, 1));
                 for (const std::int64_t k : x.kids(u)) {
                     if (x.kind(k) == k_region_ceded) outcome += "-ceded";
+                }
+                for (const std::int64_t k : x.kids(u)) {
+                    if (x.kind(k) == k_tribute) outcome += "-tribute";  // r9 20.3 (0.18.0)
                 }
             } else if (x.kind(u) == k_truce) {
                 outcome = "truce";
@@ -435,7 +527,7 @@ inline void check_invariants_06(const Tables& t, const eng::HistoryInputs& in, s
         if (k == k_battle || k == k_battle_at_pass || k == k_siege || k == k_sacked || k == k_settlement_captured) {
             CHECK_FALSE(quiet);
         }
-        if ((k == k_peace || k == k_truce || k == k_region_ceded) && quiet) {
+        if ((k == k_peace || k == k_truce || k == k_region_ceded || k == k_tribute) && quiet) {  // r9: tribute
             CHECK((at(e, 1) - at(*x.ph.at(at(e, 4)), 3)) % quiet_step_years == 0);
         }
         if (k == k_battle || k == k_battle_at_pass) {
@@ -494,7 +586,9 @@ inline void check_invariants_06(const Tables& t, const eng::HistoryInputs& in, s
     // 5 territory
     for (const Row& r : t.region_control) {
         const std::int64_t k = x.kind(at(r, 4));
-        CHECK((k == 2 || k == k_colony_founded || k == k_civ_seceded || k == k_settlement_captured || k == k_region_ceded));
+        // r9 20.13 item 1 (0.18.0): or a refugees_settled into a free region
+        CHECK((k == 2 || k == k_colony_founded || k == k_civ_seceded || k == k_settlement_captured || k == k_region_ceded ||
+               k == k_refugees_settled));
     }
     // 7 races
     if (last_refuge) {
@@ -522,6 +616,203 @@ inline void check_invariants_06(const Tables& t, const eng::HistoryInputs& in, s
             CHECK_FALSE((x.kind(at(s, 7)) == k_colony_founded && at(s, 6) == at(e, 1)));
         }
     }
+}
+
+// --- P3-06 r9 20.13 items 3-6 from the rows (P3-09, generator 0.18.0) --------------------------------
+
+// B(R, r) of P3-05 4.2 from the inputs: sum over the race's biome weights of weight x share, div 1000, share =
+// cells x 1000 div the region's land cells.
+inline std::int64_t biome_term(const eng::HistoryInputs& in, std::int64_t region, std::int64_t race) {
+    std::map<std::int64_t, bool> water;
+    for (const db::BiomeRow& b : in.biomes) water[b.id] = b.water != 0;
+    std::int64_t land = 0;
+    std::map<std::int64_t, std::int64_t> cells;
+    for (const db::RegionBiomeRow& rb : in.region_biomes) {
+        if (rb.region != region) continue;
+        cells[rb.biome] = rb.cells;
+        land += water.count(rb.biome) != 0 && !water.at(rb.biome) ? rb.cells : 0;
+    }
+    std::int64_t sum = 0;
+    for (const db::RaceBiomeRow& w : in.race_biomes) {
+        if (w.race != race) continue;
+        const auto it = cells.find(w.biome);
+        sum += w.weight * (it == cells.end() || land == 0 ? 0 : it->second * 1000 / land);
+    }
+    return sum / 1000 - ((sum % 1000 != 0 && sum < 0) ? 1 : 0);  // floor division, as the reference's //
+}
+
+// A race field of the content (by race key).
+inline std::int64_t race_field(const wd::ContentSet& c, const std::string& key, std::string_view field) {
+    for (const wd::KindContent& k : c.kinds) {
+        if (k.kind != "race") continue;
+        for (const wd::Definition& d : k.definitions) {
+            if (d.id == key) return d.record.get_int(field);
+        }
+    }
+    FAIL("no race " << key);
+    return 0;
+}
+
+// 20.13 item 5, sound and conservative from the rows (the reference's weary_violations): per (defender, region)
+// the wars ended by peace or truce, in id order, during whose span (and since the previous one) the region's
+// owner never changed count; a claim or declaration naming (defender, region) after `weary` of them, with no
+// change since the last, is a violation.
+inline std::vector<std::int64_t> weary_violations(const Tables& t, std::int64_t weary) {
+    std::vector<std::int64_t> out;
+    if (weary == 0) return out;
+    const Index x(t);
+    std::map<std::int64_t, const Row*> war_row;
+    for (const Row& r : t.relation) {
+        if (r[4].bytes == "war") war_row[at(r, 7)] = &r;
+    }
+    std::map<std::int64_t, std::vector<std::int64_t>> changes;
+    for (const Row& rc : t.region_control) {
+        changes[at(rc, 0)].push_back(at(rc, 1));
+        if (!is_null(rc[2])) changes[at(rc, 0)].push_back(at(rc, 2));
+    }
+    struct End {
+        std::int64_t u, y0, y1;
+    };
+    std::map<std::pair<std::int64_t, std::int64_t>, std::vector<End>> ends;
+    for (const Row& e : t.event) {
+        if (at(e, 3) != k_war_declared) continue;
+        const auto it = war_row.find(at(e, 0));
+        if (it == war_row.end() || is_null((*it->second)[6])) continue;
+        const std::int64_t u = at(*it->second, 8);
+        if (x.kind(u) != k_peace && x.kind(u) != k_truce) continue;
+        ends[{x.role1(at(e, 0), 2), at(e, 5)}].push_back({u, at(e, 1), at(*it->second, 6)});
+    }
+    auto any_in = [&](std::int64_t g, std::int64_t lo, std::int64_t hi) {
+        for (const std::int64_t y : changes[g]) {
+            if (lo <= y && y <= hi) return true;
+        }
+        return false;
+    };
+    for (const Row& e : t.event) {
+        if (at(e, 3) != k_claim && at(e, 3) != k_war_declared) continue;
+        const std::int64_t b = x.role1(at(e, 0), 2), g = at(e, 5);
+        std::vector<End> done;
+        for (const End& d : ends[{b, g}]) {
+            if (d.u < at(e, 0)) done.push_back(d);
+        }
+        std::sort(done.begin(), done.end(), [](const End& p, const End& q) { return p.u < q.u; });
+        std::int64_t run = 0, last = -1;
+        for (const End& d : done) {
+            if (last >= 0 && any_in(g, last, d.y0)) run = 0;
+            if (any_in(g, d.y0, d.y1)) {
+                run = 0;
+            } else {
+                ++run;
+            }
+            last = d.y1;
+        }
+        if (run >= weary && last >= 0 && !any_in(g, last, at(e, 1))) out.push_back(at(e, 0));
+    }
+    return out;
+}
+
+// Items 3, 4 and 6 of 20.13, the cost rule of 20.3 and P3-09 10 (every won war costs the loser a region or a
+// tribute, except a last refuge's or when it has no visible people), with `hidden_years`, `abandon_min`,
+// `capital_sacked` and `weary` the tuning's values.
+inline void check_invariants_09(const Tables& t, const eng::HistoryInputs& in, const wd::ContentSet& content) {
+    const Index x(t);
+    const std::int64_t hidden_years = conflict_int(content, "hidden_years");
+    const std::int64_t capital_sacked = conflict_int(content, "capital_sacked_salience");
+    std::int64_t abandon_min = 0;
+    for (const wd::KindContent& k : content.kinds) {
+        if (k.kind != "history") continue;
+        for (const wd::Definition& d : k.definitions) {
+            if (d.id == "peoples") abandon_min = d.record.get_int("abandon_min");
+        }
+    }
+    std::map<std::int64_t, std::string> race_key;
+    for (const db::RaceRow& r : in.races) race_key[r.id] = r.key;
+    for (const Row& e : t.event) {
+        const std::int64_t id = at(e, 0), k = at(e, 3), y = at(e, 1);
+        CAPTURE(id);
+        if (k == k_refugees_settled) {
+            const std::int64_t h = x.role1(id, 1), founder = x.role1(id, 2), origin = x.role1(id, 3);
+            CHECK(x.values.at(id).at(1) >= abandon_min);
+            REQUIRE(x.causes.at(id).size() == 1U);
+            const std::int64_t sack = x.causes.at(id)[0];
+            CHECK(x.kind(sack) == k_sacked);
+            CHECK(x.year(sack) == y);
+            CHECK(at(*x.ev.at(sack), 6) == origin);
+            CHECK(x.role1(sack, 2) == founder);
+            CHECK(at(*x.ev.at(sack), 7) == capital_sacked);  // the origin was the founder's capital (its only one)
+            CHECK(at(e, 6) == h);
+            const Row& s = *x.st.at(h);
+            CHECK(at(s, 7) == id);  // founded by the event
+            CHECK(at(s, 5) == founder);
+            CHECK(at(s, 4) == at(e, 5));
+            for (const std::int64_t kid : x.kids(sack)) CHECK(x.kind(kid) != k_settlement_abandoned_to);
+            // the founder was its race's only alive civilization
+            const std::int64_t race = at(*x.cv.at(founder), 2);
+            for (const Row& c : t.civilization) {
+                if (at(c, 0) == founder || at(c, 2) != race || at(c, 6) > y) continue;
+                const bool alive = is_null(c[8]) || at(c, 8) > y || (at(c, 8) == y && at(c, 9) > id);
+                CHECK_MESSAGE(!alive, "civilization " << at(c, 0) << " of the founder's race was alive");
+            }
+            // hidden for hidden_years: never besieged; no battle, claim or declaration against the founder in its
+            // region while it is the founder's only settlement there (conservatively: no other settlement of the
+            // founder's there founded by then)
+            for (const Row& o : t.event) {
+                const std::int64_t oy = at(o, 1);
+                if (at(o, 0) <= id || oy >= y + hidden_years) continue;
+                if (at(o, 3) == k_siege) CHECK_MESSAGE(at(o, 6) != h, "siege e" << at(o, 0) << " of a hidden refuge");
+                if (at(o, 5) != at(e, 5)) continue;
+                const std::int64_t ok = at(o, 3);
+                bool against = false;
+                if (ok == k_battle || ok == k_battle_at_pass) {
+                    against = x.role1(at(o, 0), 1) == founder || x.role1(at(o, 0), 2) == founder;
+                } else if (ok == k_claim || ok == k_war_declared) {
+                    against = x.role1(at(o, 0), 2) == founder;
+                }
+                if (!against) continue;
+                bool alone = true;
+                for (const Row& s2 : t.settlement) {
+                    alone = alone && !(at(s2, 0) != h && at(s2, 4) == at(e, 5) && at(s2, 6) <= oy &&
+                                       (at(s2, 5) == founder || at(s2, 8) == founder));
+                }
+                CHECK_MESSAGE(!alone, "event e" << at(o, 0) << " against a hidden refuge's region");
+            }
+        }
+        if (k == k_tribute) {
+            REQUIRE(x.causes.at(id).size() == 1U);
+            const std::int64_t p = x.causes.at(id)[0];
+            CHECK(x.kind(p) == k_peace);
+            CHECK(x.role1(p, 2) == x.role1(id, 1));  // the loser pays
+            CHECK(x.role1(p, 1) == x.role1(id, 2));  // to the winner
+            CHECK(x.values.at(id).at(1) >= 1);
+            CHECK(at(e, 5) == 0);
+        }
+        if (k == k_peace || k == k_truce) {
+            std::int64_t costs = 0;
+            for (const std::int64_t kid : x.kids(id)) costs += (x.kind(kid) == k_region_ceded || x.kind(kid) == k_tribute) ? 1 : 0;
+            CHECK(costs <= (k == k_peace ? 1 : 0));  // one cession or one tribute per peace; a truce costs nothing
+            if (k == k_peace && costs == 0) {
+                // the exceptions of 20.3 / P3-09 10: the loser was its race's last alive civilization (a last
+                // refuge), or its people were all out of sight (concealed: a race that can be concealed)
+                const std::int64_t loser = x.role1(id, 2), race = at(*x.cv.at(loser), 2);
+                bool alone = true;
+                for (const Row& c : t.civilization) {
+                    if (at(c, 0) == loser || at(c, 2) != race || at(c, 6) > y) continue;
+                    alone = alone && !(is_null(c[8]) || at(c, 8) > y || (at(c, 8) == y && at(c, 9) > id));
+                }
+                CHECK_MESSAGE((alone || race_field(content, race_key.at(race), "conceal_min") <= 1000),
+                              "peace e" << id << " won without a cession or tribute");
+            }
+        }
+        if (k == k_siege) {  // item 6: never a concealed settlement
+            const std::int64_t def = x.role1(id, 2);
+            const std::int64_t race = at(*x.cv.at(def), 2);
+            const std::int64_t region = at(*x.st.at(at(e, 6)), 4);
+            CHECK_MESSAGE(biome_term(in, region, race) < race_field(content, race_key.at(race), "conceal_min"),
+                          "siege e" << id << " of a concealed settlement");
+        }
+    }
+    // item 5 from the log
+    CHECK(weary_violations(t, conflict_int(content, "weary_wars")) == std::vector<std::int64_t>{});
 }
 
 // P3-06 16.2 item 18a (r7, the 0.16.0 validation's F1): below the first claim the log with conflict (t)

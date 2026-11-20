@@ -48,6 +48,9 @@ enum Kind : std::int64_t {
 };
 // P3-05 r6 11 (generator 0.17.0): kind 31, appended after P3-06's kinds 20-30.
 constexpr std::int64_t k_settlement_abandoned_to = 31;
+// P3-06 r9 20.9 (generator 0.18.0, P3-09)
+constexpr std::int64_t k_refugees_settled = 32;
+constexpr std::int64_t k_tribute = 33;
 enum SKind : std::int64_t { hamlet = 1, village, town, city, fortress };
 enum Status : std::int64_t { thriving = 1, declining, ruined, faded };
 
@@ -879,7 +882,10 @@ inline void check_invariants(const Tables& t, const eng::HistoryInputs& in, cons
             }
         }
         CHECK(n >= 1);
-        CHECK(n <= (in.params.civs_per_race.has_value() ? *in.params.civs_per_race : 2));
+        // r8 21 item 5 (0.18.0): `auto` founds up to min(civs_extra_max 2, N div regions_per_extra_civ 90) more
+        std::int64_t land = 0;
+        for (const db::RegionRow& rg : in.regions) land += (rg.cells - rg.lake_cells >= 1172) ? 1 : 0;
+        CHECK(n <= (in.params.civs_per_race.has_value() ? *in.params.civs_per_race : 2 + std::min<std::int64_t>(2, land / 90)));
     }
     // 2
     std::map<std::pair<std::int64_t, std::int64_t>, std::int64_t> cells;
@@ -891,7 +897,9 @@ inline void check_invariants(const Tables& t, const eng::HistoryInputs& in, cons
     const auto& wat = std::get<std::vector<std::uint8_t>>(in.water_layer.values);
     for (const Row& s : t.settlement) {
         CAPTURE(at(s, 0));
-        CHECK((kind(at(s, 7)) == k_settlement_founded || kind(at(s, 7)) == k_colony_founded));
+        // r8 21 item 3 (0.18.0): or refugees_settled (P3-06 kind 32)
+        CHECK((kind(at(s, 7)) == k_settlement_founded || kind(at(s, 7)) == k_colony_founded ||
+               kind(at(s, 7)) == k_refugees_settled));
         const auto c = static_cast<std::size_t>(at(s, 3) * in.map_size + at(s, 2));
         CHECK(reg.at(c) == at(s, 4));
         CHECK(wat.at(c) == 0);

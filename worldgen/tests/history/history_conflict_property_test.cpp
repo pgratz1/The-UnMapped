@@ -54,7 +54,13 @@ void check_case(const CCase& g, std::map<std::int64_t, std::int64_t>* kinds = nu
     if (g.kind == "synthetic") {
         CHECK(t.event.size() == g.sentences.size());
     }
-    check_invariants_06(t, in, 25, conflict_int(c, "last_refuge") == 1);
+    // stress-1, -12, -14 (fixture tuning, not shipped): from 0.18.0 the orcs, their race's last refuge, are bled
+    // below abandon_min by battle losses while the guard holds and are abandoned by P3-05 8.5 (b) (the
+    // reference's reading of P3-06 r9; a gap of 20.13 item 2 reported to the lead: 20.1 and P3-09 10 guard flights
+    // and tributes, not battles). Item 7 is not asserted for those cases (KNOWN_EXTINCT_018 of the reference).
+    const bool known_extinct = g.name == "stress-1" || g.name == "stress-12" || g.name == "stress-14";
+    check_invariants_06(t, in, 25, conflict_int(c, "last_refuge") == 1 && !known_extinct);
+    check_invariants_09(t, in, c);  // P3-06 r9 20.13 (generator 0.18.0)
     if (kinds != nullptr) {
         for (const Row& e : t.event) (*kinds)[at(e, 3)] += 1;
     }
@@ -106,6 +112,8 @@ TEST_CASE("P3-06 7, 14: the stress cases equal the reference and reach every con
     }
     CHECK(kinds[k_flare_up] > 0);
     CHECK(kinds[k_capital_moved] > 0);
+    CHECK(kinds[k_refugees_settled] > 0);  // r9 20.1 (0.18.0)
+    CHECK(kinds[k_tribute] > 0);           // r9 20.3
 }
 
 }  // TEST_SUITE

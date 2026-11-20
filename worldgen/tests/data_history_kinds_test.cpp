@@ -157,6 +157,10 @@ void check_race(const wd::Definition& d, const history_data::Race& want) {
     CHECK(r.get_int("expansion") == want.expansion);
     CHECK(r.get_int("aggression") == want.aggression);
     CHECK(r.get_int("prowess_permille") == want.prowess_permille);  // P3-06 12.2 (P3-01 r7)
+    // P3-01 r9 3.2 / P3-06 r9 20.12 (generator 0.18.0, P3-09)
+    CHECK(r.get_int("muster_permille") == want.muster_permille);
+    CHECK(r.get_int("conceal_min") == want.conceal_min);
+    CHECK(r.get_int("home_defense_permille") == want.home_defense_permille);
     const auto& kinds = r.get_array("settlement_kinds");
     REQUIRE(kinds.size() == want.settlement_kinds.size());
     for (std::size_t i = 0; i < kinds.size(); ++i) {
@@ -790,6 +794,17 @@ TEST_CASE("P3-01 8.1 test 5: every bounded race field one step outside its bound
         // P3-06 12.2 item 1 (P3-01 r7): prowess_permille int(1, 4000)
         {"races/orc.toml", "prowess_permille = 1300", "prowess_permille = 1", "prowess_permille = 0", "race.orc.prowess_permille"},
         {"races/orc.toml", "prowess_permille = 1300", "prowess_permille = 4000", "prowess_permille = 4001", "race.orc.prowess_permille"},
+        // P3-01 r9 3.2 (generator 0.18.0): muster_permille int(1, 10000), conceal_min int(0, 1001),
+        // home_defense_permille int(0, 10000)
+        {"races/orc.toml", "muster_permille = 4000", "muster_permille = 1", "muster_permille = 0", "race.orc.muster_permille"},
+        {"races/orc.toml", "muster_permille = 4000", "muster_permille = 10000", "muster_permille = 10001",
+         "race.orc.muster_permille"},
+        {"races/orc.toml", "conceal_min = 1001", "conceal_min = 0", "conceal_min = -1", "race.orc.conceal_min"},
+        {"races/orc.toml", "conceal_min = 1001", "conceal_min = 1001", "conceal_min = 1002", "race.orc.conceal_min"},
+        {"races/orc.toml", "home_defense_permille = 0", "home_defense_permille = 0", "home_defense_permille = -1",
+         "race.orc.home_defense_permille"},
+        {"races/orc.toml", "home_defense_permille = 0", "home_defense_permille = 10000", "home_defense_permille = 10001",
+         "race.orc.home_defense_permille"},
         // fx(0, 1): one raw step is below the decimal resolution, so the
         // nearest decimals outside are used (raw ONE + 4 and -4). Below 0
         // the awakening check would fail too, but the definition is not

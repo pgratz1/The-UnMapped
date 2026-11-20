@@ -361,6 +361,15 @@ target_sources(worldgen-tests PRIVATE
 target_compile_definitions(worldgen-tests PRIVATE
     UNMAPPED_P3_06_GOLDEN_PATH="${CMAKE_CURRENT_SOURCE_DIR}/golden/p3-06-conflict.txt"
 )
+# Conflict balance (spec P3-09, generator 0.18.0; P3-06 r9 20, P3-05 r8 21,
+# P3-01 r9 3.2, P3-07 r8 21): the 0.18.0 data and kinds 32 and 33, the [stats]
+# keys of P3-07 r8 21.5 and the weariness check on hand-made logs, the seams
+# behind p3_09_switch.hpp, and the extra golden world hist-conflict-flight.
+target_sources(worldgen-tests PRIVATE
+    history/history_balance_data_test.cpp
+    history/history_balance_unit_test.cpp
+    history/history_balance_golden_test.cpp
+)
 # CTest entries (cmake/UnmappedTestShards.cmake): one per group of source
 # files, run in parallel by `ctest -j`, plus worldgen-tests-other for every
 # file not named here and worldgen-tests-partition, which checks that the
@@ -389,5 +398,6 @@ unmapped_add_doctest_shards(worldgen-tests
     SHARD peoples 25 "*history_peoples_*"
     SHARD conflict 25 "*history_conflict_data_test.cpp,*history_conflict_unit_test.cpp,*history_conflict_property_test.cpp"
     SHARD conflict-worlds 25 "*history_conflict_golden_test.cpp"
+    SHARD balance 20 "*history_balance_*"
     REST other 13
 )
