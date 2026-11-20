@@ -52,8 +52,8 @@ under a second.
 A file under `worldgen/` is **library** code and a file under
 `tools/worldgen-cli/` is **CLI** code. Any other path (an explicit path
 elsewhere, a self-test snippet) gets the rules of both, except
-`history-sequential-rng` and `history-live-iteration`, which apply to library
-history code only.
+`history-sequential-rng`, `history-live-iteration` and `history-held-reference`,
+which apply to library history code only.
 
 ## Rules
 
@@ -102,6 +102,7 @@ reason it is safe.
 | --- | --- | --- |
 | `history-sequential-rng` | `Rng` (the type, its constructor and `Rng::from_state`), calls of `splitmix64_next(`, and `#include "worldgen/core/rng.hpp"`. Rule H4: every random decision of the history is a keyed draw, `history::draw(stream_key, w0, a, b, k)` and the helpers `pick`, `chance` and `weighted` (`worldgen/history/draw.hpp`), so that adding or removing one decision shifts no other. A draw from a sequential stream would make every later decision depend on how many draws came before. Added by the P3-02 names audit | library files whose path starts with `worldgen/src/history/`, `worldgen/include/worldgen/history/`, `worldgen/src/stages/chronology`, `worldgen/src/stages/history`, `worldgen/include/worldgen/stages/chronology` or `worldgen/include/worldgen/stages/history` (`HISTORY_DIRS`); not the geography stages, which use `Rng` by P0-01 6. A history stage file with another name must be added to `HISTORY_DIRS` |
 | `history-live-iteration` | A range-for loop over `State::civs()`, `settlements()` or `relations()` (through `.` or `->`, or the members `civs_`, `settlements_`, `relations_`) whose body calls `found_civilization(`, `found_settlement(`, `open_relation(` or `close_relation(`. Founding appends to the vector the loop iterates: when the vector reallocates, the loop's iterators (and any span or reference into it) dangle, and when it reallocates depends on the standard library's growth factor (libstdc++ and libc++ double, MSVC grows by half), so the undefined behaviour can differ between platforms. `close_relation` erases from the map being iterated. Iterate over ids up to a count taken before the loop, or collect the changes and apply them after it. Only the loop body as written is read: a helper called in the body that founds is not seen, and references held across a founding outside a loop are not found (the audit checks those). Added by the P3-04 engine audit | the same files as `history-sequential-rng` (`HISTORY_DIRS`) |
+| `history-held-reference` | A local `Civilization&`, `Settlement&`, `Civilization*` or `Settlement*`, a `std::span<const Civilization>` or `std::span<const Settlement>`, or an `auto&` / `auto*` / `auto` whose initializer is exactly a call of `.civ(`, `.settlement(`, `.civs()` or `.settlements()`, that is used after a later `found_civilization(` or `found_settlement(` call in the same block (a use inside the founding's own arguments does not count: they are evaluated before the vector grows). The other form of the P3-04 audit's A1: the founding may reallocate the vector, so the reference dangles on one standard library and not on another. Re-fetch by id after the founding, or copy the fields first. Not seen: a founding inside a called helper, a use earlier in a loop body that runs after a founding later in the previous iteration, and references stored in members (P3-05 13.1 item 1 forbids those). Added by the P3-05 peoples audit | the same files as `history-sequential-rng` (`HISTORY_DIRS`) |
 
 ### Platform input and output
 
@@ -227,7 +228,7 @@ least one snippet. A C++ snippet whose first lines contain
 `lint-selftest-path: <path>` is scanned as if it were that repository path,
 which selects its area (library, CLI), the allow-lists and the SQL
 directories (and the history directories); other snippets get every rule
-but `history-sequential-rng` and `history-live-iteration`.
+but `history-sequential-rng`, `history-live-iteration` and `history-held-reference`.
 
 | File | Checks |
 | --- | --- |
@@ -238,6 +239,7 @@ but `history-sequential-rng` and `history-live-iteration`.
 | `bad_sql.cpp` | the SQL rules, as a file of `worldgen/src/db/`; joined and raw literals; near misses (`VACUUM INTO`, `journal_mode = MEMORY`, `'real'` in an SQL string, `REAL` in a message, lower-case prose) |
 | `bad_history.cpp` | `history-sequential-rng`, as a file of `worldgen/src/history/`: the `rng.hpp` include, `Rng` and `Rng::from_state`, `splitmix64_next(`; near misses (keyed draws, `Rng` in a comment and a literal, identifiers containing the names) |
 | `bad_history_live.cpp` | `history-live-iteration`, as a file of `worldgen/src/history/`: range-for over `civs()`, `settlements()` (a body without braces), `relations()` (structured bindings) and `civs_`; near misses (a loop that only reads, ids up to a count taken first, changes collected and applied after the loop, a founding after the loop, the pattern in a comment and a literal) |
+| `bad_history_held.cpp` | `history-held-reference`, as a file of `worldgen/src/history/`: a `Settlement&`, a `Civilization*`, a `std::span<const Settlement>`, a `const auto&` and an `auto` span used after a founding; near misses (fields copied first, the reference only in the founding's arguments, re-fetched after, a block that ends before the founding, another type, a range-for variable, an integer computed from `civs().size()`) |
 | `good_history_scope.cpp` | `Rng` and its header are allowed in a geography stage (`worldgen/src/stages/elevation_selftest.cpp`); `history-live-iteration` does not apply there |
 | `bad_flags.cmake` | `cmake-fp-flag`, with comments and allowed flags as near misses |
 | `toml_config/` | `toml-config`: a guard and a CMake fixture with one macro missing and one wrong (a source without a guard must also fail) |

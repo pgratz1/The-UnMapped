@@ -297,6 +297,40 @@ def _live_iteration(code: str, m: re.Match) -> bool:
     return bool(_LIVE_MUTATOR.search(body))
 
 
+_FOUNDING = re.compile(r"\bfound_(?:civilization|settlement)\s*\(")
+
+
+def _block_end(code: str, pos: int) -> int:
+    """Offset of the '}' that closes the block containing pos (or the end)."""
+    depth = 0
+    for k in range(pos, len(code)):
+        ch = code[k]
+        if ch == "{":
+            depth += 1
+        elif ch == "}":
+            if depth == 0:
+                return k
+            depth -= 1
+    return len(code)
+
+
+def _held_reference(code: str, m: re.Match) -> bool:
+    """For history-held-reference: True if the reference, pointer or span
+    declared by this match is used after a found_civilization( or
+    found_settlement( call that follows it in the same block (the use is
+    after the call's closing parenthesis, so the arguments do not count)."""
+    name = m.group("ref") or m.group("span") or m.group("auto")
+    end = _block_end(code, m.end())
+    use = re.compile(r"\b" + re.escape(name) + r"\b")
+    for f in _FOUNDING.finditer(code, m.end(), end):
+        close = _matching_paren(code, f.end() - 1)
+        if close < 0 or close >= end:
+            continue
+        if use.search(code, close + 1, end):
+            return True
+    return False
+
+
 _STMT_START_CHARS = (";", "{", "}", ")", ":")
 _VOID_CAST_TAIL = re.compile(r"static_cast\s*<\s*void\s*>\s*\(\s*$")
 
@@ -656,6 +690,25 @@ RULES: tuple = (
         "taken before the loop, or collect the changes and apply them after it (P3-04 6.1, 6.2)",
         _rx(r"\bfor\s*\("),
         filter=_live_iteration,
+        areas=frozenset({LIB}),
+        only_dirs=HISTORY_DIRS,
+        where="library: " + ", ".join(HISTORY_DIRS) + " (prefixes)",
+    ),
+    # Added by the P3-05 peoples audit: the other form of P3-04 audit A1.
+    Rule(
+        "history-held-reference",
+        "a local Civilization& / Settlement& / Civilization* / Settlement*, a std::span<const Civilization> or "
+        "std::span<const Settlement>, or an auto& / auto* / auto whose initializer is a call of .civ(, .settlement(, "
+        ".civs() or .settlements() (nothing after it), that is used after a later found_civilization( or found_settlement( call in the same block",
+        "a reference, pointer or span into State's civilization or settlement vector is used after a founding: "
+        "the founding may reallocate the vector, and whether it does depends on the standard library's growth "
+        "factor, so the use reads freed memory on one platform and not on another; re-fetch by id after the "
+        "founding, or copy the fields you need before it (P3-04 6.9, P3-05 13.1 item 1)",
+        _rx(r"\b(?:Civilization|Settlement)\s*[&*]\s*(?P<ref>\w+)\s*="
+            r"|\bstd\s*::\s*span\s*<\s*const\s+(?:Civilization|Settlement)\s*>\s*(?P<span>\w+)\s*[={(]"
+            r"|\bauto\b\s*[&*]?\s*(?P<auto>\w+)\s*=\s*(?:\w+\s*(?:\(\s*\))?\s*(?:\.|->)\s*)+"
+            r"(?:civ|settlement|civs|settlements)\s*\([^()]*\)\s*;"),
+        filter=_held_reference,
         areas=frozenset({LIB}),
         only_dirs=HISTORY_DIRS,
         where="library: " + ", ".join(HISTORY_DIRS) + " (prefixes)",
