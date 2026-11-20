@@ -820,3 +820,19 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
   11. The history report's summary: a per-age floor of 20, a shown declaration always with its ending, claims at salience 35, the notes; within the 250-line budget and minimum salience 20. The fill step is added only if the P3-07 implementer's measurements confirm it.
 - Interim choice: none needed. The spec's figures were measured on a prototype at 0.16.0 and are re-measured after implementation on top of P3-08.
 - Status: accepted; implementation follows P3-08
+
+### Paul's notes of 2026-11-20 from reading a generated history (seed 42, generator 0.17.0)
+
+- Date: 2026-11-20
+- Raised by: Paul, recorded by the lead
+- Design doc section: 5 (history: wars, the peoples, relations between civilizations), 13 (P3, P5)
+- Problem: Paul read the summary history of seed 42 at map size 1024 and noted three things.
+  1. **A defender sues for peace right after winning the last battle** (the dwarves in 3826, the elves in 4799 and 5625). Paul: "that maybe doesn't make sense?" The cause: a war ends when a side's dead pass a share of its people (exhaustion), the loser is decided by the count of battles won, and neither looks at who just won or by how much. In 3826 the Hold of Dulimin killed 991 goblins for 44 of its own, and those 44 took it over the threshold, so it "sued for peace".
+  2. **Faeries are far too strong in battle**: they lose a handful where goblins lose thousands (4424: 881 goblins and 4 faeries fell). Paul: "maybe instead of getting involved in lots of battles the Faeries could be so hard to find that they often can't be conquered?" The cause: the defeated lose a share of their own force whatever the size of the victor's, so forty faeries can kill nine hundred.
+  3. **Alliances and trade.** Paul: "we should probably add some kind of alliance and trade systems. I could imagine different races that are closely aligned forming trading partnerships that could enrich and strengthen both. Also during battles, one could imagine a close partner might come to the aid of an ally."
+- Proposal:
+  1. A side that has just won a battle does not sue for peace in that step, and the scale of battles counts in deciding who won a war, not only their number. Wording: "sued for peace" is used only where the loser yields.
+  2. The dead of the defeated are bounded by what the victors' force can kill. Faeries avoid battle: an army entering their forest often finds no one (no battle, no siege), instead of being beaten by a stronger defence.
+  3. Alliances and trade as a relation between civilizations: aligned peoples in contact form partnerships that add to both sides' growth and strength, and an ally may join a partner's war or battle.
+- Interim choice: points 1 and 2 are added to the P3-09 "conflict balance" change (generator 0.18.0), which is being implemented, as an amendment to its spec; with P3-09's rule that a lost war always costs the loser, point 1 would otherwise make a victorious defender cede land. Point 3 is a new system (new relation kinds, a notion of wealth, allied armies) and is proposed for P5 History depth, with the artifacts made in response to conflicts; it is not specified in P3 unless Paul wants it earlier.
+- Status: 1 and 2 accepted for P3-09 (Paul's notes are the decision; the rule details are the spec writer's and are measured); 3 open, suggested for P5
