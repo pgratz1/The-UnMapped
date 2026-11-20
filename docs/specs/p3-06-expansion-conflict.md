@@ -321,6 +321,22 @@ P3-04 6.9's rules, as P3-06 meets them:
 6. **N4.** `enmity` and `peace` are opened and closed through one helper that orders the pair (lower civilization id first); `war` is stored as (attacker, defender).
 7. **N5, net change.** P3-06 never closes and reopens one relation before the same bookkeeping: a war is not fought in its declaration year (7.3), so it cannot end then, and its pair's `peace` row, closed by the declaration, is reopened at the earliest in the next year; a truce of `truce_years` ≥ 1 keeps a new war from closing a `peace` opened in the same year; `enmity` is opened once per pair and closed only by the end of a side, which `shelter_years` keeps out of its founding year. A region can change owner twice in one T6 (two wars' captures in declaration order, or a sack's release followed by nothing): the last change and its event are recorded, the events stay in the log. Peoples and conflict never set the same region's owner in one step (in T2 conflict sets none; in Q4 a cession concerns a held region, which peoples does not colonize).
 
+### 8.4 What P3-06 respects in the peoples code (normative; from the P3-05 determinism audit, r4)
+
+The audit of P3-05 (`docs/reviews/p3-05-peoples-determinism-audit.md` on `p3/05-audit`) lists what conflict must respect; each item with how P3-06's rules meet it:
+
+1. **Order and visibility.** Conflict is installed after peoples; in T2 and Q4 peoples' same-step foundings are live state (their regions' owners) but invisible entities to conflict. Met: 8.3 items 3 and 4.
+2. **`ruin`** needs a standing, owned settlement, may append `capital_moved` and does not end the civilization; in a quiet step its caller must check the budget for every event it causes. Met: P3-06 calls `ruin` only for a sack (7.5 item 2), only in T6, on a settlement that is standing and owned at the call; it never ruins in a quiet step. A later rule that ruins in Q4 must first check `quiet_events_left` for the `sacked`, the possible `capital_moved` and the possible `civ_conquered` of the charged civilizations.
+3. **End what conflict empties.** A civilization left with no standing settlement and no ruin on record stops the next T1 (`history: peoples: civilization <c> has no standing settlement and none was ruined`). Met: 7.5 item 5 appends `civ_conquered` in the same T6 whenever a sack **or a capture** leaves the defender with no standing settlement (the capture path transfers the last settlement and ends the civilization at once; the prototype does the same). A cession never takes the last settlement (the loser's capital region is never ceded, 7.7). Casualties never empty a settlement (7.4 takes at most 0.1 of a side's people); a settlement they leave below `abandon_min` is abandoned by P3-05 in the next T1 with `civ_ended` as usual.
+4. **Ruin only in T6, or end at once.** Met: sacks happen only in T6 (7.3–7.5); T2 and Q4 ruin nothing; a civilization emptied in T6 is ended in the same step (item 3), so the next year's T4 crisis never meets a ruined capital.
+5. **Regions with settlements; `note_reduction`; `set_population`.** Met: a region changes owner only by a capture of the defender's last standing settlement there, a cession with its settlements, or `ruin`'s release (14 item 5); 7.4 calls `note_reduction` for every settlement of a side after casualties; every population change (casualties, sack and capture tolls, refugees, capture and cession excess) goes through `set_population`.
+6. **Own streams, keys from ids and the year.** Met: 3.3 and 8.3 item 5.
+7. **`share` and `wanted_held` once per civilization per step** (each scans every settlement or region). Met: P3-06 calls `wanted_held` once per alive civilization at the start of each strain update (5.3's snapshot) and never calls `share`; `population`, `regions` and `settlements` are called once per side per war event that needs them, and an implementation may cache them per step.
+8. **Ids, not references, across steps** (lint rules `history-held-reference` and `history-live-iteration`). Met: 8.3 item 1.
+9. **No `homes()`.** Met: P3-06 never calls it (homes are P3-05's awakening).
+
+Checking P3-06 against items 3 and 4 found no gap: the capture path already ends the civilization in the same step, and no rule ruins outside T6. No behaviour or number changes.
+
 ## 9. The race characters (design 5; P3-00 13)
 
 | Character | Rule and data that produce it | Measured (15) |
@@ -923,3 +939,7 @@ New 8.3: how P3-06 meets P3-04 6.9 (the determinism audit's A1, A2, N1–N5). Tw
 ## Revision note r3 (2026-11-19, P3-05's implementation rulings)
 
 7.5 and 13: `PeoplesSubsystem::ruin` and the `PeoplesView` state readers take the step's `StepContext` (P3-05 r3); P3-06's member holds the subsystem, never `State`. A sacked settlement passed to `ruin` must be standing and owned, which 7.5's order guarantees (the sack event is appended and the population set before the call). No rule or number changes.
+
+## Revision note r4 (2026-11-19, the P3-05 audit)
+
+New 8.4: what P3-06 respects in the peoples code, from the P3-05 determinism audit (items 1–9), each with the rule that meets it. Checking items 3 (end a civilization whose last settlement is sacked or taken, in the same step) and 4 (ruin only in T6) against 7.3–7.7 found no gap; no rule, prototype behaviour or number changes.
