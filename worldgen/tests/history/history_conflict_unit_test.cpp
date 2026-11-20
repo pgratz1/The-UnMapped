@@ -10,6 +10,13 @@
 // guards: with last_refuge 0 and no shelter (the golden cases norefuge-*) a
 // race dies out where the shipped guards keep every race (7.3 item 7, 7.2).
 //
+// Not tested: the four internal guard messages of 16.4 (r5: camp not 0, 1
+// or 2; race or region that does not exist; contact cost below 1) and the
+// two H6 bounds. They are unreachable from data that passed the loader and
+// the stage's entry checks (camps come from race.camp, ids from the inputs,
+// costs from P3-05's border costs of at least 1, strain capped by
+// strain_max), and the public seam offers no way to reach them.
+//
 // Written from the spec only; empty until the implementation's header
 // exists (p3_06_conflict_api.hpp).
 
