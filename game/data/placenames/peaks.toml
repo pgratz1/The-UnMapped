@@ -1,0 +1,41 @@
+# Region names of one land (spec docs/specs/p1-06-regions.md, revision r3,
+# RG11 and section 4.1). Alpine (noun Peaks).
+# Pool 1 of every slot for the regions of this land; common.toml is pool 0
+# and the region's traits (traits.toml) pool 2. Lists sorted, no duplicates.
+
+[placename.peaks]
+role = "land"
+biomes = ["alpine"]
+special = "none"
+trait = "none"
+forms = [
+  { form = "{prefix}{suffix}", weight = 30 },
+  { form = "The {adjective} {noun}", weight = 22 },
+  { form = "{prefix}{feature} {noun}", weight = 22 },
+  { form = "The {noun} of {object}", weight = 12 },
+  { form = "{possessor}'s {noun}", weight = 9 },
+  { form = "{possessor}'s {place}", weight = 5 },
+]
+nouns = [
+  "Crags", "Fangs", "Heights", "Horns", "Needles", "Peaks", "Pikes",
+  "Pinnacles", "Spires", "Teeth",
+]
+suffixes = [
+  "crag", "fang", "horn", "peak", "pike", "scar", "spire", "tooth",
+]
+prefixes = [
+  "Cloud", "Eagle", "Frost", "Hail", "Ice", "Rime", "Scree", "Shale", "Sky",
+  "Slate", "Snow", "Thunder",
+]
+adjectives = [
+  "Cloven", "Frostbitten", "Frozen", "Hoary", "Jagged", "Shattered", "Sheer",
+  "Snowbound",
+]
+features = []
+possessors = []
+places = []
+objects = [
+  "Eagles", "Frost", "Ice", "the Storm",
+]
+forbidden = []
+excluded = []

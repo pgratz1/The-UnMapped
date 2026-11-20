@@ -666,3 +666,13 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
 - Decision: replace the numeral with names drawn from a large hand-written set held in data (TOML). A spec amendment to P1-06 RG11 defines the scheme and the word lists; it changes the `name` column of table `region`, so it changes world bytes and comes with a generator version bump. No schema change.
 - Interim choice: the amendment is written now; it is implemented after P3-06 is integrated (together with the faerie data change or just before it), before Paul's review of P3.
 - Status: decided; spec amendment in progress
+
+### Region names: who keeps the plain name, and "The" inside history sentences
+
+- Date: 2026-11-19
+- Raised by: spec-writer (P1-06 r3)
+- Design doc section: 4 (regions: placeholder names), 5 and 14 (history text)
+- Problem: with names drawn from hand-written lists (Paul's decision above), two choices are left. (1) Which regions keep the plain sector-and-noun name ("East Wood"): one per base name, or none. (2) Many drawn names begin with "The" ("The Scarred Downs"), stored capitalised as civilization names already are ("The Warrens of Bonk-Gitch"), so sentences read "Fielie awakened the Elves in The Scarred Downs."
+- Proposal: (1) the largest region of each base name keeps it, every other region draws a name (45% plain at 1024, 16% at 2048). (2) Names are stored with the capital; the sentence renderer of the history report lower-cases a leading "The " of any entity name inside a sentence, for regions and civilizations alike.
+- Interim choice: (1) as proposed (`docs/specs/p1-06-regions.md` r3, RG11 4); (2) stored names as proposed, sentences unchanged until the report spec takes the rule up (P1-06 r3 14.5 question 2).
+- Status: open

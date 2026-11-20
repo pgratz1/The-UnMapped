@@ -1,6 +1,6 @@
 # P1-06 Regions
 
-Status: **second version, approved by the lead 2026-11-18; revision r2, draft, spec writer, 2026-11-18** (after the world critic's review of the implementation, `~/.cache/the-unmapped/out/p1-06-critic/critic-review.md` F1 and F2: a pass is attached to one border only, and two noun rules; layer and schema unchanged, generator still 0.11.0; section 13 lists the revision). It replaces the first draft of 2026-11-16 (never implemented), which was written before the biome variety revision (generator 0.9.0) and the resources stage (P1-05 r2, generator 0.10.0); section 0 lists every change. Generator **0.11.0**; **schema version 5** (three new tables, section 3). Calibrated on real 0.10.0 worlds (512 seeds 0–19, 1024 seeds 0–29 and 75, 133, 185 and the phrase "The Unmapped", 2048 seeds 0–5; the P1-05 validation worlds, byte-identical to `main` at `a18d21c`) with a prototype of this spec (section 11). Phase P1 Geography, stage 6 (`regions`), the last geography stage. Design doc section 4 (stage 6; "Regions": about 2 km² each, roughly 12, 45 and 180 per map, bordered on ridges and large rivers, placeholder names such as "East Wood II", land only with lakes in land regions, border length, lowest crossing and whether walkable or a river stored for each pair of neighbours), 5 (civilizations have a home region and claim regions; beast populations are counts per region; passes are places to fortify and fight over; region borders tell history where a crossing needs a road or a bridge; events carry a `region_id`), 6 (table `region` with `id`, `name`, `biome`, `bounds` and summary statistics; schema version 5 planned with `region` and `region_border`). Depends on P0-01 to P0-04, P1-00 (G1, G2, G6, G7, D1 to D10), P1-01 (table `pass`), P1-02 (H7), P1-04 (the `biome` layer and definitions) and P1-05 (the score layers and `walk_area`). Reviews that shaped it: `docs/reviews/p1-05-resources-critic.md` section 6, `docs/reviews/p1-05-resources-validation.md` 3.3.
+Status: **second version, approved by the lead 2026-11-18; revision r2 (2026-11-18, implemented in 0.11.0); revision r3, draft, spec writer, 2026-11-19** (region names with identity and no numerals, Paul's decision of 2026-11-19 in `docs/design/proposals.md`: RG11, section 4.1 (new data kind `placename`), the stream `geo.regions.name`, invariant 6, tests; no schema change, a generator version bump; section 14 lists the revision). r2 was written after the world critic's review of the implementation (`~/.cache/the-unmapped/out/p1-06-critic/critic-review.md` F1 and F2: a pass is attached to one border only, and two noun rules; layer and schema unchanged, generator still 0.11.0; section 13 lists the revision). The second version replaces the first draft of 2026-11-16 (never implemented), which was written before the biome variety revision (generator 0.9.0) and the resources stage (P1-05 r2, generator 0.10.0); section 0 lists every change. Generator **0.11.0**; **schema version 5** (three new tables, section 3). Calibrated on real 0.10.0 worlds (512 seeds 0–19, 1024 seeds 0–29 and 75, 133, 185 and the phrase "The Unmapped", 2048 seeds 0–5; the P1-05 validation worlds, byte-identical to `main` at `a18d21c`) with a prototype of this spec (section 11). Phase P1 Geography, stage 6 (`regions`), the last geography stage. Design doc section 4 (stage 6; "Regions": about 2 km² each, roughly 12, 45 and 180 per map, bordered on ridges and large rivers, placeholder names such as "East Wood II", land only with lakes in land regions, border length, lowest crossing and whether walkable or a river stored for each pair of neighbours), 5 (civilizations have a home region and claim regions; beast populations are counts per region; passes are places to fortify and fight over; region borders tell history where a crossing needs a road or a bridge; events carry a `region_id`), 6 (table `region` with `id`, `name`, `biome`, `bounds` and summary statistics; schema version 5 planned with `region` and `region_border`). Depends on P0-01 to P0-04, P1-00 (G1, G2, G6, G7, D1 to D10), P1-01 (table `pass`), P1-02 (H7), P1-04 (the `biome` layer and definitions) and P1-05 (the score layers and `walk_area`). Reviews that shaped it: `docs/reviews/p1-05-resources-critic.md` section 6, `docs/reviews/p1-05-resources-validation.md` 3.3.
 
 ## 0. Changes from the first draft
 
@@ -19,6 +19,7 @@ Status: **second version, approved by the lead 2026-11-18; revision r2, draft, s
 | Statistics | float prototype, 5 worlds of 0.3.0 | prototype of this spec on 60 worlds of 0.10.0 | |
 | **r2**: passes on borders | every border a pass path crosses | one border per pass, the crossing nearest the col (RG12) | critic F1: approach borders were flagged |
 | **r2**: nouns | isle, else dominant biome | isle, then `Mere` (≥ half lake), then `Fells` for upland regions not dominated by alpine, heath or moor, else dominant biome | critic F2: crags named Downs, lakes named Wood |
+| **r3**: names | base name (sector + noun), the k-th repeat numbered (`East Wood III`) | the largest region of each base name keeps it (`East Wood`); every other region draws a name of its land from the hand-written lists of the new data kind `placename` (`Harrowholt`, `The Scarred Downs`, `Witchgate Barrows`, `The Grove of the Hunt`, `Prince's Vow`), steered by its character (coast, river, lake, height, ore, pass, barren, fertile); no numerals | Paul, 2026-11-19: "'East Wood' is fine but 'West Wood III' is pretty boring" |
 
 ## 1. Purpose
 
@@ -39,9 +40,10 @@ Size is physical (P1-00 2.2): about four times as many regions at 2048 as at 102
 | `fertility`, `ore`, `timber`, `fresh_water`, `forage`, `habitability`, `walk_area` | P1-05 |
 | table `pass` (rows `id`, `path`) | P1-01 9.1 |
 | tuning | definition `worldgen.regions` (4) |
+| name words (r3) | every definition of kind `placename` (4.1), in canonical (ascending id) order |
 | world seed, N | |
 
-S = `elevation` + `water_depth` (dm), the water or land surface, as in P1-03 and P1-05. Streams (names unchanged from P1-00 3): **K_seed = `stream_key(seed, "geo.regions.seed")`**, used only by `hash_at` (site tie-break, RG4); **K_cost = `stream_key(seed, "geo.regions.cost")`**, a noise key used only by `fbm_m` (RG3). No `Rng`.
+S = `elevation` + `water_depth` (dm), the water or land surface, as in P1-03 and P1-05. Streams (names unchanged from P1-00 3): **K_seed = `stream_key(seed, "geo.regions.seed")`**, used only by `hash_at` (site tie-break, RG4); **K_cost = `stream_key(seed, "geo.regions.cost")`**, a noise key used only by `fbm_m` (RG3). From r3: **K_name = `substream(stream_key(seed, "geo.regions.name"), N)`** (P0-01 7.3; N the grid width), used only by `hash_at3` (the name draws of RG11); the map size is in the key so that worlds of one seed at two sizes do not share names region id by region id (measured before the change: 20 of 33 drawn names of 1024 seed 0 also in 2048 seed 0). The stream name is new (P1-00 section 3 gains it; a constant in `streams.hpp`). No `Rng`.
 
 Checks, each fatal, in this order:
 
@@ -49,6 +51,7 @@ Checks, each fatal, in this order:
 2. The thread count in [1, 256] (`regions: thread count outside [1, 256]`).
 3. The tuning: each field inside its schema range of 4 (`regions: tuning: <field> outside its schema range`, declaration order), then the named checks of 4 (`regions: tuning: <message>`). With data loaded by P0-03 these cannot fail; they guard the seams.
 4. Each biome definition's `region_noun` matches the word grammar of 4 (`regions: biome '<key>' has a region_noun that is not one word`, definitions in ascending `code`). The shipped nouns all match (`Sea`, `Mere`, `Wood`, `Downs`, `Marsh`, `Moor`, `Peaks`, `Waste`, `Heath`, `Steppe`, `Carr`, `Fen`).
+4a. (r3) The `placename` definitions cover the land (the loader's checks of 4.1 have passed; these need the biome definitions too), in this order, each with the prefix `regions: placename: `: (i) every biome definition with `water` = false, in ascending `code`, is named in the `biomes` of exactly one definition of role `land` (`biome '<key>' has no land definition`; the loader already refuses a biome in two definitions); (ii) a land definition of each `special` value `isle`, `lake`, `upland`, in that order (`no land definition for '<special>'`); (iii) for every land definition (ascending id), every form (in order) and every slot of the form (left to right), with L the slot's list and (w0, w1, w2) = `name_pool_weights.<L>`: w0 > 0 and the common definition's L is not empty, or w1 > 0 and the land's own L is not empty (`'<id>' form <i> slot '<slot>' has no words`). So every slot of every attempt has a word without help from traits.
 5. With the prefix `regions: input precondition: `: the P1-00 grid checks; every input array of length W × H (`<name> length is not width * height`); `water` in 0..3 and `river` in 0..15 (`<name> value <v> at (<x>, <y>)`, lowest index); every `biome` value the `code` of a loaded definition (`biome value <v> at (<x>, <y>) has no definition`); every pass `path` non-empty, a whole number of `u32` cells, each index below W × H, consecutive cells equal or 8-neighbours (`pass <id>: path is not a chain of cells`); the col cell (`col_x`, `col_y`) inside the grid and on the path (`pass <id>: col cell is not on its path`; r2); then G7 with k = 1 (`regions: input precondition: G7: …`).
 
 ## 3. Outputs
@@ -81,7 +84,7 @@ CREATE TABLE region_biome (region INTEGER NOT NULL, biome INTEGER NOT NULL, cell
 | Column | Value | Range | Read by history for |
 | --- | --- | --- | --- |
 | `id` | 1 … R (RG9) | | `civilization.home_region`, `event.region_id`, `beast_population.region_id` |
-| `name` | placeholder name (RG11) | unique | display until history names the region |
+| `name` | the land's own name (RG11; r3: its base name, or a name drawn from the `placename` lists) | unique; ASCII letters, spaces and `'`; at most 65 bytes | display, history sentences, the history name registry (P3-02 4.4) |
 | `biome` | dominant biome code (RG10) | a non-water code | the region's character, beast and race preference |
 | `x_min`, `y_min`, `x_max`, `y_max` | inclusive cell bounds of the region's cells | 0..N−1 | quick spatial lookup |
 | `seed_x`, `seed_y` | the region's seed (RG4, RG7), its best settlement site | a site cell of the region (RG6: the landmass's smallest-index cell if the landmass has no site cell) | the first village site |
@@ -144,6 +147,8 @@ New id `regions` of the fixed-id kind `worldgen` (P1-00 6.1), file **`game/data/
 | `name_central_frac` | fx(0, "0.5") | "0.12" | taste | regions whose seed lies within this fraction of the map side from the land centroid are central |
 | `names` | record `region_names` | below | taste | the words of the names |
 | `upland_own_noun` | array(ref(biome), 0, 16) | `["alpine", "heath", "highland_moor"]` | taste (r2) | upland biomes that keep their own noun in an upland region (RG11 3) |
+| `name_pool_weights` | record `name_pools` | below | taste (r3) | for each word list, the weights of its three pools: common, land, trait (RG11 6) |
+| `name_traits` | record `name_traits` | below | taste (r3) | the tests that give a region a trait (RG11 5) |
 
 Record `region_names`, all fields `string(32, word)` and required, in this order: `central`, `north`, `northeast`, `east`, `southeast`, `south`, `southwest`, `west`, `northwest`, `isle`, `upland` (r2). **Word grammar**: one ASCII capital letter followed by zero or more ASCII lower-case letters (`[A-Z][a-z]*`), 1 to 32 bytes. The same grammar applies to every biome's `region_noun` (check 4 of section 2). It makes every name a sequence of words without spaces or digits, which the uniqueness argument of RG11 uses. The loader's `string` type takes a grammar (P0-03 4); `word` is a new named grammar beside the id grammar, registered with this kind (a P0-03 amendment for the lead, one line).
 
@@ -154,6 +159,22 @@ Record `region_names`, all fields `string(32, word)` and required, in this order
 | `regions_tile_fits_spacing` | `seed_tile_m` ≤ 2 × `seed_spacing_m` | `seed_tile_m must be at most twice seed_spacing_m` |
 
 (Without it a tile larger than twice the spacing could leave land more than one spacing from any seed's candidate; the shipped 864 ≤ 2400.)
+
+Record `name_pools` (r3), all fields required, in this order: `nouns`, `suffixes`, `prefixes`, `adjectives`, `features`, `possessors`, `places`, `objects`; each `array(int(0, 1000), 3, 3)`, the weights [w0, w1, w2] of the common pool, the land pool and the trait pool of that list (RG11 6). A pool with no words gets weight 0 whatever its tuning weight.
+
+Record `name_traits` (r3), all fields required, in this order:
+
+| Field | Type | Shipped | A region has the trait when | Measured share of regions, 512 / 1024 / 2048 |
+| --- | --- | --- | --- | --- |
+| `coast_cells` | int(0, 100000000) | 128 | `coast` ⟸ `coast_cells` ≥ this (about 2 km of shore) | 51 / 22 / 11% |
+| `river_class` | int(1, 16) | 7 | `river` ⟸ `river_class_max` ≥ this (16: never) | 3 / 17 / 29% |
+| `lake_permille` | int(1, 1000) | 125 | `lake` ⟸ `lake_cells` > 0 and 1000 × `lake_cells` ≥ this × `cells` | 4 / 7 / 7% |
+| `high_mean_m` | int(0, 10000) | 400 | `high` ⟸ `elev_mean_dm` ≥ 10 × this | 20 / 23 / 15% |
+| `ore_rich_cells` | int(0, 100000000) | 1000 | `ore` ⟸ `ore_rich_cells` ≥ this (0.26 km² of rich ore) | 17 / 20 / 12% |
+| `barren_hab_max` | int(−1, 255) | 20 | `barren` ⟸ `habitability_mean` ≤ this (−1: never) | 30 / 25 / 10% |
+| `fertile_min` | int(0, 256) | 200 | `fertile` ⟸ `fertility_mean` ≥ this (256: never) | 9 / 12 / 15% |
+
+The eighth trait, `pass`, has no tuning: a region has it when it is `a` or `b` of a `region_border` row with `passes` > 0 (RG12; 6 / 6 / 4%). Shares measured by the prototype of 14.2 on its 8 worlds at 512, 11 at 1024 and 5 at 2048.
 
 ```toml
 # game/data/worldgen/regions.toml and the fixtures under worldgen/tests/data/geo*/worldgen/
@@ -172,9 +193,79 @@ ore_reach_m = 300
 name_central_frac = "0.12"
 names = { central = "Central", north = "North", northeast = "Northeast", east = "East", southeast = "Southeast", south = "South", southwest = "Southwest", west = "West", northwest = "Northwest", isle = "Isle", upland = "Fells" }
 upland_own_noun = ["alpine", "heath", "highland_moor"]
+name_pool_weights = { nouns = [0, 1, 0], suffixes = [0, 4, 1], prefixes = [6, 3, 2], adjectives = [6, 3, 2], features = [5, 1, 2], possessors = [8, 1, 1], places = [8, 1, 1], objects = [6, 3, 2] }
+name_traits = { coast_cells = 128, river_class = 7, lake_permille = 125, high_mean_m = 400, ore_rich_cells = 1000, barren_hab_max = 20, fertile_min = 200 }
 ```
 
-`seed_tile_m`, `seed_spacing_m`, `hand_ref_m`, `river_cost_m`, `region_min_area_m2` and `ore_reach_m` are physical (P1-00 2.2); `name_central_frac` is a map fraction. The biome nouns stay in the biome files (`region_noun`, P1-04 4.1); this stage changes no biome file.
+`seed_tile_m`, `seed_spacing_m`, `hand_ref_m`, `river_cost_m`, `region_min_area_m2` and `ore_reach_m` are physical (P1-00 2.2); `name_central_frac` is a map fraction. The biome nouns stay in the biome files (`region_noun`, P1-04 4.1); this stage changes no biome file. r3 adds the last two lines of the block (written into `game/data/worldgen/regions.toml` by the engineer with the implementation, and into both fixture copies; the shipped file on this branch is unchanged so that `main` keeps loading until the loader knows the fields).
+
+### 4.1 Data kind `placename` (r3)
+
+The words of drawn region names. A new kind (P0-03 7.1): name **`placename`**, directory **`placenames`**, **required**, open ids. Shipped files, normative and committed with this revision: **`game/data/placenames/common.toml`** (role `common`), one file per land (`wood.toml`, `carr.toml`, `downs.toml`, `marsh.toml`, `fen.toml`, `moor.toml`, `heath.toml`, `peaks.toml`, `waste.toml`, `steppe.toml`, `isle.toml`, `mere.toml`, `fells.toml`, role `land`) and **`traits.toml`** (eight definitions `trait_<name>`, role `trait`). The fixtures `worldgen/tests/data/geo/placenames/` and `worldgen/tests/data/geo-small/placenames/` become identical copies with the implementation (every data root that loads must hold every required kind; the copies are not on this branch, which changes no test). A loader that does not know the kind ignores the directory (P0-03 7.2), so the files change no world until the kind is registered.
+
+Kinds are processed in ascending name order, so `placename` comes after `history` and before `race`; it is a new required kind, so every content hash changes (P0-03 8).
+
+**Fields**, all required, in this declaration order (it fixes the canonical encoding, P0-03 8; definitions in ascending id):
+
+| Field | Type | Meaning |
+| --- | --- | --- |
+| `role` | enum(`common`, `land`, `trait`) | what the definition is |
+| `biomes` | array(ref(biome), 0, 16) | role `land`: the biomes whose regions it names (by dominant biome, RG11 3 d) |
+| `special` | enum(`none`, `isle`, `lake`, `upland`) | role `land`: the noun rules a, b, c of RG11 3 instead of biomes |
+| `trait` | enum(`none`, `coast`, `river`, `lake`, `high`, `ore`, `pass`, `barren`, `fertile`) | role `trait`: which trait (RG11 5) |
+| `forms` | array(record `place_form`, 0, 16) | role `land`: the name forms and their weights |
+| `nouns` | array(string(24, word), 0, 1024) | the land's nouns: `Wood`, `Weald`, `Holt` |
+| `suffixes` | array(string(24, element), 0, 1024) | second half of a one-word name: `holt`, `hurst` |
+| `prefixes` | array(string(24, word), 0, 1024) | first half of a compound: `Thorn`, `Black` |
+| `adjectives` | array(string(24, word), 0, 1024) | `Ashen`, `Drowned` |
+| `features` | array(string(24, element), 0, 1024) | second half of a qualifier: `water`, `gate` |
+| `possessors` | array(string(24, word), 0, 1024) | `Widow`, `Hangman` |
+| `places` | array(string(24, word), 0, 1024) | `Reach`, `Folly` |
+| `objects` | array(string(32, name_object), 0, 1024) | `Crows`, `the Drowned` |
+| `forbidden` | array(string(16, element), 0, 64) | role `common`: substrings no word of a name may contain (RG11 7 V4) |
+| `excluded` | array(string(48, place_name), 0, 1024) | role `common`: names, and single words, a name may not be or contain (RG11 7 V5) |
+
+Record `place_form`: `form` string(48, place_form), `weight` int(1, 1000), both required, in that order.
+
+**Grammars** (kind-local `StringGrammar`s; the description is printed in error messages):
+
+| Grammar | Rule | Description |
+| --- | --- | --- |
+| `word` | P1-06 4's: `[A-Z][a-z]*` | (existing) |
+| `element` | one or more ASCII lower-case letters `[a-z]+` | `lower-case letters a-z` |
+| `name_object` | a `word`, optionally preceded by `the` and one space | `a capitalised word, optionally after 'the '` |
+| `place_name` | ASCII letters, spaces and `'`; starts with a letter; no leading, trailing or double space | `a name (letters, single spaces and ')` |
+| `place_form` | literal characters (ASCII letters, space, `'`) and slots; a slot is one of `{noun}`, `{suffix}`, `{prefix}`, `{adjective}`, `{feature}`, `{possessor}`, `{place}`, `{object}`; at least one slot, none twice; no other `{` or `}`; no leading, trailing or double space | `a name form (letters, spaces, ' and slots such as {noun}, each slot at most once)` |
+
+**Named checks**, per definition (P0-03 7.5, reported `… failed for 'placename.<id>': <message>`), in this order:
+
+| Check | Condition | Message |
+| --- | --- | --- |
+| `placename_role_fields` | role `common`: `biomes` empty, `special` `none`, `trait` `none`, `forms` and `nouns` empty; role `land`: `trait` `none`, exactly one of (`biomes` non-empty) and (`special` ≠ `none`), `forms`, `nouns` and `suffixes` non-empty, `forbidden` and `excluded` empty; role `trait`: `trait` ≠ `none`, `biomes` empty, `special` `none`, `forms`, `nouns`, `forbidden` and `excluded` empty | the first failing condition, in the order written: `a <role> definition must have <field> <empty / none / non-empty / not none>`; for the land's either-or: `a land definition must name biomes or a special, not both` / `… not neither` |
+| `placename_lists_unique` | no string twice within one list (`biomes`, `nouns` … `excluded`; forms compared by `form` text) | `<field>[<j>] '<value>' repeats <field>[<i>]` (first list in declaration order, first repeat j, its first occurrence i) |
+
+**Kind checks** (P0-03, over all definitions in id order), in this order:
+
+| Check | Condition | Message |
+| --- | --- | --- |
+| `placename_one_common` | exactly one definition has role `common` | `there must be exactly one common definition, found <n>` |
+| `placename_lands_distinct` | no biome key in the `biomes` of two land definitions; no `special` value other than `none` in two; no `trait` value other than `none` in two | `biome '<key>' is in '<id1>' and '<id2>'` / `special '<s>' is in …` / `trait '<t>' is in …` (ids ascending) |
+| `placename_common_sizes` | the common definition has at least 100 `prefixes`, 100 `adjectives`, 16 `features`, 32 `possessors`, 16 `places` and 32 `objects` | `the common definition needs at least <n> <field>, has <m>` (first field in declaration order) |
+
+The coverage of the biomes and the fillable slots need the biome kind and the tuning, so the stage checks them (section 2, check 4a).
+
+**Shipped sizes** (the files are normative; counts checked by the prototype):
+
+| Definition | nouns | suffixes | prefixes | adjectives | features | possessors | places | objects |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `common` | 0 | 0 | 156 | 159 | 33 | 94 | 52 | 79 |
+| each land (13) | 5–11 | 4–8 | 7–23 | 4–10 | 0–2 | 0 | 0 | 3–7 |
+| each trait (8) | 0 | 0–3 | 0–9 | 2–4 | 0–3 | 1–3 | 2–4 | 3–5 |
+| distinct over all | 87 | 67 | 282 | 222 | 50 | 105 | 70 | 141 |
+
+`common` also holds 19 `forbidden` substrings and 90 `excluded` entries. Every land has the same six forms with weights 30, 22, 22, 12, 9, 5 (RG11 6); a land may have its own.
+
+**Taste rules of the shipped lists** (for whoever edits them): dark, old, weathered English words, ASCII, never comic or modern; common words fit any land (colours, moods, omens, death and ritual, fire, weather, hedge plants), so they hold no land noun (`Wood`, `Fen`, `Moor`, `Barrow`, `Scar`, …), no compass word and no plant or beast tied to one land; a land's words are its own (fen: `Bog`, `Mire`, `Quag`, `Peat`, `Wisp`, `Fever`); a trait's words describe the trait (coast: `Gull`, `Wrack`, `strand`; ore: `Iron`, `Slag`, `seam`). Prefixes that lead mostly to famous names were left out (`Shadow`, `Dusk`, `Mirk`, `Storm`, `Winter`, `Dragon`, `Doom`, `Fel`); the `excluded` list catches the rest the lists can make (14.3).
 
 ## 5. Algorithm
 
@@ -272,22 +363,60 @@ Each column of 3.2 by exact integer reductions over the region's cells (sums, co
 
 **Dominant biome**: the code with the most cells among the region's cells whose definition has `water` = false, ties to the smaller code. If the region has no such cell (only possible for a hand-made landmass without a site cell, RG6), the code with the most cells among all its cells, ties to the smaller code (for a lake-only landmass the `lake` code, so its noun is `Mere`, or `Isle` by RG11 3); everything else about the region (`walk_area` 0, `region_biome` rows, borders, `report`) follows the general rules.
 
-### RG11. Names (sequential, id order)
+### RG11. Names (r3; evaluated after RG12, since the `pass` trait reads the border rows)
 
-With the words of `names` (record `region_names`) and the biome nouns:
+With the words of `names` (record `region_names`), the biome nouns, the `placename` definitions (4.1) and the tuning records `name_pools` and `name_traits`. Every value below is an integer or an ASCII string; "lower case" maps `A`–`Z` to `a`–`z` and nothing else; string comparisons are by bytes.
 
 1. **Land centroid**: L = the number of land cells, cx = RHA(Σx, L), cy = RHA(Σy, L) over land cells. r_c = round_int(mul_int(`name_central_frac`, N)), with N the grid **width** W on a non-square test grid (worlds are square).
 2. **Sector** of a region from its seed: dx = seed_x − cx, dy = seed_y − cy (y grows southward). If dx² + dy² < r_c²: `central`. Otherwise, with ax = |dx|, ay = |dy|: if 29 ay ≤ 12 ax, `east` (dx > 0) or `west`; else if 29 ax ≤ 12 ay, `south` (dy > 0) or `north`; else `southeast`, `southwest`, `northeast` or `northwest` by the signs of dy and dx. (12/29 = 0.4138 approximates tan 22.5° = 0.4142.)
-3. **Noun**, the first rule that applies (r2 added rules b and c):
-   a. `isle` if the region is the only region of its landmass and that landmass is not the largest (most cells; ties to the smaller label);
-   b. the `region_noun` of the lake biome (the definition with `water_body` "lake"; `Mere` as shipped) if 2 × `lake_cells` ≥ `cells`;
-   c. `upland` (`Fells` as shipped) if the region is upland, 4 × `walk_cells` < `cells` (the definition of `regions_upland`, 9), and its dominant biome is not in `upland_own_noun`;
-   d. the `region_noun` of its dominant biome.
+3. **Noun and land**, the first rule that applies (r2 added rules b and c; r3 adds the land, the `placename` definition of role `land` whose words the region draws):
+   a. `isle` if the region is the only region of its landmass and that landmass is not the largest (most cells; ties to the smaller label); land: the definition with `special` `isle`;
+   b. the `region_noun` of the lake biome (the definition with `water_body` "lake"; `Mere` as shipped) if 2 × `lake_cells` ≥ `cells`; land: `special` `lake`;
+   c. `upland` (`Fells` as shipped) if the region is upland, 4 × `walk_cells` < `cells` (the definition of `regions_upland`, 9), and its dominant biome is not in `upland_own_noun`; land: `special` `upland`;
+   d. the `region_noun` of its dominant biome; land: the definition whose `biomes` holds the dominant biome's key, or, if the dominant biome has `water` = true (only on hand-made input, RG10), `special` `lake`.
 
    So an upland region dominated by forest or grassland is `Fells`, not `Wood` or `Downs`; one dominated by alpine, heath or moor keeps `Peaks`, `Heath` or `Moor`.
-4. **Base name** = sector word, one space, noun. **Name**: going through regions in id order, the k-th region with a given base name is named the base name for k = 1, and the base name, one space and the Roman numeral of k for k ≥ 2 (`East Wood II`). Roman numerals: standard subtractive form (I, II, III, IV, V, …, IX, X, …, XL, L, …, XC, C, …, CD, D, …, CM, M), thousands as repeated M.
+4. **Base name** = sector word, one space, noun (`East Wood`). The **keeper** of a base name is, among the regions with that base name, the one with the most `cells`, ties to the smaller id. Each keeper is named its base name. Every other region is named by drawing (6 to 8). (Before r3 every region after the first of its base name took a Roman numeral; r3 has no numerals.)
+5. **Traits** of a region, from its row and the border rows (tests of record `name_traits`, 4): `coast`, `river`, `lake`, `high`, `ore`, `pass`, `barren`, `fertile`, each held or not. The **trait order** is this order (the order of the `trait` enumeration of 4.1), not the order of the definitions' ids.
+6. **One attempt** t (t = 0, 1, …, 63) for region id r with land definition D, common definition C and the region's trait definitions T_1 … T_m (the role-`trait` definitions of the traits it holds, in trait order; a held trait without a definition contributes nothing). Draws: u(k) = `hash_at3`(K_name, r, t, k) (`uint64`; P0-01 7.3, x = r, y = t, z = k). `pick(u, n)` and `weighted(u, w)` are P3-02 4.1's (`pick(u, n)` = ((u >> 32) × n) >> 32; `weighted` = the smallest i with (u >> 32) × W < 2^32 × (w[0] + … + w[i]), W = Σ w, in `uint128`). Then:
 
-Names are unique: base names have exactly two words, numbered names three; two numbered names differ in base or numeral. (A word never contains a space, by the word grammar of 4.)
+   ```
+   F    = D.forms                                       // non-empty (4.1)
+   form = F[weighted(u(0), [f.weight for f in F])].form
+   k    = 1
+   for each slot s of form, left to right:              // a slot names a list L: {noun} nouns, {suffix} suffixes, ...
+       P0 = C.L;  P1 = D.L;  P2 = T_1.L ++ … ++ T_m.L   // concatenation in trait order, duplicates kept
+       w  = [len(Pi) > 0 ? name_pool_weights.L[i] : 0 for i = 0, 1, 2]
+       p  = weighted(u(k), w)                            // Σ w > 0: check 4a (iii)
+       value[s] = Pp[pick(u(k + 1), len(Pp))]
+       k  = k + 2
+   name = form with each slot replaced by its value
+   ```
+
+   A form has at most 8 slots, so k ≤ 16. The words keep their case from the lists: nouns, prefixes and the rest capitalised, suffixes and features lower case, so `{prefix}{suffix}` is one capitalised word (`Thorn` + `holt` = `Thornholt`) and an object keeps its `the` (`The Grove of the Hunt`).
+7. **Validity** of the attempt, every rule must hold:
+   - **V1 joins.** For every two slots that are adjacent in the form (nothing between them, such as `{prefix}{suffix}`), with x the lower-cased left value and y the lower-cased right value: the last byte of x differs from the first byte of y, they are not both vowels (`a`, `e`, `i`, `o`, `u`), and len(x) + len(y) ≤ 12 bytes. (Rejects `Birchhurst`, `Hollowwood`, `Bramblealder`, `Hemlockhollow`, `Cormorantskerry`.)
+   - **V2 no triple letters**: the lower-cased name has no three equal consecutive letters.
+   - **V3 no repeated word**: for any two different slots of the form, the lower-cased value of one is not a substring of the lower-cased value of the other (rejects `The Hollow Hollows`, `Fenmoss Moss`, `The Wood of Woods`).
+   - **V4 forbidden**: no word of the lower-cased name (the name split at spaces; an apostrophe is part of its word) contains an entry of C.`forbidden` as a substring.
+   - **V5 excluded**: the name is not an entry of C.`excluded`, and no word of the name (split at spaces) equals an entry of C.`excluded` that has no space (so `Blackrock` also rejects `Blackrock Downs`).
+   - **V6 length**: the name has at most 48 bytes.
+8. **Order, uniqueness and fallback.** U = the set of keeper names (all of them, before any draw). Then for each region that is not a keeper, in id order:
+
+   ```
+   for t = 0, 1, …, 63:
+       if attempt t is valid and its name is not in U: name the region with it; add it to U; next region
+   fallback: for i over P = C.prefixes ++ D.prefixes, for j over S = D.suffixes ++ C.suffixes (i outer, both in list order):
+       n = P[i] + S[j]; if {prefix}{suffix} with these values passes V1 to V6 and n is not in U:
+           name the region n; add it to U; next region
+   fatal: regions: no free name for region <r>
+   ```
+
+**Uniqueness.** Keepers are named by distinct base names (one keeper per base name); every drawn name is checked against U, which holds every keeper name and every name drawn so far; so all names are distinct. Names never carry a numeral.
+
+**Why 64 attempts and why the fallback is not reached with the shipped data.** An attempt fails when it is invalid or when its name is in U. Measured with the shipped data (14.3; 20,000 first attempts per land): 1.7% (fen) to 4.5% (moor) of attempts are invalid, and the most frequent single name of a land takes 0.16% (wood, `The Primeval Holt`) to 0.42% (isle, `The Sunken Isle`) of the attempts. A region competes only with the names of its own land in U: at most about 130 at 2048 (the drawn wood regions of the five 2048 worlds of 14.2: 97 to 115) plus a handful of keepers. Even if every one of them were the land's most frequent name, an attempt fails with probability below 0.045 + 130 × 0.0042 < 0.6, and 64 attempts all fail with probability below 0.6^64 < 10^-14 per region; measured on the 24 worlds of 14.2, 2.7% of 1208 attempts were invalid and 0.7% hit a taken name, and the accepted attempt was at most 2. The fallback is still exact and bounded: it enumerates at most |P| × |S| compounds (at most 2048 × 2048) and succeeds unless every valid one-word compound of the land (626 for steppe to 1332 for wood with the shipped lists, 14.3) is taken, which needs more drawn regions of one land than that in one world, five to ten times the largest 2048 count. The fatal error is reached only with data or tuning far from the shipped (many more regions, or tiny lists), and it is an error rather than a numeral by Paul's decision.
+
+**Determinism.** A region's attempts depend only on K_name (seed and N), its id, its land, its traits and the data; the only dependence between regions is U, which is built in a fixed order (keepers, then id order). So the names are a pure function of the region rows, the border rows, the data and the seed, independent of thread count and evaluation order. No `Rng`; `hash_at3` with a stage-specific key, as `hash_at` in RG4.
 
 ### RG12. Borders and passes (D8 counts per pair, then sorted; passes sequential)
 
@@ -323,7 +452,16 @@ Computed by the spec writer's exact-integer prototype (`~/.cache/the-unmapped/ou
 
 **RG8 merge** (min_cells 100): regions 1 (500 cells), 2 (120), 3 (90), 4 (60, an island). n(1, 2) = 30 (nr 30), n(1, 3) = 12 of which 10 are river pairs (nr 2), n(2, 3) = 8 (nr 8). Region 3 is the smallest small region with a neighbour; it merges into 2 (nr 8 > 2), although its longest border is with 1. Region 2 now has 210 cells and n(1, 2) = 42, nr 32. No region with a neighbour is below 100; region 4 stays. Result: 1 (500), 2 (210), 4 (60).
 
-**RG11 names** at N = 1024, land centroid (500, 480), `name_central_frac` "0.12" (raw 515396076): r_c = round_int(122.88) = 123. Seeds and dominant biomes, regions in id order: (520, 470) grassland → d² = 500 < 15129: `Central Downs`; (800, 500) forest → dx 300, dy 20, 29 × 20 ≤ 12 × 300: `East Wood`; (200, 200) alpine → dx −300, dy −280: `Northwest Peaks`; (510, 900) marsh → 29 × 10 ≤ 12 × 420: `South Marsh`; (790, 560) forest → `East Wood` again, the second: `East Wood II`; a lone region on a small island north of the centre: `North Isle`. Rules b and c (r2): (700, 300) with 120 of its 200 cells lake → dx 200, dy −180, diagonal: `Northeast Mere`; (210, 700) dominated by forest with 4 × `walk_cells` < `cells` → dx −290, dy 220 (29 × 220 > 12 × 290 and 29 × 290 > 12 × 220): `Southwest Fells`; (230, 720), upland and dominated by alpine → `Southwest Peaks` (alpine is in `upland_own_noun`); an upland region 50% lake → `Mere` (b before c). Sector checks (dx, dy): (10, 4) east; (10, 5) southeast; (−3, −7) northwest; (0, −9) north; (4, 10) south; (5, 12) southeast. Roman: 2 II, 4 IV, 9 IX, 14 XIV, 40 XL, 90 XC, 400 CD, 1994 MCMXCIV, 4000 MMMM.
+**RG11 names** at N = 1024, land centroid (500, 480), `name_central_frac` "0.12" (raw 515396076): r_c = round_int(122.88) = 123. Seeds and dominant biomes, regions in id order: (520, 470) grassland → d² = 500 < 15129: `Central Downs`; (800, 500) forest → dx 300, dy 20, 29 × 20 ≤ 12 × 300: `East Wood`; (200, 200) alpine → dx −300, dy −280: `Northwest Peaks`; (510, 900) marsh → 29 × 10 ≤ 12 × 420: `South Marsh`; (790, 560) forest → base name `East Wood` again: the two `East Wood` regions are compared by `cells` and the larger keeps `East Wood`, the other draws a name (r3; before r3 the second was `East Wood II`); a lone region on a small island north of the centre: `North Isle`. Rules b and c (r2): (700, 300) with 120 of its 200 cells lake → dx 200, dy −180, diagonal: `Northeast Mere`; (210, 700) dominated by forest with 4 × `walk_cells` < `cells` → dx −290, dy 220 (29 × 220 > 12 × 290 and 29 × 290 > 12 × 220): `Southwest Fells`; (230, 720), upland and dominated by alpine → `Southwest Peaks` (alpine is in `upland_own_noun`); an upland region 50% lake → `Mere` (b before c). Sector checks (dx, dy): (10, 4) east; (10, 5) southeast; (−3, −7) northwest; (0, −9) north; (4, 10) south; (5, 12) southeast. (r3: region names no longer use `roman`; it stays in `worldgen/core/roman.hpp` for P3-02's fallback.)
+
+**RG11 draws (r3)**, the shipped data and tuning, the 1024 world of seed 42 (`worldgen-cli generate --seed 42 --map-size 1024`, its region and border rows as written by 0.11.0 to 0.16.0, which r3 leaves unchanged). stream_key(42, "geo.regions.name") = 0x224A148B98263929; K_name = substream(…, 1024) = **0xE1A9F22A266E243A**. Pools as [common, land, trait]; a weight 0 marks an empty pool.
+
+- Region 1, base `North Downs` (4443 cells), not the keeper: of the four `North Downs` regions (ids 1, 2, 6, 16; 4443, 6898, 14036, 5593 cells) region 6 keeps the base name. Land `downs`; traits: coast (`coast_cells` 177 ≥ 128). t = 0: u(0) = 0x6859A960857622CB → form 1 `The {adjective} {noun}` (weights 30, 22, 22, 12, 9, 5); adjective: u(1) = 0x7EE3FBE2B3DAA4E4, weights [6, 3, 2] → pool 0 (159 words), u(2) = 0xA731588330C4201D → index 103 `Scarred`; noun: u(3) = 0xE72102C4301D4A38, weights [0, 1, 0] → pool 1 (8), u(4) = 0x26E0EFE6AE26CED5 → index 1 `Downs`. Valid, free: **`The Scarred Downs`**. (Attempt 1 would give `Fletcher's Wolds`.)
+- Region 10, `Northeast Downs` base (river 8, fertility 237: traits river, fertile). t = 0: u(0) = 0x42002C340A52E948 → form 0 `{prefix}{suffix}`; prefix: u(1) = 0x2056F9F4076F2CC2, [6, 3, 2] → pool 0 (156), u(2) = 0x80DC08382FB40AEE → 78 `Knell`; suffix: u(3) = 0xA85791F9B2BC6F64, [0, 4, 1] → pool 1 (6), u(4) = 0x672EF6DA06D6A3DA → 2 `down`. **`Knelldown`**.
+- Region 39, `Southeast Wood` base, trait coast. t = 0: form 0; prefix pool 0 index 62 `Harrow` (u(2) = 0x673CC715D61964E8), suffix pool 1 (8) index 4 `holt` (u(4) = 0x99255536F43A47E7): **`Harrowholt`**.
+- Region 40, `Southeast Wood` base, no trait (coast 113, river class 4, mean elevation 101 m, habitability 59, fertility 112). t = 0: u(0) = 0x1DAD0A4F3DA9416D → form 0; prefix: u(1) = 0xD767ECABF011F7C6, weights [6, 3, 0] (no trait pool) → pool 1 (23), u(2) = 0x2574A736E868C8E5 → 3 `Birch`; suffix: u(3) = 0x21EE6D0295292197, [0, 4, 0] → pool 1, u(4) = 0xA4FFEA0405079A69 → 5 `hurst`: `Birchhurst` fails V1 (h, h). t = 1: u(0) = 0xF8C4AD91FCA3D645 → form 5 `{possessor}'s {place}`; possessor: u(1) = 0xB4FB47D898CFA306, [8, 0, 0] → pool 0 (94), u(2) = 0xA07474902FABD7AE → 58 `Prince`; place: u(3) = 0xDC51F8D891CC3346, [8, 0, 0] → pool 0 (52), u(4) = 0xF07596C36D36F72F → 48 `Vow`. **`Prince's Vow`**.
+
+Validity checks (V1 to V6): `Birchhurst`, `Brambleedge`, `Hallowwell` V1 (same letter); `Bramblealder` V1 (two vowels); `The Hollow Hollow`, `Fenmoss Moss` V3; `Blackwood`, `The Haunted Forest` V5 (whole name); `Blackrock Downs` V5 (word); `Hollywood` V5. The fallback order for land `fen`: P = the 156 common prefixes then the 11 fen prefixes, S = the 6 fen suffixes (`bog`, `fen`, `mire`, `moss`, `quag`, `sike`); the first compound is `Adderbog`.
 
 **RG12 borders and passes.** A 4 × 3 test world, all land, region 1 on columns 0–1 and region 2 on columns 2–3; S rows `10 20 30 10`, `10 50 40 10`, `10 25 25 10`; `walk_area` 1 everywhere except 0 at (1, 1) and (2, 1); (2, 0) a river cell of class 6. Border pairs (1, y)–(2, y) for y = 0, 1, 2 with max S 30, 50, 25. Row (1, 2): `length_m` 48, `low_dm` 25, `low_x`, `low_y` = (1, 2) (equal S: the first cell), `walk_pairs` 2, `river_pairs` 1, `river_class_max` 6. If (2, 0) were of class 4 instead (below `river_border_class`), the row would have `river_pairs` 0 and `river_class_max` 4. A pass with path (0, 1), (1, 0), (2, 1), (3, 1) and col (1, 0) (q = 1): the step (0, 1) → (1, 0) gets the corner (1, 1) (inside region 1); the step (1, 0) → (2, 1) (j = 1, d = 0) gets the corner (2, 0), and (1, 0)–(2, 0) crosses (1, 2): the pass is attached to row (1, 2). With this pass as id 3 and a second attached pass of id 5: `pass_id` 3, `passes` 2.
 
@@ -336,7 +474,7 @@ Computed by the spec writer's exact-integer prototype (`~/.cache/the-unmapped/ou
 3. Each region is 8-connected, lies on one landmass and contains its seed (`seed_x`, `seed_y`), which is a site cell unless the landmass has none (then its smallest-index cell, RG6); `landmass` is that landmass's G2 label.
 4. Every region has at least min_cells cells, unless it has no 4-adjacent neighbour region.
 5. Every column of the three tables equals its definition recomputed from the layers, the definitions and table `pass` (bounds, counts, means, percentile, dominant biome, walk area, the border rows and exactly the pairs that share a 4-adjacent cell pair, with `a` < `b`; the biome rows sum to `cells`).
-6. Names are unique; each is a sector word and a noun, optionally followed by a Roman numeral ≥ II, all words from the data.
+6. Names are unique and carry no numeral (r3). For each base name (sector word + noun of RG11 3) in use, exactly one region is named it: the one with the most `cells`, ties to the smaller id. Every other region's name is one of its land's forms filled with words of the pools of RG11 6 (common, its land, its traits), passes V1 to V6, and equals no base name in use.
 8. (r2) Σ `passes` over `region_border` ≤ the number of `pass` rows; each pass is attached to at most one row, and to one exactly when its path crosses a border.
 7. Pure function of the seed, N, the inputs, the biome definitions, table `pass` and the tuning; independent of the thread count.
 
@@ -353,9 +491,10 @@ Computed by the spec writer's exact-integer prototype (`~/.cache/the-unmapped/ou
 | RG8 | D4 | stated selection order and tie-breaks |
 | RG9 | D7 | by smallest index |
 | RG10, RG12, RG13 | D8 | integer sums, counts, min/max; ties stated; rows sorted; the chamfer is D4 (H7's two passes) |
-| RG11, RG12 passes | D4 | id order |
+| RG11 | D4 | evaluated after RG12; keepers by (`cells`, id); drawn names in id order against the set U; each draw keyed by (K_name, region id, attempt, k) with `hash_at3`, so a name does not depend on how many draws other regions made |
+| RG12 passes | D4 | id order |
 
-No floating point, no new math function, one noise key and one `hash_at` key, no `Rng`.
+No floating point, no new math function, one noise key, one `hash_at` key and (r3) one `hash_at3` key, no `Rng`.
 
 Overflow (N ≤ 2048, values within the bounds of 4): nf ∈ [0.1, 1.9] ONE; hand ≤ 30000 dm on hydrology output, so hf ≤ 1 + 30000 / 10 = 3001 ONE with `hand_ref_m` 1 (the seam refuses a hand above 131070, the largest |ΔS| of P1-05 7, giving hf ≤ 13108 ONE); wt < 2^15 ONE (raw < 2^47); hz ≤ round(2^15 × 226.3) × 10 < 2^27 (lake factor ≤ 10); rv and the corner term ≤ 10^6 each; a step < 2^28 and a path of at most 2^22 steps < 2^50 (`int64`; INF = 2^62). Spacing: (16 Δx)² + (16 Δy)² ≤ 2 × 2^30. Segment: |Δx · j| ≤ 2^22. Sums over a region: `elevation` ≤ 2^22 × 32767 < 2^37, scores ≤ 2^22 × 255 < 2^30, Σx < 2^33. Centroid and sector: dx² + dy² < 2^23; 29 × 2048 < 2^16.
 
@@ -454,7 +593,7 @@ The rows are `db::RegionRow`, `db::RegionBorderRow`, `db::RegionBiomeRow` (`worl
 
 ### 10.1 Unit tests
 
-1. Every worked example of 5.1 exactly, through the seams (owners and costs of each flood case; seeds and the bank exception; merge; sectors, numerals and names; border rows and pass crossings).
+1. Every worked example of 5.1 exactly, through the seams (owners and costs of each flood case; seeds and the bank exception; merge; sectors and names; border rows and pass crossings).
 2. RG6: a fixture island with no candidate gets a seed at its best site cell, numbered after the greedy seeds; a landmass of only river and lake cells (hand-made) takes its smallest-index cell.
 3. RG9 renumbering on a fixture where the seed numbering differs from the smallest-index order.
 4. The tuning: each field one step outside its bounds is a P0-03 range error; `upland_own_noun` naming an unknown biome is a P0-03 reference error; a missing `names.upland` is a missing-field error; `seed_tile_m` above twice `seed_spacing_m` fails `regions_tile_fits_spacing` at the definition's header; a `names` word `east` or `North West` fails the word grammar; a missing `names.isle` is a missing-field error; a biome `region_noun` of `Wet Wood` is fatal at the stage (section 2, check 4).
@@ -477,6 +616,30 @@ Threads 1, 2, 5: identical layer and tables. Resume: a world written after `reso
 `worldgen/tests/golden/p1-06-regions.txt`, written by the test writer's independent reference in `worldgen/tests/reference/` for the cases of P1-05 10.4 (the N = 128 fixture cases and 512 seed 0, 512 seed 42, 512 "The Unmapped", 1024 seed 1 with the shipped data): per case the layer hash of `region`, the logical hashes of the three tables, and the SHA-256 of hand (as P1-05), wt (raw `int64`, every land cell, 0 elsewhere), the flood owners before merging (`int32` per cell, 0 on ocean) and the seed list (`u32` cell indices in seed order), each little-endian in index order with no header. The large cases are read by the `*-slow` suites.
 
 **Version and golden re-recording.** `GENERATOR_VERSION` becomes **0.11.0**. Every geography world changes (a new layer and rows), every world changes its schema version and page count, and every world changes its `content_hash` (new `worldgen.regions`; P1-00 6.4): `p0-worlds.txt` and `p1-worlds.txt` are re-recorded by the validation specialist after the cross-preset comparison. The golden vectors of P1-01 to P1-05 hold layer and table hashes, which this change must leave **unchanged**; a difference there is a defect. `tools/ci/world-hashes.sh` needs no new case; its timings in `CLAUDE.md` grow by this stage's share.
+
+### 10.5 Tests for r3 (names)
+
+**Seams** (interim; the engineer records the final signatures, as for r1 and r2): `region_names` gains the region rows' trait inputs (`coast_cells`, `river_class_max`, `lake_cells`, `elev_mean_dm`, `ore_rich_cells`, `habitability_mean`, `fertility_mean`, and whether a border row with `passes` > 0 touches the region), the `placename` definitions and the seed, and is called after `region_pass_crossings`; new seams `region_traits(row, has_pass, tuning) → bitset` (RG11 5), `region_name_attempt(key, id, t, land, common, traits, tuning) → (valid, name)` (RG11 6, 7; an invalid attempt's name unspecified, as P3-02), `region_name_valid(form, values, common) → bool` (V1 to V6), `region_name_fallback(land, common, used) → name` (RG11 8), and the data reader `placename_data_from(const data::ContentSet&)`. Item 1 of 10.1 no longer tests numerals of names (`roman` keeps its own tests in `worldgen/core`).
+
+**Unit tests** (each against values written in the test, not produced by the code under test):
+
+1. The four draw examples of 5.1 (seed 42, N 1024, regions 1, 10, 39, 40): K_name, every u(k) listed, the form, pool and index chosen, and the names `The Scarred Downs`, `Knelldown`, `Harrowholt`, `Prince's Vow` (the last through the invalid attempt 0, `Birchhurst`).
+2. Keepers: a fixture of four regions with one base name and cells 4443, 6898, 14036, 5593 (the `North Downs` case) keeps the base name on the third; equal cells keep it on the smaller id; a base name used once is kept.
+3. Each validity rule with a passing and a failing case: V1 (same letter `Birch` + `hurst`; vowels `Bramble` + `alder`; length `Hemlock` + `hollow` (13); `Adder` + `bog` passes, `Thistle` + `horn` (11) and `Bracken` + `stone` (12) pass), V2 (a fixture prefix `Brrr` + `holt`; V1 already rules out a triple across a join, so V2 guards the words themselves and the literals of forms), V3 (`The Hollow Hollow`, `Fen` + `moss` + `Moss`, substring case `The Wood of Woods`), V4 (a fixture `forbidden` entry inside a compound, and inside a word with an apostrophe), V5 (whole name `The Haunted Forest`; one-word entry `Blackrock` rejecting `Blackrock Downs`; a two-word entry rejecting only the whole name), V6 (49 bytes fails, 48 passes).
+4. Traits: for each of the eight, a row one step either side of its threshold (including `lake_cells` 0 with `lake_permille` 1, `river_class` 16, `barren_hab_max` −1 and `fertile_min` 256 meaning never); the trait pool is the concatenation in trait order, not id order (fixture traits whose ids sort differently from the enumeration).
+5. Pools: an empty pool gets weight 0 (a land with no `adjectives` draws only from the common pool for `{adjective}`); `weighted` boundaries on hand-made u values (the high word exactly at a prefix-sum boundary goes to the next pool, P3-02 4.1).
+6. Collision and fallback: with a fixture land whose forms can make only three names, a fourth region of that land falls back to the first free compound in (P, S) order; with every compound also taken, the stage is fatal with `regions: no free name for region <id>`; a drawn name equal to a keeper's base name is rejected (fixture data that can make `East Wood`).
+7. The loader (P0-03 forms of each message): each grammar with one failing string (`Wood land`, `Holt` as an element, `The Crows` as an object, `{noun} {noun}` and `{nouns}` as forms, a double space in an excluded name); each check of 4.1 with one failing definition, in the stated order (a land with both biomes and a special; a trait with nouns; a common with forms; a word twice in `prefixes`; two common definitions; `fen` in two lands; `special` `isle` twice; a common with 99 prefixes); `placename` missing from a data root is a required-kind error; the new tuning records: each field one step outside its bounds, a `name_pools` array of 2 or 4 weights.
+8. Stage check 4a, each message: a fixture biome with no land definition; no `upland` land; a land form whose `{feature}` slot has no words when `name_pool_weights.features` = [0, 1, 1] and the land has no features.
+9. Fallback order on the shipped `fen` land with an empty U: `Adderbog`.
+
+**Property tests** (10.2's worlds, seeds 0 to 63 at N = 128, both fixture data roots, with the shipped `placename` copies): invariant 6 recomputed by independent code: names unique; every base name in use held by exactly one region, the largest; every other name parses as one of its land's forms with every slot value from one of the three pools of that region; V1 to V6 hold; no Roman numeral token. Also: the names are the same with threads 1, 2 and 5; renaming a `placename` file, or moving a definition between files, changes no name (P0-03 7.4); reordering the definitions of `traits.toml` changes no name.
+
+**Data tests**: the shipped `game/data/placenames/` loads; `common` meets `placename_common_sizes`; every list sorted (a convention test for editors, `the …` objects after the others); the fixture copies are byte-identical to the shipped files; the test writer's reference reproduces the space sizes of 14.3 (distinct valid names per land without traits) as a check of the reference, not of the C++.
+
+**Golden values.** `p1-06-regions.txt`: the logical hash of table `region` changes for every case in which a base name repeats (all four shipped-data cases: 512 seed 0 draws 1 name, 512 seed 42 3, 512 "The Unmapped" 1, 1024 seed 1 35); the layer hash of `region`, the hashes of `region_border` and `region_biome`, hand, wt, owners and seeds are **unchanged**, and a difference there is a defect. Add per case one line `<case> names <id>:<name>|…` (every region, id order) and `<case> name_attempts <id>:<t or F or K>|…` (K keeper, F fallback), so a difference is legible. The reference implements RG11 r3 independently (it may use `core_reference.hash_at3` and `substream`).
+
+**Version and what else changes.** `GENERATOR_VERSION`: the next minor version after the one on `main` when this merges (0.17.0 if it follows P3-06 at 0.16.0, as the proposals entry plans). Every world file changes: the `content_hash` (a new required kind and two new `worldgen.regions` fields), so `p0-worlds.txt`, `p1-worlds.txt` and `p3-worlds.txt` are re-recorded after the cross-preset comparison, and `p3-01-data.txt` (content hashes of the three data roots) is re-recorded. P1-01 to P1-05 goldens: unchanged. History goldens: tables keyed by ids do not change, and civilization, settlement, god and age names change only where a new region name equals a name history would have drawn (none on the golden worlds: checked by the prototype on all twelve P3 test input worlds of `~/.cache/the-unmapped/out/p3-06-tests/inputs/`, and P3-03 14.3 item 21 still holds there); the files that store rendered sentences with region names change: `p3-04-engine.txt` (the `e<n>` sentence lines, such as `Kruskux awakened the Goblins in West Wood II.`), `p3-05-peoples.txt` (on its branch), and any P3-06 or P3-07 golden that stores report text. `p3-02-names.txt` (hand-written preload lists) and `p3-03-chronology.txt` are unchanged. The `world-hashes.sh` cases are unchanged.
 
 ## 11. Calibration and known limitations
 
@@ -520,13 +683,13 @@ Decided: **both, by geometry, with no special rule.** Upland tiles still contrib
 2. **Regions are valleys, not basins.** A long valley is split into several regions along its length; whole basins are sets of regions.
 3. **Large rivers are borders where seeds lie on both banks.** About 30% of class-6 river cells at 1024 run inside a region: mostly the upper reaches of class-6 rivers, where both banks are one valley, and stretches where one bank has no seed within reach.
 4. **Islands are regions of any size**: 0.05 km² islets are regions (`Isle`), never merged (`regions_isolated`).
-5. **Names repeat.** Forest worlds have up to `Northwest Wood VII`; the names are placeholders (question 1).
+5. **Names (r3).** Before r3 names repeated with numerals (forest worlds up to `Northwest Wood VII`, 2048 worlds 83–85% numbered). From r3 the largest region of each base name keeps it (45% of regions at 1024, 16% at 2048, 88% at 512) and the others draw names. Drawn names are built from the elements of English place names, so some coincide with obscure real places (`Crowhurst`, `Blackmoor`, `Silverdale`); famous real places and names from well-known fiction and games that the lists can make are excluded (14.3), but no list can be complete. The kept names `North Downs` and `South Downs` are real English ranges (unchanged since r1).
 6. **No sea regions** (question 2).
 7. **2048 statistics rest on six worlds.**
 
 ## 12. Open questions and decisions of taste (for the lead and Paul)
 
-1. **Placeholder names** "<sector> <biome noun> [numeral]", words from data (Paul's call). Recommendation: keep; history adds cultural names per civilization in its own table, since a name depends on who lives there and when. Alternative if the repetition bothers: a second noun from the second most common biome or from the coast (`East Wood Shore`), a small change to RG11.
+1. **Placeholder names** "<sector> <biome noun> [numeral]". **Decided by Paul 2026-11-19**: names with identity, no numerals (r3, section 14); the questions r3 raises are in 14.5. History may still add cultural names per civilization in its own table later (P3-02 4.5 reserves the kind `region`).
 2. **No sea regions; lakes belong to land regions** (design). Recommendation: approve for P1; sea areas for naval events are history's.
 3. **Region size and count**: seeds 1200 m apart, merge below 0.75 km²; median 2.0–2.1 km², 13 / 49 / 200 regions. Recommendation: approve (the design's "about 2 km²"); `seed_spacing_m` 1250 would give 12 / 45 / 185 at about 2.3 km².
 4. **Borders by height above drainage** instead of climbing cost (`hand_ref_m` 25 m). Recommendation: approve (11.2 finding 1).
@@ -538,6 +701,8 @@ Decided: **both, by geometry, with no special rule.** Upland tiles still contrib
 10. **Islets of any size are regions** (11.4 item 4). Recommendation: approve; the alternative (no region) breaks "every land cell is in a region".
 
 ## Appendix A. Schema and catalogue impact (for the lead's proposals entry)
+
+**r3 (names)**: no schema change (the `name` column keeps its type; values change); a new data kind `placename` (4.1); two new fields of `worldgen.regions`; a new stream `geo.regions.name` (P1-00 section 3 and `streams.hpp` gain it); a generator version bump. `docs/specs/schema.md` needs no change (it refers to section 3 for the columns' meaning).
 
 **Schema version 5** (generator 0.11.0): tables `region`, `region_border`, `region_biome` (DDL in 3.1), executed after `climate`; the empty world grows from 8 to 11 pages. `docs/specs/schema.md` is updated on this branch (DDL, `meta`, catalogue, changelog). Needed with the merge: P0-02 amendment 17 (DDL, version 5, 11 pages, the refusal message for version 4) and P0-04 amendment (the three tables in `[tables]` and `hash --detail`, the `[geography]` region keys, the composite `regions`). Layer catalogue: `region` unchanged (`u16`, 0 on ocean only, id 19). Data: new `worldgen` id `regions` (`game/data/worldgen/regions.toml`); no biome file changes. Streams `geo.regions.seed`, `geo.regions.cost` as P1-00 3.
 
@@ -561,3 +726,187 @@ After the world critic's review of the implementation (F1, F2; F4 and F6 as note
 3. **History notes (F1, F4, F6)** in 3.3 and 3.4: passes located by the col; river borders judged by `river_pairs` × 16 / `length_m`; islets under about 0.3 km² of dry land.
 4. Data: `regions.toml` gains `names.upland = "Fells"` and `upland_own_noun`; the content hash changes, so `p0-worlds.txt` and `p1-worlds.txt` are recorded with r2 data.
 5. Worked examples (RG11 names, RG12 attachment), report example (1024 seed 0 `region_borders_pass` 2), the `region_borders_pass` statistics, invariant 8, tests 10.1 items 4, 5 and 9.
+
+## 14. Revision r3 (2026-11-19): region names with identity
+
+Paul's decision of 2026-11-19 (`docs/design/proposals.md`, "region names get identity; no numbered names"): "'East Wood' is fine but 'West Wood III' is pretty boring". Only the `name` column of table `region` changes; the layer, the other tables and every other column are as in r2. **No schema change**; a new required data kind, two new tuning fields and a new stream, so every world file changes and the generator version is bumped (10.5). The proposals entry says this is implemented after P3-06 is integrated, before Paul's review of P3.
+
+### 14.1 What changed
+
+1. **RG11** (rewritten): base name as before; the largest region of each base name keeps it; every other region draws a name from its land's forms and words, with pools common, land and traits, keyed draws `hash_at3(K_name, id, attempt, k)`, validity rules V1 to V6, at most 64 attempts, an exact fallback; no numerals. RG11 is evaluated after RG12 (the `pass` trait).
+2. **Section 4.1**: the data kind `placename` (`game/data/placenames/`, 15 files: `common`, 13 lands, `traits`), its grammars, checks and canonical form; the files are committed with this revision and are normative.
+3. **Section 4**: `worldgen.regions` gains `name_pool_weights` (record `name_pools`) and `name_traits` (record `name_traits`).
+4. **Section 2**: the input row, the stream `geo.regions.name` (keyed with N), check 4a.
+5. **Invariant 6**, the determinism table, 3.2 (`name`), 5.1 (RG11 examples), 10.5 (tests and goldens), 11.4 item 5, 12 question 1, Appendix A.
+
+### 14.2 How it was measured
+
+A prototype of RG11 r3 in exact integers, `~/.cache/the-unmapped/out/p1-06-names/proto.py` (Python, on `worldgen/tests/reference/core_reference.py` for `stream_key`, `substream` and `hash_at3`; reads the shipped data with `tomllib` and table `region` and `region_border` of a world file with `sqlite3`; the sector and noun are taken from the stored name with its numeral stripped, which is exactly RG11 1 to 3). It is the spec's algorithm, so the worked examples of 5.1 are exact; the test writer's reference must reproduce them independently. Worlds (region tables written by 0.11.0 to 0.16.0, which r3 does not change): 512 seeds 0, 42, 1 to 4, 7 and the phrase "The Unmapped"; 1024 seeds 0, 1, 2, 3, 4, 11, 42, 75, 133, 185 and the phrase; 2048 seeds 0, 1, 2, 3 and 42 (24 worlds; `sweep.py`). Also the data checks of `proto.py --audit` (duplicates, grammar, sort order, space sizes, samples), `dict_audit.py` (compounds that are dictionary words, against `/usr/share/dict`) and `known_audit.py` (which well-known real and fictional names the lists can make).
+
+| Size | Regions (worlds) | Keep their base name | Drawn | Attempts / invalid / taken | Fallback | Highest accepted attempt |
+| --- | --- | --- | --- | --- | --- | --- |
+| 512 | 106 (8) | 93 (88%) | 13 | 13 / 0 / 0 | 0 | 0 |
+| 1024 | 569 (11) | 254 (45%) | 315 | 328 / 13 / 0 | 0 | 1 |
+| 2048 | 995 (5) | 156 (16%) | 839 | 867 / 20 / 8 | 0 | 2 |
+
+Names are unique in every world. **Repeats between worlds**: two different 2048 worlds share 0 to 5 drawn names of about 165 each (ten pairs); different 1024 worlds share 0 or 1. Before the map size went into the key, 1024 seed 0 and 2048 seed 0 shared 20 drawn names (same region ids, same draws); with it, none. **History names**: on the twelve P3 test input worlds (`~/.cache/the-unmapped/out/p3-06-tests/inputs/`: the four P1 golden cases, the `hist-*` cases, `example-42-1024` and four sweep worlds), no new region name equals any god, age, civilization or settlement name of the world, so the history tables of those worlds would not change.
+
+### 14.3 The lists
+
+Sizes in 4.1. What each land can make, enumerated over its six forms and all its pools (`proto.py --audit`; a name counted once however it is made):
+
+| Land | Regions it names | Distinct valid names, no trait | of them one word (the fallback space) | With every trait |
+| --- | --- | --- | --- | --- |
+| `wood` | temperate forest (`Wood`) | 70,880 | 1,332 | 127,225 |
+| `carr` | wet woodland (`Carr`) | 53,285 | 976 | 92,792 |
+| `downs` | grassland (`Downs`) | 49,230 | 914 | 88,609 |
+| `marsh` | marsh (`Marsh`) | 41,451 | 801 | 71,992 |
+| `fen` | fen (`Fen`) | 51,444 | 984 | 90,767 |
+| `moor` | highland moor (`Moor`) | 37,905 | 878 | 68,962 |
+| `heath` | heath (`Heath`) | 33,174 | 783 | 60,050 |
+| `peaks` | alpine (`Peaks`) | 60,610 | 1,282 | 107,103 |
+| `waste` | blighted waste (`Waste`) | 38,279 | 636 | 69,015 |
+| `steppe` | steppe (`Steppe`) | 38,242 | 626 | 69,460 |
+| `isle` | isles (`Isle`) | 33,367 | 630 | 58,364 |
+| `mere` | half lake (`Mere`) | 43,866 | 761 | 76,472 |
+| `fells` | other upland (`Fells`) | 48,932 | 1,065 | 86,451 |
+
+So each land offers 33,000 to 71,000 distinct names to a region without traits and 58,000 to 127,000 to one with every trait; the largest number of drawn regions of one land in one 2048 world is 115 (wood). The pools spread the draws: the most frequent single name of a land takes 0.16% (wood) to 0.42% (isle) of first attempts.
+
+**Thirty samples per land** (first valid attempts of distinct region ids for a land without traits, `proto.py --audit --samples 30`, in draw order; traits add their words, see 14.4):
+
+- **wood**: The Starved Weald, Chillwood, Wangill Grove, The Sable Forest, Wightwood, The Woods of Antlers, Mutehurst, Dimstone Holt, Barkbrook Grove, Cairnhurst, The Yellow Holt, Hollowbourne Wood, Flintholt, Brigand's Brake, Forester's Dole, Stillhurst, Hermit's Woods, Boughshaw, Pedlar's Bend, Brigand's Hurst, The Thorned Woods, Hazelgill Holt, Illhurst, Brockholt, Hazelwood, The Overgrown Tangle, Crow's Wood, The Forest of Crows, The Thicket of Boars, Maiden's Bane.
+- **carr**: Cindershaw, The Drowsing Wood, The Unlit Holt, The Withies of Candles, Gibbetmark Thicket, Rushmire Osiers, Woemire Carr, Stagmark Withies, Reedcarr, The Holt of Alders, Chieftain's Sallows, Willowpool Withies, The Wood of Herons, Archer's Pit, The Osiers of Alders, Heron's Carrs, The Osiers of Cinders, Charnelgate Carrs, Alderwood, Reedlaw Thicket, Frostholt, Gloamcarr, The Osiers of Silence, The Carrs of Gibbets, The Carr of Wyrms, The Sallows of Silence, Siltbeck Thicket, Fetchcombe Carr, Wyrmholt, Houndshaw.
+- **downs**: Blackhowe Wolds, Ferryman's Cairn, Teaseldown, Chalkgate Barrows, Mason's Sward, Blacklea, The Downs of the Harvest, The Vale of Traitors, Pyredown, Wanderer's Portion, Corbiecombe, Dwalelea, Swineherd's Toll, Hawbeck Barrows, Harepike Sward, Vetchwold, Witherdown, The Vale of Candles, Gravedigger's Leas, Dreadbarrow, The Leas of Candles, The Bare Leas, The Barrows of Nettles, Stagcombe, Ivycombe, Umbercombe, Warden's Barrows, The Barren Wolds, Lichwold, Darnelstone Leas.
+- **marsh**: Redhollow Flats, Dreadfleet, The Unhallowed Marshes, The Rank Slough, The Reeds of Moths, Ferryman's Marsh, Mothfleet, The Reeds of the Forsaken, Thane's Marshes, The Reeds of Ashes, Dwalefleet, Sloegate Reeds, The Reeds of the Drowned, Roodslough, The Marshes of Outlaws, Mutewash, Aguemarsh, Rushfleet, Rookslough, Wanwash, Brackhowe Reeds, The Sodden Reeds, The Unquiet Marsh, The Faded Marshes, Shroudslough, Squire's Barrow, The Sunken Marshes, Lornslough, Wyrmfleet, Bitternwell Slough.
+- **fen**: Collier's Mark, The Mire of Worms, Squire's Mire, Banefen, Rushpool Fen, Leechlaw Morass, Hawkquag, Ivymire, Feverquag, Lornscar Quag, Leechsike, Palemire, The Fens of the Fallen, Sedgefen, Crooksike, The Drowned Mire, Hawslack Morass, The Murky Mire, Ashbog, Woodcutter's Fen, Cinderbog, Shrikepool Quag, Wyrmbeck Quag, Kitemire, The Raw Quag, Blackbog, Warlord's Hollow, The Sombre Mosses, Reavemoss, Wraithquag.
+- **moor**: The Wild Tops, Shrikerigg, The Heights of Crows, Knellbank Tops, Miller's Edge, Wrenknowe, Houndedge Moor, Boneknowe, Shepherd's Tree, Grouserigg, The Ashen Rigg, Bearmoor, Ploverlaw, The Heights of the Hanged, Sablecairn Edge, The Silent Heights, Misthowe, The Ill Rigg, The Moor of Curses, Mournspring Heights, Lornspring Moor, Curlewknowe, The Edge of Peat, The Long Edge, The Pitiless Heights, Curlewridge Rigg, Curlewedge, Lingthorn Heights, The Wild Moors, The Fading Moors.
+- **heath**: Gorselaw Heaths, The Bare Heath, Burrslack Brakes, Balegate Furze, Keenfurze, The Furze of Mists, The Scorched Whins, Gloamheath, Usurper's Whins, Umberbarrow Heath, Brackenstone Heath, Hallowheath, Palefurze, The Whins of Adders, Blackwhin, Spinner's Furze, The Furze of Nightjars, Butcher's Heath, Gorsebeck Whins, Prince's Furze, Wakefurze, Broomling, Raven's Debt, Heatherling, The Fey Heath, Hagbrake, The Desolate Heath, The Bare Whins, Reaver's Heaths, Dirgewhin.
+- **peaks**: Eaglehorn, Tarescar, Cullcrag, Weeptooth, The Sallow Needles, Emberhollow Crags, Hawmark Teeth, The Unlit Crags, Keenfang, The Cloven Pinnacles, Hawcombe Teeth, The Cloven Needles, Nettlespire, The Peaks of the Blind, The Frowning Heights, Banebank Spires, Usurper's Oath, Sloegate Pikes, The Fangs of Kings, Umberhorn, King's Needles, The Peaks of Saints, Gloampeak, The Pale Teeth, The Peaks of Gallows, The Doleful Crags, The Hidden Pikes, The Fading Needles, The Joyless Pikes, Cloudtooth.
+- **waste**: Reavewaste, Gravedigger's Wastes, Slagwaste, Dimwaste, Owl's Knoll, The Murmuring Waste, Ferryman's Scald, Widow's Scald, The Barrens of Barrows, Nightbeck Wastes, Bitterscar, The Scorched Waste, Pilgrim's Scald, The Barrens of the Unburied, Brockscald, Widow's Wilds, Lynxlaw Scald, Gloomblight, Slagscar, Carrionwaste, Fowler's Blight, The Cankered Scald, The Barrens of Plagues, Frostbank Scald, Bride's Sorrow, Pitchmark Waste, Wraithscald, Reekwaste, The Barren Blight, The Russet Wastes.
+- **steppe**: The Dry Sweep, Redsweep, Horsegrass, Adder's Wilds, The Hushed Wilds, Widower's Plains, Ivyreach, The Plains of Worms, Thirstreach, Brockreach, The Sighing Steppe, Soursweep, The Steppe of Prayers, Dunmark, Ferryman's Steppe, The Steppe of Horses, Ravengrass, The Reaches of Bones, Dolesweep, Spinner's Howe, The Steppe of Saints, The Pale Reaches, The Shrouded Plains, The Forlorn Steppes, Reekdale Wilds, Dirgemark, Rimemark Steppe, The Plains of Mourners, The Cheerless Plains, Cairnsweep.
+- **isle**: The Drowned Isle, Gullskerry, The Isle of Sorrows, The Sunken Rock, Usurper's Isle, Hushknoll Skerry, Orphan's Hollow, Fletcher's Rock, Kelpgill Isle, Gullstack, Reeve's Rock, The Rock of Tides, The Holm of Gulls, Reaver's Holm, The Salt Stack, Brineholm, Anchorite's Oath, The Skerry of Saints, Wrackside Isle, Dwalelaw Rock, The Stack of Echoes, Goatherd's Isle, Skuarock, The Dying Skerry, The Skerry of the Damned, Nightbourne Stack, The Veiled Rock, The Stack of Kites, The Worn Isle, Stoatlaw Stack.
+- **mere**: Silvermere, Bowyer's Mere, Gloomwater, Palemere, Eelmark Water, Swartknoll Meres, Mirrortarn, Houndlake, The Worn Meres, Nighthorn Lake, Wayfarer's Drop, Prophet's Meres, Tansywater, Dirgebrook Meres, Horseman's Water, Banemark Mere, Spinner's Water, Rowangill Water, Wolftarn, Pitchedge Lake, The Deep Pool, Shroudfall Tarn, Crooktree Water, Fletcher's Meres, Gibbetcombe Tarn, The Drowned Water, Burrmere, Dwalelake, Carter's Meres, Saint's Mere.
+- **fells**: The High Fells, Adderedge, Hartcrag, The Sable Uplands, The Drear Uplands, Frostedge, Pallrigg, The Godless Fells, The Fell of the Moon, The Steep Fell, Brandslack Fells, Prince's Heights, Hushcrag, Thief's Fell, Windfell, Slaterigg, Prince's Edges, The Cloven Uplands, The Ruined Fell, Stagbank Brows, The Stunted Scars, The Scars of the Moon, Hushrigg, Shaleknott, Screerigg Fell, Sorrowridge Crags, Murkdale Edges, The High Brows, Frostbeck Uplands, Witherknott.
+
+**How bad combinations are avoided.** By rule (RG11 7): V1 joins (no `Ashhurst`, `Hollowwood`, `Bramblealder`; compounds of at most 12 letters, so no `Hemlockhollow`); V2 no triple letters; V3 no element inside another (`The Hollow Hollow`, `Fenmoss Moss`, `The Wood of Woods`); V4 the 19 forbidden substrings; V5 the excluded names; V6 at most 48 bytes. By list discipline: common lists hold no land noun or land suffix (`Barrow`, `Fang`, `Horn`, `Scald`, `Scar` were moved out of the common prefixes), no compass word (so no drawn name can read as a sector name), no comic or modern words. By audit: every compound the lists can make was checked against the English word lists of `/usr/share/dict` (abstract nouns such as `Blackness` came from the coast suffix `ness`, which was removed; modern words such as `Foghorn`, `Smokestack`, `Floodgate`, `Blindside` were excluded) and against a hand list of about 250 well-known real and fictional place names (Tolkien, Forgotten Realms, Greyhawk, Warcraft, Elder Scrolls, Dark Souls, Elden Ring, Game of Thrones, Diablo, Path of Exile and English towns and landscapes). Excluded as whole names or words, among others: `Blackwood`, `Blackrock`, `Blackreach`, `Blackmarsh`, `Murkmire`, `Mistwood`, `Ravenholm`, `Ravenscar`, `Coldfell`, `Redhorn`, `Starkhorn`, `Mirrormere`, `Hoarwell`, `Harrowdale`, `Hornwood`, `Ironwood`, `Wychwood`, `Hollywood`, `Blackpool`, `Ashford`, `Lichfield`, `Stillwater`, `The Withered Heath`, `The Burning Steppes`, `The Dread Wastes`, `The Cold Plains`, `The Black Marsh`, `The Wild Wood`, `The High Moor`, `The Fallow Mire`. Paul's own examples are kept: `Blackwater Fen`, `The Ashen Downs`, `Thornwood`-style compounds, `Harrowmere`, `Widow's Reach` and `The Vale of Crows` can all be drawn.
+
+### 14.4 Before and after
+
+**1024, seed 42** (the world of the history examples; every region):
+
+| id | old name | new name | land | traits | how |
+| --- | --- | --- | --- | --- | --- |
+| 1 | North Downs | The Scarred Downs | downs | coast | t0 |
+| 2 | North Downs II | The Sour Plain | downs | coast | t0 |
+| 3 | Northwest Downs | The Rises of Hares | downs |  | t0 |
+| 4 | Northwest Downs II | Warlord's Rises | downs | fertile | t0 |
+| 5 | Northwest Steppe | Northwest Steppe | steppe | coast, high, ore, barren | plain |
+| 6 | North Downs III | North Downs | downs | river, fertile | plain |
+| 7 | Northeast Downs | The Windswept Wolds | downs | fertile | t0 |
+| 8 | Northwest Downs III | Northwest Downs | downs | ore | plain |
+| 9 | Northwest Heath | Northwest Heath | heath | high, barren | plain |
+| 10 | Northeast Downs II | Knelldown | downs | river, fertile | t0 |
+| 11 | Northeast Downs III | Beggar's Plain | downs | fertile | t0 |
+| 12 | Northeast Downs IV | Witchgate Barrows | downs | river, fertile | t0 |
+| 13 | North Heath | North Heath | heath | high, barren | plain |
+| 14 | Northeast Wood | Northeast Wood | wood | river | plain |
+| 15 | Northwest Peaks | Northwest Peaks | peaks | high, ore, barren | plain |
+| 16 | North Downs IV | Steward's Vale | downs | river | t0 |
+| 17 | East Wood | Wrecker's Reach | wood | coast | t0 |
+| 18 | Northeast Downs V | Northeast Downs | downs | river, fertile | plain |
+| 19 | West Wood | The Shaw of Widows | wood |  | t0 |
+| 20 | West Peaks | West Peaks | peaks | lake, high | plain |
+| 21 | Central Heath | Central Heath | heath | high, ore, barren | plain |
+| 22 | West Wood II | West Wood | wood |  | plain |
+| 23 | Central Wood | Central Wood | wood | lake, high, ore | plain |
+| 24 | East Wood II | Drover's Sorrow | wood | river | t0 |
+| 25 | Central Downs | Central Downs | downs |  | plain |
+| 26 | East Wood III | East Wood | wood | river | plain |
+| 27 | West Wood III | Sprayridge Thicket | wood | coast, river | t0 |
+| 28 | East Downs | East Downs | downs | river | plain |
+| 29 | East Wood IV | Dawthorn Woods | wood | ore, barren | t0 |
+| 30 | West Downs | Vetchdown | downs | river, lake, fertile | t0 |
+| 31 | West Downs II | West Downs | downs | lake, fertile | plain |
+| 32 | South Downs | South Downs | downs | high, ore | plain |
+| 33 | East Wood V | The Sorrowing Shaw | wood |  | t0 |
+| 34 | Southeast Wood | Southeast Wood | wood |  | plain |
+| 35 | Southwest Wood | The Wood of Stags | wood |  | t0 |
+| 36 | Southwest Steppe | Southwest Steppe | steppe |  | plain |
+| 37 | Southeast Wood II | The Brake of the Forgotten | wood |  | t0 |
+| 38 | Southwest Downs | Southwest Downs | downs | high | plain |
+| 39 | Southeast Wood III | Harrowholt | wood | coast | t0 |
+| 40 | Southeast Wood IV | Prince's Vow | wood |  | t1 |
+| 41 | Southwest Downs II | Larkfell | downs | high, ore, pass, barren | t0 |
+| 42 | South Wood | Stranger's Oath | wood |  | t0 |
+| 43 | Southwest Wood II | Southwest Wood | wood | coast | plain |
+| 44 | South Wood II | South Wood | wood | high, pass | plain |
+| 45 | Southeast Wood V | Badgerhorn Wood | wood |  | t0 |
+| 46 | South Wood III | The Tangle of Yews | wood |  | t0 |
+| 47 | Southwest Wood III | Thistlehorn Shaw | wood |  | t0 |
+| 48 | South Fells | South Fells | fells | high, barren | plain |
+| 49 | South Wood IV | The Gnarled Forest | wood | coast, barren | t0 |
+| 50 | Southeast Isle | Southeast Isle | isle | coast | plain |
+
+`how`: `plain` the keeper of its base name, `t<n>` the accepted attempt. 24 regions keep their base name, 26 draw (`East Wood` and `West Wood` are now one each; `Northeast Downs V`, the largest of five, is `Northeast Downs`).
+
+**2048, seed 42** (195 regions, 32 keep their base name, 163 drawn; attempts 170, 4 invalid, 3 taken, no fallback). The first 40 rows; the full table is `~/.cache/the-unmapped/out/p1-06-names/s42-2048.md`:
+
+| id | old name | new name | land | traits | how |
+| --- | --- | --- | --- | --- | --- |
+| 1 | North Wood | North Wood | wood | coast | plain |
+| 2 | North Wood II | Kelphollow Wood | wood | coast | t0 |
+| 3 | North Downs | Sorrowdale Vale | downs | coast, fertile | t0 |
+| 4 | North Wood III | Tidewood | wood | coast | t0 |
+| 5 | Northwest Downs | Sentinel's Hope | downs | coast, river, fertile | t0 |
+| 6 | Northwest Downs II | Wyrmtree Wolds | downs | coast, fertile | t0 |
+| 7 | Northwest Downs III | The Wolds of Sheaves | downs | fertile | t1 |
+| 8 | Northwest Downs IV | The Sward of Shepherds | downs | fertile | t0 |
+| 9 | Northwest Downs V | Sheafgill Sward | downs | fertile | t0 |
+| 10 | North Downs II | Knotwold | downs | coast, fertile | t0 |
+| 11 | North Wood IV | Knellmouth Weald | wood | coast, fertile | t0 |
+| 12 | North Downs III | The Sward of Scythes | downs | coast | t0 |
+| 13 | Northwest Steppe | The Unhallowed Wilds | steppe | coast, river | t0 |
+| 14 | Northwest Steppe II | Wrensweep | steppe | river | t0 |
+| 15 | Northwest Downs VI | Owl's Vale | downs | fertile | t0 |
+| 16 | Northwest Steppe III | The Plains of Kites | steppe |  | t0 |
+| 17 | North Steppe | North Steppe | steppe |  | plain |
+| 18 | North Downs IV | Teaselhorn Leas | downs | lake, fertile | t0 |
+| 19 | Northeast Downs | Sheafcross Barrows | downs | fertile | t0 |
+| 20 | Northeast Downs II | Sheafwold | downs | river, fertile | t0 |
+| 21 | North Downs V | Barleydown | downs | river | t0 |
+| 22 | Northeast Downs III | Bailiff's Knoll | downs | coast, fertile | t0 |
+| 23 | Northeast Downs IV | Drover's Leas | downs | river, fertile | t0 |
+| 24 | Northeast Downs V | The Bare Vale | downs | coast, fertile | t0 |
+| 25 | Northeast Downs VI | Wayfarer's Penance | downs | river, fertile | t0 |
+| 26 | Northwest Downs VII | Teaseldown | downs | fertile | t0 |
+| 27 | Northwest Downs VIII | Northwest Downs | downs | fertile | plain |
+| 28 | Northwest Steppe IV | Northwest Steppe | steppe |  | plain |
+| 29 | Northwest Downs IX | Frostlea | downs |  | t0 |
+| 30 | Northeast Downs VII | Hagwold | downs | fertile | t0 |
+| 31 | North Downs VI | Tarebarrow | downs | river, fertile | t0 |
+| 32 | Northeast Downs VIII | The Downs of the Harvest | downs | fertile | t0 |
+| 33 | Northeast Downs IX | Dreadwold | downs | river, fertile | t0 |
+| 34 | Northeast Downs X | Shroudlea | downs | fertile | t0 |
+| 35 | Northeast Downs XI | The Bleached Wolds | downs | river, fertile | t0 |
+| 36 | Northwest Heath | Northwest Heath | heath | high, ore, barren | plain |
+| 37 | North Heath | North Heath | heath | lake, high, barren | plain |
+| 38 | Northeast Downs XII | Stonegill Vale | downs | fertile | t0 |
+| 39 | Northeast Downs XIII | The Wolds of the Unburied | downs | river, fertile | t0 |
+| 40 | Northwest Wood | Coaledge Brake | wood | coast | t0 |
+
+### 14.5 Open questions for Paul (each with the interim choice this revision implements)
+
+1. **Who keeps the plain name.** Interim and recommended: the largest region of each base name keeps `East Wood`, so the main forest east of the centre is still called that and every other region gets a name of its own (45% plain at 1024, 16% at 2048, 88% at 512). Alternatives: no plain names at all (every region drawn; the sector words then disappear from the map), or plain names only at 512.
+2. **`The` in running text.** Many drawn names begin with `The` (`The Scarred Downs`), stored capitalised as civilization names already are (`The Warrens of Bonk-Gitch`), so history sentences read "Fielie awakened the Elves in The Scarred Downs." Recommendation: the sentence renderer (P3-04 templates, P3-07 report) lower-cases a leading `The ` of an entity name inside a sentence, for regions and civilizations alike; stored names keep the capital. Interim: names stored with `The`; sentences unchanged until the report spec decides (a proposals entry is added).
+3. **Coincidence with real places.** English place-name elements make some real but obscure English place names (`Crowhurst`, `Blackmoor`, `Silverdale`, `Oakwood`). Interim and recommended: exclude famous places and names from well-known fiction and games only (14.3); accept obscure coincidences as the price of English-sounding names.
+4. **Tone and taste of the lists.** The lists are hand-written and normative; Paul may want words added or removed (14.3 samples). Any edit is a data change (content hash, world bytes), no code change.
+5. **Traits.** Eight traits steer the words (coast, river, lake, high, ore, pass, barren, fertile) with the thresholds of 4 and about a sixth of each slot's weight. Interim: as shipped. A stronger steer is one tuning number (`name_pool_weights`).
+
+### 14.6 Notes for other specs (for the lead)
+
+1. **P3-02 4.4** says region names "have a different form (`East Wood II`), so collisions with them are rare". From r3 a region name can be one capitalised word, the same form as a god or settlement name. Nothing in the algorithm changes: the history registry is already filled with every `region.name` first (P3-03 8, P3-04 7.2), so no god, civilization or settlement can take a region's name, and region names, fixed before history, never need to avoid history names. **Rule (unchanged, now load-bearing)**: the registry holds the region names before any history name is drawn. Only the sentence needs rewording.
+2. **P3-03 section 2** ("with the shipped data no region name can equal a god or age name (their forms differ)") and **14.3 item 21** (the chronology rows do not depend on the region names on shipped data): no longer true by form; item 21 still holds on the four P1 golden worlds (checked, 14.2), so the test stands, but the sentence should say "on the golden worlds" rather than "by form".
+3. **P3-04 and P3-05 goldens** store rendered sentences with region names (`p3-04-engine.txt` lines `<case> e<n> …`); they are re-recorded with r3 (10.5). P3-07's examples (`capital:` blocks, sentences) change likewise.
+4. **Viewer**: region names are up to 65 bytes (a kept name: 32 + 1 + 32) and up to 48 for drawn names; ASCII with `'`. No change needed; the region panel shows longer names than before.
+5. **P1-00 section 3** gains the stream `geo.regions.name`; **P0-03** gains the kind `placename` in its kind list and the grammars `element`, `name_object`, `place_name` and `place_form` (kind-local).
