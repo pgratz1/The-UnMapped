@@ -112,7 +112,8 @@ TEST_CASE("P3-06 engineer: W1 front, force, battle, siege and casualties") {
     const std::vector<std::int64_t> losses = h::casualty_losses(std::vector<std::int64_t>{2000, 500}, 100);
     CHECK(losses == std::vector<std::int64_t>{80, 20});
     CHECK(h::casualty_losses(std::vector<std::int64_t>{6000}, 38) == std::vector<std::int64_t>{38});
-    CHECK(h::casualty_losses(std::vector<std::int64_t>{1, 1, 1}, 2) == std::vector<std::int64_t>{1, 1, 0});
+    // The remainder comes from one settlement only, at most its population (7.4).
+    CHECK(h::casualty_losses(std::vector<std::int64_t>{1, 1, 1}, 2) == std::vector<std::int64_t>{1, 0, 0});
     const std::int64_t garrison = h::garrison_of(t, 480, 1600, h::SettlementKind::village, false);
     CHECK(garrison == 345);
     CHECK(h::siege_permille_of(442, garrison) == 561);

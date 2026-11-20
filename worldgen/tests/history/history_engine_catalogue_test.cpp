@@ -120,7 +120,7 @@ TEST_CASE("P3-04 8.2, 16.1 item 9: the compiled catalogue is 8.2 transcribed; ke
         std::sort(keys.begin(), keys.end() - 1);
         CHECK(std::adjacent_find(keys.begin(), keys.end() - 1) == keys.end() - 1);
     }
-    CHECK(c.find("battle") == nullptr);
+    CHECK(c.find("duel") == nullptr);  // battle is P3-06's kind 22 from 0.16.0
     // Entity type and phase kind codes (6.1, 9.2).
     CHECK(static_cast<std::int64_t>(EntityType::race) == 1);
     CHECK(static_cast<std::int64_t>(EntityType::god) == 2);

@@ -1004,7 +1004,7 @@ void ConflictSubsystem::declare(StepContext& ctx, std::int64_t a, std::int64_t b
     e.causes = {claim_of.event};
     if (const auto lp = last_peace_.find(ordered(a, b)); lp != last_peace_.end()) {
         e.causes.push_back(lp->second.event);
-        std::sort(e.causes.begin(), e.causes.end());
+        std::stable_sort(e.causes.begin(), e.causes.end());
     }
     const std::int64_t ev = ctx.append(e);
     const RelationKey peace = symmetric_relation(a, b, "peace");

@@ -187,7 +187,7 @@ void check_shipped_values(const wd::ContentSet& c) {
     }
     const wd::KindContent* history = c.find_kind("history");
     REQUIRE(history != nullptr);
-    REQUIRE(history->definitions.size() == 4U);  // chronology, engine, peoples (P3-05 12.1), report (P3-04 4)
+    REQUIRE(history->definitions.size() == 5U);  // chronology, conflict (P3-06 12.1), engine, peoples (P3-05 12.1), report (P3-04 4)
     const wd::Definition& chrono = history->definitions[0];
     CHECK(chrono.id == "chronology");
     REQUIRE(chrono.record.size() == 3U);
@@ -223,18 +223,19 @@ TEST_CASE("P3-01 3-5: the production registry holds race, culture and history be
     CHECK(history.directory == "history");
     CHECK(history.required);
     REQUIRE(history.has_fixed_ids());
-    REQUIRE(history.id_schemas.size() == 4U);  // P3-01 5: chronology; engine and report from P3-04; peoples P3-05
+    REQUIRE(history.id_schemas.size() == 5U);  // P3-01 5: chronology; engine and report from P3-04; peoples P3-05; conflict P3-06
     CHECK(history.id_schemas[0].id == "chronology");
-    CHECK(history.id_schemas[1].id == "engine");
-    CHECK(history.id_schemas[2].id == "peoples");
-    CHECK(history.id_schemas[3].id == "report");
+    CHECK(history.id_schemas[1].id == "conflict");
+    CHECK(history.id_schemas[2].id == "engine");
+    CHECK(history.id_schemas[3].id == "peoples");
+    CHECK(history.id_schemas[4].id == "report");
     const wd::Schema* chrono = history.schema_for("chronology");
     REQUIRE(chrono != nullptr);
     REQUIRE(chrono->checks().size() == 1U);
     CHECK(chrono->checks()[0].name == "chronology_age_name_form");
     CHECK(history.schema_for("engine") != nullptr);
     CHECK(history.schema_for("peoples") != nullptr);  // P3-05 12.1
-    CHECK(history.schema_for("conflict") == nullptr);  // P3-06, generator 0.16.0 (P3-01 r7)
+    CHECK(history.schema_for("conflict") != nullptr);  // P3-06, generator 0.16.0 (P3-01 r7)
 
     const wd::Kind& race = kinds[3];
     CHECK(race.directory == "races");
@@ -309,13 +310,13 @@ TEST_CASE("P3-01 8.1 test 1: game/data and the two fixture roots hold the listin
     for (const char* f : {"races/elf.toml", "races/goblin.toml", "races/dwarf.toml", "races/faerie.toml",
                           "races/human.toml", "races/orc.toml", "cultures/dwarven.toml", "cultures/elven.toml",
                           "cultures/faerie.toml", "cultures/goblin.toml", "cultures/human.toml",
-                          "cultures/orcish.toml", "history/chronology.toml", "history/engine.toml",
-                          "history/peoples.toml", "history/report.toml"}) {
+                          "cultures/orcish.toml", "history/chronology.toml", "history/conflict.toml",
+                          "history/engine.toml", "history/peoples.toml", "history/report.toml"}) {
         CAPTURE(f);
         CHECK(std::filesystem::is_regular_file(data / f));
     }
     // P3-01 5: "a file for a future id must not be committed early".
-    CHECK(directory_from_disk(data, "history").entries.size() == 4U);  // no conflict.toml before 0.16.0
+    CHECK(directory_from_disk(data, "history").entries.size() == 5U);  // conflict.toml from 0.16.0 (P3-06 12.1)
 }
 
 TEST_CASE("P3-01 3.1: the races in race order are elves, goblins, dwarves, faeries, humans, orcs (design 5)") {
@@ -500,6 +501,7 @@ TEST_CASE("P3-01 3 race_order_dense: against the directory, naming the smallest 
         f["history/chronology.toml"] = std::string(history_data::CHRONOLOGY_TOML);
         f["history/engine.toml"] = std::string(history_data::ENGINE_TOML);
         f["history/peoples.toml"] = std::string(history_data::PEOPLES_TOML);
+        f["history/conflict.toml"] = std::string(history_data::CONFLICT_TOML);
         f["history/report.toml"] = std::string(history_data::REPORT_TOML);
         at_directory(only_error(load(f)), "races", "race_order_dense", "race",
                      "orders must be 1 to 1 without gaps; 1 is missing");
@@ -521,6 +523,7 @@ TEST_CASE("P3-01 3 race_order_dense: against the directory, naming the smallest 
         f["history/chronology.toml"] = std::string(history_data::CHRONOLOGY_TOML);
         f["history/engine.toml"] = std::string(history_data::ENGINE_TOML);
         f["history/peoples.toml"] = std::string(history_data::PEOPLES_TOML);
+        f["history/conflict.toml"] = std::string(history_data::CONFLICT_TOML);
         f["history/report.toml"] = std::string(history_data::REPORT_TOML);
         const Load l = load(f);
         INFO(dump(l));
