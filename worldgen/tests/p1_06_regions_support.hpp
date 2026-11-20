@@ -40,6 +40,7 @@
 #include "p1_05_resources_support.hpp"
 #include "p1_06_regions_api.hpp"
 #include "p1_06_regions_data.hpp"
+#include "p1_06_regions_names.hpp"
 #include "worldgen/core/fx.hpp"
 #include "worldgen/core/hash.hpp"
 #include "worldgen/core/noise.hpp"
@@ -708,10 +709,33 @@ inline std::vector<std::string> own_name_list(std::span<const region_api::NameIn
                                  : 4 * e.walk_cells < e.cells && !own ? v.names[10]
                                                                   : nouns.at(e.biome).noun;
         const std::string base = v.names[static_cast<std::size_t>(sec)] + " " + noun;
-        const std::int64_t k = ++seen[base];
-        out.push_back(k == 1 ? base : base + " " + own_roman(k));
+        ++seen[base];
+        out.push_back(base);  // r3: the base name, never a numeral (RG11 4)
     }
     return out;
+}
+
+// RG11 3 (r3): the land definition whose words a region draws: isle, lake
+// (b), upland (c), else the land of the dominant biome (a water biome:
+// lake; only on hand-made input).
+inline const region_names::PlaceDef* own_land_of(const region_api::NameInput& e, const Values& v,
+                                                 const std::map<std::int64_t, Noun>& nouns,
+                                                 const region_names::PlaceData& data) {
+    const bool own = std::find(v.upland_own_noun.begin(), v.upland_own_noun.end(), nouns.at(e.biome).key) !=
+                     v.upland_own_noun.end();
+    if (e.isle) {
+        return data.special("isle");
+    }
+    if (2 * e.lake_cells >= e.cells) {
+        return data.special("lake");
+    }
+    if (4 * e.walk_cells < e.cells && !own) {
+        return data.special("upland");
+    }
+    if (nouns.at(e.biome).water) {
+        return data.special("lake");
+    }
+    return data.land_of_biome(nouns.at(e.biome).key);
 }
 
 // --- Own RG12 ------------------------------------------------------------------------------------
@@ -930,6 +954,10 @@ struct Own {
     std::vector<std::int64_t> owner0, cost, owner;
     region_api::Output out;
     OwnStats stats;
+    std::vector<std::string> name_how;  // r3: per region "K", "F" or the accepted attempt
+    std::vector<std::string> bases;     // r3: base name per region (RG11 4)
+    std::vector<const region_names::PlaceDef*> lands;     // r3: land definition per region (RG11 3)
+    std::vector<region_names::TraitRow> trait_rows;       // r3: trait inputs per region (RG11 5)
 };
 
 inline std::int64_t own_metres(std::int64_t d) { return std::min<std::int64_t>(32767, (32 * d + 5) / 10); }
@@ -1128,7 +1156,9 @@ inline Own own_regions(const region_api::Inputs& in, std::span<const region_api:
             o.out.biomes.push_back(region_api::BiomeRow{r, code, cnt});
         }
     }
-    // RG11.
+    // RG11 1 to 4 (base names and lands); the draws follow RG12.
+    std::vector<region_api::NameInput> name_inputs;
+    std::vector<std::string> bases;
     if (R > 0) {
         std::int64_t land = 0, sx = 0, sy = 0;
         std::map<std::int64_t, std::int64_t> lm_cells;
@@ -1166,15 +1196,53 @@ inline Own own_regions(const region_api::Inputs& in, std::span<const region_api:
             o.stats.fells += !isle && !mere && 4 * row.walk_cells < row.cells && !own_noun ? 1 : 0;
             o.stats.central += own_sector(row.seed_x - cx, row.seed_y - cy, rc) == 0 ? 1 : 0;
         }
-        const std::vector<std::string> nm = own_name_list(ni, cx, cy, rc, v, nouns);
-        for (std::size_t k = 0; k < nm.size(); ++k) {
-            o.out.regions[k].name = nm[k];
-            o.stats.numbered += std::count(nm[k].begin(), nm[k].end(), ' ') == 2 ? 1 : 0;
+        name_inputs = ni;
+        bases = own_name_list(ni, cx, cy, rc, v, nouns);
+        std::map<std::string, std::int64_t> seen;
+        for (const std::string& b : bases) {
+            // cover's `numbered`: every region of a base name but its first
+            // (r2's numbered names; r3's drawn names are the same regions).
+            o.stats.numbered += ++seen[b] >= 2 ? 1 : 0;
         }
     }
     // RG12.
     o.out.borders = own_borders(g, region, o.surface, in.walk_area, in.water, in.river, border, passes,
                                 &o.stats.crossings, &o.stats.crossed);
+    // RG11 r3 (after RG12: the pass trait reads the border rows).
+    if (R > 0) {
+        const region_names::PlaceData& data = region_names::shipped();
+        std::set<std::int64_t> passed;
+        for (const auto& b : o.out.borders) {
+            if (b.passes > 0) {
+                passed.insert(b.a);
+                passed.insert(b.b);
+            }
+        }
+        std::vector<region_names::NamedRegion> nr;
+        for (std::size_t k = 0; k < o.out.regions.size(); ++k) {
+            const auto& row = o.out.regions[k];
+            region_names::NamedRegion x;
+            x.id = row.id;
+            x.cells = row.cells;
+            x.base = bases[k];
+            x.land = own_land_of(name_inputs[k], v, nouns, data);
+            REQUIRE(x.land != nullptr);
+            x.traits = region_names::TraitRow{row.coast_cells,    row.river_class_max,   row.lake_cells,
+                                              row.cells,          row.elev_mean_dm,      row.ore_rich_cells,
+                                              row.habitability_mean, row.fertility_mean, passed.count(row.id) > 0};
+            nr.push_back(x);
+            o.lands.push_back(x.land);
+            o.trait_rows.push_back(x.traits);
+        }
+        o.bases = bases;
+        const auto named = region_names::name_regions(nr, seed, static_cast<std::uint64_t>(g.width), data,
+                                                      region_names::NameTuning{});
+        REQUIRE_MESSAGE(named.has_value(), "own RG11: no free name");
+        for (std::size_t k = 0; k < named->names.size(); ++k) {
+            o.out.regions[k].name = named->names[k];
+        }
+        o.name_how = named->how;
+    }
     o.stats.greedy = static_cast<std::int64_t>(o.greedy.size());
     o.stats.landmass_seeds = static_cast<std::int64_t>(o.seeds.size() - o.greedy.size());
     o.stats.rejected = ss.rejected;
@@ -1207,6 +1275,22 @@ inline std::string cover_of(const OwnStats& s) {
            ",border_river_cells:" + std::to_string(s.border_river_cells) + ",corner:" + std::to_string(s.corner) +
            ",mere:" + std::to_string(s.mere) + ",fells:" + std::to_string(s.fells) +
            ",crossed:" + std::to_string(s.crossed);
+}
+
+// r3 golden lines (10.5): "<id>:<name>|..." and "<id>:<how>|..." in id order.
+inline std::string names_line(const std::vector<region_api::RegionRow>& rows) {
+    std::string s;
+    for (const auto& r : rows) {
+        s += (s.empty() ? "" : "|") + std::to_string(r.id) + ":" + r.name;
+    }
+    return s.empty() ? "-" : s;
+}
+inline std::string attempts_line(const std::vector<region_api::RegionRow>& rows, const std::vector<std::string>& how) {
+    std::string s;
+    for (std::size_t k = 0; k < rows.size() && k < how.size(); ++k) {
+        s += (s.empty() ? "" : "|") + std::to_string(rows[k].id) + ":" + how[k];
+    }
+    return s.empty() ? "-" : s;
 }
 
 // --- Hashes (P0-04 8; golden items) --------------------------------------------------------------
@@ -1517,6 +1601,10 @@ inline std::vector<GoldenCase> read_golden(const std::string& path) {
             out.push_back(gc);
         } else {
             REQUIRE_MESSAGE((!out.empty() && out.back().name == a), "golden line outside its case: " << line);
+            if (b == "names" || b == "name_attempts") {
+                // r3: the value is the rest of the line (names hold spaces).
+                c = line.substr(a.size() + 1 + b.size() + 1);
+            }
             out.back().items.emplace_back(b, c);
         }
     }

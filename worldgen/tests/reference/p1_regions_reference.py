@@ -2,7 +2,8 @@
 """Independent exact-integer reference of the P1-06 regions stage.
 
 Written by the test writer from docs/specs/p1-06-regions.md (second
-version, generator 0.11.0, schema 5: RG1 to RG14, the layer `region`, the
+version, generator 0.11.0, schema 5; revisions r3 and r4, generator 0.17.0:
+RG11's drawn region names from the data kind `placename`, no numerals; RG1 to RG14, the layer `region`, the
 tables `region`, `region_border` and `region_biome`, the report keys and
 the `ids` palette and `regions` composite of section 9, P0-04 amendment 18)
 and docs/specs/p1-00-geography-overview.md (G1, G2, G6, G7 with k = 1,
@@ -41,6 +42,12 @@ Usage (from the repository root; -B keeps __pycache__ out of the tree):
 
     python3 -B worldgen/tests/reference/p1_regions_reference.py case NAME [--db-dir DIR]
         Print the items of one golden case.
+
+    python3 -B worldgen/tests/reference/p1_regions_reference.py names DB...
+    python3 -B worldgen/tests/reference/p1_regions_reference.py rename-db SRC DST
+        (r3, generator 0.17.0) RG11 r3 on the region and border rows of a
+        stored world: print the names, or copy the world with only
+        region.name replaced (the history references' inputs).
 
     python3 -B worldgen/tests/reference/p1_regions_reference.py world DB...
         Run the stage on the stored layers of 0.10.0 world files (any size)

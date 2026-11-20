@@ -23,10 +23,17 @@
 // A contract violation throws worldgen::FatalError: "regions: input
 // precondition: " for the stage (P1-06 section 2).
 
+#include <algorithm>
+#include <array>
 #include <cstdint>
+#include <filesystem>
+#include <fstream>
 #include <optional>
+#include <set>
 #include <span>
+#include <sstream>
 #include <string>
+#include <string_view>
 #include <utility>
 #include <vector>
 
@@ -38,6 +45,7 @@
 #include "p1_05_resources_data.hpp"
 #include "p1_06_regions_data.hpp"
 #include "p3_01_history_fixture.hpp"
+#include "p3_08_switch.hpp"
 #include "worldgen/core/fx.hpp"
 #include "worldgen/data/content.hpp"
 #include "worldgen/data/load_error.hpp"
@@ -84,6 +92,25 @@ inline Load load(std::optional<std::string> regions_tuning, std::optional<worldg
         root.directories.push_back(*biomes_dir);
     }
     history_fixture::add_to(root);  // P3-01: the required history kinds
+#if UNMAPPED_P3_08_API
+    // P1-06 r3 4.1: the required kind `placename` (the shipped files; the
+    // fixture copies are identical).
+    {
+        wd::MemoryDirectory pn{"placenames", {}};
+        for (const auto& e : std::filesystem::directory_iterator(
+                 std::filesystem::path(UNMAPPED_TEST_SOURCE_ROOT) / "game" / "data" / "placenames")) {
+            if (e.path().extension() == ".toml") {
+                std::ifstream in(e.path(), std::ios::binary);
+                std::ostringstream ss;
+                ss << in.rdbuf();
+                pn.entries.push_back(wd::MemoryEntry{e.path().filename().string(), ss.str(), false});
+            }
+        }
+        std::sort(pn.entries.begin(), pn.entries.end(),
+                  [](const wd::MemoryEntry& a, const wd::MemoryEntry& b) { return a.name < b.name; });
+        root.directories.push_back(std::move(pn));
+    }
+#endif
     wd::LoadResult<wd::ContentSet> r = wd::load_content_from_memory(registry, root);
     Load out;
     out.errors = r.errors;
@@ -212,7 +239,12 @@ inline std::vector<std::int64_t> merge(Grid g, std::span<const std::int64_t> own
 inline int sector(std::int64_t dx, std::int64_t dy, std::int64_t rc) {
     return static_cast<int>(worldgen::stages::region_sector(dx, dy, rc));
 }
+#if !UNMAPPED_P3_08_API
+// r2 seams, replaced by r3 (10.5): roman leaves the names (worldgen/core
+// keeps it), region_names gains the trait inputs, the placename data and
+// the seed (the r3 wrappers are at the end of this file).
 inline std::string roman(std::int64_t k) { return worldgen::stages::roman(k); }
+#endif
 
 // cells, lake_cells and walk_cells decide RG11 3 b (Mere) and c (upland,
 // r2); the defaults make neither apply.
@@ -225,6 +257,7 @@ struct NameInput {
 // seam computes the centroid from the land sums and the isles from the
 // landmass sizes, so the regions not marked isle are put on landmass 1 (the
 // largest) and each isle on a landmass of its own of one cell.
+#if !UNMAPPED_P3_08_API
 inline std::vector<std::string> names(std::span<const NameInput> in, std::int64_t cx, std::int64_t cy, std::int64_t n,
                                       const Tuning& t, const Definitions& d) {
     std::vector<worldgen::stages::RegionNameInput> v;
@@ -249,6 +282,7 @@ inline std::vector<std::string> names(std::span<const NameInput> in, std::int64_
     return worldgen::stages::region_names(v, lm_cells, 1, static_cast<std::uint64_t>(cx), static_cast<std::uint64_t>(cy),
                                           n, d, t);
 }
+#endif
 
 // --- Tables (3.2, 3.3) ----------------------------------------------------------------------------
 
@@ -335,13 +369,33 @@ struct Output {
     friend bool operator==(const Output&, const Output&) = default;
 };
 
+#if UNMAPPED_P3_08_API
+// --- RG11 r3 seams (interim names of P1-06 10.5; adapted at integration) ------------------------
+
+inline const worldgen::data::ContentSet& r3_content() {
+    static const Load l = load(std::string(region_data::TUNING_TOML), biome_data::directory());
+    REQUIRE(l.ok());
+    return *l.content;
+}
+using Placenames = decltype(worldgen::stages::placename_data_from(std::declval<const worldgen::data::ContentSet&>()));
+inline const Placenames& placenames() {
+    static const Placenames p = worldgen::stages::placename_data_from(r3_content());
+    return p;
+}
+#endif
+
 inline Output stage(const Inputs& in, const Definitions& d, std::span<const Pass> passes, const Tuning& t,
                     std::uint64_t seed, std::uint32_t threads) {
     const worldgen::stages::RegionInputs ri{in.grid,      in.elevation, in.water,       in.water_depth, in.flow_dir,
                                             in.river,     in.biome,     in.fertility,   in.ore,         in.timber,
                                             in.fresh_water, in.forage,  in.habitability, in.walk_area};
     const std::vector<worldgen::db::PassRow> pr = pass_rows(passes);
+#if UNMAPPED_P3_08_API
+    // r3 (interim, 10.5): the stage takes the placename data.
+    auto r = worldgen::stages::regions_stage(ri, d, placenames(), pr, t, seed, threads);
+#else
     auto r = worldgen::stages::regions_stage(ri, d, pr, t, seed, threads);
+#endif
     Output out;
     out.region = std::move(r.region);
     for (const auto& x : r.regions) {
@@ -380,5 +434,84 @@ inline std::vector<std::uint8_t> composite(const worldgen::db::LayerGrid& elevat
                                            const worldgen::db::LayerGrid* flow_dir, std::uint32_t scale) {
     return worldgen::inspect::render_composite_regions(elevation, water, river, flow_dir, biome, region, scale, table);
 }
+
+#if UNMAPPED_P3_08_API
+// --- RG11 r3 seams (P1-06 10.5 "Seams", interim; adapt to the engineer's
+// recorded signatures at integration) ------------------------------------------------------------
+//
+//   placename_data_from(const data::ContentSet&)          the data reader
+//   region_traits(row, has_pass, tuning) -> bitset          RG11 5, trait order
+//   region_name_attempt(key, id, t, land, common, traits, tuning) -> (valid, name)
+//   region_name_valid(form, values, common) -> bool        V1 to V6
+//   region_name_fallback(land, common, used) -> name       RG11 8
+//   regions_stage(inputs, definitions, placenames, passes, tuning, seed, threads)
+//
+// The tests below this header use only these wrappers, with plain types:
+// a land, the common definition or a trait by its placename id or trait
+// name, traits as names in trait order, values as strings.
+
+// A data root as load() makes it, with the given placenames/ directory
+// instead of the shipped one (std::nullopt: none).
+inline Load load_with_placenames(std::optional<worldgen::data::MemoryDirectory> pn) {
+    namespace wd = worldgen::data;
+    const wd::KindRegistry registry = wd::builtin_kinds();
+    wd::MemoryDataRoot root;
+    wd::MemoryDirectory dir{"worldgen", {}};
+    dir.entries.push_back(wd::MemoryEntry{"elevation.toml", elev_test::elevation_toml(), false});
+    dir.entries.push_back(wd::MemoryEntry{"hydrology.toml", hydro_test::hydrology_toml(hydro_test::SHIPPED_AREA), false});
+    dir.entries.push_back(wd::MemoryEntry{"climate.toml", std::string(climate_test::SHIPPED_TOML), false});
+    dir.entries.push_back(wd::MemoryEntry{"biomes.toml", std::string(biome_data::TUNING_TOML), false});
+    dir.entries.push_back(wd::MemoryEntry{"resources.toml", std::string(resource_data::TUNING_TOML), false});
+    dir.entries.push_back(wd::MemoryEntry{"regions.toml", std::string(region_data::TUNING_TOML), false});
+    root.directories.push_back(dir);
+    root.directories.push_back(biome_data::directory());
+    history_fixture::add_to(root);
+    if (pn.has_value()) {
+        root.directories.push_back(*pn);
+    }
+    wd::LoadResult<wd::ContentSet> r = wd::load_content_from_memory(registry, root);
+    Load out;
+    out.errors = r.errors;
+    if (r.ok()) {
+        out.content = std::move(*r.value);
+    }
+    return out;
+}
+
+inline Placenames placenames_of(const worldgen::data::ContentSet& c) { return worldgen::stages::placename_data_from(c); }
+
+// RG11 5: the traits a row holds, as names in trait order.
+inline std::vector<std::string> traits(const worldgen::db::RegionRow& row, bool has_pass, const Tuning& t) {
+    const auto bits = worldgen::stages::region_traits(row, has_pass, t);
+    static const std::array<const char*, 8> names = {"coast", "river", "lake", "high", "ore", "pass", "barren", "fertile"};
+    std::vector<std::string> out;
+    for (std::size_t i = 0; i < names.size(); ++i) {
+        if (bits.test(i)) {
+            out.emplace_back(names[i]);
+        }
+    }
+    return out;
+}
+
+// RG11 6 and 7: attempt t of region id for the land `land` with the given
+// traits (names, trait order), K_name of (seed, n).
+inline std::pair<bool, std::string> name_attempt(const Placenames& pn, std::uint64_t seed, std::uint64_t n,
+                                                 std::int64_t id, std::int64_t t, std::string_view land,
+                                                 const std::vector<std::string>& traits, const Tuning& tu) {
+    const std::uint64_t key = worldgen::substream(worldgen::stream_key(seed, "geo.regions.name"), n);
+    const auto r = worldgen::stages::region_name_attempt(key, id, t, pn.land(land), pn.common(), pn.traits(traits), tu);
+    return {r.valid, r.name};
+}
+
+// V1 to V6 of a form and its slot values (in slot order).
+inline bool name_valid(const Placenames& pn, std::string_view form, const std::vector<std::string>& values) {
+    return worldgen::stages::region_name_valid(form, values, pn.common());
+}
+
+// RG11 8.
+inline std::string name_fallback(const Placenames& pn, std::string_view land, const std::set<std::string>& used) {
+    return worldgen::stages::region_name_fallback(pn.land(land), pn.common(), used);
+}
+#endif
 
 }  // namespace region_api

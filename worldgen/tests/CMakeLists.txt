@@ -231,6 +231,7 @@ target_sources(worldgen-tests PRIVATE
     stages_regions_data_test.cpp
     stages_regions_golden_test.cpp
     stages_regions_property_test.cpp
+    stages_regions_names_test.cpp
     inspect_regions_test.cpp
 )
 target_compile_definitions(worldgen-tests PRIVATE

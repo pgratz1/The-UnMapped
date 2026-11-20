@@ -6,7 +6,7 @@
 // message and the edges that pass; the event kinds 20-30 of 11 transcribed
 // (keys, caused, region and settlement use, roles with counts, values,
 // salience, template) and their templates; the report lists every kind;
-// the five hist.conflict streams after hist.peoples.split (51 names).
+// the five hist.conflict streams after hist.peoples.split (51 names at 0.16.0, 52 from P3-08).
 // The race-data items of 12.2 are in history_peoples_data_test.cpp and
 // data_history_kinds_test.cpp (P3-01 tests).
 //
@@ -257,9 +257,9 @@ TEST_CASE("P3-06 11, 16.1 item 11: the compiled kinds 20-30 equal section 11; te
     CHECK(compiled.kinds[18].key == "ruin_faded");
 }
 
-TEST_CASE("P3-06 3.3, 18.2: the five hist.conflict streams follow hist.peoples.split, 51 names in all") {
+TEST_CASE("P3-06 3.3, 18.2: the five hist.conflict streams follow hist.peoples.split, 52 names in all (P0-01 amendment 20)") {
     const auto names = worldgen::streams::all_stream_names;
-    REQUIRE(names.size() == 51U);
+    REQUIRE(names.size() == 52U);  // 51 at 0.16.0; P1-06 r4 adds geo.regions.name
     std::size_t at = names.size();
     for (std::size_t i = 0; i < names.size(); ++i) {
         if (names[i] == "hist.peoples.split") at = i;
