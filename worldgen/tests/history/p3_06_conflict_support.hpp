@@ -439,6 +439,9 @@ inline void check_invariants_06(const Tables& t, const eng::HistoryInputs& in, s
             CHECK((at(e, 1) - at(*x.ph.at(at(e, 4)), 3)) % quiet_step_years == 0);
         }
         if (k == k_battle || k == k_battle_at_pass) {
+            // r7 7.3 item 4 (0.17.0): with the shipped loss_winner 80 <= loss_loser 250 the victors never lose
+            // more than the defeated (dead_W from the smaller force)
+            CHECK(x.values.at(id).at(1) <= x.values.at(id).at(2));
             REQUIRE(x.causes.at(id).size() == 1U);
             CHECK(x.kind(x.causes.at(id)[0]) == k_war_declared);
         }

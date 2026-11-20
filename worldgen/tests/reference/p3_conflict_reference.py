@@ -1578,6 +1578,12 @@ def check_invariants(c, res, inp, w, label, last_refuge=True, threshold=None):
             c.true("%s 11 e%d claim cause" % (label, e[0]), len(cs) == 1 and KEY_OF[kind[cs[0]]] in (
                 "civ_founded", "settlement_founded", "colony_founded", "civ_seceded", "settlement_captured",
                 "region_ceded"))
+    # r7 7.3 item 4: with loss_winner <= loss_loser the victors never lose more than the defeated
+    if FLAGS["loss"] and w.ct["loss_winner_permille"] <= w.ct["loss_loser_permille"]:
+        for e in res["event"]:
+            if e[3] in (K["battle"], K["battle_at_pass"]):
+                c.true("%s r7 e%d the victors lose no more than the defeated" % (label, e[0]),
+                       vals[e[0]][1] <= vals[e[0]][2])
     # 3 falls
     for e in res["event"]:
         if e[3] not in (K["sacked"], K["settlement_captured"]):
@@ -2342,11 +2348,11 @@ def cmd_check(argv):
             if r[6] is not None and r[5] == r[6]:
                 guards["same-year " + r[4]] = guards.get("same-year " + r[4], 0) + 1
                 print("same-year row %s %s" % (name, r))
-        for (o, planned, actual) in w.plague_plans:
+        for (oe, planned, actual) in w.plague_plans:
             if planned != actual:
                 guards["plague plan != strikes"] = guards.get("plague plan != strikes", 0) + 1
                 print("note: %s plague e%d planned %d dead, struck %d (10.2: a spread target changed by an earlier "
-                      "strike of the same outbreak)" % (name, o, planned, actual))
+                      "strike of the same outbreak)" % (name, oe, planned, actual))
         if name.startswith("syn-") or head.startswith("world"):
             pres = history_stage(w.pd, inp, conflict=False)
             guards["18a eras"] = guards.get("18a eras", 0) + check_prefix(c, res, pres, name)
