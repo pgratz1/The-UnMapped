@@ -749,3 +749,21 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
   5. Trait steering stays as shipped.
 - Interim choice: none needed. Point 2 is a change to the sentence renderer (spec P3-04 8.4), specified and implemented together with the region names.
 - Status: accepted; implementation scheduled after P3-06
+
+### History: four rule changes proposed by the world critic's review of conflict
+
+- Date: 2026-11-20
+- Raised by: lead, from the world critic's review of P3-06 (`docs/reviews/p3-06-conflict-world-critic.md`)
+- Design doc section: 5 (history: wars, ruin, the elder peoples), 13 (P3)
+- Problem: conflict (generator 0.16.0) gives the history causes, endings and ruins, and the review found nothing that blocks its merge. It found four things the design does not settle:
+  1. **The last refuge cannot fall.** A people's last settlement is protected so that no race goes extinct. The guard is in use in 92 of 100 default worlds; one village holds 32 sieges in 352 years. It reads as absurd.
+  2. **Only goblins act.** Goblins declare 81% of wars at defaults; elves and faeries declare none, however much they have lost, and orcs lose three times as often as they win.
+  3. **Many wars change nothing.** 42% of default wars end with no sack, capture, cession or conquest, and the same pair fights over the same region up to 17 times.
+  4. **A race can win though no civilization does.** The runaway guard measures land share per civilization only; in 38 of 100 default worlds one race has at least 60% of all people.
+- Proposal:
+  1. A last refuge falls: its survivors flee and found a hidden hamlet elsewhere. The guard stays only when there is nowhere to flee.
+  2. Land lost by capture, sack or cession leaves a revenge claim that acts whatever the race's aggression, so elves retake ruins and dwarves avenge their holds. Orcs are made able to win their age (a larger levy, or a limit on declaring against much stronger foes).
+  3. A won war always costs the loser: land, tribute, or a longer truce for a pair that keeps fighting over the same goal.
+  4. Runaway is also measured per race, in the spec's sweep statistics and the validation sweep.
+- Interim choice: P3-06 merges as specified. Points 1 to 4 are being specified as their own change, P3-09 "conflict balance" (generator 0.18.0, branch `p3/09-spec`), at the spec writer's most reasonable reading, after the already decided names and peoples follow-ups (P3-08, generator 0.17.0). The P3-09 spec will list the decisions for Paul to confirm before it is implemented.
+- Status: open
