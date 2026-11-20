@@ -291,7 +291,7 @@ For each civilization c alive and visible in ascending id, with r its race: rate
 
 ### 10.4 Strike
 
-strike(s, kind, t, causes): dead = P × t div 1000; if s is thriving, `before` = P; P −= dead (`set_population`); append the event (region and settlement s; participants s as `settlement`, the owner as `civilization`; values `dead`, `population` = the new P; causes); status declining; s's **last reduction event** = this event; then 8.5 (a).
+strike(s, kind, t, causes): dead = P × t div 1000; if s is thriving, `before` = P; P −= dead (`set_population`); append the event (region and settlement s; participants s as `settlement`, the owner as `civilization`; values `dead`, `population` = the new P; causes); status declining; s's **last reduction event** = this event; then 8.5 (a). A settlement struck more than once in one T4 while already declining (its own famine and then its own plague, or a spread and then its own outbreak) draws `abandon` with the same key (s, 0) each time, so the later chances repeat the first outcome: in effect one abandonment chance per settlement per year (as specified; noted by the P3-05 audit, N6; r4).
 
 ### 10.5 Quiet steps
 
@@ -903,3 +903,7 @@ New 13.1: how P3-05 meets P3-04 6.9 (the determinism audit's A1, A2, N1–N5): l
 ## Revision note r3 (2026-11-19, rulings after implementation)
 
 The lead's rulings on the questions the implementation (`p3/05-int`, b62c1cf) raised; text only, no world byte or number changes. 13: `ruin(StepContext&, settlement, event)`; the `PeoplesView` state readers (`share`, `population`, `regions`, `settlements`, `wanted_held`) take `const StepContext&`; `PeoplesAwakening(PeoplesSubsystem&)`. 14 invariant 2: two settlements may share a cell when the earlier had faded first; invariant 7 through the `ruin_faded` event's cause, faded rows' `ruined_year` and `ruin_event` being cleared; invariant 9 covers every quiet step with no peoples event. 9.2: recovery is applied each year inside Q1; abandonments and kind changes once at the end, in ascending id. 9.3: the quiet factor applies in every quiet step. 10.2: the spread reads s's owner after the outbreak's strike, and an outbreak that abandons s spreads nowhere. 8.5 item 6 and 9.1: `civ_ended`'s region and settlement are the abandoned (or last ruined) settlement's; a civilization without standing settlement ends only in T1. 10.3: a crisis loss sets `before`, declining and the last reduction, and is not a strike. New 16.0 (the test writer's readings, agreed) and 16.0a (fatal messages, normative). Question 8 added (a plague that empties a settlement).
+
+## Revision note r4 (2026-11-19, the P3-05 audit)
+
+10.4: a settlement struck twice in one T4 while declining repeats the same abandonment draw (the audit's N6; as specified). The audit's N5 (9.2's recovery "once at the end") was already corrected by r3: recovery is applied each year inside Q1. What P3-06 must respect in this code is recorded in P3-06 8.4. No rule or world byte changes.
