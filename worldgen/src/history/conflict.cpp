@@ -837,8 +837,17 @@ std::vector<std::int64_t> ConflictSubsystem::wronged(std::int64_t a, std::int64_
                                 : std::vector<std::int64_t>(it->second.begin(), it->second.end());
 }
 
+// r9 20.4 with the lead's ruling for 20.23 (P3-09 r3): the wars now open
+// against the defender over the region count as if futile already.
 bool ConflictSubsystem::weary(const StepContext& ctx, std::int64_t defender, std::int64_t region) const {
-    return tuning_.weary_wars > 0 && futile_count(ctx, defender, region) >= tuning_.weary_wars;
+    if (tuning_.weary_wars <= 0) {
+        return false;
+    }
+    std::int64_t open = 0;
+    for (const ConflictWar& w : wars_) {
+        open += (w.open && w.defender == defender && w.goal == region) ? 1 : 0;
+    }
+    return checked_add(futile_count(ctx, defender, region), open) >= tuning_.weary_wars;
 }
 
 // 20.2: front(a, b) without the regions b is weary of, and without b's
