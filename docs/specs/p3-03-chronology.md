@@ -34,7 +34,7 @@ No data file changes: the six races, six cultures and `history/chronology.toml` 
 | Tuning | definition `history.chronology` (P3-01 5.1): `awakening_jitter_frac`, `awakening_min_gap_years`, `age_name_form` |
 | Region names | table `region` as written by the regions stage, in id order (`StageContext::regions()`, a new accessor like `passes()`) |
 
-The stage reads no layer. Of the geography it reads only the region names, and only to keep names unique (8.1); with the shipped data no region name can equal a god or age name (their forms differ: two or three capitalized words against one word or `The Age of …`), so on shipped data the chronology is a function of the seed, the settings and the data alone. This is a property to test (14.3 item 21), not a rule to rely on.
+The stage reads no layer. Of the geography it reads only the region names, and only to keep names unique (8.1); with the shipped data no region name could equal a god or age name before P1-06 r3 (their forms differed: two or three capitalized words against one word or `The Age of …`); from generator 0.17.0 (P1-06 r3, r3 of this spec) a drawn region name can be one capitalised word, the form of a god name, so the independence holds on the golden worlds (checked by P1-06 r3 14.2) rather than by form. On those worlds the chronology is a function of the seed, the settings and the data alone. This is a property to test (14.3 item 21), not a rule to rely on.
 
 Streams: **K_aw = `stream_key(seed, "hist.chronology.awakening")`** (new; registered in `streams.hpp`) and `hist.names.god` (P3-02 4.5). No `Rng`, no noise, no `hash_at`.
 
@@ -425,7 +425,7 @@ void run_chronology(StageContext&);
 18. Draw independence (Y3 in small): adding a test-only extra keyed draw on another stream before C3 changes nothing.
 19. `chronology_stage` called twice with the same inputs gives the same rows (no hidden state); the registry passed in is not shared across calls.
 20. Y5: every world of 4.3's table has the eight keys.
-21. On shipped data, the chronology rows do not depend on the region names: the full run's rows equal `chronology_stage` with an empty region list, for the four P1 golden worlds.
+21. On shipped data, the chronology rows do not depend on the region names: the full run's rows equal `chronology_stage` with an empty region list, for the four P1 golden worlds (from 0.17.0 a property of those worlds, not of the name forms: r3).
 
 ### 14.4 Golden values
 
@@ -515,3 +515,7 @@ Text changes so that the spec says what the implementation (`p3/03-int`) and its
 ## Revision note r2 (2026-11-19, amendments for P3-04)
 
 Requested by P3-04 18.2; text only, nothing of this stage changes. 4.3: from P3-04 (generator 0.14.0) `--until history` is accepted and is the default, and `--until chronology` no longer gives the default world's bytes (the default also runs `history`; 14.1 item 12's equality holds only at 0.13.0). 5.1: from schema 7 the empty world is 34 pages (P3-04 9.6; P0-02 amendment 19). 8.2: the registry rule is applied by the `history` stage as its first step (P3-04 7.2, "Registry"). The P3-03 audit's guards (`origin/p3/03-audit-guard`) are recorded by the audit, not here.
+
+## Revision note r3 (2026-11-20, amendments for P3-08; generator 0.17.0)
+
+Requested by P1-06 r3 14.6 item 2 and P3-02 r5 11.8; takes effect with the P3-08 change (`docs/specs/p3-08-followups.md`). Section 2 and 14.3 item 21: region names of P1-06 r3 can have the form of a god name, so "the chronology does not depend on the region names" holds on the golden worlds, not by form; the test is unchanged. The stage's input checks gain P3-02 r5's `names_form_text` (P3-02 11.3, r6: the forms' fixed text holds no filtered fragment), after the existing checks of the culture data and before any name is drawn; god names are drawn with the name filter and the culture's `god_patterns` (P3-02 11.3, 11.4), so the `god` rows and `p3-03-chronology.txt` change (re-recorded by the reference with P3-08).
