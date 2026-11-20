@@ -262,7 +262,7 @@ std::int64_t PeoplesSubsystem::share_now(const State& state, std::int64_t settle
 
 std::vector<std::int64_t> PeoplesSubsystem::homes(const StepContext& ctx, std::int64_t race) {
     prepare(ctx);
-    if (homes_year_ == static_cast<std::int64_t>(ctx.serial()) && homes_race_ == race) {
+    if (homes_serial_ == static_cast<std::int64_t>(ctx.serial()) && homes_race_ == race) {
         return homes_;
     }
     const PeoplesGeo& g = geo();
@@ -336,7 +336,7 @@ std::vector<std::int64_t> PeoplesSubsystem::homes(const StepContext& ctx, std::i
         }
         out.push_back(*next);
     }
-    homes_year_ = static_cast<std::int64_t>(ctx.serial());
+    homes_serial_ = static_cast<std::int64_t>(ctx.serial());
     homes_race_ = race;
     homes_ = out;
     return out;
@@ -386,6 +386,10 @@ void PeoplesSubsystem::awaken(StepContext& ctx, std::int64_t race, std::int64_t 
         }
         state.set_capital(c, s);
     }
+    // Audit A3: the cached homes describe the state before this awakening.
+    homes_serial_ = -1;
+    homes_race_ = 0;
+    homes_.clear();
 }
 
 std::int64_t PeoplesAwakening::awakening_place(const StepContext& context, std::int64_t race) {
@@ -712,7 +716,7 @@ void PeoplesSubsystem::foundings(StepContext& ctx) {
             const std::int64_t p = s.population;
             const std::int64_t pressure =
                 std::max(floor_div(checked_mul(p, 1000), share[static_cast<std::size_t>(id - 1)]),
-                         floor_div(checked_mul(p, 1000), cap_of(state, s)));
+                         floor_div(checked_mul(p, 1000), std::max<std::int64_t>(1, cap_of(state, s))));  // audit A1: a cap of 0 is legal data
             if (pressure < tuning_.found_pressure_permille) {
                 continue;
             }

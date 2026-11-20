@@ -252,6 +252,13 @@ HistoryStatsResult history_stats(const HistoryTables& tables, std::int64_t end_y
         if (row[10].integer != 1 && row[10].integer != 2) {
             continue;
         }
+        // Audit A2: bound the stored value before any arithmetic on it.
+        if (row[11].integer < 0 || row[11].integer > 2147483647) {
+            result.problem = corrupt(db::SETTLEMENT_TABLE, row_at(row) + "population " +
+                                                               db::format_i64(row[11].integer) +
+                                                               " outside 0 to 2147483647");
+            return result;
+        }
         st.population += row[11].integer;
         if (HistoryStats::RaceStats* r = race_slot(row[8].integer)) {
             r->population += row[11].integer;

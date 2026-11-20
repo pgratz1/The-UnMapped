@@ -276,6 +276,8 @@ public:
     void ruin(StepContext& context, std::int64_t settlement, std::int64_t event);
 
     // The homes of an awakening of `race` now (7.1, 7.2): no state change.
+    // Cached within one step for awakening_place and awaken; awaken clears
+    // the cache, so a later call in the same step sees the new state.
     [[nodiscard]] std::vector<std::int64_t> homes(const StepContext& context, std::int64_t race);
     // 7.3 for each home.
     void awaken(StepContext& context, std::int64_t race, std::int64_t awakening_event);
@@ -322,7 +324,7 @@ private:
     std::array<std::uint64_t, 12> keys_{};
     std::int64_t intensity_ = 1000;
     bool prepared_ = false;
-    std::int64_t homes_year_ = -1;            // the step (serial) the homes were computed in
+    std::int64_t homes_serial_ = -1;          // the step serial the cached homes were computed in; -1 none
     std::int64_t homes_race_ = 0;
     std::vector<std::int64_t> homes_;
     // Members keyed by id (index id - 1).

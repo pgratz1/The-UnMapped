@@ -143,3 +143,115 @@ TEST_CASE("P3-05 engineer: history stage time") {
     }
 }
 }
+
+// --- Audit hardening (docs/reviews/p3-05-peoples-determinism-audit.md) ----------------------------
+
+#include "p3_05_peoples_support.hpp"
+#include "worldgen/inspect/history.hpp"
+
+#if UNMAPPED_HAVE_PEOPLES
+
+namespace {
+
+// Faeries building only hamlets, with village_min 1: kind_cap is 0 (legal data).
+worldgen::data::ContentSet hamlet_only_content() {
+    const worldgen::data::ContentSet base = chrono_test::edited_content({
+        {"races", "faerie.toml", R"(settlement_kinds = ["hamlet", "village"])", R"(settlement_kinds = ["hamlet"])"},
+        {"history", "peoples.toml", "village_min = 250", "village_min = 1"},
+    });
+    return base;
+}
+
+worldgen::db::ColumnValue iv(std::int64_t v) {
+    return worldgen::db::ColumnValue{worldgen::db::ValueType::integer, v, {}};
+}
+worldgen::db::ColumnValue tv(const char* s) {
+    return worldgen::db::ColumnValue{worldgen::db::ValueType::text, 0, s};
+}
+worldgen::db::ColumnValue nv() {
+    return worldgen::db::ColumnValue{};
+}
+
+}  // namespace
+
+TEST_CASE("P3-05 engineer, audit A1: a kind cap of 0 (village_min 1, hamlets only) founds without dividing by 0") {
+    const worldgen::data::ContentSet c = hamlet_only_content();
+    const h::PeoplesTuning t = h::peoples_tuning_from(c);
+    h::PeoplesRace r = race({h::SettlementKind::hamlet});
+    CHECK(h::kind_cap(r, h::SettlementKind::hamlet, t) == 0);
+    peoples_test::Geo g = peoples_test::hand_made(64, {peoples_test::plain_region(1, 0, 0, 31, 63),
+                                                       peoples_test::plain_region(2, 32, 0, 63, 63)});
+    for (auto& reg : g.regions) {
+        reg.cells = 2048;
+        reg.walk_cells = 2000;
+    }
+    g.region_biomes = {{1, 4, 2048}, {2, 4, 2048}};
+    peoples_test::Settings s;
+    s.span = 2000;
+    s.races = {"faerie"};
+    s.civs = 1;
+    peoples_test::PeoplesConfig cfg(c);
+    const engine_test::Tables tables = eng::run_engine(c, peoples_test::inputs_of(g, 0, s, c), cfg.get());
+    CHECK_FALSE(tables.settlement.empty());
+}
+
+TEST_CASE("P3-05 engineer, audit A3: homes() after awaken in the same step reads the new state") {
+    class Probe final : public eng::AwakeningHandler {
+    public:
+        explicit Probe(h::PeoplesSubsystem& p) : p_(p) {}
+        std::int64_t awakening_place(const eng::StepContext& ctx, std::int64_t race) override {
+            before = p_.homes(ctx, race);
+            return before.front();
+        }
+        void awaken(eng::StepContext& ctx, std::int64_t race, std::int64_t event) override {
+            p_.awaken(ctx, race, event);
+            after = p_.homes(ctx, race);
+        }
+        std::vector<std::int64_t> before, after;
+
+    private:
+        h::PeoplesSubsystem& p_;
+    };
+    peoples_test::Geo g = peoples_test::hand_made(64, {peoples_test::plain_region(1, 0, 0, 31, 63),
+                                                       peoples_test::plain_region(2, 32, 0, 63, 63)});
+    for (auto& reg : g.regions) {
+        reg.cells = 2048;
+        reg.walk_cells = 2000;
+    }
+    g.region_biomes = {{1, 4, 2048}, {2, 4, 2048}};
+    peoples_test::Settings s;
+    s.span = 2000;
+    s.races = {"human"};
+    s.civs = 1;
+    peoples_test::PeoplesConfig cfg(engine_test::shipped());
+    Probe probe(*cfg.peoples.sub);
+    eng::EngineConfig config = cfg.get();
+    config.awakening = &probe;
+    (void)eng::run_engine(engine_test::shipped(), peoples_test::inputs_of(g, 0, s), config);
+    REQUIRE(probe.before.size() == 1U);
+    REQUIRE(probe.after.size() == 1U);
+    // The first home is held after the awakening, so a fresh answer names the other region.
+    CHECK(probe.after.front() != probe.before.front());
+}
+
+TEST_CASE("P3-05 engineer, audit A2: [history] reports a stored population outside 0 to 2^31 - 1 as corrupt") {
+    for (const std::int64_t bad : {std::int64_t{-1}, std::int64_t{2147483648}, std::int64_t{1} << 62}) {
+        worldgen::inspect::HistoryTables t;
+        t.rows[3] = {{iv(1), iv(1), iv(1), iv(0), iv(9), iv(0)}};  // one phase, 0 to E - 1
+        t.rows[9] = {{iv(1), tv("S"), iv(0), iv(0), iv(1), iv(1), iv(0), iv(1), iv(1), iv(1), iv(1), iv(bad), nv(),
+                      iv(0)}};
+        const worldgen::inspect::HistoryStatsResult r = worldgen::inspect::history_stats(t, 10);
+        REQUIRE(r.problem.has_value());
+        CHECK(*r.problem == "corrupt table 'settlement': row 1: population " + std::to_string(bad) +
+                                " outside 0 to 2147483647");
+    }
+    worldgen::inspect::HistoryTables ok;
+    ok.rows[3] = {{iv(1), iv(1), iv(1), iv(0), iv(9), iv(0)}};
+    ok.rows[9] = {{iv(1), tv("S"), iv(0), iv(0), iv(1), iv(1), iv(0), iv(1), iv(1), iv(1), iv(1), iv(2147483647), nv(),
+                   iv(0)}};
+    const worldgen::inspect::HistoryStatsResult r = worldgen::inspect::history_stats(ok, 10);
+    CHECK_FALSE(r.problem.has_value());
+    CHECK(r.stats.population == 2147483647);
+}
+
+#endif  // UNMAPPED_HAVE_PEOPLES
