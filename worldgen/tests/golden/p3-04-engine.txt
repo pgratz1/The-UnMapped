@@ -1844,7 +1844,7 @@ geo-seed-0-512 table event_value ad5952c3b355192a907866827d3f7d9eff52c6aa354af5f
 geo-seed-0-512 table phase 2025149618743653c395aa95bb57b39387fbb133b91d2a0baf53978136aeb81d
 geo-seed-0-512 table region_control 0fd8b35797452c3c63504881bcded57d6a5930399a0f0796b28871f2383f4564
 geo-seed-0-512 table relation cbbd5f990c53684d7ae650b40fcb5656e02261b53da5f6a7d8c819c92f2828f8
-geo-seed-0-512 table settlement 8cf4f0cc592b58ade20adea47e1bcbb2881eb099bf89c22775d0b29d662bc7d5
+geo-seed-0-512 table settlement 98923f0da9ceaa74279c5379b478228c7e446c4fe78205133198844e0eb9887e
 geo-seed-0-512 table settlement_census 62a922e64633aed5632292cc303451551a1439186ee04f34fdf526b74b58c1f4
 geo-seed-0-512 report end_year = 6000
 geo-seed-0-512 report phases_opening = 6
@@ -1922,7 +1922,7 @@ geo-seed-0-512 names c2:1 s2:0 site:seed
 geo-seed-0-512 names c3:0 s3:1 site:seed
 geo-seed-0-512 names c4:0 s4:1 site:seed
 geo-seed-0-512 names c5:3 s5:0 site:seed
-geo-seed-0-512 names c6:0 s6:0 site:seed
+geo-seed-0-512 names c6:0 s6:1 site:seed
 geo-seed-0-512 e1 Saene awakened the Elves in Northeast Wood.
 geo-seed-0-512 e2 The Elves founded the House of Nife in Northeast Wood.
 geo-seed-0-512 e3 The House of Nife founded Iensath in Northeast Wood.
@@ -1955,7 +1955,7 @@ geo-seed-0-512 e29 The Wosk Ring passed 381 quiet years, from 5153 to 5533, in w
 geo-seed-0-512 e30 The Duchy of Circon passed 381 quiet years, from 5153 to 5533, in which 15 new generations of rulers came to power.
 geo-seed-0-512 e31 Uruld'kruum awakened the Orcs in East Steppe.
 geo-seed-0-512 e32 The Orcs founded the Warband of Ghom in East Steppe.
-geo-seed-0-512 e33 The Warband of Ghom founded Uu'mold Fort in East Steppe.
+geo-seed-0-512 e33 The Warband of Ghom founded Shaazazuug in East Steppe.
 geo-seed-0-512 e34 The House of Nife passed 16 quiet years, from 5684 to 5699, in which one new generation of rulers came to power.
 geo-seed-0-512 e35 The Baskeeb Mob passed 16 quiet years, from 5684 to 5699, in which one new generation of rulers came to power.
 geo-seed-0-512 e36 Clan Durgarin passed 16 quiet years, from 5684 to 5699, under one generation of rulers.
@@ -2085,7 +2085,7 @@ geo-seed-42-512 e27 The Skib Horde passed 477 quiet years, from 5119 to 5595, in
 geo-seed-42-512 e28 The Kaindnimm Throne passed 477 quiet years, from 5119 to 5595, in which 7 new generations of rulers came to power.
 geo-seed-42-512 e29 The Circle of Fysoli passed 477 quiet years, from 5119 to 5595, in which 5 new generations of rulers came to power.
 geo-seed-42-512 e30 The Kingdom of Alird passed 477 quiet years, from 5119 to 5595, in which 19 new generations of rulers came to power.
-geo-seed-42-512 e31 Kruu'mold awakened the Orcs in Bitterstrand Wolds.
+geo-seed-42-512 e31 Ogh'krak awakened the Orcs in Bitterstrand Wolds.
 geo-seed-42-512 e32 The Orcs founded the Warband of Baaldkrok in Bitterstrand Wolds.
 geo-seed-42-512 e33 The Warband of Baaldkrok founded Uld'kag in Bitterstrand Wolds.
 world geo-phrase-512 15629206466951235176 512 6000 all normal none
@@ -2811,7 +2811,7 @@ example-42-1024 e27 The Skib Horde passed 477 quiet years, from 5119 to 5595, in
 example-42-1024 e28 The Kaindnimm Throne passed 477 quiet years, from 5119 to 5595, in which 7 new generations of rulers came to power.
 example-42-1024 e29 The Circle of Fysoli passed 477 quiet years, from 5119 to 5595, in which 5 new generations of rulers came to power.
 example-42-1024 e30 The Kingdom of Alird passed 477 quiet years, from 5119 to 5595, in which 19 new generations of rulers came to power.
-example-42-1024 e31 Kruu'mold awakened the Orcs in Warlord's Rises.
+example-42-1024 e31 Ogh'krak awakened the Orcs in Warlord's Rises.
 example-42-1024 e32 The Orcs founded the Warband of Baaldkrok in Warlord's Rises.
 example-42-1024 e33 The Warband of Baaldkrok founded Uld'kag in Warlord's Rises.
 world example-42-1024-ft500 42 1024 6000 all normal ForcedTension(500,1000,1)
@@ -2945,7 +2945,7 @@ example-42-1024-ft500 e35 The Skib Horde passed 477 quiet years, from 5119 to 55
 example-42-1024-ft500 e36 The Kaindnimm Throne passed 477 quiet years, from 5119 to 5595, in which 7 new generations of rulers came to power.
 example-42-1024-ft500 e37 The Circle of Fysoli passed 477 quiet years, from 5119 to 5595, in which 5 new generations of rulers came to power.
 example-42-1024-ft500 e38 The Kingdom of Alird passed 477 quiet years, from 5119 to 5595, in which 19 new generations of rulers came to power.
-example-42-1024-ft500 e39 Kruu'mold awakened the Orcs in Warlord's Rises.
+example-42-1024-ft500 e39 Ogh'krak awakened the Orcs in Warlord's Rises.
 example-42-1024-ft500 e40 The Orcs founded the Warband of Baaldkrok in Warlord's Rises.
 example-42-1024-ft500 e41 The Warband of Baaldkrok founded Uld'kag in Warlord's Rises.
 world example-42-1024-ft1 42 1024 6000 all normal ForcedTension(1,5000,1)
@@ -3140,7 +3140,7 @@ example-42-1024-ft1 e96 The Skib Horde passed 477 quiet years, from 5119 to 5595
 example-42-1024-ft1 e97 The Kaindnimm Throne passed 477 quiet years, from 5119 to 5595, in which 7 new generations of rulers came to power.
 example-42-1024-ft1 e98 The Circle of Fysoli passed 477 quiet years, from 5119 to 5595, in which 5 new generations of rulers came to power.
 example-42-1024-ft1 e99 The Kingdom of Alird passed 477 quiet years, from 5119 to 5595, in which 19 new generations of rulers came to power.
-example-42-1024-ft1 e100 Kruu'mold awakened the Orcs in Warlord's Rises.
+example-42-1024-ft1 e100 Ogh'krak awakened the Orcs in Warlord's Rises.
 example-42-1024-ft1 e101 The Orcs founded the Warband of Baaldkrok in Warlord's Rises.
 example-42-1024-ft1 e102 The Warband of Baaldkrok founded Uld'kag in Warlord's Rises.
 template awakening 7b63726561746f727d206177616b656e656420746865207b726163653a706c7572616c7d20696e207b40726567696f6e7d2e ok

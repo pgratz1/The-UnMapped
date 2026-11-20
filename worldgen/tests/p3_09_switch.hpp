@@ -21,7 +21,7 @@
 // A macro set on the command line wins.
 
 #ifndef UNMAPPED_P3_09_API
-#define UNMAPPED_P3_09_API 0
+#define UNMAPPED_P3_09_API 1  // integrated with p3/09-impl (b9c70eb)
 #endif
 
 #ifndef UNMAPPED_P3_09_DIGEST

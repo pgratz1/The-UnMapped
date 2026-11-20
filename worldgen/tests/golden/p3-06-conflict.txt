@@ -1562,7 +1562,7 @@ geo-seed-42-512 e564 The Grunk Horde passed 152 quiet years, from 5444 to 5595, 
 geo-seed-42-512 e565 Stuckham grew into a town of 1539.
 geo-seed-42-512 e566 Gruz-Keegg grew into a town of 1513.
 geo-seed-42-512 e567 Walasheadwick grew into a city of 8067.
-geo-seed-42-512 e568 Kruu'mold awakened the Orcs in East Downs.
+geo-seed-42-512 e568 Ogh'krak awakened the Orcs in East Downs.
 geo-seed-42-512 e569 The Orcs founded the Urumdug Horde in East Downs.
 geo-seed-42-512 e570 The Urumdug Horde founded Thukdash Fort in East Downs.
 geo-seed-42-512 e571 Famine struck Cathfe; 24 died.
@@ -5905,7 +5905,7 @@ hist-conflict-turbulent-512 e578 Stuckham grew into a town of 1509.
 hist-conflict-turbulent-512 e579 The Gadruzz Horde sent settlers from Druk to found Nobogg Pit in West Wood.
 hist-conflict-turbulent-512 e580 The Gadruzz Horde laid claim to East Downs, held by the Duchy of Stin.
 hist-conflict-turbulent-512 e581 Walasheadwick grew into a city of 8769.
-hist-conflict-turbulent-512 e582 Kruu'mold awakened the Orcs in North Downs.
+hist-conflict-turbulent-512 e582 Ogh'krak awakened the Orcs in North Downs.
 hist-conflict-turbulent-512 e583 The Orcs founded the Warband of Uld'muu in North Downs.
 hist-conflict-turbulent-512 e584 The Warband of Uld'muu founded Thukdash Fort in North Downs.
 hist-conflict-turbulent-512 e585 Plague broke out in Dreeb Pit; 201 died.
@@ -7274,7 +7274,7 @@ hist-conflict-civs4-512 e682 The Gadruzz Horde passed 2 quiet years, from 5594 t
 hist-conflict-civs4-512 e683 The Wouwha Ring passed 2 quiet years, from 5594 to 5595, under one generation of rulers.
 hist-conflict-civs4-512 e684 The Cerwel League passed 2 quiet years, from 5594 to 5595, under one generation of rulers.
 hist-conflict-civs4-512 e685 The Slig Mob passed 2 quiet years, from 5594 to 5595, under one generation of rulers.
-hist-conflict-civs4-512 e686 Kruu'mold awakened the Orcs in East Downs.
+hist-conflict-civs4-512 e686 Ogh'krak awakened the Orcs in East Downs.
 hist-conflict-civs4-512 e687 The Orcs founded the Kogh'muuz Horde in East Downs.
 hist-conflict-civs4-512 e688 The Kogh'muuz Horde founded Grulbaal Camp in East Downs.
 hist-conflict-civs4-512 e689 The Tourdbaim Throne declared war on the Slig Mob over Northwest Wood.
@@ -16078,7 +16078,7 @@ stress-12 stats wars_attacker_orc = 4
 stress-12 stats wars_hollow = 13
 stress-12 stats wars_hollow_permille = 393
 stress-12 stats wars_same_goal_max = 10
-stress-12 stats wars_same_goal_unchanged_max = 5
+stress-12 stats wars_same_goal_unchanged_max = 4
 stress-12 stats race_population_share_max_permille = 985
 stress-12 stats race_regions_share_max_permille = 800
 stress-12 stats wars_unfound = 0
@@ -16783,7 +16783,7 @@ stress-14 q1710 5000 e914
 stress-14 q1752 1353 e988
 stress-14 q1794 1061 e653
 norefuge norefuge-5 5 6000 goblin,human,orc 4 calm
-norefuge-5 table civilization 7cb0bc0561a45b9b29753e23243e4273ab61833f8b4ea2bc731bab20acb98e76
+norefuge-5 table civilization e7f815ea6fc35d4518421afdfacb6fa303bcd46d4bff5418212795672269216d
 norefuge-5 table event 748046856d39746f242c26e7d78fd23e3f9b869536a55de5cdf3baf6c7fc4bc9
 norefuge-5 table event_cause 4a22fc4b5d2dfa8cfb70ee1b980cdfad5dbce23d6612579b3dfb094d919dfdb5
 norefuge-5 table event_kind 597ed5b0fcd34fc10fd84f7e04e8c16df3ebec801046f2a1c6072df2c15034fc

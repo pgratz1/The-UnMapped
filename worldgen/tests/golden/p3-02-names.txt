@@ -1390,7 +1390,7 @@ fatal never settlement 0 1 1 names: culture 'never' produced no valid settlement
 0 orcish settlement 3 0 Grush
 0 orcish settlement 4 0 Zaakugaag
 0 orcish settlement 5 0 Uruld'duuld
-0 orcish settlement 6 0 Uu'mold Fort
+0 orcish settlement 6 1 Shaazazuug
 0 orcish settlement 7 0 Kark Fort
 0 orcish settlement 8 0 Azol'urash Fort
 0 orcish settlement 9 0 Karzthogh
@@ -1435,7 +1435,7 @@ fatal never settlement 0 1 1 names: culture 'never' produced no valid settlement
 0 orcish settlement 48 0 Ghark
 0 orcish settlement 49 0 Urald Camp
 0 orcish settlement 50 0 Azol'uguuz
-sha256 0 280cd652769804684d375d02836aeb719847d8323cc30a3dc3c5b3390c6a48cd
+sha256 0 716854e994b67293c3db853445a8616e6b8946ec7feeb67bf0d449d1c4cd2911
 42 dwarven god 1 0 Khorkhound
 42 dwarven god 2 1 Grirtoum
 42 dwarven god 3 1 Bronhak
@@ -2191,7 +2191,7 @@ sha256 0 280cd652769804684d375d02836aeb719847d8323cc30a3dc3c5b3390c6a48cd
 42 orcish god 3 0 Osh'krag
 42 orcish god 4 1 Uraakzuuld
 42 orcish god 5 0 Uguk'kold
-42 orcish god 6 0 Kruu'mold
+42 orcish god 6 1 Ogh'krak
 42 orcish god 7 0 Muug'murk
 42 orcish god 8 0 Ugaalshom
 42 orcish god 9 0 Og'bog
@@ -2336,6 +2336,6 @@ sha256 0 280cd652769804684d375d02836aeb719847d8323cc30a3dc3c5b3390c6a48cd
 42 orcish settlement 48 0 Aal'uraaz Fort
 42 orcish settlement 49 0 Orz'grom Camp
 42 orcish settlement 50 0 Thuurkbash
-sha256 42 6d67931eef8936dac2a684f3a2f0674b98bc106a1feeec14ae0ab3689ccc56cf
+sha256 42 93741421453cc3de169fb14a02d0c1bdd52208acdf800c1cc659b278eccdf0d5
 r4sha256 0 7b81d85d11630b64f27f7eb16dc9f0815b764a0fc8ee60d506f68686a04942b9
 r4sha256 42 8403dc92b716ecfb7c22bb9589d3e487aecaf08a43ffc81a89a370f0f4f80f4c

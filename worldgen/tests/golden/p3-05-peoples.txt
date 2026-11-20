@@ -700,7 +700,7 @@ geo-seed-42-512 e167 Cinmumstead dwindled to 5776 souls.
 geo-seed-42-512 e168 Stisbrelbury grew into a town of 1503.
 geo-seed-42-512 e169 Realdeadstead grew into a town of 1594.
 geo-seed-42-512 e170 Ashackham grew into a city of 8280.
-geo-seed-42-512 e171 Kruu'mold awakened the Orcs in East Downs.
+geo-seed-42-512 e171 Ogh'krak awakened the Orcs in East Downs.
 geo-seed-42-512 e172 The Orcs founded Clan Aark'thuugh in East Downs.
 geo-seed-42-512 e173 Clan Aark'thuugh founded Orz'grom Camp in East Downs.
 geo-seed-42-512 e174 Plague broke out in Cinmumstead; 1005 died.
@@ -4118,7 +4118,7 @@ hist-peoples-42-1024 e265 Beckford dwindled to 4873 souls.
 hist-peoples-42-1024 e266 Alurbury grew into a city of 8038.
 hist-peoples-42-1024 e267 The Kingdom of Stard sent settlers from Beckford to found Weldham in Beggar's Plain.
 hist-peoples-42-1024 e268 The Zak-Neez Mob sent settlers from Geexdronk Pit to found Slogg in East Wood.
-hist-peoples-42-1024 e269 Kruu'mold awakened the Orcs in Northwest Downs.
+hist-peoples-42-1024 e269 Ogh'krak awakened the Orcs in Northwest Downs.
 hist-peoples-42-1024 e270 The Orcs founded the Ghuughzuz Horde in Northwest Downs.
 hist-peoples-42-1024 e271 The Ghuughzuz Horde founded Ald'ghugh Fort in Northwest Downs.
 hist-peoples-42-1024 e272 Famine struck Meadstead; 619 died.
