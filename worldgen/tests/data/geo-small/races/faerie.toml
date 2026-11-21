@@ -10,7 +10,7 @@ generation_years = 100
 growth_permille = 4
 density_permille = 250
 site_weights = { fertility = 0, forage = 60, timber = 20, ore = 0, fresh_water = 20 }
-cell_weights = { ore = 0, height = 0 }
+cell_weights = { ore = 0, height = 0, inland = 400, port = 0, habitability = 1000 }
 biomes = [
   { biome = "temperate_forest", weight = 800 },
   { biome = "wet_woodland", weight = 800 },
@@ -23,12 +23,14 @@ biomes = [
   { biome = "steppe", weight = -400 },
 ]
 upland = 200
-coast = 0
+coast = -500
 expansion = 100
 aggression = 50
 prowess_permille = 1200
 muster_permille = 1000
 conceal_min = 400
 home_defense_permille = 0
+odds_min_permille = 700
+awakening_quarrel = 0
 settlement_kinds = ["hamlet", "village"]
 culture = "faerie"

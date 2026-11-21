@@ -129,6 +129,10 @@ Schema race_cell_weights_schema() {
     return Schema(std::vector<Field>{
         Field::required("ore", Type::integer(0, 1000)),
         Field::required("height", Type::integer(0, 1000)),
+        // P3-01 r11 3.4 (generator 0.19.0)
+        Field::required("inland", Type::integer(0, 1000)),
+        Field::required("port", Type::integer(0, 1000)),
+        Field::required("habitability", Type::integer(0, 1000)),
     });
 }
 
@@ -383,7 +387,9 @@ Schema report_event_schema() {
     return Schema(std::vector<Field>{
         Field::required("kind", Type::string(32, id_grammar())),
         Field::required("salience", Type::integer(0, 100)),
-        Field::required("template", Type::string(256)),
+        // P3-10: 512 bytes (P3-04 4.2 says 256; the cause lists of P3-05 r12
+        // 22.3 make the templates of kinds 16 and 31 longer).
+        Field::required("template", Type::string(512)),
     });
 }
 
@@ -505,6 +511,8 @@ Schema history_peoples_schema() {
         i("regions_per_civ", 0, 100),
         i("regions_per_extra_civ", 1, 100000),  // P3-05 r8 21 item 5 (generator 0.18.0)
         i("civs_extra_max", 0, 3),
+        i("cause_memory_years", 0, 100000),  // P3-05 r12 22.2 (generator 0.19.0)
+        i("inland_cap", 1, 256),             // P3-05 r12 22.5
         i("home_min_hops", 1, 64),
         i("home_min_capacity", 0, 1000000),
         Field::required("intensity", Type::record(peoples_intensity_schema())),
@@ -610,13 +618,14 @@ Schema history_conflict_schema() {
         i("revenge_aggression", 0, 1000),
         i("levy_hops", 0, 16),
         i("odds_floor", 0, 1000),
-        i("odds_min", 0, 1000),
         i("truce_break_aggression", 0, 999),
         i("enmity_hops", 1, 4),
         // P3-06 r10 20.19 (P3-09 r3).
         i("kill_max_permille", 1, 10000),
         i("find_permille", 0, 1000),
         i("search_years", 1, 100),
+        i("search_weary_years", 0, 10000),   // P3-06 r14 21.7 (generator 0.19.0)
+        i("search_repeat_salience", 0, 100),
         i("capital_sacked_salience", 0, 100),
         i("capital_captured_salience", 0, 100),
     };
@@ -707,6 +716,9 @@ Schema race_schema() {
         Field::required("muster_permille", Type::integer(1, 10000)),
         Field::required("conceal_min", Type::integer(0, 1001)),
         Field::required("home_defense_permille", Type::integer(0, 10000)),
+        // P3-01 r11 3.5 (P3-06 r14 21.9, 21.12; generator 0.19.0)
+        Field::required("odds_min_permille", Type::integer(0, 1000)),
+        Field::required("awakening_quarrel", Type::integer(0, 1)),
         Field::required("settlement_kinds",
                         Type::array(Type::enumeration({"hamlet", "village", "town", "city", "fortress"}), 1, 5)),
         Field::required("culture", Type::reference(std::string(CULTURE_KIND))),
