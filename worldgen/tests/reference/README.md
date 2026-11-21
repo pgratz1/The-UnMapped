@@ -1231,4 +1231,7 @@ guessed name was the engineer's. `check-world` on 20 worlds written by the C++ (
 2048 seed 0) found every chronology and history table equal to the reference's and no invariant failure. No
 golden moved at integration. Foothold cessions in that set: 1024 seed 40 (e198), seed 58 (e922), 512 seeds 3, 4
 and 7; no quick aim win. The 8.3 item 4 exemption above is reached by stress-7 e1153 only; there the region had no
-owner at all the year before (the holder's row ended with the sack of 4455).
+owner at all the year before (the holder's row ended with the sack of 4455). The slow cases of 20.27 item 7 (a
+colony founded in the Q4 of its cession) move from 1024 seed 36, whose case the round removes, to 1024 seed 5 with
+`--event-intensity turbulent` (e933, e1102; `check-world` again without a difference): no 1024 default world of
+seeds 0 to 160 holds one.
