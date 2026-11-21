@@ -291,7 +291,7 @@ One branch from the current P3-10 tip (`origin/p3/10-final`), one engineer and o
 Every world file changes again: the race and tuning fields and the filter lists change `content_hash`, the P0 empty worlds included. Golden files as in section 5, all re-recorded by the validation specialist and the test writer's references after the cross-preset comparison:
 - `p3-02-names.txt`: the names the new filter entries and the triple rule reject.
 - `p3-03-chronology.txt`: god names only.
-- `p3-04-engine.txt`: the `ForcedTension` cases lose their quiet lines under 50 years, and the event ids that follow renumber; the plain stub cases' rows are long and keep theirs.
+- `p3-04-engine.txt`: the `ForcedTension` cases lose their quiet lines under 50 years, and the event ids that follow renumber; the plain stub cases keep the lines of their long rows, but lose those of their short ones too (r4): `geo-seed-0-512`'s 16-year quiet row 5684 to 5699 loses its line, and the event ids after it renumber.
 - `p3-05-peoples.txt`, `p3-06-conflict.txt`: every history line.
 - `p1-06-regions.txt` and the geography goldens do not move.
 
@@ -306,6 +306,15 @@ Every world file changes again: the race and tuning fields and the filter lists 
 7. **R3** is decided in the stretch's first step from what is known there; `engine_quiet_min` (`quiet_min_years` ≤ 2 × `quiet_step_years`) keeps that exact. No event is removed or moved.
 8. **A2's definition** takes the latest flight of the civilization. The old conflict predicate's case of a hidden refuge passed to another civilization no longer makes the new owner lie low.
 9. **F6**: exclusive, as the implementation, the reference and validation read it.
+
+## 12b. Text corrections after the second-round integration (r4, 2026-11-21)
+
+Text only; no rule, value, golden or code change.
+
+1. 12.4, `p3-04-engine.txt`: the plain stub cases do not keep every quiet line; a short quiet row loses its line there too (`geo-seed-0-512`, 5684 to 5699, 16 years). Also P3-04 r16 20.6 item 00.
+2. P3-02 r14 11.3: the at_start example is `Bumdou` / `Abumdou`, since 13.1 made `cum` an `anywhere` entry.
+3. P3-06 r18 8.3 item 4: the claim-cause exemption the tests apply for a same-step colony whose region a later step of the year passed on (stress-7 e1153).
+4. P3-06 r18 20.27 items 7 and 8: the same-step colony cession case is now 1024 seed 5 `turbulent` (e933, e1102); seed 42 e286 is a goal cession in a quiet phase with a standing settlement of the loser passing.
 
 ## 11. Proposals
 
