@@ -26,6 +26,8 @@ The world critic's review of P3-06 at 0.16.0 (`docs/reviews/p3-06-conflict-world
 | 12 | A race's last refuge is never emptied (the test writer's extinction case) | Casualties never take it below `abandon_min`; P3-05 8.5 never abandons it | P3-06 20.20; P3-05 21 item 6 | yes |
 | 13 | T3 checkable from the rows | A refuge the guard holds writes kind 36 `refuge_held` with a `reason` instead of a `siege` | P3-06 20.22; P3-07 21.8 | yes |
 | 14 | Weariness counts wars in progress (the engineer's T2 finding: 4 of 40 worlds above 3 at 0.18.0; the lead's ruling) | A defender is weary of a region while the futile wars over it plus the wars over it still open reach 3; checked at the claim and the declaration. T2 then holds in every world (invariant 20.13 (12)) | P3-06 20.23 | yes |
+| 15 | A cession passes the loser's same-step colony (the P3-09 validation's D1: 2048 seed 3, a region held for 760 years with no settlement of its holder; the lead's ruling) | A cession (7.7 or 20.3) passes every settlement of the loser standing in the ceded region, also one founded earlier in the same step; presence is unchanged; no new event (the `region_ceded` records it); invariant (13) | P3-06 20.27 | yes, only where the case arises |
+| 16 | T2 counts what weariness counts (the validation's D2, D3) | `wars_same_goal_unchanged_max` leaves out wars closed by a side's end (neither extend nor break a run); the first war after a change of owner starts a run of 1; T2 then follows from invariant (12) | P3-06 20.28; P3-07 21.8 item 5 (r11) | no (report only) |
 
 ## 3. What it touches (for the engineer)
 
@@ -69,8 +71,8 @@ The test writer extends `p3_conflict_reference.py` from P3-06 20 alone (not from
 
 | # | Target | Prototype (`FINE`, seeds 0–39) |
 | --- | --- | --- |
-| T1 | hollow wars below 25% (`wars_hollow_permille` < 250 over the sweep) | 24% |
-| T2 | at most 3 consecutive wars per (defender, goal) without a change of owner, any change of the region's owner breaking the run, also one between two wars (`wars_same_goal_unchanged_max` ≤ 3, P3-07 21.8 item 5); from r4 an invariant of every world (P3-06 20.23) | 38 of 40 |
+| T1 | hollow wars below 25% (`wars_hollow_permille` < 250 over the sweep); **defined at 1024 with default settings only** (r6: no target for other map sizes or settings, P3-06 20.29 item 3) | 24% |
+| T2 | at most 3 consecutive wars per (defender, goal) without a change of owner, any change of the region's owner breaking the run, also one between two wars (`wars_same_goal_unchanged_max` ≤ 3, P3-07 21.8 item 5); from r4 an invariant of every world (P3-06 20.23), from r6 with the run counting only the wars weariness counts: a war closed by a side's end neither extends nor breaks it (P3-06 20.28) | 38 of 40 |
 | T3 | no last refuge holds a siege while a flight destination with enough survivors exists (the reference counts sieges held by the guard with a destination: 0) | 0 of 41 sieges |
 | T4 | no race extinct (`races_alive` = the present races; P3-06 14 item 7) in every world of every sweep | 0 worlds |
 | T5 | orcs win at least as often as they lose: over the sweep, peaces with an orc civilization as `winner` ≥ peaces with one as `loser` | 39 against 30 |
@@ -314,3 +316,13 @@ Text only.
 - War-line words are added in P3-06 20.26.
 - The P3-05 seam is stated as built (21 item 1).
 - P3-02 r9: `mold` is back on the list (393 words), and the shipped `words.toml` and its `geo-small` copy are taken from `origin/p3/09-int`. Item 8's list is now 393 words.
+
+## Revision note r6 (2026-11-20, after the P3-09 validation)
+
+From the validation (`docs/reviews/p3-09-conflict-balance-validation.md`, 537f981) and the lead's rulings.
+- **Item 15 (D1, a rule).** A cession passes every settlement of the loser standing in the ceded region, also a colony founded earlier in the same step (P3-06 20.27).
+- **Item 16 (D2, D3, the report key only).** T2's run counts the wars that weariness counts (P3-06 20.28, P3-07 21.8 item 5 r11). T2 is then a consequence of invariant (12) in every world.
+- **T1** is stated as defined at 1024 with default settings only.
+- **Typical ranges** are reset from the validation sweep (P3-06 15.5, 20.29). F1 and F3 are recorded there as known observations.
+
+Item 15 changes output only in worlds where the case arises (once in 375 validated worlds). **Generator stays 0.18.0** (not yet released). Validation re-records the goldens and world hashes after the engineer's change (section 6 is unchanged otherwise). Schema stays 7.

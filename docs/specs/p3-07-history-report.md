@@ -1054,6 +1054,18 @@ P3-06 20.15–20.22 (r10 there) add kinds 34 `war_won` (a war won where the lose
 3. New key **`refuges_held_no_destination`**, appended after `wars_unfound`: events of kind `refuge_held` with `reason` 1. Validation checks each with the reference (P3-06 20.22).
 4. Invariant 13 item 7 of 21.3: "every shown `war_declared` with a closed `war` row has its ending shown" covers the new endings.
 5. (r10) **`wars_same_goal_unchanged_max`** (21.5) is redefined to follow the weariness rule (P3-06 20.4, 20.23): any change of the region's owner breaks the run, also one between two wars. For one defender D and region G, take the `war_declared` events with defender D and region G in id order. A run is a sequence of consecutive such wars w_i … w_j such that no `region_control` row of G has `from_year` or `to_year` in [since(w_i), until(w_j)] (until = E for an open row). The key is the length of the longest run over all (D, G); 0 when there is none. This replaces 21.5's definition, which checked each war's own span only and missed a change of owner between two wars.
+
+   **(r11) Restated; this replaces the paragraph above** (P3-06 20.28, the lead's ruling: the run counts exactly the wars that weariness counts, so that T2 follows from P3-06 invariant (12)).
+   - **Counted wars.** For one defender D and region G: the `war_declared` events with `defender` D and `event.region` G, in id order, **without the wars closed by a side's end**: those whose `war` row's `until_event` is a `civ_conquered` or a `civ_ended`. Such a war neither extends a run nor breaks one; the counted wars before and after it are consecutive. A war whose row is open at the present is counted, with until = E.
+   - **Change.** A *change* in an interval [a, b] is a `region_control` row of G whose `from_year` or `to_year` lies in [a, b].
+   - **Run.** A run is a sequence of consecutive counted wars w_i … w_j with no change in the window [since(w_i), max(until(w_i), …, until(w_j))]. The key is the length of the longest run over all (D, G), 0 when no war is counted. (The window ends at the latest end in the run, since wars over one (D, G) may overlap.)
+   - **Incremental form** (equivalent; each (D, G) separately, with run = 0 and key = 0 at the start). For each counted war w = [s, u] in id order:
+     - if run > 0 and there is no change in [lo, max(hi, u)]: run += 1 and hi = max(hi, u);
+     - else if there is no change in [s, u]: run = 1, lo = s and hi = u. The first war after a change of owner starts a run of **1**, not 0, when its own span holds no change;
+     - else run = 0: a war whose own span holds a change is in no run.
+
+     After each war, key = max(key, run).
+   - **Examples.** 1024 seed 6, region 40, defender c1: e341 `war_won`, e445 `peace`, e453 closed by `civ_conquered` e488, e538 `truce`, with no change in 4892–5597. e453 is skipped and the key is **3**: e341, e445, e538. 1024 `calm` seed 17, region 11, defender c1: e285 (5577–5587) and e297 (5588–5598), with changes at 5039 and 5857 only. The key is **2**.
 6. (r10) **Events by kind**: `[stats]` prints `events_war_won`, `events_search_abandoned` and `events_refuge_held` after `events_tribute`, by kind id (9: one line per catalogue kind). They need no rule here. The war line words of the conflict golden (`won-c<W>`, `-ceded`, `-tribute`, `truce`, `unfound`, P3-06 20.26) are the reference's, not a report line: the report prints wars as `war` relation rows (6.6) and their endings as event lines.
 7. (r10) **The summary's companions** (21.2 with item 1 above) name every ending kind: a shown `war_declared` brings its `peace`, `war_won`, `truce`, `search_abandoned`, `civ_conquered` or `civ_ended`; a `peace` or `war_won` brings its `region_ceded` or `tribute`. A `refuge_held` (salience 25) has no companions and is no companion: it is the siege of a refuge, and a siege is shown only at its own salience.
 
@@ -1100,3 +1112,7 @@ New 21.8: kinds 34 `war_won`, 35 `search_abandoned` and 36 `refuge_held` (P3-06 
 ## Revision note r10 (2026-11-20, text after the P3-09 integration)
 
 21.8 items 5–7: `wars_same_goal_unchanged_max` breaks a run at any change of the region's owner, also between two wars (the lead's ruling); the `events_<key>` lines of kinds 34–36; the companions name every ending kind, and `refuge_held` is neither a head nor a companion. No world byte changes.
+
+## Revision note r11 (2026-11-20, the P3-09 validation's D2 and D3)
+
+21.8 item 5 restated (P3-06 20.28, the lead's ruling). `wars_same_goal_unchanged_max` leaves out the wars closed by a side's end (`civ_conquered`, `civ_ended`), which neither extend nor break a run, so that it counts the same wars as P3-06 20.4's weariness and T2 follows from invariant (12). A run's window ends at the latest end in the run. An incremental form is given, in which the first war after a change of owner starts a run of 1. Worked examples: seed 6 (key 3) and `calm` seed 17 (key 2). Report key only: no world byte changes, and format stays v1.
