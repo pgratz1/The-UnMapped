@@ -108,13 +108,23 @@ TEST_CASE("P3-06 r9 20.14 item 8: hist-conflict-flight equals the reference; fli
 
 TEST_SUITE("history-slow" * doctest::skip()) {
 
-TEST_CASE("P3-06 r13 20.27 items 7, 8: 1024 seed 36, a colony founded in the step of a cession passes to the winner") {
-    // 20.27 item 7 at 0.19.0 (the 0.18.0 case, 2048 seed 3's s240, no longer occurs; P3-10 integration): the
-    // reference (p3_conflict_reference.py, table for table on this world) has one such cession in 1024 seed 36,
-    // default settings: region_ceded e310 of region 10 from c3 to c2 in 4913, after c3's colony_founded e308 of
-    // s66 in region 10 in the same step. The test finds it from the log rather than by id: a region_ceded e of
-    // region R in year Y, from L to W, preceded in Y by a colony_founded of a settlement s in R with founder L.
-    const std::string path = chrono_test::world(chrono_test::WorldKey{36, "", 1024, 6000, "all", "", 1});
+TEST_CASE("P3-06 r13 20.27 items 7, 8: 1024 turbulent seed 5, a colony founded in the step of a cession passes to the winner") {
+    // 20.27 item 7 at 0.19.0 (the 0.18.0 case, 2048 seed 3's s240, no longer occurs; P3-10 integration; the first
+    // round's 1024 seed 36 case, e310, no longer occurs with the second round's rules, and no 1024 default world
+    // of seeds 0 to 160 has one): the reference (p3_conflict_reference.py check-world, table for table on this
+    // world at the second round's integration) has two such cessions in 1024 seed 5 with --event-intensity
+    // turbulent: region_ceded e933 of region 25 in 4410 (colony e930, s101) and e1102 of region 29 in 4885
+    // (colony e1100, s110), each in a quiet step. The test finds them from the log rather than by id: a
+    // region_ceded e of region R in year Y of a quiet phase (one Q4, so one step), from L to W, preceded in Y by a
+    // colony_founded of a settlement s in R with founder L. (Same year in an active phase is not the same step:
+    // the T2 colony is visible in T6, 1024 seed 23 e215.)
+    static dbtest::TempDir dir("balance-golden-1024-turbulent-5");
+    chrono_api::Params hp;
+    hp.intensity = "turbulent";
+    const std::string path = dir.file("turbulent-5-1024.db");
+    REQUIRE(worldgen::generate_world(chrono_test::world_params(5, 1024, hp, shipped()), shipped(), path,
+                                     worldgen::db::Overwrite::refuse)
+                .ok());
     const db::WorldReader r = open_world(path);
     const Tables t = tables_of_world(r);
     const Index x(t);
@@ -122,6 +132,9 @@ TEST_CASE("P3-06 r13 20.27 items 7, 8: 1024 seed 36, a colony founded in the ste
     for (const Row& e : t.event) {
         if (at(e, 3) != k_region_ceded) continue;
         const std::int64_t y = at(e, 1), region = at(e, 5), loser = x.role1(at(e, 0), 1), winner = x.role1(at(e, 0), 2);
+        bool quiet = false;
+        for (const Row& ph : t.phase) quiet = quiet || (at(ph, 2) == 2 && at(ph, 3) <= y && y <= at(ph, 4));
+        if (!quiet) continue;
         for (const Row& f : t.event) {
             if (at(f, 0) >= at(e, 0) || at(f, 3) != k_colony_founded || at(f, 1) != y || at(f, 5) != region) continue;
             if (x.role1(at(f, 0), 2) != loser) continue;
@@ -145,7 +158,7 @@ TEST_CASE("P3-06 r13 20.27 items 7, 8: 1024 seed 36, a colony founded in the ste
             CHECK(row);
         }
     }
-    CHECK(found >= 1);  // the reference: exactly e310 (s66, region 10, c3 to c2, 4913)
+    CHECK(found >= 1);  // the reference: e933 (s101, region 25, 4410) and e1102 (s110, region 29, 4885)
     MESSAGE("same-step colony cessions found: " << found);
     // invariant (13), with 14 item 5 (a region's owner has a standing settlement in it) through the replay
     CHECK(cession_violations(t) == std::vector<std::string>{});

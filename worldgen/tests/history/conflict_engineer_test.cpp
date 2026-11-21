@@ -488,14 +488,19 @@ TEST_SUITE("history-slow" * doctest::skip()) {
 
 // 20.27 item 7: a colony founded in a Q4 passes to the winner with the region_ceded of that step.
 // Generator 0.19.0 changed the 0.18.0 case (2048 seed 3, colony s240 of c15 in region 158 at 5234; at
-// 0.19.0 that world has no such cession). 1024 seed 36 (default settings) has one at 0.19.0 (region 10,
-// c3 to c2 at 4913, colony s66); the test finds it in the log, the first cession that passes a
+// 0.19.0 that world has no such cession). 1024 seed 36 (default settings) had one at the first P3-10 round
+// (region 10, c3 to c2 at 4913, colony s66), which the second round's rules remove; no 1024 default world of
+// seeds 0 to 160 has one at the second round, and 1024 seed 5 with --event-intensity turbulent has two (region_ceded
+// e933 of region 25 in 4410, colony s101; e1102 of region 29 in 4885, colony s110; P3-10 second round
+// integration); the test finds the first in the log, the first cession that passes a
 // settlement created earlier in its step, and checks invariant (13) over the whole world.
-TEST_CASE("P3-06 r13 engineer: invariant (13) on 1024 seed 36 and a same-step colony cession (20.27 item 7)") {
-    static dbtest::TempDir dir("conflict-engineer-1024-36");
+TEST_CASE("P3-06 r13 engineer: invariant (13) on 1024 turbulent seed 5 and a same-step colony cession (20.27 item 7)") {
+    static dbtest::TempDir dir("conflict-engineer-1024-turbulent-5");
     std::vector<worldgen::stages::StageInfo> stages = worldgen::stages::stages_until(std::string("chronology"));
-    const worldgen::WorldParams wp = chrono_test::world_params(36, 1024, chrono_api::Params{}, ct::shipped());
-    const std::string path = dir.file("seed36-1024.db");
+    chrono_api::Params hp;
+    hp.intensity = "turbulent";
+    const worldgen::WorldParams wp = chrono_test::world_params(5, 1024, hp, ct::shipped());
+    const std::string path = dir.file("turbulent-5-1024.db");
     REQUIRE(worldgen::stages::testing::generate_world_with_stages(wp, ct::shipped(), stages, path).ok());
     const eng::HistoryInputs in = h::history_inputs_from_world(chrono_test::open_world(path), ct::shipped());
     const Watched w = watched_run(ct::shipped(), in);
