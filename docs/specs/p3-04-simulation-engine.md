@@ -1045,7 +1045,7 @@ No schema change (8.2's list): two kinds are appended, two kinds stop being writ
 1. `quiet_stretch`: on the stub golden cases and on the `ForcedTension` cases, one event per quiet phase row with a living civilization, participants every civilization not ended at the row's first step in ascending id, `realms` their number, `years` = `end_year` − `year` + 1 = the row's length; no `quiet_era` event; a civilization ended within the row (a hand-made subsystem in a test configuration that ends one in a quiet step) stays a participant.
 2. `{@causes:…}` on fixture events: causes (famine, plague) → `Weakened by famine and plague, `; (plague, plague_spread) with both mapped to `plague` → `Weakened by plague, `; three distinct words → `A, B and C`; no mapped cause → empty, and the next name is at the sentence start; every malformed body of 20.2 → `unknown placeholder`.
 3. Separators: values 0, 999, 1000, 1155, 25000, 1000000, −1000, −999 in `{value}` and in `#` render `0`, `999`, `1,000`, `1,155`, `25,000`, `1,000,000`, `-1,000`, `-999`; `{@year}` 4393 renders `4393`.
-4. The P3-04 golden vectors (`p3-04-engine.txt`): the stub worlds' `e<n>` sentence lines change (quiet lines, separators); their `phase` rows, event years except the quiet lines and their kinds' ids, and their participants other than the quiet lines do not.
+4. The P3-04 golden vectors (`p3-04-engine.txt`): the stub worlds' `e<n>` sentence lines change (quiet lines, separators); their `phase` rows' years and kinds, event years except the quiet lines and their kinds' ids, and their participants other than the quiet lines do not. (r14) The `phase` rows' `trigger_event` column does move: it holds event ids, and event ids renumber when one `quiet_stretch` replaces a row's `quiet_era` lines.
 
 ## Appendix A. Proposals entry (added to `docs/design/proposals.md` with this spec)
 
@@ -1102,3 +1102,7 @@ New section 20, normative from generator 0.19.0 (`docs/specs/p3-10-followups.md`
 ## Revision note r13 (2026-11-21, after the P3-10 implementation)
 
 20.1: `quiet_stretch` participants are at most `MAX_PARTICIPANTS` (64), the most populous realms; `realms` counts every living civilization; test 20.6 item 0. 4.2: `report_event.template` is string(512) from 0.19.0 (the cause-list templates of P3-05 22.3 exceed 256 bytes), as implemented.
+
+## Revision note r14 (2026-11-21, text after the P3-10 integration)
+
+20.6 item 4: the `phase` rows keep their years and kinds, but their `trigger_event` column moves with the event ids, which renumber when the quiet lines collapse. No rule or output change.

@@ -1066,8 +1066,10 @@ Since r6/r7 an outbreak's salience comes from the total toll of the outbreak and
 Everything else of 10.2 is unchanged: the same strike, the same plan, the same salience rule on `total` (45 if `total` ≥ `plague_major_dead`, else `plague_small_salience`), the same spreads (kind 13, caused by the outbreak), the same draws. Kind 12 stays in the catalogue and is not written from 0.19.0. Every rule that names "a plague" or kind 12 (8.3's decline start, 8.5's causes, 10.4, 15.4's keys, P3-07's plague counts, P3-07 22.1) applies to kind 37 in a 0.19.0 world. Template (data; salience 45 as kind 12's):
 
 ```
-Plague broke out in {settlement}{reached?| and spread to one other settlement| and spread to # other settlements}; {total} died{reached?|| in all}.
+Plague broke out in {settlement}{reached?| and spread to one other settlement| and spread to # other settlements}; {total} died{reached?| in all| in all}.
 ```
+
+(r14) The last placeholder is the three-word form of P3-04 8.5 (w0 for 0, w1 for 1, w2 otherwise): "in all" is kept whenever at least one other settlement was reached (`… and spread to one other settlement; 1,993 died in all.`) and dropped only when none was. r12 wrote `{reached?|| in all}`, which also dropped it for one settlement reached.
 
 `Plague broke out in Gork-Skreeg Hole and spread to 3 other settlements; 1,084 died in all.` (illustrative) · with no spread: `Plague broke out in Raenme; 120 died.` Measured on the stored logs (`total` and `reached` are computed from the outbreak's caused spreads): 1024 default at 0.18.0 (seeds 0 to 39), 2,939 outbreaks, 1,543 with at least one spread (955 one, 388 two, 157 three, 43 four or more); of the 760 at salience 45 the median own toll is 1,020 and the median total 1,446, and 370 state fewer than 1,000 dead today, none will (the total is at least 1,000 by the salience rule).
 
@@ -1227,3 +1229,7 @@ New section 22 (`docs/specs/p3-10-followups.md`), normative from generator 0.19.
 ## Revision note r13 (2026-11-21, after the P3-10 implementation)
 
 Text only. The defaults of hand-made tuning (tests) leave 22.2 and 22.5 off: `cause_memory_years` 100000, `inland_cap` 20, as implemented. Measured at the implementation (1024 default seeds 0 to 39): faerie settlements within 300 m of the sea 11% (0.18.0: 55%); humans +3% standing settlements against 0.18.0 (22.5's harness estimate of −15% was the reshuffle of keyed war draws).
+
+## Revision note r14 (2026-11-21, text after the P3-10 integration)
+
+22.1: kind 37's template ends `{reached?| in all| in all}`, so that "in all" is kept whenever at least one other settlement was reached (r12's `{reached?|| in all}` dropped it for exactly one). Data text; no rule change.
