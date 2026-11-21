@@ -273,14 +273,16 @@ TEST_CASE("P3-02 9.1 test 4: a root starting or ending with ' or -, or with two 
 }
 
 TEST_CASE("P3-02 9.1 test 4: a name over 48 bytes is invalid; 48 bytes is valid") {
-    const std::string tail(42, 'x');  // a 48-byte form "{root}xxx...x"
-    Naming n = fixed("", "aaaaaa", "", "N", 1, 32);
+    // a 48-byte form "{root}xyxy...xy"; P3-02 r13 13.2: no three equal letters in a row in the fixture
+    std::string tail;
+    for (int i = 0; i < 21; ++i) tail += "xy";
+    Naming n = fixed("", "abcabc", "", "N", 1, 32);
     n.god_forms = {"{root}" + tail};
     REQUIRE(n.god_forms[0].size() == 48);
     names_api::Attempt a = names_api::attempt(n, Kind::god, 0, 1, 1, 0);
     CHECK(a.valid);  // 6 + 42 = 48 bytes
     CHECK(a.name.size() == 48);
-    n.nuclei = {"aaaaaaa"};
+    n.nuclei = {"abcabca"};
     a = names_api::attempt(n, Kind::god, 0, 1, 1, 0);
     CHECK_FALSE(a.valid);  // 49 bytes
     // The bound is on the name, not on the root: the same root in a short form is valid.
@@ -731,13 +733,16 @@ TEST_CASE("P3-02 11.3, 11.7 item 10: the critics' examples are rejected as root 
         std::string("nik-") + "gn" + "igg", std::string("gn") + "ig" + "sneet", std::string("kreets") + "l" + "ut",
         std::string("s") + "l" + "ut" + "keeb", std::string("gn") + "azi" + "tch",
         // 11.3's examples
-        std::string("ugh") + "'kaal", std::string("cu") + "m" + "brin"};
+        std::string("ugh") + "'kaal", std::string("cu") + "m" + "brin",
+        // P3-02 r13 13.1: the fragment of 11.3's example now matches anywhere, so its "not filtered" example
+        // (Ascumbrin) is filtered from 0.19.0 r13 on (11.3's sentence is outdated by 13.1)
+        std::string("ascu") + "m" + "brin"};
     for (std::size_t i = 0; i < rejected.size(); ++i) {
         CAPTURE(i);  // the index, not the word
         CHECK(names_api::name_filtered(f, rejected[i]));
         CHECK(names_test::ref_filtered(f, rejected[i]));
     }
-    for (const std::string& w : std::vector<std::string>{"stard", "iensath", "grork", std::string("ascu") + "m" + "brin"}) {
+    for (const std::string& w : std::vector<std::string>{"stard", "iensath", "grork"}) {
         CAPTURE(w);
         CHECK_FALSE(names_api::name_filtered(f, w));
         CHECK_FALSE(names_test::ref_filtered(f, w));
@@ -901,10 +906,11 @@ TEST_CASE("P3-02 11.2, 11.5: the library's effective filter equals the union of 
     // The test reads game/data/name_filters/ with toml++; the library builds its filter from the
     // loaded content set (name_filter_from). Compared as sets (only membership matters, 11.2).
     const names_api::Filter& mine = names_test::shipped_filter();
-    // P3-02 r10 12.1 (0.19.0): 108 / 36 / 510 (101 / 35 / 514 at 0.18.0; 768 whole at 0.17.0)
-    CHECK(std::set<std::string>(mine.anywhere.begin(), mine.anywhere.end()).size() == 108);
-    CHECK(std::set<std::string>(mine.at_start.begin(), mine.at_start.end()).size() == 36);
-    CHECK(std::set<std::string>(mine.whole.begin(), mine.whole.end()).size() == 510);
+    // P3-02 r13 13.1 (0.19.0 second round): 110 / 31 / 508 (r10 12.1: 108 / 36 / 510; 101 / 35 / 514 at 0.18.0;
+    // 768 whole at 0.17.0)
+    CHECK(std::set<std::string>(mine.anywhere.begin(), mine.anywhere.end()).size() == 110);
+    CHECK(std::set<std::string>(mine.at_start.begin(), mine.at_start.end()).size() == 31);
+    CHECK(std::set<std::string>(mine.whole.begin(), mine.whole.end()).size() == 508);
 }
 
 }  // TEST_SUITE

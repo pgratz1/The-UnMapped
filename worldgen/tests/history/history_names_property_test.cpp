@@ -318,20 +318,23 @@ TEST_CASE("P3-02 4.3: the numeral fallback takes the smallest free numeral, from
 }
 
 TEST_CASE("P3-02 4.4: a numbered name may reach 64 bytes; above 64 is fatal") {
-    // A 48-byte name: root "Aaaaaa" in a 48-byte form; the numerals of k up
+    // A 48-byte name: root "Abcabc" in a 48-byte form; the numerals of k up
     // to 3887 taken, the next is MMMDCCCLXXXVIII (15 bytes): 48 + 1 + 15 = 64.
+    // P3-02 r13 13.2: no three equal letters in the attempt (the fallback's numeral is exempt, 13.3 invariant 7).
     Naming n;
     n.onsets = {""};
-    n.nuclei = {"aaaaaa"};
+    n.nuclei = {"abcabc"};
     n.codas = {""};
     n.patterns = {"N"};
     n.min_letters = 1;
     n.max_letters = 32;
-    n.god_forms = {"{root}" + std::string(42, 'x')};
+    std::string tail;
+    for (int i = 0; i < 21; ++i) tail += "xy";
+    n.god_forms = {"{root}" + tail};
     n.civilization_forms = {"{root}"};
     n.settlement_forms = {"{root}"};
     const names_api::Namer namer(n);
-    const std::string base = "Aaaaaa" + std::string(42, 'x');
+    const std::string base = "Abcabc" + tail;
     REQUIRE(base.size() == 48);
     {
         Registry reg;

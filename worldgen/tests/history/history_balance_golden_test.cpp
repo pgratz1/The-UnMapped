@@ -6,7 +6,7 @@
 // re-derived from the rows (outcomes with -ceded and -tribute), every rendered sentence (kinds 32 and 33
 // with their templates), the invariants of P3-06 14 and r9 20.13 from the rows, threads 1 and 4
 // byte-identical; and that the case does what it is for: at least one refugees_settled whose refuge is found
-// (its year + hidden_years before the present) and a tribute.
+// (its year + its founder's race's hidden_years, P3-06 r17 22.2, before the present) and a tribute.
 //
 // P3-06 r13 20.27 item 8 (the last test): invariant (13) on 2048 seed 3, default settings, the case of the P3-09
 // validation's D1, in the doctest suite "history-slow" (worldgen-tests -ts=history-slow --no-skip). Invariant (13)
@@ -83,11 +83,12 @@ TEST_CASE("P3-06 r9 20.14 item 8: hist-conflict-flight equals the reference; fli
     check_r17(t, shipped(), g);                                        // P3-06 r17 (8), (15), (17), 22.5's facts
     // what the case is for
     const Index x(t);
-    const std::int64_t hidden_years = conflict_int(shipped(), "hidden_years");
+    const std::map<std::int64_t, std::int64_t> hidden_of_race = race_hidden_years(shipped());  // P3-06 r17 22.2
     std::int64_t flights = 0, found = 0, tributes = 0;
     for (const Row& e : t.event) {
         if (at(e, 3) == k_refugees_settled) {
             ++flights;
+            const std::int64_t hidden_years = hidden_of_race.at(at(*x.cv.at(x.role1(at(e, 0), 2)), 2));
             found += at(e, 1) + hidden_years < g.span ? 1 : 0;
             // the sentence of kind 32 names the origin, the refuge and its region
             const std::string& s = sent[static_cast<std::size_t>(at(e, 0) - 1)];

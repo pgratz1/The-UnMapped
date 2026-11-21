@@ -66,15 +66,25 @@ enum class Release { none, ruined, passed };
 struct LowRun {
     Tables t;
     std::int64_t h = 0;
+    std::int64_t rel = 0;  // the year h was ruined or passed (0: never)
     std::map<std::int64_t, bool> low1, low2;  // year -> lying_low(state, c, year) after peoples, at T6
 };
 
+// found_rate 1000 (a colony as soon as the pressure allows) and no secession: with stress_content's split_permille
+// 1000 the refuge, the far region of c1, seceded at year 2 and passed to a new civilization, which by 22.3 ends
+// c1's lying low (the engine was right; the test had not ruled the secession out).
+const wd::ContentSet& low_content() {
+    static const wd::ContentSet c = with_peoples({{"found_rate_permille", I64(1000)}, {"split_permille", I64(0)}});
+    return c;
+}
+
 // Civilization 1 founds a refuge h in a free region at year 1 (T6), lie_low(1, h, 301); its capital is crowded at
-// years 1 and 50. At year 50 (T6) h is ruined, passed to civilization 2, or left as it is.
+// years 1 and 50. At year 50 (T6) h is ruined, passed to a civilization 2 founded there with h as its capital, or
+// left as it is.
 LowRun low_run(Release how) {
     const Geo g = four_regions();
-    const wd::ContentSet& c = stress_content();
-    const eng::HistoryInputs in = inputs_of(g, 0, humans(how == Release::passed ? 2 : 1), c);
+    const wd::ContentSet& c = low_content();
+    const eng::HistoryInputs in = inputs_of(g, 0, humans(1), c);
     PeoplesConfig cfg(c, true);
     PeoplesConfig* p = &cfg;
     LowRun r;
@@ -95,13 +105,20 @@ LowRun low_run(Release how) {
         }
         if (ctx.year() == 1 || ctx.year() == 50) st.set_population(st.civ(1).capital, 20000);
         if (ctx.year() == 50 && how != Release::none) {
+            r.rel = ctx.year();
             const std::int64_t e = test_event(ctx, st.settlement(r.h).region, r.h);
             if (how == Release::ruined) {
                 st.set_settlement_status(r.h, eng::SettlementStatus::ruined, e);
                 st.set_region_owner(st.settlement(r.h).region, 0, e);
             } else {
-                st.set_settlement_owner(r.h, 2, e);
-                st.set_region_owner(st.settlement(r.h).region, 2, e);
+                // the second civilization, founded here with the refuge as its capital (the engine founds no
+                // second human civilization in these four regions before 301)
+                const std::int64_t c2 = st.found_civilization(st.civ(1).race, st.civ(1).culture,
+                                                              st.settlement(r.h).region, "Test Realm", e);
+                REQUIRE(c2 == 2);
+                st.set_settlement_owner(r.h, c2, e);
+                st.set_capital(c2, r.h);
+                st.set_region_owner(st.settlement(r.h).region, c2, e);
             }
         }
         if (ctx.year() >= 1 && ctx.year() <= 320) {
@@ -151,6 +168,7 @@ TEST_CASE("P3-05 r15 22.8 item 4a: with the refuge standing and its own, no colo
 TEST_CASE("P3-05 r15 22.8 item 4a: the refuge ruined at 50: foundings resume in the next step; lying_low false") {
     const LowRun r = low_run(Release::ruined);
     REQUIRE(r.h != 0);
+    REQUIRE(r.rel == 50);
     bool resumed = false;
     for (const std::int64_t y : colony_years_of(r.t, 1)) {
         CHECK_MESSAGE((y < 2 || y > 50), "colony of c1 in " << y << " while lying low");
@@ -166,15 +184,16 @@ TEST_CASE("P3-05 r15 22.8 item 4a: the refuge ruined at 50: foundings resume in 
 TEST_CASE("P3-05 r15 22.8 item 4a: the refuge passed to c2 at 50: c1 founds again; c2 does not lie low") {
     const LowRun r = low_run(Release::passed);
     REQUIRE(r.h != 0);
+    REQUIRE(r.rel == 50);
     bool resumed = false;
     for (const std::int64_t y : colony_years_of(r.t, 1)) {
-        CHECK_MESSAGE((y < 2 || y > 50), "colony of c1 in " << y << " while lying low");
-        resumed = resumed || (y > 50 && y < 301);
+        CHECK_MESSAGE((y < 2 || y > r.rel), "colony of c1 in " << y << " while lying low");
+        resumed = resumed || (y > r.rel && y < 301);
     }
     CHECK(resumed);
     for (const auto& [y, low] : r.low1) {
         CAPTURE(y);
-        CHECK(low == (y < 50));
+        CHECK(low == (y < r.rel));
     }
     for (const auto& [y, low] : r.low2) CHECK_FALSE(low);
 }

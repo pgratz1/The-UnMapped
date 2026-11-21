@@ -148,20 +148,21 @@ TEST_CASE("P3-02 r10 12.1, 12.3: the eight filter entries reject the names of 12
         CAPTURE(std::string_view(w));
         CHECK_FALSE(names_api::name_filtered(lib, w));
     }
-    // 12.1 sizes after the edit: crude 70 / 16 / 14; words 5 / 1 / 389.
+    // 12.1 sizes after the edit: crude 70 / 16 / 14; words 5 / 1 / 389; after P3-02 r13 13.1 (the second
+    // round): crude 72 / 12 / 14, words 5 / 1 / 387.
     const wd::KindContent* kind = content.find_kind("name_filter");
     REQUIRE(kind != nullptr);
     for (const auto& d : kind->definitions) {
         CAPTURE(d.id);
         if (d.id == "crude") {
-            CHECK(d.record.get_array("anywhere").size() == 70U);
-            CHECK(d.record.get_array("at_start").size() == 16U);
+            CHECK(d.record.get_array("anywhere").size() == 72U);
+            CHECK(d.record.get_array("at_start").size() == 12U);
             CHECK(d.record.get_array("whole").size() == 14U);
         }
         if (d.id == "words") {
             CHECK(d.record.get_array("anywhere").size() == 5U);
             CHECK(d.record.get_array("at_start").size() == 1U);
-            CHECK(d.record.get_array("whole").size() == 389U);
+            CHECK(d.record.get_array("whole").size() == 387U);
         }
     }
 }
