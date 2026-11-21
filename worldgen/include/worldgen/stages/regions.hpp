@@ -404,11 +404,17 @@ using PlaceSlotValues = std::vector<std::pair<std::size_t, std::string>>;
 struct RegionNameAttempt {
     bool valid = false;
     std::string name;
+    PlaceSlotValues values;  // r6 15.4: the slot values, in the form's order
 };
 [[nodiscard]] RegionNameAttempt region_name_attempt(std::uint64_t k_name, std::int64_t region, std::int64_t attempt,
                                                     const PlacenameDef& land, const PlacenameDef& common,
                                                     std::span<const PlacenameDef* const> traits,
                                                     const RegionTuning& tuning);
+
+// r6 15.4 (V7, generator 0.19.0): the stems of the slot values other than
+// {noun} and {suffix}: each value lower-cased, without a leading "the ",
+// cut to its first five bytes.
+[[nodiscard]] std::vector<std::string> region_name_stems(const PlaceSlotValues& values);
 
 // RG11 8 fallback: the first compound P[i] + S[j] (P = common prefixes then
 // the land's, S = the land's suffixes then the common ones, i outer) that

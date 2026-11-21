@@ -10,7 +10,7 @@ generation_years = 70
 growth_permille = 5
 density_permille = 700
 site_weights = { fertility = 10, forage = 10, timber = 10, ore = 60, fresh_water = 10 }
-cell_weights = { ore = 400, height = 600 }
+cell_weights = { ore = 400, height = 600, inland = 0, port = 0, habitability = 500 }
 biomes = [
   { biome = "alpine", weight = 300 },
   { biome = "highland_moor", weight = 300 },
@@ -28,5 +28,7 @@ prowess_permille = 1400
 muster_permille = 1000
 conceal_min = 1001
 home_defense_permille = 0
+odds_min_permille = 700
+awakening_quarrel = 0
 settlement_kinds = ["hamlet", "village", "town", "city", "fortress"]
 culture = "dwarven"

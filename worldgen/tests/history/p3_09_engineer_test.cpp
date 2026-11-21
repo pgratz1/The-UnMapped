@@ -47,12 +47,13 @@ h::ConflictTuning tuning_09() {
     t.revenge_aggression = 400;
     t.levy_hops = 3;
     t.odds_floor = 500;
-    t.odds_min = 700;
     t.truce_break_aggression = 600;
     t.enmity_hops = 3;
     t.kill_max_permille = 500;  // r10 20.19
     t.find_permille = 250;
     t.search_years = 3;
+    t.search_weary_years = 500;  // r14 21.7 (generator 0.19.0)
+    t.search_repeat_salience = 15;
     return t;
 }
 

@@ -72,10 +72,14 @@ ConflictSubsystem::Fought ConflictSubsystem::battle(StepContext& ctx, std::size_
     }
     const std::int64_t region = target.region;
     // r10 20.17 item 1: y's settlements there all concealed: x must find them.
+    // r14 21.7 item 2: a region where this war has fought a battle needs no
+    // search for the rest of the war.
     const std::vector<std::int64_t> there = seen_settlements(ctx, y, region);
-    const bool all_concealed = !there.empty() && std::all_of(there.begin(), there.end(), [&](std::int64_t id) {
-        return concealed(ctx.state(), ctx.state().settlement(id));
-    });
+    const bool fought_here = std::binary_search(w0.fought.begin(), w0.fought.end(), region);
+    const bool all_concealed =
+        !fought_here && !there.empty() && std::all_of(there.begin(), there.end(), [&](std::int64_t id) {
+            return concealed(ctx.state(), ctx.state().settlement(id));
+        });
     if (all_concealed) {
         if (!chance_pm(ctx.draw(keys_[SEARCH], word(w0.declared), word(region), 0), tuning_.find_permille)) {
             ConflictWar& w = wars_[i];
@@ -125,6 +129,10 @@ ConflictSubsystem::Fought ConflictSubsystem::battle(StepContext& ctx, std::size_
         w.last_battle_winner = winner;
         w.last_event = ev;
         w.initiative = winner;
+        const auto at = std::lower_bound(w.fought.begin(), w.fought.end(), region);
+        if (at == w.fought.end() || *at != region) {
+            w.fought.insert(at, region);
+        }
     }
     if (x_wins && !seen_settlements(ctx, y, region).empty()) {  // r9: hidden ones are never besieged
         siege(ctx, i, x, y, region, attack, dw, ev);
@@ -189,7 +197,9 @@ std::optional<ConflictSubsystem::Flight> ConflictSubsystem::flight_plan(const St
     const std::int64_t from = state.settlement(t).region;
     const std::int64_t p = state.settlement(t).population;
     const std::int64_t survivors = p - floor_div(checked_mul(p, tuning_.sack_toll_permille), 1000);
-    const std::vector<std::int64_t>& from_t = view.hops(from);
+    // P3-06 r14 21.3 (audit A1): a copy of the row, since view.hops(r) below
+    // may fill other rows of the lazily filled cache.
+    const std::vector<std::int64_t> from_t = view.hops(from);
     const std::vector<std::int64_t> px = presence(ctx, x);
     const std::int64_t far = tuning_.march_hops + 1;
     // (-h_x(D), -sigma(D, r_y), D) ascending.
@@ -263,6 +273,9 @@ void ConflictSubsystem::flee(StepContext& ctx, std::size_t i, std::int64_t x, st
     }
     state.set_region_owner(plan.region, y, settled);
     hidden_until_[h] = checked_add(ctx.year(), tuning_.hidden_years);
+    // r14 21.10 item 1: y lies low while its refuge is hidden; peoples learns
+    // it here and founds no colony for y until then (P3-05 r12 22.7a).
+    peoples_.lie_low(y, hidden_until_[h]);
     // 3. The ruin of t; its destination is h, which is full when n was capped.
     state.set_population(t, state.settlement(t).population - n);
     peoples_.ruin(ctx, t, sack);
@@ -468,10 +481,11 @@ std::int64_t ConflictSubsystem::casualties(StepContext& ctx, std::int64_t civ, s
     }
     const std::vector<std::int64_t> loss = casualty_losses(pops, dead);
     for (std::size_t k = 0; k < ids.size(); ++k) {
+        // r14 21.1 (generator 0.19.0): a reduction is noted only where people were lost.
         if (loss[k] != 0) {
             state.set_population(ids[k], pops[k] - loss[k]);
+            peoples_.note_reduction(ids[k], event);
         }
-        peoples_.note_reduction(ids[k], event);
     }
     return std::min(dead, total);
 }
@@ -482,13 +496,8 @@ void ConflictSubsystem::end_checks(StepContext& ctx, std::size_t i, bool no_fron
     const ConflictWar w = wars_[i];
     const State& state = ctx.state();
     // r9 20.6 item 1: the losses a side bears scale with its muster.
-    const std::array<std::int64_t, 2> muster{race_of_civ(ctx, w.attacker).muster, race_of_civ(ctx, w.defender).muster};
-    const auto exhausted = [&](std::size_t s) {
-        const std::int64_t base = floor_div(checked_mul(w.pop0[s], muster[s]), 1000);
-        return checked_mul(w.dead[s], 1000) >= checked_mul(tuning_.exhaustion_permille, std::max<std::int64_t>(1, base));
-    };
-    const bool ex_a = exhausted(0);
-    const bool ex_b = exhausted(1);
+    const bool ex_a = exhausted(ctx, w, 0);
+    const bool ex_b = exhausted(ctx, w, 1);
     // r10 20.15: the score of dead and people taken; the winner of the last
     // battle never loses an ending decided by the score.
     const std::int64_t by_score = unless_last_battle(w, score_winner(w));
@@ -499,7 +508,15 @@ void ConflictSubsystem::end_checks(StepContext& ctx, std::size_t i, bool no_fron
         (void)end_war(ctx, i, by_score, loser_exhausted);
         return;
     }
-    // Aim achieved: the defender neither holds the goal nor has a standing settlement in it.
+    // r14 21.6 (generator 0.19.0; replaces 7.7 item 2). 1. Aim achieved:
+    // the attacker holds its goal; no last-battle rule.
+    if (state.region(w.goal).owner == w.attacker) {
+        (void)end_war(ctx, i, w.attacker, false);
+        return;
+    }
+    // 2. The goal lost to no one or to a third party: the defender neither
+    // holds it nor has a standing settlement in it; the war ends now by the
+    // score, with the last-battle rule.
     bool defender_there = state.region(w.goal).owner == w.defender;
     const std::int64_t ns = settlement_count(state);
     for (std::int64_t id = 1; id <= ns; ++id) {
@@ -507,7 +524,7 @@ void ConflictSubsystem::end_checks(StepContext& ctx, std::size_t i, bool no_fron
         defender_there = defender_there || (s.owner_civ == w.defender && standing(s) && s.region == w.goal);
     }
     if (!defender_there) {
-        (void)end_war(ctx, i, w.attacker, false);  // aim achieved: no last-battle rule
+        (void)end_war(ctx, i, by_score, false);
         return;
     }
     if (no_front || ctx.year() - w.start >= tuning_.war_max_years) {
@@ -587,9 +604,21 @@ void ConflictSubsystem::abandon_search(StepContext& ctx, std::size_t i, std::int
     e.participants = {civ_role("searcher", x), civ_role("hidden", y)};
     e.values = {ctx.year() - w.start};
     e.causes = {w.last_event};
+    // r14 21.7 item 3: only the first search_abandoned of the log keeps the
+    // base salience.
+    if (search_written_) {
+        e.salience = tuning_.search_repeat_salience;
+    }
     const std::int64_t ev = ctx.append(e);
+    search_written_ = true;
     close_war(ctx, i, ev);
     note_futile(ctx, w);  // 20.4: the goal unchanged by an unfound war counts
+    // r14 21.7 item 1: R is weary for every claimant against y for
+    // search_weary_years, until its holder changes.
+    if (tuning_.search_weary_years > 0) {
+        searched_until_[Pair{y, region}] =
+            Searched{checked_add(ctx.year(), tuning_.search_weary_years), ctx.state().region(region).holder};
+    }
 }
 
 // 7.7's cession (and r9 20.3 item 1's): every standing settlement of the
@@ -649,9 +678,10 @@ ConflictSubsystem::Cost ConflictSubsystem::cost_plan(const StepContext& ctx, std
     return cost;
 }
 
-// r9 20.4: a war over G that leaves G's owner as it was at the declaration.
+// r9 20.4: a war over G that leaves G's holder (r14 21.8) as it was at the
+// declaration.
 void ConflictSubsystem::note_futile(const StepContext& ctx, const ConflictWar& w) {
-    const std::int64_t owner = ctx.state().region(w.goal).owner;
+    const std::int64_t owner = ctx.state().region(w.goal).holder;
     if (owner != w.goal_owner) {
         return;
     }

@@ -13,8 +13,12 @@
 # Lower-case a-z only, 2 to 16 letters; keep the list sorted, no duplicates.
 
 [name_filter.words]
-anywhere = []
-at_start = []
+anywhere = [
+  "dead", "flop", "gramma", "hack", "whop",
+]
+at_start = [
+  "gord",
+]
 whole = [
   "aces", "alas", "alien", "all", "also", "altho", "amen", "amend", "amir",
   "anon", "ashed", "ask", "aver", "baa", "baby", "back", "bag", "bald",
@@ -28,10 +32,10 @@ whole = [
   "drank", "drink", "drug", "drunk", "duck", "dud", "dude", "dug", "dweeb",
   "either", "else", "emend", "emir", "emos", "even", "ever", "face", "fan",
   "fatso", "fie", "fill", "fine", "fishy", "five", "flan", "flap", "flash",
-  "flashy", "flip", "flop", "floss", "fly", "flyby", "foci", "foo", "fop",
+  "flashy", "flip", "floss", "fly", "flyby", "foci", "foo", "fop",
   "fora", "fore", "gab", "gag", "gain", "gear", "geek", "geez", "gent", "gig",
-  "gob", "gonk", "goof", "gord", "got", "grab", "grad", "gram", "greet",
-  "grid", "grog", "grok", "ground", "gunk", "gut", "hack", "hair", "hand",
+  "gob", "gonk", "goof", "got", "grab", "grad", "gram", "greet",
+  "grid", "grog", "grok", "ground", "gunk", "gut", "hair", "hand",
   "hard", "head", "heal", "hear", "heard", "heck", "held", "hick", "hint",
   "hock", "hold", "hour", "ices", "icier", "info", "khan", "kind", "kink",
   "lama", "lame", "lard", "lase", "lay", "lice", "lie", "lien", "lii", "limo",
@@ -52,7 +56,7 @@ whole = [
   "slot", "slunk", "snark", "snit", "snitch", "snob", "snub", "snug", "sock",
   "sofa", "sold", "soli", "solo", "some", "son", "sore", "soup", "soupy",
   "south", "soy", "stack", "steal", "stent", "stick", "stint", "stir",
-  "stock", "stuck", "stud", "stun", "stunt", "suck", "team", "teas", "tee",
+  "stock", "stuck", "stud", "stun", "stunt", "team", "teas", "tee",
   "teen", "teepee", "than", "theme", "there", "these", "thieve", "thine",
   "third", "those", "thud", "thug", "tibia", "tick", "tie", "tipi", "told",
   "ton", "too", "top", "toss", "toupee", "tour", "toy", "twee", "two", "typo",

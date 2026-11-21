@@ -94,13 +94,14 @@ std::string flare_note(const HistoryView& view, const HistoryView::Event& e, con
     if (a == nullptr || b == nullptr || r == nullptr) {
         return {};
     }
-    std::string out;
-    append_name(out, *a, true);
-    out += " pressed its claim to ";
+    // P3-07 r12 22.3: no pronoun, every name mid-sentence.
+    std::string out = "The claim of ";
+    append_name(out, *a, false);
+    out += " to ";
     append_name(out, *r, false);
-    out += " against ";
+    out += ", held by ";
     append_name(out, *b, false);
-    out += ".";
+    out += ", came to a head.";
     return out;
 }
 

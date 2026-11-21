@@ -406,11 +406,15 @@ std::size_t NameRegistry::size() const noexcept {
     return names_.size();
 }
 
-NameChoice choose_name(const CultureNaming& naming, const NameFilter& filter, std::string_view culture_id,
-                       NameKind kind, std::uint64_t seed, std::uint64_t culture, std::uint64_t entity,
-                       NameRegistry& registry) {
+namespace {
+
+// 4.3, with (r10 12.2) the core rule when `cores` is given.
+NameChoice choose_name_impl(const CultureNaming& naming, const NameFilter& filter, std::string_view culture_id,
+                            NameKind kind, std::uint64_t seed, std::uint64_t culture, std::uint64_t entity,
+                            NameRegistry& registry, NameCores* cores) {
     const std::uint64_t key = stream_key(seed, name_stream(kind));
     std::optional<NameChoice> first;
+    std::string first_core;
     for (std::uint64_t t = 0; t < NAME_ATTEMPTS; ++t) {
         // A filtered attempt is invalid: skipped, never the fallback's first
         // name (11.3); the next attempt is drawn with its own keys.
@@ -418,11 +422,16 @@ NameChoice choose_name(const CultureNaming& naming, const NameFilter& filter, st
         if (!a.valid) {
             continue;
         }
+        std::string core = cores != nullptr ? name_core(a.root) : std::string();
         if (!first) {
             first = NameChoice{a.name, t, true};
+            first_core = core;
         }
-        if (!registry.contains(a.name)) {
+        if (!registry.contains(a.name) && (cores == nullptr || !cores->near(core))) {
             registry.add(a.name);
+            if (cores != nullptr) {
+                cores->add(std::move(core));
+            }
             return NameChoice{std::move(a.name), t, false};
         }
     }
@@ -443,7 +452,71 @@ NameChoice choose_name(const CultureNaming& naming, const NameFilter& filter, st
         fatal("names: a name longer than 64 bytes");
     }
     registry.add(first->name);
+    if (cores != nullptr) {
+        cores->add(std::move(first_core));
+    }
     return std::move(*first);
+}
+
+}  // namespace
+
+std::string name_core(std::string_view root) {
+    std::string out;
+    for (const char c : root) {
+        if (c != '\'' && c != '-') {
+            out += c;
+        }
+    }
+    return out;
+}
+
+bool within_one_edit(std::string_view a, std::string_view b) noexcept {
+    if (a.size() < b.size()) {
+        std::swap(a, b);  // a is the longer
+    }
+    if (a.size() - b.size() > 1U) {
+        return false;
+    }
+    std::size_t i = 0;
+    while (i < b.size() && a[i] == b[i]) {
+        ++i;
+    }
+    if (i == b.size()) {
+        return true;  // equal, or a has one more letter at the end
+    }
+    if (a.size() == b.size()) {
+        return a.substr(i + 1) == b.substr(i + 1);  // one letter replaced
+    }
+    return a.substr(i + 1) == b.substr(i);  // one letter inserted
+}
+
+bool NameCores::near(std::string_view core) const {
+    for (const std::string& k : cores_) {
+        if (within_one_edit(k, core)) {
+            return true;
+        }
+    }
+    return false;
+}
+
+void NameCores::add(std::string core) {
+    cores_.insert(std::move(core));
+}
+
+std::size_t NameCores::size() const noexcept {
+    return cores_.size();
+}
+
+NameChoice choose_name(const CultureNaming& naming, const NameFilter& filter, std::string_view culture_id,
+                       NameKind kind, std::uint64_t seed, std::uint64_t culture, std::uint64_t entity,
+                       NameRegistry& registry) {
+    return choose_name_impl(naming, filter, culture_id, kind, seed, culture, entity, registry, nullptr);
+}
+
+NameChoice choose_name(const CultureNaming& naming, const NameFilter& filter, std::string_view culture_id,
+                       NameKind kind, std::uint64_t seed, std::uint64_t culture, std::uint64_t entity,
+                       NameRegistry& registry, NameCores& cores) {
+    return choose_name_impl(naming, filter, culture_id, kind, seed, culture, entity, registry, &cores);
 }
 
 NameChoice choose_name(const CultureNaming& naming, std::string_view culture_id, NameKind kind, std::uint64_t seed,
