@@ -129,7 +129,8 @@ TEST_CASE("P3-07 r8 21.5 (P3-09): the six [stats] keys on a hand-made log with h
     CHECK(l[7] == "refuges_held_no_destination = 1");
     // the lead's ruling on wars_same_goal_unchanged_max: a change of R5's owner between w1 (ends 110) and w2
     // (from 200), in 150, breaks the run: w1 1, w2 0, w3 0 (305 in its span): the longest run is 1
-    t.region_control = {{I(5), I(0), I(150), I(2), I(1)}, {I(5), I(150), I(305), I(2), I(1)},
+    // (P3-06 r14 21.8, P3-07 r12 22.5b: a change is a row of another civilization, so the row from 150 is c3's)
+    t.region_control = {{I(5), I(0), I(150), I(2), I(1)}, {I(5), I(150), I(305), I(3), I(1)},
                         {I(5), I(305), N(), I(1), I(33)}, {I(7), I(0), N(), I(2), I(1)}};
     CHECK(stats_lines_21(t, in)[3] == "wars_same_goal_unchanged_max = 1");
     // no war: 0 for every war key; no people, no regions: 0 for the shares
@@ -159,9 +160,12 @@ TEST_CASE("P3-06 r9 20.13 item 5 from rows: weariness violations found on a hand
     CHECK(weary_violations(t, 3) == std::vector<std::int64_t>{40});
     CHECK(weary_violations(t, 4).empty());
     CHECK(weary_violations(t, 0).empty());  // weary_wars 0: never weary
-    // the region changed hands between the third truce and the fourth declaration: no violation
-    t.region_control = {{I(5), I(0), I(350), I(2), I(1)}, {I(5), I(350), N(), I(2), I(1)}};
+    // the region changed hands (to c4) between the third truce and the fourth declaration: no violation
+    t.region_control = {{I(5), I(0), I(350), I(2), I(1)}, {I(5), I(350), N(), I(4), I(1)}};
     CHECK(weary_violations(t, 3).empty());
+    // P3-06 r14 21.8: c2 losing R5 to no one and resettling it is no change of holder: the violation stays
+    t.region_control = {{I(5), I(0), I(330), I(2), I(1)}, {I(5), I(340), N(), I(2), I(1)}};
+    CHECK(weary_violations(t, 3) == std::vector<std::int64_t>{40});
 }
 
 TEST_CASE("P3-06 r11 20.23, 20.13 item 12 from rows: wars in progress count toward weariness") {
@@ -183,7 +187,7 @@ TEST_CASE("P3-06 r11 20.23, 20.13 item 12 from rows: wars in progress count towa
     CHECK(weary_violations(t, 4).empty());
     CHECK(weary_violations(t, 0).empty());
     // the first war's goal changed hands meanwhile (the count resets): only the open war counts, 1 < 3
-    t.region_control = {{I(5), I(0), I(250), I(2), I(1)}, {I(5), I(250), N(), I(2), I(1)}};
+    t.region_control = {{I(5), I(0), I(250), I(2), I(1)}, {I(5), I(250), N(), I(4), I(1)}};
     CHECK(weary_violations(t, 3).empty());
     // weary_wars 1: e20 follows one futile war (no change by 200); e40 meets the open e30
     CHECK(weary_violations(t, 1) == std::vector<std::int64_t>{20, 40});
@@ -213,7 +217,12 @@ std::string same_goal_unchanged(const std::vector<HandWar>& wars,
         }
     }
     std::sort(t.event.begin(), t.event.end(), [](const Row& a, const Row& b) { return at(a, 0) < at(b, 0); });
-    for (const auto& [a, b] : rows) t.region_control.push_back({I(5), I(a), b < 0 ? N() : I(b), I(2), I(1)});
+    // P3-06 r14 21.8: each row is a change of holder, so the rows alternate between c2 and c3
+    std::int64_t civ = 2;
+    for (const auto& [a, b] : rows) {
+        t.region_control.push_back({I(5), I(a), b < 0 ? N() : I(b), I(civ), I(1)});
+        civ = civ == 2 ? 3 : 2;
+    }
     eng::HistoryInputs in;
     in.params.span = E;
     return stats_lines_21(t, in)[3];
