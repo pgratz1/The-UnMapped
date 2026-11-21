@@ -1392,7 +1392,7 @@ Other words unchanged: `exhaustion`, `aim`, `no-front`, `length`, `quiet`, `conq
    - 20.3: 2048 seed 3 (above);
    - 7.7: the golden world `hist-conflict-flight` (512 seed 1: colony s42 by e351, cession e354, year 4878), 1024 default seed 5 (e262, s61) and `civs4` seed 13 (e1332, s167).
 
-   That is 4 of 53 sampled worlds, so the validation's "once in 375" (a scan for 20.3 cessions only) undercounts. **Validation's re-run reports the final count.** The golden `hist-conflict-flight` changes. **Generator stays 0.18.0** (not yet released, P3-09 6). After the engineer's change, validation re-records the world hashes and golden vectors that change and re-runs the cross-preset comparison; a golden case without the situation keeps its value.
+   That is 4 of 53 sampled worlds, so the validation's "once in 375" undercounts. **Validation's re-run reports the final count.** The golden `hist-conflict-flight` changes. **Generator stays 0.18.0** (not yet released, P3-09 6). After the engineer's change, validation re-records the world hashes and golden vectors that change and re-runs the cross-preset comparison; a golden case without the situation keeps its value.
 
 ### 20.28 Which wars weariness and T2 count (r13; amends 20.23 and P3-07 21.8 item 5; closes defects D2 and D3 of the P3-09 validation)
 
