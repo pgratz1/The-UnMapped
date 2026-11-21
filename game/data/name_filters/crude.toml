@@ -8,18 +8,18 @@
 [name_filter.crude]
 anywhere = [
   "anus", "arse", "bastard", "beetch", "bitch", "bollo", "boner", "boob",
-  "butt", "cack", "clit", "cock", "crap", "crotch", "cuck", "cunt", "dick",
-  "dild", "fart", "felch", "fellat", "fuck", "fuk", "hitler", "horny", "jizz",
-  "krotch", "kunt", "lmao", "lol", "nazi", "orgas", "penis", "phuk", "piss",
-  "poop", "porn", "prick", "pube", "puke", "queef", "rape", "rectum",
-  "schlong", "scrot", "semen", "sex", "shiet", "shit", "shyt", "sick",
-  "skank", "slut", "smeg", "snatch", "sperm", "spunk", "suck", "terd",
-  "testic", "tits", "titt", "turd", "twat", "vagin", "vomit", "vulva", "wank",
+  "butt", "cack", "clit", "cock", "crap", "crotch", "cuck", "cum", "cunt",
+  "dick", "dild", "fart", "fass", "felch", "fellat", "fuck", "fuk", "hitler",
+  "horny", "jizz", "krotch", "kunt", "lmao", "lol", "nazi", "orgas", "pee",
+  "penis", "phuk", "piss", "poo", "porn", "prick", "pube", "puke", "queef",
+  "rape", "rectum", "schlong", "scrot", "semen", "sex", "shiet", "shit",
+  "shyt", "sick", "skank", "slut", "smeg", "snatch", "sperm", "spunk", "suck",
+  "terd", "testic", "tit", "turd", "twat", "vagin", "vomit", "vulva", "wank",
   "whore", "wtf",
 ]
 at_start = [
-  "anal", "ass", "boog", "bum", "cum", "dik", "dung", "hump", "knob", "pee",
-  "poo", "puss", "shag", "slag", "snot", "tit",
+  "anal", "ass", "boog", "bum", "dik", "dung", "hump", "knob", "puss", "shag",
+  "slag", "snot",
 ]
 whole = [
   "bimbo", "bonk", "dong", "kak", "labia", "nob", "nuts", "pantie", "panty",

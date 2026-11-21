@@ -88,6 +88,25 @@ constexpr std::string_view ROOT_SLOT = "{root}";
     return separators_ok(root);
 }
 
+// r13 13.2: lower(n) holds one letter a-z at three consecutive positions
+// (A-Z mapped to a-z; every other character breaks a run).
+[[nodiscard]] char lower_letter(char c) noexcept {
+    if (c >= 'A' && c <= 'Z') {
+        return static_cast<char>(c - 'A' + 'a');
+    }
+    return c;
+}
+
+[[nodiscard]] bool triple_letter(std::string_view name) noexcept {
+    for (std::size_t i = 2; i < name.size(); ++i) {
+        const char c = lower_letter(name[i]);
+        if (c >= 'a' && c <= 'z' && lower_letter(name[i - 1]) == c && lower_letter(name[i - 2]) == c) {
+            return true;
+        }
+    }
+    return false;
+}
+
 // The form with its one {root} replaced. Fatal unless the form holds
 // exactly one {root}.
 [[nodiscard]] std::string fill_form(std::string_view form, std::string_view cap_root) {
@@ -194,6 +213,10 @@ constexpr std::string_view ROOT_SLOT = "{root}";
     if (out.valid && name_filtered(filter, root_word(form, out.root))) {
         out.valid = false;
         out.filtered = true;
+    }
+    // r13 13.2: no three equal letters in a row in the rendered name.
+    if (out.valid && triple_letter(out.name)) {
+        out.valid = false;
     }
     return out;
 }

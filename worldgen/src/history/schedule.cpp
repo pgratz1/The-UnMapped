@@ -69,6 +69,7 @@ EngineTuning engine_tuning_from(const data::ContentSet& content) {
     EngineTuning t;
     t.quiet_step_years = r.get_int("quiet_step_years");
     t.quiet_events_max = r.get_int("quiet_events_max");
+    t.quiet_min_years = r.get_int("quiet_min_years");  // r15 20.1 item 1a
     t.simulated_min_permille = r.get_int("simulated_min_permille");
     t.simulated_max_permille = r.get_int("simulated_max_permille");
     t.islet_max_dry_cells = r.get_int("islet_max_dry_cells");
@@ -81,6 +82,7 @@ EngineTuning engine_tuning_from(const data::ContentSet& content) {
 void check_engine_tuning(const EngineTuning& t) {
     field_in(in(t.quiet_step_years, 1, 200), "quiet_step_years");
     field_in(in(t.quiet_events_max, 1, 100), "quiet_events_max");
+    field_in(in(t.quiet_min_years, 0, 400), "quiet_min_years");
     field_in(in(t.simulated_min_permille, 100, 500), "simulated_min_permille");
     field_in(in(t.simulated_max_permille, 100, 500), "simulated_max_permille");
     field_in(in(t.islet_max_dry_cells, 0, 1000000), "islet_max_dry_cells");
@@ -96,6 +98,9 @@ void check_engine_tuning(const EngineTuning& t) {
     // The named checks of 4.1, in order (the messages of the loader's checks).
     if (t.simulated_min_permille > t.simulated_max_permille) {
         fail("history: tuning: simulated_min_permille must not be above simulated_max_permille");
+    }
+    if (t.quiet_min_years > 2 * t.quiet_step_years) {  // r15 engine_quiet_min
+        fail("history: tuning: quiet_min_years must not be above 2 x quiet_step_years");
     }
     for (const auto& [name, l] : levels) {
         if (6 * l->active_years + l->final_years > 6 * t.simulated_max_permille - 30) {
@@ -261,7 +266,8 @@ private:
                     f = std::min({l.flare, q_e - s, l.cap_years - base_.scheduled - flare_total_});  // E3, E8
                 }
                 const bool flare = f >= 1;
-                hooks_.quiet_step_end(ends_interval || flare);
+                const bool ends_row = ends_interval || flare;
+                hooks_.quiet_step_end(ends_row, ends_row ? 0 : std::min(l.quiet_step, q_e - s));
                 if (ends_interval) {
                     row.end_year = s - 1;
                     push(row);
@@ -317,7 +323,7 @@ public:
     TensionReport quiet_step(std::int64_t start, std::int64_t length, bool asks_tension) override {
         return asks_tension && tension_ ? tension_(start, length) : TensionReport{};
     }
-    void quiet_step_end(bool) override {}
+    void quiet_step_end(bool, std::int64_t) override {}
 
 private:
     const std::function<TensionReport(std::int64_t, std::int64_t)>& tension_;

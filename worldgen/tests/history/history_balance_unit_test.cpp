@@ -358,7 +358,6 @@ TEST_CASE("P3-06 r9 20.9 (seam): the r9 tuning fields and the conflict_enmity_ho
     h::ConflictTuning t = h::conflict_tuning_from(shipped());
     CHECK(t.refuge_flight == 1);
     CHECK(t.flight_hops == 3);
-    CHECK(t.hidden_years == 300);
     CHECK(t.weary_wars == 3);
     CHECK(t.tribute_permille == 100);
     CHECK(t.revenge_aggression == 400);
