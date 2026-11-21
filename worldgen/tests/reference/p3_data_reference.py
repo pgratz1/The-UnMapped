@@ -342,6 +342,8 @@ CONFLICT_CHECKS_018 = CONFLICT_CHECKS + (("conflict_enmity_hops", "enmity_hops m
 
 def conflict_ranges():
     """The history.conflict field ranges of the served data version."""
+    if DATA_VERSION == "0.19.0":
+        return CONFLICT_RANGES_019
     return CONFLICT_RANGES_018 if DATA_VERSION == "0.18.0" else CONFLICT_RANGES_016
 
 
@@ -1067,11 +1069,349 @@ REPORT_FILE_018 = {"report.toml": _re}
 HISTORY_FILES_018 = dict(CHRONOLOGY_FILE, **CONFLICT_FILE_018, **ENGINE_FILE, **PEOPLES_FILE_018, **REPORT_FILE_018)
 SPEC_FILES_018 = {"race": RACE_FILES_018, "culture": CULTURE_FILES_017, "history": HISTORY_FILES_018}
 
+
+# ---------------------------------------------------------------------------
+# The 0.19.0 listings (P3-10, docs/specs/p3-10-followups.md), derived from the
+# 0.18.0 ones by the edits the specs state:
+#   races     P3-01 r11 3.4: cell_weights gains inland, port, habitability
+#             after height (dwarf port 0, habitability 500; faerie inland 400,
+#             port 0; every other race neutral 0/1000/1000); faerie coast -500
+#             (P3-05 r12 22.5). P3-01 r11 3.5: odds_min_permille (orc 500,
+#             others 700) and awakening_quarrel (orc 1) after
+#             home_defense_permille.
+#   conflict  P3-01 r11 3.5 / P3-06 r14 21.7, 21.9: odds_min removed;
+#             search_weary_years 500 and search_repeat_salience 15 after
+#             search_years.
+#   peoples   P3-05 r12 22.2, 22.5: cause_memory_years 50 and inland_cap 20
+#             after civs_extra_max.
+#   report    P3-05 r12 22.1, 22.3, 22.4; P3-06 r14 21.2; P3-04 r12 20.1, 20.4:
+#             templates of kinds 10, 15, 16, 17, 22, 23, 31; the entries of
+#             kinds 37 plague_outbreak (45) and 38 quiet_stretch (20).
+#             ASSUMPTION (spec gap, as for kinds 31-36): appended after kind
+#             36's entry in kind id order; the specs give the entries, not
+#             their place in report.toml.
+#   cultures  unchanged.
+#   copied kinds (placename, name_filter): P1-06 r6 15.1-15.3 and P3-02 r10
+#             12.1, applied to the 0.18.0 files read from disk (or from git
+#             at P3_10_BASE_COMMIT once the disk holds 0.19.0 files), see
+#             copied_files_019().
+# ---------------------------------------------------------------------------
+
+CELL_WEIGHTS_019 = {   # (ore, height, inland, port, habitability), P3-01 r11 3.4
+    "elf": (0, 0, 0, 1000, 1000), "goblin": (0, 0, 0, 1000, 1000), "human": (0, 0, 0, 1000, 1000),
+    "orc": (0, 0, 0, 1000, 1000), "dwarf": (400, 600, 0, 0, 500), "faerie": (0, 0, 400, 0, 1000),
+}
+CELL_WEIGHTS_NEUTRAL_019 = (0, 0, 0, 1000, 1000)
+RACE_FIELDS_019_VALUES = {   # (odds_min_permille, awakening_quarrel), P3-01 r11 3.5
+    "elf": (700, 0), "goblin": (700, 0), "dwarf": (700, 0), "faerie": (700, 0), "human": (700, 0), "orc": (500, 1),
+}
+RACE_FIELDS_019 = (("odds_min_permille", 0, 1000), ("awakening_quarrel", 0, 1))
+CELL_FIELDS_019 = (("inland", 0, 1000), ("port", 0, 1000), ("habitability", 0, 1000))
+RACE_CELL_WEIGHTS_019 = REC(fields("ore:I height:I inland:I port:I habitability:I"))
+_i = [n for n, _ in RACE_018].index("home_defense_permille") + 1
+RACE_019 = tuple((n, RACE_CELL_WEIGHTS_019 if n == "cell_weights" else t) for n, t in RACE_018[:_i]) + \
+    (("odds_min_permille", INT), ("awakening_quarrel", INT)) + RACE_018[_i:]
+assert RACE_019[_i + 2][0] == "settlement_kinds" and len(RACE_019) == len(RACE_018) + 2
+
+
+def _race_019(name, text):
+    rid = name[:-5]
+    o, h, i, p, a = CELL_WEIGHTS_019[rid]
+    line = [l for l in text.splitlines(True) if l.startswith("cell_weights = ")][0]
+    text = _edit(text, line, "cell_weights = { ore = %d, height = %d, inland = %d, port = %d, habitability = %d }\n"
+                 % (o, h, i, p, a))
+    if rid == "faerie":
+        text = _edit(text, "\ncoast = 0\n", "\ncoast = -500\n")
+    q, aq = RACE_FIELDS_019_VALUES[rid]
+    line = [l for l in text.splitlines(True) if l.startswith("home_defense_permille = ")][0]
+    return _edit(text, line, line + "odds_min_permille = %d\nawakening_quarrel = %d\n" % (q, aq))
+
+
+RACE_FILES_019 = {n: _race_019(n, t) for n, t in RACE_FILES_018.items()}
+
+CONFLICT_NEW_019 = (("search_weary_years", 0, 10000), ("search_repeat_salience", 0, 100))
+_rows = [r for r in CONFLICT_RANGES_018 if r[0] != "odds_min"]
+_i = [n for n, _, _ in _rows].index("search_years") + 1
+CONFLICT_RANGES_019 = tuple(_rows[:_i]) + CONFLICT_NEW_019 + tuple(_rows[_i:])
+CONFLICT_019 = tuple((n, CONFLICT_RECORDS.get(n, INT)) for n, _, _ in CONFLICT_RANGES_019)
+assert len(CONFLICT_019) == 58 and CONFLICT_019[_i][0] == "search_weary_years"
+_co = _edit(CONFLICT_FILE_018["conflict.toml"], "odds_min = 700\n", "")
+CONFLICT_FILE_019 = {"conflict.toml": _edit(_co, "search_years = 3\n",
+                                            "search_years = 3\nsearch_weary_years = 500\nsearch_repeat_salience = 15\n")}
+
+PEOPLES_NEW_019 = (("cause_memory_years", 0, 100000), ("inland_cap", 1, 256))
+_i = [n for n, _, _ in PEOPLES_RANGES_018].index("civs_extra_max") + 1
+PEOPLES_RANGES_019 = PEOPLES_RANGES_018[:_i] + PEOPLES_NEW_019 + PEOPLES_RANGES_018[_i:]
+PEOPLES_019 = tuple((n, PEOPLES_RECORDS.get(n, INT)) for n, _, _ in PEOPLES_RANGES_019)
+assert len(PEOPLES_019) == 71 and PEOPLES_019[_i][0] == "cause_memory_years"
+PEOPLES_FILE_019 = {"peoples.toml": _edit(PEOPLES_FILE_018["peoples.toml"], "civs_extra_max = 2\n",
+                                          "civs_extra_max = 2\ncause_memory_years = 50\ninland_cap = 20\n")}
+
+# P3-05 r12 22.3: the map M, written out in full in the data.
+CAUSES_M_019 = ("famine=famine,plague=plague,plague_outbreak=plague,plague_spread=plague,succession_crisis=strife,"
+                "battle=war,battle_at_pass=war,tribute=tribute")
+TEMPLATES_019 = {   # kind key -> (0.18.0 template, 0.19.0 template)
+    "settlement_dwindled": ("{settlement} dwindled to {population} souls.",
+                            "{@causes:" + CAUSES_M_019 + ",colony_founded=emigration|Weakened by |, }"
+                            "{settlement} dwindled to {population} souls."),
+    "settlement_abandoned": ("{settlement} was abandoned; {survivors?no one survived|its one survivor was scattered"
+                             "|its # survivors were scattered}.",
+                             "{@causes:" + CAUSES_M_019 + "|Weakened by |, }{settlement} was abandoned; "
+                             "{survivors?no one survived|its one survivor was scattered|its # survivors were scattered}."),
+    "settlement_abandoned_to": ("{settlement} was abandoned; {settled} {settled?survivor|survivors} went to "
+                                "{destination}{lost?|, and one was lost|, and # were lost}.",
+                                "{@causes:" + CAUSES_M_019 + "|Weakened by |, }{settlement} was abandoned; {settled} "
+                                "{settled?survivor|survivors} went to {destination}{lost?|, and one was lost|, and # were lost}."),
+    "civ_seceded": ("{civilization} broke away from {from}, taking {settlements} {settlements?settlement|settlements} "
+                    "with it.",
+                    "{civilization} broke away from {from} with {settlements} {settlements?settlement|settlements}."),
+    "capital_moved": ("{civilization} moved its seat to {settlement}.",
+                      "The seat of {civilization} moved to {settlement}."),
+    "battle": ("{winner} defeated {loser} in {@region}; {loser_dead} of the defeated and {winner_dead} of the victors "
+               "fell.",
+               "{winner} defeated {loser} in {@region}; {loser_dead?none|one|#} of the defeated{winner_dead? fell, and "
+               "none of the victors| and one of the victors fell| and # of the victors fell}."),
+    "battle_at_pass": ("{winner} defeated {loser} at the pass into {@region}; {loser_dead} of the defeated and "
+                       "{winner_dead} of the victors fell.",
+                       "{winner} defeated {loser} at the pass into {@region}; {loser_dead?none|one|#} of the defeated"
+                       "{winner_dead? fell, and none of the victors| and one of the victors fell| and # of the victors "
+                       "fell}."),
+}
+KIND37_ENTRY = ('  { kind = "plague_outbreak", salience = 45, template = "Plague broke out in {settlement}'
+                '{reached?| and spread to one other settlement| and spread to # other settlements}; {total} died'
+                '{reached?|| in all}." },\n')
+KIND38_ENTRY = ('  { kind = "quiet_stretch", salience = 20, template = "For {years} {years?year|years}, from {@year} to '
+                '{@end_year}, the land was quiet{realms?|; one realm held it|, and # realms kept the peace}." },\n')
+_re = REPORT_FILE_018["report.toml"]
+for _k, (_old, _new) in TEMPLATES_019.items():
+    _re = _edit(_re, 'template = "%s" }' % _old, 'template = "%s" }' % _new)
+_last = [l for l in _re.splitlines(True) if '"refuge_held"' in l][0]
+_re = _edit(_re, _last, _last + KIND37_ENTRY + KIND38_ENTRY)
+REPORT_FILE_019 = {"report.toml": _re}
+HISTORY_FILES_019 = dict(CHRONOLOGY_FILE, **CONFLICT_FILE_019, **ENGINE_FILE, **PEOPLES_FILE_019, **REPORT_FILE_019)
+SPEC_FILES_019 = {"race": RACE_FILES_019, "culture": CULTURE_FILES_017, "history": HISTORY_FILES_019}
+
+KINDS_019 = dict(KINDS_018)
+KINDS_019["history"] = ("history", {"chronology": CHRONOLOGY, "conflict": CONFLICT_019, "engine": ENGINE,
+                                    "peoples": PEOPLES_019, "report": REPORT})
+KINDS_019["race"] = ("races", RACE_019)
+
+# --- copied kinds at 0.19.0 -------------------------------------------------
+# The commit whose game/data holds the 0.18.0 copied-kind files (the P3-10 spec base, the validated P3-09
+# state): read from git when the disk holds 0.19.0 files and an earlier version is served.
+P3_10_BASE_COMMIT = "81908fa"
+
+# P1-06 r6 15.1: church words out.
+CHURCH_019 = {
+    ("common", "possessors"): ["Abbess", "Anchorite", "Martyr", "Penitent", "Pilgrim", "Prophet", "Saint", "Sexton"],
+    ("common", "objects"): ["Martyrs", "Penance", "Pilgrims", "Prayers", "Saints", "the Unshriven"],
+    ("common", "prefixes"): ["Rood", "Tithe"],
+    ("common", "places"): ["Penance", "Tithe"],
+    ("trait_fertile", "objects"): ["Tithes"],
+}
+# P1-06 r6 15.2: the grim class (a set per list; the common list's order decides which stay).
+GRIM_019 = {
+    "prefixes": "Bale Bane Bier Charnel Dirge Dole Dread Drear Gallow Ghost Gibbet Grave Grief Grim Knell Lich Lorn "
+                "Mourn Pall Pyre Shroud Sorrow Tomb Weep Wight Woe Wraith Wither",
+    "adjectives": "Accursed Baleful Bereft Bloodless Cheerless Crumbling Cursed Desolate Dismal Doleful Dolorous Dread "
+                  "Drear Dreary Dying Fallen Forgotten Forlorn Forsaken Friendless Ghostly Godless Grieving Grievous "
+                  "Grim Grisly Haunted Joyless Lamenting Lost Moaning Mouldering Mourning Orphaned Pitiless Ruined "
+                  "Shunned Sorrowing Spectral Stricken Unhallowed Wailing Weeping Widowed Woeful Wretched",
+    "places": "Bane Dole Grave Grief Lament Ruin Shame Sorrow",
+    "possessors": "Gravedigger Hangman Headsman Mourner Orphan Widow Widower",
+    "objects": "Bones|Curses|Gallows|Ghosts|Gibbets|Graves|Grief|Mourners|Ruin|Shades|Sorrows|Tombs|Widows|Wights|"
+               "Wraiths|the Damned|the Fallen|the Forgotten|the Forsaken|the Hanged|the Lost|the Slain|the Unburied|"
+               "the Weeping",
+}
+GRIM_019 = {k: (v.split("|") if "|" in v else v.split()) for k, v in GRIM_019.items()}
+GRIM_KEPT_019 = {   # the spec's own statement of what stays in common (checked against the rule)
+    "prefixes": "Bale Charnel Dread Ghost Grief Lich Pall Sorrow Wight Wraith".split(),
+    "adjectives": ("Accursed Bloodless Cursed Doleful Drear Fallen Forsaken Godless Grim Joyless Moaning Orphaned "
+                   "Shunned Stricken Weeping Wretched").split(),
+    "places": "Bane Grief Shame".split(), "possessors": "Gravedigger Mourner Widower".split(),
+    "objects": ["Bones", "Ghosts", "Grief", "Shades", "Widows", "the Damned", "the Forsaken", "the Slain"],
+}
+GRIM_MOVED_COUNTS_019 = {"prefixes": 18, "adjectives": 30, "places": 5, "possessors": 4, "objects": 16}
+PLACENAME_LISTS = ("nouns", "suffixes", "prefixes", "adjectives", "features", "possessors", "places", "objects",
+                   "forbidden", "excluded")
+# P3-02 r10 12.1 (data): (file, list) -> (added, removed).
+NAME_FILTER_EDITS_019 = {
+    ("crude", "anywhere"): (["shiet", "suck"], []),
+    ("words", "anywhere"): (["dead", "flop", "gramma", "hack", "whop"], []),
+    ("words", "at_start"): (["gord"], []),
+    ("words", "whole"): ([], ["flop", "gord", "hack", "suck"]),
+}
+
+
+def _byte_sorted(words):
+    return sorted(words, key=lambda w: w.encode())
+
+
+def _list_text(key, words):
+    """A TOML array line block, wrapped at 78 columns (the values alone are hashed)."""
+    if not words:
+        return "%s = []\n" % key
+    lines, cur = [], " "
+    for w in words:
+        item = ' "%s",' % w
+        if len(cur) + len(item) > 78:
+            lines.append(cur)
+            cur = " "
+        cur += item
+    lines.append(cur)
+    return "%s = [\n%s\n]\n" % (key, "\n".join(" " + l.strip() for l in lines))
+
+
+def _set_list(text, table, key, words):
+    """Replaces the array `key` inside [<kind>.<table>] of a TOML text written in the shipped style."""
+    import re
+    start = text.index("." + table + "]\n")
+    nxt = text.find("\n[", start + 1)
+    end = len(text) if nxt < 0 else nxt + 1
+    block = text[start:end]
+    m = re.search(r"(?m)^%s = \[(?:[^\]]|\n)*?\]\n" % re.escape(key), block)
+    assert m, (table, key)
+    block = block[:m.start()] + _list_text(key, words) + block[m.end():]
+    return text[:start] + block + text[end:]
+
+
+def _toml_lists(text, kind):
+    return tomllib.loads(text)[kind]
+
+
+def placenames_pre_019(files):
+    """True when a placenames/ directory's files are older than 0.19.0 (the church words are still in common)."""
+    for name, text in files:
+        d = tomllib.loads(text).get("placename", {})
+        if "common" in d:
+            return "Abbess" in d["common"]["possessors"]
+    return False
+
+
+def name_filters_pre_019(files):
+    for name, text in files:
+        d = tomllib.loads(text).get("name_filter", {})
+        if "words" in d:
+            return "suck" in d["words"]["whole"]
+    return False
+
+
+def grim_split_019(common):
+    """(kept, moved) per list of P1-06 r6 15.2: of the grim words of each common list, in list order, every third
+    starting with the first stays."""
+    kept, moved = {}, {}
+    for f, cls in GRIM_019.items():
+        grim = [w for w in common[f] if w in cls]
+        kept[f] = grim[0::3]
+        moved[f] = [w for j, w in enumerate(grim) if j % 3 != 0]
+    return kept, moved
+
+
+def placenames_019(files):
+    """The 0.19.0 placenames/ files from the 0.18.0 ones (P1-06 r6 15.1 to 15.3)."""
+    files = dict(files)
+    owner = {}
+    for name, text in files.items():
+        for did in tomllib.loads(text).get("placename", {}):
+            owner[did] = name
+    defs = {did: dict(tomllib.loads(files[n])["placename"][did]) for did, n in owner.items()}
+    new = {did: {f: list(t[f]) for f in PLACENAME_LISTS} for did, t in defs.items()}
+    for (did, f), words in CHURCH_019.items():
+        for w in words:
+            new[did][f].remove(w)
+    # 15.2 on the common lists after 15.1 (no church word is grim)
+    kept, moved = grim_split_019(new["common"])
+    for f in GRIM_019:
+        assert kept[f] == GRIM_KEPT_019[f], (f, kept[f])
+        assert len(moved[f]) == GRIM_MOVED_COUNTS_019[f], (f, moved[f])
+        new["common"][f] = [w for w in new["common"][f] if w not in moved[f]]
+        new["trait_barren"][f] = _byte_sorted(set(new["trait_barren"][f]) | set(moved[f]))
+    # 15.3
+    new["wood"]["suffixes"].remove("hanger")
+    new["trait_high"]["adjectives"].remove("High")
+    new["common"]["places"].remove("Cleft")
+    new["common"]["places"].remove("Gap")
+    new["trait_high"]["places"] = _byte_sorted(new["trait_high"]["places"] + ["Cleft"])
+    out = dict(files)
+    for did in new:
+        for f in PLACENAME_LISTS:
+            if new[did][f] != defs[did][f]:
+                out[owner[did]] = _set_list(out[owner[did]], did, f, new[did][f])
+    for did in new:   # the edit is exact: every list now holds the new words
+        got = tomllib.loads(out[owner[did]])["placename"][did]
+        assert all(got[f] == new[did][f] for f in PLACENAME_LISTS), did
+    return sorted(out.items(), key=lambda kv: kv[0].encode())
+
+
+def name_filters_019(files):
+    """The 0.19.0 name_filters/ files from the 0.18.0 ones (P3-02 r10 12.1)."""
+    out = dict(files)
+    for (did, f), (add, rem) in NAME_FILTER_EDITS_019.items():
+        name = did + ".toml"
+        cur = tomllib.loads(out[name])["name_filter"][did][f]
+        assert all(w not in cur for w in add) and all(w in cur for w in rem), (did, f)
+        words = _byte_sorted([w for w in cur if w not in rem] + add)
+        out[name] = _set_list(out[name], did, f, words)
+        assert tomllib.loads(out[name])["name_filter"][did][f] == words
+    return sorted(out.items(), key=lambda kv: kv[0].encode())
+
+
+def git_dir_files(commit, path):
+    """[(name, text)] of the *.toml files of a directory of the repository at a commit."""
+    import subprocess
+    rel = os.path.relpath(path, REPO).replace(os.sep, "/")
+    names = subprocess.run(["git", "-C", REPO, "ls-tree", "--name-only", commit + ":" + rel],
+                           check=True, capture_output=True, text=True).stdout.split()
+    out = []
+    for name in sorted((n for n in names if n.endswith(".toml")), key=lambda n: n.encode()):
+        text = subprocess.run(["git", "-C", REPO, "show", "%s:%s/%s" % (commit, rel, name)],
+                              check=True, capture_output=True).stdout.decode("utf-8")
+        out.append((name, text))
+    return out
+
+
+def copied_files_019(path, directory, files):
+    """The files of a copied kind directory for the served version, given what the disk holds (P3-10)."""
+    if directory not in ("placenames", "name_filters"):
+        return files
+    pre = placenames_pre_019 if directory == "placenames" else name_filters_pre_019
+    if DATA_VERSION == "0.19.0":
+        if pre(files):
+            PRE_015_USED.add(path)
+            return placenames_019(files) if directory == "placenames" else name_filters_019(files)
+        return files
+    if not pre(files):   # an earlier version served over 0.19.0 files on disk
+        if os.path.normpath(path).startswith(os.path.normpath(REPO)):
+            return git_dir_files(P3_10_BASE_COMMIT, path)
+        raise DataError("%s: 0.19.0 files, cannot serve %s" % (path, DATA_VERSION))
+    return files
+
+
+def write_root_019(dest):
+    """Writes a scratch 0.19.0 data root (P3-10) into dest (outside the repository): game/data with the 0.19.0
+    listings of races/, cultures/, history/ and the 0.19.0 copied kinds."""
+    import shutil
+    assert DATA_VERSION == "0.19.0"
+    dest = os.path.abspath(dest)
+    assert not dest.startswith(os.path.normpath(REPO) + os.sep), "refusing a scratch root inside the repository"
+    if os.path.exists(dest):
+        shutil.rmtree(dest)
+    shutil.copytree(os.path.join(REPO, "game", "data"), dest)
+    for kind in ("race", "culture", "history", "placename", "name_filter"):
+        directory = KINDS[kind][0]
+        p = os.path.join(dest, directory)
+        files = read_kind_files("game/data", kind, False)
+        shutil.rmtree(p)
+        os.makedirs(p)
+        for name, text in files:
+            with open(os.path.join(p, name), "wb") as f:
+                f.write(text.encode("utf-8"))
+
 # The data version this module serves: "0.18.0" (default, P3-09), "0.17.0"
 # (P3-08) or "0.16.0" (use_version), so that the references can still
 # reproduce the older worlds and goldens.
 DATA_VERSION = None
-VERSIONS = ("0.16.0", "0.17.0", "0.18.0")
+VERSIONS = ("0.16.0", "0.17.0", "0.18.0", "0.19.0")
 
 
 def at_least(v):
@@ -1081,7 +1421,9 @@ def at_least(v):
 
 def use_version(v):
     global DATA_VERSION, KINDS, SPEC_FILES
-    if v == "0.18.0":
+    if v == "0.19.0":
+        KINDS, SPEC_FILES = KINDS_019, SPEC_FILES_019
+    elif v == "0.18.0":
         KINDS, SPEC_FILES = KINDS_018, SPEC_FILES_018
     elif v == "0.17.0":
         KINDS, SPEC_FILES = KINDS_017, SPEC_FILES_017
@@ -1092,7 +1434,7 @@ def use_version(v):
     DATA_VERSION = v
 
 
-use_version("0.18.0")
+use_version("0.19.0")
 
 # ---------------------------------------------------------------------------
 # Loading and validation (types only: what the encoding needs)
@@ -1158,7 +1500,7 @@ def legacy_filter_files(path, directory):
 
 
 def read_dir_files(path, directory):
-    if directory == "name_filters" and DATA_VERSION != "0.18.0" and os.path.isdir(path) and \
+    if directory == "name_filters" and not at_least("0.18.0") and os.path.isdir(path) and \
             os.path.normpath(path).startswith(os.path.normpath(REPO)):
         return legacy_filter_files(path, directory)
     names = []
@@ -1172,7 +1514,7 @@ def read_dir_files(path, directory):
     for name in sorted(names, key=lambda n: n.encode()):
         with open(os.path.join(path, name), "rb") as f:
             out.append((name, f.read().decode("utf-8")))
-    return out
+    return copied_files_019(path, directory, out)
 
 
 def disk_version(path, kind):
@@ -1183,14 +1525,31 @@ def disk_version(path, kind):
         return "0.16.0"
     if kind != "culture" and pre_018(path, kind):
         return "0.17.0"
-    return "0.18.0"
+    if kind != "culture" and pre_019(path, kind):
+        return "0.18.0"
+    return "0.19.0"
 
 
 def same_version(kind, a, b):
     """Whether two data versions have the same files of a kind (cultures did not change at 0.18.0)."""
     if kind == "culture":
-        a, b = ("0.17.0" if x == "0.18.0" else x for x in (a, b))
+        a, b = ("0.17.0" if x in ("0.18.0", "0.19.0") else x for x in (a, b))
     return a == b
+
+
+def pre_019(path, kind):
+    """A race or history directory older than 0.19.0 (P3-10): no `odds_min_permille` in a race file, no
+    `search_weary_years` in conflict.toml, no `inland_cap` in peoples.toml or no kind 38 entry in report.toml."""
+    texts = {}
+    for n in os.listdir(path):
+        if n.endswith(".toml"):
+            with open(os.path.join(path, n), encoding="utf-8") as f:
+                texts[n] = f.read()
+    if kind == "history":
+        return ("search_weary_years" not in texts.get("conflict.toml", "")
+                or "inland_cap" not in texts.get("peoples.toml", "")
+                or "quiet_stretch" not in texts.get("report.toml", ""))
+    return any("odds_min_permille" not in t for t in texts.values())
 
 
 def pre_018(path, kind):
@@ -1797,6 +2156,9 @@ def main(argv):
         else:
             with open(GOLDEN, "wb") as f:
                 f.write(text.encode())
+        return 0
+    if args[0] == "write-root":   # P3-10: a scratch 0.19.0 data root, outside the repository
+        write_root_019(args[1])
         return 0
     if args[0] == "hash":
         kinds = None
