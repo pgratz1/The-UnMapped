@@ -127,6 +127,7 @@ From generator 0.18.0 (P3-09, `docs/specs/p3-06-expansion-conflict.md` 20.9), ap
 | 7 | 2026-11-19 | No schema change (generator 0.16.0, the conflict merge): the event catalogue gains kinds 20–30 (section 6); table `relation` holds rows of kinds `enmity`, `war` and `peace` | P3-06 11, 4.3, 18.5 |
 | 7 | 2026-11-20 | No schema change (generator 0.17.0, the P3-08 change): the event catalogue gains kind 31 `settlement_abandoned_to` (section 6); templates may use the three-word value form `{value?w0\|w1\|w2}` (P3-04 r10 8.4) | P3-08 8, P3-05 r6 11 |
 | 7 | 2026-11-20 | No schema change (generator 0.18.0, the P3-09 change): the event catalogue gains kinds 32 `refugees_settled` and 33 `tribute` (section 6) | P3-09 2, P3-06 r9 20.9 |
+| 7 | 2026-11-20 | No schema change (generator 0.19.0, the P3-10 change): the event catalogue gains kinds 37 `plague_outbreak` and 38 `quiet_stretch` (section 6); kinds 4 and 12 are no longer written; templates may use the cause list placeholder `{@causes:...}` (P3-04 r12 20.2) and render values with thousands separators (20.3) | P3-10 8, P3-04 r12 20 |
 
 ## 6. Event catalogue
 
@@ -170,8 +171,10 @@ Kinds, roles, value keys and flags are code (`history::compiled_event_catalogue(
 | 34 | `war_won` | 1 | 0 | 0 | 1: `winner`, civilization, 1–1; 2: `loser`, civilization, 1–1 | 1: `years` | P3-06 r10 |
 | 35 | `search_abandoned` | 1 | 1 | 0 | 1: `searcher`, civilization, 1–1; 2: `hidden`, civilization, 1–1 | 1: `years` | P3-06 r10 |
 | 36 | `refuge_held` | 1 | 1 | 1 | 1: `attacker`, civilization, 1–1; 2: `defender`, civilization, 1–1 | 1: `reason` | P3-06 r10 |
+| 37 | `plague_outbreak` | 0 | 1 | 1 | 1: `settlement`, settlement, 1–1; 2: `civilization`, civilization, 1–1 | 1: `dead`; 2: `population`; 3: `total`; 4: `reached` | P3-04 r12, P3-05 r12 |
+| 38 | `quiet_stretch` | 0 | 0 | 0 | 1: `realm`, civilization, 1–0 (unbounded) | 1: `years`; 2: `realms` | P3-04 r12 |
 
-Kinds 1–5 are P3-04's, 6–19 P3-05's (generator 0.15.0), 20–30 P3-06's (generator 0.16.0, P3-06 11); in kinds 20–30 every count is 1–1 except `parties` 2–2, and every kind is caused. Kind 31 is P3-05 r6's (generator 0.17.0, the P3-08 change): an abandonment whose survivors reached another settlement; from 0.17.0 kind 16 is written only when none did. Kinds 32 `refugees_settled` and 33 `tribute` are P3-06 r9's (generator 0.18.0, the P3-09 change): the survivors of a fallen last refuge found a hidden settlement; a loser with no region to cede pays people.
+Kinds 1–5 are P3-04's, 6–19 P3-05's (generator 0.15.0), 20–30 P3-06's (generator 0.16.0, P3-06 11); in kinds 20–30 every count is 1–1 except `parties` 2–2, and every kind is caused. Kind 31 is P3-05 r6's (generator 0.17.0, the P3-08 change): an abandonment whose survivors reached another settlement; from 0.17.0 kind 16 is written only when none did. Kinds 32 `refugees_settled` and 33 `tribute` are P3-06 r9's (generator 0.18.0, the P3-09 change): the survivors of a fallen last refuge found a hidden settlement; a loser with no region to cede pays people. Kinds 37 `plague_outbreak` and 38 `quiet_stretch` are P3-04 r12's (generator 0.19.0, the P3-10 change): every outbreak with its total toll and the number of its spreads (P3-05 r12 22.1), and one quiet line for the world per quiet phase row (P3-04 r12 20.1); from 0.19.0 kinds 12 `plague` and 4 `quiet_era` keep their rows and are no longer written.
 
 **Relation kinds** (`relation.kind`; text keys, not a schema change): from generator 0.16.0, `enmity` (symmetric, a < b), `war` (asymmetric, a the attacker, b the defender), `peace` (symmetric, a < b), all between civilizations (`a_type` = `b_type` = 3; P3-06 4.3). None exist before 0.16.0. No schema change; `schema_version` stays 7.
 
