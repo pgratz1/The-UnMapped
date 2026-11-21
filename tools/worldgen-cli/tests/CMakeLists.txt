@@ -156,4 +156,9 @@ unmapped_add_doctest_shards(worldgen-cli-tests
     SHARD engine 15 "*cli_history_test.cpp"
     SHARD conflict 27 "*cli_history_conflict_test.cpp"
     REST other 10
+    # The *-slow suites (label slow), as for worldgen-tests; costs measured
+    # 2026-11-21 at 0.18.0.
+    SLOW slow-history-regions 210 "*-slow" "*cli_history_conflict_test.cpp,*cli_chronology_test.cpp,*cli_regions_test.cpp"
+    SLOW slow-geography 210 "*-slow" "*cli_resources_test.cpp,*cli_hydrology_test.cpp,*cli_climate_test.cpp,*cli_biomes_test.cpp"
+    SLOW_REST slow-other 10 "*-slow"
 )

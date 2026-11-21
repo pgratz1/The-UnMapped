@@ -114,6 +114,13 @@ jobs:
       - name: Test
         run: ctest --preset "${{ matrix.preset }}" --test-dir "$UNMAPPED_BUILD_ROOT/build/${{ matrix.preset }}"
 
+      # The *-slow doctest suites (CTest label `slow`, excluded from the test
+      # step above), on one release preset per platform only (spec P3-10 4
+      # item 1). Four entries at a time, from the <preset>-slow test preset.
+      - name: Test the slow suites
+        if: matrix.preset == 'linux-gcc-release' || matrix.preset == 'windows-msvc-release'
+        run: ctest --preset "${{ matrix.preset }}-slow" --test-dir "$UNMAPPED_BUILD_ROOT/build/${{ matrix.preset }}"
+
       # P0-04 section 9: generate the eight cases and save hash --detail and
       # report text per case under $UNMAPPED_BUILD_ROOT/out/world-hashes/.
       - name: Generate the P0 world cases
