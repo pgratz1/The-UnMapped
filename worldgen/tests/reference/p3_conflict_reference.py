@@ -115,6 +115,8 @@ FLAGS = dict(
     floor=True,     # 20.20 item 1: casualties never take a race's last refuge below abandon_min
     held=True,      # 20.22: refuge_held (kind 36) instead of the siege when the guard holds
     weary_open=True,  # r11 20.23: futile + the wars open over (D, G) >= weary_wars
+    # r13 (generator stays 0.18.0)
+    cede_all=True,  # 20.27: a cession passes every standing settlement of the loser in G, hidden or same-step
 )
 FLAGS_017 = ("loss",)
 
@@ -246,6 +248,23 @@ SPEC_GAPS = (
                            "floor applies whatever last_refuge says."),
     ("r10 T3 from rows", "Region owners at year y are the region_control rows with from_year <= y < to_year (or "
                          "open); the site test blocks every settlement founded before the event and not faded by it."),
+    # r13 (generator stays 0.18.0)
+    ("r13 20.27 item 1 excess", "As 7.7 cession refugees: the excess of each passing settlement goes to L's nearest "
+                                "other standing settlement at that moment, which may be a settlement of L in G not yet "
+                                "passed (a later id) or a colony founded earlier in the step."),
+    ("r13 20.13 (13) from rows", "Owners replayed in event id order: a settlement's founding_event gives it to its "
+                                 "founder_civ; civ_seceded passes `from`'s standing settlements in the regions whose "
+                                 "region_control row has that event (and the new capital's region); "
+                                 "settlement_captured gives it to the attacker; sacked, settlement_abandoned and "
+                                 "settlement_abandoned_to ruin it; region_ceded passes every standing settlement of "
+                                 "`from` in the region. Each passing settlement must have a census row at the "
+                                 "cession's year (its step's bookkeeping) with an owner other than `from`; `from` held "
+                                 "the region by an open region_control row or, when its hold began in the step, by a "
+                                 "settlement standing there in the replay; the replay must end at the settlement "
+                                 "table."),
+    ("r13 20.28 counted wars", "A war is closed by a side's end when its war row's until_event is a civ_conquered or "
+                               "civ_ended; an open row counts with until = E; the incremental form of P3-07 21.8 item "
+                               "5 (r11) is used as written."),
 )
 
 
@@ -1510,7 +1529,12 @@ class World(pp.World):
         g = plan[1]
         ec = self.append("region_ceded", region=g, participants=(("from", CIV, L), ("to", CIV, winner)),
                          causes=(e,))
-        ids = [s["id"] for s in self.svis(L) if s["region"] == g]
+        if FLAGS["cede_all"]:
+            # r13 20.27 item 1: every settlement of L standing in G (all of State, not only visible(): hidden
+            # ones and those created earlier in the step), ascending, the list taken before any change
+            ids = [s["id"] for s in self.standing_of(L) if s["region"] == g]
+        else:
+            ids = [s["id"] for s in self.svis(L) if s["region"] == g]
         race_w = self.race_c(winner)
         for sid in ids:
             s = self.stl(sid)
@@ -1718,6 +1742,36 @@ def war_events(res, d, idx=None):
     return out, u
 
 
+def same_goal_unchanged_max(res, E, kind, groups):
+    """P3-07 r11 21.8 item 5 (P3-06 r13 20.28), in its incremental form: per (defender D, region G), the counted
+    wars are the war_declared over (D, G) in id order without those closed by a side's end (the war row's
+    until_event a civ_conquered or civ_ended); an open war has until = E. A change in [a, b] is a region_control
+    row of G with from_year or to_year in [a, b]. For each counted war [s, u]: run += 1 when run > 0 and there is
+    no change in [lo, max(hi, u)] (hi = max(hi, u)); else run = 1 (lo, hi = s, u) when there is no change in
+    [s, u]; else run = 0. The key is the largest run."""
+    rows = {r[7]: r for r in res["relation"] if r[4] == "war"}
+    side_end = (K["civ_conquered"], K["civ_ended"])
+    best = 0
+    for (_b, g), ds in groups.items():
+        changes = [y for rc in res["region_control"] if rc[0] == g for y in (rc[1], rc[2]) if y is not None]
+        moved = lambda a, z: any(a <= y <= z for y in changes)  # noqa: E731
+        run, lo, hi = 0, None, None
+        for d in sorted(ds):
+            r = rows[d]
+            if r[6] is not None and kind[r[8]] in side_end:
+                continue                  # neither extends a run nor breaks one
+            s, u = r[5], (r[6] if r[6] is not None else E)
+            if run > 0 and not moved(lo, max(hi, u)):
+                run += 1
+                hi = max(hi, u)
+            elif not moved(s, u):
+                run, lo, hi = 1, s, u
+            else:
+                run = 0
+            best = max(best, run)
+    return best
+
+
 def stats21_lines(res, inp):
     """P3-07 r8 21.5: the six keys appended after wars_attacker_<race>."""
     idx = _index(res)
@@ -1737,25 +1791,7 @@ def stats21_lines(res, inp):
     groups = {}
     for d in decl:
         groups.setdefault((role(d[0], 2), d[5]), []).append(d[0])
-    span = {}
-    for r in res["relation"]:
-        if r[4] == "war":
-            span[r[7]] = (r[5], r[6] if r[6] is not None else E)
-    unchanged = 0
-    for (b, g), ds in groups.items():
-        changes = [y for rc in res["region_control"] if rc[0] == g for y in (rc[1], rc[2]) if y is not None]
-        run = 0
-        prev_hi = None
-        for d in sorted(ds):
-            lo, hi = span[d]
-            # the lead's ruling (follows the weariness rule): a change of owner between two wars breaks the run too
-            wlo = lo if prev_hi is None else min(lo, prev_hi)
-            prev_hi = hi
-            if any(wlo <= y <= hi for y in changes):
-                run = 0
-            else:
-                run += 1
-                unchanged = max(unchanged, run)
+    unchanged = same_goal_unchanged_max(res, E, kind, groups)
     civ_race = {c[0]: c[2] for c in res["civilization"]}
     standing = [x for x in res["settlement"] if x[10] in (1, 2)]
     pop = sum(x[11] for x in standing)
@@ -2455,6 +2491,62 @@ def weary_violations(res, ww, E, count_open=False):
     return out
 
 
+def cession_violations(res):
+    """P3-06 r13 20.27 item 6, invariant (13), from the rows: settlement owners replayed from the log (foundings,
+    secessions, captures, cessions passing every settlement of `from` standing in the region, ruins). For each
+    region_ceded e of G at year Y from L to W: L held G just before e (a region_control row of L for G open at Y,
+    or, when L's hold began in the same step, a settlement of L standing in G by the replay, such as a colony
+    founded earlier in the step: P3-04 6.7 item 1's net rule leaves L no row); and every settlement the replay
+    has as L's, standing in G just before e, has its census row of year Y (the step's bookkeeping) with an owner
+    other than L. Finally the replay's owners and standing equal the settlement table. Returns a list of
+    messages, empty when the invariant holds."""
+    kind, ev, _causes, _kids, parts = _index(res)
+    role = lambda e, seq: [p_[4] for p_ in parts.get(e, []) if p_[2] == seq]  # noqa: E731
+    sts = {x[0]: x for x in res["settlement"]}
+    founded = {x[7]: x[0] for x in res["settlement"]}
+    census = {(r[0], r[1]): r for r in res["settlement_census"]}
+    seceded_regions = {}
+    for rc in res["region_control"]:
+        seceded_regions.setdefault(rc[4], []).append(rc[0])
+    owner, standing = {}, {}
+    out = []
+    ruin_kinds = (K["sacked"], K["settlement_abandoned"], K["settlement_abandoned_to"])
+    for e in sorted(res["event"]):
+        eid, y, k = e[0], e[1], e[3]
+        if eid in founded:
+            s = founded[eid]
+            owner[s], standing[s] = sts[s][5], True
+        if k == K["civ_seceded"]:
+            c2, frm = role(eid, 1)[0], role(eid, 2)[0]
+            regs = set(seceded_regions.get(eid, [])) | {e[5]}
+            for s in sorted(owner):
+                if owner[s] == frm and standing[s] and sts[s][4] in regs:
+                    owner[s] = c2
+        elif k == K["settlement_captured"]:
+            owner[e[6]] = role(eid, 1)[0]
+        elif k in ruin_kinds:
+            owner[e[6]], standing[e[6]] = 0, False
+        elif k == K["region_ceded"]:
+            g, L, W = e[5], role(eid, 1)[0], role(eid, 2)[0]
+            mine = [s for s in sorted(owner) if owner[s] == L and standing[s] and sts[s][4] == g]
+            held_row = any(rc[0] == g and rc[3] == L and rc[1] <= y and (rc[2] is None or rc[2] >= y)
+                           for rc in res["region_control"])
+            if not held_row and not mine:
+                out.append("e%d: c%d ceded rg%d, which it did not hold" % (eid, L, g))
+            for s in mine:
+                row = census.get((s, y))
+                if row is None or row[2] == L:
+                    out.append("e%d: s%d of c%d in rg%d did not pass to c%d (census of %d: %s)" %
+                               (eid, s, L, g, W, y, "none" if row is None else "c%d" % row[2]))
+                owner[s] = W
+    for s, x in sorted(sts.items()):
+        st_ = x[10] in (THRIVING, DECLINING)
+        if standing.get(s) != st_ or (st_ and owner.get(s) != x[8]):
+            out.append("s%d: replayed owner c%s standing %s, stored c%d status %d" %
+                       (s, owner.get(s), standing.get(s), x[8], x[10]))
+    return out
+
+
 def check_invariants_r9(c, res, inp, w, label):
     """P3-06 r9 20.13 items 3-6 from the rows (items 1 and 2: check_invariants), with the in-run counters."""
     kind, ev, causes, kids, parts = _index(res)
@@ -2539,6 +2631,10 @@ def check_invariants_r9(c, res, inp, w, label):
                        not concealed_at(w, sts[e[6]][4], civs[y][2]))
     # T3 (P3-09 5): no last refuge holds a siege while a destination with enough survivors exists
     c.eq("%s T3 guard holds with a destination" % label, w.guard_with_dest, 0)
+    if FLAGS["cede_all"]:
+        # r13 20.27 item 6: invariant (13), from the log
+        c.eq("%s r13 20.13.13 a cession passes every settlement of the loser in the region" % label,
+             cession_violations(res), [])
     check_invariants_r10(c, res, inp, w, label, kind, ev, causes, kids, parts, vals)
     c.eq("%s in-run r9 checks" % label, w.checks9, [])
 
@@ -3684,6 +3780,233 @@ def check_units_r9_odds(c):
     c.eq("20.7 garrison x (1000 + home 2000 x B 250 div 1000) div 1000", w.garrison(w.stl(2), 2), g0 * 1500 // 1000)
     w.pd.race[4]["home"] = 0
     check_units_r10(c)
+    check_units_r13(c)
+
+
+# ---------------------------------------------------------------------------
+# r13 (P3-06 20.27, 20.28; P3-07 21.8 item 5 r11): hand-made units
+# ---------------------------------------------------------------------------
+
+def colony_now(w, civ, region, kind, pop):
+    """A colony of `civ` founded earlier in the current step (created = serial: not visible)."""
+    sid = add_stl(w, civ, region, kind, pop)
+    w.stl(sid)["created"] = w.serial
+    return sid
+
+
+def r13_rows(events, parts, settlements, census, control, relation=()):
+    """A row set for the row-level checks: events (id, year, kind, region, settlement); parts (event, role, civ);
+    settlements (id, region, founder, founding_event, owner, status); census (s, year, owner, status);
+    control (region, from, to, civ, event); relation rows as stored."""
+    return dict(event=[(e[0], e[1], e[1], e[2], 1, e[3], e[4], 50) for e in events],
+                event_participant=[(p_[0], p_[1], p_[1], CIV, p_[2]) for p_ in parts],
+                event_cause=[], event_value=[],
+                settlement=[(s[0], "S", 0, 0, s[1], s[2], 0, s[3], s[4], HAMLET, s[5], 100, None, 0)
+                            for s in settlements],
+                settlement_census=[(x[0], x[1], x[2], HAMLET, x[3], 100) for x in census],
+                region_control=list(control), relation=list(relation))
+
+
+def check_units_r13(c):
+    """P3-06 r13 20.27 item 8 and 20.28's tests (with P3-07 r11 21.8 item 5)."""
+    # --- 20.27 item 8, first test: a Q4 colony of L into a free region in front(W, L); the war ends in W's favour;
+    # 20.3 cedes that region and the colony passes with the region_ceded, no event added. Goblins c1 (capital R3),
+    # elves c2 (capital R1, a village in R4, held by the goblins c3), the war over R4 won by c1.
+    w = r9_world(regions=5)
+    add_civ(w, 2, 1)
+    add_civ(w, 1, 2)
+    add_civ(w, 2, 5)
+    add_stl(w, 1, 3, TOWN, 3000)
+    add_stl(w, 2, 1, TOWN, 400)
+    add_stl(w, 3, 4, HAMLET, 100, x=70)
+    add_stl(w, 2, 4, VILLAGE, 200)
+    add_stl(w, 3, 5, HAMLET, 100)
+    w.civ(1)["capital"], w.civ(2)["capital"], w.civ(3)["capital"] = 1, 2, 3
+    claim_war(w, 1, 2, 4)
+    war = w.wars[-1]
+    w.year = 1060
+    c.eq("20.27 without the colony nothing of c2 can be ceded: a tribute of (400 + 200) x 100 div 1000",
+         w.cost_plan(war, 1), ("tribute", 60))
+    s6 = colony_now(w, 2, 2, HAMLET, 60)
+    c.eq("20.27 the colony s6 is not visible; c2 holds R2 through it", (w.visible(w.stl(s6)), w.owner[2][0]),
+         (False, 2))
+    c.eq("20.27 item 3: R2 is a 20.3 candidate by presence part (b): cede R2", w.cost_plan(war, 1), ("cede", 2))
+    n0 = len(w.events)
+    w.end_war(war, 1, "length")
+    ev = w.events[n0:]
+    c.eq("20.27 item 4: peace then region_ceded R2 from c2 to c1, no other event",
+         ([KEY_OF[e["kind"]] for e in ev], ev[1]["region"], ev[1]["participants"]),
+         (["peace", "region_ceded"], 2, [(1, 1, CIV, 2), (2, 2, CIV, 1)]))
+    c.eq("20.27 item 1: the colony passes to c1 (60 <= 2 x C(R2, goblin): no excess); R2 is c1's",
+         (w.stl(s6)["owner_civ"], w.stl(s6)["population"], w.owner[2]), (1, 60, (1, ev[1]["id"])))
+    c.eq("20.27 item 6: c2 keeps no standing settlement in R2", [s["id"] for s in w.standing_of(2)
+                                                                 if s["region"] == 2], [])
+    # the 0.18.0 reading before r13 (visible settlements only) left the colony with c2: the defect D1
+    with_flag = FLAGS["cede_all"]
+    FLAGS["cede_all"] = False
+    try:
+        w = r9_world(regions=5)
+        add_civ(w, 2, 1)
+        add_civ(w, 1, 2)
+        add_civ(w, 2, 5)
+        add_stl(w, 1, 3, TOWN, 3000)
+        add_stl(w, 2, 1, TOWN, 400)
+        add_stl(w, 3, 4, HAMLET, 100, x=70)
+        add_stl(w, 2, 4, VILLAGE, 200)
+        add_stl(w, 3, 5, HAMLET, 100)
+        w.civ(1)["capital"], w.civ(2)["capital"], w.civ(3)["capital"] = 1, 2, 3
+        claim_war(w, 1, 2, 4)
+        war = w.wars[-1]
+        w.year = 1060
+        s6 = colony_now(w, 2, 2, HAMLET, 60)
+        w.end_war(war, 1, "length")
+        c.eq("20.27 the defect D1 (visible only): R2 is c1's, its colony stays c2's",
+             (w.owner[2][0], w.stl(s6)["owner_civ"]), (1, 2))
+    finally:
+        FLAGS["cede_all"] = with_flag
+    # --- second test: 7.7's goal cession with one visible settlement and one same-step colony of L in G: both pass,
+    # ascending, with the colony's excess to L's nearest other standing settlement; a same-step colony of L in a
+    # region not ceded (third test) stays L's. Goblins c1 (capital R3, town 3000); elves c2 (capital R1 town 400,
+    # a village 200 in R2); the war over R2 won by c1; then colonies of c2 in R2 (2500) and R4 (60).
+    w = r9_world(regions=5)
+    add_civ(w, 2, 3)
+    add_civ(w, 1, 1)
+    add_stl(w, 1, 3, TOWN, 3000)          # s1
+    add_stl(w, 2, 1, TOWN, 400)           # s2
+    add_stl(w, 2, 2, VILLAGE, 200)        # s3
+    w.civ(1)["capital"], w.civ(2)["capital"] = 1, 2
+    claim_war(w, 1, 2, 2)
+    war = w.wars[-1]
+    c.eq("20.27 the war's goal R2", war["goal"], 2)
+    w.year = 1060
+    s4 = colony_now(w, 2, 2, HAMLET, 2500)
+    s5 = colony_now(w, 2, 4, HAMLET, 60)
+    cap = w.geo.capacity(2, 2)
+    c.eq("20.27 C(R2, goblin) of the unit geography (hand-read from the world)", cap, 1077)
+    c.eq("20.27 7.7's cession of the goal", w.cost_plan(war, 1), ("goal", 2))
+    n0 = len(w.events)
+    w.end_war(war, 1, "length")
+    ev = w.events[n0:]
+    c.eq("20.27 7.7: peace then region_ceded R2, no other event", [KEY_OF[e["kind"]] for e in ev],
+         ["peace", "region_ceded"])
+    # the colony's excess 2500 - 2 x 1077 = 346 goes to s2 (R1, nearer than s5 in R4), room 2 x C(R1, elf) - 400
+    room = 2 * w.geo.capacity(1, 1) - 400
+    c.eq("20.27 both settlements of c2 in R2 pass; the colony keeps 2 x C, its excess joins s2 (room %d)" % room,
+         (w.stl(3)["owner_civ"], w.stl(s4)["owner_civ"], w.stl(s4)["population"], w.stl(2)["population"]),
+         (1, 1, 2154, 400 + min(346, room)))
+    c.eq("20.27 the colony s4 keeps its founder and founding event (P3-05: founder c2)",
+         (w.stl(s4)["founder_civ"], w.stl(s4)["kind"]), (2, HAMLET))
+    c.eq("20.27 item 8 third test: c2's colony in R4 (not ceded) stays c2's", (w.stl(s5)["owner_civ"], w.owner[4][0]),
+         (2, 2))
+    # --- invariant (13) from the rows (20.27 item 6): the step 500's colony s3 of c2 in R2 and the cession e5
+    events = [(1, 0, K["civ_founded"], 1, 1), (2, 0, K["civ_founded"], 3, 2), (3, 500, K["colony_founded"], 2, 3),
+              (4, 500, K["peace"], 0, 0), (5, 500, K["region_ceded"], 2, 0)]
+    parts = [(5, 1, 2), (5, 2, 1)]
+    good = r13_rows(events, parts, [(1, 1, 1, 1, 1, THRIVING), (2, 3, 2, 2, 2, THRIVING), (3, 2, 2, 3, 1, THRIVING)],
+                    [(1, 0, 1, THRIVING), (2, 0, 2, THRIVING), (3, 500, 1, THRIVING)],
+                    [(1, 0, None, 1, 1), (2, 500, None, 1, 5), (3, 0, None, 2, 2)])
+    c.eq("20.13 (13) rows: the same-step colony passed with the cession (c2 has no row of R2: log hold)",
+         cession_violations(good), [])
+    bad = r13_rows(events, parts, [(1, 1, 1, 1, 1, THRIVING), (2, 3, 2, 2, 2, THRIVING), (3, 2, 2, 3, 2, THRIVING)],
+                   [(1, 0, 1, THRIVING), (2, 0, 2, THRIVING), (3, 500, 2, THRIVING)],
+                   [(1, 0, None, 1, 1), (2, 500, None, 1, 5), (3, 0, None, 2, 2)])
+    c.eq("20.13 (13) rows: the colony left with c2 (the defect D1) is found",
+         cession_violations(bad), ["e5: s3 of c2 in rg2 did not pass to c1 (census of 500: c2)",
+                                   "s3: replayed owner c1 standing True, stored c2 status 1"])
+    # an older settlement of c2 in R2, held by a region_control row, passed; and a cession of a region c2 never held
+    events2 = [(1, 0, K["civ_founded"], 1, 1), (2, 0, K["civ_founded"], 3, 2), (3, 100, K["colony_founded"], 2, 3),
+               (4, 500, K["peace"], 0, 0), (5, 500, K["region_ceded"], 2, 0), (6, 600, K["peace"], 0, 0),
+               (7, 600, K["region_ceded"], 4, 0)]
+    parts2 = [(5, 1, 2), (5, 2, 1), (7, 1, 2), (7, 2, 1)]
+    held = r13_rows(events2, parts2, [(1, 1, 1, 1, 1, THRIVING), (2, 3, 2, 2, 2, THRIVING),
+                                      (3, 2, 2, 3, 1, THRIVING)],
+                    [(1, 0, 1, THRIVING), (2, 0, 2, THRIVING), (3, 100, 2, THRIVING), (3, 500, 1, THRIVING)],
+                    [(1, 0, None, 1, 1), (2, 100, 500, 2, 3), (2, 500, None, 1, 5), (3, 0, None, 2, 2),
+                     (4, 600, None, 1, 7)])
+    c.eq("20.13 (13) rows: an older settlement passed; a cession of a region its giver did not hold is found",
+         cession_violations(held), ["e7: c2 ceded rg4, which it did not hold"])
+    # captures and ruins replayed: s3 captured by c1 (e6) before the cession (nothing of c2 left in R2), then sacked
+    events3 = [(1, 0, K["civ_founded"], 1, 1), (2, 0, K["civ_founded"], 3, 2), (3, 100, K["colony_founded"], 2, 3),
+               (4, 100, K["settlement_founded"], 2, 4), (6, 400, K["settlement_captured"], 2, 3),
+               (7, 450, K["sacked"], 2, 4), (8, 500, K["peace"], 0, 0), (9, 500, K["region_ceded"], 2, 0)]
+    parts3 = [(6, 1, 1), (6, 2, 2), (7, 1, 1), (7, 2, 2), (9, 1, 2), (9, 2, 1)]
+    cap_rows = r13_rows(events3, parts3, [(1, 1, 1, 1, 1, THRIVING), (2, 3, 2, 2, 2, THRIVING),
+                                          (3, 2, 2, 3, 1, THRIVING), (4, 2, 2, 4, 0, RUINED)],
+                        [(1, 0, 1, THRIVING), (2, 0, 2, THRIVING), (3, 100, 2, THRIVING), (3, 400, 1, THRIVING),
+                         (4, 100, 2, THRIVING), (4, 450, 0, RUINED)],
+                        [(1, 0, None, 1, 1), (2, 100, None, 2, 3), (3, 0, None, 2, 2)])
+    c.eq("20.13 (13) rows: captures and ruins replayed (nothing of c2 stands in R2 at the cession)",
+         cession_violations(cap_rows), [])
+    # --- 20.28 / P3-07 r11 21.8 item 5: the statistic on hand-made logs
+    def stat(wars, changes, E=1000):
+        """wars: (declaration id, since, until or None, ending kind key or None); one defender c2, region R5;
+        changes: region_control rows of R5 as (from, to)."""
+        evs, rel, pts = [], [], []
+        nid = 1000
+        for (d, s, u, k) in wars:
+            evs.append((d, s, K["war_declared"], 5, 0))
+            pts += [(d, 1, 1), (d, 2, 2)]
+            if u is None:
+                rel.append((CIV, 1, CIV, 2, "war", s, None, d, 0))
+            else:
+                nid += 1
+                evs.append((nid, u, K[k], 0, 0))
+                rel.append((CIV, 1, CIV, 2, "war", s, u, d, nid))
+        rows = r13_rows(sorted(evs), pts, [], [], [(5, a, b, 2, 1) for (a, b) in changes], rel)
+        kind = {e[0]: e[3] for e in rows["event"]}
+        groups = {}
+        for e in rows["event"]:
+            if e[3] == K["war_declared"]:
+                groups.setdefault((2, 5), []).append(e[0])
+        return same_goal_unchanged_max(rows, E, kind, groups)
+    # 1024 seed 6 (20.28's table): e341 war_won, e445 peace, e453 closed by civ_conquered, e538 truce; no change
+    seed6 = [(341, 4892, 4922, "war_won"), (445, 5297, 5309, "peace"), (453, 5310, 5338, "civ_conquered"),
+             (538, 5591, 5597, "truce")]
+    c.eq("20.28 seed 6 shape: e453 (civ_conquered) skipped, key 3", stat(seed6, [(0, None)], 6000), 3)
+    c.eq("20.28 r10's reading counted e453: it would be 4 (the key is not that)", stat(seed6[:2] + [
+        (453, 5310, 5338, "peace")] + seed6[3:], [(0, None)], 6000), 4)
+    # 1024 calm seed 17: e285 (5577-5587) and e297 (5588-5598), changes at 5039 and 5857 only: key 2 (D3: not 1)
+    c.eq("20.28 calm seed 17 shape: the first war after a change starts a run of 1, key 2",
+         stat([(285, 5577, 5587, "peace"), (297, 5588, 5598, "truce")], [(0, 5039), (5039, 5857), (5857, None)],
+              6000), 2)
+    # a war closed by civ_conquered between two peace wars: not broken (2)
+    c.eq("20.28 a civ_conquered war between two peace wars: run 2, not broken",
+         stat([(10, 100, 110, "peace"), (20, 200, 210, "civ_conquered"), (30, 300, 310, "peace")], [(0, None)]), 2)
+    c.eq("20.28 a civ_ended war counts no more than a civ_conquered one",
+         stat([(10, 100, 110, "peace"), (20, 200, 210, "civ_ended"), (30, 300, 310, "peace")], [(0, None)]), 2)
+    # that war's span holds a change of owner (205): the run is broken (the change is in [100, 310])
+    c.eq("20.28 the skipped war's span holds a change of owner: the run is broken (1)",
+         stat([(10, 100, 110, "peace"), (20, 200, 210, "civ_conquered"), (30, 300, 310, "peace")],
+              [(0, 205), (205, None)]), 1)
+    # a change between two wars: the second starts a run of 1
+    c.eq("20.28 a change between two wars: the second war starts a run of 1 (key 1)",
+         stat([(10, 100, 110, "peace"), (20, 200, 210, "peace")], [(0, 150), (150, None)]), 1)
+    c.eq("20.28 ... and a third war after it extends that run (key 2)",
+         stat([(10, 100, 110, "peace"), (20, 200, 210, "peace"), (30, 300, 310, "truce")], [(0, 150), (150, None)]),
+         2)
+    # a war whose own span holds the change is in no run; the next starts again at 1
+    c.eq("20.28 a war whose span holds a change is in no run (0 then 1)",
+         stat([(10, 100, 110, "peace"), (20, 200, 210, "peace")], [(0, 105), (105, None)]), 1)
+    # three overlapping wars, the middle one ending last: w1 100-150, w2 120-400, w3 200-250, a change at 300:
+    # the window of w1..w3 is [100, max(150, 400, 250)] = [100, 400], which holds 300; w2 alone holds it too
+    c.eq("20.28 three overlapping wars, the middle ending last, a change at 300 in its span: key 1",
+         stat([(10, 100, 150, "peace"), (20, 120, 400, "peace"), (30, 200, 250, "peace")], [(0, 300), (300, None)]),
+         1)
+    c.eq("20.28 the same three wars with the change at 450: one run of 3",
+         stat([(10, 100, 150, "peace"), (20, 120, 400, "peace"), (30, 200, 250, "peace")], [(0, 450), (450, None)]),
+         3)
+    # the latest end, not the last war's: w1 100-400, w2 200-250, a change at 300. The last war's end would give
+    # the window [100, 250] for w1..w2 (no change: 2); the latest end gives [100, 400]: w1 is in no run, w2 starts 1
+    c.eq("20.28 the window ends at the latest end in the run, not the last war's (key 1, not 2)",
+         stat([(10, 100, 400, "peace"), (20, 200, 250, "peace")], [(0, 300), (300, None)]), 1)
+    # an open war counts with until = E: a change at 900 breaks it, none keeps it
+    c.eq("20.28 an open war counts until E (no change: key 2)",
+         stat([(10, 100, 110, "peace"), (20, 200, None, None)], [(0, None)]), 2)
+    c.eq("20.28 an open war counts until E (a change at 900: key 1)",
+         stat([(10, 100, 110, "peace"), (20, 200, None, None)], [(0, 900), (900, None)]), 1)
+    c.eq("20.28 no war: 0", stat([], [(0, None)]), 0)
+
+
 def r10_war(regions=3, goblin_pop=3000, elf_pop=3000, conflict=None, elf_biome=4):
     """Goblins c1 (a town in R1) at war with elves c2 (a town in R3, and a second elven realm c3 in R2 so that c2
     is not its race's last refuge); the war declared in 1050."""
@@ -4199,7 +4522,18 @@ def cmd_check_world(argv):
         st["_engine"] = res["_engine"]
         st["_world"] = res["_world"]
         w = res["_world"]
-        check_invariants(c, st, inp, w, os.path.basename(path), last_refuge=w.ct["last_refuge"] == 1)
+        if all(pchr.table_hash(COLUMNS[t], stored[t]) == want[t] for t in TABLES):
+            check_invariants(c, st, inp, w, os.path.basename(path), last_refuge=w.ct["last_refuge"] == 1)
+        else:
+            # the stored history is not the reference's: the checks that read the reference's in-run state (its
+            # wars, counters) may not apply to the stored rows; the row-only ones still do
+            print("note: the stored history differs from the reference; invariants read from the stored rows, "
+                  "those that need the reference's run may fail or stop")
+            try:
+                check_invariants(c, st, inp, w, os.path.basename(path), last_refuge=w.ct["last_refuge"] == 1)
+            except (KeyError, IndexError, TypeError) as ex:
+                c.true("invariants on the stored rows stopped at %s %s (the stored history differs)" %
+                       (type(ex).__name__, ex), False)
         hard_bounds(c, st, inp, os.path.basename(path))
         worst, over = share_over(st, inp, w, 800)
         c.true("15.5 runaway: share_over_800_years <= 1000 (%d years; largest share %d permille)" % (over, worst),

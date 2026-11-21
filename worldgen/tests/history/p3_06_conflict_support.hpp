@@ -302,17 +302,30 @@ inline std::vector<std::string> stats_lines_21(const Tables& t, const eng::Histo
             changes.push_back(at(rc, 1));
             if (!is_null(rc[2])) changes.push_back(at(rc, 2));
         }
-        std::int64_t run = 0, prev_hi = -1;
+        auto moved = [&changes](std::int64_t a, std::int64_t b) {
+            for (const std::int64_t y : changes) {
+                if (a <= y && y <= b) return true;
+            }
+            return false;
+        };
+        // P3-07 r11 21.8 item 5 (P3-06 r13 20.28), the incremental form: the counted wars leave out those closed by
+        // a side's end (until_event a civ_conquered or civ_ended), which neither extend nor break a run; a run's
+        // window ends at the latest end in it; the first counted war after a change starts a run of 1.
+        std::int64_t run = 0, lo = 0, hi = 0;
         for (const std::int64_t d : ds) {  // id order
             const Row& r = *war_row.at(d);
-            const std::int64_t lo = at(r, 5), hi = is_null(r[6]) ? E : at(r, 6);
-            // the lead's ruling (follows the weariness rule, 20.23): a change of owner between two wars of the
-            // run breaks it too, so the window starts at the previous war's end
-            const std::int64_t wlo = prev_hi < 0 ? lo : std::min(lo, prev_hi);
-            prev_hi = hi;
-            bool moved = false;
-            for (const std::int64_t y : changes) moved = moved || (wlo <= y && y <= hi);
-            run = moved ? 0 : run + 1;
+            if (!is_null(r[6]) && (x.kind(at(r, 8)) == k_civ_conquered || x.kind(at(r, 8)) == k_civ_ended)) continue;
+            const std::int64_t s = at(r, 5), u = is_null(r[6]) ? E : at(r, 6);
+            if (run > 0 && !moved(lo, std::max(hi, u))) {
+                ++run;
+                hi = std::max(hi, u);
+            } else if (!moved(s, u)) {
+                run = 1;
+                lo = s;
+                hi = u;
+            } else {
+                run = 0;
+            }
             unchanged_max = std::max(unchanged_max, run);
         }
     }
@@ -625,18 +638,9 @@ inline void check_invariants_06(const Tables& t, const eng::HistoryInputs& in, s
     for (const Row& p : t.phase) {
         if (at(p, 2) == 3) CHECK(x.kind(at(p, 5)) == k_claim);
     }
-    // 8.3 item 4 (N2): a cession in a quiet step never transfers a colony founded earlier in the same step
-    for (const Row& e : t.event) {
-        if (at(e, 3) != k_region_ceded || at(*x.ph.at(at(e, 4)), 2) != 2) continue;
-        const std::int64_t to = x.role1(at(e, 0), 2);
-        for (const Row& c : t.settlement_census) {
-            if (at(c, 1) != at(e, 1) || at(c, 2) != to) continue;
-            const Row& s = *x.st.at(at(c, 0));
-            if (at(s, 4) != at(e, 5)) continue;
-            CHECK_MESSAGE(at(s, 7) < at(e, 0), "settlement " << at(s, 0));
-            CHECK_FALSE((x.kind(at(s, 7)) == k_colony_founded && at(s, 6) == at(e, 1)));
-        }
-    }
+    // 8.3 item 4 (N2, r7): "a cession in a quiet step never transfers a colony founded earlier in the same step"
+    // no longer holds: P3-06 r13 20.27 passes every settlement of the loser standing in the ceded region, a
+    // same-step colony included (invariant (13), cession_violations, checked with the r9 invariants).
 }
 
 // --- P3-06 r9 20.13 items 3-6 from the rows (P3-09, generator 0.18.0) --------------------------------
@@ -742,6 +746,84 @@ inline std::vector<std::int64_t> weary_violations(const Tables& t, std::int64_t 
     return out;
 }
 
+// P3-06 r13 20.27 item 6, invariant (13) of 20.13, from the rows (the reference's cession_violations, same
+// messages): settlement owners replayed from the log in event id order. A settlement's founding_event gives it to
+// its founder_civ; a civ_seceded passes `from`'s standing settlements in the regions whose region_control row has
+// that event (and its own region); a settlement_captured gives it to the attacker; sacked, settlement_abandoned and
+// settlement_abandoned_to ruin it; a region_ceded of G at year Y from L to W passes every settlement of L standing
+// in G. At each region_ceded: L held G (a region_control row of L for G open at Y, or, when L's hold began in the
+// same step and P3-04 6.7 item 1's net rule left L no row, a settlement of L standing in G in the replay), and
+// every settlement of L standing in G just before it has a census row of year Y whose owner is not L. Finally the
+// replay's owners and standing equal the settlement table. Empty when the invariant holds.
+inline std::vector<std::string> cession_violations(const Tables& t) {
+    const Index x(t);
+    std::map<std::int64_t, std::int64_t> founded;  // founding event -> settlement
+    for (const Row& s : t.settlement) founded[at(s, 7)] = at(s, 0);
+    std::map<std::pair<std::int64_t, std::int64_t>, std::int64_t> census;  // (settlement, year) -> owner
+    for (const Row& c : t.settlement_census) census[{at(c, 0), at(c, 1)}] = at(c, 2);
+    std::map<std::int64_t, std::set<std::int64_t>> rc_regions;  // event -> regions of its region_control rows
+    for (const Row& rc : t.region_control) rc_regions[at(rc, 4)].insert(at(rc, 0));
+    std::map<std::int64_t, std::int64_t> owner;
+    std::map<std::int64_t, bool> standing;
+    std::vector<std::string> out;
+    for (const auto& [eid, ep] : x.ev) {  // id order
+        const Row& e = *ep;
+        const std::int64_t y = at(e, 1), k = at(e, 3);
+        if (const auto f = founded.find(eid); f != founded.end()) {
+            owner[f->second] = at(*x.st.at(f->second), 5);
+            standing[f->second] = true;
+        }
+        if (k == k_civ_seceded) {
+            const std::int64_t c2 = x.role1(eid, 1), from = x.role1(eid, 2);
+            std::set<std::int64_t> regs = rc_regions[eid];
+            regs.insert(at(e, 5));
+            for (auto& [s, o] : owner) {
+                if (o == from && standing[s] && regs.count(at(*x.st.at(s), 4)) != 0) o = c2;
+            }
+        } else if (k == k_settlement_captured) {
+            owner[at(e, 6)] = x.role1(eid, 1);
+        } else if (k == k_sacked || k == k_settlement_abandoned || k == k_settlement_abandoned_to) {
+            owner[at(e, 6)] = 0;
+            standing[at(e, 6)] = false;
+        } else if (k == k_region_ceded) {
+            const std::int64_t g = at(e, 5), L = x.role1(eid, 1), W = x.role1(eid, 2);
+            std::vector<std::int64_t> mine;
+            for (const auto& [s, o] : owner) {
+                if (o == L && standing[s] && at(*x.st.at(s), 4) == g) mine.push_back(s);
+            }
+            bool held_row = false;
+            for (const Row& rc : t.region_control) {
+                held_row = held_row || (at(rc, 0) == g && at(rc, 3) == L && at(rc, 1) <= y && (is_null(rc[2]) || at(rc, 2) >= y));
+            }
+            if (!held_row && mine.empty()) {
+                out.push_back("e" + std::to_string(eid) + ": c" + std::to_string(L) + " ceded rg" + std::to_string(g) +
+                              ", which it did not hold");
+            }
+            for (const std::int64_t s : mine) {
+                const auto c = census.find({s, y});
+                if (c == census.end() || c->second == L) {
+                    out.push_back("e" + std::to_string(eid) + ": s" + std::to_string(s) + " of c" + std::to_string(L) +
+                                  " in rg" + std::to_string(g) + " did not pass to c" + std::to_string(W) + " (census of " +
+                                  std::to_string(y) + ": " + (c == census.end() ? std::string("none") : "c" + std::to_string(c->second)) +
+                                  ")");
+                }
+                owner[s] = W;
+            }
+        }
+    }
+    for (const Row& s : t.settlement) {
+        const std::int64_t id = at(s, 0);
+        const bool st = at(s, 10) == thriving || at(s, 10) == declining;
+        const bool known = standing.count(id) != 0;
+        if (!known || standing[id] != st || (st && owner[id] != at(s, 8))) {
+            out.push_back("s" + std::to_string(id) + ": replayed owner c" + (known ? std::to_string(owner[id]) : std::string("None")) +
+                          " standing " + (known ? (standing[id] ? "True" : "False") : "None") + ", stored c" +
+                          std::to_string(at(s, 8)) + " status " + std::to_string(at(s, 10)));
+        }
+    }
+    return out;
+}
+
 // Items 3, 4 and 6 of 20.13, the cost rule of 20.3 and P3-09 10 (every won war costs the loser a region or a
 // tribute, except a last refuge's or when it has no visible people), with `hidden_years`, `abandon_min`,
 // `capital_sacked` and `weary` the tuning's values.
@@ -839,6 +921,8 @@ inline void check_invariants_09(const Tables& t, const eng::HistoryInputs& in, c
     }
     // item 5 from the log
     CHECK(weary_violations(t, conflict_int(content, "weary_wars")) == std::vector<std::int64_t>{});
+    // r13 20.27 item 6: invariant (13), a cession passes every settlement of the loser standing in the region
+    CHECK(cession_violations(t) == std::vector<std::string>{});
 }
 
 // --- P3-06 r10 20.19 items 7-11 and 20.22 from the rows (P3-09 r3) ---------------------------------------

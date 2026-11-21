@@ -14,7 +14,9 @@ After the merges, `worldgen/src`, `worldgen/include`, `tools/worldgen-cli` and `
 
 ## Verdict
 
-**Fail on one defect (D1).** Everything else passes. D1 is a rule gap in P3-06 20.3 that leaves a region held without a settlement of its holder for 760 years. It occurs in 1 of 375 sweep worlds, and the test writer's reference flags it as a failure. The C++ matches the reference row for row, so the code follows the spec as written. D2 is a definition mismatch: four worlds miss T2 as the statistic is defined, although weariness invariant 12 holds in every world. D3 is a small defect in the reference's statistic. Section 9 has the reproductions.
+**After the cession fix: pass** (section 12). D1, D2 and D3 are closed; the rest of this report describes the first run, before the fix.
+
+**First run: fail on one defect (D1).** Everything else passes. D1 is a rule gap in P3-06 20.3 that leaves a region held without a settlement of its holder for 760 years. It occurs in 1 of 375 sweep worlds, and the test writer's reference flags it as a failure. The C++ matches the reference row for row, so the code follows the spec as written. D2 is a definition mismatch: four worlds miss T2 as the statistic is defined, although weariness invariant 12 holds in every world. D3 is a small defect in the reference's statistic. Section 9 has the reproductions.
 
 | Gate | Result |
 | --- | --- |
@@ -585,3 +587,127 @@ Under `~/.cache/the-unmapped/out/p3-09-validation/`:
 | `readme/`, `readme-report.txt` | the README phrase world |
 
 The scripts are in the same folder: `check09.py`, `stats09.py`, `chronicle09.py`, `cession_scan.py`, `names.py`, `sweep-job.sh`, `run-sweep.sh`, `old09.sh`, `recheck.sh`, `purity.sh`, `timing.sh` and `critic/make.sh`.
+
+## 12. Re-validation after the cession fix
+
+**Input.** Merged into `p3/09-validation` (merges, no conflicts):
+- `origin/p3/09-fix-impl` `901ec5e` (the engineer: `cede` passes every standing settlement of the loser, P3-06 20.27);
+- `origin/p3/09-fix-tests` `b08ef8a` (the test writer: reference, invariant (13), the 20.28 statistic, `p3-06-conflict.txt` re-recorded).
+
+Both are cut from `origin/p3/09-specfix` `623e98c`, which is this branch's `537f981` plus P3-06 r13 (20.27–20.29) and P3-07 r11 (21.8 item 5). Generator 0.18.0, schema 7. Logs are in `~/.cache/the-unmapped/out/p3-09-validation/logs2/`. The first run's sweep and critic folder are kept as `sweep-first/` and `critic-first/`.
+
+**Verdict: pass.** D1, D2 and D3 are closed, and I found no new defect.
+
+### 12.1 Gates
+
+| Gate | Result |
+| --- | --- |
+| Build, five Linux presets | warning-free |
+| `ctest` | 33 of 33 on every preset |
+| Lint | both commands clean |
+| Slow suites, `linux-gcc-release` | `worldgen-tests` 59 of 59 (2305 s; two cases added), `worldgen-cli-tests` 8 of 8 (253 s) |
+| Slow suites, `linux-clang-release` (run after, not beside, the debug and asan ctest) | 59 of 59 (2181 s) and 8 of 8 (199 s) |
+| `world-hashes.sh local`, five presets | 15 cases identical |
+| `expect` | 15 of 15 on each preset |
+
+`ctest` times:
+
+| Preset | Time | Load at the end |
+| --- | --- | --- |
+| `linux-gcc-release` | 117 s | 6.3 |
+| `linux-clang-release` | 119 s | 6.9 |
+| `linux-gcc-debug` | 520 s | 5.5 |
+| `linux-clang-debug` | 541 s | 6.0 |
+| `linux-clang-asan` | 2341 s | 1.8 |
+
+**No world hash changed.** None of the fifteen cases contains a cession with a same-step colony, so `p0-worlds.txt`, `p1-worlds.txt`, `p3-worlds.txt` and the inline constants stay as recorded in section 7, and nothing was re-recorded. The extension was not rebuilt: no source outside `worldgen/src/history/` changed.
+
+### 12.2 The sweep again (375 worlds, same jobs)
+
+- The reference's `check-world --version 0.18.0` passes **375 of 375**, d2048 seed 3 included.
+- The peoples reference passes 20 of 20 elf-only worlds.
+- My `check09.py` passes 375 of 375. It now reads 20.28's statistic: counted wars skip those closed by `civ_conquered` or `civ_ended`, with the incremental run form of P3-07 21.8 item 5 r11. It also checks invariant (13) by replaying settlement owners: after each `region_ceded`, every settlement of `from` standing in the region (by the event replay, same-step colonies included) is `to`'s in the census of that year.
+- Its statistics agree with the reference's `[stats]` in every world. D3's four worlds now agree too: calm seed 17 gives 2.
+- `cession_scan.py` finds no region held without a settlement of its holder.
+
+**Worlds whose file changed against the first 0.18.0 sweep: 10 of 375.**
+- civs4 seeds 3, 12, 13, 15;
+- 2048 seed 3;
+- 512 seed 1 (the engineer's flight world: a 7.7 goal cession);
+- default seeds 5, 34;
+- `elf,goblin` seed 4;
+- span 12000 seed 19.
+
+These are exactly the 10 worlds in which my invariant (13) check fails on the first sweep's file:
+- in 8 of them the failing cession is a 20.3 cession;
+- in 2 it is a 7.7 goal cession (512 seed 1, span 12000 seed 19).
+
+Only 2048 seed 3 also broke 14 item 5 (region held with no settlement of the holder). In the other 9 the winner already had a settlement in the region, so only (13) caught them.
+
+**Cessions that carry a settlement of the loser founded earlier in the same year, in the fixed worlds: 21, in 19 worlds.**
+- 14 are 20.3 cessions (14 settlements) and 7 are 7.7 goal cessions (7 settlements).
+- In 9 of the 19 worlds the colony was already visible to the old rule (founded in an earlier step of that year), so the bytes did not move. The 10 changed worlds are the same-step cases of 20.27.
+
+**Targets.** T2 is the 20.28 statistic.
+
+| Set | T1 hollow ‰ (hollow / found) | Unfound | T2 worlds above 3 | T3 `refuge_held` r1 | T4 | T5 won / lost | T6 | T7 |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| default 1024 | **230** (481 / 2083), met | 443 | **0** (was 2) | 1 | 0 | **114 / 68**, met | 0 (17 by aim) | 0 |
+| 512 | 292 (130 / 444) | 66 | 0 | 57 | 0 | 32 / 17 | 0 (3) | 0 |
+| 2048 | 158 (32 / 202) | 28 | 0 | 0 | 0 | 13 / 5 | 0 | 0 |
+| span 12000 | 148 (120 / 809) | 135 | 0 | 6 | 0 | 85 / 35 | 0 (4) | 0 |
+| civs 4 | 202 (324 / 1603) | 188 | **0** (was 2) | 7 | 0 | 16 / 22 (lost more, as before) | 0 (21) | 0 |
+| every other set | unchanged from section 4 | | 0 | | 0 | | 0 | 0 |
+
+T2 now holds in every world of every set: `wars_same_goal_unchanged_max` is at most 3 everywhere. The four D2 worlds give 3: default seeds 6 and 77, civs4 seeds 0 and 13. T3 holds: no reason-1 `refuge_held` has a destination by the reference, and my site-free recomputation now finds free regions for none in civs 4 (3 before).
+
+**Statistics that moved** (1024 defaults, against the first run; every other figure of section 5 is unchanged or moves by at most one in a median):
+
+| Statistic | After the fix | First run |
+| --- | --- | --- |
+| hollow ‰ over the sweep; median | 230; 230 | 229; 226 |
+| worlds with a flight (flights) | 36 (45) | 37 (46) |
+| `search_abandoned` | 443 | 437 |
+| battles, median | 77 | 76 |
+| largest civilization land share, median | 209 | 211.5 |
+| largest race share of held regions, median | 460 | 467 |
+| attackers: elf / goblin / dwarf / faerie / human / orc | 38 / 1929 / 105 / 4 / 144 / 306 | 36 / 1922 / 105 / 5 / 147 / 308 |
+| orc age: wars, orc share, goblin share | 1173, 260‰, 535‰ | 1170, 263‰, 530‰ |
+| orc wars won / lost | 114 / 68 | 115 / 68 |
+| `wars_same_goal_unchanged_max` (20.28) | 1 / 3 / 3 | 1 / 3 / 4 by the old definition |
+
+At 512:
+- orcs win 32 and lose 17 (29 / 17 before);
+- orcs end with one settlement in 4 worlds (5 before);
+- elf standing median is 7.5 (8);
+- the largest race share of people median is 485.5 (496.5).
+
+At 2048 the hollow share is 158‰ (140‰ before) and the maximum event count is 2349 (2444). Most typical ranges of section 5.4 (adopted in P3-06 20.29) are unchanged. Four 95th percentiles moved and should be corrected in 15.5:
+
+| Statistic | After the fix | 5.4 |
+| --- | --- | --- |
+| simulated years | 1196–1545 | 1196–1481 |
+| `simulated_permille` | 199–257 | 199–247 |
+| `wars_same_goal_max` | 2–8 | 2–7 |
+| largest civilization land share | 127–326 | 127–334 |
+
+The medians that moved are in the table above.
+
+### 12.3 Critic folder and README world
+
+- Of the thirteen critic worlds only **seed 42 1024 `--civs-per-race 4`** changed:
+  - file hash `5a03e6a8…` → `9a549ca1…`;
+  - its first-run file breaks invariant (13) at e267 (region 42, c5 → c4, settlement s69);
+  - the new world passes `check09.py` and the reference.
+- All of `critic/` was regenerated with the fixed binary. The other twelve worlds are byte-identical, and so are their chronicles.
+- **The README phrase world did not change:** hash `255e4cb0b4c5b6fa19603abfd48be2827ab5fa23cf2eeda23a6f4f0e156956cc`, and `readme-report.txt` is byte-identical.
+
+### 12.4 Defects after the fix
+
+| Defect | Status | Evidence |
+| --- | --- | --- |
+| D1 | closed | (13) and 14 item 5 hold in every world; 2048 seed 3 passes |
+| D2 | closed | 20.28's statistic is at most 3 everywhere |
+| D3 | closed | the reference's statistic matches mine in every world |
+
+The findings F1–F9 of section 9 are unchanged in substance. F1–F3 are now recorded as known observations in P3-06 20.29. F9 (`CLAUDE.md`'s CTest table and the README example) is still for the lead.

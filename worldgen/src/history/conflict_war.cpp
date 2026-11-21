@@ -592,9 +592,11 @@ void ConflictSubsystem::abandon_search(StepContext& ctx, std::size_t i, std::int
     note_futile(ctx, w);  // 20.4: the goal unchanged by an unfound war counts
 }
 
-// 7.7's cession (and r9 20.3 item 1's): the loser's standing visible
-// settlements in the region pass to the winner, their excess over 2 C to the
-// loser's nearest other settlement; wronged(loser, winner) gains the region.
+// 7.7's cession (and r9 20.3 item 1's): every standing settlement of the
+// loser in the region (r13 20.27: visible, hidden or created earlier in the
+// step; a stated exception to P3-04 6.2's visibility) passes to the winner,
+// its excess over 2 C to the loser's nearest other settlement;
+// wronged(loser, winner) gains the region.
 void ConflictSubsystem::cede(StepContext& ctx, std::int64_t region, std::int64_t loser, std::int64_t winner,
                              std::int64_t cause) {
     State& state = ctx.state();
@@ -603,7 +605,9 @@ void ConflictSubsystem::cede(StepContext& ctx, std::int64_t region, std::int64_t
     c.causes = {cause};
     const std::int64_t cev = ctx.append(c);
     const std::int64_t room = checked_mul(2, peoples_.view().capacity(region, race_of_civ(ctx, winner).id));
-    for (const std::int64_t id : visible_settlements(ctx, loser, region)) {
+    // 8.3 item 1: the id list before any change, each re-fetched by id.
+    const std::vector<std::int64_t> ids = standing_settlements_in(state, loser, region);
+    for (const std::int64_t id : ids) {
         const std::int64_t p = state.settlement(id).population;
         const std::int64_t excess = std::max<std::int64_t>(0, p - room);
         if (excess > 0) {
