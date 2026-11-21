@@ -954,3 +954,13 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
 - Decision: Paul's words: "having the orcs start with a quarrel with a neighbor is reasonable". Orcs begin their history with a quarrel with a neighbour, in addition to the shorter odds. The rule is specified in the P3-10 change (generator 0.19.0), not held back until the target is measured.
 - Interim choice: none needed.
 - Status: accepted
+
+### Viewer: a history movie on the 2D map
+
+- Date: 2026-11-21
+- Raised by: lead, recording Paul's request
+- Design doc section: 8 (viewer), 13 (phase P4 Viewer v1)
+- Problem: Paul's words: "it would be nice to be able to visualize the rise and falls of civilizations using the godot 2d map, as a movie. Doesn't have to be soon, but something to put on the list". The viewer shows geography only; nothing shows how the realms grow, fight and fall over the years.
+- Proposal: a time control on the 2D map of the viewer: a year slider with play, pause and speed, which colours each region by the civilization that holds it in that year and marks the standing settlements, with battles, sackings and falls shown as they happen and the year's sentences beside the map. The data is already in the world file: `region_control` stores ownership intervals and `settlement_census` the settlement states by year, so any year is answered without replaying the log. Saving the playback as a video file is a second step, after the playback works on screen. Candidate for P4 Viewer v1.
+- Interim choice: none needed; not scheduled. To be placed when P4 is planned, after Paul's review of P3.
+- Status: open
