@@ -896,3 +896,25 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
   The lead also accepts the spec's technical question (a template placeholder for the cause clause of abandonment and dwindling sentences).
 - Interim choice: none needed. P3-10 (generator 0.19.0) is implemented after P3-09.
 - Status: accepted
+
+### History: six questions from the world critic's review of P3-09 (conflict balance)
+
+- Date: 2026-11-20
+- Raised by: lead, from the world critic's review (`docs/reviews/p3-09-conflict-balance-world-critic.md`, added with the P3-09 merge)
+- Design doc section: 5 (history: wars and how they end, the races' roles)
+- Problem: the review passes P3-09 with notes; nothing blocks the merge. War endings now read right, flights read well and no race goes extinct. Six things remain, each a rule or tuning choice:
+  1. **A war is "won" when a third party takes the goal.** The attacker is given the win, and a tribute or cession, even when it lost the fighting (42 such endings in 100 worlds; in 19 the attacker took nothing, in 7 it also lost more battles than it won).
+  2. **Faerie searches repeat.** A failed search for the faeries is faerie-like once and an anticlimax by the fourth (median 4 per world, up to 11); every one is in the summary; in 67 of 437 the searcher had already fought in that wood and still "found no one".
+  3. **One wood fought over eleven times.** A sack empties a region, its owner resettles it, and that counts as a change of owner, which resets war-weariness.
+  4. **Orcs are a threat only in aggregate.** They win more than they lose overall, but declare no war in 24 of 100 worlds and win none in 44.
+  5. **Goblins start most wars** (76% overall; at least 90% in 24 of 100 worlds), and one race holds 700‰ or more of the people in 27 of 100 worlds (goblins in 21).
+  6. **A refuge that "fled into hiding" founds colonies and declares wars while hidden** (7 of 46 flights).
+- Proposal (the lead's recommendations):
+  1. The attacker wins by aim only if it holds the goal itself; otherwise the war is decided by score with the last-battle rule, falling back to a truce.
+  2. One failed search makes that wood weary for every claimant for a time; salience of the search drops below the default summary threshold except for the first in a world; a second sentence for wars that had already fought there.
+  3. Resettlement by the same owner does not reset weariness.
+  4. Orcs declare at shorter odds than other races (a per-race `odds_min`).
+  5. Take 1 to 4 first and measure again; if goblins still lead nine wars in ten in a quarter of worlds, raise human aggression.
+  6. A hidden refuge lies low: no colonies and no declarations for its hidden years.
+- Interim choice: P3-09 merges as validated. These six go into the next change after Paul's answer (with P3-10, generator 0.19.0, or a change of their own).
+- Status: open
