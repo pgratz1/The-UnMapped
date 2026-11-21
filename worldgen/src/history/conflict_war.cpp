@@ -617,7 +617,8 @@ void ConflictSubsystem::abandon_search(StepContext& ctx, std::size_t i, std::int
     // search_weary_years, until its holder changes.
     if (tuning_.search_weary_years > 0) {
         searched_until_[Pair{y, region}] =
-            Searched{checked_add(ctx.year(), tuning_.search_weary_years), ctx.state().region(region).holder};
+            Searched{checked_add(ctx.year(), tuning_.search_weary_years), ctx.state().region(region).holder,
+                     ctx.state().region(region).holder_changes};
     }
 }
 
@@ -686,7 +687,7 @@ void ConflictSubsystem::note_futile(const StepContext& ctx, const ConflictWar& w
         return;
     }
     const std::int64_t count = futile_count(ctx, w.defender, w.goal);
-    futile_[Pair{w.defender, w.goal}] = Futile{checked_add(count, 1), owner};
+    futile_[Pair{w.defender, w.goal}] = Futile{checked_add(count, 1), owner, ctx.state().region(w.goal).holder_changes};
 }
 
 }  // namespace worldgen::history

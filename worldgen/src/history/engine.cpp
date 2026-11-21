@@ -1019,7 +1019,8 @@ void State::set_region_owner(std::int64_t region, std::int64_t civ, std::int64_t
     }
     require_event(event, what);
     RegionState& r = regions_[static_cast<std::size_t>(region - 1)];
-    r = RegionState{civ, event, civ != 0 ? civ : r.holder};
+    const bool new_holder = civ != 0 && civ != r.holder;
+    r = RegionState{civ, event, civ != 0 ? civ : r.holder, r.holder_changes + (new_holder ? 1 : 0)};
 }
 
 void State::set_settlement_owner(std::int64_t id, std::int64_t civ, std::int64_t event) {

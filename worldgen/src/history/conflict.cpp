@@ -836,8 +836,11 @@ std::int64_t ConflictSubsystem::hidden_until(std::int64_t settlement) const {
 
 std::int64_t ConflictSubsystem::futile_count(const StepContext& ctx, std::int64_t defender, std::int64_t region) const {
     const auto it = futile_.find(Pair{defender, region});
-    // r14 21.8: a count reads 0 when its recorded holder is not the holder now.
-    if (it == futile_.end() || it->second.owner != ctx.state().region(region).holder) {
+    // r14 21.8: a count reads 0 when its recorded holder is not the holder
+    // now; ruling A: and when another civilization has become the holder
+    // since it was stored (a change of holder clears it, also on a retake).
+    const RegionState& r = ctx.state().region(region);
+    if (it == futile_.end() || it->second.owner != r.holder || it->second.epoch != r.holder_changes) {
         return 0;
     }
     return it->second.count;
@@ -845,8 +848,9 @@ std::int64_t ConflictSubsystem::futile_count(const StepContext& ctx, std::int64_
 
 bool ConflictSubsystem::search_weary(const StepContext& ctx, std::int64_t hidden, std::int64_t region) const {
     const auto it = searched_until_.find(Pair{hidden, region});
-    return it != searched_until_.end() && ctx.year() < it->second.until &&
-           it->second.holder == ctx.state().region(region).holder;
+    const RegionState& r = ctx.state().region(region);
+    return it != searched_until_.end() && ctx.year() < it->second.until && it->second.holder == r.holder &&
+           it->second.epoch == r.holder_changes;
 }
 
 bool ConflictSubsystem::lying_low(const StepContext& ctx, std::int64_t civ) const {

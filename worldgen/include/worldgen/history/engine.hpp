@@ -83,6 +83,10 @@ struct RegionState {
     // the owner, or while there is none the civilization that last owned the
     // region (0 if it was never owned). Not stored in the world.
     std::int64_t holder = 0;
+    // The number of times a different civilization became the holder
+    // (P3-06 21.8, the lead's ruling A: a change of holder clears the
+    // weariness counts over the region). Not stored in the world.
+    std::int64_t holder_changes = 0;
 };
 
 // A relation between two entities (6.1): a symmetric relation is stored with

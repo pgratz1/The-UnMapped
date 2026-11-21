@@ -303,11 +303,13 @@ private:
     struct Futile {
         std::int64_t count = 0;
         std::int64_t owner = 0;  // r14 21.8: the holder at the declaration
+        std::int64_t epoch = 0;  // ruling A: the region's holder_changes when stored
     };
     // r14 21.7 item 1: a region weary for every claimant after a failed search.
     struct Searched {
         std::int64_t until = 0;
         std::int64_t holder = 0;  // hold(R) when it was set
+        std::int64_t epoch = 0;   // ruling A: the region's holder_changes when set
     };
     // 20.1: where the survivors of a fallen last refuge would flee.
     struct Flight {
