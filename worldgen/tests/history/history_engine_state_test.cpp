@@ -172,11 +172,12 @@ TEST_CASE("P3-04 6.7, 16.1 item 6: bookkeeping of region control, relations and 
     CHECK(t.civilization[1][8].type == db::ValueType::null);
 }
 
-TEST_CASE("P3-04 6.6 r10, 16.1 item 7: a charged event does not break a quiet era; a flare-up and an awakening do") {
+TEST_CASE("P3-04 r12 20.1, 16.1 item 7: a charged event does not break a quiet stretch; a flare-up and an awakening do") {
     // elf at 0, goblin at 1000, span 2000, normal (A 50, F 17, L 100, Q 25), ForcedTension(500, 1000, 1);
-    // a test subsystem charges one event to civilization 1 in the quiet step starting at 150. From r10
-    // (generator 0.17.0) the event does not close civilization 1's era: one era per civilization and
-    // quiet phase row (before r10 the era 50-149 closed and 175-499 opened).
+    // a test subsystem charges one event (the test kind, 39) to civilization 1 in the quiet step starting at
+    // 150. From generator 0.19.0 (P3-04 r12 20.1) each quiet phase row has one world-level quiet_stretch
+    // (kind 38, region 0, participants every living civilization as realm, values years and realms); kind 4
+    // is not written. Until 0.18.0 each civilization had its own quiet_era (two lines in rows 6 and 8).
     FnSubsystem q({Step::q1}, [](eng::StepContext& ctx) {
         if (ctx.year() == 150) {
             (void)change(ctx, 1);
@@ -186,48 +187,45 @@ TEST_CASE("P3-04 6.6 r10, 16.1 item 7: a charged event does not break a quiet er
     cfg.subsystems = {&q};
     cfg.add_tension(eng::forced_tension(500, 1000, 1));
     const Tables t = eng::run_engine(shipped(), inputs_for({0, 1000}, 2000), cfg.get());
-    // The opening phase of the goblins is triggered by their awakening, now event 8.
+    // The opening phase of the goblins is triggered by their awakening, event 8 (as before r12: civilization 1
+    // alone wrote one line per row until then).
     CHECK(phases_text(t, true) ==
           "1:1:1:0:49:1|2:1:2:50:499:0|3:1:3:500:516:1|4:1:2:517:999:0|5:2:1:1000:1049:8|6:2:2:1050:1499:0|"
           "7:2:3:1500:1516:1|8:2:2:1517:1899:0|9:2:4:1900:1999:0");
     CHECK(str(t.event) == str(irows({{1, 0, 0, 1, 1, 1, 0, 100},
                                      {2, 0, 0, 2, 1, 1, 0, 80},
                                      {3, 0, 0, 3, 1, 1, 1, 40},
-                                     {4, 50, 499, 4, 2, 1, 0, 20},
-                                     {5, 150, 150, 6, 2, 0, 0, 10},
+                                     {4, 50, 499, 38, 2, 0, 0, 20},
+                                     {5, 150, 150, 39, 2, 0, 0, 10},
                                      {6, 500, 500, 5, 3, 0, 0, 50},
-                                     {7, 517, 999, 4, 4, 1, 0, 20},
+                                     {7, 517, 999, 38, 4, 0, 0, 20},
                                      {8, 1000, 1000, 1, 5, 1, 0, 100},
                                      {9, 1000, 1000, 2, 5, 1, 0, 80},
                                      {10, 1000, 1000, 3, 5, 1, 2, 40},
-                                     {11, 1050, 1499, 4, 6, 1, 0, 20},
-                                     {12, 1050, 1499, 4, 6, 1, 0, 20},
-                                     {13, 1500, 1500, 5, 7, 0, 0, 50},
-                                     {14, 1517, 1899, 4, 8, 1, 0, 20},
-                                     {15, 1517, 1899, 4, 8, 1, 0, 20}})));
-    // years and generations: elves 150 years a generation (founded 0), goblins 15 (founded 1000)
+                                     {11, 1050, 1499, 38, 6, 0, 0, 20},
+                                     {12, 1500, 1500, 5, 7, 0, 0, 50},
+                                     {13, 1517, 1899, 38, 8, 0, 0, 20}})));
+    // years and realms
     CHECK(str(t.event_value) == str(irows({{3, 1, 200},
-                                           {4, 1, 450}, {4, 2, 3},
+                                           {4, 1, 450}, {4, 2, 1},
                                            {6, 1, 17},
-                                           {7, 1, 483}, {7, 2, 3},
+                                           {7, 1, 483}, {7, 2, 1},
                                            {10, 1, 200},
-                                           {11, 1, 450}, {11, 2, 3},
-                                           {12, 1, 450}, {12, 2, 30},
-                                           {13, 1, 17},
-                                           {14, 1, 383}, {14, 2, 2},
-                                           {15, 1, 383}, {15, 2, 26}})));
-    CHECK(str(t.event_cause) == str(irows({{2, 1}, {3, 2}, {6, 1}, {9, 8}, {10, 9}, {13, 1}})));
+                                           {11, 1, 450}, {11, 2, 2},
+                                           {12, 1, 17},
+                                           {13, 1, 383}, {13, 2, 2}})));
+    CHECK(str(t.event_cause) == str(irows({{2, 1}, {3, 2}, {6, 1}, {9, 8}, {10, 9}, {12, 1}})));
     CHECK(str(t.event_participant) ==
           str(irows({{1, 1, 1, 1, 1}, {1, 2, 2, 2, 1}, {2, 1, 1, 3, 1}, {2, 2, 2, 1, 1}, {3, 1, 1, 4, 1},
                      {3, 2, 2, 3, 1}, {4, 1, 1, 3, 1}, {5, 1, 1, 3, 1}, {7, 1, 1, 3, 1},
                      {8, 1, 1, 1, 2}, {8, 2, 2, 2, 2}, {9, 1, 1, 3, 2}, {9, 2, 2, 1, 2}, {10, 1, 1, 4, 2},
-                     {10, 2, 2, 3, 2}, {11, 1, 1, 3, 1}, {12, 1, 1, 3, 2}, {14, 1, 1, 3, 1}, {15, 1, 1, 3, 2}})));
+                     {10, 2, 2, 3, 2}, {11, 1, 1, 3, 1}, {11, 2, 1, 3, 2}, {13, 1, 1, 3, 1}, {13, 2, 1, 3, 2}})));
     // The test kind is written to the catalogue tables (9.3: every kind of the config's catalogue).
-    REQUIRE(t.event_kind.size() == 6U);
-    CHECK(t.event_kind[5][1].bytes == "test_change");
+    REQUIRE(t.event_kind.size() == 39U);
+    CHECK(t.event_kind[38][1].bytes == "test_change");
 }
 
-TEST_CASE("P3-04 6.6 r10, 16.1 item 7: an event charged in every second quiet step leaves one era per quiet row") {
+TEST_CASE("P3-04 r12 20.1, 16.1 item 7: an event charged in every second quiet step leaves one stretch per quiet row") {
     // One race (elves at 0), span 2000, no tension: rows opening 0-49, quiet 50-1849, final 1850-1999
     // (the floor of 5.5 lengthens the final phase; the reference's scheduler gives the same rows).
     FnSubsystem q({Step::q1}, [](eng::StepContext& ctx) {
@@ -238,24 +236,26 @@ TEST_CASE("P3-04 6.6 r10, 16.1 item 7: an event charged in every second quiet st
     Config cfg;
     cfg.subsystems = {&q};
     const Tables t = eng::run_engine(shipped(), inputs_for({0}, 2000), cfg.get());
-    const std::vector<Row> eras = rows_where_kind(t, 4);
-    REQUIRE(eras.size() == 1U);
-    CHECK(at(eras[0], 1) == 50);
-    CHECK(at(eras[0], 2) == 1849);
-    // years 1800, generations g(1850) - g(50) = 12 - 0 = 12 (elves: 150 years a generation)
+    CHECK(rows_where_kind(t, 4).empty());
+    const std::vector<Row> st = rows_where_kind(t, 38);
+    REQUIRE(st.size() == 1U);
+    CHECK(at(st[0], 1) == 50);
+    CHECK(at(st[0], 2) == 1849);
+    // years 1800, realms 1
     std::vector<std::int64_t> vals;
     for (const Row& v : t.event_value) {
-        if (at(v, 0) == at(eras[0], 0)) vals.push_back(at(v, 2));
+        if (at(v, 0) == at(st[0], 0)) vals.push_back(at(v, 2));
     }
-    CHECK(vals == std::vector<std::int64_t>{1800, 12});
-    // The charged events are separate events dated inside the era (36 of the 72 quiet steps).
-    CHECK(rows_where_kind(t, 6).size() == 36U);
+    CHECK(vals == std::vector<std::int64_t>{1800, 1});
+    // The charged events are separate events dated inside the stretch (36 of the 72 quiet steps).
+    CHECK(rows_where_kind(t, 39).size() == 36U);
 }
 
-TEST_CASE("P3-04 6.6 r10, 16.1 item 7: a civilization ended in a quiet step keeps the era of its last full step") {
+TEST_CASE("P3-04 r12 20.1, 20.6 item 1: a civilization ended in a quiet step stays a participant of its row's stretch") {
     // Elves at 0, span 2000, no tension. In the quiet step starting at 300 a test subsystem ends
-    // civilization 1: its era (opened at 50) is not lengthened in that step or later, so it ends at
-    // 299 (years 250, generations g(300) - g(50) = 2), and no later era is opened for it.
+    // civilization 1. The row's quiet_stretch (opened at 50 with civilization 1) keeps its participant and
+    // realms and is lengthened to the row's end, 1849 (20.1 item 2; until 0.18.0 the civilization's era
+    // ended at 299).
     FnSubsystem q({Step::q1}, [](eng::StepContext& ctx) {
         if (ctx.year() == 300) {
             const std::int64_t e = change(ctx, 1);
@@ -265,15 +265,55 @@ TEST_CASE("P3-04 6.6 r10, 16.1 item 7: a civilization ended in a quiet step keep
     Config cfg;
     cfg.subsystems = {&q};
     const Tables t = eng::run_engine(shipped(), inputs_for({0}, 2000), cfg.get());
-    const std::vector<Row> eras = rows_where_kind(t, 4);
-    REQUIRE(eras.size() == 1U);
-    CHECK(at(eras[0], 1) == 50);
-    CHECK(at(eras[0], 2) == 299);
-    std::vector<std::int64_t> vals;
+    CHECK(rows_where_kind(t, 4).empty());
+    const std::vector<Row> st = rows_where_kind(t, 38);
+    REQUIRE(st.size() == 1U);
+    CHECK(at(st[0], 1) == 50);
+    CHECK(at(st[0], 2) == 1849);
+    std::vector<std::int64_t> vals, parts;
     for (const Row& v : t.event_value) {
-        if (at(v, 0) == at(eras[0], 0)) vals.push_back(at(v, 2));
+        if (at(v, 0) == at(st[0], 0)) vals.push_back(at(v, 2));
     }
-    CHECK(vals == std::vector<std::int64_t>{250, 2});
+    for (const Row& p : t.event_participant) {
+        if (at(p, 0) == at(st[0], 0)) parts.push_back(at(p, 4));
+    }
+    CHECK(vals == std::vector<std::int64_t>{1800, 1});
+    CHECK(parts == std::vector<std::int64_t>{1});
+}
+
+TEST_CASE("P3-04 r13 20.1, 20.6 item 0: 70 living civilizations: realms 70, the 64 most populous as participants") {
+    // A test subsystem founds 69 more civilizations in the opening (ticks), each with one settlement whose
+    // population is 1000 - id for ids below 60 and 5 from 60 on (eleven tied at 5): the participants are ids
+    // 1 to 59 and, of the tied, the five smallest, 60 to 64, in ascending id; realms counts all 70.
+    FnSubsystem f({Step::t2}, [](eng::StepContext& ctx) {
+        if (ctx.year() != 1) return;
+        const std::int64_t culture = ctx.inputs().races.at(0).culture;
+        for (std::int64_t c = 2; c <= 70; ++c) {
+            const std::int64_t e = change(ctx);
+            const std::int64_t civ = ctx.state().found_civilization(1, culture, 1, "Test Realm " + std::to_string(c), e);
+            // region 1 is the cells x 0-7 of the 16 x 16 map: one cell per settlement
+            const std::int64_t s = ctx.state().found_settlement(c % 8, c / 8, 1, civ, eng::SettlementKind::hamlet,
+                                                                 c < 60 ? 1000 - c : 5, "Test Hold " + std::to_string(c), e);
+            ctx.state().set_capital(civ, s);
+        }
+        ctx.state().set_population(1, 999);
+    });
+    Config cfg;
+    cfg.subsystems = {&f};
+    const Tables t = eng::run_engine(shipped(), inputs_for({0}, 2000), cfg.get());
+    const std::vector<Row> st = rows_where_kind(t, 38);
+    REQUIRE(st.size() == 1U);
+    std::vector<std::int64_t> vals, parts;
+    for (const Row& v : t.event_value) {
+        if (at(v, 0) == at(st[0], 0)) vals.push_back(at(v, 2));
+    }
+    for (const Row& p : t.event_participant) {
+        if (at(p, 0) == at(st[0], 0)) parts.push_back(at(p, 4));
+    }
+    std::vector<std::int64_t> want;
+    for (std::int64_t c = 1; c <= 64; ++c) want.push_back(c);
+    CHECK(vals.at(1) == 70);
+    CHECK(parts == want);
 }
 
 TEST_CASE("P3-04 6.8, 16.1 item 8: the intervention seam; every intervention is dropped in P3") {

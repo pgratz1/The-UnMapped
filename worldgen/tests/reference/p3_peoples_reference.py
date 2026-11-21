@@ -233,6 +233,12 @@ SPEC_GAPS = (
     ("P3-02 r10 12.2 in the stub (P3-04 7.2)", "K is kept by the history stage beside the registry, so the stub "
         "configuration (P3-04's test seam, the same stage) applies the core rule too; no stub name of the engine "
         "golden's world cases changes by it (checked)."),
+    ("P3-04 r13 20.1 the 64 cap", "A realm's people are the summed populations of its thriving and declining "
+        "settlements when Q6 runs (after the step's subsystems); the 64 largest, ties to the smaller id, are listed "
+        "in ascending id; realms counts every living civilization. No golden world has more than 64 realms."),
+    ("P3-05 r13 hand-made tuning", "The reference's hand-made and stress tunings are the shipped tuning with "
+        "edits, so they carry the shipped cause_memory_years 50 and inland_cap 20, as the C++ support's "
+        "with_peoples does; a tuning table without the fields reads them as 100000 and 20 (rule off)."),
     ("P3-04 r12 20.1 participants", "'every civilization not ended at this step': ended_year unset when Q6 runs, "
         "so a civilization that ended earlier in the row's first step is not a participant; the event's phase is "
         "the quiet row's id; the stretch is kept per row and reset where the eras were."),
@@ -702,7 +708,7 @@ class Geo:
         if getattr(self, "_sea_d", None) is None:
             self.layers()
             n = self.n
-            cap = self.t["inland_cap"]
+            cap = self.t.get("inland_cap", 20)   # P3-05 r13: the hand-made default
             level = list(self.sea_rows)        # level k: the cells at distance <= k
             full = (1 << n) - 1
             count = [bytearray(n) for _ in range(n)]   # how many levels 0..cap-1 hold the cell
@@ -736,7 +742,7 @@ class Geo:
         if (co, ch) != (0, 0):
             v += (co * lay["ore"][i] + ch * self.hgt(i, rid)) // 1000
         if ci > 0:
-            cap = self.t["inland_cap"]
+            cap = self.t.get("inland_cap", 20)
             v += ci * min(cap, self.sea_d()[i]) * 255 // (cap * 1000)
         return v
 
@@ -828,7 +834,8 @@ class World(pe.World):
         cause_memory_years (from 0.19.0; always before)."""
         if not e:
             return False
-        return not FLAGS["memory"] or self.year - self.events[e - 1]["year"] <= self.t["cause_memory_years"]
+        # P3-05 r13: a hand-made tuning without the field has the rule off (100000)
+        return not FLAGS["memory"] or self.year - self.events[e - 1]["year"] <= self.t.get("cause_memory_years", 100000)
 
     # --- draws (3.3)
     def draw(self, stream, a, b, k):

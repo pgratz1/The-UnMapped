@@ -80,6 +80,12 @@ TEST_CASE("P3-04 6.6: valid events of each shipped kind and of a test kind are a
     c.participants = {{"civilization", EntityType::civilization, 1}};
     c.values = {1, 0};
     CHECK(tick(c) == "<no error>");
+    // P3-04 r12 20.4 (0.19.0): kind 38 quiet_stretch, no region, role realm 1-0 (unbounded)
+    EventSpec q = ev("quiet_stretch", 1);
+    q.end_year = 1999;
+    q.participants = {{"realm", EntityType::civilization, 1}};
+    q.values = {1999, 1};
+    CHECK(tick(q) == "<no error>");
     EventSpec d = ev("test_change", 1);
     d.salience = 0;
     d.causes = {1, 3};

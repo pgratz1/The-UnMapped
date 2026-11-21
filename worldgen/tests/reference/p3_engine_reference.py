@@ -305,6 +305,7 @@ QUIET_ERA_R10 = True
 #                   references).
 RENDER_R12 = True
 QUIET_R12 = True
+MAX_PARTICIPANTS = 64   # P3-04 r13 20.1: the event writer's bound on a quiet_stretch's participants
 ENGINE_VERSION = None
 
 
@@ -1099,8 +1100,17 @@ class World:
             alive = [c["id"] for c in sorted(self.civs, key=lambda c: c["id"]) if c["ended_year"] is None]
             if not alive:
                 return
+            parts = alive
+            if len(alive) > MAX_PARTICIPANTS:
+                # r13: the MAX_PARTICIPANTS realms with the most people (the sum of their standing settlements'
+                # populations at this step), ties to the smaller id, listed in ascending id; realms counts all
+                pop = {x: 0 for x in alive}
+                for st in self.settlements:
+                    if st["status"] in (1, 2) and st["owner_civ"] in pop:
+                        pop[st["owner_civ"]] += st["population"]
+                parts = sorted(sorted(alive, key=lambda x: (-pop[x], x))[:MAX_PARTICIPANTS])
             kw = {} if phase is None else dict(phase=phase)
-            eid = self.append("quiet_stretch", start, last, participants=tuple(("realm", CIV, x) for x in alive),
+            eid = self.append("quiet_stretch", start, last, participants=tuple(("realm", CIV, x) for x in parts),
                               values=(last - start + 1, len(alive)), **kw)
             self.open_era[0] = eid - 1
             return
@@ -2346,6 +2356,23 @@ def check_quiet_r12(c, inputs):
     c.eq("r12 an ended civilization stays a participant", (len(w.events), e["year"], e["end_year"],
                                                            [p[3] for p in e["participants"]], e["values"]),
          (1, 100, 149, [1, 2], {1: 50, 2: 2}))
+    w.settlements = []
+    # r13 20.6 item 0: 70 living civilizations; populations so that ties occur at the cut
+    w70 = World.__new__(World)
+    w70.events, w70.open_era, w70.cat_by_key, w70.inp = [], {}, w.cat_by_key, w.inp
+    w70.civs = [dict(id=i, ended_year=None) for i in range(1, 71)]
+    w70.settlements = []
+    for i in range(1, 71):
+        w70.settlements.append(dict(id=i, owner_civ=i, status=1, population=(1000 - i if i < 60 else 5)))
+    w70.settlements.append(dict(id=71, owner_civ=3, status=3, population=0))      # a ruin counts nothing
+    w70.settlements.append(dict(id=72, owner_civ=5, status=2, population=10000))  # declining counts
+    w70.quiet_stretch(100, 124, 7)
+    pop = {i: (1000 - i if i < 60 else 5) + (10000 if i == 5 else 0) for i in range(1, 71)}
+    want = sorted(sorted(range(1, 71), key=lambda x: (-pop[x], x))[:64])
+    e70 = w70.events[0]
+    c.eq("r13 20.6 item 0: realms 70, 64 participants, the most populous (ties by id), ascending",
+         (e70["values"][2], [p[3] for p in e70["participants"]]), (70, want))
+    c.eq("r13 20.6 item 0: ids 1-59 and, of the eleven tied at 5, the five smallest", want, list(range(1, 65)))
     w2 = World.__new__(World)
     w2.events, w2.civs, w2.open_era = [], [dict(id=1, ended_year=5)], {}
     w2.cat_by_key, w2.inp = w.cat_by_key, w.inp
