@@ -330,6 +330,7 @@ public:
     [[nodiscard]] std::string_view event_kind(std::int64_t event) const {
         return config_.catalogue->find_id(stored(event).row.kind)->key;
     }
+    [[nodiscard]] std::int64_t event_year(std::int64_t event) const { return stored(event).row.year; }
     [[nodiscard]] std::int64_t event_participant(std::int64_t event, std::string_view role) const {
         const StoredEvent& e = stored(event);
         const RoleDef* r = config_.catalogue->find_id(e.row.kind)->find_role(role);
@@ -507,7 +508,7 @@ private:
     void quiet_row(const db::PhaseRow& row) override {
         phase_id_ = row.id;
         phase_kind_ = PhaseKind::quiet;
-        open_eras_.clear();
+        open_stretch_ = 0;
     }
 
     // ScheduleHooks: Q1 to Q5 of a quiet step.
@@ -560,54 +561,41 @@ private:
     void quiet_step_end(bool ends_row) override {
         begin_step(Step::q6);
         const std::int64_t last = year_ + years_ - 1;
-        quiet_eras(last);
+        quiet_stretch(last);
         bookkeeping(year_, ends_row ? std::optional<std::int64_t>(last) : std::nullopt);
         if (ends_row) {
-            open_eras_.clear();
+            open_stretch_ = 0;
         }
         in_quiet_ = false;
         charged_.clear();
     }
 
-    // 6.6: the engine's summary of the quiet years of each civilization. r10
-    // (generator 0.17.0): events charged to a civilization do not close its
-    // era, so it has at most one era per quiet phase row; an ended
-    // civilization's era keeps the end of its last full step.
-    void quiet_eras(std::int64_t last) {
+    // r12 20.1 (generator 0.19.0; replaces 6.6's quiet eras): one
+    // quiet_stretch per quiet phase row for the whole world, with every
+    // civilization not ended at its first step as a realm; later steps of
+    // the row lengthen it, its participants and realms never change.
+    void quiet_stretch(std::int64_t last) {
+        if (open_stretch_ != 0) {
+            StoredEvent& e = events_[static_cast<std::size_t>(open_stretch_ - 1)];
+            e.row.end_year = last;
+            e.values[0] = last - e.row.year + 1;
+            return;
+        }
+        EventSpec e;
+        e.kind = "quiet_stretch";
+        e.year = year_;
+        e.end_year = last;
         for (std::size_t i = 0; i < state_.civs_.size(); ++i) {
             const Civilization& c = state_.civs_[i];
-            if (c.ended_year) {
-                continue;
+            if (!c.ended_year) {
+                e.participants.push_back(Participant{"realm", EntityType::civilization, c.id});
             }
-            if (const auto open = open_eras_.find(c.id); open != open_eras_.end()) {
-                StoredEvent& e = events_[static_cast<std::size_t>(open->second - 1)];
-                e.row.end_year = last;
-                e.values = era_values(c, e.row.year, last);
-                continue;
-            }
-            EventSpec e;
-            e.kind = "quiet_era";
-            e.year = year_;
-            e.end_year = last;
-            e.region = c.home_region;
-            e.participants = {Participant{"civilization", EntityType::civilization, c.id}};
-            e.values = era_values(c, year_, last);
-            open_eras_[c.id] = append_event(e, true);
         }
-    }
-
-    [[nodiscard]] std::vector<std::int64_t> era_values(const Civilization& c, std::int64_t from,
-                                                       std::int64_t to) const {
-        std::int64_t generation = 0;
-        for (const db::RaceRow& r : inputs_.races) {
-            generation = r.id == c.race ? r.generation_years : generation;
+        if (e.participants.empty()) {
+            return;  // no civilization alive: no quiet line
         }
-        if (generation < 1) {
-            fail("history: state: race " + int_text(c.race) + " has no generation_years above 0");
-        }
-        // g(t) = (t - founded_year) div generation_years; t >= founded_year here.
-        const auto g = [&](std::int64_t t) { return (t - c.founded_year) / generation; };
-        return {to - from + 1, g(to + 1) - g(from)};
+        e.values = {last - year_ + 1, static_cast<std::int64_t>(e.participants.size())};
+        open_stretch_ = append_event(e, true);
     }
 
     // --- The event writer (6.6) --------------------------------------------------------
@@ -847,7 +835,7 @@ private:
     std::vector<StoredEvent> events_;
     std::size_t checked_events_ = 0;  // events_ before this index passed check_references
     std::map<std::int64_t, std::int64_t> charged_;    // civilization (0 none) -> events charged in this quiet step
-    std::map<std::int64_t, std::int64_t> open_eras_;  // civilization -> its open quiet_era in this quiet row
+    std::int64_t open_stretch_ = 0;  // r12 20.1: the quiet_stretch of this quiet row, 0 none
 
     // Bookkeeping.
     std::vector<std::int64_t> recorded_owner_;  // per region
@@ -1006,7 +994,8 @@ void State::set_region_owner(std::int64_t region, std::int64_t civ, std::int64_t
         require_live_civ(civ, what);
     }
     require_event(event, what);
-    regions_[static_cast<std::size_t>(region - 1)] = RegionState{civ, event};
+    RegionState& r = regions_[static_cast<std::size_t>(region - 1)];
+    r = RegionState{civ, event, civ != 0 ? civ : r.holder};
 }
 
 void State::set_settlement_owner(std::int64_t id, std::int64_t civ, std::int64_t event) {
@@ -1155,6 +1144,10 @@ std::int64_t StepContext::append(const EventSpec& spec) {
 
 std::string_view StepContext::event_kind(std::int64_t event) const {
     return engine_.event_kind(event);
+}
+
+std::int64_t StepContext::event_year(std::int64_t event) const {
+    return engine_.event_year(event);
 }
 
 std::int64_t StepContext::event_participant(std::int64_t event, std::string_view role) const {
