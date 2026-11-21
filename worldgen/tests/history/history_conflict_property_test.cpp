@@ -58,7 +58,8 @@ void check_case(const CCase& g, std::map<std::int64_t, std::int64_t>* kinds = nu
     // included: at r2 their orcs were bled out; P3-06 r10 20.20 (with P3-05 r9 21 item 6) closed it.
     check_invariants_06(t, in, 25, conflict_int(c, "last_refuge") == 1);
     check_invariants_09(t, in, c);  // P3-06 r9 20.13 (generator 0.18.0)
-    check_invariants_10(t, c);      // P3-06 r10 20.19 items 7-11, 20.22
+    check_invariants_10(t, c);      // P3-06 r10 20.19 items 7-11, 20.22 (r14: (8) as amended)
+    CHECK(invariants_19(t, c) == std::vector<std::string>{});  // P3-06 r14 (14), (15), 21.7 (generator 0.19.0)
     if (kinds != nullptr) {
         for (const Row& e : t.event) (*kinds)[at(e, 3)] += 1;
     }

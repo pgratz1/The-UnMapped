@@ -17,6 +17,7 @@
 // Written from the specs only.
 
 #include "../p3_09_switch.hpp"
+#include "../p3_10_switch.hpp"
 #include "p3_06_conflict_support.hpp"
 
 #if UNMAPPED_HAVE_PEOPLES
@@ -355,7 +356,9 @@ TEST_CASE("P3-06 r9 20.9 (seam): the r9 tuning fields and the conflict_enmity_ho
     CHECK(t.revenge_aggression == 400);
     CHECK(t.levy_hops == 3);
     CHECK(t.odds_floor == 500);
-    CHECK(t.odds_min == 700);
+#if !UNMAPPED_P3_10_API
+    CHECK(t.odds_min == 700);  // P3-06 r14 21.9 (0.19.0): odds_min moves to the race field odds_min_permille
+#endif
     CHECK(t.truce_break_aggression == 600);
     CHECK(t.enmity_hops == 3);
     CHECK(t.kill_max_permille == 500);  // r10 20.19

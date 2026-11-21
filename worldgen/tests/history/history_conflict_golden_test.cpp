@@ -112,7 +112,8 @@ void check_world_case(const CCase& g) {
     CHECK(g.sentences.size() == (g.size <= 512 ? sent.size() : conflict_events));
     check_invariants_06(t, in, 25, true);
     check_invariants_09(t, in, shipped());  // P3-06 r9 20.13 (generator 0.18.0)
-    check_invariants_10(t, shipped());      // P3-06 r10 20.19, 20.22
+    check_invariants_10(t, shipped());      // P3-06 r10 20.19, 20.22 (r14: (8) as amended)
+    CHECK(invariants_19(t, shipped()) == std::vector<std::string>{});  // P3-06 r14 (14), (15), 21.7
     // P3-07 r8 21 (reference-only until P3-07 is implemented): the golden notes and summary of the case exist
     CHECK_FALSE(g.summary.empty());
 }

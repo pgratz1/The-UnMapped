@@ -55,13 +55,15 @@ std::int64_t index_of(const wd::Record& r, std::string_view field) {
 
 TEST_SUITE("history") {
 
-TEST_CASE("P3-06 r9 20.9, r10 20.19: the fourteen new history.conflict fields follow last_refuge in order, shipped values") {
+TEST_CASE("P3-06 r9 20.9, r10 20.19, r14 21.7, 21.9: the new history.conflict fields follow last_refuge in order (odds_min out at 0.19.0), shipped values") {
     const std::vector<std::pair<const char*, std::int64_t>> want = {
         {"refuge_flight", 1}, {"flight_hops", 3}, {"hidden_years", 300}, {"weary_wars", 3}, {"tribute_permille", 100},
-        {"revenge_aggression", 400}, {"levy_hops", 3}, {"odds_floor", 500}, {"odds_min", 700},
+        {"revenge_aggression", 400}, {"levy_hops", 3}, {"odds_floor", 500},  // odds_min: removed by P3-06 r14 21.9
         {"truce_break_aggression", 600}, {"enmity_hops", 3},
         // r10 20.19 (P3-09 r3)
-        {"kill_max_permille", 500}, {"find_permille", 250}, {"search_years", 3}};
+        {"kill_max_permille", 500}, {"find_permille", 250}, {"search_years", 3},
+        // r14 21.7 (P3-10, 0.19.0)
+        {"search_weary_years", 500}, {"search_repeat_salience", 15}};
     for (const wd::ContentSet* c : {&shipped_content()}) {
         const wd::Record& r = history_record(*c, "conflict");
         const std::int64_t at = index_of(r, "last_refuge");
@@ -127,9 +129,9 @@ TEST_CASE("P3-05 r8 21 item 5: regions_per_extra_civ 90 and civs_extra_max 2 fol
 TEST_CASE("P3-06 r9 20.9: kinds 32 refugees_settled and 33 tribute after kind 31; claim salience 35") {
     using ET = eng::EntityType;
     const eng::EventCatalogue& compiled = eng::compiled();
-    REQUIRE(compiled.kinds.size() == 36U);
+    REQUIRE(compiled.kinds.size() == 38U);
     const eng::EventCatalogue cat = eng::catalogue_of(engine_test::shipped());
-    REQUIRE(cat.kinds.size() == 36U);
+    REQUIRE(cat.kinds.size() == 38U);
     for (const eng::EventCatalogue* c : {&compiled, &cat}) {
         const eng::KindDef& k32 = c->kinds[31];
         CHECK(k32.id == 32);
@@ -185,10 +187,10 @@ TEST_CASE("P3-06 r9 20.9: kinds 32 refugees_settled and 33 tribute after kind 31
     CHECK(cat.kinds[16].salience == 50);   // capital_moved
 }
 
-TEST_CASE("P3-06 r9 20.9, r10 20.21 item 9: history.report lists kinds 1-36 in kind id order") {
+TEST_CASE("P3-06 r9 20.9, r10 20.21 item 9: history.report lists kinds 1-38 in kind id order (P3-04 r12 20.4: 37, 38)") {
     const wd::Record& r = history_record(shipped_content(), "report");
     const auto& events = r.get_array("events");
-    REQUIRE(events.size() == 36U);
+    REQUIRE(events.size() == 38U);
     const eng::EventCatalogue& compiled = eng::compiled();
     for (std::size_t i = 0; i < events.size(); ++i) {
         CHECK(events[i].as_record().get_string("kind") == compiled.kinds[i].key);
@@ -231,9 +233,9 @@ TEST_CASE("P3-06 r10 20.15, 20.17, 20.22: kinds 34 war_won, 35 search_abandoned,
          "held on."},
     };
     const eng::EventCatalogue& compiled = eng::compiled();
-    REQUIRE(compiled.kinds.size() == 36U);
+    REQUIRE(compiled.kinds.size() == 38U);
     const eng::EventCatalogue cat = eng::catalogue_of(engine_test::shipped());
-    REQUIRE(cat.kinds.size() == 36U);
+    REQUIRE(cat.kinds.size() == 38U);
     for (const K& w : want) {
         CAPTURE(std::string_view(w.key));
         for (const eng::EventCatalogue* c : {&compiled, &cat}) {

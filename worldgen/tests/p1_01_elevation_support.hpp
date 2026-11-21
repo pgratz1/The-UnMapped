@@ -869,6 +869,9 @@ inline std::vector<GoldenCase> read_golden(const std::string& path) {
         std::istringstream ss(line);
         std::string a, b, c;
         ss >> a >> b >> c;
+        if (a.rfind("elevation-1024", 0) == 0) {
+            continue;  // the N = 1024 layer hashes (read_golden_1024), outside every case
+        }
         if (a == "case") {
             GoldenCase gc;
             gc.name = b;
@@ -883,6 +886,29 @@ inline std::vector<GoldenCase> read_golden(const std::string& path) {
             REQUIRE_MESSAGE((!out.empty() && out.back().name == a), "golden line outside its case: " << line);
             out.back().items.emplace_back(b, c);
         }
+    }
+    return out;
+}
+
+// The N = 1024 layer hashes of the reference (P3-10 4 item 3): lines "<label> s<seed> <hash>" with label
+// elevation-1024 (shipped settings) or elevation-1024-neutral (10.4.2), outside every case. Returns
+// seed -> hash for one label; seeds the reference has not computed have no line and are not checked.
+inline std::map<std::uint64_t, std::string> read_golden_1024(const std::string& path, std::string_view label) {
+    std::ifstream in(path, std::ios::binary);
+    REQUIRE_MESSAGE(in.good(), "cannot open " << path);
+    std::map<std::uint64_t, std::string> out;
+    std::string line;
+    while (std::getline(in, line)) {
+        std::istringstream ss(line);
+        std::string a, b, c;
+        ss >> a >> b >> c;
+        if (a != label) {
+            continue;
+        }
+        REQUIRE_MESSAGE((b.size() > 1 && b[0] == 's' && c.size() == 64), "bad 1024 hash line: " << line);
+        const std::uint64_t seed = std::stoull(b.substr(1));
+        REQUIRE_MESSAGE(out.count(seed) == 0, "seed listed twice: " << line);
+        out[seed] = c;
     }
     return out;
 }

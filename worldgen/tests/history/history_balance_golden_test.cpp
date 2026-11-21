@@ -79,6 +79,7 @@ TEST_CASE("P3-06 r9 20.14 item 8: hist-conflict-flight equals the reference; fli
     check_invariants_06(t, in, 25, true);
     check_invariants_09(t, in, shipped());
     check_invariants_10(t, shipped());
+    CHECK(invariants_19(t, shipped()) == std::vector<std::string>{});  // P3-06 r14 (14), (15), 21.7 (0.19.0)
     // what the case is for
     const Index x(t);
     const std::int64_t hidden_years = conflict_int(shipped(), "hidden_years");
