@@ -708,21 +708,10 @@ std::vector<std::int64_t> ConflictSubsystem::seen_settlements(const StepContext&
 }
 
 // 20.1: c's only standing settlement is t and c is the only alive
-// civilization of its race.
+// civilization of its race; P3-05 r12 22.7 (P3-06 r14 21.4): the one
+// predicate of the peoples subsystem, on the live state.
 bool ConflictSubsystem::last_refuge_of(const State& state, std::int64_t civ) const {
-    const std::int64_t race = state.civ(civ).race;
-    const std::int64_t nc = civ_count(state);
-    for (std::int64_t c = 1; c <= nc; ++c) {
-        if (c != civ && !state.civ(c).ended_year && state.civ(c).race == race) {
-            return false;
-        }
-    }
-    std::int64_t standing_count = 0;
-    const std::int64_t ns = settlement_count(state);
-    for (std::int64_t id = 1; id <= ns; ++id) {
-        standing_count += (state.settlement(id).owner_civ == civ && standing(state.settlement(id))) ? 1 : 0;
-    }
-    return standing_count == 1;
+    return peoples_.race_last_refuge(PeoplesSubsystem::SettlementsNow{state, nullptr, nullptr}, civ);
 }
 
 std::vector<std::int64_t> ConflictSubsystem::visible_settlements(const StepContext& ctx, std::int64_t civ,

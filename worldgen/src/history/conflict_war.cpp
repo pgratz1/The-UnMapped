@@ -189,7 +189,9 @@ std::optional<ConflictSubsystem::Flight> ConflictSubsystem::flight_plan(const St
     const std::int64_t from = state.settlement(t).region;
     const std::int64_t p = state.settlement(t).population;
     const std::int64_t survivors = p - floor_div(checked_mul(p, tuning_.sack_toll_permille), 1000);
-    const std::vector<std::int64_t>& from_t = view.hops(from);
+    // P3-06 r14 21.3 (audit A1): a copy of the row, since view.hops(r) below
+    // may fill other rows of the lazily filled cache.
+    const std::vector<std::int64_t> from_t = view.hops(from);
     const std::vector<std::int64_t> px = presence(ctx, x);
     const std::int64_t far = tuning_.march_hops + 1;
     // (-h_x(D), -sigma(D, r_y), D) ascending.

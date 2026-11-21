@@ -226,7 +226,13 @@ private:
     std::vector<std::int64_t> capacity_;
     std::vector<std::int64_t> biome_term_;           // B (4.2), same index
     std::vector<std::vector<PeoplesNeighbour>> neighbours_;
-    mutable std::vector<std::vector<std::int64_t>> hops_;  // empty until computed
+    // One row per region, each empty until computed. The outer vector is
+    // sized once, at construction, and never resized, so a reference
+    // returned by hops() stays valid for the life of the geography (which
+    // ConflictSubsystem::local_force relies on while it holds one row);
+    // a caller that holds a row across further hops() calls may still copy
+    // it (P3-06 r14 21.3).
+    mutable std::vector<std::vector<std::int64_t>> hops_;
     std::vector<std::uint16_t> region_layer_;
     std::vector<std::uint8_t> water_;
     std::vector<std::uint16_t> habitability_;
@@ -322,6 +328,23 @@ public:
     [[nodiscard]] const PeoplesGeo& geo() const;
     [[nodiscard]] const PeoplesTuning& tuning() const noexcept { return tuning_; }
 
+    // The settlements a rule reads: the state, or (the plague plan, 10.2) a
+    // copy of the populations and of which settlements of the owner stand,
+    // indexed by id.
+    struct SettlementsNow {
+        const State& state;
+        const std::vector<std::int64_t>* pop = nullptr;
+        const std::vector<std::uint8_t>* up_mask = nullptr;
+        // Standing and owned by `owner` (the copy: standing in it).
+        [[nodiscard]] bool up(std::int64_t id, std::int64_t owner) const;
+        [[nodiscard]] std::int64_t population(std::int64_t id) const;
+    };
+    // P3-05 r12 22.7 (the one last-refuge predicate, P3-06 r14 21.4): `civ`
+    // has exactly one standing settlement in `now` and no other
+    // civilization of its race is alive (ended_year read from the state).
+    // P3-06 calls it with the live state (SettlementsNow{state}).
+    [[nodiscard]] bool race_last_refuge(const SettlementsNow& now, std::int64_t civ) const;
+
 private:
     friend class PeoplesView;
 
@@ -357,17 +380,6 @@ private:
     // r6 (10.2): the total dead of an outbreak and its spreads, planned.
     [[nodiscard]] std::int64_t planned_plague_dead(const StepContext& context, std::int64_t origin, std::int64_t toll,
                                                    const std::vector<std::uint8_t>& struck) const;
-    // The settlements a strike's rules read: the state, or (the plague plan,
-    // 10.2) a copy of the populations and of which settlements of the owner
-    // stand, indexed by id.
-    struct SettlementsNow {
-        const State& state;
-        const std::vector<std::int64_t>* pop = nullptr;
-        const std::vector<std::uint8_t>* up_mask = nullptr;
-        // Standing and owned by `owner` (the copy: standing in it).
-        [[nodiscard]] bool up(std::int64_t id, std::int64_t owner) const;
-        [[nodiscard]] std::int64_t population(std::int64_t id) const;
-    };
     // The outcome of a blow of `toll` per mille (10.4 with 8.5 (a)).
     struct StrikeResult {
         std::int64_t dead = 0;
@@ -381,9 +393,9 @@ private:
                                                           std::int64_t target) const;
     // Another standing settlement of the settlement's owner exists.
     [[nodiscard]] bool other_standing(const SettlementsNow& now, std::int64_t settlement) const;
-    // r9 (21 item 6): the settlement is its race's last refuge (its owner's
-    // only standing settlement, the owner the only alive civilization of its race).
-    [[nodiscard]] bool race_last_refuge(const SettlementsNow& now, std::int64_t settlement) const;
+    // r9 (21 item 6): the standing settlement is its race's last refuge
+    // (race_last_refuge of its owner: then it is the one standing settlement).
+    [[nodiscard]] bool settlement_last_refuge(const SettlementsNow& now, std::int64_t settlement) const;
     // The owner's nearest other standing settlement (squared distance, then
     // id), 0 if none.
     [[nodiscard]] std::int64_t nearest_standing(const SettlementsNow& now, std::int64_t settlement) const;
