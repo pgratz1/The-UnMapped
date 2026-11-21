@@ -78,10 +78,15 @@ struct ConflictTuning {
     // truce), except that a truce shortens by nothing only below aggression
     // 999.
     std::int64_t refuge_flight = 0, flight_hops = 1, hidden_years = 0, weary_wars = 0, tribute_permille = 0;
-    std::int64_t revenge_aggression = 0, levy_hops = 16, odds_floor = 0, odds_min = 0;
+    // r14 21.9 (generator 0.19.0): odds_min is a race field (odds_min_permille).
+    std::int64_t revenge_aggression = 0, levy_hops = 16, odds_floor = 0;
     std::int64_t truce_break_aggression = 999, enmity_hops = 1;
     // r10 20.19 (P3-09 r3): the kill bound, the search for a concealed people.
     std::int64_t kill_max_permille = 10000, find_permille = 1000, search_years = 100;
+    // r14 21.7 (generator 0.19.0): the weary years after a failed search (0:
+    // the rule off) and the salience of every search_abandoned after the
+    // first of a world (a hand-made tuning: 40, the shipped base salience).
+    std::int64_t search_weary_years = 0, search_repeat_salience = 40;
     std::int64_t capital_sacked_salience = 0, capital_captured_salience = 0;
 };
 
@@ -111,6 +116,9 @@ struct ConflictRace {
     std::int64_t muster = 1000;        // muster_permille (20.6)
     std::int64_t conceal_min = 1001;   // 20.7; 1001 never
     std::int64_t home_defense = 0;     // home_defense_permille (20.7)
+    // r14 21.9, 21.12 (P3-01 r11 3.5, generator 0.19.0).
+    std::int64_t odds_min = 0;            // odds_min_permille
+    std::int64_t awakening_quarrel = 0;   // 1: a quarrel at its awakening
 };
 
 // One entry of front(x, y) (5.1): the region R of y's presence, the cost of
@@ -238,6 +246,8 @@ struct ConflictWar {
     std::array<std::int64_t, 2> taken_people{};
     std::int64_t last_battle_winner = 0;
     std::int64_t unfound = 0;
+    // r14 21.7 item 2: the regions this war fought a battle in, ascending.
+    std::vector<std::int64_t> fought;
 };
 
 class ConflictSubsystem final : public Subsystem, public TensionSource {
@@ -267,10 +277,17 @@ public:
     [[nodiscard]] std::optional<std::pair<std::int64_t, std::int64_t>> claim(std::int64_t a, std::int64_t b) const;
     // r9 (20.1, 20.4, 20.5): the year until which a fled refuge is hidden
     // (0 none), the futile count of (defender, region) as read now (0 when
-    // the recorded owner is not the region's owner), wronged(a, b).
+    // the recorded holder is not the region's holder, r14 21.8), wronged(a, b).
     [[nodiscard]] std::int64_t hidden_until(std::int64_t settlement) const;
     [[nodiscard]] std::int64_t futile_count(const StepContext& context, std::int64_t defender, std::int64_t region) const;
     [[nodiscard]] std::vector<std::int64_t> wronged(std::int64_t a, std::int64_t b) const;
+    // r14 21.7 item 1: (hidden, region) is search-weary now (Y below the year
+    // set by its last search_abandoned, and the region's holder unchanged).
+    [[nodiscard]] bool search_weary(const StepContext& context, std::int64_t hidden, std::int64_t region) const;
+    // r14 21.10: civ lies low (one of its settlements is a hidden refuge).
+    [[nodiscard]] bool lying_low(const StepContext& context, std::int64_t civ) const;
+    // r14 21.12: the civilizations whose awakening quarrel waits for a people.
+    [[nodiscard]] const std::set<std::int64_t>& quarrel_pending() const noexcept { return quarrel_pending_; }
 
 private:
     struct Claim {
@@ -283,7 +300,12 @@ private:
     };
     struct Futile {
         std::int64_t count = 0;
-        std::int64_t owner = 0;
+        std::int64_t owner = 0;  // r14 21.8: the holder at the declaration
+    };
+    // r14 21.7 item 1: a region weary for every claimant after a failed search.
+    struct Searched {
+        std::int64_t until = 0;
+        std::int64_t holder = 0;  // hold(R) when it was set
     };
     // 20.1: where the survivors of a fallen last refuge would flee.
     struct Flight {
@@ -340,6 +362,8 @@ private:
 
     // Steps (8.1, 8.2).
     void housekeeping(StepContext& context);
+    // r14 21.12: the awakening quarrels of this T2, before the strain update.
+    void awakening_quarrels(StepContext& context);
     void decay_grudges(std::int64_t years);
     void update_strain(StepContext& context, std::int64_t years, std::int64_t permille);
     void declarations(StepContext& context);
@@ -371,6 +395,8 @@ private:
     // The war's relation changes, last_peace, grudge and strains after its end event.
     void close_war(StepContext& context, std::size_t war, std::int64_t event);
     [[nodiscard]] std::int64_t score_winner(const ConflictWar& w) const;
+    // 7.7 item 1: side s (0 the attacker, 1 the defender) is exhausted.
+    [[nodiscard]] bool exhausted(const StepContext& context, const ConflictWar& w, std::size_t s) const;
     // r10 20.15 item 3: an ending decided by the score never makes the winner
     // of the war's last battle the loser (a truce, 0, instead).
     [[nodiscard]] std::int64_t unless_last_battle(const ConflictWar& w, std::int64_t winner) const;
@@ -404,6 +430,13 @@ private:
     std::map<Pair, Futile> futile_;
     std::map<Pair, std::set<std::int64_t>> wronged_;
     std::int64_t last_t2_phase_ = 0;
+    // r14 (P3-10, generator 0.19.0): failed searches per (hidden, region);
+    // whether a search_abandoned is in the log (21.7); the civilizations
+    // seen by the awakening quarrel and those whose quarrel waits (21.12).
+    std::map<Pair, Searched> searched_until_;
+    bool search_written_ = false;
+    std::set<std::int64_t> quarrel_seen_;
+    std::set<std::int64_t> quarrel_pending_;
 };
 
 }  // namespace worldgen::history

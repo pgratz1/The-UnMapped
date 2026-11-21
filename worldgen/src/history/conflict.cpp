@@ -216,12 +216,13 @@ ConflictTuning conflict_tuning_from(const data::ContentSet& content) {
     t.revenge_aggression = r.get_int("revenge_aggression");
     t.levy_hops = r.get_int("levy_hops");
     t.odds_floor = r.get_int("odds_floor");
-    t.odds_min = r.get_int("odds_min");
     t.truce_break_aggression = r.get_int("truce_break_aggression");
     t.enmity_hops = r.get_int("enmity_hops");
     t.kill_max_permille = r.get_int("kill_max_permille");  // r10 20.19
     t.find_permille = r.get_int("find_permille");
     t.search_years = r.get_int("search_years");
+    t.search_weary_years = r.get_int("search_weary_years");  // r14 21.7
+    t.search_repeat_salience = r.get_int("search_repeat_salience");
     t.capital_sacked_salience = r.get_int("capital_sacked_salience");
     t.capital_captured_salience = r.get_int("capital_captured_salience");
     return t;
@@ -291,12 +292,13 @@ void check_conflict_tuning(const ConflictTuning& t) {
     field_in(in(t.revenge_aggression, 0, 1000), "revenge_aggression");
     field_in(in(t.levy_hops, 0, 16), "levy_hops");
     field_in(in(t.odds_floor, 0, 1000), "odds_floor");
-    field_in(in(t.odds_min, 0, 1000), "odds_min");
     field_in(in(t.truce_break_aggression, 0, 999), "truce_break_aggression");
     field_in(in(t.enmity_hops, 1, 4), "enmity_hops");
     field_in(in(t.kill_max_permille, 1, 10000), "kill_max_permille");
     field_in(in(t.find_permille, 0, 1000), "find_permille");
     field_in(in(t.search_years, 1, 100), "search_years");
+    field_in(in(t.search_weary_years, 0, 10000), "search_weary_years");
+    field_in(in(t.search_repeat_salience, 0, 100), "search_repeat_salience");
     field_in(in(t.capital_sacked_salience, 0, 100), "capital_sacked_salience");
     field_in(in(t.capital_captured_salience, 0, 100), "capital_captured_salience");
     if (t.claim_strain > t.declare_min) {
@@ -591,7 +593,8 @@ void ConflictSubsystem::prepare(const StepContext& ctx) {
         }
         races_.push_back(ConflictRace{row.id, row.key, row.camp, d->record.get_int("aggression"),
                                       d->record.get_int("prowess_permille"), d->record.get_int("muster_permille"),
-                                      d->record.get_int("conceal_min"), d->record.get_int("home_defense_permille")});
+                                      d->record.get_int("conceal_min"), d->record.get_int("home_defense_permille"),
+                                      d->record.get_int("odds_min_permille"), d->record.get_int("awakening_quarrel")});
     }
     const PeoplesGeo& g = peoples_.geo();
     const std::int64_t nr = g.region_count();
@@ -828,10 +831,28 @@ std::int64_t ConflictSubsystem::hidden_until(std::int64_t settlement) const {
 
 std::int64_t ConflictSubsystem::futile_count(const StepContext& ctx, std::int64_t defender, std::int64_t region) const {
     const auto it = futile_.find(Pair{defender, region});
-    if (it == futile_.end() || it->second.owner != ctx.state().region(region).owner) {
+    // r14 21.8: a count reads 0 when its recorded holder is not the holder now.
+    if (it == futile_.end() || it->second.owner != ctx.state().region(region).holder) {
         return 0;
     }
     return it->second.count;
+}
+
+bool ConflictSubsystem::search_weary(const StepContext& ctx, std::int64_t hidden, std::int64_t region) const {
+    const auto it = searched_until_.find(Pair{hidden, region});
+    return it != searched_until_.end() && ctx.year() < it->second.until &&
+           it->second.holder == ctx.state().region(region).holder;
+}
+
+bool ConflictSubsystem::lying_low(const StepContext& ctx, std::int64_t civ) const {
+    const State& state = ctx.state();
+    for (const auto& [settlement, until] : hidden_until_) {
+        if (ctx.year() < until && settlement <= settlement_count(state) &&
+            state.settlement(settlement).owner_civ == civ && standing(state.settlement(settlement))) {
+            return true;
+        }
+    }
+    return false;
 }
 
 std::vector<std::int64_t> ConflictSubsystem::wronged(std::int64_t a, std::int64_t b) const {
@@ -863,7 +884,7 @@ std::vector<FrontEntry> ConflictSubsystem::allowed_goals(const StepContext& ctx,
     std::vector<FrontEntry> out;
     std::optional<FrontEntry> at_capital;
     for (const FrontEntry& e : front) {
-        if (weary(ctx, b, e.region)) {
+        if (weary(ctx, b, e.region) || search_weary(ctx, b, e.region)) {  // r14 21.7 item 1
             continue;
         }
         if (e.region == capital_region) {
@@ -964,6 +985,7 @@ void ConflictSubsystem::run(StepContext& ctx) {
         case Step::t2:
             housekeeping(ctx);
             decay_grudges(1);
+            awakening_quarrels(ctx);  // r14 21.12: before the strain update
             update_strain(ctx, 1, tuning_.tick_strain_permille);
             declarations(ctx);
             last_t2_phase_ = ctx.phase_id();
@@ -1117,8 +1139,8 @@ void ConflictSubsystem::update_strain(StepContext& ctx, std::int64_t years, std:
             }
             contact_[Pair{a, b}] = k;
             fronts.emplace(Pair{a, b}, std::move(fr));
-            if (at_war(a, b) || !truce_over(ctx, a, b)) {
-                continue;
+            if (at_war(a, b) || !truce_over(ctx, a, b) || lying_low(ctx, a)) {
+                continue;  // r14 21.10 item 2: no strain raised while lying low
             }
             bool wants = false;
             for (const std::int64_t r : sa.wanted) {
@@ -1141,8 +1163,8 @@ void ConflictSubsystem::update_strain(StepContext& ctx, std::int64_t years, std:
     for (const auto& [key, fr] : fronts) {
         const auto [a, b] = key;
         if (claims_.count(key) != 0 || at_war(a, b) || !truce_over(ctx, a, b) ||
-            strain(a, b) < checked_mul(tuning_.claim_strain, 1000)) {
-            continue;
+            strain(a, b) < checked_mul(tuning_.claim_strain, 1000) || lying_low(ctx, a)) {
+            continue;  // r14 21.10 item 2: no claim while lying low
         }
         if (quiet && ctx.quiet_events_left(a) <= 0) {
             continue;
@@ -1201,13 +1223,14 @@ std::optional<std::pair<TensionReport, ConflictSubsystem::Pair>> ConflictSubsyst
     for (const auto& [key, c] : claims_) {
         const auto [a, b] = key;
         if (ctx.state().civ(a).ended_year || ctx.state().civ(b).ended_year || contact_.count(key) == 0 ||
-            at_war(a, b) || !truce_over(ctx, a, b)) {
-            continue;
+            at_war(a, b) || !truce_over(ctx, a, b) || lying_low(ctx, a)) {
+            continue;  // r14 21.10 item 2: a claimant lying low is skipped
         }
         const std::int64_t v = floor_div(strain(a, b), 1000);
         // r9 20.6 item 3: a claim a people cannot pursue does not flare up
-        // (the odds only when the value would count).
-        if (v > best_value && odds_of(ctx, a, b) >= tuning_.odds_min) {
+        // (the odds only when the value would count); r14 21.9: the
+        // claimant's race's odds_min_permille.
+        if (v > best_value && odds_of(ctx, a, b) >= race_of_civ(ctx, a).odds_min) {
             best_value = v;
             best = std::pair(TensionReport{v, c.event}, key);
         }
@@ -1235,8 +1258,8 @@ void ConflictSubsystem::declarations(StepContext& ctx) {
     }
     const std::vector<std::int64_t> alive = alive_civs(ctx);
     for (const std::int64_t a : alive) {
-        if (attacking(a)) {
-            continue;
+        if (attacking(a) || lying_low(ctx, a)) {
+            continue;  // r14 21.10 item 2: no declaration while lying low
         }
         std::vector<std::int64_t> candidates;
         for (const auto& [key, c] : claims_) {
@@ -1266,9 +1289,10 @@ void ConflictSubsystem::declarations(StepContext& ctx) {
         if (s < tuning_.declare_min) {
             continue;
         }
-        // r9 20.6 item 3: no declaration, and no draw, below odds_min.
+        // r9 20.6 item 3: no declaration, and no draw, below odds_min (r14
+        // 21.9: the claimant's race's odds_min_permille).
         const std::int64_t odds = odds_of(ctx, a, b);
-        if (odds < tuning_.odds_min) {
+        if (odds < race_of_civ(ctx, a).odds_min) {
             continue;
         }
         const std::int64_t p = declare_chance(tuning_, s, odds);
@@ -1316,7 +1340,7 @@ void ConflictSubsystem::declare(StepContext& ctx, std::int64_t a, std::int64_t b
     w.start = ctx.year();
     w.last_event = ev;
     w.initiative = a;
-    w.goal_owner = state.region(goal).owner;
+    w.goal_owner = state.region(goal).holder;  // r14 21.8: hold(G) at the declaration
     w.pop0 = {peoples_.view().population(ctx, a), peoples_.view().population(ctx, b)};
     wars_.push_back(w);
 }
@@ -1326,9 +1350,87 @@ void ConflictSubsystem::declare(StepContext& ctx, std::int64_t a, std::int64_t b
 void ConflictSubsystem::quiet_ends(StepContext& ctx) {
     const std::size_t n = wars_.size();
     for (std::size_t i = 0; i < n; ++i) {
-        if (wars_[i].open) {
-            (void)end_war(ctx, i, unless_last_battle(wars_[i], score_winner(wars_[i])), false);
+        if (!wars_[i].open) {
+            continue;
         }
+        const ConflictWar& w = wars_[i];
+        // r14 21.6 item 1: an attacker holding its goal wins (a peace when
+        // the defender is exhausted), without the last-battle rule; items 2
+        // and 3: every other open war ends by the score (7.8).
+        if (ctx.state().region(w.goal).owner == w.attacker) {
+            (void)end_war(ctx, i, w.attacker, exhausted(ctx, w, 1));
+        } else {
+            (void)end_war(ctx, i, unless_last_battle(w, score_winner(w)), false);
+        }
+    }
+}
+
+// 7.7 item 1 (r9 20.6 item 1: the losses a side bears scale with its muster).
+bool ConflictSubsystem::exhausted(const StepContext& ctx, const ConflictWar& w, std::size_t s) const {
+    const std::int64_t civ = s == 0 ? w.attacker : w.defender;
+    const std::int64_t base = floor_div(checked_mul(w.pop0[s], race_of_civ(ctx, civ).muster), 1000);
+    return checked_mul(w.dead[s], 1000) >= checked_mul(tuning_.exhaustion_permille, std::max<std::int64_t>(1, base));
+}
+
+// --- The awakening quarrel (r14 21.12) ------------------------------------------------------------
+
+void ConflictSubsystem::awakening_quarrels(StepContext& ctx) {
+    const State& state = ctx.state();
+    const std::vector<std::int64_t> alive = alive_civs(ctx);
+    // A civilization seen by this rule for the first time: an awakening of a
+    // race with awakening_quarrel 1 waits for its neighbour.
+    for (const std::int64_t c : alive) {
+        if (!quarrel_seen_.insert(c).second) {
+            continue;
+        }
+        if (race_of_civ(ctx, c).awakening_quarrel == 1 && ctx.event_kind(state.civ(c).founding_event) == "civ_founded") {
+            quarrel_pending_.insert(c);
+        }
+    }
+    // A civilization that ended while pending loses its quarrel.
+    for (auto it = quarrel_pending_.begin(); it != quarrel_pending_.end();) {
+        if (state.civ(*it).ended_year) {
+            it = quarrel_pending_.erase(it);
+        } else {
+            ++it;
+        }
+    }
+    const std::vector<std::int64_t> pending(quarrel_pending_.begin(), quarrel_pending_.end());
+    const PeoplesView& view = peoples_.view();
+    const std::int64_t ns = settlement_count(state);
+    for (const std::int64_t a : pending) {
+        if (!alive_visible(ctx, a) || state.civ(a).capital == 0) {
+            continue;
+        }
+        const Settlement& cap = state.settlement(state.civ(a).capital);
+        const std::int64_t race = state.civ(a).race;
+        const std::vector<std::int64_t>& from = view.hops(cap.region);
+        // The key (0 within enmity_hops else 1, hops, squared distance, id).
+        std::optional<std::tuple<std::int64_t, std::int64_t, std::int64_t, std::int64_t>> best;
+        std::int64_t b = 0;
+        for (std::int64_t id = 1; id <= ns; ++id) {
+            const Settlement& s = state.settlement(id);
+            if (!standing(s) || s.owner_civ == 0 || !ctx.visible(s) || hidden(ctx, id) ||
+                !alive_visible(ctx, s.owner_civ) || state.civ(s.owner_civ).race == race) {
+                continue;
+            }
+            const std::int64_t d0 = from[static_cast<std::size_t>(s.region - 1)];
+            const std::int64_t h = d0 < 0 ? std::numeric_limits<std::int64_t>::max() : d0;
+            const std::int64_t dx = s.x - cap.x;
+            const std::int64_t dy = s.y - cap.y;
+            const std::tuple<std::int64_t, std::int64_t, std::int64_t, std::int64_t> k{
+                h <= tuning_.enmity_hops ? 0 : 1, h, checked_add(checked_mul(dx, dx), checked_mul(dy, dy)), id};
+            if (!best || k < *best) {
+                best = k;
+                b = s.owner_civ;
+            }
+        }
+        if (b == 0) {
+            continue;  // no other people stands yet: the quarrel waits
+        }
+        std::int64_t& st = strain_[Pair{a, b}];
+        st = std::max(st, checked_mul(tuning_.claim_strain, 1000));
+        quarrel_pending_.erase(a);
     }
 }
 
