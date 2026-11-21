@@ -964,6 +964,7 @@ const PlacenameDef* land_by_biome(const PlacenameData& data, std::string_view ke
 // land (a special, or the dominant biome's key).
 struct RegionBase {
     std::string base;
+    std::string noun;  // r7 15.7: the land noun (the base name's noun)
     PlaceSpecial special = PlaceSpecial::none;  // none: rule d with a land biome
     std::string biome_key;                     // rule d: the dominant biome's key
 };
@@ -1055,6 +1056,7 @@ std::vector<RegionBase> region_bases(std::span<const RegionNameInput> regions,
             base.biome_key = b->key;
         }
         base.base = std::string(sectors[sector]) + " " + *noun;
+        base.noun = *noun;
         out.push_back(std::move(base));
     }
     return out;
@@ -1269,6 +1271,28 @@ RegionNameAttempt region_name_attempt(std::uint64_t k_name, std::int64_t region,
     RegionNameAttempt out;
     out.name = region_fill_form(form, values);
     out.valid = region_name_valid(form, values, common);
+    out.values = std::move(values);
+    return out;
+}
+
+std::vector<std::string> region_name_stems(const PlaceSlotValues& values) {
+    constexpr std::size_t NOUN = 0;
+    constexpr std::size_t SUFFIX = 1;
+    constexpr std::string_view THE = "the ";
+    std::vector<std::string> out;
+    for (const auto& [slot, value] : values) {
+        if (slot == NOUN || slot == SUFFIX) {
+            continue;
+        }
+        std::string v = lower_text(value);
+        if (v.size() >= THE.size() && v.compare(0, THE.size(), THE) == 0) {
+            v.erase(0, THE.size());
+        }
+        if (v.size() > 5U) {
+            v.resize(5U);
+        }
+        out.push_back(std::move(v));
+    }
     return out;
 }
 
@@ -1312,11 +1336,12 @@ std::vector<RegionNameChoice> region_name_choices(std::span<const RegionNameInpu
     const std::vector<RegionBase> bases =
         region_bases(regions, landmass_cells, land_cells, sum_x, sum_y, n, definitions, tuning);
     const PlacenameDef& common = common_def(placenames);
-    // 4. Keepers: per base name the region with the most cells, ties to the
-    // smaller id (id order: the first of equal size wins).
+    // 4. Keepers (r7 15.7, generator 0.19.0): per land noun the region with
+    // the most cells, ties to the smaller id (id order: the first of equal
+    // size wins); it keeps its base name.
     std::map<std::string, std::size_t> keeper;
     for (std::size_t i = 0; i < bases.size(); ++i) {
-        const auto [it, inserted] = keeper.try_emplace(bases[i].base, i);
+        const auto [it, inserted] = keeper.try_emplace(bases[i].noun, i);
         if (!inserted && regions[i].cells > regions[it->second].cells) {
             it->second = i;
         }
@@ -1324,11 +1349,14 @@ std::vector<RegionNameChoice> region_name_choices(std::span<const RegionNameInpu
     std::vector<RegionNameChoice> out(bases.size());
     UsedNames used;
     for (std::size_t i = 0; i < bases.size(); ++i) {
-        if (keeper.at(bases[i].base) == i) {
+        if (keeper.at(bases[i].noun) == i) {
             out[i] = RegionNameChoice{bases[i].base, true, false, 0};
             used.insert(bases[i].base);
         }
     }
+    // r6 15.4: S, the stems of the drawn names so far (keepers and the
+    // fallback add none).
+    std::set<std::string, std::less<>> stems;
     // 5 to 8: every other region in id order.
     const std::uint64_t k_name = substream(stream_key(seed, streams::geo_regions_name), static_cast<std::uint64_t>(n));
     for (std::size_t i = 0; i < bases.size(); ++i) {
@@ -1345,11 +1373,18 @@ std::vector<RegionNameChoice> region_name_choices(std::span<const RegionNameInpu
         bool named = false;
         for (std::int64_t t = 0; t < 64 && !named; ++t) {
             RegionNameAttempt a = region_name_attempt(k_name, id, t, *land, common, traits, tuning);
-            if (a.valid && used.find(a.name) == used.end()) {
-                used.insert(a.name);
-                out[i] = RegionNameChoice{std::move(a.name), false, false, t};
-                named = true;
+            if (!a.valid || used.find(a.name) != used.end()) {
+                continue;
             }
+            // V7 (r6 15.4): no stem of a slot value already used in this world.
+            const std::vector<std::string> st = region_name_stems(a.values);
+            if (std::any_of(st.begin(), st.end(), [&stems](const std::string& x) { return stems.count(x) != 0; })) {
+                continue;
+            }
+            stems.insert(st.begin(), st.end());
+            used.insert(a.name);
+            out[i] = RegionNameChoice{std::move(a.name), false, false, t};
+            named = true;
         }
         if (named) {
             continue;
