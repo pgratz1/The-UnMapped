@@ -1224,3 +1224,11 @@ listings stand in for it, as for every earlier change.
 The goldens re-recorded from these references: `p3-01-data.txt`, `p3-02-names.txt`, `p3-04-engine.txt`,
 `p3-05-peoples.txt`, `p3-06-conflict.txt`. `p3-03-chronology.txt` does not move: no god of its cases is reached
 by the new filter entries or the triple rule.
+
+Integration with `p3/10-fix2` (branch `p3/10-int2`): the switch `p3_10_r3_switch.hpp` is removed, since every
+guessed name was the engineer's. `check-world` on 20 worlds written by the C++ (1024 defaults seeds 0, 7, 23, 40,
+42, 53, 58; 512 seeds 0 to 7; 1024 `--civs-per-race 4` seeds 0 and 1; 1024 `calm` seed 0 and `turbulent` seed 14;
+2048 seed 0) found every chronology and history table equal to the reference's and no invariant failure. No
+golden moved at integration. Foothold cessions in that set: 1024 seed 40 (e198), seed 58 (e922), 512 seeds 3, 4
+and 7; no quick aim win. The 8.3 item 4 exemption above is reached by stress-7 e1153 only; there the region had no
+owner at all the year before (the holder's row ended with the sack of 4455).
