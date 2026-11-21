@@ -1171,7 +1171,7 @@ The C++ side: `p3_06_conflict_support.hpp` counts changes by holder
 as amended in `check_invariants_10`, accepts kind 38 in the 18a prefix, and
 adds `invariants_19` ((14), (15), 21.7) for the property and golden tests;
 `history/history_conflict_r14_test.cpp` holds the hand-made row units and the
-guarded seams (`UNMAPPED_P3_10_API`).
+seam tests on the engineer's names (the P3-10 switch was removed at integration).
 
 ### The N = 1024 elevation hashes (P3-10 4 item 3)
 

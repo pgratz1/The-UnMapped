@@ -5,7 +5,7 @@
 //     hand-counted values). holder_change_years on the same rows.
 //   - The row checks of invariants (14), (15) and 21.7 (invariants_19, p3_06_conflict_support.hpp) fire on
 //     hand-made logs that break them, and stay silent on the same logs repaired.
-//   - The seams the specs name (guarded by UNMAPPED_P3_10_API, p3_10_switch.hpp): history.conflict's
+//   - The seams the specs name (the engineer's names; P3-10 integration): history.conflict's
 //     search_weary_years, search_repeat_salience and quarrel_strain (r15, with conflict_quarrel_strain) in
 //     ConflictTuning without odds_min; the race fields
 //     odds_min_permille and awakening_quarrel in ConflictRace; PeoplesSubsystem::lie_low(civ, until_year).
@@ -18,7 +18,6 @@
 //
 // Written from the specs only.
 
-#include "../p3_10_switch.hpp"
 #include "p3_06_conflict_support.hpp"
 
 #if UNMAPPED_HAVE_PEOPLES
@@ -32,10 +31,8 @@
 #include <utility>
 #include <vector>
 
-#if UNMAPPED_P3_10_API
 #include "worldgen/history/conflict.hpp"
 #include "worldgen/history/peoples.hpp"
-#endif
 
 namespace {
 
@@ -197,7 +194,6 @@ TEST_CASE("P3-06 r14 (14): a cost after a lost goal's ending only when the attac
     CHECK(invariants_19(t, c).empty());
 }
 
-#if UNMAPPED_P3_10_API
 
 TEST_CASE("P3-06 r14 21.7, 21.9 (seam): ConflictTuning has search_weary_years 500 and search_repeat_salience 15") {
     namespace h = worldgen::history;
@@ -219,9 +215,9 @@ TEST_CASE("P3-06 r15 21.12 item 2 (seam): the named check conflict_quarrel_strai
 
 TEST_CASE("P3-06 r14 21.9, 21.12, P3-01 r11 3.5 (seam): ConflictRace carries odds_min_permille and awakening_quarrel") {
     worldgen::history::ConflictRace r;
-    r.odds_min_permille = 500;  // orc
+    r.odds_min = 500;  // orc
     r.awakening_quarrel = 1;
-    CHECK(r.odds_min_permille + r.awakening_quarrel == 501);
+    CHECK(r.odds_min + r.awakening_quarrel == 501);
 }
 
 TEST_CASE("P3-05 r12 22.7a (seam): PeoplesSubsystem::lie_low(civ, until_year)") {
@@ -231,7 +227,6 @@ TEST_CASE("P3-05 r12 22.7a (seam): PeoplesSubsystem::lie_low(civ, until_year)") 
     CHECK(true);
 }
 
-#endif  // UNMAPPED_P3_10_API
 
 }  // TEST_SUITE
 

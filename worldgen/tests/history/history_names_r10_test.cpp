@@ -6,7 +6,7 @@
 // worldgen/tests/golden/p3-02-names.txt (lines corename, corenear, corefallback, core, coresha256), written
 // by the test writer's reference p3_names_reference.py at 0.19.0. The test's own core rule (below) runs on
 // names_api::attempt, which exists at 0.18.0; the library's seams of 12.2 (interim names in
-// p3_10_names_api.hpp) are used only with UNMAPPED_P3_10_API 1. The data tests and the golden lists fail
+// p3_10_names_api.hpp) are mapped to the engineer's API. The data tests and the golden lists fail
 // until the 0.19.0 filter files land (game/data/name_filters and both fixture copies). The critics' stems
 // are written as concatenations (P3-02 11.7 item 10).
 
@@ -23,7 +23,6 @@
 #include "p3_02_names_api.hpp"
 #include "p3_02_names_support.hpp"
 #include "p3_10_names_api.hpp"
-#include "../p3_10_switch.hpp"
 #include "worldgen/core/sha256.hpp"
 #include "worldgen/data/content.hpp"
 #include "worldgen/data/schema.hpp"
@@ -181,9 +180,7 @@ TEST_CASE("P3-02 r10 12.2, 12.3: the core and the near test (skat, sligg, kuzz, 
         CAPTURE(line);
         const auto t = split(line, 3);
         CHECK(own_core(t[1]) == t[2]);
-#if UNMAPPED_P3_10_API
         CHECK(names_api_r10::name_core(t[1]) == t[2]);
-#endif
     }
     const auto& near = golden_lines("corenear");
     CHECK(near.size() >= 10U);
@@ -191,9 +188,7 @@ TEST_CASE("P3-02 r10 12.2, 12.3: the core and the near test (skat, sligg, kuzz, 
         CAPTURE(line);
         const auto t = split(line, 4);
         CHECK(own_near(t[1], set_of(t[2])) == (t[3] == "1"));
-#if UNMAPPED_P3_10_API
         CHECK(names_api_r10::core_near(t[1], set_of(t[2])) == (t[3] == "1"));
-#endif
     }
 }
 
@@ -215,13 +210,11 @@ TEST_CASE("P3-02 r10 12.3: with skat in K an attempt with root skat is skipped a
     const OwnChoice c = own_choose(g, Kind::settlement, 11, 4, 1, reg, &cores, f);
     CHECK(c.name != a0.name);
     CHECK(c.token != "F");
-#if UNMAPPED_P3_10_API
     Registry reg2;
     std::set<std::string> k2 = {own_core(a0.root)};
     const names_api::Choice lc = names_api_r10::choose_name_k(g, f, "goblin", Kind::settlement, 11, 4, 1, reg2, k2);
     CHECK(lc.name == c.name);
     CHECK(k2 == cores);
-#endif
 }
 
 TEST_CASE("P3-02 r10 12.3: every attempt near K falls back to the first valid name with a numeral; its core joins K") {
@@ -240,7 +233,6 @@ TEST_CASE("P3-02 r10 12.3: every attempt near K falls back to the first valid na
     CHECK(c.token == "F");
     CHECK(c.name == name);
     CHECK(cores == set_of(after));
-#if UNMAPPED_P3_10_API
     Registry r2;
     std::set<std::string> k2 = {"ba"};
     const names_api::Choice lc =
@@ -249,7 +241,6 @@ TEST_CASE("P3-02 r10 12.3: every attempt near K falls back to the first valid na
     CHECK(lc.fallback);
     CHECK(lc.name == name);
     CHECK(k2 == set_of(after));
-#endif
 }
 
 TEST_CASE("P3-02 r10 12.2, 12.3: the golden core lists (seeds 0 and 42; gods without K, as before) and invariant 6") {

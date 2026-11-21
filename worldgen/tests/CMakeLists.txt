@@ -416,7 +416,7 @@ unmapped_add_doctest_shards(worldgen-tests
     SLOW slow-conflict 450 "*-slow" "*history_conflict_golden_test.cpp"
     SLOW slow-climate 490 "*-slow" "*stages_climate_*"
     SLOW slow-hydrology 490 "*-slow" "*stages_hydrology_*,*stages_elevation_passes_test.cpp,*stages_elevation_property_test.cpp"
-    SLOW slow-engine 490 "*-slow" "*history_balance_*,*conflict_engineer_test.cpp,*history_engine_golden_test.cpp,*history_engine_property_test.cpp,*history_engine_schedule_test.cpp"
+    SLOW slow-engine 490 "*-slow" "*history_balance_*,*conflict_engineer_test.cpp,*history_engine_golden_test.cpp,*history_engine_property_test.cpp,*history_engine_schedule_test.cpp,*history_engine_r12_test.cpp"
     SLOW slow-biomes-resources-regions 550 "*-slow" "*stages_biomes_*,*stages_resources_*,*stages_regions_*"
     SLOW_REST slow-other 10 "*-slow"
 )

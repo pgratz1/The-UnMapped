@@ -17,7 +17,6 @@
 // Written from the specs only.
 
 #include "../p3_09_switch.hpp"
-#include "../p3_10_switch.hpp"
 #include "p3_06_conflict_support.hpp"
 
 #if UNMAPPED_HAVE_PEOPLES

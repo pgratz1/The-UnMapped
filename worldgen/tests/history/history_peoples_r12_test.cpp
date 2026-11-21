@@ -6,7 +6,7 @@
 //   22.3, 22.4  the templates of kinds 10, 15, 16, 17 and 31 (shipped data);
 //   22.5  the site value: a faerie in a coastal region settles inland (not the seed cell); a dwarf prefers a
 //         hill cell of habitability 60 and height 255 to a shore cell of habitability 200 (183 against 100);
-//   22.7a lie_low: no colony while lying low (needs PeoplesSubsystem::lie_low, UNMAPPED_P3_10_API);
+//   22.7a lie_low: no colony while lying low (PeoplesSubsystem::lie_low);
 // (P3-10 4 item 2, the dwarven forts and ladder kinds of hist-peoples-42-1024, is read from the golden file by
 // history_peoples_golden_test.cpp; the sentence of kind 37 is rendered in history_engine_r12_test.cpp.)
 // Written from the spec only, before the implementation (test-writer rule). Every case but the lie_low one
@@ -14,7 +14,6 @@
 // reference (reference/p3_peoples_reference.py, check_units_r12) checks the same cases on its own.
 
 #include "p3_05_peoples_support.hpp"
-#include "../p3_10_switch.hpp"
 
 #if UNMAPPED_HAVE_PEOPLES
 
@@ -286,7 +285,6 @@ TEST_CASE("P3-05 r12 22.5, 22.8 item 4: a dwarf prefers the hill (v 183) to the 
     CHECK(at(t.settlement[0], 3) == 30);
 }
 
-#if UNMAPPED_P3_10_API
 TEST_CASE("P3-05 r12 22.7a, 22.8 item 4a: after lie_low(c, Y + 300) c founds no colony before Y + 300") {
     const Geo g = two_regions();
     const wd::ContentSet& c = stress_content();  // found_rate 1000: a colony as soon as the pressure allows
@@ -304,7 +302,6 @@ TEST_CASE("P3-05 r12 22.7a, 22.8 item 4a: after lie_low(c, Y + 300) c founds no 
         CHECK_MESSAGE(at(*e, 1) >= 301, "colony e" << at(*e, 0) << " in " << at(*e, 1) << " while lying low");
     }
 }
-#endif
 
 TEST_CASE("P3-05 r12 22.2: every dwindling that cites a colony cites one it sent within 50 years (geo-seed-42-512)") {
     const GCase& g = golden_case("geo-seed-42-512");
