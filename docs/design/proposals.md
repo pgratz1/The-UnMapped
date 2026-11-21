@@ -984,3 +984,23 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
 - Proposal: a time control on the 2D map of the viewer: a year slider with play, pause and speed, which colours each region by the civilization that holds it in that year and marks the standing settlements, with battles, sackings and falls shown as they happen and the year's sentences beside the map. The data is already in the world file: `region_control` stores ownership intervals and `settlement_census` the settlement states by year, so any year is answered without replaying the log. Saving the playback as a video file is a second step, after the playback works on screen. Candidate for P4 Viewer v1.
 - Interim choice: none needed; not scheduled. To be placed when P4 is planned, after Paul's review of P3.
 - Status: open
+
+### Paul's decision of 2026-11-21: orcs at peace among goblins is accepted
+
+- Date: 2026-11-21
+- Raised by: lead, recording Paul's decision
+- Design doc section: 5 (history: the races' roles, the orc age)
+- Problem: with the awakening quarrel and the shorter odds, about 80% of default worlds have an orc war, against the 90% first aimed at. The rest are mostly worlds where only goblins, the orcs' own camp, are within reach.
+- Decision: Paul's words: "Orcs surrounded by goblins and not fighting is fine on 20%of worlds, better than reopening and lots of changes". The share of worlds with an orc declaration is a reported statistic, not a merge condition. Orcs do not fight their own camp and do not seek distant enemies. Asked whether a longer orc age (about 1000 more years) should be tried, Paul decided on the same day: "leave it as is for now".
+- Interim choice: none needed.
+- Status: accepted
+
+### Paul's decision of 2026-11-21: faerie names keep their character, without the baby-talk sounds
+
+- Date: 2026-11-21
+- Raised by: lead, recording Paul's decision (question 2 of the world critic's review of P3-10)
+- Design doc section: 5 (races and cultures: names)
+- Problem: faerie names are built from soft consonants and bright vowels. At their best they read as light and fey (Lyfae Hollow, The Faeli Court, Atwia Glade); at their worst as baby talk (Wifleeflee Glade, Weebaema Glade, Eepou Glade, The Twiwhiwou Ring). The name filter removes crude names, not these. The alternatives were to leave the syllables alone, or to make them strange in a way that drifts toward the elven names.
+- Decision: the middle option, which Paul accepted ("Agree the middle option is good"): keep the faerie character, and drop the sounds that cause the baby talk: no `p` and `b` onsets, fewer `ee` and `ou` nuclei, and no syllable repeated twice in a row. A change to the faerie culture's naming data (`game/data/cultures/faerie.toml`) and, for the repeated syllable, a naming rule if the data cannot express it.
+- Interim choice: not part of P3-10 (generator 0.19.0), which is in validation. It goes into the next change that alters world bytes, with a spec.
+- Status: accepted
