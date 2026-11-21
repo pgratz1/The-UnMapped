@@ -12,17 +12,17 @@ The world critic's review of P3-08 (`docs/reviews/p3-08-followups-world-critic.m
 
 | # | Item (review) | Resolution, in short | Normative text | Changes worlds |
 | --- | --- | --- | --- | --- |
-| 1 | Plague sentence carries the total (F1) | A new kind 37 `plague_outbreak` with values `dead`, `population`, `total`, `reached` replaces kind 12 for every outbreak (kind 12 has no value key for them and a shipped kind is never edited); `Plague broke out in X and spread to 3 other settlements; 1,084 died in all.` | `docs/specs/p3-05-peoples.md` r11 22.1; `docs/specs/p3-04-simulation-engine.md` r12 20.4 | yes |
-| 2 | Abandonment names its cause (F2) | A renderer placeholder `{@causes:key=word,…\|before\|after}` names the kinds of an event's causes; kinds 10, 16 and 31 lead with `Weakened by famine and plague, …`; causes older than `cause_memory_years` (50) are not cited; a dwindling with no recent blow cites the colony it sent | P3-04 r12 20.2; P3-05 r11 22.2, 22.3 | yes |
-| 3 | Quiet eras (F3) | One world-level `quiet_stretch` event (kind 38) per quiet phase row, with every living realm as participant and their count; generations of rulers derivable, printed by P3-07 in a realm's milestones; kind 4 no longer written | P3-04 r12 20.1; `docs/specs/p3-07-history-report.md` r11 22.2 | yes |
-| 4 | Faeries off the shore (F4) | Race field `cell_weights` gains `port`, `habitability` and `inland` (a cell's distance from the sea, Chebyshev, capped); faeries `port` 0, `inland` 400 (`inland_cap` 20 cells, 320 m) and race `coast` −500, so they also lose the region seed cell as first site: 54% → 10% of faerie settlements within 300 m of the sea | P3-05 r11 22.5; `docs/specs/p3-01-history-data-settings.md` r11 | yes |
-| 5 | Dwarves (F5) | Dwarves `port` 0 and `habitability` 500 in the site value (lowland counted at half when scoring a home site): dwarven settlements below 30 m 7 → 0 of about 160; region capacity unchanged (a lowland discount there cost a quarter of the dwarves' people and moved no more holds) | P3-05 r11 22.5; P3-01 r11 | yes |
+| 1 | Plague sentence carries the total (F1) | A new kind 37 `plague_outbreak` with values `dead`, `population`, `total`, `reached` replaces kind 12 for every outbreak (kind 12 has no value key for them and a shipped kind is never edited); `Plague broke out in X and spread to 3 other settlements; 1,084 died in all.` | `docs/specs/p3-05-peoples.md` r12 22.1; `docs/specs/p3-04-simulation-engine.md` r12 20.4 | yes |
+| 2 | Abandonment names its cause (F2) | A renderer placeholder `{@causes:key=word,…\|before\|after}` names the kinds of an event's causes; kinds 10, 16 and 31 lead with `Weakened by famine and plague, …`; causes older than `cause_memory_years` (50) are not cited; a dwindling with no recent blow cites the colony it sent | P3-04 r12 20.2; P3-05 r12 22.2, 22.3 | yes |
+| 3 | Quiet eras (F3) | One world-level `quiet_stretch` event (kind 38) per quiet phase row, with every living realm as participant and their count; generations of rulers derivable, printed by P3-07 in a realm's milestones; kind 4 no longer written | P3-04 r12 20.1; `docs/specs/p3-07-history-report.md` r12 22.2 | yes |
+| 4 | Faeries off the shore (F4) | Race field `cell_weights` gains `port`, `habitability` and `inland` (a cell's distance from the sea, Chebyshev, capped); faeries `port` 0, `inland` 400 (`inland_cap` 20 cells, 320 m) and race `coast` −500, so they also lose the region seed cell as first site: 54% → 10% of faerie settlements within 300 m of the sea | P3-05 r12 22.5; `docs/specs/p3-01-history-data-settings.md` r11 | yes |
+| 5 | Dwarves (F5) | Dwarves `port` 0 and `habitability` 500 in the site value (lowland counted at half when scoring a home site): dwarven settlements below 30 m 7 → 0 of about 160; region capacity unchanged (a lowland discount there cost a quarter of the dwarves' people and moved no more holds) | P3-05 r12 22.5; P3-01 r11 | yes |
 | 6 | Region names (F7) | Data: church words out, two thirds of the grim words moved from `common` to `trait_barren`, `-hanger`, `High`, lowland `Gap`/`Cleft` out; rule V7: one use of a word stem per world; **one plain compass name per land noun**, kept by that noun's largest region (Paul's decision; 83% / 42% / 15% plain at 512 / 1024 / 2048 become 33% / 12% / 4%) | `docs/specs/p1-06-regions.md` r6 section 15, r7 15.7 | yes |
 | 7 | Names (F6) | Eight filter entries (`suck`, `shiet`, `dead`, `hack`, `whop`, `flop`, `gord`, `gramma`); a core uniqueness rule: no two civilization or settlement names of a world whose cores (roots without `'` and `-`) are equal or one letter apart | `docs/specs/p3-02-names.md` r10 section 12 | yes |
-| 8 | Wording (F9) | Thousands separators in rendered values (not in years); battle sentences without "0 of the victors"; moved seats and secessions without "its"; the flare-up's parties stay in P3-07's note, reworded (the one place); `note_reduction` only where people were lost and causes bounded by item 2's memory, so a dwindling no longer cites an unrelated old battle | P3-04 r12 20.3; `docs/specs/p3-06-expansion-conflict.md` r13 21.1, 21.2; P3-05 r11 22.2, 22.4; P3-07 r11 22.3, 22.4 | yes |
-| 9 | P3-09 audit A1, A2 | A1: `flight_plan` copies its hop row; the cache's fixed outer size documented. A2: one last-refuge predicate in peoples | P3-06 r13 21.3, 21.4; P3-05 r11 22.7 | no |
+| 8 | Wording (F9) | Thousands separators in rendered values (not in years); battle sentences without "0 of the victors"; moved seats and secessions without "its"; the flare-up's parties stay in P3-07's note, reworded (the one place); `note_reduction` only where people were lost and causes bounded by item 2's memory, so a dwindling no longer cites an unrelated old battle | P3-04 r12 20.3; `docs/specs/p3-06-expansion-conflict.md` r14 21.1, 21.2; P3-05 r12 22.2, 22.4; P3-07 r12 22.3, 22.4 | yes |
+| 9 | P3-09 audit A1, A2 | A1: `flight_plan` copies its hop row; the cache's fixed outer size documented. A2: one last-refuge predicate in peoples | P3-06 r14 21.3, 21.4; P3-05 r12 22.7 | no |
 | 10 | Slow tests in CI | Section 4 item 1 (the build engineer) | this spec, 4 | no |
-| 11 | Left from earlier | Inline figures to golden files (4 items 2 and 3); kind 16 and kind 31's "were lost" can still occur and are kept (P3-05 r11 22.6) | 4 below; P3-05 r11 22.6 | no |
+| 11 | Left from earlier | Inline figures to golden files (4 items 2 and 3); kind 16 and kind 31's "were lost" can still occur and are kept (P3-05 r12 22.6) | 4 below; P3-05 r12 22.6 | no |
 
 ## 3. Order of implementation
 
@@ -30,13 +30,13 @@ One branch, one engineer and one test writer working from the stage specs separa
 
 | Step | What | Spec | Output |
 | --- | --- | --- | --- |
-| 0 | No output change, each its own commit checked byte-identical against 0.18.0's goldens: A1, A2 (P3-06 21.3, 21.4; P3-05 22.7); slow shards and CI (4 item 1) | P3-06 r13, P3-05 r11, 4 | none |
+| 0 | No output change, each its own commit checked byte-identical against 0.18.0's goldens: A1, A2 (P3-06 21.3, 21.4; P3-05 22.7); slow shards and CI (4 item 1) | P3-06 r14, P3-05 r12, 4 | none |
 | 1 | Test housekeeping: the inline figures to golden files (4 items 2, 3) | 4 | none |
 | 2 | Renderer: separators (P3-04 20.3); `{@causes:…}` (20.2) | P3-04 r12 | rendered text only |
 | 3 | Catalogue and engine: kinds 37 and 38 with their report entries; `quiet_stretch` in Q6 (20.1) | P3-04 r12 20.1, 20.4 | `event` rows, catalogue tables |
-| 4 | Peoples: kind 37 (22.1); `cause_memory_years` and the dwindle's colony cause (22.2); P3-06's `note_reduction` rule (21.1) | P3-05 r11, P3-06 r13 | history tables |
+| 4 | Peoples: kind 37 (22.1); `cause_memory_years` and the dwindle's colony cause (22.2); P3-06's `note_reduction` rule (21.1) | P3-05 r12, P3-06 r14 | history tables |
 | 5 | Templates (data): kinds 10, 15, 16, 17, 22, 23, 31, 37, 38 | P3-05 22.3, 22.4; P3-06 21.2; P3-04 20.1 | templates; content hash |
-| 6 | Sites: the `cell_weights` fields and the inland distance (22.5); race data | P3-05 r11 22.5; P3-01 r11 | sites, everything after |
+| 6 | Sites: the `cell_weights` fields and the inland distance (22.5); race data | P3-05 r12 22.5; P3-01 r11 | sites, everything after |
 | 7 | Names: filter entries (data) and the core rule | P3-02 r10 | names; content hash |
 | 8 | Region names: the list edits (data), V7 and the keeper per land noun | P1-06 r6, r7 15.7 | `region.name`; content hash |
 | 9 | Goldens and figures: re-record every golden of section 5; README hash; `docs/specs/schema.md` (kinds 37, 38) | 5 | — |
@@ -53,7 +53,7 @@ The test writer updates, from the specs and not from the C++: `p3_engine_referen
    - Group the suites into SLOW entries of about equal cost (the build engineer measures each file on a release preset). The lead's measurement on a release build: 57 + 8 slow test cases (library and CLI), about 37 minutes serial; expected 12 to 15 minutes on the 4-vCPU runners. Update CLAUDE.md's shard table and README's test notes.
 2. **The peoples slow test's inline figures** (`worldgen/tests/history/history_peoples_golden_test.cpp`, `forts == 5`, `ladder == 3`, P3-05 r6 6.2, 8.4): `p3_peoples_reference.py` writes a line `hist-peoples-42-1024 dwarf_kinds forts <n> ladder <m>` (the dwarven settlements of the case by their first census kind) into `worldgen/tests/golden/p3-05-peoples.txt`, and the test reads it. At 0.19.0 the values follow the new site rules (22.5); they are never edited by hand.
 3. **The 1024 elevation hashes** (`worldgen/tests/stages_elevation_golden_test.cpp`, the slow cases "layer hashes at N = 1024, seeds 0 to 9" and "with the neutral settings, the 0.5.0 layer hashes", inline lists commented "Fourth version (0.6.0) values; the test writer's reference reproduces seeds 0, 1 and 3"): the test writer runs `p1_elevation_reference.py` for the seeds it can (a long job, in the background) and writes `elevation-1024 s<seed> <hash>` and `elevation-1024-neutral s<seed> <hash>` lines into `worldgen/tests/golden/p1-01-elevation.txt`; the test reads them and checks every seed that has a line. Seeds the reference has not computed are dropped from the test, not kept as recorded C++ values (CLAUDE.md "Golden values": never values written from the C++). No output changes (the elevation stage is unchanged since 0.6.0).
-4. **Kind 16 and kind 31's "were lost"** (P3-08 validation F6): both still occur by the rules and are kept (P3-05 r11 22.6).
+4. **Kind 16 and kind 31's "were lost"** (P3-08 validation F6): both still occur by the rules and are kept (P3-05 r12 22.6).
 
 ## 5. Effect on output: golden values
 
@@ -100,7 +100,7 @@ Method: the stored worlds of two sweeps and the test writers' references.
 
 ### 6.2 Faeries and dwarves (variants, 1024 default seeds 0 to 19)
 
-P3-05 r11 22.5 has the full table (variants one by one). As shipped (faeries `port` 0, `inland` 400, `coast` −500; dwarves `port` 0, `habitability` 500; the name rule on):
+P3-05 r12 22.5 has the full table (variants one by one). As shipped (faeries `port` 0, `inland` 400, `coast` −500; dwarves `port` 0, `habitability` 500; the name rule on):
 
 | Measure (20 worlds) | 0.18.0 | P3-10 |
 | --- | --- | --- |
