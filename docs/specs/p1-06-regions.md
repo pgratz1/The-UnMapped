@@ -1045,6 +1045,8 @@ Method: the test writer's reference `worldgen/tests/reference/p1_regions_referen
 | attempts per drawn name, mean (max) | 0.07 (1) | 0.14 (6) | 0.75 (11) |
 | fallbacks | 0 | 0 | 0 |
 
+**Measured at the implementation** (`origin/p3/10-impl` f5caea9; r8 note): plain names 12% at 1024 and 33% at 512, as above.
+
 **The name space.** More regions draw (at 512 four times as many), but every land's space is far from full: a region competes with the drawn names of its own land, at most about 130 at 2048 before and now at most the land's regions of one world (the five 2048 worlds have about 200 regions each; the wood land has 1,331 one-word compounds alone, 14.3); with V7 the stems of earlier names also block, which is what raises the mean attempts at 2048 to 0.75. The largest accepted attempt is 11 of 64 and no region reached the fallback in the 135 worlds; the argument of RG11 "Why 64 attempts" holds with V7's extra failure share (a drawn name at 2048 blocks at most its four or five non-noun stems among the land's 150 to 200 prefixes, adjectives and objects).
 
 ### 15.6 Tests and goldens
@@ -1054,7 +1056,7 @@ Method: the test writer's reference `worldgen/tests/reference/p1_regions_referen
 - Keeper unit tests (r7): four `North Downs` regions and one `South Downs` region (cells 4443, 6898, 14036, 5593 and 20000): only the `South Downs` region keeps its name; equal cells keep it on the smaller id; a noun used once is kept by its region; `West Isle` and `East Isle` share one keeper; an upland forest region (`… Fells`) does not compete with the `… Wood` regions.
 - Golden values: `p1-06-regions.txt` is re-recorded by the reference: the `region` table hash changes in every case in which a land noun occurs in two or more regions or a name is drawn: 33 of its 43 cases (every `designed-*` case but `designed-0-shipped`, `designed-0-bigmerge` and `designed-0-tile`; `terrace-0`, `terrace-1`; `shipped-512-s0`, `shipped-512-s42`, `shipped-512-phrase`, `shipped-1024-s1`, `shipped-64-s0-t`, `shipped-128-s0-t`, `shipped-128-s42-t`, `small-128-s2`, `small-128-s2-t`); the 10 cases whose plain names all have distinct nouns keep their names (`designed-0-shipped`, `designed-0-bigmerge`, `designed-0-tile`, `shipped-48-s3`, `shipped-64-s0`, `shipped-128-s0`, `shipped-128-s9`, `shipped-128-s42`, `small-128-s0`, `small-128-s1`; counted from the golden file's `names` lines), and, having no drawn name, keep their `region` hash. The layer, `region_border` and `region_biome` must not change. Every world hash changes with the data (`content_hash`) and the names.
 
-**Amendment record.** r6 (2026-11-20): section 15 for P3-10. r7 (2026-11-20): Paul's decision on the plain name, 15.5 closed and 15.7 (the keeper per land noun) normative.
+**Amendment record.** r6 (2026-11-20): section 15 for P3-10. r7 (2026-11-20): Paul's decision on the plain name, 15.5 closed and 15.7 (the keeper per land noun) normative. r8 (2026-11-21): 15.7's shares confirmed by the implementation.
 
 ## Appendix B. Patch text for the P3 specs (to be applied by the P3 spec writer)
 

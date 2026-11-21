@@ -322,7 +322,7 @@ The **neutral record** is { `ore` 0, `height` 0, `inland` 0, `port` 1000, `habit
 
 ### 3.5 Odds minimum per race from generator 0.19.0 (P3-10; r11; P3-06 21.9)
 
-New race field **`odds_min_permille`** int(0, 1000), required, after `home_defense_permille`: the least odds at which a civilization of the race declares war or lets a claim flare up (P3-06 20.6 item 3 as amended by 21.9). Shipped **orc 500**, elf, goblin, dwarf, faerie and human 700. It replaces the `history.conflict` field `odds_min` (700), which is removed. New race field **`awakening_quarrel`** int(0, 1), required, after `odds_min_permille`: shipped **orc 1**, every other race 0; a civilization of such a race starts with a quarrel with its nearest neighbour of another race at its awakening (P3-06 21.12). `history.conflict` gains `search_weary_years` int(0, 10000), shipped 500, and `search_repeat_salience` int(0, 100), shipped 15, after `search_years` (P3-06 21.7). The fixture race and conflict files change alike; loader tests (8.1) cover the new field's range and absence, and the old `odds_min` key is refused as unknown.
+New race field **`odds_min_permille`** int(0, 1000), required, after `home_defense_permille`: the least odds at which a civilization of the race declares war or lets a claim flare up (P3-06 20.6 item 3 as amended by 21.9). Shipped **orc 500**, elf, goblin, dwarf, faerie and human 700. It replaces the `history.conflict` field `odds_min` (700), which is removed. New race field **`awakening_quarrel`** int(0, 1), required, after `odds_min_permille`: shipped **orc 1**, every other race 0; a civilization of such a race starts with a quarrel with its nearest neighbour of another race at its awakening (P3-06 21.12). `history.conflict` gains `search_weary_years` int(0, 10000), shipped 500, and `search_repeat_salience` int(0, 100), shipped 15, after `search_years` (P3-06 21.7), then (r12) `quarrel_strain` int(0, 5000), shipped 600, with the check `conflict_quarrel_strain` (≥ `claim_strain`; P3-06 21.12). The fixture race and conflict files change alike; loader tests (8.1) cover the new field's range and absence, and the old `odds_min` key is refused as unknown.
 
 ## 4. Kind `culture`
 
@@ -551,3 +551,7 @@ New 3.3: faerie `home_defense_permille` 0 (P3-06 20.17). No field changes.
 ## Revision note r11 (2026-11-20, for P3-10; generator 0.19.0)
 
 New section 3.4 (`docs/specs/p3-10-followups.md`, P3-05 22.5): record `race_cell_weights` gains `inland`, `port` and `habitability`, required, after `height`; shipped dwarf `port` 0 and `habitability` 500, faerie `inland` 400 and `port` 0 (and faerie `coast` −500), every other race neutral; a race has a cell term when its record differs from the neutral one. `history.peoples` gains `cause_memory_years` and `inland_cap` (P3-05 22.2, 22.5); new 3.5: race fields `odds_min_permille` (orc 500, others 700) replacing `history.conflict.odds_min`, and `awakening_quarrel` (orc 1), and `history.conflict` gains `search_weary_years` and `search_repeat_salience` (P3-06 21.7, 21.9); the id list of 5 is unchanged. Every change takes effect at generator 0.19.0.
+
+## Revision note r12 (2026-11-21, after the P3-10 implementation)
+
+3.5: `history.conflict` gains `quarrel_strain` (600) and its check (P3-06 r15 21.12).
