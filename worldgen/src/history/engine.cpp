@@ -11,6 +11,7 @@
 #include <tuple>
 #include <utility>
 
+#include "worldgen/core/checked.hpp"
 #include "worldgen/core/error.hpp"
 #include "worldgen/data/schema.hpp"
 #include "worldgen/data/settings.hpp"
@@ -585,16 +586,39 @@ private:
         e.kind = "quiet_stretch";
         e.year = year_;
         e.end_year = last;
+        // r13: realms counts every civilization not ended; the participants
+        // are at most MAX_PARTICIPANTS of them, the most populous (people of
+        // their standing settlements now), ties to the smaller id, listed in
+        // ascending id.
+        std::vector<std::pair<std::int64_t, std::int64_t>> alive;  // (-people, id)
         for (std::size_t i = 0; i < state_.civs_.size(); ++i) {
             const Civilization& c = state_.civs_[i];
             if (!c.ended_year) {
-                e.participants.push_back(Participant{"realm", EntityType::civilization, c.id});
+                alive.emplace_back(0, c.id);
             }
         }
-        if (e.participants.empty()) {
+        if (alive.empty()) {
             return;  // no civilization alive: no quiet line
         }
-        e.values = {last - year_ + 1, static_cast<std::int64_t>(e.participants.size())};
+        for (std::pair<std::int64_t, std::int64_t>& a : alive) {
+            for (const Settlement& t : state_.settlements_) {
+                const bool up = t.status == SettlementStatus::thriving || t.status == SettlementStatus::declining;
+                if (up && t.owner_civ == a.second) {
+                    a.first = checked_sub(a.first, t.population);
+                }
+            }
+        }
+        const auto realms = static_cast<std::int64_t>(alive.size());
+        if (alive.size() > MAX_PARTICIPANTS) {
+            std::stable_sort(alive.begin(), alive.end());  // keys distinct (the id)
+            alive.resize(MAX_PARTICIPANTS);
+            std::stable_sort(alive.begin(), alive.end(),
+                             [](const auto& x, const auto& y) { return x.second < y.second; });
+        }
+        for (const auto& a : alive) {
+            e.participants.push_back(Participant{"realm", EntityType::civilization, a.second});
+        }
+        e.values = {last - year_ + 1, realms};
         open_stretch_ = append_event(e, true);
     }
 

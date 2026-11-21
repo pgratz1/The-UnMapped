@@ -626,6 +626,7 @@ Schema history_conflict_schema() {
         i("search_years", 1, 100),
         i("search_weary_years", 0, 10000),   // P3-06 r14 21.7 (generator 0.19.0)
         i("search_repeat_salience", 0, 100),
+        i("quarrel_strain", 0, 5000),        // P3-06 r15 21.12 item 2
         i("capital_sacked_salience", 0, 100),
         i("capital_captured_salience", 0, 100),
     };
@@ -650,6 +651,13 @@ Schema history_conflict_schema() {
                       return std::nullopt;
                   }
                   return std::string("enmity_hops must not be below march_hops");
+              }},
+        Check{"conflict_quarrel_strain",  // P3-06 r15 21.12 item 2
+              [](const Record& r) -> std::optional<std::string> {
+                  if (r.get_int("quarrel_strain") >= r.get_int("claim_strain")) {
+                      return std::nullopt;
+                  }
+                  return std::string("quarrel_strain must not be below claim_strain");
               }},
     };
     return Schema(std::move(fields), std::move(checks));

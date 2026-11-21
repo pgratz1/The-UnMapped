@@ -87,6 +87,8 @@ struct ConflictTuning {
     // the rule off) and the salience of every search_abandoned after the
     // first of a world (a hand-made tuning: 40, the shipped base salience).
     std::int64_t search_weary_years = 0, search_repeat_salience = 40;
+    // r15 21.12 item 2: the strain of an awakening quarrel (x 1000 in strain).
+    std::int64_t quarrel_strain = 600;
     std::int64_t capital_sacked_salience = 0, capital_captured_salience = 0;
 };
 

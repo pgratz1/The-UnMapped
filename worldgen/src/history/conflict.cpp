@@ -223,6 +223,7 @@ ConflictTuning conflict_tuning_from(const data::ContentSet& content) {
     t.search_years = r.get_int("search_years");
     t.search_weary_years = r.get_int("search_weary_years");  // r14 21.7
     t.search_repeat_salience = r.get_int("search_repeat_salience");
+    t.quarrel_strain = r.get_int("quarrel_strain");  // r15 21.12 item 2
     t.capital_sacked_salience = r.get_int("capital_sacked_salience");
     t.capital_captured_salience = r.get_int("capital_captured_salience");
     return t;
@@ -299,6 +300,7 @@ void check_conflict_tuning(const ConflictTuning& t) {
     field_in(in(t.search_years, 1, 100), "search_years");
     field_in(in(t.search_weary_years, 0, 10000), "search_weary_years");
     field_in(in(t.search_repeat_salience, 0, 100), "search_repeat_salience");
+    field_in(in(t.quarrel_strain, 0, 5000), "quarrel_strain");
     field_in(in(t.capital_sacked_salience, 0, 100), "capital_sacked_salience");
     field_in(in(t.capital_captured_salience, 0, 100), "capital_captured_salience");
     if (t.claim_strain > t.declare_min) {
@@ -309,6 +311,9 @@ void check_conflict_tuning(const ConflictTuning& t) {
     }
     if (t.enmity_hops < t.march_hops) {
         fail("history: tuning: enmity_hops must not be below march_hops");
+    }
+    if (t.quarrel_strain < t.claim_strain) {
+        fail("history: tuning: quarrel_strain must not be below claim_strain");
     }
 }
 
@@ -1411,7 +1416,8 @@ void ConflictSubsystem::awakening_quarrels(StepContext& ctx) {
         for (std::int64_t id = 1; id <= ns; ++id) {
             const Settlement& s = state.settlement(id);
             if (!standing(s) || s.owner_civ == 0 || !ctx.visible(s) || hidden(ctx, id) ||
-                !alive_visible(ctx, s.owner_civ) || state.civ(s.owner_civ).race == race) {
+                !alive_visible(ctx, s.owner_civ) || state.civ(s.owner_civ).race == race ||
+                disposition_of(ctx, a, s.owner_civ) >= tuning_.border_friction) {  // r15: a people a can fight
                 continue;
             }
             const std::int64_t d0 = from[static_cast<std::size_t>(s.region - 1)];
@@ -1429,7 +1435,7 @@ void ConflictSubsystem::awakening_quarrels(StepContext& ctx) {
             continue;  // no other people stands yet: the quarrel waits
         }
         std::int64_t& st = strain_[Pair{a, b}];
-        st = std::max(st, checked_mul(tuning_.claim_strain, 1000));
+        st = std::max(st, checked_mul(tuning_.quarrel_strain, 1000));  // r15 21.12 item 2
         quarrel_pending_.erase(a);
     }
 }
