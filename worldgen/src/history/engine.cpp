@@ -510,6 +510,7 @@ private:
         phase_id_ = row.id;
         phase_kind_ = PhaseKind::quiet;
         open_stretch_ = 0;
+        stretch_decided_ = false;
     }
 
     // ScheduleHooks: Q1 to Q5 of a quiet step.
@@ -559,10 +560,11 @@ private:
     }
 
     // ScheduleHooks: Q6 (quiet eras, then the bookkeeping).
-    void quiet_step_end(bool ends_row) override {
+    void quiet_step_end(bool ends_row, std::int64_t next_length) override {
         begin_step(Step::q6);
         const std::int64_t last = year_ + years_ - 1;
-        quiet_stretch(last);
+        // r15 20.1 item 1a: the assured length A of a stretch opened now.
+        quiet_stretch(last, checked_add(years_, next_length));
         bookkeeping(year_, ends_row ? std::optional<std::int64_t>(last) : std::nullopt);
         if (ends_row) {
             open_stretch_ = 0;
@@ -575,12 +577,15 @@ private:
     // quiet_stretch per quiet phase row for the whole world, with every
     // civilization not ended at its first step as a realm; later steps of
     // the row lengthen it, its participants and realms never change.
-    void quiet_stretch(std::int64_t last) {
+    void quiet_stretch(std::int64_t last, std::int64_t assured) {
         if (open_stretch_ != 0) {
             StoredEvent& e = events_[static_cast<std::size_t>(open_stretch_ - 1)];
             e.row.end_year = last;
             e.values[0] = last - e.row.year + 1;
             return;
+        }
+        if (stretch_decided_) {
+            return;  // r15 20.1 item 1a: decided without a stretch
         }
         EventSpec e;
         e.kind = "quiet_stretch";
@@ -598,7 +603,13 @@ private:
             }
         }
         if (alive.empty()) {
-            return;  // no civilization alive: no quiet line
+            return;  // no civilization alive: no quiet line (a later step may append)
+        }
+        // r15 20.1 item 1a: a stretch shorter than quiet_min_years gets no
+        // line; engine_quiet_min makes A its length at the row's close.
+        if (assured < tuning_.quiet_min_years) {
+            stretch_decided_ = true;
+            return;
         }
         for (std::pair<std::int64_t, std::int64_t>& a : alive) {
             for (const Settlement& t : state_.settlements_) {
@@ -860,6 +871,7 @@ private:
     std::size_t checked_events_ = 0;  // events_ before this index passed check_references
     std::map<std::int64_t, std::int64_t> charged_;    // civilization (0 none) -> events charged in this quiet step
     std::int64_t open_stretch_ = 0;  // r12 20.1: the quiet_stretch of this quiet row, 0 none
+    bool stretch_decided_ = false;   // r15 20.1 item 1a: this row was decided without a stretch
 
     // Bookkeeping.
     std::vector<std::int64_t> recorded_owner_;  // per region

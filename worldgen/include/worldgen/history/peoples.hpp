@@ -317,9 +317,14 @@ public:
     [[nodiscard]] const PeoplesView& view() const noexcept { return view_; }
     // P3-06 after casualties: the cause of a later abandonment.
     void note_reduction(std::int64_t settlement, std::int64_t event);
-    // r12 22.7a (P3-06 r14 21.10): civ founds no colony while the step's
-    // year is below until_year (a later call replaces the year).
-    void lie_low(std::int64_t civ, std::int64_t until_year);
+    // r15 22.7a (P3-06 r17 22.3): the latest flight of civ, to the refuge
+    // `settlement`, whose hidden years end at until_year (a later call
+    // replaces the record).
+    void lie_low(std::int64_t civ, std::int64_t settlement, std::int64_t until_year);
+    // r15 22.7a: the one definition of lying low, read by 9.3's skip and by
+    // P3-06 21.10 item 2: civ has a record, year < until, and its refuge is
+    // standing and owned by civ.
+    [[nodiscard]] bool lying_low(const State& state, std::int64_t civ, std::int64_t year) const;
     // 8.5 items 2 to 5 with `event` as the ruin event (r1); not item 6. The
     // settlement must be standing and owned. FatalError "history: peoples:
     // ruin: settlement <s> is not standing".
@@ -454,7 +459,11 @@ private:
     std::vector<std::int64_t> ruined_year_;     // per settlement: the year it was ruined
     std::vector<std::int64_t> ruin_event_;      // per settlement: its ruin event
     std::vector<std::int64_t> hunger_;          // per civilization
-    std::map<std::int64_t, std::int64_t> low_until_;  // r12 22.7a: civilization -> year it stops lying low
+    struct LowRecord {
+        std::int64_t settlement = 0;  // the refuge
+        std::int64_t until = 0;       // the year its hidden years end
+    };
+    std::map<std::int64_t, LowRecord> low_until_;  // r15 22.7a: civilization -> its latest flight
     PeoplesView view_;
 };
 

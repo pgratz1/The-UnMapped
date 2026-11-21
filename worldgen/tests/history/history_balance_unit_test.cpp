@@ -17,7 +17,6 @@
 // Written from the specs only.
 
 #include "../p3_09_switch.hpp"
-#include "../p3_10_r3_switch.hpp"
 #include "p3_06_conflict_support.hpp"
 
 #if UNMAPPED_HAVE_PEOPLES
@@ -359,9 +358,6 @@ TEST_CASE("P3-06 r9 20.9 (seam): the r9 tuning fields and the conflict_enmity_ho
     h::ConflictTuning t = h::conflict_tuning_from(shipped());
     CHECK(t.refuge_flight == 1);
     CHECK(t.flight_hops == 3);
-#if !UNMAPPED_P3_10_R3_API
-    CHECK(t.hidden_years == 300);  // P3-06 r17 22.2 moves it to the race (history_conflict_r17_test.cpp)
-#endif
     CHECK(t.weary_wars == 3);
     CHECK(t.tribute_permille == 100);
     CHECK(t.revenge_aggression == 400);

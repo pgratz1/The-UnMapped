@@ -210,7 +210,6 @@ ConflictTuning conflict_tuning_from(const data::ContentSet& content) {
     t.last_refuge = r.get_int("last_refuge");
     t.refuge_flight = r.get_int("refuge_flight");  // r9 20.9
     t.flight_hops = r.get_int("flight_hops");
-    t.hidden_years = r.get_int("hidden_years");
     t.weary_wars = r.get_int("weary_wars");
     t.tribute_permille = r.get_int("tribute_permille");
     t.revenge_aggression = r.get_int("revenge_aggression");
@@ -224,6 +223,7 @@ ConflictTuning conflict_tuning_from(const data::ContentSet& content) {
     t.search_weary_years = r.get_int("search_weary_years");  // r14 21.7
     t.search_repeat_salience = r.get_int("search_repeat_salience");
     t.quarrel_strain = r.get_int("quarrel_strain");  // r15 21.12 item 2
+    t.quarrel_min_settlements = r.get_int("quarrel_min_settlements");  // r17 22.1
     t.capital_sacked_salience = r.get_int("capital_sacked_salience");
     t.capital_captured_salience = r.get_int("capital_captured_salience");
     return t;
@@ -287,7 +287,6 @@ void check_conflict_tuning(const ConflictTuning& t) {
     field_in(in(t.last_refuge, 0, 1), "last_refuge");
     field_in(in(t.refuge_flight, 0, 1), "refuge_flight");
     field_in(in(t.flight_hops, 1, 8), "flight_hops");
-    field_in(in(t.hidden_years, 0, 10000), "hidden_years");
     field_in(in(t.weary_wars, 0, 100), "weary_wars");
     field_in(in(t.tribute_permille, 0, 1000), "tribute_permille");
     field_in(in(t.revenge_aggression, 0, 1000), "revenge_aggression");
@@ -301,6 +300,7 @@ void check_conflict_tuning(const ConflictTuning& t) {
     field_in(in(t.search_weary_years, 0, 10000), "search_weary_years");
     field_in(in(t.search_repeat_salience, 0, 100), "search_repeat_salience");
     field_in(in(t.quarrel_strain, 0, 5000), "quarrel_strain");
+    field_in(in(t.quarrel_min_settlements, 0, 1000), "quarrel_min_settlements");
     field_in(in(t.capital_sacked_salience, 0, 100), "capital_sacked_salience");
     field_in(in(t.capital_captured_salience, 0, 100), "capital_captured_salience");
     if (t.claim_strain > t.declare_min) {
@@ -314,6 +314,9 @@ void check_conflict_tuning(const ConflictTuning& t) {
     }
     if (t.quarrel_strain < t.claim_strain) {
         fail("history: tuning: quarrel_strain must not be below claim_strain");
+    }
+    if (t.quarrel_strain > t.strain_max) {  // r17 22.7
+        fail("history: tuning: quarrel_strain must not be above strain_max");
     }
 }
 
@@ -599,7 +602,8 @@ void ConflictSubsystem::prepare(const StepContext& ctx) {
         races_.push_back(ConflictRace{row.id, row.key, row.camp, d->record.get_int("aggression"),
                                       d->record.get_int("prowess_permille"), d->record.get_int("muster_permille"),
                                       d->record.get_int("conceal_min"), d->record.get_int("home_defense_permille"),
-                                      d->record.get_int("odds_min_permille"), d->record.get_int("awakening_quarrel")});
+                                      d->record.get_int("odds_min_permille"), d->record.get_int("awakening_quarrel"),
+                                      d->record.get_int("hidden_years")});
     }
     const PeoplesGeo& g = peoples_.geo();
     const std::int64_t nr = g.region_count();
@@ -853,15 +857,22 @@ bool ConflictSubsystem::search_weary(const StepContext& ctx, std::int64_t hidden
            it->second.epoch == r.holder_changes;
 }
 
+// r17 22.3: the one definition, held by peoples (P3-05 r15 22.7a).
 bool ConflictSubsystem::lying_low(const StepContext& ctx, std::int64_t civ) const {
-    const State& state = ctx.state();
-    for (const auto& [settlement, until] : hidden_until_) {
-        if (ctx.year() < until && settlement <= settlement_count(state) &&
-            state.settlement(settlement).owner_civ == civ && standing(state.settlement(settlement))) {
-            return true;
-        }
+    return peoples_.lying_low(ctx.state(), civ, ctx.year());
+}
+
+// r17 22.1 items 2 and 3: the quarrel claim (a's open claim on b while
+// quarrel_with[a] = b) is held back while a has fewer than
+// quarrel_min_settlements standing settlements visible in the step, hidden
+// ones included.
+bool ConflictSubsystem::quarrel_held_back(const StepContext& ctx, std::int64_t a, std::int64_t b) const {
+    const auto it = quarrel_with_.find(a);
+    if (it == quarrel_with_.end() || it->second != b || claims_.count(Pair{a, b}) == 0) {
+        return false;
     }
-    return false;
+    const auto n = static_cast<std::int64_t>(visible_settlements(ctx, a, 0).size());
+    return n < tuning_.quarrel_min_settlements;
 }
 
 std::vector<std::int64_t> ConflictSubsystem::wronged(std::int64_t a, std::int64_t b) const {
@@ -1045,6 +1056,14 @@ void ConflictSubsystem::housekeeping(StepContext& ctx) {
     for (auto it = claims_.begin(); it != claims_.end();) {
         if (state.civ(it->first.first).ended_year || state.civ(it->first.second).ended_year) {
             it = claims_.erase(it);
+        } else {
+            ++it;
+        }
+    }
+    // r17 22.1 item 1: a quarrel ends with either side.
+    for (auto it = quarrel_with_.begin(); it != quarrel_with_.end();) {
+        if (state.civ(it->first).ended_year || state.civ(it->second).ended_year) {
+            it = quarrel_with_.erase(it);
         } else {
             ++it;
         }
@@ -1239,7 +1258,9 @@ std::optional<std::pair<TensionReport, ConflictSubsystem::Pair>> ConflictSubsyst
         // r9 20.6 item 3: a claim a people cannot pursue does not flare up
         // (the odds only when the value would count); r14 21.9: the
         // claimant's race's odds_min_permille.
-        if (v > best_value && odds_of(ctx, a, b) >= race_of_civ(ctx, a).odds_min) {
+        // r17 22.1 item 3.2: a held-back quarrel claim reports nothing, as a
+        // claim below its odds minimum.
+        if (v > best_value && !quarrel_held_back(ctx, a, b) && odds_of(ctx, a, b) >= race_of_civ(ctx, a).odds_min) {
             best_value = v;
             best = std::pair(TensionReport{v, c.event}, key);
         }
@@ -1298,6 +1319,11 @@ void ConflictSubsystem::declarations(StepContext& ctx) {
         if (s < tuning_.declare_min) {
             continue;
         }
+        // r17 22.1 item 3.1: a held-back quarrel claim declares nothing and
+        // takes no draw.
+        if (quarrel_held_back(ctx, a, b)) {
+            continue;
+        }
         // r9 20.6 item 3: no declaration, and no draw, below odds_min (r14
         // 21.9: the claimant's race's odds_min_permille).
         const std::int64_t odds = odds_of(ctx, a, b);
@@ -1341,6 +1367,13 @@ void ConflictSubsystem::declare(StepContext& ctx, std::int64_t a, std::int64_t b
     }
     state.open_relation(civ_relation(a, b, "war"), ev);
     drop_pair(a, b);
+    // r17 22.1 item 1: the first war between a and b ends their quarrel,
+    // whichever side attacks.
+    for (const auto& [x, y] : {Pair{a, b}, Pair{b, a}}) {
+        if (const auto q = quarrel_with_.find(x); q != quarrel_with_.end() && q->second == y) {
+            quarrel_with_.erase(q);
+        }
+    }
     ConflictWar w;
     w.declared = ev;
     w.attacker = a;
@@ -1363,10 +1396,11 @@ void ConflictSubsystem::quiet_ends(StepContext& ctx) {
             continue;
         }
         const ConflictWar& w = wars_[i];
-        // r14 21.6 item 1: an attacker holding its goal wins (a peace when
-        // the defender is exhausted), without the last-battle rule; items 2
-        // and 3: every other open war ends by the score (7.8).
-        if (ctx.state().region(w.goal).owner == w.attacker) {
+        // r14 21.6 item 1 (r17 22.5 item 1): an attacker holding its goal,
+        // with no standing settlement of the defender left in it, wins (a
+        // peace when the defender is exhausted), without the last-battle
+        // rule; items 2 and 3: every other open war ends by the score (7.8).
+        if (aim_achieved(ctx.state(), w)) {
             (void)end_war(ctx, i, w.attacker, exhausted(ctx, w, 1));
         } else {
             (void)end_war(ctx, i, unless_last_battle(w, score_winner(w)), false);
@@ -1413,7 +1447,9 @@ void ConflictSubsystem::awakening_quarrels(StepContext& ctx) {
         }
         const Settlement& cap = state.settlement(state.civ(a).capital);
         const std::int64_t race = state.civ(a).race;
-        const std::vector<std::int64_t>& from = view.hops(cap.region);
+        // Audit A1: a copy of the row, since the calls below may fill other
+        // rows of the lazily filled cache.
+        const std::vector<std::int64_t> from = view.hops(cap.region);
         // The key (0 within enmity_hops else 1, hops, squared distance, id).
         std::optional<std::tuple<std::int64_t, std::int64_t, std::int64_t, std::int64_t>> best;
         std::int64_t b = 0;
@@ -1440,6 +1476,7 @@ void ConflictSubsystem::awakening_quarrels(StepContext& ctx) {
         }
         std::int64_t& st = strain_[Pair{a, b}];
         st = std::max(st, checked_mul(tuning_.quarrel_strain, 1000));  // r15 21.12 item 2
+        quarrel_with_[a] = b;  // r17 22.1 item 1
         quarrel_pending_.erase(a);
     }
 }

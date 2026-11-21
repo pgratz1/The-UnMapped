@@ -25,7 +25,6 @@
 #include <utility>
 #include <vector>
 
-#include "../p3_10_r3_switch.hpp"
 #include "p3_03_chronology_support.hpp"
 #include "p3_04_engine_api.hpp"
 #include "worldgen/data/value.hpp"
@@ -461,8 +460,8 @@ struct Detail {
 struct EngineTuning {
     std::int64_t quiet_step_years = 25, quiet_events_max = 3, simulated_min_permille = 100,
                  simulated_max_permille = 450, islet_max_dry_cells = 1172;
-    // P3-04 r15 4.1 (P3-10 second round): after quiet_events_max in the record; written by engine_record only
-    // with the second round's library (UNMAPPED_P3_10_R3_API), always by engine_record_r15
+    // P3-04 r15 4.1 (P3-10 second round): after quiet_events_max in the record (engine_record leaves it out
+    // when with_quiet_min is false)
     std::int64_t quiet_min_years = 50;
     Detail sparse{75, 30, 250, 1500}, normal{150, 50, 300, 1000}, dense{250, 75, 400, 700};
 };
@@ -494,7 +493,7 @@ inline wd::Record detail_record(const Detail& d) {
     r.add("flare_threshold", wd::Value::integer(d.flare_threshold));
     return r;
 }
-inline wd::Record engine_record(const EngineTuning& t, bool with_quiet_min = UNMAPPED_P3_10_R3_API != 0) {
+inline wd::Record engine_record(const EngineTuning& t, bool with_quiet_min = true) {
     wd::Record r;
     r.add("quiet_step_years", wd::Value::integer(t.quiet_step_years));
     r.add("quiet_events_max", wd::Value::integer(t.quiet_events_max));

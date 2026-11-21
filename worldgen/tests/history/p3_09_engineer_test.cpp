@@ -41,7 +41,6 @@ h::ConflictTuning tuning_09() {
     // r9 20.9, shipped.
     t.refuge_flight = 1;
     t.flight_hops = 3;
-    t.hidden_years = 300;
     t.weary_wars = 3;
     t.tribute_permille = 100;
     t.revenge_aggression = 400;

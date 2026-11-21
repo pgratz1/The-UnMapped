@@ -8,8 +8,11 @@
 #include <string>
 #include <vector>
 
+#include "worldgen/core/error.hpp"
+#include "worldgen/history/conflict.hpp"
 #include "worldgen/history/event_catalogue.hpp"
 #include "worldgen/history/names.hpp"
+#include "worldgen/history/schedule.hpp"
 #include "worldgen/stages/regions.hpp"
 
 #include "p3_04_engine_support.hpp"
@@ -170,6 +173,66 @@ TEST_CASE("P3-10 engineer: quiet_stretch with 70 living realms lists the 64 most
         }
         REQUIRE(values.size() == 2U);
         CHECK(values[1] == 70);
+    }
+    CHECK(stretches >= 1);
+}
+
+// --- P3-10 second round (r3; P3-04 r15, P3-06 r17) --------------------------------------------------
+
+namespace {
+
+std::string fatal_text(const auto& f) {
+    try {
+        f();
+    } catch (const worldgen::FatalError& e) {
+        return e.what();
+    }
+    return {};
+}
+
+}  // namespace
+
+TEST_CASE("P3-10 r3 engineer: engine_quiet_min and the conflict seam checks (P3-04 r15 4.1, P3-06 r17 22.1, 22.7)") {
+    namespace h = worldgen::history;
+    h::EngineTuning e = h::engine_tuning_from(engine_test::shipped());
+    CHECK(e.quiet_min_years == 50);
+    CHECK(fatal_text([&] { h::check_engine_tuning(e); }).empty());
+    e.quiet_min_years = 2 * e.quiet_step_years + 1;
+    CHECK(fatal_text([&] { h::check_engine_tuning(e); }) ==
+          "history: tuning: quiet_min_years must not be above 2 x quiet_step_years");
+    h::ConflictTuning t = h::conflict_tuning_from(engine_test::shipped());
+    CHECK(t.quarrel_min_settlements == 2);
+    CHECK(fatal_text([&] { h::check_conflict_tuning(t); }).empty());
+    t.strain_max = 1000;  // declare_min + declare_span (900) still fit
+    t.quarrel_strain = 1001;
+    CHECK(fatal_text([&] { h::check_conflict_tuning(t); }) ==
+          "history: tuning: quarrel_strain must not be above strain_max");
+    t = h::conflict_tuning_from(engine_test::shipped());
+    t.quarrel_min_settlements = 1001;
+    CHECK(fatal_text([&] { h::check_conflict_tuning(t); }) ==
+          "history: tuning: conflict.quarrel_min_settlements outside its schema range");
+    CHECK(h::ConflictTuning{}.quarrel_min_settlements == 1);  // a hand-made tuning: the rule off
+    CHECK(h::ConflictRace{}.hidden_years == 300);
+}
+
+TEST_CASE("P3-10 r3 engineer: no quiet_stretch shorter than quiet_min_years (P3-04 r15 20.1 item 1a)") {
+    namespace h = worldgen::history;
+    ManyHandler handler(3);
+    h::EmptyInterventionSource none;
+    const h::EventCatalogue catalogue = h::event_catalogue(engine_test::shipped());
+    h::EngineConfig cfg;
+    cfg.awakening = &handler;
+    cfg.interventions = &none;
+    cfg.catalogue = &catalogue;
+    const h::HistoryResult r =
+        h::run_engine(engine_test::shipped(), engine_test::inputs_for({0}, 2000, "normal", {"elf"}), cfg);
+    const std::int64_t kind = catalogue.find("quiet_stretch")->id;
+    std::int64_t stretches = 0;
+    for (const auto& e : r.events) {
+        if (e.kind == kind) {
+            ++stretches;
+            CHECK(e.end_year - e.year + 1 >= 50);
+        }
     }
     CHECK(stretches >= 1);
 }

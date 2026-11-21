@@ -20,10 +20,8 @@
 // reference's (reference/p3_conflict_reference.py check_units_r17); the public seam cannot set conflict's strain
 // or claims.
 //
-// Written from the specs before the implementation (test-writer rule). The tuning and data cases need no new API
-// and fail until the round's code and data land; the seam cases compile only with UNMAPPED_P3_10_R3_API 1.
+// Written from the specs before the implementation (test-writer rule); the seam names are the engineer's.
 
-#include "../p3_10_r3_switch.hpp"
 #include "p3_06_conflict_support.hpp"
 
 #if UNMAPPED_HAVE_PEOPLES
@@ -324,8 +322,7 @@ TEST_CASE("P3-06 r17 22.1: one-settlement orcs claim the elves but never declare
 }
 #endif
 
-#if UNMAPPED_P3_10_R3_API && UNMAPPED_HAVE_CONFLICT
-// GUESS (interim names; adapt at integration): ConflictTuning::quarrel_min_settlements, ConflictRace::hidden_years.
+#if UNMAPPED_HAVE_CONFLICT
 TEST_CASE("P3-06 r17 22.1, 22.2 (seam): ConflictTuning has quarrel_min_settlements 2; ConflictRace hidden_years") {
     namespace h = worldgen::history;
     const h::ConflictTuning t = h::conflict_tuning_from(shipped());

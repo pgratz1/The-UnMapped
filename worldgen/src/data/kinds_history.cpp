@@ -358,6 +358,14 @@ std::optional<std::string> check_engine_simulated_bounds(const Record& r) {
     return std::string("simulated_min_permille must not be above simulated_max_permille");
 }
 
+// P3-04 r15 4.1: makes 20.1 item 1a's decision exact.
+std::optional<std::string> check_engine_quiet_min(const Record& r) {
+    if (r.get_int("quiet_min_years") <= 2 * r.get_int("quiet_step_years")) {
+        return std::nullopt;
+    }
+    return std::string("quiet_min_years must not be above 2 x quiet_step_years");
+}
+
 std::optional<std::string> check_engine_phase_budget(const Record& r) {
     const std::int64_t budget = 6 * r.get_int("simulated_max_permille") - 30;  // at most 2970
     for (const std::string_view level : ENGINE_LEVELS) {
@@ -612,7 +620,7 @@ Schema history_conflict_schema() {
         // P3-06 r9 20.9 (P3-09, generator 0.18.0), in the table's order.
         i("refuge_flight", 0, 1),
         i("flight_hops", 1, 8),
-        i("hidden_years", 0, 10000),
+        // P3-06 r17 22.2: hidden_years is a race field (removed here).
         i("weary_wars", 0, 100),
         i("tribute_permille", 0, 1000),
         i("revenge_aggression", 0, 1000),
@@ -627,6 +635,7 @@ Schema history_conflict_schema() {
         i("search_weary_years", 0, 10000),   // P3-06 r14 21.7 (generator 0.19.0)
         i("search_repeat_salience", 0, 100),
         i("quarrel_strain", 0, 5000),        // P3-06 r15 21.12 item 2
+        i("quarrel_min_settlements", 0, 1000),  // P3-06 r17 22.1
         i("capital_sacked_salience", 0, 100),
         i("capital_captured_salience", 0, 100),
     };
@@ -659,6 +668,13 @@ Schema history_conflict_schema() {
                   }
                   return std::string("quarrel_strain must not be below claim_strain");
               }},
+        Check{"conflict_quarrel_strain_max",  // P3-06 r17 22.7
+              [](const Record& r) -> std::optional<std::string> {
+                  if (r.get_int("quarrel_strain") <= r.get_int("strain_max")) {
+                      return std::nullopt;
+                  }
+                  return std::string("quarrel_strain must not be above strain_max");
+              }},
     };
     return Schema(std::move(fields), std::move(checks));
 }
@@ -668,6 +684,7 @@ Schema history_engine_schema() {
     std::vector<Field> fields{
         Field::required("quiet_step_years", Type::integer(1, 200)),
         Field::required("quiet_events_max", Type::integer(1, 100)),
+        Field::required("quiet_min_years", Type::integer(0, 400)),  // P3-04 r15 20.1 item 1a
         Field::required("simulated_min_permille", Type::integer(100, 500)),
         Field::required("simulated_max_permille", Type::integer(100, 500)),
         Field::required("islet_max_dry_cells", Type::integer(0, 1000000)),
@@ -677,6 +694,7 @@ Schema history_engine_schema() {
     };
     std::vector<Check> checks{
         Check{"engine_simulated_bounds", [](const Record& r) { return check_engine_simulated_bounds(r); }},
+        Check{"engine_quiet_min", [](const Record& r) { return check_engine_quiet_min(r); }},  // P3-04 r15
         Check{"engine_phase_budget", [](const Record& r) { return check_engine_phase_budget(r); }},
     };
     return Schema(std::move(fields), std::move(checks));
@@ -727,6 +745,7 @@ Schema race_schema() {
         // P3-01 r11 3.5 (P3-06 r14 21.9, 21.12; generator 0.19.0)
         Field::required("odds_min_permille", Type::integer(0, 1000)),
         Field::required("awakening_quarrel", Type::integer(0, 1)),
+        Field::required("hidden_years", Type::integer(0, 10000)),  // P3-01 r13 3.6 (P3-06 r17 22.2)
         Field::required("settlement_kinds",
                         Type::array(Type::enumeration({"hamlet", "village", "town", "city", "fortress"}), 1, 5)),
         Field::required("culture", Type::reference(std::string(CULTURE_KIND))),

@@ -18,7 +18,6 @@
 //
 // Written from the specs only.
 
-#include "../p3_10_r3_switch.hpp"
 #include "p3_06_conflict_support.hpp"
 
 #if UNMAPPED_HAVE_PEOPLES
@@ -212,14 +211,12 @@ TEST_CASE("P3-06 r14 21.9, 21.12, P3-01 r11 3.5 (seam): ConflictRace carries odd
     CHECK(r.odds_min + r.awakening_quarrel == 501);
 }
 
-#if !UNMAPPED_P3_10_R3_API  // P3-05 r15 22.7a gives it the refuge: history_peoples_r15_test.cpp
-TEST_CASE("P3-05 r12 22.7a (seam): PeoplesSubsystem::lie_low(civ, until_year)") {
+TEST_CASE("P3-05 r15 22.7a (seam): PeoplesSubsystem::lie_low(civ, settlement, until_year)") {
     namespace h = worldgen::history;
     static_assert(std::is_same_v<decltype(&h::PeoplesSubsystem::lie_low),
-                                 void (h::PeoplesSubsystem::*)(std::int64_t, std::int64_t)>);
+                                 void (h::PeoplesSubsystem::*)(std::int64_t, std::int64_t, std::int64_t)>);
     CHECK(true);
 }
-#endif
 
 
 }  // TEST_SUITE

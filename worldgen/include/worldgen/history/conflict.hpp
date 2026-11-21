@@ -77,7 +77,8 @@ struct ConflictTuning {
     // levies from every reachable settlement, no odds minimum, the full
     // truce), except that a truce shortens by nothing only below aggression
     // 999.
-    std::int64_t refuge_flight = 0, flight_hops = 1, hidden_years = 0, weary_wars = 0, tribute_permille = 0;
+    // r17 22.2: hidden_years is a race field (ConflictRace::hidden_years).
+    std::int64_t refuge_flight = 0, flight_hops = 1, weary_wars = 0, tribute_permille = 0;
     // r14 21.9 (generator 0.19.0): odds_min is a race field (odds_min_permille).
     std::int64_t revenge_aggression = 0, levy_hops = 16, odds_floor = 0;
     std::int64_t truce_break_aggression = 999, enmity_hops = 1;
@@ -89,6 +90,9 @@ struct ConflictTuning {
     std::int64_t search_weary_years = 0, search_repeat_salience = 40;
     // r15 21.12 item 2: the strain of an awakening quarrel (x 1000 in strain).
     std::int64_t quarrel_strain = 600;
+    // r17 22.1: the standing settlements a civilization needs before its
+    // awakening quarrel claim is pursued (a hand-made tuning: 1, the rule off).
+    std::int64_t quarrel_min_settlements = 1;
     std::int64_t capital_sacked_salience = 0, capital_captured_salience = 0;
 };
 
@@ -121,6 +125,9 @@ struct ConflictRace {
     // r14 21.9, 21.12 (P3-01 r11 3.5, generator 0.19.0).
     std::int64_t odds_min = 0;            // odds_min_permille
     std::int64_t awakening_quarrel = 0;   // 1: a quarrel at its awakening
+    // r17 22.2 (P3-01 r13 3.6): the years a fled refuge of the race stays
+    // hidden and its civilization lies low.
+    std::int64_t hidden_years = 300;
 };
 
 // One entry of front(x, y) (5.1): the region R of y's presence, the cost of
@@ -286,8 +293,14 @@ public:
     // r14 21.7 item 1: (hidden, region) is search-weary now (Y below the year
     // set by its last search_abandoned, and the region's holder unchanged).
     [[nodiscard]] bool search_weary(const StepContext& context, std::int64_t hidden, std::int64_t region) const;
-    // r14 21.10: civ lies low (one of its settlements is a hidden refuge).
+    // r17 22.3: civ lies low now (PeoplesSubsystem::lying_low, the one
+    // definition: its latest refuge stands, is its own, and is still hidden).
     [[nodiscard]] bool lying_low(const StepContext& context, std::int64_t civ) const;
+    // r17 22.1: the open awakening quarrels, civilization -> its neighbour.
+    [[nodiscard]] const std::map<std::int64_t, std::int64_t>& quarrel_with() const noexcept { return quarrel_with_; }
+    // r17 22.1 item 3: a's claim on b is its quarrel claim and a has fewer
+    // than quarrel_min_settlements standing visible settlements.
+    [[nodiscard]] bool quarrel_held_back(const StepContext& context, std::int64_t a, std::int64_t b) const;
     // r14 21.12: the civilizations whose awakening quarrel waits for a people.
     [[nodiscard]] const std::set<std::int64_t>& quarrel_pending() const noexcept { return quarrel_pending_; }
 
@@ -384,7 +397,10 @@ private:
               std::int64_t siege_event);
     void flee(StepContext& context, std::size_t war, std::int64_t x, std::int64_t y, std::int64_t settlement,
               std::int64_t siege_event, const Flight& plan);
-    void cede(StepContext& context, std::int64_t region, std::int64_t loser, std::int64_t winner, std::int64_t cause);
+    // `move_region` false: r17 22.5 item 3's foothold cession (the winner
+    // already holds the region; its owner is left as it is).
+    void cede(StepContext& context, std::int64_t region, std::int64_t loser, std::int64_t winner, std::int64_t cause,
+              bool move_region = true);
     void note_futile(const StepContext& context, const ConflictWar& w);
     void conquer(StepContext& context, std::int64_t y, std::int64_t x, std::int64_t cause, std::int64_t region);
     std::int64_t casualties(StepContext& context, std::int64_t civ, std::int64_t dead, std::int64_t event);
@@ -399,6 +415,9 @@ private:
     // The war's relation changes, last_peace, grudge and strains after its end event.
     void close_war(StepContext& context, std::size_t war, std::int64_t event);
     [[nodiscard]] std::int64_t score_winner(const ConflictWar& w) const;
+    // r17 22.5 item 1: the attacker holds the goal and the defender has no
+    // standing settlement in it (visible or not, hidden ones included).
+    [[nodiscard]] static bool aim_achieved(const State& state, const ConflictWar& w);
     // 7.7 item 1: side s (0 the attacker, 1 the defender) is exhausted.
     [[nodiscard]] bool exhausted(const StepContext& context, const ConflictWar& w, std::size_t s) const;
     // r10 20.15 item 3: an ending decided by the score never makes the winner
@@ -441,6 +460,8 @@ private:
     bool search_written_ = false;
     std::set<std::int64_t> quarrel_seen_;
     std::set<std::int64_t> quarrel_pending_;
+    // r17 22.1 item 1: a -> b while a's awakening quarrel with b is open.
+    std::map<std::int64_t, std::int64_t> quarrel_with_;
 };
 
 }  // namespace worldgen::history

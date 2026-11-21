@@ -272,10 +272,13 @@ void ConflictSubsystem::flee(StepContext& ctx, std::size_t i, std::int64_t x, st
         fail("history: conflict: the settlement id is not the expected one");
     }
     state.set_region_owner(plan.region, y, settled);
-    hidden_until_[h] = checked_add(ctx.year(), tuning_.hidden_years);
-    // r14 21.10 item 1: y lies low while its refuge is hidden; peoples learns
-    // it here and founds no colony for y until then (P3-05 r12 22.7a).
-    peoples_.lie_low(y, hidden_until_[h]);
+    // r17 22.2: the hidden years of the founder's race.
+    const std::int64_t until = checked_add(ctx.year(), race_of_civ(ctx, y).hidden_years);
+    hidden_until_[h] = until;
+    // r14 21.10 item 1, r17 22.3: y lies low while its refuge stands, is its
+    // own and is hidden; peoples holds the record and the one predicate
+    // (P3-05 r15 22.7a).
+    peoples_.lie_low(y, h, until);
     // 3. The ruin of t; its destination is h, which is full when n was capped.
     state.set_population(t, state.settlement(t).population - n);
     peoples_.ruin(ctx, t, sack);
@@ -508,9 +511,10 @@ void ConflictSubsystem::end_checks(StepContext& ctx, std::size_t i, bool no_fron
         (void)end_war(ctx, i, by_score, loser_exhausted);
         return;
     }
-    // r14 21.6 (generator 0.19.0; replaces 7.7 item 2). 1. Aim achieved:
-    // the attacker holds its goal; no last-battle rule.
-    if (state.region(w.goal).owner == w.attacker) {
+    // r14 21.6 (generator 0.19.0; replaces 7.7 item 2). 1. Aim achieved
+    // (r17 22.5 item 1): the attacker holds its goal and the defender has
+    // no standing settlement left in it; no last-battle rule.
+    if (aim_achieved(state, w)) {
         (void)end_war(ctx, i, w.attacker, false);
         return;
     }
@@ -532,6 +536,10 @@ void ConflictSubsystem::end_checks(StepContext& ctx, std::size_t i, bool no_fron
     }
 }
 
+bool ConflictSubsystem::aim_achieved(const State& state, const ConflictWar& w) {
+    return state.region(w.goal).owner == w.attacker && standing_settlements_in(state, w.defender, w.goal).empty();
+}
+
 bool ConflictSubsystem::end_war(StepContext& ctx, std::size_t i, std::int64_t winner, bool sued) {
     State& state = ctx.state();
     const ConflictWar w = wars_[i];
@@ -541,6 +549,7 @@ bool ConflictSubsystem::end_war(StepContext& ctx, std::size_t i, std::int64_t wi
     const std::int64_t b = w.defender;
     std::int64_t loser = 0;
     bool ceding = false;
+    bool foothold = false;  // r17 22.5 item 3.2
     Cost cost;
     EventSpec e = point_event(ctx, winner == 0 ? "truce" : (sued ? "peace" : "war_won"), 0, 0);
     e.values = {years};
@@ -550,10 +559,16 @@ bool ConflictSubsystem::end_war(StepContext& ctx, std::size_t i, std::int64_t wi
         const std::int64_t loser_capital = state.civ(loser).capital;
         ceding = winner == a && state.region(w.goal).owner == loser &&
                  (loser_capital == 0 || state.settlement(loser_capital).region != w.goal);
-        if (!ceding) {
+        // r17 22.5 item 3.2: the foothold cession, when the attacker already
+        // holds G and the defender stands there, its capital elsewhere.
+        if (!ceding && winner == a && state.region(w.goal).owner == winner) {
+            const std::vector<std::int64_t> there = standing_settlements_in(state, loser, w.goal);
+            foothold = !there.empty() && std::find(there.begin(), there.end(), loser_capital) == there.end();
+        }
+        if (!ceding && !foothold) {
             cost = cost_plan(ctx, winner, loser);  // r9 20.3
         }
-        const bool costs = ceding || cost.region != 0 || cost.tribute > 0;
+        const bool costs = ceding || foothold || cost.region != 0 || cost.tribute > 0;
         if (quiet && (ctx.quiet_events_left(winner) < 1 || (costs && ctx.quiet_events_left(loser) < 1))) {
             return false;  // waits for the next step, still open (7.8, r9 20.3)
         }
@@ -570,6 +585,8 @@ bool ConflictSubsystem::end_war(StepContext& ctx, std::size_t i, std::int64_t wi
     note_futile(ctx, w);  // r9 20.4, at the end event (r10 20.21 item 6)
     if (ceding) {
         cede(ctx, w.goal, loser, winner, ev);  // cession of the goal (7.7)
+    } else if (foothold) {
+        cede(ctx, w.goal, loser, winner, ev, false);  // r17 22.5 item 3.2
     } else if (cost.region != 0) {
         cede(ctx, cost.region, loser, winner, ev);  // r9 20.3 item 1
     } else if (cost.tribute > 0) {
@@ -628,7 +645,7 @@ void ConflictSubsystem::abandon_search(StepContext& ctx, std::size_t i, std::int
 // its excess over 2 C to the loser's nearest other settlement;
 // wronged(loser, winner) gains the region.
 void ConflictSubsystem::cede(StepContext& ctx, std::int64_t region, std::int64_t loser, std::int64_t winner,
-                             std::int64_t cause) {
+                             std::int64_t cause, bool move_region) {
     State& state = ctx.state();
     EventSpec c = point_event(ctx, "region_ceded", region, 0);
     c.participants = {civ_role("from", loser), civ_role("to", winner)};
@@ -646,7 +663,9 @@ void ConflictSubsystem::cede(StepContext& ctx, std::int64_t region, std::int64_t
         }
         state.set_settlement_owner(id, winner, cev);
     }
-    state.set_region_owner(region, winner, cev);
+    if (move_region) {
+        state.set_region_owner(region, winner, cev);
+    }
     wronged_[Pair{loser, winner}].insert(region);  // r9 20.5
 }
 

@@ -9,13 +9,11 @@
 // The orc's 100 years (P3-06 r17 22.2) is the flight's until; peoples reads only the year it is given (the
 // reference's check_units_r12 and the conflict golden worlds cover the flight itself).
 //
-// Written from the spec before the implementation (test-writer rule). The hook and the predicate are the round's
-// new API: the file compiles to nothing until UNMAPPED_P3_10_R3_API is 1 (p3_10_r3_switch.hpp).
+// Written from the spec before the implementation (test-writer rule); the seam names are the engineer's.
 
-#include "../p3_10_r3_switch.hpp"
 #include "p3_05_peoples_support.hpp"
 
-#if UNMAPPED_HAVE_PEOPLES && UNMAPPED_P3_10_R3_API
+#if UNMAPPED_HAVE_PEOPLES
 
 #include <doctest/doctest.h>
 
@@ -183,4 +181,4 @@ TEST_CASE("P3-05 r15 22.8 item 4a: the refuge passed to c2 at 50: c1 founds agai
 
 }  // TEST_SUITE
 
-#endif  // UNMAPPED_HAVE_PEOPLES && UNMAPPED_P3_10_R3_API
+#endif  // UNMAPPED_HAVE_PEOPLES
