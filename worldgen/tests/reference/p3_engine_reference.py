@@ -84,7 +84,7 @@ M64 = (1 << 64) - 1
 REPO = os.path.normpath(os.path.join(_HERE, "..", "..", ".."))
 GOLDEN = os.path.join(REPO, "worldgen", "tests", "golden", "p3-04-engine.txt")
 DEFAULT_INPUTS = os.path.join(os.path.expanduser("~"), ".cache", "the-unmapped", "out", "p3-08-tests", "inputs")
-GENERATOR_VERSION = "0.18.0"  # P3-09: the catalogue of 33 kinds (P3-08: 31, r10 rendering and quiet eras)
+GENERATOR_VERSION = "0.19.0"  # P3-10: kinds 37, 38, quiet stretches, {@causes:...}, separators (P3-09: 36 kinds)
 SCHEMA_VERSION = 7
 
 
@@ -281,6 +281,12 @@ KIND_36 = kind_def(36, "refuge_held", 1, 1, 1, (("attacker", CIV, 1, 1), ("defen
 COMPILED_016 = COMPILED
 COMPILED_017 = COMPILED + (KIND_31,)
 COMPILED_018 = COMPILED_017 + (KIND_32, KIND_33, KIND_34, KIND_35, KIND_36)
+# P3-04 r12 20.4 (generator 0.19.0, P3-10): kind 37 plague_outbreak (P3-05 r12 22.1) and kind 38 quiet_stretch
+# (20.1; role realm 1-0, unbounded). Kinds 4 and 12 keep their rows and are no longer written.
+KIND_37 = kind_def(37, "plague_outbreak", 0, 1, 1, (("settlement", SETTLEMENT, 1, 1), ("civilization", CIV, 1, 1)),
+                   ("dead", "population", "total", "reached"))
+KIND_38 = kind_def(38, "quiet_stretch", 0, 0, 0, (("realm", CIV, 1, 0),), ("years", "realms"))
+COMPILED_019 = COMPILED_018 + (KIND_37, KIND_38)
 
 # P3-04 r10 (generator 0.17.0, P3-08), each switchable so that the 0.16.0
 # goldens can still be reproduced (use_version("0.16.0")):
@@ -292,10 +298,17 @@ COMPILED_018 = COMPILED_017 + (KIND_32, KIND_33, KIND_34, KIND_35, KIND_36)
 #                   quiet_step (P3-05, P3-06 references) read it.
 RENDER_R10 = True
 QUIET_ERA_R10 = True
+# P3-04 r12 (generator 0.19.0, P3-10):
+#   RENDER_R12      20.2 the placeholder {@causes:...} and 20.3 thousands separators;
+#   QUIET_R12       20.1 one world-level quiet_stretch per quiet phase row in place of the quiet_era of
+#                   every civilization (stub, and quiet_stretch_step() for the peoples and conflict
+#                   references).
+RENDER_R12 = True
+QUIET_R12 = True
 ENGINE_VERSION = None
 
 
-VERSIONS = ("0.16.0", "0.17.0", "0.18.0")
+VERSIONS = ("0.16.0", "0.17.0", "0.18.0", "0.19.0")
 
 
 def at_least(v):
@@ -309,17 +322,20 @@ def use_version(v):
     r10 rendering and quiet eras, P3-02 r5 names) or "0.16.0" (the catalogue
     of 30 kinds, r9 rendering and quiet eras, the 0.16.0 data and P3-02 r4
     names). Clears the cached data roots."""
-    global COMPILED, RENDER_R10, QUIET_ERA_R10, GENERATOR_VERSION, ENGINE_VERSION
+    global COMPILED, RENDER_R10, QUIET_ERA_R10, RENDER_R12, QUIET_R12, GENERATOR_VERSION, ENGINE_VERSION
     if v not in VERSIONS:
         raise ValueError(v)
     new = v != "0.16.0"
-    COMPILED = {"0.16.0": COMPILED_016, "0.17.0": COMPILED_017, "0.18.0": COMPILED_018}[v]
+    COMPILED = {"0.16.0": COMPILED_016, "0.17.0": COMPILED_017, "0.18.0": COMPILED_018, "0.19.0": COMPILED_019}[v]
     RENDER_R10 = QUIET_ERA_R10 = new
+    RENDER_R12 = QUIET_R12 = v == "0.19.0"
     GENERATOR_VERSION = v
     ENGINE_VERSION = v
     pdr.use_version(v)
     # P3-09 item 8: the word list of the version (0.18.0 on disk; before, P3-08's, from git)
-    pnr.FILTER_COMMIT = None if v == "0.18.0" else pdr.NAME_FILTERS_017_COMMIT
+    pnr.FILTER_COMMIT = None if v in ("0.18.0", "0.19.0") else pdr.NAME_FILTERS_017_COMMIT
+    if hasattr(pnr, "use_version"):   # P3-10: the names reference serves the filter of the version (F1)
+        pnr.use_version(v)
     pnr._SHIPPED_FILTER = None
     pnr.use_rules("r5" if new else "r4")
     pchr._SHIPPED = None
@@ -364,6 +380,49 @@ def _is_word(w):
     return all(c not in "{}|?" for c in w)
 
 
+CAUSE_KEY_FIRST = set("abcdefghijklmnopqrstuvwxyz")
+CAUSE_KEY_REST = CAUSE_KEY_FIRST | set("0123456789_")
+
+
+def causes_entries(body):
+    """P3-04 r12 20.2: [(key, cword)], word1, word2 of a body "@causes:..." matching the grammar, or None.
+    Words follow 8.4's word rule (no {, }, |, ?); a word may be empty, a cword may not."""
+    rest = body[len("@causes:"):]
+    parts = rest.split("|")
+    if len(parts) != 3:
+        return None
+    ents, w1, w2 = parts
+    if not (_is_word(w1) and _is_word(w2)):
+        return None
+    out, seen = [], set()
+    for ent in ents.split(","):
+        if ent.count("=") != 1:
+            return None
+        key, cw = ent.split("=")
+        if not key or key[0] not in CAUSE_KEY_FIRST or any(ch not in CAUSE_KEY_REST for ch in key):
+            return None
+        if not cw or any(ch in "{}|?,=" for ch in cw):
+            return None
+        if key in seen:
+            return None
+        seen.add(key)
+        out.append((key, cw))
+    return out, w1, w2
+
+
+def fmt_value(v):
+    """P3-04 r12 20.3: a comma between groups of three digits from 1,000 (after the sign); as before
+    without RENDER_R12."""
+    if not RENDER_R12 or abs(v) < 1000:
+        return str(v)
+    d = str(abs(v))
+    groups = []
+    while d:
+        groups.insert(0, d[-3:])
+        d = d[:-3]
+    return ("-" if v < 0 else "") + ",".join(groups)
+
+
 def placeholder_problem(kind, body, at):
     """The problem of one placeholder body, or None (8.4)."""
     roles = {r["role"]: r for r in kind["roles"]}
@@ -372,6 +431,8 @@ def placeholder_problem(kind, body, at):
     if body.startswith("@"):
         if body in ("@year", "@end_year"):
             return None
+        if RENDER_R12 and body.startswith("@causes:"):   # r12 20.2, any kind, caused or not
+            return None if causes_entries(body) is not None else unknown
         if body == "@region":
             return None if kind["region_use"] == 1 else "{@region} needs a kind with a region at byte %d" % at
         if body == "@settlement":
@@ -537,12 +598,27 @@ def render(view, eid):
             put_name(view["name"](REGION, ev["region"], "name"))
         elif body == "@settlement":
             put_name(view["name"](SETTLEMENT, ev["settlement"], "name"))
+        elif RENDER_R12 and body.startswith("@causes:"):
+            # r12 20.2: L = the entries' cwords of the causes' kind keys in ascending cause id, first
+            # occurrence kept; nothing when L is empty; else word1, L joined as {role:all}, word2.
+            ents, w1, w2 = causes_entries(body)
+            first = {}
+            for key, cw in ents:
+                first.setdefault(key, cw)
+            lst = []
+            for cc in sorted(ev.get("causes", ())):
+                key = view["catalogue"][view["events"][cc]["kind"]]["key"]
+                cw = first.get(key)
+                if cw is not None and cw not in lst:
+                    lst.append(cw)
+            if lst:
+                out.append(w1 + join_all(lst) + w2)
         elif "?" in body:
             v, rest = body.split("?", 1)
             ws = rest.split("|")
             x = ev["values"][val_seq[v]]
             if len(ws) == 3:   # r10: w0 for 0, w1 for 1, w2 otherwise; # is the value in the chosen word
-                out.append((ws[0] if x == 0 else ws[1] if x == 1 else ws[2]).replace("#", str(x)))
+                out.append((ws[0] if x == 0 else ws[1] if x == 1 else ws[2]).replace("#", fmt_value(x)))
             else:
                 out.append(ws[0] if x == 1 else ws[1])
         else:
@@ -551,7 +627,7 @@ def render(view, eid):
                 if body in role_seq:
                     form = "name"
                 else:
-                    out.append(str(ev["values"][val_seq[body]]))
+                    out.append(fmt_value(ev["values"][val_seq[body]]))
                     continue
             ps = of_role(role)
             if form == "all":
@@ -899,6 +975,8 @@ class World:
         self.registry = set(r["name"] for r in inp.regions) | set(a[4] for a in inp.ages) | \
             set(g[1] for g in inp.gods)
         self.registry_initial = set(self.registry)
+        self.cores = set()            # P3-02 r10 12.2 (0.19.0): K, the cores of the stage's civilization and
+                                      # settlement names (the stub's too: it is the history stage)
         self.region_control = []      # [region, from, to, civ, event]
         self.rc_open = {}             # region -> index
         self.recorded_owner = {r["id"]: 0 for r in inp.regions}
@@ -979,7 +1057,8 @@ class World:
         c = len(self.civs) + 1
         if self.extra_draw:  # Y3: a test-only keyed draw before the names changes nothing
             pnr.draw(cr.stream_key(self.inp.seed, "test.engine.extra"), year, c, 0, 0)
-        n_c, t_c = pnr.make_name(naming, cid, "civilization", self.inp.seed, cnum, c, self.registry)
+        kw = dict(cores=self.cores) if QUIET_R12 else {}   # P3-02 r10 12.2 (0.19.0): K in the history stage
+        n_c, t_c = pnr.make_name(naming, cid, "civilization", self.inp.seed, cnum, c, self.registry, **kw)
         e_civ = self.append("civ_founded", year, year, region=place,
                             participants=(("civilization", CIV, c), ("race", RACE, race_id)), causes=(e_aw,),
                             phase=phase)
@@ -989,7 +1068,7 @@ class World:
             self.owner[place] = (c, e_civ)
         x, y, how = self.site(place)
         s = len(self.settlements) + 1
-        n_s, t_s = pnr.make_name(naming, cid, "settlement", self.inp.seed, cnum, s, self.registry)
+        n_s, t_s = pnr.make_name(naming, cid, "settlement", self.inp.seed, cnum, s, self.registry, **kw)
         e_set = self.append("settlement_founded", year, year, region=place, settlement=s,
                             participants=(("settlement", SETTLEMENT, s), ("founder", CIV, c)), values=(200,),
                             causes=(e_civ,), phase=phase)
@@ -1009,10 +1088,36 @@ class World:
         gy = self.race[civ["race"]][7]
         return (y1 + 1 - civ["founded_year"]) // gy - (y0 - civ["founded_year"]) // gy
 
+    def quiet_stretch(self, start, last, phase=None):
+        """r12 20.1 (Q6, after the subsystems): one world-level quiet_stretch per quiet phase row, kept in
+        open_era under key 0 (no civilization has id 0), so that every reset of the eras resets it. Opened at
+        the row's first step with a living civilization: participants every civilization not ended at this
+        step, ascending id, as `realm`; values years and realms. Later steps of the row lengthen it; its
+        participants and `realms` never change. No living civilization: nothing."""
+        idx = self.open_era.get(0)
+        if idx is None:
+            alive = [c["id"] for c in sorted(self.civs, key=lambda c: c["id"]) if c["ended_year"] is None]
+            if not alive:
+                return
+            kw = {} if phase is None else dict(phase=phase)
+            eid = self.append("quiet_stretch", start, last, participants=tuple(("realm", CIV, x) for x in alive),
+                              values=(last - start + 1, len(alive)), **kw)
+            self.open_era[0] = eid - 1
+            return
+        ev = self.events[idx]
+        ev["end_year"] = last
+        ev["values"] = {1: last - ev["year"] + 1, 2: ev["values"][2]}
+
     def quiet_step(self, eng_run, start, length, phase_end, row_start):
         last = start + length - 1
         if start == row_start:
             self.open_era = {}
+        if QUIET_R12:
+            self.quiet_stretch(start, last, eng_run.phase_id)
+            self.bookkeeping(start, phase_end, last)
+            if phase_end:
+                self.open_era = {}
+            return
         for civ in self.civs:   # none ends in the stub; none is charged an event
             if civ["ended_year"] is not None:
                 continue
@@ -1313,6 +1418,10 @@ def view_from_rows(res, regions, races, gods):
                          values={})
     for p in res["event_participant"]:
         evs[p[0]]["participants"].append(tuple(p[1:]))
+    for e in evs.values():
+        e["causes"] = []
+    for x, cc in res.get("event_cause", ()):   # r12 20.2: {@causes:...} reads the causes
+        evs[x]["causes"].append(cc)
     for v in res["event_value"]:
         evs[v[0]]["values"][v[1]] = v[2]
     names = {REGION: {r[0]: r[1] for r in regions}, GOD: {g[0]: g[1] for g in gods},
@@ -1559,14 +1668,52 @@ TEMPLATE_CASES_R10 = (
 )
 
 
+# r12 (P3-04 20.2, 20.6 item 2): {@causes:...} valid for any kind, and every malformed body of 20.2.
+# Appended only from 0.19.0, so 0.18.0 stays reproducible.
+TEMPLATE_CASES_R12 = (
+    ("settlement_dwindled", "{@causes:famine=famine,plague=plague|Weakened by |, }{settlement} dwindled."),
+    ("awakening", "{@causes:famine=famine|a|b}{race:name}"),          # an uncaused kind: allowed
+    ("awakening", "{@causes:nokind=word|a|b}x"),                       # a key that is no kind: allowed
+    ("awakening", "{@causes:a=x|||}"),                                 # three words
+    ("awakening", "{@causes:a=x|w}"),                                  # one word
+    ("awakening", "{@causes:a=x}"),                                    # no word
+    ("awakening", "{@causes:|a|b}"),                                   # no entry
+    ("awakening", "{@causes:a=|a|b}"),                                 # empty cword
+    ("awakening", "{@causes:a=x,a=y|a|b}"),                            # the same key twice
+    ("awakening", "{@causes:Ab=x|a|b}"),                               # key syntax
+    ("awakening", "{@causes:1a=x|a|b}"),                               # key syntax
+    ("awakening", "{@causes:a-b=x|a|b}"),                              # key syntax
+    ("awakening", "{@causes:a=x=y|a|b}"),                              # '=' in a cword
+    ("awakening", "{@causes:a=x,|a|b}"),                               # empty entry
+    ("awakening", "{@causes:a=x?|a|b}"),                               # '?' in a cword
+    ("awakening", "{@causes:a=x|a?|b}"),                               # '?' in a word
+    ("awakening", "{@causes:a=x y,b_2=z|, w=|.}"),                     # ',' and '=' in words, space in cword
+    ("awakening", "{@causes}"),
+    ("awakening", "{@causes:}"),
+    ("quiet_stretch", "For {years} {years?year|years}, from {@year} to {@end_year}, the land was quiet"
+                      "{realms?|; one realm held it|, and # realms kept the peace}."),
+    ("quiet_stretch", "{realm:all} {realm}"),
+    ("plague_outbreak", "Plague broke out in {settlement}{reached?| and spread to one other settlement| and spread "
+                        "to # other settlements}; {total} died{reached?|| in all}."),
+)
+
+
 def template_cases():
-    return TEMPLATE_CASES + (TEMPLATE_CASES_R10 if at_least("0.17.0") else ())
+    return (TEMPLATE_CASES + (TEMPLATE_CASES_R10 if at_least("0.17.0") else ())
+            + (TEMPLATE_CASES_R12 if at_least("0.19.0") else ()))
 
 
 def template_kind(key):
     return TEST_KIND if key == "test_optional" else find_kind(COMPILED, key)
 
 
+HEADER_019 = """\
+# P3-04 engine golden vectors for generator 0.19.0 (schema 7; P3-10): the stub engine (run_engine
+# with the stub configuration) on the 0.19.0 catalogue of 38 kinds (P3-04 r12 20.4: kinds 37
+# plague_outbreak and 38 quiet_stretch appended, kinds 4 and 12 kept and not written), one world-level
+# quiet_stretch per quiet phase row (20.1), thousands separators in rendered values (20.3) and the
+# placeholder {@causes:...} (20.2, template cases), with P3-02 r10 names and P1-06 r7 region names
+# (the input worlds' table region). Spec"""
 HEADER_018 = """\
 # P3-04 engine golden vectors for generator 0.18.0 (schema 7; P3-09): the stub engine (run_engine
 # with the stub configuration) on the 0.18.0 catalogue of 36 kinds (P3-05 11 and r6, P3-06 11, r9
@@ -1660,7 +1807,9 @@ HEADER = """\
 def golden_text(inputs):
     dat = data()
     head = HEADER.rstrip("\n")
-    if ENGINE_VERSION == "0.18.0":
+    if ENGINE_VERSION == "0.19.0":
+        head = HEADER_019 + "\n" + "\n".join(head.splitlines()[2:])
+    elif ENGINE_VERSION == "0.18.0":
         head = HEADER_018 + "\n" + "\n".join(head.splitlines()[2:])
     elif ENGINE_VERSION == "0.17.0":
         head = HEADER_017 + "\n" + "\n".join(head.splitlines()[2:])
@@ -1984,6 +2133,26 @@ def check_example_r10(c, inputs):
     c.eq("r10 11.1 kind 31 key", "events_settlement_abandoned_to = 0" in report_lines(res, 6000), True)
 
 
+P3_08_INPUTS = os.path.join(os.path.expanduser("~"), ".cache", "the-unmapped", "out", "p3-08-tests", "inputs")
+
+
+def check_example_r12(c, inputs):
+    """P3-04 r12 20.1's example (illustrative there; re-told from seed 42): the first quiet row of seed 42 at 1024,
+    the elves alone, as one quiet_stretch."""
+    path = os.path.join(inputs, "example-42-1024.db")
+    if not os.path.exists(path):
+        print("note: %s missing; the r12 example is not checked" % path)
+        return
+    res = world_case("example-42-1024", 42, 1024, 6000, "all", "normal", inputs)
+    st = sentences(res, res["_inputs"])
+    c.eq("r12 20.1 the elves' first row", st[3], "For 1,924 years, from 150 to 2073, the land was quiet; one realm held it.")
+    rl = report_lines(res, 6000)
+    c.eq("r12 events_quiet_era 0", "events_quiet_era = 0" in rl, True)
+    c.eq("r12 the two new lines follow events_refuge_held",
+         [l.split(" = ")[0] for l in rl if l.startswith("events_")][-3:],
+         ["events_refuge_held", "events_plague_outbreak", "events_quiet_stretch"])
+
+
 def check_render_r10(c):
     """P3-04 16.1 item 10 (r10) in the reference: the three-word form and
     names inside a sentence, on hand-made views (the examples of 8.5 and of
@@ -2062,6 +2231,128 @@ def check_render_r10(c):
     c.eq("r10 stored names unchanged", names[(CIV, 1)], "The Skib Horde")
 
 
+def check_render_r12(c):
+    """P3-04 r12 20.6 items 2 and 3 in the reference, on hand-made views: {@causes:...} and separators."""
+    names = {(SETTLEMENT, 1): "Glathenddell", (CIV, 1): "The Warrens of Zeez", (CIV, 2): "Clan Durgarin"}
+
+    def nm(t, x, form):
+        return names[(t, x)]
+
+    def view(templ, cause_keys, kind_key="settlement_dwindled", parts=((1, 1, SETTLEMENT, 1), (2, 2, CIV, 1)),
+             values=None):
+        """Event 100 of kind_key with causes 1..n of the given kind keys (ascending id)."""
+        cat = {k["id"]: dict(k) for k in COMPILED}
+        kid = find_kind(COMPILED, kind_key)["id"]
+        cat[kid] = dict(cat[kid], templ=templ)
+        evs = {}
+        for i, key in enumerate(cause_keys):
+            evs[i + 1] = dict(year=1, end_year=1, kind=find_kind(COMPILED, key)["id"], region=0, settlement=0,
+                              participants=[], values={}, causes=[])
+        evs[100] = dict(year=5, end_year=5, kind=kid, region=0, settlement=1, participants=list(parts),
+                        values=values or {1: 412}, causes=list(range(1, len(cause_keys) + 1)))
+        return dict(catalogue=cat, events=evs, name=nm)
+
+    tm = "{@causes:famine=famine,plague=plague,plague_spread=plague,battle=war,tribute=tribute|Weakened by |, }" \
+         "{settlement} dwindled to {population} souls."
+    r = lambda keys, t=tm, **kw: render(view(t, keys, **kw), 100)   # noqa: E731
+    c.eq("r12 causes famine, plague", r(["famine", "plague"]),
+         "Weakened by famine and plague, Glathenddell dwindled to 412 souls.")
+    c.eq("r12 causes plague, plague_spread one word", r(["plague", "plague_spread"]),
+         "Weakened by plague, Glathenddell dwindled to 412 souls.")
+    c.eq("r12 causes three words", r(["battle", "famine", "tribute"]),
+         "Weakened by war, famine and tribute, Glathenddell dwindled to 412 souls.")
+    c.eq("r12 causes in ascending cause id, not entry order", r(["tribute", "famine"]),
+         "Weakened by tribute and famine, Glathenddell dwindled to 412 souls.")
+    c.eq("r12 causes unmapped only: empty", r(["colony_founded", "settlement_founded"]),
+         "Glathenddell dwindled to 412 souls.")
+    c.eq("r12 causes none: empty", r([]), "Glathenddell dwindled to 412 souls.")
+    c.eq("r12 first entry of a key wins over a repeated cword", r(["battle", "battle_at_pass", "battle"],
+         t="{@causes:battle=war,battle_at_pass=war|W |, }x"), "W war, x")
+    # names: after the second word mid-sentence, after an empty placeholder at the sentence start
+    t2 = "{@causes:battle=war|Weakened by |, }{civilization} moved."
+    kw = dict(kind_key="capital_moved", parts=((1, 1, CIV, 1), (2, 2, SETTLEMENT, 1)), values={})
+    c.eq("r12 the name after ', ' is mid-sentence", r(["battle"], t=t2, **kw), "Weakened by war, the Warrens of Zeez moved.")
+    c.eq("r12 the name after an empty placeholder is at the start", r(["famine"], t=t2, **kw),
+         "The Warrens of Zeez moved.")
+    # the cwords and words are literals (no name rule)
+    c.eq("r12 words are literals", r(["battle"], t="{@causes:battle=The War|The |: }x"), "The The War: x")
+    # every malformed body of 20.2 is unknown placeholder
+    k = find_kind(COMPILED, "settlement_dwindled")
+    for body in ("@causes:a=x|||", "@causes:a=x|w", "@causes:a=x", "@causes:|a|b", "@causes:a=|a|b",
+                 "@causes:a=x,a=y|a|b", "@causes:Ab=x|a|b", "@causes:1a=x|a|b", "@causes:a=x,|a|b"):
+        c.eq("r12 malformed {%s}" % body, template_problem(k, "ab{%s}" % body),
+             "unknown placeholder '{%s}' at byte 2" % body)
+    c.eq("r12 causes allowed for an uncaused kind", template_problem(find_kind(COMPILED, "awakening"),
+                                                                     "{@causes:x=y|a|b}"), None)
+    # 20.3 separators in {value} and #
+    want = {0: "0", 999: "999", 1000: "1,000", 1155: "1,155", 25000: "25,000", 1000000: "1,000,000",
+            -1000: "-1,000", -999: "-999", 52691: "52,691", -12000: "-12,000"}
+    for v, w in want.items():
+        c.eq("r12 {value} %d" % v, r([], t="{population}", values={1: v}), w)
+        c.eq("r12 # %d" % v, r([], t="{population?a|b|# x}", values={1: v}), w + " x" if v not in (0, 1) else "a")
+    c.eq("r12 years without separators", render(dict(view("{@year}-{@end_year}", []),
+                                                     events={100: dict(year=4393, end_year=12000, kind=k["id"],
+                                                                       region=0, settlement=1, participants=[],
+                                                                       values={1: 0}, causes=[])}), 100),
+         "4393-12000")
+    c.eq("r12 the choice depends on the value, not its text",
+         r([], t="{population?one|many}", values={1: 1000}), "many")
+
+
+def check_quiet_r12(c, inputs):
+    """P3-04 r12 20.6 item 1 on the stub world cases and the ForcedTension cases: one quiet_stretch per quiet
+    phase row with a living civilization, participants every civilization alive at the row's first step in
+    ascending id, realms their number, years = end_year - year + 1 = the row's length; no quiet_era."""
+    cases = [(n, sd, sz, sp, rc, dt, None) for n, sd, sz, sp, rc, dt in
+             list(WORLD_CASES) + [("example-42-1024", 42, 1024, 6000, "all", "normal")]]
+    cases += [("example-42-1024", 42, 1024, 6000, "all", "normal", t) for _tag, t in TENSIONS]
+    for name, seed, size, span, races, detail, t in cases:
+        if not os.path.exists(os.path.join(inputs, name + ".db")):
+            print("note: %s missing; quiet stretches not checked on it" % name)
+            continue
+        res = world_case(name, seed, size, span, races, detail, inputs, t)
+        w = res["_world"]
+        lab = name + ("-" + t.label() if t else "")
+        qid = find_kind(COMPILED, "quiet_stretch")["id"]
+        c.eq("r12 %s no quiet_era" % lab, [e for e in w.events if e["key"] == "quiet_era"], [])
+        st = [e for e in w.events if e["key"] == "quiet_stretch"]
+        rows = [r for r in res["phase"] if r[2] == QUIET]
+        bad = []
+        for r in rows:
+            alive = sorted(x["id"] for x in w.civs if x["founded_year"] <= r[3])
+            mine = [e for e in st if e["phase"] == r[0]]
+            if not alive:
+                if mine:
+                    bad.append(("stretch without a civilization", r))
+                continue
+            if len(mine) != 1:
+                bad.append(("count", r, len(mine)))
+                continue
+            e = mine[0]
+            if (e["year"], e["end_year"]) != (r[3], r[4]) or e["values"] != {1: r[4] - r[3] + 1, 2: len(alive)} \
+                    or [p[3] for p in e["participants"]] != alive or e["region"] or e["settlement"] or e["causes"]:
+                bad.append(("row", r, e))
+        c.eq("r12 %s one quiet_stretch per quiet row" % lab, bad, [])
+        c.eq("r12 %s kind id" % lab, all(e["kind"] == qid for e in st), True)
+    # a civilization ended within the row stays a participant (hand-made: a world state driven directly)
+    w = World.__new__(World)
+    w.events, w.civs, w.open_era = [], [dict(id=1, ended_year=None), dict(id=2, ended_year=None)], {}
+    w.cat_by_key = {k["key"]: k for k in COMPILED}
+    w.inp = Inputs(0, 64, dict(span=6000), [], [], [], [], [])
+    w.quiet_stretch(100, 124, 7)
+    w.civs[1]["ended_year"] = 130
+    w.quiet_stretch(125, 149, 7)
+    e = w.events[0]
+    c.eq("r12 an ended civilization stays a participant", (len(w.events), e["year"], e["end_year"],
+                                                           [p[3] for p in e["participants"]], e["values"]),
+         (1, 100, 149, [1, 2], {1: 50, 2: 2}))
+    w2 = World.__new__(World)
+    w2.events, w2.civs, w2.open_era = [], [dict(id=1, ended_year=5)], {}
+    w2.cat_by_key, w2.inp = w.cat_by_key, w.inp
+    w2.quiet_stretch(100, 124, 7)
+    c.eq("r12 no living civilization: no quiet line", w2.events, [])
+
+
 def check_templates(c):
     k = find_kind(COMPILED, "awakening")
     c.eq("t ok", template_problem(k, "{creator} awakened the {race:plural} in {@region}."), None)
@@ -2088,7 +2379,8 @@ def check_templates(c):
         "event kind 'flare_up' has no entry"] + ["event kind '%s' has no entry" % k for k in P3_05_KEYS + P3_06_KEYS
                                                  + (["settlement_abandoned_to"] if at_least("0.17.0") else [])
                                                  + (["refugees_settled", "tribute", "war_won", "search_abandoned",
-                                                     "refuge_held"] if at_least("0.18.0") else [])])
+                                                     "refuge_held"] if at_least("0.18.0") else [])
+                                                 + (["plague_outbreak", "quiet_stretch"] if at_least("0.19.0") else [])])
     # rendering on a hand-made view: :all with 0..3, ? with 0, 1, 2
     cat = {99: dict(TEST_KIND, region_use=1, templ="[{actor:all}] {people:plural}/{people:adjective}/{people} at {@region}: "
                                      "{count} {count?thing|things} {{ok}} {@year}-{@end_year}")}
@@ -2249,7 +2541,17 @@ def cmd_check(argv):
         check_templates(c)
     finally:
         use_version(saved)
-    check_example_r10(c, inputs)
+    if at_least("0.19.0"):   # r10's example is 0.18.0's (quiet eras, P1-06 r3 names): on the 0.18.0 inputs
+        use_version("0.18.0")
+        try:
+            check_example_r10(c, P3_08_INPUTS)
+        finally:
+            use_version(saved)
+        check_example_r12(c, inputs)
+        check_render_r12(c)
+        check_quiet_r12(c, inputs)
+    else:
+        check_example_r10(c, inputs)
     check_templates(c)
     check_render_r10(c)
     check_relation_bookkeeping(c)
@@ -2414,7 +2716,7 @@ def cmd_check_world(argv):
     return 1 if c.failures else 0
 
 
-use_version("0.18.0")
+use_version("0.19.0")
 
 
 def main(argv):

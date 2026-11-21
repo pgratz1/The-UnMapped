@@ -181,8 +181,8 @@ TEST_CASE("P3-05 16.3 item 21, 16.2 item 18: the 1024 golden worlds and the hard
 }
 
 TEST_CASE("P3-05 r6 6.2, 8.4: on a real 1024 world dwarves found fortresses off the walkable ground and ladder kinds on it") {
-    // seed 42 at 1024 (peoples only), real layers elevation, ore and walk_area: the reference founds eight
-    // dwarven settlements, five fortresses and three of ladder kinds (the cell rule does not make every
+    // seed 42 at 1024 (peoples only), real layers elevation, ore and walk_area: the counts of the reference's
+    // golden line (0.18.0: five fortresses and three of ladder kinds; the cell rule does not make every
     // dwarven founding a fortress)
     const GCase& g = golden_case("hist-peoples-42-1024");
     const db::WorldReader r = open_world(world_path(g));
@@ -202,8 +202,11 @@ TEST_CASE("P3-05 r6 6.2, 8.4: on a real 1024 world dwarves found fortresses off 
             CHECK_MESSAGE(fort, "dwarven settlement " << at(s, 0) << " on walk_area 0 is not a fortress");
         }
     }
-    CHECK(forts == 5);
-    CHECK(ladder == 3);
+    // P3-10 4 item 2: the reference's line `hist-peoples-42-1024 dwarf_kinds forts <n> ladder <m>`
+    REQUIRE(g.dwarf_forts >= 0);
+    REQUIRE(g.dwarf_ladder >= 0);
+    CHECK(forts == g.dwarf_forts);
+    CHECK(ladder == g.dwarf_ladder);
 }
 
 TEST_CASE("P3-05 16.2 item 20: threads 1 and 5 give identical history tables") {

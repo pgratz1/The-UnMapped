@@ -109,8 +109,11 @@ TEST_CASE("P3-05 11, 16.1 item 14, 16.1a 17i: the compiled catalogue appends kin
          "{settlement} grew into a town of {population}."},
         {"became_city", true, {{"settlement", S}, {"civilization", C}}, {"population"}, 45,
          "{settlement} grew into a city of {population}."},
+        // P3-05 r12 22.3 (0.19.0): the cause clause (P3-04 r12 20.2's {@causes:...})
         {"settlement_dwindled", false, {{"settlement", S}, {"civilization", C}}, {"population"}, 15,
-         "{settlement} dwindled to {population} souls."},
+         "{@causes:famine=famine,plague=plague,plague_outbreak=plague,plague_spread=plague,succession_crisis=strife,battle=war,"
+         "battle_at_pass=war,tribute=tribute,colony_founded=emigration|Weakened by |, }{settlement} dwindled to "
+         "{population} souls."},
         {"famine", false, {{"settlement", S}, {"civilization", C}}, {"dead", "population"}, 25,
          "Famine struck {settlement}; {dead} died."},
         {"plague", false, {{"settlement", S}, {"civilization", C}}, {"dead", "population"}, 45,
@@ -120,23 +123,25 @@ TEST_CASE("P3-05 11, 16.1 item 14, 16.1a 17i: the compiled catalogue appends kin
         // r6 (0.17.0): the crisis sentence names the capital
         {"succession_crisis", false, {{"civilization", C}}, {}, 40,
          "A succession crisis at {@settlement} shook {civilization}."},
+        // P3-05 r12 22.4 (0.19.0): no "its"
         {"civ_seceded", true, {{"civilization", C}, {"from", C}}, {"settlements"}, 70,
-         "{civilization} broke away from {from}, taking {settlements} {settlements?settlement|settlements} with it."},
+         "{civilization} broke away from {from} with {settlements} {settlements?settlement|settlements}."},
         // r6: kind 16 only when no survivor reaches another settlement (P3-04 r10's three-word form)
         {"settlement_abandoned", true, {{"settlement", S}, {"civilization", C}}, {"survivors"}, 55,
-         "{settlement} was abandoned; {survivors?no one survived|its one survivor was scattered|its # survivors were "
-         "scattered}."},
+         "{@causes:famine=famine,plague=plague,plague_outbreak=plague,plague_spread=plague,succession_crisis=strife,battle=war,"
+         "battle_at_pass=war,tribute=tribute|Weakened by |, }{settlement} was abandoned; {survivors?no one survived|its one "
+         "survivor was scattered|its # survivors were scattered}."},
         {"capital_moved", true, {{"civilization", C}, {"settlement", S}}, {}, 50,
-         "{civilization} moved its seat to {settlement}."},
+         "The seat of {civilization} moved to {settlement}."},
         {"civ_ended", true, {{"civilization", C}}, {}, 85, "{civilization} came to an end."},
         {"ruin_faded", true, {{"settlement", S}}, {}, 10, "The ruins of {settlement} faded from memory."},
     };
     const eng::EventCatalogue& compiled = eng::compiled();
     // P3-06 11 appends kinds 20-30 at 0.16.0 (P3-04 8.2 r4), P3-05 r6 kind 31 at 0.17.0, P3-06 r9 20.9
     // kinds 32 and 33 at 0.18.0
-    REQUIRE(compiled.kinds.size() == 36U);  // r10: kinds 34-36
+    REQUIRE(compiled.kinds.size() == 38U);  // r10: kinds 34-36; P3-04 r12 20.4 (0.19.0): kinds 37, 38
     const eng::EventCatalogue cat = eng::catalogue_of(shipped());
-    REQUIRE(cat.kinds.size() == 36U);
+    REQUIRE(cat.kinds.size() == 38U);
     for (std::size_t i = 0; i < want.size(); ++i) {
         const K& w = want[i];
         CAPTURE(std::string_view(w.key));
@@ -181,8 +186,9 @@ TEST_CASE("P3-05 11, 16.1 item 14, 16.1a 17i: the compiled catalogue appends kin
         }
         CHECK(k->values == std::vector<std::string>{"settled", "lost"});
     }
-    const char* t31 = "{settlement} was abandoned; {settled} {settled?survivor|survivors} went to {destination}"
-                      "{lost?|, and one was lost|, and # were lost}.";
+    const char* t31 = "{@causes:famine=famine,plague=plague,plague_outbreak=plague,plague_spread=plague,succession_crisis=strife,battle=war,"
+                      "battle_at_pass=war,tribute=tribute|Weakened by |, }{settlement} was abandoned; {settled} {settled?survivor|survivors} went to "
+                      "{destination}{lost?|, and one was lost|, and # were lost}.";
     CHECK(cat.kinds[30].salience == 55);
     CHECK(cat.kinds[30].templ == t31);  // history.report lists it (data)
     CHECK(eng::template_problem(cat.kinds[30], t31) == std::nullopt);

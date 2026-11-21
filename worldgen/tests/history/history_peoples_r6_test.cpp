@@ -300,7 +300,7 @@ TEST_CASE("P3-05 r6 8.5 causes, 16.1a 17e: an abandonment by chance names the bl
     // settlement 1: struck while thriving (a, its decline start; 300 -> 210, below 900 per mille of 300, no
     // recovery), then struck while declining (b): the chance abandons it, causes (a, b)
     std::vector<std::int64_t> strikes;
-    for (const Row* e : events_of(t, k_plague)) {
+    for (const Row* e : events_of(t, k_plague_outbreak)) {  // P3-05 r12 22.1 (0.19.0): every outbreak is kind 37
         if (at(*e, 6) == 1) strikes.push_back(at(*e, 0));
     }
     REQUIRE(strikes.size() >= 2U);
@@ -354,7 +354,7 @@ TEST_CASE("P3-05 r6 10.2, 10.3, 14 item 13, 16.1a 17g 17h: saliences by toll and
         for (const Row* e : events_of(t, k_civ_seceded)) {
             for (const std::int64_t x : causes_of(t, at(*e, 0))) seceded.insert(x);
         }
-        for (const Row* e : events_of(t, k_plague)) (at(*e, 7) == 45 ? major : small) += 1;
+        for (const Row* e : events_of(t, k_plague_outbreak)) (at(*e, 7) == 45 ? major : small) += 1;  // r12 22.1: kind 37
         for (const Row* e : events_of(t, k_succession_crisis)) {
             const std::int64_t id = at(*e, 0);
             (seceded.count(id) == 1U ? split : unsplit) += 1;
