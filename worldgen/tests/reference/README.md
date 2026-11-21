@@ -1149,9 +1149,11 @@ The readings taken are printed by `p3_peoples_reference.py gaps` (the P3-10 entr
   its pairs as claimant (`hides`);
 - `quarrel` (21.12): `quarrels()` before 5.2 in each T2: the first visible
   T2 of a `civ_founded` civilization of a race with `awakening_quarrel` 1
-  seeds strain at `claim_strain` x 1000 toward the owner of the nearest
-  standing visible settlement of another race (key: within `enmity_hops`,
-  hops, squared distance, id), or keeps it pending (`quarrel_pending`);
+  seeds strain at `quarrel_strain` x 1000 (r15, 600) toward the owner of
+  the nearest standing visible, not hidden settlement of an alive people of
+  another race whose disposition is below `border_friction` (r15: never a
+  people of the orcs' camp; key: within `enmity_hops`, hops, squared
+  distance, id), or keeps it pending (`quarrel_pending`);
 - `note_019` (P3-07 r12 22.3, 22.5a): the reworded flare-up note; a
   declaration whose war ended by a `search_abandoned` below 20 is no summary
   candidate.

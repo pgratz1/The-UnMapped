@@ -6,7 +6,8 @@
 //   - The row checks of invariants (14), (15) and 21.7 (invariants_19, p3_06_conflict_support.hpp) fire on
 //     hand-made logs that break them, and stay silent on the same logs repaired.
 //   - The seams the specs name (guarded by UNMAPPED_P3_10_API, p3_10_switch.hpp): history.conflict's
-//     search_weary_years and search_repeat_salience in ConflictTuning without odds_min; the race fields
+//     search_weary_years, search_repeat_salience and quarrel_strain (r15, with conflict_quarrel_strain) in
+//     ConflictTuning without odds_min; the race fields
 //     odds_min_permille and awakening_quarrel in ConflictRace; PeoplesSubsystem::lie_low(civ, until_year).
 //
 // The rules themselves (aim by holding the goal, the lost goal's score ending, searches, the holder, the odds per
@@ -204,6 +205,16 @@ TEST_CASE("P3-06 r14 21.7, 21.9 (seam): ConflictTuning has search_weary_years 50
     CHECK(t.search_weary_years == 500);
     CHECK(t.search_repeat_salience == 15);
     CHECK(t.search_years == 3);
+    CHECK(t.quarrel_strain == 600);  // r15 21.12 item 2
+}
+
+TEST_CASE("P3-06 r15 21.12 item 2 (seam): the named check conflict_quarrel_strain") {
+    namespace h = worldgen::history;
+    h::ConflictTuning t = h::conflict_tuning_from(shipped());
+    t.quarrel_strain = t.claim_strain;
+    h::check_conflict_tuning(t);
+    t.quarrel_strain = t.claim_strain - 1;
+    CHECK(fatal_of([&] { h::check_conflict_tuning(t); }) == "history: tuning: quarrel_strain must not be below claim_strain");
 }
 
 TEST_CASE("P3-06 r14 21.9, 21.12, P3-01 r11 3.5 (seam): ConflictRace carries odds_min_permille and awakening_quarrel") {

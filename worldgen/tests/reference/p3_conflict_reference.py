@@ -306,7 +306,8 @@ SPEC_GAPS = (
                        "a side is exhausted in the step its goal changes hands."),
     ("r14 21.6 at 7.8", "At the end of an active phase (Q4's ending of every open war by the score) item 1 applies: "
                         "an attacker holding G wins without the last-battle rule (peace if b is exhausted, else "
-                        "war_won); item 2 is the score ending as before; how 'aim' in the war line."),
+                        "war_won); item 2 is the score ending as before, with peace when the loser is exhausted "
+                        "(r15 confirms both); how 'aim' in the war line. Other quiet endings keep war_won."),
     ("r14 21.6 b stands in G", "'b neither holds G nor has a standing settlement in it' reads b's standing VISIBLE "
                                "settlements, as 7.7 item 2 did (SPEC_GAPS 7.3 item 7)."),
     ("r14 (14)", "Read for the endings of 21.6 items 1 and 2 (b no longer holds G nor stands in it): an attacker that "
@@ -334,6 +335,13 @@ SPEC_GAPS = (
                            "settlements has Y < hidden_until; no strain of y toward others is raised (5.2), no claim "
                            "(5.3) and no declaration (7.2, including the flare pair) with y as claimant or attacker; "
                            "the tension skips pairs with y as claimant. Strain toward y and y's defence unchanged."),
+    ("r15 21.12 item 1", "S: the standing visible settlements that are not hidden (hidden(s): Y < hidden_until) of "
+                         "alive visible civilizations of another race whose disposition d(a, b) = camp - grudge is "
+                         "below border_friction at that T2 (after housekeeping and decay); the strain is "
+                         "quarrel_strain x 1000. Stress and norefuge tunings are shipped plus edits (P3-06 16.3), so "
+                         "they carry the shipped search_weary_years 500, search_repeat_salience 15 and "
+                         "quarrel_strain 600, in the reference and the C++ support alike; the defaults of hand-made "
+                         "tuning (0, 40, 600) concern tuning built without data."),
     ("r14 21.12 visible", "'The first T2 in which a is visible' is the first T2 in which a is among the alive visible "
                           "civilizations (P3-04 6.2: the tick after its awakening step); S is the standing visible "
                           "settlements of the alive visible civilizations of other races at that T2; the quarrel is "
@@ -1252,21 +1260,25 @@ class World(pp.World):
                 continue
             self.quarrel_pending.discard(a)
             k = (a, b)
-            self.strain[k] = max(self.strain.get(k, 0), t["claim_strain"] * 1000)
+            self.strain[k] = max(self.strain.get(k, 0), t["quarrel_strain"] * 1000)   # r15 21.12 item 2
             self.quarrel_log.append((self.year, a, b))
 
     def quarrel_neighbour(self, a):
-        """21.12 item 1: the owner of the standing visible settlement of another race's alive civilization with the
-        smallest key (0 if h <= enmity_hops else 1, h, d^2, id), h the hops from a's capital region; None if none."""
+        """21.12 item 1 (r15): the owner of the standing visible settlement, not hidden (20.1), of an alive
+        civilization b of another race with disposition d(a, b) below border_friction (read at this step), with the
+        smallest key (0 if h <= enmity_hops else 1, h, d^2, id), h the hops from a's capital region (unreachable:
+        +infinity); None if none."""
         cap = self.stl(self.civ(a)["capital"])
         hops = self.geo.hops(cap["region"])
         inf = 1 << 62
         ra = self.race_c(a)
         best = None
         for c in self.avc():
-            if self.race_c(c) == ra:
-                continue
+            if self.race_c(c) == ra or self.disp(a, c) >= self.ct["border_friction"]:
+                continue                      # r15: a people a can come to war with only (never its own camp)
             for s in self.svis(c):
+                if self.hidden(s):
+                    continue                  # r15: a hidden refuge is never chosen
                 h = hops.get(s["region"], inf)
                 d = (s["x"] - cap["x"]) ** 2 + (s["y"] - cap["y"]) ** 2
                 key = (0 if h <= self.ct["enmity_hops"] else 1, h, d, s["id"])
@@ -1839,6 +1851,11 @@ class World(pp.World):
                 # r14 21.6 item 1 at 7.8's end: the attacker holds its goal and wins, no last-battle rule
                 winner, how = war["a"], "aim"
                 kind = "peace" if self.exhausted(war, war["b"]) else "war_won"
+            elif FLAGS["aim_hold"] and winner is not None and self.owner[war["goal"]][0] != war["b"] and not any(
+                    s["region"] == war["goal"] for s in self.svis(war["b"])):
+                # r15 21.6: an ending of item 2 in a quiet step writes peace when the loser is exhausted
+                loser = war["b"] if winner == war["a"] else war["a"]
+                kind = "peace" if self.exhausted(war, loser) else "war_won"
             if winner is None:
                 if self.quiet_events_left(min(war["a"], war["b"])) <= 0:
                     continue
@@ -3700,6 +3717,9 @@ def check_units_r14(c):
         c.eq("16.4 %s below its range" % n, tuning_problem(dict(t, **{n: lo - 1})),
              "history: tuning: conflict.%s outside its schema range" % n)
         c.eq("16.4 %s at its range" % n, tuning_problem(dict(t, **{n: hi})), None)
+    c.eq("21.12 r15 conflict_quarrel_strain below claim_strain", tuning_problem(dict(t, quarrel_strain=t["claim_strain"] - 1)),
+         "history: tuning: quarrel_strain must not be below claim_strain")
+    c.eq("21.12 r15 conflict_quarrel_strain at claim_strain", tuning_problem(dict(t, quarrel_strain=t["claim_strain"])), None)
     # --- 21.5 item 1 (21.1): note_reduction only where people were lost. READING (SPEC_GAPS r14 21.5 item 1): 7.4's
     # distribution of 2 dead over 1000, 1000, 10 is 0, 0, 0 and the remainder 2 to the first (2, 0, 0), not the
     # text's (1, 1, 0); 3 dead give (2, 1, 0)
@@ -3912,8 +3932,8 @@ def check_units_r14(c):
     c.eq("21.10 the tension skips its pair", w.best_claim(w.year)[2] in (None, (1, 2)), True)
     w.year = h and w.hidden_until[h]
     c.true("21.10 no longer lying low at hidden_until", not w.hides(2))
-    # --- 21.12 item 6: the awakening quarrel
-    def qworld(regions, stl_specs, enmity_hops=None, races=("elf", "goblin", "orc")):
+    # --- 21.12 item 6 (r15): the awakening quarrel
+    def qworld(regions, stl_specs, enmity_hops=None, races=("elf", "goblin", "human", "orc")):
         w = r9_world(regions=regions, races=races, conflict=(dict(enmity_hops=enmity_hops) if enmity_hops else None))
         add_civ(w, ORC, 1)
         add_stl(w, 1, 1, TOWN, 1000)
@@ -3923,51 +3943,73 @@ def check_units_r14(c):
             sid = add_stl(w, cv, region, TOWN, 1000, x=x)
             w.civ(cv)["capital"] = sid
         return w
+    qs = w.ct["quarrel_strain"] * 1000
+    c.eq("21.12 r15 shipped quarrel_strain", w.ct["quarrel_strain"], 600)
     w = qworld(4, [(ELF, 3, None), (GOBLIN, 2, None)])
     w.quarrels()
-    c.eq("21.12 elf 2 borders away, goblin 1: the goblins (c3)", w.quarrel_log, [(1000, 1, 3)])
-    c.eq("21.12 strain(orc, goblin) = claim_strain x 1000", w.strain.get((1, 3)), w.ct["claim_strain"] * 1000)
-    w = qworld(9, [(ELF, 6, None), (GOBLIN, 7, None)])
+    c.eq("21.12 elf 2 borders away, goblin 1: the elves (c2; the goblins' disposition 300 >= border_friction 200)",
+         (w.quarrel_log, w.disp(1, 3)), ([(1000, 1, 2)], 300))
+    c.eq("21.12 strain(orc, elf) = quarrel_strain x 1000", w.strain.get((1, 2)), qs)
+    w = qworld(4, [(ELF, 3, None), (HUMAN, 2, None)])
     w.quarrels()
-    c.eq("21.12 none within enmity_hops: the nearest (elves, 5 borders)", w.quarrel_log, [(1000, 1, 2)])
-    w = qworld(4, [(ELF, 2, 30), (GOBLIN, 2, 30)])
+    c.eq("21.12 elf 2 borders away, human 1: the humans (c3)", w.quarrel_log, [(1000, 1, 3)])
+    w = qworld(4, [(ELF, 3, None), (HUMAN, 2, None)])
+    w.hidden_until[3] = 1100            # the humans' settlement s3 is a hidden refuge
+    w.quarrels()
+    c.eq("21.12 a hidden refuge is never chosen: the elves", w.quarrel_log, [(1000, 1, 2)])
+    w = qworld(9, [(ELF, 7, None), (HUMAN, 6, None)])
+    w.quarrels()
+    c.eq("21.12 none within enmity_hops: the nearest (humans, 5 borders)", w.quarrel_log, [(1000, 1, 3)])
+    w = qworld(4, [(ELF, 2, 30), (HUMAN, 2, 30)])
     w.quarrels()
     c.eq("21.12 equal hops and distance: the smaller settlement id (the elves' s2)", w.quarrel_log, [(1000, 1, 2)])
-    w = qworld(4, [(ELF, 2, 30), (GOBLIN, 2, 22)])
+    w = qworld(4, [(ELF, 2, 30), (HUMAN, 2, 22)])
     w.quarrels()
-    c.eq("21.12 equal hops: the nearer by squared distance (the goblins at x 22)", w.quarrel_log, [(1000, 1, 3)])
-    w = qworld(4, [(GOBLIN, 2, None)])
-    w.strain[(1, 2)] = w.ct["claim_strain"] * 1000 + 7
+    c.eq("21.12 equal hops: the nearer by squared distance (the humans at x 22)", w.quarrel_log, [(1000, 1, 3)])
+    w = qworld(4, [(ELF, 2, None)])
+    w.strain[(1, 2)] = qs + 7
     w.quarrels()
-    c.eq("21.12 strain already higher: not lowered", w.strain[(1, 2)], w.ct["claim_strain"] * 1000 + 7)
+    c.eq("21.12 strain already higher: not lowered", w.strain[(1, 2)], qs + 7)
     w.quarrels()
     c.eq("21.12 set once (the first visible T2 only)", len(w.quarrel_log), 1)
+    w = qworld(4, [(ELF, 2, None)])
+    w.quarrels()
+    w.claim[(1, 2)] = (1, 2)
+    w.odds = lambda a, b: 1000
+    c.eq("21.12 item 2: the yearly declaration chance at the quarrel strain and odds 1000 is 75 per mille",
+         w.declare_p(1, 2), 75)
     w = qworld(4, [])
     w.quarrels()
     c.eq("21.12 item 3: no other people: pending", (sorted(w.quarrel_pending), w.strain), ([1], {}))
     cv = add_civ(w, GOBLIN, 0)
     sid = add_stl(w, cv, 3, TOWN, 1000)
     w.civ(cv)["capital"] = sid
+    w.year = 1001
+    w.quarrels()
+    c.eq("21.12 item 3 (r15): still pending while every people standing is of its camp (the goblins)",
+         (sorted(w.quarrel_pending), w.quarrel_log), ([1], []))
+    cv = add_civ(w, ELF, 0)
+    sid = add_stl(w, cv, 4, TOWN, 1000)
+    w.civ(cv)["capital"] = sid
     w.stl(sid)["created"] = w.serial         # founded in this step: not visible yet
     w.civs[-1]["created"] = w.serial
     w.quarrels()
     c.eq("21.12 item 3: still pending while the new people is not visible", sorted(w.quarrel_pending), [1])
     w.serial += 1
-    w.year = 1001
+    w.year = 1002
     w.quarrels()
-    c.eq("21.12 item 3: the pending quarrel attaches to the first people to stand", (w.quarrel_log,
-                                                                                    sorted(w.quarrel_pending)),
-         ([(1001, 1, 2)], []))
+    c.eq("21.12 item 3: the pending quarrel attaches to the first people to stand that it can fight",
+         (w.quarrel_log, sorted(w.quarrel_pending)), ([(1002, 1, 3)], []))
     w = qworld(4, [])
     w.quarrels()
     w.civ(1)["ended_year"] = 1000
     w.quarrels()
     c.eq("21.12 item 3: an ended civilization loses its pending quarrel", sorted(w.quarrel_pending), [])
-    w = qworld(4, [(GOBLIN, 2, None)])
+    w = qworld(4, [(ELF, 2, None)])
     w.events[w.civ(1)["founding_event"] - 1]["kind"] = K["civ_seceded"]
     w.quarrels()
     c.eq("21.12 a secession of an orc realm gets no quarrel", (w.quarrel_log, w.strain), ([], {}))
-    w = qworld(4, [(GOBLIN, 2, None)])
+    w = qworld(4, [(ELF, 2, None)])
     w.pd.race[ORC]["quarrel"] = 0
     w.quarrels()
     c.eq("21.12 a race with awakening_quarrel 0: nothing", (w.quarrel_log, w.strain, sorted(w.quarrel_pending)),

@@ -6173,19 +6173,19 @@ hist-conflict-turbulent-512 e763 The Hold of Dulimin besieged Sloslonk Hole of t
 hist-conflict-turbulent-512 e764 The Warband of Uld'muu declared war on the Duchy of Stin over Blackstrand Wolds.
 world hist-conflict-civs4-512 42 512 6000 all normal 4 normal
 hist-conflict-civs4-512 input_region 539cb4cc7473048fa68b7824f5c25785781ba2b091671aa534d583578eb5db49
-hist-conflict-civs4-512 table civilization 0f76b702460ecbbc5ea41d3d8cda137ff4a49b8175085a1bb4d9c56a3da68ecc
-hist-conflict-civs4-512 table event ebea737d7ec8e2a2d62b70b94f4db9380489d5ca0f8d85d630523c172dcfe584
-hist-conflict-civs4-512 table event_cause 95bbd580c8be943b355d0e9ec8d03b828f008c2d0320f1aa2219a4ac9d4c7c84
+hist-conflict-civs4-512 table civilization 996f513b617c6cc24871dae183ac4356aad5ec4563862dbbb0412e3f9806c712
+hist-conflict-civs4-512 table event e2cc4a35a48623553a969ada01456f6b6735714bf032d1394a2ef7063e2ff7ef
+hist-conflict-civs4-512 table event_cause ad672cc7a37d4e4a58182ce300f2d13d7b3bfafa64c5e2a1329083fa42fcad92
 hist-conflict-civs4-512 table event_kind 58b8cb7b5b5121612b331cd052c06a2bdfc4e23ba2f1956e14bc85aa432f8776
 hist-conflict-civs4-512 table event_kind_role 828c060dc0d262d618363e1eb4194754223827013ae83efa04ea2944f3b5731b
 hist-conflict-civs4-512 table event_kind_value ea3bdaba66965ca348093390b78ac4b2e92807052c93c9bb59822b0c53c0771e
-hist-conflict-civs4-512 table event_participant da534bd390e1097abe731f7320a67b9b7139c340abff5ed574643e0cb7909ae7
-hist-conflict-civs4-512 table event_value ac77ebd65aecd32d7b1dcac4b5cfa1e1ad0de6c1523172016d3842450d8383df
+hist-conflict-civs4-512 table event_participant be8e5a6103412a2c298be72c76dae0bd0681612e1c5eda4238af7452ba918cc6
+hist-conflict-civs4-512 table event_value 34f1063790fcba0a39a1e55210cf142744ac277b13b23d05716625dd7a94349f
 hist-conflict-civs4-512 table phase 4cc07835a1e16f07f0c6a853f21b708611e8b3e923bd5806888e684f3c9456fd
-hist-conflict-civs4-512 table region_control 4eec488fc8b4c925a1ee54717e01d21180fbf8e0730061e134a1d5678ad2027e
-hist-conflict-civs4-512 table relation dd4bf595c0698d024f4c9a72296dcd5c236a5c215db50c638832ee56f026a743
-hist-conflict-civs4-512 table settlement 0bfc203340b99c063e7b942b2eea25fc643df5989fb891d428bd7bfc91bdf3d5
-hist-conflict-civs4-512 table settlement_census c72045be3512c429fe515dd2f5e331648a76865e36aa977b830daac743be36f6
+hist-conflict-civs4-512 table region_control 855f7f190440b0191dcce182baac0e046b0d94c79714df0628a6be5d1b74ff50
+hist-conflict-civs4-512 table relation 17f77fff986956e46086e17f626df685172ff56b44b26bf54d4a14897518cb9a
+hist-conflict-civs4-512 table settlement 097e1eda8fa4dc3f494651fdbdd5d5f5a618cddc0af44ce8bcca3059e490c63c
+hist-conflict-civs4-512 table settlement_census f0a1d11f4b9e046e39c70e525860e6c5131c3c6ddacd2e9b01033ba131f718b6
 hist-conflict-civs4-512 report end_year = 6000
 hist-conflict-civs4-512 report phases_opening = 6
 hist-conflict-civs4-512 report phases_quiet = 10
@@ -6193,97 +6193,97 @@ hist-conflict-civs4-512 report phases_flare = 5
 hist-conflict-civs4-512 report phases_final = 1
 hist-conflict-civs4-512 report simulated_years = 1404
 hist-conflict-civs4-512 report simulated_permille = 234
-hist-conflict-civs4-512 report events = 808
+hist-conflict-civs4-512 report events = 832
 hist-conflict-civs4-512 report events_awakening = 6
 hist-conflict-civs4-512 report events_civ_founded = 9
 hist-conflict-civs4-512 report events_settlement_founded = 9
 hist-conflict-civs4-512 report events_quiet_era = 0
 hist-conflict-civs4-512 report events_flare_up = 5
-hist-conflict-civs4-512 report events_colony_founded = 67
-hist-conflict-civs4-512 report events_became_village = 34
-hist-conflict-civs4-512 report events_became_town = 37
+hist-conflict-civs4-512 report events_colony_founded = 65
+hist-conflict-civs4-512 report events_became_village = 36
+hist-conflict-civs4-512 report events_became_town = 38
 hist-conflict-civs4-512 report events_became_city = 1
-hist-conflict-civs4-512 report events_settlement_dwindled = 13
-hist-conflict-civs4-512 report events_famine = 41
+hist-conflict-civs4-512 report events_settlement_dwindled = 16
+hist-conflict-civs4-512 report events_famine = 45
 hist-conflict-civs4-512 report events_plague = 0
-hist-conflict-civs4-512 report events_plague_spread = 31
+hist-conflict-civs4-512 report events_plague_spread = 30
 hist-conflict-civs4-512 report events_succession_crisis = 17
 hist-conflict-civs4-512 report events_civ_seceded = 2
 hist-conflict-civs4-512 report events_settlement_abandoned = 0
-hist-conflict-civs4-512 report events_capital_moved = 22
+hist-conflict-civs4-512 report events_capital_moved = 23
 hist-conflict-civs4-512 report events_civ_ended = 0
 hist-conflict-civs4-512 report events_ruin_faded = 10
-hist-conflict-civs4-512 report events_claim = 67
-hist-conflict-civs4-512 report events_war_declared = 40
-hist-conflict-civs4-512 report events_battle = 148
+hist-conflict-civs4-512 report events_claim = 69
+hist-conflict-civs4-512 report events_war_declared = 42
+hist-conflict-civs4-512 report events_battle = 160
 hist-conflict-civs4-512 report events_battle_at_pass = 0
-hist-conflict-civs4-512 report events_siege = 68
-hist-conflict-civs4-512 report events_sacked = 25
-hist-conflict-civs4-512 report events_settlement_captured = 16
-hist-conflict-civs4-512 report events_peace = 16
-hist-conflict-civs4-512 report events_truce = 6
-hist-conflict-civs4-512 report events_region_ceded = 7
+hist-conflict-civs4-512 report events_siege = 74
+hist-conflict-civs4-512 report events_sacked = 28
+hist-conflict-civs4-512 report events_settlement_captured = 13
+hist-conflict-civs4-512 report events_peace = 17
+hist-conflict-civs4-512 report events_truce = 7
+hist-conflict-civs4-512 report events_region_ceded = 9
 hist-conflict-civs4-512 report events_civ_conquered = 3
 hist-conflict-civs4-512 report events_settlement_abandoned_to = 1
-hist-conflict-civs4-512 report events_refugees_settled = 0
-hist-conflict-civs4-512 report events_tribute = 19
+hist-conflict-civs4-512 report events_refugees_settled = 1
+hist-conflict-civs4-512 report events_tribute = 17
 hist-conflict-civs4-512 report events_war_won = 14
 hist-conflict-civs4-512 report events_search_abandoned = 0
-hist-conflict-civs4-512 report events_refuge_held = 19
+hist-conflict-civs4-512 report events_refuge_held = 10
 hist-conflict-civs4-512 report events_plague_outbreak = 45
 hist-conflict-civs4-512 report events_quiet_stretch = 10
 hist-conflict-civs4-512 report civilizations = 11
 hist-conflict-civs4-512 report civilizations_alive = 8
-hist-conflict-civs4-512 report settlements = 76
-hist-conflict-civs4-512 report settlements_standing = 50
-hist-conflict-civs4-512 report regions_held = 14
-hist-conflict-civs4-512 report census_rows = 1046
-hist-conflict-civs4-512 report relations = 90
-hist-conflict-civs4-512 report population = 77719
-hist-conflict-civs4-512 report population_elf = 6147
-hist-conflict-civs4-512 report population_goblin = 1791
-hist-conflict-civs4-512 report population_dwarf = 53988
+hist-conflict-civs4-512 report settlements = 75
+hist-conflict-civs4-512 report settlements_standing = 46
+hist-conflict-civs4-512 report regions_held = 13
+hist-conflict-civs4-512 report census_rows = 1063
+hist-conflict-civs4-512 report relations = 94
+hist-conflict-civs4-512 report population = 73320
+hist-conflict-civs4-512 report population_elf = 4639
+hist-conflict-civs4-512 report population_goblin = 1774
+hist-conflict-civs4-512 report population_dwarf = 52270
 hist-conflict-civs4-512 report population_faerie = 400
-hist-conflict-civs4-512 report population_human = 9714
-hist-conflict-civs4-512 report population_orc = 5679
-hist-conflict-civs4-512 report settlements_standing_elf = 13
-hist-conflict-civs4-512 report settlements_standing_goblin = 2
-hist-conflict-civs4-512 report settlements_standing_dwarf = 29
+hist-conflict-civs4-512 report population_human = 11103
+hist-conflict-civs4-512 report population_orc = 3134
+hist-conflict-civs4-512 report settlements_standing_elf = 10
+hist-conflict-civs4-512 report settlements_standing_goblin = 1
+hist-conflict-civs4-512 report settlements_standing_dwarf = 28
 hist-conflict-civs4-512 report settlements_standing_faerie = 2
-hist-conflict-civs4-512 report settlements_standing_human = 3
+hist-conflict-civs4-512 report settlements_standing_human = 4
 hist-conflict-civs4-512 report settlements_standing_orc = 1
-hist-conflict-civs4-512 report regions_held_elf = 4
-hist-conflict-civs4-512 report regions_held_goblin = 1
+hist-conflict-civs4-512 report regions_held_elf = 3
+hist-conflict-civs4-512 report regions_held_goblin = 0
 hist-conflict-civs4-512 report regions_held_dwarf = 7
 hist-conflict-civs4-512 report regions_held_faerie = 1
 hist-conflict-civs4-512 report regions_held_human = 1
-hist-conflict-civs4-512 report regions_held_orc = 0
-hist-conflict-civs4-512 stats civ_settlements_max = 19
-hist-conflict-civs4-512 stats settlements_colonies = 67
+hist-conflict-civs4-512 report regions_held_orc = 1
+hist-conflict-civs4-512 stats civ_settlements_max = 15
+hist-conflict-civs4-512 stats settlements_colonies = 65
 hist-conflict-civs4-512 stats civilizations_seceded = 2
 hist-conflict-civs4-512 stats relations_enmity = 14
-hist-conflict-civs4-512 stats relations_peace = 36
-hist-conflict-civs4-512 stats war_years_total = 524
-hist-conflict-civs4-512 stats war_years_max = 40
+hist-conflict-civs4-512 stats relations_peace = 38
+hist-conflict-civs4-512 stats war_years_total = 552
+hist-conflict-civs4-512 stats war_years_max = 29
 hist-conflict-civs4-512 stats civilizations_conquered = 3
-hist-conflict-civs4-512 stats settlements_sacked = 15
-hist-conflict-civs4-512 stats settlements_captured = 11
-hist-conflict-civs4-512 stats regions_conquered = 9
+hist-conflict-civs4-512 stats settlements_sacked = 18
+hist-conflict-civs4-512 stats settlements_captured = 8
+hist-conflict-civs4-512 stats regions_conquered = 10
 hist-conflict-civs4-512 stats races_alive = 6
-hist-conflict-civs4-512 stats wars_attacker_elf = 2
-hist-conflict-civs4-512 stats wars_attacker_goblin = 26
+hist-conflict-civs4-512 stats wars_attacker_elf = 3
+hist-conflict-civs4-512 stats wars_attacker_goblin = 28
 hist-conflict-civs4-512 stats wars_attacker_dwarf = 8
 hist-conflict-civs4-512 stats wars_attacker_faerie = 0
 hist-conflict-civs4-512 stats wars_attacker_human = 1
-hist-conflict-civs4-512 stats wars_attacker_orc = 3
-hist-conflict-civs4-512 stats wars_hollow = 6
-hist-conflict-civs4-512 stats wars_hollow_permille = 150
+hist-conflict-civs4-512 stats wars_attacker_orc = 2
+hist-conflict-civs4-512 stats wars_hollow = 8
+hist-conflict-civs4-512 stats wars_hollow_permille = 190
 hist-conflict-civs4-512 stats wars_same_goal_max = 4
 hist-conflict-civs4-512 stats wars_same_goal_unchanged_max = 3
-hist-conflict-civs4-512 stats race_population_share_max_permille = 694
-hist-conflict-civs4-512 stats race_regions_share_max_permille = 500
+hist-conflict-civs4-512 stats race_population_share_max_permille = 712
+hist-conflict-civs4-512 stats race_regions_share_max_permille = 538
 hist-conflict-civs4-512 stats wars_unfound = 0
-hist-conflict-civs4-512 stats refuges_held_no_destination = 19
+hist-conflict-civs4-512 stats refuges_held_no_destination = 10
 hist-conflict-civs4-512 war e61 2449-2450 c3 c1 rg12 claim e31 battles 1 sacked 1 taken 0 goal-lost won-c3-tribute
 hist-conflict-civs4-512 war e62 2449-2469 c4 c2 rg3 claim e33 battles 6 sacked 1 taken 1 goal-lost won-c4-tribute
 hist-conflict-civs4-512 war e68 2453-2468 c3 c2 rg3 claim e37 battles 4 sacked 2 taken 0 goal-lost won-c3-tribute
@@ -6316,14 +6316,16 @@ hist-conflict-civs4-512 war e576 5347-5352 c10 c3 rg1 claim e557 battles 1 sacke
 hist-conflict-civs4-512 war e589 5366-5369 c6 c9 rg8 claim e539 battles 1 sacked 1 taken 0 quiet won-c6-tribute
 hist-conflict-civs4-512 war e611 5608-5627 c6 c4 rg13 claim e558 battles 7 sacked 1 taken 0 exhaustion won-c6-tribute
 hist-conflict-civs4-512 war e620 5621-5625 c7 c3 rg8 claim e603 battles 2 sacked 0 taken 2 goal-lost won-c7-ceded
-hist-conflict-civs4-512 war e645 5628-5634 c7 c9 rg8 claim e588 battles 2 sacked 0 taken 2 conquest -
-hist-conflict-civs4-512 war e654 5634-5636 c1 c3 rg6 claim e302 battles 1 sacked 1 taken 0 goal-lost won-c1-tribute
-hist-conflict-civs4-512 war e675 5696-5704 c6 c3 rg5 claim e599 battles 3 sacked 2 taken 1 conquest -
-hist-conflict-civs4-512 war e696 5758-5763 c2 c4 rg13 claim e613 battles 3 sacked 0 taken 0 exhaustion truce
-hist-conflict-civs4-512 war e710 5786-5826 c11 c7 rg9 claim e643 battles 2 sacked 0 taken 0 length won-c7
-hist-conflict-civs4-512 war e726 5831-5855 c11 c10 rg4 claim e644 battles 5 sacked 2 taken 0 exhaustion won-c11-tribute
-hist-conflict-civs4-512 war e743 5871-5906 c7 c4 rg13 claim e713 battles 12 sacked 1 taken 2 exhaustion won-c7
-hist-conflict-civs4-512 war e786 5944-5949 c11 c6 rg5 claim e669 battles 3 sacked 0 taken 0 exhaustion won-c11-tribute
+hist-conflict-civs4-512 war e644 5628-5645 c7 c9 rg8 claim e588 battles 4 sacked 1 taken 1 conquest -
+hist-conflict-civs4-512 war e650 5634-5642 c1 c3 rg6 claim e302 battles 3 sacked 0 taken 0 exhaustion won-c3-ceded
+hist-conflict-civs4-512 war e652 5636-5652 c11 c10 rg4 claim e609 battles 4 sacked 0 taken 0 exhaustion won-c10
+hist-conflict-civs4-512 war e684 5682-5703 c4 c3 rg12 claim e290 battles 6 sacked 0 taken 0 exhaustion truce
+hist-conflict-civs4-512 war e691 5696-5708 c6 c3 rg5 claim e599 battles 5 sacked 2 taken 1 goal-lost won-c6-ceded
+hist-conflict-civs4-512 war e705 5705-5726 c3 c10 rg4 claim e672 battles 6 sacked 0 taken 0 exhaustion truce
+hist-conflict-civs4-512 war e746 5811-5820 c11 c7 rg9 claim e643 battles 2 sacked 1 taken 0 no-front won-c7
+hist-conflict-civs4-512 war e761 5871-5900 c7 c4 rg13 claim e739 battles 6 sacked 5 taken 0 conquest -
+hist-conflict-civs4-512 war e781 5893-5906 c2 c3 rg6 claim e559 battles 4 sacked 0 taken 0 exhaustion won-c3-tribute
+hist-conflict-civs4-512 war e808 5940-5947 c1 c3 rg6 claim e805 battles 3 sacked 0 taken 0 exhaustion won-c1
 hist-conflict-civs4-512 q150 0 e0
 hist-conflict-civs4-512 q175 0 e0
 hist-conflict-civs4-512 q200 0 e0
@@ -6543,15 +6545,17 @@ hist-conflict-civs4-512 note e576 Claimed since 5169.
 hist-conflict-civs4-512 note e589 Claimed since 5092.
 hist-conflict-civs4-512 note e611 Claimed since 5219. The second war between them.
 hist-conflict-civs4-512 note e620 Claimed since 5394. The fourth war between them.
-hist-conflict-civs4-512 note e645 Claimed since 5365.
-hist-conflict-civs4-512 note e654 Claimed since 3818. The fourth war between them.
-hist-conflict-civs4-512 note e675 Claimed since 5369. The third war between them.
-hist-conflict-civs4-512 note e696 Claimed since 5617. The fifth war between them.
-hist-conflict-civs4-512 note e710 Claimed since 5628.
-hist-conflict-civs4-512 note e726 Claimed since 5628.
-hist-conflict-civs4-512 note e743 Claimed since 5792.
-hist-conflict-civs4-512 note e786 Claimed since 5661.
-hist-conflict-civs4-512 summary threshold 36 shown 217 ages 8,42,43,32,36,56
+hist-conflict-civs4-512 note e644 Claimed since 5365.
+hist-conflict-civs4-512 note e650 Claimed since 3818. The fourth war between them.
+hist-conflict-civs4-512 note e652 Claimed since 5596.
+hist-conflict-civs4-512 note e684 Claimed since 3359.
+hist-conflict-civs4-512 note e691 Claimed since 5369. The third war between them.
+hist-conflict-civs4-512 note e705 Claimed since 5651. The second war between them.
+hist-conflict-civs4-512 note e746 Claimed since 5628.
+hist-conflict-civs4-512 note e761 Claimed since 5792.
+hist-conflict-civs4-512 note e781 Claimed since 5244. The fifth war between them.
+hist-conflict-civs4-512 note e808 Claimed since 5913. The fifth war between them.
+hist-conflict-civs4-512 summary threshold 36 shown 225 ages 8,42,43,32,36,64
 hist-conflict-civs4-512 e1 Fielie awakened the Elves in Gull's Pit.
 hist-conflict-civs4-512 e2 The Elves founded the House of Finen in Gull's Pit.
 hist-conflict-civs4-512 e3 The House of Finen founded Voeledell in Gull's Pit.
@@ -7160,7 +7164,7 @@ hist-conflict-civs4-512 e605 Wuldwick grew into a town of 1,570.
 hist-conflict-civs4-512 e606 Ogh'krak awakened the Orcs in the Swart Barrows.
 hist-conflict-civs4-512 e607 The Orcs founded the Ghuughzuz Horde in the Swart Barrows.
 hist-conflict-civs4-512 e608 The Ghuughzuz Horde founded Maaz Fort in the Swart Barrows.
-hist-conflict-civs4-512 e609 The Ghuughzuz Horde laid claim to West Wood, held by the Grork Horde.
+hist-conflict-civs4-512 e609 The Ghuughzuz Horde laid claim to the Plain of Silence, held by the Duchy of Ashin.
 hist-conflict-civs4-512 e610 Famine struck Broumgrirk; 94 died.
 hist-conflict-civs4-512 e611 The Tourdbaim Throne declared war on the Gidruz Horde over the Hollow Hurst.
 hist-conflict-civs4-512 e612 The Gidruz Horde defeated the Tourdbaim Throne in the Hollow Hurst; 142 of the defeated and 22 of the victors fell.
@@ -7195,186 +7199,210 @@ hist-conflict-civs4-512 e640 The Gidruz Horde sued the Tourdbaim Throne for peac
 hist-conflict-civs4-512 e641 The Gidruz Horde paid tribute to the Tourdbaim Throne; 281 were carried off.
 hist-conflict-civs4-512 e642 Krik grew into a town of 1,539.
 hist-conflict-civs4-512 e643 The Ghuughzuz Horde laid claim to Central Downs, held by Clan Thraim.
-hist-conflict-civs4-512 e644 The Ghuughzuz Horde laid claim to the Plain of Silence, held by the Duchy of Ashin.
-hist-conflict-civs4-512 e645 Clan Thraim declared war on the Druz Horde over West Wood.
-hist-conflict-civs4-512 e646 Plague broke out in Sneezskrub Hole and spread to one other settlement; 232 died.
-hist-conflict-civs4-512 e647 The plague spread to Snugg; 81 died.
-hist-conflict-civs4-512 e648 Weakened by plague, Snugg was abandoned; 947 survivors went to Sneezskrub Hole.
-hist-conflict-civs4-512 e649 Famine struck Endnodell; 23 died.
-hist-conflict-civs4-512 e650 Clan Thraim defeated the Druz Horde in West Wood; 81 of the defeated and 25 of the victors fell.
-hist-conflict-civs4-512 e651 Clan Thraim besieged Snirk Pit of the Druz Horde; it fell.
-hist-conflict-civs4-512 e652 Clan Thraim took Snirk Pit from the Druz Horde; 299 died.
-hist-conflict-civs4-512 e653 The seat of the Druz Horde moved to Gneerkkit.
-hist-conflict-civs4-512 e654 The House of Finen declared war on the Grork Horde over Sorreldown.
-hist-conflict-civs4-512 e655 Clan Thraim defeated the Druz Horde in West Wood; 20 of the defeated and 6 of the victors fell.
-hist-conflict-civs4-512 e656 Clan Thraim besieged Gneerkkit of the Druz Horde; it fell.
-hist-conflict-civs4-512 e657 Clan Thraim took Gneerkkit from the Druz Horde; 100 died.
-hist-conflict-civs4-512 e658 The Druz Horde fell to Clan Thraim.
-hist-conflict-civs4-512 e659 The House of Finen defeated the Grork Horde in Sorreldown; 176 of the defeated and 51 of the victors fell.
-hist-conflict-civs4-512 e660 The House of Finen besieged Turknon Hold of the Grork Horde; it fell.
-hist-conflict-civs4-512 e661 The House of Finen sacked Turknon Hold of the Grork Horde; 240 died and 560 fled.
-hist-conflict-civs4-512 e662 The House of Finen prevailed over the Grork Horde after 2 years of war.
-hist-conflict-civs4-512 e663 The Grork Horde paid tribute to the House of Finen; 721 were carried off.
-hist-conflict-civs4-512 e664 A succession crisis at Snozz-Skink shook the Grork Horde.
-hist-conflict-civs4-512 e665 Famine struck Lafeco; 32 died.
-hist-conflict-civs4-512 e666 The Grork Horde laid claim to the Plain of Silence, held by the Duchy of Ashin.
-hist-conflict-civs4-512 e667 Famine struck Alessas; 752 died.
-hist-conflict-civs4-512 e668 Famine struck Drili Deep; 198 died.
-hist-conflict-civs4-512 e669 The Ghuughzuz Horde laid claim to Northwest Fells, held by the Tourdbaim Throne.
-hist-conflict-civs4-512 e670 A succession crisis at Snozz-Skink shook the Grork Horde.
-hist-conflict-civs4-512 e671 Plague broke out in Skrunk Pit and spread to one other settlement; 1,426 died.
-hist-conflict-civs4-512 e672 The plague spread to Gneerkkit; 120 died.
-hist-conflict-civs4-512 e673 Famine struck Saeniedell; 72 died.
-hist-conflict-civs4-512 e674 The Gidruz Horde sent settlers from Slikreek to found Zork in the Hollow Hurst.
-hist-conflict-civs4-512 e675 The Tourdbaim Throne declared war on the Grork Horde over the Swart Barrows.
-hist-conflict-civs4-512 e676 The Tourdbaim Throne defeated the Grork Horde in the Swart Barrows; 131 of the defeated and 42 of the victors fell.
-hist-conflict-civs4-512 e677 The Tourdbaim Throne besieged Snozz-Skink of the Grork Horde; it fell.
-hist-conflict-civs4-512 e678 The Tourdbaim Throne took Snozz-Skink from the Grork Horde; 367 died.
-hist-conflict-civs4-512 e679 The seat of the Grork Horde moved to Dreeb Pit.
-hist-conflict-civs4-512 e680 The Tourdbaim Throne defeated the Grork Horde in the Swart Barrows; 57 of the defeated and 18 of the victors fell.
-hist-conflict-civs4-512 e681 The Tourdbaim Throne besieged Dreeb Pit of the Grork Horde; it fell.
-hist-conflict-civs4-512 e682 The Tourdbaim Throne sacked Dreeb Pit of the Grork Horde; 438 died and 1,025 fled.
-hist-conflict-civs4-512 e683 The seat of the Grork Horde moved to Sneezskrub Hole.
-hist-conflict-civs4-512 e684 The Tourdbaim Throne defeated the Grork Horde in the Swart Barrows; 48 of the defeated and 15 of the victors fell.
-hist-conflict-civs4-512 e685 The Tourdbaim Throne besieged Sneezskrub Hole of the Grork Horde; it fell.
-hist-conflict-civs4-512 e686 The Tourdbaim Throne sacked Sneezskrub Hole of the Grork Horde; 720 died and 1,681 fled.
-hist-conflict-civs4-512 e687 The Grork Horde fell to the Tourdbaim Throne.
-hist-conflict-civs4-512 e688 Maaz Fort grew into a town of 1,508.
-hist-conflict-civs4-512 e689 Plague broke out in Voeledell; 373 died.
-hist-conflict-civs4-512 e690 Famine struck Alessas; 901 died.
-hist-conflict-civs4-512 e691 Plague broke out in Brodinbu and spread to 2 other settlements; 1,288 died in all.
-hist-conflict-civs4-512 e692 The plague spread to Gruz-Keegg; 662 died.
-hist-conflict-civs4-512 e693 The plague spread to Skrunk Pit; 516 died.
-hist-conflict-civs4-512 e694 Clan Thraim sent settlers from Bronbair to found Koli Hold in Sorreldown.
-hist-conflict-civs4-512 e695 Plague broke out in Snozz-Skink; 706 died.
-hist-conflict-civs4-512 e696 The Realm of Ithieglie declared war on the Gidruz Horde over the Hollow Hurst.
-hist-conflict-civs4-512 e697 The Gidruz Horde defeated the Realm of Ithieglie in the Hollow Hurst; 87 of the defeated and 20 of the victors fell.
-hist-conflict-civs4-512 e698 The Gidruz Horde defeated the Realm of Ithieglie in Seredale Tangle; 84 of the defeated and 20 of the victors fell.
-hist-conflict-civs4-512 e699 The Gidruz Horde besieged Glalivedell of the Realm of Ithieglie; it held.
-hist-conflict-civs4-512 e700 The Duchy of Ashin laid claim to the Swart Barrows, held by the Ghuughzuz Horde.
-hist-conflict-civs4-512 e701 The Realm of Ithieglie defeated the Gidruz Horde in Seredale Tangle; 63 of the defeated and 20 of the victors fell.
-hist-conflict-civs4-512 e702 The Realm of Ithieglie and the Gidruz Horde made peace after 5 years of war, neither the victor.
-hist-conflict-civs4-512 e703 Plague broke out in Alessas; 1,304 died.
-hist-conflict-civs4-512 e704 Zork grew into a village of 252.
-hist-conflict-civs4-512 e705 The Realm of Ithieglie sent settlers from Esranddell to found Nonedell in the Brake of Antlers.
-hist-conflict-civs4-512 e706 Clan Thraim sent settlers from Bronbair to found Himmkhu Hold in the Swart Barrows.
-hist-conflict-civs4-512 e707 Famine struck Esranddell; 25 died.
-hist-conflict-civs4-512 e708 Weakened by famine, Esranddell dwindled to 194 souls.
-hist-conflict-civs4-512 e709 Keeskeegg Hole grew into a town of 1,503.
-hist-conflict-civs4-512 e710 The Ghuughzuz Horde declared war on Clan Thraim over Central Downs.
-hist-conflict-civs4-512 e711 Plague broke out in Skrunk Pit; 995 died.
-hist-conflict-civs4-512 e712 Dreerksnak grew into a town of 1,500.
-hist-conflict-civs4-512 e713 Clan Thraim laid claim to the Hollow Hurst, held by the Gidruz Horde.
-hist-conflict-civs4-512 e714 Raenme dwindled to 1,199 souls.
-hist-conflict-civs4-512 e715 Zeezzbazz grew into a town of 1,500.
-hist-conflict-civs4-512 e716 Gnag grew into a town of 1,500.
-hist-conflict-civs4-512 e717 Skognit Hole grew into a town of 1,500.
-hist-conflict-civs4-512 e718 Gnark Hole grew into a town of 1,500.
-hist-conflict-civs4-512 e719 Famine struck Iennmo; 96 died.
-hist-conflict-civs4-512 e720 Clan Thraim defeated the Ghuughzuz Horde in Central Downs; 627 of the defeated and 200 of the victors fell.
-hist-conflict-civs4-512 e721 Plague broke out in Fia Hollow; 70 died.
-hist-conflict-civs4-512 e722 Clan Thraim defeated the Ghuughzuz Horde in the Swart Barrows; 568 of the defeated and 181 of the victors fell.
-hist-conflict-civs4-512 e723 Clan Thraim besieged Maaz Fort of the Ghuughzuz Horde; with nowhere to flee, its people held on.
-hist-conflict-civs4-512 e724 Famine struck Gink; 66 died.
-hist-conflict-civs4-512 e725 Clan Thraim prevailed over the Ghuughzuz Horde after 40 years of war.
-hist-conflict-civs4-512 e726 The Ghuughzuz Horde declared war on the Duchy of Ashin over the Plain of Silence.
-hist-conflict-civs4-512 e727 Gneerkkit grew into a town of 1,503.
-hist-conflict-civs4-512 e728 The Ghuughzuz Horde defeated the Duchy of Ashin in the Plain of Silence; 264 of the defeated and 84 of the victors fell.
-hist-conflict-civs4-512 e729 The Ghuughzuz Horde besieged Alessas of the Duchy of Ashin; it fell.
-hist-conflict-civs4-512 e730 The Ghuughzuz Horde sacked Alessas of the Duchy of Ashin; 1,417 died and 3,309 fled.
-hist-conflict-civs4-512 e731 The seat of the Duchy of Ashin moved to Alurbury.
-hist-conflict-civs4-512 e732 The Duchy of Ashin defeated the Ghuughzuz Horde in the Plain of Silence; 446 of the defeated and 71 of the victors fell.
-hist-conflict-civs4-512 e733 The Duchy of Ashin defeated the Ghuughzuz Horde in the Swart Barrows; 447 of the defeated and 71 of the victors fell.
-hist-conflict-civs4-512 e734 The Duchy of Ashin besieged Maaz Fort of the Ghuughzuz Horde; it held.
-hist-conflict-civs4-512 e735 The Ghuughzuz Horde defeated the Duchy of Ashin in the Swart Barrows; 224 of the defeated and 71 of the victors fell.
-hist-conflict-civs4-512 e736 The Ghuughzuz Horde defeated the Duchy of Ashin in the Plain of Silence; 226 of the defeated and 72 of the victors fell.
-hist-conflict-civs4-512 e737 The Ghuughzuz Horde besieged Alurbury of the Duchy of Ashin; it fell.
-hist-conflict-civs4-512 e738 The Ghuughzuz Horde sacked Alurbury of the Duchy of Ashin; 1,545 died and 3,608 fled.
-hist-conflict-civs4-512 e739 The seat of the Duchy of Ashin moved to Wuldwick.
-hist-conflict-civs4-512 e740 The Duchy of Ashin sued the Ghuughzuz Horde for peace after 24 years of war.
-hist-conflict-civs4-512 e741 The Duchy of Ashin paid tribute to the Ghuughzuz Horde; 728 were carried off.
-hist-conflict-civs4-512 e742 The Gidruz Horde laid claim to Coldbarrow, held by the Tourdbaim Throne.
-hist-conflict-civs4-512 e743 Clan Thraim declared war on the Gidruz Horde over the Hollow Hurst.
-hist-conflict-civs4-512 e744 Plague broke out in Zeezzbazz and spread to one other settlement; 614 died.
-hist-conflict-civs4-512 e745 The plague spread to Skrunk Pit; 230 died.
-hist-conflict-civs4-512 e746 Clan Thraim defeated the Gidruz Horde in the Hollow Hurst; 69 of the defeated and 22 of the victors fell.
-hist-conflict-civs4-512 e747 Clan Thraim besieged Krik of the Gidruz Horde; it fell.
-hist-conflict-civs4-512 e748 Clan Thraim took Krik from the Gidruz Horde; 175 died.
-hist-conflict-civs4-512 e749 The seat of the Gidruz Horde moved to Slikreek.
-hist-conflict-civs4-512 e750 Clan Thraim defeated the Gidruz Horde in the Hollow Hurst; 34 of the defeated and 10 of the victors fell.
-hist-conflict-civs4-512 e751 Clan Thraim besieged Slikreek of the Gidruz Horde; it fell.
-hist-conflict-civs4-512 e752 Clan Thraim took Slikreek from the Gidruz Horde; 61 died.
-hist-conflict-civs4-512 e753 The seat of the Gidruz Horde moved to Sneeggnox Hole.
-hist-conflict-civs4-512 e754 Clan Thraim defeated the Gidruz Horde in the Hollow Hurst; 21 of the defeated and 6 of the victors fell.
-hist-conflict-civs4-512 e755 Clan Thraim besieged Sneeggnox Hole of the Gidruz Horde; it fell.
-hist-conflict-civs4-512 e756 Clan Thraim sacked Sneeggnox Hole of the Gidruz Horde; 172 died and 404 fled.
-hist-conflict-civs4-512 e757 The seat of the Gidruz Horde moved to Zork.
-hist-conflict-civs4-512 e758 Clan Thraim defeated the Gidruz Horde in the Hollow Hurst; 18 of the defeated and 5 of the victors fell.
-hist-conflict-civs4-512 e759 Clan Thraim besieged Zork of the Gidruz Horde; with nowhere to flee, its people held on.
-hist-conflict-civs4-512 e760 Clan Thraim defeated the Gidruz Horde in the Hollow Hurst; 18 of the defeated and 6 of the victors fell.
-hist-conflict-civs4-512 e761 Clan Thraim besieged Zork of the Gidruz Horde; with nowhere to flee, its people held on.
-hist-conflict-civs4-512 e762 Clan Thraim defeated the Gidruz Horde in the Hollow Hurst; 19 of the defeated and 6 of the victors fell.
-hist-conflict-civs4-512 e763 Clan Thraim besieged Zork of the Gidruz Horde; with nowhere to flee, its people held on.
-hist-conflict-civs4-512 e764 Clan Thraim defeated the Gidruz Horde in the Hollow Hurst; 19 of the defeated and 6 of the victors fell.
-hist-conflict-civs4-512 e765 Clan Thraim besieged Zork of the Gidruz Horde; with nowhere to flee, its people held on.
-hist-conflict-civs4-512 e766 Clan Thraim defeated the Gidruz Horde in the Hollow Hurst; 19 of the defeated and 6 of the victors fell.
-hist-conflict-civs4-512 e767 Clan Thraim besieged Zork of the Gidruz Horde; with nowhere to flee, its people held on.
-hist-conflict-civs4-512 e768 Clan Thraim defeated the Gidruz Horde in the Hollow Hurst; 19 of the defeated and 6 of the victors fell.
-hist-conflict-civs4-512 e769 Clan Thraim besieged Zork of the Gidruz Horde; with nowhere to flee, its people held on.
-hist-conflict-civs4-512 e770 The Ghuughzuz Horde laid claim to the Swart Barrows, held by Clan Thraim.
-hist-conflict-civs4-512 e771 Plague broke out in Minno; 53 died.
-hist-conflict-civs4-512 e772 Famine struck Groz; 74 died.
-hist-conflict-civs4-512 e773 Clan Thraim defeated the Gidruz Horde in the Hollow Hurst; 20 of the defeated and 6 of the victors fell.
-hist-conflict-civs4-512 e774 Clan Thraim besieged Zork of the Gidruz Horde; it held.
-hist-conflict-civs4-512 e775 Clan Thraim defeated the Gidruz Horde in the Hollow Hurst; 20 of the defeated and 6 of the victors fell.
-hist-conflict-civs4-512 e776 Clan Thraim besieged Zork of the Gidruz Horde; with nowhere to flee, its people held on.
-hist-conflict-civs4-512 e777 Clan Thraim defeated the Gidruz Horde in the Hollow Hurst; 20 of the defeated and 6 of the victors fell.
-hist-conflict-civs4-512 e778 Clan Thraim besieged Zork of the Gidruz Horde; with nowhere to flee, its people held on.
-hist-conflict-civs4-512 e779 The Gidruz Horde sued Clan Thraim for peace after 35 years of war.
-hist-conflict-civs4-512 e780 Famine struck Mairkhound Hold; 233 died.
-hist-conflict-civs4-512 e781 The Duchy of Ashin sent settlers from Hudrorstead to found Brurreldford in the Plain of Silence.
-hist-conflict-civs4-512 e782 Koli Hold grew into a village of 250.
-hist-conflict-civs4-512 e783 The Ghuughzuz Horde laid claim to the Plain of Silence, held by the Duchy of Ashin.
-hist-conflict-civs4-512 e784 Plague broke out in Gink and spread to one other settlement; 430 died.
-hist-conflict-civs4-512 e785 The plague spread to Grirk-Zix Pit; 121 died.
-hist-conflict-civs4-512 e786 The Ghuughzuz Horde declared war on the Tourdbaim Throne over the Swart Barrows.
-hist-conflict-civs4-512 e787 Plague broke out in Fia Hollow; 55 died.
-hist-conflict-civs4-512 e788 The Tourdbaim Throne defeated the Ghuughzuz Horde in the Swart Barrows; 743 of the defeated and 237 of the victors fell.
-hist-conflict-civs4-512 e789 The Ghuughzuz Horde defeated the Tourdbaim Throne in the Swart Barrows; 1,241 of the defeated and 208 of the victors fell.
-hist-conflict-civs4-512 e790 The Ghuughzuz Horde defeated the Tourdbaim Throne in the Swart Barrows; 1,159 of the defeated and 201 of the victors fell.
-hist-conflict-civs4-512 e791 The Ghuughzuz Horde besieged Snozz-Skink of the Tourdbaim Throne; it held.
-hist-conflict-civs4-512 e792 The Tourdbaim Throne sued the Ghuughzuz Horde for peace after 5 years of war.
-hist-conflict-civs4-512 e793 The Tourdbaim Throne paid tribute to the Ghuughzuz Horde; 1,639 were carried off.
-hist-conflict-civs4-512 e794 Plague broke out in Snozz-Skink; 639 died.
-hist-conflict-civs4-512 e795 Zork grew into a town of 1,506.
-hist-conflict-civs4-512 e796 Plague broke out in Brodinbu; 117 died.
-hist-conflict-civs4-512 e797 Plague broke out in Gruz-Keegg and spread to 2 other settlements; 1,442 died in all.
-hist-conflict-civs4-512 e798 The plague spread to Dreerksnak; 268 died.
-hist-conflict-civs4-512 e799 The plague spread to Gnark Hole; 236 died.
-hist-conflict-civs4-512 e800 Plague broke out in Doundkind and spread to one other settlement; 982 died.
-hist-conflict-civs4-512 e801 The plague spread to Raenme; 67 died.
-hist-conflict-civs4-512 e802 The Gidruz Horde sent settlers from Zork to found Nux in the Hollow Hurst.
-hist-conflict-civs4-512 e803 Famine struck Iennmo; 91 died.
-hist-conflict-civs4-512 e804 Famine struck Beedrux Pit; 812 died.
-hist-conflict-civs4-512 e805 Famine struck Milia Glade; 12 died.
-hist-conflict-civs4-512 e806 Plague broke out in Voeledell; 188 died.
-hist-conflict-civs4-512 e807 Nux grew into a village of 250.
-hist-conflict-civs4-512 e808 A succession crisis at Zork shook the Gidruz Horde.
+hist-conflict-civs4-512 e644 Clan Thraim declared war on the Druz Horde over West Wood.
+hist-conflict-civs4-512 e645 Plague broke out in Sneezskrub Hole and spread to one other settlement; 232 died.
+hist-conflict-civs4-512 e646 The plague spread to Snugg; 81 died.
+hist-conflict-civs4-512 e647 Weakened by plague, Snugg was abandoned; 947 survivors went to Sneezskrub Hole.
+hist-conflict-civs4-512 e648 Famine struck Endnodell; 23 died.
+hist-conflict-civs4-512 e649 The Druz Horde defeated Clan Thraim in West Wood; 162 of the defeated and 25 of the victors fell.
+hist-conflict-civs4-512 e650 The House of Finen declared war on the Grork Horde over Sorreldown.
+hist-conflict-civs4-512 e651 The Grork Horde defeated the House of Finen in Sorreldown; 160 of the defeated and 51 of the victors fell.
+hist-conflict-civs4-512 e652 The Ghuughzuz Horde declared war on the Duchy of Ashin over the Plain of Silence.
+hist-conflict-civs4-512 e653 Clan Thraim defeated the Druz Horde in Central Downs; 81 of the defeated and 25 of the victors fell.
+hist-conflict-civs4-512 e654 The House of Finen defeated the Grork Horde in Gull's Pit; 175 of the defeated and 49 of the victors fell.
+hist-conflict-civs4-512 e655 A succession crisis at Snozz-Skink shook the Grork Horde.
+hist-conflict-civs4-512 e656 The Duchy of Ashin defeated the Ghuughzuz Horde in the Plain of Silence; 75 of the defeated and 24 of the victors fell.
+hist-conflict-civs4-512 e657 The Grork Horde defeated the House of Finen in Sorreldown; 154 of the defeated and 49 of the victors fell.
+hist-conflict-civs4-512 e658 The House of Finen sued the Grork Horde for peace after 8 years of war.
+hist-conflict-civs4-512 e659 The House of Finen ceded Boughcombe Wood to the Grork Horde.
+hist-conflict-civs4-512 e660 Famine struck Lafeco; 32 died.
+hist-conflict-civs4-512 e661 Clan Thraim defeated the Druz Horde in West Wood; 79 of the defeated and 25 of the victors fell.
+hist-conflict-civs4-512 e662 Clan Thraim besieged Snirk Pit of the Druz Horde; it fell.
+hist-conflict-civs4-512 e663 Clan Thraim took Snirk Pit from the Druz Horde; 292 died.
+hist-conflict-civs4-512 e664 The seat of the Druz Horde moved to Gneerkkit.
+hist-conflict-civs4-512 e665 The Duchy of Ashin defeated the Ghuughzuz Horde in the Swart Barrows; 71 of the defeated and 22 of the victors fell.
+hist-conflict-civs4-512 e666 The Duchy of Ashin besieged Maaz Fort of the Ghuughzuz Horde; it held.
+hist-conflict-civs4-512 e667 Clan Thraim defeated the Druz Horde in West Wood; 20 of the defeated and 6 of the victors fell.
+hist-conflict-civs4-512 e668 Clan Thraim besieged Gneerkkit of the Druz Horde; it fell.
+hist-conflict-civs4-512 e669 Clan Thraim sacked Gneerkkit of the Druz Horde; 297 died and 695 fled.
+hist-conflict-civs4-512 e670 The Druz Horde fell to Clan Thraim.
+hist-conflict-civs4-512 e671 The Ghuughzuz Horde defeated the Duchy of Ashin in the Swart Barrows; 134 of the defeated and 21 of the victors fell.
+hist-conflict-civs4-512 e672 The Grork Horde laid claim to the Plain of Silence, held by the Duchy of Ashin.
+hist-conflict-civs4-512 e673 The Duchy of Ashin defeated the Ghuughzuz Horde in the Plain of Silence; 68 of the defeated and 21 of the victors fell.
+hist-conflict-civs4-512 e674 The Ghuughzuz Horde sued the Duchy of Ashin for peace after 16 years of war.
+hist-conflict-civs4-512 e675 Weakened by war, Gliecari dwindled to 199 souls.
+hist-conflict-civs4-512 e676 Weakened by war, Endnodell dwindled to 195 souls.
+hist-conflict-civs4-512 e677 Weakened by war, Saeniedell dwindled to 199 souls.
+hist-conflict-civs4-512 e678 Famine struck Alessas; 741 died.
+hist-conflict-civs4-512 e679 Famine struck Drili Deep; 198 died.
+hist-conflict-civs4-512 e680 The Ghuughzuz Horde laid claim to Northwest Fells, held by the Tourdbaim Throne.
+hist-conflict-civs4-512 e681 A succession crisis at Snozz-Skink shook the Grork Horde.
+hist-conflict-civs4-512 e682 Plague broke out in Skrunk Pit; 1,299 died.
+hist-conflict-civs4-512 e683 Famine struck Saeniedell; 24 died.
+hist-conflict-civs4-512 e684 The Gidruz Horde declared war on the Grork Horde over Boughcombe Wood.
+hist-conflict-civs4-512 e685 The Grork Horde defeated the Gidruz Horde in Boughcombe Wood; 63 of the defeated and 20 of the victors fell.
+hist-conflict-civs4-512 e686 The Gidruz Horde defeated the Grork Horde in the Hollow Hurst; 124 of the defeated and 19 of the victors fell.
+hist-conflict-civs4-512 e687 The Gidruz Horde defeated the Grork Horde in Boughcombe Wood; 124 of the defeated and 19 of the victors fell.
+hist-conflict-civs4-512 e688 The Gidruz Horde besieged Gliecari of the Grork Horde; it held.
+hist-conflict-civs4-512 e689 The Gidruz Horde sent settlers from Slikreek to found Zork in the Hollow Hurst.
+hist-conflict-civs4-512 e690 The Grork Horde defeated the Gidruz Horde in Boughcombe Wood; 62 of the defeated and 19 of the victors fell.
+hist-conflict-civs4-512 e691 The Tourdbaim Throne declared war on the Grork Horde over the Swart Barrows.
+hist-conflict-civs4-512 e692 The Tourdbaim Throne defeated the Grork Horde in the Swart Barrows; 88 of the defeated and 28 of the victors fell.
+hist-conflict-civs4-512 e693 The Tourdbaim Throne besieged Snozz-Skink of the Grork Horde; it held.
+hist-conflict-civs4-512 e694 The Grork Horde defeated the Gidruz Horde in the Hollow Hurst; 61 of the defeated and 19 of the victors fell.
+hist-conflict-civs4-512 e695 The Grork Horde besieged Krik of the Gidruz Horde; it held.
+hist-conflict-civs4-512 e696 The Tourdbaim Throne defeated the Grork Horde in the Swart Barrows; 88 of the defeated and 28 of the victors fell.
+hist-conflict-civs4-512 e697 The Tourdbaim Throne besieged Snozz-Skink of the Grork Horde; it fell.
+hist-conflict-civs4-512 e698 The Tourdbaim Throne took Snozz-Skink from the Grork Horde; 369 died.
+hist-conflict-civs4-512 e699 The seat of the Grork Horde moved to Sneezskrub Hole.
+hist-conflict-civs4-512 e700 The Grork Horde defeated the Gidruz Horde in the Hollow Hurst; 59 of the defeated and 16 of the victors fell.
+hist-conflict-civs4-512 e701 The Grork Horde besieged Krik of the Gidruz Horde; it held.
+hist-conflict-civs4-512 e702 The Grork Horde and the Gidruz Horde made peace after 21 years of war, neither the victor.
+hist-conflict-civs4-512 e703 The Tourdbaim Throne defeated the Grork Horde in the Swart Barrows; 101 of the defeated and 32 of the victors fell.
+hist-conflict-civs4-512 e704 The Tourdbaim Throne besieged Sneezskrub Hole of the Grork Horde; it held.
+hist-conflict-civs4-512 e705 The Grork Horde declared war on the Duchy of Ashin over the Plain of Silence.
+hist-conflict-civs4-512 e706 The Tourdbaim Throne defeated the Grork Horde in the Swart Barrows; 49 of the defeated and 15 of the victors fell.
+hist-conflict-civs4-512 e707 The Tourdbaim Throne besieged Sneezskrub Hole of the Grork Horde; it fell.
+hist-conflict-civs4-512 e708 The Tourdbaim Throne sacked Sneezskrub Hole of the Grork Horde; 404 died and 945 fled.
+hist-conflict-civs4-512 e709 The seat of the Grork Horde moved to Dreeb Pit.
+hist-conflict-civs4-512 e710 The Duchy of Ashin defeated the Grork Horde in the Plain of Silence; 45 of the defeated and 14 of the victors fell.
+hist-conflict-civs4-512 e711 The Tourdbaim Throne defeated the Grork Horde in the Swart Barrows; 45 of the defeated and 14 of the victors fell.
+hist-conflict-civs4-512 e712 The Tourdbaim Throne besieged Dreeb Pit of the Grork Horde; it fell.
+hist-conflict-civs4-512 e713 The Tourdbaim Throne sacked Dreeb Pit of the Grork Horde; 661 died and 1,543 fled.
+hist-conflict-civs4-512 e714 The seat of the Grork Horde moved to Turknon Hold.
+hist-conflict-civs4-512 e715 The Tourdbaim Throne prevailed over the Grork Horde after 12 years of war.
+hist-conflict-civs4-512 e716 The Grork Horde ceded Boughcombe Wood to the Tourdbaim Throne.
+hist-conflict-civs4-512 e717 The Grork Horde defeated the Duchy of Ashin in Sorreldown; 222 of the defeated and 35 of the victors fell.
+hist-conflict-civs4-512 e718 The Duchy of Ashin defeated the Grork Horde in the Plain of Silence; 101 of the defeated and 32 of the victors fell.
+hist-conflict-civs4-512 e719 Plague broke out in Voeledell; 359 died.
+hist-conflict-civs4-512 e720 Famine struck Alessas; 876 died.
+hist-conflict-civs4-512 e721 Plague broke out in Brodinbu and spread to 2 other settlements; 1,250 died in all.
+hist-conflict-civs4-512 e722 The plague spread to Gruz-Keegg; 660 died.
+hist-conflict-civs4-512 e723 The plague spread to Skrunk Pit; 514 died.
+hist-conflict-civs4-512 e724 The Grork Horde defeated the Duchy of Ashin in Sorreldown; 190 of the defeated and 30 of the victors fell.
+hist-conflict-civs4-512 e725 The Duchy of Ashin defeated the Grork Horde in the Plain of Silence; 93 of the defeated and 30 of the victors fell.
+hist-conflict-civs4-512 e726 The Ghuughzuz Horde laid claim to the Plain of Silence, held by the Duchy of Ashin.
+hist-conflict-civs4-512 e727 The Duchy of Ashin defeated the Grork Horde in Sorreldown; 89 of the defeated and 28 of the victors fell.
+hist-conflict-civs4-512 e728 The Duchy of Ashin besieged Turknon Hold of the Grork Horde; it held.
+hist-conflict-civs4-512 e729 The Grork Horde and the Duchy of Ashin made peace after 21 years of war, neither the victor.
+hist-conflict-civs4-512 e730 Maaz Fort grew into a town of 1,521.
+hist-conflict-civs4-512 e731 Clan Thraim sent settlers from Bronbair to found Koli Hold in the Swart Barrows.
+hist-conflict-civs4-512 e732 Plague broke out in Snozz-Skink; 714 died.
+hist-conflict-civs4-512 e733 Plague broke out in Alessas; 1,265 died.
+hist-conflict-civs4-512 e734 Keeskeegg Hole grew into a town of 1,504.
+hist-conflict-civs4-512 e735 Dreerksnak grew into a town of 1,504.
+hist-conflict-civs4-512 e736 Zork grew into a village of 252.
+hist-conflict-civs4-512 e737 Famine struck Esranddell; 33 died.
+hist-conflict-civs4-512 e738 Plague broke out in Skrunk Pit; 991 died.
+hist-conflict-civs4-512 e739 Clan Thraim laid claim to the Hollow Hurst, held by the Gidruz Horde.
+hist-conflict-civs4-512 e740 Zeezzbazz grew into a town of 1,502.
+hist-conflict-civs4-512 e741 Gnag grew into a town of 1,502.
+hist-conflict-civs4-512 e742 Skognit Hole grew into a town of 1,502.
+hist-conflict-civs4-512 e743 Gnark Hole grew into a town of 1,502.
+hist-conflict-civs4-512 e744 Famine struck Turknon Hold; 255 died.
+hist-conflict-civs4-512 e745 A succession crisis at Turknon Hold shook the Grork Horde.
+hist-conflict-civs4-512 e746 The Ghuughzuz Horde declared war on Clan Thraim over Central Downs.
+hist-conflict-civs4-512 e747 Famine struck Iennmo; 96 died.
+hist-conflict-civs4-512 e748 Clan Thraim defeated the Ghuughzuz Horde in Central Downs; 499 of the defeated and 159 of the victors fell.
+hist-conflict-civs4-512 e749 Clan Thraim defeated the Ghuughzuz Horde in the Swart Barrows; 449 of the defeated and 143 of the victors fell.
+hist-conflict-civs4-512 e750 Clan Thraim besieged Maaz Fort of the Ghuughzuz Horde; it fell.
+hist-conflict-civs4-512 e751 Clan Thraim sacked Maaz Fort of the Ghuughzuz Horde; 905 died and 2,114 fled.
+hist-conflict-civs4-512 e752 The survivors of Maaz Fort fled into hiding and founded Shurk'dald Fort in West Wood.
+hist-conflict-civs4-512 e753 The seat of the Ghuughzuz Horde moved to Shurk'dald Fort.
+hist-conflict-civs4-512 e754 Clan Thraim prevailed over the Ghuughzuz Horde after 9 years of war.
+hist-conflict-civs4-512 e755 Plague broke out in Fia Hollow; 70 died.
+hist-conflict-civs4-512 e756 Gliecari grew into a village of 250.
+hist-conflict-civs4-512 e757 Endnodell grew into a village of 250.
+hist-conflict-civs4-512 e758 Saeniedell grew into a village of 250.
+hist-conflict-civs4-512 e759 Famine struck Gink; 66 died.
+hist-conflict-civs4-512 e760 The Gidruz Horde laid claim to Coldbarrow, held by the Tourdbaim Throne.
+hist-conflict-civs4-512 e761 Clan Thraim declared war on the Gidruz Horde over the Hollow Hurst.
+hist-conflict-civs4-512 e762 The Grork Horde laid claim to Central Downs, held by Clan Thraim.
+hist-conflict-civs4-512 e763 Clan Thraim defeated the Gidruz Horde in the Hollow Hurst; 69 of the defeated and 22 of the victors fell.
+hist-conflict-civs4-512 e764 Clan Thraim besieged Krik of the Gidruz Horde; it fell.
+hist-conflict-civs4-512 e765 Clan Thraim sacked Krik of the Gidruz Horde; 526 died and 1,229 fled.
+hist-conflict-civs4-512 e766 The seat of the Gidruz Horde moved to Slikreek.
+hist-conflict-civs4-512 e767 Slikreek grew into a town of 1,821.
+hist-conflict-civs4-512 e768 Plague broke out in Zeezzbazz and spread to one other settlement; 614 died.
+hist-conflict-civs4-512 e769 The plague spread to Skrunk Pit; 230 died.
+hist-conflict-civs4-512 e770 The Gidruz Horde sent settlers from Sneeggnox Hole to found Slux in the Hollow Hurst.
+hist-conflict-civs4-512 e771 Clan Thraim defeated the Gidruz Horde in the Hollow Hurst; 58 of the defeated and 18 of the victors fell.
+hist-conflict-civs4-512 e772 Clan Thraim besieged Slikreek of the Gidruz Horde; it fell.
+hist-conflict-civs4-512 e773 Clan Thraim sacked Slikreek of the Gidruz Horde; 534 died and 1,246 fled.
+hist-conflict-civs4-512 e774 The seat of the Gidruz Horde moved to Sneeggnox Hole.
+hist-conflict-civs4-512 e775 Sneeggnox Hole grew into a town of 1,768.
+hist-conflict-civs4-512 e776 Clan Thraim defeated the Gidruz Horde in the Hollow Hurst; 47 of the defeated and 15 of the victors fell.
+hist-conflict-civs4-512 e777 Clan Thraim besieged Sneeggnox Hole of the Gidruz Horde; it fell.
+hist-conflict-civs4-512 e778 Clan Thraim sacked Sneeggnox Hole of the Gidruz Horde; 523 died and 1,221 fled.
+hist-conflict-civs4-512 e779 The seat of the Gidruz Horde moved to Zork.
+hist-conflict-civs4-512 e780 Zork grew into a town of 1,727.
+hist-conflict-civs4-512 e781 The Realm of Ithieglie declared war on the Grork Horde over Sorreldown.
+hist-conflict-civs4-512 e782 The Grork Horde defeated the Realm of Ithieglie in Sorreldown; 66 of the defeated and 21 of the victors fell.
+hist-conflict-civs4-512 e783 Clan Thraim defeated the Gidruz Horde in the Hollow Hurst; 38 of the defeated and 12 of the victors fell.
+hist-conflict-civs4-512 e784 Clan Thraim besieged Zork of the Gidruz Horde; it held.
+hist-conflict-civs4-512 e785 Clan Thraim defeated the Gidruz Horde in the Hollow Hurst; 38 of the defeated and 12 of the victors fell.
+hist-conflict-civs4-512 e786 Clan Thraim besieged Zork of the Gidruz Horde; it fell.
+hist-conflict-civs4-512 e787 Clan Thraim sacked Zork of the Gidruz Horde; 539 died and 1,258 fled.
+hist-conflict-civs4-512 e788 The seat of the Gidruz Horde moved to Slux.
+hist-conflict-civs4-512 e789 Slux grew into a village of 1,370.
+hist-conflict-civs4-512 e790 Plague broke out in Minno; 52 died.
+hist-conflict-civs4-512 e791 Famine struck Groz; 74 died.
+hist-conflict-civs4-512 e792 Clan Thraim defeated the Gidruz Horde in the Hollow Hurst; 28 of the defeated and 9 of the victors fell.
+hist-conflict-civs4-512 e793 Clan Thraim besieged Slux of the Gidruz Horde; it fell.
+hist-conflict-civs4-512 e794 Clan Thraim sacked Slux of the Gidruz Horde; 417 died and 976 fled.
+hist-conflict-civs4-512 e795 The Gidruz Horde fell to Clan Thraim.
+hist-conflict-civs4-512 e796 The Realm of Ithieglie defeated the Grork Horde in Seredale Tangle; 90 of the defeated and 27 of the victors fell.
+hist-conflict-civs4-512 e797 The Grork Horde defeated the Realm of Ithieglie in Sorreldown; 62 of the defeated and 19 of the victors fell.
+hist-conflict-civs4-512 e798 The Realm of Ithieglie sent settlers from Esranddell to found Fosall in the Brake of Antlers.
+hist-conflict-civs4-512 e799 The Grork Horde defeated the Realm of Ithieglie in Seredale Tangle; 82 of the defeated and 26 of the victors fell.
+hist-conflict-civs4-512 e800 The Grork Horde besieged Glalivedell of the Realm of Ithieglie; it held.
+hist-conflict-civs4-512 e801 The Realm of Ithieglie sued the Grork Horde for peace after 13 years of war.
+hist-conflict-civs4-512 e802 The Realm of Ithieglie paid tribute to the Grork Horde; 200 were carried off.
+hist-conflict-civs4-512 e803 Weakened by tribute, Esranddell dwindled to 191 souls.
+hist-conflict-civs4-512 e804 Famine struck Mairkhound Hold; 233 died.
+hist-conflict-civs4-512 e805 The House of Finen laid claim to Sorreldown, held by the Grork Horde.
+hist-conflict-civs4-512 e806 Raenme dwindled to 1,199 souls.
+hist-conflict-civs4-512 e807 Clan Thraim laid claim to Sorreldown, held by the Grork Horde.
+hist-conflict-civs4-512 e808 The House of Finen declared war on the Grork Horde over Sorreldown.
+hist-conflict-civs4-512 e809 Plague broke out in Gink and spread to one other settlement; 430 died.
+hist-conflict-civs4-512 e810 The plague spread to Grirk-Zix Pit; 121 died.
+hist-conflict-civs4-512 e811 The Grork Horde defeated the House of Finen in Sorreldown; 110 of the defeated and 28 of the victors fell.
+hist-conflict-civs4-512 e812 Plague broke out in Fia Hollow; 55 died.
+hist-conflict-civs4-512 e813 The House of Finen defeated the Grork Horde in Gull's Pit; 88 of the defeated and 28 of the victors fell.
+hist-conflict-civs4-512 e814 The House of Finen defeated the Grork Horde in Sorreldown; 84 of the defeated and 26 of the victors fell.
+hist-conflict-civs4-512 e815 The House of Finen besieged Turknon Hold of the Grork Horde; it held.
+hist-conflict-civs4-512 e816 The Grork Horde sued the House of Finen for peace after 7 years of war.
+hist-conflict-civs4-512 e817 The Grork Horde laid claim to Boughcombe Wood, held by the Tourdbaim Throne.
+hist-conflict-civs4-512 e818 Plague broke out in Snozz-Skink; 1,091 died.
+hist-conflict-civs4-512 e819 Famine struck Groz; 69 died.
+hist-conflict-civs4-512 e820 Plague broke out in Brodinbu; 88 died.
+hist-conflict-civs4-512 e821 Plague broke out in Gruz-Keegg and spread to 2 other settlements; 1,405 died in all.
+hist-conflict-civs4-512 e822 The plague spread to Dreerksnak; 233 died.
+hist-conflict-civs4-512 e823 The plague spread to Gnark Hole; 235 died.
+hist-conflict-civs4-512 e824 Plague broke out in Doundkind and spread to one other settlement; 1,243 died.
+hist-conflict-civs4-512 e825 The plague spread to Raenme; 84 died.
+hist-conflict-civs4-512 e826 The Grork Horde laid claim to the Plain of Silence, held by the Duchy of Ashin.
+hist-conflict-civs4-512 e827 Famine struck Raenme; 164 died.
+hist-conflict-civs4-512 e828 Famine struck Iennmo; 91 died.
+hist-conflict-civs4-512 e829 Famine struck Beedrux Pit; 813 died.
+hist-conflict-civs4-512 e830 Famine struck Milia Glade; 12 died.
+hist-conflict-civs4-512 e831 Plague broke out in Voeledell; 171 died.
+hist-conflict-civs4-512 e832 Famine struck Alessas; 332 died.
 world hist-conflict-flight 1 512 6000 all normal auto normal
 hist-conflict-flight input_region 35e08813a3200d30cb81cb006490355fedc419fa138cfe2bb4376a91eb590f8c
-hist-conflict-flight table civilization 6428c2500ec3d1bc1b12bb52a3044dc19a9937950a7737850b69cf14af5c044b
-hist-conflict-flight table event dfcbf9b1992ac33be3ddc6648bfe52fc632df7a5d0c1ef02d42981fb7c93a5db
-hist-conflict-flight table event_cause 57541d6087a5dd7229ab1a6940248efd9e247fc2f51f4e642c37fbb30c80a306
+hist-conflict-flight table civilization 4e1e5227de1a99bf0422f45278d1f2652b1ddfb006d2acfcbf433d0556703495
+hist-conflict-flight table event 823ef36bfca42331320d303ee2dcb8f8d0e873e476f3f4017ef1a612f544a8e9
+hist-conflict-flight table event_cause c376c87d3384a3349c5c05831f56b05c68a5c18758d5c2aefe84b429c470cdd5
 hist-conflict-flight table event_kind 58b8cb7b5b5121612b331cd052c06a2bdfc4e23ba2f1956e14bc85aa432f8776
 hist-conflict-flight table event_kind_role 828c060dc0d262d618363e1eb4194754223827013ae83efa04ea2944f3b5731b
 hist-conflict-flight table event_kind_value ea3bdaba66965ca348093390b78ac4b2e92807052c93c9bb59822b0c53c0771e
-hist-conflict-flight table event_participant d94284a45211a84882a9e7feed0aef9b51c0c20386c0ab4b276e3819c036d4c9
-hist-conflict-flight table event_value d629f77825075ec94884235f9d994fd55918232c09df0953ba9ee13ddf83a13a
+hist-conflict-flight table event_participant 63eb329b05158dbbf3fa093e7403119a0621c665ddccd2d580c06645abe04acd
+hist-conflict-flight table event_value 076915e9851bbc3ab81e1a23262505f6584b6964e572d38c5e9fb124a41f65ae
 hist-conflict-flight table phase 8b9de523e5af109e0c72c21082c8216980635d5a5699e17e48b6ca3ccc3bc0df
-hist-conflict-flight table region_control 283d3715de060043be627ff7b5d0fb0fcd3477c8f0d657deb9781f1559e90ad3
-hist-conflict-flight table relation a89166237b6448a1494978bbf98046d92c776bbed72c47b85877a5b9bd111581
-hist-conflict-flight table settlement a64d3d0b9bd8dbe837cb6af8595220cec840a5b75e397c616cf77ce10861f6b1
-hist-conflict-flight table settlement_census 43406eb9c9639e1617df20aa97d09b329589ddbaa510b3965ba5c35dec5c196a
+hist-conflict-flight table region_control e206810a10071cd01fd06bbee8312332c4490fbbd5852a732ac7ccb95a71b002
+hist-conflict-flight table relation 9e4bf18edbc20ecb390687876da197e171d5e3d7fe021c4e553975b6fff164e7
+hist-conflict-flight table settlement 0e41fde1fabd5fdfab318b1f6c41cab3d0c87da5613e56a224b4f893c5b3f373
+hist-conflict-flight table settlement_census 9678f7af3bb117ace0516e387f8cb93aa92cf94f75ca4115d5ef890d1a3be245
 hist-conflict-flight report end_year = 6000
 hist-conflict-flight report phases_opening = 6
 hist-conflict-flight report phases_quiet = 12
@@ -7382,7 +7410,7 @@ hist-conflict-flight report phases_flare = 7
 hist-conflict-flight report phases_final = 1
 hist-conflict-flight report simulated_years = 1520
 hist-conflict-flight report simulated_permille = 253
-hist-conflict-flight report events = 571
+hist-conflict-flight report events = 573
 hist-conflict-flight report events_awakening = 6
 hist-conflict-flight report events_civ_founded = 7
 hist-conflict-flight report events_settlement_founded = 7
@@ -7390,29 +7418,29 @@ hist-conflict-flight report events_quiet_era = 0
 hist-conflict-flight report events_flare_up = 7
 hist-conflict-flight report events_colony_founded = 42
 hist-conflict-flight report events_became_village = 7
-hist-conflict-flight report events_became_town = 34
+hist-conflict-flight report events_became_town = 31
 hist-conflict-flight report events_became_city = 1
 hist-conflict-flight report events_settlement_dwindled = 4
-hist-conflict-flight report events_famine = 49
+hist-conflict-flight report events_famine = 52
 hist-conflict-flight report events_plague = 0
-hist-conflict-flight report events_plague_spread = 50
+hist-conflict-flight report events_plague_spread = 52
 hist-conflict-flight report events_succession_crisis = 14
 hist-conflict-flight report events_civ_seceded = 1
 hist-conflict-flight report events_settlement_abandoned = 0
-hist-conflict-flight report events_capital_moved = 10
+hist-conflict-flight report events_capital_moved = 12
 hist-conflict-flight report events_civ_ended = 0
 hist-conflict-flight report events_ruin_faded = 3
-hist-conflict-flight report events_claim = 45
+hist-conflict-flight report events_claim = 43
 hist-conflict-flight report events_war_declared = 23
-hist-conflict-flight report events_battle = 92
+hist-conflict-flight report events_battle = 89
 hist-conflict-flight report events_battle_at_pass = 0
-hist-conflict-flight report events_siege = 53
-hist-conflict-flight report events_sacked = 7
-hist-conflict-flight report events_settlement_captured = 11
-hist-conflict-flight report events_peace = 8
+hist-conflict-flight report events_siege = 54
+hist-conflict-flight report events_sacked = 8
+hist-conflict-flight report events_settlement_captured = 13
+hist-conflict-flight report events_peace = 7
 hist-conflict-flight report events_truce = 9
-hist-conflict-flight report events_region_ceded = 3
-hist-conflict-flight report events_civ_conquered = 1
+hist-conflict-flight report events_region_ceded = 2
+hist-conflict-flight report events_civ_conquered = 2
 hist-conflict-flight report events_settlement_abandoned_to = 0
 hist-conflict-flight report events_refugees_settled = 2
 hist-conflict-flight report events_tribute = 3
@@ -7422,21 +7450,21 @@ hist-conflict-flight report events_refuge_held = 3
 hist-conflict-flight report events_plague_outbreak = 52
 hist-conflict-flight report events_quiet_stretch = 12
 hist-conflict-flight report civilizations = 8
-hist-conflict-flight report civilizations_alive = 7
+hist-conflict-flight report civilizations_alive = 6
 hist-conflict-flight report settlements = 51
-hist-conflict-flight report settlements_standing = 44
+hist-conflict-flight report settlements_standing = 43
 hist-conflict-flight report regions_held = 11
-hist-conflict-flight report census_rows = 909
-hist-conflict-flight report relations = 53
-hist-conflict-flight report population = 83680
+hist-conflict-flight report census_rows = 917
+hist-conflict-flight report relations = 52
+hist-conflict-flight report population = 83628
 hist-conflict-flight report population_elf = 4587
-hist-conflict-flight report population_goblin = 61056
+hist-conflict-flight report population_goblin = 61088
 hist-conflict-flight report population_dwarf = 4113
 hist-conflict-flight report population_faerie = 2566
 hist-conflict-flight report population_human = 10087
-hist-conflict-flight report population_orc = 1271
+hist-conflict-flight report population_orc = 1187
 hist-conflict-flight report settlements_standing_elf = 4
-hist-conflict-flight report settlements_standing_goblin = 28
+hist-conflict-flight report settlements_standing_goblin = 27
 hist-conflict-flight report settlements_standing_dwarf = 4
 hist-conflict-flight report settlements_standing_faerie = 4
 hist-conflict-flight report settlements_standing_human = 3
@@ -7447,17 +7475,17 @@ hist-conflict-flight report regions_held_dwarf = 1
 hist-conflict-flight report regions_held_faerie = 1
 hist-conflict-flight report regions_held_human = 1
 hist-conflict-flight report regions_held_orc = 0
-hist-conflict-flight stats civ_settlements_max = 26
+hist-conflict-flight stats civ_settlements_max = 27
 hist-conflict-flight stats settlements_colonies = 42
 hist-conflict-flight stats civilizations_seceded = 1
 hist-conflict-flight stats relations_enmity = 8
-hist-conflict-flight stats relations_peace = 22
-hist-conflict-flight stats war_years_total = 337
+hist-conflict-flight stats relations_peace = 21
+hist-conflict-flight stats war_years_total = 323
 hist-conflict-flight stats war_years_max = 40
-hist-conflict-flight stats civilizations_conquered = 1
-hist-conflict-flight stats settlements_sacked = 4
-hist-conflict-flight stats settlements_captured = 11
-hist-conflict-flight stats regions_conquered = 4
+hist-conflict-flight stats civilizations_conquered = 2
+hist-conflict-flight stats settlements_sacked = 5
+hist-conflict-flight stats settlements_captured = 13
+hist-conflict-flight stats regions_conquered = 5
 hist-conflict-flight stats races_alive = 6
 hist-conflict-flight stats wars_attacker_elf = 0
 hist-conflict-flight stats wars_attacker_goblin = 22
@@ -7469,7 +7497,7 @@ hist-conflict-flight stats wars_hollow = 8
 hist-conflict-flight stats wars_hollow_permille = 400
 hist-conflict-flight stats wars_same_goal_max = 3
 hist-conflict-flight stats wars_same_goal_unchanged_max = 3
-hist-conflict-flight stats race_population_share_max_permille = 729
+hist-conflict-flight stats race_population_share_max_permille = 730
 hist-conflict-flight stats race_regions_share_max_permille = 636
 hist-conflict-flight stats wars_unfound = 3
 hist-conflict-flight stats refuges_held_no_destination = 3
@@ -7493,9 +7521,9 @@ hist-conflict-flight war e312 4859-4869 c3 c6 rg9 claim e311 battles 0 sacked 0 
 hist-conflict-flight war e324 4947-4974 c3 c2 rg5 claim e301 battles 7 sacked 1 taken 2 exhaustion truce
 hist-conflict-flight war e386 5509-5549 c2 c7 rg3 claim e349 battles 12 sacked 0 taken 0 length won-c2
 hist-conflict-flight war e392 5514-5554 c3 c7 rg3 claim e350 battles 11 sacked 2 taken 1 length won-c3
-hist-conflict-flight war e454 5584-5605 c3 c2 rg6 claim e382 battles 6 sacked 1 taken 1 exhaustion won-c3-ceded
+hist-conflict-flight war e453 5584-5599 c3 c2 rg6 claim e382 battles 6 sacked 0 taken 4 aim won-c3-ceded
 hist-conflict-flight war e487 5664-5683 c8 c7 rg3 claim e484 battles 4 sacked 0 taken 0 exhaustion won-c8-tribute
-hist-conflict-flight war e524 5874-5892 c3 c2 rg8 claim e523 battles 7 sacked 0 taken 3 exhaustion won-c3-ceded
+hist-conflict-flight war e542 5964-5974 c3 c2 rg8 claim e532 battles 4 sacked 2 taken 2 conquest -
 hist-conflict-flight q150 0 e0
 hist-conflict-flight q175 0 e0
 hist-conflict-flight q200 0 e0
@@ -7699,10 +7727,10 @@ hist-conflict-flight note e324 Claimed since 4728. The third war between them.
 hist-conflict-flight note e385 The claim of the Warrens of Skiskib to Dreadwell Rises, held by the Kingdom of Mald, came to a head.
 hist-conflict-flight note e386 Claimed since 5008.
 hist-conflict-flight note e392 Claimed since 5018.
-hist-conflict-flight note e454 Claimed since 5409. The fourth war between them.
+hist-conflict-flight note e453 Claimed since 5409. The fourth war between them.
 hist-conflict-flight note e487 Claimed since 5645.
-hist-conflict-flight note e524 Claimed since 5850. The fifth war between them.
-hist-conflict-flight summary threshold 31 shown 171 ages 5,20,52,31,33,30
+hist-conflict-flight note e542 Claimed since 5898. The fifth war between them.
+hist-conflict-flight summary threshold 31 shown 174 ages 5,20,52,31,33,33
 hist-conflict-flight e1 Laesiel awakened the Elves in Poacher's Tangle.
 hist-conflict-flight e2 The Elves founded the House of Glaefaenn in Poacher's Tangle.
 hist-conflict-flight e3 The House of Glaefaenn founded Elomaell in Poacher's Tangle.
@@ -8153,38 +8181,38 @@ hist-conflict-flight e447 For 21 years, from 5559 to 5579, the land was quiet, a
 hist-conflict-flight e448 Kaag'azak awakened the Orcs in the White Wilds.
 hist-conflict-flight e449 The Orcs founded the Shaaz Horde in the White Wilds.
 hist-conflict-flight e450 The Shaaz Horde founded Zuum'zuukh Camp in the White Wilds.
-hist-conflict-flight e451 The Shaaz Horde laid claim to the White Wilds, held by the Warrens of Skiskib.
-hist-conflict-flight e452 Plague broke out in Iennrer; 231 died.
-hist-conflict-flight e453 Weakened by war, Babkuz dwindled to 1,185 souls.
-hist-conflict-flight e454 The Skreegg Horde declared war on the Warrens of Skiskib over Wraithshaw.
-hist-conflict-flight e455 Famine struck Weardstead; 58 died.
-hist-conflict-flight e456 The Skreegg Horde defeated the Warrens of Skiskib in Wraithshaw; 246 of the defeated and 78 of the victors fell.
-hist-conflict-flight e457 The Skreegg Horde besieged Gaggkot Pit of the Warrens of Skiskib; it fell.
-hist-conflict-flight e458 The Skreegg Horde took Gaggkot Pit from the Warrens of Skiskib; 141 died.
-hist-conflict-flight e459 Plague broke out in Geezink; 772 died.
-hist-conflict-flight e460 The Skreegg Horde defeated the Warrens of Skiskib in Wraithshaw; 212 of the defeated and 68 of the victors fell.
-hist-conflict-flight e461 The Skreegg Horde besieged Grix of the Warrens of Skiskib; it fell.
-hist-conflict-flight e462 The Skreegg Horde sacked Grix of the Warrens of Skiskib; 417 died and 973 fled.
-hist-conflict-flight e463 Iennrer grew into a town of 2,138.
-hist-conflict-flight e464 Famine struck Snonk-Girk; 308 died.
+hist-conflict-flight e451 Plague broke out in Iennrer; 231 died.
+hist-conflict-flight e452 Weakened by war, Babkuz dwindled to 1,185 souls.
+hist-conflict-flight e453 The Skreegg Horde declared war on the Warrens of Skiskib over Wraithshaw.
+hist-conflict-flight e454 Famine struck Weardstead; 58 died.
+hist-conflict-flight e455 The Skreegg Horde defeated the Warrens of Skiskib in Wraithshaw; 247 of the defeated and 79 of the victors fell.
+hist-conflict-flight e456 The Skreegg Horde besieged Gaggkot Pit of the Warrens of Skiskib; it fell.
+hist-conflict-flight e457 The Skreegg Horde took Gaggkot Pit from the Warrens of Skiskib; 141 died.
+hist-conflict-flight e458 Plague broke out in Geezink; 772 died.
+hist-conflict-flight e459 The Skreegg Horde defeated the Warrens of Skiskib in Wraithshaw; 212 of the defeated and 68 of the victors fell.
+hist-conflict-flight e460 The Skreegg Horde besieged Grix of the Warrens of Skiskib; it fell.
+hist-conflict-flight e461 The Skreegg Horde took Grix from the Warrens of Skiskib; 139 died.
+hist-conflict-flight e462 The Warrens of Skiskib defeated the Skreegg Horde in Wraithshaw; 361 of the defeated and 57 of the victors fell.
+hist-conflict-flight e463 The Skreegg Horde defeated the Warrens of Skiskib in Central Downs; 179 of the defeated and 57 of the victors fell.
+hist-conflict-flight e464 Famine struck Snonk-Girk; 306 died.
 hist-conflict-flight e465 A succession crisis at Zuum'zuukh Camp shook the Shaaz Horde.
-hist-conflict-flight e466 The Skreegg Horde defeated the Warrens of Skiskib in Wraithshaw; 198 of the defeated and 63 of the victors fell.
-hist-conflict-flight e467 The Skreegg Horde besieged Iennrer of the Warrens of Skiskib; it held.
-hist-conflict-flight e468 Plague broke out in Gnugbunk Pit; 516 died.
-hist-conflict-flight e469 The Warrens of Skiskib defeated the Skreegg Horde in Wraithshaw; 370 of the defeated and 59 of the victors fell.
-hist-conflict-flight e470 The Skreegg Horde defeated the Warrens of Skiskib in Central Downs; 184 of the defeated and 59 of the victors fell.
-hist-conflict-flight e471 Plague broke out in Elomaell; 487 died.
-hist-conflict-flight e472 The Skreegg Horde defeated the Warrens of Skiskib in Wraithshaw; 181 of the defeated and 58 of the victors fell.
-hist-conflict-flight e473 The Skreegg Horde besieged Iennrer of the Warrens of Skiskib; it held.
-hist-conflict-flight e474 The Warrens of Skiskib sued the Skreegg Horde for peace after 21 years of war.
-hist-conflict-flight e475 The Warrens of Skiskib ceded Wraithshaw to the Skreegg Horde.
-hist-conflict-flight e476 Famine struck Druzz; 177 died.
-hist-conflict-flight e477 Skrink-Zozz Pit grew into a town of 1,500.
-hist-conflict-flight e478 Gaggkot Pit grew into a town of 1,506.
-hist-conflict-flight e479 Plague broke out in Nank and spread to one other settlement; 1,080 died.
-hist-conflict-flight e480 The plague spread to Skuggkib Pit; 662 died.
-hist-conflict-flight e481 Plague broke out in Iennrer and spread to one other settlement; 742 died.
-hist-conflict-flight e482 The plague spread to Geezink; 480 died.
+hist-conflict-flight e466 The Skreegg Horde defeated the Warrens of Skiskib in Wraithshaw; 176 of the defeated and 56 of the victors fell.
+hist-conflict-flight e467 The Skreegg Horde besieged Skrink-Zozz Pit of the Warrens of Skiskib; it fell.
+hist-conflict-flight e468 The Skreegg Horde took Skrink-Zozz Pit from the Warrens of Skiskib; 133 died.
+hist-conflict-flight e469 The Skreegg Horde defeated the Warrens of Skiskib in Wraithshaw; 147 of the defeated and 47 of the victors fell.
+hist-conflict-flight e470 The Skreegg Horde besieged Iennrer of the Warrens of Skiskib; it fell.
+hist-conflict-flight e471 The Skreegg Horde took Iennrer from the Warrens of Skiskib; 115 died.
+hist-conflict-flight e472 The Warrens of Skiskib sued the Skreegg Horde for peace after 15 years of war.
+hist-conflict-flight e473 The Warrens of Skiskib ceded the Pallid Leas to the Skreegg Horde.
+hist-conflict-flight e474 Plague broke out in Gnugbunk Pit and spread to one other settlement; 827 died.
+hist-conflict-flight e475 The plague spread to Skub Pit; 332 died.
+hist-conflict-flight e476 Plague broke out in Elomaell; 487 died.
+hist-conflict-flight e477 Famine struck Druzz; 178 died.
+hist-conflict-flight e478 Plague broke out in Nank and spread to one other settlement; 1,081 died.
+hist-conflict-flight e479 The plague spread to Skuggkib Pit; 663 died.
+hist-conflict-flight e480 Plague broke out in Iennrer and spread to 2 other settlements; 747 died in all.
+hist-conflict-flight e481 The plague spread to Geezink; 481 died.
+hist-conflict-flight e482 The plague spread to Grix; 99 died.
 hist-conflict-flight e483 Famine struck Skrutch Pit; 334 died.
 hist-conflict-flight e484 The Shaaz Horde laid claim to Dreadwell Rises, held by the Kingdom of Mald.
 hist-conflict-flight e485 A succession crisis at Elomaell shook the House of Glaefaenn.
@@ -8206,88 +8234,90 @@ hist-conflict-flight e500 The Kingdom of Mald sued the Shaaz Horde for peace aft
 hist-conflict-flight e501 The Kingdom of Mald paid tribute to the Shaaz Horde; 664 were carried off.
 hist-conflict-flight e502 Famine struck Geezink; 486 died.
 hist-conflict-flight e503 Plague broke out in Skruz; 628 died.
-hist-conflict-flight e504 Famine struck Ofy Hollow; 93 died.
-hist-conflict-flight e505 Famine struck Meesk; 21 died.
-hist-conflict-flight e506 A succession crisis at Tearford shook the Kingdom of Mald.
+hist-conflict-flight e504 The Shaaz Horde laid claim to the Pallid Leas, held by the Skreegg Horde.
+hist-conflict-flight e505 Famine struck Ofy Hollow; 93 died.
+hist-conflict-flight e506 Famine struck Meesk; 21 died.
 hist-conflict-flight e507 A succession crisis at Tearford shook the Kingdom of Mald.
-hist-conflict-flight e508 Famine struck Snonk-Girk; 208 died.
-hist-conflict-flight e509 Edarham grew into a town of 1,501.
-hist-conflict-flight e510 Famine struck Brirk; 138 died.
-hist-conflict-flight e511 Bealdwick grew into a town of 1,503.
-hist-conflict-flight e512 Plague broke out in Skrutch Pit; 708 died.
-hist-conflict-flight e513 Famine struck Aeitheitho; 74 died.
-hist-conflict-flight e514 Famine struck Babkuz; 57 died.
-hist-conflict-flight e515 Plague broke out in Edarham; 466 died.
-hist-conflict-flight e516 Famine struck Buskug; 259 died.
-hist-conflict-flight e517 Famine struck Gnugbunk Pit; 372 died.
-hist-conflict-flight e518 A succession crisis at Babkuz shook the Warrens of Skiskib.
-hist-conflict-flight e519 Plague broke out in Bealdwick and spread to one other settlement; 1,177 died.
-hist-conflict-flight e520 The plague spread to Tearford; 749 died.
-hist-conflict-flight e521 The Kingdom of Mald laid claim to Dreadwell Rises, held by the Skreegg Horde.
-hist-conflict-flight e522 The Warrens of Skiskib laid claim to Wraithshaw, held by the Skreegg Horde.
-hist-conflict-flight e523 The Skreegg Horde laid claim to the White Wilds, held by the Warrens of Skiskib.
-hist-conflict-flight e524 The Skreegg Horde declared war on the Warrens of Skiskib over the White Wilds.
-hist-conflict-flight e525 The Kingdom of Mald laid claim to the White Wilds, held by the Warrens of Skiskib.
-hist-conflict-flight e526 The Skreegg Horde defeated the Warrens of Skiskib in the White Wilds; 132 of the defeated and 42 of the victors fell.
-hist-conflict-flight e527 The Skreegg Horde besieged Babkuz of the Warrens of Skiskib; it fell.
-hist-conflict-flight e528 The Skreegg Horde took Babkuz from the Warrens of Skiskib; 86 died.
-hist-conflict-flight e529 The seat of the Warrens of Skiskib moved to Gronkkeeb Hole.
-hist-conflict-flight e530 The Warrens of Skiskib defeated the Skreegg Horde in the White Wilds; 224 of the defeated and 35 of the victors fell.
-hist-conflict-flight e531 The Skreegg Horde defeated the Warrens of Skiskib in the White Wilds; 111 of the defeated and 35 of the victors fell.
-hist-conflict-flight e532 The Khirnhu Throne laid claim to the White Wilds, held by the Shaaz Horde.
-hist-conflict-flight e533 The Warrens of Skiskib defeated the Skreegg Horde in the White Wilds; 216 of the defeated and 34 of the victors fell.
-hist-conflict-flight e534 Plague broke out in Kaz; 314 died.
-hist-conflict-flight e535 Plague broke out in Slok; 70 died.
-hist-conflict-flight e536 The Skreegg Horde defeated the Warrens of Skiskib in the White Wilds; 106 of the defeated and 33 of the victors fell.
-hist-conflict-flight e537 The Skreegg Horde defeated the Warrens of Skiskib in the White Wilds; 104 of the defeated and 33 of the victors fell.
-hist-conflict-flight e538 The Skreegg Horde besieged Zozz-Greenk Hole of the Warrens of Skiskib; it fell.
-hist-conflict-flight e539 The Skreegg Horde took Zozz-Greenk Hole from the Warrens of Skiskib; 29 died.
-hist-conflict-flight e540 The Skreegg Horde defeated the Warrens of Skiskib in the White Wilds; 98 of the defeated and 31 of the victors fell.
-hist-conflict-flight e541 The Skreegg Horde besieged Bukrak of the Warrens of Skiskib; it fell.
-hist-conflict-flight e542 The Skreegg Horde took Bukrak from the Warrens of Skiskib; 29 died.
-hist-conflict-flight e543 The Warrens of Skiskib sued the Skreegg Horde for peace after 18 years of war.
-hist-conflict-flight e544 The Warrens of Skiskib ceded the White Wilds to the Skreegg Horde.
-hist-conflict-flight e545 A succession crisis at Zuum'zuukh Camp shook the Shaaz Horde.
-hist-conflict-flight e546 Plague broke out in Drax-Snagg Pit and spread to 3 other settlements; 648 died in all.
-hist-conflict-flight e547 The plague spread to Nank; 151 died.
-hist-conflict-flight e548 The plague spread to Skrukkreek; 169 died.
-hist-conflict-flight e549 The plague spread to Weardstead; 71 died.
-hist-conflict-flight e550 Famine struck Gnok-Skeex; 232 died.
-hist-conflict-flight e551 Plague broke out in Bealdwick and spread to one other settlement; 661 died.
-hist-conflict-flight e552 The plague spread to Edarham; 237 died.
-hist-conflict-flight e553 Plague broke out in Skub Pit and spread to 2 other settlements; 877 died in all.
-hist-conflict-flight e554 The plague spread to Bukrak; 26 died.
-hist-conflict-flight e555 The plague spread to Geezink; 489 died.
-hist-conflict-flight e556 Famine struck Nik Pit; 626 died.
-hist-conflict-flight e557 Plague broke out in Gnugbunk Pit; 218 died.
-hist-conflict-flight e558 Famine struck Buskug; 282 died.
-hist-conflict-flight e559 Famine struck Skruz; 496 died.
-hist-conflict-flight e560 Famine struck Taidinkhai; 367 died.
-hist-conflict-flight e561 Famine struck Fiask Hollow; 23 died.
-hist-conflict-flight e562 Plague broke out in Gronkkeeb Hole; 964 died.
-hist-conflict-flight e563 Plague broke out in Buzuzz Pit and spread to 2 other settlements; 1,518 died in all.
-hist-conflict-flight e564 The plague spread to Skuggkib Pit; 617 died.
-hist-conflict-flight e565 The plague spread to Snonk-Girk; 176 died.
-hist-conflict-flight e566 Plague broke out in Nank and spread to 4 other settlements; 1,400 died in all.
-hist-conflict-flight e567 The plague spread to Gnot Pit; 510 died.
-hist-conflict-flight e568 The plague spread to Gnok-Skeex; 118 died.
-hist-conflict-flight e569 The plague spread to Skrukkreek; 139 died.
-hist-conflict-flight e570 The plague spread to Druzz; 213 died.
-hist-conflict-flight e571 The Shaaz Horde laid claim to the White Wilds, held by the Skreegg Horde.
+hist-conflict-flight e508 A succession crisis at Tearford shook the Kingdom of Mald.
+hist-conflict-flight e509 Famine struck Snonk-Girk; 208 died.
+hist-conflict-flight e510 Edarham grew into a town of 1,501.
+hist-conflict-flight e511 Famine struck Brirk; 138 died.
+hist-conflict-flight e512 Bealdwick grew into a town of 1,503.
+hist-conflict-flight e513 Plague broke out in Skrutch Pit; 708 died.
+hist-conflict-flight e514 Famine struck Aeitheitho; 74 died.
+hist-conflict-flight e515 Famine struck Babkuz; 57 died.
+hist-conflict-flight e516 Plague broke out in Edarham; 466 died.
+hist-conflict-flight e517 The Warrens of Skiskib laid claim to the Pallid Leas, held by the Skreegg Horde.
+hist-conflict-flight e518 The Kingdom of Mald laid claim to Dreadwell Rises, held by the Skreegg Horde.
+hist-conflict-flight e519 Famine struck Buskug; 259 died.
+hist-conflict-flight e520 Famine struck Gnugbunk Pit; 372 died.
+hist-conflict-flight e521 A succession crisis at Babkuz shook the Warrens of Skiskib.
+hist-conflict-flight e522 Plague broke out in Bealdwick and spread to one other settlement; 1,177 died.
+hist-conflict-flight e523 The plague spread to Tearford; 749 died.
+hist-conflict-flight e524 The Khirnhu Throne laid claim to the White Wilds, held by the Shaaz Horde.
+hist-conflict-flight e525 Plague broke out in Kaz; 315 died.
+hist-conflict-flight e526 Plague broke out in Slok; 71 died.
+hist-conflict-flight e527 A succession crisis at Zuum'zuukh Camp shook the Shaaz Horde.
+hist-conflict-flight e528 Plague broke out in Drax-Snagg Pit and spread to 3 other settlements; 753 died in all.
+hist-conflict-flight e529 The plague spread to Nank; 151 died.
+hist-conflict-flight e530 The plague spread to Skrukkreek; 169 died.
+hist-conflict-flight e531 The plague spread to Weardstead; 71 died.
+hist-conflict-flight e532 The Skreegg Horde laid claim to the White Wilds, held by the Warrens of Skiskib.
+hist-conflict-flight e533 Famine struck Gnok-Skeex; 232 died.
+hist-conflict-flight e534 Famine struck Zuum'zuukh Camp; 134 died.
+hist-conflict-flight e535 Plague broke out in Bealdwick and spread to one other settlement; 661 died.
+hist-conflict-flight e536 The plague spread to Edarham; 237 died.
+hist-conflict-flight e537 Famine struck Bukrak; 36 died.
+hist-conflict-flight e538 Plague broke out in Skub Pit and spread to one other settlement; 1,033 died.
+hist-conflict-flight e539 The plague spread to Geezink; 490 died.
+hist-conflict-flight e540 Famine struck Bukrak; 19 died.
+hist-conflict-flight e541 Famine struck Nik Pit; 626 died.
+hist-conflict-flight e542 The Skreegg Horde declared war on the Warrens of Skiskib over the White Wilds.
+hist-conflict-flight e543 Plague broke out in Gnugbunk Pit and spread to one other settlement; 406 died.
+hist-conflict-flight e544 The plague spread to Weardstead; 83 died.
+hist-conflict-flight e545 The Skreegg Horde defeated the Warrens of Skiskib in the White Wilds; 36 of the defeated and 11 of the victors fell.
+hist-conflict-flight e546 The Skreegg Horde besieged Babkuz of the Warrens of Skiskib; it fell.
+hist-conflict-flight e547 The Skreegg Horde sacked Babkuz of the Warrens of Skiskib; 268 died and 628 fled.
+hist-conflict-flight e548 The seat of the Warrens of Skiskib moved to Zozz-Greenk Hole.
+hist-conflict-flight e549 Famine struck Buskug; 284 died.
+hist-conflict-flight e550 Famine struck Skruz; 496 died.
+hist-conflict-flight e551 The Skreegg Horde defeated the Warrens of Skiskib in the White Wilds; 30 of the defeated and 9 of the victors fell.
+hist-conflict-flight e552 The Skreegg Horde besieged Zozz-Greenk Hole of the Warrens of Skiskib; it fell.
+hist-conflict-flight e553 The Skreegg Horde sacked Zozz-Greenk Hole of the Warrens of Skiskib; 273 died and 640 fled.
+hist-conflict-flight e554 The seat of the Warrens of Skiskib moved to Bukrak.
+hist-conflict-flight e555 The Skreegg Horde defeated the Warrens of Skiskib in the White Wilds; 24 of the defeated and 7 of the victors fell.
+hist-conflict-flight e556 The Skreegg Horde besieged Bukrak of the Warrens of Skiskib; it fell.
+hist-conflict-flight e557 The Skreegg Horde took Bukrak from the Warrens of Skiskib; 91 died.
+hist-conflict-flight e558 The seat of the Warrens of Skiskib moved to Slok.
+hist-conflict-flight e559 The Skreegg Horde defeated the Warrens of Skiskib in the White Wilds; 6 of the defeated and one of the victors fell.
+hist-conflict-flight e560 The Skreegg Horde besieged Slok of the Warrens of Skiskib; it fell.
+hist-conflict-flight e561 The Skreegg Horde took Slok from the Warrens of Skiskib; 29 died.
+hist-conflict-flight e562 The Warrens of Skiskib fell to the Skreegg Horde.
+hist-conflict-flight e563 Famine struck Taidinkhai; 367 died.
+hist-conflict-flight e564 Famine struck Fiask Hollow; 23 died.
+hist-conflict-flight e565 Plague broke out in Gronkkeeb Hole; 558 died.
+hist-conflict-flight e566 Plague broke out in Buzuzz Pit and spread to 2 other settlements; 1,518 died in all.
+hist-conflict-flight e567 The plague spread to Skuggkib Pit; 617 died.
+hist-conflict-flight e568 The plague spread to Snonk-Girk; 176 died.
+hist-conflict-flight e569 Plague broke out in Nank and spread to 4 other settlements; 1,399 died in all.
+hist-conflict-flight e570 The plague spread to Gnot Pit; 509 died.
+hist-conflict-flight e571 The plague spread to Gnok-Skeex; 118 died.
+hist-conflict-flight e572 The plague spread to Skrukkreek; 139 died.
+hist-conflict-flight e573 The plague spread to Druzz; 213 died.
 synthetic syn-0 0 2000 all auto normal
 syn-0 table civilization 9fc100509a10912ed8eea65db8b7ebf34bdb4927b290f45c32447cf3486deece
-syn-0 table event b2430506ddce2d55d2ec39bc3cbdb0ac3012949ef9502f85c986bacb452b26df
-syn-0 table event_cause 85dc5e11e1325b80b240c4dacbe25d5f18bbad4cb426318803224a60b77b3bff
+syn-0 table event 5ad6ee9cc9ecd9ef3096e6080c3f04ae5b136839a104375b870b52c5960d2c44
+syn-0 table event_cause 9e8fd86c19dbe023648a8f91ae5f4449cd0fa2cec6d376df36ab5408f1bcd249
 syn-0 table event_kind 58b8cb7b5b5121612b331cd052c06a2bdfc4e23ba2f1956e14bc85aa432f8776
 syn-0 table event_kind_role 828c060dc0d262d618363e1eb4194754223827013ae83efa04ea2944f3b5731b
 syn-0 table event_kind_value ea3bdaba66965ca348093390b78ac4b2e92807052c93c9bb59822b0c53c0771e
-syn-0 table event_participant 19db2366c7db4a2433495d7cbdc39692e62ef4b7965e8c88ed20d8ad69ddac26
-syn-0 table event_value 048c4b15702352cc7eb7b5fd3e33b8a121e9328b8674d238b2b4f0a0e3f0f5d9
+syn-0 table event_participant 24b1363e6d6230f267bae3f36a9e466fa8ffa7984a4aa664470768748e841957
+syn-0 table event_value 4db4e065aa3cf7748a13a4ea5d83a5b637b4351e6048dcf5b59cba2fa8cf6cf4
 syn-0 table phase 7be4fcecb4feb7b45a0d02b7bdbe9c2c37c6f0a3c923a96425b5733dbd53c246
-syn-0 table region_control 28a5b510ebff769f0771ee6038781a24fe952888b1f50b50141fbe90d731f68d
-syn-0 table relation 3aee13bf7856b4f1fe416b701806379aae7e4dc2379611ac66c8dca33c7111b0
-syn-0 table settlement f711bc3cc0df2f725605b0b6691cf006e79eea8bb486227be2a16ce6adad8644
-syn-0 table settlement_census 361217e80f06d951ee6ff090ad476915e468f7c70fc497867585306bf198ae6c
+syn-0 table region_control e176765e2d117d8922fed2d880d8f3a25d344f0096043f5c1d44b5d3111dd64e
+syn-0 table relation 27ccb6d81388a2abfb5fe97d1d193bd3f729e6f607035b18e141e1d248b4fc8d
+syn-0 table settlement c32cf901cb50df0bebe6e1e2bcd518b4e1e4716c4905ada4832e636aa15a691b
+syn-0 table settlement_census 0a8315f2d0f25216e7e1005fa09e904a2af8a2e1488c45a6a613e7d331e6a7b4
 syn-0 report end_year = 2000
 syn-0 report phases_opening = 6
 syn-0 report phases_quiet = 6
@@ -8295,7 +8325,7 @@ syn-0 report phases_flare = 0
 syn-0 report phases_final = 1
 syn-0 report simulated_years = 400
 syn-0 report simulated_permille = 200
-syn-0 report events = 81
+syn-0 report events = 90
 syn-0 report events_awakening = 6
 syn-0 report events_civ_founded = 6
 syn-0 report events_settlement_founded = 6
@@ -8315,23 +8345,23 @@ syn-0 report events_settlement_abandoned = 0
 syn-0 report events_capital_moved = 2
 syn-0 report events_civ_ended = 0
 syn-0 report events_ruin_faded = 0
-syn-0 report events_claim = 6
+syn-0 report events_claim = 7
 syn-0 report events_war_declared = 4
-syn-0 report events_battle = 13
+syn-0 report events_battle = 17
 syn-0 report events_battle_at_pass = 0
-syn-0 report events_siege = 6
+syn-0 report events_siege = 9
 syn-0 report events_sacked = 1
 syn-0 report events_settlement_captured = 1
-syn-0 report events_peace = 1
-syn-0 report events_truce = 2
+syn-0 report events_peace = 2
+syn-0 report events_truce = 0
 syn-0 report events_region_ceded = 0
 syn-0 report events_civ_conquered = 0
 syn-0 report events_settlement_abandoned_to = 0
 syn-0 report events_refugees_settled = 0
 syn-0 report events_tribute = 0
-syn-0 report events_war_won = 0
+syn-0 report events_war_won = 1
 syn-0 report events_search_abandoned = 0
-syn-0 report events_refuge_held = 2
+syn-0 report events_refuge_held = 3
 syn-0 report events_plague_outbreak = 1
 syn-0 report events_quiet_stretch = 6
 syn-0 report civilizations = 6
@@ -8341,13 +8371,13 @@ syn-0 report settlements_standing = 13
 syn-0 report regions_held = 8
 syn-0 report census_rows = 83
 syn-0 report relations = 11
-syn-0 report population = 9302
-syn-0 report population_elf = 248
-syn-0 report population_goblin = 2899
+syn-0 report population = 9284
+syn-0 report population_elf = 261
+syn-0 report population_goblin = 2944
 syn-0 report population_dwarf = 2032
 syn-0 report population_faerie = 400
 syn-0 report population_human = 2459
-syn-0 report population_orc = 1264
+syn-0 report population_orc = 1188
 syn-0 report settlements_standing_elf = 1
 syn-0 report settlements_standing_goblin = 3
 syn-0 report settlements_standing_dwarf = 3
@@ -8365,7 +8395,7 @@ syn-0 stats settlements_colonies = 8
 syn-0 stats civilizations_seceded = 0
 syn-0 stats relations_enmity = 4
 syn-0 stats relations_peace = 3
-syn-0 stats war_years_total = 46
+syn-0 stats war_years_total = 57
 syn-0 stats war_years_max = 25
 syn-0 stats civilizations_conquered = 0
 syn-0 stats settlements_sacked = 1
@@ -8382,14 +8412,14 @@ syn-0 stats wars_hollow = 2
 syn-0 stats wars_hollow_permille = 500
 syn-0 stats wars_same_goal_max = 3
 syn-0 stats wars_same_goal_unchanged_max = 3
-syn-0 stats race_population_share_max_permille = 311
+syn-0 stats race_population_share_max_permille = 317
 syn-0 stats race_regions_share_max_permille = 250
 syn-0 stats wars_unfound = 0
-syn-0 stats refuges_held_no_destination = 2
+syn-0 stats refuges_held_no_destination = 3
 syn-0 war e26 1683-1708 c2 c1 rg14 claim e15 battles 7 sacked 0 taken 1 exhaustion won-c2
-syn-0 war e55 1893-1894 c6 c4 rg15 claim e49 battles 0 sacked 0 taken 0 quiet truce
-syn-0 war e63 1948-1954 c6 c1 rg14 claim e61 battles 3 sacked 0 taken 0 exhaustion truce
-syn-0 war e73 1986-open c2 c1 rg14 claim e62 battles 3 sacked 1 taken 0 open -
+syn-0 war e51 1847-1856 c6 c4 rg15 claim e49 battles 5 sacked 0 taken 0 exhaustion won-c4
+syn-0 war e70 1948-1957 c6 c1 rg14 claim e68 battles 3 sacked 1 taken 0 exhaustion won-c6
+syn-0 war e86 1986-open c2 c1 rg14 claim e69 battles 2 sacked 0 taken 0 open -
 syn-0 q50 0 e0
 syn-0 q75 0 e0
 syn-0 q100 0 e0
@@ -8453,10 +8483,10 @@ syn-0 q1768 0 e0
 syn-0 q1793 0 e0
 syn-0 q1818 0 e0
 syn-0 note e26 Claimed since 1138.
-syn-0 note e55 Claimed since 1844.
-syn-0 note e63 Claimed since 1931.
-syn-0 note e73 Claimed since 1940. The second war between them.
-syn-0 summary threshold 20 shown 67 ages 4,4,5,4,21,29
+syn-0 note e51 Claimed since 1844.
+syn-0 note e70 Claimed since 1931.
+syn-0 note e86 Claimed since 1940. The second war between them.
+syn-0 summary threshold 20 shown 76 ages 4,4,5,4,21,38
 syn-0 e1 Saene awakened the Elves in Synthetic 14.
 syn-0 e2 The Elves founded the House of Nife in Synthetic 14.
 syn-0 e3 The House of Nife founded Iensath in Synthetic 14.
@@ -8507,37 +8537,46 @@ syn-0 e47 The Orcs founded the Warband of Ghom in Synthetic 25.
 syn-0 e48 The Warband of Ghom founded Uul'krakh Camp in Synthetic 25.
 syn-0 e49 The Warband of Ghom laid claim to Synthetic 15, held by the Wosk Ring.
 syn-0 e50 Ceambury grew into a town of 1,506.
-syn-0 e51 Nodin grew into a village of 250.
-syn-0 e52 Famine struck Zux; 103 died.
-syn-0 e53 Famine struck Iensath; 31 died.
-syn-0 e54 The Baskeeb Mob laid claim to Synthetic 15, held by the Wosk Ring.
-syn-0 e55 The Warband of Ghom declared war on the Wosk Ring over Synthetic 15.
-syn-0 e56 The Wosk Ring and the Warband of Ghom made peace after 1 year of war, neither the victor.
-syn-0 e57 For 6 years, from 1894 to 1899, the land was quiet, and 6 realms kept the peace.
-syn-0 e58 The Duchy of Circon sent settlers from Ceambury to found Dack in Synthetic 3.
-syn-0 e59 Onaeme grew into a village of 250.
-syn-0 e60 Dack grew into a village of 251.
-syn-0 e61 The Warband of Ghom laid claim to Synthetic 14, held by the House of Nife.
-syn-0 e62 The Baskeeb Mob laid claim to Synthetic 14, held by the House of Nife.
-syn-0 e63 The Warband of Ghom declared war on the House of Nife over Synthetic 14.
-syn-0 e64 The House of Nife defeated the Warband of Ghom in Synthetic 14; 26 of the defeated and 4 of the victors fell.
-syn-0 e65 The Warband of Ghom defeated the House of Nife in Synthetic 25; 13 of the defeated and 4 of the victors fell.
-syn-0 e66 The Warband of Ghom defeated the House of Nife in Synthetic 14; 12 of the defeated and 4 of the victors fell.
-syn-0 e67 The Warband of Ghom besieged Onaeme of the House of Nife; it held.
-syn-0 e68 The House of Nife and the Warband of Ghom made peace after 6 years of war, neither the victor.
-syn-0 e69 The Duchy of Circon sent settlers from Ceambury to found Stastint in Synthetic 4.
-syn-0 e70 Plague broke out in Zux; 130 died.
-syn-0 e71 Stastint grew into a village of 251.
-syn-0 e72 The House of Nife laid claim to Synthetic 14, held by the Baskeeb Mob.
-syn-0 e73 The Baskeeb Mob declared war on the House of Nife over Synthetic 14.
-syn-0 e74 The Baskeeb Mob defeated the House of Nife in Synthetic 14; 13 of the defeated and 4 of the victors fell.
-syn-0 e75 The Baskeeb Mob besieged Onaeme of the House of Nife; it fell.
-syn-0 e76 The Baskeeb Mob sacked Onaeme of the House of Nife; 72 died and 171 fled.
-syn-0 e77 The seat of the House of Nife moved to Orith.
-syn-0 e78 Orith grew into a village of 253.
-syn-0 e79 The Baskeeb Mob defeated the House of Nife in Synthetic 14; 10 of the defeated and 3 of the victors fell.
-syn-0 e80 The Baskeeb Mob besieged Orith of the House of Nife; it held.
-syn-0 e81 The House of Nife defeated the Baskeeb Mob in Synthetic 14; 20 of the defeated and 3 of the victors fell.
+syn-0 e51 The Warband of Ghom declared war on the Wosk Ring over Synthetic 15.
+syn-0 e52 Nodin grew into a village of 250.
+syn-0 e53 Famine struck Zux; 103 died.
+syn-0 e54 The Warband of Ghom defeated the Wosk Ring in Synthetic 15; 12 of the defeated and 3 of the victors fell.
+syn-0 e55 The Warband of Ghom besieged Pieshaep Hollow of the Wosk Ring; it held.
+syn-0 e56 The Wosk Ring defeated the Warband of Ghom in Synthetic 15; 22 of the defeated and 3 of the victors fell.
+syn-0 e57 The Wosk Ring defeated the Warband of Ghom in Synthetic 25; 22 of the defeated and 3 of the victors fell.
+syn-0 e58 The Wosk Ring besieged Uul'krakh Camp of the Warband of Ghom; it held.
+syn-0 e59 The Warband of Ghom defeated the Wosk Ring in Synthetic 25; 11 of the defeated and 3 of the victors fell.
+syn-0 e60 The Wosk Ring defeated the Warband of Ghom in Synthetic 15; 22 of the defeated and 3 of the victors fell.
+syn-0 e61 The Wosk Ring prevailed over the Warband of Ghom after 9 years of war.
+syn-0 e62 Famine struck Iensath; 31 died.
+syn-0 e63 The Baskeeb Mob laid claim to Synthetic 15, held by the Wosk Ring.
+syn-0 e64 For 6 years, from 1894 to 1899, the land was quiet, and 6 realms kept the peace.
+syn-0 e65 The Duchy of Circon sent settlers from Ceambury to found Dack in Synthetic 3.
+syn-0 e66 Onaeme grew into a village of 250.
+syn-0 e67 Dack grew into a village of 251.
+syn-0 e68 The Warband of Ghom laid claim to Synthetic 14, held by the House of Nife.
+syn-0 e69 The Baskeeb Mob laid claim to Synthetic 14, held by the House of Nife.
+syn-0 e70 The Warband of Ghom declared war on the House of Nife over Synthetic 14.
+syn-0 e71 The Warband of Ghom defeated the House of Nife in Synthetic 14; 13 of the defeated and 4 of the victors fell.
+syn-0 e72 The Warband of Ghom besieged Onaeme of the House of Nife; it fell.
+syn-0 e73 The Warband of Ghom sacked Onaeme of the House of Nife; 72 died and 171 fled.
+syn-0 e74 The seat of the House of Nife moved to Orith.
+syn-0 e75 Orith grew into a village of 253.
+syn-0 e76 The Warband of Ghom defeated the House of Nife in Synthetic 14; 10 of the defeated and 3 of the victors fell.
+syn-0 e77 The Warband of Ghom besieged Orith of the House of Nife; with nowhere to flee, its people held on.
+syn-0 e78 The Warband of Ghom defeated the House of Nife in Synthetic 14; 9 of the defeated and 3 of the victors fell.
+syn-0 e79 The Warband of Ghom besieged Orith of the House of Nife; it held.
+syn-0 e80 The House of Nife sued the Warband of Ghom for peace after 9 years of war.
+syn-0 e81 The Duchy of Circon sent settlers from Ceambury to found Stastint in Synthetic 4.
+syn-0 e82 The Warband of Ghom laid claim to Synthetic 15, held by the Wosk Ring.
+syn-0 e83 Plague broke out in Zux; 130 died.
+syn-0 e84 Stastint grew into a village of 251.
+syn-0 e85 The House of Nife laid claim to Synthetic 14, held by the Baskeeb Mob.
+syn-0 e86 The Baskeeb Mob declared war on the House of Nife over Synthetic 14.
+syn-0 e87 The Baskeeb Mob defeated the House of Nife in Synthetic 14; 10 of the defeated and 3 of the victors fell.
+syn-0 e88 The Baskeeb Mob besieged Orith of the House of Nife; it held.
+syn-0 e89 The Baskeeb Mob defeated the House of Nife in Synthetic 14; 10 of the defeated and 3 of the victors fell.
+syn-0 e90 The Baskeeb Mob besieged Orith of the House of Nife; it held.
 synthetic syn-1 1 6000 all auto calm
 syn-1 table civilization 03bf71059214f90cb876656ef4cffd6e12540e30849e871f58ed4903ef37e84a
 syn-1 table event 009f647483a53c3f847e42f431cb18132b3daf24b49b97c13a36b77d2df342f4
@@ -12381,19 +12420,19 @@ syn-12 e16 Gru grew into a town of 1,507.
 syn-12 e17 A succession crisis at Gru shook the Uu'mal Horde.
 syn-12 e18 A succession crisis at Siliefiedell shook the Realm of Cielathae.
 synthetic syn-13 13 6000 elf,orc 4 calm
-syn-13 table civilization 5f10aebba17c583d98707896affb91c426f140a97abc7229f5f7e37e7c9db0e6
-syn-13 table event cbb62b3891e037f97040fffa38ab9bb8a89399f03600a1f1a9d5413d88f2a565
-syn-13 table event_cause 78c7438fdd7be4e99a8233b248964922b7cff01e99cfce17b0ab5d2e48e6d1be
+syn-13 table civilization 885a17e0bee21ded1a38add9ddb8593b33cd76759665d6566607cf110205ad97
+syn-13 table event eb97e25331b6fc6697509b7f6a29a5d58c0ffae5d1ff0fe2d0c5a217a9cf10ea
+syn-13 table event_cause 278bd9b3e4ac4f1781c8c9271222deb6f0c917f53801fcfcf44e8e68d4329be2
 syn-13 table event_kind 58b8cb7b5b5121612b331cd052c06a2bdfc4e23ba2f1956e14bc85aa432f8776
 syn-13 table event_kind_role 828c060dc0d262d618363e1eb4194754223827013ae83efa04ea2944f3b5731b
 syn-13 table event_kind_value ea3bdaba66965ca348093390b78ac4b2e92807052c93c9bb59822b0c53c0771e
-syn-13 table event_participant 21fe77865675029c5e0ef3a3b748718fd73042797ebdbafc88f8d2a712bdb71b
-syn-13 table event_value b1acd5781368f256c5c2b6411768dc70d1bb0e7c9b51c04c835d903abab075f0
+syn-13 table event_participant b9e286620bd7c64a365a294cb72a5f0f051b2b80d55c1c54d55b7bad2d054fe0
+syn-13 table event_value 2c06539b91751b15a9251440f760653ab037432b0d3a5e1294b37af097c92c3b
 syn-13 table phase 37c134c2bba2c922d95040bae6b064a1fb4460e7523202509dcfae4ebdb18d5d
-syn-13 table region_control 13a1f7f21282c6fb7e90f6696d55be301308ec9ccef7672d04c5e281b30c4158
-syn-13 table relation b9b23f288b728e7c9e7508327cfb066bc3cf2629c20de5b20becbf0083ab2f83
-syn-13 table settlement 6da5f158fba9de86891602e4fc31dd93829049a33493b10151bd36493294e154
-syn-13 table settlement_census 1b2a6b487f7c801c1ef4ebf14e0af964395d3f53745d5f6c822e3f78ac6e7a99
+syn-13 table region_control cdbce59ad03721104c032844188409446236515eaf5e002847c2bdcff10c5e84
+syn-13 table relation 4af3717da6066a396d8a5dbb20f9b62f9883e5da7cd120f5c549023f322709af
+syn-13 table settlement ce31b753b383fa5c4529e0d97b1d41a27c11c28bb43e63b7675a0416b34e3112
+syn-13 table settlement_census 652ecdffe0f405e884bdfb7989db119f918352c8e86213ff85e41a765b700e70
 syn-13 report end_year = 6000
 syn-13 report phases_opening = 2
 syn-13 report phases_quiet = 1
@@ -12401,41 +12440,41 @@ syn-13 report phases_flare = 0
 syn-13 report phases_final = 1
 syn-13 report simulated_years = 600
 syn-13 report simulated_permille = 100
-syn-13 report events = 70
+syn-13 report events = 73
 syn-13 report events_awakening = 2
 syn-13 report events_civ_founded = 5
 syn-13 report events_settlement_founded = 5
 syn-13 report events_quiet_era = 0
 syn-13 report events_flare_up = 0
 syn-13 report events_colony_founded = 10
-syn-13 report events_became_village = 8
+syn-13 report events_became_village = 10
 syn-13 report events_became_town = 3
 syn-13 report events_became_city = 0
 syn-13 report events_settlement_dwindled = 1
-syn-13 report events_famine = 3
+syn-13 report events_famine = 2
 syn-13 report events_plague = 0
 syn-13 report events_plague_spread = 0
 syn-13 report events_succession_crisis = 4
 syn-13 report events_civ_seceded = 0
 syn-13 report events_settlement_abandoned = 0
-syn-13 report events_capital_moved = 0
+syn-13 report events_capital_moved = 2
 syn-13 report events_civ_ended = 0
 syn-13 report events_ruin_faded = 0
 syn-13 report events_claim = 3
 syn-13 report events_war_declared = 3
 syn-13 report events_battle = 9
 syn-13 report events_battle_at_pass = 0
-syn-13 report events_siege = 6
-syn-13 report events_sacked = 0
+syn-13 report events_siege = 5
+syn-13 report events_sacked = 2
 syn-13 report events_settlement_captured = 0
-syn-13 report events_peace = 1
+syn-13 report events_peace = 2
 syn-13 report events_truce = 1
 syn-13 report events_region_ceded = 0
 syn-13 report events_civ_conquered = 0
 syn-13 report events_settlement_abandoned_to = 0
 syn-13 report events_refugees_settled = 0
-syn-13 report events_tribute = 2
-syn-13 report events_war_won = 1
+syn-13 report events_tribute = 1
+syn-13 report events_war_won = 0
 syn-13 report events_search_abandoned = 0
 syn-13 report events_refuge_held = 0
 syn-13 report events_plague_outbreak = 2
@@ -12443,18 +12482,18 @@ syn-13 report events_quiet_stretch = 1
 syn-13 report civilizations = 5
 syn-13 report civilizations_alive = 5
 syn-13 report settlements = 15
-syn-13 report settlements_standing = 15
+syn-13 report settlements_standing = 13
 syn-13 report regions_held = 6
-syn-13 report census_rows = 68
+syn-13 report census_rows = 70
 syn-13 report relations = 10
-syn-13 report population = 10162
-syn-13 report population_elf = 786
+syn-13 report population = 10034
+syn-13 report population_elf = 655
 syn-13 report population_goblin = 0
 syn-13 report population_dwarf = 0
 syn-13 report population_faerie = 0
 syn-13 report population_human = 0
-syn-13 report population_orc = 9376
-syn-13 report settlements_standing_elf = 3
+syn-13 report population_orc = 9379
+syn-13 report settlements_standing_elf = 1
 syn-13 report settlements_standing_goblin = 0
 syn-13 report settlements_standing_dwarf = 0
 syn-13 report settlements_standing_faerie = 0
@@ -12471,10 +12510,10 @@ syn-13 stats settlements_colonies = 10
 syn-13 stats civilizations_seceded = 0
 syn-13 stats relations_enmity = 4
 syn-13 stats relations_peace = 3
-syn-13 stats war_years_total = 40
-syn-13 stats war_years_max = 23
+syn-13 stats war_years_total = 21
+syn-13 stats war_years_max = 9
 syn-13 stats civilizations_conquered = 0
-syn-13 stats settlements_sacked = 0
+syn-13 stats settlements_sacked = 2
 syn-13 stats settlements_captured = 0
 syn-13 stats regions_conquered = 0
 syn-13 stats races_alive = 2
@@ -12488,13 +12527,13 @@ syn-13 stats wars_hollow = 1
 syn-13 stats wars_hollow_permille = 333
 syn-13 stats wars_same_goal_max = 3
 syn-13 stats wars_same_goal_unchanged_max = 3
-syn-13 stats race_population_share_max_permille = 922
+syn-13 stats race_population_share_max_permille = 934
 syn-13 stats race_regions_share_max_permille = 833
 syn-13 stats wars_unfound = 0
 syn-13 stats refuges_held_no_destination = 0
-syn-13 war e18 5622-5631 c4 c1 rg1 claim e16 battles 3 sacked 0 taken 0 exhaustion won-c1-tribute
-syn-13 war e31 5727-5735 c4 c1 rg1 claim e29 battles 3 sacked 0 taken 0 exhaustion truce
-syn-13 war e50 5831-5854 c4 c1 rg1 claim e47 battles 3 sacked 0 taken 0 exhaustion won-c4-tribute
+syn-13 war e17 5597-5601 c4 c1 rg1 claim e16 battles 3 sacked 0 taken 0 exhaustion won-c4-tribute
+syn-13 war e28 5696-5704 c4 c1 rg1 claim e27 battles 3 sacked 0 taken 0 exhaustion truce
+syn-13 war e42 5783-5792 c4 c1 rg1 claim e41 battles 3 sacked 2 taken 0 exhaustion won-c4
 syn-13 q196 0 e0
 syn-13 q221 0 e0
 syn-13 q246 0 e0
@@ -12710,10 +12749,10 @@ syn-13 q5471 0 e0
 syn-13 q5496 0 e0
 syn-13 q5521 0 e0
 syn-13 q5546 0 e0
-syn-13 note e18 Claimed since 5596.
-syn-13 note e31 Claimed since 5709. The second war between them.
-syn-13 note e50 Claimed since 5809. The third war between them.
-syn-13 summary threshold 20 shown 49 ages 4,45
+syn-13 note e17 Claimed since 5596.
+syn-13 note e28 Claimed since 5679. The second war between them.
+syn-13 note e42 Claimed since 5778. The third war between them.
+syn-13 summary threshold 20 shown 50 ages 4,46
 syn-13 e1 Insind awakened the Elves in Synthetic 1.
 syn-13 e2 The Elves founded the House of Ithagliefie in Synthetic 1.
 syn-13 e3 The House of Ithagliefie founded Ondthon in Synthetic 1.
@@ -12730,60 +12769,63 @@ syn-13 e13 The Warband of Bold'shaald founded Mulduruld Fort in Synthetic 6.
 syn-13 e14 The Orcs founded the Agh'kraa Horde in Synthetic 7.
 syn-13 e15 The Agh'kraa Horde founded Shukh in Synthetic 7.
 syn-13 e16 The Warband of Bold'shaald laid claim to Synthetic 1, held by the House of Ithagliefie.
-syn-13 e17 Famine struck Aefir; 27 died.
-syn-13 e18 The Warband of Bold'shaald declared war on the House of Ithagliefie over Synthetic 1.
-syn-13 e19 Plague broke out in Iviel; 28 died.
-syn-13 e20 The Warband of Bold'shaald defeated the House of Ithagliefie in Synthetic 1; 30 of the defeated and 9 of the victors fell.
-syn-13 e21 The Warband of Bold'shaald besieged Ondthon of the House of Ithagliefie; it held.
-syn-13 e22 The Warband of Bold'shaald defeated the House of Ithagliefie in Synthetic 1; 28 of the defeated and 9 of the victors fell.
-syn-13 e23 The Warband of Bold'shaald besieged Ondthon of the House of Ithagliefie; it held.
-syn-13 e24 The House of Ithagliefie defeated the Warband of Bold'shaald in Synthetic 1; 56 of the defeated and 8 of the victors fell.
-syn-13 e25 The House of Ithagliefie prevailed over the Warband of Bold'shaald after 9 years of war.
-syn-13 e26 The Warband of Bold'shaald paid tribute to the House of Ithagliefie; 44 were carried off.
-syn-13 e27 Famine struck Ondthon; 42 died.
-syn-13 e28 A succession crisis at Ondthon shook the House of Ithagliefie.
-syn-13 e29 The Warband of Bold'shaald laid claim to Synthetic 1, held by the House of Ithagliefie.
-syn-13 e30 Kuumkom Fort grew into a town of 1,502.
-syn-13 e31 The Warband of Bold'shaald declared war on the House of Ithagliefie over Synthetic 1.
-syn-13 e32 The House of Ithagliefie defeated the Warband of Bold'shaald in Synthetic 1; 60 of the defeated and 9 of the victors fell.
-syn-13 e33 The Warband of Bold'shaald defeated the House of Ithagliefie in Synthetic 6; 30 of the defeated and 9 of the victors fell.
-syn-13 e34 The Warband of Bold'shaald defeated the House of Ithagliefie in Synthetic 1; 29 of the defeated and 9 of the victors fell.
-syn-13 e35 The Warband of Bold'shaald besieged Ondthon of the House of Ithagliefie; it held.
-syn-13 e36 The House of Ithagliefie and the Warband of Bold'shaald made peace after 8 years of war, neither the victor.
-syn-13 e37 Mulduruld Fort grew into a town of 1,503.
-syn-13 e38 Clan Gruug sent settlers from Ugol Camp to found Uguukgrukh Camp in Synthetic 9.
-syn-13 e39 Clan Gruug sent settlers from Ugol Camp to found Duum Fort in Synthetic 9.
-syn-13 e40 Shukh grew into a town of 1,501.
-syn-13 e41 The Warband of Azarz sent settlers from Kuumkom Fort to found Daarz Camp in Synthetic 16.
-syn-13 e42 Daarz Camp grew into a village of 252.
+syn-13 e17 The Warband of Bold'shaald declared war on the House of Ithagliefie over Synthetic 1.
+syn-13 e18 Famine struck Aefir; 27 died.
+syn-13 e19 The House of Ithagliefie defeated the Warband of Bold'shaald in Synthetic 1; 40 of the defeated and 9 of the victors fell.
+syn-13 e20 The Warband of Bold'shaald defeated the House of Ithagliefie in Synthetic 6; 29 of the defeated and 9 of the victors fell.
+syn-13 e21 The Warband of Bold'shaald defeated the House of Ithagliefie in Synthetic 1; 28 of the defeated and 9 of the victors fell.
+syn-13 e22 The Warband of Bold'shaald besieged Ondthon of the House of Ithagliefie; it held.
+syn-13 e23 The House of Ithagliefie sued the Warband of Bold'shaald for peace after 4 years of war.
+syn-13 e24 The House of Ithagliefie paid tribute to the Warband of Bold'shaald; 70 were carried off.
+syn-13 e25 Plague broke out in Iviel; 28 died.
+syn-13 e26 A succession crisis at Ondthon shook the House of Ithagliefie.
+syn-13 e27 The Warband of Bold'shaald laid claim to Synthetic 1, held by the House of Ithagliefie.
+syn-13 e28 The Warband of Bold'shaald declared war on the House of Ithagliefie over Synthetic 1.
+syn-13 e29 The House of Ithagliefie defeated the Warband of Bold'shaald in Synthetic 1; 60 of the defeated and 9 of the victors fell.
+syn-13 e30 The Warband of Bold'shaald defeated the House of Ithagliefie in Synthetic 6; 30 of the defeated and 9 of the victors fell.
+syn-13 e31 The Warband of Bold'shaald defeated the House of Ithagliefie in Synthetic 1; 29 of the defeated and 9 of the victors fell.
+syn-13 e32 The Warband of Bold'shaald besieged Ondthon of the House of Ithagliefie; it held.
+syn-13 e33 The House of Ithagliefie and the Warband of Bold'shaald made peace after 8 years of war, neither the victor.
+syn-13 e34 Kuumkom Fort grew into a town of 1,502.
+syn-13 e35 Mulduruld Fort grew into a town of 1,501.
+syn-13 e36 Clan Gruug sent settlers from Ugol Camp to found Uguukgrukh Camp in Synthetic 9.
+syn-13 e37 Clan Gruug sent settlers from Ugol Camp to found Duum Fort in Synthetic 9.
+syn-13 e38 Shukh grew into a town of 1,501.
+syn-13 e39 The Warband of Azarz sent settlers from Kuumkom Fort to found Daarz Camp in Synthetic 16.
+syn-13 e40 Daarz Camp grew into a village of 252.
+syn-13 e41 The Warband of Bold'shaald laid claim to Synthetic 1, held by the House of Ithagliefie.
+syn-13 e42 The Warband of Bold'shaald declared war on the House of Ithagliefie over Synthetic 1.
 syn-13 e43 The Agh'kraa Horde sent settlers from Shukh to found Uraldkosh in Synthetic 7.
-syn-13 e44 The Warband of Azarz sent settlers from Kuumkom Fort to found Shash Fort in Synthetic 17.
-syn-13 e45 Shash Fort grew into a village of 252.
-syn-13 e46 The Agh'kraa Horde sent settlers from Shukh to found Krashgruum Fort in Synthetic 7.
-syn-13 e47 The Warband of Bold'shaald laid claim to Synthetic 1, held by the House of Ithagliefie.
-syn-13 e48 Weakened by emigration, Shukh dwindled to 1,198 souls.
-syn-13 e49 Uraldkosh grew into a village of 250.
-syn-13 e50 The Warband of Bold'shaald declared war on the House of Ithagliefie over Synthetic 1.
-syn-13 e51 The Warband of Azarz sent settlers from Kuumkom Fort to found Dagh'kuk in Synthetic 17.
-syn-13 e52 The Warband of Bold'shaald defeated the House of Ithagliefie in Synthetic 1; 30 of the defeated and 9 of the victors fell.
-syn-13 e53 The Warband of Bold'shaald besieged Ondthon of the House of Ithagliefie; it held.
-syn-13 e54 The Warband of Bold'shaald defeated the House of Ithagliefie in Synthetic 1; 30 of the defeated and 9 of the victors fell.
-syn-13 e55 The Warband of Bold'shaald besieged Ondthon of the House of Ithagliefie; it held.
-syn-13 e56 Krashgruum Fort grew into a village of 250.
-syn-13 e57 Dagh'kuk grew into a village of 251.
-syn-13 e58 The Warband of Azarz sent settlers from Kuumkom Fort to found Azuukthush Camp in Synthetic 17.
-syn-13 e59 Uguukgrukh Camp grew into a village of 250.
-syn-13 e60 The Warband of Bold'shaald defeated the House of Ithagliefie in Synthetic 1; 29 of the defeated and 9 of the victors fell.
-syn-13 e61 The Warband of Bold'shaald besieged Ondthon of the House of Ithagliefie; it held.
-syn-13 e62 The House of Ithagliefie sued the Warband of Bold'shaald for peace after 23 years of war.
-syn-13 e63 The House of Ithagliefie paid tribute to the Warband of Bold'shaald; 73 were carried off.
-syn-13 e64 Duum Fort grew into a village of 250.
-syn-13 e65 Azuukthush Camp grew into a village of 250.
-syn-13 e66 A succession crisis at Mulduruld Fort shook the Warband of Bold'shaald.
-syn-13 e67 A succession crisis at Kuumkom Fort shook the Warband of Azarz.
-syn-13 e68 Famine struck Uraldkosh; 52 died.
+syn-13 e44 The Warband of Bold'shaald defeated the House of Ithagliefie in Synthetic 1; 30 of the defeated and 9 of the victors fell.
+syn-13 e45 The Warband of Bold'shaald besieged Ondthon of the House of Ithagliefie; it fell.
+syn-13 e46 The Warband of Bold'shaald sacked Ondthon of the House of Ithagliefie; 135 died and 317 fled.
+syn-13 e47 The seat of the House of Ithagliefie moved to Aefir.
+syn-13 e48 Aefir grew into a village of 470.
+syn-13 e49 The Warband of Bold'shaald defeated the House of Ithagliefie in Synthetic 1; 24 of the defeated and 7 of the victors fell.
+syn-13 e50 The Warband of Bold'shaald besieged Aefir of the House of Ithagliefie; it held.
+syn-13 e51 The Warband of Bold'shaald defeated the House of Ithagliefie in Synthetic 1; 23 of the defeated and 7 of the victors fell.
+syn-13 e52 The Warband of Bold'shaald besieged Aefir of the House of Ithagliefie; it fell.
+syn-13 e53 The Warband of Bold'shaald sacked Aefir of the House of Ithagliefie; 130 died and 304 fled.
+syn-13 e54 The seat of the House of Ithagliefie moved to Iviel.
+syn-13 e55 The House of Ithagliefie sued the Warband of Bold'shaald for peace after 9 years of war.
+syn-13 e56 Iviel grew into a village of 449.
+syn-13 e57 The Warband of Azarz sent settlers from Kuumkom Fort to found Shash Fort in Synthetic 17.
+syn-13 e58 Shash Fort grew into a village of 252.
+syn-13 e59 The Agh'kraa Horde sent settlers from Shukh to found Krashgruum Fort in Synthetic 7.
+syn-13 e60 Weakened by emigration, Shukh dwindled to 1,198 souls.
+syn-13 e61 Uraldkosh grew into a village of 250.
+syn-13 e62 The Warband of Azarz sent settlers from Kuumkom Fort to found Dagh'kuk in Synthetic 17.
+syn-13 e63 Krashgruum Fort grew into a village of 250.
+syn-13 e64 Dagh'kuk grew into a village of 251.
+syn-13 e65 The Warband of Azarz sent settlers from Kuumkom Fort to found Azuukthush Camp in Synthetic 17.
+syn-13 e66 Uguukgrukh Camp grew into a village of 250.
+syn-13 e67 Duum Fort grew into a village of 250.
+syn-13 e68 Azuukthush Camp grew into a village of 250.
 syn-13 e69 A succession crisis at Mulduruld Fort shook the Warband of Bold'shaald.
-syn-13 e70 Plague broke out in Shukh; 295 died.
+syn-13 e70 A succession crisis at Kuumkom Fort shook the Warband of Azarz.
+syn-13 e71 Famine struck Uraldkosh; 52 died.
+syn-13 e72 A succession crisis at Mulduruld Fort shook the Warband of Bold'shaald.
+syn-13 e73 Plague broke out in Shukh; 295 died.
 synthetic syn-14 14 2000 dwarf,faerie 4 turbulent
 syn-14 table civilization 88d016e1ea6c853e1de12b5bd4692a5aedf4a25e64a469866991ba73f9598ab7
 syn-14 table event 718aa92871404e0537108b5336db1b12bc5be4389106c819afb91620a21bafc4
@@ -14554,19 +14596,19 @@ stress-4 q1792 0 e0
 stress-4 q1817 0 e0
 stress-4 q1842 0 e0
 stress stress-5 5 6000 goblin,human,orc 4 calm
-stress-5 table civilization 95d7a0609aff70eff915b2dc1b5cee975d694a22d13a25410d82f719e6961fc3
-stress-5 table event f6700e3c3094cc3e14ae6634b1e9bc47708a72e54ca20916c6091aa9873db182
-stress-5 table event_cause 9882571649a4f6bbf85ad93eadd160a31f56a66e3fc7f43a604ddeadcff4fb2b
+stress-5 table civilization 4f6d1e868d988a48663786d02a9efb2cee0947b801b288dd2261d966426e310e
+stress-5 table event d19105ed181e40bdea9d0fb54378bce56f2adbc724afda5465c181a0fa65c21e
+stress-5 table event_cause de9c5695300bb21c7d325dafd77b8d627d9f12cab6fe0336c8ec090efe8d4d82
 stress-5 table event_kind 58b8cb7b5b5121612b331cd052c06a2bdfc4e23ba2f1956e14bc85aa432f8776
 stress-5 table event_kind_role 828c060dc0d262d618363e1eb4194754223827013ae83efa04ea2944f3b5731b
 stress-5 table event_kind_value ea3bdaba66965ca348093390b78ac4b2e92807052c93c9bb59822b0c53c0771e
-stress-5 table event_participant 8dbea933597e49c139f7a58b0393e0954610479500bfd458e81d3861a20a0276
-stress-5 table event_value c5a00d5f403231727b09b393ad0dfbbad1e24ec513343087f861aaa0ee0e3fda
+stress-5 table event_participant 7f19a33cd60189edf408c61392da541d9593939ff6a0a857cc27893ef8f42792
+stress-5 table event_value 1270381f91325045858697fab2acc9d9c905ae80180c5028cbf318a9f9a79e06
 stress-5 table phase 0b57d461f99a5b352cd9fd850f4d0df45e12c5bc831f102fef999f8de3acaf67
-stress-5 table region_control 04a3beb449401b921b2f35c2181d65c7648f0aaa1617141e7ef355fde0d1d6b5
-stress-5 table relation 86c808817cd162c58b63e5d07d2c933f791a30161a4ca9aa4446b6ca77d4d313
-stress-5 table settlement 27fba466dabf9582a52a5115c4cbf8d02f330fae53b4b463fafbd303edd6bd42
-stress-5 table settlement_census 416df94db8db6e7b49d8842995673b12e2c4d7aef117114bd7b9b488b65d57c3
+stress-5 table region_control 7535d8a1528a34d67cc617741a0675e0abe17f77a6bfe81d74da18a2b44cac95
+stress-5 table relation 88afaf37430a7174c3692604d427c555f6d84bb8186d2d51ad8a85442382c2fc
+stress-5 table settlement 48dd401b4a900a553b126b799de1129dd755a2745e77465d955cbab9da52e02a
+stress-5 table settlement_census cc14627ea1fa155f607e17c4436ca00ba5b4d047bf0699f66abbf575d3ea1a78
 stress-5 report end_year = 6000
 stress-5 report phases_opening = 3
 stress-5 report phases_quiet = 13
@@ -14574,95 +14616,95 @@ stress-5 report phases_flare = 11
 stress-5 report phases_final = 1
 stress-5 report simulated_years = 1295
 stress-5 report simulated_permille = 215
-stress-5 report events = 1085
+stress-5 report events = 1013
 stress-5 report events_awakening = 3
 stress-5 report events_civ_founded = 7
 stress-5 report events_settlement_founded = 7
 stress-5 report events_quiet_era = 0
 stress-5 report events_flare_up = 11
 stress-5 report events_colony_founded = 17
-stress-5 report events_became_village = 11
+stress-5 report events_became_village = 10
 stress-5 report events_became_town = 15
 stress-5 report events_became_city = 0
-stress-5 report events_settlement_dwindled = 12
+stress-5 report events_settlement_dwindled = 11
 stress-5 report events_famine = 5
 stress-5 report events_plague = 0
 stress-5 report events_plague_spread = 2
-stress-5 report events_succession_crisis = 78
-stress-5 report events_civ_seceded = 13
+stress-5 report events_succession_crisis = 71
+stress-5 report events_civ_seceded = 8
 stress-5 report events_settlement_abandoned = 0
-stress-5 report events_capital_moved = 23
+stress-5 report events_capital_moved = 20
 stress-5 report events_civ_ended = 0
 stress-5 report events_ruin_faded = 5
-stress-5 report events_claim = 118
-stress-5 report events_war_declared = 56
-stress-5 report events_battle = 388
+stress-5 report events_claim = 98
+stress-5 report events_war_declared = 52
+stress-5 report events_battle = 377
 stress-5 report events_battle_at_pass = 0
-stress-5 report events_siege = 175
-stress-5 report events_sacked = 18
-stress-5 report events_settlement_captured = 31
-stress-5 report events_peace = 9
-stress-5 report events_truce = 9
-stress-5 report events_region_ceded = 3
-stress-5 report events_civ_conquered = 14
+stress-5 report events_siege = 161
+stress-5 report events_sacked = 17
+stress-5 report events_settlement_captured = 25
+stress-5 report events_peace = 12
+stress-5 report events_truce = 8
+stress-5 report events_region_ceded = 2
+stress-5 report events_civ_conquered = 10
 stress-5 report events_settlement_abandoned_to = 0
 stress-5 report events_refugees_settled = 4
-stress-5 report events_tribute = 16
-stress-5 report events_war_won = 17
+stress-5 report events_tribute = 21
+stress-5 report events_war_won = 16
 stress-5 report events_search_abandoned = 0
 stress-5 report events_refuge_held = 0
 stress-5 report events_plague_outbreak = 5
 stress-5 report events_quiet_stretch = 13
-stress-5 report civilizations = 20
-stress-5 report civilizations_alive = 6
+stress-5 report civilizations = 15
+stress-5 report civilizations_alive = 5
 stress-5 report settlements = 28
-stress-5 report settlements_standing = 10
-stress-5 report regions_held = 6
-stress-5 report census_rows = 542
-stress-5 report relations = 91
-stress-5 report population = 8590
+stress-5 report settlements_standing = 11
+stress-5 report regions_held = 5
+stress-5 report census_rows = 526
+stress-5 report relations = 88
+stress-5 report population = 13166
 stress-5 report population_elf = 0
-stress-5 report population_goblin = 3170
+stress-5 report population_goblin = 6632
 stress-5 report population_dwarf = 0
 stress-5 report population_faerie = 0
-stress-5 report population_human = 70
-stress-5 report population_orc = 5350
+stress-5 report population_human = 362
+stress-5 report population_orc = 6172
 stress-5 report settlements_standing_elf = 0
-stress-5 report settlements_standing_goblin = 3
+stress-5 report settlements_standing_goblin = 5
 stress-5 report settlements_standing_dwarf = 0
 stress-5 report settlements_standing_faerie = 0
 stress-5 report settlements_standing_human = 1
-stress-5 report settlements_standing_orc = 6
+stress-5 report settlements_standing_orc = 5
 stress-5 report regions_held_elf = 0
-stress-5 report regions_held_goblin = 2
+stress-5 report regions_held_goblin = 3
 stress-5 report regions_held_dwarf = 0
 stress-5 report regions_held_faerie = 0
 stress-5 report regions_held_human = 1
-stress-5 report regions_held_orc = 3
-stress-5 stats civ_settlements_max = 3
+stress-5 report regions_held_orc = 1
+stress-5 stats civ_settlements_max = 5
 stress-5 stats settlements_colonies = 17
-stress-5 stats civilizations_seceded = 13
+stress-5 stats civilizations_seceded = 8
 stress-5 stats relations_enmity = 0
-stress-5 stats relations_peace = 35
-stress-5 stats war_years_total = 451
+stress-5 stats relations_peace = 36
+stress-5 stats war_years_total = 434
 stress-5 stats war_years_max = 25
-stress-5 stats civilizations_conquered = 14
-stress-5 stats settlements_sacked = 13
-stress-5 stats settlements_captured = 12
-stress-5 stats regions_conquered = 16
+stress-5 stats civilizations_conquered = 10
+stress-5 stats settlements_sacked = 12
+stress-5 stats settlements_captured = 10
+stress-5 stats regions_conquered = 11
 stress-5 stats races_alive = 3
 stress-5 stats wars_attacker_elf = 0
-stress-5 stats wars_attacker_goblin = 40
+stress-5 stats wars_attacker_goblin = 42
 stress-5 stats wars_attacker_dwarf = 0
 stress-5 stats wars_attacker_faerie = 0
 stress-5 stats wars_attacker_human = 0
-stress-5 stats wars_attacker_orc = 16
-stress-5 stats wars_hollow = 6
-stress-5 stats wars_hollow_permille = 107
-stress-5 stats wars_same_goal_max = 5
+stress-5 stats wars_attacker_orc = 10
+stress-5 stats wars_hollow = 5
+stress-5 stats wars_hollow_permille = 96
+stress-5 stats wars_same_goal_max = 6
 stress-5 stats wars_same_goal_unchanged_max = 3
-stress-5 stats race_population_share_max_permille = 622
-stress-5 stats race_regions_share_max_permille = 500
+stress-5 stats race_population_share_max_permille = 503
+stress-5 stats race_regions_share_max_permille = 600
 stress-5 stats wars_unfound = 0
 stress-5 stats refuges_held_no_destination = 0
 stress-5 war e13 60-71 c3 c4 rg10 claim e11 battles 10 sacked 0 taken 0 exhaustion won-c4-tribute
@@ -14703,24 +14745,20 @@ stress-5 war e741 5353-5368 c6 c13 rg4 claim e737 battles 13 sacked 1 taken 0 ex
 stress-5 war e754 5360-5379 c13 c10 rg6 claim e748 battles 14 sacked 0 taken 0 goal-lost truce
 stress-5 war e781 5370-5378 c6 c10 rg6 claim e746 battles 6 sacked 2 taken 0 goal-lost won-c6
 stress-5 war e817 5478-5492 c6 c13 rg4 claim e814 battles 12 sacked 0 taken 0 exhaustion won-c6-tribute
-stress-5 war e853 5559-5567 c13 c6 rg10 claim e848 battles 6 sacked 1 taken 0 goal-lost truce
-stress-5 war e855 5561-5562 c14 c13 rg4 claim e849 battles 1 sacked 0 taken 0 aim won-c14-ceded
-stress-5 war e869 5565-5566 c14 c6 rg10 claim e866 battles 1 sacked 0 taken 1 goal-lost won-c14-tribute
-stress-5 war e883 5569-5570 c15 c6 rg15 claim e850 battles 1 sacked 1 taken 0 aim won-c15-tribute
-stress-5 war e893 5575-5576 c14 c13 rg4 claim e890 battles 1 sacked 0 taken 1 conquest -
-stress-5 war e903 5615-5618 c14 c15 rg15 claim e891 battles 2 sacked 1 taken 0 no-front won-c15-tribute
-stress-5 war e919 5682-5686 c14 c10 rg9 claim e915 battles 1 sacked 1 taken 0 goal-lost won-c14
-stress-5 war e920 5683-5685 c15 c10 rg9 claim e916 battles 2 sacked 1 taken 0 goal-lost won-c15
-stress-5 war e952 5863-5870 c16 c14 rg4 claim e951 battles 4 sacked 0 taken 0 exhaustion truce
-stress-5 war e958 5870-5877 c6 c14 rg4 claim e902 battles 6 sacked 0 taken 2 conquest -
-stress-5 war e985 5882-5884 c16 c14 rg4 claim e980 battles 2 sacked 0 taken 0 conquest -
-stress-5 war e986 5882-5884 c17 c14 rg4 claim e983 battles 2 sacked 0 taken 2 conquest -
-stress-5 war e1007 5921-5922 c17 c16 rg5 claim e984 battles 1 sacked 1 taken 0 conquest -
-stress-5 war e1008 5921-5922 c18 c16 rg5 claim e1004 battles 0 sacked 0 taken 0 conquest -
-stress-5 war e1014 5940-5945 c18 c17 rg2 claim e1005 battles 5 sacked 0 taken 2 conquest -
-stress-5 war e1033 5953-5963 c19 c17 rg2 claim e1032 battles 9 sacked 0 taken 2 conquest -
-stress-5 war e1061 5986-5992 c15 c10 rg11 claim e1060 battles 4 sacked 0 taken 0 goal-lost won-c15
-stress-5 war e1066 5989-5991 c17 c10 rg11 claim e1062 battles 2 sacked 1 taken 1 goal-lost won-c17
+stress-5 war e852 5556-5557 c14 c13 rg4 claim e849 battles 1 sacked 0 taken 0 aim won-c14-tribute
+stress-5 war e858 5560-5563 c13 c6 rg10 claim e848 battles 3 sacked 1 taken 0 goal-lost won-c13-tribute
+stress-5 war e871 5569-5570 c15 c6 rg15 claim e850 battles 1 sacked 0 taken 1 aim won-c15-tribute
+stress-5 war e877 5572-5583 c11 c13 rg5 claim e690 battles 10 sacked 0 taken 0 exhaustion won-c13-tribute
+stress-5 war e880 5575-5576 c14 c13 rg4 claim e869 battles 1 sacked 0 taken 0 aim won-c14-tribute
+stress-5 war e899 5587-5588 c14 c13 rg4 claim e898 battles 1 sacked 0 taken 1 aim won-c14-tribute
+stress-5 war e907 5599-5603 c14 c13 rg5 claim e906 battles 4 sacked 0 taken 1 exhaustion won-c14-tribute
+stress-5 war e920 5605-5609 c6 c13 rg5 claim e913 battles 2 sacked 1 taken 0 conquest -
+stress-5 war e938 5682-5684 c14 c10 rg9 claim e934 battles 2 sacked 1 taken 1 goal-lost won-c14
+stress-5 war e939 5683-5684 c15 c10 rg9 claim e935 battles 0 sacked 0 taken 0 goal-lost truce
+stress-5 war e955 5700-5711 c14 c15 rg15 claim e952 battles 10 sacked 0 taken 0 exhaustion won-c14-tribute
+stress-5 war e974 5729-5732 c14 c15 rg15 claim e972 battles 2 sacked 1 taken 1 conquest -
+stress-5 war e979 5731-5732 c11 c15 rg15 claim e870 battles 0 sacked 0 taken 0 conquest -
+stress-5 war e1001 5985-5988 c14 c10 rg11 claim e1000 battles 2 sacked 2 taken 0 goal-lost won-c14
 stress-5 q150 0 e0
 stress-5 q175 0 e0
 stress-5 q200 131 e71
@@ -14910,19 +14948,19 @@ stress-5 q5428 761 e814
 stress-5 q5453 1516 e814
 stress-5 q5528 0 e0
 stress stress-6 6 2000 all 4 normal
-stress-6 table civilization c7bafa79c3e5c934bcb11385df18aed869ed70e094bdbc71be5f9c4a21d61cf8
-stress-6 table event 172bbc57a329c4245b1298eb520ba5118a9d94469a500972fd160e0345e960cd
-stress-6 table event_cause 139abf05aa5c657f539479817475c614d6fbd62abacea409c08cfafdd207fbe7
+stress-6 table civilization 21b6c6207446e0b52b203af5c642c02cd13de3c6ec98ce2cbe00227598ab9828
+stress-6 table event ac00f01e1157c003c7d20f0810f8c3c0880e04aa3f74e054ff22cd3837ac733d
+stress-6 table event_cause 3afd32d08d74e6e53d818dec3616e213cd3395c0df6867fb1ba1ee9930fdfc89
 stress-6 table event_kind 58b8cb7b5b5121612b331cd052c06a2bdfc4e23ba2f1956e14bc85aa432f8776
 stress-6 table event_kind_role 828c060dc0d262d618363e1eb4194754223827013ae83efa04ea2944f3b5731b
 stress-6 table event_kind_value ea3bdaba66965ca348093390b78ac4b2e92807052c93c9bb59822b0c53c0771e
-stress-6 table event_participant f1e1f9d7c1eaac378fa84277afa23de4be55aaaff2ca47878fef226684436a09
-stress-6 table event_value 8cb645ad3048088838e0e6fd8a00b3b725806aea5c8b861501f4acb7290c9abf
+stress-6 table event_participant 945905ac38cb588121efc308d9cd5776b0693c76695505491904eccc1eeb60fe
+stress-6 table event_value 6296b70c066e61398d75e724ffee3549cca4d050379e87834f3b217e62ac73b6
 stress-6 table phase 8f1958fbcefc2de553a922fabd4d964fa65dde1e3a971d4d26697fc6622dca86
-stress-6 table region_control 96f306055cac00ca726a05b6a4016750843f116d393409f5ea023d757a9dcc9c
-stress-6 table relation 660f697853e10b23940e50a289614fa04f2d0750937fd24892c86b304824cea5
-stress-6 table settlement 01ccd86dd6718804bdf9a43f7f36ed612b9b5271b3447906dfb9a542545e1a20
-stress-6 table settlement_census 95ab1fb3de534a77bb2766a3ca2f30fd40d2afdbcd8f8ca448cc37ca36e4ae16
+stress-6 table region_control fabe27a5f5f3886e292692435d3bf30b0f76bb9f5b48dc5a1dc1ec10b3ea4b10
+stress-6 table relation 6f8abd5c801a2e62f001164787fec34ea4273157fda2eec0f7f2b615cb90582d
+stress-6 table settlement b62bd1a8c864763283d53b90dfb41637dccf2f0fad0c4fbd823c23c103fa9f33
+stress-6 table settlement_census 5926484d5ed47ff7365244e692908684fe29c9d7374c31867b762293e96f8911
 stress-6 report end_year = 2000
 stress-6 report phases_opening = 6
 stress-6 report phases_quiet = 17
@@ -14930,7 +14968,7 @@ stress-6 report phases_flare = 12
 stress-6 report phases_final = 1
 stress-6 report simulated_years = 595
 stress-6 report simulated_permille = 297
-stress-6 report events = 1071
+stress-6 report events = 1067
 stress-6 report events_awakening = 6
 stress-6 report events_civ_founded = 11
 stress-6 report events_settlement_founded = 11
@@ -14945,46 +14983,46 @@ stress-6 report events_famine = 5
 stress-6 report events_plague = 0
 stress-6 report events_plague_spread = 0
 stress-6 report events_succession_crisis = 63
-stress-6 report events_civ_seceded = 9
+stress-6 report events_civ_seceded = 8
 stress-6 report events_settlement_abandoned = 0
-stress-6 report events_capital_moved = 12
+stress-6 report events_capital_moved = 11
 stress-6 report events_civ_ended = 0
 stress-6 report events_ruin_faded = 0
-stress-6 report events_claim = 130
-stress-6 report events_war_declared = 65
-stress-6 report events_battle = 372
-stress-6 report events_battle_at_pass = 33
-stress-6 report events_siege = 146
-stress-6 report events_sacked = 12
-stress-6 report events_settlement_captured = 12
-stress-6 report events_peace = 9
-stress-6 report events_truce = 22
+stress-6 report events_claim = 127
+stress-6 report events_war_declared = 63
+stress-6 report events_battle = 384
+stress-6 report events_battle_at_pass = 31
+stress-6 report events_siege = 144
+stress-6 report events_sacked = 11
+stress-6 report events_settlement_captured = 11
+stress-6 report events_peace = 10
+stress-6 report events_truce = 21
 stress-6 report events_region_ceded = 3
-stress-6 report events_civ_conquered = 8
+stress-6 report events_civ_conquered = 7
 stress-6 report events_settlement_abandoned_to = 0
 stress-6 report events_refugees_settled = 1
-stress-6 report events_tribute = 23
-stress-6 report events_war_won = 22
+stress-6 report events_tribute = 22
+stress-6 report events_war_won = 21
 stress-6 report events_search_abandoned = 1
 stress-6 report events_refuge_held = 26
 stress-6 report events_plague_outbreak = 2
 stress-6 report events_quiet_stretch = 17
-stress-6 report civilizations = 20
+stress-6 report civilizations = 19
 stress-6 report civilizations_alive = 12
 stress-6 report settlements = 28
-stress-6 report settlements_standing = 16
+stress-6 report settlements_standing = 17
 stress-6 report regions_held = 12
-stress-6 report census_rows = 621
-stress-6 report relations = 141
-stress-6 report population = 13278
+stress-6 report census_rows = 620
+stress-6 report relations = 136
+stress-6 report population = 13884
 stress-6 report population_elf = 633
-stress-6 report population_goblin = 7314
-stress-6 report population_dwarf = 3425
+stress-6 report population_goblin = 7973
+stress-6 report population_dwarf = 3360
 stress-6 report population_faerie = 810
 stress-6 report population_human = 1037
-stress-6 report population_orc = 59
+stress-6 report population_orc = 71
 stress-6 report settlements_standing_elf = 1
-stress-6 report settlements_standing_goblin = 8
+stress-6 report settlements_standing_goblin = 9
 stress-6 report settlements_standing_dwarf = 4
 stress-6 report settlements_standing_faerie = 1
 stress-6 report settlements_standing_human = 1
@@ -14997,27 +15035,27 @@ stress-6 report regions_held_human = 1
 stress-6 report regions_held_orc = 1
 stress-6 stats civ_settlements_max = 3
 stress-6 stats settlements_colonies = 16
-stress-6 stats civilizations_seceded = 9
-stress-6 stats relations_enmity = 22
-stress-6 stats relations_peace = 54
-stress-6 stats war_years_total = 468
+stress-6 stats civilizations_seceded = 8
+stress-6 stats relations_enmity = 20
+stress-6 stats relations_peace = 53
+stress-6 stats war_years_total = 482
 stress-6 stats war_years_max = 20
-stress-6 stats civilizations_conquered = 8
-stress-6 stats settlements_sacked = 12
+stress-6 stats civilizations_conquered = 7
+stress-6 stats settlements_sacked = 11
 stress-6 stats settlements_captured = 7
-stress-6 stats regions_conquered = 10
+stress-6 stats regions_conquered = 9
 stress-6 stats races_alive = 6
 stress-6 stats wars_attacker_elf = 0
-stress-6 stats wars_attacker_goblin = 55
+stress-6 stats wars_attacker_goblin = 54
 stress-6 stats wars_attacker_dwarf = 5
 stress-6 stats wars_attacker_faerie = 0
 stress-6 stats wars_attacker_human = 1
-stress-6 stats wars_attacker_orc = 4
+stress-6 stats wars_attacker_orc = 3
 stress-6 stats wars_hollow = 23
-stress-6 stats wars_hollow_permille = 359
+stress-6 stats wars_hollow_permille = 370
 stress-6 stats wars_same_goal_max = 7
 stress-6 stats wars_same_goal_unchanged_max = 3
-stress-6 stats race_population_share_max_permille = 550
+stress-6 stats race_population_share_max_permille = 574
 stress-6 stats race_regions_share_max_permille = 416
 stress-6 stats wars_unfound = 1
 stress-6 stats refuges_held_no_destination = 26
@@ -15072,20 +15110,18 @@ stress-6 war e761 1841-1843 c7 c15 rg23 claim e754 battles 1 sacked 0 taken 1 go
 stress-6 war e762 1841-1856 c15 c18 rg16 claim e756 battles 12 sacked 1 taken 0 no-front won-c15-tribute
 stress-6 war e777 1844-1845 c18 c7 rg23 claim e776 battles 1 sacked 0 taken 0 aim won-c18-tribute
 stress-6 war e795 1848-1860 c18 c4 rg18 claim e752 battles 12 sacked 0 taken 0 exhaustion truce
-stress-6 war e806 1850-1859 c19 c7 rg23 claim e800 battles 8 sacked 0 taken 0 exhaustion won-c7
-stress-6 war e856 1873-1881 c19 c18 rg16 claim e805 battles 8 sacked 0 taken 0 exhaustion won-c18
+stress-6 war e801 1849-1858 c19 c7 rg23 claim e800 battles 8 sacked 0 taken 0 exhaustion won-c7
+stress-6 war e856 1873-1881 c19 c18 rg16 claim e806 battles 8 sacked 0 taken 0 exhaustion won-c18
 stress-6 war e874 1886-1899 c15 c7 rg23 claim e873 battles 11 sacked 0 taken 0 quiet truce
 stress-6 war e889 1891-1892 c18 c7 rg20 claim e886 battles 1 sacked 0 taken 1 goal-lost won-c18-tribute
 stress-6 war e891 1892-1899 c11 c4 rg9 claim e885 battles 4 sacked 0 taken 0 quiet won-c4-ceded
 stress-6 war e920 1902-1917 c15 c18 rg20 claim e912 battles 14 sacked 0 taken 0 exhaustion truce
 stress-6 war e924 1905-1906 c19 c18 rg20 claim e901 battles 1 sacked 0 taken 0 aim won-c19-tribute
-stress-6 war e933 1909-1913 c7 c19 rg20 claim e919 battles 3 sacked 1 taken 0 conquest -
-stress-6 war e953 1917-1918 c19 c18 rg20 claim e950 battles 1 sacked 0 taken 0 aim won-c19-tribute
-stress-6 war e960 1919-1921 c4 c18 rg16 claim e932 battles 2 sacked 0 taken 1 aim won-c4-tribute
-stress-6 war e961 1919-1929 c15 c19 rg20 claim e818 battles 10 sacked 0 taken 0 exhaustion truce
-stress-6 war e989 1933-1950 c4 c19 rg20 claim e988 battles 17 sacked 0 taken 0 exhaustion truce
-stress-6 war e1011 1945-1946 c11 c4 rg10 claim e1004 battles 1 sacked 1 taken 0 goal-lost won-c11-tribute
-stress-6 war e1033 1960-1980 c18 c19 rg20 claim e1030 battles 18 sacked 0 taken 0 exhaustion truce
+stress-6 war e933 1909-1919 c7 c19 rg20 claim e919 battles 9 sacked 0 taken 0 exhaustion won-c7
+stress-6 war e961 1919-1938 c15 c19 rg20 claim e820 battles 17 sacked 0 taken 0 exhaustion truce
+stress-6 war e998 1945-1951 c11 c4 rg10 claim e997 battles 6 sacked 1 taken 0 goal-lost won-c11-tribute
+stress-6 war e1002 1948-1968 c18 c19 rg20 claim e1000 battles 18 sacked 0 taken 0 exhaustion truce
+stress-6 war e1018 1952-1966 c7 c18 rg20 claim e982 battles 12 sacked 0 taken 0 exhaustion won-c7-tribute
 stress-6 q50 0 e0
 stress-6 q75 0 e0
 stress-6 q100 0 e0
@@ -16407,19 +16443,19 @@ stress-13 q5512 0 e0
 stress-13 q5537 0 e0
 stress-13 q5562 0 e0
 stress stress-14 14 2000 all 4 calm
-stress-14 table civilization a79c0d72b0e64e3c979308b9a1c4c4cd83d9acebccf6423a0ef1e033c6330671
-stress-14 table event 76f906921462d472e6d6e4f3f57cc6abbc97e499c5f9ed7b14e2e71b659c1293
-stress-14 table event_cause 1e021cf0d45af956301a91f9d5206feef937053f803965914519a077c5b6b955
+stress-14 table civilization e073d6e98e6860bc35cc1d15f5a11a26a87a0dacb00807d82e9fcdefe230280b
+stress-14 table event 027f5e66f6217252454a55182a70589b333634c0fcceeb13b7f7394ccfb6dc23
+stress-14 table event_cause 43bb414363f8645dc8026082d9482bda77e9340e2c0cb552a60cd85404e0c960
 stress-14 table event_kind 58b8cb7b5b5121612b331cd052c06a2bdfc4e23ba2f1956e14bc85aa432f8776
 stress-14 table event_kind_role 828c060dc0d262d618363e1eb4194754223827013ae83efa04ea2944f3b5731b
 stress-14 table event_kind_value ea3bdaba66965ca348093390b78ac4b2e92807052c93c9bb59822b0c53c0771e
-stress-14 table event_participant 6abc427f3f3279e4ac9175abbf70b94c9ba0be1edb0eb42677f51a10013c19df
-stress-14 table event_value 8265732c5ccc379c1d9036ee11016690fcccd7a832239aeeaaac4e8fbb8a84b9
+stress-14 table event_participant 3b29a23d593b497003ab2aa292f88b0c4a450af508270d090c201cbf2581a37f
+stress-14 table event_value 5c53f49ad368891664666b78a93632cd3b497bc5a95b13c1a556ceec8b214a8a
 stress-14 table phase 77145d6a5fdd81ff9926aaca2ec87f0737befb4e00eacfdc0ab5577c58865d60
-stress-14 table region_control a035f489a4c0d971331d0d470e9fadc3087545e21bafe49126a167da0cd0ed93
-stress-14 table relation 0559df54506c7ab80d3a9299ed1fb9936121e685673435fd1be20882a7f084aa
-stress-14 table settlement ceb67b5fc055ff9d50fc828ad021dbd2669bfa064a20e463e788861932a538da
-stress-14 table settlement_census 12c4a164719339a00eaef686bf77f9197bc7a63c583fd0d9f36bf75c8e3bc792
+stress-14 table region_control 6d3f3d558885655e763fb113143c5082a079ccf1cd05e1b71d7a11f145c44417
+stress-14 table relation 234b435c546dd1cc0c1199dee537959642223351a34a1257185890e30c720eb8
+stress-14 table settlement 72d1a284449ef0d206105625dfceb47fe745f056deedbf6311ee9368bfdcb5b6
+stress-14 table settlement_census 08be3757f3817db9018a7494e874777149c35ed87a5525a670bb76b6c6a9763f
 stress-14 report end_year = 2000
 stress-14 report phases_opening = 6
 stress-14 report phases_quiet = 14
@@ -16427,7 +16463,7 @@ stress-14 report phases_flare = 9
 stress-14 report phases_final = 1
 stress-14 report simulated_years = 546
 stress-14 report simulated_permille = 273
-stress-14 report events = 1236
+stress-14 report events = 1045
 stress-14 report events_awakening = 6
 stress-14 report events_civ_founded = 11
 stress-14 report events_settlement_founded = 11
@@ -16435,89 +16471,89 @@ stress-14 report events_quiet_era = 0
 stress-14 report events_flare_up = 9
 stress-14 report events_colony_founded = 18
 stress-14 report events_became_village = 7
-stress-14 report events_became_town = 13
+stress-14 report events_became_town = 12
 stress-14 report events_became_city = 0
-stress-14 report events_settlement_dwindled = 8
+stress-14 report events_settlement_dwindled = 7
 stress-14 report events_famine = 0
 stress-14 report events_plague = 0
 stress-14 report events_plague_spread = 0
-stress-14 report events_succession_crisis = 26
+stress-14 report events_succession_crisis = 20
 stress-14 report events_civ_seceded = 9
 stress-14 report events_settlement_abandoned = 0
-stress-14 report events_capital_moved = 7
+stress-14 report events_capital_moved = 10
 stress-14 report events_civ_ended = 0
 stress-14 report events_ruin_faded = 0
-stress-14 report events_claim = 134
-stress-14 report events_war_declared = 58
-stress-14 report events_battle = 411
-stress-14 report events_battle_at_pass = 110
-stress-14 report events_siege = 186
-stress-14 report events_sacked = 12
-stress-14 report events_settlement_captured = 27
-stress-14 report events_peace = 6
-stress-14 report events_truce = 13
-stress-14 report events_region_ceded = 5
-stress-14 report events_civ_conquered = 9
+stress-14 report events_claim = 122
+stress-14 report events_war_declared = 54
+stress-14 report events_battle = 360
+stress-14 report events_battle_at_pass = 56
+stress-14 report events_siege = 171
+stress-14 report events_sacked = 13
+stress-14 report events_settlement_captured = 31
+stress-14 report events_peace = 5
+stress-14 report events_truce = 11
+stress-14 report events_region_ceded = 4
+stress-14 report events_civ_conquered = 12
 stress-14 report events_settlement_abandoned_to = 0
 stress-14 report events_refugees_settled = 0
 stress-14 report events_tribute = 17
-stress-14 report events_war_won = 27
+stress-14 report events_war_won = 23
 stress-14 report events_search_abandoned = 0
-stress-14 report events_refuge_held = 80
+stress-14 report events_refuge_held = 30
 stress-14 report events_plague_outbreak = 2
 stress-14 report events_quiet_stretch = 14
 stress-14 report civilizations = 20
-stress-14 report civilizations_alive = 11
+stress-14 report civilizations_alive = 8
 stress-14 report settlements = 29
-stress-14 report settlements_standing = 17
-stress-14 report regions_held = 11
-stress-14 report census_rows = 558
-stress-14 report relations = 129
-stress-14 report population = 19675
-stress-14 report population_elf = 1127
-stress-14 report population_goblin = 12835
-stress-14 report population_dwarf = 2054
+stress-14 report settlements_standing = 16
+stress-14 report regions_held = 10
+stress-14 report census_rows = 550
+stress-14 report relations = 118
+stress-14 report population = 20198
+stress-14 report population_elf = 1058
+stress-14 report population_goblin = 8042
+stress-14 report population_dwarf = 2064
 stress-14 report population_faerie = 713
-stress-14 report population_human = 2843
-stress-14 report population_orc = 103
+stress-14 report population_human = 2939
+stress-14 report population_orc = 5382
 stress-14 report settlements_standing_elf = 3
-stress-14 report settlements_standing_goblin = 9
+stress-14 report settlements_standing_goblin = 4
 stress-14 report settlements_standing_dwarf = 2
 stress-14 report settlements_standing_faerie = 1
 stress-14 report settlements_standing_human = 1
-stress-14 report settlements_standing_orc = 1
+stress-14 report settlements_standing_orc = 5
 stress-14 report regions_held_elf = 1
-stress-14 report regions_held_goblin = 6
+stress-14 report regions_held_goblin = 3
 stress-14 report regions_held_dwarf = 1
 stress-14 report regions_held_faerie = 1
 stress-14 report regions_held_human = 1
-stress-14 report regions_held_orc = 1
-stress-14 stats civ_settlements_max = 3
+stress-14 report regions_held_orc = 3
+stress-14 stats civ_settlements_max = 5
 stress-14 stats settlements_colonies = 18
 stress-14 stats civilizations_seceded = 9
 stress-14 stats relations_enmity = 25
-stress-14 stats relations_peace = 46
-stress-14 stats war_years_total = 590
-stress-14 stats war_years_max = 25
-stress-14 stats civilizations_conquered = 9
-stress-14 stats settlements_sacked = 12
-stress-14 stats settlements_captured = 11
+stress-14 stats relations_peace = 39
+stress-14 stats war_years_total = 465
+stress-14 stats war_years_max = 23
+stress-14 stats civilizations_conquered = 12
+stress-14 stats settlements_sacked = 13
+stress-14 stats settlements_captured = 13
 stress-14 stats regions_conquered = 16
 stress-14 stats races_alive = 6
-stress-14 stats wars_attacker_elf = 6
-stress-14 stats wars_attacker_goblin = 44
+stress-14 stats wars_attacker_elf = 4
+stress-14 stats wars_attacker_goblin = 41
 stress-14 stats wars_attacker_dwarf = 3
 stress-14 stats wars_attacker_faerie = 0
-stress-14 stats wars_attacker_human = 2
-stress-14 stats wars_attacker_orc = 3
-stress-14 stats wars_hollow = 22
-stress-14 stats wars_hollow_permille = 379
+stress-14 stats wars_attacker_human = 1
+stress-14 stats wars_attacker_orc = 5
+stress-14 stats wars_hollow = 16
+stress-14 stats wars_hollow_permille = 296
 stress-14 stats wars_same_goal_max = 4
 stress-14 stats wars_same_goal_unchanged_max = 3
-stress-14 stats race_population_share_max_permille = 652
-stress-14 stats race_regions_share_max_permille = 545
+stress-14 stats race_population_share_max_permille = 398
+stress-14 stats race_regions_share_max_permille = 300
 stress-14 stats wars_unfound = 0
-stress-14 stats refuges_held_no_destination = 80
+stress-14 stats refuges_held_no_destination = 30
 stress-14 war e35 830-847 c3 c1 rg11 claim e18 battles 15 sacked 0 taken 0 quiet truce
 stress-14 war e37 832-847 c4 c1 rg11 claim e19 battles 14 sacked 1 taken 0 quiet won-c4-tribute
 stress-14 war e39 833-842 c1 c2 rg13 claim e25 battles 9 sacked 0 taken 0 conquest -
@@ -16557,25 +16593,21 @@ stress-14 war e718 1785-1802 c7 c14 rg5 claim e638 battles 14 sacked 0 taken 0 q
 stress-14 war e719 1785-1802 c11 c14 rg5 claim e631 battles 15 sacked 0 taken 0 quiet won-c11
 stress-14 war e817 1843-1844 c4 c11 rg13 claim e715 battles 0 sacked 0 taken 0 quiet truce
 stress-14 war e828 1857-1859 c7 c11 rg13 claim e695 battles 2 sacked 1 taken 0 goal-lost won-c7-tribute
-stress-14 war e829 1857-1859 c15 c11 rg13 claim e796 battles 2 sacked 0 taken 0 goal-lost won-c11-tribute
-stress-14 war e833 1859-1865 c17 c15 rg16 claim e826 battles 5 sacked 0 taken 0 exhaustion won-c15-tribute
-stress-14 war e848 1864-1874 c18 c11 rg7 claim e827 battles 9 sacked 0 taken 0 exhaustion truce
-stress-14 war e863 1868-1874 c1 c3 rg2 claim e194 battles 5 sacked 0 taken 0 exhaustion truce
-stress-14 war e872 1871-1876 c17 c11 rg7 claim e846 battles 5 sacked 0 taken 0 exhaustion won-c11-tribute
-stress-14 war e883 1874-1887 c16 c3 rg2 claim e813 battles 10 sacked 0 taken 1 conquest -
-stress-14 war e893 1875-1888 c18 c15 rg16 claim e860 battles 10 sacked 0 taken 0 exhaustion truce
-stress-14 war e935 1905-1914 c14 c17 rg15 claim e918 battles 8 sacked 0 taken 0 exhaustion truce
-stress-14 war e944 1910-1923 c17 c15 rg16 claim e941 battles 11 sacked 0 taken 0 exhaustion truce
-stress-14 war e947 1912-1928 c15 c11 rg7 claim e938 battles 16 sacked 0 taken 0 exhaustion truce
-stress-14 war e965 1917-1942 c1 c18 rg13 claim e928 battles 21 sacked 0 taken 0 length won-c1
-stress-14 war e966 1917-1942 c4 c18 rg13 claim e871 battles 21 sacked 0 taken 0 length won-c4
-stress-14 war e967 1917-1942 c18 c17 rg15 claim e850 battles 23 sacked 0 taken 0 length won-c17
-stress-14 war e976 1919-1944 c14 c18 rg13 claim e891 battles 20 sacked 0 taken 0 length won-c14
-stress-14 war e1042 1927-1942 c3 c19 rg1 claim e859 battles 13 sacked 0 taken 0 exhaustion won-c19-ceded
-stress-14 war e1182 1971-1977 c15 c17 rg15 claim e1179 battles 6 sacked 0 taken 0 exhaustion won-c15-tribute
-stress-14 war e1199 1984-1988 c3 c19 rg1 claim e1197 battles 2 sacked 1 taken 0 conquest -
-stress-14 war e1206 1986-1988 c1 c19 rg1 claim e995 battles 2 sacked 0 taken 1 conquest -
-stress-14 war e1218 1989-1998 c1 c3 rg2 claim e1176 battles 8 sacked 1 taken 0 exhaustion won-c3-tribute
+stress-14 war e829 1857-1859 c15 c11 rg13 claim e796 battles 2 sacked 0 taken 0 goal-lost truce
+stress-14 war e830 1858-1859 c18 c11 rg13 claim e827 battles 1 sacked 0 taken 0 aim won-c18-tribute
+stress-14 war e834 1859-1864 c17 c15 rg16 claim e826 battles 4 sacked 0 taken 0 exhaustion won-c15-tribute
+stress-14 war e861 1868-1879 c1 c3 rg2 claim e194 battles 9 sacked 0 taken 0 exhaustion truce
+stress-14 war e864 1871-1877 c17 c11 rg7 claim e847 battles 6 sacked 0 taken 0 exhaustion won-c17-tribute
+stress-14 war e866 1872-1876 c18 c15 rg16 claim e859 battles 4 sacked 0 taken 2 conquest -
+stress-14 war e877 1874-1888 c16 c3 rg2 claim e813 battles 13 sacked 0 taken 0 exhaustion truce
+stress-14 war e921 1885-1896 c18 c11 rg7 claim e900 battles 10 sacked 0 taken 1 exhaustion won-c18-tribute
+stress-14 war e934 1889-1905 c19 c3 rg2 claim e860 battles 12 sacked 1 taken 0 exhaustion won-c3-tribute
+stress-14 war e954 1894-1902 c1 c16 rg9 claim e883 battles 7 sacked 1 taken 0 conquest -
+stress-14 war e984 1904-1906 c18 c17 rg15 claim e855 battles 2 sacked 0 taken 1 conquest -
+stress-14 war e986 1905-1906 c14 c17 rg15 claim e923 battles 0 sacked 0 taken 0 conquest -
+stress-14 war e997 1907-1908 c18 c11 rg7 claim e992 battles 1 sacked 1 taken 0 conquest -
+stress-14 war e1007 1947-1957 c3 c19 rg1 claim e1006 battles 9 sacked 0 taken 2 conquest -
+stress-14 war e1028 1984-1996 c20 c19 rg1 claim e1027 battles 12 sacked 0 taken 0 exhaustion truce
 stress-14 q50 0 e0
 stress-14 q75 0 e0
 stress-14 q100 0 e0
