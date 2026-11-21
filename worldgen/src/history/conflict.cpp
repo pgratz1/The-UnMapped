@@ -68,6 +68,18 @@ std::int64_t settlement_count(const State& state) noexcept {
     return static_cast<std::int64_t>(state.settlements().size());
 }
 
+std::vector<std::int64_t> standing_settlements_in(const State& state, std::int64_t civ, std::int64_t region) {
+    std::vector<std::int64_t> out;
+    const std::int64_t ns = settlement_count(state);
+    for (std::int64_t id = 1; id <= ns; ++id) {
+        const Settlement& s = state.settlement(id);
+        if (s.owner_civ == civ && s.region == region && standing(s)) {
+            out.push_back(id);
+        }
+    }
+    return out;
+}
+
 std::int64_t civ_count(const State& state) noexcept {
     return static_cast<std::int64_t>(state.civs().size());
 }
