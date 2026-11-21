@@ -1,12 +1,12 @@
 # P3-10 Wording and site follow-ups
 
-Status: **decided, ready for implementation (2026-11-20)**: Paul accepted every recommendation of section 10 ("Yes I agree with the recommendations on all five"; `docs/design/proposals.md`, "Paul's decision of 2026-11-20: the P3-10 questions go with their recommendations"), and the lead accepted the grammar extension (question 3). Draft (written by the spec writer on `p3/10-spec`, cut from `origin/p3/09-int` with `origin/p3/09-audit` and `origin/main` merged). Phase P3 History core, a change spec after P3-09 (conflict balance, generator 0.18.0, implemented and in validation) and before P3-07 (the history report, specified, not implemented). Generator **0.19.0**. **No schema change**: schema stays 7; the change appends two event kinds (37, 38), stops writing two (4, 12), changes templates, saliences and lists (data), adds three race fields and two tuning fields (data), and extends the template grammar with one placeholder that was invalid before, as P3-08 did (section 8).
+Status: **decided, ready for implementation (2026-11-20)**; items 12 to 16 added the same day after Paul's decision on the P3-09 review (section 10b; one question, 7): Paul accepted every recommendation of section 10 ("Yes I agree with the recommendations on all five"; `docs/design/proposals.md`, "Paul's decision of 2026-11-20: the P3-10 questions go with their recommendations"), and the lead accepted the grammar extension (question 3). Draft (written by the spec writer on `p3/10-spec`, cut from `origin/p3/09-int` with `origin/p3/09-audit` and `origin/main` merged). Phase P3 History core, a change spec after P3-09 (conflict balance, generator 0.18.0, implemented and in validation) and before P3-07 (the history report, specified, not implemented). Generator **0.19.0**. **No schema change**: schema stays 7; the change appends two event kinds (37, 38), stops writing two (4, 12), changes templates, saliences and lists (data), adds three race fields and two tuning fields (data), and extends the template grammar with one placeholder that was invalid before, as P3-08 did (section 8).
 
 This spec is short on purpose. It lists every item, names the stage-spec section that holds its normative text (each stage spec stays the single source for its stage, amended with a new revision, a bounded new section and a revision note; nothing is renumbered), gives the order of implementation, the effect on output and goldens, the tests to add, the statistics to re-measure and the questions for the owner. Every figure is stated with the worlds it was measured on (section 6); figures measured at 0.17.0 are marked *(0.17.0)*, since P3-09 may move them.
 
 ## 1. Purpose
 
-The world critic's review of P3-08 (`docs/reviews/p3-08-followups-world-critic.md`, generator 0.17.0) found the change acceptable with follow-ups: major plagues announced with small tolls (F1), abandonments with no stated reason (F2), quiet eras in blocks of identical lines (F3), faeries on the shore (F4), dwarves at sea level (F5), comic and near-identical names (F6), region names with a skewed plain-name mix, dense gloom and parish words (F7), and wording faults (F9). P3-10 collects the wording, data and site follow-ups, the two advisories of the P3-09 determinism audit (`docs/reviews/p3-09-conflict-balance-determinism-audit.md`), slow tests in CI, and three small items left by P3-08 and P3-09, under one version bump. Not here: conflict rules (P3-09's), alliances, trade and wealth (P5, Paul's decision), history renaming regions and mountain peoples' own history (open proposals for P5), dwarven agency, and the P3-07 report command itself.
+The world critic's review of P3-08 (`docs/reviews/p3-08-followups-world-critic.md`, generator 0.17.0) found the change acceptable with follow-ups: major plagues announced with small tolls (F1), abandonments with no stated reason (F2), quiet eras in blocks of identical lines (F3), faeries on the shore (F4), dwarves at sea level (F5), comic and near-identical names (F6), region names with a skewed plain-name mix, dense gloom and parish words (F7), and wording faults (F9). P3-10 collects the wording, data and site follow-ups, the two advisories of the P3-09 determinism audit (`docs/reviews/p3-09-conflict-balance-determinism-audit.md`), slow tests in CI, and three small items left by P3-08 and P3-09, under one version bump. Items 12 to 16 add five conflict rules from the world critic's review of P3-09 (`~/.cache/the-unmapped/out/p3-09-validation/review-p3-09-conflict-balance.md`, with the validation `docs/reviews/p3-09-conflict-balance-validation.md`), decided by Paul on 2026-11-20. Not here: other conflict rules (goblins starting most wars is accepted; human aggression stays 400), alliances, trade and wealth (P5, Paul's decision), history renaming regions and mountain peoples' own history (open proposals for P5), dwarven agency, and the P3-07 report command itself.
 
 ## 2. Items and where their normative text is
 
@@ -22,6 +22,11 @@ The world critic's review of P3-08 (`docs/reviews/p3-08-followups-world-critic.m
 | 8 | Wording (F9) | Thousands separators in rendered values (not in years); battle sentences without "0 of the victors"; moved seats and secessions without "its"; the flare-up's parties stay in P3-07's note, reworded (the one place); `note_reduction` only where people were lost and causes bounded by item 2's memory, so a dwindling no longer cites an unrelated old battle | P3-04 r12 20.3; `docs/specs/p3-06-expansion-conflict.md` r14 21.1, 21.2; P3-05 r12 22.2, 22.4; P3-07 r12 22.3, 22.4 | yes |
 | 9 | P3-09 audit A1, A2 | A1: `flight_plan` copies its hop row; the cache's fixed outer size documented. A2: one last-refuge predicate in peoples | P3-06 r14 21.3, 21.4; P3-05 r12 22.7 | no |
 | 10 | Slow tests in CI | Section 4 item 1 (the build engineer) | this spec, 4 | no |
+| 12 | Aim-achieved endings (P3-09 critic F1; Paul's decision 1 of 2026-11-20 on the P3-09 review) | An attacker wins by aim only when it holds the goal; when the defender lost the goal to no one or to a third party, the war ends at once by the score with the last-battle rule (a truce on 0 or when the loser won the last battle); costs only for a winner by that rule | `docs/specs/p3-06-expansion-conflict.md` r14 21.6 | yes |
+| 13 | Failed faerie searches (F2; decision 2) | A `search_abandoned` makes the region weary for every claimant for `search_weary_years` (500); no search in a region where the war has fought a battle (such a war ends by the ordinary rules, no second template); only the first `search_abandoned` of a world keeps salience 40, later ones `search_repeat_salience` 15, and their declarations leave the summary | P3-06 r14 21.7; P3-07 r12 22.5a | yes |
+| 14 | Resettlement does not reset weariness (F3; decision 3) | A region's holder is its owner or, while it has none, its last owner; weariness (20.4, 20.23) and `wars_same_goal_unchanged_max` (20.28, P3-07 21.8 item 5) both count a change only when another civilization holds it | P3-06 r14 21.8; P3-07 r12 22.5b | yes |
+| 15 | Orcs declare at shorter odds (F4; decision 4) | Race field `odds_min_permille` (orc 500, others 700) replaces `history.conflict.odds_min` | P3-06 r14 21.9; P3-01 r11 3.5 | yes |
+| 16 | A hidden refuge lies low (F6; decision 6) | While its refuge is hidden a civilization founds no colony (peoples hook `lie_low`) and raises no claim, strain or declaration; it still defends; its refuge grows to its share and waits | P3-06 r14 21.10; P3-05 r12 22.7a | yes |
 | 11 | Left from earlier | Inline figures to golden files (4 items 2 and 3); kind 16 and kind 31's "were lost" can still occur and are kept (P3-05 r12 22.6) | 4 below; P3-05 r12 22.6 | no |
 
 ## 3. Order of implementation
@@ -39,7 +44,13 @@ One branch, one engineer and one test writer working from the stage specs separa
 | 6 | Sites: the `cell_weights` fields and the inland distance (22.5); race data | P3-05 r12 22.5; P3-01 r11 | sites, everything after |
 | 7 | Names: filter entries (data) and the core rule | P3-02 r10 | names; content hash |
 | 8 | Region names: the list edits (data), V7 and the keeper per land noun | P1-06 r6, r7 15.7 | `region.name`; content hash |
+| 8a | Conflict rules: aim (21.6), searches (21.7), holder (21.8), odds per race with the race field (21.9, P3-01 3.5), lying low with the peoples hook (21.10, P3-05 22.7a); P3-07 22.5a, 22.5b for the report's implementer | P3-06 r14 21.6–21.11 | history tables |
 | 9 | Goldens and figures: re-record every golden of section 5; README hash; `docs/specs/schema.md` (kinds 37, 38) | 5 | — |
+
+**Per role, for items 12 to 16:**
+- *Engineer*: `conflict.cpp`, `conflict_war.cpp` (7.7's checks, the search's battle test and salience, `searched_until`, the holder in `futile_`, the odds minimum from the race, lying low in claims, strain and declarations, the `lie_low` call in the flight); `peoples.cpp` (`lie_low`, `low_until`, the skip in 9.3); `kinds_history.cpp` (race field `odds_min_permille`, `history.conflict` without `odds_min` and with `search_weary_years`, `search_repeat_salience`); `game/data/races/*.toml`, `game/data/history/conflict.toml` and the fixture copies; `digest.cpp`'s statistic if P3-07 is implemented by then.
+- *Test writer*: `p3_conflict_reference.py` from P3-06 21.6–21.11 (and its `check_invariants`: (8) amended, (14), (15), (12) with the holder), `p3_peoples_reference.py` for 22.7a, `p3_data_reference.py` for the fields; the golden `p3-06-conflict.txt`.
+- *Validation*: the targets below, measured at 0.19.0 (section 9 items 9 to 13).
 
 The test writer updates, from the specs and not from the C++: `p3_engine_reference.py` (P3-04 20.1–20.4), `p3_peoples_reference.py` (P3-05 22), `p3_conflict_reference.py` (P3-06 21), `p3_names_reference.py` and the history references' naming (P3-02 12), `p1_regions_reference.py` (P1-06 15), `p3_data_reference.py` (the new fields and lists).
 
@@ -130,6 +141,7 @@ Each stage spec lists its own; in summary:
 
 - P3-04 20.6: quiet stretches (participants, `realms`, `years`, no `quiet_era`); `{@causes:…}` (lists, joins, empty, malformed bodies); separators.
 - P3-05 22.8: kind 37's values and sentence; the cause memory at 49, 50, 51 years; the dwindle's colony cause; templates of 10, 15, 16, 17, 31; the site terms of 22.5.
+- P3-06 21.11: aim by holding the goal, the search's weariness, battle test and salience, the holder, the odds per race, lying low; invariants (8), (14), (15).
 - P3-06 21.5: `note_reduction` only with a loss; the battle sentence with (4, 0), (37, 1), (491, 14), (0, 0); A1 and A2 byte-identical.
 - P3-07 22.6: the generations note; the reworded flare-up note; the new `events_` lines.
 - P3-02 12.3: the filter entries; the core rule (equal, distance 1, fallback, gods unaffected); invariant 6.
@@ -143,7 +155,7 @@ Each stage spec lists its own; in summary:
 - **Kinds 37 `plague_outbreak` and 38 `quiet_stretch`** are appended (P3-04 8.2: appending a kind is not a schema change). Kinds 4 `quiet_era` and 12 `plague` keep their structure and rows in every catalogue and are no longer written; nothing about them changes meaning.
 - Item 1 asked whether the totals can be stored as event values "without a schema change". Not on kind 12: adding a value key to an existing kind is a schema change by P3-04 8.2, hence the new kind.
 - **`{@causes:…}`** (P3-04 20.2) is a renderer extension like P3-08's three-word form: no table, column, code list or kind structure changes; every earlier template renders as before (but for separators, a rendering rule). A world of 0.19.0 is refused by `HistoryView::load` of 0.18.0 or earlier; no shipped program of those versions renders sentences. Should the lead read a template-grammar extension as a contract change, the alternative is to drop the cause clause and leave the cause to P3-07's companions (a shown abandonment brings its causes), which needs no grammar change (question 3).
-- New data fields (`cell_weights.port`, `.habitability`, `.inland`, `history.peoples.cause_memory_years`, `inland_cap`) change `content_hash` only.
+- New data fields (`cell_weights.port`, `.habitability`, `.inland`, `history.peoples.cause_memory_years`, `inland_cap`, race `odds_min_permille`, `history.conflict.search_weary_years`, `search_repeat_salience`; `history.conflict.odds_min` removed) change `content_hash` only. Items 12 to 16 add no event kind: a lost goal ends with the existing `peace`, `war_won` or `truce`, and the repeated search keeps kind 35 with a lower salience.
 
 ## 9. Statistics to re-measure (P3-10's validation)
 
@@ -157,6 +169,11 @@ On the sweeps of P3-06 15.6 at 0.19.0, against section 6 and P3-09's acceptance 
 6. Names: equal-core pairs (must be 0), pairs one letter apart, redraws per name, fallbacks; filtered names (P3-02 invariant 5).
 7. Region names: P1-06 15.5's and 15.7's measures at 512, 1024 and 2048: plain share, attempts, fallbacks (must be 0), grim share, repeats; one keeper per land noun in every world (invariant 6 as restated).
 8. The summary: per-age floor and threshold (P3-07 21) with kinds 37 and 38.
+9. **Aim** (item 12): invariants (8) as amended and (14) in every world; endings by the score of P3-06 21.6 item 2 by outcome (estimate at 0.18.0, 40 worlds: of 141 endings with the goal lost to no one or a third party, 132 attacker wins by the score, 7 truces, 2 defender wins, 9 costs no longer paid).
+10. **Searches** (item 13), targets: median `search_abandoned` per 1024 default world ≤ 2 (0.18.0: 5; estimate with the rule: 2); none in a region where its war fought a battle; at most one per world in the default summary.
+11. **Weariness by holder** (item 14): `wars_same_goal_max` (any owner) per world against 0.18.0 (critic: up to 11); seed 42's Wood of Stags: at most 3 wars after 21.8 (0.18.0: 11); invariant (12) and T2 with the holder definition.
+12. **Orcs** (item 15), target **T8**: orcs declare at least one war in ≥ 90% of 1024 default worlds where they are present (0.18.0: 76 of 100; harness at orc 500: 16 of 20, against 15 at 700); **T5** kept (harness: 24 won, 18 lost). T8 is expected to be missed by this rule alone (question 7).
+13. **Lying low** (item 16): invariant (15), no colony, claim or declaration by a civilization with a hidden refuge (0.18.0: 7 of 46 flights followed by a declaration).
 
 ## 10. Decisions (questions to Paul, closed 2026-11-20)
 
@@ -168,6 +185,12 @@ Paul accepted every recommendation ("Yes I agree with the recommendations on all
 4. **Decided: thousands separators from 1,000, in sentences only**, never in years or the report's own numbers (P3-04 20.3).
 5. **Decided: the faerie and dwarven site data as specified** (P3-05 22.5). **Watch item for validation**: humans' standing settlements and population against 0.18.0 (−15% and −9% in the 20 measured worlds; section 9 item 4); the lead follows it in validation.
 6. **Decided: `Mammga` and "The Twiwhiwou Ring" stay unfiltered** (P3-02 12.1).
+
+## 10b. Decisions of 2026-11-20 on the P3-09 review, and one question
+
+Paul's decision ("let's take your recommendation for 1-4 and 6. On 5 it's ok for goblins to start most wars, do not increase human aggression"; `docs/design/proposals.md`, "Paul's decision of 2026-11-20 on the six questions from the P3-09 review"): items 12 to 16 above; goblins starting most wars is accepted and human `aggression` stays 400. The rule details (the score ending of a lost goal, `search_weary_years` 500, no search after a battle in the region, salience 15 for repeats, the holder reading, orc 500, the lying-low hook) are the spec writer's and were measured where section 9 says.
+
+7. **Orcs that never quarrel.** In 5 of the 9 stored 0.18.0 worlds (of 40) where the orcs declare no war, they never raise a claim: no strain builds toward a neighbour in their roughly 400 years, so no odds rule can make them declare. With orc `odds_min_permille` 500 the harness gives 16 of 20 worlds with an orc declaration (80%), and 300 gives 18 of 20 but breaks T5 (18 won, 22 lost). Recommendation: ship orc 500 (decision 4), and let T8 stand as a target that validation reports; if it is missed, a later change gives the orcs a quarrel from their awakening (for example, strain toward their neighbours starting at the claim threshold), which is a rule beyond decision 4 and needs Paul. Interim: orc 500, T8 reported, not a merge condition.
 
 ## 11. Proposals
 

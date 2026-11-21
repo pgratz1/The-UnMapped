@@ -1,6 +1,6 @@
 # P3-01 History data and settings
 
-Status: **approved by the lead 2026-11-19; revised 2026-11-19 (text only, after implementation); amended 2026-11-19 for P3-03 (r2); amended again 2026-11-19 after the P3-03 implementation (r3: check D0); r11 (2026-11-20, P3-10, generator 0.19.0): three cell weights, 3.4**: see the revision notes at the end. Phase P3 History core, spec 1 (P3-00 3.1). Design doc sections 3 (data in TOML), 5 (the six races, their order, camps and timing; "Food and homelands"; world-creation settings), 6 (`meta` holds the settings). Depends on P0-03 (with amendments 15 to 17), P0-04, P1-00 6 and P3-00. Written together with P3-02, which defines the culture naming record that this spec's `culture` kind carries. Amended 2026-11-19 for P3-05 (r6: `density_permille`, field meanings) and for P3-06 (r7: `prowess_permille`, goblin aggression, id `conflict`, all from generator 0.16.0).
+Status: **approved by the lead 2026-11-19; revised 2026-11-19 (text only, after implementation); amended 2026-11-19 for P3-03 (r2); amended again 2026-11-19 after the P3-03 implementation (r3: check D0); r11 (2026-11-20, P3-10, generator 0.19.0): three cell weights, 3.4; odds minimum per race, 3.5**: see the revision notes at the end. Phase P3 History core, spec 1 (P3-00 3.1). Design doc sections 3 (data in TOML), 5 (the six races, their order, camps and timing; "Food and homelands"; world-creation settings), 6 (`meta` holds the settings). Depends on P0-03 (with amendments 15 to 17), P0-04, P1-00 6 and P3-00. Written together with P3-02, which defines the culture naming record that this spec's `culture` kind carries. Amended 2026-11-19 for P3-05 (r6: `density_permille`, field meanings) and for P3-06 (r7: `prowess_permille`, goblin aggression, id `conflict`, all from generator 0.16.0).
 
 ## 1. Purpose
 
@@ -320,6 +320,10 @@ With them the faerie race field `coast` becomes **−500** (was 0; P3-05 22.5): 
 
 The **neutral record** is { `ore` 0, `height` 0, `inland` 0, `port` 1000, `habitability` 1000 }: a race with it chooses sites exactly as before 0.19.0 and keeps the region's seed cell as its first site (P3-05 6.2 item 1); a race whose record differs from it has a **cell term** (P3-05 6.2 items 1 and 2, 8.4). Before 0.19.0 a race had a cell term when `ore` or `height` was not 0, which is the same for every shipped race but the faerie, who gains one. The fixture race files gain the three fields with the neutral values (and the shipped dwarf and faerie values in the fixture copies of those files). Loader tests (8.1) cover each field's range and its absence.
 
+### 3.5 Odds minimum per race from generator 0.19.0 (P3-10; r11; P3-06 21.9)
+
+New race field **`odds_min_permille`** int(0, 1000), required, after `home_defense_permille`: the least odds at which a civilization of the race declares war or lets a claim flare up (P3-06 20.6 item 3 as amended by 21.9). Shipped **orc 500**, elf, goblin, dwarf, faerie and human 700. It replaces the `history.conflict` field `odds_min` (700), which is removed. `history.conflict` gains `search_weary_years` int(0, 10000), shipped 500, and `search_repeat_salience` int(0, 100), shipped 15, after `search_years` (P3-06 21.7). The fixture race and conflict files change alike; loader tests (8.1) cover the new field's range and absence, and the old `odds_min` key is refused as unknown.
+
 ## 4. Kind `culture`
 
 Directory `cultures/`, **required**. Fields, all required, in this order:
@@ -546,4 +550,4 @@ New 3.3: faerie `home_defense_permille` 0 (P3-06 20.17). No field changes.
 
 ## Revision note r11 (2026-11-20, for P3-10; generator 0.19.0)
 
-New section 3.4 (`docs/specs/p3-10-followups.md`, P3-05 22.5): record `race_cell_weights` gains `inland`, `port` and `habitability`, required, after `height`; shipped dwarf `port` 0 and `habitability` 500, faerie `inland` 400 and `port` 0 (and faerie `coast` −500), every other race neutral; a race has a cell term when its record differs from the neutral one. `history.peoples` gains `cause_memory_years` and `inland_cap` (P3-05 22.2, 22.5); the id list of 5 is unchanged. Every change takes effect at generator 0.19.0.
+New section 3.4 (`docs/specs/p3-10-followups.md`, P3-05 22.5): record `race_cell_weights` gains `inland`, `port` and `habitability`, required, after `height`; shipped dwarf `port` 0 and `habitability` 500, faerie `inland` 400 and `port` 0 (and faerie `coast` −500), every other race neutral; a race has a cell term when its record differs from the neutral one. `history.peoples` gains `cause_memory_years` and `inland_cap` (P3-05 22.2, 22.5); new 3.5: race field `odds_min_permille` (orc 500, others 700) replacing `history.conflict.odds_min`, and `history.conflict` gains `search_weary_years` and `search_repeat_salience` (P3-06 21.7, 21.9); the id list of 5 is unchanged. Every change takes effect at generator 0.19.0.
