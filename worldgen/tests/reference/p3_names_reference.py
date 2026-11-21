@@ -501,6 +501,8 @@ def use_version(v):
     pdr.use_version(v)
     FILTER_COMMIT = None if pdr.at_least("0.18.0") else pdr.NAME_FILTERS_017_COMMIT
     _SHIPPED_FILTER = None
+    global TRIPLE_RULE
+    TRIPLE_RULE = pdr.at_least("0.19.0")
     use_rules(RULES)
 
 
@@ -590,7 +592,24 @@ def attempt(d, kind, seed, c, e, t, trace=None, filt=None, flags=None):
     filtered = valid and name_filtered(filt, root_word(form, root))
     if flags is not None:
         flags["filtered"] = filtered
-    return valid and not filtered, name, root
+    trip = valid and not filtered and TRIPLE_RULE and triple(name)
+    if flags is not None:
+        flags["triple"] = trip
+    return valid and not filtered and not trip, name, root
+
+
+# P3-02 r13 13.2 (P3-10 second round, generator 0.19.0): an attempt whose rendered name holds the same letter a-z
+# three times in a row (case-insensitive; every other character, space, ' and - included, breaks a run) is invalid.
+# TRIPLE_RULE follows the served data version (use_version).
+TRIPLE_RULE = True
+
+
+def triple(name):
+    n = lower(name)
+    for i in range(len(n) - 2):
+        if "a" <= n[i] <= "z" and n[i] == n[i + 1] == n[i + 2]:
+            return True
+    return False
 
 
 ROMAN = ((1000, "M"), (900, "CM"), (500, "D"), (400, "CD"), (100, "C"), (90, "XC"), (50, "L"), (40, "XL"),
@@ -1011,6 +1030,7 @@ def golden_text():
             o.append("r4sha256 %d %s" % (seed, list_sha(name_list(seed, r4_equivalent_cultures(), EMPTY_FILTER))))
     if RULES == "r5" and pdr.at_least("0.19.0"):
         o.extend(r10_golden_lines())
+        o.extend(r13_golden_lines())
     return "\n".join(o) + "\n"
 
 
@@ -1033,6 +1053,104 @@ R10_REJECTED = ("suckford", "shiety", "realdeadstead", "timhack", "whop", "flopf
                 "gulsuckton", "shietwo")
 R10_PASSING = ("gramm", "mammga", "twiwhiwou", "timmthorin", "kaidinmamm")
 CORE_ENTITIES = 50
+
+# ---------------------------------------------------------------------------
+# P3-02 r13 section 13 (P3-10 second round, generator 0.19.0)
+# ---------------------------------------------------------------------------
+
+# 13.3's names: filtered by the r13 entries (root words), and the triple-letter cases (rendered names).
+R13_FILTERED = ("twipee", "twypoo", "twotitwee", "fassbou", "beamcumstead", "mypee", "teefass", "dincum")
+R13_TRIPLE = ("Wasssie", "Floullly Hollow", "Fiasssie", "Passsae", "The Circle of Eesssy", "The Bosssie Ring",
+              "AAAb", "xBBBy")
+R13_NOT_TRIPLE = ("Bigg-Gnizz", "Aa'azaam", "Billa Hollow", "Aa a", "Kaa-aar", "Mammga", "Ee'e", "")
+# 13.3: the fallback's numeral is not tested (the rule tests attempts): with the registry {Ba, Da, Ba II}, culture
+# tiny's fallback is "Ba III" (a string triple() holds).
+R13_FALLBACK = (("Ba", "Da", "Da II"), "Da III")   # seed 0, settlement 1: the first valid attempt is Da
+# Test cultures of 13.3 (also in worldgen/tests/history/p3_02_names_support.hpp): pattern "O" makes the root one
+# onset, so every attempt renders one of the listed names.
+TRIP = naming(["wasssie", "billa", "bigg-gnizz", "aa'azaam", "fiasssie"], ["a"], [""], ["O"], 1, 32, [],
+              ["{root}"], ["{root}"], ["{root}"])
+TRIP_HOLLOW = naming(["floullly", "billa"], ["a"], [""], ["O"], 1, 32, [], ["{root}"], ["{root}"],
+                     ["{root} Hollow"])
+TRIP_CULTURES = (("trip", TRIP), ("trip_hollow", TRIP_HOLLOW))
+TRIP_SEEDS = (0, 42)
+
+
+def r13_golden_lines():
+    o = ["# r13 (P3-02 13, generator 0.19.0 second round):",
+         "#   triple <0|1> <name>   13.2's test on a rendered name (case-insensitive, three equal letters a-z",
+         "#       at consecutive positions); the name is the rest of the line",
+         "#   tattempt <culture> <kind> <seed> <c> <e> <t> <valid 0|1> <triple 0|1> <name>  attempts of the",
+         "#       test cultures trip and trip_hollow (filter: the shipped one), c = 1",
+         "#   tresult <culture> <kind> <seed> <c> <e> <attempt|F> <name>  make_name with a fresh registry"]
+    for n in R13_TRIPLE + R13_NOT_TRIPLE:
+        if n:
+            o.append("triple %d %s" % (1 if triple(n) else 0, n))
+    for cid, d in TRIP_CULTURES:
+        for kind in KINDS:
+            for seed in TRIP_SEEDS:
+                for e in (1, 2, 3):
+                    for t in range(8):
+                        fl = {}
+                        v, n, _ = attempt(d, kind, seed, 1, e, t, flags=fl)
+                        o.append("tattempt %s %s %d 1 %d %d %d %d %s" % (cid, kind, seed, e, t, 1 if v else 0,
+                                                                         1 if fl.get("triple") else 0, n))
+                    n, t = make_name(d, cid, kind, seed, 1, e, set())
+                    o.append("tresult %s %s %d 1 %d %s %s" % (cid, kind, seed, e, t, n))
+    return o
+
+
+def check_r13(ck):
+    """P3-02 r13 13.3."""
+    sf = shipped_filter()
+    for w in R13_FILTERED:
+        ck.eq("13.1 %s filtered" % w, name_filtered(sf, w), True)
+    for w in ("billa", "biggnizz", "gramm", "mammga", "cucmber", "spon"):
+        ck.eq("13.1 %s passes" % w, name_filtered(sf, w), False)
+    for n in R13_TRIPLE:
+        ck.eq("13.2 triple %r" % n, triple(n), True)
+    for n in R13_NOT_TRIPLE:
+        ck.eq("13.2 not triple %r" % n, triple(n), False)
+    ck.eq("13.1 sizes of the shipped filter (effective)", (len(sf.anywhere), len(sf.at_start), len(sf.whole)),
+          (110, 31, 508))
+    filters = {d: t for d, t in pdr.load_root("game/data", ["name_filter"])["name_filter"]}
+    ck.eq("13.1 name_filter_not_redundant passes on the edited lists", pdr.name_filter_messages(sorted(filters.items())),
+          [])
+    bad = dict(filters, crude=dict(filters["crude"], at_start=sorted(filters["crude"]["at_start"] + ["pee"])))
+    ck.eq("13.3 a copy that keeps crude.at_start pee fails name_filter_not_redundant",
+          [m.split(":")[0] for m in pdr.name_filter_messages(sorted(bad.items()))], ["name_filter_not_redundant"])
+    bad = dict(filters, words=dict(filters["words"], whole=sorted(filters["words"]["whole"] + ["teepee"])))
+    ck.eq("13.3 a copy that keeps words.whole teepee fails name_filter_not_redundant",
+          [m.split(":")[0] for m in pdr.name_filter_messages(sorted(bad.items()))], ["name_filter_not_redundant"])
+    for cid, d in TRIP_CULTURES:
+        for kind in KINDS:
+            for seed in TRIP_SEEDS:
+                for e in (1, 2, 3):
+                    n, t = make_name(d, cid, kind, seed, 1, e, set())
+                    ck.eq("13.2 %s %s %d %d gives a name without a triple" % (cid, kind, seed, e), triple(n), False)
+                    if t != "F" and t > 0:
+                        _, n0, _ = attempt(d, kind, seed, 1, e, 0)
+                        ck.eq("13.2 %s %s %d %d: attempt 0 skipped for a reason" % (cid, kind, seed, e),
+                              triple(n0) or n0 == n, True)
+    reg, want = R13_FALLBACK
+    ck.eq("13.3 the fallback numeral is exempt", make_name(TINY, "tiny", "settlement", 0, 1, 1, set(reg)), (want, "F"))
+    ck.eq("13.3 ... though the numbered name holds III", triple(want), True)
+    seen = set()
+    for cid, d in TRIP_CULTURES:
+        for kind in KINDS:
+            for seed in TRIP_SEEDS:
+                for e in (1, 2, 3):
+                    for t in range(8):
+                        fl = {}
+                        v, n, _ = attempt(d, kind, seed, 1, e, t, flags=fl)
+                        seen.add((v, bool(fl.get("triple"))))
+    ck.eq("13.2 the test cultures give both valid and triple attempts", sorted(seen), [(False, True), (True, False)])
+    for seed in GOLDEN_SEEDS:
+        ck.eq("invariant 7 (13.3) seed %d: no listed name holds three equal letters" % seed,
+              [l for l in name_list(seed) if triple(l.split(" ", 5)[5].rsplit(" ", 1)[0]
+                                                   if l.split(" ", 5)[4] == "F" else l.split(" ", 5)[5])], [])
+        ck.eq("invariant 7 (13.3) seed %d, core lists" % seed,
+              [l for l in core_list(seed) if l.split(" ", 5)[4] != "F" and triple(l.split(" ", 6)[6])], [])
 
 
 def core_list(seed):
@@ -1100,7 +1218,8 @@ def check_r10(ck):
         ck.eq("12.1 %s rejected" % w, name_filtered(sf, w), True)
     for w in R10_PASSING:
         ck.eq("12.1 %s passes" % w, name_filtered(sf, w), False)
-    ck.eq("12.1 effective sizes", (len(sf.anywhere), len(sf.at_start), len(sf.whole)), (108, 36, 510))
+    # r10's own sizes (108, 36, 510) are those before r13's edits (13.1), which check_r13 tests
+    ck.eq("12.1 effective sizes (after r13 13.1)", (len(sf.anywhere), len(sf.at_start), len(sf.whole)), (110, 31, 508))
     n, t, K = core_fallback_case()
     ck.eq("12.3 fallback: the first valid name numbered", (t, n.endswith(" II")), ("F", True))
     ck.eq("12.3 fallback: first's core joins K", K, sorted({"ba", name_core(lower(n.split()[0]))}))
@@ -1392,6 +1511,7 @@ def check_all():
         check_r5(ck)
     if RULES == "r5" and pdr.at_least("0.19.0"):
         check_r10(ck)
+        check_r13(ck)
     sys.stdout.write("%d checks, %d failures\n" % (ck.count, ck.failures))
     return 1 if ck.failures else 0
 
@@ -1403,7 +1523,10 @@ def check_r5(ck):
     f = FILTER
     # 11.3 examples with the shipped lists (the offensive ones as concatenations).
     for w, exp in (("cock" + "ford", True), ("bum" + "dou", True), ("but-skrotch", True), ("ugh'kaal", True),
-                   ("bag", True), ("stard", False), ("cum" + "brin", True), ("ascum" + "brin", False)):
+                   ("bag", True), ("stard", False), ("cum" + "brin", True),
+                   # P3-02 r13 13.1 moves cum to crude.anywhere: 11.3's "while Ascumbrin is not" no longer holds
+                   # (a reading: 13.1 rules over 11.3's example)
+                   ("ascum" + "brin", pdr.at_least("0.19.0"))):
         ck.eq("11.3 example %s" % w, name_filtered(f, w), exp)
     ck.eq("11.3 Bag Hole: W is the root", root_word("{root} Hole", "bag"), "bag")
     # 11.7 item 5.

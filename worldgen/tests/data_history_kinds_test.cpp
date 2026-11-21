@@ -168,6 +168,7 @@ void check_race(const wd::Definition& d, const history_data::Race& want) {
     // P3-01 r11 3.5 (generator 0.19.0, P3-10)
     CHECK(r.get_int("odds_min_permille") == want.odds_min_permille);
     CHECK(r.get_int("awakening_quarrel") == want.awakening_quarrel);
+    CHECK(r.get_int("hidden_years") == want.hidden_years);  // P3-01 r13 3.6 (P3-10 second round)
     const auto& kinds = r.get_array("settlement_kinds");
     REQUIRE(kinds.size() == want.settlement_kinds.size());
     for (std::size_t i = 0; i < kinds.size(); ++i) {
@@ -266,11 +267,16 @@ TEST_CASE("P3-01 3-5: the production registry holds race, culture and history be
     CHECK(history.schema_for("engine") != nullptr);
     CHECK(history.schema_for("peoples") != nullptr);  // P3-05 12.1
     REQUIRE(history.schema_for("conflict") != nullptr);  // P3-06 12.1, generator 0.16.0 (P3-01 r7)
-    REQUIRE(history.schema_for("conflict")->checks().size() == 4U);  // r9 20.9 conflict_enmity_hops; r15 quarrel
+    REQUIRE(history.schema_for("conflict")->checks().size() == 5U);  // r9 conflict_enmity_hops; r15, r17 quarrel
     CHECK(history.schema_for("conflict")->checks()[0].name == "conflict_declare");
     CHECK(history.schema_for("conflict")->checks()[1].name == "conflict_strain_max");
     CHECK(history.schema_for("conflict")->checks()[2].name == "conflict_enmity_hops");
     CHECK(history.schema_for("conflict")->checks()[3].name == "conflict_quarrel_strain");  // P3-06 r15 21.12
+    CHECK(history.schema_for("conflict")->checks()[4].name == "conflict_quarrel_strain_max");  // P3-06 r17 22.7
+    REQUIRE(history.schema_for("engine")->checks().size() == 3U);  // P3-04 4.1 with r15's engine_quiet_min
+    CHECK(history.schema_for("engine")->checks()[0].name == "engine_simulated_bounds");
+    CHECK(history.schema_for("engine")->checks()[1].name == "engine_quiet_min");
+    CHECK(history.schema_for("engine")->checks()[2].name == "engine_phase_budget");
 
     const wd::Kind& race = kinds[5];
     CHECK(race.directory == "races");
@@ -818,6 +824,10 @@ TEST_CASE("P3-01 8.1 test 5: every bounded race field one step outside its bound
          "race.orc.awakening_quarrel"},
         {"races/orc.toml", "awakening_quarrel = 1", "awakening_quarrel = 1", "awakening_quarrel = 2",
          "race.orc.awakening_quarrel"},
+        // P3-01 r13 3.6 (P3-10 second round): hidden_years int(0, 10000)
+        {"races/orc.toml", "hidden_years = 100", "hidden_years = 0", "hidden_years = -1", "race.orc.hidden_years"},
+        {"races/orc.toml", "hidden_years = 100", "hidden_years = 10000", "hidden_years = 10001",
+         "race.orc.hidden_years"},
         // P3-06 12.2 item 1 (P3-01 r7): prowess_permille int(1, 4000)
         {"races/orc.toml", "prowess_permille = 1300", "prowess_permille = 1", "prowess_permille = 0", "race.orc.prowess_permille"},
         {"races/orc.toml", "prowess_permille = 1300", "prowess_permille = 4000", "prowess_permille = 4001", "race.orc.prowess_permille"},
@@ -984,6 +994,75 @@ TEST_CASE("P3-01 r11 3.5, P3-06 r14 21.9: history.conflict.odds_min is refused a
                              r.cell_habitability == 1000;
         CHECK(neutral == (r.id != "dwarf" && r.id != "faerie"));  // 3.4: the races with a cell term
     }
+}
+
+TEST_CASE("P3-01 r13 3.6, P3-06 r17 22.2: history.conflict.hidden_years is refused as an unknown field") {
+    const Load l = load(shipped_edited("history/conflict.toml", "quarrel_min_settlements = 2\n",
+                                       "quarrel_min_settlements = 2\nhidden_years = 300\n"));
+    const wd::LoadError e = only_error(l);
+    CHECK(e.path == "history/conflict.toml");
+    CHECK(contains(e.message, "hidden_years"));
+    CHECK_FALSE(contains(history_data::CONFLICT_TOML, "hidden_years"));
+    for (const history_data::Race& r : history_data::races()) {
+        CAPTURE(std::string(r.id));
+        CHECK(r.hidden_years == (r.id == "orc" ? 100 : 300));
+    }
+}
+
+TEST_CASE("P3-06 r17 22.1 item 4, 22.7: quarrel_min_settlements int(0, 1000) after quarrel_strain; conflict_quarrel_strain_max") {
+    const std::string path = "history/conflict.toml";
+    CHECK(load(shipped_edited(path, "quarrel_min_settlements = 2", "quarrel_min_settlements = 0")).ok());
+    CHECK(load(shipped_edited(path, "quarrel_min_settlements = 2", "quarrel_min_settlements = 1000")).ok());
+    for (const char* bad : {"quarrel_min_settlements = -1", "quarrel_min_settlements = 1001"}) {
+        CAPTURE(std::string_view(bad));
+        const wd::LoadError e = only_error(load(shipped_edited(path, "quarrel_min_settlements = 2", bad)));
+        CHECK(e.path == path);
+        CHECK(contains(e.message, "'history.conflict.quarrel_min_settlements'"));
+    }
+    // required: a listing without it is refused
+    const wd::LoadError miss = only_error(load(shipped_edited(path, "quarrel_min_settlements = 2\n", "")));
+    CHECK(miss.message == "missing required field 'history.conflict.quarrel_min_settlements'");
+    // strain_max 500 with quarrel_strain 600 (and claim, declare fields that pass the other checks): fails
+    // conflict_quarrel_strain_max with 22.7's message; 600 and 600 passes
+    Files f = history_data::shipped_files();
+    std::string t(history_data::CONFLICT_TOML);
+    for (const auto& [from, to] : std::vector<std::pair<std::string, std::string>>{
+             {"strain_max = 5000", "strain_max = 500"},
+             {"claim_strain = 300", "claim_strain = 100"},
+             {"declare_min = 300", "declare_min = 100"},
+             {"declare_span = 600", "declare_span = 400"}}) {
+        const std::size_t at = t.find(from);
+        REQUIRE(at != std::string::npos);
+        t.replace(at, from.size(), to);
+    }
+    f[path] = t;
+    const wd::LoadError e = only_error(load(f));
+    CHECK(e.path == path);
+    CHECK(contains(e.message,
+                   "check 'conflict_quarrel_strain_max' failed for 'history.conflict': quarrel_strain must not be above strain_max"));
+    const std::size_t at = t.find("strain_max = 500");
+    t.replace(at, std::string_view("strain_max = 500").size(), "strain_max = 600");
+    const std::size_t at2 = t.find("declare_span = 400");
+    t.replace(at2, std::string_view("declare_span = 400").size(), "declare_span = 500");
+    f[path] = t;
+    CHECK(load(f).ok());
+}
+
+TEST_CASE("P3-04 r15 4.1: quiet_min_years int(0, 400) after quiet_events_max, required; engine_quiet_min") {
+    const std::string path = "history/engine.toml";
+    REQUIRE(contains(history_data::ENGINE_TOML, "quiet_events_max = 3\nquiet_min_years = 50\n"));
+    CHECK(load(shipped_edited(path, "quiet_min_years = 50", "quiet_min_years = 0")).ok());
+    for (const char* bad : {"quiet_min_years = -1", "quiet_min_years = 401"}) {
+        CAPTURE(std::string_view(bad));
+        const wd::LoadError e = only_error(load(shipped_edited(path, "quiet_min_years = 50", bad)));
+        CHECK(contains(e.message, "'history.engine.quiet_min_years'"));
+    }
+    const wd::LoadError miss = only_error(load(shipped_edited(path, "quiet_min_years = 50\n", "")));
+    CHECK(miss.message == "missing required field 'history.engine.quiet_min_years'");
+    const wd::LoadError e = only_error(load(shipped_edited(path, "quiet_min_years = 50", "quiet_min_years = 51")));
+    CHECK(contains(e.message, "check 'engine_quiet_min' failed for 'history.engine': quiet_min_years must not be above 2 x "
+                              "quiet_step_years"));
+    CHECK(load(shipped_edited(path, "quiet_step_years = 25", "quiet_step_years = 26")).ok());  // 50 <= 52
 }
 
 TEST_CASE("P3-01 5.1: history.chronology bounds, required fields and chronology_age_name_form") {

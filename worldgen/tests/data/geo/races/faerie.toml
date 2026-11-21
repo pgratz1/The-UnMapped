@@ -32,5 +32,6 @@ conceal_min = 400
 home_defense_permille = 0
 odds_min_permille = 700
 awakening_quarrel = 0
+hidden_years = 300
 settlement_kinds = ["hamlet", "village"]
 culture = "faerie"

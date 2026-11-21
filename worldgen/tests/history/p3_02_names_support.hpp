@@ -187,6 +187,19 @@ inline Naming shipped_naming_r4(std::string_view id) {
         n.god_forms = {"{root}"};
         n.civilization_forms = {"{root}"};
         n.settlement_forms = {"{root}"};
+    } else if (id == "trip" || id == "trip_hollow") {
+        // P3-02 r13 13.3 (P3-10 second round; also in the reference): pattern "O" makes the root one onset, so
+        // every attempt renders one of the listed names; trip_hollow's settlements are "{root} Hollow".
+        n.onsets = id == "trip" ? std::vector<std::string>{"wasssie", "billa", "bigg-gnizz", "aa'azaam", "fiasssie"}
+                                : std::vector<std::string>{"floullly", "billa"};
+        n.nuclei = {"a"};
+        n.codas = {""};
+        n.patterns = {"O"};
+        n.min_letters = 1;
+        n.max_letters = 32;
+        n.god_forms = {"{root}"};
+        n.civilization_forms = {"{root}"};
+        n.settlement_forms = {id == "trip" ? "{root}" : "{root} Hollow"};
     } else {
         throw std::runtime_error("unknown culture " + std::string(id));
     }

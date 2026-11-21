@@ -142,8 +142,10 @@ const std::string M =
     "test_r12_k_famine=famine,test_r12_k_plague=plague,test_r12_k_spread=plague,test_r12_k_battle=war,"
     "test_r12_k_tribute=tribute";
 
-// 20.1 on the rows of one world: one quiet_stretch per quiet phase row with a living civilization.
+// 20.1 on the rows of one world: one quiet_stretch per quiet phase row with a living civilization (r15 20.1 item
+// 1a: and at least quiet_min_years long; a shorter row has none).
 void check_quiet_stretches(const Tables& t) {
+    const std::int64_t qmin = shipped_quiet_min_years();
     std::int64_t k38 = 0, k4 = 0;
     for (const Row& k : t.event_kind) {
         if (k.at(1).bytes == "quiet_stretch") k38 = at(k, 0);
@@ -177,7 +179,7 @@ void check_quiet_stretches(const Tables& t) {
             if (at(c, 6) <= at(ph, 3) && !ended_before) alive.push_back(at(c, 0));
         }
         const auto& mine = by_phase[at(ph, 0)];
-        if (alive.empty()) {
+        if (alive.empty() || at(ph, 4) - at(ph, 3) + 1 < qmin) {
             CHECK(mine.empty());
             continue;
         }

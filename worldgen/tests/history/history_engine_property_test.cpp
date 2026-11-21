@@ -347,7 +347,8 @@ void check_stub_world(std::uint64_t seed, std::int64_t span, const std::vector<s
             for (const Row& c : t.civilization) {
                 any = any || at(c, 6) < at(ph, 3);
             }
-            expect_events += any ? 1 : 0;
+            // r15 20.1 item 1a (P3-10 second round): and the row at least quiet_min_years long
+            expect_events += any && at(ph, 4) - at(ph, 3) + 1 >= shipped_quiet_min_years() ? 1 : 0;
         }
     }
     CHECK(static_cast<std::int64_t>(t.event.size()) == expect_events);
@@ -376,6 +377,8 @@ void hand_made_tuning(int count, const std::function<bool(int)>& run_case) {
         EngineTuning t;
         t.quiet_step_years = m.in(1, 200);
         t.quiet_events_max = m.in(1, 100);
+        // P3-04 r15 4.1 (engine_quiet_min): at most 2 x quiet_step_years; no draw, so the cases keep their numbers
+        t.quiet_min_years = std::min<std::int64_t>(50, 2 * t.quiet_step_years);
         t.simulated_max_permille = m.in(100, 500);
         t.simulated_min_permille = m.in(100, t.simulated_max_permille);
         t.islet_max_dry_cells = m.in(0, 1000000);

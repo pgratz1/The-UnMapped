@@ -832,8 +832,8 @@ void PeoplesSubsystem::foundings(StepContext& ctx) {
             continue;
         }
         // r12 22.7a: a civilization lying low is skipped before item 1 (no
-        // draw, hunger unchanged).
-        if (const auto low = low_until_.find(c); low != low_until_.end() && ctx.year() < low->second) {
+        // draw, hunger unchanged); r15: the one predicate.
+        if (lying_low(state, c, ctx.year())) {
             continue;
         }
         const std::int64_t race = state.civ(c).race;
@@ -1319,8 +1319,21 @@ void PeoplesSubsystem::note_reduction(std::int64_t settlement, std::int64_t even
     slot(last_reduction_, settlement) = event;
 }
 
-void PeoplesSubsystem::lie_low(std::int64_t civ, std::int64_t until_year) {
-    low_until_[civ] = until_year;
+void PeoplesSubsystem::lie_low(std::int64_t civ, std::int64_t settlement, std::int64_t until_year) {
+    low_until_[civ] = LowRecord{settlement, until_year};
+}
+
+bool PeoplesSubsystem::lying_low(const State& state, std::int64_t civ, std::int64_t year) const {
+    const auto it = low_until_.find(civ);
+    if (it == low_until_.end() || year >= it->second.until) {
+        return false;
+    }
+    const std::int64_t h = it->second.settlement;
+    if (h < 1 || h > static_cast<std::int64_t>(state.settlements().size())) {
+        return false;
+    }
+    const Settlement& s = state.settlement(h);
+    return s.owner_civ == civ && standing(s);
 }
 
 std::int64_t PeoplesView::score(std::int64_t region, std::int64_t race) const {

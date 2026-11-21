@@ -115,13 +115,12 @@ TEST_CASE("P3-06 r14 21.8, P3-07 r12 22.5b: the run statistic counts by holder (
     CHECK(weary_violations(other4, 3).empty());
 }
 
-TEST_CASE("P3-06 r14 (15), 21.7: the row checks fire on hand-made logs that break them") {
-    // c1 elves, c2 goblins, c3 faeries. e1 refugees_settled of c3 in 1000 (hidden_years 300). e5 search_abandoned
+TEST_CASE("P3-06 r14 21.7: the row checks fire on hand-made logs that break them") {
+    // ((15) is restated by P3-06 r17 22.3 and checked by invariants_r17, history_conflict_r17_test.cpp.)
+    // c1 elves, c2 goblins, c3 faeries. e1 refugees_settled of c3 in 1000. e5 search_abandoned
     // by c1 of c3 in R4 in 1100 (the war e3, its battle e4 in R2), e7 a second one in 1200 (war e6) at salience 15.
     const wd::ContentSet& c = shipped();
-    const std::int64_t hidden = conflict_int(c, "hidden_years");
     const std::int64_t repeat = conflict_int(c, "search_repeat_salience");
-    REQUIRE(hidden == 300);
     REQUIRE(repeat == 15);
     Tables t;
     t.event_kind = {pad({I(35), T("search_abandoned"), I(1), I(1), I(0), I(40)}, 7)};
@@ -135,20 +134,8 @@ TEST_CASE("P3-06 r14 (15), 21.7: the row checks fire on hand-made logs that brea
                   {I(3), I(2), I(3), I(3), T("war"), I(1150), I(1200), I(6), I(7)}};
     t.region_control = {{I(4), I(900), N(), I(3), I(1)}};
     CHECK(invariants_19(t, c).empty());
-    // (15): a colony of c3 in 1250 (inside [1000, 1300)), a claim by c3 in 1299; none counted from 1300
     Tables bad = t;
-    bad.event.push_back(ev(8, 1250, k_colony_founded, 3));
-    bad.event_participant.push_back(part(8, 1, 20));
-    bad.event_participant.push_back(part(8, 2, 3));
-    bad.event.push_back(ev(9, 1299, k_claim, 5));
-    bad.event_participant.push_back(part(9, 1, 3));
-    bad.event_participant.push_back(part(9, 2, 1));
-    bad.event.push_back(ev(10, 1300, k_war_declared, 5));
-    bad.event_participant.push_back(part(10, 1, 3));
-    bad.event_participant.push_back(part(10, 2, 1));
-    CHECK(invariants_19(bad, c).size() == 2U);
     // 21.7 item 2: a battle of the war e3 in the searched region R4
-    bad = t;
     bad.event.push_back(ev(11, 1096, k_battle, 4));
     bad.event_participant.push_back(part(11, 1, 1));
     bad.event_participant.push_back(part(11, 2, 3));
@@ -167,6 +154,10 @@ TEST_CASE("P3-06 r14 (15), 21.7: the row checks fire on hand-made logs that brea
     bad.event.push_back(ev(12, 1590, k_claim, 4));
     bad.event_participant.push_back(part(12, 1, 2));
     bad.event_participant.push_back(part(12, 2, 3));
+    CHECK(invariants_19(bad, c).size() == 1U);
+    // P3-06 r17 22.6 (22.10 item 5): the bound is exclusive: Y + search_weary_years - 1 is refused, Y +
+    // search_weary_years allowed
+    bad.event.back() = ev(12, 1599, k_claim, 4);
     CHECK(invariants_19(bad, c).size() == 1U);
     bad.event.back() = ev(12, 1600, k_claim, 4);
     CHECK(invariants_19(bad, c).empty());
@@ -220,10 +211,10 @@ TEST_CASE("P3-06 r14 21.9, 21.12, P3-01 r11 3.5 (seam): ConflictRace carries odd
     CHECK(r.odds_min + r.awakening_quarrel == 501);
 }
 
-TEST_CASE("P3-05 r12 22.7a (seam): PeoplesSubsystem::lie_low(civ, until_year)") {
+TEST_CASE("P3-05 r15 22.7a (seam): PeoplesSubsystem::lie_low(civ, settlement, until_year)") {
     namespace h = worldgen::history;
     static_assert(std::is_same_v<decltype(&h::PeoplesSubsystem::lie_low),
-                                 void (h::PeoplesSubsystem::*)(std::int64_t, std::int64_t)>);
+                                 void (h::PeoplesSubsystem::*)(std::int64_t, std::int64_t, std::int64_t)>);
     CHECK(true);
 }
 

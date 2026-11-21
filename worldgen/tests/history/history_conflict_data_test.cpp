@@ -85,7 +85,7 @@ const std::vector<Range>& ranges() {
         {"truce_years", 0, 10000}, {"war_grudge", 0, 2000}, {"capture_grudge", 0, 2000}, {"secession_grudge", 0, 2000},
         {"grudge_decay_per_century", 0, 10000}, {"last_refuge", 0, 1},
         // r9 20.9 (generator 0.18.0, P3-09): eleven fields after last_refuge
-        {"refuge_flight", 0, 1}, {"flight_hops", 1, 8}, {"hidden_years", 0, 10000}, {"weary_wars", 0, 100},
+        {"refuge_flight", 0, 1}, {"flight_hops", 1, 8}, {"weary_wars", 0, 100},  // hidden_years out: r17 22.2
         {"tribute_permille", 0, 1000}, {"revenge_aggression", 0, 1000}, {"levy_hops", 0, 16}, {"odds_floor", 0, 1000},
         {"truce_break_aggression", 0, 999}, {"enmity_hops", 1, 4},  // r14 21.9 (0.19.0): odds_min removed
         // r10 20.19 (P3-09 r3): after enmity_hops
@@ -94,6 +94,8 @@ const std::vector<Range>& ranges() {
         {"search_weary_years", 0, 10000}, {"search_repeat_salience", 0, 100},
         // r15 21.12 item 2 (0.19.0, P3-10 r1): after search_repeat_salience
         {"quarrel_strain", 0, 5000},
+        // r17 22.1 item 4 (P3-10 second round): after quarrel_strain
+        {"quarrel_min_settlements", 0, 1000},
         {"capital_sacked_salience", 0, 100}, {"capital_captured_salience", 0, 100},
     };
     return v;

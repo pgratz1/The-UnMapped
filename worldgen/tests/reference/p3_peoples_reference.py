@@ -805,6 +805,7 @@ class World(pe.World):
         self.plague_plans = []     # r6 10.2: (outbreak event, planned total, actual total) for the checks
         self.last_colony = {}      # r12 22.2 item 3: settlement -> its last colony_founded event as origin
         self.low_until = {}        # r12 22.7a: civilization -> the year it stops lying low (latest call wins)
+        self.low_refuge = {}       # r15 22.7a: civilization -> the refuge h of its latest lie_low call
         self.cores = set()         # P3-02 r10 12.2: K, the cores of the civilization and settlement names drawn
         self.extra_draw = extra_draw
         self.keys = {s: cr.stream_key(inp.seed, s) for s in STREAMS}
@@ -820,12 +821,23 @@ class World(pe.World):
         return pnr.make_name(naming, culture_id, kind, self.inp.seed, cnum, entity, self.registry)
 
     # --- r12 22.7a: the hook P3-06's flight calls (beside note_reduction and ruin)
-    def lie_low(self, civ, until_year):
-        """PeoplesSubsystem::lie_low: civ founds nothing while Y < until_year (the latest call wins)."""
+    def lie_low(self, civ, settlement, until_year):
+        """PeoplesSubsystem::lie_low (r15 22.7a): records the latest (refuge, until) of civ (a later call replaces
+        it)."""
         self.low_until[civ] = until_year
+        self.low_refuge[civ] = settlement
 
-    def lying_low(self, cid):
-        return FLAGS["lie_low"] and self.year < self.low_until.get(cid, self.year)
+    def lying_low(self, cid, year=None):
+        """r15 22.7a, P3-06 r17 22.3: the one predicate. True when cid has a record, year < until, and the refuge
+        h is standing and owned by cid (read in State at the call: changes of status and owner are immediate,
+        P3-04 6.2). year: the step's year (a quiet step's start), default self.year."""
+        if not FLAGS["lie_low"] or cid not in self.low_until:
+            return False
+        y = self.year if year is None else year
+        if not (y < self.low_until[cid]):
+            return False
+        h = self.stl(self.low_refuge[cid])
+        return self.standing(h) and h["owner_civ"] == cid
 
     # --- r12 22.2: the cause memory
     def recent(self, e):
@@ -1735,18 +1747,18 @@ class World(pe.World):
         self.begin()          # Q5
         self.begin()          # Q6
         self.quiet_used = None
-        self.quiet_eras(start, last)
+        self.quiet_eras(start, last, eng_run.assured(start, length, phase_end))
         self.bookkeeping(start, phase_end, last)
         if phase_end:
             self.open_era = {}
         self.check_state()
 
-    def quiet_eras(self, start, last):
+    def quiet_eras(self, start, last, assured=None):
         """P3-04 6.6 (Q6). r10 (FLAGS["quiet"]): an event charged to the civilization does not close its era,
         so it has one era per quiet phase row; before r10 a charged civilization's era was closed. From 0.19.0
         (P3-04 r12 20.1, pe.QUIET_R12) one world-level quiet_stretch per quiet phase row instead."""
         if pe.QUIET_R12:
-            self.quiet_stretch(start, last)
+            self.quiet_stretch(start, last, assured=assured)
             return
         for civ in self.civs:
             if civ["ended_year"] is not None:
@@ -3549,7 +3561,7 @@ def check_units_r12(c):
     w.draw = lambda stream, a, b, k: (draws.append((w.year, stream)) or real(stream, a, b, k))
     Yl = 1000
     w.year = Yl
-    w.lie_low(civ, Yl + 300)
+    w.lie_low(civ, s, Yl + 300)
     hunger0 = w.hunger.get(civ)
     for yr in (Yl, Yl + 150, Yl + 299):
         w.year = yr
@@ -3570,9 +3582,62 @@ def check_units_r12(c):
     w.foundings(quiet=False)
     c.eq("22.8.4a the first founding chance at Y + 300", [x for x in draws if x[1] == "hist.peoples.found"],
          [(Yl + 300, "hist.peoples.found")])
-    w.lie_low(civ, Yl + 400)
-    w.lie_low(civ, Yl + 350)
+    w.lie_low(civ, s, Yl + 400)
+    w.lie_low(civ, s, Yl + 350)
     c.eq("22.8.4a a later call replaces the year", w.low_until[civ], Yl + 350)
+    # r15 (P3-06 r17 22.2, 22.3): an orc refuge's 100 years; the refuge ruined, or owned by another civilization,
+    # before its year while the civilization stands elsewhere: foundings resume in the next step
+    for how in ("orc", "ruined", "passed", "ruined-quiet"):
+        races = ("orc", "human") if how == "orc" else ("human", "elf")
+        rc = 6 if how == "orc" else HUMAN   # orc: race order 6
+        w = r6_world(races=races, regions=big + [dict(x_min=0, x_max=0)], peoples=dict(found_rate_permille=1000))
+        civ = r6_civ(w, rc)
+        other = r6_civ(w, rc)
+        home = r6_stl(w, civ, 1, CITY, 30000, 10, 10)     # stands elsewhere
+        h = r6_stl(w, civ, 1, VILLAGE, 300, 40, 40)       # the refuge
+        r6_stl(w, other, 1, VILLAGE, 300, 50, 50)
+        draws = []
+        real = w.draw
+        w.draw = lambda stream, a, b, k, w=w, draws=draws, real=real: (draws.append((w.year, stream, a)) or
+                                                                     real(stream, a, b, k))
+        until = Yl + (100 if how == "orc" else 300)
+        w.year = Yl
+        w.lie_low(civ, h, until)
+        found = lambda: [x for x in draws if x[1] == "hist.peoples.found" and x[2] == civ]  # noqa: E731
+        w.year = Yl + 50
+        w.serial += 1
+        w.foundings(quiet=False)
+        c.eq("22.8.4a r15 %s: lying low at Y + 50" % how, (w.lying_low(civ), found()), (True, []))
+        if how == "orc":
+            w.year = Yl + 99
+            w.serial += 1
+            w.foundings(quiet=False)
+            c.eq("22.8.4a r15 orc: lying low at Y + 99", (w.lying_low(civ), found()), (True, []))
+            w.year = Yl + 100
+            w.serial += 1
+            w.foundings(quiet=False)
+            c.eq("22.8.4a r15 orc: the first founding chance at Y + 100", (w.lying_low(civ), found()),
+                 (False, [(Yl + 100, "hist.peoples.found", civ)]))
+            continue
+        if how.startswith("ruined"):
+            w.stl(h)["status"] = RUINED
+            w.stl(h)["owner_civ"] = 0
+        else:
+            w.stl(h)["owner_civ"] = other
+        c.eq("22.8.4a r15 %s: no longer lying low, though Y < until" % how, w.lying_low(civ), False)
+        c.eq("22.8.4a r15 %s: the new owner does not lie low" % how, w.lying_low(other), False)
+        w.year = Yl + 51
+        w.serial += 1
+        if how == "ruined-quiet":
+            w.years = 25
+        w.foundings(quiet=how == "ruined-quiet")
+        w.years = 1
+        c.eq("22.8.4a r15 %s: the founding chance is taken in the next step" % how, found(),
+             [(Yl + 51, "hist.peoples.found", civ)])
+        c.true("22.8.4a r15 %s: the record stays (the year and refuge)" % how,
+               (w.low_until[civ], w.low_refuge[civ]) == (until, h))
+        _ = home
+    c.eq("22.8.4a r15 a civilization never given lie_low does not lie low", w.lying_low(99), False)
     # 22.7: the one predicate
     w = r6_world(races=("human", "elf"), regions=big)
     a = r6_civ(w, HUMAN)

@@ -296,7 +296,7 @@ TEST_CASE("P3-05 r12 22.7a, 22.8 item 4a: after lie_low(c, Y + 300) c founds no 
     PeoplesConfig* p = &cfg;
     cfg.add_after({Step::t6}, [&](eng::StepContext& ctx) {
         if (ctx.year() == 1) {
-            p->peoples.sub->lie_low(1, 301);
+            p->peoples.sub->lie_low(1, 1, 301)  /* r15: the refuge is settlement 1 */;
             ctx.state().set_population(1, 20000);  // the pressure far above found_pressure_permille
         }
     });

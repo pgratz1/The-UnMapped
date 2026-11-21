@@ -1,6 +1,6 @@
 # P3-10 Wording and site follow-ups
 
-Status: **decided, ready for implementation (2026-11-20)**; corrected after the implementation, r1 (2026-11-21, section 10c); text corrected after the integration, r2 (2026-11-21, section 10d); items 12 to 17 added the same day after Paul's decisions on the P3-09 review and on question 7 (section 10b): Paul accepted every recommendation of section 10 ("Yes I agree with the recommendations on all five"; `docs/design/proposals.md`, "Paul's decision of 2026-11-20: the P3-10 questions go with their recommendations"), and the lead accepted the grammar extension (question 3). Draft (written by the spec writer on `p3/10-spec`, cut from `origin/p3/09-int` with `origin/p3/09-audit` and `origin/main` merged). Phase P3 History core, a change spec after P3-09 (conflict balance, generator 0.18.0, implemented and in validation) and before P3-07 (the history report, specified, not implemented). Generator **0.19.0**. **No schema change**: schema stays 7; the change appends two event kinds (37, 38), stops writing two (4, 12), changes templates, saliences and lists (data), adds three race fields and two tuning fields (data), and extends the template grammar with one placeholder that was invalid before, as P3-08 did (section 8).
+Status: **decided, ready for implementation (2026-11-20)**; corrected after the implementation, r1 (2026-11-21, section 10c); text corrected after the integration, r2 (2026-11-21, section 10d); **second round r3 (2026-11-21, section 12, items 18 to 26): the world critic failed the change on two conflict rules; the lead's rulings R1 to R5, R1 and R2 awaiting Paul's confirmation**; items 12 to 17 added the same day after Paul's decisions on the P3-09 review and on question 7 (section 10b): Paul accepted every recommendation of section 10 ("Yes I agree with the recommendations on all five"; `docs/design/proposals.md`, "Paul's decision of 2026-11-20: the P3-10 questions go with their recommendations"), and the lead accepted the grammar extension (question 3). Draft (written by the spec writer on `p3/10-spec`, cut from `origin/p3/09-int` with `origin/p3/09-audit` and `origin/main` merged). Phase P3 History core, a change spec after P3-09 (conflict balance, generator 0.18.0, implemented and in validation) and before P3-07 (the history report, specified, not implemented). Generator **0.19.0**. **No schema change**: schema stays 7; the change appends two event kinds (37, 38), stops writing two (4, 12), changes templates, saliences and lists (data), adds three race fields and two tuning fields (data), and extends the template grammar with one placeholder that was invalid before, as P3-08 did (section 8).
 
 This spec is short on purpose. It lists every item, names the stage-spec section that holds its normative text (each stage spec stays the single source for its stage, amended with a new revision, a bounded new section and a revision note; nothing is renumbered), gives the order of implementation, the effect on output and goldens, the tests to add, the statistics to re-measure and the questions for the owner. Every figure is stated with the worlds it was measured on (section 6); figures measured at 0.17.0 are marked *(0.17.0)*, since P3-09 may move them.
 
@@ -29,6 +29,7 @@ The world critic's review of P3-08 (`docs/reviews/p3-08-followups-world-critic.m
 | 17 | Orcs awaken with a quarrel (Paul's decision of 2026-11-20 on question 7) | Race field `awakening_quarrel` (orc 1): at its awakening a civilization of such a race gets strain at `quarrel_strain` (600, r1) toward the nearest standing settlement's owner of another race it can come to war with (disposition below `border_friction`) (within `enmity_hops` first, then by distance; ties by id; no draw); the existing claim rules do the rest; pending until another people stands; silent until the claim | P3-06 r14 21.12; P3-01 r11 3.5 | yes |
 | 16 | A hidden refuge lies low (F6; decision 6) | While its refuge is hidden a civilization founds no colony (peoples hook `lie_low`) and raises no claim, strain or declaration; it still defends; its refuge grows to its share and waits | P3-06 r14 21.10; P3-05 r12 22.7a | yes |
 | 11 | Left from earlier | Inline figures to golden files (4 items 2 and 3); kind 16 and kind 31's "were lost" can still occur and are kept (P3-05 r12 22.6) | 4 below; P3-05 r12 22.6 | no |
+| 18–26 | Second round (r3): the world critic's F1 to F4, validation F6, audit A2 and A3 | Section 12 | Section 12 | yes |
 
 ## 3. Order of implementation
 
@@ -219,6 +220,92 @@ Lead rulings and agreed facts at 0.19.0, text only; each in the stage spec named
 2. **Invariant (16) restated** (P3-06 r16 21.12 item 5): the claim against the quarrel neighbour falls within the first phase of contact with that neighbour, unless the claim pass refuses it (weary or out-of-bounds regions; the neighbour chosen by distance need not be the first people met).
 3. **T8 is a reported statistic, not a merge condition** (the lead's ruling; P3-06 r16 21.9, 21.12; section 9 item 12): measured with r15, 32 of 40 worlds with orcs have an orc declaration (80%; 72% with r14's rule, 77% at 0.18.0); T5 met, 42 won, 36 lost. Of the 8 without: 4 have only goblins within reach (the nearest eligible people 170 to 260 cells from the orc capital, never in contact in the orc age), 3 hold a claim whose odds reach the minimum but 7.2's largest-strain choice declares elsewhere, 1 never reaches its odds minimum. **Question to Paul (non-blocking):** may orcs with only goblins near them stay at peace?
 4. **Text fixes:** P3-06 21.5 item 1 (2 dead over 1000, 1000, 10 is (2, 0, 0)); P3-05 r14 22.1 (kind 37's `{reached?| in all| in all}`); P3-02 r12 (four `whole` entries removed); section 5 and P3-04 r14 20.6 item 4 (the `phase` rows' `trigger_event` moves with renumbered event ids); P1-06 r9 15.6 (`Thornholt` then `Elmholt`); section 4 item 1 (the slow CI time as measured, 18.4 and 30.4 minutes; `SLOW_REST` and the `<preset>-slow` presets).
+
+## 12. Second round after the world critic (r3, 2026-11-21; generator stays 0.19.0)
+
+**Why.** The world critic failed the change on two conflict rules (`docs/reviews/p3-10-followups-world-critic.md`). **F1**: items 15 and 17 weakened the orcs. At 1024 defaults orcs end with one standing settlement in 21 of 100 worlds (0.18.0: 7). They do nothing after 5750 in 9 worlds (0.18.0: 0). T5 holds at defaults (95 won, 77 lost) and fails in `calm` (8 / 18) and `turbulent` (8 / 20). **F2**: item 12's aim lets a war over a region the attacker already holds be won at its first check, with no battle (22 such wins at defaults, 0.18.0: 2). Validation (`docs/reviews/p3-10-followups-validation.md`) found the same orc chain (its F1), and asked for the weary bound to be stated (F6) and for its typical ranges to be adopted (11 item 4). The audit (`docs/reviews/p3-10-followups-audit.md`) left advisories A2 (two lying-low predicates) and A3 (the quarrel strain above `strain_max`). The lead ruled R1 to R5. **R1 and R2 change conflict rules Paul decided**, so they are recorded as lead decisions awaiting Paul's confirmation (`docs/design/proposals.md`, "History: the P3-10 orc and aim rulings (lead, awaiting Paul)", status open). The change is still unmerged: `GENERATOR_VERSION` stays **0.19.0**, every golden is re-recorded once more, and there is no schema change (7), no new event kind, no new stream and no new draw.
+
+### 12.1 Items
+
+| # | Item (source) | Resolution, in short | Normative text | Changes worlds |
+| --- | --- | --- | --- | --- |
+| 18 | The quarrel waits for a second settlement (critic F1; R1 (a)) | The awakening-quarrel claim of a civilization, recognised by the pair (a, its quarrel neighbour) until their first war, is **held back** while the civilization has fewer than `quarrel_min_settlements` (new `history.conflict` field, **2**) standing settlements: no declaration and no draw when 7.2 chooses it, no tension from it. Other claims are unaffected | `docs/specs/p3-06-expansion-conflict.md` r17 22.1; `docs/specs/p3-01-history-data-settings.md` r13 3.6 | yes |
+| 19 | Hidden years per race (critic F1; R1 (b)) | Race field `hidden_years` (**orc 100**, others 300) replaces `history.conflict.hidden_years`; a broken orc realm is found and acts again inside its age | P3-06 r17 22.2; P3-01 r13 3.6 | yes |
+| 20 | Orc targets (R1) | T5 kept; **T9**: orcs with one standing settlement at the present in at most 10 of 100 default worlds; **T10**: orcs that do not act after E − 250 (5750) in at most 2 of 100; T5, T9, T10 reported for `calm` and `turbulent` | P3-06 r17 22.4 | no (targets) |
+| 21 | Aim over land the attacker holds (critic F2; R2) | Cause: a gap, not a defect (22.5). Aim needs G held by the attacker **and no standing settlement of the defender in G**, never true at the declaration; a war won by the attacker over a region it holds passes the defender's settlements there (the **foothold cession**, a `region_ceded` with no change of the region's owner); claims unchanged; invariant (8) restated, new (17); quick aim wins at most 3 in 100 default worlds | P3-06 r17 22.5 | yes |
+| 22 | Names (critic F4; R4) | `cum`, `fass`, `pee`, `poo`, `tit` in `crude.anywhere` (the redundant entries removed); no name with three equal letters in a row | `docs/specs/p3-02-names.md` r13 13 | yes |
+| 23 | Short quiet stretches (critic F3; R3) | No `quiet_stretch` for a stretch shorter than `quiet_min_years` (new `history.engine` field, **50**), decided in the stretch's first step from what Q5 and the schedule already know; check `engine_quiet_min` | `docs/specs/p3-04-simulation-engine.md` r15 20.1 item 1a | yes |
+| 24 | One definition of lying low (audit A2; R5) | The latest flight's refuge stands, is the civilization's, and its hidden years have not ended; held by peoples (`lie_low(civ, settlement, until)`, `lying_low`), called by conflict; invariant (15) restated | P3-06 r17 22.3; `docs/specs/p3-05-peoples.md` r15 22.7a | rarely |
+| 25 | `quarrel_strain` ≤ `strain_max` (audit A3; R5) | Named check `conflict_quarrel_strain_max` | P3-06 r17 22.7; P3-01 r13 3.6 | no |
+| 26 | Text (validation F6 and 11 item 4; R5) | 21.7's weary bound is exclusive; 15.5's typical ranges are 0.19.0 r16's (validation 5.8), to be re-measured after this round | P3-06 r17 22.6, 22.8 | no |
+
+### 12.2 Order of implementation
+
+One branch from the current P3-10 tip (`origin/p3/10-final`), one engineer and one test writer working from the stage specs separately. Every golden is re-recorded once, in the last step.
+
+| Step | What | Spec |
+| --- | --- | --- |
+| 0 | A3's check (no output change; byte-identical) | P3-06 22.7 |
+| 1 | Data: race `hidden_years`, `history.conflict` without `hidden_years` and with `quarrel_min_settlements`, `history.engine.quiet_min_years`, the filter edits; in `game/data` and both fixture roots | P3-01 3.6; P3-04 4.1; P3-02 13.1 |
+| 2 | Names: the triple-letter rule | P3-02 13.2 |
+| 3 | Engine: 20.1 item 1a and `engine_quiet_min` | P3-04 20.1 |
+| 4 | Lying low: the peoples record and predicate, conflict calling it; `hidden_until` from the founder's race | P3-05 22.7a; P3-06 22.2, 22.3 |
+| 5 | The quarrel record and the hold-back | P3-06 22.1 |
+| 6 | Aim and the foothold cession | P3-06 22.5 |
+| 7 | Goldens, README hash, `docs/specs/schema.md` unchanged (no kind) | 12.4 |
+
+### 12.3 Per role
+
+- **Engineer.**
+  - `conflict.cpp`: `quarrel_with_` (set beside the strain seeding in `awakening_quarrels`; erased in `declare` for the pair in either direction and in housekeeping when a side ends); the hold-back in `declarations` (after the `declare_min` test, before `odds_of`) and in `best_claim`; the `conflict_quarrel_strain_max` seam guard; `lying_low` delegating to peoples.
+  - `conflict_war.cpp`: `end_checks` item 1 with the defender's standing settlements in G; `end_war`'s cost order of 22.5 item 3, with the foothold cession through the 20.27 transfer and without `set_region_owner`; `flee` taking `hidden_years` from the founder's race and calling `lie_low(civ, h, until)`.
+  - `peoples.cpp` and `peoples.hpp`: the (h, until) record, `lying_low`, the 9.3 skip reading it.
+  - `engine.cpp`: the assured length in Q6, the decided-row mark.
+  - `names.cpp`: the triple test in the attempt's validity.
+  - `kinds_history.cpp`: race `hidden_years`; `history.conflict` without `hidden_years` and with `quarrel_min_settlements` and the check; `history.engine.quiet_min_years` and `engine_quiet_min`.
+  - Data: `game/data/races/*.toml`, `game/data/history/conflict.toml`, `engine.toml`, `game/data/name_filters/*.toml`, the copies under `worldgen/tests/data/geo/` and `geo-small/`.
+  - Defaults of hand-made tuning built in code: `quarrel_min_settlements` 1, race `hidden_years` 300, `quiet_min_years` 0, so each new rule is off.
+  - Audit A1 (the hop row held across calls in `awakening_quarrels`) may be answered by a copy while the code is open; it changes no output.
+- **Test writer** (from the specs, not the C++).
+  - `p3_conflict_reference.py`: P3-06 22.1 to 22.5; `check_invariants` with (8) restated, (15) restated, (17), and the quick-aim-win count and foothold cessions in its war lines.
+  - `p3_peoples_reference.py`: 22.7a r15.
+  - `p3_engine_reference.py`: P3-04 20.1 item 1a.
+  - `p3_names_reference.py`: P3-02 13.
+  - `p3_data_reference.py`: the fields, the removed key, the check, the list edits.
+  - Tests: P3-06 22.10, P3-05 22.8 item 4a, P3-04 20.6 item 00, P3-02 13.3, P3-01 3.6.
+  - Goldens: `p3-02-names.txt`, `p3-03-chronology.txt` (gods), `p3-04-engine.txt` (the `ForcedTension` stub cases), `p3-05-peoples.txt`, `p3-06-conflict.txt`, `p3-01-data.txt`.
+- **Validation.** The sweep of section 9 at 0.19.0 r3. Report:
+  - targets T5, T9, T10 at 1024 defaults, and T5, T9, T10 in `calm` and `turbulent` (reported);
+  - quick aim wins (target at most 3 in 100), foothold cessions, wars over a region the attacker held at the declaration by outcome;
+  - every `quiet_stretch` with `years` ≥ 50, and the number of quiet lines;
+  - names: filtered and triple-letter redraws per culture, no fallback;
+  - invariants (8), (13), (15), (17);
+  - the earlier targets T1–T8 and section 9's statistics;
+  - the typical ranges of P3-06 15.5 re-measured;
+  - the three claims of 21.12 item 3a's kind and the one-settlement orc realms' declarations on claims other than their quarrel (22.1's risk).
+
+  A missed target goes to the lead before the merge; validation changes no tuning on its own judgement (P3-06 22.4).
+
+### 12.4 Effect on output and goldens
+
+Every world file changes again: the race and tuning fields and the filter lists change `content_hash`, the P0 empty worlds included. Golden files as in section 5, all re-recorded by the validation specialist and the test writer's references after the cross-preset comparison:
+- `p3-02-names.txt`: the names the new filter entries and the triple rule reject.
+- `p3-03-chronology.txt`: god names only.
+- `p3-04-engine.txt`: the `ForcedTension` cases lose their quiet lines under 50 years, and the event ids that follow renumber; the plain stub cases' rows are long and keep theirs.
+- `p3-05-peoples.txt`, `p3-06-conflict.txt`: every history line.
+- `p1-06-regions.txt` and the geography goldens do not move.
+
+### 12.5 Readings chosen (for the lead)
+
+1. **R1 (a) holds back the quarrel claim only**, as the lead intended. It is recognised by the pair (a, b) from the quarrel's setting until the first war between them, whoever declares it, and it is treated where 20.6 item 3's odds minimum is (the declaration chosen by the largest strain, the tension, hence the flare pair). The risk: a one-settlement realm may still declare on another claim of larger strain. The next lever, holding back every declaration while the quarrel is open, is a rule change (P3-06 22.4).
+2. **The counts of R1** count all of a civilization's visible standing settlements, hidden ones included; a colony founded in the same T2 counts from the next step.
+3. **T10's window** is the critic's "after 5750", stated as Y > E − 250, so that it is defined at any span; the targets are set at the default span only.
+4. **R2: "resolved by passing", not "not raised"**: claims on a held region stay (P3-06 22.5 gives the counts and the reason: footholds would otherwise be permanent). The aim condition is stated as "the attacker holds G and the defender has no standing settlement in G". This equals "the goal changed hands to the attacker during the war": the condition is false at every declaration, and it counts a goal the attacker already held as having changed hands once the defender's last settlement there is gone.
+5. **The foothold cession** reuses kind 29 `region_ceded` with no change of the region's owner. No kind or schema change. Its sentence reads "X ceded R to Y", and its `region_control` row is unchanged.
+6. **R4's `cum`** goes in `crude.anywhere` for every culture: the kind has no per-culture lists, and only human names reach the fragment (P3-02 13.1 says what was checked). The triple-letter rule covers the names `make_name` draws (gods, civilizations, settlements), not region names, which never have one (18,507 checked).
+7. **R3** is decided in the stretch's first step from what is known there; `engine_quiet_min` (`quiet_min_years` ≤ 2 × `quiet_step_years`) keeps that exact. No event is removed or moved.
+8. **A2's definition** takes the latest flight of the civilization. The old conflict predicate's case of a hidden refuge passed to another civilization no longer makes the new owner lie low.
+9. **F6**: exclusive, as the implementation, the reference and validation read it.
 
 ## 11. Proposals
 

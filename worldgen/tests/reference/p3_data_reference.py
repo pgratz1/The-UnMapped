@@ -339,7 +339,9 @@ CONFLICT_018 = tuple((n, CONFLICT_RECORDS.get(n, INT)) for n, _, _ in CONFLICT_R
 assert len(CONFLICT_018) == 57 and CONFLICT_018[_i][0] == "refuge_flight"
 CONFLICT_CHECKS_018 = CONFLICT_CHECKS + (("conflict_enmity_hops", "enmity_hops must not be below march_hops"),)
 # P3-06 r15 21.12 item 2 (0.19.0): after conflict_enmity_hops.
-CONFLICT_CHECKS_019 = CONFLICT_CHECKS_018 + (("conflict_quarrel_strain", "quarrel_strain must not be below claim_strain"),)
+CONFLICT_CHECKS_019 = CONFLICT_CHECKS_018 + (("conflict_quarrel_strain", "quarrel_strain must not be below claim_strain"),
+                                             # P3-06 r17 22.7 (P3-10 r3, audit A3)
+                                             ("conflict_quarrel_strain_max", "quarrel_strain must not be above strain_max"))
 
 
 def conflict_ranges():
@@ -360,6 +362,8 @@ def conflict_check_messages(t):
         out.append(CONFLICT_CHECKS_018[2][1])
     if "quarrel_strain" in t and not (t["quarrel_strain"] >= t["claim_strain"]):
         out.append(CONFLICT_CHECKS_019[3][1])
+    if "quarrel_strain" in t and not (t["quarrel_strain"] <= t["strain_max"]):
+        out.append(CONFLICT_CHECKS_019[4][1])
     return out
 
 # P3-01 3.
@@ -1109,13 +1113,16 @@ CELL_WEIGHTS_NEUTRAL_019 = (0, 0, 0, 1000, 1000)
 RACE_FIELDS_019_VALUES = {   # (odds_min_permille, awakening_quarrel), P3-01 r11 3.5
     "elf": (700, 0), "goblin": (700, 0), "dwarf": (700, 0), "faerie": (700, 0), "human": (700, 0), "orc": (500, 1),
 }
-RACE_FIELDS_019 = (("odds_min_permille", 0, 1000), ("awakening_quarrel", 0, 1))
+# P3-10 second round (r3; P3-01 r13 3.6, P3-06 r17 22.2): race field hidden_years after awakening_quarrel,
+# orc 100, others 300.
+HIDDEN_YEARS_019 = {"elf": 300, "goblin": 300, "dwarf": 300, "faerie": 300, "human": 300, "orc": 100}
+RACE_FIELDS_019 = (("odds_min_permille", 0, 1000), ("awakening_quarrel", 0, 1), ("hidden_years", 0, 10000))
 CELL_FIELDS_019 = (("inland", 0, 1000), ("port", 0, 1000), ("habitability", 0, 1000))
 RACE_CELL_WEIGHTS_019 = REC(fields("ore:I height:I inland:I port:I habitability:I"))
 _i = [n for n, _ in RACE_018].index("home_defense_permille") + 1
 RACE_019 = tuple((n, RACE_CELL_WEIGHTS_019 if n == "cell_weights" else t) for n, t in RACE_018[:_i]) + \
-    (("odds_min_permille", INT), ("awakening_quarrel", INT)) + RACE_018[_i:]
-assert RACE_019[_i + 2][0] == "settlement_kinds" and len(RACE_019) == len(RACE_018) + 2
+    (("odds_min_permille", INT), ("awakening_quarrel", INT), ("hidden_years", INT)) + RACE_018[_i:]
+assert RACE_019[_i + 3][0] == "settlement_kinds" and len(RACE_019) == len(RACE_018) + 3
 
 
 def _race_019(name, text):
@@ -1128,22 +1135,25 @@ def _race_019(name, text):
         text = _edit(text, "\ncoast = 0\n", "\ncoast = -500\n")
     q, aq = RACE_FIELDS_019_VALUES[rid]
     line = [l for l in text.splitlines(True) if l.startswith("home_defense_permille = ")][0]
-    return _edit(text, line, line + "odds_min_permille = %d\nawakening_quarrel = %d\n" % (q, aq))
+    return _edit(text, line, line + "odds_min_permille = %d\nawakening_quarrel = %d\nhidden_years = %d\n"
+                 % (q, aq, HIDDEN_YEARS_019[rid]))
 
 
 RACE_FILES_019 = {n: _race_019(n, t) for n, t in RACE_FILES_018.items()}
 
 CONFLICT_NEW_019 = (("search_weary_years", 0, 10000), ("search_repeat_salience", 0, 100),
-                    ("quarrel_strain", 0, 5000))   # P3-06 r15 21.12 item 2, P3-01 r12 3.5 (P3-10 r1)
-_rows = [r for r in CONFLICT_RANGES_018 if r[0] != "odds_min"]
+                    ("quarrel_strain", 0, 5000),   # P3-06 r15 21.12 item 2, P3-01 r12 3.5 (P3-10 r1)
+                    ("quarrel_min_settlements", 0, 1000))   # P3-06 r17 22.1 item 4 (P3-10 r3)
+# r3 (P3-06 r17 22.2): hidden_years leaves history.conflict for the race.
+_rows = [r for r in CONFLICT_RANGES_018 if r[0] not in ("odds_min", "hidden_years")]
 _i = [n for n, _, _ in _rows].index("search_years") + 1
 CONFLICT_RANGES_019 = tuple(_rows[:_i]) + CONFLICT_NEW_019 + tuple(_rows[_i:])
 CONFLICT_019 = tuple((n, CONFLICT_RECORDS.get(n, INT)) for n, _, _ in CONFLICT_RANGES_019)
 assert len(CONFLICT_019) == 59 and CONFLICT_019[_i][0] == "search_weary_years"
-_co = _edit(CONFLICT_FILE_018["conflict.toml"], "odds_min = 700\n", "")
+_co = _edit(_edit(CONFLICT_FILE_018["conflict.toml"], "odds_min = 700\n", ""), "hidden_years = 300\n", "")
 CONFLICT_FILE_019 = {"conflict.toml": _edit(_co, "search_years = 3\n",
                                             "search_years = 3\nsearch_weary_years = 500\nsearch_repeat_salience = 15\n"
-                                            "quarrel_strain = 600\n")}
+                                            "quarrel_strain = 600\nquarrel_min_settlements = 2\n")}
 
 PEOPLES_NEW_019 = (("cause_memory_years", 0, 100000), ("inland_cap", 1, 256))
 _i = [n for n, _, _ in PEOPLES_RANGES_018].index("civs_extra_max") + 1
@@ -1194,11 +1204,36 @@ for _k, (_old, _new) in TEMPLATES_019.items():
 _last = [l for l in _re.splitlines(True) if '"refuge_held"' in l][0]
 _re = _edit(_re, _last, _last + KIND37_ENTRY + KIND38_ENTRY)
 REPORT_FILE_019 = {"report.toml": _re}
-HISTORY_FILES_019 = dict(CHRONOLOGY_FILE, **CONFLICT_FILE_019, **ENGINE_FILE, **PEOPLES_FILE_019, **REPORT_FILE_019)
+# P3-04 r15 4.1 (P3-10 r3): history.engine gains quiet_min_years (int(0, 400), shipped 50) after quiet_events_max,
+# as the table and the listing place it; named check engine_quiet_min between engine_simulated_bounds and
+# engine_phase_budget.
+ENGINE_019 = ENGINE[:2] + (("quiet_min_years", INT),) + ENGINE[2:]
+assert ENGINE_019[1][0] == "quiet_events_max" and ENGINE_019[3][0] == "simulated_min_permille"
+ENGINE_FILE_019 = {"engine.toml": _edit(ENGINE_FILE["engine.toml"], "quiet_events_max = 3\n",
+                                        "quiet_events_max = 3\nquiet_min_years = 50\n")}
+ENGINE_CHECKS_019 = (
+    ("engine_simulated_bounds", "simulated_min_permille must not be above simulated_max_permille"),
+    ("engine_quiet_min", "quiet_min_years must not be above 2 x quiet_step_years"),
+)
+
+
+def engine_check_messages(t):
+    """The first two named checks of P3-04 4.1 (r15) that fail for a history.engine table (engine_phase_budget is
+    the engine reference's)."""
+    out = []
+    if not (t["simulated_min_permille"] <= t["simulated_max_permille"]):
+        out.append(ENGINE_CHECKS_019[0][1])
+    if "quiet_min_years" in t and not (t["quiet_min_years"] <= 2 * t["quiet_step_years"]):
+        out.append(ENGINE_CHECKS_019[1][1])
+    return out
+
+
+HISTORY_FILES_019 = dict(CHRONOLOGY_FILE, **CONFLICT_FILE_019, **ENGINE_FILE_019, **PEOPLES_FILE_019,
+                         **REPORT_FILE_019)
 SPEC_FILES_019 = {"race": RACE_FILES_019, "culture": CULTURE_FILES_017, "history": HISTORY_FILES_019}
 
 KINDS_019 = dict(KINDS_018)
-KINDS_019["history"] = ("history", {"chronology": CHRONOLOGY, "conflict": CONFLICT_019, "engine": ENGINE,
+KINDS_019["history"] = ("history", {"chronology": CHRONOLOGY, "conflict": CONFLICT_019, "engine": ENGINE_019,
                                     "peoples": PEOPLES_019, "report": REPORT})
 KINDS_019["race"] = ("races", RACE_019)
 
@@ -1246,6 +1281,13 @@ NAME_FILTER_EDITS_019 = {
     ("words", "anywhere"): (["dead", "flop", "gramma", "hack", "whop"], []),
     ("words", "at_start"): (["gord"], []),
     ("words", "whole"): ([], ["flop", "gord", "hack", "suck"]),
+}
+# P3-02 r13 13.1 (P3-10 second round, r3), applied after r10's edits: (file, list) -> (added, removed).
+NAME_FILTER_EDITS_019_R13 = {
+    ("crude", "anywhere"): (["cum", "fass", "pee", "poo", "tit"], ["poop", "tits", "titt"]),
+    ("crude", "at_start"): ([], ["cum", "pee", "poo", "tit"]),
+    ("slurs", "at_start"): ([], ["poof"]),
+    ("words", "whole"): ([], ["teepee", "toupee"]),
 }
 
 
@@ -1349,10 +1391,23 @@ def placenames_019(files):
     return sorted(out.items(), key=lambda kv: kv[0].encode())
 
 
-def name_filters_019(files):
-    """The 0.19.0 name_filters/ files from the 0.18.0 ones (P3-02 r10 12.1)."""
+def name_filters_r16(files):
+    """True when a name_filters/ directory holds the 0.19.0 files of the first P3-10 round (r10 applied, r13 not:
+    `pee` is still a crude.at_start entry)."""
+    for name, text in files:
+        d = tomllib.loads(text).get("name_filter", {})
+        if "crude" in d:
+            return "pee" in d["crude"]["at_start"]
+    return False
+
+
+def name_filters_019(files, edits=None):
+    """The 0.19.0 name_filters/ files from the 0.18.0 ones (P3-02 r10 12.1, then r13 13.1); with `edits`, only
+    those edits."""
+    if edits is None:
+        return name_filters_019(name_filters_019(files, NAME_FILTER_EDITS_019), NAME_FILTER_EDITS_019_R13)
     out = dict(files)
-    for (did, f), (add, rem) in NAME_FILTER_EDITS_019.items():
+    for (did, f), (add, rem) in edits.items():
         name = did + ".toml"
         cur = tomllib.loads(out[name])["name_filter"][did][f]
         assert all(w not in cur for w in add) and all(w in cur for w in rem), (did, f)
@@ -1385,6 +1440,9 @@ def copied_files_019(path, directory, files):
         if pre(files):
             PRE_015_USED.add(path)
             return placenames_019(files) if directory == "placenames" else name_filters_019(files)
+        if directory == "name_filters" and name_filters_r16(files):   # P3-10 r3: the first round's files
+            PRE_015_USED.add(path)
+            return name_filters_019(files, NAME_FILTER_EDITS_019_R13)
         return files
     if not pre(files):   # an earlier version served over 0.19.0 files on disk
         if os.path.normpath(path).startswith(os.path.normpath(REPO)):
@@ -1533,6 +1591,8 @@ def disk_version(path, kind):
         return "0.17.0"
     if kind != "culture" and pre_019(path, kind):
         return "0.18.0"
+    if kind != "culture" and pre_019_r17(path, kind):
+        return "0.19.0-r16"   # the first P3-10 round's files: matches no served version
     return "0.19.0"
 
 
@@ -1557,6 +1617,21 @@ def pre_019(path, kind):
                 or "inland_cap" not in texts.get("peoples.toml", "")
                 or "quiet_stretch" not in texts.get("report.toml", ""))
     return any("odds_min_permille" not in t for t in texts.values())
+
+
+def pre_019_r17(path, kind):
+    """A race or history directory of the first P3-10 round (P3-10 r3 replaces it): no `hidden_years` in a race
+    file, `hidden_years` still in conflict.toml, no `quarrel_min_settlements` or no `quiet_min_years`."""
+    texts = {}
+    for n in os.listdir(path):
+        if n.endswith(".toml"):
+            with open(os.path.join(path, n), encoding="utf-8") as f:
+                texts[n] = f.read()
+    if kind == "history":
+        co = texts.get("conflict.toml", "")
+        return ("quarrel_min_settlements" not in co or "\nhidden_years" in co
+                or "quiet_min_years" not in texts.get("engine.toml", ""))
+    return any("hidden_years" not in t for t in texts.values())
 
 
 def pre_018(path, kind):
@@ -1808,7 +1883,7 @@ def check_spec_invariants(c):
     for cid, cu in cultures.items():
         check_record(KINDS["culture"][1], cu, "culture." + cid)
     check_record(CHRONOLOGY, parsed_spec("history")["chronology"], "history.chronology")
-    check_record(ENGINE, parsed_spec("history")["engine"], "history.engine")
+    check_record(KINDS["history"][1]["engine"], parsed_spec("history")["engine"], "history.engine")
     check_record(REPORT, parsed_spec("history")["report"], "history.report")
     check_record(KINDS["history"][1]["peoples"], parsed_spec("history")["peoples"], "history.peoples")
     check_record(KINDS["history"][1]["conflict"], parsed_spec("history")["conflict"], "history.conflict")
@@ -1950,27 +2025,49 @@ def check_spec_019(c, races):
              k: v["coast"] for k, v in races.items() if k != "faerie"})
     c.eq("odds_min_permille, awakening_quarrel (P3-01 r11 3.5)",
          {k: (v["odds_min_permille"], v["awakening_quarrel"]) for k, v in races.items()}, RACE_FIELDS_019_VALUES)
-    c.eq("the two race fields follow home_defense_permille in this order (3.5)",
-         [list(v)[list(v).index("home_defense_permille") + 1:list(v).index("home_defense_permille") + 3]
-          for v in races.values()], [["odds_min_permille", "awakening_quarrel"]] * 6)
+    c.eq("hidden_years (P3-01 r13 3.6: orc 100, others 300)", {k: v["hidden_years"] for k, v in races.items()},
+         HIDDEN_YEARS_019)
+    c.eq("the three race fields follow home_defense_permille in this order (3.5, 3.6)",
+         [list(v)[list(v).index("home_defense_permille") + 1:list(v).index("home_defense_permille") + 4]
+          for v in races.values()], [["odds_min_permille", "awakening_quarrel", "hidden_years"]] * 6)
     co = parsed_spec("history")["conflict"]
     c.ok("history.conflict has no odds_min (3.5)", "odds_min" not in co)
+    c.ok("history.conflict has no hidden_years (3.6)", "hidden_years" not in co)
     i = list(co).index("search_years")
     c.eq("history.conflict: search_weary_years 500, search_repeat_salience 15 (P3-06 r14 21.7), quarrel_strain 600 "
-         "(r15 21.12) after search_years",
-         [(n, co[n]) for n in list(co)[i + 1:i + 4]],
-         [("search_weary_years", 500), ("search_repeat_salience", 15), ("quarrel_strain", 600)])
-    c.eq("history.conflict: capital_sacked_salience follows quarrel_strain", list(co)[i + 4],
+         "(r15 21.12), quarrel_min_settlements 2 (r17 22.1) after search_years",
+         [(n, co[n]) for n in list(co)[i + 1:i + 5]],
+         [("search_weary_years", 500), ("search_repeat_salience", 15), ("quarrel_strain", 600),
+          ("quarrel_min_settlements", 2)])
+    c.eq("history.conflict: capital_sacked_salience follows quarrel_min_settlements", list(co)[i + 5],
          "capital_sacked_salience")
-    c.eq("history.conflict has 59 fields", len(co), 59)
+    c.eq("history.conflict has 59 fields (r17: one out, one in)", len(co), 59)
     c.eq("conflict_quarrel_strain fails below claim_strain (r15 21.12)",
          conflict_check_messages(dict(co, quarrel_strain=co["claim_strain"] - 1)),
          ["quarrel_strain must not be below claim_strain"])
     c.eq("conflict_quarrel_strain passes at claim_strain", conflict_check_messages(dict(co, quarrel_strain=co["claim_strain"])), [])
+    c.eq("conflict_quarrel_strain_max fails with strain_max 500, quarrel_strain 600 (r17 22.7)",
+         conflict_check_messages(dict(co, strain_max=500, quarrel_strain=600, claim_strain=100, declare_min=100,
+                                      declare_span=400)),
+         ["quarrel_strain must not be above strain_max"])
+    c.eq("conflict_quarrel_strain_max passes at 600 and 600",
+         conflict_check_messages(dict(co, strain_max=600, quarrel_strain=600, claim_strain=100, declare_min=100,
+                                      declare_span=500)), [])
     c.eq("history.conflict without odds_min equals 0.18.0's but for the new fields",
-         {k: v for k, v in co.items() if k not in ("search_weary_years", "search_repeat_salience", "quarrel_strain")},
+         {k: v for k, v in co.items() if k not in ("search_weary_years", "search_repeat_salience", "quarrel_strain",
+                                                   "quarrel_min_settlements")},
          {k: v for k, v in tomllib.loads(CONFLICT_FILE_018["conflict.toml"])["history"]["conflict"].items()
-          if k != "odds_min"})
+          if k not in ("odds_min", "hidden_years")})
+    en = parsed_spec("history")["engine"]
+    c.eq("history.engine: quiet_min_years 50 after quiet_events_max (P3-04 r15 4.1)",
+         list(en.items())[1:3], [("quiet_events_max", 3), ("quiet_min_years", 50)])
+    c.eq("history.engine passes its named checks", engine_check_messages(en), [])
+    c.eq("engine_quiet_min passes at 2 x quiet_step_years", engine_check_messages(dict(en, quiet_min_years=50)), [])
+    c.eq("engine_quiet_min fails at 51 with quiet_step_years 25 (P3-04 r15 20.6 item 00)",
+         engine_check_messages(dict(en, quiet_min_years=51)), ["quiet_min_years must not be above 2 x quiet_step_years"])
+    c.eq("history.engine equals 0.18.0's but for quiet_min_years",
+         {k: v for k, v in en.items() if k != "quiet_min_years"},
+         tomllib.loads(ENGINE_FILE["engine.toml"])["history"]["engine"])
     pe = parsed_spec("history")["peoples"]
     j = list(pe).index("civs_extra_max")
     c.eq("history.peoples: cause_memory_years 50 and inland_cap 20 after civs_extra_max (P3-05 r12 22.2, 22.5)",
@@ -2118,9 +2215,9 @@ def check_copied_kinds(c):
                  read_dir_files(path, directory), shipped)
     content = load_root("game/data", ["name_filter"])["name_filter"]
     c.eq("name_filter ids (P3-02 r5 11.2)", [d for d, _ in content], ["crude", "famous", "slurs", "words"])
-    if at_least("0.19.0"):   # P3-02 r10 12.1: crude 70 / 16 / 14, words 5 / 1 / 389
-        sizes = dict(slurs=(33, 19, 6), crude=(70, 16, 14), words=(5, 1, 389), famous=(0, 0, 101))
-        effs = [108, 36, 510]
+    if at_least("0.19.0"):   # P3-02 r10 12.1, r13 13.1: crude 72 / 12 / 14, slurs 33 / 18 / 6, words 5 / 1 / 387
+        sizes = dict(slurs=(33, 18, 6), crude=(72, 12, 14), words=(5, 1, 387), famous=(0, 0, 101))
+        effs = [110, 31, 508]
     else:
         sizes = dict(slurs=(33, 19, 6), crude=(68, 16, 14), words=(0, 0, 393 if at_least("0.18.0") else 647),
                      famous=(0, 0, 101))   # P3-02 r8 11.11 (0.18.0): the short word list, 393 (647 before)
