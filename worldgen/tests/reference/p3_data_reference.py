@@ -1813,7 +1813,7 @@ def check_spec_invariants(c):
         c.ok("history.conflict.%s inside its range" % n, all(lo <= v <= hi for v in vals))
     pe = parsed_spec("history")["peoples"]
     c.eq("history.peoples passes its named checks (P3-05 12.1)", peoples_check_messages(pe), [])
-    for n, lo, hi in (PEOPLES_RANGES_018 if at_least("0.18.0") else
+    for n, lo, hi in (PEOPLES_RANGES_019 if at_least("0.19.0") else PEOPLES_RANGES_018 if at_least("0.18.0") else
                       PEOPLES_RANGES_017 if at_least("0.17.0") else PEOPLES_RANGES):
         vals = list(pe[n].values()) if isinstance(pe[n], dict) else [pe[n]]
         c.ok("history.peoples.%s inside its range" % n, all(lo <= v <= hi for v in vals))
@@ -1823,15 +1823,18 @@ def check_spec_invariants(c):
                "civ_ended", "ruin_faded", "claim", "war_declared", "battle", "battle_at_pass", "siege", "sacked",
                "settlement_captured", "peace", "truce", "region_ceded", "civ_conquered"]
     later = (["settlement_abandoned_to"] if at_least("0.17.0") else []) + \
-        (["refugees_settled", "tribute", "war_won", "search_abandoned", "refuge_held"] if at_least("0.18.0") else [])
+        (["refugees_settled", "tribute", "war_won", "search_abandoned", "refuge_held"] if at_least("0.18.0") else []) + \
+        (["plague_outbreak", "quiet_stretch"] if at_least("0.19.0") else [])
     c.eq("report lists kinds 1-%d in id order (P3-05 11, P3-06 11%s)"
          % (30 + len(later), (", P3-05 r6 11" if at_least("0.17.0") else "") +
             (", P3-06 r9 20.9" if at_least("0.18.0") else "")),
          [e["kind"] for e in parsed_spec("history")["report"]["events"]], kinds30 + later)
     if at_least("0.17.0"):
         check_spec_017(c, races, cultures)
-    if at_least("0.18.0"):
+    if DATA_VERSION == "0.18.0":
         check_spec_018(c, races)
+    if at_least("0.19.0"):
+        check_spec_019(c, races)
     c.eq("densities (P3-05 12.2)", {k: v["density_permille"] for k, v in races.items()},
          dict(elf=300, goblin=900, dwarf=700, faerie=250, human=1000, orc=800))
     c.eq("prowess_permille (P3-06 12.2)", {k: v["prowess_permille"] for k, v in races.items()},
@@ -1916,6 +1919,72 @@ def check_spec_018(c, races):
     c.eq("conflict_enmity_hops passes at march_hops", conflict_check_messages(dict(co, enmity_hops=2)), [])
 
 
+def check_spec_019(c, races):
+    """The 0.19.0 listings say what P3-01 r11 3.4 and 3.5, P3-05 r12 22.1-22.5, P3-06 r14 21.2, 21.7, 21.9 and
+    P3-04 r12 20.1, 20.4 state."""
+    c.eq("race fields of P3-06 r9 20.12 kept (muster, conceal_min, home defence)",
+         {k: (v["muster_permille"], v["conceal_min"], v["home_defense_permille"]) for k, v in races.items()},
+         RACE_FIELDS_018_VALUES)
+    c.eq("cell_weights (P3-01 r11 3.4): ore, height, inland, port, habitability",
+         {k: tuple(v["cell_weights"][f] for f in ("ore", "height", "inland", "port", "habitability"))
+          for k, v in races.items()}, CELL_WEIGHTS_019)
+    c.eq("cell_weights field order (3.4: the three after height)",
+         [list(v["cell_weights"]) for v in races.values()], [["ore", "height", "inland", "port", "habitability"]] * 6)
+    for k, v in races.items():
+        for n, lo, hi in CELL_FIELDS_019:
+            c.ok("race %s.cell_weights.%s inside int(%d, %d)" % (k, n, lo, hi), lo <= v["cell_weights"][n] <= hi)
+        for n, lo, hi in RACE_FIELDS_019:
+            c.ok("race %s.%s inside int(%d, %d)" % (k, n, lo, hi), lo <= v[n] <= hi)
+    c.eq("races with a cell term (3.4: record differs from the neutral one)",
+         sorted(k for k, v in races.items() if tuple(v["cell_weights"][f] for f in
+                ("ore", "height", "inland", "port", "habitability")) != CELL_WEIGHTS_NEUTRAL_019), ["dwarf", "faerie"])
+    c.eq("coast (P3-05 r12 22.5: faerie -500)", {k: v["coast"] for k, v in races.items()},
+         dict(elf=0, goblin=-100, dwarf=-200, faerie=-500, human=200, orc=-100) | {
+             k: v["coast"] for k, v in races.items() if k != "faerie"})
+    c.eq("odds_min_permille, awakening_quarrel (P3-01 r11 3.5)",
+         {k: (v["odds_min_permille"], v["awakening_quarrel"]) for k, v in races.items()}, RACE_FIELDS_019_VALUES)
+    c.eq("the two race fields follow home_defense_permille in this order (3.5)",
+         [list(v)[list(v).index("home_defense_permille") + 1:list(v).index("home_defense_permille") + 3]
+          for v in races.values()], [["odds_min_permille", "awakening_quarrel"]] * 6)
+    co = parsed_spec("history")["conflict"]
+    c.ok("history.conflict has no odds_min (3.5)", "odds_min" not in co)
+    i = list(co).index("search_years")
+    c.eq("history.conflict: search_weary_years 500, search_repeat_salience 15 after search_years (P3-06 r14 21.7)",
+         [(n, co[n]) for n in list(co)[i + 1:i + 3]], [("search_weary_years", 500), ("search_repeat_salience", 15)])
+    c.eq("history.conflict: capital_sacked_salience follows search_repeat_salience", list(co)[i + 3],
+         "capital_sacked_salience")
+    c.eq("history.conflict has 58 fields", len(co), 58)
+    c.eq("history.conflict without odds_min equals 0.18.0's but for the new fields",
+         {k: v for k, v in co.items() if k not in ("search_weary_years", "search_repeat_salience")},
+         {k: v for k, v in tomllib.loads(CONFLICT_FILE_018["conflict.toml"])["history"]["conflict"].items()
+          if k != "odds_min"})
+    pe = parsed_spec("history")["peoples"]
+    j = list(pe).index("civs_extra_max")
+    c.eq("history.peoples: cause_memory_years 50 and inland_cap 20 after civs_extra_max (P3-05 r12 22.2, 22.5)",
+         [(n, pe[n]) for n in list(pe)[j + 1:j + 3]], [("cause_memory_years", 50), ("inland_cap", 20)])
+    c.eq("history.peoples has 71 fields", len(pe), 71)
+    ev = {e["kind"]: e for e in parsed_spec("history")["report"]["events"]}
+    c.eq("kind 37 entry (P3-05 r12 22.1)", (ev["plague_outbreak"]["salience"], ev["plague_outbreak"]["template"]),
+         (45, "Plague broke out in {settlement}{reached?| and spread to one other settlement| and spread to # other "
+              "settlements}; {total} died{reached?|| in all}."))
+    c.eq("kind 38 entry (P3-04 r12 20.1)", (ev["quiet_stretch"]["salience"], ev["quiet_stretch"]["template"]),
+         (20, "For {years} {years?year|years}, from {@year} to {@end_year}, the land was quiet{realms?|; one realm "
+              "held it|, and # realms kept the peace}."))
+    for k, (_old, new) in TEMPLATES_019.items():
+        c.eq("template of %s (P3-10)" % k, ev[k]["template"], new)
+    c.eq("dwindle template (P3-05 r12 22.3, M written out)", ev["settlement_dwindled"]["template"],
+         "{@causes:famine=famine,plague=plague,plague_outbreak=plague,plague_spread=plague,succession_crisis=strife,"
+         "battle=war,battle_at_pass=war,tribute=tribute,colony_founded=emigration|Weakened by |, }{settlement} "
+         "dwindled to {population} souls.")
+    old = {e["kind"]: e for e in tomllib.loads(REPORT_FILE_018["report.toml"])["history"]["report"]["events"]}
+    c.eq("every other report entry as at 0.18.0 (saliences unchanged)",
+         [e for e in parsed_spec("history")["report"]["events"]
+          if e["kind"] not in TEMPLATES_019 and e["kind"] not in ("plague_outbreak", "quiet_stretch")],
+         [e for k, e in old.items() if k not in TEMPLATES_019])
+    c.eq("saliences of the changed kinds unchanged", {k: ev[k]["salience"] for k in TEMPLATES_019},
+         {k: old[k]["salience"] for k in TEMPLATES_019})
+
+
 def check_spec_017(c, races, cultures):
     """The 0.17.0 listings say what P3-01 r8, P3-02 r5 11.4, P3-04 r10 4.2,
     P3-05 r6 11, 12.1, 12.3 and P3-06 r7 11 state."""
@@ -1946,11 +2015,13 @@ def check_spec_017(c, races, cultures):
          ["plague_small_salience", "plague_major_dead", "crisis_small_salience"])
     ev = {e["kind"]: e for e in parsed_spec("history")["report"]["events"]}
     for k, (_, new) in TEMPLATES_017.items():
-        c.eq("report template of %s (0.17.0)" % k, ev[k]["template"], new)
-    c.eq("kind 31 entry (P3-05 r6 11)", (ev["settlement_abandoned_to"]["salience"],
-                                         ev["settlement_abandoned_to"]["template"]),
-         (55, "{settlement} was abandoned; {settled} {settled?survivor|survivors} went to {destination}"
-              "{lost?|, and one was lost|, and # were lost}."))
+        if not (at_least("0.19.0") and k in TEMPLATES_019):   # P3-10 rewrites some; check_spec_019 has them
+            c.eq("report template of %s (0.17.0)" % k, ev[k]["template"], new)
+    if not at_least("0.19.0"):
+        c.eq("kind 31 entry (P3-05 r6 11)", (ev["settlement_abandoned_to"]["salience"],
+                                             ev["settlement_abandoned_to"]["template"]),
+             (55, "{settlement} was abandoned; {settled} {settled?survivor|survivors} went to {destination}"
+                  "{lost?|, and one was lost|, and # were lost}."))
     c.eq("crisis and abandonment saliences unchanged (P3-05 r6 11: bases 40, 55)",
          (ev["succession_crisis"]["salience"], ev["settlement_abandoned"]["salience"], ev["plague"]["salience"]),
          (40, 55, 45))
@@ -2028,12 +2099,19 @@ def check_copied_kinds(c):
                  read_dir_files(path, directory), shipped)
     content = load_root("game/data", ["name_filter"])["name_filter"]
     c.eq("name_filter ids (P3-02 r5 11.2)", [d for d, _ in content], ["crude", "famous", "slurs", "words"])
-    c.eq("name_filter sizes (P3-02 r5 11.2)",
-         {d: tuple(len(t[f]) for f in ("anywhere", "at_start", "whole")) for d, t in content},
-         dict(slurs=(33, 19, 6), crude=(68, 16, 14), words=(0, 0, 393 if at_least("0.18.0") else 647),
-              famous=(0, 0, 101)))   # P3-02 r8 11.11 (0.18.0): the short word list, 393 (647 before)
+    if at_least("0.19.0"):   # P3-02 r10 12.1: crude 70 / 16 / 14, words 5 / 1 / 389
+        sizes = dict(slurs=(33, 19, 6), crude=(70, 16, 14), words=(5, 1, 389), famous=(0, 0, 101))
+        effs = [108, 36, 510]
+    else:
+        sizes = dict(slurs=(33, 19, 6), crude=(68, 16, 14), words=(0, 0, 393 if at_least("0.18.0") else 647),
+                     famous=(0, 0, 101))   # P3-02 r8 11.11 (0.18.0): the short word list, 393 (647 before)
+        effs = [101, 35, 514 if at_least("0.18.0") else 768]
+    c.eq("name_filter sizes (P3-02 r5 11.2, r10 12.1)",
+         {d: tuple(len(t[f]) for f in ("anywhere", "at_start", "whole")) for d, t in content}, sizes)
     eff = [len(set(w for _, t in content for w in t[f])) for f in ("anywhere", "at_start", "whole")]
-    c.eq("effective list sizes (P3-02 r5 11.2, r8 11.11)", eff, [101, 35, 514 if at_least("0.18.0") else 768])
+    c.eq("effective list sizes (P3-02 r5 11.2, r8 11.11, r10 12.1)", eff, effs)
+    if at_least("0.19.0"):
+        check_placenames_019(c)
     c.eq("shipped name_filter passes its checks", name_filter_messages(content), [])
     for d, t in content:
         for f in ("anywhere", "at_start", "whole"):
@@ -2055,6 +2133,32 @@ def check_copied_kinds(c):
         c.eq("filter_word grammar refuses %r" % w,
              name_filter_messages([("a", dict(anywhere=[w], at_start=[], whole=[]))]),
              ["grammar: a.anywhere[0] '%s'" % w])
+
+
+def check_placenames_019(c):
+    """P1-06 r6 15.1-15.3 in the served placename lists."""
+    pn = {d: t for d, t in load_root("game/data", ["placename"])["placename"]}
+    co, ba, hi = pn["common"], pn["trait_barren"], pn["trait_high"]
+    for (did, f), words in CHURCH_019.items():
+        c.eq("15.1 %s.%s holds no church word" % (did, f), [w for w in words if w in pn[did][f]], [])
+    for w in ("Hallow", "Hermit", "Bellringer"):
+        c.ok("15.1 %s stays" % w, w in co["prefixes"] + co["possessors"])
+    for f in GRIM_019:
+        c.eq("15.2 grim words kept in common.%s" % f, [w for w in co[f] if w in GRIM_019[f]], GRIM_KEPT_019[f])
+        moved = [w for w in GRIM_019[f] if w not in GRIM_KEPT_019[f]]
+        c.ok("15.2 moved grim words of %s are in trait_barren" % f, all(w in ba[f] for w in moved))
+    for f in PLACENAME_LISTS:
+        if f == "excluded":
+            continue   # grouped (one-word entries, then multi-word ones), not one sorted run
+        for did, t in pn.items():
+            c.ok("%s.%s sorted without repeats" % (did, f), t[f] == sorted(set(t[f]), key=lambda w: w.encode()))
+    c.ok("15.3 wood.suffixes without hanger", "hanger" not in pn["wood"]["suffixes"])
+    c.ok("15.3 trait_high.adjectives without High", "High" not in hi["adjectives"])
+    c.ok("15.3 common.places without Cleft and Gap", "Cleft" not in co["places"] and "Gap" not in co["places"])
+    c.ok("15.3 trait_high.places with Cleft", "Cleft" in hi["places"])
+    c.ok("15.3 trait_pass.places holds Gap", "Gap" in pn["trait_pass"]["places"])
+    c.eq("15.2 trait_barren.places (Dole not repeated)", ba["places"],
+         sorted(set(["Dole", "Hunger", "Want", "Dole", "Grave", "Lament", "Ruin", "Sorrow"]), key=lambda w: w.encode()))
 
 
 def check_disk(c):
@@ -2124,7 +2228,12 @@ def cmd_check():
     # The three roots differ only where the geo-small elevation tuning does
     # (P1-00 6.4); the new kinds are identical in all three.
     fresh = golden_text(from_spec=present < len(ROOTS) * len(NEW_KINDS))
-    if os.path.exists(GOLDEN):
+    if os.path.exists(GOLDEN) and not at_least("0.19.0"):   # P3-10: the file of 0.18.0 is the base commit's
+        import subprocess
+        committed = subprocess.run(["git", "-C", REPO, "show", P3_10_BASE_COMMIT + ":worldgen/tests/golden/p3-01-data.txt"],
+                                   check=True, capture_output=True, text=True).stdout
+        c.eq("golden file of %s (git %s) is current" % (DATA_VERSION, P3_10_BASE_COMMIT), committed, fresh)
+    elif os.path.exists(GOLDEN):
         with open(GOLDEN, "rb") as f:
             c.eq("committed golden file is current", f.read().decode(), fresh)
     else:

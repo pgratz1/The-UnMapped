@@ -134,14 +134,18 @@ void check_race(const wd::Definition& d, const history_data::Race& want) {
     CHECK(sw.get_int("timber") == want.timber);
     CHECK(sw.get_int("ore") == want.ore);
     CHECK(sw.get_int("fresh_water") == want.fresh_water);
-    // P3-01 r8 (1) (generator 0.17.0): record race_cell_weights {ore, height}.
+    // P3-01 r8 (1) (generator 0.17.0): record race_cell_weights {ore, height}; r11 3.4 (0.19.0) adds inland,
+    // port and habitability.
     const wd::Record& cw = r.get_record("cell_weights");
-    REQUIRE(cw.size() == 2U);
+    REQUIRE(cw.size() == 5U);
     for (std::size_t i = 0; i < cw.size(); ++i) {
         CHECK(cw.name_at(i) == history_data::cell_weight_fields()[i]);
     }
     CHECK(cw.get_int("ore") == want.cell_ore);
     CHECK(cw.get_int("height") == want.cell_height);
+    CHECK(cw.get_int("inland") == want.cell_inland);
+    CHECK(cw.get_int("port") == want.cell_port);
+    CHECK(cw.get_int("habitability") == want.cell_habitability);
     const auto& biomes = r.get_array("biomes");
     REQUIRE(biomes.size() == want.biomes.size());
     for (std::size_t i = 0; i < biomes.size(); ++i) {
@@ -161,6 +165,9 @@ void check_race(const wd::Definition& d, const history_data::Race& want) {
     CHECK(r.get_int("muster_permille") == want.muster_permille);
     CHECK(r.get_int("conceal_min") == want.conceal_min);
     CHECK(r.get_int("home_defense_permille") == want.home_defense_permille);
+    // P3-01 r11 3.5 (generator 0.19.0, P3-10)
+    CHECK(r.get_int("odds_min_permille") == want.odds_min_permille);
+    CHECK(r.get_int("awakening_quarrel") == want.awakening_quarrel);
     const auto& kinds = r.get_array("settlement_kinds");
     REQUIRE(kinds.size() == want.settlement_kinds.size());
     for (std::size_t i = 0; i < kinds.size(); ++i) {
@@ -787,11 +794,29 @@ TEST_CASE("P3-01 8.1 test 5: every bounded race field one step outside its bound
         {"races/orc.toml", "expansion = 600", "expansion = 1000", "expansion = 1001", "race.orc.expansion"},
         {"races/orc.toml", "aggression = 900", "aggression = 0", "aggression = -1", "race.orc.aggression"},
         {"races/orc.toml", "aggression = 900", "aggression = 1000", "aggression = 1001", "race.orc.aggression"},
-        // P3-01 r8 (1) (generator 0.17.0): cell_weights {ore, height}, each int(0, 1000)
-        {"races/orc.toml", "cell_weights = { ore = 0, height = 0 }", "cell_weights = { ore = 1000, height = 0 }",
-         "cell_weights = { ore = 1001, height = 0 }", "race.orc.cell_weights.ore"},
-        {"races/orc.toml", "cell_weights = { ore = 0, height = 0 }", "cell_weights = { ore = 0, height = 1000 }",
-         "cell_weights = { ore = 0, height = -1 }", "race.orc.cell_weights.height"},
+        // P3-01 r8 (1) (generator 0.17.0): cell_weights {ore, height}, each int(0, 1000); r11 3.4 (0.19.0):
+        // inland, port, habitability, each int(0, 1000)
+        {"races/orc.toml", "ore = 0, height = 0,", "ore = 1000, height = 0,", "ore = 1001, height = 0,",
+         "race.orc.cell_weights.ore"},
+        {"races/orc.toml", "ore = 0, height = 0,", "ore = 0, height = 1000,", "ore = 0, height = -1,",
+         "race.orc.cell_weights.height"},
+        {"races/orc.toml", "inland = 0,", "inland = 1000,", "inland = 1001,", "race.orc.cell_weights.inland"},
+        {"races/orc.toml", "inland = 0,", "inland = 0,", "inland = -1,", "race.orc.cell_weights.inland"},
+        {"races/orc.toml", "port = 1000,", "port = 0,", "port = -1,", "race.orc.cell_weights.port"},
+        {"races/orc.toml", "port = 1000,", "port = 1000,", "port = 1001,", "race.orc.cell_weights.port"},
+        {"races/orc.toml", "habitability = 1000 }", "habitability = 0 }", "habitability = -1 }",
+         "race.orc.cell_weights.habitability"},
+        {"races/orc.toml", "habitability = 1000 }", "habitability = 1000 }", "habitability = 1001 }",
+         "race.orc.cell_weights.habitability"},
+        // P3-01 r11 3.5 (0.19.0): odds_min_permille int(0, 1000), awakening_quarrel int(0, 1)
+        {"races/orc.toml", "odds_min_permille = 500", "odds_min_permille = 0", "odds_min_permille = -1",
+         "race.orc.odds_min_permille"},
+        {"races/orc.toml", "odds_min_permille = 500", "odds_min_permille = 1000", "odds_min_permille = 1001",
+         "race.orc.odds_min_permille"},
+        {"races/orc.toml", "awakening_quarrel = 1", "awakening_quarrel = 0", "awakening_quarrel = -1",
+         "race.orc.awakening_quarrel"},
+        {"races/orc.toml", "awakening_quarrel = 1", "awakening_quarrel = 1", "awakening_quarrel = 2",
+         "race.orc.awakening_quarrel"},
         // P3-06 12.2 item 1 (P3-01 r7): prowess_permille int(1, 4000)
         {"races/orc.toml", "prowess_permille = 1300", "prowess_permille = 1", "prowess_permille = 0", "race.orc.prowess_permille"},
         {"races/orc.toml", "prowess_permille = 1300", "prowess_permille = 4000", "prowess_permille = 4001", "race.orc.prowess_permille"},
@@ -908,6 +933,30 @@ TEST_CASE("P3-01 3: every race field is required and no other key is accepted") 
     CHECK_FALSE(load(shipped_edited("races/human.toml", ", fresh_water = 15 }", " }")).ok());
     CHECK_FALSE(load(shipped_edited("races/human.toml", "{ biome = \"steppe\", weight = 100 }", "{ biome = \"steppe\" }")).ok());
     CHECK_FALSE(load(shipped_edited("races/human.toml", "fertility = 60,", "fertility = 60, magic = 1,")).ok());
+    // P3-01 r11 3.4 (generator 0.19.0): each of the three new cell weights is required.
+    for (const char* part : {", inland = 0", ", port = 1000", ", habitability = 1000"}) {
+        CAPTURE(std::string_view(part));
+        const Load l = load(shipped_edited("races/human.toml", part, ""));
+        CHECK_FALSE(l.ok());
+        if (!l.ok()) CHECK(contains(l.errors[0].message, "race.human.cell_weights"));
+    }
+}
+
+TEST_CASE("P3-01 r11 3.5, P3-06 r14 21.9: history.conflict.odds_min is refused as an unknown field from 0.19.0") {
+    const Load l = load(shipped_edited("history/conflict.toml", "search_years = 3\n", "search_years = 3\nodds_min = 700\n"));
+    const wd::LoadError e = only_error(l);
+    CHECK(e.path == "history/conflict.toml");
+    CHECK(contains(e.message, "odds_min"));
+    // and the shipped listing has no odds_min, and every race an odds_min_permille in int(0, 1000)
+    CHECK_FALSE(contains(history_data::CONFLICT_TOML, "odds_min"));
+    for (const history_data::Race& r : history_data::races()) {
+        CAPTURE(std::string(r.id));
+        CHECK(r.odds_min_permille == (r.id == "orc" ? 500 : 700));
+        CHECK(r.awakening_quarrel == (r.id == "orc" ? 1 : 0));
+        const bool neutral = r.cell_ore == 0 && r.cell_height == 0 && r.cell_inland == 0 && r.cell_port == 1000 &&
+                             r.cell_habitability == 1000;
+        CHECK(neutral == (r.id != "dwarf" && r.id != "faerie"));  // 3.4: the races with a cell term
+    }
 }
 
 TEST_CASE("P3-01 5.1: history.chronology bounds, required fields and chronology_age_name_form") {

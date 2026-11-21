@@ -220,20 +220,29 @@ void check_invariants(const std::string& label, const CaseInputs& ci, const Over
             fail("invariant 8: passes attached");
         }
     }
-    // Invariant 6 (r3): names unique, no numeral; each base name in use held
-    // by exactly one region, the largest (ties to the smaller id); every
-    // other name one of its land's forms filled from the region's pools
-    // (common, land, its traits; weight > 0), valid by V1 to V6, and no base
-    // name in use. Bases, lands and traits by the test's own RG11 1 to 5.
+    // Invariant 6 (as restated by P1-06 r7 15.7 item 4, generator 0.19.0):
+    // names unique, no numeral; for each land noun in use exactly one region,
+    // the one with the most cells (ties to the smaller id), is named its base
+    // name; every other name one of its land's forms filled from the
+    // region's pools (common, land, its traits; weight > 0), valid by V1 to
+    // V6, and equal to no keeper's name. Bases, lands and traits by the
+    // test's own RG11 1 to 5. (V7 is checked by the golden comparison of the
+    // test's own RG11, which applies it.)
     {
         std::set<std::string> names;
-        const std::set<std::string> base_set(own.bases.begin(), own.bases.end());
-        std::map<std::string, std::pair<std::int64_t, std::int64_t>> best;  // base -> (cells, -id)
+        std::map<std::string, std::pair<std::int64_t, std::int64_t>> best;  // land noun -> (cells, -id)
         for (std::size_t k = 0; k < out.regions.size() && k < own.bases.size(); ++k) {
             const auto& row = out.regions[k];
-            auto it = best.find(own.bases[k]);
+            const std::string noun = region_names::land_noun(own.bases[k]);
+            auto it = best.find(noun);
             if (it == best.end() || std::make_pair(row.cells, -row.id) > it->second) {
-                best[own.bases[k]] = std::make_pair(row.cells, -row.id);
+                best[noun] = std::make_pair(row.cells, -row.id);
+            }
+        }
+        std::set<std::string> base_set;  // the keepers' names
+        for (std::size_t k = 0; k < out.regions.size() && k < own.bases.size(); ++k) {
+            if (best[region_names::land_noun(own.bases[k])].second == -out.regions[k].id) {
+                base_set.insert(own.bases[k]);
             }
         }
         const region_names::PlaceData& pd = region_names::shipped();
@@ -253,14 +262,14 @@ void check_invariants(const std::string& label, const CaseInputs& ci, const Over
                 continue;
             }
             const std::string& base = own.bases[k];
-            if (best[base].second == -row.id) {
+            if (best[region_names::land_noun(base)].second == -row.id) {
                 if (row.name != base) {
                     fail("the keeper does not hold its base name: " + row.name);
                 }
                 continue;
             }
             if (base_set.count(row.name) != 0U) {
-                fail("a drawn name equals a base name in use: " + row.name);
+                fail("a drawn name equals a keeper's name: " + row.name);
             }
             const auto td = region_names::trait_defs(pd, region_names::traits_of(own.trait_rows[k], nt));
             if (!region_names::parses_as_land_name(row.name, *own.lands[k], pd.common(), td, nt)) {

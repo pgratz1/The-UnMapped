@@ -23,6 +23,19 @@ golden file of r5 keeps every keyed-draw vector of 4.1 unchanged and adds
 the filter lines described in its header; the critics' stems are checked
 here and in the C++ only as concatenations, never stored.
 
+Generator 0.19.0 (P3-10, P3-02 r10 section 12; the default): the filter of
+12.1 (data, served through p3_data_reference) and the core rule of 12.2
+(make_name's `cores`). `--version 0.18.0` (and 0.17.0) reproduce the older
+golden files. Readings taken where the spec is open:
+  - 12.1 removes four `words.whole` entries (suck, hack, flop, gord), as its
+    table and its size 389 = 393 - 4 say; revision note r10 says "three".
+  - 12.2: the core is taken of the root R of the accepted attempt; an
+    attempt already in the registry is skipped before the near test (the
+    order does not matter: both skip); K is per world and holds the cores
+    of civilization and settlement names only (gods and regions never).
+  - 11.6's god table is r5's (0.17.0 lists): at 0.19.0 only the gods the
+    new entries reject (Grammam, seed 5; Gordman, seed 7) are redrawn.
+
 Usage (from the repository root; -B keeps __pycache__ out of the tree):
 
     python3 -B worldgen/tests/reference/p3_names_reference.py check
@@ -56,6 +69,7 @@ _HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, _HERE)
 
 import core_reference as cr  # noqa: E402
+import p3_data_reference as pdr  # noqa: E402
 
 FatalError = cr.FatalError
 ONE = 1 << 32
@@ -356,7 +370,11 @@ def filter_from_dir(path):
     """The effective filter of a name_filters/ directory, read with tomllib."""
     import tomllib
     a, s_, w = [], [], []
-    if FILTER_COMMIT is not None:
+    if os.path.isdir(path) and os.path.normpath(path).startswith(REPO):
+        # The files of the data version p3_data_reference serves (0.19.0: P3-02 r10 12.1's entries applied to
+        # 0.18.0 files on disk; 0.18.0 over 0.19.0 files: git 81908fa; before 0.18.0: git d750d15).
+        texts = [t.encode("utf-8") for _, t in pdr.read_dir_files(path, "name_filters")]
+    elif FILTER_COMMIT is not None:
         import subprocess
         rel = os.path.relpath(path, REPO).replace(os.sep, "/")
         names = subprocess.run(["git", "-C", REPO, "ls-tree", "--name-only", FILTER_COMMIT + ":" + rel], check=True,
@@ -477,6 +495,15 @@ CULTURES = None
 FILTER = None
 
 
+def use_version(v):
+    """The filter data of generator v (through p3_data_reference's served version)."""
+    global FILTER_COMMIT, _SHIPPED_FILTER
+    pdr.use_version(v)
+    FILTER_COMMIT = None if pdr.at_least("0.18.0") else pdr.NAME_FILTERS_017_COMMIT
+    _SHIPPED_FILTER = None
+    use_rules(RULES)
+
+
 def use_rules(r):
     global RULES, CULTURES, FILTER
     if r == "r5":
@@ -581,18 +608,53 @@ def roman(k):
     return "".join(out)
 
 
-def make_name(d, culture_id, kind, seed, c, e, registry, filt=None):
+def name_core(root):
+    """P3-02 r10 12.2: the core of a root, its letters without ' and - (the root is lower case)."""
+    return lower(root.replace("'", "").replace("-", ""))
+
+
+def lev1(a, b):
+    """True when a and b are at Levenshtein distance at most 1."""
+    if a == b:
+        return True
+    la, lb = len(a), len(b)
+    if abs(la - lb) > 1:
+        return False
+    if la == lb:
+        return sum(1 for x, y in zip(a, b) if x != y) == 1
+    if la > lb:
+        a, b, la, lb = b, a, lb, la
+    i = 0
+    while i < la and a[i] == b[i]:
+        i += 1
+    return a[i:] == b[i + 1:]
+
+
+def core_near(core, cores):
+    """12.2: k is near K when some core of K equals k or is one letter (inserted, deleted, replaced) apart."""
+    return any(lev1(core, k) for k in cores)
+
+
+def make_name(d, culture_id, kind, seed, c, e, registry, filt=None, cores=None):
     """4.3; returns (name, attempt number or 'F'); adds the name to registry
-    (a set). A filtered attempt is an invalid attempt (11.3)."""
+    (a set). A filtered attempt is an invalid attempt (11.3). With cores a
+    set (the history stage's K of P3-02 r10 12.2, civilizations and
+    settlements from generator 0.19.0), an attempt whose core is near K is
+    skipped like a name already in the registry; the accepted name's core
+    (or the fallback's first valid attempt's core) joins K."""
     first = None
+    first_core = None
     for t in range(64):
-        valid, n, _ = attempt(d, kind, seed, c, e, t, filt=filt)
+        valid, n, root = attempt(d, kind, seed, c, e, t, filt=filt)
         if not valid:
             continue
         if first is None:
             first = n
-        if n not in registry:
+            first_core = name_core(root)
+        if n not in registry and (cores is None or not core_near(name_core(root), cores)):
             registry.add(n)
+            if cores is not None:
+                cores.add(name_core(root))
             return n, t
     if first is None:
         fatal("names: culture '%s' produced no valid %s name in 64 attempts" % (culture_id, kind))
@@ -603,6 +665,8 @@ def make_name(d, culture_id, kind, seed, c, e, registry, filt=None):
     if len(n) > 64:
         fatal("names: a name longer than 64 bytes")
     registry.add(n)
+    if cores is not None:
+        cores.add(first_core)
     return n, "F"
 
 
@@ -945,7 +1009,124 @@ def golden_text():
     if RULES == "r5":
         for seed in GOLDEN_SEEDS:
             o.append("r4sha256 %d %s" % (seed, list_sha(name_list(seed, r4_equivalent_cultures(), EMPTY_FILTER))))
+    if RULES == "r5" and pdr.at_least("0.19.0"):
+        o.extend(r10_golden_lines())
     return "\n".join(o) + "\n"
+
+
+# ---------------------------------------------------------------------------
+# P3-02 r10 section 12 (generator 0.19.0): filter entries (data) and the core rule
+# ---------------------------------------------------------------------------
+
+# 12.3 unit cases of the predicate: (core, K, near?)
+CORE_NEAR_CASES = (
+    ("skat", ("skat",), True), ("sligg", ("slig",), True), ("kuzz", ("kuz",), True), ("kaz", ("kuz",), True),
+    ("kuz", ("kuz",), True), ("kazz", ("kuz",), False), ("slig", ("sligg",), True), ("ab", (), False),
+    ("abc", ("abd", "xyz"), True), ("abc", ("cab",), False), ("nili", ("muli",), False), ("a", ("",), True),
+    ("skreek", ("skreeg",), True), ("zeez", ("zez",), True), ("zeez", ("ze",), False),
+)
+# 12.2: root -> core
+CORE_CASES = (("skat", "skat"), ("ogh'krak", "oghkrak"), ("gnink-snunk", "gninksnunk"), ("uruld'duuld", "uruldduuld"))
+# 12.1's table: the root word each entry rejects (the critics' names), and names that pass.
+R10_REJECTED = ("suckford", "shiety", "realdeadstead", "timhack", "whop", "flopfia", "gordman", "grammam",
+                "suckbury", "deadstead", "hackford", "ashackstead", "whopia", "leeflop", "gordford", "grammaik",
+                "gulsuckton", "shietwo")
+R10_PASSING = ("gramm", "mammga", "twiwhiwou", "timmthorin", "kaidinmamm")
+CORE_ENTITIES = 50
+
+
+def core_list(seed):
+    """The name list of 9.3's order with the history stage's K (12.2) for civilizations and settlements: one
+    registry and one K per seed, gods (P3-03) without K."""
+    reg, cores, lines = set(), set(), []
+    for cid in CULTURE_ORDER:
+        for kind in KINDS:
+            for e in range(1, CORE_ENTITIES + 1):
+                n, t = make_name(CULTURES[cid], cid, kind, seed, CULTURE_NUMBER[cid], e, reg,
+                                 cores=None if kind == "god" else cores)
+                lines.append("core %d %s %s %d %s %s" % (seed, cid, kind, e, t, n))
+    return lines
+
+
+def core_fallback_case():
+    """12.3: a K near every attempt of the test culture tiny (Ba, Da): the fallback numbers the first valid name
+    and adds its core to K."""
+    reg, cores = set(), {"ba"}
+    n, t = make_name(TEST_CULTURES["tiny"], "tiny", "settlement", 0, 1, 1, reg, cores=cores)
+    return n, t, sorted(cores)
+
+
+def r10_golden_lines():
+    o = ["# r10 (P3-02 12, generator 0.19.0):",
+         "#   corename <root> <core>            12.2's core (letters without ' and -)",
+         "#   corenear <core> <K comma-joined|-> <0|1>   12.2's near (equal or one letter apart)",
+         "#   corefallback tiny settlement 0 1 1 <attempt|F> <name> <K after, comma-joined>  with K = {ba}",
+         "#   core <seed> <culture> <kind> <entity> <attempt|F> <name>  the list of 9.3's order with one K",
+         "#       for civilizations and settlements (gods without K), entities 1..50",
+         "#   coresha256 <seed> <hex>  of that seed's core lines joined by LF (no trailing LF)"]
+    for r, k in CORE_CASES:
+        o.append("corename %s %s" % (r, name_core(r)))
+    for k, K, _ in CORE_NEAR_CASES:
+        if k == "a" and K == ("",):
+            continue   # an empty core is not a valid name core; checked only in the reference
+        o.append("corenear %s %s %d" % (k, ",".join(K) if K else "-", 1 if core_near(k, set(K)) else 0))
+    n, t, K = core_fallback_case()
+    o.append("corefallback tiny settlement 0 1 1 %s %s %s" % (t, n, ",".join(K)))
+    for seed in GOLDEN_SEEDS:
+        lines = core_list(seed)
+        o.extend(lines)
+        o.append("coresha256 %d %s" % (seed, list_sha(lines)))
+    return o
+
+
+def core_pairs(names_roots):
+    """Pairs (a, b) of names whose cores are equal or one letter apart."""
+    out = []
+    for i in range(len(names_roots)):
+        for j in range(i + 1, len(names_roots)):
+            if lev1(names_roots[i][1], names_roots[j][1]):
+                out.append((names_roots[i][0], names_roots[j][0]))
+    return out
+
+
+def check_r10(ck):
+    """P3-02 r10 12.3."""
+    for r, k in CORE_CASES:
+        ck.eq("12.2 core of %s" % r, name_core(r), k)
+    for k, K, want in CORE_NEAR_CASES:
+        ck.eq("12.3 near %s in %r" % (k, K), core_near(k, set(K)), want)
+    sf = shipped_filter()
+    for w in R10_REJECTED:
+        ck.eq("12.1 %s rejected" % w, name_filtered(sf, w), True)
+    for w in R10_PASSING:
+        ck.eq("12.1 %s passes" % w, name_filtered(sf, w), False)
+    ck.eq("12.1 effective sizes", (len(sf.anywhere), len(sf.at_start), len(sf.whole)), (108, 36, 510))
+    n, t, K = core_fallback_case()
+    ck.eq("12.3 fallback: the first valid name numbered", (t, n.endswith(" II")), ("F", True))
+    ck.eq("12.3 fallback: first's core joins K", K, sorted({"ba", name_core(lower(n.split()[0]))}))
+    # cores=None is the r5 rule exactly (gods, chronology)
+    ck.eq("12.3 gods unaffected (no K)", name_list(0)[:5], name_list(0)[:5])
+    for seed in GOLDEN_SEEDS:
+        lines = core_list(seed)
+        rows = [l.split(" ", 6) for l in lines]
+        hist = [(r[6], r[2], r[3]) for r in rows if r[3] != "god"]
+        ck.eq("12.3 unique names seed %d" % seed, len(set(r[6] for r in rows)), len(rows))
+        roots = []
+        for r in rows:
+            if r[3] == "god":
+                continue
+            d = CULTURES[r[2]]
+            t = r[5]
+            if t == "F":
+                continue
+            _, nm, root = attempt(d, r[3], seed, CULTURE_NUMBER[r[2]], int(r[4]), int(t))
+            assert nm == r[6]
+            roots.append((nm, name_core(root)))
+        ck.eq("invariant 6 (12.3) seed %d: no two cores equal or one letter apart" % seed, core_pairs(roots), [])
+        ck.eq("12.3 seed %d: some name redrawn for its core" % seed, True,
+              any(l.split()[5] != o.split()[4] for l, o in zip([x for x in lines if " god " not in x],
+                                                               [x for x in name_list(seed) if " god " not in x])))
+
 
 
 # ---------------------------------------------------------------------------
@@ -1209,6 +1390,8 @@ def check_all():
         ck.eq("4.6 in list", ("%d elven settlement 1 0 Iensath" % 0) in lines, seed == 0)
     if RULES == "r5":
         check_r5(ck)
+    if RULES == "r5" and pdr.at_least("0.19.0"):
+        check_r10(ck)
     sys.stdout.write("%d checks, %d failures\n" % (ck.count, ck.failures))
     return 1 if ck.failures else 0
 
@@ -1270,7 +1453,17 @@ def check_r5(ck):
     for seed, row in GODS_R5.items():
         got = [make_name(CULTURES[cid], cid, "god", seed, CULTURE_NUMBER[cid], i + 1, set())[0]
                for i, cid in enumerate(GOD_RACE_CULTURES)]
-        ck.eq("11.6 gods seed %d" % seed, ", ".join(got), row)
+        if pdr.at_least("0.19.0"):
+            # P3-02 r10 12.1: the gods the new entries reach (Grammam, Gordman) are redrawn; every other god of
+            # the 0.18.0 table stands, and no god of the table is filtered.
+            old = row.split(", ")
+            ck.eq("11.6 gods seed %d at 0.19.0 (r10 12.1)" % seed,
+                  [g for g, o in zip(got, old) if g != o],
+                  [g for g, o in zip(got, old) if name_filtered(shipped_filter(), lower(o))])
+            ck.eq("11.6 gods seed %d: none filtered" % seed, True,
+                  not any(name_filtered(shipped_filter(), lower(g)) for g in got))
+        else:
+            ck.eq("11.6 gods seed %d" % seed, ", ".join(got), row)
     for seed, row in REALMS_R5.items():
         got = tuple(make_name(CULTURES["elven"], "elven", "civilization", seed, 2, e, set())[0] for e in (1, 2))
         ck.eq("11.6 realms seed %d" % seed, got, row)
@@ -1351,14 +1544,9 @@ use_rules("r5")
 
 
 def main(argv):
-    global FILTER_COMMIT
-    if "--version" in argv:   # 0.17.0: the word list of P3-08 (git); 0.18.0 (default): the files on disk
+    if "--version" in argv:   # 0.19.0 (default): P3-02 r10's filter; 0.18.0 the short list; 0.17.0 P3-08's
         i = argv.index("--version")
-        if argv[i + 1] != "0.18.0":
-            FILTER_COMMIT = "d750d15"
-            global _SHIPPED_FILTER
-            _SHIPPED_FILTER = None
-            use_rules(RULES)          # rebuilds the cached shipped filter
+        use_version(argv[i + 1])
         argv = argv[:i] + argv[i + 2:]
     if "--rules" in argv:
         i = argv.index("--rules")

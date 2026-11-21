@@ -142,7 +142,8 @@ TEST_CASE("P3-03 7.1, 14.1 item 1: seed 7, span 2000 (hist-span-2000-512)") {
         ends.push_back(a.end_year);
     }
     CHECK(ends == std::vector<std::int64_t>{687, 1113, 1408, 1643, 1878, 1999});
-    CHECK(god_names(r) == std::vector<std::string>{"Onveth", "Buzork", "Mammga", "Ouwheefy", "Gordman", "Maarkzaagh"});
+    // P3-02 r10 12.1 (0.19.0): the human god Gordman (0.18.0) is rejected by `gord` at the start and redrawn.
+    CHECK(god_names(r) == std::vector<std::string>{"Onveth", "Buzork", "Mammga", "Ouwheefy", "Balbron", "Maarkzaagh"});
 }
 
 TEST_CASE("P3-03 7.1, 14.1 item 1: seed 3, --races elf,orc (hist-races-elf-orc-1024)") {
