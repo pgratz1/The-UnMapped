@@ -59,6 +59,8 @@ struct CCase {
     // P3-09 (generator 0.18.0): P3-07 r8 21.4's notes and 21.3's summary line of the world and synthetic cases
     std::map<std::int64_t, std::string> notes;
     std::string summary;  // "threshold <T> shown <n> ages <n1,...>"
+    // P3-10 second round (P3-06 r17 22.5): "quick_aim_wins <n> foothold_cessions <m> held_goal_wars <a>/<b>/<c>/<d>"
+    std::string r17;
 };
 
 inline const std::vector<CCase>& conflict_golden() {
@@ -114,6 +116,8 @@ inline const std::vector<CCase>& conflict_golden() {
                 c.notes[std::stoll(w[2].substr(1))] = rest.substr(5 + w[2].size() + 1);
             } else if (w[1] == "summary") {
                 c.summary = rest.substr(8);
+            } else if (w[1] == "r17") {
+                c.r17 = rest.substr(4);  // P3-10 second round (P3-06 r17 22.5): the reference's replay facts
             } else if (w[1].size() > 1 && w[1][0] == 'q') {
                 c.tension[std::stoll(w[1].substr(1))] = {std::stoll(w[2]), std::stoll(w[3].substr(1))};
             } else if (w[1].size() > 1 && w[1][0] == 'e') {
@@ -168,6 +172,25 @@ inline std::int64_t conflict_int(const wd::ContentSet& c, std::string_view f) {
     }
     FAIL("no history.conflict");
     return 0;
+}
+
+// P3-06 r17 22.2, P3-01 r13 3.6 (P3-10 second round): the hidden years of a refuge by its founder's race (race
+// order, the civilization row's race column): the race field hidden_years; a content set without it (the first
+// P3-10 round, 0.18.0) gives history.conflict.hidden_years for every race.
+inline std::map<std::int64_t, std::int64_t> race_hidden_years(const wd::ContentSet& c) {
+    std::map<std::int64_t, std::int64_t> out;
+    const wd::KindContent* race = c.find_kind("race");
+    REQUIRE(race != nullptr);
+    bool per_race = true;
+    for (const wd::Definition& d : race->definitions) {
+        bool has = false;
+        for (std::size_t i = 0; i < d.record.size(); ++i) has = has || d.record.name_at(i) == "hidden_years";
+        per_race = per_race && has;
+    }
+    for (const wd::Definition& d : race->definitions) {
+        out[d.record.get_int("order")] = per_race ? d.record.get_int("hidden_years") : conflict_int(c, "hidden_years");
+    }
+    return out;
 }
 
 // The reference's STRESS_PEOPLES and STRESS_CONFLICT (p3_conflict_reference.py; the golden header).
@@ -593,6 +616,17 @@ inline void check_invariants_06(const Tables& t, const eng::HistoryInputs& in, s
                 if (x.kind(c) != k_colony_founded || x.year(c) != at(e, 1)) continue;
                 bool owner_event = false;
                 for (const Row& rc : t.region_control) owner_event = owner_event || (at(rc, 0) == at(e, 5) && at(rc, 4) == c);
+                // P3-10 r3 (stress-7 e1153): a colony of the holder in the claimed region, which the holder did not
+                // hold the year before, was the owner_event at the claim even when a later step of the same year
+                // (a secession) passed the region on and the net rule left it no region_control row
+                if (!owner_event && at(*x.ev.at(c), 5) == at(e, 5) && x.role1(c, 2) == x.role1(id, 2)) {
+                    bool held_before = false;
+                    for (const Row& rc : t.region_control) {
+                        held_before = held_before || (at(rc, 0) == at(e, 5) && at(rc, 3) == x.role1(id, 2) &&
+                                                      at(rc, 1) <= at(e, 1) - 1 && (is_null(rc[2]) || at(rc, 2) > at(e, 1) - 1));
+                    }
+                    owner_event = !held_before;
+                }
                 CHECK(owner_event);
             }
         }
@@ -845,7 +879,7 @@ inline std::vector<std::string> cession_violations(const Tables& t) {
 inline void check_invariants_09(const Tables& t, const eng::HistoryInputs& in, const wd::ContentSet& content) {
     const Index x(t);
     (void)in;  // r10: the race fields are no longer read here (concealed people are in presence)
-    const std::int64_t hidden_years = conflict_int(content, "hidden_years");
+    const std::map<std::int64_t, std::int64_t> hidden_of_race = race_hidden_years(content);  // r17 22.2
     const std::int64_t capital_sacked = conflict_int(content, "capital_sacked_salience");
     std::int64_t abandon_min = 0;
     for (const wd::KindContent& k : content.kinds) {
@@ -859,6 +893,7 @@ inline void check_invariants_09(const Tables& t, const eng::HistoryInputs& in, c
         CAPTURE(id);
         if (k == k_refugees_settled) {
             const std::int64_t h = x.role1(id, 1), founder = x.role1(id, 2), origin = x.role1(id, 3);
+            const std::int64_t hidden_years = hidden_of_race.at(at(*x.cv.at(founder), 2));
             CHECK(x.values.at(id).at(1) >= abandon_min);
             REQUIRE(x.causes.at(id).size() == 1U);
             const std::int64_t sack = x.causes.at(id)[0];
@@ -1105,7 +1140,6 @@ inline std::vector<std::string> invariants_19(const Tables& t, const wd::Content
     std::vector<std::string> out;
     const std::int64_t weary_years = conflict_int(content, "search_weary_years");
     const std::int64_t repeat_sal = conflict_int(content, "search_repeat_salience");
-    const std::int64_t hidden_years = conflict_int(content, "hidden_years");
     std::int64_t base35 = -1;
     for (const Row& k : t.event_kind) {
         if (at(k, 0) == k_search_abandoned) base35 = at(k, 5);
@@ -1174,21 +1208,213 @@ inline std::vector<std::string> invariants_19(const Tables& t, const wd::Content
                 }
             }
         }
-        if (k == k_refugees_settled) {
-            const std::int64_t f = x.role1(id, 2);
-            for (const Row& z : t.event) {
-                const std::int64_t zk = at(z, 3), zy = at(z, 1);
-                if (at(z, 0) <= id || zy < y || zy >= y + hidden_years) continue;
-                const bool bad = (zk == k_colony_founded && x.role1(at(z, 0), 2) == f) ||
-                                 ((zk == k_claim || zk == k_war_declared) && x.role1(at(z, 0), 1) == f);
-                if (bad) {
-                    out.push_back("(15) e" + std::to_string(at(z, 0)) + ": c" + std::to_string(f) +
-                                  " acts while its refuge of e" + std::to_string(id) + " lies hidden");
-                }
-            }
-        }
     }
     return out;
+}
+
+// P3-06 r17 22.3, 22.5 (P3-10 second round) from the rows, as the reference's replay_r17: settlement owners,
+// standing and capitals replayed from the log (foundings; secessions passing the parent's standing settlements
+// in the seceded regions; captures; ruins by sack or abandonment; cessions passing every standing settlement of
+// `from` in the region, a foothold cession included; capital_moved; a refugees_settled is the founder's latest
+// flight), region holders from region_control. Problems:
+//   (8) restated: no peace or war_won whose loser won its war's last battle, unless its winner is the attacker
+//       and holds the goal (region_control at the ending's year) with no standing settlement of the loser in it;
+//   (15) restated: no colony_founded (founder), claim (claimant) or war_declared (attacker) by y in a year Y in
+//       which y lies low: its latest flight (refuge h, year Y_f) has Y < Y_f + hidden_years of y's race and h is
+//       standing and y's (by the replay just before the event);
+//   (17) right after the cost of a peace or war_won won by the attacker W over L with goal G (the region_ceded or
+//       tribute caused by the ending, if any): if W holds G, L has no standing settlement in G unless L's capital
+//       is one of them;
+//   the replay's owners and standing against table settlement, its capitals against table civilization.
+// Facts: quick aim wins (an attacker's peace or war_won holding G with the loser out of G, no battle of the war,
+// years <= 1), foothold cessions (a region_ceded with no region_control row of its event), and the wars declared
+// over a region the attacker held (won by the attacker, by the defender, truce, open or otherwise).
+struct R17 {
+    std::vector<std::string> problems;
+    std::int64_t quick_aim_wins = 0, foothold_cessions = 0;
+    std::int64_t held_won_attacker = 0, held_won_defender = 0, held_truce = 0, held_other = 0;
+    // `<quick> foothold_cessions <m> held_goal_wars <wa>/<wd>/<t>/<o>` as the golden file's r17 line after "r17 "
+    [[nodiscard]] std::string line() const {
+        return "quick_aim_wins " + std::to_string(quick_aim_wins) + " foothold_cessions " +
+               std::to_string(foothold_cessions) + " held_goal_wars " + std::to_string(held_won_attacker) + "/" +
+               std::to_string(held_won_defender) + "/" + std::to_string(held_truce) + "/" + std::to_string(held_other);
+    }
+};
+
+inline R17 invariants_r17(const Tables& t, const wd::ContentSet& content) {
+    const Index x(t);
+    R17 out;
+    const std::map<std::int64_t, std::int64_t> hidden_of_race = race_hidden_years(content);
+    std::map<std::int64_t, std::int64_t> founded;  // founding event -> settlement
+    for (const Row& s : t.settlement) founded[at(s, 7)] = at(s, 0);
+    std::map<std::int64_t, std::vector<std::int64_t>> seceded_regions;
+    std::set<std::int64_t> rc_events;
+    for (const Row& rc : t.region_control) {
+        seceded_regions[at(rc, 4)].push_back(at(rc, 0));
+        rc_events.insert(at(rc, 4));
+    }
+    std::map<std::int64_t, std::int64_t> war_of_end;
+    for (const Row& r : t.relation) {
+        if (r[4].bytes == "war" && !is_null(r[6])) war_of_end[at(r, 8)] = at(r, 7);
+    }
+    // the owner of g in year y: the region_control row of g covering y with the largest from_year (and event),
+    // rows opened in y by an event after `before` left out; 0 if none
+    auto holder = [&t](std::int64_t g, std::int64_t y, std::int64_t before) {
+        const Row* best = nullptr;
+        for (const Row& rc : t.region_control) {
+            if (at(rc, 0) != g || at(rc, 1) > y || (!is_null(rc[2]) && at(rc, 2) < y)) continue;
+            if (at(rc, 1) == y && at(rc, 4) > before) continue;
+            if (best == nullptr || at(rc, 1) > at(*best, 1) || (at(rc, 1) == at(*best, 1) && at(rc, 4) > at(*best, 4))) {
+                best = &rc;
+            }
+        }
+        return best == nullptr ? std::int64_t{0} : at(*best, 3);
+    };
+    std::map<std::int64_t, std::int64_t> owner, capital;
+    std::map<std::int64_t, bool> standing;
+    struct Flight {
+        std::int64_t h, year;
+    };
+    std::map<std::int64_t, Flight> flights;
+    auto mine_in = [&](std::int64_t L, std::int64_t g) {
+        std::vector<std::int64_t> m;
+        for (const auto& [s, o] : owner) {
+            if (o == L && standing[s] && at(*x.st.at(s), 4) == g) m.push_back(s);
+        }
+        return m;
+    };
+    auto lies_low = [&](std::int64_t y, std::int64_t year) {
+        const auto it = flights.find(y);
+        if (it == flights.end()) return false;
+        const std::int64_t hy = hidden_of_race.at(at(*x.cv.at(y), 2));
+        const std::int64_t h = it->second.h;
+        return year < it->second.year + hy && standing[h] && owner[h] == y;
+    };
+    struct Pending {
+        std::int64_t w, l, g;
+    };
+    std::map<std::int64_t, Pending> pending17;
+    std::map<std::int64_t, int> held_goal;  // war -> 0 other, 1 attacker won, 2 defender won, 3 truce
+    for (const Row& e : t.event) {
+        const std::int64_t id = at(e, 0), y = at(e, 1), k = at(e, 3);
+        if (k == k_colony_founded && lies_low(x.role1(id, 2), y)) {
+            out.problems.push_back("(15) e" + std::to_string(id) + ": colony_founded by c" +
+                                   std::to_string(x.role1(id, 2)) + " while it lies low");
+        }
+        if ((k == k_claim || k == k_war_declared) && lies_low(x.role1(id, 1), y)) {
+            out.problems.push_back("(15) e" + std::to_string(id) + ": claim or war_declared by c" +
+                                   std::to_string(x.role1(id, 1)) + " while it lies low");
+        }
+        if (k == k_war_declared && holder(at(e, 5), y, id) == x.role1(id, 1)) held_goal.emplace(id, 0);
+        if (k == k_peace || k == k_war_won) {
+            const auto it = war_of_end.find(id);
+            if (it != war_of_end.end()) {
+                const std::int64_t d = it->second, A = x.role1(d, 1), g = at(*x.ev.at(d), 5);
+                const std::int64_t W = x.role1(id, 1), L = x.role1(id, 2);
+                bool battles = false;
+                for (const std::int64_t b : x.kids(d)) battles = battles || x.kind(b) == k_battle || x.kind(b) == k_battle_at_pass;
+                const bool held = holder(g, y, id) == W, clear = mine_in(L, g).empty();
+                if (last_battle_winner(x, d) == L && !(W == A && held && clear)) {
+                    out.problems.push_back("(8) e" + std::to_string(id) + ": the loser c" + std::to_string(L) +
+                                           " won the last battle of war e" + std::to_string(d) +
+                                           ", and the winner is not the attacker holding the goal with the loser out of it");
+                }
+                const auto v = x.values.find(id);
+                const std::int64_t years = v != x.values.end() && v->second.count(1) != 0 ? v->second.at(1) : 99;
+                if (W == A && held && clear && !battles && years <= 1) ++out.quick_aim_wins;
+                if (held_goal.count(d) != 0) held_goal[d] = W == A ? 1 : 2;
+                if (W == A) pending17[id] = Pending{W, L, g};
+            }
+        }
+        if (k == k_truce) {
+            const auto it = war_of_end.find(id);
+            if (it != war_of_end.end() && held_goal.count(it->second) != 0) held_goal[it->second] = 3;
+        }
+        // the event's changes
+        if (const auto f = founded.find(id); f != founded.end()) {
+            const std::int64_t s = f->second, c = at(*x.st.at(s), 5);
+            owner[s] = c;
+            standing[s] = true;
+            capital.emplace(c, s);
+        }
+        if (k == k_civ_seceded) {
+            const std::int64_t c2 = x.role1(id, 1), frm = x.role1(id, 2);
+            std::set<std::int64_t> regs(seceded_regions[id].begin(), seceded_regions[id].end());
+            regs.insert(at(e, 5));
+            for (auto& [s, o] : owner) {
+                if (o == frm && standing[s] && regs.count(at(*x.st.at(s), 4)) != 0) o = c2;
+            }
+            if (at(e, 6) != 0) {
+                capital[c2] = at(e, 6);
+            } else {
+                for (const auto& [s, o] : owner) {
+                    if (o == c2 && standing[s]) {
+                        capital.emplace(c2, s);
+                        break;
+                    }
+                }
+            }
+        } else if (k == k_settlement_captured) {
+            owner[at(e, 6)] = x.role1(id, 1);
+        } else if (k == k_sacked || k == k_settlement_abandoned || k == k_settlement_abandoned_to) {
+            owner[at(e, 6)] = 0;
+            standing[at(e, 6)] = false;
+        } else if (k == k_capital_moved) {
+            capital[x.role1(id, 1)] = at(e, 6);
+        } else if (k == k_refugees_settled) {
+            flights[x.role1(id, 2)] = Flight{at(e, 6), y};
+        } else if (k == k_region_ceded) {
+            const std::int64_t g = at(e, 5), L = x.role1(id, 1), W = x.role1(id, 2);
+            if (rc_events.count(id) == 0) ++out.foothold_cessions;
+            for (const std::int64_t s : mine_in(L, g)) owner[s] = W;
+        }
+        // (17) once the ending's cost events (caused by it) are applied
+        for (auto it = pending17.begin(); it != pending17.end();) {
+            std::int64_t last = it->first;
+            for (const std::int64_t c : x.kids(it->first)) {
+                if (x.kind(c) == k_region_ceded || x.kind(c) == k_tribute) last = std::max(last, c);
+            }
+            if (last > id) {
+                ++it;
+                continue;
+            }
+            const Pending p = it->second;
+            if (holder(p.g, x.year(it->first), last) == p.w) {
+                const std::vector<std::int64_t> m = mine_in(p.l, p.g);
+                if (!m.empty() && std::find(m.begin(), m.end(), capital[p.l]) == m.end()) {
+                    out.problems.push_back("(17) e" + std::to_string(it->first) + ": c" + std::to_string(p.w) +
+                                           " won and holds rg" + std::to_string(p.g) + ", but c" + std::to_string(p.l) +
+                                           " still stands there");
+                }
+            }
+            it = pending17.erase(it);
+        }
+    }
+    for (const Row& s : t.settlement) {
+        const std::int64_t id = at(s, 0);
+        const bool st = at(s, 10) == 1 || at(s, 10) == 2;
+        if (standing.count(id) == 0 || standing[id] != st || (st && owner[id] != at(s, 8))) {
+            out.problems.push_back("replay: s" + std::to_string(id) + " owner or status differs from the table");
+        }
+    }
+    for (const Row& c : t.civilization) {
+        if (is_null(c[8]) && capital[at(c, 0)] != at(c, 5)) {
+            out.problems.push_back("replay: c" + std::to_string(at(c, 0)) + " capital differs from the table");
+        }
+    }
+    for (const auto& [d, v] : held_goal) {
+        (v == 1 ? out.held_won_attacker : v == 2 ? out.held_won_defender : v == 3 ? out.held_truce : out.held_other) += 1;
+    }
+    return out;
+}
+
+// P3-06 r17 22.10 item 7 on one world or case: invariants (8), (15), (17) restated hold, and the replay's facts
+// equal the reference's r17 line of the golden case (when the file has one).
+inline void check_r17(const Tables& t, const wd::ContentSet& c, const CCase& g) {
+    const R17 r = invariants_r17(t, c);
+    CHECK(r.problems == std::vector<std::string>{});
+    CHECK_MESSAGE(!g.r17.empty(), "the golden case has no r17 line (P3-10 second round)");
+    if (!g.r17.empty()) CHECK(r.line() == g.r17);
 }
 
 }  // namespace conflict_test

@@ -25,6 +25,7 @@
 #include <utility>
 #include <vector>
 
+#include "../p3_10_r3_switch.hpp"
 #include "p3_03_chronology_support.hpp"
 #include "p3_04_engine_api.hpp"
 #include "worldgen/data/value.hpp"
@@ -460,6 +461,9 @@ struct Detail {
 struct EngineTuning {
     std::int64_t quiet_step_years = 25, quiet_events_max = 3, simulated_min_permille = 100,
                  simulated_max_permille = 450, islet_max_dry_cells = 1172;
+    // P3-04 r15 4.1 (P3-10 second round): after quiet_events_max in the record; written by engine_record only
+    // with the second round's library (UNMAPPED_P3_10_R3_API), always by engine_record_r15
+    std::int64_t quiet_min_years = 50;
     Detail sparse{75, 30, 250, 1500}, normal{150, 50, 300, 1000}, dense{250, 75, 400, 700};
 };
 struct ReportEntry {
@@ -490,10 +494,11 @@ inline wd::Record detail_record(const Detail& d) {
     r.add("flare_threshold", wd::Value::integer(d.flare_threshold));
     return r;
 }
-inline wd::Record engine_record(const EngineTuning& t) {
+inline wd::Record engine_record(const EngineTuning& t, bool with_quiet_min = UNMAPPED_P3_10_R3_API != 0) {
     wd::Record r;
     r.add("quiet_step_years", wd::Value::integer(t.quiet_step_years));
     r.add("quiet_events_max", wd::Value::integer(t.quiet_events_max));
+    if (with_quiet_min) r.add("quiet_min_years", wd::Value::integer(t.quiet_min_years));
     r.add("simulated_min_permille", wd::Value::integer(t.simulated_min_permille));
     r.add("simulated_max_permille", wd::Value::integer(t.simulated_max_permille));
     r.add("islet_max_dry_cells", wd::Value::integer(t.islet_max_dry_cells));
@@ -531,8 +536,27 @@ inline wd::ContentSet with_history_record(const wd::ContentSet& base, const std:
     FAIL("no history." << id << " in the content");
     return c;
 }
+// P3-04 r15 4.1 (P3-10 second round): the shipped quiet_min_years (0 when the record has none: the first round).
+inline std::int64_t shipped_quiet_min_years() {
+    for (const wd::KindContent& k : shipped().kinds) {
+        if (k.kind != "history") continue;
+        for (const wd::Definition& d : k.definitions) {
+            if (d.id != "engine") continue;
+            for (std::size_t i = 0; i < d.record.size(); ++i) {
+                if (d.record.name_at(i) == "quiet_min_years") return d.record.get_int("quiet_min_years");
+            }
+        }
+    }
+    return 0;
+}
+
 inline wd::ContentSet with_engine(const EngineTuning& t, const wd::ContentSet& base = shipped()) {
     return with_history_record(base, "engine", engine_record(t));
+}
+// P3-04 r15: the record with quiet_min_years whatever the library (the r15 tests fail on the first round's
+// library, which ignores the field, instead of testing nothing)
+inline wd::ContentSet with_engine_r15(const EngineTuning& t, const wd::ContentSet& base = shipped()) {
+    return with_history_record(base, "engine", engine_record(t, true));
 }
 inline wd::ContentSet with_report(const std::vector<ReportEntry>& es, const wd::ContentSet& base = shipped()) {
     return with_history_record(base, "report", report_record(es));

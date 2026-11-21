@@ -57,7 +57,7 @@ TEST_SUITE("history") {
 
 TEST_CASE("P3-06 r9 20.9, r10 20.19, r14 21.7, 21.9: the new history.conflict fields follow last_refuge in order (odds_min out at 0.19.0), shipped values") {
     const std::vector<std::pair<const char*, std::int64_t>> want = {
-        {"refuge_flight", 1}, {"flight_hops", 3}, {"hidden_years", 300}, {"weary_wars", 3}, {"tribute_permille", 100},
+        {"refuge_flight", 1}, {"flight_hops", 3}, {"weary_wars", 3}, {"tribute_permille", 100},  // hidden_years: r17 22.2
         {"revenge_aggression", 400}, {"levy_hops", 3}, {"odds_floor", 500},  // odds_min: removed by P3-06 r14 21.9
         {"truce_break_aggression", 600}, {"enmity_hops", 3},
         // r10 20.19 (P3-09 r3)
@@ -65,7 +65,9 @@ TEST_CASE("P3-06 r9 20.9, r10 20.19, r14 21.7, 21.9: the new history.conflict fi
         // r14 21.7 (P3-10, 0.19.0)
         {"search_weary_years", 500}, {"search_repeat_salience", 15},
         // r15 21.12 item 2 (P3-10 r1)
-        {"quarrel_strain", 600}};
+        {"quarrel_strain", 600},
+        // r17 22.1 item 4 (P3-10 second round)
+        {"quarrel_min_settlements", 2}};
     for (const wd::ContentSet* c : {&shipped_content()}) {
         const wd::Record& r = history_record(*c, "conflict");
         const std::int64_t at = index_of(r, "last_refuge");
@@ -112,7 +114,10 @@ TEST_CASE("P3-06 r9 20.12, P3-01 r9 3.2: muster_permille, conceal_min, home_defe
         // P3-01 r11 3.5 (0.19.0): odds_min_permille and awakening_quarrel follow home_defense_permille
         CHECK(d.record.name_at(static_cast<std::size_t>(at) + 4) == "odds_min_permille");
         CHECK(d.record.name_at(static_cast<std::size_t>(at) + 5) == "awakening_quarrel");
-        CHECK(d.record.name_at(static_cast<std::size_t>(at) + 6) == "settlement_kinds");
+        // P3-01 r13 3.6 (P3-10 second round): hidden_years follows awakening_quarrel (orc 100, others 300)
+        CHECK(d.record.name_at(static_cast<std::size_t>(at) + 6) == "hidden_years");
+        CHECK(d.record.get_int("hidden_years") == (d.id == "orc" ? 100 : 300));
+        CHECK(d.record.name_at(static_cast<std::size_t>(at) + 7) == "settlement_kinds");
         CHECK(d.record.get_int("muster_permille") == want[i].muster);
         CHECK(d.record.get_int("conceal_min") == want[i].conceal);
         CHECK(d.record.get_int("home_defense_permille") == want[i].home);

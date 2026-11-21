@@ -45,7 +45,11 @@
 // civs_extra_max, the templates of kinds 10, 15, 16, 17, 22, 23 and 31, and
 // the entries of kinds 37 and 38 appended after kind 36's (the same
 // assumption). P3-10 r1 (P3-06 r15 21.12, P3-01 r12 3.5): quarrel_strain 600
-// after search_repeat_salience. Mirrors SPEC_FILES_019.
+// after search_repeat_salience. P3-10 second round (r3; P3-01 r13 3.6, P3-06
+// r17 22.1, 22.2, P3-04 r15 4.1): race hidden_years after awakening_quarrel
+// (orc 100, others 300), history.conflict without hidden_years and with
+// quarrel_min_settlements 2 after quarrel_strain, history.engine
+// quiet_min_years 50 after quiet_events_max. Mirrors SPEC_FILES_019.
 
 #include <cstdint>
 #include <map>
@@ -93,6 +97,7 @@ conceal_min = 1001
 home_defense_permille = 1500
 odds_min_permille = 700
 awakening_quarrel = 0
+hidden_years = 300
 settlement_kinds = ["hamlet", "village", "town", "city"]
 culture = "elven"
 )";
@@ -130,6 +135,7 @@ conceal_min = 1001
 home_defense_permille = 0
 odds_min_permille = 700
 awakening_quarrel = 0
+hidden_years = 300
 settlement_kinds = ["hamlet", "village", "town", "fortress"]
 culture = "goblin"
 )";
@@ -166,6 +172,7 @@ conceal_min = 1001
 home_defense_permille = 0
 odds_min_permille = 700
 awakening_quarrel = 0
+hidden_years = 300
 settlement_kinds = ["hamlet", "village", "town", "city", "fortress"]
 culture = "dwarven"
 )";
@@ -204,6 +211,7 @@ conceal_min = 400
 home_defense_permille = 0
 odds_min_permille = 700
 awakening_quarrel = 0
+hidden_years = 300
 settlement_kinds = ["hamlet", "village"]
 culture = "faerie"
 )";
@@ -241,6 +249,7 @@ conceal_min = 1001
 home_defense_permille = 0
 odds_min_permille = 700
 awakening_quarrel = 0
+hidden_years = 300
 settlement_kinds = ["hamlet", "village", "town", "city", "fortress"]
 culture = "human"
 )";
@@ -279,6 +288,7 @@ conceal_min = 1001
 home_defense_permille = 0
 odds_min_permille = 500
 awakening_quarrel = 1
+hidden_years = 100
 settlement_kinds = ["hamlet", "village", "town", "fortress"]
 culture = "orcish"
 )";
@@ -377,6 +387,7 @@ age_name_form = "The Age of {plural}"
 inline constexpr std::string_view ENGINE_TOML = R"([history.engine]
 quiet_step_years = 25
 quiet_events_max = 3
+quiet_min_years = 50
 simulated_min_permille = 100
 simulated_max_permille = 450
 islet_max_dry_cells = 1172
@@ -474,7 +485,6 @@ grudge_decay_per_century = 50
 last_refuge = 1
 refuge_flight = 1
 flight_hops = 3
-hidden_years = 300
 weary_wars = 3
 tribute_permille = 100
 revenge_aggression = 400
@@ -488,6 +498,7 @@ search_years = 3
 search_weary_years = 500
 search_repeat_salience = 15
 quarrel_strain = 600
+quarrel_min_settlements = 2
 capital_sacked_salience = 90
 capital_captured_salience = 80
 )";
@@ -671,6 +682,7 @@ struct Race {
     // the end of the struct so the aggregate initializers above them stay as they were.
     std::int64_t cell_inland, cell_port, cell_habitability;
     std::int64_t odds_min_permille, awakening_quarrel;
+    std::int64_t hidden_years;  // P3-01 r13 3.6 (P3-10 second round): after awakening_quarrel in the record
 };
 
 // The six races of P3-01 3.1 in canonical id order. Raw values of the
@@ -681,27 +693,27 @@ inline const std::vector<Race>& races() {
         {"dwarf", 3, "Dwarf", "Dwarves", "Dwarven", "neutral", 2362232013, 300, 70, 5, 700, 10, 10, 10, 60, 10, 400, 600,
          {{"alpine", 300}, {"highland_moor", 300}, {"heath", 200}, {"temperate_forest", -100}, {"wet_woodland", -300},
           {"marsh", -400}, {"fen", -400}},
-         800, -200, 250, 300, 1400, 1000, 1001, 0, {"hamlet", "village", "town", "city", "fortress"}, "dwarven", 0, 0, 500, 700, 0},
+         800, -200, 250, 300, 1400, 1000, 1001, 0, {"hamlet", "village", "town", "city", "fortress"}, "dwarven", 0, 0, 500, 700, 0, 300},
         {"elf", 1, "Elf", "Elves", "Elven", "good", 0, 700, 150, 3, 300, 20, 35, 35, 0, 10, 0, 0,
          {{"temperate_forest", 500}, {"wet_woodland", 300}, {"grassland", 0}, {"heath", -200}, {"steppe", -300},
           {"highland_moor", -300}, {"alpine", -600}},
-         -300, 0, 200, 150, 1600, 1000, 1001, 1500, {"hamlet", "village", "town", "city"}, "elven", 0, 1000, 1000, 700, 0},
+         -300, 0, 200, 150, 1600, 1000, 1001, 1500, {"hamlet", "village", "town", "city"}, "elven", 0, 1000, 1000, 700, 0, 300},
         {"faerie", 4, "Faerie", "Faeries", "Faerie", "good", 3006477107, 400, 100, 4, 250, 0, 60, 20, 0, 20, 0, 0,
          {{"temperate_forest", 800}, {"wet_woodland", 800}, {"fen", 300}, {"marsh", 200}, {"highland_moor", 100},
           {"heath", 0}, {"grassland", -300}, {"alpine", -400}, {"steppe", -400}},
-         200, -500, 100, 50, 1200, 1000, 400, 0, {"hamlet", "village"}, "faerie", 400, 0, 1000, 700, 0},  // home 0: P3-01 r10 3.3
+         200, -500, 100, 50, 1200, 1000, 400, 0, {"hamlet", "village"}, "faerie", 400, 0, 1000, 700, 0, 300},  // home 0: P3-01 r10 3.3
         {"goblin", 2, "Goblin", "Goblins", "Goblin", "evil", 1503238554, 40, 15, 20, 900, 40, 20, 10, 30, 0, 0, 0,
          {{"heath", 200}, {"highland_moor", 200}, {"steppe", 150}, {"grassland", 100}, {"marsh", 100}, {"alpine", -400},
           {"temperate_forest", -200}, {"wet_woodland", -300}},
-         100, -100, 600, 600, 800, 1000, 1001, 0, {"hamlet", "village", "town", "fortress"}, "goblin", 0, 1000, 1000, 700, 0},
+         100, -100, 600, 600, 800, 1000, 1001, 0, {"hamlet", "village", "town", "fortress"}, "goblin", 0, 1000, 1000, 700, 0, 300},
         {"human", 5, "Human", "Humans", "Human", "neutral", 3564822856, 70, 25, 15, 1000, 60, 10, 10, 5, 15, 0, 0,
          {{"grassland", 300}, {"steppe", 100}, {"temperate_forest", 100}, {"marsh", -100}, {"heath", -100},
           {"fen", -200}, {"highland_moor", -200}, {"alpine", -500}},
-         -300, 200, 700, 400, 1000, 1000, 1001, 0, {"hamlet", "village", "town", "city", "fortress"}, "human", 0, 1000, 1000, 700, 0},
+         -300, 200, 700, 400, 1000, 1000, 1001, 0, {"hamlet", "village", "town", "city", "fortress"}, "human", 0, 1000, 1000, 700, 0, 300},
         {"orc", 6, "Orc", "Orcs", "Orcish", "evil", 3994319585, 50, 18, 18, 800, 35, 25, 10, 30, 0, 0, 0,
          {{"steppe", 400}, {"heath", 200}, {"grassland", 200}, {"highland_moor", 100}, {"temperate_forest", -100},
           {"marsh", -100}, {"fen", -200}, {"wet_woodland", -200}, {"alpine", -300}},
-         100, -100, 600, 900, 1300, 4000, 1001, 0, {"hamlet", "village", "town", "fortress"}, "orcish", 0, 1000, 1000, 500, 1},
+         100, -100, 600, 900, 1300, 4000, 1001, 0, {"hamlet", "village", "town", "fortress"}, "orcish", 0, 1000, 1000, 500, 1, 100},
     };
     return v;
 }
@@ -724,6 +736,7 @@ inline const std::vector<std::string_view>& race_fields() {
         "generation_years", "growth_permille", "density_permille", "site_weights", "cell_weights", "biomes", "upland", "coast",          "expansion",
         "aggression",      "prowess_permille", "muster_permille", "conceal_min", "home_defense_permille",
         "odds_min_permille", "awakening_quarrel",  // P3-01 r11 3.5 (generator 0.19.0)
+        "hidden_years",                            // P3-01 r13 3.6 (P3-10 second round)
         "settlement_kinds", "culture"};
     return v;
 }

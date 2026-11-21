@@ -344,8 +344,9 @@ TEST_CASE("P3-02 11.7 item 1: the shipped name_filters/ loads: four definitions,
     const std::vector<std::string_view> ids = {"crude", "famous", "slurs", "words"};
     for (std::size_t i = 0; i < 4; ++i) CHECK(kind->definitions[i].id == ids[i]);
     // Sizes of 11.2 per definition: anywhere, at_start, whole.
-    // words: 389 / 5 / 1 and crude 70 anywhere from P3-02 r10 12.1 (0.19.0; 393 whole from r8 11.11, 647 at 0.17.0)
-    const std::vector<std::array<std::size_t, 3>> sizes = {{70, 16, 14}, {0, 0, 101}, {33, 19, 6}, {5, 1, 389}};
+    // words: 389 / 5 / 1 and crude 70 anywhere from P3-02 r10 12.1 (0.19.0; 393 whole from r8 11.11, 647 at 0.17.0);
+    // P3-02 r13 13.1 (P3-10 second round): crude 72 / 12 / 14, slurs 33 / 18 / 6, words 5 / 1 / 387
+    const std::vector<std::array<std::size_t, 3>> sizes = {{72, 12, 14}, {0, 0, 101}, {33, 18, 6}, {5, 1, 387}};
     for (std::size_t i = 0; i < 4; ++i) {
         CAPTURE(ids[i]);
         const wd::Record& rec = kind->definitions[i].record;
@@ -484,6 +485,50 @@ TEST_CASE("P3-02 11.7 item 3: naming_realm_forms and god_patterns' grammar, boun
         (*n.god_patterns)[0] = bad;
         check_fails(n, PATTERN);
     }
+}
+
+TEST_CASE("P3-02 r13 13.1, 13.3: the edited lists pass name_filter_not_redundant; a copy keeping crude.at_start pee "
+          "or words.whole teepee fails it") {
+    const wd::LoadResult<wd::ContentSet> ok = wd::load_content(wd::builtin_kinds(), data_root());
+    INFO(errors_of(ok));
+    CHECK(ok.ok());
+    // the five fragments are crude.anywhere entries; the four old at_start entries, poop, tits, titt, slurs'
+    // poof and words' teepee and toupee are gone (13.1's table)
+    const names_api::Filter& f = names_test::shipped_filter();
+    auto has = [](const std::vector<std::string>& v, const char* w) { return std::find(v.begin(), v.end(), w) != v.end(); };
+    for (const char* w : {"cum", "fass", "pee", "poo", "tit"}) {
+        CAPTURE(std::string_view(w));
+        CHECK(has(f.anywhere, w));
+        CHECK_FALSE(has(f.at_start, w));
+    }
+    for (const char* w : {"poop", "tits", "titt"}) CHECK_FALSE(has(f.anywhere, w));
+    CHECK_FALSE(has(f.at_start, "poof"));
+    CHECK_FALSE(has(f.whole, "teepee"));
+    CHECK_FALSE(has(f.whole, "toupee"));
+    auto edited = [](const char* file, const char* from, const char* to) {
+        wd::MemoryDataRoot root = shipped_in_memory();
+        bool done = false;
+        for (wd::MemoryDirectory& d : root.directories) {
+            if (d.name != "name_filters") continue;
+            for (wd::MemoryEntry& e : d.entries) {
+                if (e.name != file) continue;
+                const std::size_t at = e.bytes.find(from);
+                REQUIRE(at != std::string::npos);
+                e.bytes.replace(at, std::string_view(from).size(), to);
+                done = true;
+            }
+        }
+        REQUIRE(done);
+        return wd::load_content_from_memory(wd::builtin_kinds(), root);
+    };
+    const wd::LoadResult<wd::ContentSet> pee = edited("crude.toml", "at_start = [", "at_start = [\"pee\", ");
+    CHECK_FALSE(pee.ok());
+    CHECK(errors_of(pee).find("error: check 'name_filter_not_redundant' failed for 'name_filter.crude': 'crude' at_start "
+                              "'pee' is already rejected by anywhere 'pee' of 'crude'") != std::string::npos);
+    const wd::LoadResult<wd::ContentSet> teepee = edited("words.toml", "whole = [", "whole = [\"teepee\", ");
+    CHECK_FALSE(teepee.ok());
+    CHECK(errors_of(teepee).find("error: check 'name_filter_not_redundant' failed for 'name_filter.words': 'words' whole "
+                                 "'teepee' is already rejected by anywhere 'pee' of 'crude'") != std::string::npos);
 }
 
 }  // TEST_SUITE

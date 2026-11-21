@@ -347,7 +347,8 @@ void check_stub_world(std::uint64_t seed, std::int64_t span, const std::vector<s
             for (const Row& c : t.civilization) {
                 any = any || at(c, 6) < at(ph, 3);
             }
-            expect_events += any ? 1 : 0;
+            // r15 20.1 item 1a (P3-10 second round): and the row at least quiet_min_years long
+            expect_events += any && at(ph, 4) - at(ph, 3) + 1 >= shipped_quiet_min_years() ? 1 : 0;
         }
     }
     CHECK(static_cast<std::int64_t>(t.event.size()) == expect_events);
