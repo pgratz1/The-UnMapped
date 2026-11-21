@@ -214,6 +214,24 @@ TEST_CASE("P3-06 16.3 item 19, 16.2 item 16: the 1024 golden worlds and the hard
 // quoted sentences) is generator 0.16.0's (P3-06 r7 15: "The 0.16.0 figures of 15 stay as measured"); from
 // 0.17.0 (P3-08) the case is checked against the golden file like every other world, and 16.3 item 20
 // becomes the peoples-only prefix of 16.2 item 18a (r7).
+// P3-06 21.6's order of items (P3-10 second round, validation's D1): 1024 default seed 73 is the one sweep world
+// (of 375) whose history reaches a T6 check where aim (21.6 item 1) and exhaustion (7.7 item 1) both hold with
+// different endings: war e875, checked in 5063, ends by aim with the attacker's peace (e914) and tribute, not in a
+// truce. The case's lines are the reference's (p3_conflict_reference.py, WORLD_CASES_019); the hand-made cases of
+// the order are in history_conflict_order_test.cpp.
+TEST_CASE("P3-06 21.6 (D1): hist-conflict-73-1024, a check where aim and exhaustion both hold, equals the reference") {
+    const CCase& g = conflict_case("hist-conflict-73-1024");
+    REQUIRE(g.kind == "world");
+    check_world_case(g);
+    REQUIRE(g.sentences.count(914) == 1U);
+    const db::WorldReader r = open_world(world_path(g));
+    const Tables t = tables_of_world(r);
+    REQUIRE(t.event.size() >= 914U);
+    const Row& e = t.event[913];
+    CHECK(at(e, 1) == 5063);
+    CHECK(at(e, 3) == k_peace);  // the reference: aim with the defender exhausted
+}
+
 TEST_CASE("P3-06 16.3 item 20, 16.2 item 18a (r7): seed 42 at 1024 below its first claim is the peoples-only log") {
     const CCase& g = conflict_case("hist-conflict-42-1024");
     const Tables t = tables_of_world(open_world(world_path(g)));

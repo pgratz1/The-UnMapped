@@ -8272,6 +8272,1255 @@ hist-conflict-flight e581 The plague spread to Gnot Pit; 510 died.
 hist-conflict-flight e582 The plague spread to Gnok-Skeex; 118 died.
 hist-conflict-flight e583 The plague spread to Skrukkreek; 140 died.
 hist-conflict-flight e584 The plague spread to Druzz; 213 died.
+world hist-conflict-73-1024 73 1024 6000 all normal auto normal
+hist-conflict-73-1024 input_region 0a7fdede133953e1d874676d7c006bc2304b24ac76a55a33d860bf0d32a03c67
+hist-conflict-73-1024 table civilization 1ddc8d39686574406d7fb814c007d397c9ca746898728ed469559ad57c4a3053
+hist-conflict-73-1024 table event 8ea2e9148ea4486fe1b47fa13b81889cf8bf4eb894aaa32170a468c6aeb1e646
+hist-conflict-73-1024 table event_cause d04f0253b4b051afe57e68ee89732e2be120459d5ac1a212b6bc17830a39b048
+hist-conflict-73-1024 table event_kind 5bb33c7be421113e5b2507e775557dd7afe51c39ad7d9a5426e6f8e94e4b2f18
+hist-conflict-73-1024 table event_kind_role 828c060dc0d262d618363e1eb4194754223827013ae83efa04ea2944f3b5731b
+hist-conflict-73-1024 table event_kind_value ea3bdaba66965ca348093390b78ac4b2e92807052c93c9bb59822b0c53c0771e
+hist-conflict-73-1024 table event_participant 261dcd7ea7a4b9a7a7486c5a067424602071a0b80784d8e8a62ca29e189acd7b
+hist-conflict-73-1024 table event_value a66c97c3bb788dd1b94defe203174a4848bf41e68b5f3a5deeb13c6cdc1d7aff
+hist-conflict-73-1024 table phase 7627d3458fc1188c187675f5a876e449ece9a0555f0fe0d16b08c624b223266d
+hist-conflict-73-1024 table region_control 67f6b22cdbbb4d2ea9b75dd4b3af7ff4012ef4711455ebc8344b300db57b3799
+hist-conflict-73-1024 table relation 38ae2d9b86aa1433efe49729babbf28c455b02be7ecf3283f398f71aae1f108e
+hist-conflict-73-1024 table settlement 01a46fa49c1e488db495c8959dd50f8077f9c481a5ba48477c76f4911046f6df
+hist-conflict-73-1024 table settlement_census 76ac18f54248356a24b3d05d5e6df09ca233d9181a72d499e7f3fc7c0f0fd51c
+hist-conflict-73-1024 report end_year = 6000
+hist-conflict-73-1024 report phases_opening = 6
+hist-conflict-73-1024 report phases_quiet = 11
+hist-conflict-73-1024 report phases_flare = 8
+hist-conflict-73-1024 report phases_final = 1
+hist-conflict-73-1024 report simulated_years = 1487
+hist-conflict-73-1024 report simulated_permille = 247
+hist-conflict-73-1024 report events = 1418
+hist-conflict-73-1024 report events_awakening = 6
+hist-conflict-73-1024 report events_civ_founded = 8
+hist-conflict-73-1024 report events_settlement_founded = 8
+hist-conflict-73-1024 report events_quiet_era = 0
+hist-conflict-73-1024 report events_flare_up = 8
+hist-conflict-73-1024 report events_colony_founded = 130
+hist-conflict-73-1024 report events_became_village = 30
+hist-conflict-73-1024 report events_became_town = 112
+hist-conflict-73-1024 report events_became_city = 2
+hist-conflict-73-1024 report events_settlement_dwindled = 31
+hist-conflict-73-1024 report events_famine = 92
+hist-conflict-73-1024 report events_plague = 0
+hist-conflict-73-1024 report events_plague_spread = 124
+hist-conflict-73-1024 report events_succession_crisis = 25
+hist-conflict-73-1024 report events_civ_seceded = 6
+hist-conflict-73-1024 report events_settlement_abandoned = 0
+hist-conflict-73-1024 report events_capital_moved = 9
+hist-conflict-73-1024 report events_civ_ended = 0
+hist-conflict-73-1024 report events_ruin_faded = 6
+hist-conflict-73-1024 report events_claim = 100
+hist-conflict-73-1024 report events_war_declared = 63
+hist-conflict-73-1024 report events_battle = 242
+hist-conflict-73-1024 report events_battle_at_pass = 0
+hist-conflict-73-1024 report events_siege = 119
+hist-conflict-73-1024 report events_sacked = 32
+hist-conflict-73-1024 report events_settlement_captured = 25
+hist-conflict-73-1024 report events_peace = 19
+hist-conflict-73-1024 report events_truce = 15
+hist-conflict-73-1024 report events_region_ceded = 24
+hist-conflict-73-1024 report events_civ_conquered = 2
+hist-conflict-73-1024 report events_settlement_abandoned_to = 1
+hist-conflict-73-1024 report events_refugees_settled = 0
+hist-conflict-73-1024 report events_tribute = 18
+hist-conflict-73-1024 report events_war_won = 23
+hist-conflict-73-1024 report events_search_abandoned = 3
+hist-conflict-73-1024 report events_refuge_held = 0
+hist-conflict-73-1024 report events_plague_outbreak = 125
+hist-conflict-73-1024 report events_quiet_stretch = 10
+hist-conflict-73-1024 report civilizations = 14
+hist-conflict-73-1024 report civilizations_alive = 12
+hist-conflict-73-1024 report settlements = 138
+hist-conflict-73-1024 report settlements_standing = 105
+hist-conflict-73-1024 report regions_held = 31
+hist-conflict-73-1024 report census_rows = 2596
+hist-conflict-73-1024 report relations = 155
+hist-conflict-73-1024 report population = 210074
+hist-conflict-73-1024 report population_elf = 12173
+hist-conflict-73-1024 report population_goblin = 169039
+hist-conflict-73-1024 report population_dwarf = 4439
+hist-conflict-73-1024 report population_faerie = 2413
+hist-conflict-73-1024 report population_human = 14376
+hist-conflict-73-1024 report population_orc = 7634
+hist-conflict-73-1024 report settlements_standing_elf = 12
+hist-conflict-73-1024 report settlements_standing_goblin = 76
+hist-conflict-73-1024 report settlements_standing_dwarf = 4
+hist-conflict-73-1024 report settlements_standing_faerie = 3
+hist-conflict-73-1024 report settlements_standing_human = 4
+hist-conflict-73-1024 report settlements_standing_orc = 6
+hist-conflict-73-1024 report regions_held_elf = 3
+hist-conflict-73-1024 report regions_held_goblin = 23
+hist-conflict-73-1024 report regions_held_dwarf = 1
+hist-conflict-73-1024 report regions_held_faerie = 1
+hist-conflict-73-1024 report regions_held_human = 1
+hist-conflict-73-1024 report regions_held_orc = 2
+hist-conflict-73-1024 stats civ_settlements_max = 32
+hist-conflict-73-1024 stats settlements_colonies = 130
+hist-conflict-73-1024 stats civilizations_seceded = 6
+hist-conflict-73-1024 stats relations_enmity = 32
+hist-conflict-73-1024 stats relations_peace = 60
+hist-conflict-73-1024 stats war_years_total = 884
+hist-conflict-73-1024 stats war_years_max = 35
+hist-conflict-73-1024 stats civilizations_conquered = 2
+hist-conflict-73-1024 stats settlements_sacked = 26
+hist-conflict-73-1024 stats settlements_captured = 23
+hist-conflict-73-1024 stats regions_conquered = 31
+hist-conflict-73-1024 stats races_alive = 6
+hist-conflict-73-1024 stats wars_attacker_elf = 0
+hist-conflict-73-1024 stats wars_attacker_goblin = 60
+hist-conflict-73-1024 stats wars_attacker_dwarf = 2
+hist-conflict-73-1024 stats wars_attacker_faerie = 0
+hist-conflict-73-1024 stats wars_attacker_human = 0
+hist-conflict-73-1024 stats wars_attacker_orc = 1
+hist-conflict-73-1024 stats wars_hollow = 11
+hist-conflict-73-1024 stats wars_hollow_permille = 183
+hist-conflict-73-1024 stats wars_same_goal_max = 5
+hist-conflict-73-1024 stats wars_same_goal_unchanged_max = 3
+hist-conflict-73-1024 stats race_population_share_max_permille = 804
+hist-conflict-73-1024 stats race_regions_share_max_permille = 741
+hist-conflict-73-1024 stats wars_unfound = 3
+hist-conflict-73-1024 stats refuges_held_no_destination = 0
+hist-conflict-73-1024 war e86 2641-2651 c3 c1 rg11 claim e36 battles 4 sacked 0 taken 1 exhaustion truce
+hist-conflict-73-1024 war e109 2670-2691 c3 c2 rg12 claim e88 battles 1 sacked 0 taken 0 quiet won-c2-ceded
+hist-conflict-73-1024 war e173 3216-3221 c4 c2 rg19 claim e140 battles 1 sacked 1 taken 0 goal-lost won-c4-tribute
+hist-conflict-73-1024 war e182 3227-3238 c4 c1 rg18 claim e97 battles 3 sacked 0 taken 0 exhaustion truce
+hist-conflict-73-1024 war e191 3242-3263 c3 c1 rg18 claim e155 battles 5 sacked 2 taken 0 exhaustion won-c1-ceded
+hist-conflict-73-1024 war e210 3265-3266 c3 c2 rg12 claim e161 battles 0 sacked 0 taken 0 quiet truce
+hist-conflict-73-1024 war e252 3503-3510 c3 c1 rg18 claim e245 battles 3 sacked 2 taken 0 quiet won-c1-ceded
+hist-conflict-73-1024 war e277 3685-3686 c4 c1 rg19 claim e242 battles 1 sacked 1 taken 0 goal-lost won-c4-ceded
+hist-conflict-73-1024 war e286 3695-3720 c4 c6 rg45 claim e235 battles 6 sacked 0 taken 0 exhaustion truce
+hist-conflict-73-1024 war e297 3703-3719 c3 c2 rg12 claim e274 battles 5 sacked 0 taken 0 exhaustion won-c2-ceded
+hist-conflict-73-1024 war e324 3725-3735 c4 c5 rg36 claim e269 battles 3 sacked 0 taken 1 quiet won-c4-tribute
+hist-conflict-73-1024 war e366 4110-4125 c4 c2 rg19 claim e344 battles 5 sacked 1 taken 0 goal-lost won-c4-tribute
+hist-conflict-73-1024 war e391 4128-4160 c4 c3 rg49 claim e298 battles 5 sacked 0 taken 3 quiet won-c4-ceded
+hist-conflict-73-1024 war e392 4129-4140 c3 c1 rg11 claim e343 battles 2 sacked 0 taken 0 goal-lost won-c1-ceded
+hist-conflict-73-1024 war e418 4145-4149 c8 c1 rg19 claim e352 battles 1 sacked 1 taken 0 goal-lost won-c8-ceded
+hist-conflict-73-1024 war e425 4150-4185 c8 c2 rg6 claim e355 battles 3 sacked 0 taken 0 quiet won-c2-ceded
+hist-conflict-73-1024 war e451 4210-4236 c5 c2 rg17 claim e156 battles 8 sacked 0 taken 0 goal-lost truce
+hist-conflict-73-1024 war e462 4224-4247 c4 c6 rg45 claim e387 battles 7 sacked 0 taken 5 aim won-c4-tribute
+hist-conflict-73-1024 war e476 4229-4235 c3 c2 rg17 claim e449 battles 2 sacked 1 taken 0 goal-lost won-c3-ceded
+hist-conflict-73-1024 war e522 4277-4310 c4 c1 rg2 claim e394 battles 6 sacked 1 taken 0 exhaustion won-c1-ceded
+hist-conflict-73-1024 war e524 4282-4290 c3 c5 rg36 claim e374 battles 5 sacked 0 taken 0 exhaustion won-c3-tribute
+hist-conflict-73-1024 war e542 4293-4312 c3 c9 rg11 claim e501 battles 6 sacked 0 taken 0 exhaustion won-c3-tribute
+hist-conflict-73-1024 war e543 4293-4309 c8 c9 rg11 claim e455 battles 5 sacked 0 taken 0 exhaustion won-c8-tribute
+hist-conflict-73-1024 war e591 4314-4345 c4 c5 rg36 claim e416 battles 5 sacked 1 taken 2 conquest -
+hist-conflict-73-1024 war e623 4359-4365 c4 c7 rg13 claim e357 battles 1 sacked 0 taken 0 exhaustion won-c4-tribute
+hist-conflict-73-1024 war e637 4368-4371 c8 c7 rg13 claim e606 battles 1 sacked 0 taken 0 quiet won-c7-ceded
+hist-conflict-73-1024 war e644 4396-4409 c3 c1 rg27 claim e628 battles 5 sacked 3 taken 0 exhaustion truce
+hist-conflict-73-1024 war e645 4396-4402 c4 c10 rg48 claim e512 battles 0 sacked 0 taken 0 unfound unfound
+hist-conflict-73-1024 war e669 4414-4422 c4 c9 rg11 claim e538 battles 4 sacked 1 taken 0 exhaustion won-c4-tribute
+hist-conflict-73-1024 war e686 4432-4446 c8 c1 rg27 claim e643 battles 2 sacked 0 taken 0 quiet won-c1-ceded
+hist-conflict-73-1024 war e730 4796-4812 c3 c7 rg19 claim e687 battles 5 sacked 0 taken 1 exhaustion truce
+hist-conflict-73-1024 war e735 4797-4822 c4 c1 rg27 claim e717 battles 6 sacked 2 taken 0 goal-lost won-c4-ceded
+hist-conflict-73-1024 war e740 4799-4802 c8 c2 rg12 claim e710 battles 1 sacked 1 taken 0 goal-lost won-c8-tribute
+hist-conflict-73-1024 war e748 4803-4822 c8 c1 rg17 claim e725 battles 7 sacked 2 taken 0 goal-lost won-c8-ceded
+hist-conflict-73-1024 war e771 4818-4822 c3 c1 rg17 claim e721 battles 2 sacked 0 taken 0 goal-lost truce
+hist-conflict-73-1024 war e796 4826-4846 c3 c8 rg18 claim e523 battles 5 sacked 0 taken 0 quiet truce
+hist-conflict-73-1024 war e799 4827-4846 c4 c3 rg46 claim e714 battles 3 sacked 0 taken 2 quiet won-c4-ceded
+hist-conflict-73-1024 war e823 4843-4846 c8 c7 rg19 claim e739 battles 0 sacked 0 taken 0 quiet truce
+hist-conflict-73-1024 war e847 4996-5001 c4 c10 rg48 claim e844 battles 0 sacked 0 taken 0 unfound unfound
+hist-conflict-73-1024 war e850 5004-5026 c4 c7 rg19 claim e839 battles 5 sacked 0 taken 1 exhaustion won-c7-ceded
+hist-conflict-73-1024 war e871 5032-5038 c4 c6 rg49 claim e810 battles 3 sacked 0 taken 1 conquest -
+hist-conflict-73-1024 war e875 5034-5063 c3 c2 rg12 claim e845 battles 7 sacked 0 taken 1 aim won-c3-tribute
+hist-conflict-73-1024 war e916 5064-5083 c3 c7 rg36 claim e894 battles 10 sacked 5 taken 0 goal-lost won-c3-ceded
+hist-conflict-73-1024 war e949 5081-5098 c8 c1 rg2 claim e901 battles 6 sacked 0 taken 0 exhaustion truce
+hist-conflict-73-1024 war e960 5086-5098 c3 c1 rg2 claim e928 battles 7 sacked 0 taken 0 exhaustion won-c3-ceded
+hist-conflict-73-1024 war e961 5086-5098 c7 c1 rg9 claim e861 battles 5 sacked 1 taken 0 goal-lost won-c7-tribute
+hist-conflict-73-1024 war e1001 5108-5115 c8 c2 rg6 claim e874 battles 3 sacked 0 taken 0 exhaustion truce
+hist-conflict-73-1024 war e1028 5139-5143 c8 c7 rg17 claim e950 battles 3 sacked 0 taken 1 aim won-c8-tribute
+hist-conflict-73-1024 war e1037 5144-5163 c8 c3 rg28 claim e1013 battles 8 sacked 0 taken 0 exhaustion won-c3-ceded
+hist-conflict-73-1024 war e1051 5158-5178 c4 c3 rg28 claim e1011 battles 5 sacked 1 taken 1 quiet truce
+hist-conflict-73-1024 war e1109 5607-5614 c3 c12 rg20 claim e1026 battles 4 sacked 0 taken 0 exhaustion won-c3-tribute
+hist-conflict-73-1024 war e1123 5615-5624 c3 c2 rg6 claim e1092 battles 3 sacked 0 taken 0 exhaustion truce
+hist-conflict-73-1024 war e1126 5619-5621 c4 c10 rg42 claim e1086 battles 1 sacked 0 taken 1 aim won-c4-tribute
+hist-conflict-73-1024 war e1138 5625-5658 c4 c3 rg28 claim e1103 battles 8 sacked 1 taken 2 goal-lost won-c4-ceded
+hist-conflict-73-1024 war e1142 5633-5656 c8 c12 rg20 claim e1071 battles 6 sacked 1 taken 0 exhaustion truce
+hist-conflict-73-1024 war e1146 5637-5642 c3 c7 rg13 claim e1116 battles 2 sacked 0 taken 0 exhaustion won-c3-tribute
+hist-conflict-73-1024 war e1231 5742-5763 c8 c3 rg19 claim e1135 battles 5 sacked 0 taken 2 exhaustion won-c3-ceded
+hist-conflict-73-1024 war e1306 5847-5848 c13 c7 rg7 claim e1108 battles 1 sacked 0 taken 0 exhaustion won-c13-ceded
+hist-conflict-73-1024 war e1328 5873-5879 c4 c10 rg48 claim e1312 battles 0 sacked 0 taken 0 unfound unfound
+hist-conflict-73-1024 war e1329 5876-5888 c3 c12 rg20 claim e1321 battles 5 sacked 1 taken 0 exhaustion won-c3-tribute
+hist-conflict-73-1024 war e1357 5917-5942 c4 c3 rg28 claim e1350 battles 6 sacked 2 taken 0 exhaustion won-c3-ceded
+hist-conflict-73-1024 war e1380 5941-5945 c7 c8 rg14 claim e1355 battles 1 sacked 0 taken 0 exhaustion won-c8-tribute
+hist-conflict-73-1024 war e1404 5982-open c3 c14 rg18 claim e1353 battles 4 sacked 0 taken 0 open -
+hist-conflict-73-1024 r17 quick_aim_wins 0 foothold_cessions 0 held_goal_wars 0/0/0/1
+hist-conflict-73-1024 q150 0 e0
+hist-conflict-73-1024 q175 0 e0
+hist-conflict-73-1024 q200 0 e0
+hist-conflict-73-1024 q225 0 e0
+hist-conflict-73-1024 q250 0 e0
+hist-conflict-73-1024 q275 0 e0
+hist-conflict-73-1024 q300 0 e0
+hist-conflict-73-1024 q325 0 e0
+hist-conflict-73-1024 q350 0 e0
+hist-conflict-73-1024 q375 0 e0
+hist-conflict-73-1024 q400 0 e0
+hist-conflict-73-1024 q425 0 e0
+hist-conflict-73-1024 q450 0 e0
+hist-conflict-73-1024 q475 0 e0
+hist-conflict-73-1024 q500 0 e0
+hist-conflict-73-1024 q525 0 e0
+hist-conflict-73-1024 q550 0 e0
+hist-conflict-73-1024 q575 0 e0
+hist-conflict-73-1024 q600 0 e0
+hist-conflict-73-1024 q625 0 e0
+hist-conflict-73-1024 q650 0 e0
+hist-conflict-73-1024 q675 0 e0
+hist-conflict-73-1024 q700 0 e0
+hist-conflict-73-1024 q725 0 e0
+hist-conflict-73-1024 q750 0 e0
+hist-conflict-73-1024 q775 0 e0
+hist-conflict-73-1024 q800 0 e0
+hist-conflict-73-1024 q825 0 e0
+hist-conflict-73-1024 q850 0 e0
+hist-conflict-73-1024 q875 0 e0
+hist-conflict-73-1024 q900 0 e0
+hist-conflict-73-1024 q925 0 e0
+hist-conflict-73-1024 q950 0 e0
+hist-conflict-73-1024 q975 0 e0
+hist-conflict-73-1024 q1000 0 e0
+hist-conflict-73-1024 q1025 0 e0
+hist-conflict-73-1024 q1050 0 e0
+hist-conflict-73-1024 q1075 0 e0
+hist-conflict-73-1024 q1100 0 e0
+hist-conflict-73-1024 q1125 0 e0
+hist-conflict-73-1024 q1150 0 e0
+hist-conflict-73-1024 q1175 0 e0
+hist-conflict-73-1024 q1200 0 e0
+hist-conflict-73-1024 q1225 0 e0
+hist-conflict-73-1024 q1250 0 e0
+hist-conflict-73-1024 q1275 0 e0
+hist-conflict-73-1024 q1300 0 e0
+hist-conflict-73-1024 q1325 0 e0
+hist-conflict-73-1024 q1350 0 e0
+hist-conflict-73-1024 q1375 0 e0
+hist-conflict-73-1024 q1400 0 e0
+hist-conflict-73-1024 q1425 0 e0
+hist-conflict-73-1024 q1450 0 e0
+hist-conflict-73-1024 q1475 0 e0
+hist-conflict-73-1024 q1500 0 e0
+hist-conflict-73-1024 q1525 0 e0
+hist-conflict-73-1024 q1550 0 e0
+hist-conflict-73-1024 q1575 0 e0
+hist-conflict-73-1024 q1600 0 e0
+hist-conflict-73-1024 q1625 0 e0
+hist-conflict-73-1024 q1650 0 e0
+hist-conflict-73-1024 q1675 0 e0
+hist-conflict-73-1024 q1700 0 e0
+hist-conflict-73-1024 q1725 0 e0
+hist-conflict-73-1024 q1750 0 e0
+hist-conflict-73-1024 q1775 0 e0
+hist-conflict-73-1024 q1800 0 e0
+hist-conflict-73-1024 q1825 0 e0
+hist-conflict-73-1024 q1850 0 e0
+hist-conflict-73-1024 q1875 0 e0
+hist-conflict-73-1024 q1900 0 e0
+hist-conflict-73-1024 q1925 0 e0
+hist-conflict-73-1024 q1950 0 e0
+hist-conflict-73-1024 q1975 0 e0
+hist-conflict-73-1024 q2000 0 e0
+hist-conflict-73-1024 q2191 0 e0
+hist-conflict-73-1024 q2216 0 e0
+hist-conflict-73-1024 q2241 0 e0
+hist-conflict-73-1024 q2266 0 e0
+hist-conflict-73-1024 q2291 0 e0
+hist-conflict-73-1024 q2316 0 e0
+hist-conflict-73-1024 q2341 0 e0
+hist-conflict-73-1024 q2366 0 e0
+hist-conflict-73-1024 q2391 594 e36
+hist-conflict-73-1024 q2416 643 e36
+hist-conflict-73-1024 q2441 691 e36
+hist-conflict-73-1024 q2466 740 e36
+hist-conflict-73-1024 q2491 789 e36
+hist-conflict-73-1024 q2516 837 e36
+hist-conflict-73-1024 q2541 886 e36
+hist-conflict-73-1024 q2566 934 e36
+hist-conflict-73-1024 q2591 983 e36
+hist-conflict-73-1024 q2616 1032 e36
+hist-conflict-73-1024 q2691 485 e97
+hist-conflict-73-1024 q2716 510 e97
+hist-conflict-73-1024 q2741 534 e97
+hist-conflict-73-1024 q2766 558 e97
+hist-conflict-73-1024 q2791 583 e97
+hist-conflict-73-1024 q2816 607 e97
+hist-conflict-73-1024 q2841 631 e97
+hist-conflict-73-1024 q2866 656 e97
+hist-conflict-73-1024 q2891 680 e97
+hist-conflict-73-1024 q2916 704 e97
+hist-conflict-73-1024 q2941 728 e97
+hist-conflict-73-1024 q2966 753 e97
+hist-conflict-73-1024 q2991 777 e97
+hist-conflict-73-1024 q3016 801 e97
+hist-conflict-73-1024 q3041 826 e97
+hist-conflict-73-1024 q3066 850 e97
+hist-conflict-73-1024 q3091 874 e97
+hist-conflict-73-1024 q3116 899 e97
+hist-conflict-73-1024 q3141 923 e97
+hist-conflict-73-1024 q3166 972 e140
+hist-conflict-73-1024 q3191 1020 e140
+hist-conflict-73-1024 q3266 0 e0
+hist-conflict-73-1024 q3291 0 e0
+hist-conflict-73-1024 q3316 0 e0
+hist-conflict-73-1024 q3510 703 e242
+hist-conflict-73-1024 q3535 756 e242
+hist-conflict-73-1024 q3560 808 e242
+hist-conflict-73-1024 q3585 860 e242
+hist-conflict-73-1024 q3610 911 e242
+hist-conflict-73-1024 q3635 961 e242
+hist-conflict-73-1024 q3660 1011 e242
+hist-conflict-73-1024 q3735 416 e298
+hist-conflict-73-1024 q3760 438 e298
+hist-conflict-73-1024 q3785 460 e298
+hist-conflict-73-1024 q3810 481 e298
+hist-conflict-73-1024 q3835 526 e344
+hist-conflict-73-1024 q3860 575 e344
+hist-conflict-73-1024 q3885 623 e344
+hist-conflict-73-1024 q3910 672 e344
+hist-conflict-73-1024 q3935 720 e344
+hist-conflict-73-1024 q3960 769 e344
+hist-conflict-73-1024 q3985 818 e344
+hist-conflict-73-1024 q4010 866 e344
+hist-conflict-73-1024 q4035 915 e344
+hist-conflict-73-1024 q4060 963 e344
+hist-conflict-73-1024 q4085 1012 e344
+hist-conflict-73-1024 q4160 488 e387
+hist-conflict-73-1024 q4185 1040 e156
+hist-conflict-73-1024 q4371 1263 e512
+hist-conflict-73-1024 q4446 446 e625
+hist-conflict-73-1024 q4471 459 e625
+hist-conflict-73-1024 q4496 482 e687
+hist-conflict-73-1024 q4521 524 e687
+hist-conflict-73-1024 q4546 568 e687
+hist-conflict-73-1024 q4571 615 e687
+hist-conflict-73-1024 q4596 664 e687
+hist-conflict-73-1024 q4621 715 e687
+hist-conflict-73-1024 q4646 766 e687
+hist-conflict-73-1024 q4671 818 e687
+hist-conflict-73-1024 q4696 869 e687
+hist-conflict-73-1024 q4721 920 e687
+hist-conflict-73-1024 q4746 971 e687
+hist-conflict-73-1024 q4771 1023 e687
+hist-conflict-73-1024 q4846 718 e625
+hist-conflict-73-1024 q4871 730 e625
+hist-conflict-73-1024 q4896 742 e625
+hist-conflict-73-1024 q4921 947 e844
+hist-conflict-73-1024 q4946 996 e844
+hist-conflict-73-1024 q4971 1044 e844
+hist-conflict-73-1024 q5178 486 e1026
+hist-conflict-73-1024 q5203 510 e1026
+hist-conflict-73-1024 q5228 534 e1026
+hist-conflict-73-1024 q5253 558 e1026
+hist-conflict-73-1024 q5278 583 e1026
+hist-conflict-73-1024 q5303 607 e1026
+hist-conflict-73-1024 q5328 631 e1026
+hist-conflict-73-1024 q5353 656 e1026
+hist-conflict-73-1024 q5378 680 e1026
+hist-conflict-73-1024 q5403 704 e1026
+hist-conflict-73-1024 q5428 729 e1026
+hist-conflict-73-1024 q5453 753 e1026
+hist-conflict-73-1024 q5478 777 e1026
+hist-conflict-73-1024 q5503 801 e1026
+hist-conflict-73-1024 q5528 826 e1026
+hist-conflict-73-1024 q5553 850 e1026
+hist-conflict-73-1024 q5578 874 e1026
+hist-conflict-73-1024 note e85 The claim of the Snonugg Mob to Wormcombe Grove, held by the Realm of Ielasie, came to a head.
+hist-conflict-73-1024 note e86 Claimed since 2153.
+hist-conflict-73-1024 note e109 Claimed since 2647.
+hist-conflict-73-1024 note e172 The claim of the Droz Horde to Wayfarer's Vigil, held by the House of Fiegla, came to a head.
+hist-conflict-73-1024 note e173 Claimed since 2841.
+hist-conflict-73-1024 note e182 Claimed since 2651.
+hist-conflict-73-1024 note e191 Claimed since 2991. The second war between them.
+hist-conflict-73-1024 note e210 Claimed since 3041. The second war between them.
+hist-conflict-73-1024 note e252 Claimed since 3493. The third war between them.
+hist-conflict-73-1024 note e276 The claim of the Droz Horde to Wayfarer's Vigil, held by the Realm of Ielasie, came to a head.
+hist-conflict-73-1024 note e277 Claimed since 3471. The second war between them.
+hist-conflict-73-1024 note e286 Claimed since 3450.
+hist-conflict-73-1024 note e297 Claimed since 3635. The third war between them.
+hist-conflict-73-1024 note e324 Claimed since 3585.
+hist-conflict-73-1024 note e365 The claim of the Droz Horde to Wayfarer's Vigil, held by the House of Fiegla, came to a head.
+hist-conflict-73-1024 note e366 Claimed since 3735. The second war between them.
+hist-conflict-73-1024 note e391 Claimed since 3708.
+hist-conflict-73-1024 note e392 Claimed since 3735. The fourth war between them.
+hist-conflict-73-1024 note e418 Claimed since 3860.
+hist-conflict-73-1024 note e425 Claimed since 3910.
+hist-conflict-73-1024 note e450 The claim of the Gank-Drat Horde to Wayfarer's Vigil, held by the House of Fiegla, came to a head.
+hist-conflict-73-1024 note e451 Claimed since 2991.
+hist-conflict-73-1024 note e462 Claimed since 4126. The second war between them.
+hist-conflict-73-1024 note e476 Claimed since 4185. The fourth war between them.
+hist-conflict-73-1024 note e522 Claimed since 4130. The third war between them.
+hist-conflict-73-1024 note e524 Claimed since 4121.
+hist-conflict-73-1024 note e542 Claimed since 4244.
+hist-conflict-73-1024 note e543 Claimed since 4216.
+hist-conflict-73-1024 note e591 Claimed since 4143. The second war between them.
+hist-conflict-73-1024 note e623 Claimed since 3960.
+hist-conflict-73-1024 note e637 Claimed since 4343.
+hist-conflict-73-1024 note e642 The claim of the Droz Horde to the Mossgrown Wood, held by the Loutaebie Ring, came to a head.
+hist-conflict-73-1024 note e644 Claimed since 4365. The fifth war between them.
+hist-conflict-73-1024 note e645 Claimed since 4258.
+hist-conflict-73-1024 note e669 Claimed since 4291.
+hist-conflict-73-1024 note e686 Claimed since 4396. The second war between them.
+hist-conflict-73-1024 note e729 The claim of the Snonugg Mob to Wayfarer's Vigil, held by Clan Broknir, came to a head.
+hist-conflict-73-1024 note e730 Claimed since 4433.
+hist-conflict-73-1024 note e735 Claimed since 4596. The fourth war between them.
+hist-conflict-73-1024 note e740 Claimed since 4496. The second war between them.
+hist-conflict-73-1024 note e748 Claimed since 4746. The third war between them.
+hist-conflict-73-1024 note e771 Claimed since 4671. The sixth war between them.
+hist-conflict-73-1024 note e796 Claimed since 4281.
+hist-conflict-73-1024 note e799 Claimed since 4571. The second war between them.
+hist-conflict-73-1024 note e823 Claimed since 4799. The second war between them.
+hist-conflict-73-1024 note e846 The claim of the Droz Horde to the Mossgrown Wood, held by the Loutaebie Ring, came to a head.
+hist-conflict-73-1024 note e847 Claimed since 4921. The second war between them.
+hist-conflict-73-1024 note e850 Claimed since 4871. The second war between them.
+hist-conflict-73-1024 note e871 Claimed since 4835. The third war between them.
+hist-conflict-73-1024 note e875 Claimed since 4946. The fifth war between them.
+hist-conflict-73-1024 note e916 Claimed since 5042. The second war between them.
+hist-conflict-73-1024 note e949 Claimed since 5049. The fourth war between them.
+hist-conflict-73-1024 note e960 Claimed since 5069. The seventh war between them.
+hist-conflict-73-1024 note e961 Claimed since 5024.
+hist-conflict-73-1024 note e1001 Claimed since 5034. The third war between them.
+hist-conflict-73-1024 note e1028 Claimed since 5082. The third war between them.
+hist-conflict-73-1024 note e1037 Claimed since 5127. The second war between them.
+hist-conflict-73-1024 note e1051 Claimed since 5124. The third war between them.
+hist-conflict-73-1024 note e1109 Claimed since 5138.
+hist-conflict-73-1024 note e1123 Claimed since 5403. The sixth war between them.
+hist-conflict-73-1024 note e1126 Claimed since 5328. The third war between them.
+hist-conflict-73-1024 note e1138 Claimed since 5553. The fourth war between them.
+hist-conflict-73-1024 note e1142 Claimed since 5176.
+hist-conflict-73-1024 note e1146 Claimed since 5613. The third war between them.
+hist-conflict-73-1024 note e1231 Claimed since 5624. The third war between them.
+hist-conflict-73-1024 note e1306 Claimed since 5606.
+hist-conflict-73-1024 note e1328 Claimed since 5851. The fourth war between them.
+hist-conflict-73-1024 note e1329 Claimed since 5869. The second war between them.
+hist-conflict-73-1024 note e1357 Claimed since 5895. The fifth war between them.
+hist-conflict-73-1024 note e1380 Claimed since 5916. The fourth war between them.
+hist-conflict-73-1024 note e1404 Claimed since 5914.
+hist-conflict-73-1024 summary threshold 61 shown 239 ages 11,23,41,84,37,43
+hist-conflict-73-1024 e7 For 1,891 years, from 150 to 2040, the land was quiet, and 2 realms kept the peace.
+hist-conflict-73-1024 e32 Plague broke out in Slazzdrozz; 144 died.
+hist-conflict-73-1024 e34 Plague broke out in Miethno; 388 died.
+hist-conflict-73-1024 e36 The Snonugg Mob laid claim to Wormcombe Grove, held by the Realm of Ielasie.
+hist-conflict-73-1024 e38 Plague broke out in Thielinn and spread to one other settlement; 898 died in all.
+hist-conflict-73-1024 e40 For 450 years, from 2191 to 2640, the land was quiet, and 4 realms kept the peace.
+hist-conflict-73-1024 e86 The Snonugg Mob declared war on the Realm of Ielasie over Wormcombe Grove.
+hist-conflict-73-1024 e87 The Realm of Ielasie defeated the Snonugg Mob in Wormcombe Grove; 718 of the defeated and 158 of the victors fell.
+hist-conflict-73-1024 e88 The Snonugg Mob laid claim to Moonwell Grove, held by the House of Fiegla.
+hist-conflict-73-1024 e89 Plague broke out in Gnaz Hole; 2,222 died.
+hist-conflict-73-1024 e90 The Realm of Ielasie defeated the Snonugg Mob in the Reaped Vale; 784 of the defeated and 156 of the victors fell.
+hist-conflict-73-1024 e91 The Realm of Ielasie besieged Skreerk Pit of the Snonugg Mob; it held.
+hist-conflict-73-1024 e93 The Realm of Ielasie defeated the Snonugg Mob in the Reaped Vale; 782 of the defeated and 155 of the victors fell.
+hist-conflict-73-1024 e94 The Realm of Ielasie besieged Skreerk Pit of the Snonugg Mob; it fell.
+hist-conflict-73-1024 e95 The Realm of Ielasie took Skreerk Pit from the Snonugg Mob; 552 died.
+hist-conflict-73-1024 e97 The Droz Horde laid claim to the Reaped Vale, held by the Realm of Ielasie.
+hist-conflict-73-1024 e98 Plague broke out in Roaenidell and spread to one other settlement; 929 died in all.
+hist-conflict-73-1024 e100 The Snonugg Mob defeated the Realm of Ielasie in Wayfarer's Vigil; 640 of the defeated and 204 of the victors fell.
+hist-conflict-73-1024 e101 The Realm of Ielasie and the Snonugg Mob made peace after 10 years of war, neither the victor.
+hist-conflict-73-1024 e102 Plague broke out in Neet Pit and spread to one other settlement; 1,442 died in all.
+hist-conflict-73-1024 e107 Plague broke out in Gruz Hole; 393 died.
+hist-conflict-73-1024 e109 The Snonugg Mob declared war on the House of Fiegla over Moonwell Grove.
+hist-conflict-73-1024 e110 Plague broke out in Gux Hole; 516 died.
+hist-conflict-73-1024 e112 Plague broke out in Zudrix; 108 died.
+hist-conflict-73-1024 e113 The House of Fiegla defeated the Snonugg Mob in Moonwell Grove; 361 of the defeated and 86 of the victors fell.
+hist-conflict-73-1024 e117 The House of Fiegla prevailed over the Snonugg Mob after 21 years of war.
+hist-conflict-73-1024 e118 The Snonugg Mob ceded Wayfarer's Vigil to the House of Fiegla.
+hist-conflict-73-1024 e119 For 525 years, from 2691 to 3215, the land was quiet, and 5 realms kept the peace.
+hist-conflict-73-1024 e140 The Droz Horde laid claim to Wayfarer's Vigil, held by the House of Fiegla.
+hist-conflict-73-1024 e144 The Gank-Drat Horde laid claim to the Reaped Vale, held by the Realm of Ielasie.
+hist-conflict-73-1024 e152 The Gank-Drat Horde laid claim to the Tolling Vale, held by the Droz Horde.
+hist-conflict-73-1024 e155 The Snonugg Mob laid claim to the Reaped Vale, held by the Realm of Ielasie.
+hist-conflict-73-1024 e156 The Gank-Drat Horde laid claim to Wayfarer's Vigil, held by the House of Fiegla.
+hist-conflict-73-1024 e161 The Snonugg Mob laid claim to Wayfarer's Vigil, held by the House of Fiegla.
+hist-conflict-73-1024 e171 The Gank-Drat Horde laid claim to Barleycross Plain, held by the Snonugg Mob.
+hist-conflict-73-1024 e173 The Droz Horde declared war on the House of Fiegla over Wayfarer's Vigil.
+hist-conflict-73-1024 e174 The Droz Horde defeated the House of Fiegla in Wayfarer's Vigil; 428 of the defeated and 137 of the victors fell.
+hist-conflict-73-1024 e175 The Droz Horde besieged Gruz Hole of the House of Fiegla; it fell.
+hist-conflict-73-1024 e176 The Droz Horde sacked Gruz Hole of the House of Fiegla; 1,187 died and 2,770 fled.
+hist-conflict-73-1024 e177 The Droz Horde prevailed over the House of Fiegla after 5 years of war.
+hist-conflict-73-1024 e178 The House of Fiegla paid tribute to the Droz Horde; 1,211 were carried off.
+hist-conflict-73-1024 e182 The Droz Horde declared war on the Realm of Ielasie over the Reaped Vale.
+hist-conflict-73-1024 e184 The Droz Horde defeated the Realm of Ielasie in the Reaped Vale; 892 of the defeated and 267 of the victors fell.
+hist-conflict-73-1024 e185 The Droz Horde besieged Skreerk Pit of the Realm of Ielasie; it held.
+hist-conflict-73-1024 e186 The Droz Horde defeated the Realm of Ielasie in the Reaped Vale; 858 of the defeated and 265 of the victors fell.
+hist-conflict-73-1024 e187 The Droz Horde besieged Skreerk Pit of the Realm of Ielasie; it held.
+hist-conflict-73-1024 e189 The Realm of Ielasie defeated the Droz Horde in the Reaped Vale; 830 of the defeated and 265 of the victors fell.
+hist-conflict-73-1024 e190 The Realm of Ielasie and the Droz Horde made peace after 11 years of war, neither the victor.
+hist-conflict-73-1024 e191 The Snonugg Mob declared war on the Realm of Ielasie over the Reaped Vale.
+hist-conflict-73-1024 e192 The Realm of Ielasie defeated the Snonugg Mob in the Reaped Vale; 869 of the defeated and 262 of the victors fell.
+hist-conflict-73-1024 e195 The Realm of Ielasie defeated the Snonugg Mob in Wolflow; 857 of the defeated and 260 of the victors fell.
+hist-conflict-73-1024 e196 The Realm of Ielasie besieged Gnaz Hole of the Snonugg Mob; it fell.
+hist-conflict-73-1024 e197 The Realm of Ielasie sacked Gnaz Hole of the Snonugg Mob; 739 died and 1,727 fled.
+hist-conflict-73-1024 e198 The Realm of Ielasie defeated the Snonugg Mob in Wolflow; 828 of the defeated and 257 of the victors fell.
+hist-conflict-73-1024 e199 The Realm of Ielasie besieged Krob of the Snonugg Mob; it fell.
+hist-conflict-73-1024 e200 The Realm of Ielasie sacked Krob of the Snonugg Mob; 1,191 died and 2,782 fled.
+hist-conflict-73-1024 e202 The Snonugg Mob defeated the Realm of Ielasie in Wayfarer's Vigil; 795 of the defeated and 253 of the victors fell.
+hist-conflict-73-1024 e205 Plague broke out in Biz; 182 died.
+hist-conflict-73-1024 e206 The Realm of Ielasie defeated the Snonugg Mob in the Reaped Vale; 801 of the defeated and 246 of the victors fell.
+hist-conflict-73-1024 e207 The Realm of Ielasie prevailed over the Snonugg Mob after 21 years of war.
+hist-conflict-73-1024 e208 The Snonugg Mob ceded Wayfarer's Vigil to the Realm of Ielasie.
+hist-conflict-73-1024 e210 The Snonugg Mob declared war on the House of Fiegla over Moonwell Grove.
+hist-conflict-73-1024 e212 The House of Fiegla and the Snonugg Mob made peace after 1 year of war, neither the victor.
+hist-conflict-73-1024 e213 For 94 years, from 3266 to 3359, the land was quiet, and 6 realms kept the peace.
+hist-conflict-73-1024 e219 Plague broke out in Snarkdriz Pit; 534 died.
+hist-conflict-73-1024 e220 Plague broke out in Keenk Pit; 357 died.
+hist-conflict-73-1024 e223 Plague broke out in Drorkkrurk; 632 died.
+hist-conflict-73-1024 e225 Plague broke out in Kik and spread to 2 other settlements; 620 died in all.
+hist-conflict-73-1024 e228 Plague broke out in Sluz and spread to 2 other settlements; 860 died in all.
+hist-conflict-73-1024 e232 The Warrens of Sneez laid claim to Fallowlea, held by the Droz Horde.
+hist-conflict-73-1024 e235 The Droz Horde laid claim to the Restless Vale, held by the Warrens of Sneez.
+hist-conflict-73-1024 e237 Plague broke out in Skrasleek Pit and spread to 2 other settlements; 756 died in all.
+hist-conflict-73-1024 e242 The Droz Horde laid claim to Wayfarer's Vigil, held by the Realm of Ielasie.
+hist-conflict-73-1024 e245 The Snonugg Mob laid claim to the Reaped Vale, held by the Realm of Ielasie.
+hist-conflict-73-1024 e249 Plague broke out in Skreerk Pit and spread to one other settlement; 881 died in all.
+hist-conflict-73-1024 e251 Plague broke out in Gux Hole; 417 died.
+hist-conflict-73-1024 e252 The Snonugg Mob declared war on the Realm of Ielasie over the Reaped Vale.
+hist-conflict-73-1024 e254 The Realm of Ielasie defeated the Snonugg Mob in the Reaped Vale; 815 of the defeated and 260 of the victors fell.
+hist-conflict-73-1024 e256 The Realm of Ielasie defeated the Snonugg Mob in Wolflow; 802 of the defeated and 256 of the victors fell.
+hist-conflict-73-1024 e257 The Realm of Ielasie besieged Gnozzonk of the Snonugg Mob; it fell.
+hist-conflict-73-1024 e258 The Realm of Ielasie sacked Gnozzonk of the Snonugg Mob; 797 died and 1,862 fled.
+hist-conflict-73-1024 e260 The Realm of Ielasie defeated the Snonugg Mob in Wolflow; 776 of the defeated and 248 of the victors fell.
+hist-conflict-73-1024 e261 The Realm of Ielasie besieged Zag of the Snonugg Mob; it fell.
+hist-conflict-73-1024 e262 The Realm of Ielasie sacked Zag of the Snonugg Mob; 764 died and 1,785 fled.
+hist-conflict-73-1024 e264 The Realm of Ielasie prevailed over the Snonugg Mob after 7 years of war.
+hist-conflict-73-1024 e265 The Snonugg Mob ceded Wolflow to the Realm of Ielasie.
+hist-conflict-73-1024 e266 The Warrens of Sneez laid claim to the Cruel Wolds, held by the Snonugg Mob.
+hist-conflict-73-1024 e267 For 175 years, from 3510 to 3684, the land was quiet, and 7 realms kept the peace.
+hist-conflict-73-1024 e269 The Droz Horde laid claim to Bailiff's Plains, held by the Gank-Drat Horde.
+hist-conflict-73-1024 e274 The Snonugg Mob laid claim to Moonwell Grove, held by the House of Fiegla.
+hist-conflict-73-1024 e277 The Droz Horde declared war on the Realm of Ielasie over Wayfarer's Vigil.
+hist-conflict-73-1024 e278 The Droz Horde defeated the Realm of Ielasie in Wayfarer's Vigil; 1,067 of the defeated and 267 of the victors fell.
+hist-conflict-73-1024 e279 The Droz Horde besieged Bozork of the Realm of Ielasie; it fell.
+hist-conflict-73-1024 e280 The Droz Horde sacked Bozork of the Realm of Ielasie; 458 died and 1,069 fled.
+hist-conflict-73-1024 e281 The Droz Horde prevailed over the Realm of Ielasie after 1 year of war.
+hist-conflict-73-1024 e282 The Realm of Ielasie ceded Wolflow to the Droz Horde.
+hist-conflict-73-1024 e284 Plague broke out in Skrasleek Pit; 511 died.
+hist-conflict-73-1024 e286 The Droz Horde declared war on the Warrens of Sneez over the Restless Vale.
+hist-conflict-73-1024 e287 Plague broke out in Kik and spread to one other settlement; 752 died in all.
+hist-conflict-73-1024 e289 Plague broke out in Kuggsleerk and spread to one other settlement; 488 died in all.
+hist-conflict-73-1024 e291 The Warrens of Sneez defeated the Droz Horde in the Restless Vale; 307 of the defeated and 49 of the victors fell.
+hist-conflict-73-1024 e294 The Droz Horde defeated the Warrens of Sneez in Fallowlea; 152 of the defeated and 48 of the victors fell.
+hist-conflict-73-1024 e295 Plague broke out in Slotch and spread to one other settlement; 1,475 died in all.
+hist-conflict-73-1024 e297 The Snonugg Mob declared war on the House of Fiegla over Moonwell Grove.
+hist-conflict-73-1024 e298 The Droz Horde laid claim to the Cruel Wolds, held by the Snonugg Mob.
+hist-conflict-73-1024 e299 The Warrens of Sneez defeated the Droz Horde in the Restless Vale; 301 of the defeated and 48 of the victors fell.
+hist-conflict-73-1024 e301 The House of Fiegla defeated the Snonugg Mob in Moonwell Grove; 277 of the defeated and 88 of the victors fell.
+hist-conflict-73-1024 e302 The Snonugg Mob defeated the House of Fiegla in Wayfarer's Vigil; 297 of the defeated and 95 of the victors fell.
+hist-conflict-73-1024 e303 The Droz Horde defeated the Warrens of Sneez in Fallowlea; 150 of the defeated and 48 of the victors fell.
+hist-conflict-73-1024 e304 The House of Fiegla defeated the Snonugg Mob in Moonwell Grove; 276 of the defeated and 88 of the victors fell.
+hist-conflict-73-1024 e305 The Droz Horde defeated the Warrens of Sneez in the Restless Vale; 147 of the defeated and 47 of the victors fell.
+hist-conflict-73-1024 e306 The Droz Horde besieged Gux Hole of the Warrens of Sneez; it held.
+hist-conflict-73-1024 e307 The Snonugg Mob defeated the House of Fiegla in Wayfarer's Vigil; 286 of the defeated and 91 of the victors fell.
+hist-conflict-73-1024 e308 Plague broke out in Slazzdrozz and spread to 3 other settlements; 1,590 died in all.
+hist-conflict-73-1024 e312 The House of Fiegla defeated the Snonugg Mob in Moonwell Grove; 277 of the defeated and 88 of the victors fell.
+hist-conflict-73-1024 e313 The House of Fiegla prevailed over the Snonugg Mob after 16 years of war.
+hist-conflict-73-1024 e314 The Snonugg Mob ceded Wayfarer's Vigil to the House of Fiegla.
+hist-conflict-73-1024 e315 The Droz Horde defeated the Warrens of Sneez in the Restless Vale; 145 of the defeated and 46 of the victors fell.
+hist-conflict-73-1024 e316 The Droz Horde besieged Gux Hole of the Warrens of Sneez; it held.
+hist-conflict-73-1024 e317 The Droz Horde and the Warrens of Sneez made peace after 25 years of war, neither the victor.
+hist-conflict-73-1024 e319 Plague broke out in Zurk-Greex Pit and spread to 3 other settlements; 861 died in all.
+hist-conflict-73-1024 e324 The Droz Horde declared war on the Gank-Drat Horde over Bailiff's Plains.
+hist-conflict-73-1024 e328 The Droz Horde defeated the Gank-Drat Horde in Bailiff's Plains; 206 of the defeated and 66 of the victors fell.
+hist-conflict-73-1024 e329 The Droz Horde besieged Krork of the Gank-Drat Horde; it held.
+hist-conflict-73-1024 e330 The Droz Horde defeated the Gank-Drat Horde in Bailiff's Plains; 202 of the defeated and 64 of the victors fell.
+hist-conflict-73-1024 e331 The Droz Horde besieged Krork of the Gank-Drat Horde; it held.
+hist-conflict-73-1024 e333 The Droz Horde defeated the Gank-Drat Horde in Bailiff's Plains; 199 of the defeated and 63 of the victors fell.
+hist-conflict-73-1024 e334 The Droz Horde besieged Krork of the Gank-Drat Horde; it fell.
+hist-conflict-73-1024 e335 The Droz Horde took Krork from the Gank-Drat Horde; 487 died.
+hist-conflict-73-1024 e341 The Droz Horde prevailed over the Gank-Drat Horde after 10 years of war.
+hist-conflict-73-1024 e342 The Gank-Drat Horde paid tribute to the Droz Horde; 554 were carried off.
+hist-conflict-73-1024 e343 The Snonugg Mob laid claim to Wormcombe Grove, held by the Realm of Ielasie.
+hist-conflict-73-1024 e344 The Droz Horde laid claim to Wayfarer's Vigil, held by the House of Fiegla.
+hist-conflict-73-1024 e345 For 375 years, from 3735 to 4109, the land was quiet, and 8 realms kept the peace.
+hist-conflict-73-1024 e352 The Warrens of Bugnit laid claim to Wormcombe Grove, held by the Realm of Ielasie.
+hist-conflict-73-1024 e355 The Warrens of Bugnit laid claim to Wayfarer's Vigil, held by the House of Fiegla.
+hist-conflict-73-1024 e357 The Droz Horde laid claim to Hailscar, held by Clan Broknir.
+hist-conflict-73-1024 e360 The Snonugg Mob laid claim to Wayfarer's Vigil, held by the House of Fiegla.
+hist-conflict-73-1024 e366 The Droz Horde declared war on the House of Fiegla over Wayfarer's Vigil.
+hist-conflict-73-1024 e367 The House of Fiegla defeated the Droz Horde in Wayfarer's Vigil; 752 of the defeated and 120 of the victors fell.
+hist-conflict-73-1024 e368 The Droz Horde defeated the House of Fiegla in Sorrowlea; 66 of the defeated and 21 of the victors fell.
+hist-conflict-73-1024 e369 The House of Fiegla defeated the Droz Horde in Wayfarer's Vigil; 743 of the defeated and 118 of the victors fell.
+hist-conflict-73-1024 e370 The Droz Horde defeated the House of Fiegla in Sorrowlea; 65 of the defeated and 20 of the victors fell.
+hist-conflict-73-1024 e371 Plague broke out in Aelraldell; 1,121 died.
+hist-conflict-73-1024 e373 The Snonugg Mob laid claim to Sorrowlea, held by the Droz Horde.
+hist-conflict-73-1024 e374 The Snonugg Mob laid claim to Bailiff's Plains, held by the Gank-Drat Horde.
+hist-conflict-73-1024 e375 Plague broke out in Miethno; 235 died.
+hist-conflict-73-1024 e376 Plague broke out in Krubsnox and spread to 3 other settlements; 969 died in all.
+hist-conflict-73-1024 e380 The Droz Horde defeated the House of Fiegla in Wayfarer's Vigil; 367 of the defeated and 117 of the victors fell.
+hist-conflict-73-1024 e381 The Droz Horde besieged Krubgnirk Pit of the House of Fiegla; it fell.
+hist-conflict-73-1024 e382 The Droz Horde sacked Krubgnirk Pit of the House of Fiegla; 482 died and 1,127 fled.
+hist-conflict-73-1024 e383 The Droz Horde prevailed over the House of Fiegla after 15 years of war.
+hist-conflict-73-1024 e384 The House of Fiegla paid tribute to the Droz Horde; 1,108 were carried off.
+hist-conflict-73-1024 e387 The Droz Horde laid claim to the Restless Vale, held by the Warrens of Sneez.
+hist-conflict-73-1024 e388 The Warrens of Sneez laid claim to Fallowlea, held by the Droz Horde.
+hist-conflict-73-1024 e389 Plague broke out in Aelraldell and spread to one other settlement; 1,541 died in all.
+hist-conflict-73-1024 e391 The Droz Horde declared war on the Snonugg Mob over the Cruel Wolds.
+hist-conflict-73-1024 e392 The Snonugg Mob declared war on the Realm of Ielasie over Wormcombe Grove.
+hist-conflict-73-1024 e393 The Snonugg Mob defeated the Droz Horde in the Cruel Wolds; 827 of the defeated and 132 of the victors fell.
+hist-conflict-73-1024 e394 The Droz Horde laid claim to Wormcombe Grove, held by the Realm of Ielasie.
+hist-conflict-73-1024 e396 The Droz Horde defeated the Snonugg Mob in Bailiff's Plains; 413 of the defeated and 132 of the victors fell.
+hist-conflict-73-1024 e397 The Droz Horde defeated the Snonugg Mob in the Cruel Wolds; 405 of the defeated and 129 of the victors fell.
+hist-conflict-73-1024 e398 The Droz Horde besieged Krasnirk Hole of the Snonugg Mob; it fell.
+hist-conflict-73-1024 e399 The Droz Horde took Krasnirk Hole from the Snonugg Mob; 187 died.
+hist-conflict-73-1024 e401 The Realm of Ielasie defeated the Snonugg Mob in Wormcombe Grove; 276 of the defeated and 88 of the victors fell.
+hist-conflict-73-1024 e404 Plague broke out in Arres; 1,452 died.
+hist-conflict-73-1024 e405 Plague broke out in Slotch and spread to one other settlement; 1,391 died in all.
+hist-conflict-73-1024 e409 The Droz Horde defeated the Snonugg Mob in the Cruel Wolds; 356 of the defeated and 114 of the victors fell.
+hist-conflict-73-1024 e410 The Droz Horde besieged Skrasleek Pit of the Snonugg Mob; it fell.
+hist-conflict-73-1024 e411 The Droz Horde took Skrasleek Pit from the Snonugg Mob; 184 died.
+hist-conflict-73-1024 e412 The Realm of Ielasie defeated the Snonugg Mob in Wayfarer's Vigil; 303 of the defeated and 97 of the victors fell.
+hist-conflict-73-1024 e413 The Realm of Ielasie besieged Skeedrank Hole of the Snonugg Mob; it held.
+hist-conflict-73-1024 e414 The Realm of Ielasie prevailed over the Snonugg Mob after 11 years of war.
+hist-conflict-73-1024 e415 The Snonugg Mob ceded Wayfarer's Vigil to the Realm of Ielasie.
+hist-conflict-73-1024 e416 The Droz Horde laid claim to Bailiff's Plains, held by the Gank-Drat Horde.
+hist-conflict-73-1024 e417 The Gank-Drat Horde laid claim to the Tolling Vale, held by the Droz Horde.
+hist-conflict-73-1024 e418 The Warrens of Bugnit declared war on the Realm of Ielasie over Wayfarer's Vigil.
+hist-conflict-73-1024 e420 The Warrens of Bugnit defeated the Realm of Ielasie in Wayfarer's Vigil; 705 of the defeated and 170 of the victors fell.
+hist-conflict-73-1024 e421 The Warrens of Bugnit besieged Skeedrank Hole of the Realm of Ielasie; it fell.
+hist-conflict-73-1024 e422 The Warrens of Bugnit sacked Skeedrank Hole of the Realm of Ielasie; 162 died and 380 fled.
+hist-conflict-73-1024 e423 The Warrens of Bugnit prevailed over the Realm of Ielasie after 4 years of war.
+hist-conflict-73-1024 e424 The Realm of Ielasie ceded the Reaped Vale to the Warrens of Bugnit.
+hist-conflict-73-1024 e425 The Warrens of Bugnit declared war on the House of Fiegla over the Windswept Thicket.
+hist-conflict-73-1024 e426 Plague broke out in Neet Pit and spread to 2 other settlements; 1,729 died in all.
+hist-conflict-73-1024 e429 The House of Fiegla defeated the Warrens of Bugnit in the Windswept Thicket; 400 of the defeated and 100 of the victors fell.
+hist-conflict-73-1024 e430 The Warrens of Bugnit defeated the House of Fiegla in the Wandering Rises; 309 of the defeated and 99 of the victors fell.
+hist-conflict-73-1024 e434 The Droz Horde defeated the Snonugg Mob in the Cruel Wolds; 655 of the defeated and 209 of the victors fell.
+hist-conflict-73-1024 e435 The Droz Horde besieged Skrox-Kreet of the Snonugg Mob; it fell.
+hist-conflict-73-1024 e436 The Droz Horde took Skrox-Kreet from the Snonugg Mob; 181 died.
+hist-conflict-73-1024 e437 The House of Fiegla defeated the Warrens of Bugnit in the Windswept Thicket; 395 of the defeated and 95 of the victors fell.
+hist-conflict-73-1024 e442 The Droz Horde prevailed over the Snonugg Mob after 32 years of war.
+hist-conflict-73-1024 e443 The Snonugg Mob ceded the Cruel Wolds to the Droz Horde.
+hist-conflict-73-1024 e444 For 50 years, from 4160 to 4209, the land was quiet, and 9 realms kept the peace.
+hist-conflict-73-1024 e447 The House of Fiegla prevailed over the Warrens of Bugnit after 35 years of war.
+hist-conflict-73-1024 e448 The Warrens of Bugnit ceded Spindlewood to the House of Fiegla.
+hist-conflict-73-1024 e449 The Snonugg Mob laid claim to Spindlewood, held by the House of Fiegla.
+hist-conflict-73-1024 e451 The Gank-Drat Horde declared war on the House of Fiegla over Spindlewood.
+hist-conflict-73-1024 e453 The House of Fiegla defeated the Gank-Drat Horde in Spindlewood; 172 of the defeated and 55 of the victors fell.
+hist-conflict-73-1024 e455 The Warrens of Bugnit laid claim to Wormcombe Grove, held by the Realm of Cenael.
+hist-conflict-73-1024 e456 The Gank-Drat Horde defeated the House of Fiegla in Bailiff's Plains; 20 of the defeated and 6 of the victors fell.
+hist-conflict-73-1024 e457 The House of Fiegla defeated the Gank-Drat Horde in Spindlewood; 169 of the defeated and 54 of the victors fell.
+hist-conflict-73-1024 e462 The Droz Horde declared war on the Warrens of Sneez over the Restless Vale.
+hist-conflict-73-1024 e463 The House of Fiegla defeated the Gank-Drat Horde in Bailiff's Plains; 40 of the defeated and 6 of the victors fell.
+hist-conflict-73-1024 e464 The House of Fiegla besieged Zigrink Pit of the Gank-Drat Horde; it held.
+hist-conflict-73-1024 e465 The Gank-Drat Horde defeated the House of Fiegla in Bailiff's Plains; 20 of the defeated and 6 of the victors fell.
+hist-conflict-73-1024 e466 The Droz Horde defeated the Warrens of Sneez in the Restless Vale; 152 of the defeated and 48 of the victors fell.
+hist-conflict-73-1024 e467 The Droz Horde besieged Gux Hole of the Warrens of Sneez; it fell.
+hist-conflict-73-1024 e468 The Droz Horde took Gux Hole from the Warrens of Sneez; 376 died.
+hist-conflict-73-1024 e470 Plague broke out in Biz and spread to one other settlement; 493 died in all.
+hist-conflict-73-1024 e472 The Warrens of Sneez defeated the Droz Horde in the Restless Vale; 130 of the defeated and 20 of the victors fell.
+hist-conflict-73-1024 e474 The Gank-Drat Horde defeated the House of Fiegla in Spindlewood; 230 of the defeated and 53 of the victors fell.
+hist-conflict-73-1024 e475 The Gank-Drat Horde besieged Nutchzib of the House of Fiegla; it held.
+hist-conflict-73-1024 e476 The Snonugg Mob declared war on the House of Fiegla over Spindlewood.
+hist-conflict-73-1024 e477 The Warrens of Sneez defeated the Droz Horde in the Cruel Wolds; 129 of the defeated and 20 of the victors fell.
+hist-conflict-73-1024 e478 The Warrens of Sneez besieged Skut-Niz of the Droz Horde; it fell.
+hist-conflict-73-1024 e479 The Warrens of Sneez took Skut-Niz from the Droz Horde; 188 died.
+hist-conflict-73-1024 e481 The House of Fiegla defeated the Gank-Drat Horde in Spindlewood; 165 of the defeated and 35 of the victors fell.
+hist-conflict-73-1024 e482 The Gank-Drat Horde defeated the House of Fiegla in Bailiff's Plains; 9 of the defeated and 3 of the victors fell.
+hist-conflict-73-1024 e483 The Droz Horde defeated the Warrens of Sneez in the Cruel Wolds; 99 of the defeated and 31 of the victors fell.
+hist-conflict-73-1024 e484 The Snonugg Mob defeated the House of Fiegla in Spindlewood; 111 of the defeated and 35 of the victors fell.
+hist-conflict-73-1024 e485 The Snonugg Mob besieged Nutchzib of the House of Fiegla; it held.
+hist-conflict-73-1024 e486 The Snonugg Mob defeated the House of Fiegla in Spindlewood; 110 of the defeated and 35 of the victors fell.
+hist-conflict-73-1024 e487 The Snonugg Mob besieged Nutchzib of the House of Fiegla; it fell.
+hist-conflict-73-1024 e488 The Snonugg Mob sacked Nutchzib of the House of Fiegla; 146 died and 342 fled.
+hist-conflict-73-1024 e489 The Snonugg Mob prevailed over the House of Fiegla after 6 years of war.
+hist-conflict-73-1024 e490 The House of Fiegla ceded Moonwell Grove to the Snonugg Mob.
+hist-conflict-73-1024 e491 The House of Fiegla and the Gank-Drat Horde made peace after 26 years of war, neither the victor.
+hist-conflict-73-1024 e492 The Droz Horde defeated the Warrens of Sneez in the Restless Vale; 99 of the defeated and 31 of the victors fell.
+hist-conflict-73-1024 e493 The Droz Horde besieged Slozgit of the Warrens of Sneez; it fell.
+hist-conflict-73-1024 e494 The Droz Horde took Slozgit from the Warrens of Sneez; 117 died.
+hist-conflict-73-1024 e495 Plague broke out in Skrox-Kreet; 187 died.
+hist-conflict-73-1024 e496 Plague broke out in Faesve; 424 died.
+hist-conflict-73-1024 e497 The Droz Horde defeated the Warrens of Sneez in the Restless Vale; 75 of the defeated and 24 of the victors fell.
+hist-conflict-73-1024 e498 The Droz Horde besieged Keenk Pit of the Warrens of Sneez; it fell.
+hist-conflict-73-1024 e499 The Droz Horde took Keenk Pit from the Warrens of Sneez; 115 died.
+hist-conflict-73-1024 e501 The Snonugg Mob laid claim to Wormcombe Grove, held by the Realm of Cenael.
+hist-conflict-73-1024 e502 The Droz Horde defeated the Warrens of Sneez in the Restless Vale; 55 of the defeated and 17 of the victors fell.
+hist-conflict-73-1024 e503 The Droz Horde besieged Biz of the Warrens of Sneez; it fell.
+hist-conflict-73-1024 e504 The Droz Horde took Biz from the Warrens of Sneez; 99 died.
+hist-conflict-73-1024 e505 The Droz Horde prevailed over the Warrens of Sneez after 23 years of war.
+hist-conflict-73-1024 e506 The Warrens of Sneez paid tribute to the Droz Horde; 174 were carried off.
+hist-conflict-73-1024 e508 Plague broke out in Nunkskot Hole and spread to 2 other settlements; 987 died in all.
+hist-conflict-73-1024 e512 The Droz Horde laid claim to the Mossgrown Wood, held by the Loutaebie Ring.
+hist-conflict-73-1024 e514 Plague broke out in Zeegg-Kork Hole and spread to 2 other settlements; 916 died in all.
+hist-conflict-73-1024 e522 The Droz Horde declared war on the Realm of Ielasie over Gravedigger's Thicket.
+hist-conflict-73-1024 e523 The Snonugg Mob laid claim to the Reaped Vale, held by the Warrens of Bugnit.
+hist-conflict-73-1024 e524 The Snonugg Mob declared war on the Gank-Drat Horde over Bailiff's Plains.
+hist-conflict-73-1024 e525 The Snonugg Mob defeated the Gank-Drat Horde in Bailiff's Plains; 168 of the defeated and 53 of the victors fell.
+hist-conflict-73-1024 e526 The Snonugg Mob besieged Zigrink Pit of the Gank-Drat Horde; it held.
+hist-conflict-73-1024 e527 The Snonugg Mob defeated the Gank-Drat Horde in Bailiff's Plains; 165 of the defeated and 52 of the victors fell.
+hist-conflict-73-1024 e528 The Snonugg Mob besieged Zigrink Pit of the Gank-Drat Horde; it held.
+hist-conflict-73-1024 e529 The Snonugg Mob defeated the Gank-Drat Horde in Bailiff's Plains; 162 of the defeated and 51 of the victors fell.
+hist-conflict-73-1024 e530 The Snonugg Mob besieged Zigrink Pit of the Gank-Drat Horde; it held.
+hist-conflict-73-1024 e531 The Snonugg Mob defeated the Gank-Drat Horde in Bailiff's Plains; 159 of the defeated and 50 of the victors fell.
+hist-conflict-73-1024 e532 The Snonugg Mob besieged Zigrink Pit of the Gank-Drat Horde; it held.
+hist-conflict-73-1024 e533 The Realm of Ielasie defeated the Droz Horde in Gravedigger's Thicket; 197 of the defeated and 63 of the victors fell.
+hist-conflict-73-1024 e534 The Snonugg Mob defeated the Gank-Drat Horde in Bailiff's Plains; 156 of the defeated and 49 of the victors fell.
+hist-conflict-73-1024 e535 The Snonugg Mob besieged Zigrink Pit of the Gank-Drat Horde; it held.
+hist-conflict-73-1024 e536 The Gank-Drat Horde sued the Snonugg Mob for peace after 8 years of war.
+hist-conflict-73-1024 e537 The Gank-Drat Horde paid tribute to the Snonugg Mob; 767 were carried off.
+hist-conflict-73-1024 e538 The Droz Horde laid claim to Wormcombe Grove, held by the Realm of Cenael.
+hist-conflict-73-1024 e539 The Gank-Drat Horde laid claim to Wormcombe Grove, held by the Realm of Cenael.
+hist-conflict-73-1024 e542 The Snonugg Mob declared war on the Realm of Cenael over Wormcombe Grove.
+hist-conflict-73-1024 e543 The Warrens of Bugnit declared war on the Realm of Cenael over Wormcombe Grove.
+hist-conflict-73-1024 e545 The Realm of Ielasie defeated the Droz Horde in Sorrowlea; 844 of the defeated and 135 of the victors fell.
+hist-conflict-73-1024 e546 The Realm of Ielasie besieged Zakskatch of the Droz Horde; it fell.
+hist-conflict-73-1024 e547 The Realm of Ielasie sacked Zakskatch of the Droz Horde; 419 died and 978 fled.
+hist-conflict-73-1024 e550 The Realm of Cenael defeated the Snonugg Mob in Wormcombe Grove; 167 of the defeated and 26 of the victors fell.
+hist-conflict-73-1024 e553 Plague broke out in Gux Hole and spread to one other settlement; 516 died in all.
+hist-conflict-73-1024 e555 The Droz Horde defeated the Realm of Ielasie in Sorrowlea; 418 of the defeated and 133 of the victors fell.
+hist-conflict-73-1024 e556 The Warrens of Bugnit defeated the Realm of Cenael in Wormcombe Grove; 83 of the defeated and 26 of the victors fell.
+hist-conflict-73-1024 e557 The Warrens of Bugnit besieged Indvil of the Realm of Cenael; it held.
+hist-conflict-73-1024 e558 Plague broke out in Zigg Hole and spread to 3 other settlements; 1,130 died in all.
+hist-conflict-73-1024 e563 The Warrens of Bugnit defeated the Realm of Cenael in Wormcombe Grove; 81 of the defeated and 26 of the victors fell.
+hist-conflict-73-1024 e564 The Warrens of Bugnit besieged Indvil of the Realm of Cenael; it held.
+hist-conflict-73-1024 e565 The Snonugg Mob defeated the Realm of Cenael in Moonwell Grove; 80 of the defeated and 25 of the victors fell.
+hist-conflict-73-1024 e566 Plague broke out in Maevo and spread to one other settlement; 858 died in all.
+hist-conflict-73-1024 e568 The Realm of Ielasie defeated the Droz Horde in Gravedigger's Thicket; 177 of the defeated and 56 of the victors fell.
+hist-conflict-73-1024 e569 The Snonugg Mob defeated the Realm of Cenael in Wormcombe Grove; 78 of the defeated and 25 of the victors fell.
+hist-conflict-73-1024 e570 The Snonugg Mob besieged Indvil of the Realm of Cenael; it held.
+hist-conflict-73-1024 e571 The Realm of Cenael defeated the Warrens of Bugnit in Wormcombe Grove; 154 of the defeated and 24 of the victors fell.
+hist-conflict-73-1024 e572 The Droz Horde defeated the Realm of Ielasie in Sorrowlea; 405 of the defeated and 129 of the victors fell.
+hist-conflict-73-1024 e573 The Snonugg Mob defeated the Realm of Cenael in Wormcombe Grove; 76 of the defeated and 24 of the victors fell.
+hist-conflict-73-1024 e574 The Snonugg Mob besieged Indvil of the Realm of Cenael; it held.
+hist-conflict-73-1024 e575 The Warrens of Bugnit defeated the Realm of Cenael in Spindlewood; 75 of the defeated and 24 of the victors fell.
+hist-conflict-73-1024 e576 Plague broke out in Bukrig; 157 died.
+hist-conflict-73-1024 e577 The Snonugg Mob defeated the Realm of Cenael in Wormcombe Grove; 73 of the defeated and 23 of the victors fell.
+hist-conflict-73-1024 e578 The Snonugg Mob besieged Indvil of the Realm of Cenael; it held.
+hist-conflict-73-1024 e579 The Warrens of Bugnit defeated the Realm of Cenael in Wormcombe Grove; 72 of the defeated and 23 of the victors fell.
+hist-conflict-73-1024 e580 The Warrens of Bugnit besieged Indvil of the Realm of Cenael; it held.
+hist-conflict-73-1024 e581 The Realm of Cenael sued the Warrens of Bugnit for peace after 16 years of war.
+hist-conflict-73-1024 e582 The Realm of Cenael paid tribute to the Warrens of Bugnit; 356 were carried off.
+hist-conflict-73-1024 e583 The Realm of Ielasie defeated the Droz Horde in Gravedigger's Thicket; 175 of the defeated and 56 of the victors fell.
+hist-conflict-73-1024 e584 The Realm of Ielasie prevailed over the Droz Horde after 33 years of war.
+hist-conflict-73-1024 e585 The Droz Horde ceded Sorrowlea to the Realm of Ielasie.
+hist-conflict-73-1024 e586 The Snonugg Mob defeated the Realm of Cenael in Wormcombe Grove; 128 of the defeated and 41 of the victors fell.
+hist-conflict-73-1024 e587 The Snonugg Mob besieged Indvil of the Realm of Cenael; it held.
+hist-conflict-73-1024 e588 The Realm of Cenael sued the Snonugg Mob for peace after 19 years of war.
+hist-conflict-73-1024 e589 The Realm of Cenael paid tribute to the Snonugg Mob; 309 were carried off.
+hist-conflict-73-1024 e591 The Droz Horde declared war on the Gank-Drat Horde over Bailiff's Plains.
+hist-conflict-73-1024 e593 The Droz Horde defeated the Gank-Drat Horde in Bailiff's Plains; 151 of the defeated and 48 of the victors fell.
+hist-conflict-73-1024 e594 The Droz Horde besieged Zigrink Pit of the Gank-Drat Horde; it fell.
+hist-conflict-73-1024 e595 The Droz Horde took Zigrink Pit from the Gank-Drat Horde; 446 died.
+hist-conflict-73-1024 e598 The Droz Horde defeated the Gank-Drat Horde in Bailiff's Plains; 63 of the defeated and 20 of the victors fell.
+hist-conflict-73-1024 e599 The Droz Horde besieged Zudrix of the Gank-Drat Horde; it fell.
+hist-conflict-73-1024 e600 The Droz Horde took Zudrix from the Gank-Drat Horde; 160 died.
+hist-conflict-73-1024 e602 Plague broke out in Khonturk; 1,107 died.
+hist-conflict-73-1024 e604 The Droz Horde defeated the Gank-Drat Horde in Bailiff's Plains; 34 of the defeated and 11 of the victors fell.
+hist-conflict-73-1024 e605 The Droz Horde besieged Bobzib of the Gank-Drat Horde; it held.
+hist-conflict-73-1024 e606 The Warrens of Bugnit laid claim to Hailscar, held by Clan Broknir.
+hist-conflict-73-1024 e607 Plague broke out in Kuggsleerk and spread to one other settlement; 155 died in all.
+hist-conflict-73-1024 e609 The Droz Horde defeated the Gank-Drat Horde in Bailiff's Plains; 36 of the defeated and 11 of the victors fell.
+hist-conflict-73-1024 e610 The Droz Horde besieged Bobzib of the Gank-Drat Horde; it held.
+hist-conflict-73-1024 e611 The Droz Horde defeated the Gank-Drat Horde in Bailiff's Plains; 36 of the defeated and 11 of the victors fell.
+hist-conflict-73-1024 e612 The Droz Horde besieged Bobzib of the Gank-Drat Horde; it fell.
+hist-conflict-73-1024 e613 The Droz Horde sacked Bobzib of the Gank-Drat Horde; 536 died and 1,251 fled.
+hist-conflict-73-1024 e614 The Gank-Drat Horde fell to the Droz Horde.
+hist-conflict-73-1024 e621 Plague broke out in Biz and spread to one other settlement; 379 died in all.
+hist-conflict-73-1024 e623 The Droz Horde declared war on Clan Broknir over Hailscar.
+hist-conflict-73-1024 e625 The Warrens of Sneez laid claim to the Mossgrown Wood, held by the Loutaebie Ring.
+hist-conflict-73-1024 e628 The Snonugg Mob laid claim to Sorrowlea, held by the Realm of Ielasie.
+hist-conflict-73-1024 e629 The Droz Horde defeated Clan Broknir in Hailscar; 427 of the defeated and 136 of the victors fell.
+hist-conflict-73-1024 e630 The Droz Horde besieged Khonturk of Clan Broknir; it held.
+hist-conflict-73-1024 e631 Clan Broknir sued the Droz Horde for peace after 6 years of war.
+hist-conflict-73-1024 e632 Clan Broknir paid tribute to the Droz Horde; 446 were carried off.
+hist-conflict-73-1024 e633 Plague broke out in Gukgrizz and spread to 3 other settlements; 636 died in all.
+hist-conflict-73-1024 e637 The Warrens of Bugnit declared war on Clan Broknir over Hailscar.
+hist-conflict-73-1024 e638 Plague broke out in Faesve; 467 died.
+hist-conflict-73-1024 e639 Clan Broknir defeated the Warrens of Bugnit in Hailscar; 343 of the defeated and 109 of the victors fell.
+hist-conflict-73-1024 e640 Clan Broknir prevailed over the Warrens of Bugnit after 3 years of war.
+hist-conflict-73-1024 e641 The Warrens of Bugnit ceded Wayfarer's Vigil to Clan Broknir.
+hist-conflict-73-1024 e643 The Warrens of Bugnit laid claim to Sorrowlea, held by the Realm of Ielasie.
+hist-conflict-73-1024 e644 The Snonugg Mob declared war on the Realm of Ielasie over Sorrowlea.
+hist-conflict-73-1024 e645 The Droz Horde declared war on the Loutaebie Ring over the Mossgrown Wood.
+hist-conflict-73-1024 e646 The Snonugg Mob defeated the Realm of Ielasie in Sorrowlea; 473 of the defeated and 151 of the victors fell.
+hist-conflict-73-1024 e647 The Snonugg Mob besieged Grizz-Greez of the Realm of Ielasie; it fell.
+hist-conflict-73-1024 e648 The Snonugg Mob sacked Grizz-Greez of the Realm of Ielasie; 111 died and 261 fled.
+hist-conflict-73-1024 e650 Plague broke out in Krasnirk Hole; 211 died.
+hist-conflict-73-1024 e651 Plague broke out in Faelvadell; 79 died.
+hist-conflict-73-1024 e652 The Droz Horde searched the Mossgrown Wood for the Loutaebie Ring and found no one; the war ended after 6 years.
+hist-conflict-73-1024 e654 The Snonugg Mob defeated the Realm of Ielasie in Sorrowlea; 454 of the defeated and 145 of the victors fell.
+hist-conflict-73-1024 e655 The Snonugg Mob besieged Kagg of the Realm of Ielasie; it fell.
+hist-conflict-73-1024 e656 The Snonugg Mob sacked Kagg of the Realm of Ielasie; 172 died and 402 fled.
+hist-conflict-73-1024 e657 Plague broke out in Rovesie and spread to one other settlement; 994 died in all.
+hist-conflict-73-1024 e660 The Realm of Ielasie defeated the Snonugg Mob in Sorrowlea; 678 of the defeated and 126 of the victors fell.
+hist-conflict-73-1024 e662 The Realm of Ielasie defeated the Snonugg Mob in Moonwell Grove; 391 of the defeated and 125 of the victors fell.
+hist-conflict-73-1024 e663 The Realm of Ielasie besieged Arres of the Snonugg Mob; it fell.
+hist-conflict-73-1024 e664 The Realm of Ielasie sacked Arres of the Snonugg Mob; 1,517 died and 3,540 fled.
+hist-conflict-73-1024 e665 The Snonugg Mob defeated the Realm of Ielasie in Bittersike Steppe; 520 of the defeated and 166 of the victors fell.
+hist-conflict-73-1024 e666 The Realm of Ielasie and the Snonugg Mob made peace after 13 years of war, neither the victor.
+hist-conflict-73-1024 e669 The Droz Horde declared war on the Realm of Cenael over Wormcombe Grove.
+hist-conflict-73-1024 e670 The Droz Horde defeated the Realm of Cenael in Wormcombe Grove; 124 of the defeated and 39 of the victors fell.
+hist-conflict-73-1024 e671 The Droz Horde besieged Indvil of the Realm of Cenael; it fell.
+hist-conflict-73-1024 e672 The Droz Horde sacked Indvil of the Realm of Cenael; 749 died and 1,749 fled.
+hist-conflict-73-1024 e676 The Realm of Cenael defeated the Droz Horde in Wormcombe Grove; 180 of the defeated and 28 of the victors fell.
+hist-conflict-73-1024 e677 Plague broke out in Drazzkonk Pit and spread to one other settlement; 573 died in all.
+hist-conflict-73-1024 e679 The Droz Horde defeated the Realm of Cenael in the Tolling Vale; 89 of the defeated and 28 of the victors fell.
+hist-conflict-73-1024 e680 The Droz Horde defeated the Realm of Cenael in Wormcombe Grove; 86 of the defeated and 27 of the victors fell.
+hist-conflict-73-1024 e681 The Droz Horde besieged Faelvadell of the Realm of Cenael; it held.
+hist-conflict-73-1024 e682 The Realm of Cenael sued the Droz Horde for peace after 8 years of war.
+hist-conflict-73-1024 e683 The Realm of Cenael paid tribute to the Droz Horde; 206 were carried off.
+hist-conflict-73-1024 e686 The Warrens of Bugnit declared war on the Realm of Ielasie over Sorrowlea.
+hist-conflict-73-1024 e687 The Snonugg Mob laid claim to Wayfarer's Vigil, held by Clan Broknir.
+hist-conflict-73-1024 e688 Plague broke out in Gux Hole and spread to 4 other settlements; 935 died in all.
+hist-conflict-73-1024 e693 Plague broke out in Gux Hole and spread to 2 other settlements; 460 died in all.
+hist-conflict-73-1024 e696 Plague broke out in Geet-Kruz and spread to one other settlement; 1,335 died in all.
+hist-conflict-73-1024 e698 The Realm of Ielasie defeated the Warrens of Bugnit in Sorrowlea; 770 of the defeated and 123 of the victors fell.
+hist-conflict-73-1024 e700 The Warrens of Sneez laid claim to Sorrowlea, held by the Realm of Ielasie.
+hist-conflict-73-1024 e701 The Realm of Ielasie defeated the Warrens of Bugnit in Spindlewood; 794 of the defeated and 165 of the victors fell.
+hist-conflict-73-1024 e702 The Realm of Ielasie besieged Snat Hole of the Warrens of Bugnit; it held.
+hist-conflict-73-1024 e704 The Realm of Ielasie prevailed over the Warrens of Bugnit after 14 years of war.
+hist-conflict-73-1024 e705 The Warrens of Bugnit ceded Spindlewood to the Realm of Ielasie.
+hist-conflict-73-1024 e706 For 350 years, from 4446 to 4795, the land was quiet, and 9 realms kept the peace.
+hist-conflict-73-1024 e710 The Warrens of Bugnit laid claim to the Windswept Thicket, held by the House of Fiegla.
+hist-conflict-73-1024 e713 The Snonugg Mob laid claim to the Cruel Wolds, held by the Droz Horde.
+hist-conflict-73-1024 e714 The Droz Horde laid claim to Barleycross Plain, held by the Snonugg Mob.
+hist-conflict-73-1024 e717 The Droz Horde laid claim to Sorrowlea, held by the Realm of Ielasie.
+hist-conflict-73-1024 e721 The Snonugg Mob laid claim to Sorrowlea, held by the Realm of Ielasie.
+hist-conflict-73-1024 e725 The Warrens of Bugnit laid claim to Spindlewood, held by the Realm of Ielasie.
+hist-conflict-73-1024 e730 The Snonugg Mob declared war on Clan Broknir over Wayfarer's Vigil.
+hist-conflict-73-1024 e731 Plague broke out in Skignab and spread to 3 other settlements; 944 died in all.
+hist-conflict-73-1024 e735 The Droz Horde declared war on the Realm of Ielasie over Sorrowlea.
+hist-conflict-73-1024 e736 Clan Broknir defeated the Snonugg Mob in Wayfarer's Vigil; 683 of the defeated and 218 of the victors fell.
+hist-conflict-73-1024 e737 The Snonugg Mob defeated Clan Broknir in the Faded Steppes; 39 of the defeated and 12 of the victors fell.
+hist-conflict-73-1024 e738 The Realm of Ielasie defeated the Droz Horde in Sorrowlea; 1,126 of the defeated and 180 of the victors fell.
+hist-conflict-73-1024 e739 The Warrens of Bugnit laid claim to Wayfarer's Vigil, held by Clan Broknir.
+hist-conflict-73-1024 e740 The Warrens of Bugnit declared war on the House of Fiegla over Moonwell Grove.
+hist-conflict-73-1024 e741 Clan Broknir defeated the Snonugg Mob in Wayfarer's Vigil; 670 of the defeated and 214 of the victors fell.
+hist-conflict-73-1024 e743 The Warrens of Bugnit defeated the House of Fiegla in Moonwell Grove; 129 of the defeated and 41 of the victors fell.
+hist-conflict-73-1024 e744 The Warrens of Bugnit besieged Cinsie of the House of Fiegla; it fell.
+hist-conflict-73-1024 e745 The Warrens of Bugnit sacked Cinsie of the House of Fiegla; 69 died and 164 fled.
+hist-conflict-73-1024 e746 The Warrens of Bugnit prevailed over the House of Fiegla after 3 years of war.
+hist-conflict-73-1024 e747 The House of Fiegla paid tribute to the Warrens of Bugnit; 304 were carried off.
+hist-conflict-73-1024 e748 The Warrens of Bugnit declared war on the Realm of Ielasie over Spindlewood.
+hist-conflict-73-1024 e749 The Snonugg Mob defeated Clan Broknir in the Faded Steppes; 39 of the defeated and 12 of the victors fell.
+hist-conflict-73-1024 e750 Plague broke out in Kotch; 90 died.
+hist-conflict-73-1024 e751 Plague broke out in Nank-Beeg Pit and spread to one other settlement; 871 died in all.
+hist-conflict-73-1024 e754 The Droz Horde defeated the Realm of Ielasie in the Mute Plain; 28 of the defeated and 8 of the victors fell.
+hist-conflict-73-1024 e755 The Realm of Ielasie defeated the Droz Horde in Sorrowlea; 558 of the defeated and 89 of the victors fell.
+hist-conflict-73-1024 e756 The Realm of Ielasie laid claim to Bittersike Steppe, held by the Snonugg Mob.
+hist-conflict-73-1024 e757 The Realm of Ielasie defeated the Warrens of Bugnit in Spindlewood; 724 of the defeated and 115 of the victors fell.
+hist-conflict-73-1024 e758 The Droz Horde defeated the Realm of Ielasie in the Mute Plain; 28 of the defeated and 8 of the victors fell.
+hist-conflict-73-1024 e759 The Warrens of Bugnit defeated the Realm of Ielasie in the Reaped Vale; 359 of the defeated and 114 of the victors fell.
+hist-conflict-73-1024 e760 The Realm of Ielasie defeated the Warrens of Bugnit in Spindlewood; 704 of the defeated and 112 of the victors fell.
+hist-conflict-73-1024 e761 The Snonugg Mob defeated Clan Broknir in Wayfarer's Vigil; 772 of the defeated and 212 of the victors fell.
+hist-conflict-73-1024 e762 The Snonugg Mob besieged Slonk of Clan Broknir; it fell.
+hist-conflict-73-1024 e763 The Snonugg Mob took Slonk from Clan Broknir; 26 died.
+hist-conflict-73-1024 e764 The Snonugg Mob and Clan Broknir made peace after 16 years of war, neither the victor.
+hist-conflict-73-1024 e766 The Droz Horde defeated the Realm of Ielasie in Sorrowlea; 270 of the defeated and 86 of the victors fell.
+hist-conflict-73-1024 e767 The Droz Horde besieged Kuggsleerk of the Realm of Ielasie; it fell.
+hist-conflict-73-1024 e768 The Droz Horde sacked Kuggsleerk of the Realm of Ielasie; 220 died and 515 fled.
+hist-conflict-73-1024 e769 The Warrens of Bugnit defeated the Realm of Ielasie in the Reaped Vale; 342 of the defeated and 109 of the victors fell.
+hist-conflict-73-1024 e771 The Snonugg Mob declared war on the Realm of Ielasie over Spindlewood.
+hist-conflict-73-1024 e773 The Warrens of Bugnit defeated the Realm of Ielasie in Spindlewood; 224 of the defeated and 71 of the victors fell.
+hist-conflict-73-1024 e774 The Warrens of Bugnit besieged Snat Hole of the Realm of Ielasie; it fell.
+hist-conflict-73-1024 e775 The Warrens of Bugnit sacked Snat Hole of the Realm of Ielasie; 225 died and 526 fled.
+hist-conflict-73-1024 e776 The Realm of Ielasie defeated the Snonugg Mob in Spindlewood; 435 of the defeated and 69 of the victors fell.
+hist-conflict-73-1024 e777 The Warrens of Bugnit defeated the Realm of Ielasie in Spindlewood; 217 of the defeated and 69 of the victors fell.
+hist-conflict-73-1024 e778 The Warrens of Bugnit besieged Skreeslurk Pit of the Realm of Ielasie; it fell.
+hist-conflict-73-1024 e779 The Warrens of Bugnit sacked Skreeslurk Pit of the Realm of Ielasie; 361 died and 844 fled.
+hist-conflict-73-1024 e781 The Droz Horde defeated the Realm of Ielasie in Sorrowlea; 159 of the defeated and 51 of the victors fell.
+hist-conflict-73-1024 e782 The Droz Horde besieged Kotch of the Realm of Ielasie; it fell.
+hist-conflict-73-1024 e783 The Droz Horde sacked Kotch of the Realm of Ielasie; 324 died and 756 fled.
+hist-conflict-73-1024 e784 The Droz Horde prevailed over the Realm of Ielasie after 25 years of war.
+hist-conflict-73-1024 e785 The Realm of Ielasie ceded Spindlewood to the Droz Horde.
+hist-conflict-73-1024 e786 The Warrens of Bugnit defeated the Realm of Ielasie in Bellshaw; 258 of the defeated and 82 of the victors fell.
+hist-conflict-73-1024 e787 The Warrens of Bugnit besieged Thielinn of the Realm of Ielasie; it held.
+hist-conflict-73-1024 e788 The Realm of Ielasie sued the Warrens of Bugnit for peace after 19 years of war.
+hist-conflict-73-1024 e789 The Realm of Ielasie ceded Roothowe Shaw to the Warrens of Bugnit.
+hist-conflict-73-1024 e790 The Snonugg Mob defeated the Realm of Ielasie in Wayfarer's Vigil; 360 of the defeated and 115 of the victors fell.
+hist-conflict-73-1024 e791 The Realm of Ielasie and the Snonugg Mob made peace after 4 years of war, neither the victor.
+hist-conflict-73-1024 e792 Plague broke out in Woia Glade and spread to one other settlement; 147 died in all.
+hist-conflict-73-1024 e796 The Snonugg Mob declared war on the Warrens of Bugnit over the Reaped Vale.
+hist-conflict-73-1024 e797 Plague broke out in Snarkdriz Pit and spread to one other settlement; 491 died in all.
+hist-conflict-73-1024 e799 The Droz Horde declared war on the Snonugg Mob over Barleycross Plain.
+hist-conflict-73-1024 e801 The Warrens of Bugnit defeated the Snonugg Mob in the Reaped Vale; 331 of the defeated and 105 of the victors fell.
+hist-conflict-73-1024 e802 Plague broke out in Biz and spread to 3 other settlements; 899 died in all.
+hist-conflict-73-1024 e808 The Droz Horde defeated the Snonugg Mob in Barleycross Plain; 324 of the defeated and 103 of the victors fell.
+hist-conflict-73-1024 e809 The Droz Horde besieged Neezzeenk Hole of the Snonugg Mob; it held.
+hist-conflict-73-1024 e810 The Droz Horde laid claim to the Cruel Wolds, held by the Warrens of Sneez.
+hist-conflict-73-1024 e811 The Warrens of Sneez laid claim to the Restless Vale, held by the Droz Horde.
+hist-conflict-73-1024 e812 Plague broke out in Neet Pit; 498 died.
+hist-conflict-73-1024 e813 Plague broke out in Conithidell and spread to one other settlement; 505 died in all.
+hist-conflict-73-1024 e815 The Snonugg Mob defeated the Warrens of Bugnit in the Faded Steppes; 635 of the defeated and 101 of the victors fell.
+hist-conflict-73-1024 e817 The Warrens of Bugnit defeated the Snonugg Mob in the Reaped Vale; 318 of the defeated and 102 of the victors fell.
+hist-conflict-73-1024 e818 The Snonugg Mob defeated the Warrens of Bugnit in the Faded Steppes; 632 of the defeated and 101 of the victors fell.
+hist-conflict-73-1024 e819 The Droz Horde defeated the Snonugg Mob in Barleycross Plain; 315 of the defeated and 100 of the victors fell.
+hist-conflict-73-1024 e820 The Droz Horde besieged Neezzeenk Hole of the Snonugg Mob; it fell.
+hist-conflict-73-1024 e821 The Droz Horde took Neezzeenk Hole from the Snonugg Mob; 131 died.
+hist-conflict-73-1024 e823 The Warrens of Bugnit declared war on Clan Broknir over Wayfarer's Vigil.
+hist-conflict-73-1024 e824 The Droz Horde defeated the Snonugg Mob in Barleycross Plain; 299 of the defeated and 95 of the victors fell.
+hist-conflict-73-1024 e825 The Droz Horde besieged Geekink of the Snonugg Mob; it fell.
+hist-conflict-73-1024 e826 The Droz Horde took Geekink from the Snonugg Mob; 130 died.
+hist-conflict-73-1024 e828 Plague broke out in Zurk-Greex Pit; 184 died.
+hist-conflict-73-1024 e829 The Warrens of Bugnit defeated the Snonugg Mob in the Reaped Vale; 284 of the defeated and 91 of the victors fell.
+hist-conflict-73-1024 e832 The Snonugg Mob and the Warrens of Bugnit made peace after 20 years of war, neither the victor.
+hist-conflict-73-1024 e833 The Droz Horde prevailed over the Snonugg Mob after 19 years of war.
+hist-conflict-73-1024 e834 The Snonugg Mob ceded Barleycross Plain to the Droz Horde.
+hist-conflict-73-1024 e835 Clan Broknir and the Warrens of Bugnit made peace after 3 years of war, neither the victor.
+hist-conflict-73-1024 e836 For 150 years, from 4846 to 4995, the land was quiet, and 10 realms kept the peace.
+hist-conflict-73-1024 e839 The Droz Horde laid claim to Wayfarer's Vigil, held by Clan Broknir.
+hist-conflict-73-1024 e841 The Warrens of Skaslix laid claim to Gravedigger's Thicket, held by the Realm of Ielasie.
+hist-conflict-73-1024 e844 The Droz Horde laid claim to the Mossgrown Wood, held by the Loutaebie Ring.
+hist-conflict-73-1024 e845 The Snonugg Mob laid claim to Moonwell Grove, held by the House of Fiegla.
+hist-conflict-73-1024 e847 The Droz Horde declared war on the Loutaebie Ring over the Mossgrown Wood.
+hist-conflict-73-1024 e848 Plague broke out in Skreerk Pit; 737 died.
+hist-conflict-73-1024 e849 The Droz Horde searched the Mossgrown Wood for the Loutaebie Ring and found no one; the war ended after 5 years.
+hist-conflict-73-1024 e850 The Droz Horde declared war on Clan Broknir over Wayfarer's Vigil.
+hist-conflict-73-1024 e852 Clan Broknir defeated the Droz Horde in Wayfarer's Vigil; 1,115 of the defeated and 276 of the victors fell.
+hist-conflict-73-1024 e853 Clan Broknir defeated the Droz Horde in Spindlewood; 547 of the defeated and 175 of the victors fell.
+hist-conflict-73-1024 e854 Clan Broknir besieged Skreezslux of the Droz Horde; it held.
+hist-conflict-73-1024 e855 Clan Broknir defeated the Droz Horde in Spindlewood; 545 of the defeated and 174 of the victors fell.
+hist-conflict-73-1024 e856 Clan Broknir besieged Skreezslux of the Droz Horde; it fell.
+hist-conflict-73-1024 e857 Clan Broknir took Skreezslux from the Droz Horde; 347 died and 724 fled.
+hist-conflict-73-1024 e859 Plague broke out in Nelos and spread to one other settlement; 490 died in all.
+hist-conflict-73-1024 e861 Clan Broknir laid claim to Gravedigger's Thicket, held by the Realm of Ielasie.
+hist-conflict-73-1024 e862 The Droz Horde defeated Clan Broknir in Bailiff's Plains; 89 of the defeated and 28 of the victors fell.
+hist-conflict-73-1024 e864 Clan Broknir defeated the Droz Horde in Wayfarer's Vigil; 1,024 of the defeated and 280 of the victors fell.
+hist-conflict-73-1024 e865 Clan Broknir prevailed over the Droz Horde after 22 years of war.
+hist-conflict-73-1024 e866 The Droz Horde ceded Bailiff's Plains to Clan Broknir.
+hist-conflict-73-1024 e871 The Droz Horde declared war on the Warrens of Sneez over the Cruel Wolds.
+hist-conflict-73-1024 e872 The Droz Horde defeated the Warrens of Sneez in the Cruel Wolds; 76 of the defeated and 24 of the victors fell.
+hist-conflict-73-1024 e873 The Droz Horde besieged Skut-Niz of the Warrens of Sneez; it held.
+hist-conflict-73-1024 e874 The Warrens of Bugnit laid claim to Moonwell Grove, held by the House of Fiegla.
+hist-conflict-73-1024 e875 The Snonugg Mob declared war on the House of Fiegla over Moonwell Grove.
+hist-conflict-73-1024 e876 Plague broke out in Bukrig and spread to 2 other settlements; 652 died in all.
+hist-conflict-73-1024 e882 The Droz Horde defeated the Warrens of Sneez in the Cruel Wolds; 74 of the defeated and 23 of the victors fell.
+hist-conflict-73-1024 e883 The Droz Horde besieged Skut-Niz of the Warrens of Sneez; it held.
+hist-conflict-73-1024 e887 The Droz Horde defeated the Warrens of Sneez in the Cruel Wolds; 73 of the defeated and 23 of the victors fell.
+hist-conflict-73-1024 e888 The Droz Horde besieged Skut-Niz of the Warrens of Sneez; it fell.
+hist-conflict-73-1024 e889 The Droz Horde took Skut-Niz from the Warrens of Sneez; 360 died.
+hist-conflict-73-1024 e890 The Warrens of Sneez fell to the Droz Horde.
+hist-conflict-73-1024 e891 The House of Fiegla defeated the Snonugg Mob in Moonwell Grove; 262 of the defeated and 41 of the victors fell.
+hist-conflict-73-1024 e893 The Snonugg Mob defeated the House of Fiegla in Wayfarer's Vigil; 11 of the defeated and 3 of the victors fell.
+hist-conflict-73-1024 e894 The Snonugg Mob laid claim to Bailiff's Plains, held by Clan Broknir.
+hist-conflict-73-1024 e895 Plague broke out in Zeegg-Kork Hole and spread to 3 other settlements; 1,058 died in all.
+hist-conflict-73-1024 e899 The House of Fiegla defeated the Snonugg Mob in Moonwell Grove; 257 of the defeated and 41 of the victors fell.
+hist-conflict-73-1024 e901 The Warrens of Bugnit laid claim to Gravedigger's Thicket, held by the Realm of Ielasie.
+hist-conflict-73-1024 e902 The Warrens of Skaslix laid claim to Moonwell Grove, held by the House of Fiegla.
+hist-conflict-73-1024 e903 The Snonugg Mob defeated the House of Fiegla in Wayfarer's Vigil; 11 of the defeated and 3 of the victors fell.
+hist-conflict-73-1024 e905 The House of Fiegla defeated the Snonugg Mob in Moonwell Grove; 260 of the defeated and 41 of the victors fell.
+hist-conflict-73-1024 e906 The Snonugg Mob defeated the House of Fiegla in Wayfarer's Vigil; 11 of the defeated and 3 of the victors fell.
+hist-conflict-73-1024 e907 Plague broke out in Nelos and spread to 2 other settlements; 794 died in all.
+hist-conflict-73-1024 e911 The Snonugg Mob defeated the House of Fiegla in Moonwell Grove; 128 of the defeated and 40 of the victors fell.
+hist-conflict-73-1024 e912 The Snonugg Mob besieged Eloglaevie of the House of Fiegla; it fell.
+hist-conflict-73-1024 e913 The Snonugg Mob took Eloglaevie from the House of Fiegla; 28 died.
+hist-conflict-73-1024 e914 The House of Fiegla sued the Snonugg Mob for peace after 29 years of war.
+hist-conflict-73-1024 e915 The House of Fiegla paid tribute to the Snonugg Mob; 282 were carried off.
+hist-conflict-73-1024 e916 The Snonugg Mob declared war on Clan Broknir over Bailiff's Plains.
+hist-conflict-73-1024 e918 The Snonugg Mob defeated Clan Broknir in Bailiff's Plains; 164 of the defeated and 52 of the victors fell.
+hist-conflict-73-1024 e919 The Snonugg Mob besieged Zigrink Pit of Clan Broknir; it fell.
+hist-conflict-73-1024 e920 The Snonugg Mob sacked Zigrink Pit of Clan Broknir; 197 died and 462 fled.
+hist-conflict-73-1024 e923 Plague broke out in Kik and spread to one other settlement; 658 died in all.
+hist-conflict-73-1024 e925 The Snonugg Mob defeated Clan Broknir in Bailiff's Plains; 155 of the defeated and 49 of the victors fell.
+hist-conflict-73-1024 e926 The Snonugg Mob besieged Nibkrizz Pit of Clan Broknir; it fell.
+hist-conflict-73-1024 e927 The Snonugg Mob sacked Nibkrizz Pit of Clan Broknir; 324 died and 758 fled.
+hist-conflict-73-1024 e928 The Snonugg Mob laid claim to Gravedigger's Thicket, held by the Realm of Ielasie.
+hist-conflict-73-1024 e933 The Snonugg Mob defeated Clan Broknir in Bailiff's Plains; 140 of the defeated and 44 of the victors fell.
+hist-conflict-73-1024 e934 The Snonugg Mob besieged Krork of Clan Broknir; it fell.
+hist-conflict-73-1024 e935 The Snonugg Mob sacked Krork of Clan Broknir; 344 died and 803 fled.
+hist-conflict-73-1024 e938 Clan Broknir defeated the Snonugg Mob in Bailiff's Plains; 252 of the defeated and 40 of the victors fell.
+hist-conflict-73-1024 e940 The Snonugg Mob defeated Clan Broknir in the Faded Steppes; 120 of the defeated and 38 of the victors fell.
+hist-conflict-73-1024 e941 Clan Broknir defeated the Snonugg Mob in Bailiff's Plains; 239 of the defeated and 38 of the victors fell.
+hist-conflict-73-1024 e942 The Snonugg Mob defeated Clan Broknir in the Faded Steppes; 119 of the defeated and 38 of the victors fell.
+hist-conflict-73-1024 e943 The Snonugg Mob defeated Clan Broknir in Bailiff's Plains; 119 of the defeated and 38 of the victors fell.
+hist-conflict-73-1024 e944 The Snonugg Mob besieged Zudrix of Clan Broknir; it held.
+hist-conflict-73-1024 e945 The Snonugg Mob defeated Clan Broknir in Bailiff's Plains; 118 of the defeated and 37 of the victors fell.
+hist-conflict-73-1024 e946 The Snonugg Mob besieged Zudrix of Clan Broknir; it fell.
+hist-conflict-73-1024 e947 The Snonugg Mob sacked Zudrix of Clan Broknir; 368 died and 861 fled.
+hist-conflict-73-1024 e949 The Warrens of Bugnit declared war on the Realm of Ielasie over Gravedigger's Thicket.
+hist-conflict-73-1024 e950 The Warrens of Bugnit laid claim to Spindlewood, held by Clan Broknir.
+hist-conflict-73-1024 e951 The Warrens of Bugnit defeated the Realm of Ielasie in Gravedigger's Thicket; 405 of the defeated and 129 of the victors fell.
+hist-conflict-73-1024 e952 The Warrens of Bugnit besieged Rovesie of the Realm of Ielasie; it held.
+hist-conflict-73-1024 e953 The Snonugg Mob defeated Clan Broknir in Bailiff's Plains; 105 of the defeated and 33 of the victors fell.
+hist-conflict-73-1024 e954 The Snonugg Mob besieged Doulinord Deep of Clan Broknir; it fell.
+hist-conflict-73-1024 e955 The Snonugg Mob sacked Doulinord Deep of Clan Broknir; 307 died and 718 fled.
+hist-conflict-73-1024 e956 Clan Broknir sued the Snonugg Mob for peace after 19 years of war.
+hist-conflict-73-1024 e957 Clan Broknir ceded Wayfarer's Vigil to the Snonugg Mob.
+hist-conflict-73-1024 e958 The Realm of Ielasie defeated the Warrens of Bugnit in Gravedigger's Thicket; 531 of the defeated and 124 of the victors fell.
+hist-conflict-73-1024 e959 The House of Fiegla laid claim to the Wandering Rises, held by the Warrens of Bugnit.
+hist-conflict-73-1024 e960 The Snonugg Mob declared war on the Realm of Ielasie over Gravedigger's Thicket.
+hist-conflict-73-1024 e961 Clan Broknir declared war on the Realm of Ielasie over Bellshaw.
+hist-conflict-73-1024 e962 Plague broke out in Nunkskot Hole and spread to 2 other settlements; 748 died in all.
+hist-conflict-73-1024 e965 The Snonugg Mob defeated the Realm of Ielasie in Gravedigger's Thicket; 128 of the defeated and 41 of the victors fell.
+hist-conflict-73-1024 e966 The Snonugg Mob besieged Rovesie of the Realm of Ielasie; it held.
+hist-conflict-73-1024 e967 The Snonugg Mob defeated the Realm of Ielasie in Gravedigger's Thicket; 127 of the defeated and 40 of the victors fell.
+hist-conflict-73-1024 e968 The Snonugg Mob besieged Rovesie of the Realm of Ielasie; it held.
+hist-conflict-73-1024 e969 The Realm of Ielasie defeated Clan Broknir in Bellshaw; 250 of the defeated and 40 of the victors fell.
+hist-conflict-73-1024 e970 The Snonugg Mob defeated the Realm of Ielasie in Gravedigger's Thicket; 124 of the defeated and 39 of the victors fell.
+hist-conflict-73-1024 e971 The Snonugg Mob besieged Rovesie of the Realm of Ielasie; it held.
+hist-conflict-73-1024 e974 Clan Broknir defeated the Realm of Ielasie in Spindlewood; 123 of the defeated and 39 of the victors fell.
+hist-conflict-73-1024 e975 The Snonugg Mob defeated the Realm of Ielasie in Gravedigger's Thicket; 121 of the defeated and 38 of the victors fell.
+hist-conflict-73-1024 e976 The Snonugg Mob besieged Rovesie of the Realm of Ielasie; it held.
+hist-conflict-73-1024 e977 Clan Broknir defeated the Realm of Ielasie in Bellshaw; 120 of the defeated and 38 of the victors fell.
+hist-conflict-73-1024 e978 Clan Broknir besieged Thielinn of the Realm of Ielasie; it fell.
+hist-conflict-73-1024 e979 Clan Broknir sacked Thielinn of the Realm of Ielasie; 748 died and 1,748 fled.
+hist-conflict-73-1024 e983 The Warrens of Bugnit defeated the Realm of Ielasie in the Reaped Vale; 108 of the defeated and 34 of the victors fell.
+hist-conflict-73-1024 e984 The Realm of Ielasie defeated Clan Broknir in Bellshaw; 212 of the defeated and 34 of the victors fell.
+hist-conflict-73-1024 e985 The Realm of Ielasie defeated the Warrens of Bugnit in Gravedigger's Thicket; 210 of the defeated and 33 of the victors fell.
+hist-conflict-73-1024 e986 The Snonugg Mob defeated the Realm of Ielasie in Gravedigger's Thicket; 104 of the defeated and 33 of the victors fell.
+hist-conflict-73-1024 e987 The Snonugg Mob besieged Rovesie of the Realm of Ielasie; it held.
+hist-conflict-73-1024 e988 The Warrens of Bugnit defeated the Realm of Ielasie in the Reaped Vale; 102 of the defeated and 32 of the victors fell.
+hist-conflict-73-1024 e989 Clan Broknir defeated the Realm of Ielasie in Spindlewood; 101 of the defeated and 32 of the victors fell.
+hist-conflict-73-1024 e990 The Realm of Ielasie defeated the Snonugg Mob in Gravedigger's Thicket; 200 of the defeated and 32 of the victors fell.
+hist-conflict-73-1024 e992 The Warrens of Bugnit defeated the Realm of Ielasie in Gravedigger's Thicket; 99 of the defeated and 31 of the victors fell.
+hist-conflict-73-1024 e993 The Warrens of Bugnit besieged Rovesie of the Realm of Ielasie; it held.
+hist-conflict-73-1024 e994 The Realm of Ielasie and the Warrens of Bugnit made peace after 17 years of war, neither the victor.
+hist-conflict-73-1024 e995 The Snonugg Mob defeated the Realm of Ielasie in Moonwell Grove; 147 of the defeated and 47 of the victors fell.
+hist-conflict-73-1024 e996 The Realm of Ielasie sued the Snonugg Mob for peace after 12 years of war.
+hist-conflict-73-1024 e997 The Realm of Ielasie ceded Bellshaw to the Snonugg Mob.
+hist-conflict-73-1024 e998 Clan Broknir prevailed over the Realm of Ielasie after 12 years of war.
+hist-conflict-73-1024 e999 The Realm of Ielasie paid tribute to Clan Broknir; 324 were carried off.
+hist-conflict-73-1024 e1001 The Warrens of Bugnit declared war on the House of Fiegla over the Windswept Thicket.
+hist-conflict-73-1024 e1002 The House of Fiegla defeated the Warrens of Bugnit in the Windswept Thicket; 218 of the defeated and 34 of the victors fell.
+hist-conflict-73-1024 e1003 The Warrens of Bugnit defeated the House of Fiegla in the Wandering Rises; 107 of the defeated and 34 of the victors fell.
+hist-conflict-73-1024 e1004 The Warrens of Bugnit defeated the House of Fiegla in the Windswept Thicket; 104 of the defeated and 33 of the victors fell.
+hist-conflict-73-1024 e1005 The Warrens of Bugnit besieged Miethno of the House of Fiegla; it held.
+hist-conflict-73-1024 e1006 The House of Fiegla and the Warrens of Bugnit made peace after 7 years of war, neither the victor.
+hist-conflict-73-1024 e1010 Plague broke out in Rovesie; 521 died.
+hist-conflict-73-1024 e1011 The Droz Horde laid claim to Bittersike Steppe, held by the Snonugg Mob.
+hist-conflict-73-1024 e1013 The Warrens of Bugnit laid claim to Bittersike Steppe, held by the Snonugg Mob.
+hist-conflict-73-1024 e1015 Plague broke out in Skraslurk Hole and spread to 2 other settlements; 944 died in all.
+hist-conflict-73-1024 e1018 The Snonugg Mob laid claim to Barleycross Plain, held by the Droz Horde.
+hist-conflict-73-1024 e1021 Plague broke out in Gux Hole and spread to one other settlement; 564 died in all.
+hist-conflict-73-1024 e1024 Plague broke out in Skreerk Pit; 486 died.
+hist-conflict-73-1024 e1026 The Snonugg Mob laid claim to the Drowned Hurst, held by the Kingdom of Edod.
+hist-conflict-73-1024 e1028 The Warrens of Bugnit declared war on Clan Broknir over Spindlewood.
+hist-conflict-73-1024 e1030 Clan Broknir defeated the Warrens of Bugnit in Spindlewood; 769 of the defeated and 246 of the victors fell.
+hist-conflict-73-1024 e1031 The Warrens of Bugnit defeated Clan Broknir in the Reaped Vale; 451 of the defeated and 144 of the victors fell.
+hist-conflict-73-1024 e1032 The Warrens of Bugnit defeated Clan Broknir in Spindlewood; 736 of the defeated and 235 of the victors fell.
+hist-conflict-73-1024 e1033 The Warrens of Bugnit besieged Skreezslux of Clan Broknir; it fell.
+hist-conflict-73-1024 e1034 The Warrens of Bugnit took Skreezslux from Clan Broknir; 95 died.
+hist-conflict-73-1024 e1035 Clan Broknir sued the Warrens of Bugnit for peace after 4 years of war.
+hist-conflict-73-1024 e1036 Clan Broknir paid tribute to the Warrens of Bugnit; 735 were carried off.
+hist-conflict-73-1024 e1037 The Warrens of Bugnit declared war on the Snonugg Mob over Bittersike Steppe.
+hist-conflict-73-1024 e1039 Plague broke out in Sluz and spread to 5 other settlements; 1,129 died in all.
+hist-conflict-73-1024 e1045 The Snonugg Mob defeated the Warrens of Bugnit in Bittersike Steppe; 771 of the defeated and 244 of the victors fell.
+hist-conflict-73-1024 e1046 The Warrens of Bugnit defeated the Snonugg Mob in Wolflow; 764 of the defeated and 243 of the victors fell.
+hist-conflict-73-1024 e1047 The Snonugg Mob defeated the Warrens of Bugnit in Bittersike Steppe; 756 of the defeated and 240 of the victors fell.
+hist-conflict-73-1024 e1048 The Snonugg Mob defeated the Warrens of Bugnit in Wolflow; 747 of the defeated and 239 of the victors fell.
+hist-conflict-73-1024 e1049 The Snonugg Mob besieged Geet-Kruz of the Warrens of Bugnit; it held.
+hist-conflict-73-1024 e1050 The Warrens of Bugnit defeated the Snonugg Mob in Wolflow; 754 of the defeated and 235 of the victors fell.
+hist-conflict-73-1024 e1051 The Droz Horde declared war on the Snonugg Mob over Bittersike Steppe.
+hist-conflict-73-1024 e1052 The Warrens of Bugnit defeated the Snonugg Mob in Bittersike Steppe; 372 of the defeated and 119 of the victors fell.
+hist-conflict-73-1024 e1053 The Warrens of Bugnit besieged Dreezoz of the Snonugg Mob; it held.
+hist-conflict-73-1024 e1054 The Droz Horde defeated the Snonugg Mob in Bittersike Steppe; 369 of the defeated and 118 of the victors fell.
+hist-conflict-73-1024 e1055 The Droz Horde besieged Dreezoz of the Snonugg Mob; it fell.
+hist-conflict-73-1024 e1056 The Droz Horde took Dreezoz from the Snonugg Mob; 340 died.
+hist-conflict-73-1024 e1057 The Warrens of Bugnit defeated the Snonugg Mob in Bittersike Steppe; 334 of the defeated and 106 of the victors fell.
+hist-conflict-73-1024 e1058 The Warrens of Bugnit besieged Slotch of the Snonugg Mob; it held.
+hist-conflict-73-1024 e1059 The Snonugg Mob defeated the Warrens of Bugnit in Bittersike Steppe; 664 of the defeated and 106 of the victors fell.
+hist-conflict-73-1024 e1060 The Warrens of Bugnit sued the Snonugg Mob for peace after 19 years of war.
+hist-conflict-73-1024 e1061 The Warrens of Bugnit ceded the Reaped Vale to the Snonugg Mob.
+hist-conflict-73-1024 e1062 The Droz Horde defeated the Snonugg Mob in Bittersike Steppe; 842 of the defeated and 269 of the victors fell.
+hist-conflict-73-1024 e1063 The Droz Horde besieged Slotch of the Snonugg Mob; it fell.
+hist-conflict-73-1024 e1064 The Droz Horde sacked Slotch of the Snonugg Mob; 993 died and 2,320 fled.
+hist-conflict-73-1024 e1066 The Snonugg Mob defeated the Droz Horde in Bittersike Steppe; 1,293 of the defeated and 258 of the victors fell.
+hist-conflict-73-1024 e1067 Plague broke out in Woldbury; 385 died.
+hist-conflict-73-1024 e1068 The Droz Horde defeated the Snonugg Mob in Bailiff's Plains; 777 of the defeated and 248 of the victors fell.
+hist-conflict-73-1024 e1069 Plague broke out in Skreezslux; 224 died.
+hist-conflict-73-1024 e1070 The Snonugg Mob defeated the Droz Horde in Bittersike Steppe; 1,283 of the defeated and 257 of the victors fell.
+hist-conflict-73-1024 e1071 The Warrens of Bugnit laid claim to the Drowned Hurst, held by the Kingdom of Edod.
+hist-conflict-73-1024 e1072 Plague broke out in Gnark-Grirk Hole; 198 died.
+hist-conflict-73-1024 e1078 The Snonugg Mob and the Droz Horde made peace after 20 years of war, neither the victor.
+hist-conflict-73-1024 e1079 For 428 years, from 5178 to 5605, the land was quiet, and 10 realms kept the peace.
+hist-conflict-73-1024 e1086 The Droz Horde laid claim to Brinewood, held by the Loutaebie Ring.
+hist-conflict-73-1024 e1087 The Warrens of Skaslix laid claim to Bellshaw, held by the Snonugg Mob.
+hist-conflict-73-1024 e1089 The Kingdom of Edod laid claim to Moonwell Grove, held by the Snonugg Mob.
+hist-conflict-73-1024 e1092 The Snonugg Mob laid claim to the Windswept Thicket, held by the House of Fiegla.
+hist-conflict-73-1024 e1098 The House of Fiegla laid claim to Moonwell Grove, held by the Snonugg Mob.
+hist-conflict-73-1024 e1100 The Realm of Ielasie laid claim to Bellshaw, held by the Snonugg Mob.
+hist-conflict-73-1024 e1101 The Realm of Ielasie laid claim to Bittersike Steppe, held by the Droz Horde.
+hist-conflict-73-1024 e1103 The Droz Horde laid claim to Bittersike Steppe, held by the Snonugg Mob.
+hist-conflict-73-1024 e1104 The Warrens of Bugnit laid claim to the Windswept Thicket, held by the House of Fiegla.
+hist-conflict-73-1024 e1108 Clan Um'zurk laid claim to Drearstone Spires, held by Clan Broknir.
+hist-conflict-73-1024 e1109 The Snonugg Mob declared war on the Kingdom of Edod over the Drowned Hurst.
+hist-conflict-73-1024 e1110 Plague broke out in Sleegnonk and spread to one other settlement; 534 died in all.
+hist-conflict-73-1024 e1112 The Snonugg Mob defeated the Kingdom of Edod in the Drowned Hurst; 402 of the defeated and 128 of the victors fell.
+hist-conflict-73-1024 e1113 The Snonugg Mob besieged Woldbury of the Kingdom of Edod; it held.
+hist-conflict-73-1024 e1114 The Snonugg Mob defeated the Kingdom of Edod in the Drowned Hurst; 392 of the defeated and 125 of the victors fell.
+hist-conflict-73-1024 e1115 The Snonugg Mob besieged Woldbury of the Kingdom of Edod; it held.
+hist-conflict-73-1024 e1116 The Snonugg Mob laid claim to Hailscar, held by Clan Broknir.
+hist-conflict-73-1024 e1117 The Snonugg Mob defeated the Kingdom of Edod in the Drowned Hurst; 384 of the defeated and 123 of the victors fell.
+hist-conflict-73-1024 e1118 The Snonugg Mob besieged Woldbury of the Kingdom of Edod; it held.
+hist-conflict-73-1024 e1119 The Snonugg Mob defeated the Kingdom of Edod in the Drowned Hurst; 376 of the defeated and 120 of the victors fell.
+hist-conflict-73-1024 e1120 The Snonugg Mob besieged Woldbury of the Kingdom of Edod; it held.
+hist-conflict-73-1024 e1121 The Kingdom of Edod sued the Snonugg Mob for peace after 7 years of war.
+hist-conflict-73-1024 e1122 The Kingdom of Edod paid tribute to the Snonugg Mob; 1,643 were carried off.
+hist-conflict-73-1024 e1123 The Snonugg Mob declared war on the House of Fiegla over the Windswept Thicket.
+hist-conflict-73-1024 e1126 The Droz Horde declared war on the Loutaebie Ring over Brinewood.
+hist-conflict-73-1024 e1127 The Snonugg Mob defeated the House of Fiegla in the Windswept Thicket; 120 of the defeated and 38 of the victors fell.
+hist-conflict-73-1024 e1128 The Snonugg Mob besieged Miethno of the House of Fiegla; it held.
+hist-conflict-73-1024 e1129 The House of Fiegla defeated the Snonugg Mob in the Windswept Thicket; 230 of the defeated and 36 of the victors fell.
+hist-conflict-73-1024 e1130 The Droz Horde defeated the Loutaebie Ring in Brinewood; 106 of the defeated and 33 of the victors fell.
+hist-conflict-73-1024 e1131 The Droz Horde besieged Bitwoush of the Loutaebie Ring; it fell.
+hist-conflict-73-1024 e1132 The Droz Horde took Bitwoush from the Loutaebie Ring; 106 died.
+hist-conflict-73-1024 e1133 The Droz Horde prevailed over the Loutaebie Ring after 2 years of war.
+hist-conflict-73-1024 e1134 The Loutaebie Ring paid tribute to the Droz Horde; 238 were carried off.
+hist-conflict-73-1024 e1135 The Warrens of Bugnit laid claim to the Reaped Vale, held by the Snonugg Mob.
+hist-conflict-73-1024 e1136 The Snonugg Mob defeated the House of Fiegla in Moonwell Grove; 113 of the defeated and 36 of the victors fell.
+hist-conflict-73-1024 e1137 The House of Fiegla and the Snonugg Mob made peace after 9 years of war, neither the victor.
+hist-conflict-73-1024 e1138 The Droz Horde declared war on the Snonugg Mob over Bittersike Steppe.
+hist-conflict-73-1024 e1140 Plague broke out in Snozzsnib and spread to one other settlement; 404 died in all.
+hist-conflict-73-1024 e1142 The Warrens of Bugnit declared war on the Kingdom of Edod over the Drowned Hurst.
+hist-conflict-73-1024 e1143 Plague broke out in Slazzdrozz and spread to one other settlement; 902 died in all.
+hist-conflict-73-1024 e1146 The Snonugg Mob declared war on Clan Broknir over Hailscar.
+hist-conflict-73-1024 e1148 The Snonugg Mob defeated the Droz Horde in Bittersike Steppe; 1,109 of the defeated and 177 of the victors fell.
+hist-conflict-73-1024 e1149 The Droz Horde defeated the Snonugg Mob in Bailiff's Plains; 514 of the defeated and 164 of the victors fell.
+hist-conflict-73-1024 e1150 The Kingdom of Edod defeated the Warrens of Bugnit in the Drowned Hurst; 332 of the defeated and 106 of the victors fell.
+hist-conflict-73-1024 e1151 Plague broke out in Skreerk Pit and spread to one other settlement; 1,078 died in all.
+hist-conflict-73-1024 e1153 Clan Broknir defeated the Snonugg Mob in Hailscar; 364 of the defeated and 116 of the victors fell.
+hist-conflict-73-1024 e1154 The Droz Horde defeated the Snonugg Mob in Bittersike Steppe; 535 of the defeated and 171 of the victors fell.
+hist-conflict-73-1024 e1155 The Droz Horde besieged Neet Pit of the Snonugg Mob; it fell.
+hist-conflict-73-1024 e1156 The Droz Horde took Neet Pit from the Snonugg Mob; 358 died.
+hist-conflict-73-1024 e1157 The Snonugg Mob defeated Clan Broknir in Wayfarer's Vigil; 877 of the defeated and 157 of the victors fell.
+hist-conflict-73-1024 e1158 Clan Broknir sued the Snonugg Mob for peace after 5 years of war.
+hist-conflict-73-1024 e1159 Clan Broknir paid tribute to the Snonugg Mob; 915 were carried off.
+hist-conflict-73-1024 e1160 Plague broke out in Skeegriz Hole; 1,302 died.
+hist-conflict-73-1024 e1161 The Droz Horde defeated the Snonugg Mob in Bittersike Steppe; 985 of the defeated and 315 of the victors fell.
+hist-conflict-73-1024 e1162 The Droz Horde besieged Druggeenk Hole of the Snonugg Mob; it held.
+hist-conflict-73-1024 e1163 The Snonugg Mob defeated the Droz Horde in Bittersike Steppe; 1,494 of the defeated and 310 of the victors fell.
+hist-conflict-73-1024 e1165 Plague broke out in Aelraldell; 257 died.
+hist-conflict-73-1024 e1166 Plague broke out in Gnark-Grirk Hole; 379 died.
+hist-conflict-73-1024 e1167 The Droz Horde defeated the Snonugg Mob in Bailiff's Plains; 892 of the defeated and 285 of the victors fell.
+hist-conflict-73-1024 e1168 The Warrens of Bugnit defeated the Kingdom of Edod in the Wandering Rises; 360 of the defeated and 115 of the victors fell.
+hist-conflict-73-1024 e1169 The Warrens of Bugnit defeated the Kingdom of Edod in the Drowned Hurst; 353 of the defeated and 103 of the victors fell.
+hist-conflict-73-1024 e1170 The Warrens of Bugnit besieged Woldbury of the Kingdom of Edod; it held.
+hist-conflict-73-1024 e1172 The Droz Horde defeated the Snonugg Mob in Bittersike Steppe; 959 of the defeated and 306 of the victors fell.
+hist-conflict-73-1024 e1173 The Droz Horde besieged Druggeenk Hole of the Snonugg Mob; it fell.
+hist-conflict-73-1024 e1174 The Droz Horde took Druggeenk Hole from the Snonugg Mob; 339 died.
+hist-conflict-73-1024 e1175 The Kingdom of Edod defeated the Warrens of Bugnit in the Drowned Hurst; 322 of the defeated and 103 of the victors fell.
+hist-conflict-73-1024 e1176 The Kingdom of Edod defeated the Warrens of Bugnit in the Wandering Rises; 637 of the defeated and 110 of the victors fell.
+hist-conflict-73-1024 e1177 The Kingdom of Edod besieged Skeeb Pit of the Warrens of Bugnit; it fell.
+hist-conflict-73-1024 e1178 The Kingdom of Edod sacked Skeeb Pit of the Warrens of Bugnit; 488 died and 1,140 fled.
+hist-conflict-73-1024 e1180 Plague broke out in Nok Pit and spread to 3 other settlements; 879 died in all.
+hist-conflict-73-1024 e1183 Weakened by plague, Snozzsnib was abandoned; 836 survivors went to Zurk-Greex Pit.
+hist-conflict-73-1024 e1186 Plague broke out in Dragnik Pit and spread to 2 other settlements; 610 died in all.
+hist-conflict-73-1024 e1189 The Warrens of Bugnit defeated the Kingdom of Edod in the Wandering Rises; 344 of the defeated and 110 of the victors fell.
+hist-conflict-73-1024 e1190 The Warrens of Bugnit and the Kingdom of Edod made peace after 23 years of war, neither the victor.
+hist-conflict-73-1024 e1191 The Realm of Ielasie laid claim to Spindlewood, held by the Warrens of Bugnit.
+hist-conflict-73-1024 e1192 The Droz Horde defeated the Snonugg Mob in Bittersike Steppe; 881 of the defeated and 281 of the victors fell.
+hist-conflict-73-1024 e1193 The Droz Horde besieged Grizag Pit of the Snonugg Mob; it fell.
+hist-conflict-73-1024 e1194 The Droz Horde sacked Grizag Pit of the Snonugg Mob; 953 died and 2,226 fled.
+hist-conflict-73-1024 e1195 The Snonugg Mob sued the Droz Horde for peace after 33 years of war.
+hist-conflict-73-1024 e1196 The Snonugg Mob ceded the Reaped Vale to the Droz Horde.
+hist-conflict-73-1024 e1198 Plague broke out in Aelraldell and spread to one other settlement; 406 died in all.
+hist-conflict-73-1024 e1209 The House of Fiegla laid claim to the Wandering Rises, held by the Warrens of Bugnit.
+hist-conflict-73-1024 e1210 Plague broke out in Miethno; 222 died.
+hist-conflict-73-1024 e1212 Plague broke out in Geet-Kruz; 1,328 died.
+hist-conflict-73-1024 e1214 Plague broke out in Vithevae; 115 died.
+hist-conflict-73-1024 e1217 Plague broke out in Zeegg-Kork Hole and spread to 2 other settlements; 823 died in all.
+hist-conflict-73-1024 e1226 Plague broke out in Zigg Hole and spread to 3 other settlements; 864 died in all.
+hist-conflict-73-1024 e1231 The Warrens of Bugnit declared war on the Snonugg Mob over Wayfarer's Vigil.
+hist-conflict-73-1024 e1232 The Snonugg Mob defeated the Warrens of Bugnit in Wayfarer's Vigil; 628 of the defeated and 200 of the victors fell.
+hist-conflict-73-1024 e1234 The Snonugg Mob defeated the Warrens of Bugnit in Bittersike Steppe; 619 of the defeated and 198 of the victors fell.
+hist-conflict-73-1024 e1235 The Snonugg Mob besieged Griskeeb of the Warrens of Bugnit; it fell.
+hist-conflict-73-1024 e1236 The Snonugg Mob took Griskeeb from the Warrens of Bugnit; 68 died.
+hist-conflict-73-1024 e1237 The Snonugg Mob defeated the Warrens of Bugnit in Wolflow; 596 of the defeated and 190 of the victors fell.
+hist-conflict-73-1024 e1238 The Snonugg Mob besieged Geet-Kruz of the Warrens of Bugnit; it held.
+hist-conflict-73-1024 e1239 Plague broke out in Druggeenk Hole and spread to 4 other settlements; 2,860 died in all.
+hist-conflict-73-1024 e1244 Plague broke out in Griskeeb; 89 died.
+hist-conflict-73-1024 e1246 The Snonugg Mob defeated the Warrens of Bugnit in Wolflow; 590 of the defeated and 188 of the victors fell.
+hist-conflict-73-1024 e1247 The Snonugg Mob besieged Geet-Kruz of the Warrens of Bugnit; it held.
+hist-conflict-73-1024 e1249 Plague broke out in Gind; 126 died.
+hist-conflict-73-1024 e1250 The Snonugg Mob defeated the Warrens of Bugnit in Wolflow; 585 of the defeated and 187 of the victors fell.
+hist-conflict-73-1024 e1251 The Snonugg Mob besieged Geet-Kruz of the Warrens of Bugnit; it fell.
+hist-conflict-73-1024 e1252 The Snonugg Mob took Geet-Kruz from the Warrens of Bugnit; 404 died.
+hist-conflict-73-1024 e1254 The Warrens of Bugnit sued the Snonugg Mob for peace after 21 years of war.
+hist-conflict-73-1024 e1255 The Warrens of Bugnit ceded Wolflow to the Snonugg Mob.
+hist-conflict-73-1024 e1258 The Realm of Cenael laid claim to Bellshaw, held by the Snonugg Mob.
+hist-conflict-73-1024 e1259 Plague broke out in Krubsnox and spread to one other settlement; 592 died in all.
+hist-conflict-73-1024 e1266 Plague broke out in Dreezoz and spread to 2 other settlements; 1,069 died in all.
+hist-conflict-73-1024 e1269 The Realm of Ielasie laid claim to Roothowe Shaw, held by the Warrens of Skaslix.
+hist-conflict-73-1024 e1271 Plague broke out in Skignab; 200 died.
+hist-conflict-73-1024 e1272 The Realm of Cenael laid claim to Tansyridge Plain, held by the Warrens of Bugnit.
+hist-conflict-73-1024 e1273 Plague broke out in Drazzkonk Pit; 811 died.
+hist-conflict-73-1024 e1274 Plague broke out in Zurk-Greex Pit and spread to 2 other settlements; 603 died in all.
+hist-conflict-73-1024 e1279 Plague broke out in Zurk-Greex Pit and spread to 2 other settlements; 539 died in all.
+hist-conflict-73-1024 e1283 Plague broke out in Woia Glade; 230 died.
+hist-conflict-73-1024 e1286 Plague broke out in Alesstead and spread to one other settlement; 1,121 died in all.
+hist-conflict-73-1024 e1289 Plague broke out in Snarkdriz Pit and spread to 5 other settlements; 1,120 died in all.
+hist-conflict-73-1024 e1296 The Warrens of Bugnit laid claim to Drearstone Spires, held by Clan Broknir.
+hist-conflict-73-1024 e1297 Plague broke out in Gatch Pit; 254 died.
+hist-conflict-73-1024 e1301 Plague broke out in Zeegg-Kork Hole and spread to 4 other settlements; 944 died in all.
+hist-conflict-73-1024 e1306 Clan Um'zurk declared war on Clan Broknir over Drearstone Spires.
+hist-conflict-73-1024 e1307 Clan Um'zurk defeated Clan Broknir in Drearstone Spires; 718 of the defeated and 218 of the victors fell.
+hist-conflict-73-1024 e1308 Clan Um'zurk besieged Toktu Deep of Clan Broknir; it held.
+hist-conflict-73-1024 e1309 Clan Broknir sued Clan Um'zurk for peace after 1 year of war.
+hist-conflict-73-1024 e1310 Clan Broknir ceded Drearstone Spires to Clan Um'zurk.
+hist-conflict-73-1024 e1312 The Droz Horde laid claim to the Mossgrown Wood, held by the Loutaebie Ring.
+hist-conflict-73-1024 e1314 Plague broke out in Vithevae; 247 died.
+hist-conflict-73-1024 e1317 Plague broke out in Skreezslux; 497 died.
+hist-conflict-73-1024 e1318 Plague broke out in Fathsiedell; 110 died.
+hist-conflict-73-1024 e1319 Plague broke out in Rovesie; 334 died.
+hist-conflict-73-1024 e1320 The Loutaebie Ring laid claim to Brinewood, held by the Droz Horde.
+hist-conflict-73-1024 e1321 The Snonugg Mob laid claim to the Drowned Hurst, held by the Kingdom of Edod.
+hist-conflict-73-1024 e1322 Plague broke out in Gatch Pit and spread to 3 other settlements; 861 died in all.
+hist-conflict-73-1024 e1327 The House of Fiegla laid claim to Moonwell Grove, held by the Snonugg Mob.
+hist-conflict-73-1024 e1328 The Droz Horde declared war on the Loutaebie Ring over the Mossgrown Wood.
+hist-conflict-73-1024 e1329 The Snonugg Mob declared war on the Kingdom of Edod over the Drowned Hurst.
+hist-conflict-73-1024 e1330 The Kingdom of Edod defeated the Snonugg Mob in the Drowned Hurst; 407 of the defeated and 125 of the victors fell.
+hist-conflict-73-1024 e1331 The Snonugg Mob defeated the Kingdom of Edod in Moonwell Grove; 391 of the defeated and 125 of the victors fell.
+hist-conflict-73-1024 e1332 The Droz Horde searched the Mossgrown Wood for the Loutaebie Ring and found no one; the war ended after 6 years.
+hist-conflict-73-1024 e1333 The Snonugg Mob defeated the Kingdom of Edod in the Drowned Hurst; 383 of the defeated and 122 of the victors fell.
+hist-conflict-73-1024 e1334 The Snonugg Mob besieged Woldbury of the Kingdom of Edod; it held.
+hist-conflict-73-1024 e1335 The Realm of Cenael laid claim to Bittersike Steppe, held by the Droz Horde.
+hist-conflict-73-1024 e1336 The Snonugg Mob defeated the Kingdom of Edod in the Drowned Hurst; 375 of the defeated and 120 of the victors fell.
+hist-conflict-73-1024 e1337 The Snonugg Mob besieged Woldbury of the Kingdom of Edod; it fell.
+hist-conflict-73-1024 e1338 The Snonugg Mob sacked Woldbury of the Kingdom of Edod; 2,511 died and 5,860 fled.
+hist-conflict-73-1024 e1342 Plague broke out in Dreezoz; 718 died.
+hist-conflict-73-1024 e1344 The Snonugg Mob defeated the Kingdom of Edod in the Drowned Hurst; 309 of the defeated and 98 of the victors fell.
+hist-conflict-73-1024 e1345 The Snonugg Mob besieged Alesstead of the Kingdom of Edod; it held.
+hist-conflict-73-1024 e1346 The Kingdom of Edod sued the Snonugg Mob for peace after 12 years of war.
+hist-conflict-73-1024 e1347 The Kingdom of Edod paid tribute to the Snonugg Mob; 1,375 were carried off.
+hist-conflict-73-1024 e1349 The Snonugg Mob laid claim to Barleycross Plain, held by the Droz Horde.
+hist-conflict-73-1024 e1350 The Droz Horde laid claim to Bittersike Steppe, held by the Snonugg Mob.
+hist-conflict-73-1024 e1351 Plague broke out in Nakdrig; 334 died.
+hist-conflict-73-1024 e1353 The Snonugg Mob laid claim to the Reaped Vale, held by the Greenk Horde.
+hist-conflict-73-1024 e1355 Clan Broknir laid claim to Northeast Downs, held by the Warrens of Bugnit.
+hist-conflict-73-1024 e1357 The Droz Horde declared war on the Snonugg Mob over Bittersike Steppe.
+hist-conflict-73-1024 e1358 The Snonugg Mob defeated the Droz Horde in Bittersike Steppe; 1,600 of the defeated and 307 of the victors fell.
+hist-conflict-73-1024 e1359 The Snonugg Mob defeated the Droz Horde in Bailiff's Plains; 1,602 of the defeated and 273 of the victors fell.
+hist-conflict-73-1024 e1360 The Snonugg Mob besieged Skeegriz Hole of the Droz Horde; it fell.
+hist-conflict-73-1024 e1361 The Snonugg Mob sacked Skeegriz Hole of the Droz Horde; 2,327 died and 5,431 fled.
+hist-conflict-73-1024 e1363 Plague broke out in Themaeithe; 124 died.
+hist-conflict-73-1024 e1364 The Snonugg Mob defeated the Droz Horde in Barleycross Plain; 1,480 of the defeated and 237 of the victors fell.
+hist-conflict-73-1024 e1365 The Snonugg Mob besieged Skrogskrak Hole of the Droz Horde; it held.
+hist-conflict-73-1024 e1366 The Snonugg Mob defeated the Droz Horde in Barleycross Plain; 1,440 of the defeated and 237 of the victors fell.
+hist-conflict-73-1024 e1367 The Snonugg Mob besieged Skrogskrak Hole of the Droz Horde; it fell.
+hist-conflict-73-1024 e1368 The Snonugg Mob sacked Skrogskrak Hole of the Droz Horde; 847 died and 1,977 fled.
+hist-conflict-73-1024 e1371 Plague broke out in Fathsiedell and spread to one other settlement; 130 died in all.
+hist-conflict-73-1024 e1374 Plague broke out in Boskratch Pit; 1,779 died.
+hist-conflict-73-1024 e1375 Plague broke out in Skignab; 359 died.
+hist-conflict-73-1024 e1376 The Droz Horde defeated the Snonugg Mob in Barleycross Plain; 698 of the defeated and 223 of the victors fell.
+hist-conflict-73-1024 e1377 Plague broke out in Sluz and spread to 2 other settlements; 998 died in all.
+hist-conflict-73-1024 e1380 Clan Broknir declared war on the Warrens of Bugnit over Northeast Downs.
+hist-conflict-73-1024 e1382 Plague broke out in Stanham and spread to one other settlement; 587 died in all.
+hist-conflict-73-1024 e1384 The Snonugg Mob defeated the Droz Horde in Bittersike Steppe; 1,348 of the defeated and 288 of the victors fell.
+hist-conflict-73-1024 e1385 The Droz Horde sued the Snonugg Mob for peace after 25 years of war.
+hist-conflict-73-1024 e1386 The Droz Horde ceded Barleycross Plain to the Snonugg Mob.
+hist-conflict-73-1024 e1387 The Warrens of Bugnit defeated Clan Broknir in Northeast Downs; 437 of the defeated and 140 of the victors fell.
+hist-conflict-73-1024 e1388 Clan Broknir sued the Warrens of Bugnit for peace after 4 years of war.
+hist-conflict-73-1024 e1389 Clan Broknir paid tribute to the Warrens of Bugnit; 457 were carried off.
+hist-conflict-73-1024 e1390 Plague broke out in Slozgit; 181 died.
+hist-conflict-73-1024 e1391 Plague broke out in Faelvadell; 730 died.
+hist-conflict-73-1024 e1392 Plague broke out in Sluz and spread to one other settlement; 416 died in all.
+hist-conflict-73-1024 e1394 Plague broke out in Greekrunk; 313 died.
+hist-conflict-73-1024 e1396 Plague broke out in Alesstead; 1,629 died.
+hist-conflict-73-1024 e1398 Plague broke out in Neezzdruzz and spread to one other settlement; 503 died in all.
+hist-conflict-73-1024 e1401 The Droz Horde laid claim to the Reaped Vale, held by the Greenk Horde.
+hist-conflict-73-1024 e1402 The Greenk Horde laid claim to Bittersike Steppe, held by the Droz Horde.
+hist-conflict-73-1024 e1404 The Snonugg Mob declared war on the Greenk Horde over the Reaped Vale.
+hist-conflict-73-1024 e1405 The Snonugg Mob defeated the Greenk Horde in the Reaped Vale; 209 of the defeated and 67 of the victors fell.
+hist-conflict-73-1024 e1406 The Snonugg Mob besieged Skreerk Pit of the Greenk Horde; it held.
+hist-conflict-73-1024 e1407 The Snonugg Mob defeated the Greenk Horde in the Reaped Vale; 206 of the defeated and 65 of the victors fell.
+hist-conflict-73-1024 e1408 The Snonugg Mob besieged Skreerk Pit of the Greenk Horde; it held.
+hist-conflict-73-1024 e1411 The Snonugg Mob defeated the Greenk Horde in the Reaped Vale; 199 of the defeated and 63 of the victors fell.
+hist-conflict-73-1024 e1412 The Snonugg Mob besieged Skreerk Pit of the Greenk Horde; it held.
+hist-conflict-73-1024 e1414 Plague broke out in Sleezz Hole; 2,287 died.
+hist-conflict-73-1024 e1416 The Snonugg Mob defeated the Greenk Horde in the Reaped Vale; 197 of the defeated and 63 of the victors fell.
+hist-conflict-73-1024 e1417 The Snonugg Mob besieged Skreerk Pit of the Greenk Horde; it held.
 synthetic syn-0 0 2000 all auto normal
 syn-0 table civilization 014eced46c384bc3afc79040656bac3650c1519b88ef0ac75311e747aef7a50a
 syn-0 table event f03f011b9ab38622dc887b814f4f8882c770156689d8df879ebb780e93fa5354

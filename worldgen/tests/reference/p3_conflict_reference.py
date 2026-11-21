@@ -3526,12 +3526,17 @@ WORLD_CASES = tuple(c + ("auto", "normal") for c in pe.WORLD_CASES) + (
 # r9 20.14 item 8 (generator 0.18.0): the test writer's extra case, a world with flights and found refuges
 # (seed 1 at 512, default settings: three flights, every refuge found before the present)
 WORLD_CASES_018 = (("hist-conflict-flight", 1, 512, 6000, "all", "normal", "auto", "normal"),)
+# P3-10 second round integration (0.19.0 r17): 1024 default seed 73, the one sweep world whose history reaches a
+# T6 check where 21.6 item 1 (aim) and 7.7 item 1 (exhaustion) both hold with different endings (validation's D1:
+# e914 in 5063, aim gives the attacker a peace, exhaustion first a truce). Its input is a --until regions world.
+WORLD_CASES_019 = (("hist-conflict-73-1024", 73, 1024, 6000, "all", "normal", "auto", "normal"),)
 INPUT_OF = {"hist-conflict-42-1024": "example-42-1024", "hist-conflict-turbulent-512": "geo-seed-42-512",
             "hist-conflict-civs4-512": "geo-seed-42-512", "hist-conflict-flight": "sweep-1-512"}
 
 
 def world_cases():
-    return WORLD_CASES + (WORLD_CASES_018 if pe.at_least("0.18.0") else ())
+    return WORLD_CASES + (WORLD_CASES_018 if pe.at_least("0.18.0") else ()) + (
+        WORLD_CASES_019 if at_least("0.19.0") else ())
 
 
 def world_case(name, seed, size, span, races, detail, inputs_dir, dat=None, civs="auto", intensity="normal"):

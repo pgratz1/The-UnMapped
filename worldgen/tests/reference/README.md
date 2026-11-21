@@ -1235,3 +1235,17 @@ owner at all the year before (the holder's row ended with the sack of 4455). The
 colony founded in the Q4 of its cession) move from 1024 seed 36, whose case the round removes, to 1024 seed 5 with
 `--event-intensity turbulent` (e933, e1102; `check-world` again without a difference): no 1024 default world of
 seeds 0 to 160 holds one.
+
+### P3-10 second round, validation's D1 (21.6's order of items)
+
+`p3_conflict_reference.py` gains the world case `hist-conflict-73-1024` (`WORLD_CASES_019`, served from 0.19.0;
+input `hist-conflict-73-1024.db`, a `--until regions` world of 1024 seed 73 with default settings, in the inputs
+directory). It is the one world of validation's 375 whose history reaches a T6 check where 21.6 item 1 (aim) and
+7.7 item 1 (exhaustion) both hold with different endings: war e875, checked in 5063, ends by aim with the
+attacker's `peace` (e914, "The House of Fiegla sued the Snonugg Mob for peace after 29 years of war.") and a
+tribute. `golden` with that inputs directory rewrites `p3-06-conflict.txt` with the case's lines appended after
+`hist-conflict-flight` and every other line unchanged (checked by diff). A scan of every other golden case, with
+the reference's checks instrumented, finds no check where the order of 21.6's items changes an ending, nor do 96
+synthetic and stress runs at `exhaustion_permille` 20 to 600: an attacker usually gains its goal by its own capture
+in the same T6, so the score is for it and both orders agree. The hand-made order cases are
+`history/history_conflict_order_test.cpp`.
