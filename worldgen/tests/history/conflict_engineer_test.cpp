@@ -481,15 +481,16 @@ TEST_CASE("P3-06 r13 engineer: a same-step colony passes with the cession of its
 
 TEST_SUITE("history-slow" * doctest::skip()) {
 
-// 20.27 item 7: in 2048 seed 3 (default settings) a colony founded in a Q4 passes to the winner with the
-// region_ceded of that step. The ids are found in the log (generator 0.19.0 changed the 0.18.0 history,
-// whose case was colony s240 of c15 in region 158 at 5234): the first cession that passes a settlement
-// created earlier in its step; invariant (13) is checked over the whole world.
-TEST_CASE("P3-06 r13 engineer: invariant (13) on 2048 seed 3 and a same-step colony cession (20.27 item 7)") {
-    static dbtest::TempDir dir("conflict-engineer-2048");
+// 20.27 item 7: a colony founded in a Q4 passes to the winner with the region_ceded of that step.
+// Generator 0.19.0 changed the 0.18.0 case (2048 seed 3, colony s240 of c15 in region 158 at 5234; at
+// 0.19.0 that world has no such cession). 1024 seed 36 (default settings) has one at 0.19.0 (region 10,
+// c3 to c2 at 4913, colony s66); the test finds it in the log, the first cession that passes a
+// settlement created earlier in its step, and checks invariant (13) over the whole world.
+TEST_CASE("P3-06 r13 engineer: invariant (13) on 1024 seed 36 and a same-step colony cession (20.27 item 7)") {
+    static dbtest::TempDir dir("conflict-engineer-1024-36");
     std::vector<worldgen::stages::StageInfo> stages = worldgen::stages::stages_until(std::string("chronology"));
-    const worldgen::WorldParams wp = chrono_test::world_params(3, 2048, chrono_api::Params{}, ct::shipped());
-    const std::string path = dir.file("seed3-2048.db");
+    const worldgen::WorldParams wp = chrono_test::world_params(36, 1024, chrono_api::Params{}, ct::shipped());
+    const std::string path = dir.file("seed36-1024.db");
     REQUIRE(worldgen::stages::testing::generate_world_with_stages(wp, ct::shipped(), stages, path).ok());
     const eng::HistoryInputs in = h::history_inputs_from_world(chrono_test::open_world(path), ct::shipped());
     const Watched w = watched_run(ct::shipped(), in);
