@@ -682,7 +682,16 @@ At 512:
 - elf standing median is 7.5 (8);
 - the largest race share of people median is 485.5 (496.5).
 
-At 2048 the hollow share is 158‰ (140‰ before) and the maximum event count is 2349 (2444). The typical ranges of section 5.4, as adopted in P3-06 20.29, still describe the 1024 defaults: no 5th or 95th percentile moved by more than one unit.
+At 2048 the hollow share is 158‰ (140‰ before) and the maximum event count is 2349 (2444). Most typical ranges of section 5.4 (adopted in P3-06 20.29) are unchanged. Four 95th percentiles moved and should be corrected in 15.5:
+
+| Statistic | After the fix | 5.4 |
+| --- | --- | --- |
+| simulated years | 1196–1545 | 1196–1481 |
+| `simulated_permille` | 199–257 | 199–247 |
+| `wars_same_goal_max` | 2–8 | 2–7 |
+| largest civilization land share | 127–326 | 127–334 |
+
+The medians that moved are in the table above.
 
 ### 12.3 Critic folder and README world
 
