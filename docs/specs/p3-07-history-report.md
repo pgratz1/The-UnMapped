@@ -961,6 +961,114 @@ Binding on those specs, which are being written in parallel with this one:
 3. Every event that ends a civilization or ruins a settlement is that row's `ending_event` or `ruin_event`, and its salience is at least 20 and high enough to rank among the civilization's milestones (7.3); the illustrative excerpt of 17 uses 85–90.
 4. No new event kind may be needed by the report: a kind is printed from its stored template, roles and values (A1). A spec that wants a new block or line in the report asks for a `v2` (10.3).
 
+## 21. Summary selection, war notes and the P3-09 statistics (amendment r8, P3-09, generator 0.18.0; before implementation)
+
+Written 2026-11-20 by the spec writer for change P3-09 "conflict balance" (`docs/specs/p3-09-conflict-balance.md`), in answer to the world critic's review of P3-06 (`docs/reviews/p3-06-conflict-world-critic.md`, finding F4 and suggestions 2 and 8). P3-07 is not implemented yet, so this section is part of format v1 as it will first be implemented: no `v2` is needed and no report text exists that changes. **Where this section and sections 5–13 differ, this section rules**; the sections it replaces are named in each item. It changes no world byte (the report reads the world only); the salience change of claims (21.6) is a data change of P3-06's and belongs to generator 0.18.0.
+
+### 21.1 Why the threshold alone is not enough (measured at 0.16.0)
+
+The summary of 7.4 shows every event at or above one salience threshold. On the 0.16.0 worlds (1024, default settings, seeds 0–39, the spec writer's prototype `~/.cache/the-unmapped/out/p3-09-spec/proto.py`, which reproduces the 0.16.0 log) this has three defects the critic found:
+
+1. **Ages vanish.** The thresholds of 26–46 drop the quiet early ages almost entirely: seed 42 shows 3, 8, 12, 28, 30 and 74 events in its six ages (the Age of Elves, 2,074 years, gets 3 lines).
+2. **Wars lose their endings and their consequences.** A `truce` (50) or `region_ceded` (55) is below a threshold of 56, a `capital_moved` (50) below 51: with four civilizations per race the critic counted 12 truces, 4 cessions and 32 moved capitals hidden under shown declarations and sacks (seed 42, threshold 56).
+3. **Repetition reads as a timer.** The same declaration sentence recurs with nothing to say that it is the fifth war between the same pair, or how old the claim is; the `flare_up` sentence names no one.
+
+### 21.2 Units (new; used by 21.3)
+
+The **unit** U(e) of an event e is e together with its **companions**, found from the stored log only:
+
+| Kind of e | Companions |
+| --- | --- |
+| `war_declared` | the war's **ending**: the `until_event` of the `war` relation row whose `since_event` is e, when that row is closed (a `peace`, `truce`, `civ_conquered` or `civ_ended`); and every event of kind `region_ceded` or `tribute` that has that ending among its causes |
+| `peace`, `truce` | every event of kind `region_ceded` or `tribute` that has e among its causes |
+| `sacked`, `settlement_captured` | every event of kind `capital_moved`, `refugees_settled` or `civ_conquered` that has e among its causes |
+| any other kind | none |
+
+Companions are not followed further (a companion's own companions are not added, except as listed: the war's ending brings its cession or tribute). Kinds absent from a world's catalogue simply never occur. The kind keys are those of P3-06 11 and P3-06 20 (amendment r9 there: kinds 32 `refugees_settled` and 33 `tribute`, after P3-08's kind 31); the report finds them by key in the stored catalogue, never by id.
+
+### 21.3 The summary set and its threshold (replaces 7.4; 6.7's "an event is shown when its `salience` ≥ T"; 13 item 2)
+
+1. **Candidates**: the events with `salience` ≥ `SUMMARY_MIN_SALIENCE` (20), ranked by (`salience` descending, `id` ascending).
+2. **Age floor.** For each age k in ascending id (its years `start_year`–`end_year` of `age`): walk the candidates whose `year` lies in age k in rank order; for each one not yet in the floor set, add its whole unit; stop when the floor set holds at least `SUMMARY_AGE_FLOOR` = 20 events whose `year` lies in age k, or when the age's candidates are exhausted. A unit may carry companions of later years into the floor (a war declared at the end of an age ends in the next); they count toward the age of their own year. The floor set is the union over the ages.
+3. **Threshold.** C(t) = the union of U(e) over the candidates with `salience` ≥ t. **T** = the smallest t in [20, 100] with |floor ∪ C(t)| ≤ `SUMMARY_BUDGET` (250). The summary shows floor ∪ C(T). If no t qualifies, T = 100 and the summary shows floor ∪ C(100), which may exceed 250 lines (only when more than about 130 events have salience 100). The set grows as t falls, so T is well defined; no tie needs a rule (the floor walk is in rank order, the threshold a value).
+4. The floor set holds at most (ages) × (20 + 3) events (a unit has at most four events), so with the six races of the design it never exceeds 138 and always leaves room under the budget.
+5. **`[chronicle]`**: `threshold = <T>` as before; an event line is printed for each event of the summary set (in id order, under its phase); `shown` = the size of the set; the `(n more events not shown)` lines count the rest. At `full`, T stays 0 and every event is shown (unchanged).
+6. **`[stats]`**: `summary_threshold` = T of item 3 (also at `full`), `summary_events` = the size of the summary set (both definitions of 9 replaced).
+7. **Invariant 13 item 2** becomes: at `summary`, the event lines are exactly the summary set of item 3; every shown `war_declared` with a closed `war` row has its ending shown; every shown `sacked` or `settlement_captured` has its `capital_moved` and `refugees_settled` shown; each age with at least 20 candidates shows at least 20 events of its years; `shown` ≤ 250 unless T = 100.
+8. Constants (section 8 gains one row): `SUMMARY_AGE_FLOOR` = 20, used in 21.3. It is part of format v1 like the others.
+
+**Measured**: see 21.7.
+
+### 21.4 Notes after a sentence (new; 6.7's event line, 6.1 "Sentences", 13 item 4)
+
+Two kinds get a **note**, written by the report from the log after the rendered sentence and before the refs, at both levels:
+
+```
+<span> e<id> <kind key>/<salience>: <sentence> (<note>) {<refs>}[ [causes e<c1>, e<c2>, ...]]
+```
+
+The sentence is still `render_event` byte for byte (13 item 4 holds for the sentence part); the note is the report's own text, built from stored names, years and links, escaped like any other text (6.1), with names rendered as `render_event` renders a name in that position (a leading "The" lower-cased in the middle of a sentence and kept at its start, Paul's decision 2 on the region names, P3-04 8.5 as amended by P3-08). The parsing rule of 6.7 is unchanged (refs start at the last ` {`, which a note cannot contain: it holds names, digits, letters, spaces, `;` and `.` only).
+
+1. **`war_declared`.** c = the event's cause of kind `claim` with the smallest id (every declaration has one: P3-06 14 item 2); y_c its `year`. n = 1 + the number of earlier `war_declared` events whose two civilization participants (`attacker`, `defender`) are the same two civilizations, in either role. Note: `Claimed since <y_c>.` when y_c < the event's year, `Claimed the same year.` when equal; when n ≥ 2, followed by ` The <ordinal(n)> war between them.` No cause of kind `claim` (a world of another generator): no note.
+2. **`flare_up`.** c = the event's first cause. If c is of kind `claim`, with claimant A (role `claimant`), holder B (role `holder`) and region R (`event.region` of c): note `<A> pressed its claim to <R> against <B>.` with A at the start of a sentence and R, B in its middle. Otherwise no note.
+3. `ordinal(n)`: `second`, `third`, `fourth`, `fifth`, `sixth`, `seventh`, `eighth`, `ninth`, `tenth` for n = 2–10; for n ≥ 11 the decimal number followed by `th` when n mod 100 is 11, 12 or 13, else `st`, `nd`, `rd` for n mod 10 = 1, 2, 3, else `th` (`11th`, `21st`, `22nd`, `23rd`, `101st`, `111th`).
+
+Examples (seed 42, 1024, the 0.16.0 log and its numbered region names; from 0.17.0 the regions carry P1-06 r3's names):
+
+```
+2949 e93 flare_up/50: In 2949 tensions flared into 50 years of upheaval. (The Grork Horde pressed its claim to Southwest Wood against Finen.) {years=50} [causes e75]
+2949 e94 war_declared/70: The Grork Horde declared war on Finen over Southwest Wood. (Claimed since 2574. The second war between them.) {@rg35 attacker=c3 defender=c1} [causes e44, e75]
+```
+
+**API** (5.1): `std::string history_note(const HistoryView&, std::int64_t event_id)` in `worldgen/history/digest.hpp` returns the note without its parentheses, or an empty string; the report and P4's browser call it, nobody re-implements it (as `render_event`, P3-00 6.3). It does not fail on a loaded view.
+
+### 21.5 New `[stats]` keys (appended after `wars_attacker_<race key>`, 10.3 rule 1)
+
+Integers only; "the war of d" for a `war_declared` event d is its `war` relation row (`since_event` = d) and the events reached from d: the `battle` and `battle_at_pass` events caused by d, the `siege` events caused by those, the `sacked` and `settlement_captured` events caused by those, and the row's `until_event` u with the `region_ceded` and `tribute` events caused by u.
+
+| Key | Definition |
+| --- | --- |
+| `wars_hollow` | `war_declared` events whose war has no `sacked`, no `settlement_captured`, no `region_ceded`, no `tribute`, and whose u is not a `civ_conquered`: wars that changed nothing (an open war counts with what it has so far) |
+| `wars_hollow_permille` | floor(1000 × `wars_hollow` / the number of `war_declared` events); 0 when there is none |
+| `wars_same_goal_max` | the largest number of `war_declared` events with one `defender` and one `event.region`; 0 when there is none |
+| `wars_same_goal_unchanged_max` | the largest number of consecutive `war_declared` events (in id order) with one `defender` and one region G such that no `region_control` row of G has `from_year` or `to_year` within the war's span [since, until] (until = E for an open row) for any of them: the longest run of wars over one goal that never moved it |
+| `race_population_share_max_permille` | max over races of floor(1000 × `population_<race>` / `population`); 0 when `population` is 0 |
+| `race_regions_share_max_permille` | max over races of floor(1000 × `regions_held_<race>` / `regions_held`); 0 when `regions_held` is 0 |
+
+The validation sweep reads them (P3-06 15.6 as amended by P3-06 20.9).
+
+### 21.6 Claims at salience 35 (a data change of P3-06's, generator 0.18.0)
+
+`history.report`'s `claim` entry goes from 45 to **35** (P3-06 20.8), so that a claim, whose year is now in the declaration's note (21.4 item 1), is shown at summary level only in small logs; a claim that leads to no war stays visible there. Sections 16 and 17 are illustrative and predate P3-06; the sample of 16 is re-produced from the implementation and recorded by its golden case (14.4), as it already had to be.
+
+### 21.7 Measured effect
+
+`docs/specs/p3-09-conflict-balance.md` 5.7 gives the figures (the spec writer's prototype, which computes this selection from the log; 1024, default settings, seeds 0–39; the 0.16.0 rules and the expected 0.18.0 rules): the median world shows 223 events (142 at least, 248 at most) at a median threshold of 31; its six ages show a median of 19.5, 20, 26, 27.5, 30.5 and 83 events, against 5, 16.5, 27.5, 28.5, 31 and 89 under 7.4's threshold alone; seed 42's first three ages go from 3, 8 and 12 events to 20 each. The companions add nothing at default settings (no shown war lost its ending there) and matter when the threshold rises above 50, as with four civilizations per race (P3-09 5.4).
+
+### 21.8 War endings and searches (amendment r9, P3-09 r3, generator 0.18.0)
+
+P3-06 20.15–20.22 (r10 there) add kinds 34 `war_won` (a war won where the loser did not sue for peace), 35 `search_abandoned` (a war against a hidden people that found no one) and 36 `refuge_held` (a last refuge that held for want of a place to flee). This section amends 21 for them; nothing else changes.
+
+1. **Units** (21.2): the row "`peace`, `truce`" reads "`peace`, `war_won`, `truce`". A declaration's ending (the `war` row's `until_event`) may be any of `peace`, `war_won`, `truce`, `search_abandoned`, `civ_conquered`, `civ_ended`, and is its companion in every case. Wherever 21 says "the peace" of a war, `war_won` is meant too: 21.5's "u", and the cession or tribute caused by it.
+2. **`wars_hollow`** (21.5) excludes the wars whose u is a `search_abandoned`. New key **`wars_unfound`**, appended after `race_regions_share_max_permille`, counts them. `wars_hollow_permille` = floor(1000 × `wars_hollow` / (the number of `war_declared` events − `wars_unfound`)): a war that never found its enemy is neither hollow nor a war that changed something, and it is counted apart.
+3. New key **`refuges_held_no_destination`**, appended after `wars_unfound`: events of kind `refuge_held` with `reason` 1. Validation checks each with the reference (P3-06 20.22).
+4. Invariant 13 item 7 of 21.3: "every shown `war_declared` with a closed `war` row has its ending shown" covers the new endings.
+5. (r10) **`wars_same_goal_unchanged_max`** (21.5) is redefined to follow the weariness rule (P3-06 20.4, 20.23): any change of the region's owner breaks the run, also one between two wars. For one defender D and region G, take the `war_declared` events with defender D and region G in id order. A run is a sequence of consecutive such wars w_i … w_j such that no `region_control` row of G has `from_year` or `to_year` in [since(w_i), until(w_j)] (until = E for an open row). The key is the length of the longest run over all (D, G); 0 when there is none. This replaces 21.5's definition, which checked each war's own span only and missed a change of owner between two wars.
+
+   **(r11) Restated; this replaces the paragraph above** (P3-06 20.28, the lead's ruling: the run counts exactly the wars that weariness counts, so that T2 follows from P3-06 invariant (12)).
+   - **Counted wars.** For one defender D and region G: the `war_declared` events with `defender` D and `event.region` G, in id order, **without the wars closed by a side's end**: those whose `war` row's `until_event` is a `civ_conquered` or a `civ_ended`. Such a war neither extends a run nor breaks one; the counted wars before and after it are consecutive. A war whose row is open at the present is counted, with until = E.
+   - **Change.** A *change* in an interval [a, b] is a `region_control` row of G whose `from_year` or `to_year` lies in [a, b].
+   - **Run.** A run is a sequence of consecutive counted wars w_i … w_j with no change in the window [since(w_i), max(until(w_i), …, until(w_j))]. The key is the length of the longest run over all (D, G), 0 when no war is counted. (The window ends at the latest end in the run, since wars over one (D, G) may overlap.)
+   - **Incremental form** (equivalent; each (D, G) separately, with run = 0 and key = 0 at the start). For each counted war w = [s, u] in id order:
+     - if run > 0 and there is no change in [lo, max(hi, u)]: run += 1 and hi = max(hi, u);
+     - else if there is no change in [s, u]: run = 1, lo = s and hi = u. The first war after a change of owner starts a run of **1**, not 0, when its own span holds no change;
+     - else run = 0: a war whose own span holds a change is in no run.
+
+     After each war, key = max(key, run).
+   - **Examples.** 1024 seed 6, region 40, defender c1: e341 `war_won`, e445 `peace`, e453 closed by `civ_conquered` e488, e538 `truce`, with no change in 4892–5597. e453 is skipped and the key is **3**: e341, e445, e538. 1024 `calm` seed 17, region 11, defender c1: e285 (5577–5587) and e297 (5588–5598), with changes at 5039 and 5857 only. The key is **2**.
+6. (r10) **Events by kind**: `[stats]` prints `events_war_won`, `events_search_abandoned` and `events_refuge_held` after `events_tribute`, by kind id (9: one line per catalogue kind). They need no rule here. The war line words of the conflict golden (`won-c<W>`, `-ceded`, `-tribute`, `truce`, `unfound`, P3-06 20.26) are the reference's, not a report line: the report prints wars as `war` relation rows (6.6) and their endings as event lines.
+7. (r10) **The summary's companions** (21.2 with item 1 above) name every ending kind: a shown `war_declared` brings its `peace`, `war_won`, `truce`, `search_abandoned`, `civ_conquered` or `civ_ended`; a `peace` or `war_won` brings its `region_ceded` or `tribute`. A `refuge_held` (salience 25) has no companions and is no companion: it is the siege of a refuge, and a siege is shown only at its own salience.
+
 ## Appendix A. Proposals
 
 No proposals entry is needed: the report realizes design 13's "text history report" within design 6's rule (text from records and templates) and does not change the design. Its relation to design 14's chronicles (a deterministic template report for checking the history, not prose for players) is stated in section 1.
@@ -992,3 +1100,19 @@ The illustrative excerpt of 17 is corrected: a faded settlement's `ruined_year` 
 ## Revision note r7 (2026-11-20, names inside sentences; for P3-08)
 
 Text only (P1-06 r3 14.7, Appendix B.2; P3-04 r10 8.5). 6.1 "Sentences": the report prints `render_event`'s text unchanged, so a `The …` name mid-sentence is lower-cased there and nowhere else; every name printed as a field keeps its stored capital. 13 invariant 4 names the case. Format stays v1; no world byte changes. The golden report hashes (14.4) are recorded with P3-08's worlds and renderer (generator 0.17.0). The sample of 16 and the excerpt of 17 predate P3-04 r10 and P1-06 r3 (their region names and some sentences differ from what 0.17.0 prints); section 14.4 already makes section 16 equal the output of the generator current when P3-07 is implemented, so the sample is re-made then; this revision changes neither section.
+
+## Revision note r8 (2026-11-20, summary selection and war notes; for P3-09)
+
+New section 21 (P3-09, `docs/specs/p3-09-conflict-balance.md`, decided by Paul 2026-11-20; the P3-06 world critic's F4 and suggestions 2 and 8), before implementation, so format v1 as first implemented: the summary set is the per-age floor of 20 events plus the threshold set, each event with its companions (a declaration with its ending and the ending's cession or tribute, a sack or capture with the moved capital, the refugees and the conquest it caused), replacing 7.4's threshold-only rule; a note in parentheses after the sentence of `war_declared` (claim year, ordinal of the war between the pair) and of `flare_up` (claimant, region, holder), from the library function `history_note`; six `[stats]` keys appended (hollow wars, wars over one goal, race shares); constant `SUMMARY_AGE_FLOOR` = 20. The claim salience 35 is P3-06's data (r8 there). No world byte changes by this section.
+
+## Revision note r9 (2026-11-20, war endings and searches; for P3-09 r3)
+
+New 21.8: kinds 34 `war_won`, 35 `search_abandoned` and 36 `refuge_held` (P3-06 r10) in the summary units and the statistics; `wars_hollow_permille` counted over the wars that found their enemy; two keys, `wars_unfound` and `refuges_held_no_destination`. No world byte changes by this section.
+
+## Revision note r10 (2026-11-20, text after the P3-09 integration)
+
+21.8 items 5–7: `wars_same_goal_unchanged_max` breaks a run at any change of the region's owner, also between two wars (the lead's ruling); the `events_<key>` lines of kinds 34–36; the companions name every ending kind, and `refuge_held` is neither a head nor a companion. No world byte changes.
+
+## Revision note r11 (2026-11-20, the P3-09 validation's D2 and D3)
+
+21.8 item 5 restated (P3-06 20.28, the lead's ruling). `wars_same_goal_unchanged_max` leaves out the wars closed by a side's end (`civ_conquered`, `civ_ended`), which neither extend nor break a run, so that it counts the same wars as P3-06 20.4's weariness and T2 follows from invariant (12). A run's window ends at the latest end in the run. An incremental form is given, in which the first war after a change of owner starts a run of 1. Worked examples: seed 6 (key 3) and `calm` seed 17 (key 2). Report key only: no world byte changes, and format stays v1.

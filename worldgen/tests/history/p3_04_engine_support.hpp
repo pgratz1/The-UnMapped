@@ -382,6 +382,44 @@ inline std::vector<std::string> report_lines(const Tables& t, std::int64_t end_y
     return o;
 }
 
+// The whole [history] section after the header line, from rows: 11.1 with the keys of P3-05 15.4
+// appended after `relations` (every world with a history has them, whatever subsystems ran: a stub
+// world's report prints them too, history_engine_report_test.cpp); [] when `phase` is empty.
+inline std::vector<std::string> history_lines(const Tables& t, const eng::HistoryInputs& in) {
+    std::vector<std::string> o = report_lines(t, in.params.span);
+    if (o.empty()) {
+        return o;
+    }
+    std::map<std::int64_t, std::int64_t> civ_race;
+    for (const Row& c : t.civilization) {
+        civ_race[at(c, 0)] = at(c, 2);
+    }
+    auto standing = [](const Row& s) { return at(s, 10) == 1 || at(s, 10) == 2; };
+    std::int64_t pop = 0;
+    for (const Row& s : t.settlement) {
+        pop += standing(s) ? at(s, 11) : 0;
+    }
+    o.push_back("population = " + std::to_string(pop));
+    for (const char* what : {"population_", "settlements_standing_", "regions_held_"}) {
+        for (const db::RaceRow& r : in.races) {
+            std::int64_t v = 0;
+            if (std::string(what) == "regions_held_") {
+                for (const Row& rc : t.region_control) {
+                    v += (rc[2].type == db::ValueType::null && civ_race[at(rc, 3)] == r.id) ? 1 : 0;
+                }
+            } else {
+                for (const Row& s : t.settlement) {
+                    if (standing(s) && civ_race[at(s, 8)] == r.id) {
+                        v += std::string(what) == "population_" ? at(s, 11) : 1;
+                    }
+                }
+            }
+            o.push_back(std::string(what) + r.key + " = " + std::to_string(v));
+        }
+    }
+    return o;
+}
+
 // "id:age:kind:start:end|..." (golden format), with ":trigger" when asked.
 inline std::string phases_text(const Tables& t, bool trigger = false) {
     std::string s;

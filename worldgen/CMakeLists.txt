@@ -74,6 +74,7 @@ add_library(worldgen STATIC
     # P3-03: the history settings, the data checks across kinds and the
     # chronology stage with its report section.
     src/history/data_checks.cpp
+    src/history/digest.cpp
     src/history/params.cpp
     src/stages/chronology.cpp
     src/inspect/chronology.cpp

@@ -265,6 +265,12 @@ PEOPLES = tuple((n, PEOPLES_RECORDS.get(n, INT)) for n, _, _ in PEOPLES_RANGES)
 assert len(PEOPLES) == 65
 PEOPLES_017 = tuple((n, PEOPLES_RECORDS.get(n, INT)) for n, _, _ in PEOPLES_RANGES_017)
 assert len(PEOPLES_017) == 67
+# P3-05 r8 21 item 5 (0.18.0, P3-09): two fields after regions_per_civ.
+_i = [n for n, _, _ in PEOPLES_RANGES_017].index("regions_per_civ") + 1
+PEOPLES_RANGES_018 = PEOPLES_RANGES_017[:_i] + (("regions_per_extra_civ", 1, 100000), ("civs_extra_max", 0, 3)) + \
+    PEOPLES_RANGES_017[_i:]
+PEOPLES_018 = tuple((n, PEOPLES_RECORDS.get(n, INT)) for n, _, _ in PEOPLES_RANGES_018)
+assert len(PEOPLES_018) == 69 and PEOPLES_018[_i - 1][0] == "regions_per_civ"
 # P3-05 12.1 named checks, in order: (name, message).
 PEOPLES_CHECKS = (
     ("peoples_ladder", "village_min, town_min, city_min must increase and city_max must not be below city_min"),
@@ -318,13 +324,36 @@ CONFLICT_CHECKS = (
 )
 
 
+CONFLICT_RANGES_016 = CONFLICT_RANGES
+# P3-06 r9 20.9 (generator 0.18.0, P3-09): eleven fields after last_refuge, in this order.
+CONFLICT_NEW_018 = (
+    ("refuge_flight", 0, 1), ("flight_hops", 1, 8), ("hidden_years", 0, 10000), ("weary_wars", 0, 100),
+    ("tribute_permille", 0, 1000), ("revenge_aggression", 0, 1000), ("levy_hops", 0, 16), ("odds_floor", 0, 1000),
+    ("odds_min", 0, 1000), ("truce_break_aggression", 0, 999), ("enmity_hops", 1, 4),
+    # r10 20.19 (P3-09 r3): after enmity_hops
+    ("kill_max_permille", 1, 10000), ("find_permille", 0, 1000), ("search_years", 1, 100),
+)
+_i = [n for n, _, _ in CONFLICT_RANGES].index("last_refuge") + 1
+CONFLICT_RANGES_018 = CONFLICT_RANGES[:_i] + CONFLICT_NEW_018 + CONFLICT_RANGES[_i:]
+CONFLICT_018 = tuple((n, CONFLICT_RECORDS.get(n, INT)) for n, _, _ in CONFLICT_RANGES_018)
+assert len(CONFLICT_018) == 57 and CONFLICT_018[_i][0] == "refuge_flight"
+CONFLICT_CHECKS_018 = CONFLICT_CHECKS + (("conflict_enmity_hops", "enmity_hops must not be below march_hops"),)
+
+
+def conflict_ranges():
+    """The history.conflict field ranges of the served data version."""
+    return CONFLICT_RANGES_018 if DATA_VERSION == "0.18.0" else CONFLICT_RANGES_016
+
+
 def conflict_check_messages(t):
-    """The named checks of P3-06 12.1 that fail for a history.conflict table."""
+    """The named checks of P3-06 12.1 (and r9 20.9 from 0.18.0) that fail for a history.conflict table."""
     out = []
     if not (t["claim_strain"] <= t["declare_min"]):
         out.append(CONFLICT_CHECKS[0][1])
     if not (t["declare_min"] + t["declare_span"] <= t["strain_max"]):
         out.append(CONFLICT_CHECKS[1][1])
+    if "enmity_hops" in t and not (t["enmity_hops"] >= t["march_hops"]):
+        out.append(CONFLICT_CHECKS_018[2][1])
     return out
 
 # P3-01 3.
@@ -343,6 +372,12 @@ RACE = (
 RACE_CELL_WEIGHTS = REC(fields("ore:I height:I"))
 RACE_017 = RACE[:11] + (("cell_weights", RACE_CELL_WEIGHTS),) + RACE[11:]
 assert RACE_017[10][0] == "site_weights" and RACE_017[12][0] == "biomes"
+# P3-01 r9 3.2 (0.18.0, P3-09): three fields after prowess_permille, in this order.
+_i = [n for n, _ in RACE_017].index("prowess_permille") + 1
+RACE_018 = RACE_017[:_i] + (("muster_permille", INT), ("conceal_min", INT), ("home_defense_permille", INT)) + \
+    RACE_017[_i:]
+RACE_FIELDS_018 = (("muster_permille", 1, 10000), ("conceal_min", 0, 1001), ("home_defense_permille", 0, 10000))
+assert RACE_018[_i + 3][0] == "settlement_kinds"
 
 # P3-02 r5 11.2 (0.17.0): kind name_filter, three lists.
 NAME_FILTER = (("anywhere", ARR(STR)), ("at_start", ARR(STR)), ("whole", ARR(STR)))
@@ -379,6 +414,10 @@ KINDS_017 = {
         "regions": REGIONS_017, "resources": RESOURCES,
     }),
 }
+KINDS_018 = dict(KINDS_017)
+KINDS_018["history"] = ("history", {"chronology": CHRONOLOGY, "conflict": CONFLICT_018, "engine": ENGINE,
+                                    "peoples": PEOPLES_018, "report": REPORT})
+KINDS_018["race"] = ("races", RACE_018)
 NEW_KINDS = ("culture", "history", "race")
 # Kinds whose shipped files are normative and committed (P1-06 r3 4.1,
 # P3-02 r5 11.2): the fixture roots get identical copies with the
@@ -967,15 +1006,84 @@ REPORT_FILE_017 = {"report.toml": _re}
 HISTORY_FILES_017 = dict(CHRONOLOGY_FILE, **CONFLICT_FILE, **ENGINE_FILE, **PEOPLES_FILE_017, **REPORT_FILE_017)
 SPEC_FILES_017 = {"race": RACE_FILES_017, "culture": CULTURE_FILES_017, "history": HISTORY_FILES_017}
 
-# The data version this module serves: "0.17.0" (default, P3-08) or
-# "0.16.0" (use_version), so that the references can still reproduce the
-# 0.16.0 worlds and goldens.
+
+# ---------------------------------------------------------------------------
+# The 0.18.0 listings (P3-09), derived from the 0.17.0 ones by the edits the
+# specs state:
+#   races     P3-01 r9 3.2 / P3-06 r9 20.12: muster_permille, conceal_min,
+#             home_defense_permille after prowess_permille (orc muster 4000,
+#             faerie conceal 400, elf home defence 1500, faerie 2000).
+#   conflict  P3-06 r9 20.9: eleven fields after last_refuge, shipped values.
+#   peoples   P3-05 r8 21 item 5: regions_per_extra_civ 90 and civs_extra_max 2
+#             after regions_per_civ.
+#   report    P3-06 r9 20.9: claim salience 45 -> 35 (P3-07 r8 21.6); the
+#             entries of kinds 32 refugees_settled (65) and 33 tribute (50).
+#             ASSUMPTION (spec gap, as for kind 31): appended after kind 31's
+#             entry in kind id order; the spec gives the entries, not their
+#             place in report.toml.
+#   cultures  unchanged.
+#   name filter: the short word list (P3-09 item 8) is data read from disk
+#             (game/data/name_filters/), not a listing here.
+# ---------------------------------------------------------------------------
+
+RACE_FIELDS_018_VALUES = {
+    "elf": (1000, 1001, 1500), "goblin": (1000, 1001, 0), "dwarf": (1000, 1001, 0),
+    "faerie": (1000, 400, 0), "human": (1000, 1001, 0), "orc": (4000, 1001, 0),   # faerie home 0: P3-01 r10 3.3
+}
+
+
+def _race_018(name, text):
+    m, cmin, hd = RACE_FIELDS_018_VALUES[name[:-5]]
+    line = [l for l in text.splitlines(True) if l.startswith("prowess_permille = ")][0]
+    return _edit(text, line, line + "muster_permille = %d\nconceal_min = %d\nhome_defense_permille = %d\n"
+                 % (m, cmin, hd))
+
+
+RACE_FILES_018 = {n: _race_018(n, t) for n, t in RACE_FILES_017.items()}
+CONFLICT_018_VALUES = (("refuge_flight", 1), ("flight_hops", 3), ("hidden_years", 300), ("weary_wars", 3),
+                       ("tribute_permille", 100), ("revenge_aggression", 400), ("levy_hops", 3),
+                       ("odds_floor", 500), ("odds_min", 700), ("truce_break_aggression", 600),
+                       ("enmity_hops", 3), ("kill_max_permille", 500), ("find_permille", 250), ("search_years", 3))
+assert [n for n, _ in CONFLICT_018_VALUES] == [n for n, _, _ in CONFLICT_NEW_018]
+CONFLICT_FILE_018 = {"conflict.toml": _edit(CONFLICT_FILE["conflict.toml"], "last_refuge = 1\n", "last_refuge = 1\n" +
+                                            "".join("%s = %d\n" % kv for kv in CONFLICT_018_VALUES))}
+PEOPLES_FILE_018 = {"peoples.toml": _edit(PEOPLES_FILE_017["peoples.toml"], "regions_per_civ = 4\n",
+                                          "regions_per_civ = 4\nregions_per_extra_civ = 90\ncivs_extra_max = 2\n")}
+KIND32_ENTRY = ('  { kind = "refugees_settled", salience = 65, template = "The survivors of {origin} fled into hiding '
+                'and founded {@settlement} in {@region}." },\n')
+KIND33_ENTRY = ('  { kind = "tribute", salience = 50, template = "{payer} paid tribute to {payee}; {people} '
+                '{people?was|were} carried off." },\n')
+_re = _edit(REPORT_FILE_017["report.toml"], '{ kind = "claim", salience = 45,', '{ kind = "claim", salience = 35,')
+_last = [l for l in _re.splitlines(True) if '"settlement_abandoned_to"' in l][0]
+# r10 20.15, 20.17, 20.22 (P3-09 r3): kinds 34-36, appended after 33 (20.21 item 9)
+KIND34_ENTRY = ('  { kind = "war_won", salience = 60, template = "{winner} prevailed over {loser} after {years} '
+                '{years?year|years} of war." },\n')
+KIND35_ENTRY = ('  { kind = "search_abandoned", salience = 40, template = "{searcher} searched {@region} for {hidden} '
+                'and found no one; the war ended after {years} {years?year|years}." },\n')
+KIND36_ENTRY = ('  { kind = "refuge_held", salience = 25, template = "{attacker} besieged {@settlement} of {defender}; '
+                'with {reason?nowhere to flee|too few to flee}, its people held on." },\n')
+_re = _edit(_re, _last, _last + KIND32_ENTRY + KIND33_ENTRY + KIND34_ENTRY + KIND35_ENTRY + KIND36_ENTRY)
+REPORT_FILE_018 = {"report.toml": _re}
+HISTORY_FILES_018 = dict(CHRONOLOGY_FILE, **CONFLICT_FILE_018, **ENGINE_FILE, **PEOPLES_FILE_018, **REPORT_FILE_018)
+SPEC_FILES_018 = {"race": RACE_FILES_018, "culture": CULTURE_FILES_017, "history": HISTORY_FILES_018}
+
+# The data version this module serves: "0.18.0" (default, P3-09), "0.17.0"
+# (P3-08) or "0.16.0" (use_version), so that the references can still
+# reproduce the older worlds and goldens.
 DATA_VERSION = None
+VERSIONS = ("0.16.0", "0.17.0", "0.18.0")
+
+
+def at_least(v):
+    """True when the served data version is v or later."""
+    return VERSIONS.index(DATA_VERSION) >= VERSIONS.index(v)
 
 
 def use_version(v):
     global DATA_VERSION, KINDS, SPEC_FILES
-    if v == "0.17.0":
+    if v == "0.18.0":
+        KINDS, SPEC_FILES = KINDS_018, SPEC_FILES_018
+    elif v == "0.17.0":
         KINDS, SPEC_FILES = KINDS_017, SPEC_FILES_017
     elif v == "0.16.0":
         KINDS, SPEC_FILES = KINDS_016, SPEC_FILES_016
@@ -984,7 +1092,7 @@ def use_version(v):
     DATA_VERSION = v
 
 
-use_version("0.17.0")
+use_version("0.18.0")
 
 # ---------------------------------------------------------------------------
 # Loading and validation (types only: what the encoding needs)
@@ -1011,7 +1119,7 @@ def read_kind_files(root, kind, from_spec):
     if not os.path.isdir(path):
         if from_spec and kind in SPEC_FILES:
             return sorted(SPEC_FILES[kind].items(), key=lambda kv: kv[0].encode())
-        if DATA_VERSION == "0.17.0" and kind in COPIED_KINDS and SPEC_FALLBACK:
+        if at_least("0.17.0") and kind in COPIED_KINDS and SPEC_FALLBACK:
             # P1-06 r3 4.1, P3-02 r5 11.2: the fixture roots get identical
             # copies of the shipped (normative, committed) files with the
             # implementation; until then game/data's files stand in.
@@ -1020,26 +1128,39 @@ def read_kind_files(root, kind, from_spec):
                 PRE_015_USED.add(os.path.join(root, directory))
                 return read_dir_files(shipped, directory)
         return None
-    if DATA_VERSION == "0.17.0" and kind in SPEC_FILES and SPEC_FALLBACK and pre_017(path, kind):
-        # P3-08 (0.17.0): the race, culture and history files are the
-        # engineer's deliverable; while the disk holds 0.16.0 files the 0.17.0
-        # listings stand in for them (noted by `check`).
-        PRE_015_USED.add(os.path.join(root, directory))
-        return sorted(SPEC_FILES[kind].items(), key=lambda kv: kv[0].encode())
-    if DATA_VERSION == "0.16.0" and kind in SPEC_FILES and SPEC_FALLBACK and not pre_017(path, kind):
-        # The disk holds 0.17.0 files: the 0.16.0 listings stand in for them.
-        PRE_015_USED.add(os.path.join(root, directory))
-        return sorted(SPEC_FILES[kind].items(), key=lambda kv: kv[0].encode())
-    if DATA_VERSION == "0.16.0" and kind in ("race", "history") and SPEC_FALLBACK and pre_015(path, kind):
-        # P3-06 (0.16.0): the shipped race and history files are the
-        # engineer's deliverable; while the disk holds older (0.15.0) files
-        # the spec listings stand in for them (noted by `check`).
+    if kind in SPEC_FILES and SPEC_FALLBACK and not same_version(kind, disk_version(path, kind), DATA_VERSION):
+        # The race, culture and history files are the engineer's deliverable
+        # (P3-06 for 0.16.0, P3-08 for 0.17.0, P3-09 for 0.18.0): while the
+        # disk holds files of another version, the listings of the served
+        # version stand in for them (noted by `check`).
         PRE_015_USED.add(os.path.join(root, directory))
         return sorted(SPEC_FILES[kind].items(), key=lambda kv: kv[0].encode())
     return read_dir_files(path, directory)
 
 
+# P3-09 item 8 (0.18.0): the short word list replaces game/data/name_filters/words.toml (and its fixture copies).
+# A version before 0.18.0 reads the name_filter files as they were at the P3-08 commit below (from git), so
+# that the 0.17.0 goldens stay reproducible after the data change.
+NAME_FILTERS_017_COMMIT = "d750d15"
+
+
+def legacy_filter_files(path, directory):
+    import subprocess
+    rel = os.path.relpath(path, REPO).replace(os.sep, "/")
+    names = subprocess.run(["git", "-C", REPO, "ls-tree", "--name-only", NAME_FILTERS_017_COMMIT + ":" + rel],
+                           check=True, capture_output=True, text=True).stdout.split()
+    out = []
+    for name in sorted((n for n in names if n.endswith(".toml")), key=lambda n: n.encode()):
+        text = subprocess.run(["git", "-C", REPO, "show", "%s:%s/%s" % (NAME_FILTERS_017_COMMIT, rel, name)],
+                              check=True, capture_output=True).stdout.decode("utf-8")
+        out.append((name, text))
+    return out
+
+
 def read_dir_files(path, directory):
+    if directory == "name_filters" and DATA_VERSION != "0.18.0" and os.path.isdir(path) and \
+            os.path.normpath(path).startswith(os.path.normpath(REPO)):
+        return legacy_filter_files(path, directory)
     names = []
     for name in os.listdir(path):
         if name.startswith(".") or not name.endswith(".toml"):
@@ -1052,6 +1173,42 @@ def read_dir_files(path, directory):
         with open(os.path.join(path, name), "rb") as f:
             out.append((name, f.read().decode("utf-8")))
     return out
+
+
+def disk_version(path, kind):
+    """The data version of a race, culture or history directory on disk."""
+    if kind in ("race", "history") and pre_015(path, kind):
+        return "0.15.0"
+    if pre_017(path, kind):
+        return "0.16.0"
+    if kind != "culture" and pre_018(path, kind):
+        return "0.17.0"
+    return "0.18.0"
+
+
+def same_version(kind, a, b):
+    """Whether two data versions have the same files of a kind (cultures did not change at 0.18.0)."""
+    if kind == "culture":
+        a, b = ("0.17.0" if x == "0.18.0" else x for x in (a, b))
+    return a == b
+
+
+def pre_018(path, kind):
+    """A race or history directory older than 0.18.0 (P3-09): no `muster_permille` in a race file, no
+    `refuge_flight` in conflict.toml, no `regions_per_extra_civ` in peoples.toml or no kind 32 entry
+    in report.toml."""
+    texts = {}
+    for n in os.listdir(path):
+        if n.endswith(".toml"):
+            with open(os.path.join(path, n), encoding="utf-8") as f:
+                texts[n] = f.read()
+    if kind == "history":
+        return ("kill_max_permille" not in texts.get("conflict.toml", "")
+                or "refuge_held" not in texts.get("report.toml", "")
+                or "refuge_flight" not in texts.get("conflict.toml", "")
+                or "regions_per_extra_civ" not in texts.get("peoples.toml", "")
+                or "refugees_settled" not in texts.get("report.toml", ""))
+    return any("muster_permille" not in t for t in texts.values())
 
 
 def pre_017(path, kind):
@@ -1154,7 +1311,7 @@ def load_root(root, kinds=None, from_spec=False):
                     raise DataError("duplicate id '%s.%s'" % (kind, did))
                 defs[did] = table
         schema = KINDS[kind][1]
-        if (DATA_VERSION == "0.17.0" and kind == "worldgen" and SPEC_FALLBACK and "regions" in defs
+        if (at_least("0.17.0") and kind == "worldgen" and SPEC_FALLBACK and "regions" in defs
                 and not any(k in defs["regions"] for k in REGIONS_017_VALUES)):
             # P1-06 r3 4: the two records are written into regions.toml by the
             # engineer; the shipped values of the spec's block stand in.
@@ -1288,16 +1445,17 @@ def check_spec_invariants(c):
     check_record(ENGINE, parsed_spec("history")["engine"], "history.engine")
     check_record(REPORT, parsed_spec("history")["report"], "history.report")
     check_record(KINDS["history"][1]["peoples"], parsed_spec("history")["peoples"], "history.peoples")
-    check_record(CONFLICT, parsed_spec("history")["conflict"], "history.conflict")
+    check_record(KINDS["history"][1]["conflict"], parsed_spec("history")["conflict"], "history.conflict")
     c.eq("history ids", sorted(parsed_spec("history")), ["chronology", "conflict", "engine", "peoples", "report"])
     co = parsed_spec("history")["conflict"]
     c.eq("history.conflict passes its named checks (P3-06 12.1)", conflict_check_messages(co), [])
-    for n, lo, hi in CONFLICT_RANGES:
+    for n, lo, hi in conflict_ranges():
         vals = list(co[n].values()) if isinstance(co[n], dict) else [co[n]]
         c.ok("history.conflict.%s inside its range" % n, all(lo <= v <= hi for v in vals))
     pe = parsed_spec("history")["peoples"]
     c.eq("history.peoples passes its named checks (P3-05 12.1)", peoples_check_messages(pe), [])
-    for n, lo, hi in (PEOPLES_RANGES_017 if DATA_VERSION == "0.17.0" else PEOPLES_RANGES):
+    for n, lo, hi in (PEOPLES_RANGES_018 if at_least("0.18.0") else
+                      PEOPLES_RANGES_017 if at_least("0.17.0") else PEOPLES_RANGES):
         vals = list(pe[n].values()) if isinstance(pe[n], dict) else [pe[n]]
         c.ok("history.peoples.%s inside its range" % n, all(lo <= v <= hi for v in vals))
     kinds30 = ["awakening", "civ_founded", "settlement_founded", "quiet_era", "flare_up", "colony_founded",
@@ -1305,12 +1463,16 @@ def check_spec_invariants(c):
                "plague_spread", "succession_crisis", "civ_seceded", "settlement_abandoned", "capital_moved",
                "civ_ended", "ruin_faded", "claim", "war_declared", "battle", "battle_at_pass", "siege", "sacked",
                "settlement_captured", "peace", "truce", "region_ceded", "civ_conquered"]
+    later = (["settlement_abandoned_to"] if at_least("0.17.0") else []) + \
+        (["refugees_settled", "tribute", "war_won", "search_abandoned", "refuge_held"] if at_least("0.18.0") else [])
     c.eq("report lists kinds 1-%d in id order (P3-05 11, P3-06 11%s)"
-         % (31 if DATA_VERSION == "0.17.0" else 30, ", P3-05 r6 11" if DATA_VERSION == "0.17.0" else ""),
-         [e["kind"] for e in parsed_spec("history")["report"]["events"]],
-         kinds30 + (["settlement_abandoned_to"] if DATA_VERSION == "0.17.0" else []))
-    if DATA_VERSION == "0.17.0":
+         % (30 + len(later), (", P3-05 r6 11" if at_least("0.17.0") else "") +
+            (", P3-06 r9 20.9" if at_least("0.18.0") else "")),
+         [e["kind"] for e in parsed_spec("history")["report"]["events"]], kinds30 + later)
+    if at_least("0.17.0"):
         check_spec_017(c, races, cultures)
+    if at_least("0.18.0"):
+        check_spec_018(c, races)
     c.eq("densities (P3-05 12.2)", {k: v["density_permille"] for k, v in races.items()},
          dict(elf=300, goblin=900, dwarf=700, faerie=250, human=1000, orc=800))
     c.eq("prowess_permille (P3-06 12.2)", {k: v["prowess_permille"] for k, v in races.items()},
@@ -1354,6 +1516,45 @@ def check_spec_invariants(c):
     form = parsed_spec("history")["chronology"]["age_name_form"]
     c.ok("age_name_form check", ("{plural}" in form or "{adjective}" in form)
          and form.replace("{plural}", "").replace("{adjective}", "").count("{") == 0)
+
+
+def check_spec_018(c, races):
+    """The 0.18.0 listings say what P3-01 r9 3.2, P3-05 r8 21 item 5 and P3-06 r9 20.9 and 20.12 state."""
+    c.eq("race fields of P3-06 r9 20.12 (muster, conceal_min, home defence)",
+         {k: (v["muster_permille"], v["conceal_min"], v["home_defense_permille"]) for k, v in races.items()},
+         RACE_FIELDS_018_VALUES)
+    c.eq("the three race fields follow prowess_permille in this order (P3-01 r9 3.2)",
+         [list(v)[list(v).index("prowess_permille") + 1:list(v).index("prowess_permille") + 4] for v in races.values()],
+         [["muster_permille", "conceal_min", "home_defense_permille"]] * 6)
+    for k, v in races.items():
+        for n, lo, hi in RACE_FIELDS_018:
+            c.ok("race %s.%s inside int(%d, %d)" % (k, n, lo, hi), lo <= v[n] <= hi)
+    co = parsed_spec("history")["conflict"]
+    i = list(co).index("last_refuge")
+    c.eq("history.conflict: the eleven r9 and three r10 fields after last_refuge, in order, shipped values",
+         [(n, co[n]) for n in list(co)[i + 1:i + 15]], list(CONFLICT_018_VALUES))
+    c.eq("history.conflict: capital_sacked_salience follows search_years", list(co)[i + 15], "capital_sacked_salience")
+    c.eq("history.conflict has 57 fields", len(co), 57)
+    pe = parsed_spec("history")["peoples"]
+    j = list(pe).index("regions_per_civ")
+    c.eq("history.peoples: regions_per_extra_civ 90 and civs_extra_max 2 after regions_per_civ (P3-05 r8 21 item 5)",
+         [(n, pe[n]) for n in list(pe)[j + 1:j + 3]], [("regions_per_extra_civ", 90), ("civs_extra_max", 2)])
+    ev = {e["kind"]: e for e in parsed_spec("history")["report"]["events"]}
+    c.eq("claim salience 35 (P3-06 r9 20.9, P3-07 r8 21.6)", ev["claim"]["salience"], 35)
+    c.eq("kind 32 entry (P3-06 r9 20.9)", (ev["refugees_settled"]["salience"], ev["refugees_settled"]["template"]),
+         (65, "The survivors of {origin} fled into hiding and founded {@settlement} in {@region}."))
+    c.eq("kind 33 entry (P3-06 r9 20.9)", (ev["tribute"]["salience"], ev["tribute"]["template"]),
+         (50, "{payer} paid tribute to {payee}; {people} {people?was|were} carried off."))
+    c.eq("every other report entry as at 0.17.0", [e for e in parsed_spec("history")["report"]["events"]
+                                                    if e["kind"] not in ("claim", "refugees_settled", "tribute",
+                                                                         "war_won", "search_abandoned",
+                                                                         "refuge_held")],
+         [e for e in tomllib.loads(REPORT_FILE_017["report.toml"])["history"]["report"]["events"]
+          if e["kind"] != "claim"])
+    # the named check conflict_enmity_hops, once failing and at its edge (20.9)
+    c.eq("conflict_enmity_hops fails below march_hops", conflict_check_messages(dict(co, enmity_hops=1)),
+         ["enmity_hops must not be below march_hops"])
+    c.eq("conflict_enmity_hops passes at march_hops", conflict_check_messages(dict(co, enmity_hops=2)), [])
 
 
 def check_spec_017(c, races, cultures):
@@ -1470,9 +1671,10 @@ def check_copied_kinds(c):
     c.eq("name_filter ids (P3-02 r5 11.2)", [d for d, _ in content], ["crude", "famous", "slurs", "words"])
     c.eq("name_filter sizes (P3-02 r5 11.2)",
          {d: tuple(len(t[f]) for f in ("anywhere", "at_start", "whole")) for d, t in content},
-         dict(slurs=(33, 19, 6), crude=(68, 16, 14), words=(0, 0, 647), famous=(0, 0, 101)))
+         dict(slurs=(33, 19, 6), crude=(68, 16, 14), words=(0, 0, 393 if at_least("0.18.0") else 647),
+              famous=(0, 0, 101)))   # P3-02 r8 11.11 (0.18.0): the short word list, 393 (647 before)
     eff = [len(set(w for _, t in content for w in t[f])) for f in ("anywhere", "at_start", "whole")]
-    c.eq("effective list sizes 101, 35, 768 (P3-02 r5 11.2)", eff, [101, 35, 768])
+    c.eq("effective list sizes (P3-02 r5 11.2, r8 11.11)", eff, [101, 35, 514 if at_least("0.18.0") else 768])
     c.eq("shipped name_filter passes its checks", name_filter_messages(content), [])
     for d, t in content:
         for f in ("anywhere", "at_start", "whole"):
@@ -1558,7 +1760,7 @@ def cmd_check():
     self_test(c)
     check_spec_invariants(c)
     present = check_disk(c)
-    if DATA_VERSION == "0.17.0":
+    if at_least("0.17.0"):
         check_copied_kinds(c)
     # The three roots differ only where the geo-small elevation tuning does
     # (P1-00 6.4); the new kinds are identical in all three.

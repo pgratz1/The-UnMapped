@@ -561,7 +561,7 @@ TEST_CASE("P3-02 11.6 (r5): the sample table under r5 (seed 0, one registry per 
         {"human", {"Deanham", "Alantton", "Cickham", "Gackwick", "Brir", "Tackbury", "Gurdton", "Studford", "Ceambury",
                    "Buld", "Silstudstead", "Tirdwick", "Dack", "Stastint", "Moldstead", "Edumford", "Tontstead",
                    "Ceanbir", "Durdton", "Durdbury", "The Duchy of Ashem", "The Kingdom of Ashos", "The Kingdom of Edes",
-                   "The Duchy of Ceam", "The Duchy of Circon", "Wasbrid", "Histold", "Edostold"}},
+                   "The Duchy of Wick", "The Duchy of Circon", "Wasbrid", "Histold", "Edostold"}},
         {"orcish", {"Kaak Fort", "Zaarz Camp", "Grush", "Zaakugaag", "Uruld'duuld", "Shaazazuug", "Kark Fort",
                     "Azol'urash Fort", "Karzthogh", "Uromgha", "Maag", "Uul'krakh Camp", "Og'buurk Camp",
                     "Zaalduruz Camp", "Mak", "Duld'sha Fort", "Shuum Fort", "Ghorz Fort", "Duuldkrosh Fort",
@@ -903,7 +903,7 @@ TEST_CASE("P3-02 11.2, 11.5: the library's effective filter equals the union of 
     const names_api::Filter& mine = names_test::shipped_filter();
     CHECK(std::set<std::string>(mine.anywhere.begin(), mine.anywhere.end()).size() == 101);
     CHECK(std::set<std::string>(mine.at_start.begin(), mine.at_start.end()).size() == 35);
-    CHECK(std::set<std::string>(mine.whole.begin(), mine.whole.end()).size() == 768);
+    CHECK(std::set<std::string>(mine.whole.begin(), mine.whole.end()).size() == 514);  // P3-02 r8 11.11: 768 at 0.17.0
 }
 
 }  // TEST_SUITE

@@ -86,7 +86,7 @@ FatalError = cr.FatalError
 REPO = pe.REPO
 GOLDEN = os.path.join(REPO, "worldgen", "tests", "golden", "p3-05-peoples.txt")
 DEFAULT_INPUTS = pe.DEFAULT_INPUTS
-GENERATOR_VERSION = "0.17.0"  # P3-08: P3-05 r6 rules, kind 31, P3-04 r10 quiet eras
+GENERATOR_VERSION = "0.18.0"  # P3-09: P3-05 r8 21 (P3-08: P3-05 r6 rules, kind 31, P3-04 r10 quiet eras)
 ONE = 1 << 32
 
 # ---------------------------------------------------------------------------
@@ -107,21 +107,32 @@ FLAGS = dict(
     plague_sal=True,    # 10.2: the outbreak's salience by its planned total toll
     crisis_sal=True,    # 10.3: the split test first; a crisis that does not split has crisis_small_salience
     quiet=True,         # P3-04 r10 6.6: a civilization's quiet era is not closed by its own events
+    # P3-05 r8 21 (generator 0.18.0, P3-09)
+    auto_size=True,     # 21 item 5: `auto` + min(civs_extra_max, N div regions_per_extra_civ)
+    refuge_floor=True,  # 21 item 6 (r9, P3-09 r3): a race's last refuge is never abandoned
 )
+FLAGS_018 = ("auto_size", "refuge_floor")
+
+
+def use_version(v):
+    """Serve generator v: "0.18.0" (default; P3-09), "0.17.0" (P3-08) or "0.16.0": the rule flags of the
+    version and the data, names, renderer and catalogue of p3_engine_reference.use_version. Call it before
+    the first data() (the data are cached)."""
+    for k in FLAGS:
+        FLAGS[k] = v != "0.16.0" and (v == "0.18.0" or k not in FLAGS_018)
+    if hasattr(pe, "use_version"):
+        pe.use_version(v)
+    else:
+        pdr.use_version(v)
+        pnr.use_rules("r4" if v == "0.16.0" else "r5")
+    _DATA.clear()
 
 
 def legacy(on=True):
-    """Every r6 / r10 flag off (the 0.16.0 rules), with the 0.16.0 data (p3_data_reference) and names
-    (p3_names_reference r4) and the engine reference's 0.16.0 renderer, or everything 0.17.0. Call it
+    """Every r6 / r10 / r8 flag off (the 0.16.0 rules), with the 0.16.0 data (p3_data_reference) and names
+    (p3_names_reference r4) and the engine reference's 0.16.0 renderer, or everything 0.18.0. Call it
     before the first data() (the data are cached)."""
-    for k in FLAGS:
-        FLAGS[k] = not on
-    if hasattr(pe, "use_version"):
-        pe.use_version("0.16.0" if on else "0.17.0")   # data, names, renderer, catalogue together
-    else:
-        pdr.use_version("0.16.0" if on else "0.17.0")
-        pnr.use_rules("r4" if on else "r5")
-    _DATA.clear()
+    use_version("0.16.0" if on else "0.18.0")
 
 RACE, GOD, CIV, SETTLEMENT, REGION = pe.RACE, pe.GOD, pe.CIV, pe.SETTLEMENT, pe.REGION
 OPENING, QUIET, FLARE, FINAL = pe.OPENING, pe.QUIET, pe.FLARE, pe.FINAL
@@ -227,19 +238,23 @@ KIND31 = pe.kind_def(31, "settlement_abandoned_to", 1, 1, 1,
                       ("destination", SETTLEMENT, 1, 1)), ("settled", "lost"))
 # p3_engine_reference.py carries the catalogue (kinds 1-30 at 0.16.0; 31 from 0.17.0 once its own
 # transcription has it); this file's transcription of section 11 must equal its kinds 6-19 and 31.
-assert list(pe.COMPILED[5:19]) == list(PEOPLES_KINDS) and len(pe.COMPILED) in (30, 31)
+assert list(pe.COMPILED[5:19]) == list(PEOPLES_KINDS) and len(pe.COMPILED) in (30, 31, 36)
 assert len(pe.COMPILED) == 30 or pe.COMPILED[30] == KIND31, "engine reference kind 31 differs from P3-05 r6 11"
 assert getattr(pe, "KIND_31", KIND31) == KIND31, "engine reference KIND_31 differs from P3-05 r6 11"
 COMPILED_016 = tuple(pe.COMPILED[:30])
 COMPILED_017 = COMPILED_016 + (KIND31,)
-# COMPILED (every kind id a row may hold) is the 0.17.0 list; the catalogue a run writes is
-# catalogue_kinds(), which drops kind 31 when FLAGS["dest"] is off (the 0.16.0 catalogue).
-COMPILED = COMPILED_017
+# P3-06 r9 20.9 (generator 0.18.0): kinds 32 refugees_settled and 33 tribute, from the engine reference.
+COMPILED_018 = COMPILED_017 + tuple(pe.COMPILED_018[31:36])
+assert [k["key"] for k in COMPILED_018[31:]] == ["refugees_settled", "tribute", "war_won", "search_abandoned",
+                                                 "refuge_held"]
+# COMPILED (every kind id a row may hold) is the 0.18.0 list; the catalogue a run writes is
+# catalogue_kinds(): the engine reference's catalogue of the served version (30, 31 or 33 kinds).
+COMPILED = COMPILED_018
 KIND_ID = {k["key"]: k["id"] for k in COMPILED}
 
 
 def catalogue_kinds():
-    return COMPILED_017 if FLAGS["dest"] else COMPILED_016
+    return {30: COMPILED_016, 31: COMPILED_017, 36: COMPILED_018}[len(pe.COMPILED)]
 # Quiet-step kinds (14 item 8): 6-10, 16-19 (and P3-04's quiet_era).
 QUIET_KINDS = {6, 7, 8, 9, 10, 16, 17, 18, 19, 31}   # 31: r6, an abandonment of 9.2 in Q1
 
@@ -879,6 +894,11 @@ class World(pe.World):
         setting = self.inp.params["civs"]       # None = auto (P3-03 params)
         if setting is None:
             n = 1 + (1 if chance_pm(self.draw("hist.peoples.civs", race, 0, 0), self.t["civs_two_permille"]) else 0)
+            if FLAGS["auto_size"]:
+                # P3-05 r8 21 item 5 (0.18.0): one more realm per regions_per_extra_civ non-islet regions,
+                # at most civs_extra_max more, before the free-land check
+                n_land = sum(1 for rid in self.geo.ids if not self.geo.islet(rid))
+                n += min(self.t["civs_extra_max"], n_land // self.t["regions_per_extra_civ"])
             if len(el) < self.t["regions_per_civ"] * alive + 2:
                 n = 1
         else:
@@ -1022,7 +1042,8 @@ class World(pe.World):
 
     def check_floor(self):
         for s in self.settlements:
-            if self.standing(s) and s["population"] < self.t["abandon_min"] and self.visible(s):
+            if self.standing(s) and s["population"] < self.t["abandon_min"] and self.visible(s) and \
+                    not self.race_refuge(s):      # 21 item 6: a race's last refuge may stay below abandon_min
                 if self.quiet_used is None:
                     self.checks.append("14 item 3: settlement %d below abandon_min after T1 in %d" % (s["id"], self.year))
 
@@ -1030,6 +1051,8 @@ class World(pe.World):
         for s in self.settlements:
             if not self.standing(s) or not self.visible(s) or s["population"] >= self.t["abandon_min"]:
                 continue
+            if self.race_refuge(s):
+                continue                          # 21 item 6
             cause = self.last_red.get(s["id"], s["founding_event"])
             if not self.budget_for_abandon(s):
                 continue
@@ -1268,12 +1291,25 @@ class World(pe.World):
         # 8.5 (a)
         t = self.t
         p2 = s["population"]
-        if p2 < t["abandon_min"]:
+        if self.race_refuge(s):
+            pass                                  # 21 item 6: never abandoned, by the rule or by chance
+        elif p2 < t["abandon_min"]:
             self.abandon(s["id"], e)
         elif was_declining and p2 < t["abandon_frail_max"] and self.chance_abandon_allowed(s):
             if self.abandon_draw(s):
                 self.abandon(s["id"], e)
         return e
+
+    def race_refuge(self, s):
+        """21 item 6: s is its race's last refuge (its civilization's only standing settlement, and that
+        civilization the only alive one of its race)."""
+        if not FLAGS["refuge_floor"] or not self.standing(s) or s["owner_civ"] == 0:
+            return False
+        c = s["owner_civ"]
+        race = self.civ(c)["race"]
+        if [x["id"] for x in self.standing_of(c)] != [s["id"]]:
+            return False
+        return [x["id"] for x in self.civs if x["ended_year"] is None and x["race"] == race] == [c]
 
     def chance_abandon_allowed(self, s):
         """r6 8.5 (a): the chance is not drawn for a civilization's last standing settlement (the settlements
@@ -1387,8 +1423,8 @@ class World(pe.World):
         p = s["population"]
         dead0 = p * toll // 1000
         rest = p - dead0
-        emptied = rest < t["abandon_min"]
-        if not emptied and s["status"] == DECLINING and rest < t["abandon_frail_max"] and \
+        emptied = rest < t["abandon_min"] and not self.race_refuge(s)
+        if not emptied and not self.race_refuge(s) and s["status"] == DECLINING and rest < t["abandon_frail_max"] and \
                 self.chance_abandon_allowed(s):
             emptied = self.abandon_draw(s)
         total = dead0
@@ -1912,6 +1948,15 @@ def synthetic_inputs(seed, dat=None):
 # Invariants of 14 on rows (used on reference rows and on stored worlds)
 # ---------------------------------------------------------------------------
 
+def auto_max(w):
+    """The most civilizations `auto` founds for one race (7.2; P3-05 r8 21 item 5 from 0.18.0)."""
+    extra = 0
+    if FLAGS["auto_size"]:
+        n_land = sum(1 for rid in w.geo.ids if not w.geo.islet(rid))
+        extra = min(w.t["civs_extra_max"], n_land // w.t["regions_per_extra_civ"])
+    return 2 + extra
+
+
 def check_invariants(c, res, inp, w, label):
     t = w.t
     ev = {e[0]: e for e in res["event"]}
@@ -1934,7 +1979,7 @@ def check_invariants(c, res, inp, w, label):
         founded = [x for x in res["civilization"] if x[2] == race and kind[x[7]] == KIND_ID["civ_founded"]]
         c.true("%s inv 1 race %d has a civilization" % (label, race), len(founded) >= 1)
         c.true("%s inv 1 race %d at most its setting" % (label, race),
-             len(founded) <= (2 if setting is None else setting))
+             len(founded) <= (auto_max(w) if setting is None else setting))
         for x in founded:
             c.true("%s inv 1 founded at the awakening" % label, x[6] == a[2] and kind[causes[x[7]][0]] == 1)
     # 2
@@ -1944,8 +1989,10 @@ def check_invariants(c, res, inp, w, label):
         if e[3] == KIND_ID["ruin_faded"]:
             faded_at[e[6]] = e[0]
     for s in res["settlement"]:
+        # r8 21 item 3 (0.18.0): or refugees_settled (P3-06 kind 32)
         c.true("%s inv 2 s%d founding kind" % (label, s[0]), kind[s[7]] in (KIND_ID["settlement_founded"],
-                                                                          KIND_ID["colony_founded"]))
+                                                                          KIND_ID["colony_founded"],
+                                                                          KIND_ID["refugees_settled"]))
         i = s[3] * n + s[2]
         c.true("%s inv 2 s%d cell in region, dry" % (label, s[0]), lay["region"][i] == s[4] and lay["water"][i] == 0)
         # READING (SPEC_GAPS 14 item 2 / 6.2): a faded settlement does not block (6.2), so a later
@@ -3219,7 +3266,7 @@ def cmd_check_world(argv):
     if meta.get("schema_version") != "7":
         print("%s: schema version %s, check-world reads 7" % (path, meta.get("schema_version")))
         return 1
-    c.eq("generator_version", meta.get("generator_version"), GENERATOR_VERSION if FLAGS["dest"] else "0.16.0")
+    c.eq("generator_version", meta.get("generator_version"), pe.ENGINE_VERSION)
     stages = meta["stages"].split(",") if meta["stages"] else []
     p = pchr.params_from_meta(meta)
     inp, chron = inputs_for(dat, conn, p, int(meta["seed"]), int(meta["param.map_size"]))
@@ -3269,6 +3316,11 @@ def main(argv):
     if "--legacy" in argv:
         argv = [a for a in argv if a != "--legacy"]
         legacy()
+    # --version V: the rules, data, names and catalogue of generator V (0.16.0, 0.17.0 or 0.18.0)
+    if "--version" in argv:
+        i = argv.index("--version")
+        use_version(argv[i + 1])
+        argv = argv[:i] + argv[i + 2:]
     if not argv:
         print(__doc__)
         return 2

@@ -25,8 +25,16 @@
 // of {root}`, history.peoples famine_ppm 1250, plague_spread_permille 100,
 // plague_major_dead and crisis_small_salience, the templates of kinds 4, 14,
 // 16 and 26, and kind 31's entry appended after civ_conquered (kind id
-// order, the same assumption). Mirrors SPEC_FILES_017 of
-// p3_data_reference.py.
+// order, the same assumption). Generator 0.18.0 (P3-09; P3-01 r9 3.2,
+// P3-05 r8 21 item 5, P3-06 r9 20.9 and 20.12): race fields muster_permille,
+// conceal_min and home_defense_permille after prowess_permille, the eleven
+// history.conflict fields after last_refuge, regions_per_extra_civ and
+// civs_extra_max after regions_per_civ, claim salience 35 and the entries of
+// kinds 32 and 33 appended after kind 31's (the same assumption); P3-09 r3
+// (P3-06 r10 20.19, P3-01 r10 3.3): kill_max_permille, find_permille and
+// search_years after enmity_hops, faerie home_defense_permille 0, kinds 34-36
+// appended after 33. Mirrors
+// SPEC_FILES_018 of p3_data_reference.py.
 
 #include <cstdint>
 #include <map>
@@ -69,6 +77,9 @@ coast = 0
 expansion = 200
 aggression = 150
 prowess_permille = 1600
+muster_permille = 1000
+conceal_min = 1001
+home_defense_permille = 1500
 settlement_kinds = ["hamlet", "village", "town", "city"]
 culture = "elven"
 )";
@@ -101,6 +112,9 @@ coast = -100
 expansion = 600
 aggression = 600
 prowess_permille = 800
+muster_permille = 1000
+conceal_min = 1001
+home_defense_permille = 0
 settlement_kinds = ["hamlet", "village", "town", "fortress"]
 culture = "goblin"
 )";
@@ -132,6 +146,9 @@ coast = -200
 expansion = 250
 aggression = 300
 prowess_permille = 1400
+muster_permille = 1000
+conceal_min = 1001
+home_defense_permille = 0
 settlement_kinds = ["hamlet", "village", "town", "city", "fortress"]
 culture = "dwarven"
 )";
@@ -165,6 +182,9 @@ coast = 0
 expansion = 100
 aggression = 50
 prowess_permille = 1200
+muster_permille = 1000
+conceal_min = 400
+home_defense_permille = 0
 settlement_kinds = ["hamlet", "village"]
 culture = "faerie"
 )";
@@ -197,6 +217,9 @@ coast = 200
 expansion = 700
 aggression = 400
 prowess_permille = 1000
+muster_permille = 1000
+conceal_min = 1001
+home_defense_permille = 0
 settlement_kinds = ["hamlet", "village", "town", "city", "fortress"]
 culture = "human"
 )";
@@ -230,6 +253,9 @@ coast = -100
 expansion = 600
 aggression = 900
 prowess_permille = 1300
+muster_permille = 4000
+conceal_min = 1001
+home_defense_permille = 0
 settlement_kinds = ["hamlet", "village", "town", "fortress"]
 culture = "orcish"
 )";
@@ -357,7 +383,7 @@ events = [
   { kind = "capital_moved", salience = 50, template = "{civilization} moved its seat to {settlement}." },
   { kind = "civ_ended", salience = 85, template = "{civilization} came to an end." },
   { kind = "ruin_faded", salience = 10, template = "The ruins of {settlement} faded from memory." },
-  { kind = "claim", salience = 45, template = "{claimant} laid claim to {@region}, held by {holder}." },
+  { kind = "claim", salience = 35, template = "{claimant} laid claim to {@region}, held by {holder}." },
   { kind = "war_declared", salience = 70, template = "{attacker} declared war on {defender} over {@region}." },
   { kind = "battle", salience = 30, template = "{winner} defeated {loser} in {@region}; {loser_dead} of the defeated and {winner_dead} of the victors fell." },
   { kind = "battle_at_pass", salience = 35, template = "{winner} defeated {loser} at the pass into {@region}; {loser_dead} of the defeated and {winner_dead} of the victors fell." },
@@ -369,10 +395,15 @@ events = [
   { kind = "region_ceded", salience = 55, template = "{from} ceded {@region} to {to}." },
   { kind = "civ_conquered", salience = 90, template = "{civilization} fell to {conqueror}." },
   { kind = "settlement_abandoned_to", salience = 55, template = "{settlement} was abandoned; {settled} {settled?survivor|survivors} went to {destination}{lost?|, and one was lost|, and # were lost}." },
+  { kind = "refugees_settled", salience = 65, template = "The survivors of {origin} fled into hiding and founded {@settlement} in {@region}." },
+  { kind = "tribute", salience = 50, template = "{payer} paid tribute to {payee}; {people} {people?was|were} carried off." },
+  { kind = "war_won", salience = 60, template = "{winner} prevailed over {loser} after {years} {years?year|years} of war." },
+  { kind = "search_abandoned", salience = 40, template = "{searcher} searched {@region} for {hidden} and found no one; the war ended after {years} {years?year|years}." },
+  { kind = "refuge_held", salience = 25, template = "{attacker} besieged {@settlement} of {defender}; with {reason?nowhere to flee|too few to flee}, its people held on." },
 ]
 )";
 
-// --- history.conflict (P3-06 12.1, the listing; generator 0.16.0) -----------------
+// --- history.conflict (P3-06 12.1, the listing; generator 0.16.0; r9 20.9 from 0.18.0) ---
 
 inline constexpr std::string_view CONFLICT_TOML = R"([history.conflict]
 camp = { good_good = 400, good_neutral = -150, good_evil = -700, neutral_neutral = 100, neutral_evil = -250, evil_evil = 300 }
@@ -416,6 +447,20 @@ capture_grudge = 50
 secession_grudge = 300
 grudge_decay_per_century = 50
 last_refuge = 1
+refuge_flight = 1
+flight_hops = 3
+hidden_years = 300
+weary_wars = 3
+tribute_permille = 100
+revenge_aggression = 400
+levy_hops = 3
+odds_floor = 500
+odds_min = 700
+truce_break_aggression = 600
+enmity_hops = 3
+kill_max_permille = 500
+find_permille = 250
+search_years = 3
 capital_sacked_salience = 90
 capital_captured_salience = 80
 )";
@@ -471,6 +516,8 @@ river_cost = 2
 river_border_share_permille = 500
 civs_two_permille = 500
 regions_per_civ = 4
+regions_per_extra_civ = 90
+civs_extra_max = 2
 home_min_hops = 3
 home_min_capacity = 1500
 intensity = { calm = 500, normal = 1000, turbulent = 2000 }
@@ -586,6 +633,8 @@ struct Race {
     std::vector<RaceBiome> biomes;
     std::int64_t upland, coast, expansion, aggression;
     std::int64_t prowess_permille;  // P3-06 12.2 item 1 (P3-01 r7, generator 0.16.0)
+    // P3-01 r9 3.2 / P3-06 r9 20.12 (generator 0.18.0, P3-09)
+    std::int64_t muster_permille, conceal_min, home_defense_permille;
     std::vector<std::string_view> settlement_kinds;
     std::string_view culture;
 };
@@ -598,27 +647,27 @@ inline const std::vector<Race>& races() {
         {"dwarf", 3, "Dwarf", "Dwarves", "Dwarven", "neutral", 2362232013, 300, 70, 5, 700, 10, 10, 10, 60, 10, 400, 600,
          {{"alpine", 300}, {"highland_moor", 300}, {"heath", 200}, {"temperate_forest", -100}, {"wet_woodland", -300},
           {"marsh", -400}, {"fen", -400}},
-         800, -200, 250, 300, 1400, {"hamlet", "village", "town", "city", "fortress"}, "dwarven"},
+         800, -200, 250, 300, 1400, 1000, 1001, 0, {"hamlet", "village", "town", "city", "fortress"}, "dwarven"},
         {"elf", 1, "Elf", "Elves", "Elven", "good", 0, 700, 150, 3, 300, 20, 35, 35, 0, 10, 0, 0,
          {{"temperate_forest", 500}, {"wet_woodland", 300}, {"grassland", 0}, {"heath", -200}, {"steppe", -300},
           {"highland_moor", -300}, {"alpine", -600}},
-         -300, 0, 200, 150, 1600, {"hamlet", "village", "town", "city"}, "elven"},
+         -300, 0, 200, 150, 1600, 1000, 1001, 1500, {"hamlet", "village", "town", "city"}, "elven"},
         {"faerie", 4, "Faerie", "Faeries", "Faerie", "good", 3006477107, 400, 100, 4, 250, 0, 60, 20, 0, 20, 0, 0,
          {{"temperate_forest", 800}, {"wet_woodland", 800}, {"fen", 300}, {"marsh", 200}, {"highland_moor", 100},
           {"heath", 0}, {"grassland", -300}, {"alpine", -400}, {"steppe", -400}},
-         200, 0, 100, 50, 1200, {"hamlet", "village"}, "faerie"},
+         200, 0, 100, 50, 1200, 1000, 400, 0, {"hamlet", "village"}, "faerie"},  // home 0: P3-01 r10 3.3
         {"goblin", 2, "Goblin", "Goblins", "Goblin", "evil", 1503238554, 40, 15, 20, 900, 40, 20, 10, 30, 0, 0, 0,
          {{"heath", 200}, {"highland_moor", 200}, {"steppe", 150}, {"grassland", 100}, {"marsh", 100}, {"alpine", -400},
           {"temperate_forest", -200}, {"wet_woodland", -300}},
-         100, -100, 600, 600, 800, {"hamlet", "village", "town", "fortress"}, "goblin"},
+         100, -100, 600, 600, 800, 1000, 1001, 0, {"hamlet", "village", "town", "fortress"}, "goblin"},
         {"human", 5, "Human", "Humans", "Human", "neutral", 3564822856, 70, 25, 15, 1000, 60, 10, 10, 5, 15, 0, 0,
          {{"grassland", 300}, {"steppe", 100}, {"temperate_forest", 100}, {"marsh", -100}, {"heath", -100},
           {"fen", -200}, {"highland_moor", -200}, {"alpine", -500}},
-         -300, 200, 700, 400, 1000, {"hamlet", "village", "town", "city", "fortress"}, "human"},
+         -300, 200, 700, 400, 1000, 1000, 1001, 0, {"hamlet", "village", "town", "city", "fortress"}, "human"},
         {"orc", 6, "Orc", "Orcs", "Orcish", "evil", 3994319585, 50, 18, 18, 800, 35, 25, 10, 30, 0, 0, 0,
          {{"steppe", 400}, {"heath", 200}, {"grassland", 200}, {"highland_moor", 100}, {"temperate_forest", -100},
           {"marsh", -100}, {"fen", -200}, {"wet_woodland", -200}, {"alpine", -300}},
-         100, -100, 600, 900, 1300, {"hamlet", "village", "town", "fortress"}, "orcish"},
+         100, -100, 600, 900, 1300, 4000, 1001, 0, {"hamlet", "village", "town", "fortress"}, "orcish"},
     };
     return v;
 }
@@ -639,7 +688,8 @@ inline const std::vector<std::string_view>& race_fields() {
     static const std::vector<std::string_view> v = {
         "order",           "name",      "plural", "adjective", "camp",      "awakening_share", "lifespan_years",
         "generation_years", "growth_permille", "density_permille", "site_weights", "cell_weights", "biomes", "upland", "coast",          "expansion",
-        "aggression",      "prowess_permille", "settlement_kinds", "culture"};
+        "aggression",      "prowess_permille", "muster_permille", "conceal_min", "home_defense_permille",
+        "settlement_kinds", "culture"};
     return v;
 }
 // P3-01 r8 (1): record race_cell_weights.

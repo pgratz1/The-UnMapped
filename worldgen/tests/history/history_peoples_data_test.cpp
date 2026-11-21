@@ -79,6 +79,8 @@ const std::vector<Range>& ranges() {
         {"expand_min_score", -3000, 4000}, {"expand_relative_permille", 0, 1000}, {"expand_min_capacity", 0, 1000000},
         {"cost_penalty", 0, 10000}, {"pass_cost", 1, 100}, {"river_cost", 0, 100},
         {"river_border_share_permille", 0, 1000}, {"civs_two_permille", 0, 1000}, {"regions_per_civ", 0, 100},
+        // r8 21 item 5 (0.18.0, P3-09): after regions_per_civ
+        {"regions_per_extra_civ", 1, 100000}, {"civs_extra_max", 0, 3},
         {"home_min_hops", 1, 64}, {"home_min_capacity", 0, 1000000}, {"intensity", 0, 10000},
         {"famine_crowding_permille", 0, 2000}, {"famine_ppm", 0, 1000000}, {"famine_toll_min", 0, 1000},
         {"famine_toll_max", 0, 1000}, {"plague_ppm", 0, 1000000}, {"plague_toll_min", 0, 1000},
@@ -103,7 +105,7 @@ std::string listing_line(std::string_view field) {
 
 }  // namespace
 
-TEST_CASE("P3-05 12.1 (r6): history.peoples loads with the listing's 67 fields in table order and values") {
+TEST_CASE("P3-05 12.1 (r6, r8): history.peoples loads with the listing's 69 fields in table order and values") {
     const Load l = load(history_data::shipped_files());
     INFO(dump(l));
     REQUIRE(l.ok());
@@ -127,6 +129,10 @@ TEST_CASE("P3-05 12.1 (r6): history.peoples loads with the listing's 67 fields i
     CHECK(r.get_int("plague_spread_permille") == 100);
     CHECK(r.get_int("plague_major_dead") == 1000);
     CHECK(r.get_int("crisis_small_salience") == 25);
+    // r8 21 item 5 (0.18.0): more realms on a larger map
+    CHECK(r.get_int("regions_per_extra_civ") == 90);
+    CHECK(r.get_int("civs_extra_max") == 2);
+    CHECK(r.size() == 69U);
     // the shipped content (game/data) holds the same record (12.1: identical copies)
     CHECK(peoples_record(shipped_content()) == r);
 }

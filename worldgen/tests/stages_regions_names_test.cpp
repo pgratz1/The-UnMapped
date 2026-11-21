@@ -651,7 +651,7 @@ TEST_CASE("P1-06 r3 4.1, 10.5 data: the fixture roots hold byte-identical copies
 
 TEST_CASE("P0-01 amendment 20, P1-06 r4 14.8: geo.regions.name directly after geo.regions.cost, 52 names") {
     const auto& names = worldgen::streams::all_stream_names;
-    CHECK(names.size() == 52U);
+    CHECK(names.size() == 53U);  // P3-06 r10 20.17: hist.conflict.search (0.18.0)
     std::size_t at = names.size();
     for (std::size_t i = 0; i < names.size(); ++i) {
         if (names[i] == "geo.regions.cost") {

@@ -1,14 +1,22 @@
 // The engineer's checks of P3-06 internals (the independent tests are the
 // test writer's, history_conflict_*): the pure rules on the numbers of
-// worked example W1 (spec 16.1) and the tuning seam. Hand-made inputs only.
+// worked example W1 (spec 16.1) and the tuning seam, on hand-made inputs;
+// and (r13, 20.27 item 8) the cession of every standing settlement of the
+// loser in the ceded region, through probes around the shipped subsystems
+// on the synthetic worlds of the golden file and, in history-slow, on 2048
+// seed 3.
 
 #include <doctest/doctest.h>
 
+#include <algorithm>
 #include <cstdint>
+#include <functional>
+#include <set>
 #include <string>
 #include <utility>
 #include <vector>
 
+#include "p3_06_conflict_support.hpp"
 #include "worldgen/core/error.hpp"
 #include "worldgen/history/conflict.hpp"
 
@@ -59,6 +67,21 @@ h::ConflictTuning shipped_tuning() {
     t.secession_grudge = 300;
     t.grudge_decay_per_century = 50;
     t.last_refuge = 1;
+    // r9 20.9 and r10 20.19 (generator 0.18.0), shipped.
+    t.refuge_flight = 1;
+    t.flight_hops = 3;
+    t.hidden_years = 300;
+    t.weary_wars = 3;
+    t.tribute_permille = 100;
+    t.revenge_aggression = 400;
+    t.levy_hops = 3;
+    t.odds_floor = 500;
+    t.odds_min = 700;
+    t.truce_break_aggression = 600;
+    t.enmity_hops = 3;
+    t.kill_max_permille = 500;
+    t.find_permille = 250;
+    t.search_years = 3;
     t.capital_sacked_salience = 90;
     t.capital_captured_salience = 80;
     return t;
@@ -152,3 +175,347 @@ TEST_CASE("P3-06 engineer: the tuning seam's messages (16.4)") {
     t.strain_max = 899;
     CHECK(fatal_of(t) == "history: tuning: declare_min + declare_span must not be above strain_max");
 }
+
+// --- r13 20.27: a cession passes every settlement of the loser in the ceded region ----------------------
+
+#if UNMAPPED_HAVE_PEOPLES && UNMAPPED_HAVE_CONFLICT
+
+namespace {
+
+namespace ct = conflict_test;
+
+// One cession, as the probe after conflict's run of a step sees it.
+struct Cession {
+    std::uint64_t serial = 0;
+    h::Step step = h::Step::t6;
+    std::int64_t year = 0, region = 0, from = 0, to = 0, event = 0;
+    bool goal = false;                 // 7.7's cession of a war's goal; else 20.3 item 1's
+    std::vector<std::int64_t> passed;  // settlements of `from` standing in the region before conflict ran
+    std::int64_t unseen = 0;           // of those, created earlier in the step (not visible)
+};
+
+struct Standing {
+    std::int64_t id = 0, owner = 0, region = 0;
+    bool seen = false;
+};
+
+// Probes around conflict in T2, T6 and Q4: `between` (after peoples, before conflict) runs the optional
+// injection, then keeps the regions' owner events, the standing settlements and the open wars; `after`
+// finds the step's cessions (a region whose owner event became a region_ceded) and checks, on the live
+// state, invariant (13) of 20.27 item 6, 14 item 5 for the ceded region, and that a settlement created
+// in the step changes owner only by a cession of its region.
+class CessionWatch {
+public:
+    std::function<void(h::StepContext&)> inject;  // runs first in `between`
+    std::function<void(h::StepContext&)> check;   // runs last in `after`
+    std::vector<Cession> cessions;
+    std::vector<std::string> failures;
+    std::int64_t unseen_kept = 0;  // same-step settlements in a region not ceded, kept by their owner
+
+    void install(ct::ConflictConfig& cfg) {
+        const std::vector<h::Step> steps = {h::Step::t2, h::Step::t6, h::Step::q4};
+        cfg.add_between(steps, [this](h::StepContext& ctx) { before(ctx); });
+        sub_ = cfg.pair->sub.get();
+        cfg.add_after(steps, [this](h::StepContext& ctx) { after(ctx, *sub_); });
+    }
+
+private:
+    std::vector<std::int64_t> owner_event_;
+    std::vector<Standing> standing_;
+    std::set<std::size_t> open_wars_;
+    const h::ConflictSubsystem* sub_ = nullptr;
+
+    static bool is_standing(const h::Settlement& s) {
+        return s.status == h::SettlementStatus::thriving || s.status == h::SettlementStatus::declining;
+    }
+    static std::size_t region_count(const h::StepContext& ctx) { return ctx.inputs().regions.size(); }
+
+    void before(h::StepContext& ctx) {
+        if (inject) inject(ctx);
+        const h::State& st = ctx.state();
+        owner_event_.assign(region_count(ctx) + 1, 0);
+        for (std::size_t r = 1; r <= region_count(ctx); ++r) {
+            owner_event_[r] = st.region(static_cast<std::int64_t>(r)).owner_event;
+        }
+        standing_.clear();
+        for (const h::Settlement& s : st.settlements()) {
+            if (is_standing(s)) standing_.push_back({s.id, s.owner_civ, s.region, ctx.visible(s)});
+        }
+        open_wars_.clear();
+        for (std::size_t i = 0; i < sub_->wars().size(); ++i) {
+            if (sub_->wars()[i].open) open_wars_.insert(i);
+        }
+    }
+
+    void fail(const h::StepContext& ctx, const std::string& what) {
+        failures.push_back("year " + std::to_string(ctx.year()) + ": " + what);
+    }
+
+    void after(h::StepContext& ctx, const h::ConflictSubsystem& sub) {
+        const h::State& st = ctx.state();
+        std::set<std::int64_t> ceded;
+        for (std::size_t r = 1; r < owner_event_.size(); ++r) {
+            const std::int64_t g = static_cast<std::int64_t>(r);
+            const std::int64_t ev = st.region(g).owner_event;
+            if (ev == owner_event_[r] || ev == 0 || ctx.event_kind(ev) != "region_ceded") continue;
+            Cession c;
+            c.serial = ctx.serial();
+            c.step = ctx.step();
+            c.year = ctx.year();
+            c.region = g;
+            c.event = ev;
+            c.from = ctx.event_participant(ev, "from");
+            c.to = ctx.event_participant(ev, "to");
+            for (const std::size_t i : open_wars_) {
+                const h::ConflictWar& w = sub.wars()[i];
+                const bool pair = (w.attacker == c.from && w.defender == c.to) ||
+                                  (w.attacker == c.to && w.defender == c.from);
+                c.goal = c.goal || (!w.open && pair && w.goal == g);
+            }
+            for (const Standing& s : standing_) {
+                if (s.owner != c.from || s.region != g) continue;
+                c.passed.push_back(s.id);
+                c.unseen += s.seen ? 0 : 1;
+                const h::Settlement& now = st.settlement(s.id);
+                if (is_standing(now) && now.owner_civ != c.to) {
+                    fail(ctx, "settlement " + std::to_string(s.id) + " of region " + std::to_string(g) +
+                                  " did not pass to " + std::to_string(c.to));
+                }
+            }
+            bool owner_has = false;
+            for (const h::Settlement& s : st.settlements()) {
+                if (!is_standing(s) || s.region != g) continue;
+                if (s.owner_civ == c.from) {
+                    fail(ctx, "civilization " + std::to_string(c.from) + " keeps settlement " +
+                                  std::to_string(s.id) + " in ceded region " + std::to_string(g));
+                }
+                owner_has = owner_has || s.owner_civ == st.region(g).owner;
+            }
+            if (!owner_has) fail(ctx, "the owner of ceded region " + std::to_string(g) + " has no settlement in it");
+            ceded.insert(g);
+            cessions.push_back(c);
+        }
+        for (const Standing& s : standing_) {
+            if (s.seen || ceded.count(s.region) != 0) continue;
+            if (st.settlement(s.id).owner_civ != s.owner) {
+                fail(ctx, "same-step settlement " + std::to_string(s.id) + " changed owner outside a cession");
+            } else {
+                ++unseen_kept;
+            }
+        }
+        if (check) check(ctx);
+    }
+};
+
+// A kind for the probe's planted settlements: no civilization participant, so no quiet budget is charged.
+void add_planted_kind(eng::EventCatalogue& cat) {
+    eng::KindDef k;
+    k.id = static_cast<std::int64_t>(cat.kinds.size()) + 1;
+    k.key = "test_planted";
+    k.caused = false;
+    k.region_use = 1;
+    k.settlement_use = 1;
+    k.roles = {eng::RoleDef{1, "settlement", eng::EntityType::settlement, 1, 1}};
+    k.salience = 10;
+    k.templ = "A settlement was planted.";
+    cat.kinds.push_back(k);
+}
+
+// A settlement of civ planted now at (x, y) of region r, as a same-step colony would be founded.
+std::int64_t plant(h::StepContext& ctx, std::int64_t civ, std::int64_t region, std::int64_t x, std::int64_t y) {
+    h::State& st = ctx.state();
+    const std::int64_t id = static_cast<std::int64_t>(st.settlements().size()) + 1;
+    h::EventSpec e;
+    e.kind = "test_planted";
+    e.year = ctx.year();
+    e.end_year = ctx.year();
+    e.region = region;
+    e.settlement = id;
+    e.participants = {h::Participant{"settlement", h::EntityType::settlement, id}};
+    const std::int64_t ev = ctx.append(e);
+    const std::int64_t got = st.found_settlement(x, y, region, civ, h::SettlementKind::hamlet, 50,
+                                                 "Planted " + std::to_string(id), ev);
+    REQUIRE(got == id);
+    return id;
+}
+
+struct Watched {
+    eng::Tables tables;
+    std::vector<Cession> cessions;
+    std::vector<std::string> failures;
+    std::int64_t unseen_kept = 0;
+};
+
+Watched watched_run(const worldgen::data::ContentSet& content, const eng::HistoryInputs& in,
+                    const std::function<void(CessionWatch&)>& setup = {}, bool planted_kind = false) {
+    ct::ConflictConfig cfg(content);
+    if (planted_kind) add_planted_kind(cfg.catalogue);
+    CessionWatch watch;
+    if (setup) setup(watch);
+    watch.install(cfg);
+    Watched out;
+    out.tables = eng::run_engine(content, in, cfg.get());
+    out.cessions = watch.cessions;
+    out.failures = watch.failures;
+    out.unseen_kept = watch.unseen_kept;
+    return out;
+}
+
+const std::vector<const char*>& property_cases() {
+    static const std::vector<const char*> v = {
+        "syn-0",      "syn-1",    "syn-2",    "syn-3",    "syn-4",    "syn-5",    "syn-6",     "syn-7",
+        "syn-8",      "syn-9",    "syn-10",   "syn-11",   "syn-12",   "syn-13",   "syn-14",    "syn-15",
+        "stress-0",   "stress-1", "stress-2", "stress-3", "stress-4", "stress-5", "stress-6",  "stress-7",
+        "stress-9",   "stress-12", "stress-13", "stress-14", "norefuge-5", "norefuge-12", "norefuge-13"};
+    return v;
+}
+
+}  // namespace
+
+TEST_CASE("P3-06 r13 engineer: invariant (13) and 14 item 5 at every cession of the synthetic worlds (20.27)") {
+    std::int64_t goal = 0, other = 0;
+    for (const char* name : property_cases()) {
+        const ct::CCase& g = ct::conflict_case(name);
+        CAPTURE(g.name);
+        const eng::HistoryInputs in = ct::synthetic_inputs(g);
+        const Watched w = watched_run(ct::content_of(g), in);
+        for (const std::string& f : w.failures) FAIL_CHECK(f);
+        for (const Cession& c : w.cessions) (c.goal ? goal : other) += 1;
+        // the probes read only: the watched run is the shipped stage
+        if (std::string(name) == "syn-5" || std::string(name) == "stress-0") {
+            CHECK(w.tables == eng::history_stage(ct::content_of(g), in));
+        }
+    }
+    CHECK(goal > 0);
+    CHECK(other > 0);
+}
+
+// 7.7's and 20.3's cessions with one visible settlement and one same-step colony of the loser L in G (a
+// settlement planted after peoples, before conflict, in the step of a cession of the unplanted run): both
+// pass, with the region_ceded and no event of their own; a same-step colony of L in a region not ceded
+// stays L's.
+TEST_CASE("P3-06 r13 engineer: a same-step colony passes with the cession of its region, one elsewhere stays") {
+    for (const bool want_goal : {true, false}) {
+        CAPTURE(want_goal);
+        bool done = false;
+        for (const char* name : property_cases()) {
+            if (done) break;
+            const ct::CCase& g = ct::conflict_case(name);
+            const eng::HistoryInputs in = ct::synthetic_inputs(g);
+            const worldgen::data::ContentSet& content = ct::content_of(g);
+            const Watched base = watched_run(content, in, {}, true);
+            for (const Cession& c : base.cessions) {
+                if (done) break;
+                if (c.goal != want_goal || c.step != h::Step::q4 || c.passed.empty() || c.unseen != 0) continue;
+                CAPTURE(g.name);
+                CAPTURE(c.year);
+                CAPTURE(c.region);
+                std::int64_t in_g = 0, elsewhere = 0, ceded_event = 0;
+                bool elsewhere_wanted = false;
+                const auto setup = [&](CessionWatch& watch) {
+                    watch.inject = [&](h::StepContext& ctx) {
+                        if (ctx.serial() != c.serial || ctx.step() != h::Step::q4) return;
+                        const h::State& st = ctx.state();
+                        const h::Settlement& v = st.settlement(c.passed.front());
+                        REQUIRE(ctx.visible(v));
+                        const std::int64_t vx = v.x, vy = v.y;
+                        std::int64_t ox = -1, oy = -1, oregion = 0;
+                        for (const h::Settlement& s : st.settlements()) {
+                            const bool ceded_here = std::any_of(base.cessions.begin(), base.cessions.end(),
+                                                                [&](const Cession& d) {
+                                                                    return d.serial == c.serial &&
+                                                                           d.region == s.region;
+                                                                });
+                            if (oregion == 0 && s.owner_civ == c.from && s.region != c.region && !ceded_here &&
+                                (s.status == h::SettlementStatus::thriving ||
+                                 s.status == h::SettlementStatus::declining)) {
+                                ox = s.x;
+                                oy = s.y;
+                                oregion = s.region;
+                            }
+                        }
+                        in_g = plant(ctx, c.from, c.region, vx, vy);
+                        if (oregion != 0) {
+                            elsewhere_wanted = true;
+                            elsewhere = plant(ctx, c.from, oregion, ox, oy);
+                        }
+                    };
+                    watch.check = [&](h::StepContext& ctx) {
+                        if (ctx.serial() != c.serial || ctx.step() != h::Step::q4) return;
+                        const h::State& st = ctx.state();
+                        CHECK(st.region(c.region).owner == c.to);
+                        ceded_event = st.region(c.region).owner_event;
+                        CHECK(st.settlement(in_g).owner_civ == c.to);
+                        for (const std::int64_t id : c.passed) CHECK(st.settlement(id).owner_civ == c.to);
+                        if (elsewhere != 0) CHECK(st.settlement(elsewhere).owner_civ == c.from);
+                    };
+                };
+                const Watched w = watched_run(content, in, setup, true);
+                for (const std::string& f : w.failures) FAIL_CHECK(f);
+                REQUIRE(in_g != 0);
+                // the same cession, after the planted events and with no event of the transfers
+                const std::int64_t planted = elsewhere_wanted ? 2 : 1;
+                CHECK(ceded_event == c.event + planted);
+                bool found = false;
+                for (const Cession& d : w.cessions) {
+                    if (d.serial != c.serial || d.region != c.region) continue;
+                    found = true;
+                    CHECK(d.goal == want_goal);
+                    CHECK(d.from == c.from);
+                    CHECK(d.to == c.to);
+                    CHECK(d.unseen == 1);
+                    CHECK(d.passed.size() == c.passed.size() + 1);
+                    CHECK(std::is_sorted(d.passed.begin(), d.passed.end()));
+                }
+                CHECK(found);
+                if (want_goal) {
+                    CHECK(elsewhere_wanted);  // the goal case carries the third test of 20.27 item 8
+                }
+                done = true;
+            }
+        }
+        CHECK_MESSAGE(done, "no Q4 cession with a visible settlement of the loser in the synthetic worlds");
+    }
+}
+
+TEST_SUITE("history-slow" * doctest::skip()) {
+
+// 20.27 item 7: in 2048 seed 3 (default settings) colony s240 of c15, founded in the Q4 of 5234 in the free
+// region 158, passes to c10 with the region_ceded of 20.3 item 1 in the same step.
+TEST_CASE("P3-06 r13 engineer: invariant (13) on 2048 seed 3 and the cession of s240 (20.27 item 7)") {
+    static dbtest::TempDir dir("conflict-engineer-2048");
+    std::vector<worldgen::stages::StageInfo> stages = worldgen::stages::stages_until(std::string("chronology"));
+    const worldgen::WorldParams wp = chrono_test::world_params(3, 2048, chrono_api::Params{}, ct::shipped());
+    const std::string path = dir.file("seed3-2048.db");
+    REQUIRE(worldgen::stages::testing::generate_world_with_stages(wp, ct::shipped(), stages, path).ok());
+    const eng::HistoryInputs in = h::history_inputs_from_world(chrono_test::open_world(path), ct::shipped());
+    const Watched w = watched_run(ct::shipped(), in);
+    for (const std::string& f : w.failures) FAIL_CHECK(f);
+    bool found = false;
+    for (const Cession& c : w.cessions) {
+        if (c.year != 5234 || c.region != 158) continue;
+        found = true;
+        CHECK(c.step == h::Step::q4);
+        CHECK(!c.goal);
+        CHECK(c.from == 15);
+        CHECK(c.to == 10);
+        CHECK(c.event == 1142);
+        CHECK(c.unseen == 1);
+        CHECK(std::find(c.passed.begin(), c.passed.end(), 240) != c.passed.end());
+    }
+    CHECK(found);
+    // the census of that step's bookkeeping writes c10 as s240's owner
+    bool census = false;
+    for (const eng::Row& r : w.tables.settlement_census) {
+        if (ct::at(r, 0) == 240 && ct::at(r, 1) == 5234) {
+            census = true;
+            CHECK(ct::at(r, 2) == 10);
+        }
+    }
+    CHECK(census);
+    CHECK(w.unseen_kept > 0);
+}
+
+}  // TEST_SUITE
+
+#endif  // UNMAPPED_HAVE_PEOPLES && UNMAPPED_HAVE_CONFLICT

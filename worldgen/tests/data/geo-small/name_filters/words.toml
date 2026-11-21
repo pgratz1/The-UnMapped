@@ -1,90 +1,62 @@
-# Name filter: ordinary English words (spec docs/specs/p3-02-names.md,
-# revision r5, section 11; not yet shipped: the loader ignores this directory
-# until kind `name_filter` is registered). A drawn root that is, or has a part
-# (split at ' and -) that is, an ordinary English word reads as a translation
-# or a joke ("Bald", "Buzz", "Dog Fort", "The Bag Horde"), so it is redrawn.
-# The list is every lower-case word of the system English word lists
-# (american-english and british-english) of 3 or more letters that the six
-# shipped cultures reach as a root part with probability 1/100,000 or more per
-# attempt (r5 11.6), plus a few comic words added by hand. Words a culture
-# cannot reach do no harm; after a syllable edit, rerun the measurement of
-# 11.6 to see which words become reachable.
+# Name filter: English words that make a name read as a joke (spec
+# docs/specs/p3-02-names.md, section 11, revision r8). A drawn root that is, or
+# has a part (split at ' and -) that is, one of these words is redrawn. Paul's
+# decision of 2026-11-20: only words that are crude, comic or modern-sounding
+# are rejected ("Dork", "Bag Hole", "The House of Movie"), and function words
+# and inflected forms, whose names read as an error ("The Kingdom of Went").
+# Ordinary English words that fit the setting stay as name roots ("The Kingdom
+# of Gold", "Thorn Deep", "Moss Hollow"). The list is drawn from the words of
+# the system English word lists that the six shipped cultures reach as a root
+# part with probability 1/100,000 or more per attempt, plus a few comic words
+# added by hand; the reasons for each word are in section 11.11. Words a
+# culture cannot reach do no harm.
 # Lower-case a-z only, 2 to 16 letters; keep the list sorted, no duplicates.
 
 [name_filter.words]
 anywhere = []
 at_start = []
 whole = [
-  "aces", "aeon", "aerie", "aeries", "afar", "alas", "ales", "alien", "all",
-  "also", "altho", "alum", "amen", "amend", "amir", "angle", "anon", "ark",
-  "ash", "ashed", "ashen", "ashes", "ashy", "ask", "aver", "baa", "baby",
-  "back", "bag", "bald", "ball", "ban", "band", "bank", "bap", "bard", "bark",
-  "barn", "bash", "bask", "bass", "bat", "batch", "bath", "bay", "bead",
-  "beam", "bean", "bear", "beard", "beck", "bee", "beefy", "been", "beep",
-  "beet", "bent", "bib", "big", "bill", "bin", "bind", "bird", "bit", "bloke",
-  "boa", "bob", "bog", "bola", "bold", "boll", "bond", "boo", "bop", "born",
-  "bosh", "boss", "bot", "botch", "both", "bound", "box", "boy", "brad",
-  "braid", "brain", "bran", "brand", "bras", "bread", "bred", "brick", "brim",
-  "bro", "brunt", "buck", "bug", "bunk", "bunt", "burn", "burp", "bush",
-  "but", "butch", "buzz", "came", "cane", "cant", "card", "care", "case",
-  "cave", "cent", "cola", "cold", "coma", "come", "cone", "cont", "cord",
-  "core", "cove", "curd", "dam", "dark", "darn", "dash", "dead", "deal",
-  "dean", "dear", "deck", "dent", "dint", "dirk", "dock", "dog", "dork",
-  "dour", "doz", "drab", "drag", "drain", "dram", "drank", "drink", "drub",
-  "drug", "drum", "drunk", "duck", "dud", "dude", "dug", "dweeb", "either",
-  "else", "emend", "emir", "emos", "eras", "ether", "ethos", "even", "ever",
-  "eves", "evil", "face", "fall", "fame", "fan", "fare", "fatso", "fee",
-  "fie", "fife", "file", "fill", "fin", "fine", "fire", "fish", "fishy",
-  "five", "flan", "flap", "flash", "flashy", "flask", "flay", "flee", "flip",
-  "flop", "floss", "fly", "flyby", "foci", "foo", "fop", "fora", "fore",
-  "gab", "gag", "gain", "gear", "geek", "geez", "geld", "gent", "gig", "gild",
-  "gird", "glare", "glove", "gnat", "gob", "gold", "gonk", "goof", "gord",
-  "got", "gourd", "grab", "grad", "grain", "gram", "grand", "greet", "grid",
-  "grim", "grin", "grind", "grit", "grog", "grok", "ground", "grub", "gunk",
-  "gut", "hack", "hair", "hand", "hard", "hark", "head", "heal", "hear",
-  "heard", "heck", "held", "herd", "hick", "hind", "hint", "hock", "hold",
-  "horn", "hound", "hour", "hunt", "ices", "icier", "icon", "ill", "info",
-  "iris", "iron", "isle", "ivies", "khan", "kind", "kink", "kit", "lace",
-  "lad", "lama", "lame", "lane", "lap", "lard", "lase", "lash", "lass",
-  "lath", "lathe", "lava", "lay", "lee", "lice", "lie", "lien", "life", "lii",
-  "lily", "lime", "limo", "limy", "line", "lip", "lira", "lire", "lithe",
-  "live", "loci", "loco", "lone", "lop", "lore", "lose", "loss", "loth",
-  "lousy", "love", "mace", "maid", "maim", "main", "male", "mall", "mama",
-  "man", "mane", "map", "mare", "mark", "mash", "mask", "mass", "math", "may",
-  "mead", "meal", "mean", "meant", "meld", "meme", "memo", "mere", "mesa",
-  "mica", "mice", "mien", "mild", "mile", "mill", "mime", "min", "mind",
-  "mine", "mini", "mint", "mire", "miss", "mock", "mold", "mole", "moll",
-  "mom", "mono", "moo", "mop", "more", "morn", "moss", "moth", "mound",
-  "mourn", "mousy", "mouth", "move", "movie", "muck", "mug", "mum", "murk",
-  "mush", "myth", "nab", "nag", "name", "nark", "nave", "nerd", "nib", "nice",
-  "niece", "nine", "nit", "nix", "none", "nose", "not", "notch", "noun",
-  "nova", "novae", "nub", "nut", "oath", "ogle", "ogles", "old", "omen",
-  "once", "ones", "oral", "ores", "osier", "other", "oval", "oven", "over",
-  "pall", "pan", "pap", "papa", "pasha", "pass", "path", "pay", "pie",
-  "piety", "pill", "pin", "pip", "pita", "pith", "pity", "poi", "poll",
-  "polo", "pop", "posh", "poss", "posy", "pypy", "race", "rack", "rant",
-  "rare", "rave", "read", "real", "ream", "rear", "rent", "rice", "rick",
-  "rife", "rile", "rime", "rise", "rock", "role", "rose", "rove", "runt",
-  "sack", "safe", "sale", "same", "sane", "sap", "sari", "sash", "sass",
-  "save", "say", "seal", "seam", "sear", "seas", "see", "seen", "seep",
-  "semi", "sent", "sera", "sere", "shall", "sham", "shark", "sheen", "sheep",
-  "shill", "shin", "ship", "shoo", "shop", "showy", "shush", "shy", "shyly",
-  "sieve", "sill", "silo", "sin", "sine", "sip", "sire", "skeet", "skit",
-  "skunk", "slab", "slat", "sleek", "sleet", "slink", "slit", "slob", "slog",
-  "slot", "slug", "slunk", "snag", "snark", "snit", "snitch", "snob", "snub",
-  "snug", "sock", "sofa", "sold", "sole", "soli", "solo", "some", "son",
-  "sop", "sore", "soup", "soupy", "south", "soy", "stack", "star", "stead",
-  "steal", "steam", "stem", "stent", "stick", "stint", "stir", "stock",
-  "stuck", "stud", "stun", "stunt", "suck", "tack", "tall", "tan", "tap",
-  "task", "teal", "team", "tear", "teas", "tee", "teen", "teepee", "teeth",
-  "tent", "than", "theme", "there", "these", "thieve", "thin", "thine",
-  "third", "thorn", "those", "thrum", "thud", "thug", "tibia", "tick", "tie",
-  "till", "tin", "tint", "tip", "tipi", "told", "toll", "ton", "too", "top",
-  "torn", "toss", "toupee", "tour", "toy", "tuck", "turn", "twee", "twill",
-  "twin", "two", "typo", "ugh", "vale", "vane", "vase", "vice", "vile",
-  "vine", "visa", "vise", "viva", "vole", "wack", "wall", "wan", "want",
-  "ward", "wash", "way", "weal", "wean", "wear", "wee", "weep", "weepy",
-  "weld", "went", "whip", "whisk", "who", "whoa", "why", "wick", "wild",
-  "will", "wily", "win", "wish", "with", "won", "wont", "woo", "word", "you",
-  "zit",
+  "aces", "alas", "alien", "all", "also", "altho", "amen", "amend", "amir",
+  "anon", "ashed", "ask", "aver", "baa", "baby", "back", "bag", "bald",
+  "ball", "bank", "bap", "batch", "bath", "bead", "bean", "beard", "beefy",
+  "been", "beep", "beet", "bent", "bib", "big", "bill", "bin", "bit", "bloke",
+  "bob", "boo", "bop", "born", "bosh", "boss", "bot", "botch", "both", "box",
+  "boy", "brad", "brain", "bran", "bras", "bred", "bro", "brunt", "bug",
+  "bunk", "bunt", "burp", "but", "butch", "buzz", "came", "card", "care",
+  "case", "cent", "cola", "coma", "come", "cont", "curd", "darn", "deal",
+  "dean", "dear", "deck", "dint", "dog", "dork", "doz", "drag", "drain",
+  "drank", "drink", "drug", "drunk", "duck", "dud", "dude", "dug", "dweeb",
+  "either", "else", "emend", "emir", "emos", "even", "ever", "face", "fan",
+  "fatso", "fie", "fill", "fine", "fishy", "five", "flan", "flap", "flash",
+  "flashy", "flip", "flop", "floss", "fly", "flyby", "foci", "foo", "fop",
+  "fora", "fore", "gab", "gag", "gain", "gear", "geek", "geez", "gent", "gig",
+  "gob", "gonk", "goof", "gord", "got", "grab", "grad", "gram", "greet",
+  "grid", "grog", "grok", "ground", "gunk", "gut", "hack", "hair", "hand",
+  "hard", "head", "heal", "hear", "heard", "heck", "held", "hick", "hint",
+  "hock", "hold", "hour", "ices", "icier", "info", "khan", "kind", "kink",
+  "lama", "lame", "lard", "lase", "lay", "lice", "lie", "lien", "lii", "limo",
+  "line", "lip", "lira", "lire", "loci", "loco", "lop", "lose", "lousy",
+  "love", "main", "male", "mall", "mama", "map", "mark", "mash", "mass",
+  "math", "may", "mean", "meant", "meld", "meme", "memo", "mild", "mile",
+  "mime", "min", "mind", "mini", "miss", "mold", "moll", "mom", "mono", "moo", "mop",
+  "more", "mousy", "mouth", "move", "movie", "muck", "mug", "mum", "mush",
+  "nab", "nag", "name", "nark", "nerd", "nib", "nice", "niece", "nine", "nit",
+  "none", "nose", "not", "noun", "nova", "novae", "nut", "ogle", "ogles",
+  "old", "once", "ones", "oral", "other", "oval", "over", "pan", "pap",
+  "papa", "pasha", "pay", "pie", "pill", "pita", "poi", "poll", "polo", "pop",
+  "posh", "poss", "pypy", "rant", "rare", "rave", "read", "real", "ream",
+  "rear", "rent", "rick", "rife", "rile", "role", "safe", "sale", "same",
+  "sane", "sari", "sass", "save", "say", "see", "seen", "semi", "sent",
+  "shall", "sham", "shill", "shin", "shoo", "shop", "showy", "shush", "shy",
+  "shyly", "silo", "sine", "sip", "skeet", "skit", "skunk", "slit", "slob",
+  "slot", "slunk", "snark", "snit", "snitch", "snob", "snub", "snug", "sock",
+  "sofa", "sold", "soli", "solo", "some", "son", "sore", "soup", "soupy",
+  "south", "soy", "stack", "steal", "stent", "stick", "stint", "stir",
+  "stock", "stuck", "stud", "stun", "stunt", "suck", "team", "teas", "tee",
+  "teen", "teepee", "than", "theme", "there", "these", "thieve", "thine",
+  "third", "those", "thud", "thug", "tibia", "tick", "tie", "tipi", "told",
+  "ton", "too", "top", "toss", "toupee", "tour", "toy", "twee", "two", "typo",
+  "ugh", "vase", "visa", "viva", "wack", "want", "way", "wean", "wear", "wee",
+  "weepy", "weld", "went", "whisk", "who", "whoa", "why", "will", "win",
+  "with", "won", "wont", "woo", "word", "you", "zit",
 ]

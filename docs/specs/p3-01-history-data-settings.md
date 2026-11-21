@@ -282,6 +282,22 @@ culture = "orcish"
 
 Reasons, in short: **elves** (good, very long-lived, few) live in forest and wet woodland, grow slowest and expand least; **goblins** (evil, short-lived, numerous) take dry uplands and poorer lowland, grow fast, are aggressive, and through the camp rule are hostile to elves from their first year; **dwarves** (neutral, long-lived) want reachable ore in uplands (`upland` 800, ore 60; the P1 critic: report-upland regions with `ore_reach_cells` > 0, median 3 per 1024 world), and avoid wetland; **faeries** (good, small, hidden) take forage-rich wetland and wet woodland (regions with a quarter or more wetland: median 1 per 1024 world, so they must also accept forest), and build only hamlets and villages; **humans** (neutral, adaptable, fast-growing) farm (fertility 60, grassland), like coasts and expand fastest; **orcs** (evil, warlike) take steppe and heath, most aggressive of all. From generator 0.16.0 (P3-06, r7) every race file also carries `prowess_permille` after `aggression`, and the goblins' `aggression` is 600 (the orcs stay the most aggressive by a clear margin, P3-06 12.2); neither change belongs to an earlier merge. Lifespans and generations are of the design's characters (elves "very long-lived", goblins "short-lived"); they matter only for ruling-line turnover in P3.
 
+### 3.2 Race fields from generator 0.18.0 (P3-09; r9)
+
+Three race fields, required, after `prowess_permille` (in this order), **from generator 0.18.0 (P3-09, `docs/specs/p3-09-conflict-balance.md`; P3-06 20.6, 20.7, 20.12), not before**; the fixture race files gain them with the shipped values:
+
+| Field | Type | Meaning | Shipped |
+| --- | --- | --- | --- |
+| `muster_permille` | int(1, 10000) | share of the race's people under arms, per mille of the standard levy (P3-06 6.1 as amended by 20.6); also scales the losses a side bears before it is exhausted | orc 4000, every other race 1000 |
+| `conceal_min` | int(0, 1001) | a settlement of the race is concealed (out of every army's sight, P3-06 20.1, 20.7) where the race's biome term B (P3-05 4.2) is at least this; 1001 = never | faerie 400, every other race 1001 |
+| `home_defense_permille` | int(0, 10000) | extra defence and garrison strength of the race on its own preferred land, per mille of B (P3-06 20.7) | elf 1500, faerie 2000, every other race 0 |
+
+Section 3.1's TOML blocks are read with these three lines added after `prowess_permille` (for example the faerie block: `muster_permille = 1000`, `conceal_min = 400`, `home_defense_permille = 2000`). Every content hash changes.
+
+### 3.3 Faerie home defence from P3-09 r3 (r10)
+
+From P3-09 r3 (P3-06 20.17 item 3) the faerie `home_defense_permille` is **0**, not 2000: faeries are protected by not being found, not by winning. Every other value of 3.2's table stands (elves 1500).
+
 ## 4. Kind `culture`
 
 Directory `cultures/`, **required**. Fields, all required, in this order:
@@ -497,3 +513,11 @@ Made with P3-06 (its 18.3), in place where marked; **every change takes effect a
 ## Revision note r8 (2026-11-20, amendments for P3-08; generator 0.17.0)
 
 Made with P3-08 (`docs/specs/p3-08-followups.md`), in place where marked; **every change takes effect at generator 0.17.0 and is not part of the 0.16.0 data**. (1) Race field `cell_weights`, record `race_cell_weights` {`ore`, `height`} int(0, 1000), required, after `site_weights`: shipped dwarf `{ ore = 400, height = 600 }`, elf, goblin, faerie, human and orc `{ ore = 0, height = 0 }` (P3-05 6.2 and 8.4, r6); the fixture race files gain it. (2) Section 3.1's faerie biome weights become P3-05 12.3's (temperate forest 800, wet woodland 800, fen 300, marsh 200, highland moor 100, heath 0, grassland −300, alpine −400, steppe −400; nine rows, the heath row kept with weight 0); read the TOML blocks of 3.1 with these values. (3) The culture record `culture_naming` gains `god_patterns` after `patterns` and the kind `culture` the check `naming_realm_forms`, the elven civilization forms gain `The House of {root}` in place of the bare `{root}` (P3-02 r5 11.4; fields, checks and data defined there only). (4) A new required data kind `name_filter` (P3-02 r5 11.2) and a new required data kind `placename` (P1-06 r3 4.1) join `biome`, `culture`, `history`, `race` and `worldgen` in every data root; P3-01's listing test of the shipped files (8.3 test 9) gains their files. Every content hash changes.
+
+## Revision note r9 (2026-11-20, amendments for P3-09; generator 0.18.0)
+
+New section 3.2 (P3-09; P3-06 20.12): race fields `muster_permille`, `conceal_min` and `home_defense_permille`, required, after `prowess_permille`, from generator 0.18.0 (orc muster 4000; faerie concealment at 400; elven and faerie home defence 1500 and 2000). `history.conflict` gains eleven fields (P3-06 20.9: `refuge_flight`, `flight_hops`, `hidden_years`, `weary_wars`, `tribute_permille`, `revenge_aggression`, `levy_hops`, `odds_floor`, `odds_min`, `truce_break_aggression`, `enmity_hops`); the id list of 5 is unchanged. Loader tests (8.1) cover each new race field's range and its absence.
+
+## Revision note r10 (2026-11-20, for P3-09 r3; generator 0.18.0)
+
+New 3.3: faerie `home_defense_permille` 0 (P3-06 20.17). No field changes.

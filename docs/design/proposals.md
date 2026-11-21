@@ -813,7 +813,7 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
   6. Orcish two-letter apostrophe parts ("Am'gash") stay.
   7. The filter lists are plain text in the repository.
 - Interim choice: points 2 to 7 are as shipped with P3-08 (generator 0.17.0). Point 1 differs from what P3-08 ships (the full list of 647 words): the short list is a data change to `game/data/name_filters/words.toml` that changes worlds, and ships with the next change after P3-08.
-- Status: accepted; point 1 scheduled after P3-08
+- Status: accepted; point 1 scheduled after P3-08; 2026-11-20: point 1 specified (`docs/specs/p3-02-names.md` r8, section 11.11, branch `p3/10-word-list`): `words.toml` holds 393 of the 647 words (with `mold` restored by the lead's interim choice) (crude, comic or modern-sounding words, and function words, inflected forms and plain slips), 254 are released; a data change only (no code, no schema change), shipping with P3-09 (0.18.0) or alone as 0.17.1
 
 ### Paul's decision of 2026-11-20: the P3-08 tuning questions go with their recommendations
 
@@ -850,6 +850,16 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
   11. The history report's summary: a per-age floor of 20, a shown declaration always with its ending, claims at salience 35, the notes; within the 250-line budget and minimum salience 20. The fill step is added only if the P3-07 implementer's measurements confirm it.
 - Interim choice: none needed. The spec's figures were measured on a prototype at 0.16.0 and are re-measured after implementation on top of P3-08.
 - Status: accepted; implementation follows P3-08
+
+### History: conflict balance beyond the four rule changes (P3-09)
+
+- Date: 2026-11-20
+- Raised by: spec writer (P3-09), after the world critic's review of P3-06 (`docs/reviews/p3-06-conflict-world-critic.md` F1–F7, F9)
+- Design doc section: 5 (faeries "hidden communities in wild places"; orcs "strong, warlike", "their coming opens the most recent age of conflict"; goblins "hostile to elves from the first year"; "old wars leave grudges"), 2 (map size means more land), 13 (P3 exit: the history reads as coherent history)
+- Problem: besides the four design-level changes of the lead's entry (flight of the last refuge, revenge, a cost for every lost war, runaway measured per race), the review's findings need rules the design does not state: faeries are besieged dozens of times in open view; orcs, the most warlike people, lose three wars in four in their own age; the same defender is attacked over the same wood up to 17 times; the goblin–elf feud is missing in a fifth of worlds; a 2048 world is nearly at peace; the summary drops whole ages and war endings.
+- Proposal: specified in `docs/specs/p3-09-conflict-balance.md` (generator 0.18.0, no schema change; normative text in P3-06 20, P3-05 21, P3-01 3.2, P3-07 21): faerie settlements in their forest are concealed from armies, elves and faeries defend their own land more strongly (race fields `conceal_min`, `home_defense_permille`); orcs muster four times the standard levy (race field `muster_permille`), battles are fought with the levies near the battlefield, a people declares only wars whose odds, weighed by the terrain, reach a minimum, and peoples more warlike than goblins keep shorter truces; a defender that has withstood three wars over one region is not attacked over it again until it changes hands; good and evil armies cross three borders to reach each other; a larger map founds more realms per race; the history report's summary shows at least 20 events per age and every shown war with its ending.
+- Interim choice: as proposed, for the P3-09 implementation; the questions to Paul were `docs/specs/p3-09-conflict-balance.md` 8 (items 5–11).
+- Status: accepted by Paul on 2026-11-20 (see "Paul's decision of 2026-11-20: the P3-09 conflict balance questions go with the lead's recommendations")
 
 ### Paul's notes of 2026-11-20 from reading a generated history (seed 42, generator 0.17.0)
 

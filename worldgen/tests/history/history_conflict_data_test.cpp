@@ -6,7 +6,9 @@
 // message and the edges that pass; the event kinds 20-30 of 11 transcribed
 // (keys, caused, region and settlement use, roles with counts, values,
 // salience, template) and their templates; the report lists every kind;
-// the five hist.conflict streams after hist.peoples.split (51 names at 0.16.0, 52 from P3-08).
+// the five hist.conflict streams after hist.peoples.split (51 names at 0.16.0, 52 from P3-08; r9 adds
+// no stream, 20.10). r9 (generator 0.18.0, P3-09): the eleven fields of 20.9 with their ranges and the
+// named check conflict_enmity_hops, claim salience 35; kinds 32 and 33 in history_balance_data_test.cpp.
 // The race-data items of 12.2 are in history_peoples_data_test.cpp and
 // data_history_kinds_test.cpp (P3-01 tests).
 //
@@ -81,8 +83,14 @@ const std::vector<Range>& ranges() {
         {"sack_base", 0, 1000}, {"sack_hostility", 0, 2000}, {"sack_toll_permille", 0, 1000},
         {"capture_toll_permille", 0, 1000}, {"exhaustion_permille", 1, 1000}, {"war_max_years", 1, 1000},
         {"truce_years", 0, 10000}, {"war_grudge", 0, 2000}, {"capture_grudge", 0, 2000}, {"secession_grudge", 0, 2000},
-        {"grudge_decay_per_century", 0, 10000}, {"last_refuge", 0, 1}, {"capital_sacked_salience", 0, 100},
-        {"capital_captured_salience", 0, 100},
+        {"grudge_decay_per_century", 0, 10000}, {"last_refuge", 0, 1},
+        // r9 20.9 (generator 0.18.0, P3-09): eleven fields after last_refuge
+        {"refuge_flight", 0, 1}, {"flight_hops", 1, 8}, {"hidden_years", 0, 10000}, {"weary_wars", 0, 100},
+        {"tribute_permille", 0, 1000}, {"revenge_aggression", 0, 1000}, {"levy_hops", 0, 16}, {"odds_floor", 0, 1000},
+        {"odds_min", 0, 1000}, {"truce_break_aggression", 0, 999}, {"enmity_hops", 1, 4},
+        // r10 20.19 (P3-09 r3): after enmity_hops
+        {"kill_max_permille", 1, 10000}, {"find_permille", 0, 1000}, {"search_years", 1, 100},
+        {"capital_sacked_salience", 0, 100}, {"capital_captured_salience", 0, 100},
     };
     return v;
 }
@@ -99,7 +107,7 @@ std::string listing_line(std::string_view field) {
 
 TEST_SUITE("history") {
 
-TEST_CASE("P3-06 12.1: history.conflict loads with the listing's 43 fields in table order and values") {
+TEST_CASE("P3-06 12.1, r9 20.9: history.conflict loads with the listing's 57 fields in table order and values") {
     const Load l = load(history_data::shipped_files());
     INFO(dump(l));
     REQUIRE(l.ok());
@@ -128,6 +136,7 @@ TEST_CASE("P3-06 12.1: history.conflict loads with the listing's 43 fields in ta
     CHECK(r.get_int("truce_years") == 200);
     CHECK(r.get_int("last_refuge") == 1);
     CHECK(r.get_int("capital_captured_salience") == 80);
+    CHECK(r.size() == 57U);  // 43 at 0.16.0 and 0.17.0; r9 20.9 adds eleven, r10 20.19 three
     // the shipped content (game/data) holds the same record (2: identical copies in the fixtures)
     CHECK(conflict_record(shipped_content()) == r);
 }
@@ -178,6 +187,9 @@ TEST_CASE("P3-06 12.1, 16.1 item 12: each named check of history.conflict once, 
               "declare_min + declare_span must not be above strain_max"},
              {"declare_span = 600", "declare_span = 4701", "conflict_strain_max",
               "declare_min + declare_span must not be above strain_max"},
+             // r9 20.9 (0.18.0): enmity_hops >= march_hops
+             {"enmity_hops = 3", "enmity_hops = 1", "conflict_enmity_hops", "enmity_hops must not be below march_hops"},
+             {"march_hops = 2", "march_hops = 4", "conflict_enmity_hops", "enmity_hops must not be below march_hops"},
          }) {
         CAPTURE(std::string_view(c.to));
         const wd::LoadError e = one_error(load(with_conflict_edit(c.from, c.to)));
@@ -187,6 +199,7 @@ TEST_CASE("P3-06 12.1, 16.1 item 12: each named check of history.conflict once, 
     }
     CHECK(load(with_conflict_edit("claim_strain = 300", "claim_strain = 299")).ok());
     CHECK(load(with_conflict_edit("strain_max = 5000", "strain_max = 900")).ok());
+    CHECK(load(with_conflict_edit("enmity_hops = 3", "enmity_hops = 2")).ok());  // r9: the edge, equal to march_hops
 }
 
 TEST_CASE("P3-06 11 (r7), 16.1 item 11: the compiled kinds 20-30 equal section 11; templates parse; report lists them") {
@@ -201,7 +214,8 @@ TEST_CASE("P3-06 11 (r7), 16.1 item 11: the compiled kinds 20-30 equal section 1
         const char* templ;
     };
     const std::vector<K> want = {
-        {"claim", 1, 0, {{"claimant", 1}, {"holder", 1}}, {}, 45, "{claimant} laid claim to {@region}, held by {holder}."},
+        // r9 20.9 (0.18.0): claim salience 45 -> 35 (P3-07 r8 21.6)
+        {"claim", 1, 0, {{"claimant", 1}, {"holder", 1}}, {}, 35, "{claimant} laid claim to {@region}, held by {holder}."},
         {"war_declared", 1, 0, {{"attacker", 1}, {"defender", 1}}, {}, 70,
          "{attacker} declared war on {defender} over {@region}."},
         {"battle", 1, 0, {{"winner", 1}, {"loser", 1}}, {"winner_dead", "loser_dead"}, 30,
@@ -224,9 +238,10 @@ TEST_CASE("P3-06 11 (r7), 16.1 item 11: the compiled kinds 20-30 equal section 1
         {"civ_conquered", 1, 0, {{"civilization", 1}, {"conqueror", 1}}, {}, 90, "{civilization} fell to {conqueror}."},
     };
     const eng::EventCatalogue& compiled = eng::compiled();
-    REQUIRE(compiled.kinds.size() == 31U);  // P3-05 r6 appends kind 31 after kinds 20-30 (0.17.0)
+    // P3-05 r6 appends kind 31 after kinds 20-30 (0.17.0); P3-06 r9 and r10 kinds 32-36 (0.18.0)
+    REQUIRE(compiled.kinds.size() == 36U);
     const eng::EventCatalogue cat = eng::catalogue_of(engine_test::shipped());
-    REQUIRE(cat.kinds.size() == 31U);
+    REQUIRE(cat.kinds.size() == 36U);
     for (std::size_t i = 0; i < want.size(); ++i) {
         const K& w = want[i];
         CAPTURE(std::string_view(w.key));
@@ -258,9 +273,10 @@ TEST_CASE("P3-06 11 (r7), 16.1 item 11: the compiled kinds 20-30 equal section 1
     CHECK(compiled.kinds[18].key == "ruin_faded");
 }
 
-TEST_CASE("P3-06 3.3, 18.2: the five hist.conflict streams follow hist.peoples.split, 52 names in all (P0-01 amendment 20)") {
+TEST_CASE("P3-06 3.3, 18.2, r10 20.17: the hist.conflict streams follow hist.peoples.split, 53 names in all") {
     const auto names = worldgen::streams::all_stream_names;
-    REQUIRE(names.size() == 52U);  // 51 at 0.16.0; P1-06 r4 adds geo.regions.name
+    // 51 at 0.16.0; P1-06 r4 adds geo.regions.name (52); r10 20.17 hist.conflict.search after hist.conflict.sack
+    REQUIRE(names.size() == 53U);
     std::size_t at = names.size();
     for (std::size_t i = 0; i < names.size(); ++i) {
         if (names[i] == "hist.peoples.split") at = i;
@@ -269,6 +285,8 @@ TEST_CASE("P3-06 3.3, 18.2: the five hist.conflict streams follow hist.peoples.s
     for (std::size_t i = 0; i < 5; ++i) {
         CHECK(names[at + 1 + i] == cfl::stream_names()[i]);
     }
+    REQUIRE(at + 6 < names.size());
+    CHECK(names[at + 6] == "hist.conflict.search");
 }
 
 }  // TEST_SUITE

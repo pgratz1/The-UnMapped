@@ -84,7 +84,7 @@ M64 = (1 << 64) - 1
 REPO = os.path.normpath(os.path.join(_HERE, "..", "..", ".."))
 GOLDEN = os.path.join(REPO, "worldgen", "tests", "golden", "p3-04-engine.txt")
 DEFAULT_INPUTS = os.path.join(os.path.expanduser("~"), ".cache", "the-unmapped", "out", "p3-08-tests", "inputs")
-GENERATOR_VERSION = "0.17.0"  # P3-08: the catalogue of 31 kinds, r10 rendering and quiet eras
+GENERATOR_VERSION = "0.18.0"  # P3-09: the catalogue of 33 kinds (P3-08: 31, r10 rendering and quiet eras)
 SCHEMA_VERSION = 7
 
 
@@ -197,7 +197,7 @@ def spec_report():
     """The history.report listing of the active version: 0.16.0's is REPORT_TOML (and
     p3_data_reference's 0.16.0 listing); from 0.17.0 the data reference's listing,
     derived from it by the template edits of P3-04 r10 4.2, P3-05 r6 11 and P3-06 r7 11."""
-    if ENGINE_VERSION == "0.17.0":
+    if at_least("0.17.0"):
         return [(e["kind"], e["salience"], e["template"]) for e in pdr.parsed_spec("history")["report"]["events"]]
     return [(e["kind"], e["salience"], e["template"]) for e in tomllib.loads(REPORT_TOML)["history"]["report"]["events"]]
 
@@ -270,8 +270,17 @@ COMPILED = (
 KIND_31 = kind_def(31, "settlement_abandoned_to", 1, 1, 1, (("settlement", SETTLEMENT, 1, 1),
                                                             ("civilization", CIV, 1, 1),
                                                             ("destination", SETTLEMENT, 1, 1)), ("settled", "lost"))
+# P3-06 r9 20.9 (generator 0.18.0, P3-09): kinds 32 and 33, caused, every count 1-1.
+KIND_32 = kind_def(32, "refugees_settled", 1, 1, 1, (("settlement", SETTLEMENT, 1, 1), ("founder", CIV, 1, 1),
+                                                     ("origin", SETTLEMENT, 1, 1)), ("population",))
+KIND_33 = kind_def(33, "tribute", 1, 0, 0, (("payer", CIV, 1, 1), ("payee", CIV, 1, 1)), ("people",))
+# P3-06 r10 20.15, 20.17, 20.22 (P3-09 r3): kinds 34-36, caused, every count 1-1.
+KIND_34 = kind_def(34, "war_won", 1, 0, 0, (("winner", CIV, 1, 1), ("loser", CIV, 1, 1)), ("years",))
+KIND_35 = kind_def(35, "search_abandoned", 1, 1, 0, (("searcher", CIV, 1, 1), ("hidden", CIV, 1, 1)), ("years",))
+KIND_36 = kind_def(36, "refuge_held", 1, 1, 1, (("attacker", CIV, 1, 1), ("defender", CIV, 1, 1)), ("reason",))
 COMPILED_016 = COMPILED
 COMPILED_017 = COMPILED + (KIND_31,)
+COMPILED_018 = COMPILED_017 + (KIND_32, KIND_33, KIND_34, KIND_35, KIND_36)
 
 # P3-04 r10 (generator 0.17.0, P3-08), each switchable so that the 0.16.0
 # goldens can still be reproduced (use_version("0.16.0")):
@@ -286,19 +295,32 @@ QUIET_ERA_R10 = True
 ENGINE_VERSION = None
 
 
+VERSIONS = ("0.16.0", "0.17.0", "0.18.0")
+
+
+def at_least(v):
+    """True when the served generator version is v or later."""
+    return VERSIONS.index(ENGINE_VERSION) >= VERSIONS.index(v)
+
+
 def use_version(v):
-    """Serve generator v's rules and data: "0.17.0" (default; P3-08) or
-    "0.16.0" (the catalogue of 30 kinds, r9 rendering and quiet eras, the
-    0.16.0 data and P3-02 r4 names). Clears the cached data roots."""
+    """Serve generator v's rules and data: "0.18.0" (default; P3-09: the
+    catalogue of 33 kinds and the 0.18.0 data), "0.17.0" (P3-08: 31 kinds,
+    r10 rendering and quiet eras, P3-02 r5 names) or "0.16.0" (the catalogue
+    of 30 kinds, r9 rendering and quiet eras, the 0.16.0 data and P3-02 r4
+    names). Clears the cached data roots."""
     global COMPILED, RENDER_R10, QUIET_ERA_R10, GENERATOR_VERSION, ENGINE_VERSION
-    if v not in ("0.16.0", "0.17.0"):
+    if v not in VERSIONS:
         raise ValueError(v)
-    new = v == "0.17.0"
-    COMPILED = COMPILED_017 if new else COMPILED_016
+    new = v != "0.16.0"
+    COMPILED = {"0.16.0": COMPILED_016, "0.17.0": COMPILED_017, "0.18.0": COMPILED_018}[v]
     RENDER_R10 = QUIET_ERA_R10 = new
     GENERATOR_VERSION = v
     ENGINE_VERSION = v
     pdr.use_version(v)
+    # P3-09 item 8: the word list of the version (0.18.0 on disk; before, P3-08's, from git)
+    pnr.FILTER_COMMIT = None if v == "0.18.0" else pdr.NAME_FILTERS_017_COMMIT
+    pnr._SHIPPED_FILTER = None
     pnr.use_rules("r5" if new else "r4")
     pchr._SHIPPED = None
     _DATA.clear()
@@ -1538,13 +1560,20 @@ TEMPLATE_CASES_R10 = (
 
 
 def template_cases():
-    return TEMPLATE_CASES + (TEMPLATE_CASES_R10 if ENGINE_VERSION == "0.17.0" else ())
+    return TEMPLATE_CASES + (TEMPLATE_CASES_R10 if at_least("0.17.0") else ())
 
 
 def template_kind(key):
     return TEST_KIND if key == "test_optional" else find_kind(COMPILED, key)
 
 
+HEADER_018 = """\
+# P3-04 engine golden vectors for generator 0.18.0 (schema 7; P3-09): the stub engine (run_engine
+# with the stub configuration) on the 0.18.0 catalogue of 36 kinds (P3-05 11 and r6, P3-06 11, r9
+# 20.9 and r10: kinds 32-36; claim salience 35; P3-02 r8's word list), with P3-04 r10 (names
+# inside a sentence, the three-word value form, the quiet_era template of 4.2, one quiet era per
+# civilization and quiet row), P3-02 r5 names (filter, god patterns, the elven House form) and
+# P1-06 r3 region names (the input worlds' table region). Spec"""
 HEADER_017 = """\
 # P3-04 engine golden vectors for generator 0.17.0 (schema 7; P3-08): the stub engine (run_engine
 # with the stub configuration) on the 0.17.0 catalogue of 31 kinds (P3-05 11 and r6, P3-06 11),
@@ -1631,7 +1660,9 @@ HEADER = """\
 def golden_text(inputs):
     dat = data()
     head = HEADER.rstrip("\n")
-    if ENGINE_VERSION == "0.17.0":
+    if ENGINE_VERSION == "0.18.0":
+        head = HEADER_018 + "\n" + "\n".join(head.splitlines()[2:])
+    elif ENGINE_VERSION == "0.17.0":
         head = HEADER_017 + "\n" + "\n".join(head.splitlines()[2:])
     o = [head]
     for seed in SEAM_SEEDS:
@@ -2055,7 +2086,9 @@ def check_templates(c):
         "events[3]: template: unclosed placeholder at byte 0",
         "events[4]: template: the template is empty",
         "event kind 'flare_up' has no entry"] + ["event kind '%s' has no entry" % k for k in P3_05_KEYS + P3_06_KEYS
-                                                 + (["settlement_abandoned_to"] if ENGINE_VERSION == "0.17.0" else [])])
+                                                 + (["settlement_abandoned_to"] if at_least("0.17.0") else [])
+                                                 + (["refugees_settled", "tribute", "war_won", "search_abandoned",
+                                                     "refuge_held"] if at_least("0.18.0") else [])])
     # rendering on a hand-made view: :all with 0..3, ? with 0, 1, 2
     cat = {99: dict(TEST_KIND, region_use=1, templ="[{actor:all}] {people:plural}/{people:adjective}/{people} at {@region}: "
                                      "{count} {count?thing|things} {{ok}} {@year}-{@end_year}")}
@@ -2381,7 +2414,7 @@ def cmd_check_world(argv):
     return 1 if c.failures else 0
 
 
-use_version("0.17.0")
+use_version("0.18.0")
 
 
 def main(argv):

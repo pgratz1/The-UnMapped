@@ -144,9 +144,9 @@ geo-seed-0-512 homes ra6 y5534 n1 9
 geo-seed-0-512 table civilization 9074dbaf2023d1ce350ac1b5447731eb2729fb33c77f88bef002ce1de27d3c59
 geo-seed-0-512 table event ba5978ab3e94f05e28f4dd78eea024ee21f37d1bab4f3fad49f8cfd78a36bc26
 geo-seed-0-512 table event_cause 5f8c6d619d284e41b669a93c26c3449072b6e6753c2f4cc5aae60fcf44e1ff57
-geo-seed-0-512 table event_kind c51f995a98efd2947f096f162bd85a224528e0138d28b9999a9c83a245f45786
-geo-seed-0-512 table event_kind_role bc566753d2e7d43e4d062a0bcd55a104707becf9f775f8a60eaa63a6afd1daf2
-geo-seed-0-512 table event_kind_value 781821ff7e1ee9c8d9159b8746873a36236bedb9eed25ff734efcb3dff1970a2
+geo-seed-0-512 table event_kind 597ed5b0fcd34fc10fd84f7e04e8c16df3ebec801046f2a1c6072df2c15034fc
+geo-seed-0-512 table event_kind_role a72cdc51e6ddc171c3712eb1d7a8f5009cb4759a8561d2785712deadfe36e0fb
+geo-seed-0-512 table event_kind_value 0ed4ada6d848301b2b0ed1ef17d4073d78b84697102d243ea2be48a25b672be3
 geo-seed-0-512 table event_participant 359d98270615cdc5eff716971dfc084db6b18fd2db8f9b9d7539fa6cfbf5d8ac
 geo-seed-0-512 table event_value ee4c347dd8727b04a3773ec21ebe257a02a1f11a2a4a8cbd7c8d171f9b079464
 geo-seed-0-512 table phase 028924ab8c555c85d0a5b5f4ae4f899104d6151b9a0f58040e771577f6cb931f
@@ -193,6 +193,11 @@ geo-seed-0-512 report events_truce = 0
 geo-seed-0-512 report events_region_ceded = 0
 geo-seed-0-512 report events_civ_conquered = 0
 geo-seed-0-512 report events_settlement_abandoned_to = 0
+geo-seed-0-512 report events_refugees_settled = 0
+geo-seed-0-512 report events_tribute = 0
+geo-seed-0-512 report events_war_won = 0
+geo-seed-0-512 report events_search_abandoned = 0
+geo-seed-0-512 report events_refuge_held = 0
 geo-seed-0-512 report civilizations = 6
 geo-seed-0-512 report civilizations_alive = 6
 geo-seed-0-512 report settlements = 33
@@ -442,15 +447,15 @@ geo-seed-42-512 homes ra6 y5596 n1 6
 geo-seed-42-512 table civilization ef587cf132f892ea79d403b085de7e9d0b9b2f078415236a7b5e2f70e25e1a3a
 geo-seed-42-512 table event 77dbc6f6a515385c0eaea09168631f08eccee4f912b8401f81845dc053275884
 geo-seed-42-512 table event_cause 9ca3d0ebfb69ae3f0d8ac60a9e380e3d529adfba9a0dc1624fcb204dd79c9515
-geo-seed-42-512 table event_kind c51f995a98efd2947f096f162bd85a224528e0138d28b9999a9c83a245f45786
-geo-seed-42-512 table event_kind_role bc566753d2e7d43e4d062a0bcd55a104707becf9f775f8a60eaa63a6afd1daf2
-geo-seed-42-512 table event_kind_value 781821ff7e1ee9c8d9159b8746873a36236bedb9eed25ff734efcb3dff1970a2
+geo-seed-42-512 table event_kind 597ed5b0fcd34fc10fd84f7e04e8c16df3ebec801046f2a1c6072df2c15034fc
+geo-seed-42-512 table event_kind_role a72cdc51e6ddc171c3712eb1d7a8f5009cb4759a8561d2785712deadfe36e0fb
+geo-seed-42-512 table event_kind_value 0ed4ada6d848301b2b0ed1ef17d4073d78b84697102d243ea2be48a25b672be3
 geo-seed-42-512 table event_participant 08e997996b5b28e46fee8bfe71af64751146b5c77a016dc3fc3cad9ab2850da4
 geo-seed-42-512 table event_value c5b69c910d1d71ffdece5072d37d712ce0665f13fbd71343883d80f3196db816
 geo-seed-42-512 table phase 70b5e6781599176734737c3220e5be215b12d1e57a602a72faa25bbd905dacd2
 geo-seed-42-512 table region_control 75bd83fe4e91d236a0dacdbcebd3cda2b95d1ff025f2af3e52b2a46221b8f79f
 geo-seed-42-512 table relation cbbd5f990c53684d7ae650b40fcb5656e02261b53da5f6a7d8c819c92f2828f8
-geo-seed-42-512 table settlement 3e3f51c609e3ec8b004644af34b6e2324ee4a637a2ea9890f0332ecb4f7b6503
+geo-seed-42-512 table settlement b1fe1846b05d59f34f66affb12599f86fda274ffa06e3e9da09b621111025bf6
 geo-seed-42-512 table settlement_census a74c646742ca0ff5c2500d42575f118f8ca572b6d9a428e6aeba05eba65ea002
 geo-seed-42-512 report end_year = 6000
 geo-seed-42-512 report phases_opening = 6
@@ -491,6 +496,11 @@ geo-seed-42-512 report events_truce = 0
 geo-seed-42-512 report events_region_ceded = 0
 geo-seed-42-512 report events_civ_conquered = 0
 geo-seed-42-512 report events_settlement_abandoned_to = 1
+geo-seed-42-512 report events_refugees_settled = 0
+geo-seed-42-512 report events_tribute = 0
+geo-seed-42-512 report events_war_won = 0
+geo-seed-42-512 report events_search_abandoned = 0
+geo-seed-42-512 report events_refuge_held = 0
 geo-seed-42-512 report civilizations = 8
 geo-seed-42-512 report civilizations_alive = 8
 geo-seed-42-512 report settlements = 55
@@ -599,7 +609,7 @@ geo-seed-42-512 e76 The Realm of Ithieglie passed 851 quiet years, from 3392 to 
 geo-seed-42-512 e77 The Grork Horde passed 851 quiet years, from 3392 to 4242, in which 57 new generations of rulers came to power.
 geo-seed-42-512 e78 The Hold of Dulimin passed 851 quiet years, from 3392 to 4242, in which 12 new generations of rulers came to power.
 geo-seed-42-512 e79 The Hold of Dulimin sent settlers from Thoum to found Khord in Northwest Fells.
-geo-seed-42-512 e80 The Hold of Dulimin sent settlers from Thoum to found Malika in Northwest Fells.
+geo-seed-42-512 e80 The Hold of Dulimin sent settlers from Thoum to found Grin in Northwest Fells.
 geo-seed-42-512 e81 The Hold of Dulimin sent settlers from Thoum to found Toukmairk in Northwest Fells.
 geo-seed-42-512 e82 Syfiash awakened the Faeries in South Wood.
 geo-seed-42-512 e83 The Faeries founded the Beepo Ring in South Wood.
@@ -682,9 +692,9 @@ geo-seed-42-512 e159 Sneeggnox Hole grew into a village of 257.
 geo-seed-42-512 e160 Cinmumstead grew into a city of 8085.
 geo-seed-42-512 e161 The Duchy of Stin sent settlers from Cinmumstead to found Ashackham in Bitterstrand Wolds.
 geo-seed-42-512 e162 Ashackham grew into a town of 1581.
-geo-seed-42-512 e163 The Duchy of Stin sent settlers from Cinmumstead to found Brontrurham in Northeast Downs.
+geo-seed-42-512 e163 The Duchy of Stin sent settlers from Cinmumstead to found Sack in Northeast Downs.
 geo-seed-42-512 e164 The Duchy of Stin sent settlers from Cinmumstead to found Stisbrelbury in Northeast Downs.
-geo-seed-42-512 e165 Brontrurham grew into a town of 1568.
+geo-seed-42-512 e165 Sack grew into a town of 1568.
 geo-seed-42-512 e166 The Duchy of Stin sent settlers from Cinmumstead to found Realdeadstead in Northeast Downs.
 geo-seed-42-512 e167 Cinmumstead dwindled to 5776 souls.
 geo-seed-42-512 e168 Stisbrelbury grew into a town of 1503.
@@ -725,7 +735,7 @@ geo-seed-42-512 e202 Plague broke out in Realdeadstead; 334 died.
 geo-seed-42-512 e203 Famine struck Iennmo; 96 died.
 geo-seed-42-512 e204 Famine struck Snugg; 561 died.
 geo-seed-42-512 e205 Famine struck Fouflo Hollow; 34 died.
-geo-seed-42-512 e206 Famine struck Malika; 183 died.
+geo-seed-42-512 e206 Famine struck Grin; 183 died.
 geo-seed-42-512 e207 Clan Aark'thuugh sent settlers from Orz'grom Camp to found Thuurkbash in East Downs.
 geo-seed-42-512 e208 Plague broke out in Sneezskrub Hole; 387 died.
 geo-seed-42-512 e209 The plague spread to Snugg; 289 died.
@@ -847,15 +857,15 @@ geo-phrase-512 homes ra6 y5638 n1 1
 geo-phrase-512 table civilization 6e9cbdc5eac3b50afa53853c81c6a2ebc343f8b50b1449ad369c748452cfa619
 geo-phrase-512 table event f985902789efc30597cd53cf88f727c3700a704f70169f96d7b8765e1e9235b6
 geo-phrase-512 table event_cause b3dffdd14fc1743f7e76b33127a3b3c3217176280c4a653aa260c81ab697a1fc
-geo-phrase-512 table event_kind c51f995a98efd2947f096f162bd85a224528e0138d28b9999a9c83a245f45786
-geo-phrase-512 table event_kind_role bc566753d2e7d43e4d062a0bcd55a104707becf9f775f8a60eaa63a6afd1daf2
-geo-phrase-512 table event_kind_value 781821ff7e1ee9c8d9159b8746873a36236bedb9eed25ff734efcb3dff1970a2
+geo-phrase-512 table event_kind 597ed5b0fcd34fc10fd84f7e04e8c16df3ebec801046f2a1c6072df2c15034fc
+geo-phrase-512 table event_kind_role a72cdc51e6ddc171c3712eb1d7a8f5009cb4759a8561d2785712deadfe36e0fb
+geo-phrase-512 table event_kind_value 0ed4ada6d848301b2b0ed1ef17d4073d78b84697102d243ea2be48a25b672be3
 geo-phrase-512 table event_participant d8151ac5870560db80ac62771efc4d0f02693f9fbe588c923dcb0e34971a5319
 geo-phrase-512 table event_value 2ea311985f370b87249b327ce72f4d81d728638605ca16f92bf4ce3870262023
 geo-phrase-512 table phase 5516e1a1d014f35777e6c4064c57a1c019973d0a1c7535485945a4be7fc96a09
 geo-phrase-512 table region_control 7baa6727f2eb8d770f1dfbcd34fabd21cd0df4a2113c6461d2c357db3c02975c
 geo-phrase-512 table relation cbbd5f990c53684d7ae650b40fcb5656e02261b53da5f6a7d8c819c92f2828f8
-geo-phrase-512 table settlement d8ad824e1f5725c4454d7a9f4739bfcd99a837417ba0b7991b637b6362d254a7
+geo-phrase-512 table settlement 97ca12c75ec59f2a741b14020e2443e33d0dec21ac281dbd5f17fc1279482d49
 geo-phrase-512 table settlement_census bb70eacb3f547897ec9d6ceca015a67145278985b43899889163d285443bf18c
 geo-phrase-512 report end_year = 6000
 geo-phrase-512 report phases_opening = 6
@@ -896,6 +906,11 @@ geo-phrase-512 report events_truce = 0
 geo-phrase-512 report events_region_ceded = 0
 geo-phrase-512 report events_civ_conquered = 0
 geo-phrase-512 report events_settlement_abandoned_to = 0
+geo-phrase-512 report events_refugees_settled = 0
+geo-phrase-512 report events_tribute = 0
+geo-phrase-512 report events_war_won = 0
+geo-phrase-512 report events_search_abandoned = 0
+geo-phrase-512 report events_refuge_held = 0
 geo-phrase-512 report civilizations = 7
 geo-phrase-512 report civilizations_alive = 7
 geo-phrase-512 report settlements = 38
@@ -964,9 +979,9 @@ geo-phrase-512 e36 Sneeg-Bink Pit grew into a village of 271.
 geo-phrase-512 e37 The Warrens of Skruz-Snugg sent settlers from Gnix to found Gub Pit in South Downs.
 geo-phrase-512 e38 The Warrens of Skruz-Snugg sent settlers from Gnix to found Kunk-Slitch Hole in South Downs.
 geo-phrase-512 e39 Gub Pit grew into a town of 1779.
-geo-phrase-512 e40 The Warrens of Skruz-Snugg sent settlers from Gnix to found Gazz Pit in South Downs.
+geo-phrase-512 e40 The Warrens of Skruz-Snugg sent settlers from Gnix to found Slug in South Downs.
 geo-phrase-512 e41 Kunk-Slitch Hole grew into a town of 1686.
-geo-phrase-512 e42 Gazz Pit grew into a town of 1647.
+geo-phrase-512 e42 Slug grew into a town of 1647.
 geo-phrase-512 e43 Nukgarin awakened the Dwarves in Southeast Peaks.
 geo-phrase-512 e44 The Dwarves founded the Hold of Girinnam in Southeast Peaks.
 geo-phrase-512 e45 The Hold of Girinnam founded Drondgound in Southeast Peaks.
@@ -1010,7 +1025,7 @@ geo-phrase-512 e82 Birdsten awakened the Humans in Southwest Downs.
 geo-phrase-512 e83 The Humans founded the Meald League in Southwest Downs.
 geo-phrase-512 e84 The Meald League founded Weckstead in Southwest Downs.
 geo-phrase-512 e85 Plague broke out in Grorkbug Pit; 929 died.
-geo-phrase-512 e86 The plague spread to Gazz Pit; 266 died.
+geo-phrase-512 e86 The plague spread to Slug; 266 died.
 geo-phrase-512 e87 A succession crisis at Weckstead shook the Meald League.
 geo-phrase-512 e88 Famine struck Burkskrogg Pit; 294 died.
 geo-phrase-512 e89 A succession crisis at Grorkbug Pit shook the Warrens of Skruz-Snugg.
@@ -1070,7 +1085,7 @@ geo-phrase-512 e142 Plague broke out in Naendnae; 127 died.
 geo-phrase-512 e143 The plague spread to Aethsor; 24 died.
 geo-phrase-512 e144 Plague broke out in Kunk-Slitch Hole; 583 died.
 geo-phrase-512 e145 Plague broke out in Sharz'maa; 348 died.
-geo-phrase-512 e146 Plague broke out in Gazz Pit; 520 died.
+geo-phrase-512 e146 Plague broke out in Slug; 520 died.
 geo-phrase-512 e147 The plague spread to Grorkbug Pit; 961 died.
 geo-phrase-512 e148 The plague spread to Gnix; 289 died.
 geo-phrase-512 e149 The plague spread to Slinkbat Hole; 338 died.
@@ -1431,15 +1446,15 @@ geo-seed-1-1024 homes ra6 y5580 n1 27
 geo-seed-1-1024 table civilization 8d9939b00d3a87c3ca7679f2428340246f97750a5f5d1aa98356212fcd92189f
 geo-seed-1-1024 table event 0fe0219e123ac2924d40edfe3ae15508f5942687508c1daa2936253c7395df17
 geo-seed-1-1024 table event_cause d9085bb9da1f39c611dac2eff64fdbf25efb42b094c6587aeaa4e4fae1b7512d
-geo-seed-1-1024 table event_kind c51f995a98efd2947f096f162bd85a224528e0138d28b9999a9c83a245f45786
-geo-seed-1-1024 table event_kind_role bc566753d2e7d43e4d062a0bcd55a104707becf9f775f8a60eaa63a6afd1daf2
-geo-seed-1-1024 table event_kind_value 781821ff7e1ee9c8d9159b8746873a36236bedb9eed25ff734efcb3dff1970a2
+geo-seed-1-1024 table event_kind 597ed5b0fcd34fc10fd84f7e04e8c16df3ebec801046f2a1c6072df2c15034fc
+geo-seed-1-1024 table event_kind_role a72cdc51e6ddc171c3712eb1d7a8f5009cb4759a8561d2785712deadfe36e0fb
+geo-seed-1-1024 table event_kind_value 0ed4ada6d848301b2b0ed1ef17d4073d78b84697102d243ea2be48a25b672be3
 geo-seed-1-1024 table event_participant 4626e1587047334f05ea48cfa6902cbb83eb620925ec4602918c6ec28daf4727
 geo-seed-1-1024 table event_value 81428c5606646916e6276278b043b5b66ad7e7f1b03d2e1b7ce2fb841075728f
 geo-seed-1-1024 table phase 33db9fa16cdb3f0e6224cd0c23688140f3d0698131aa5f24cd88a3eb14fba77a
 geo-seed-1-1024 table region_control 43fcebafb7a5b34674d0b19cb4f2c1e3bddecba79ebc67ebbb9d73b435101c74
 geo-seed-1-1024 table relation cbbd5f990c53684d7ae650b40fcb5656e02261b53da5f6a7d8c819c92f2828f8
-geo-seed-1-1024 table settlement 9a408f49cccf68c3a8ce3e198c6a1472095e05d45ad26d68e1e11cdf2fb65970
+geo-seed-1-1024 table settlement 359136a34b6d2fa67120a3cb7c14deecb2ac9104a5bda02363d8d9bdcb389fe3
 geo-seed-1-1024 table settlement_census 4eb9e6cbfbb7dc51f719bdddd425c68738856087a7061eb7c2985c19fc15c0d4
 geo-seed-1-1024 report end_year = 6000
 geo-seed-1-1024 report phases_opening = 6
@@ -1480,6 +1495,11 @@ geo-seed-1-1024 report events_truce = 0
 geo-seed-1-1024 report events_region_ceded = 0
 geo-seed-1-1024 report events_civ_conquered = 0
 geo-seed-1-1024 report events_settlement_abandoned_to = 0
+geo-seed-1-1024 report events_refugees_settled = 0
+geo-seed-1-1024 report events_tribute = 0
+geo-seed-1-1024 report events_war_won = 0
+geo-seed-1-1024 report events_search_abandoned = 0
+geo-seed-1-1024 report events_refuge_held = 0
 geo-seed-1-1024 report civilizations = 12
 geo-seed-1-1024 report civilizations_alive = 12
 geo-seed-1-1024 report settlements = 109
@@ -1523,7 +1543,7 @@ geo-seed-1-1024 e11 The House of Glaefaenn sent settlers from Iennrer to found S
 geo-seed-1-1024 e12 Sennfe grew into a village of 251.
 geo-seed-1-1024 e13 Gragg-Gnurk awakened the Goblins in the Benighted Leas.
 geo-seed-1-1024 e14 The Goblins founded the Warrens of Skiskib in the Benighted Leas.
-geo-seed-1-1024 e15 The Warrens of Skiskib founded Grak Hole in the Benighted Leas.
+geo-seed-1-1024 e15 The Warrens of Skiskib founded Geerk-Drub Pit in the Benighted Leas.
 geo-seed-1-1024 e16 The Goblins founded the Skreegg Horde in Starkden.
 geo-seed-1-1024 e17 The Skreegg Horde founded Buskug in Starkden.
 geo-seed-1-1024 e18 The House of Glaefaenn sent settlers from Iennrer to found Rifonndell in Northwest Wood.
@@ -1532,7 +1552,7 @@ geo-seed-1-1024 e20 The plague spread to Iennrer; 110 died.
 geo-seed-1-1024 e21 The plague spread to Vomethidell; 88 died.
 geo-seed-1-1024 e22 The House of Glaefaenn sent settlers from Vomethidell to found Aeglaes in the Hushed Hurst.
 geo-seed-1-1024 e23 Buskug grew into a town of 1512.
-geo-seed-1-1024 e24 Grak Hole grew into a town of 1513.
+geo-seed-1-1024 e24 Geerk-Drub Pit grew into a town of 1513.
 geo-seed-1-1024 e25 The House of Glaefaenn sent settlers from Iennrer to found Ilathdell in Douredge Woods.
 geo-seed-1-1024 e26 Plague broke out in Buskug; 300 died.
 geo-seed-1-1024 e27 Rifonndell grew into a village of 271.
@@ -1542,23 +1562,23 @@ geo-seed-1-1024 e30 The Skreegg Horde passed 1120 quiet years, from 2221 to 3340
 geo-seed-1-1024 e31 The Skreegg Horde sent settlers from Buskug to found Gnot Pit in Thane's Plain.
 geo-seed-1-1024 e32 Aeglaes grew into a village of 263.
 geo-seed-1-1024 e33 Gnot Pit grew into a town of 1797.
-geo-seed-1-1024 e34 The Warrens of Skiskib sent settlers from Grak Hole to found Skruz in the Wintry Leas.
+geo-seed-1-1024 e34 The Warrens of Skiskib sent settlers from Geerk-Drub Pit to found Skruz in the Wintry Leas.
 geo-seed-1-1024 e35 The Skreegg Horde sent settlers from Buskug to found Slok in North Downs.
 geo-seed-1-1024 e36 Ilathdell grew into a village of 258.
-geo-seed-1-1024 e37 The Warrens of Skiskib sent settlers from Grak Hole to found Bukrak in Harewold.
+geo-seed-1-1024 e37 The Warrens of Skiskib sent settlers from Geerk-Drub Pit to found Bukrak in Harewold.
 geo-seed-1-1024 e38 The Skreegg Horde sent settlers from Buskug to found Borksluzz in Starkden.
 geo-seed-1-1024 e39 Skruz grew into a town of 1736.
 geo-seed-1-1024 e40 Slok grew into a town of 2259.
-geo-seed-1-1024 e41 The Warrens of Skiskib sent settlers from Grak Hole to found Gnok-Skeex in Southwest Downs.
+geo-seed-1-1024 e41 The Warrens of Skiskib sent settlers from Geerk-Drub Pit to found Gnok-Skeex in Southwest Downs.
 geo-seed-1-1024 e42 Bukrak grew into a town of 1574.
 geo-seed-1-1024 e43 Borksluzz grew into a town of 1685.
 geo-seed-1-1024 e44 The Skreegg Horde sent settlers from Buskug to found Skuggkib Pit in Starkden.
 geo-seed-1-1024 e45 Gnok-Skeex grew into a town of 1677.
-geo-seed-1-1024 e46 The Warrens of Skiskib sent settlers from Grak Hole to found Geezink in the Benighted Leas.
+geo-seed-1-1024 e46 The Warrens of Skiskib sent settlers from Geerk-Drub Pit to found Geezink in the Benighted Leas.
 geo-seed-1-1024 e47 The Skreegg Horde sent settlers from Borksluzz to found Nik Pit in Ryewold.
 geo-seed-1-1024 e48 Skuggkib Pit grew into a town of 1552.
 geo-seed-1-1024 e49 Nik Pit grew into a village of 366.
-geo-seed-1-1024 e50 The Warrens of Skiskib sent settlers from Grak Hole to found Drax-Snagg Pit in the Benighted Leas.
+geo-seed-1-1024 e50 The Warrens of Skiskib sent settlers from Geerk-Drub Pit to found Drax-Snagg Pit in the Benighted Leas.
 geo-seed-1-1024 e51 The Skreegg Horde sent settlers from Gnot Pit to found Slork in Thane's Plain.
 geo-seed-1-1024 e52 The Warrens of Skiskib sent settlers from Geezink to found Grot in the Benighted Leas.
 geo-seed-1-1024 e53 Slork grew into a town of 1575.
@@ -1687,7 +1707,7 @@ geo-seed-1-1024 e175 Plague broke out in Skuggkib Pit; 365 died.
 geo-seed-1-1024 e176 The plague spread to Skrutch Pit; 206 died.
 geo-seed-1-1024 e177 The plague spread to Gronkkeeb Hole; 164 died.
 geo-seed-1-1024 e178 Plague broke out in Skreex Pit; 321 died.
-geo-seed-1-1024 e179 The plague spread to Grak Hole; 487 died.
+geo-seed-1-1024 e179 The plague spread to Geerk-Drub Pit; 487 died.
 geo-seed-1-1024 e180 The plague spread to Skuzzsnazz; 132 died.
 geo-seed-1-1024 e181 Plague broke out in Iennrer; 252 died.
 geo-seed-1-1024 e182 Famine struck Rifonndell; 524 died.
@@ -1945,18 +1965,18 @@ hist-span-2000-512 homes ra3 y1114 n1 8
 hist-span-2000-512 homes ra4 y1409 n1 4
 hist-span-2000-512 homes ra5 y1644 n1 13
 hist-span-2000-512 homes ra6 y1879 n1 12
-hist-span-2000-512 table civilization 7b7bd377edce46e5807582ee0b7210859756f1eb980361cc5b8b2e9e78c38f42
+hist-span-2000-512 table civilization a088bc6db4d2b741c5f9b094d0e30075dd0b9e4e9ae0d8874ccf2a0056d2724d
 hist-span-2000-512 table event 85f18eb7633c0419ef4d70681d60a5a94056c0758f0ebf73d6f015e3a0c23d11
 hist-span-2000-512 table event_cause bd116687bcbbee23c8b9669856b2930b5960a555a2d6017bc2baea2b894d2172
-hist-span-2000-512 table event_kind c51f995a98efd2947f096f162bd85a224528e0138d28b9999a9c83a245f45786
-hist-span-2000-512 table event_kind_role bc566753d2e7d43e4d062a0bcd55a104707becf9f775f8a60eaa63a6afd1daf2
-hist-span-2000-512 table event_kind_value 781821ff7e1ee9c8d9159b8746873a36236bedb9eed25ff734efcb3dff1970a2
+hist-span-2000-512 table event_kind 597ed5b0fcd34fc10fd84f7e04e8c16df3ebec801046f2a1c6072df2c15034fc
+hist-span-2000-512 table event_kind_role a72cdc51e6ddc171c3712eb1d7a8f5009cb4759a8561d2785712deadfe36e0fb
+hist-span-2000-512 table event_kind_value 0ed4ada6d848301b2b0ed1ef17d4073d78b84697102d243ea2be48a25b672be3
 hist-span-2000-512 table event_participant 629b1c9f60a5b94720c8fca80dfe23e165f21308161a9def09d921e03410e45f
 hist-span-2000-512 table event_value 6759064136947c162bb68f069d94722455e59043bd85f61da44f3421cf0f670a
 hist-span-2000-512 table phase a46f5ab9f166b745bcb145a63feecea71d930cfaa06dac1369acfea13d70ee6d
 hist-span-2000-512 table region_control 66404248fb509a622cc145e1bc2856999e3f5753652c6a5339ca1efef60326c6
 hist-span-2000-512 table relation cbbd5f990c53684d7ae650b40fcb5656e02261b53da5f6a7d8c819c92f2828f8
-hist-span-2000-512 table settlement a2fe93b0eae5c4c0a23c3e5668029d7ed606db0c44f43de23bcd143939e7b4c7
+hist-span-2000-512 table settlement 164693b3fc1065c9db9a33030a3da478465254b76e2ad7c9ae2f06e650c7eeb8
 hist-span-2000-512 table settlement_census ac49cea3164147aecc68b6d188fa56e9e757329766f05732c677b5668a97d12d
 hist-span-2000-512 report end_year = 2000
 hist-span-2000-512 report phases_opening = 6
@@ -1997,6 +2017,11 @@ hist-span-2000-512 report events_truce = 0
 hist-span-2000-512 report events_region_ceded = 0
 hist-span-2000-512 report events_civ_conquered = 0
 hist-span-2000-512 report events_settlement_abandoned_to = 0
+hist-span-2000-512 report events_refugees_settled = 0
+hist-span-2000-512 report events_tribute = 0
+hist-span-2000-512 report events_war_won = 0
+hist-span-2000-512 report events_search_abandoned = 0
+hist-span-2000-512 report events_refuge_held = 0
 hist-span-2000-512 report civilizations = 7
 hist-span-2000-512 report civilizations_alive = 7
 hist-span-2000-512 report settlements = 36
@@ -2035,22 +2060,22 @@ hist-span-2000-512 e6 The Realm of Ienngleth passed 638 quiet years, from 50 to 
 hist-span-2000-512 e7 The Realm of Rasglae passed 638 quiet years, from 50 to 687, in which 4 new generations of rulers came to power.
 hist-span-2000-512 e8 Anen grew into a town of 1522.
 hist-span-2000-512 e9 Buzork awakened the Goblins in the Tainted Plain.
-hist-span-2000-512 e10 The Goblins founded the Warrens of Girkkat in the Tainted Plain.
-hist-span-2000-512 e11 The Warrens of Girkkat founded Kuk in the Tainted Plain.
+hist-span-2000-512 e10 The Goblins founded the Skiz-Sleet Horde in the Tainted Plain.
+hist-span-2000-512 e11 The Skiz-Sleet Horde founded Kuk in the Tainted Plain.
 hist-span-2000-512 e12 Fielaenddell grew into a town of 1501.
 hist-span-2000-512 e13 The Realm of Ienngleth passed 376 quiet years, from 738 to 1113, in which 3 new generations of rulers came to power.
 hist-span-2000-512 e14 The Realm of Rasglae passed 376 quiet years, from 738 to 1113, in which 3 new generations of rulers came to power.
-hist-span-2000-512 e15 The Warrens of Girkkat passed 376 quiet years, from 738 to 1113, in which 25 new generations of rulers came to power.
+hist-span-2000-512 e15 The Skiz-Sleet Horde passed 376 quiet years, from 738 to 1113, in which 25 new generations of rulers came to power.
 hist-span-2000-512 e16 Kuk grew into a town of 1601.
-hist-span-2000-512 e17 The Warrens of Girkkat sent settlers from Kuk to found Sneegg Hole in Southeast Downs.
-hist-span-2000-512 e18 The Warrens of Girkkat sent settlers from Kuk to found Sneerk in Central Wood.
-hist-span-2000-512 e19 The Warrens of Girkkat sent settlers from Kuk to found Skazdrot in West Wood.
+hist-span-2000-512 e17 The Skiz-Sleet Horde sent settlers from Kuk to found Sneegg Hole in Southeast Downs.
+hist-span-2000-512 e18 The Skiz-Sleet Horde sent settlers from Kuk to found Sneerk in Central Wood.
+hist-span-2000-512 e19 The Skiz-Sleet Horde sent settlers from Kuk to found Skazdrot in West Wood.
 hist-span-2000-512 e20 Sneegg Hole grew into a town of 1657.
-hist-span-2000-512 e21 The Warrens of Girkkat sent settlers from Kuk to found Slax Hole in the Tainted Plain.
+hist-span-2000-512 e21 The Skiz-Sleet Horde sent settlers from Kuk to found Slax Hole in the Tainted Plain.
 hist-span-2000-512 e22 Sneerk grew into a town of 1822.
-hist-span-2000-512 e23 The Warrens of Girkkat sent settlers from Kuk to found Drik in the Tainted Plain.
+hist-span-2000-512 e23 The Skiz-Sleet Horde sent settlers from Kuk to found Drik in the Tainted Plain.
 hist-span-2000-512 e24 Skazdrot grew into a town of 1750.
-hist-span-2000-512 e25 The Warrens of Girkkat sent settlers from Kuk to found Snitneegg in the Tainted Plain.
+hist-span-2000-512 e25 The Skiz-Sleet Horde sent settlers from Kuk to found Snitneegg in the Tainted Plain.
 hist-span-2000-512 e26 Mammga awakened the Dwarves in Southwest Peaks.
 hist-span-2000-512 e27 The Dwarves founded Clan Dradintuk in Southwest Peaks.
 hist-span-2000-512 e28 Clan Dradintuk founded Harinhimm in Southwest Peaks.
@@ -2059,37 +2084,37 @@ hist-span-2000-512 e30 Plague broke out in Sneerk; 2041 died.
 hist-span-2000-512 e31 The plague spread to Drik; 45 died.
 hist-span-2000-512 e32 Famine struck Kuk; 453 died.
 hist-span-2000-512 e33 Famine struck Slax Hole; 170 died.
-hist-span-2000-512 e34 The Warrens of Girkkat sent settlers from Sneegg Hole to found Sleeg in Southeast Downs.
+hist-span-2000-512 e34 The Skiz-Sleet Horde sent settlers from Sneegg Hole to found Sleeg in Southeast Downs.
 hist-span-2000-512 e35 The Realm of Ienngleth passed 245 quiet years, from 1164 to 1408, in which 2 new generations of rulers came to power.
 hist-span-2000-512 e36 The Realm of Rasglae passed 245 quiet years, from 1164 to 1408, in which 2 new generations of rulers came to power.
-hist-span-2000-512 e37 The Warrens of Girkkat passed 245 quiet years, from 1164 to 1408, in which 17 new generations of rulers came to power.
+hist-span-2000-512 e37 The Skiz-Sleet Horde passed 245 quiet years, from 1164 to 1408, in which 17 new generations of rulers came to power.
 hist-span-2000-512 e38 Clan Dradintuk passed 245 quiet years, from 1164 to 1408, in which 4 new generations of rulers came to power.
-hist-span-2000-512 e39 The Warrens of Girkkat sent settlers from Sneegg Hole to found Krark in Southeast Downs.
+hist-span-2000-512 e39 The Skiz-Sleet Horde sent settlers from Sneegg Hole to found Krark in Southeast Downs.
 hist-span-2000-512 e40 The Realm of Rasglae sent settlers from Fielaenddell to found Naolldell in Southwest Wood.
-hist-span-2000-512 e41 The Warrens of Girkkat sent settlers from Sneegg Hole to found Skrizz in Southeast Downs.
+hist-span-2000-512 e41 The Skiz-Sleet Horde sent settlers from Sneegg Hole to found Skrizz in Southeast Downs.
 hist-span-2000-512 e42 Skrizz grew into a village of 352.
 hist-span-2000-512 e43 The Realm of Rasglae sent settlers from Fielaenddell to found Oniesdell in Southwest Wood.
 hist-span-2000-512 e44 The Realm of Rasglae sent settlers from Fielaenddell to found Ithonondell in Southwest Wood.
-hist-span-2000-512 e45 The Warrens of Girkkat sent settlers from Sneerk to found Sluk-Gozz in Central Wood.
+hist-span-2000-512 e45 The Skiz-Sleet Horde sent settlers from Sneerk to found Sluk-Gozz in Central Wood.
 hist-span-2000-512 e46 The Realm of Ienngleth sent settlers from Anen to found Gliemidell in Northeast Wood.
-hist-span-2000-512 e47 The Warrens of Girkkat sent settlers from Sneerk to found Slonk-Skruk in Central Wood.
+hist-span-2000-512 e47 The Skiz-Sleet Horde sent settlers from Sneerk to found Slonk-Skruk in Central Wood.
 hist-span-2000-512 e48 Sluk-Gozz grew into a town of 1795.
-hist-span-2000-512 e49 The Warrens of Girkkat sent settlers from Sneerk to found Sneenk in Central Wood.
+hist-span-2000-512 e49 The Skiz-Sleet Horde sent settlers from Sneerk to found Sneenk in Central Wood.
 hist-span-2000-512 e50 Ouwheefy awakened the Faeries in Northwest Wood.
 hist-span-2000-512 e51 The Faeries founded the Circle of Fon in Northwest Wood.
 hist-span-2000-512 e52 The Circle of Fon founded Tosae in Northwest Wood.
 hist-span-2000-512 e53 Slonk-Skruk grew into a town of 1506.
-hist-span-2000-512 e54 The Warrens of Girkkat sent settlers from Skazdrot to found Koggnotch Pit in West Wood.
-hist-span-2000-512 e55 The Warrens of Girkkat sent settlers from Skazdrot to found Skrab in West Wood.
-hist-span-2000-512 e56 The Warrens of Girkkat sent settlers from Skazdrot to found Gnibslot in West Wood.
+hist-span-2000-512 e54 The Skiz-Sleet Horde sent settlers from Skazdrot to found Grub in West Wood.
+hist-span-2000-512 e55 The Skiz-Sleet Horde sent settlers from Skazdrot to found Skrab in West Wood.
+hist-span-2000-512 e56 The Skiz-Sleet Horde sent settlers from Skazdrot to found Gnibslot in West Wood.
 hist-span-2000-512 e57 The Realm of Ienngleth passed 185 quiet years, from 1459 to 1643, in which one new generation of rulers came to power.
 hist-span-2000-512 e58 The Realm of Rasglae passed 185 quiet years, from 1459 to 1643, in which one new generation of rulers came to power.
-hist-span-2000-512 e59 The Warrens of Girkkat passed 185 quiet years, from 1459 to 1643, in which 12 new generations of rulers came to power.
+hist-span-2000-512 e59 The Skiz-Sleet Horde passed 185 quiet years, from 1459 to 1643, in which 12 new generations of rulers came to power.
 hist-span-2000-512 e60 Clan Dradintuk passed 185 quiet years, from 1459 to 1643, in which 3 new generations of rulers came to power.
 hist-span-2000-512 e61 The Circle of Fon passed 185 quiet years, from 1459 to 1643, in which 2 new generations of rulers came to power.
 hist-span-2000-512 e62 Sneenk grew into a town of 1615.
 hist-span-2000-512 e63 The Realm of Ienngleth sent settlers from Anen to found Riene in North Wood.
-hist-span-2000-512 e64 Koggnotch Pit grew into a town of 1592.
+hist-span-2000-512 e64 Grub grew into a town of 1592.
 hist-span-2000-512 e65 Skrab grew into a town of 1563.
 hist-span-2000-512 e66 Gnibslot grew into a town of 1550.
 hist-span-2000-512 e67 The Realm of Ienngleth sent settlers from Anen to found Leglann in North Wood.
@@ -2100,7 +2125,7 @@ hist-span-2000-512 e71 Plague broke out in Anen; 377 died.
 hist-span-2000-512 e72 The Realm of Ienngleth sent settlers from Anen to found Insaes in North Wood.
 hist-span-2000-512 e73 The Realm of Ienngleth passed 185 quiet years, from 1694 to 1878, in which one new generation of rulers came to power.
 hist-span-2000-512 e74 The Realm of Rasglae passed 185 quiet years, from 1694 to 1878, in which one new generation of rulers came to power.
-hist-span-2000-512 e75 The Warrens of Girkkat passed 185 quiet years, from 1694 to 1878, in which 12 new generations of rulers came to power.
+hist-span-2000-512 e75 The Skiz-Sleet Horde passed 185 quiet years, from 1694 to 1878, in which 12 new generations of rulers came to power.
 hist-span-2000-512 e76 Clan Dradintuk passed 185 quiet years, from 1694 to 1878, in which 2 new generations of rulers came to power.
 hist-span-2000-512 e77 The Circle of Fon passed 185 quiet years, from 1694 to 1878, in which 2 new generations of rulers came to power.
 hist-span-2000-512 e78 The Wearhuld League passed 185 quiet years, from 1694 to 1878, in which 7 new generations of rulers came to power.
@@ -2114,7 +2139,7 @@ hist-span-2000-512 e85 Famine struck Fielaenddell; 315 died.
 hist-span-2000-512 e86 Famine struck Gnibslot; 244 died.
 hist-span-2000-512 e87 Plague broke out in Skazdrot; 439 died.
 hist-span-2000-512 e88 The plague spread to Gnibslot; 181 died.
-hist-span-2000-512 e89 The Circle of Fon sent settlers from Tosae to found Whiath Glade in Northwest Wood.
+hist-span-2000-512 e89 The Circle of Fon sent settlers from Tosae to found Tin Glade in Northwest Wood.
 hist-span-2000-512 e90 Clan Dradintuk sent settlers from Harinhimm to found Murdgak in Southwest Peaks.
 hist-span-2000-512 e91 Famine struck Slonk-Skruk; 221 died.
 hist-span-2000-512 e92 Famine struck Ithonondell; 83 died.
@@ -2447,15 +2472,15 @@ hist-races-elf-orc-1024 homes ra6 y5602 n1 41
 hist-races-elf-orc-1024 table civilization f3814b0b68c55db29957ec9566b9de7e7a57015a504336c000b96bed675067be
 hist-races-elf-orc-1024 table event 2ec2b6e3817f8356f59c6c814160c3b0257c843fb4b5198da63866864e28456b
 hist-races-elf-orc-1024 table event_cause 95b6494a9148c506e30d660a337070358041d0200763dd7ef3310d1f69008aa2
-hist-races-elf-orc-1024 table event_kind c51f995a98efd2947f096f162bd85a224528e0138d28b9999a9c83a245f45786
-hist-races-elf-orc-1024 table event_kind_role bc566753d2e7d43e4d062a0bcd55a104707becf9f775f8a60eaa63a6afd1daf2
-hist-races-elf-orc-1024 table event_kind_value 781821ff7e1ee9c8d9159b8746873a36236bedb9eed25ff734efcb3dff1970a2
+hist-races-elf-orc-1024 table event_kind 597ed5b0fcd34fc10fd84f7e04e8c16df3ebec801046f2a1c6072df2c15034fc
+hist-races-elf-orc-1024 table event_kind_role a72cdc51e6ddc171c3712eb1d7a8f5009cb4759a8561d2785712deadfe36e0fb
+hist-races-elf-orc-1024 table event_kind_value 0ed4ada6d848301b2b0ed1ef17d4073d78b84697102d243ea2be48a25b672be3
 hist-races-elf-orc-1024 table event_participant 8df0715e4de0c9f22e7f55453e9ec19304dc8fa358b08dd2b5e3d975fcee5f31
 hist-races-elf-orc-1024 table event_value a210e7f401dc06a6700a121db2d7bf801978866155e4d95542ae9b43d24c7d02
 hist-races-elf-orc-1024 table phase bd84e8ffe2a370665f017bdf019d6764a4224f45f9badd905c569cf1490ae550
 hist-races-elf-orc-1024 table region_control 683035ce7ec8c822aabed8144a507e524473a3f47f58fe1fc143cbe8da911410
 hist-races-elf-orc-1024 table relation cbbd5f990c53684d7ae650b40fcb5656e02261b53da5f6a7d8c819c92f2828f8
-hist-races-elf-orc-1024 table settlement 78914edad18f87d9c79049b8ec7b29eef8af06c9ae5e971cc7830a11dc4a964a
+hist-races-elf-orc-1024 table settlement 1bc027e0b0cda2e3af0d333e0200aafe11a550cb37b522c765a4e6ccd9b4095d
 hist-races-elf-orc-1024 table settlement_census b45a8868c0d0a2dd3bf10a93ca9111bcd1b46c38e21ea6128f8dfe0bc4b10f36
 hist-races-elf-orc-1024 report end_year = 6000
 hist-races-elf-orc-1024 report phases_opening = 2
@@ -2496,6 +2521,11 @@ hist-races-elf-orc-1024 report events_truce = 0
 hist-races-elf-orc-1024 report events_region_ceded = 0
 hist-races-elf-orc-1024 report events_civ_conquered = 0
 hist-races-elf-orc-1024 report events_settlement_abandoned_to = 0
+hist-races-elf-orc-1024 report events_refugees_settled = 0
+hist-races-elf-orc-1024 report events_tribute = 0
+hist-races-elf-orc-1024 report events_war_won = 0
+hist-races-elf-orc-1024 report events_search_abandoned = 0
+hist-races-elf-orc-1024 report events_refuge_held = 0
 hist-races-elf-orc-1024 report civilizations = 3
 hist-races-elf-orc-1024 report civilizations_alive = 3
 hist-races-elf-orc-1024 report settlements = 45
@@ -2630,13 +2660,13 @@ hist-races-elf-orc-1024 e102 Famine struck Raelil; 156 died.
 hist-races-elf-orc-1024 e103 Famine struck Secael; 209 died.
 hist-races-elf-orc-1024 e104 Famine struck Lini; 111 died.
 hist-races-elf-orc-1024 e105 Famine struck Aevond; 110 died.
-hist-races-elf-orc-1024 e106 The Shuuzthom Horde sent settlers from Thum Camp to found Thom Camp in South Downs.
+hist-races-elf-orc-1024 e106 The Shuuzthom Horde sent settlers from Thum Camp to found Dash Fort in South Downs.
 hist-races-elf-orc-1024 e107 The Shuuzthom Horde sent settlers from Thum Camp to found A'urok in Southeast Steppe.
 hist-races-elf-orc-1024 e108 Famine struck Elinvadell; 109 died.
 hist-races-elf-orc-1024 e109 Plague broke out in Rire; 355 died.
 hist-races-elf-orc-1024 e110 The plague spread to Raelil; 193 died.
 hist-races-elf-orc-1024 e111 The plague spread to Elilae; 131 died.
-hist-races-elf-orc-1024 e112 Thom Camp grew into a town of 1507.
+hist-races-elf-orc-1024 e112 Dash Fort grew into a town of 1507.
 hist-races-elf-orc-1024 e113 The Shuuzthom Horde sent settlers from Thum Camp to found Ugal'kuuk Fort in the Leas of Frost.
 hist-races-elf-orc-1024 e114 Plague broke out in Iennglosdell; 268 died.
 hist-races-elf-orc-1024 e115 A'urok grew into a town of 1510.
@@ -2993,15 +3023,15 @@ hist-dense-1024 homes ra6 y5618 n1 14
 hist-dense-1024 table civilization 2072853abc55c3d33ce8e79180d0b1228ebd9c30658297fd502465753e6d446d
 hist-dense-1024 table event b501e1f29633169844744367513d55d627f5d7962d26051931ebb9cbffaadefd
 hist-dense-1024 table event_cause 164a425b70363d6ec4c34efd279b9a511cc111bacdf98117eb9d855d330d2e1c
-hist-dense-1024 table event_kind c51f995a98efd2947f096f162bd85a224528e0138d28b9999a9c83a245f45786
-hist-dense-1024 table event_kind_role bc566753d2e7d43e4d062a0bcd55a104707becf9f775f8a60eaa63a6afd1daf2
-hist-dense-1024 table event_kind_value 781821ff7e1ee9c8d9159b8746873a36236bedb9eed25ff734efcb3dff1970a2
+hist-dense-1024 table event_kind 597ed5b0fcd34fc10fd84f7e04e8c16df3ebec801046f2a1c6072df2c15034fc
+hist-dense-1024 table event_kind_role a72cdc51e6ddc171c3712eb1d7a8f5009cb4759a8561d2785712deadfe36e0fb
+hist-dense-1024 table event_kind_value 0ed4ada6d848301b2b0ed1ef17d4073d78b84697102d243ea2be48a25b672be3
 hist-dense-1024 table event_participant 7bec7ed70fbe9bb9fce37aebf1750e44f81b515c55890d066cfb6816d1c7a090
 hist-dense-1024 table event_value b756959e38cb874c5826d19488ba40dde1610cdfbeefe9b23e7443deb7c2c915
 hist-dense-1024 table phase e3d438aa49e58058ddb5a361cd62e840cfb750024bb9c164c49bfbf8bcc526bc
 hist-dense-1024 table region_control 5d83c8b7088cb1e5c63b094401ff2f29e998701a98587f6e90c4b5317e60b6fc
 hist-dense-1024 table relation cbbd5f990c53684d7ae650b40fcb5656e02261b53da5f6a7d8c819c92f2828f8
-hist-dense-1024 table settlement 13701fc8fa4ddcbf376a1241864cb69d90db718b18545cc28ace76add7e19940
+hist-dense-1024 table settlement c7e6a0caa11251cb4578680ce7d821bd75747525fc592d829f3f4c7614650492
 hist-dense-1024 table settlement_census bf6bc8f9dcac30e22af9209054cfa0cc076eef7492799cf16d7167e5fdfd31f6
 hist-dense-1024 report end_year = 6000
 hist-dense-1024 report phases_opening = 6
@@ -3042,6 +3072,11 @@ hist-dense-1024 report events_truce = 0
 hist-dense-1024 report events_region_ceded = 0
 hist-dense-1024 report events_civ_conquered = 0
 hist-dense-1024 report events_settlement_abandoned_to = 0
+hist-dense-1024 report events_refugees_settled = 0
+hist-dense-1024 report events_tribute = 0
+hist-dense-1024 report events_war_won = 0
+hist-dense-1024 report events_search_abandoned = 0
+hist-dense-1024 report events_refuge_held = 0
 hist-dense-1024 report civilizations = 10
 hist-dense-1024 report civilizations_alive = 10
 hist-dense-1024 report settlements = 89
@@ -3195,10 +3230,10 @@ hist-dense-1024 e121 Naslag Pit grew into a village of 250.
 hist-dense-1024 e122 Plague broke out in Zaz-Gigg Hole; 1430 died.
 hist-dense-1024 e123 The plague spread to Gnib; 147 died.
 hist-dense-1024 e124 The plague spread to Slunkgneez Hole; 138 died.
-hist-dense-1024 e125 The Skagnink Mob sent settlers from Gnik-Koz Pit to found Slabgnob in Horsegrass.
+hist-dense-1024 e125 The Skagnink Mob sent settlers from Gnik-Koz Pit to found Grub Hole in Horsegrass.
 hist-dense-1024 e126 Famine struck Eloithiend; 789 died.
 hist-dense-1024 e127 Skrag Pit grew into a village of 254.
-hist-dense-1024 e128 Slabgnob grew into a village of 251.
+hist-dense-1024 e128 Grub Hole grew into a village of 251.
 hist-dense-1024 e129 Famine struck Raegledell; 136 died.
 hist-dense-1024 e130 Plague broke out in Zogak; 190 died.
 hist-dense-1024 e131 The plague spread to Gub Pit; 188 died.
@@ -3215,7 +3250,7 @@ hist-dense-1024 e141 Naslag Pit grew into a town of 2021.
 hist-dense-1024 e142 Skrag Pit grew into a town of 1889.
 hist-dense-1024 e143 Krozz-Bizz Hole grew into a village of 285.
 hist-dense-1024 e144 The Skagnink Mob sent settlers from Zogak to found Dreet in the Quiet Steppes.
-hist-dense-1024 e145 Slabgnob grew into a town of 2254.
+hist-dense-1024 e145 Grub Hole grew into a town of 2254.
 hist-dense-1024 e146 The Skagnink Mob sent settlers from Gnik-Koz Pit to found Kazz Pit in Sexton's Steppe.
 hist-dense-1024 e147 Dreet grew into a village of 269.
 hist-dense-1024 e148 Kazz Pit grew into a village of 274.
@@ -3227,7 +3262,7 @@ hist-dense-1024 e153 Skat grew into a town of 1924.
 hist-dense-1024 e154 The Skagnink Mob sent settlers from Naslag Pit to found Sliz in Southeast Steppe.
 hist-dense-1024 e155 Kazz Pit grew into a town of 1925.
 hist-dense-1024 e156 Slizeeb grew into a town of 1842.
-hist-dense-1024 e157 The Skagnink Mob sent settlers from Slabgnob to found Skeegrizz in Horsegrass.
+hist-dense-1024 e157 The Skagnink Mob sent settlers from Grub Hole to found Skeegrizz in Horsegrass.
 hist-dense-1024 e158 Sliz grew into a town of 1808.
 hist-dense-1024 e159 Skeegrizz grew into a town of 2083.
 hist-dense-1024 e160 The Skagnink Mob sent settlers from Krozz-Bizz Hole to found Goz Pit in East Steppe.
@@ -3236,9 +3271,9 @@ hist-dense-1024 e162 Goz Pit grew into a town of 1912.
 hist-dense-1024 e163 The Skagnink Mob sent settlers from Krozz-Bizz Hole to found Kreeg Pit in East Steppe.
 hist-dense-1024 e164 The Fiall Court sent settlers from Lotwyll Glade to found Sianba in Wychbrake.
 hist-dense-1024 e165 Skat Pit grew into a town of 1801.
-hist-dense-1024 e166 The Skagnink Mob sent settlers from Slabgnob to found Zasnab in Horsegrass.
+hist-dense-1024 e166 The Skagnink Mob sent settlers from Grub Hole to found Zasnab in Horsegrass.
 hist-dense-1024 e167 Kreeg Pit grew into a town of 1766.
-hist-dense-1024 e168 The Skagnink Mob sent settlers from Slabgnob to found Drokdrunk in Horsegrass.
+hist-dense-1024 e168 The Skagnink Mob sent settlers from Grub Hole to found Drokdrunk in Horsegrass.
 hist-dense-1024 e169 Sianba grew into a village of 273.
 hist-dense-1024 e170 Zasnab grew into a town of 1589.
 hist-dense-1024 e171 The Hold of Hurktuli sent settlers from Timmhi to found Draimthrai Hold in North Peaks.
@@ -3274,7 +3309,7 @@ hist-dense-1024 e200 The plague spread to Naslag Pit; 174 died.
 hist-dense-1024 e201 Gabguzz grew into a town of 1501.
 hist-dense-1024 e202 Ysy grew into a village of 250.
 hist-dense-1024 e203 Plague broke out in Timmhi; 1121 died.
-hist-dense-1024 e204 Famine struck Slabgnob; 445 died.
+hist-dense-1024 e204 Famine struck Grub Hole; 445 died.
 hist-dense-1024 e205 The Skagnink Mob sent settlers from Dreet to found Drik-Sneez Hole in the Quiet Steppes.
 hist-dense-1024 e206 Ashealton grew into a town of 1518.
 hist-dense-1024 e207 The Twoll Court sent settlers from Shaepee to found Eefysh Glade in the Hurst of Yews.
@@ -3382,7 +3417,7 @@ hist-dense-1024 e380 Plague broke out in Gragg-Grix Hole; 362 died.
 hist-dense-1024 e381 The plague spread to Kisnozz Hole; 249 died.
 hist-dense-1024 e382 Aludford grew into a city of 8010.
 hist-dense-1024 e383 Famine struck Skokskuk Hole; 276 died.
-hist-dense-1024 e384 A succession crisis at Slabgnob shook the Zubgeeg Horde.
+hist-dense-1024 e384 A succession crisis at Grub Hole shook the Zubgeeg Horde.
 hist-dense-1024 e385 Famine struck Grun; 93 died.
 hist-dense-1024 e386 Plague broke out in Aludford; 1839 died.
 hist-dense-1024 e387 Aludford dwindled to 6369 souls.
@@ -3409,8 +3444,8 @@ hist-dense-1024 e407 Plague broke out in Skat; 562 died.
 hist-dense-1024 e408 Aloston grew into a town of 1501.
 hist-dense-1024 e409 Famine struck Sitholie; 150 died.
 hist-dense-1024 e410 Aludford grew into a city of 8001.
-hist-dense-1024 e411 A succession crisis at Slabgnob shook the Zubgeeg Horde.
-hist-dense-1024 e412 Plague broke out in Slabgnob; 1395 died.
+hist-dense-1024 e411 A succession crisis at Grub Hole shook the Zubgeeg Horde.
+hist-dense-1024 e412 Plague broke out in Grub Hole; 1395 died.
 hist-dense-1024 e413 Plague broke out in Skat Pit; 1438 died.
 hist-dense-1024 e414 The plague spread to Goz Pit; 101 died.
 hist-dense-1024 e415 Rordford grew into a town of 1506.
@@ -3732,15 +3767,15 @@ hist-peoples-42-1024 homes ra6 y5596 n1 8
 hist-peoples-42-1024 table civilization f498f30ff45f3cc2f32e4da53ca78390e069a1f33e3bc9ced02873ad2a50c17b
 hist-peoples-42-1024 table event 1541bc451ed9f688c40be7e2a7d097efea09557044f28837e7cf57e8c11d9e1d
 hist-peoples-42-1024 table event_cause 3dfb2e2d5b0cf817ae01860d068f1a5ad01b1ba14f35695c8a634e5e10425aa1
-hist-peoples-42-1024 table event_kind c51f995a98efd2947f096f162bd85a224528e0138d28b9999a9c83a245f45786
-hist-peoples-42-1024 table event_kind_role bc566753d2e7d43e4d062a0bcd55a104707becf9f775f8a60eaa63a6afd1daf2
-hist-peoples-42-1024 table event_kind_value 781821ff7e1ee9c8d9159b8746873a36236bedb9eed25ff734efcb3dff1970a2
+hist-peoples-42-1024 table event_kind 597ed5b0fcd34fc10fd84f7e04e8c16df3ebec801046f2a1c6072df2c15034fc
+hist-peoples-42-1024 table event_kind_role a72cdc51e6ddc171c3712eb1d7a8f5009cb4759a8561d2785712deadfe36e0fb
+hist-peoples-42-1024 table event_kind_value 0ed4ada6d848301b2b0ed1ef17d4073d78b84697102d243ea2be48a25b672be3
 hist-peoples-42-1024 table event_participant 768ef3d423267225e9dd8b4b480a972d4b9e8e9eda5e2e0aafc8725d8146e3f0
 hist-peoples-42-1024 table event_value f722b7b07e2d5b74c8cd097f819de91ef58d0fa02f113d387f89bb952ae3de93
 hist-peoples-42-1024 table phase 59b00a6024161a54d4bfafed0a94942dd31ee723026a52bbc3b385f5339070d6
 hist-peoples-42-1024 table region_control 6c37b7d1c10aa4c9eb9c99c28ffb644931c798875016885dffda719fe5c3ab36
 hist-peoples-42-1024 table relation cbbd5f990c53684d7ae650b40fcb5656e02261b53da5f6a7d8c819c92f2828f8
-hist-peoples-42-1024 table settlement 1650e7c7bf2d86e7b3227c564d6af069ba4991b8fa1699c9f8bd96c26a2dc740
+hist-peoples-42-1024 table settlement 6d1f681dca8823b313f16c587ef59774ebf94534cbb5f15bad0b224bcd008707
 hist-peoples-42-1024 table settlement_census b0d6c9b7d31c8e24a323510f8f8e66f224cafc380cf8da569d3e831a9ba8bc42
 hist-peoples-42-1024 report end_year = 6000
 hist-peoples-42-1024 report phases_opening = 6
@@ -3781,6 +3816,11 @@ hist-peoples-42-1024 report events_truce = 0
 hist-peoples-42-1024 report events_region_ceded = 0
 hist-peoples-42-1024 report events_civ_conquered = 0
 hist-peoples-42-1024 report events_settlement_abandoned_to = 0
+hist-peoples-42-1024 report events_refugees_settled = 0
+hist-peoples-42-1024 report events_tribute = 0
+hist-peoples-42-1024 report events_war_won = 0
+hist-peoples-42-1024 report events_search_abandoned = 0
+hist-peoples-42-1024 report events_refuge_held = 0
 hist-peoples-42-1024 report civilizations = 12
 hist-peoples-42-1024 report civilizations_alive = 12
 hist-peoples-42-1024 report settlements = 96
@@ -4131,7 +4171,7 @@ hist-peoples-42-1024 e375 The plague spread to Neetch-Gnag Hole; 294 died.
 hist-peoples-42-1024 e376 Famine struck Beedruzz; 639 died.
 hist-peoples-42-1024 e377 Plague broke out in Bromstead; 504 died.
 hist-peoples-42-1024 e378 The plague spread to Meackham; 318 died.
-hist-peoples-42-1024 e379 The Kingdom of Stard sent settlers from Weckdeackham to found Stirtick in North Downs.
+hist-peoples-42-1024 e379 The Kingdom of Stard sent settlers from Weckdeackham to found Herd in North Downs.
 hist-peoples-42-1024 e380 Plague broke out in Grirnbra; 2460 died.
 hist-peoples-42-1024 e381 Grirnbra dwindled to 5945 souls.
 hist-peoples-42-1024 e382 Plague broke out in Wuldbury; 3408 died.
@@ -4320,9 +4360,9 @@ syn-0 homes ra6 y1844 n1 25
 syn-0 table civilization 8455be8fd58526d89dc488d7823bfcfee8fb98498eccecc7e2e3e47b0d3e9ae3
 syn-0 table event c76f355bcbaca45c5c1a38f96f147c3279931a5f13843150cb8622c7ddbb1e05
 syn-0 table event_cause f9be9bac7b6a6662c247f2dbe348db2d7f857368b947f56362b27538e612f01b
-syn-0 table event_kind c51f995a98efd2947f096f162bd85a224528e0138d28b9999a9c83a245f45786
-syn-0 table event_kind_role bc566753d2e7d43e4d062a0bcd55a104707becf9f775f8a60eaa63a6afd1daf2
-syn-0 table event_kind_value 781821ff7e1ee9c8d9159b8746873a36236bedb9eed25ff734efcb3dff1970a2
+syn-0 table event_kind 597ed5b0fcd34fc10fd84f7e04e8c16df3ebec801046f2a1c6072df2c15034fc
+syn-0 table event_kind_role a72cdc51e6ddc171c3712eb1d7a8f5009cb4759a8561d2785712deadfe36e0fb
+syn-0 table event_kind_value 0ed4ada6d848301b2b0ed1ef17d4073d78b84697102d243ea2be48a25b672be3
 syn-0 table event_participant 94fbfceda1666eb878bbd785c5a86018fcdc93597477a7970b44f4bf77128ea7
 syn-0 table event_value b1722305b695de54f245103cfe2af5284556383093ee27e63d0be2306595c073
 syn-0 table phase ad3fb2b4287e871cdc905d368d4396153b2887b47735ea33cc0f4554c376ab68
@@ -4369,6 +4409,11 @@ syn-0 report events_truce = 0
 syn-0 report events_region_ceded = 0
 syn-0 report events_civ_conquered = 0
 syn-0 report events_settlement_abandoned_to = 0
+syn-0 report events_refugees_settled = 0
+syn-0 report events_tribute = 0
+syn-0 report events_war_won = 0
+syn-0 report events_search_abandoned = 0
+syn-0 report events_refuge_held = 0
 syn-0 report civilizations = 6
 syn-0 report civilizations_alive = 6
 syn-0 report settlements = 13
@@ -4468,9 +4513,9 @@ syn-1 homes ra1 y0 n1 1
 syn-1 table civilization 4446eb5ac0b26614d404d5e31b920d0f6873638f361eda3c44eaacbf30ff172c
 syn-1 table event f7015332d33199f4987822e659b9acc99db8216b2082aae1d620774bf5d4b1cb
 syn-1 table event_cause ed79cd863bb68d57c722efe5869aa5301f7ec367e614f300d084dded58718653
-syn-1 table event_kind c51f995a98efd2947f096f162bd85a224528e0138d28b9999a9c83a245f45786
-syn-1 table event_kind_role bc566753d2e7d43e4d062a0bcd55a104707becf9f775f8a60eaa63a6afd1daf2
-syn-1 table event_kind_value 781821ff7e1ee9c8d9159b8746873a36236bedb9eed25ff734efcb3dff1970a2
+syn-1 table event_kind 597ed5b0fcd34fc10fd84f7e04e8c16df3ebec801046f2a1c6072df2c15034fc
+syn-1 table event_kind_role a72cdc51e6ddc171c3712eb1d7a8f5009cb4759a8561d2785712deadfe36e0fb
+syn-1 table event_kind_value 0ed4ada6d848301b2b0ed1ef17d4073d78b84697102d243ea2be48a25b672be3
 syn-1 table event_participant 7b1d9f87b7853dd6b517a343b158658acb36a4d5813bc5b4d7f9bb7a443e80a2
 syn-1 table event_value 866554da9df14ed713d26705bc312f16f6f7b310682aba044e727bb3ba9468d2
 syn-1 table phase 90795a24abc4f0fb42bfe3503793797ff687a273caac3d6f96049fe9b4acbc18
@@ -4517,6 +4562,11 @@ syn-1 report events_truce = 0
 syn-1 report events_region_ceded = 0
 syn-1 report events_civ_conquered = 0
 syn-1 report events_settlement_abandoned_to = 0
+syn-1 report events_refugees_settled = 0
+syn-1 report events_tribute = 0
+syn-1 report events_war_won = 0
+syn-1 report events_search_abandoned = 0
+syn-1 report events_refuge_held = 0
 syn-1 report civilizations = 1
 syn-1 report civilizations_alive = 1
 syn-1 report settlements = 4
@@ -4617,9 +4667,9 @@ syn-2 homes ra4 y1390 n1 6
 syn-2 table civilization fc11514b523cca63bc6c1c75131950d5dc144722deb1b9c608a3e1e430792a2f
 syn-2 table event a455153c0efecd843900147561fdf072a437e4b0db8efb45a8416b718514e8d6
 syn-2 table event_cause 68d2e0e0ad96c771f760ec023981cc4b7ef5385530f9ca0b29e063fb37286511
-syn-2 table event_kind c51f995a98efd2947f096f162bd85a224528e0138d28b9999a9c83a245f45786
-syn-2 table event_kind_role bc566753d2e7d43e4d062a0bcd55a104707becf9f775f8a60eaa63a6afd1daf2
-syn-2 table event_kind_value 781821ff7e1ee9c8d9159b8746873a36236bedb9eed25ff734efcb3dff1970a2
+syn-2 table event_kind 597ed5b0fcd34fc10fd84f7e04e8c16df3ebec801046f2a1c6072df2c15034fc
+syn-2 table event_kind_role a72cdc51e6ddc171c3712eb1d7a8f5009cb4759a8561d2785712deadfe36e0fb
+syn-2 table event_kind_value 0ed4ada6d848301b2b0ed1ef17d4073d78b84697102d243ea2be48a25b672be3
 syn-2 table event_participant a099192d069c18fffc93990c3d8b25c3e1ff32fdd249803315029fdaa62f2bae
 syn-2 table event_value 44a48526d5391687553c6e006c15fd07611afaa954a5923901681b78446b651b
 syn-2 table phase 9445d660875a92c29b2944d82ad1e363bd575b179222c2a403ce6167c35c681b
@@ -4666,6 +4716,11 @@ syn-2 report events_truce = 0
 syn-2 report events_region_ceded = 0
 syn-2 report events_civ_conquered = 0
 syn-2 report events_settlement_abandoned_to = 0
+syn-2 report events_refugees_settled = 0
+syn-2 report events_tribute = 0
+syn-2 report events_war_won = 0
+syn-2 report events_search_abandoned = 0
+syn-2 report events_refuge_held = 0
 syn-2 report civilizations = 2
 syn-2 report civilizations_alive = 2
 syn-2 report settlements = 5
@@ -4864,9 +4919,9 @@ syn-3 homes ra6 y5602 n1 12
 syn-3 table civilization db527b0dd70601d3968375c619f88db4b890728cc2e999709fdec0a54de8fa60
 syn-3 table event 460836e81e03640eebe9f7b3842768fdd3e4c965f97cec684190d5502aa6e130
 syn-3 table event_cause 23f29caa1ea50c72792ae1d7a9fa1069487a90549714c155652315bfce665732
-syn-3 table event_kind c51f995a98efd2947f096f162bd85a224528e0138d28b9999a9c83a245f45786
-syn-3 table event_kind_role bc566753d2e7d43e4d062a0bcd55a104707becf9f775f8a60eaa63a6afd1daf2
-syn-3 table event_kind_value 781821ff7e1ee9c8d9159b8746873a36236bedb9eed25ff734efcb3dff1970a2
+syn-3 table event_kind 597ed5b0fcd34fc10fd84f7e04e8c16df3ebec801046f2a1c6072df2c15034fc
+syn-3 table event_kind_role a72cdc51e6ddc171c3712eb1d7a8f5009cb4759a8561d2785712deadfe36e0fb
+syn-3 table event_kind_value 0ed4ada6d848301b2b0ed1ef17d4073d78b84697102d243ea2be48a25b672be3
 syn-3 table event_participant 8f6f83a1ebfcc38683e731c89bba8fa763413cac47394149a293369e24ba1b69
 syn-3 table event_value 475c2c8793d1c32dc855ed9d14a5391095574230757fe71ccf0ade945f591ccc
 syn-3 table phase c18c8e927ac3ba4de23f54a9de245646edf68081d6ab93887824aabf17882296
@@ -4913,6 +4968,11 @@ syn-3 report events_truce = 0
 syn-3 report events_region_ceded = 0
 syn-3 report events_civ_conquered = 0
 syn-3 report events_settlement_abandoned_to = 0
+syn-3 report events_refugees_settled = 0
+syn-3 report events_tribute = 0
+syn-3 report events_war_won = 0
+syn-3 report events_search_abandoned = 0
+syn-3 report events_refuge_held = 0
 syn-3 report civilizations = 3
 syn-3 report civilizations_alive = 3
 syn-3 report settlements = 9
@@ -5282,9 +5342,9 @@ syn-4 homes ra6 y1880 n4 44
 syn-4 table civilization df1256413a98c12eb01539e81d3569b900c87f17fbeaf2dd712154ebbf8b0037
 syn-4 table event 3858a3f1bdbc1ba545831a0cc65f0cbee71e50debe8afa097eaae8f7baa6eb1d
 syn-4 table event_cause d6dfa8d2ff87ade63ee15bc561a57d5aa9ad788bfc919272e6e5f262d9e292b7
-syn-4 table event_kind c51f995a98efd2947f096f162bd85a224528e0138d28b9999a9c83a245f45786
-syn-4 table event_kind_role bc566753d2e7d43e4d062a0bcd55a104707becf9f775f8a60eaa63a6afd1daf2
-syn-4 table event_kind_value 781821ff7e1ee9c8d9159b8746873a36236bedb9eed25ff734efcb3dff1970a2
+syn-4 table event_kind 597ed5b0fcd34fc10fd84f7e04e8c16df3ebec801046f2a1c6072df2c15034fc
+syn-4 table event_kind_role a72cdc51e6ddc171c3712eb1d7a8f5009cb4759a8561d2785712deadfe36e0fb
+syn-4 table event_kind_value 0ed4ada6d848301b2b0ed1ef17d4073d78b84697102d243ea2be48a25b672be3
 syn-4 table event_participant fe9bb86c8a7550b0ac82185e190c64ae2584f4c4926ffc8dea5539cd71eb0e7e
 syn-4 table event_value 0be2cc0f31ec574fa2e041f9e4f40206f37b3120f7da901a553ae23cec0b2883
 syn-4 table phase c62c5da93501c686f0839dc2bf95c394cb4a1998fe4bb7ca8e6c0bb4d82603a6
@@ -5331,6 +5391,11 @@ syn-4 report events_truce = 0
 syn-4 report events_region_ceded = 0
 syn-4 report events_civ_conquered = 0
 syn-4 report events_settlement_abandoned_to = 1
+syn-4 report events_refugees_settled = 0
+syn-4 report events_tribute = 0
+syn-4 report events_war_won = 0
+syn-4 report events_search_abandoned = 0
+syn-4 report events_refuge_held = 0
 syn-4 report civilizations = 6
 syn-4 report civilizations_alive = 6
 syn-4 report settlements = 8
@@ -5513,9 +5578,9 @@ syn-5 homes ra1 y0 n4 6
 syn-5 table civilization 16a88ae8d82d2d228ca13f163b39992ef653cb8c626861478e0be64f0865b3c5
 syn-5 table event 3c3b4578bb94a89a1a6dcca37f9df990b313760ad4c346231b53f123c64314a4
 syn-5 table event_cause 30ce76f41019e620fbad00d06d3a13d4d6b915938fbf249f141bc7ce4656f5b4
-syn-5 table event_kind c51f995a98efd2947f096f162bd85a224528e0138d28b9999a9c83a245f45786
-syn-5 table event_kind_role bc566753d2e7d43e4d062a0bcd55a104707becf9f775f8a60eaa63a6afd1daf2
-syn-5 table event_kind_value 781821ff7e1ee9c8d9159b8746873a36236bedb9eed25ff734efcb3dff1970a2
+syn-5 table event_kind 597ed5b0fcd34fc10fd84f7e04e8c16df3ebec801046f2a1c6072df2c15034fc
+syn-5 table event_kind_role a72cdc51e6ddc171c3712eb1d7a8f5009cb4759a8561d2785712deadfe36e0fb
+syn-5 table event_kind_value 0ed4ada6d848301b2b0ed1ef17d4073d78b84697102d243ea2be48a25b672be3
 syn-5 table event_participant 40f9317fe60d8acb789c3669bd62ff096a8b099bf8ce111eb18a67ac0af61921
 syn-5 table event_value 044de2652bd438c5f5cae48dffb79a5d7ae0b58e275a8690e8ea108b129aea7f
 syn-5 table phase 90795a24abc4f0fb42bfe3503793797ff687a273caac3d6f96049fe9b4acbc18
@@ -5562,6 +5627,11 @@ syn-5 report events_truce = 0
 syn-5 report events_region_ceded = 0
 syn-5 report events_civ_conquered = 0
 syn-5 report events_settlement_abandoned_to = 0
+syn-5 report events_refugees_settled = 0
+syn-5 report events_tribute = 0
+syn-5 report events_war_won = 0
+syn-5 report events_search_abandoned = 0
+syn-5 report events_refuge_held = 0
 syn-5 report civilizations = 1
 syn-5 report civilizations_alive = 1
 syn-5 report settlements = 4
@@ -5750,9 +5820,9 @@ syn-6 homes ra4 y1407 n1 14
 syn-6 table civilization 426438e9731cfb1fd3697fdbb6992fbb643f929f597bba107aff9ded69b57934
 syn-6 table event 17991d03ba36db725f9576e5b01d7f5077db2cdbfe42539162a7c1b871d39731
 syn-6 table event_cause ad1ab910f74d1b5d76ce991492b6db268d32c8950df21ec6f8a066709979c4da
-syn-6 table event_kind c51f995a98efd2947f096f162bd85a224528e0138d28b9999a9c83a245f45786
-syn-6 table event_kind_role bc566753d2e7d43e4d062a0bcd55a104707becf9f775f8a60eaa63a6afd1daf2
-syn-6 table event_kind_value 781821ff7e1ee9c8d9159b8746873a36236bedb9eed25ff734efcb3dff1970a2
+syn-6 table event_kind 597ed5b0fcd34fc10fd84f7e04e8c16df3ebec801046f2a1c6072df2c15034fc
+syn-6 table event_kind_role a72cdc51e6ddc171c3712eb1d7a8f5009cb4759a8561d2785712deadfe36e0fb
+syn-6 table event_kind_value 0ed4ada6d848301b2b0ed1ef17d4073d78b84697102d243ea2be48a25b672be3
 syn-6 table event_participant 67e93bda5e106f772dee7c31180b0583647264577c950caea55ca74586c4ede5
 syn-6 table event_value d1a9e2b011581ac92636c1a6007e9ddbac607a5ad5b41653cbc881b0aa294e79
 syn-6 table phase b7bcb5c9404e25917c06996f8ffa97a69260089ab7f293c8ed2fc752d2a19da6
@@ -5799,6 +5869,11 @@ syn-6 report events_truce = 0
 syn-6 report events_region_ceded = 0
 syn-6 report events_civ_conquered = 0
 syn-6 report events_settlement_abandoned_to = 0
+syn-6 report events_refugees_settled = 0
+syn-6 report events_tribute = 0
+syn-6 report events_war_won = 0
+syn-6 report events_search_abandoned = 0
+syn-6 report events_refuge_held = 0
 syn-6 report civilizations = 3
 syn-6 report civilizations_alive = 3
 syn-6 report settlements = 6
@@ -5950,12 +6025,12 @@ syn-7 score rg16 ra6 843 1524
 syn-7 homes ra2 y0 n1 5
 syn-7 homes ra5 y4932 n1 2
 syn-7 homes ra6 y5637 n1 15
-syn-7 table civilization c2297cb936e0d2288ffb034aad52fef08078895d0da3b96dc072048ec2e20251
+syn-7 table civilization 48263ba7f67d6fc7dcb6d9b3a4ef97a7db08763ffcf6e35dd5da3694e64f0041
 syn-7 table event 174f029a96fce2189481d43462fcd85d6775da956dc28063021e3a004c7ef001
 syn-7 table event_cause 4439a35998daeadaf2fe4bdeb97e91764302b1084b2acf65e58bfc3799ebb2f8
-syn-7 table event_kind c51f995a98efd2947f096f162bd85a224528e0138d28b9999a9c83a245f45786
-syn-7 table event_kind_role bc566753d2e7d43e4d062a0bcd55a104707becf9f775f8a60eaa63a6afd1daf2
-syn-7 table event_kind_value 781821ff7e1ee9c8d9159b8746873a36236bedb9eed25ff734efcb3dff1970a2
+syn-7 table event_kind 597ed5b0fcd34fc10fd84f7e04e8c16df3ebec801046f2a1c6072df2c15034fc
+syn-7 table event_kind_role a72cdc51e6ddc171c3712eb1d7a8f5009cb4759a8561d2785712deadfe36e0fb
+syn-7 table event_kind_value 0ed4ada6d848301b2b0ed1ef17d4073d78b84697102d243ea2be48a25b672be3
 syn-7 table event_participant bd502a78a24baeacb7161a3c4b3076fc6364f5c763ade88068482ecfcd0be87f
 syn-7 table event_value 03c0a05a7f0a49a87a6a5008902ea085fa569bbb90e21b658ac683b7954f6928
 syn-7 table phase 8dd6d165e808548750b0edbda764d8f4f1b5e9a2f84407ef694cf6086d23ad60
@@ -6002,6 +6077,11 @@ syn-7 report events_truce = 0
 syn-7 report events_region_ceded = 0
 syn-7 report events_civ_conquered = 0
 syn-7 report events_settlement_abandoned_to = 0
+syn-7 report events_refugees_settled = 0
+syn-7 report events_tribute = 0
+syn-7 report events_war_won = 0
+syn-7 report events_search_abandoned = 0
+syn-7 report events_refuge_held = 0
 syn-7 report civilizations = 4
 syn-7 report civilizations_alive = 4
 syn-7 report settlements = 19
@@ -6062,13 +6142,13 @@ syn-7 e28 Gordman awakened the Humans in Synthetic 2.
 syn-7 e29 The Humans founded the Kingdom of Beal in Synthetic 2.
 syn-7 e30 The Kingdom of Beal founded Bralddeldton in Synthetic 2.
 syn-7 e31 A succession crisis at Skrozskiz Hole shook the Gib-Grig Mob.
-syn-7 e32 The Warrens of Girkkat broke away from the Gib-Grig Mob, taking 3 settlements with it.
+syn-7 e32 The Skiz-Sleet Horde broke away from the Gib-Grig Mob, taking 3 settlements with it.
 syn-7 e33 Plague broke out in Skruz Pit; 37 died.
 syn-7 e34 Famine struck Snitneegg; 88 died.
-syn-7 e35 A succession crisis at Slax Hole shook the Warrens of Girkkat.
+syn-7 e35 A succession crisis at Slax Hole shook the Skiz-Sleet Horde.
 syn-7 e36 Famine struck Kuk; 73 died.
 syn-7 e37 Famine struck Sleeg; 69 died.
-syn-7 e38 A succession crisis at Slax Hole shook the Warrens of Girkkat.
+syn-7 e38 A succession crisis at Slax Hole shook the Skiz-Sleet Horde.
 syn-7 e39 Famine struck Sleeg; 33 died.
 syn-7 e40 Famine struck Guzz Pit; 108 died.
 syn-7 e41 Slax Hole grew into a town of 1501.
@@ -6077,7 +6157,7 @@ syn-7 e43 Famine struck Sneegg Hole; 45 died.
 syn-7 e44 Bralddeldton grew into a town of 1510.
 syn-7 e45 The Gib-Grig Mob passed 555 quiet years, from 5082 to 5636, in which 37 new generations of rulers came to power.
 syn-7 e46 The Kingdom of Beal passed 555 quiet years, from 5082 to 5636, in which 22 new generations of rulers came to power.
-syn-7 e47 The Warrens of Girkkat passed 555 quiet years, from 5082 to 5636, in which 37 new generations of rulers came to power.
+syn-7 e47 The Skiz-Sleet Horde passed 555 quiet years, from 5082 to 5636, in which 37 new generations of rulers came to power.
 syn-7 e48 Maarkzaagh awakened the Orcs in Synthetic 15.
 syn-7 e49 The Orcs founded Clan Ghuugbarz in Synthetic 15.
 syn-7 e50 Clan Ghuugbarz founded Baakh Camp in Synthetic 15.
@@ -6085,7 +6165,7 @@ syn-7 e51 Famine struck Krark; 54 died.
 syn-7 e52 Famine struck Skazdrot; 98 died.
 syn-7 e53 Famine struck Skruz Pit; 31 died.
 syn-7 e54 Plague broke out in Slax Hole; 558 died.
-syn-7 e55 A succession crisis at Slax Hole shook the Warrens of Girkkat.
+syn-7 e55 A succession crisis at Slax Hole shook the Skiz-Sleet Horde.
 syn-7 e56 Plague broke out in Krark; 74 died.
 syn-7 e57 Famine struck Sneegg Hole; 63 died.
 syn-7 e58 A succession crisis at Skrozskiz Hole shook the Gib-Grig Mob.
@@ -6164,9 +6244,9 @@ syn-8 homes ra6 y1842 n1 3
 syn-8 table civilization de2877188bbc97bf8eebac2f2ff3b3d1daa13620b1afeed9066175f88489e154
 syn-8 table event 2351bd6db65cc2890fa50972bed9ec8308716961e58175ffae34123355e0dc38
 syn-8 table event_cause 1c39cf96f3bbf86a836950a87eb7cea7deda7a8db07a737681ded93bbfe4bd8e
-syn-8 table event_kind c51f995a98efd2947f096f162bd85a224528e0138d28b9999a9c83a245f45786
-syn-8 table event_kind_role bc566753d2e7d43e4d062a0bcd55a104707becf9f775f8a60eaa63a6afd1daf2
-syn-8 table event_kind_value 781821ff7e1ee9c8d9159b8746873a36236bedb9eed25ff734efcb3dff1970a2
+syn-8 table event_kind 597ed5b0fcd34fc10fd84f7e04e8c16df3ebec801046f2a1c6072df2c15034fc
+syn-8 table event_kind_role a72cdc51e6ddc171c3712eb1d7a8f5009cb4759a8561d2785712deadfe36e0fb
+syn-8 table event_kind_value 0ed4ada6d848301b2b0ed1ef17d4073d78b84697102d243ea2be48a25b672be3
 syn-8 table event_participant 714569ec1606adca369617ab244d35352d88d968af68cf1f7c970030af93e007
 syn-8 table event_value a886fc7a6dbabd7b50bbe6f2b9fe4bf2c2c08f2e6aba5d3db0cb778a43003d84
 syn-8 table phase e0e0e55fe6426b8308506112b8d50028c11278202794a9dd3ce633b136db75e3
@@ -6213,6 +6293,11 @@ syn-8 report events_truce = 0
 syn-8 report events_region_ceded = 0
 syn-8 report events_civ_conquered = 0
 syn-8 report events_settlement_abandoned_to = 0
+syn-8 report events_refugees_settled = 0
+syn-8 report events_tribute = 0
+syn-8 report events_war_won = 0
+syn-8 report events_search_abandoned = 0
+syn-8 report events_refuge_held = 0
 syn-8 report civilizations = 6
 syn-8 report civilizations_alive = 6
 syn-8 report settlements = 20
@@ -6584,9 +6669,9 @@ syn-9 homes ra1 y0 n1 17
 syn-9 table civilization 7bc68118557e4402e4b7dc9f18b873382cddedcdc377a3b4b2f981b3c27318b7
 syn-9 table event 6d3b56201d5463172fa723181cd6596c84eb7933d19781723c22ab1d45022826
 syn-9 table event_cause 90bb939533bf9ed46996d6f2190346c6ca7ef8dfc09caf11b381af6b7130c07f
-syn-9 table event_kind c51f995a98efd2947f096f162bd85a224528e0138d28b9999a9c83a245f45786
-syn-9 table event_kind_role bc566753d2e7d43e4d062a0bcd55a104707becf9f775f8a60eaa63a6afd1daf2
-syn-9 table event_kind_value 781821ff7e1ee9c8d9159b8746873a36236bedb9eed25ff734efcb3dff1970a2
+syn-9 table event_kind 597ed5b0fcd34fc10fd84f7e04e8c16df3ebec801046f2a1c6072df2c15034fc
+syn-9 table event_kind_role a72cdc51e6ddc171c3712eb1d7a8f5009cb4759a8561d2785712deadfe36e0fb
+syn-9 table event_kind_value 0ed4ada6d848301b2b0ed1ef17d4073d78b84697102d243ea2be48a25b672be3
 syn-9 table event_participant 3b922b3dfef251793066db2420c4cd653ada5aeedcad7dad280141348544daf9
 syn-9 table event_value afdd935db0bd796928864619105788e8dfca60ea6aefa669c4ad4707e57c9c8f
 syn-9 table phase 90795a24abc4f0fb42bfe3503793797ff687a273caac3d6f96049fe9b4acbc18
@@ -6633,6 +6718,11 @@ syn-9 report events_truce = 0
 syn-9 report events_region_ceded = 0
 syn-9 report events_civ_conquered = 0
 syn-9 report events_settlement_abandoned_to = 0
+syn-9 report events_refugees_settled = 0
+syn-9 report events_tribute = 0
+syn-9 report events_war_won = 0
+syn-9 report events_search_abandoned = 0
+syn-9 report events_refuge_held = 0
 syn-9 report civilizations = 1
 syn-9 report civilizations_alive = 1
 syn-9 report settlements = 2
@@ -6699,15 +6789,15 @@ syn-10 homes ra4 y1397 n4 4
 syn-10 table civilization de2e486f452d09b03a4717cb265e82e14a209de4dd3644850efe1c2f0e2b879e
 syn-10 table event 6ed1a4fa2bd55db4c2f187e960ca3d3c78901de5c1b8b89a6f8e3336d2a8f895
 syn-10 table event_cause 457a507f403afe707bbcdcdc6d1fcf7b30978d43b743b10de9a98769497ebaec
-syn-10 table event_kind c51f995a98efd2947f096f162bd85a224528e0138d28b9999a9c83a245f45786
-syn-10 table event_kind_role bc566753d2e7d43e4d062a0bcd55a104707becf9f775f8a60eaa63a6afd1daf2
-syn-10 table event_kind_value 781821ff7e1ee9c8d9159b8746873a36236bedb9eed25ff734efcb3dff1970a2
+syn-10 table event_kind 597ed5b0fcd34fc10fd84f7e04e8c16df3ebec801046f2a1c6072df2c15034fc
+syn-10 table event_kind_role a72cdc51e6ddc171c3712eb1d7a8f5009cb4759a8561d2785712deadfe36e0fb
+syn-10 table event_kind_value 0ed4ada6d848301b2b0ed1ef17d4073d78b84697102d243ea2be48a25b672be3
 syn-10 table event_participant c458f75c4bc144116fa8297a781542e6c7979b6e00a87b4312a653398b3d14e1
 syn-10 table event_value 0ff86400cea3d30ee4faa34c00435235dc33987d20597c68b13f29bf82922336
 syn-10 table phase 97110c3629b87e37a6a8f53763ff57928fe3967533aa650674f553b847ed1cdb
 syn-10 table region_control e5cfef132d45400d2dfabbfe6012c868bb66a0ea9319ab26eeb8e08b79cc923d
 syn-10 table relation cbbd5f990c53684d7ae650b40fcb5656e02261b53da5f6a7d8c819c92f2828f8
-syn-10 table settlement 51f076a89fe81c845d111b0daf393100170f7644e11cd3e0010eac14593f104f
+syn-10 table settlement e5558b6cf93e621b8ce9be0ce4e475067eed5b8004a87b3ae87132cbbf7a1cd5
 syn-10 table settlement_census 0cca884171984beb9e5f127d7857cb576b588735187ad60d4b4435d17cf825fb
 syn-10 report end_year = 2000
 syn-10 report phases_opening = 2
@@ -6748,6 +6838,11 @@ syn-10 report events_truce = 0
 syn-10 report events_region_ceded = 0
 syn-10 report events_civ_conquered = 0
 syn-10 report events_settlement_abandoned_to = 0
+syn-10 report events_refugees_settled = 0
+syn-10 report events_tribute = 0
+syn-10 report events_war_won = 0
+syn-10 report events_search_abandoned = 0
+syn-10 report events_refuge_held = 0
 syn-10 report civilizations = 2
 syn-10 report civilizations_alive = 2
 syn-10 report settlements = 8
@@ -6783,10 +6878,10 @@ syn-10 e3 The Grairin Throne founded Graidin in Synthetic 2.
 syn-10 e4 The Grairin Throne passed 1347 quiet years, from 50 to 1396, in which 19 new generations of rulers came to power.
 syn-10 e5 The Grairin Throne sent settlers from Graidin to found Nurindro Hold in Synthetic 2.
 syn-10 e6 The Grairin Throne sent settlers from Graidin to found Binbron Hold in Synthetic 3.
-syn-10 e7 The Grairin Throne sent settlers from Graidin to found Todinhork in Synthetic 2.
+syn-10 e7 The Grairin Throne sent settlers from Graidin to found Bird Hold in Synthetic 2.
 syn-10 e8 The Grairin Throne sent settlers from Graidin to found Humkaik in Synthetic 2.
 syn-10 e9 Binbron Hold grew into a town of 1588.
-syn-10 e10 Todinhork grew into a town of 1549.
+syn-10 e10 Bird Hold grew into a town of 1549.
 syn-10 e11 Bientwy awakened the Faeries in Synthetic 4.
 syn-10 e12 The Faeries founded the Seess Court in Synthetic 4.
 syn-10 e13 The Seess Court founded Meebaeshae Hollow in Synthetic 4.
@@ -6859,9 +6954,9 @@ syn-11 homes ra6 y5618 n4 9
 syn-11 table civilization 7a9cbce962f01324c8432cb1e58c5cfd1156866411c62b29bef611748ec845bc
 syn-11 table event f7c05b634658a8d587d4f101aa224e7b3e5ddfa3dc8a7fbea80d8a661ed680a2
 syn-11 table event_cause 3425a2d44a70c44ccd5a624705622b087f35a920c634e2c489ea84528755b73a
-syn-11 table event_kind c51f995a98efd2947f096f162bd85a224528e0138d28b9999a9c83a245f45786
-syn-11 table event_kind_role bc566753d2e7d43e4d062a0bcd55a104707becf9f775f8a60eaa63a6afd1daf2
-syn-11 table event_kind_value 781821ff7e1ee9c8d9159b8746873a36236bedb9eed25ff734efcb3dff1970a2
+syn-11 table event_kind 597ed5b0fcd34fc10fd84f7e04e8c16df3ebec801046f2a1c6072df2c15034fc
+syn-11 table event_kind_role a72cdc51e6ddc171c3712eb1d7a8f5009cb4759a8561d2785712deadfe36e0fb
+syn-11 table event_kind_value 0ed4ada6d848301b2b0ed1ef17d4073d78b84697102d243ea2be48a25b672be3
 syn-11 table event_participant a6c747e390729d35f7ff4362155b80f8ca8cd3632b9eb828c1d92f56bde69efd
 syn-11 table event_value 75a75121e82b88fdc37f797c9244ef4df3b9c9d61275ce90d16a663e5063a50f
 syn-11 table phase 22fb9a8fe77da1251c01fef146adf7fae95ebe7fc786844ae8dd5689ca765c0a
@@ -6908,6 +7003,11 @@ syn-11 report events_truce = 0
 syn-11 report events_region_ceded = 0
 syn-11 report events_civ_conquered = 0
 syn-11 report events_settlement_abandoned_to = 0
+syn-11 report events_refugees_settled = 0
+syn-11 report events_tribute = 0
+syn-11 report events_war_won = 0
+syn-11 report events_search_abandoned = 0
+syn-11 report events_refuge_held = 0
 syn-11 report civilizations = 4
 syn-11 report civilizations_alive = 4
 syn-11 report settlements = 24
@@ -7059,12 +7159,12 @@ syn-12 homes ra3 y1098 n1 2
 syn-12 homes ra4 y1384 n1 3
 syn-12 homes ra5 y1652 n1 2
 syn-12 homes ra6 y1852 n1 5
-syn-12 table civilization e63f81ce4b3055ae5dbe6cfc00694186310cc0c4bdb70cf51e31a615e87b38c4
+syn-12 table civilization 59c452288e2613cd1134cc808c637f59a13ecfa08fa5ca15a7be56b25e019b7b
 syn-12 table event 94bbd8d4dccb2f9e0677933f845ddc40aa402a2a49a86058af776611feac9ff9
 syn-12 table event_cause 80a0f7ccbd2feb205a485e517e184ae12acd548f3ce42603522aa77f3b7c78bf
-syn-12 table event_kind c51f995a98efd2947f096f162bd85a224528e0138d28b9999a9c83a245f45786
-syn-12 table event_kind_role bc566753d2e7d43e4d062a0bcd55a104707becf9f775f8a60eaa63a6afd1daf2
-syn-12 table event_kind_value 781821ff7e1ee9c8d9159b8746873a36236bedb9eed25ff734efcb3dff1970a2
+syn-12 table event_kind 597ed5b0fcd34fc10fd84f7e04e8c16df3ebec801046f2a1c6072df2c15034fc
+syn-12 table event_kind_role a72cdc51e6ddc171c3712eb1d7a8f5009cb4759a8561d2785712deadfe36e0fb
+syn-12 table event_kind_value 0ed4ada6d848301b2b0ed1ef17d4073d78b84697102d243ea2be48a25b672be3
 syn-12 table event_participant c3e2d2a5f48ed38d634b67fcfd420c5b23e2ad7d9449b682c1b518a9319c5fee
 syn-12 table event_value 70574d0b7c378820ec83cc691a647d3129287132116fdc12eb0984c996a9b741
 syn-12 table phase d2700e6ed25b9a2ddce9575b001675758ee3217fd1c7bf262cddf00cfc833e7d
@@ -7111,6 +7211,11 @@ syn-12 report events_truce = 0
 syn-12 report events_region_ceded = 0
 syn-12 report events_civ_conquered = 0
 syn-12 report events_settlement_abandoned_to = 0
+syn-12 report events_refugees_settled = 0
+syn-12 report events_tribute = 0
+syn-12 report events_war_won = 0
+syn-12 report events_search_abandoned = 0
+syn-12 report events_refuge_held = 0
 syn-12 report civilizations = 6
 syn-12 report civilizations_alive = 6
 syn-12 report settlements = 20
@@ -7190,8 +7295,8 @@ syn-12 e47 The Duchy of Ceal passed 150 quiet years, from 1702 to 1851, in which
 syn-12 e48 Clan Koudto sent settlers from Thidinni Deep to found Brair in Synthetic 2.
 syn-12 e49 Rentsoldwick grew into a town of 1790.
 syn-12 e50 Dazdokh awakened the Orcs in Synthetic 5.
-syn-12 e51 The Orcs founded Clan Zaa in Synthetic 5.
-syn-12 e52 Clan Zaa founded Shuulthaal in Synthetic 5.
+syn-12 e51 The Orcs founded Clan Ash'azaarz in Synthetic 5.
+syn-12 e52 Clan Ash'azaarz founded Shuulthaal in Synthetic 5.
 syn-12 e53 Plague broke out in Shuulthaal; 71 died.
 syn-12 e54 Famine struck Thidinni Deep; 431 died.
 syn-12 e55 Plague broke out in Siliefiedell; 405 died.
@@ -7324,9 +7429,9 @@ syn-13 homes ra1 y0 n1 1
 syn-13 table civilization 857ba71ab0f5a7a2ec1b4226fc93cb6f746f03614d6d4cd86b8af5e3c32f279c
 syn-13 table event b1f6e6e6d532550dab704c3bc59fe7e8c12b5301fd830ef4015093bd0e9b25eb
 syn-13 table event_cause 90bb939533bf9ed46996d6f2190346c6ca7ef8dfc09caf11b381af6b7130c07f
-syn-13 table event_kind c51f995a98efd2947f096f162bd85a224528e0138d28b9999a9c83a245f45786
-syn-13 table event_kind_role bc566753d2e7d43e4d062a0bcd55a104707becf9f775f8a60eaa63a6afd1daf2
-syn-13 table event_kind_value 781821ff7e1ee9c8d9159b8746873a36236bedb9eed25ff734efcb3dff1970a2
+syn-13 table event_kind 597ed5b0fcd34fc10fd84f7e04e8c16df3ebec801046f2a1c6072df2c15034fc
+syn-13 table event_kind_role a72cdc51e6ddc171c3712eb1d7a8f5009cb4759a8561d2785712deadfe36e0fb
+syn-13 table event_kind_value 0ed4ada6d848301b2b0ed1ef17d4073d78b84697102d243ea2be48a25b672be3
 syn-13 table event_participant 939b379e5ea5fcf3a06c1ec770b209ce8c5a48c07a157e5e79c1d28d7c7bd782
 syn-13 table event_value b99058c56ace57e54fd3c7ffd596597f9b3b5635008de41ef0ab13f9f0588a31
 syn-13 table phase 90795a24abc4f0fb42bfe3503793797ff687a273caac3d6f96049fe9b4acbc18
@@ -7373,6 +7478,11 @@ syn-13 report events_truce = 0
 syn-13 report events_region_ceded = 0
 syn-13 report events_civ_conquered = 0
 syn-13 report events_settlement_abandoned_to = 0
+syn-13 report events_refugees_settled = 0
+syn-13 report events_tribute = 0
+syn-13 report events_war_won = 0
+syn-13 report events_search_abandoned = 0
+syn-13 report events_refuge_held = 0
 syn-13 report civilizations = 1
 syn-13 report civilizations_alive = 1
 syn-13 report settlements = 3
@@ -7514,9 +7624,9 @@ syn-14 homes ra4 y1409 n1 11
 syn-14 table civilization c59cacc03fa6759eb5a437056c95d7bf826b115732ff90f1b2be3c43854b120c
 syn-14 table event 1c3cfb40fff25b2633cd2059ba7be5f7ade0701253d0606e69501502b60d48cd
 syn-14 table event_cause 7d00ac2f87d575dcb9e2c345351dedee82bae69d939931742e55b1d2a2d1167b
-syn-14 table event_kind c51f995a98efd2947f096f162bd85a224528e0138d28b9999a9c83a245f45786
-syn-14 table event_kind_role bc566753d2e7d43e4d062a0bcd55a104707becf9f775f8a60eaa63a6afd1daf2
-syn-14 table event_kind_value 781821ff7e1ee9c8d9159b8746873a36236bedb9eed25ff734efcb3dff1970a2
+syn-14 table event_kind 597ed5b0fcd34fc10fd84f7e04e8c16df3ebec801046f2a1c6072df2c15034fc
+syn-14 table event_kind_role a72cdc51e6ddc171c3712eb1d7a8f5009cb4759a8561d2785712deadfe36e0fb
+syn-14 table event_kind_value 0ed4ada6d848301b2b0ed1ef17d4073d78b84697102d243ea2be48a25b672be3
 syn-14 table event_participant 2efd56af0ac662faa52aa3b3df27ffb0368662b5f569f2c2cffd55384a8e38be
 syn-14 table event_value 1acae49c74733f616fc97d7ec58a7d0f427596041e317c8cccf46d718dbaa032
 syn-14 table phase 8db0c970afd1cb9b3361610078440e85f6c11359b7dd19570d743bb841ae8431
@@ -7563,6 +7673,11 @@ syn-14 report events_truce = 0
 syn-14 report events_region_ceded = 0
 syn-14 report events_civ_conquered = 0
 syn-14 report events_settlement_abandoned_to = 0
+syn-14 report events_refugees_settled = 0
+syn-14 report events_tribute = 0
+syn-14 report events_war_won = 0
+syn-14 report events_search_abandoned = 0
+syn-14 report events_refuge_held = 0
 syn-14 report civilizations = 2
 syn-14 report civilizations_alive = 2
 syn-14 report settlements = 5
@@ -7805,9 +7920,9 @@ syn-15 homes ra6 y5520 n1 28
 syn-15 table civilization a55037dbdaa6805f44e1506184f84d9e39945503f32dbb324f81957184e6e508
 syn-15 table event 1bcfd704f08fba2505df6673642dd1fabef591bd2da9c6a816cc7dc798e5e784
 syn-15 table event_cause ca888a49935430f0c0381847b08685ac67ab0c8bb98f3c0ea5743d6801fa7894
-syn-15 table event_kind c51f995a98efd2947f096f162bd85a224528e0138d28b9999a9c83a245f45786
-syn-15 table event_kind_role bc566753d2e7d43e4d062a0bcd55a104707becf9f775f8a60eaa63a6afd1daf2
-syn-15 table event_kind_value 781821ff7e1ee9c8d9159b8746873a36236bedb9eed25ff734efcb3dff1970a2
+syn-15 table event_kind 597ed5b0fcd34fc10fd84f7e04e8c16df3ebec801046f2a1c6072df2c15034fc
+syn-15 table event_kind_role a72cdc51e6ddc171c3712eb1d7a8f5009cb4759a8561d2785712deadfe36e0fb
+syn-15 table event_kind_value 0ed4ada6d848301b2b0ed1ef17d4073d78b84697102d243ea2be48a25b672be3
 syn-15 table event_participant 8fe32ab5c4dea38ce16902a7b19de89abc5cd32d728929ebc635a33d29500d5a
 syn-15 table event_value 4fc24b9468b6a225efa44bb977bb697228336d12897f32951448814967dbd9b6
 syn-15 table phase 9414d37412d75a4d160a235e7f552eed9795ef6455024d86b5baab1bba71f4ff
@@ -7854,6 +7969,11 @@ syn-15 report events_truce = 0
 syn-15 report events_region_ceded = 0
 syn-15 report events_civ_conquered = 0
 syn-15 report events_settlement_abandoned_to = 0
+syn-15 report events_refugees_settled = 0
+syn-15 report events_tribute = 0
+syn-15 report events_war_won = 0
+syn-15 report events_search_abandoned = 0
+syn-15 report events_refuge_held = 0
 syn-15 report civilizations = 3
 syn-15 report civilizations_alive = 3
 syn-15 report settlements = 6
@@ -8085,9 +8205,9 @@ stress-0 homes ra6 y1844 n1 25
 stress-0 table civilization d1fc327c972d56c5ac41981e17933d704e5148d56f2ff92b5f628adb6ef7e6c3
 stress-0 table event 8b006eb136451d3c0c95d19fbd6205dde04454218b8bd09bcf38958d0fb5dabe
 stress-0 table event_cause 1abb4738968cdbc0b664d6d646447f7ab01abc51b3dbd23a0cd621e3d4de3db2
-stress-0 table event_kind c51f995a98efd2947f096f162bd85a224528e0138d28b9999a9c83a245f45786
-stress-0 table event_kind_role bc566753d2e7d43e4d062a0bcd55a104707becf9f775f8a60eaa63a6afd1daf2
-stress-0 table event_kind_value 781821ff7e1ee9c8d9159b8746873a36236bedb9eed25ff734efcb3dff1970a2
+stress-0 table event_kind 597ed5b0fcd34fc10fd84f7e04e8c16df3ebec801046f2a1c6072df2c15034fc
+stress-0 table event_kind_role a72cdc51e6ddc171c3712eb1d7a8f5009cb4759a8561d2785712deadfe36e0fb
+stress-0 table event_kind_value 0ed4ada6d848301b2b0ed1ef17d4073d78b84697102d243ea2be48a25b672be3
 stress-0 table event_participant d5c0f484c17807ff112c334e37124cf677ad2184a59ab1316d8d5b607b57653d
 stress-0 table event_value 795de2450d2d3768d3c8d53d7a36ccc971e6ec53357832d74256b25bf9c4e54e
 stress-0 table phase 3f410b5cb420b90068a9e0408fc930bc7b812412016d616b3dfb0a4b109b2ea7
@@ -8134,6 +8254,11 @@ stress-0 report events_truce = 0
 stress-0 report events_region_ceded = 0
 stress-0 report events_civ_conquered = 0
 stress-0 report events_settlement_abandoned_to = 11
+stress-0 report events_refugees_settled = 0
+stress-0 report events_tribute = 0
+stress-0 report events_war_won = 0
+stress-0 report events_search_abandoned = 0
+stress-0 report events_refuge_held = 0
 stress-0 report civilizations = 6
 stress-0 report civilizations_alive = 6
 stress-0 report settlements = 17
@@ -8478,9 +8603,9 @@ stress-1 homes ra1 y0 n1 1
 stress-1 table civilization 81509aa6ef0cfd9d4ed7a4df9f5d60699666e0ab2f493d986328379124db44e7
 stress-1 table event 069333f7cfd7a6e8a95145d6fa9e7552c1324377af6eb245f41d8879389c12dd
 stress-1 table event_cause f623afcfcd4e4160dc1467dd0fa68cd2a0946f0047a5fd69f66110b7a8f15921
-stress-1 table event_kind c51f995a98efd2947f096f162bd85a224528e0138d28b9999a9c83a245f45786
-stress-1 table event_kind_role bc566753d2e7d43e4d062a0bcd55a104707becf9f775f8a60eaa63a6afd1daf2
-stress-1 table event_kind_value 781821ff7e1ee9c8d9159b8746873a36236bedb9eed25ff734efcb3dff1970a2
+stress-1 table event_kind 597ed5b0fcd34fc10fd84f7e04e8c16df3ebec801046f2a1c6072df2c15034fc
+stress-1 table event_kind_role a72cdc51e6ddc171c3712eb1d7a8f5009cb4759a8561d2785712deadfe36e0fb
+stress-1 table event_kind_value 0ed4ada6d848301b2b0ed1ef17d4073d78b84697102d243ea2be48a25b672be3
 stress-1 table event_participant 09e8ab988ce88eb6b59af3c2b52d597a9c26e74f51f9636a4ae00155c4a6c136
 stress-1 table event_value 1080d875c15918181a2b9adcc458b0f375cd8ba99c7c670e0d9aa5d6f3f24d88
 stress-1 table phase 90795a24abc4f0fb42bfe3503793797ff687a273caac3d6f96049fe9b4acbc18
@@ -8527,6 +8652,11 @@ stress-1 report events_truce = 0
 stress-1 report events_region_ceded = 0
 stress-1 report events_civ_conquered = 0
 stress-1 report events_settlement_abandoned_to = 6
+stress-1 report events_refugees_settled = 0
+stress-1 report events_tribute = 0
+stress-1 report events_war_won = 0
+stress-1 report events_search_abandoned = 0
+stress-1 report events_refuge_held = 0
 stress-1 report civilizations = 1
 stress-1 report civilizations_alive = 1
 stress-1 report settlements = 7
@@ -8707,9 +8837,9 @@ stress-2 homes ra4 y1390 n1 6
 stress-2 table civilization 9af4197ec9c3d0ab60b01d4548cface2ba5c0d52771031faf90c4e1e843aeb70
 stress-2 table event b000d1bf83942bdb7f7fdf6064c147131a27826c7b7b9617721d5579bcfe9213
 stress-2 table event_cause f45dd3dcdaff4fbd2e16d7dade287492a9f76fca1be4f60a0a596c0901bc3ac7
-stress-2 table event_kind c51f995a98efd2947f096f162bd85a224528e0138d28b9999a9c83a245f45786
-stress-2 table event_kind_role bc566753d2e7d43e4d062a0bcd55a104707becf9f775f8a60eaa63a6afd1daf2
-stress-2 table event_kind_value 781821ff7e1ee9c8d9159b8746873a36236bedb9eed25ff734efcb3dff1970a2
+stress-2 table event_kind 597ed5b0fcd34fc10fd84f7e04e8c16df3ebec801046f2a1c6072df2c15034fc
+stress-2 table event_kind_role a72cdc51e6ddc171c3712eb1d7a8f5009cb4759a8561d2785712deadfe36e0fb
+stress-2 table event_kind_value 0ed4ada6d848301b2b0ed1ef17d4073d78b84697102d243ea2be48a25b672be3
 stress-2 table event_participant 7fe7c70af731ea753c6c7fb5bd5dd5cdc970fe1a392ced33ee78e5d7d3dd4513
 stress-2 table event_value 29a6426ded2294158fab2b4d1dee7240b2bd03aa37ceb0e1cf970c7f7bf288fc
 stress-2 table phase 768dd613dd1cdfde9b02faa66c6d2b12bac27b813eb398d3308456429de875ab
@@ -8756,6 +8886,11 @@ stress-2 report events_truce = 0
 stress-2 report events_region_ceded = 0
 stress-2 report events_civ_conquered = 0
 stress-2 report events_settlement_abandoned_to = 3
+stress-2 report events_refugees_settled = 0
+stress-2 report events_tribute = 0
+stress-2 report events_war_won = 0
+stress-2 report events_search_abandoned = 0
+stress-2 report events_refuge_held = 0
 stress-2 report civilizations = 2
 stress-2 report civilizations_alive = 2
 stress-2 report settlements = 7
@@ -9027,9 +9162,9 @@ stress-3 homes ra6 y5602 n1 12
 stress-3 table civilization 331373881e0a98dd550392b7e68dfec2e863895b11257562da68febae1bce73e
 stress-3 table event b72cae3ecb6a1615f70fa7cb42dfb5f2ff0b461b645c23167aa2dfa8149e8698
 stress-3 table event_cause d8d5cd96f691d7d263db186db199867ae9d3bc57f62beb823c99549867170e69
-stress-3 table event_kind c51f995a98efd2947f096f162bd85a224528e0138d28b9999a9c83a245f45786
-stress-3 table event_kind_role bc566753d2e7d43e4d062a0bcd55a104707becf9f775f8a60eaa63a6afd1daf2
-stress-3 table event_kind_value 781821ff7e1ee9c8d9159b8746873a36236bedb9eed25ff734efcb3dff1970a2
+stress-3 table event_kind 597ed5b0fcd34fc10fd84f7e04e8c16df3ebec801046f2a1c6072df2c15034fc
+stress-3 table event_kind_role a72cdc51e6ddc171c3712eb1d7a8f5009cb4759a8561d2785712deadfe36e0fb
+stress-3 table event_kind_value 0ed4ada6d848301b2b0ed1ef17d4073d78b84697102d243ea2be48a25b672be3
 stress-3 table event_participant 49db21743b50966ec5788663de4539c7287aeb35ae95fba4d38733ab197a6fa9
 stress-3 table event_value 4c0d49c532798003cbd3792d8cc92e696514784c95fdd1da3b0bfc93c77dc5f1
 stress-3 table phase fa794ced217516363d2660b999eab9f148f575930c8747d00c26369da05e2102
@@ -9076,6 +9211,11 @@ stress-3 report events_truce = 0
 stress-3 report events_region_ceded = 0
 stress-3 report events_civ_conquered = 0
 stress-3 report events_settlement_abandoned_to = 7
+stress-3 report events_refugees_settled = 0
+stress-3 report events_tribute = 0
+stress-3 report events_war_won = 0
+stress-3 report events_search_abandoned = 0
+stress-3 report events_refuge_held = 0
 stress-3 report civilizations = 3
 stress-3 report civilizations_alive = 3
 stress-3 report settlements = 11
@@ -9582,9 +9722,9 @@ stress-4 homes ra6 y1880 n4 44
 stress-4 table civilization c1d10c25fc1f0cb0b5683c51d06fa2820a961ca4a848fc8d8ef60e0215e3f5ec
 stress-4 table event 515143f1aba51a7e8abea5158aff5de89db809185e1861abf5ca8fdc872108f8
 stress-4 table event_cause 96f70c806c9e5822ce7963964d808c9d6b90d4a15aea5c9e31ec170901ef1e79
-stress-4 table event_kind c51f995a98efd2947f096f162bd85a224528e0138d28b9999a9c83a245f45786
-stress-4 table event_kind_role bc566753d2e7d43e4d062a0bcd55a104707becf9f775f8a60eaa63a6afd1daf2
-stress-4 table event_kind_value 781821ff7e1ee9c8d9159b8746873a36236bedb9eed25ff734efcb3dff1970a2
+stress-4 table event_kind 597ed5b0fcd34fc10fd84f7e04e8c16df3ebec801046f2a1c6072df2c15034fc
+stress-4 table event_kind_role a72cdc51e6ddc171c3712eb1d7a8f5009cb4759a8561d2785712deadfe36e0fb
+stress-4 table event_kind_value 0ed4ada6d848301b2b0ed1ef17d4073d78b84697102d243ea2be48a25b672be3
 stress-4 table event_participant f3d4d14b3a7b14a6b785d15abc60e455669e3b97b9a7853aeb3e00260ceea49a
 stress-4 table event_value ca8c86a052ee17999e44249ab2d7b63a5cb7d4556a6063d2cb727d4a255e3fd1
 stress-4 table phase fefd82f64eac7d68a044ca5bed3befcaf96d68b780550230cec57e4a513bb2f1
@@ -9631,6 +9771,11 @@ stress-4 report events_truce = 0
 stress-4 report events_region_ceded = 0
 stress-4 report events_civ_conquered = 0
 stress-4 report events_settlement_abandoned_to = 3
+stress-4 report events_refugees_settled = 0
+stress-4 report events_tribute = 0
+stress-4 report events_war_won = 0
+stress-4 report events_search_abandoned = 0
+stress-4 report events_refuge_held = 0
 stress-4 report civilizations = 6
 stress-4 report civilizations_alive = 6
 stress-4 report settlements = 9
@@ -9899,9 +10044,9 @@ stress-5 homes ra1 y0 n4 6
 stress-5 table civilization 388f181467083e75fd8c46971e18620b0be155ab5ba7bda4f400bf03ebed9a7f
 stress-5 table event a4790842e18e5399cc800bfceea5e0c0de0ad511272940c80e0c07694eba8600
 stress-5 table event_cause c8385ab95b70ea1cf5b751efb852b8598c07703426789d522fbe5c870e7ae018
-stress-5 table event_kind c51f995a98efd2947f096f162bd85a224528e0138d28b9999a9c83a245f45786
-stress-5 table event_kind_role bc566753d2e7d43e4d062a0bcd55a104707becf9f775f8a60eaa63a6afd1daf2
-stress-5 table event_kind_value 781821ff7e1ee9c8d9159b8746873a36236bedb9eed25ff734efcb3dff1970a2
+stress-5 table event_kind 597ed5b0fcd34fc10fd84f7e04e8c16df3ebec801046f2a1c6072df2c15034fc
+stress-5 table event_kind_role a72cdc51e6ddc171c3712eb1d7a8f5009cb4759a8561d2785712deadfe36e0fb
+stress-5 table event_kind_value 0ed4ada6d848301b2b0ed1ef17d4073d78b84697102d243ea2be48a25b672be3
 stress-5 table event_participant 6efdc71d12582c561975b4feeec4902395fd83911daacb50fc06eba041d078dc
 stress-5 table event_value e235dde8dca5483cf0a8f01278457f807cba6b6221b94a17b771f6279949bac1
 stress-5 table phase 90795a24abc4f0fb42bfe3503793797ff687a273caac3d6f96049fe9b4acbc18
@@ -9948,6 +10093,11 @@ stress-5 report events_truce = 0
 stress-5 report events_region_ceded = 0
 stress-5 report events_civ_conquered = 0
 stress-5 report events_settlement_abandoned_to = 4
+stress-5 report events_refugees_settled = 0
+stress-5 report events_tribute = 0
+stress-5 report events_war_won = 0
+stress-5 report events_search_abandoned = 0
+stress-5 report events_refuge_held = 0
 stress-5 report civilizations = 1
 stress-5 report civilizations_alive = 1
 stress-5 report settlements = 5
@@ -10172,9 +10322,9 @@ stress-6 homes ra4 y1407 n1 14
 stress-6 table civilization 8f11fdefa4593e959ab5c49e29893d73e5fbcf4beafe2be644abd81f05f87012
 stress-6 table event 00df0850b7b96413e16b58acf304fc6a8860d39cfa6af0af9b8991c5a39d86c7
 stress-6 table event_cause 2685d2f7f97a06ffec709a02429b42b66c33dbd3630153484c7ffbf5bd045423
-stress-6 table event_kind c51f995a98efd2947f096f162bd85a224528e0138d28b9999a9c83a245f45786
-stress-6 table event_kind_role bc566753d2e7d43e4d062a0bcd55a104707becf9f775f8a60eaa63a6afd1daf2
-stress-6 table event_kind_value 781821ff7e1ee9c8d9159b8746873a36236bedb9eed25ff734efcb3dff1970a2
+stress-6 table event_kind 597ed5b0fcd34fc10fd84f7e04e8c16df3ebec801046f2a1c6072df2c15034fc
+stress-6 table event_kind_role a72cdc51e6ddc171c3712eb1d7a8f5009cb4759a8561d2785712deadfe36e0fb
+stress-6 table event_kind_value 0ed4ada6d848301b2b0ed1ef17d4073d78b84697102d243ea2be48a25b672be3
 stress-6 table event_participant 7566b5ba029282381bc5db3d7753d63f19036fe8a6e9a6f6ca489a0a308f0979
 stress-6 table event_value 1becf1003bc37b5e8ce15c7b1eeac7adb5bce6f9fb150aeeb2cc046038799a96
 stress-6 table phase adcfb0725d78860be88557ee907030b8f14e3653da182f3ab04f3d23ecfe1b67
@@ -10221,6 +10371,11 @@ stress-6 report events_truce = 0
 stress-6 report events_region_ceded = 0
 stress-6 report events_civ_conquered = 0
 stress-6 report events_settlement_abandoned_to = 4
+stress-6 report events_refugees_settled = 0
+stress-6 report events_tribute = 0
+stress-6 report events_war_won = 0
+stress-6 report events_search_abandoned = 0
+stress-6 report events_refuge_held = 0
 stress-6 report civilizations = 3
 stress-6 report civilizations_alive = 3
 stress-6 report settlements = 7
@@ -10488,19 +10643,19 @@ stress-7 score rg16 ra6 843 1524
 stress-7 homes ra2 y0 n1 5
 stress-7 homes ra5 y4932 n1 2
 stress-7 homes ra6 y5637 n1 15
-stress-7 table civilization 47e857f97206f3959fcab535d47aa87b65f9f1ded6e473536465be1232d7143f
-stress-7 table event 2560a89245b6a2c006d6204f9a64478de2da8a970dcc0760dfebe0691f28236c
-stress-7 table event_cause aceb1d10fa56706fe613123110ec5a9ad646f9f710ec96ab6e2a1ee3a5e40bb7
-stress-7 table event_kind c51f995a98efd2947f096f162bd85a224528e0138d28b9999a9c83a245f45786
-stress-7 table event_kind_role bc566753d2e7d43e4d062a0bcd55a104707becf9f775f8a60eaa63a6afd1daf2
-stress-7 table event_kind_value 781821ff7e1ee9c8d9159b8746873a36236bedb9eed25ff734efcb3dff1970a2
-stress-7 table event_participant 1f2bb12d654ac2d5919c4c42f984ed7cae6e17136b173674baa4e6dea8a83fec
-stress-7 table event_value ff8dc3a305d0bb4d40c5e0a2c79a9eb8889ed09403d492c6f6c9bb1c82faabc3
+stress-7 table civilization f08566f083e14e8cea9482b64d2802b2c63e18bd846d8ceb0425175b69dacf20
+stress-7 table event 9245a1c9261e283444bc97f7dd2b7d65a83e44a87bf75d2bd5b4c6f67114d870
+stress-7 table event_cause a11e81b1f369885196118a31bb640d3e3605fa4fda7f39ab21d6cdf6df5663b3
+stress-7 table event_kind 597ed5b0fcd34fc10fd84f7e04e8c16df3ebec801046f2a1c6072df2c15034fc
+stress-7 table event_kind_role a72cdc51e6ddc171c3712eb1d7a8f5009cb4759a8561d2785712deadfe36e0fb
+stress-7 table event_kind_value 0ed4ada6d848301b2b0ed1ef17d4073d78b84697102d243ea2be48a25b672be3
+stress-7 table event_participant 388c292a1809e7e1f30099bbeffe22ee8c9c5f71bdd1027701b9fcf06bb036ef
+stress-7 table event_value 3264400949bc3f656097689c831c3c878bb8643b38336349740c81d92ddca3a5
 stress-7 table phase bec2970a166216be6d6c0cc4e2202dab635cc59e70f4370a4ad6c0470e9265cf
-stress-7 table region_control 3164d6afa4dfafd6c6453ba94e915499e8a4948c00b74f16e15dab163d5b4f8c
+stress-7 table region_control bf57b5c2ee310d5c2e37d194c02dcc840739ab6b21251d1fcbeac13639822ba3
 stress-7 table relation cbbd5f990c53684d7ae650b40fcb5656e02261b53da5f6a7d8c819c92f2828f8
-stress-7 table settlement 0a819de5a36f41362d69b141b18687d6f3726c4520ace326747872febfe7af4a
-stress-7 table settlement_census 1e688f3ef90d3736c74e66609c7e78d837cdb7f2f7fb17d2eba7b31e3fd7c45f
+stress-7 table settlement aef23f22807f723858847231ec8a2d4a71fb1a6b762a932882c1cbd62d57f0b4
+stress-7 table settlement_census ae86441540f3ac015baa7d6c9418193e6c4af0ae2bef279f3227492a5a8cbd0c
 stress-7 report end_year = 6000
 stress-7 report phases_opening = 3
 stress-7 report phases_quiet = 2
@@ -10508,7 +10663,7 @@ stress-7 report phases_flare = 0
 stress-7 report phases_final = 1
 stress-7 report simulated_years = 663
 stress-7 report simulated_permille = 110
-stress-7 report events = 875
+stress-7 report events = 927
 stress-7 report events_awakening = 3
 stress-7 report events_civ_founded = 3
 stress-7 report events_settlement_founded = 3
@@ -10519,14 +10674,14 @@ stress-7 report events_became_village = 9
 stress-7 report events_became_town = 6
 stress-7 report events_became_city = 0
 stress-7 report events_settlement_dwindled = 10
-stress-7 report events_famine = 401
-stress-7 report events_plague = 122
+stress-7 report events_famine = 435
+stress-7 report events_plague = 131
 stress-7 report events_plague_spread = 3
-stress-7 report events_succession_crisis = 240
+stress-7 report events_succession_crisis = 253
 stress-7 report events_civ_seceded = 4
-stress-7 report events_settlement_abandoned = 6
+stress-7 report events_settlement_abandoned = 4
 stress-7 report events_capital_moved = 6
-stress-7 report events_civ_ended = 6
+stress-7 report events_civ_ended = 4
 stress-7 report events_ruin_faded = 8
 stress-7 report events_claim = 0
 stress-7 report events_war_declared = 0
@@ -10540,32 +10695,37 @@ stress-7 report events_truce = 0
 stress-7 report events_region_ceded = 0
 stress-7 report events_civ_conquered = 0
 stress-7 report events_settlement_abandoned_to = 17
+stress-7 report events_refugees_settled = 0
+stress-7 report events_tribute = 0
+stress-7 report events_war_won = 0
+stress-7 report events_search_abandoned = 0
+stress-7 report events_refuge_held = 0
 stress-7 report civilizations = 7
-stress-7 report civilizations_alive = 1
+stress-7 report civilizations_alive = 3
 stress-7 report settlements = 24
-stress-7 report settlements_standing = 1
-stress-7 report regions_held = 1
+stress-7 report settlements_standing = 3
+stress-7 report regions_held = 3
 stress-7 report census_rows = 282
 stress-7 report relations = 0
-stress-7 report population = 102
+stress-7 report population = 174
 stress-7 report population_elf = 0
 stress-7 report population_goblin = 102
 stress-7 report population_dwarf = 0
 stress-7 report population_faerie = 0
-stress-7 report population_human = 0
-stress-7 report population_orc = 0
+stress-7 report population_human = 27
+stress-7 report population_orc = 45
 stress-7 report settlements_standing_elf = 0
 stress-7 report settlements_standing_goblin = 1
 stress-7 report settlements_standing_dwarf = 0
 stress-7 report settlements_standing_faerie = 0
-stress-7 report settlements_standing_human = 0
-stress-7 report settlements_standing_orc = 0
+stress-7 report settlements_standing_human = 1
+stress-7 report settlements_standing_orc = 1
 stress-7 report regions_held_elf = 0
 stress-7 report regions_held_goblin = 1
 stress-7 report regions_held_dwarf = 0
 stress-7 report regions_held_faerie = 0
-stress-7 report regions_held_human = 0
-stress-7 report regions_held_orc = 0
+stress-7 report regions_held_human = 1
+stress-7 report regions_held_orc = 1
 stress-7 stats civ_settlements_max = 1
 stress-7 stats settlements_colonies = 21
 stress-7 stats civilizations_seceded = 4
@@ -10642,14 +10802,14 @@ stress-7 e70 The plague spread to Krark; 41 died.
 stress-7 e71 Famine struck Snitneegg; 26 died.
 stress-7 e72 Famine struck Krark; 52 died.
 stress-7 e73 A succession crisis at Skrozskiz Hole shook the Gib-Grig Mob.
-stress-7 e74 The Warrens of Girkkat broke away from the Gib-Grig Mob, taking 2 settlements with it.
+stress-7 e74 The Skiz-Sleet Horde broke away from the Gib-Grig Mob, taking 2 settlements with it.
 stress-7 e75 Plague broke out in Sneerk; 86 died.
 stress-7 e76 Plague broke out in Gux Pit; 76 died.
 stress-7 e77 Plague broke out in Skruz Pit; 46 died.
 stress-7 e78 Famine struck Snitneegg; 28 died.
 stress-7 e79 A succession crisis at Skrozskiz Hole shook the Gib-Grig Mob.
 stress-7 e80 The Sneerk-Grik Mob broke away from the Gib-Grig Mob, taking 2 settlements with it.
-stress-7 e81 A succession crisis at Slax Hole shook the Warrens of Girkkat.
+stress-7 e81 A succession crisis at Slax Hole shook the Skiz-Sleet Horde.
 stress-7 e82 Plague broke out in Skruz Pit; 38 died.
 stress-7 e83 Skruz Pit was abandoned; 286 survivors went to Sleeg.
 stress-7 e84 Famine struck Gux Pit; 41 died.
@@ -10700,7 +10860,7 @@ stress-7 e128 Famine struck Bralddeldton; 33 died.
 stress-7 e129 Famine struck Drik; 49 died.
 stress-7 e130 Famine struck Slax Hole; 93 died.
 stress-7 e131 Slax Hole was abandoned; 1229 survivors went to Guzz Pit.
-stress-7 e132 The Warrens of Girkkat moved its seat to Guzz Pit.
+stress-7 e132 The Skiz-Sleet Horde moved its seat to Guzz Pit.
 stress-7 e133 Famine struck Guzz Pit; 375 died.
 stress-7 e134 Guzz Pit grew into a town of 1693.
 stress-7 e135 Famine struck Kuk; 30 died.
@@ -10718,11 +10878,11 @@ stress-7 e146 Famine struck Krark; 51 died.
 stress-7 e147 Famine struck Bralddeldton; 20 died.
 stress-7 e148 Famine struck Sleeg; 77 died.
 stress-7 e149 Plague broke out in Guzz Pit; 221 died.
-stress-7 e150 A succession crisis at Guzz Pit shook the Warrens of Girkkat.
+stress-7 e150 A succession crisis at Guzz Pit shook the Skiz-Sleet Horde.
 stress-7 e151 Famine struck Guzz Pit; 109 died.
 stress-7 e152 Famine struck Drik; 54 died.
 stress-7 e153 Famine struck Sleeg; 50 died.
-stress-7 e154 A succession crisis at Guzz Pit shook the Warrens of Girkkat.
+stress-7 e154 A succession crisis at Guzz Pit shook the Skiz-Sleet Horde.
 stress-7 e155 Famine struck Sleeg; 91 died.
 stress-7 e156 Plague broke out in Guzz Pit; 263 died.
 stress-7 e157 Famine struck Bralddeldton; 16 died.
@@ -10730,7 +10890,7 @@ stress-7 e158 Guzz Pit dwindled to 1007 souls.
 stress-7 e159 A succession crisis at Skazdrot shook the Gib-Grig Mob.
 stress-7 e160 A succession crisis at Drik shook the Warrens of Krog.
 stress-7 e161 A succession crisis at Bralddeldton shook the Kingdom of Beal.
-stress-7 e162 A succession crisis at Guzz Pit shook the Warrens of Girkkat.
+stress-7 e162 A succession crisis at Guzz Pit shook the Skiz-Sleet Horde.
 stress-7 e163 Famine struck Skazdrot; 155 died.
 stress-7 e164 Famine struck Skazdrot; 191 died.
 stress-7 e165 Plague broke out in Sleeg; 42 died.
@@ -10759,7 +10919,7 @@ stress-7 e187 Famine struck Sleeg; 19 died.
 stress-7 e188 Famine struck Bralddeldton; 13 died.
 stress-7 e189 A succession crisis at Sneerk shook the Sneerk-Grik Mob.
 stress-7 e190 Famine struck Guzz Pit; 126 died.
-stress-7 e191 A succession crisis at Guzz Pit shook the Warrens of Girkkat.
+stress-7 e191 A succession crisis at Guzz Pit shook the Skiz-Sleet Horde.
 stress-7 e192 A succession crisis at Sleeg shook the Sneezbeezz Mob.
 stress-7 e193 Famine struck Drik; 78 died.
 stress-7 e194 Plague broke out in Guzz Pit; 305 died.
@@ -10771,7 +10931,7 @@ stress-7 e199 Famine struck Guzz Pit; 149 died.
 stress-7 e200 A succession crisis at Drik shook the Warrens of Krog.
 stress-7 e201 Plague broke out in Sleeg; 71 died.
 stress-7 e202 A succession crisis at Drik shook the Warrens of Krog.
-stress-7 e203 A succession crisis at Guzz Pit shook the Warrens of Girkkat.
+stress-7 e203 A succession crisis at Guzz Pit shook the Skiz-Sleet Horde.
 stress-7 e204 Famine struck Bralddeldton; 13 died.
 stress-7 e205 Famine struck Sneerk; 72 died.
 stress-7 e206 A succession crisis at Sleeg shook the Sneezbeezz Mob.
@@ -10833,8 +10993,8 @@ stress-7 e261 A succession crisis at Skazdrot shook the Gib-Grig Mob.
 stress-7 e262 A succession crisis at Drik shook the Warrens of Krog.
 stress-7 e263 A succession crisis at Sleeg shook the Sneezbeezz Mob.
 stress-7 e264 Famine struck Sleeg; 61 died.
-stress-7 e265 A succession crisis at Guzz Pit shook the Warrens of Girkkat.
-stress-7 e266 A succession crisis at Guzz Pit shook the Warrens of Girkkat.
+stress-7 e265 A succession crisis at Guzz Pit shook the Skiz-Sleet Horde.
+stress-7 e266 A succession crisis at Guzz Pit shook the Skiz-Sleet Horde.
 stress-7 e267 A succession crisis at Drik shook the Warrens of Krog.
 stress-7 e268 Famine struck Sneerk; 27 died.
 stress-7 e269 Famine struck Skazdrot; 47 died.
@@ -10843,7 +11003,7 @@ stress-7 e271 Famine struck Bralddeldton; 15 died.
 stress-7 e272 A succession crisis at Skazdrot shook the Gib-Grig Mob.
 stress-7 e273 Famine struck Guzz Pit; 58 died.
 stress-7 e274 Famine struck Guzz Pit; 31 died.
-stress-7 e275 A succession crisis at Guzz Pit shook the Warrens of Girkkat.
+stress-7 e275 A succession crisis at Guzz Pit shook the Skiz-Sleet Horde.
 stress-7 e276 A succession crisis at Skazdrot shook the Gib-Grig Mob.
 stress-7 e277 Famine struck Drik; 36 died.
 stress-7 e278 Famine struck Drik; 15 died.
@@ -10860,7 +11020,7 @@ stress-7 e288 Famine struck Drik; 28 died.
 stress-7 e289 A succession crisis at Skazdrot shook the Gib-Grig Mob.
 stress-7 e290 The Gib-Grig Mob passed 555 quiet years, from 5082 to 5636, in which 37 new generations of rulers came to power.
 stress-7 e291 The Kingdom of Beal passed 555 quiet years, from 5082 to 5636, in which 22 new generations of rulers came to power.
-stress-7 e292 The Warrens of Girkkat passed 555 quiet years, from 5082 to 5636, in which 37 new generations of rulers came to power.
+stress-7 e292 The Skiz-Sleet Horde passed 555 quiet years, from 5082 to 5636, in which 37 new generations of rulers came to power.
 stress-7 e293 The Sneerk-Grik Mob passed 555 quiet years, from 5082 to 5636, in which 37 new generations of rulers came to power.
 stress-7 e294 The Sneezbeezz Mob passed 555 quiet years, from 5082 to 5636, in which 37 new generations of rulers came to power.
 stress-7 e295 The Warrens of Krog passed 555 quiet years, from 5082 to 5636, in which 37 new generations of rulers came to power.
@@ -10874,43 +11034,43 @@ stress-7 e302 The Gib-Grig Mob sent settlers from Skazdrot to found Zink Pit in 
 stress-7 e303 The ruins of Sneegg Hole faded from memory.
 stress-7 e304 The ruins of Slax Hole faded from memory.
 stress-7 e305 The ruins of Snitneegg faded from memory.
-stress-7 e306 The Gib-Grig Mob sent settlers from Skazdrot to found Skizkrirk in Synthetic 5.
+stress-7 e306 The Gib-Grig Mob sent settlers from Skazdrot to found Grit Pit in Synthetic 5.
 stress-7 e307 The Sneezbeezz Mob sent settlers from Sleeg to found Sluk-Gozz in Synthetic 7.
 stress-7 e308 The ruins of Gux Pit faded from memory.
 stress-7 e309 The ruins of Krark faded from memory.
 stress-7 e310 The Gib-Grig Mob sent settlers from Skazdrot to found Zunk Hole in Synthetic 5.
-stress-7 e311 The Warrens of Girkkat sent settlers from Guzz Pit to found Slonk-Skruk in Synthetic 4.
+stress-7 e311 The Skiz-Sleet Horde sent settlers from Guzz Pit to found Slonk-Skruk in Synthetic 4.
 stress-7 e312 The Sneerk-Grik Mob sent settlers from Sneerk to found Sneenk in Synthetic 9.
 stress-7 e313 The Warrens of Krog sent settlers from Drik to found Graskreeg in Synthetic 6.
 stress-7 e314 Bralddeldton grew into a town of 1597.
-stress-7 e315 The Warrens of Krog sent settlers from Drik to found Koggnotch Pit in Synthetic 6.
+stress-7 e315 The Warrens of Krog sent settlers from Drik to found Grub in Synthetic 6.
 stress-7 e316 Graskreeg grew into a village of 263.
-stress-7 e317 Koggnotch Pit grew into a village of 250.
+stress-7 e317 Grub grew into a village of 250.
 stress-7 e318 The Kingdom of Beal sent settlers from Bralddeldton to found Deckwick in Synthetic 2.
 stress-7 e319 Maarkzaagh awakened the Orcs in Synthetic 15.
 stress-7 e320 The Orcs founded Clan Thaash in Synthetic 15.
 stress-7 e321 Clan Thaash founded Zoz Fort in Synthetic 15.
 stress-7 e322 Famine struck Sneerk; 201 died.
 stress-7 e323 Famine struck Skazdrot; 161 died.
-stress-7 e324 Plague broke out in Skizkrirk; 51 died.
+stress-7 e324 Plague broke out in Grit Pit; 51 died.
 stress-7 e325 Famine struck Sluk-Gozz; 55 died.
 stress-7 e326 Famine struck Sneenk; 24 died.
 stress-7 e327 A succession crisis at Sleeg shook the Sneezbeezz Mob.
 stress-7 e328 Famine struck Zoz Fort; 48 died.
-stress-7 e329 A succession crisis at Guzz Pit shook the Warrens of Girkkat.
+stress-7 e329 A succession crisis at Guzz Pit shook the Skiz-Sleet Horde.
 stress-7 e330 A succession crisis at Drik shook the Warrens of Krog.
-stress-7 e331 Famine struck Koggnotch Pit; 26 died.
+stress-7 e331 Famine struck Grub; 26 died.
 stress-7 e332 Famine struck Skazdrot; 95 died.
 stress-7 e333 Famine struck Zunk Hole; 24 died.
 stress-7 e334 A succession crisis at Sleeg shook the Sneezbeezz Mob.
 stress-7 e335 Famine struck Guzz Pit; 361 died.
-stress-7 e336 Plague broke out in Skizkrirk; 56 died.
+stress-7 e336 Plague broke out in Grit Pit; 56 died.
 stress-7 e337 Plague broke out in Sneenk; 95 died.
 stress-7 e338 A succession crisis at Skazdrot shook the Gib-Grig Mob.
-stress-7 e339 A succession crisis at Guzz Pit shook the Warrens of Girkkat.
+stress-7 e339 A succession crisis at Guzz Pit shook the Skiz-Sleet Horde.
 stress-7 e340 Plague broke out in Sneerk; 164 died.
 stress-7 e341 Famine struck Bralddeldton; 177 died.
-stress-7 e342 Plague broke out in Skizkrirk; 52 died.
+stress-7 e342 Plague broke out in Grit Pit; 52 died.
 stress-7 e343 Famine struck Sleeg; 191 died.
 stress-7 e344 Famine struck Deckwick; 112 died.
 stress-7 e345 Famine struck Sluk-Gozz; 63 died.
@@ -10920,12 +11080,12 @@ stress-7 e348 Deckwick was abandoned; 778 survivors went to Bralddeldton.
 stress-7 e349 Plague broke out in Sleeg; 304 died.
 stress-7 e350 Famine struck Bralddeldton; 552 died.
 stress-7 e351 Famine struck Skazdrot; 109 died.
-stress-7 e352 Famine struck Skizkrirk; 14 died.
+stress-7 e352 Famine struck Grit Pit; 14 died.
 stress-7 e353 Famine struck Slonk-Skruk; 74 died.
-stress-7 e354 Plague broke out in Koggnotch Pit; 60 died.
+stress-7 e354 Plague broke out in Grub; 60 died.
 stress-7 e355 Famine struck Guzz Pit; 274 died.
 stress-7 e356 Guzz Pit was abandoned; 1629 survivors went to Slonk-Skruk.
-stress-7 e357 The Warrens of Girkkat moved its seat to Slonk-Skruk.
+stress-7 e357 The Skiz-Sleet Horde moved its seat to Slonk-Skruk.
 stress-7 e358 Plague broke out in Bralddeldton; 899 died.
 stress-7 e359 Slonk-Skruk grew into a town of 2375.
 stress-7 e360 Famine struck Sneenk; 38 died.
@@ -10941,10 +11101,10 @@ stress-7 e369 Famine struck Sneenk; 34 died.
 stress-7 e370 Famine struck Graskreeg; 40 died.
 stress-7 e371 Graskreeg was abandoned; 215 survivors went to Drik.
 stress-7 e372 Famine struck Drik; 126 died.
-stress-7 e373 Famine struck Koggnotch Pit; 34 died.
-stress-7 e374 Koggnotch Pit was abandoned; 188 survivors went to Drik.
+stress-7 e373 Famine struck Grub; 34 died.
+stress-7 e374 Grub was abandoned; 188 survivors went to Drik.
 stress-7 e375 Famine struck Skazdrot; 80 died.
-stress-7 e376 Famine struck Skizkrirk; 27 died.
+stress-7 e376 Famine struck Grit Pit; 27 died.
 stress-7 e377 Famine struck Slonk-Skruk; 181 died.
 stress-7 e378 Famine struck Skazdrot; 69 died.
 stress-7 e379 Plague broke out in Bralddeldton; 265 died.
@@ -10975,7 +11135,7 @@ stress-7 e403 Plague broke out in Slonk-Skruk; 486 died.
 stress-7 e404 A succession crisis at Zoz Fort shook Clan Thaash.
 stress-7 e405 Famine struck Sleeg; 56 died.
 stress-7 e406 Plague broke out in Zink Pit; 50 died.
-stress-7 e407 Famine struck Skizkrirk; 15 died.
+stress-7 e407 Famine struck Grit Pit; 15 died.
 stress-7 e408 Famine struck Zunk Hole; 23 died.
 stress-7 e409 A succession crisis at Drik shook the Warrens of Krog.
 stress-7 e410 Famine struck Slonk-Skruk; 216 died.
@@ -10992,7 +11152,7 @@ stress-7 e420 Famine struck Sleeg; 151 died.
 stress-7 e421 Famine struck Drik; 89 died.
 stress-7 e422 Famine struck Slonk-Skruk; 75 died.
 stress-7 e423 A succession crisis at Skazdrot shook the Gib-Grig Mob.
-stress-7 e424 A succession crisis at Slonk-Skruk shook the Warrens of Girkkat.
+stress-7 e424 A succession crisis at Slonk-Skruk shook the Skiz-Sleet Horde.
 stress-7 e425 Famine struck Slonk-Skruk; 62 died.
 stress-7 e426 Famine struck Zoz Fort; 22 died.
 stress-7 e427 Famine struck Bralddeldton; 130 died.
@@ -11013,8 +11173,8 @@ stress-7 e441 Famine struck Zink Pit; 18 died.
 stress-7 e442 Plague broke out in Zoz Fort; 24 died.
 stress-7 e443 A succession crisis at Skazdrot shook the Gib-Grig Mob.
 stress-7 e444 A succession crisis at Drik shook the Warrens of Krog.
-stress-7 e445 Famine struck Skizkrirk; 8 died.
-stress-7 e446 Skizkrirk was abandoned; 166 survivors went to Skazdrot.
+stress-7 e445 Famine struck Grit Pit; 8 died.
+stress-7 e446 Grit Pit was abandoned; 166 survivors went to Skazdrot.
 stress-7 e447 Famine struck Zunk Hole; 16 died.
 stress-7 e448 Plague broke out in Slonk-Skruk; 103 died.
 stress-7 e449 Famine struck Zoz Fort; 19 died.
@@ -11071,7 +11231,7 @@ stress-7 e499 A succession crisis at Drik shook the Warrens of Krog.
 stress-7 e500 Famine struck Drik; 85 died.
 stress-7 e501 Famine struck Bralddeldton; 126 died.
 stress-7 e502 Plague broke out in Slonk-Skruk; 78 died.
-stress-7 e503 A succession crisis at Slonk-Skruk shook the Warrens of Girkkat.
+stress-7 e503 A succession crisis at Slonk-Skruk shook the Skiz-Sleet Horde.
 stress-7 e504 Famine struck Drik; 55 died.
 stress-7 e505 A succession crisis at Drik shook the Warrens of Krog.
 stress-7 e506 Plague broke out in Drik; 93 died.
@@ -11096,7 +11256,7 @@ stress-7 e524 Famine struck Zink Pit; 50 died.
 stress-7 e525 Famine struck Slonk-Skruk; 76 died.
 stress-7 e526 Famine struck Drik; 15 died.
 stress-7 e527 Famine struck Zoz Fort; 8 died.
-stress-7 e528 A succession crisis at Slonk-Skruk shook the Warrens of Girkkat.
+stress-7 e528 A succession crisis at Slonk-Skruk shook the Skiz-Sleet Horde.
 stress-7 e529 Famine struck Slonk-Skruk; 62 died.
 stress-7 e530 Famine struck Zink Pit; 69 died.
 stress-7 e531 A succession crisis at Sneenk shook the Sneerk-Grik Mob.
@@ -11129,11 +11289,11 @@ stress-7 e557 Famine struck Sneenk; 67 died.
 stress-7 e558 Famine struck Bralddeldton; 77 died.
 stress-7 e559 Famine struck Sneenk; 27 died.
 stress-7 e560 A succession crisis at Bralddeldton shook the Kingdom of Beal.
-stress-7 e561 A succession crisis at Slonk-Skruk shook the Warrens of Girkkat.
+stress-7 e561 A succession crisis at Slonk-Skruk shook the Skiz-Sleet Horde.
 stress-7 e562 Famine struck Sleeg; 40 died.
 stress-7 e563 A succession crisis at Drik shook the Warrens of Krog.
 stress-7 e564 Famine struck Slonk-Skruk; 51 died.
-stress-7 e565 A succession crisis at Slonk-Skruk shook the Warrens of Girkkat.
+stress-7 e565 A succession crisis at Slonk-Skruk shook the Skiz-Sleet Horde.
 stress-7 e566 Plague broke out in Slonk-Skruk; 49 died.
 stress-7 e567 A succession crisis at Bralddeldton shook the Kingdom of Beal.
 stress-7 e568 Famine struck Zoz Fort; 6 died.
@@ -11147,7 +11307,7 @@ stress-7 e575 A succession crisis at Sneenk shook the Sneerk-Grik Mob.
 stress-7 e576 A succession crisis at Zoz Fort shook Clan Thaash.
 stress-7 e577 Famine struck Slonk-Skruk; 21 died.
 stress-7 e578 Plague broke out in Slonk-Skruk; 27 died.
-stress-7 e579 A succession crisis at Slonk-Skruk shook the Warrens of Girkkat.
+stress-7 e579 A succession crisis at Slonk-Skruk shook the Skiz-Sleet Horde.
 stress-7 e580 Famine struck Bralddeldton; 27 died.
 stress-7 e581 A succession crisis at Zoz Fort shook Clan Thaash.
 stress-7 e582 Plague broke out in Drik; 48 died.
@@ -11158,10 +11318,10 @@ stress-7 e586 Famine struck Zoz Fort; 2 died.
 stress-7 e587 Famine struck Sleeg; 44 died.
 stress-7 e588 Famine struck Zink Pit; 87 died.
 stress-7 e589 A succession crisis at Zink Pit shook the Gib-Grig Mob.
-stress-7 e590 A succession crisis at Slonk-Skruk shook the Warrens of Girkkat.
+stress-7 e590 A succession crisis at Slonk-Skruk shook the Skiz-Sleet Horde.
 stress-7 e591 A succession crisis at Sleeg shook the Sneezbeezz Mob.
 stress-7 e592 Famine struck Drik; 13 died.
-stress-7 e593 A succession crisis at Slonk-Skruk shook the Warrens of Girkkat.
+stress-7 e593 A succession crisis at Slonk-Skruk shook the Skiz-Sleet Horde.
 stress-7 e594 A succession crisis at Sleeg shook the Sneezbeezz Mob.
 stress-7 e595 A succession crisis at Sneenk shook the Sneerk-Grik Mob.
 stress-7 e596 Famine struck Bralddeldton; 54 died.
@@ -11194,11 +11354,11 @@ stress-7 e622 A succession crisis at Sleeg shook the Sneezbeezz Mob.
 stress-7 e623 Famine struck Sleeg; 25 died.
 stress-7 e624 Famine struck Zink Pit; 57 died.
 stress-7 e625 Plague broke out in Zoz Fort; 20 died.
-stress-7 e626 A succession crisis at Slonk-Skruk shook the Warrens of Girkkat.
+stress-7 e626 A succession crisis at Slonk-Skruk shook the Skiz-Sleet Horde.
 stress-7 e627 Plague broke out in Drik; 11 died.
 stress-7 e628 Famine struck Sleeg; 8 died.
 stress-7 e629 A succession crisis at Zink Pit shook the Gib-Grig Mob.
-stress-7 e630 A succession crisis at Slonk-Skruk shook the Warrens of Girkkat.
+stress-7 e630 A succession crisis at Slonk-Skruk shook the Skiz-Sleet Horde.
 stress-7 e631 A succession crisis at Drik shook the Warrens of Krog.
 stress-7 e632 Famine struck Zoz Fort; 3 died.
 stress-7 e633 A succession crisis at Sleeg shook the Sneezbeezz Mob.
@@ -11217,31 +11377,31 @@ stress-7 e645 A succession crisis at Sneenk shook the Sneerk-Grik Mob.
 stress-7 e646 Famine struck Zink Pit; 14 died.
 stress-7 e647 Plague broke out in Zink Pit; 39 died.
 stress-7 e648 Famine struck Zoz Fort; 7 died.
-stress-7 e649 Zoz Fort was abandoned; its 38 survivors were scattered.
-stress-7 e650 Clan Thaash came to an end.
-stress-7 e651 Famine struck Sleeg; 24 died.
-stress-7 e652 Plague broke out in Sneenk; 45 died.
-stress-7 e653 A succession crisis at Drik shook the Warrens of Krog.
-stress-7 e654 Famine struck Sneenk; 19 died.
-stress-7 e655 A succession crisis at Sneenk shook the Sneerk-Grik Mob.
-stress-7 e656 Famine struck Drik; 8 died.
-stress-7 e657 A succession crisis at Sneenk shook the Sneerk-Grik Mob.
-stress-7 e658 A succession crisis at Slonk-Skruk shook the Warrens of Girkkat.
-stress-7 e659 Famine struck Bralddeldton; 42 died.
-stress-7 e660 Famine struck Zink Pit; 15 died.
-stress-7 e661 Plague broke out in Slonk-Skruk; 58 died.
-stress-7 e662 A succession crisis at Slonk-Skruk shook the Warrens of Girkkat.
-stress-7 e663 Famine struck Sleeg; 15 died.
-stress-7 e664 A succession crisis at Slonk-Skruk shook the Warrens of Girkkat.
-stress-7 e665 Famine struck Bralddeldton; 19 died.
-stress-7 e666 Famine struck Sneenk; 16 died.
-stress-7 e667 Famine struck Drik; 7 died.
-stress-7 e668 Famine struck Sneenk; 25 died.
-stress-7 e669 A succession crisis at Sneenk shook the Sneerk-Grik Mob.
-stress-7 e670 Famine struck Zink Pit; 35 died.
+stress-7 e649 A succession crisis at Zoz Fort shook Clan Thaash.
+stress-7 e650 Famine struck Sleeg; 24 died.
+stress-7 e651 Plague broke out in Sneenk; 45 died.
+stress-7 e652 A succession crisis at Drik shook the Warrens of Krog.
+stress-7 e653 Famine struck Sneenk; 19 died.
+stress-7 e654 A succession crisis at Sneenk shook the Sneerk-Grik Mob.
+stress-7 e655 Famine struck Drik; 8 died.
+stress-7 e656 A succession crisis at Sneenk shook the Sneerk-Grik Mob.
+stress-7 e657 A succession crisis at Slonk-Skruk shook the Skiz-Sleet Horde.
+stress-7 e658 Famine struck Bralddeldton; 42 died.
+stress-7 e659 Famine struck Zink Pit; 15 died.
+stress-7 e660 Plague broke out in Slonk-Skruk; 58 died.
+stress-7 e661 A succession crisis at Slonk-Skruk shook the Skiz-Sleet Horde.
+stress-7 e662 Famine struck Sleeg; 15 died.
+stress-7 e663 A succession crisis at Slonk-Skruk shook the Skiz-Sleet Horde.
+stress-7 e664 Famine struck Bralddeldton; 19 died.
+stress-7 e665 Famine struck Sneenk; 16 died.
+stress-7 e666 Famine struck Drik; 7 died.
+stress-7 e667 Famine struck Sneenk; 25 died.
+stress-7 e668 A succession crisis at Sneenk shook the Sneerk-Grik Mob.
+stress-7 e669 Famine struck Zink Pit; 35 died.
+stress-7 e670 Famine struck Zoz Fort; 5 died.
 stress-7 e671 Famine struck Drik; 5 died.
 stress-7 e672 A succession crisis at Sleeg shook the Sneezbeezz Mob.
-stress-7 e673 A succession crisis at Slonk-Skruk shook the Warrens of Girkkat.
+stress-7 e673 A succession crisis at Slonk-Skruk shook the Skiz-Sleet Horde.
 stress-7 e674 A succession crisis at Bralddeldton shook the Kingdom of Beal.
 stress-7 e675 A succession crisis at Drik shook the Warrens of Krog.
 stress-7 e676 Famine struck Zink Pit; 36 died.
@@ -11254,12 +11414,12 @@ stress-7 e682 Plague broke out in Zink Pit; 47 died.
 stress-7 e683 A succession crisis at Sleeg shook the Sneezbeezz Mob.
 stress-7 e684 Famine struck Bralddeldton; 8 died.
 stress-7 e685 Famine struck Slonk-Skruk; 59 died.
-stress-7 e686 A succession crisis at Slonk-Skruk shook the Warrens of Girkkat.
+stress-7 e686 A succession crisis at Slonk-Skruk shook the Skiz-Sleet Horde.
 stress-7 e687 Famine struck Slonk-Skruk; 22 died.
 stress-7 e688 A succession crisis at Drik shook the Warrens of Krog.
 stress-7 e689 Famine struck Bralddeldton; 21 died.
 stress-7 e690 Famine struck Sneenk; 18 died.
-stress-7 e691 A succession crisis at Slonk-Skruk shook the Warrens of Girkkat.
+stress-7 e691 A succession crisis at Slonk-Skruk shook the Skiz-Sleet Horde.
 stress-7 e692 A succession crisis at Drik shook the Warrens of Krog.
 stress-7 e693 Famine struck Slonk-Skruk; 28 died.
 stress-7 e694 Plague broke out in Slonk-Skruk; 28 died.
@@ -11268,182 +11428,234 @@ stress-7 e696 Plague broke out in Slonk-Skruk; 20 died.
 stress-7 e697 Slonk-Skruk dwindled to 193 souls.
 stress-7 e698 Famine struck Sleeg; 13 died.
 stress-7 e699 Famine struck Sneenk; 18 died.
-stress-7 e700 A succession crisis at Slonk-Skruk shook the Warrens of Girkkat.
-stress-7 e701 Famine struck Zink Pit; 9 died.
-stress-7 e702 A succession crisis at Slonk-Skruk shook the Warrens of Girkkat.
-stress-7 e703 Plague broke out in Sleeg; 17 died.
-stress-7 e704 Famine struck Slonk-Skruk; 28 died.
-stress-7 e705 Famine struck Sneenk; 23 died.
-stress-7 e706 Famine struck Zink Pit; 6 died.
-stress-7 e707 Famine struck Slonk-Skruk; 32 died.
-stress-7 e708 Famine struck Bralddeldton; 31 died.
-stress-7 e709 A succession crisis at Drik shook the Warrens of Krog.
-stress-7 e710 Famine struck Sleeg; 7 died.
-stress-7 e711 A succession crisis at Sleeg shook the Sneezbeezz Mob.
-stress-7 e712 Famine struck Sneenk; 28 died.
-stress-7 e713 Plague broke out in Bralddeldton; 22 died.
-stress-7 e714 Famine struck Zink Pit; 15 died.
-stress-7 e715 A succession crisis at Slonk-Skruk shook the Warrens of Girkkat.
-stress-7 e716 Famine struck Zink Pit; 11 died.
-stress-7 e717 Famine struck Slonk-Skruk; 24 died.
-stress-7 e718 A succession crisis at Sleeg shook the Sneezbeezz Mob.
-stress-7 e719 A succession crisis at Drik shook the Warrens of Krog.
-stress-7 e720 Famine struck Sneenk; 7 died.
-stress-7 e721 A succession crisis at Zink Pit shook the Gib-Grig Mob.
-stress-7 e722 Plague broke out in Sneenk; 38 died.
-stress-7 e723 A succession crisis at Slonk-Skruk shook the Warrens of Girkkat.
-stress-7 e724 A succession crisis at Slonk-Skruk shook the Warrens of Girkkat.
-stress-7 e725 A succession crisis at Sneenk shook the Sneerk-Grik Mob.
-stress-7 e726 A succession crisis at Bralddeldton shook the Kingdom of Beal.
+stress-7 e700 Famine struck Zoz Fort; 7 died.
+stress-7 e701 A succession crisis at Slonk-Skruk shook the Skiz-Sleet Horde.
+stress-7 e702 Famine struck Zink Pit; 9 died.
+stress-7 e703 A succession crisis at Slonk-Skruk shook the Skiz-Sleet Horde.
+stress-7 e704 Plague broke out in Sleeg; 17 died.
+stress-7 e705 Famine struck Slonk-Skruk; 28 died.
+stress-7 e706 Famine struck Sneenk; 23 died.
+stress-7 e707 Famine struck Zink Pit; 6 died.
+stress-7 e708 Famine struck Slonk-Skruk; 32 died.
+stress-7 e709 Famine struck Bralddeldton; 31 died.
+stress-7 e710 A succession crisis at Drik shook the Warrens of Krog.
+stress-7 e711 Famine struck Sleeg; 7 died.
+stress-7 e712 A succession crisis at Sleeg shook the Sneezbeezz Mob.
+stress-7 e713 Famine struck Sneenk; 28 died.
+stress-7 e714 Plague broke out in Bralddeldton; 22 died.
+stress-7 e715 Famine struck Zink Pit; 15 died.
+stress-7 e716 A succession crisis at Slonk-Skruk shook the Skiz-Sleet Horde.
+stress-7 e717 Famine struck Zink Pit; 11 died.
+stress-7 e718 Famine struck Slonk-Skruk; 24 died.
+stress-7 e719 Famine struck Zoz Fort; 13 died.
+stress-7 e720 A succession crisis at Sleeg shook the Sneezbeezz Mob.
+stress-7 e721 A succession crisis at Drik shook the Warrens of Krog.
+stress-7 e722 Famine struck Sneenk; 7 died.
+stress-7 e723 A succession crisis at Zink Pit shook the Gib-Grig Mob.
+stress-7 e724 Plague broke out in Sneenk; 38 died.
+stress-7 e725 A succession crisis at Slonk-Skruk shook the Skiz-Sleet Horde.
+stress-7 e726 A succession crisis at Slonk-Skruk shook the Skiz-Sleet Horde.
 stress-7 e727 A succession crisis at Sneenk shook the Sneerk-Grik Mob.
-stress-7 e728 A succession crisis at Sleeg shook the Sneezbeezz Mob.
-stress-7 e729 Famine struck Bralddeldton; 21 died.
-stress-7 e730 Plague broke out in Slonk-Skruk; 13 died.
-stress-7 e731 Famine struck Sneenk; 13 died.
-stress-7 e732 Famine struck Sleeg; 19 died.
-stress-7 e733 A succession crisis at Drik shook the Warrens of Krog.
-stress-7 e734 Famine struck Sleeg; 16 died.
-stress-7 e735 Plague broke out in Zink Pit; 34 died.
-stress-7 e736 Famine struck Sneenk; 7 died.
-stress-7 e737 A succession crisis at Sleeg shook the Sneezbeezz Mob.
-stress-7 e738 Famine struck Drik; 11 died.
-stress-7 e739 Famine struck Zink Pit; 8 died.
-stress-7 e740 A succession crisis at Sneenk shook the Sneerk-Grik Mob.
-stress-7 e741 A succession crisis at Drik shook the Warrens of Krog.
-stress-7 e742 Famine struck Slonk-Skruk; 23 died.
-stress-7 e743 A succession crisis at Zink Pit shook the Gib-Grig Mob.
-stress-7 e744 Famine struck Drik; 11 died.
-stress-7 e745 Plague broke out in Sneenk; 15 died.
-stress-7 e746 A succession crisis at Bralddeldton shook the Kingdom of Beal.
-stress-7 e747 A succession crisis at Zink Pit shook the Gib-Grig Mob.
-stress-7 e748 A succession crisis at Sneenk shook the Sneerk-Grik Mob.
-stress-7 e749 A succession crisis at Drik shook the Warrens of Krog.
-stress-7 e750 Famine struck Sneenk; 12 died.
-stress-7 e751 A succession crisis at Sneenk shook the Sneerk-Grik Mob.
-stress-7 e752 A succession crisis at Sleeg shook the Sneezbeezz Mob.
-stress-7 e753 Plague broke out in Bralddeldton; 21 died.
-stress-7 e754 Famine struck Sneenk; 11 died.
-stress-7 e755 Famine struck Bralddeldton; 7 died.
-stress-7 e756 Famine struck Zink Pit; 15 died.
-stress-7 e757 Plague broke out in Sleeg; 29 died.
-stress-7 e758 Famine struck Bralddeldton; 19 died.
+stress-7 e728 A succession crisis at Zoz Fort shook Clan Thaash.
+stress-7 e729 A succession crisis at Bralddeldton shook the Kingdom of Beal.
+stress-7 e730 A succession crisis at Sneenk shook the Sneerk-Grik Mob.
+stress-7 e731 A succession crisis at Sleeg shook the Sneezbeezz Mob.
+stress-7 e732 Famine struck Bralddeldton; 21 died.
+stress-7 e733 Plague broke out in Slonk-Skruk; 13 died.
+stress-7 e734 Famine struck Sneenk; 13 died.
+stress-7 e735 Famine struck Sleeg; 19 died.
+stress-7 e736 A succession crisis at Drik shook the Warrens of Krog.
+stress-7 e737 Famine struck Sleeg; 16 died.
+stress-7 e738 Famine struck Zoz Fort; 9 died.
+stress-7 e739 A succession crisis at Zoz Fort shook Clan Thaash.
+stress-7 e740 Plague broke out in Zink Pit; 34 died.
+stress-7 e741 Famine struck Sneenk; 7 died.
+stress-7 e742 A succession crisis at Sleeg shook the Sneezbeezz Mob.
+stress-7 e743 Famine struck Drik; 11 died.
+stress-7 e744 Famine struck Zoz Fort; 7 died.
+stress-7 e745 Famine struck Zink Pit; 8 died.
+stress-7 e746 A succession crisis at Sneenk shook the Sneerk-Grik Mob.
+stress-7 e747 A succession crisis at Drik shook the Warrens of Krog.
+stress-7 e748 Famine struck Slonk-Skruk; 23 died.
+stress-7 e749 A succession crisis at Zink Pit shook the Gib-Grig Mob.
+stress-7 e750 Famine struck Drik; 11 died.
+stress-7 e751 Plague broke out in Sneenk; 15 died.
+stress-7 e752 Famine struck Zoz Fort; 7 died.
+stress-7 e753 A succession crisis at Bralddeldton shook the Kingdom of Beal.
+stress-7 e754 A succession crisis at Zink Pit shook the Gib-Grig Mob.
+stress-7 e755 A succession crisis at Sneenk shook the Sneerk-Grik Mob.
+stress-7 e756 A succession crisis at Drik shook the Warrens of Krog.
+stress-7 e757 Famine struck Sneenk; 12 died.
+stress-7 e758 A succession crisis at Sneenk shook the Sneerk-Grik Mob.
 stress-7 e759 A succession crisis at Sleeg shook the Sneezbeezz Mob.
-stress-7 e760 Famine struck Zink Pit; 8 died.
-stress-7 e761 Famine struck Sleeg; 10 died.
-stress-7 e762 A succession crisis at Drik shook the Warrens of Krog.
-stress-7 e763 Famine struck Bralddeldton; 10 died.
-stress-7 e764 Famine struck Sneenk; 2 died.
-stress-7 e765 A succession crisis at Zink Pit shook the Gib-Grig Mob.
-stress-7 e766 Famine struck Bralddeldton; 7 died.
-stress-7 e767 A succession crisis at Drik shook the Warrens of Krog.
-stress-7 e768 Famine struck Drik; 11 died.
-stress-7 e769 Famine struck Sleeg; 9 died.
-stress-7 e770 Famine struck Slonk-Skruk; 8 died.
-stress-7 e771 A succession crisis at Bralddeldton shook the Kingdom of Beal.
-stress-7 e772 A succession crisis at Slonk-Skruk shook the Warrens of Girkkat.
+stress-7 e760 Plague broke out in Bralddeldton; 21 died.
+stress-7 e761 Famine struck Sneenk; 11 died.
+stress-7 e762 Famine struck Bralddeldton; 7 died.
+stress-7 e763 Famine struck Zink Pit; 15 died.
+stress-7 e764 Plague broke out in Zoz Fort; 7 died.
+stress-7 e765 Plague broke out in Zoz Fort; 11 died.
+stress-7 e766 A succession crisis at Zoz Fort shook Clan Thaash.
+stress-7 e767 Plague broke out in Sleeg; 29 died.
+stress-7 e768 Famine struck Zoz Fort; 2 died.
+stress-7 e769 Famine struck Bralddeldton; 19 died.
+stress-7 e770 A succession crisis at Sleeg shook the Sneezbeezz Mob.
+stress-7 e771 Famine struck Zink Pit; 8 died.
+stress-7 e772 Famine struck Sleeg; 10 died.
 stress-7 e773 A succession crisis at Drik shook the Warrens of Krog.
-stress-7 e774 Famine struck Sneenk; 7 died.
-stress-7 e775 Plague broke out in Bralddeldton; 8 died.
-stress-7 e776 Famine struck Slonk-Skruk; 10 died.
-stress-7 e777 A succession crisis at Slonk-Skruk shook the Warrens of Girkkat.
-stress-7 e778 Famine struck Drik; 2 died.
-stress-7 e779 Plague broke out in Sleeg; 22 died.
-stress-7 e780 Plague broke out in Zink Pit; 12 died.
-stress-7 e781 Famine struck Slonk-Skruk; 18 died.
-stress-7 e782 Plague broke out in Slonk-Skruk; 19 died.
-stress-7 e783 Famine struck Sleeg; 11 died.
-stress-7 e784 Famine struck Sneenk; 5 died.
-stress-7 e785 A succession crisis at Sleeg shook the Sneezbeezz Mob.
-stress-7 e786 Famine struck Bralddeldton; 11 died.
-stress-7 e787 A succession crisis at Slonk-Skruk shook the Warrens of Girkkat.
+stress-7 e774 Famine struck Bralddeldton; 10 died.
+stress-7 e775 Famine struck Sneenk; 2 died.
+stress-7 e776 Famine struck Zoz Fort; 3 died.
+stress-7 e777 Plague broke out in Zoz Fort; 4 died.
+stress-7 e778 A succession crisis at Zink Pit shook the Gib-Grig Mob.
+stress-7 e779 A succession crisis at Zoz Fort shook Clan Thaash.
+stress-7 e780 Famine struck Bralddeldton; 7 died.
+stress-7 e781 A succession crisis at Drik shook the Warrens of Krog.
+stress-7 e782 Famine struck Drik; 11 died.
+stress-7 e783 Famine struck Sleeg; 9 died.
+stress-7 e784 Famine struck Slonk-Skruk; 8 died.
+stress-7 e785 A succession crisis at Bralddeldton shook the Kingdom of Beal.
+stress-7 e786 A succession crisis at Slonk-Skruk shook the Skiz-Sleet Horde.
+stress-7 e787 A succession crisis at Drik shook the Warrens of Krog.
 stress-7 e788 Famine struck Sneenk; 7 died.
-stress-7 e789 Plague broke out in Sleeg; 12 died.
-stress-7 e790 Plague broke out in Sneenk; 13 died.
-stress-7 e791 Famine struck Slonk-Skruk; 9 died.
-stress-7 e792 Famine struck Bralddeldton; 4 died.
-stress-7 e793 A succession crisis at Zink Pit shook the Gib-Grig Mob.
-stress-7 e794 Famine struck Drik; 5 died.
-stress-7 e795 Famine struck Sneenk; 5 died.
-stress-7 e796 Famine struck Drik; 8 died.
-stress-7 e797 Famine struck Zink Pit; 7 died.
-stress-7 e798 Famine struck Sneenk; 8 died.
-stress-7 e799 Sneenk was abandoned; its 37 survivors were scattered.
-stress-7 e800 The Sneerk-Grik Mob came to an end.
-stress-7 e801 Famine struck Sleeg; 7 died.
-stress-7 e802 Famine struck Zink Pit; 18 died.
-stress-7 e803 A succession crisis at Slonk-Skruk shook the Warrens of Girkkat.
-stress-7 e804 Plague broke out in Zink Pit; 22 died.
-stress-7 e805 A succession crisis at Drik shook the Warrens of Krog.
-stress-7 e806 A succession crisis at Sleeg shook the Sneezbeezz Mob.
-stress-7 e807 A succession crisis at Drik shook the Warrens of Krog.
-stress-7 e808 Famine struck Zink Pit; 7 died.
-stress-7 e809 Plague broke out in Drik; 8 died.
-stress-7 e810 A succession crisis at Slonk-Skruk shook the Warrens of Girkkat.
-stress-7 e811 Famine struck Sleeg; 9 died.
-stress-7 e812 Plague broke out in Sleeg; 11 died.
-stress-7 e813 Famine struck Sleeg; 4 died.
-stress-7 e814 Plague broke out in Sleeg; 12 died.
-stress-7 e815 Sleeg was abandoned; its 37 survivors were scattered.
-stress-7 e816 The Sneezbeezz Mob came to an end.
-stress-7 e817 Famine struck Bralddeldton; 9 died.
-stress-7 e818 A succession crisis at Drik shook the Warrens of Krog.
-stress-7 e819 Famine struck Drik; 6 died.
-stress-7 e820 Plague broke out in Drik; 7 died.
-stress-7 e821 Famine struck Slonk-Skruk; 19 died.
-stress-7 e822 Plague broke out in Slonk-Skruk; 26 died.
-stress-7 e823 Plague broke out in Zink Pit; 16 died.
-stress-7 e824 Famine struck Slonk-Skruk; 15 died.
-stress-7 e825 Famine struck Drik; 8 died.
-stress-7 e826 Drik was abandoned; its 36 survivors were scattered.
-stress-7 e827 The Warrens of Krog came to an end.
-stress-7 e828 Plague broke out in Bralddeldton; 17 died.
-stress-7 e829 Famine struck Zink Pit; 11 died.
-stress-7 e830 A succession crisis at Bralddeldton shook the Kingdom of Beal.
-stress-7 e831 A succession crisis at Zink Pit shook the Gib-Grig Mob.
-stress-7 e832 Plague broke out in Bralddeldton; 12 died.
-stress-7 e833 Famine struck Bralddeldton; 3 died.
-stress-7 e834 Famine struck Slonk-Skruk; 16 died.
-stress-7 e835 A succession crisis at Zink Pit shook the Gib-Grig Mob.
-stress-7 e836 Famine struck Zink Pit; 5 died.
-stress-7 e837 Plague broke out in Zink Pit; 19 died.
-stress-7 e838 Famine struck Slonk-Skruk; 9 died.
-stress-7 e839 Famine struck Zink Pit; 4 died.
-stress-7 e840 A succession crisis at Zink Pit shook the Gib-Grig Mob.
-stress-7 e841 Famine struck Bralddeldton; 7 died.
-stress-7 e842 A succession crisis at Zink Pit shook the Gib-Grig Mob.
-stress-7 e843 Famine struck Bralddeldton; 5 died.
-stress-7 e844 Famine struck Bralddeldton; 5 died.
-stress-7 e845 A succession crisis at Zink Pit shook the Gib-Grig Mob.
-stress-7 e846 Famine struck Zink Pit; 4 died.
-stress-7 e847 Famine struck Bralddeldton; 3 died.
-stress-7 e848 Famine struck Bralddeldton; 3 died.
-stress-7 e849 Famine struck Zink Pit; 9 died.
-stress-7 e850 Plague broke out in Slonk-Skruk; 11 died.
-stress-7 e851 Plague broke out in Bralddeldton; 9 died.
-stress-7 e852 A succession crisis at Slonk-Skruk shook the Warrens of Girkkat.
-stress-7 e853 Famine struck Bralddeldton; 2 died.
-stress-7 e854 Famine struck Zink Pit; 3 died.
-stress-7 e855 Famine struck Bralddeldton; 4 died.
-stress-7 e856 Famine struck Bralddeldton; 8 died.
-stress-7 e857 Bralddeldton was abandoned; its 36 survivors were scattered.
-stress-7 e858 The Kingdom of Beal came to an end.
-stress-7 e859 Plague broke out in Slonk-Skruk; 23 died.
-stress-7 e860 A succession crisis at Slonk-Skruk shook the Warrens of Girkkat.
-stress-7 e861 Famine struck Zink Pit; 3 died.
-stress-7 e862 Famine struck Zink Pit; 3 died.
-stress-7 e863 Plague broke out in Zink Pit; 7 died.
-stress-7 e864 Famine struck Slonk-Skruk; 7 died.
-stress-7 e865 A succession crisis at Zink Pit shook the Gib-Grig Mob.
-stress-7 e866 Famine struck Slonk-Skruk; 16 died.
-stress-7 e867 Famine struck Zink Pit; 5 died.
-stress-7 e868 Famine struck Zink Pit; 9 died.
-stress-7 e869 Zink Pit was abandoned; its 39 survivors were scattered.
-stress-7 e870 The Gib-Grig Mob came to an end.
-stress-7 e871 Famine struck Slonk-Skruk; 5 died.
-stress-7 e872 Famine struck Slonk-Skruk; 21 died.
-stress-7 e873 A succession crisis at Slonk-Skruk shook the Warrens of Girkkat.
-stress-7 e874 Plague broke out in Slonk-Skruk; 14 died.
-stress-7 e875 Famine struck Slonk-Skruk; 13 died.
+stress-7 e789 Plague broke out in Bralddeldton; 8 died.
+stress-7 e790 Famine struck Slonk-Skruk; 10 died.
+stress-7 e791 A succession crisis at Slonk-Skruk shook the Skiz-Sleet Horde.
+stress-7 e792 Famine struck Drik; 2 died.
+stress-7 e793 Famine struck Zoz Fort; 5 died.
+stress-7 e794 Plague broke out in Sleeg; 22 died.
+stress-7 e795 Plague broke out in Zink Pit; 12 died.
+stress-7 e796 Famine struck Slonk-Skruk; 18 died.
+stress-7 e797 Plague broke out in Slonk-Skruk; 19 died.
+stress-7 e798 Famine struck Sleeg; 11 died.
+stress-7 e799 Famine struck Sneenk; 5 died.
+stress-7 e800 Plague broke out in Zoz Fort; 10 died.
+stress-7 e801 A succession crisis at Sleeg shook the Sneezbeezz Mob.
+stress-7 e802 Famine struck Bralddeldton; 11 died.
+stress-7 e803 A succession crisis at Slonk-Skruk shook the Skiz-Sleet Horde.
+stress-7 e804 Famine struck Sneenk; 7 died.
+stress-7 e805 Plague broke out in Sleeg; 12 died.
+stress-7 e806 Plague broke out in Sneenk; 13 died.
+stress-7 e807 Famine struck Slonk-Skruk; 9 died.
+stress-7 e808 Famine struck Bralddeldton; 4 died.
+stress-7 e809 A succession crisis at Zink Pit shook the Gib-Grig Mob.
+stress-7 e810 Famine struck Drik; 5 died.
+stress-7 e811 Famine struck Sneenk; 5 died.
+stress-7 e812 Plague broke out in Zoz Fort; 5 died.
+stress-7 e813 Famine struck Drik; 8 died.
+stress-7 e814 Famine struck Zink Pit; 7 died.
+stress-7 e815 Famine struck Sneenk; 8 died.
+stress-7 e816 Sneenk was abandoned; its 37 survivors were scattered.
+stress-7 e817 The Sneerk-Grik Mob came to an end.
+stress-7 e818 Plague broke out in Zoz Fort; 5 died.
+stress-7 e819 Famine struck Sleeg; 7 died.
+stress-7 e820 Famine struck Zink Pit; 18 died.
+stress-7 e821 A succession crisis at Slonk-Skruk shook the Skiz-Sleet Horde.
+stress-7 e822 Plague broke out in Zink Pit; 22 died.
+stress-7 e823 A succession crisis at Drik shook the Warrens of Krog.
+stress-7 e824 A succession crisis at Sleeg shook the Sneezbeezz Mob.
+stress-7 e825 A succession crisis at Drik shook the Warrens of Krog.
+stress-7 e826 Famine struck Zink Pit; 7 died.
+stress-7 e827 Plague broke out in Drik; 8 died.
+stress-7 e828 A succession crisis at Slonk-Skruk shook the Skiz-Sleet Horde.
+stress-7 e829 Famine struck Sleeg; 9 died.
+stress-7 e830 Plague broke out in Sleeg; 11 died.
+stress-7 e831 Famine struck Sleeg; 4 died.
+stress-7 e832 Famine struck Zoz Fort; 4 died.
+stress-7 e833 Plague broke out in Sleeg; 12 died.
+stress-7 e834 Sleeg was abandoned; its 37 survivors were scattered.
+stress-7 e835 The Sneezbeezz Mob came to an end.
+stress-7 e836 Famine struck Bralddeldton; 9 died.
+stress-7 e837 Famine struck Zoz Fort; 3 died.
+stress-7 e838 A succession crisis at Drik shook the Warrens of Krog.
+stress-7 e839 Famine struck Drik; 6 died.
+stress-7 e840 Plague broke out in Drik; 7 died.
+stress-7 e841 Famine struck Slonk-Skruk; 19 died.
+stress-7 e842 Plague broke out in Slonk-Skruk; 26 died.
+stress-7 e843 Plague broke out in Zink Pit; 16 died.
+stress-7 e844 Famine struck Slonk-Skruk; 15 died.
+stress-7 e845 Famine struck Drik; 8 died.
+stress-7 e846 Drik was abandoned; its 36 survivors were scattered.
+stress-7 e847 The Warrens of Krog came to an end.
+stress-7 e848 Plague broke out in Bralddeldton; 17 died.
+stress-7 e849 Famine struck Zoz Fort; 3 died.
+stress-7 e850 Famine struck Zoz Fort; 6 died.
+stress-7 e851 Famine struck Zink Pit; 11 died.
+stress-7 e852 Famine struck Zoz Fort; 6 died.
+stress-7 e853 A succession crisis at Bralddeldton shook the Kingdom of Beal.
+stress-7 e854 A succession crisis at Zink Pit shook the Gib-Grig Mob.
+stress-7 e855 Plague broke out in Bralddeldton; 12 died.
+stress-7 e856 Famine struck Bralddeldton; 3 died.
+stress-7 e857 Famine struck Zoz Fort; 6 died.
+stress-7 e858 Famine struck Slonk-Skruk; 16 died.
+stress-7 e859 A succession crisis at Zink Pit shook the Gib-Grig Mob.
+stress-7 e860 Famine struck Zink Pit; 5 died.
+stress-7 e861 Plague broke out in Zink Pit; 19 died.
+stress-7 e862 Famine struck Slonk-Skruk; 9 died.
+stress-7 e863 Famine struck Zink Pit; 4 died.
+stress-7 e864 A succession crisis at Zink Pit shook the Gib-Grig Mob.
+stress-7 e865 A succession crisis at Zoz Fort shook Clan Thaash.
+stress-7 e866 Famine struck Bralddeldton; 7 died.
+stress-7 e867 Famine struck Zoz Fort; 7 died.
+stress-7 e868 A succession crisis at Zink Pit shook the Gib-Grig Mob.
+stress-7 e869 Famine struck Bralddeldton; 5 died.
+stress-7 e870 Famine struck Zoz Fort; 2 died.
+stress-7 e871 Famine struck Bralddeldton; 5 died.
+stress-7 e872 A succession crisis at Zink Pit shook the Gib-Grig Mob.
+stress-7 e873 Famine struck Zink Pit; 4 died.
+stress-7 e874 Famine struck Bralddeldton; 3 died.
+stress-7 e875 Famine struck Bralddeldton; 3 died.
+stress-7 e876 Famine struck Zink Pit; 9 died.
+stress-7 e877 Plague broke out in Slonk-Skruk; 11 died.
+stress-7 e878 Plague broke out in Bralddeldton; 9 died.
+stress-7 e879 Famine struck Zoz Fort; 4 died.
+stress-7 e880 A succession crisis at Slonk-Skruk shook the Skiz-Sleet Horde.
+stress-7 e881 Famine struck Bralddeldton; 2 died.
+stress-7 e882 A succession crisis at Zoz Fort shook Clan Thaash.
+stress-7 e883 Famine struck Zink Pit; 3 died.
+stress-7 e884 Famine struck Bralddeldton; 4 died.
+stress-7 e885 Famine struck Bralddeldton; 8 died.
+stress-7 e886 Plague broke out in Slonk-Skruk; 23 died.
+stress-7 e887 A succession crisis at Slonk-Skruk shook the Skiz-Sleet Horde.
+stress-7 e888 Famine struck Zink Pit; 3 died.
+stress-7 e889 Famine struck Zink Pit; 3 died.
+stress-7 e890 A succession crisis at Zoz Fort shook Clan Thaash.
+stress-7 e891 Plague broke out in Zink Pit; 7 died.
+stress-7 e892 Famine struck Slonk-Skruk; 7 died.
+stress-7 e893 Famine struck Zoz Fort; 5 died.
+stress-7 e894 A succession crisis at Zink Pit shook the Gib-Grig Mob.
+stress-7 e895 Famine struck Zoz Fort; 7 died.
+stress-7 e896 A succession crisis at Zoz Fort shook Clan Thaash.
+stress-7 e897 Famine struck Slonk-Skruk; 16 died.
+stress-7 e898 Famine struck Bralddeldton; 3 died.
+stress-7 e899 Famine struck Zink Pit; 5 died.
+stress-7 e900 Famine struck Zoz Fort; 6 died.
+stress-7 e901 Plague broke out in Bralddeldton; 13 died.
+stress-7 e902 Famine struck Bralddeldton; 2 died.
+stress-7 e903 Famine struck Zink Pit; 9 died.
+stress-7 e904 Zink Pit was abandoned; its 39 survivors were scattered.
+stress-7 e905 The Gib-Grig Mob came to an end.
+stress-7 e906 Famine struck Zoz Fort; 7 died.
+stress-7 e907 Plague broke out in Zoz Fort; 7 died.
+stress-7 e908 Famine struck Bralddeldton; 7 died.
+stress-7 e909 A succession crisis at Zoz Fort shook Clan Thaash.
+stress-7 e910 Famine struck Slonk-Skruk; 5 died.
+stress-7 e911 A succession crisis at Bralddeldton shook the Kingdom of Beal.
+stress-7 e912 Famine struck Slonk-Skruk; 21 died.
+stress-7 e913 A succession crisis at Slonk-Skruk shook the Skiz-Sleet Horde.
+stress-7 e914 Famine struck Bralddeldton; 6 died.
+stress-7 e915 Famine struck Zoz Fort; 1 died.
+stress-7 e916 Plague broke out in Slonk-Skruk; 14 died.
+stress-7 e917 Plague broke out in Bralddeldton; 3 died.
+stress-7 e918 Famine struck Bralddeldton; 5 died.
+stress-7 e919 A succession crisis at Bralddeldton shook the Kingdom of Beal.
+stress-7 e920 Famine struck Bralddeldton; 4 died.
+stress-7 e921 Famine struck Bralddeldton; 4 died.
+stress-7 e922 Famine struck Bralddeldton; 4 died.
+stress-7 e923 A succession crisis at Zoz Fort shook Clan Thaash.
+stress-7 e924 Famine struck Zoz Fort; 5 died.
+stress-7 e925 Famine struck Bralddeldton; 5 died.
+stress-7 e926 Famine struck Slonk-Skruk; 13 died.
+stress-7 e927 Famine struck Zoz Fort; 4 died.
 stress stress-12 12 2000 all auto calm
 stress-12 score rg1 ra1 666 3586
 stress-12 score rg1 ra2 455 7359
@@ -11484,9 +11696,9 @@ stress-12 homes ra6 y1852 n1 5
 stress-12 table civilization a1cfd8658885e7f06625110a8fafc825b33d28ba19ff4703d61fc1fe0e524a66
 stress-12 table event 9d2d3867b3fc01622337cb23b0fb5ea7e9dd68655a104512bd764ec63b216b99
 stress-12 table event_cause a3893b48a04980802f9005641d946c12677ff027b7bb777695bc07a0639f4673
-stress-12 table event_kind c51f995a98efd2947f096f162bd85a224528e0138d28b9999a9c83a245f45786
-stress-12 table event_kind_role bc566753d2e7d43e4d062a0bcd55a104707becf9f775f8a60eaa63a6afd1daf2
-stress-12 table event_kind_value 781821ff7e1ee9c8d9159b8746873a36236bedb9eed25ff734efcb3dff1970a2
+stress-12 table event_kind 597ed5b0fcd34fc10fd84f7e04e8c16df3ebec801046f2a1c6072df2c15034fc
+stress-12 table event_kind_role a72cdc51e6ddc171c3712eb1d7a8f5009cb4759a8561d2785712deadfe36e0fb
+stress-12 table event_kind_value 0ed4ada6d848301b2b0ed1ef17d4073d78b84697102d243ea2be48a25b672be3
 stress-12 table event_participant 22b91877a0cb87f026cda9267301dfba6cf541e94a8d5aefb5cfa8fa78bc2b04
 stress-12 table event_value d31986dc29aff8cf992196ab19bfaa6f58f5c455eb83b33f6ebc1312239da1af
 stress-12 table phase 8754ca052d33ca91da216a1fd82ac5910454ad1d6578f50cc644f8549729b481
@@ -11533,6 +11745,11 @@ stress-12 report events_truce = 0
 stress-12 report events_region_ceded = 0
 stress-12 report events_civ_conquered = 0
 stress-12 report events_settlement_abandoned_to = 9
+stress-12 report events_refugees_settled = 0
+stress-12 report events_tribute = 0
+stress-12 report events_war_won = 0
+stress-12 report events_search_abandoned = 0
+stress-12 report events_refuge_held = 0
 stress-12 report civilizations = 7
 stress-12 report civilizations_alive = 7
 stress-12 report settlements = 17
@@ -11892,9 +12109,9 @@ stress-14 homes ra4 y1409 n1 11
 stress-14 table civilization a70f192d05d8ad02fb1d5c83fd6c8867161476774f51127dec911fcfc621c852
 stress-14 table event 4a4409a200fa21328f0f7437e1a164451a91886f14b0494c32c3122cb95ba414
 stress-14 table event_cause c003b37ee1f7d69c8b7509fad789bcfc524683e5b8edadef9622be085136fed6
-stress-14 table event_kind c51f995a98efd2947f096f162bd85a224528e0138d28b9999a9c83a245f45786
-stress-14 table event_kind_role bc566753d2e7d43e4d062a0bcd55a104707becf9f775f8a60eaa63a6afd1daf2
-stress-14 table event_kind_value 781821ff7e1ee9c8d9159b8746873a36236bedb9eed25ff734efcb3dff1970a2
+stress-14 table event_kind 597ed5b0fcd34fc10fd84f7e04e8c16df3ebec801046f2a1c6072df2c15034fc
+stress-14 table event_kind_role a72cdc51e6ddc171c3712eb1d7a8f5009cb4759a8561d2785712deadfe36e0fb
+stress-14 table event_kind_value 0ed4ada6d848301b2b0ed1ef17d4073d78b84697102d243ea2be48a25b672be3
 stress-14 table event_participant b5d6d95573e44358b0c67754994f32486ca93ee8d99355b4d85c6d53f9bcb0d2
 stress-14 table event_value 2a04207293e529ed58160a48d7950d00006ab41c2dca62501a845897208f085a
 stress-14 table phase 0ef460512ef04791caf94dce29d615082b6488ee373bfe6ac93b44ec857467ed
@@ -11941,6 +12158,11 @@ stress-14 report events_truce = 0
 stress-14 report events_region_ceded = 0
 stress-14 report events_civ_conquered = 0
 stress-14 report events_settlement_abandoned_to = 3
+stress-14 report events_refugees_settled = 0
+stress-14 report events_tribute = 0
+stress-14 report events_war_won = 0
+stress-14 report events_search_abandoned = 0
+stress-14 report events_refuge_held = 0
 stress-14 report civilizations = 3
 stress-14 report civilizations_alive = 3
 stress-14 report settlements = 8

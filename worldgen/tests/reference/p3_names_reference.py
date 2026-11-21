@@ -346,18 +346,34 @@ EMPTY_FILTER = NameFilter()
 REPO = os.path.normpath(os.path.join(_HERE, "..", "..", ".."))
 
 
+# P3-09 item 8 (generator 0.18.0) changed game/data/name_filters/words.toml. With FILTER_COMMIT set (option
+# --version 0.17.0) the shipped filter is read as it was at that commit (git), so that the 0.17.0 golden is
+# reproducible; None reads the files on disk.
+FILTER_COMMIT = None
+
+
 def filter_from_dir(path):
     """The effective filter of a name_filters/ directory, read with tomllib."""
     import tomllib
     a, s_, w = [], [], []
-    for name in sorted(os.listdir(path)):
-        if not name.endswith(".toml"):
-            continue
-        with open(os.path.join(path, name), "rb") as f:
-            for _, t in tomllib.load(f).get("name_filter", {}).items():
-                a += t["anywhere"]
-                s_ += t["at_start"]
-                w += t["whole"]
+    if FILTER_COMMIT is not None:
+        import subprocess
+        rel = os.path.relpath(path, REPO).replace(os.sep, "/")
+        names = subprocess.run(["git", "-C", REPO, "ls-tree", "--name-only", FILTER_COMMIT + ":" + rel], check=True,
+                               capture_output=True, text=True).stdout.split()
+        texts = [subprocess.run(["git", "-C", REPO, "show", "%s:%s/%s" % (FILTER_COMMIT, rel, n)], check=True,
+                                capture_output=True).stdout for n in sorted(names) if n.endswith(".toml")]
+    else:
+        texts = []
+        for name in sorted(os.listdir(path)):
+            if name.endswith(".toml"):
+                with open(os.path.join(path, name), "rb") as f:
+                    texts.append(f.read())
+    for raw in texts:
+        for _, t in tomllib.loads(raw.decode("utf-8")).get("name_filter", {}).items():
+            a += t["anywhere"]
+            s_ += t["at_start"]
+            w += t["whole"]
     return NameFilter(a, s_, w)
 
 
@@ -961,7 +977,7 @@ SAMPLES = {
               "Silstudstead, Tirdwick, Dack, Stastint, Moldstead, Edumford, Tontstead, Ceanbir, Durdton, Durdbury",
               "The Duchy of Ashem; The Kingdom of Ashos; The Duchy of Hick; The Duchy of Wick; The Duchy of Circon",
               "Simbear, Histold, Edostold"),
-    "orcish": ("Kaak Fort, Zaarz Camp, Grush, Zaakugaag, Uruld'duuld, Uu'mold Fort, Kark Fort, Azol'urash Fort, "
+    "orcish": ("Kaak Fort, Zaarz Camp, Grush, Zaakugaag, Uruld'duuld, Shaazazuug, Kark Fort, Azol'urash Fort, "
                "Karzthogh, Uromgha, Maag, Uul'krakh Camp, Og'buurk Camp, Zaalduruz Camp, Mak, Duld'sha Fort, "
                "Shuum Fort, Ghorz Fort, Duuldkrosh Fort, Aag'urog Fort",
                "Clan Kram'krorz; The Azakhdam Horde; The Urogh'krorz Horde; The Burk'zork Horde; "
@@ -994,7 +1010,7 @@ SAMPLES_R5 = {
                "Zab-Skreeb, Kruskux, Nugnug"),
     "human": ("Deanham, Alantton, Cickham, Gackwick, Brir, Tackbury, Gurdton, Studford, Ceambury, Buld, "
               "Silstudstead, Tirdwick, Dack, Stastint, Moldstead, Edumford, Tontstead, Ceanbir, Durdton, Durdbury",
-              "The Duchy of Ashem; The Kingdom of Ashos; The Kingdom of Edes; The Duchy of Ceam; The Duchy of Circon",
+              "The Duchy of Ashem; The Kingdom of Ashos; The Kingdom of Edes; The Duchy of Wick; The Duchy of Circon",
               "Wasbrid, Histold, Edostold"),
     "orcish": ("Kaak Fort, Zaarz Camp, Grush, Zaakugaag, Uruld'duuld, Shaazazuug, Kark Fort, Azol'urash Fort, "
                "Karzthogh, Uromgha, Maag, Uul'krakh Camp, Og'buurk Camp, Zaalduruz Camp, Mak, Duld'sha Fort, "
@@ -1242,6 +1258,12 @@ def check_r5(ck):
         ck.eq("names_form_text passes {root}ford and the shipped forms", True, True)
     except FatalError as ex:
         ck.eq("names_form_text passes the shipped forms", str(ex), "")
+    # P3-02 r8 11.11.5 item 5: the anchors of 11.11.1 with the shipped filter (bare root words)
+    sf = shipped_filter()
+    for w in ("gold", "thorn", "moss", "iron", "ash", "grub", "sleet", "horn"):
+        ck.eq("r8 anchor %s passes" % w, name_filtered(sf, w), False)
+    for w in ("also", "went", "movie", "dork", "zit", "old", "mold"):
+        ck.eq("r8 anchor %s is rejected" % w, name_filtered(sf, w), True)
     # 11.6 tables.
     bad = compare_samples(sys.stdout)
     ck.eq("11.6 sample table under r5", bad, 0)
@@ -1329,6 +1351,15 @@ use_rules("r5")
 
 
 def main(argv):
+    global FILTER_COMMIT
+    if "--version" in argv:   # 0.17.0: the word list of P3-08 (git); 0.18.0 (default): the files on disk
+        i = argv.index("--version")
+        if argv[i + 1] != "0.18.0":
+            FILTER_COMMIT = "d750d15"
+            global _SHIPPED_FILTER
+            _SHIPPED_FILTER = None
+            use_rules(RULES)          # rebuilds the cached shipped filter
+        argv = argv[:i] + argv[i + 2:]
     if "--rules" in argv:
         i = argv.index("--rules")
         use_rules(argv[i + 1])

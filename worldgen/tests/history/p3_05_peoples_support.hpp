@@ -48,6 +48,13 @@ enum Kind : std::int64_t {
 };
 // P3-05 r6 11 (generator 0.17.0): kind 31, appended after P3-06's kinds 20-30.
 constexpr std::int64_t k_settlement_abandoned_to = 31;
+// P3-06 r9 20.9 (generator 0.18.0, P3-09)
+constexpr std::int64_t k_refugees_settled = 32;
+constexpr std::int64_t k_tribute = 33;
+// P3-06 r10 20.15, 20.17, 20.22 (P3-09 r3)
+constexpr std::int64_t k_war_won = 34;
+constexpr std::int64_t k_search_abandoned = 35;
+constexpr std::int64_t k_refuge_held = 36;
 enum SKind : std::int64_t { hamlet = 1, village, town, city, fortress };
 enum Status : std::int64_t { thriving = 1, declining, ruined, faded };
 
@@ -640,40 +647,9 @@ inline std::string peoples_world(const std::string& name, std::uint64_t seed, co
 
 inline bool is_null(const Cell& c) { return c.type == db::ValueType::null; }
 
-// P3-04 11.1 with P3-05 15.4 appended.
+// P3-04 11.1 with P3-05 15.4 appended (engine_test::history_lines).
 inline std::vector<std::string> report_lines_05(const Tables& t, const eng::HistoryInputs& in) {
-    std::vector<std::string> o = report_lines(t, in.params.span);
-    if (o.empty()) {
-        return o;
-    }
-    std::map<std::int64_t, std::int64_t> civ_race;
-    for (const Row& c : t.civilization) {
-        civ_race[at(c, 0)] = at(c, 2);
-    }
-    auto standing = [](const Row& s) { return at(s, 10) == 1 || at(s, 10) == 2; };
-    std::int64_t pop = 0;
-    for (const Row& s : t.settlement) {
-        pop += standing(s) ? at(s, 11) : 0;
-    }
-    o.push_back("population = " + std::to_string(pop));
-    for (const char* what : {"population_", "settlements_standing_", "regions_held_"}) {
-        for (const db::RaceRow& r : in.races) {
-            std::int64_t v = 0;
-            if (std::string(what) == "regions_held_") {
-                for (const Row& rc : t.region_control) {
-                    v += (is_null(rc[2]) && civ_race[at(rc, 3)] == r.id) ? 1 : 0;
-                }
-            } else {
-                for (const Row& s : t.settlement) {
-                    if (standing(s) && civ_race[at(s, 8)] == r.id) {
-                        v += std::string(what) == "population_" ? at(s, 11) : 1;
-                    }
-                }
-            }
-            o.push_back(std::string(what) + r.key + " = " + std::to_string(v));
-        }
-    }
-    return o;
+    return history_lines(t, in);
 }
 
 inline std::vector<std::string> stats_lines(const Tables& t) {
@@ -879,7 +855,10 @@ inline void check_invariants(const Tables& t, const eng::HistoryInputs& in, cons
             }
         }
         CHECK(n >= 1);
-        CHECK(n <= (in.params.civs_per_race.has_value() ? *in.params.civs_per_race : 2));
+        // r8 21 item 5 (0.18.0): `auto` founds up to min(civs_extra_max 2, N div regions_per_extra_civ 90) more
+        std::int64_t land = 0;
+        for (const db::RegionRow& rg : in.regions) land += (rg.cells - rg.lake_cells >= 1172) ? 1 : 0;
+        CHECK(n <= (in.params.civs_per_race.has_value() ? *in.params.civs_per_race : 2 + std::min<std::int64_t>(2, land / 90)));
     }
     // 2
     std::map<std::pair<std::int64_t, std::int64_t>, std::int64_t> cells;
@@ -891,7 +870,9 @@ inline void check_invariants(const Tables& t, const eng::HistoryInputs& in, cons
     const auto& wat = std::get<std::vector<std::uint8_t>>(in.water_layer.values);
     for (const Row& s : t.settlement) {
         CAPTURE(at(s, 0));
-        CHECK((kind(at(s, 7)) == k_settlement_founded || kind(at(s, 7)) == k_colony_founded));
+        // r8 21 item 3 (0.18.0): or refugees_settled (P3-06 kind 32)
+        CHECK((kind(at(s, 7)) == k_settlement_founded || kind(at(s, 7)) == k_colony_founded ||
+               kind(at(s, 7)) == k_refugees_settled));
         const auto c = static_cast<std::size_t>(at(s, 3) * in.map_size + at(s, 2));
         CHECK(reg.at(c) == at(s, 4));
         CHECK(wat.at(c) == 0);

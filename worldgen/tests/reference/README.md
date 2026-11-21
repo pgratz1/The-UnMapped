@@ -918,3 +918,92 @@ recomputation of the destination, 13), and the peoples-only prefix of
 P3-06 16.2 item 18a on every world and synthetic case (`check_prefix`).
 The 15.2 samples of both specs are 0.16.0 measurements and are checked only
 with `--legacy`.
+
+## Generator 0.18.0 (P3-09: P3-06 r9 20, P3-05 r8 21, P3-01 r9 3.2, P3-07 r8 21)
+
+Written from `docs/specs/p3-09-conflict-balance.md` r2 and the stage-spec
+sections it names, without the engineer's branch (the spec writer's
+prototype was read only afterwards, to list differences). Every reference
+serves 0.18.0 by default; `--version 0.17.0` (and `--version 0.16.0`, or
+`--legacy`) serves the older rules, data, names and catalogue, and
+reproduces the committed 0.17.0 goldens byte for byte (checked before and
+after the 0.18.0 files were written; the 0.17.0 files are those of d750d15):
+
+```
+I=~/.cache/the-unmapped/out/p3-08-tests/inputs
+python3 -B worldgen/tests/reference/p3_data_reference.py golden - --version 0.17.0
+python3 -B worldgen/tests/reference/p3_engine_reference.py golden - --version 0.17.0 --inputs $I
+python3 -B worldgen/tests/reference/p3_peoples_reference.py golden - --version 0.17.0 --inputs $I
+python3 -B worldgen/tests/reference/p3_conflict_reference.py golden - --version 0.17.0 --inputs $I
+python3 -B worldgen/tests/reference/p3_names_reference.py golden - --version 0.17.0
+```
+
+- `p3_data_reference.py`: `SPEC_FILES_018` (three race fields after
+  `prowess_permille`, eleven `history.conflict` fields after `last_refuge`,
+  two `history.peoples` fields after `regions_per_civ`, `claim` 35, the
+  entries of kinds 32 and 33 appended after kind 31's: an assumption, as
+  for every earlier kind), the 54-field conflict schema and the named check
+  `conflict_enmity_hops`. While a root on disk holds 0.17.0 files, the
+  0.18.0 listings stand in (`disk_version`, noted by `check`).
+- `p3_engine_reference.py`: the catalogue of 33 kinds (`COMPILED_018`),
+  `at_least(v)`; the stub worlds change only in the catalogue tables and
+  the two new `events_<key>` lines.
+- `p3_peoples_reference.py`: `FLAGS["auto_size"]` (21 item 5) and invariant
+  2 with `refugees_settled`; no 512 or 1024 world changes by it.
+- `p3_conflict_reference.py`: one flag per rule of 20 (`flight`, `goals`,
+  `cost`, `weary`, `revenge`, `muster`, `levies`, `odds`, `truce`,
+  `conceal`, `home`, `enmity`); `use_version`, `rules(v)` (flags only);
+  the hand-made units of 20.14 (`check_units_r9`); the invariants of 20.13
+  from the rows (`check_invariants_r9`, `weary_violations`); P3-07 r8 21's
+  six `[stats]` keys, `history_note`, units and the summary set
+  (reference-only until P3-07 is implemented), written to the golden file
+  as `stats`, `note` and `summary` lines; the extra world case
+  `hist-conflict-flight` (seed 1 at 512, input `sweep-1-512.db`).
+
+Re-recording after a data change (the short word list of P3-09 item 8) is
+one command per reference, in this order:
+
+```
+python3 -B worldgen/tests/reference/p3_data_reference.py golden
+python3 -B worldgen/tests/reference/p3_names_reference.py golden
+python3 -B worldgen/tests/reference/p3_chronology_reference.py golden
+python3 -B worldgen/tests/reference/p3_engine_reference.py golden --inputs $I
+python3 -B worldgen/tests/reference/p3_peoples_reference.py golden --inputs $I
+python3 -B worldgen/tests/reference/p3_conflict_reference.py check --write --inputs $I
+```
+
+### P3-09 r3 (P3-06 r10 20.15-20.22, P3-05 r9 21 item 6, P3-07 r8 21.8, P3-01 r10 3.3)
+
+Flags `score`, `kill`, `search`, `floor`, `held` (conflict) and
+`refuge_floor` (peoples); kinds 34 `war_won`, 35 `search_abandoned`, 36
+`refuge_held`; the stream `hist.conflict.search`; the three conflict fields
+after `enmity_hops`; faerie home defence 0; `[stats]` `wars_unfound` and
+`refuges_held_no_destination`; the hand-made units of 20.19
+(`check_units_r10`) and the invariants 7-11 and T3 from the rows
+(`check_invariants_r10`). The r2 finding (stress cases 1, 12, 14: a race
+bled out behind its guard) is closed by 20.20 and checked as an ordinary
+invariant.
+
+The short word list (P3-02 r8 11.11) is read from disk at 0.18.0; at 0.17.0
+the name filter is read from git at d750d15 (`NAME_FILTERS_017_COMMIT` in
+`p3_data_reference.py`, `FILTER_COMMIT` in `p3_names_reference.py`), so the
+0.17.0 goldens stay reproducible after the data change. `p3_names_reference.py`
+takes `--version 0.17.0` too.
+
+### P3-09 fixes (P3-06 r13 20.27, 20.28; P3-07 r11 21.8 item 5; generator stays 0.18.0)
+
+Flag `cede_all` (conflict): a cession (7.7's and 20.3's) passes every
+settlement of the loser standing in the ceded region, a colony founded
+earlier in the same step included. Invariant (13) is checked from the rows by
+`cession_violations` (owners replayed from the log; the reading is in
+`gaps`), with `check_invariants_r9`. `wars_same_goal_unchanged_max` follows
+21.8 item 5's incremental form (`same_goal_unchanged_max`): wars closed by
+`civ_conquered` or `civ_ended` are skipped, the window ends at the latest end,
+and the first war after a change starts a run of 1. Hand-made units:
+`check_units_r13`. `check-world` on a world whose stored history differs from
+the reference still runs the row invariants and reports, rather than stops,
+when an in-run check does not apply. The golden file was rewritten by
+`golden --inputs $I`; the entries that changed are those of
+`hist-conflict-flight` (seed 1 at 512 holds a cession of a same-step
+colony, e354) and the `wars_same_goal_unchanged_max` line of `stress-5`,
+`-6`, `-7`, `-12`, `-13` and `norefuge-13`.

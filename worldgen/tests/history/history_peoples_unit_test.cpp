@@ -132,10 +132,11 @@ TEST_CASE("P3-05 11, 16.1 item 14, 16.1a 17i: the compiled catalogue appends kin
         {"ruin_faded", true, {{"settlement", S}}, {}, 10, "The ruins of {settlement} faded from memory."},
     };
     const eng::EventCatalogue& compiled = eng::compiled();
-    // P3-06 11 appends kinds 20-30 at 0.16.0 (P3-04 8.2 r4), P3-05 r6 kind 31 at 0.17.0
-    REQUIRE(compiled.kinds.size() == 31U);
+    // P3-06 11 appends kinds 20-30 at 0.16.0 (P3-04 8.2 r4), P3-05 r6 kind 31 at 0.17.0, P3-06 r9 20.9
+    // kinds 32 and 33 at 0.18.0
+    REQUIRE(compiled.kinds.size() == 36U);  // r10: kinds 34-36
     const eng::EventCatalogue cat = eng::catalogue_of(shipped());
-    REQUIRE(cat.kinds.size() == 31U);
+    REQUIRE(cat.kinds.size() == 36U);
     for (std::size_t i = 0; i < want.size(); ++i) {
         const K& w = want[i];
         CAPTURE(std::string_view(w.key));
@@ -190,11 +191,11 @@ TEST_CASE("P3-05 11, 16.1 item 14, 16.1a 17i: the compiled catalogue appends kin
     CHECK(compiled.kinds[4].key == "flare_up");
 }
 
-TEST_CASE("P3-05 3.3: the twelve hist.peoples streams follow hist.chronology.awakening (52 names from 0.17.0)") {
+TEST_CASE("P3-05 3.3: the twelve hist.peoples streams follow hist.chronology.awakening (53 names from 0.18.0)") {
     const auto names = ppl::registered_streams();
     // P3-06 3.3 appends five hist.conflict names (P0-01 19); P0-01 amendment 20 (0.17.0) inserts
-    // geo.regions.name after geo.regions.cost
-    REQUIRE(names.size() == 52U);
+    // geo.regions.name after geo.regions.cost; P3-06 r10 20.17 (0.18.0) hist.conflict.search
+    REQUIRE(names.size() == 53U);
     std::size_t at = 0;
     for (std::size_t i = 0; i < names.size(); ++i) {
         if (names[i] == "hist.chronology.awakening") at = i;
@@ -509,7 +510,7 @@ TEST_CASE("P3-05 8.5 r1, 13: ruin(s, e) applies items 2-5 with e and does not en
     CHECK(at(t.settlement[0], 13) == 0);
 }
 
-TEST_CASE("P3-05 13, 8.5 (b): note_reduction makes P3-06's event the cause of a later abandonment in T1") {
+TEST_CASE("P3-05 13, 8.5 (b), r9 21 item 6: note_reduction records P3-06's event; a race's last refuge is not abandoned") {
     const Geo g = two_regions();
     const eng::HistoryInputs in = inputs_of(g, 0, humans_2000(), quiet_content());
     PeoplesConfig cfg(quiet_content(), true);
@@ -527,25 +528,14 @@ TEST_CASE("P3-05 13, 8.5 (b): note_reduction makes P3-06's event the cause of a 
         if (at(e, 3) == k_settlement_abandoned) ab = &e;
         if (at(e, 3) == k_civ_ended) end = &e;
     }
-    REQUIRE(ab != nullptr);
-    CHECK(at(*ab, 1) == 3);  // T1 of the next year, after growth: 10 + max(1, d) = 11 < 40
-    std::vector<std::int64_t> cs;
-    std::int64_t survivors = -1;
-    for (const Row& c : t.event_cause) {
-        if (at(c, 0) == at(*ab, 0)) cs.push_back(at(c, 1));
-    }
-    for (const Row& v : t.event_value) {
-        if (at(v, 0) == at(*ab, 0)) survivors = at(v, 2);
-    }
-    CHECK(cs == std::vector<std::int64_t>{e_cas});
-    CHECK(survivors == 11);
-    // its only settlement: the civilization ends with it (item 6), regions freed
-    REQUIRE(end != nullptr);
-    CHECK(at(*end, 1) == 3);
-    CHECK(at(t.civilization[0], 8) == 3);
-    for (const Row& rc : t.region_control) {
-        CHECK_FALSE(is_null(rc[2]));
-    }
+    // P3-05 r9 21 item 6 (generator 0.18.0, P3-06 r10 20.20): the settlement is its race's last refuge (the
+    // humans' only civilization, its only settlement), so it is never abandoned, not even below abandon_min:
+    // it stays standing with its few people and the civilization does not end. (Until 0.17.0 it was abandoned in
+    // the next T1 with the casualty event as its cause; that cause rule is checked on the property worlds.)
+    CHECK(ab == nullptr);
+    CHECK(end == nullptr);
+    CHECK(is_null(t.civilization[0][8]));
+    CHECK((at(t.settlement[0], 10) == 1 || at(t.settlement[0], 10) == 2));
 }
 
 TEST_CASE("P3-05 14 item 10, 16.2 item 19 (Y3): extra draws on every hist.peoples stream change nothing") {

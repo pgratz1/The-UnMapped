@@ -19,7 +19,7 @@ events = [
   { kind = "capital_moved", salience = 50, template = "{civilization} moved its seat to {settlement}." },
   { kind = "civ_ended", salience = 85, template = "{civilization} came to an end." },
   { kind = "ruin_faded", salience = 10, template = "The ruins of {settlement} faded from memory." },
-  { kind = "claim", salience = 45, template = "{claimant} laid claim to {@region}, held by {holder}." },
+  { kind = "claim", salience = 35, template = "{claimant} laid claim to {@region}, held by {holder}." },
   { kind = "war_declared", salience = 70, template = "{attacker} declared war on {defender} over {@region}." },
   { kind = "battle", salience = 30, template = "{winner} defeated {loser} in {@region}; {loser_dead} of the defeated and {winner_dead} of the victors fell." },
   { kind = "battle_at_pass", salience = 35, template = "{winner} defeated {loser} at the pass into {@region}; {loser_dead} of the defeated and {winner_dead} of the victors fell." },
@@ -31,4 +31,9 @@ events = [
   { kind = "region_ceded", salience = 55, template = "{from} ceded {@region} to {to}." },
   { kind = "civ_conquered", salience = 90, template = "{civilization} fell to {conqueror}." },
   { kind = "settlement_abandoned_to", salience = 55, template = "{settlement} was abandoned; {settled} {settled?survivor|survivors} went to {destination}{lost?|, and one was lost|, and # were lost}." },
+  { kind = "refugees_settled", salience = 65, template = "The survivors of {origin} fled into hiding and founded {@settlement} in {@region}." },
+  { kind = "tribute", salience = 50, template = "{payer} paid tribute to {payee}; {people} {people?was|were} carried off." },
+  { kind = "war_won", salience = 60, template = "{winner} prevailed over {loser} after {years} {years?year|years} of war." },
+  { kind = "search_abandoned", salience = 40, template = "{searcher} searched {@region} for {hidden} and found no one; the war ended after {years} {years?year|years}." },
+  { kind = "refuge_held", salience = 25, template = "{attacker} besieged {@settlement} of {defender}; with {reason?nowhere to flee|too few to flee}, its people held on." },
 ]

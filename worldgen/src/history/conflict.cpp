@@ -68,6 +68,18 @@ std::int64_t settlement_count(const State& state) noexcept {
     return static_cast<std::int64_t>(state.settlements().size());
 }
 
+std::vector<std::int64_t> standing_settlements_in(const State& state, std::int64_t civ, std::int64_t region) {
+    std::vector<std::int64_t> out;
+    const std::int64_t ns = settlement_count(state);
+    for (std::int64_t id = 1; id <= ns; ++id) {
+        const Settlement& s = state.settlement(id);
+        if (s.owner_civ == civ && s.region == region && standing(s)) {
+            out.push_back(id);
+        }
+    }
+    return out;
+}
+
 std::int64_t civ_count(const State& state) noexcept {
     return static_cast<std::int64_t>(state.civs().size());
 }
@@ -92,10 +104,10 @@ using namespace conflict_detail;
 
 namespace {
 
-// The five streams of 3.3, in registration order.
-constexpr std::array<std::string_view, 5> STREAM_NAMES = {
+// The five streams of 3.3 and r10's search (20.17 item 5), in registration order.
+constexpr std::array<std::string_view, 6> STREAM_NAMES = {
     streams::hist_conflict_declare, streams::hist_conflict_battle, streams::hist_conflict_battle_win,
-    streams::hist_conflict_siege, streams::hist_conflict_sack,
+    streams::hist_conflict_siege,   streams::hist_conflict_sack,   streams::hist_conflict_search,
 };
 
 constexpr std::array<Step, 3> STEPS = {Step::t2, Step::t6, Step::q4};
@@ -196,6 +208,20 @@ ConflictTuning conflict_tuning_from(const data::ContentSet& content) {
     t.secession_grudge = r.get_int("secession_grudge");
     t.grudge_decay_per_century = r.get_int("grudge_decay_per_century");
     t.last_refuge = r.get_int("last_refuge");
+    t.refuge_flight = r.get_int("refuge_flight");  // r9 20.9
+    t.flight_hops = r.get_int("flight_hops");
+    t.hidden_years = r.get_int("hidden_years");
+    t.weary_wars = r.get_int("weary_wars");
+    t.tribute_permille = r.get_int("tribute_permille");
+    t.revenge_aggression = r.get_int("revenge_aggression");
+    t.levy_hops = r.get_int("levy_hops");
+    t.odds_floor = r.get_int("odds_floor");
+    t.odds_min = r.get_int("odds_min");
+    t.truce_break_aggression = r.get_int("truce_break_aggression");
+    t.enmity_hops = r.get_int("enmity_hops");
+    t.kill_max_permille = r.get_int("kill_max_permille");  // r10 20.19
+    t.find_permille = r.get_int("find_permille");
+    t.search_years = r.get_int("search_years");
     t.capital_sacked_salience = r.get_int("capital_sacked_salience");
     t.capital_captured_salience = r.get_int("capital_captured_salience");
     return t;
@@ -257,6 +283,20 @@ void check_conflict_tuning(const ConflictTuning& t) {
     field_in(in(t.secession_grudge, 0, 2000), "secession_grudge");
     field_in(in(t.grudge_decay_per_century, 0, 10000), "grudge_decay_per_century");
     field_in(in(t.last_refuge, 0, 1), "last_refuge");
+    field_in(in(t.refuge_flight, 0, 1), "refuge_flight");
+    field_in(in(t.flight_hops, 1, 8), "flight_hops");
+    field_in(in(t.hidden_years, 0, 10000), "hidden_years");
+    field_in(in(t.weary_wars, 0, 100), "weary_wars");
+    field_in(in(t.tribute_permille, 0, 1000), "tribute_permille");
+    field_in(in(t.revenge_aggression, 0, 1000), "revenge_aggression");
+    field_in(in(t.levy_hops, 0, 16), "levy_hops");
+    field_in(in(t.odds_floor, 0, 1000), "odds_floor");
+    field_in(in(t.odds_min, 0, 1000), "odds_min");
+    field_in(in(t.truce_break_aggression, 0, 999), "truce_break_aggression");
+    field_in(in(t.enmity_hops, 1, 4), "enmity_hops");
+    field_in(in(t.kill_max_permille, 1, 10000), "kill_max_permille");
+    field_in(in(t.find_permille, 0, 1000), "find_permille");
+    field_in(in(t.search_years, 1, 100), "search_years");
     field_in(in(t.capital_sacked_salience, 0, 100), "capital_sacked_salience");
     field_in(in(t.capital_captured_salience, 0, 100), "capital_captured_salience");
     if (t.claim_strain > t.declare_min) {
@@ -264,6 +304,9 @@ void check_conflict_tuning(const ConflictTuning& t) {
     }
     if (t.declare_min + t.declare_span > t.strain_max) {
         fail("history: tuning: declare_min + declare_span must not be above strain_max");
+    }
+    if (t.enmity_hops < t.march_hops) {
+        fail("history: tuning: enmity_hops must not be below march_hops");
     }
 }
 
@@ -384,11 +427,38 @@ std::int64_t declare_permille(const ConflictTuning& t, std::int64_t s, std::int6
 
 std::int64_t force_of(const ConflictTuning& t, std::span<const std::pair<std::int64_t, SettlementKind>> settlements,
                       std::int64_t prowess) {
+    return force_of(t, settlements, prowess, 1000);
+}
+
+std::int64_t force_of(const ConflictTuning& t, std::span<const std::pair<std::int64_t, SettlementKind>> settlements,
+                      std::int64_t prowess, std::int64_t muster) {
     std::int64_t levy = 0;
     for (const auto& [p, kind] : settlements) {
         levy = checked_add(levy, floor_div(checked_mul(p, t.levy_permille.of(kind)), 1000));
     }
-    return floor_div(checked_mul(levy, prowess), 1000);
+    return floor_div(checked_mul(floor_div(checked_mul(levy, prowess), 1000), muster), 1000);
+}
+
+std::int64_t declare_odds(const ConflictTuning& t, std::int64_t force_a, std::int64_t fb, std::int64_t g) {
+    const std::int64_t m = std::max<std::int64_t>(1000 - g, t.odds_floor);
+    std::int64_t need = floor_div(checked_mul(fb, t.declare_ratio), 1000);
+    need = floor_div(checked_mul(need, m), 1000);
+    return std::min<std::int64_t>(1000, floor_div(checked_mul(force_a, 1000), std::max<std::int64_t>(1, need)));
+}
+
+std::int64_t declare_chance(const ConflictTuning& t, std::int64_t s, std::int64_t odds) {
+    if (s < t.declare_min) {
+        return 0;
+    }
+    const std::int64_t ramp = std::min<std::int64_t>(1000, floor_div(checked_mul(s - t.declare_min, 1000), t.declare_span));
+    const std::int64_t p = floor_div(checked_mul(t.declare_permille, ramp), 1000);
+    return floor_div(checked_mul(p, odds), 1000);
+}
+
+std::int64_t truce_length(const ConflictTuning& t, std::int64_t g) {
+    const std::int64_t f =
+        std::min<std::int64_t>(1000, floor_div(checked_mul(1000 - g, 1000), 1000 - t.truce_break_aggression));
+    return floor_div(checked_mul(t.truce_years, f), 1000);
 }
 
 std::int64_t cover_of(const PeoplesRegion& region, std::span<const std::int64_t> cover_biomes) {
@@ -412,6 +482,8 @@ std::int64_t defence_of(const ConflictTuning& t, const DefenceTerms& d) {
     if (d.fort) {
         def = checked_add(def, t.fort_defense);
     }
+    // r9 20.7 item 2: home defence.
+    def = checked_add(def, floor_div(checked_mul(d.home_defense, std::max<std::int64_t>(0, d.biome_term)), 1000));
     return def;
 }
 
@@ -427,6 +499,13 @@ std::int64_t garrison_of(const ConflictTuning& t, std::int64_t population, std::
     std::int64_t g = floor_div(checked_mul(population, t.garrison_permille), 1000);
     g = floor_div(checked_mul(g, prowess), 1000);
     return floor_div(checked_mul(g, walls), 1000);
+}
+
+std::int64_t garrison_of(const ConflictTuning& t, std::int64_t population, std::int64_t prowess, SettlementKind kind,
+                         bool capital, std::int64_t home_defense, std::int64_t biome_term) {
+    const std::int64_t home =
+        checked_add(1000, floor_div(checked_mul(home_defense, std::max<std::int64_t>(0, biome_term)), 1000));
+    return floor_div(checked_mul(garrison_of(t, population, prowess, kind, capital), home), 1000);
 }
 
 std::int64_t siege_permille_of(std::int64_t attack_left, std::int64_t garrison) {
@@ -466,6 +545,15 @@ std::int64_t war_score(std::int64_t won_a, std::int64_t won_b, std::int64_t take
     return checked_add(checked_sub(won_a, won_b), checked_mul(2, checked_sub(taken_a, taken_b)));
 }
 
+std::int64_t war_score_people(std::int64_t dead_a, std::int64_t dead_b, std::int64_t taken_a, std::int64_t taken_b) {
+    return checked_add(checked_sub(dead_b, dead_a), checked_sub(taken_a, taken_b));
+}
+
+std::int64_t loser_dead_of(const ConflictTuning& t, std::int64_t force_winner, std::int64_t force_loser) {
+    return std::min(floor_div(checked_mul(force_loser, t.loss_loser_permille), 1000),
+                    floor_div(checked_mul(force_winner, t.kill_max_permille), 1000));
+}
+
 // --- Setup ----------------------------------------------------------------------------------------
 
 ConflictSubsystem::ConflictSubsystem(PeoplesSubsystem& peoples, const data::ContentSet& content)
@@ -502,7 +590,8 @@ void ConflictSubsystem::prepare(const StepContext& ctx) {
             fail("history: conflict: race '" + row.key + "' is not in the content");
         }
         races_.push_back(ConflictRace{row.id, row.key, row.camp, d->record.get_int("aggression"),
-                                      d->record.get_int("prowess_permille")});
+                                      d->record.get_int("prowess_permille"), d->record.get_int("muster_permille"),
+                                      d->record.get_int("conceal_min"), d->record.get_int("home_defense_permille")});
     }
     const PeoplesGeo& g = peoples_.geo();
     const std::int64_t nr = g.region_count();
@@ -554,27 +643,86 @@ std::vector<std::int64_t> ConflictSubsystem::alive_civs(const StepContext& ctx) 
     return out;
 }
 
+// r9 20.1: the regions of c's standing visible settlements that are not
+// hidden, with the regions c holds in which c has no hidden settlement.
 std::vector<std::int64_t> ConflictSubsystem::presence(const StepContext& ctx, std::int64_t civ) const {
     const State& state = ctx.state();
     const std::int64_t nr = static_cast<std::int64_t>(graph_.size());
-    std::vector<std::uint8_t> in_presence(static_cast<std::size_t>(nr) + 1, 0);
-    for (std::int64_t r = 1; r <= nr; ++r) {
-        in_presence[static_cast<std::size_t>(r)] = state.region(r).owner == civ ? 1 : 0;
-    }
+    std::vector<std::uint8_t> seen(static_cast<std::size_t>(nr) + 1, 0);
+    std::vector<std::uint8_t> hiding(static_cast<std::size_t>(nr) + 1, 0);
     const std::int64_t ns = settlement_count(state);
     for (std::int64_t id = 1; id <= ns; ++id) {
         const Settlement& s = state.settlement(id);
-        if (s.owner_civ == civ && standing(s) && ctx.visible(s)) {
-            in_presence[static_cast<std::size_t>(s.region)] = 1;
+        if (s.owner_civ != civ || !standing(s)) {
+            continue;
+        }
+        // 20.1 with 5.1 and 8.3 item 4: a visible settlement that is not
+        // hidden puts its region in presence; a hidden one hides a held
+        // region whether or not the engine shows it yet (20.21 item 1: a
+        // refuge founded earlier in this T6 counts).
+        if (hidden(ctx, id)) {
+            hiding[static_cast<std::size_t>(s.region)] = 1;
+        } else if (ctx.visible(s)) {
+            seen[static_cast<std::size_t>(s.region)] = 1;
         }
     }
     std::vector<std::int64_t> out;
     for (std::int64_t r = 1; r <= nr; ++r) {
-        if (in_presence[static_cast<std::size_t>(r)] != 0) {
+        const auto i = static_cast<std::size_t>(r);
+        if (seen[i] != 0 || (state.region(r).owner == civ && hiding[i] == 0)) {
             out.push_back(r);
         }
     }
     return out;
+}
+
+bool ConflictSubsystem::concealed(const State& state, const Settlement& s) const {
+    if (s.owner_civ == 0) {
+        return false;
+    }
+    const std::int64_t race = state.civ(s.owner_civ).race;
+    for (const ConflictRace& r : races_) {
+        if (r.id == race) {
+            return r.conceal_min <= 1000 && peoples_.view().biome_term(s.region, race) >= r.conceal_min;
+        }
+    }
+    fail("history: conflict: race " + int_text(race) + " does not exist");
+}
+
+// r10 20.17: hidden is a fled refuge only; a concealed settlement is in
+// presence and must be found (the search of 7.3).
+bool ConflictSubsystem::hidden(const StepContext& ctx, std::int64_t settlement) const {
+    const auto it = hidden_until_.find(settlement);
+    return it != hidden_until_.end() && ctx.year() < it->second;
+}
+
+std::vector<std::int64_t> ConflictSubsystem::seen_settlements(const StepContext& ctx, std::int64_t civ,
+                                                              std::int64_t region) const {
+    std::vector<std::int64_t> out;
+    for (const std::int64_t id : visible_settlements(ctx, civ, region)) {
+        if (!hidden(ctx, id)) {
+            out.push_back(id);
+        }
+    }
+    return out;
+}
+
+// 20.1: c's only standing settlement is t and c is the only alive
+// civilization of its race.
+bool ConflictSubsystem::last_refuge_of(const State& state, std::int64_t civ) const {
+    const std::int64_t race = state.civ(civ).race;
+    const std::int64_t nc = civ_count(state);
+    for (std::int64_t c = 1; c <= nc; ++c) {
+        if (c != civ && !state.civ(c).ended_year && state.civ(c).race == race) {
+            return false;
+        }
+    }
+    std::int64_t standing_count = 0;
+    const std::int64_t ns = settlement_count(state);
+    for (std::int64_t id = 1; id <= ns; ++id) {
+        standing_count += (state.settlement(id).owner_civ == civ && standing(state.settlement(id))) ? 1 : 0;
+    }
+    return standing_count == 1;
 }
 
 std::vector<std::int64_t> ConflictSubsystem::visible_settlements(const StepContext& ctx, std::int64_t civ,
@@ -597,11 +745,44 @@ std::int64_t ConflictSubsystem::force(const StepContext& ctx, std::int64_t civ) 
         const Settlement& s = ctx.state().settlement(id);
         list.emplace_back(s.population, s.kind);
     }
-    const std::int64_t f = force_of(tuning_, list, race_of_civ(ctx, civ).prowess);
+    const ConflictRace& r = race_of_civ(ctx, civ);
+    const std::int64_t f = force_of(tuning_, list, r.prowess, r.muster);
     if (f > BOUND_2_40) {
         fail("history: bound: conflict force of civilization " + int_text(civ) + " exceeds 2^40");
     }
     return f;
+}
+
+std::int64_t ConflictSubsystem::local_force(const StepContext& ctx, std::int64_t civ, std::int64_t region) const {
+    const std::vector<std::int64_t>& hops = peoples_.view().hops(region);
+    std::vector<std::pair<std::int64_t, SettlementKind>> list;
+    for (const std::int64_t id : visible_settlements(ctx, civ, 0)) {
+        const Settlement& s = ctx.state().settlement(id);
+        const std::int64_t d = hops[static_cast<std::size_t>(s.region - 1)];
+        if (d >= 0 && d <= tuning_.levy_hops) {
+            list.emplace_back(s.population, s.kind);
+        }
+    }
+    const ConflictRace& r = race_of_civ(ctx, civ);
+    const std::int64_t f = force_of(tuning_, list, r.prowess, r.muster);
+    if (f > BOUND_2_40) {
+        fail("history: bound: conflict force of civilization " + int_text(civ) + " exceeds 2^40");
+    }
+    return floor_div(f, std::max<std::int64_t>(1, open_wars_of(civ)));
+}
+
+std::int64_t ConflictSubsystem::front_hops(std::int64_t a, std::int64_t b) const {
+    return enmity_opened_.count(ordered(a, b)) != 0 ? tuning_.enmity_hops : tuning_.march_hops;
+}
+
+// 20.5: g' = max(g_a, revenge_aggression) while wronged(a, b) is not empty
+// and grudge{a, b} > 0.
+std::int64_t ConflictSubsystem::effective_aggression(std::int64_t a, std::int64_t b, std::int64_t g) const {
+    const auto it = wronged_.find(Pair{a, b});
+    if (it != wronged_.end() && !it->second.empty() && grudge(a, b) > 0) {
+        return std::max(g, tuning_.revenge_aggression);
+    }
+    return g;
 }
 
 std::int64_t ConflictSubsystem::open_wars_of(std::int64_t civ) const {
@@ -622,9 +803,11 @@ bool ConflictSubsystem::attacking(std::int64_t a) const {
     return std::any_of(wars_.begin(), wars_.end(), [a](const ConflictWar& w) { return w.open && w.attacker == a; });
 }
 
+// r9 20.6 item 4: a's truce against b, shorter for the most warlike.
 bool ConflictSubsystem::truce_over(const StepContext& ctx, std::int64_t a, std::int64_t b) const {
     const auto it = last_peace_.find(ordered(a, b));
-    return it == last_peace_.end() || ctx.year() >= checked_add(it->second.year, tuning_.truce_years);
+    return it == last_peace_.end() ||
+           ctx.year() >= checked_add(it->second.year, truce_length(tuning_, race_of_civ(ctx, a).aggression));
 }
 
 std::int64_t ConflictSubsystem::disposition_of(const StepContext& ctx, std::int64_t a, std::int64_t b) const {
@@ -647,6 +830,103 @@ std::optional<std::pair<std::int64_t, std::int64_t>> ConflictSubsystem::claim(st
         return std::nullopt;
     }
     return std::pair(it->second.event, it->second.region);
+}
+
+std::int64_t ConflictSubsystem::hidden_until(std::int64_t settlement) const {
+    const auto it = hidden_until_.find(settlement);
+    return it == hidden_until_.end() ? 0 : it->second;
+}
+
+std::int64_t ConflictSubsystem::futile_count(const StepContext& ctx, std::int64_t defender, std::int64_t region) const {
+    const auto it = futile_.find(Pair{defender, region});
+    if (it == futile_.end() || it->second.owner != ctx.state().region(region).owner) {
+        return 0;
+    }
+    return it->second.count;
+}
+
+std::vector<std::int64_t> ConflictSubsystem::wronged(std::int64_t a, std::int64_t b) const {
+    const auto it = wronged_.find(Pair{a, b});
+    return it == wronged_.end() ? std::vector<std::int64_t>{}
+                                : std::vector<std::int64_t>(it->second.begin(), it->second.end());
+}
+
+// r9 20.4 with the lead's ruling for 20.23 (P3-09 r3): the wars now open
+// against the defender over the region count as if futile already.
+bool ConflictSubsystem::weary(const StepContext& ctx, std::int64_t defender, std::int64_t region) const {
+    if (tuning_.weary_wars <= 0) {
+        return false;
+    }
+    std::int64_t open = 0;
+    for (const ConflictWar& w : wars_) {
+        open += (w.open && w.defender == defender && w.goal == region) ? 1 : 0;
+    }
+    return checked_add(futile_count(ctx, defender, region), open) >= tuning_.weary_wars;
+}
+
+// 20.2: front(a, b) without the regions b is weary of, and without b's
+// capital region unless that leaves none.
+std::vector<FrontEntry> ConflictSubsystem::allowed_goals(const StepContext& ctx, std::int64_t b,
+                                                         std::span<const FrontEntry> front) const {
+    const State& state = ctx.state();
+    const std::int64_t capital = state.civ(b).capital;
+    const std::int64_t capital_region = capital != 0 ? state.settlement(capital).region : 0;
+    std::vector<FrontEntry> out;
+    std::optional<FrontEntry> at_capital;
+    for (const FrontEntry& e : front) {
+        if (weary(ctx, b, e.region)) {
+            continue;
+        }
+        if (e.region == capital_region) {
+            at_capital = e;
+        } else {
+            out.push_back(e);
+        }
+    }
+    if (out.empty() && at_capital) {
+        out.push_back(*at_capital);
+    }
+    return out;
+}
+
+// 6.3 for entry e of a front against y, with r9's home defence.
+std::pair<std::int64_t, std::int64_t> ConflictSubsystem::defence_at(const StepContext& ctx, std::int64_t y,
+                                                                    const FrontEntry& e) const {
+    const std::int64_t region = e.region;
+    DefenceTerms terms;
+    terms.cover = cover_of(peoples_.geo().region(region), cover_biomes_);
+    std::int64_t pass_id = 0;
+    if (e.from != region) {
+        const auto it = border_.find(ordered(e.from, region));
+        if (it != border_.end()) {
+            const db::RegionBorderRow& b = ctx.inputs().region_borders[it->second];
+            terms.pass = b.walk_pairs == 0 && b.pass_id > 0;
+            pass_id = terms.pass ? b.pass_id : 0;
+            terms.river = b.length_m > 0 &&
+                          checked_mul(checked_mul(b.river_pairs, 16), 1000) >=
+                              checked_mul(peoples_.tuning().river_border_share_permille, b.length_m);
+        }
+    }
+    for (const std::int64_t id : visible_settlements(ctx, y, region)) {
+        terms.fort = terms.fort || ctx.state().settlement(id).kind == SettlementKind::fortress;
+    }
+    const ConflictRace& r = race_of_civ(ctx, y);
+    terms.home_defense = r.home_defense;
+    terms.biome_term = peoples_.view().biome_term(region, r.id);
+    return {defence_of(tuning_, terms), pass_id};
+}
+
+// 20.6 item 3: the odds of a's declaration against b on its claim.
+std::int64_t ConflictSubsystem::odds_of(const StepContext& ctx, std::int64_t a, std::int64_t b) const {
+    const std::int64_t goal = claims_.at(Pair{a, b}).region;
+    std::int64_t def = 1000;
+    for (const FrontEntry& e : live_front(ctx, a, b)) {
+        if (e.region == goal) {
+            def = defence_at(ctx, b, e).first;
+        }
+    }
+    const std::int64_t fb = floor_div(checked_mul(force(ctx, b), def), 1000);
+    return declare_odds(tuning_, force(ctx, a), fb, effective_aggression(a, b, race_of_civ(ctx, a).aggression));
 }
 
 void ConflictSubsystem::add_grudge(std::int64_t a, std::int64_t b, std::int64_t amount) {
@@ -684,7 +964,7 @@ FrontEntry ConflictSubsystem::best_target(const StepContext& ctx, std::int64_t r
 std::vector<FrontEntry> ConflictSubsystem::live_front(const StepContext& ctx, std::int64_t x, std::int64_t y) const {
     const std::vector<std::int64_t> px = presence(ctx, x);
     const std::vector<std::int64_t> py = presence(ctx, y);
-    return front_of(graph_, px, py, tuning_.march_hops);
+    return front_of(graph_, px, py, front_hops(x, y));
 }
 
 // --- Run --------------------------------------------------------------------------------------------
@@ -806,6 +1086,7 @@ void ConflictSubsystem::update_strain(StepContext& ctx, std::int64_t years, std:
         std::vector<std::int64_t> wanted;
         std::int64_t share = 0;
         ReachTable reach;
+        ReachTable reach_enmity;  // r9 20.8 item 1: at enmity_hops (when it differs)
     };
     std::map<std::int64_t, Snapshot> snap;
     const std::int64_t nr = g.region_count();
@@ -822,6 +1103,9 @@ void ConflictSubsystem::update_strain(StepContext& ctx, std::int64_t years, std:
         s.wanted = view.wanted_held(ctx, c);  // once per civilization (8.4 item 7)
         s.share = share_of(non_islet_held, non_islet_);
         s.reach = reach_from(graph_, s.presence, tuning_.march_hops);
+        if (tuning_.enmity_hops != tuning_.march_hops) {
+            s.reach_enmity = reach_from(graph_, s.presence, tuning_.enmity_hops);
+        }
         snap.emplace(c, std::move(s));
     }
     contact_.clear();
@@ -833,7 +1117,8 @@ void ConflictSubsystem::update_strain(StepContext& ctx, std::int64_t years, std:
                 continue;
             }
             const Snapshot& sb = snap.at(b);
-            std::vector<FrontEntry> fr = front_of(sa.reach, sa.presence, sb.presence);
+            const bool far = front_hops(a, b) != tuning_.march_hops;
+            std::vector<FrontEntry> fr = front_of(far ? sa.reach_enmity : sa.reach, sa.presence, sb.presence);
             if (fr.empty()) {
                 continue;
             }
@@ -853,7 +1138,8 @@ void ConflictSubsystem::update_strain(StepContext& ctx, std::int64_t years, std:
             const std::int64_t want = want_of(tuning_, wants, view.hunger(a));
             const std::int64_t fear = fear_of(tuning_, sb.share);
             const std::int64_t drive = drive_of(tuning_, disposition_of(ctx, a, b), want, fear);
-            const std::int64_t rate = strain_rate(race_of_civ(ctx, a).aggression, drive, k);
+            const std::int64_t ga = effective_aggression(a, b, race_of_civ(ctx, a).aggression);  // r9 20.5
+            const std::int64_t rate = strain_rate(ga, drive, k);
             const std::int64_t next = strain_after(tuning_, strain(a, b), rate, years, permille, intensity_);
             if (next > BOUND_2_40) {
                 fail("history: bound: conflict strain of civilization " + int_text(a) + " against " + int_text(b) +
@@ -872,16 +1158,23 @@ void ConflictSubsystem::update_strain(StepContext& ctx, std::int64_t years, std:
         if (quiet && ctx.quiet_events_left(a) <= 0) {
             continue;
         }
+        // r9 20.2 item 1: among the allowed goals; wronged land first (20.5).
+        const std::vector<FrontEntry> allowed = allowed_goals(ctx, b, fr);
+        if (allowed.empty()) {
+            continue;
+        }
         const std::int64_t race = race_of_civ(ctx, a).id;
         const std::vector<std::int64_t>& wanted = snap.at(a).wanted;
-        FrontEntry pick_entry = fr.front();
-        std::tuple<std::int64_t, std::int64_t, std::int64_t> best_key{};
+        const auto wr = wronged_.find(key);
+        FrontEntry pick_entry = allowed.front();
+        std::tuple<std::int64_t, std::int64_t, std::int64_t, std::int64_t> best_key{};
         bool first = true;
-        for (const FrontEntry& e : fr) {
-            const bool wanted_held = std::binary_search(wanted.begin(), wanted.end(), e.region) &&
-                                     ctx.state().region(e.region).owner == b;
-            const std::tuple<std::int64_t, std::int64_t, std::int64_t> k{wanted_held ? 0 : 1,
-                                                                         -target_key_value(ctx, race, e), e.region};
+        for (const FrontEntry& e : allowed) {
+            const bool held = ctx.state().region(e.region).owner == b;
+            const bool wronged_held = held && wr != wronged_.end() && wr->second.count(e.region) != 0;
+            const bool wanted_held = held && std::binary_search(wanted.begin(), wanted.end(), e.region);
+            const std::tuple<std::int64_t, std::int64_t, std::int64_t, std::int64_t> k{
+                wronged_held ? 0 : 1, wanted_held ? 0 : 1, -target_key_value(ctx, race, e), e.region};
             if (first || k < best_key) {
                 pick_entry = e;
                 best_key = k;
@@ -894,7 +1187,7 @@ void ConflictSubsystem::update_strain(StepContext& ctx, std::int64_t years, std:
             cause = ctx.state().region(region).owner_event;
         } else {
             std::int64_t best = 0;
-            for (const std::int64_t id : visible_settlements(ctx, b, region)) {
+            for (const std::int64_t id : seen_settlements(ctx, b, region)) {  // r10 20.21 item 3
                 if (best == 0 || ctx.state().settlement(id).population > ctx.state().settlement(best).population) {
                     best = id;
                 }
@@ -923,7 +1216,9 @@ std::optional<std::pair<TensionReport, ConflictSubsystem::Pair>> ConflictSubsyst
             continue;
         }
         const std::int64_t v = floor_div(strain(a, b), 1000);
-        if (v > best_value) {
+        // r9 20.6 item 3: a claim a people cannot pursue does not flare up
+        // (the odds only when the value would count).
+        if (v > best_value && odds_of(ctx, a, b) >= tuning_.odds_min) {
             best_value = v;
             best = std::pair(TensionReport{v, c.event}, key);
         }
@@ -982,7 +1277,12 @@ void ConflictSubsystem::declarations(StepContext& ctx) {
         if (s < tuning_.declare_min) {
             continue;
         }
-        const std::int64_t p = declare_permille(tuning_, s, force(ctx, a), force(ctx, b), race_of_civ(ctx, a).aggression);
+        // r9 20.6 item 3: no declaration, and no draw, below odds_min.
+        const std::int64_t odds = odds_of(ctx, a, b);
+        if (odds < tuning_.odds_min) {
+            continue;
+        }
+        const std::int64_t p = declare_chance(tuning_, s, odds);
         if (chance_pm(ctx.draw(keys_[DECLARE], word(a), word(b), 0), p)) {
             declare(ctx, a, b);
         }
@@ -993,11 +1293,17 @@ void ConflictSubsystem::declare(StepContext& ctx, std::int64_t a, std::int64_t b
     State& state = ctx.state();
     const Claim claim_of = claims_.at(Pair{a, b});
     std::int64_t goal = claim_of.region;
-    if (state.region(goal).owner != b && visible_settlements(ctx, b, goal).empty()) {
-        const std::vector<FrontEntry> fr = live_front(ctx, a, b);
-        if (!fr.empty()) {
-            goal = best_target(ctx, race_of_civ(ctx, a).id, fr).region;
+    // r9 20.2 item 2: the goal is an allowed goal, else the claim is dropped.
+    const std::vector<FrontEntry> fr = live_front(ctx, a, b);
+    const std::vector<FrontEntry> allowed = allowed_goals(ctx, b, fr);
+    const bool claim_allowed = std::any_of(allowed.begin(), allowed.end(),
+                                           [goal](const FrontEntry& e) { return e.region == goal; });
+    if (!claim_allowed || (state.region(goal).owner != b && visible_settlements(ctx, b, goal).empty())) {
+        if (allowed.empty()) {
+            claims_.erase(Pair{a, b});
+            return;
         }
+        goal = best_target(ctx, race_of_civ(ctx, a).id, allowed).region;
     }
     EventSpec e = point_event(ctx, "war_declared", goal, 0);
     e.participants = {civ_role("attacker", a), civ_role("defender", b)};
@@ -1021,6 +1327,7 @@ void ConflictSubsystem::declare(StepContext& ctx, std::int64_t a, std::int64_t b
     w.start = ctx.year();
     w.last_event = ev;
     w.initiative = a;
+    w.goal_owner = state.region(goal).owner;
     w.pop0 = {peoples_.view().population(ctx, a), peoples_.view().population(ctx, b)};
     wars_.push_back(w);
 }
@@ -1031,14 +1338,23 @@ void ConflictSubsystem::quiet_ends(StepContext& ctx) {
     const std::size_t n = wars_.size();
     for (std::size_t i = 0; i < n; ++i) {
         if (wars_[i].open) {
-            (void)end_war(ctx, i, score_winner(wars_[i]));
+            (void)end_war(ctx, i, unless_last_battle(wars_[i], score_winner(wars_[i])), false);
         }
     }
 }
 
+// r10 20.15 item 1: the dead inflicted and the people taken.
 std::int64_t ConflictSubsystem::score_winner(const ConflictWar& w) const {
-    const std::int64_t s = war_score(w.won[0], w.won[1], w.taken[0], w.taken[1]);
+    const std::int64_t s = war_score_people(w.dead[0], w.dead[1], w.taken_people[0], w.taken_people[1]);
     return s > 0 ? w.attacker : (s < 0 ? w.defender : 0);
+}
+
+std::int64_t ConflictSubsystem::unless_last_battle(const ConflictWar& w, std::int64_t winner) const {
+    if (winner == 0) {
+        return 0;
+    }
+    const std::int64_t loser = winner == w.attacker ? w.defender : w.attacker;
+    return w.last_battle_winner == loser ? 0 : winner;
 }
 
 }  // namespace worldgen::history
