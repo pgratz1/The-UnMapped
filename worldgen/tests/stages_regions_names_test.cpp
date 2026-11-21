@@ -344,7 +344,7 @@ TEST_CASE("P1-06 r6 15.4, 15.6: V7 stems: The Weald of Floods after The Flooded 
     CHECK(k->how[0] == "0");
 }
 
-// 15.6 writes "Thornholt then Ashholt"; Ash + holt fails V1 (h, h), so Elm stands in for Ash.
+// 15.6 (r9): "Thornholt then Elmholt".
 TEST_CASE("P1-06 r6 15.4, 15.6: V7 lets nouns and suffixes repeat (Thornholt, Elmholt); a fallback adds nothing to S") {
     rn::PlaceData d;
     rn::PlaceDef c = fixture_common();

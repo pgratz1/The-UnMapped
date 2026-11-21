@@ -150,7 +150,7 @@ geo-seed-0-512 homes ra6 y5534 n1 9
 geo-seed-0-512 table civilization 6756ca8ff505c2dd0e404aedfd022f17f58f16c65660d4fbfaae8732f4d45f25
 geo-seed-0-512 table event b7c4596d4936f465e5fbbca343654f5721b268319a552b8b214e6737c54434c0
 geo-seed-0-512 table event_cause 0a2cb974b7fb190580dbbe605d0026558d04a21218c8192ddc83ba2853fedc3a
-geo-seed-0-512 table event_kind 58b8cb7b5b5121612b331cd052c06a2bdfc4e23ba2f1956e14bc85aa432f8776
+geo-seed-0-512 table event_kind 5bb33c7be421113e5b2507e775557dd7afe51c39ad7d9a5426e6f8e94e4b2f18
 geo-seed-0-512 table event_kind_role 828c060dc0d262d618363e1eb4194754223827013ae83efa04ea2944f3b5731b
 geo-seed-0-512 table event_kind_value ea3bdaba66965ca348093390b78ac4b2e92807052c93c9bb59822b0c53c0771e
 geo-seed-0-512 table event_participant 7815adc513d503398becd086f047ae1cebe98efc337c4ff7327e0416138a31fc
@@ -272,7 +272,7 @@ geo-seed-0-512 e34 Clan Durgarin sent settlers from Kidinkorn to found Houmm Dee
 geo-seed-0-512 e35 Whaia awakened the Faeries in the Wild Hurst.
 geo-seed-0-512 e36 The Faeries founded the Wosk Ring in the Wild Hurst.
 geo-seed-0-512 e37 The Wosk Ring founded Athfli Hollow in the Wild Hurst.
-geo-seed-0-512 e38 Plague broke out in Bux-Kreeb and spread to one other settlement; 372 died.
+geo-seed-0-512 e38 Plague broke out in Bux-Kreeb and spread to one other settlement; 372 died in all.
 geo-seed-0-512 e39 The plague spread to Grunkgnuzz Pit; 157 died.
 geo-seed-0-512 e40 Famine struck Sniz; 136 died.
 geo-seed-0-512 e41 Plague broke out in Slank-Skrox; 168 died.
@@ -312,7 +312,7 @@ geo-seed-0-512 e74 Magh'thuugh Fort grew into a town of 1,513.
 geo-seed-0-512 e75 A succession crisis at Magh'thuugh Fort shook the Warband of Ghom.
 geo-seed-0-512 e76 The Wosk Ring sent settlers from Whywo to found Twaess Hollow in Coalholt.
 geo-seed-0-512 e77 Plague broke out in Grangrak; 300 died.
-geo-seed-0-512 e78 Plague broke out in Bozz Pit and spread to one other settlement; 219 died.
+geo-seed-0-512 e78 Plague broke out in Bozz Pit and spread to one other settlement; 219 died in all.
 geo-seed-0-512 e79 The plague spread to Grunkgnuzz Pit; 121 died.
 geo-seed-0-512 e80 For 16 years, from 5684 to 5699, the land was quiet, and 6 realms kept the peace.
 geo-seed-0-512 e81 Famine struck Drobskeet; 39 died.
@@ -334,7 +334,7 @@ geo-seed-0-512 e96 Famine struck Sluggatch Hole; 57 died.
 geo-seed-0-512 e97 Famine struck Sluggatch Hole; 100 died.
 geo-seed-0-512 e98 The Wosk Ring sent settlers from Whywo to found Whoutwa in Coalholt.
 geo-seed-0-512 e99 Famine struck Hinbeasbury; 278 died.
-geo-seed-0-512 e100 Plague broke out in Flouy Glade and spread to one other settlement; 343 died.
+geo-seed-0-512 e100 Plague broke out in Flouy Glade and spread to one other settlement; 343 died in all.
 geo-seed-0-512 e101 The plague spread to Athfli Hollow; 174 died.
 geo-seed-0-512 e102 Whoutwa grew into a village of 250.
 geo-seed-0-512 e103 A succession crisis at Grunkgnuzz Pit shook the Baskeeb Mob.
@@ -440,7 +440,7 @@ geo-seed-42-512 homes ra6 y5596 n1 6
 geo-seed-42-512 table civilization fbd2a7f5083cc813db2891e1f834d11df08461dfe64ed0a45ee7cd843b99be0b
 geo-seed-42-512 table event e7bbed99ed7244bf967c2f2631bf8d7bf22610183fd1df6dd181cf432e225f5f
 geo-seed-42-512 table event_cause b25cd0e76426b6c9e056187eb1b9b319dbcfdb7960a416b2ad1fc853643ee7da
-geo-seed-42-512 table event_kind 58b8cb7b5b5121612b331cd052c06a2bdfc4e23ba2f1956e14bc85aa432f8776
+geo-seed-42-512 table event_kind 5bb33c7be421113e5b2507e775557dd7afe51c39ad7d9a5426e6f8e94e4b2f18
 geo-seed-42-512 table event_kind_role 828c060dc0d262d618363e1eb4194754223827013ae83efa04ea2944f3b5731b
 geo-seed-42-512 table event_kind_value ea3bdaba66965ca348093390b78ac4b2e92807052c93c9bb59822b0c53c0771e
 geo-seed-42-512 table event_participant 16caf9abd6e1124af08ef6e063c45b29755322273ca1541ed3326ee82ae95db4
@@ -589,7 +589,7 @@ geo-seed-42-512 e61 Druk grew into a town of 1,523.
 geo-seed-42-512 e62 Bronhak awakened the Dwarves in Northwest Fells.
 geo-seed-42-512 e63 The Dwarves founded the Hold of Dulimin in Northwest Fells.
 geo-seed-42-512 e64 The Hold of Dulimin founded Thoum in Northwest Fells.
-geo-seed-42-512 e65 Plague broke out in Niskreerk and spread to one other settlement; 1,020 died.
+geo-seed-42-512 e65 Plague broke out in Niskreerk and spread to one other settlement; 1,020 died in all.
 geo-seed-42-512 e66 The plague spread to Sneezskrub Hole; 551 died.
 geo-seed-42-512 e67 Famine struck Snugg; 447 died.
 geo-seed-42-512 e68 Famine struck Druk; 232 died.
@@ -605,7 +605,7 @@ geo-seed-42-512 e77 The Faeries founded the Beepo Ring in Leper's Debt.
 geo-seed-42-512 e78 The Beepo Ring founded Beeliemee in Leper's Debt.
 geo-seed-42-512 e79 Famine struck Voeledell; 290 died.
 geo-seed-42-512 e80 Weakened by famine, Voeledell dwindled to 1,193 souls.
-geo-seed-42-512 e81 Plague broke out in Groz and spread to one other settlement; 356 died.
+geo-seed-42-512 e81 Plague broke out in Groz and spread to one other settlement; 356 died in all.
 geo-seed-42-512 e82 The plague spread to Drirk Pit; 161 died.
 geo-seed-42-512 e83 Famine struck Saelo; 32 died.
 geo-seed-42-512 e84 Famine struck Gruz-Keegg; 138 died.
@@ -614,7 +614,7 @@ geo-seed-42-512 e86 Famine struck Niskreerk; 268 died.
 geo-seed-42-512 e87 Famine struck Dreeb Pit; 417 died.
 geo-seed-42-512 e88 Plague broke out in Snozz-Skink; 941 died.
 geo-seed-42-512 e89 Famine struck Raenme; 21 died.
-geo-seed-42-512 e90 Plague broke out in Beedrux Pit and spread to one other settlement; 330 died.
+geo-seed-42-512 e90 Plague broke out in Beedrux Pit and spread to one other settlement; 330 died in all.
 geo-seed-42-512 e91 The plague spread to Slikreek; 143 died.
 geo-seed-42-512 e92 A succession crisis at Snozz-Skink shook the Grork Horde.
 geo-seed-42-512 e93 The Warrens of Gutch-Sluz broke away from the Grork Horde with 4 settlements.
@@ -655,7 +655,7 @@ geo-seed-42-512 e127 A succession crisis at Snozz-Skink shook the Grork Horde.
 geo-seed-42-512 e128 Cinmumstead grew into a town of 1,506.
 geo-seed-42-512 e129 Krux grew into a village of 251.
 geo-seed-42-512 e130 A succession crisis at Snozz-Skink shook the Grork Horde.
-geo-seed-42-512 e131 Plague broke out in Druk and spread to one other settlement; 551 died.
+geo-seed-42-512 e131 Plague broke out in Druk and spread to one other settlement; 551 died in all.
 geo-seed-42-512 e132 The plague spread to Zeezzbazz; 109 died.
 geo-seed-42-512 e133 Famine struck Beedrux Pit; 200 died.
 geo-seed-42-512 e134 Matia Glade grew into a village of 250.
@@ -687,7 +687,7 @@ geo-seed-42-512 e159 Plague broke out in Iennmo and spread to 2 other settlement
 geo-seed-42-512 e160 The plague spread to Ciennfae; 53 died.
 geo-seed-42-512 e161 The plague spread to Laesiend; 41 died.
 geo-seed-42-512 e162 Famine struck Glalivedell; 48 died.
-geo-seed-42-512 e163 Plague broke out in Snugg and spread to one other settlement; 1,318 died.
+geo-seed-42-512 e163 Plague broke out in Snugg and spread to one other settlement; 1,318 died in all.
 geo-seed-42-512 e164 The plague spread to Nank Pit; 555 died.
 geo-seed-42-512 e165 Plague broke out in Sneezskrub Hole and spread to 2 other settlements; 924 died in all.
 geo-seed-42-512 e166 The plague spread to Niskreerk; 233 died.
@@ -701,7 +701,7 @@ geo-seed-42-512 e173 Famine struck Mald; 1,417 died.
 geo-seed-42-512 e174 A succession crisis at Orz'grom Camp shook Clan Aark'thuugh.
 geo-seed-42-512 e175 A succession crisis at Snozz-Skink shook the Grork Horde.
 geo-seed-42-512 e176 Famine struck Laesiend; 39 died.
-geo-seed-42-512 e177 Plague broke out in Skrunk Pit and spread to one other settlement; 418 died.
+geo-seed-42-512 e177 Plague broke out in Skrunk Pit and spread to one other settlement; 418 died in all.
 geo-seed-42-512 e178 The plague spread to Slikreek; 116 died.
 geo-seed-42-512 e179 Plague broke out in Masri; 52 died.
 geo-seed-42-512 e180 Orz'grom Camp grew into a town of 1,516.
@@ -716,7 +716,7 @@ geo-seed-42-512 e188 Famine struck Snugg; 561 died.
 geo-seed-42-512 e189 Famine struck Fouflo Hollow; 21 died.
 geo-seed-42-512 e190 Famine struck Grin; 183 died.
 geo-seed-42-512 e191 Clan Aark'thuugh sent settlers from Orz'grom Camp to found Thuurkbash in Sorreldown.
-geo-seed-42-512 e192 Plague broke out in Sneezskrub Hole and spread to one other settlement; 676 died.
+geo-seed-42-512 e192 Plague broke out in Sneezskrub Hole and spread to one other settlement; 676 died in all.
 geo-seed-42-512 e193 The plague spread to Snugg; 289 died.
 geo-seed-42-512 e194 Clan Aark'thuugh sent settlers from Orz'grom Camp to found Urald in Sorreldown.
 geo-seed-42-512 e195 Famine struck Sneezskrub Hole; 408 died.
@@ -729,7 +729,7 @@ geo-seed-42-512 e201 Famine struck Zeezzbazz; 157 died.
 geo-seed-42-512 e202 Famine struck Stisbrelbury; 233 died.
 geo-seed-42-512 e203 Famine struck Cesie; 28 died.
 geo-seed-42-512 e204 Plague broke out in Fouflo Hollow; 99 died.
-geo-seed-42-512 e205 Plague broke out in Snozz-Skink and spread to one other settlement; 2,046 died.
+geo-seed-42-512 e205 Plague broke out in Snozz-Skink and spread to one other settlement; 2,046 died in all.
 geo-seed-42-512 e206 The plague spread to Sneezskrub Hole; 403 died.
 geo-seed-42-512 e207 Famine struck Groz; 124 died.
 geo-seed-42-512 e208 Plague broke out in Gruz-Keegg; 206 died.
@@ -836,7 +836,7 @@ geo-phrase-512 homes ra6 y5638 n1 1
 geo-phrase-512 table civilization 8f9064b7acde0b7a593d404b395e57e1af1cfe0a9edd58635d886e52aaa7d0de
 geo-phrase-512 table event 3375f599ab1d8be7979a69b77a4834ee827ad52ee79b0288397b978980c531b4
 geo-phrase-512 table event_cause 766f6d110fe066858b69736d029f62081e1de655d11528ebaf3e47822bdb6023
-geo-phrase-512 table event_kind 58b8cb7b5b5121612b331cd052c06a2bdfc4e23ba2f1956e14bc85aa432f8776
+geo-phrase-512 table event_kind 5bb33c7be421113e5b2507e775557dd7afe51c39ad7d9a5426e6f8e94e4b2f18
 geo-phrase-512 table event_kind_role 828c060dc0d262d618363e1eb4194754223827013ae83efa04ea2944f3b5731b
 geo-phrase-512 table event_kind_value ea3bdaba66965ca348093390b78ac4b2e92807052c93c9bb59822b0c53c0771e
 geo-phrase-512 table event_participant f7337311bc5257f77af21e6266c1054ee0893e5ac4b44d53069dee0f9f0ecf64
@@ -995,7 +995,7 @@ geo-phrase-512 e71 The Hold of Girinnam sent settlers from Gommku Hold to found 
 geo-phrase-512 e72 Birdsten awakened the Humans in the Wolds of Scythes.
 geo-phrase-512 e73 The Humans founded the Meald League in the Wolds of Scythes.
 geo-phrase-512 e74 The Meald League founded Weckstead in the Wolds of Scythes.
-geo-phrase-512 e75 Plague broke out in Grorkbug Pit and spread to one other settlement; 1,195 died.
+geo-phrase-512 e75 Plague broke out in Grorkbug Pit and spread to one other settlement; 1,195 died in all.
 geo-phrase-512 e76 The plague spread to Slug; 266 died.
 geo-phrase-512 e77 A succession crisis at Weckstead shook the Meald League.
 geo-phrase-512 e78 Famine struck Burkskrogg Pit; 294 died.
@@ -1021,7 +1021,7 @@ geo-phrase-512 e97 Aetwee Hollow grew into a village of 260.
 geo-phrase-512 e98 Uul'duk awakened the Orcs in Owlpike Sward.
 geo-phrase-512 e99 The Orcs founded the Urom Horde in Owlpike Sward.
 geo-phrase-512 e100 The Urom Horde founded Sharz'maa in Owlpike Sward.
-geo-phrase-512 e101 Plague broke out in Vaenies and spread to one other settlement; 251 died.
+geo-phrase-512 e101 Plague broke out in Vaenies and spread to one other settlement; 251 died in all.
 geo-phrase-512 e102 The plague spread to Naendnae; 58 died.
 geo-phrase-512 e103 Plague broke out in Grorkbug Pit and spread to 2 other settlements; 1,818 died in all.
 geo-phrase-512 e104 The plague spread to Gib; 285 died.
@@ -1034,13 +1034,13 @@ geo-phrase-512 e110 Famine struck Sneeg-Bink Pit; 90 died.
 geo-phrase-512 e111 Plague broke out in Aethsor; 117 died.
 geo-phrase-512 e112 Twify grew into a village of 250.
 geo-phrase-512 e113 Plague broke out in Aetwee Hollow; 30 died.
-geo-phrase-512 e114 Plague broke out in Gib and spread to one other settlement; 594 died.
+geo-phrase-512 e114 Plague broke out in Gib and spread to one other settlement; 594 died in all.
 geo-phrase-512 e115 The plague spread to Zodrib Pit; 322 died.
 geo-phrase-512 e116 Plague broke out in Sharz'maa; 367 died.
 geo-phrase-512 e117 Plague broke out in Fielouwho Hollow; 66 died.
 geo-phrase-512 e118 Famine struck Grorkbug Pit; 753 died.
 geo-phrase-512 e119 A succession crisis at Skozz Hole shook the Gnokkirk Horde.
-geo-phrase-512 e120 Plague broke out in Aetwee Hollow and spread to one other settlement; 115 died.
+geo-phrase-512 e120 Plague broke out in Aetwee Hollow and spread to one other settlement; 115 died in all.
 geo-phrase-512 e121 The plague spread to Whishiata; 82 died.
 geo-phrase-512 e122 Plague broke out in Twify; 89 died.
 geo-phrase-512 e123 Sharz'maa grew into a town of 1,505.
@@ -1048,7 +1048,7 @@ geo-phrase-512 e124 The Urom Horde sent settlers from Sharz'maa to found Aag'gru
 geo-phrase-512 e125 Aag'grug Camp grew into a village of 252.
 geo-phrase-512 e126 Famine struck Fielouwho Hollow; 18 died.
 geo-phrase-512 e127 Famine struck Aetwee Hollow; 48 died.
-geo-phrase-512 e128 Plague broke out in Naendnae and spread to one other settlement; 151 died.
+geo-phrase-512 e128 Plague broke out in Naendnae and spread to one other settlement; 151 died in all.
 geo-phrase-512 e129 The plague spread to Aethsor; 24 died.
 geo-phrase-512 e130 Plague broke out in Kunk-Slitch Hole; 583 died.
 geo-phrase-512 e131 Plague broke out in Sharz'maa; 348 died.
@@ -1413,7 +1413,7 @@ geo-seed-1-1024 homes ra6 y5580 n1 27
 geo-seed-1-1024 table civilization c2a1ac760ce1188f86a09e156482ddb5123e01cd07814e1fc66cef488da307b1
 geo-seed-1-1024 table event 003b135da5d72a8fe562f6006767b294dc7b0478ac655f81d5a0a2830ff63a44
 geo-seed-1-1024 table event_cause 8b347a585be27a5d526b5a434d1572116023db073270f98fa2b35f7335f6de32
-geo-seed-1-1024 table event_kind 58b8cb7b5b5121612b331cd052c06a2bdfc4e23ba2f1956e14bc85aa432f8776
+geo-seed-1-1024 table event_kind 5bb33c7be421113e5b2507e775557dd7afe51c39ad7d9a5426e6f8e94e4b2f18
 geo-seed-1-1024 table event_kind_role 828c060dc0d262d618363e1eb4194754223827013ae83efa04ea2944f3b5731b
 geo-seed-1-1024 table event_kind_value ea3bdaba66965ca348093390b78ac4b2e92807052c93c9bb59822b0c53c0771e
 geo-seed-1-1024 table event_participant 8080071a84f050338d7b5a9f10a9be9e991bccf7f7f6208b2b9a117989ee2ca8
@@ -1611,7 +1611,7 @@ geo-seed-1-1024 e110 Famine struck Gnot Pit; 370 died.
 geo-seed-1-1024 e111 Famine struck Drax-Snagg Pit; 174 died.
 geo-seed-1-1024 e112 Famine struck Aeitheitho; 102 died.
 geo-seed-1-1024 e113 Plague broke out in Kitch; 216 died.
-geo-seed-1-1024 e114 Plague broke out in Skuggkib Pit and spread to one other settlement; 415 died.
+geo-seed-1-1024 e114 Plague broke out in Skuggkib Pit and spread to one other settlement; 415 died in all.
 geo-seed-1-1024 e115 The plague spread to Borksluzz; 156 died.
 geo-seed-1-1024 e116 Candraedell grew into a village of 250.
 geo-seed-1-1024 e117 A succession crisis at Gairnmand Hold shook the Khirnhu Throne.
@@ -1621,9 +1621,9 @@ geo-seed-1-1024 e120 The plague spread to Skub Pit; 107 died.
 geo-seed-1-1024 e121 A succession crisis at Gairnmand Hold shook the Khirnhu Throne.
 geo-seed-1-1024 e122 Famine struck Skuggkib Pit; 274 died.
 geo-seed-1-1024 e123 Guzz grew into a town of 1,516.
-geo-seed-1-1024 e124 Plague broke out in Nank and spread to one other settlement; 493 died.
+geo-seed-1-1024 e124 Plague broke out in Nank and spread to one other settlement; 493 died in all.
 geo-seed-1-1024 e125 The plague spread to Guzz; 219 died.
-geo-seed-1-1024 e126 Plague broke out in Aeglaes and spread to one other settlement; 844 died.
+geo-seed-1-1024 e126 Plague broke out in Aeglaes and spread to one other settlement; 844 died in all.
 geo-seed-1-1024 e127 The plague spread to Ilathdell; 336 died.
 geo-seed-1-1024 e128 Famine struck Borksluzz; 185 died.
 geo-seed-1-1024 e129 Gronkkeeb Hole grew into a town of 1,590.
@@ -1643,23 +1643,23 @@ geo-seed-1-1024 e142 The Faeries founded the Sawy Ring in South Wood.
 geo-seed-1-1024 e143 The Sawy Ring founded Tiewie in South Wood.
 geo-seed-1-1024 e144 Famine struck Gnudrig Pit; 304 died.
 geo-seed-1-1024 e145 Famine struck Bukrak; 128 died.
-geo-seed-1-1024 e146 Plague broke out in Skrink-Zozz Pit and spread to one other settlement; 534 died.
+geo-seed-1-1024 e146 Plague broke out in Skrink-Zozz Pit and spread to one other settlement; 534 died in all.
 geo-seed-1-1024 e147 The plague spread to Gaggkot Pit; 116 died.
 geo-seed-1-1024 e148 The Khirnhu Throne sent settlers from Gairnmand Hold to found Tarngrou Hold in South Fells.
 geo-seed-1-1024 e149 Plague broke out in Skrink-Zozz Pit; 240 died.
 geo-seed-1-1024 e150 Famine struck Elomaell; 427 died.
-geo-seed-1-1024 e151 Plague broke out in Aeitheitho and spread to one other settlement; 294 died.
+geo-seed-1-1024 e151 Plague broke out in Aeitheitho and spread to one other settlement; 294 died in all.
 geo-seed-1-1024 e152 The plague spread to Vomethidell; 60 died.
 geo-seed-1-1024 e153 The Khirnhu Throne sent settlers from Gairnmand Hold to found Thaid Deep in South Fells.
 geo-seed-1-1024 e154 Plague broke out in Iendthand; 130 died.
-geo-seed-1-1024 e155 Plague broke out in Gronkkeeb Hole and spread to one other settlement; 410 died.
+geo-seed-1-1024 e155 Plague broke out in Gronkkeeb Hole and spread to one other settlement; 410 died in all.
 geo-seed-1-1024 e156 The plague spread to Gnot Pit; 200 died.
 geo-seed-1-1024 e157 Plague broke out in Nulidu; 201 died.
 geo-seed-1-1024 e158 Famine struck Slok; 276 died.
 geo-seed-1-1024 e159 Famine struck Geezink; 240 died.
-geo-seed-1-1024 e160 Plague broke out in Nank and spread to one other settlement; 456 died.
+geo-seed-1-1024 e160 Plague broke out in Nank and spread to one other settlement; 456 died in all.
 geo-seed-1-1024 e161 The plague spread to Snokeerk Hole; 134 died.
-geo-seed-1-1024 e162 Plague broke out in Skrink-Zozz Pit and spread to one other settlement; 515 died.
+geo-seed-1-1024 e162 Plague broke out in Skrink-Zozz Pit and spread to one other settlement; 515 died in all.
 geo-seed-1-1024 e163 The plague spread to Skruz; 254 died.
 geo-seed-1-1024 e164 A succession crisis at Slok shook the Warrens of Zeez.
 geo-seed-1-1024 e165 Plague broke out in Skrutch Pit; 600 died.
@@ -1707,7 +1707,7 @@ geo-seed-1-1024 e206 The plague spread to Gnudrig Pit; 153 died.
 geo-seed-1-1024 e207 Fliepfae Hollow grew into a village of 250.
 geo-seed-1-1024 e208 Plague broke out in Slok; 529 died.
 geo-seed-1-1024 e209 Famine struck Elomaell; 324 died.
-geo-seed-1-1024 e210 Plague broke out in Nulidu and spread to one other settlement; 2,456 died.
+geo-seed-1-1024 e210 Plague broke out in Nulidu and spread to one other settlement; 2,456 died in all.
 geo-seed-1-1024 e211 The plague spread to Gairnmand Hold; 537 died.
 geo-seed-1-1024 e212 The House of Glaefaenn sent settlers from Ilathdell to found Thiennve in Dimedge Woods.
 geo-seed-1-1024 e213 Famine struck Kaz; 153 died.
@@ -1715,7 +1715,7 @@ geo-seed-1-1024 e214 Famine struck Zeegneeg Pit; 100 died.
 geo-seed-1-1024 e215 Plague broke out in Skrink-Zozz Pit; 235 died.
 geo-seed-1-1024 e216 The House of Glaefaenn sent settlers from Ilathdell to found Thacas in Dimedge Woods.
 geo-seed-1-1024 e217 Plague broke out in Nank; 230 died.
-geo-seed-1-1024 e218 Plague broke out in Gnudrig Pit and spread to one other settlement; 486 died.
+geo-seed-1-1024 e218 Plague broke out in Gnudrig Pit and spread to one other settlement; 486 died in all.
 geo-seed-1-1024 e219 The plague spread to Bix; 174 died.
 geo-seed-1-1024 e220 Famine struck Slok; 914 died.
 geo-seed-1-1024 e221 Famine struck Borksluzz; 96 died.
@@ -1734,9 +1734,9 @@ geo-seed-1-1024 e233 The House of Glaefaenn sent settlers from Sennfe to found I
 geo-seed-1-1024 e234 Plague broke out in Buskug and spread to 2 other settlements; 1,174 died in all.
 geo-seed-1-1024 e235 The plague spread to Gnot Pit; 227 died.
 geo-seed-1-1024 e236 The plague spread to Gronkkeeb Hole; 158 died.
-geo-seed-1-1024 e237 Plague broke out in Gnok-Skeex and spread to one other settlement; 722 died.
+geo-seed-1-1024 e237 Plague broke out in Gnok-Skeex and spread to one other settlement; 722 died in all.
 geo-seed-1-1024 e238 The plague spread to Skrink-Zozz Pit; 157 died.
-geo-seed-1-1024 e239 Plague broke out in Skub Pit and spread to one other settlement; 626 died.
+geo-seed-1-1024 e239 Plague broke out in Skub Pit and spread to one other settlement; 626 died in all.
 geo-seed-1-1024 e240 The plague spread to Gnot Pit; 236 died.
 geo-seed-1-1024 e241 Plague broke out in Skreex Pit; 448 died.
 geo-seed-1-1024 e242 For 496 years, from 5084 to 5579, the land was quiet, and 8 realms kept the peace.
@@ -1769,7 +1769,7 @@ geo-seed-1-1024 e268 Famine struck Aenfien; 175 died.
 geo-seed-1-1024 e269 Famine struck Snonk-Girk; 127 died.
 geo-seed-1-1024 e270 Famine struck Grix; 115 died.
 geo-seed-1-1024 e271 A succession crisis at Honhudbury shook the Hodmal League.
-geo-seed-1-1024 e272 Plague broke out in Honhudbury and spread to one other settlement; 2,611 died.
+geo-seed-1-1024 e272 Plague broke out in Honhudbury and spread to one other settlement; 2,611 died in all.
 geo-seed-1-1024 e273 The plague spread to Edid; 245 died.
 geo-seed-1-1024 e274 Plague broke out in Rifonndell; 1,432 died.
 geo-seed-1-1024 e275 Plague broke out in Elomaell and spread to 3 other settlements; 854 died in all.
@@ -1778,13 +1778,13 @@ geo-seed-1-1024 e277 The plague spread to Ermoll; 122 died.
 geo-seed-1-1024 e278 The plague spread to Thiennve; 121 died.
 geo-seed-1-1024 e279 Famine struck Druzz; 128 died.
 geo-seed-1-1024 e280 Famine struck Geerk-Drub Pit; 305 died.
-geo-seed-1-1024 e281 Plague broke out in Nulidu and spread to one other settlement; 1,566 died.
+geo-seed-1-1024 e281 Plague broke out in Nulidu and spread to one other settlement; 1,566 died in all.
 geo-seed-1-1024 e282 The plague spread to Tarngrou Hold; 127 died.
 geo-seed-1-1024 e283 The Lousstwo Court sent settlers from Whyfi to found Toushwie Hollow in the Benighted Forest.
 geo-seed-1-1024 e284 Plague broke out in Nank; 427 died.
-geo-seed-1-1024 e285 Plague broke out in Iennrer and spread to one other settlement; 228 died.
+geo-seed-1-1024 e285 Plague broke out in Iennrer and spread to one other settlement; 228 died in all.
 geo-seed-1-1024 e286 The plague spread to Aeitheitho; 117 died.
-geo-seed-1-1024 e287 Plague broke out in Ithaethaeca and spread to one other settlement; 173 died.
+geo-seed-1-1024 e287 Plague broke out in Ithaethaeca and spread to one other settlement; 173 died in all.
 geo-seed-1-1024 e288 The plague spread to Vomethidell; 73 died.
 geo-seed-1-1024 e289 Famine struck Skrutch Pit; 236 died.
 geo-seed-1-1024 e290 A succession crisis at Elomaell shook the House of Glaefaenn.
@@ -1793,7 +1793,7 @@ geo-seed-1-1024 e292 A succession crisis at Geerk-Drub Pit shook the Warrens of 
 geo-seed-1-1024 e293 The Sawy Ring sent settlers from Iapowae Glade to found Whask in the Grove of Boars.
 geo-seed-1-1024 e294 Um'bagh Camp grew into a town of 1,505.
 geo-seed-1-1024 e295 Famine struck Geezink; 134 died.
-geo-seed-1-1024 e296 Plague broke out in Skruz and spread to one other settlement; 642 died.
+geo-seed-1-1024 e296 Plague broke out in Skruz and spread to one other settlement; 642 died in all.
 geo-seed-1-1024 e297 The plague spread to Skreex Pit; 247 died.
 geo-seed-1-1024 e298 Famine struck Ofie; 204 died.
 geo-seed-1-1024 e299 Famine struck Zeegneeg Pit; 95 died.
@@ -1818,7 +1818,7 @@ geo-seed-1-1024 e347 A succession crisis at Um'bagh Camp shook Clan Thaald.
 geo-seed-1-1024 e348 Clan Aam'urush broke away from Clan Thaald with 1 settlement.
 geo-seed-1-1024 e349 Famine struck Ofie; 181 died.
 geo-seed-1-1024 e350 Pashiafy grew into a village of 250.
-geo-seed-1-1024 e351 Plague broke out in Skub Pit and spread to one other settlement; 605 died.
+geo-seed-1-1024 e351 Plague broke out in Skub Pit and spread to one other settlement; 605 died in all.
 geo-seed-1-1024 e352 The plague spread to Kitch; 158 died.
 geo-seed-1-1024 e353 The Sawy Ring sent settlers from Iapowae Glade to found Twaesheeth Hollow in the Grove of Boars.
 geo-seed-1-1024 e354 Plague broke out in Taelousie; 73 died.
@@ -1828,9 +1828,9 @@ geo-seed-1-1024 e357 Famine struck Ofie; 73 died.
 geo-seed-1-1024 e358 Plague broke out in Uruum Fort and spread to 2 other settlements; 659 died in all.
 geo-seed-1-1024 e359 The plague spread to Ugozbaagh Camp; 149 died.
 geo-seed-1-1024 e360 The plague spread to Azaz Fort; 63 died.
-geo-seed-1-1024 e361 Plague broke out in Skreex Pit and spread to one other settlement; 699 died.
+geo-seed-1-1024 e361 Plague broke out in Skreex Pit and spread to one other settlement; 699 died in all.
 geo-seed-1-1024 e362 The plague spread to Kut-Gnoz Hole; 168 died.
-geo-seed-1-1024 e363 Plague broke out in Rifonndell and spread to one other settlement; 811 died.
+geo-seed-1-1024 e363 Plague broke out in Rifonndell and spread to one other settlement; 811 died in all.
 geo-seed-1-1024 e364 The plague spread to Vomethidell; 82 died.
 geo-seed-1-1024 e365 Famine struck Buskug; 942 died.
 geo-seed-1-1024 e366 Famine struck Skruz; 312 died.
@@ -1844,7 +1844,7 @@ geo-seed-1-1024 e373 Plague broke out in Buzuzz Pit and spread to 3 other settle
 geo-seed-1-1024 e374 The plague spread to Skuggkib Pit; 263 died.
 geo-seed-1-1024 e375 The plague spread to Zeegneeg Pit; 92 died.
 geo-seed-1-1024 e376 The plague spread to Gronkkeeb Hole; 109 died.
-geo-seed-1-1024 e377 Plague broke out in Nank and spread to one other settlement; 575 died.
+geo-seed-1-1024 e377 Plague broke out in Nank and spread to one other settlement; 575 died in all.
 geo-seed-1-1024 e378 The plague spread to Skrukkreek; 142 died.
 geo-seed-1-1024 e379 Famine struck Bral; 614 died.
 geo-seed-1-1024 e380 Plague broke out in Toushwie Hollow; 126 died.
@@ -1937,7 +1937,7 @@ hist-span-2000-512 homes ra6 y1879 n1 12
 hist-span-2000-512 table civilization 61c8a6ada99288e49943183fce71a264365927b2789fb728da6a968768413431
 hist-span-2000-512 table event c9b862143787eaf221d5e72f6077da780f34721e397785f35b2356a7fa02762f
 hist-span-2000-512 table event_cause 9fa835f6e74275fd6a9ba14e9d66f6e498109d834bf2203315f228f841a6eea4
-hist-span-2000-512 table event_kind 58b8cb7b5b5121612b331cd052c06a2bdfc4e23ba2f1956e14bc85aa432f8776
+hist-span-2000-512 table event_kind 5bb33c7be421113e5b2507e775557dd7afe51c39ad7d9a5426e6f8e94e4b2f18
 hist-span-2000-512 table event_kind_role 828c060dc0d262d618363e1eb4194754223827013ae83efa04ea2944f3b5731b
 hist-span-2000-512 table event_kind_value ea3bdaba66965ca348093390b78ac4b2e92807052c93c9bb59822b0c53c0771e
 hist-span-2000-512 table event_participant 6f05c3baee27d028715824953d10c3a522aebcf46c0da384818d08396dc34803
@@ -2048,7 +2048,7 @@ hist-span-2000-512 e23 Mammga awakened the Dwarves in Blindcrag Horns.
 hist-span-2000-512 e24 The Dwarves founded Clan Dradintuk in Blindcrag Horns.
 hist-span-2000-512 e25 Clan Dradintuk founded Harinhimm in Blindcrag Horns.
 hist-span-2000-512 e26 Famine struck Drik; 94 died.
-hist-span-2000-512 e27 Plague broke out in Sneerk and spread to one other settlement; 2,086 died.
+hist-span-2000-512 e27 Plague broke out in Sneerk and spread to one other settlement; 2,086 died in all.
 hist-span-2000-512 e28 The plague spread to Drik; 45 died.
 hist-span-2000-512 e29 Famine struck Kuk; 453 died.
 hist-span-2000-512 e30 Famine struck Slax Hole; 170 died.
@@ -2093,7 +2093,7 @@ hist-span-2000-512 e68 The Orcs founded Clan Thaash in the Wrecked Sward.
 hist-span-2000-512 e69 Clan Thaash founded Thaalmork in the Wrecked Sward.
 hist-span-2000-512 e70 Famine struck Fielaenddell; 315 died.
 hist-span-2000-512 e71 Famine struck Gnibslot; 244 died.
-hist-span-2000-512 e72 Plague broke out in Skazdrot and spread to one other settlement; 620 died.
+hist-span-2000-512 e72 Plague broke out in Skazdrot and spread to one other settlement; 620 died in all.
 hist-span-2000-512 e73 The plague spread to Gnibslot; 181 died.
 hist-span-2000-512 e74 The Circle of Fon sent settlers from Tosae to found Tin Glade in Kelpfall Tangle.
 hist-span-2000-512 e75 Clan Dradintuk sent settlers from Harinhimm to found Murdgak in Blindcrag Horns.
@@ -2428,7 +2428,7 @@ hist-races-elf-orc-1024 homes ra6 y5602 n1 41
 hist-races-elf-orc-1024 table civilization 35e9b2bdcf7f334ee7a29d97dd3cb271ce809d84adf6ab6a6234f1017e78c393
 hist-races-elf-orc-1024 table event fc29903d10fbe2a6c1105d9579d37aa906204de0bd978484018b9d26aecd4287
 hist-races-elf-orc-1024 table event_cause 30e07fde25a3d02fb5c843c63a6e93e76bfde5971aa7880a18e7d557f6616d42
-hist-races-elf-orc-1024 table event_kind 58b8cb7b5b5121612b331cd052c06a2bdfc4e23ba2f1956e14bc85aa432f8776
+hist-races-elf-orc-1024 table event_kind 5bb33c7be421113e5b2507e775557dd7afe51c39ad7d9a5426e6f8e94e4b2f18
 hist-races-elf-orc-1024 table event_kind_role 828c060dc0d262d618363e1eb4194754223827013ae83efa04ea2944f3b5731b
 hist-races-elf-orc-1024 table event_kind_value ea3bdaba66965ca348093390b78ac4b2e92807052c93c9bb59822b0c53c0771e
 hist-races-elf-orc-1024 table event_participant 2470b76af87af5a38035d77dce91a77cb7771f53658ff95197a018d4daa065ef
@@ -2980,7 +2980,7 @@ hist-dense-1024 homes ra6 y5618 n1 14
 hist-dense-1024 table civilization 56eeef5fcd3a96a18cc9cb3409f048a287f868ac551aa5f9801ecc21a2f61c60
 hist-dense-1024 table event 846ee5ff61acfce40118585d5c095ffab5705bdf51fc5f92e07f7d2872785609
 hist-dense-1024 table event_cause a37378ddbfccaa068983be74fe347e4cc2490f3931ae05845130a3635ea76522
-hist-dense-1024 table event_kind 58b8cb7b5b5121612b331cd052c06a2bdfc4e23ba2f1956e14bc85aa432f8776
+hist-dense-1024 table event_kind 5bb33c7be421113e5b2507e775557dd7afe51c39ad7d9a5426e6f8e94e4b2f18
 hist-dense-1024 table event_kind_role 828c060dc0d262d618363e1eb4194754223827013ae83efa04ea2944f3b5731b
 hist-dense-1024 table event_kind_value ea3bdaba66965ca348093390b78ac4b2e92807052c93c9bb59822b0c53c0771e
 hist-dense-1024 table event_participant b39314ae665927d8f7ec80058975f8c5a0b35a0b8b9743a61c3067722a9bac62
@@ -3134,7 +3134,7 @@ hist-dense-1024 e66 The plague spread to Zaz-Gigg Hole; 464 died.
 hist-dense-1024 e67 The plague spread to Gub Pit; 140 died.
 hist-dense-1024 e68 The plague spread to Dreeb; 241 died.
 hist-dense-1024 e69 The plague spread to Slunkgneez Hole; 124 died.
-hist-dense-1024 e70 Plague broke out in Zogak and spread to one other settlement; 383 died.
+hist-dense-1024 e70 Plague broke out in Zogak and spread to one other settlement; 383 died in all.
 hist-dense-1024 e71 The plague spread to Nitch-Gork; 124 died.
 hist-dense-1024 e72 The Realm of Liesas sent settlers from Villmo to found Ennelilldell in Rowanholt.
 hist-dense-1024 e73 Famine struck Zaz-Gigg Hole; 612 died.
@@ -3156,21 +3156,21 @@ hist-dense-1024 e88 The Faeries founded the Twoll Court in Dawden.
 hist-dense-1024 e89 The Twoll Court founded Shaepee in Dawden.
 hist-dense-1024 e90 The Faeries founded the Fiall Court in Goatherd's End.
 hist-dense-1024 e91 The Fiall Court founded Lotwyll Glade in Goatherd's End.
-hist-dense-1024 e92 Plague broke out in Aeglal and spread to one other settlement; 192 died.
+hist-dense-1024 e92 Plague broke out in Aeglal and spread to one other settlement; 192 died in all.
 hist-dense-1024 e93 The plague spread to Elinienn; 31 died.
 hist-dense-1024 e94 Plague broke out in Nitch-Gork; 224 died.
 hist-dense-1024 e95 Famine struck Ennelilldell; 42 died.
 hist-dense-1024 e96 Famine struck Eloithiend; 787 died.
 hist-dense-1024 e97 The Hold of Hurktuli sent settlers from Thord Deep to found Timmhi in North Peaks.
 hist-dense-1024 e98 Famine struck Dreeb; 114 died.
-hist-dense-1024 e99 Plague broke out in Zogak and spread to one other settlement; 600 died.
+hist-dense-1024 e99 Plague broke out in Zogak and spread to one other settlement; 600 died in all.
 hist-dense-1024 e100 The plague spread to Drigork; 201 died.
 hist-dense-1024 e101 Plague broke out in Timmhi and spread to 2 other settlements; 239 died in all.
 hist-dense-1024 e102 The plague spread to Mairin Deep; 45 died.
 hist-dense-1024 e103 The plague spread to Grun; 90 died.
-hist-dense-1024 e104 Plague broke out in Gnik-Koz Pit and spread to one other settlement; 548 died.
+hist-dense-1024 e104 Plague broke out in Gnik-Koz Pit and spread to one other settlement; 548 died in all.
 hist-dense-1024 e105 The plague spread to Slatch Pit; 221 died.
-hist-dense-1024 e106 Plague broke out in Timmhi and spread to one other settlement; 165 died.
+hist-dense-1024 e106 Plague broke out in Timmhi and spread to one other settlement; 165 died in all.
 hist-dense-1024 e107 The plague spread to Gadinkhok Hold; 99 died.
 hist-dense-1024 e108 Famine struck Drigork; 242 died.
 hist-dense-1024 e109 A succession crisis at Shaepee shook the Twoll Court.
@@ -3179,7 +3179,7 @@ hist-dense-1024 e111 A succession crisis at Zaz-Gigg Hole shook the Grurk Mob.
 hist-dense-1024 e112 The Skagnink Mob broke away from the Grurk Mob with 4 settlements.
 hist-dense-1024 e113 Gub Pit grew into a town of 1,507.
 hist-dense-1024 e114 The Skagnink Mob sent settlers from Zogak to found Naslag Pit in Chillsweep.
-hist-dense-1024 e115 Plague broke out in Gub Pit and spread to one other settlement; 569 died.
+hist-dense-1024 e115 Plague broke out in Gub Pit and spread to one other settlement; 569 died in all.
 hist-dense-1024 e116 The plague spread to Zogak; 62 died.
 hist-dense-1024 e117 The Skagnink Mob sent settlers from Drigork to found Skrag Pit in Butcher's Forest.
 hist-dense-1024 e118 Naslag Pit grew into a village of 250.
@@ -3191,9 +3191,9 @@ hist-dense-1024 e123 Famine struck Eloithiend; 789 died.
 hist-dense-1024 e124 Skrag Pit grew into a village of 254.
 hist-dense-1024 e125 Slabgnob grew into a village of 251.
 hist-dense-1024 e126 Famine struck Raegledell; 136 died.
-hist-dense-1024 e127 Plague broke out in Zogak and spread to one other settlement; 378 died.
+hist-dense-1024 e127 Plague broke out in Zogak and spread to one other settlement; 378 died in all.
 hist-dense-1024 e128 The plague spread to Gub Pit; 188 died.
-hist-dense-1024 e129 Plague broke out in Drigork and spread to one other settlement; 241 died.
+hist-dense-1024 e129 Plague broke out in Drigork and spread to one other settlement; 241 died in all.
 hist-dense-1024 e130 The plague spread to Naslag Pit; 54 died.
 hist-dense-1024 e131 The Skagnink Mob sent settlers from Gnik-Koz Pit to found Krozz-Bizz Hole in Stagedge Steppes.
 hist-dense-1024 e132 For 590 years, from 4416 to 5005, the land was quiet, and 6 realms kept the peace.
@@ -3252,10 +3252,10 @@ hist-dense-1024 e184 The plague spread to Krozz-Bizz Hole; 322 died.
 hist-dense-1024 e185 The plague spread to Skeegrizz; 159 died.
 hist-dense-1024 e186 The plague spread to Goz Pit; 211 died.
 hist-dense-1024 e187 Plague broke out in Slunkgneez Hole; 190 died.
-hist-dense-1024 e188 Plague broke out in Naslag Pit and spread to one other settlement; 1,225 died.
+hist-dense-1024 e188 Plague broke out in Naslag Pit and spread to one other settlement; 1,225 died in all.
 hist-dense-1024 e189 The plague spread to Kazz Pit; 472 died.
 hist-dense-1024 e190 Famine struck Gnib; 148 died.
-hist-dense-1024 e191 Plague broke out in Goz Pit and spread to one other settlement; 559 died.
+hist-dense-1024 e191 Plague broke out in Goz Pit and spread to one other settlement; 559 died in all.
 hist-dense-1024 e192 The plague spread to Beerkkab Pit; 167 died.
 hist-dense-1024 e193 Skokskuk Hole grew into a town of 1,501.
 hist-dense-1024 e194 Bielie Glade grew into a village of 250.
@@ -3264,13 +3264,13 @@ hist-dense-1024 e196 Famine struck Slabgnob; 445 died.
 hist-dense-1024 e197 The Skagnink Mob sent settlers from Skruz-Drig to found Skitchnork in the Riven Steppes.
 hist-dense-1024 e198 Sted grew into a town of 1,518.
 hist-dense-1024 e199 The Twoll Court sent settlers from Shaepee to found Lopee in Dawden.
-hist-dense-1024 e200 Plague broke out in Krozz-Bizz Hole and spread to one other settlement; 804 died.
+hist-dense-1024 e200 Plague broke out in Krozz-Bizz Hole and spread to one other settlement; 804 died in all.
 hist-dense-1024 e201 The plague spread to Skeegrizz; 190 died.
 hist-dense-1024 e202 Plague broke out in Bielie Glade; 43 died.
 hist-dense-1024 e203 The Skagnink Mob sent settlers from Skruz-Drig to found Skrukuzz in the Riven Steppes.
 hist-dense-1024 e204 The Skagnink Mob sent settlers from Skruz-Drig to found Dreesnux in the Riven Steppes.
 hist-dense-1024 e205 Plague broke out in Lopee; 24 died.
-hist-dense-1024 e206 Plague broke out in Skreezark and spread to one other settlement; 897 died.
+hist-dense-1024 e206 Plague broke out in Skreezark and spread to one other settlement; 897 died in all.
 hist-dense-1024 e207 The plague spread to Skruz-Drig; 130 died.
 hist-dense-1024 e208 Plague broke out in Drokdrunk; 467 died.
 hist-dense-1024 e209 Plague broke out in Snak-Drux Hole; 142 died.
@@ -3286,11 +3286,11 @@ hist-dense-1024 e218 Famine struck Skat; 362 died.
 hist-dense-1024 e219 Famine struck Skeegrizz; 319 died.
 hist-dense-1024 e220 Lopee grew into a village of 250.
 hist-dense-1024 e221 Nutchzotch grew into a town of 1,502.
-hist-dense-1024 e222 Plague broke out in Beerkkab Pit and spread to one other settlement; 739 died.
+hist-dense-1024 e222 Plague broke out in Beerkkab Pit and spread to one other settlement; 739 died in all.
 hist-dense-1024 e223 The plague spread to Slabgnob; 309 died.
 hist-dense-1024 e224 Weakened by plague, Beerkkab Pit dwindled to 1,148 souls.
 hist-dense-1024 e225 Skrukuzz grew into a town of 1,503.
-hist-dense-1024 e226 Plague broke out in Skreezark and spread to one other settlement; 947 died.
+hist-dense-1024 e226 Plague broke out in Skreezark and spread to one other settlement; 947 died in all.
 hist-dense-1024 e227 The plague spread to Skruz-Drig; 273 died.
 hist-dense-1024 e228 Famine struck Goz Pit; 346 died.
 hist-dense-1024 e229 Siaee grew into a village of 250.
@@ -3328,17 +3328,17 @@ hist-dense-1024 e260 The Warband of Kraagazarz founded Dorkmuul Fort in Northwes
 hist-dense-1024 e261 A succession crisis at Gub Pit shook the Skagnink Mob.
 hist-dense-1024 e262 The Zubgeeg Horde broke away from the Skagnink Mob with 12 settlements.
 hist-dense-1024 e263 Reamham grew into a town of 1,515.
-hist-dense-1024 e264 Plague broke out in Sniskrurk and spread to one other settlement; 403 died.
+hist-dense-1024 e264 Plague broke out in Sniskrurk and spread to one other settlement; 403 died in all.
 hist-dense-1024 e265 The plague spread to Grux-Gix Pit; 112 died.
 hist-dense-1024 e266 The Zubgeeg Horde sent settlers from Goz Pit to found Gragg-Grix Hole in Rustdown.
 hist-dense-1024 e267 The Zubgeeg Horde sent settlers from Drokdrunk to found Snanit Pit in Barleywell Vale.
 hist-dense-1024 e268 Famine struck Sitholie; 165 died.
-hist-dense-1024 e269 Plague broke out in Naslag Pit and spread to one other settlement; 722 died.
+hist-dense-1024 e269 Plague broke out in Naslag Pit and spread to one other settlement; 722 died in all.
 hist-dense-1024 e270 The plague spread to Gnik-Koz Pit; 46 died.
 hist-dense-1024 e271 Saebae Glade grew into a village of 250.
 hist-dense-1024 e272 The Zubgeeg Horde sent settlers from Sniskrurk to found Slankkreex Pit in Griefdown.
 hist-dense-1024 e273 Plague broke out in Nitch-Gork; 302 died.
-hist-dense-1024 e274 Plague broke out in Skat and spread to one other settlement; 594 died.
+hist-dense-1024 e274 Plague broke out in Skat and spread to one other settlement; 594 died in all.
 hist-dense-1024 e275 The plague spread to Skitchnork; 238 died.
 hist-dense-1024 e276 Ashuld grew into a town of 1,509.
 hist-dense-1024 e277 Famine struck Sniskrurk; 370 died.
@@ -3395,7 +3395,7 @@ hist-dense-1024 e381 A succession crisis at Shaepee shook the Twoll Court.
 hist-dense-1024 e382 Ghamo Camp grew into a town of 1,506.
 hist-dense-1024 e383 Weldbury grew into a city of 8,015.
 hist-dense-1024 e384 Plague broke out in Edinton; 1,143 died.
-hist-dense-1024 e385 Plague broke out in Weldbury and spread to one other settlement; 2,736 died.
+hist-dense-1024 e385 Plague broke out in Weldbury and spread to one other settlement; 2,736 died in all.
 hist-dense-1024 e386 The plague spread to Edinton; 818 died.
 hist-dense-1024 e387 Weakened by plague, Weldbury dwindled to 6,278 souls.
 hist-dense-1024 e388 Plague broke out in Skat; 562 died.
@@ -3726,7 +3726,7 @@ hist-peoples-42-1024 homes ra6 y5596 n1 8
 hist-peoples-42-1024 table civilization c48ebbbf514b25cbfbdcdc4a35b7136f120e1780810edd69fdf8cafef38dc8af
 hist-peoples-42-1024 table event 430ec294971501c696ab743cf5f047608ef17abdf88267817f2e2bd93b5fc521
 hist-peoples-42-1024 table event_cause 2112cdd986b0c8445ac503a616899ee877be27a2aff87c14774b52ac3f7ac397
-hist-peoples-42-1024 table event_kind 58b8cb7b5b5121612b331cd052c06a2bdfc4e23ba2f1956e14bc85aa432f8776
+hist-peoples-42-1024 table event_kind 5bb33c7be421113e5b2507e775557dd7afe51c39ad7d9a5426e6f8e94e4b2f18
 hist-peoples-42-1024 table event_kind_role 828c060dc0d262d618363e1eb4194754223827013ae83efa04ea2944f3b5731b
 hist-peoples-42-1024 table event_kind_value ea3bdaba66965ca348093390b78ac4b2e92807052c93c9bb59822b0c53c0771e
 hist-peoples-42-1024 table event_participant 2976177f7261b17b7a3e3632d2a47bee316463b8cb917b9d79a2a702232cabd2
@@ -3895,21 +3895,21 @@ hist-peoples-42-1024 e81 The Dwarves founded the Hold of Dulimin in Larchbrake.
 hist-peoples-42-1024 e82 The Hold of Dulimin founded Grirnbra in Larchbrake.
 hist-peoples-42-1024 e83 The Dwarves founded the Narinthri Throne in the Heights of the Crow.
 hist-peoples-42-1024 e84 The Narinthri Throne founded Kholikhu in the Heights of the Crow.
-hist-peoples-42-1024 e85 Plague broke out in Niskreerk and spread to one other settlement; 632 died.
+hist-peoples-42-1024 e85 Plague broke out in Niskreerk and spread to one other settlement; 632 died in all.
 hist-peoples-42-1024 e86 The plague spread to Druk; 117 died.
 hist-peoples-42-1024 e87 Plague broke out in Raenme; 47 died.
-hist-peoples-42-1024 e88 Plague broke out in Skreek Pit and spread to one other settlement; 530 died.
+hist-peoples-42-1024 e88 Plague broke out in Skreek Pit and spread to one other settlement; 530 died in all.
 hist-peoples-42-1024 e89 The plague spread to Grak-Kutch; 194 died.
-hist-peoples-42-1024 e90 Plague broke out in Nok Hole and spread to one other settlement; 584 died.
+hist-peoples-42-1024 e90 Plague broke out in Nok Hole and spread to one other settlement; 584 died in all.
 hist-peoples-42-1024 e91 The plague spread to Dreerksnak; 135 died.
 hist-peoples-42-1024 e92 Famine struck Snugg; 210 died.
 hist-peoples-42-1024 e93 Famine struck Druk; 260 died.
 hist-peoples-42-1024 e94 Famine struck Gruz-Keegg; 449 died.
-hist-peoples-42-1024 e95 Plague broke out in Grak-Kutch and spread to one other settlement; 756 died.
+hist-peoples-42-1024 e95 Plague broke out in Grak-Kutch and spread to one other settlement; 756 died in all.
 hist-peoples-42-1024 e96 The plague spread to Gruz-Keegg; 136 died.
 hist-peoples-42-1024 e97 Plague broke out in Skrunk Pit; 147 died.
 hist-peoples-42-1024 e98 Famine struck Nank Pit; 204 died.
-hist-peoples-42-1024 e99 Plague broke out in Voeledell and spread to one other settlement; 338 died.
+hist-peoples-42-1024 e99 Plague broke out in Voeledell and spread to one other settlement; 338 died in all.
 hist-peoples-42-1024 e100 The plague spread to Minno; 40 died.
 hist-peoples-42-1024 e101 For 851 years, from 3392 to 4242, the land was quiet, and 5 realms kept the peace.
 hist-peoples-42-1024 e102 Grirnbra grew into a town of 1,604.
@@ -3927,10 +3927,10 @@ hist-peoples-42-1024 e113 Plague broke out in Gnark-Guk and spread to 2 other se
 hist-peoples-42-1024 e114 The plague spread to Niskreerk; 227 died.
 hist-peoples-42-1024 e115 The plague spread to Groz; 99 died.
 hist-peoples-42-1024 e116 Famine struck Voeledell; 352 died.
-hist-peoples-42-1024 e117 Plague broke out in Zugnob Hole and spread to one other settlement; 1,146 died.
+hist-peoples-42-1024 e117 Plague broke out in Zugnob Hole and spread to one other settlement; 1,146 died in all.
 hist-peoples-42-1024 e118 The plague spread to Snugg; 151 died.
 hist-peoples-42-1024 e119 Famine struck Skrunk Pit; 58 died.
-hist-peoples-42-1024 e120 Plague broke out in Groz and spread to one other settlement; 366 died.
+hist-peoples-42-1024 e120 Plague broke out in Groz and spread to one other settlement; 366 died in all.
 hist-peoples-42-1024 e121 The plague spread to Drirk Pit; 177 died.
 hist-peoples-42-1024 e122 The Hold of Dulimin sent settlers from Grirnbra to found Nirnthrurn Deep in Larchbrake.
 hist-peoples-42-1024 e123 The Narinthri Throne sent settlers from Kholikhu to found Didtarn Deep in the Heights of the Crow.
@@ -3969,7 +3969,7 @@ hist-peoples-42-1024 e155 Famine struck Snozz-Skink; 131 died.
 hist-peoples-42-1024 e156 The House of Finen sent settlers from Glathenddell to found Ithithe in the Wood of Stags.
 hist-peoples-42-1024 e157 Famine struck Saelo; 25 died.
 hist-peoples-42-1024 e158 Famine struck Gruz-Keegg; 277 died.
-hist-peoples-42-1024 e159 Plague broke out in Elalcie and spread to one other settlement; 356 died.
+hist-peoples-42-1024 e159 Plague broke out in Elalcie and spread to one other settlement; 356 died in all.
 hist-peoples-42-1024 e160 The plague spread to Rannve; 105 died.
 hist-peoples-42-1024 e161 Plague broke out in Gruz-Keegg; 269 died.
 hist-peoples-42-1024 e162 Weakened by plague, Gruz-Keegg dwindled to 1,046 souls.
@@ -4059,7 +4059,7 @@ hist-peoples-42-1024 e245 The Ghuughzuz Horde founded Aa'azuugh Fort in Miller's
 hist-peoples-42-1024 e246 Famine struck Meadstead; 619 died.
 hist-peoples-42-1024 e247 Rerdasherstead grew into a town of 1,500.
 hist-peoples-42-1024 e248 Skroz-Drub grew into a town of 1,509.
-hist-peoples-42-1024 e249 Plague broke out in Iennmo and spread to one other settlement; 194 died.
+hist-peoples-42-1024 e249 Plague broke out in Iennmo and spread to one other settlement; 194 died in all.
 hist-peoples-42-1024 e250 The plague spread to Ciennfae; 65 died.
 hist-peoples-42-1024 e251 Alorwick grew into a town of 1,502.
 hist-peoples-42-1024 e252 Famine struck Glalivedell; 45 died.
@@ -4071,7 +4071,7 @@ hist-peoples-42-1024 e257 A succession crisis at Zugnob Hole shook the Grork Hor
 hist-peoples-42-1024 e258 The Slig Mob broke away from the Grork Horde with 4 settlements.
 hist-peoples-42-1024 e259 Dessimton grew into a city of 8,035.
 hist-peoples-42-1024 e260 Famine struck Wurdham; 1,228 died.
-hist-peoples-42-1024 e261 Plague broke out in Druk and spread to one other settlement; 699 died.
+hist-peoples-42-1024 e261 Plague broke out in Druk and spread to one other settlement; 699 died in all.
 hist-peoples-42-1024 e262 The plague spread to Niskreerk; 229 died.
 hist-peoples-42-1024 e263 Famine struck Drand; 216 died.
 hist-peoples-42-1024 e264 Plague broke out in Alorwick; 414 died.
@@ -4112,22 +4112,22 @@ hist-peoples-42-1024 e298 The Teeshti Court sent settlers from Yfie Hollow to fo
 hist-peoples-42-1024 e299 The Kingdom of Stard sent settlers from Bromstead to found Gasbrunwick in Wrecker's Reach.
 hist-peoples-42-1024 e300 Slogg grew into a town of 1,505.
 hist-peoples-42-1024 e331 Famine struck Sneezskrub Hole; 513 died.
-hist-peoples-42-1024 e332 Plague broke out in Allaenndell and spread to one other settlement; 436 died.
+hist-peoples-42-1024 e332 Plague broke out in Allaenndell and spread to one other settlement; 436 died in all.
 hist-peoples-42-1024 e333 The plague spread to Voeledell; 103 died.
 hist-peoples-42-1024 e334 The Ghuughzuz Horde sent settlers from Aa'azuugh Fort to found Uush'azogh Camp in Miller's Rises.
 hist-peoples-42-1024 e335 A succession crisis at Sneezskrub Hole shook the Warrens of Dribnark.
 hist-peoples-42-1024 e336 Famine struck Nirnthrurn Deep; 490 died.
-hist-peoples-42-1024 e337 Plague broke out in Beckford and spread to one other settlement; 1,088 died.
+hist-peoples-42-1024 e337 Plague broke out in Beckford and spread to one other settlement; 1,088 died in all.
 hist-peoples-42-1024 e338 The plague spread to Bildheldham; 671 died.
 hist-peoples-42-1024 e339 Plague broke out in Minno; 96 died.
 hist-peoples-42-1024 e340 Famine struck Groz; 270 died.
 hist-peoples-42-1024 e341 Plague broke out in Slogg; 624 died.
-hist-peoples-42-1024 e342 Plague broke out in Nok Hole and spread to one other settlement; 405 died.
+hist-peoples-42-1024 e342 Plague broke out in Nok Hole and spread to one other settlement; 405 died in all.
 hist-peoples-42-1024 e343 The plague spread to Slogg; 240 died.
 hist-peoples-42-1024 e344 Weakened by plague, Nok Hole dwindled to 1,113 souls.
 hist-peoples-42-1024 e345 Famine struck Mairkhound Hold; 354 died.
 hist-peoples-42-1024 e346 Famine struck Beedruzz; 639 died.
-hist-peoples-42-1024 e347 Plague broke out in Bromstead and spread to one other settlement; 1,512 died.
+hist-peoples-42-1024 e347 Plague broke out in Bromstead and spread to one other settlement; 1,512 died in all.
 hist-peoples-42-1024 e348 The plague spread to Weckdeackham; 461 died.
 hist-peoples-42-1024 e349 Sishae grew into a village of 250.
 hist-peoples-42-1024 e350 The Kingdom of Stard sent settlers from Bresstead to found Rirdgusham in Tollhope Rises.
@@ -4135,7 +4135,7 @@ hist-peoples-42-1024 e351 Plague broke out in Grirnbra; 2,460 died.
 hist-peoples-42-1024 e352 Weakened by plague, Grirnbra dwindled to 5,945 souls.
 hist-peoples-42-1024 e353 Stantwen grew into a town of 1,502.
 hist-peoples-42-1024 e354 Plague broke out in Fia Hollow; 136 died.
-hist-peoples-42-1024 e355 Plague broke out in Drizz and spread to one other settlement; 571 died.
+hist-peoples-42-1024 e355 Plague broke out in Drizz and spread to one other settlement; 571 died in all.
 hist-peoples-42-1024 e356 The plague spread to Krazz; 178 died.
 hist-peoples-42-1024 e357 Famine struck Broldbury; 592 died.
 hist-peoples-42-1024 e358 Gragugaarz Camp grew into a town of 1,500.
@@ -4322,7 +4322,7 @@ syn-0 homes ra6 y1844 n1 25
 syn-0 table civilization 06770ade07fe312621f23a1c38f776ae3e6e04a5bfaa942c44201cbbf1c55107
 syn-0 table event 6b271fb8522f3e0d5e42b7ac9450bd8f5c6fdadd37cb440e062a179dc396576d
 syn-0 table event_cause 1d01b00835631564e45e8a24ac1ab86bd4b3557ea033df60a761267439cc7a2a
-syn-0 table event_kind 58b8cb7b5b5121612b331cd052c06a2bdfc4e23ba2f1956e14bc85aa432f8776
+syn-0 table event_kind 5bb33c7be421113e5b2507e775557dd7afe51c39ad7d9a5426e6f8e94e4b2f18
 syn-0 table event_kind_role 828c060dc0d262d618363e1eb4194754223827013ae83efa04ea2944f3b5731b
 syn-0 table event_kind_value ea3bdaba66965ca348093390b78ac4b2e92807052c93c9bb59822b0c53c0771e
 syn-0 table event_participant 29dcee5a8b25dc18d4ff7ee12220a592d4af4357ba343d790d34205b4d70d6ed
@@ -4463,7 +4463,7 @@ syn-1 homes ra1 y0 n1 1
 syn-1 table civilization 4446eb5ac0b26614d404d5e31b920d0f6873638f361eda3c44eaacbf30ff172c
 syn-1 table event 3f1ca9ff4d1748b520637155b5e860ce57f9f2cacf5ed26d7e8d13dc84020029
 syn-1 table event_cause ed79cd863bb68d57c722efe5869aa5301f7ec367e614f300d084dded58718653
-syn-1 table event_kind 58b8cb7b5b5121612b331cd052c06a2bdfc4e23ba2f1956e14bc85aa432f8776
+syn-1 table event_kind 5bb33c7be421113e5b2507e775557dd7afe51c39ad7d9a5426e6f8e94e4b2f18
 syn-1 table event_kind_role 828c060dc0d262d618363e1eb4194754223827013ae83efa04ea2944f3b5731b
 syn-1 table event_kind_value ea3bdaba66965ca348093390b78ac4b2e92807052c93c9bb59822b0c53c0771e
 syn-1 table event_participant 7b1d9f87b7853dd6b517a343b158658acb36a4d5813bc5b4d7f9bb7a443e80a2
@@ -4619,7 +4619,7 @@ syn-2 homes ra4 y1390 n1 6
 syn-2 table civilization fc11514b523cca63bc6c1c75131950d5dc144722deb1b9c608a3e1e430792a2f
 syn-2 table event ec8b1f001595267635c0dfbc3f2ce17eaa72d6c7affc029b022bbfb95db20cf7
 syn-2 table event_cause 68d2e0e0ad96c771f760ec023981cc4b7ef5385530f9ca0b29e063fb37286511
-syn-2 table event_kind 58b8cb7b5b5121612b331cd052c06a2bdfc4e23ba2f1956e14bc85aa432f8776
+syn-2 table event_kind 5bb33c7be421113e5b2507e775557dd7afe51c39ad7d9a5426e6f8e94e4b2f18
 syn-2 table event_kind_role 828c060dc0d262d618363e1eb4194754223827013ae83efa04ea2944f3b5731b
 syn-2 table event_kind_value ea3bdaba66965ca348093390b78ac4b2e92807052c93c9bb59822b0c53c0771e
 syn-2 table event_participant b8cfeaa8bf2b31b9244a92ac3608185310ac336f629c02061af71ffc4886d63b
@@ -4872,7 +4872,7 @@ syn-3 homes ra6 y5602 n1 12
 syn-3 table civilization f578f9200f461cc08f6109a5be3bab526aca520344fa8a622538b20091eb5e32
 syn-3 table event c006efa0564cf78587840ecc937b06e1bc19b8edabcc3e101e6adbb5753aa557
 syn-3 table event_cause 75e323e2303db47f451c2142b11b4a070107d7c5164305351499f56119b5f3d3
-syn-3 table event_kind 58b8cb7b5b5121612b331cd052c06a2bdfc4e23ba2f1956e14bc85aa432f8776
+syn-3 table event_kind 5bb33c7be421113e5b2507e775557dd7afe51c39ad7d9a5426e6f8e94e4b2f18
 syn-3 table event_kind_role 828c060dc0d262d618363e1eb4194754223827013ae83efa04ea2944f3b5731b
 syn-3 table event_kind_value ea3bdaba66965ca348093390b78ac4b2e92807052c93c9bb59822b0c53c0771e
 syn-3 table event_participant ccb3045d3d419f5dbed68eb009cba8de057c20145957aa50ae76cef22f7dcc7c
@@ -5296,7 +5296,7 @@ syn-4 homes ra6 y1880 n4 44
 syn-4 table civilization 65573ec55cc55d2090cfd9a8bd8dee6d44ae3bdfab5c30c45596e99da4f96139
 syn-4 table event 6e21f9a292f865ef2a1a1e9876c214ed1708670ad91de258a58d2a17663a32e1
 syn-4 table event_cause 9787464610dabab6bb131ce800c16aa556283fba90c5e08c20614de791c480ef
-syn-4 table event_kind 58b8cb7b5b5121612b331cd052c06a2bdfc4e23ba2f1956e14bc85aa432f8776
+syn-4 table event_kind 5bb33c7be421113e5b2507e775557dd7afe51c39ad7d9a5426e6f8e94e4b2f18
 syn-4 table event_kind_role 828c060dc0d262d618363e1eb4194754223827013ae83efa04ea2944f3b5731b
 syn-4 table event_kind_value ea3bdaba66965ca348093390b78ac4b2e92807052c93c9bb59822b0c53c0771e
 syn-4 table event_participant ffb67ea56dec75e969f1f49feb14c4a214e26d95475edd342b8a84a4fe86d715
@@ -5524,7 +5524,7 @@ syn-5 homes ra1 y0 n4 6
 syn-5 table civilization 16a88ae8d82d2d228ca13f163b39992ef653cb8c626861478e0be64f0865b3c5
 syn-5 table event 13f4b21507f95204410f1e76a0071761e4f5b04ba8ae6d23cdf48aee894a8e44
 syn-5 table event_cause 30ce76f41019e620fbad00d06d3a13d4d6b915938fbf249f141bc7ce4656f5b4
-syn-5 table event_kind 58b8cb7b5b5121612b331cd052c06a2bdfc4e23ba2f1956e14bc85aa432f8776
+syn-5 table event_kind 5bb33c7be421113e5b2507e775557dd7afe51c39ad7d9a5426e6f8e94e4b2f18
 syn-5 table event_kind_role 828c060dc0d262d618363e1eb4194754223827013ae83efa04ea2944f3b5731b
 syn-5 table event_kind_value ea3bdaba66965ca348093390b78ac4b2e92807052c93c9bb59822b0c53c0771e
 syn-5 table event_participant 40f9317fe60d8acb789c3669bd62ff096a8b099bf8ce111eb18a67ac0af61921
@@ -5768,7 +5768,7 @@ syn-6 homes ra4 y1407 n1 14
 syn-6 table civilization d4de5e60286daaba94cd5e1a94bd39e5d98d66af17e3cbebe6147134c139e10a
 syn-6 table event 22a382d407b446bd133da59ed1171d757fd7540999a24fd52dbd71d5ebcb9efb
 syn-6 table event_cause 5f9c88af44f8d31f2a0cea12f1b20fffa69582fc0ec786cd89ae723bfac73a44
-syn-6 table event_kind 58b8cb7b5b5121612b331cd052c06a2bdfc4e23ba2f1956e14bc85aa432f8776
+syn-6 table event_kind 5bb33c7be421113e5b2507e775557dd7afe51c39ad7d9a5426e6f8e94e4b2f18
 syn-6 table event_kind_role 828c060dc0d262d618363e1eb4194754223827013ae83efa04ea2944f3b5731b
 syn-6 table event_kind_value ea3bdaba66965ca348093390b78ac4b2e92807052c93c9bb59822b0c53c0771e
 syn-6 table event_participant 296c79d43da59b0ee5ab646533a866a34c73dcf67c3baa2941568cacb0a366c9
@@ -5975,7 +5975,7 @@ syn-7 homes ra6 y5637 n1 15
 syn-7 table civilization d84867e9075ada16f39281e5d8c8385dcf9f4954f1c13f0c3a4345c46906503c
 syn-7 table event 2a135d9d765c09059ca01db532dc85d60e3f13c1a0e67dbfb84092dcc2201e70
 syn-7 table event_cause 295c8cb620b9bed596f001a0034f77af68e496e51c47077115d33aa4a12a3684
-syn-7 table event_kind 58b8cb7b5b5121612b331cd052c06a2bdfc4e23ba2f1956e14bc85aa432f8776
+syn-7 table event_kind 5bb33c7be421113e5b2507e775557dd7afe51c39ad7d9a5426e6f8e94e4b2f18
 syn-7 table event_kind_role 828c060dc0d262d618363e1eb4194754223827013ae83efa04ea2944f3b5731b
 syn-7 table event_kind_value ea3bdaba66965ca348093390b78ac4b2e92807052c93c9bb59822b0c53c0771e
 syn-7 table event_participant 8be5ecdf46361eca842029834e02011bbc911a2a97bfc0392c71f89a0d21cfd1
@@ -6128,7 +6128,7 @@ syn-7 e65 Clan Ghuugbarz sent settlers from Baakh Camp to found Zaashthork Fort 
 syn-7 e66 Clan Ghuugbarz sent settlers from Shamazuld to found Gruurk Fort in Synthetic 13.
 syn-7 e67 Clan Ghuugbarz sent settlers from Shamazuld to found Agh'krosh in Synthetic 14.
 syn-7 e68 A succession crisis at Baakh Camp shook Clan Ghuugbarz.
-syn-7 e69 Plague broke out in Slax Hole and spread to one other settlement; 424 died.
+syn-7 e69 Plague broke out in Slax Hole and spread to one other settlement; 424 died in all.
 syn-7 e70 The plague spread to Krark; 79 died.
 syn-7 e71 Zaashthork Fort grew into a village of 250.
 syn-7 e72 Famine struck Snitneegg; 35 died.
@@ -6191,7 +6191,7 @@ syn-8 homes ra6 y1842 n1 3
 syn-8 table civilization e6822073b75b6d300846097808975d1008bdf52d36f78331775bbcad4a908192
 syn-8 table event ca5e9911417712902a7e889a4f732933ea3173e6cf62cd9bc404d43dc4614832
 syn-8 table event_cause a11e81fc8f1960b36c38ce5890146690cfdf2d230d577b080ff5e6b04555e5b1
-syn-8 table event_kind 58b8cb7b5b5121612b331cd052c06a2bdfc4e23ba2f1956e14bc85aa432f8776
+syn-8 table event_kind 5bb33c7be421113e5b2507e775557dd7afe51c39ad7d9a5426e6f8e94e4b2f18
 syn-8 table event_kind_role 828c060dc0d262d618363e1eb4194754223827013ae83efa04ea2944f3b5731b
 syn-8 table event_kind_value ea3bdaba66965ca348093390b78ac4b2e92807052c93c9bb59822b0c53c0771e
 syn-8 table event_participant bcbc09f045644db57c79d439efef96be1436f29f9ecac929522082d56153773b
@@ -6311,7 +6311,7 @@ syn-8 e32 Famine struck Drusnark Pit; 143 died.
 syn-8 e33 The Realm of Gliethil sent settlers from Lalefe to found Macaemi in Synthetic 3.
 syn-8 e34 Graim Deep grew into a town of 1,505.
 syn-8 e35 Fierelodell dwindled to 1,198 souls.
-syn-8 e36 Plague broke out in Nuzonk Pit and spread to one other settlement; 399 died.
+syn-8 e36 Plague broke out in Nuzonk Pit and spread to one other settlement; 399 died in all.
 syn-8 e37 The plague spread to Dreegink Pit; 156 died.
 syn-8 e38 For 205 years, from 1457 to 1661, the land was quiet, and 4 realms kept the peace.
 syn-8 e39 Dreegink Pit grew into a town of 1,631.
@@ -6324,7 +6324,7 @@ syn-8 e45 Macaemi grew into a village of 271.
 syn-8 e46 Madgil awakened the Humans in Synthetic 6.
 syn-8 e47 The Humans founded the Kingdom of Meas in Synthetic 6.
 syn-8 e48 The Kingdom of Meas founded Staston in Synthetic 6.
-syn-8 e49 Plague broke out in Fierelodell and spread to one other settlement; 198 died.
+syn-8 e49 Plague broke out in Fierelodell and spread to one other settlement; 198 died in all.
 syn-8 e50 The plague spread to Macaemi; 31 died.
 syn-8 e51 Plague broke out in Fietwash; 146 died.
 syn-8 e52 For 130 years, from 1712 to 1841, the land was quiet, and 5 realms kept the peace.
@@ -6603,7 +6603,7 @@ syn-9 homes ra1 y0 n1 17
 syn-9 table civilization 7bc68118557e4402e4b7dc9f18b873382cddedcdc377a3b4b2f981b3c27318b7
 syn-9 table event f428940112bdc3b6fe5f74c2bd73427ff223510720dc16b77a07f37efa751c23
 syn-9 table event_cause 90bb939533bf9ed46996d6f2190346c6ca7ef8dfc09caf11b381af6b7130c07f
-syn-9 table event_kind 58b8cb7b5b5121612b331cd052c06a2bdfc4e23ba2f1956e14bc85aa432f8776
+syn-9 table event_kind 5bb33c7be421113e5b2507e775557dd7afe51c39ad7d9a5426e6f8e94e4b2f18
 syn-9 table event_kind_role 828c060dc0d262d618363e1eb4194754223827013ae83efa04ea2944f3b5731b
 syn-9 table event_kind_value ea3bdaba66965ca348093390b78ac4b2e92807052c93c9bb59822b0c53c0771e
 syn-9 table event_participant 3b922b3dfef251793066db2420c4cd653ada5aeedcad7dad280141348544daf9
@@ -6725,7 +6725,7 @@ syn-10 homes ra4 y1397 n4 4
 syn-10 table civilization de2e486f452d09b03a4717cb265e82e14a209de4dd3644850efe1c2f0e2b879e
 syn-10 table event 064b9d1fd69fe905d87f68a627021e1b46e1883495a764a2897260ddd08a3c1c
 syn-10 table event_cause d4079b47731bbfb8ea415e686ba41753bb2a7bc96ecfb10db2dbf985f38be50e
-syn-10 table event_kind 58b8cb7b5b5121612b331cd052c06a2bdfc4e23ba2f1956e14bc85aa432f8776
+syn-10 table event_kind 5bb33c7be421113e5b2507e775557dd7afe51c39ad7d9a5426e6f8e94e4b2f18
 syn-10 table event_kind_role 828c060dc0d262d618363e1eb4194754223827013ae83efa04ea2944f3b5731b
 syn-10 table event_kind_value ea3bdaba66965ca348093390b78ac4b2e92807052c93c9bb59822b0c53c0771e
 syn-10 table event_participant 6d05e2690683cf5cb1d4818ac7ad63706211ad392cd68b48fb36a31463a0a3d1
@@ -6889,7 +6889,7 @@ syn-11 homes ra6 y5618 n4 9
 syn-11 table civilization 7d0dd4251dd32e777d3950155810102134940d0410b068d6be2dfc87011e1935
 syn-11 table event 438b9acfead97be6157944d721a17ca347d1c69bdbb9d8f204534493fd75d0c2
 syn-11 table event_cause 7a65cd75943571f21262bd55b7892e32322c29b4224ee7533bfdf0ff92d045f8
-syn-11 table event_kind 58b8cb7b5b5121612b331cd052c06a2bdfc4e23ba2f1956e14bc85aa432f8776
+syn-11 table event_kind 5bb33c7be421113e5b2507e775557dd7afe51c39ad7d9a5426e6f8e94e4b2f18
 syn-11 table event_kind_role 828c060dc0d262d618363e1eb4194754223827013ae83efa04ea2944f3b5731b
 syn-11 table event_kind_value ea3bdaba66965ca348093390b78ac4b2e92807052c93c9bb59822b0c53c0771e
 syn-11 table event_participant cba15a81dc15292fa119c1229651a79b06f42d677d7f8f0e9015231d809efd40
@@ -7022,7 +7022,7 @@ syn-11 e45 Plague broke out in Asheantstead; 33 died.
 syn-11 e46 Famine struck Gnib; 52 died.
 syn-11 e47 Plague broke out in Druzz Hole; 141 died.
 syn-11 e48 Weakened by plague, Druzz Hole dwindled to 1,127 souls.
-syn-11 e49 Plague broke out in Snak-Drux Hole and spread to one other settlement; 128 died.
+syn-11 e49 Plague broke out in Snak-Drux Hole and spread to one other settlement; 128 died in all.
 syn-11 e50 The plague spread to Skog-Skeerk Hole; 48 died.
 syn-11 e51 For 462 years, from 5156 to 5617, the land was quiet, and 3 realms kept the peace.
 syn-11 e52 Burkkram awakened the Orcs in Synthetic 9.
@@ -7035,13 +7035,13 @@ syn-11 e58 A succession crisis at Kub-Grut shook the Warrens of Drork.
 syn-11 e59 Clan Maagh sent settlers from Ghaam to found Uush'kok in Synthetic 9.
 syn-11 e60 A succession crisis at Asheantstead shook the Duchy of Alur.
 syn-11 e61 Clan Maagh sent settlers from Ghaam to found Dokh in Synthetic 9.
-syn-11 e62 Plague broke out in Slatch Pit and spread to one other settlement; 195 died.
+syn-11 e62 Plague broke out in Slatch Pit and spread to one other settlement; 195 died in all.
 syn-11 e63 The plague spread to Slizot; 71 died.
 syn-11 e64 Famine struck Zaz-Gigg Hole; 79 died.
 syn-11 e65 Famine struck Sneex; 116 died.
 syn-11 e66 Famine struck Gub Pit; 123 died.
 syn-11 e67 Famine struck Snak-Drux Hole; 123 died.
-syn-11 e68 Plague broke out in Gnik-Koz Pit and spread to one other settlement; 390 died.
+syn-11 e68 Plague broke out in Gnik-Koz Pit and spread to one other settlement; 390 died in all.
 syn-11 e69 The plague spread to Kub-Grut; 260 died.
 syn-11 e70 A succession crisis at Kub-Grut shook the Warrens of Drork.
 syn-11 e71 Famine struck Zaz-Gigg Hole; 120 died.
@@ -7051,7 +7051,7 @@ syn-11 e74 The plague spread to Snak-Drux Hole; 86 died.
 syn-11 e75 Plague broke out in Zaz-Gigg Hole; 107 died.
 syn-11 e76 A succession crisis at Asheantstead shook the Duchy of Alur.
 syn-11 e77 Plague broke out in Uush'kok; 19 died.
-syn-11 e78 Plague broke out in Dreeb and spread to one other settlement; 145 died.
+syn-11 e78 Plague broke out in Dreeb and spread to one other settlement; 145 died in all.
 syn-11 e79 The plague spread to Skog-Skeerk Hole; 73 died.
 syn-11 e80 A succession crisis at Ghaam shook Clan Maagh.
 syn-11 e81 Famine struck Grizzsnot Hole; 73 died.
@@ -7096,7 +7096,7 @@ syn-12 homes ra6 y1852 n1 5
 syn-12 table civilization c62b726250db4e3ca231c558c791639341715689a63114dda25a9a47fdcba294
 syn-12 table event 349e9e57280b2d055bcce92cd27e0ab7c849471fb4f9e866de231556911baf04
 syn-12 table event_cause 2827b2a4a551c0dc35f888b3063d31bbca1c1618da62a0b96b4fcd421c0e4c2f
-syn-12 table event_kind 58b8cb7b5b5121612b331cd052c06a2bdfc4e23ba2f1956e14bc85aa432f8776
+syn-12 table event_kind 5bb33c7be421113e5b2507e775557dd7afe51c39ad7d9a5426e6f8e94e4b2f18
 syn-12 table event_kind_role 828c060dc0d262d618363e1eb4194754223827013ae83efa04ea2944f3b5731b
 syn-12 table event_kind_value ea3bdaba66965ca348093390b78ac4b2e92807052c93c9bb59822b0c53c0771e
 syn-12 table event_participant 2e50b2a27ff94f6b450fdb4c454321ce766467889939db3a631c69ee2361846a
@@ -7355,7 +7355,7 @@ syn-13 homes ra1 y0 n1 1
 syn-13 table civilization 857ba71ab0f5a7a2ec1b4226fc93cb6f746f03614d6d4cd86b8af5e3c32f279c
 syn-13 table event 0bef0c67e85d64d05e93c8519c1a5ea8c69a5177cee83276d140cb5dc76c0cea
 syn-13 table event_cause 90bb939533bf9ed46996d6f2190346c6ca7ef8dfc09caf11b381af6b7130c07f
-syn-13 table event_kind 58b8cb7b5b5121612b331cd052c06a2bdfc4e23ba2f1956e14bc85aa432f8776
+syn-13 table event_kind 5bb33c7be421113e5b2507e775557dd7afe51c39ad7d9a5426e6f8e94e4b2f18
 syn-13 table event_kind_role 828c060dc0d262d618363e1eb4194754223827013ae83efa04ea2944f3b5731b
 syn-13 table event_kind_value ea3bdaba66965ca348093390b78ac4b2e92807052c93c9bb59822b0c53c0771e
 syn-13 table event_participant 939b379e5ea5fcf3a06c1ec770b209ce8c5a48c07a157e5e79c1d28d7c7bd782
@@ -7552,7 +7552,7 @@ syn-14 homes ra4 y1409 n1 11
 syn-14 table civilization c59cacc03fa6759eb5a437056c95d7bf826b115732ff90f1b2be3c43854b120c
 syn-14 table event 0b9dce3215baebccac41de3390f45aef84ea69d314182a02e5732287b60efb90
 syn-14 table event_cause 7d00ac2f87d575dcb9e2c345351dedee82bae69d939931742e55b1d2a2d1167b
-syn-14 table event_kind 58b8cb7b5b5121612b331cd052c06a2bdfc4e23ba2f1956e14bc85aa432f8776
+syn-14 table event_kind 5bb33c7be421113e5b2507e775557dd7afe51c39ad7d9a5426e6f8e94e4b2f18
 syn-14 table event_kind_role 828c060dc0d262d618363e1eb4194754223827013ae83efa04ea2944f3b5731b
 syn-14 table event_kind_value ea3bdaba66965ca348093390b78ac4b2e92807052c93c9bb59822b0c53c0771e
 syn-14 table event_participant b07bcd4f0faf39711c3f65b35ed7cbb9e2a03f87749225593d68d4d7b96bba55
@@ -7849,7 +7849,7 @@ syn-15 homes ra6 y5520 n1 28
 syn-15 table civilization 94b74d2275cba4053049150d68d98f1a8164e3672c921334ed8be6f5b0644b11
 syn-15 table event 121b083c50f9b1d2e06a2ad13e95d0512c2af5a78fbc87cd30f3d455ea51c05b
 syn-15 table event_cause 9359d98d25dbf28769bd602b1b0f89b18d220569b7aae5e637598f218f5a1562
-syn-15 table event_kind 58b8cb7b5b5121612b331cd052c06a2bdfc4e23ba2f1956e14bc85aa432f8776
+syn-15 table event_kind 5bb33c7be421113e5b2507e775557dd7afe51c39ad7d9a5426e6f8e94e4b2f18
 syn-15 table event_kind_role 828c060dc0d262d618363e1eb4194754223827013ae83efa04ea2944f3b5731b
 syn-15 table event_kind_value ea3bdaba66965ca348093390b78ac4b2e92807052c93c9bb59822b0c53c0771e
 syn-15 table event_participant 33d6b48751d9055e7ed44ca5e9e88c7ce160ecd622099237322edec342404e1c
@@ -7954,10 +7954,10 @@ syn-15 e17 A succession crisis at Gnugg shook the Drarkzeegg Horde.
 syn-15 e18 A succession crisis at Zaam Camp shook Clan Uraalghuld.
 syn-15 e19 Clan Uraalghuld sent settlers from Zaam Camp to found Ghurk Fort in Synthetic 28.
 syn-15 e20 A succession crisis at Daldwick shook the Duchy of Ceck.
-syn-15 e21 Plague broke out in Zaam Camp and spread to one other settlement; 74 died.
+syn-15 e21 Plague broke out in Zaam Camp and spread to one other settlement; 74 died in all.
 syn-15 e22 The plague spread to Ghurk Fort; 8 died.
 syn-15 e23 For 30 years, from 5670 to 5699, the land was quiet, and 3 realms kept the peace.
-syn-15 e24 Plague broke out in Daldwick and spread to one other settlement; 39 died.
+syn-15 e24 Plague broke out in Daldwick and spread to one other settlement; 39 died in all.
 syn-15 e25 The plague spread to Bantreaston; 8 died.
 syn-15 e26 A succession crisis at Daldwick shook the Duchy of Ceck.
 syn-15 e27 A succession crisis at Zaam Camp shook Clan Uraalghuld.
@@ -8133,7 +8133,7 @@ stress-0 homes ra6 y1844 n1 25
 stress-0 table civilization 06b5eec6d91eeb6e667667dc807577c3e94b2e5bde6ea06475f74f7c58ed5061
 stress-0 table event 6f849c1ec1b6e389f5271ec0878a3b0c980e6bbf2c53847ffe45d158fad717a9
 stress-0 table event_cause bffe46b58a3460ad3c8f5a9c0847633c0dea50c3e74e73252aacd3bc240442b8
-stress-0 table event_kind 58b8cb7b5b5121612b331cd052c06a2bdfc4e23ba2f1956e14bc85aa432f8776
+stress-0 table event_kind 5bb33c7be421113e5b2507e775557dd7afe51c39ad7d9a5426e6f8e94e4b2f18
 stress-0 table event_kind_role 828c060dc0d262d618363e1eb4194754223827013ae83efa04ea2944f3b5731b
 stress-0 table event_kind_value ea3bdaba66965ca348093390b78ac4b2e92807052c93c9bb59822b0c53c0771e
 stress-0 table event_participant 14e76e75deecced07af5dac2b0fffbf3266e21ed99df0d2556d53064917cfbcf
@@ -8505,7 +8505,7 @@ stress-1 homes ra1 y0 n1 1
 stress-1 table civilization 81509aa6ef0cfd9d4ed7a4df9f5d60699666e0ab2f493d986328379124db44e7
 stress-1 table event 73e62ebbde75915ac3f691efd1ef50539311a28054e553ecb751cd952cc565b1
 stress-1 table event_cause f623afcfcd4e4160dc1467dd0fa68cd2a0946f0047a5fd69f66110b7a8f15921
-stress-1 table event_kind 58b8cb7b5b5121612b331cd052c06a2bdfc4e23ba2f1956e14bc85aa432f8776
+stress-1 table event_kind 5bb33c7be421113e5b2507e775557dd7afe51c39ad7d9a5426e6f8e94e4b2f18
 stress-1 table event_kind_role 828c060dc0d262d618363e1eb4194754223827013ae83efa04ea2944f3b5731b
 stress-1 table event_kind_value ea3bdaba66965ca348093390b78ac4b2e92807052c93c9bb59822b0c53c0771e
 stress-1 table event_participant 09e8ab988ce88eb6b59af3c2b52d597a9c26e74f51f9636a4ae00155c4a6c136
@@ -8741,7 +8741,7 @@ stress-2 homes ra4 y1390 n1 6
 stress-2 table civilization 9af4197ec9c3d0ab60b01d4548cface2ba5c0d52771031faf90c4e1e843aeb70
 stress-2 table event c8df1db986816af291d8f438510b17cad5ebc3ad2e5aca58a7957ef2c0b0354e
 stress-2 table event_cause 26ce286bf66523072a853d310e8baadc948882108a8a28c691b94fc3ce1e4844
-stress-2 table event_kind 58b8cb7b5b5121612b331cd052c06a2bdfc4e23ba2f1956e14bc85aa432f8776
+stress-2 table event_kind 5bb33c7be421113e5b2507e775557dd7afe51c39ad7d9a5426e6f8e94e4b2f18
 stress-2 table event_kind_role 828c060dc0d262d618363e1eb4194754223827013ae83efa04ea2944f3b5731b
 stress-2 table event_kind_value ea3bdaba66965ca348093390b78ac4b2e92807052c93c9bb59822b0c53c0771e
 stress-2 table event_participant 4b414bf464337d0606d560ec6dfd0b46588c887c1c41a4b0a773deb0d2709e91
@@ -8839,7 +8839,7 @@ stress-2 e10 Biewie awakened the Faeries in Synthetic 6.
 stress-2 e11 The Faeries founded the Twieboss Court in Synthetic 6.
 stress-2 e12 The Twieboss Court founded Fysh in Synthetic 6.
 stress-2 e13 Famine struck Thain; 413 died.
-stress-2 e14 Plague broke out in Gintaimm and spread to one other settlement; 345 died.
+stress-2 e14 Plague broke out in Gintaimm and spread to one other settlement; 345 died in all.
 stress-2 e15 The plague spread to Nargrair Deep; 81 died.
 stress-2 e16 Famine struck Fysh; 36 died.
 stress-2 e17 Famine struck Gintaimm; 67 died.
@@ -8881,7 +8881,7 @@ stress-2 e52 Famine struck Thain; 419 died.
 stress-2 e53 Famine struck Fysh; 133 died.
 stress-2 e54 Famine struck Nargrair Deep; 89 died.
 stress-2 e55 Famine struck Fysh; 81 died.
-stress-2 e56 Plague broke out in Nargrair Deep and spread to one other settlement; 134 died.
+stress-2 e56 Plague broke out in Nargrair Deep and spread to one other settlement; 134 died in all.
 stress-2 e57 The plague spread to Drudinnun Deep; 53 died.
 stress-2 e58 Famine struck Nargrair Deep; 46 died.
 stress-2 e59 Famine struck Nargrair Deep; 82 died.
@@ -8907,7 +8907,7 @@ stress-2 e78 Plague broke out in Nargrair Deep; 19 died.
 stress-2 e79 Famine struck Thain; 405 died.
 stress-2 e80 Famine struck Fysh; 72 died.
 stress-2 e81 Famine struck Kound; 35 died.
-stress-2 e82 Plague broke out in Thain and spread to one other settlement; 430 died.
+stress-2 e82 Plague broke out in Thain and spread to one other settlement; 430 died in all.
 stress-2 e83 The plague spread to Kound; 26 died.
 stress-2 e84 Weakened by plague, Kound was abandoned; 194 survivors went to Drudinnun Deep.
 stress stress-3 3 6000 goblin,human,orc 1 calm
@@ -9067,7 +9067,7 @@ stress-3 homes ra6 y5602 n1 12
 stress-3 table civilization 7c46b226ce858882eddfef9a73b76b69a9e303673bd5fe49b6dfb0616e925637
 stress-3 table event 048fd10fe130b011ec918db744e9387669b93c7aa232d9c4b03b4b83e7e3bcfe
 stress-3 table event_cause 0958b58130b04cce16b642e0742f35615186b49cf302406580118d129a184122
-stress-3 table event_kind 58b8cb7b5b5121612b331cd052c06a2bdfc4e23ba2f1956e14bc85aa432f8776
+stress-3 table event_kind 5bb33c7be421113e5b2507e775557dd7afe51c39ad7d9a5426e6f8e94e4b2f18
 stress-3 table event_kind_role 828c060dc0d262d618363e1eb4194754223827013ae83efa04ea2944f3b5731b
 stress-3 table event_kind_value ea3bdaba66965ca348093390b78ac4b2e92807052c93c9bb59822b0c53c0771e
 stress-3 table event_participant d19b6bb838faa6b9df7749d9cf5056c0b78f8d20528995e84d82c83b9e9774fd
@@ -9628,7 +9628,7 @@ stress-4 homes ra6 y1880 n4 44
 stress-4 table civilization 632d12067da6a60163f70de8ded0c19a9efdd18920bd49b23f23bcf4683611c2
 stress-4 table event 9ca01e1548ee0fc8c3c845c387e277be1278190e4aa88f253a46bfaf51881aad
 stress-4 table event_cause 9155b208f20d97c2c3d9f4def0857adb4bd2175f88a9ed54d896dce7790550f7
-stress-4 table event_kind 58b8cb7b5b5121612b331cd052c06a2bdfc4e23ba2f1956e14bc85aa432f8776
+stress-4 table event_kind 5bb33c7be421113e5b2507e775557dd7afe51c39ad7d9a5426e6f8e94e4b2f18
 stress-4 table event_kind_role 828c060dc0d262d618363e1eb4194754223827013ae83efa04ea2944f3b5731b
 stress-4 table event_kind_value ea3bdaba66965ca348093390b78ac4b2e92807052c93c9bb59822b0c53c0771e
 stress-4 table event_participant 27eface5af36a1c2234c6773d5ccb75ae5ef92f0867e31c918ba1735b7c7c742
@@ -9942,7 +9942,7 @@ stress-5 homes ra1 y0 n4 6
 stress-5 table civilization 388f181467083e75fd8c46971e18620b0be155ab5ba7bda4f400bf03ebed9a7f
 stress-5 table event c3358fc3d70cf8315f7c905cd855c8ab5981f0424f9b46acedcd54afed9311a2
 stress-5 table event_cause c8385ab95b70ea1cf5b751efb852b8598c07703426789d522fbe5c870e7ae018
-stress-5 table event_kind 58b8cb7b5b5121612b331cd052c06a2bdfc4e23ba2f1956e14bc85aa432f8776
+stress-5 table event_kind 5bb33c7be421113e5b2507e775557dd7afe51c39ad7d9a5426e6f8e94e4b2f18
 stress-5 table event_kind_role 828c060dc0d262d618363e1eb4194754223827013ae83efa04ea2944f3b5731b
 stress-5 table event_kind_value ea3bdaba66965ca348093390b78ac4b2e92807052c93c9bb59822b0c53c0771e
 stress-5 table event_participant 6efdc71d12582c561975b4feeec4902395fd83911daacb50fc06eba041d078dc
@@ -10222,7 +10222,7 @@ stress-6 homes ra4 y1407 n1 14
 stress-6 table civilization cbf7e5f0f834324dd41441b20b000d22835d68b42a4ac426102499d01cadbfb3
 stress-6 table event 601e620ba70986fed8b49e2e442c60d9ff19a93f2742106bb0e4cbb1b3402690
 stress-6 table event_cause 803fb0e921d2f1edd77553afce86b17eb79a7d84eb9e6b3c3ce000b6ff977923
-stress-6 table event_kind 58b8cb7b5b5121612b331cd052c06a2bdfc4e23ba2f1956e14bc85aa432f8776
+stress-6 table event_kind 5bb33c7be421113e5b2507e775557dd7afe51c39ad7d9a5426e6f8e94e4b2f18
 stress-6 table event_kind_role 828c060dc0d262d618363e1eb4194754223827013ae83efa04ea2944f3b5731b
 stress-6 table event_kind_value ea3bdaba66965ca348093390b78ac4b2e92807052c93c9bb59822b0c53c0771e
 stress-6 table event_participant a500bb35f3c6c45bc344f0bfdd498353c2923af978c4d82daedfab9616f8e716
@@ -10383,7 +10383,7 @@ stress-6 e73 A succession crisis at Dodinnord Hold shook the Hold of Khaird.
 stress-6 e74 Famine struck Dodinnord Hold; 159 died.
 stress-6 e75 Plague broke out in Thodbrou; 44 died.
 stress-6 e76 Plague broke out in Dodinnord Hold; 236 died.
-stress-6 e77 Plague broke out in Syba and spread to one other settlement; 97 died.
+stress-6 e77 Plague broke out in Syba and spread to one other settlement; 97 died in all.
 stress-6 e78 The plague spread to Pieti Glade; 20 died.
 stress-6 e79 Plague broke out in Thodbrou; 53 died.
 stress-6 e80 Weakened by plague, Thodbrou was abandoned; 163 survivors went to Dodinnord Hold.
@@ -10545,7 +10545,7 @@ stress-7 homes ra6 y5637 n1 15
 stress-7 table civilization 14cdf9515023572ea13849b61c6308998a826213347b842e9bc1b5cee4d21b38
 stress-7 table event 9d708efcdc2d357f845e0517a1a60b1298002bea51c959e96eb81f66710d7760
 stress-7 table event_cause 175ee32d2bca751489bdc59158d646ff18b495e51a8553b118cfb62e0f2caa6c
-stress-7 table event_kind 58b8cb7b5b5121612b331cd052c06a2bdfc4e23ba2f1956e14bc85aa432f8776
+stress-7 table event_kind 5bb33c7be421113e5b2507e775557dd7afe51c39ad7d9a5426e6f8e94e4b2f18
 stress-7 table event_kind_role 828c060dc0d262d618363e1eb4194754223827013ae83efa04ea2944f3b5731b
 stress-7 table event_kind_value ea3bdaba66965ca348093390b78ac4b2e92807052c93c9bb59822b0c53c0771e
 stress-7 table event_participant 67ff5f1989b3a9649d64016ae51b618547b00892b800215d46c6f25754f4bccd
@@ -10698,7 +10698,7 @@ stress-7 e65 The Humans founded the Kingdom of Beal in Synthetic 2.
 stress-7 e66 The Kingdom of Beal founded Bralddeldton in Synthetic 2.
 stress-7 e67 Famine struck Sneegg Hole; 100 died.
 stress-7 e68 Famine struck Sneerk; 127 died.
-stress-7 e69 Plague broke out in Sneerk and spread to one other settlement; 188 died.
+stress-7 e69 Plague broke out in Sneerk and spread to one other settlement; 188 died in all.
 stress-7 e70 The plague spread to Krark; 41 died.
 stress-7 e71 Famine struck Snitneegg; 26 died.
 stress-7 e72 Famine struck Krark; 52 died.
@@ -10717,7 +10717,7 @@ stress-7 e84 Famine struck Gux Pit; 41 died.
 stress-7 e85 Weakened by plague and famine, Gux Pit was abandoned; 254 survivors went to Drik.
 stress-7 e86 Famine struck Bralddeldton; 47 died.
 stress-7 e87 Famine struck Skrozskiz Hole; 200 died.
-stress-7 e88 Plague broke out in Skrozskiz Hole and spread to one other settlement; 212 died.
+stress-7 e88 Plague broke out in Skrozskiz Hole and spread to one other settlement; 212 died in all.
 stress-7 e89 The plague spread to Sneegg Hole; 60 died.
 stress-7 e90 Weakened by famine and plague, Sneegg Hole was abandoned; 628 survivors went to Skazdrot.
 stress-7 e91 A succession crisis at Skrozskiz Hole shook the Gib-Grig Mob.
@@ -10737,7 +10737,7 @@ stress-7 e104 Weakened by famine, Bralddeldton dwindled to 177 souls.
 stress-7 e105 Famine struck Skrozskiz Hole; 83 died.
 stress-7 e106 Weakened by famine, Skrozskiz Hole was abandoned; 715 survivors went to Skazdrot.
 stress-7 e107 The seat of the Gib-Grig Mob moved to Skazdrot.
-stress-7 e108 Plague broke out in Snitneegg and spread to one other settlement; 84 died.
+stress-7 e108 Plague broke out in Snitneegg and spread to one other settlement; 84 died in all.
 stress-7 e109 The plague spread to Kuk; 45 died.
 stress-7 e110 Famine struck Krark; 73 died.
 stress-7 e111 A succession crisis at Skazdrot shook the Gib-Grig Mob.
@@ -11592,7 +11592,7 @@ stress-12 homes ra6 y1852 n1 5
 stress-12 table civilization e23d810718b13987b7b0b4482fe7e82ba0f3d79f2fdb0e911514cf1c71933b15
 stress-12 table event 370b3fdaaf6d7192aa76930db35c6867db4d718dea6f7ed1505f5c2a237ecaa6
 stress-12 table event_cause 9850f701393c118f6c28a233067f87bd5c377af961fec17c98f2a30383db7f71
-stress-12 table event_kind 58b8cb7b5b5121612b331cd052c06a2bdfc4e23ba2f1956e14bc85aa432f8776
+stress-12 table event_kind 5bb33c7be421113e5b2507e775557dd7afe51c39ad7d9a5426e6f8e94e4b2f18
 stress-12 table event_kind_role 828c060dc0d262d618363e1eb4194754223827013ae83efa04ea2944f3b5731b
 stress-12 table event_kind_value ea3bdaba66965ca348093390b78ac4b2e92807052c93c9bb59822b0c53c0771e
 stress-12 table event_participant 89ccf6049bdbb2d4a2bc5255c17fc71b8302655c9850c150127fe030b2d892b5
@@ -11699,7 +11699,7 @@ stress-12 e19 Hammgrad awakened the Dwarves in Synthetic 2.
 stress-12 e20 The Dwarves founded Clan Koudto in Synthetic 2.
 stress-12 e21 Clan Koudto founded Thidinni Deep in Synthetic 2.
 stress-12 e22 The Warrens of Snunk sent settlers from Krok Hole to found Gneenuz in Synthetic 4.
-stress-12 e23 Plague broke out in Krok Hole and spread to one other settlement; 1,518 died.
+stress-12 e23 Plague broke out in Krok Hole and spread to one other settlement; 1,518 died in all.
 stress-12 e24 The plague spread to Gneekizz; 47 died.
 stress-12 e25 Plague broke out in Krognirk and spread to 2 other settlements; 168 died in all.
 stress-12 e26 The plague spread to Gobig; 64 died.
@@ -11748,7 +11748,7 @@ stress-12 e68 Famine struck Thidinni Deep; 51 died.
 stress-12 e69 Famine struck Tashy; 32 died.
 stress-12 e70 Famine struck Krognirk; 21 died.
 stress-12 e71 Plague broke out in Krognirk; 90 died.
-stress-12 e72 Plague broke out in Gneenuz and spread to one other settlement; 1,010 died.
+stress-12 e72 Plague broke out in Gneenuz and spread to one other settlement; 1,010 died in all.
 stress-12 e73 The plague spread to Gneekizz; 48 died.
 stress-12 e74 Famine struck Krognirk; 23 died.
 stress-12 e75 Famine struck Drog-Dreezz; 557 died.
@@ -11766,7 +11766,7 @@ stress-12 e86 Plague broke out in Thidinni Deep; 358 died.
 stress-12 e87 A succession crisis at Brentstead shook the Duchy of Ceal.
 stress-12 e88 Famine struck Nikeerk; 585 died.
 stress-12 e89 Famine struck Drux; 223 died.
-stress-12 e90 Plague broke out in Bik-Zugg Pit and spread to one other settlement; 432 died.
+stress-12 e90 Plague broke out in Bik-Zugg Pit and spread to one other settlement; 432 died in all.
 stress-12 e91 The plague spread to Nikeerk; 281 died.
 stress-12 e92 Weakened by famine and plague, Nikeerk was abandoned; 2,166 survivors went to Bik-Zugg Pit.
 stress-12 e93 Famine struck Gneekizz; 77 died.
@@ -11827,7 +11827,7 @@ stress-12 e147 Famine struck Siliefiedell; 151 died.
 stress-12 e148 Plague broke out in Sneenk-Nug; 88 died.
 stress-12 e149 Famine struck Krognirk; 63 died.
 stress-12 e150 Plague broke out in Siliefiedell; 547 died.
-stress-12 e151 Plague broke out in Zeenkgnix and spread to one other settlement; 2,040 died.
+stress-12 e151 Plague broke out in Zeenkgnix and spread to one other settlement; 2,040 died in all.
 stress-12 e152 The plague spread to Skrutch Pit; 286 died.
 stress-12 e153 Plague broke out in Bik-Zugg Pit; 302 died.
 stress-12 e154 Famine struck Skrutch Pit; 326 died.
@@ -11865,7 +11865,7 @@ stress-12 e185 Famine struck Thidinni Deep; 135 died.
 stress-12 e186 Famine struck Sneenk-Nug; 38 died.
 stress-12 e187 Famine struck Siliefiedell; 69 died.
 stress-12 e188 Famine struck Thidinni Deep; 82 died.
-stress-12 e189 Plague broke out in Sneenk-Nug and spread to one other settlement; 62 died.
+stress-12 e189 Plague broke out in Sneenk-Nug and spread to one other settlement; 62 died in all.
 stress-12 e190 The plague spread to Krognirk; 30 died.
 stress-12 e191 Famine struck Brentstead; 621 died.
 stress-12 e192 Famine struck Gobig; 170 died.
@@ -11997,7 +11997,7 @@ stress-14 homes ra4 y1409 n1 11
 stress-14 table civilization a1c7c49c93ea8c815eaee8da273f159ef1c69831de13e534304fef2cfcb84127
 stress-14 table event 8f2b239da61ec68977cec50fb233fdafcf1ccb59f27f6a9399711e75df46a7dc
 stress-14 table event_cause 2b6b42fd070057836676d92629f951e75ccfc5a6579bf1f11eb51832eb683b7e
-stress-14 table event_kind 58b8cb7b5b5121612b331cd052c06a2bdfc4e23ba2f1956e14bc85aa432f8776
+stress-14 table event_kind 5bb33c7be421113e5b2507e775557dd7afe51c39ad7d9a5426e6f8e94e4b2f18
 stress-14 table event_kind_role 828c060dc0d262d618363e1eb4194754223827013ae83efa04ea2944f3b5731b
 stress-14 table event_kind_value ea3bdaba66965ca348093390b78ac4b2e92807052c93c9bb59822b0c53c0771e
 stress-14 table event_participant c4293049b15ee87cc7493c1248407642e54a0abaf7a7f25335dc518217de00ed
@@ -12118,7 +12118,7 @@ stress-14 e33 Famine struck Garmai; 43 died.
 stress-14 e34 Plague broke out in Garmai; 54 died.
 stress-14 e35 Famine struck Taidthrou Hold; 47 died.
 stress-14 e36 Famine struck Grounmurk; 88 died.
-stress-14 e37 Plague broke out in Garmai and spread to one other settlement; 83 died.
+stress-14 e37 Plague broke out in Garmai and spread to one other settlement; 83 died in all.
 stress-14 e38 The plague spread to Taidthrou Hold; 34 died.
 stress-14 e39 Weakened by plague, Taidthrou Hold was abandoned; 394 survivors went to Drumm.
 stress-14 e40 Plague broke out in Taesytwi; 96 died.

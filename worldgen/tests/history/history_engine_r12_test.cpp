@@ -29,7 +29,6 @@ namespace {
 
 using namespace engine_golden;
 
-constexpr int CIV = 3, SET = 4;
 
 bool null_cell(const Cell& c) { return c.type == db::ValueType::null; }
 
@@ -237,7 +236,7 @@ TEST_CASE("P3-04 r12 20.1, P3-05 r12 22.1: the shipped entries of kinds 37 and 3
     CHECK(k37->salience == 45);
     CHECK(k37->templ ==
           "Plague broke out in {settlement}{reached?| and spread to one other settlement| and spread to # other "
-          "settlements}; {total} died{reached?|| in all}.");
+          "settlements}; {total} died{reached?| in all| in all}.");
     CHECK(k38->salience == 20);
     CHECK(k38->templ ==
           "For {years} {years?year|years}, from {@year} to {@end_year}, the land was quiet{realms?|; one realm "
@@ -310,7 +309,7 @@ TEST_CASE("P3-04 r12 20.3, 20.6 item 3: thousands separators in {value} and #; n
 TEST_CASE("P3-05 r12 22.1, 22.8 item 1: the outbreak's sentence with 2, 1 and 0 spreads; P3-04 r12 20.1's quiet line") {
     const std::string t37 =
         "Plague broke out in {settlement}{reached?| and spread to one other settlement| and spread to # other "
-        "settlements}; {total} died{reached?|| in all}.";
+        "settlements}; {total} died{reached?| in all| in all}.";
     const std::string t38 =
         "For {years} {years?year|years}, from {@year} to {@end_year}, the land was quiet{realms?|; one realm "
         "held it|, and # realms kept the peace}.";
@@ -328,8 +327,8 @@ TEST_CASE("P3-05 r12 22.1, 22.8 item 1: the outbreak's sentence with 2, 1 and 0 
     CHECK(render_c("k37.db", cases) ==
           std::vector<std::string>{
               "Plague broke out in Glathenddell and spread to 2 other settlements; 1,020 died in all.",
-              // reached 1: the second word of {reached?|| in all} is empty (as written, 22.1)
-              "Plague broke out in Glathenddell and spread to one other settlement; 900 died.",
+              // reached 1: P3-05 r14 22.1, "in all" whenever another settlement was reached
+              "Plague broke out in Glathenddell and spread to one other settlement; 900 died in all.",
               "Plague broke out in Glathenddell; 120 died.",
               "Plague broke out in Glathenddell and spread to 3 other settlements; 1,084 died in all.",
               "For 1,924 years, from 5999 to 5999, the land was quiet; one realm held it.",

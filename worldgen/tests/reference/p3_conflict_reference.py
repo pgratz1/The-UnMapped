@@ -318,7 +318,7 @@ SPEC_GAPS = (
     ("r14 (8)", "Checked in the run: an ending whose winner lost the last battle has how 'aim' with the attacker "
                 "holding G at the ending."),
     ("r14 21.5 item 1", "7.4's distribution of 2 dead over 1000, 1000 and 10 people is 0, 0, 0 with the remainder 2 "
-                        "to the most populous (losses 2, 0, 0, not the text's 1, 1, 0); the unit checks 2 dead "
+                        "to the most populous (losses 2, 0, 0, as r16's text now says); the unit checks 2 dead "
                         "(note for s1 only) and 3 dead (2, 1, 0: notes for s1 and s2), s3 never noted."),
     ("r14 21.7 item 1 who", "searched_until is keyed (hidden civilization y, region R) and makes R weary as a goal "
                             "against y (20.2's allowed goals) for every claimant; the 20.23 open-war count is not "
@@ -347,14 +347,11 @@ SPEC_GAPS = (
                           "settlements of the alive visible civilizations of other races at that T2; the quarrel is "
                           "set after housekeeping and the grudge decay, before 5.2. A civilization whose first "
                           "visible step is quiet gets its quarrel in the next T2 (T2 only, 21.12 item 3)."),
-    ("r14 (16) blocked", "(16) does not follow from the rules when 5.3's own tests refuse the claim the quarrel's "
-                         "strain calls for: every front region of the neighbour weary for it (20.2 / 20.4 / 21.7), a "
-                         "truce or a war (stress-9 at 0.19.0: the orcs' goblin neighbour is weary of every region in "
-                         "the orcs' front). The reference prints such a civilization as a finding, with the refusing "
-                         "test, and fails (16) only when no refusal was recorded."),
-    ("r14 (16) contact", "Contact is 5.1's contact (front(a, b) or front(b, a) not empty) as the T2 strain update "
-                         "computes it, between a and a civilization of another race; the first active phase is that "
-                         "of the first such T2; a claim with a as claimant must be dated in that phase."),
+    ("r16 (16)", "Invariant (16) as restated by r16 21.12 item 5 (P3-10 10d item 2): the claim of a against its "
+                 "quarrel neighbour b is dated in the first phase in which a and b are in contact (5.1's contact as "
+                 "the T2 strain update computes it), unless 5.3's tests refuse that claim in that phase (no allowed "
+                 "goal, a truce, a war, hiding); a pair never in contact owes nothing. Replaces r14's wording, under "
+                 "which the reference printed refused claims as findings."),
 )
 
 
@@ -629,6 +626,8 @@ class World(pp.World):
         self.low_log = []          # (year, civ, until) of every lie_low call (21.10)
         self.aim_log = []          # (war id, how, winner, holder of G at the end, score winner, last battle winner)
         self.claim_blocked = set()  # (civ, phase, reason): a claim the strain called for, refused by 5.3's tests
+        self.claim_refused = set()  # (civ, target, phase): the same, per target (r16 (16))
+        self.pair_contact = {}      # (a, b) -> first phase id in which a and b are in contact (r16 (16))
 
     # --- engine phase kind
     def tick(self, eng_run, year, phase_end):
@@ -1109,6 +1108,7 @@ class World(pp.World):
                 if (a, b) in self.claim or self.at_war(a, b) or not self.past_truce(a, b) or a in low:
                     if (a, b) not in self.claim and self.strain.get((a, b), 0) >= t["claim_strain"] * 1000:
                         self.claim_blocked.add((a, self.phase, "war, truce or hiding"))
+                        self.claim_refused.add((a, b, self.phase))
                     continue
                 if self.strain.get((a, b), 0) < t["claim_strain"] * 1000:
                     continue
@@ -1120,6 +1120,7 @@ class World(pp.World):
                     fr = self.allowed(a, b, fr)      # r9 20.2 item 1, 20.4
                     if not fr:
                         self.claim_blocked.add((a, self.phase, "no allowed goal"))
+                        self.claim_refused.add((a, b, self.phase))
                         continue
                 wr = self.wronged.get((a, b), set())
                 r, cost, _f = min(fr, key=lambda e: (0 if (e[0] in wr and self.owner[e[0]][0] == b) else 1,
@@ -1293,6 +1294,7 @@ class World(pp.World):
             if self.race_c(a) != self.race_c(b):
                 for x in (a, b):
                     self.contact_log.setdefault(x, self.phase)
+            self.pair_contact.setdefault((a, b), self.phase)
 
     def declare_p(self, a, b):
         """7.2 item 3: the yearly chance of a's declaration on b, or None below declare_min (no draw)."""
@@ -3038,27 +3040,24 @@ def check_invariants_r14(c, res, inp, w, label, kind, ev, causes, kids, parts, v
                   (x[3] in (K["claim"], K["war_declared"]) and role(x[0], 1) == [y])
             c.true("%s r14 (15) e%d %s by c%d while its refuge e%d lies hidden" % (label, x[0], KEY_OF[x[3]], y, e[0]),
                    not bad)
-    # (16): an awakening-quarrel civilization founded by civ_founded claims within the first active phase in which
-    # another people is in contact with it, or was never in contact (contact recomputed in the run)
-    quarrel_races = {rid for rid, r in w.pd.race.items() if r.get("quarrel") == 1}
-    for cv in res["civilization"]:
-        if cv[2] not in quarrel_races or kind[cv[7]] != K["civ_founded"]:
+    # (16), as restated by r16 21.12 item 5: the claim of an awakening-quarrel civilization a (founded by civ_founded)
+    # against its quarrel neighbour b falls within the first phase in which a and b are in contact, unless the claim
+    # pass refuses it there (weary or out-of-bounds regions, a truce, a war, hiding); a pair never in contact owes
+    # nothing (contact recomputed in the run)
+    for (_y, a, b) in w.quarrel_log:
+        if b == 0:
+            continue                         # a pending mark; the attached quarrel is logged with its b
+        cv = next(x for x in res["civilization"] if x[0] == a)
+        if kind[cv[7]] != K["civ_founded"]:
             continue
-        ph = w.contact_log.get(cv[0])
+        ph = w.pair_contact.get((a, b))
         if ph is None:
             continue
-        claimed = any(x[3] == K["claim"] and x[4] == ph and role(x[0], 1) == [cv[0]] for x in res["event"])
-        blocked = sorted(r for (x, p_, r) in w.claim_blocked if x == cv[0] and p_ == ph)
-        if not claimed and blocked:
-            # READING (SPEC_GAPS r14 (16) blocked): the claim pass of 5.3 refuses the claim the quarrel calls for
-            # (every front region of the neighbour weary, a truce, a war): a finding of the invariant's wording,
-            # not a defect of the rules
-            print("finding: %s (16) c%d has no claim in its first phase of contact %d: %s" % (label, cv[0], ph,
-                                                                                           ", ".join(blocked)))
-            w.findings16 = getattr(w, "findings16", 0) + 1
-            continue
-        c.true("%s r14 (16) c%d claims in phase %d, its first active phase in contact with another people" % (
-            label, cv[0], ph), claimed)
+        claimed = any(x[3] == K["claim"] and x[4] == ph and role(x[0], 1) == [a] and role(x[0], 2) == [b]
+                      for x in res["event"])
+        refused = (a, b, ph) in w.claim_refused
+        c.true("%s r16 (16) c%d claims against its quarrel neighbour c%d in phase %d, their first phase of contact, "
+               "or the claim pass refuses it" % (label, a, b, ph), claimed or refused)
 
 
 def last_battle_winner(res, d, idx):
@@ -3721,8 +3720,8 @@ def check_units_r14(c):
          "history: tuning: quarrel_strain must not be below claim_strain")
     c.eq("21.12 r15 conflict_quarrel_strain at claim_strain", tuning_problem(dict(t, quarrel_strain=t["claim_strain"])), None)
     # --- 21.5 item 1 (21.1): note_reduction only where people were lost. READING (SPEC_GAPS r14 21.5 item 1): 7.4's
-    # distribution of 2 dead over 1000, 1000, 10 is 0, 0, 0 and the remainder 2 to the first (2, 0, 0), not the
-    # text's (1, 1, 0); 3 dead give (2, 1, 0)
+    # distribution of 2 dead over 1000, 1000, 10 is 0, 0, 0 and the remainder 2 to the first (2, 0, 0), as r16
+    # states; 3 dead give (2, 1, 0)
     for dead, want_pop, want_noted in ((2, (998, 1000, 10), [1]), (3, (998, 999, 10), [1, 2])):
         w = r9_world(regions=3)
         add_civ(w, ELF, 1)

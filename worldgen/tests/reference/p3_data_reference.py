@@ -1185,7 +1185,7 @@ TEMPLATES_019 = {   # kind key -> (0.18.0 template, 0.19.0 template)
 }
 KIND37_ENTRY = ('  { kind = "plague_outbreak", salience = 45, template = "Plague broke out in {settlement}'
                 '{reached?| and spread to one other settlement| and spread to # other settlements}; {total} died'
-                '{reached?|| in all}." },\n')
+                '{reached?| in all| in all}." },\n')
 KIND38_ENTRY = ('  { kind = "quiet_stretch", salience = 20, template = "For {years} {years?year|years}, from {@year} to '
                 '{@end_year}, the land was quiet{realms?|; one realm held it|, and # realms kept the peace}." },\n')
 _re = REPORT_FILE_018["report.toml"]
@@ -1979,7 +1979,7 @@ def check_spec_019(c, races):
     ev = {e["kind"]: e for e in parsed_spec("history")["report"]["events"]}
     c.eq("kind 37 entry (P3-05 r12 22.1)", (ev["plague_outbreak"]["salience"], ev["plague_outbreak"]["template"]),
          (45, "Plague broke out in {settlement}{reached?| and spread to one other settlement| and spread to # other "
-              "settlements}; {total} died{reached?|| in all}."))
+              "settlements}; {total} died{reached?| in all| in all}."))
     c.eq("kind 38 entry (P3-04 r12 20.1)", (ev["quiet_stretch"]["salience"], ev["quiet_stretch"]["template"]),
          (20, "For {years} {years?year|years}, from {@year} to {@end_year}, the land was quiet{realms?|; one realm "
               "held it|, and # realms kept the peace}."))

@@ -149,7 +149,7 @@ TEST_CASE("P3-05 r12 22.3, 22.4, 22.1: the shipped templates of kinds 10, 15, 16
     CHECK(template_of("capital_moved") == "The seat of {civilization} moved to {settlement}.");
     CHECK(template_of("plague_outbreak") ==
           "Plague broke out in {settlement}{reached?| and spread to one other settlement| and spread to # other "
-          "settlements}; {total} died{reached?|| in all}.");
+          "settlements}; {total} died{reached?| in all| in all}.");
 }
 
 TEST_CASE("P3-05 r12 22.1, 22.8 item 1: an outbreak with no spread is kind 37, total = dead, reached 0, salience 25") {

@@ -423,7 +423,7 @@ events = [
   { kind = "war_won", salience = 60, template = "{winner} prevailed over {loser} after {years} {years?year|years} of war." },
   { kind = "search_abandoned", salience = 40, template = "{searcher} searched {@region} for {hidden} and found no one; the war ended after {years} {years?year|years}." },
   { kind = "refuge_held", salience = 25, template = "{attacker} besieged {@settlement} of {defender}; with {reason?nowhere to flee|too few to flee}, its people held on." },
-  { kind = "plague_outbreak", salience = 45, template = "Plague broke out in {settlement}{reached?| and spread to one other settlement| and spread to # other settlements}; {total} died{reached?|| in all}." },
+  { kind = "plague_outbreak", salience = 45, template = "Plague broke out in {settlement}{reached?| and spread to one other settlement| and spread to # other settlements}; {total} died{reached?| in all| in all}." },
   { kind = "quiet_stretch", salience = 20, template = "For {years} {years?year|years}, from {@year} to {@end_year}, the land was quiet{realms?|; one realm held it|, and # realms kept the peace}." },
 ]
 )";

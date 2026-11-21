@@ -31,7 +31,7 @@ Readings taken where the spec is open:
     stem(v) strips a leading "the " after lower-casing, then cuts 5 bytes.
   - 15.2: "merged into its sorted list" is byte order (the order every
     shipped list already has).
-  - 15.6's "Thornholt then Ashholt" cannot occur: Ash + holt fails V1 (h, h);
+  - 15.6 wrote "Thornholt then Ashholt" before r9 (Ash + holt fails V1, h, h); r9 writes Elmholt;
     the unit uses Elm.
   - rename-db accepts an input that stores r3 names (the P3-08 inputs),
     checked against the r3 rule on the 0.18.0 lists.
@@ -2681,7 +2681,7 @@ def check_rg11_r7(c):
                       mp, tt)
     c.eq("15.6 V7: a keeper adds nothing to S", (nm[0], how[0]), ("The Weald of Floods", "0"))
     # nouns and suffixes repeat freely
-    # (15.6 writes Thornholt then Ashholt; Ash + holt fails V1, h h, so Elm stands in: SPEC_GAPS)
+    # (15.6 r9: Thornholt then Elmholt)
     C = _mini_land("c", ["{prefix}{suffix}"], prefixes=["Thorn", "Elm"], suffixes=["holt"])
     rws = [_row(i, 10) for i in (1, 2)] + [_row(3, 99)]
     nm, how = rg11_r3(rws, [("North Holt", C), ("East Holt", C), ("South Holt", C)], set(), 0, 64, mp, tt)

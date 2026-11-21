@@ -89,7 +89,7 @@ geo-seed-0-512 input_region 17dc7e6341db4b9b27aa22fe5671fcaad6b3dcfbf708282ea816
 geo-seed-0-512 table civilization 755287c4210776d2143a4d843e8528b413a079837dd5ce52f173597499b838e7
 geo-seed-0-512 table event d5b29904f4df45a60ba22928f2aaf65bf4228f54656a2ae480d65270db76f9b3
 geo-seed-0-512 table event_cause 6199039750bf7169e75563d6e289c70f4836e512b04a853136967eb8b9ee9dca
-geo-seed-0-512 table event_kind 58b8cb7b5b5121612b331cd052c06a2bdfc4e23ba2f1956e14bc85aa432f8776
+geo-seed-0-512 table event_kind 5bb33c7be421113e5b2507e775557dd7afe51c39ad7d9a5426e6f8e94e4b2f18
 geo-seed-0-512 table event_kind_role 828c060dc0d262d618363e1eb4194754223827013ae83efa04ea2944f3b5731b
 geo-seed-0-512 table event_kind_value ea3bdaba66965ca348093390b78ac4b2e92807052c93c9bb59822b0c53c0771e
 geo-seed-0-512 table event_participant 98acd82bc16a096f0a4dc66dd8652c6a4b9b74bcb0c6c61362a0a66686de80ad
@@ -441,7 +441,7 @@ geo-seed-0-512 e34 Clan Durgarin sent settlers from Kidinkorn to found Houmm Dee
 geo-seed-0-512 e35 Whaia awakened the Faeries in the Wild Hurst.
 geo-seed-0-512 e36 The Faeries founded the Wosk Ring in the Wild Hurst.
 geo-seed-0-512 e37 The Wosk Ring founded Athfli Hollow in the Wild Hurst.
-geo-seed-0-512 e38 Plague broke out in Bux-Kreeb and spread to one other settlement; 372 died.
+geo-seed-0-512 e38 Plague broke out in Bux-Kreeb and spread to one other settlement; 372 died in all.
 geo-seed-0-512 e39 The plague spread to Grunkgnuzz Pit; 157 died.
 geo-seed-0-512 e40 Famine struck Sniz; 136 died.
 geo-seed-0-512 e41 The Baskeeb Mob laid claim to the Wild Hurst, held by the Wosk Ring.
@@ -514,7 +514,7 @@ geo-seed-0-512 e107 The House of Nife paid tribute to the Warband of Ghom; 378 w
 geo-seed-0-512 e108 A succession crisis at Murz Fort shook the Warband of Ghom.
 geo-seed-0-512 e109 Plague broke out in Grangrak; 300 died.
 geo-seed-0-512 e110 Murz Fort grew into a town of 1,519.
-geo-seed-0-512 e111 Plague broke out in Bozz Pit and spread to one other settlement; 217 died.
+geo-seed-0-512 e111 Plague broke out in Bozz Pit and spread to one other settlement; 217 died in all.
 geo-seed-0-512 e112 The plague spread to Grunkgnuzz Pit; 119 died.
 geo-seed-0-512 e113 The Warband of Ghom laid claim to Warden's Wood, held by the House of Nife.
 geo-seed-0-512 e114 For 16 years, from 5684 to 5699, the land was quiet, and 6 realms kept the peace.
@@ -592,7 +592,7 @@ geo-seed-42-512 input_region 539cb4cc7473048fa68b7824f5c25785781ba2b091671aa534d
 geo-seed-42-512 table civilization a4cbdbef93fc8d6ef8e94e4b60dd4f157de11b586d808d84d36f5bf1d1f4a8dc
 geo-seed-42-512 table event 4e0533979082c0326d4759873cc463039d67c63a90e34e0ed7caa095f54544ea
 geo-seed-42-512 table event_cause d6a1be4c5df48c16637f32a1ee5e06cca8b12a98400b85fde27b19d903a19e90
-geo-seed-42-512 table event_kind 58b8cb7b5b5121612b331cd052c06a2bdfc4e23ba2f1956e14bc85aa432f8776
+geo-seed-42-512 table event_kind 5bb33c7be421113e5b2507e775557dd7afe51c39ad7d9a5426e6f8e94e4b2f18
 geo-seed-42-512 table event_kind_role 828c060dc0d262d618363e1eb4194754223827013ae83efa04ea2944f3b5731b
 geo-seed-42-512 table event_kind_value ea3bdaba66965ca348093390b78ac4b2e92807052c93c9bb59822b0c53c0771e
 geo-seed-42-512 table event_participant d1d6b80d6e8d9ac584cf1f8e10772f9910676645eb2eb0d2eedb38600ee8208c
@@ -1116,7 +1116,7 @@ geo-seed-42-512 e166 The Gidruz Horde defeated the Realm of Ithieglie in Coldbar
 geo-seed-42-512 e167 The Gidruz Horde defeated the Realm of Ithieglie in Seredale Tangle; 64 of the defeated and 20 of the victors fell.
 geo-seed-42-512 e168 The Gidruz Horde besieged Saelo of the Realm of Ithieglie; it held.
 geo-seed-42-512 e169 The Realm of Ithieglie and the Gidruz Horde made peace after 8 years of war, neither the victor.
-geo-seed-42-512 e170 Plague broke out in Niskreerk and spread to one other settlement; 706 died.
+geo-seed-42-512 e170 Plague broke out in Niskreerk and spread to one other settlement; 706 died in all.
 geo-seed-42-512 e171 The plague spread to Druk; 244 died.
 geo-seed-42-512 e172 The Gidruz Horde defeated the Grork Horde in the Hollow Hurst; 436 of the defeated and 69 of the victors fell.
 geo-seed-42-512 e173 The Gidruz Horde laid claim to Gull's Pit, held by the House of Finen.
@@ -1203,7 +1203,7 @@ geo-seed-42-512 e253 Famine struck Voeledell; 264 died.
 geo-seed-42-512 e254 The Grork Horde laid claim to Northwest Fells, held by the Narinthri Throne.
 geo-seed-42-512 e255 Famine struck Skrunk Pit; 55 died.
 geo-seed-42-512 e256 The Gidruz Horde declared war on the House of Finen over Central Downs.
-geo-seed-42-512 e257 Plague broke out in Groz and spread to one other settlement; 350 died.
+geo-seed-42-512 e257 Plague broke out in Groz and spread to one other settlement; 350 died in all.
 geo-seed-42-512 e258 The plague spread to Drirk Pit; 158 died.
 geo-seed-42-512 e259 The House of Finen defeated the Gidruz Horde in Central Downs; 208 of the defeated and 66 of the victors fell.
 geo-seed-42-512 e260 The Grork Horde laid claim to Leper's Debt, held by the Teeshti Court.
@@ -1255,7 +1255,7 @@ geo-seed-42-512 e305 The Grork Horde declared war on the Teeshti Court over Lepe
 geo-seed-42-512 e306 Plague broke out in Gruz-Keegg; 301 died.
 geo-seed-42-512 e307 The Grork Horde searched Leper's Debt for the Teeshti Court and found no one; the war ended after 5 years.
 geo-seed-42-512 e308 Famine struck Gnark Hole; 41 died.
-geo-seed-42-512 e309 Plague broke out in Nank Pit and spread to one other settlement; 2,263 died.
+geo-seed-42-512 e309 Plague broke out in Nank Pit and spread to one other settlement; 2,263 died in all.
 geo-seed-42-512 e310 The plague spread to Druk; 469 died.
 geo-seed-42-512 e311 For 500 years, from 4468 to 4967, the land was quiet, and 7 realms kept the peace.
 geo-seed-42-512 e312 The Warrens of Dribnark laid claim to Northwest Fells, held by the Narinthri Throne.
@@ -1332,9 +1332,9 @@ geo-seed-42-512 e382 The Gidruz Horde besieged Skrunk Pit of the Grork Horde; it
 geo-seed-42-512 e383 The Gidruz Horde took Skrunk Pit from the Grork Horde; 86 died.
 geo-seed-42-512 e384 The Gidruz Horde prevailed over the Grork Horde after 17 years of war.
 geo-seed-42-512 e385 The Grork Horde paid tribute to the Gidruz Horde; 1,067 were carried off.
-geo-seed-42-512 e386 Plague broke out in Wolan and spread to one other settlement; 304 died.
+geo-seed-42-512 e386 Plague broke out in Wolan and spread to one other settlement; 304 died in all.
 geo-seed-42-512 e387 The plague spread to Yfie Hollow; 52 died.
-geo-seed-42-512 e388 Plague broke out in Gruz-Keegg and spread to one other settlement; 622 died.
+geo-seed-42-512 e388 Plague broke out in Gruz-Keegg and spread to one other settlement; 622 died in all.
 geo-seed-42-512 e389 The plague spread to Beedrux Pit; 123 died.
 geo-seed-42-512 e390 The Grork Horde laid claim to the Plain of Silence, held by the Kingdom of Stard.
 geo-seed-42-512 e391 Famine struck Iennmie; 48 died.
@@ -1417,7 +1417,7 @@ geo-seed-42-512 e467 The Teeshti Court paid tribute to the Grork Horde; 140 were
 geo-seed-42-512 e468 A succession crisis at Drirk Pit shook the Grork Horde.
 geo-seed-42-512 e469 The Grork Horde declared war on the Kingdom of Stard over Blackstrand Wolds.
 geo-seed-42-512 e470 The Teeshti Court sent settlers from Yfie Hollow to found Tia in Leper's Debt.
-geo-seed-42-512 e471 Plague broke out in Iennmo and spread to one other settlement; 178 died.
+geo-seed-42-512 e471 Plague broke out in Iennmo and spread to one other settlement; 178 died in all.
 geo-seed-42-512 e472 The plague spread to Ithithe; 42 died.
 geo-seed-42-512 e473 Wumwumbury grew into a city of 8,000.
 geo-seed-42-512 e474 The Kingdom of Stard defeated the Grork Horde in Blackstrand Wolds; 223 of the defeated and 71 of the victors fell.
@@ -1461,7 +1461,7 @@ geo-seed-42-512 e511 Famine struck Sligg Pit; 373 died.
 geo-seed-42-512 e512 A succession crisis at Bildheldham shook the Kingdom of Stard.
 geo-seed-42-512 e513 A succession crisis at Groz shook the Grork Horde.
 geo-seed-42-512 e514 Famine struck Skreek Pit; 86 died.
-geo-seed-42-512 e515 Plague broke out in Skrunk Pit and spread to one other settlement; 306 died.
+geo-seed-42-512 e515 Plague broke out in Skrunk Pit and spread to one other settlement; 306 died in all.
 geo-seed-42-512 e516 The plague spread to Skizz-Grork Hole; 57 died.
 geo-seed-42-512 e517 Plague broke out in Grak-Kutch; 130 died.
 geo-seed-42-512 e518 Plague broke out in Bildheldham; 1,467 died.
@@ -1477,7 +1477,7 @@ geo-seed-42-512 e527 Famine struck Beckford; 160 died.
 geo-seed-42-512 e528 Famine struck Yfie Hollow; 39 died.
 geo-seed-42-512 e529 Famine struck Lienond; 18 died.
 geo-seed-42-512 e530 A succession crisis at Groz shook the Grork Horde.
-geo-seed-42-512 e531 Plague broke out in Stuckham and spread to one other settlement; 676 died.
+geo-seed-42-512 e531 Plague broke out in Stuckham and spread to one other settlement; 676 died in all.
 geo-seed-42-512 e532 The plague spread to Gentstead; 176 died.
 geo-seed-42-512 e533 Plague broke out in Sligg Pit; 651 died.
 geo-seed-42-512 e534 The Narinthri Throne declared war on the Warband of Uld'muu over the Brake of Antlers.
@@ -1528,7 +1528,7 @@ geo-seed-42-512 e578 Krazz grew into a village of 252.
 geo-seed-42-512 e579 The Gidruz Horde declared war on the Kingdom of Stard over the Plain of Silence.
 geo-seed-42-512 e580 The Kingdom of Stard defeated the Gidruz Horde in the Plain of Silence; 381 of the defeated and 86 of the victors fell.
 geo-seed-42-512 e581 The Warband of Uld'muu laid claim to the Brake of Antlers, held by the Narinthri Throne.
-geo-seed-42-512 e582 Plague broke out in Beckford and spread to one other settlement; 1,149 died.
+geo-seed-42-512 e582 Plague broke out in Beckford and spread to one other settlement; 1,149 died in all.
 geo-seed-42-512 e583 The plague spread to Bildheldham; 708 died.
 geo-seed-42-512 e584 Plague broke out in Minno; 44 died.
 geo-seed-42-512 e585 The Kingdom of Stard declared war on the Grork Horde over Central Downs.
@@ -1565,13 +1565,13 @@ geo-seed-42-512 e615 The seat of the Kingdom of Stard moved to Hudrorstead.
 geo-seed-42-512 e616 The Gidruz Horde prevailed over the Kingdom of Stard after 19 years of war.
 geo-seed-42-512 e617 The Grork Horde prevailed over the Kingdom of Stard after 11 years of war.
 geo-seed-42-512 e618 Plague broke out in Kidrurk; 959 died.
-geo-seed-42-512 e619 Plague broke out in Gink and spread to one other settlement; 437 died.
+geo-seed-42-512 e619 Plague broke out in Gink and spread to one other settlement; 437 died in all.
 geo-seed-42-512 e620 The plague spread to Grirk-Zix Pit; 120 died.
 geo-seed-42-512 e621 Plague broke out in Wumwumbury; 179 died.
 geo-seed-42-512 e622 Hudrorstead grew into a town of 1,513.
-geo-seed-42-512 e623 Plague broke out in Grax Hole and spread to one other settlement; 817 died.
+geo-seed-42-512 e623 Plague broke out in Grax Hole and spread to one other settlement; 817 died in all.
 geo-seed-42-512 e624 The plague spread to Kidrurk; 387 died.
-geo-seed-42-512 e625 Plague broke out in Gruz-Keegg and spread to one other settlement; 647 died.
+geo-seed-42-512 e625 Plague broke out in Gruz-Keegg and spread to one other settlement; 647 died in all.
 geo-seed-42-512 e626 The plague spread to Krazz; 42 died.
 geo-seed-42-512 e627 Famine struck Feesk; 29 died.
 geo-seed-42-512 e628 Famine struck Beedrux Pit; 171 died.
@@ -1586,7 +1586,7 @@ geo-phrase-512 input_region 5be7a4ad5bc8551a445f8112bc7b6970e9ac6cfebb671f7bfd1c
 geo-phrase-512 table civilization fcfdbf9963afe57ab14eaba46bbb05bd58d9d19dc5546584cf9a9c8c94ef69ff
 geo-phrase-512 table event c1fa26e09a397d54e253984dc9632a4fb3ac3b50df64cb5215ff91cd27451873
 geo-phrase-512 table event_cause 91cd5b9509f247409c0a18b33213b2680ef1093d9f423230a2bb0d46c48c36dd
-geo-phrase-512 table event_kind 58b8cb7b5b5121612b331cd052c06a2bdfc4e23ba2f1956e14bc85aa432f8776
+geo-phrase-512 table event_kind 5bb33c7be421113e5b2507e775557dd7afe51c39ad7d9a5426e6f8e94e4b2f18
 geo-phrase-512 table event_kind_role 828c060dc0d262d618363e1eb4194754223827013ae83efa04ea2944f3b5731b
 geo-phrase-512 table event_kind_value ea3bdaba66965ca348093390b78ac4b2e92807052c93c9bb59822b0c53c0771e
 geo-phrase-512 table event_participant 2aa015d8320f6de682d3f5e90b140a31afd3d2417ff3da38e3f26bbd38e5f991
@@ -2033,7 +2033,7 @@ geo-phrase-512 e121 The Meald League founded Alarham in the Wolds of Scythes.
 geo-phrase-512 e122 The Hold of Girinnam declared war on the Warrens of Skruz-Snugg over South Downs.
 geo-phrase-512 e123 The Warrens of Skruz-Snugg declared war on the Liemoupee Ring over East Wood.
 geo-phrase-512 e124 The Gnokkirk Horde declared war on the Liemoupee Ring over East Wood.
-geo-phrase-512 e125 Plague broke out in Grorkbug Pit and spread to one other settlement; 1,195 died.
+geo-phrase-512 e125 Plague broke out in Grorkbug Pit and spread to one other settlement; 1,195 died in all.
 geo-phrase-512 e126 The plague spread to Slug; 266 died.
 geo-phrase-512 e127 The Warrens of Skruz-Snugg searched East Wood for the Liemoupee Ring and found no one; the war ended after 3 years.
 geo-phrase-512 e128 Aetwee Hollow grew into a village of 250.
@@ -2136,7 +2136,7 @@ geo-phrase-512 e224 The Hold of Girinnam sacked Gnix of the Warrens of Skruz-Snu
 geo-phrase-512 e225 The seat of the Warrens of Skruz-Snugg moved to Skrork-Zot Hole.
 geo-phrase-512 e226 The Warrens of Skruz-Snugg sent settlers from Skrork-Zot Hole to found Guggsnag Hole in Sootsike Sward.
 geo-phrase-512 e227 Plague broke out in Aetwee Hollow; 33 died.
-geo-phrase-512 e228 Plague broke out in Damdulbury and spread to one other settlement; 1,221 died.
+geo-phrase-512 e228 Plague broke out in Damdulbury and spread to one other settlement; 1,221 died in all.
 geo-phrase-512 e229 The plague spread to Alarham; 561 died.
 geo-phrase-512 e230 The Warrens of Skruz-Snugg sent settlers from Gib to found Krogg Pit in Sootsike Sward.
 geo-phrase-512 e231 The Hold of Girinnam defeated the Warrens of Skruz-Snugg in Sootsike Sward; 193 of the defeated and 61 of the victors fell.
@@ -2211,7 +2211,7 @@ geo-seed-1-1024 input_region 203db9d853af513f6c0b79e4ec7307f41d163eaa6bb50c727a1
 geo-seed-1-1024 table civilization 15f90e862ec58d9fcba9e862e0e64b94d9c7caf14481d75ff26c83cbd54d7bd5
 geo-seed-1-1024 table event 90b8795bc42165b7473cbee17703a0aa525b118614892818d568df9978df4b36
 geo-seed-1-1024 table event_cause fb3c56bacedc6b6c80e070433a0208b203b05f5855bab36ec4b8af6ebeca5488
-geo-seed-1-1024 table event_kind 58b8cb7b5b5121612b331cd052c06a2bdfc4e23ba2f1956e14bc85aa432f8776
+geo-seed-1-1024 table event_kind 5bb33c7be421113e5b2507e775557dd7afe51c39ad7d9a5426e6f8e94e4b2f18
 geo-seed-1-1024 table event_kind_role 828c060dc0d262d618363e1eb4194754223827013ae83efa04ea2944f3b5731b
 geo-seed-1-1024 table event_kind_value ea3bdaba66965ca348093390b78ac4b2e92807052c93c9bb59822b0c53c0771e
 geo-seed-1-1024 table event_participant 89987f632a4994f1e5095426f923116dce5880b834eb280dd8e158949f8bfdae
@@ -2569,7 +2569,7 @@ geo-seed-1-1024 e62 The House of Glaefaenn defeated the Skreegg Horde in Ryefurr
 geo-seed-1-1024 e63 The House of Glaefaenn besieged Slok of the Skreegg Horde; it held.
 geo-seed-1-1024 e64 The House of Glaefaenn defeated the Skreegg Horde in Ryefurrow Vale; 533 of the defeated and 142 of the victors fell.
 geo-seed-1-1024 e65 The House of Glaefaenn besieged Slok of the Skreegg Horde; it held.
-geo-seed-1-1024 e66 Plague broke out in Buskug and spread to one other settlement; 1,007 died.
+geo-seed-1-1024 e66 Plague broke out in Buskug and spread to one other settlement; 1,007 died in all.
 geo-seed-1-1024 e69 The Skreegg Horde defeated the House of Glaefaenn in Ryefurrow Vale; 444 of the defeated and 142 of the victors fell.
 geo-seed-1-1024 e70 The Skreegg Horde defeated the House of Glaefaenn in Dimedge Woods; 428 of the defeated and 137 of the victors fell.
 geo-seed-1-1024 e71 The Skreegg Horde besieged Ilathdell of the House of Glaefaenn; it fell.
@@ -2579,7 +2579,7 @@ geo-seed-1-1024 e78 For 700 years, from 2621 to 3320, the land was quiet, and 3 
 geo-seed-1-1024 e95 The Skreegg Horde laid claim to Dimedge Woods, held by the House of Glaefaenn.
 geo-seed-1-1024 e108 The Skreegg Horde declared war on the House of Glaefaenn over Dimedge Woods.
 geo-seed-1-1024 e109 The House of Glaefaenn defeated the Skreegg Horde in Dimedge Woods; 727 of the defeated and 232 of the victors fell.
-geo-seed-1-1024 e110 Plague broke out in Snokeerk Hole and spread to one other settlement; 870 died.
+geo-seed-1-1024 e110 Plague broke out in Snokeerk Hole and spread to one other settlement; 870 died in all.
 geo-seed-1-1024 e113 The Skreegg Horde defeated the House of Glaefaenn in Ryefurrow Vale; 770 of the defeated and 222 of the victors fell.
 geo-seed-1-1024 e114 The House of Glaefaenn defeated the Skreegg Horde in Dimedge Woods; 692 of the defeated and 221 of the victors fell.
 geo-seed-1-1024 e115 The House of Glaefaenn defeated the Skreegg Horde in Ryefurrow Vale; 681 of the defeated and 217 of the victors fell.
@@ -2590,11 +2590,11 @@ geo-seed-1-1024 e121 The House of Glaefaenn besieged Skrukkreek of the Skreegg H
 geo-seed-1-1024 e122 The House of Glaefaenn sacked Skrukkreek of the Skreegg Horde; 1,213 died and 2,832 fled.
 geo-seed-1-1024 e123 The Skreegg Horde sued the House of Glaefaenn for peace after 15 years of war.
 geo-seed-1-1024 e124 The Skreegg Horde ceded Ryefurrow Vale to the House of Glaefaenn.
-geo-seed-1-1024 e125 Plague broke out in Buskug and spread to one other settlement; 1,218 died.
+geo-seed-1-1024 e125 Plague broke out in Buskug and spread to one other settlement; 1,218 died in all.
 geo-seed-1-1024 e130 Plague broke out in Gnok-Skeex and spread to 3 other settlements; 775 died in all.
 geo-seed-1-1024 e153 The Warrens of Zeez laid claim to Ryefurrow Vale, held by the House of Glaefaenn.
-geo-seed-1-1024 e157 Plague broke out in Kitch and spread to one other settlement; 437 died.
-geo-seed-1-1024 e160 Plague broke out in Skuggkib Pit and spread to one other settlement; 492 died.
+geo-seed-1-1024 e157 Plague broke out in Kitch and spread to one other settlement; 437 died in all.
+geo-seed-1-1024 e160 Plague broke out in Skuggkib Pit and spread to one other settlement; 492 died in all.
 geo-seed-1-1024 e162 The Warrens of Zeez laid claim to South Fells, held by the Khirnhu Throne.
 geo-seed-1-1024 e163 The Skreegg Horde laid claim to Fernhurst, held by the Warrens of Zeez.
 geo-seed-1-1024 e166 Plague broke out in Buzuzz Pit and spread to 2 other settlements; 1,504 died in all.
@@ -2619,7 +2619,7 @@ geo-seed-1-1024 e215 The House of Glaefaenn defeated the Skreegg Horde in Tinker
 geo-seed-1-1024 e216 The House of Glaefaenn besieged Skrutch Pit of the Skreegg Horde; it held.
 geo-seed-1-1024 e217 The Warrens of Zeez defeated the House of Glaefaenn in Ryefurrow Vale; 563 of the defeated and 152 of the victors fell.
 geo-seed-1-1024 e218 The Warrens of Zeez besieged Snokeerk Hole of the House of Glaefaenn; it held.
-geo-seed-1-1024 e219 Plague broke out in Seciell and spread to one other settlement; 1,100 died.
+geo-seed-1-1024 e219 Plague broke out in Seciell and spread to one other settlement; 1,100 died in all.
 geo-seed-1-1024 e221 The Khirnhu Throne defeated the Warrens of Skiskib in South Fells; 527 of the defeated and 92 of the victors fell.
 geo-seed-1-1024 e222 The Warrens of Zeez defeated the House of Glaefaenn in Ryefurrow Vale; 531 of the defeated and 152 of the victors fell.
 geo-seed-1-1024 e223 The Warrens of Zeez besieged Snokeerk Hole of the House of Glaefaenn; it fell.
@@ -2669,19 +2669,19 @@ geo-seed-1-1024 e290 The Warrens of Zeez besieged Skuggkib Pit of the Skreegg Ho
 geo-seed-1-1024 e291 The Warrens of Zeez took Skuggkib Pit from the Skreegg Horde; 192 died.
 geo-seed-1-1024 e292 The Skreegg Horde fell to the Warrens of Zeez.
 geo-seed-1-1024 e294 The Warrens of Zeez laid claim to Boarfall Woods, held by the Lousstwo Court.
-geo-seed-1-1024 e295 Plague broke out in Aeitheitho and spread to one other settlement; 294 died.
+geo-seed-1-1024 e295 Plague broke out in Aeitheitho and spread to one other settlement; 294 died in all.
 geo-seed-1-1024 e298 The Warrens of Zeez declared war on the House of Glaefaenn over Tinker's Plain.
 geo-seed-1-1024 e299 The House of Glaefaenn defeated the Warrens of Zeez in Tinker's Plain; 1,334 of the defeated and 367 of the victors fell.
 geo-seed-1-1024 e300 The Warrens of Zeez defeated the House of Glaefaenn in Fernhurst; 700 of the defeated and 224 of the victors fell.
 geo-seed-1-1024 e301 The House of Glaefaenn defeated the Warrens of Zeez in Tinker's Plain; 1,310 of the defeated and 355 of the victors fell.
 geo-seed-1-1024 e302 The Warrens of Zeez laid claim to South Fells, held by the Khirnhu Throne.
 geo-seed-1-1024 e303 The Warrens of Zeez defeated the House of Glaefaenn in Fernhurst; 678 of the defeated and 217 of the victors fell.
-geo-seed-1-1024 e304 Plague broke out in Skuskrix Hole and spread to one other settlement; 361 died.
+geo-seed-1-1024 e304 Plague broke out in Skuskrix Hole and spread to one other settlement; 361 died in all.
 geo-seed-1-1024 e306 The House of Glaefaenn defeated the Warrens of Zeez in Tinker's Plain; 1,299 of the defeated and 343 of the victors fell.
 geo-seed-1-1024 e307 The House of Glaefaenn prevailed over the Warrens of Zeez after 12 years of war.
 geo-seed-1-1024 e308 The Warrens of Zeez ceded Fernhurst to the House of Glaefaenn.
 geo-seed-1-1024 e309 Plague broke out in Faethaithodell and spread to 2 other settlements; 1,088 died in all.
-geo-seed-1-1024 e312 Plague broke out in Bark-Nux Pit and spread to one other settlement; 1,015 died.
+geo-seed-1-1024 e312 Plague broke out in Bark-Nux Pit and spread to one other settlement; 1,015 died in all.
 geo-seed-1-1024 e315 Plague broke out in Nank; 563 died.
 geo-seed-1-1024 e318 The Warrens of Zeez declared war on the Khirnhu Throne over South Fells.
 geo-seed-1-1024 e319 The Khirnhu Throne defeated the Warrens of Zeez in South Fells; 698 of the defeated and 143 of the victors fell.
@@ -2697,7 +2697,7 @@ geo-seed-1-1024 e336 The Warrens of Zeez besieged Iapa of the Lousstwo Court; it
 geo-seed-1-1024 e337 The Warrens of Zeez sacked Iapa of the Lousstwo Court; 204 died and 478 fled.
 geo-seed-1-1024 e338 The survivors of Iapa fled into hiding and founded Loull in Briarpike Tangle.
 geo-seed-1-1024 e340 The Warrens of Zeez prevailed over the Lousstwo Court after 2 years of war.
-geo-seed-1-1024 e341 Plague broke out in Kanox Pit and spread to one other settlement; 510 died.
+geo-seed-1-1024 e341 Plague broke out in Kanox Pit and spread to one other settlement; 510 died in all.
 geo-seed-1-1024 e343 Plague broke out in Aeglaes; 1,145 died.
 geo-seed-1-1024 e350 The Warrens of Zeez laid claim to Fernhurst, held by the House of Glaefaenn.
 geo-seed-1-1024 e351 For 325 years, from 4478 to 4802, the land was quiet, and 5 realms kept the peace.
@@ -2721,8 +2721,8 @@ geo-seed-1-1024 e392 The Warrens of Zeez declared war on the Khirnhu Throne over
 geo-seed-1-1024 e393 The Khirnhu Throne defeated the Warrens of Zeez in the Brambled Weald; 681 of the defeated and 196 of the victors fell.
 geo-seed-1-1024 e394 The Warrens of Zeez defeated the Khirnhu Throne in South Wood; 600 of the defeated and 192 of the victors fell.
 geo-seed-1-1024 e395 The Khirnhu Throne and the Warrens of Zeez made peace after 5 years of war, neither the victor.
-geo-seed-1-1024 e396 Plague broke out in Drozkeex and spread to one other settlement; 754 died.
-geo-seed-1-1024 e399 Plague broke out in Snonkskub Pit and spread to one other settlement; 474 died.
+geo-seed-1-1024 e396 Plague broke out in Drozkeex and spread to one other settlement; 754 died in all.
+geo-seed-1-1024 e399 Plague broke out in Snonkskub Pit and spread to one other settlement; 474 died in all.
 geo-seed-1-1024 e405 For 81 years, from 4853 to 4933, the land was quiet, and 5 realms kept the peace.
 geo-seed-1-1024 e413 Plague broke out in Rifonndell; 1,360 died.
 geo-seed-1-1024 e417 The Warrens of Zeez laid claim to Briarpike Tangle, held by the Lousstwo Court.
@@ -2730,12 +2730,12 @@ geo-seed-1-1024 e422 Plague broke out in Gneek Pit; 278 died.
 geo-seed-1-1024 e424 Plague broke out in Nank; 343 died.
 geo-seed-1-1024 e426 Plague broke out in Gnudrig Pit; 275 died.
 geo-seed-1-1024 e427 Weakened by plague, Gnudrig Pit was abandoned; 1,116 survivors went to Snox.
-geo-seed-1-1024 e429 Plague broke out in Sleek and spread to one other settlement; 733 died.
+geo-seed-1-1024 e429 Plague broke out in Sleek and spread to one other settlement; 733 died in all.
 geo-seed-1-1024 e431 Plague broke out in Geegkrugg; 699 died.
 geo-seed-1-1024 e434 The Warrens of Zeez declared war on the Lousstwo Court over Briarpike Tangle.
 geo-seed-1-1024 e437 The Warrens of Zeez searched Briarpike Tangle for the Lousstwo Court and found no one; the war ended after 3 years.
 geo-seed-1-1024 e438 The Warrens of Zeez laid claim to Fernhurst, held by the House of Glaefaenn.
-geo-seed-1-1024 e440 Plague broke out in Aeglaes and spread to one other settlement; 1,632 died.
+geo-seed-1-1024 e440 Plague broke out in Aeglaes and spread to one other settlement; 1,632 died in all.
 geo-seed-1-1024 e444 Plague broke out in Gneek Pit; 468 died.
 geo-seed-1-1024 e447 Plague broke out in Buskug; 394 died.
 geo-seed-1-1024 e449 Plague broke out in Gnok-Skeex; 565 died.
@@ -2748,7 +2748,7 @@ geo-seed-1-1024 e460 The House of Glaefaenn defeated the Warrens of Zeez in Fern
 geo-seed-1-1024 e462 The Warrens of Zeez defeated the House of Glaefaenn in Charnelhorn Wood; 532 of the defeated and 170 of the victors fell.
 geo-seed-1-1024 e464 Plague broke out in Snonkskub Pit; 267 died.
 geo-seed-1-1024 e465 The House of Glaefaenn defeated the Warrens of Zeez in Fernhurst; 1,298 of the defeated and 324 of the victors fell.
-geo-seed-1-1024 e467 Plague broke out in Zeerkkrib Hole and spread to one other settlement; 524 died.
+geo-seed-1-1024 e467 Plague broke out in Zeerkkrib Hole and spread to one other settlement; 524 died in all.
 geo-seed-1-1024 e469 The Warrens of Zeez defeated the House of Glaefaenn in Charnelhorn Wood; 523 of the defeated and 167 of the victors fell.
 geo-seed-1-1024 e470 The Warrens of Zeez defeated the House of Glaefaenn in Fernhurst; 995 of the defeated and 318 of the victors fell.
 geo-seed-1-1024 e471 The Warrens of Zeez besieged Snox of the House of Glaefaenn; it fell.
@@ -2777,7 +2777,7 @@ geo-seed-1-1024 e536 Plague broke out in Iennrer and spread to 2 other settlemen
 geo-seed-1-1024 e540 The Warrens of Zeez laid claim to South Wood, held by the Khirnhu Throne.
 geo-seed-1-1024 e542 The Hodmal League laid claim to Charnelhorn Wood, held by the House of Glaefaenn.
 geo-seed-1-1024 e550 Clan Thaald laid claim to the Bleak Forest, held by the House of Glaefaenn.
-geo-seed-1-1024 e551 Plague broke out in Bursteanton and spread to one other settlement; 3,325 died.
+geo-seed-1-1024 e551 Plague broke out in Bursteanton and spread to one other settlement; 3,325 died in all.
 geo-seed-1-1024 e553 The Hodmal League declared war on the Lousstwo Court over Boarfall Woods.
 geo-seed-1-1024 e554 Plague broke out in Rifonndell; 1,359 died.
 geo-seed-1-1024 e555 The Khirnhu Throne declared war on the Warrens of Skiskib over the Wintry Leas.
@@ -2793,7 +2793,7 @@ geo-seed-1-1024 e568 The House of Glaefaenn laid claim to Ryefurrow Vale, held b
 geo-seed-1-1024 e570 The Khirnhu Throne defeated the Warrens of Skiskib in the Wintry Leas; 487 of the defeated and 155 of the victors fell.
 geo-seed-1-1024 e571 The Khirnhu Throne besieged Kut-Gnoz Hole of the Warrens of Skiskib; it fell.
 geo-seed-1-1024 e572 The Khirnhu Throne sacked Kut-Gnoz Hole of the Warrens of Skiskib; 855 died and 1,997 fled.
-geo-seed-1-1024 e574 Plague broke out in Bark-Nux Pit and spread to one other settlement; 1,009 died.
+geo-seed-1-1024 e574 Plague broke out in Bark-Nux Pit and spread to one other settlement; 1,009 died in all.
 geo-seed-1-1024 e576 The Khirnhu Throne defeated the Warrens of Skiskib in the Wintry Leas; 458 of the defeated and 146 of the victors fell.
 geo-seed-1-1024 e577 The Khirnhu Throne besieged Snink-Grozz Hole of the Warrens of Skiskib; it fell.
 geo-seed-1-1024 e578 The Khirnhu Throne sacked Snink-Grozz Hole of the Warrens of Skiskib; 522 died and 1,221 fled.
@@ -2801,11 +2801,11 @@ geo-seed-1-1024 e580 The Khirnhu Throne defeated the Warrens of Skiskib in the W
 geo-seed-1-1024 e581 The Khirnhu Throne besieged Skuskrix Hole of the Warrens of Skiskib; it held.
 geo-seed-1-1024 e582 The Warrens of Skiskib sued the Khirnhu Throne for peace after 10 years of war.
 geo-seed-1-1024 e583 The Warrens of Skiskib ceded the Wintry Leas to the Khirnhu Throne.
-geo-seed-1-1024 e586 Plague broke out in Nank and spread to one other settlement; 835 died.
-geo-seed-1-1024 e588 Plague broke out in Iennrer and spread to one other settlement; 228 died.
+geo-seed-1-1024 e586 Plague broke out in Nank and spread to one other settlement; 835 died in all.
+geo-seed-1-1024 e588 Plague broke out in Iennrer and spread to one other settlement; 228 died in all.
 geo-seed-1-1024 e590 Plague broke out in Brolithin Hold and spread to 2 other settlements; 2,362 died in all.
 geo-seed-1-1024 e593 The House of Glaefaenn declared war on the Warrens of Zeez over Ryefurrow Vale.
-geo-seed-1-1024 e594 Plague broke out in Ashirstead and spread to one other settlement; 1,055 died.
+geo-seed-1-1024 e594 Plague broke out in Ashirstead and spread to one other settlement; 1,055 died in all.
 geo-seed-1-1024 e596 The Warrens of Zeez defeated the House of Glaefaenn in Ryefurrow Vale; 1,658 of the defeated and 265 of the victors fell.
 geo-seed-1-1024 e597 The House of Glaefaenn defeated the Warrens of Zeez in Tinker's Plain; 892 of the defeated and 285 of the victors fell.
 geo-seed-1-1024 e598 The House of Glaefaenn defeated the Warrens of Zeez in Ryefurrow Vale; 812 of the defeated and 259 of the victors fell.
@@ -2816,7 +2816,7 @@ geo-seed-1-1024 e604 The House of Glaefaenn besieged Beenk of the Warrens of Zee
 geo-seed-1-1024 e605 The House of Glaefaenn sacked Beenk of the Warrens of Zeez; 1,126 died and 2,628 fled.
 geo-seed-1-1024 e608 The Warrens of Zeez defeated the House of Glaefaenn in Ryefurrow Vale; 1,507 of the defeated and 241 of the victors fell.
 geo-seed-1-1024 e609 The House of Glaefaenn and the Warrens of Zeez made peace after 19 years of war, neither the victor.
-geo-seed-1-1024 e615 Plague broke out in Meambruck and spread to one other settlement; 469 died.
+geo-seed-1-1024 e615 Plague broke out in Meambruck and spread to one other settlement; 469 died in all.
 geo-seed-1-1024 e620 Plague broke out in Edodstead; 224 died.
 geo-seed-1-1024 e621 The Hodmal League laid claim to Mourner's Shaw, held by the Sant League.
 geo-seed-1-1024 e625 Plague broke out in Alur and spread to 2 other settlements; 1,152 died in all.
@@ -2846,7 +2846,7 @@ geo-seed-1-1024 e660 The Hodmal League and the Sant League made peace after 17 y
 geo-seed-1-1024 e664 The Khirnhu Throne laid claim to Central Downs, held by the Warrens of Zeez.
 geo-seed-1-1024 e667 Plague broke out in Zeerkkrib Hole; 190 died.
 geo-seed-1-1024 e668 Plague broke out in Edodstead; 521 died.
-geo-seed-1-1024 e671 Plague broke out in Gnonk Hole and spread to one other settlement; 348 died.
+geo-seed-1-1024 e671 Plague broke out in Gnonk Hole and spread to one other settlement; 348 died in all.
 geo-seed-1-1024 e675 The Warrens of Zeez laid claim to Mourner's Shaw, held by the Hodmal League.
 geo-seed-1-1024 e676 Plague broke out in Bark-Nux Pit and spread to 2 other settlements; 3,204 died in all.
 geo-seed-1-1024 e679 Plague broke out in Readham; 392 died.
@@ -2856,7 +2856,7 @@ geo-seed-1-1024 e694 Clan Thaald declared war on the House of Glaefaenn over the
 geo-seed-1-1024 e696 The House of Glaefaenn defeated Clan Thaald in the Bleak Forest; 1,194 of the defeated and 382 of the victors fell.
 geo-seed-1-1024 e697 Clan Thaald defeated the House of Glaefaenn in the Bleached Leas; 1,103 of the defeated and 337 of the victors fell.
 geo-seed-1-1024 e698 The House of Glaefaenn defeated Clan Thaald in the Bleak Forest; 1,020 of the defeated and 326 of the victors fell.
-geo-seed-1-1024 e700 Plague broke out in Seciell and spread to one other settlement; 983 died.
+geo-seed-1-1024 e700 Plague broke out in Seciell and spread to one other settlement; 983 died in all.
 geo-seed-1-1024 e702 Clan Thaald defeated the House of Glaefaenn in the Bleached Leas; 1,036 of the defeated and 301 of the victors fell.
 geo-seed-1-1024 e703 The House of Glaefaenn and Clan Thaald made peace after 17 years of war, neither the victor.
 geo-seed-1-1024 e704 The Warrens of Zeez laid claim to Charnelhorn Wood, held by the House of Glaefaenn.
@@ -2873,8 +2873,8 @@ geo-seed-1-1024 e721 The Zudrik Horde laid claim to the Wintry Leas, held by the
 geo-seed-1-1024 e722 Clan Thaald defeated the Kingdom of Mald in the Bleached Leas; 769 of the defeated and 246 of the victors fell.
 geo-seed-1-1024 e723 Clan Thaald prevailed over the Kingdom of Mald after 20 years of war.
 geo-seed-1-1024 e724 The Kingdom of Mald ceded the Woods of Ashes to Clan Thaald.
-geo-seed-1-1024 e727 Plague broke out in Geegkrugg and spread to one other settlement; 2,427 died.
-geo-seed-1-1024 e731 Plague broke out in Gnitch and spread to one other settlement; 930 died.
+geo-seed-1-1024 e727 Plague broke out in Geegkrugg and spread to one other settlement; 2,427 died in all.
+geo-seed-1-1024 e731 Plague broke out in Gnitch and spread to one other settlement; 930 died in all.
 geo-seed-1-1024 e734 The House of Glaefaenn laid claim to Ryefurrow Vale, held by the Warrens of Zeez.
 geo-seed-1-1024 e738 The Hodmal League laid claim to the Fettered Hurst, held by the Lousstwo Court.
 geo-seed-1-1024 e739 Plague broke out in Readham and spread to 2 other settlements; 810 died in all.
@@ -2889,7 +2889,7 @@ geo-seed-1-1024 e750 The House of Glaefaenn defeated the Warrens of Zeez in Ryef
 geo-seed-1-1024 e751 The House of Glaefaenn besieged Notch-Slozz of the Warrens of Zeez; it fell.
 geo-seed-1-1024 e752 The House of Glaefaenn sacked Notch-Slozz of the Warrens of Zeez; 1,321 died and 3,084 fled.
 geo-seed-1-1024 e754 The Warrens of Zeez defeated the House of Glaefaenn in Ryefurrow Vale; 490 of the defeated and 78 of the victors fell.
-geo-seed-1-1024 e755 Plague broke out in Grix and spread to one other settlement; 661 died.
+geo-seed-1-1024 e755 Plague broke out in Grix and spread to one other settlement; 661 died in all.
 geo-seed-1-1024 e757 Plague broke out in Taelousie; 144 died.
 geo-seed-1-1024 e758 The House of Glaefaenn defeated the Warrens of Zeez in Tinker's Plain; 267 of the defeated and 85 of the victors fell.
 geo-seed-1-1024 e759 The House of Glaefaenn defeated the Warrens of Zeez in Ryefurrow Vale; 243 of the defeated and 78 of the victors fell.
@@ -2927,7 +2927,7 @@ geo-seed-1-1024 e795 Plague broke out in Slizz Hole and spread to 3 other settle
 geo-seed-1-1024 e799 The Khirnhu Throne defeated the Warrens of Zeez in Central Downs; 486 of the defeated and 155 of the victors fell.
 geo-seed-1-1024 e800 The Khirnhu Throne besieged Dreezgrork of the Warrens of Zeez; it held.
 geo-seed-1-1024 e801 The Warrens of Zeez defeated the Khirnhu Throne in Central Downs; 954 of the defeated and 152 of the victors fell.
-geo-seed-1-1024 e802 Plague broke out in Rifonndell and spread to one other settlement; 713 died.
+geo-seed-1-1024 e802 Plague broke out in Rifonndell and spread to one other settlement; 713 died in all.
 geo-seed-1-1024 e804 The Warrens of Zeez declared war on the Sant League over Mourner's Shaw.
 geo-seed-1-1024 e805 Clan Thaald declared war on the House of Glaefaenn over the Bleak Forest.
 geo-seed-1-1024 e806 The Warrens of Zeez defeated the Sant League in Mourner's Shaw; 276 of the defeated and 76 of the victors fell.
@@ -2949,7 +2949,7 @@ geo-seed-1-1024 e826 Plague broke out in Huckganstead; 489 died.
 geo-seed-1-1024 e827 The Khirnhu Throne defeated the Warrens of Zeez in Central Downs; 233 of the defeated and 74 of the victors fell.
 geo-seed-1-1024 e828 The Khirnhu Throne besieged Dreezgrork of the Warrens of Zeez; it fell.
 geo-seed-1-1024 e829 The Khirnhu Throne sacked Dreezgrork of the Warrens of Zeez; 528 died and 1,232 fled.
-geo-seed-1-1024 e831 Plague broke out in Gnonk Hole and spread to one other settlement; 508 died.
+geo-seed-1-1024 e831 Plague broke out in Gnonk Hole and spread to one other settlement; 508 died in all.
 geo-seed-1-1024 e834 The Khirnhu Throne defeated the Warrens of Zeez in Central Downs; 220 of the defeated and 70 of the victors fell.
 geo-seed-1-1024 e835 The Khirnhu Throne besieged Gnonk Hole of the Warrens of Zeez; it fell.
 geo-seed-1-1024 e836 The Khirnhu Throne sacked Gnonk Hole of the Warrens of Zeez; 402 died and 940 fled.
@@ -2970,7 +2970,7 @@ hist-span-2000-512 input_region 8033c0e0f65ddc8702524bfd5a85b0a53551b587fdda9b48
 hist-span-2000-512 table civilization f4201382be5665abecfdb01c7ef239e5536c28801229c4d2d5404ec4026b500c
 hist-span-2000-512 table event a5e3444d043a5feb0f624244e6100a92494d345c18e0af59ffe3f9b8b68834cd
 hist-span-2000-512 table event_cause 8a733648f6481cf50c4143546800296dea29a826027fa668f79ca8ae9583097c
-hist-span-2000-512 table event_kind 58b8cb7b5b5121612b331cd052c06a2bdfc4e23ba2f1956e14bc85aa432f8776
+hist-span-2000-512 table event_kind 5bb33c7be421113e5b2507e775557dd7afe51c39ad7d9a5426e6f8e94e4b2f18
 hist-span-2000-512 table event_kind_role 828c060dc0d262d618363e1eb4194754223827013ae83efa04ea2944f3b5731b
 hist-span-2000-512 table event_kind_value ea3bdaba66965ca348093390b78ac4b2e92807052c93c9bb59822b0c53c0771e
 hist-span-2000-512 table event_participant 43951451c8bd10b8ac3f3a49d4c9e0bdf46c4b21dcb61943c9ca7e1937378ef9
@@ -3202,7 +3202,7 @@ hist-span-2000-512 e37 The Realm of Ienngleth paid tribute to the Skiz-Sleet Hor
 hist-span-2000-512 e38 The Skiz-Sleet Horde declared war on the Realm of Rasglae over Squire's Tangle.
 hist-span-2000-512 e39 The Skiz-Sleet Horde defeated the Realm of Rasglae in Squire's Tangle; 99 of the defeated and 31 of the victors fell.
 hist-span-2000-512 e40 The Skiz-Sleet Horde besieged Fielaenddell of the Realm of Rasglae; it held.
-hist-span-2000-512 e41 Plague broke out in Sneerk and spread to one other settlement; 2,073 died.
+hist-span-2000-512 e41 Plague broke out in Sneerk and spread to one other settlement; 2,073 died in all.
 hist-span-2000-512 e42 The plague spread to Drik; 44 died.
 hist-span-2000-512 e43 The Skiz-Sleet Horde defeated the Realm of Rasglae in Squire's Tangle; 95 of the defeated and 30 of the victors fell.
 hist-span-2000-512 e44 The Skiz-Sleet Horde besieged Fielaenddell of the Realm of Rasglae; it held.
@@ -3248,7 +3248,7 @@ hist-span-2000-512 e83 The Wearhuld League founded Brirstead in Leper's Downs.
 hist-span-2000-512 e84 The Skiz-Sleet Horde declared war on the Circle of Fon over the Holt of Shepherds.
 hist-span-2000-512 e85 The Skiz-Sleet Horde laid claim to Blindcrag Horns, held by Clan Dradintuk.
 hist-span-2000-512 e86 The Skiz-Sleet Horde searched the Holt of Shepherds for the Circle of Fon and found no one; the war ended after 6 years.
-hist-span-2000-512 e87 Plague broke out in Anen and spread to one other settlement; 492 died.
+hist-span-2000-512 e87 Plague broke out in Anen and spread to one other settlement; 492 died in all.
 hist-span-2000-512 e88 The plague spread to Ithiesthe; 67 died.
 hist-span-2000-512 e89 The Skiz-Sleet Horde declared war on the Realm of Rasglae over the Shaw of the Hunt.
 hist-span-2000-512 e90 The Skiz-Sleet Horde defeated the Realm of Rasglae in the Shaw of the Hunt; 214 of the defeated and 68 of the victors fell.
@@ -3332,7 +3332,7 @@ hist-races-elf-orc-1024 input_region bcb9b8d321e5a1571cf98d9191fdbc957982f4f40b7
 hist-races-elf-orc-1024 table civilization 35e9b2bdcf7f334ee7a29d97dd3cb271ce809d84adf6ab6a6234f1017e78c393
 hist-races-elf-orc-1024 table event 41324558bf641f7e5a769e9274117ec798ad0881f48e917a4136b94565a739f9
 hist-races-elf-orc-1024 table event_cause fd3c88df1c03cbf430f9ef00b7a7ec965944741051c64c24dbce7e5119aba3e8
-hist-races-elf-orc-1024 table event_kind 58b8cb7b5b5121612b331cd052c06a2bdfc4e23ba2f1956e14bc85aa432f8776
+hist-races-elf-orc-1024 table event_kind 5bb33c7be421113e5b2507e775557dd7afe51c39ad7d9a5426e6f8e94e4b2f18
 hist-races-elf-orc-1024 table event_kind_role 828c060dc0d262d618363e1eb4194754223827013ae83efa04ea2944f3b5731b
 hist-races-elf-orc-1024 table event_kind_value ea3bdaba66965ca348093390b78ac4b2e92807052c93c9bb59822b0c53c0771e
 hist-races-elf-orc-1024 table event_participant 96568f1c362eed6346071b50a8fce67c988d31a9813c02a5a4be97382c1a6196
@@ -3688,7 +3688,7 @@ hist-dense-1024 input_region 0979a31a22fe8087d09ecf2a8b2ef486141115e2ae4c971809e
 hist-dense-1024 table civilization f900e67952439768329364e7e1c10b05d195daf0256a9656ee0607f93e113b31
 hist-dense-1024 table event b17959efe24a20af84131aa96079e0d387d71f6de461b8327645df60c080b109
 hist-dense-1024 table event_cause 7dda90a660e58a4c10538aea1b423aca1bfd84a9eca7990a46359e85585240eb
-hist-dense-1024 table event_kind 58b8cb7b5b5121612b331cd052c06a2bdfc4e23ba2f1956e14bc85aa432f8776
+hist-dense-1024 table event_kind 5bb33c7be421113e5b2507e775557dd7afe51c39ad7d9a5426e6f8e94e4b2f18
 hist-dense-1024 table event_kind_role 828c060dc0d262d618363e1eb4194754223827013ae83efa04ea2944f3b5731b
 hist-dense-1024 table event_kind_value ea3bdaba66965ca348093390b78ac4b2e92807052c93c9bb59822b0c53c0771e
 hist-dense-1024 table event_participant f4f053011dfa6fc3ca4c5229c957076020ba528cd25159a15b902eb6626f4003
@@ -4023,21 +4023,21 @@ hist-dense-1024 e53 Plague broke out in Gub Pit and spread to 4 other settlement
 hist-dense-1024 e61 Plague broke out in Raegledell; 179 died.
 hist-dense-1024 e64 Plague broke out in Thord Deep; 216 died.
 hist-dense-1024 e65 Plague broke out in Drigork and spread to 4 other settlements; 1,187 died in all.
-hist-dense-1024 e70 Plague broke out in Zogak and spread to one other settlement; 383 died.
+hist-dense-1024 e70 Plague broke out in Zogak and spread to one other settlement; 383 died in all.
 hist-dense-1024 e77 For 621 years, from 3545 to 4165, the land was quiet, and 3 realms kept the peace.
-hist-dense-1024 e92 Plague broke out in Aeglal and spread to one other settlement; 192 died.
+hist-dense-1024 e92 Plague broke out in Aeglal and spread to one other settlement; 192 died in all.
 hist-dense-1024 e94 Plague broke out in Nitch-Gork; 224 died.
-hist-dense-1024 e99 Plague broke out in Zogak and spread to one other settlement; 600 died.
+hist-dense-1024 e99 Plague broke out in Zogak and spread to one other settlement; 600 died in all.
 hist-dense-1024 e101 Plague broke out in Timmhi and spread to 2 other settlements; 239 died in all.
-hist-dense-1024 e104 Plague broke out in Gnik-Koz Pit and spread to one other settlement; 548 died.
-hist-dense-1024 e106 Plague broke out in Timmhi and spread to one other settlement; 165 died.
-hist-dense-1024 e115 Plague broke out in Gub Pit and spread to one other settlement; 569 died.
+hist-dense-1024 e104 Plague broke out in Gnik-Koz Pit and spread to one other settlement; 548 died in all.
+hist-dense-1024 e106 Plague broke out in Timmhi and spread to one other settlement; 165 died in all.
+hist-dense-1024 e115 Plague broke out in Gub Pit and spread to one other settlement; 569 died in all.
 hist-dense-1024 e119 Plague broke out in Zaz-Gigg Hole and spread to 2 other settlements; 1,715 died in all.
 hist-dense-1024 e122 The Grurk Mob laid claim to Butcher's Forest, held by the Skagnink Mob.
 hist-dense-1024 e126 The Skagnink Mob laid claim to Dawden, held by the Twoll Court.
-hist-dense-1024 e129 Plague broke out in Zogak and spread to one other settlement; 378 died.
+hist-dense-1024 e129 Plague broke out in Zogak and spread to one other settlement; 378 died in all.
 hist-dense-1024 e131 The Skagnink Mob declared war on the Twoll Court over Dawden.
-hist-dense-1024 e132 Plague broke out in Drigork and spread to one other settlement; 241 died.
+hist-dense-1024 e132 Plague broke out in Drigork and spread to one other settlement; 241 died in all.
 hist-dense-1024 e135 The Twoll Court and the Skagnink Mob made peace after 5 years of war, neither the victor.
 hist-dense-1024 e136 For 25 years, from 4416 to 4440, the land was quiet, and 6 realms kept the peace.
 hist-dense-1024 e140 Plague broke out in Villmo and spread to 2 other settlements; 718 died in all.
@@ -4089,13 +4089,13 @@ hist-dense-1024 e256 The Fiall Court paid tribute to the Skagnink Mob; 242 were 
 hist-dense-1024 e258 The Grurk Mob declared war on the Realm of Liesas over Horsegrass.
 hist-dense-1024 e259 The Realm of Liesas defeated the Grurk Mob in Horsegrass; 416 of the defeated and 133 of the victors fell.
 hist-dense-1024 e260 The Grurk Mob defeated the Realm of Liesas in Butcher's Forest; 62 of the defeated and 19 of the victors fell.
-hist-dense-1024 e261 Plague broke out in Naslag Pit and spread to one other settlement; 1,201 died.
+hist-dense-1024 e261 Plague broke out in Naslag Pit and spread to one other settlement; 1,201 died in all.
 hist-dense-1024 e265 The Grurk Mob laid claim to Chalkbarrow, held by the Kingdom of Wurdrom.
 hist-dense-1024 e266 The Grurk Mob defeated the Realm of Liesas in Horsegrass; 462 of the defeated and 131 of the victors fell.
 hist-dense-1024 e267 The Grurk Mob besieged Slabgnob of the Realm of Liesas; it fell.
 hist-dense-1024 e268 The Grurk Mob took Slabgnob from the Realm of Liesas; 37 died.
 hist-dense-1024 e269 The Realm of Liesas defeated the Grurk Mob in Horsegrass; 417 of the defeated and 133 of the victors fell.
-hist-dense-1024 e270 Plague broke out in Goz Pit and spread to one other settlement; 100 died.
+hist-dense-1024 e270 Plague broke out in Goz Pit and spread to one other settlement; 100 died in all.
 hist-dense-1024 e272 The Grurk Mob defeated the Realm of Liesas in Butcher's Forest; 40 of the defeated and 12 of the victors fell.
 hist-dense-1024 e273 The Grurk Mob defeated the Realm of Liesas in Horsegrass; 429 of the defeated and 131 of the victors fell.
 hist-dense-1024 e274 The Grurk Mob besieged Gabguzz of the Realm of Liesas; it fell.
@@ -4106,7 +4106,7 @@ hist-dense-1024 e278 The Grurk Mob declared war on the Skagnink Mob over Chillsw
 hist-dense-1024 e279 The Skagnink Mob defeated the Grurk Mob in Chillsweep; 412 of the defeated and 131 of the victors fell.
 hist-dense-1024 e280 Plague broke out in Timmhi; 1,121 died.
 hist-dense-1024 e281 The Grurk Mob defeated the Skagnink Mob in Rathwash; 763 of the defeated and 129 of the victors fell.
-hist-dense-1024 e284 Plague broke out in Krozz-Bizz Hole and spread to one other settlement; 782 died.
+hist-dense-1024 e284 Plague broke out in Krozz-Bizz Hole and spread to one other settlement; 782 died in all.
 hist-dense-1024 e286 Plague broke out in Drik-Sneez Hole; 219 died.
 hist-dense-1024 e287 The Skagnink Mob defeated the Grurk Mob in Chillsweep; 409 of the defeated and 130 of the victors fell.
 hist-dense-1024 e288 The Grurk Mob defeated the Skagnink Mob in Rathwash; 738 of the defeated and 128 of the victors fell.
@@ -4120,8 +4120,8 @@ hist-dense-1024 e295 The Skagnink Mob ceded Chillsweep to the Grurk Mob.
 hist-dense-1024 e296 Plague broke out in Zasnab and spread to 2 other settlements; 545 died in all.
 hist-dense-1024 e299 The Skagnink Mob laid claim to Chalkbarrow, held by the Kingdom of Wurdrom.
 hist-dense-1024 e301 Plague broke out in Skaksnik and spread to 3 other settlements; 833 died in all.
-hist-dense-1024 e305 Plague broke out in Nutchzotch and spread to one other settlement; 621 died.
-hist-dense-1024 e308 Plague broke out in Skreezark and spread to one other settlement; 828 died.
+hist-dense-1024 e305 Plague broke out in Nutchzotch and spread to one other settlement; 621 died in all.
+hist-dense-1024 e308 Plague broke out in Skreezark and spread to one other settlement; 828 died in all.
 hist-dense-1024 e310 Plague broke out in Whie Glade; 59 died.
 hist-dense-1024 e311 Plague broke out in Snak-Drux Hole; 133 died.
 hist-dense-1024 e313 The Grurk Mob declared war on the Kingdom of Wurdrom over Chalkbarrow.
@@ -4146,7 +4146,7 @@ hist-dense-1024 e340 The Skagnink Mob took Fouss Glade from the Twoll Court; 18 
 hist-dense-1024 e341 The Skagnink Mob prevailed over the Twoll Court after 17 years of war.
 hist-dense-1024 e342 The Twoll Court paid tribute to the Skagnink Mob; 140 were carried off.
 hist-dense-1024 e343 The Grurk Mob laid claim to Goatherd's End, held by the Fiall Court.
-hist-dense-1024 e348 Plague broke out in Skreezark and spread to one other settlement; 931 died.
+hist-dense-1024 e348 Plague broke out in Skreezark and spread to one other settlement; 931 died in all.
 hist-dense-1024 e351 The Skagnink Mob laid claim to Horsegrass, held by the Realm of Liesas.
 hist-dense-1024 e354 Plague broke out in Slatch Pit; 212 died.
 hist-dense-1024 e355 For 100 years, from 5256 to 5355, the land was quiet, and 7 realms kept the peace.
@@ -4158,7 +4158,7 @@ hist-dense-1024 e366 The Realm of Liesas besieged Fouss Glade of the Skagnink Mo
 hist-dense-1024 e367 The Realm of Liesas sacked Fouss Glade of the Skagnink Mob; 562 died and 1,313 fled.
 hist-dense-1024 e368 The Skagnink Mob defeated the Realm of Liesas in the Riven Steppes; 40 of the defeated and 13 of the victors fell.
 hist-dense-1024 e370 The Realm of Liesas defeated the Skagnink Mob in Horsegrass; 569 of the defeated and 144 of the victors fell.
-hist-dense-1024 e371 Plague broke out in Drigork and spread to one other settlement; 213 died.
+hist-dense-1024 e371 Plague broke out in Drigork and spread to one other settlement; 213 died in all.
 hist-dense-1024 e374 The Grurk Mob laid claim to Horsegrass, held by the Realm of Liesas.
 hist-dense-1024 e375 The Skagnink Mob defeated the Realm of Liesas in the Riven Steppes; 40 of the defeated and 13 of the victors fell.
 hist-dense-1024 e376 The Grurk Mob declared war on the Fiall Court over Goatherd's End.
@@ -4201,7 +4201,7 @@ hist-dense-1024 e435 The Skagnink Mob defeated the Grurk Mob in Stagedge Steppes
 hist-dense-1024 e437 The Grurk Mob defeated the Skagnink Mob in Butcher's Forest; 373 of the defeated and 119 of the victors fell.
 hist-dense-1024 e438 The Skagnink Mob sued the Grurk Mob for peace after 15 years of war.
 hist-dense-1024 e439 The Skagnink Mob ceded Stagedge Steppes to the Grurk Mob.
-hist-dense-1024 e441 Plague broke out in Drigork and spread to one other settlement; 299 died.
+hist-dense-1024 e441 Plague broke out in Drigork and spread to one other settlement; 299 died in all.
 hist-dense-1024 e443 The Skagnink Mob laid claim to Nightden, held by the Twoll Court.
 hist-dense-1024 e444 Plague broke out in Skrork Pit; 533 died.
 hist-dense-1024 e448 The Kingdom of Wurdrom laid claim to the Endless Shaw, held by the Realm of Liesas.
@@ -4215,7 +4215,7 @@ hist-dense-1024 e468 Plague broke out in Naslag Pit and spread to 3 other settle
 hist-dense-1024 e474 Plague broke out in Nitch-Gork; 302 died.
 hist-dense-1024 e475 Plague broke out in Skat and spread to 2 other settlements; 645 died in all.
 hist-dense-1024 e478 The Warband of Kraagazarz laid claim to the Reaped Sward, held by the Kingdom of Wurdrom.
-hist-dense-1024 e482 Plague broke out in Iaskpa Glade and spread to one other settlement; 213 died.
+hist-dense-1024 e482 Plague broke out in Iaskpa Glade and spread to one other settlement; 213 died in all.
 hist-dense-1024 e484 Plague broke out in Kazz Pit and spread to 2 other settlements; 710 died in all.
 hist-dense-1024 e487 The Warband of Kraagazarz laid claim to Nightden, held by the Twoll Court.
 hist-dense-1024 e488 The Zubgeeg Horde laid claim to Nightden, held by the Twoll Court.
@@ -4231,7 +4231,7 @@ hist-dense-1024 e503 The Zubgeeg Horde searched Nightden for the Twoll Court and
 hist-dense-1024 e505 The Grurk Mob laid claim to the Hungry Tangle, held by the Realm of Liesas.
 hist-dense-1024 e506 Plague broke out in Mairin Deep; 195 died.
 hist-dense-1024 e511 The Kingdom of Wurdrom laid claim to the Wood of the Wolf, held by the Twoll Court.
-hist-dense-1024 e513 Plague broke out in Slatch Pit and spread to one other settlement; 621 died.
+hist-dense-1024 e513 Plague broke out in Slatch Pit and spread to one other settlement; 621 died in all.
 hist-dense-1024 e517 The Kingdom of Wurdrom declared war on the Realm of Liesas over the Endless Shaw.
 hist-dense-1024 e519 The Realm of Liesas defeated the Kingdom of Wurdrom in the Endless Shaw; 954 of the defeated and 197 of the victors fell.
 hist-dense-1024 e520 The Kingdom of Wurdrom defeated the Realm of Liesas in Rookford Holt; 608 of the defeated and 194 of the victors fell.
@@ -4243,9 +4243,9 @@ hist-dense-1024 e528 Plague broke out in Skaksnik and spread to 2 other settleme
 hist-dense-1024 e532 The Grurk Mob laid claim to Ravenslack Leas, held by the Kingdom of Wurdrom.
 hist-dense-1024 e534 The Zubgeeg Horde laid claim to the Hungry Tangle, held by the Realm of Liesas.
 hist-dense-1024 e535 The Grurk Mob declared war on the Realm of Liesas over the Hungry Tangle.
-hist-dense-1024 e536 Plague broke out in Snanit Pit and spread to one other settlement; 220 died.
+hist-dense-1024 e536 Plague broke out in Snanit Pit and spread to one other settlement; 220 died in all.
 hist-dense-1024 e538 The Realm of Liesas defeated the Grurk Mob in the Hungry Tangle; 67 of the defeated and 21 of the victors fell.
-hist-dense-1024 e539 Plague broke out in Teamstead and spread to one other settlement; 1,387 died.
+hist-dense-1024 e539 Plague broke out in Teamstead and spread to one other settlement; 1,387 died in all.
 hist-dense-1024 e541 The Realm of Liesas defeated the Grurk Mob in Horsegrass; 768 of the defeated and 122 of the victors fell.
 hist-dense-1024 e542 The Realm of Liesas besieged Slabgnob of the Grurk Mob; it fell.
 hist-dense-1024 e543 The Realm of Liesas sacked Slabgnob of the Grurk Mob; 990 died and 2,312 fled.
@@ -4267,7 +4267,7 @@ hist-dense-1024 e580 Plague broke out in Gnik-Koz Pit; 238 died.
 hist-dense-1024 e581 The Grurk Mob laid claim to the Plains of the Wind, held by the Skagnink Mob.
 hist-dense-1024 e582 The Skagnink Mob laid claim to Chillsweep, held by the Grurk Mob.
 hist-dense-1024 e583 The Grurk Mob declared war on the Kingdom of Wurdrom over Ravenslack Leas.
-hist-dense-1024 e585 Plague broke out in Edosham and spread to one other settlement; 1,736 died.
+hist-dense-1024 e585 Plague broke out in Edosham and spread to one other settlement; 1,736 died in all.
 hist-dense-1024 e587 The Kingdom of Wurdrom defeated the Grurk Mob in Ravenslack Leas; 690 of the defeated and 220 of the victors fell.
 hist-dense-1024 e589 The Grurk Mob defeated the Kingdom of Wurdrom in Rustdown; 1,388 of the defeated and 319 of the victors fell.
 hist-dense-1024 e591 The Kingdom of Wurdrom defeated the Grurk Mob in Ravenslack Leas; 682 of the defeated and 218 of the victors fell.
@@ -4285,9 +4285,9 @@ hist-dense-1024 e604 The Grurk Mob besieged Slankkreex Pit of the Kingdom of Wur
 hist-dense-1024 e605 The Kingdom of Wurdrom defeated the Grurk Mob in Rustdown; 860 of the defeated and 275 of the victors fell.
 hist-dense-1024 e606 The Grurk Mob sued the Kingdom of Wurdrom for peace after 21 years of war.
 hist-dense-1024 e607 The Grurk Mob ceded Chillsweep to the Kingdom of Wurdrom.
-hist-dense-1024 e609 Plague broke out in Ashuld and spread to one other settlement; 2,640 died.
+hist-dense-1024 e609 Plague broke out in Ashuld and spread to one other settlement; 2,640 died in all.
 hist-dense-1024 e612 The Grurk Mob declared war on the Skagnink Mob over the Plains of the Wind.
-hist-dense-1024 e613 Plague broke out in Shaepee and spread to one other settlement; 156 died.
+hist-dense-1024 e613 Plague broke out in Shaepee and spread to one other settlement; 156 died in all.
 hist-dense-1024 e615 The Kingdom of Wurdrom laid claim to Barleywell Vale, held by the Zubgeeg Horde.
 hist-dense-1024 e616 The Grurk Mob defeated the Skagnink Mob in the Plains of the Wind; 104 of the defeated and 33 of the victors fell.
 hist-dense-1024 e617 The Grurk Mob besieged Gub Pit of the Skagnink Mob; it fell.
@@ -4324,7 +4324,7 @@ hist-dense-1024 e675 The Zubgeeg Horde defeated the Kingdom of Wurdrom in Barley
 hist-dense-1024 e676 The Kingdom of Wurdrom defeated the Zubgeeg Horde in Rustdown; 566 of the defeated and 181 of the victors fell.
 hist-dense-1024 e677 The Kingdom of Wurdrom defeated the Zubgeeg Horde in Barleywell Vale; 560 of the defeated and 179 of the victors fell.
 hist-dense-1024 e678 The Kingdom of Wurdrom besieged Skrizogg Hole of the Zubgeeg Horde; it held.
-hist-dense-1024 e680 Plague broke out in Skreezark and spread to one other settlement; 863 died.
+hist-dense-1024 e680 Plague broke out in Skreezark and spread to one other settlement; 863 died in all.
 hist-dense-1024 e682 The Kingdom of Wurdrom defeated the Zubgeeg Horde in Barleywell Vale; 552 of the defeated and 176 of the victors fell.
 hist-dense-1024 e683 The Kingdom of Wurdrom besieged Skrizogg Hole of the Zubgeeg Horde; it held.
 hist-dense-1024 e684 The Zubgeeg Horde sued the Kingdom of Wurdrom for peace after 15 years of war.
@@ -4344,7 +4344,7 @@ hist-conflict-42-1024 input_region 651657ccb53ed602f5e2cf8603f6685ec1637d5600345
 hist-conflict-42-1024 table civilization dee51c9864d1062293225b544c48f8e9d46675ad81207da6f0493a6a382fb987
 hist-conflict-42-1024 table event 59304dd8a8a8c4377baec189c6dde0b45fbec66f9c5e5a4dd175a8ab752c9ebf
 hist-conflict-42-1024 table event_cause c13327032f0e77b9ab59c9113832841392b28988f7d1ea9c46e831250c9d594b
-hist-conflict-42-1024 table event_kind 58b8cb7b5b5121612b331cd052c06a2bdfc4e23ba2f1956e14bc85aa432f8776
+hist-conflict-42-1024 table event_kind 5bb33c7be421113e5b2507e775557dd7afe51c39ad7d9a5426e6f8e94e4b2f18
 hist-conflict-42-1024 table event_kind_role 828c060dc0d262d618363e1eb4194754223827013ae83efa04ea2944f3b5731b
 hist-conflict-42-1024 table event_kind_value ea3bdaba66965ca348093390b78ac4b2e92807052c93c9bb59822b0c53c0771e
 hist-conflict-42-1024 table event_participant f2f01402919238781b5b6cc7f625e12b2e71772b1a081cd8c17049c92800b1e3
@@ -4719,19 +4719,19 @@ hist-conflict-42-1024 e81 The Grork Horde laid claim to the Wood of Stags, held 
 hist-conflict-42-1024 e101 The Grork Horde declared war on the House of Finen over the Wood of Stags.
 hist-conflict-42-1024 e102 The House of Finen defeated the Grork Horde in the Wood of Stags; 972 of the defeated and 155 of the victors fell.
 hist-conflict-42-1024 e103 The Grork Horde defeated the House of Finen in Tanner's Oath; 195 of the defeated and 62 of the victors fell.
-hist-conflict-42-1024 e104 Plague broke out in Niskreerk and spread to one other settlement; 620 died.
+hist-conflict-42-1024 e104 Plague broke out in Niskreerk and spread to one other settlement; 620 died in all.
 hist-conflict-42-1024 e106 The House of Finen defeated the Grork Horde in the Wood of Stags; 948 of the defeated and 151 of the victors fell.
 hist-conflict-42-1024 e107 The Grork Horde defeated the House of Finen in Tanner's Oath; 191 of the defeated and 61 of the victors fell.
 hist-conflict-42-1024 e108 The Grork Horde defeated the House of Finen in the Wood of Stags; 465 of the defeated and 148 of the victors fell.
 hist-conflict-42-1024 e109 The Grork Horde besieged Glathenddell of the House of Finen; it held.
 hist-conflict-42-1024 e110 The House of Finen and the Grork Horde made peace after 25 years of war, neither the victor.
 hist-conflict-42-1024 e111 Plague broke out in Raenme; 47 died.
-hist-conflict-42-1024 e112 Plague broke out in Skreek Pit and spread to one other settlement; 514 died.
-hist-conflict-42-1024 e114 Plague broke out in Nok Hole and spread to one other settlement; 568 died.
+hist-conflict-42-1024 e112 Plague broke out in Skreek Pit and spread to one other settlement; 514 died in all.
+hist-conflict-42-1024 e114 Plague broke out in Nok Hole and spread to one other settlement; 568 died in all.
 hist-conflict-42-1024 e116 The Grork Horde laid claim to Larchbrake, held by the Hold of Dulimin.
-hist-conflict-42-1024 e120 Plague broke out in Grak-Kutch and spread to one other settlement; 745 died.
+hist-conflict-42-1024 e120 Plague broke out in Grak-Kutch and spread to one other settlement; 745 died in all.
 hist-conflict-42-1024 e122 Plague broke out in Skrunk Pit; 146 died.
-hist-conflict-42-1024 e124 Plague broke out in Voeledell and spread to one other settlement; 326 died.
+hist-conflict-42-1024 e124 Plague broke out in Voeledell and spread to one other settlement; 326 died in all.
 hist-conflict-42-1024 e126 For 425 years, from 3392 to 3816, the land was quiet, and 5 realms kept the peace.
 hist-conflict-42-1024 e128 The Grork Horde laid claim to the Wood of Stags, held by the House of Finen.
 hist-conflict-42-1024 e130 The Grork Horde declared war on the Hold of Dulimin over Larchbrake.
@@ -4744,7 +4744,7 @@ hist-conflict-42-1024 e136 The Hold of Dulimin fell to the Grork Horde.
 hist-conflict-42-1024 e138 Plague broke out in Gnark-Guk; 514 died.
 hist-conflict-42-1024 e139 The Grork Horde declared war on the House of Finen over the Wood of Stags.
 hist-conflict-42-1024 e140 The House of Finen defeated the Grork Horde in the Wood of Stags; 982 of the defeated and 174 of the victors fell.
-hist-conflict-42-1024 e141 Plague broke out in Beedruzz and spread to one other settlement; 1,442 died.
+hist-conflict-42-1024 e141 Plague broke out in Beedruzz and spread to one other settlement; 1,442 died in all.
 hist-conflict-42-1024 e143 Plague broke out in Nok Hole; 217 died.
 hist-conflict-42-1024 e144 The Grork Horde defeated the House of Finen in Tanner's Oath; 228 of the defeated and 72 of the victors fell.
 hist-conflict-42-1024 e146 The House of Finen defeated the Grork Horde in the Wood of Stags; 929 of the defeated and 169 of the victors fell.
@@ -4757,8 +4757,8 @@ hist-conflict-42-1024 e155 For 376 years, from 3867 to 4242, the land was quiet,
 hist-conflict-42-1024 e158 The Grork Horde laid claim to Lichenbank Shaw, held by the House of Finen.
 hist-conflict-42-1024 e162 Plague broke out in Glathenddell; 1,646 died.
 hist-conflict-42-1024 e163 Plague broke out in Gnark-Guk and spread to 2 other settlements; 823 died in all.
-hist-conflict-42-1024 e167 Plague broke out in Zugnob Hole and spread to one other settlement; 1,146 died.
-hist-conflict-42-1024 e170 Plague broke out in Groz and spread to one other settlement; 366 died.
+hist-conflict-42-1024 e167 Plague broke out in Zugnob Hole and spread to one other settlement; 1,146 died in all.
+hist-conflict-42-1024 e170 Plague broke out in Groz and spread to one other settlement; 366 died in all.
 hist-conflict-42-1024 e172 The Grork Horde declared war on the House of Finen over Lichenbank Shaw.
 hist-conflict-42-1024 e173 The House of Finen defeated the Grork Horde in Lichenbank Shaw; 503 of the defeated and 153 of the victors fell.
 hist-conflict-42-1024 e174 The House of Finen defeated the Grork Horde in Tanner's Oath; 343 of the defeated and 54 of the victors fell.
@@ -4832,12 +4832,12 @@ hist-conflict-42-1024 e321 The Grork Horde defeated the Teeshti Court in Floodhu
 hist-conflict-42-1024 e322 The Grork Horde besieged Wiasa Hollow of the Teeshti Court; it held.
 hist-conflict-42-1024 e323 The Grork Horde prevailed over the Teeshti Court after 1 year of war.
 hist-conflict-42-1024 e324 The Teeshti Court paid tribute to the Grork Horde; 234 were carried off.
-hist-conflict-42-1024 e325 Plague broke out in Voeledell and spread to one other settlement; 790 died.
+hist-conflict-42-1024 e325 Plague broke out in Voeledell and spread to one other settlement; 790 died in all.
 hist-conflict-42-1024 e330 The Grork Horde laid claim to Tanner's Oath, held by the Warrens of Dribnark.
 hist-conflict-42-1024 e332 The Zak-Neez Mob laid claim to the Sleeping Sward, held by the Grork Horde.
 hist-conflict-42-1024 e333 The Zak-Neez Mob laid claim to Floodhurst, held by the Teeshti Court.
 hist-conflict-42-1024 e335 The Grork Horde declared war on the Warrens of Dribnark over Tanner's Oath.
-hist-conflict-42-1024 e336 Plague broke out in Beegux Hole and spread to one other settlement; 181 died.
+hist-conflict-42-1024 e336 Plague broke out in Beegux Hole and spread to one other settlement; 181 died in all.
 hist-conflict-42-1024 e345 The Grork Horde and the Warrens of Dribnark made peace after 8 years of war, neither the victor.
 hist-conflict-42-1024 e346 The Grork Horde laid claim to Sprayridge Thicket, held by the House of Finen.
 hist-conflict-42-1024 e347 For 25 years, from 5344 to 5368, the land was quiet, and 9 realms kept the peace.
@@ -4882,7 +4882,7 @@ hist-conflict-42-1024 e422 The Warrens of Dribnark defeated the Zak-Neez Mob in 
 hist-conflict-42-1024 e423 The Zak-Neez Mob defeated the Warrens of Dribnark in Larchbrake; 182 of the defeated and 45 of the victors fell.
 hist-conflict-42-1024 e424 The Warrens of Dribnark defeated the Zak-Neez Mob in Tanner's Oath; 140 of the defeated and 44 of the victors fell.
 hist-conflict-42-1024 e426 The Zak-Neez Mob defeated the Warrens of Dribnark in Larchbrake; 177 of the defeated and 43 of the victors fell.
-hist-conflict-42-1024 e427 Plague broke out in Iennmo and spread to one other settlement; 194 died.
+hist-conflict-42-1024 e427 Plague broke out in Iennmo and spread to one other settlement; 194 died in all.
 hist-conflict-42-1024 e430 The Warrens of Dribnark defeated the Zak-Neez Mob in Tanner's Oath; 133 of the defeated and 42 of the victors fell.
 hist-conflict-42-1024 e431 The Zak-Neez Mob defeated the Warrens of Dribnark in Larchbrake; 175 of the defeated and 41 of the victors fell.
 hist-conflict-42-1024 e432 The Warrens of Dribnark sued the Zak-Neez Mob for peace after 9 years of war.
@@ -4895,9 +4895,9 @@ hist-conflict-42-1024 e441 The Zak-Neez Mob laid claim to the Torn Holt, held by
 hist-conflict-42-1024 e442 The Grork Horde laid claim to Tanner's Oath, held by the Warrens of Dribnark.
 hist-conflict-42-1024 e443 The Warrens of Dribnark laid claim to Yarrowcombe, held by the Grork Horde.
 hist-conflict-42-1024 e447 The Warrens of Dribnark laid claim to the Stark Shaw, held by the Teeshti Court.
-hist-conflict-42-1024 e450 Plague broke out in Druk and spread to one other settlement; 699 died.
+hist-conflict-42-1024 e450 Plague broke out in Druk and spread to one other settlement; 699 died in all.
 hist-conflict-42-1024 e452 The Grork Horde laid claim to Floodhurst, held by the Teeshti Court.
-hist-conflict-42-1024 e453 Plague broke out in Edackgomwick and spread to one other settlement; 1,392 died.
+hist-conflict-42-1024 e453 Plague broke out in Edackgomwick and spread to one other settlement; 1,392 died in all.
 hist-conflict-42-1024 e464 The Grork Horde declared war on the House of Finen over Lichenbank Shaw.
 hist-conflict-42-1024 e466 The House of Finen defeated the Grork Horde in Lichenbank Shaw; 524 of the defeated and 167 of the victors fell.
 hist-conflict-42-1024 e468 Plague broke out in Skrunk Pit and spread to 3 other settlements; 722 died in all.
@@ -4935,7 +4935,7 @@ hist-conflict-42-1024 e522 The Ghuughzuz Horde laid claim to the Rises of Hares,
 hist-conflict-42-1024 e523 Plague broke out in Alessas; 436 died.
 hist-conflict-42-1024 e524 The Teeshti Court defeated the Warrens of Dribnark in Tanner's Oath; 184 of the defeated and 51 of the victors fell.
 hist-conflict-42-1024 e525 The Teeshti Court besieged Sneezskrub Hole of the Warrens of Dribnark; it held.
-hist-conflict-42-1024 e526 Plague broke out in Wurdham and spread to one other settlement; 650 died.
+hist-conflict-42-1024 e526 Plague broke out in Wurdham and spread to one other settlement; 650 died in all.
 hist-conflict-42-1024 e528 The Warrens of Dribnark defeated the Teeshti Court in Tanner's Oath; 160 of the defeated and 51 of the victors fell.
 hist-conflict-42-1024 e529 The Warrens of Dribnark searched Floodhurst for the Teeshti Court and found no one; the war ended after 12 years.
 hist-conflict-42-1024 e530 The Ghuughzuz Horde declared war on the House of Finen over Lichenbank Shaw.
@@ -4948,7 +4948,7 @@ hist-conflict-42-1024 e538 The Ghuughzuz Horde sued the House of Finen for peace
 hist-conflict-42-1024 e539 The Ghuughzuz Horde declared war on the Duchy of Dant over the Rises of Hares.
 hist-conflict-42-1024 e541 The Ghuughzuz Horde defeated the Duchy of Dant in the Rises of Hares; 478 of the defeated and 118 of the victors fell.
 hist-conflict-42-1024 e542 The Ghuughzuz Horde besieged Beckford of the Duchy of Dant; it held.
-hist-conflict-42-1024 e543 Plague broke out in Bromstead and spread to one other settlement; 4,070 died.
+hist-conflict-42-1024 e543 Plague broke out in Bromstead and spread to one other settlement; 4,070 died in all.
 hist-conflict-42-1024 e546 The Grork Horde declared war on the Kit-Kotch Mob over the Vale of Larks.
 hist-conflict-42-1024 e547 The Duchy of Dant defeated the Ghuughzuz Horde in the Rises of Hares; 386 of the defeated and 123 of the victors fell.
 hist-conflict-42-1024 e548 The Grork Horde defeated the Kit-Kotch Mob in the Vale of Larks; 252 of the defeated and 80 of the victors fell.
@@ -4975,7 +4975,7 @@ hist-conflict-42-1024 e575 The Kit-Kotch Mob defeated the Kingdom of Stard in th
 hist-conflict-42-1024 e576 The Kit-Kotch Mob defeated the Kingdom of Stard in Otterford Rises; 531 of the defeated and 85 of the victors fell.
 hist-conflict-42-1024 e577 The Kit-Kotch Mob besieged Gusmerton of the Kingdom of Stard; it held.
 hist-conflict-42-1024 e578 The Kingdom of Stard defeated the Kit-Kotch Mob in Otterford Rises; 268 of the defeated and 85 of the victors fell.
-hist-conflict-42-1024 e580 Plague broke out in Sneezskrub Hole and spread to one other settlement; 664 died.
+hist-conflict-42-1024 e580 Plague broke out in Sneezskrub Hole and spread to one other settlement; 664 died in all.
 hist-conflict-42-1024 e582 The Kit-Kotch Mob defeated the Kingdom of Stard in the Vale of Larks; 529 of the defeated and 84 of the victors fell.
 hist-conflict-42-1024 e583 The Kingdom of Stard defeated the Kit-Kotch Mob in Otterford Rises; 265 of the defeated and 84 of the victors fell.
 hist-conflict-42-1024 e584 The Kingdom of Stard defeated the Kit-Kotch Mob in the Vale of Larks; 261 of the defeated and 83 of the victors fell.
@@ -5017,7 +5017,7 @@ hist-conflict-42-1024 e634 The Grork Horde defeated the House of Finen in Corbie
 hist-conflict-42-1024 e635 The House of Finen defeated the Grork Horde in Larklow; 436 of the defeated and 139 of the victors fell.
 hist-conflict-42-1024 e636 The Grork Horde sued the House of Finen for peace after 16 years of war.
 hist-conflict-42-1024 e637 The Grork Horde ceded the Mossgrown Grove to the House of Finen.
-hist-conflict-42-1024 e643 Plague broke out in Snaksnuz Pit and spread to one other settlement; 389 died.
+hist-conflict-42-1024 e643 Plague broke out in Snaksnuz Pit and spread to one other settlement; 389 died in all.
 hist-conflict-42-1024 e645 The Ghuughzuz Horde defeated the Duchy of Dant in the Rises of Hares; 431 of the defeated and 138 of the victors fell.
 hist-conflict-42-1024 e646 The Ghuughzuz Horde besieged Beckford of the Duchy of Dant; it held.
 hist-conflict-42-1024 e647 Plague broke out in Bromstead; 3,070 died.
@@ -5038,7 +5038,7 @@ hist-conflict-42-1024 e674 Plague broke out in Snozz-Skink; 575 died.
 hist-conflict-42-1024 e675 The Grork Horde laid claim to Southeast Wood, held by the Kingdom of Stard.
 hist-conflict-42-1024 e676 The Kit-Kotch Mob laid claim to the Stark Shaw, held by the Teeshti Court.
 hist-conflict-42-1024 e678 Plague broke out in Grax Hole; 208 died.
-hist-conflict-42-1024 e679 Plague broke out in Snaksnuz Pit and spread to one other settlement; 425 died.
+hist-conflict-42-1024 e679 Plague broke out in Snaksnuz Pit and spread to one other settlement; 425 died in all.
 hist-conflict-42-1024 e682 The Ghuughzuz Horde laid claim to Larklow, held by the House of Finen.
 hist-conflict-42-1024 e684 Plague broke out in Beedruzz; 1,269 died.
 hist-conflict-42-1024 e691 Plague broke out in Voeledell; 170 died.
@@ -5048,7 +5048,7 @@ hist-conflict-turbulent-512 input_region 539cb4cc7473048fa68b7824f5c25785781ba2b
 hist-conflict-turbulent-512 table civilization d25d13bce451900cb0818fe0c6649ebf483568c31cc6c5e386e3637e98f493e6
 hist-conflict-turbulent-512 table event a094a768669f3bf8ab5318d8942e3fdb6c82329fa9f16d78f66b89f5da68998a
 hist-conflict-turbulent-512 table event_cause aa5e4000ac4ac92ed4ee073629a29b116166ee24a1fdabf89a41f9daf9f21980
-hist-conflict-turbulent-512 table event_kind 58b8cb7b5b5121612b331cd052c06a2bdfc4e23ba2f1956e14bc85aa432f8776
+hist-conflict-turbulent-512 table event_kind 5bb33c7be421113e5b2507e775557dd7afe51c39ad7d9a5426e6f8e94e4b2f18
 hist-conflict-turbulent-512 table event_kind_role 828c060dc0d262d618363e1eb4194754223827013ae83efa04ea2944f3b5731b
 hist-conflict-turbulent-512 table event_kind_value ea3bdaba66965ca348093390b78ac4b2e92807052c93c9bb59822b0c53c0771e
 hist-conflict-turbulent-512 table event_participant f98cdf16bf1a600f640fb7def83436d6966293fd318fde5962dc23c4c2167740
@@ -5434,7 +5434,7 @@ hist-conflict-turbulent-512 e24 Krokzit awakened the Goblins in the Swart Barrow
 hist-conflict-turbulent-512 e25 The Goblins founded the Grork Horde in the Swart Barrows.
 hist-conflict-turbulent-512 e26 The Grork Horde founded Snozz-Skink in the Swart Barrows.
 hist-conflict-turbulent-512 e27 The Realm of Ithieglie sent settlers from Raenme to found Cesie in the Brake of Antlers.
-hist-conflict-turbulent-512 e28 Plague broke out in Glalivedell and spread to one other settlement; 167 died.
+hist-conflict-turbulent-512 e28 Plague broke out in Glalivedell and spread to one other settlement; 167 died in all.
 hist-conflict-turbulent-512 e29 The plague spread to Mofaesi; 94 died.
 hist-conflict-turbulent-512 e30 The Grork Horde laid claim to Boughcombe Wood, held by the House of Finen.
 hist-conflict-turbulent-512 e31 Famine struck Mofaesi; 65 died.
@@ -5509,7 +5509,7 @@ hist-conflict-turbulent-512 e99 The Grork Horde defeated the House of Finen in B
 hist-conflict-turbulent-512 e100 The House of Finen and the Grork Horde made peace after 21 years of war, neither the victor.
 hist-conflict-turbulent-512 e101 A succession crisis at Snozz-Skink shook the Grork Horde.
 hist-conflict-turbulent-512 e102 The Grork Horde declared war on the Realm of Ithieglie over the Brake of Antlers.
-hist-conflict-turbulent-512 e103 Plague broke out in Cesie and spread to one other settlement; 52 died.
+hist-conflict-turbulent-512 e103 Plague broke out in Cesie and spread to one other settlement; 52 died in all.
 hist-conflict-turbulent-512 e104 The plague spread to Saelo; 29 died.
 hist-conflict-turbulent-512 e105 Weakened by plague, Cesie dwindled to 194 souls.
 hist-conflict-turbulent-512 e106 The Realm of Ithieglie defeated the Grork Horde in the Brake of Antlers; 194 of the defeated and 31 of the victors fell.
@@ -5529,12 +5529,12 @@ hist-conflict-turbulent-512 e119 Bronhak awakened the Dwarves in Northwest Fells
 hist-conflict-turbulent-512 e120 The Dwarves founded the Hold of Dulimin in Northwest Fells.
 hist-conflict-turbulent-512 e121 The Hold of Dulimin founded Khord in Northwest Fells.
 hist-conflict-turbulent-512 e122 Famine struck Rannve; 33 died.
-hist-conflict-turbulent-512 e123 Plague broke out in Dreeb Pit and spread to one other settlement; 1,413 died.
+hist-conflict-turbulent-512 e123 Plague broke out in Dreeb Pit and spread to one other settlement; 1,413 died in all.
 hist-conflict-turbulent-512 e124 The plague spread to Snozz-Skink; 330 died.
 hist-conflict-turbulent-512 e125 The Grork Horde declared war on the House of Finen over Gull's Pit.
 hist-conflict-turbulent-512 e126 The Grork Horde defeated the House of Finen in Gull's Pit; 118 of the defeated and 37 of the victors fell.
 hist-conflict-turbulent-512 e127 The Grork Horde besieged Voeledell of the House of Finen; it held.
-hist-conflict-turbulent-512 e128 Plague broke out in Beedrux Pit and spread to one other settlement; 653 died.
+hist-conflict-turbulent-512 e128 Plague broke out in Beedrux Pit and spread to one other settlement; 653 died in all.
 hist-conflict-turbulent-512 e129 The plague spread to Slikreek; 353 died.
 hist-conflict-turbulent-512 e130 The Grork Horde defeated the House of Finen in Gull's Pit; 113 of the defeated and 36 of the victors fell.
 hist-conflict-turbulent-512 e131 The Grork Horde besieged Voeledell of the House of Finen; it fell.
@@ -5557,13 +5557,13 @@ hist-conflict-turbulent-512 e147 The Grork Horde sacked Rannve of the Realm of I
 hist-conflict-turbulent-512 e148 The Grork Horde defeated the Realm of Ithieglie in Boughcombe Wood; 106 of the defeated and 34 of the victors fell.
 hist-conflict-turbulent-512 e149 The Grork Horde besieged Drirk Pit of the Realm of Ithieglie; it fell.
 hist-conflict-turbulent-512 e150 The Grork Horde sacked Drirk Pit of the Realm of Ithieglie; 194 died and 455 fled.
-hist-conflict-turbulent-512 e151 Plague broke out in Skreek Pit and spread to one other settlement; 546 died.
+hist-conflict-turbulent-512 e151 Plague broke out in Skreek Pit and spread to one other settlement; 546 died in all.
 hist-conflict-turbulent-512 e152 The plague spread to Grak-Kutch; 280 died.
 hist-conflict-turbulent-512 e153 The Grork Horde defeated the Realm of Ithieglie in Boughcombe Wood; 95 of the defeated and 30 of the victors fell.
 hist-conflict-turbulent-512 e154 The Grork Horde besieged Gruz-Keegg of the Realm of Ithieglie; it held.
 hist-conflict-turbulent-512 e155 The Realm of Ithieglie sued the Grork Horde for peace after 13 years of war.
 hist-conflict-turbulent-512 e156 The Realm of Ithieglie ceded Boughcombe Wood to the Grork Horde.
-hist-conflict-turbulent-512 e157 Plague broke out in Sneezskrub Hole and spread to one other settlement; 734 died.
+hist-conflict-turbulent-512 e157 Plague broke out in Sneezskrub Hole and spread to one other settlement; 734 died in all.
 hist-conflict-turbulent-512 e158 The plague spread to Dreeb Pit; 402 died.
 hist-conflict-turbulent-512 e159 Plague broke out in Khord; 98 died.
 hist-conflict-turbulent-512 e160 Famine struck Slikreek; 696 died.
@@ -5694,7 +5694,7 @@ hist-conflict-turbulent-512 e284 The Hold of Dulimin besieged Glalivedell of the
 hist-conflict-turbulent-512 e285 The Hold of Dulimin sacked Glalivedell of the Realm of Ithieglie; 75 died and 175 fled.
 hist-conflict-turbulent-512 e286 The Realm of Ithieglie sued the Hold of Dulimin for peace after 10 years of war.
 hist-conflict-turbulent-512 e287 The Realm of Ithieglie ceded Seredale Tangle to the Hold of Dulimin.
-hist-conflict-turbulent-512 e288 Plague broke out in Snozz-Skink and spread to one other settlement; 1,288 died.
+hist-conflict-turbulent-512 e288 Plague broke out in Snozz-Skink and spread to one other settlement; 1,288 died in all.
 hist-conflict-turbulent-512 e289 The plague spread to Slikreek; 511 died.
 hist-conflict-turbulent-512 e290 Famine struck Raemael; 37 died.
 hist-conflict-turbulent-512 e291 A succession crisis at Snozz-Skink shook the Grork Horde.
@@ -5735,7 +5735,7 @@ hist-conflict-turbulent-512 e325 Famine struck Skreek Pit; 153 died.
 hist-conflict-turbulent-512 e326 The Hold of Dulimin laid claim to West Wood, held by the Warrens of Gutch-Sluz.
 hist-conflict-turbulent-512 e327 A succession crisis at Snozz-Skink shook the Grork Horde.
 hist-conflict-turbulent-512 e328 The Beepo Ring sent settlers from Fouflo Hollow to found Matia Glade in Leper's Debt.
-hist-conflict-turbulent-512 e329 Plague broke out in Grak-Kutch and spread to one other settlement; 873 died.
+hist-conflict-turbulent-512 e329 Plague broke out in Grak-Kutch and spread to one other settlement; 873 died in all.
 hist-conflict-turbulent-512 e330 The plague spread to Sneezskrub Hole; 277 died.
 hist-conflict-turbulent-512 e331 Famine struck Khilikhi; 176 died.
 hist-conflict-turbulent-512 e332 Famine struck Cesie; 19 died.
@@ -5768,7 +5768,7 @@ hist-conflict-turbulent-512 e358 The Grork Horde defeated the Beepo Ring in Lepe
 hist-conflict-turbulent-512 e359 The Grork Horde besieged Fouflo Hollow of the Beepo Ring; it fell.
 hist-conflict-turbulent-512 e360 The Grork Horde took Fouflo Hollow from the Beepo Ring; 95 died.
 hist-conflict-turbulent-512 e361 The seat of the Beepo Ring moved to Matia Glade.
-hist-conflict-turbulent-512 e362 Plague broke out in Gnag and spread to one other settlement; 1,094 died.
+hist-conflict-turbulent-512 e362 Plague broke out in Gnag and spread to one other settlement; 1,094 died in all.
 hist-conflict-turbulent-512 e363 The plague spread to Skognit Hole; 437 died.
 hist-conflict-turbulent-512 e364 The Hold of Dulimin defeated the Warrens of Gutch-Sluz in West Wood; 62 of the defeated and 19 of the victors fell.
 hist-conflict-turbulent-512 e365 The Hold of Dulimin besieged Druk of the Warrens of Gutch-Sluz; it fell.
@@ -5780,7 +5780,7 @@ hist-conflict-turbulent-512 e370 The Hold of Dulimin besieged Keeskeegg Hole of 
 hist-conflict-turbulent-512 e371 The Hold of Dulimin sacked Keeskeegg Hole of the Warrens of Gutch-Sluz; 296 died and 693 fled.
 hist-conflict-turbulent-512 e372 The seat of the Warrens of Gutch-Sluz moved to Zeezzbazz.
 hist-conflict-turbulent-512 e373 Zeezzbazz grew into a town of 1,689.
-hist-conflict-turbulent-512 e374 Plague broke out in Groz and spread to one other settlement; 999 died.
+hist-conflict-turbulent-512 e374 Plague broke out in Groz and spread to one other settlement; 999 died in all.
 hist-conflict-turbulent-512 e375 The plague spread to Minno; 389 died.
 hist-conflict-turbulent-512 e376 The Hold of Dulimin defeated the Warrens of Gutch-Sluz in West Wood; 34 of the defeated and 10 of the victors fell.
 hist-conflict-turbulent-512 e377 The Hold of Dulimin besieged Zeezzbazz of the Warrens of Gutch-Sluz; it held.
@@ -5830,13 +5830,13 @@ hist-conflict-turbulent-512 e420 Stickton grew into a town of 1,506.
 hist-conflict-turbulent-512 e421 Famine struck Sneezskrub Hole; 111 died.
 hist-conflict-turbulent-512 e422 A succession crisis at Snozz-Skink shook the Grork Horde.
 hist-conflict-turbulent-512 e423 The Gadruzz Horde broke away from the Grork Horde with 3 settlements.
-hist-conflict-turbulent-512 e424 Plague broke out in Druk and spread to one other settlement; 398 died.
+hist-conflict-turbulent-512 e424 Plague broke out in Druk and spread to one other settlement; 398 died in all.
 hist-conflict-turbulent-512 e425 The plague spread to Zeezzbazz; 196 died.
 hist-conflict-turbulent-512 e426 Plague broke out in Zeezzbazz and spread to 3 other settlements; 2,007 died in all.
 hist-conflict-turbulent-512 e427 The plague spread to Minno; 685 died.
 hist-conflict-turbulent-512 e428 The plague spread to Snugg; 431 died.
 hist-conflict-turbulent-512 e429 The plague spread to Slikreek; 472 died.
-hist-conflict-turbulent-512 e430 Plague broke out in Minno and spread to one other settlement; 1,272 died.
+hist-conflict-turbulent-512 e430 Plague broke out in Minno and spread to one other settlement; 1,272 died in all.
 hist-conflict-turbulent-512 e431 The plague spread to Groz; 192 died.
 hist-conflict-turbulent-512 e432 A succession crisis at Skognit Hole shook the Gadruzz Horde.
 hist-conflict-turbulent-512 e433 The Gadruzz Horde sent settlers from Gnag to found Krik in Leper's Debt.
@@ -5903,7 +5903,7 @@ hist-conflict-turbulent-512 e493 Weakened by emigration, Stisbrelbury dwindled t
 hist-conflict-turbulent-512 e494 Plague broke out in Iennmo; 136 died.
 hist-conflict-turbulent-512 e495 The Duchy of Stin sent settlers from Stisbrelbury to found Walasheadwick in Blackstrand Wolds.
 hist-conflict-turbulent-512 e496 The Grork Horde laid claim to the Plain of Silence, held by the Duchy of Stin.
-hist-conflict-turbulent-512 e497 Plague broke out in Druk and spread to one other settlement; 1,138 died.
+hist-conflict-turbulent-512 e497 Plague broke out in Druk and spread to one other settlement; 1,138 died in all.
 hist-conflict-turbulent-512 e498 The plague spread to Dreeb Pit; 406 died.
 hist-conflict-turbulent-512 e499 Famine struck Roithano; 210 died.
 hist-conflict-turbulent-512 e500 Famine struck Sligg Pit; 216 died.
@@ -5944,7 +5944,7 @@ hist-conflict-turbulent-512 e534 Plague broke out in Snugg; 982 died.
 hist-conflict-turbulent-512 e535 Plague broke out in Skognit Hole; 462 died.
 hist-conflict-turbulent-512 e536 The Duchy of Stin declared war on the Grork Horde over the Swart Barrows.
 hist-conflict-turbulent-512 e537 Weakened by war, Sleet dwindled to 1,191 souls.
-hist-conflict-turbulent-512 e538 Plague broke out in Sneezskrub Hole and spread to one other settlement; 463 died.
+hist-conflict-turbulent-512 e538 Plague broke out in Sneezskrub Hole and spread to one other settlement; 463 died in all.
 hist-conflict-turbulent-512 e539 The plague spread to Niskreerk; 233 died.
 hist-conflict-turbulent-512 e540 Plague broke out in Snozz-Skink and spread to 2 other settlements; 1,548 died in all.
 hist-conflict-turbulent-512 e541 The plague spread to Skreek Pit; 279 died.
@@ -5955,7 +5955,7 @@ hist-conflict-turbulent-512 e545 A succession crisis at Snozz-Skink shook the Gr
 hist-conflict-turbulent-512 e546 Famine struck Groz; 426 died.
 hist-conflict-turbulent-512 e547 The Hold of Dulimin declared war on the Grork Horde over Leper's Debt.
 hist-conflict-turbulent-512 e548 The Gadruzz Horde sent settlers from Skognit Hole to found Gneesluz Pit in Leper's Debt.
-hist-conflict-turbulent-512 e549 Plague broke out in Druk and spread to one other settlement; 1,204 died.
+hist-conflict-turbulent-512 e549 Plague broke out in Druk and spread to one other settlement; 1,204 died in all.
 hist-conflict-turbulent-512 e550 The plague spread to Gnark Hole; 385 died.
 hist-conflict-turbulent-512 e551 The Duchy of Stin defeated the Grork Horde in the Swart Barrows; 96 of the defeated and 30 of the victors fell.
 hist-conflict-turbulent-512 e552 The Duchy of Stin besieged Snozz-Skink of the Grork Horde; it held.
@@ -5985,7 +5985,7 @@ hist-conflict-turbulent-512 e575 The Gadruzz Horde defeated the Grork Horde in L
 hist-conflict-turbulent-512 e576 The Duchy of Stin prevailed over the Grork Horde after 40 years of war.
 hist-conflict-turbulent-512 e577 The Grork Horde paid tribute to the Duchy of Stin; 476 were carried off.
 hist-conflict-turbulent-512 e578 A succession crisis at Niskreerk shook the Grork Horde.
-hist-conflict-turbulent-512 e579 Plague broke out in Gudbrain and spread to one other settlement; 655 died.
+hist-conflict-turbulent-512 e579 Plague broke out in Gudbrain and spread to one other settlement; 655 died in all.
 hist-conflict-turbulent-512 e580 The plague spread to Khilikhi; 122 died.
 hist-conflict-turbulent-512 e581 The Grork Horde defeated the Gadruzz Horde in the Swart Barrows; 67 of the defeated and 21 of the victors fell.
 hist-conflict-turbulent-512 e582 The Gadruzz Horde defeated the Grork Horde in Leper's Debt; 91 of the defeated and 21 of the victors fell.
@@ -6020,7 +6020,7 @@ hist-conflict-turbulent-512 e610 The Hold of Dulimin laid claim to Sorreldown, h
 hist-conflict-turbulent-512 e611 Plague broke out in Edeal; 435 died.
 hist-conflict-turbulent-512 e612 The Duchy of Stin declared war on the Warband of Uld'muu over Sorreldown.
 hist-conflict-turbulent-512 e613 Famine struck Stisbrelbury; 237 died.
-hist-conflict-turbulent-512 e614 Plague broke out in Snozz-Skink and spread to one other settlement; 847 died.
+hist-conflict-turbulent-512 e614 Plague broke out in Snozz-Skink and spread to one other settlement; 847 died in all.
 hist-conflict-turbulent-512 e615 The plague spread to Stisbrelbury; 524 died.
 hist-conflict-turbulent-512 e616 The Warband of Uld'muu defeated the Duchy of Stin in Sorreldown; 416 of the defeated and 119 of the victors fell.
 hist-conflict-turbulent-512 e617 Weakened by war, Snozz-Skink dwindled to 1,011 souls.
@@ -6070,7 +6070,7 @@ hist-conflict-turbulent-512 e660 Plague broke out in Ghald'mul; 553 died.
 hist-conflict-turbulent-512 e661 Famine struck Roithano; 135 died.
 hist-conflict-turbulent-512 e662 The Gadruzz Horde laid claim to Coldbarrow, held by the Hold of Dulimin.
 hist-conflict-turbulent-512 e663 The Warband of Uld'muu laid claim to Blackstrand Wolds, held by the Duchy of Stin.
-hist-conflict-turbulent-512 e664 Plague broke out in Sneezskrub Hole and spread to one other settlement; 240 died.
+hist-conflict-turbulent-512 e664 Plague broke out in Sneezskrub Hole and spread to one other settlement; 240 died in all.
 hist-conflict-turbulent-512 e665 The plague spread to Gnox Pit; 50 died.
 hist-conflict-turbulent-512 e666 The Warband of Uld'muu sent settlers from Bildheldham to found Zal in the Plain of Silence.
 hist-conflict-turbulent-512 e667 Famine struck Bildheldham; 253 died.
@@ -6086,7 +6086,7 @@ hist-conflict-turbulent-512 e676 The seat of the Duchy of Stin moved to Eduldali
 hist-conflict-turbulent-512 e677 Eduldalinton grew into a town of 4,268.
 hist-conflict-turbulent-512 e678 The Warband of Uld'muu defeated the Duchy of Stin in Blackstrand Wolds; 177 of the defeated and 56 of the victors fell.
 hist-conflict-turbulent-512 e679 The Warband of Uld'muu besieged Eduldalinton of the Duchy of Stin; it held.
-hist-conflict-turbulent-512 e680 Plague broke out in Zeezzbazz and spread to one other settlement; 1,187 died.
+hist-conflict-turbulent-512 e680 Plague broke out in Zeezzbazz and spread to one other settlement; 1,187 died in all.
 hist-conflict-turbulent-512 e681 The plague spread to Groz; 489 died.
 hist-conflict-turbulent-512 e682 The Warband of Uld'muu defeated the Duchy of Stin in Blackstrand Wolds; 175 of the defeated and 56 of the victors fell.
 hist-conflict-turbulent-512 e683 The Warband of Uld'muu besieged Eduldalinton of the Duchy of Stin; it held.
@@ -6102,7 +6102,7 @@ hist-conflict-turbulent-512 e692 A succession crisis at Eduldalinton shook the D
 hist-conflict-turbulent-512 e693 Famine struck Maethie; 83 died.
 hist-conflict-turbulent-512 e694 The Grork Horde laid claim to Blackstrand Wolds, held by the Duchy of Stin.
 hist-conflict-turbulent-512 e695 Plague broke out in Nobogg Pit; 154 died.
-hist-conflict-turbulent-512 e696 Plague broke out in Minno and spread to one other settlement; 1,261 died.
+hist-conflict-turbulent-512 e696 Plague broke out in Minno and spread to one other settlement; 1,261 died in all.
 hist-conflict-turbulent-512 e697 The plague spread to Gnag; 75 died.
 hist-conflict-turbulent-512 e698 The Warband of Uld'muu declared war on the Hold of Dulimin over Central Downs.
 hist-conflict-turbulent-512 e699 The Hold of Dulimin laid claim to the Hollow Hurst, held by the Gadruzz Horde.
@@ -6120,7 +6120,7 @@ hist-conflict-turbulent-512 e710 The Warband of Uld'muu sued the Hold of Dulimin
 hist-conflict-turbulent-512 e711 The Warband of Uld'muu ceded the Plain of Silence to the Hold of Dulimin.
 hist-conflict-turbulent-512 e712 A succession crisis at Ghald'mul shook the Warband of Uld'muu.
 hist-conflict-turbulent-512 e713 Famine struck Cesie; 19 died.
-hist-conflict-turbulent-512 e714 Plague broke out in Snaksnuz Pit and spread to one other settlement; 262 died.
+hist-conflict-turbulent-512 e714 Plague broke out in Snaksnuz Pit and spread to one other settlement; 262 died in all.
 hist-conflict-turbulent-512 e715 The plague spread to Gnag; 104 died.
 hist-conflict-turbulent-512 e716 Plague broke out in Kidrurk; 101 died.
 hist-conflict-turbulent-512 e717 Weakened by war, Zal dwindled to 196 souls.
@@ -6176,7 +6176,7 @@ hist-conflict-civs4-512 input_region 539cb4cc7473048fa68b7824f5c25785781ba2b0916
 hist-conflict-civs4-512 table civilization 996f513b617c6cc24871dae183ac4356aad5ec4563862dbbb0412e3f9806c712
 hist-conflict-civs4-512 table event e2cc4a35a48623553a969ada01456f6b6735714bf032d1394a2ef7063e2ff7ef
 hist-conflict-civs4-512 table event_cause ad672cc7a37d4e4a58182ce300f2d13d7b3bfafa64c5e2a1329083fa42fcad92
-hist-conflict-civs4-512 table event_kind 58b8cb7b5b5121612b331cd052c06a2bdfc4e23ba2f1956e14bc85aa432f8776
+hist-conflict-civs4-512 table event_kind 5bb33c7be421113e5b2507e775557dd7afe51c39ad7d9a5426e6f8e94e4b2f18
 hist-conflict-civs4-512 table event_kind_role 828c060dc0d262d618363e1eb4194754223827013ae83efa04ea2944f3b5731b
 hist-conflict-civs4-512 table event_kind_value ea3bdaba66965ca348093390b78ac4b2e92807052c93c9bb59822b0c53c0771e
 hist-conflict-civs4-512 table event_participant be8e5a6103412a2c298be72c76dae0bd0681612e1c5eda4238af7452ba918cc6
@@ -6815,7 +6815,7 @@ hist-conflict-civs4-512 e256 The Grork Horde besieged Grak-Kutch of the House of
 hist-conflict-civs4-512 e257 The Grork Horde sacked Grak-Kutch of the House of Finen; 124 died and 292 fled.
 hist-conflict-civs4-512 e258 Plague broke out in Turknon Hold; 114 died.
 hist-conflict-civs4-512 e259 The House of Finen defeated the Grork Horde in Leper's Debt; 376 of the defeated and 60 of the victors fell.
-hist-conflict-civs4-512 e260 Plague broke out in Gliecari and spread to one other settlement; 166 died.
+hist-conflict-civs4-512 e260 Plague broke out in Gliecari and spread to one other settlement; 166 died in all.
 hist-conflict-civs4-512 e261 The plague spread to Zeezzbazz; 50 died.
 hist-conflict-civs4-512 e262 The Grork Horde sent settlers from Drirk Pit to found Krux in West Wood.
 hist-conflict-civs4-512 e263 The Grork Horde defeated the House of Finen in Central Downs; 178 of the defeated and 57 of the victors fell.
@@ -6846,7 +6846,7 @@ hist-conflict-civs4-512 e287 The Gidruz Horde paid tribute to the House of Finen
 hist-conflict-civs4-512 e288 Skreek Pit grew into a town of 1,559.
 hist-conflict-civs4-512 e289 Plague broke out in Skrunk Pit; 622 died.
 hist-conflict-civs4-512 e290 The Gidruz Horde laid claim to Leper's Debt, held by the Grork Horde.
-hist-conflict-civs4-512 e291 Plague broke out in Voeledell and spread to one other settlement; 249 died.
+hist-conflict-civs4-512 e291 Plague broke out in Voeledell and spread to one other settlement; 249 died in all.
 hist-conflict-civs4-512 e292 The plague spread to Gliecari; 42 died.
 hist-conflict-civs4-512 e293 The Grork Horde laid claim to Northwest Fells, held by the Tourdbaim Throne.
 hist-conflict-civs4-512 e294 For 425 years, from 3392 to 3816, the land was quiet, and 6 realms kept the peace.
@@ -6859,7 +6859,7 @@ hist-conflict-civs4-512 e300 In 3817 tensions flared into 50 years of upheaval.
 hist-conflict-civs4-512 e301 The Gidruz Horde declared war on the Realm of Ithieglie over Coldbarrow.
 hist-conflict-civs4-512 e302 The House of Finen laid claim to Leper's Debt, held by the Grork Horde.
 hist-conflict-civs4-512 e303 Famine struck Skreek Pit; 220 died.
-hist-conflict-civs4-512 e304 Plague broke out in Gnark-Guk and spread to one other settlement; 1,079 died.
+hist-conflict-civs4-512 e304 Plague broke out in Gnark-Guk and spread to one other settlement; 1,079 died in all.
 hist-conflict-civs4-512 e305 The plague spread to Skognit Hole; 77 died.
 hist-conflict-civs4-512 e306 The Realm of Ithieglie defeated the Gidruz Horde in Coldbarrow; 101 of the defeated and 32 of the victors fell.
 hist-conflict-civs4-512 e307 The Grork Horde declared war on Clan Thraim over Sorreldown.
@@ -6965,12 +6965,12 @@ hist-conflict-civs4-512 e406 The Tourdbaim Throne besieged Krux of the Grork Hor
 hist-conflict-civs4-512 e407 The Tourdbaim Throne sacked Krux of the Grork Horde; 720 died and 1,680 fled.
 hist-conflict-civs4-512 e408 The Grork Horde defeated the Tourdbaim Throne in West Wood; 914 of the defeated and 219 of the victors fell.
 hist-conflict-civs4-512 e409 The Grork Horde and the Tourdbaim Throne made peace after 9 years of war, neither the victor.
-hist-conflict-civs4-512 e410 Plague broke out in Snozz-Skink and spread to one other settlement; 1,348 died.
+hist-conflict-civs4-512 e410 Plague broke out in Snozz-Skink and spread to one other settlement; 1,348 died in all.
 hist-conflict-civs4-512 e411 The plague spread to Beedrux Pit; 471 died.
 hist-conflict-civs4-512 e412 Famine struck Gnark-Guk; 229 died.
 hist-conflict-civs4-512 e413 The Grork Horde sent settlers from Keeskeegg Hole to found Gneesluz Pit in West Wood.
 hist-conflict-civs4-512 e414 The Grork Horde sent settlers from Keeskeegg Hole to found Nobogg Pit in West Wood.
-hist-conflict-civs4-512 e415 Plague broke out in Beedrux Pit and spread to one other settlement; 574 died.
+hist-conflict-civs4-512 e415 Plague broke out in Beedrux Pit and spread to one other settlement; 574 died in all.
 hist-conflict-civs4-512 e416 The plague spread to Dreerksnak; 178 died.
 hist-conflict-civs4-512 e417 A succession crisis at Snozz-Skink shook the Grork Horde.
 hist-conflict-civs4-512 e418 The Druz Horde broke away from the Grork Horde with 4 settlements.
@@ -7125,7 +7125,7 @@ hist-conflict-civs4-512 e566 Weakened by emigration, Alessas dwindled to 6,080 s
 hist-conflict-civs4-512 e567 Plague broke out in Skrunk Pit; 542 died.
 hist-conflict-civs4-512 e568 The Grork Horde laid claim to Central Downs, held by Clan Thraim.
 hist-conflict-civs4-512 e569 The Gidruz Horde laid claim to Central Downs, held by Clan Thraim.
-hist-conflict-civs4-512 e570 Plague broke out in Bronbair and spread to one other settlement; 305 died.
+hist-conflict-civs4-512 e570 Plague broke out in Bronbair and spread to one other settlement; 305 died in all.
 hist-conflict-civs4-512 e571 The plague spread to Gruz-Keegg; 222 died.
 hist-conflict-civs4-512 e572 A succession crisis at Nobogg Pit shook the Druz Horde.
 hist-conflict-civs4-512 e573 A succession crisis at Skreek Pit shook the Gidruz Horde.
@@ -7139,7 +7139,7 @@ hist-conflict-civs4-512 e580 The Duchy of Ashin besieged Feesk of the Grork Hord
 hist-conflict-civs4-512 e581 The Duchy of Ashin sacked Feesk of the Grork Horde; 183 died and 429 fled.
 hist-conflict-civs4-512 e582 The Duchy of Ashin prevailed over the Grork Horde after 5 years of war.
 hist-conflict-civs4-512 e583 The Grork Horde paid tribute to the Duchy of Ashin; 1,784 were carried off.
-hist-conflict-civs4-512 e584 Plague broke out in Beedrux Pit and spread to one other settlement; 1,456 died.
+hist-conflict-civs4-512 e584 Plague broke out in Beedrux Pit and spread to one other settlement; 1,456 died in all.
 hist-conflict-civs4-512 e585 The plague spread to Gnark-Guk; 566 died.
 hist-conflict-civs4-512 e586 A succession crisis at Skreek Pit shook the Gidruz Horde.
 hist-conflict-civs4-512 e587 A succession crisis at Nobogg Pit shook the Druz Horde.
@@ -7169,7 +7169,7 @@ hist-conflict-civs4-512 e610 Famine struck Broumgrirk; 94 died.
 hist-conflict-civs4-512 e611 The Tourdbaim Throne declared war on the Gidruz Horde over the Hollow Hurst.
 hist-conflict-civs4-512 e612 The Gidruz Horde defeated the Tourdbaim Throne in the Hollow Hurst; 142 of the defeated and 22 of the victors fell.
 hist-conflict-civs4-512 e613 The Realm of Ithieglie laid claim to the Hollow Hurst, held by the Gidruz Horde.
-hist-conflict-civs4-512 e614 Plague broke out in Iennmo and spread to one other settlement; 159 died.
+hist-conflict-civs4-512 e614 Plague broke out in Iennmo and spread to one other settlement; 159 died in all.
 hist-conflict-civs4-512 e615 The plague spread to Ciennfae; 53 died.
 hist-conflict-civs4-512 e616 The Gidruz Horde defeated the Tourdbaim Throne in Coldbarrow; 142 of the defeated and 22 of the victors fell.
 hist-conflict-civs4-512 e617 The Gidruz Horde besieged Groz of the Tourdbaim Throne; it held.
@@ -7200,7 +7200,7 @@ hist-conflict-civs4-512 e641 The Gidruz Horde paid tribute to the Tourdbaim Thro
 hist-conflict-civs4-512 e642 Krik grew into a town of 1,539.
 hist-conflict-civs4-512 e643 The Ghuughzuz Horde laid claim to Central Downs, held by Clan Thraim.
 hist-conflict-civs4-512 e644 Clan Thraim declared war on the Druz Horde over West Wood.
-hist-conflict-civs4-512 e645 Plague broke out in Sneezskrub Hole and spread to one other settlement; 232 died.
+hist-conflict-civs4-512 e645 Plague broke out in Sneezskrub Hole and spread to one other settlement; 232 died in all.
 hist-conflict-civs4-512 e646 The plague spread to Snugg; 81 died.
 hist-conflict-civs4-512 e647 Weakened by plague, Snugg was abandoned; 947 survivors went to Sneezskrub Hole.
 hist-conflict-civs4-512 e648 Famine struck Endnodell; 23 died.
@@ -7323,7 +7323,7 @@ hist-conflict-civs4-512 e764 Clan Thraim besieged Krik of the Gidruz Horde; it f
 hist-conflict-civs4-512 e765 Clan Thraim sacked Krik of the Gidruz Horde; 526 died and 1,229 fled.
 hist-conflict-civs4-512 e766 The seat of the Gidruz Horde moved to Slikreek.
 hist-conflict-civs4-512 e767 Slikreek grew into a town of 1,821.
-hist-conflict-civs4-512 e768 Plague broke out in Zeezzbazz and spread to one other settlement; 614 died.
+hist-conflict-civs4-512 e768 Plague broke out in Zeezzbazz and spread to one other settlement; 614 died in all.
 hist-conflict-civs4-512 e769 The plague spread to Skrunk Pit; 230 died.
 hist-conflict-civs4-512 e770 The Gidruz Horde sent settlers from Sneeggnox Hole to found Slux in the Hollow Hurst.
 hist-conflict-civs4-512 e771 Clan Thraim defeated the Gidruz Horde in the Hollow Hurst; 58 of the defeated and 18 of the victors fell.
@@ -7364,7 +7364,7 @@ hist-conflict-civs4-512 e805 The House of Finen laid claim to Sorreldown, held b
 hist-conflict-civs4-512 e806 Raenme dwindled to 1,199 souls.
 hist-conflict-civs4-512 e807 Clan Thraim laid claim to Sorreldown, held by the Grork Horde.
 hist-conflict-civs4-512 e808 The House of Finen declared war on the Grork Horde over Sorreldown.
-hist-conflict-civs4-512 e809 Plague broke out in Gink and spread to one other settlement; 430 died.
+hist-conflict-civs4-512 e809 Plague broke out in Gink and spread to one other settlement; 430 died in all.
 hist-conflict-civs4-512 e810 The plague spread to Grirk-Zix Pit; 121 died.
 hist-conflict-civs4-512 e811 The Grork Horde defeated the House of Finen in Sorreldown; 110 of the defeated and 28 of the victors fell.
 hist-conflict-civs4-512 e812 Plague broke out in Fia Hollow; 55 died.
@@ -7379,7 +7379,7 @@ hist-conflict-civs4-512 e820 Plague broke out in Brodinbu; 88 died.
 hist-conflict-civs4-512 e821 Plague broke out in Gruz-Keegg and spread to 2 other settlements; 1,405 died in all.
 hist-conflict-civs4-512 e822 The plague spread to Dreerksnak; 233 died.
 hist-conflict-civs4-512 e823 The plague spread to Gnark Hole; 235 died.
-hist-conflict-civs4-512 e824 Plague broke out in Doundkind and spread to one other settlement; 1,243 died.
+hist-conflict-civs4-512 e824 Plague broke out in Doundkind and spread to one other settlement; 1,243 died in all.
 hist-conflict-civs4-512 e825 The plague spread to Raenme; 84 died.
 hist-conflict-civs4-512 e826 The Grork Horde laid claim to the Plain of Silence, held by the Duchy of Ashin.
 hist-conflict-civs4-512 e827 Famine struck Raenme; 164 died.
@@ -7393,7 +7393,7 @@ hist-conflict-flight input_region 35e08813a3200d30cb81cb006490355fedc419fa138cfe
 hist-conflict-flight table civilization 4e1e5227de1a99bf0422f45278d1f2652b1ddfb006d2acfcbf433d0556703495
 hist-conflict-flight table event 823ef36bfca42331320d303ee2dcb8f8d0e873e476f3f4017ef1a612f544a8e9
 hist-conflict-flight table event_cause c376c87d3384a3349c5c05831f56b05c68a5c18758d5c2aefe84b429c470cdd5
-hist-conflict-flight table event_kind 58b8cb7b5b5121612b331cd052c06a2bdfc4e23ba2f1956e14bc85aa432f8776
+hist-conflict-flight table event_kind 5bb33c7be421113e5b2507e775557dd7afe51c39ad7d9a5426e6f8e94e4b2f18
 hist-conflict-flight table event_kind_role 828c060dc0d262d618363e1eb4194754223827013ae83efa04ea2944f3b5731b
 hist-conflict-flight table event_kind_value ea3bdaba66965ca348093390b78ac4b2e92807052c93c9bb59822b0c53c0771e
 hist-conflict-flight table event_participant 63eb329b05158dbbf3fa093e7403119a0621c665ddccd2d580c06645abe04acd
@@ -7822,7 +7822,7 @@ hist-conflict-flight e88 The Skreegg Horde sent settlers from Borksluzz to found
 hist-conflict-flight e89 The Skreegg Horde defeated the House of Glaefaenn in Wolf's Vale; 368 of the defeated and 117 of the victors fell.
 hist-conflict-flight e90 The House of Glaefaenn and the Skreegg Horde made peace after 9 years of war, neither the victor.
 hist-conflict-flight e91 Druzz grew into a village of 250.
-hist-conflict-flight e92 Plague broke out in Skrukkreek and spread to one other settlement; 559 died.
+hist-conflict-flight e92 Plague broke out in Skrukkreek and spread to one other settlement; 559 died in all.
 hist-conflict-flight e93 The plague spread to Nank; 96 died.
 hist-conflict-flight e94 The Warrens of Skiskib laid claim to Central Downs, held by the Skreegg Horde.
 hist-conflict-flight e95 A succession crisis at Babkuz shook the Warrens of Skiskib.
@@ -7868,7 +7868,7 @@ hist-conflict-flight e134 The House of Glaefaenn ceded Wraithshaw to the Warrens
 hist-conflict-flight e135 The Skreegg Horde declared war on the Warrens of Skiskib over the Pallid Leas.
 hist-conflict-flight e136 The Skreegg Horde defeated the Warrens of Skiskib in the Pallid Leas; 336 of the defeated and 107 of the victors fell.
 hist-conflict-flight e137 The Skreegg Horde besieged Skub Pit of the Warrens of Skiskib; it held.
-hist-conflict-flight e138 Plague broke out in Skuggkib Pit and spread to one other settlement; 724 died.
+hist-conflict-flight e138 Plague broke out in Skuggkib Pit and spread to one other settlement; 724 died in all.
 hist-conflict-flight e139 The plague spread to Borksluzz; 129 died.
 hist-conflict-flight e140 The Warrens of Skiskib defeated the Skreegg Horde in the Pallid Leas; 666 of the defeated and 106 of the victors fell.
 hist-conflict-flight e141 A succession crisis at Khodmir Deep shook the Khirnhu Throne.
@@ -7890,11 +7890,11 @@ hist-conflict-flight e156 The plague spread to Skuggkib Pit; 494 died.
 hist-conflict-flight e157 For 100 years, from 3491 to 3590, the land was quiet, and 5 realms kept the peace.
 hist-conflict-flight e158 In 3591 tensions flared into 50 years of upheaval.
 hist-conflict-flight e159 The Skreegg Horde declared war on the Warrens of Zeez over Shingletree Rises.
-hist-conflict-flight e160 Plague broke out in Slok and spread to one other settlement; 358 died.
+hist-conflict-flight e160 Plague broke out in Slok and spread to one other settlement; 358 died in all.
 hist-conflict-flight e161 The plague spread to Snokeerk Hole; 269 died.
 hist-conflict-flight e162 Famine struck Druzz; 222 died.
 hist-conflict-flight e163 The Warrens of Zeez declared war on the Khirnhu Throne over Southwest Steppe.
-hist-conflict-flight e164 Plague broke out in Gnot Pit and spread to one other settlement; 1,680 died.
+hist-conflict-flight e164 Plague broke out in Gnot Pit and spread to one other settlement; 1,680 died in all.
 hist-conflict-flight e165 The plague spread to Geezink; 450 died.
 hist-conflict-flight e166 The Warrens of Zeez defeated the Khirnhu Throne in Southwest Steppe; 72 of the defeated and 23 of the victors fell.
 hist-conflict-flight e167 The Warrens of Zeez besieged Khodmir Deep of the Khirnhu Throne; it fell.
@@ -7920,7 +7920,7 @@ hist-conflict-flight e186 The Warrens of Zeez paid tribute to the Skreegg Horde;
 hist-conflict-flight e187 Famine struck Gnok-Skeex; 175 died.
 hist-conflict-flight e188 Plague broke out in Skrutch Pit; 420 died.
 hist-conflict-flight e189 The Skreegg Horde laid claim to Poacher's Tangle, held by the House of Glaefaenn.
-hist-conflict-flight e190 Plague broke out in Skub Pit and spread to one other settlement; 700 died.
+hist-conflict-flight e190 Plague broke out in Skub Pit and spread to one other settlement; 700 died in all.
 hist-conflict-flight e191 The plague spread to Zozz-Greenk Hole; 36 died.
 hist-conflict-flight e192 For 325 years, from 3641 to 3965, the land was quiet, and 5 realms kept the peace.
 hist-conflict-flight e193 The Warrens of Skiskib sent settlers from Iennrer to found Gaggkot Pit in Wraithshaw.
@@ -7959,7 +7959,7 @@ hist-conflict-flight e225 The Warrens of Zeez defeated the House of Glaefaenn in
 hist-conflict-flight e226 The Warrens of Zeez besieged Elomaell of the House of Glaefaenn; it held.
 hist-conflict-flight e227 The House of Glaefaenn defeated the Warrens of Zeez in Poacher's Tangle; 190 of the defeated and 46 of the victors fell.
 hist-conflict-flight e228 The House of Glaefaenn and the Warrens of Zeez made peace after 4 years of war, neither the victor.
-hist-conflict-flight e229 Plague broke out in Zozz-Greenk Hole and spread to one other settlement; 276 died.
+hist-conflict-flight e229 Plague broke out in Zozz-Greenk Hole and spread to one other settlement; 276 died in all.
 hist-conflict-flight e230 The plague spread to Babkuz; 166 died.
 hist-conflict-flight e231 Plague broke out in Borksluzz; 205 died.
 hist-conflict-flight e232 For 162 years, from 4016 to 4177, the land was quiet, and 5 realms kept the peace.
@@ -7993,7 +7993,7 @@ hist-conflict-flight e259 The Warrens of Skiskib laid claim to Southeast Wood, h
 hist-conflict-flight e260 The Skreegg Horde laid claim to Southeast Wood, held by the Lousstwo Court.
 hist-conflict-flight e261 The Skreegg Horde defeated the Warrens of Skiskib in Central Downs; 348 of the defeated and 111 of the victors fell.
 hist-conflict-flight e262 The Warrens of Skiskib and the Skreegg Horde made peace after 13 years of war, neither the victor.
-hist-conflict-flight e263 Plague broke out in Aeitheitho and spread to one other settlement; 258 died.
+hist-conflict-flight e263 Plague broke out in Aeitheitho and spread to one other settlement; 258 died in all.
 hist-conflict-flight e264 The plague spread to Vomethidell; 53 died.
 hist-conflict-flight e265 Famine struck Slok; 22 died.
 hist-conflict-flight e266 Famine struck Geezink; 920 died.
@@ -8006,9 +8006,9 @@ hist-conflict-flight e272 The Khirnhu Throne defeated the Skreegg Horde in South
 hist-conflict-flight e273 Plague broke out in Skrutch Pit; 752 died.
 hist-conflict-flight e274 The Skreegg Horde defeated the Khirnhu Throne in Shingletree Rises; 267 of the defeated and 85 of the victors fell.
 hist-conflict-flight e275 The Skreegg Horde and the Khirnhu Throne made peace after 9 years of war, neither the victor.
-hist-conflict-flight e276 Plague broke out in Skuggkib Pit and spread to one other settlement; 1,102 died.
+hist-conflict-flight e276 Plague broke out in Skuggkib Pit and spread to one other settlement; 1,102 died in all.
 hist-conflict-flight e277 The plague spread to Skrutch Pit; 261 died.
-hist-conflict-flight e278 Plague broke out in Iennrer and spread to one other settlement; 555 died.
+hist-conflict-flight e278 Plague broke out in Iennrer and spread to one other settlement; 555 died in all.
 hist-conflict-flight e279 The plague spread to Gaggkot Pit; 155 died.
 hist-conflict-flight e280 Weakened by plague, Iennrer dwindled to 1,048 souls.
 hist-conflict-flight e281 Famine struck Gnugbunk Pit; 213 died.
@@ -8021,7 +8021,7 @@ hist-conflict-flight e287 The Warrens of Skiskib searched Southeast Wood for the
 hist-conflict-flight e288 The Skreegg Horde searched Southeast Wood for the Lousstwo Court and found no one; the war ended after 3 years.
 hist-conflict-flight e289 A succession crisis at Gnot Pit shook the Skreegg Horde.
 hist-conflict-flight e290 Plague broke out in Skruz; 599 died.
-hist-conflict-flight e291 Plague broke out in Nik Pit and spread to one other settlement; 930 died.
+hist-conflict-flight e291 Plague broke out in Nik Pit and spread to one other settlement; 930 died in all.
 hist-conflict-flight e292 The plague spread to Snonk-Girk; 299 died.
 hist-conflict-flight e293 Famine struck Borksluzz; 289 died.
 hist-conflict-flight e294 Famine struck Gaggkot Pit; 133 died.
@@ -8050,7 +8050,7 @@ hist-conflict-flight e316 Itwa grew into a village of 264.
 hist-conflict-flight e317 Steckwint awakened the Humans in Dreadwell Rises.
 hist-conflict-flight e318 The Humans founded the Kingdom of Mald in Dreadwell Rises.
 hist-conflict-flight e319 The Kingdom of Mald founded Merdmasstead in Dreadwell Rises.
-hist-conflict-flight e320 Plague broke out in Gnugbunk Pit and spread to one other settlement; 650 died.
+hist-conflict-flight e320 Plague broke out in Gnugbunk Pit and spread to one other settlement; 650 died in all.
 hist-conflict-flight e321 The plague spread to Slok; 47 died.
 hist-conflict-flight e322 Plague broke out in Druzz; 447 died.
 hist-conflict-flight e323 Famine struck Taidinkhai; 418 died.
@@ -8067,7 +8067,7 @@ hist-conflict-flight e333 The Skreegg Horde besieged Drax-Snagg Pit of the Warre
 hist-conflict-flight e334 The Skreegg Horde took Drax-Snagg Pit from the Warrens of Skiskib; 395 died.
 hist-conflict-flight e335 A succession crisis at Ofy Hollow shook the Lousstwo Court.
 hist-conflict-flight e336 The Lousstwo Court sent settlers from Ofy Hollow to found Fiask Hollow in Southeast Wood.
-hist-conflict-flight e337 Plague broke out in Borksluzz and spread to one other settlement; 687 died.
+hist-conflict-flight e337 Plague broke out in Borksluzz and spread to one other settlement; 687 died in all.
 hist-conflict-flight e338 The plague spread to Nank; 217 died.
 hist-conflict-flight e339 The Skreegg Horde defeated the Warrens of Skiskib in the Pallid Leas; 202 of the defeated and 64 of the victors fell.
 hist-conflict-flight e340 The Skreegg Horde besieged Gnugbunk Pit of the Warrens of Skiskib; it held.
@@ -8092,7 +8092,7 @@ hist-conflict-flight e358 Fiask Hollow grew into a village of 250.
 hist-conflict-flight e359 Plague broke out in Skub Pit and spread to 2 other settlements; 1,616 died in all.
 hist-conflict-flight e360 The plague spread to Neetdrink Hole; 396 died.
 hist-conflict-flight e361 The plague spread to Geezink; 418 died.
-hist-conflict-flight e362 Plague broke out in Buskug and spread to one other settlement; 790 died.
+hist-conflict-flight e362 Plague broke out in Buskug and spread to one other settlement; 790 died in all.
 hist-conflict-flight e363 The plague spread to Gnot Pit; 554 died.
 hist-conflict-flight e364 Plague broke out in Gnok-Skeex and spread to 2 other settlements; 1,288 died in all.
 hist-conflict-flight e365 The plague spread to Neetdrink Hole; 213 died.
@@ -8204,11 +8204,11 @@ hist-conflict-flight e470 The Skreegg Horde besieged Iennrer of the Warrens of S
 hist-conflict-flight e471 The Skreegg Horde took Iennrer from the Warrens of Skiskib; 115 died.
 hist-conflict-flight e472 The Warrens of Skiskib sued the Skreegg Horde for peace after 15 years of war.
 hist-conflict-flight e473 The Warrens of Skiskib ceded the Pallid Leas to the Skreegg Horde.
-hist-conflict-flight e474 Plague broke out in Gnugbunk Pit and spread to one other settlement; 827 died.
+hist-conflict-flight e474 Plague broke out in Gnugbunk Pit and spread to one other settlement; 827 died in all.
 hist-conflict-flight e475 The plague spread to Skub Pit; 332 died.
 hist-conflict-flight e476 Plague broke out in Elomaell; 487 died.
 hist-conflict-flight e477 Famine struck Druzz; 178 died.
-hist-conflict-flight e478 Plague broke out in Nank and spread to one other settlement; 1,081 died.
+hist-conflict-flight e478 Plague broke out in Nank and spread to one other settlement; 1,081 died in all.
 hist-conflict-flight e479 The plague spread to Skuggkib Pit; 663 died.
 hist-conflict-flight e480 Plague broke out in Iennrer and spread to 2 other settlements; 747 died in all.
 hist-conflict-flight e481 The plague spread to Geezink; 481 died.
@@ -8252,7 +8252,7 @@ hist-conflict-flight e518 The Kingdom of Mald laid claim to Dreadwell Rises, hel
 hist-conflict-flight e519 Famine struck Buskug; 259 died.
 hist-conflict-flight e520 Famine struck Gnugbunk Pit; 372 died.
 hist-conflict-flight e521 A succession crisis at Babkuz shook the Warrens of Skiskib.
-hist-conflict-flight e522 Plague broke out in Bealdwick and spread to one other settlement; 1,177 died.
+hist-conflict-flight e522 Plague broke out in Bealdwick and spread to one other settlement; 1,177 died in all.
 hist-conflict-flight e523 The plague spread to Tearford; 749 died.
 hist-conflict-flight e524 The Khirnhu Throne laid claim to the White Wilds, held by the Shaaz Horde.
 hist-conflict-flight e525 Plague broke out in Kaz; 315 died.
@@ -8265,15 +8265,15 @@ hist-conflict-flight e531 The plague spread to Weardstead; 71 died.
 hist-conflict-flight e532 The Skreegg Horde laid claim to the White Wilds, held by the Warrens of Skiskib.
 hist-conflict-flight e533 Famine struck Gnok-Skeex; 232 died.
 hist-conflict-flight e534 Famine struck Zuum'zuukh Camp; 134 died.
-hist-conflict-flight e535 Plague broke out in Bealdwick and spread to one other settlement; 661 died.
+hist-conflict-flight e535 Plague broke out in Bealdwick and spread to one other settlement; 661 died in all.
 hist-conflict-flight e536 The plague spread to Edarham; 237 died.
 hist-conflict-flight e537 Famine struck Bukrak; 36 died.
-hist-conflict-flight e538 Plague broke out in Skub Pit and spread to one other settlement; 1,033 died.
+hist-conflict-flight e538 Plague broke out in Skub Pit and spread to one other settlement; 1,033 died in all.
 hist-conflict-flight e539 The plague spread to Geezink; 490 died.
 hist-conflict-flight e540 Famine struck Bukrak; 19 died.
 hist-conflict-flight e541 Famine struck Nik Pit; 626 died.
 hist-conflict-flight e542 The Skreegg Horde declared war on the Warrens of Skiskib over the White Wilds.
-hist-conflict-flight e543 Plague broke out in Gnugbunk Pit and spread to one other settlement; 406 died.
+hist-conflict-flight e543 Plague broke out in Gnugbunk Pit and spread to one other settlement; 406 died in all.
 hist-conflict-flight e544 The plague spread to Weardstead; 83 died.
 hist-conflict-flight e545 The Skreegg Horde defeated the Warrens of Skiskib in the White Wilds; 36 of the defeated and 11 of the victors fell.
 hist-conflict-flight e546 The Skreegg Horde besieged Babkuz of the Warrens of Skiskib; it fell.
@@ -8308,7 +8308,7 @@ synthetic syn-0 0 2000 all auto normal
 syn-0 table civilization 9fc100509a10912ed8eea65db8b7ebf34bdb4927b290f45c32447cf3486deece
 syn-0 table event 5ad6ee9cc9ecd9ef3096e6080c3f04ae5b136839a104375b870b52c5960d2c44
 syn-0 table event_cause 9e8fd86c19dbe023648a8f91ae5f4449cd0fa2cec6d376df36ab5408f1bcd249
-syn-0 table event_kind 58b8cb7b5b5121612b331cd052c06a2bdfc4e23ba2f1956e14bc85aa432f8776
+syn-0 table event_kind 5bb33c7be421113e5b2507e775557dd7afe51c39ad7d9a5426e6f8e94e4b2f18
 syn-0 table event_kind_role 828c060dc0d262d618363e1eb4194754223827013ae83efa04ea2944f3b5731b
 syn-0 table event_kind_value ea3bdaba66965ca348093390b78ac4b2e92807052c93c9bb59822b0c53c0771e
 syn-0 table event_participant 24b1363e6d6230f267bae3f36a9e466fa8ffa7984a4aa664470768748e841957
@@ -8581,7 +8581,7 @@ synthetic syn-1 1 6000 all auto calm
 syn-1 table civilization 03bf71059214f90cb876656ef4cffd6e12540e30849e871f58ed4903ef37e84a
 syn-1 table event 009f647483a53c3f847e42f431cb18132b3daf24b49b97c13a36b77d2df342f4
 syn-1 table event_cause 1031d5856329fcb21a9edfe70663a70566feb0f052b9a25f7133276fde84bdcb
-syn-1 table event_kind 58b8cb7b5b5121612b331cd052c06a2bdfc4e23ba2f1956e14bc85aa432f8776
+syn-1 table event_kind 5bb33c7be421113e5b2507e775557dd7afe51c39ad7d9a5426e6f8e94e4b2f18
 syn-1 table event_kind_role 828c060dc0d262d618363e1eb4194754223827013ae83efa04ea2944f3b5731b
 syn-1 table event_kind_value ea3bdaba66965ca348093390b78ac4b2e92807052c93c9bb59822b0c53c0771e
 syn-1 table event_participant e555885424f27e5fbc8fdfb6849786433e28132f30decc1d3798700af226462e
@@ -9068,7 +9068,7 @@ synthetic syn-2 2 2000 elf,goblin auto turbulent
 syn-2 table civilization 1492dfeff25cf0f62dc9a11f3039739756b65365851b75bfeabbde05a4552b2c
 syn-2 table event 18b8c41677f16306f0e5b120adc19d57fd9cf7541468daec30732adf017b7df0
 syn-2 table event_cause 6762a4c9dcc1ecb23f699dd79d83a7386a0a6cd5f15ac5effb483ffde256a11a
-syn-2 table event_kind 58b8cb7b5b5121612b331cd052c06a2bdfc4e23ba2f1956e14bc85aa432f8776
+syn-2 table event_kind 5bb33c7be421113e5b2507e775557dd7afe51c39ad7d9a5426e6f8e94e4b2f18
 syn-2 table event_kind_role 828c060dc0d262d618363e1eb4194754223827013ae83efa04ea2944f3b5731b
 syn-2 table event_kind_value ea3bdaba66965ca348093390b78ac4b2e92807052c93c9bb59822b0c53c0771e
 syn-2 table event_participant 2cb32305d7bd1e2c30c014bbfb8d2da30647a947f15096ef42fdc7bf572187e1
@@ -9352,7 +9352,7 @@ syn-2 e89 Famine struck Elathieth; 36 died.
 syn-2 e90 For 206 years, from 1694 to 1899, the land was quiet, and 3 realms kept the peace.
 syn-2 e91 Voni grew into a village of 261.
 syn-2 e92 The Snoskrag Mob laid claim to Synthetic 2, held by the Court of Ienriend.
-syn-2 e93 Plague broke out in Skreek Pit and spread to one other settlement; 65 died.
+syn-2 e93 Plague broke out in Skreek Pit and spread to one other settlement; 65 died in all.
 syn-2 e94 The plague spread to Skogneet; 22 died.
 syn-2 e95 The House of Ithasfa laid claim to Synthetic 6, held by the Snoskrag Mob.
 syn-2 e96 Famine struck Eliesigledell; 42 died.
@@ -9361,7 +9361,7 @@ synthetic syn-3 3 6000 elf,goblin auto normal
 syn-3 table civilization 77b3f3426d0e1290932b56279705a7efd1c3a22e4f116cf815517d0fdd610d07
 syn-3 table event 233cf6fdcfc9835b0bd4f704250cee2506c79d02d6acc921aefcb3292f435ef7
 syn-3 table event_cause 0aaa569ce20509abe919592178b3afef5386f699da349c7827cbc5b52e0f77d1
-syn-3 table event_kind 58b8cb7b5b5121612b331cd052c06a2bdfc4e23ba2f1956e14bc85aa432f8776
+syn-3 table event_kind 5bb33c7be421113e5b2507e775557dd7afe51c39ad7d9a5426e6f8e94e4b2f18
 syn-3 table event_kind_role 828c060dc0d262d618363e1eb4194754223827013ae83efa04ea2944f3b5731b
 syn-3 table event_kind_value ea3bdaba66965ca348093390b78ac4b2e92807052c93c9bb59822b0c53c0771e
 syn-3 table event_participant eeb3a46b881eee3721c836ba653f034342ad2d227f6b6c4a43e75163cfbc6ae8
@@ -9709,7 +9709,7 @@ synthetic syn-4 4 2000 elf,orc auto calm
 syn-4 table civilization c48d150d6a21de386cfebb7d5d88de47daa5be991b577d11f6829a311cfc615c
 syn-4 table event ef90ec52ac44bbbc0ba61a384b34136067cb021f1ea6d4d145e94c3ba78e9afd
 syn-4 table event_cause b0eef73a11df97d8c04bd86d544fc9b7492f187894c48074541d96fcd2ced2d2
-syn-4 table event_kind 58b8cb7b5b5121612b331cd052c06a2bdfc4e23ba2f1956e14bc85aa432f8776
+syn-4 table event_kind 5bb33c7be421113e5b2507e775557dd7afe51c39ad7d9a5426e6f8e94e4b2f18
 syn-4 table event_kind_role 828c060dc0d262d618363e1eb4194754223827013ae83efa04ea2944f3b5731b
 syn-4 table event_kind_value ea3bdaba66965ca348093390b78ac4b2e92807052c93c9bb59822b0c53c0771e
 syn-4 table event_participant e1b4bb28faf137aa751b4346b442b5ed6e1cd23b4cc6db84e6de200c92efc240
@@ -9903,7 +9903,7 @@ synthetic syn-5 5 6000 elf,orc auto turbulent
 syn-5 table civilization 4cc30a274b8be001ac8e1de14b81e23d880c33275917fbf82f7ad16977af8e0e
 syn-5 table event d985c4c9c7ccdd7964556cfd12d1e4794d1c83a7d26865f45a6d8ad0da3b90ae
 syn-5 table event_cause c62dc8a07888f863ea56fde3655f7130f58df6fdc5fc28f99acdd5554270a850
-syn-5 table event_kind 58b8cb7b5b5121612b331cd052c06a2bdfc4e23ba2f1956e14bc85aa432f8776
+syn-5 table event_kind 5bb33c7be421113e5b2507e775557dd7afe51c39ad7d9a5426e6f8e94e4b2f18
 syn-5 table event_kind_role 828c060dc0d262d618363e1eb4194754223827013ae83efa04ea2944f3b5731b
 syn-5 table event_kind_value ea3bdaba66965ca348093390b78ac4b2e92807052c93c9bb59822b0c53c0771e
 syn-5 table event_participant 13028962e8c172bf403085d64651ead1b3917de88ec153d8854d4e12425a9fac
@@ -10253,7 +10253,7 @@ synthetic syn-6 6 2000 dwarf,faerie auto normal
 syn-6 table civilization d4de5e60286daaba94cd5e1a94bd39e5d98d66af17e3cbebe6147134c139e10a
 syn-6 table event 7db1243ce10dbce13264715b737cca007086ae91cf3050e4bf42d490a81597a3
 syn-6 table event_cause 5f9c88af44f8d31f2a0cea12f1b20fffa69582fc0ec786cd89ae723bfac73a44
-syn-6 table event_kind 58b8cb7b5b5121612b331cd052c06a2bdfc4e23ba2f1956e14bc85aa432f8776
+syn-6 table event_kind 5bb33c7be421113e5b2507e775557dd7afe51c39ad7d9a5426e6f8e94e4b2f18
 syn-6 table event_kind_role 828c060dc0d262d618363e1eb4194754223827013ae83efa04ea2944f3b5731b
 syn-6 table event_kind_value ea3bdaba66965ca348093390b78ac4b2e92807052c93c9bb59822b0c53c0771e
 syn-6 table event_participant 093083f4201692e7b117439c70eed24aa0df319818d47b116c0330e980e5cf19
@@ -10453,7 +10453,7 @@ synthetic syn-7 7 6000 dwarf,faerie auto calm
 syn-7 table civilization 149375d505cb65f16f72b440fe3beec828a0e9c1a541afec7d3d934b79f85e01
 syn-7 table event db598fe4e74c70ddb58255e09f68aa7c2628da9e01cd0262312e3686f5901892
 syn-7 table event_cause 9e23d0b9952a33c0c9d9677fde86ba73de9ae59931d63948c77408ea7ef93761
-syn-7 table event_kind 58b8cb7b5b5121612b331cd052c06a2bdfc4e23ba2f1956e14bc85aa432f8776
+syn-7 table event_kind 5bb33c7be421113e5b2507e775557dd7afe51c39ad7d9a5426e6f8e94e4b2f18
 syn-7 table event_kind_role 828c060dc0d262d618363e1eb4194754223827013ae83efa04ea2944f3b5731b
 syn-7 table event_kind_value ea3bdaba66965ca348093390b78ac4b2e92807052c93c9bb59822b0c53c0771e
 syn-7 table event_participant 106d5e368d5645a4d02ef2f0bf82af4488caf11517a9b199a477fdbb14896982
@@ -10791,12 +10791,12 @@ syn-7 e11 Ouwheefy awakened the Faeries in Synthetic 11.
 syn-7 e12 The Faeries founded the Shiep Court in Synthetic 11.
 syn-7 e13 The Shiep Court founded Waemyth Glade in Synthetic 11.
 syn-7 e14 The Shiep Court sent settlers from Waemyth Glade to found Weesheeti Hollow in Synthetic 11.
-syn-7 e15 Plague broke out in Borkhird and spread to one other settlement; 419 died.
+syn-7 e15 Plague broke out in Borkhird and spread to one other settlement; 419 died in all.
 syn-7 e16 The plague spread to Murnmaird Hold; 38 died.
 syn-7 e17 For 1,324 years, from 4376 to 5699, the land was quiet, and 2 realms kept the peace.
 syn-7 e18 Famine struck Weesheeti Hollow; 7 died.
 syn-7 e19 Famine struck Thourdbrir Hold; 211 died.
-syn-7 e20 Plague broke out in Thidindair Deep and spread to one other settlement; 430 died.
+syn-7 e20 Plague broke out in Thidindair Deep and spread to one other settlement; 430 died in all.
 syn-7 e21 The plague spread to Borkhird; 210 died.
 syn-7 e22 Plague broke out in Tunkhou; 149 died.
 syn-7 e23 Famine struck Ganthadin; 51 died.
@@ -10804,7 +10804,7 @@ synthetic syn-8 8 2000 all 4 turbulent
 syn-8 table civilization 3f310e816446c66601862ae548ccf3e62da290d18e95cf15e957ecc3fe639a22
 syn-8 table event d21a79d20d469a81730f905eb5ea78f6d7daadf163ecdc3b4a26d3c0c2596111
 syn-8 table event_cause dad383fc9b08118b7cf02e1d22542570c35cb5d227353b5c1f2f1cde2959f2a5
-syn-8 table event_kind 58b8cb7b5b5121612b331cd052c06a2bdfc4e23ba2f1956e14bc85aa432f8776
+syn-8 table event_kind 5bb33c7be421113e5b2507e775557dd7afe51c39ad7d9a5426e6f8e94e4b2f18
 syn-8 table event_kind_role 828c060dc0d262d618363e1eb4194754223827013ae83efa04ea2944f3b5731b
 syn-8 table event_kind_value ea3bdaba66965ca348093390b78ac4b2e92807052c93c9bb59822b0c53c0771e
 syn-8 table event_participant 1d9384eaed7d202f73822d610b81eae8a32b860dd20ef3f8947977e12ebb1d6d
@@ -11075,7 +11075,7 @@ syn-8 e80 The Realm of Gliethil and the Zux Mob made peace after 24 years of war
 syn-8 e81 Plague broke out in Drat Pit; 71 died.
 syn-8 e82 Famine struck Drusnark Pit; 85 died.
 syn-8 e83 The Realm of Gliethil sent settlers from Fierelodell to found Ithaengliedell in Synthetic 3.
-syn-8 e84 Plague broke out in Nuzonk Pit and spread to one other settlement; 340 died.
+syn-8 e84 Plague broke out in Nuzonk Pit and spread to one other settlement; 340 died in all.
 syn-8 e85 The plague spread to Dreegink Pit; 70 died.
 syn-8 e86 The Kriskruzz Horde sent settlers from Sleeg Pit to found Kax Hole in Synthetic 1.
 syn-8 e87 For 50 years, from 1457 to 1506, the land was quiet, and 5 realms kept the peace.
@@ -11104,7 +11104,7 @@ syn-8 e109 Famine struck Drix Pit; 103 died.
 syn-8 e110 The Zux Mob laid claim to Synthetic 6, held by Clan Hairdgrork.
 syn-8 e111 The Kriskruzz Horde laid claim to Synthetic 1, held by the Duchy of Brus.
 syn-8 e112 Plague broke out in Fierelodell; 143 died.
-syn-8 e113 Plague broke out in Skrikkuk and spread to one other settlement; 221 died.
+syn-8 e113 Plague broke out in Skrikkuk and spread to one other settlement; 221 died in all.
 syn-8 e114 The plague spread to Drat Pit; 37 died.
 syn-8 e115 Famine struck Drix Pit; 65 died.
 syn-8 e116 For 130 years, from 1712 to 1841, the land was quiet, and 6 realms kept the peace.
@@ -11164,7 +11164,7 @@ synthetic syn-9 9 6000 all 4 normal
 syn-9 table civilization b66dbda94f384dd8472a45b1bc2d85cd3ec056562691a46360dc11f9cde1c395
 syn-9 table event f40ef6eb215489f06b698697bdf7188aa20af305de8220a13e074fe050f42254
 syn-9 table event_cause 5d448f546e34fc11b799cd59374286ddafcd45a86169bc8e3c89b59f2de24305
-syn-9 table event_kind 58b8cb7b5b5121612b331cd052c06a2bdfc4e23ba2f1956e14bc85aa432f8776
+syn-9 table event_kind 5bb33c7be421113e5b2507e775557dd7afe51c39ad7d9a5426e6f8e94e4b2f18
 syn-9 table event_kind_role 828c060dc0d262d618363e1eb4194754223827013ae83efa04ea2944f3b5731b
 syn-9 table event_kind_value ea3bdaba66965ca348093390b78ac4b2e92807052c93c9bb59822b0c53c0771e
 syn-9 table event_participant fbdb66516ebc0fbdfecdd881ac116e8bb6c3d9e97442e554e6b56889bb510fdd
@@ -11554,7 +11554,7 @@ syn-9 e76 A succession crisis at Rontwick shook the Asheam League.
 syn-9 e77 A succession crisis at Geeg shook the Dreek-Drox Mob.
 syn-9 e78 A succession crisis at Rontwick shook the Asheam League.
 syn-9 e79 Famine struck Kourn Hold; 134 died.
-syn-9 e80 Plague broke out in Kourn Hold and spread to one other settlement; 81 died.
+syn-9 e80 Plague broke out in Kourn Hold and spread to one other settlement; 81 died in all.
 syn-9 e81 The plague spread to Dangrod Deep; 17 died.
 syn-9 e82 Famine struck Ciendae; 25 died.
 syn-9 e83 A succession crisis at Kam shook the Kogh'krakh Horde.
@@ -11570,7 +11570,7 @@ synthetic syn-10 10 2000 elf,goblin 4 calm
 syn-10 table civilization 5513ae2a1c1775694861c2ccff131f35ff01ef80a6f6e624e922344f7c3533f6
 syn-10 table event db4858420191e097cfe866d376dec1172308e94179f83c1c6919e31e35772d6e
 syn-10 table event_cause 807af3a8d07ed1e7a3f2707c8032bec4c97d2ecf98beca9a08e3a5e847e198cd
-syn-10 table event_kind 58b8cb7b5b5121612b331cd052c06a2bdfc4e23ba2f1956e14bc85aa432f8776
+syn-10 table event_kind 5bb33c7be421113e5b2507e775557dd7afe51c39ad7d9a5426e6f8e94e4b2f18
 syn-10 table event_kind_role 828c060dc0d262d618363e1eb4194754223827013ae83efa04ea2944f3b5731b
 syn-10 table event_kind_value ea3bdaba66965ca348093390b78ac4b2e92807052c93c9bb59822b0c53c0771e
 syn-10 table event_participant db3a45a3688c3f2e01e8d32beed0df8a07bbdb5925f4b45bf74f1a362c4483a2
@@ -11802,7 +11802,7 @@ synthetic syn-11 11 6000 elf,goblin 4 turbulent
 syn-11 table civilization acdd47356f1cd91aab537dc78bbe5d81d16c160649bc175908967996828d4db5
 syn-11 table event 87d3192c89898cd17da9b159f272915aeb09bf6dbbd2876493e2bf2913c075e5
 syn-11 table event_cause cb7edfe249642956eabbf1cc31cf522fb94c842fd930d832ab151c7046b00002
-syn-11 table event_kind 58b8cb7b5b5121612b331cd052c06a2bdfc4e23ba2f1956e14bc85aa432f8776
+syn-11 table event_kind 5bb33c7be421113e5b2507e775557dd7afe51c39ad7d9a5426e6f8e94e4b2f18
 syn-11 table event_kind_role 828c060dc0d262d618363e1eb4194754223827013ae83efa04ea2944f3b5731b
 syn-11 table event_kind_value ea3bdaba66965ca348093390b78ac4b2e92807052c93c9bb59822b0c53c0771e
 syn-11 table event_participant 56057794d4767b516fe37c10f6858c1674508b89f208616de86ae2a4772aa126
@@ -12164,7 +12164,7 @@ syn-11 e32 Plague broke out in Skog-Skeerk Hole; 421 died.
 syn-11 e33 The Grurk Mob defeated the Realm of Liesas in Synthetic 6; 61 of the defeated and 19 of the victors fell.
 syn-11 e34 The Realm of Liesas sued the Grurk Mob for peace after 10 years of war.
 syn-11 e35 The Realm of Liesas paid tribute to the Grurk Mob; 148 were carried off.
-syn-11 e36 Plague broke out in Skog-Skeerk Hole and spread to one other settlement; 407 died.
+syn-11 e36 Plague broke out in Skog-Skeerk Hole and spread to one other settlement; 407 died in all.
 syn-11 e37 The plague spread to Zonk Hole; 155 died.
 syn-11 e38 A succession crisis at Skog-Skeerk Hole shook the Grurk Mob.
 syn-11 e39 Slatch Pit grew into a village of 317.
@@ -12199,7 +12199,7 @@ syn-11 e67 Plague broke out in Aesrae; 209 died.
 syn-11 e68 For 1,255 years, from 4445 to 5699, the land was quiet, and 2 realms kept the peace.
 syn-11 e69 Famine struck Zaz-Gigg Hole; 66 died.
 syn-11 e70 Famine struck Sitholie; 33 died.
-syn-11 e71 Plague broke out in Skog-Skeerk Hole and spread to one other settlement; 284 died.
+syn-11 e71 Plague broke out in Skog-Skeerk Hole and spread to one other settlement; 284 died in all.
 syn-11 e72 The plague spread to Zonk Hole; 37 died.
 syn-11 e73 Famine struck Gub Pit; 98 died.
 syn-11 e74 A succession crisis at Skog-Skeerk Hole shook the Grurk Mob.
@@ -12221,7 +12221,7 @@ synthetic syn-12 12 2000 elf,orc 4 normal
 syn-12 table civilization fbe7e388685a9f74430cefccc7df98548a75f4780f241793d5eead288894f7c2
 syn-12 table event 3e17dd77093cb069e04a1cad0b022ff1b1f8a5e7b94625edab7cf81cb7814063
 syn-12 table event_cause 6f904257afe9adbf3c2f43c71e9cf3cd142daa8b6965800365b9c84a66475f18
-syn-12 table event_kind 58b8cb7b5b5121612b331cd052c06a2bdfc4e23ba2f1956e14bc85aa432f8776
+syn-12 table event_kind 5bb33c7be421113e5b2507e775557dd7afe51c39ad7d9a5426e6f8e94e4b2f18
 syn-12 table event_kind_role 828c060dc0d262d618363e1eb4194754223827013ae83efa04ea2944f3b5731b
 syn-12 table event_kind_value ea3bdaba66965ca348093390b78ac4b2e92807052c93c9bb59822b0c53c0771e
 syn-12 table event_participant 5d74564058f2b34f45cead5af5fdfbf55f6d29deec2119017f82d581d9eb30a4
@@ -12423,7 +12423,7 @@ synthetic syn-13 13 6000 elf,orc 4 calm
 syn-13 table civilization 885a17e0bee21ded1a38add9ddb8593b33cd76759665d6566607cf110205ad97
 syn-13 table event eb97e25331b6fc6697509b7f6a29a5d58c0ffae5d1ff0fe2d0c5a217a9cf10ea
 syn-13 table event_cause 278bd9b3e4ac4f1781c8c9271222deb6f0c917f53801fcfcf44e8e68d4329be2
-syn-13 table event_kind 58b8cb7b5b5121612b331cd052c06a2bdfc4e23ba2f1956e14bc85aa432f8776
+syn-13 table event_kind 5bb33c7be421113e5b2507e775557dd7afe51c39ad7d9a5426e6f8e94e4b2f18
 syn-13 table event_kind_role 828c060dc0d262d618363e1eb4194754223827013ae83efa04ea2944f3b5731b
 syn-13 table event_kind_value ea3bdaba66965ca348093390b78ac4b2e92807052c93c9bb59822b0c53c0771e
 syn-13 table event_participant b9e286620bd7c64a365a294cb72a5f0f051b2b80d55c1c54d55b7bad2d054fe0
@@ -12830,7 +12830,7 @@ synthetic syn-14 14 2000 dwarf,faerie 4 turbulent
 syn-14 table civilization 88d016e1ea6c853e1de12b5bd4692a5aedf4a25e64a469866991ba73f9598ab7
 syn-14 table event 718aa92871404e0537108b5336db1b12bc5be4389106c819afb91620a21bafc4
 syn-14 table event_cause 32cbf5c7b05f9a293f6eff84b7c2395dd112b127cc503f05bf479bbafdf2a775
-syn-14 table event_kind 58b8cb7b5b5121612b331cd052c06a2bdfc4e23ba2f1956e14bc85aa432f8776
+syn-14 table event_kind 5bb33c7be421113e5b2507e775557dd7afe51c39ad7d9a5426e6f8e94e4b2f18
 syn-14 table event_kind_role 828c060dc0d262d618363e1eb4194754223827013ae83efa04ea2944f3b5731b
 syn-14 table event_kind_value ea3bdaba66965ca348093390b78ac4b2e92807052c93c9bb59822b0c53c0771e
 syn-14 table event_participant 50f0c9fab1fbc7bf1a380e9ede26747f267c94115bb573ec1a97ea6d9b576cf9
@@ -13060,7 +13060,7 @@ synthetic syn-15 15 6000 dwarf,faerie 4 normal
 syn-15 table civilization c12e5878a5bee1191f36d2fc15ae21852cbed80d38fba569f930bf60eb7b762a
 syn-15 table event 9f6da5e6161679de554f065ec6c7c776689f1ed91a2e2cf7071c54123e938dd2
 syn-15 table event_cause a52fc9bc28c3d21e3f6f2da09a5f80a1bd4f0d006c6a1f726186b1f3d83b25b0
-syn-15 table event_kind 58b8cb7b5b5121612b331cd052c06a2bdfc4e23ba2f1956e14bc85aa432f8776
+syn-15 table event_kind 5bb33c7be421113e5b2507e775557dd7afe51c39ad7d9a5426e6f8e94e4b2f18
 syn-15 table event_kind_role 828c060dc0d262d618363e1eb4194754223827013ae83efa04ea2944f3b5731b
 syn-15 table event_kind_value ea3bdaba66965ca348093390b78ac4b2e92807052c93c9bb59822b0c53c0771e
 syn-15 table event_participant b9627145aa8b96bc7ea6f487ea6513d51ddb0baf18bea77ef78f6857c40e9b5a
@@ -13400,7 +13400,7 @@ stress stress-0 0 2000 all auto normal
 stress-0 table civilization bd65e76539a6e7c31cf7d8d88d82aa15131d34e48f1c3fa2cf369c0f46fa8919
 stress-0 table event bf6cb80a4a89d2ce4074b75483a8749129e56107fbe51b1bba2a81e2e4848e5c
 stress-0 table event_cause a270e8fff0599bab48f86ac18aaef4af4a3b8ab3d16858578ed6fa861bfb8e0c
-stress-0 table event_kind 58b8cb7b5b5121612b331cd052c06a2bdfc4e23ba2f1956e14bc85aa432f8776
+stress-0 table event_kind 5bb33c7be421113e5b2507e775557dd7afe51c39ad7d9a5426e6f8e94e4b2f18
 stress-0 table event_kind_role 828c060dc0d262d618363e1eb4194754223827013ae83efa04ea2944f3b5731b
 stress-0 table event_kind_value ea3bdaba66965ca348093390b78ac4b2e92807052c93c9bb59822b0c53c0771e
 stress-0 table event_participant f103b3467464f3fff5cb1c42dcd3a047242f76b2de2095e8dfe012e380fdaec0
@@ -13584,7 +13584,7 @@ stress stress-1 1 6000 all auto turbulent
 stress-1 table civilization 0ebf14d06c130827a1d826125e8735ab7cfb78181425f45b7f3670a91431af8c
 stress-1 table event 10b9e769340ef120ea0ae0be8a0860271b0a1ca745a4741a34755409d1c220b0
 stress-1 table event_cause f58fc37b51ace12c8c177393af88bd1671de9692b0bf1c20d17aeeea834b484b
-stress-1 table event_kind 58b8cb7b5b5121612b331cd052c06a2bdfc4e23ba2f1956e14bc85aa432f8776
+stress-1 table event_kind 5bb33c7be421113e5b2507e775557dd7afe51c39ad7d9a5426e6f8e94e4b2f18
 stress-1 table event_kind_role 828c060dc0d262d618363e1eb4194754223827013ae83efa04ea2944f3b5731b
 stress-1 table event_kind_value ea3bdaba66965ca348093390b78ac4b2e92807052c93c9bb59822b0c53c0771e
 stress-1 table event_participant c4a066d6e1ca9cabffc8128b3889fc143486dcfc350dfc54522b4585a3976f8c
@@ -13898,7 +13898,7 @@ stress stress-2 2 2000 elf,goblin auto calm
 stress-2 table civilization 973af983e749bb91c41fd80798d7ad7ad1b0a1d49e770b94e29a0511693b65d0
 stress-2 table event 83cb29f73e44599dfd2be64de4aa496e0c64e60b0eee21a007af4140643f2943
 stress-2 table event_cause c1d70be42490bd8126625cae3f13e98a414138dbd186b409c4383168749e5af7
-stress-2 table event_kind 58b8cb7b5b5121612b331cd052c06a2bdfc4e23ba2f1956e14bc85aa432f8776
+stress-2 table event_kind 5bb33c7be421113e5b2507e775557dd7afe51c39ad7d9a5426e6f8e94e4b2f18
 stress-2 table event_kind_role 828c060dc0d262d618363e1eb4194754223827013ae83efa04ea2944f3b5731b
 stress-2 table event_kind_value ea3bdaba66965ca348093390b78ac4b2e92807052c93c9bb59822b0c53c0771e
 stress-2 table event_participant 57df7dee94b8e6b9b41ea14109732cfb2b8f47d10fb239255968e8f5c785b739
@@ -14087,7 +14087,7 @@ stress stress-3 3 6000 elf,goblin auto normal
 stress-3 table civilization 1832707b53b84989aff23a42e1f7c79ae04600ad9db62c007151ebc40aa774cd
 stress-3 table event a75b4aeb251646b380134dbf1f33b8d9e12dc7ea1c9a789277bdbd98f710cdd2
 stress-3 table event_cause 93c9d3b1d1168008662d42405b4eb46674b5a7416d1cbfc3c6b7798f2b70990d
-stress-3 table event_kind 58b8cb7b5b5121612b331cd052c06a2bdfc4e23ba2f1956e14bc85aa432f8776
+stress-3 table event_kind 5bb33c7be421113e5b2507e775557dd7afe51c39ad7d9a5426e6f8e94e4b2f18
 stress-3 table event_kind_role 828c060dc0d262d618363e1eb4194754223827013ae83efa04ea2944f3b5731b
 stress-3 table event_kind_value ea3bdaba66965ca348093390b78ac4b2e92807052c93c9bb59822b0c53c0771e
 stress-3 table event_participant c02baac65d0c68a839adb38dc0094bb52ce02fc93e24526ad545e10a734a53ea
@@ -14414,7 +14414,7 @@ stress stress-4 4 2000 goblin,human,orc 4 turbulent
 stress-4 table civilization 7d3b1a8f8c1f6989e5f4a8e5450681e44d1b029cf4060b3dd0d590cd667c3779
 stress-4 table event a0916f6bc9af3c59f68e9273e28e27dabcc3c97fe552f3d284c4fe6a0c00d907
 stress-4 table event_cause a1f5e60f3d733cea4407850b7af70c7bae7ceee3c4ecaeeca34ea0fafd083927
-stress-4 table event_kind 58b8cb7b5b5121612b331cd052c06a2bdfc4e23ba2f1956e14bc85aa432f8776
+stress-4 table event_kind 5bb33c7be421113e5b2507e775557dd7afe51c39ad7d9a5426e6f8e94e4b2f18
 stress-4 table event_kind_role 828c060dc0d262d618363e1eb4194754223827013ae83efa04ea2944f3b5731b
 stress-4 table event_kind_value ea3bdaba66965ca348093390b78ac4b2e92807052c93c9bb59822b0c53c0771e
 stress-4 table event_participant cc525d280954776bfd631cb40b326c8c59f12dce7fa141fbe40ca48ba2249f01
@@ -14599,7 +14599,7 @@ stress stress-5 5 6000 goblin,human,orc 4 calm
 stress-5 table civilization 4f6d1e868d988a48663786d02a9efb2cee0947b801b288dd2261d966426e310e
 stress-5 table event d19105ed181e40bdea9d0fb54378bce56f2adbc724afda5465c181a0fa65c21e
 stress-5 table event_cause de9c5695300bb21c7d325dafd77b8d627d9f12cab6fe0336c8ec090efe8d4d82
-stress-5 table event_kind 58b8cb7b5b5121612b331cd052c06a2bdfc4e23ba2f1956e14bc85aa432f8776
+stress-5 table event_kind 5bb33c7be421113e5b2507e775557dd7afe51c39ad7d9a5426e6f8e94e4b2f18
 stress-5 table event_kind_role 828c060dc0d262d618363e1eb4194754223827013ae83efa04ea2944f3b5731b
 stress-5 table event_kind_value ea3bdaba66965ca348093390b78ac4b2e92807052c93c9bb59822b0c53c0771e
 stress-5 table event_participant 7f19a33cd60189edf408c61392da541d9593939ff6a0a857cc27893ef8f42792
@@ -14951,7 +14951,7 @@ stress stress-6 6 2000 all 4 normal
 stress-6 table civilization 21b6c6207446e0b52b203af5c642c02cd13de3c6ec98ce2cbe00227598ab9828
 stress-6 table event ac00f01e1157c003c7d20f0810f8c3c0880e04aa3f74e054ff22cd3837ac733d
 stress-6 table event_cause 3afd32d08d74e6e53d818dec3616e213cd3395c0df6867fb1ba1ee9930fdfc89
-stress-6 table event_kind 58b8cb7b5b5121612b331cd052c06a2bdfc4e23ba2f1956e14bc85aa432f8776
+stress-6 table event_kind 5bb33c7be421113e5b2507e775557dd7afe51c39ad7d9a5426e6f8e94e4b2f18
 stress-6 table event_kind_role 828c060dc0d262d618363e1eb4194754223827013ae83efa04ea2944f3b5731b
 stress-6 table event_kind_value ea3bdaba66965ca348093390b78ac4b2e92807052c93c9bb59822b0c53c0771e
 stress-6 table event_participant 945905ac38cb588121efc308d9cd5776b0693c76695505491904eccc1eeb60fe
@@ -15180,7 +15180,7 @@ stress stress-7 7 6000 all 4 turbulent
 stress-7 table civilization f94eadeca22e702a1c8671659899c1be7718ced00cccf129f92109e85cf5bef0
 stress-7 table event 39f6027e2787f511194ed784c33e255a3b693d9710494989c6ccbda8bd9e1e32
 stress-7 table event_cause 8402da7a0cb972bec3ad5032832ac442528a159ee6516b836761d80f8b438c83
-stress-7 table event_kind 58b8cb7b5b5121612b331cd052c06a2bdfc4e23ba2f1956e14bc85aa432f8776
+stress-7 table event_kind 5bb33c7be421113e5b2507e775557dd7afe51c39ad7d9a5426e6f8e94e4b2f18
 stress-7 table event_kind_role 828c060dc0d262d618363e1eb4194754223827013ae83efa04ea2944f3b5731b
 stress-7 table event_kind_value ea3bdaba66965ca348093390b78ac4b2e92807052c93c9bb59822b0c53c0771e
 stress-7 table event_participant 0d28d44ee9eecadfe7dc2169eb78643feccbe4d8627ba4f0943af305b0993f26
@@ -15564,7 +15564,7 @@ stress stress-9 9 6000 all auto normal
 stress-9 table civilization 80e796b646a834d8c6d1e11e1e0449706f4d6fcdcc4db74c4c7a1db23b9ad1e6
 stress-9 table event cb0c18f65f13d5216617981fbff97d4f6e5a0f32397066a7905eeb3ba0b8522b
 stress-9 table event_cause befafef6566579ec984e6ee3b62946dc7ae710018853488fde156b2cfacb228b
-stress-9 table event_kind 58b8cb7b5b5121612b331cd052c06a2bdfc4e23ba2f1956e14bc85aa432f8776
+stress-9 table event_kind 5bb33c7be421113e5b2507e775557dd7afe51c39ad7d9a5426e6f8e94e4b2f18
 stress-9 table event_kind_role 828c060dc0d262d618363e1eb4194754223827013ae83efa04ea2944f3b5731b
 stress-9 table event_kind_value ea3bdaba66965ca348093390b78ac4b2e92807052c93c9bb59822b0c53c0771e
 stress-9 table event_participant 5c194666bccabc24517322cb2ec72deacae9531b231c04af3ec927e2b8a91b6a
@@ -15878,7 +15878,7 @@ stress stress-12 12 2000 goblin,human,orc 4 normal
 stress-12 table civilization a724902227a07d46255f76e760d632c25e55a4a1e4e251c500011cddb9501b53
 stress-12 table event 6e4b45fb43f2525831f8e9ba43e243846a02c5a7ec4700baa77a528c3c79b92f
 stress-12 table event_cause a44470032bd05d67f24d239006bc797838a6e0fb723086707ba21d8136fc8370
-stress-12 table event_kind 58b8cb7b5b5121612b331cd052c06a2bdfc4e23ba2f1956e14bc85aa432f8776
+stress-12 table event_kind 5bb33c7be421113e5b2507e775557dd7afe51c39ad7d9a5426e6f8e94e4b2f18
 stress-12 table event_kind_role 828c060dc0d262d618363e1eb4194754223827013ae83efa04ea2944f3b5731b
 stress-12 table event_kind_value ea3bdaba66965ca348093390b78ac4b2e92807052c93c9bb59822b0c53c0771e
 stress-12 table event_participant 87f376f7415126ada12ef98e4b44b69739cb40a2965b0e27201f8b2db7437944
@@ -16081,7 +16081,7 @@ stress stress-13 13 6000 goblin,human,orc 4 turbulent
 stress-13 table civilization d2beaf905298323cc576a895bb382c6b6478f9c6633527f2c03a53728a644ab6
 stress-13 table event 1cd8367b709352683de4c5e692962655f14c0361fc16a7f700191991b035a8fc
 stress-13 table event_cause 983cbc1db3a7a0c5e0136e6df42c7142ef01eaab7ea5f8ea7f81e417af138103
-stress-13 table event_kind 58b8cb7b5b5121612b331cd052c06a2bdfc4e23ba2f1956e14bc85aa432f8776
+stress-13 table event_kind 5bb33c7be421113e5b2507e775557dd7afe51c39ad7d9a5426e6f8e94e4b2f18
 stress-13 table event_kind_role 828c060dc0d262d618363e1eb4194754223827013ae83efa04ea2944f3b5731b
 stress-13 table event_kind_value ea3bdaba66965ca348093390b78ac4b2e92807052c93c9bb59822b0c53c0771e
 stress-13 table event_participant f4c162571d4f12cb46852b1d47515ba2473cf87287b045ca7ebeec37e2517a22
@@ -16446,7 +16446,7 @@ stress stress-14 14 2000 all 4 calm
 stress-14 table civilization e073d6e98e6860bc35cc1d15f5a11a26a87a0dacb00807d82e9fcdefe230280b
 stress-14 table event 027f5e66f6217252454a55182a70589b333634c0fcceeb13b7f7394ccfb6dc23
 stress-14 table event_cause 43bb414363f8645dc8026082d9482bda77e9340e2c0cb552a60cd85404e0c960
-stress-14 table event_kind 58b8cb7b5b5121612b331cd052c06a2bdfc4e23ba2f1956e14bc85aa432f8776
+stress-14 table event_kind 5bb33c7be421113e5b2507e775557dd7afe51c39ad7d9a5426e6f8e94e4b2f18
 stress-14 table event_kind_role 828c060dc0d262d618363e1eb4194754223827013ae83efa04ea2944f3b5731b
 stress-14 table event_kind_value ea3bdaba66965ca348093390b78ac4b2e92807052c93c9bb59822b0c53c0771e
 stress-14 table event_participant 3b29a23d593b497003ab2aa292f88b0c4a450af508270d090c201cbf2581a37f
@@ -16668,7 +16668,7 @@ norefuge norefuge-5 5 6000 goblin,human,orc 4 calm
 norefuge-5 table civilization 6e6e4558586ad08f9cbd5fd09cdba0117474a93337a98c21748eabf12853b5cc
 norefuge-5 table event 6bb3497e465f6d027d32ae4e1abdff6593377142f96d14f4d7fa9f64a615c149
 norefuge-5 table event_cause 128afe0c981ae67ef7828b0fb29bd7f7408ffd46f8df92b0aa0843d151b53c80
-norefuge-5 table event_kind 58b8cb7b5b5121612b331cd052c06a2bdfc4e23ba2f1956e14bc85aa432f8776
+norefuge-5 table event_kind 5bb33c7be421113e5b2507e775557dd7afe51c39ad7d9a5426e6f8e94e4b2f18
 norefuge-5 table event_kind_role 828c060dc0d262d618363e1eb4194754223827013ae83efa04ea2944f3b5731b
 norefuge-5 table event_kind_value ea3bdaba66965ca348093390b78ac4b2e92807052c93c9bb59822b0c53c0771e
 norefuge-5 table event_participant d771657e8fd52de7c2d073d1c3df5b457acfacd32ca3ae51dbd4285284b1b380
@@ -17000,7 +17000,7 @@ norefuge norefuge-12 12 2000 goblin,human,orc 4 normal
 norefuge-12 table civilization b5116121dbbbf083cb80818765fb0590d266806282224f8f321b11ad72cd5937
 norefuge-12 table event 2e183d2da2cea14e86bdc58a5a6da8f53fdfceb7d91ab3cebf692e32d64ddca8
 norefuge-12 table event_cause b3f37db69bf42e0ea864c35ac3e615f4a31853dd0ddb7f14fa44a2ab86ec485f
-norefuge-12 table event_kind 58b8cb7b5b5121612b331cd052c06a2bdfc4e23ba2f1956e14bc85aa432f8776
+norefuge-12 table event_kind 5bb33c7be421113e5b2507e775557dd7afe51c39ad7d9a5426e6f8e94e4b2f18
 norefuge-12 table event_kind_role 828c060dc0d262d618363e1eb4194754223827013ae83efa04ea2944f3b5731b
 norefuge-12 table event_kind_value ea3bdaba66965ca348093390b78ac4b2e92807052c93c9bb59822b0c53c0771e
 norefuge-12 table event_participant da110c8284b123e3cc3569d00272055e14f62bfd2e5c0ce4e79e346ceb6484a1
@@ -17201,7 +17201,7 @@ norefuge norefuge-13 13 6000 goblin,human,orc 4 turbulent
 norefuge-13 table civilization d34cd04efafd288bf753255bc230921f1f612ec57d402fc4433fcbb2622afd15
 norefuge-13 table event 11558f08014469a7309122fbe729d7eeeccbf9e4d9c831dd08977da28cee3fef
 norefuge-13 table event_cause 7a6fd8ceb3542056ef3518e4119a17f3ce3dd2ac4a3b39e726381feed72862b5
-norefuge-13 table event_kind 58b8cb7b5b5121612b331cd052c06a2bdfc4e23ba2f1956e14bc85aa432f8776
+norefuge-13 table event_kind 5bb33c7be421113e5b2507e775557dd7afe51c39ad7d9a5426e6f8e94e4b2f18
 norefuge-13 table event_kind_role 828c060dc0d262d618363e1eb4194754223827013ae83efa04ea2944f3b5731b
 norefuge-13 table event_kind_value ea3bdaba66965ca348093390b78ac4b2e92807052c93c9bb59822b0c53c0771e
 norefuge-13 table event_participant 640c4e6844a51ebc7de8198bdec7136f49014c8cdbec6b3646a7737860f143bf

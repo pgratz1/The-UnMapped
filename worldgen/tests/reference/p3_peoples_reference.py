@@ -213,9 +213,8 @@ SPEC_GAPS = (
     ("15.4 regions_held_<race>", "Counted from the open region_control rows (to_year NULL) by the race of their "
                                  "civ."),
     # P3-10 (generator 0.19.0): P3-05 r12 22 and P3-04 r12 20
-    ("P3-05 r12 22.1 template {reached?|| in all}", "Rendered as written: w1 is empty, so an outbreak that reached "
-        "one other settlement reads '... and spread to one other settlement; 900 died.' without 'in all' (the spec's "
-        "examples show 0 and 2 or more only; possibly a slip for '| in all| in all')."),
+    ("P3-05 r12 22.1 template (closed by r14)", "r12's {reached?|| in all} left 'in all' out at one spread; P3-05 r14 "
+        "22.1 (P3-10 10d item 4) ships {reached?| in all| in all}, served from 0.19.0."),
     ("P3-05 r12 22.2 'Y - year(r)'", "year(r) is the cited event's year (its start); Y the year of the event being "
         "written (in a quiet step its start). A difference of exactly cause_memory_years is cited (<=)."),
     ("P3-05 r12 22.2 item 4 (b)", "An abandonment by 9.2 (b) whose last reduction is older than the memory cites "
@@ -3348,8 +3347,8 @@ def check_units_r12(c):
     c.eq("22.8.1 sentence with two spreads", r6_sentence(w, o),
          "Plague broke out in Gork-Skreeg Hole and spread to 2 other settlements; 1,020 died in all.")
     w, o = outbreak([6000, 6000], names=["Raenme", "B"])
-    c.eq("22.8.1 sentence with one spread (w1 of {reached?|| in all} is empty)", r6_sentence(w, o),
-         "Plague broke out in Raenme and spread to one other settlement; 900 died.")
+    c.eq("22.8.1 sentence with one spread (P3-05 r14 22.1: 'in all' whenever another settlement was reached)",
+         r6_sentence(w, o), "Plague broke out in Raenme and spread to one other settlement; 900 died in all.")
     w, o = outbreak([1200], names=["Raenme"])
     e = w.events[o - 1]
     c.eq("22.8.1 no spread: reached 0, total 120, salience 25", (e["values"], e["salience"]),

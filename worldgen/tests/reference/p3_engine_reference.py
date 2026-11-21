@@ -1704,7 +1704,7 @@ TEMPLATE_CASES_R12 = (
                       "{realms?|; one realm held it|, and # realms kept the peace}."),
     ("quiet_stretch", "{realm:all} {realm}"),
     ("plague_outbreak", "Plague broke out in {settlement}{reached?| and spread to one other settlement| and spread "
-                        "to # other settlements}; {total} died{reached?|| in all}."),
+                        "to # other settlements}; {total} died{reached?| in all| in all}."),
 )
 
 
