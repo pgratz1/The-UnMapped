@@ -989,3 +989,21 @@ the name filter is read from git at d750d15 (`NAME_FILTERS_017_COMMIT` in
 `p3_data_reference.py`, `FILTER_COMMIT` in `p3_names_reference.py`), so the
 0.17.0 goldens stay reproducible after the data change. `p3_names_reference.py`
 takes `--version 0.17.0` too.
+
+### P3-09 fixes (P3-06 r13 20.27, 20.28; P3-07 r11 21.8 item 5; generator stays 0.18.0)
+
+Flag `cede_all` (conflict): a cession (7.7's and 20.3's) passes every
+settlement of the loser standing in the ceded region, a colony founded
+earlier in the same step included. Invariant (13) is checked from the rows by
+`cession_violations` (owners replayed from the log; the reading is in
+`gaps`), with `check_invariants_r9`. `wars_same_goal_unchanged_max` follows
+21.8 item 5's incremental form (`same_goal_unchanged_max`): wars closed by
+`civ_conquered` or `civ_ended` are skipped, the window ends at the latest end,
+and the first war after a change starts a run of 1. Hand-made units:
+`check_units_r13`. `check-world` on a world whose stored history differs from
+the reference still runs the row invariants and reports, rather than stops,
+when an in-run check does not apply. The golden file was rewritten by
+`golden --inputs $I`; the entries that changed are those of
+`hist-conflict-flight` (seed 1 at 512 holds a cession of a same-step
+colony, e354) and the `wars_same_goal_unchanged_max` line of `stress-5`,
+`-6`, `-7`, `-12`, `-13` and `norefuge-13`.

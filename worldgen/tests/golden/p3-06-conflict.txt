@@ -7394,19 +7394,19 @@ hist-conflict-civs4-512 e864 The Tourdbaim Throne sacked Bronbair of the Slig Mo
 hist-conflict-civs4-512 e865 The Slig Mob moved its seat to Geexdronk Pit.
 world hist-conflict-flight 1 512 6000 all normal auto normal
 hist-conflict-flight input_region 4a4539dfc7bb6b8a5d6bbd9403cfd4bb306e619b40f7c7d96b66f6f58f28db8c
-hist-conflict-flight table civilization bac13235c1924e99dec3e22469f2bdf2113c55df928b0377bd6476e1f78ae481
-hist-conflict-flight table event 367361a3cd8fb8c7dd9e791917852d4d1aac0ddd89152cd11e96cb7ae82b412e
-hist-conflict-flight table event_cause 373a10112baac8f184397d6c093e492c18af22f7c0d49d4eeba66fd04789efab
+hist-conflict-flight table civilization e1ed24c9d9625e2d61e24406881c595556469de2fe602d5c00677b2186d03f26
+hist-conflict-flight table event bd566794f75b23983ff06c453201e2f5aedc9746487cab829d55268df6bdb486
+hist-conflict-flight table event_cause 6010c5e442b6786e94e766d3628270f0ac3c019e6880298fd97d9abfcb595bc0
 hist-conflict-flight table event_kind 597ed5b0fcd34fc10fd84f7e04e8c16df3ebec801046f2a1c6072df2c15034fc
 hist-conflict-flight table event_kind_role a72cdc51e6ddc171c3712eb1d7a8f5009cb4759a8561d2785712deadfe36e0fb
 hist-conflict-flight table event_kind_value 0ed4ada6d848301b2b0ed1ef17d4073d78b84697102d243ea2be48a25b672be3
-hist-conflict-flight table event_participant cef6e30eb24230a00a44127ee3008a5ef66f8cb1c79f8e4116158c467d0063fd
-hist-conflict-flight table event_value 10576b8a0b406b016d79bf4e6fd51545d3e2494136aa7f5546bd07a5dd071cd0
-hist-conflict-flight table phase 96045df8acc9d64e9538debcd108b9b92b7ecf5f049535518c6b85996113cac7
-hist-conflict-flight table region_control 3003ab558c9081ae94521a62abddd32bf458c7a7c7e5577e5daad140bb9f8655
-hist-conflict-flight table relation 4a45868263e8c4dadb1b71cd25d31bdd34b88d5450258c02b0d936c6b4a98942
-hist-conflict-flight table settlement 93879fe0d06bd915316094a5cbe403952ccdd00e341d3fb25611d2c1780edc1f
-hist-conflict-flight table settlement_census bca012d7028fb8b32f4c2cbdefda569faebbf03210aa3dd20e71aa9e0b73db27
+hist-conflict-flight table event_participant 2850080e1cdc77d3cfa62f4cbb2732b1a15da48a19cabe2a1637088a414e4eee
+hist-conflict-flight table event_value 959f92e00a9ea18cfa065a810d2dc593ae7497874ba9b245b038a06d649e7d3e
+hist-conflict-flight table phase 958599411ad4b351a9d68cc2c50b0e2c179d815cd29e94dedf9803d873b8941a
+hist-conflict-flight table region_control d0fea3f6a1a44595e169369d17232b353e503743093d4263d4ba232b0af573c6
+hist-conflict-flight table relation 1293f51efa2c25db2d62fb8e5770013271792d37473294b64cb74aab0e2a7ac3
+hist-conflict-flight table settlement 8350aa033b2a207fe0554a39920f05e69aa9c265ece4202b4cbddf82be63eef0
+hist-conflict-flight table settlement_census 587a98c0bde0cf0efc2c64fe44257c4e50238d9f2491e7944ee2f0bd05227709
 hist-conflict-flight report end_year = 6000
 hist-conflict-flight report phases_opening = 6
 hist-conflict-flight report phases_quiet = 13
@@ -7414,95 +7414,95 @@ hist-conflict-flight report phases_flare = 8
 hist-conflict-flight report phases_final = 1
 hist-conflict-flight report simulated_years = 1570
 hist-conflict-flight report simulated_permille = 261
-hist-conflict-flight report events = 589
+hist-conflict-flight report events = 642
 hist-conflict-flight report events_awakening = 6
 hist-conflict-flight report events_civ_founded = 7
 hist-conflict-flight report events_settlement_founded = 7
 hist-conflict-flight report events_quiet_era = 64
 hist-conflict-flight report events_flare_up = 8
 hist-conflict-flight report events_colony_founded = 47
-hist-conflict-flight report events_became_village = 4
-hist-conflict-flight report events_became_town = 32
+hist-conflict-flight report events_became_village = 7
+hist-conflict-flight report events_became_town = 35
 hist-conflict-flight report events_became_city = 0
-hist-conflict-flight report events_settlement_dwindled = 7
-hist-conflict-flight report events_famine = 44
+hist-conflict-flight report events_settlement_dwindled = 5
+hist-conflict-flight report events_famine = 36
 hist-conflict-flight report events_plague = 46
-hist-conflict-flight report events_plague_spread = 27
-hist-conflict-flight report events_succession_crisis = 17
+hist-conflict-flight report events_plague_spread = 25
+hist-conflict-flight report events_succession_crisis = 16
 hist-conflict-flight report events_civ_seceded = 1
 hist-conflict-flight report events_settlement_abandoned = 0
-hist-conflict-flight report events_capital_moved = 5
+hist-conflict-flight report events_capital_moved = 9
 hist-conflict-flight report events_civ_ended = 0
 hist-conflict-flight report events_ruin_faded = 2
-hist-conflict-flight report events_claim = 47
-hist-conflict-flight report events_war_declared = 23
-hist-conflict-flight report events_battle = 96
+hist-conflict-flight report events_claim = 49
+hist-conflict-flight report events_war_declared = 31
+hist-conflict-flight report events_battle = 118
 hist-conflict-flight report events_battle_at_pass = 0
-hist-conflict-flight report events_siege = 45
-hist-conflict-flight report events_sacked = 10
-hist-conflict-flight report events_settlement_captured = 4
-hist-conflict-flight report events_peace = 8
-hist-conflict-flight report events_truce = 10
-hist-conflict-flight report events_region_ceded = 4
-hist-conflict-flight report events_civ_conquered = 0
+hist-conflict-flight report events_siege = 54
+hist-conflict-flight report events_sacked = 15
+hist-conflict-flight report events_settlement_captured = 5
+hist-conflict-flight report events_peace = 13
+hist-conflict-flight report events_truce = 11
+hist-conflict-flight report events_region_ceded = 5
+hist-conflict-flight report events_civ_conquered = 1
 hist-conflict-flight report events_settlement_abandoned_to = 0
 hist-conflict-flight report events_refugees_settled = 1
-hist-conflict-flight report events_tribute = 3
+hist-conflict-flight report events_tribute = 5
 hist-conflict-flight report events_war_won = 5
 hist-conflict-flight report events_search_abandoned = 0
-hist-conflict-flight report events_refuge_held = 9
+hist-conflict-flight report events_refuge_held = 8
 hist-conflict-flight report civilizations = 8
-hist-conflict-flight report civilizations_alive = 8
+hist-conflict-flight report civilizations_alive = 7
 hist-conflict-flight report settlements = 55
-hist-conflict-flight report settlements_standing = 45
+hist-conflict-flight report settlements_standing = 40
 hist-conflict-flight report regions_held = 11
-hist-conflict-flight report census_rows = 980
-hist-conflict-flight report relations = 54
-hist-conflict-flight report population = 57482
-hist-conflict-flight report population_elf = 18094
-hist-conflict-flight report population_goblin = 29008
-hist-conflict-flight report population_dwarf = 5016
+hist-conflict-flight report census_rows = 941
+hist-conflict-flight report relations = 68
+hist-conflict-flight report population = 73845
+hist-conflict-flight report population_elf = 4131
+hist-conflict-flight report population_goblin = 34865
+hist-conflict-flight report population_dwarf = 4386
 hist-conflict-flight report population_faerie = 1295
-hist-conflict-flight report population_human = 3038
-hist-conflict-flight report population_orc = 1031
-hist-conflict-flight report settlements_standing_elf = 16
-hist-conflict-flight report settlements_standing_goblin = 16
+hist-conflict-flight report population_human = 2485
+hist-conflict-flight report population_orc = 26683
+hist-conflict-flight report settlements_standing_elf = 4
+hist-conflict-flight report settlements_standing_goblin = 18
 hist-conflict-flight report settlements_standing_dwarf = 4
 hist-conflict-flight report settlements_standing_faerie = 4
-hist-conflict-flight report settlements_standing_human = 4
-hist-conflict-flight report settlements_standing_orc = 1
-hist-conflict-flight report regions_held_elf = 4
+hist-conflict-flight report settlements_standing_human = 3
+hist-conflict-flight report settlements_standing_orc = 7
+hist-conflict-flight report regions_held_elf = 1
 hist-conflict-flight report regions_held_goblin = 4
 hist-conflict-flight report regions_held_dwarf = 1
 hist-conflict-flight report regions_held_faerie = 1
 hist-conflict-flight report regions_held_human = 1
-hist-conflict-flight report regions_held_orc = 0
-hist-conflict-flight stats civ_settlements_max = 16
+hist-conflict-flight report regions_held_orc = 3
+hist-conflict-flight stats civ_settlements_max = 10
 hist-conflict-flight stats settlements_colonies = 47
 hist-conflict-flight stats civilizations_seceded = 1
 hist-conflict-flight stats relations_enmity = 8
-hist-conflict-flight stats relations_peace = 23
-hist-conflict-flight stats war_years_total = 330
+hist-conflict-flight stats relations_peace = 29
+hist-conflict-flight stats war_years_total = 434
 hist-conflict-flight stats war_years_max = 36
-hist-conflict-flight stats civilizations_conquered = 0
-hist-conflict-flight stats settlements_sacked = 8
-hist-conflict-flight stats settlements_captured = 4
-hist-conflict-flight stats regions_conquered = 4
+hist-conflict-flight stats civilizations_conquered = 1
+hist-conflict-flight stats settlements_sacked = 13
+hist-conflict-flight stats settlements_captured = 5
+hist-conflict-flight stats regions_conquered = 6
 hist-conflict-flight stats races_alive = 6
-hist-conflict-flight stats wars_attacker_elf = 5
-hist-conflict-flight stats wars_attacker_goblin = 17
-hist-conflict-flight stats wars_attacker_dwarf = 1
+hist-conflict-flight stats wars_attacker_elf = 4
+hist-conflict-flight stats wars_attacker_goblin = 21
+hist-conflict-flight stats wars_attacker_dwarf = 3
 hist-conflict-flight stats wars_attacker_faerie = 0
 hist-conflict-flight stats wars_attacker_human = 0
-hist-conflict-flight stats wars_attacker_orc = 0
-hist-conflict-flight stats wars_hollow = 9
-hist-conflict-flight stats wars_hollow_permille = 391
+hist-conflict-flight stats wars_attacker_orc = 3
+hist-conflict-flight stats wars_hollow = 11
+hist-conflict-flight stats wars_hollow_permille = 354
 hist-conflict-flight stats wars_same_goal_max = 4
 hist-conflict-flight stats wars_same_goal_unchanged_max = 3
-hist-conflict-flight stats race_population_share_max_permille = 504
+hist-conflict-flight stats race_population_share_max_permille = 472
 hist-conflict-flight stats race_regions_share_max_permille = 363
 hist-conflict-flight stats wars_unfound = 0
-hist-conflict-flight stats refuges_held_no_destination = 9
+hist-conflict-flight stats refuges_held_no_destination = 8
 hist-conflict-flight war e34 2346-2354 c3 c1 rg6 claim e19 battles 3 sacked 0 taken 0 exhaustion truce
 hist-conflict-flight war e82 3096-3108 c3 c1 rg6 claim e70 battles 3 sacked 0 taken 0 exhaustion won-c1-ceded
 hist-conflict-flight war e105 3358-3380 c3 c2 rg5 claim e97 battles 5 sacked 0 taken 0 exhaustion won-c2-ceded
@@ -7522,10 +7522,18 @@ hist-conflict-flight war e337 4863-4878 c1 c2 rg4 claim e310 battles 4 sacked 2 
 hist-conflict-flight war e338 4864-4878 c3 c2 rg4 claim e311 battles 1 sacked 0 taken 0 quiet won-c3-ceded
 hist-conflict-flight war e367 4953-4989 c1 c5 rg11 claim e290 battles 6 sacked 0 taken 0 exhaustion truce
 hist-conflict-flight war e382 5001-5008 c4 c5 rg11 claim e346 battles 3 sacked 0 taken 0 exhaustion won-c5-tribute
-hist-conflict-flight war e430 5509-5532 c2 c7 rg10 claim e385 battles 12 sacked 0 taken 3 exhaustion won-c2
-hist-conflict-flight war e443 5518-5535 c1 c2 rg4 claim e422 battles 5 sacked 1 taken 0 aim won-c1-ceded
-hist-conflict-flight war e533 5816-5838 c1 c2 rg10 claim e528 battles 5 sacked 3 taken 0 aim won-c1-tribute
-hist-conflict-flight war e550 5840-5858 c2 c7 rg10 claim e526 battles 6 sacked 0 taken 0 exhaustion won-c7-tribute
+hist-conflict-flight war e430 5509-5518 c2 c7 rg10 claim e385 battles 4 sacked 0 taken 0 exhaustion won-c2-tribute
+hist-conflict-flight war e437 5518-5548 c1 c2 rg5 claim e422 battles 4 sacked 4 taken 0 aim won-c1-tribute
+hist-conflict-flight war e498 5733-5759 c8 c1 rg7 claim e477 battles 4 sacked 0 taken 0 exhaustion won-c8-ceded
+hist-conflict-flight war e507 5760-5767 c4 c1 rg1 claim e291 battles 3 sacked 0 taken 0 exhaustion won-c1-tribute
+hist-conflict-flight war e508 5762-5786 c8 c7 rg10 claim e485 battles 5 sacked 3 taken 1 exhaustion won-c8
+hist-conflict-flight war e509 5763-5776 c3 c1 rg1 claim e392 battles 4 sacked 0 taken 0 exhaustion truce
+hist-conflict-flight war e527 5776-5781 c4 c5 rg11 claim e449 battles 3 sacked 0 taken 0 exhaustion won-c5-tribute
+hist-conflict-flight war e531 5778-5798 c5 c1 rg1 claim e423 battles 4 sacked 0 taken 0 exhaustion won-c5-ceded
+hist-conflict-flight war e555 5797-5817 c3 c2 rg8 claim e425 battles 6 sacked 1 taken 2 conquest -
+hist-conflict-flight war e556 5798-5817 c2 c7 rg10 claim e524 battles 7 sacked 0 taken 1 conquest -
+hist-conflict-flight war e594 5824-5828 c5 c7 rg8 claim e592 battles 2 sacked 1 taken 0 aim won-c5
+hist-conflict-flight war e607 5861-5868 c8 c7 rg10 claim e605 battles 4 sacked 0 taken 0 exhaustion won-c8
 hist-conflict-flight q150 0 e0
 hist-conflict-flight q175 0 e0
 hist-conflict-flight q200 0 e0
@@ -7728,10 +7736,18 @@ hist-conflict-flight note e367 Claimed since 4578.
 hist-conflict-flight note e382 Claimed since 4874. The second war between them.
 hist-conflict-flight note e429 The Warrens of Skiskib pressed its claim to Southwest Steppe against the Kingdom of Ashack.
 hist-conflict-flight note e430 Claimed since 5008.
-hist-conflict-flight note e443 Claimed since 5284. The fifth war between them.
-hist-conflict-flight note e533 Claimed since 5789. The sixth war between them.
-hist-conflict-flight note e550 Claimed since 5777. The second war between them.
-hist-conflict-flight summary threshold 31 shown 159 ages 5,20,23,56,32,23
+hist-conflict-flight note e437 Claimed since 5284. The fifth war between them.
+hist-conflict-flight note e498 Claimed since 5596.
+hist-conflict-flight note e507 Claimed since 4653.
+hist-conflict-flight note e508 Claimed since 5645.
+hist-conflict-flight note e509 Claimed since 5031. The fourth war between them.
+hist-conflict-flight note e527 Claimed since 5535. The third war between them.
+hist-conflict-flight note e531 Claimed since 5284. The second war between them.
+hist-conflict-flight note e555 Claimed since 5359. The fourth war between them.
+hist-conflict-flight note e556 Claimed since 5774. The second war between them.
+hist-conflict-flight note e594 Claimed since 5818.
+hist-conflict-flight note e607 Claimed since 5854. The second war between them.
+hist-conflict-flight summary threshold 31 shown 190 ages 5,20,23,56,30,56
 hist-conflict-flight e1 Laesiel awakened the Elves in Piper's Tangle.
 hist-conflict-flight e2 The Elves founded the House of Glaefaenn in Piper's Tangle.
 hist-conflict-flight e3 The House of Glaefaenn founded Elomaell in Piper's Tangle.
@@ -8153,7 +8169,7 @@ hist-conflict-flight e418 The Lousstwo Court sent settlers from Wiapo to found S
 hist-conflict-flight e419 The Kingdom of Ashack sent settlers from Headwick to found Weardstead in Southwest Steppe.
 hist-conflict-flight e420 The Kingdom of Ashack sent settlers from Headwick to found Rerdford in Southwest Steppe.
 hist-conflict-flight e421 The Lousstwo Court sent settlers from Wiapo to found Wimie in Drearwell Rises.
-hist-conflict-flight e422 The House of Glaefaenn laid claim to North Downs, held by the Warrens of Skiskib.
+hist-conflict-flight e422 The House of Glaefaenn laid claim to Northwest Downs, held by the Warrens of Skiskib.
 hist-conflict-flight e423 The Warrens of Zeez laid claim to Central Downs, held by the House of Glaefaenn.
 hist-conflict-flight e424 Shiewiewho Glade grew into a village of 260.
 hist-conflict-flight e425 The Skreegg Horde laid claim to Northwest Downs, held by the Warrens of Skiskib.
@@ -8164,163 +8180,216 @@ hist-conflict-flight e429 In 5509 tensions flared into 50 years of upheaval.
 hist-conflict-flight e430 The Warrens of Skiskib declared war on the Kingdom of Ashack over Southwest Steppe.
 hist-conflict-flight e431 Plague broke out in Shiewiewho Glade; 46 died.
 hist-conflict-flight e432 The Warrens of Skiskib defeated the Kingdom of Ashack in Southwest Steppe; 88 of the defeated and 28 of the victors fell.
-hist-conflict-flight e433 The Warrens of Skiskib besieged Headwick of the Kingdom of Ashack; it fell.
-hist-conflict-flight e434 The Warrens of Skiskib took Headwick from the Kingdom of Ashack; 173 died.
-hist-conflict-flight e435 The Kingdom of Ashack moved its seat to Ashedstead.
-hist-conflict-flight e436 The Warrens of Skiskib defeated the Kingdom of Ashack in Southwest Steppe; 43 of the defeated and 14 of the victors fell.
-hist-conflict-flight e437 The Warrens of Skiskib besieged Ashedstead of the Kingdom of Ashack; it fell.
-hist-conflict-flight e438 The Warrens of Skiskib took Ashedstead from the Kingdom of Ashack; 58 died.
-hist-conflict-flight e439 The Kingdom of Ashack moved its seat to Weardstead.
-hist-conflict-flight e440 Headwick dwindled to 1152 souls.
-hist-conflict-flight e441 The Warrens of Skiskib defeated the Kingdom of Ashack in Southwest Steppe; 29 of the defeated and 9 of the victors fell.
-hist-conflict-flight e442 The Warrens of Skiskib besieged Weardstead of the Kingdom of Ashack; it held.
-hist-conflict-flight e443 The House of Glaefaenn declared war on the Warrens of Skiskib over North Downs.
-hist-conflict-flight e444 The Warrens of Skiskib defeated the Kingdom of Ashack in Southwest Steppe; 28 of the defeated and 9 of the victors fell.
-hist-conflict-flight e445 The Warrens of Skiskib besieged Weardstead of the Kingdom of Ashack; it fell.
-hist-conflict-flight e446 The Warrens of Skiskib took Weardstead from the Kingdom of Ashack; 56 died.
-hist-conflict-flight e447 The Kingdom of Ashack moved its seat to Rerdford.
-hist-conflict-flight e448 The Kingdom of Ashack defeated the Warrens of Skiskib in Southwest Steppe; 27 of the defeated and 4 of the victors fell.
-hist-conflict-flight e449 The Warrens of Skiskib defeated the House of Glaefaenn in North Downs; 324 of the defeated and 51 of the victors fell.
-hist-conflict-flight e450 The Warrens of Skiskib defeated the Kingdom of Ashack in West Steppe; 14 of the defeated and 4 of the victors fell.
-hist-conflict-flight e451 The Warrens of Skiskib defeated the Kingdom of Ashack in Southwest Steppe; 13 of the defeated and 4 of the victors fell.
-hist-conflict-flight e452 The Warrens of Skiskib besieged Rerdford of the Kingdom of Ashack; it held.
-hist-conflict-flight e453 The Warrens of Skiskib defeated the Kingdom of Ashack in Southwest Steppe; 14 of the defeated and 4 of the victors fell.
-hist-conflict-flight e454 The Warrens of Skiskib besieged Rerdford of the Kingdom of Ashack; with nowhere to flee, its people held on.
-hist-conflict-flight e455 The Warrens of Skiskib defeated the Kingdom of Ashack in Southwest Steppe; 14 of the defeated and 4 of the victors fell.
-hist-conflict-flight e456 The Warrens of Skiskib besieged Rerdford of the Kingdom of Ashack; it held.
-hist-conflict-flight e457 The House of Glaefaenn defeated the Warrens of Skiskib in Central Downs; 158 of the defeated and 50 of the victors fell.
-hist-conflict-flight e458 The Warrens of Skiskib defeated the Kingdom of Ashack in Southwest Steppe; 13 of the defeated and 4 of the victors fell.
-hist-conflict-flight e459 The Warrens of Skiskib besieged Rerdford of the Kingdom of Ashack; with nowhere to flee, its people held on.
-hist-conflict-flight e460 The Warrens of Skiskib defeated the House of Glaefaenn in North Downs; 313 of the defeated and 50 of the victors fell.
-hist-conflict-flight e461 The Warrens of Skiskib defeated the Kingdom of Ashack in Southwest Steppe; 13 of the defeated and 4 of the victors fell.
-hist-conflict-flight e462 The Warrens of Skiskib besieged Rerdford of the Kingdom of Ashack; with nowhere to flee, its people held on.
-hist-conflict-flight e463 The Warrens of Skiskib defeated the Kingdom of Ashack in Southwest Steppe; 13 of the defeated and 4 of the victors fell.
-hist-conflict-flight e464 The Warrens of Skiskib besieged Rerdford of the Kingdom of Ashack; with nowhere to flee, its people held on.
-hist-conflict-flight e465 The Kingdom of Ashack sued the Warrens of Skiskib for peace after 23 years of war.
-hist-conflict-flight e466 The House of Glaefaenn defeated the Warrens of Skiskib in Central Downs; 312 of the defeated and 99 of the victors fell.
-hist-conflict-flight e467 The Khirnhu Throne laid claim to South Downs, held by the Warrens of Zeez.
-hist-conflict-flight e468 The House of Glaefaenn defeated the Warrens of Skiskib in North Downs; 306 of the defeated and 98 of the victors fell.
-hist-conflict-flight e469 The House of Glaefaenn besieged Krakutch of the Warrens of Skiskib; it fell.
-hist-conflict-flight e470 The House of Glaefaenn sacked Krakutch of the Warrens of Skiskib; 515 died and 1203 fled.
-hist-conflict-flight e471 The House of Glaefaenn prevailed over the Warrens of Skiskib after 17 years of war.
-hist-conflict-flight e472 The Warrens of Skiskib ceded Northwest Downs to the House of Glaefaenn.
-hist-conflict-flight e473 Gnugbunk Pit dwindled to 1189 souls.
-hist-conflict-flight e474 Grot dwindled to 1189 souls.
-hist-conflict-flight e475 Skub Pit dwindled to 1189 souls.
-hist-conflict-flight e476 Famine struck Skub Pit; 219 died.
-hist-conflict-flight e477 Plague broke out in Zozz-Greenk Hole; 93 died.
-hist-conflict-flight e478 The plague spread to Slok; 50 died.
-hist-conflict-flight e479 Geezink dwindled to 1178 souls.
-hist-conflict-flight e480 Famine struck Gnugbunk Pit; 152 died.
-hist-conflict-flight e481 The House of Glaefaenn passed 21 quiet years, from 5559 to 5579, under one generation of rulers.
-hist-conflict-flight e482 The Warrens of Skiskib passed 21 quiet years, from 5559 to 5579, in which one new generation of rulers came to power.
-hist-conflict-flight e483 The Skreegg Horde passed 21 quiet years, from 5559 to 5579, in which one new generation of rulers came to power.
-hist-conflict-flight e484 The Khirnhu Throne passed 21 quiet years, from 5559 to 5579, under one generation of rulers.
-hist-conflict-flight e485 The Warrens of Zeez passed 21 quiet years, from 5559 to 5579, in which one new generation of rulers came to power.
-hist-conflict-flight e486 The Lousstwo Court passed 21 quiet years, from 5559 to 5579, in which one new generation of rulers came to power.
-hist-conflict-flight e487 The Kingdom of Ashack passed 21 quiet years, from 5559 to 5579, under one generation of rulers.
-hist-conflict-flight e488 Kaag'azak awakened the Orcs in West Steppe.
-hist-conflict-flight e489 The Orcs founded the Shaaz Horde in West Steppe.
-hist-conflict-flight e490 The Shaaz Horde founded Uraag Camp in West Steppe.
-hist-conflict-flight e491 Plague broke out in Iennrer; 217 died.
-hist-conflict-flight e492 Babkuz dwindled to 1176 souls.
-hist-conflict-flight e493 Famine struck Weardstead; 21 died.
-hist-conflict-flight e494 Famine struck Grot; 58 died.
-hist-conflict-flight e495 A succession crisis at Uraag Camp shook the Shaaz Horde.
-hist-conflict-flight e496 The Shaaz Horde laid claim to Northwest Downs, held by the House of Glaefaenn.
-hist-conflict-flight e497 Plague broke out in Gnugbunk Pit; 132 died.
-hist-conflict-flight e498 The plague spread to Skub Pit; 78 died.
-hist-conflict-flight e499 Plague broke out in Elomaell; 474 died.
-hist-conflict-flight e500 The Shaaz Horde laid claim to Southwest Steppe, held by the Kingdom of Ashack.
-hist-conflict-flight e501 Famine struck Geerk-Drub Pit; 424 died.
-hist-conflict-flight e502 The Lousstwo Court sent settlers from Shiewiewho Glade to found Lywoll in Drearwell Rises.
-hist-conflict-flight e503 Plague broke out in Nank; 531 died.
-hist-conflict-flight e504 Plague broke out in Iennrer; 163 died.
-hist-conflict-flight e505 The plague spread to Aeitheitho; 102 died.
-hist-conflict-flight e506 Famine struck Skrutch Pit; 223 died.
-hist-conflict-flight e507 A succession crisis at Elomaell shook the House of Glaefaenn.
-hist-conflict-flight e508 Famine struck Borksluzz; 48 died.
-hist-conflict-flight e509 A succession crisis at Babkuz shook the Warrens of Skiskib.
-hist-conflict-flight e510 A succession crisis at Rerdford shook the Kingdom of Ashack.
-hist-conflict-flight e511 Plague broke out in Bukrak; 405 died.
-hist-conflict-flight e512 The plague spread to Bizz Pit; 148 died.
-hist-conflict-flight e513 Famine struck Geezink; 61 died.
-hist-conflict-flight e514 Plague broke out in Skruz; 1257 died.
-hist-conflict-flight e515 The Kingdom of Ashack laid claim to Central Downs, held by the House of Glaefaenn.
-hist-conflict-flight e516 Famine struck Rendmi; 113 died.
-hist-conflict-flight e517 Famine struck Kaimmkour Deep; 48 died.
-hist-conflict-flight e518 Rerdford grew into a town of 1501.
-hist-conflict-flight e519 A succession crisis at Rerdford shook the Kingdom of Ashack.
-hist-conflict-flight e520 A succession crisis at Rerdford shook the Kingdom of Ashack.
-hist-conflict-flight e521 The Kingdom of Ashack laid claim to West Steppe, held by the Shaaz Horde.
-hist-conflict-flight e522 The Skreegg Horde sent settlers from Kaz to found Skib in North Downs.
-hist-conflict-flight e523 The Warrens of Skiskib laid claim to Northwest Downs, held by the House of Glaefaenn.
-hist-conflict-flight e524 Famine struck Grot; 39 died.
-hist-conflict-flight e525 Famine struck Uraag Camp; 119 died.
-hist-conflict-flight e526 The Warrens of Skiskib laid claim to Southwest Steppe, held by the Kingdom of Ashack.
-hist-conflict-flight e527 Famine struck Brirk; 179 died.
-hist-conflict-flight e528 The House of Glaefaenn laid claim to Southwest Steppe, held by the Warrens of Skiskib.
-hist-conflict-flight e529 The Kingdom of Ashack laid claim to Southwest Steppe, held by the Warrens of Skiskib.
-hist-conflict-flight e530 Plague broke out in Skrutch Pit; 472 died.
-hist-conflict-flight e531 Famine struck Aeitheitho; 74 died.
-hist-conflict-flight e532 Famine struck Babkuz; 57 died.
-hist-conflict-flight e533 The House of Glaefaenn declared war on the Warrens of Skiskib over Southwest Steppe.
-hist-conflict-flight e534 Rendmi grew into a town of 1500.
-hist-conflict-flight e535 The House of Glaefaenn defeated the Warrens of Skiskib in Southwest Steppe; 57 of the defeated and 18 of the victors fell.
-hist-conflict-flight e536 The House of Glaefaenn besieged Headwick of the Warrens of Skiskib; it fell.
-hist-conflict-flight e537 The House of Glaefaenn sacked Headwick of the Warrens of Skiskib; 108 died and 254 fled.
-hist-conflict-flight e538 The House of Glaefaenn defeated the Warrens of Skiskib in Southwest Steppe; 53 of the defeated and 17 of the victors fell.
-hist-conflict-flight e539 The House of Glaefaenn besieged Ashedstead of the Warrens of Skiskib; it fell.
-hist-conflict-flight e540 The House of Glaefaenn sacked Ashedstead of the Warrens of Skiskib; 167 died and 392 fled.
-hist-conflict-flight e541 Famine struck Gnugbunk Pit; 81 died.
-hist-conflict-flight e542 The Warrens of Skiskib defeated the House of Glaefaenn in Southwest Steppe; 96 of the defeated and 15 of the victors fell.
-hist-conflict-flight e543 A succession crisis at Babkuz shook the Warrens of Skiskib.
-hist-conflict-flight e544 The House of Glaefaenn defeated the Warrens of Skiskib in Northwest Downs; 47 of the defeated and 15 of the victors fell.
-hist-conflict-flight e545 The House of Glaefaenn defeated the Warrens of Skiskib in Southwest Steppe; 45 of the defeated and 14 of the victors fell.
-hist-conflict-flight e546 The House of Glaefaenn besieged Weardstead of the Warrens of Skiskib; it fell.
-hist-conflict-flight e547 The House of Glaefaenn sacked Weardstead of the Warrens of Skiskib; 187 died and 437 fled.
-hist-conflict-flight e548 The House of Glaefaenn prevailed over the Warrens of Skiskib after 22 years of war.
-hist-conflict-flight e549 The Warrens of Skiskib paid tribute to the House of Glaefaenn; 207 were carried off.
-hist-conflict-flight e550 The Warrens of Skiskib declared war on the Kingdom of Ashack over Southwest Steppe.
-hist-conflict-flight e551 The Warrens of Skiskib defeated the Kingdom of Ashack in Southwest Steppe; 44 of the defeated and 11 of the victors fell.
-hist-conflict-flight e552 The Warrens of Skiskib besieged Rerdford of the Kingdom of Ashack; it held.
-hist-conflict-flight e553 The Kingdom of Ashack defeated the Warrens of Skiskib in Southwest Steppe; 34 of the defeated and 10 of the victors fell.
-hist-conflict-flight e554 The Kingdom of Ashack defeated the Warrens of Skiskib in West Steppe; 32 of the defeated and 10 of the victors fell.
-hist-conflict-flight e555 The Kingdom of Ashack besieged Babkuz of the Warrens of Skiskib; it held.
-hist-conflict-flight e556 The Kingdom of Ashack defeated the Warrens of Skiskib in West Steppe; 31 of the defeated and 10 of the victors fell.
-hist-conflict-flight e557 The Kingdom of Ashack besieged Babkuz of the Warrens of Skiskib; it held.
-hist-conflict-flight e558 The Kingdom of Ashack defeated the Warrens of Skiskib in West Steppe; 31 of the defeated and 9 of the victors fell.
-hist-conflict-flight e559 The Kingdom of Ashack besieged Babkuz of the Warrens of Skiskib; it held.
-hist-conflict-flight e560 The Kingdom of Ashack defeated the Warrens of Skiskib in West Steppe; 30 of the defeated and 9 of the victors fell.
-hist-conflict-flight e561 The Kingdom of Ashack besieged Babkuz of the Warrens of Skiskib; it held.
-hist-conflict-flight e562 The Warrens of Skiskib sued the Kingdom of Ashack for peace after 18 years of war.
-hist-conflict-flight e563 The Warrens of Skiskib paid tribute to the Kingdom of Ashack; 151 were carried off.
-hist-conflict-flight e564 A succession crisis at Skruz shook the Warrens of Zeez.
-hist-conflict-flight e565 Plague broke out in Kaz; 315 died.
-hist-conflict-flight e566 The plague spread to Bukrak; 233 died.
-hist-conflict-flight e567 Plague broke out in Slok; 71 died.
-hist-conflict-flight e568 A succession crisis at Uraag Camp shook the Shaaz Horde.
-hist-conflict-flight e569 Plague broke out in Drax-Snagg Pit; 227 died.
-hist-conflict-flight e570 The plague spread to Niellae; 171 died.
-hist-conflict-flight e571 The plague spread to Rendmi; 107 died.
-hist-conflict-flight e572 Famine struck Gnok-Skeex; 232 died.
-hist-conflict-flight e573 Famine struck Wimie; 31 died.
-hist-conflict-flight e574 Skib grew into a town of 1504.
-hist-conflict-flight e575 Famine struck Bukrak; 186 died.
-hist-conflict-flight e576 The Kingdom of Ashack sent settlers from Rerdford to found Steackton in Southwest Steppe.
-hist-conflict-flight e577 The Kingdom of Ashack sent settlers from Rerdford to found Wolwerford in Southwest Steppe.
-hist-conflict-flight e578 Famine struck Nik Pit; 210 died.
-hist-conflict-flight e579 The House of Glaefaenn laid claim to North Downs, held by the Skreegg Horde.
-hist-conflict-flight e580 The Kingdom of Ashack sent settlers from Rerdford to found Sesmelton in Southwest Steppe.
-hist-conflict-flight e581 Plague broke out in Nangud Deep; 835 died.
-hist-conflict-flight e582 The plague spread to Brimtha Hold; 87 died.
-hist-conflict-flight e583 Famine struck Skruz; 983 died.
-hist-conflict-flight e584 The Khirnhu Throne laid claim to North Downs, held by the Skreegg Horde.
-hist-conflict-flight e585 Famine struck Wiapo; 114 died.
-hist-conflict-flight e586 Plague broke out in Slork; 483 died.
-hist-conflict-flight e587 Plague broke out in Nank; 423 died.
-hist-conflict-flight e588 The plague spread to Gnot Pit; 169 died.
-hist-conflict-flight e589 The plague spread to Gnok-Skeex; 118 died.
+hist-conflict-flight e433 The Warrens of Skiskib besieged Headwick of the Kingdom of Ashack; it held.
+hist-conflict-flight e434 The Warrens of Skiskib defeated the Kingdom of Ashack in Southwest Steppe; 86 of the defeated and 27 of the victors fell.
+hist-conflict-flight e435 The Warrens of Skiskib besieged Headwick of the Kingdom of Ashack; it held.
+hist-conflict-flight e436 The Kingdom of Ashack defeated the Warrens of Skiskib in Southwest Steppe; 170 of the defeated and 27 of the victors fell.
+hist-conflict-flight e437 The House of Glaefaenn declared war on the Warrens of Skiskib over Northwest Downs.
+hist-conflict-flight e438 The Warrens of Skiskib defeated the Kingdom of Ashack in West Steppe; 84 of the defeated and 26 of the victors fell.
+hist-conflict-flight e439 The Kingdom of Ashack sued the Warrens of Skiskib for peace after 9 years of war.
+hist-conflict-flight e440 The Kingdom of Ashack paid tribute to the Warrens of Skiskib; 330 were carried off.
+hist-conflict-flight e441 The House of Glaefaenn defeated the Warrens of Skiskib in Northwest Downs; 251 of the defeated and 80 of the victors fell.
+hist-conflict-flight e442 The House of Glaefaenn besieged Grot of the Warrens of Skiskib; it fell.
+hist-conflict-flight e443 The House of Glaefaenn sacked Grot of the Warrens of Skiskib; 727 died and 1699 fled.
+hist-conflict-flight e444 Zozz-Greenk Hole grew into a town of 1977.
+hist-conflict-flight e445 Zozz-Greenk Hole dwindled to 1186 souls.
+hist-conflict-flight e446 The House of Glaefaenn defeated the Warrens of Skiskib in Northwest Downs; 219 of the defeated and 70 of the victors fell.
+hist-conflict-flight e447 The House of Glaefaenn besieged Geezink of the Warrens of Skiskib; it fell.
+hist-conflict-flight e448 The House of Glaefaenn sacked Geezink of the Warrens of Skiskib; 743 died and 1736 fled.
+hist-conflict-flight e449 The Khirnhu Throne laid claim to South Downs, held by the Warrens of Zeez.
+hist-conflict-flight e450 The House of Glaefaenn defeated the Warrens of Skiskib in Northwest Downs; 201 of the defeated and 64 of the victors fell.
+hist-conflict-flight e451 The House of Glaefaenn besieged Skub Pit of the Warrens of Skiskib; it fell.
+hist-conflict-flight e452 The House of Glaefaenn sacked Skub Pit of the Warrens of Skiskib; 1293 died and 3019 fled.
+hist-conflict-flight e453 Plague broke out in Zozz-Greenk Hole; 112 died.
+hist-conflict-flight e454 The plague spread to Slok; 49 died.
+hist-conflict-flight e455 The House of Glaefaenn defeated the Warrens of Skiskib in Northwest Downs; 171 of the defeated and 54 of the victors fell.
+hist-conflict-flight e456 The House of Glaefaenn besieged Gnugbunk Pit of the Warrens of Skiskib; it fell.
+hist-conflict-flight e457 The House of Glaefaenn sacked Gnugbunk Pit of the Warrens of Skiskib; 1767 died and 4123 fled.
+hist-conflict-flight e458 The House of Glaefaenn prevailed over the Warrens of Skiskib after 30 years of war.
+hist-conflict-flight e459 The Warrens of Skiskib paid tribute to the House of Glaefaenn; 667 were carried off.
+hist-conflict-flight e460 Babkuz dwindled to 1156 souls.
+hist-conflict-flight e461 Zozz-Greenk Hole grew into a town of 3732.
+hist-conflict-flight e462 Zozz-Greenk Hole dwindled to 601 souls.
+hist-conflict-flight e463 The House of Glaefaenn passed 21 quiet years, from 5559 to 5579, under one generation of rulers.
+hist-conflict-flight e464 The Warrens of Skiskib passed 21 quiet years, from 5559 to 5579, in which one new generation of rulers came to power.
+hist-conflict-flight e465 The Skreegg Horde passed 21 quiet years, from 5559 to 5579, in which one new generation of rulers came to power.
+hist-conflict-flight e466 The Khirnhu Throne passed 21 quiet years, from 5559 to 5579, under one generation of rulers.
+hist-conflict-flight e467 The Warrens of Zeez passed 21 quiet years, from 5559 to 5579, in which one new generation of rulers came to power.
+hist-conflict-flight e468 The Lousstwo Court passed 21 quiet years, from 5559 to 5579, in which one new generation of rulers came to power.
+hist-conflict-flight e469 The Kingdom of Ashack passed 21 quiet years, from 5559 to 5579, under one generation of rulers.
+hist-conflict-flight e470 Kaag'azak awakened the Orcs in Northwest Downs.
+hist-conflict-flight e471 The Orcs founded the Shaaz Horde in Northwest Downs.
+hist-conflict-flight e472 The Shaaz Horde founded Uraag Camp in Northwest Downs.
+hist-conflict-flight e473 Plague broke out in Iennrer; 219 died.
+hist-conflict-flight e474 Famine struck Weardstead; 32 died.
+hist-conflict-flight e475 Famine struck Rerdford; 70 died.
+hist-conflict-flight e476 A succession crisis at Uraag Camp shook the Shaaz Horde.
+hist-conflict-flight e477 The Shaaz Horde laid claim to Central Downs, held by the House of Glaefaenn.
+hist-conflict-flight e478 Plague broke out in Elomaell; 487 died.
+hist-conflict-flight e479 Famine struck Geerk-Drub Pit; 424 died.
+hist-conflict-flight e480 The Lousstwo Court sent settlers from Shiewiewho Glade to found Lywoll in Drearwell Rises.
+hist-conflict-flight e481 Plague broke out in Nank; 418 died.
+hist-conflict-flight e482 Plague broke out in Iennrer; 164 died.
+hist-conflict-flight e483 The plague spread to Aeitheitho; 102 died.
+hist-conflict-flight e484 Famine struck Skrutch Pit; 223 died.
+hist-conflict-flight e485 The Shaaz Horde laid claim to Southwest Steppe, held by the Kingdom of Ashack.
+hist-conflict-flight e486 Rendmi grew into a town of 1500.
+hist-conflict-flight e487 A succession crisis at Elomaell shook the House of Glaefaenn.
+hist-conflict-flight e488 Famine struck Borksluzz; 72 died.
+hist-conflict-flight e489 A succession crisis at Babkuz shook the Warrens of Skiskib.
+hist-conflict-flight e490 A succession crisis at Headwick shook the Kingdom of Ashack.
+hist-conflict-flight e491 Uraag Camp grew into a town of 1518.
+hist-conflict-flight e492 Plague broke out in Bukrak; 405 died.
+hist-conflict-flight e493 The plague spread to Bizz Pit; 113 died.
+hist-conflict-flight e494 Plague broke out in Skruz; 1257 died.
+hist-conflict-flight e495 The Kingdom of Ashack laid claim to Central Downs, held by the House of Glaefaenn.
+hist-conflict-flight e496 Famine struck Rendmi; 117 died.
+hist-conflict-flight e497 Famine struck Kaimmkour Deep; 48 died.
+hist-conflict-flight e498 The Shaaz Horde declared war on the House of Glaefaenn over Central Downs.
+hist-conflict-flight e499 A succession crisis at Headwick shook the Kingdom of Ashack.
+hist-conflict-flight e500 The House of Glaefaenn defeated the Shaaz Horde in Central Downs; 438 of the defeated and 140 of the victors fell.
+hist-conflict-flight e501 A succession crisis at Headwick shook the Kingdom of Ashack.
+hist-conflict-flight e502 The Shaaz Horde defeated the House of Glaefaenn in Northwest Downs; 627 of the defeated and 137 of the victors fell.
+hist-conflict-flight e503 The House of Glaefaenn defeated the Shaaz Horde in Central Downs; 423 of the defeated and 135 of the victors fell.
+hist-conflict-flight e504 The Shaaz Horde defeated the House of Glaefaenn in Northwest Downs; 602 of the defeated and 132 of the victors fell.
+hist-conflict-flight e505 The House of Glaefaenn sued the Shaaz Horde for peace after 26 years of war.
+hist-conflict-flight e506 The House of Glaefaenn ceded Central Downs to the Shaaz Horde.
+hist-conflict-flight e507 The Khirnhu Throne declared war on the House of Glaefaenn over Piper's Tangle.
+hist-conflict-flight e508 The Shaaz Horde declared war on the Kingdom of Ashack over Southwest Steppe.
+hist-conflict-flight e509 The Skreegg Horde declared war on the House of Glaefaenn over Piper's Tangle.
+hist-conflict-flight e510 The House of Glaefaenn defeated the Khirnhu Throne in Piper's Tangle; 253 of the defeated and 56 of the victors fell.
+hist-conflict-flight e511 The Khirnhu Throne defeated the House of Glaefaenn in Southeast Wood; 175 of the defeated and 56 of the victors fell.
+hist-conflict-flight e512 The Shaaz Horde defeated the Kingdom of Ashack in Southwest Steppe; 84 of the defeated and 27 of the victors fell.
+hist-conflict-flight e513 The Shaaz Horde besieged Headwick of the Kingdom of Ashack; it held.
+hist-conflict-flight e514 The Shaaz Horde defeated the Kingdom of Ashack in Southwest Steppe; 83 of the defeated and 26 of the victors fell.
+hist-conflict-flight e515 The Shaaz Horde besieged Headwick of the Kingdom of Ashack; it fell.
+hist-conflict-flight e516 The Shaaz Horde sacked Headwick of the Kingdom of Ashack; 464 died and 1083 fled.
+hist-conflict-flight e517 The Kingdom of Ashack moved its seat to Ashedstead.
+hist-conflict-flight e518 Ashedstead grew into a town of 1655.
+hist-conflict-flight e519 The House of Glaefaenn defeated the Khirnhu Throne in Piper's Tangle; 240 of the defeated and 55 of the victors fell.
+hist-conflict-flight e520 The Khirnhu Throne sued the House of Glaefaenn for peace after 7 years of war.
+hist-conflict-flight e521 The Khirnhu Throne paid tribute to the House of Glaefaenn; 526 were carried off.
+hist-conflict-flight e522 The House of Glaefaenn defeated the Skreegg Horde in Piper's Tangle; 342 of the defeated and 109 of the victors fell.
+hist-conflict-flight e523 The Skreegg Horde defeated the House of Glaefaenn in Northeast Downs; 338 of the defeated and 107 of the victors fell.
+hist-conflict-flight e524 The Warrens of Skiskib laid claim to Southwest Steppe, held by the Kingdom of Ashack.
+hist-conflict-flight e525 The House of Glaefaenn defeated the Skreegg Horde in Piper's Tangle; 334 of the defeated and 104 of the victors fell.
+hist-conflict-flight e526 The Kingdom of Ashack sent settlers from Weardstead to found Ceard in Southwest Steppe.
+hist-conflict-flight e527 The Khirnhu Throne declared war on the Warrens of Zeez over South Downs.
+hist-conflict-flight e528 The Skreegg Horde defeated the House of Glaefaenn in Northeast Downs; 322 of the defeated and 103 of the victors fell.
+hist-conflict-flight e529 The House of Glaefaenn and the Skreegg Horde made peace after 13 years of war, neither the victor.
+hist-conflict-flight e530 The Warrens of Zeez defeated the Khirnhu Throne in South Downs; 209 of the defeated and 66 of the victors fell.
+hist-conflict-flight e531 The Warrens of Zeez declared war on the House of Glaefaenn over Piper's Tangle.
+hist-conflict-flight e532 The Khirnhu Throne defeated the Warrens of Zeez in Southeast Wood; 114 of the defeated and 36 of the victors fell.
+hist-conflict-flight e533 The Shaaz Horde defeated the Kingdom of Ashack in Southwest Steppe; 72 of the defeated and 23 of the victors fell.
+hist-conflict-flight e534 The Shaaz Horde besieged Ashedstead of the Kingdom of Ashack; it fell.
+hist-conflict-flight e535 The Shaaz Horde took Ashedstead from the Kingdom of Ashack; 166 died.
+hist-conflict-flight e536 The Kingdom of Ashack moved its seat to Rerdford.
+hist-conflict-flight e537 The Warrens of Zeez defeated the Khirnhu Throne in South Downs; 199 of the defeated and 36 of the victors fell.
+hist-conflict-flight e538 The Khirnhu Throne sued the Warrens of Zeez for peace after 5 years of war.
+hist-conflict-flight e539 The Khirnhu Throne paid tribute to the Warrens of Zeez; 436 were carried off.
+hist-conflict-flight e540 The Shaaz Horde defeated the Kingdom of Ashack in Southwest Steppe; 29 of the defeated and 9 of the victors fell.
+hist-conflict-flight e541 The Shaaz Horde besieged Rerdford of the Kingdom of Ashack; it fell.
+hist-conflict-flight e542 The Shaaz Horde sacked Rerdford of the Kingdom of Ashack; 173 died and 406 fled.
+hist-conflict-flight e543 The Kingdom of Ashack moved its seat to Weardstead.
+hist-conflict-flight e544 Ceard grew into a village of 484.
+hist-conflict-flight e545 Ashedstead dwindled to 1183 souls.
+hist-conflict-flight e546 The Shaaz Horde defeated the Kingdom of Ashack in Southwest Steppe; 24 of the defeated and 7 of the victors fell.
+hist-conflict-flight e547 The Shaaz Horde besieged Weardstead of the Kingdom of Ashack; it fell.
+hist-conflict-flight e548 The Shaaz Horde sacked Weardstead of the Kingdom of Ashack; 149 died and 350 fled.
+hist-conflict-flight e549 The Kingdom of Ashack moved its seat to Ceard.
+hist-conflict-flight e550 The Kingdom of Ashack sued the Shaaz Horde for peace after 24 years of war.
+hist-conflict-flight e551 The House of Glaefaenn defeated the Warrens of Zeez in Piper's Tangle; 227 of the defeated and 72 of the victors fell.
+hist-conflict-flight e552 The House of Glaefaenn defeated the Warrens of Zeez in South Downs; 222 of the defeated and 71 of the victors fell.
+hist-conflict-flight e553 The House of Glaefaenn besieged Skruz of the Warrens of Zeez; it held.
+hist-conflict-flight e554 The Warrens of Zeez defeated the House of Glaefaenn in South Downs; 308 of the defeated and 69 of the victors fell.
+hist-conflict-flight e555 The Skreegg Horde declared war on the Warrens of Skiskib over West Steppe.
+hist-conflict-flight e556 The Warrens of Skiskib declared war on the Kingdom of Ashack over Southwest Steppe.
+hist-conflict-flight e557 The Warrens of Zeez defeated the House of Glaefaenn in Piper's Tangle; 300 of the defeated and 70 of the victors fell.
+hist-conflict-flight e558 The Warrens of Zeez besieged Elomaell of the House of Glaefaenn; it held.
+hist-conflict-flight e559 The House of Glaefaenn sued the Warrens of Zeez for peace after 20 years of war.
+hist-conflict-flight e560 The House of Glaefaenn ceded Northeast Wood to the Warrens of Zeez.
+hist-conflict-flight e561 Plague broke out in Skrutch Pit; 448 died.
+hist-conflict-flight e562 The Skreegg Horde defeated the Warrens of Skiskib in West Steppe; 27 of the defeated and 8 of the victors fell.
+hist-conflict-flight e563 The Skreegg Horde besieged Babkuz of the Warrens of Skiskib; it held.
+hist-conflict-flight e564 The Skreegg Horde defeated the Warrens of Skiskib in West Steppe; 27 of the defeated and 8 of the victors fell.
+hist-conflict-flight e565 The Skreegg Horde besieged Babkuz of the Warrens of Skiskib; it fell.
+hist-conflict-flight e566 The Skreegg Horde took Babkuz from the Warrens of Skiskib; 134 died.
+hist-conflict-flight e567 The Warrens of Skiskib moved its seat to Zozz-Greenk Hole.
+hist-conflict-flight e568 The Kingdom of Ashack defeated the Warrens of Skiskib in Southwest Steppe; 13 of the defeated and 4 of the victors fell.
+hist-conflict-flight e569 The Warrens of Skiskib defeated the Kingdom of Ashack in West Steppe; 24 of the defeated and 4 of the victors fell.
+hist-conflict-flight e570 The Kingdom of Ashack defeated the Warrens of Skiskib in Southwest Steppe; 13 of the defeated and 4 of the victors fell.
+hist-conflict-flight e571 The Skreegg Horde defeated the Warrens of Skiskib in West Steppe; 13 of the defeated and 4 of the victors fell.
+hist-conflict-flight e572 The Skreegg Horde besieged Zozz-Greenk Hole of the Warrens of Skiskib; it fell.
+hist-conflict-flight e573 The Skreegg Horde sacked Zozz-Greenk Hole of the Warrens of Skiskib; 138 died and 325 fled.
+hist-conflict-flight e574 The Warrens of Skiskib moved its seat to Borksluzz.
+hist-conflict-flight e575 The Kingdom of Ashack defeated the Warrens of Skiskib in West Steppe; 12 of the defeated and 3 of the victors fell.
+hist-conflict-flight e576 The Kingdom of Ashack besieged Borksluzz of the Warrens of Skiskib; it held.
+hist-conflict-flight e577 The Kingdom of Ashack defeated the Warrens of Skiskib in West Steppe; 12 of the defeated and 3 of the victors fell.
+hist-conflict-flight e578 The Kingdom of Ashack besieged Borksluzz of the Warrens of Skiskib; it held.
+hist-conflict-flight e579 The Warrens of Skiskib defeated the Skreegg Horde in West Steppe; 23 of the defeated and 3 of the victors fell.
+hist-conflict-flight e580 The Skreegg Horde defeated the Warrens of Skiskib in West Steppe; 12 of the defeated and 3 of the victors fell.
+hist-conflict-flight e581 Famine struck Babkuz; 46 died.
+hist-conflict-flight e582 The Skreegg Horde defeated the Warrens of Skiskib in West Steppe; 12 of the defeated and 3 of the victors fell.
+hist-conflict-flight e583 The Skreegg Horde besieged Borksluzz of the Warrens of Skiskib; it fell.
+hist-conflict-flight e584 The Skreegg Horde took Borksluzz from the Warrens of Skiskib; 78 died.
+hist-conflict-flight e585 The Warrens of Skiskib moved its seat to Slok.
+hist-conflict-flight e586 The Kingdom of Ashack defeated the Warrens of Skiskib in West Steppe; 4 of the defeated and 1 of the victors fell.
+hist-conflict-flight e587 The Kingdom of Ashack besieged Slok of the Warrens of Skiskib; it held.
+hist-conflict-flight e588 The Kingdom of Ashack defeated the Warrens of Skiskib in West Steppe; 4 of the defeated and 1 of the victors fell.
+hist-conflict-flight e589 The Kingdom of Ashack besieged Slok of the Warrens of Skiskib; it fell.
+hist-conflict-flight e590 The Kingdom of Ashack took Slok from the Warrens of Skiskib; 46 died.
+hist-conflict-flight e591 The Warrens of Skiskib fell to the Kingdom of Ashack.
+hist-conflict-flight e592 The Warrens of Zeez laid claim to West Steppe, held by the Kingdom of Ashack.
+hist-conflict-flight e593 Plague broke out in Uraag Camp; 1491 died.
+hist-conflict-flight e594 The Warrens of Zeez declared war on the Kingdom of Ashack over West Steppe.
+hist-conflict-flight e595 The Warrens of Zeez defeated the Kingdom of Ashack in West Steppe; 39 of the defeated and 12 of the victors fell.
+hist-conflict-flight e596 The Warrens of Zeez besieged Slok of the Kingdom of Ashack; it held.
+hist-conflict-flight e597 The Warrens of Zeez defeated the Kingdom of Ashack in West Steppe; 39 of the defeated and 12 of the victors fell.
+hist-conflict-flight e598 The Warrens of Zeez besieged Slok of the Kingdom of Ashack; it fell.
+hist-conflict-flight e599 The Warrens of Zeez sacked Slok of the Kingdom of Ashack; 128 died and 301 fled.
+hist-conflict-flight e600 The Warrens of Zeez prevailed over the Kingdom of Ashack after 4 years of war.
+hist-conflict-flight e601 The Shaaz Horde sent settlers from Ashedstead to found Krush Fort in West Steppe.
+hist-conflict-flight e602 Ceard grew into a town of 1500.
+hist-conflict-flight e603 The Skreegg Horde laid claim to Central Downs, held by the Shaaz Horde.
+hist-conflict-flight e604 The Warrens of Zeez laid claim to Central Downs, held by the Shaaz Horde.
+hist-conflict-flight e605 The Shaaz Horde laid claim to Southwest Steppe, held by the Kingdom of Ashack.
+hist-conflict-flight e606 The Khirnhu Throne laid claim to Central Downs, held by the Shaaz Horde.
+hist-conflict-flight e607 The Shaaz Horde declared war on the Kingdom of Ashack over Southwest Steppe.
+hist-conflict-flight e608 The Shaaz Horde defeated the Kingdom of Ashack in Southwest Steppe; 43 of the defeated and 13 of the victors fell.
+hist-conflict-flight e609 The Shaaz Horde besieged Ceard of the Kingdom of Ashack; it held.
+hist-conflict-flight e610 The Shaaz Horde defeated the Kingdom of Ashack in Southwest Steppe; 42 of the defeated and 13 of the victors fell.
+hist-conflict-flight e611 The Shaaz Horde besieged Ceard of the Kingdom of Ashack; with nowhere to flee, its people held on.
+hist-conflict-flight e612 The Shaaz Horde defeated the Kingdom of Ashack in Southwest Steppe; 42 of the defeated and 13 of the victors fell.
+hist-conflict-flight e613 The Shaaz Horde besieged Ceard of the Kingdom of Ashack; with nowhere to flee, its people held on.
+hist-conflict-flight e614 The Shaaz Horde defeated the Kingdom of Ashack in Southwest Steppe; 41 of the defeated and 13 of the victors fell.
+hist-conflict-flight e615 The Shaaz Horde besieged Ceard of the Kingdom of Ashack; with nowhere to flee, its people held on.
+hist-conflict-flight e616 The Kingdom of Ashack sued the Shaaz Horde for peace after 7 years of war.
+hist-conflict-flight e617 A succession crisis at Skruz shook the Warrens of Zeez.
+hist-conflict-flight e618 Plague broke out in Kaz; 315 died.
+hist-conflict-flight e619 The plague spread to Bukrak; 233 died.
+hist-conflict-flight e620 Krush Fort grew into a village of 251.
+hist-conflict-flight e621 A succession crisis at Uraag Camp shook the Shaaz Horde.
+hist-conflict-flight e622 Plague broke out in Drax-Snagg Pit; 555 died.
+hist-conflict-flight e623 The plague spread to Rendmi; 261 died.
+hist-conflict-flight e624 Famine struck Gnok-Skeex; 232 died.
+hist-conflict-flight e625 The Warrens of Zeez laid claim to West Steppe, held by the Skreegg Horde.
+hist-conflict-flight e626 Famine struck Wimie; 31 died.
+hist-conflict-flight e627 Famine struck Bukrak; 185 died.
+hist-conflict-flight e628 The Kingdom of Ashack sent settlers from Ceard to found Wolwerford in Southwest Steppe.
+hist-conflict-flight e629 The Kingdom of Ashack sent settlers from Ceard to found Sesmelton in Southwest Steppe.
+hist-conflict-flight e630 Sesmelton grew into a village of 250.
+hist-conflict-flight e631 Famine struck Nik Pit; 569 died.
+hist-conflict-flight e632 Plague broke out in Nangud Deep; 697 died.
+hist-conflict-flight e633 The plague spread to Brimtha Hold; 76 died.
+hist-conflict-flight e634 The Kingdom of Ashack laid claim to West Steppe, held by the Skreegg Horde.
+hist-conflict-flight e635 Famine struck Skruz; 981 died.
+hist-conflict-flight e636 The Khirnhu Throne laid claim to North Downs, held by the Skreegg Horde.
+hist-conflict-flight e637 Famine struck Wiapo; 114 died.
+hist-conflict-flight e638 Plague broke out in Ashedstead; 148 died.
+hist-conflict-flight e639 Plague broke out in Slork; 483 died.
+hist-conflict-flight e640 Plague broke out in Nank; 423 died.
+hist-conflict-flight e641 The plague spread to Gnot Pit; 169 died.
+hist-conflict-flight e642 The plague spread to Gnok-Skeex; 118 died.
 synthetic syn-0 0 2000 all auto normal
 syn-0 table civilization 5ab356cecd672352c9111ae6df5178cc461c24e3f96bc1d2613d7ba3463d1a53
 syn-0 table event 98256e248557d6a7295a620d5c5a0f281d930c87a7f35507f5fc4bc2fa53ce9b
@@ -14805,7 +14874,7 @@ stress-5 stats wars_attacker_orc = 1
 stress-5 stats wars_hollow = 5
 stress-5 stats wars_hollow_permille = 138
 stress-5 stats wars_same_goal_max = 4
-stress-5 stats wars_same_goal_unchanged_max = 4
+stress-5 stats wars_same_goal_unchanged_max = 3
 stress-5 stats race_population_share_max_permille = 893
 stress-5 stats race_regions_share_max_permille = 666
 stress-5 stats wars_unfound = 0
@@ -15147,7 +15216,7 @@ stress-6 stats wars_attacker_orc = 4
 stress-6 stats wars_hollow = 5
 stress-6 stats wars_hollow_permille = 156
 stress-6 stats wars_same_goal_max = 5
-stress-6 stats wars_same_goal_unchanged_max = 5
+stress-6 stats wars_same_goal_unchanged_max = 3
 stress-6 stats race_population_share_max_permille = 533
 stress-6 stats race_regions_share_max_permille = 363
 stress-6 stats wars_unfound = 3
@@ -15348,7 +15417,7 @@ stress-7 stats wars_attacker_orc = 3
 stress-7 stats wars_hollow = 20
 stress-7 stats wars_hollow_permille = 217
 stress-7 stats wars_same_goal_max = 4
-stress-7 stats wars_same_goal_unchanged_max = 4
+stress-7 stats wars_same_goal_unchanged_max = 3
 stress-7 stats race_population_share_max_permille = 522
 stress-7 stats race_regions_share_max_permille = 444
 stress-7 stats wars_unfound = 5
@@ -16016,7 +16085,7 @@ stress-12 stats wars_attacker_orc = 4
 stress-12 stats wars_hollow = 13
 stress-12 stats wars_hollow_permille = 393
 stress-12 stats wars_same_goal_max = 10
-stress-12 stats wars_same_goal_unchanged_max = 4
+stress-12 stats wars_same_goal_unchanged_max = 3
 stress-12 stats race_population_share_max_permille = 985
 stress-12 stats race_regions_share_max_permille = 800
 stress-12 stats wars_unfound = 0
@@ -16222,7 +16291,7 @@ stress-13 stats wars_attacker_orc = 5
 stress-13 stats wars_hollow = 9
 stress-13 stats wars_hollow_permille = 97
 stress-13 stats wars_same_goal_max = 7
-stress-13 stats wars_same_goal_unchanged_max = 4
+stress-13 stats wars_same_goal_unchanged_max = 3
 stress-13 stats race_population_share_max_permille = 798
 stress-13 stats race_regions_share_max_permille = 666
 stress-13 stats wars_unfound = 0
@@ -17354,7 +17423,7 @@ norefuge-13 stats wars_attacker_orc = 5
 norefuge-13 stats wars_hollow = 9
 norefuge-13 stats wars_hollow_permille = 113
 norefuge-13 stats wars_same_goal_max = 4
-norefuge-13 stats wars_same_goal_unchanged_max = 4
+norefuge-13 stats wars_same_goal_unchanged_max = 3
 norefuge-13 stats race_population_share_max_permille = 771
 norefuge-13 stats race_regions_share_max_permille = 625
 norefuge-13 stats wars_unfound = 0
