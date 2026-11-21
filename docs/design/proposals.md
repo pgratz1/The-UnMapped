@@ -934,3 +934,13 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
   6. A hidden refuge lies low: no colonies and no declarations for its hidden years.
 - Interim choice: none needed. The five rule changes are added to the P3-10 change (generator 0.19.0), which follows the P3-09 merge.
 - Status: accepted
+
+### Paul's decision of 2026-11-20: orcs awaken with a quarrel
+
+- Date: 2026-11-20
+- Raised by: lead, recording Paul's decision
+- Design doc section: 5 (history: the races' roles, the orc age)
+- Problem: the per-race odds accepted for orcs (decision above, item 4) cannot reach worlds where orcs never raise a claim: in 5 of the 9 worlds (of 40) where orcs declare no war, they have no quarrel with anyone, so about 80% of worlds would have an orc war against a target of 90%.
+- Decision: Paul's words: "having the orcs start with a quarrel with a neighbor is reasonable". Orcs begin their history with a quarrel with a neighbour, in addition to the shorter odds. The rule is specified in the P3-10 change (generator 0.19.0), not held back until the target is measured.
+- Interim choice: none needed.
+- Status: accepted
