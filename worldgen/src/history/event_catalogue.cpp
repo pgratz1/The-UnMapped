@@ -24,6 +24,25 @@ std::string int_text(std::int64_t v) {
     return db::format_i64(v);
 }
 
+// P3-04 r12 20.3: a value as rendered in a sentence, with a comma between
+// groups of three digits from |v| >= 1000 (after the sign).
+std::string grouped_text(std::int64_t v) {
+    const std::string digits = int_text(v);
+    const std::size_t sign = !digits.empty() && digits.front() == '-' ? 1U : 0U;
+    const std::size_t n = digits.size() - sign;
+    if (n <= 3U) {
+        return digits;
+    }
+    std::string out = digits.substr(0, sign);
+    for (std::size_t i = 0; i < n; ++i) {
+        if (i > 0U && (n - i) % 3U == 0U) {
+            out += ',';
+        }
+        out += digits[sign + i];
+    }
+    return out;
+}
+
 std::string size_text(std::size_t v) {
     return db::format_u64(static_cast<std::uint64_t>(v));
 }
@@ -137,6 +156,13 @@ EventCatalogue build_compiled() {
     c.kinds.push_back(KindDef{34, "war_won", true, 0, 0, two("winner", "loser"), {"years"}, 0, {}});
     c.kinds.push_back(KindDef{35, "search_abandoned", true, 1, 0, two("searcher", "hidden"), {"years"}, 0, {}});
     c.kinds.push_back(KindDef{36, "refuge_held", true, 1, 1, two("attacker", "defender"), {"reason"}, 0, {}});
+    // P3-04 r12 20.4 (P3-10, generator 0.19.0): kind 37, an outbreak with its
+    // total toll (P3-05 22.1; replaces kind 12); kind 38, one quiet line for
+    // the world per quiet phase row (20.1; replaces kind 4).
+    c.kinds.push_back(
+        KindDef{37, "plague_outbreak", false, 1, 1, settlement_and_civ(), {"dead", "population", "total", "reached"}, 0, {}});
+    c.kinds.push_back(KindDef{38, "quiet_stretch", false, 0, 0, {role(1, "realm", EntityType::civilization, 1, 0)},
+                              {"years", "realms"}, 0, {}});
     return c;
 }
 
@@ -182,7 +208,7 @@ void check_compiled(const EventCatalogue& c) {
 
 // --- Template grammar (8.4) -----------------------------------------------------
 
-enum class TokenType : std::uint8_t { literal, role, value, choice, year, end_year, region, settlement };
+enum class TokenType : std::uint8_t { literal, role, value, choice, year, end_year, region, settlement, causes };
 
 enum class Form : std::uint8_t { name, plural, adjective, all };
 
@@ -194,6 +220,9 @@ struct Token {
     std::string word_other;     // choice: the word otherwise
     std::string word_zero;      // three-word choice (r10): the word for 0
     bool three = false;         // three-word choice: w0 | w1 | w2, '#' is the value
+    // r12 20.2, {@causes:key=cword,...|before|after}: (kind key, cword) in
+    // template order; the two words in word_one (before) and word_other (after).
+    std::vector<std::pair<std::string, std::string>> cause_words;
 };
 
 struct Parsed {
@@ -205,10 +234,72 @@ bool is_word(std::string_view w) noexcept {
     return w.find_first_of("{}|?") == std::string_view::npos;
 }
 
+// r12 20.2: a cword is one or more bytes other than { } | ? , =.
+bool is_cause_word(std::string_view w) noexcept {
+    return !w.empty() && w.find_first_of("{}|?,=") == std::string_view::npos;
+}
+
+// r12 20.2: the body after "@causes:"; false when it does not match the grammar.
+bool parse_causes(std::string_view rest, Token& out) {
+    const std::size_t bar = rest.find('|');
+    if (bar == std::string_view::npos) {
+        return false;
+    }
+    const std::string_view entries = rest.substr(0, bar);
+    const std::string_view words = rest.substr(bar + 1);
+    const std::size_t bar2 = words.find('|');
+    if (bar2 == std::string_view::npos) {
+        return false;
+    }
+    const std::string_view before = words.substr(0, bar2);
+    const std::string_view after = words.substr(bar2 + 1);
+    if (after.find('|') != std::string_view::npos || !is_word(before) || !is_word(after)) {
+        return false;
+    }
+    std::vector<std::pair<std::string, std::string>> list;
+    std::size_t from = 0;
+    while (true) {
+        const std::size_t comma = entries.find(',', from);
+        const std::string_view entry =
+            entries.substr(from, comma == std::string_view::npos ? std::string_view::npos : comma - from);
+        const std::size_t eq = entry.find('=');
+        if (eq == std::string_view::npos) {
+            return false;
+        }
+        const std::string_view key = entry.substr(0, eq);
+        const std::string_view word = entry.substr(eq + 1);
+        if (!is_key(key) || !is_cause_word(word)) {
+            return false;
+        }
+        for (const auto& [k, w] : list) {
+            if (k == key) {
+                return false;  // the same key twice
+            }
+        }
+        list.emplace_back(std::string(key), std::string(word));
+        if (comma == std::string_view::npos) {
+            break;
+        }
+        from = comma + 1;
+    }
+    out.type = TokenType::causes;
+    out.cause_words = std::move(list);
+    out.word_one = std::string(before);
+    out.word_other = std::string(after);
+    return true;
+}
+
 // Classifies a placeholder body at byte `at`; a problem or a token.
 std::optional<std::string> classify(const KindDef& kind, std::string_view body, std::size_t at, Token& out) {
     const std::string where = " at byte " + size_text(at);
     const std::string unknown = "unknown placeholder '{" + std::string(body) + "}'" + where;
+    constexpr std::string_view CAUSES = "@causes:";
+    if (body.size() >= CAUSES.size() && body.compare(0, CAUSES.size(), CAUSES) == 0) {
+        if (!parse_causes(body.substr(CAUSES.size()), out)) {
+            return unknown;
+        }
+        return std::nullopt;
+    }
     if (!body.empty() && body.front() == '@') {
         if (body == "@year") {
             out.type = TokenType::year;
@@ -873,7 +964,7 @@ std::string render_event(const HistoryView& view, std::int64_t event_id) {
                 }
                 break;
             }
-            case TokenType::value: out += int_text(value_of(t.text)); break;
+            case TokenType::value: out += grouped_text(value_of(t.text)); break;
             case TokenType::choice: {
                 const std::int64_t v = value_of(t.text);
                 if (!t.three) {
@@ -884,7 +975,7 @@ std::string render_event(const HistoryView& view, std::int64_t event_id) {
                 const std::string& word = v == 0 ? t.word_zero : v == 1 ? t.word_one : t.word_other;
                 for (const char c : word) {
                     if (c == '#') {
-                        out += int_text(v);
+                        out += grouped_text(v);
                     } else {
                         out += c;
                     }
@@ -907,6 +998,42 @@ std::string render_event(const HistoryView& view, std::int64_t event_id) {
                     fail(at + "no settlement " + int_text(e->row.settlement));
                 }
                 append_name(*s);
+                break;
+            }
+            case TokenType::causes: {
+                // r12 20.2: the cwords of the causes' kinds, in ascending
+                // cause id, each once; joined as {role:all} joins names.
+                std::vector<const std::string*> words;
+                std::vector<std::int64_t> causes = e->causes;
+                std::stable_sort(causes.begin(), causes.end());
+                for (const std::int64_t c : causes) {
+                    const HistoryView::Event* ce = view.event(c);
+                    const KindDef* ck = ce != nullptr ? view.catalogue().find_id(ce->row.kind) : nullptr;
+                    if (ck == nullptr) {
+                        fail(at + "cause " + int_text(c) + " is not in the log");
+                    }
+                    for (const auto& [key, word] : t.cause_words) {
+                        if (key == ck->key) {
+                            const bool listed = std::any_of(words.begin(), words.end(),
+                                                            [&word](const std::string* w) { return *w == word; });
+                            if (!listed) {
+                                words.push_back(&word);
+                            }
+                            break;
+                        }
+                    }
+                }
+                if (words.empty()) {
+                    break;
+                }
+                out += t.word_one;
+                for (std::size_t i = 0; i < words.size(); ++i) {
+                    if (i > 0) {
+                        out += i + 1 == words.size() ? " and " : ", ";
+                    }
+                    out += *words[i];
+                }
+                out += t.word_other;
                 break;
             }
         }
