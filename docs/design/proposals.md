@@ -917,4 +917,20 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
   5. Take 1 to 4 first and measure again; if goblins still lead nine wars in ten in a quarter of worlds, raise human aggression.
   6. A hidden refuge lies low: no colonies and no declarations for its hidden years.
 - Interim choice: P3-09 merges as validated. These six go into the next change after Paul's answer (with P3-10, generator 0.19.0, or a change of their own).
-- Status: open
+- Status: accepted for 1 to 4 and 6; 5 answered (no change). See the decision entry below.
+
+### Paul's decision of 2026-11-20 on the six questions from the P3-09 review
+
+- Date: 2026-11-20
+- Raised by: lead, recording Paul's decision
+- Design doc section: 5 (history: wars and how they end, the races' roles)
+- Problem: the entry "History: six questions from the world critic's review of P3-09 (conflict balance)" above.
+- Decision: Paul's words: "let's take your recommendation for 1-4 and 6. On 5 it's ok for goblins to start most wars, do not increase human aggression". So:
+  1. An attacker wins by aim only if it holds the goal itself; otherwise the war is decided by score with the last-battle rule, falling back to a truce.
+  2. One failed search makes that wood weary for every claimant for a time; only the first failed search in a world reaches the default summary; a second sentence for wars that had already fought there.
+  3. Resettlement of a region by the same owner does not reset weariness.
+  4. Orcs declare war at shorter odds than other races (a per-race `odds_min`).
+  5. Goblins starting most wars is accepted. Human aggression is not raised.
+  6. A hidden refuge lies low: no colonies and no declarations for its hidden years.
+- Interim choice: none needed. The five rule changes are added to the P3-10 change (generator 0.19.0), which follows the P3-09 merge.
+- Status: accepted
