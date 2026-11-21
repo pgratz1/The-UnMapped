@@ -1223,3 +1223,7 @@ New 21 item 7 and a note on invariant 4: a cession of P3-06 (20.27, r13 there; t
 ## Revision note r12 (2026-11-20, wording and site follow-ups; for P3-10, generator 0.19.0)
 
 New section 22 (`docs/specs/p3-10-followups.md`), normative from generator 0.19.0: every outbreak is kind 37 `plague_outbreak` with its total and the settlements it reached (22.1); causes remembered for `cause_memory_years` (50), a dwindling citing the colony it sent (22.2); the cause clause in kinds 10, 16 and 31 (22.3); kinds 15 and 17 without "its" (22.4); the site value with `inland`, `port` and `habitability` weights, faerie and dwarven data (22.5); kind 16 kept (22.6); one last-refuge predicate (22.7); a hidden refuge founds no colony, hook `lie_low` (22.7a, for P3-06 21.10); tests (22.8). New `history.peoples` fields `cause_memory_years` and `inland_cap`, appended after `civs_extra_max`. No earlier section is renumbered.
+
+## Revision note r13 (2026-11-21, after the P3-10 implementation)
+
+Text only. The defaults of hand-made tuning (tests) leave 22.2 and 22.5 off: `cause_memory_years` 100000, `inland_cap` 20, as implemented. Measured at the implementation (1024 default seeds 0 to 39): faerie settlements within 300 m of the sea 11% (0.18.0: 55%); humans +3% standing settlements against 0.18.0 (22.5's harness estimate of −15% was the reshuffle of keyed war draws).
