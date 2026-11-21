@@ -186,8 +186,11 @@ const PeoplesGeo& PeoplesSubsystem::geo() const {
 std::string PeoplesSubsystem::next_name(const StepContext& ctx, std::int64_t race, NameKind kind,
                                         std::int64_t entity) {
     const PeoplesRace& r = geo().race(race);
-    return make_name(r.naming, filter_, r.culture_key, kind, ctx.inputs().seed, word(r.culture), word(entity),
-                     registry_);
+    // P3-02 r10 12.2 (generator 0.19.0): no two civilization or settlement
+    // names of the world with cores equal or one letter apart.
+    return choose_name(r.naming, filter_, r.culture_key, kind, ctx.inputs().seed, word(r.culture), word(entity),
+                       registry_, cores_)
+        .name;
 }
 
 void PeoplesSubsystem::run(StepContext& ctx) {
@@ -497,9 +500,27 @@ void PeoplesSubsystem::abandon_small(StepContext& ctx) {
         if (quiet && ctx.quiet_events_left(s.owner_civ) < abandon_events(state, id)) {
             continue;  // waits for the next step (8.5)
         }
-        const std::int64_t last = get(last_reduction_, id);
+        const std::int64_t last = recent(ctx, get(last_reduction_, id));  // r12 22.2 item 1
         abandon(ctx, id, last != 0 ? last : s.founding_event);
     }
+}
+
+// r12 22.2: an event of a cause rule is cited only within cause_memory_years
+// of the year of the event being written (Y = the step's year); 0 if older.
+std::int64_t PeoplesSubsystem::recent(const StepContext& ctx, std::int64_t event) const {
+    if (event == 0 || ctx.year() - ctx.event_year(event) > tuning_.cause_memory_years) {
+        return 0;
+    }
+    return event;
+}
+
+// r12 22.2 item 3: the last reduction (recent), else the settlement's last
+// colony_founded with it as origin (recent), else none.
+std::int64_t PeoplesSubsystem::dwindle_cause(const StepContext& ctx, std::int64_t settlement) const {
+    if (const std::int64_t r = recent(ctx, get(last_reduction_, settlement)); r != 0) {
+        return r;
+    }
+    return recent(ctx, get(last_colony_, settlement));
 }
 
 void PeoplesSubsystem::change_kinds(StepContext& ctx) {
@@ -530,8 +551,8 @@ void PeoplesSubsystem::change_kinds(StepContext& ctx) {
         e.values = {p};
         if (up) {
             e.causes = {s.founding_event};
-        } else if (const std::int64_t last = get(last_reduction_, id); last != 0) {
-            e.causes = {last};
+        } else if (const std::int64_t cause = dwindle_cause(ctx, id); cause != 0) {
+            e.causes = {cause};  // r12 22.2 item 3
         }
         const std::int64_t ev = ctx.append(e);
         state.set_settlement_kind(id, next, ev);
@@ -706,7 +727,7 @@ void PeoplesSubsystem::abandon(StepContext& ctx, std::int64_t settlement, std::i
     // or founding) and, when s is declining, its decline start.
     std::vector<std::int64_t> causes{cause};
     if (s.status == SettlementStatus::declining) {
-        const std::int64_t start = get(decline_start_, settlement);
+        const std::int64_t start = recent(ctx, get(decline_start_, settlement));  // r12 22.2 item 2
         if (start != 0 && start != cause) {
             causes.push_back(start);
             std::stable_sort(causes.begin(), causes.end());
@@ -810,6 +831,11 @@ void PeoplesSubsystem::foundings(StepContext& ctx) {
         if (state.civ(c).ended_year || !ctx.visible(state.civ(c))) {
             continue;
         }
+        // r12 22.7a: a civilization lying low is skipped before item 1 (no
+        // draw, hunger unchanged).
+        if (const auto low = low_until_.find(c); low != low_until_.end() && ctx.year() < low->second) {
+            continue;
+        }
         const std::int64_t race = state.civ(c).race;
         const std::int64_t capital = state.civ(c).capital;
         const PeoplesRace& r = g.race(race);
@@ -906,6 +932,7 @@ void PeoplesSubsystem::foundings(StepContext& ctx) {
             e.salience = tuning_.colony_new_region_salience;
         }
         const std::int64_t ev = ctx.append(e);
+        slot(last_colony_, source) = ev;  // r12 22.2 item 3
         if (state.found_settlement(target.second.x, target.second.y, region, c, kind, colonists, std::move(name),
                                    ev) != s) {
             fail("history: peoples: the settlement id is not the expected one");
@@ -919,7 +946,8 @@ void PeoplesSubsystem::foundings(StepContext& ctx) {
 // --- T4: pressures (10) -----------------------------------------------------------------------------
 
 std::int64_t PeoplesSubsystem::strike(StepContext& ctx, std::int64_t settlement, std::string_view kind, std::int64_t toll,
-                              std::int64_t cause, std::optional<std::int64_t> salience) {
+                              std::int64_t cause, std::optional<std::int64_t> salience,
+                              std::span<const std::int64_t> extra) {
     State& state = ctx.state();
     // The outcome (dead, survivors, abandoned) by the rule the plague plan
     // replays (10.2), decided on the state before the blow.
@@ -937,6 +965,7 @@ std::int64_t PeoplesSubsystem::strike(StepContext& ctx, std::int64_t settlement,
     e.participants = {Participant{"settlement", EntityType::settlement, settlement},
                       Participant{"civilization", EntityType::civilization, owner}};
     e.values = {r.dead, r.after};
+    e.values.insert(e.values.end(), extra.begin(), extra.end());
     if (cause != 0) {
         e.causes = {cause};
     }
@@ -967,8 +996,9 @@ std::optional<std::int64_t> PeoplesSubsystem::spread_toll(const StepContext& ctx
     return floor_div(checked_mul(base, tuning_.plague_spread_toll_permille), 1000);
 }
 
-std::int64_t PeoplesSubsystem::planned_plague_dead(const StepContext& ctx, std::int64_t origin, std::int64_t toll,
-                                                   const std::vector<std::uint8_t>& struck) const {
+PeoplesSubsystem::PlaguePlan PeoplesSubsystem::planned_plague(const StepContext& ctx, std::int64_t origin,
+                                                              std::int64_t toll,
+                                                              const std::vector<std::uint8_t>& struck) const {
     // r6/r7 (10.2): the outbreak's dead and, unless it empties its
     // settlement, the dead of every spread whose draw succeeds, with the
     // populations the strikes will meet. The plan replays the strikes on a
@@ -995,7 +1025,7 @@ std::int64_t PeoplesSubsystem::planned_plague_dead(const StepContext& ctx, std::
     const SettlementsNow now{state, &pop, &up};
     const StrikeResult outbreak = strike_result(ctx, now, origin, toll);
     if (outbreak.abandoned) {
-        return outbreak.dead;  // emptied: no spread
+        return PlaguePlan{outbreak.dead, 0};  // emptied: no spread
     }
     pop[static_cast<std::size_t>(origin)] = outbreak.after;
     std::vector<std::int64_t> regions{s.region};
@@ -1004,6 +1034,7 @@ std::int64_t PeoplesSubsystem::planned_plague_dead(const StepContext& ctx, std::
     }
     const std::int64_t race = race_of_civ(state, c);
     std::int64_t total = outbreak.dead;
+    std::int64_t reached = 0;  // r12 22.1: the plague_spread events the outbreak will cause
     for (std::int64_t u = 1; u <= n; ++u) {
         const Settlement& t = state.settlement(u);
         if (u == origin || struck[static_cast<std::size_t>(u)] != 0 || up[static_cast<std::size_t>(u)] == 0 ||
@@ -1016,6 +1047,7 @@ std::int64_t PeoplesSubsystem::planned_plague_dead(const StepContext& ctx, std::
         }
         const StrikeResult r = strike_result(ctx, now, u, *toll_u);
         total = checked_add(total, r.dead);
+        ++reached;
         pop[static_cast<std::size_t>(u)] = r.after;
         if (!r.abandoned) {
             continue;
@@ -1030,7 +1062,7 @@ std::int64_t PeoplesSubsystem::planned_plague_dead(const StepContext& ctx, std::
         up[static_cast<std::size_t>(u)] = 0;
         pop[static_cast<std::size_t>(u)] = 0;
     }
-    return total;
+    return PlaguePlan{total, reached};
 }
 
 void PeoplesSubsystem::pressures(StepContext& ctx) {
@@ -1076,11 +1108,15 @@ void PeoplesSubsystem::pressures(StepContext& ctx) {
             static_cast<std::int64_t>(pick(ctx.draw(key(PLAGUE_TOLL), word(id), 0, 0), word(plague_range)));
         // r6 (10.2): the outbreak's salience by the total toll of the
         // outbreak and its spreads, planned before it is written.
-        const std::int64_t total = planned_plague_dead(ctx, id, toll, struck);
+        // r12 22.1 (generator 0.19.0): written as kind 37 with the plan's
+        // total and the number of spreads it will cause.
+        const PlaguePlan plan = planned_plague(ctx, id, toll, struck);
+        const std::array<std::int64_t, 2> extra{plan.total, plan.reached};
         const std::int64_t outbreak =
-            strike(ctx, id, "plague", toll, 0,
-                   total >= tuning_.plague_major_dead ? std::nullopt
-                                                      : std::optional<std::int64_t>(tuning_.plague_small_salience));
+            strike(ctx, id, "plague_outbreak", toll, 0,
+                   plan.total >= tuning_.plague_major_dead ? std::nullopt
+                                                           : std::optional<std::int64_t>(tuning_.plague_small_salience),
+                   extra);
         struck[static_cast<std::size_t>(id)] = 1;
         // The spread, to the owner's settlements in the region and its open neighbours.
         const std::int64_t owner = state.settlement(id).owner_civ;  // 0 if the outbreak emptied it
@@ -1281,6 +1317,10 @@ void PeoplesSubsystem::fade_ruins(StepContext& ctx) {
 
 void PeoplesSubsystem::note_reduction(std::int64_t settlement, std::int64_t event) {
     slot(last_reduction_, settlement) = event;
+}
+
+void PeoplesSubsystem::lie_low(std::int64_t civ, std::int64_t until_year) {
+    low_until_[civ] = until_year;
 }
 
 std::int64_t PeoplesView::score(std::int64_t region, std::int64_t race) const {
