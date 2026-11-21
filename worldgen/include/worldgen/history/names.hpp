@@ -143,6 +143,26 @@ private:
     std::set<std::string, std::less<>> names_;
 };
 
+// P3-02 r10 12.2: the cores of the civilization and settlement names a
+// history run has drawn. The core of an attempt is its root without ' and -.
+// A core is near the set when one of its cores equals it or is one letter
+// apart (Levenshtein distance 1). Membership only; never iterated by the
+// generator except to compare.
+class NameCores {
+public:
+    [[nodiscard]] bool near(std::string_view core) const;
+    void add(std::string core);
+    [[nodiscard]] std::size_t size() const noexcept;
+
+private:
+    std::set<std::string, std::less<>> cores_;
+};
+
+// The core of a root: its letters with every ' and - removed.
+[[nodiscard]] std::string name_core(std::string_view root);
+// True when the two strings are equal or at Levenshtein distance 1.
+[[nodiscard]] bool within_one_edit(std::string_view a, std::string_view b) noexcept;
+
 // A world-unique name (P3-02 4.3): the first valid attempt t = 0 ... 63 not
 // in the registry; failing that, the first valid attempt followed by " " and
 // the smallest Roman numeral >= II that makes it new. The name is added to
@@ -169,6 +189,14 @@ struct NameChoice {
 [[nodiscard]] NameChoice choose_name(const CultureNaming& naming, const NameFilter& filter,
                                      std::string_view culture_id, NameKind kind, std::uint64_t seed,
                                      std::uint64_t culture, std::uint64_t entity, NameRegistry& registry);
+// P3-02 r10 12.2 (generator 0.19.0; the history stage's civilizations and
+// settlements): as above, but an attempt whose core is near `cores` is
+// skipped like a name in the registry; the accepted name's core (or the
+// fallback's first core) is added to `cores`.
+[[nodiscard]] NameChoice choose_name(const CultureNaming& naming, const NameFilter& filter,
+                                     std::string_view culture_id, NameKind kind, std::uint64_t seed,
+                                     std::uint64_t culture, std::uint64_t entity, NameRegistry& registry,
+                                     NameCores& cores);
 // The same with an empty filter.
 [[nodiscard]] NameChoice choose_name(const CultureNaming& naming, std::string_view culture_id, NameKind kind,
                                      std::uint64_t seed, std::uint64_t culture, std::uint64_t entity,

@@ -76,12 +76,13 @@ h::ConflictTuning shipped_tuning() {
     t.revenge_aggression = 400;
     t.levy_hops = 3;
     t.odds_floor = 500;
-    t.odds_min = 700;
     t.truce_break_aggression = 600;
     t.enmity_hops = 3;
     t.kill_max_permille = 500;
     t.find_permille = 250;
     t.search_years = 3;
+    t.search_weary_years = 500;  // r14 21.7 (generator 0.19.0)
+    t.search_repeat_salience = 15;
     t.capital_sacked_salience = 90;
     t.capital_captured_salience = 80;
     return t;
@@ -480,39 +481,41 @@ TEST_CASE("P3-06 r13 engineer: a same-step colony passes with the cession of its
 
 TEST_SUITE("history-slow" * doctest::skip()) {
 
-// 20.27 item 7: in 2048 seed 3 (default settings) colony s240 of c15, founded in the Q4 of 5234 in the free
-// region 158, passes to c10 with the region_ceded of 20.3 item 1 in the same step.
-TEST_CASE("P3-06 r13 engineer: invariant (13) on 2048 seed 3 and the cession of s240 (20.27 item 7)") {
-    static dbtest::TempDir dir("conflict-engineer-2048");
+// 20.27 item 7: a colony founded in a Q4 passes to the winner with the region_ceded of that step.
+// Generator 0.19.0 changed the 0.18.0 case (2048 seed 3, colony s240 of c15 in region 158 at 5234; at
+// 0.19.0 that world has no such cession). 1024 seed 36 (default settings) has one at 0.19.0 (region 10,
+// c3 to c2 at 4913, colony s66); the test finds it in the log, the first cession that passes a
+// settlement created earlier in its step, and checks invariant (13) over the whole world.
+TEST_CASE("P3-06 r13 engineer: invariant (13) on 1024 seed 36 and a same-step colony cession (20.27 item 7)") {
+    static dbtest::TempDir dir("conflict-engineer-1024-36");
     std::vector<worldgen::stages::StageInfo> stages = worldgen::stages::stages_until(std::string("chronology"));
-    const worldgen::WorldParams wp = chrono_test::world_params(3, 2048, chrono_api::Params{}, ct::shipped());
-    const std::string path = dir.file("seed3-2048.db");
+    const worldgen::WorldParams wp = chrono_test::world_params(36, 1024, chrono_api::Params{}, ct::shipped());
+    const std::string path = dir.file("seed36-1024.db");
     REQUIRE(worldgen::stages::testing::generate_world_with_stages(wp, ct::shipped(), stages, path).ok());
     const eng::HistoryInputs in = h::history_inputs_from_world(chrono_test::open_world(path), ct::shipped());
     const Watched w = watched_run(ct::shipped(), in);
     for (const std::string& f : w.failures) FAIL_CHECK(f);
-    bool found = false;
+    const Cession* found = nullptr;
     for (const Cession& c : w.cessions) {
-        if (c.year != 5234 || c.region != 158) continue;
-        found = true;
-        CHECK(c.step == h::Step::q4);
-        CHECK(!c.goal);
-        CHECK(c.from == 15);
-        CHECK(c.to == 10);
-        CHECK(c.event == 1142);
-        CHECK(c.unseen == 1);
-        CHECK(std::find(c.passed.begin(), c.passed.end(), 240) != c.passed.end());
-    }
-    CHECK(found);
-    // the census of that step's bookkeeping writes c10 as s240's owner
-    bool census = false;
-    for (const eng::Row& r : w.tables.settlement_census) {
-        if (ct::at(r, 0) == 240 && ct::at(r, 1) == 5234) {
-            census = true;
-            CHECK(ct::at(r, 2) == 10);
+        if (c.unseen >= 1) {
+            found = &c;
+            break;
         }
     }
-    CHECK(census);
+    REQUIRE(found != nullptr);
+    MESSAGE("same-step cession: year " << found->year << " region " << found->region << " c" << found->from
+                                       << " -> c" << found->to << " event " << found->event);
+    // the census of that step's bookkeeping writes the winner as the owner of every passed settlement
+    for (const std::int64_t s : found->passed) {
+        bool census = false;
+        for (const eng::Row& r : w.tables.settlement_census) {
+            if (ct::at(r, 0) == s && ct::at(r, 1) == found->year) {
+                census = true;
+                CHECK(ct::at(r, 2) == found->to);
+            }
+        }
+        CHECK(census);
+    }
     CHECK(w.unseen_kept > 0);
 }
 

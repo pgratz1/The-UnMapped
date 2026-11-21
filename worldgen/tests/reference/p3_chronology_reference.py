@@ -66,12 +66,16 @@ ONE = 1 << 32
 M64 = (1 << 64) - 1
 REPO = os.path.normpath(os.path.join(_HERE, "..", "..", ".."))
 GOLDEN = os.path.join(REPO, "worldgen", "tests", "golden", "p3-03-chronology.txt")
-DEFAULT_INPUTS = os.path.join(os.path.expanduser("~"), ".cache", "the-unmapped", "out", "p3-08-tests", "inputs")
+DEFAULT_INPUTS = os.path.join(os.path.expanduser("~"), ".cache", "the-unmapped", "out", "p3-10-tests", "inputs")
+# P3-10 (generator 0.19.0, the default): the inputs carry P1-06 r7's region names; --version 0.18.0 (or
+# 0.17.0) reads the P3-08 inputs (r3 names).
+INPUTS_BY_VERSION = {"0.19.0": DEFAULT_INPUTS,
+                     "0.18.0": os.path.join(os.path.expanduser("~"), ".cache", "the-unmapped", "out", "p3-08-tests",
+                                            "inputs")}
 
 # The P3-08 input worlds (the 0.16.0 inputs with P1-06 r3 region names) are
 # complete when the regions writer has left this marker.
-INPUTS_READY = os.path.join(os.path.expanduser("~"), ".cache", "the-unmapped", "out", "p3-08-tests", "markers",
-                            "inputs-ready")
+INPUTS_READY = os.path.join(DEFAULT_INPUTS, "READY")
 AWAKENING_STREAM = "hist.chronology.awakening"  # 3: K_aw
 GOD_STREAM = "hist.names.god"                   # P3-02 4.5
 CAMPS = {"good": 0, "neutral": 1, "evil": 2}    # 5.2 race.camp
@@ -562,9 +566,19 @@ def races_of(text, data=None):
 
 
 def p1_06_region_hash(case):
+    """The table_region hash of a P1-06 golden case for the served version: from 0.19.0 the committed file
+    (P1-06 r7 names); before, the file as of the P3-10 base commit (r3 names, the inputs of those versions)."""
     path = os.path.join(REPO, "worldgen", "tests", "golden", "p1-06-regions.txt")
-    with open(path) as f:
-        for line in f:
+    if pdr.at_least("0.19.0"):
+        with open(path) as f:
+            text = f.read()
+    else:
+        import subprocess
+        text = subprocess.run(["git", "-C", REPO, "show", pdr.P3_10_BASE_COMMIT +
+                               ":worldgen/tests/golden/p1-06-regions.txt"], check=True, capture_output=True,
+                              text=True).stdout
+    if True:
+        for line in text.splitlines():
             parts = line.split()
             if len(parts) == 3 and parts[0] == case and parts[1] == "table_region":
                 return parts[2]
@@ -1041,14 +1055,14 @@ class version:
     def __enter__(self):
         global _SHIPPED
         self.saved = (pdr.DATA_VERSION, pnr.RULES, _SHIPPED)
-        pdr.use_version(self.v)
+        pnr.use_version(self.v)
         pnr.use_rules("r4" if self.v == "0.16.0" else "r5")
         _SHIPPED = None
         return self
 
     def __exit__(self, *a):
         global _SHIPPED
-        pdr.use_version(self.saved[0])
+        pnr.use_version(self.saved[0])
         pnr.use_rules(self.saved[1])
         _SHIPPED = self.saved[2]
         return False
@@ -1061,7 +1075,14 @@ def check_r3(c):
     data = shipped()
     for seed, row in pnr.GODS_R5.items():
         res = stage_with_regions(data, params(), seed, [])
-        c.eq("r3 gods seed %d (P3-02 11.6)" % seed, ", ".join(g[1] for g in res["god"]), row)
+        got = [g[1] for g in res["god"]]
+        if pdr.at_least("0.19.0"):
+            # P3-02 r10 12.1: only the gods the new filter entries reject (Grammam, Gordman) are redrawn
+            old = row.split(", ")
+            c.eq("r3 gods seed %d (P3-02 11.6, r10 12.1)" % seed, [g for g, o in zip(got, old) if g != o],
+                 [g for g, o in zip(got, old) if pnr.name_filtered(pnr.shipped_filter(), pnr.lower(o))])
+        else:
+            c.eq("r3 gods seed %d (P3-02 11.6)" % seed, ", ".join(got), row)
     c.eq("r3 shipped data passes names_form_text", entry_checks(data, params(), ["x"]), None)
     for form, entry in (("{root}" + "cock", "cock"), ("Shit" + "{root}", "shit"),
                         ("The Scrap" + "yard of {root}", "crap"), ("The Snot" + "ty Court of {root}", "snot")):
@@ -1099,8 +1120,15 @@ def cmd_check():
     check_r3(c)
     check_properties(c)
     if os.path.exists(GOLDEN) and os.path.exists(INPUTS_READY):
-        with open(GOLDEN, "rb") as f:
-            c.eq("golden file current", f.read().decode(), golden_text(DEFAULT_INPUTS))
+        if pdr.at_least("0.19.0"):
+            with open(GOLDEN, "rb") as f:
+                committed = f.read().decode()
+        else:   # P3-10: the file of the served version, as of the P3-10 base commit
+            import subprocess
+            committed = subprocess.run(["git", "-C", REPO, "show", pdr.P3_10_BASE_COMMIT +
+                                        ":worldgen/tests/golden/p3-03-chronology.txt"], check=True,
+                                       capture_output=True, text=True).stdout
+        c.eq("golden file current", committed, golden_text(DEFAULT_INPUTS))
     else:
         print("note: golden comparison skipped (no golden file or no input worlds)")
     print("%d checks, %d failures" % (c.count, c.failures))
@@ -1179,6 +1207,15 @@ def main(argv):
     if not argv:
         print(__doc__)
         return 2
+    global DEFAULT_INPUTS, INPUTS_READY, _SHIPPED
+    if "--version" in argv:   # P3-10: 0.19.0 (default) or 0.18.0 / 0.17.0 (the filter and inputs of that version)
+        i = argv.index("--version")
+        v = argv[i + 1]
+        argv = argv[:i] + argv[i + 2:]
+        pnr.use_version(v)
+        _SHIPPED = None
+        DEFAULT_INPUTS = INPUTS_BY_VERSION.get(v, INPUTS_BY_VERSION["0.18.0"])
+        INPUTS_READY = os.path.join(DEFAULT_INPUTS, "READY") if v == "0.19.0" else DEFAULT_INPUTS
     cmd = argv[0]
     if cmd == "check":
         return cmd_check()

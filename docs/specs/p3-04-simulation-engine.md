@@ -1,6 +1,6 @@
 # P3-04 Simulation engine
 
-Status: **approved by the lead 2026-11-19; corrected after implementation (r3, the lead's rulings of 2026-11-19)** (the six questions of section 19 go to Paul; the interim choices stand). Written by the spec writer 2026-11-19; amendments 18.2 and 18.3 applied the same day; revision r1 (P3-07's amendments) the same day. Phase P3 History core, spec 4 (P3-00 3.1), pipeline stage 8, `history`, as an engine with stub subsystems. Generator **0.14.0**; **schema version 7** (thirteen new tables, one new required `meta` key, section 9). Design doc sections 5 (deep time, ages, active phases, quiet intervals, flare-ups, records, determinism; creation; entities; tick loop), 6 (tables `phase`, `event`, `event_participant`, `event_cause`, `civilization`, `settlement`, `relation`; `meta` end year), 13 (P3 row and exit check; P4 timeline and territory by year; P5 interventions) and 14 (records a model can narrate and validate; the divine script as an intervention source). Depends on P0-01 to P0-04 with their amendments, P1-06 (region tables), P3-00 (binding; amended in 18.3), P3-01 (kind `history`), P3-02 (keyed draws, names), P3-03 (chronology tables, `HistoryParams`, the registry rule 8.2). Implementation read: `origin/p3/03-int` at 3ddc942 (generator 0.13.0, schema 6). Proposals read: up to "History: with a subset of races the first one present opens history; every race keeps its creator god". Also addresses the P3-03 determinism audit's advisories A1 (fatal guards for schedule invariants) and A2 (H8 must not rest on in-memory values): sections 3.2, 3.3 and 5.6. Revision r2 (P3-05's amendments) 2026-11-19. **Revision r10 (2026-11-20, for P3-08, generator 0.17.0; `docs/specs/p3-08-followups.md`)**: names inside a sentence lose a leading capital `The` (8.5, P1-06 r3 14.7), a three-word form of `{value?…}` (8.4, 8.5), one quiet era per civilization and quiet phase row (6.6), the `quiet_era` template (4.2), the engine microbenchmark (14.3); see the revision note.
+Status: **approved by the lead 2026-11-19; corrected after implementation (r3, the lead's rulings of 2026-11-19)** **r12 (2026-11-20, P3-10, generator 0.19.0): section 20, quiet stretches, `{@causes:…}`, thousands separators** (the six questions of section 19 go to Paul; the interim choices stand). Written by the spec writer 2026-11-19; amendments 18.2 and 18.3 applied the same day; revision r1 (P3-07's amendments) the same day. Phase P3 History core, spec 4 (P3-00 3.1), pipeline stage 8, `history`, as an engine with stub subsystems. Generator **0.14.0**; **schema version 7** (thirteen new tables, one new required `meta` key, section 9). Design doc sections 5 (deep time, ages, active phases, quiet intervals, flare-ups, records, determinism; creation; entities; tick loop), 6 (tables `phase`, `event`, `event_participant`, `event_cause`, `civilization`, `settlement`, `relation`; `meta` end year), 13 (P3 row and exit check; P4 timeline and territory by year; P5 interventions) and 14 (records a model can narrate and validate; the divine script as an intervention source). Depends on P0-01 to P0-04 with their amendments, P1-06 (region tables), P3-00 (binding; amended in 18.3), P3-01 (kind `history`), P3-02 (keyed draws, names), P3-03 (chronology tables, `HistoryParams`, the registry rule 8.2). Implementation read: `origin/p3/03-int` at 3ddc942 (generator 0.13.0, schema 6). Proposals read: up to "History: with a subset of races the first one present opens history; every race keeps its creator god". Also addresses the P3-03 determinism audit's advisories A1 (fatal guards for schedule invariants) and A2 (H8 must not rest on in-memory values): sections 3.2, 3.3 and 5.6. Revision r2 (P3-05's amendments) 2026-11-19. **Revision r10 (2026-11-20, for P3-08, generator 0.17.0; `docs/specs/p3-08-followups.md`)**: names inside a sentence lose a leading capital `The` (8.5, P1-06 r3 14.7), a three-word form of `{value?…}` (8.4, 8.5), one quiet era per civilization and quiet phase row (6.6), the `quiet_era` template (4.2), the engine microbenchmark (14.3); see the revision note.
 
 Numbers in this spec come from the spec writer's exact-integer prototype `~/.cache/the-unmapped/out/p3-04-spec/engine_proto.py` (on the P3-03 and P3-02 references; awakening years over seeds 0–999 and all 63 race subsets) and from the P1-06 validation worlds (`~/.cache/the-unmapped/out/p1-06-validation/`, whose geography is unchanged at 0.13.0). The empty-world size was measured with Python's SQLite 3.46.1 (9.6); the engineer confirms it with the vendored SQLite.
 
@@ -160,7 +160,7 @@ P3-04 lands first and defines one field; P3-07 adds none (r1: its selection cons
 | --- | --- | --- |
 | `events` | array(record `report_event`, 1, 256) | one entry per event kind of the compiled catalogue (8.2) |
 
-Record `report_event`, in this order: `kind` string(32, the P0-03 definition id grammar); `salience` int(0, 100), the kind's base salience; `template` string(256), the English sentence (grammar 8.4).
+Record `report_event`, in this order: `kind` string(32, the P0-03 definition id grammar); `salience` int(0, 100), the kind's base salience; `template` string(256), the English sentence (grammar 8.4); **from 0.19.0 string(512)** (r13: P3-05 22.3's cause-list templates of kinds 16 and 31 are about 280 and 300 bytes; the bound is a loader limit, not a column type, and no shorter wording keeps the cause map readable).
 
 Check `report_events` (r3: a **kind-level check of kind `history`**, P0-03 amendment 16, reported at the header of `history.report`'s definition in the P0-03 7.5 form `<path>:<line>:<column>: error: check 'report_events' failed for 'history.report': <message>`), messages in this order: for each entry i in array order: `events[<i>]: kind '<key>' is not an event kind` (not in the compiled catalogue), `events[<i>]: kind '<key>' is already listed at events[<j>]` (j the first), `events[<i>]: template: <problem>` (8.4, the first problem of that template); then for each compiled kind in id order without an entry: `event kind '<key>' has no entry`. Each message is reported (the check reports all, as `race_order_unique` does). A check of one kind may consult the compiled catalogue: it is code of the library, not another kind.
 
@@ -971,6 +971,82 @@ Each with the recommendation and the interim choice this spec follows.
 5. **Resume is a library seam, not a `generate --resume` option** (3.2). Recommendation and interim: yes until P5's history mode needs a command.
 6. **A `flare_up` event marks each flare-up.** Recommendation and interim: yes, so a reader of the log sees why detail resumes; it costs one event per flare-up.
 
+## 20. Wording and quiet stretches (amendment r12, P3-10, generator 0.19.0)
+
+Normative for the change P3-10 "wording and site follow-ups" (`docs/specs/p3-10-followups.md`), from generator **0.19.0**, not before. Each subsection replaces or extends the section it names; the text of those sections describes generator 0.14.0 to 0.18.0. **No schema change** (20.5).
+
+### 20.1 One quiet line per quiet stretch (replaces 6.6 "Quiet eras" from 0.19.0)
+
+Why: since r10 a civilization has one `quiet_era` per quiet phase row, but every civilization writes its own line for the same row. In the 40 default 1024 worlds of generator 0.18.0 (seeds 0 to 39) every quiet row's eras share one start and one end year (325 rows, 1,640 era lines); with four civilizations per race a row holds up to 12 identical lines (`docs/reviews/p3-08-followups-world-critic.md` F3). From 0.19.0 the engine writes **one event per quiet phase row** for the whole world, kind 38 `quiet_stretch` (20.4).
+
+In Q6 of each quiet step, after the subsystems:
+
+1. If the current quiet phase row has no `quiet_stretch` yet and at least one civilization is not ended: append `quiet_stretch` with `year` = the step's start, `end_year` = the step's last year, `region` 0, `settlement` 0, no cause, values `years` = `end_year` − `year` + 1 and `realms` = **the number of civilizations not ended at this step**, and as participants (each as `realm`, in ascending id) those civilizations, **at most `MAX_PARTICIPANTS` (64, the event writer's bound)**: when more are alive, the 64 with the most people (the sum of their standing settlements' populations at this step), ties to the smaller id (r13). So the sentence's count stays right with any number of realms, and the participants are the largest realms. P3-07 22.2's generations note is written only for participants.
+2. Otherwise, if the row has its `quiet_stretch`: its `end_year` becomes the step's last year and `years` is recomputed. Its participants and `realms` never change: a civilization that ends within the row stays a participant (it was at peace when the stretch began); no civilization can be founded within a quiet row with the shipped subsystems (P3-05 founds civilizations in ticks only: awakenings, secessions), and one founded by a later subsystem would not be added.
+3. No civilization alive: nothing (a world with no civilization has no quiet line).
+
+The stretch closes at the end of its quiet phase row, like the eras before it. W9 does not apply (as for `quiet_era`); W2's rule for `quiet_era` (lengthened afterwards) applies to `quiet_stretch`. Kind 4 `quiet_era` stays in the catalogue with its structure (a shipped kind is never removed, 8.2) and is **not written** from 0.19.0, so `events_quiet_era` is 0 in every 0.19.0 world.
+
+**What the era carried.** `generations` (the ruling generations of one civilization in its era) is not stored any more. It is derivable from the stored rows: for civilization c and a stretch [y, e], g(e + 1) − g(y) with g(t) = (t − c.`founded_year`) div `race.generation_years` (6.6's formula); P3-07 22.2 prints it in a civilization's own section. The region (a civilization's `home_region`) is not needed: the stretch belongs to the whole world.
+
+P3-06 16.2 item 18a's exception (the eras open in the first claim's step may differ between the peoples-only and the conflict log) applies to the `quiet_stretch` open in that step, whose `end_year` and `years` may differ; its participants do not.
+
+**The stubs** (7.3): the log of a stub world is, per age, `awakening`, `civ_founded`, `settlement_founded`, then one `quiet_stretch` per quiet phase row (participants: every civilization).
+
+Template (data, `history.report`; salience 20 as `quiet_era`'s):
+
+```
+For {years} {years?year|years}, from {@year} to {@end_year}, the land was quiet{realms?|; one realm held it|, and # realms kept the peace}.
+```
+
+Example (illustrative, re-told from seed 42 at 1024, generator 0.17.0: the row 4393–4417 whose seven eras were e211–e217, and the elves' first row): `For 25 years, from 4393 to 4417, the land was quiet, and 7 realms kept the peace.`; the first row of a world with the elves alone: `For 1,924 years, from 150 to 2073, the land was quiet; one realm held it.`
+
+Measured on the stored logs (one line per quiet row is the count of rows): default 1024 (0.18.0, seeds 0 to 39) 1,640 era lines become 325 lines (median 40 → 8 per world); at 0.17.0 the 100 default worlds of the P3-08 validation 3,670 → 732, `civs4` (20 worlds) 2,296 → 203, `turbulent` (20) 1,263 → 212, 512 (30) 942 → 244.
+
+### 20.2 The cause list placeholder `{@causes:…}` (extends 8.4 and 8.5)
+
+Why: an abandonment's causes are correct but cannot be said in its sentence (the review's F2: at summary level towns empty "for no stated reason"). The renderer gains one placeholder that names the kinds of the event's causes in words the template supplies.
+
+Grammar (added to 8.4's `body`):
+
+```
+body     = … | "@causes:" entry { "," entry } "|" word "|" word
+entry    = key "=" cword
+key      = [a-z][a-z0-9_]*                     // an event kind key
+cword    = one or more bytes other than "{", "}", "|", "?", ",", "="
+```
+
+Rendering (8.5): L = for each cause of the event in ascending cause id, the key of the cause event's kind (as stored in the world's `event_kind`); if the key is an entry's key, that entry's cword (the first entry with that key); a cause whose key has no entry contributes nothing; a cword already in L is not added again (first occurrence kept). If L is empty the placeholder renders nothing. Otherwise it renders the first word, then L joined as `{role:all}` joins names (`A`, `A and B`, `A, B and C`), then the second word. The cwords and both words are copied as they are (no name rule; they are literals). Example: causes a famine and then a plague, entries `famine=famine,plague=plague`, words `Weakened by ` and `, `: `Weakened by famine and plague, `.
+
+`template_problem` (8.4): a body that starts with `@causes:` and does not match the grammar (no entry, an empty cword, a key not of the key syntax, the same key twice, fewer or more than two words) is `unknown placeholder '{<body>}' at byte <n>`, the existing message. The keys need not be kinds of the catalogue (a key that matches no kind is never used). `{@causes:…}` is allowed for every kind, caused or not.
+
+A sentence start (8.5's names rule) is judged on the text rendered so far, so a name that follows the placeholder's second word `, ` is mid-sentence and one that follows an empty placeholder at offset 0 is at the sentence start: `Weakened by war, the Warrens of Zeez …` against `The Warrens of Zeez …`.
+
+### 20.3 Thousands separators (amends 8.5's `{value}` and the `#` of the three-word form)
+
+From 0.19.0 a value v with |v| ≥ 1000 renders with a comma (0x2C) between groups of three digits counted from the right, after the sign: `1,155`, `52,691`, `-12,000`; |v| ≤ 999 renders as before. This applies to `{value}` and to each `#` of a chosen three-word form; it does not apply to `{@year}` and `{@end_year}` (years stay `4393`), to the choice of `{value?w1|w2}` and `{value?w0|w1|w2}` (which depends on the value, not on its text), or to anything outside `render_event`. Design 4 writes "a city of 20,000". Stored values are integers and do not change: the rule changes no world byte, and it changes every stored golden sentence that holds a value of 1,000 or more (0.18.0, 40 default 1024 worlds: 10,030 of 27,971 events, 36%).
+
+### 20.4 Catalogue (appended to 8.2)
+
+| id | key | caused | region | settlement | roles (seq: role, entity type, min–max) | values (seq: key) | written by |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 37 | `plague_outbreak` | 0 | 1 | 1 | 1: `settlement`, settlement, 1–1; 2: `civilization`, civilization, 1–1 | 1: `dead`; 2: `population`; 3: `total`; 4: `reached` | P3-05 (22.1) |
+| 38 | `quiet_stretch` | 0 | 0 | 0 | 1: `realm`, civilization, 1–0 (unbounded) | 1: `years`; 2: `realms` | engine (20.1) |
+
+Kind 37 replaces kind 12 `plague` from 0.19.0 (P3-05 22.1); kind 38 replaces kind 4 `quiet_era`. Kinds 4 and 12 keep their rows, roles, values, salience and template in every world's catalogue and are not written. `docs/specs/schema.md` 6 gains both rows (the engineer).
+
+### 20.5 Schema and compatibility
+
+No schema change (8.2's list): two kinds are appended, two kinds stop being written (their structure is unchanged), templates and saliences change (data), and the template grammar gains a form that was an unknown placeholder before (20.2), as r10's three-word form did. Every template valid before r12 renders as before except for the separators of 20.3, which are a rendering rule, not a stored value. A world of 0.19.0 whose templates use `{@causes:…}` is refused by `HistoryView::load` of 0.18.0 or earlier; no shipped program of those versions renders sentences (P3-07 is not implemented and the viewer does not render events), so, as for r10, no proposals entry for a schema change is needed. The flare-up sentence (kind 5) is unchanged: its parties are named by P3-07's note (P3-07 21.4 item 2, worded as amended in P3-07 22.3), the one place for them (`docs/specs/p3-10-followups.md` item 8).
+
+### 20.6 Tests (amends 16)
+
+0. (r13) A test world with 70 living civilizations at a quiet row: one `quiet_stretch` with `realms` 70 and 64 participants, the 64 most populous (ties by id), in ascending id.
+1. `quiet_stretch`: on the stub golden cases and on the `ForcedTension` cases, one event per quiet phase row with a living civilization, participants every civilization not ended at the row's first step in ascending id, `realms` their number, `years` = `end_year` − `year` + 1 = the row's length; no `quiet_era` event; a civilization ended within the row (a hand-made subsystem in a test configuration that ends one in a quiet step) stays a participant.
+2. `{@causes:…}` on fixture events: causes (famine, plague) → `Weakened by famine and plague, `; (plague, plague_spread) with both mapped to `plague` → `Weakened by plague, `; three distinct words → `A, B and C`; no mapped cause → empty, and the next name is at the sentence start; every malformed body of 20.2 → `unknown placeholder`.
+3. Separators: values 0, 999, 1000, 1155, 25000, 1000000, −1000, −999 in `{value}` and in `#` render `0`, `999`, `1,000`, `1,155`, `25,000`, `1,000,000`, `-1,000`, `-999`; `{@year}` 4393 renders `4393`.
+4. The P3-04 golden vectors (`p3-04-engine.txt`): the stub worlds' `e<n>` sentence lines change (quiet lines, separators); their `phase` rows' years and kinds, event years except the quiet lines and their kinds' ids, and their participants other than the quiet lines do not. (r14) The `phase` rows' `trigger_event` column does move: it holds event ids, and event ids renumber when one `quiet_stretch` replaces a row's `quiet_era` lines.
+
 ## Appendix A. Proposals entry (added to `docs/design/proposals.md` with this spec)
 
 "History: active phases scale with the history span; the detail level sets the simulated share" (questions 1 to 3). Schema 7 itself is recorded in "History: schema versions 6 and 7"; its column details are this spec's 9.1.
@@ -1018,3 +1094,15 @@ Normative for the P3-08 change (`docs/specs/p3-08-followups.md`), not before it.
 ## Revision note r11 (2026-11-20, corrections after the P3-08 implementation)
 
 Text only. 8.5's seed 42 example and 17's names: civilization 1 is `The House of Finen` from 0.17.0 (P3-02 r5's elven realm form), and 17's stub homes carry P1-06 r3's region names; 8.5's illustrative goblin name `Bonk-Gitch` is replaced by `Gnonk` (P3-02 r5's filter rejects `Bonk-Gitch`). 14.3: "simulated years" in the microbenchmark are the years of the opening, flare-up and final phase rows (phase kinds 1, 3 and 4), as 4.1 counts the simulated years. 16.0a (P3-05's fatal message for a layer, now also used for the `i16` layer `elevation`): see P3-05 16.0a r7.
+
+## Revision note r12 (2026-11-20, for P3-10; generator 0.19.0)
+
+New section 20, normative from generator 0.19.0 (`docs/specs/p3-10-followups.md`): one `quiet_stretch` event per quiet phase row for the whole world (kind 38) in place of one `quiet_era` per civilization (20.1, replacing 6.6's eras); the cause list placeholder `{@causes:…}` (20.2, extending 8.4 and 8.5); thousands separators in rendered values (20.3); kinds 37 and 38 appended, kinds 4 and 12 kept and no longer written (20.4); no schema change (20.5); tests (20.6). No earlier section is renumbered; sections 6.6, 8.4 and 8.5 describe generators 0.14.0 to 0.18.0 where 20 amends them.
+
+## Revision note r13 (2026-11-21, after the P3-10 implementation)
+
+20.1: `quiet_stretch` participants are at most `MAX_PARTICIPANTS` (64), the most populous realms; `realms` counts every living civilization; test 20.6 item 0. 4.2: `report_event.template` is string(512) from 0.19.0 (the cause-list templates of P3-05 22.3 exceed 256 bytes), as implemented.
+
+## Revision note r14 (2026-11-21, text after the P3-10 integration)
+
+20.6 item 4: the `phase` rows keep their years and kinds, but their `trigger_event` column moves with the event ids, which renumber when the quiet lines collapse. No rule or output change.

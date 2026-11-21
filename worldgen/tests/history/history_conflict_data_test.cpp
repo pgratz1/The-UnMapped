@@ -87,9 +87,13 @@ const std::vector<Range>& ranges() {
         // r9 20.9 (generator 0.18.0, P3-09): eleven fields after last_refuge
         {"refuge_flight", 0, 1}, {"flight_hops", 1, 8}, {"hidden_years", 0, 10000}, {"weary_wars", 0, 100},
         {"tribute_permille", 0, 1000}, {"revenge_aggression", 0, 1000}, {"levy_hops", 0, 16}, {"odds_floor", 0, 1000},
-        {"odds_min", 0, 1000}, {"truce_break_aggression", 0, 999}, {"enmity_hops", 1, 4},
+        {"truce_break_aggression", 0, 999}, {"enmity_hops", 1, 4},  // r14 21.9 (0.19.0): odds_min removed
         // r10 20.19 (P3-09 r3): after enmity_hops
         {"kill_max_permille", 1, 10000}, {"find_permille", 0, 1000}, {"search_years", 1, 100},
+        // r14 21.7 (0.19.0, P3-10): after search_years
+        {"search_weary_years", 0, 10000}, {"search_repeat_salience", 0, 100},
+        // r15 21.12 item 2 (0.19.0, P3-10 r1): after search_repeat_salience
+        {"quarrel_strain", 0, 5000},
         {"capital_sacked_salience", 0, 100}, {"capital_captured_salience", 0, 100},
     };
     return v;
@@ -107,7 +111,7 @@ std::string listing_line(std::string_view field) {
 
 TEST_SUITE("history") {
 
-TEST_CASE("P3-06 12.1, r9 20.9: history.conflict loads with the listing's 57 fields in table order and values") {
+TEST_CASE("P3-06 12.1, r9 20.9: history.conflict loads with the listing's 59 fields in table order and values (r14, r15: 0.19.0)") {
     const Load l = load(history_data::shipped_files());
     INFO(dump(l));
     REQUIRE(l.ok());
@@ -136,7 +140,8 @@ TEST_CASE("P3-06 12.1, r9 20.9: history.conflict loads with the listing's 57 fie
     CHECK(r.get_int("truce_years") == 200);
     CHECK(r.get_int("last_refuge") == 1);
     CHECK(r.get_int("capital_captured_salience") == 80);
-    CHECK(r.size() == 57U);  // 43 at 0.16.0 and 0.17.0; r9 20.9 adds eleven, r10 20.19 three
+    CHECK(r.size() == 59U);  // 43 at 0.16.0 and 0.17.0; r9 20.9 adds eleven, r10 20.19 three; r14 (0.19.0) -1 +2, r15 +1
+    CHECK(r.get_int("quarrel_strain") == 600);
     // the shipped content (game/data) holds the same record (2: identical copies in the fixtures)
     CHECK(conflict_record(shipped_content()) == r);
 }
@@ -190,6 +195,9 @@ TEST_CASE("P3-06 12.1, 16.1 item 12: each named check of history.conflict once, 
              // r9 20.9 (0.18.0): enmity_hops >= march_hops
              {"enmity_hops = 3", "enmity_hops = 1", "conflict_enmity_hops", "enmity_hops must not be below march_hops"},
              {"march_hops = 2", "march_hops = 4", "conflict_enmity_hops", "enmity_hops must not be below march_hops"},
+             // r15 21.12 item 2 (0.19.0): quarrel_strain >= claim_strain (300)
+             {"quarrel_strain = 600", "quarrel_strain = 299", "conflict_quarrel_strain",
+              "quarrel_strain must not be below claim_strain"},
          }) {
         CAPTURE(std::string_view(c.to));
         const wd::LoadError e = one_error(load(with_conflict_edit(c.from, c.to)));
@@ -200,6 +208,7 @@ TEST_CASE("P3-06 12.1, 16.1 item 12: each named check of history.conflict once, 
     CHECK(load(with_conflict_edit("claim_strain = 300", "claim_strain = 299")).ok());
     CHECK(load(with_conflict_edit("strain_max = 5000", "strain_max = 900")).ok());
     CHECK(load(with_conflict_edit("enmity_hops = 3", "enmity_hops = 2")).ok());  // r9: the edge, equal to march_hops
+    CHECK(load(with_conflict_edit("quarrel_strain = 600", "quarrel_strain = 300")).ok());  // r15: the edge, = claim_strain
 }
 
 TEST_CASE("P3-06 11 (r7), 16.1 item 11: the compiled kinds 20-30 equal section 11; templates parse; report lists them") {
@@ -218,11 +227,13 @@ TEST_CASE("P3-06 11 (r7), 16.1 item 11: the compiled kinds 20-30 equal section 1
         {"claim", 1, 0, {{"claimant", 1}, {"holder", 1}}, {}, 35, "{claimant} laid claim to {@region}, held by {holder}."},
         {"war_declared", 1, 0, {{"attacker", 1}, {"defender", 1}}, {}, 70,
          "{attacker} declared war on {defender} over {@region}."},
+        // P3-06 r14 21.2 (0.19.0): no "0 of the victors", the three-word form for both counts
         {"battle", 1, 0, {{"winner", 1}, {"loser", 1}}, {"winner_dead", "loser_dead"}, 30,
-         "{winner} defeated {loser} in {@region}; {loser_dead} of the defeated and {winner_dead} of the victors fell."},
+         "{winner} defeated {loser} in {@region}; {loser_dead?none|one|#} of the defeated{winner_dead? fell, and none "
+         "of the victors| and one of the victors fell| and # of the victors fell}."},
         {"battle_at_pass", 1, 0, {{"winner", 1}, {"loser", 1}}, {"winner_dead", "loser_dead", "pass"}, 35,
-         "{winner} defeated {loser} at the pass into {@region}; {loser_dead} of the defeated and {winner_dead} of the "
-         "victors fell."},
+         "{winner} defeated {loser} at the pass into {@region}; {loser_dead?none|one|#} of the defeated{winner_dead? "
+         "fell, and none of the victors| and one of the victors fell| and # of the victors fell}."},
         {"siege", 1, 1, {{"attacker", 1}, {"defender", 1}}, {"fell"}, 25,
          "{attacker} besieged {@settlement} of {defender}; it {fell?fell|held}."},
         {"sacked", 1, 1, {{"attacker", 1}, {"defender", 1}}, {"dead", "survivors"}, 75,
@@ -238,10 +249,11 @@ TEST_CASE("P3-06 11 (r7), 16.1 item 11: the compiled kinds 20-30 equal section 1
         {"civ_conquered", 1, 0, {{"civilization", 1}, {"conqueror", 1}}, {}, 90, "{civilization} fell to {conqueror}."},
     };
     const eng::EventCatalogue& compiled = eng::compiled();
-    // P3-05 r6 appends kind 31 after kinds 20-30 (0.17.0); P3-06 r9 and r10 kinds 32-36 (0.18.0)
-    REQUIRE(compiled.kinds.size() == 36U);
+    // P3-05 r6 appends kind 31 after kinds 20-30 (0.17.0); P3-06 r9 and r10 kinds 32-36 (0.18.0); P3-04 r12 20.4
+    // kinds 37 and 38 (0.19.0)
+    REQUIRE(compiled.kinds.size() == 38U);
     const eng::EventCatalogue cat = eng::catalogue_of(engine_test::shipped());
-    REQUIRE(cat.kinds.size() == 36U);
+    REQUIRE(cat.kinds.size() == 38U);
     for (std::size_t i = 0; i < want.size(); ++i) {
         const K& w = want[i];
         CAPTURE(std::string_view(w.key));

@@ -46,6 +46,8 @@ civs_two_permille = 500
 regions_per_civ = 4
 regions_per_extra_civ = 90
 civs_extra_max = 2
+cause_memory_years = 50
+inland_cap = 20
 home_min_hops = 3
 home_min_capacity = 1500
 intensity = { calm = 500, normal = 1000, turbulent = 2000 }

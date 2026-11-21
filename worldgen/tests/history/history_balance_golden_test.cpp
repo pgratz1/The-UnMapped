@@ -79,6 +79,7 @@ TEST_CASE("P3-06 r9 20.14 item 8: hist-conflict-flight equals the reference; fli
     check_invariants_06(t, in, 25, true);
     check_invariants_09(t, in, shipped());
     check_invariants_10(t, shipped());
+    CHECK(invariants_19(t, shipped()) == std::vector<std::string>{});  // P3-06 r14 (14), (15), 21.7 (0.19.0)
     // what the case is for
     const Index x(t);
     const std::int64_t hidden_years = conflict_int(shipped(), "hidden_years");
@@ -105,42 +106,45 @@ TEST_CASE("P3-06 r9 20.14 item 8: hist-conflict-flight equals the reference; fli
 
 TEST_SUITE("history-slow" * doctest::skip()) {
 
-TEST_CASE("P3-06 r13 20.27 items 7, 8: 2048 seed 3, the colony s240 passes to c10 with the region_ceded e1142") {
-    // 20.27 item 7: the log is unchanged up to and including e1142 (the transfer writes no event): the colony s240
-    // of c15 in region 158 (e1138), c15's war_won lost to c10 (e1141) and the cession of 158 from c15 to c10 (e1142),
-    // all in the quiet step of 5234. Under r13 s240 passes to c10 with e1142: its census row of 5234 has owner c10.
-    const std::string path = chrono_test::world(chrono_test::WorldKey{3, "", 2048, 6000, "all", "", 1});
+TEST_CASE("P3-06 r13 20.27 items 7, 8: 1024 seed 36, a colony founded in the step of a cession passes to the winner") {
+    // 20.27 item 7 at 0.19.0 (the 0.18.0 case, 2048 seed 3's s240, no longer occurs; P3-10 integration): the
+    // reference (p3_conflict_reference.py, table for table on this world) has one such cession in 1024 seed 36,
+    // default settings: region_ceded e310 of region 10 from c3 to c2 in 4913, after c3's colony_founded e308 of
+    // s66 in region 10 in the same step. The test finds it from the log rather than by id: a region_ceded e of
+    // region R in year Y, from L to W, preceded in Y by a colony_founded of a settlement s in R with founder L.
+    const std::string path = chrono_test::world(chrono_test::WorldKey{36, "", 1024, 6000, "all", "", 1});
     const db::WorldReader r = open_world(path);
     const Tables t = tables_of_world(r);
     const Index x(t);
-    REQUIRE(x.ev.count(1142) == 1U);
-    CHECK(x.kind(1138) == k_colony_founded);
-    CHECK(at(*x.ev.at(1138), 6) == 240);
-    CHECK(at(*x.ev.at(1138), 5) == 158);
-    CHECK(x.role1(1138, 2) == 15);
-    CHECK(x.kind(1141) == k_war_won);
-    CHECK(x.role1(1141, 1) == 10);
-    CHECK(x.role1(1141, 2) == 15);
-    CHECK(x.kind(1142) == k_region_ceded);
-    CHECK(at(*x.ev.at(1142), 1) == 5234);
-    CHECK(at(*x.ev.at(1142), 5) == 158);
-    CHECK(x.role1(1142, 1) == 15);
-    CHECK(x.role1(1142, 2) == 10);
-    REQUIRE(x.causes.count(1142) == 1U);
-    CHECK(x.causes.at(1142) == std::vector<std::int64_t>{1141});
-    // s240 keeps c15 as founder and e1138 as founding event; its census row of 5234 is c10's
-    const Row& s = *x.st.at(240);
-    CHECK(at(s, 5) == 15);
-    CHECK(at(s, 7) == 1138);
-    std::int64_t owner_5234 = -1;
-    for (const Row& c : t.settlement_census) {
-        if (at(c, 0) == 240 && at(c, 1) == 5234) owner_5234 = at(c, 2);
+    std::int64_t found = 0;
+    for (const Row& e : t.event) {
+        if (at(e, 3) != k_region_ceded) continue;
+        const std::int64_t y = at(e, 1), region = at(e, 5), loser = x.role1(at(e, 0), 1), winner = x.role1(at(e, 0), 2);
+        for (const Row& f : t.event) {
+            if (at(f, 0) >= at(e, 0) || at(f, 3) != k_colony_founded || at(f, 1) != y || at(f, 5) != region) continue;
+            if (x.role1(at(f, 0), 2) != loser) continue;
+            ++found;
+            const std::int64_t s = at(f, 6);
+            CAPTURE(at(e, 0));
+            CAPTURE(s);
+            // s keeps its founder and founding event; its census row of Y is the winner's (20.27 item 7)
+            CHECK(at(*x.st.at(s), 5) == loser);
+            CHECK(at(*x.st.at(s), 7) == at(f, 0));
+            std::int64_t owner = -1;
+            for (const Row& c : t.settlement_census) {
+                if (at(c, 0) == s && at(c, 1) == y) owner = at(c, 2);
+            }
+            CHECK(owner == winner);
+            // the winner holds the region from Y with e
+            bool row = false;
+            for (const Row& rc : t.region_control) {
+                row = row || (at(rc, 0) == region && at(rc, 1) == y && at(rc, 3) == winner && at(rc, 4) == at(e, 0));
+            }
+            CHECK(row);
+        }
     }
-    CHECK(owner_5234 == 10);
-    // c10 holds 158 from 5234 with e1142, as before
-    bool row = false;
-    for (const Row& rc : t.region_control) row = row || (at(rc, 0) == 158 && at(rc, 1) == 5234 && at(rc, 3) == 10 && at(rc, 4) == 1142);
-    CHECK(row);
+    CHECK(found >= 1);  // the reference: exactly e310 (s66, region 10, c3 to c2, 4913)
+    MESSAGE("same-step colony cessions found: " << found);
     // invariant (13), with 14 item 5 (a region's owner has a standing settlement in it) through the replay
     CHECK(cession_violations(t) == std::vector<std::string>{});
 }

@@ -10,7 +10,7 @@ generation_years = 150
 growth_permille = 3
 density_permille = 300
 site_weights = { fertility = 20, forage = 35, timber = 35, ore = 0, fresh_water = 10 }
-cell_weights = { ore = 0, height = 0 }
+cell_weights = { ore = 0, height = 0, inland = 0, port = 1000, habitability = 1000 }
 biomes = [
   { biome = "temperate_forest", weight = 500 },
   { biome = "wet_woodland", weight = 300 },
@@ -28,5 +28,7 @@ prowess_permille = 1600
 muster_permille = 1000
 conceal_min = 1001
 home_defense_permille = 1500
+odds_min_permille = 700
+awakening_quarrel = 0
 settlement_kinds = ["hamlet", "village", "town", "city"]
 culture = "elven"

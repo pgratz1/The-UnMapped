@@ -55,6 +55,12 @@ constexpr std::int64_t k_tribute = 33;
 constexpr std::int64_t k_war_won = 34;
 constexpr std::int64_t k_search_abandoned = 35;
 constexpr std::int64_t k_refuge_held = 36;
+// P3-04 r12 20.4 (generator 0.19.0, P3-10): every outbreak is kind 37 (P3-05 r12 22.1), every quiet line kind 38;
+// kinds 4 and 12 are no longer written.
+constexpr std::int64_t k_plague_outbreak = 37;
+constexpr std::int64_t k_quiet_stretch = 38;
+// P3-05 r12 22.2: the shipped cause_memory_years.
+constexpr std::int64_t cause_memory_years = 50;
 enum SKind : std::int64_t { hamlet = 1, village, town, city, fortress };
 enum Status : std::int64_t { thriving = 1, declining, ruined, faded };
 
@@ -73,6 +79,8 @@ struct GCase {
     std::vector<std::string> report;    // after "[history]"
     std::vector<std::string> stats;
     std::map<std::int64_t, std::string> sentences;
+    // P3-10 4 item 2 (hist-peoples-42-1024 only): the dwarven settlements by their first census kind; -1: no line
+    std::int64_t dwarf_forts = -1, dwarf_ladder = -1;
 };
 
 inline const std::vector<GCase>& peoples_golden() {
@@ -124,6 +132,12 @@ inline const std::vector<GCase>& peoples_golden() {
                 c.report.push_back(rest.substr(7));
             } else if (w[1] == "stats") {
                 c.stats.push_back(rest.substr(6));
+            } else if (w[1] == "dwarf_kinds") {
+                REQUIRE(w.size() == 6U);
+                REQUIRE(w[2] == "forts");
+                REQUIRE(w[4] == "ladder");
+                c.dwarf_forts = std::stoll(w[3]);
+                c.dwarf_ladder = std::stoll(w[5]);
             } else if (w[1].size() > 1 && w[1][0] == 'e') {
                 c.sentences[std::stoll(w[1].substr(1))] = rest.substr(w[1].size() + 1);
             } else {
@@ -807,12 +821,15 @@ inline void check_invariants_r6(const Tables& t, std::int64_t abandon_min, const
             CHECK_MESSAGE(owned, "destination " << d << " of e" << id << " never owned by its civilization");
         }
     }
-    // 13
-    std::map<std::int64_t, std::int64_t> spread;
+    // 13 (r12 22.1: on kind 37, with its stored total and reached)
+    std::map<std::int64_t, std::int64_t> spread, reached;
     std::set<std::int64_t> split;
     for (const Row& e : t.event) {
         if (at(e, 3) == k_plague_spread) {
-            for (const std::int64_t c : causes[at(e, 0)]) spread[c] += vals[at(e, 0)].at(1);
+            for (const std::int64_t c : causes[at(e, 0)]) {
+                spread[c] += vals[at(e, 0)].at(1);
+                reached[c] += 1;
+            }
         }
         if (at(e, 3) == k_civ_seceded) {
             for (const std::int64_t c : causes[at(e, 0)]) split.insert(c);
@@ -820,10 +837,14 @@ inline void check_invariants_r6(const Tables& t, std::int64_t abandon_min, const
     }
     for (const Row& e : t.event) {
         const std::int64_t id = at(e, 0);
-        if (at(e, 3) == k_plague) {
+        CHECK_MESSAGE(at(e, 3) != k_plague, "e" << id << " is a kind 12 plague (not written from 0.19.0)");
+        CHECK_MESSAGE(at(e, 3) != k_quiet_era, "e" << id << " is a kind 4 quiet_era (not written from 0.19.0)");
+        if (at(e, 3) == k_plague_outbreak) {
             const std::int64_t total = vals[id].at(1) + spread[id];
-            CHECK_MESSAGE(at(e, 7) == (total >= 1000 ? base.at(k_plague) : 25),
-                          "plague e" << id << " salience " << at(e, 7) << " total dead " << total);
+            CHECK_MESSAGE(vals[id].at(3) == total, "outbreak e" << id << " total " << vals[id].at(3) << " dead " << total);
+            CHECK_MESSAGE(vals[id].at(4) == reached[id], "outbreak e" << id << " reached " << vals[id].at(4));
+            CHECK_MESSAGE(at(e, 7) == (total >= 1000 ? base.at(k_plague_outbreak) : 25),
+                          "outbreak e" << id << " salience " << at(e, 7) << " total dead " << total);
         }
         if (at(e, 3) == k_succession_crisis) {
             CHECK_MESSAGE(at(e, 7) == (split.count(id) == 1U ? base.at(k_succession_crisis) : 25),
@@ -954,7 +975,7 @@ inline void check_invariants(const Tables& t, const eng::HistoryInputs& in, cons
         if (k == k_became_village || k == k_became_town || k == k_became_city) {
             CHECK(cs == std::vector<std::int64_t>{at(*st.at(at(e, 6)), 7)});
         } else if (k == k_plague_spread) {
-            CHECK((cs.size() == 1U && kind(cs[0]) == k_plague));
+            CHECK((cs.size() == 1U && kind(cs[0]) == k_plague_outbreak));
         } else if (k == k_civ_seceded) {
             CHECK((cs.size() == 1U && kind(cs[0]) == k_succession_crisis));
         } else if (k == k_capital_moved || k == k_civ_ended || k == k_ruin_faded) {
@@ -965,8 +986,27 @@ inline void check_invariants(const Tables& t, const eng::HistoryInputs& in, cons
             CHECK(std::is_sorted(cs.begin(), cs.end()));
             for (const std::int64_t c : cs) {
                 const std::int64_t ck = kind(c);
-                CHECK((ck == k_famine || ck == k_plague || ck == k_plague_spread || ck == k_succession_crisis ||
-                       ck == k_settlement_founded || ck == k_colony_founded));
+                CHECK((ck == k_famine || ck == k_plague_outbreak || ck == k_plague_spread ||
+                       ck == k_succession_crisis || ck == k_settlement_founded || ck == k_colony_founded));
+            }
+        }
+        // r12 22.2: a dwindling or an abandonment cites no reduction, decline start or colony older than
+        // cause_memory_years (the founding event standing in for none is exempt)
+        if (k == k_settlement_dwindled || ruin_kind(k)) {
+            for (const std::int64_t c : cs) {
+                const std::int64_t ck = kind(c);
+                if (ck == k_settlement_founded || (ck == k_colony_founded && ruin_kind(k))) continue;
+                CHECK_MESSAGE(at(e, 1) - at(*ev.at(c), 1) <= cause_memory_years,
+                              "e" << at(e, 0) << " cites e" << c << " of " << at(e, 1) - at(*ev.at(c), 1) << " years ago");
+            }
+            if (k == k_settlement_dwindled) {
+                CHECK(cs.size() <= 1U);
+                for (const std::int64_t c : cs) {
+                    const std::int64_t ck = kind(c);
+                    CHECK((ck == k_famine || ck == k_plague_outbreak || ck == k_plague_spread ||
+                           ck == k_succession_crisis || ck == k_colony_founded || ck == 22 || ck == 23 ||
+                           ck == k_tribute));
+                }
             }
         }
     }

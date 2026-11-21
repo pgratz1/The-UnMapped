@@ -562,8 +562,9 @@ TEST_CASE("P1-06 3.2, RG6, RG10 (ruling): a one-cell lake islet is a region with
     for (const auto& x : o.regions) {
         names.push_back(x.name);
     }
-    // r3 (the reference's lake-only fixture; before r3 `East Isle II`, `East Isle III`).
-    CHECK(names == std::vector<std::string>{"West Downs", "The Sable Isle", "East Isle", "Woemere"});
+    // r3 (the reference's lake-only fixture; before r3 `East Isle II`, `East Isle III`), with the 0.19.0 lists
+    // of P1-06 r6 (The Sable Isle and Woemere on the 0.18.0 lists; Woe moved to trait_barren).
+    CHECK(names == std::vector<std::string>{"West Downs", "The Shivering Isle", "East Isle", "Wolfmere"});
     CHECK(own_regions(in, {}, values(RG6_TUNING), 0).out == o);
 }
 

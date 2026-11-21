@@ -1007,3 +1007,177 @@ when an in-run check does not apply. The golden file was rewritten by
 `hist-conflict-flight` (seed 1 at 512 holds a cession of a same-step
 colony, e354) and the `wars_same_goal_unchanged_max` line of `stress-5`,
 `-6`, `-7`, `-12`, `-13` and `norefuge-13`.
+
+## Generator 0.19.0 (P3-10): data, names, region names, chronology
+
+Written from `docs/specs/p3-10-followups.md` and the stage-spec revisions it
+names (P3-01 r11 3.4 and 3.5, P3-02 r10 section 12, P1-06 r6 section 15 and
+r7 15.7), without the engineer's branch. Each reference serves 0.19.0 by
+default and keeps 0.18.0 behind `--version 0.18.0`, which reproduces the
+committed 0.18.0 golden files byte for byte (checked before the 0.19.0 files
+were written; the 0.18.0 files are those of 81908fa):
+
+```
+python3 -B worldgen/tests/reference/p3_data_reference.py golden - --version 0.18.0
+python3 -B worldgen/tests/reference/p3_names_reference.py golden - --version 0.18.0
+python3 -B worldgen/tests/reference/p1_regions_reference.py golden - --large \
+    --db-dir ~/.cache/the-unmapped/out/p1-06-tests/db --version 0.18.0
+python3 -B worldgen/tests/reference/p3_chronology_reference.py --version 0.18.0 golden -
+```
+
+- `p3_data_reference.py`: `SPEC_FILES_019` (race `cell_weights` gains
+  `inland`, `port`, `habitability` after `height`; faerie `coast` -500;
+  `odds_min_permille` and `awakening_quarrel` after `home_defense_permille`;
+  `history.conflict` without `odds_min`, with `search_weary_years` and
+  `search_repeat_salience` after `search_years`; `history.peoples`
+  `cause_memory_years` and `inland_cap` after `civs_extra_max`; the templates
+  of kinds 10, 15, 16, 17, 22, 23, 31 and the entries of kinds 37 and 38
+  appended after kind 36's: an assumption, as for every earlier kind). The
+  copied kinds (`placename`, `name_filter`) are served by the spec's edits
+  applied to the 0.18.0 files on disk (`placenames_019`, `name_filters_019`:
+  P1-06 r6 15.1-15.3, P3-02 r10 12.1), or read from git at 81908fa when the
+  disk holds 0.19.0 files and an earlier version is served
+  (`copied_files_019`). `write-root DIR` writes a scratch 0.19.0 data root
+  (outside the repository) with every listing; its content hash is the
+  `game/data` line of `p3-01-data.txt`. `check` adds `check_spec_019` and
+  `check_placenames_019` (the grim words kept and moved, every list but
+  `excluded` byte-sorted without repeats, the three small edits).
+- `p3_names_reference.py`: the filter follows `p3_data_reference`'s served
+  version (`use_version`). `make_name(..., cores=K)` is 12.2's rule for the
+  history stage (core = root without `'` and `-`; near = equal or one letter
+  apart; the fallback adds its first valid attempt's core); `cores=None` is
+  4.3 unchanged (gods). `check` adds `check_r10` (12.1's table, Gramm and the
+  culture syllables, 12.3's units, the fallback, invariant 6 on the K lists)
+  and reads 11.6's god table at 0.19.0 as "only the gods the new entries
+  reach are redrawn" (Grammam, Gordman). The golden file adds `corename`,
+  `corenear`, `corefallback`, `core` (seeds 0 and 42, one registry and one K
+  for civilizations and settlements, gods without K) and `coresha256` lines.
+- `p1_regions_reference.py`: `use_version` (`VERSION`, `r7()`); the
+  placename lists come through `p3_data_reference.read_dir_files`; V7
+  (`v7_stem`, `v7_stems`; `name_attempt(..., slots=)` records the slot
+  values) and the keeper per land noun (`keepers`, `land_noun`) in
+  `rg11_r3`; invariant 6 as restated by 15.7 item 4; `check_v7_world` on
+  every checked world; the hand-made units of 15.6 (`check_rg11_r7`). At
+  0.19.0 `check` runs r3's draw examples, sizes and 14.4 table under 0.18.0
+  (they describe the 0.18.0 lists). `golden` at 0.19.0 guards against the
+  old file: only `table_region`, `names` and `name_attempts` may move (33
+  cases moved, exactly those of 15.6). `rename-db` accepts an input whose
+  stored names are r3's (the P3-08 inputs), checked against the r3 rule.
+- `p3_chronology_reference.py`: `--version`; inputs
+  `~/.cache/the-unmapped/out/p3-10-tests/inputs` (with a `READY` marker) at
+  0.19.0, the P3-08 inputs before; `p1_06_region_hash` reads
+  `p1-06-regions.txt` at 81908fa for versions before 0.19.0.
+
+The history inputs of 0.19.0 are the P3-08 inputs with table `region`'s
+names replaced by P1-06 r7's (`p1_regions_reference.py rename-db SRC DST`,
+nothing else changed), in `~/.cache/the-unmapped/out/p3-10-tests/inputs/`.
+
+### Generator 0.19.0 (P3-10): engine and peoples (P3-04 r12 20, P3-05 r12 22)
+
+Written from `docs/specs/p3-10-followups.md` and the stage-spec sections it names, without the engineer's
+branch. Both references serve 0.19.0 by default; `--version 0.18.0` serves the 0.18.0 rules, data, names and
+catalogue and reproduces the committed 0.18.0 `p3-04-engine.txt` and `p3-05-peoples.txt` byte for byte on the
+0.18.0 inputs (checked before the 0.19.0 files were written):
+
+```
+I8=~/.cache/the-unmapped/out/p3-08-tests/inputs        # P1-06 r3 region names (0.17.0, 0.18.0)
+I=~/.cache/the-unmapped/out/p3-10-tests/inputs         # P1-06 r7 region names (0.19.0)
+python3 -B worldgen/tests/reference/p3_engine_reference.py golden - --version 0.18.0 --inputs $I8
+python3 -B worldgen/tests/reference/p3_peoples_reference.py golden - --version 0.18.0 --inputs $I8
+python3 -B worldgen/tests/reference/p3_engine_reference.py check --inputs $I
+python3 -B worldgen/tests/reference/p3_peoples_reference.py check --inputs $I
+```
+
+- `p3_engine_reference.py`: `COMPILED_019` (kinds 37 `plague_outbreak` and 38 `quiet_stretch`, 20.4);
+  `RENDER_R12` (20.2's `{@causes:...}`: `causes_entries`, the grammar and its `unknown placeholder` cases in
+  `placeholder_problem`, the rendering in `render`, which reads the causes from the view (`view_from_rows`
+  now carries `event_cause`); 20.3's separators, `fmt_value`, in `{value}` and `#` only); `QUIET_R12` (20.1:
+  `World.quiet_stretch(start, last, phase)`, one world-level event per quiet phase row, kept in `open_era`
+  under key 0 so that every reset of the eras resets it; the stub's `quiet_step` and the peoples and
+  conflict references' `quiet_eras` call it). The stub draws its names with K (P3-02 r10 12.2: the history
+  stage's rule); no stub name changes by it. `check` adds `check_render_r12` (20.6 items 2 and 3),
+  `check_quiet_r12` (20.6 item 1 on every world case and both ForcedTension cases, and a hand-made world in
+  which a civilization ends within the row) and `check_example_r12` (20.1's example, seed 42's first row);
+  r10's example runs on 0.18.0 and the 0.18.0 inputs. The golden file gains the template cases
+  `TEMPLATE_CASES_R12` (every malformed body of 20.2, the shipped templates of kinds 37 and 38).
+- `p3_peoples_reference.py`: `FLAGS_019` (`outbreak37`, `memory`, `sites19`, `lie_low`, `cores`) and
+  `flags_for(v)`, the flags of generator v (used by the conflict reference). 22.1: kind 37 with `total` and
+  `reached` from the plan (`plague_plan` counts the planned spreads; the run checks it against the real
+  spreads); 22.2: `recent(e)` (Y - year(e) <= `cause_memory_years`), the dwindle's colony cause
+  (`last_colony`), the abandonment's reduction and decline start by the memory; 22.5: `Geo.cell_record`,
+  `has_cell_term` against the neutral record, the new site value and `sea_d` (one-cell dilations of the sea
+  mask, capped at `inland_cap`); 22.7: `race_last_refuge(civ)`, the one predicate (`race_refuge(s)` calls
+  it); 22.7a: `lie_low(civ, until_year)` and the skip in 9.3 (`lying_low`); names through
+  `World.hist_name` with `cores=self.cores` (P3-02 r10 12.2, `p3_names_reference.make_name`). `check` adds
+  `check_units_r12` (22.8 items 1, 2, 3, 4, 4a; 22.7) and `check_r12_invariants` on every world and
+  synthetic case (no kind 4 or 12 event; invariant 13 with `total` and `reached`; no cited reduction,
+  decline start or colony older than the memory). The r6 units (17a-17i) run with r6's site value and kind
+  12, as written for 0.17.0; 17c gains a second civilization of the race (it contradicted r9 21 item 6).
+- `p3-05-peoples.txt` gains the line `hist-peoples-42-1024 dwarf_kinds forts <n> ladder <m>` (P3-10 4 item 2),
+  read by `history_peoples_golden_test.cpp` in place of its inline counts (0.19.0: forts 6, ladder 2).
+
+The readings taken are printed by `p3_peoples_reference.py gaps` (the P3-10 entries at the end).
+
+### Generator 0.19.0 (P3-10: P3-06 r14 section 21, P3-07 r12 22.3, 22.5a, 22.5b)
+
+`p3_conflict_reference.py` serves 0.19.0 by default; `--version 0.18.0` (or
+0.17.0, 0.16.0) serves the older rules and reproduces the committed 0.18.0
+`p3-06-conflict.txt` byte for byte from the P3-08 inputs (checked before the
+0.19.0 file was written). One flag per rule of 21 (`FLAGS_019`):
+
+- `reduce_loss` (21.1): `note_reduction` only for a settlement whose loss is
+  at least 1 (battles and tributes, through `casualties`);
+- `aim_hold` (21.6): at every check of 7.7 and at 7.8's end of an active
+  phase the attacker wins by aim only when it holds G (`peace` when the
+  defender is exhausted, else `war_won`; no last-battle rule); when the
+  defender neither holds nor stands in G the war ends now by the score with
+  the last-battle rule (war line how `goal-lost`); the run's ending log
+  (`aim_log`) feeds invariants (8) as amended and (14);
+- `search_weary`, `search_battle`, `search_sal` (21.7): `searched_until`
+  per (hidden civilization, region), cleared by a change of holder; no search
+  in a region of a battle of the same war; the first kind-35 event keeps the
+  kind's salience 40, later ones `search_repeat_salience`;
+- `holder` (21.8): `hold(G)` (owner, else last owner) in the futile counts,
+  a change of holder resetting them; `change_years` (the from_year of each
+  region_control row whose civ differs from the previous row's) in
+  `wars_same_goal_unchanged_max` and the row check of invariant (12);
+- `race_odds` (21.9): the claimant race's `odds_min_permille` in the
+  declaration and the tension;
+- `lie_low` (21.10): the flight calls the peoples hook `lie_low(civ,
+  hidden_until)`; while one of its standing settlements is hidden a
+  civilization raises no strain, claim or declaration and the tension skips
+  its pairs as claimant (`hides`);
+- `quarrel` (21.12): `quarrels()` before 5.2 in each T2: the first visible
+  T2 of a `civ_founded` civilization of a race with `awakening_quarrel` 1
+  seeds strain at `quarrel_strain` x 1000 (r15, 600) toward the owner of
+  the nearest standing visible, not hidden settlement of an alive people of
+  another race whose disposition is below `border_friction` (r15: never a
+  people of the orcs' camp; key: within `enmity_hops`, hops, squared
+  distance, id), or keeps it pending (`quarrel_pending`);
+- `note_019` (P3-07 r12 22.3, 22.5a): the reworded flare-up note; a
+  declaration whose war ended by a `search_abandoned` below 20 is no summary
+  candidate.
+
+Hand-made units: `check_units_r14` (21.5 items 1 and 2, 21.11 items 1 to 5,
+21.12 item 6); the older units run on the rules they were written for
+(`rules("0.17.0")`, `rules("0.18.0")`). Row invariants at 0.19.0:
+`check_invariants_r14` ((8) amended, (14), (15), (16) with contact recomputed
+in the run, 21.7's three rules) and the P3-05 r12 cause rules (kind 37 as a
+reduction, the colony cause, `cause_memory_years`, no kind 4 or 12 event) in
+`check_peoples_invariants`. Readings in `gaps` (`r14 ...`).
+
+The C++ side: `p3_06_conflict_support.hpp` counts changes by holder
+(`holder_change_years`) in `stats_lines_21` and `weary_violations`, reads (8)
+as amended in `check_invariants_10`, accepts kind 38 in the 18a prefix, and
+adds `invariants_19` ((14), (15), 21.7) for the property and golden tests;
+`history/history_conflict_r14_test.cpp` holds the hand-made row units and the
+seam tests on the engineer's names (the P3-10 switch was removed at integration).
+
+### The N = 1024 elevation hashes (P3-10 4 item 3)
+
+`p1_elevation_reference.py layers-1024 shipped|shipped-neutral SEED...` prints
+`elevation-1024 s<seed> <hash>` (or `elevation-1024-neutral`) per world, about
+an hour each on a loaded machine; the lines sit in a commented block at the end
+of `p1-01-elevation.txt`, which `golden` keeps from the committed file. The
+slow cases of `stages_elevation_golden_test.cpp` check every seed with a line;
+seeds without one are not checked.

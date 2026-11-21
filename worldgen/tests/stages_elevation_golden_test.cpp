@@ -20,6 +20,7 @@
 #include <algorithm>
 #include <cstdint>
 #include <functional>
+#include <map>
 #include <optional>
 #include <ostream>
 #include <span>
@@ -895,46 +896,28 @@ TEST_CASE("P1-01 10.4.2 (slow): mountain floor at N = 512, seeds 9, 10, 12, 13")
     }
 }
 
-TEST_CASE("P1-01 10.4.1 (slow): layer hashes at N = 1024, seeds 0 to 9, and the 13.1 hard bounds") {
-    // Fourth version (0.6.0) values; the test writer's reference reproduces
-    // seeds 0, 1 and 3 (seed 3 is unchanged from 0.5.0).
-    const std::vector<std::string> want = {
-        "44bc2c07bc695a1e608bfe8963ea5d88b807e6f78d27d2662194ca06ffab949d",
-        "2e3b7dee44d149f739bbf6040f0345ee310c51f2f5e27940c57f1759ef16eec4",
-        "58fe223112f73ebc8dbe03d64386144631b2cef6735f7117a6bd905b43592861",
-        "e9fb8259e2813298306a12b7d3611405485dd144de7cc6ec6cb6d0daca3d1273",
-        "74ff0a90733704ba6d66f0bcef621f4d0dd76ad11c7fa1647ab83437edb6cdd8",
-        "0efc92d64a60b4acf154cd096e57d2b8609f391d0054d623cc2ef10d9f061536",
-        "162ae0a5ec41b22c6524f1fbb3c6b242c5a62de336018b89b8bd7e3f211f4c92",
-        "81d5e490e155cdf7e6617d1fd89c42f1610fa6132ef37882494fd5175aa7d07a",
-        "ec1de02ad1778c4e53d9e81c49e15a1c2a5de5c6b72b87aef1ac9ced67f94052",
-        "8f8c726a9941a62e86c4c7fcfd1add9291f204b13420694d80820d0c4f6754b3",
-    };
-    for (std::uint64_t seed = 0; seed < want.size(); ++seed) {
+TEST_CASE("P1-01 10.4.1 (slow): layer hashes at N = 1024 (the reference's seeds), and the 13.1 hard bounds") {
+    // P3-10 4 item 3: the hashes are the independent reference's (lines elevation-1024 of the golden file,
+    // p1_elevation_reference.py layers-1024); a seed without a line is not checked (never a value recorded
+    // from the C++).
+    const std::map<std::uint64_t, std::string> want = read_golden_1024(UNMAPPED_P1_01_GOLDEN_PATH, "elevation-1024");
+    REQUIRE(!want.empty());
+    for (const auto& [seed, hash] : want) {
         CAPTURE(seed);
         const std::vector<std::int16_t> e = elev_api::elevation_grid(seed, 1024, tuning("shipped"), THREADS);
-        CHECK(layer_hash_i16(1024, 1024, e) == want[seed]);
+        CHECK(layer_hash_i16(1024, 1024, e) == hash);
         check_hard_bounds(e, 1024);
     }
 }
 
-TEST_CASE("P1-01 10.4.2 (slow): with the neutral settings, the 0.5.0 layer hashes at N = 1024, seeds 0 to 9") {
-    const std::vector<std::string> want = {
-        "070dbf1206416efcbed64aa009b89e5e3f23fec990a4397d99675cfba9450786",
-        "0cc4f2c15156aa89424cee960d9e434e8fe3a018b855d6a4a2e703cf314a31d2",
-        "c67f2aa09e7e73e96d151846bdc7b771ef55ebd1fac44bb726ba57863d7e79ee",
-        "e9fb8259e2813298306a12b7d3611405485dd144de7cc6ec6cb6d0daca3d1273",
-        "bafe937a342236d2e7565939f79a6ee40586a38b6f614217e5868ea24f04d37c",
-        "aae827ebf0a93b753d73d05a95bd83393ec803b9a7a46deed18c0a948d311eef",
-        "91114f3ad92fa40ce007f9ffcced15c51efeca14af23252eb756eaee35bab2ac",
-        "14e232deb39aa1e8f52b73ab2a627b61d0b27ab8c5c3a9d18cc7dbf12cc3dbad",
-        "c68fcc1ebbb517ae949d34fdcce6c73043c13b6bffe7e7ff522fa626dec5c8ed",
-        "df59c33313cf315232f028eb71c1d0da21e6ab64981bdee5d9b4563d7657745f",
-    };
-    for (std::uint64_t seed = 0; seed < want.size(); ++seed) {
+TEST_CASE("P1-01 10.4.2 (slow): with the neutral settings, the layer hashes at N = 1024 (the reference's seeds)") {
+    const std::map<std::uint64_t, std::string> want =
+        read_golden_1024(UNMAPPED_P1_01_GOLDEN_PATH, "elevation-1024-neutral");
+    REQUIRE(!want.empty());
+    for (const auto& [seed, hash] : want) {
         CAPTURE(seed);
         const std::vector<std::int16_t> e = elev_api::elevation_grid(seed, 1024, tuning("shipped-neutral"), THREADS);
-        CHECK(layer_hash_i16(1024, 1024, e) == want[seed]);
+        CHECK(layer_hash_i16(1024, 1024, e) == hash);
     }
 }
 

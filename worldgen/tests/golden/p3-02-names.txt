@@ -670,7 +670,7 @@ fatal never settlement 0 1 1 names: culture 'never' produced no valid settlement
 0 dwarven settlement 33 0 Khargouk Hold
 0 dwarven settlement 34 1 Brourinbra
 0 dwarven settlement 35 0 Halithrou Deep
-0 dwarven settlement 36 0 Gordgrudin Deep
+0 dwarven settlement 36 1 Thrurk Hold
 0 dwarven settlement 37 1 Kairkgrou
 0 dwarven settlement 38 0 Thairngra
 0 dwarven settlement 39 1 Tirknourn
@@ -1284,7 +1284,7 @@ fatal never settlement 0 1 1 names: culture 'never' produced no valid settlement
 0 human settlement 47 1 Steackham
 0 human settlement 48 0 Ashurciston
 0 human settlement 49 0 Ashintbury
-0 human settlement 50 4 Suckgirstead
+0 human settlement 50 5 Alardton
 0 orcish god 1 1 Ug'krarz
 0 orcish god 2 0 Og'uraag
 0 orcish god 3 0 Uruuk'krush
@@ -1435,7 +1435,7 @@ fatal never settlement 0 1 1 names: culture 'never' produced no valid settlement
 0 orcish settlement 48 0 Ghark
 0 orcish settlement 49 0 Urald Camp
 0 orcish settlement 50 0 Azol'uguuz
-sha256 0 716854e994b67293c3db853445a8616e6b8946ec7feeb67bf0d449d1c4cd2911
+sha256 0 e9b96a4f9efa226de99cc90e0cdb2a07d92abb1372f171f18d3de2ad0b3a93bf
 42 dwarven god 1 0 Khorkhound
 42 dwarven god 2 1 Grirtoum
 42 dwarven god 3 1 Bronhak
@@ -1885,7 +1885,7 @@ sha256 0 716854e994b67293c3db853445a8616e6b8946ec7feeb67bf0d449d1c4cd2911
 42 faerie settlement 47 0 Shath
 42 faerie settlement 48 0 Fieshpia
 42 faerie settlement 49 0 Yfie Hollow
-42 faerie settlement 50 0 Whop
+42 faerie settlement 50 1 Baepie Glade
 42 goblin god 1 0 Skork-Snagg
 42 goblin god 2 0 Krokzit
 42 goblin god 3 0 Dreeslix
@@ -2180,10 +2180,10 @@ sha256 0 716854e994b67293c3db853445a8616e6b8946ec7feeb67bf0d449d1c4cd2911
 42 human settlement 42 0 Stickton
 42 human settlement 43 0 Hent
 42 human settlement 44 0 Meanton
-42 human settlement 45 0 Ashackham
+42 human settlement 45 2 Mald
 42 human settlement 46 1 Sack
 42 human settlement 47 2 Stisbrelbury
-42 human settlement 48 0 Realdeadstead
+42 human settlement 48 1 Murdranham
 42 human settlement 49 0 Ashintaswick
 42 human settlement 50 0 Meadstead
 42 orcish god 1 0 Grurzkuurz
@@ -2336,6 +2336,1834 @@ sha256 0 716854e994b67293c3db853445a8616e6b8946ec7feeb67bf0d449d1c4cd2911
 42 orcish settlement 48 0 Aal'uraaz Fort
 42 orcish settlement 49 0 Orz'grom Camp
 42 orcish settlement 50 0 Thuurkbash
-sha256 42 93741421453cc3de169fb14a02d0c1bdd52208acdf800c1cc659b278eccdf0d5
+sha256 42 e382f734b1dec402e429cb534acc458ffcaeb7e0fc9313bc814e067fcc874d90
 r4sha256 0 7b81d85d11630b64f27f7eb16dc9f0815b764a0fc8ee60d506f68686a04942b9
 r4sha256 42 8403dc92b716ecfb7c22bb9589d3e487aecaf08a43ffc81a89a370f0f4f80f4c
+# r10 (P3-02 12, generator 0.19.0):
+#   corename <root> <core>            12.2's core (letters without ' and -)
+#   corenear <core> <K comma-joined|-> <0|1>   12.2's near (equal or one letter apart)
+#   corefallback tiny settlement 0 1 1 <attempt|F> <name> <K after, comma-joined>  with K = {ba}
+#   core <seed> <culture> <kind> <entity> <attempt|F> <name>  the list of 9.3's order with one K
+#       for civilizations and settlements (gods without K), entities 1..50
+#   coresha256 <seed> <hex>  of that seed's core lines joined by LF (no trailing LF)
+corename skat skat
+corename ogh'krak oghkrak
+corename gnink-snunk gninksnunk
+corename uruld'duuld uruldduuld
+corenear skat skat 1
+corenear sligg slig 1
+corenear kuzz kuz 1
+corenear kaz kuz 1
+corenear kuz kuz 1
+corenear kazz kuz 0
+corenear slig sligg 1
+corenear ab - 0
+corenear abc abd,xyz 1
+corenear abc cab 0
+corenear nili muli 0
+corenear skreek skreeg 1
+corenear zeez zez 1
+corenear zeez ze 0
+corefallback tiny settlement 0 1 1 F Da II ba,da
+core 0 dwarven god 1 0 Brommgrai
+core 0 dwarven god 2 0 Groumtoun
+core 0 dwarven god 3 0 Nurnthaimm
+core 0 dwarven god 4 0 Taidhourk
+core 0 dwarven god 5 0 Borkod
+core 0 dwarven god 6 0 Nidmuli
+core 0 dwarven god 7 1 Groukmour
+core 0 dwarven god 8 0 Thunbo
+core 0 dwarven god 9 0 Korinthrik
+core 0 dwarven god 10 0 Boudthrai
+core 0 dwarven god 11 2 Haimgu
+core 0 dwarven god 12 0 Drirndard
+core 0 dwarven god 13 1 Grimthrir
+core 0 dwarven god 14 0 Bindan
+core 0 dwarven god 15 0 Drourdnurn
+core 0 dwarven god 16 0 Groukgrou
+core 0 dwarven god 17 0 Khodkou
+core 0 dwarven god 18 0 Drundnou
+core 0 dwarven god 19 1 Thurdrorn
+core 0 dwarven god 20 2 Hokdoumm
+core 0 dwarven god 21 1 Nommi
+core 0 dwarven god 22 1 Thummdrou
+core 0 dwarven god 23 0 Gomthraind
+core 0 dwarven god 24 1 Brindkum
+core 0 dwarven god 25 0 Bodinnarn
+core 0 dwarven god 26 1 Thammkhu
+core 0 dwarven god 27 0 Graidthurn
+core 0 dwarven god 28 1 Manthrudin
+core 0 dwarven god 29 0 Kommadin
+core 0 dwarven god 30 1 Grardkou
+core 0 dwarven god 31 0 Drumkhai
+core 0 dwarven god 32 1 Maintourk
+core 0 dwarven god 33 2 Huliki
+core 0 dwarven god 34 1 Minthum
+core 0 dwarven god 35 0 Hadtili
+core 0 dwarven god 36 0 Thidnarn
+core 0 dwarven god 37 0 Horndo
+core 0 dwarven god 38 0 Kalimind
+core 0 dwarven god 39 0 Grourngi
+core 0 dwarven god 40 0 Drakbair
+core 0 dwarven god 41 1 Himda
+core 0 dwarven god 42 0 Grairdhi
+core 0 dwarven god 43 0 Khodinthir
+core 0 dwarven god 44 0 Draidinko
+core 0 dwarven god 45 0 Khorktai
+core 0 dwarven god 46 0 Girdbrir
+core 0 dwarven god 47 0 Kharinkirk
+core 0 dwarven god 48 0 Thrammno
+core 0 dwarven god 49 0 Grirkna
+core 0 dwarven god 50 0 Nidinbruli
+core 0 dwarven civilization 1 3 The Kourdbrar Throne
+core 0 dwarven civilization 2 0 The Hold of Didin
+core 0 dwarven civilization 3 0 Clan Durgarin
+core 0 dwarven civilization 4 0 Clan Drourd
+core 0 dwarven civilization 5 0 Clan Drailimai
+core 0 dwarven civilization 6 0 Clan Kukdum
+core 0 dwarven civilization 7 0 The Thurindrid Throne
+core 0 dwarven civilization 8 0 The Hold of Barn
+core 0 dwarven civilization 9 1 Clan Thrantouli
+core 0 dwarven civilization 10 0 The Thainbri Throne
+core 0 dwarven civilization 11 0 The Maligali Throne
+core 0 dwarven civilization 12 0 Clan Throknorin
+core 0 dwarven civilization 13 0 The Hold of Doudindod
+core 0 dwarven civilization 14 0 The Thund Throne
+core 0 dwarven civilization 15 0 Clan Gundhound
+core 0 dwarven civilization 16 0 Clan Kommourd
+core 0 dwarven civilization 17 0 The Hold of Boukdadin
+core 0 dwarven civilization 18 0 The Drorinnoun Throne
+core 0 dwarven civilization 19 0 The Khulibali Throne
+core 0 dwarven civilization 20 0 Clan Graim
+core 0 dwarven civilization 21 0 The Hold of Mimhumm
+core 0 dwarven civilization 22 0 Clan Tolithoum
+core 0 dwarven civilization 23 0 Clan Grirdmour
+core 0 dwarven civilization 24 1 The Drurkbrai Throne
+core 0 dwarven civilization 25 0 The Khurd Throne
+core 0 dwarven civilization 26 0 The Thouk Throne
+core 0 dwarven civilization 27 0 The Thimmhou Throne
+core 0 dwarven civilization 28 2 The Hummnarn Throne
+core 0 dwarven civilization 29 0 The Hold of Brund
+core 0 dwarven civilization 30 0 The Hold of Thrarn
+core 0 dwarven civilization 31 0 The Khar Throne
+core 0 dwarven civilization 32 0 Clan Hourkbrur
+core 0 dwarven civilization 33 0 The Hold of Brid
+core 0 dwarven civilization 34 0 The Grairn Throne
+core 0 dwarven civilization 35 2 The Tanmid Throne
+core 0 dwarven civilization 36 0 The Kork Throne
+core 0 dwarven civilization 37 1 Clan Horkgar
+core 0 dwarven civilization 38 0 The Brorinhain Throne
+core 0 dwarven civilization 39 0 The Hold of Goud
+core 0 dwarven civilization 40 0 Clan Thrum
+core 0 dwarven civilization 41 0 The Brarinmu Throne
+core 0 dwarven civilization 42 1 The Hold of Nuntod
+core 0 dwarven civilization 43 0 The Madinmond Throne
+core 0 dwarven civilization 44 0 The Hold of Thokmord
+core 0 dwarven civilization 45 1 The Thalitid Throne
+core 0 dwarven civilization 46 0 The Hold of Gindkoud
+core 0 dwarven civilization 47 0 The Khound Throne
+core 0 dwarven civilization 48 1 Clan Dulikhai
+core 0 dwarven civilization 49 0 Clan Thrird
+core 0 dwarven civilization 50 0 Clan Dranbamm
+core 0 dwarven settlement 1 0 Moumka
+core 0 dwarven settlement 2 1 Thoumdaili
+core 0 dwarven settlement 3 1 Makmoudin Deep
+core 0 dwarven settlement 4 0 Brummthu
+core 0 dwarven settlement 5 0 Gromka
+core 0 dwarven settlement 6 0 Kaird Deep
+core 0 dwarven settlement 7 0 Khaili Hold
+core 0 dwarven settlement 8 0 Kili
+core 0 dwarven settlement 9 1 Baili
+core 0 dwarven settlement 10 0 Nodin
+core 0 dwarven settlement 11 0 Gondhark
+core 0 dwarven settlement 12 0 Turnbruk Deep
+core 0 dwarven settlement 13 0 Kidinkorn
+core 0 dwarven settlement 14 0 Tharndramm Hold
+core 0 dwarven settlement 15 0 Grangrak
+core 0 dwarven settlement 16 0 Houmm Deep
+core 0 dwarven settlement 17 1 Doknirk
+core 0 dwarven settlement 18 1 Gali
+core 0 dwarven settlement 19 1 Nailimim Deep
+core 0 dwarven settlement 20 0 Tairdbra Hold
+core 0 dwarven settlement 21 0 Thraimm Hold
+core 0 dwarven settlement 22 0 Targramm
+core 0 dwarven settlement 23 2 Khorin Deep
+core 0 dwarven settlement 24 0 Thrundgimm
+core 0 dwarven settlement 25 0 Doudbradin
+core 0 dwarven settlement 26 0 Nairnthun Hold
+core 0 dwarven settlement 27 1 Domm Hold
+core 0 dwarven settlement 28 0 Kirnha
+core 0 dwarven settlement 29 0 Bririn
+core 0 dwarven settlement 30 0 Koudinbai Hold
+core 0 dwarven settlement 31 2 Noliko Hold
+core 0 dwarven settlement 32 0 Nidinnird
+core 0 dwarven settlement 33 0 Khargouk Hold
+core 0 dwarven settlement 34 1 Brourinbra
+core 0 dwarven settlement 35 0 Halithrou Deep
+core 0 dwarven settlement 36 1 Thrurk Hold
+core 0 dwarven settlement 37 1 Kairkgrou
+core 0 dwarven settlement 38 0 Thairngra
+core 0 dwarven settlement 39 1 Tirknourn
+core 0 dwarven settlement 40 2 Bombrorn Hold
+core 0 dwarven settlement 41 0 Mudtali
+core 0 dwarven settlement 42 0 Bodingrun Hold
+core 0 dwarven settlement 43 1 Girinkom
+core 0 dwarven settlement 44 0 Bunbrid Hold
+core 0 dwarven settlement 45 0 Thraid Hold
+core 0 dwarven settlement 46 0 Nukgarin Hold
+core 0 dwarven settlement 47 0 Gramhair
+core 0 dwarven settlement 48 1 Dairdga
+core 0 dwarven settlement 49 0 Goundur Hold
+core 0 dwarven settlement 50 1 Grolibadin Deep
+core 0 elven god 1 0 Saene
+core 0 elven god 2 0 Fiendse
+core 0 elven god 3 0 Ithonnfa
+core 0 elven god 4 0 Glaefaeth
+core 0 elven god 5 1 Aglill
+core 0 elven god 6 1 Ollglie
+core 0 elven god 7 0 Thiro
+core 0 elven god 8 0 Vaenithie
+core 0 elven god 9 0 Aesaend
+core 0 elven god 10 2 Fiemer
+core 0 elven god 11 0 Ithaglir
+core 0 elven god 12 0 Thaeletho
+core 0 elven god 13 0 Lanva
+core 0 elven god 14 0 Ithfinn
+core 0 elven god 15 0 Vaithaenn
+core 0 elven god 16 1 Glithra
+core 0 elven god 17 0 Foco
+core 0 elven god 18 0 Glaron
+core 0 elven god 19 0 Rieral
+core 0 elven god 20 0 Naenaend
+core 0 elven god 21 0 Raeran
+core 0 elven god 22 0 Notharie
+core 0 elven god 23 0 Cievas
+core 0 elven god 24 0 Feles
+core 0 elven god 25 1 Ritha
+core 0 elven god 26 0 Valae
+core 0 elven god 27 0 Lieseth
+core 0 elven god 28 0 Rithoela
+core 0 elven god 29 0 Niesar
+core 0 elven god 30 0 Riso
+core 0 elven god 31 0 Mieseglie
+core 0 elven god 32 1 Sithir
+core 0 elven god 33 0 Renis
+core 0 elven god 34 0 Elaethni
+core 0 elven god 35 0 Rerie
+core 0 elven god 36 0 Anaell
+core 0 elven god 37 0 Laegliel
+core 0 elven god 38 0 Vosieth
+core 0 elven god 39 0 Afaer
+core 0 elven god 40 0 Iethill
+core 0 elven god 41 0 Ronnsi
+core 0 elven god 42 1 Iesol
+core 0 elven god 43 0 Liethinn
+core 0 elven god 44 0 Ciesao
+core 0 elven god 45 0 Onnelin
+core 0 elven god 46 0 Mecaer
+core 0 elven god 47 0 Minnelie
+core 0 elven god 48 0 Roos
+core 0 elven god 49 0 Thaelan
+core 0 elven god 50 0 Gliesaeth
+core 0 elven civilization 1 0 The House of Nife
+core 0 elven civilization 2 0 The Court of Nothind
+core 0 elven civilization 3 0 The House of Aesoth
+core 0 elven civilization 4 0 The House of Riefifie
+core 0 elven civilization 5 0 The Court of Thiesaell
+core 0 elven civilization 6 0 The Realm of Liecaes
+core 0 elven civilization 7 0 The Court of Nallmo
+core 0 elven civilization 8 0 The House of Glesas
+core 0 elven civilization 9 0 The Realm of Rinaeithe
+core 0 elven civilization 10 1 The Realm of Fomand
+core 0 elven civilization 11 0 The House of Rethae
+core 0 elven civilization 12 0 The Realm of Iessie
+core 0 elven civilization 13 0 The Court of Sofomie
+core 0 elven civilization 14 0 The Realm of Ciethiemi
+core 0 elven civilization 15 0 The Court of Inelill
+core 0 elven civilization 16 0 The House of Thielevie
+core 0 elven civilization 17 0 The Court of Virith
+core 0 elven civilization 18 0 The Realm of Annelaell
+core 0 elven civilization 19 0 The Court of Annrael
+core 0 elven civilization 20 0 The Realm of Glelonn
+core 0 elven civilization 21 0 The Realm of Iecill
+core 0 elven civilization 22 1 The Court of Enditheth
+core 0 elven civilization 23 0 The Court of Merol
+core 0 elven civilization 24 0 The Court of Orli
+core 0 elven civilization 25 0 The Realm of Feramae
+core 0 elven civilization 26 0 The House of Lilne
+core 0 elven civilization 27 0 The Court of Thira
+core 0 elven civilization 28 0 The Realm of Ilglaen
+core 0 elven civilization 29 0 The Court of Foso
+core 0 elven civilization 30 0 The Court of Glinae
+core 0 elven civilization 31 0 The House of Rarsae
+core 0 elven civilization 32 1 The Court of Eithos
+core 0 elven civilization 33 1 The House of Glieriend
+core 0 elven civilization 34 0 The Court of Riraell
+core 0 elven civilization 35 1 The Court of Veris
+core 0 elven civilization 36 0 The Realm of Ieloitho
+core 0 elven civilization 37 0 The Court of Vinath
+core 0 elven civilization 38 0 The House of Liglar
+core 0 elven civilization 39 0 The Court of Ithiece
+core 0 elven civilization 40 0 The Realm of Aeritheth
+core 0 elven civilization 41 0 The Court of Naeithivi
+core 0 elven civilization 42 0 The House of Fienaes
+core 0 elven civilization 43 0 The Realm of Cathand
+core 0 elven civilization 44 0 The House of Nielaend
+core 0 elven civilization 45 1 The Court of Elama
+core 0 elven civilization 46 1 The Realm of Mieslae
+core 0 elven civilization 47 0 The Court of Finaell
+core 0 elven civilization 48 3 The House of Thaennco
+core 0 elven civilization 49 0 The Realm of Mallithi
+core 0 elven civilization 50 0 The Realm of Mieroll
+core 0 elven settlement 1 0 Iensath
+core 0 elven settlement 2 0 Onaeme
+core 0 elven settlement 3 0 Ierrael
+core 0 elven settlement 4 0 Elonoma
+core 0 elven settlement 5 0 Fievos
+core 0 elven settlement 6 1 Mion
+core 0 elven settlement 7 0 Asvathdell
+core 0 elven settlement 8 0 Lafin
+core 0 elven settlement 9 0 Laevo
+core 0 elven settlement 10 0 Leithiedell
+core 0 elven settlement 11 0 Orith
+core 0 elven settlement 12 0 Voglael
+core 0 elven settlement 13 0 Mievife
+core 0 elven settlement 14 0 Iefann
+core 0 elven settlement 15 0 Cellve
+core 0 elven settlement 16 0 Fimo
+core 0 elven settlement 17 1 Londcae
+core 0 elven settlement 18 0 Rienel
+core 0 elven settlement 19 0 Nathol
+core 0 elven settlement 20 0 Siendnie
+core 0 elven settlement 21 0 Niloth
+core 0 elven settlement 22 0 Vofill
+core 0 elven settlement 23 0 Iethgledell
+core 0 elven settlement 24 0 Thiordell
+core 0 elven settlement 25 0 Innrand
+core 0 elven settlement 26 0 Itholoeli
+core 0 elven settlement 27 2 Thathaell
+core 0 elven settlement 28 0 Facieo
+core 0 elven settlement 29 1 Maeva
+core 0 elven settlement 30 0 Viecer
+core 0 elven settlement 31 0 Glevothi
+core 0 elven settlement 32 0 Mierelo
+core 0 elven settlement 33 0 Rieven
+core 0 elven settlement 34 0 Riecaetha
+core 0 elven settlement 35 0 Enre
+core 0 elven settlement 36 0 Aenliend
+core 0 elven settlement 37 0 Aefigle
+core 0 elven settlement 38 0 Soithierdell
+core 0 elven settlement 39 0 Nisath
+core 0 elven settlement 40 0 Lacier
+core 0 elven settlement 41 0 Enrin
+core 0 elven settlement 42 0 Fieglenie
+core 0 elven settlement 43 0 Thillvo
+core 0 elven settlement 44 4 Sindnodell
+core 0 elven settlement 45 0 Ondthaes
+core 0 elven settlement 46 0 Cocothdell
+core 0 elven settlement 47 0 Sethaelldell
+core 0 elven settlement 48 0 Ithienne
+core 0 elven settlement 49 0 Caenoledell
+core 0 elven settlement 50 0 Allrall
+core 0 faerie god 1 0 Fiwhall
+core 0 faerie god 2 0 Fiabo
+core 0 faerie god 3 0 Biensho
+core 0 faerie god 4 1 Whaia
+core 0 faerie god 5 0 Pouwou
+core 0 faerie god 6 0 Twishtwia
+core 0 faerie god 7 0 Mamie
+core 0 faerie god 8 0 Ollwee
+core 0 faerie god 9 0 Fouthia
+core 0 faerie god 10 0 Twiewha
+core 0 faerie god 11 0 Shiati
+core 0 faerie god 12 0 Sallma
+core 0 faerie god 13 0 Floushlie
+core 0 faerie god 14 0 Siliawee
+core 0 faerie god 15 0 Flaskwou
+core 0 faerie god 16 0 Siemie
+core 0 faerie god 17 0 Eeliapie
+core 0 faerie god 18 0 Topiath
+core 0 faerie god 19 0 Poutwiatou
+core 0 faerie god 20 0 Fifia
+core 0 faerie god 21 0 Biatwy
+core 0 faerie god 22 0 Fliafly
+core 0 faerie god 23 0 Shobeeth
+core 0 faerie god 24 0 Fysouflo
+core 0 faerie god 25 0 Pieflotwou
+core 0 faerie god 26 0 Amia
+core 0 faerie god 27 0 Leebia
+core 0 faerie god 28 0 Moufliap
+core 0 faerie god 29 0 Fleeshwhae
+core 0 faerie god 30 0 Whaefiesia
+core 0 faerie god 31 0 Lietwae
+core 0 faerie god 32 1 Shieflap
+core 0 faerie god 33 0 Sheemiebae
+core 0 faerie god 34 0 Whiepwo
+core 0 faerie god 35 0 Oupee
+core 0 faerie god 36 0 Woutwiamou
+core 0 faerie god 37 0 Fitie
+core 0 faerie god 38 0 Twoullmia
+core 0 faerie god 39 0 Flywie
+core 0 faerie god 40 0 Fiefou
+core 0 faerie god 41 0 Piaba
+core 0 faerie god 42 0 Wysie
+core 0 faerie god 43 0 Filltwa
+core 0 faerie god 44 0 Fybyth
+core 0 faerie god 45 0 Afliela
+core 0 faerie god 46 0 Biaflia
+core 0 faerie god 47 0 Olia
+core 0 faerie god 48 0 Womae
+core 0 faerie god 49 0 Boma
+core 0 faerie god 50 0 Foi
+core 0 faerie civilization 1 0 The Lyp Ring
+core 0 faerie civilization 2 0 The Watiafia Court
+core 0 faerie civilization 3 0 The Bouss Ring
+core 0 faerie civilization 4 0 The Wosk Ring
+core 0 faerie civilization 5 0 The Twiwhiwou Ring
+core 0 faerie civilization 6 0 The Whieshoun Ring
+core 0 faerie civilization 7 0 The Circle of Shiell
+core 0 faerie civilization 8 0 The Wimaie Court
+core 0 faerie civilization 9 0 The Circle of Oubae
+core 0 faerie civilization 10 1 The Maen Court
+core 0 faerie civilization 11 0 The Fiabapie Court
+core 0 faerie civilization 12 1 The Twiawhy Ring
+core 0 faerie civilization 13 0 The Circle of Fleess
+core 0 faerie civilization 14 0 The Aebi Court
+core 0 faerie civilization 15 0 The Circle of Saellto
+core 0 faerie civilization 16 0 The Oflitia Court
+core 0 faerie civilization 17 0 The Circle of Flytwouth
+core 0 faerie civilization 18 0 The Circle of Sian
+core 0 faerie civilization 19 0 The Circle of Liwosh
+core 0 faerie civilization 20 0 The Shosi Ring
+core 0 faerie civilization 21 0 The Wish Court
+core 0 faerie civilization 22 0 The Circle of Saebiep
+core 0 faerie civilization 23 0 The Circle of Fithwie
+core 0 faerie civilization 24 0 The Foubeess Court
+core 0 faerie civilization 25 0 The Twiesie Ring
+core 0 faerie civilization 26 0 The Weebou Court
+core 0 faerie civilization 27 0 The Louskbia Court
+core 0 faerie civilization 28 0 The Aepisk Court
+core 0 faerie civilization 29 0 The Lobifli Ring
+core 0 faerie civilization 30 0 The Taewi Court
+core 0 faerie civilization 31 0 The Biafla Ring
+core 0 faerie civilization 32 0 The Bouie Ring
+core 0 faerie civilization 33 0 The Laepshou Ring
+core 0 faerie civilization 34 0 The Whien Ring
+core 0 faerie civilization 35 0 The Circle of Tweetwa
+core 0 faerie civilization 36 0 The Circle of Twiafiask
+core 0 faerie civilization 37 0 The Woumae Court
+core 0 faerie civilization 38 0 The Circle of Woflie
+core 0 faerie civilization 39 0 The Twaweesk Court
+core 0 faerie civilization 40 0 The Shisy Court
+core 0 faerie civilization 41 0 The Circle of Sowhee
+core 0 faerie civilization 42 0 The Circle of Flywhifee
+core 0 faerie civilization 43 0 The Seensou Ring
+core 0 faerie civilization 44 0 The Shishtwy Ring
+core 0 faerie civilization 45 0 The Shifop Ring
+core 0 faerie civilization 46 0 The Flosk Court
+core 0 faerie civilization 47 1 The Safleesh Court
+core 0 faerie civilization 48 0 The Foun Ring
+core 0 faerie civilization 49 0 The Lissbae Ring
+core 0 faerie civilization 50 0 The Circle of Poutweeshy
+core 0 faerie settlement 1 0 Liapa
+core 0 faerie settlement 2 1 Wiatwiesk Glade
+core 0 faerie settlement 3 0 Twamae Glade
+core 0 faerie settlement 4 1 Ybeeie Hollow
+core 0 faerie settlement 5 0 Biafloss Glade
+core 0 faerie settlement 6 0 Pieshaep Hollow
+core 0 faerie settlement 7 0 Teelan
+core 0 faerie settlement 8 0 Meeie Hollow
+core 0 faerie settlement 9 0 Sywysh Hollow
+core 0 faerie settlement 10 0 Iatysk
+core 0 faerie settlement 11 0 Wiepysk
+core 0 faerie settlement 12 0 Miemo Hollow
+core 0 faerie settlement 13 0 Mapoufee
+core 0 faerie settlement 14 0 Feetop Hollow
+core 0 faerie settlement 15 0 Showhie Hollow
+core 0 faerie settlement 16 0 Mawhiap Hollow
+core 0 faerie settlement 17 0 Athfli Hollow
+core 0 faerie settlement 18 0 Whywo
+core 0 faerie settlement 19 0 Fliaposk Hollow
+core 0 faerie settlement 20 0 Whosy Hollow
+core 0 faerie settlement 21 0 Poushi
+core 0 faerie settlement 22 0 Fiflo
+core 0 faerie settlement 23 0 Teetiss
+core 0 faerie settlement 24 0 Willwo
+core 0 faerie settlement 25 2 Weewhee
+core 0 faerie settlement 26 0 Flouy Glade
+core 0 faerie settlement 27 0 Paelie
+core 0 faerie settlement 28 1 Twaess Hollow
+core 0 faerie settlement 29 0 Whaeie
+core 0 faerie settlement 30 1 Sie
+core 0 faerie settlement 31 0 Fiss Glade
+core 0 faerie settlement 32 0 Flyfleeth Hollow
+core 0 faerie settlement 33 0 Whoutwa
+core 0 faerie settlement 34 0 Lyma
+core 0 faerie settlement 35 0 Boflia
+core 0 faerie settlement 36 0 Boll
+core 0 faerie settlement 37 0 Twiepa
+core 0 faerie settlement 38 0 Loshwo
+core 0 faerie settlement 39 0 Shieisae
+core 0 faerie settlement 40 0 Piaba Glade
+core 0 faerie settlement 41 0 Whieiath Glade
+core 0 faerie settlement 42 0 Shota Glade
+core 0 faerie settlement 43 0 Baesstwie Glade
+core 0 faerie settlement 44 0 Whaewhia Glade
+core 0 faerie settlement 45 0 Wiaee
+core 0 faerie settlement 46 0 Wieflyll Hollow
+core 0 faerie settlement 47 0 Lyfoshou Hollow
+core 0 faerie settlement 48 0 Bouleewia
+core 0 faerie settlement 49 0 Whatytwie
+core 0 faerie settlement 50 0 Taeliell
+core 0 goblin god 1 0 Zab-Skreeb
+core 0 goblin god 2 0 Kruskux
+core 0 goblin god 3 2 Nugnug
+core 0 goblin god 4 2 Gneesnut
+core 0 goblin god 5 0 Bisneegg
+core 0 goblin god 6 0 Beebgrat
+core 0 goblin god 7 0 Sleex-Kragg
+core 0 goblin god 8 0 Geex-Zik
+core 0 goblin god 9 0 Skrub-Skrax
+core 0 goblin god 10 2 Skidratch
+core 0 goblin god 11 0 Snogzox
+core 0 goblin god 12 0 Skignuzz
+core 0 goblin god 13 0 Nudrunk
+core 0 goblin god 14 1 Nogreetch
+core 0 goblin god 15 1 Grakrirk
+core 0 goblin god 16 0 Gnitchgnag
+core 0 goblin god 17 1 Beeg-Grozz
+core 0 goblin god 18 1 Zot-Gix
+core 0 goblin god 19 1 Nugreetch
+core 0 goblin god 20 0 Skeenotch
+core 0 goblin god 21 0 Gnux-Zak
+core 0 goblin god 22 0 Bosnank
+core 0 goblin god 23 0 Zeezonk
+core 0 goblin god 24 0 Keek-Krizz
+core 0 goblin god 25 0 Drugrork
+core 0 goblin god 26 0 Groggslok
+core 0 goblin god 27 1 Greeg-Bizz
+core 0 goblin god 28 0 Gobeeb
+core 0 goblin god 29 0 Nax-Gax
+core 0 goblin god 30 2 Gnatch-Kig
+core 0 goblin god 31 2 Sligzob
+core 0 goblin god 32 0 Zax-Bork
+core 0 goblin god 33 0 Slazkrub
+core 0 goblin god 34 0 Zizigg
+core 0 goblin god 35 0 Zibbirk
+core 0 goblin god 36 0 Sleetbatch
+core 0 goblin god 37 0 Beeg-Skrub
+core 0 goblin god 38 0 Zakbix
+core 0 goblin god 39 0 Kitchkrox
+core 0 goblin god 40 0 Snork-Snab
+core 0 goblin god 41 0 Gnonkkrozz
+core 0 goblin god 42 0 Boz-Gnib
+core 0 goblin god 43 0 Zitbig
+core 0 goblin god 44 0 Zosnob
+core 0 goblin god 45 2 Kreeggrak
+core 0 goblin god 46 0 Kroz-Snak
+core 0 goblin god 47 0 Snognog
+core 0 goblin god 48 1 Skonizz
+core 0 goblin god 49 0 Gink-Kag
+core 0 goblin god 50 0 Gignat
+core 0 goblin civilization 1 0 The Gnazz Horde
+core 0 goblin civilization 2 1 The Baskeeb Mob
+core 0 goblin civilization 3 0 The Grodratch Horde
+core 0 goblin civilization 4 0 The Krunkgirk Horde
+core 0 goblin civilization 5 0 The Warrens of Gnonk
+core 0 goblin civilization 6 0 The Kreegg Mob
+core 0 goblin civilization 7 0 The Zazz Horde
+core 0 goblin civilization 8 0 The Gurk-Dreeb Horde
+core 0 goblin civilization 9 0 The Zuggsnak Horde
+core 0 goblin civilization 10 0 The Warrens of Skrib
+core 0 goblin civilization 11 0 The Warrens of Draggdruk
+core 0 goblin civilization 12 0 The Skob-Zeek Horde
+core 0 goblin civilization 13 0 The Skox-Bugg Mob
+core 0 goblin civilization 14 0 The Zeegkoz Mob
+core 0 goblin civilization 15 0 The Zeesloz Horde
+core 0 goblin civilization 16 0 The Zoz Horde
+core 0 goblin civilization 17 0 The Snut Horde
+core 0 goblin civilization 18 0 The Skrosnog Horde
+core 0 goblin civilization 19 0 The Skrunk Horde
+core 0 goblin civilization 20 0 The Gnot Mob
+core 0 goblin civilization 21 0 The Warrens of Gix
+core 0 goblin civilization 22 0 The Warrens of Drobkrig
+core 0 goblin civilization 23 0 The Warrens of Kit-Slirk
+core 0 goblin civilization 24 1 The Warrens of Snutch
+core 0 goblin civilization 25 0 The Bigg-Bogg Horde
+core 0 goblin civilization 26 0 The Warrens of Burkbot
+core 0 goblin civilization 27 0 The Kritch Mob
+core 0 goblin civilization 28 0 The Kiggeegg Mob
+core 0 goblin civilization 29 1 The Skeekskrik Mob
+core 0 goblin civilization 30 0 The Zink Mob
+core 0 goblin civilization 31 0 The Warrens of Zaburk
+core 0 goblin civilization 32 2 The Nurk-Skrurk Mob
+core 0 goblin civilization 33 0 The Neeb Mob
+core 0 goblin civilization 34 0 The Warrens of Beekik
+core 0 goblin civilization 35 1 The Warrens of Slitgnag
+core 0 goblin civilization 36 0 The Warrens of Drog-Slonk
+core 0 goblin civilization 37 0 The Kozeek Mob
+core 0 goblin civilization 38 0 The Skigg Horde
+core 0 goblin civilization 39 0 The Keek-Giz Mob
+core 0 goblin civilization 40 1 The Warrens of Gnugg
+core 0 goblin civilization 41 0 The Warrens of Skrugg
+core 0 goblin civilization 42 0 The Warrens of Dratch
+core 0 goblin civilization 43 1 The Dreeskrogg Horde
+core 0 goblin civilization 44 0 The Zeenk Horde
+core 0 goblin civilization 45 2 The Nixbut Horde
+core 0 goblin civilization 46 1 The Warrens of Skirk
+core 0 goblin civilization 47 0 The Drib Mob
+core 0 goblin civilization 48 0 The Slux Horde
+core 0 goblin civilization 49 1 The Gneeg-Gnazz Horde
+core 0 goblin civilization 50 1 The Skrat-Snog Horde
+core 0 goblin settlement 1 0 Krot Pit
+core 0 goblin settlement 2 0 Slograb Pit
+core 0 goblin settlement 3 0 Gnink-Snunk
+core 0 goblin settlement 4 0 Zux
+core 0 goblin settlement 5 0 Grunkgnuzz Pit
+core 0 goblin settlement 6 0 Grizz-Skeeb
+core 0 goblin settlement 7 0 Slank-Skrox
+core 0 goblin settlement 8 0 Drobskeet
+core 0 goblin settlement 9 1 Bozz Pit
+core 0 goblin settlement 10 0 Sluggatch Hole
+core 0 goblin settlement 11 0 Bux-Kreeb
+core 0 goblin settlement 12 0 Sniz
+core 0 goblin settlement 13 0 Slak
+core 0 goblin settlement 14 0 Zug-Gok
+core 0 goblin settlement 15 1 Gunitch
+core 0 goblin settlement 16 3 Skrizuz
+core 0 goblin settlement 17 0 Droggkazz Hole
+core 0 goblin settlement 18 0 Slobeerk
+core 0 goblin settlement 19 1 Snok
+core 0 goblin settlement 20 0 Kruskreezz Hole
+core 0 goblin settlement 21 1 Beedratch
+core 0 goblin settlement 22 2 Greebuk Pit
+core 0 goblin settlement 23 1 Snarkzeeb
+core 0 goblin settlement 24 0 Zeedrork Pit
+core 0 goblin settlement 25 0 Skruxsnax
+core 0 goblin settlement 26 0 Zigox Pit
+core 0 goblin settlement 27 1 Skoggnit
+core 0 goblin settlement 28 0 Snikob
+core 0 goblin settlement 29 0 Grax Pit
+core 0 goblin settlement 30 0 Nub Pit
+core 0 goblin settlement 31 1 Zot-Sleeg Pit
+core 0 goblin settlement 32 0 Karkkonk Pit
+core 0 goblin settlement 33 0 Krik
+core 0 goblin settlement 34 0 Nuggnank Pit
+core 0 goblin settlement 35 0 Sluneek Pit
+core 0 goblin settlement 36 0 Beek-Skrink
+core 0 goblin settlement 37 3 Bix-Nurk Pit
+core 0 goblin settlement 38 0 Skax-Zux Pit
+core 0 goblin settlement 39 0 Drigragg
+core 0 goblin settlement 40 2 Skeek-Zeet Pit
+core 0 goblin settlement 41 1 Slaskrig Pit
+core 0 goblin settlement 42 1 Zabig
+core 0 goblin settlement 43 0 Skox-Keerk
+core 0 goblin settlement 44 1 Slugnink
+core 0 goblin settlement 45 2 Zobslig Pit
+core 0 goblin settlement 46 1 Gneek-Grogg
+core 0 goblin settlement 47 0 Sneesnirk
+core 0 goblin settlement 48 0 Nuggdrax
+core 0 goblin settlement 49 0 Grarkkoz Pit
+core 0 goblin settlement 50 0 Snink-Neek
+core 0 human god 1 0 Wasbrid
+core 0 human god 2 0 Histold
+core 0 human god 3 0 Edostold
+core 0 human god 4 0 Hadream
+core 0 human god 5 0 Steldhil
+core 0 human god 6 0 Turbrur
+core 0 human god 7 1 Heasalel
+core 0 human god 8 0 Breartock
+core 0 human god 9 1 Monalin
+core 0 human god 10 0 Bambis
+core 0 human god 11 0 Garmin
+core 0 human god 12 1 Seckedus
+core 0 human god 13 0 Geackdent
+core 0 human god 14 1 Hungan
+core 0 human god 15 0 Seldman
+core 0 human god 16 0 Silmard
+core 0 human god 17 0 Culbrock
+core 0 human god 18 1 Aluntwud
+core 0 human god 19 0 Staldhol
+core 0 human god 20 0 Alunmint
+core 0 human god 21 1 Heamdeard
+core 0 human god 22 0 Sismild
+core 0 human god 23 0 Wuldrun
+core 0 human god 24 0 Bockwear
+core 0 human god 25 1 Womdal
+core 0 human god 26 0 Measbrum
+core 0 human god 27 1 Caldbold
+core 0 human god 28 2 Sorwold
+core 0 human god 29 1 Gentreas
+core 0 human god 30 0 Brildwint
+core 0 human god 31 0 Bonhur
+core 0 human god 32 1 Ceackson
+core 0 human god 33 0 Rulrim
+core 0 human god 34 0 Cedbick
+core 0 human god 35 0 Stumrud
+core 0 human god 36 0 Sudteam
+core 0 human god 37 0 Dodrad
+core 0 human god 38 0 Beasdald
+core 0 human god 39 1 Huneder
+core 0 human god 40 0 Horaleam
+core 0 human god 41 1 Gantrant
+core 0 human god 42 0 Sealgan
+core 0 human god 43 0 Steambent
+core 0 human god 44 1 Dordedock
+core 0 human god 45 0 Hedasham
+core 0 human god 46 0 Tadrur
+core 0 human god 47 0 Gengur
+core 0 human god 48 0 Dardcad
+core 0 human god 49 0 Cantbird
+core 0 human god 50 0 Ashasdem
+core 0 human civilization 1 0 The Duchy of Ashem
+core 0 human civilization 2 2 The Kingdom of Ashos
+core 0 human civilization 3 2 The Kingdom of Edes
+core 0 human civilization 4 0 The Duchy of Wick
+core 0 human civilization 5 3 The Duchy of Circon
+core 0 human civilization 6 0 The Duchy of Cear
+core 0 human civilization 7 0 The Duchy of Deas
+core 0 human civilization 8 0 The Kingdom of Stelgant
+core 0 human civilization 9 0 The Gack League
+core 0 human civilization 10 0 The Duchy of Cild
+core 0 human civilization 11 1 The Kingdom of Deld
+core 0 human civilization 12 7 The Montceck League
+core 0 human civilization 13 2 The Ward League
+core 0 human civilization 14 0 The Duchy of Bront
+core 0 human civilization 15 1 The Duchy of Centteam
+core 0 human civilization 16 3 The Alor League
+core 0 human civilization 17 2 The Edumgem League
+core 0 human civilization 18 1 The Gerashor League
+core 0 human civilization 19 2 The Geasbos League
+core 0 human civilization 20 1 The Stin League
+core 0 human civilization 21 3 The Duchy of Aleam
+core 0 human civilization 22 5 The Kingdom of Hemstar
+core 0 human civilization 23 1 The Guldbrack League
+core 0 human civilization 24 2 The Kingdom of Rerd
+core 0 human civilization 25 1 The Kingdom of Ashant
+core 0 human civilization 26 0 The Kingdom of Stead
+core 0 human civilization 27 1 The Kingdom of Doldran
+core 0 human civilization 28 1 The Duchy of Wongal
+core 0 human civilization 29 1 The Duchy of Dodmock
+core 0 human civilization 30 1 The Kingdom of Ashead
+core 0 human civilization 31 10 The Duchy of Mint
+core 0 human civilization 32 3 The Kingdom of Dontstird
+core 0 human civilization 33 1 The Canedon League
+core 0 human civilization 34 9 The Duchy of Ashock
+core 0 human civilization 35 1 The Kingdom of Alildbrim
+core 0 human civilization 36 2 The Kingdom of Alard
+core 0 human civilization 37 0 The Kingdom of Sengud
+core 0 human civilization 38 0 The Kingdom of Edald
+core 0 human civilization 39 4 The Duchy of Sird
+core 0 human civilization 40 0 The Duchy of Wirtol
+core 0 human civilization 41 3 The Kingdom of Edolalear
+core 0 human civilization 42 0 The Alesmeard League
+core 0 human civilization 43 6 The Kingdom of Edeam
+core 0 human civilization 44 1 The Stod League
+core 0 human civilization 45 0 The Duchy of Suld
+core 0 human civilization 46 1 The Kingdom of Ashud
+core 0 human civilization 47 1 The Kingdom of Serrack
+core 0 human civilization 48 0 The Kingdom of Tearalur
+core 0 human civilization 49 1 The Duchy of Steldel
+core 0 human civilization 50 0 The Rald League
+core 0 human settlement 1 3 Hickwuntstead
+core 0 human settlement 2 0 Alantton
+core 0 human settlement 3 2 Edeantford
+core 0 human settlement 4 4 Hockford
+core 0 human settlement 5 3 Rirduntstead
+core 0 human settlement 6 1 Asheackwick
+core 0 human settlement 7 1 Gurdton
+core 0 human settlement 8 4 Muldedeamham
+core 0 human settlement 9 7 Burdanford
+core 0 human settlement 10 2 Alilbury
+core 0 human settlement 11 2 Silstudstead
+core 0 human settlement 12 3 Gidreambury
+core 0 human settlement 13 1 Hisbremstead
+core 0 human settlement 14 0 Stastint
+core 0 human settlement 15 0 Moldstead
+core 0 human settlement 16 0 Edumford
+core 0 human settlement 17 1 Tontstead
+core 0 human settlement 18 0 Ceanbir
+core 0 human settlement 19 1 Duntstead
+core 0 human settlement 20 3 Brickbury
+core 0 human settlement 21 1 Geard
+core 0 human settlement 22 0 Hinbeasbury
+core 0 human settlement 23 1 Wurdedam
+core 0 human settlement 24 1 Ashedgord
+core 0 human settlement 25 0 Hildbrunwick
+core 0 human settlement 26 8 Heasceadton
+core 0 human settlement 27 1 Tenashedwick
+core 0 human settlement 28 0 Ashinwick
+core 0 human settlement 29 2 Tanalordbury
+core 0 human settlement 30 5 Edanrudford
+core 0 human settlement 31 3 Edeardford
+core 0 human settlement 32 0 Brealton
+core 0 human settlement 33 5 Alonbrildham
+core 0 human settlement 34 3 Geal
+core 0 human settlement 35 2 Alockton
+core 0 human settlement 36 5 Stealceadham
+core 0 human settlement 37 2 Edodton
+core 0 human settlement 38 2 Alamwockwick
+core 0 human settlement 39 2 Gadashuckbury
+core 0 human settlement 40 3 Tasberdwick
+core 0 human settlement 41 2 Hurdstim
+core 0 human settlement 42 0 Edil
+core 0 human settlement 43 1 Danttamwick
+core 0 human settlement 44 6 Branford
+core 0 human settlement 45 0 Dadalinwick
+core 0 human settlement 46 5 Aluld
+core 0 human settlement 47 1 Steackham
+core 0 human settlement 48 0 Ashurciston
+core 0 human settlement 49 7 Reanwick
+core 0 human settlement 50 7 Aledham
+core 0 orcish god 1 1 Ug'krarz
+core 0 orcish god 2 0 Og'uraag
+core 0 orcish god 3 0 Uruuk'krush
+core 0 orcish god 4 0 Uuk'graarz
+core 0 orcish god 5 1 Thuugh'maak
+core 0 orcish god 6 1 Uruld'kruum
+core 0 orcish god 7 0 Uuld'mam
+core 0 orcish god 8 0 Aark'ghaagh
+core 0 orcish god 9 0 Thuumghok
+core 0 orcish god 10 0 Og'uguu
+core 0 orcish god 11 0 Thukthark
+core 0 orcish god 12 0 Uuk'kold
+core 0 orcish god 13 0 Uraluruum
+core 0 orcish god 14 1 Zuushgruz
+core 0 orcish god 15 0 Ugaag'zald
+core 0 orcish god 16 0 Kuuzuukh
+core 0 orcish god 17 2 Gral'ghurk
+core 0 orcish god 18 0 Mal'ugarz
+core 0 orcish god 19 0 Uuk'kaald
+core 0 orcish god 20 0 Zuuldkragh
+core 0 orcish god 21 0 Uraaz'azak
+core 0 orcish god 22 0 Uro'urald
+core 0 orcish god 23 0 Ghuukkruum
+core 0 orcish god 24 1 Thuug'kark
+core 0 orcish god 25 0 Zuulkro
+core 0 orcish god 26 0 Bakshuugh
+core 0 orcish god 27 0 Uruuzshogh
+core 0 orcish god 28 2 Shaash'bark
+core 0 orcish god 29 0 Uruu'uruukh
+core 0 orcish god 30 0 Aakh'shuul
+core 0 orcish god 31 0 Baalghosh
+core 0 orcish god 32 0 Ghuzgruugh
+core 0 orcish god 33 0 Buuz'shaag
+core 0 orcish god 34 0 Uush'barz
+core 0 orcish god 35 0 Aam'thurk
+core 0 orcish god 36 0 Krukgraark
+core 0 orcish god 37 0 Zuum'ururk
+core 0 orcish god 38 0 Azug'buush
+core 0 orcish god 39 0 Aag'krark
+core 0 orcish god 40 0 Ghaark'mol
+core 0 orcish god 41 0 Ogh'dam
+core 0 orcish god 42 0 Kuuldmoz
+core 0 orcish god 43 0 Zaa'zaak
+core 0 orcish god 44 0 Daaz'kuugh
+core 0 orcish god 45 0 Ugom'muugh
+core 0 orcish god 46 0 Orz'bokh
+core 0 orcish god 47 0 Buuz'uraa
+core 0 orcish god 48 0 Korkazuz
+core 0 orcish god 49 0 Okh'kraarz
+core 0 orcish god 50 0 Aash'kuurk
+core 0 orcish civilization 1 0 Clan Kram'krorz
+core 0 orcish civilization 2 0 The Azakhdam Horde
+core 0 orcish civilization 3 0 The Urogh'krorz Horde
+core 0 orcish civilization 4 0 The Burk'zork Horde
+core 0 orcish civilization 5 0 The Warband of Maakurokh
+core 0 orcish civilization 6 0 The Warband of Ghom
+core 0 orcish civilization 7 0 Clan Uromthuurk
+core 0 orcish civilization 8 0 The Krurz Horde
+core 0 orcish civilization 9 0 Clan Mogh
+core 0 orcish civilization 10 0 The Uul'kraag Horde
+core 0 orcish civilization 11 0 The U'thogh Horde
+core 0 orcish civilization 12 1 Clan Dok'uraak
+core 0 orcish civilization 13 0 The Warband of Azal
+core 0 orcish civilization 14 0 The Warband of Murk
+core 0 orcish civilization 15 0 Clan Kold'ko
+core 0 orcish civilization 16 0 The Thalmork Horde
+core 0 orcish civilization 17 0 The Warband of Uld'kuuk
+core 0 orcish civilization 18 0 The Warband of Aagh'buush
+core 0 orcish civilization 19 1 Clan Thuukh
+core 0 orcish civilization 20 0 The Warband of Bamkaarz
+core 0 orcish civilization 21 0 The Kuuld Horde
+core 0 orcish civilization 22 0 The Ghagh'daash Horde
+core 0 orcish civilization 23 0 Clan Urul'muuk
+core 0 orcish civilization 24 0 The Kraz Horde
+core 0 orcish civilization 25 0 The Warband of Dakh'burk
+core 0 orcish civilization 26 0 The Warband of Ghaald
+core 0 orcish civilization 27 0 The Warband of Shukh
+core 0 orcish civilization 28 0 The Ghag'uraag Horde
+core 0 orcish civilization 29 0 Clan Ghaash
+core 0 orcish civilization 30 0 The Ugagkrum Horde
+core 0 orcish civilization 31 0 The Warband of Grum
+core 0 orcish civilization 32 0 The Warband of Kuurk
+core 0 orcish civilization 33 0 Clan Ugokh'makh
+core 0 orcish civilization 34 0 The Warband of Zaarz'shork
+core 0 orcish civilization 35 0 The Warband of Kraal
+core 0 orcish civilization 36 1 The Duukh Horde
+core 0 orcish civilization 37 1 Clan Ghukhdukh
+core 0 orcish civilization 38 0 The Gruug Horde
+core 0 orcish civilization 39 0 The Warband of Bom
+core 0 orcish civilization 40 3 The Am'shuukh Horde
+core 0 orcish civilization 41 0 The Warband of Aak'ugurz
+core 0 orcish civilization 42 0 Clan Urark'krak
+core 0 orcish civilization 43 0 Clan Uguuld
+core 0 orcish civilization 44 0 Clan Uroghkaagh
+core 0 orcish civilization 45 1 The Warband of Korz'urakh
+core 0 orcish civilization 46 0 The Zaag Horde
+core 0 orcish civilization 47 0 The Azaagh Horde
+core 0 orcish civilization 48 2 Clan Oz'shug
+core 0 orcish civilization 49 0 The Warband of Ogh'thaal
+core 0 orcish civilization 50 0 The Warband of Ugaz
+core 0 orcish settlement 1 0 Kaak Fort
+core 0 orcish settlement 2 0 Zaarz Camp
+core 0 orcish settlement 3 0 Grush
+core 0 orcish settlement 4 0 Zaakugaag
+core 0 orcish settlement 5 0 Uruld'duuld
+core 0 orcish settlement 6 1 Shaazazuug
+core 0 orcish settlement 7 1 Mukhghaam
+core 0 orcish settlement 8 0 Azol'urash Fort
+core 0 orcish settlement 9 0 Karzthogh
+core 0 orcish settlement 10 0 Uromgha
+core 0 orcish settlement 11 2 Thazthosh
+core 0 orcish settlement 12 0 Uul'krakh Camp
+core 0 orcish settlement 13 0 Og'buurk Camp
+core 0 orcish settlement 14 0 Zaalduruz Camp
+core 0 orcish settlement 15 0 Mak
+core 0 orcish settlement 16 0 Duld'sha Fort
+core 0 orcish settlement 17 0 Shuum Fort
+core 0 orcish settlement 18 0 Ghorz Fort
+core 0 orcish settlement 19 0 Duuldkrosh Fort
+core 0 orcish settlement 20 0 Aag'urog Fort
+core 0 orcish settlement 21 0 Duugh'kaagh
+core 0 orcish settlement 22 0 Urk'uguush Fort
+core 0 orcish settlement 23 0 Duukh'ugaz
+core 0 orcish settlement 24 1 Ork'thukh
+core 0 orcish settlement 25 0 Magh'thuugh Fort
+core 0 orcish settlement 26 1 Ugabaald Fort
+core 0 orcish settlement 27 0 Mok'azaagh
+core 0 orcish settlement 28 1 Bakh'mald
+core 0 orcish settlement 29 1 Ghum'makh Fort
+core 0 orcish settlement 30 1 Zash'kug
+core 0 orcish settlement 31 0 Maal'thaash Camp
+core 0 orcish settlement 32 0 Uguukh
+core 0 orcish settlement 33 0 Kaald
+core 0 orcish settlement 34 0 Aash'azaald
+core 0 orcish settlement 35 1 Uug'krak Camp
+core 0 orcish settlement 36 0 Uuld'bugh
+core 0 orcish settlement 37 0 Ul'ghuld
+core 0 orcish settlement 38 0 Thurz'gruu Camp
+core 0 orcish settlement 39 0 Aak'kaa Fort
+core 0 orcish settlement 40 0 Thakh Fort
+core 0 orcish settlement 41 0 Kughuraa Camp
+core 0 orcish settlement 42 0 Thoshdurk Camp
+core 0 orcish settlement 43 0 Uguum'maagh
+core 0 orcish settlement 44 0 Oz'uraa
+core 0 orcish settlement 45 0 Uraak'bukh
+core 0 orcish settlement 46 0 Kuu'baag
+core 0 orcish settlement 47 1 Uukh'kruuld Fort
+core 0 orcish settlement 48 0 Ghark
+core 0 orcish settlement 49 2 Dogkrogh Fort
+core 0 orcish settlement 50 0 Azol'uguuz
+coresha256 0 e5d21c6134fc6c83e3b000d90aabd91a85a6d23c9b06a7038851faf84d2da88a
+core 42 dwarven god 1 0 Khorkhound
+core 42 dwarven god 2 1 Grirtoum
+core 42 dwarven god 3 1 Bronhak
+core 42 dwarven god 4 0 Khulihadin
+core 42 dwarven god 5 0 Nodbru
+core 42 dwarven god 6 1 Tairnam
+core 42 dwarven god 7 0 Khorinkhu
+core 42 dwarven god 8 0 Drulihai
+core 42 dwarven god 9 0 Kidintid
+core 42 dwarven god 10 0 Braikdourd
+core 42 dwarven god 11 0 Haingaid
+core 42 dwarven god 12 0 Madinto
+core 42 dwarven god 13 1 Brirndruk
+core 42 dwarven god 14 0 Bidindrum
+core 42 dwarven god 15 0 Tarinthrou
+core 42 dwarven god 16 0 Hurkbraid
+core 42 dwarven god 17 3 Turkhodin
+core 42 dwarven god 18 0 Nolihali
+core 42 dwarven god 19 0 Taimgai
+core 42 dwarven god 20 1 Norntom
+core 42 dwarven god 21 0 Douligrirn
+core 42 dwarven god 22 0 Horbrairk
+core 42 dwarven god 23 0 Graidinmum
+core 42 dwarven god 24 0 Gomthrurd
+core 42 dwarven god 25 0 Toummtu
+core 42 dwarven god 26 0 Donnirn
+core 42 dwarven god 27 1 Brukgrou
+core 42 dwarven god 28 0 Khoudham
+core 42 dwarven god 29 0 Thondhadin
+core 42 dwarven god 30 0 Drimnard
+core 42 dwarven god 31 0 Madingrurn
+core 42 dwarven god 32 0 Grurthund
+core 42 dwarven god 33 0 Nailigroum
+core 42 dwarven god 34 0 Barindon
+core 42 dwarven god 35 0 Gourbrod
+core 42 dwarven god 36 2 Nommgo
+core 42 dwarven god 37 1 Grimmkili
+core 42 dwarven god 38 1 Goringou
+core 42 dwarven god 39 0 Bolitaid
+core 42 dwarven god 40 0 Dokmomm
+core 42 dwarven god 41 0 Thradgon
+core 42 dwarven god 42 0 Dornmairin
+core 42 dwarven god 43 0 Thourdo
+core 42 dwarven god 44 0 Nodindraim
+core 42 dwarven god 45 0 Kourinna
+core 42 dwarven god 46 0 Durbrairk
+core 42 dwarven god 47 0 Brirbrudin
+core 42 dwarven god 48 0 Drirnnairk
+core 42 dwarven god 49 0 Khintho
+core 42 dwarven god 50 0 Korinkirk
+core 42 dwarven civilization 1 0 The Gadho Throne
+core 42 dwarven civilization 2 0 The Hound Throne
+core 42 dwarven civilization 3 0 The Kaindnimm Throne
+core 42 dwarven civilization 4 0 The Hold of Dulimin
+core 42 dwarven civilization 5 0 The Narinthri Throne
+core 42 dwarven civilization 6 0 The Tourdbaim Throne
+core 42 dwarven civilization 7 0 Clan Thraim
+core 42 dwarven civilization 8 0 The Dord Throne
+core 42 dwarven civilization 9 0 The Hold of Throurdo
+core 42 dwarven civilization 10 0 The Hold of Mairdurk
+core 42 dwarven civilization 11 1 The Grar Throne
+core 42 dwarven civilization 12 0 The Hold of Nondrorn
+core 42 dwarven civilization 13 0 The Hold of Gaik
+core 42 dwarven civilization 14 0 Clan Khorinthir
+core 42 dwarven civilization 15 0 The Hudthourn Throne
+core 42 dwarven civilization 16 0 Clan Giknird
+core 42 dwarven civilization 17 1 Clan Kairbrair
+core 42 dwarven civilization 18 0 Clan Mourta
+core 42 dwarven civilization 19 0 Clan Brordna
+core 42 dwarven civilization 20 0 Clan Tamm
+core 42 dwarven civilization 21 1 Clan Modingark
+core 42 dwarven civilization 22 0 The Grourindra Throne
+core 42 dwarven civilization 23 0 The Hold of Drunnod
+core 42 dwarven civilization 24 0 The Hold of Bourinhili
+core 42 dwarven civilization 25 0 Clan Thrilibaik
+core 42 dwarven civilization 26 0 The Hold of Nandhu
+core 42 dwarven civilization 27 0 The Hold of Khodintud
+core 42 dwarven civilization 28 0 The Hold of Thurinda
+core 42 dwarven civilization 29 3 The Hold of Dondgaim
+core 42 dwarven civilization 30 0 The Khourd Throne
+core 42 dwarven civilization 31 0 The Nadin Throne
+core 42 dwarven civilization 32 1 Clan Gond
+core 42 dwarven civilization 33 0 The Hold of Kaimho
+core 42 dwarven civilization 34 0 The Hold of Khimmdrad
+core 42 dwarven civilization 35 1 Clan Grardnou
+core 42 dwarven civilization 36 1 Clan Brodinthu
+core 42 dwarven civilization 37 0 Clan Haili
+core 42 dwarven civilization 38 2 The Tirin Throne
+core 42 dwarven civilization 39 0 The Harktoum Throne
+core 42 dwarven civilization 40 0 Clan Khumkimm
+core 42 dwarven civilization 41 1 The Kodinbrou Throne
+core 42 dwarven civilization 42 0 The Hold of Boumnirk
+core 42 dwarven civilization 43 0 Clan Badtoud
+core 42 dwarven civilization 44 0 The Houlikaili Throne
+core 42 dwarven civilization 45 1 The Nurnu Throne
+core 42 dwarven civilization 46 0 Clan Karin
+core 42 dwarven civilization 47 0 The Kondrudin Throne
+core 42 dwarven civilization 48 2 The Monbud Throne
+core 42 dwarven civilization 49 0 The Tarngru Throne
+core 42 dwarven civilization 50 0 The Brundtord Throne
+core 42 dwarven settlement 1 1 Maird Hold
+core 42 dwarven settlement 2 0 Gidinkhi
+core 42 dwarven settlement 3 0 Daidmin
+core 42 dwarven settlement 4 0 Thrindnim Deep
+core 42 dwarven settlement 5 1 Gorindrum Hold
+core 42 dwarven settlement 6 1 Brudindrou Hold
+core 42 dwarven settlement 7 0 Khurdrourk
+core 42 dwarven settlement 8 0 Briringrim Deep
+core 42 dwarven settlement 9 1 Harthim
+core 42 dwarven settlement 10 1 Thundord Hold
+core 42 dwarven settlement 11 0 Thonbird
+core 42 dwarven settlement 12 0 Thand Deep
+core 42 dwarven settlement 13 0 Thounthan
+core 42 dwarven settlement 14 1 Naind
+core 42 dwarven settlement 15 0 Naimmkhork Hold
+core 42 dwarven settlement 16 0 Humdroud
+core 42 dwarven settlement 17 0 Braimgum
+core 42 dwarven settlement 18 1 Thraimmgu Hold
+core 42 dwarven settlement 19 0 Tourd Hold
+core 42 dwarven settlement 20 2 Drardnouk
+core 42 dwarven settlement 21 1 Durkta Deep
+core 42 dwarven settlement 22 0 Kurdgor
+core 42 dwarven settlement 23 0 Kirndrimm Hold
+core 42 dwarven settlement 24 0 Murkhaird Deep
+core 42 dwarven settlement 25 4 Hurntard Hold
+core 42 dwarven settlement 26 0 Naimthairk
+core 42 dwarven settlement 27 1 Grairnmod Hold
+core 42 dwarven settlement 28 0 Thoum
+core 42 dwarven settlement 29 2 Haknund Deep
+core 42 dwarven settlement 30 0 Grin
+core 42 dwarven settlement 31 0 Toukmairk
+core 42 dwarven settlement 32 0 Khilikhi
+core 42 dwarven settlement 33 0 Gudbrain
+core 42 dwarven settlement 34 1 Gouringi
+core 42 dwarven settlement 35 0 Grirnbra
+core 42 dwarven settlement 36 1 Kholikhu
+core 42 dwarven settlement 37 1 Mindmaim
+core 42 dwarven settlement 38 0 Haidbram Hold
+core 42 dwarven settlement 39 0 Drand
+core 42 dwarven settlement 40 0 Kingrouli
+core 42 dwarven settlement 41 0 Doundkind
+core 42 dwarven settlement 42 0 Turknon Hold
+core 42 dwarven settlement 43 0 Nirnthrurn Deep
+core 42 dwarven settlement 44 0 Didtarn Deep
+core 42 dwarven settlement 45 0 Mouk Deep
+core 42 dwarven settlement 46 2 Barkgodin Deep
+core 42 dwarven settlement 47 0 Mairkhound Hold
+core 42 dwarven settlement 48 1 Drili Deep
+core 42 dwarven settlement 49 0 Kardrou Hold
+core 42 dwarven settlement 50 1 Broumgrirk
+core 42 elven god 1 0 Fielie
+core 42 elven god 2 0 Agla
+core 42 elven god 3 0 Foithal
+core 42 elven god 4 0 Ollvith
+core 42 elven god 5 0 Elilan
+core 42 elven god 6 0 Ieth
+core 42 elven god 7 0 Eoll
+core 42 elven god 8 0 Ieminn
+core 42 elven god 9 0 Neie
+core 42 elven god 10 0 Cathgli
+core 42 elven god 11 0 Naecend
+core 42 elven god 12 0 Maeglith
+core 42 elven god 13 0 Irath
+core 42 elven god 14 0 Thiesaeth
+core 42 elven god 15 0 Ithesiso
+core 42 elven god 16 0 Ithanele
+core 42 elven god 17 2 Eitheni
+core 42 elven god 18 0 Asaeth
+core 42 elven god 19 0 Gliefaelae
+core 42 elven god 20 0 Glesae
+core 42 elven god 21 0 Eithell
+core 42 elven god 22 0 Elces
+core 42 elven god 23 1 Vaeglagle
+core 42 elven god 24 0 Vosiere
+core 42 elven god 25 0 Elane
+core 42 elven god 26 0 Eliererie
+core 42 elven god 27 1 Thaie
+core 42 elven god 28 0 Riecar
+core 42 elven god 29 0 Laeithell
+core 42 elven god 30 0 Glaennmie
+core 42 elven god 31 0 Eneglae
+core 42 elven god 32 0 Laesaero
+core 42 elven god 33 0 Iecaend
+core 42 elven god 34 0 Vestho
+core 42 elven god 35 0 Gleglael
+core 42 elven god 36 0 Seroll
+core 42 elven god 37 0 Manglie
+core 42 elven god 38 0 Iellnell
+core 42 elven god 39 0 Glaetha
+core 42 elven god 40 0 Elaelthae
+core 42 elven god 41 0 Elifosa
+core 42 elven god 42 1 Ninnitha
+core 42 elven god 43 0 Femaend
+core 42 elven god 44 0 Gloglosa
+core 42 elven god 45 1 Elaesath
+core 42 elven god 46 0 Vaennli
+core 42 elven god 47 0 Fecind
+core 42 elven god 48 0 Rofaeithae
+core 42 elven god 49 0 Orend
+core 42 elven god 50 0 Gliela
+core 42 elven civilization 1 0 The House of Finen
+core 42 elven civilization 2 0 The Realm of Ithieglie
+core 42 elven civilization 3 0 The House of Ithathiecae
+core 42 elven civilization 4 0 The Realm of Ithoithegle
+core 42 elven civilization 5 0 The House of Gliellelae
+core 42 elven civilization 6 0 The Realm of Othmal
+core 42 elven civilization 7 0 The House of Viethothae
+core 42 elven civilization 8 0 The Court of Aethi
+core 42 elven civilization 9 0 The Realm of Lonaenn
+core 42 elven civilization 10 0 The Court of Elietha
+core 42 elven civilization 11 0 The Realm of Sise
+core 42 elven civilization 12 0 The House of Faerath
+core 42 elven civilization 13 0 The Realm of Saemesae
+core 42 elven civilization 14 1 The House of Niol
+core 42 elven civilization 15 0 The House of Sinnve
+core 42 elven civilization 16 0 The Realm of Glivarie
+core 42 elven civilization 17 0 The Realm of Gliesfe
+core 42 elven civilization 18 0 The Realm of Voglor
+core 42 elven civilization 19 0 The Court of Cico
+core 42 elven civilization 20 0 The Court of Lesosae
+core 42 elven civilization 21 2 The Court of Ilel
+core 42 elven civilization 22 0 The House of Ethronn
+core 42 elven civilization 23 0 The House of Vieglo
+core 42 elven civilization 24 0 The Realm of Glatheno
+core 42 elven civilization 25 0 The Realm of Iviece
+core 42 elven civilization 26 0 The Realm of Elisind
+core 42 elven civilization 27 2 The Realm of Coiend
+core 42 elven civilization 28 0 The Realm of Othol
+core 42 elven civilization 29 1 The House of Motheme
+core 42 elven civilization 30 0 The Realm of Moitheve
+core 42 elven civilization 31 0 The Court of Elelind
+core 42 elven civilization 32 0 The House of Ondnir
+core 42 elven civilization 33 0 The Realm of Vasiri
+core 42 elven civilization 34 0 The Realm of Esnar
+core 42 elven civilization 35 0 The Realm of Levae
+core 42 elven civilization 36 0 The Realm of Connfae
+core 42 elven civilization 37 0 The House of Elendthi
+core 42 elven civilization 38 0 The House of Saesie
+core 42 elven civilization 39 0 The Realm of Saesaell
+core 42 elven civilization 40 0 The Court of Vilae
+core 42 elven civilization 41 0 The House of Faenethe
+core 42 elven civilization 42 0 The House of Itheoll
+core 42 elven civilization 43 1 The Realm of Iesnoth
+core 42 elven civilization 44 0 The Court of Ciennme
+core 42 elven civilization 45 0 The Realm of Veithae
+core 42 elven civilization 46 0 The House of Thaema
+core 42 elven civilization 47 0 The House of Maesiesie
+core 42 elven civilization 48 0 The Realm of Glaesivie
+core 42 elven civilization 49 1 The House of Fienglae
+core 42 elven civilization 50 0 The Realm of Ofogla
+core 42 elven settlement 1 0 Voeledell
+core 42 elven settlement 2 0 Mofaesi
+core 42 elven settlement 3 0 Saelo
+core 42 elven settlement 4 0 Raenme
+core 42 elven settlement 5 0 Glalivedell
+core 42 elven settlement 6 0 Minno
+core 42 elven settlement 7 0 Iennmo
+core 42 elven settlement 8 1 Ciennfae
+core 42 elven settlement 9 2 Canla
+core 42 elven settlement 10 0 Rannve
+core 42 elven settlement 11 0 Fivelie
+core 42 elven settlement 12 0 Coand
+core 42 elven settlement 13 0 Cesie
+core 42 elven settlement 14 0 Gloeliel
+core 42 elven settlement 15 0 Elaesel
+core 42 elven settlement 16 1 Fothandell
+core 42 elven settlement 17 0 Sendsi
+core 42 elven settlement 18 0 Raellfo
+core 42 elven settlement 19 0 Ellmoll
+core 42 elven settlement 20 0 Thoa
+core 42 elven settlement 21 0 Gleglana
+core 42 elven settlement 22 0 Laesiend
+core 42 elven settlement 23 1 Etha
+core 42 elven settlement 24 0 Masri
+core 42 elven settlement 25 0 Ciferdell
+core 42 elven settlement 26 0 Gloralldell
+core 42 elven settlement 27 0 Foroeli
+core 42 elven settlement 28 1 Sisirdell
+core 42 elven settlement 29 2 Iennmie
+core 42 elven settlement 30 0 Roithano
+core 42 elven settlement 31 0 Raemael
+core 42 elven settlement 32 0 Miesoitha
+core 42 elven settlement 33 0 Elieldell
+core 42 elven settlement 34 0 Mienore
+core 42 elven settlement 35 0 Forathadell
+core 42 elven settlement 36 0 Sofiethiedell
+core 42 elven settlement 37 0 Allaenndell
+core 42 elven settlement 38 0 Thaeglaethi
+core 42 elven settlement 39 0 Relothdell
+core 42 elven settlement 40 0 Gliecari
+core 42 elven settlement 41 0 Elalcie
+core 42 elven settlement 42 0 Lienond
+core 42 elven settlement 43 0 Maethie
+core 42 elven settlement 44 0 Athnael
+core 42 elven settlement 45 0 Aendithieth
+core 42 elven settlement 46 1 Iemiel
+core 42 elven settlement 47 0 Nienann
+core 42 elven settlement 48 0 Ithimaesdell
+core 42 elven settlement 49 0 Esranddell
+core 42 elven settlement 50 0 Cathfe
+core 42 faerie god 1 0 Soutwae
+core 42 faerie god 2 0 Shieshia
+core 42 faerie god 3 0 Tyfien
+core 42 faerie god 4 0 Syfiash
+core 42 faerie god 5 0 Bonbie
+core 42 faerie god 6 0 Sytouss
+core 42 faerie god 7 0 Sysy
+core 42 faerie god 8 1 Timiass
+core 42 faerie god 9 1 Eeshflo
+core 42 faerie god 10 0 Ouwi
+core 42 faerie god 11 0 Saeiss
+core 42 faerie god 12 0 Bobo
+core 42 faerie god 13 0 Flieskshie
+core 42 faerie god 14 0 Bietaefee
+core 42 faerie god 15 0 Whosklae
+core 42 faerie god 16 0 Wimyll
+core 42 faerie god 17 0 Twaeskshae
+core 42 faerie god 18 0 Flaetweess
+core 42 faerie god 19 0 Tiefia
+core 42 faerie god 20 0 Whoufee
+core 42 faerie god 21 0 Twysho
+core 42 faerie god 22 0 Tweentwou
+core 42 faerie god 23 0 Othti
+core 42 faerie god 24 0 Faewo
+core 42 faerie god 25 0 Wheemeesa
+core 42 faerie god 26 0 Shibowhou
+core 42 faerie god 27 0 Shiataesh
+core 42 faerie god 28 0 Whillby
+core 42 faerie god 29 0 Powhybia
+core 42 faerie god 30 0 Flouflia
+core 42 faerie god 31 0 Flieshask
+core 42 faerie god 32 0 Shasi
+core 42 faerie god 33 0 Whiwae
+core 42 faerie god 34 0 Siea
+core 42 faerie god 35 0 Wiathsi
+core 42 faerie god 36 0 Showie
+core 42 faerie god 37 0 Shisha
+core 42 faerie god 38 0 Bitee
+core 42 faerie god 39 0 Ielae
+core 42 faerie god 40 0 Biskti
+core 42 faerie god 41 0 Twoumy
+core 42 faerie god 42 0 Feeou
+core 42 faerie god 43 1 Ishae
+core 42 faerie god 44 0 Tyflass
+core 42 faerie god 45 0 Whawhiewie
+core 42 faerie god 46 0 Powheess
+core 42 faerie god 47 0 Famou
+core 42 faerie god 48 0 Flapbo
+core 42 faerie god 49 0 Whiwhiall
+core 42 faerie god 50 0 Safie
+core 42 faerie civilization 1 0 The Circle of Leesh
+core 42 faerie civilization 2 0 The Moutaep Court
+core 42 faerie civilization 3 0 The Lyousk Ring
+core 42 faerie civilization 4 0 The Circle of Fysoli
+core 42 faerie civilization 5 0 The Beepo Ring
+core 42 faerie civilization 6 1 The Teeshti Court
+core 42 faerie civilization 7 0 The Circle of Seeskflie
+core 42 faerie civilization 8 0 The Shaesia Ring
+core 42 faerie civilization 9 0 The Wouwha Ring
+core 42 faerie civilization 10 0 The Twielie Ring
+core 42 faerie civilization 11 0 The Circle of Sheep
+core 42 faerie civilization 12 0 The Whaliwhee Court
+core 42 faerie civilization 13 0 The Taflie Court
+core 42 faerie civilization 14 0 The Wiesiwia Ring
+core 42 faerie civilization 15 1 The Circle of Tyshia
+core 42 faerie civilization 16 0 The Sheesi Court
+core 42 faerie civilization 17 0 The Babiapee Court
+core 42 faerie civilization 18 0 The Faeli Court
+core 42 faerie civilization 19 0 The Shask Ring
+core 42 faerie civilization 20 0 The Aewhousk Ring
+core 42 faerie civilization 21 0 The Circle of Tweemia
+core 42 faerie civilization 22 0 The Showhae Ring
+core 42 faerie civilization 23 0 The Circle of Pienmo
+core 42 faerie civilization 24 1 The Outhso Court
+core 42 faerie civilization 25 0 The Mieshy Ring
+core 42 faerie civilization 26 1 The Flosk Court
+core 42 faerie civilization 27 0 The Circle of Sybeess
+core 42 faerie civilization 28 0 The Iaby Court
+core 42 faerie civilization 29 0 The Circle of Shiawhee
+core 42 faerie civilization 30 0 The Baefliefly Court
+core 42 faerie civilization 31 0 The Circle of Sieiasae
+core 42 faerie civilization 32 0 The Fleep Ring
+core 42 faerie civilization 33 0 The Circle of Whaewhie
+core 42 faerie civilization 34 0 The Whilafie Court
+core 42 faerie civilization 35 0 The Fipae Ring
+core 42 faerie civilization 36 0 The Lypill Court
+core 42 faerie civilization 37 0 The Waptwia Court
+core 42 faerie civilization 38 0 The Moflou Ring
+core 42 faerie civilization 39 0 The Meeloso Ring
+core 42 faerie civilization 40 3 The Sien Court
+core 42 faerie civilization 41 0 The Circle of Lielae
+core 42 faerie civilization 42 0 The Oshie Ring
+core 42 faerie civilization 43 0 The Sosouy Ring
+core 42 faerie civilization 44 0 The Circle of Maetwo
+core 42 faerie civilization 45 0 The Meenfo Court
+core 42 faerie civilization 46 0 The Circle of Flapeeth
+core 42 faerie civilization 47 0 The Saep Court
+core 42 faerie civilization 48 0 The Circle of Sheetwou
+core 42 faerie civilization 49 0 The Shoshtae Court
+core 42 faerie civilization 50 0 The Falae Ring
+core 42 faerie settlement 1 0 Iawowo Glade
+core 42 faerie settlement 2 0 Flisspie
+core 42 faerie settlement 3 0 Tiasstou Hollow
+core 42 faerie settlement 4 0 Lowhou
+core 42 faerie settlement 5 0 Mounfie
+core 42 faerie settlement 6 0 Liflowhia Hollow
+core 42 faerie settlement 7 0 Tibask
+core 42 faerie settlement 8 0 Miptwae
+core 42 faerie settlement 9 0 Shibou
+core 42 faerie settlement 10 0 Faeoll
+core 42 faerie settlement 11 0 Flyntia Hollow
+core 42 faerie settlement 12 0 Whiamae
+core 42 faerie settlement 13 0 Bouotwee Glade
+core 42 faerie settlement 14 0 Fabyfie Glade
+core 42 faerie settlement 15 0 Sieshlae Hollow
+core 42 faerie settlement 16 0 Fliafabou
+core 42 faerie settlement 17 0 Twish
+core 42 faerie settlement 18 0 Whatwin
+core 42 faerie settlement 19 0 Flylie Hollow
+core 42 faerie settlement 20 1 Fiesha Hollow
+core 42 faerie settlement 21 0 Soss
+core 42 faerie settlement 22 0 Mouflin Glade
+core 42 faerie settlement 23 0 Paepou
+core 42 faerie settlement 24 0 Fiasiath Glade
+core 42 faerie settlement 25 0 Mie
+core 42 faerie settlement 26 0 Fiebou
+core 42 faerie settlement 27 0 Flaess
+core 42 faerie settlement 28 0 Ieteetou Hollow
+core 42 faerie settlement 29 0 Wip
+core 42 faerie settlement 30 0 Flowie
+core 42 faerie settlement 31 0 Whaely
+core 42 faerie settlement 32 0 Beeliemee
+core 42 faerie settlement 33 0 Fleefli
+core 42 faerie settlement 34 0 Whietwia
+core 42 faerie settlement 35 0 Fouflo Hollow
+core 42 faerie settlement 36 0 Baetiawou Hollow
+core 42 faerie settlement 37 0 Fieyshia
+core 42 faerie settlement 38 0 Taemash Glade
+core 42 faerie settlement 39 0 Wiasa Hollow
+core 42 faerie settlement 40 0 Matia Glade
+core 42 faerie settlement 41 0 Wolan
+core 42 faerie settlement 42 0 Shawae
+core 42 faerie settlement 43 0 Tyfie Glade
+core 42 faerie settlement 44 0 Eepae
+core 42 faerie settlement 45 1 Biatwian
+core 42 faerie settlement 46 1 Biemiwi
+core 42 faerie settlement 47 0 Shath
+core 42 faerie settlement 48 0 Fieshpia
+core 42 faerie settlement 49 1 Pousho Hollow
+core 42 faerie settlement 50 1 Baepie Glade
+core 42 goblin god 1 0 Skork-Snagg
+core 42 goblin god 2 0 Krokzit
+core 42 goblin god 3 0 Dreeslix
+core 42 goblin god 4 0 Snobank
+core 42 goblin god 5 0 Borkgaz
+core 42 goblin god 6 0 Keekritch
+core 42 goblin god 7 0 Grubkux
+core 42 goblin god 8 0 Skrukkeenk
+core 42 goblin god 9 0 Bagit
+core 42 goblin god 10 2 Guslotch
+core 42 goblin god 11 0 Gnatchdrib
+core 42 goblin god 12 0 Gneeskrigg
+core 42 goblin god 13 2 Sneegib
+core 42 goblin god 14 0 Skreesnuzz
+core 42 goblin god 15 0 Neek-Snab
+core 42 goblin god 16 0 Bodreeg
+core 42 goblin god 17 0 Keesnok
+core 42 goblin god 18 0 Snikag
+core 42 goblin god 19 0 Dreegkrigg
+core 42 goblin god 20 1 Drukgrak
+core 42 goblin god 21 0 Droksniz
+core 42 goblin god 22 0 Bozzsnurk
+core 42 goblin god 23 0 Beezsnurk
+core 42 goblin god 24 0 Natbag
+core 42 goblin god 25 0 Gnozkonk
+core 42 goblin god 26 1 Keebiz
+core 42 goblin god 27 0 Drizazz
+core 42 goblin god 28 0 Gnubskox
+core 42 goblin god 29 1 Kuk-Kank
+core 42 goblin god 30 1 Skabnuz
+core 42 goblin god 31 0 Gizz-Dreeb
+core 42 goblin god 32 0 Sluzz-Skeek
+core 42 goblin god 33 0 Zislok
+core 42 goblin god 34 0 Zig-Slox
+core 42 goblin god 35 0 Drizz-Groz
+core 42 goblin god 36 0 Gneeznit
+core 42 goblin god 37 0 Gaggzurk
+core 42 goblin god 38 0 Gozz-Zink
+core 42 goblin god 39 0 Gnogrug
+core 42 goblin god 40 0 Zig-Skrutch
+core 42 goblin god 41 0 Beegaz
+core 42 goblin god 42 0 Driz-Zax
+core 42 goblin god 43 0 Zonk-Kagg
+core 42 goblin god 44 0 Kraz-Skug
+core 42 goblin god 45 0 Drubot
+core 42 goblin god 46 0 Gnaskrik
+core 42 goblin god 47 0 Kratkik
+core 42 goblin god 48 0 Nibnub
+core 42 goblin god 49 0 Zugeeb
+core 42 goblin god 50 0 Zeex-Kix
+core 42 goblin civilization 1 0 The Bok Mob
+core 42 goblin civilization 2 0 The Skib Horde
+core 42 goblin civilization 3 1 The Grork Horde
+core 42 goblin civilization 4 0 The Gidruz Horde
+core 42 goblin civilization 5 0 The Warrens of Gnunk
+core 42 goblin civilization 6 0 The Warrens of Gutch-Sluz
+core 42 goblin civilization 7 0 The Warrens of Dribnark
+core 42 goblin civilization 8 0 The Gadruzz Horde
+core 42 goblin civilization 9 1 The Druz Horde
+core 42 goblin civilization 10 0 The Zak-Neez Mob
+core 42 goblin civilization 11 0 The Kritch-Gux Horde
+core 42 goblin civilization 12 0 The Slig Mob
+core 42 goblin civilization 13 0 The Warrens of Kug-Nuk
+core 42 goblin civilization 14 0 The Skrax-Snix Mob
+core 42 goblin civilization 15 0 The Warrens of Snoz
+core 42 goblin civilization 16 0 The Warrens of Skabug
+core 42 goblin civilization 17 0 The Zazslonk Horde
+core 42 goblin civilization 18 1 The Warrens of Krizz
+core 42 goblin civilization 19 0 The Skignozz Horde
+core 42 goblin civilization 20 0 The Warrens of Driskrib
+core 42 goblin civilization 21 0 The Warrens of Neetch
+core 42 goblin civilization 22 0 The Warrens of Zinksleenk
+core 42 goblin civilization 23 0 The Gnosnib Horde
+core 42 goblin civilization 24 0 The Warrens of Skirk
+core 42 goblin civilization 25 0 The Skislugg Mob
+core 42 goblin civilization 26 0 The Warrens of Gaskragg
+core 42 goblin civilization 27 0 The Zaz Horde
+core 42 goblin civilization 28 1 The Drugnax Mob
+core 42 goblin civilization 29 0 The Gogg Horde
+core 42 goblin civilization 30 0 The Warrens of Nisnitch
+core 42 goblin civilization 31 0 The Skrazz Mob
+core 42 goblin civilization 32 0 The Grozskox Mob
+core 42 goblin civilization 33 1 The Sluskogg Mob
+core 42 goblin civilization 34 0 The Zurkdraz Mob
+core 42 goblin civilization 35 0 The Gnox Mob
+core 42 goblin civilization 36 0 The Kukirk Horde
+core 42 goblin civilization 37 0 The Greeg Horde
+core 42 goblin civilization 38 1 The Skrik-Skeex Mob
+core 42 goblin civilization 39 0 The Zutch Horde
+core 42 goblin civilization 40 0 The Sliskob Mob
+core 42 goblin civilization 41 0 The Kux Mob
+core 42 goblin civilization 42 2 The Warrens of Krig
+core 42 goblin civilization 43 1 The Krak Mob
+core 42 goblin civilization 44 0 The Sloskrik Mob
+core 42 goblin civilization 45 0 The Warrens of Zodreek
+core 42 goblin civilization 46 0 The Grat-Gurk Horde
+core 42 goblin civilization 47 1 The Kronk Mob
+core 42 goblin civilization 48 0 The Warrens of Burk
+core 42 goblin civilization 49 0 The Gnislag Horde
+core 42 goblin civilization 50 0 The Warrens of Beekrix
+core 42 goblin settlement 1 0 Greetch
+core 42 goblin settlement 2 1 Skrisligg Pit
+core 42 goblin settlement 3 0 Droskug Pit
+core 42 goblin settlement 4 1 Keebugg Hole
+core 42 goblin settlement 5 0 Snuzz Hole
+core 42 goblin settlement 6 1 Gnitch
+core 42 goblin settlement 7 0 Gnonit
+core 42 goblin settlement 8 0 Git Pit
+core 42 goblin settlement 9 3 Skeezab
+core 42 goblin settlement 10 1 Kigg-Skuzz Hole
+core 42 goblin settlement 11 0 Zugnob Hole
+core 42 goblin settlement 12 1 Snozz-Skink
+core 42 goblin settlement 13 0 Beedruzz
+core 42 goblin settlement 14 1 Zork-Skrink Hole
+core 42 goblin settlement 15 1 Niskreerk
+core 42 goblin settlement 16 0 Snugg
+core 42 goblin settlement 17 0 Gruz-Keegg
+core 42 goblin settlement 18 0 Groz
+core 42 goblin settlement 19 0 Drirk Pit
+core 42 goblin settlement 20 0 Nank Pit
+core 42 goblin settlement 21 0 Dreeb Pit
+core 42 goblin settlement 22 0 Skreek Pit
+core 42 goblin settlement 23 1 Sneezskrub Hole
+core 42 goblin settlement 24 0 Grak-Kutch
+core 42 goblin settlement 25 1 Slikreek
+core 42 goblin settlement 26 0 Beedrux Pit
+core 42 goblin settlement 27 1 Zob Pit
+core 42 goblin settlement 28 0 Keeskeegg Hole
+core 42 goblin settlement 29 2 Skotch Hole
+core 42 goblin settlement 30 0 Dreerksnak
+core 42 goblin settlement 31 0 Gnark-Guk
+core 42 goblin settlement 32 1 Skizz-Grork Hole
+core 42 goblin settlement 33 0 Skrunk Pit
+core 42 goblin settlement 34 0 Grirk-Zix Pit
+core 42 goblin settlement 35 1 Gink
+core 42 goblin settlement 36 0 Skragg Pit
+core 42 goblin settlement 37 0 Zeezzbazz
+core 42 goblin settlement 38 0 Gnag
+core 42 goblin settlement 39 0 Skognit Hole
+core 42 goblin settlement 40 4 Drob Pit
+core 42 goblin settlement 41 0 Snaksnuz Pit
+core 42 goblin settlement 42 2 Drux-Zeek Pit
+core 42 goblin settlement 43 1 Krot
+core 42 goblin settlement 44 0 Sneeggnox Hole
+core 42 goblin settlement 45 0 Gnark Hole
+core 42 goblin settlement 46 1 Slaxsnink Pit
+core 42 goblin settlement 47 2 Sneeb Hole
+core 42 goblin settlement 48 1 Zorkkizz Hole
+core 42 goblin settlement 49 0 Sleet
+core 42 goblin settlement 50 0 Drax-Gork Pit
+core 42 human god 1 1 Wudguck
+core 42 human god 2 0 Besbent
+core 42 human god 3 0 Dudrer
+core 42 human god 4 0 Bockras
+core 42 human god 5 0 Wealstuld
+core 42 human god 6 0 Stearres
+core 42 human god 7 0 Dadashad
+core 42 human god 8 0 Murdim
+core 42 human god 9 2 Mocksten
+core 42 human god 10 0 Bembrint
+core 42 human god 11 0 Halbrald
+core 42 human god 12 0 Himber
+core 42 human god 13 0 Edeartud
+core 42 human god 14 1 Edearbuck
+core 42 human god 15 0 Ashedsock
+core 42 human god 16 0 Golsord
+core 42 human god 17 0 Alenral
+core 42 human god 18 0 Brealcird
+core 42 human god 19 0 Alasedeld
+core 42 human god 20 1 Redmer
+core 42 human god 21 1 Edackwem
+core 42 human god 22 0 Alontwuld
+core 42 human god 23 0 Curdcint
+core 42 human god 24 0 Corwur
+core 42 human god 25 0 Tulwun
+core 42 human god 26 0 Geltos
+core 42 human god 27 0 Walread
+core 42 human god 28 1 Dintedord
+core 42 human god 29 0 Merdstid
+core 42 human god 30 0 Alardwald
+core 42 human god 31 0 Edadstunt
+core 42 human god 32 0 Toseded
+core 42 human god 33 0 Wentcird
+core 42 human god 34 0 Stearwuck
+core 42 human god 35 1 Bildard
+core 42 human god 36 2 Geastold
+core 42 human god 37 0 Busdeal
+core 42 human god 38 0 Hostent
+core 42 human god 39 1 Tommol
+core 42 human god 40 1 Tudgeack
+core 42 human god 41 0 Mealdster
+core 42 human god 42 0 Caralod
+core 42 human god 43 1 Stonwad
+core 42 human god 44 0 Culdtunt
+core 42 human god 45 0 Wonwad
+core 42 human god 46 1 Wunbreal
+core 42 human god 47 0 Ashenbres
+core 42 human god 48 0 Wirdweald
+core 42 human god 49 0 Tedgel
+core 42 human god 50 0 Brembild
+core 42 human civilization 1 1 The Brold League
+core 42 human civilization 2 1 The Kingdom of Seack
+core 42 human civilization 3 2 The Duchy of Alont
+core 42 human civilization 4 0 The Duchy of Ashes
+core 42 human civilization 5 0 The Kingdom of Alird
+core 42 human civilization 6 0 The Brurweck League
+core 42 human civilization 7 2 The Duchy of Stin
+core 42 human civilization 8 0 The Kingdom of Stard
+core 42 human civilization 9 0 The Duchy of Dant
+core 42 human civilization 10 1 The Duchy of Ashin
+core 42 human civilization 11 0 The Cerwel League
+core 42 human civilization 12 0 The Cerd League
+core 42 human civilization 13 0 The Tent League
+core 42 human civilization 14 0 The Kingdom of Dealdmis
+core 42 human civilization 15 0 The Kingdom of Reld
+core 42 human civilization 16 0 The Kingdom of Stol
+core 42 human civilization 17 2 The Kingdom of Centsteld
+core 42 human civilization 18 2 The Hodwuck League
+core 42 human civilization 19 0 The Duchy of Teck
+core 42 human civilization 20 2 The Duchy of Breard
+core 42 human civilization 21 1 The Edard League
+core 42 human civilization 22 0 The Ster League
+core 42 human civilization 23 0 The Duchy of Alimbrid
+core 42 human civilization 24 0 The Kingdom of Burdid
+core 42 human civilization 25 1 The Brum League
+core 42 human civilization 26 0 The Studweack League
+core 42 human civilization 27 6 The Tamgeas League
+core 42 human civilization 28 1 The Duchy of Stas
+core 42 human civilization 29 2 The Calalock League
+core 42 human civilization 30 2 The Remmed League
+core 42 human civilization 31 2 The Kingdom of Measmon
+core 42 human civilization 32 1 The Kingdom of Budsor
+core 42 human civilization 33 0 The Duchy of Brel
+core 42 human civilization 34 0 The Kingdom of Santaluck
+core 42 human civilization 35 0 The Duchy of Edunt
+core 42 human civilization 36 0 The Duchy of Tead
+core 42 human civilization 37 2 The Duchy of Ashold
+core 42 human civilization 38 1 The Kingdom of Alur
+core 42 human civilization 39 1 The Duchy of Tunbunt
+core 42 human civilization 40 0 The Duchy of Binashir
+core 42 human civilization 41 1 The Duchy of Rurd
+core 42 human civilization 42 2 The Cidwor League
+core 42 human civilization 43 1 The Duchy of Edol
+core 42 human civilization 44 0 The Duchy of Alincald
+core 42 human civilization 45 3 The Sald League
+core 42 human civilization 46 3 The Alambrunt League
+core 42 human civilization 47 0 The Geas League
+core 42 human civilization 48 0 The Wentteam League
+core 42 human civilization 49 2 The Duchy of Wardashul
+core 42 human civilization 50 3 The Kingdom of Aleledur
+core 42 human settlement 1 0 Sessardham
+core 42 human settlement 2 5 Edearton
+core 42 human settlement 3 1 Canedurbury
+core 42 human settlement 4 6 Reantwick
+core 42 human settlement 5 0 Aledsealdbury
+core 42 human settlement 6 3 Sontstead
+core 42 human settlement 7 1 Bonrinstead
+core 42 human settlement 8 0 Alinttad
+core 42 human settlement 9 0 Alasbury
+core 42 human settlement 10 6 Cergird
+core 42 human settlement 11 0 Weamton
+core 42 human settlement 12 1 Cinwerdbury
+core 42 human settlement 13 4 Gildham
+core 42 human settlement 14 1 Wolwuntwick
+core 42 human settlement 15 2 Wuldstasford
+core 42 human settlement 16 0 Decktenham
+core 42 human settlement 17 3 Edeackstead
+core 42 human settlement 18 0 Seaddinbury
+core 42 human settlement 19 1 Tentsirdwick
+core 42 human settlement 20 1 Stealdford
+core 42 human settlement 21 3 Rildalamwick
+core 42 human settlement 22 0 Tarbonstead
+core 42 human settlement 23 2 Edumton
+core 42 human settlement 24 1 Brantstead
+core 42 human settlement 25 0 Budalint
+core 42 human settlement 26 1 Stulstulwick
+core 42 human settlement 27 0 Birgil
+core 42 human settlement 28 0 Edadtent
+core 42 human settlement 29 5 Stockham
+core 42 human settlement 30 2 Alelbrentstead
+core 42 human settlement 31 4 Balcintton
+core 42 human settlement 32 2 Mealdton
+core 42 human settlement 33 1 Heanhodwick
+core 42 human settlement 34 2 Radmulstead
+core 42 human settlement 35 6 Alaldsimford
+core 42 human settlement 36 1 Alirbrenham
+core 42 human settlement 37 5 Aleckbury
+core 42 human settlement 38 0 Cinmumstead
+core 42 human settlement 39 3 Stantham
+core 42 human settlement 40 0 Steardwud
+core 42 human settlement 41 3 Ashinteldham
+core 42 human settlement 42 2 Malgaldford
+core 42 human settlement 43 3 Wimwold
+core 42 human settlement 44 0 Meanton
+core 42 human settlement 45 4 Gurbaldwick
+core 42 human settlement 46 2 Brontrurham
+core 42 human settlement 47 2 Stisbrelbury
+core 42 human settlement 48 1 Murdranham
+core 42 human settlement 49 0 Ashintaswick
+core 42 human settlement 50 8 Ediston
+core 42 orcish god 1 0 Grurzkuurz
+core 42 orcish god 2 0 Maa'duk
+core 42 orcish god 3 0 Osh'krag
+core 42 orcish god 4 1 Uraakzuuld
+core 42 orcish god 5 0 Uguk'kold
+core 42 orcish god 6 1 Ogh'krak
+core 42 orcish god 7 0 Muug'murk
+core 42 orcish god 8 0 Ugaalshom
+core 42 orcish god 9 0 Og'bog
+core 42 orcish god 10 1 Aag'dark
+core 42 orcish god 11 0 Ol'ghuum
+core 42 orcish god 12 0 Osh'muld
+core 42 orcish god 13 1 Ush'zagh
+core 42 orcish god 14 0 Shal'baarz
+core 42 orcish god 15 0 Mukazol
+core 42 orcish god 16 0 Uz'uruuld
+core 42 orcish god 17 0 Ghol'duukh
+core 42 orcish god 18 0 Uld'boz
+core 42 orcish god 19 0 Uul'kraz
+core 42 orcish god 20 0 Grold'moz
+core 42 orcish god 21 0 Zuld'uruugh
+core 42 orcish god 22 0 Zash'zald
+core 42 orcish god 23 1 Agh'shuum
+core 42 orcish god 24 0 Aakh'uragh
+core 42 orcish god 25 1 Shakgruum
+core 42 orcish god 26 0 Ghorkazold
+core 42 orcish god 27 0 Kruulddog
+core 42 orcish god 28 0 Azam'azaark
+core 42 orcish god 29 0 Kroz'kram
+core 42 orcish god 30 0 Aagh'bul
+core 42 orcish god 31 0 Ok'ugash
+core 42 orcish god 32 0 Baambaash
+core 42 orcish god 33 0 Uz'ghom
+core 42 orcish god 34 0 Maashbal
+core 42 orcish god 35 0 Uguguruuk
+core 42 orcish god 36 0 Ghaakh'thuz
+core 42 orcish god 37 1 Zokthal
+core 42 orcish god 38 0 Kuurzzuukh
+core 42 orcish god 39 0 Zuukgrald
+core 42 orcish god 40 0 Akh'azuum
+core 42 orcish god 41 0 Ugaagghukh
+core 42 orcish god 42 0 Az'shaald
+core 42 orcish god 43 0 Osh'zakh
+core 42 orcish god 44 0 Ugokh'maag
+core 42 orcish god 45 0 Thorzuguk
+core 42 orcish god 46 0 Makazaz
+core 42 orcish god 47 0 Kruld'shork
+core 42 orcish god 48 0 Bam'duuz
+core 42 orcish god 49 0 Zukhkukh
+core 42 orcish god 50 0 Kushuraa
+core 42 orcish civilization 1 0 The Thu Horde
+core 42 orcish civilization 2 0 The Warband of Kraz'ugorz
+core 42 orcish civilization 3 0 The Kork Horde
+core 42 orcish civilization 4 0 The Warband of Ald'azok
+core 42 orcish civilization 5 0 The Warband of Uug'ugak
+core 42 orcish civilization 6 0 The Warband of Baaldkrok
+core 42 orcish civilization 7 0 Clan Zurz
+core 42 orcish civilization 8 0 Clan Aark'thuugh
+core 42 orcish civilization 9 0 The Warband of Uld'muu
+core 42 orcish civilization 10 0 The Urumdug Horde
+core 42 orcish civilization 11 0 The Ghuughzuz Horde
+core 42 orcish civilization 12 0 The Daald Horde
+core 42 orcish civilization 13 0 The Kogh'muuz Horde
+core 42 orcish civilization 14 1 The Warband of Ghuuzuz
+core 42 orcish civilization 15 0 The Maashgrurz Horde
+core 42 orcish civilization 16 0 The Ugald Horde
+core 42 orcish civilization 17 0 Clan Zuukh
+core 42 orcish civilization 18 0 The Ghuz Horde
+core 42 orcish civilization 19 0 The Uld'azaam Horde
+core 42 orcish civilization 20 0 The Warband of Uraa
+core 42 orcish civilization 21 0 Clan Baalkrog
+core 42 orcish civilization 22 0 Clan Ol'thul
+core 42 orcish civilization 23 1 Clan Kuuzduuld
+core 42 orcish civilization 24 1 The Warband of Azam
+core 42 orcish civilization 25 2 Clan Ork'graark
+core 42 orcish civilization 26 0 Clan Uul'graal
+core 42 orcish civilization 27 0 The Thuld'kush Horde
+core 42 orcish civilization 28 0 The Warband of Ukh'uguum
+core 42 orcish civilization 29 0 Clan Urash
+core 42 orcish civilization 30 0 Clan Tho'muuk
+core 42 orcish civilization 31 0 Clan Kraldgruuz
+core 42 orcish civilization 32 0 The Kugh Horde
+core 42 orcish civilization 33 0 The Warband of Graakh'baam
+core 42 orcish civilization 34 2 The Warband of Ugak
+core 42 orcish civilization 35 0 The Warband of Boz'kraak
+core 42 orcish civilization 36 0 The Warband of Mog'shaaz
+core 42 orcish civilization 37 0 The Azurzbok Horde
+core 42 orcish civilization 38 0 The Warband of Urokh'kaag
+core 42 orcish civilization 39 0 The Bokugarz Horde
+core 42 orcish civilization 40 1 The Zogh'thak Horde
+core 42 orcish civilization 41 0 Clan Ghogh
+core 42 orcish civilization 42 1 The Aark'zakh Horde
+core 42 orcish civilization 43 0 The Warband of Krokh'zogh
+core 42 orcish civilization 44 0 Clan Muug
+core 42 orcish civilization 45 0 Clan Shaagh
+core 42 orcish civilization 46 1 The Kraald Horde
+core 42 orcish civilization 47 0 The Warband of Zuushka
+core 42 orcish civilization 48 0 The Ald'ghald Horde
+core 42 orcish civilization 49 1 The Warband of Ghuuazugh
+core 42 orcish civilization 50 0 The Ururzazaam Horde
+core 42 orcish settlement 1 0 Aa'kuuld Camp
+core 42 orcish settlement 2 0 Daal'zark
+core 42 orcish settlement 3 0 Uram'ghuugh
+core 42 orcish settlement 4 0 Uukh'dul
+core 42 orcish settlement 5 0 Aaz'ugugh Camp
+core 42 orcish settlement 6 0 Uld'kag
+core 42 orcish settlement 7 0 Mokhbaa
+core 42 orcish settlement 8 1 Shurk Camp
+core 42 orcish settlement 9 1 Gham Fort
+core 42 orcish settlement 10 0 Ghaark Fort
+core 42 orcish settlement 11 0 Ghuukh Camp
+core 42 orcish settlement 12 0 Aal'gha Camp
+core 42 orcish settlement 13 0 Okh'ugu
+core 42 orcish settlement 14 0 Kraakhdog
+core 42 orcish settlement 15 0 Zuulduruul Camp
+core 42 orcish settlement 16 3 Mushzaarz Camp
+core 42 orcish settlement 17 0 Ugo
+core 42 orcish settlement 18 0 Ugukzul Fort
+core 42 orcish settlement 19 1 Gruukzal Camp
+core 42 orcish settlement 20 0 Dukh
+core 42 orcish settlement 21 0 Azuuk
+core 42 orcish settlement 22 1 Ugaal'dark
+core 42 orcish settlement 23 0 Ugolkuurk
+core 42 orcish settlement 24 0 Uraakh
+core 42 orcish settlement 25 1 Graaldthak
+core 42 orcish settlement 26 0 Oz'ugarz
+core 42 orcish settlement 27 0 Bulduru
+core 42 orcish settlement 28 0 Og'ugaark
+core 42 orcish settlement 29 0 Ok'gruugh
+core 42 orcish settlement 30 0 Azuuld
+core 42 orcish settlement 31 0 Shogh'maark Camp
+core 42 orcish settlement 32 1 Ok'uruuld Fort
+core 42 orcish settlement 33 0 Kurzmorz Fort
+core 42 orcish settlement 34 0 Urol'muugh Fort
+core 42 orcish settlement 35 0 Dokazurz
+core 42 orcish settlement 36 0 Arz'thuuld
+core 42 orcish settlement 37 0 Maal Camp
+core 42 orcish settlement 38 1 Daaghsharz Camp
+core 42 orcish settlement 39 0 Krogthogh
+core 42 orcish settlement 40 0 Zaarz'kruul Camp
+core 42 orcish settlement 41 0 Thak'thurk
+core 42 orcish settlement 42 0 Aakh'ghaagh
+core 42 orcish settlement 43 0 Ash'azak
+core 42 orcish settlement 44 0 Maaghgragh Fort
+core 42 orcish settlement 45 0 Gruug Fort
+core 42 orcish settlement 46 1 Ugogh'ghak
+core 42 orcish settlement 47 0 Ark'muuz
+core 42 orcish settlement 48 0 Aal'uraaz Fort
+core 42 orcish settlement 49 0 Orz'grom Camp
+core 42 orcish settlement 50 0 Thuurkbash
+coresha256 42 a014564c70c2520aa4f8f332dadb465326148c910cc199a05982335dedfaacbc

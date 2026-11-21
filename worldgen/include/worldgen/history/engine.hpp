@@ -79,6 +79,14 @@ struct Settlement {
 struct RegionState {
     std::int64_t owner = 0;
     std::int64_t owner_event = 0;
+    // P3-06 r14 21.8 (generator 0.19.0): the holding civilization, hold(G):
+    // the owner, or while there is none the civilization that last owned the
+    // region (0 if it was never owned). Not stored in the world.
+    std::int64_t holder = 0;
+    // The number of times a different civilization became the holder
+    // (P3-06 21.8, the lead's ruling A: a change of holder clears the
+    // weariness counts over the region). Not stored in the world.
+    std::int64_t holder_changes = 0;
 };
 
 // A relation between two entities (6.1): a symmetric relation is stored with
@@ -245,6 +253,8 @@ public:
     // has none. FatalError "history: state: event <e> does not exist".
     [[nodiscard]] std::string_view event_kind(std::int64_t event) const;
     [[nodiscard]] std::int64_t event_participant(std::int64_t event, std::string_view role) const;
+    // The `year` of event `event` (P3-05 r12 22.2: the cause memory).
+    [[nodiscard]] std::int64_t event_year(std::int64_t event) const;
 
 private:
     friend class Engine;

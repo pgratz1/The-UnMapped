@@ -20,6 +20,22 @@ value depends on an unchecked input.
 Python 3 standard library only, arbitrary-precision integers, no floating
 point.
 
+Generator 0.19.0 (P3-10: P1-06 r6 section 15 and r7 15.7; the default):
+the placename lists of 15.1 to 15.3 (through p3_data_reference), V7 and one
+keeper per land noun; `--version 0.18.0` reproduces the r3/r4 file.
+Readings taken where the spec is open:
+  - 15.7 item 1: the land noun is the base name after its sector word (every
+    sector word is one word), compared as bytes.
+  - 15.4: an attempt is tested against S (the stems of earlier accepted
+    draws) only, not against its own other slot values (V3 covers those);
+    stem(v) strips a leading "the " after lower-casing, then cuts 5 bytes.
+  - 15.2: "merged into its sorted list" is byte order (the order every
+    shipped list already has).
+  - 15.6 wrote "Thornholt then Ashholt" before r9 (Ash + holt fails V1, h, h); r9 writes Elmholt;
+    the unit uses Elm.
+  - rename-db accepts an input that stores r3 names (the P3-08 inputs),
+    checked against the r3 rule on the 0.18.0 lists.
+
 Usage (from the repository root; -B keeps __pycache__ out of the tree):
 
     python3 -B worldgen/tests/reference/p1_regions_reference.py check [--quick]
@@ -70,6 +86,24 @@ import core_reference as cr  # noqa: E402
 import p1_elevation_reference as er  # noqa: E402
 import p1_biomes_reference as br  # noqa: E402
 import p1_resources_reference as rr  # noqa: E402
+import p3_data_reference as pdr  # noqa: E402
+
+# P1-06 r6/r7 (P3-10, generator 0.19.0; the default): the list edits of 15.1-15.3 (data, served through
+# p3_data_reference's copied-kind logic), V7 (15.4) and one keeper per land noun (15.7). "0.18.0" (also
+# 0.17.0: r3/r4) keeps the keeper per base name and no V7, with the 0.18.0 lists. use_version(v).
+VERSION = "0.19.0"
+
+
+def use_version(v):
+    global VERSION
+    if v not in ("0.17.0", "0.18.0", "0.19.0"):
+        raise ValueError(v)
+    VERSION = v
+    pdr.use_version(v)
+
+
+def r7():
+    return VERSION == "0.19.0"
 
 FatalError = cr.FatalError
 ONE = 1 << 32
@@ -878,11 +912,16 @@ def read_placename_files(directory=None):
     import tomllib
     directory = PLACENAMES_DIR if directory is None else directory
     defs = {}
-    for name in sorted(os.listdir(directory), key=lambda s: s.encode()):
-        if not name.endswith(".toml"):
-            continue
-        with open(os.path.join(directory, name), "rb") as f:
-            doc = tomllib.load(f)
+    # The files of the served version (P3-10: 0.19.0's lists are the 0.18.0 files with P1-06 r6 15.1-15.3's
+    # edits while the disk holds 0.18.0 files; 0.18.0 over 0.19.0 files reads git 81908fa).
+    saved = pdr.DATA_VERSION
+    pdr.use_version(VERSION)
+    try:
+        files = pdr.read_dir_files(os.path.abspath(directory), "placenames")
+    finally:
+        pdr.use_version(saved)
+    for name, text in files:
+        doc = tomllib.loads(text)
         for did, table in doc.get("placename", {}).items():
             if did in defs:
                 fatal("placename: duplicate id '%s'" % did)
@@ -1192,9 +1231,10 @@ def pools_for(slot_list, land, common, trait_defs, pw):
     return P, w
 
 
-def name_attempt(key, rid, t, land, common, trait_defs, pw, trace=None):
+def name_attempt(key, rid, t, land, common, trait_defs, pw, trace=None, slots=None):
     """One attempt t of RG11 6 and 7: (valid, name, rule). trace: a list to
-    receive (k, u, choice) records."""
+    receive (k, u, choice) records; slots: a list to receive (slot, value)
+    per slot in form order (V7)."""
     def u(k):
         v = cr.hash_at3(key, rid, t, k)
         return v
@@ -1219,6 +1259,8 @@ def name_attempt(key, rid, t, land, common, trait_defs, pw, trace=None):
             trace.append((s, ua, tuple(w), p, len(P[p]), ub, idx, P[p][idx]))
         k += 2
     ok, rule = name_valid(toks, values, common)
+    if slots is not None:
+        slots.extend(zip([s for kd, s in toks if kd == "slot"], values))
     parts = iter(values)
     name = "".join(v if kd == "lit" else next(parts) for kd, v in toks)
     return ok, name, rule
@@ -1236,19 +1278,50 @@ def name_fallback(land, common, used):
     return None
 
 
+def v7_stem(v):
+    """P1-06 r6 15.4: v lower-cased, without a leading `the `, cut to its first five bytes."""
+    low = v.lower()
+    if low.startswith("the "):
+        low = low[4:]
+    return low[:5]
+
+
+V7_FREE = ("noun", "suffix")   # 15.4: slots whose values repeat freely
+
+
+def v7_stems(slots):
+    return [v7_stem(v) for sl, v in slots if sl not in V7_FREE]
+
+
+def land_noun(base):
+    """15.7 item 1: the noun of a base name (sector word + ' ' + noun; sector words are one word)."""
+    return base.split(" ", 1)[1]
+
+
+def keepers(rows, bl):
+    """{key: keeper row}: r7 (0.19.0) one per land noun, r3 one per base name; the most cells, ties to the
+    smaller id."""
+    best = {}
+    for row, (base, _) in zip(rows, bl):
+        k = land_noun(base) if r7() else base
+        b = best.get(k)
+        if b is None or (row["cells"], -row["id"]) > (b["cells"], -b["id"]):
+            best[k] = row
+    return best
+
+
 def rg11_r3(rows, bl, passed, seed, n, pn, t):
     """RG11 4 and 8: keepers, then the draws in id order. bl: (base, land)
-    per row. Returns (names, how) with how 'K', 'F' or the attempt number."""
+    per row. Returns (names, how) with how 'K', 'F' or the attempt number.
+    r7 (0.19.0): the keeper per land noun (15.7) and V7 (15.4)."""
     pw = t.get("name_pool_weights", SHIPPED_POOLS)
     nt = t.get("name_traits", SHIPPED_TRAITS)
     key = k_name(seed, n)
-    best = {}
-    for row, (base, _) in zip(rows, bl):
-        b = best.get(base)
-        if b is None or (row["cells"], -row["id"]) > (b["cells"], -b["id"]):
-            best[base] = row
+    best = keepers(rows, bl)
     keeper = {b["id"] for b in best.values()}
-    used = set(best)
+    base_of = {row["id"]: base for row, (base, _) in zip(rows, bl)}
+    used = set(base_of[b["id"]] for b in best.values())
+    stems = set()
     out, how = [], []
     common = pn["common"]
     for row, (base, land) in zip(rows, bl):
@@ -1260,9 +1333,14 @@ def rg11_r3(rows, bl, passed, seed, n, pn, t):
         tdefs = [pn["trait"][tr] for tr in trs if tr in pn["trait"]]
         got = None
         for att in range(64):
-            ok, nm, _ = name_attempt(key, row["id"], att, land, common, tdefs, pw)
+            sl = []
+            ok, nm, _ = name_attempt(key, row["id"], att, land, common, tdefs, pw, slots=sl)
+            if ok and r7() and any(x in stems for x in v7_stems(sl)):
+                ok = False   # V7
             if ok and nm not in used:
                 got = (nm, str(att))
+                if r7():
+                    stems.update(v7_stems(sl))
                 break
         if got is None:
             nm = name_fallback(land, common, used)
@@ -1554,7 +1632,7 @@ def regions(w, h, L, passes, t, seed, defs=None, second=False):
             "border": border, "greedy": greedy, "seeds": seeds, "landmass": landmass, "nlm": nlm,
             "owner0": owner0, "cost": cost, "owner": owner, "region": region, "rows": rows,
             "borders": border_list, "biome_rows": biome_rows, "walk_dist": walk_dist, "stats": stats,
-            "passes": passes, "merge_log": log}
+            "passes": passes, "merge_log": log, "seed": seed}
 
 
 def corner_count(w, h, water, border):
@@ -1674,8 +1752,8 @@ def read_golden(path):
     with open(path) as f:
         for line in f:
             tok = line.split()
-            if not tok or tok[0].startswith("#"):
-                continue
+            if not tok or tok[0].startswith("#") or tok[0].startswith("elevation-1024"):
+                continue   # P3-10 4 item 3: the 1024 elevation hash lines, outside any case
             if tok[0] == "case":
                 out[tok[1]] = {"line": tok, "items": {}}
             elif tok[1] in ("names", "name_attempts"):
@@ -2500,6 +2578,183 @@ def check_rg11_r3(c, quick=False):
                 c.eq("14.3 space of %s (%s)" % (ld, label), (got0[0], got0[1], gotall), want)
 
 
+# --- P1-06 r6/r7 (0.19.0) hand-made units --------------------------------------
+
+GRIM_PREFIXES_R6 = ("Bale Bane Bier Charnel Dirge Dole Dread Drear Gallow Ghost Gibbet Grave Grief Grim Knell Lich "
+                    "Lorn Mourn Pall Pyre Shroud Sorrow Tomb Weep Wight Woe Wraith Wither").split()
+
+
+def grim_name(name):
+    """15.2: a drawn name is grim when one of its words (split at spaces, a final 's dropped) is a word of the
+    class, lower-cased, or starts with a prefix of the class, or the name holds an object of the class."""
+    words = set()
+    for f in ("adjectives", "places", "possessors"):
+        words.update(w.lower() for w in pdr.GRIM_019[f])
+    words.update(w.lower() for w in GRIM_PREFIXES_R6)
+    for wd in name.split(" "):
+        if wd.endswith("'s"):
+            wd = wd[:-2]
+        low = wd.lower()
+        if low in words or any(low.startswith(p.lower()) for p in GRIM_PREFIXES_R6):
+            return True
+    return any(o in name for o in pdr.GRIM_019["objects"])
+
+
+def _row(rid, cells):
+    return dict(id=rid, cells=cells, coast_cells=0, river_class_max=0, lake_cells=0, elev_mean_dm=0,
+                ore_rich_cells=0, habitability_mean=100, fertility_mean=0)
+
+
+def _mini_pn(common_extra=None):
+    common = {f: [] for f in PN_LISTS}
+    common.update(forbidden=[], excluded=[], id="common", forms=[])
+    common.update(common_extra or {})
+    return {"common": common, "trait": {}, "defs": {}, "by_biome": {}, "special": {}}
+
+
+def _mini_land(lid, forms, **lists):
+    d = {f: [] for f in PN_LISTS}
+    d.update(lists)
+    d.update(id=lid, forms=[{"form": f, "weight": 1} for f in forms])
+    return d
+
+
+def check_rg11_r7(c):
+    """P1-06 15.6 (r6, r7): V7 and the keeper per land noun, on hand-made rows and lists; the list edits on
+    the served placename data; the grim class."""
+    t = shipped_tuning()
+    pn = placename_data()
+    co = pn["common"]
+    c.eq("15.4 stem examples", [v7_stem(x) for x in ("Flooded", "Floods", "the Forsaken", "Ash", "the Moon")],
+         ["flood", "flood", "forsa", "ash", "moon"])
+    # --- keepers (15.7) on the shipped data's rows: the rule only reads cells, ids and base names
+    land = dict(pn["defs"]["downs"], id="downs")
+    rows = [_row(i + 1, cl) for i, cl in enumerate((4443, 6898, 14036, 5593, 20000))]
+    bl = [("North Downs", land)] * 4 + [("South Downs", land)]
+    nm, how = rg11_r3(rows, bl, set(), 42, 1024, pn, t)
+    c.eq("15.6 keeper: of four North Downs and one South Downs only the South Downs keeps its name",
+         [h == "K" for h in how], [False, False, False, False, True])
+    c.eq("15.6 keeper: South Downs named its base name", nm[4], "South Downs")
+    c.ok("15.6 keeper: the others draw names (no North Downs)", "North Downs" not in nm[:4])
+    rows = [_row(1, 5000), _row(2, 5000)]
+    nm, how = rg11_r3(rows, [("West Downs", land), ("East Downs", land)], set(), 42, 1024, pn, t)
+    c.eq("15.6 keeper: equal cells keep it on the smaller id", (how[0], nm[0], how[1] != "K"), ("K", "West Downs", True))
+    isle = dict(pn["special"]["isle"])
+    wood = dict(pn["by_biome"]["temperate_forest"])
+    fells = dict(pn["special"]["upland"])
+    rows = [_row(1, 300), _row(2, 900), _row(3, 4000), _row(4, 7000), _row(5, 100), _row(6, 50)]
+    bl = [("West Isle", isle), ("East Isle", isle), ("North Wood", wood), ("South Wood", wood),
+          ("North Fells", fells), ("Central Heath", dict(pn["by_biome"]["heath"]))]
+    nm, how = rg11_r3(rows, bl, set(), 7, 512, pn, t)
+    c.eq("15.6 keepers: one Isle (the larger), one Wood (the larger), the Fells and the one Heath",
+         [h == "K" for h in how], [False, True, False, True, True, True])
+    c.eq("15.6 keepers named their base names", [nm[1], nm[3], nm[4], nm[5]],
+         ["East Isle", "South Wood", "North Fells", "Central Heath"])
+    c.ok("15.6 drawn names equal no keeper's name", not ({nm[0], nm[2]} & {nm[1], nm[3], nm[4], nm[5]}))
+    # --- V7 (15.4) on a hand-made pair of lands
+    A = _mini_land("a", ["The {adjective} {noun}"], adjectives=["Flooded"], nouns=["Thicket"])
+    B = _mini_land("b", ["The {noun} of {object}"], nouns=["Weald"], objects=["Crows", "Floods"])
+    pw = {f: (0, 1, 0) for f in PN_LISTS}
+    tt = dict(t, name_pool_weights=pw)
+    mp = _mini_pn()
+    key = k_name(0, 64)
+    rid = next(r for r in range(2, 400)
+               if name_attempt(key, r, 0, B, mp["common"], [], pw)[1] == "The Weald of Floods")
+    want_t = next(a for a in range(1, 64) if name_attempt(key, rid, a, B, mp["common"], [], pw)[1]
+                  == "The Weald of Crows")
+    rows = [_row(1, 10), _row(rid, 10)]
+    bl = [("North Thicket", A), ("North Weald", B)]
+    big = [_row(rid + 1, 99), _row(rid + 2, 99)]   # keepers (same base names), so both rows draw by r3 and r7
+    blk = [("North Thicket", A), ("North Weald", B)]
+    nm, how = rg11_r3(rows + big, bl + blk, set(), 0, 64, mp, tt)
+    c.eq("15.6 V7: the first drawn region takes The Flooded Thicket", (nm[0], how[0]), ("The Flooded Thicket", "0"))
+    c.eq("15.6 V7: attempt 0 The Weald of Floods is invalid (stem flood); the next valid attempt names it",
+         (nm[1], how[1]), ("The Weald of Crows", str(want_t)))
+    use_version("0.18.0")
+    try:
+        nm18, how18 = rg11_r3(rows + big, bl + blk, set(), 0, 64, mp, tt)
+    finally:
+        use_version("0.19.0")
+    c.eq("15.6 V7 off at 0.18.0: attempt 0 stands", (nm18[1], how18[1]), ("The Weald of Floods", "0"))
+    # keepers add nothing to S: a keeper of land B's noun, then a region of B whose attempt 0 is accepted
+    nm, how = rg11_r3([_row(rid, 10), _row(rid + 1, 99)], [("North Weald", B), ("South Weald", B)], set(), 0, 64,
+                      mp, tt)
+    c.eq("15.6 V7: a keeper adds nothing to S", (nm[0], how[0]), ("The Weald of Floods", "0"))
+    # nouns and suffixes repeat freely
+    # (15.6 r9: Thornholt then Elmholt)
+    C = _mini_land("c", ["{prefix}{suffix}"], prefixes=["Thorn", "Elm"], suffixes=["holt"])
+    rws = [_row(i, 10) for i in (1, 2)] + [_row(3, 99)]
+    nm, how = rg11_r3(rws, [("North Holt", C), ("East Holt", C), ("South Holt", C)], set(), 0, 64, mp, tt)
+    c.eq("15.6 V7: suffixes repeat (Thornholt and Elmholt)", sorted(nm[:2]), ["Elmholt", "Thornholt"])
+    # a fallback adds nothing to S: land D's attempts all fail V1 (Birch + hurst); its fallback over the
+    # common prefixes is Floodhurst; then land B's attempt 0 The Weald of Floods is accepted
+    D = _mini_land("d", ["{prefix}{suffix}"], prefixes=["Birch"], suffixes=["hurst"])
+    mpf = _mini_pn({"prefixes": ["Flood"]})
+    nm, how = rg11_r3([_row(1, 10), _row(rid, 10), _row(rid + 1, 99), _row(rid + 2, 99)],
+                      [("North Dene", D), ("North Weald", B), ("South Dene", D), ("South Weald", B)], set(), 0, 64,
+                      mpf, tt)
+    c.eq("15.6 V7: the fallback (Floodhurst) adds nothing to S", (nm[0], how[0], nm[1], how[1]),
+         ("Floodhurst", "F", "The Weald of Floods", "0"))
+    # --- the grim class (15.2)
+    for nmx, want in (("Dolebrake", True), ("The Desolate Waste", True), ("Widow's Reach", True),
+                      ("The Vale of the Slain", True), ("The Ashen Downs", False), ("Blackwater Fen", False),
+                      ("The Bleak Moor", False), ("The Riven Heath", False)):
+        c.eq("15.2 grim(%s)" % nmx, grim_name(nmx), want)
+    # --- the list edits on the served data (15.1-15.3)
+    c.eq("15.1 church possessors gone", [w for w in ("Abbess", "Saint", "Sexton", "Pilgrim") if w in co["possessors"]],
+         [])
+    c.eq("15.1 kept: Hallow, Hermit, Bellringer", ("Hallow" in co["prefixes"], "Hermit" in co["possessors"],
+                                                   "Bellringer" in co["possessors"]), (True, True, True))
+    c.eq("15.3 edits", ("hanger" in pn["defs"]["wood"]["suffixes"], "High" in pn["trait"]["high"]["adjectives"],
+                        "Gap" in co["places"], "Cleft" in co["places"], "Cleft" in pn["trait"]["high"]["places"]),
+         (False, False, False, False, True))
+    ba = pn["trait"]["barren"]
+    c.ok("15.2 Desolate and Dirge moved to trait_barren",
+         "Desolate" in ba["adjectives"] and "Dirge" in ba["prefixes"] and "Desolate" not in co["adjectives"])
+    c.eq("4.1 loader checks pass on the 0.19.0 lists", placename_problem(pn["defs"], set(br.shipped_definitions())),
+         None)
+    try:
+        check_4a(pn, shipped_defs(), SHIPPED_POOLS)
+        c.ok("check 4a passes on the 0.19.0 lists", True)
+    except FatalError as e:
+        c.ok("check 4a passes on the 0.19.0 lists: %s" % e, False)
+
+
+def check_v7_world(c, label, r):
+    """15.4 on a computed world: no stem of a drawn attempt's non-noun, non-suffix slot values repeats."""
+    if not r7() or "name_how" not in r["stats"]:
+        return
+    rows, t = r["rows"], r["t"]
+    pn = placename_data()
+    defs = shipped_defs()
+    lm = {}
+    for row in rows:
+        lm[row["landmass"]] = lm.get(row["landmass"], 0) + row["cells"]
+    code_of = {k: cc for cc, k, _, _ in defs}
+    own = set(code_of[k] for k in t["upland_own_noun"])
+    cx, cy = centroid(r["w"], r["h"], r["L"]["water"])
+    rc = er.round_int(t["name_central_frac"] * r["w"])
+    lands = [ld for _, ld in base_and_land(base_entries(rows, lm), cx, cy, rc, t["names"], defs, own,
+                                           lake_noun(defs), pn)]
+    pw = t.get("name_pool_weights", SHIPPED_POOLS)
+    nt = t.get("name_traits", SHIPPED_TRAITS)
+    key = k_name(r["seed"], r["w"])
+    passed = set()
+    for b in r["borders"]:
+        if b["passes"] > 0:
+            passed.update((b["a"], b["b"]))
+    seen = []
+    for row, hw, land in zip(rows, r["stats"]["name_how"], lands):
+        if hw in ("K", "F"):
+            continue
+        trs = [pn["trait"][x] for x in region_traits(row, row["id"] in passed, nt) if x in pn["trait"]]
+        sl = []
+        ok, nm, _ = name_attempt(key, row["id"], int(hw), land, pn["common"], trs, pw, slots=sl)
+        c.eq("%s V7 region %d attempt reproduces its name" % (label, row["id"]), (ok, nm), (True, row["name"]))
+        seen.extend(v7_stems(sl))
+    c.eq("%s V7: no stem repeats among drawn names" % label, len(seen), len(set(seen)))
+
+
 def check_rg12(c):
     t = shipped_tuning()
     W, H = 4, 3
@@ -2714,7 +2969,9 @@ def check_lake_only(c):
     c.eq("lake-only row", (row["id"], row["cells"], row["lake_cells"], row["biome"], row["walk_area"], row["walk_cells"],
                            row["elev_mean_dm"], row["elev_max_dm"], row["habitability_mean"], row["habitability_p90"],
                            row["fresh_water_mean"], row["ore_rich_cells"]), (2, 1, 1, 2, 0, 0, 0, 0, 0, 0, 0, 0))
-    c.eq("lake-only names", [x["name"] for x in r["rows"]], ["West Downs", "The Sable Isle", "East Isle", "Woemere"])
+    c.eq("lake-only names", [x["name"] for x in r["rows"]],
+         ["West Downs", "The Shivering Isle", "East Isle", "Wolfmere"] if r7() else   # 0.19.0 lists (P1-06 r6)
+         ["West Downs", "The Sable Isle", "East Isle", "Woemere"])
     check_invariant6(c, "lake-only fixture", r)  # r3
     check_invariants(c, "lake-only", r)
     return r
@@ -2880,8 +3137,9 @@ def check_invariants(c, label, r):
     c.ok("%s inv8 sum" % label, total <= len(r["passes"]))
     crossing = sum(1 for _, path, col in r["passes"] if pass_attachment(w, region, water, path, col)[1])
     c.eq("%s inv8 attached" % label, total, crossing)
-    # 6 (r3).
+    # 6 (r3; r7 restated).
     check_invariant6(c, label, r)
+    check_v7_world(c, label, r)
 
 
 def form_parses(toks, name, choices):
@@ -2928,11 +3186,12 @@ def check_invariant6(c, label, r):
             c.ok("%s inv6 numeral in %r" % (label, x), False)
     groups = {}
     for row, (base, _) in zip(rows, bl):
-        groups.setdefault(base, []).append(row)
-    bases = set(groups)
+        groups.setdefault(land_noun(base) if r7() else base, []).append(row)
     keep = {}
-    for base, g in groups.items():
-        keep[base] = max(g, key=lambda x: (x["cells"], -x["id"]))["id"]
+    for k, g in groups.items():
+        keep[k] = max(g, key=lambda x: (x["cells"], -x["id"]))["id"]
+    # r3: no drawn name is a base name in use; r7 (15.7 item 4): no drawn name equals a keeper's name
+    bases = set(base for row, (base, _) in zip(rows, bl) if not r7() or row["id"] in keep.values())
     passed = set()
     for b in r["borders"]:
         if b["passes"] > 0:
@@ -2941,7 +3200,7 @@ def check_invariant6(c, label, r):
     pw = t.get("name_pool_weights", SHIPPED_POOLS)
     for row, (base, land) in zip(rows, bl):
         name = row["name"]
-        if keep[base] == row["id"]:
+        if keep[land_noun(base) if r7() else base] == row["id"]:
             if name != base:
                 c.ok("%s inv6 keeper %d named %r, not %r" % (label, row["id"], name, base), False)
             continue
@@ -2988,7 +3247,16 @@ def check_all(quick):
     check_rg5(c)
     check_rg8(c)
     check_rg11(c)
-    check_rg11_r3(c, quick)
+    if r7():
+        # r3's draw examples, sizes and 14.4 table are statements about the 0.18.0 lists and rule
+        use_version("0.18.0")
+        try:
+            check_rg11_r3(c, quick)
+        finally:
+            use_version("0.19.0")
+        check_rg11_r7(c)
+    else:
+        check_rg11_r3(c, quick)
     check_rg12(c)
     check_words(c)
     check_tuning_errors(c)
@@ -3092,7 +3360,19 @@ def rename_db(src, dst):
     the r3 names (nothing else changes)."""
     import shutil
     rows, nm, how, _, bases, _ = world_names(src)
-    check_stored_bases(src, rows, bases)
+    if r7() and any(strip_numeral(r["name"]) != b for r, b in zip(rows, bases)):
+        # P3-10: an input of the 0.17.0/0.18.0 history tests stores the r3 names; check them against the r3
+        # rule on the 0.18.0 lists, then rename to the r7 names.
+        use_version("0.18.0")
+        try:
+            _, nm18, _, _, _, _ = world_names(src)
+        finally:
+            use_version("0.19.0")
+        bad = [(r["id"], r["name"], n) for r, n in zip(rows, nm18) if r["name"] != n]
+        if bad:
+            fatal("%s: stored names are neither r2 nor r3 names: %r" % (src, bad[:5]))
+    else:
+        check_stored_bases(src, rows, bases)
     tmp = dst + ".tmp"
     shutil.copyfile(src, tmp)
     con = sqlite3.connect(tmp)
@@ -3146,7 +3426,43 @@ def r3_golden_guard(old_path, new_text):
     return out
 
 
+def r7_golden_guard(old_path, new_text):
+    """P1-06 r7 15.6: against the 0.18.0 file only table_region, names and name_attempts may move; returns
+    (problems, cases whose table_region moved)."""
+    import tempfile
+    old = read_golden(old_path)
+    with tempfile.NamedTemporaryFile("w", suffix=".txt", delete=False) as f:
+        f.write(new_text)
+        tmp = f.name
+    try:
+        new = read_golden(tmp)
+    finally:
+        os.unlink(tmp)
+    out, moved = [], []
+    if sorted(old) != sorted(new):
+        out.append("case lists differ")
+    for case in sorted(old):
+        a, b = old[case], new.get(case)
+        if b is None:
+            continue
+        if a["line"] != b["line"]:
+            out.append("%s: case line differs" % case)
+        for item in sorted(set(a["items"]) | set(b["items"])):
+            va, vb = a["items"].get(item), b["items"].get(item)
+            if item in ("names", "name_attempts", "table_region"):
+                if item == "table_region" and va != vb:
+                    moved.append(case)
+                continue
+            if va != vb:
+                out.append("%s: %s differs" % (case, item))
+    return out, moved
+
+
 def main(argv):
+    if "--version" in argv:
+        i = argv.index("--version")
+        use_version(argv[i + 1])
+        argv = argv[:i] + argv[i + 2:]
     if len(argv) >= 4 and argv[1] == "rename-db":
         rows, nm, how = rename_db(argv[2], argv[3])
         drawn = sum(1 for x in how if x != "K")
@@ -3181,7 +3497,14 @@ def main(argv):
             path = rest[0]
         text = golden_text(large="--large" in argv, db_dir=db_dir)
         old = against if against else path
-        if old != "-":
+        if old != "-" and r7() and os.path.exists(old):
+            problems, moved = r7_golden_guard(old, text)
+            if problems:
+                sys.stderr.write("golden: r7 guard failed against %s:\n  %s\n" % (old, "\n  ".join(problems)))
+                return 1
+            sys.stderr.write("golden: r7 guard passed against %s; table_region moved in %d cases: %s\n"
+                             % (old, len(moved), " ".join(moved)))
+        elif old != "-":
             if os.path.exists(old):
                 problems = r3_golden_guard(old, text)
                 if problems:

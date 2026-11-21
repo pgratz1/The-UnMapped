@@ -17,8 +17,9 @@ namespace worldgen::history {
 //   war_declared: "Claimed since <year>." or "Claimed the same year.", then,
 //                 from the second war between the same two civilizations,
 //                 " The <ordinal> war between them.";
-//   flare_up:     "<claimant> pressed its claim to <region> against <holder>."
-//                 when its first cause is a claim.
+//   flare_up:     "The claim of <claimant> to <region>, held by <holder>,
+//                 came to a head." when its first cause is a claim (P3-07
+//                 r12 22.3; every name mid-sentence).
 // Kinds are found by key in the stored catalogue. Never throws on a loaded
 // view; an id not in the log has no note.
 [[nodiscard]] std::string history_note(const HistoryView& view, std::int64_t event_id);

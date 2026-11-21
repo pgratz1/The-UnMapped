@@ -342,9 +342,12 @@ void check_stub_world(std::uint64_t seed, std::int64_t span, const std::vector<s
     for (const Row& ph : t.phase) {
         CHECK(at(ph, 2) != 3);
         if (at(ph, 2) == 2) {
+            // P3-04 r12 20.1 (0.19.0): one quiet_stretch per quiet row with a civilization founded before it
+            bool any = false;
             for (const Row& c : t.civilization) {
-                expect_events += at(c, 6) < at(ph, 3) ? 1 : 0;
+                any = any || at(c, 6) < at(ph, 3);
             }
+            expect_events += any ? 1 : 0;
         }
     }
     CHECK(static_cast<std::int64_t>(t.event.size()) == expect_events);

@@ -81,6 +81,8 @@ const std::vector<Range>& ranges() {
         {"river_border_share_permille", 0, 1000}, {"civs_two_permille", 0, 1000}, {"regions_per_civ", 0, 100},
         // r8 21 item 5 (0.18.0, P3-09): after regions_per_civ
         {"regions_per_extra_civ", 1, 100000}, {"civs_extra_max", 0, 3},
+        // r12 22.2, 22.5 (0.19.0, P3-10): after civs_extra_max
+        {"cause_memory_years", 0, 100000}, {"inland_cap", 1, 256},
         {"home_min_hops", 1, 64}, {"home_min_capacity", 0, 1000000}, {"intensity", 0, 10000},
         {"famine_crowding_permille", 0, 2000}, {"famine_ppm", 0, 1000000}, {"famine_toll_min", 0, 1000},
         {"famine_toll_max", 0, 1000}, {"plague_ppm", 0, 1000000}, {"plague_toll_min", 0, 1000},
@@ -105,7 +107,7 @@ std::string listing_line(std::string_view field) {
 
 }  // namespace
 
-TEST_CASE("P3-05 12.1 (r6, r8): history.peoples loads with the listing's 69 fields in table order and values") {
+TEST_CASE("P3-05 12.1 (r6, r8): history.peoples loads with the listing's 71 fields in table order and values (r12: 0.19.0)") {
     const Load l = load(history_data::shipped_files());
     INFO(dump(l));
     REQUIRE(l.ok());
@@ -132,7 +134,10 @@ TEST_CASE("P3-05 12.1 (r6, r8): history.peoples loads with the listing's 69 fiel
     // r8 21 item 5 (0.18.0): more realms on a larger map
     CHECK(r.get_int("regions_per_extra_civ") == 90);
     CHECK(r.get_int("civs_extra_max") == 2);
-    CHECK(r.size() == 69U);
+    // r12 22.2, 22.5 (0.19.0)
+    CHECK(r.get_int("cause_memory_years") == 50);
+    CHECK(r.get_int("inland_cap") == 20);
+    CHECK(r.size() == 71U);
     // the shipped content (game/data) holds the same record (12.1: identical copies)
     CHECK(peoples_record(shipped_content()) == r);
 }
@@ -266,9 +271,12 @@ TEST_CASE("P3-05 r6 6.2, P3-01 r8 (1): cell_weights is required, after site_weig
     for (const wd::Definition& d : race->definitions) {
         CAPTURE(d.id);
         const wd::Record& cw = d.record.get_record("cell_weights");
-        CHECK(cw.size() == 2U);
+        CHECK(cw.size() == 5U);  // P3-01 r11 3.4 (0.19.0): inland, port, habitability after height
         CHECK(cw.name_at(0) == "ore");
         CHECK(cw.name_at(1) == "height");
+        CHECK(cw.name_at(2) == "inland");
+        CHECK(cw.name_at(3) == "port");
+        CHECK(cw.name_at(4) == "habitability");
         CHECK(cw.get_int("ore") == (d.id == "dwarf" ? 400 : 0));
         CHECK(cw.get_int("height") == (d.id == "dwarf" ? 600 : 0));
         std::size_t sw = 0, c = 0;
@@ -292,10 +300,11 @@ TEST_CASE("P3-05 r6 6.2, P3-01 r8 (1): cell_weights is required, after site_weig
     missing["races/orc.toml"].erase(at, end - at + 1);
     CHECK(contains(one_error(load(missing)).message, "cell_weights"));
     Files high = f;
-    high["races/orc.toml"].replace(at, end - at, "cell_weights = { ore = 1001, height = 0 }");
+    // (P3-01 r11 3.4, 0.19.0: the record holds inland, port and habitability too)
+    high["races/orc.toml"].replace(at, end - at, "cell_weights = { ore = 1001, height = 0, inland = 0, port = 1000, habitability = 1000 }");
     CHECK(contains(one_error(load(high)).message, "race.orc.cell_weights.ore"));
     Files low = f;
-    low["races/orc.toml"].replace(at, end - at, "cell_weights = { ore = 0, height = -1 }");
+    low["races/orc.toml"].replace(at, end - at, "cell_weights = { ore = 0, height = -1, inland = 0, port = 1000, habitability = 1000 }");
     CHECK(contains(one_error(load(low)).message, "race.orc.cell_weights.height"));
 }
 

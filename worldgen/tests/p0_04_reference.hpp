@@ -245,7 +245,7 @@ inline MetaRows meta_rows(std::uint64_t seed, std::string_view phrase = {}, std:
     return {
         {"content_hash", std::string(EMPTY_CONTENT_HASH)},
         {"format", "the-unmapped-world"},
-        {"generator_version", "0.18.0"},
+        {"generator_version", "0.19.0"},
         {"history_end_year", "6000"},
         {"param.civs_per_race", "auto"},
         {"param.divine_activity", "normal"},
@@ -476,7 +476,7 @@ inline constexpr std::string_view REPORT_SEED_0 =
     "[meta]\n"
     "content_hash = e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\n"
     "format = the-unmapped-world\n"
-    "generator_version = 0.18.0\n"
+    "generator_version = 0.19.0\n"
     "history_end_year = 6000\n"
     "param.civs_per_race = auto\n"
     "param.divine_activity = normal\n"

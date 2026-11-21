@@ -75,10 +75,22 @@
   ],
   "testPresets": [
     {
-      "name": "test-base",
+      "name": "test-common",
       "hidden": true,
       "output": { "outputOnFailure": true },
       "execution": { "noTestsAction": "error", "jobs": 4 }
+    },
+    {
+      "name": "test-base",
+      "hidden": true,
+      "inherits": "test-common",
+      "filter": { "exclude": { "label": "^slow$" } }
+    },
+    {
+      "name": "test-slow",
+      "hidden": true,
+      "inherits": "test-common",
+      "filter": { "include": { "label": "^slow$" } }
     },
     { "name": "linux-gcc-debug", "inherits": "test-base", "configurePreset": "linux-gcc-debug" },
     { "name": "linux-gcc-release", "inherits": "test-base", "configurePreset": "linux-gcc-release" },
@@ -94,6 +106,8 @@
       }
     },
     { "name": "windows-msvc-debug", "inherits": "test-base", "configurePreset": "windows-msvc-debug" },
-    { "name": "windows-msvc-release", "inherits": "test-base", "configurePreset": "windows-msvc-release" }
+    { "name": "windows-msvc-release", "inherits": "test-base", "configurePreset": "windows-msvc-release" },
+    { "name": "linux-gcc-release-slow", "inherits": "test-slow", "configurePreset": "linux-gcc-release" },
+    { "name": "windows-msvc-release-slow", "inherits": "test-slow", "configurePreset": "windows-msvc-release" }
   ]
 }

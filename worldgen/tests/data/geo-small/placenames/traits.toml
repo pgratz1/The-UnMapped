@@ -69,10 +69,10 @@ forms = []
 nouns = []
 suffixes = ["fell", "scar"]
 prefixes = ["Cloud", "Eagle", "Ice", "Rime", "Scree", "Snow"]
-adjectives = ["Frozen", "High", "Hoary", "Snowbound"]
+adjectives = ["Frozen", "Hoary", "Snowbound"]
 features = ["crag", "fell", "knott"]
 possessors = ["Eagle"]
-places = ["Brow", "Crag", "Height"]
+places = ["Brow", "Cleft", "Crag", "Height"]
 objects = ["Eagles", "Frost", "the Storm"]
 forbidden = []
 excluded = []
@@ -119,12 +119,28 @@ trait = "barren"
 forms = []
 nouns = []
 suffixes = []
-prefixes = ["Dearth", "Famine", "Hunger", "Starve", "Want"]
-adjectives = ["Bare", "Barren", "Hungry", "Starved"]
+prefixes = [
+  "Bane", "Bier", "Dearth", "Dirge", "Dole", "Drear", "Famine", "Gallow",
+  "Gibbet", "Grave", "Grim", "Hunger", "Knell", "Lorn", "Mourn", "Pyre",
+  "Shroud", "Starve", "Tomb", "Want", "Weep", "Wither", "Woe",
+]
+adjectives = [
+  "Baleful", "Bare", "Barren", "Bereft", "Cheerless", "Crumbling", "Desolate",
+  "Dismal", "Dolorous", "Dread", "Dreary", "Dying", "Forgotten", "Forlorn",
+  "Friendless", "Ghostly", "Grieving", "Grievous", "Grisly", "Haunted",
+  "Hungry", "Lamenting", "Lost", "Mouldering", "Mourning", "Pitiless",
+  "Ruined", "Sorrowing", "Spectral", "Starved", "Unhallowed", "Wailing",
+  "Widowed", "Woeful",
+]
 features = []
-possessors = ["Beggar", "Pauper"]
-places = ["Dole", "Hunger", "Want"]
-objects = ["Famine", "Hunger", "the Starved"]
+possessors = ["Beggar", "Hangman", "Headsman", "Orphan", "Pauper", "Widow"]
+places = ["Dole", "Grave", "Hunger", "Lament", "Ruin", "Sorrow", "Want"]
+objects = [
+  "Curses", "Famine", "Gallows", "Gibbets", "Graves", "Hunger", "Mourners",
+  "Ruin", "Sorrows", "Tombs", "Wights", "Wraiths", "the Fallen",
+  "the Forgotten", "the Hanged", "the Lost", "the Starved", "the Unburied",
+  "the Weeping",
+]
 forbidden = []
 excluded = []
 
@@ -141,6 +157,6 @@ adjectives = ["Fallow", "Gleaned", "Reaped"]
 features = ["field", "furrow"]
 possessors = ["Gleaner", "Reaper", "Sower"]
 places = ["Acre", "Furrow", "Harvest", "Sheaf"]
-objects = ["Scythes", "Sheaves", "Tithes", "the Harvest"]
+objects = ["Scythes", "Sheaves", "the Harvest"]
 forbidden = []
 excluded = []

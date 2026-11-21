@@ -3394,6 +3394,15 @@ GOLDEN_LARGE_V4 = [
 ]
 
 
+ELEV_1024_MARK = "# P3-10 4 item 3: N = 1024 layer hashes"
+ELEV_1024_HEADER = ELEV_1024_MARK + """ (SHA-256 of the elevation layer, as the layer item), written by
+# p1_elevation_reference.py layers-1024 shipped|shipped-neutral SEED...; read by the slow cases of
+# stages_elevation_golden_test.cpp, which check every seed that has a line. Lines, outside every case:
+#   elevation-1024 s<seed> <hash>          shipped settings (10.4.1)
+#   elevation-1024-neutral s<seed> <hash>  neutral settings (10.4.2)
+"""
+
+
 def golden_text(large=False):
     out = [GOLDEN_HEADER_V4]
     for name, fx, n, seed, why in GOLDEN_CASES_V4 + (GOLDEN_LARGE_V4 if large else []):
@@ -3447,11 +3456,31 @@ def main(argv):
         args = [a for a in argv[2:] if not a.startswith("--")]
         text = golden_text(large="--large" in argv)
         path = args[0] if args else os.path.join(_HERE, "..", "golden", "p1-01-elevation.txt")
+        # P3-10 4 item 3: the block of N = 1024 layer hashes (written by layers-1024, an hour or more per
+        # seed pair) is kept from the committed file; it is not recomputed by `golden`.
+        committed = os.path.join(_HERE, "..", "golden", "p1-01-elevation.txt")
+        if os.path.exists(committed):
+            with open(committed) as fh:
+                old = fh.read()
+            if ELEV_1024_MARK in old:
+                text += old[old.index(ELEV_1024_MARK):]
         if path == "-":
             sys.stdout.write(text)
         else:
             with open(path, "w", newline="\n") as fh:
                 fh.write(text)
+        return 0
+    if len(argv) >= 2 and argv[1] == "layers-1024":
+        # P3-10 4 item 3: the N = 1024 layer hashes of the slow cases of stages_elevation_golden_test.cpp, as
+        # lines "elevation-1024 s<seed> <hash>" (shipped) and "elevation-1024-neutral s<seed> <hash>" (10.4.2's
+        # neutral settings), one per world as it completes (about ten minutes each), for
+        # worldgen/tests/golden/p1-01-elevation.txt. Usage: layers-1024 shipped|shipped-neutral SEED...
+        fx = argv[2]
+        label = {"shipped": "elevation-1024", "shipped-neutral": "elevation-1024-neutral"}[fx]
+        for seed in (int(a) for a in argv[3:]):
+            r = run_world(seed, 1024, tuning_of(fx))
+            sys.stdout.write("%s s%d %s\n" % (label, seed, layer_hash(1024, r["e_final"])))
+            sys.stdout.flush()
         return 0
     if len(argv) >= 2 and argv[1] == "toml":
         sys.stdout.write(toml_text(SMALL_OVERRIDES if len(argv) > 2 and argv[2] == "small" else None))

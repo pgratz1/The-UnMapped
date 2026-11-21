@@ -20,9 +20,7 @@ nouns = [
   "Brake", "Forest", "Grove", "Holt", "Hurst", "Shaw", "Tangle", "Thicket",
   "Weald", "Wood", "Woods",
 ]
-suffixes = [
-  "brake", "den", "grove", "hanger", "holt", "hurst", "shaw", "wood",
-]
+suffixes = ["brake", "den", "grove", "holt", "hurst", "shaw", "wood"]
 prefixes = [
   "Badger", "Bark", "Beech", "Birch", "Boar", "Bough", "Buck", "Elm", "Fern",
   "Hazel", "Hind", "Jay", "Larch", "Lichen", "Linden", "Mistle", "Oak",

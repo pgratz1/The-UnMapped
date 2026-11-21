@@ -861,7 +861,7 @@ TEST_CASE("P3-02 11.4, 11.6: gods draw their shape from god_patterns; the elven 
     // The 11.6 god table (race order elf, goblin, dwarf, faerie, human, orc; god entity = race order).
     const std::vector<std::pair<std::uint64_t, std::vector<std::string>>> gods = {
         {0, {"Saene", "Kruskux", "Nurnthaimm", "Whaia", "Steldhil", "Uruld'kruum"}},
-        {7, {"Onveth", "Buzork", "Mammga", "Ouwheefy", "Gordman", "Maarkzaagh"}},
+        {7, {"Onveth", "Buzork", "Mammga", "Ouwheefy", "Balbron", "Maarkzaagh"}},  // r10 12.1: Gordman redrawn (0.19.0)
         {42, {"Fielie", "Krokzit", "Bronhak", "Syfiash", "Wealstuld", "Ogh'krak"}}};
     const std::vector<std::string_view> by_race = {"elven", "goblin", "dwarven", "faerie", "human", "orcish"};
     const names_api::Filter& f = names_test::shipped_filter();
@@ -901,9 +901,10 @@ TEST_CASE("P3-02 11.2, 11.5: the library's effective filter equals the union of 
     // The test reads game/data/name_filters/ with toml++; the library builds its filter from the
     // loaded content set (name_filter_from). Compared as sets (only membership matters, 11.2).
     const names_api::Filter& mine = names_test::shipped_filter();
-    CHECK(std::set<std::string>(mine.anywhere.begin(), mine.anywhere.end()).size() == 101);
-    CHECK(std::set<std::string>(mine.at_start.begin(), mine.at_start.end()).size() == 35);
-    CHECK(std::set<std::string>(mine.whole.begin(), mine.whole.end()).size() == 514);  // P3-02 r8 11.11: 768 at 0.17.0
+    // P3-02 r10 12.1 (0.19.0): 108 / 36 / 510 (101 / 35 / 514 at 0.18.0; 768 whole at 0.17.0)
+    CHECK(std::set<std::string>(mine.anywhere.begin(), mine.anywhere.end()).size() == 108);
+    CHECK(std::set<std::string>(mine.at_start.begin(), mine.at_start.end()).size() == 36);
+    CHECK(std::set<std::string>(mine.whole.begin(), mine.whole.end()).size() == 510);
 }
 
 }  // TEST_SUITE

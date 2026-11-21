@@ -525,25 +525,56 @@ struct Named {
     std::vector<std::string> how;  // "K", "F" or the attempt number
 };
 
-// Throws (FAIL) where the stage is fatal; returns nullopt on "no free name".
+// P1-06 r6 15.4 (V7, generator 0.19.0): stem(v) = v lower-cased, without a leading "the ", its first five bytes.
+inline std::string v7_stem(const std::string& v) {
+    std::string low = lower(v);
+    if (low.rfind("the ", 0) == 0) {
+        low = low.substr(4);
+    }
+    return low.substr(0, std::min<std::size_t>(5, low.size()));
+}
+
+// The stems of an attempt's slot values other than {noun} and {suffix}.
+inline std::vector<std::string> v7_stems(const Attempt& a) {
+    std::vector<std::string> out;
+    for (const Step& s : a.steps) {
+        if (s.slot != "noun" && s.slot != "suffix") {
+            out.push_back(v7_stem(s.word));
+        }
+    }
+    return out;
+}
+
+// P1-06 r7 15.7 item 1: the land noun of a base name (sector word, one space, noun).
+inline std::string land_noun(const std::string& base) {
+    const auto sp = base.find(' ');
+    return sp == std::string::npos ? base : base.substr(sp + 1);
+}
+
+// RG11 4 and 8 as from generator 0.19.0 (P1-06 r7 15.7: one keeper per land noun; r6 15.4: V7). Throws (FAIL)
+// where the stage is fatal; returns nullopt on "no free name".
 inline std::optional<Named> name_regions(const std::vector<NamedRegion>& regions, std::uint64_t seed, std::uint64_t n,
                                          const PlaceData& data, const NameTuning& t) {
     const std::uint64_t key = k_name(seed, n);
-    std::map<std::string, std::pair<std::int64_t, std::int64_t>> best;  // base -> (cells, -id)
+    std::map<std::string, std::pair<std::int64_t, std::int64_t>> best;  // land noun -> (cells, -id)
+    std::map<std::int64_t, std::string> base_of;
     for (const NamedRegion& r : regions) {
-        auto it = best.find(r.base);
+        base_of[r.id] = r.base;
+        const std::string k = land_noun(r.base);
+        auto it = best.find(k);
         if (it == best.end() || std::make_pair(r.cells, -r.id) > it->second) {
-            best[r.base] = std::make_pair(r.cells, -r.id);
+            best[k] = std::make_pair(r.cells, -r.id);
         }
     }
-    std::set<std::string> used;
-    for (const auto& [b, v] : best) {
-        used.insert(b);
+    std::set<std::string> used;  // U: the keepers' names
+    for (const auto& [k, v] : best) {
+        used.insert(base_of[-v.second]);
     }
+    std::set<std::string> stems;  // S of V7
     Named out;
     const PlaceDef& common = data.common();
     for (const NamedRegion& r : regions) {
-        if (best[r.base].second == -r.id) {
+        if (best[land_noun(r.base)].second == -r.id) {
             out.names.push_back(r.base);
             out.how.emplace_back("K");
             continue;
@@ -552,8 +583,11 @@ inline std::optional<Named> name_regions(const std::vector<NamedRegion>& regions
         std::optional<std::pair<std::string, std::string>> got;
         for (std::int64_t at = 0; at < 64 && !got; ++at) {
             const Attempt a = attempt(key, r.id, at, *r.land, common, td, t);
-            if (a.valid() && used.count(a.name) == 0U) {
+            const auto st = v7_stems(a);
+            const bool v7 = std::none_of(st.begin(), st.end(), [&](const std::string& x) { return stems.count(x) != 0U; });
+            if (a.valid() && v7 && used.count(a.name) == 0U) {
                 got = std::make_pair(a.name, std::to_string(at));
+                stems.insert(st.begin(), st.end());
             }
         }
         if (!got) {

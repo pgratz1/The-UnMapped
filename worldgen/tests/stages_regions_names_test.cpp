@@ -19,6 +19,7 @@
 #include <set>
 #include <string>
 #include <string_view>
+#include <tuple>
 #include <utility>
 #include <vector>
 
@@ -104,7 +105,11 @@ TEST_CASE("P1-06 r3 5.1, 10.5 unit 1: K_name and every listed u(k) of seed 42, N
     }
 }
 
-TEST_CASE("P1-06 r3 5.1, 10.5 unit 1: The Scarred Downs, Knelldown, Harrowholt, Prince's Vow (through Birchhurst)") {
+// The draws of 5.1 (r3) on the 0.19.0 lists (P1-06 r6 15.1 to 15.3 shrink the common lists, so every
+// pool size and index of 5.1 moves). Values: the test writer's reference p1_regions_reference.py at 0.19.0
+// (5.1's own values, The Scarred Downs, Knelldown, Harrowholt and Prince's Vow, are those of the 0.18.0 lists
+// and are checked there with --version 0.18.0).
+TEST_CASE("P1-06 r3 5.1, r6 15: the 5.1 draws on the 0.19.0 lists: The Shuddering Downs, Kitedown, Harthurst, Queen's Wake (through Birchhurst)") {
     const std::uint64_t key = rn::k_name(42, 1024);
     const rn::NameTuning t{};
     struct Want {
@@ -126,16 +131,17 @@ TEST_CASE("P1-06 r3 5.1, 10.5 unit 1: The Scarred Downs, Knelldown, Harrowholt, 
     };
     const std::vector<Want> cases = {
         {1, 0, "downs", {"coast"}, 1,
-         {{"adjective", {6, 3, 2}, 0, 159, 103, "Scarred"}, {"noun", {0, 1, 0}, 1, 8, 1, "Downs"}}, true,
-         "The Scarred Downs"},
+         {{"adjective", {6, 3, 2}, 0, 129, 84, "Shuddering"}, {"noun", {0, 1, 0}, 1, 8, 1, "Downs"}}, true,
+         "The Shuddering Downs"},
         {10, 0, "downs", {"river", "fertile"}, 0,
-         {{"prefix", {6, 3, 2}, 0, 156, 78, "Knell"}, {"suffix", {0, 4, 1}, 1, 6, 2, "down"}}, true, "Knelldown"},
-        {39, 0, "wood", {"coast"}, 0, {{"prefix", {}, 0, 156, 62, "Harrow"}, {"suffix", {}, 1, 8, 4, "holt"}}, true,
-         "Harrowholt"},
-        {40, 0, "wood", {}, 0, {{"prefix", {6, 3, 0}, 1, 23, 3, "Birch"}, {"suffix", {0, 4, 0}, 1, 8, 5, "hurst"}},
+         {{"prefix", {6, 3, 2}, 0, 136, 68, "Kite"}, {"suffix", {0, 4, 1}, 1, 6, 2, "down"}}, true, "Kitedown"},
+        {39, 0, "wood", {"coast"}, 0, {{"prefix", {}, 0, 136, 54, "Hart"}, {"suffix", {}, 1, 7, 4, "hurst"}}, true,
+         "Harthurst"},
+        {40, 0, "wood", {}, 0, {{"prefix", {6, 3, 0}, 1, 23, 3, "Birch"}, {"suffix", {0, 4, 0}, 1, 7, 4, "hurst"}},
          false, "Birchhurst"},
-        {40, 1, "wood", {}, 5, {{"possessor", {8, 0, 0}, 0, 94, 58, "Prince"}, {"place", {8, 0, 0}, 0, 52, 48, "Vow"}},
-         true, "Prince's Vow"},
+        {40, 1, "wood", {}, 5,
+         {{"possessor", {8, 0, 0}, 0, 82, 51, "Queen"}, {"place", {8, 0, 0}, 0, 43, 40, "Wake"}}, true,
+         "Queen's Wake"},
     };
     for (const Want& w : cases) {
         CAPTURE(w.region);
@@ -168,13 +174,13 @@ TEST_CASE("P1-06 r3 5.1, 10.5 unit 1: The Scarred Downs, Knelldown, Harrowholt, 
         }
 #endif
     }
-    // 5.1: attempt 1 of region 1 would give Fletcher's Wolds.
-    CHECK(rn::attempt(key, 1, 1, land("downs"), common(), traits({"coast"}), t).name == "Fletcher's Wolds");
+    // 5.1: attempt 1 of region 1 (Fletcher's Wolds on the 0.18.0 lists).
+    CHECK(rn::attempt(key, 1, 1, land("downs"), common(), traits({"coast"}), t).name == "Ferryman's Wolds");
 }
 
 // --- 10.5 unit 2: keepers -----------------------------------------------------------------------
 
-TEST_CASE("P1-06 r3 RG11 4, 10.5 unit 2: the largest region of a base name keeps it; ties to the smaller id") {
+TEST_CASE("P1-06 r3 RG11 4 (r7 15.7), 10.5 unit 2: the largest region of a land noun keeps it; ties to the smaller id") {
     const rn::NameTuning t{};
     auto regions = [](const std::vector<std::pair<std::int64_t, std::int64_t>>& id_cells, std::string base) {
         std::vector<rn::NamedRegion> v;
@@ -195,7 +201,11 @@ TEST_CASE("P1-06 r3 RG11 4, 10.5 unit 2: the largest region of a base name keeps
     CHECK(a->how == std::vector<std::string>{"0", "0", "K", "0"});
     CHECK(a->names[2] == "North Downs");
     CHECK(std::count(a->names.begin(), a->names.end(), "North Downs") == 1);
-    CHECK(a->names[0] == "The Scarred Downs");
+    // Region 1's first valid free attempt (attempt 0, The Scarred Downs on the 0.18.0 lists).
+    const rn::Attempt a0 = rn::attempt(rn::k_name(42, 1024), 1, 0, land("downs"), common(),
+                                       traits(rn::traits_of(rn::TraitRow{}, t)), t);
+    CHECK(a0.valid());
+    CHECK(a->names[0] == a0.name);
     // Equal cells: the smaller id keeps it.
     const auto b = rn::name_regions(regions({{3, 500}, {4, 500}}, "East Downs"), 0, 128, pd(), t);
     REQUIRE(b.has_value());
@@ -206,6 +216,241 @@ TEST_CASE("P1-06 r3 RG11 4, 10.5 unit 2: the largest region of a base name keeps
     const auto c = rn::name_regions(regions({{7, 1}}, "West Downs"), 0, 128, pd(), t);
     REQUIRE(c.has_value());
     CHECK(c->names == std::vector<std::string>{"West Downs"});
+}
+
+// --- P1-06 r7 15.7 and r6 15.4 (generator 0.19.0): the keeper per land noun and V7 (15.6) --------------
+
+namespace {
+
+std::vector<rn::NamedRegion> rows_of(const std::vector<std::tuple<std::int64_t, std::int64_t, std::string,
+                                                                  const rn::PlaceDef*>>& v) {
+    std::vector<rn::NamedRegion> out;
+    for (const auto& [id, cells, base, ld] : v) {
+        rn::NamedRegion r;
+        r.id = id;
+        r.cells = cells;
+        r.base = base;
+        r.land = ld;
+        out.push_back(r);
+    }
+    return out;
+}
+
+}  // namespace
+
+TEST_CASE("P1-06 r7 15.6: four North Downs and one South Downs (cells 4443, 6898, 14036, 5593, 20000): only the South Downs keeps its name") {
+    const rn::PlaceDef* d = &land("downs");
+    const auto got = rn::name_regions(rows_of({{1, 4443, "North Downs", d}, {2, 6898, "North Downs", d},
+                                               {3, 14036, "North Downs", d}, {4, 5593, "North Downs", d},
+                                               {5, 20000, "South Downs", d}}),
+                                      42, 1024, pd(), rn::NameTuning{});
+    REQUIRE(got.has_value());
+    CHECK(got->how[4] == "K");
+    CHECK(got->names[4] == "South Downs");
+    for (std::size_t i = 0; i < 4; ++i) {
+        CAPTURE(i);
+        CHECK(got->how[i] != "K");
+        CHECK(got->names[i] != "North Downs");
+        CHECK(got->names[i] != "South Downs");
+    }
+    CHECK(rn::land_noun("North Downs") == "Downs");
+    CHECK(rn::land_noun("Central Wood") == "Wood");
+}
+
+TEST_CASE("P1-06 r7 15.6: equal cells keep the plain name on the smaller id; a noun used once is kept") {
+    const rn::PlaceDef* d = &land("downs");
+    const auto a = rn::name_regions(rows_of({{8, 700, "West Downs", d}, {9, 700, "East Downs", d}}), 0, 128, pd(),
+                                    rn::NameTuning{});
+    REQUIRE(a.has_value());
+    CHECK(a->how[0] == "K");
+    CHECK(a->names[0] == "West Downs");
+    CHECK(a->how[1] != "K");
+    const rn::PlaceDef* f = &land("fen");
+    const auto b = rn::name_regions(rows_of({{1, 30, "Southwest Fen", f}}), 0, 128, pd(), rn::NameTuning{});
+    REQUIRE(b.has_value());
+    CHECK(b->names == std::vector<std::string>{"Southwest Fen"});
+}
+
+TEST_CASE("P1-06 r7 15.6: West Isle and East Isle share one keeper; an upland forest region (Fells) does not compete with the Woods") {
+    const rn::PlaceDef* isle = pd().special("isle");
+    const rn::PlaceDef* fells = pd().special("upland");
+    const rn::PlaceDef* wood = pd().land_of_biome("temperate_forest");
+    REQUIRE(isle != nullptr);
+    REQUIRE(fells != nullptr);
+    REQUIRE(wood != nullptr);
+    const auto got = rn::name_regions(rows_of({{1, 300, "West Isle", isle}, {2, 900, "East Isle", isle},
+                                               {3, 4000, "North Wood", wood}, {4, 7000, "South Wood", wood},
+                                               {5, 100, "North Fells", fells}}),
+                                      7, 512, pd(), rn::NameTuning{});
+    REQUIRE(got.has_value());
+    CHECK(got->how == std::vector<std::string>{got->how[0], "K", got->how[2], "K", "K"});
+    CHECK(got->how[0] != "K");
+    CHECK(got->how[2] != "K");
+    CHECK(got->names[1] == "East Isle");
+    CHECK(got->names[3] == "South Wood");
+    CHECK(got->names[4] == "North Fells");
+    for (std::size_t i : {std::size_t{0}, std::size_t{2}}) {
+        CAPTURE(i);
+        for (const char* k : {"East Isle", "South Wood", "North Fells"}) {
+            CHECK(got->names[i] != k);
+        }
+    }
+}
+
+TEST_CASE("P1-06 r6 15.4, 15.6: V7 stems: The Weald of Floods after The Flooded Thicket is invalid; the next valid attempt names it") {
+    CHECK(rn::v7_stem("Flooded") == "flood");
+    CHECK(rn::v7_stem("Floods") == "flood");
+    CHECK(rn::v7_stem("the Forsaken") == "forsa");
+    CHECK(rn::v7_stem("Ash") == "ash");
+    rn::PlaceData d;
+    rn::PlaceDef c = fixture_common();
+    rn::PlaceDef a = fixture_land("a", {{"The {adjective} {noun}", 1}});
+    a.lists[3] = {"Flooded"};
+    a.lists[0] = {"Thicket"};
+    rn::PlaceDef b = fixture_land("b", {{"The {noun} of {object}", 1}});
+    b.lists[0] = {"Weald"};
+    b.lists[7] = {"Crows", "Floods"};
+    d.defs = {a, b, c};
+    const rn::PlaceDef* pa = &d.defs[0];
+    const rn::PlaceDef* pb = &d.defs[1];
+    const rn::NameTuning t{};
+    const std::uint64_t key = rn::k_name(0, 64);
+    // The first region id whose attempt 0 in land b is The Weald of Floods, and its first attempt giving
+    // The Weald of Crows.
+    std::int64_t rid = 2;
+    while (rn::attempt(key, rid, 0, *pb, d.common(), {}, t).name != "The Weald of Floods") {
+        ++rid;
+        REQUIRE(rid < 400);
+    }
+    std::int64_t want = 1;
+    while (rn::attempt(key, rid, want, *pb, d.common(), {}, t).name != "The Weald of Crows") {
+        ++want;
+        REQUIRE(want < 64);
+    }
+    // Keepers of the two nouns (larger), so that both small regions draw.
+    const auto got = rn::name_regions(rows_of({{1, 10, "North Thicket", pa}, {rid, 10, "North Weald", pb},
+                                               {rid + 1, 99, "North Thicket", pa}, {rid + 2, 99, "North Weald", pb}}),
+                                      0, 64, d, t);
+    REQUIRE(got.has_value());
+    CHECK(got->names[0] == "The Flooded Thicket");
+    CHECK(got->how[0] == "0");
+    CHECK(got->names[1] == "The Weald of Crows");
+    CHECK(got->how[1] == std::to_string(want));
+    // A keeper adds nothing to S.
+    const auto k = rn::name_regions(rows_of({{rid, 10, "North Weald", pb}, {rid + 1, 99, "South Weald", pb}}), 0, 64,
+                                    d, t);
+    REQUIRE(k.has_value());
+    CHECK(k->names[0] == "The Weald of Floods");
+    CHECK(k->how[0] == "0");
+}
+
+// 15.6 (r9): "Thornholt then Elmholt".
+TEST_CASE("P1-06 r6 15.4, 15.6: V7 lets nouns and suffixes repeat (Thornholt, Elmholt); a fallback adds nothing to S") {
+    rn::PlaceData d;
+    rn::PlaceDef c = fixture_common();
+    c.lists[2] = {"Flood"};  // common prefixes: reached by the fallback only (land d's forms draw land prefixes)
+    rn::PlaceDef holt = fixture_land("c", {{"{prefix}{suffix}", 1}});
+    holt.lists[2] = {"Elm", "Thorn"};
+    holt.lists[1] = {"holt"};
+    rn::PlaceDef dn = fixture_land("d", {{"{prefix}{suffix}", 1}});
+    dn.lists[2] = {"Birch"};
+    dn.lists[1] = {"hurst"};  // Birch + hurst fails V1 at every attempt
+    rn::PlaceDef b = fixture_land("e", {{"The {noun} of {object}", 1}});
+    b.lists[0] = {"Weald"};
+    b.lists[7] = {"Crows", "Floods"};
+    d.defs = {holt, c, dn, b};
+    rn::NameTuning t{};
+    t.pools[2] = {0, 3, 0};  // prefixes from the land pool only
+    const auto h = rn::name_regions(rows_of({{1, 10, "North Holt", &d.defs[0]}, {2, 10, "East Holt", &d.defs[0]},
+                                             {3, 99, "South Holt", &d.defs[0]}}),
+                                    0, 64, d, t);
+    REQUIRE(h.has_value());
+    std::vector<std::string> two{h->names[0], h->names[1]};
+    std::sort(two.begin(), two.end());
+    CHECK(two == std::vector<std::string>{"Elmholt", "Thornholt"});
+    const std::uint64_t key = rn::k_name(0, 64);
+    std::int64_t rid = 2;
+    while (rn::attempt(key, rid, 0, d.defs[3], d.common(), {}, t).name != "The Weald of Floods") {
+        ++rid;
+        REQUIRE(rid < 400);
+    }
+    const auto f = rn::name_regions(rows_of({{1, 10, "North Dene", &d.defs[2]}, {rid, 10, "North Weald", &d.defs[3]},
+                                             {rid + 1, 99, "South Dene", &d.defs[2]},
+                                             {rid + 2, 99, "South Weald", &d.defs[3]}}),
+                                    0, 64, d, t);
+    REQUIRE(f.has_value());
+    CHECK(f->names[0] == "Floodhurst");
+    CHECK(f->how[0] == "F");
+    CHECK(f->names[1] == "The Weald of Floods");
+    CHECK(f->how[1] == "0");
+}
+
+TEST_CASE("P1-06 r6 15.1 to 15.3, 15.6 data: church words out, grim words split, hanger, High, Gap and Cleft") {
+    const rn::PlaceDef& c = common();
+    auto has = [](const std::vector<std::string>& v, const std::string& w) {
+        return std::find(v.begin(), v.end(), w) != v.end();
+    };
+    // 15.1
+    for (const char* w : {"Abbess", "Anchorite", "Martyr", "Penitent", "Pilgrim", "Prophet", "Saint", "Sexton"}) {
+        CHECK_MESSAGE(!has(c.lists[5], w), w);
+    }
+    for (const char* w : {"Martyrs", "Penance", "Pilgrims", "Prayers", "Saints", "the Unshriven"}) {
+        CHECK_MESSAGE(!has(c.lists[7], w), w);
+    }
+    CHECK(!has(c.lists[2], "Rood"));
+    CHECK(!has(c.lists[2], "Tithe"));
+    CHECK(!has(c.lists[6], "Penance"));
+    CHECK(!has(c.lists[6], "Tithe"));
+    CHECK(!has(land("trait_fertile").lists[7], "Tithes"));
+    CHECK(has(c.lists[2], "Hallow"));
+    CHECK(has(c.lists[5], "Hermit"));
+    CHECK(has(c.lists[5], "Bellringer"));
+    CHECK(has(c.lists[3], "Godless"));
+    // 15.2: the grim words kept in common, exactly (in list order)
+    const std::vector<std::pair<std::size_t, std::vector<std::string>>> kept = {
+        {2, {"Bale", "Charnel", "Dread", "Ghost", "Grief", "Lich", "Pall", "Sorrow", "Wight", "Wraith"}},
+        {3, {"Accursed", "Bloodless", "Cursed", "Doleful", "Drear", "Fallen", "Forsaken", "Godless", "Grim", "Joyless",
+             "Moaning", "Orphaned", "Shunned", "Stricken", "Weeping", "Wretched"}},
+        {6, {"Bane", "Grief", "Shame"}},
+        {5, {"Gravedigger", "Mourner", "Widower"}},
+        {7, {"Bones", "Ghosts", "Grief", "Shades", "Widows", "the Damned", "the Forsaken", "the Slain"}}};
+    const std::map<std::size_t, std::vector<std::string>> moved = {
+        {2, {"Bane", "Bier", "Dirge", "Dole", "Drear", "Gallow", "Gibbet", "Grave", "Grim", "Knell", "Lorn", "Mourn",
+             "Pyre", "Shroud", "Tomb", "Weep", "Wither", "Woe"}},
+        {3, {"Baleful", "Bereft", "Cheerless", "Crumbling", "Desolate", "Dismal", "Dolorous", "Dread", "Dreary",
+             "Dying", "Forgotten", "Forlorn", "Friendless", "Ghostly", "Grieving", "Grievous", "Grisly", "Haunted",
+             "Lamenting", "Lost", "Mouldering", "Mourning", "Pitiless", "Ruined", "Sorrowing", "Spectral",
+             "Unhallowed", "Wailing", "Widowed", "Woeful"}},
+        {6, {"Dole", "Grave", "Lament", "Ruin", "Sorrow"}},
+        {5, {"Hangman", "Headsman", "Orphan", "Widow"}},
+        {7, {"Curses", "Gallows", "Gibbets", "Graves", "Mourners", "Ruin", "Sorrows", "Tombs", "Wights", "Wraiths",
+             "the Fallen", "the Forgotten", "the Hanged", "the Lost", "the Unburied", "the Weeping"}}};
+    const rn::PlaceDef& barren = land("trait_barren");
+    for (const auto& [li, words] : kept) {
+        CAPTURE(li);
+        for (const std::string& w : words) {
+            CHECK_MESSAGE(has(c.lists[li], w), w);
+        }
+        const auto& mv = moved.at(li);
+        const std::map<std::size_t, std::size_t> counts = {{2, 18}, {3, 30}, {6, 5}, {5, 4}, {7, 16}};
+        CHECK(mv.size() == counts.at(li));
+        for (const std::string& w : mv) {
+            CHECK_MESSAGE(!has(c.lists[li], w), w);
+            CHECK_MESSAGE(has(barren.lists[li], w), w);
+        }
+    }
+    // trait_barren keeps its own words, sorted, Dole once
+    for (const char* w : {"Dearth", "Famine", "Hunger", "Starve", "Want"}) {
+        CHECK(has(barren.lists[2], w));
+    }
+    CHECK(std::count(barren.lists[6].begin(), barren.lists[6].end(), "Dole") == 1);
+    // 15.3
+    CHECK(!has(land("wood").lists[1], "hanger"));
+    CHECK(!has(land("trait_high").lists[3], "High"));
+    CHECK(!has(c.lists[6], "Cleft"));
+    CHECK(!has(c.lists[6], "Gap"));
+    CHECK(has(land("trait_high").lists[6], "Cleft"));
+    CHECK(has(land("trait_pass").lists[6], "Gap"));
 }
 
 // --- 10.5 unit 3: validity ----------------------------------------------------------------------
@@ -506,7 +751,9 @@ TEST_CASE("P1-06 r3 5.1, 10.5 unit 9: the fallback of land fen with an empty U i
 
 // --- 14.4: every region of 1024 seed 42 -----------------------------------------------------------
 
-TEST_CASE("P1-06 r3 14.4: the test's own RG11 on the region rows of 1024 seed 42 (the drawn rows of the table)") {
+// The drawn rows of 14.4 (1024 seed 42), attempt 0 with each row's land and traits, on the 0.19.0 lists
+// (values from the test writer's reference at 0.19.0; 14.4's names are those of the 0.18.0 lists).
+TEST_CASE("P1-06 r3 14.4, r6 15: attempt 0 of the drawn rows of 1024 seed 42 on the 0.19.0 lists") {
     // (id, base, cells rank is irrelevant here: the drawn rows of 14.4 with
     // their land, traits and accepted attempt; keepers are not drawn.)
     struct Row {
@@ -517,15 +764,15 @@ TEST_CASE("P1-06 r3 14.4: the test's own RG11 on the region rows of 1024 seed 42
         std::string name;
     };
     const std::uint64_t key = rn::k_name(42, 1024);
-    for (const Row& r : std::vector<Row>{{1, "downs", {"coast"}, 0, "The Scarred Downs"},
-                                         {2, "downs", {"coast"}, 0, "The Sour Plain"},
+    for (const Row& r : std::vector<Row>{{1, "downs", {"coast"}, 0, "The Shuddering Downs"},
+                                         {2, "downs", {"coast"}, 0, "The Starless Plain"},
                                          {3, "downs", {}, 0, "The Rises of Hares"},
                                          {4, "downs", {"fertile"}, 0, "Warlord's Rises"},
-                                         {12, "downs", {"river", "fertile"}, 0, "Witchgate Barrows"},
+                                         {12, "downs", {"river", "fertile"}, 0, "Windgate Barrows"},
                                          {17, "wood", {"coast"}, 0, "Wrecker's Reach"},
-                                         {19, "wood", {}, 0, "The Shaw of Widows"},
-                                         {30, "downs", {"river", "lake", "fertile"}, 0, "Vetchdown"},
-                                         {37, "wood", {}, 0, "The Brake of the Forgotten"},
+                                         {19, "wood", {}, 0, "The Shaw of Vows"},
+                                         {30, "downs", {"river", "lake", "fertile"}, 0, "Umberdown"},
+                                         {37, "wood", {}, 0, "The Brake of the Blind"},
                                          {41, "downs", {"high", "ore", "pass", "barren"}, 0, "Larkfell"},
                                          {49, "wood", {"coast", "barren"}, 0, "The Gnarled Forest"}}) {
         CAPTURE(r.id);
@@ -563,13 +810,15 @@ TEST_CASE("P1-06 r3 4.1: the shipped placename files: 15 files, one common, 13 l
     CHECK(c.lists[5].size() >= 32U);
     CHECK(c.lists[6].size() >= 16U);
     CHECK(c.lists[7].size() >= 32U);
-    // 4.1's shipped sizes (objects: the files hold 78; the table's 79 is off by one).
-    CHECK(c.lists[2].size() == 156U);
-    CHECK(c.lists[3].size() == 159U);
+    // The shipped sizes from 0.19.0 (P1-06 r6 15.1 to 15.3; 4.1's 156, 159, 33, 94, 52, 78 before): prefixes
+    // 156 - 2 church - 18 grim moved = 136, adjectives 159 - 30 = 129, possessors 94 - 8 - 4 = 82, places
+    // 52 - 2 - 5 - 2 (Cleft, Gap) = 43, objects 78 - 6 - 16 = 56.
+    CHECK(c.lists[2].size() == 136U);
+    CHECK(c.lists[3].size() == 129U);
     CHECK(c.lists[4].size() == 33U);
-    CHECK(c.lists[5].size() == 94U);
-    CHECK(c.lists[6].size() == 52U);
-    CHECK(c.lists[7].size() == 78U);
+    CHECK(c.lists[5].size() == 82U);
+    CHECK(c.lists[6].size() == 43U);
+    CHECK(c.lists[7].size() == 56U);
     CHECK(c.excluded.size() == 90U);
     // Every land has the six forms with weights 30, 22, 22, 12, 9, 5; each
     // trait definition names its trait; every non-water biome in one land;

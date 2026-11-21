@@ -344,7 +344,8 @@ TEST_CASE("P3-02 11.7 item 1: the shipped name_filters/ loads: four definitions,
     const std::vector<std::string_view> ids = {"crude", "famous", "slurs", "words"};
     for (std::size_t i = 0; i < 4; ++i) CHECK(kind->definitions[i].id == ids[i]);
     // Sizes of 11.2 per definition: anywhere, at_start, whole.
-    const std::vector<std::array<std::size_t, 3>> sizes = {{68, 16, 14}, {0, 0, 101}, {33, 19, 6}, {0, 0, 393}};  // words: 393 from P3-02 r8 11.11 with mold (647 at 0.17.0)
+    // words: 389 / 5 / 1 and crude 70 anywhere from P3-02 r10 12.1 (0.19.0; 393 whole from r8 11.11, 647 at 0.17.0)
+    const std::vector<std::array<std::size_t, 3>> sizes = {{70, 16, 14}, {0, 0, 101}, {33, 19, 6}, {5, 1, 389}};
     for (std::size_t i = 0; i < 4; ++i) {
         CAPTURE(ids[i]);
         const wd::Record& rec = kind->definitions[i].record;

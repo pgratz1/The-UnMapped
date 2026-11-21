@@ -35,8 +35,11 @@ namespace worldgen {
 // (names, peoples: kind 31); 0.17.0 until the P3-09 conflict balance
 // (flight of a last refuge, costs of a lost war, weariness, revenge,
 // muster, local levies, concealment, home defence: kinds 32 and 33, eleven
-// history.conflict fields, three race fields); now 0.18.0.
-inline constexpr std::string_view GENERATOR_VERSION = "0.18.0";
+// history.conflict fields, three race fields); 0.18.0 until the P3-10
+// wording, site and conflict follow-ups (kinds 37 and 38, the cause list
+// placeholder, thousands separators, site weights, name cores, region
+// keepers per land noun, five conflict rules); now 0.19.0.
+inline constexpr std::string_view GENERATOR_VERSION = "0.19.0";
 
 // Returns GENERATOR_VERSION (P0-02 5.5). A world is only guaranteed
 // reproducible under the same generator version (design doc section 4).

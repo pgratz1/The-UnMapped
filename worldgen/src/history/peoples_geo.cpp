@@ -190,6 +190,8 @@ PeoplesTuning peoples_tuning_from(const data::ContentSet& content) {
     t.regions_per_civ = r.get_int("regions_per_civ");
     t.regions_per_extra_civ = r.get_int("regions_per_extra_civ");  // r8 (generator 0.18.0)
     t.civs_extra_max = r.get_int("civs_extra_max");
+    t.cause_memory_years = r.get_int("cause_memory_years");  // r12 22.2 (generator 0.19.0)
+    t.inland_cap = r.get_int("inland_cap");                  // r12 22.5
     t.home_min_hops = r.get_int("home_min_hops");
     t.home_min_capacity = r.get_int("home_min_capacity");
     const data::Record& intensity = r.get_record("intensity");
@@ -225,7 +227,8 @@ bool PeoplesRace::builds_kind(SettlementKind kind) const noexcept {
 }
 
 bool PeoplesRace::has_cell_term() const noexcept {
-    return cell_ore != 0 || cell_height != 0;
+    // P3-01 r11 3.4: the record differs from the neutral one.
+    return cell_ore != 0 || cell_height != 0 || cell_inland != 0 || cell_port != 1000 || cell_habitability != 1000;
 }
 
 bool PeoplesRace::has_ladder() const noexcept {
@@ -271,6 +274,9 @@ PeoplesRace peoples_race(const db::RaceRow& row, std::span<const db::RaceBiomeRo
     const data::Record& cw = d.get_record("cell_weights");  // P3-01 r8
     r.cell_ore = cw.get_int("ore");
     r.cell_height = cw.get_int("height");
+    r.cell_inland = cw.get_int("inland");  // P3-01 r11 3.4 (generator 0.19.0)
+    r.cell_port = cw.get_int("port");
+    r.cell_habitability = cw.get_int("habitability");
     for (const data::Value& v : d.get_array("settlement_kinds")) {
         r.builds[static_cast<std::size_t>(kind_of_text(v.as_string()))] = 1;
     }
@@ -473,6 +479,49 @@ std::int64_t grow_population(std::int64_t p, std::int64_t share, std::int64_t g,
     return p;
 }
 
+// r12 22.5: sea_d(c), the Chebyshev distance in cells from c to the
+// nearest sea cell, capped at `cap`: a multi-source breadth-first search over
+// the 8-neighbour grid from every sea cell, in unit steps, stopped at `cap`.
+// Every cell farther (and every cell of a world without sea) has `cap`.
+namespace {
+
+std::vector<std::uint16_t> capped_sea_distance(const std::vector<std::uint8_t>& sea, std::int64_t n, std::int64_t cap) {
+    const auto cells = static_cast<std::size_t>(n * n);
+    std::vector<std::uint16_t> d(cells, static_cast<std::uint16_t>(cap));
+    std::vector<std::size_t> frontier;
+    for (std::size_t i = 0; i < cells; ++i) {
+        if (sea[i] != 0) {
+            d[i] = 0;
+            frontier.push_back(i);
+        }
+    }
+    for (std::int64_t step = 1; step < cap && !frontier.empty(); ++step) {
+        std::vector<std::size_t> next;
+        for (const std::size_t i : frontier) {
+            const std::int64_t x = static_cast<std::int64_t>(i) % n;
+            const std::int64_t y = static_cast<std::int64_t>(i) / n;
+            for (std::int64_t dy = -1; dy <= 1; ++dy) {
+                for (std::int64_t dx = -1; dx <= 1; ++dx) {
+                    const std::int64_t nx = x + dx;
+                    const std::int64_t ny = y + dy;
+                    if (nx < 0 || ny < 0 || nx >= n || ny >= n) {
+                        continue;
+                    }
+                    const auto j = static_cast<std::size_t>(ny * n + nx);
+                    if (d[j] > step) {
+                        d[j] = static_cast<std::uint16_t>(step);
+                        next.push_back(j);
+                    }
+                }
+            }
+        }
+        frontier = std::move(next);
+    }
+    return d;
+}
+
+}  // namespace
+
 // --- PeoplesGeo ---------------------------------------------------------------------------------
 
 PeoplesGeo::PeoplesGeo(const HistoryInputs& in, const data::ContentSet& content, const PeoplesTuning& tuning,
@@ -539,11 +588,17 @@ PeoplesGeo::PeoplesGeo(const HistoryInputs& in, const data::ContentSet& content,
         }
     }
     // Races, scores, capacities.
+    bool inland = false;
     for (const db::RaceRow& row : in.races) {
         if (row.generation_years < 1) {
             fail("history: peoples: race " + int_text(row.id) + " has no generation_years above 0");
         }
         races_.push_back(peoples_race(row, in.race_biomes, in.cultures, content));
+        inland = inland || races_.back().cell_inland > 0;
+    }
+    // r12 22.5: the capped distance from the sea, only when a present race weighs it.
+    if (inland) {
+        sea_d_ = capped_sea_distance(sea, n, tuning_.inland_cap);
     }
     score_.resize(races_.size() * nr);
     capacity_.resize(races_.size() * nr);
@@ -673,8 +728,13 @@ std::int64_t PeoplesGeo::site_value(std::int64_t x, std::int64_t y, std::int64_t
     const std::int64_t bonus = near_mouth_[i] != 0 ? tuning_.port_mouth_bonus
                                : near_sea_[i] != 0 ? tuning_.port_coast_bonus
                                                    : 0;
-    std::int64_t v = static_cast<std::int64_t>(habitability_[i]) + floor_div(bonus * (1000 + r.coast), 1000);
-    if (r.has_cell_term()) {
+    const std::int64_t port = floor_div(bonus * (1000 + r.coast), 1000);  // 6.1
+    // r12 22.5: v = hab x cw_a div 1000 + port x cw_p div 1000
+    //            + (cw_o x ore + cw_h x hgt) div 1000
+    //            + cw_i x min(cap, sea_d) x 255 div (cap x 1000).
+    std::int64_t v = floor_div(static_cast<std::int64_t>(habitability_[i]) * r.cell_habitability, 1000);
+    v += floor_div(port * r.cell_port, 1000);
+    if (r.cell_ore != 0 || r.cell_height != 0) {
         // r6 (6.2 item 2): the cell's ore and its height in its region.
         const std::int64_t reg = region_layer_[i];
         const std::int64_t elev_max = reg >= 1 && reg <= region_count() ? region(reg).elev_max_dm : 0;
@@ -682,7 +742,17 @@ std::int64_t PeoplesGeo::site_value(std::int64_t x, std::int64_t y, std::int64_t
             255, floor_div(std::max<std::int64_t>(0, elevation_[i]) * 255, std::max<std::int64_t>(1, elev_max)));
         v += floor_div(r.cell_ore * static_cast<std::int64_t>(ore_[i]) + r.cell_height * hgt, 1000);
     }
+    if (r.cell_inland != 0) {
+        const std::int64_t cap = tuning_.inland_cap;
+        const std::int64_t d = std::min<std::int64_t>(cap, sea_d_[i]);
+        v += floor_div(r.cell_inland * d * 255, cap * 1000);
+    }
     return v;
+}
+
+std::int64_t PeoplesGeo::sea_distance(std::int64_t x, std::int64_t y) const {
+    const std::size_t i = cell(x, y);
+    return sea_d_.empty() ? tuning_.inland_cap : static_cast<std::int64_t>(sea_d_[i]);
 }
 
 const std::vector<std::uint32_t>& PeoplesGeo::candidates(std::int64_t region_id, std::int64_t race_id) const {

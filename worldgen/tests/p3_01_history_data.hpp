@@ -34,7 +34,18 @@
 // (P3-06 r10 20.19, P3-01 r10 3.3): kill_max_permille, find_permille and
 // search_years after enmity_hops, faerie home_defense_permille 0, kinds 34-36
 // appended after 33. Mirrors
-// SPEC_FILES_018 of p3_data_reference.py.
+// SPEC_FILES_018 of p3_data_reference.py. Generator 0.19.0 (P3-10; P3-01 r11
+// 3.4, 3.5, P3-05 r12 22.1-22.5, P3-06 r14 21.2, 21.7, 21.9, P3-04 r12 20.1,
+// 20.4): cell_weights gains inland, port and habitability after height
+// (dwarf port 0, habitability 500; faerie inland 400, port 0), faerie coast
+// -500, odds_min_permille (orc 500, others 700) and awakening_quarrel (orc 1)
+// after home_defense_permille, history.conflict without odds_min and with
+// search_weary_years 500 and search_repeat_salience 15 after search_years,
+// history.peoples cause_memory_years 50 and inland_cap 20 after
+// civs_extra_max, the templates of kinds 10, 15, 16, 17, 22, 23 and 31, and
+// the entries of kinds 37 and 38 appended after kind 36's (the same
+// assumption). P3-10 r1 (P3-06 r15 21.12, P3-01 r12 3.5): quarrel_strain 600
+// after search_repeat_salience. Mirrors SPEC_FILES_019.
 
 #include <cstdint>
 #include <map>
@@ -62,7 +73,7 @@ generation_years = 150
 growth_permille = 3
 density_permille = 300
 site_weights = { fertility = 20, forage = 35, timber = 35, ore = 0, fresh_water = 10 }
-cell_weights = { ore = 0, height = 0 }
+cell_weights = { ore = 0, height = 0, inland = 0, port = 1000, habitability = 1000 }
 biomes = [
   { biome = "temperate_forest", weight = 500 },
   { biome = "wet_woodland", weight = 300 },
@@ -80,6 +91,8 @@ prowess_permille = 1600
 muster_permille = 1000
 conceal_min = 1001
 home_defense_permille = 1500
+odds_min_permille = 700
+awakening_quarrel = 0
 settlement_kinds = ["hamlet", "village", "town", "city"]
 culture = "elven"
 )";
@@ -96,7 +109,7 @@ generation_years = 15
 growth_permille = 20
 density_permille = 900
 site_weights = { fertility = 40, forage = 20, timber = 10, ore = 30, fresh_water = 0 }
-cell_weights = { ore = 0, height = 0 }
+cell_weights = { ore = 0, height = 0, inland = 0, port = 1000, habitability = 1000 }
 biomes = [
   { biome = "heath", weight = 200 },
   { biome = "highland_moor", weight = 200 },
@@ -115,6 +128,8 @@ prowess_permille = 800
 muster_permille = 1000
 conceal_min = 1001
 home_defense_permille = 0
+odds_min_permille = 700
+awakening_quarrel = 0
 settlement_kinds = ["hamlet", "village", "town", "fortress"]
 culture = "goblin"
 )";
@@ -131,7 +146,7 @@ generation_years = 70
 growth_permille = 5
 density_permille = 700
 site_weights = { fertility = 10, forage = 10, timber = 10, ore = 60, fresh_water = 10 }
-cell_weights = { ore = 400, height = 600 }
+cell_weights = { ore = 400, height = 600, inland = 0, port = 0, habitability = 500 }
 biomes = [
   { biome = "alpine", weight = 300 },
   { biome = "highland_moor", weight = 300 },
@@ -149,6 +164,8 @@ prowess_permille = 1400
 muster_permille = 1000
 conceal_min = 1001
 home_defense_permille = 0
+odds_min_permille = 700
+awakening_quarrel = 0
 settlement_kinds = ["hamlet", "village", "town", "city", "fortress"]
 culture = "dwarven"
 )";
@@ -165,7 +182,7 @@ generation_years = 100
 growth_permille = 4
 density_permille = 250
 site_weights = { fertility = 0, forage = 60, timber = 20, ore = 0, fresh_water = 20 }
-cell_weights = { ore = 0, height = 0 }
+cell_weights = { ore = 0, height = 0, inland = 400, port = 0, habitability = 1000 }
 biomes = [
   { biome = "temperate_forest", weight = 800 },
   { biome = "wet_woodland", weight = 800 },
@@ -178,13 +195,15 @@ biomes = [
   { biome = "steppe", weight = -400 },
 ]
 upland = 200
-coast = 0
+coast = -500
 expansion = 100
 aggression = 50
 prowess_permille = 1200
 muster_permille = 1000
 conceal_min = 400
 home_defense_permille = 0
+odds_min_permille = 700
+awakening_quarrel = 0
 settlement_kinds = ["hamlet", "village"]
 culture = "faerie"
 )";
@@ -201,7 +220,7 @@ generation_years = 25
 growth_permille = 15
 density_permille = 1000
 site_weights = { fertility = 60, forage = 10, timber = 10, ore = 5, fresh_water = 15 }
-cell_weights = { ore = 0, height = 0 }
+cell_weights = { ore = 0, height = 0, inland = 0, port = 1000, habitability = 1000 }
 biomes = [
   { biome = "grassland", weight = 300 },
   { biome = "steppe", weight = 100 },
@@ -220,6 +239,8 @@ prowess_permille = 1000
 muster_permille = 1000
 conceal_min = 1001
 home_defense_permille = 0
+odds_min_permille = 700
+awakening_quarrel = 0
 settlement_kinds = ["hamlet", "village", "town", "city", "fortress"]
 culture = "human"
 )";
@@ -236,7 +257,7 @@ generation_years = 18
 growth_permille = 18
 density_permille = 800
 site_weights = { fertility = 35, forage = 25, timber = 10, ore = 30, fresh_water = 0 }
-cell_weights = { ore = 0, height = 0 }
+cell_weights = { ore = 0, height = 0, inland = 0, port = 1000, habitability = 1000 }
 biomes = [
   { biome = "steppe", weight = 400 },
   { biome = "heath", weight = 200 },
@@ -256,6 +277,8 @@ prowess_permille = 1300
 muster_permille = 4000
 conceal_min = 1001
 home_defense_permille = 0
+odds_min_permille = 500
+awakening_quarrel = 1
 settlement_kinds = ["hamlet", "village", "town", "fortress"]
 culture = "orcish"
 )";
@@ -373,20 +396,20 @@ events = [
   { kind = "became_village", salience = 10, template = "{settlement} grew into a village of {population}." },
   { kind = "became_town", salience = 18, template = "{settlement} grew into a town of {population}." },
   { kind = "became_city", salience = 45, template = "{settlement} grew into a city of {population}." },
-  { kind = "settlement_dwindled", salience = 15, template = "{settlement} dwindled to {population} souls." },
+  { kind = "settlement_dwindled", salience = 15, template = "{@causes:famine=famine,plague=plague,plague_outbreak=plague,plague_spread=plague,succession_crisis=strife,battle=war,battle_at_pass=war,tribute=tribute,colony_founded=emigration|Weakened by |, }{settlement} dwindled to {population} souls." },
   { kind = "famine", salience = 25, template = "Famine struck {settlement}; {dead} died." },
   { kind = "plague", salience = 45, template = "Plague broke out in {settlement}; {dead} died." },
   { kind = "plague_spread", salience = 25, template = "The plague spread to {settlement}; {dead} died." },
   { kind = "succession_crisis", salience = 40, template = "A succession crisis at {@settlement} shook {civilization}." },
-  { kind = "civ_seceded", salience = 70, template = "{civilization} broke away from {from}, taking {settlements} {settlements?settlement|settlements} with it." },
-  { kind = "settlement_abandoned", salience = 55, template = "{settlement} was abandoned; {survivors?no one survived|its one survivor was scattered|its # survivors were scattered}." },
-  { kind = "capital_moved", salience = 50, template = "{civilization} moved its seat to {settlement}." },
+  { kind = "civ_seceded", salience = 70, template = "{civilization} broke away from {from} with {settlements} {settlements?settlement|settlements}." },
+  { kind = "settlement_abandoned", salience = 55, template = "{@causes:famine=famine,plague=plague,plague_outbreak=plague,plague_spread=plague,succession_crisis=strife,battle=war,battle_at_pass=war,tribute=tribute|Weakened by |, }{settlement} was abandoned; {survivors?no one survived|its one survivor was scattered|its # survivors were scattered}." },
+  { kind = "capital_moved", salience = 50, template = "The seat of {civilization} moved to {settlement}." },
   { kind = "civ_ended", salience = 85, template = "{civilization} came to an end." },
   { kind = "ruin_faded", salience = 10, template = "The ruins of {settlement} faded from memory." },
   { kind = "claim", salience = 35, template = "{claimant} laid claim to {@region}, held by {holder}." },
   { kind = "war_declared", salience = 70, template = "{attacker} declared war on {defender} over {@region}." },
-  { kind = "battle", salience = 30, template = "{winner} defeated {loser} in {@region}; {loser_dead} of the defeated and {winner_dead} of the victors fell." },
-  { kind = "battle_at_pass", salience = 35, template = "{winner} defeated {loser} at the pass into {@region}; {loser_dead} of the defeated and {winner_dead} of the victors fell." },
+  { kind = "battle", salience = 30, template = "{winner} defeated {loser} in {@region}; {loser_dead?none|one|#} of the defeated{winner_dead? fell, and none of the victors| and one of the victors fell| and # of the victors fell}." },
+  { kind = "battle_at_pass", salience = 35, template = "{winner} defeated {loser} at the pass into {@region}; {loser_dead?none|one|#} of the defeated{winner_dead? fell, and none of the victors| and one of the victors fell| and # of the victors fell}." },
   { kind = "siege", salience = 25, template = "{attacker} besieged {@settlement} of {defender}; it {fell?fell|held}." },
   { kind = "sacked", salience = 75, template = "{attacker} sacked {@settlement} of {defender}; {dead} died and {survivors} fled." },
   { kind = "settlement_captured", salience = 60, template = "{attacker} took {@settlement} from {defender}; {dead} died{fled?| and one fled| and # fled}." },
@@ -394,12 +417,14 @@ events = [
   { kind = "truce", salience = 50, template = "{parties:all} made peace after {years} {years?year|years} of war, neither the victor." },
   { kind = "region_ceded", salience = 55, template = "{from} ceded {@region} to {to}." },
   { kind = "civ_conquered", salience = 90, template = "{civilization} fell to {conqueror}." },
-  { kind = "settlement_abandoned_to", salience = 55, template = "{settlement} was abandoned; {settled} {settled?survivor|survivors} went to {destination}{lost?|, and one was lost|, and # were lost}." },
+  { kind = "settlement_abandoned_to", salience = 55, template = "{@causes:famine=famine,plague=plague,plague_outbreak=plague,plague_spread=plague,succession_crisis=strife,battle=war,battle_at_pass=war,tribute=tribute|Weakened by |, }{settlement} was abandoned; {settled} {settled?survivor|survivors} went to {destination}{lost?|, and one was lost|, and # were lost}." },
   { kind = "refugees_settled", salience = 65, template = "The survivors of {origin} fled into hiding and founded {@settlement} in {@region}." },
   { kind = "tribute", salience = 50, template = "{payer} paid tribute to {payee}; {people} {people?was|were} carried off." },
   { kind = "war_won", salience = 60, template = "{winner} prevailed over {loser} after {years} {years?year|years} of war." },
   { kind = "search_abandoned", salience = 40, template = "{searcher} searched {@region} for {hidden} and found no one; the war ended after {years} {years?year|years}." },
   { kind = "refuge_held", salience = 25, template = "{attacker} besieged {@settlement} of {defender}; with {reason?nowhere to flee|too few to flee}, its people held on." },
+  { kind = "plague_outbreak", salience = 45, template = "Plague broke out in {settlement}{reached?| and spread to one other settlement| and spread to # other settlements}; {total} died{reached?| in all| in all}." },
+  { kind = "quiet_stretch", salience = 20, template = "For {years} {years?year|years}, from {@year} to {@end_year}, the land was quiet{realms?|; one realm held it|, and # realms kept the peace}." },
 ]
 )";
 
@@ -455,12 +480,14 @@ tribute_permille = 100
 revenge_aggression = 400
 levy_hops = 3
 odds_floor = 500
-odds_min = 700
 truce_break_aggression = 600
 enmity_hops = 3
 kill_max_permille = 500
 find_permille = 250
 search_years = 3
+search_weary_years = 500
+search_repeat_salience = 15
+quarrel_strain = 600
 capital_sacked_salience = 90
 capital_captured_salience = 80
 )";
@@ -518,6 +545,8 @@ civs_two_permille = 500
 regions_per_civ = 4
 regions_per_extra_civ = 90
 civs_extra_max = 2
+cause_memory_years = 50
+inland_cap = 20
 home_min_hops = 3
 home_min_capacity = 1500
 intensity = { calm = 500, normal = 1000, turbulent = 2000 }
@@ -637,6 +666,11 @@ struct Race {
     std::int64_t muster_permille, conceal_min, home_defense_permille;
     std::vector<std::string_view> settlement_kinds;
     std::string_view culture;
+    // P3-01 r11 3.4 and 3.5 (generator 0.19.0, P3-10): cell_weights inland, port, habitability (after height in
+    // the record), odds_min_permille and awakening_quarrel (after home_defense_permille in the record). Kept at
+    // the end of the struct so the aggregate initializers above them stay as they were.
+    std::int64_t cell_inland, cell_port, cell_habitability;
+    std::int64_t odds_min_permille, awakening_quarrel;
 };
 
 // The six races of P3-01 3.1 in canonical id order. Raw values of the
@@ -647,27 +681,27 @@ inline const std::vector<Race>& races() {
         {"dwarf", 3, "Dwarf", "Dwarves", "Dwarven", "neutral", 2362232013, 300, 70, 5, 700, 10, 10, 10, 60, 10, 400, 600,
          {{"alpine", 300}, {"highland_moor", 300}, {"heath", 200}, {"temperate_forest", -100}, {"wet_woodland", -300},
           {"marsh", -400}, {"fen", -400}},
-         800, -200, 250, 300, 1400, 1000, 1001, 0, {"hamlet", "village", "town", "city", "fortress"}, "dwarven"},
+         800, -200, 250, 300, 1400, 1000, 1001, 0, {"hamlet", "village", "town", "city", "fortress"}, "dwarven", 0, 0, 500, 700, 0},
         {"elf", 1, "Elf", "Elves", "Elven", "good", 0, 700, 150, 3, 300, 20, 35, 35, 0, 10, 0, 0,
          {{"temperate_forest", 500}, {"wet_woodland", 300}, {"grassland", 0}, {"heath", -200}, {"steppe", -300},
           {"highland_moor", -300}, {"alpine", -600}},
-         -300, 0, 200, 150, 1600, 1000, 1001, 1500, {"hamlet", "village", "town", "city"}, "elven"},
+         -300, 0, 200, 150, 1600, 1000, 1001, 1500, {"hamlet", "village", "town", "city"}, "elven", 0, 1000, 1000, 700, 0},
         {"faerie", 4, "Faerie", "Faeries", "Faerie", "good", 3006477107, 400, 100, 4, 250, 0, 60, 20, 0, 20, 0, 0,
          {{"temperate_forest", 800}, {"wet_woodland", 800}, {"fen", 300}, {"marsh", 200}, {"highland_moor", 100},
           {"heath", 0}, {"grassland", -300}, {"alpine", -400}, {"steppe", -400}},
-         200, 0, 100, 50, 1200, 1000, 400, 0, {"hamlet", "village"}, "faerie"},  // home 0: P3-01 r10 3.3
+         200, -500, 100, 50, 1200, 1000, 400, 0, {"hamlet", "village"}, "faerie", 400, 0, 1000, 700, 0},  // home 0: P3-01 r10 3.3
         {"goblin", 2, "Goblin", "Goblins", "Goblin", "evil", 1503238554, 40, 15, 20, 900, 40, 20, 10, 30, 0, 0, 0,
          {{"heath", 200}, {"highland_moor", 200}, {"steppe", 150}, {"grassland", 100}, {"marsh", 100}, {"alpine", -400},
           {"temperate_forest", -200}, {"wet_woodland", -300}},
-         100, -100, 600, 600, 800, 1000, 1001, 0, {"hamlet", "village", "town", "fortress"}, "goblin"},
+         100, -100, 600, 600, 800, 1000, 1001, 0, {"hamlet", "village", "town", "fortress"}, "goblin", 0, 1000, 1000, 700, 0},
         {"human", 5, "Human", "Humans", "Human", "neutral", 3564822856, 70, 25, 15, 1000, 60, 10, 10, 5, 15, 0, 0,
          {{"grassland", 300}, {"steppe", 100}, {"temperate_forest", 100}, {"marsh", -100}, {"heath", -100},
           {"fen", -200}, {"highland_moor", -200}, {"alpine", -500}},
-         -300, 200, 700, 400, 1000, 1000, 1001, 0, {"hamlet", "village", "town", "city", "fortress"}, "human"},
+         -300, 200, 700, 400, 1000, 1000, 1001, 0, {"hamlet", "village", "town", "city", "fortress"}, "human", 0, 1000, 1000, 700, 0},
         {"orc", 6, "Orc", "Orcs", "Orcish", "evil", 3994319585, 50, 18, 18, 800, 35, 25, 10, 30, 0, 0, 0,
          {{"steppe", 400}, {"heath", 200}, {"grassland", 200}, {"highland_moor", 100}, {"temperate_forest", -100},
           {"marsh", -100}, {"fen", -200}, {"wet_woodland", -200}, {"alpine", -300}},
-         100, -100, 600, 900, 1300, 4000, 1001, 0, {"hamlet", "village", "town", "fortress"}, "orcish"},
+         100, -100, 600, 900, 1300, 4000, 1001, 0, {"hamlet", "village", "town", "fortress"}, "orcish", 0, 1000, 1000, 500, 1},
     };
     return v;
 }
@@ -689,12 +723,13 @@ inline const std::vector<std::string_view>& race_fields() {
         "order",           "name",      "plural", "adjective", "camp",      "awakening_share", "lifespan_years",
         "generation_years", "growth_permille", "density_permille", "site_weights", "cell_weights", "biomes", "upland", "coast",          "expansion",
         "aggression",      "prowess_permille", "muster_permille", "conceal_min", "home_defense_permille",
+        "odds_min_permille", "awakening_quarrel",  // P3-01 r11 3.5 (generator 0.19.0)
         "settlement_kinds", "culture"};
     return v;
 }
 // P3-01 r8 (1): record race_cell_weights.
 inline const std::vector<std::string_view>& cell_weight_fields() {
-    static const std::vector<std::string_view> v = {"ore", "height"};
+    static const std::vector<std::string_view> v = {"ore", "height", "inland", "port", "habitability"};  // r11 3.4
     return v;
 }
 inline const std::vector<std::string_view>& site_weight_fields() {

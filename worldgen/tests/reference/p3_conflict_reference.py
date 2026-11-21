@@ -88,7 +88,7 @@ FatalError = cr.FatalError
 REPO = pe.REPO
 GOLDEN = os.path.join(REPO, "worldgen", "tests", "golden", "p3-06-conflict.txt")
 DEFAULT_INPUTS = os.path.join(os.path.expanduser("~"), ".cache", "the-unmapped", "out", "p3-06-tests", "inputs")
-GENERATOR_VERSION = "0.18.0"
+GENERATOR_VERSION = "0.19.0"
 
 # P3-06 r7 (generator 0.17.0) and r9 section 20 (generator 0.18.0, P3-09): each rule change behind a
 # flag, as pp.FLAGS for P3-05; use_version(v) sets the flags of generator v in both files (and the data,
@@ -117,22 +117,56 @@ FLAGS = dict(
     weary_open=True,  # r11 20.23: futile + the wars open over (D, G) >= weary_wars
     # r13 (generator stays 0.18.0)
     cede_all=True,  # 20.27: a cession passes every standing settlement of the loser in G, hidden or same-step
+    # r14 section 21 (P3-10, generator 0.19.0)
+    reduce_loss=True,   # 21.1: note_reduction only for a settlement whose loss is at least 1
+    aim_hold=True,      # 21.6: won by aim only when the attacker holds G; G lost otherwise: end by the score now
+    search_weary=True,  # 21.7 item 1: a search_abandoned makes (y, R) weary for every claimant (searched_until)
+    search_battle=True,  # 21.7 item 2: no search in a region where this war has fought a battle
+    search_sal=True,    # 21.7 item 3: only the first kind-35 event keeps its salience; later search_repeat_salience
+    holder=True,        # 21.8: weariness and the run statistic count a change of the holder (owner or last owner)
+    race_odds=True,     # 21.9: the odds minimum is the claimant race's odds_min_permille
+    lie_low=True,       # 21.10: a civilization with a hidden refuge raises no claim, strain or declaration
+    quarrel=True,       # 21.12: the awakening quarrel (race field awakening_quarrel)
+    note_019=True,      # P3-07 r12 22.3 / 22.5a: the reworded flare-up note; repeated searches out of the summary
 )
 FLAGS_017 = ("loss",)
+FLAGS_019 = ("reduce_loss", "aim_hold", "search_weary", "search_battle", "search_sal", "holder", "race_odds",
+             "lie_low", "quarrel", "note_019")
+VERSIONS = ("0.16.0", "0.17.0", "0.18.0", "0.19.0")
+
+
+def flag_on(v, k):
+    """Whether rule flag k is on at generator v."""
+    if k in FLAGS_019:
+        return v == "0.19.0"
+    return v in ("0.18.0", "0.19.0") or (v == "0.17.0" and k in FLAGS_017)
+
+
+def at_least(v):
+    return VERSIONS.index(GENERATOR_VERSION) >= VERSIONS.index(v)
+
+
+def peoples_flags(v):
+    """P3-05's flags of generator v (p3_peoples_reference.flags_for from 0.19.0; the 0.18.0 rule before it)."""
+    if hasattr(pp, "flags_for"):
+        return pp.flags_for(v)
+    return {k: v != "0.16.0" and (v in ("0.18.0", "0.19.0") or k not in pp.FLAGS_018) for k in pp.FLAGS}
 
 
 def use_version(v):
-    """Generator v's rules, data, names and catalogue: "0.18.0" (default), "0.17.0" or "0.16.0"."""
+    """Generator v's rules, data, names and catalogue: "0.19.0" (default), "0.18.0", "0.17.0" or "0.16.0"."""
     global GENERATOR_VERSION
+    if v not in VERSIONS:
+        raise ValueError(v)
     pp.use_version(v)
     for k in FLAGS:
-        FLAGS[k] = v == "0.18.0" or (v == "0.17.0" and k in FLAGS_017)
+        FLAGS[k] = flag_on(v, k)
     GENERATOR_VERSION = v
     _DATA.clear()
 
 
 def legacy(on=True):
-    use_version("0.16.0" if on else "0.18.0")
+    use_version("0.16.0" if on else "0.19.0")
 
 
 class rules:
@@ -144,9 +178,8 @@ class rules:
     def __enter__(self):
         self.saved = (dict(FLAGS), dict(pp.FLAGS))
         for k in FLAGS:
-            FLAGS[k] = self.v == "0.18.0" or (self.v == "0.17.0" and k in FLAGS_017)
-        for k in pp.FLAGS:
-            pp.FLAGS[k] = self.v != "0.16.0" and (self.v == "0.18.0" or k not in pp.FLAGS_018)
+            FLAGS[k] = flag_on(self.v, k)
+        pp.FLAGS.update(peoples_flags(self.v))
         return self
 
     def __exit__(self, *a):
@@ -265,6 +298,60 @@ SPEC_GAPS = (
     ("r13 20.28 counted wars", "A war is closed by a side's end when its war row's until_event is a civ_conquered or "
                                "civ_ended; an open row counts with until = E; the incremental form of P3-07 21.8 item "
                                "5 (r11) is used as written."),
+    # r14 (P3-10, generator 0.19.0)
+    ("r14 21.6 order", "The new items 1 and 2 are tested first at every check (after 7.3 in T6) and only then 7.7's "
+                       "items 1, 3, 4 (exhaustion, no front, length): the literal order of 21.6's list ('Otherwise ... "
+                       "7.7 items 1, 3 and 4'); item 1's 'peace when b is exhausted' only arises in that order. The "
+                       "alternative reading (exhaustion first, as 7.7's numbering keeps it) changes endings in which "
+                       "a side is exhausted in the step its goal changes hands."),
+    ("r14 21.6 at 7.8", "At the end of an active phase (Q4's ending of every open war by the score) item 1 applies: "
+                        "an attacker holding G wins without the last-battle rule (peace if b is exhausted, else "
+                        "war_won); item 2 is the score ending as before, with peace when the loser is exhausted "
+                        "(r15 confirms both); how 'aim' in the war line. Other quiet endings keep war_won."),
+    ("r14 21.6 b stands in G", "'b neither holds G nor has a standing settlement in it' reads b's standing VISIBLE "
+                               "settlements, as 7.7 item 2 did (SPEC_GAPS 7.3 item 7)."),
+    ("r14 (14)", "Read for the endings of 21.6 items 1 and 2 (b no longer holds G nor stands in it): an attacker that "
+                 "wins by 7.7's exhaustion, no-front or length endings while b still holds G is not 'won while not "
+                 "holding the goal' in (14)'s sense (7.7's own cession of G would otherwise break (14)). Checked from "
+                 "the run's ending log (the owner of G at the ending moment is not in the rows when G changes hands "
+                 "in the ending's step)."),
+    ("r14 (8)", "Checked in the run: an ending whose winner lost the last battle has how 'aim' with the attacker "
+                "holding G at the ending."),
+    ("r14 21.5 item 1", "7.4's distribution of 2 dead over 1000, 1000 and 10 people is 0, 0, 0 with the remainder 2 "
+                        "to the most populous (losses 2, 0, 0, as r16's text now says); the unit checks 2 dead "
+                        "(note for s1 only) and 3 dead (2, 1, 0: notes for s1 and s2), s3 never noted."),
+    ("r14 21.7 item 1 who", "searched_until is keyed (hidden civilization y, region R) and makes R weary as a goal "
+                            "against y (20.2's allowed goals) for every claimant; the 20.23 open-war count is not "
+                            "involved; with search_weary_years 0 nothing is stored."),
+    ("r14 21.7 item 2", "A war's battlefields are the regions of its battle and battle_at_pass events (any winner); "
+                        "the battle draw then follows as in 7.3, the siege may take a concealed settlement."),
+    ("r14 21.8 reset", "A change of holder (another civilization holds G) clears every futile count over G, so a "
+                       "region taken by another and retaken by its old holder starts from 0 (21.11 item 3: 'a region "
+                       "taken by another civilization and retaken resets it'); with only 20.4's reading rule (a count "
+                       "of another holder reads 0) the old count would read again after the retake. The run "
+                       "statistic breaks at a change row (from_year of a region_control row whose civ differs from "
+                       "the previous row's), never at a row's end."),
+    ("r14 21.10 lies low", "y lies low in year Y (the step's start in a quiet step) while one of y's standing "
+                           "settlements has Y < hidden_until; no strain of y toward others is raised (5.2), no claim "
+                           "(5.3) and no declaration (7.2, including the flare pair) with y as claimant or attacker; "
+                           "the tension skips pairs with y as claimant. Strain toward y and y's defence unchanged."),
+    ("r15 21.12 item 1", "S: the standing visible settlements that are not hidden (hidden(s): Y < hidden_until) of "
+                         "alive visible civilizations of another race whose disposition d(a, b) = camp - grudge is "
+                         "below border_friction at that T2 (after housekeeping and decay); the strain is "
+                         "quarrel_strain x 1000. Stress and norefuge tunings are shipped plus edits (P3-06 16.3), so "
+                         "they carry the shipped search_weary_years 500, search_repeat_salience 15 and "
+                         "quarrel_strain 600, in the reference and the C++ support alike; the defaults of hand-made "
+                         "tuning (0, 40, 600) concern tuning built without data."),
+    ("r14 21.12 visible", "'The first T2 in which a is visible' is the first T2 in which a is among the alive visible "
+                          "civilizations (P3-04 6.2: the tick after its awakening step); S is the standing visible "
+                          "settlements of the alive visible civilizations of other races at that T2; the quarrel is "
+                          "set after housekeeping and the grudge decay, before 5.2. A civilization whose first "
+                          "visible step is quiet gets its quarrel in the next T2 (T2 only, 21.12 item 3)."),
+    ("r16 (16)", "Invariant (16) as restated by r16 21.12 item 5 (P3-10 10d item 2): the claim of a against its "
+                 "quarrel neighbour b is dated in the first phase in which a and b are in contact (5.1's contact as "
+                 "the T2 strain update computes it), unless 5.3's tests refuse that claim in that phase (no allowed "
+                 "goal, a truce, a war, hiding); a pair never in contact owes nothing. Replaces r14's wording, under "
+                 "which the reference printed refused claims as findings."),
 )
 
 
@@ -300,7 +387,7 @@ CONFLICT_KINDS_018 = (
     pe.kind_def(36, "refuge_held", 1, 1, 1, (("attacker", CIV, 1, 1), ("defender", CIV, 1, 1)), ("reason",)),
 )
 COMPILED = pp.COMPILED      # kinds 1-33 (P3-05 r6 appends 31 after P3-06's 20-30; r9 32 and 33)
-assert list(COMPILED[19:30]) == list(CONFLICT_KINDS) and len(COMPILED) == 36
+assert list(COMPILED[19:30]) == list(CONFLICT_KINDS) and len(COMPILED) >= 36   # 38 from 0.19.0 (kinds 37, 38)
 assert list(COMPILED[31:36]) == list(CONFLICT_KINDS_018)
 KIND_ID = {k["key"]: k["id"] for k in COMPILED}
 KEY_OF = {k["id"]: k["key"] for k in COMPILED}
@@ -322,6 +409,15 @@ SPEC_REPORT = (
     ("region_ceded", 55, "{from} ceded {@region} to {to}."),
     ("civ_conquered", 90, "{civilization} fell to {conqueror}."),
 )
+
+# r14 21.2 (0.19.0), transcribed from the spec
+SPEC_REPORT_019 = {
+    "battle": "{winner} defeated {loser} in {@region}; {loser_dead?none|one|#} of the defeated{winner_dead? fell, and "
+              "none of the victors| and one of the victors fell| and # of the victors fell}.",
+    "battle_at_pass": "{winner} defeated {loser} at the pass into {@region}; {loser_dead?none|one|#} of the defeated"
+                      "{winner_dead? fell, and none of the victors| and one of the victors fell| and # of the victors "
+                      "fell}.",
+}
 
 STREAMS = ("hist.conflict.declare", "hist.conflict.battle", "hist.conflict.battle_win", "hist.conflict.siege",
            "hist.conflict.sack", "hist.conflict.search")   # search: r10 20.17 (0.18.0)
@@ -351,6 +447,9 @@ class Data(pp.Data):
             self.race[rid]["muster"] = t.get("muster_permille", 1000)
             self.race[rid]["conceal"] = t.get("conceal_min", 1001)
             self.race[rid]["home"] = t.get("home_defense_permille", 0)
+            # P3-01 r11 3.5 (0.19.0); an older root has none (and no rule reads them then)
+            self.race[rid]["odds_min"] = t.get("odds_min_permille", 700)
+            self.race[rid]["quarrel"] = t.get("awakening_quarrel", 0)
 
 
 _DATA = {}
@@ -516,6 +615,19 @@ class World(pp.World):
         self.kills = []            # r10: (F_W, dead_L) of every battle (20.19 item 9)
         self.search_log = []       # r10: (year, war, region, defender, found) of every search (items 10, 11)
         self.held_log = []         # r10: (refuge_held event, settlement, reason) (20.22, T3)
+        # r14 members (21.7, 21.8, 21.12), keyed by ids
+        self.searched_until = {}   # (hidden civ, region) -> year until which every claimant is weary (21.7 item 1)
+        self.last_owner = getattr(self, "last_owner", {})   # region -> its last owner (21.8's holder)
+        self.quarrel_done = set()  # civilizations whose first visible T2 has passed (21.12)
+        self.quarrel_pending = set()  # 21.12 item 3
+        # r14 logs for the checks (not state)
+        self.quarrel_log = []      # (year, a, b or 0) of every quarrel set (b 0: pending)
+        self.contact_log = {}      # civ -> first phase id in which it was in contact with another race (16)
+        self.low_log = []          # (year, civ, until) of every lie_low call (21.10)
+        self.aim_log = []          # (war id, how, winner, holder of G at the end, score winner, last battle winner)
+        self.claim_blocked = set()  # (civ, phase, reason): a claim the strain called for, refused by 5.3's tests
+        self.claim_refused = set()  # (civ, target, phase): the same, per target (r16 (16))
+        self.pair_contact = {}      # (a, b) -> first phase id in which a and b are in contact (r16 (16))
 
     # --- engine phase kind
     def tick(self, eng_run, year, phase_end):
@@ -567,8 +679,50 @@ class World(pp.World):
 
     # --- State helpers
     def set_owner(self, rid, civ, event):
+        fu = getattr(self, "futile", None)
+        if FLAGS["holder"] and fu and civ != 0 and civ != self.hold(rid):
+            # 21.8 (READING, SPEC_GAPS r14 21.8 reset): a change of holder resets every count over the region, so a
+            # region taken by another and retaken starts again from 0 (21.11 item 3), as the run statistic does
+            for k in [k for k in fu if k[1] == rid]:
+                del fu[k]
+        su = getattr(self, "searched_until", None)
+        if FLAGS["search_weary"] and su and civ != 0 and civ != self.hold(rid):
+            # 21.7 item 1: a change of R's holder (21.8: another civilization holds R) clears the search's weariness
+            for k in [k for k in su if k[1] == rid]:
+                del su[k]
         super().set_owner(rid, civ, event)
+        if civ != 0:
+            if not hasattr(self, "last_owner"):
+                self.last_owner = {}
+            self.last_owner[rid] = civ
         self.version += 1
+
+    def hold(self, rid):
+        """21.8: hold(G) = G's owner, else the civilization that last owned G (0 if G was never owned); before
+        0.19.0 the owner."""
+        o = self.owner[rid][0]
+        if o != 0 or not FLAGS["holder"]:
+            return o
+        return getattr(self, "last_owner", {}).get(rid, 0)
+
+    def hides(self, y):
+        """21.10: y lies low while one of its (standing) settlements s has Y < hidden_until[s]."""
+        if not FLAGS["lie_low"]:
+            return False
+        return any(self.year < self.hidden_until.get(s["id"], -1) for s in self.standing_of(y))
+
+    def name_cores(self):
+        """P3-02 r10 12.2: the history stage's set K of name cores (kept by the peoples world), from 0.19.0."""
+        if GENERATOR_VERSION != "0.19.0":
+            return None
+        return getattr(self, "cores", None)
+
+    def odds_min(self, a):
+        """21.9: the claimant race's odds_min_permille (before 0.19.0 history.conflict.odds_min)."""
+        if FLAGS["race_odds"]:
+            return self.pd.race[self.race_c(a)]["odds_min"]
+        # the 0.18.0 rules on 0.19.0 data (the units of r9, run with rules("0.18.0")): 0.18.0's shipped 700
+        return self.ct.get("odds_min", 700)
 
     def open_rel(self, key, e):
         self.open_relation(key, e)      # P3-04 State (6.7 item 2, r9: calls replayed in order)
@@ -778,23 +932,26 @@ class World(pp.World):
         return g
 
     def weary(self, b, r):
-        """20.4: b is weary of r (count read >= weary_wars; a count of another owner reads 0)."""
+        """20.4: b is weary of r (count read >= weary_wars; a count of another owner reads 0); 21.8: owner read
+        as holder; 21.7 item 1: weary for every claimant while a search in r found no one of b."""
         ww = self.ct["weary_wars"] if FLAGS["weary"] else 0
-        if ww == 0:
+        if ww == 0 and not FLAGS["search_weary"]:
             return False
+        if FLAGS["search_weary"] and self.year < self.searched_until.get((b, r), -1):
+            return True                       # 21.7 item 1: whatever the counts read
         k = self.futile.get((b, r))
-        n = k[0] if k is not None and k[1] == self.owner[r][0] else 0
+        n = k[0] if k is not None and k[1] == self.hold(r) else 0
         if FLAGS["weary_open"]:
             # 20.23: the wars now open against b with goal r count, by any attacker
             n += sum(1 for w in self.wars if w["open"] and w["b"] == b and w["goal"] == r)
-        return n >= ww
+        return ww > 0 and n >= ww
 
     def count_futile(self, war):
         """20.4: a war ended by peace or truce whose goal kept the owner it had at the declaration."""
         if not FLAGS["weary"]:
             return
         b, g = war["b"], war["goal"]
-        o = self.owner[g][0]
+        o = self.hold(g)
         if o != war["owner0"]:
             return
         k = self.futile.get((b, g))
@@ -923,9 +1080,10 @@ class World(pp.World):
                 if fr:
                     self.contact[(a, b)] = min(e[1] for e in fr)
         I = self.intensity
+        low = {c for c in al if self.hides(c)}   # r14 21.10 item 2
         for a in al:
             for b in al:
-                if a == b or (a, b) not in self.contact:
+                if a == b or (a, b) not in self.contact or a in low:
                     continue
                 if self.at_war(a, b) or not self.past_truce(a, b):
                     continue
@@ -947,7 +1105,10 @@ class World(pp.World):
             for b in al:
                 if a == b or (a, b) not in self.contact:
                     continue
-                if (a, b) in self.claim or self.at_war(a, b) or not self.past_truce(a, b):
+                if (a, b) in self.claim or self.at_war(a, b) or not self.past_truce(a, b) or a in low:
+                    if (a, b) not in self.claim and self.strain.get((a, b), 0) >= t["claim_strain"] * 1000:
+                        self.claim_blocked.add((a, self.phase, "war, truce or hiding"))
+                        self.claim_refused.add((a, b, self.phase))
                     continue
                 if self.strain.get((a, b), 0) < t["claim_strain"] * 1000:
                     continue
@@ -958,6 +1119,8 @@ class World(pp.World):
                 if FLAGS["goals"] or FLAGS["weary"]:
                     fr = self.allowed(a, b, fr)      # r9 20.2 item 1, 20.4
                     if not fr:
+                        self.claim_blocked.add((a, self.phase, "no allowed goal"))
+                        self.claim_refused.add((a, b, self.phase))
                         continue
                 wr = self.wronged.get((a, b), set())
                 r, cost, _f = min(fr, key=lambda e: (0 if (e[0] in wr and self.owner[e[0]][0] == b) else 1,
@@ -981,8 +1144,10 @@ class World(pp.World):
                 continue
             if self.at_war(a, b) or not self.past_truce(a, b, y):
                 continue
-            if FLAGS["odds"] and self.odds(a, b) < self.ct["odds_min"]:
-                continue                     # r9 20.6 item 3: a quarrel a people cannot pursue does not flare
+            if FLAGS["lie_low"] and self.hides(a):
+                continue                     # r14 21.10 item 2: the tension skips its pairs as claimant
+            if FLAGS["odds"] and self.odds(a, b) < self.odds_min(a):
+                continue                     # r9 20.6 item 3 (r14 21.9: the claimant race's minimum)
             v = self.strain.get((a, b), 0) // 1000
             if v > best[0]:
                 best = (v, self.claim[(a, b)][0], (a, b))
@@ -1030,14 +1195,17 @@ class World(pp.World):
                               won={a: 0, b: 0}, taken={a: 0, b: 0}, dead={a: 0, b: 0},
                               pop0={a: self.population(a), b: self.population(b)}, open=True, end=None,
                               battles=0, sacked=0, captured=0, flare=draw_free, ceded=False,
-                              owner0=self.owner[goal][0], cost=None, fled=0))
+                              owner0=self.hold(goal), cost=None, fled=0, fought=set()))
         return e
 
     def c_t2(self):
         t = self.ct
         self.housekeeping()
         self.decay(1)
+        if FLAGS["quarrel"]:
+            self.quarrels()                  # r14 21.12, before 5.2's strain update
         self.strain_update(1, t["tick_strain_permille"], False)
+        self.note_contact()
         first_flare = self.phase != self.last_t2_phase and self.phase_kind == FLARE
         flare_pair = self.best_claim(self.year)[2] if first_flare else None
         if first_flare:
@@ -1045,6 +1213,8 @@ class World(pp.World):
         for a in self.avc():
             if any(w["open"] and w["a"] == a for w in self.wars):
                 continue
+            if self.hides(a):
+                continue                     # r14 21.10 item 2: no declaration
             cands = []
             for b in self.avc():
                 if b == a or (a, b) not in self.claim or (a, b) not in self.contact:
@@ -1068,6 +1238,64 @@ class World(pp.World):
                 self.declare(a, b, False)
         self.last_t2_phase = self.phase
 
+    def quarrels(self):
+        """r14 21.12: the awakening quarrel of each civilization of a race with awakening_quarrel 1 founded by
+        civ_founded, set in its first visible T2 (pending while no other people stands)."""
+        t = self.ct
+        for c in sorted(self.quarrel_pending):
+            if not self.alive(c):
+                self.quarrel_pending.discard(c)      # item 3: a civilization that ends while pending loses it
+        for a in self.avc():
+            if a in self.quarrel_done:
+                continue
+            self.quarrel_done.add(a)
+            if self.pd.race[self.race_c(a)]["quarrel"] != 1:
+                continue
+            fe = self.events[self.civ(a)["founding_event"] - 1]
+            if fe["kind"] != K["civ_founded"]:
+                continue                             # a secession (or any later founding) gets none
+            self.quarrel_pending.add(a)
+        for a in sorted(self.quarrel_pending):
+            b = self.quarrel_neighbour(a)
+            if b is None:
+                continue
+            self.quarrel_pending.discard(a)
+            k = (a, b)
+            self.strain[k] = max(self.strain.get(k, 0), t["quarrel_strain"] * 1000)   # r15 21.12 item 2
+            self.quarrel_log.append((self.year, a, b))
+
+    def quarrel_neighbour(self, a):
+        """21.12 item 1 (r15): the owner of the standing visible settlement, not hidden (20.1), of an alive
+        civilization b of another race with disposition d(a, b) below border_friction (read at this step), with the
+        smallest key (0 if h <= enmity_hops else 1, h, d^2, id), h the hops from a's capital region (unreachable:
+        +infinity); None if none."""
+        cap = self.stl(self.civ(a)["capital"])
+        hops = self.geo.hops(cap["region"])
+        inf = 1 << 62
+        ra = self.race_c(a)
+        best = None
+        for c in self.avc():
+            if self.race_c(c) == ra or self.disp(a, c) >= self.ct["border_friction"]:
+                continue                      # r15: a people a can come to war with only (never its own camp)
+            for s in self.svis(c):
+                if self.hidden(s):
+                    continue                  # r15: a hidden refuge is never chosen
+                h = hops.get(s["region"], inf)
+                d = (s["x"] - cap["x"]) ** 2 + (s["y"] - cap["y"]) ** 2
+                key = (0 if h <= self.ct["enmity_hops"] else 1, h, d, s["id"])
+                if best is None or key < best[0]:
+                    best = (key, c)
+        return None if best is None else best[1]
+
+    def note_contact(self):
+        """For invariant (16): the first phase in which each civilization is in contact (5.1, the T2 strain
+        update's contact) with a civilization of another race."""
+        for (a, b) in self.contact:
+            if self.race_c(a) != self.race_c(b):
+                for x in (a, b):
+                    self.contact_log.setdefault(x, self.phase)
+            self.pair_contact.setdefault((a, b), self.phase)
+
     def declare_p(self, a, b):
         """7.2 item 3: the yearly chance of a's declaration on b, or None below declare_min (no draw)."""
         t = self.ct
@@ -1076,8 +1304,8 @@ class World(pp.World):
             return None
         p = t["declare_permille"] * min(1000, (s - t["declare_min"]) * 1000 // t["declare_span"]) // 1000
         odds = self.odds(a, b)
-        if FLAGS["odds"] and odds < t["odds_min"]:
-            return None                       # r9 20.6 item 3: no declaration and no draw
+        if FLAGS["odds"] and odds < self.odds_min(a):
+            return None                       # r9 20.6 item 3 (r14 21.9 per race): no declaration and no draw
         return p * odds // 1000
 
     def odds(self, a, b):
@@ -1124,6 +1352,7 @@ class World(pp.World):
         if tot == 0 or dead == 0:
             return 0
         dead = min(dead, tot)
+        before = {s["id"]: s["population"] for s in ss}
         took = 0
         for s in ss:
             loss = dead * s["population"] // tot
@@ -1134,6 +1363,8 @@ class World(pp.World):
             m = min(ss, key=lambda s: (-s["population"], s["id"]))
             m["population"] -= min(rem, m["population"])
         for s in ss:
+            if FLAGS["reduce_loss"] and s["population"] >= before[s["id"]]:
+                continue                      # r14 21.1: no loss, no note
             self.last_red[s["id"]] = e        # note_reduction
         if war is not None:
             war["dead"][c] += dead
@@ -1249,8 +1480,9 @@ class World(pp.World):
             ent = min(fr, key=lambda e: self.target_key(x, e))
         r, _cost, r_from = ent
         w = war["w"]
-        if FLAGS["search"] and self.conceal_search(war, x, y, r):
-            return
+        if FLAGS["search"] and not (FLAGS["search_battle"] and r in war["fought"]) and \
+                self.conceal_search(war, x, y, r):
+            return                 # r14 21.7 item 2: a battlefield of this war needs no search
         if not chance_pm(self.draw("hist.conflict.battle", w, 0, 0), t["battle_permille"]):
             return
         if FLAGS["levies"]:     # r9 20.6 item 2: each side's local force at R
@@ -1277,6 +1509,7 @@ class World(pp.World):
                             values=(dead_w, dead_l), causes=(w,))
         self.casualties(W, dead_w, e, war)
         self.casualties(L, dead_l, e, war)
+        war["fought"].add(r)
         war["won"][W] += 1
         war["battles"] += 1
         war["last"] = e
@@ -1353,8 +1586,13 @@ class World(pp.World):
         """20.17 item 2: search_abandoned, then the truce bookkeeping of 7.7, with no cost."""
         t = self.ct
         a, b = war["a"], war["b"]
+        sal = None
+        if FLAGS["search_sal"] and any(ev["kind"] == K["search_abandoned"] for ev in self.events):
+            sal = t["search_repeat_salience"]     # r14 21.7 item 3: only the first is news
         e = self.append("search_abandoned", region=r, participants=(("searcher", CIV, x), ("hidden", CIV, y)),
-                        values=(self.year - war["start"],), causes=(war["last"],))
+                        values=(self.year - war["start"],), causes=(war["last"],), salience=sal)
+        if FLAGS["search_weary"] and t["search_weary_years"] > 0:
+            self.searched_until[(y, r)] = self.year + t["search_weary_years"]   # r14 21.7 item 1
         self.count_futile(war)
         self.close_rel(rel_key(a, b, "war"), e)
         self.open_rel(sym_key(a, b, "peace"), e)
@@ -1411,7 +1649,8 @@ class World(pp.World):
         civ = self.civ(y)
         cnum = civ["culture"]
         cul = self.culture[cnum][1]
-        name, _t = pnr.make_name(self.dat.naming[cul], cul, "settlement", self.inp.seed, cnum, h, self.registry)
+        name, _t = pnr.make_name(self.dat.naming[cul], cul, "settlement", self.inp.seed, cnum, h, self.registry,
+                                 cores=self.name_cores())
         e2 = self.append("refugees_settled", region=d, settlement=h,
                          participants=(("settlement", SETTLEMENT, h), ("founder", CIV, y), ("origin", SETTLEMENT, ts["id"])),
                          values=(n,), causes=(e,))
@@ -1420,6 +1659,9 @@ class World(pp.World):
         self.site_how[h] = how
         self.set_owner(d, y, e2)
         self.hidden_until[h] = self.year + t["hidden_years"]
+        if FLAGS["lie_low"]:
+            self.lie_low(y, self.hidden_until[h])     # r14 21.10 item 1, P3-05 r12 22.7a
+            self.low_log.append((self.year, y, self.hidden_until[h]))
         # 3 the remainder, the ruin (destination h; the capital moves to h)
         ts["population"] -= n
         if not self.standing(ts) or ts["owner_civ"] == 0:
@@ -1456,9 +1698,37 @@ class World(pp.World):
         s = self.score(war)
         return war["a"] if s > 0 else (war["b"] if s < 0 else None)
 
+    def exhausted(self, war, c):
+        t = self.ct
+        return war["dead"][c] * 1000 >= t["exhaustion_permille"] * max(1, war["pop0"][c] * self.muster(c) // 1000)
+
+    def goal_ending(self, war, how):
+        """r14 21.6 items 1 and 2, at a check of 7.7 or at 7.8's end of an active phase: True when the war ended
+        here. Item 1: the attacker holds G and wins (`peace` when b is exhausted, else `war_won`), no last-battle
+        rule. Item 2: b neither holds G nor stands in it: the war ends now by the score with the last-battle rule
+        (`peace` when the loser is exhausted, else `war_won`; a truce on 0)."""
+        a, b, g = war["a"], war["b"], war["goal"]
+        o = self.owner[g][0]
+        lbw = war.get("last_battle_winner")
+        if o == a:
+            self.aim_log.append((war["w"], "aim", a, o, self.by_score(war), lbw))
+            self.end_war(war, a, "aim", "peace" if self.exhausted(war, b) else "war_won")
+            return True
+        if o != b and not any(s["region"] == g for s in self.svis(b)):
+            win = self.decided(war, self.by_score(war))
+            kind = "war_won"
+            if win is not None and self.exhausted(war, b if win == a else a):
+                kind = "peace"
+            self.aim_log.append((war["w"], "lost", win, o, self.by_score(war), lbw))
+            self.end_war(war, win, how, kind)
+            return True
+        return False
+
     def end_check(self, war):
         t = self.ct
         a, b = war["a"], war["b"]
+        if FLAGS["aim_hold"] and self.goal_ending(war, "goal-lost"):
+            return
         # r9 20.6 item 1: pop0 x muster div 1000 for each side
         ex = [c for c in (a, b) if war["dead"][c] * 1000 >= t["exhaustion_permille"] *
               max(1, war["pop0"][c] * self.muster(c) // 1000)]
@@ -1475,7 +1745,7 @@ class World(pp.World):
                 self.end_war(war, None, "exhaustion")
             return
         g = war["goal"]
-        if self.owner[g][0] != b and not any(s["region"] == g for s in self.svis(b)):
+        if not FLAGS["aim_hold"] and self.owner[g][0] != b and not any(s["region"] == g for s in self.svis(b)):
             self.end_war(war, a, "aim", "war_won")     # by aim: not decided by the score (item 3)
             return
         if war.get("no_front"):
@@ -1578,6 +1848,16 @@ class World(pp.World):
             if not war["open"]:
                 continue
             winner = self.decided(war, self.by_score(war))
+            how, kind = "quiet", "war_won"
+            if FLAGS["aim_hold"] and self.owner[war["goal"]][0] == war["a"]:
+                # r14 21.6 item 1 at 7.8's end: the attacker holds its goal and wins, no last-battle rule
+                winner, how = war["a"], "aim"
+                kind = "peace" if self.exhausted(war, war["b"]) else "war_won"
+            elif FLAGS["aim_hold"] and winner is not None and self.owner[war["goal"]][0] != war["b"] and not any(
+                    s["region"] == war["goal"] for s in self.svis(war["b"])):
+                # r15 21.6: an ending of item 2 in a quiet step writes peace when the loser is exhausted
+                loser = war["b"] if winner == war["a"] else war["a"]
+                kind = "peace" if self.exhausted(war, loser) else "war_won"
             if winner is None:
                 if self.quiet_events_left(min(war["a"], war["b"])) <= 0:
                     continue
@@ -1588,7 +1868,12 @@ class World(pp.World):
                 L = war["b"] if winner == war["a"] else war["a"]
                 if self.cost_plan(war, winner) is not None and self.quiet_events_left(L) <= 0:
                     continue
-            self.end_war(war, winner, "quiet", "war_won")
+            if FLAGS["aim_hold"]:
+                self.aim_log.append((war["w"], how if how == "aim" else (
+                    "lost" if self.owner[war["goal"]][0] != war["b"] and not any(
+                        s["region"] == war["goal"] for s in self.svis(war["b"])) else "quiet"),
+                    winner, self.owner[war["goal"]][0], self.by_score(war), war.get("last_battle_winner")))
+            self.end_war(war, winner, how, kind)
         self.decay(self.years)
         self.strain_update(self.years, t["quiet_strain_permille"], True)
 
@@ -1742,6 +2027,22 @@ def war_events(res, d, idx=None):
     return out, u
 
 
+def change_years(res, g):
+    """The years in which region g's owner changes, as weariness counts them: before 0.19.0 both ends of every
+    region_control row of g; from 0.19.0 (r14 21.8, P3-07 r12 22.5b) the from_year of each row whose civ differs
+    from that of g's previous row (g's first row is a change): a row of the same civilization after a gap is not
+    a change."""
+    rows = sorted((rc for rc in res["region_control"] if rc[0] == g), key=lambda rc: (rc[1], rc[3]))
+    if not FLAGS["holder"]:
+        return [y for rc in rows for y in (rc[1], rc[2]) if y is not None]
+    out, prev = [], None
+    for rc in rows:
+        if rc[3] != prev:
+            out.append(rc[1])
+        prev = rc[3]
+    return out
+
+
 def same_goal_unchanged_max(res, E, kind, groups):
     """P3-07 r11 21.8 item 5 (P3-06 r13 20.28), in its incremental form: per (defender D, region G), the counted
     wars are the war_declared over (D, G) in id order without those closed by a side's end (the war row's
@@ -1753,7 +2054,7 @@ def same_goal_unchanged_max(res, E, kind, groups):
     side_end = (K["civ_conquered"], K["civ_ended"])
     best = 0
     for (_b, g), ds in groups.items():
-        changes = [y for rc in res["region_control"] if rc[0] == g for y in (rc[1], rc[2]) if y is not None]
+        changes = change_years(res, g)
         moved = lambda a, z: any(a <= y <= z for y in changes)  # noqa: E731
         run, lo, hi = 0, None, None
         for d in sorted(ds):
@@ -1854,6 +2155,10 @@ def history_note(res, inp, eid, view=None, idx=None):
         view = view or pe.view_from_rows(res, [(r["id"], r["name"]) for r in inp.regions], inp.races, inp.gods)
         a = [p_[4] for p_ in parts[c] if p_[2] == 1][0]
         b = [p_[4] for p_ in parts[c] if p_[2] == 2][0]
+        if FLAGS["note_019"]:   # P3-07 r12 22.3: no "its"; every name mid-sentence
+            return "The claim of %s to %s, held by %s, came to a head." % (
+                mid(view["name"](CIV, a, "name")), mid(view["name"](REGION, ev[c][5], "name")),
+                mid(view["name"](CIV, b, "name")))
         return "%s pressed its claim to %s against %s." % (view["name"](CIV, a, "name"),
                                                           mid(view["name"](REGION, ev[c][5], "name")),
                                                           mid(view["name"](CIV, b, "name")))
@@ -1899,6 +2204,12 @@ def summary_set(res, inp):
     idx = _index(res)
     ev = idx[1]
     cands = sorted((e for e in res["event"] if e[7] >= SUMMARY_MIN_SALIENCE), key=lambda e: (-e[7], e[0]))
+    if FLAGS["note_019"]:
+        # P3-07 r12 22.5a: a declaration whose war ended by a search_abandoned below SUMMARY_MIN_SALIENCE is no
+        # candidate (and no companion of any event: no unit holds a war_declared but its own)
+        quiet_search = {r[7] for r in res["relation"] if r[4] == "war" and r[6] is not None and
+                        ev[r[8]][3] == K["search_abandoned"] and ev[r[8]][7] < SUMMARY_MIN_SALIENCE}
+        cands = [e for e in cands if e[0] not in quiet_search]
     units = {e[0]: unit(res, e[0], idx) for e in cands}
     ages = [(a[0], a[2], a[3]) for a in inp.ages]
     floor = set()
@@ -2033,7 +2344,7 @@ def spec_war_lines(res, inp):
             y, h, win = war["end"]
             end = str(y)
             how = {"exhaustion": "exhaustion", "aim": "aim taken", "no-front": "no front", "length": "length",
-                   "quiet": "end of the active phase", "conquest": "conquest of the defender"
+                   "quiet": "end of the active phase", "goal-lost": "goal lost", "conquest": "conquest of the defender"
                    if not w.alive(war["b"]) else "conquest of the attacker", "ended": "end of a side"}[h]
             res_ = ("won by %s" % cname[win] + (", ceded" if war["ceded"] else "")) if win is not None else "no victor"
         out.append("e%d, %d-%s: %s (c%d) on %s (c%d) over %s, claim e%d (%d); %d battles, %d sacked, %d taken; %s, %s." % (
@@ -2229,6 +2540,21 @@ def check_peoples_invariants(c, res, inp, w, label):
         "ruin_faded": ("settlement_abandoned", "settlement_abandoned_to", "sacked"),
         "settlement_dwindled": red,
     }
+    if at_least("0.19.0"):
+        # P3-05 r12 22.1: every outbreak is kind 37; 22.2 item 3: a dwindling may cite the colony it sent
+        red = red + ("plague_outbreak",)
+        want_cause.update({"plague_spread": ("plague_outbreak",), "settlement_dwindled": red + ("colony_founded",),
+                           "settlement_abandoned": red + ("settlement_founded", "colony_founded"),
+                           "settlement_abandoned_to": red + ("settlement_founded", "colony_founded")})
+        mem = w.t["cause_memory_years"]
+        for e in res["event"]:
+            if KEY_OF[e[3]] in ("settlement_dwindled", "settlement_abandoned", "settlement_abandoned_to"):
+                for x in causes.get(e[0], []):
+                    if KEY_OF[kind[x]] in red + ("colony_founded",):
+                        c.true("%s P3-05 r12 22.2 e%d cites e%d within cause_memory_years (%d years)" % (
+                            label, e[0], x, e[1] - ev[x][1]), e[1] - ev[x][1] <= mem)
+        c.eq("%s P3-05 r12 22.1 no kind 12 and no kind 4 event" % label,
+             [e[0] for e in res["event"] if e[3] in (K["plague"], K["quiet_era"])], [])
     for e in res["event"]:
         key = KEY_OF[e[3]]
         cs = causes.get(e[0], [])
@@ -2443,11 +2769,7 @@ def weary_violations(res, ww, E, count_open=False):
         return []
     role = lambda e, seq: [p_[4] for p_ in parts.get(e, []) if p_[2] == seq][0]  # noqa: E731
     rows = {r[7]: r for r in res["relation"] if r[4] == "war"}
-    changes = {}
-    for rc in res["region_control"]:
-        for y in (rc[1], rc[2]):
-            if y is not None:
-                changes.setdefault(rc[0], []).append(y)
+    changes = {g: change_years(res, g) for g in {rc[0] for rc in res["region_control"]}}
     ends = {}   # (b, g) -> [(end event id, start year, end year)]
     for e in res["event"]:
         if e[3] != K["war_declared"]:
@@ -2636,7 +2958,106 @@ def check_invariants_r9(c, res, inp, w, label):
         c.eq("%s r13 20.13.13 a cession passes every settlement of the loser in the region" % label,
              cession_violations(res), [])
     check_invariants_r10(c, res, inp, w, label, kind, ev, causes, kids, parts, vals)
+    if FLAGS["aim_hold"]:
+        check_invariants_r14(c, res, inp, w, label, kind, ev, causes, kids, parts, vals)
     c.eq("%s in-run r9 checks" % label, w.checks9, [])
+
+
+def role_of(res, key, role):
+    """The seq of role `role` of kind `key` in the stored catalogue."""
+    kid = K[key]
+    return [r[1] for r in res["event_kind_role"] if r[0] == kid and r[2] == role][0]
+
+
+def check_invariants_r14(c, res, inp, w, label, kind, ev, causes, kids, parts, vals):
+    """P3-06 r14 21.6-21.12: invariants (8) as amended, (14), (15), (16) and the rules of 21.7 from the rows (and
+    the in-run logs where a row cannot tell)."""
+    t = w.ct
+    role = lambda e, seq: [p_[4] for p_ in parts.get(e, []) if p_[2] == seq]  # noqa: E731
+    wars = {war["w"]: war for war in w.wars}
+    # (8) amended: an ending whose loser won the last battle is one whose winner is the attacker holding G
+    for (wid, how, win, holder, sw, lbw) in w.aim_log:
+        war = wars[wid]
+        if win is not None and lbw is not None and lbw != win:
+            c.true("%s r14 (8) war e%d: its winner c%d lost the last battle only when it is the attacker holding the "
+                   "goal (%s)" % (label, wid, win, how), how == "aim" and win == war["a"] and holder == war["a"])
+        if how == "aim":
+            c.true("%s r14 21.6 item 1 war e%d ends by aim only when the attacker holds the goal" % (label, wid),
+                   holder == war["a"] and win == war["a"])
+        # (14): a cost after an attacker's win without the goal, only by the score of item 2 with the attacker the
+        # score's winner and the last battle's winner
+        if how == "lost" and win == war["a"] and war.get("cost") is not None:
+            c.true("%s r14 (14) war e%d: the cost of a lost goal's ending is paid only to a score winner that won the "
+                   "last battle" % (label, wid), sw == war["a"] and lbw == war["a"])
+        if how == "lost":
+            c.true("%s r14 21.6 item 2 war e%d: the goal was lost to no one or to a third party" % (label, wid),
+                   holder not in (war["a"], war["b"]))
+    # every war that ended by aim (any version-0.19.0 path) is in the log
+    for war in w.wars:
+        if war["end"] is not None and war["end"][1] == "aim":
+            c.true("%s r14 21.6 war e%d aim ending logged" % (label, war["w"]),
+                   any(x[0] == war["w"] and x[1] == "aim" for x in w.aim_log))
+    # 21.7 item 2: no search_abandoned in a region where its war fought a battle; item 3: salience
+    war_of_end = {r[8]: r[7] for r in res["relation"] if r[4] == "war" and r[6] is not None}
+    base35 = [x[5] for x in res["event_kind"] if x[0] == K["search_abandoned"]][0]
+    first35 = True
+    for e in res["event"]:
+        if e[3] != K["search_abandoned"]:
+            continue
+        d = war_of_end.get(e[0])
+        fought = [b for b in kids.get(d, []) if kind[b] in (K["battle"], K["battle_at_pass"]) and ev[b][5] == e[5]]
+        c.eq("%s r14 21.7 item 2 e%d no battle of its war in the searched region" % (label, e[0]), fought, [])
+        c.eq("%s r14 21.7 item 3 e%d salience" % (label, e[0]), e[7],
+             base35 if first35 else t["search_repeat_salience"])
+        first35 = False
+    # 21.7 item 1: no claim or declaration over (y, R) within search_weary_years of a failed search, unless R's
+    # holder changed since
+    if t["search_weary_years"] > 0:
+        for e in res["event"]:
+            if e[3] != K["search_abandoned"]:
+                continue
+            y, r, ys = role(e[0], 2)[0], e[5], e[1]
+            ch = change_years(res, r)
+            for x in res["event"]:
+                if x[0] <= e[0] or x[5] != r or x[3] not in (K["claim"], K["war_declared"]):
+                    continue
+                if not (ys <= x[1] < ys + t["search_weary_years"]):
+                    continue
+                if role(x[0], 2) != [y] or any(ys <= z <= x[1] for z in ch):
+                    continue
+                c.true("%s r14 21.7 item 1 e%d %s over a searched region within search_weary_years (search e%d)" % (
+                    label, x[0], KEY_OF[x[3]], e[0]), False)
+    # (15): no colony_founded by y, no claim or war_declared with y as claimant or attacker in [Y_f, Y_f + hidden)
+    sf = role_of(res, "colony_founded", "founder")
+    for e in res["event"]:
+        if e[3] != K["refugees_settled"]:
+            continue
+        y, yf = role(e[0], 2)[0], e[1]
+        for x in res["event"]:
+            if not (yf <= x[1] < yf + t["hidden_years"]) or x[0] <= e[0]:
+                continue
+            bad = (x[3] == K["colony_founded"] and role(x[0], sf) == [y]) or \
+                  (x[3] in (K["claim"], K["war_declared"]) and role(x[0], 1) == [y])
+            c.true("%s r14 (15) e%d %s by c%d while its refuge e%d lies hidden" % (label, x[0], KEY_OF[x[3]], y, e[0]),
+                   not bad)
+    # (16), as restated by r16 21.12 item 5: the claim of an awakening-quarrel civilization a (founded by civ_founded)
+    # against its quarrel neighbour b falls within the first phase in which a and b are in contact, unless the claim
+    # pass refuses it there (weary or out-of-bounds regions, a truce, a war, hiding); a pair never in contact owes
+    # nothing (contact recomputed in the run)
+    for (_y, a, b) in w.quarrel_log:
+        if b == 0:
+            continue                         # a pending mark; the attached quarrel is logged with its b
+        cv = next(x for x in res["civilization"] if x[0] == a)
+        if kind[cv[7]] != K["civ_founded"]:
+            continue
+        ph = w.pair_contact.get((a, b))
+        if ph is None:
+            continue
+        claimed = any(x[3] == K["claim"] and x[4] == ph and role(x[0], 1) == [a] and role(x[0], 2) == [b]
+                      for x in res["event"])
+        refused = (a, b, ph) in w.claim_refused
+        c.true("%s r16 (16) c%d claims against its quarrel neighbour c%d in phase %d, their first phase of contact, "
+               "or the claim pass refuses it" % (label, a, b, ph), claimed or refused)
 
 
 def last_battle_winner(res, d, idx):
@@ -2688,8 +3109,14 @@ def check_invariants_r10(c, res, inp, w, label, kind, ev, causes, kids, parts, v
             if k == K["peace"]:   # (7) a peace follows an ending by exhaustion with an exhausted loser
                 L = role(e[0], 2)[0]
                 exhausted = war["dead"][L] * 1000 >= t["exhaustion_permille"] * max(1, war["pop0"][L] * w.muster(L) // 1000)
-                c.true("%s r10 20.19 (7) e%d peace after exhaustion, its loser exhausted" % (label, e[0]),
-                       how == "exhaustion" and exhausted)
+                if FLAGS["aim_hold"]:
+                    # r14 21.6: a peace also ends a war won by aim, or by the score of a lost goal, whose loser is
+                    # exhausted; every peace has an exhausted loser
+                    c.true("%s r14 20.19 (7) e%d peace with its loser exhausted (end %s)" % (label, e[0], how),
+                           how in ("exhaustion", "aim", "goal-lost", "quiet") and exhausted)
+                else:
+                    c.true("%s r10 20.19 (7) e%d peace after exhaustion, its loser exhausted" % (label, e[0]),
+                           how == "exhaustion" and exhausted)
             # (8) T6: the loser did not win the war's last battle, unless the ending was by aim
             lb = last_battle_winner(res, d, idx)
             c.true("%s r10 20.19 (8) T6 e%d loser c%d is not the last battle's winner (end %s)" % (
@@ -3028,7 +3455,7 @@ def unit_world(dat=None, regions=3, conflict=None, peoples=None, races=("elf", "
     d2, inp = pp.unit_geo(regs, borders=bs, region_biomes=rb, races=races, dat=d2, n=20 * regions)
     d2.conflict = edited(dat, conflict=conflict).conflict
     for rid in d2.race:
-        for f in ("aggression", "prowess", "muster", "conceal", "home"):
+        for f in ("aggression", "prowess", "muster", "conceal", "home", "odds_min", "quarrel"):
             d2.race[rid][f] = dat.race[rid][f]
     inp.biome_keys = dict(BIOME_KEYS)
     w = World(d2, inp, pp.event_catalogue(d2.report))
@@ -3203,6 +3630,392 @@ def capture_sentence(fled):
         return "render failed: %s" % x
 
 
+# ---------------------------------------------------------------------------
+# r14 (P3-06 21, P3-10, generator 0.19.0): hand-made units of 21.5, 21.11 and 21.12 item 6
+# ---------------------------------------------------------------------------
+
+ELF, GOBLIN, DWARF, FAERIE, HUMAN, ORC = 1, 2, 3, 4, 5, 6
+
+
+def battle_sentence(loser_dead, winner_dead):
+    """A battle (P3-06 21.2) of the Grork Horde over the Teeshti Court in region 2, rendered."""
+    w = w1()
+    w.civ(2)["name"] = "The Grork Horde"
+    w.civ(1)["name"] = "The Teeshti Court"
+    e = w.append("battle", region=2, participants=(("winner", CIV, 2), ("loser", CIV, 1)),
+                 values=(winner_dead, loser_dead), causes=(1,))
+    res = pp.rows_of(w, pp.event_catalogue(w.pd.report), [])
+    view = pe.view_from_rows(res, [(r["id"], r["name"]) for r in w.inp.regions], w.inp.races, w.inp.gods)
+    try:
+        return pe.render(view, e)
+    except FatalError as x:
+        return "render failed: %s" % x
+
+
+def r14_war(w, a, b, goal, year=1050, check_goal=True):
+    war_e = claim_war(w, a, b, goal, year)
+    war = w.wars[-1]
+    assert war["w"] == war_e and (war["goal"] == goal or not check_goal), (war["goal"], goal)
+    return war
+
+
+def lose_goal(w, b, goal, to):
+    """b's settlements in `goal` pass to `to` (0: ruined); the region follows."""
+    e = len(w.events)
+    for s in w.standing_of(b):
+        if s["region"] == goal:
+            if to == 0:
+                s["status"], s["owner_civ"] = RUINED, 0
+            else:
+                s["owner_civ"] = to
+    w.set_owner(goal, to, e)
+    w.version += 1
+
+
+def ended_kinds(w, n0):
+    return [KEY_OF[e["kind"]] for e in w.events[n0:]]
+
+
+def goal_case(attacker_leads=True, last_winner=2, to=3):
+    """Goblins c1 (capital R1, 3000) attack the elves c2 (capital R4, 10000; a village in the goal R2) over R2;
+    the humans c3 (a hamlet in R3); a second elven realm c4 (R5), so that c2 is no last refuge. The score from
+    the dead: the attacker leads by 100 (or trails)."""
+    w = r9_world(regions=5, races=("elf", "goblin", "human"))
+    add_civ(w, GOBLIN, 1)
+    add_civ(w, ELF, 2)
+    add_civ(w, HUMAN, 4)
+    add_civ(w, ELF, 5)
+    add_stl(w, 1, 1, TOWN, 3000)
+    add_stl(w, 2, 4, TOWN, 10000)
+    add_stl(w, 2, 2, VILLAGE, 500)
+    add_stl(w, 3, 3, HAMLET, 100)
+    add_stl(w, 4, 5, HAMLET, 100)
+    w.civ(1)["capital"], w.civ(2)["capital"], w.civ(3)["capital"], w.civ(4)["capital"] = 1, 2, 4, 5
+    war = r14_war(w, 1, 2, 2)
+    w.year = 1055
+    war["dead"] = {1: 0, 2: 100} if attacker_leads else {1: 100, 2: 0}
+    war["last_battle_winner"] = last_winner
+    war["won"] = {1: 1 if last_winner == 1 else 0, 2: 1 if last_winner == 2 else 0}
+    war["no_front"] = False
+    if to is not None:
+        lose_goal(w, 2, 2, to)
+    return w, war
+
+
+def check_units_r14(c):
+    """P3-06 r14 21.5, 21.11 and 21.12 item 6 on hand-made worlds."""
+    dat = data()
+    t = dat.conflict
+    c.true("21.9 history.conflict has no odds_min", "odds_min" not in t)
+    c.eq("21.7 search_weary_years, search_repeat_salience shipped", (t["search_weary_years"],
+                                                                     t["search_repeat_salience"]), (500, 15))
+    c.eq("21.9, 21.12 race fields odds_min_permille, awakening_quarrel",
+         {dat.race[r]["key"]: (dat.race[r]["odds_min"], dat.race[r]["quarrel"]) for r in dat.race},
+         pdr.RACE_FIELDS_019_VALUES)
+    for n, lo, hi in pdr.CONFLICT_NEW_019:
+        c.eq("16.4 %s below its range" % n, tuning_problem(dict(t, **{n: lo - 1})),
+             "history: tuning: conflict.%s outside its schema range" % n)
+        c.eq("16.4 %s at its range" % n, tuning_problem(dict(t, **{n: hi})), None)
+    c.eq("21.12 r15 conflict_quarrel_strain below claim_strain", tuning_problem(dict(t, quarrel_strain=t["claim_strain"] - 1)),
+         "history: tuning: quarrel_strain must not be below claim_strain")
+    c.eq("21.12 r15 conflict_quarrel_strain at claim_strain", tuning_problem(dict(t, quarrel_strain=t["claim_strain"])), None)
+    # --- 21.5 item 1 (21.1): note_reduction only where people were lost. READING (SPEC_GAPS r14 21.5 item 1): 7.4's
+    # distribution of 2 dead over 1000, 1000, 10 is 0, 0, 0 and the remainder 2 to the first (2, 0, 0), as r16
+    # states; 3 dead give (2, 1, 0)
+    for dead, want_pop, want_noted in ((2, (998, 1000, 10), [1]), (3, (998, 999, 10), [1, 2])):
+        w = r9_world(regions=3)
+        add_civ(w, ELF, 1)
+        for r, p_ in ((1, 1000), (2, 1000), (3, 10)):
+            add_stl(w, 1, r, TOWN if p_ > 100 else HAMLET, p_)
+        w.last_red = {3: 77}
+        e = len(w.events)
+        w.casualties(1, dead, e, None)
+        c.eq("21.1 %d dead over 1000, 1000, 10: populations" % dead,
+             tuple(w.stl(i)["population"] for i in (1, 2, 3)), want_pop)
+        c.eq("21.1 %d dead: note_reduction only for the settlements that lost people; s3 keeps e77" % dead,
+             (sorted(k for k, v in w.last_red.items() if v == e), w.last_red[3]), (want_noted, 77))
+    # --- 21.5 item 2 (21.2): the battle sentence
+    for ld, wd, tail in ((4, 0, "4 of the defeated fell, and none of the victors."),
+                         (37, 1, "37 of the defeated and one of the victors fell."),
+                         (491, 14, "491 of the defeated and 14 of the victors fell."),
+                         (0, 0, "none of the defeated fell, and none of the victors."),
+                         (1155, 1000, "1,155 of the defeated and 1,000 of the victors fell.")):
+        got = battle_sentence(ld, wd)
+        c.eq("21.2 battle sentence (%d, %d)" % (ld, wd), got.split("; ", 1)[-1], tail)
+    # --- 21.11 item 1 (21.6)
+    w, war = goal_case(attacker_leads=True, last_winner=2, to=3)
+    n0 = len(w.events)
+    w.end_check(war)
+    c.eq("21.6 G captured by a third, attacker leads, defender won the last battle: truce, no cost",
+         (ended_kinds(w, n0), war["end"][1]), (["truce"], "goal-lost"))
+    w, war = goal_case(attacker_leads=True, last_winner=1, to=3)
+    n0 = len(w.events)
+    w.end_check(war)
+    c.eq("21.6 ... the attacker won the last battle: war_won and 20.3's cost (a tribute: the elves hold only their "
+         "capital region)", (ended_kinds(w, n0), war["end"][2], war["cost"]), (["war_won", "tribute"], 1, "tribute"))
+    w, war = goal_case(attacker_leads=False, last_winner=2, to=3)
+    n0 = len(w.events)
+    w.end_check(war)
+    c.eq("21.6 ... the defender leads the score and won the last battle: the defender wins (war_won)",
+         (ended_kinds(w, n0)[0], war["end"][2]), ("war_won", 2))
+    w, war = goal_case(attacker_leads=True, last_winner=1, to=0)
+    n0 = len(w.events)
+    w.end_check(war)
+    c.eq("21.6 G emptied (o = 0): by the score, the attacker", (ended_kinds(w, n0)[0], war["end"][1:]),
+         ("war_won", ("goal-lost", 1)))
+    w, war = goal_case(attacker_leads=False, last_winner=2, to=1)
+    n0 = len(w.events)
+    w.end_check(war)
+    c.eq("21.6 G captured by the attacker: aim, war_won, the last-battle rule not applied (score and last battle "
+         "against it)", (ended_kinds(w, n0)[0], war["end"][1:]), ("war_won", ("aim", 1)))
+    w, war = goal_case(attacker_leads=False, last_winner=2, to=None)
+    n0 = len(w.events)
+    w.end_check(war)
+    c.eq("21.6 the defender still holds G: 7.7 items 1, 3, 4 (nothing ends at year 5 of the war)",
+         (ended_kinds(w, n0), war["open"]), ([], True))
+    # two open wars over one goal: both end by their own score at their checks
+    w, war1 = goal_case(attacker_leads=True, last_winner=1, to=None)
+    war2 = r14_war(w, 3, 2, 2, year=1052)
+    w.year = 1055
+    war2["dead"], war2["last_battle_winner"], war2["no_front"] = {3: 50, 2: 0}, 2, False
+    war2["won"] = {3: 0, 2: 1}
+    lose_goal(w, 2, 2, 0)
+    n0 = len(w.events)
+    w.end_check(war1)
+    w.end_check(war2)
+    c.eq("21.6 two wars over one goal, both by the score: c1 wins (war_won), c3 loses to the defender (peace: c3's "
+         "50 dead of its 100 exhaust it)",
+         ([KEY_OF[e["kind"]] for e in w.events[n0:] if e["kind"] in (K["war_won"], K["truce"], K["peace"])],
+          war1["end"][2], war2["end"][2]), (["war_won", "peace"], 1, 2))
+    # 7.8's end of an active phase: an attacker holding G wins (no last-battle rule)
+    w, war = goal_case(attacker_leads=False, last_winner=2, to=1)
+    w.quiet_used, w.charged = {}, set()
+    n0 = len(w.events)
+    w.c_q4()
+    c.eq("21.6 at 7.8's end: the attacker holding G wins", (ended_kinds(w, n0)[:1], war["end"][1:]),
+         (["war_won"], ("aim", 1)))
+    w.quiet_used = None
+    # --- 21.11 item 2 (21.7)
+    w, war = goal_case(attacker_leads=True, last_winner=2, to=None)
+    n0 = len(w.events)
+    w.give_up(war, 1, 2, 2)
+    e1 = w.events[n0]
+    c.eq("21.7 item 3: the first kind-35 event has the base salience 40", (KEY_OF[e1["kind"]], e1["salience"]),
+         ("search_abandoned", 40))
+    c.eq("21.7 item 1: searched_until[(c2, R2)] = Y + 500", w.searched_until, {(2, 2): 1555})
+    w.year = 1554
+    c.true("21.7 item 1: (c2, R2) weary for every claimant at Y + 499", w.weary(2, 2))
+    c.eq("21.7 item 1: R2 not an allowed goal of c3 or c1 against c2",
+         ([e[0] for e in w.allowed(3, 2, [(2, 1, 2), (4, 1, 3)])], [e[0] for e in w.allowed(1, 2, [(2, 1, 2)])]),
+         ([4], []))
+    c.true("21.7 item 1: R4 (another region of the same people) not weary", not w.weary(2, 4))
+    w.year = 1555
+    c.true("21.7 item 1: not weary at Y + 500", not w.weary(2, 2))
+    w.year = 1100
+    w.set_owner(2, 2, len(w.events))       # the same holder resettles: not a change
+    c.true("21.7 item 1: a resettlement by the same holder keeps it", w.weary(2, 2))
+    w.set_owner(2, 3, len(w.events))       # the humans take it: a change of holder
+    c.eq("21.7 item 1: a change of R2's holder clears it", (w.searched_until, w.weary(2, 2)), ({}, False))
+    war2 = r14_war(w, 3, 2, 4, year=1100, check_goal=False)
+    n1 = len(w.events)
+    w.give_up(war2, 3, 2, 4)
+    c.eq("21.7 item 3: a later kind-35 event has search_repeat_salience", w.events[n1]["salience"], 15)
+    # item 2: no search where the war has fought a battle
+    for fought, searched in ((False, True), (True, False)):
+        w, war = goal_case(attacker_leads=True, last_winner=1, to=None)
+        w.concealed = lambda s: True
+        war["init"] = 1
+        if fought:
+            war["fought"].add(2)
+        forced(w, losing=("hist.conflict.search", "hist.conflict.battle_win"))
+        w.year = 1056
+        n0 = len(w.events)
+        w.fight(war)
+        c.eq("21.7 item 2: fought in R2 before: %s; searched, a battle" % fought,
+             (len(w.search_log) == 1, "battle" in ended_kinds(w, n0)), (searched, fought))
+    # --- 21.11 item 3 (21.8): sacked and resettled by its holder keeps the count; taken and retaken resets it
+    def wood(n_wars, retake=False, holder=True):
+        with_flag = FLAGS["holder"]
+        FLAGS["holder"] = holder
+        try:
+            w = r9_world(regions=4, races=("elf", "goblin", "human"))
+            add_civ(w, GOBLIN, 1)
+            add_civ(w, ELF, 2)
+            add_civ(w, HUMAN, 3)
+            add_stl(w, 1, 1, TOWN, 3000)
+            add_stl(w, 2, 3, TOWN, 3000)
+            add_stl(w, 3, 4, TOWN, 3000)
+            w.civ(1)["capital"], w.civ(2)["capital"], w.civ(3)["capital"] = 1, 2, 3
+            year = 1050
+            for i in range(n_wars):
+                sid = add_stl(w, 2, 2, HAMLET, 100)       # c2 settles the wood (again)
+                if w.owner[2][0] == 0:
+                    w.set_owner(2, 2, len(w.events))
+                if retake and i == 1:
+                    w.set_owner(2, 3, len(w.events))      # the humans take it, then c2 retakes it
+                    w.set_owner(2, 2, len(w.events))
+                war = r14_war(w, 1, 2, 2, year)
+                w.year = year + 5
+                w.stl(sid)["status"], w.stl(sid)["owner_civ"] = RUINED, 0   # the wood emptied by a sack
+                w.set_owner(2, 0, len(w.events))
+                war["dead"], war["last_battle_winner"] = {1: 0, 2: 0}, None
+                w.end_war(war, None, "length")
+                w.bookkeeping(w.year, False)
+                year += 300
+            w.year = year
+            return w, w.futile.get((2, 2), (0, 0))[0], w.weary(2, 2)
+        finally:
+            FLAGS["holder"] = with_flag
+    _w, n, weary = wood(3)
+    c.eq("21.8 three wars, each emptying the wood resettled by its holder: count 3, weary (the fourth claim "
+         "refused)", (n, weary), (3, True))
+    _w, n, weary = wood(3, holder=False)
+    c.eq("21.8 the 0.18.0 reading: the release and resettlement are changes of owner, no war counts", (n, weary), (0, False))
+    _w, n, weary = wood(3, retake=True)
+    c.eq("21.8 taken by another and retaken: the count restarts", (n, weary), (2, False))
+    w, _n, _wy = wood(3)
+    al = w.allowed(1, 2, [(2, 1, 1)])
+    c.eq("21.8 the fourth claim on the wood finds no allowed goal", al, [])
+    # the statistic on the same kind of rows: one run when the holder resettles, two after a change
+    rc_same = [(2, 1000, 1050, 2, 1), (2, 1060, 1350, 2, 2), (2, 1360, 1650, 2, 3), (2, 1660, None, 2, 4)]
+    rc_other = [(2, 1000, 1050, 2, 1), (2, 1060, 1350, 3, 2), (2, 1360, None, 2, 3)]
+    for rows_, want in ((rc_same, [1000]), (rc_other, [1000, 1060, 1360])):
+        c.eq("21.8 / P3-07 22.5b change years of the holder", change_years(dict(region_control=rows_), 2), want)
+    # --- 21.11 item 4 (21.9): the odds minimum per race
+    w = r9_world(regions=3, races=("goblin", "elf", "orc"))
+    add_civ(w, ORC, 1)
+    add_civ(w, GOBLIN, 2)
+    add_civ(w, ELF, 3)
+    add_stl(w, 1, 1, TOWN, 3000)
+    add_stl(w, 2, 2, TOWN, 3000)
+    add_stl(w, 3, 3, TOWN, 3000)
+    w.civ(1)["capital"], w.civ(2)["capital"], w.civ(3)["capital"] = 1, 2, 3
+    w.claim[(1, 3)] = (1, 3)
+    w.claim[(2, 3)] = (1, 3)
+    w.strain[(1, 3)] = w.strain[(2, 3)] = 900000
+    w.odds = lambda a, b: 600
+    c.eq("21.9 odds 600: the orc claimant has a chance (drawn), the goblin none (no draw)",
+         (w.declare_p(1, 3) is not None, w.declare_p(2, 3)), (True, None))
+    w.odds = lambda a, b: 650
+    w.contact = {(1, 3): 1, (2, 3): 1}
+    w.strain[(1, 3)] = 800000
+    c.eq("21.9 the tension skips the goblin pair at 650 and keeps the orc pair (although its strain is lower)",
+         w.best_claim(w.year)[2], (1, 3))
+    w.odds = lambda a, b: 499
+    c.eq("21.9 odds 499: no pair", w.best_claim(w.year)[2], None)
+    # --- 21.11 item 5 (21.10): a fled refuge lies low
+    w = flight_case()
+    w.c_t6()
+    h = max(w.hidden_until)
+    c.eq("21.10 the flight calls lie_low(c2, Y + hidden_years)", w.low_log, [(1051, 2, 1351)])
+    if hasattr(w, "low_until"):
+        c.eq("21.10 peoples records low_until", w.low_until.get(2), 1351)
+    c.true("21.10 c2 lies low while its refuge is hidden", w.hides(2))
+    w.claim.clear()
+    w.strain.clear()
+    w.year = 1100
+    w.serial += 1
+    w.contact = {}
+    w.wanted_override = {1: [], 2: []}
+    w.strain_update(1, 25, False)
+    c.eq("21.10 no strain and no claim with c2 as claimant", (sorted(k for k in w.strain if k[0] == 2),
+                                                               sorted(k for k in w.claim if k[0] == 2)), ([], []))
+    w.strain[(2, 1)] = 10 ** 9
+    w.claim[(2, 1)] = (1, 1)
+    w.contact[(2, 1)] = 1
+    w.civ(1)["founded_year"] = -1000
+    n0 = len(w.events)
+    w.c_t2()
+    c.eq("21.10 no declaration by c2 although its strain and claim stand", [x for x in ended_kinds(w, n0)
+                                                                            if x == "war_declared"], [])
+    c.eq("21.10 the tension skips its pair", w.best_claim(w.year)[2] in (None, (1, 2)), True)
+    w.year = h and w.hidden_until[h]
+    c.true("21.10 no longer lying low at hidden_until", not w.hides(2))
+    # --- 21.12 item 6 (r15): the awakening quarrel
+    def qworld(regions, stl_specs, enmity_hops=None, races=("elf", "goblin", "human", "orc")):
+        w = r9_world(regions=regions, races=races, conflict=(dict(enmity_hops=enmity_hops) if enmity_hops else None))
+        add_civ(w, ORC, 1)
+        add_stl(w, 1, 1, TOWN, 1000)
+        w.civ(1)["capital"] = 1
+        for race, region, x in stl_specs:
+            cv = add_civ(w, race, 0)
+            sid = add_stl(w, cv, region, TOWN, 1000, x=x)
+            w.civ(cv)["capital"] = sid
+        return w
+    qs = w.ct["quarrel_strain"] * 1000
+    c.eq("21.12 r15 shipped quarrel_strain", w.ct["quarrel_strain"], 600)
+    w = qworld(4, [(ELF, 3, None), (GOBLIN, 2, None)])
+    w.quarrels()
+    c.eq("21.12 elf 2 borders away, goblin 1: the elves (c2; the goblins' disposition 300 >= border_friction 200)",
+         (w.quarrel_log, w.disp(1, 3)), ([(1000, 1, 2)], 300))
+    c.eq("21.12 strain(orc, elf) = quarrel_strain x 1000", w.strain.get((1, 2)), qs)
+    w = qworld(4, [(ELF, 3, None), (HUMAN, 2, None)])
+    w.quarrels()
+    c.eq("21.12 elf 2 borders away, human 1: the humans (c3)", w.quarrel_log, [(1000, 1, 3)])
+    w = qworld(4, [(ELF, 3, None), (HUMAN, 2, None)])
+    w.hidden_until[3] = 1100            # the humans' settlement s3 is a hidden refuge
+    w.quarrels()
+    c.eq("21.12 a hidden refuge is never chosen: the elves", w.quarrel_log, [(1000, 1, 2)])
+    w = qworld(9, [(ELF, 7, None), (HUMAN, 6, None)])
+    w.quarrels()
+    c.eq("21.12 none within enmity_hops: the nearest (humans, 5 borders)", w.quarrel_log, [(1000, 1, 3)])
+    w = qworld(4, [(ELF, 2, 30), (HUMAN, 2, 30)])
+    w.quarrels()
+    c.eq("21.12 equal hops and distance: the smaller settlement id (the elves' s2)", w.quarrel_log, [(1000, 1, 2)])
+    w = qworld(4, [(ELF, 2, 30), (HUMAN, 2, 22)])
+    w.quarrels()
+    c.eq("21.12 equal hops: the nearer by squared distance (the humans at x 22)", w.quarrel_log, [(1000, 1, 3)])
+    w = qworld(4, [(ELF, 2, None)])
+    w.strain[(1, 2)] = qs + 7
+    w.quarrels()
+    c.eq("21.12 strain already higher: not lowered", w.strain[(1, 2)], qs + 7)
+    w.quarrels()
+    c.eq("21.12 set once (the first visible T2 only)", len(w.quarrel_log), 1)
+    w = qworld(4, [(ELF, 2, None)])
+    w.quarrels()
+    w.claim[(1, 2)] = (1, 2)
+    w.odds = lambda a, b: 1000
+    c.eq("21.12 item 2: the yearly declaration chance at the quarrel strain and odds 1000 is 75 per mille",
+         w.declare_p(1, 2), 75)
+    w = qworld(4, [])
+    w.quarrels()
+    c.eq("21.12 item 3: no other people: pending", (sorted(w.quarrel_pending), w.strain), ([1], {}))
+    cv = add_civ(w, GOBLIN, 0)
+    sid = add_stl(w, cv, 3, TOWN, 1000)
+    w.civ(cv)["capital"] = sid
+    w.year = 1001
+    w.quarrels()
+    c.eq("21.12 item 3 (r15): still pending while every people standing is of its camp (the goblins)",
+         (sorted(w.quarrel_pending), w.quarrel_log), ([1], []))
+    cv = add_civ(w, ELF, 0)
+    sid = add_stl(w, cv, 4, TOWN, 1000)
+    w.civ(cv)["capital"] = sid
+    w.stl(sid)["created"] = w.serial         # founded in this step: not visible yet
+    w.civs[-1]["created"] = w.serial
+    w.quarrels()
+    c.eq("21.12 item 3: still pending while the new people is not visible", sorted(w.quarrel_pending), [1])
+    w.serial += 1
+    w.year = 1002
+    w.quarrels()
+    c.eq("21.12 item 3: the pending quarrel attaches to the first people to stand that it can fight",
+         (w.quarrel_log, sorted(w.quarrel_pending)), ([(1002, 1, 3)], []))
+    w = qworld(4, [])
+    w.quarrels()
+    w.civ(1)["ended_year"] = 1000
+    w.quarrels()
+    c.eq("21.12 item 3: an ended civilization loses its pending quarrel", sorted(w.quarrel_pending), [])
+    w = qworld(4, [(ELF, 2, None)])
+    w.events[w.civ(1)["founding_event"] - 1]["kind"] = K["civ_seceded"]
+    w.quarrels()
+    c.eq("21.12 a secession of an orc realm gets no quarrel", (w.quarrel_log, w.strain), ([], {}))
+    w = qworld(4, [(ELF, 2, None)])
+    w.pd.race[ORC]["quarrel"] = 0
+    w.quarrels()
+    c.eq("21.12 a race with awakening_quarrel 0: nothing", (w.quarrel_log, w.strain, sorted(w.quarrel_pending)),
+         ([], {}, []))
+    w.pd.race[ORC]["quarrel"] = 1
+
+
 def check_units(c):
     if FLAGS["loss"]:
         check_units_r7(c)
@@ -3229,6 +4042,8 @@ def check_units(c):
     want = [(k, 35 if (k == "claim" and pe.at_least("0.18.0")) else sal,   # r9 20.9: claim 45 -> 35
              "{attacker} took {@settlement} from {defender}; {dead} died and {fled} fled."
              if (k == "settlement_captured" and not FLAGS["loss"]) else tm) for k, sal, tm in SPEC_REPORT]
+    if at_least("0.19.0"):   # r14 21.2: the battle templates without "0 of the victors"
+        want = [(k, sal, SPEC_REPORT_019.get(k, tm)) for k, sal, tm in want]
     c.eq("11 report entries 20-30", [e for e in dat.report[19:30]], want)
     c.eq("11 report_events on the 0.16.0 report", pp.report_events_messages(dat.report), [])
     for k in CONFLICT_KINDS:
@@ -3403,7 +4218,8 @@ def check_units_r9(c):
     """P3-06 r9 20.14 items 1-7 on hand-made worlds (items 8, 9: the cases)."""
     dat = data()
     t = dat.conflict
-    c.eq("20.9 shipped r9 tuning", [(n, t[n]) for n, _v in pdr.CONFLICT_018_VALUES], list(pdr.CONFLICT_018_VALUES))
+    c.eq("20.9 shipped r9 tuning", [(n, t[n]) for n, _v in pdr.CONFLICT_018_VALUES if n in t],
+         [kv for kv in pdr.CONFLICT_018_VALUES if kv[0] != "odds_min" or not at_least("0.19.0")])
     c.eq("20.12 race fields", {dat.race[r]["key"]: (dat.race[r]["muster"], dat.race[r]["conceal"], dat.race[r]["home"])
                                for r in dat.race}, pdr.RACE_FIELDS_018_VALUES)
     # --- 1 flight: destination order (-h_x, -sigma, id) with the cap at march_hops + 1
@@ -3705,9 +4521,15 @@ def check_units_r9_odds(c):
     c.eq("20.6 odds below odds_min: no declaration chance (None, no draw)", w.declare_p(1, 2), None if want < 700 else
          150 * want // 1000)
     for om, ok in ((want, True), (want + 1, False)):
-        w.ct["odds_min"] = om
+        if FLAGS["race_odds"]:
+            w.pd.race[2]["odds_min"] = om     # r14 21.9: the goblin claimant's race field
+        else:
+            w.ct["odds_min"] = om
         c.eq("20.6 odds_min %s the odds" % ("at" if ok else "above"), w.declare_p(1, 2) is not None, ok)
-    w.ct["odds_min"] = 700
+    if FLAGS["race_odds"]:
+        w.pd.race[2]["odds_min"] = 700
+    else:
+        w.ct["odds_min"] = 700
     # --- 5 revenge: g' in the rate and in the odds
     w = r9_world(regions=2, races=("elf", "goblin"))
     add_civ(w, 2, 1)
@@ -4241,7 +5063,9 @@ def check_prefix(c, res, pres, label):
         b = pe_.get(i)
         if a == b:
             continue
-        if b is not None and a[3] == K["quiet_era"] and a[:2] == b[:2] and a[3:] == b[3:] and cy <= a[2] <= b[2]:
+        # P3-04 r12 20.1: from 0.19.0 the quiet_stretch open in that step (its end_year and years), not its participants
+        if b is not None and a[3] in (K["quiet_era"], K.get("quiet_stretch")) and a[:2] == b[:2] and \
+                a[3:] == b[3:] and cy <= a[2] <= b[2]:
             excepted.add(i)
             continue
         ok_events = False
@@ -4294,7 +5118,25 @@ def header():
     if not pe.at_least("0.18.0"):
         return HEADER.rstrip("\n")
     old = HEADER.rstrip("\n").splitlines()
-    return HEADER_018 + "#\n" + "\n".join(old[[i for i, l in enumerate(old) if l.startswith("# Format:")][0]:])
+    head = HEADER_018 if not at_least("0.19.0") else HEADER_019 + "#\n" + HEADER_018.replace(
+        "generator 0.18.0 (schema 7)", "generator 0.18.0, kept at 0.19.0 (schema 7)", 1)
+    return head + "#\n" + "\n".join(old[[i for i, l in enumerate(old) if l.startswith("# Format:")][0]:])
+
+
+HEADER_019 = """\
+# Generator 0.19.0 (P3-10, docs/specs/p3-10-followups.md): P3-06 r14 section 21
+# (note_reduction only with a loss; the battle templates without "0 of the
+# victors"; aim only by holding the goal, a lost goal ends now by the score
+# with the last-battle rule, war line how "goal-lost"; searches: weary for
+# search_weary_years, none where the war fought, salience 40 then 15; the
+# holder in weariness and wars_same_goal_unchanged_max; odds_min_permille per
+# race; a hidden refuge lies low; the orcs' awakening quarrel), P3-05 r12 22,
+# P3-04 r12 20 (kinds 37 plague_outbreak and 38 quiet_stretch, {@causes:...},
+# thousands separators), P3-02 r10 12 (filter entries, name cores), P1-06 r7
+# region names (the inputs' region table) and P3-07 r12 22.3, 22.5a (the
+# reworded flare-up note, repeated searches out of the summary). Data: the
+# 0.19.0 listings of p3_data_reference.py while the disk holds 0.18.0 files.
+"""
 
 
 HEADER_018 = """\
@@ -4340,7 +5182,10 @@ def cmd_check(argv):
     with rules("0.17.0" if pe.at_least("0.17.0") else "0.16.0"):
         check_units(c)          # 16.1 (r4, r7) on the rules they were written for
     if pe.at_least("0.18.0"):
-        check_units_r9(c)       # 20.14
+        with rules("0.18.0"):
+            check_units_r9(c)   # 20.14 (with r10, r13) on the rules they were written for
+    if at_least("0.19.0"):
+        check_units_r14(c)      # 21.5, 21.11, 21.12 item 6
     check_peoples_only(c, dat)
     o = [header()]
     reach = {}
@@ -4566,6 +5411,8 @@ def main(argv):
         i = argv.index("--version")
         use_version(argv[i + 1])
         argv = argv[:i] + argv[i + 2:]
+    elif "--legacy" not in sys.argv:
+        use_version(GENERATOR_VERSION)   # the default, 0.19.0, in this file and its libraries
     if not argv:
         print(__doc__)
         return 2
