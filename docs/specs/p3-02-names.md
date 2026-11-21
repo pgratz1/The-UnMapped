@@ -959,8 +959,12 @@ Text and data corrections in 11.11 after the lead's interim choice to restore `m
 
 ## Revision note r10 (2026-11-20, comic and near-identical names; for P3-10, generator 0.19.0)
 
-New section 12 (`docs/specs/p3-10-followups.md`): eight filter entries for the names the P3-08 world critic listed, with three `whole` entries removed as redundant (12.1, data); no two civilization or settlement names of a world with cores equal or one letter apart (12.2, amends 4.3 and 4.4 for the history stage); invariant 6, tests (12.3). No earlier section is renumbered.
+New section 12 (`docs/specs/p3-10-followups.md`): eight filter entries for the names the P3-08 world critic listed, with four `whole` entries removed as redundant (`suck`, `hack`, `flop`, `gord`; 12.1, data; r12: this note said three); no two civilization or settlement names of a world with cores equal or one letter apart (12.2, amends 4.3 and 4.4 for the history stage); invariant 6, tests (12.3). No earlier section is renumbered.
 
 ## Revision note r11 (2026-11-21, after the P3-10 implementation)
 
 12.2: the core rule applies to the history stage's registry; `make_name` with a plain registry is unchanged (the implementation's reading, confirmed).
+
+## Revision note r12 (2026-11-21, text after the P3-10 integration)
+
+The r10 note is corrected: 12.1 removes four `whole` entries (`suck`, `hack`, `flop`, `gord`), as its table and list sizes say, not three. No rule or data change.
