@@ -804,15 +804,15 @@ Claims, battles and sieges are counted by P3-07's `events_<key>` lines. Strain, 
 | endings: `search_abandoned` (`wars_unfound`) | 0 – 9 | 4 |
 | endings: conquest (`civ_conquered`) | 0 – 3 | 1 |
 | `wars_hollow_permille` | 52 – 466 | 226 |
-| `wars_same_goal_max` | 2 – 7 | 3 |
+| `wars_same_goal_max` | 2 – 8 | 3 |
 | `wars_same_goal_unchanged_max` | 2 – 3 | 3 |
 | `race_population_share_max_permille` | 368 – 835 | 596.5 |
 | `race_regions_share_max_permille` | 269 – 737 | 467 |
-| largest civilization share of the non-islet land, max over the history (‰) | 127 – 334 | 211.5 |
+| largest civilization share of the non-islet land, max over the history (‰) | 127 – 326 | 211.5 |
 | civilizations | 8 – 14 | 10 |
 | civilizations ended | 0 – 2 | 1 |
-| simulated years | 1,196 – 1,481 | 1,324.5 |
-| `simulated_permille` | 199 – 247 | 220.5 |
+| simulated years | 1,196 – 1,545 | 1,324.5 |
+| `simulated_permille` | 199 – 257 | 220.5 |
 | summary threshold | 26 – 36 | 31 |
 | years from the goblins' awakening to the first war | 299 – 2,959 | 812.5 |
 | standing settlements: faerie | 4 – 15 | 7 |
@@ -1388,11 +1388,9 @@ Other words unchanged: `exhaustion`, `aim`, `no-front`, `length`, `quiet`, `conq
    - 7.7's goal cession with one visible settlement and one same-step colony of L in G: both pass, in ascending id, with the excess to L's nearest other settlement.
    - A same-step colony of L in a region that is not ceded stays L's.
    - Invariant (13) on the property worlds of 16.2 and on 2048 seed 3 (slow suite).
-9. **Effect on output.** Bytes change only in worlds where a cession, by 7.7 or by 20.3, meets a settlement of the loser in the ceded region that was created earlier in the same step. Both kinds of cession left a region with no settlement of its holder at 0.18.0. Found so far:
-   - 20.3: 2048 seed 3 (above);
-   - 7.7: the golden world `hist-conflict-flight` (512 seed 1: colony s42 by e351, cession e354, year 4878), 1024 default seed 5 (e262, s61) and `civs4` seed 13 (e1332, s167).
+9. **Effect on output.** Bytes change only in worlds where a cession, by 7.7 or by 20.3, meets a settlement of the loser in the ceded region that was created earlier in the same step. Both kinds of cession left a region with no settlement of its holder at 0.18.0. **Final count** (the validation's re-run, `docs/reviews/p3-09-conflict-balance-validation.md` 12): **10 of the 375 sweep worlds changed**, 8 through a 20.3 cession and 2 through a 7.7 goal cession (512 seed 1, the golden `hist-conflict-flight`, and span 12000 seed 19); **21 cessions in 19 worlds carried a same-year colony** (14 of 20.3, 7 of 7.7; in 9 of those 19 worlds the colony was founded in an earlier step of the year and was already visible to the old rule, so their bytes did not move); only **2048 seed 3** also broke 14 item 5. (r13 first listed 4 of 53 sampled worlds, among them 1024 default seed 5 and `civs4` seed 13, as found so far.)
 
-   That is 4 of 53 sampled worlds, so the validation's "once in 375" undercounts. **Validation's re-run reports the final count.** The golden `hist-conflict-flight` changes. **Generator stays 0.18.0** (not yet released, P3-09 6). After the engineer's change, validation re-records the world hashes and golden vectors that change and re-runs the cross-preset comparison; a golden case without the situation keeps its value.
+   The golden `hist-conflict-flight` changes. **Generator stays 0.18.0** (not yet released, P3-09 6). After the engineer's change, validation re-records the world hashes and golden vectors that change and re-runs the cross-preset comparison; a golden case without the situation keeps its value.
 
 ### 20.28 Which wars weariness and T2 count (r13; amends 20.23 and P3-07 21.8 item 5; closes defects D2 and D3 of the P3-09 validation)
 
