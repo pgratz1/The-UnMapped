@@ -982,3 +982,23 @@ shipped-512-phrase kept_cells 2786
 shipped-512-phrase e_final e16265d03196d36fb628eb718000f90de61c60d858ce5ab22c8a940d3e7ac568
 shipped-512-phrase layer d763561a5def9384d83ed33ef6039c1b47652b9ca0c1d5092ba09a47cec7a34c
 shipped-512-phrase pass_rows 1485bbf6ea9ca36cbf19060e1befb58d93bb2ae3b4783e06bb700ad03675806f
+# P3-10 4 item 3: N = 1024 layer hashes (SHA-256 of the elevation layer, as the layer item), written by
+# p1_elevation_reference.py layers-1024 shipped|shipped-neutral SEED...; read by the slow cases of
+# stages_elevation_golden_test.cpp, which check every seed that has a line. Lines, outside every case:
+#   elevation-1024 s<seed> <hash>          shipped settings (10.4.1)
+#   elevation-1024-neutral s<seed> <hash>  neutral settings (10.4.2)
+elevation-1024 s0 44bc2c07bc695a1e608bfe8963ea5d88b807e6f78d27d2662194ca06ffab949d
+elevation-1024 s1 2e3b7dee44d149f739bbf6040f0345ee310c51f2f5e27940c57f1759ef16eec4
+elevation-1024 s2 58fe223112f73ebc8dbe03d64386144631b2cef6735f7117a6bd905b43592861
+elevation-1024 s3 e9fb8259e2813298306a12b7d3611405485dd144de7cc6ec6cb6d0daca3d1273
+elevation-1024 s4 74ff0a90733704ba6d66f0bcef621f4d0dd76ad11c7fa1647ab83437edb6cdd8
+elevation-1024 s5 0efc92d64a60b4acf154cd096e57d2b8609f391d0054d623cc2ef10d9f061536
+elevation-1024 s6 162ae0a5ec41b22c6524f1fbb3c6b242c5a62de336018b89b8bd7e3f211f4c92
+elevation-1024 s7 81d5e490e155cdf7e6617d1fd89c42f1610fa6132ef37882494fd5175aa7d07a
+elevation-1024 s8 ec1de02ad1778c4e53d9e81c49e15a1c2a5de5c6b72b87aef1ac9ced67f94052
+elevation-1024 s9 8f8c726a9941a62e86c4c7fcfd1add9291f204b13420694d80820d0c4f6754b3
+elevation-1024-neutral s0 070dbf1206416efcbed64aa009b89e5e3f23fec990a4397d99675cfba9450786
+elevation-1024-neutral s1 0cc4f2c15156aa89424cee960d9e434e8fe3a018b855d6a4a2e703cf314a31d2
+elevation-1024-neutral s2 c67f2aa09e7e73e96d151846bdc7b771ef55ebd1fac44bb726ba57863d7e79ee
+elevation-1024-neutral s3 e9fb8259e2813298306a12b7d3611405485dd144de7cc6ec6cb6d0daca3d1273
+elevation-1024-neutral s4 bafe937a342236d2e7565939f79a6ee40586a38b6f614217e5868ea24f04d37c
