@@ -109,7 +109,10 @@ TEST_CASE("P3-06 r9 20.12, P3-01 r9 3.2: muster_permille, conceal_min, home_defe
         CHECK(d.record.name_at(static_cast<std::size_t>(at) + 1) == "muster_permille");
         CHECK(d.record.name_at(static_cast<std::size_t>(at) + 2) == "conceal_min");
         CHECK(d.record.name_at(static_cast<std::size_t>(at) + 3) == "home_defense_permille");
-        CHECK(d.record.name_at(static_cast<std::size_t>(at) + 4) == "settlement_kinds");
+        // P3-01 r11 3.5 (0.19.0): odds_min_permille and awakening_quarrel follow home_defense_permille
+        CHECK(d.record.name_at(static_cast<std::size_t>(at) + 4) == "odds_min_permille");
+        CHECK(d.record.name_at(static_cast<std::size_t>(at) + 5) == "awakening_quarrel");
+        CHECK(d.record.name_at(static_cast<std::size_t>(at) + 6) == "settlement_kinds");
         CHECK(d.record.get_int("muster_permille") == want[i].muster);
         CHECK(d.record.get_int("conceal_min") == want[i].conceal);
         CHECK(d.record.get_int("home_defense_permille") == want[i].home);

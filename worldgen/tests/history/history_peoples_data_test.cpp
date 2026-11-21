@@ -271,9 +271,12 @@ TEST_CASE("P3-05 r6 6.2, P3-01 r8 (1): cell_weights is required, after site_weig
     for (const wd::Definition& d : race->definitions) {
         CAPTURE(d.id);
         const wd::Record& cw = d.record.get_record("cell_weights");
-        CHECK(cw.size() == 2U);
+        CHECK(cw.size() == 5U);  // P3-01 r11 3.4 (0.19.0): inland, port, habitability after height
         CHECK(cw.name_at(0) == "ore");
         CHECK(cw.name_at(1) == "height");
+        CHECK(cw.name_at(2) == "inland");
+        CHECK(cw.name_at(3) == "port");
+        CHECK(cw.name_at(4) == "habitability");
         CHECK(cw.get_int("ore") == (d.id == "dwarf" ? 400 : 0));
         CHECK(cw.get_int("height") == (d.id == "dwarf" ? 600 : 0));
         std::size_t sw = 0, c = 0;

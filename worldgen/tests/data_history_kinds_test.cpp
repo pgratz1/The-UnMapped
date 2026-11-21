@@ -266,10 +266,11 @@ TEST_CASE("P3-01 3-5: the production registry holds race, culture and history be
     CHECK(history.schema_for("engine") != nullptr);
     CHECK(history.schema_for("peoples") != nullptr);  // P3-05 12.1
     REQUIRE(history.schema_for("conflict") != nullptr);  // P3-06 12.1, generator 0.16.0 (P3-01 r7)
-    REQUIRE(history.schema_for("conflict")->checks().size() == 3U);  // r9 20.9 adds conflict_enmity_hops
+    REQUIRE(history.schema_for("conflict")->checks().size() == 4U);  // r9 20.9 conflict_enmity_hops; r15 quarrel
     CHECK(history.schema_for("conflict")->checks()[0].name == "conflict_declare");
     CHECK(history.schema_for("conflict")->checks()[1].name == "conflict_strain_max");
     CHECK(history.schema_for("conflict")->checks()[2].name == "conflict_enmity_hops");
+    CHECK(history.schema_for("conflict")->checks()[3].name == "conflict_quarrel_strain");  // P3-06 r15 21.12
 
     const wd::Kind& race = kinds[5];
     CHECK(race.directory == "races");
@@ -938,7 +939,10 @@ TEST_CASE("P3-01 3: every race field is required and no other key is accepted") 
         CAPTURE(std::string_view(part));
         const Load l = load(shipped_edited("races/human.toml", part, ""));
         CHECK_FALSE(l.ok());
-        if (!l.ok()) CHECK(contains(l.errors[0].message, "race.human.cell_weights"));
+        // the field error (and the kind-level race_order_dense that follows from leaving human out, P3-01 3 r3)
+        bool named = false;
+        for (const auto& e : l.errors) named = named || contains(e.message, "race.human.cell_weights");
+        CHECK(named);
     }
 }
 
