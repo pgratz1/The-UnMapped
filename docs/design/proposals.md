@@ -984,3 +984,19 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
 - Proposal: a time control on the 2D map of the viewer: a year slider with play, pause and speed, which colours each region by the civilization that holds it in that year and marks the standing settlements, with battles, sackings and falls shown as they happen and the year's sentences beside the map. The data is already in the world file: `region_control` stores ownership intervals and `settlement_census` the settlement states by year, so any year is answered without replaying the log. Saving the playback as a video file is a second step, after the playback works on screen. Candidate for P4 Viewer v1.
 - Interim choice: none needed; not scheduled. To be placed when P4 is planned, after Paul's review of P3.
 - Status: open
+
+### History: the P3-10 orc and aim rulings (lead, awaiting Paul)
+
+- Date: 2026-11-21
+- Raised by: lead (rulings R1 and R2), written up by the spec writer
+- Design doc section: 5 (history: the races' roles, the orc age, wars and how they end)
+- Problem: the world critic failed P3-10 (generator 0.19.0) on two rules Paul decided on 2026-11-20 (`docs/reviews/p3-10-followups-world-critic.md` F1, F2).
+  - F1, the orcs. The awakening quarrel and the shorter orc odds ("orcs awaken with a quarrel"; decision 4 of the P3-09 review) were meant to make the orcs warlike, and made them weaker. A new orc realm declares on its quarrel neighbour with one settlement, loses, flees, and its refuge lies hidden for 300 years, longer than what is left of the orc age. At 1024 defaults the orcs end with one standing settlement in 21 of 100 worlds (7 at 0.18.0) and do nothing after 5750 in 9 (0). In `calm` and `turbulent` they lose more wars than they win.
+  - F2, aim. Decision 1 of the P3-09 review ("an attacker wins by aim only if it holds the goal itself") lets a war over a region the attacker already holds be won at its first check, with no battle, wherever the defender keeps one town there. In seed 23 the Urarz Horde takes tribute three times from the Kingdom of Durd, which keeps the town Fiecaes in the Horde's Ancient Holt. This happens in 22 wars in 100 default worlds. It is a gap in the rules, not a defect of the code (`docs/specs/p3-06-expansion-conflict.md` 22.5).
+- Proposal (the lead's rulings, specified in P3-06 r17 section 22 and `docs/specs/p3-10-followups.md` section 12):
+  - R1 (a): a realm with fewer than two standing settlements does not declare war on its awakening-quarrel claim. The claim stays open and is pursued once the realm has two. Only the quarrel claim is held back.
+  - R1 (b): the years a fled refuge stays hidden become a race field: orcs 100, every other race 300 as now. A broken orc realm can then act again inside its own age.
+  - R1, targets at 1024 defaults (100 worlds): orcs with one standing settlement at the present in at most 10 worlds; orcs doing nothing after 5750 in at most 2; orc wins at least orc losses; the same reported for `calm` and `turbulent`.
+  - R2: a war is won by aim only when the goal has changed hands to the attacker during the war. Holding it at the declaration does not count: the defender's last settlement there must be gone. A realm may still claim a region it holds where another people keeps a town. If it wins that war by the score, the other people's settlements there pass to it with the peace. Wars won by aim with no battle in one year: at most 3 in 100 default worlds.
+- Interim choice: the rulings are specified and go into P3-10 before its merge (generator stays 0.19.0). Paul's decisions of 2026-11-20 stand in their intent: orcs still awaken with a quarrel and declare at shorter odds, and an attacker still wins by aim only by holding its goal. The rulings add a condition to each.
+- Status: open (awaiting Paul's confirmation)

@@ -1,6 +1,6 @@
 # P3-01 History data and settings
 
-Status: **approved by the lead 2026-11-19; revised 2026-11-19 (text only, after implementation); amended 2026-11-19 for P3-03 (r2); amended again 2026-11-19 after the P3-03 implementation (r3: check D0); r11 (2026-11-20, P3-10, generator 0.19.0): three cell weights, 3.4; odds minimum per race, 3.5**: see the revision notes at the end. Phase P3 History core, spec 1 (P3-00 3.1). Design doc sections 3 (data in TOML), 5 (the six races, their order, camps and timing; "Food and homelands"; world-creation settings), 6 (`meta` holds the settings). Depends on P0-03 (with amendments 15 to 17), P0-04, P1-00 6 and P3-00. Written together with P3-02, which defines the culture naming record that this spec's `culture` kind carries. Amended 2026-11-19 for P3-05 (r6: `density_permille`, field meanings) and for P3-06 (r7: `prowess_permille`, goblin aggression, id `conflict`, all from generator 0.16.0).
+Status: **approved by the lead 2026-11-19; revised 2026-11-19 (text only, after implementation); amended 2026-11-19 for P3-03 (r2); amended again 2026-11-19 after the P3-03 implementation (r3: check D0); r11 (2026-11-20, P3-10, generator 0.19.0): three cell weights, 3.4; odds minimum per race, 3.5; r13 (2026-11-21, P3-10 second round): hidden years per race, 3.6**: see the revision notes at the end. Phase P3 History core, spec 1 (P3-00 3.1). Design doc sections 3 (data in TOML), 5 (the six races, their order, camps and timing; "Food and homelands"; world-creation settings), 6 (`meta` holds the settings). Depends on P0-03 (with amendments 15 to 17), P0-04, P1-00 6 and P3-00. Written together with P3-02, which defines the culture naming record that this spec's `culture` kind carries. Amended 2026-11-19 for P3-05 (r6: `density_permille`, field meanings) and for P3-06 (r7: `prowess_permille`, goblin aggression, id `conflict`, all from generator 0.16.0).
 
 ## 1. Purpose
 
@@ -324,6 +324,10 @@ The **neutral record** is { `ore` 0, `height` 0, `inland` 0, `port` 1000, `habit
 
 New race field **`odds_min_permille`** int(0, 1000), required, after `home_defense_permille`: the least odds at which a civilization of the race declares war or lets a claim flare up (P3-06 20.6 item 3 as amended by 21.9). Shipped **orc 500**, elf, goblin, dwarf, faerie and human 700. It replaces the `history.conflict` field `odds_min` (700), which is removed. New race field **`awakening_quarrel`** int(0, 1), required, after `odds_min_permille`: shipped **orc 1**, every other race 0; a civilization of such a race starts with a quarrel with its nearest neighbour of another race at its awakening (P3-06 21.12). `history.conflict` gains `search_weary_years` int(0, 10000), shipped 500, and `search_repeat_salience` int(0, 100), shipped 15, after `search_years` (P3-06 21.7), then (r12) `quarrel_strain` int(0, 5000), shipped 600, with the check `conflict_quarrel_strain` (≥ `claim_strain`; P3-06 21.12). The fixture race and conflict files change alike; loader tests (8.1) cover the new field's range and absence, and the old `odds_min` key is refused as unknown.
 
+### 3.6 Hidden years per race; the quarrel's settlement minimum (P3-10 second round; r13; P3-06 r17 22.1, 22.2, 22.7)
+
+New race field **`hidden_years`** int(0, 10000), required, after `awakening_quarrel`: the years a fled refuge of the race stays hidden and its civilization lies low (P3-06 20.1 item 2, 22.2, 22.3). Shipped **orc 100**; elf, goblin, dwarf, faerie and human 300. It replaces the `history.conflict` field `hidden_years` (300), which is removed; the old key is refused as unknown. `history.conflict` gains **`quarrel_min_settlements`** int(0, 1000), shipped 2, appended after `quarrel_strain` (P3-06 22.1), and the named check **`conflict_quarrel_strain_max`** after `conflict_quarrel_strain`: `quarrel_strain` ≤ `strain_max`, message `quarrel_strain must not be above strain_max` (P3-06 22.7). The fixture race and conflict files change alike; loader tests (8.1) cover the new field's range and absence, the removed key, and the check (`strain_max` 500 with `quarrel_strain` 600 fails).
+
 ## 4. Kind `culture`
 
 Directory `cultures/`, **required**. Fields, all required, in this order:
@@ -555,3 +559,7 @@ New section 3.4 (`docs/specs/p3-10-followups.md`, P3-05 22.5): record `race_cell
 ## Revision note r12 (2026-11-21, after the P3-10 implementation)
 
 3.5: `history.conflict` gains `quarrel_strain` (600) and its check (P3-06 r15 21.12).
+
+## Revision note r13 (2026-11-21, P3-10 second round; generator stays 0.19.0)
+
+New 3.6: race field `hidden_years` (orc 100, others 300) replacing `history.conflict.hidden_years`; `history.conflict` gains `quarrel_min_settlements` (2) and the check `conflict_quarrel_strain_max` (P3-06 r17 22.1, 22.2, 22.7). Every change takes effect at generator 0.19.0.

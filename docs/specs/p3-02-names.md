@@ -1,6 +1,6 @@
 # P3-02 Names
 
-Status: **approved by the lead 2026-11-19; revised 2026-11-19 (text only, after implementation); amended 2026-11-19 for P3-03 (r2); revised 2026-11-19 after the P3-03 implementation (r3: 7 registry container, 4.3 `roman` location, 8 P0-01 request applied); amendment r5 drafted 2026-11-20 by the spec writer (section 11: name filter, god patterns, realm forms); **r6 (2026-11-20): r5 ships with the P3-08 change, generator 0.17.0 (`docs/specs/p3-08-followups.md`), with the filter applied to every word of the rendered name and the redraw stated (11.3, 11.6)**; the seven questions of 11.10 are open with Paul, their interim choices stand; **r10 (2026-11-20, P3-10, generator 0.19.0): section 12, filter entries and near-identical names**: see the revision notes at the end. Phase P3 History core, spec 2 (P3-00 3.1). Design doc sections 5 ("the seed varies the dates, the places and the gods' names"; civilizations, settlements), 6 ("the database stores facts and names"), 14 (every reference a model writes must resolve to a real entity: names must be unique). Depends on P0-01 (hashing, streams), P0-03 (string grammars, named checks), P3-00 (4.6 keyed draws) and P3-01 (the `culture` kind carries this spec's record). It introduces the domain tag `TAG_HIST` and the keyed-draw helpers that every later history spec uses.
+Status: **approved by the lead 2026-11-19; revised 2026-11-19 (text only, after implementation); amended 2026-11-19 for P3-03 (r2); revised 2026-11-19 after the P3-03 implementation (r3: 7 registry container, 4.3 `roman` location, 8 P0-01 request applied); amendment r5 drafted 2026-11-20 by the spec writer (section 11: name filter, god patterns, realm forms); **r6 (2026-11-20): r5 ships with the P3-08 change, generator 0.17.0 (`docs/specs/p3-08-followups.md`), with the filter applied to every word of the rendered name and the redraw stated (11.3, 11.6)**; **r13 (2026-11-21, P3-10 second round, generator 0.19.0): crude fragments inside a word and no three equal letters (section 13)**; the seven questions of 11.10 are open with Paul, their interim choices stand; **r10 (2026-11-20, P3-10, generator 0.19.0): section 12, filter entries and near-identical names**: see the revision notes at the end. Phase P3 History core, spec 2 (P3-00 3.1). Design doc sections 5 ("the seed varies the dates, the places and the gods' names"; civilizations, settlements), 6 ("the database stores facts and names"), 14 (every reference a model writes must resolve to a real entity: names must be unique). Depends on P0-01 (hashing, streams), P0-03 (string grammars, named checks), P3-00 (4.6 keyed draws) and P3-01 (the `culture` kind carries this spec's record). It introduces the domain tag `TAG_HIST` and the keyed-draw helpers that every later history spec uses.
 
 ## 1. Purpose
 
@@ -910,6 +910,45 @@ Rejected: equality of cores alone (it leaves `The Slig Mob` beside `Sligg Pit`);
 - Filter data: the eight entries of 12.1 reject the names in the table; `Gramm` passes; `name_filter_not_redundant` passes on the shipped lists.
 - Golden: `p3-02-names.txt` is re-recorded by the reference (the filter entries change names; the core rule is a history-stage rule and is checked through `p3-05-peoples.txt` and `p3-06-conflict.txt`, whose names change).
 
+## 13. Amendment r13: crude fragments inside a word, and no three equal letters (P3-10 second round, generator 0.19.0)
+
+Normative for the change P3-10 (`docs/specs/p3-10-followups.md` section 12, item 22), from generator **0.19.0** (not yet merged; the version stays 0.19.0); after the world critic's F4 (`docs/reviews/p3-10-followups-world-critic.md`). Data and one validity rule; no schema change.
+
+### 13.1 Filter entries (data; `game/data/name_filters/` and both fixture copies)
+
+The critic's names: `pee` in Twipee (also a god), Mypee, Lopee, Shaepee, Wypee Glade, Tapeefla, Miepeewhie Hollow; Twypoo; The Circle of Twotitwee; Fassbou Hollow (validation F5: Teefass); Beamcumstead and Dincum (human). `pee`, `poo`, `tit` and `cum` are already `crude.at_start` entries, which catch them only at the start of a part of the root word, and these names hold them inside. So the four move from `at_start` to **`anywhere`**, and `fass` is added there (11.3: a substring of the squeezed root word S):
+
+| Edit | List | Why |
+| --- | --- | --- |
+| add `cum`, `fass`, `pee`, `poo`, `tit` | `crude.anywhere` | the critic's names |
+| remove `cum`, `pee`, `poo`, `tit` | `crude.at_start` | covered by the new `anywhere` entries; 11.2's `name_filter_not_redundant` would refuse them |
+| remove `poop`, `tits`, `titt` | `crude.anywhere` | contain a new `anywhere` entry, so they can never change a result |
+| remove `poof` | `slurs.at_start` | contains `poo`; refused by `name_filter_not_redundant` otherwise |
+| remove `teepee`, `toupee` | `words.whole` | contain `pee`; refused by `name_filter_not_redundant` otherwise |
+
+Sizes after the edit: `crude` 72 anywhere, 12 at_start, 14 whole; `slurs` 33, 18, 6; `words` 5, 1, 387; `famous` unchanged.
+
+**`cum` for every culture, not for humans only.** The kind has no per-culture list (11.2), and no culture needs one. **Checked**: with `p3_names_reference.py` (`make_name`, the shipped 0.19.0 r16 data), seeds 0, 1 and 2, entities 1 to 1,500 of every culture for kinds civilization and settlement and 1 to 300 for gods, 59,400 names (9,900 per culture), each root word tested for the five fragments inside it (`'` and `-` removed, fixed form words excluded). The new matches are:
+- `cum`: 2 names, both human (`Alircumstead`, `Bilcumstead`), none of another culture;
+- `pee`: 89 names, all faerie (`Beepee Hollow`, `The Circle of Flaepee`, god `Fynpee`);
+- `fass`: 4, all faerie (`Eefass`, `Fassy`);
+- `tit`: 3, all faerie (`Pytitwie`, `The Ititi Ring`);
+- `poo`: 1, faerie (`The Poupoo Court`).
+
+**No dwarven, elven, goblin or orcish name is touched**, and none of the matches is a name worth keeping. The shipped forms' fixed words and fused letters (11.3's `names_form_text` list: `the`, `of`, `kingdom`, … , `dell`, `ford`, `stead`) hold none of the five, so the stage check still passes. The common English words that hold them (`cucumber`, `title`, `speech`, `spoon`) are not reached by the shipped syllables.
+
+### 13.2 No three equal letters in a row (amends 11.3's validity)
+
+An attempt of 4.2 with rendered name n is **invalid** when lower(n) (A–Z mapped to a–z) holds the same letter a–z at three consecutive positions. Space, `'` and `-` are characters too, so they break a run: `Bigg-Gnizz` and `Aa'azaam` are valid, `Wasssie` and `Floullly Hollow` are not. 4.2's validity becomes `valid = (r4 validity) and not filtered(W) and not triple(n)`. A triple-letter attempt is an invalid attempt for every purpose of 4.3, as a filtered one is (11.3): it is skipped, it is never the fallback's first name, and the next attempt t + 1 is drawn with its own key. The rule applies to every name `make_name` draws: gods (chronology), civilizations and settlements (history). Regions are named by P1-06 from English place words and are not covered. **Checked**: in the 18,507 region names of the P3-10 validation sweep none holds three equal letters, so no P1-06 change is made.
+
+**Measured** on the same 59,400 names: 52 have three equal letters, all faerie (`Passsae`, `Baellli`, `The Circle of Eesssy`, the critic's `The Bosssie Ring`); none of another culture. With 13.1, 152 of the 59,400 names (0.26%) are redrawn: 150 faerie (1.5% of faerie names) and 2 human. Each is redrawn by 4.3; no culture comes near the fatal message (64 invalid attempts).
+
+### 13.3 Invariants and tests
+
+- Invariant 6 gains: **7. No generated name (god, civilization, settlement) holds three equal letters in a row** (case-insensitive, consecutive characters), the Roman numeral of 4.3's fallback aside (`III`, `VIII`: the rule tests attempts, and the fallback numbers a valid attempt's name).
+- Unit tests: roots giving `Twipee`, `Twypoo`, `Twotitwee`, `Fassbou Hollow`, `Beamcumstead` are filtered; `Wasssie`, `Floullly Hollow` and a god `Fiasssie` are invalid, and the next attempt is taken; `Bigg-Gnizz`, `Aa'azaam` and `Billa Hollow` are valid; `name_filter_not_redundant` passes on the edited lists and fails on a copy that keeps `crude.at_start` `pee` or `words.whole` `teepee`.
+- Golden: `p3-02-names.txt`, and through gods `p3-03-chronology.txt`, re-recorded by the reference; the history goldens follow through names.
+
 ## Revision note (2026-11-19, text only, after implementation)
 
 The implementation (`p3/02-names`) and the independent tests (`p3/02-names-tests`) agreed; this revision makes the text say what they do. No behaviour, golden value or world byte changes.
@@ -968,3 +1007,7 @@ New section 12 (`docs/specs/p3-10-followups.md`): eight filter entries for the n
 ## Revision note r12 (2026-11-21, text after the P3-10 integration)
 
 The r10 note is corrected: 12.1 removes four `whole` entries (`suck`, `hack`, `flop`, `gord`), as its table and list sizes say, not three. No rule or data change.
+
+## Revision note r13 (2026-11-21, P3-10 second round; generator stays 0.19.0)
+
+New section 13: `cum`, `fass`, `pee`, `poo` and `tit` as `crude.anywhere` entries, with the entries they make redundant removed (`crude.at_start` `cum`, `pee`, `poo`, `tit`; `crude.anywhere` `poop`, `tits`, `titt`; `slurs.at_start` `poof`; `words.whole` `teepee`, `toupee`); `cum` for every culture, since only human names reach it (13.1); a name with three equal letters in a row is an invalid attempt (13.2); invariant 7 and tests (13.3). No earlier section is renumbered.
