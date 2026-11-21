@@ -44,7 +44,8 @@
 // history.peoples cause_memory_years 50 and inland_cap 20 after
 // civs_extra_max, the templates of kinds 10, 15, 16, 17, 22, 23 and 31, and
 // the entries of kinds 37 and 38 appended after kind 36's (the same
-// assumption). Mirrors SPEC_FILES_019.
+// assumption). P3-10 r1 (P3-06 r15 21.12, P3-01 r12 3.5): quarrel_strain 600
+// after search_repeat_salience. Mirrors SPEC_FILES_019.
 
 #include <cstdint>
 #include <map>
@@ -486,6 +487,7 @@ find_permille = 250
 search_years = 3
 search_weary_years = 500
 search_repeat_salience = 15
+quarrel_strain = 600
 capital_sacked_salience = 90
 capital_captured_salience = 80
 )";

@@ -297,10 +297,11 @@ TEST_CASE("P3-05 r6 6.2, P3-01 r8 (1): cell_weights is required, after site_weig
     missing["races/orc.toml"].erase(at, end - at + 1);
     CHECK(contains(one_error(load(missing)).message, "cell_weights"));
     Files high = f;
-    high["races/orc.toml"].replace(at, end - at, "cell_weights = { ore = 1001, height = 0 }");
+    // (P3-01 r11 3.4, 0.19.0: the record holds inland, port and habitability too)
+    high["races/orc.toml"].replace(at, end - at, "cell_weights = { ore = 1001, height = 0, inland = 0, port = 1000, habitability = 1000 }");
     CHECK(contains(one_error(load(high)).message, "race.orc.cell_weights.ore"));
     Files low = f;
-    low["races/orc.toml"].replace(at, end - at, "cell_weights = { ore = 0, height = -1 }");
+    low["races/orc.toml"].replace(at, end - at, "cell_weights = { ore = 0, height = -1, inland = 0, port = 1000, habitability = 1000 }");
     CHECK(contains(one_error(load(low)).message, "race.orc.cell_weights.height"));
 }
 

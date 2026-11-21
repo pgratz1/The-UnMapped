@@ -92,6 +92,8 @@ const std::vector<Range>& ranges() {
         {"kill_max_permille", 1, 10000}, {"find_permille", 0, 1000}, {"search_years", 1, 100},
         // r14 21.7 (0.19.0, P3-10): after search_years
         {"search_weary_years", 0, 10000}, {"search_repeat_salience", 0, 100},
+        // r15 21.12 item 2 (0.19.0, P3-10 r1): after search_repeat_salience
+        {"quarrel_strain", 0, 5000},
         {"capital_sacked_salience", 0, 100}, {"capital_captured_salience", 0, 100},
     };
     return v;
@@ -109,7 +111,7 @@ std::string listing_line(std::string_view field) {
 
 TEST_SUITE("history") {
 
-TEST_CASE("P3-06 12.1, r9 20.9: history.conflict loads with the listing's 58 fields in table order and values (r14: 0.19.0)") {
+TEST_CASE("P3-06 12.1, r9 20.9: history.conflict loads with the listing's 59 fields in table order and values (r14, r15: 0.19.0)") {
     const Load l = load(history_data::shipped_files());
     INFO(dump(l));
     REQUIRE(l.ok());
@@ -138,7 +140,8 @@ TEST_CASE("P3-06 12.1, r9 20.9: history.conflict loads with the listing's 58 fie
     CHECK(r.get_int("truce_years") == 200);
     CHECK(r.get_int("last_refuge") == 1);
     CHECK(r.get_int("capital_captured_salience") == 80);
-    CHECK(r.size() == 58U);  // 43 at 0.16.0 and 0.17.0; r9 20.9 adds eleven, r10 20.19 three; r14 (0.19.0) -1 +2
+    CHECK(r.size() == 59U);  // 43 at 0.16.0 and 0.17.0; r9 20.9 adds eleven, r10 20.19 three; r14 (0.19.0) -1 +2, r15 +1
+    CHECK(r.get_int("quarrel_strain") == 600);
     // the shipped content (game/data) holds the same record (2: identical copies in the fixtures)
     CHECK(conflict_record(shipped_content()) == r);
 }
@@ -192,6 +195,9 @@ TEST_CASE("P3-06 12.1, 16.1 item 12: each named check of history.conflict once, 
              // r9 20.9 (0.18.0): enmity_hops >= march_hops
              {"enmity_hops = 3", "enmity_hops = 1", "conflict_enmity_hops", "enmity_hops must not be below march_hops"},
              {"march_hops = 2", "march_hops = 4", "conflict_enmity_hops", "enmity_hops must not be below march_hops"},
+             // r15 21.12 item 2 (0.19.0): quarrel_strain >= claim_strain (300)
+             {"quarrel_strain = 600", "quarrel_strain = 299", "conflict_quarrel_strain",
+              "quarrel_strain must not be below claim_strain"},
          }) {
         CAPTURE(std::string_view(c.to));
         const wd::LoadError e = one_error(load(with_conflict_edit(c.from, c.to)));
@@ -202,6 +208,7 @@ TEST_CASE("P3-06 12.1, 16.1 item 12: each named check of history.conflict once, 
     CHECK(load(with_conflict_edit("claim_strain = 300", "claim_strain = 299")).ok());
     CHECK(load(with_conflict_edit("strain_max = 5000", "strain_max = 900")).ok());
     CHECK(load(with_conflict_edit("enmity_hops = 3", "enmity_hops = 2")).ok());  // r9: the edge, equal to march_hops
+    CHECK(load(with_conflict_edit("quarrel_strain = 600", "quarrel_strain = 300")).ok());  // r15: the edge, = claim_strain
 }
 
 TEST_CASE("P3-06 11 (r7), 16.1 item 11: the compiled kinds 20-30 equal section 11; templates parse; report lists them") {

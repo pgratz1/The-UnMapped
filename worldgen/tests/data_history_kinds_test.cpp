@@ -942,6 +942,29 @@ TEST_CASE("P3-01 3: every race field is required and no other key is accepted") 
     }
 }
 
+TEST_CASE("P3-04 r13 4.2: report_event.template is string(512) from 0.19.0: 512 bytes load, 513 are refused") {
+    const std::string old = "{creator} awakened the {race:plural} in {@region}.";
+    REQUIRE(contains(history_data::REPORT_TOML, old));
+    // plain text after the placeholders keeps the template valid (8.4); only the length changes
+    const std::string at512 = old + std::string(512 - old.size(), 'x');
+    REQUIRE(at512.size() == 512U);
+    CHECK_MESSAGE(load(shipped_edited("history/report.toml", old, at512)).ok(), "512 bytes");
+    const Load l = load(shipped_edited("history/report.toml", old, at512 + "x"));
+    const wd::LoadError e = only_error(l);
+    CHECK(e.path == "history/report.toml");
+    CHECK(contains(e.message, "template"));
+    // the shipped cause-list templates of kinds 16 and 31 exceed the old bound of 256 (P3-05 r12 22.3)
+    for (const char* k : {"settlement_abandoned\"", "settlement_abandoned_to\""}) {
+        const std::string t(history_data::REPORT_TOML);
+        const std::size_t at = t.find(std::string("kind = \"") + k);
+        REQUIRE(at != std::string::npos);
+        const std::size_t from = t.find("template = \"", at) + 12;
+        const std::size_t to = t.find("\" }", from);
+        CHECK(to - from > 256U);
+        CHECK(to - from <= 512U);
+    }
+}
+
 TEST_CASE("P3-01 r11 3.5, P3-06 r14 21.9: history.conflict.odds_min is refused as an unknown field from 0.19.0") {
     const Load l = load(shipped_edited("history/conflict.toml", "search_years = 3\n", "search_years = 3\nodds_min = 700\n"));
     const wd::LoadError e = only_error(l);

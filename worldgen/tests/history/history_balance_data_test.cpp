@@ -63,7 +63,9 @@ TEST_CASE("P3-06 r9 20.9, r10 20.19, r14 21.7, 21.9: the new history.conflict fi
         // r10 20.19 (P3-09 r3)
         {"kill_max_permille", 500}, {"find_permille", 250}, {"search_years", 3},
         // r14 21.7 (P3-10, 0.19.0)
-        {"search_weary_years", 500}, {"search_repeat_salience", 15}};
+        {"search_weary_years", 500}, {"search_repeat_salience", 15},
+        // r15 21.12 item 2 (P3-10 r1)
+        {"quarrel_strain", 600}};
     for (const wd::ContentSet* c : {&shipped_content()}) {
         const wd::Record& r = history_record(*c, "conflict");
         const std::int64_t at = index_of(r, "last_refuge");

@@ -338,6 +338,8 @@ CONFLICT_RANGES_018 = CONFLICT_RANGES[:_i] + CONFLICT_NEW_018 + CONFLICT_RANGES[
 CONFLICT_018 = tuple((n, CONFLICT_RECORDS.get(n, INT)) for n, _, _ in CONFLICT_RANGES_018)
 assert len(CONFLICT_018) == 57 and CONFLICT_018[_i][0] == "refuge_flight"
 CONFLICT_CHECKS_018 = CONFLICT_CHECKS + (("conflict_enmity_hops", "enmity_hops must not be below march_hops"),)
+# P3-06 r15 21.12 item 2 (0.19.0): after conflict_enmity_hops.
+CONFLICT_CHECKS_019 = CONFLICT_CHECKS_018 + (("conflict_quarrel_strain", "quarrel_strain must not be below claim_strain"),)
 
 
 def conflict_ranges():
@@ -356,6 +358,8 @@ def conflict_check_messages(t):
         out.append(CONFLICT_CHECKS[1][1])
     if "enmity_hops" in t and not (t["enmity_hops"] >= t["march_hops"]):
         out.append(CONFLICT_CHECKS_018[2][1])
+    if "quarrel_strain" in t and not (t["quarrel_strain"] >= t["claim_strain"]):
+        out.append(CONFLICT_CHECKS_019[3][1])
     return out
 
 # P3-01 3.
@@ -1129,15 +1133,17 @@ def _race_019(name, text):
 
 RACE_FILES_019 = {n: _race_019(n, t) for n, t in RACE_FILES_018.items()}
 
-CONFLICT_NEW_019 = (("search_weary_years", 0, 10000), ("search_repeat_salience", 0, 100))
+CONFLICT_NEW_019 = (("search_weary_years", 0, 10000), ("search_repeat_salience", 0, 100),
+                    ("quarrel_strain", 0, 5000))   # P3-06 r15 21.12 item 2, P3-01 r12 3.5 (P3-10 r1)
 _rows = [r for r in CONFLICT_RANGES_018 if r[0] != "odds_min"]
 _i = [n for n, _, _ in _rows].index("search_years") + 1
 CONFLICT_RANGES_019 = tuple(_rows[:_i]) + CONFLICT_NEW_019 + tuple(_rows[_i:])
 CONFLICT_019 = tuple((n, CONFLICT_RECORDS.get(n, INT)) for n, _, _ in CONFLICT_RANGES_019)
-assert len(CONFLICT_019) == 58 and CONFLICT_019[_i][0] == "search_weary_years"
+assert len(CONFLICT_019) == 59 and CONFLICT_019[_i][0] == "search_weary_years"
 _co = _edit(CONFLICT_FILE_018["conflict.toml"], "odds_min = 700\n", "")
 CONFLICT_FILE_019 = {"conflict.toml": _edit(_co, "search_years = 3\n",
-                                            "search_years = 3\nsearch_weary_years = 500\nsearch_repeat_salience = 15\n")}
+                                            "search_years = 3\nsearch_weary_years = 500\nsearch_repeat_salience = 15\n"
+                                            "quarrel_strain = 600\n")}
 
 PEOPLES_NEW_019 = (("cause_memory_years", 0, 100000), ("inland_cap", 1, 256))
 _i = [n for n, _, _ in PEOPLES_RANGES_018].index("civs_extra_max") + 1
@@ -1547,6 +1553,7 @@ def pre_019(path, kind):
                 texts[n] = f.read()
     if kind == "history":
         return ("search_weary_years" not in texts.get("conflict.toml", "")
+                or "quarrel_strain" not in texts.get("conflict.toml", "")   # P3-10 r1 (P3-06 r15 21.12)
                 or "inland_cap" not in texts.get("peoples.toml", "")
                 or "quiet_stretch" not in texts.get("report.toml", ""))
     return any("odds_min_permille" not in t for t in texts.values())
@@ -1949,13 +1956,19 @@ def check_spec_019(c, races):
     co = parsed_spec("history")["conflict"]
     c.ok("history.conflict has no odds_min (3.5)", "odds_min" not in co)
     i = list(co).index("search_years")
-    c.eq("history.conflict: search_weary_years 500, search_repeat_salience 15 after search_years (P3-06 r14 21.7)",
-         [(n, co[n]) for n in list(co)[i + 1:i + 3]], [("search_weary_years", 500), ("search_repeat_salience", 15)])
-    c.eq("history.conflict: capital_sacked_salience follows search_repeat_salience", list(co)[i + 3],
+    c.eq("history.conflict: search_weary_years 500, search_repeat_salience 15 (P3-06 r14 21.7), quarrel_strain 600 "
+         "(r15 21.12) after search_years",
+         [(n, co[n]) for n in list(co)[i + 1:i + 4]],
+         [("search_weary_years", 500), ("search_repeat_salience", 15), ("quarrel_strain", 600)])
+    c.eq("history.conflict: capital_sacked_salience follows quarrel_strain", list(co)[i + 4],
          "capital_sacked_salience")
-    c.eq("history.conflict has 58 fields", len(co), 58)
+    c.eq("history.conflict has 59 fields", len(co), 59)
+    c.eq("conflict_quarrel_strain fails below claim_strain (r15 21.12)",
+         conflict_check_messages(dict(co, quarrel_strain=co["claim_strain"] - 1)),
+         ["quarrel_strain must not be below claim_strain"])
+    c.eq("conflict_quarrel_strain passes at claim_strain", conflict_check_messages(dict(co, quarrel_strain=co["claim_strain"])), [])
     c.eq("history.conflict without odds_min equals 0.18.0's but for the new fields",
-         {k: v for k, v in co.items() if k not in ("search_weary_years", "search_repeat_salience")},
+         {k: v for k, v in co.items() if k not in ("search_weary_years", "search_repeat_salience", "quarrel_strain")},
          {k: v for k, v in tomllib.loads(CONFLICT_FILE_018["conflict.toml"])["history"]["conflict"].items()
           if k != "odds_min"})
     pe = parsed_spec("history")["peoples"]
@@ -1981,6 +1994,12 @@ def check_spec_019(c, races):
          [e for e in parsed_spec("history")["report"]["events"]
           if e["kind"] not in TEMPLATES_019 and e["kind"] not in ("plague_outbreak", "quiet_stretch")],
          [e for k, e in old.items() if k not in TEMPLATES_019])
+    # P3-04 r13 4.2: report_event.template is string(512) from 0.19.0 (256 before); the cause-list templates are
+    # why (this reference checks types only; the bound is the loader's, tested in data_history_kinds_test.cpp)
+    lens = {k: len(e["template"].encode()) for k, e in ev.items()}
+    c.ok("every 0.19.0 template within 512 bytes (P3-04 r13 4.2)", max(lens.values()) <= 512)
+    c.eq("templates above 256 bytes are the cause-list ones",
+         sorted(k for k, n in lens.items() if n > 256), ["settlement_abandoned", "settlement_abandoned_to"])
     c.eq("saliences of the changed kinds unchanged", {k: ev[k]["salience"] for k in TEMPLATES_019},
          {k: old[k]["salience"] for k in TEMPLATES_019})
 
