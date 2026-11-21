@@ -148,17 +148,17 @@ geo-seed-0-512 homes ra4 y4178 n1 1
 geo-seed-0-512 homes ra5 y5003 n1 8
 geo-seed-0-512 homes ra6 y5534 n1 9
 geo-seed-0-512 table civilization 6756ca8ff505c2dd0e404aedfd022f17f58f16c65660d4fbfaae8732f4d45f25
-geo-seed-0-512 table event b7c4596d4936f465e5fbbca343654f5721b268319a552b8b214e6737c54434c0
-geo-seed-0-512 table event_cause 0a2cb974b7fb190580dbbe605d0026558d04a21218c8192ddc83ba2853fedc3a
+geo-seed-0-512 table event e9482d2322ef13bd59026474c3adeb3797741ad250384ac63f3f85f4923c3503
+geo-seed-0-512 table event_cause b693ec549b55794736b77b7fff19045aa6c3302e96dea6e44b214823352710b4
 geo-seed-0-512 table event_kind 5bb33c7be421113e5b2507e775557dd7afe51c39ad7d9a5426e6f8e94e4b2f18
 geo-seed-0-512 table event_kind_role 828c060dc0d262d618363e1eb4194754223827013ae83efa04ea2944f3b5731b
 geo-seed-0-512 table event_kind_value ea3bdaba66965ca348093390b78ac4b2e92807052c93c9bb59822b0c53c0771e
-geo-seed-0-512 table event_participant 7815adc513d503398becd086f047ae1cebe98efc337c4ff7327e0416138a31fc
-geo-seed-0-512 table event_value ccce8fdab10d1420cf16ac8a14a23a437fb7c4c482de197933087ba0912aa1fd
+geo-seed-0-512 table event_participant 2f2957344e08ff8dbcea42d909ed6e4030774db56c522d5be79bb31d9d1bf3ec
+geo-seed-0-512 table event_value 68987ca97f394075345cb1201106294d9770b3fc5b37ea3495a3fc9cd9938333
 geo-seed-0-512 table phase 8e015edf672a7416a831c10fa1efd6f56501618b3a174f7a18c7ae2746946442
-geo-seed-0-512 table region_control 47395214d4c58040fe6da9f218f4c2e6fca1d9488ddf43ac5d4995434e90608c
+geo-seed-0-512 table region_control b6be86206f917b74c7125d3573095bf587298347205ca04da48cb9d9a718b185
 geo-seed-0-512 table relation cbbd5f990c53684d7ae650b40fcb5656e02261b53da5f6a7d8c819c92f2828f8
-geo-seed-0-512 table settlement 97e9ac5fc207ed96b78631c0c8fd73a4ef0b1833a1d09f12b1c3d768555c4003
+geo-seed-0-512 table settlement 81436c58ee15e6c5a9bcc8e862fef5dab74d70b76c3c32915f89e6f3f0d0d2c9
 geo-seed-0-512 table settlement_census bade4bc95312d4f90f9725399d590e5f9ff8aa29ffa6d309b51eb196a2d94976
 geo-seed-0-512 report end_year = 6000
 geo-seed-0-512 report phases_opening = 6
@@ -167,7 +167,7 @@ geo-seed-0-512 report phases_flare = 0
 geo-seed-0-512 report phases_final = 1
 geo-seed-0-512 report simulated_years = 1200
 geo-seed-0-512 report simulated_permille = 200
-geo-seed-0-512 report events = 104
+geo-seed-0-512 report events = 103
 geo-seed-0-512 report events_awakening = 6
 geo-seed-0-512 report events_civ_founded = 6
 geo-seed-0-512 report events_settlement_founded = 6
@@ -205,7 +205,7 @@ geo-seed-0-512 report events_war_won = 0
 geo-seed-0-512 report events_search_abandoned = 0
 geo-seed-0-512 report events_refuge_held = 0
 geo-seed-0-512 report events_plague_outbreak = 10
-geo-seed-0-512 report events_quiet_stretch = 6
+geo-seed-0-512 report events_quiet_stretch = 5
 geo-seed-0-512 report civilizations = 6
 geo-seed-0-512 report civilizations_alive = 6
 geo-seed-0-512 report settlements = 33
@@ -314,31 +314,30 @@ geo-seed-0-512 e76 The Wosk Ring sent settlers from Whywo to found Twaess Hollow
 geo-seed-0-512 e77 Plague broke out in Grangrak; 300 died.
 geo-seed-0-512 e78 Plague broke out in Bozz Pit and spread to one other settlement; 219 died in all.
 geo-seed-0-512 e79 The plague spread to Grunkgnuzz Pit; 121 died.
-geo-seed-0-512 e80 For 16 years, from 5684 to 5699, the land was quiet, and 6 realms kept the peace.
-geo-seed-0-512 e81 Famine struck Drobskeet; 39 died.
-geo-seed-0-512 e82 Famine struck Bozz Pit; 34 died.
-geo-seed-0-512 e83 Twaess Hollow grew into a village of 250.
-geo-seed-0-512 e84 Famine struck Onaeme; 137 died.
-geo-seed-0-512 e85 A succession crisis at Magh'thuugh Fort shook the Warband of Ghom.
-geo-seed-0-512 e86 Paelie grew into a village of 250.
-geo-seed-0-512 e87 Famine struck Slank-Skrox; 45 died.
-geo-seed-0-512 e88 The Warband of Ghom sent settlers from Magh'thuugh Fort to found Ghum'makh Fort in the Brambled Shaw.
-geo-seed-0-512 e89 Plague broke out in Kidinkorn; 972 died.
-geo-seed-0-512 e90 Famine struck Hinbeasbury; 150 died.
-geo-seed-0-512 e91 The Warband of Ghom sent settlers from Magh'thuugh Fort to found Shaald in West Wood.
-geo-seed-0-512 e92 The Warband of Ghom sent settlers from Magh'thuugh Fort to found Maal'thaash Camp in West Wood.
-geo-seed-0-512 e93 Ghum'makh Fort grew into a town of 1,509.
-geo-seed-0-512 e94 The Warband of Ghom sent settlers from Magh'thuugh Fort to found Uguukh in West Wood.
-geo-seed-0-512 e95 Famine struck Ierrael; 114 died.
-geo-seed-0-512 e96 Famine struck Sluggatch Hole; 57 died.
-geo-seed-0-512 e97 Famine struck Sluggatch Hole; 100 died.
-geo-seed-0-512 e98 The Wosk Ring sent settlers from Whywo to found Whoutwa in Coalholt.
-geo-seed-0-512 e99 Famine struck Hinbeasbury; 278 died.
-geo-seed-0-512 e100 Plague broke out in Flouy Glade and spread to one other settlement; 343 died in all.
-geo-seed-0-512 e101 The plague spread to Athfli Hollow; 174 died.
-geo-seed-0-512 e102 Whoutwa grew into a village of 250.
-geo-seed-0-512 e103 A succession crisis at Grunkgnuzz Pit shook the Baskeeb Mob.
-geo-seed-0-512 e104 Plague broke out in Twaess Hollow; 58 died.
+geo-seed-0-512 e80 Famine struck Drobskeet; 39 died.
+geo-seed-0-512 e81 Famine struck Bozz Pit; 34 died.
+geo-seed-0-512 e82 Twaess Hollow grew into a village of 250.
+geo-seed-0-512 e83 Famine struck Onaeme; 137 died.
+geo-seed-0-512 e84 A succession crisis at Magh'thuugh Fort shook the Warband of Ghom.
+geo-seed-0-512 e85 Paelie grew into a village of 250.
+geo-seed-0-512 e86 Famine struck Slank-Skrox; 45 died.
+geo-seed-0-512 e87 The Warband of Ghom sent settlers from Magh'thuugh Fort to found Ghum'makh Fort in the Brambled Shaw.
+geo-seed-0-512 e88 Plague broke out in Kidinkorn; 972 died.
+geo-seed-0-512 e89 Famine struck Hinbeasbury; 150 died.
+geo-seed-0-512 e90 The Warband of Ghom sent settlers from Magh'thuugh Fort to found Shaald in West Wood.
+geo-seed-0-512 e91 The Warband of Ghom sent settlers from Magh'thuugh Fort to found Maal'thaash Camp in West Wood.
+geo-seed-0-512 e92 Ghum'makh Fort grew into a town of 1,509.
+geo-seed-0-512 e93 The Warband of Ghom sent settlers from Magh'thuugh Fort to found Uguukh in West Wood.
+geo-seed-0-512 e94 Famine struck Ierrael; 114 died.
+geo-seed-0-512 e95 Famine struck Sluggatch Hole; 57 died.
+geo-seed-0-512 e96 Famine struck Sluggatch Hole; 100 died.
+geo-seed-0-512 e97 The Wosk Ring sent settlers from Whywo to found Whoutwa in Coalholt.
+geo-seed-0-512 e98 Famine struck Hinbeasbury; 278 died.
+geo-seed-0-512 e99 Plague broke out in Flouy Glade and spread to one other settlement; 343 died in all.
+geo-seed-0-512 e100 The plague spread to Athfli Hollow; 174 died.
+geo-seed-0-512 e101 Whoutwa grew into a village of 250.
+geo-seed-0-512 e102 A succession crisis at Grunkgnuzz Pit shook the Baskeeb Mob.
+geo-seed-0-512 e103 Plague broke out in Twaess Hollow; 58 died.
 world geo-seed-42-512 42 512 6000 all normal
 geo-seed-42-512 input_region 539cb4cc7473048fa68b7824f5c25785781ba2b091671aa534d583578eb5db49
 geo-seed-42-512 score rg1 ra1 398 1291
@@ -833,7 +832,7 @@ geo-phrase-512 homes ra3 y3327 n1 8
 geo-phrase-512 homes ra4 y4226 n1 6
 geo-phrase-512 homes ra5 y5036 n1 12
 geo-phrase-512 homes ra6 y5638 n1 1
-geo-phrase-512 table civilization 8f9064b7acde0b7a593d404b395e57e1af1cfe0a9edd58635d886e52aaa7d0de
+geo-phrase-512 table civilization 6cfe068524dd730f54c9f8683e1aba9cd6aa47dbd8e0aa43c4e74fbd3b0ae6f9
 geo-phrase-512 table event 3375f599ab1d8be7979a69b77a4834ee827ad52ee79b0288397b978980c531b4
 geo-phrase-512 table event_cause 766f6d110fe066858b69736d029f62081e1de655d11528ebaf3e47822bdb6023
 geo-phrase-512 table event_kind 5bb33c7be421113e5b2507e775557dd7afe51c39ad7d9a5426e6f8e94e4b2f18
@@ -977,8 +976,8 @@ geo-phrase-512 e53 The Hold of Girinnam sent settlers from Drondgound to found D
 geo-phrase-512 e54 The Hold of Girinnam sent settlers from Drondgound to found Darnthraid Deep in the Grim Crags.
 geo-phrase-512 e55 The Hold of Girinnam sent settlers from Drondgound to found Nirdbrorn in the Grim Crags.
 geo-phrase-512 e56 Sofoush awakened the Faeries in East Wood.
-geo-phrase-512 e57 The Faeries founded the Liemoupee Ring in East Wood.
-geo-phrase-512 e58 The Liemoupee Ring founded Whishiata in East Wood.
+geo-phrase-512 e57 The Faeries founded the Circle of Sytoup in East Wood.
+geo-phrase-512 e58 The Circle of Sytoup founded Whishiata in East Wood.
 geo-phrase-512 e59 A succession crisis at Skozz Hole shook the Gnokkirk Horde.
 geo-phrase-512 e60 Famine struck Zodrib Pit; 245 died.
 geo-phrase-512 e61 Plague broke out in Gommku Hold; 394 died.
@@ -989,7 +988,7 @@ geo-phrase-512 e65 Weakened by famine, Skrork-Zot Hole dwindled to 1,093 souls.
 geo-phrase-512 e66 Plague broke out in Grorkbug Pit; 2,143 died.
 geo-phrase-512 e67 For 660 years, from 4376 to 5035, the land was quiet, and 5 realms kept the peace.
 geo-phrase-512 e68 The Hold of Girinnam sent settlers from Gommku Hold to found Humbu Deep in Southeast Fells.
-geo-phrase-512 e69 The Liemoupee Ring sent settlers from Whishiata to found Fielouwho Hollow in East Wood.
+geo-phrase-512 e69 The Circle of Sytoup sent settlers from Whishiata to found Fielouwho Hollow in East Wood.
 geo-phrase-512 e70 The Hold of Girinnam sent settlers from Gommku Hold to found Brorkmoli in Southeast Fells.
 geo-phrase-512 e71 The Hold of Girinnam sent settlers from Gommku Hold to found Mankaid in Southeast Fells.
 geo-phrase-512 e72 Birdsten awakened the Humans in the Wolds of Scythes.
@@ -1008,15 +1007,15 @@ geo-phrase-512 e84 Famine struck Dramnarn; 105 died.
 geo-phrase-512 e85 Famine struck Nirdbrorn; 93 died.
 geo-phrase-512 e86 For 452 years, from 5186 to 5637, the land was quiet, and 6 realms kept the peace.
 geo-phrase-512 e87 Weckstead grew into a city of 8,330.
-geo-phrase-512 e88 The Liemoupee Ring sent settlers from Fielouwho Hollow to found Aetwee Hollow in East Wood.
+geo-phrase-512 e88 The Circle of Sytoup sent settlers from Fielouwho Hollow to found Aetwee Hollow in East Wood.
 geo-phrase-512 e89 The Meald League sent settlers from Weckstead to found Alarham in the Wolds of Scythes.
 geo-phrase-512 e90 Alarham grew into a town of 1,832.
 geo-phrase-512 e91 The Meald League sent settlers from Weckstead to found Stesstead in the Wolds of Scythes.
 geo-phrase-512 e92 Stesstead grew into a town of 1,634.
 geo-phrase-512 e93 The Meald League sent settlers from Weckstead to found Mealdtearham in the Wolds of Scythes.
 geo-phrase-512 e94 Mealdtearham grew into a town of 1,640.
-geo-phrase-512 e95 The Liemoupee Ring sent settlers from Fielouwho Hollow to found Aflaeth in East Wood.
-geo-phrase-512 e96 The Liemoupee Ring sent settlers from Fielouwho Hollow to found Twify in Tarden.
+geo-phrase-512 e95 The Circle of Sytoup sent settlers from Fielouwho Hollow to found Aflaeth in East Wood.
+geo-phrase-512 e96 The Circle of Sytoup sent settlers from Fielouwho Hollow to found Twify in Tarden.
 geo-phrase-512 e97 Aetwee Hollow grew into a village of 260.
 geo-phrase-512 e98 Uul'duk awakened the Orcs in Owlpike Sward.
 geo-phrase-512 e99 The Orcs founded the Urom Horde in Owlpike Sward.
@@ -2988,7 +2987,7 @@ hist-dense-1024 table event_value 268f1a7fff42dd15dad59d30340c6f4711beb4295d1795
 hist-dense-1024 table phase ea8adff371f8c2d916bde55bed8659941ee6ba9e47762260101225bbe7cc59a6
 hist-dense-1024 table region_control 658912f2efd2b74ad6033b0699926796abb48ab5c098f96526d025e8910b787b
 hist-dense-1024 table relation cbbd5f990c53684d7ae650b40fcb5656e02261b53da5f6a7d8c819c92f2828f8
-hist-dense-1024 table settlement 7528ff6e28cfb9e6e2e726ddac6aff7d3023a50557c0c638591b9156612a3536
+hist-dense-1024 table settlement dc8bde60bf31c5f6111a2f4cb28eb13ad63d097bc5f5782c4849025c1319cfe7
 hist-dense-1024 table settlement_census 238bdca3ef3f34164ba8a1db6c0dd16435c3975a22b1f6c1a4599d4a675785b1
 hist-dense-1024 report end_year = 6000
 hist-dense-1024 report phases_opening = 6
@@ -3153,7 +3152,7 @@ hist-dense-1024 e85 The Hold of Hurktuli sent settlers from Thord Deep to found 
 hist-dense-1024 e86 The Hold of Hurktuli sent settlers from Thord Deep to found Gadinkhok Hold in North Fells.
 hist-dense-1024 e87 Patie awakened the Faeries in Dawden.
 hist-dense-1024 e88 The Faeries founded the Twoll Court in Dawden.
-hist-dense-1024 e89 The Twoll Court founded Shaepee in Dawden.
+hist-dense-1024 e89 The Twoll Court founded Foloun in Dawden.
 hist-dense-1024 e90 The Faeries founded the Fiall Court in Goatherd's End.
 hist-dense-1024 e91 The Fiall Court founded Lotwyll Glade in Goatherd's End.
 hist-dense-1024 e92 Plague broke out in Aeglal and spread to one other settlement; 192 died in all.
@@ -3173,7 +3172,7 @@ hist-dense-1024 e105 The plague spread to Slatch Pit; 221 died.
 hist-dense-1024 e106 Plague broke out in Timmhi and spread to one other settlement; 165 died in all.
 hist-dense-1024 e107 The plague spread to Gadinkhok Hold; 99 died.
 hist-dense-1024 e108 Famine struck Drigork; 242 died.
-hist-dense-1024 e109 A succession crisis at Shaepee shook the Twoll Court.
+hist-dense-1024 e109 A succession crisis at Foloun shook the Twoll Court.
 hist-dense-1024 e110 Famine struck Sitholie; 70 died.
 hist-dense-1024 e111 A succession crisis at Zaz-Gigg Hole shook the Grurk Mob.
 hist-dense-1024 e112 The Skagnink Mob broke away from the Grurk Mob with 4 settlements.
@@ -3263,28 +3262,28 @@ hist-dense-1024 e195 Plague broke out in Timmhi; 1,121 died.
 hist-dense-1024 e196 Famine struck Slabgnob; 445 died.
 hist-dense-1024 e197 The Skagnink Mob sent settlers from Skruz-Drig to found Skitchnork in the Riven Steppes.
 hist-dense-1024 e198 Sted grew into a town of 1,518.
-hist-dense-1024 e199 The Twoll Court sent settlers from Shaepee to found Lopee in Dawden.
+hist-dense-1024 e199 The Twoll Court sent settlers from Foloun to found Flyfy Hollow in Dawden.
 hist-dense-1024 e200 Plague broke out in Krozz-Bizz Hole and spread to one other settlement; 804 died in all.
 hist-dense-1024 e201 The plague spread to Skeegrizz; 190 died.
 hist-dense-1024 e202 Plague broke out in Bielie Glade; 43 died.
 hist-dense-1024 e203 The Skagnink Mob sent settlers from Skruz-Drig to found Skrukuzz in the Riven Steppes.
 hist-dense-1024 e204 The Skagnink Mob sent settlers from Skruz-Drig to found Dreesnux in the Riven Steppes.
-hist-dense-1024 e205 Plague broke out in Lopee; 24 died.
+hist-dense-1024 e205 Plague broke out in Flyfy Hollow; 24 died.
 hist-dense-1024 e206 Plague broke out in Skreezark and spread to one other settlement; 897 died in all.
 hist-dense-1024 e207 The plague spread to Skruz-Drig; 130 died.
 hist-dense-1024 e208 Plague broke out in Drokdrunk; 467 died.
 hist-dense-1024 e209 Plague broke out in Snak-Drux Hole; 142 died.
 hist-dense-1024 e210 Famine struck Sliz; 215 died.
 hist-dense-1024 e211 A succession crisis at Zaz-Gigg Hole shook the Grurk Mob.
-hist-dense-1024 e212 The Twoll Court sent settlers from Shaepee to found Fouss Glade in Nightden.
+hist-dense-1024 e212 The Twoll Court sent settlers from Foloun to found Fouss Glade in Nightden.
 hist-dense-1024 e213 The Fiall Court sent settlers from Lotwyll Glade to found Siaee in Boarwood.
 hist-dense-1024 e214 Skitchnork grew into a town of 1,505.
-hist-dense-1024 e215 The Twoll Court sent settlers from Shaepee to found Iaskpa Glade in Dawden.
+hist-dense-1024 e215 The Twoll Court sent settlers from Foloun to found Iaskpa Glade in Dawden.
 hist-dense-1024 e216 Beerkkab Pit grew into a town of 1,500.
 hist-dense-1024 e217 Famine struck Eloithiend; 789 died.
 hist-dense-1024 e218 Famine struck Skat; 362 died.
 hist-dense-1024 e219 Famine struck Skeegrizz; 319 died.
-hist-dense-1024 e220 Lopee grew into a village of 250.
+hist-dense-1024 e220 Flyfy Hollow grew into a village of 250.
 hist-dense-1024 e221 Nutchzotch grew into a town of 1,502.
 hist-dense-1024 e222 Plague broke out in Beerkkab Pit and spread to one other settlement; 739 died in all.
 hist-dense-1024 e223 The plague spread to Slabgnob; 309 died.
@@ -3308,10 +3307,10 @@ hist-dense-1024 e240 The Skagnink Mob sent settlers from Kazz Pit to found Grizz
 hist-dense-1024 e241 Weakened by emigration, Kazz Pit dwindled to 1,093 souls.
 hist-dense-1024 e242 Grizz grew into a village of 262.
 hist-dense-1024 e243 The Fiall Court sent settlers from Siasstwa to found Flibywhae in the Wrecked Holt.
-hist-dense-1024 e244 The Twoll Court sent settlers from Lopee to found Powiall in Dawden.
+hist-dense-1024 e244 The Twoll Court sent settlers from Flyfy Hollow to found Powiall in Dawden.
 hist-dense-1024 e245 The Kingdom of Wurdrom sent settlers from Sted to found Cald in Chalkbarrow.
 hist-dense-1024 e246 The Kingdom of Wurdrom sent settlers from Sted to found Hadweadwick in Chalkbarrow.
-hist-dense-1024 e247 The Twoll Court sent settlers from Lopee to found Saebae Glade in the Wood of the Wolf.
+hist-dense-1024 e247 The Twoll Court sent settlers from Flyfy Hollow to found Saebae Glade in the Wood of the Wolf.
 hist-dense-1024 e248 The Kingdom of Wurdrom sent settlers from Cald to found Mendurdton in Chalkbarrow.
 hist-dense-1024 e249 The Kingdom of Wurdrom sent settlers from Cald to found Aludford in Witchden.
 hist-dense-1024 e250 Flibywhae grew into a village of 258.
@@ -3346,9 +3345,9 @@ hist-dense-1024 e278 Famine struck Slatch Pit; 185 died.
 hist-dense-1024 e279 The Zubgeeg Horde sent settlers from Goz Pit to found Skrizogg Hole in the Reaped Sward.
 hist-dense-1024 e280 Plague broke out in Fouss Glade; 167 died.
 hist-dense-1024 e281 Plague broke out in Iaskpa Glade and spread to 2 other settlements; 237 died in all.
-hist-dense-1024 e282 The plague spread to Shaepee; 122 died.
+hist-dense-1024 e282 The plague spread to Foloun; 122 died.
 hist-dense-1024 e283 The plague spread to Powiall; 33 died.
-hist-dense-1024 e284 Famine struck Lopee; 72 died.
+hist-dense-1024 e284 Famine struck Flyfy Hollow; 72 died.
 hist-dense-1024 e285 Plague broke out in Kazz Pit; 190 died.
 hist-dense-1024 e286 The Kingdom of Wurdrom sent settlers from Cald to found Ashodford in the Fading Leas.
 hist-dense-1024 e287 The Zubgeeg Horde sent settlers from Drokdrunk to found Krirk-Dreex in Ravenslack Leas.
@@ -3365,7 +3364,7 @@ hist-dense-1024 e297 Famine struck Zaz-Gigg Hole; 541 died.
 hist-dense-1024 e298 Weldbury grew into a town of 1,513.
 hist-dense-1024 e299 A succession crisis at Gub Pit shook the Skagnink Mob.
 hist-dense-1024 e300 Dorkmuul Fort grew into a town of 1,504.
-hist-dense-1024 e355 Plague broke out in Shaepee; 117 died.
+hist-dense-1024 e355 Plague broke out in Foloun; 117 died.
 hist-dense-1024 e356 Plague broke out in Reamham; 2,042 died.
 hist-dense-1024 e357 The Warband of Kraagazarz sent settlers from Dorkmuul Fort to found Ghamo Camp in Northwest Downs.
 hist-dense-1024 e358 Plague broke out in Zaz-Gigg Hole; 736 died.
@@ -3391,7 +3390,7 @@ hist-dense-1024 e377 A succession crisis at Dorkmuul Fort shook the Warband of K
 hist-dense-1024 e378 Famine struck Nutchzotch; 170 died.
 hist-dense-1024 e379 The Zubgeeg Horde sent settlers from Krirk-Dreex to found Bodreek in Ravenslack Leas.
 hist-dense-1024 e380 Plague broke out in Skruz-Drig; 345 died.
-hist-dense-1024 e381 A succession crisis at Shaepee shook the Twoll Court.
+hist-dense-1024 e381 A succession crisis at Foloun shook the Twoll Court.
 hist-dense-1024 e382 Ghamo Camp grew into a town of 1,506.
 hist-dense-1024 e383 Weldbury grew into a city of 8,015.
 hist-dense-1024 e384 Plague broke out in Edinton; 1,143 died.
@@ -4320,17 +4319,17 @@ syn-0 homes ra4 y1392 n1 15
 syn-0 homes ra5 y1668 n1 4
 syn-0 homes ra6 y1844 n1 25
 syn-0 table civilization 06770ade07fe312621f23a1c38f776ae3e6e04a5bfaa942c44201cbbf1c55107
-syn-0 table event 6b271fb8522f3e0d5e42b7ac9450bd8f5c6fdadd37cb440e062a179dc396576d
-syn-0 table event_cause 1d01b00835631564e45e8a24ac1ab86bd4b3557ea033df60a761267439cc7a2a
+syn-0 table event 4301f99bfbaa550ab20bda95aeed391a4abfe5f0e1f82bb0cbcd1440471c003f
+syn-0 table event_cause 5848025f597b292305609695b26d080f87f17bb33e97df672f06fde9dd60c4c5
 syn-0 table event_kind 5bb33c7be421113e5b2507e775557dd7afe51c39ad7d9a5426e6f8e94e4b2f18
 syn-0 table event_kind_role 828c060dc0d262d618363e1eb4194754223827013ae83efa04ea2944f3b5731b
 syn-0 table event_kind_value ea3bdaba66965ca348093390b78ac4b2e92807052c93c9bb59822b0c53c0771e
-syn-0 table event_participant 29dcee5a8b25dc18d4ff7ee12220a592d4af4357ba343d790d34205b4d70d6ed
-syn-0 table event_value 48a1198342a6845f31997884f0949e4e0641f268c1395afb7033d680a13a0602
+syn-0 table event_participant 312b171147264fb8b4f05bc98d2ab10826f69ed3aabfb1613ed894313f654fd9
+syn-0 table event_value 2ec890cff74d8fe85d276899b5acbc9c519300980c04bb4959387218d9dda453
 syn-0 table phase 5266432c9b45ae903d168d16da655a96ef309ff47725e399d5ac1fc7e6db4f09
-syn-0 table region_control 53d5ba937f66a4d0dd9a7fbb8dda2441c0f001237d5533693fb0537049ddc2c2
+syn-0 table region_control 602c073fdee30f7c5c90490d678b89aba07afdacc857e5c88dbf9b83e687ec42
 syn-0 table relation cbbd5f990c53684d7ae650b40fcb5656e02261b53da5f6a7d8c819c92f2828f8
-syn-0 table settlement d5440e97666b91c1431034a95965b10b525b8214c3809f0108b34c6ecaec46fd
+syn-0 table settlement 686ee41f796c91aca5ea319f9a40c98442a8fe8916b882735d93cc1083a9715d
 syn-0 table settlement_census 026d06af216186426cb10dc6569d72871ff9b89e0df1e5a519dd7fbc834a365e
 syn-0 report end_year = 2000
 syn-0 report phases_opening = 6
@@ -4339,7 +4338,7 @@ syn-0 report phases_flare = 0
 syn-0 report phases_final = 1
 syn-0 report simulated_years = 400
 syn-0 report simulated_permille = 200
-syn-0 report events = 39
+syn-0 report events = 38
 syn-0 report events_awakening = 6
 syn-0 report events_civ_founded = 6
 syn-0 report events_settlement_founded = 6
@@ -4377,7 +4376,7 @@ syn-0 report events_war_won = 0
 syn-0 report events_search_abandoned = 0
 syn-0 report events_refuge_held = 0
 syn-0 report events_plague_outbreak = 1
-syn-0 report events_quiet_stretch = 6
+syn-0 report events_quiet_stretch = 5
 syn-0 report civilizations = 6
 syn-0 report civilizations_alive = 6
 syn-0 report settlements = 13
@@ -4440,12 +4439,11 @@ syn-0 e30 Ceambury grew into a town of 1,506.
 syn-0 e31 Nodin grew into a village of 250.
 syn-0 e32 Famine struck Zux; 103 died.
 syn-0 e33 Famine struck Iensath; 62 died.
-syn-0 e34 For 6 years, from 1894 to 1899, the land was quiet, and 6 realms kept the peace.
-syn-0 e35 The Duchy of Circon sent settlers from Ceambury to found Tirdwick in Synthetic 3.
-syn-0 e36 Tirdwick grew into a village of 251.
-syn-0 e37 The Duchy of Circon sent settlers from Ceambury to found Dack in Synthetic 4.
-syn-0 e38 Plague broke out in Zux; 130 died.
-syn-0 e39 Dack grew into a village of 251.
+syn-0 e34 The Duchy of Circon sent settlers from Ceambury to found Tirdwick in Synthetic 3.
+syn-0 e35 Tirdwick grew into a village of 251.
+syn-0 e36 The Duchy of Circon sent settlers from Ceambury to found Dack in Synthetic 4.
+syn-0 e37 Plague broke out in Zux; 130 died.
+syn-0 e38 Dack grew into a village of 251.
 synthetic syn-1 1 6000 elf auto normal
 syn-1 score rg1 ra1 704 9375
 syn-1 score rg1 ra2 826 33032
@@ -6189,17 +6187,17 @@ syn-8 homes ra4 y1407 n1 5
 syn-8 homes ra5 y1662 n1 6
 syn-8 homes ra6 y1842 n1 3
 syn-8 table civilization e6822073b75b6d300846097808975d1008bdf52d36f78331775bbcad4a908192
-syn-8 table event ca5e9911417712902a7e889a4f732933ea3173e6cf62cd9bc404d43dc4614832
-syn-8 table event_cause a11e81fc8f1960b36c38ce5890146690cfdf2d230d577b080ff5e6b04555e5b1
+syn-8 table event 35eb9a9c037cd1502ae375b03631e01c9109416f21a624092907c6583b8511c0
+syn-8 table event_cause af0fa3a2e0cead5cabcabc61a8dd5a6a13fe3d2858b48b684befcd732c48b5b6
 syn-8 table event_kind 5bb33c7be421113e5b2507e775557dd7afe51c39ad7d9a5426e6f8e94e4b2f18
 syn-8 table event_kind_role 828c060dc0d262d618363e1eb4194754223827013ae83efa04ea2944f3b5731b
 syn-8 table event_kind_value ea3bdaba66965ca348093390b78ac4b2e92807052c93c9bb59822b0c53c0771e
-syn-8 table event_participant bcbc09f045644db57c79d439efef96be1436f29f9ecac929522082d56153773b
-syn-8 table event_value cc1936a09acffd202dac5e8613365cd4180b91ac535200e6a01a46f2c31ea29d
+syn-8 table event_participant 3ba91b931dda5551e7ada502e1ba1efb422182a00d1cf5696f151765f8d9130f
+syn-8 table event_value 62ef061e723abbdc1869cdbb8119cbb95acac7bfe7bed72df83a51a51bdef0ff
 syn-8 table phase 85f2f9ed4e921c56ff68d0687dd8602ade4d61d693b26f33c13fdf1f396a4536
 syn-8 table region_control 303dab7d389a1ff5b9ad868c6471b9ff0a16d3fc9135b648e1f2c41f6d93b6ab
 syn-8 table relation cbbd5f990c53684d7ae650b40fcb5656e02261b53da5f6a7d8c819c92f2828f8
-syn-8 table settlement da9199f30505d14d5c6526c993a56d3cca518fd9670a07c4eab218fc9b373152
+syn-8 table settlement d395b244786658ef6600d020c8823af1a703ca8ee9c88860844cd2704f73c533
 syn-8 table settlement_census 5c0c24c73819d066939c14313f247ea3af5d4a162f1918895fbd22c24d9f380a
 syn-8 report end_year = 2000
 syn-8 report phases_opening = 6
@@ -6208,7 +6206,7 @@ syn-8 report phases_flare = 0
 syn-8 report phases_final = 1
 syn-8 report simulated_years = 400
 syn-8 report simulated_permille = 200
-syn-8 report events = 82
+syn-8 report events = 81
 syn-8 report events_awakening = 6
 syn-8 report events_civ_founded = 6
 syn-8 report events_settlement_founded = 6
@@ -6246,7 +6244,7 @@ syn-8 report events_war_won = 0
 syn-8 report events_search_abandoned = 0
 syn-8 report events_refuge_held = 0
 syn-8 report events_plague_outbreak = 8
-syn-8 report events_quiet_stretch = 6
+syn-8 report events_quiet_stretch = 5
 syn-8 report civilizations = 6
 syn-8 report civilizations_alive = 6
 syn-8 report settlements = 20
@@ -6345,19 +6343,18 @@ syn-8 e66 Famine struck Nuzonk Pit; 147 died.
 syn-8 e67 Plague broke out in Brirdton; 43 died.
 syn-8 e68 Famine struck Staston; 92 died.
 syn-8 e69 A succession crisis at Geegg shook the Kriskruzz Horde.
-syn-8 e70 For 8 years, from 1892 to 1899, the land was quiet, and 6 realms kept the peace.
-syn-8 e71 Famine struck Skreeskox Pit; 156 died.
-syn-8 e72 Plague broke out in Lalefe; 48 died.
-syn-8 e73 Weakened by plague, Lalefe dwindled to 190 souls.
-syn-8 e74 Famine struck Drix Pit; 154 died.
-syn-8 e75 Famine struck Staston; 83 died.
-syn-8 e76 Famine struck Lathieledell; 43 died.
-syn-8 e77 Weakened by famine, Lathieledell dwindled to 195 souls.
-syn-8 e78 A succession crisis at Graim Deep shook Clan Brouligron.
-syn-8 e79 A succession crisis at Shakugol Fort shook the Warband of Durzkaz.
-syn-8 e80 Famine struck Dreegink Pit; 167 died.
-syn-8 e81 Clan Brouligron sent settlers from Graim Deep to found Harin Deep in Synthetic 4.
-syn-8 e82 Famine struck Gnot; 164 died.
+syn-8 e70 Famine struck Skreeskox Pit; 156 died.
+syn-8 e71 Plague broke out in Lalefe; 48 died.
+syn-8 e72 Weakened by plague, Lalefe dwindled to 190 souls.
+syn-8 e73 Famine struck Drix Pit; 154 died.
+syn-8 e74 Famine struck Staston; 83 died.
+syn-8 e75 Famine struck Lathieledell; 43 died.
+syn-8 e76 Weakened by famine, Lathieledell dwindled to 195 souls.
+syn-8 e77 A succession crisis at Graim Deep shook Clan Brouligron.
+syn-8 e78 A succession crisis at Shakugol Fort shook the Warband of Durzkaz.
+syn-8 e79 Famine struck Dreegink Pit; 167 died.
+syn-8 e80 Clan Brouligron sent settlers from Graim Deep to found Harin Deep in Synthetic 4.
+syn-8 e81 Famine struck Gnot; 164 died.
 synthetic syn-9 9 6000 elf 1 normal
 syn-9 score rg1 ra1 660 406
 syn-9 score rg1 ra2 347 647
@@ -7847,13 +7844,13 @@ syn-15 homes ra2 y0 n1 26
 syn-15 homes ra5 y5034 n1 25
 syn-15 homes ra6 y5520 n1 28
 syn-15 table civilization 94b74d2275cba4053049150d68d98f1a8164e3672c921334ed8be6f5b0644b11
-syn-15 table event 121b083c50f9b1d2e06a2ad13e95d0512c2af5a78fbc87cd30f3d455ea51c05b
-syn-15 table event_cause 9359d98d25dbf28769bd602b1b0f89b18d220569b7aae5e637598f218f5a1562
+syn-15 table event ce30d556cf570403f4bf3a001c970f43e250842342ef347f5012acd4214ee1b4
+syn-15 table event_cause 2075f075b6be15153fa2eaffb25a3397269c9e6ebecc7118ce15afa1f26257e0
 syn-15 table event_kind 5bb33c7be421113e5b2507e775557dd7afe51c39ad7d9a5426e6f8e94e4b2f18
 syn-15 table event_kind_role 828c060dc0d262d618363e1eb4194754223827013ae83efa04ea2944f3b5731b
 syn-15 table event_kind_value ea3bdaba66965ca348093390b78ac4b2e92807052c93c9bb59822b0c53c0771e
-syn-15 table event_participant 33d6b48751d9055e7ed44ca5e9e88c7ce160ecd622099237322edec342404e1c
-syn-15 table event_value 97b4ba9688938c6600da36aaf5632d3cd4701f4affdba055cdcd8477a19e906f
+syn-15 table event_participant 1647d3e0503ce2fcdb358b26a85687e6633ecdeca4f1e63a9b293b37c1cfdc5f
+syn-15 table event_value 4cca69fc91ad96b45adf4f30742af9929e32865891533b407c42e54b2c7b6570
 syn-15 table phase 65ffd8b4efa67e79b31e066e9888b8e957cc68b21b6ef3398c2cd9a71386c486
 syn-15 table region_control 9abdb15c7093763a4045cb352cac03e160b774401591b755d7584bbfbeded9fa
 syn-15 table relation cbbd5f990c53684d7ae650b40fcb5656e02261b53da5f6a7d8c819c92f2828f8
@@ -7866,7 +7863,7 @@ syn-15 report phases_flare = 0
 syn-15 report phases_final = 1
 syn-15 report simulated_years = 750
 syn-15 report simulated_permille = 125
-syn-15 report events = 39
+syn-15 report events = 38
 syn-15 report events_awakening = 3
 syn-15 report events_civ_founded = 3
 syn-15 report events_settlement_founded = 3
@@ -7904,7 +7901,7 @@ syn-15 report events_war_won = 0
 syn-15 report events_search_abandoned = 0
 syn-15 report events_refuge_held = 0
 syn-15 report events_plague_outbreak = 3
-syn-15 report events_quiet_stretch = 3
+syn-15 report events_quiet_stretch = 2
 syn-15 report civilizations = 3
 syn-15 report civilizations_alive = 3
 syn-15 report settlements = 6
@@ -7956,23 +7953,22 @@ syn-15 e19 Clan Uraalghuld sent settlers from Zaam Camp to found Ghurk Fort in S
 syn-15 e20 A succession crisis at Daldwick shook the Duchy of Ceck.
 syn-15 e21 Plague broke out in Zaam Camp and spread to one other settlement; 74 died in all.
 syn-15 e22 The plague spread to Ghurk Fort; 8 died.
-syn-15 e23 For 30 years, from 5670 to 5699, the land was quiet, and 3 realms kept the peace.
-syn-15 e24 Plague broke out in Daldwick and spread to one other settlement; 39 died in all.
-syn-15 e25 The plague spread to Bantreaston; 8 died.
-syn-15 e26 A succession crisis at Daldwick shook the Duchy of Ceck.
+syn-15 e23 Plague broke out in Daldwick and spread to one other settlement; 39 died in all.
+syn-15 e24 The plague spread to Bantreaston; 8 died.
+syn-15 e25 A succession crisis at Daldwick shook the Duchy of Ceck.
+syn-15 e26 A succession crisis at Zaam Camp shook Clan Uraalghuld.
 syn-15 e27 A succession crisis at Zaam Camp shook Clan Uraalghuld.
-syn-15 e28 A succession crisis at Zaam Camp shook Clan Uraalghuld.
-syn-15 e29 A succession crisis at Gnugg shook the Drarkzeegg Horde.
-syn-15 e30 A succession crisis at Zaam Camp shook Clan Uraalghuld.
-syn-15 e31 Famine struck Ghurk Fort; 16 died.
-syn-15 e32 A succession crisis at Gnugg shook the Drarkzeegg Horde.
-syn-15 e33 Plague broke out in Ghurk Fort; 13 died.
-syn-15 e34 A succession crisis at Gnugg shook the Drarkzeegg Horde.
-syn-15 e35 Famine struck Ghurk Fort; 13 died.
-syn-15 e36 A succession crisis at Gnugg shook the Drarkzeegg Horde.
-syn-15 e37 A succession crisis at Zaam Camp shook Clan Uraalghuld.
-syn-15 e38 Famine struck Daldwick; 26 died.
-syn-15 e39 Famine struck Ghurk Fort; 6 died.
+syn-15 e28 A succession crisis at Gnugg shook the Drarkzeegg Horde.
+syn-15 e29 A succession crisis at Zaam Camp shook Clan Uraalghuld.
+syn-15 e30 Famine struck Ghurk Fort; 16 died.
+syn-15 e31 A succession crisis at Gnugg shook the Drarkzeegg Horde.
+syn-15 e32 Plague broke out in Ghurk Fort; 13 died.
+syn-15 e33 A succession crisis at Gnugg shook the Drarkzeegg Horde.
+syn-15 e34 Famine struck Ghurk Fort; 13 died.
+syn-15 e35 A succession crisis at Gnugg shook the Drarkzeegg Horde.
+syn-15 e36 A succession crisis at Zaam Camp shook Clan Uraalghuld.
+syn-15 e37 Famine struck Daldwick; 26 died.
+syn-15 e38 Famine struck Ghurk Fort; 6 died.
 stress stress-0 0 2000 all auto normal
 stress-0 score rg1 ra1 738 673
 stress-0 score rg1 ra2 461 1285
@@ -8131,13 +8127,13 @@ stress-0 homes ra4 y1392 n1 15
 stress-0 homes ra5 y1668 n1 4
 stress-0 homes ra6 y1844 n1 25
 stress-0 table civilization 06b5eec6d91eeb6e667667dc807577c3e94b2e5bde6ea06475f74f7c58ed5061
-stress-0 table event 6f849c1ec1b6e389f5271ec0878a3b0c980e6bbf2c53847ffe45d158fad717a9
-stress-0 table event_cause bffe46b58a3460ad3c8f5a9c0847633c0dea50c3e74e73252aacd3bc240442b8
+stress-0 table event e26c8d617ce68a96c4859c3517bc4b7f46d59a218ae8bccc7fa0460c823c5038
+stress-0 table event_cause f25654300017642ac4384ab91ecc0cb9a784eaeaf6a1059dea7f760a66118ddf
 stress-0 table event_kind 5bb33c7be421113e5b2507e775557dd7afe51c39ad7d9a5426e6f8e94e4b2f18
 stress-0 table event_kind_role 828c060dc0d262d618363e1eb4194754223827013ae83efa04ea2944f3b5731b
 stress-0 table event_kind_value ea3bdaba66965ca348093390b78ac4b2e92807052c93c9bb59822b0c53c0771e
-stress-0 table event_participant 14e76e75deecced07af5dac2b0fffbf3266e21ed99df0d2556d53064917cfbcf
-stress-0 table event_value e2c2e40c3d53679143453283b8f63978befe3e66ac77767df48e054294d4c96f
+stress-0 table event_participant b4b12464c3841da3a8497db754526898c0e31e78c1d53164ae6c09a37da51533
+stress-0 table event_value 2191f6a062bd2d43ea070a799f482cc53e646752c2b08b69ab00a29059224482
 stress-0 table phase 52a628dba295c03b485724c4c7d0e3443297e0662ee04a0851a1a1162491a7c2
 stress-0 table region_control 7cbea05cd57655a00ef659bfbd4f9f4fbf13c9f1440a485a9c220b2c53e01e32
 stress-0 table relation cbbd5f990c53684d7ae650b40fcb5656e02261b53da5f6a7d8c819c92f2828f8
@@ -8150,7 +8146,7 @@ stress-0 report phases_flare = 0
 stress-0 report phases_final = 1
 stress-0 report simulated_years = 400
 stress-0 report simulated_permille = 200
-stress-0 report events = 270
+stress-0 report events = 269
 stress-0 report events_awakening = 6
 stress-0 report events_civ_founded = 6
 stress-0 report events_settlement_founded = 6
@@ -8188,7 +8184,7 @@ stress-0 report events_war_won = 0
 stress-0 report events_search_abandoned = 0
 stress-0 report events_refuge_held = 0
 stress-0 report events_plague_outbreak = 43
-stress-0 report events_quiet_stretch = 6
+stress-0 report events_quiet_stretch = 5
 stress-0 report civilizations = 6
 stress-0 report civilizations_alive = 6
 stress-0 report settlements = 16
@@ -8424,70 +8420,69 @@ stress-0 e203 Famine struck Gnink-Snunk; 99 died.
 stress-0 e204 Plague broke out in Stastint; 139 died.
 stress-0 e205 The ruins of Voglael faded from memory.
 stress-0 e206 The ruins of Slak faded from memory.
-stress-0 e207 For 6 years, from 1894 to 1899, the land was quiet, and 6 realms kept the peace.
-stress-0 e208 Famine struck Cellve; 14 died.
-stress-0 e209 Famine struck Stastint; 137 died.
-stress-0 e210 Famine struck Cellve; 24 died.
-stress-0 e211 Plague broke out in Cellve; 29 died.
-stress-0 e212 Weakened by plague, Cellve dwindled to 164 souls.
-stress-0 e213 A succession crisis at Stastint shook the Duchy of Circon.
-stress-0 e214 A succession crisis at Wiepysk shook the Wosk Ring.
-stress-0 e215 A succession crisis at Stastint shook the Duchy of Circon.
-stress-0 e216 A succession crisis at Gnink-Snunk shook the Baskeeb Mob.
-stress-0 e217 Plague broke out in Gnink-Snunk; 285 died.
-stress-0 e218 Famine struck Kaird Deep; 83 died.
-stress-0 e219 Famine struck Cellve; 15 died.
-stress-0 e220 Famine struck Wiepysk; 32 died.
-stress-0 e221 A succession crisis at Kaird Deep shook Clan Durgarin.
-stress-0 e222 A succession crisis at Stastint shook the Duchy of Circon.
-stress-0 e223 Famine struck Gnink-Snunk; 60 died.
-stress-0 e224 Famine struck Kaird Deep; 84 died.
-stress-0 e225 A succession crisis at Stastint shook the Duchy of Circon.
-stress-0 e226 Famine struck Kaird Deep; 66 died.
-stress-0 e227 Famine struck Gnink-Snunk; 242 died.
-stress-0 e228 Famine struck Duld'sha Fort; 78 died.
-stress-0 e229 Famine struck Kaird Deep; 43 died.
-stress-0 e230 Famine struck Wiepysk; 31 died.
-stress-0 e231 Famine struck Gnink-Snunk; 60 died.
-stress-0 e232 Famine struck Duld'sha Fort; 73 died.
-stress-0 e233 Famine struck Kaird Deep; 33 died.
-stress-0 e234 Famine struck Wiepysk; 11 died.
-stress-0 e235 A succession crisis at Cellve shook the House of Nife.
-stress-0 e236 Famine struck Duld'sha Fort; 71 died.
-stress-0 e237 Plague broke out in Kaird Deep; 39 died.
-stress-0 e238 Famine struck Stastint; 55 died.
-stress-0 e239 Famine struck Kaird Deep; 55 died.
-stress-0 e240 Famine struck Wiepysk; 20 died.
-stress-0 e241 Famine struck Stastint; 124 died.
-stress-0 e242 A succession crisis at Cellve shook the House of Nife.
-stress-0 e243 Plague broke out in Gnink-Snunk; 385 died.
-stress-0 e244 Plague broke out in Wiepysk; 35 died.
-stress-0 e245 A succession crisis at Gnink-Snunk shook the Baskeeb Mob.
-stress-0 e246 Famine struck Wiepysk; 8 died.
-stress-0 e247 Famine struck Cellve; 16 died.
-stress-0 e248 Famine struck Gnink-Snunk; 79 died.
-stress-0 e249 A succession crisis at Duld'sha Fort shook the Warband of Ghom.
-stress-0 e250 Plague broke out in Cellve; 51 died.
-stress-0 e251 Famine struck Cellve; 9 died.
-stress-0 e252 Famine struck Kaird Deep; 24 died.
-stress-0 e253 Famine struck Wiepysk; 22 died.
-stress-0 e254 Plague broke out in Kaird Deep; 65 died.
-stress-0 e255 Famine struck Cellve; 17 died.
-stress-0 e256 Plague broke out in Cellve; 17 died.
-stress-0 e257 Famine struck Duld'sha Fort; 64 died.
-stress-0 e258 Famine struck Cellve; 18 died.
-stress-0 e259 Famine struck Stastint; 214 died.
-stress-0 e260 Famine struck Cellve; 6 died.
-stress-0 e261 Plague broke out in Gnink-Snunk; 161 died.
-stress-0 e262 Famine struck Stastint; 187 died.
-stress-0 e263 Famine struck Cellve; 5 died.
-stress-0 e264 Famine struck Duld'sha Fort; 33 died.
-stress-0 e265 Famine struck Wiepysk; 7 died.
-stress-0 e266 A succession crisis at Stastint shook the Duchy of Circon.
-stress-0 e267 Famine struck Wiepysk; 10 died.
-stress-0 e268 Famine struck Gnink-Snunk; 82 died.
-stress-0 e269 Plague broke out in Kaird Deep; 41 died.
-stress-0 e270 A succession crisis at Stastint shook the Duchy of Circon.
+stress-0 e207 Famine struck Cellve; 14 died.
+stress-0 e208 Famine struck Stastint; 137 died.
+stress-0 e209 Famine struck Cellve; 24 died.
+stress-0 e210 Plague broke out in Cellve; 29 died.
+stress-0 e211 Weakened by plague, Cellve dwindled to 164 souls.
+stress-0 e212 A succession crisis at Stastint shook the Duchy of Circon.
+stress-0 e213 A succession crisis at Wiepysk shook the Wosk Ring.
+stress-0 e214 A succession crisis at Stastint shook the Duchy of Circon.
+stress-0 e215 A succession crisis at Gnink-Snunk shook the Baskeeb Mob.
+stress-0 e216 Plague broke out in Gnink-Snunk; 285 died.
+stress-0 e217 Famine struck Kaird Deep; 83 died.
+stress-0 e218 Famine struck Cellve; 15 died.
+stress-0 e219 Famine struck Wiepysk; 32 died.
+stress-0 e220 A succession crisis at Kaird Deep shook Clan Durgarin.
+stress-0 e221 A succession crisis at Stastint shook the Duchy of Circon.
+stress-0 e222 Famine struck Gnink-Snunk; 60 died.
+stress-0 e223 Famine struck Kaird Deep; 84 died.
+stress-0 e224 A succession crisis at Stastint shook the Duchy of Circon.
+stress-0 e225 Famine struck Kaird Deep; 66 died.
+stress-0 e226 Famine struck Gnink-Snunk; 242 died.
+stress-0 e227 Famine struck Duld'sha Fort; 78 died.
+stress-0 e228 Famine struck Kaird Deep; 43 died.
+stress-0 e229 Famine struck Wiepysk; 31 died.
+stress-0 e230 Famine struck Gnink-Snunk; 60 died.
+stress-0 e231 Famine struck Duld'sha Fort; 73 died.
+stress-0 e232 Famine struck Kaird Deep; 33 died.
+stress-0 e233 Famine struck Wiepysk; 11 died.
+stress-0 e234 A succession crisis at Cellve shook the House of Nife.
+stress-0 e235 Famine struck Duld'sha Fort; 71 died.
+stress-0 e236 Plague broke out in Kaird Deep; 39 died.
+stress-0 e237 Famine struck Stastint; 55 died.
+stress-0 e238 Famine struck Kaird Deep; 55 died.
+stress-0 e239 Famine struck Wiepysk; 20 died.
+stress-0 e240 Famine struck Stastint; 124 died.
+stress-0 e241 A succession crisis at Cellve shook the House of Nife.
+stress-0 e242 Plague broke out in Gnink-Snunk; 385 died.
+stress-0 e243 Plague broke out in Wiepysk; 35 died.
+stress-0 e244 A succession crisis at Gnink-Snunk shook the Baskeeb Mob.
+stress-0 e245 Famine struck Wiepysk; 8 died.
+stress-0 e246 Famine struck Cellve; 16 died.
+stress-0 e247 Famine struck Gnink-Snunk; 79 died.
+stress-0 e248 A succession crisis at Duld'sha Fort shook the Warband of Ghom.
+stress-0 e249 Plague broke out in Cellve; 51 died.
+stress-0 e250 Famine struck Cellve; 9 died.
+stress-0 e251 Famine struck Kaird Deep; 24 died.
+stress-0 e252 Famine struck Wiepysk; 22 died.
+stress-0 e253 Plague broke out in Kaird Deep; 65 died.
+stress-0 e254 Famine struck Cellve; 17 died.
+stress-0 e255 Plague broke out in Cellve; 17 died.
+stress-0 e256 Famine struck Duld'sha Fort; 64 died.
+stress-0 e257 Famine struck Cellve; 18 died.
+stress-0 e258 Famine struck Stastint; 214 died.
+stress-0 e259 Famine struck Cellve; 6 died.
+stress-0 e260 Plague broke out in Gnink-Snunk; 161 died.
+stress-0 e261 Famine struck Stastint; 187 died.
+stress-0 e262 Famine struck Cellve; 5 died.
+stress-0 e263 Famine struck Duld'sha Fort; 33 died.
+stress-0 e264 Famine struck Wiepysk; 7 died.
+stress-0 e265 A succession crisis at Stastint shook the Duchy of Circon.
+stress-0 e266 Famine struck Wiepysk; 10 died.
+stress-0 e267 Famine struck Gnink-Snunk; 82 died.
+stress-0 e268 Plague broke out in Kaird Deep; 41 died.
+stress-0 e269 A succession crisis at Stastint shook the Duchy of Circon.
 stress stress-1 1 6000 elf auto normal
 stress-1 score rg1 ra1 704 9375
 stress-1 score rg1 ra2 826 33032

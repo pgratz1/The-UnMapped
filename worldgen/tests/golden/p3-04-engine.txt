@@ -1834,13 +1834,13 @@ world geo-seed-0-512 0 512 6000 all normal none
 geo-seed-0-512 input_region 17dc7e6341db4b9b27aa22fe5671fcaad6b3dcfbf708282ea8168ef69e8cd7ad
 geo-seed-0-512 regions 14
 geo-seed-0-512 table civilization 6243303abf0d14d1e346d27c630b9f2b25e1188a13d9fdc0064739006130dfe1
-geo-seed-0-512 table event 8a5a768ee56065dce671029f3e137d6a7cbd67f786d005d5d2335b373af72d2a
+geo-seed-0-512 table event af86b88ed34461dcf3ba9cf8747a4e30c5e05426840249efad7452181e5097ef
 geo-seed-0-512 table event_cause 64b6e84bea602ab126bcf8347fe6cd6e1f382aa0d6858877eae7ef1f8ac9e36a
 geo-seed-0-512 table event_kind 5bb33c7be421113e5b2507e775557dd7afe51c39ad7d9a5426e6f8e94e4b2f18
 geo-seed-0-512 table event_kind_role 828c060dc0d262d618363e1eb4194754223827013ae83efa04ea2944f3b5731b
 geo-seed-0-512 table event_kind_value ea3bdaba66965ca348093390b78ac4b2e92807052c93c9bb59822b0c53c0771e
-geo-seed-0-512 table event_participant 7839862ae5f85f870bd57c634c55efd03083fe9ff81695502409f31c2fa0fee5
-geo-seed-0-512 table event_value 4495f418e73e3d7f285d01664afb60aadad8d90f1dab9e4283dae0ba061b03f5
+geo-seed-0-512 table event_participant b2693c6e746e6df3a7fdb95d545b8bd975c5b49349d8ff336f76edd445608b69
+geo-seed-0-512 table event_value 09a90746ccc3f4412d081a7d9b0d9ddd32c7f62a16351a5ceaac76b621214b99
 geo-seed-0-512 table phase 4b6ddb1fe0ca7d674d692194bb5c2aa2416372decdda68d1d2f3a768e92f0811
 geo-seed-0-512 table region_control 760bf531b4a66f5f7aec453f23f10e162a7f3367e999e46cac85d23c85437e08
 geo-seed-0-512 table relation cbbd5f990c53684d7ae650b40fcb5656e02261b53da5f6a7d8c819c92f2828f8
@@ -1853,7 +1853,7 @@ geo-seed-0-512 report phases_flare = 0
 geo-seed-0-512 report phases_final = 1
 geo-seed-0-512 report simulated_years = 1200
 geo-seed-0-512 report simulated_permille = 200
-geo-seed-0-512 report events = 24
+geo-seed-0-512 report events = 23
 geo-seed-0-512 report events_awakening = 6
 geo-seed-0-512 report events_civ_founded = 6
 geo-seed-0-512 report events_settlement_founded = 6
@@ -1891,7 +1891,7 @@ geo-seed-0-512 report events_war_won = 0
 geo-seed-0-512 report events_search_abandoned = 0
 geo-seed-0-512 report events_refuge_held = 0
 geo-seed-0-512 report events_plague_outbreak = 0
-geo-seed-0-512 report events_quiet_stretch = 6
+geo-seed-0-512 report events_quiet_stretch = 5
 geo-seed-0-512 report civilizations = 6
 geo-seed-0-512 report civilizations_alive = 6
 geo-seed-0-512 report settlements = 6
@@ -1948,7 +1948,6 @@ geo-seed-0-512 e20 For 381 years, from 5153 to 5533, the land was quiet, and 5 r
 geo-seed-0-512 e21 Uruld'kruum awakened the Orcs in East Steppe.
 geo-seed-0-512 e22 The Orcs founded the Warband of Ghom in East Steppe.
 geo-seed-0-512 e23 The Warband of Ghom founded Shaazazuug in East Steppe.
-geo-seed-0-512 e24 For 16 years, from 5684 to 5699, the land was quiet, and 6 realms kept the peace.
 world geo-seed-42-512 42 512 6000 all normal none
 geo-seed-42-512 input_region 539cb4cc7473048fa68b7824f5c25785781ba2b091671aa534d583578eb5db49
 geo-seed-42-512 regions 15
@@ -2758,18 +2757,18 @@ example-42-1024 e23 The Warband of Baaldkrok founded Uld'kag in Warlord's Rises.
 world example-42-1024-ft500 42 1024 6000 all normal ForcedTension(500,1000,1)
 example-42-1024-ft500 input_region 651657ccb53ed602f5e2cf8603f6685ec1637d5600345f20ea3b7b903c330c6e
 example-42-1024-ft500 regions 50
-example-42-1024-ft500 table civilization e8f93f31db2a14da7e3c909d3946c3c72c09883f32920113fef4fe18b0348371
-example-42-1024-ft500 table event d7ab4cbf3d6541392dca427210ecbd2c839ad1e23ab8d9ff58ec0be7f6f45d2b
-example-42-1024-ft500 table event_cause a19d6f7f4d5b75e670ca7803802fb6b69104f2b6edaf36e152df905b0435431f
+example-42-1024-ft500 table civilization c1442c62c468e4a01b8378fab33ddf1f33dd711f7261a5c406ea8bad08ce61aa
+example-42-1024-ft500 table event b473dbaad24b02edee866d04b4f011a9a4292bcc7241f1d04b94d3adec555d40
+example-42-1024-ft500 table event_cause c098757088ec702eb7baa330b808ee2a5594aff2e54b4874dd9b12c659315f2e
 example-42-1024-ft500 table event_kind 5bb33c7be421113e5b2507e775557dd7afe51c39ad7d9a5426e6f8e94e4b2f18
 example-42-1024-ft500 table event_kind_role 828c060dc0d262d618363e1eb4194754223827013ae83efa04ea2944f3b5731b
 example-42-1024-ft500 table event_kind_value ea3bdaba66965ca348093390b78ac4b2e92807052c93c9bb59822b0c53c0771e
-example-42-1024-ft500 table event_participant d28d799cf5a25a222f1a473a3798d3f0f52af98e9937d786135951a87f48628d
-example-42-1024-ft500 table event_value cb2827b1d6192ad35d0af155ab201d91a1f1a9df496442334de29079f1da5e74
-example-42-1024-ft500 table phase 23bba312b773798bf91d6a30fa2bdd5c57a5bdc43b793775703d8e284da438b3
-example-42-1024-ft500 table region_control 94d1004f8da2fb786f2226684170c83b319e163da79c69f36242fd5c20dee9fc
+example-42-1024-ft500 table event_participant 5df9b4312feb99681b2645668ef0650c644613dbb1c9810d94e9546012d76047
+example-42-1024-ft500 table event_value fd1cbb988a67fd11d4c04d6e7eb29a77bc753ecf050d1adfa4c2c36d6133b472
+example-42-1024-ft500 table phase ef67922dc166f4153572d78d876ea8e2e448921629c44e5a1462fbbbadf9e21d
+example-42-1024-ft500 table region_control 00873556fc0154561b608e0bce352a57343a69ff1f404a7a5da33646473d28c0
 example-42-1024-ft500 table relation cbbd5f990c53684d7ae650b40fcb5656e02261b53da5f6a7d8c819c92f2828f8
-example-42-1024-ft500 table settlement 1198dcb53830ef74466755613e5dfa949444de927819ac06cc333b98ac27e73c
+example-42-1024-ft500 table settlement 65b1ec9f1122e128fceb7d19b4bce17b427d29724ccc9e07921992ee96601a84
 example-42-1024-ft500 table settlement_census d089d64856c5c21d5ef5749ff506cdd37502c7391a0752da50408c31ff25fab4
 example-42-1024-ft500 report end_year = 6000
 example-42-1024-ft500 report phases_opening = 6
@@ -2778,7 +2777,7 @@ example-42-1024-ft500 report phases_flare = 4
 example-42-1024-ft500 report phases_final = 1
 example-42-1024-ft500 report simulated_years = 1354
 example-42-1024-ft500 report simulated_permille = 225
-example-42-1024-ft500 report events = 31
+example-42-1024-ft500 report events = 30
 example-42-1024-ft500 report events_awakening = 6
 example-42-1024-ft500 report events_civ_founded = 6
 example-42-1024-ft500 report events_settlement_founded = 6
@@ -2816,7 +2815,7 @@ example-42-1024-ft500 report events_war_won = 0
 example-42-1024-ft500 report events_search_abandoned = 0
 example-42-1024-ft500 report events_refuge_held = 0
 example-42-1024-ft500 report events_plague_outbreak = 0
-example-42-1024-ft500 report events_quiet_stretch = 9
+example-42-1024-ft500 report events_quiet_stretch = 8
 example-42-1024-ft500 report civilizations = 6
 example-42-1024-ft500 report civilizations_alive = 6
 example-42-1024-ft500 report settlements = 6
@@ -2843,7 +2842,7 @@ example-42-1024-ft500 report regions_held_dwarf = 1
 example-42-1024-ft500 report regions_held_faerie = 1
 example-42-1024-ft500 report regions_held_human = 1
 example-42-1024-ft500 report regions_held_orc = 1
-example-42-1024-ft500 phases 1:1:1:0:149:1|2:1:2:150:499:0|3:1:3:500:549:1|4:1:2:550:999:0|5:1:3:1000:1049:1|6:1:2:1050:1499:0|7:1:3:1500:1549:1|8:1:2:1550:1999:0|9:1:3:2000:2049:1|10:1:2:2050:2073:0|11:2:1:2074:2223:13|12:2:2:2224:3241:0|13:3:1:3242:3391:17|14:3:2:3392:4242:0|15:4:1:4243:4392:21|16:4:2:4393:4968:0|17:5:1:4969:5118:25|18:5:2:5119:5595:0|19:6:1:5596:5745:29|20:6:4:5746:5999:0
+example-42-1024-ft500 phases 1:1:1:0:149:1|2:1:2:150:499:0|3:1:3:500:549:1|4:1:2:550:999:0|5:1:3:1000:1049:1|6:1:2:1050:1499:0|7:1:3:1500:1549:1|8:1:2:1550:1999:0|9:1:3:2000:2049:1|10:1:2:2050:2073:0|11:2:1:2074:2223:12|12:2:2:2224:3241:0|13:3:1:3242:3391:16|14:3:2:3392:4242:0|15:4:1:4243:4392:20|16:4:2:4393:4968:0|17:5:1:4969:5118:24|18:5:2:5119:5595:0|19:6:1:5596:5745:28|20:6:4:5746:5999:0
 example-42-1024-ft500 names c1:0 s1:0 site:seed
 example-42-1024-ft500 names c2:0 s2:1 site:seed
 example-42-1024-ft500 names c3:0 s3:0 site:seed
@@ -2861,41 +2860,40 @@ example-42-1024-ft500 e8 For 450 years, from 1050 to 1499, the land was quiet; o
 example-42-1024-ft500 e9 In 1500 tensions flared into 50 years of upheaval.
 example-42-1024-ft500 e10 For 450 years, from 1550 to 1999, the land was quiet; one realm held it.
 example-42-1024-ft500 e11 In 2000 tensions flared into 50 years of upheaval.
-example-42-1024-ft500 e12 For 24 years, from 2050 to 2073, the land was quiet; one realm held it.
-example-42-1024-ft500 e13 Krokzit awakened the Goblins in Kitedown.
-example-42-1024-ft500 e14 The Goblins founded the Skib Horde in Kitedown.
-example-42-1024-ft500 e15 The Skib Horde founded Skrisligg Pit in Kitedown.
-example-42-1024-ft500 e16 For 1,018 years, from 2224 to 3241, the land was quiet, and 2 realms kept the peace.
-example-42-1024-ft500 e17 Bronhak awakened the Dwarves in the Sundered Shaw.
-example-42-1024-ft500 e18 The Dwarves founded the Kaindnimm Throne in the Sundered Shaw.
-example-42-1024-ft500 e19 The Kaindnimm Throne founded Daidmin in the Sundered Shaw.
-example-42-1024-ft500 e20 For 851 years, from 3392 to 4242, the land was quiet, and 3 realms kept the peace.
-example-42-1024-ft500 e21 Syfiash awakened the Faeries in Umberdown.
-example-42-1024-ft500 e22 The Faeries founded the Circle of Fysoli in Umberdown.
-example-42-1024-ft500 e23 The Circle of Fysoli founded Lowhou in Umberdown.
-example-42-1024-ft500 e24 For 576 years, from 4393 to 4968, the land was quiet, and 4 realms kept the peace.
-example-42-1024-ft500 e25 Wealstuld awakened the Humans in Otterford Rises.
-example-42-1024-ft500 e26 The Humans founded the Kingdom of Alird in Otterford Rises.
-example-42-1024-ft500 e27 The Kingdom of Alird founded Aledsealdbury in Otterford Rises.
-example-42-1024-ft500 e28 For 477 years, from 5119 to 5595, the land was quiet, and 5 realms kept the peace.
-example-42-1024-ft500 e29 Ogh'krak awakened the Orcs in Warlord's Rises.
-example-42-1024-ft500 e30 The Orcs founded the Warband of Baaldkrok in Warlord's Rises.
-example-42-1024-ft500 e31 The Warband of Baaldkrok founded Uld'kag in Warlord's Rises.
+example-42-1024-ft500 e12 Krokzit awakened the Goblins in Kitedown.
+example-42-1024-ft500 e13 The Goblins founded the Skib Horde in Kitedown.
+example-42-1024-ft500 e14 The Skib Horde founded Skrisligg Pit in Kitedown.
+example-42-1024-ft500 e15 For 1,018 years, from 2224 to 3241, the land was quiet, and 2 realms kept the peace.
+example-42-1024-ft500 e16 Bronhak awakened the Dwarves in the Sundered Shaw.
+example-42-1024-ft500 e17 The Dwarves founded the Kaindnimm Throne in the Sundered Shaw.
+example-42-1024-ft500 e18 The Kaindnimm Throne founded Daidmin in the Sundered Shaw.
+example-42-1024-ft500 e19 For 851 years, from 3392 to 4242, the land was quiet, and 3 realms kept the peace.
+example-42-1024-ft500 e20 Syfiash awakened the Faeries in Umberdown.
+example-42-1024-ft500 e21 The Faeries founded the Circle of Fysoli in Umberdown.
+example-42-1024-ft500 e22 The Circle of Fysoli founded Lowhou in Umberdown.
+example-42-1024-ft500 e23 For 576 years, from 4393 to 4968, the land was quiet, and 4 realms kept the peace.
+example-42-1024-ft500 e24 Wealstuld awakened the Humans in Otterford Rises.
+example-42-1024-ft500 e25 The Humans founded the Kingdom of Alird in Otterford Rises.
+example-42-1024-ft500 e26 The Kingdom of Alird founded Aledsealdbury in Otterford Rises.
+example-42-1024-ft500 e27 For 477 years, from 5119 to 5595, the land was quiet, and 5 realms kept the peace.
+example-42-1024-ft500 e28 Ogh'krak awakened the Orcs in Warlord's Rises.
+example-42-1024-ft500 e29 The Orcs founded the Warband of Baaldkrok in Warlord's Rises.
+example-42-1024-ft500 e30 The Warband of Baaldkrok founded Uld'kag in Warlord's Rises.
 world example-42-1024-ft1 42 1024 6000 all normal ForcedTension(1,5000,1)
 example-42-1024-ft1 input_region 651657ccb53ed602f5e2cf8603f6685ec1637d5600345f20ea3b7b903c330c6e
 example-42-1024-ft1 regions 50
-example-42-1024-ft1 table civilization 75801e2b63fb69d875a84e95098a9fa0d34a7dfadcaae717c2b92c9f30a12256
-example-42-1024-ft1 table event 85abefa5294accb173427b27e4de01e5f9b11a7e680b236db147f69b8c689510
-example-42-1024-ft1 table event_cause d144a021c3796e53cc84906bd08723511c0b03c438333bd20eed1b99b753cafd
+example-42-1024-ft1 table civilization aad8f2321068ba8ab1204d16a218b8bd4f4885f864ee7e8bb0ba1504734ac7a5
+example-42-1024-ft1 table event 4b3e10b56df11a1af35d063d872dbfe2cf1ae7ef4719cc12186dfa175f9499e9
+example-42-1024-ft1 table event_cause c7072f87feada9d6c6d4491fcb1701c565a4dafdb739104f45b8781a6fcd5ed5
 example-42-1024-ft1 table event_kind 5bb33c7be421113e5b2507e775557dd7afe51c39ad7d9a5426e6f8e94e4b2f18
 example-42-1024-ft1 table event_kind_role 828c060dc0d262d618363e1eb4194754223827013ae83efa04ea2944f3b5731b
 example-42-1024-ft1 table event_kind_value ea3bdaba66965ca348093390b78ac4b2e92807052c93c9bb59822b0c53c0771e
-example-42-1024-ft1 table event_participant 1d54a4bd523dc09c6c610ccff58c74a31eef0752772baf85641b50d5d3c271cd
-example-42-1024-ft1 table event_value 4944cd10cd741c37e8542edd35449f4ee189afc27d0cb902a8f7e11af2f165f2
-example-42-1024-ft1 table phase 3150ead1235c95a768a1762da4a1863a14ea0d0d82c7e0a19259225a1d722c1d
-example-42-1024-ft1 table region_control f91f5e12b00d587bcc10475c883d31cc0a5e9fc0e3692fdbf2f9904ad10780e8
+example-42-1024-ft1 table event_participant b9a9dfe6e4ca4cad6f36ded7e0081dcfe751bc1203eaaa23ca49db5ff7ebfe0b
+example-42-1024-ft1 table event_value 7cd72ca980ad76983e2894fcbc428053f77b6fca2e41765731529e623edea421
+example-42-1024-ft1 table phase 34791cf48fad9fc99b3d5a5c8bce4f19ede80fcc36564ff3c0075d400c9b9b32
+example-42-1024-ft1 table region_control 0874a404732f9c9f41a81054371b51f97ebf1948073ae9b9b56aa75f8f119beb
 example-42-1024-ft1 table relation cbbd5f990c53684d7ae650b40fcb5656e02261b53da5f6a7d8c819c92f2828f8
-example-42-1024-ft1 table settlement 3599313016cd87d326d567fcd2b12013753f5bdc267c276a26be894d3bd7e6f5
+example-42-1024-ft1 table settlement 70f83a4457b85171ab01fdef7b17d842a497018ae99a763fa8c7ba3ef53eeb12
 example-42-1024-ft1 table settlement_census d089d64856c5c21d5ef5749ff506cdd37502c7391a0752da50408c31ff25fab4
 example-42-1024-ft1 report end_year = 6000
 example-42-1024-ft1 report phases_opening = 6
@@ -2904,7 +2902,7 @@ example-42-1024-ft1 report phases_flare = 32
 example-42-1024-ft1 report phases_final = 1
 example-42-1024-ft1 report simulated_years = 2700
 example-42-1024-ft1 report simulated_permille = 450
-example-42-1024-ft1 report events = 86
+example-42-1024-ft1 report events = 54
 example-42-1024-ft1 report events_awakening = 6
 example-42-1024-ft1 report events_civ_founded = 6
 example-42-1024-ft1 report events_settlement_founded = 6
@@ -2942,7 +2940,7 @@ example-42-1024-ft1 report events_war_won = 0
 example-42-1024-ft1 report events_search_abandoned = 0
 example-42-1024-ft1 report events_refuge_held = 0
 example-42-1024-ft1 report events_plague_outbreak = 0
-example-42-1024-ft1 report events_quiet_stretch = 36
+example-42-1024-ft1 report events_quiet_stretch = 4
 example-42-1024-ft1 report civilizations = 6
 example-42-1024-ft1 report civilizations_alive = 6
 example-42-1024-ft1 report settlements = 6
@@ -2969,7 +2967,7 @@ example-42-1024-ft1 report regions_held_dwarf = 1
 example-42-1024-ft1 report regions_held_faerie = 1
 example-42-1024-ft1 report regions_held_human = 1
 example-42-1024-ft1 report regions_held_orc = 1
-example-42-1024-ft1 phases 1:1:1:0:149:1|2:1:2:150:174:0|3:1:3:175:224:1|4:1:2:225:249:0|5:1:3:250:299:1|6:1:2:300:324:0|7:1:3:325:374:1|8:1:2:375:399:0|9:1:3:400:449:1|10:1:2:450:474:0|11:1:3:475:524:1|12:1:2:525:549:0|13:1:3:550:599:1|14:1:2:600:624:0|15:1:3:625:674:1|16:1:2:675:699:0|17:1:3:700:749:1|18:1:2:750:774:0|19:1:3:775:824:1|20:1:2:825:849:0|21:1:3:850:899:1|22:1:2:900:924:0|23:1:3:925:974:1|24:1:2:975:999:0|25:1:3:1000:1049:1|26:1:2:1050:1074:0|27:1:3:1075:1124:1|28:1:2:1125:1149:0|29:1:3:1150:1199:1|30:1:2:1200:1224:0|31:1:3:1225:1274:1|32:1:2:1275:1299:0|33:1:3:1300:1349:1|34:1:2:1350:1374:0|35:1:3:1375:1424:1|36:1:2:1425:1449:0|37:1:3:1450:1499:1|38:1:2:1500:1524:0|39:1:3:1525:1574:1|40:1:2:1575:1599:0|41:1:3:1600:1649:1|42:1:2:1650:1674:0|43:1:3:1675:1724:1|44:1:2:1725:1749:0|45:1:3:1750:1799:1|46:1:2:1800:1824:0|47:1:3:1825:1874:1|48:1:2:1875:1899:0|49:1:3:1900:1949:1|50:1:2:1950:1974:0|51:1:3:1975:2024:1|52:1:2:2025:2049:0|53:1:3:2050:2073:1|54:2:1:2074:2223:56|55:2:2:2224:2248:0|56:2:3:2249:2298:1|57:2:2:2299:2323:0|58:2:3:2324:2373:1|59:2:2:2374:2398:0|60:2:3:2399:2448:1|61:2:2:2449:2473:0|62:2:3:2474:2523:1|63:2:2:2524:2548:0|64:2:3:2549:2598:1|65:2:2:2599:2623:0|66:2:3:2624:2645:1|67:2:2:2646:3241:0|68:3:1:3242:3391:72|69:3:2:3392:4242:0|70:4:1:4243:4392:76|71:4:2:4393:4968:0|72:5:1:4969:5118:80|73:5:2:5119:5595:0|74:6:1:5596:5745:84|75:6:4:5746:5999:0
+example-42-1024-ft1 phases 1:1:1:0:149:1|2:1:2:150:174:0|3:1:3:175:224:1|4:1:2:225:249:0|5:1:3:250:299:1|6:1:2:300:324:0|7:1:3:325:374:1|8:1:2:375:399:0|9:1:3:400:449:1|10:1:2:450:474:0|11:1:3:475:524:1|12:1:2:525:549:0|13:1:3:550:599:1|14:1:2:600:624:0|15:1:3:625:674:1|16:1:2:675:699:0|17:1:3:700:749:1|18:1:2:750:774:0|19:1:3:775:824:1|20:1:2:825:849:0|21:1:3:850:899:1|22:1:2:900:924:0|23:1:3:925:974:1|24:1:2:975:999:0|25:1:3:1000:1049:1|26:1:2:1050:1074:0|27:1:3:1075:1124:1|28:1:2:1125:1149:0|29:1:3:1150:1199:1|30:1:2:1200:1224:0|31:1:3:1225:1274:1|32:1:2:1275:1299:0|33:1:3:1300:1349:1|34:1:2:1350:1374:0|35:1:3:1375:1424:1|36:1:2:1425:1449:0|37:1:3:1450:1499:1|38:1:2:1500:1524:0|39:1:3:1525:1574:1|40:1:2:1575:1599:0|41:1:3:1600:1649:1|42:1:2:1650:1674:0|43:1:3:1675:1724:1|44:1:2:1725:1749:0|45:1:3:1750:1799:1|46:1:2:1800:1824:0|47:1:3:1825:1874:1|48:1:2:1875:1899:0|49:1:3:1900:1949:1|50:1:2:1950:1974:0|51:1:3:1975:2024:1|52:1:2:2025:2049:0|53:1:3:2050:2073:1|54:2:1:2074:2223:30|55:2:2:2224:2248:0|56:2:3:2249:2298:1|57:2:2:2299:2323:0|58:2:3:2324:2373:1|59:2:2:2374:2398:0|60:2:3:2399:2448:1|61:2:2:2449:2473:0|62:2:3:2474:2523:1|63:2:2:2524:2548:0|64:2:3:2549:2598:1|65:2:2:2599:2623:0|66:2:3:2624:2645:1|67:2:2:2646:3241:0|68:3:1:3242:3391:40|69:3:2:3392:4242:0|70:4:1:4243:4392:44|71:4:2:4393:4968:0|72:5:1:4969:5118:48|73:5:2:5119:5595:0|74:6:1:5596:5745:52|75:6:4:5746:5999:0
 example-42-1024-ft1 names c1:0 s1:0 site:seed
 example-42-1024-ft1 names c2:0 s2:1 site:seed
 example-42-1024-ft1 names c3:0 s3:0 site:seed
@@ -2979,89 +2977,57 @@ example-42-1024-ft1 names c6:0 s6:0 site:seed
 example-42-1024-ft1 e1 Fielie awakened the Elves in Windgate Barrows.
 example-42-1024-ft1 e2 The Elves founded the House of Finen in Windgate Barrows.
 example-42-1024-ft1 e3 The House of Finen founded Voeledell in Windgate Barrows.
-example-42-1024-ft1 e4 For 25 years, from 150 to 174, the land was quiet; one realm held it.
-example-42-1024-ft1 e5 In 175 tensions flared into 50 years of upheaval.
-example-42-1024-ft1 e6 For 25 years, from 225 to 249, the land was quiet; one realm held it.
-example-42-1024-ft1 e7 In 250 tensions flared into 50 years of upheaval.
-example-42-1024-ft1 e8 For 25 years, from 300 to 324, the land was quiet; one realm held it.
-example-42-1024-ft1 e9 In 325 tensions flared into 50 years of upheaval.
-example-42-1024-ft1 e10 For 25 years, from 375 to 399, the land was quiet; one realm held it.
-example-42-1024-ft1 e11 In 400 tensions flared into 50 years of upheaval.
-example-42-1024-ft1 e12 For 25 years, from 450 to 474, the land was quiet; one realm held it.
-example-42-1024-ft1 e13 In 475 tensions flared into 50 years of upheaval.
-example-42-1024-ft1 e14 For 25 years, from 525 to 549, the land was quiet; one realm held it.
-example-42-1024-ft1 e15 In 550 tensions flared into 50 years of upheaval.
-example-42-1024-ft1 e16 For 25 years, from 600 to 624, the land was quiet; one realm held it.
-example-42-1024-ft1 e17 In 625 tensions flared into 50 years of upheaval.
-example-42-1024-ft1 e18 For 25 years, from 675 to 699, the land was quiet; one realm held it.
-example-42-1024-ft1 e19 In 700 tensions flared into 50 years of upheaval.
-example-42-1024-ft1 e20 For 25 years, from 750 to 774, the land was quiet; one realm held it.
-example-42-1024-ft1 e21 In 775 tensions flared into 50 years of upheaval.
-example-42-1024-ft1 e22 For 25 years, from 825 to 849, the land was quiet; one realm held it.
-example-42-1024-ft1 e23 In 850 tensions flared into 50 years of upheaval.
-example-42-1024-ft1 e24 For 25 years, from 900 to 924, the land was quiet; one realm held it.
-example-42-1024-ft1 e25 In 925 tensions flared into 50 years of upheaval.
-example-42-1024-ft1 e26 For 25 years, from 975 to 999, the land was quiet; one realm held it.
-example-42-1024-ft1 e27 In 1000 tensions flared into 50 years of upheaval.
-example-42-1024-ft1 e28 For 25 years, from 1050 to 1074, the land was quiet; one realm held it.
-example-42-1024-ft1 e29 In 1075 tensions flared into 50 years of upheaval.
-example-42-1024-ft1 e30 For 25 years, from 1125 to 1149, the land was quiet; one realm held it.
-example-42-1024-ft1 e31 In 1150 tensions flared into 50 years of upheaval.
-example-42-1024-ft1 e32 For 25 years, from 1200 to 1224, the land was quiet; one realm held it.
-example-42-1024-ft1 e33 In 1225 tensions flared into 50 years of upheaval.
-example-42-1024-ft1 e34 For 25 years, from 1275 to 1299, the land was quiet; one realm held it.
-example-42-1024-ft1 e35 In 1300 tensions flared into 50 years of upheaval.
-example-42-1024-ft1 e36 For 25 years, from 1350 to 1374, the land was quiet; one realm held it.
-example-42-1024-ft1 e37 In 1375 tensions flared into 50 years of upheaval.
-example-42-1024-ft1 e38 For 25 years, from 1425 to 1449, the land was quiet; one realm held it.
-example-42-1024-ft1 e39 In 1450 tensions flared into 50 years of upheaval.
-example-42-1024-ft1 e40 For 25 years, from 1500 to 1524, the land was quiet; one realm held it.
-example-42-1024-ft1 e41 In 1525 tensions flared into 50 years of upheaval.
-example-42-1024-ft1 e42 For 25 years, from 1575 to 1599, the land was quiet; one realm held it.
-example-42-1024-ft1 e43 In 1600 tensions flared into 50 years of upheaval.
-example-42-1024-ft1 e44 For 25 years, from 1650 to 1674, the land was quiet; one realm held it.
-example-42-1024-ft1 e45 In 1675 tensions flared into 50 years of upheaval.
-example-42-1024-ft1 e46 For 25 years, from 1725 to 1749, the land was quiet; one realm held it.
-example-42-1024-ft1 e47 In 1750 tensions flared into 50 years of upheaval.
-example-42-1024-ft1 e48 For 25 years, from 1800 to 1824, the land was quiet; one realm held it.
-example-42-1024-ft1 e49 In 1825 tensions flared into 50 years of upheaval.
-example-42-1024-ft1 e50 For 25 years, from 1875 to 1899, the land was quiet; one realm held it.
-example-42-1024-ft1 e51 In 1900 tensions flared into 50 years of upheaval.
-example-42-1024-ft1 e52 For 25 years, from 1950 to 1974, the land was quiet; one realm held it.
-example-42-1024-ft1 e53 In 1975 tensions flared into 50 years of upheaval.
-example-42-1024-ft1 e54 For 25 years, from 2025 to 2049, the land was quiet; one realm held it.
-example-42-1024-ft1 e55 In 2050 tensions flared into 24 years of upheaval.
-example-42-1024-ft1 e56 Krokzit awakened the Goblins in Kitedown.
-example-42-1024-ft1 e57 The Goblins founded the Skib Horde in Kitedown.
-example-42-1024-ft1 e58 The Skib Horde founded Skrisligg Pit in Kitedown.
-example-42-1024-ft1 e59 For 25 years, from 2224 to 2248, the land was quiet, and 2 realms kept the peace.
-example-42-1024-ft1 e60 In 2249 tensions flared into 50 years of upheaval.
-example-42-1024-ft1 e61 For 25 years, from 2299 to 2323, the land was quiet, and 2 realms kept the peace.
-example-42-1024-ft1 e62 In 2324 tensions flared into 50 years of upheaval.
-example-42-1024-ft1 e63 For 25 years, from 2374 to 2398, the land was quiet, and 2 realms kept the peace.
-example-42-1024-ft1 e64 In 2399 tensions flared into 50 years of upheaval.
-example-42-1024-ft1 e65 For 25 years, from 2449 to 2473, the land was quiet, and 2 realms kept the peace.
-example-42-1024-ft1 e66 In 2474 tensions flared into 50 years of upheaval.
-example-42-1024-ft1 e67 For 25 years, from 2524 to 2548, the land was quiet, and 2 realms kept the peace.
-example-42-1024-ft1 e68 In 2549 tensions flared into 50 years of upheaval.
-example-42-1024-ft1 e69 For 25 years, from 2599 to 2623, the land was quiet, and 2 realms kept the peace.
-example-42-1024-ft1 e70 In 2624 tensions flared into 22 years of upheaval.
-example-42-1024-ft1 e71 For 596 years, from 2646 to 3241, the land was quiet, and 2 realms kept the peace.
-example-42-1024-ft1 e72 Bronhak awakened the Dwarves in the Sundered Shaw.
-example-42-1024-ft1 e73 The Dwarves founded the Kaindnimm Throne in the Sundered Shaw.
-example-42-1024-ft1 e74 The Kaindnimm Throne founded Daidmin in the Sundered Shaw.
-example-42-1024-ft1 e75 For 851 years, from 3392 to 4242, the land was quiet, and 3 realms kept the peace.
-example-42-1024-ft1 e76 Syfiash awakened the Faeries in Umberdown.
-example-42-1024-ft1 e77 The Faeries founded the Circle of Fysoli in Umberdown.
-example-42-1024-ft1 e78 The Circle of Fysoli founded Lowhou in Umberdown.
-example-42-1024-ft1 e79 For 576 years, from 4393 to 4968, the land was quiet, and 4 realms kept the peace.
-example-42-1024-ft1 e80 Wealstuld awakened the Humans in Otterford Rises.
-example-42-1024-ft1 e81 The Humans founded the Kingdom of Alird in Otterford Rises.
-example-42-1024-ft1 e82 The Kingdom of Alird founded Aledsealdbury in Otterford Rises.
-example-42-1024-ft1 e83 For 477 years, from 5119 to 5595, the land was quiet, and 5 realms kept the peace.
-example-42-1024-ft1 e84 Ogh'krak awakened the Orcs in Warlord's Rises.
-example-42-1024-ft1 e85 The Orcs founded the Warband of Baaldkrok in Warlord's Rises.
-example-42-1024-ft1 e86 The Warband of Baaldkrok founded Uld'kag in Warlord's Rises.
+example-42-1024-ft1 e4 In 175 tensions flared into 50 years of upheaval.
+example-42-1024-ft1 e5 In 250 tensions flared into 50 years of upheaval.
+example-42-1024-ft1 e6 In 325 tensions flared into 50 years of upheaval.
+example-42-1024-ft1 e7 In 400 tensions flared into 50 years of upheaval.
+example-42-1024-ft1 e8 In 475 tensions flared into 50 years of upheaval.
+example-42-1024-ft1 e9 In 550 tensions flared into 50 years of upheaval.
+example-42-1024-ft1 e10 In 625 tensions flared into 50 years of upheaval.
+example-42-1024-ft1 e11 In 700 tensions flared into 50 years of upheaval.
+example-42-1024-ft1 e12 In 775 tensions flared into 50 years of upheaval.
+example-42-1024-ft1 e13 In 850 tensions flared into 50 years of upheaval.
+example-42-1024-ft1 e14 In 925 tensions flared into 50 years of upheaval.
+example-42-1024-ft1 e15 In 1000 tensions flared into 50 years of upheaval.
+example-42-1024-ft1 e16 In 1075 tensions flared into 50 years of upheaval.
+example-42-1024-ft1 e17 In 1150 tensions flared into 50 years of upheaval.
+example-42-1024-ft1 e18 In 1225 tensions flared into 50 years of upheaval.
+example-42-1024-ft1 e19 In 1300 tensions flared into 50 years of upheaval.
+example-42-1024-ft1 e20 In 1375 tensions flared into 50 years of upheaval.
+example-42-1024-ft1 e21 In 1450 tensions flared into 50 years of upheaval.
+example-42-1024-ft1 e22 In 1525 tensions flared into 50 years of upheaval.
+example-42-1024-ft1 e23 In 1600 tensions flared into 50 years of upheaval.
+example-42-1024-ft1 e24 In 1675 tensions flared into 50 years of upheaval.
+example-42-1024-ft1 e25 In 1750 tensions flared into 50 years of upheaval.
+example-42-1024-ft1 e26 In 1825 tensions flared into 50 years of upheaval.
+example-42-1024-ft1 e27 In 1900 tensions flared into 50 years of upheaval.
+example-42-1024-ft1 e28 In 1975 tensions flared into 50 years of upheaval.
+example-42-1024-ft1 e29 In 2050 tensions flared into 24 years of upheaval.
+example-42-1024-ft1 e30 Krokzit awakened the Goblins in Kitedown.
+example-42-1024-ft1 e31 The Goblins founded the Skib Horde in Kitedown.
+example-42-1024-ft1 e32 The Skib Horde founded Skrisligg Pit in Kitedown.
+example-42-1024-ft1 e33 In 2249 tensions flared into 50 years of upheaval.
+example-42-1024-ft1 e34 In 2324 tensions flared into 50 years of upheaval.
+example-42-1024-ft1 e35 In 2399 tensions flared into 50 years of upheaval.
+example-42-1024-ft1 e36 In 2474 tensions flared into 50 years of upheaval.
+example-42-1024-ft1 e37 In 2549 tensions flared into 50 years of upheaval.
+example-42-1024-ft1 e38 In 2624 tensions flared into 22 years of upheaval.
+example-42-1024-ft1 e39 For 596 years, from 2646 to 3241, the land was quiet, and 2 realms kept the peace.
+example-42-1024-ft1 e40 Bronhak awakened the Dwarves in the Sundered Shaw.
+example-42-1024-ft1 e41 The Dwarves founded the Kaindnimm Throne in the Sundered Shaw.
+example-42-1024-ft1 e42 The Kaindnimm Throne founded Daidmin in the Sundered Shaw.
+example-42-1024-ft1 e43 For 851 years, from 3392 to 4242, the land was quiet, and 3 realms kept the peace.
+example-42-1024-ft1 e44 Syfiash awakened the Faeries in Umberdown.
+example-42-1024-ft1 e45 The Faeries founded the Circle of Fysoli in Umberdown.
+example-42-1024-ft1 e46 The Circle of Fysoli founded Lowhou in Umberdown.
+example-42-1024-ft1 e47 For 576 years, from 4393 to 4968, the land was quiet, and 4 realms kept the peace.
+example-42-1024-ft1 e48 Wealstuld awakened the Humans in Otterford Rises.
+example-42-1024-ft1 e49 The Humans founded the Kingdom of Alird in Otterford Rises.
+example-42-1024-ft1 e50 The Kingdom of Alird founded Aledsealdbury in Otterford Rises.
+example-42-1024-ft1 e51 For 477 years, from 5119 to 5595, the land was quiet, and 5 realms kept the peace.
+example-42-1024-ft1 e52 Ogh'krak awakened the Orcs in Warlord's Rises.
+example-42-1024-ft1 e53 The Orcs founded the Warband of Baaldkrok in Warlord's Rises.
+example-42-1024-ft1 e54 The Warband of Baaldkrok founded Uld'kag in Warlord's Rises.
 template awakening 7b63726561746f727d206177616b656e656420746865207b726163653a706c7572616c7d20696e207b40726567696f6e7d2e ok
 template awakening 546578742077697468207d7d20616e64207b7b20627261636573 ok
 template awakening 7b7b726163657d7d ok

@@ -276,7 +276,7 @@ filter stard 0
 filter iensath 0
 filter grork 0
 filter arthos 0
-filter ascumbrin 0
+filter ascumbrin 1
 filter focoth 0
 filter khorkhound 0
 filter bag 1
@@ -869,7 +869,7 @@ fatal never settlement 0 1 1 names: culture 'never' produced no valid settlement
 0 faerie god 32 1 Shieflap
 0 faerie god 33 0 Sheemiebae
 0 faerie god 34 0 Whiepwo
-0 faerie god 35 0 Oupee
+0 faerie god 35 1 Pilo
 0 faerie god 36 0 Woutwiamou
 0 faerie god 37 0 Fitie
 0 faerie god 38 0 Twoullmia
@@ -1435,7 +1435,7 @@ fatal never settlement 0 1 1 names: culture 'never' produced no valid settlement
 0 orcish settlement 48 0 Ghark
 0 orcish settlement 49 0 Urald Camp
 0 orcish settlement 50 0 Azol'uguuz
-sha256 0 e9b96a4f9efa226de99cc90e0cdb2a07d92abb1372f171f18d3de2ad0b3a93bf
+sha256 0 bbf27d67ab1c49823980438225c1d58e6b48b078fc3f5584d12b31ccd6b5dda8
 42 dwarven god 1 0 Khorkhound
 42 dwarven god 2 1 Grirtoum
 42 dwarven god 3 1 Bronhak
@@ -1802,7 +1802,7 @@ sha256 0 e9b96a4f9efa226de99cc90e0cdb2a07d92abb1372f171f18d3de2ad0b3a93bf
 42 faerie civilization 14 0 The Wiesiwia Ring
 42 faerie civilization 15 1 The Circle of Tyshia
 42 faerie civilization 16 0 The Sheesi Court
-42 faerie civilization 17 0 The Babiapee Court
+42 faerie civilization 17 1 The Piemolie Court
 42 faerie civilization 18 0 The Faeli Court
 42 faerie civilization 19 0 The Shask Ring
 42 faerie civilization 20 0 The Aewhousk Ring
@@ -1831,7 +1831,7 @@ sha256 0 e9b96a4f9efa226de99cc90e0cdb2a07d92abb1372f171f18d3de2ad0b3a93bf
 42 faerie civilization 43 0 The Sosouy Ring
 42 faerie civilization 44 0 The Circle of Maetwo
 42 faerie civilization 45 0 The Meenfo Court
-42 faerie civilization 46 0 The Circle of Flapeeth
+42 faerie civilization 46 1 The Miawhae Court
 42 faerie civilization 47 0 The Saep Court
 42 faerie civilization 48 0 The Circle of Sheetwou
 42 faerie civilization 49 0 The Shoshtae Court
@@ -2336,7 +2336,7 @@ sha256 0 e9b96a4f9efa226de99cc90e0cdb2a07d92abb1372f171f18d3de2ad0b3a93bf
 42 orcish settlement 48 0 Aal'uraaz Fort
 42 orcish settlement 49 0 Orz'grom Camp
 42 orcish settlement 50 0 Thuurkbash
-sha256 42 e382f734b1dec402e429cb534acc458ffcaeb7e0fc9313bc814e067fcc874d90
+sha256 42 f85c99a8e4514d2683d42acbd1af3441ccde736b1aad62f1e110dbf128bf5b9d
 r4sha256 0 7b81d85d11630b64f27f7eb16dc9f0815b764a0fc8ee60d506f68686a04942b9
 r4sha256 42 8403dc92b716ecfb7c22bb9589d3e487aecaf08a43ffc81a89a370f0f4f80f4c
 # r10 (P3-02 12, generator 0.19.0):
@@ -2699,7 +2699,7 @@ core 0 faerie god 31 0 Lietwae
 core 0 faerie god 32 1 Shieflap
 core 0 faerie god 33 0 Sheemiebae
 core 0 faerie god 34 0 Whiepwo
-core 0 faerie god 35 0 Oupee
+core 0 faerie god 35 1 Pilo
 core 0 faerie god 36 0 Woutwiamou
 core 0 faerie god 37 0 Fitie
 core 0 faerie god 38 0 Twoullmia
@@ -3265,7 +3265,7 @@ core 0 orcish settlement 47 1 Uukh'kruuld Fort
 core 0 orcish settlement 48 0 Ghark
 core 0 orcish settlement 49 2 Dogkrogh Fort
 core 0 orcish settlement 50 0 Azol'uguuz
-coresha256 0 e5d21c6134fc6c83e3b000d90aabd91a85a6d23c9b06a7038851faf84d2da88a
+coresha256 0 f2bd5ffb021c24a09bf0a07d805b4373342c9f510634ec66b8371c5bd47e62b7
 core 42 dwarven god 1 0 Khorkhound
 core 42 dwarven god 2 1 Grirtoum
 core 42 dwarven god 3 1 Bronhak
@@ -3632,7 +3632,7 @@ core 42 faerie civilization 13 0 The Taflie Court
 core 42 faerie civilization 14 0 The Wiesiwia Ring
 core 42 faerie civilization 15 1 The Circle of Tyshia
 core 42 faerie civilization 16 0 The Sheesi Court
-core 42 faerie civilization 17 0 The Babiapee Court
+core 42 faerie civilization 17 1 The Piemolie Court
 core 42 faerie civilization 18 0 The Faeli Court
 core 42 faerie civilization 19 0 The Shask Ring
 core 42 faerie civilization 20 0 The Aewhousk Ring
@@ -3661,7 +3661,7 @@ core 42 faerie civilization 42 0 The Oshie Ring
 core 42 faerie civilization 43 0 The Sosouy Ring
 core 42 faerie civilization 44 0 The Circle of Maetwo
 core 42 faerie civilization 45 0 The Meenfo Court
-core 42 faerie civilization 46 0 The Circle of Flapeeth
+core 42 faerie civilization 46 1 The Miawhae Court
 core 42 faerie civilization 47 0 The Saep Court
 core 42 faerie civilization 48 0 The Circle of Sheetwou
 core 42 faerie civilization 49 0 The Shoshtae Court
@@ -4166,4 +4166,349 @@ core 42 orcish settlement 47 0 Ark'muuz
 core 42 orcish settlement 48 0 Aal'uraaz Fort
 core 42 orcish settlement 49 0 Orz'grom Camp
 core 42 orcish settlement 50 0 Thuurkbash
-coresha256 42 a014564c70c2520aa4f8f332dadb465326148c910cc199a05982335dedfaacbc
+coresha256 42 94452abbbc8de142ba54dca976cf0c66b076a77845a013f719ac2cdeb5efdc3b
+# r13 (P3-02 13, generator 0.19.0 second round):
+#   triple <0|1> <name>   13.2's test on a rendered name (case-insensitive, three equal letters a-z
+#       at consecutive positions); the name is the rest of the line
+#   tattempt <culture> <kind> <seed> <c> <e> <t> <valid 0|1> <triple 0|1> <name>  attempts of the
+#       test cultures trip and trip_hollow (filter: the shipped one), c = 1
+#   tresult <culture> <kind> <seed> <c> <e> <attempt|F> <name>  make_name with a fresh registry
+triple 1 Wasssie
+triple 1 Floullly Hollow
+triple 1 Fiasssie
+triple 1 Passsae
+triple 1 The Circle of Eesssy
+triple 1 The Bosssie Ring
+triple 1 AAAb
+triple 1 xBBBy
+triple 0 Bigg-Gnizz
+triple 0 Aa'azaam
+triple 0 Billa Hollow
+triple 0 Aa a
+triple 0 Kaa-aar
+triple 0 Mammga
+triple 0 Ee'e
+tattempt trip god 0 1 1 0 1 0 Bigg-Gnizz
+tattempt trip god 0 1 1 1 0 1 Wasssie
+tattempt trip god 0 1 1 2 1 0 Aa'azaam
+tattempt trip god 0 1 1 3 1 0 Bigg-Gnizz
+tattempt trip god 0 1 1 4 0 1 Wasssie
+tattempt trip god 0 1 1 5 0 1 Fiasssie
+tattempt trip god 0 1 1 6 0 1 Wasssie
+tattempt trip god 0 1 1 7 0 1 Wasssie
+tresult trip god 0 1 1 0 Bigg-Gnizz
+tattempt trip god 0 1 2 0 1 0 Bigg-Gnizz
+tattempt trip god 0 1 2 1 1 0 Bigg-Gnizz
+tattempt trip god 0 1 2 2 1 0 Bigg-Gnizz
+tattempt trip god 0 1 2 3 0 1 Fiasssie
+tattempt trip god 0 1 2 4 1 0 Aa'azaam
+tattempt trip god 0 1 2 5 1 0 Aa'azaam
+tattempt trip god 0 1 2 6 1 0 Aa'azaam
+tattempt trip god 0 1 2 7 1 0 Bigg-Gnizz
+tresult trip god 0 1 2 0 Bigg-Gnizz
+tattempt trip god 0 1 3 0 0 1 Fiasssie
+tattempt trip god 0 1 3 1 1 0 Bigg-Gnizz
+tattempt trip god 0 1 3 2 1 0 Billa
+tattempt trip god 0 1 3 3 1 0 Bigg-Gnizz
+tattempt trip god 0 1 3 4 0 1 Fiasssie
+tattempt trip god 0 1 3 5 1 0 Aa'azaam
+tattempt trip god 0 1 3 6 1 0 Aa'azaam
+tattempt trip god 0 1 3 7 0 1 Fiasssie
+tresult trip god 0 1 3 1 Bigg-Gnizz
+tattempt trip god 42 1 1 0 1 0 Aa'azaam
+tattempt trip god 42 1 1 1 0 1 Wasssie
+tattempt trip god 42 1 1 2 0 1 Fiasssie
+tattempt trip god 42 1 1 3 1 0 Bigg-Gnizz
+tattempt trip god 42 1 1 4 1 0 Bigg-Gnizz
+tattempt trip god 42 1 1 5 1 0 Billa
+tattempt trip god 42 1 1 6 1 0 Billa
+tattempt trip god 42 1 1 7 1 0 Billa
+tresult trip god 42 1 1 0 Aa'azaam
+tattempt trip god 42 1 2 0 1 0 Aa'azaam
+tattempt trip god 42 1 2 1 1 0 Bigg-Gnizz
+tattempt trip god 42 1 2 2 1 0 Billa
+tattempt trip god 42 1 2 3 0 1 Wasssie
+tattempt trip god 42 1 2 4 0 1 Wasssie
+tattempt trip god 42 1 2 5 1 0 Billa
+tattempt trip god 42 1 2 6 1 0 Billa
+tattempt trip god 42 1 2 7 0 1 Fiasssie
+tresult trip god 42 1 2 0 Aa'azaam
+tattempt trip god 42 1 3 0 1 0 Billa
+tattempt trip god 42 1 3 1 1 0 Bigg-Gnizz
+tattempt trip god 42 1 3 2 1 0 Billa
+tattempt trip god 42 1 3 3 1 0 Bigg-Gnizz
+tattempt trip god 42 1 3 4 1 0 Billa
+tattempt trip god 42 1 3 5 0 1 Wasssie
+tattempt trip god 42 1 3 6 0 1 Wasssie
+tattempt trip god 42 1 3 7 1 0 Billa
+tresult trip god 42 1 3 0 Billa
+tattempt trip civilization 0 1 1 0 1 0 Bigg-Gnizz
+tattempt trip civilization 0 1 1 1 1 0 Billa
+tattempt trip civilization 0 1 1 2 0 1 Fiasssie
+tattempt trip civilization 0 1 1 3 1 0 Billa
+tattempt trip civilization 0 1 1 4 1 0 Bigg-Gnizz
+tattempt trip civilization 0 1 1 5 1 0 Bigg-Gnizz
+tattempt trip civilization 0 1 1 6 1 0 Billa
+tattempt trip civilization 0 1 1 7 1 0 Billa
+tresult trip civilization 0 1 1 0 Bigg-Gnizz
+tattempt trip civilization 0 1 2 0 0 1 Wasssie
+tattempt trip civilization 0 1 2 1 1 0 Aa'azaam
+tattempt trip civilization 0 1 2 2 1 0 Bigg-Gnizz
+tattempt trip civilization 0 1 2 3 1 0 Aa'azaam
+tattempt trip civilization 0 1 2 4 1 0 Billa
+tattempt trip civilization 0 1 2 5 1 0 Aa'azaam
+tattempt trip civilization 0 1 2 6 1 0 Bigg-Gnizz
+tattempt trip civilization 0 1 2 7 0 1 Wasssie
+tresult trip civilization 0 1 2 1 Aa'azaam
+tattempt trip civilization 0 1 3 0 0 1 Wasssie
+tattempt trip civilization 0 1 3 1 0 1 Wasssie
+tattempt trip civilization 0 1 3 2 0 1 Wasssie
+tattempt trip civilization 0 1 3 3 1 0 Aa'azaam
+tattempt trip civilization 0 1 3 4 1 0 Billa
+tattempt trip civilization 0 1 3 5 0 1 Fiasssie
+tattempt trip civilization 0 1 3 6 0 1 Fiasssie
+tattempt trip civilization 0 1 3 7 1 0 Aa'azaam
+tresult trip civilization 0 1 3 3 Aa'azaam
+tattempt trip civilization 42 1 1 0 1 0 Billa
+tattempt trip civilization 42 1 1 1 1 0 Bigg-Gnizz
+tattempt trip civilization 42 1 1 2 0 1 Fiasssie
+tattempt trip civilization 42 1 1 3 0 1 Fiasssie
+tattempt trip civilization 42 1 1 4 1 0 Billa
+tattempt trip civilization 42 1 1 5 1 0 Billa
+tattempt trip civilization 42 1 1 6 1 0 Bigg-Gnizz
+tattempt trip civilization 42 1 1 7 1 0 Bigg-Gnizz
+tresult trip civilization 42 1 1 0 Billa
+tattempt trip civilization 42 1 2 0 1 0 Aa'azaam
+tattempt trip civilization 42 1 2 1 1 0 Billa
+tattempt trip civilization 42 1 2 2 1 0 Billa
+tattempt trip civilization 42 1 2 3 1 0 Aa'azaam
+tattempt trip civilization 42 1 2 4 1 0 Aa'azaam
+tattempt trip civilization 42 1 2 5 0 1 Fiasssie
+tattempt trip civilization 42 1 2 6 1 0 Aa'azaam
+tattempt trip civilization 42 1 2 7 0 1 Wasssie
+tresult trip civilization 42 1 2 0 Aa'azaam
+tattempt trip civilization 42 1 3 0 1 0 Billa
+tattempt trip civilization 42 1 3 1 1 0 Bigg-Gnizz
+tattempt trip civilization 42 1 3 2 1 0 Bigg-Gnizz
+tattempt trip civilization 42 1 3 3 1 0 Bigg-Gnizz
+tattempt trip civilization 42 1 3 4 0 1 Wasssie
+tattempt trip civilization 42 1 3 5 0 1 Fiasssie
+tattempt trip civilization 42 1 3 6 0 1 Wasssie
+tattempt trip civilization 42 1 3 7 0 1 Fiasssie
+tresult trip civilization 42 1 3 0 Billa
+tattempt trip settlement 0 1 1 0 0 1 Fiasssie
+tattempt trip settlement 0 1 1 1 1 0 Bigg-Gnizz
+tattempt trip settlement 0 1 1 2 0 1 Fiasssie
+tattempt trip settlement 0 1 1 3 0 1 Wasssie
+tattempt trip settlement 0 1 1 4 0 1 Wasssie
+tattempt trip settlement 0 1 1 5 1 0 Aa'azaam
+tattempt trip settlement 0 1 1 6 1 0 Aa'azaam
+tattempt trip settlement 0 1 1 7 0 1 Wasssie
+tresult trip settlement 0 1 1 1 Bigg-Gnizz
+tattempt trip settlement 0 1 2 0 1 0 Bigg-Gnizz
+tattempt trip settlement 0 1 2 1 0 1 Wasssie
+tattempt trip settlement 0 1 2 2 1 0 Billa
+tattempt trip settlement 0 1 2 3 0 1 Fiasssie
+tattempt trip settlement 0 1 2 4 0 1 Fiasssie
+tattempt trip settlement 0 1 2 5 0 1 Wasssie
+tattempt trip settlement 0 1 2 6 1 0 Aa'azaam
+tattempt trip settlement 0 1 2 7 0 1 Fiasssie
+tresult trip settlement 0 1 2 0 Bigg-Gnizz
+tattempt trip settlement 0 1 3 0 1 0 Aa'azaam
+tattempt trip settlement 0 1 3 1 0 1 Fiasssie
+tattempt trip settlement 0 1 3 2 0 1 Fiasssie
+tattempt trip settlement 0 1 3 3 0 1 Wasssie
+tattempt trip settlement 0 1 3 4 1 0 Billa
+tattempt trip settlement 0 1 3 5 1 0 Bigg-Gnizz
+tattempt trip settlement 0 1 3 6 1 0 Bigg-Gnizz
+tattempt trip settlement 0 1 3 7 1 0 Bigg-Gnizz
+tresult trip settlement 0 1 3 0 Aa'azaam
+tattempt trip settlement 42 1 1 0 0 1 Wasssie
+tattempt trip settlement 42 1 1 1 0 1 Fiasssie
+tattempt trip settlement 42 1 1 2 0 1 Wasssie
+tattempt trip settlement 42 1 1 3 1 0 Aa'azaam
+tattempt trip settlement 42 1 1 4 0 1 Fiasssie
+tattempt trip settlement 42 1 1 5 1 0 Bigg-Gnizz
+tattempt trip settlement 42 1 1 6 1 0 Aa'azaam
+tattempt trip settlement 42 1 1 7 1 0 Aa'azaam
+tresult trip settlement 42 1 1 3 Aa'azaam
+tattempt trip settlement 42 1 2 0 1 0 Billa
+tattempt trip settlement 42 1 2 1 1 0 Billa
+tattempt trip settlement 42 1 2 2 0 1 Fiasssie
+tattempt trip settlement 42 1 2 3 1 0 Aa'azaam
+tattempt trip settlement 42 1 2 4 0 1 Wasssie
+tattempt trip settlement 42 1 2 5 0 1 Wasssie
+tattempt trip settlement 42 1 2 6 1 0 Aa'azaam
+tattempt trip settlement 42 1 2 7 1 0 Aa'azaam
+tresult trip settlement 42 1 2 0 Billa
+tattempt trip settlement 42 1 3 0 0 1 Wasssie
+tattempt trip settlement 42 1 3 1 1 0 Aa'azaam
+tattempt trip settlement 42 1 3 2 0 1 Fiasssie
+tattempt trip settlement 42 1 3 3 1 0 Bigg-Gnizz
+tattempt trip settlement 42 1 3 4 0 1 Wasssie
+tattempt trip settlement 42 1 3 5 1 0 Billa
+tattempt trip settlement 42 1 3 6 1 0 Aa'azaam
+tattempt trip settlement 42 1 3 7 1 0 Bigg-Gnizz
+tresult trip settlement 42 1 3 1 Aa'azaam
+tattempt trip_hollow god 0 1 1 0 0 1 Floullly
+tattempt trip_hollow god 0 1 1 1 0 1 Floullly
+tattempt trip_hollow god 0 1 1 2 1 0 Billa
+tattempt trip_hollow god 0 1 1 3 1 0 Billa
+tattempt trip_hollow god 0 1 1 4 0 1 Floullly
+tattempt trip_hollow god 0 1 1 5 1 0 Billa
+tattempt trip_hollow god 0 1 1 6 0 1 Floullly
+tattempt trip_hollow god 0 1 1 7 0 1 Floullly
+tresult trip_hollow god 0 1 1 2 Billa
+tattempt trip_hollow god 0 1 2 0 1 0 Billa
+tattempt trip_hollow god 0 1 2 1 0 1 Floullly
+tattempt trip_hollow god 0 1 2 2 1 0 Billa
+tattempt trip_hollow god 0 1 2 3 1 0 Billa
+tattempt trip_hollow god 0 1 2 4 1 0 Billa
+tattempt trip_hollow god 0 1 2 5 1 0 Billa
+tattempt trip_hollow god 0 1 2 6 1 0 Billa
+tattempt trip_hollow god 0 1 2 7 0 1 Floullly
+tresult trip_hollow god 0 1 2 0 Billa
+tattempt trip_hollow god 0 1 3 0 1 0 Billa
+tattempt trip_hollow god 0 1 3 1 1 0 Billa
+tattempt trip_hollow god 0 1 3 2 0 1 Floullly
+tattempt trip_hollow god 0 1 3 3 1 0 Billa
+tattempt trip_hollow god 0 1 3 4 1 0 Billa
+tattempt trip_hollow god 0 1 3 5 1 0 Billa
+tattempt trip_hollow god 0 1 3 6 1 0 Billa
+tattempt trip_hollow god 0 1 3 7 1 0 Billa
+tresult trip_hollow god 0 1 3 0 Billa
+tattempt trip_hollow god 42 1 1 0 1 0 Billa
+tattempt trip_hollow god 42 1 1 1 0 1 Floullly
+tattempt trip_hollow god 42 1 1 2 1 0 Billa
+tattempt trip_hollow god 42 1 1 3 1 0 Billa
+tattempt trip_hollow god 42 1 1 4 1 0 Billa
+tattempt trip_hollow god 42 1 1 5 0 1 Floullly
+tattempt trip_hollow god 42 1 1 6 0 1 Floullly
+tattempt trip_hollow god 42 1 1 7 0 1 Floullly
+tresult trip_hollow god 42 1 1 0 Billa
+tattempt trip_hollow god 42 1 2 0 1 0 Billa
+tattempt trip_hollow god 42 1 2 1 1 0 Billa
+tattempt trip_hollow god 42 1 2 2 0 1 Floullly
+tattempt trip_hollow god 42 1 2 3 0 1 Floullly
+tattempt trip_hollow god 42 1 2 4 0 1 Floullly
+tattempt trip_hollow god 42 1 2 5 0 1 Floullly
+tattempt trip_hollow god 42 1 2 6 0 1 Floullly
+tattempt trip_hollow god 42 1 2 7 1 0 Billa
+tresult trip_hollow god 42 1 2 0 Billa
+tattempt trip_hollow god 42 1 3 0 0 1 Floullly
+tattempt trip_hollow god 42 1 3 1 0 1 Floullly
+tattempt trip_hollow god 42 1 3 2 0 1 Floullly
+tattempt trip_hollow god 42 1 3 3 0 1 Floullly
+tattempt trip_hollow god 42 1 3 4 0 1 Floullly
+tattempt trip_hollow god 42 1 3 5 0 1 Floullly
+tattempt trip_hollow god 42 1 3 6 0 1 Floullly
+tattempt trip_hollow god 42 1 3 7 0 1 Floullly
+tresult trip_hollow god 42 1 3 9 Billa
+tattempt trip_hollow civilization 0 1 1 0 1 0 Billa
+tattempt trip_hollow civilization 0 1 1 1 0 1 Floullly
+tattempt trip_hollow civilization 0 1 1 2 1 0 Billa
+tattempt trip_hollow civilization 0 1 1 3 0 1 Floullly
+tattempt trip_hollow civilization 0 1 1 4 0 1 Floullly
+tattempt trip_hollow civilization 0 1 1 5 1 0 Billa
+tattempt trip_hollow civilization 0 1 1 6 0 1 Floullly
+tattempt trip_hollow civilization 0 1 1 7 0 1 Floullly
+tresult trip_hollow civilization 0 1 1 0 Billa
+tattempt trip_hollow civilization 0 1 2 0 0 1 Floullly
+tattempt trip_hollow civilization 0 1 2 1 1 0 Billa
+tattempt trip_hollow civilization 0 1 2 2 1 0 Billa
+tattempt trip_hollow civilization 0 1 2 3 1 0 Billa
+tattempt trip_hollow civilization 0 1 2 4 0 1 Floullly
+tattempt trip_hollow civilization 0 1 2 5 1 0 Billa
+tattempt trip_hollow civilization 0 1 2 6 1 0 Billa
+tattempt trip_hollow civilization 0 1 2 7 0 1 Floullly
+tresult trip_hollow civilization 0 1 2 1 Billa
+tattempt trip_hollow civilization 0 1 3 0 0 1 Floullly
+tattempt trip_hollow civilization 0 1 3 1 0 1 Floullly
+tattempt trip_hollow civilization 0 1 3 2 0 1 Floullly
+tattempt trip_hollow civilization 0 1 3 3 1 0 Billa
+tattempt trip_hollow civilization 0 1 3 4 0 1 Floullly
+tattempt trip_hollow civilization 0 1 3 5 1 0 Billa
+tattempt trip_hollow civilization 0 1 3 6 1 0 Billa
+tattempt trip_hollow civilization 0 1 3 7 1 0 Billa
+tresult trip_hollow civilization 0 1 3 3 Billa
+tattempt trip_hollow civilization 42 1 1 0 0 1 Floullly
+tattempt trip_hollow civilization 42 1 1 1 0 1 Floullly
+tattempt trip_hollow civilization 42 1 1 2 1 0 Billa
+tattempt trip_hollow civilization 42 1 1 3 1 0 Billa
+tattempt trip_hollow civilization 42 1 1 4 0 1 Floullly
+tattempt trip_hollow civilization 42 1 1 5 0 1 Floullly
+tattempt trip_hollow civilization 42 1 1 6 1 0 Billa
+tattempt trip_hollow civilization 42 1 1 7 1 0 Billa
+tresult trip_hollow civilization 42 1 1 2 Billa
+tattempt trip_hollow civilization 42 1 2 0 1 0 Billa
+tattempt trip_hollow civilization 42 1 2 1 0 1 Floullly
+tattempt trip_hollow civilization 42 1 2 2 0 1 Floullly
+tattempt trip_hollow civilization 42 1 2 3 1 0 Billa
+tattempt trip_hollow civilization 42 1 2 4 1 0 Billa
+tattempt trip_hollow civilization 42 1 2 5 1 0 Billa
+tattempt trip_hollow civilization 42 1 2 6 1 0 Billa
+tattempt trip_hollow civilization 42 1 2 7 0 1 Floullly
+tresult trip_hollow civilization 42 1 2 0 Billa
+tattempt trip_hollow civilization 42 1 3 0 0 1 Floullly
+tattempt trip_hollow civilization 42 1 3 1 0 1 Floullly
+tattempt trip_hollow civilization 42 1 3 2 1 0 Billa
+tattempt trip_hollow civilization 42 1 3 3 1 0 Billa
+tattempt trip_hollow civilization 42 1 3 4 0 1 Floullly
+tattempt trip_hollow civilization 42 1 3 5 1 0 Billa
+tattempt trip_hollow civilization 42 1 3 6 0 1 Floullly
+tattempt trip_hollow civilization 42 1 3 7 1 0 Billa
+tresult trip_hollow civilization 42 1 3 2 Billa
+tattempt trip_hollow settlement 0 1 1 0 1 0 Billa Hollow
+tattempt trip_hollow settlement 0 1 1 1 0 1 Floullly Hollow
+tattempt trip_hollow settlement 0 1 1 2 1 0 Billa Hollow
+tattempt trip_hollow settlement 0 1 1 3 0 1 Floullly Hollow
+tattempt trip_hollow settlement 0 1 1 4 0 1 Floullly Hollow
+tattempt trip_hollow settlement 0 1 1 5 1 0 Billa Hollow
+tattempt trip_hollow settlement 0 1 1 6 1 0 Billa Hollow
+tattempt trip_hollow settlement 0 1 1 7 0 1 Floullly Hollow
+tresult trip_hollow settlement 0 1 1 0 Billa Hollow
+tattempt trip_hollow settlement 0 1 2 0 1 0 Billa Hollow
+tattempt trip_hollow settlement 0 1 2 1 0 1 Floullly Hollow
+tattempt trip_hollow settlement 0 1 2 2 0 1 Floullly Hollow
+tattempt trip_hollow settlement 0 1 2 3 1 0 Billa Hollow
+tattempt trip_hollow settlement 0 1 2 4 1 0 Billa Hollow
+tattempt trip_hollow settlement 0 1 2 5 0 1 Floullly Hollow
+tattempt trip_hollow settlement 0 1 2 6 1 0 Billa Hollow
+tattempt trip_hollow settlement 0 1 2 7 1 0 Billa Hollow
+tresult trip_hollow settlement 0 1 2 0 Billa Hollow
+tattempt trip_hollow settlement 0 1 3 0 1 0 Billa Hollow
+tattempt trip_hollow settlement 0 1 3 1 1 0 Billa Hollow
+tattempt trip_hollow settlement 0 1 3 2 1 0 Billa Hollow
+tattempt trip_hollow settlement 0 1 3 3 0 1 Floullly Hollow
+tattempt trip_hollow settlement 0 1 3 4 0 1 Floullly Hollow
+tattempt trip_hollow settlement 0 1 3 5 1 0 Billa Hollow
+tattempt trip_hollow settlement 0 1 3 6 0 1 Floullly Hollow
+tattempt trip_hollow settlement 0 1 3 7 1 0 Billa Hollow
+tresult trip_hollow settlement 0 1 3 0 Billa Hollow
+tattempt trip_hollow settlement 42 1 1 0 0 1 Floullly Hollow
+tattempt trip_hollow settlement 42 1 1 1 1 0 Billa Hollow
+tattempt trip_hollow settlement 42 1 1 2 0 1 Floullly Hollow
+tattempt trip_hollow settlement 42 1 1 3 1 0 Billa Hollow
+tattempt trip_hollow settlement 42 1 1 4 1 0 Billa Hollow
+tattempt trip_hollow settlement 42 1 1 5 0 1 Floullly Hollow
+tattempt trip_hollow settlement 42 1 1 6 1 0 Billa Hollow
+tattempt trip_hollow settlement 42 1 1 7 1 0 Billa Hollow
+tresult trip_hollow settlement 42 1 1 1 Billa Hollow
+tattempt trip_hollow settlement 42 1 2 0 0 1 Floullly Hollow
+tattempt trip_hollow settlement 42 1 2 1 0 1 Floullly Hollow
+tattempt trip_hollow settlement 42 1 2 2 1 0 Billa Hollow
+tattempt trip_hollow settlement 42 1 2 3 1 0 Billa Hollow
+tattempt trip_hollow settlement 42 1 2 4 0 1 Floullly Hollow
+tattempt trip_hollow settlement 42 1 2 5 0 1 Floullly Hollow
+tattempt trip_hollow settlement 42 1 2 6 1 0 Billa Hollow
+tattempt trip_hollow settlement 42 1 2 7 1 0 Billa Hollow
+tresult trip_hollow settlement 42 1 2 2 Billa Hollow
+tattempt trip_hollow settlement 42 1 3 0 0 1 Floullly Hollow
+tattempt trip_hollow settlement 42 1 3 1 1 0 Billa Hollow
+tattempt trip_hollow settlement 42 1 3 2 1 0 Billa Hollow
+tattempt trip_hollow settlement 42 1 3 3 0 1 Floullly Hollow
+tattempt trip_hollow settlement 42 1 3 4 0 1 Floullly Hollow
+tattempt trip_hollow settlement 42 1 3 5 0 1 Floullly Hollow
+tattempt trip_hollow settlement 42 1 3 6 1 0 Billa Hollow
+tattempt trip_hollow settlement 42 1 3 7 0 1 Floullly Hollow
+tresult trip_hollow settlement 42 1 3 1 Billa Hollow

@@ -1181,3 +1181,46 @@ an hour each on a loaded machine; the lines sit in a commented block at the end
 of `p1-01-elevation.txt`, which `golden` keeps from the committed file. The
 slow cases of `stages_elevation_golden_test.cpp` check every seed with a line;
 seeds without one are not checked.
+
+### Generator 0.19.0, second round (P3-10 section 12; P3-06 r17 22, P3-05 r15 22.7a, P3-04 r15 20.1 item 1a, P3-02 r13 13, P3-01 r13 3.6)
+
+Written from the spec text alone, without the engineer's branch. The round replaces the unmerged 0.19.0
+behaviour in place: `--version 0.19.0` (the default) serves the second round's rules and data, `--version
+0.18.0` is unchanged and still reproduces the 0.18.0 files of 81908fa byte for byte (checked again for
+`p3-01-data.txt`, `p3-02-names.txt`, `p3-04-engine.txt`, `p3-05-peoples.txt` and `p3-06-conflict.txt`). The
+first round's 0.19.0 data on disk is recognised (`pre_019_r17`, `name_filters_r16`) and the second round's
+listings stand in for it, as for every earlier change.
+
+- `p3_data_reference.py`: race `hidden_years` after `awakening_quarrel` (orc 100, others 300,
+  `HIDDEN_YEARS_019`); `history.conflict` without `hidden_years` and with `quarrel_min_settlements` 2 after
+  `quarrel_strain` (int(0, 1000)); the check `conflict_quarrel_strain_max` (`conflict_check_messages`);
+  `history.engine.quiet_min_years` 50 after `quiet_events_max` (int(0, 400), `ENGINE_019`) and
+  `engine_check_messages` with `engine_quiet_min`; the filter edits of P3-02 13.1 (`NAME_FILTER_EDITS_019_R13`,
+  applied after r10's). Effective filter sizes 110 / 31 / 508.
+- `p3_names_reference.py`: `triple(name)` and the rule in `attempt` (`TRIPLE_RULE`, from 0.19.0); the test
+  cultures `trip` and `trip_hollow`; golden lines `triple`, `tattempt`, `tresult`; `check_r13` (13.3's units,
+  `name_filter_not_redundant` on the edited lists and on copies that keep `crude.at_start` `pee` or
+  `words.whole` `teepee`, invariant 7 on the lists, the numeral exempt).
+- `p3_engine_reference.py`: `QUIET_R15`; `Engine.assured(s, len, closes)` (the assured length A of 20.1 item
+  1a, with `q_end` the interval's end); `World.quiet_stretch(..., assured)` marks a row decided without a
+  stretch (`open_era[-1]`) when A < `quiet_min_years`; the entry check `engine_quiet_min` and the field's
+  range; `check_quiet_r15` (20.6 item 00 on probe runs: rows of 25, 35, 49, 50 years at Q 25 and 50,
+  quiet_min 0 and 100, and an exactness sweep over some 700 schedules).
+- `p3_peoples_reference.py`: `lie_low(civ, settlement, until)` and `lying_low(civ, year)` (22.7a r15: the
+  refuge stands and is the civilization's); 22.8 item 4a's r15 units (an orc's 100 years, the refuge ruined or
+  passed early, the new owner).
+- `p3_conflict_reference.py`: flags `quarrel_hold`, `race_hidden`, `aim_foot` (0.19.0); `quarrel_with` and
+  `held_back` (22.1: in 7.2 item 3 after `declare_min` and before the odds, and in 5.4); `hidden_years_of`
+  (22.2); `hides` is peoples' `lying_low` (22.3); `aim_clear` (22.5 item 1, every standing settlement of b in G)
+  and 21.6 item 2 only for o != a; the foothold cession in `cost_plan` / `end_war` (22.5 item 3);
+  `after_cost` (invariant (17) in the run); `replay_r17` (from the rows: (8) restated, (15) restated, (17),
+  the replay against the tables, and the facts: quick aim wins, foothold cessions, wars over a held goal by
+  outcome), one golden line per case `<case> r17 quick_aim_wins <n> foothold_cessions <m> held_goal_wars
+  <a>/<d>/<t>/<o>`; `check_units_r17` (22.10 items 1 to 6). The check of 8.3 item 4 (a claim's cause is no
+  colony of the same step) exempts a colony that was the claimed region's owner_event although a later step of
+  the year (a secession) passed the region on and the net rule left it no region_control row (stress-7 e1153,
+  first seen with this round's histories; the C++ support has the same exemption).
+
+The goldens re-recorded from these references: `p3-01-data.txt`, `p3-02-names.txt`, `p3-04-engine.txt`,
+`p3-05-peoples.txt`, `p3-06-conflict.txt`. `p3-03-chronology.txt` does not move: no god of its cases is reached
+by the new filter entries or the triple rule.

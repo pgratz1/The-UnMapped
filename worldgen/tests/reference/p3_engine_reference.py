@@ -190,7 +190,11 @@ def data(root="game/data"):
 
 
 def spec_engine():
-    return tomllib.loads(ENGINE_TOML)["history"]["engine"]
+    """4.1's listing; from 0.19.0 (r15) with quiet_min_years = 50 after quiet_events_max."""
+    t = ENGINE_TOML
+    if QUIET_R15:
+        t = t.replace("quiet_events_max = 3\n", "quiet_events_max = 3\nquiet_min_years = 50\n")
+    return tomllib.loads(t)["history"]["engine"]
 
 
 def spec_report():
@@ -306,6 +310,11 @@ QUIET_ERA_R10 = True
 RENDER_R12 = True
 QUIET_R12 = True
 MAX_PARTICIPANTS = 64   # P3-04 r13 20.1: the event writer's bound on a quiet_stretch's participants
+# P3-04 r15 (P3-10 second round, generator 0.19.0):
+#   QUIET_R15       20.1 item 1a: no quiet_stretch when the stretch's assured length A (Engine.assured) is below
+#                   history.engine.quiet_min_years (default 0 for hand-made tuning without the key); the row is
+#                   then decided without a stretch (open_era[-1]); entry check engine_quiet_min.
+QUIET_R15 = True
 ENGINE_VERSION = None
 
 
@@ -323,13 +332,13 @@ def use_version(v):
     r10 rendering and quiet eras, P3-02 r5 names) or "0.16.0" (the catalogue
     of 30 kinds, r9 rendering and quiet eras, the 0.16.0 data and P3-02 r4
     names). Clears the cached data roots."""
-    global COMPILED, RENDER_R10, QUIET_ERA_R10, RENDER_R12, QUIET_R12, GENERATOR_VERSION, ENGINE_VERSION
+    global COMPILED, RENDER_R10, QUIET_ERA_R10, RENDER_R12, QUIET_R12, QUIET_R15, GENERATOR_VERSION, ENGINE_VERSION
     if v not in VERSIONS:
         raise ValueError(v)
     new = v != "0.16.0"
     COMPILED = {"0.16.0": COMPILED_016, "0.17.0": COMPILED_017, "0.18.0": COMPILED_018, "0.19.0": COMPILED_019}[v]
     RENDER_R10 = QUIET_ERA_R10 = new
-    RENDER_R12 = QUIET_R12 = v == "0.19.0"
+    RENDER_R12 = QUIET_R12 = QUIET_R15 = v == "0.19.0"
     GENERATOR_VERSION = v
     ENGINE_VERSION = v
     pdr.use_version(v)
@@ -794,8 +803,15 @@ class Engine:
             self.hooks.tick(self, year, year == e - 1)
         self.close_phase(row, e - 1)
 
+    def assured(self, s, ln, closes):
+        """P3-04 r15 20.1 item 1a: the assured length A of the stretch from the step [s, s + ln) of the quiet
+        interval ending at q_e (self.q_end): ln when the step is the row's last (closes), else ln + min(Q, q_e -
+        (s + ln))."""
+        return ln if closes else ln + min(self.base["Q"], self.q_end - (s + ln))
+
     def run_quiet(self, qs, qe):
         b = self.base
+        self.q_end = qe
         cur = qs
         while cur < qe:
             row = self.open_phase(QUIET, cur)
@@ -904,7 +920,8 @@ def entry_checks(dat, inp, eng=None, report=None, stage_entry=True):
             return "history: input precondition: no region rows"
         if not inp.ages:
             return "history: input precondition: no age rows"
-    for f, lo, hi in ENGINE_RANGES:
+    for f, lo, hi in ENGINE_RANGES + ((("quiet_min_years", 0, 400),) if QUIET_R15 and "quiet_min_years" in eng
+                                      else ()):
         if not (lo <= eng[f] <= hi):
             return "history: tuning: %s outside its schema range" % f
     for lvl in DETAILS:
@@ -913,6 +930,8 @@ def entry_checks(dat, inp, eng=None, report=None, stage_entry=True):
                 return "history: tuning: %s.%s outside its schema range" % (lvl, f)
     if eng["simulated_min_permille"] > eng["simulated_max_permille"]:
         return "history: tuning: simulated_min_permille must not be above simulated_max_permille"
+    if QUIET_R15 and eng.get("quiet_min_years", 0) > 2 * eng["quiet_step_years"]:   # r15 engine_quiet_min
+        return "history: tuning: quiet_min_years must not be above 2 x quiet_step_years"
     for lvl in DETAILS:
         d = eng[lvl]
         if 6 * d["active_years"] + d["final_years"] > 6 * eng["simulated_max_permille"] - 30:
@@ -976,6 +995,7 @@ class World:
         self.registry = set(r["name"] for r in inp.regions) | set(a[4] for a in inp.ages) | \
             set(g[1] for g in inp.gods)
         self.registry_initial = set(self.registry)
+        self.quiet_skipped = []       # r15 20.1 item 1a: (step start, A, phase) of every row decided without one
         self.cores = set()            # P3-02 r10 12.2 (0.19.0): K, the cores of the stage's civilization and
                                       # settlement names (the stub's too: it is the history stage)
         self.region_control = []      # [region, from, to, civ, event]
@@ -1089,7 +1109,7 @@ class World:
         gy = self.race[civ["race"]][7]
         return (y1 + 1 - civ["founded_year"]) // gy - (y0 - civ["founded_year"]) // gy
 
-    def quiet_stretch(self, start, last, phase=None):
+    def quiet_stretch(self, start, last, phase=None, assured=None):
         """r12 20.1 (Q6, after the subsystems): one world-level quiet_stretch per quiet phase row, kept in
         open_era under key 0 (no civilization has id 0), so that every reset of the eras resets it. Opened at
         the row's first step with a living civilization: participants every civilization not ended at this
@@ -1097,9 +1117,17 @@ class World:
         participants and `realms` never change. No living civilization: nothing."""
         idx = self.open_era.get(0)
         if idx is None:
+            if self.open_era.get(-1):
+                return   # r15 20.1 item 1a: the row is decided without a stretch
             alive = [c["id"] for c in sorted(self.civs, key=lambda c: c["id"]) if c["ended_year"] is None]
             if not alive:
                 return
+            if QUIET_R15:
+                assert assured is not None
+                if assured < self.eng.get("quiet_min_years", 0):
+                    self.open_era[-1] = True
+                    self.quiet_skipped.append((start, assured, phase))
+                    return
             parts = alive
             if len(alive) > MAX_PARTICIPANTS:
                 # r13: the MAX_PARTICIPANTS realms with the most people (the sum of their standing settlements'
@@ -1123,7 +1151,7 @@ class World:
         if start == row_start:
             self.open_era = {}
         if QUIET_R12:
-            self.quiet_stretch(start, last, eng_run.phase_id)
+            self.quiet_stretch(start, last, eng_run.phase_id, eng_run.assured(start, length, phase_end))
             self.bookkeeping(start, phase_end, last)
             if phase_end:
                 self.open_era = {}
@@ -1890,7 +1918,8 @@ expect_fatal = pchr.expect_fatal
 def check_data(c):
     dat = data()
     c.eq("engine listing", spec_engine(), dict(
-        quiet_step_years=25, quiet_events_max=3, simulated_min_permille=100, simulated_max_permille=450,
+        quiet_step_years=25, quiet_events_max=3, **(dict(quiet_min_years=50) if QUIET_R15 else {}),
+        simulated_min_permille=100, simulated_max_permille=450,
         islet_max_dry_cells=1172,
         sparse=dict(active_years=75, flare_years=30, final_years=250, flare_threshold=1500),
         normal=dict(active_years=150, flare_years=50, final_years=300, flare_threshold=1000),
@@ -2328,12 +2357,17 @@ def check_quiet_r12(c, inputs):
         st = [e for e in w.events if e["key"] == "quiet_stretch"]
         rows = [r for r in res["phase"] if r[2] == QUIET]
         bad = []
+        qmin = w.eng.get("quiet_min_years", 0) if QUIET_R15 else 0
         for r in rows:
             alive = sorted(x["id"] for x in w.civs if x["founded_year"] <= r[3])
             mine = [e for e in st if e["phase"] == r[0]]
             if not alive:
                 if mine:
                     bad.append(("stretch without a civilization", r))
+                continue
+            if r[4] - r[3] + 1 < qmin:   # r15 20.1 item 1a: a row shorter than quiet_min_years has none
+                if mine:
+                    bad.append(("stretch on a short row", r, mine))
                 continue
             if len(mine) != 1:
                 bad.append(("count", r, len(mine)))
@@ -2349,9 +2383,10 @@ def check_quiet_r12(c, inputs):
     w.events, w.civs, w.open_era = [], [dict(id=1, ended_year=None), dict(id=2, ended_year=None)], {}
     w.cat_by_key = {k["key"]: k for k in COMPILED}
     w.inp = Inputs(0, 64, dict(span=6000), [], [], [], [], [])
-    w.quiet_stretch(100, 124, 7)
+    w.eng, w.quiet_skipped = {}, []   # hand-made tuning: quiet_min_years 0 (r15 20.1 item 1a off)
+    w.quiet_stretch(100, 124, 7, 50)
     w.civs[1]["ended_year"] = 130
-    w.quiet_stretch(125, 149, 7)
+    w.quiet_stretch(125, 149, 7, 25)
     e = w.events[0]
     c.eq("r12 an ended civilization stays a participant", (len(w.events), e["year"], e["end_year"],
                                                            [p[3] for p in e["participants"]], e["values"]),
@@ -2359,14 +2394,14 @@ def check_quiet_r12(c, inputs):
     w.settlements = []
     # r13 20.6 item 0: 70 living civilizations; populations so that ties occur at the cut
     w70 = World.__new__(World)
-    w70.events, w70.open_era, w70.cat_by_key, w70.inp = [], {}, w.cat_by_key, w.inp
+    w70.events, w70.open_era, w70.cat_by_key, w70.inp, w70.eng, w70.quiet_skipped = [], {}, w.cat_by_key, w.inp, {}, []
     w70.civs = [dict(id=i, ended_year=None) for i in range(1, 71)]
     w70.settlements = []
     for i in range(1, 71):
         w70.settlements.append(dict(id=i, owner_civ=i, status=1, population=(1000 - i if i < 60 else 5)))
     w70.settlements.append(dict(id=71, owner_civ=3, status=3, population=0))      # a ruin counts nothing
     w70.settlements.append(dict(id=72, owner_civ=5, status=2, population=10000))  # declining counts
-    w70.quiet_stretch(100, 124, 7)
+    w70.quiet_stretch(100, 124, 7, 25)
     pop = {i: (1000 - i if i < 60 else 5) + (10000 if i == 5 else 0) for i in range(1, 71)}
     want = sorted(sorted(range(1, 71), key=lambda x: (-pop[x], x))[:64])
     e70 = w70.events[0]
@@ -2375,9 +2410,115 @@ def check_quiet_r12(c, inputs):
     c.eq("r13 20.6 item 0: ids 1-59 and, of the eleven tied at 5, the five smallest", want, list(range(1, 65)))
     w2 = World.__new__(World)
     w2.events, w2.civs, w2.open_era = [], [dict(id=1, ended_year=5)], {}
-    w2.cat_by_key, w2.inp = w.cat_by_key, w.inp
-    w2.quiet_stretch(100, 124, 7)
+    w2.cat_by_key, w2.inp, w2.eng, w2.quiet_skipped = w.cat_by_key, w.inp, {}, []
+    w2.quiet_stretch(100, 124, 7, 25)
     c.eq("r12 no living civilization: no quiet line", w2.events, [])
+
+
+class QuietProbe(Hooks):
+    """r15 20.6 item 00: a schedule-only run whose quiet steps drive World.quiet_stretch on a hand-made world with
+    two living civilizations (no subsystem, no other event)."""
+
+    def __init__(self, eng_tuning):
+        super().__init__()
+        w = World.__new__(World)
+        w.events, w.civs, w.open_era = [], [dict(id=1, ended_year=None), dict(id=2, ended_year=None)], {}
+        w.cat_by_key = {k["key"]: k for k in COMPILED}
+        w.inp = Inputs(0, 64, dict(span=6000), [], [], [], [], [])
+        w.eng, w.quiet_skipped, w.settlements = eng_tuning, [], []
+        self.w = w
+        self.appended_at = []   # (step start, stretch year) of every append
+
+    def quiet_step(self, eng, start, length, phase_end, row_start):
+        w = self.w
+        if start == row_start:
+            w.open_era = {}
+        n = len(w.events)
+        w.quiet_stretch(start, start + length - 1, eng.phase_id, eng.assured(start, length, phase_end))
+        if len(w.events) > n:
+            self.appended_at.append((start, w.events[-1]["year"]))
+        if phase_end:
+            w.open_era = {}
+
+    def last_event_id(self):
+        return 1   # the ForcedTension trigger 1 is valid
+
+
+def quiet_probe(starts, q, qmin, tension=None, e=6000, detail="normal"):
+    """(quiet rows [(start, end)], stretches [(year, end_year, years)], appended_at) of a probe run."""
+    tun = dict(data().engine, quiet_step_years=q, quiet_min_years=qmin)
+    h = QuietProbe(tun)
+    en = Engine(starts, age_ends(starts, e), e, tun, detail, tension, h).run()
+    rows = [(r[3], r[4]) for r in en.phases if r[2] == QUIET]
+    st = [(x["year"], x["end_year"], x["values"][1]) for x in h.w.events]
+    return rows, st, h.appended_at, en
+
+
+def check_quiet_r15(c, inputs):
+    """P3-04 r15 20.1 item 1a and 20.6 item 00."""
+    eng = data().engine
+    c.eq("r15 shipped quiet_min_years", eng.get("quiet_min_years"), 50)
+    # a row of one 25-year step followed by a flare-up (Q 25): no stretch; quiet_min_years 0: one per row
+    rows, st, _, _ = quiet_probe((0, 3000), 25, 50, ForcedTension(25, 5000, 1))
+    c.eq("r15 Q25 rows of one step then a flare-up are 25 years", sorted(set(b - a + 1 for a, b in rows[:-1])), [25])
+    c.eq("r15 Q25 one 25-year step then a flare-up: no quiet_stretch",
+         [x for x in st if x[0] < rows[-1][0]], [])
+    rows0, st0, _, _ = quiet_probe((0, 3000), 25, 0, ForcedTension(25, 5000, 1))
+    c.eq("r15 quiet_min_years 0: every quiet row has one (as at r14)", [(a, b, b - a + 1) for a, b in rows0], st0)
+    # one full step and one of 10 years cut by an awakening (35 years): none
+    rows, st, _, _ = quiet_probe((0, 185), 25, 50)
+    c.eq("r15 Q25 the row 150-184 (35 years)", rows[0], (150, 184))
+    c.eq("r15 Q25 a 35-year row cut by an awakening: no quiet_stretch", [x for x in st if x[0] == 150], [])
+    # rows of 49 and 50 years
+    rows, st, app, _ = quiet_probe((0, 199), 25, 50)
+    c.eq("r15 Q25 the row 150-198 (49 years)", rows[0], (150, 198))
+    c.eq("r15 Q25 a 49-year row: no quiet_stretch", [x for x in st if x[0] == 150], [])
+    rows, st, app, _ = quiet_probe((0, 200), 25, 50)
+    c.eq("r15 Q25 the row 150-199 (50 years)", rows[0], (150, 199))
+    c.eq("r15 Q25 two full steps (50 years): one quiet_stretch", [x for x in st if x[0] == 150], [(150, 199, 50)])
+    c.eq("r15 Q25 ... appended in its first step", [a for a in app if a[1] == 150], [(150, 150)])
+    # Q 50
+    rows, st, _, _ = quiet_probe((0, 175), 50, 50)
+    c.eq("r15 Q50 a 25-year row (one step, the interval's end): none", (rows[0], [x for x in st if x[0] == 150]),
+         ((150, 174), []))
+    rows, st, _, _ = quiet_probe((0, 185), 50, 50)
+    c.eq("r15 Q50 a 35-year row: none", (rows[0], [x for x in st if x[0] == 150]), ((150, 184), []))
+    rows, st, _, _ = quiet_probe((0, 199), 50, 50)
+    c.eq("r15 Q50 a 49-year row: none", (rows[0], [x for x in st if x[0] == 150]), ((150, 198), []))
+    rows, st, app, _ = quiet_probe((0, 200), 50, 50)
+    c.eq("r15 Q50 a 50-year row (one step): one", [x for x in st if x[0] == 150], [(150, 199, 50)])
+    rows, st, _, _ = quiet_probe((0, 249), 50, 100)
+    c.eq("r15 Q50 quiet_min 100: a 99-year row has none", (rows[0], [x for x in st if x[0] == 150]),
+         ((150, 248), []))
+    rows, st, app, _ = quiet_probe((0, 250), 50, 100)
+    c.eq("r15 Q50 quiet_min 100: a 100-year row has one, from its first step", ([x for x in st if x[0] == 150],
+                                                                                 [a for a in app if a[1] == 150]),
+         ([(150, 249, 100)], [(150, 150)]))
+    # exactness (20.1 item 1a): over many schedules, a stretch exactly when the row is long enough, and never
+    # moved; every quiet_stretch has years >= quiet_min_years
+    bad = []
+    for q in (25, 50):
+        for qmin in sorted(set(x for x in (0, 25, 26, 49, 50, 51, 99, 2 * q) if x <= 2 * q)):
+            for a2 in range(152, 280, 7):
+                for t in (None, ForcedTension(25, 5000, 1), ForcedTension(100, 5000, 1), ForcedTension(35, 5000, 1)):
+                    if t is not None and q == 50 and t.period == 35:
+                        continue
+                    rows, st, app, en = quiet_probe((0, a2, 3000), q, qmin, t)
+                    want = [(x, y, y - x + 1) for x, y in rows if y - x + 1 >= qmin]
+                    if st != want or any(z[2] < qmin for z in st) or any(p != y for p, y in app):
+                        bad.append((q, qmin, a2, t and t.label(), rows[:4], st[:4]))
+    c.eq("r15 exactness: a stretch for exactly the rows at least quiet_min_years long, from their first step", bad,
+         [])
+    # engine_quiet_min
+    inp0 = None
+    for tun, want in ((dict(eng, quiet_min_years=51, quiet_step_years=25),
+                       "history: tuning: quiet_min_years must not be above 2 x quiet_step_years"),
+                      (dict(eng, quiet_min_years=50, quiet_step_years=25), None),
+                      (dict(eng, quiet_min_years=401), "history: tuning: quiet_min_years outside its schema range")):
+        got = entry_checks(data(), Inputs(0, 64, dict(span=6000, races=[]), [dict(id=1)], [], [], [], [(1, 1, 0, 5999, "A")]),
+                           eng=tun)
+        c.eq("r15 entry check quiet_min_years %d, Q %d" % (tun["quiet_min_years"], tun["quiet_step_years"]),
+             got if got is None or "quiet_min" in got else "other: " + got, want)
 
 
 def check_templates(c):
@@ -2577,6 +2718,8 @@ def cmd_check(argv):
         check_example_r12(c, inputs)
         check_render_r12(c)
         check_quiet_r12(c, inputs)
+        if QUIET_R15:
+            check_quiet_r15(c, inputs)
     else:
         check_example_r10(c, inputs)
     check_templates(c)
