@@ -236,3 +236,25 @@ TEST_CASE("P3-10 r3 engineer: no quiet_stretch shorter than quiet_min_years (P3-
     }
     CHECK(stretches >= 1);
 }
+
+TEST_CASE("P3-10 r3 engineer: the end check tests aim and the lost goal before exhaustion (P3-06 21.6, 22.5)") {
+    namespace h = worldgen::history;
+    using D = h::EndDecision;
+    const std::int64_t a = 3, b = 7;
+    // 1. Aim: the attacker wins whatever the exhaustion and the score; a peace when b is exhausted.
+    CHECK(h::end_decision(a, b, true, false, true, false, b, false) == D{true, a, false});
+    CHECK(h::end_decision(a, b, true, false, false, true, 0, false) == D{true, a, true});
+    CHECK(h::end_decision(a, b, true, false, false, false, b, false) == D{true, a, false});
+    // 2. The goal lost: by the score, a peace when the score's loser is exhausted, a truce at 0.
+    CHECK(h::end_decision(a, b, false, false, false, true, a, false) == D{true, a, true});
+    CHECK(h::end_decision(a, b, false, false, true, false, a, false) == D{true, a, false});
+    CHECK(h::end_decision(a, b, false, false, true, false, b, false) == D{true, b, true});
+    CHECK(h::end_decision(a, b, false, false, true, true, 0, false) == D{true, 0, false});
+    CHECK(h::end_decision(a, b, false, false, false, false, b, false) == D{true, b, false});
+    // 3. b still stands in G: exhaustion, then no front or the length; else the war goes on.
+    CHECK(h::end_decision(a, b, false, true, true, false, b, false) == D{true, b, true});
+    CHECK(h::end_decision(a, b, false, true, true, false, a, false) == D{true, a, false});
+    CHECK(h::end_decision(a, b, false, true, false, true, a, false) == D{true, a, true});
+    CHECK(h::end_decision(a, b, false, true, false, false, a, true) == D{true, a, false});
+    CHECK(h::end_decision(a, b, false, true, false, false, a, false) == D{});
+}

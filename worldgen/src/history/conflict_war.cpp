@@ -495,6 +495,27 @@ std::int64_t ConflictSubsystem::casualties(StepContext& ctx, std::int64_t civ, s
 
 // --- The end of a war (7.7) ---------------------------------------------------------------------------
 
+EndDecision end_decision(std::int64_t attacker, std::int64_t defender, bool aim, bool defender_there, bool ex_a,
+                         bool ex_b, std::int64_t by_score, bool over) noexcept {
+    // 20.15 item 4: a peace only when the loser is exhausted.
+    const auto loser_exhausted = [&](std::int64_t winner) {
+        return winner != 0 && (winner == attacker ? ex_b : (winner == defender && ex_a));
+    };
+    // 21.6 item 1 (r17 22.5 item 1): aim achieved; no last-battle rule.
+    if (aim) {
+        return EndDecision{true, attacker, ex_b};
+    }
+    // 21.6 item 2: the goal lost to no one or to a third party: by the score.
+    if (!defender_there) {
+        return EndDecision{true, by_score, loser_exhausted(by_score)};
+    }
+    // 21.6 item 3: 7.7 items 1, 3 and 4.
+    if (ex_a || ex_b || over) {
+        return EndDecision{true, by_score, loser_exhausted(by_score)};
+    }
+    return EndDecision{};
+}
+
 void ConflictSubsystem::end_checks(StepContext& ctx, std::size_t i, bool no_front) {
     const ConflictWar w = wars_[i];
     const State& state = ctx.state();
@@ -504,35 +525,21 @@ void ConflictSubsystem::end_checks(StepContext& ctx, std::size_t i, bool no_fron
     // r10 20.15: the score of dead and people taken; the winner of the last
     // battle never loses an ending decided by the score.
     const std::int64_t by_score = unless_last_battle(w, score_winner(w));
-    if (ex_a || ex_b) {
-        // An exhausted side that leads wins (war_won); a peace is sued for
-        // only by an exhausted loser (items 2 and 4).
-        const bool loser_exhausted = by_score != 0 && (by_score == w.attacker ? ex_b : ex_a);
-        (void)end_war(ctx, i, by_score, loser_exhausted);
-        return;
-    }
-    // r14 21.6 (generator 0.19.0; replaces 7.7 item 2). 1. Aim achieved
-    // (r17 22.5 item 1): the attacker holds its goal and the defender has
-    // no standing settlement left in it; no last-battle rule.
-    if (aim_achieved(state, w)) {
-        (void)end_war(ctx, i, w.attacker, false);
-        return;
-    }
-    // 2. The goal lost to no one or to a third party: the defender neither
-    // holds it nor has a standing settlement in it; the war ends now by the
-    // score, with the last-battle rule.
+    // r14 21.6 (generator 0.19.0; replaces 7.7 item 2), in its order: 1.
+    // aim achieved (r17 22.5 item 1), 2. the goal lost to no one or to a
+    // third party (the defender neither holds it nor has a standing
+    // settlement in it), 3. 7.7 items 1, 3 and 4 (end_decision).
     bool defender_there = state.region(w.goal).owner == w.defender;
     const std::int64_t ns = settlement_count(state);
     for (std::int64_t id = 1; id <= ns; ++id) {
         const Settlement& s = state.settlement(id);
         defender_there = defender_there || (s.owner_civ == w.defender && standing(s) && s.region == w.goal);
     }
-    if (!defender_there) {
-        (void)end_war(ctx, i, by_score, false);
-        return;
-    }
-    if (no_front || ctx.year() - w.start >= tuning_.war_max_years) {
-        (void)end_war(ctx, i, by_score, false);
+    const bool over = no_front || ctx.year() - w.start >= tuning_.war_max_years;
+    const EndDecision d =
+        end_decision(w.attacker, w.defender, aim_achieved(state, w), defender_there, ex_a, ex_b, by_score, over);
+    if (d.ends) {
+        (void)end_war(ctx, i, d.winner, d.sued);
     }
 }
 

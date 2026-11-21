@@ -232,6 +232,20 @@ struct DefenceTerms {
 // r10 20.16: the defeated's dead, min(F_L x loss_loser, F_W x kill_max) div 1000.
 [[nodiscard]] std::int64_t loser_dead_of(const ConflictTuning& t, std::int64_t force_winner, std::int64_t force_loser);
 
+// The war's end check of 7.7 in T6 as 21.6 orders it (r17 22.5): 1. aim
+// achieved, 2. the goal lost to no one or to a third party, 3. 7.7 items 1,
+// 3 and 4 (exhaustion, then no front or the length). `by_score` is the
+// score's winner after the last-battle rule (0 a truce); `ex_a`, `ex_b` the
+// sides' exhaustion; `over` no front or the war's length reached.
+struct EndDecision {
+    bool ends = false;
+    std::int64_t winner = 0;  // 0: a truce
+    bool sued = false;        // peace (the loser is exhausted), else war_won
+    friend bool operator==(const EndDecision&, const EndDecision&) = default;
+};
+[[nodiscard]] EndDecision end_decision(std::int64_t attacker, std::int64_t defender, bool aim, bool defender_there,
+                                       bool ex_a, bool ex_b, std::int64_t by_score, bool over) noexcept;
+
 // --- The subsystem (13) ----------------------------------------------------------------------
 
 // A war (7.1), keyed by its war_declared event id.
