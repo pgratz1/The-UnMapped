@@ -8,6 +8,10 @@
 // byte-identical; and that the case does what it is for: at least one refugees_settled whose refuge is found
 // (its year + hidden_years before the present) and a tribute.
 //
+// P3-06 r13 20.27 item 8 (the last test): invariant (13) on 2048 seed 3, default settings, the case of the P3-09
+// validation's D1, in the doctest suite "history-slow" (worldgen-tests -ts=history-slow --no-skip). Invariant (13)
+// on the synthetic, stress and golden worlds is checked with the r9 invariants (check_invariants_09).
+//
 // Written from the spec only; needs no new library name. Runs by default (one 512 world, two threads).
 
 #include "p3_06_conflict_support.hpp"
@@ -95,6 +99,50 @@ TEST_CASE("P3-06 r9 20.14 item 8: hist-conflict-flight equals the reference; fli
     CHECK(tributes >= 1);
     // threads: byte-identical tables
     CHECK(tables_of_world(open_world(flight_world(4))) == t);
+}
+
+}  // TEST_SUITE
+
+TEST_SUITE("history-slow" * doctest::skip()) {
+
+TEST_CASE("P3-06 r13 20.27 items 7, 8: 2048 seed 3, the colony s240 passes to c10 with the region_ceded e1142") {
+    // 20.27 item 7: the log is unchanged up to and including e1142 (the transfer writes no event): the colony s240
+    // of c15 in region 158 (e1138), c15's war_won lost to c10 (e1141) and the cession of 158 from c15 to c10 (e1142),
+    // all in the quiet step of 5234. Under r13 s240 passes to c10 with e1142: its census row of 5234 has owner c10.
+    const std::string path = chrono_test::world(chrono_test::WorldKey{3, "", 2048, 6000, "all", "", 1});
+    const db::WorldReader r = open_world(path);
+    const Tables t = tables_of_world(r);
+    const Index x(t);
+    REQUIRE(x.ev.count(1142) == 1U);
+    CHECK(x.kind(1138) == k_colony_founded);
+    CHECK(at(*x.ev.at(1138), 6) == 240);
+    CHECK(at(*x.ev.at(1138), 5) == 158);
+    CHECK(x.role1(1138, 2) == 15);
+    CHECK(x.kind(1141) == k_war_won);
+    CHECK(x.role1(1141, 1) == 10);
+    CHECK(x.role1(1141, 2) == 15);
+    CHECK(x.kind(1142) == k_region_ceded);
+    CHECK(at(*x.ev.at(1142), 1) == 5234);
+    CHECK(at(*x.ev.at(1142), 5) == 158);
+    CHECK(x.role1(1142, 1) == 15);
+    CHECK(x.role1(1142, 2) == 10);
+    REQUIRE(x.causes.count(1142) == 1U);
+    CHECK(x.causes.at(1142) == std::vector<std::int64_t>{1141});
+    // s240 keeps c15 as founder and e1138 as founding event; its census row of 5234 is c10's
+    const Row& s = *x.st.at(240);
+    CHECK(at(s, 5) == 15);
+    CHECK(at(s, 7) == 1138);
+    std::int64_t owner_5234 = -1;
+    for (const Row& c : t.settlement_census) {
+        if (at(c, 0) == 240 && at(c, 1) == 5234) owner_5234 = at(c, 2);
+    }
+    CHECK(owner_5234 == 10);
+    // c10 holds 158 from 5234 with e1142, as before
+    bool row = false;
+    for (const Row& rc : t.region_control) row = row || (at(rc, 0) == 158 && at(rc, 1) == 5234 && at(rc, 3) == 10 && at(rc, 4) == 1142);
+    CHECK(row);
+    // invariant (13), with 14 item 5 (a region's owner has a standing settlement in it) through the replay
+    CHECK(cession_violations(t) == std::vector<std::string>{});
 }
 
 }  // TEST_SUITE
