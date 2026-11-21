@@ -160,7 +160,7 @@ P3-04 lands first and defines one field; P3-07 adds none (r1: its selection cons
 | --- | --- | --- |
 | `events` | array(record `report_event`, 1, 256) | one entry per event kind of the compiled catalogue (8.2) |
 
-Record `report_event`, in this order: `kind` string(32, the P0-03 definition id grammar); `salience` int(0, 100), the kind's base salience; `template` string(256), the English sentence (grammar 8.4).
+Record `report_event`, in this order: `kind` string(32, the P0-03 definition id grammar); `salience` int(0, 100), the kind's base salience; `template` string(256), the English sentence (grammar 8.4); **from 0.19.0 string(512)** (r13: P3-05 22.3's cause-list templates of kinds 16 and 31 are about 280 and 300 bytes; the bound is a loader limit, not a column type, and no shorter wording keeps the cause map readable).
 
 Check `report_events` (r3: a **kind-level check of kind `history`**, P0-03 amendment 16, reported at the header of `history.report`'s definition in the P0-03 7.5 form `<path>:<line>:<column>: error: check 'report_events' failed for 'history.report': <message>`), messages in this order: for each entry i in array order: `events[<i>]: kind '<key>' is not an event kind` (not in the compiled catalogue), `events[<i>]: kind '<key>' is already listed at events[<j>]` (j the first), `events[<i>]: template: <problem>` (8.4, the first problem of that template); then for each compiled kind in id order without an entry: `event kind '<key>' has no entry`. Each message is reported (the check reports all, as `race_order_unique` does). A check of one kind may consult the compiled catalogue: it is code of the library, not another kind.
 
@@ -981,7 +981,7 @@ Why: since r10 a civilization has one `quiet_era` per quiet phase row, but every
 
 In Q6 of each quiet step, after the subsystems:
 
-1. If the current quiet phase row has no `quiet_stretch` yet and at least one civilization is not ended: append `quiet_stretch` with `year` = the step's start, `end_year` = the step's last year, `region` 0, `settlement` 0, no cause, participants every civilization not ended at this step in ascending id, each as `realm`, values `years` = `end_year` − `year` + 1 and `realms` = the number of participants.
+1. If the current quiet phase row has no `quiet_stretch` yet and at least one civilization is not ended: append `quiet_stretch` with `year` = the step's start, `end_year` = the step's last year, `region` 0, `settlement` 0, no cause, values `years` = `end_year` − `year` + 1 and `realms` = **the number of civilizations not ended at this step**, and as participants (each as `realm`, in ascending id) those civilizations, **at most `MAX_PARTICIPANTS` (64, the event writer's bound)**: when more are alive, the 64 with the most people (the sum of their standing settlements' populations at this step), ties to the smaller id (r13). So the sentence's count stays right with any number of realms, and the participants are the largest realms. P3-07 22.2's generations note is written only for participants.
 2. Otherwise, if the row has its `quiet_stretch`: its `end_year` becomes the step's last year and `years` is recomputed. Its participants and `realms` never change: a civilization that ends within the row stays a participant (it was at peace when the stretch began); no civilization can be founded within a quiet row with the shipped subsystems (P3-05 founds civilizations in ticks only: awakenings, secessions), and one founded by a later subsystem would not be added.
 3. No civilization alive: nothing (a world with no civilization has no quiet line).
 
@@ -1041,6 +1041,7 @@ No schema change (8.2's list): two kinds are appended, two kinds stop being writ
 
 ### 20.6 Tests (amends 16)
 
+0. (r13) A test world with 70 living civilizations at a quiet row: one `quiet_stretch` with `realms` 70 and 64 participants, the 64 most populous (ties by id), in ascending id.
 1. `quiet_stretch`: on the stub golden cases and on the `ForcedTension` cases, one event per quiet phase row with a living civilization, participants every civilization not ended at the row's first step in ascending id, `realms` their number, `years` = `end_year` − `year` + 1 = the row's length; no `quiet_era` event; a civilization ended within the row (a hand-made subsystem in a test configuration that ends one in a quiet step) stays a participant.
 2. `{@causes:…}` on fixture events: causes (famine, plague) → `Weakened by famine and plague, `; (plague, plague_spread) with both mapped to `plague` → `Weakened by plague, `; three distinct words → `A, B and C`; no mapped cause → empty, and the next name is at the sentence start; every malformed body of 20.2 → `unknown placeholder`.
 3. Separators: values 0, 999, 1000, 1155, 25000, 1000000, −1000, −999 in `{value}` and in `#` render `0`, `999`, `1,000`, `1,155`, `25,000`, `1,000,000`, `-1,000`, `-999`; `{@year}` 4393 renders `4393`.
@@ -1097,3 +1098,7 @@ Text only. 8.5's seed 42 example and 17's names: civilization 1 is `The House of
 ## Revision note r12 (2026-11-20, for P3-10; generator 0.19.0)
 
 New section 20, normative from generator 0.19.0 (`docs/specs/p3-10-followups.md`): one `quiet_stretch` event per quiet phase row for the whole world (kind 38) in place of one `quiet_era` per civilization (20.1, replacing 6.6's eras); the cause list placeholder `{@causes:…}` (20.2, extending 8.4 and 8.5); thousands separators in rendered values (20.3); kinds 37 and 38 appended, kinds 4 and 12 kept and no longer written (20.4); no schema change (20.5); tests (20.6). No earlier section is renumbered; sections 6.6, 8.4 and 8.5 describe generators 0.14.0 to 0.18.0 where 20 amends them.
+
+## Revision note r13 (2026-11-21, after the P3-10 implementation)
+
+20.1: `quiet_stretch` participants are at most `MAX_PARTICIPANTS` (64), the most populous realms; `realms` counts every living civilization; test 20.6 item 0. 4.2: `report_event.template` is string(512) from 0.19.0 (the cause-list templates of P3-05 22.3 exceed 256 bytes), as implemented.

@@ -877,7 +877,7 @@ Left, with the reason: "The Twiwhiwou Ring" (`twiw` is a faerie syllable pair; 1
 
 Same-core names in one world read as the same place twice (`Skat` and `Skat Pit`, seed 11; `Skreek Pit` and `Skreek Hole`, seed 2; `The Slig Mob` and `Sligg Pit`, seed 42; the critic counted 49 pairs one letter apart in 8 worlds at 0.17.0).
 
-**The core** of a valid attempt is its root R (4.2) with every `'` and `-` removed (letters a–z only; R is lower case before Cap). The history stage keeps, beside the registry, the set K of the cores of the civilization and settlement names it has drawn (gods and regions are not in K: gods are drawn by the chronology stage, and region names are English words). A core k is **near** K when some core of K equals k or is at Levenshtein distance 1 from it (one letter inserted, deleted or replaced). 4.3 becomes, for kinds `civilization` and `settlement` in the history stage:
+**The core** of a valid attempt is its root R (4.2) with every `'` and `-` removed (letters a–z only; R is lower case before Cap). The history stage keeps, beside the registry, the set K of the cores of the civilization and settlement names it has drawn (gods and regions are not in K: gods are drawn by the chronology stage, and region names are English words). A core k is **near** K when some core of K equals k or is at Levenshtein distance 1 from it (one letter inserted, deleted or replaced). 4.3 becomes, for kinds `civilization` and `settlement` in the history stage (r11, as implemented: the rule belongs to the history stage's registry, the one the stage builds and names through; `make_name` called with a plain registry, as the chronology stage and the unit tests of 4.3 do, is unchanged):
 
 ```
     for t = 0, 1, …, 63:
@@ -960,3 +960,7 @@ Text and data corrections in 11.11 after the lead's interim choice to restore `m
 ## Revision note r10 (2026-11-20, comic and near-identical names; for P3-10, generator 0.19.0)
 
 New section 12 (`docs/specs/p3-10-followups.md`): eight filter entries for the names the P3-08 world critic listed, with three `whole` entries removed as redundant (12.1, data); no two civilization or settlement names of a world with cores equal or one letter apart (12.2, amends 4.3 and 4.4 for the history stage); invariant 6, tests (12.3). No earlier section is renumbered.
+
+## Revision note r11 (2026-11-21, after the P3-10 implementation)
+
+12.2: the core rule applies to the history stage's registry; `make_name` with a plain registry is unchanged (the implementation's reading, confirmed).
