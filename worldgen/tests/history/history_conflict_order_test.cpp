@@ -391,6 +391,49 @@ TEST_CASE("P3-06 21.6 order (Q4, 7.8): aim before the quiet ending by the score;
     CHECK(lost.checked >= 3);
 }
 
+// The engineer's seam of the fix (P3-10 fix3): end_decision(attacker, defender, aim, defender_there, ex_a, ex_b,
+// by_score, over), by_score the score's winner after 20.15 item 3's last-battle rule (0: a truce), over no front or
+// the length reached; the result: ends, winner (0 a truce), sued (`peace`, else `war_won`). Expectations from the
+// spec: the T6 checks the probes above never reach, a level score (by_score 0) with a side exhausted, and the
+// rest of 21.6's order.
+TEST_CASE("P3-06 21.6 order (seam): end_decision with a level score and an exhausted side, and every item's place") {
+    using D = h::EndDecision;
+    const std::int64_t a = 4, b = 9;
+    for (const bool over : {false, true}) {
+        CAPTURE(over);
+        // 21.6 item 1 (aim): a wins whatever the score, the exhaustion and the length; `peace` when b is exhausted.
+        CHECK(h::end_decision(a, b, true, false, true, false, 0, over) == D{true, a, false});
+        CHECK(h::end_decision(a, b, true, false, false, true, 0, over) == D{true, a, true});
+        CHECK(h::end_decision(a, b, true, false, true, true, 0, over) == D{true, a, true});
+        CHECK(h::end_decision(a, b, true, false, false, false, 0, over) == D{true, a, false});
+        CHECK(h::end_decision(a, b, true, false, true, true, b, over) == D{true, a, true});  // D1, seed 73
+        CHECK(h::end_decision(a, b, true, false, true, false, b, over) == D{true, a, false});
+        // 21.6 item 2 (goal lost): the score now; a level score is a truce whoever is exhausted.
+        CHECK(h::end_decision(a, b, false, false, true, false, 0, over) == D{true, 0, false});
+        CHECK(h::end_decision(a, b, false, false, false, true, 0, over) == D{true, 0, false});
+        CHECK(h::end_decision(a, b, false, false, true, true, 0, over) == D{true, 0, false});
+        CHECK(h::end_decision(a, b, false, false, false, false, 0, over) == D{true, 0, false});
+        // item 2 with a winner: `peace` only when the loser is exhausted (20.15 item 4)
+        CHECK(h::end_decision(a, b, false, false, true, true, b, over) == D{true, b, true});
+        CHECK(h::end_decision(a, b, false, false, false, true, b, over) == D{true, b, false});
+        CHECK(h::end_decision(a, b, false, false, false, false, a, over) == D{true, a, false});
+        // 21.6 item 3 -> 7.7 item 1 with a level score: "if s = 0 ... the war ends with s's outcome", a truce
+        CHECK(h::end_decision(a, b, false, true, true, false, 0, over) == D{true, 0, false});
+        CHECK(h::end_decision(a, b, false, true, false, true, 0, over) == D{true, 0, false});
+        CHECK(h::end_decision(a, b, false, true, true, true, 0, over) == D{true, 0, false});
+        // 7.7 item 1 with a winner: both exhausted, the score's outcome, `peace` (the loser is exhausted)
+        CHECK(h::end_decision(a, b, false, true, true, true, a, over) == D{true, a, true});
+        // 20.15 item 2: the one exhausted side leads: it wins, `war_won`
+        CHECK(h::end_decision(a, b, false, true, false, true, b, over) == D{true, b, false});
+    }
+    // 7.7 items 3 and 4 (no front, length) without exhaustion: the score, `war_won`; a level score a truce
+    CHECK(h::end_decision(a, b, false, true, false, false, b, true) == D{true, b, false});
+    CHECK(h::end_decision(a, b, false, true, false, false, 0, true) == D{true, 0, false});
+    // nothing holds: the war goes on
+    CHECK(h::end_decision(a, b, false, true, false, false, a, false) == D{});
+    CHECK(h::end_decision(a, b, false, true, false, false, 0, false) == D{});
+}
+
 }  // TEST_SUITE
 
 #endif  // UNMAPPED_HAVE_PEOPLES && UNMAPPED_HAVE_CONFLICT
