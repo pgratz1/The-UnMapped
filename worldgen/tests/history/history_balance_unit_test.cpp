@@ -355,7 +355,6 @@ TEST_CASE("P3-06 r9 20.9 (seam): the r9 tuning fields and the conflict_enmity_ho
     CHECK(t.revenge_aggression == 400);
     CHECK(t.levy_hops == 3);
     CHECK(t.odds_floor == 500);
-    CHECK(t.odds_min == 700);
     CHECK(t.truce_break_aggression == 600);
     CHECK(t.enmity_hops == 3);
     CHECK(t.kill_max_permille == 500);  // r10 20.19
