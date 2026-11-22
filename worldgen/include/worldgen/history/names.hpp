@@ -76,7 +76,20 @@ struct NameAttempt {
     // r5 (P3-02 11.5): true when the r4 rules pass and the name filter
     // rejects the root word (valid is then false).
     bool filtered = false;
+    // r15 (P3-02 14.2): true when the r4 rules, the filter and the
+    // triple-letter rule pass and two consecutive syllables repeat (valid is
+    // then false).
+    bool repeated = false;
 };
+
+// P3-02 r15 14.2: whether an attempt with this pattern and these drawn
+// strings (one per O, N and C symbol of the pattern, in pattern order;
+// separators draw nothing) has a repeated syllable: a boundary at the
+// first symbol, before every O, before every N not directly after an O and
+// at every separator; syllable i's text s_i and its text b_i without its
+// codas; repeated when some s_i is not empty and s_i = s_{i+1} or
+// s_i = b_{i+1}. Fatal when the drawn strings do not match the pattern.
+[[nodiscard]] bool repeated_syllable(std::string_view pattern, const std::vector<std::string>& drawn);
 
 // The name filter of P3-02 r5 11.2: the effective lists, the unions over
 // every name_filter definition in ascending id. Membership only: the order

@@ -5,6 +5,7 @@
 
 #include <array>
 #include <string_view>
+#include <vector>
 
 #include "worldgen/db/schema.hpp"
 
@@ -47,19 +48,53 @@ bool is_kind(const HistoryView::Event& e, const KindDef* kind) noexcept {
     return kind != nullptr && e.row.kind == kind->id;
 }
 
-std::string war_note(const HistoryView& view, const HistoryView::Event& e, const KindDef& war, const KindDef* claim) {
+// The claim kinds of P3-07 r14 23: kind 20 claim and kind 39
+// claim_settlements, found by key in the stored catalogue.
+struct ClaimKinds {
+    const KindDef* claim = nullptr;
+    const KindDef* settlements = nullptr;
+    [[nodiscard]] bool holds(const HistoryView::Event& e) const noexcept {
+        return is_kind(e, claim) || is_kind(e, settlements);
+    }
+};
+
+// The name of an entity in mid-sentence, appended; false when it has none.
+bool append_entity(std::string& out, const HistoryView& view, EntityType type, std::int64_t id) {
+    const std::string* n = view.name(type, id);
+    if (n == nullptr) {
+        return false;
+    }
+    append_name(out, *n, false);
+    return true;
+}
+
+std::string war_note(const HistoryView& view, const HistoryView::Event& e, const KindDef& war,
+                     const ClaimKinds& claims) {
+    // P3-07 r14 23 item 3: the cause of kind claim or claim_settlements with
+    // the smallest id.
     const HistoryView::Event* c = nullptr;
     for (const std::int64_t id : e.causes) {
         const HistoryView::Event* k = view.event(id);
-        if (k != nullptr && is_kind(*k, claim)) {
+        if (k != nullptr && claims.holds(*k) && (c == nullptr || k->row.id < c->row.id)) {
             c = k;
-            break;
         }
     }
     if (c == nullptr) {
         return {};
     }
-    std::string out = c->row.year < e.row.year ? "Claimed since " + int_text(c->row.year) + "." : "Claimed the same year.";
+    const bool same_year = c->row.year >= e.row.year;
+    std::string out;
+    if (c->row.region == e.row.region) {
+        out = same_year ? "Claimed the same year." : "Claimed since " + int_text(c->row.year) + ".";
+    } else {
+        // P3-07 r14 23 item 3 (P3-06 r19 23.4): the war's goal is not the
+        // claim's region.
+        out = same_year ? "The claim, made the same year, was to " : "The claim, since " + int_text(c->row.year) + ", was to ";
+        if (!append_entity(out, view, EntityType::region, c->row.region)) {
+            return {};
+        }
+        out += ".";
+    }
     const std::int64_t a = participant(e, war, "attacker");
     const std::int64_t b = participant(e, war, "defender");
     std::int64_t n = 1;
@@ -80,14 +115,56 @@ std::string war_note(const HistoryView& view, const HistoryView::Event& e, const
     return out;
 }
 
-std::string flare_note(const HistoryView& view, const HistoryView::Event& e, const KindDef* claim) {
-    if (e.causes.empty() || claim == nullptr) {
+// P3-07 r14 23 item 4: a flare-up caused by a claim_settlements.
+std::string flare_settlements_note(const HistoryView& view, const HistoryView::Event& c, const KindDef& kind) {
+    const RoleDef* role = kind.find_role("settlement");
+    std::vector<std::int64_t> settlements;
+    for (const db::EventParticipantRow& p : c.participants) {
+        if (role != nullptr && p.role == role->seq) {
+            settlements.push_back(p.entity_id);
+        }
+    }
+    std::string out = "The claim of ";
+    if (settlements.empty() ||
+        !append_entity(out, view, EntityType::civilization, participant(c, kind, "claimant"))) {
+        return {};
+    }
+    out += " to ";
+    for (std::size_t i = 0; i < settlements.size(); ++i) {
+        if (i > 0) {
+            out += i + 1 == settlements.size() ? " and " : ", ";
+        }
+        if (!append_entity(out, view, EntityType::settlement, settlements[i])) {
+            return {};
+        }
+    }
+    out += " of ";
+    if (!append_entity(out, view, EntityType::civilization, participant(c, kind, "holder"))) {
+        return {};
+    }
+    out += " in ";
+    if (!append_entity(out, view, EntityType::region, c.row.region)) {
+        return {};
+    }
+    out += " came to a head.";
+    return out;
+}
+
+std::string flare_note(const HistoryView& view, const HistoryView::Event& e, const ClaimKinds& claims) {
+    if (e.causes.empty()) {
         return {};
     }
     const HistoryView::Event* c = view.event(e.causes.front());
-    if (c == nullptr || !is_kind(*c, claim)) {
+    if (c == nullptr) {
         return {};
     }
+    if (is_kind(*c, claims.settlements)) {
+        return flare_settlements_note(view, *c, *claims.settlements);
+    }
+    if (!is_kind(*c, claims.claim)) {
+        return {};
+    }
+    const KindDef* claim = claims.claim;
     const std::string* a = view.name(EntityType::civilization, participant(*c, *claim, "claimant"));
     const std::string* b = view.name(EntityType::civilization, participant(*c, *claim, "holder"));
     const std::string* r = view.name(EntityType::region, c->row.region);
@@ -132,14 +209,14 @@ std::string history_note(const HistoryView& view, std::int64_t event_id) {
         return {};
     }
     const EventCatalogue& catalogue = view.catalogue();
-    const KindDef* claim = catalogue.find("claim");
+    const ClaimKinds claims{catalogue.find("claim"), catalogue.find("claim_settlements")};
     const KindDef* war = catalogue.find("war_declared");
     if (war != nullptr && e->row.kind == war->id) {
-        return war_note(view, *e, *war, claim);
+        return war_note(view, *e, *war, claims);
     }
     const KindDef* flare = catalogue.find("flare_up");
     if (flare != nullptr && e->row.kind == flare->id) {
-        return flare_note(view, *e, claim);
+        return flare_note(view, *e, claims);
     }
     return {};
 }
