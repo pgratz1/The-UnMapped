@@ -271,3 +271,5 @@ Listed here, not specified. Sources: the P3-11 world critic's review and the lea
 - **The reference's participant bound for kinds 39 and 40**: 64 against the implementation's 62 (section 7).
 - **A fresh claim at the declaration** (Paul's decision of 2026-11-22, question 1 of section 10, option (b)): a war whose goal differs from its claim's region cites a new claim on its goal, written at the declaration.
 - **Fewer grim region names** in data (Paul's decision of 2026-11-22 on renamed regions, item 3).
+- **"grew into a city of 8,0xx"** (the P3-07 world critic's A10, P3-07 24.8): the population figure is part of the stored template of kind `became_city`, so the report prints it as `render_event` gives it; rewording the template changes world bytes.
+- **Exact hidden refuges and standing claims in the report** (P3-07 24.7): an exact list of refuges still hidden at E would need a stored flag (the race's `hidden_years` and the faeries' concealment are not in the world), and an exact list of standing claims would need an event or flag recording a claim dropped at a declaration with no allowed goal left (P3-06 20.2 item 2, 20.23).
