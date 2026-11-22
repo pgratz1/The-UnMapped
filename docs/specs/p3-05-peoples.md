@@ -1,6 +1,6 @@
 # P3-05 Peoples
 
-Status: **approved by the lead 2026-11-19** (the seven questions of section 19 go to Paul; the interim choices stand). **Revision r12 (2026-11-20, for P3-10, generator 0.19.0; `docs/specs/p3-10-followups.md`): section 22.** **r15 (2026-11-21, P3-10 second round): 22.7a's lying low has one definition.** **r16 (2026-11-21, P3-11, generator 0.20.0): section 23, orcs arrive in numbers.** **Revision r6 (2026-11-20, for P3-08, generator 0.17.0; `docs/specs/p3-08-followups.md`)**: the faerie weights of 12.3 ship; dwarves choose high, ore-rich cells (6.2, 8.4); a civilization's last settlement is not abandoned by chance; abandonment names its destination and the blow that began the decline (8.5, new kind 31); refugees above a kind cap drain (9.1); saliences of plague and succession crisis (10.2, 10.3); famine and plague-spread rates halved for the log's volume (10.2, 12.1); invariant 6 read for captured settlements (14); the 100-seed figures of the P3-05 validation (15); see the revision note. Written by the spec writer 2026-11-19; amended 2026-11-19 for P3-06 (r1, r2) and after implementation (r3; notes at the end), note at the end); the amendments of section 18 applied the same day on `p3/05-spec` (P3-00 correction note for P3-05, P3-04 r2, P0-01 section 18, P3-01 r6, P3-07 r1; `schema.md` is the engineer's), after merging `origin/p3/07-spec` at 1cb9d48. Phase P3 History core, spec 5 (P3-00 3.1 row P3-05), a subsystem of pipeline stage 8, `history`. Generator **0.15.0**; **no schema change** (schema stays 7: P3-05 appends event kinds 6–19 to the catalogue and writes rows, never columns; P3-04 8.2). Design doc sections 4 ("Scale is compressed": a city of 20,000; resources and habitability; regions), 5 (the six races and their characters; "Food and homelands"; entities; the tick loop items 1, 2 and 4; quiet intervals; world-creation settings `civs_per_race` and `event_intensity`), 6 (`civilization`, `settlement`), 13 (P3 row) and 14 (records a model can narrate). Depends on P3-00 (binding; amended in 18.2), P0-01 (stream list, 18.3), P3-01 (kind `race`; amended in 18.4: one new field, three field meanings made precise), P3-02 (keyed draws, names), P3-03 (chronology rows), P3-04 (engine, step seam, `State`, event writer, catalogue; amended in 18.2) and P3-07 (report: section 9's statistics, section 20's requirements; amended in 18.5). Branch read: `origin/p3/04-spec` at 4a00615 for P3-00 to P3-04, `origin/p3/07-spec` at 1cb9d48 for P3-07. Proposals read: up to "History: active phases scale with the history span". Reviews read: `docs/reviews/p1-05-resources-critic.md` 7 and `docs/reviews/p1-06-regions-critic.md` 6–7.
+Status: **approved by the lead 2026-11-19** (the seven questions of section 19 go to Paul; the interim choices stand). **Revision r12 (2026-11-20, for P3-10, generator 0.19.0; `docs/specs/p3-10-followups.md`): section 22.** **r15 (2026-11-21, P3-10 second round): 22.7a's lying low has one definition.** **r16, r17 (2026-11-21, P3-11, generator 0.20.0): section 23, orcs arrive in numbers (r17: the first colony is not held back by pressure).** **Revision r6 (2026-11-20, for P3-08, generator 0.17.0; `docs/specs/p3-08-followups.md`)**: the faerie weights of 12.3 ship; dwarves choose high, ore-rich cells (6.2, 8.4); a civilization's last settlement is not abandoned by chance; abandonment names its destination and the blow that began the decline (8.5, new kind 31); refugees above a kind cap drain (9.1); saliences of plague and succession crisis (10.2, 10.3); famine and plague-spread rates halved for the log's volume (10.2, 12.1); invariant 6 read for captured settlements (14); the 100-seed figures of the P3-05 validation (15); see the revision note. Written by the spec writer 2026-11-19; amended 2026-11-19 for P3-06 (r1, r2) and after implementation (r3; notes at the end), note at the end); the amendments of section 18 applied the same day on `p3/05-spec` (P3-00 correction note for P3-05, P3-04 r2, P0-01 section 18, P3-01 r6, P3-07 r1; `schema.md` is the engineer's), after merging `origin/p3/07-spec` at 1cb9d48. Phase P3 History core, spec 5 (P3-00 3.1 row P3-05), a subsystem of pipeline stage 8, `history`. Generator **0.15.0**; **no schema change** (schema stays 7: P3-05 appends event kinds 6–19 to the catalogue and writes rows, never columns; P3-04 8.2). Design doc sections 4 ("Scale is compressed": a city of 20,000; resources and habitability; regions), 5 (the six races and their characters; "Food and homelands"; entities; the tick loop items 1, 2 and 4; quiet intervals; world-creation settings `civs_per_race` and `event_intensity`), 6 (`civilization`, `settlement`), 13 (P3 row) and 14 (records a model can narrate). Depends on P3-00 (binding; amended in 18.2), P0-01 (stream list, 18.3), P3-01 (kind `race`; amended in 18.4: one new field, three field meanings made precise), P3-02 (keyed draws, names), P3-03 (chronology rows), P3-04 (engine, step seam, `State`, event writer, catalogue; amended in 18.2) and P3-07 (report: section 9's statistics, section 20's requirements; amended in 18.5). Branch read: `origin/p3/04-spec` at 4a00615 for P3-00 to P3-04, `origin/p3/07-spec` at 1cb9d48 for P3-07. Proposals read: up to "History: active phases scale with the history span". Reviews read: `docs/reviews/p1-05-resources-critic.md` 7 and `docs/reviews/p1-06-regions-critic.md` 6–7.
 
 Numbers in this spec come from the spec writer's exact-integer prototype `~/.cache/the-unmapped/out/p3-05-spec/peoples.py` (on the P3-02 and P3-03 references for names and chronology and the P3-04 prototype `engine_proto.py` for the schedule, quiet steps and quiet eras), run on the P1-06 validation worlds `~/.cache/the-unmapped/out/p1-06-validation/` (geography unchanged since 0.11.0): 1024 seeds 0–49 (the reference sweep), 512 seeds 0–49, 2048 seeds 0–19, and 1024 seeds 0–49 with each non-default setting of section 15.3. The prototype is evidence, not the reference: the test writer's reference is written from this text (16).
 
@@ -1174,9 +1174,9 @@ New hook on `PeoplesSubsystem`, called by P3-06's flight (P3-06 21.10 item 1), b
 
 ## 23. Orcs arrive in numbers (amendment r16, P3-11, generator 0.20.0)
 
-Normative for the change P3-11 (`docs/specs/p3-11-followups.md`, item 1), from generator **0.20.0**, not before. Source: the world critic's N1 of the P3-10 second round (`docs/reviews/p3-10-followups-round2-world-critic.md`). The targets are P3-06 23.1's. No schema change, no new event kind, no new stream and no new draw.
+Normative for the change P3-11 (`docs/specs/p3-11-followups.md`, item 1), from generator **0.20.0**, not before. Source: the world critic's N1 of the P3-10 second round (`docs/reviews/p3-10-followups-round2-world-critic.md`). The targets are P3-06 23.1's. No schema change, no new event kind, no new stream and no new draw. **r17 (2026-11-21) corrects r16**: r16 read an orc village's kind cap as 1,499, while 5.2 gives every non-fortress orc settlement the cap 7,999; the awakening population alone therefore missed the target (23.1), and the first colony of a race that arrives in numbers is now freed from pressure (23.2 item 2).
 
-### 23.1 Why the orcs are silent for two centuries
+### 23.1 Why the orcs are silent for two centuries (r17: corrected)
 
 Measured by the critic on the 100 default 1024 worlds (years from the orcs' awakening to the first orc colony, war declaration, sack or capture):
 
@@ -1187,53 +1187,103 @@ Measured by the critic on the 100 default 1024 worlds (years from the orcs' awak
 | worlds with 200 or more silent years | 52 | 88 |
 | first orc declaration, years after the awakening (median) | 175 | 244 |
 
-The first orc colony comes a median 235 years after the awakening (0.18.0: 248), and since P3-06 22.1 holds the awakening-quarrel claim back until a second settlement stands, the first colony now also opens the orcs' wars. The cause is 9.3's pressure. The awakening settlement is founded with `founding_population` 300, so it is a village (8.1; `village_min` 250) whose kind cap is 1,499 (5.2). It is ready to send settlers only when p ≥ `found_pressure_permille` (750): at P ≥ 1,125 (1,125,000 div 1,499 = 750), or at 750‰ of its share. At the orcs' `growth_permille` 18, in a capital share of about 4,700 (a median orc region, 5.1), it grows from 300 to 1,125 in about 85 years. The yearly founding chance is then 60‰ in ticks (`found_rate_permille` 100 × `expansion` 600 div 1000). At 1,500 the village becomes a town with cap 7,999, about 17 to 22 years later, and is then ready only at 750‰ of its share (about 3,500), roughly another century. Where the home is upland the capital is a fortress (8.4) with cap `fortress_max` 6,000 and the same 750‰-of-share condition. The growth figures are the spec writer's reading of 9.1 at a share of 4,700; the shares of the orcs' homes are *to be measured by validation*.
+The first orc colony comes a median 235 years after the awakening (0.18.0: 248). Since P3-06 22.1 holds the awakening-quarrel claim back until a second settlement stands, the first colony now also opens the orcs' wars.
 
-### 23.2 Rule (amends 7.3 item 3)
+**The rules, read line by line** (r17; r16 misread the kind cap):
+- **5.2, kind cap.** `kind_cap(s)` is `fortress_max` for a fortress, otherwise "the top of the highest ladder kind the race builds". It depends on the race, not on the settlement's current kind. Orcs build hamlet, village, town and fortress, so every orc settlement that is not a fortress has cap `city_min` − 1 = **7,999**, a village as much as a town (the goblins likewise). A fortress has 6,000. r16 took the cap of an orc village as 1,499 (`town_min` − 1); that is the cap only of a race whose highest kind is the village (faeries).
+- **9.3 item 1, readiness.** p(s) = max(P × 1000 div C_s, P × 1000 div kind_cap(s)), and s is ready when p ≥ `found_pressure_permille` (750). The larger of the two ratios is the one with the smaller denominator, so s is ready when, up to rounding, **P ≥ 750‰ × min(C_s, kind_cap(s))**.
+- **9.1, growth.** While P < T_s = min(C_s, kind_cap(s)): d = max(1, (P × g × (C_s − P) + 500 × C_s) div (1000 × C_s)), with g = 18 for orcs. This is the integer logistic P' ≈ P + 0.018 × P × (1 − P / C_s), whose continuous time from P_a to P_b is t = (1000 / g) × ln[P_b (C_s − P_a) / (P_a (C_s − P_b))], with 1000 / 18 ≈ 55.6.
 
-New race field **`awakening_population`** int(0, 100000), required, after `hidden_years` (P3-01 r14 3.7). In 7.3 item 3 the first settlement of a civilization placed at an awakening has the population
+**The median orc home.** A capital alone in its region has C_s = C(H, orc) (5.2: weights 3000 / 3000). The median orc region has C ≈ 4,700 (5.1's calibration: 4,700–5,100 for goblins and orcs).
+- Readiness needs P ≥ 750‰ × min(4,700, 7,999) = **3,525**.
+- From 300 (0.19.0) that takes t ≈ 55.6 × ln[(3,525 × 4,400) / (300 × 1,175)] = 55.6 × ln 44.0 ≈ **210 years**.
+- Add the wait for the 60‰ yearly chance (`found_rate_permille` 100 × `expansion` 600 div 1000): a median of about 11 tick years. That gives about 220, against the measured 235.
+- From r16's 1,200 it takes 55.6 × ln[(3,525 × 3,500) / (1,200 × 1,175)] = 55.6 × ln 8.75 ≈ **121 years**.
 
-```
-P0 = founding_population                                                if awakening_population_r = 0
-P0 = max(founding_population, min(awakening_population_r, C(H, r)))    otherwise
-```
+**Check against the implementation of r16** (`origin/p3/11-impl` e7b9988; 1024 default seed 1). The capital starts at 1,219, with share 8,882 and cap 7,999. Its pressure is max(1,219,000 div 8,882, 1,219,000 div 7,999) = max(137, 152) = 152‰. Readiness needs P ≥ 750‰ × 7,999 ≈ 6,000. Growth to it takes 55.6 × ln[(6,000 × 7,663) / (1,219 × 2,882)] = 55.6 × ln 13.1 ≈ **143 years**. The first colony was measured at awakening + 149.
 
-with H the home and C(H, r) its capacity for the race (5.1). Its kind is fortress by 8.4, else `ladder(r, P0)` (r3 reading 2 of 16.0 becomes "`ladder(r, P0)`"); the `settlement_founded` event's value `population` is P0, and `found_settlement` is called with P0. The rule applies to every civilization of the race placed at that awakening (7.2: one to four), and to nothing else: a secession (10.3) and a colony (9.3) are unchanged. No draw is added or moved.
+Over seeds 0 to 19 the median years to the first orc act is 149.5 (target below 100), and the act is a colony in 18 of the 20. So no awakening population below about 750‰ of the home's share starts ready, and r16's data lever (1,125) cannot help.
 
-**Bound.** When the field is not 0, P0 ≤ max(`founding_population`, C(H, r)) = C(H, r), since C ≥ `capacity_floor` ≥ `founding_population` (check `peoples_floor`, 12.1). So invariant 3 (P ≤ 2 × C) holds at an awakening as before.
+### 23.2 Rule (r17: amends 7.3 item 3 and 9.3 item 1)
 
-**Shipped:** **orc 1200**; elf, goblin, dwarf, faerie and human **0** (their awakenings are byte for byte the 0.19.0 rule). The rule reads only the field; no race is named in code.
+The race field **`awakening_population`** int(0, 100000), required, after `hidden_years` (P3-01 r14 3.7), is kept, with r16's name, range and position, and gains a second effect. A race with the field above 0 **arrives in numbers**: it starts larger (item 1), and its first colony is not held back by pressure (item 2).
 
-**Why 1200.** `ladder(orc, 1200)` is a village (250 ≤ 1,200 < `town_min` 1,500) with cap 1,499, so p ≥ 1,200,000 div 1,499 = 800 ≥ 750. The capital is therefore ready in the first T2 in which the civilization is visible (P3-04 6.2: the tick after its awakening step). With the 60‰ yearly chance the median first colony is about 11 years after the awakening, wherever 9.3 finds a target. The colony takes max(`colonists_min`, 1,200 × 120 div 1000) = 144, so P3-06 22.1's second settlement stands from the next step, and the quarrel claim is pursued with a capital of about 1,100 behind it. The village stays ready until it becomes a town at 1,500, about 17 years at a share of 4,700. The chance of no founding in 17 tick years is 0.94^17 ≈ 0.35, so about a third of homes miss the window and fall back to 23.1's slower path. Every value from 1,125 to 1,499 is ready at once. 1,125 gives the longest window (about 22 years, a miss of about 0.26), and 1,499 the shortest. 1,200 is chosen because it keeps most of the window and makes the realm that declares the first orc war about four times the size of a 300-person realm. The round-1 failure of P3-10 was that one-settlement realms went to war early with their founding population (P3-06 22.1; at 0.19.0 r16, 57 of the 80 first orc wars were declared with one standing settlement, and 38 of the 80 were lost, 29 of those with one settlement; validation `sweep/orcs.txt`).
+1. **Population** (r16, unchanged). In 7.3 item 3 the first settlement of a civilization placed at an awakening has the population
+   ```
+   P0 = founding_population                                                if awakening_population_r = 0
+   P0 = max(founding_population, min(awakening_population_r, C(H, r)))    otherwise
+   ```
+   with H the home and C(H, r) its capacity (5.1).
+   - Its kind is fortress by 8.4, else `ladder(r, P0)` (16.0 reading 2 becomes "`ladder(r, P0)`").
+   - The `settlement_founded` value `population` is P0, and `found_settlement` is called with P0.
+   - **Bound**: P0 ≤ C(H, r), since C ≥ `capacity_floor` ≥ `founding_population` (check `peoples_floor`, 12.1). So invariant 3 holds.
+2. **The first colony** (r17, new).
+   - **The mark.** Peoples keeps **`first_colony_pending`**, an ordered set of civilization ids (a member, like `low_until`). 7.3 adds c to it for every civilization placed at an awakening of a race with `awakening_population` > 0. A secession (10.3) never adds one.
+   - **Item 1, readiness.** While c is in the set, c's capital is **ready** whatever its pressure. The rest of item 1 is unchanged: other settlements are ready by pressure as before.
+   - **Unchanged items.** Items 2 to 9 apply as written: the source key, the targets, hunger, the chance, the quiet budget, the colonists with their check, the choice and the founding.
+   - **Clearing.** c leaves the set when it founds a colony (9.3 item 9, `colony_founded` with founder c), or when it ends.
+   - **Skipped first.** 22.7a's skip of a civilization that lies low comes before item 1, as before. A pending mark then waits, and so does a step with no target (hunger grows as before).
+   - So the horde's first colony waits only for 9.3's chance and a target. Every later colony waits for pressure, as for every people.
 
-**What it does not reach** (residual cases, measured and reported by validation, not fixed here):
-- **A fortress capital** (an upland home). With cap 6,000 it is ready at 1,200 only if its share is at most 1,600, so it keeps 23.1's slower path.
-- **A home held by another civilization** (7.1's fallback). 9.3 item 3 finds no target, inside or outward, for a civilization that holds no region, as before (the critic's seed 65 may be such a case).
-- **A home where no site is free** at `site_spacing` and the neighbours are unfit.
+**Draws.** No draw is added or moved. The existing **`hist.peoples.found`** draw, `draw(hist.peoples.found, Y, c, 0, 0)` (9.3 item 5), is simply reached sooner: from c's first visible T2 instead of after about a century of growth. Where both targets exist, `draw(hist.peoples.outward, Y, c, 0, 0)` (item 8) is reached sooner too. No new stream.
 
-If P3-06 23.1's median target is missed through these, the next lever is 23.3's rule, a rule change for the spec writer. The first data levers are orc `awakening_population` 1,125 (the longest window) and, for T5, P3-06 23.1's.
+**Shipped:** orc **1,200**; elf, goblin, dwarf, faerie and human **0** (their awakenings and foundings are the 0.19.0 rule byte for byte). The rule reads only the field; no race is named in code.
 
-### 23.3 Rejected: the horde with two settlements
+**The arithmetic with the rule** (the median orc home, C ≈ 4,700, in the orc opening phase, which is ticks: P3-04 5.3):
+- The chance is 60‰ a year from the first visible T2. The first colony comes within t years with probability 1 − 0.94^t: a median of **about 11 years**, 90% within 37 and 99% within 75, wherever 9.3 item 3 finds a target. In a quiet step the chance is 60 × L × 500 div 1000 per step of L years, 30‰ a year.
+- The colonists are max(`colonists_min` 60, 1,200 × 120 div 1000) = 144, and the capital keeps 1,056 ≥ 2 × 60.
+- The capital's kind and cap play no part, so a **fortress capital** (cap 6,000) is covered too; r16 missed it.
+- From the next step P3-06 22.1's count is 2, and the quarrel claim is pursued by a realm of about 1,200 people.
+- The second and later colonies come by pressure: the capital, at 3,000 / 4,000 of the region once the colony stands (5.2), is ready at 750‰ × 3,525 ≈ 2,644.
 
-The critic's first variant: a race with `awakening_quarrel` founds two settlements at its awakening (a camp and a fort). It was rejected for three reasons.
-- **It undoes P3-06 22.1 at once.** The realm has two standing settlements in its first T2 with 600 people, and declares on its quarrel at that strength. That is the round-1 chain the hold-back was written to stop: early wars at the founding strength, lost about half the time (P3-06 22.1's "Why").
-- **It does not bring the first colony forward much.** The capital, at three quarters of the share (5.2), is ready only at P ≥ 1,125, about 75 years. The second settlement, at a quarter share, needs about 120 years. So the first act would mostly be a declaration at small odds, not a colony.
-- **It needs more rule.** It needs a second site in H by 6.2 (none may be free: skip or fatal), a second name and `settlement_founded` per awakening, and shares for two settlements. 23.2 is one field and one line of 7.3.
+**Why 1,200 stays.** It is no longer needed for readiness, but:
+- the first war (P3-06 22.1) is then fought by a realm of about 1,200, not 300 (the round-1 failure was early wars at the founding strength: at 0.19.0 r16, 57 of the 80 first orc wars were declared with one standing settlement and 38 of the 80 were lost, 29 of those with one settlement; validation `sweep/orcs.txt`);
+- the first colonists are 144, not 60.
 
-It stays the next lever if 23.2 misses the target (23.2, "What it does not reach").
+**What it does not reach** (residual cases, reported by validation, not fixed here):
+- **A home held by another civilization** (7.1's fallback). 9.3 item 3 finds no target, inside or outward, for a civilization that holds no region, so the mark waits (the critic's seed 65 may be such a case).
+- **A home with no free site** at `site_spacing` and no fit neighbour. The mark waits likewise.
 
-### 23.4 Tests (adds to 22.8)
+### 23.3 Rejected alternatives (r17: restated with the real cap)
 
-1. An orc civilization awakening in a free home with C(H, orc) = 4,700: its capital is a village of 1,200, the `settlement_founded` value `population` is 1,200, and in its first visible T2 its pressure is 800 and the `hist.peoples.found` chance is drawn (9.3 item 5).
-2. C(H, orc) = 900 (a fallback home): P0 = 900. `capacity_floor` 400 and C(H, orc) = 400: P0 = 400. `awakening_population` 200 with `founding_population` 300: P0 = 300.
-3. An upland home: a fortress of 1,200 with cap 6,000, pressure max(1,200,000 div C_s, 200).
-4. A race with `awakening_population` 0: P0 = `founding_population`, and an elf-only and a goblin-only world are byte-identical to the same rule at 0.19.0 except for `content_hash`.
-5. A secession of an orc realm and an orc colony are unchanged.
-6. Loader (P3-01 8.1): the field is required; −1 and 100,001 are refused; its absence is refused.
-7. Property (16.2): invariant 3 at every awakening, with the field 0 and with 100,000.
-8. Golden: `p3-05-peoples.txt` re-recorded by the reference (every history line with orcs; worlds without orcs change only through names, P3-02 14).
+**(b) A larger awakening population that passes the threshold** (no new rule, the field alone).
+- **The value it needs.** Readiness needs P0 ≥ 750‰ × min(C(H), kind cap) for every home. Clamped to C(H), the field must be about **6,000**, so that a home of share 8,000 or more (seed 1: 8,882, where 750‰ × 7,999 ≈ 6,000) is ready. That makes a median home's capital 4,700, its whole region's capacity, at once. A fortress home needs 750‰ × min(C, 6,000), at most 4,500.
+- **What it does to balance.**
+  - Each orc realm starts with 4,700 to 6,000 people, 16 to 20 times a founding and a third to two fifths of what an orc realm holds at the present on average (1.52 M orcs over 104 awakened orc realms at 0.19.0, about 14,600 each; validation `sweep/orcs.txt`).
+  - The realm is a town at once (`ladder(orc, 6,000)` is a town), with force to match, so its first wars are fought at a strength other peoples reach in centuries. That inflates T5 and puts the neighbours of the orcs, and the race shares, at risk.
+  - Its colonists are 720 a time.
+  - The value would also tie the rule to region capacities, not to a reading of the design.
+- So (b) trades a missed target for a balance change that every target would have to re-measure.
 
-*Not prototyped*: the spec writer did not run the rule; the figures of 23.2 are read from 9.1 and 9.3 at a share of 4,700, and validation measures P3-06 23.1's targets.
+**(c) The two-settlement horde** (a second settlement at the awakening).
+- **It undoes P3-06 22.1 at once.** The count is 2 in the first T2, with 600 people.
+- **It does not bring the first colony forward.** With the real cap:
+  - the capital, at 3/4 of the share (about 3,525), is ready at about 2,644: from 300, 55.6 × ln[(2,644 × 3,225) / (300 × 881)] = 55.6 × ln 32.3 ≈ 193 years;
+  - the second settlement, at 1/4 (about 1,175), is ready at 881: from 300, 55.6 × ln[(881 × 875) / (300 × 294)] = 55.6 × ln 8.74 ≈ 121 years.
+- **The first act would mostly be a declaration**, at small odds.
+- **It needs more rule**: a second site, name and `settlement_founded` per awakening.
+
+**(a) is chosen.** It is the design's "arrive in numbers" read directly: the horde splits as soon as it can, then grows like any people.
+- It is one member set and one clause of 9.3 item 1, with no new field, event, site, name or draw.
+- It reaches the fortress homes that r16 missed.
+- It does not depend on region capacities.
+- It keeps P3-06 22.1's hold-back as it is.
+
+### 23.4 Tests (adds to 22.8; r17: replaces r16's list)
+
+1. **First visible T2.** An orc civilization awakens in a free home with C(H, orc) = 4,700. Its capital is a village of 1,200, and the `settlement_founded` value `population` is 1,200. In its first visible T2 its pressure is max(1,200,000 div 4,700, 1,200,000 div 7,999) = max(255, 150) = 255‰, below 750. It is still ready by the pending mark, the `hist.peoples.found` chance (60‰) is drawn, and a colony of 144 is founded when the draw passes.
+2. **The mark clears.** After that colony the civilization is no longer pending. In the next T2 its capital (1,056, share 3,525) has pressure 299‰, is not ready, and no `found` draw is taken.
+3. **Seed 1's case in miniature.** Share 8,882 and P 1,219 give pressure 152‰: ready while pending, not ready without the mark.
+4. **A fortress capital** (an upland home, cap 6,000): ready while pending.
+5. **No target.** A home held by another civilization: no target, `hunger` grows, no draw, and the civilization stays pending. Once it holds a region with a site (a test that cedes it one), the first colony may be founded without pressure.
+6. **Lying low.** A civilization that lies low (22.7a) while pending: skipped before item 1, as before.
+7. **Unchanged foundings.** A race with `awakening_population` 0: no mark, P0 = `founding_population`. An elf-only and a goblin-only world are byte-identical to 0.19.0's rule except for `content_hash`. A secession of an orc realm is never pending.
+8. **Population.** C(H, orc) = 900: P0 = 900. `capacity_floor` 400 with C(H, orc) = 400: P0 = 400. The field 200 with `founding_population` 300: P0 = 300.
+9. **Loader** (P3-01 8.1): the field is required; −1 and 100,001 are refused.
+10. **Property** (16.2): invariant 3 at every awakening; no civilization is pending after its first `colony_founded`; every `colony_founded` whose source was not ready by pressure is the first colony of a pending civilization (the reference replays the pressures).
+11. **Golden**: `p3-05-peoples.txt` re-recorded by the reference.
+
+*Not prototyped*: the spec writer did not run the rule. 23.2's arithmetic follows 5.2, 9.1 and 9.3 at a share of 4,700, and validation measures P3-06 23.1's targets.
 
 ## Appendix A. Proposals entries (added to `docs/design/proposals.md` with this spec)
 
@@ -1306,3 +1356,7 @@ Text only. The defaults of hand-made tuning (tests) leave 22.2 and 22.5 off: `ca
 ## Revision note r16 (2026-11-21, P3-11; generator 0.20.0)
 
 New section 23 (`docs/specs/p3-11-followups.md` item 1): race field `awakening_population` (orc 1,200, others 0 = `founding_population`); an awakening's first settlement starts at max(`founding_population`, min(the field, C(H, r))) when the field is not 0, so the orcs' capital can send settlers from its first tick (23.2); the two-settlement horde considered and rejected, kept as the next lever (23.3); tests (23.4). 7.3 item 3 and 16.0 reading 2 are read with P0 in place of `founding_population` from 0.20.0. No earlier section is renumbered.
+
+## Revision note r17 (2026-11-21, P3-11 correction; generator 0.20.0)
+
+23.1 to 23.4 corrected after the implementation of r16 (`origin/p3/11-impl` e7b9988, implemented as written) missed P3-06 23.1's T11: a median 149.5 years over 1024 default seeds 0 to 19. r16 took the kind cap of an orc village as 1,499; 5.2 gives the top of the race's highest ladder kind, 7,999, so a capital is ready only at about 750‰ of min(share, 7,999), about 3,525 in a median home. New rule (23.2 item 2): a civilization placed at an awakening of a race with `awakening_population` > 0 is marked `first_colony_pending`, and while marked its capital is ready whatever its pressure; the mark clears with its first colony or its end. The field and its value (orc 1,200) are kept. No new draw: `hist.peoples.found` (and `hist.peoples.outward`) are reached sooner. 23.3 weighs a 6,000 awakening and the two-settlement horde with the real cap. Tests 23.4 replaced.

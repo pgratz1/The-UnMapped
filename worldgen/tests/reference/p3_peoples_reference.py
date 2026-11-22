@@ -812,6 +812,8 @@ class World(pe.World):
         self.decline_start = {}    # r6 8.5: settlement -> the event that last turned it from thriving to declining
         self.plague_plans = []     # r6 10.2: (outbreak event, planned total, actual total) for the checks
         self.last_colony = {}      # r12 22.2 item 3: settlement -> its last colony_founded event as origin
+        self.first_colony_pending = set()
+        self.colony_log = []                # (colony event, founder, source, source pressure, founder pending)   # r17 23.2 item 2: civilizations whose first colony is freed from pressure
         self.low_until = {}        # r12 22.7a: civilization -> the year it stops lying low (latest call wins)
         self.low_refuge = {}       # r15 22.7a: civilization -> the refuge h of its latest lie_low call
         self.cores = set()         # P3-02 r10 12.2: K, the cores of the civilization and settlement names drawn
@@ -1105,6 +1107,8 @@ class World(pe.World):
             self.civ(c)["capital"] = s
             self.site_how[s] = how
             self.name_attempts.append((c, t_c, s, t_s, how))
+            if FLAGS["awaken_pop"] and self.pd.race[race_id].get("awakening", 0) > 0:
+                self.first_colony_pending.add(c)    # r17 23.2 item 2: the mark
         return e_aw
 
     def awakening_population(self, race_id, h):
@@ -1349,6 +1353,7 @@ class World(pe.World):
         return e
 
     def end_civ(self, c, e):
+        self.first_colony_pending.discard(c)   # r17 23.2 item 2: the mark clears when the civilization ends
         civ = self.civ(c)
         civ["ended_year"] = self.year
         civ["ending_event"] = e
@@ -1374,7 +1379,8 @@ class World(pe.World):
             for s in mine:
                 p = s["population"]
                 press[s["id"]] = max(p * 1000 // sh[s["id"]], p * 1000 // self.kind_cap(s))
-            ready = [s for s in mine if press[s["id"]] >= t["found_pressure_permille"]]
+            ready = [s for s in mine if press[s["id"]] >= t["found_pressure_permille"] or
+                     (cid in self.first_colony_pending and s["id"] == c["capital"])]   # r17 23.2 item 2
             if not ready:
                 continue
             src = max(ready, key=lambda s: (c["capital"] != s["id"], press[s["id"]], s["population"], -s["id"]))
@@ -1441,6 +1447,9 @@ class World(pe.World):
                             salience=(t["colony_new_region_salience"] if was_free else None))
             self.found_settlement(x, y, rid, cid, self.founding_kind(race, rid, n, x, y), n, n_s, e)
             self.last_colony[src["id"]] = e       # r12 22.2 item 3
+            was_pending = cid in self.first_colony_pending
+            self.colony_log.append((e, cid, src["id"], press[src["id"]], was_pending))
+            self.first_colony_pending.discard(cid)  # r17 23.2 item 2: the mark clears at the first colony
             self.site_how[s] = how
             if was_free:
                 self.set_owner(rid, cid, e)
@@ -2520,7 +2529,8 @@ HEADER_019 = """\
 HEADER_020 = """\
 # Generator 0.20.0 (P3-11; P3-05 r16 23, P3-04 r17 21, P3-02 r15 14): the first settlement of a civilization
 # placed at an awakening starts at max(founding_population, min(awakening_population, C(H, r))) (orc 1200,
-# the other races 0: founding_population); values one to nine as words in sentences; the faerie lists, the
+# the other races 0: founding_population), and (r17 23.2 item 2) such a civilization's capital is ready for its
+# first colony whatever its pressure; values one to nine as words in sentences; the faerie lists, the
 # repeated-syllable rule and the r15 filter entries in names; the catalogue of 40 kinds.
 """
 
@@ -2889,15 +2899,54 @@ def check_units_r16(c):
         w.geo._cap[(1, ORC)] = cap
         c.eq("23.2 P0 with C %d, awakening_population %d, founding %d" % (cap, ap, fp),
              w.awakening_population(ORC, 1), want)
-    # item 1: the kind and 9.3's pressure of the capital (5.2's kind cap: the top of the race's ladder)
-    w = r6_world(races=("orc",), regions=big, race_fields={ORC: dict(awakening=1200)})
+    # r17 23.4 items 1 to 3, 6: the pending mark. One orc civilization, its capital a village of 1,200 alone in a
+    # free region of C 4,700 with free neighbours (found_rate 1000: the chance always passes)
+    regions = [dict(cells=4096, walk_cells=4000, x_min=0, x_max=31), dict(cells=4096, walk_cells=4000, x_min=32, x_max=63)]
+    w = r6_world(races=("orc",), regions=regions, borders=[dict(a=1, b=2, walk_pairs=5, length_m=1000)],
+                 race_fields={ORC: dict(awakening=1200)}, peoples=dict(found_rate_permille=1000))
     c.eq("23.4.1 ladder(orc, 1200) is a village", w.ladder(ORC, 1200), VILLAGE)
     civ = r6_civ(w, ORC)
     sid = r6_stl(w, civ, 1, VILLAGE, 1200, 10, 10)
-    # READING (P3-11 finding): 5.2's kind_cap(s) is the top of the highest ladder kind the race builds; orcs
-    # build no city, so an orc village's kind cap is town's, city_min - 1 = 7,999 (not 1,499 as 23.1 and 23.2
-    # say). The pressure 9.3 item 1 gives is max(P x 1000 div C_s, P x 1000 div kind_cap).
-    c.eq("23.4.1 (5.2) the orc village's kind cap", w.kind_cap(w.stl(sid)), w.t["city_min"] - 1)
+    w.geo._cap[(1, ORC)] = 4700
+    c.eq("23.4.1 (5.2) the orc village's kind cap is town's", w.kind_cap(w.stl(sid)), w.t["city_min"] - 1)
+    sh = w.shares()[sid]
+    press = max(1200 * 1000 // sh, 1200 * 1000 // w.kind_cap(w.stl(sid)))
+    c.eq("23.4.1 pressure 255 (share 4,700), below 750", (sh, press), (4700, 255))
+    draws = []
+    real = w.draw
+    w.draw = lambda stream, a, b, k, w=w, draws=draws, real=real: (draws.append((w.year, stream, a)) or
+                                                                 real(stream, a, b, k))
+    w.serial += 1
+    w.foundings(quiet=False)
+    c.eq("23.4.1 not pending: no found draw", [x for x in draws if x[1] == "hist.peoples.found"], [])
+    w.first_colony_pending.add(civ)
+    w.year += 1
+    w.serial += 1
+    w.foundings(quiet=False)
+    col = [e for e in w.events if e["key"] == "colony_founded"]
+    c.eq("23.4.1 pending: the found draw is taken and a colony of 144 founded",
+         ([x[1] for x in draws if x[1] == "hist.peoples.found"], [e["values"] for e in col]),
+         (["hist.peoples.found"], [{1: 144}]))
+    c.eq("23.4.2 the mark clears at the colony", civ in w.first_colony_pending, False)
+    c.eq("23.4.2 the capital keeps 1,056", w.stl(sid)["population"], 1056)
+    n0 = len(draws)
+    w.year += 1
+    w.serial += 1
+    w.foundings(quiet=False)
+    c.eq("23.4.2 the next T2: not ready, no found draw", [x for x in draws[n0:] if x[1] == "hist.peoples.found"], [])
+    # item 3: seed 1's case in miniature, P 1,219 with share 8,882: 152, ready only while pending
+    c.eq("23.4.3 pressure 152", max(1219 * 1000 // 8882, 1219 * 1000 // (w.t["city_min"] - 1)), 152)
+    # item 6: lying low comes first
+    w2 = r6_world(races=("orc",), regions=regions, borders=[dict(a=1, b=2, walk_pairs=5, length_m=1000)],
+                  race_fields={ORC: dict(awakening=1200)}, peoples=dict(found_rate_permille=1000))
+    c2 = r6_civ(w2, ORC)
+    s2 = r6_stl(w2, c2, 1, VILLAGE, 1200, 10, 10)
+    w2.first_colony_pending.add(c2)
+    w2.lie_low(c2, s2, w2.year + 100)
+    w2.serial += 1
+    w2.foundings(quiet=False)
+    c.eq("23.4.6 lying low: skipped, still pending, no colony",
+         (c2 in w2.first_colony_pending, [e for e in w2.events if e["key"] == "colony_founded"]), (True, []))
     # items 4, 5, 7 and the rule's reach on synthetic worlds: the field 0 gives the 0.19.0 rule byte for byte;
     # 1,200 moves only worlds with orcs; 100,000 keeps invariant 3 at every awakening
     dat = data()
@@ -2922,6 +2971,16 @@ def check_units_r16(c):
             race = w.civ(w.stl(sid)["founder_civ"])["race"]
             want = w.awakening_population(race, h)
             c.eq("23.2 syn-%d s%d P0" % (seed, sid), pop, want)
+        for (e, cv, src, pr, pend) in w.colony_log:
+            c.true("23.4.10 syn-%d e%d: ready by pressure or the first colony of a pending civilization" % (seed, e),
+                   pr >= w.t["found_pressure_permille"] or pend)
+        firsts_c = {}
+        for (e, cv, src, pr, pend) in w.colony_log:
+            firsts_c.setdefault(cv, (e, pend))
+        c.true("23.4.10 syn-%d: only a civilization's first colony is pending" % seed,
+               all(not pend or firsts_c[cv][0] == e for (e, cv, src, pr, pend) in w.colony_log))
+        c.true("23.4.10 syn-%d: no civilization with a colony stays pending" % seed,
+               not any(cv in w.first_colony_pending for (_e, cv, _s, _p, _pd) in w.colony_log))
         h = history_stage(huge, inp)
         hw = h["_world"]
         for sid, reg, pop in awakening_firsts(h):

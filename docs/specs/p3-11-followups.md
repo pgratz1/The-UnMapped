@@ -1,6 +1,6 @@
 # P3-11 Orc arrival, wording and name follow-ups
 
-Status: **draft for the lead's approval (2026-11-21)**, written by the spec writer on `p3/11-spec`, cut from `origin/main` at dfa4e66 (generator 0.19.0, P3-10 merged). Phase P3 History core, a change spec after P3-10 (generator 0.19.0) and before P3-07 (the history report, specified, not implemented). Generator **0.20.0**.
+Status: **draft for the lead's approval (2026-11-21); r1 (2026-11-21): item 1 corrected after the implementation missed T11 (section 9 item 1)**, written by the spec writer on `p3/11-spec`, cut from `origin/main` at dfa4e66 (generator 0.19.0, P3-10 merged). Phase P3 History core, a change spec after P3-10 (generator 0.19.0) and before P3-07 (the history report, specified, not implemented). Generator **0.20.0**.
 
 **No schema change**: schema stays 7. The change:
 - appends two event kinds (39, 40);
@@ -35,7 +35,7 @@ Not here, each with its reason:
 
 | # | Item (source) | Resolution, in short | Normative text | Changes worlds |
 | --- | --- | --- | --- | --- |
-| 1 | Orcs act within their first century (N1) | New race field `awakening_population` (orc **1,200**, others 0 = `founding_population` 300). The awakening settlement starts at max(300, min(1,200, C(H))) and is ready to send settlers from its first tick (village cap 1,499, pressure 800‰ ≥ 750‰), so the second settlement, and with it 22.1's quarrel, comes within decades. New target **T11**: the median years from the orcs' awakening to their first colony, declaration, sack or capture is below 100 (0.19.0: 232). T9 ≤ 10, T10 = 0, T5, quick aim wins ≤ 3 and T1 ≤ 250‰ are kept | `docs/specs/p3-05-peoples.md` r16 23; `docs/specs/p3-06-expansion-conflict.md` r19 23.1; `docs/specs/p3-01-history-data-settings.md` r14 3.7 | yes |
+| 1 | Orcs act within their first century (N1) | New race field `awakening_population` (orc **1,200**, others 0 = `founding_population` 300). A race with the field above 0 arrives in numbers: its awakening settlement starts at max(300, min(1,200, C(H))), and (r1) its first colony is not held back by pressure. A member set `first_colony_pending` marks the civilization until its first colony, and while marked its capital counts as ready. So the second settlement, and with it 22.1's quarrel, comes after a median of about 11 years (the existing `hist.peoples.found` chance, 60‰ a year). New target **T11**: the median years from the orcs' awakening to their first colony, declaration, sack or capture is below 100 (0.19.0: 232). T9 ≤ 10, T10 = 0, T5, quick aim wins ≤ 3 and T1 ≤ 250‰ are kept | `docs/specs/p3-05-peoples.md` r16, r17 23; `docs/specs/p3-06-expansion-conflict.md` r19, r20 23.1; `docs/specs/p3-01-history-data-settings.md` r14 3.7 | yes |
 | 2 | Claims and foothold cessions name the settlements (N2) | A claim on a region the holder role does not hold is kind 39 `claim_settlements`: "The Zatzeegg Mob laid claim to Greerk-Zark Pit of the Bizz-Skuz Horde in the Graven Thicket." The foothold cession of 22.5 is kind 40 `settlements_ceded`: "The Bizz-Skuz Horde gave up Greerk-Zark Pit in the Graven Thicket to the Zatzeegg Mob." `{settlement:all}` renders one, two and three or more names alike. Kinds 20 and 29 are unchanged and still written for every other claim and cession | P3-06 r19 23.2, 23.3; `docs/specs/p3-04-simulation-engine.md` r17 21.2; `docs/specs/p3-07-history-report.md` r14 23 | yes (event kinds and participants only) |
 | 3 | Faerie names (Paul's decision of 2026-11-21) | Onsets `p` → `v`, `b` → `gl`; `ee` and `ou` at half their share (16 nuclei); the coda `p` removed; `ass` in the faerie `forbidden` list. No syllable repeated twice in a row, as a validity rule for **every culture**, with syllables defined from the pattern; a rejected attempt is the next keyed attempt t + 1 | `docs/specs/p3-02-names.md` r15 14.1, 14.2; P3-01 r14 3.7 | yes |
 | 4 | `tard` (N3) | `tard` in `slurs.anywhere`; `retard`, `bastard` and `slurs.whole` `tard` removed as redundant; `via`, `van`, `von`, `ova` (reached by the new faerie onsets) in `words.whole` | P3-02 r15 14.3 | yes |
@@ -66,7 +66,7 @@ One branch, one engineer and one test writer, working from the stage specs separ
 | 3 | Renderer: one to nine as words | P3-04 21.1 | sentences only |
 | 4 | Catalogue: kinds 39 and 40 | P3-04 21.2 | catalogue tables |
 | 5 | Conflict: kind 39 at the claim and kind 40 at the foothold cession; `history_note`'s two changes (`digest.cpp`, implemented since P3-09) | P3-06 23.2, 23.3; P3-07 23 items 3 and 4 | event kinds and participants; notes |
-| 6 | Peoples: the awakening population | P3-05 23.2 | history tables |
+| 6 | Peoples: the awakening population and the pending first colony | P3-05 23.2 items 1 and 2 | history tables |
 | 7 | Goldens and figures: every golden of section 4; the README hash; `docs/specs/schema.md` 6 gains kinds 39 and 40 | 4 | — |
 
 ### 3.1 Per role
@@ -78,7 +78,7 @@ One branch, one engineer and one test writer, working from the stage specs separ
   - `conflict.cpp`: 23.2's choice of kind at the claim (beside `point_event(ctx, "claim", …)`).
   - `conflict_war.cpp`: 23.3's kind at the foothold cession, with the participants listed before the transfer.
   - `digest.cpp`: P3-07 23 items 3 and 4; the claim lookup also finds `claim_settlements`.
-  - `peoples.cpp`: P3-05 23.2 in `awaken`.
+  - `peoples.cpp`: P3-05 23.2 item 1 in `awaken`; item 2 (r1): `first_colony_pending` set in `awaken`, read in 9.3 item 1's readiness, cleared at the civilization's first `colony_founded` and at its end.
   - `kinds_history.cpp`: the race field.
   - Data: `game/data/races/*.toml`, `game/data/cultures/faerie.toml`, `game/data/name_filters/{slurs,crude,words}.toml`, `game/data/history/report.toml`, and the copies under `worldgen/tests/data/geo/` and `geo-small/`.
   - Default of hand-made tuning built in code: `awakening_population` 0 (the rule off).
@@ -131,7 +131,7 @@ The spec writer did not run the generator or a harness for this change (the lead
 ## 6. Tests to add
 
 Each stage spec lists its own. In summary:
-- **P3-05 23.4**: the awakening population (free home, low-capacity home, upland fortress, a race at 0, secessions and colonies unchanged, the loader, invariant 3).
+- **P3-05 23.4** (r1, replaced): a pending capital is ready at pressure 255‰ and 152‰ (seed 1's case); the mark clears with the first colony; fortress capitals; no target keeps the mark; lying low first; a race at 0 and secessions unchanged; the population clamps; the loader; invariant 3 and the replayed-pressure property.
 - **P3-06 23.7**:
   - the claim kind by the holder of R (held by b, by a, by a third civilization, by no one), with visible settlements only;
   - the foothold cession's kind and participants;
@@ -181,7 +181,7 @@ On the sweeps of P3-06 15.6 at 0.20.0, against the 0.19.0 figures as merged (P3-
    - worlds with 200 or more silent years (0.19.0: 88);
    - the median first orc declaration (0.19.0: 244 years);
    - the first wars declared with at most one standing settlement, and their outcomes;
-   - the residual cases of P3-05 23.2 (fortress capitals, held homes, capitals that became towns first), with their T11;
+   - the residual cases of P3-05 23.2 (held homes, homes with no free site), with their T11; the years to the first colony and from it to the first declaration;
    - T8 (0.19.0: 71 of 100);
    - T5, T9, T10 and T11 in `calm` and `turbulent` (0.19.0: T5 28 / 6 and 23 / 22; T9 2 and 2; T10 0 and 0);
    - orc people and standing settlements, and the race shares (0.19.0: orcs 69‰ of people, 79‰ of standing settlements).
@@ -200,15 +200,14 @@ On the sweeps of P3-06 15.6 at 0.20.0, against the 0.19.0 figures as merged (P3-
 
 ## 9. Decisions made (for the lead)
 
-1. **Item 1: a faster first colony, not a horde with two settlements.** The awakening settlement of an orc civilization starts at 1,200 (P3-05 23.2).
-   - *Reasons*:
-     - it is the smallest change: one race field and one line of the awakening, no new event, site or name;
-     - it keeps the point of P3-06 22.1: the orcs still go to war only once a second settlement stands, but that settlement now comes within about a decade, wherever 9.3 finds a target;
-     - the realm that declares the first orc war is about four times the size of a 300-person realm, which is the round-1 failure the hold-back was written for;
-     - the first act it brings forward is a colony, an act in T11's sense, so T11 does not depend on war odds.
-   - *Rejected*: two settlements at the awakening (P3-05 23.3). It would undo 22.1 at once, at 600 people. The first colony would still wait 75 to 120 years for growth. It needs a second site, name and event per awakening. It stays the next lever if T11 is missed through fortress capitals or held homes.
-   - *Value*: 1,200 sits in the range that is ready at once (1,125 to 1,499). It keeps most of the window before the village becomes a town, and 1,125, the longest window, is the first data lever.
-   - Keyed draws only; **no new draw and no new stream**: the colony's chance is the existing `hist.peoples.found` draw (key Y, c), taken sooner.
+1. **Item 1: the horde splits at once: the first colony is freed from pressure** (P3-05 r17 23.2; r1 of this spec, correcting r0).
+   - **r0's mistake.** r0 relied on the awakening population alone (1,200), believing an orc village's kind cap was 1,499, so that the capital would be ready at once. P3-05 5.2 gives every orc settlement that is not a fortress the race's highest cap, 7,999. A capital is therefore ready only at about 750‰ × min(share, 7,999): about 3,525 in a median home of share 4,700, which takes some 121 years from 1,200 and 210 from 300. The implementation of r0 (`origin/p3/11-impl` e7b9988) measured a T11 median of 149.5 over seeds 0 to 19, the first act a colony in 18 of 20. r0's data lever, 1,125, could not help. P3-05 23.1 has the line-by-line reading and the arithmetic.
+   - **The rule.** A civilization placed at an awakening of a race with `awakening_population` > 0 is marked pending, and while pending its capital is ready whatever its pressure. The mark clears with its first colony or its end. The first colony then waits only for 9.3's chance, 60‰ a year in ticks, a median of about 11 years, wherever a target exists, fortress capitals included. Every later colony waits for pressure as before.
+   - **Draws.** No new draw and no new stream. The existing `hist.peoples.found` draw (key Y, c, 0, 0), and `hist.peoples.outward` (Y, c, 0, 0) where both targets exist, are reached from the first visible T2 instead of after about a century.
+   - **The field stays**, with its name, range, value (orc 1,200) and its first effect. Its second effect is the pending mark. No field is added, renamed or removed. The population still matters: the first war (22.1) is fought by a realm of about 1,200, not 300, and the first colonists are 144.
+   - **Rejected (b): an awakening population of about 6,000**, the least that passes the real threshold in every home (seed 1: 750‰ × 7,999). Every orc realm would start as a town of 4,700 to 6,000, at or near its region's capacity and a third to two fifths of an average orc realm at the present. That is a strength other peoples reach in centuries, with colonists of 720. It would inflate T5, threaten the orcs' neighbours and the race shares, and tie the rule to region capacities.
+   - **Rejected (c): the two-settlement horde.** It undoes 22.1 at once, at 600 people. With the real cap its capital (3/4 share) and its second settlement (1/4 share) are ready only after about 193 and 121 years, so the first act would mostly be a declaration at small odds. It also needs a second site, name and event per awakening.
+   - **Hold-back and targets.** P3-06 22.1's hold-back is kept unchanged, and so are the round-2 orc targets.
 2. **T11 leaves claims out.** The awakening-quarrel claim falls in the orcs' first steps in nearly every world, so counting it would meet the target at 0.19.0 already. T11 is the critic's measure: colony, declaration, sack or capture.
 3. **T10's bound becomes 0**, as the lead's constraint for this change states (P3-06 22.4 allowed 2).
 4. **Item 2: two new kinds, not a role on kinds 20 and 29**, since P3-04 8.2 makes a new role on a shipped kind a schema change (section 7).
@@ -244,7 +243,7 @@ On the sweeps of P3-06 15.6 at 0.20.0, against the 0.19.0 figures as merged (P3-
    - (c) Drop the claim and declare nothing when its region is no longer a goal. That is a behaviour change, with fewer wars and every war target to re-measure.
 
    The interim reading is (a), as specified.
-2. **If T11 is missed** (for the lead after validation). The data lever is orc `awakening_population` 1,125. The rule lever is the two-settlement horde (P3-05 23.3), which comes back to the spec writer. The residual cases are fortress capitals and homes held by another civilization (P3-05 23.2), and validation reports them separately.
+2. **If T11 is missed** (for the lead after validation; r1). No data lever is expected to help. With the first colony freed the chance is not the limit, so a miss means that P3-05 23.2's residual cases (a home held by another civilization, a home with no free site: no target) are common. Validation reports them separately, and the fix is a rule change for the spec writer, for instance outward targets from the home's neighbours for a pending civilization that holds no region. Orc `expansion` 800 (data) raises the chance to 80‰ but moves every orc colony. For T5 the levers that work are `quarrel_min_settlements` 3, orc `awakening_population` 2,000 and orc `odds_min_permille` 600, in that order (P3-06 23.1).
 3. **The faerie coda `p`** (for Paul, through the lead). It is removed with the onsets, since a coda before an empty onset sounds as an onset. If Paul meant only the onset lists, the coda `p` can return as a ninth coda (a data change). It would then bring back names such as `Lipa` and `Mapou`.
 
 ## 11. Proposals

@@ -1286,9 +1286,14 @@ python3 -B worldgen/tests/reference/p3_conflict_reference.py check --inputs $I
   (`REPEAT_OFF`), since the library applies 14.2 to every culture and the `r4sha256` golden lines move.
 - `p3_engine_reference.py`: `COMPILED_020` (kinds 39, 40), `RENDER_R17` (`fmt_value`: 1 to 9 as words in `{value}`
   and the three-word form's `#`), `TEMPLATE_CASES_R17`, `check_render_r17`; r10's grammar checks run without r17.
-- `p3_peoples_reference.py`: flag `awaken_pop` (`World.awakening_population`), `check_units_r16` (the formula with C
-  set by hand; every race at 0 equals the 0.19.0 rule on the synthetic worlds; invariant 3 at every awakening with
-  100,000).
+- `p3_peoples_reference.py`: flag `awaken_pop` (`World.awakening_population`; P3-05 r17 23.2 item 2: the ordered set
+  `first_colony_pending`, filled at an awakening of a race with the field above 0, read in 9.3 item 1 for the
+  capital, cleared at the civilization's first `colony_founded` and in `end_civ`; `colony_log` records each colony's
+  source pressure and whether the founder was pending), `check_units_r16` (r17 23.4 items 1 to 3, 6, 8, 10: the
+  formula with C set by hand; a village of 1,200 at share 4,700 has pressure 255, is ready only while pending, its
+  colony of 144 clears the mark, and the next T2 takes no found draw; lying low skips first; every race at 0 equals
+  the 0.19.0 rule on the synthetic worlds; invariant 3 at every awakening with 100,000; every colony ready by
+  pressure or the first of a pending civilization).
 - `p3_conflict_reference.py`: flags `claim39` (23.2) and `foot40` (23.3); `CLAIMS` and `CEDES` read kinds 20/39 and
   29/40 alike in every invariant, statistic, war line (`-foothold`) and note; `history_note` gains P3-07 r14 23
   items 3 and 4; `replay_r17` checks 23.7 item 3 and 23.2's holder; `check_self_r19` (23.7 item 5) on every
@@ -1299,12 +1304,10 @@ Readings taken (also in the hand-back report):
 - 23.2's settlement list is the holder's standing visible settlements **not hidden** (`svis_seen`, the set that puts
   R in presence(b)), as 23.7 item 1's test and decision 4 say; the rule text says only "visible".
 - 5.2's `kind_cap` of a non-fortress settlement is the top of the race's ladder (orcs: town, 7,999), so an orc
-  village of 1,200 has pressure max(1,200,000 div C_s, 150), not 800 as 23.1 and 23.2 compute with a cap of 1,499;
-  the reference implements 23.2's population rule as written and leaves 9.3 unchanged.
+  village of 1,200 has pressure max(1,200,000 div C_s, 150), not 800 as P3-05 r16 23.1 and 23.2 computed with a cap
+  of 1,499. P3-05 r17 (spec commit e361880) corrects it with the pending mark above; the goldens follow r17.
 
-Integration with `p3/11-impl` (e7b9988; branch `p3/11-int`): no golden moved. The C++ matches every reference
-golden (`p3-01` to `p3-06`, the slow case `hist-conflict-73-1024`), and `check-world` on the 1024 default worlds of
-seeds 0 to 13 and 73 written by the C++ finds every chronology and history table equal and no invariant failure.
-T11 on those 15 worlds (from the rows, `r19_facts`): 120, 149, 149, 140, 52, 121, 164, 153, 119, 188, 175, 112, 92,
-151, 164 (median 149), which is consistent with the kind-cap reading above. No kind 40 event in them; kind 39
-claims in 8 of 15.
+First integration with `p3/11-impl` at e7b9988 (r16, before the correction; branch `p3/11-int`): the C++ matched
+every r16 reference golden and `check-world` on the 1024 default worlds of seeds 0 to 13 and 73; T11 on those 15
+worlds was 120, 149, 149, 140, 52, 121, 164, 153, 119, 188, 175, 112, 92, 151, 164 (median 149), which is what led
+to r17.

@@ -3205,7 +3205,12 @@ def replay_r17(res, dat=None):
                 problems.append("(23.7.3) e%d settlements not in ascending id" % eid)
             if holder(e[5], y, eid) == b:
                 problems.append("(23.2) e%d claim_settlements on rg%d, which its holder c%d holds" % (eid, e[5], b))
-        if k == K["claim"] and FLAGS["claim39"] and holder(e[5], y, eid) != role(eid, 2)[0]:
+        # (a kind 20 claim whose cause is a colony of the holder in R in the claim's year is exempt: the colony made
+        # the holder R's owner earlier in the year, and a later step's secession passed R on, so the net rule of
+        # P3-04 6.7 item 1 left it no region_control row; the stress-7 e1153 case of 8.3 item 4's exemption)
+        if k == K["claim"] and FLAGS["claim39"] and holder(e[5], y, eid) != role(eid, 2)[0] and not any(
+                kind[x] == K["colony_founded"] and ev[x][1] == y and ev[x][5] == e[5] and
+                role(x, sf)[0] == role(eid, 2)[0] for x in causes.get(eid, [])):
             problems.append("(23.2) e%d claim on rg%d, which its holder c%d does not hold" % (eid, e[5],
                                                                                           role(eid, 2)[0]))
         if k in CLAIMS + (K["war_declared"],) and lies_low(role(eid, 1)[0], y):
@@ -5948,7 +5953,7 @@ HEADER_020 = """\
 # Generator 0.20.0 (P3-11, docs/specs/p3-11-followups.md): P3-06 r19 section 23 (a claim on a region its
 # holder does not hold is kind 39 claim_settlements listing the holder's visible settlements there; the
 # foothold cession is kind 40 settlements_ceded listing the passing settlements, war outcome won-c<W>-foothold),
-# P3-05 r16 23 (the awakening population, orc 1200), P3-04 r17 21 (one to nine as words; kinds 39, 40),
+# P3-05 r17 23 (the awakening population, orc 1200; the first colony freed from pressure), P3-04 r17 21 (one to nine as words; kinds 39, 40),
 # P3-02 r15 14 (faerie lists, no repeated syllable, tard) and P3-07 r14 23 items 3, 4 in the note lines. New
 # line, one per case:
 #   <case> r19 t11 <years|-> first_orc_war <years|-> claims39 <claimant>/<third>/<none> cessions40 <n>
