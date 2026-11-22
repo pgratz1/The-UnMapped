@@ -95,11 +95,16 @@ public:
     std::string build() {
         line(std::string(HISTORY_REPORT_HEADER_V1));
         line(std::string("level = ") + (level_ == HistoryLevel::full ? "full" : "summary"));
+        // r17 24.4: the chronicle before the civilization blocks; [phases]
+        // at full only.
         settings();
         ages();
-        phases();
-        civilizations();
+        count_phases();
+        if (level_ == HistoryLevel::full) {
+            phases();
+        }
         chronicle();
+        civilizations();
         present();
         stats();
         return std::move(out_);
@@ -200,37 +205,51 @@ private:
         line("[ages]");
         for (const db::AgeRow& a : t_.ages) {
             std::int64_t founded = 0;
+            std::int64_t awakening = 0;
+            const history::KindDef* civ_founded = v_.catalogue().find("civ_founded");
             for (const db::CivilizationRow& c : t_.civilizations) {
-                founded += (a.start_year <= c.founded_year && c.founded_year <= a.end_year) ? 1 : 0;
+                if (a.start_year <= c.founded_year && c.founded_year <= a.end_year) {
+                    ++founded;
+                    awakening += (civ_founded != nullptr && event(c.founding_event).row.kind == civ_founded->id) ? 1 : 0;
+                }
             }
             const db::RaceRow* r = race(a.race);          // a present race (P3-03 9.1)
             const db::GodRow* g = god(r->creator_god);    // a god (read_history_tables)
             line("a" + num(a.id) + " " + escape_history_text(a.name) + ": " + span_of(a.start_year, a.end_year) +
                  ", " + pl(a.end_year - a.start_year + 1, "year") + "; " + escape_history_text(r->plural) + " (ra" +
                  num(r->id) + ") made by " + escape_history_text(g->name) + " (g" + num(g->id) + ", " +
-                 std::string(word(CAMP, g->camp, 0)) + "); " + pl(founded, "civilization") + " founded");
+                 std::string(word(CAMP, g->camp, 0)) + "); " + pl(founded, "civilization") + " founded: " +
+                 num(awakening) + " at the awakening, " + num(founded - awakening) + " by secession");
         }
     }
 
     // --- [phases] (6.5) -----------------------------------------------------
 
-    void phases() {
+    void count_phases() {
         phase_events_.assign(t_.phases.size() + 1, 0);
         phase_shown_.assign(t_.phases.size() + 1, 0);
         for (const HistoryView::Event& e : v_.events()) {
-            const auto p = static_cast<std::size_t>(e.row.phase);  // a phase id (read_history_tables)
+            const auto p = static_cast<std::size_t>(e.row.phase);  // a phase id (read_history_tables, reads_disagree)
             ++phase_events_[p];
             phase_shown_[p] += shown(e.row.id) ? 1 : 0;
         }
+    }
+
+    // "<start>-<end>, <pl(years)>[; trigger e<t>]; <pl(m, event)>", shared by
+    // [phases] (6.5) and the chronicle's phase headings (24.4).
+    [[nodiscard]] std::string phase_tail(const db::PhaseRow& p) const {
+        std::string s = span_of(p.start_year, p.end_year) + ", " + pl(p.end_year - p.start_year + 1, "year");
+        if (p.trigger_event != 0) {
+            s += "; trigger e" + num(p.trigger_event);
+        }
+        return s + "; " + pl(phase_events_[static_cast<std::size_t>(p.id)], "event");
+    }
+
+    void phases() {
         line("[phases]");
         for (const db::PhaseRow& p : t_.phases) {
-            std::string s = "p" + num(p.id) + " a" + num(p.age) + " " + std::string(word(PHASE_KIND, p.kind, 1)) + " " +
-                            span_of(p.start_year, p.end_year) + ", " + pl(p.end_year - p.start_year + 1, "year");
-            if (p.trigger_event != 0) {
-                s += "; trigger e" + num(p.trigger_event);
-            }
-            s += "; " + pl(phase_events_[static_cast<std::size_t>(p.id)], "event");
-            line(std::move(s));
+            line("p" + num(p.id) + " a" + num(p.age) + " " + std::string(word(PHASE_KIND, p.kind, 1)) + " " +
+                 phase_tail(p));
         }
     }
 
@@ -261,7 +280,11 @@ private:
         const db::AgeRow* age = age_of(c.founded_year);
         line("  founded: " + num(c.founded_year) + " in " + escape_history_text(age->name) + " (a" + num(age->id) +
              "), e" + num(c.founding_event));
-        line(c.capital != 0 ? "  capital: " + settlement(c.capital) : std::string("  capital: none"));
+        if (d.seceded_from != 0) {
+            line("  seceded from: " + civ(d.seceded_from) + ", e" + num(c.founding_event));
+        }
+        const std::string capital = c.ended_year ? "  last capital: " : "  capital: ";
+        line(capital + (c.capital != 0 ? settlement(c.capital) : std::string("none")));
         line(d.peak_regions.count > 0 ? "  peak regions: " + num(d.peak_regions.count) + ", " +
                                             span_of(d.peak_regions.from_year, d.peak_regions.to_year)
                                       : std::string("  peak regions: 0"));
@@ -270,7 +293,14 @@ private:
                  : std::string("  peak population: 0"));
         line("  settlements: " + num(d.settlements_founded) + " founded, " + num(d.settlements_held) +
              " held at the end, " + num(d.settlements_ruined) + " ruined");
-        relations(d);
+        line("  wars: " + num(d.wars_declared) + " declared, " + num(d.wars_defended) + " defended; won " +
+             num(d.wars_won) + ", lost " + num(d.wars_lost) + ", drawn " + num(d.wars_drawn) + ", open " +
+             num(d.wars_open));
+        if (level_ == HistoryLevel::full) {
+            relations(d);
+        } else {
+            adversaries(d);
+        }
         line("  events: " + num(d.events));
         if (!c.ended_year) {
             line("  fate: alive in " + num(t_.end_year) + ": " + pl(d.regions_held, "region") + ", " +
@@ -284,6 +314,25 @@ private:
             const HistoryView::Event& e = event(m);
             line("    " + event_span(e.row) + " e" + num(m) + " " + escape_history_text(kind_of(e).key) + ": " +
                  sentence(m) + note(m, c.id));
+        }
+    }
+
+    // r17 24.5: one line per adversary, summary only.
+    void adversaries(const history::CivilizationDigest& d) {
+        if (d.adversaries.empty()) {
+            line("  adversaries: none");
+            return;
+        }
+        line("  adversaries: " + num(static_cast<std::int64_t>(d.adversaries.size())));
+        for (const history::CivilizationDigest::Adversary& a : d.adversaries) {
+            std::string l = "    " + ref(a.type, a.id) + ": ";
+            if (a.wars > 0) {
+                l += pl(a.wars, "war") + ", won " + num(a.won) + ", lost " + num(a.lost) + ", drawn " + num(a.drawn) +
+                     ", open " + num(a.open) + ", " + span_of(a.first, a.last);
+            } else {
+                l += "no war";
+            }
+            line(l + "; now " + a.state);
         }
     }
 
@@ -341,8 +390,7 @@ private:
                 if (p.age != a.id) {
                     continue;
                 }
-                line("-- p" + num(p.id) + " " + std::string(word(PHASE_KIND, p.kind, 1)) + ": " +
-                     span_of(p.start_year, p.end_year));
+                line("-- p" + num(p.id) + " " + std::string(word(PHASE_KIND, p.kind, 1)) + ": " + phase_tail(p));
                 // The events of a phase are consecutive ids (5.3).
                 while (next < all.size() && all[next].row.phase == p.id) {
                     if (shown(all[next].row.id)) {
@@ -451,6 +499,10 @@ private:
         line(largest != nullptr
                  ? "largest settlement: " + settlement(largest->id) + ", population " + num(largest->population)
                  : std::string("largest settlement: none"));
+        ruins();
+        refuges();
+        open_wars();
+        standing_claims();
     }
 
     void settlement_line(const db::SettlementRow& s) {
@@ -463,7 +515,111 @@ private:
         if (s.ruined_year) {
             l += ", ruined " + num(*s.ruined_year) + ", e" + num(s.ruin_event);
         }
+        if (s.status == 3 || s.status == 4) {
+            l += ", last held by " + last_held_by(s.id);  // r17 24.7 (A10)
+        }
         line(std::move(l));
+    }
+
+    // --- [present]'s lists (24.7) -------------------------------------------
+
+    [[nodiscard]] std::string last_held_by(Id settlement_id) const {
+        const Id c = d_.last_held_by[static_cast<std::size_t>(settlement_id - 1)];
+        return c != 0 ? civ(c) : std::string("no one");
+    }
+
+    // The first participant of `role` (by key) of event e, or 0.
+    [[nodiscard]] Id role_of(const HistoryView::Event& e, std::string_view role) const {
+        const history::RoleDef* r = kind_of(e).find_role(role);
+        if (r == nullptr) {
+            return 0;
+        }
+        for (const db::EventParticipantRow& p : e.participants) {  // seq order
+            if (p.role == r->seq) {
+                return p.entity_id;
+            }
+        }
+        return 0;
+    }
+
+    void ruins() {
+        std::vector<const db::SettlementRow*> rows;
+        for (const db::SettlementRow& s : t_.settlements) {
+            if (s.status == 3) {
+                rows.push_back(&s);
+            }
+        }
+        line("ruins: " + num(static_cast<std::int64_t>(rows.size())));
+        for (const db::SettlementRow* s : rows) {
+            std::string l = "  s" + num(s->id) + " " + escape_history_text(s->name) + " in " + region(s->region) + ":";
+            if (s->ruined_year) {  // set while ruined (5.3: with ruin_event)
+                const HistoryView::Event& e = event(s->ruin_event);
+                l += " ruined " + num(*s->ruined_year) + ", e" + num(s->ruin_event) + " " +
+                     escape_history_text(kind_of(e).key);
+                if (const Id by = role_of(e, "attacker"); by != 0) {
+                    l += ", by " + civ(by);
+                }
+                l += ";";
+            }
+            line(l + " last held by " + last_held_by(s->id));
+        }
+    }
+
+    void refuges() {
+        const history::KindDef* refugees = v_.catalogue().find("refugees_settled");
+        std::vector<const db::SettlementRow*> rows;
+        for (const db::SettlementRow& s : t_.settlements) {
+            if (refugees != nullptr && standing(s.status) && event(s.founding_event).row.kind == refugees->id) {
+                rows.push_back(&s);
+            }
+        }
+        line("refuges: " + num(static_cast<std::int64_t>(rows.size())));
+        for (const db::SettlementRow* s : rows) {
+            const Id origin = role_of(event(s->founding_event), "origin");
+            line("  s" + num(s->id) + " " + escape_history_text(s->name) + " in " + region(s->region) + ": " +
+                 (s->owner_civ != 0 ? civ(s->owner_civ) : std::string("no owner")) + ", population " +
+                 num(s->population) + ", founded " + num(s->founded_year) + " by flight from " + settlement(origin) +
+                 ", e" + num(s->founding_event));
+        }
+    }
+
+    void open_wars() {
+        std::vector<const db::RelationRow*> rows;
+        for (const db::RelationRow& r : t_.relations) {
+            if (r.kind == "war" && !r.until) {
+                rows.push_back(&r);
+            }
+        }
+        std::stable_sort(rows.begin(), rows.end(), [](const db::RelationRow* a, const db::RelationRow* b) {
+            if (a->since != b->since) return a->since < b->since;
+            if (a->a_type != b->a_type) return a->a_type < b->a_type;
+            if (a->a_id != b->a_id) return a->a_id < b->a_id;
+            if (a->b_type != b->b_type) return a->b_type < b->b_type;
+            return a->b_id < b->b_id;
+        });
+        line("open wars: " + num(static_cast<std::int64_t>(rows.size())));
+        for (const db::RelationRow* r : rows) {
+            line("  e" + num(r->since_event) + " " + ref(r->a_type, r->a_id) + " against " + ref(r->b_type, r->b_id) +
+                 " over " + region(event(r->since_event).row.region) + ", since " + num(r->since));
+        }
+    }
+
+    void standing_claims() {
+        line("standing claims: " + num(static_cast<std::int64_t>(d_.standing_claims.size())));
+        for (const Id id : d_.standing_claims) {
+            const HistoryView::Event& e = event(id);
+            std::string l = "  e" + num(id) + " " + num(e.row.year) + " " + civ(role_of(e, "claimant")) + " on " +
+                            civ(role_of(e, "holder")) + ": " + region(e.row.region);
+            const history::RoleDef* s = kind_of(e).find_role("settlement");
+            bool first = true;
+            for (const db::EventParticipantRow& p : e.participants) {
+                if (s != nullptr && p.role == s->seq) {
+                    l += (first ? ", for " : ", ") + settlement(p.entity_id);
+                    first = false;
+                }
+            }
+            line(std::move(l));
+        }
     }
 
     // --- [stats] (6.9) ------------------------------------------------------

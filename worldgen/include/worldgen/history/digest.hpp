@@ -26,7 +26,8 @@ namespace worldgen::history {
 inline constexpr std::int64_t SUMMARY_MIN_SALIENCE = 20;
 inline constexpr std::int64_t SUMMARY_BUDGET = 250;
 inline constexpr std::int64_t SUMMARY_AGE_FLOOR = 20;
-inline constexpr std::size_t MILESTONES = 6;
+inline constexpr std::size_t MILESTONES = 8;          // r17 24.9 (was 6)
+inline constexpr std::int64_t MILESTONE_KIND_MAX = 2;  // r17 24.5
 inline constexpr std::int64_t ISLET_MAX_DRY_CELLS = 1172;
 inline constexpr std::array<std::int64_t, 5> SHARE_LEVELS = {500, 600, 700, 800, 900};
 
@@ -95,14 +96,33 @@ struct CivilizationDigest {
     // At E: open region_control rows, the population of the standing
     // settlements it owns, the events with it as participant.
     std::int64_t regions_held = 0, population = 0, events = 0;
-    std::vector<std::int64_t> milestones;  // 7.3, ascending event id
+    std::vector<std::int64_t> milestones;  // 24.5 (replaces 7.3), ascending event id
     std::vector<std::size_t> relations;    // indexes into HistoryTables::relations, in 6.6 order
+    // r17 24.5: the civilization of the `from` role of a civ_seceded
+    // founding event (0: not seceded); the wars line.
+    std::int64_t seceded_from = 0;
+    std::int64_t wars_declared = 0, wars_defended = 0;
+    std::int64_t wars_won = 0, wars_lost = 0, wars_drawn = 0, wars_open = 0;
+    // One adversary of 24.5: the other end of the civilization's relation
+    // rows, in the order (first since, type, id).
+    struct Adversary {
+        std::int64_t type = 0, id = 0;
+        std::int64_t wars = 0, won = 0, lost = 0, drawn = 0, open = 0;
+        std::int64_t first = 0, last = 0;  // over the war rows; meaningful when wars > 0
+        std::string state;                 // "at war", "at peace", "enmity" or "none"
+    };
+    std::vector<Adversary> adversaries;
 };
 struct HistoryDigest {
     std::vector<CivilizationDigest> civilizations;  // id order
     std::int64_t summary_threshold = 0;             // T of 21.3 item 3
     std::int64_t summary_events = 0;                // the size of the summary set
-    std::vector<std::uint8_t> summary;              // index id - 1: 1 when in the summary set (21.3)
+    std::vector<std::uint8_t> summary;              // index id - 1: 1 when in the summary set (24.3)
+    // r17 24.7: per settlement (index id - 1) the owner_civ of its census
+    // row of largest year with status 1 or 2, 0 when none; the standing
+    // claims, ascending id.
+    std::vector<std::int64_t> last_held_by;
+    std::vector<std::int64_t> standing_claims;
     std::vector<std::pair<std::string, std::int64_t>> stats;  // section 9 with 21.5, 21.8, 22, 23, in order
 };
 
