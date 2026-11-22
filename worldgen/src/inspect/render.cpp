@@ -2,6 +2,8 @@
 
 #include "worldgen/inspect/render.hpp"
 
+#include "worldgen/inspect/layer_catalogue.hpp"
+
 #include <algorithm>
 #include <array>
 #include <cstddef>
@@ -58,23 +60,9 @@ std::optional<Palette> palette_from_name(std::string_view name) noexcept {
 }
 
 Palette registered_palette(std::string_view layer_name) noexcept {
-    if (layer_name == "elevation") return Palette::hypsometric;
-    if (layer_name == "water") return Palette::water;
-    if (layer_name == "river") return Palette::river;
-    if (layer_name == "flow_accum") return Palette::log2;
-    if (layer_name == "flow_dir") return Palette::direction;
-    if (layer_name == "lake") return Palette::ids;
-    if (layer_name == "coast_dist") return Palette::signed_distance;
-    if (layer_name == "temperature") return Palette::temperature;  // P1-03 9
-    if (layer_name == "rainfall") return Palette::rainfall;        // P1-03 9
-    if (layer_name == "biome") return Palette::biome;              // P1-04 9
-    if (layer_name == "fertility" || layer_name == "ore" || layer_name == "timber" || layer_name == "fresh_water" ||
-        layer_name == "forage" || layer_name == "habitability") {
-        return Palette::score;  // P1-05 9
-    }
-    if (layer_name == "walk_area") return Palette::ids;  // P1-05 9
-    if (layer_name == "region") return Palette::ids;     // P1-06 9
-    return Palette::gray;  // P1-00 10.2: every other layer, water_depth included
+    // One source: the catalogue of P4-02 4.2 (layer_catalogue.cpp).
+    const LayerSpec* spec = find_layer_spec(layer_name);
+    return spec != nullptr ? spec->palette : Palette::gray;
 }
 
 bool palette_suits(Palette palette, const db::LayerGrid& grid) noexcept {

@@ -1428,6 +1428,7 @@ bool append_hydrology_lines(const GeographyLayers& layers, std::span<const std::
 RegionTableResult read_region_rows(std::span<const std::vector<db::ColumnValue>> rows) {
     constexpr std::size_t COLUMNS = 28;
     constexpr std::size_t NAME = 1;
+    constexpr std::size_t BIOME = 2;
     constexpr std::size_t CELLS = 10;
     constexpr std::size_t WALK_CELLS = 15;
     RegionTableResult r;
@@ -1450,7 +1451,12 @@ RegionTableResult read_region_rows(std::span<const std::vector<db::ColumnValue>>
                 return r;
             }
         }
-        RegionRecord rec{row[0].integer, row[CELLS].integer, row[WALK_CELLS].integer};
+        RegionRecord rec;
+        rec.id = row[0].integer;
+        rec.name = row[NAME].bytes;
+        rec.biome = row[BIOME].integer;
+        rec.cells = row[CELLS].integer;
+        rec.walk_cells = row[WALK_CELLS].integer;
         if (rec.cells < 1) {
             r.problem = at + "cells below 1";
             return r;
