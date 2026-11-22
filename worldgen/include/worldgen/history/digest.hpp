@@ -10,6 +10,7 @@
 #include <array>
 #include <cstddef>
 #include <cstdint>
+#include <optional>
 #include <string>
 #include <utility>
 #include <vector>
@@ -79,6 +80,14 @@ struct HistoryTables {
 // race whose creator_god is not a god ("corrupt table 'race': row <id>:
 // creator_god <g> is not a god").
 [[nodiscard]] db::Result<HistoryTables> read_history_tables(const db::WorldReader& world);
+
+// The two reads of a file (read_history_tables, then HistoryView::load) are
+// separate snapshots: std::nullopt when they agree on everything the digest,
+// the report and the timeline index in one by a value of the other, else the
+// message "corrupt table 'event': the file changed while it was read"
+// (P3-07 5.2 item 4a, P4-01 5.1).
+[[nodiscard]] std::optional<std::string> history_reads_disagree(const HistoryView& view,
+                                                                const HistoryTables& tables);
 
 // --- Digest (section 7) -----------------------------------------------------
 
