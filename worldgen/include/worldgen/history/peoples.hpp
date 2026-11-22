@@ -14,6 +14,7 @@
 #include <array>
 #include <cstddef>
 #include <map>
+#include <set>
 #include <cstdint>
 #include <optional>
 #include <span>
@@ -328,6 +329,9 @@ public:
     // P3-06 21.10 item 2: civ has a record, year < until, and its refuge is
     // standing and owned by civ.
     [[nodiscard]] bool lying_low(const State& state, std::int64_t civ, std::int64_t year) const;
+    // r17 23.2 item 2: civ is in first_colony_pending (a test seam; a
+    // conquered civilization leaves the set at the next T2 or Q4).
+    [[nodiscard]] bool first_colony_pending(std::int64_t civ) const { return first_colony_pending_.count(civ) != 0; }
     // 8.5 items 2 to 5 with `event` as the ruin event (r1); not item 6. The
     // settlement must be standing and owned. FatalError "history: peoples:
     // ruin: settlement <s> is not standing".
@@ -470,6 +474,11 @@ private:
         std::int64_t until = 0;       // the year its hidden years end
     };
     std::map<std::int64_t, LowRecord> low_until_;  // r15 22.7a: civilization -> its latest flight
+    // r17 23.2 item 2: the civilizations placed at an awakening of a race
+    // with awakening_population > 0 that have founded no colony yet and have
+    // not ended; while a member, a civilization's capital is ready in 9.3
+    // item 1 whatever its pressure.
+    std::set<std::int64_t> first_colony_pending_;
     PeoplesView view_;
 };
 

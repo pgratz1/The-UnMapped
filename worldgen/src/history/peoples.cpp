@@ -401,6 +401,11 @@ void PeoplesSubsystem::awaken(StepContext& ctx, std::int64_t race, std::int64_t 
             fail("history: peoples: the settlement id is not the expected one");
         }
         state.set_capital(c, s);
+        // r17 23.2 item 2: a race that arrives in numbers; its first colony
+        // is not held back by pressure.
+        if (r.awakening_population > 0) {
+            first_colony_pending_.insert(c);
+        }
     }
     // Audit A3: the cached homes describe the state before this awakening.
     homes_serial_ = -1;
@@ -634,6 +639,7 @@ void PeoplesSubsystem::end_civilization(StepContext& ctx, std::int64_t civ, std:
     e.causes = {cause};
     const std::int64_t ev = ctx.append(e);
     state.end_civilization(civ, ev);
+    first_colony_pending_.erase(civ);  // r17 23.2 item 2
     const std::int64_t nr = geo().region_count();
     for (std::int64_t r = 1; r <= nr; ++r) {
         if (state.region(r).owner == civ) {
@@ -839,7 +845,11 @@ void PeoplesSubsystem::foundings(StepContext& ctx) {
     const std::vector<std::int64_t> share = shares(state);  // the snapshot at the step's start
     const std::int64_t nc = civ_count(state);
     for (std::int64_t c = 1; c <= nc; ++c) {
-        if (state.civ(c).ended_year || !ctx.visible(state.civ(c))) {
+        if (state.civ(c).ended_year) {
+            first_colony_pending_.erase(c);  // r17 23.2 item 2: an ended civilization (a conquest) leaves the set
+            continue;
+        }
+        if (!ctx.visible(state.civ(c))) {
             continue;
         }
         // r12 22.7a: a civilization lying low is skipped before item 1 (no
@@ -850,6 +860,7 @@ void PeoplesSubsystem::foundings(StepContext& ctx) {
         const std::int64_t race = state.civ(c).race;
         const std::int64_t capital = state.civ(c).capital;
         const PeoplesRace& r = g.race(race);
+        const bool pending = first_colony_pending_.count(c) != 0;  // r17 23.2 item 2
         // 1, 2. The source: (not the capital, pressure, P, -id) largest among the ready.
         std::int64_t source = 0;
         std::tuple<bool, std::int64_t, std::int64_t, std::int64_t> source_key{};
@@ -863,7 +874,9 @@ void PeoplesSubsystem::foundings(StepContext& ctx) {
             const std::int64_t pressure =
                 std::max(floor_div(checked_mul(p, 1000), share[static_cast<std::size_t>(id - 1)]),
                          floor_div(checked_mul(p, 1000), std::max<std::int64_t>(1, cap_of(state, s))));  // audit A1: a cap of 0 is legal data
-            if (pressure < tuning_.found_pressure_permille) {
+            // r17 23.2 item 2: a pending civilization's capital is ready
+            // whatever its pressure.
+            if (pressure < tuning_.found_pressure_permille && !(pending && id == capital)) {
                 continue;
             }
             const auto k = std::make_tuple(id != capital, pressure, p, -id);
@@ -951,6 +964,7 @@ void PeoplesSubsystem::foundings(StepContext& ctx) {
         if (was_free) {
             state.set_region_owner(region, c, ev);
         }
+        first_colony_pending_.erase(c);  // r17 23.2 item 2: its first colony
     }
 }
 
