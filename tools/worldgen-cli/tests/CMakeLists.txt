@@ -124,6 +124,13 @@ target_compile_definitions(worldgen-cli-tests PRIVATE
 # p3-04-engine.txt, the corrupt cases of report, and the case list of
 # world-hashes.sh. Slow checks in the doctest suite "history-slow".
 target_sources(worldgen-cli-tests PRIVATE cli_history_test.cpp)
+# report --history (spec P3-07 4, 14.2): both levels against the golden report
+# hashes, --out and --force, the usage errors, worlds without history, a
+# schema 6 file, no CR, TZ and LANG.
+target_sources(worldgen-cli-tests PRIVATE cli_history_report_test.cpp)
+target_compile_definitions(worldgen-cli-tests PRIVATE
+    UNMAPPED_P3_07_GOLDEN_PATH="${PROJECT_SOURCE_DIR}/worldgen/tests/golden/p3-07-report.txt"
+)
 target_compile_definitions(worldgen-cli-tests PRIVATE
     UNMAPPED_P3_04_GOLDEN_PATH="${PROJECT_SOURCE_DIR}/worldgen/tests/golden/p3-04-engine.txt"
 )

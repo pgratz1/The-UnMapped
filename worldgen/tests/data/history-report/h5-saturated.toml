@@ -1,0 +1,80 @@
+# P3-07 14.3 H5 saturated: H2 with 300 events of salience 100. Format: README.md in this directory.
+
+[meta]
+seed = 505
+seed_phrase = ""
+map_size = 512
+history_span = 2000
+history_detail = "normal"
+races = "human"
+civs_per_race = "auto"
+event_intensity = "normal"
+monster_pressure = "normal"
+divine_activity = "normal"
+divine_script = ""
+
+[tables]
+biome = [[1, "grassland", "Grassland", 8421376, 0]]
+region = [
+    [1, "Northeast Downs", 1, 1500, 0, 1400],
+    [2, "Isle of Rest", 1, 900, 0, 800],
+]
+race = [[1, "human", "Human", "Humans", "Human", 1, 80, 25, 1, 1, 0, 1]]
+culture = [[1, "human", "Human", 1]]
+god = [[1, "Wealstuld", 1]]
+age = [[1, 1, 0, 1999, "The Age of Humans"]]
+phase = [
+    [1, 1, 1, 0, 149, 1],
+    [2, 1, 4, 150, 1999, 0],
+]
+civilization = [[1, "The Kingdom of Alird", 1, 1, 1, 0, 0, 2, -1, 0]]
+
+[[kind]]
+key = "awakening"
+caused = 0
+region_use = 1
+settlement_use = 0
+salience = 100
+template = "{creator} awakened the {race:plural} in {@region}."
+roles = [["race", 1, 1, 1], ["creator", 2, 1, 1]]
+
+[[kind]]
+key = "civ_founded"
+caused = 1
+region_use = 1
+settlement_use = 0
+salience = 80
+template = "The {race:plural} founded {civilization} in {@region}."
+roles = [["civilization", 3, 1, 1], ["race", 1, 1, 1]]
+
+[[event]]
+id = 1
+year = 0
+kind = "awakening"
+phase = 1
+region = 1
+parts = [["race", 1], ["creator", 1]]
+
+[[event]]
+id = 2
+year = 0
+kind = "civ_founded"
+phase = 1
+region = 1
+parts = [["civilization", 1], ["race", 1]]
+causes = [1]
+
+[[kind]]
+key = "herald"
+caused = 0
+region_use = 0
+settlement_use = 0
+salience = 100
+template = "A herald cried the news."
+
+[[bulk]]
+kind = "herald"
+count = 300
+year = 100
+phase = 1
+salience = 100

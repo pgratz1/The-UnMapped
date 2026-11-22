@@ -386,6 +386,23 @@ target_sources(worldgen-tests PRIVATE
     history/history_balance_unit_test.cpp
     history/history_balance_golden_test.cpp
 )
+# History report (spec P3-07): the fixture worlds of 14.3 written through the
+# writer API (history_report_fixture.hpp) against the reference's table hashes,
+# each block of the report on the fixtures, the checks of 5.2 and 5.3, the
+# invariants of 13 and the golden report hashes of 14.4 (reference
+# reference/p3_report_reference.py). The tests that call the report's API are
+# behind p3_07_switch.hpp until it exists; the 1024 world cases are in the
+# skipped suite "history-report-slow".
+target_sources(worldgen-tests PRIVATE
+    history_report_fixtures_test.cpp
+    history_report_blocks_test.cpp
+    history_report_corrupt_test.cpp
+    history_report_worlds_test.cpp
+)
+target_compile_definitions(worldgen-tests PRIVATE
+    UNMAPPED_P3_07_FIXTURE_DIR="${CMAKE_CURRENT_SOURCE_DIR}/data/history-report"
+    UNMAPPED_P3_07_GOLDEN_PATH="${CMAKE_CURRENT_SOURCE_DIR}/golden/p3-07-report.txt"
+)
 # CTest entries (cmake/UnmappedTestShards.cmake): one per group of source
 # files, run in parallel by `ctest -j`, plus worldgen-tests-other for every
 # file not named here and worldgen-tests-partition, which checks that the
@@ -416,6 +433,7 @@ unmapped_add_doctest_shards(worldgen-tests
     SHARD conflict 25 "*history_conflict_data_test.cpp,*history_conflict_unit_test.cpp,*history_conflict_property_test.cpp,*history_conflict_r14_test.cpp,*history_conflict_r17_test.cpp,*history_conflict_r19_test.cpp,*history_conflict_order_test.cpp"
     SHARD conflict-worlds 25 "*history_conflict_golden_test.cpp"
     SHARD balance 20 "*history_balance_*"
+    SHARD history-report 20 "*history_report_*"
     REST other 13
     # The *-slow suites (label slow; ctest --preset <p>-slow). Costs: seconds
     # per file group under linux-gcc-release, measured 2026-11-21 at 0.18.0
@@ -429,5 +447,6 @@ unmapped_add_doctest_shards(worldgen-tests
     SLOW slow-hydrology 490 "*-slow" "*stages_hydrology_*,*stages_elevation_passes_test.cpp,*stages_elevation_property_test.cpp"
     SLOW slow-engine 490 "*-slow" "*history_balance_*,*conflict_engineer_test.cpp,*history_engine_golden_test.cpp,*history_engine_property_test.cpp,*history_engine_schedule_test.cpp,*history_engine_r12_test.cpp"
     SLOW slow-biomes-resources-regions 550 "*-slow" "*stages_biomes_*,*stages_resources_*,*stages_regions_*"
+    SLOW slow-history-report 120 "*-slow" "*history_report_*"
     SLOW_REST slow-other 10 "*-slow"
 )
