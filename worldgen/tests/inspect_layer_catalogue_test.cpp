@@ -472,14 +472,11 @@ TEST_CASE("P4-02 4.3, 5, invariant 4: format_layer_value never throws for any na
             CHECK_NOTHROW((void)wi::format_layer_value(e.name, v));
         }
     }
-    // AMBIGUITY (A(n) above u32 max): 4.3 bounds A(n) for n <= u32 max only;
-    // above it the text is unspecified beyond no throw. The prefix is fixed.
-    for (const std::int64_t v : {U32_MAX + 1, I64_MAX}) {
-        CAPTURE(v);
-        const std::string s = wi::format_layer_value("flow_accum", v);
-        const std::string prefix = wdb::format_i64(v) + " cells, ";
-        CHECK(s.substr(0, prefix.size()) == prefix);
-    }
+    // Lead ruling (phase 2): A(n) is exact for any value, not only up to
+    // u32 max (256 n + 5000 computed without overflow).
+    CHECK(wi::format_layer_value("flow_accum", U32_MAX + 1) == "4294967296 cells, 1099511.63 km2 upstream");
+    CHECK(wi::format_layer_value("flow_accum", I64_MAX) ==
+          "9223372036854775807 cells, 2361183241434822.61 km2 upstream");
 }
 
 // --- Test 4: cell_value (4.3) -----------------------------------------------
@@ -760,46 +757,29 @@ TEST_CASE("P4-02 4.4: signed legend, six rows when none coincide") {
                   {"9223372036854775807", {b(I64_MAX)}}});
 }
 
-TEST_CASE("P4-02 4.4: signed legend with small M or P (AMBIGUITY: which rows are skipped)") {
-    // AMBIGUITY (signed skip rule): 4.4 skips "any outside [-M, P]", but
-    // with M, P >= 1 every one of -M, -M/2, -1, 0, P/2, P lies inside it, so
-    // as written no row is ever skipped, while 9 test 5 asks for a case
-    // where one is. Readings: (a) nothing is skipped, repeated values give
-    // repeated rows; (b) repeated values are dropped; (c) values outside the
-    // grid's own [min, max] are dropped. Asserted here: the rows are, in
-    // order, a subsequence of the six-value list (at least one row), each
-    // with the label and colour of its value.
+TEST_CASE("P4-02 4.4: signed legend with small M or P keeps repeated rows") {
+    // Lead ruling (phase 2): the skip of 4.4 never drops a row (M, P >= 1);
+    // repeated values for small M or P are kept, as the viewer repeats them.
     struct Small {
         std::vector<std::int16_t> cells;
         wi::SignedScale scale;
         std::vector<std::int64_t> list;  // -M, -M/2, -1, 0, P/2, P
     };
     const std::vector<Small> cases = {
-        {{0, 1}, {1, 1}, {-1, 0, -1, 0, 0, 1}},          // no negative value: M = 1
-        {{-1, 0}, {1, 1}, {-1, 0, -1, 0, 0, 1}},         // no positive value: P = 1
-        {{-2, 3}, {3, 2}, {-2, -1, -1, 0, 1, 3}},        // -M/2 = -1
-        {{5, 5}, {5, 1}, {-1, 0, -1, 0, 2, 5}},          // constant positive grid
+        {{0, 1}, {1, 1}, {-1, 0, -1, 0, 0, 1}},    // no negative value: M = 1
+        {{-1, 0}, {1, 1}, {-1, 0, -1, 0, 0, 1}},   // no positive value: P = 1
+        {{-2, 3}, {3, 2}, {-2, -1, -1, 0, 1, 3}},  // -M/2 = -1
+        {{5, 5}, {5, 1}, {-1, 0, -1, 0, 2, 5}},    // constant positive grid
     };
     for (const Small& s : cases) {
         CAPTURE(s.scale.p);
         CAPTURE(s.scale.m);
         const LayerGrid g = grid_of<std::int16_t>(static_cast<std::uint32_t>(s.cells.size()), 1, s.cells);
-        const auto got = wi::layer_legend("coast_dist", Palette::signed_distance, g, {});
-        REQUIRE_FALSE(got.empty());
-        std::size_t k = 0;
-        bool subsequence = true;
-        for (const wi::LegendEntry& e : got) {
-            while (k < s.list.size() && wi::format_layer_value("coast_dist", s.list[k]) != e.label) ++k;
-            if (k == s.list.size()) {
-                subsequence = false;
-                break;
-            }
-            const std::vector<std::uint32_t> want = {pack(wi::signed_colour(s.list[k], s.scale))};
-            CHECK(colours_text(e.colours) == colours_text(want));
-            ++k;
+        std::vector<Row> want;
+        for (const std::int64_t v : s.list) {
+            want.push_back({wi::format_layer_value("coast_dist", v), {pack(wi::signed_colour(v, s.scale))}});
         }
-        CHECK(subsequence);
-        CHECK(got.size() <= 6U);
+        check_legend(wi::layer_legend("coast_dist", Palette::signed_distance, g, {}), want);
     }
 }
 
@@ -1129,7 +1109,7 @@ TEST_CASE("P4-02 4.6, invariant 6: region_name for present, absent, 0 and empty-
     const auto lots = records_of(many);
     for (std::int64_t id = 0; id <= 82; ++id) {
         CAPTURE(id);
-        if (id > 0 && id % 2 == 0) {
+        if (id > 0 && id <= 80 && id % 2 == 0) {
             CHECK(wi::region_name(lots, id) == "R" + wdb::format_i64(id));
         } else {
             CHECK(wi::region_name(lots, id).empty());
@@ -1138,6 +1118,8 @@ TEST_CASE("P4-02 4.6, invariant 6: region_name for present, absent, 0 and empty-
 }
 
 TEST_CASE("P4-02 4.6, invariant 4: region_name on unordered records gives a record's name or empty") {
+    // 4.6: "Unordered records give an unspecified record or empty, never
+    // undefined behaviour" (the implementation's binary search follows it).
     const auto recs = records_of({{9, "Nine"}, {2, "Two"}, {5, "Five"}, {1, "One"}, {9, "Nine again"}});
     const std::set<std::string> allowed = {"", "Nine", "Two", "Five", "One", "Nine again"};
     for (std::int64_t id = -1; id <= 10; ++id) {
@@ -1145,6 +1127,15 @@ TEST_CASE("P4-02 4.6, invariant 4: region_name on unordered records gives a reco
         const std::string got(wi::region_name(recs, id));
         CHECK(allowed.count(got) == 1U);
     }
+    // id 0 is empty even when a record claims it
+    const auto zero = records_of({{0, "Sea"}, {1, "Land"}});
+    CHECK(wi::region_name(zero, 0).empty());
+    CHECK(wi::region_name(zero, 1) == "Land");
+}
+
+TEST_CASE("P4-02 4.4: composite_description of an out-of-range value is empty") {
+    CHECK(wi::composite_description(static_cast<wi::Composite>(std::uint8_t{3})).empty());
+    CHECK(wi::composite_description(static_cast<wi::Composite>(std::uint8_t{255})).empty());
 }
 
 }  // TEST_SUITE
