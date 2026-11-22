@@ -1,6 +1,6 @@
 # P3-11 Orc arrival, wording and name follow-ups
 
-Status: **draft for the lead's approval (2026-11-21); r1 (2026-11-21): item 1 corrected after the implementation missed T11 (section 9 item 1)**, written by the spec writer on `p3/11-spec`, cut from `origin/main` at dfa4e66 (generator 0.19.0, P3-10 merged). Phase P3 History core, a change spec after P3-10 (generator 0.19.0) and before P3-07 (the history report, specified, not implemented). Generator **0.20.0**.
+Status: **merged as ruled (r2, 2026-11-22)**: validated, audited and reviewed by the world critic on `p3/11-final` (95858f2); T9 (11 worlds) and T10 (3 worlds) missed by the targets as written and **accepted by the lead's ruling of 2026-11-22**, with both restated for later measurements (`docs/design/proposals.md`, "History: the P3-11 orc targets, the lead's ruling (awaiting Paul)"; P3-06 r21 23.1). r1 (2026-11-21): item 1 corrected after the implementation missed T11 (section 9 item 1). r2 (2026-11-22): text after validation (sections 4, 7, 9, 10, 12). Draft written by the spec writer on `p3/11-spec`, cut from `origin/main` at dfa4e66 (generator 0.19.0, P3-10 merged). Phase P3 History core, a change spec after P3-10 (generator 0.19.0) and before P3-07 (the history report, specified, not implemented). Generator **0.20.0**.
 
 **No schema change**: schema stays 7. The change:
 - appends two event kinds (39, 40);
@@ -99,7 +99,7 @@ One branch, one engineer and one test writer, working from the stage specs separ
 | Golden file | Re-recorded | What moves | What must not move (a difference is a defect) |
 | --- | --- | --- | --- |
 | `p0-worlds.txt`, `p1-worlds.txt`, `p3-worlds.txt` | yes, by the validation specialist after the cross-preset comparison | every case | — |
-| `GOLDEN_CASES` (`db_determinism_test.cpp`), `stages_pipeline_test.cpp`'s hashes | as at P3-10: they hash worlds made with no data, so they are expected not to move; re-checked | — | — |
+| `GOLDEN_CASES` (`db_determinism_test.cpp`), `stages_pipeline_test.cpp`'s hashes | yes (r2: they hash worlds made with no data, but those worlds carry `meta.generator_version`, so they move at every version change, as at P3-10; r0 said they would not) | `meta.generator_version` | every other byte of those worlds |
 | README's `--seed-phrase "The Unmapped"` hash | yes | — | — |
 | `core_vectors.txt`, `p1-01-elevation.txt` … `p1-06-regions.txt` | no | — | every line (region names are not drawn by `make_name`) |
 | `p3-01-data.txt` | yes | the data roots' content hashes | — |
@@ -156,6 +156,7 @@ Each stage spec lists its own. In summary:
 - **The repeated-syllable rule** (P3-02 14.2) is a validity rule of name attempts: names change, and no table or column changes.
 - **New data fields**: `awakening_population` (race). With the list edits of P3-02 14 and the two `history.report` entries, they change `content_hash` only.
 - **No proposals entry for a schema change** is needed.
+- **Participant bound (r2).** An event has at most `MAX_PARTICIPANTS` (64) participants, so kinds 39 and 40 list at most **62** settlements after their two civilizations (P3-04 r18 21.2, P3-06 r21 23.2, 23.3). The implementation lists 62. **Known difference:** the test writer's reference lists up to 64. No world reaches either bound (a region holds a few settlements), so no output differs. A later change should align the reference.
 
 ## 8. Statistics to re-measure (P3-11's validation)
 
@@ -198,7 +199,10 @@ On the sweeps of P3-06 15.6 at 0.20.0, against the 0.19.0 figures as merged (P3-
 5. **Typical ranges**: every row of P3-06 15.5 at 0.20.0, claims and cessions counted with kinds 39 and 40.
 6. **Sentences**: no value from 1 to 9 rendered as a digit in any sentence (years aside); no "0 of the victors", no "its seat"; separators as before.
 
-## 9. Decisions made (for the lead)
+## 9. Decisions made (merged as ruled, r2)
+
+Every decision below shipped as written in 0.20.0 (r1 for item 1). Measured at 0.20.0 (P3-06 r21 23.1): T11 median 9, T9 11, T10 3, T5 168 / 95, T8 83, T1 224‰, quick aim wins 0. The lead's ruling of 2026-11-22 accepts the misses of T9 and T10 and restates them for later measurements.
+
 
 1. **Item 1: the horde splits at once: the first colony is freed from pressure** (P3-05 r17 23.2; r1 of this spec, correcting r0).
    - **r0's mistake.** r0 relied on the awakening population alone (1,200), believing an orc village's kind cap was 1,499, so that the capital would be ready at once. P3-05 5.2 gives every orc settlement that is not a fortress the race's highest cap, 7,999. A capital is therefore ready only at about 750‰ × min(share, 7,999): about 3,525 in a median home of share 4,700, which takes some 121 years from 1,200 and 210 from 300. The implementation of r0 (`origin/p3/11-impl` e7b9988) measured a T11 median of 149.5 over seeds 0 to 19, the first act a colony in 18 of 20. r0's data lever, 1,125, could not help. P3-05 23.1 has the line-by-line reading and the arithmetic.
@@ -235,7 +239,10 @@ On the sweeps of P3-06 15.6 at 0.20.0, against the 0.19.0 figures as merged (P3-
 8. **Item 5: words for one to nine as a renderer rule**, not template edits. Every template (secession, outbreak, quiet stretch, war endings, battles, tolls) reads better the same way, and P3-10's separators set the precedent.
 9. **Item 7: the goal rule is intended.** The report's note names the claim's region. No generator change (question 1).
 
-## 10. Open questions
+## 10. Open questions (r2: merged as ruled)
+
+Question 1 shipped with its recommendation (a), and question 3 with the coda `p` removed; both stay open for Paul's confirmation. Question 2 is closed: T11 was met (median 9), and its one residual world (seed 88) has no free target at all, so the outward rule suggested below would not have helped it. The critic's three questions for Paul are in the lead's ruling in `docs/design/proposals.md`.
+
 
 1. **A war's goal and the claim it cites** (non-blocking; P3-06 23.4). A war is declared on a claim but fought over another region when, by the declaration, the claimed region is weary, lost by the defender or the defender's capital region.
    - (a) **Recommended**: keep the rule and have the report say it: "(The claim, since 5930, was to Woodward's Shaw.)" This needs no generator change, and only the note text changes.
@@ -252,3 +259,13 @@ One entry in `docs/design/proposals.md`: "History and names: P3-11 orc arrival, 
 - the orcs' coming "opens the most recent age of conflict" (design 5) is served, not changed;
 - the faerie names follow Paul's decision of 2026-11-21;
 - the new kinds are appended within schema 7.
+
+## 12. Left for the next change that alters world bytes (r2)
+
+Listed here, not specified. Sources: the P3-11 world critic's review and the lead's ruling of 2026-11-22.
+- **The quarrel war gated on strength** (critic F1). 63 of the 83 first orc wars are declared with exactly two settlements, and 19 of them are won and 29 lost.
+- **`shiva`** for the famous-name list.
+- **`fag` inside a word**: today it is an `at_start` entry only.
+- **The dwarven codas `din` and `rin`**, which hide stutters the repeated-syllable rule cannot see (Clan Didin, Bririn).
+- **Mixed numerals and words in battle tolls**: "24 of the defeated and seven of the victors fell".
+- **The reference's participant bound for kinds 39 and 40**: 64 against the implementation's 62 (section 7).
