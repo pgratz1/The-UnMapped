@@ -4,8 +4,8 @@
 
 #include <doctest/doctest.h>
 
+#include <charconv>
 #include <cstdint>
-#include <cstdio>
 #include <filesystem>
 #include <map>
 #include <string>
@@ -77,6 +77,26 @@ std::map<std::string, std::string> keyed(const std::vector<std::string>& lines) 
     return out;
 }
 
+// Reads the six counts of a "  wars: " line of [civilizations] (r17 24.10
+// item 5): literal text and decimal numbers in turn; like the sscanf it
+// replaces, text after the last number is not checked.
+bool parse_wars_line(std::string_view line, std::int64_t (&out)[6]) {
+    static constexpr std::string_view literals[6] = {"  wars: ", " declared, ", " defended; won ",
+                                                     ", lost ", ", drawn ", ", open "};
+    for (std::size_t i = 0; i < 6; ++i) {
+        if (line.substr(0, literals[i].size()) != literals[i]) {
+            return false;
+        }
+        line.remove_prefix(literals[i].size());
+        const auto r = std::from_chars(line.data(), line.data() + line.size(), out[i], 10);
+        if (r.ec != std::errc{}) {
+            return false;
+        }
+        line.remove_prefix(static_cast<std::size_t>(r.ptr - line.data()));
+    }
+    return true;
+}
+
 std::string copy_of(const std::string& path, const std::string& name) {
     const std::string to = chrono_test::world_dir().file(name);
     std::filesystem::copy_file(path, to, std::filesystem::copy_options::overwrite_existing);
@@ -141,10 +161,9 @@ TEST_CASE("P3-07 engineer: the text conventions and the invariants of 13 on seed
     // stretch milestone with its note per realm that lived through one.
     for (const std::string& l : block(s, "[civilizations]")) {
         if (l.rfind("  wars: ", 0) == 0) {
-            long long a = 0, f2 = 0, w = 0, lo = 0, d = 0, o = 0;
-            REQUIRE(std::sscanf(l.c_str(), "  wars: %lld declared, %lld defended; won %lld, lost %lld, drawn %lld, open %lld",
-                                &a, &f2, &w, &lo, &d, &o) == 6);
-            CHECK(w + lo + d + o == a + f2);
+            std::int64_t n[6] = {};
+            REQUIRE_MESSAGE(parse_wars_line(l, n), l);
+            CHECK(n[2] + n[3] + n[4] + n[5] == n[0] + n[1]);
         }
     }
     {
