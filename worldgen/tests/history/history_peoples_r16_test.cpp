@@ -3,12 +3,16 @@
 // 0, else max(founding_population, min(awakening_population, C(H, r))); its kind is ladder(r, P0) away from an
 // upland home; the settlement_founded value population is P0; nothing else (colonies, secessions) changes.
 //
+// r17 (the spec correction): such a civilization is marked first_colony_pending at its awakening; while marked its
+// capital is ready in 9.3 item 1 whatever its pressure; the mark clears at its first colony_founded or its end.
+//
 // Through the engine's public seam on a hand-made geography (one or four steppe regions, orcs or elves only), with
 // race and peoples fields edited past the loader. C(H, r) is read from the library's PeoplesView::capacity, so the
-// tests check the rule, not the capacity formula (P3-05 5.1 has its own tests). Items 2 to 7 of 23.4 are here;
-// item 1's "pressure 800" and item 3 are not (see the report: 5.2's kind cap of an orc village is town's, 7,999,
-// not 1,499, so the pressure 23.2 computes is not 9.3's); the loader cases (item 6) are in
-// data_history_kinds_test.cpp, and item 8 is p3-05-peoples.txt (history_peoples_golden_test.cpp).
+// tests check the rule, not the capacity formula (P3-05 5.1 has its own tests). 23.4 items 1, 2 (the first colony
+// without pressure, the mark cleared after it), 7 and 8 are here; the loader (item 9) is in
+// data_history_kinds_test.cpp; item 11 is p3-05-peoples.txt. Items 3, 6 and 10's replayed pressures are the
+// reference's check_units_r16 (the public seam cannot set a settlement's share or read the pending set); items 4
+// (a fortress capital) and 5 (no target) are not covered by a hand-made case.
 //
 // Written from the spec before the implementation (test-writer rule).
 
@@ -128,7 +132,7 @@ std::int64_t p0(std::int64_t founding, std::int64_t awakening, std::int64_t cap)
 
 TEST_SUITE("history") {
 
-TEST_CASE("P3-05 r16 23.2, 23.4 items 1, 2: an orc awakening in a free steppe home starts at min(1,200, C), a village") {
+TEST_CASE("P3-05 r17 23.2 item 1, 23.4 item 1: an orc awakening in a free steppe home starts at min(1,200, C), a village") {
     const wd::ContentSet& c = shipped();
     const Run r = run(c, {"orc"});
     REQUIRE(r.first.size() == 1U);
@@ -142,7 +146,42 @@ TEST_CASE("P3-05 r16 23.2, 23.4 items 1, 2: an orc awakening in a free steppe ho
     CHECK(a.value <= 2 * a.capacity);  // invariant 3
 }
 
-TEST_CASE("P3-05 r16 23.4 item 2: P0 clamps to C(H, r) and never falls below founding_population") {
+TEST_CASE("P3-05 r17 23.2 item 2, 23.4 items 1, 2: the first orc colony comes without pressure; the next waits for it") {
+    // found_rate 1000: the yearly chance is expansion 600 permille in ticks, so the first colony comes within a few
+    // years of the awakening, from a capital of 1,200 whose pressure is far below 750 (C about 4,000, cap 7,999)
+    const wd::ContentSet c = with_peoples({{"found_rate_permille", I64(1000)}});
+    const Run r = run(c, {"orc"}, 4);
+    REQUIRE(r.first.size() == 1U);
+    const Awakened& a = r.first[0];
+    CHECK(a.value == p0(300, 1200, a.capacity));
+    REQUIRE(a.value * 1000 / a.capacity < 750);  // not ready by pressure (its share is at most C)
+    std::int64_t awake = 0;
+    for (const Row& e : r.t.event) {
+        if (at(e, 3) == k_settlement_founded && at(e, 6) == a.settlement) awake = at(e, 1);
+    }
+    std::vector<std::int64_t> colonies;  // years of the orc civilization's colonies
+    std::map<std::int64_t, std::int64_t> founder;
+    for (const Row& p : r.t.event_participant) {
+        if (at(p, 2) == 2) founder[at(p, 0)] = at(p, 4);
+    }
+    std::int64_t first_pop = 0;
+    for (const Row& e : r.t.event) {
+        if (at(e, 3) != k_colony_founded || founder[at(e, 0)] != 1) continue;
+        colonies.push_back(at(e, 1));
+        if (colonies.size() == 1U) {
+            for (const Row& v : r.t.event_value) {
+                if (at(v, 0) == at(e, 0) && at(v, 1) == 1) first_pop = at(v, 2);
+            }
+        }
+    }
+    REQUIRE_FALSE(colonies.empty());
+    CHECK(colonies[0] - awake <= 25);  // the mark: ready from the first visible T2
+    CHECK(first_pop == std::max<std::int64_t>(60, a.value * 120 / 1000));  // 144 colonists of 1,200
+    // the mark cleared: the capital, at 1,056, is not ready for decades, so no second colony in ten years
+    if (colonies.size() >= 2U) CHECK(colonies[1] - colonies[0] > 10);
+}
+
+TEST_CASE("P3-05 r17 23.4 item 8: P0 clamps to C(H, r) and never falls below founding_population") {
     // a low-capacity home: people_per_kcell 1 leaves C at capacity_floor; floors 400 and 900 (>= founding 300)
     for (const std::int64_t floor : {400, 900}) {
         CAPTURE(floor);
@@ -158,7 +197,7 @@ TEST_CASE("P3-05 r16 23.4 item 2: P0 clamps to C(H, r) and never falls below fou
     CHECK(low.first[0].value == 300);
 }
 
-TEST_CASE("P3-05 r16 23.4 item 4: a race with awakening_population 0 starts at founding_population; the field of "
+TEST_CASE("P3-05 r17 23.4 item 7: a race with awakening_population 0 starts at founding_population; the field of "
           "another race changes nothing") {
     const Run elves = run(shipped(), {"elf"});
     REQUIRE(elves.first.size() == 1U);
@@ -177,7 +216,7 @@ TEST_CASE("P3-05 r16 23.4 item 4: a race with awakening_population 0 starts at f
     CHECK(str(orcs.t.event_value) != str(orcs0.t.event_value));
 }
 
-TEST_CASE("P3-05 r16 23.4 items 5, 7: colonies and secessions are not awakenings; invariant 3 at every awakening with "
+TEST_CASE("P3-05 r17 23.4 items 7, 10: colonies and secessions are not awakenings; invariant 3 at every awakening with "
           "the field 0 and 100,000") {
     for (const std::int64_t v : {0, 100000}) {
         CAPTURE(v);

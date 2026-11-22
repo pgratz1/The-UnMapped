@@ -5948,7 +5948,7 @@ HEADER_020 = """\
 # Generator 0.20.0 (P3-11, docs/specs/p3-11-followups.md): P3-06 r19 section 23 (a claim on a region its
 # holder does not hold is kind 39 claim_settlements listing the holder's visible settlements there; the
 # foothold cession is kind 40 settlements_ceded listing the passing settlements, war outcome won-c<W>-foothold),
-# P3-05 r16 23 (the awakening population, orc 1200), P3-04 r17 21 (one to nine as words; kinds 39, 40),
+# P3-05 r17 23 (the awakening population, orc 1200; the first colony freed from pressure), P3-04 r17 21 (one to nine as words; kinds 39, 40),
 # P3-02 r15 14 (faerie lists, no repeated syllable, tard) and P3-07 r14 23 items 3, 4 in the note lines. New
 # line, one per case:
 #   <case> r19 t11 <years|-> first_orc_war <years|-> claims39 <claimant>/<third>/<none> cessions40 <n>
