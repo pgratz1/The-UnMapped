@@ -215,7 +215,7 @@ Library, `worldgen-tests` (new file `worldgen/tests/inspect_layer_catalogue_test
 
 1. The table: 19 entries in order, unique names, each field of 4.2's table; `description` non-empty, at most 160 bytes, ASCII plus `°`.
 2. `registered_palette` and `find_layer_spec(...)->palette` for every name, compared with a literal copy of the mapping (not with each other); unknown names (`""`, `"Elevation"`, `"water_level"`) give gray, Other, empty unit, null.
-3. `format_layer_value`: a literal table of at least two cases per row of 4.3, including every special value, negatives (`elevation -5` → `-0.5 m (sea)`, `temperature -15` → `-1.5 °C`), 0, the type limits, INT64_MIN and INT64_MAX for an unknown layer, `flow_accum 1` → `1 cells, 0.00 km2 upstream`, `flow_accum 4096` → `4096 cells, 0.10 km2 upstream`.
+3. `format_layer_value`: a literal table of at least two cases per row of 4.3, including every special value, negatives (`elevation -5` → `-0.5 m (sea)`, `temperature -15` → `-1.5 °C`), 0, the type limits, INT64_MIN and INT64_MAX for an unknown layer, `flow_accum 1` → `1 cells, 0.00 km2 upstream`, `flow_accum 4096` → `4096 cells, 1.05 km2 upstream`.
 4. `cell_value`: inside, outside, each element type, a u64 above INT64_MAX.
 5. `layer_legend`: for each palette, labels and colours against literal expected lists written from section 4.4; gray on signed, unsigned and constant grids and an invalid grid; signed with M or P small enough that a row is skipped; `signed` on an unsigned grid returns no rows; biome with a record without name.
 6. `composite_legend` and `composite_description` for the three composites with a two-record fixture biome table (one water, one land).
