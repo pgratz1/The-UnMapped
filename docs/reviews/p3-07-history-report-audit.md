@@ -159,3 +159,35 @@ I built `worldgen-cli` from `81bbf17` in the audit worktree with `linux-gcc-rele
 - **A2.** I did not test a concurrent writer.
 - **Performance** (11) is not a determinism matter and was not measured.
 - **The two failing CTest entries.** `worldgen-tests-conflict` and `worldgen-tests-balance` fail on this branch because of the 23 item 4a note wording. The lead says the test writer is updating them, so they are not findings. I did not run the test suites.
+
+## 6. Fixes confirmed (63972a3)
+
+Re-audit on 2026-11-22 of `git diff 81bbf17 63972a3 -- worldgen tools`, merged into `p3/07-audit`. Line numbers are those of `63972a3`. **S1, A1 and A2 are fixed. No new finding. The verdict stays pass.**
+
+- **S1** (`history_report.cpp:69`, `upland`).
+  - The flag is now `walk_cells < cells / 4 + (cells % 4 != 0)`. With `cells` ≥ 1 and 0 ≤ `walk_cells` ≤ `cells`, the right side is at most INT64_MAX / 4 + 1, so nothing can overflow.
+  - For integer w ≥ 0 it equals 4w < c, because w < c/4 holds exactly when w < ceil(c/4).
+  - `damage/overflow_walk.db` now exits 0 under ASan and UBSan with no report. c1's home line prints without `, upland`, which is right, since w = c.
+- **A1** (`digest.cpp:787`, `permille`).
+  - `floor(1000 n / d)` is now computed through `mul_u64_wide` and `divmod_u128_u64` of `core/wide`. That code is the reference integer arithmetic of P0-01 5.3, with golden vectors, and identical on every compiler.
+  - The function returns 0 when d ≤ 0 or n ≤ 0. Since d > 0 is guarded first, the `FatalError` on a zero divisor is unreachable.
+  - A quotient above INT64_MAX saturates, which is defined. For n ≥ 0 and d > 0 the value is the same as before, so valid worlds give the same text.
+  - The lint's `wide-int-type` rule is not involved: the new code calls the API, not compiler intrinsics.
+- **A2** (`history_report.cpp:77`, `reads_disagree`, called at `528` before the digest).
+  - **What it checks.** The view's event count must equal `t.event_rows`, and every view event's `phase` must lie in 1 to `phases.size()`.
+  - **Coverage.** I listed every index the digest and the report take from one read by a value of the other:
+    - **View `phase` into `phase_events_` and `phase_shown_`.** Covered by the phase range check.
+    - **Table event ids into the view's events.** `founding_event`, `ending_event`, `ruin_event`, `region_control.event`, `since_event` and `until_event` all go through `kind(id)`, `sentence(id)`, `war_row_` or `event(m)`. 5.3 checks each against `t.event_rows`, and the count check makes that the view's size.
+    - **View civilization ids into table vectors.** `civ_events_`, `control_of_` and `d_.civilizations` are guarded by `is_civ` against the table's size (`digest.cpp`, `index`, `civilizations`).
+    - **Table ids looked up by name in the view.** `ref` and `generations_note` handle a missing name by printing the tag, or no note.
+    - **Everything else indexes within one read:** census into settlements, catalogue into kinds, causes into events, the `d_.summary` size. Each read is checked on its own materialised rows.
+  - **What a changed file can still do.** A file changed between the reads in some other way, for example the event years against the phases, can now only give wrong text, never an out-of-range index. That is acceptable for a file modified while it is read.
+  - The message `corrupt table 'event': the file changed while it was read` is fixed ASCII.
+  - No read transaction was added. I accept that, since `WorldReader` does not expose its connection.
+- **New hazards: none.** The new arithmetic is the exact U128 path and the overflow-free upland test. The new text is one fixed message. There is no float, locale, `long`, unordered container or new ordering.
+- **Lint:** the self-test passed (18 snippet files), and the scan found 0 findings in 167 C++ and 13 CMake files. No rule was added.
+- **Reruns.** I rebuilt `linux-gcc-release` and `linux-clang-asan`.
+  - The 14 valid worlds (28 reports) are byte-identical between GCC and Clang ASan, with no sanitizer output, and unchanged from the reports at `81bbf17`.
+  - The 36 damaged copies give the same messages and exit codes as before, except `overflow_walk`, which no longer overflows.
+  - I did not trigger A2 itself, as that would need a concurrent writer. Its coverage is judged by reading the code.
+- **Still to come.** The announced one-line wording fix for the negative-population message is not part of this check and does not affect the verdict.
