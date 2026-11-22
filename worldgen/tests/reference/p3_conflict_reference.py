@@ -3205,7 +3205,12 @@ def replay_r17(res, dat=None):
                 problems.append("(23.7.3) e%d settlements not in ascending id" % eid)
             if holder(e[5], y, eid) == b:
                 problems.append("(23.2) e%d claim_settlements on rg%d, which its holder c%d holds" % (eid, e[5], b))
-        if k == K["claim"] and FLAGS["claim39"] and holder(e[5], y, eid) != role(eid, 2)[0]:
+        # (a kind 20 claim whose cause is a colony of the holder in R in the claim's year is exempt: the colony made
+        # the holder R's owner earlier in the year, and a later step's secession passed R on, so the net rule of
+        # P3-04 6.7 item 1 left it no region_control row; the stress-7 e1153 case of 8.3 item 4's exemption)
+        if k == K["claim"] and FLAGS["claim39"] and holder(e[5], y, eid) != role(eid, 2)[0] and not any(
+                kind[x] == K["colony_founded"] and ev[x][1] == y and ev[x][5] == e[5] and
+                role(x, sf)[0] == role(eid, 2)[0] for x in causes.get(eid, [])):
             problems.append("(23.2) e%d claim on rg%d, which its holder c%d does not hold" % (eid, e[5],
                                                                                           role(eid, 2)[0]))
         if k in CLAIMS + (K["war_declared"],) and lies_low(role(eid, 1)[0], y):
