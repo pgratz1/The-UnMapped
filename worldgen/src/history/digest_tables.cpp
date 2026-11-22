@@ -534,6 +534,29 @@ std::int64_t meta_integer(const db::WorldReader& world, std::string_view key) {
     return 0;
 }
 
+// The world report's P3-04 11.1 checks end with a bound on the population
+// of a standing settlement (audit A2 of P3-04), "row <id>: population <p>
+// outside 0 to 2147483647". The history report prints 5.3's texts for the
+// same row instead (the lead's ruling; r16): "population <p> is negative"
+// for a negative value and "population <p> above 2147483647" for one above
+// the bound, as for a settlement that is not standing. Every other problem
+// is passed on unchanged.
+std::string history_stats_message(const inspect::HistoryTables& h, const std::string& problem) {
+    for (const Row& r : h.rows[9]) {  // settlement rows, shapes checked by then
+        const std::int64_t status = i64(r, 10);
+        const std::int64_t population = i64(r, 11);
+        if ((status != 1 && status != 2) || (population >= 0 && population <= POPULATION_MAX)) {
+            continue;
+        }
+        const std::string at = "corrupt table 'settlement': row " + num(i64(r, 0)) + ": population " + num(population);
+        if (problem == at + " outside 0 to " + num(POPULATION_MAX)) {
+            return population < 0 ? at + " is negative" : at + " above " + num(POPULATION_MAX);
+        }
+        break;  // the first standing row out of bounds is the one history_stats reported
+    }
+    return problem;
+}
+
 HistoryTables read_and_check(const db::WorldReader& world) {
     const Reader read{world};
     HistoryTables t;
@@ -573,7 +596,7 @@ HistoryTables read_and_check(const db::WorldReader& world) {
     }
     const inspect::HistoryStatsResult stats = inspect::history_stats(h, t.end_year);
     if (stats.problem) {
-        throw db::Error{db::ErrorCode::corrupt_layer, *stats.problem};
+        throw db::Error{db::ErrorCode::corrupt_layer, history_stats_message(h, *stats.problem)};
     }
 
     // 5.2 item 3: the tables of 3.1 and the checks of 5.3.

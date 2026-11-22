@@ -191,6 +191,10 @@ TEST_CASE("P3-07 engineer: a few corrupt tables of 5.3") {
     const Case cases[] = {
         {"UPDATE settlement SET population = -1 WHERE id = 2",
          "corrupt table 'settlement': row 2: population -1 is negative"},
+        {"UPDATE settlement SET population = -5 WHERE id = (SELECT MIN(id) FROM settlement WHERE status IN (1, 2))",
+         nullptr},
+        {"UPDATE settlement SET population = 2147483648 WHERE id = (SELECT MIN(id) FROM settlement WHERE status IN (1, 2))",
+         nullptr},
         {"DELETE FROM settlement_census WHERE settlement = 3",
          "corrupt table 'settlement_census': settlement 3: no rows"},
         {"UPDATE civilization SET home_region = 999 WHERE id = 1",
@@ -202,7 +206,17 @@ TEST_CASE("P3-07 engineer: a few corrupt tables of 5.3") {
         REQUIRE(wdb::testing::execute_on_file(path, c.sql).ok());
         const wdb::Error e = error_of(path);
         CHECK(e.code == wdb::ErrorCode::corrupt_layer);
-        CHECK(e.message == c.message);
+        if (c.message != nullptr) {
+            CHECK(e.message == c.message);
+        } else {
+            // A standing settlement: 5.3's wording, not the world report's
+            // "outside 0 to 2147483647".
+            const bool negative = std::string(c.sql).find("= -5") != std::string::npos;
+            CHECK(e.message.rfind("corrupt table 'settlement': row ", 0) == 0);
+            CHECK(e.message.find(negative ? ": population -5 is negative" : ": population 2147483648 above 2147483647") !=
+                  std::string::npos);
+            CHECK(e.message.find("outside") == std::string::npos);
+        }
     }
     {
         const std::string path = copy_of(world_42(), "p3-07-corrupt-phase.db");
