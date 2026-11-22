@@ -1086,3 +1086,23 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
 - Decision: "they look great for this stage, ready to move to the next phase." P3 is approved. P4 Viewer v1 and P5 History depth start, in parallel.
 - Carried into P5 (first stage, since it alters world bytes): the items of `docs/specs/p3-11-followups.md` section 12 (a fresh claim at a declaration, the quarrel war gated on strength, fewer grim region names, the `became_city` wording, name-filter additions, a stored hidden-refuge flag and a recorded claim drop). Carried with it, without world changes: the world critic's notes on the history report (`docs/reviews/p3-07-history-report-world-critic-r17.md` B1 to B6) and the audit's advisory A3.
 - Status: accepted; design doc section 13's status line to be updated (P3 complete and approved on 2026-11-22)
+
+### Viewer v1: the library answers the year, the viewer draws it
+
+- Date: 2026-11-22
+- Raised by: spec-writer (P4-00, `docs/specs/p4-00-viewer-v1-overview.md`)
+- Design doc section: 10 (world viewer: first version), 12 (open question "Layer catalogue in the library"), 13 (phase P4)
+- Problem: the design lists what viewer v1 shows (territory, settlements and sites as markers, a timeline scrubber, a browser for civilizations, figures and events with causes) but not which side computes it. Three readings are needed. (1) The viewer keeps its own copy of the layer catalogue's units and reads region names from a raw column (entry of 2026-11-18). (2) If the viewer computed holders by year, summary sets or event text itself, it could disagree with `report --history`, and every P5 change to a history table would need a second edit in the extension. (3) Sites arrive in P6 and figures in P5, so "site markers" and a figures browser have nothing to show in P4.
+- Proposal: (1) `worldgen` exposes the layer catalogue (group, unit, decimal scale, special values, display form, legends) and the region name in its public interface (spec P4-02), and the viewer's copy goes. (2) `worldgen` gains a read-only timeline over the history tables (holders, settlement states, relations, phase and events at a year; events by entity; the events an event caused), a civilization colour rule (a hue family per race, shades per civilization) and a year-dependent composite `territory` with `worldgen-cli render --composite territory --year Y` (spec P4-01); the extension reads history only through the library and issues no SQL of its own on history tables; event text stays in `render_event` and `history_note`. (3) Until P6, "site markers" are ruins, passes and the places of the year's events; the browser lists figures once P5 provides them through the library.
+- Interim choice: as proposed, in specs P4-01 to P4-05. No world byte changes; no generator or schema version bump.
+- Status: open (P4-00 open questions 1 and 4)
+
+### Viewer v1: the history movie is playback, recorded with Godot's Movie Maker
+
+- Date: 2026-11-22
+- Raised by: spec-writer (P4-00)
+- Design doc section: 12 (open question "History movie"), 13 (phase P4: candidate addition)
+- Problem: where the movie falls in P4, and whether saving it as a video is wanted (entry "Viewer: a history movie on the 2D map"). An encoder in the extension would be a new vendored dependency.
+- Proposal: the movie is the last P4 stage (P4-06): play, pause, speed, skipping quiet years, and the year's sentences beside the map, on top of the scrubber, territory and markers. No video encoder is built: Godot's Movie Maker mode (`--write-movie`, AVI with MJPEG or a PNG sequence, fixed frame rate) records the viewer, and P4-06 adds command-line options to play a span and quit so that one command records a movie into the build root. If Movie Maker proves unusable, the fallback is a PNG frame dump, not an encoder.
+- Interim choice: as proposed.
+- Status: open (P4-00 open question 2)
