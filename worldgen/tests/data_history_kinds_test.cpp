@@ -169,6 +169,7 @@ void check_race(const wd::Definition& d, const history_data::Race& want) {
     CHECK(r.get_int("odds_min_permille") == want.odds_min_permille);
     CHECK(r.get_int("awakening_quarrel") == want.awakening_quarrel);
     CHECK(r.get_int("hidden_years") == want.hidden_years);  // P3-01 r13 3.6 (P3-10 second round)
+    CHECK(r.get_int("awakening_population") == want.awakening_population);  // P3-01 r14 3.7 (P3-11)
     const auto& kinds = r.get_array("settlement_kinds");
     REQUIRE(kinds.size() == want.settlement_kinds.size());
     for (std::size_t i = 0; i < kinds.size(); ++i) {
@@ -828,6 +829,11 @@ TEST_CASE("P3-01 8.1 test 5: every bounded race field one step outside its bound
         {"races/orc.toml", "hidden_years = 100", "hidden_years = 0", "hidden_years = -1", "race.orc.hidden_years"},
         {"races/orc.toml", "hidden_years = 100", "hidden_years = 10000", "hidden_years = 10001",
          "race.orc.hidden_years"},
+        // P3-01 r14 3.7 (P3-11, generator 0.20.0): awakening_population int(0, 100000)
+        {"races/orc.toml", "awakening_population = 1200", "awakening_population = 0", "awakening_population = -1",
+         "race.orc.awakening_population"},
+        {"races/orc.toml", "awakening_population = 1200", "awakening_population = 100000",
+         "awakening_population = 100001", "race.orc.awakening_population"},
         // P3-06 12.2 item 1 (P3-01 r7): prowess_permille int(1, 4000)
         {"races/orc.toml", "prowess_permille = 1300", "prowess_permille = 1", "prowess_permille = 0", "race.orc.prowess_permille"},
         {"races/orc.toml", "prowess_permille = 1300", "prowess_permille = 4000", "prowess_permille = 4001", "race.orc.prowess_permille"},
@@ -1306,4 +1312,23 @@ TEST_CASE("P3-01 7: race, culture and history values are part of content_hash; l
     REQUIRE(moved.ok());
     CHECK(wd::content_hash_hex(*moved.content) == h);
     CHECK(*moved.content == *base.content);
+}
+
+TEST_CASE("P3-01 r14 3.7 (P3-11): race awakening_population is required, after hidden_years; orc 1200, others 0") {
+    // required: an orc file without it is refused with the loader's message for a missing field
+    const wd::LoadError miss =
+        only_error(load(shipped_edited("races/orc.toml", "awakening_population = 1200\n", "")));
+    CHECK(miss.path == "races/orc.toml");
+    CHECK(miss.message == "missing required field 'race.orc.awakening_population'");
+    // the shipped values (the listing) and the field order
+    for (const history_data::Race& r : history_data::races()) {
+        CAPTURE(std::string(r.id));
+        CHECK(r.awakening_population == (r.id == "orc" ? 1200 : 0));
+    }
+    const std::vector<std::string_view>& f = history_data::race_fields();
+    const auto at = [&](std::string_view n) { return std::find(f.begin(), f.end(), n) - f.begin(); };
+    CHECK(at("awakening_population") == at("hidden_years") + 1);
+    CHECK(at("settlement_kinds") == at("awakening_population") + 1);
+    // the shipped root loads with the field at its bounds for every race
+    CHECK(load(shipped_edited("races/elf.toml", "awakening_population = 0", "awakening_population = 100000")).ok());
 }

@@ -346,7 +346,8 @@ TEST_CASE("P3-02 11.7 item 1: the shipped name_filters/ loads: four definitions,
     // Sizes of 11.2 per definition: anywhere, at_start, whole.
     // words: 389 / 5 / 1 and crude 70 anywhere from P3-02 r10 12.1 (0.19.0; 393 whole from r8 11.11, 647 at 0.17.0);
     // P3-02 r13 13.1 (P3-10 second round): crude 72 / 12 / 14, slurs 33 / 18 / 6, words 5 / 1 / 387
-    const std::vector<std::array<std::size_t, 3>> sizes = {{72, 12, 14}, {0, 0, 101}, {33, 18, 6}, {5, 1, 387}};
+    // P3-02 r15 14.3 (P3-11, generator 0.20.0): slurs 33 / 18 / 5, crude 71 / 12 / 14, words 5 / 1 / 391
+    const std::vector<std::array<std::size_t, 3>> sizes = {{71, 12, 14}, {0, 0, 101}, {33, 18, 5}, {5, 1, 391}};
     for (std::size_t i = 0; i < 4; ++i) {
         CAPTURE(ids[i]);
         const wd::Record& rec = kind->definitions[i].record;
@@ -529,6 +530,59 @@ TEST_CASE("P3-02 r13 13.1, 13.3: the edited lists pass name_filter_not_redundant
     CHECK_FALSE(teepee.ok());
     CHECK(errors_of(teepee).find("error: check 'name_filter_not_redundant' failed for 'name_filter.words': 'words' whole "
                                  "'teepee' is already rejected by anywhere 'pee' of 'crude'") != std::string::npos);
+}
+
+TEST_CASE("P3-02 r15 14.3, 14.4: the edited lists (tard, retard, bastard, ova, van, via, von) pass "
+          "name_filter_not_redundant; a copy keeping slurs.whole tard fails it") {
+    const wd::LoadResult<wd::ContentSet> ok = wd::load_content(wd::builtin_kinds(), data_root());
+    INFO(errors_of(ok));
+    CHECK(ok.ok());
+    const names_api::Filter& f = names_test::shipped_filter();
+    auto has = [](const std::vector<std::string>& v, const std::string& w) {
+        return std::find(v.begin(), v.end(), w) != v.end();
+    };
+    const std::string frag = std::string("ta") + "rd";
+    CHECK(has(f.anywhere, frag));
+    CHECK_FALSE(has(f.whole, frag));
+    CHECK_FALSE(has(f.anywhere, std::string("re") + frag));
+    CHECK_FALSE(has(f.anywhere, std::string("bas") + frag));
+    for (const char* w : {"ova", "van", "via", "von"}) {
+        CAPTURE(std::string_view(w));
+        CHECK(has(f.whole, w));
+    }
+    wd::MemoryDataRoot root = shipped_in_memory();
+    bool done = false;
+    for (wd::MemoryDirectory& d : root.directories) {
+        if (d.name != "name_filters") continue;
+        for (wd::MemoryEntry& e : d.entries) {
+            if (e.name != "slurs.toml") continue;
+            const std::size_t at = e.bytes.find("whole = [");
+            REQUIRE(at != std::string::npos);
+            e.bytes.replace(at, 9, "whole = [\"" + frag + "\", ");
+            done = true;
+        }
+    }
+    REQUIRE(done);
+    const wd::LoadResult<wd::ContentSet> bad = wd::load_content_from_memory(wd::builtin_kinds(), root);
+    CHECK_FALSE(bad.ok());
+    CHECK(errors_of(bad).find("error: check 'name_filter_not_redundant' failed for 'name_filter.slurs': 'slurs' whole '" +
+                              frag + "' is already rejected by anywhere '" + frag + "' of 'slurs'") != std::string::npos);
+}
+
+TEST_CASE("P3-02 r15 14.1: the shipped faerie naming has 14.1's lists and passes the checks of section 3") {
+    const wd::LoadResult<wd::ContentSet> r = wd::load_content(wd::builtin_kinds(), data_root());
+    INFO(errors_of(r));
+    REQUIRE(r.ok());
+    const Naming n = shipped_naming("faerie");
+    CHECK(n.onsets == std::vector<std::string>{"", "v", "f", "w", "l", "s", "t", "gl", "sh", "wh", "fl", "tw", "m"});
+    CHECK(n.nuclei == std::vector<std::string>{"i", "i", "ee", "ie", "ie", "ia", "ia", "a", "a", "y", "y", "ae", "ae",
+                                               "ou", "o", "o"});
+    CHECK(n.codas == std::vector<std::string>{"", "", "ll", "n", "sh", "th", "sk", "ss"});
+    CHECK(n.forbidden == std::vector<std::string>{"eee", "iee", "yy", "ouou", "shsh", "ass"});
+    // no p or b anywhere in the faerie syllable lists (14.4's validation: neither letter can occur in a faerie name)
+    for (const std::vector<std::string>* l : {&n.onsets, &n.nuclei, &n.codas}) {
+        for (const std::string& x : *l) CHECK(x.find_first_of("pb") == std::string::npos);
+    }
 }
 
 }  // TEST_SUITE

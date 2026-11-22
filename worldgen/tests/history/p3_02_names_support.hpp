@@ -187,6 +187,17 @@ inline Naming shipped_naming_r4(std::string_view id) {
         n.god_forms = {"{root}"};
         n.civilization_forms = {"{root}"};
         n.settlement_forms = {"{root}"};
+    } else if (id == "rep") {
+        // P3-02 r15 14.4 (also in the reference): "Ba" (ON) is valid, "Baba" (ONON) repeats its syllable.
+        n.onsets = {"b"};
+        n.nuclei = {"a"};
+        n.codas = {""};
+        n.patterns = {"ON", "ONON"};
+        n.min_letters = 2;
+        n.max_letters = 4;
+        n.god_forms = {"{root}"};
+        n.civilization_forms = {"{root}"};
+        n.settlement_forms = {"{root}"};
     } else if (id == "trip" || id == "trip_hollow") {
         // P3-02 r13 13.3 (P3-10 second round; also in the reference): pattern "O" makes the root one onset, so
         // every attempt renders one of the listed names; trip_hollow's settlements are "{root} Hollow".
@@ -220,6 +231,12 @@ inline Naming shipped_naming(std::string_view id) {
         n.civilization_forms = {"The Court of {root}", "The Realm of {root}", "The House of {root}"};
     } else if (id == "faerie") {
         n.god_patterns = {"ONON", "ONONON", "ONONC", "ONCON"};
+        // r15 (P3-02 14.1, P3-11, generator 0.20.0): p -> v, b -> gl; ee and ou once among 16 nuclei; the coda p
+        // removed; ass forbidden
+        n.onsets = {"", "v", "f", "w", "l", "s", "t", "gl", "sh", "wh", "fl", "tw", "m"};
+        n.nuclei = {"i", "i", "ee", "ie", "ie", "ia", "ia", "a", "a", "y", "y", "ae", "ae", "ou", "o", "o"};
+        n.codas = {"", "", "ll", "n", "sh", "th", "sk", "ss"};
+        n.forbidden = {"eee", "iee", "yy", "ouou", "shsh", "ass"};
     } else if (id == "goblin") {
         n.god_patterns = {"ONCONC", "ONC-ONC", "ONONC"};
     } else if (id == "human") {

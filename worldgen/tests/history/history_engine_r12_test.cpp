@@ -205,7 +205,7 @@ TEST_SUITE("history") {
 
 TEST_CASE("P3-04 r12 20.4: kinds 37 plague_outbreak and 38 quiet_stretch in the compiled catalogue; 4 and 12 kept") {
     const eng::EventCatalogue& c = eng::compiled();
-    REQUIRE(c.kinds.size() == 38U);
+    REQUIRE(c.kinds.size() >= 38U);  // 40 from 0.20.0 (P3-04 r17 21.2)
     const eng::KindDef& k37 = c.kinds[36];
     CHECK(k37.id == 37);
     CHECK(k37.key == "plague_outbreak");
@@ -328,14 +328,15 @@ TEST_CASE("P3-05 r12 22.1, 22.8 item 1: the outbreak's sentence with 2, 1 and 0 
     };
     CHECK(render_c("k37.db", cases) ==
           std::vector<std::string>{
-              "Plague broke out in Glathenddell and spread to 2 other settlements; 1,020 died in all.",
+              // P3-04 r17 21.1 (0.20.0): values one to nine as words
+              "Plague broke out in Glathenddell and spread to two other settlements; 1,020 died in all.",
               // reached 1: P3-05 r14 22.1, "in all" whenever another settlement was reached
               "Plague broke out in Glathenddell and spread to one other settlement; 900 died in all.",
               "Plague broke out in Glathenddell; 120 died.",
-              "Plague broke out in Glathenddell and spread to 3 other settlements; 1,084 died in all.",
+              "Plague broke out in Glathenddell and spread to three other settlements; 1,084 died in all.",
               "For 1,924 years, from 5999 to 5999, the land was quiet; one realm held it.",
-              "For 25 years, from 5999 to 5999, the land was quiet, and 7 realms kept the peace.",
-              "For 1 year, from 5999 to 5999, the land was quiet, and 2 realms kept the peace.",
+              "For 25 years, from 5999 to 5999, the land was quiet, and seven realms kept the peace.",
+              "For one year, from 5999 to 5999, the land was quiet, and two realms kept the peace.",
           });
 }
 

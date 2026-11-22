@@ -139,9 +139,9 @@ TEST_CASE("P3-05 11, 16.1 item 14, 16.1a 17i: the compiled catalogue appends kin
     const eng::EventCatalogue& compiled = eng::compiled();
     // P3-06 11 appends kinds 20-30 at 0.16.0 (P3-04 8.2 r4), P3-05 r6 kind 31 at 0.17.0, P3-06 r9 20.9
     // kinds 32 and 33 at 0.18.0
-    REQUIRE(compiled.kinds.size() == 38U);  // r10: kinds 34-36; P3-04 r12 20.4 (0.19.0): kinds 37, 38
+    REQUIRE(compiled.kinds.size() == 40U);  // P3-04 r17 21.2 (0.20.0): kinds 39, 40  // r10: kinds 34-36; P3-04 r12 20.4 (0.19.0): kinds 37, 38
     const eng::EventCatalogue cat = eng::catalogue_of(shipped());
-    REQUIRE(cat.kinds.size() == 38U);
+    REQUIRE(cat.kinds.size() == 40U);  // P3-04 r17 21.2 (0.20.0): kinds 39, 40
     for (std::size_t i = 0; i < want.size(); ++i) {
         const K& w = want[i];
         CAPTURE(std::string_view(w.key));

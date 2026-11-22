@@ -165,8 +165,9 @@ TEST_CASE("P3-04 r10 8.4, 8.5, 16.1 item 10: the three-word value form with 0, 1
         cases.push_back(TCase{"{n?#|##}", {none}, {"n"}, {}, {v}});
     }
     const std::vector<std::string> got = render_cases("three-word.db", cases);
-    CHECK(got == std::vector<std::string>{"x.", "x and one fled.", "x and 2 fled.", "x and -1 fled.", "x and 12 fled.",
-                                          "0a", "1b", "5c", "#", "##"});
+    // P3-04 r17 21.1 (0.20.0): a value from one to nine in # renders as a word
+    CHECK(got == std::vector<std::string>{"x.", "x and one fled.", "x and two fled.", "x and -1 fled.", "x and 12 fled.",
+                                          "0a", "oneb", "fivec", "#", "##"});
 }
 
 TEST_CASE("P3-04 r10 8.4: a body with four words is an unknown placeholder; the three-word form is valid") {
