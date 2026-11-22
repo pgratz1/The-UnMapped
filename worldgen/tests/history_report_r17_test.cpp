@@ -121,15 +121,15 @@ TEST_CASE("P3-07 r17 24.2, 24.3, 24.11 items 1 and 6 on H8: units, the summary s
     CHECK(w.orphans(shown) == 0);
 }
 
-TEST_CASE("P3-07 r17 24.7, 24.11 item 10 on H8: ruins by sack and by abandonment, refuges") {
+TEST_CASE("P3-07 r17 24.7 with r19 25.3, 24.11 item 10 on H8: ruins by sack and by abandonment, refuges") {
     const std::vector<std::string> p = block(summary("h8-frames"), "[present]");
     const std::vector<std::string> tail(p.end() - 9, p.end());
     CHECK(tail == std::vector<std::string>{
                       "ruins: 3",
-                      "  s3 Branfield in Bran Downs (rg2): ruined 1005, e21 sacked, by Alird (c1); last held by "
+                      "  s3 Branfield in Bran Downs (rg2): ruined 1005, e21 sacked by Alird (c1); last held by "
                       "Brannock (c2)",
-                      "  s7 Dunwick in Dun Moor (rg4): ruined 1203, e33 sacked, by Alird (c1); last held by Dunmark (c4)",
-                      "  s9 Old Alird in Alird Vale (rg1): ruined 500, e14 settlement_abandoned; last held by Alird (c1)",
+                      "  s7 Dunwick in Dun Moor (rg4): ruined 1203, e33 sacked by Alird (c1); last held by Dunmark (c4)",
+                      "  s9 Old Alird in Alird Vale (rg1): ruined 500, e14 abandoned; last held by Alird (c1)",
                       "refuges: 2",
                       "  s5 Hidden Brook in Bran Downs (rg2): Brannock (c2), population 40, founded 1006 by flight from "
                       "Branfield (s3), e23",
@@ -157,16 +157,17 @@ TEST_CASE("P3-07 r17 24.5, 24.11 items 7 and 8 on H9: the wars line, adversaries
     // one war of each outcome: won by peace (W1), by war_won (W2), by conquest (W3); lost (W4); truce (W5), search
     // (W6), a third party's conquest of the defender (W7): drawn; open (W8)
     CHECK(contains_line(c1, "  wars: 7 declared, 1 defended; won 3, lost 1, drawn 3, open 1"));
-    // adversaries by (first since, entity type, id): c2, c3 and f1 all from 300; every state word
+    // adversaries by (first since, entity type, id): c2, c3 and f1 all from 300; every state word. r19 25.4: the
+    // adversaries without a war row (f1: none, Mog: enmity) are one count line after the war lines; 25.7 item 1: a
+    // closed war's last year is its until (the year of its ending event)
     CHECK(sub_lines(c1, "  adversaries: 7") ==
           std::vector<std::string>{
-              "    Brannock (c2): 3 wars, won 1, lost 1, drawn 1, open 0, 300-1309; now at peace",
-              "    Cendrel (c3): 2 wars, won 1, lost 0, drawn 1, open 0, 300-509; now enmity",
-              "    f1: no war; now none",
-              "    Dunmark (c4): 1 war, won 1, lost 0, drawn 0, open 0, 1200-1209; now none",
-              "    Mog (c7): no war; now enmity",
+              "    Brannock (c2): 3 wars, won 1, lost 1, drawn 1, open 0, 300-1310; now at peace",
+              "    Cendrel (c3): 2 wars, won 1, lost 0, drawn 1, open 0, 300-510; now enmity",
+              "    Dunmark (c4): 1 war, won 1, lost 0, drawn 0, open 0, 1200-1210; now none",
               "    Skab (c6): 1 war, won 0, lost 0, drawn 0, open 1, 2600-2999; now at war",
-              "    Grork (c5): 1 war, won 0, lost 0, drawn 1, open 0, 2700-2799; now none"});
+              "    Grork (c5): 1 war, won 0, lost 0, drawn 1, open 0, 2700-2800; now none",
+              "    without war: 2 (enmity 1, none 1)"});
     // milestones: no quiet stretch; four sacks of salience 75 give two (e17, e18: ties broken by id); two
     // declarations of 70 (e15, e16) of four; then the two endings of 60 and the conquest
     CHECK(sub_lines(c1, "  milestones:") ==
@@ -181,7 +182,7 @@ TEST_CASE("P3-07 r17 24.5, 24.11 items 7 and 8 on H9: the wars line, adversaries
               "    1210 e33 civ_conquered: Dunmark fell to Alird."});
     // the other side of the same rows
     CHECK(contains_line(civ_block(s, 2), "  wars: 1 declared, 2 defended; won 1, lost 1, drawn 1, open 0"));
-    CHECK(contains_line(civ_block(s, 2), "    Alird (c1): 3 wars, won 1, lost 1, drawn 1, open 0, 300-1309; now at peace"));
+    CHECK(contains_line(civ_block(s, 2), "    Alird (c1): 3 wars, won 1, lost 1, drawn 1, open 0, 300-1310; now at peace"));
     CHECK(contains_line(civ_block(s, 3), "  wars: 0 declared, 2 defended; won 0, lost 1, drawn 1, open 0"));
     // the longest quiet stretch with its generations note: c2 the 100-year one (4 generations), not the other;
     // c3 its only one (no new generation)
@@ -200,8 +201,16 @@ TEST_CASE("P3-07 r17 24.5, 24.11 items 7 and 8 on H9: the wars line, adversaries
     CHECK(c6[4] == "  seceded from: Grork (c5), e39");
     CHECK(c6[5] == "  capital: Deep Hole (s11)");
     CHECK(civ_block(s, 8)[4] == "  seceded from: Skab (c6), e44");
-    CHECK(civ_block(s, 4)[4] == "  last capital: none");
-    CHECK(civ_block(s, 5)[4] == "  last capital: Grorkden (s9)");
+    // r19 25.5: an ended block at summary has no home line, so `last capital` is its fourth line
+    CHECK(civ_block(s, 4)[3] == "  last capital: none");
+    CHECK(civ_block(s, 5)[3] == "  last capital: Grorkden (s9)");
+    CHECK(civ_block(full("h9-realms"), 4)[4] == "  last capital: none");
+    // the ended Dunmark at summary: four milestones (founding, ending, then its own deeds by salience)
+    CHECK(sub_lines(civ_block(s, 4), "  milestones:") ==
+          std::vector<std::string>{"    0 e8 civ_founded: The Humans founded Dunmark in Dun Moor.",
+                                   "    0 e9 settlement_founded: Dunmark founded Dunwick in Dun Moor.",
+                                   "    800 e29 settlement_captured: Dunmark took Branford from Cendrel; 0 died.",
+                                   "    1210 e33 civ_conquered: Dunmark fell to Alird."});
     CHECK(sub_lines(civ_block(s, 8), "  milestones:") ==
           std::vector<std::string>{"    1800 e44 civ_seceded: Ruk broke away from Skab with one settlement.",
                                    "    1800 e45 settlement_founded: Ruk founded Rukhold in Ruk Crag.",
@@ -227,12 +236,12 @@ TEST_CASE("P3-07 r17 24.3 item 7, 24.7, 24.11 items 3 and 10 on H9: claims, ruin
     CHECK(std::vector<std::string>(at, p.end()) ==
           std::vector<std::string>{
               "ruins: 5",
-              "  s3 Branmoor in Bran Downs (rg2): ruined 305, e17 sacked, by Alird (c1); last held by Brannock (c2)",
-              "  s4 Branlea in Bran Downs (rg2): ruined 306, e18 sacked, by Alird (c1); last held by Brannock (c2)",
+              "  s3 Branmoor in Bran Downs (rg2): ruined 305, e17 sacked by Alird (c1); last held by Brannock (c2)",
+              "  s4 Branlea in Bran Downs (rg2): ruined 306, e18 sacked by Alird (c1); last held by Brannock (c2)",
               // captured by Cendrel, then by Dunmark, then sacked: last held by Dunmark
-              "  s5 Branford in Bran Downs (rg2): ruined 1205, e32 sacked, by Alird (c1); last held by Dunmark (c4)",
-              "  s7 Cenwick in Cen Wold (rg3): ruined 900, e30 settlement_abandoned; last held by Cendrel (c3)",
-              "  s10 Skabpit in Skab Hollow (rg6): ruined 2650, e53 sacked, by Alird (c1); last held by Skab (c6)",
+              "  s5 Branford in Bran Downs (rg2): ruined 1205, e32 sacked by Alird (c1); last held by Dunmark (c4)",
+              "  s7 Cenwick in Cen Wold (rg3): ruined 900, e30 abandoned; last held by Cendrel (c3)",
+              "  s10 Skabpit in Skab Hollow (rg6): ruined 2650, e53 sacked by Alird (c1); last held by Skab (c6)",
               "refuges: 1",
               "  s11 Deep Hole in Skab Hollow (rg6): Skab (c6), population 20, founded 2651 by flight from Skabpit "
               "(s10), e54",
@@ -250,7 +259,7 @@ TEST_CASE("P3-07 r17 24.3 item 7, 24.7, 24.11 items 3 and 10 on H9: claims, ruin
 
 TEST_CASE("P3-07 r17 24.3 item 3, 24.11 item 5 on H10: the age floor takes the age's own race first") {
     const std::string s = summary("h10-floor");
-    CHECK(hrtest::stats_of(s).at("summary_threshold") == 91);
+    CHECK(hrtest::stats_of(s).at("summary_threshold") == 91);   // a SUMMARY_STATS key (r19 25.7 item 4)
     std::set<std::int64_t> want = {1, 2, 3, 4, 5, 33, 34};
     for (const std::int64_t e : range(18, 32)) want.insert(e);  // the fifteen raids of the age's race, then 3 others
     for (const std::int64_t e : range(35, 52)) want.insert(e);  // the floor of the orc age: 18 chants

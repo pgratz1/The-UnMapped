@@ -79,14 +79,15 @@ TEST_CASE("P3-07 14.1 item 1: escape_history_text") {
     }
 }
 
-TEST_CASE("P3-07 4, 5.1: parse_history_level and the header constant") {
+TEST_CASE("P3-07 4, 5.1: parse_history_level") {
     CHECK(wi::parse_history_level("summary") == HistoryLevel::summary);
     CHECK(wi::parse_history_level("full") == HistoryLevel::full);
     CHECK_FALSE(wi::parse_history_level("brief").has_value());
     CHECK_FALSE(wi::parse_history_level("").has_value());
     CHECK_FALSE(wi::parse_history_level("Full").has_value());
     CHECK_FALSE(wi::parse_history_level("full ").has_value());
-    CHECK(wi::HISTORY_REPORT_HEADER_V1 == "# worldgen history v1");
+    // r19 25.1: the header is `# worldgen history v2`, checked on the output text (the spec names no library
+    // constant for it; see the H1 header case and history_report_v2_test.cpp)
 }
 
 TEST_CASE("P3-07 14.1 item 1: the trailing-space rule on a template ending in a space and on an empty sentence") {
@@ -113,14 +114,14 @@ TEST_CASE("P3-07 6.2, 6.3, 6.4, 6.5, r17 24.4 and 24.6 on H1: header, [settings]
     const std::string s = summary("h1-war-and-ruin");
     const std::vector<std::string> lines = hrtest::lines_of(s);
     REQUIRE(lines.size() > 3U);
-    CHECK(lines[0] == "# worldgen history v1");
+    CHECK(lines[0] == "# worldgen history v2");   // r19 25.1
     CHECK(lines[1] == "level = summary");
     CHECK(lines[2] == "[settings]");
     CHECK(block(s, "[settings]") == std::vector<std::string>{
                                         "seed = 101", "seed_phrase =", "map_size = 512", "history_span = 3000",
                                         "history_detail = normal", "races = elf,goblin", "civs_per_race = auto",
                                         "event_intensity = normal", "monster_pressure = normal",
-                                        "divine_activity = normal", "divine_script =", "generator_version = 0.20.0"});
+                                        "divine_activity = normal", "divine_script =", "generator_version = 0.21.0"});
     CHECK(block(s, "[ages]") ==
           std::vector<std::string>{
               "a1 The Age of Elves: 0-1499, 1500 years; Elves (ra1) made by Fielie (g1, good); 1 civilization founded: "
@@ -161,12 +162,15 @@ TEST_CASE("P3-07 6.6, 7.1-7.3 on H1: the three civilization blocks") {
               "  capital: Voeledell (s1)",
               "  peak regions: 3, 300-1699",
               "  peak population: 1920 in 2049",
-              "  settlements: 3 founded, 3 held at the end, 1 ruined",
+              // r19 25.3 item 3: s5 (Old Ford) faded, counted apart; s3 was the Skib Horde's
+              "  settlements: 3 founded, 3 held at the end, 0 ruined, 1 faded",
               "  wars: 2 declared, 0 defended; won 1, lost 0, drawn 1, open 0",
+              // r19 25.4: war adversaries only, then one count line; 25.7 item 1: a war's last year is the year of its
+              // ending (the truce of 2030, the conquest of 2010)
               "  adversaries: 3",
-              "    f4: no war; now none",
-              "    Gutrot Clans (c3): 1 war, won 0, lost 0, drawn 1, open 0, 2003-2029; now at peace",
-              "    The Skib Horde (c2): 1 war, won 1, lost 0, drawn 0, open 0, 2001-2009; now none",
+              "    Gutrot Clans (c3): 1 war, won 0, lost 0, drawn 1, open 0, 2003-2030; now at peace",
+              "    The Skib Horde (c2): 1 war, won 1, lost 0, drawn 0, open 0, 2001-2010; now none",
+              "    without war: 1 (enmity 0, none 1)",
               "  events: 19",
               "  fate: alive in 3000: 3 regions, 3 settlements, population 1920",
               "  milestones:",
@@ -191,32 +195,33 @@ TEST_CASE("P3-07 6.6, 7.1-7.3 on H1: the three civilization blocks") {
                                    "    war: Finen (c1), The Skib Horde (c2), 2001-2009, e22 to e30",
                                    "    war: Finen (c1), Gutrot Clans (c3), 2003-2029, e24 to e31",
                                    "    peace: Finen (c1), Gutrot Clans (c3), since 2030, e31"});
-    // c2: ended (last capital, fate with the sentence), lost its one war, eight milestones (its ending first)
+    // c2: ended (last capital, fate with the sentence), lost its one war. r19 25.5: at summary an ended block leaves
+    // out home, the peaks and events, and has at most four milestones: the founding, the ending (no quiet stretch:
+    // c2 is in none), then the fill (own deeds first: its two foundings of salience 40, e9 before e12)
     CHECK(civ_block(s, 2) ==
           std::vector<std::string>{
               "c2 The Skib Horde",
               "  race: Goblin (ra2)",
-              "  home: Gr\\xC3\\xA9y \\\\ Moor (rg3), grassland",
               "  founded: 1500 in The Age of Goblins (a2), e8",
               "  last capital: none",
-              "  peak regions: 1, 1500-2004",
-              "  peak population: 450 in 1649",
-              "  settlements: 2 founded, 0 held at the end, 1 ruined",
+              "  settlements: 2 founded, 0 held at the end, 1 ruined, 0 faded",
               "  wars: 0 declared, 1 defended; won 0, lost 1, drawn 0, open 0",
               "  adversaries: 1",
-              "    Finen (c1): 1 war, won 0, lost 1, drawn 0, open 0, 2001-2009; now none",
-              "  events: 11",
+              "    Finen (c1): 1 war, won 0, lost 1, drawn 0, open 0, 2001-2010; now none",
               "  fate: ended in 2010, e30: The Skib Horde fell to Finen.",
               "  milestones:",
               "    1500 e8 civ_founded: The Goblins founded the Skib Horde in Gr\\xC3\\xA9y \\\\ Moor.",
               "    1500 e9 settlement_founded: The Skib Horde founded Skrisligg Pit in Gr\\xC3\\xA9y \\\\ Moor.",
               "    1510 e12 settlement_founded: The Skib Horde founded Redwall in Gr\\xC3\\xA9y \\\\ Moor.",
-              "    1999 e20 claim: Finen laid claim to Gr\\xC3\\xA9y \\\\ Moor, held by the Skib Horde.",
-              "    2001 e22 war_declared: Finen declared war on the Skib Horde over Gr\\xC3\\xA9y \\\\ Moor. (Claimed "
-              "since 1999.)",
-              "    2005 e27 settlement_captured: Finen took Redwall from the Skib Horde; three died.",
-              "    2010 e29 sacked: Finen sacked Skrisligg Pit of the Skib Horde; 150 died and 50 fled.",
               "    2010 e30 civ_conquered: The Skib Horde fell to Finen."});
+    // the same realm at full keeps 24.5's block (eight milestones)
+    const std::vector<std::string> c2_full = civ_block(full("h1-war-and-ruin"), 2);
+    CHECK(contains_line(c2_full, "  home: Gr\\xC3\\xA9y \\\\ Moor (rg3), grassland"));
+    CHECK(contains_line(c2_full, "  peak regions: 1, 1500-2004"));
+    CHECK(contains_line(c2_full, "  peak population: 450 in 1649"));
+    CHECK(contains_line(c2_full, "  events: 11"));
+    CHECK(contains_line(c2_full, "    2010 e29 sacked: Finen sacked Skrisligg Pit of the Skib Horde; 150 died and 50 "
+                                 "fled."));
     // c3: a one-year peak of regions, the earlier of two peak census years, its longest stretch (e33: 18
     // generations of 25 years) and not the other (e15)
     CHECK(civ_block(s, 3) ==
@@ -228,10 +233,10 @@ TEST_CASE("P3-07 6.6, 7.1-7.3 on H1: the three civilization blocks") {
               "  capital: Ghashpit (s4)",
               "  peak regions: 2, 2600-2600",
               "  peak population: 1000 in 1999",
-              "  settlements: 2 founded, 1 held at the end, 0 ruined",
+              "  settlements: 2 founded, 1 held at the end, 0 ruined, 0 faded",
               "  wars: 0 declared, 1 defended; won 0, lost 0, drawn 1, open 0",
               "  adversaries: 1",
-              "    Finen (c1): 1 war, won 0, lost 0, drawn 1, open 0, 2003-2029; now at peace",
+              "    Finen (c1): 1 war, won 0, lost 0, drawn 1, open 0, 2003-2030; now at peace",
               "  events: 13",
               "  fate: alive in 3000: 1 region, 1 settlement, population 1000",
               "  milestones:",
@@ -308,7 +313,7 @@ TEST_CASE("P3-07 6.8 on H1: [present] at both levels") {
                                    "settlement kinds: hamlet 2, village 2, town 1, city 1, fortress 1",
                                    "largest settlement: Voeledell (s1), population 1500",
                                    "ruins: 1",
-                                   "  s3 Skrisligg Pit in Gr\\xC3\\xA9y \\\\ Moor (rg3): ruined 2010, e29 sacked, by Finen (c1); "
+                                   "  s3 Skrisligg Pit in Gr\\xC3\\xA9y \\\\ Moor (rg3): ruined 2010, e29 sacked by Finen (c1); "
                                    "last held by The Skib Horde (c2)",
                                    "refuges: 0",
                                    "open wars: 0",
@@ -344,7 +349,7 @@ TEST_CASE("P3-07 6.8 on H1: [present] at both levels") {
               "settlement kinds: hamlet 2, village 2, town 1, city 1, fortress 1",
               "largest settlement: Voeledell (s1), population 1500",
               "ruins: 1",
-              "  s3 Skrisligg Pit in Gr\\xC3\\xA9y \\\\ Moor (rg3): ruined 2010, e29 sacked, by Finen (c1); last held by "
+              "  s3 Skrisligg Pit in Gr\\xC3\\xA9y \\\\ Moor (rg3): ruined 2010, e29 sacked by Finen (c1); last held by "
               "The Skib Horde (c2)",
               "refuges: 0",
               "open wars: 0",
@@ -352,7 +357,7 @@ TEST_CASE("P3-07 6.8 on H1: [present] at both levels") {
 }
 
 TEST_CASE("P3-07 9 on H1: [stats] values worked out from the rows") {
-    const auto st = hrtest::stats_of(summary("h1-war-and-ruin"));
+    const auto st = hrtest::stats_of(full("h1-war-and-ruin"));   // r19 25.7 item 4: every key at full
     const std::vector<std::pair<std::string, std::int64_t>> want = {
         {"end_year", 3000}, {"ages", 2}, {"phases", 9}, {"phases_opening", 2}, {"phases_quiet", 4},
         {"phases_flare", 2}, {"phases_final", 1}, {"simulated_years", 451}, {"simulated_permille", 150},
@@ -384,7 +389,7 @@ TEST_CASE("P3-07 9 on H1: [stats] values worked out from the rows") {
     }
     // events_<key> in the stored catalogue's id order, the fixture's own ids (kinds found by key)
     std::vector<std::string> keys;
-    for (const auto& [k, v] : hrtest::stats_list(summary("h1-war-and-ruin"))) {
+    for (const auto& [k, v] : hrtest::stats_list(full("h1-war-and-ruin"))) {
         if (k.rfind("events_", 0) == 0 && k != "events_caused" && k != "events_per_1000_simulated_years") {
             keys.push_back(k);
         }
@@ -403,7 +408,7 @@ TEST_CASE("P3-07 6.6, 6.8, 14.1 item 3 on H2: the minimal world, every 'none' fo
                                  "c1 The Kingdom of Alird", "  race: Human (ra1)",
                                  "  home: Northeast Downs (rg1), grassland", "  founded: 0 in The Age of Humans (a1), e2",
                                  "  capital: none", "  peak regions: 0", "  peak population: 0",
-                                 "  settlements: 0 founded, 0 held at the end, 0 ruined",
+                                 "  settlements: 0 founded, 0 held at the end, 0 ruined, 0 faded",
                                  "  wars: 0 declared, 0 defended; won 0, lost 0, drawn 0, open 0", "  adversaries: none",
                                  "  events: 1", "  fate: alive in 2000: 0 regions, 0 settlements, population 0",
                                  "  milestones:",
@@ -436,7 +441,7 @@ TEST_CASE("P3-07 6.6, 6.8, 14.1 item 3 on H2: the minimal world, every 'none' fo
                                    "settlement kinds: hamlet 0, village 0, town 0, city 0, fortress 0",
                                    "largest settlement: none", "ruins: 0", "refuges: 0", "open wars: 0",
                                    "standing claims: 0"});
-    const auto st = hrtest::stats_of(s);
+    const auto st = hrtest::stats_of(full("h2-minimal"));
     CHECK(st.at("simulated_years") == 2000);
     CHECK(st.at("simulated_permille") == 1000);
     CHECK(st.at("regions_nonislet") == 1);
@@ -448,7 +453,7 @@ TEST_CASE("P3-07 6.6, 6.8, 14.1 item 3 on H2: the minimal world, every 'none' fo
 }
 
 TEST_CASE("P3-07 7.5 on H3, H3b, H3c: islets, runs of 1,001 and 1,000 years, a handover, share_max ties") {
-    const auto h3 = hrtest::stats_of(summary("h3-runaway"));
+    const auto h3 = hrtest::stats_of(full("h3-runaway"));
     CHECK(h3.at("regions_nonislet") == 11);  // 1172 dry cells is not an islet; 1171 and 1000 are
     CHECK(h3.at("share_max_permille") == 909);
     CHECK(h3.at("share_max_civ") == 2);
@@ -459,11 +464,11 @@ TEST_CASE("P3-07 7.5 on H3, H3b, H3c: islets, runs of 1,001 and 1,000 years, a h
     CHECK(h3.at("share_over_500_years") == 1999);
     CHECK(h3.at("share_over_600_years") == 1001);
     CHECK(h3.at("share_over_700_years") == 1001);
-    const auto h3b = hrtest::stats_of(summary("h3b-runaway-1000"));
+    const auto h3b = hrtest::stats_of(full("h3b-runaway-1000"));
     CHECK(h3b.at("share_over_800_years") == 1000);
     CHECK(h3b.at("share_over_600_years") == 1000);
     CHECK(h3b.at("share_over_900_years") == 500);
-    const auto h3c = hrtest::stats_of(summary("h3c-share-ties"));
+    const auto h3c = hrtest::stats_of(full("h3c-share-ties"));
     CHECK(h3c.at("share_max_permille") == 500);
     CHECK(h3c.at("share_max_civ") == 2);  // c2 and c3 in year 0 (the smaller id), c1 only from 100
     CHECK(h3c.at("share_max_year") == 0);
@@ -568,7 +573,7 @@ TEST_CASE("P3-07 21.4, 22.3, 23 items 3, 4, 4a on H6: the declaration and flare-
 
 TEST_CASE("P3-07 21.2, 21.3, 22.5a, 23 item 2 on H6: companions, searches, hollow wars") {
     const std::string s = summary("h6-notes");
-    const auto st = hrtest::stats_of(s);
+    const auto st = hrtest::stats_of(full("h6-notes"));
     CHECK(st.at("summary_threshold") == 20);
     CHECK(st.at("summary_events") == 39);
     // r17 24.3: no claim at summary (ten claims, e16 ... e44); the flare-ups' and declarations' notes read them
@@ -607,7 +612,7 @@ TEST_CASE("P3-07 21.2, 21.3, 22.5a, 23 item 2 on H6: companions, searches, hollo
     CHECK(st.at("war_years_max") == 500);
     // 23 item 1: the kinds 39 and 40 lines in the catalogue's id order, after quiet_stretch
     std::vector<std::string> keys;
-    for (const auto& [k, v] : hrtest::stats_list(s)) {
+    for (const auto& [k, v] : hrtest::stats_list(full("h6-notes"))) {
         if (k.rfind("events_", 0) == 0) keys.push_back(k);
     }
     REQUIRE(keys.size() >= 18U);
@@ -618,7 +623,7 @@ TEST_CASE("P3-07 21.2, 21.3, 22.5a, 23 item 2 on H6: companions, searches, hollo
 }
 
 TEST_CASE("P3-07 21.8 item 5 with 22.5b on H7: a resettled region keeps its run, a change of holder breaks it") {
-    const auto st = hrtest::stats_of(summary("h7-runs"));
+    const auto st = hrtest::stats_of(full("h7-runs"));
     CHECK(st.at("wars_same_goal_unchanged_max") == 2);
     CHECK(st.at("wars_same_goal_max") == 3);
     CHECK(st.at("wars_hollow") == 5);
@@ -653,7 +658,8 @@ TEST_CASE("P3-07 5.1: digest_history on H1 (peaks, counts, milestones, relations
     CHECK(c3.peak_population.year == 1999);
     CHECK(c1.settlements_founded == 3);
     CHECK(c1.settlements_held == 3);
-    CHECK(c1.settlements_ruined == 1);
+    // r19 25.3 item 3 (reading): the digest's ruined count is the block's r, status 3 only; c1's s5 faded
+    CHECK(c1.settlements_ruined == 0);
     CHECK(c1.regions_held == 3);
     CHECK(c1.population == 1920);
     CHECK(c1.events == 19);
@@ -670,7 +676,7 @@ TEST_CASE("P3-07 5.1: digest_history on H1 (peaks, counts, milestones, relations
     // the stats of the digest are the [stats] block, in order
     std::vector<std::pair<std::string, std::int64_t>> stats;
     for (const auto& kv : d.stats) stats.emplace_back(kv.first, kv.second);
-    CHECK(stats == hrtest::stats_list(summary("h1-war-and-ruin")));
+    CHECK(stats == hrtest::stats_list(full("h1-war-and-ruin")));   // r19 25.7 item 4: full's block
     // H2: fewer than six events of the civilization, and none of the peaks
     const auto r2 = hrtest::open_world(hrtest::fixture_world("h2-minimal"));
     auto t2 = worldgen::history::read_history_tables(r2);

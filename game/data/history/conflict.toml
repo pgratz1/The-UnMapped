@@ -56,5 +56,7 @@ search_weary_years = 500
 search_repeat_salience = 15
 quarrel_strain = 600
 quarrel_min_settlements = 2
+quarrel_strength_permille = 1000
+toll_spread_permille = 200
 capital_sacked_salience = 90
 capital_captured_salience = 80

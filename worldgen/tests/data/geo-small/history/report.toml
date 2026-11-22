@@ -8,7 +8,7 @@ events = [
   { kind = "colony_founded", salience = 15, template = "{founder} sent settlers from {origin} to found {settlement} in {@region}." },
   { kind = "became_village", salience = 10, template = "{settlement} grew into a village of {population}." },
   { kind = "became_town", salience = 18, template = "{settlement} grew into a town of {population}." },
-  { kind = "became_city", salience = 45, template = "{settlement} grew into a city of {population}." },
+  { kind = "became_city", salience = 45, template = "{settlement} in {@region} grew into a city." },
   { kind = "settlement_dwindled", salience = 15, template = "{@causes:famine=famine,plague=plague,plague_outbreak=plague,plague_spread=plague,succession_crisis=strife,battle=war,battle_at_pass=war,tribute=tribute,colony_founded=emigration|Weakened by |, }{settlement} dwindled to {population} souls." },
   { kind = "famine", salience = 25, template = "Famine struck {settlement}; {dead} died." },
   { kind = "plague", salience = 45, template = "Plague broke out in {settlement}; {dead} died." },
@@ -40,4 +40,6 @@ events = [
   { kind = "quiet_stretch", salience = 20, template = "For {years} {years?year|years}, from {@year} to {@end_year}, the land was quiet{realms?|; one realm held it|, and # realms kept the peace}." },
   { kind = "claim_settlements", salience = 35, template = "{claimant} laid claim to {settlement:all} of {holder} in {@region}." },
   { kind = "settlements_ceded", salience = 55, template = "{from} gave up {settlement:all} in {@region} to {to}." },
+  { kind = "claim_dropped", salience = 15, template = "{claimant} let the claim against {holder} over {@region} lapse." },
+  { kind = "refuge_hidden", salience = 10, template = "{@settlement} lay hidden from {@year} to {@end_year}." },
 ]

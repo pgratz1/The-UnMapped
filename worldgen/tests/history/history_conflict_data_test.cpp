@@ -96,6 +96,8 @@ const std::vector<Range>& ranges() {
         {"quarrel_strain", 0, 5000},
         // r17 22.1 item 4 (P3-10 second round): after quarrel_strain
         {"quarrel_min_settlements", 0, 1000},
+        // P3-06 r22 24.2, 24.5 (P5-01, generator 0.21.0): after quarrel_min_settlements
+        {"quarrel_strength_permille", 0, 1000}, {"toll_spread_permille", 0, 500},
         {"capital_sacked_salience", 0, 100}, {"capital_captured_salience", 0, 100},
     };
     return v;
@@ -142,7 +144,7 @@ TEST_CASE("P3-06 12.1, r9 20.9: history.conflict loads with the listing's 59 fie
     CHECK(r.get_int("truce_years") == 200);
     CHECK(r.get_int("last_refuge") == 1);
     CHECK(r.get_int("capital_captured_salience") == 80);
-    CHECK(r.size() == 59U);  // 43 at 0.16.0 and 0.17.0; r9 20.9 adds eleven, r10 20.19 three; r14 (0.19.0) -1 +2, r15 +1
+    CHECK(r.size() == 61U);  // 43 at 0.16.0 and 0.17.0; r9 20.9 adds eleven, r10 20.19 three; r14 (0.19.0) -1 +2, r15 +1; r22 +2
     CHECK(r.get_int("quarrel_strain") == 600);
     // the shipped content (game/data) holds the same record (2: identical copies in the fixtures)
     CHECK(conflict_record(shipped_content()) == r);
@@ -253,9 +255,9 @@ TEST_CASE("P3-06 11 (r7), 16.1 item 11: the compiled kinds 20-30 equal section 1
     const eng::EventCatalogue& compiled = eng::compiled();
     // P3-05 r6 appends kind 31 after kinds 20-30 (0.17.0); P3-06 r9 and r10 kinds 32-36 (0.18.0); P3-04 r12 20.4
     // kinds 37 and 38 (0.19.0)
-    REQUIRE(compiled.kinds.size() == 40U);  // P3-04 r17 21.2 (0.20.0): kinds 39, 40
+    REQUIRE(compiled.kinds.size() == 42U);  // P3-04 r19 22.2 (0.21.0): kinds 41, 42; r17 21.2 (0.20.0): kinds 39, 40
     const eng::EventCatalogue cat = eng::catalogue_of(engine_test::shipped());
-    REQUIRE(cat.kinds.size() == 40U);  // P3-04 r17 21.2 (0.20.0): kinds 39, 40
+    REQUIRE(cat.kinds.size() == 42U);  // P3-04 r19 22.2 (0.21.0): kinds 41, 42; r17 21.2 (0.20.0): kinds 39, 40
     for (std::size_t i = 0; i < want.size(); ++i) {
         const K& w = want[i];
         CAPTURE(std::string_view(w.key));
@@ -290,7 +292,7 @@ TEST_CASE("P3-06 11 (r7), 16.1 item 11: the compiled kinds 20-30 equal section 1
 TEST_CASE("P3-06 3.3, 18.2, r10 20.17: the hist.conflict streams follow hist.peoples.split, 53 names in all") {
     const auto names = worldgen::streams::all_stream_names;
     // 51 at 0.16.0; P1-06 r4 adds geo.regions.name (52); r10 20.17 hist.conflict.search after hist.conflict.sack
-    REQUIRE(names.size() == 53U);
+    REQUIRE(names.size() == 54U);   // P3-06 r22 24.5 (0.21.0): hist.conflict.toll after hist.conflict.search
     std::size_t at = names.size();
     for (std::size_t i = 0; i < names.size(); ++i) {
         if (names[i] == "hist.peoples.split") at = i;
@@ -301,6 +303,8 @@ TEST_CASE("P3-06 3.3, 18.2, r10 20.17: the hist.conflict streams follow hist.peo
     }
     REQUIRE(at + 6 < names.size());
     CHECK(names[at + 6] == "hist.conflict.search");
+    REQUIRE(at + 7 < names.size());
+    CHECK(names[at + 7] == "hist.conflict.toll");
 }
 
 }  // TEST_SUITE

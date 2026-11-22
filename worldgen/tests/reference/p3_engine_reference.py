@@ -84,7 +84,7 @@ M64 = (1 << 64) - 1
 REPO = os.path.normpath(os.path.join(_HERE, "..", "..", ".."))
 GOLDEN = os.path.join(REPO, "worldgen", "tests", "golden", "p3-04-engine.txt")
 DEFAULT_INPUTS = os.path.join(os.path.expanduser("~"), ".cache", "the-unmapped", "out", "p3-08-tests", "inputs")
-GENERATOR_VERSION = "0.20.0"  # P3-11: kinds 39, 40, number words (P3-10: kinds 37, 38, quiet stretches, {@causes:...}, separators (P3-09: 36 kinds)
+GENERATOR_VERSION = "0.21.0"  # P5-01: kinds 41, 42, number clauses, flare_min_years (P3-11: kinds 39, 40, number words (P3-10: kinds 37, 38, quiet stretches, {@causes:...}, separators (P3-09: 36 kinds)
 SCHEMA_VERSION = 7
 
 
@@ -194,6 +194,8 @@ def spec_engine():
     t = ENGINE_TOML
     if QUIET_R15:
         t = t.replace("quiet_events_max = 3\n", "quiet_events_max = 3\nquiet_min_years = 50\n")
+    if FLARE_R19:   # P3-04 r19 22.3 / P3-01 r15 3.8: flare_min_years = 10 after quiet_min_years
+        t = t.replace("quiet_min_years = 50\n", "quiet_min_years = 50\nflare_min_years = 10\n")
     return tomllib.loads(t)["history"]["engine"]
 
 
@@ -299,6 +301,12 @@ KIND_39 = kind_def(39, "claim_settlements", 1, 1, 0, (("claimant", CIV, 1, 1), (
 KIND_40 = kind_def(40, "settlements_ceded", 1, 1, 0, (("from", CIV, 1, 1), ("to", CIV, 1, 1),
                                                       ("settlement", SETTLEMENT, 1, 0)), ())
 COMPILED_020 = COMPILED_019 + (KIND_39, KIND_40)
+# P3-04 r19 22.2 (generator 0.21.0, P5-01): kinds 41 claim_dropped (caused, region, no settlement; claimant and
+# holder, civilization 1-1; no value) and 42 refuge_hidden (caused, region and settlement; settlement, settlement
+# 1-1; founder, civilization 1-1; no value).
+KIND_41 = kind_def(41, "claim_dropped", 1, 1, 0, (("claimant", CIV, 1, 1), ("holder", CIV, 1, 1)), ())
+KIND_42 = kind_def(42, "refuge_hidden", 1, 1, 1, (("settlement", SETTLEMENT, 1, 1), ("founder", CIV, 1, 1)), ())
+COMPILED_021 = COMPILED_020 + (KIND_41, KIND_42)
 
 # P3-04 r10 (generator 0.17.0, P3-08), each switchable so that the 0.16.0
 # goldens can still be reproduced (use_version("0.16.0")):
@@ -326,11 +334,17 @@ QUIET_R15 = True
 # P3-04 r17 (P3-11, generator 0.20.0):
 #   RENDER_R17      21.1 values 1 to 9 render as words in {value} and in the # of a chosen three-word form.
 RENDER_R17 = True
+# P3-04 r19 (P5-01, generator 0.21.0):
+#   RENDER_R19      22.1 the numbers of one clause of a template (cut at the literal "; " and ", ") are words only
+#                   when every number of the clause is from 1 to 9, else all digits.
+#   FLARE_R19       22.3 no flare-up shorter than m = max(1, the scaled flare_min_years) (default 1).
+RENDER_R19 = True
+FLARE_R19 = True
 NUMBER_WORDS = ("one", "two", "three", "four", "five", "six", "seven", "eight", "nine")
 ENGINE_VERSION = None
 
 
-VERSIONS = ("0.16.0", "0.17.0", "0.18.0", "0.19.0", "0.20.0")
+VERSIONS = ("0.16.0", "0.17.0", "0.18.0", "0.19.0", "0.20.0", "0.21.0")
 
 
 def at_least(v):
@@ -345,20 +359,21 @@ def use_version(v):
     of 30 kinds, r9 rendering and quiet eras, the 0.16.0 data and P3-02 r4
     names). Clears the cached data roots."""
     global COMPILED, RENDER_R10, QUIET_ERA_R10, RENDER_R12, QUIET_R12, QUIET_R15, GENERATOR_VERSION, ENGINE_VERSION
-    global RENDER_R17
+    global RENDER_R17, RENDER_R19, FLARE_R19
     if v not in VERSIONS:
         raise ValueError(v)
     new = v != "0.16.0"
     COMPILED = {"0.16.0": COMPILED_016, "0.17.0": COMPILED_017, "0.18.0": COMPILED_018, "0.19.0": COMPILED_019,
-                "0.20.0": COMPILED_020}[v]
+                "0.20.0": COMPILED_020, "0.21.0": COMPILED_021}[v]
     RENDER_R10 = QUIET_ERA_R10 = new
-    RENDER_R12 = QUIET_R12 = QUIET_R15 = v in ("0.19.0", "0.20.0")
-    RENDER_R17 = v == "0.20.0"
+    RENDER_R12 = QUIET_R12 = QUIET_R15 = v in ("0.19.0", "0.20.0", "0.21.0")
+    RENDER_R17 = v in ("0.20.0", "0.21.0")
+    RENDER_R19 = FLARE_R19 = v == "0.21.0"
     GENERATOR_VERSION = v
     ENGINE_VERSION = v
     pdr.use_version(v)
     # P3-09 item 8: the word list of the version (0.18.0 on disk; before, P3-08's, from git)
-    pnr.FILTER_COMMIT = None if v in ("0.18.0", "0.19.0", "0.20.0") else pdr.NAME_FILTERS_017_COMMIT
+    pnr.FILTER_COMMIT = None if v in ("0.18.0", "0.19.0", "0.20.0", "0.21.0") else pdr.NAME_FILTERS_017_COMMIT
     if hasattr(pnr, "use_version"):   # P3-10: the names reference serves the filter of the version (F1)
         pnr.use_version(v)
     pnr._SHIPPED_FILTER = None
@@ -435,10 +450,10 @@ def causes_entries(body):
     return out, w1, w2
 
 
-def fmt_value(v):
+def fmt_value(v, digits=False):
     """P3-04 r12 20.3: a comma between groups of three digits from 1,000 (after the sign); as before
-    without RENDER_R12."""
-    if RENDER_R17 and 1 <= v <= 9:   # r17 21.1: one to nine as lower-case words
+    without RENDER_R12. digits: r19 22.1, the clause holds a number outside 1 to 9."""
+    if RENDER_R17 and 1 <= v <= 9 and not digits:   # r17 21.1: one to nine as lower-case words
         return NUMBER_WORDS[v - 1]
     if not RENDER_R12 or abs(v) < 1000:
         return str(v)
@@ -448,6 +463,69 @@ def fmt_value(v):
         groups.insert(0, d[-3:])
         d = d[:-3]
     return ("-" if v < 0 else "") + ",".join(groups)
+
+
+def template_pieces(templ):
+    """8.4's scan of a stored template: [("lit", text) | ("ph", body)] with the escapes {{ and }} as literal
+    text, in order."""
+    out, i, n = [], 0, len(templ)
+    while i < n:
+        c = templ[i]
+        if c == "{" and i + 1 < n and templ[i + 1] == "{":
+            out.append(("lit", "{"))
+            i += 2
+        elif c == "}" and i + 1 < n and templ[i + 1] == "}":
+            out.append(("lit", "}"))
+            i += 2
+        elif c == "{":
+            j = templ.index("}", i)
+            out.append(("ph", templ[i + 1:j]))
+            i = j + 1
+        else:
+            out.append(("lit", c))
+            i += 1
+    return out
+
+
+def clause_of_placeholders(templ):
+    """P3-04 r19 22.1: the clause index of each placeholder, in template order. The literal text is the bytes
+    outside placeholders; a clause ends at every occurrence of the two bytes "; " or ", " in it (the two bytes
+    adjacent in the literal text, no placeholder between); a placeholder belongs to the clause it starts in."""
+    out, k, prev = [], 0, None
+    for kind, x in template_pieces(templ):
+        if kind == "ph":
+            out.append(k)
+            prev = None
+            continue
+        if prev in (";", ",") and x == " ":
+            k += 1
+        prev = x
+    return out
+
+
+def clause_digits(kind, templ, ev):
+    """{clause: True when some number of the clause is outside 1 to 9} for event ev (r19 22.1). A number is each
+    value rendered by a {value} placeholder and each # of the chosen word of a three-word form."""
+    roles = {r["role"] for r in kind["roles"]}
+    val_seq = {k: i + 1 for i, k in enumerate(kind["values"])}
+    phs = [x for t, x in template_pieces(templ) if t == "ph"]
+    nums = {}
+    for body, k in zip(phs, clause_of_placeholders(templ)):
+        nums.setdefault(k, [])
+        if body.startswith("@"):
+            continue
+        if "?" in body:
+            v, rest = body.split("?", 1)
+            ws = rest.split("|")
+            if len(ws) == 3:
+                x = ev["values"][val_seq[v]]
+                w = ws[0] if x == 0 else ws[1] if x == 1 else ws[2]
+                nums[k] += [x] * w.count("#")
+            continue
+        if ":" in body or body in roles:
+            continue
+        nums[k].append(ev["values"][val_seq[body]])
+    return {k: any(not (1 <= x <= 9) for x in xs) for k, xs in nums.items()}
 
 
 def placeholder_problem(kind, body, at):
@@ -588,6 +666,11 @@ def render(view, eid):
         return [(t, x) for (_s, rs, t, x) in parts if rs == role_seq[role]]
 
     out = []
+    if RENDER_R19:   # r19 22.1: the numbers of a clause render alike
+        digits_of = clause_digits(kind, templ, ev)
+        clause_seq = iter(clause_of_placeholders(templ))
+    else:
+        digits_of, clause_seq = {}, None
 
     def put_name(nm):
         # 8.5 r10: a leading "The " of a name appended mid-sentence becomes "the ".
@@ -617,6 +700,7 @@ def render(view, eid):
         j = b.index("}", i)
         body = b[i + 1:j]
         i = j + 1
+        dg = digits_of.get(next(clause_seq), False) if clause_seq is not None else False
         if body == "@year":
             out.append(str(ev["year"]))
         elif body == "@end_year":
@@ -645,7 +729,7 @@ def render(view, eid):
             ws = rest.split("|")
             x = ev["values"][val_seq[v]]
             if len(ws) == 3:   # r10: w0 for 0, w1 for 1, w2 otherwise; # is the value in the chosen word
-                out.append((ws[0] if x == 0 else ws[1] if x == 1 else ws[2]).replace("#", fmt_value(x)))
+                out.append((ws[0] if x == 0 else ws[1] if x == 1 else ws[2]).replace("#", fmt_value(x, dg)))
             else:
                 out.append(ws[0] if x == 1 else ws[1])
         else:
@@ -654,7 +738,7 @@ def render(view, eid):
                 if body in role_seq:
                     form = "name"
                 else:
-                    out.append(fmt_value(ev["values"][val_seq[body]]))
+                    out.append(fmt_value(ev["values"][val_seq[body]], dg))
                     continue
             ps = of_role(role)
             if form == "all":
@@ -686,7 +770,9 @@ def lengths(e, eng, detail):
                 Q=eng["quiet_step_years"],
                 # lead's ruling (spec defect 5.1/5.4): the floor is clamped to the cap
                 floor=min((eng["simulated_min_permille"] * e + 999) // 1000, (eng["simulated_max_permille"] * e) // 1000),
-                cap=(eng["simulated_max_permille"] * e) // 1000, threshold=d["flare_threshold"])
+                cap=(eng["simulated_max_permille"] * e) // 1000, threshold=d["flare_threshold"],
+                # r19 22.3: m = max(1, the scaled flare_min_years); hand-made tuning without the key: 1
+                M=max(1, scale(eng.get("flare_min_years", 1), e)) if FLARE_R19 else 1)
 
 
 def base_schedule(starts, e, eng, detail):
@@ -790,6 +876,7 @@ class Engine:
         self.flare_total = 0
         self.phase_id = 0
         self.phase_kind = 0
+        self.flares_skipped = []   # r19 22.3: (step start, step length, the cut flare length) of each skipped one
 
     def age_of(self, year):
         for i, (s, en) in enumerate(zip(self.starts, self.age_ends)):
@@ -849,6 +936,9 @@ class Engine:
                         if last is not None and not (1 <= trig <= last):
                             fatal("history: tension: trigger %d outside 1 to %d" % (trig, last))
                         flare = min(b["F"], qe - end, b["cap"] - b["sched"] - self.flare_total)
+                        if flare < b["M"]:   # r19 22.3: no flare-up shorter than m; the quiet row goes on
+                            self.flares_skipped.append((s, ln, flare))
+                            flare = 0
                 closes = end == qe or flare >= 1
                 self.hooks.quiet_step(self, s, ln, closes, row[3])
                 s = end
@@ -938,7 +1028,8 @@ def entry_checks(dat, inp, eng=None, report=None, stage_entry=True):
         if not inp.ages:
             return "history: input precondition: no age rows"
     for f, lo, hi in ENGINE_RANGES + ((("quiet_min_years", 0, 400),) if QUIET_R15 and "quiet_min_years" in eng
-                                      else ()):
+                                      else ()) + ((("flare_min_years", 1, 1000),) if FLARE_R19 and
+                                                  "flare_min_years" in eng else ()):
         if not (lo <= eng[f] <= hi):
             return "history: tuning: %s outside its schema range" % f
     for lvl in DETAILS:
@@ -949,6 +1040,10 @@ def entry_checks(dat, inp, eng=None, report=None, stage_entry=True):
         return "history: tuning: simulated_min_permille must not be above simulated_max_permille"
     if QUIET_R15 and eng.get("quiet_min_years", 0) > 2 * eng["quiet_step_years"]:   # r15 engine_quiet_min
         return "history: tuning: quiet_min_years must not be above 2 x quiet_step_years"
+    if FLARE_R19 and "flare_min_years" in eng:   # r19 22.3 engine_flare_min, after engine_quiet_min
+        for lvl in DETAILS:
+            if eng["flare_min_years"] > eng[lvl]["flare_years"]:
+                return "history: tuning: %s: flare_min_years must not be above flare_years" % lvl
     for lvl in DETAILS:
         d = eng[lvl]
         if 6 * d["active_years"] + d["final_years"] > 6 * eng["simulated_max_permille"] - 30:
@@ -1765,16 +1860,35 @@ TEMPLATE_CASES_R17 = (
 )
 
 
+# r19 (P3-04 22.4 item 2, generator 0.21.0): the templates of kinds 41 and 42; {@settlement} refused in kind 41
+# (settlement_use 0), accepted in kind 42.
+TEMPLATE_CASES_R19 = (
+    ("claim_dropped", "{claimant} let the claim against {holder} over {@region} lapse."),
+    ("refuge_hidden", "{@settlement} lay hidden from {@year} to {@end_year}."),
+    ("claim_dropped", "{claimant} let the claim on {@settlement} lapse."),
+    ("refuge_hidden", "{settlement} of {founder} in {@region}."),
+    ("became_city", "{settlement} in {@region} grew into a city."),
+)
+
+
 def template_cases():
     return (TEMPLATE_CASES + (TEMPLATE_CASES_R10 if at_least("0.17.0") else ())
             + (TEMPLATE_CASES_R12 if at_least("0.19.0") else ())
-            + (TEMPLATE_CASES_R17 if at_least("0.20.0") else ()))
+            + (TEMPLATE_CASES_R17 if at_least("0.20.0") else ())
+            + (TEMPLATE_CASES_R19 if at_least("0.21.0") else ()))
 
 
 def template_kind(key):
     return TEST_KIND if key == "test_optional" else find_kind(COMPILED, key)
 
 
+HEADER_021 = """\
+# P3-04 engine golden vectors for generator 0.21.0 (schema 7; P5-01): the stub engine (run_engine
+# with the stub configuration) on the 0.21.0 catalogue of 42 kinds (P3-04 r19 22.2: kinds 41
+# claim_dropped and 42 refuge_hidden appended; the became_city template of P3-05 r18 24), the numbers
+# of one clause of a template all words or all digits (22.1), no flare-up shorter than the scaled
+# flare_min_years (22.3), P3-02 r17 names, P1-06 r10 region names (the input worlds' table region),
+# and otherwise as at 0.20.0. Spec"""
 HEADER_020 = """\
 # P3-04 engine golden vectors for generator 0.20.0 (schema 7; P3-11): the stub engine (run_engine
 # with the stub configuration) on the 0.20.0 catalogue of 40 kinds (P3-04 r17 21.2: kinds 39
@@ -1882,7 +1996,9 @@ HEADER = """\
 def golden_text(inputs):
     dat = data()
     head = HEADER.rstrip("\n")
-    if ENGINE_VERSION == "0.20.0":
+    if ENGINE_VERSION == "0.21.0":
+        head = HEADER_021 + "\n" + "\n".join(head.splitlines()[2:])
+    elif ENGINE_VERSION == "0.20.0":
         head = HEADER_020 + "\n" + "\n".join(head.splitlines()[2:])
     elif ENGINE_VERSION == "0.19.0":
         head = HEADER_019 + "\n" + "\n".join(head.splitlines()[2:])
@@ -1958,6 +2074,7 @@ def check_data(c):
     dat = data()
     c.eq("engine listing", spec_engine(), dict(
         quiet_step_years=25, quiet_events_max=3, **(dict(quiet_min_years=50) if QUIET_R15 else {}),
+        **(dict(flare_min_years=10) if FLARE_R19 else {}),
         simulated_min_permille=100, simulated_max_permille=450,
         islet_max_dry_cells=1172,
         sparse=dict(active_years=75, flare_years=30, final_years=250, flare_threshold=1500),
@@ -2231,9 +2348,24 @@ def check_example_r12(c, inputs):
              [l.split(" = ")[0] for l in rl if l.startswith("events_")]),
          ["events_refuge_held", "events_plague_outbreak", "events_quiet_stretch"])
     if at_least("0.20.0"):   # P3-07 r14 23 item 1: kinds 39 and 40 after events_quiet_stretch, by kind id
-        c.eq("r17 the kind 39 and 40 lines follow events_quiet_stretch",
-             [l.split(" = ")[0] for l in rl if l.startswith("events_")][-3:],
-             ["events_quiet_stretch", "events_claim_settlements", "events_settlements_ceded"])
+        ks = [l.split(" = ")[0] for l in rl if l.startswith("events_")]
+        i = ks.index("events_quiet_stretch")
+        c.eq("r17 the kind 39 and 40 lines follow events_quiet_stretch (r19: then 41, 42)", ks[i:],
+             ["events_quiet_stretch", "events_claim_settlements", "events_settlements_ceded"]
+             + (["events_claim_dropped", "events_refuge_hidden"] if at_least("0.21.0") else []))
+
+
+class no_r19:
+    """The renderer without P3-04 r19 22.1 (r17's number-word cases)."""
+
+    def __enter__(self):
+        global RENDER_R19
+        self.saved, RENDER_R19 = RENDER_R19, False
+
+    def __exit__(self, *a):
+        global RENDER_R19
+        RENDER_R19 = self.saved
+        return False
 
 
 class no_r17:
@@ -2325,6 +2457,205 @@ def check_render_r10(c):
                                                                      (3, 1, CIV, 12)], {1: 1}, kind=tk),
          "Met: the A, the B and the C.")
     c.eq("r10 stored names unchanged", names[(CIV, 1)], "The Skib Horde")
+
+
+def r19_view_maker():
+    """Hand-made views over the shipped report data (as check_render_r17's)."""
+    names = {(SETTLEMENT, 1): "Drutnot Hole", (SETTLEMENT, 2): "Nutskrank", (SETTLEMENT, 3): "The Grey Fort",
+             (CIV, 1): "The Snat Horde", (CIV, 2): "The Stinrild League", (REGION, 7): "King's Fold",
+             (CIV, 3): "Clan Durgarin"}
+    shipped = event_catalogue(spec_report())
+
+    def view(kind_key, templ, parts, values=None, year=5, end_year=5):
+        cat = {k["id"]: dict(k) for k in shipped}
+        kid = find_kind(shipped, kind_key)["id"]
+        if templ is not None:
+            cat[kid] = dict(cat[kid], templ=templ)
+        vals = values or {}
+        k = cat[kid]
+        if any(isinstance(x, str) for x in vals):
+            vals = {k["values"].index(x) + 1: v for x, v in vals.items()}
+        evs = {100: dict(year=year, end_year=end_year, kind=kid, region=7, settlement=1, participants=list(parts),
+                         values=vals, causes=[])}
+        return dict(catalogue=cat, events=evs, name=lambda t, x, form: names[(t, x)])
+    return view, shipped
+
+
+R19_TABLE = (   # P3-04 r19 22.1's table: (kind, values by key, the sentence's tail)
+    ("battle", {"winner_dead": 7, "loser_dead": 24}, "; 24 of the defeated and 7 of the victors fell."),
+    ("battle", {"winner_dead": 3, "loser_dead": 8}, "; eight of the defeated and three of the victors fell."),
+    ("battle", {"winner_dead": 1, "loser_dead": 24}, "; 24 of the defeated and one of the victors fell."),
+    ("sacked", {"dead": 8, "survivors": 19}, "; 8 died and 19 fled."),
+    ("plague_outbreak", {"dead": 30, "population": 100, "total": 1084, "reached": 2},
+     " and spread to two other settlements; 1,084 died in all."),
+    ("quiet_stretch", {"years": 683, "realms": 4}, "For 683 years, from 5 to 687, the land was quiet, and four realms "
+                                                   "kept the peace."),
+    ("settlement_abandoned_to", {"settled": 12, "lost": 3}, " 12 survivors went to Nutskrank, and 3 were lost."),
+)
+R19_PARTS = {
+    "battle": ((1, 1, CIV, 1), (2, 2, CIV, 2)), "sacked": ((1, 1, CIV, 1), (2, 2, CIV, 2)),
+    "plague_outbreak": ((1, 1, SETTLEMENT, 1), (2, 2, CIV, 1)),
+    "quiet_stretch": ((1, 1, CIV, 1), (2, 1, CIV, 2), (3, 1, CIV, 3), (4, 1, CIV, 3)),
+    "settlement_abandoned_to": ((1, 1, SETTLEMENT, 1), (2, 2, CIV, 1), (3, 3, SETTLEMENT, 2)),
+}
+
+
+def check_render_r19(c):
+    """P3-04 r19 22.4 items 1 and 2 in the reference, on hand-made views and the shipped report data."""
+    view, shipped = r19_view_maker()
+    for key, vals, want in R19_TABLE:
+        got = render(view(key, None, R19_PARTS[key], vals, end_year=687), 100)
+        c.eq("r19 22.1 table %s %r: %s" % (key, vals, got), got.endswith(want), True)
+    dw = ((1, 1, SETTLEMENT, 1), (2, 2, CIV, 1))
+    for v, w in ((0, "0"), (1, "one"), (9, "nine"), (10, "10"), (1000, "1,000"), (-3, "-3")):
+        c.eq("r19 one number %d as 21.1" % v, render(view("settlement_dwindled", "{population} souls", dw, {1: v}),
+                                                    100), w + " souls")
+    bt = R19_PARTS["battle"]
+    for templ, a, b, want in (
+            ("{winner_dead} and {loser_dead}", 2, 10, "2 and 10"),
+            ("{winner_dead} and {loser_dead}", 2, 0, "2 and 0"),
+            ("{winner_dead} and {loser_dead}", 2, 3, "two and three"),
+            ("{winner_dead}, {loser_dead}", 2, 10, "two, 10"),
+            ("{winner_dead}; {loser_dead}", 2, 10, "two; 10"),
+            ("{winner_dead},{loser_dead}", 2, 10, "2,10"),
+            ("{winner_dead};{loser_dead}", 2, 10, "2;10"),
+            ("{winner_dead} and {loser_dead};", 2, 3, "two and three;"),
+            ("{winner_dead?none|one|#}{loser_dead?|x|; #}", 2, 10, "2; 10"),
+            ("{winner_dead?none|one|#}{loser_dead?|x|, #}", 2, 10, "2, 10"),
+            ("{winner_dead?none|one|#} and {loser_dead?none|one|#}", 2, 10, "2 and 10"),
+            ("{winner_dead?none|one|# and #}; {loser_dead}", 4, 10, "four and four; 10"),
+            ("{winner_dead?none|one|# fell} and {loser_dead}", 12, 3, "12 fell and 3"),
+            ("{winner_dead?none|single|#} and {loser_dead}", 1, 10, "single and 10"),
+            ("{winner_dead?none|single|#} and {loser_dead}", 0, 3, "none and three"),
+            ("{winner_dead?one|many} and {loser_dead}", 12, 3, "many and three"),
+            ("In {@year} {winner_dead} fell", 3, 0, "In 5 three fell"),
+            ("{{x, }} {winner_dead} and {loser_dead}", 2, 10, "{x, } 2 and 10"),
+            ("{{x}}, {winner_dead} and {loser_dead}", 2, 10, "{x}, 2 and 10")):
+        got = render(view("battle", templ, bt, {"winner_dead": a, "loser_dead": b}), 100)
+        c.eq("r19 22.1 %r with %d and %d" % (templ, a, b), got, want)
+    c.eq("r19 clauses of the shipped battle template", clause_of_placeholders(find_kind(shipped, "battle")["templ"]),
+         [0, 0, 0, 1, 1])
+    c.eq("r19 clauses of the shipped quiet_stretch template",
+         clause_of_placeholders(find_kind(shipped, "quiet_stretch")["templ"]), [0, 0, 1, 1, 2])
+    two = []
+    for k in shipped:
+        t = k["templ"]
+        phs = [x for kk, x in template_pieces(t) if kk == "ph"]
+        cl = clause_of_placeholders(t)
+        roles = {r["role"] for r in k["roles"]}
+        per = {}
+        for body, ci in zip(phs, cl):
+            if body.startswith("@") or ":" in body or body in roles:
+                continue
+            if "?" in body:
+                if len(body.split("?", 1)[1].split("|")) == 3 and "#" in body:
+                    per[ci] = per.get(ci, 0) + 1
+                continue
+            per[ci] = per.get(ci, 0) + 1
+        if any(n >= 2 for n in per.values()):
+            two.append(k["key"])
+    c.eq("r19 22.1: the shipped kinds with a clause of two numbers", sorted(two),
+         sorted(["battle", "battle_at_pass", "sacked", "settlement_captured", "settlement_abandoned_to"]))
+    # 22.4 item 2: kinds 41 and 42 with the shipped templates
+    cd = render(view("claim_dropped", None, ((1, 1, CIV, 1), (2, 2, CIV, 2))), 100)
+    c.eq("r19 22.2 claim_dropped", cd, "The Snat Horde let the claim against the Stinrild League over King's Fold lapse.")
+    rh = render(view("refuge_hidden", None, ((1, 1, SETTLEMENT, 1), (2, 2, CIV, 1)), year=5891, end_year=5990), 100)
+    c.eq("r19 22.2 refuge_hidden", rh, "Drutnot Hole lay hidden from 5891 to 5990.")
+    c.eq("r19 kind 41 refuses {@settlement}", template_problem(find_kind(shipped, "claim_dropped"), "{@settlement}"),
+         "{@settlement} needs a kind with a settlement at byte 0")
+    c.eq("r19 kind 41, 42 rows", [(k["id"], k["key"], k["caused"], k["region_use"], k["settlement_use"],
+                                   [(r["seq"], r["role"], r["type"], r["min"], r["max"]) for r in k["roles"]],
+                                   list(k["values"])) for k in COMPILED[-2:]],
+         [(41, "claim_dropped", 1, 1, 0, [(1, "claimant", CIV, 1, 1), (2, "holder", CIV, 1, 1)], []),
+          (42, "refuge_hidden", 1, 1, 1, [(1, "settlement", SETTLEMENT, 1, 1), (2, "founder", CIV, 1, 1)], [])])
+    bc = render(view("became_city", None, ((1, 1, SETTLEMENT, 3),), {"population": 8017}), 100)
+    c.eq("P3-05 r18 24 became_city (a The name at the sentence start stays)", bc, "The Grey Fort in King's Fold grew "
+         "into a city.")
+    view2 = view("became_city", None, ((1, 1, SETTLEMENT, 1),), {"population": 8017})
+    view2["name"] = lambda t, x, form: {(SETTLEMENT, 1): "Lafin", (REGION, 7): "The Holt of Yews"}[(t, x)]
+    c.eq("P3-05 r18 24 became_city with a The region", render(view2, 100), "Lafin in the Holt of Yews grew into a city.")
+
+
+def r19_flare_span(left):
+    """The smallest E >= 6000 whose one-race normal schedule (starts [0]) has a quiet interval [q_s, q_e) with
+    q_e - q_s = left (mod Q = 25) and a step ending q_e - left (22.4 item 3's construction)."""
+    eng = dict(data().engine)
+    for e in range(6000, 6100):
+        b = base_schedule([0], e, eng, "normal")
+        segs = [x for x in plan(b) if x[0] == "quiet"]
+        if segs and (segs[0][3] - segs[0][2]) % b["Q"] == left % b["Q"] and segs[0][3] - segs[0][2] > left:
+            return e, segs[0][2], segs[0][3]
+    raise AssertionError("no span")
+
+
+def r19_flare_rows(e, period, m, eng=None, detail="normal", starts=(0,)):
+    eng = dict(data().engine if eng is None else eng)
+    if m is None:
+        eng.pop("flare_min_years", None)
+    else:
+        eng["flare_min_years"] = m
+    en = Engine(list(starts), age_ends(list(starts), e), e, eng, detail, ForcedTension(period, 5000, 1)).run()
+    return [(r[2], r[3], r[4]) for r in en.phases], en
+
+
+def check_flare_r19(c, inputs):
+    """P3-04 r19 22.4 item 3 in the reference (Q 25, ForcedTension)."""
+    e, qs, qe = r19_flare_span(5)
+    c.eq("r19 22.3 the 5-year construction (E, q_s, q_e)", (e, qs, qe), (6006, 150, 5555))
+    rows10, en10 = r19_flare_rows(e, qe - 5, 10)
+    rows1, _ = r19_flare_rows(e, qe - 5, 1)
+    c.eq("r19 22.3 m 10: no flare-up, the quiet row runs to the interval's end", [r for r in rows10 if r[0] != OPENING],
+         [(QUIET, qs, qe - 1), (FINAL, qe, e - 1)])
+    c.eq("r19 22.3 m 10: the skipped flare-up is recorded (5 years)", en10.flares_skipped, [(qe - 30, 25, 5)])
+    c.eq("r19 22.3 m 1: a 5-year flare-up as before", [r for r in rows1 if r[0] != OPENING],
+         [(QUIET, qs, qe - 6), (FLARE, qe - 5, qe - 1), (FINAL, qe, e - 1)])
+    c.eq("r19 22.3 no key (hand-made tuning): as m 1", r19_flare_rows(e, qe - 5, None)[0], rows1)
+    e40, qs40, qe40 = r19_flare_span(40)
+    rows40, _ = r19_flare_rows(e40, qe40 - 40, 10)
+    F = lengths(e40, data().engine, "normal")["F"]
+    c.eq("r19 22.3 a crossing with 40 years left: a flare-up of min(F, 40)", [r for r in rows40 if r[0] == FLARE],
+         [(FLARE, qe40 - 40, qe40 - 40 + min(F, 40) - 1)])
+    c.eq("r19 22.3 the 40-year construction (E, q_s, q_e)", (e40, qs40, qe40), (e40, qs40, qe40))
+    c.eq("r19 22.3 scaled m at E = 2000 (10 -> 3)", lengths(2000, dict(data().engine), "normal")["M"], 3)
+    c.eq("r19 22.3 scaled m at E = 6000 (10)", lengths(6000, dict(data().engine), "normal")["M"], 10)
+    c.eq("r19 22.3 scaled m of 1 at E = 12000 (2: 22.3's 'leaves SC6 as before' holds up to E 8999)",
+         lengths(12000, dict(data().engine, flare_min_years=1), "normal")["M"], 2)
+    eng = dict(data().engine)
+    for tun, want in ((dict(eng, flare_min_years=31), "history: tuning: sparse: flare_min_years must not be above "
+                       "flare_years"),
+                      (dict(eng, flare_min_years=30), None),
+                      (dict(eng, flare_min_years=51), "history: tuning: sparse: flare_min_years must not be above "
+                       "flare_years"),
+                      (dict(eng, flare_min_years=0), "history: tuning: flare_min_years outside its schema range"),
+                      (dict(eng, flare_min_years=1001), "history: tuning: flare_min_years outside its schema range")):
+        got = entry_checks(None, None, eng=tun, report=data().report, stage_entry=False) if False else \
+            _engine_tuning_problem(tun)
+        c.eq("r19 entry check flare_min_years %d" % tun["flare_min_years"], got, want)
+    # invariant: every kind 3 row is at least m years long, over a sweep of ForcedTension schedules
+    bad = 0
+    for e2 in (2000, 2003, 4000, 6000, 6006, 9000):
+        m = max(1, scale(10, e2))
+        for period in (25, 50, 75, 100, 125, 175, 250, 333, 500, 1000):
+            for detail in DETAILS:
+                rows, _ = r19_flare_rows(e2, period, 10, detail=detail, starts=(0, e2 // 3, (2 * e2) // 3))
+                bad += sum(1 for r in rows if r[0] == FLARE and r[2] - r[1] + 1 < m)
+    c.eq("r19 22.3 invariant: no flare-up row shorter than m (180 schedules)", bad, 0)
+
+
+def _engine_tuning_problem(eng):
+    """The engine part of entry_checks (3.4) for a tuning table alone."""
+    for f, lo, hi in ENGINE_RANGES + ((("quiet_min_years", 0, 400),) if QUIET_R15 and "quiet_min_years" in eng
+                                      else ()) + ((("flare_min_years", 1, 1000),) if FLARE_R19 and
+                                                  "flare_min_years" in eng else ()):
+        if not (lo <= eng[f] <= hi):
+            return "history: tuning: %s outside its schema range" % f
+    if QUIET_R15 and eng.get("quiet_min_years", 0) > 2 * eng["quiet_step_years"]:
+        return "history: tuning: quiet_min_years must not be above 2 x quiet_step_years"
+    if FLARE_R19 and "flare_min_years" in eng:
+        for lvl in DETAILS:
+            if eng["flare_min_years"] > eng[lvl]["flare_years"]:
+                return "history: tuning: %s: flare_min_years must not be above flare_years" % lvl
+    return None
 
 
 def check_render_r17(c):
@@ -2700,7 +3031,9 @@ def check_templates(c):
                                                      "refuge_held"] if at_least("0.18.0") else [])
                                                  + (["plague_outbreak", "quiet_stretch"] if at_least("0.19.0") else [])
                                                  + (["claim_settlements", "settlements_ceded"]
-                                                    if at_least("0.20.0") else [])])
+                                                    if at_least("0.20.0") else [])
+                                                 + (["claim_dropped", "refuge_hidden"]
+                                                    if at_least("0.21.0") else [])])
     # rendering on a hand-made view: :all with 0..3, ? with 0, 1, 2
     cat = {99: dict(TEST_KIND, region_use=1, templ="[{actor:all}] {people:plural}/{people:adjective}/{people} at {@region}: "
                                      "{count} {count?thing|things} {{ok}} {@year}-{@end_year}")}
@@ -2870,7 +3203,13 @@ def cmd_check(argv):
         check_example_r12(c, inputs)
         check_render_r12(c)
         if RENDER_R17:
-            check_render_r17(c)
+            if RENDER_R19:
+                with no_r19():   # r17's cases were written before 22.1's clauses
+                    check_render_r17(c)
+                check_render_r19(c)
+                check_flare_r19(c, inputs)
+            else:
+                check_render_r17(c)
         check_quiet_r12(c, inputs)
         if QUIET_R15:
             check_quiet_r15(c, inputs)
@@ -3041,7 +3380,7 @@ def cmd_check_world(argv):
     return 1 if c.failures else 0
 
 
-use_version("0.20.0")
+use_version("0.21.0")
 
 
 def main(argv):

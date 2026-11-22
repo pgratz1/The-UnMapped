@@ -584,7 +584,7 @@ fatal never settlement 0 1 1 names: culture 'never' produced no valid settlement
 0 dwarven god 49 0 Grirkna
 0 dwarven god 50 0 Nidinbruli
 0 dwarven civilization 1 3 The Kourdbrar Throne
-0 dwarven civilization 2 0 The Hold of Didin
+0 dwarven civilization 2 1 The Khandthra Throne
 0 dwarven civilization 3 0 Clan Durgarin
 0 dwarven civilization 4 0 Clan Drourd
 0 dwarven civilization 5 0 Clan Drailimai
@@ -661,7 +661,7 @@ fatal never settlement 0 1 1 names: culture 'never' produced no valid settlement
 0 dwarven settlement 26 0 Nairnthun Hold
 0 dwarven settlement 27 1 Domm Hold
 0 dwarven settlement 28 0 Kirnha
-0 dwarven settlement 29 0 Bririn
+0 dwarven settlement 29 3 Thraid
 0 dwarven settlement 30 0 Koudinbai Hold
 0 dwarven settlement 31 2 Noliko Hold
 0 dwarven settlement 32 0 Nidinnird
@@ -1433,7 +1433,7 @@ fatal never settlement 0 1 1 names: culture 'never' produced no valid settlement
 0 orcish settlement 48 0 Ghark
 0 orcish settlement 49 0 Urald Camp
 0 orcish settlement 50 0 Azol'uguuz
-sha256 0 e5afd078dc975503e78791156fda4cf191c0a1deebf6dabd342adc36730425a4
+sha256 0 43d781b7b1247e0a4ae13ed7ffae2b81dc0957164fe14d6ac785171e9a569c12
 42 dwarven god 1 0 Khorkhound
 42 dwarven god 2 1 Grirtoum
 42 dwarven god 3 1 Bronhak
@@ -1541,7 +1541,7 @@ sha256 0 e5afd078dc975503e78791156fda4cf191c0a1deebf6dabd342adc36730425a4
 42 dwarven settlement 5 0 Gror Deep
 42 dwarven settlement 6 1 Brudindrou Hold
 42 dwarven settlement 7 0 Khurdrourk
-42 dwarven settlement 8 0 Briringrim Deep
+42 dwarven settlement 8 1 Borngimm
 42 dwarven settlement 9 0 Hali Hold
 42 dwarven settlement 10 1 Thundord Hold
 42 dwarven settlement 11 0 Thonbird
@@ -1849,7 +1849,7 @@ sha256 0 e5afd078dc975503e78791156fda4cf191c0a1deebf6dabd342adc36730425a4
 42 faerie settlement 13 0 Glouotwie Glade
 42 faerie settlement 14 1 Molo Hollow
 42 faerie settlement 15 0 Sienly Hollow
-42 faerie settlement 16 0 Fliafaglae
+42 faerie settlement 16 1 Flisee
 42 faerie settlement 17 0 Twish
 42 faerie settlement 18 0 Whatwin
 42 faerie settlement 19 0 Flylie Hollow
@@ -2334,7 +2334,7 @@ sha256 0 e5afd078dc975503e78791156fda4cf191c0a1deebf6dabd342adc36730425a4
 42 orcish settlement 48 0 Aal'uraaz Fort
 42 orcish settlement 49 0 Orz'grom Camp
 42 orcish settlement 50 0 Thuurkbash
-sha256 42 5631ba252de20516c9febbf26a69a3a32f17718f0cdbb62d56f46b6908be9aef
+sha256 42 724f863575e57e163fd73cf4f41d5c4f2f967f6ce3abc2361949c5e1143c587e
 r4sha256 0 24337e74b7094c71ae4e8362fc7f3d8e2bb65e7828694d990a27cae5827e2df1
 r4sha256 42 5a61d67ecfcaef51fd27e3ac7e42277cfc8ddaffaa65baa842e96539f76f685f
 # r10 (P3-02 12, generator 0.19.0):
@@ -2414,7 +2414,7 @@ core 0 dwarven god 48 0 Thrammno
 core 0 dwarven god 49 0 Grirkna
 core 0 dwarven god 50 0 Nidinbruli
 core 0 dwarven civilization 1 3 The Kourdbrar Throne
-core 0 dwarven civilization 2 0 The Hold of Didin
+core 0 dwarven civilization 2 1 The Khandthra Throne
 core 0 dwarven civilization 3 0 Clan Durgarin
 core 0 dwarven civilization 4 0 Clan Drourd
 core 0 dwarven civilization 5 0 Clan Drailimai
@@ -2491,7 +2491,7 @@ core 0 dwarven settlement 25 0 Doudbradin
 core 0 dwarven settlement 26 0 Nairnthun Hold
 core 0 dwarven settlement 27 1 Domm Hold
 core 0 dwarven settlement 28 0 Kirnha
-core 0 dwarven settlement 29 0 Bririn
+core 0 dwarven settlement 29 3 Thraid
 core 0 dwarven settlement 30 0 Koudinbai Hold
 core 0 dwarven settlement 31 2 Noliko Hold
 core 0 dwarven settlement 32 0 Nidinnird
@@ -2507,7 +2507,7 @@ core 0 dwarven settlement 41 0 Mudtali
 core 0 dwarven settlement 42 0 Bodingrun Hold
 core 0 dwarven settlement 43 1 Girinkom
 core 0 dwarven settlement 44 0 Bunbrid Hold
-core 0 dwarven settlement 45 0 Thraid Hold
+core 0 dwarven settlement 45 1 Koulithuk
 core 0 dwarven settlement 46 0 Nukgarin Hold
 core 0 dwarven settlement 47 0 Gramhair
 core 0 dwarven settlement 48 1 Dairdga
@@ -3263,7 +3263,7 @@ core 0 orcish settlement 47 1 Uukh'kruuld Fort
 core 0 orcish settlement 48 0 Ghark
 core 0 orcish settlement 49 2 Dogkrogh Fort
 core 0 orcish settlement 50 0 Azol'uguuz
-coresha256 0 f8095c5df45c3ce92ce8f72960e946f9e911a4516d143e645c9d395b7e544054
+coresha256 0 aa6d5b4c2681c1a28bcb06019874630c89b800f5d1347cdadd4d7357ab06f855
 core 42 dwarven god 1 0 Khorkhound
 core 42 dwarven god 2 1 Grirtoum
 core 42 dwarven god 3 1 Bronhak
@@ -3371,7 +3371,7 @@ core 42 dwarven settlement 4 0 Thrindnim Deep
 core 42 dwarven settlement 5 1 Gorindrum Hold
 core 42 dwarven settlement 6 1 Brudindrou Hold
 core 42 dwarven settlement 7 0 Khurdrourk
-core 42 dwarven settlement 8 0 Briringrim Deep
+core 42 dwarven settlement 8 1 Borngimm
 core 42 dwarven settlement 9 1 Harthim
 core 42 dwarven settlement 10 1 Thundord Hold
 core 42 dwarven settlement 11 0 Thonbird
@@ -3679,7 +3679,7 @@ core 42 faerie settlement 12 0 Whiamae
 core 42 faerie settlement 13 0 Glouotwie Glade
 core 42 faerie settlement 14 1 Molo Hollow
 core 42 faerie settlement 15 0 Sienly Hollow
-core 42 faerie settlement 16 0 Fliafaglae
+core 42 faerie settlement 16 1 Flisee
 core 42 faerie settlement 17 0 Twish
 core 42 faerie settlement 18 0 Whatwin
 core 42 faerie settlement 19 0 Flylie Hollow
@@ -4164,7 +4164,7 @@ core 42 orcish settlement 47 0 Ark'muuz
 core 42 orcish settlement 48 0 Aal'uraaz Fort
 core 42 orcish settlement 49 0 Orz'grom Camp
 core 42 orcish settlement 50 0 Thuurkbash
-coresha256 42 6734ae858a0b46e79b81c72a4a821e7b9170ce2ad388fb8db70a1f3bdbd1a472
+coresha256 42 98321695e5c33899ccc5794089cae42bff5988cfc5e1091b9bab197b2453735d
 # r13 (P3-02 13, generator 0.19.0 second round):
 #   triple <0|1> <name>   13.2's test on a rendered name (case-insensitive, three equal letters a-z
 #       at consecutive positions); the name is the rest of the line
@@ -4518,7 +4518,8 @@ tresult trip_hollow settlement 42 1 3 1 Billa Hollow
 #   rattempt <i> <e> <t> <valid 0|1> <repeated 0|1> <pieces> <name>  every attempt t 0-15 of e 1-3
 #       of row i's culture (settlement, seed 0, c 1); the name of a repeated attempt is the drawn one
 #   rresult rep <kind> <seed> 1 <e> <attempt|F> <name> [<registry comma-joined>]  make_name of culture
-#       rep (b / a / . / ON,ONON / 2-4) after the entity's attempt 0 drew Baba
+#       rep (b / a / . / ON,ONON / 2-4), the entity whose settlement attempt 0 drew Baba; the line with a
+#       registry starts from {Ba}: the fallback numbers Ba, the first valid attempt
 #   sattempt <seed> <culture> <kind> <c> <e> <t> <valid 0|1> <repeated 0|1> <name>  shipped
 #       cultures: the first attempt at seed 42 rejected by 14.2 alone (entities from 1) and the next
 #   sample15 <culture> <settlements|civilizations|gods> <names joined by '; '>  5.1's protocol at
@@ -5148,3 +5149,32 @@ sattempt 42 orcish settlement 6 442 1 1 0 Kraash'ugal
 sample15 faerie settlements Liava; Wiatwiesk Glade; Twamae Glade; Lith; Gliafloss Glade; Viashaeth Hollow; Teelan; Meeie Hollow; Sywyn Hollow; Iatysk; Wievysk; Miamo Hollow; Mavofie; Fitoth Hollow; Showhia Hollow; Mawhiath Hollow; Ashfli Hollow; Whywo; Fliavosk Hollow; Whosy Hollow
 sample15 faerie civilizations The Lysk Ring; The Watiafia Court; The Gloss Ring; The Wosk Ring; The Twiwhiwae Ring
 sample15 faerie gods Fiwhall; Fiaglo; Gliallsho
+# r17 (P3-02 15, generator 0.21.0):
+#   dattempt <seed> dwarven <kind> <c> <e> <t> <drawn root> <valid 0|1> <valid at r15 0|1> <name>  15.2:
+#       the first (e, t) (e from 1, t 0-63) whose attempt draws exactly the root (didin: ONC d i din;
+#       gririnhard: ONCONC gr i rin h a rd), then the attempts t + 1 to the first valid one; valid at r15
+#       is the same attempt with the 0.20.0 dwarven forbidden list
+#   dresult <seed> dwarven <kind> <c> <e> <attempt|F> <name>  make_name with an empty registry (4.3)
+#   dvalid dwarven <root> <0|1>   root_valid of 4.2 for 15.4's near-repeats
+dattempt 0 dwarven settlement 1 430 0 didinnord 0 1 Didinnord
+dattempt 0 dwarven settlement 1 430 1 nourknurd 1 1 Nourknurd
+dresult 0 dwarven settlement 1 430 1 Nourknurd
+dresult15 0 dwarven settlement 1 430 0 Didinnord
+dattempt 0 dwarven settlement 1 29 0 bririn 0 1 Bririn
+dattempt 0 dwarven settlement 1 29 1 kairnkuli 0 0 Kairnkuli Deep
+dattempt 0 dwarven settlement 1 29 2 grourddrork 0 0 Grourddrork
+dattempt 0 dwarven settlement 1 29 3 thraid 1 1 Thraid
+dresult 0 dwarven settlement 1 29 3 Thraid
+dresult15 0 dwarven settlement 1 29 0 Bririn
+dattempt 0 dwarven settlement 1 16 22 didinthird 0 1 Didinthird
+dattempt 0 dwarven settlement 1 16 23 gridin 1 1 Gridin Deep
+dresult 0 dwarven settlement 1 16 0 Houmm Deep
+dresult15 0 dwarven settlement 1 16 0 Houmm Deep
+dattempt 0 dwarven settlement 1 2 57 gririn 0 1 Gririn Hold
+dattempt 0 dwarven settlement 1 2 58 bairkti 1 1 Bairkti
+dresult 0 dwarven settlement 1 2 1 Thoumdaili
+dresult15 0 dwarven settlement 1 2 1 Thoumdaili
+dvalid dwarven dadin 1
+dvalid dwarven kadin 1
+dvalid dwarven didin 0
+dvalid dwarven gririnhard 0

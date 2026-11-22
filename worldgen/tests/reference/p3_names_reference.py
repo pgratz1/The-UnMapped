@@ -334,6 +334,13 @@ FAERIE_R15 = {
 CULTURES_R15 = {cid: dict(d) for cid, d in CULTURES_R5.items()}
 CULTURES_R15["faerie"] = dict(CULTURES_R5["faerie"], **{k: list(v) for k, v in FAERIE_R15.items()})
 assert list(CULTURES_R15["faerie"]) == list(CULTURES_R5["faerie"])   # the declaration order is kept
+# r17 (P3-02 15.2, P5-01, generator 0.21.0): the dwarven forbidden list gains didin and ririn (appended, in that
+# order). Transcribed from 15.2's listing; every other field unchanged.
+DWARVEN_FORBIDDEN_R17 = ["mmm", "rr", "dd", "kk", "rdt", "rkd", "rdd", "mmb", "kdr", "kthr", "dkh", "ndb", "rnk",
+                         "didin", "ririn"]
+CULTURES_R17 = {cid: dict(d) for cid, d in CULTURES_R15.items()}
+CULTURES_R17["dwarven"] = dict(CULTURES_R15["dwarven"], forbidden=list(DWARVEN_FORBIDDEN_R17))
+assert CULTURES_R15["dwarven"]["forbidden"] == DWARVEN_FORBIDDEN_R17[:-2]
 CULTURE_ORDER = ("dwarven", "elven", "faerie", "goblin", "human", "orcish")  # canonical id order, c = 1..6
 CULTURE_NUMBER = {cid: i + 1 for i, cid in enumerate(CULTURE_ORDER)}
 
@@ -523,7 +530,8 @@ def use_rules(r):
     global RULES, CULTURES, FILTER
     if r == "r5":
         # r15 (0.20.0): the faerie lists of 14.1
-        CULTURES, FILTER = (CULTURES_R15 if pdr.at_least("0.20.0") else CULTURES_R5), shipped_filter()
+        CULTURES, FILTER = (CULTURES_R17 if pdr.at_least("0.21.0") else CULTURES_R15 if pdr.at_least("0.20.0")
+                            else CULTURES_R5), shipped_filter()
     elif r == "r4":
         CULTURES, FILTER = CULTURES_R4, EMPTY_FILTER
     else:
@@ -1092,6 +1100,8 @@ def golden_text():
         o.extend(r13_golden_lines())
     if RULES == "r5" and pdr.at_least("0.20.0"):
         o.extend(r15_golden_lines())
+        if pdr.at_least("0.21.0"):
+            o.extend(r17_golden_lines())
     return "\n".join(o) + "\n"
 
 
@@ -1174,7 +1184,7 @@ def check_r13(ck):
         ck.eq("13.2 not triple %r" % n, triple(n), False)
     ck.eq("13.1 sizes of the shipped filter (effective; r15 14.3 from 0.20.0)",
           (len(sf.anywhere), len(sf.at_start), len(sf.whole)),
-          (109, 31, 511) if pdr.at_least("0.20.0") else (110, 31, 508))
+          (109, 30, 514) if pdr.at_least("0.21.0") else (109, 31, 511) if pdr.at_least("0.20.0") else (110, 31, 508))
     filters = {d: t for d, t in pdr.load_root("game/data", ["name_filter"])["name_filter"]}
     ck.eq("13.1 name_filter_not_redundant passes on the edited lists", pdr.name_filter_messages(sorted(filters.items())),
           [])
@@ -1424,10 +1434,11 @@ def check_r15(ck):
         ck.eq("14.3 %s filtered (whole)" % w, name_filtered(sf, w), True)
         ck.eq("14.3 %s inside a word passes" % w, name_filtered(sf, "x" + w + "x"), False)
     ck.eq("14.3 sizes of the shipped filter (effective)", (len(sf.anywhere), len(sf.at_start), len(sf.whole)),
-          (109, 31, 511))
+          (109, 30, 514) if pdr.at_least("0.21.0") else (109, 31, 511))   # r17 15.1 from 0.21.0
     filters = {d: t for d, t in pdr.load_root("game/data", ["name_filter"])["name_filter"]}
     ck.eq("14.3 list sizes", [(k, len(filters[k]["anywhere"]), len(filters[k]["at_start"]), len(filters[k]["whole"]))
                               for k in ("slurs", "crude", "words")],
+          [("slurs", 33, 17, 5), ("crude", 71, 12, 15), ("words", 5, 1, 391)] if pdr.at_least("0.21.0") else
           [("slurs", 33, 18, 5), ("crude", 71, 12, 14), ("words", 5, 1, 391)])
     ck.eq("14.3 name_filter_not_redundant passes on the edited lists", pdr.name_filter_messages(sorted(filters.items())),
           [])
@@ -1481,6 +1492,145 @@ def REPEAT_OFF(fn):
         return fn()
     finally:
         REPEAT_RULE = saved
+
+
+# --- P3-02 r17 section 15 (P5-01, generator 0.21.0) ---------------------------------------------------------
+
+R17_ROOTS = ("didin", "gririnhard")   # 15.4: the dwarven roots forbidden by didin and ririn (ONC; ONCONC)
+R17_STUTTERS = ("didin", "ririn")     # the attempts searched hold these (a drawn root of exactly gririnhard is rare)
+R17_VALID = ("dadin", "kadin")        # 15.4: near-repeats with another nucleus stay valid
+
+
+def r17_find(root, seed=0, kind="settlement", limit=200000, first=False):
+    """The first (e, t) of the dwarven culture (c 1), e from 1 and t 0-63 (first: only t up to e's first valid
+    attempt, so that make_name with an empty registry reaches t), whose drawn root holds `root`."""
+    d = CULTURES_R17["dwarven"]
+    for e in range(1, limit):
+        for t in range(64):
+            fl = {}
+            v, _, _ = attempt(d, kind, seed, CULTURE_NUMBER["dwarven"], e, t, flags=fl)
+            if root in "".join(p for _, p in fl["drawn"]):
+                return e, t
+            if first and v:
+                break
+    raise AssertionError("no attempt draws %s" % root)
+
+
+def r17_golden_lines():
+    o = ["# r17 (P3-02 15, generator 0.21.0):",
+         "#   dattempt <seed> dwarven <kind> <c> <e> <t> <drawn root> <valid 0|1> <valid at r15 0|1> <name>  15.2:",
+         "#       the first (e, t) (e from 1, t 0-63) whose attempt draws exactly the root (didin: ONC d i din;",
+         "#       gririnhard: ONCONC gr i rin h a rd), then the attempts t + 1 to the first valid one; valid at r15",
+         "#       is the same attempt with the 0.20.0 dwarven forbidden list",
+         "#   dresult <seed> dwarven <kind> <c> <e> <attempt|F> <name>  make_name with an empty registry (4.3)",
+         "#   dvalid dwarven <root> <0|1>   root_valid of 4.2 for 15.4's near-repeats"]
+    old = CULTURES_R15["dwarven"]
+    for root, first in (("didin", True), ("ririn", True)) + tuple((r, False) for r in R17_STUTTERS):
+        e, t = r17_find(root, first=first)
+        d = CULTURES["dwarven"]
+        tt = t
+        while True:
+            v, n, r = attempt(d, "settlement", 0, CULTURE_NUMBER["dwarven"], e, tt)
+            v15, _, _ = attempt(old, "settlement", 0, CULTURE_NUMBER["dwarven"], e, tt)
+            fl = {}
+            attempt(d, "settlement", 0, CULTURE_NUMBER["dwarven"], e, tt, flags=fl)
+            o.append("dattempt 0 dwarven settlement %d %d %d %s %d %d %s" % (
+                CULTURE_NUMBER["dwarven"], e, tt, "".join(p for _, p in fl["drawn"]), 1 if v else 0,
+                1 if v15 else 0, n))
+            if v:
+                break
+            tt += 1
+        n, at = make_name(d, "dwarven", "settlement", 0, CULTURE_NUMBER["dwarven"], e, set())
+        n15, at15 = make_name(old, "dwarven", "settlement", 0, CULTURE_NUMBER["dwarven"], e, set())
+        o.append("dresult 0 dwarven settlement %d %d %s %s" % (CULTURE_NUMBER["dwarven"], e, at, n))
+        o.append("dresult15 0 dwarven settlement %d %d %s %s" % (CULTURE_NUMBER["dwarven"], e, at15, n15))
+    for root in R17_VALID + R17_ROOTS:
+        o.append("dvalid dwarven %s %d" % (root, 1 if root_valid(CULTURES["dwarven"], root) else 0))
+    return o
+
+
+def check_r17(ck):
+    """P3-02 r17 15.4 (the unit tests the reference can state without storing an offensive stem)."""
+    d, old = CULTURES["dwarven"], CULTURES_R15["dwarven"]
+    ck.eq("15.2 dwarven forbidden", d["forbidden"][-2:], ["didin", "ririn"])
+    ck.eq("15.2 dwarven culture valid data", validate(d), [])
+    for root in R17_ROOTS:
+        ck.eq("15.4 %s invalid at r17" % root, root_valid(d, root), False)
+        ck.eq("15.4 %s valid at r15" % root, root_valid(old, root), True)
+    for root in R17_STUTTERS:
+        e, t = r17_find(root)
+        v, _, _ = attempt(d, "settlement", 0, CULTURE_NUMBER["dwarven"], e, t)
+        v15, _, _ = attempt(CULTURES_R15["dwarven"], "settlement", 0, CULTURE_NUMBER["dwarven"], e, t)
+        ck.eq("15.4 the attempt drawing %s is invalid (valid at r15)" % root, (v, v15), (False, True))
+    for st in R17_STUTTERS:
+        e, t = r17_find(st, first=True)
+        n, at = make_name(d, "dwarven", "settlement", 0, CULTURE_NUMBER["dwarven"], e, set())
+        n15, at15 = make_name(CULTURES_R15["dwarven"], "dwarven", "settlement", 0, CULTURE_NUMBER["dwarven"], e,
+                              set())
+        ck.eq("15.4 %s: at r15 make_name takes the attempt drawing it" % st, (at15, lower(n15).find(st) >= 0),
+              (t, True))
+        ck.ok("15.4 %s: make_name takes a later attempt (%s at %s > %d)" % (st, n, at, t), at == "F" or at > t)
+        ck.ok("15.4 %s: the name holds neither stutter" % st, "didin" not in lower(n) and "ririn" not in lower(n))
+    for root in R17_VALID:
+        ck.eq("15.4 %s valid" % root, root_valid(d, root), True)
+    sf = shipped_filter()
+    frag = "f" + "ag"
+    ck.eq("15.1 shy%slae filtered (r17: anywhere)" % frag[:1], name_filtered(sf, "shy" + frag + "lae"), True)
+    ck.eq("15.1 %swick filtered" % frag[:1], name_filtered(sf, frag + "wick"), True)
+    ck.ok("15.1 fagg absent (anywhere)", ("f" + "agg") not in sf.anywhere)
+    ck.ok("15.1 fag not at_start", frag not in sf.at_start and frag in sf.anywhere)
+    for w in ("shiva", "hindi", "f" + "annie"):
+        ck.eq("15.1 %s... filtered as a whole word" % w[:2], name_filtered(sf, w), True)
+        ck.eq("15.1 x%s... passes (whole only)" % w[:2], name_filtered(sf, "x" + w), False)
+    ck.eq("15.1 root_word of The Hindi Court", root_word("The {root} Court", "hindi"), "hindi")
+    filters = {dd: t for dd, t in pdr.load_root("game/data", ["name_filter"])["name_filter"]}
+    ck.eq("15.1 sizes (slurs 33/17/5, crude 71/12/15, famous 0/0/103; 15.1 writes famous 105)",
+          {k: (len(t["anywhere"]), len(t["at_start"]), len(t["whole"])) for k, t in filters.items()},
+          dict(slurs=(33, 17, 5), crude=(71, 12, 15), famous=(0, 0, 103), words=(5, 1, 391)))
+    ck.eq("15.1 name_filter_not_redundant passes on the edited lists",
+          pdr.name_filter_messages(sorted(filters.items())), [])
+    kept = dict(filters, slurs=dict(filters["slurs"], at_start=sorted(filters["slurs"]["at_start"] + [frag])))
+    ck.eq("15.1 name_filter_not_redundant fails on a copy keeping the at_start entry beside the anywhere one",
+          pdr.name_filter_messages(sorted(kept.items())),
+          ["name_filter_not_redundant: 'slurs' at_start '%s' is already rejected by anywhere '%s' of 'slurs'"
+           % (frag, frag)])
+    ck.eq("15.1 root_word of Fannie Glade", root_word("{root} Glade", "f" + "annie"), "f" + "annie")
+
+
+def scan_r17(out):
+    """P3-02 r17 15.4 (validation's report): 13.1's sample (seeds 0, 1, 2; civilizations and settlements 1-1,500,
+    gods 1-300; one registry per seed and culture; make_name without K) at 0.21.0. Per culture, the attempts made
+    until each name rejected by each new entry alone: fag (anywhere, not caught by the old at_start), shiva,
+    hindi, fannie (whole), didin, ririn (dwarven forbidden); and the fallbacks."""
+    frag = "f" + "ag"
+    alone = {"fag": NameFilter([frag], [], []), "shiva": NameFilter([], [], ["shiva"]),
+             "hindi": NameFilter([], [], ["hindi"]), "fannie": NameFilter([], [], ["f" + "annie"])}
+    old_start = NameFilter([], [frag], [])
+    for cid in CULTURE_ORDER:
+        d = CULTURES[cid]
+        c = CULTURE_NUMBER[cid]
+        r = dict(names=0, attempts=0, fag=0, shiva=0, hindi=0, fannie=0, didin=0, ririn=0, fallbacks=0)
+        for seed in (0, 1, 2):
+            reg = set()
+            for kind, n_e in (("god", 300), ("civilization", 1500), ("settlement", 1500)):
+                for e in range(1, n_e + 1):
+                    n, t = make_name(d, cid, kind, seed, c, e, reg)
+                    r["names"] += 1
+                    r["fallbacks"] += t == "F"
+                    for tt in range(64 if t == "F" else t + 1):
+                        fl = {}
+                        attempt(d, kind, seed, c, e, tt, flags=fl)
+                        r["attempts"] += 1
+                        root = "".join(p for _, p in fl["drawn"])
+                        for w in ("didin", "ririn"):
+                            if cid == "dwarven" and w in root:
+                                r[w] += 1
+                        if fl["r4valid"]:
+                            for w, f in alone.items():
+                                if name_filtered(f, fl["word"]) and not (w == "fag" and name_filtered(old_start,
+                                                                                                     fl["word"])):
+                                    r[w] += 1
+        out.write("scan17 %s %s\n" % (cid, " ".join("%s %d" % kv for kv in r.items())))
 
 
 def scan_r15(out):
@@ -1591,7 +1741,7 @@ def check_r10(ck):
         ck.eq("12.1 %s passes" % w, name_filtered(sf, w), False)
     # r10's own sizes (108, 36, 510) are those before r13's edits (13.1), which check_r13 tests
     ck.eq("12.1 effective sizes (after r13 13.1; r15 14.3)", (len(sf.anywhere), len(sf.at_start), len(sf.whole)),
-          (109, 31, 511) if pdr.at_least("0.20.0") else (110, 31, 508))
+          (109, 30, 514) if pdr.at_least("0.21.0") else (109, 31, 511) if pdr.at_least("0.20.0") else (110, 31, 508))
     n, t, K = core_fallback_case()
     ck.eq("12.3 fallback: the first valid name numbered", (t, n.endswith(" II")), ("F", True))
     ck.eq("12.3 fallback: first's core joins K", K, sorted({"ba", name_core(lower(n.split()[0]))}))
@@ -1758,6 +1908,10 @@ def compare_samples(out):
         for label, got, exp in (("settlements", s, es.split(", ")), ("civilizations", v, ev.split("; ")),
                                 ("gods", g, eg.split(", "))):
             for i, (a, b) in enumerate(zip(got, exp)):
+                if a != b and RULES == "r5" and pdr.at_least("0.21.0") and cid == "dwarven" and \
+                        ("didin" in lower(b) or "ririn" in lower(b)):
+                    out.write("r17 %s %s %d: %r redrawn as %r (P3-02 15.2)\n" % (cid, label, i + 1, b, a))
+                    continue
                 if a != b:
                     bad += 1
                     out.write("DIFF %s %s %d: reference %r, spec %s %r\n" % (cid, label, i + 1, a,
@@ -1782,6 +1936,9 @@ class Checker:
         if got != exp:
             self.failures += 1
             sys.stdout.write("FAIL %s: got %r, expected %r\n" % (what, got, exp))
+
+    def ok(self, what, cond):
+        self.eq(what, bool(cond), True)
 
 
 def check_all():
@@ -1901,6 +2058,8 @@ def check_all():
         check_r13(ck)
     if RULES == "r5" and pdr.at_least("0.20.0"):
         check_r15(ck)
+    if RULES == "r5" and pdr.at_least("0.21.0"):
+        check_r17(ck)
     sys.stdout.write("%d checks, %d failures\n" % (ck.count, ck.failures))
     return 1 if ck.failures else 0
 
@@ -2099,7 +2258,10 @@ def main(argv):
         sys.stdout.write("%d differences from spec %s\n" % (bad, "11.6 (r5)" if RULES == "r5" else "5.1"))
         return 1 if bad else 0
     if len(argv) >= 2 and argv[1] == "scan":   # P3-11 3.1: the rates of 14.2 and 14.3 on 13.1's sample
-        scan_r15(sys.stdout)
+        if pdr.at_least("0.21.0") and "--r15" not in argv:   # P5-01: P3-02 r17 15.4's rates
+            scan_r17(sys.stdout)
+        else:
+            scan_r15(sys.stdout)
         return 0
     if len(argv) >= 2 and argv[1] == "sweep":
         sweep(int(argv[2]) if len(argv) >= 3 else 2000)

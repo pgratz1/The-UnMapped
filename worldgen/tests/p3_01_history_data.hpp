@@ -52,7 +52,13 @@
 // quiet_min_years 50 after quiet_events_max. P3-11 (generator 0.20.0; P3-01
 // r14 3.7, P3-02 r15 14.1, P3-06 r19 23.6): race awakening_population after
 // hidden_years (orc 1200, others 0), the faerie lists of P3-02 14.1, the
-// entries of kinds 39 and 40 after quiet_stretch. Mirrors SPEC_FILES_020.
+// entries of kinds 39 and 40 after quiet_stretch. P5-01 (generator 0.21.0;
+// P3-01 r15 3.8, P3-02 r17 15.2, P3-05 r18 24, P3-06 r22 24.6): the dwarven
+// forbidden list gains didin and ririn, history.conflict
+// quarrel_strength_permille 1000 and toll_spread_permille 200 after
+// quarrel_min_settlements, history.engine flare_min_years 10 after
+// quiet_min_years, the became_city template, the entries of kinds 41 and 42
+// after settlements_ceded. Mirrors SPEC_FILES_021.
 
 #include <cstdint>
 #include <map>
@@ -311,7 +317,7 @@ patterns = ["ONC", "ONCONC", "ONCONC", "ONCON"]
 god_patterns = ["ONCONC", "ONCONC", "ONCON"]
 min_letters = 4
 max_letters = 10
-forbidden = ["mmm", "rr", "dd", "kk", "rdt", "rkd", "rdd", "mmb", "kdr", "kthr", "dkh", "ndb", "rnk"]
+forbidden = ["mmm", "rr", "dd", "kk", "rdt", "rkd", "rdd", "mmb", "kdr", "kthr", "dkh", "ndb", "rnk", "didin", "ririn"]
 god_forms = ["{root}"]
 civilization_forms = ["The Hold of {root}", "Clan {root}", "The {root} Throne"]
 settlement_forms = ["{root}", "{root} Deep", "{root} Hold", "{root}"]
@@ -397,6 +403,7 @@ inline constexpr std::string_view ENGINE_TOML = R"([history.engine]
 quiet_step_years = 25
 quiet_events_max = 3
 quiet_min_years = 50
+flare_min_years = 10
 simulated_min_permille = 100
 simulated_max_permille = 450
 islet_max_dry_cells = 1172
@@ -415,7 +422,7 @@ events = [
   { kind = "colony_founded", salience = 15, template = "{founder} sent settlers from {origin} to found {settlement} in {@region}." },
   { kind = "became_village", salience = 10, template = "{settlement} grew into a village of {population}." },
   { kind = "became_town", salience = 18, template = "{settlement} grew into a town of {population}." },
-  { kind = "became_city", salience = 45, template = "{settlement} grew into a city of {population}." },
+  { kind = "became_city", salience = 45, template = "{settlement} in {@region} grew into a city." },
   { kind = "settlement_dwindled", salience = 15, template = "{@causes:famine=famine,plague=plague,plague_outbreak=plague,plague_spread=plague,succession_crisis=strife,battle=war,battle_at_pass=war,tribute=tribute,colony_founded=emigration|Weakened by |, }{settlement} dwindled to {population} souls." },
   { kind = "famine", salience = 25, template = "Famine struck {settlement}; {dead} died." },
   { kind = "plague", salience = 45, template = "Plague broke out in {settlement}; {dead} died." },
@@ -447,6 +454,8 @@ events = [
   { kind = "quiet_stretch", salience = 20, template = "For {years} {years?year|years}, from {@year} to {@end_year}, the land was quiet{realms?|; one realm held it|, and # realms kept the peace}." },
   { kind = "claim_settlements", salience = 35, template = "{claimant} laid claim to {settlement:all} of {holder} in {@region}." },
   { kind = "settlements_ceded", salience = 55, template = "{from} gave up {settlement:all} in {@region} to {to}." },
+  { kind = "claim_dropped", salience = 15, template = "{claimant} let the claim against {holder} over {@region} lapse." },
+  { kind = "refuge_hidden", salience = 10, template = "{@settlement} lay hidden from {@year} to {@end_year}." },
 ]
 )";
 
@@ -510,6 +519,8 @@ search_weary_years = 500
 search_repeat_salience = 15
 quarrel_strain = 600
 quarrel_min_settlements = 2
+quarrel_strength_permille = 1000
+toll_spread_permille = 200
 capital_sacked_salience = 90
 capital_captured_salience = 80
 )";

@@ -463,6 +463,9 @@ struct EngineTuning {
     // P3-04 r15 4.1 (P3-10 second round): after quiet_events_max in the record (engine_record leaves it out
     // when with_quiet_min is false)
     std::int64_t quiet_min_years = 50;
+    // P3-04 r19 22.3 (P5-01, generator 0.21.0): after quiet_min_years in the record (engine_record leaves it out
+    // when with_flare_min is false; the hand-made default is then 1, the rule off)
+    std::int64_t flare_min_years = 10;
     Detail sparse{75, 30, 250, 1500}, normal{150, 50, 300, 1000}, dense{250, 75, 400, 700};
 };
 struct ReportEntry {
@@ -493,11 +496,12 @@ inline wd::Record detail_record(const Detail& d) {
     r.add("flare_threshold", wd::Value::integer(d.flare_threshold));
     return r;
 }
-inline wd::Record engine_record(const EngineTuning& t, bool with_quiet_min = true) {
+inline wd::Record engine_record(const EngineTuning& t, bool with_quiet_min = true, bool with_flare_min = true) {
     wd::Record r;
     r.add("quiet_step_years", wd::Value::integer(t.quiet_step_years));
     r.add("quiet_events_max", wd::Value::integer(t.quiet_events_max));
     if (with_quiet_min) r.add("quiet_min_years", wd::Value::integer(t.quiet_min_years));
+    if (with_flare_min) r.add("flare_min_years", wd::Value::integer(t.flare_min_years));
     r.add("simulated_min_permille", wd::Value::integer(t.simulated_min_permille));
     r.add("simulated_max_permille", wd::Value::integer(t.simulated_max_permille));
     r.add("islet_max_dry_cells", wd::Value::integer(t.islet_max_dry_cells));
@@ -556,6 +560,10 @@ inline wd::ContentSet with_engine(const EngineTuning& t, const wd::ContentSet& b
 // library, which ignores the field, instead of testing nothing)
 inline wd::ContentSet with_engine_r15(const EngineTuning& t, const wd::ContentSet& base = shipped()) {
     return with_history_record(base, "engine", engine_record(t, true));
+}
+// P3-04 r19 22.3: the record without flare_min_years (hand-made tuning: the default 1, the rule off)
+inline wd::ContentSet with_engine_no_flare_min(const EngineTuning& t, const wd::ContentSet& base = shipped()) {
+    return with_history_record(base, "engine", engine_record(t, true, false));
 }
 inline wd::ContentSet with_report(const std::vector<ReportEntry>& es, const wd::ContentSet& base = shipped()) {
     return with_history_record(base, "report", report_record(es));
@@ -744,7 +752,7 @@ inline eng::EventCatalogue test_catalogue() {
     // Every shipped kind (ids 1 to 38 at 0.19.0: the engine writes kind 38 quiet_stretch itself, P3-04 r12
     // 20.1, and kind ids are 1, 2, ... without a gap), then the test kind (41 from 0.20.0, 39 at 0.19.0). Until 0.18.0 these tests kept
     // only the P3-04 kinds 1 to 5 and the test kind was 6.
-    REQUIRE(cat.kinds.size() == 40U);  // P3-04 r17 21.2 (0.20.0): kinds 39, 40
+    REQUIRE(cat.kinds.size() == 42U);  // P3-04 r19 22.2 (0.21.0): kinds 41, 42; r17 21.2 (0.20.0): kinds 39, 40
     eng::KindDef k;
     k.id = static_cast<std::int64_t>(cat.kinds.size()) + 1;
     k.key = "test_change";

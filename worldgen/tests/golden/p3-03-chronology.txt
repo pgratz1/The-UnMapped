@@ -1460,7 +1460,7 @@ collision-42-6000-all report age_years = 2074 1168 1001 726 627 404
 collision-42-6000-all report age_years_min = 404
 collision-42-6000-all report gods = 6
 case geo-seed-0-512 world 0 512 6000 all
-geo-seed-0-512 input_region 17dc7e6341db4b9b27aa22fe5671fcaad6b3dcfbf708282ea8168ef69e8cd7ad
+geo-seed-0-512 input_region 47d013bdd0fd43e9c1483011f072887ad8d83835d495c55e22c05647eb433e98
 geo-seed-0-512 regions 14
 geo-seed-0-512 years 0 2068 3265 4178 5003 5534
 geo-seed-0-512 trace 1:0:-:-:-:0|2:2100:3cd314374a949b1c:28:-32:2068|3:3300:36ee444deb96edb2:25:-35:3265|4:4200:506ba1f72aa35875:38:-22:4178|5:4980:b05414cc77d2dcce:83:23:5003|6:5580:1dd5c54d0bbf56ed:14:-46:5534
@@ -1485,7 +1485,7 @@ geo-seed-0-512 report age_years = 2068 1197 913 825 531 466
 geo-seed-0-512 report age_years_min = 466
 geo-seed-0-512 report gods = 6
 case geo-seed-42-512 world 42 512 6000 all
-geo-seed-42-512 input_region 539cb4cc7473048fa68b7824f5c25785781ba2b091671aa534d583578eb5db49
+geo-seed-42-512 input_region ef34e36f0cc06dee0d1127580067a832ff50aa9445f0e7990c37c30a0f459279
 geo-seed-42-512 regions 15
 geo-seed-42-512 years 0 2074 3242 4243 4969 5596
 geo-seed-42-512 trace 1:0:-:-:-:0|2:2100:48f251c73bc89e2c:34:-26:2074|3:3300:04c4cca630137eba:2:-58:3242|4:4200:da392a12d57deaeb:103:43:4243|5:4980:67cc0b87b4ce8d5a:49:-11:4969|6:5580:a1211f03c3a8ff14:76:16:5596
@@ -1510,7 +1510,7 @@ geo-seed-42-512 report age_years = 2074 1168 1001 726 627 404
 geo-seed-42-512 report age_years_min = 404
 geo-seed-42-512 report gods = 6
 case geo-phrase-512 world 15629206466951235176 512 6000 all
-geo-phrase-512 input_region 5be7a4ad5bc8551a445f8112bc7b6970e9ac6cfebb671f7bfd1cd7b4c55a4eeb
+geo-phrase-512 input_region ac734460e6951dd2904219dc0c943d2adc83d5fa7d4e292b2d12b4a34dbfdf0c
 geo-phrase-512 regions 13
 geo-phrase-512 years 0 2094 3327 4226 5036 5638
 geo-phrase-512 trace 1:0:-:-:-:0|2:2100:741c6932186a1b35:54:-6:2094|3:3300:b9b70c1f0db3ee72:87:27:3327|4:4200:b7c83fa823ba673b:86:26:4226|5:4980:f69ba009da261d05:116:56:5036|6:5580:fb9d01bda8ac64d2:118:58:5638
@@ -1535,7 +1535,7 @@ geo-phrase-512 report age_years = 2094 1233 899 810 602 362
 geo-phrase-512 report age_years_min = 362
 geo-phrase-512 report gods = 6
 case geo-seed-1-1024 world 1 1024 6000 all
-geo-seed-1-1024 input_region 203db9d853af513f6c0b79e4ec7307f41d163eaa6bb50c727a1ca3cd024c6cbb
+geo-seed-1-1024 input_region 4bc128ab7bd74cbf9b6f153bda790088c237f815577d7fbda5aff09509d28733
 geo-seed-1-1024 regions 55
 geo-seed-1-1024 years 0 2071 3341 4178 4934 5580
 geo-seed-1-1024 trace 1:0:-:-:-:0|2:2100:43116755471ad202:31:-29:2071|3:3300:d7004a9f3dda63c5:101:41:3341|4:4200:50e63fa55eec59b0:38:-22:4178|5:4980:1f21bae0d8a9c4e6:14:-46:4934|6:5580:80ede25356406b1d:60:0:5580
@@ -1560,7 +1560,7 @@ geo-seed-1-1024 report age_years = 2071 1270 837 756 646 420
 geo-seed-1-1024 report age_years_min = 420
 geo-seed-1-1024 report gods = 6
 case hist-span-2000-512 world 7 512 2000 all
-hist-span-2000-512 input_region 8033c0e0f65ddc8702524bfd5a85b0a53551b587fdda9b4825a7eae7707faa7f
+hist-span-2000-512 input_region 6cbb147f09f56431f92f7539208755b01224337a7a132ed72726ee70ea0e196c
 hist-span-2000-512 regions 13
 hist-span-2000-512 years 0 688 1114 1409 1644 1879
 hist-span-2000-512 trace 1:0:-:-:-:0|2:700:36de754cde789afc:8:-12:688|3:1100:d461969a44206fd2:34:14:1114|4:1400:b68a1049f255c347:29:9:1409|5:1660:1a02c434e7ed95bc:4:-16:1644|6:1860:f88a01fb1652f77b:39:19:1879
@@ -1585,7 +1585,7 @@ hist-span-2000-512 report age_years = 688 426 295 235 235 121
 hist-span-2000-512 report age_years_min = 121
 hist-span-2000-512 report gods = 6
 case hist-races-elf-orc-1024 world 3 1024 6000 elf,orc
-hist-races-elf-orc-1024 input_region bcb9b8d321e5a1571cf98d9191fdbc957982f4f40b7c1138d84479b977b0648d
+hist-races-elf-orc-1024 input_region 9f8dbc9d8f0335436d6d3188df3cb2b6682a7721a445d95c2eeb73a9ec15aeae
 hist-races-elf-orc-1024 regions 52
 hist-races-elf-orc-1024 years 0 5602
 hist-races-elf-orc-1024 trace 1:0:-:-:-:0|6:5580:aea8cb7c6c7550b5:82:22:5602

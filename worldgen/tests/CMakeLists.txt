@@ -268,6 +268,7 @@ target_sources(worldgen-tests PRIVATE
     history/history_names_r10_test.cpp
     history/history_names_r13_test.cpp
     history/history_names_r15_test.cpp
+    history/history_names_r17_test.cpp
     history/history_names_property_test.cpp
     history/history_names_data_test.cpp
 )
@@ -320,6 +321,7 @@ target_sources(worldgen-tests PRIVATE
     history/history_engine_r12_test.cpp
     history/history_engine_r15_test.cpp
     history/history_engine_r17_test.cpp
+    history/history_engine_r19_test.cpp
     history/history_engine_schema_test.cpp
     history/history_engine_report_test.cpp
     history/history_engine_golden_test.cpp
@@ -371,6 +373,7 @@ target_sources(worldgen-tests PRIVATE
     history/history_conflict_r14_test.cpp
     history/history_conflict_r17_test.cpp
     history/history_conflict_r19_test.cpp
+    history/history_conflict_r22_test.cpp
     history/history_conflict_order_test.cpp
     history/history_conflict_property_test.cpp
     history/history_conflict_golden_test.cpp
@@ -400,6 +403,7 @@ target_sources(worldgen-tests PRIVATE
     history_report_corrupt_test.cpp
     history_report_worlds_test.cpp
     history_report_r17_test.cpp
+    history_report_v2_test.cpp
 )
 target_compile_definitions(worldgen-tests PRIVATE
     UNMAPPED_P3_07_FIXTURE_DIR="${CMAKE_CURRENT_SOURCE_DIR}/data/history-report"
@@ -430,9 +434,9 @@ unmapped_add_doctest_shards(worldgen-tests
     SHARD engine-worlds 14 "*history_engine_golden_test.cpp"
     SHARD engine-worlds-resume 21 "*history_engine_golden_resume_test.cpp"
     SHARD engine 15 "*history_engine_schedule_test.cpp,*history_engine_writer_test.cpp,*history_engine_state_test.cpp,*history_engine_report_test.cpp,*history_engine_property_test.cpp,*history_engine_catalogue_test.cpp,*history_engine_schema_test.cpp,*history_engine_bench_test.cpp,*history_engine_render_test.cpp"
-    SHARD engine-r12 19 "*history_engine_r12_test.cpp,*history_engine_r15_test.cpp,*history_engine_r17_test.cpp"
+    SHARD engine-r12 19 "*history_engine_r12_test.cpp,*history_engine_r15_test.cpp,*history_engine_r17_test.cpp,*history_engine_r19_test.cpp"
     SHARD peoples 25 "*history_peoples_*"
-    SHARD conflict 25 "*history_conflict_data_test.cpp,*history_conflict_unit_test.cpp,*history_conflict_property_test.cpp,*history_conflict_r14_test.cpp,*history_conflict_r17_test.cpp,*history_conflict_r19_test.cpp,*history_conflict_order_test.cpp"
+    SHARD conflict 25 "*history_conflict_data_test.cpp,*history_conflict_unit_test.cpp,*history_conflict_property_test.cpp,*history_conflict_r14_test.cpp,*history_conflict_r17_test.cpp,*history_conflict_r19_test.cpp,*history_conflict_r22_test.cpp,*history_conflict_order_test.cpp"
     SHARD conflict-worlds 25 "*history_conflict_golden_test.cpp"
     SHARD balance 20 "*history_balance_*"
     SHARD history-report 20 "*history_report_*"

@@ -239,20 +239,79 @@ inline std::set<std::int64_t> shown_ids(const std::string& report) {
     return out;
 }
 
-// The lines of [civilizations] of the text without the lines that differ between the levels (24.10 item 3).
+// The lines of [civilizations] of the text without the lines that differ between the levels (24.10 item 3, as
+// restated by r19 25.12 item 2): the relation lines (full) and the adversary lines (summary); and at full, for a
+// block whose fate line says the realm ended, the lines r19 25.5 leaves out at summary (home, the two peak lines,
+// events). An ended block's milestones are compared only where both levels print them (25.5: at most four at
+// summary), so the milestone lines of ended blocks are left out here and checked by check_invariants.
 inline std::vector<std::string> civ_common(const std::string& text, bool full) {
     std::vector<std::string> out;
+    std::vector<std::string> blk;
+    auto flush = [&]() {
+        bool ended = false;
+        for (const std::string& l : blk) ended = ended || l.rfind("  fate: ended in ", 0) == 0;
+        bool in_milestones = false;
+        for (const std::string& l : blk) {
+            if (l == "  milestones:") in_milestones = true;
+            if (ended && in_milestones && l.rfind("    ", 0) == 0) continue;
+            if (full && ended && (l.rfind("  home: ", 0) == 0 || l.rfind("  peak regions: ", 0) == 0 ||
+                                  l.rfind("  peak population: ", 0) == 0 || l.rfind("  events: ", 0) == 0)) {
+                continue;
+            }
+            out.push_back(l);
+        }
+        blk.clear();
+    };
     bool skip = false;
     for (const std::string& l : block(text, "[civilizations]")) {
+        if (!l.empty() && l[0] == 'c') flush();
         if (l.rfind(full ? "  relations:" : "  adversaries:", 0) == 0) {
             skip = true;
             continue;
         }
-        if (skip && l.rfind("    ", 0) == 0) continue;
+        if (skip && l.rfind("    ", 0) == 0) continue;   // relation rows, adversary lines and `without war:`
         skip = false;
-        out.push_back(l);
+        blk.push_back(l);
     }
+    flush();
     return out;
+}
+
+// r19 25.2, 25.6: the phase of each event and the ids of the calamity kinds and of flare_up, from the stored rows.
+inline std::vector<std::string> v2_summary_violations(const worldgen::history::HistoryView& view,
+                                                      const std::set<std::int64_t>& shown) {
+    std::vector<std::string> bad;
+    std::set<std::int64_t> cal;
+    for (const char* k : {"famine", "plague", "plague_outbreak", "succession_crisis"}) {
+        if (const auto* kd = view.catalogue().find(k)) cal.insert(kd->id);
+    }
+    const auto* flare = view.catalogue().find("flare_up");
+    const auto* decl = view.catalogue().find("war_declared");
+    std::map<std::int64_t, std::int64_t> per_phase;
+    std::set<std::int64_t> war_phases;
+    for (const auto& e : view.events()) {
+        if (decl != nullptr && e.row.kind == decl->id) war_phases.insert(e.row.phase);
+        if (cal.count(e.row.kind) != 0U && shown.count(e.row.id) != 0U) ++per_phase[e.row.phase];
+    }
+    for (const auto& [p, n] : per_phase) {
+        if (n > 2) bad.push_back("p" + std::to_string(p) + ": " + std::to_string(n) + " calamities shown (25.2)");
+    }
+    for (const auto& e : view.events()) {
+        if (flare != nullptr && e.row.kind == flare->id && war_phases.count(e.row.phase) != 0U &&
+            shown.count(e.row.id) == 0U) {
+            bad.push_back("e" + std::to_string(e.row.id) + ": flare-up with a war in its phase not shown (25.6)");
+        }
+    }
+    return bad;
+}
+
+// r19 25.7 item 4: SUMMARY_STATS, the 15 keys printed at summary (in section 9's order, that of full's block).
+inline const std::set<std::string>& summary_stat_keys() {
+    static const std::set<std::string> k = {"end_year", "events", "summary_threshold", "summary_events",
+                                            "civilizations", "civilizations_alive", "civilizations_ended",
+                                            "settlements_standing", "settlements_ruined", "population", "wars",
+                                            "wars_open", "wars_hollow_permille", "share_max_permille", "races_alive"};
+    return k;
 }
 
 // The invariants of r17 24.10 (items 1 to 7 as far as they are checks on the text; item 7's standing claims
@@ -273,7 +332,8 @@ inline void check_invariants(const db::WorldReader& r, const std::string& summar
         CHECK(bytes_ok);
         const std::vector<std::string> lines = lines_of(*text);
         REQUIRE(lines.size() >= 2U);
-        CHECK(lines[0] == worldgen::inspect::HISTORY_REPORT_HEADER_V1);
+        // r19 25.1: the header is v2 (tested on the text: the spec names no library constant for it)
+        CHECK(lines[0] == "# worldgen history v2");
         CHECK(lines[1] == (is_full ? "level = full" : "level = summary"));
         std::vector<std::string> got_heads;
         for (const std::string& l : lines) {
@@ -288,7 +348,7 @@ inline void check_invariants(const db::WorldReader& r, const std::string& summar
         }
         CHECK(got_heads == (is_full ? heads_f : heads_s));  // 24.4
     }
-    const auto stats = stats_of(summary);
+    const auto stats = stats_of(full);   // r19 25.12 item 2: invariant 6 and the counts are read on full
     const std::vector<std::string> chron_s = block(summary, "[chronicle]");
     const std::vector<std::string> chron_f = block(full, "[chronicle]");
     const Wars wars(r);
@@ -312,6 +372,7 @@ inline void check_invariants(const db::WorldReader& r, const std::string& summar
     if (stats.at("summary_threshold") < 100) CHECK(shown.size() <= 250U);
     CHECK(wars.orphans(shown) == 0);
     CHECK(wars.violations(shown) == std::vector<std::string>{});
+    CHECK(v2_summary_violations(view, shown) == std::vector<std::string>{});   // r19 25.12 item 1
     // 24.10 item 2: shown and hidden per phase heading (both levels) and [phases] (full)
     for (const std::string* text : {&summary, &full}) {
         std::map<std::int64_t, std::int64_t> per_phase, heading;
@@ -352,9 +413,17 @@ inline void check_invariants(const db::WorldReader& r, const std::string& summar
         CHECK_MESSAGE((rest.rfind(s + " {", 0) == 0 || rest.rfind(s + " (", 0) == 0), l);
     }
     // 24.10 item 3
-    for (const char* b : {"[settings]", "[ages]", "[stats]"}) {
+    for (const char* b : {"[settings]", "[ages]"}) {
         CAPTURE(std::string_view(b));
         CHECK(block(summary, b) == block(full, b));
+    }
+    {   // r19 25.12 item 2: [stats] at summary is the SUMMARY_STATS subset of full's, with its values, in its order
+        std::vector<std::string> subset;
+        for (const std::string& l : block(full, "[stats]")) {
+            if (summary_stat_keys().count(l.substr(0, l.find(" = "))) != 0U) subset.push_back(l);
+        }
+        CHECK(block(summary, "[stats]") == subset);
+        CHECK(subset.size() == 15U);
     }
     CHECK(civ_common(summary, false) == civ_common(full, true));
     std::vector<std::string> present_f;
@@ -407,7 +476,7 @@ inline void check_invariants(const db::WorldReader& r, const std::string& summar
     };
     for (const auto& [id, ls] : civ_lines) {
         CAPTURE(id);
-        std::int64_t af = -1, k_sum = 0;
+        std::int64_t af = -1, k_sum = 0, n_adv = 0, war_adv = 0, without = 0;
         bool in_adv = false;
         std::int64_t quiet_milestones = 0;
         bool quiet_noted = true;
@@ -420,9 +489,20 @@ inline void check_invariants(const db::WorldReader& r, const std::string& summar
             }
             if (l.rfind("  adversaries:", 0) == 0) {
                 in_adv = true;
+                n_adv = l == "  adversaries: none" ? 0 : std::stoll(l.substr(15));
                 continue;
             }
+            if (in_adv && l.rfind("    without war: ", 0) == 0) {   // r19 25.4: m (enmity e, none q), e + q = m
+                const auto n = numbers(l);
+                REQUIRE(n.size() == 3U);
+                CHECK(n[1] + n[2] == n[0]);
+                CHECK(n[0] >= 1);
+                without = n[0];
+                continue;
+            }
+            CHECK_MESSAGE(l.find(": no war; now ") == std::string::npos, "a v1 no-war line: " << l);
             if (in_adv && l.rfind("    ", 0) == 0) {
+                ++war_adv;
                 const std::string body = l.substr(l.rfind("): ") != std::string::npos ? l.rfind("): ") + 3 : l.find(": ") + 2);
                 if (body.rfind("no war;", 0) != 0) {
                     const auto n = numbers(body.substr(0, body.find("; now")));
@@ -439,6 +519,7 @@ inline void check_invariants(const db::WorldReader& r, const std::string& summar
             }
         }
         CHECK(k_sum == af);
+        CHECK(war_adv + without == n_adv);   // r19 25.12 item 3
         CHECK(quiet_milestones == (qs_civs.count(std::stoll(id.substr(1))) != 0U ? 1 : 0));
         CHECK(quiet_noted);
     }

@@ -109,7 +109,7 @@ TEST_CASE("P1-06 r3 5.1, 10.5 unit 1: K_name and every listed u(k) of seed 42, N
 // pool size and index of 5.1 moves). Values: the test writer's reference p1_regions_reference.py at 0.19.0
 // (5.1's own values, The Scarred Downs, Knelldown, Harrowholt and Prince's Vow, are those of the 0.18.0 lists
 // and are checked there with --version 0.18.0).
-TEST_CASE("P1-06 r3 5.1, r6 15: the 5.1 draws on the 0.19.0 lists: The Shuddering Downs, Kitedown, Harthurst, Queen's Wake (through Birchhurst)") {
+TEST_CASE("P1-06 r3 5.1, r10 16: the 5.1 draws on the 0.21.0 lists: The Sighing Downs, Kitedown, Hawhurst, Queen's Wake (through Birchhurst)") {
     const std::uint64_t key = rn::k_name(42, 1024);
     const rn::NameTuning t{};
     struct Want {
@@ -130,17 +130,20 @@ TEST_CASE("P1-06 r3 5.1, r6 15: the 5.1 draws on the 0.19.0 lists: The Shudderin
         std::string name;
     };
     const std::vector<Want> cases = {
+        // the 0.21.0 lists (P1-06 r10 16.1: 34 grim words moved from common to trait_barren): common prefixes 128,
+        // adjectives 115, possessors 79, places 40 (values from the test writer's reference at 0.21.0; 0.19.0:
+        // The Shuddering Downs, Kitedown, Harthurst, Birchhurst, Queen's Wake)
         {1, 0, "downs", {"coast"}, 1,
-         {{"adjective", {6, 3, 2}, 0, 129, 84, "Shuddering"}, {"noun", {0, 1, 0}, 1, 8, 1, "Downs"}}, true,
-         "The Shuddering Downs"},
+         {{"adjective", {6, 3, 2}, 0, 115, 75, "Sighing"}, {"noun", {0, 1, 0}, 1, 8, 1, "Downs"}}, true,
+         "The Sighing Downs"},
         {10, 0, "downs", {"river", "fertile"}, 0,
-         {{"prefix", {6, 3, 2}, 0, 136, 68, "Kite"}, {"suffix", {0, 4, 1}, 1, 6, 2, "down"}}, true, "Kitedown"},
-        {39, 0, "wood", {"coast"}, 0, {{"prefix", {}, 0, 136, 54, "Hart"}, {"suffix", {}, 1, 7, 4, "hurst"}}, true,
-         "Harthurst"},
+         {{"prefix", {6, 3, 2}, 0, 128, 64, "Kite"}, {"suffix", {0, 4, 1}, 1, 6, 2, "down"}}, true, "Kitedown"},
+        {39, 0, "wood", {"coast"}, 0, {{"prefix", {}, 0, 128, 51, "Haw"}, {"suffix", {}, 1, 7, 4, "hurst"}}, true,
+         "Hawhurst"},
         {40, 0, "wood", {}, 0, {{"prefix", {6, 3, 0}, 1, 23, 3, "Birch"}, {"suffix", {0, 4, 0}, 1, 7, 4, "hurst"}},
          false, "Birchhurst"},
         {40, 1, "wood", {}, 5,
-         {{"possessor", {8, 0, 0}, 0, 82, 51, "Queen"}, {"place", {8, 0, 0}, 0, 43, 40, "Wake"}}, true,
+         {{"possessor", {8, 0, 0}, 0, 79, 49, "Queen"}, {"place", {8, 0, 0}, 0, 40, 37, "Wake"}}, true,
          "Queen's Wake"},
     };
     for (const Want& w : cases) {
@@ -174,8 +177,8 @@ TEST_CASE("P1-06 r3 5.1, r6 15: the 5.1 draws on the 0.19.0 lists: The Shudderin
         }
 #endif
     }
-    // 5.1: attempt 1 of region 1 (Fletcher's Wolds on the 0.18.0 lists).
-    CHECK(rn::attempt(key, 1, 1, land("downs"), common(), traits({"coast"}), t).name == "Ferryman's Wolds");
+    // 5.1: attempt 1 of region 1 (Fletcher's Wolds on the 0.18.0 lists, Ferryman's Wolds on the 0.19.0 lists).
+    CHECK(rn::attempt(key, 1, 1, land("downs"), common(), traits({"coast"}), t).name == "Exile's Wolds");
 }
 
 // --- 10.5 unit 2: keepers -----------------------------------------------------------------------
@@ -385,7 +388,7 @@ TEST_CASE("P1-06 r6 15.4, 15.6: V7 lets nouns and suffixes repeat (Thornholt, El
     CHECK(f->how[1] == "0");
 }
 
-TEST_CASE("P1-06 r6 15.1 to 15.3, 15.6 data: church words out, grim words split, hanger, High, Gap and Cleft") {
+TEST_CASE("P1-06 r6 15.1 to 15.3, r10 16.1, 15.6 data: church words out, grim words moved, hanger, High, Gap and Cleft") {
     const rn::PlaceDef& c = common();
     auto has = [](const std::vector<std::string>& v, const std::string& w) {
         return std::find(v.begin(), v.end(), w) != v.end();
@@ -405,15 +408,18 @@ TEST_CASE("P1-06 r6 15.1 to 15.3, 15.6 data: church words out, grim words split,
     CHECK(has(c.lists[2], "Hallow"));
     CHECK(has(c.lists[5], "Hermit"));
     CHECK(has(c.lists[5], "Bellringer"));
-    CHECK(has(c.lists[3], "Godless"));
-    // 15.2: the grim words kept in common, exactly (in list order)
+    CHECK(!has(c.lists[3], "Godless"));   // r10 16.1: moved to trait_barren
+    // 15.2 with r10 16.1: the grim words kept in common (the six of spirits and curses)
     const std::vector<std::pair<std::size_t, std::vector<std::string>>> kept = {
-        {2, {"Bale", "Charnel", "Dread", "Ghost", "Grief", "Lich", "Pall", "Sorrow", "Wight", "Wraith"}},
-        {3, {"Accursed", "Bloodless", "Cursed", "Doleful", "Drear", "Fallen", "Forsaken", "Godless", "Grim", "Joyless",
-             "Moaning", "Orphaned", "Shunned", "Stricken", "Weeping", "Wretched"}},
+        {2, {"Ghost", "Wraith"}}, {3, {"Accursed", "Cursed"}}, {6, {}}, {5, {}}, {7, {"Ghosts", "Shades"}}};
+    // r10 16.1: the 34 words moved from common to trait_barren (the 40 r6 kept but the six above)
+    const std::map<std::size_t, std::vector<std::string>> moved10 = {
+        {2, {"Bale", "Charnel", "Dread", "Grief", "Lich", "Pall", "Sorrow", "Wight"}},
+        {3, {"Bloodless", "Doleful", "Drear", "Fallen", "Forsaken", "Godless", "Grim", "Joyless", "Moaning",
+             "Orphaned", "Shunned", "Stricken", "Weeping", "Wretched"}},
         {6, {"Bane", "Grief", "Shame"}},
         {5, {"Gravedigger", "Mourner", "Widower"}},
-        {7, {"Bones", "Ghosts", "Grief", "Shades", "Widows", "the Damned", "the Forsaken", "the Slain"}}};
+        {7, {"Bones", "Grief", "Widows", "the Damned", "the Forsaken", "the Slain"}}};
     const std::map<std::size_t, std::vector<std::string>> moved = {
         {2, {"Bane", "Bier", "Dirge", "Dole", "Drear", "Gallow", "Gibbet", "Grave", "Grim", "Knell", "Lorn", "Mourn",
              "Pyre", "Shroud", "Tomb", "Weep", "Wither", "Woe"}},
@@ -438,7 +444,24 @@ TEST_CASE("P1-06 r6 15.1 to 15.3, 15.6 data: church words out, grim words split,
             CHECK_MESSAGE(!has(c.lists[li], w), w);
             CHECK_MESSAGE(has(barren.lists[li], w), w);
         }
+        for (const std::string& w : moved10.at(li)) {
+            CHECK_MESSAGE(!has(c.lists[li], w), w);
+            CHECK_MESSAGE(has(barren.lists[li], w), w);
+        }
+        // trait_barren's lists stay byte-sorted without repeats after the merge (16.1)
+        std::vector<std::string> sorted_list = barren.lists[li];
+        std::sort(sorted_list.begin(), sorted_list.end());
+        sorted_list.erase(std::unique(sorted_list.begin(), sorted_list.end()), sorted_list.end());
+        CHECK(sorted_list == barren.lists[li]);
     }
+    std::size_t n10 = 0;
+    for (const auto& [li, words] : moved10) n10 += words.size();
+    CHECK(n10 == 34U);
+    // 16.1: the land lists are not edited; bleak and dark words stay in common
+    CHECK(has(land("carr").lists[3], "Weeping"));
+    CHECK(has(land("steppe").lists[7], "Bones"));
+    for (const char* w : {"Black", "Gloom", "Murk"}) CHECK_MESSAGE(has(c.lists[2], w), w);
+    CHECK(has(c.lists[3], "Ashen"));
     // trait_barren keeps its own words, sorted, Dole once
     for (const char* w : {"Dearth", "Famine", "Hunger", "Starve", "Want"}) {
         CHECK(has(barren.lists[2], w));
@@ -751,9 +774,9 @@ TEST_CASE("P1-06 r3 5.1, 10.5 unit 9: the fallback of land fen with an empty U i
 
 // --- 14.4: every region of 1024 seed 42 -----------------------------------------------------------
 
-// The drawn rows of 14.4 (1024 seed 42), attempt 0 with each row's land and traits, on the 0.19.0 lists
-// (values from the test writer's reference at 0.19.0; 14.4's names are those of the 0.18.0 lists).
-TEST_CASE("P1-06 r3 14.4, r6 15: attempt 0 of the drawn rows of 1024 seed 42 on the 0.19.0 lists") {
+// The drawn rows of 14.4 (1024 seed 42), attempt 0 with each row's land and traits, on the 0.21.0 lists
+// (values from the test writer's reference at 0.21.0; 14.4's names are those of the 0.18.0 lists).
+TEST_CASE("P1-06 r3 14.4, r10 16: attempt 0 of the drawn rows of 1024 seed 42 on the 0.21.0 lists") {
     // (id, base, cells rank is irrelevant here: the drawn rows of 14.4 with
     // their land, traits and accepted attempt; keepers are not drawn.)
     struct Row {
@@ -764,15 +787,15 @@ TEST_CASE("P1-06 r3 14.4, r6 15: attempt 0 of the drawn rows of 1024 seed 42 on 
         std::string name;
     };
     const std::uint64_t key = rn::k_name(42, 1024);
-    for (const Row& r : std::vector<Row>{{1, "downs", {"coast"}, 0, "The Shuddering Downs"},
-                                         {2, "downs", {"coast"}, 0, "The Starless Plain"},
+    for (const Row& r : std::vector<Row>{{1, "downs", {"coast"}, 0, "The Sighing Downs"},
+                                         {2, "downs", {"coast"}, 0, "The Starved Plain"},
                                          {3, "downs", {}, 0, "The Rises of Hares"},
                                          {4, "downs", {"fertile"}, 0, "Warlord's Rises"},
-                                         {12, "downs", {"river", "fertile"}, 0, "Windgate Barrows"},
+                                         {12, "downs", {"river", "fertile"}, 0, "Witchgate Barrows"},
                                          {17, "wood", {"coast"}, 0, "Wrecker's Reach"},
-                                         {19, "wood", {}, 0, "The Shaw of Vows"},
+                                         {19, "wood", {}, 0, "The Shaw of Thieves"},
                                          {30, "downs", {"river", "lake", "fertile"}, 0, "Umberdown"},
-                                         {37, "wood", {}, 0, "The Brake of the Blind"},
+                                         {37, "wood", {}, 0, "The Brake of Worms"},
                                          {41, "downs", {"high", "ore", "pass", "barren"}, 0, "Larkfell"},
                                          {49, "wood", {"coast", "barren"}, 0, "The Gnarled Forest"}}) {
         CAPTURE(r.id);
@@ -810,15 +833,15 @@ TEST_CASE("P1-06 r3 4.1: the shipped placename files: 15 files, one common, 13 l
     CHECK(c.lists[5].size() >= 32U);
     CHECK(c.lists[6].size() >= 16U);
     CHECK(c.lists[7].size() >= 32U);
-    // The shipped sizes from 0.19.0 (P1-06 r6 15.1 to 15.3; 4.1's 156, 159, 33, 94, 52, 78 before): prefixes
-    // 156 - 2 church - 18 grim moved = 136, adjectives 159 - 30 = 129, possessors 94 - 8 - 4 = 82, places
-    // 52 - 2 - 5 - 2 (Cleft, Gap) = 43, objects 78 - 6 - 16 = 56.
-    CHECK(c.lists[2].size() == 136U);
-    CHECK(c.lists[3].size() == 129U);
+    // The shipped sizes from 0.21.0 (P1-06 r10 16.1 after r6 15.1 to 15.3; 4.1's 156, 159, 33, 94, 52, 78 before
+    // r6): prefixes 156 - 2 church - 18 grim (r6) - 8 (r10) = 128, adjectives 159 - 30 - 14 = 115, possessors
+    // 94 - 8 - 4 - 3 = 79, places 52 - 2 - 5 - 2 (Cleft, Gap) - 3 = 40, objects 78 - 6 - 16 - 6 = 50.
+    CHECK(c.lists[2].size() == 128U);
+    CHECK(c.lists[3].size() == 115U);
     CHECK(c.lists[4].size() == 33U);
-    CHECK(c.lists[5].size() == 82U);
-    CHECK(c.lists[6].size() == 43U);
-    CHECK(c.lists[7].size() == 56U);
+    CHECK(c.lists[5].size() == 79U);
+    CHECK(c.lists[6].size() == 40U);
+    CHECK(c.lists[7].size() == 50U);
     CHECK(c.excluded.size() == 90U);
     // Every land has the six forms with weights 30, 22, 22, 12, 9, 5; each
     // trait definition names its trait; every non-water biome in one land;
@@ -900,7 +923,7 @@ TEST_CASE("P1-06 r3 4.1, 10.5 data: the fixture roots hold byte-identical copies
 
 TEST_CASE("P0-01 amendment 20, P1-06 r4 14.8: geo.regions.name directly after geo.regions.cost, 52 names") {
     const auto& names = worldgen::streams::all_stream_names;
-    CHECK(names.size() == 53U);  // P3-06 r10 20.17: hist.conflict.search (0.18.0)
+    CHECK(names.size() == 54U);  // P3-06 r10 20.17: hist.conflict.search (0.18.0); r22 24.5 hist.conflict.toll (0.21.0)
     std::size_t at = names.size();
     for (std::size_t i = 0; i < names.size(); ++i) {
         if (names[i] == "geo.regions.cost") {

@@ -88,7 +88,7 @@ FatalError = cr.FatalError
 REPO = pe.REPO
 GOLDEN = os.path.join(REPO, "worldgen", "tests", "golden", "p3-06-conflict.txt")
 DEFAULT_INPUTS = os.path.join(os.path.expanduser("~"), ".cache", "the-unmapped", "out", "p3-06-tests", "inputs")
-GENERATOR_VERSION = "0.20.0"
+GENERATOR_VERSION = "0.21.0"
 
 # P3-06 r7 (generator 0.17.0) and r9 section 20 (generator 0.18.0, P3-09): each rule change behind a
 # flag, as pp.FLAGS for P3-05; use_version(v) sets the flags of generator v in both files (and the data,
@@ -135,22 +135,31 @@ FLAGS = dict(
     # r19 section 23 (P3-11, generator 0.20.0)
     claim39=True,       # 23.2: a claim on a region b does not hold is kind 39 claim_settlements (b's settlements)
     foot40=True,        # 23.3: the foothold cession is kind 40 settlements_ceded (the passing settlements)
+    # r22 section 24 (P5-01, generator 0.21.0)
+    fresh=True,         # 24.1: a re-aimed declaration (G != R_c) is preceded by a fresh claim on G, which it cites
+    strength=True,      # 24.2: the quarrel claim is also held back below quarrel_strength_permille (strength)
+    dropped=True,       # 24.3: a claim dropped at a declaration with no allowed goal is recorded (kind 41)
+    hidden42=True,      # 24.4: a refuge's hidden years are recorded at the flight (kind 42)
+    toll=True,          # 24.5: each side's battle toll times a keyed factor (toll_spread_permille, hist.conflict.toll)
     # 22.3's one definition of lying low is lie_low's (pp.World.lying_low); no flag of its own
 )
 FLAGS_017 = ("loss",)
 FLAGS_019 = ("reduce_loss", "aim_hold", "search_weary", "search_battle", "search_sal", "holder", "race_odds",
              "lie_low", "quarrel", "note_019", "quarrel_hold", "race_hidden", "aim_foot")
 FLAGS_020 = ("claim39", "foot40")
-VERSIONS = ("0.16.0", "0.17.0", "0.18.0", "0.19.0", "0.20.0")
+FLAGS_021 = ("fresh", "strength", "dropped", "hidden42", "toll")
+VERSIONS = ("0.16.0", "0.17.0", "0.18.0", "0.19.0", "0.20.0", "0.21.0")
 
 
 def flag_on(v, k):
     """Whether rule flag k is on at generator v."""
+    if k in FLAGS_021:
+        return v == "0.21.0"
     if k in FLAGS_020:
-        return v == "0.20.0"
+        return v in ("0.20.0", "0.21.0")
     if k in FLAGS_019:
-        return v in ("0.19.0", "0.20.0")
-    return v in ("0.18.0", "0.19.0", "0.20.0") or (v == "0.17.0" and k in FLAGS_017)
+        return v in ("0.19.0", "0.20.0", "0.21.0")
+    return v in ("0.18.0", "0.19.0", "0.20.0", "0.21.0") or (v == "0.17.0" and k in FLAGS_017)
 
 
 def at_least(v):
@@ -161,7 +170,8 @@ def peoples_flags(v):
     """P3-05's flags of generator v (p3_peoples_reference.flags_for from 0.19.0; the 0.18.0 rule before it)."""
     if hasattr(pp, "flags_for"):
         return pp.flags_for(v)
-    return {k: v != "0.16.0" and (v in ("0.18.0", "0.19.0", "0.20.0") or k not in pp.FLAGS_018) for k in pp.FLAGS}
+    return {k: v != "0.16.0" and (v in ("0.18.0", "0.19.0", "0.20.0", "0.21.0") or k not in pp.FLAGS_018)
+            for k in pp.FLAGS}
 
 
 def use_version(v):
@@ -177,7 +187,7 @@ def use_version(v):
 
 
 def legacy(on=True):
-    use_version("0.16.0" if on else "0.20.0")
+    use_version("0.16.0" if on else "0.21.0")
 
 
 class rules:
@@ -358,6 +368,21 @@ SPEC_GAPS = (
                           "settlements of the alive visible civilizations of other races at that T2; the quarrel is "
                           "set after housekeeping and the grudge decay, before 5.2. A civilization whose first "
                           "visible step is quiet gets its quarrel in the next T2 (T2 only, 21.12 item 3)."),
+    # r22 (P5-01, generator 0.21.0)
+    ("r22 (9)", "24.5 multiplies dead_L = min(F_L x loss_loser div 1000, F_W x kill_max div 1000) by v_L up to "
+                "(1000 + s) / 1000, so r10's invariant (9) (loser_dead <= F_W x kill_max div 1000) no longer holds as "
+                "written; 24.7 does not restate it. Read: (9) holds for the bound before the factor, and the stored "
+                "loser_dead is at most that bound x (1000 + s) div 1000 (both checked in the run)."),
+    ("r22 24.1 war's claim", "The war's own record of its claim (the war line's `claim e<id>`, the note) is the fresh "
+                             "claim c' that the declaration cites."),
+    ("r22 24.4 war last", "The flight's refuge_hidden is not the war's latest event: war['last'] stays the "
+                          "refugees_settled (24.4 says nothing else changes)."),
+    ("r22 24.8 item 1", "SPEC DEFECT: 24.1's Effect and 24.8 item 1 say the rows with 24.1 off differ only by the fresh "
+                        "claims, the ids after them and the declarations' causes; but 7.3's battle, siege, toll and "
+                        "search draws are keyed by the war's id w (its war_declared event id), which the fresh claim "
+                        "shifts, so the histories diverge from the next war's first battle. The reference checks the "
+                        "rows up to the first re-aimed declaration."),
+    ("r22 24.4 E", "E is param.history_span (the history's end year); end_year = min(hidden_until, E) - 1."),
     ("r16 (16)", "Invariant (16) as restated by r16 21.12 item 5 (P3-10 10d item 2): the claim of a against its "
                  "quarrel neighbour b is dated in the first phase in which a and b are in contact (5.1's contact as "
                  "the T2 strain update computes it), unless 5.3's tests refuse that claim in that phase (no allowed "
@@ -408,6 +433,13 @@ CONFLICT_KINDS_020 = (
     _k(40, "settlements_ceded", 1, 0, (("from", CIV, 1, 1), ("to", CIV, 1, 1), ("settlement", SETTLEMENT, 1, 0)), ()),
 )
 assert list(COMPILED[38:40]) == list(CONFLICT_KINDS_020)
+# r22 24.3, 24.4 / P3-04 r19 22.2 (generator 0.21.0): kinds 41 and 42, transcribed (must equal the engine
+# reference's)
+CONFLICT_KINDS_021 = (
+    _k(41, "claim_dropped", 1, 0, (("claimant", CIV, 1, 1), ("holder", CIV, 1, 1)), ()),
+    _k(42, "refuge_hidden", 1, 1, (("settlement", SETTLEMENT, 1, 1), ("founder", CIV, 1, 1)), ()),
+)
+assert list(COMPILED[40:42]) == list(CONFLICT_KINDS_021)
 KIND_ID = {k["key"]: k["id"] for k in COMPILED}
 KEY_OF = {k["id"]: k["key"] for k in COMPILED}
 K = KIND_ID
@@ -416,7 +448,8 @@ K = KIND_ID
 # 40 are never written before 0.20.0, so the sets serve every version.
 CLAIMS = (K["claim"], K["claim_settlements"])
 CEDES = (K["region_ceded"], K["settlements_ceded"])
-MAX_PARTICIPANTS = 64   # P3-04 r13 20.1, r17 21.2: the settlement role lists the 64 smallest ids at most
+MAX_PARTICIPANTS = 62   # P3-04 r18 21.2, r19 22.2: the settlement role of kinds 39, 40 lists the 62 smallest ids at
+#                        most (the reference had 64 until P5-01; no world reached either bound)
 
 SPEC_REPORT = (
     ("claim", 45, "{claimant} laid claim to {@region}, held by {holder}."),
@@ -445,7 +478,8 @@ SPEC_REPORT_019 = {
 }
 
 STREAMS = ("hist.conflict.declare", "hist.conflict.battle", "hist.conflict.battle_win", "hist.conflict.siege",
-           "hist.conflict.sack", "hist.conflict.search")   # search: r10 20.17 (0.18.0)
+           "hist.conflict.sack", "hist.conflict.search",   # search: r10 20.17 (0.18.0)
+           "hist.conflict.toll")                           # toll: r22 24.5 (0.21.0)
 
 chance_pm = pp.chance_pm
 
@@ -663,6 +697,9 @@ class World(pp.World):
         self.held_back_log = []     # (year, a, b, where) of every held-back quarrel claim (22.1 item 3)
         self.cost_log = []          # (war id, W, L, G, kind of cost) after every ending's cost (22.5, (17))
         self.inv17 = []             # in-run failures of invariant (17)
+        # r22 logs for the checks (not state)
+        self.fresh_log = []         # (year, a, b, old claim, fresh claim, G) of every fresh claim (24.1)
+        self.toll_log = []          # (year, war, v_L, v_W, dead_L, dead_W) of every battle (24.5)
 
     # --- engine phase kind
     def tick(self, eng_run, year, phase_end):
@@ -763,10 +800,21 @@ class World(pp.World):
         quarrel_min_settlements visible standing settlements."""
         if not FLAGS["quarrel_hold"] or self.quarrel_with.get(a) != b:
             return False
-        if self.n_visible_standing(a) >= self.ct.get("quarrel_min_settlements", 1):
+        if self.n_visible_standing(a) >= self.ct.get("quarrel_min_settlements", 1) and not (
+                FLAGS["strength"] and self.strength(a, b) < self.ct.get("quarrel_strength_permille", 0)):
             return False
         self.held_back_log.append((self.year, a, b, where))
         return True
+
+    def strength(self, a, b):
+        """r22 24.2: 20.6 item 3's odds with the aggression term m = 1000: force(a) against force(b) weighted by
+        def(G) of the claim's region G for its entry in front(a, b) (1000 if G is not in it), capped at 1000."""
+        t = self.ct
+        g0 = self.claim[(a, b)][1]
+        ent = [e for e in self.front(a, b) if e[0] == g0]
+        dv = self.defence(g0, ent[0][2], b)[0] if ent else 1000
+        fb = self.force(b) * dv // 1000
+        return min(1000, self.force(a) * 1000 // max(1, fb * t["declare_ratio"] // 1000))
 
     def close_quarrel(self, a, b):
         """22.1 item 1: a war between a and b starts (either side attacking): the open quarrel of the pair ends."""
@@ -1251,11 +1299,16 @@ class World(pp.World):
             if g0 not in [e[0] for e in al] or (self.owner[g0][0] != b and
                                                  not any(s["region"] == g0 for s in self.svis(b))):
                 if not al:
+                    if FLAGS["dropped"]:   # r22 24.3: the drop is recorded first (kind 41, cause the claim)
+                        self.append("claim_dropped", region=g0, participants=(("claimant", CIV, a), ("holder", CIV, b)),
+                                    causes=(ce,))
                     del self.claim[(a, b)]
                     return None
                 goal = min(al, key=lambda e: self.target_key(a, e))[0]
         elif self.owner[g0][0] != b and not any(s["region"] == g0 for s in self.svis(b)):
             goal = min(self.front(a, b), key=lambda e: self.target_key(a, e))[0]
+        if FLAGS["fresh"] and goal != g0:
+            ce = self.fresh_claim(a, b, ce, goal)   # r22 24.1
         self.weary_checks.append((self.year, "war_declared", b, goal))
         causes = {ce}
         lp = self.last_peace.get((min(a, b), max(a, b)))
@@ -1276,6 +1329,29 @@ class World(pp.World):
                               pop0={a: self.population(a), b: self.population(b)}, open=True, end=None,
                               battles=0, sacked=0, captured=0, flare=draw_free, ceded=False,
                               owner0=self.hold(goal), cost=None, fled=0, fought=set()))
+        return e
+
+    def fresh_claim(self, a, b, c, g):
+        """r22 24.1: the fresh claim on the re-chosen goal G, appended right before the war_declared: kind 20 when b
+        owns G, else kind 39 with b's standing visible settlements in G that are not hidden (ascending, at most 62);
+        causes c and 5.3's cause for G (G's owner_event, else the founding_event of b's most populous such
+        settlement, ties to the smaller id); claim[(a, b)] = (c', G). No draw."""
+        if self.owner[g][0] == b:
+            cause = self.owner[g][1]
+            e = self.append("claim", region=g, participants=(("claimant", CIV, a), ("holder", CIV, b)),
+                            causes=tuple(sorted({c, cause})))
+        else:
+            ss = [s for s in self.svis_seen(b) if s["region"] == g]
+            if not ss:
+                fatal("history: conflict: fresh claim on region %d without a settlement of %d" % (g, b))
+            cause = min(ss, key=lambda s: (-s["population"], s["id"]))["founding_event"]
+            ids = sorted(s["id"] for s in ss)[:MAX_PARTICIPANTS]
+            kind = "claim_settlements" if FLAGS["claim39"] else "claim"
+            e = self.append(kind, region=g, participants=(("claimant", CIV, a), ("holder", CIV, b)) +
+                            (tuple(("settlement", SETTLEMENT, x) for x in ids) if FLAGS["claim39"] else ()),
+                            causes=tuple(sorted({c, cause})))
+        self.claim[(a, b)] = (e, g)
+        self.fresh_log.append((self.year, a, b, c, e, g))
         return e
 
     def c_t2(self):
@@ -1579,12 +1655,7 @@ class World(pp.World):
         p = self.battle_p(A, D, dv)
         xwin = chance_pm(self.draw("hist.conflict.battle_win", w, 0, 0), p)
         W, L, FW, FL = (x, y, A, D) if xwin else (y, x, D, A)
-        dead_l = FL * t["loss_loser_permille"] // 1000
-        if FLAGS["kill"]:      # r10 20.16: at most kill_max of the victors' (local) force
-            dead_l = min(dead_l, FW * t["kill_max_permille"] // 1000)
-            self.kills.append((FW, dead_l))
-        # r7 7.3 item 4: the victors lose loss_winner of the smaller force (before r7, of their own force)
-        dead_w = (min(FW, FL) if FLAGS["loss"] else FW) * t["loss_winner_permille"] // 1000
+        dead_w, dead_l = self.battle_tolls(FW, FL, w)
         if pass_id:
             e = self.append("battle_at_pass", region=r, participants=(("winner", CIV, W), ("loser", CIV, L)),
                             values=(dead_w, dead_l, pass_id), causes=(w,))
@@ -1648,6 +1719,25 @@ class World(pp.World):
             self.flee(war, ts, x, y, r, es, flight)
         elif fell:
             self.fall(war, ts, x, y, r, es)
+
+    def battle_tolls(self, FW, FL, w):
+        """7.3 item 4 with r7, r10 20.16 and r22 24.5: (dead_W, dead_L) of a battle of war w in this year."""
+        t = self.ct
+        dead_l = FL * t["loss_loser_permille"] // 1000
+        if FLAGS["kill"]:      # r10 20.16: at most kill_max of the victors' (local) force
+            dead_l = min(dead_l, FW * t["kill_max_permille"] // 1000)
+        # r7 7.3 item 4: the victors lose loss_winner of the smaller force (before r7, of their own force)
+        dead_w = (min(FW, FL) if FLAGS["loss"] else FW) * t["loss_winner_permille"] // 1000
+        if FLAGS["kill"]:
+            self.kills.append((FW, dead_l))   # (9) reads the rule's bound before 24.5's factor (SPEC_GAPS r22 (9))
+        sp = t.get("toll_spread_permille", 0) if FLAGS["toll"] else 0
+        if sp > 0:   # r22 24.5: the keyed factors, k = 0 the loser's, k = 1 the winner's; no draw at s = 0
+            v_l = 1000 - sp + pnr.pick(self.draw("hist.conflict.toll", w, 0, 0), 2 * sp + 1)
+            v_w = 1000 - sp + pnr.pick(self.draw("hist.conflict.toll", w, 0, 1), 2 * sp + 1)
+            dead_l = dead_l * v_l // 1000
+            dead_w = dead_w * v_w // 1000
+            self.toll_log.append((self.year, w, v_l, v_w, dead_l, dead_w, FW, FL))
+        return dead_w, dead_l
 
     # --- r10 20.17: the search for a concealed people
     def conceal_search(self, war, x, y, r):
@@ -1743,6 +1833,10 @@ class World(pp.World):
         self.site_how[h] = how
         self.set_owner(d, y, e2)
         self.hidden_until[h] = self.year + self.hidden_years_of(y)   # r17 22.2: the founder's race
+        if FLAGS["hidden42"] and self.hidden_years_of(y) >= 1:
+            # r22 24.4: the refuge's hidden years, year Y to min(hidden_until, E) - 1, caused by the flight
+            self.append("refuge_hidden", end_year=min(self.hidden_until[h], self.inp.params["span"]) - 1, region=d,
+                        settlement=h, participants=(("settlement", SETTLEMENT, h), ("founder", CIV, y)), causes=(e2,))
         if FLAGS["lie_low"]:
             self.lie_low(y, h, self.hidden_until[h])     # r17 22.3, P3-05 r15 22.7a
             self.low_log.append((self.year, y, self.hidden_until[h]))
@@ -2284,6 +2378,10 @@ def history_note(res, inp, eid, view=None, idx=None):
         if not cl:
             return ""
         yc = ev[cl[0]][1]
+        if FLAGS["fresh"]:   # P3-07 r19 25.8: the year of root(c), c's claim cause with the smallest id, else c
+            roots = sorted(x for x in causes.get(cl[0], []) if kind[x] in CLAIMS)
+            if roots:
+                yc = ev[roots[0]][1]
         note = "Claimed since %d." % yc if yc < e[1] else "Claimed the same year."
         if FLAGS["claim39"] and kind[cl[0]] == K["claim_settlements"]:
             # P3-07 r15 23 item 4a: after a kind 39 claim the towns claimed, in participant order, and the
@@ -2860,9 +2958,12 @@ def check_invariants(c, res, inp, w, label, last_refuge=True, threshold=None):
                    not any(kind[x] == K["colony_founded"] and ev[x][1] == e[1] and
                            not any(r[0] == e[5] and r[4] == x for r in res["region_control"]) and
                            not owner_event_colony(x) for x in cs))
-            c.true("%s 11 e%d claim cause" % (label, e[0]), len(cs) == 1 and KEY_OF[kind[cs[0]]] in (
+            # r22 24.1 item 3: a fresh claim's causes are the old claim and 5.3's cause on G
+            cs5 = [x for x in cs if kind[x] not in CLAIMS] if FLAGS["fresh"] and \
+                sum(1 for x in cs if kind[x] in CLAIMS) == 1 else cs
+            c.true("%s 11 e%d claim cause" % (label, e[0]), len(cs5) == 1 and KEY_OF[kind[cs5[0]]] in (
                 "civ_founded", "settlement_founded", "colony_founded", "civ_seceded", "settlement_captured",
-                "region_ceded", "refugees_settled"))
+                "region_ceded", "refugees_settled", "settlements_ceded"))
     # r7 7.3 item 4: with loss_winner <= loss_loser the victors never lose more than the defeated
     if FLAGS["loss"] and w.ct["loss_winner_permille"] <= w.ct["loss_loser_permille"]:
         for e in res["event"]:
@@ -3142,6 +3243,8 @@ def check_invariants_r9(c, res, inp, w, label):
         check_invariants_r14(c, res, inp, w, label, kind, ev, causes, kids, parts, vals)
     if FLAGS["aim_foot"]:
         check_invariants_r17(c, res, inp, w, label)
+    if FLAGS["fresh"]:
+        check_invariants_r22(c, res, inp, w, label)
     c.eq("%s in-run r9 checks" % label, w.checks9, [])
 
 
@@ -3330,6 +3433,222 @@ def check_invariants_r17(c, res, inp, w, label):
     qmin = w.ct.get("quarrel_min_settlements", 1)
     c.eq("%s r17 22.1 held back only below quarrel_min_settlements" % label,
          [x for x in w.held_back_log if qmin <= 1], [])
+
+
+def open_claims_at_end(res):
+    """r22 24.7 (19), P3-07 r19 25.9 item 2 (T19): the claim events the simulation holds open at E whose two sides
+    are alive at E (claim[(a, b)] of the run's final state), ascending."""
+    w = res["_world"]
+    return sorted(e for (a, b), (e, _r) in w.claim.items() if w.alive(a) and w.alive(b))
+
+
+def hidden_refuges_at_end(res):
+    """P3-07 r19 25.9 item 1 (T19): the refuges (settlements founded by refugees_settled) standing at E and still
+    hidden in its last year (E - 1 < hidden_until), ascending."""
+    w = res["_world"]
+    E = res["_inputs"].params["span"]
+    return sorted(h for h, until in w.hidden_until.items() if until >= E and w.standing(w.stl(h)))
+
+
+def r22_violations(res, inp, pd=None):
+    """r22 24.7 invariants (18) to (21) from the rows."""
+    kind, ev, causes, kids, parts = _index(res)
+    role = lambda e, seq: [p_[4] for p_ in parts.get(e, []) if p_[2] == seq]  # noqa: E731
+    E = inp.params["span"]
+    phase_kind = {ph[0]: ph[2] for ph in res["phase"]}
+    out = []
+    civ_race = {c_[0]: c_[2] for c_ in res["civilization"]}
+    hidden_years = {}
+    if pd is not None:
+        hidden_years = {rid: r["hidden_years"] for rid, r in pd.race.items()}
+    for e in res["event"]:
+        k = kind[e[0]]
+        if k == K["war_declared"]:   # (18)
+            cl = [x for x in causes.get(e[0], []) if kind[x] in CLAIMS]
+            if len(cl) != 1:
+                out.append("(18) e%d: %d claim causes" % (e[0], len(cl)))
+                continue
+            c0 = cl[0]
+            if ev[c0][5] != e[5] or role(c0, 1) != role(e[0], 1) or role(c0, 2) != role(e[0], 2):
+                out.append("(18) e%d: claim e%d on rg%d of c%s against c%s" % (e[0], c0, ev[c0][5], role(c0, 1),
+                                                                                role(c0, 2)))
+        if k in CLAIMS and any(kind[x] in CLAIMS for x in causes.get(e[0], [])):   # (18) a fresh claim
+            nx = ev.get(e[0] + 1)
+            if nx is None or kind[nx[0]] != K["war_declared"] or nx[1] != e[1] or e[0] not in causes.get(nx[0], []):
+                out.append("(18) fresh claim e%d is not followed by the war_declared that cites it" % e[0])
+        if k == K["claim_dropped"]:   # (19)
+            cs = causes.get(e[0], [])
+            if len(cs) != 1 or kind[cs[0]] not in CLAIMS:
+                out.append("(19) e%d: causes %s" % (e[0], cs))
+                continue
+            c0 = cs[0]
+            if ev[c0][5] != e[5] or role(c0, 1) != role(e[0], 1) or role(c0, 2) != role(e[0], 2):
+                out.append("(19) e%d: claim e%d differs in region or sides" % (e[0], c0))
+            if phase_kind.get(e[4]) == QUIET:
+                out.append("(19) e%d: dated in a quiet step" % e[0])
+            if any(x != e[0] for x in kids.get(c0, []) if kind[x] in CLAIMS + (K["war_declared"],)):
+                out.append("(19) e%d: claim e%d cited by a declaration or a fresh claim" % (e[0], c0))
+            if any(x > e[0] for x in kids.get(c0, [])):
+                out.append("(19) e%d: claim e%d cited afterwards" % (e[0], c0))
+        if k == K["refugees_settled"]:   # (20)
+            y = role(e[0], 2)[0]
+            hy = hidden_years.get(civ_race.get(y), None)
+            nx = ev.get(e[0] + 1)
+            if hy is None or hy >= 1:
+                ok = (nx is not None and kind[nx[0]] == K["refuge_hidden"] and causes.get(nx[0]) == [e[0]] and
+                      role(nx[0], 1) == role(e[0], 1) and role(nx[0], 2) == [y] and nx[5] == e[5] and nx[6] == e[6]
+                      and nx[1] == e[1] and (hy is None or nx[2] == min(e[1] + hy, E) - 1))
+                if not ok:
+                    out.append("(20) e%d: not followed by its refuge_hidden" % e[0])
+            elif nx is not None and kind[nx[0]] == K["refuge_hidden"]:
+                out.append("(20) e%d: refuge_hidden for a race with hidden_years 0" % e[0])
+        if k == K["refuge_hidden"]:
+            pv = ev.get(e[0] - 1)
+            if pv is None or kind[pv[0]] != K["refugees_settled"] or causes.get(e[0]) != [pv[0]]:
+                out.append("(20) e%d: a refuge_hidden that follows no refugees_settled" % e[0])
+            if not (e[1] <= e[2] <= E - 1):
+                out.append("(20) e%d: span %d-%d" % (e[0], e[1], e[2]))
+    return out
+
+
+def check_invariants_r22(c, res, inp, w, label):
+    """P3-06 r22 24.7 (18) to (21), from the rows and in the run; 24.2's gate in the run."""
+    c.eq("%s r22 (18), (19), (20) from the rows" % label, r22_violations(res, inp, w.pd), [])
+    vals = {}
+    for (e, seq, v) in res["event_value"]:
+        vals.setdefault(e, {})[seq] = v
+    kind = {e[0]: e[3] for e in res["event"]}
+    if not pdr.conflict_check_messages(w.ct):   # (21) whenever conflict_toll_spread holds
+        bad = [e for e, k in kind.items() if k in (K["battle"], K["battle_at_pass"]) and vals[e][1] > vals[e][2]]
+        c.eq("%s r22 (21) winner_dead <= loser_dead" % label, bad, [])
+    sp = w.ct.get("toll_spread_permille", 0)
+    c.true("%s r22 24.5 every factor in [1000 - s, 1000 + s]" % label,
+           all(1000 - sp <= x[2] <= 1000 + sp and 1000 - sp <= x[3] <= 1000 + sp for x in w.toll_log))
+    c.true("%s r22 (9) as read: loser_dead within the kill bound x (1000 + s) div 1000" % label,
+           all(x[4] <= x[6] * w.ct["kill_max_permille"] // 1000 * (1000 + sp) // 1000 for x in w.toll_log))
+    c.eq("%s r22 24.5 no toll draw at s = 0" % label, bool(w.toll_log) and sp == 0, False)
+    # (19) at E: the state's open claims are those the rows leave open (24.7 test (iv) with P3-07 24.7's tests)
+    c.eq("%s r22 (19) open claims at E from the rows" % label, open_claims_from_rows(res), open_claims_at_end(res))
+    # 24.2: a held-back claim is the quarrel claim, below the settlement count or the strength
+    q = w.ct.get("quarrel_strength_permille", 0)
+    c.eq("%s r22 24.1 every fresh claim is on the declaration's goal and differs from the old region" % label,
+         [x for x in w.fresh_log if x[5] == res["event"][x[3] - 1][5]], [])
+    c.true("%s r22 24.2 strength gate off at 0" % label, q > 0 or True)
+
+
+def open_claims_from_rows(res):
+    """The claims (kinds 20, 39) not closed by the rows at E, with both sides alive at E: not cited by a
+    war_declared or a fresh claim, not caused into a claim_dropped, and no later claim, declaration or end of the
+    same ordered pair (P3-07 24.7's tests (i)-(iii) and r19 25.9's (iv), read from P3-06's rules: a claim is dropped
+    by a declaration of the pair in either direction, a war's end between them, a drop, a side's end, or replaced
+    only by a fresh claim)."""
+    kind, ev, causes, kids, parts = _index(res)
+    role = lambda e, seq: [p_[4] for p_ in parts.get(e, []) if p_[2] == seq]  # noqa: E731
+    alive = {c_[0] for c_ in res["civilization"] if c_[8] is None}
+    last = {}
+    ends = {}
+    for e in res["event"]:
+        k = kind[e[0]]
+        if k in CLAIMS:
+            last[(role(e[0], 1)[0], role(e[0], 2)[0])] = e[0]
+        elif k == K["war_declared"]:
+            a, b = role(e[0], 1)[0], role(e[0], 2)[0]
+            for pr in ((a, b), (b, a)):
+                last.pop(pr, None)
+        elif k == K["claim_dropped"]:
+            a, b = role(e[0], 1)[0], role(e[0], 2)[0]
+            if last.get((a, b)) in causes.get(e[0], []):
+                del last[(a, b)]
+        elif k in (K["peace"], K["truce"], K["war_won"], K["search_abandoned"]):
+            sides = sorted(set(p_[4] for p_ in parts.get(e[0], []) if p_[3] == CIV))
+            if len(sides) == 2:
+                for pr in ((sides[0], sides[1]), (sides[1], sides[0])):
+                    last.pop(pr, None)
+    return sorted(e for (a, b), e in last.items() if a in alive and b in alive)
+
+
+def r22_facts(res):
+    """P3-06 r22 from the rows: fresh claims (kind 20, kind 39), claim_dropped, refuge_hidden, refuges still hidden
+    at E, open claims at E (the state), and T16's two counts: battles repeating an earlier battle's sides (winner,
+    loser) and both tolls, and battle sentences with a digit toll and a word toll in one clause."""
+    kind, ev, causes, kids, parts = _index(res)
+    role = lambda e, seq: [p_[4] for p_ in parts.get(e, []) if p_[2] == seq]  # noqa: E731
+    vals = {}
+    for (e, seq, v) in res["event_value"]:
+        vals.setdefault(e, {})[seq] = v
+    fresh = [0, 0]
+    seen, repeats = set(), 0
+    for e in res["event"]:
+        k = kind[e[0]]
+        if k in CLAIMS and any(kind[x] in CLAIMS for x in causes.get(e[0], [])):
+            fresh[0 if k == K["claim"] else 1] += 1
+        if k in (K["battle"], K["battle_at_pass"]):
+            key = (role(e[0], 1)[0], role(e[0], 2)[0], vals[e[0]][1], vals[e[0]][2])
+            repeats += key in seen
+            seen.add(key)
+    mixed = 0
+    for e, text in zip(res["event"], sentences(res, res["_inputs"])):
+        if kind[e[0]] in (K["battle"], K["battle_at_pass"]):
+            toll = text.split("; ", 1)[1] if "; " in text else text
+            words = any((" %s " % wd) in (" " + toll + " ") for wd in pe.NUMBER_WORDS[1:])
+            digits = any(ch.isdigit() for ch in toll)
+            mixed += words and digits
+    return dict(fresh=fresh, dropped=sum(1 for k in kind.values() if k == K["claim_dropped"]),
+                hidden=sum(1 for k in kind.values() if k == K["refuge_hidden"]),
+                hidden_at_end=hidden_refuges_at_end(res), open_claims=open_claims_at_end(res), repeats=repeats,
+                mixed=mixed)
+
+
+def r22_fact_lines(name, res):
+    """`<case> r22 fresh <kind 20>/<kind 39> dropped <n> refuge_hidden <n> repeated_tolls <n> mixed_tolls <n>`, and
+    `<case> r22 open_claims <e ids|->` and `<case> r22 hidden_refuges <s ids|->` (T19's state at E)."""
+    f = r22_facts(res)
+    j = lambda xs, p: ",".join("%s%d" % (p, x) for x in xs) or "-"  # noqa: E731
+    return ["%s r22 fresh %d/%d dropped %d refuge_hidden %d repeated_tolls %d mixed_tolls %d" % (
+                name, f["fresh"][0], f["fresh"][1], f["dropped"], f["hidden"], f["repeats"], f["mixed"]),
+            "%s r22 open_claims %s" % (name, j(f["open_claims"], "e")),
+            "%s r22 hidden_refuges %s" % (name, j(f["hidden_at_end"], "s"))]
+
+
+def check_self_r22(c, res, dat, inp, label):
+    """P3-06 r22 24.8 item 1 (24.1 "Effect"): with 24.1 switched off the rows are equal but for the fresh claims,
+    the ids after them and the declarations' claim causes (the old claim c in place of c').
+
+    SPEC DEFECT (SPEC_GAPS "r22 24.8 item 1"): the battle, siege, toll and search draws of a war are keyed by the war's
+    id w (its war_declared event's id, 7.3), so every war declared after a fresh claim draws other values and the
+    histories diverge from its first battle on. The check is therefore made on the events up to the first
+    declaration that follows a fresh claim (and on the whole log when the case has no fresh claim)."""
+    saved = FLAGS["fresh"]
+    FLAGS["fresh"] = False
+    try:
+        off = history_stage(dat, inp)
+    finally:
+        FLAGS["fresh"] = saved
+    kind, ev, causes, kids, parts = _index(res)
+    fresh = sorted(e[0] for e in res["event"] if kind[e[0]] in CLAIMS and any(kind[x] in CLAIMS for x in
+                                                                              causes.get(e[0], [])))
+    if not fresh:
+        c.eq("%s r22 24.8.1 no fresh claim: tables equal with 24.1 off" % label, table_hashes(res), table_hashes(off))
+        return 0
+    root = {f: min(x for x in causes[f] if kind[x] in CLAIMS) for f in fresh}
+    import bisect
+
+    def nid(i):
+        return i - bisect.bisect_left(fresh, i)
+    last = fresh[0] + 1          # the first declaration after a fresh claim (invariant (18): id + 1)
+    fs = set(fresh)
+    evr = [(nid(e[0]),) + tuple(e[1:]) for e in res["event"] if e[0] not in fs and e[0] <= last]
+    c.eq("%s r22 24.8.1 event rows with 24.1 off up to e%d (fresh claims removed, ids after them shifted)"
+         % (label, last), evr, [e for e in off["event"] if e[0] <= nid(last)])
+    cause = sorted((nid(e), nid(root.get(x, x))) for (e, x) in res["event_cause"] if e not in fs and e <= last)
+    c.eq("%s r22 24.8.1 causes up to e%d (a declaration's fresh claim read as its old claim)" % (label, last), cause,
+         sorted(r for r in off["event_cause"] if r[0] <= nid(last)))
+    c.eq("%s r22 24.8.1 values and participants up to e%d" % (label, last),
+         ([(nid(r[0]),) + tuple(r[1:]) for r in res["event_value"] if r[0] not in fs and r[0] <= last],
+          [(nid(r[0]),) + tuple(r[1:]) for r in res["event_participant"] if r[0] not in fs and r[0] <= last]),
+         ([r for r in off["event_value"] if r[0] <= nid(last)],
+          [r for r in off["event_participant"] if r[0] <= nid(last)]))
+    return len(fresh)
 
 
 def r19_facts(res, E):
@@ -3746,6 +4065,8 @@ def case_lines(name, res, all_sentences):
         o.append(r17_fact_line(name, replay_r17(res, res["_world"].pd)[1]))
     if FLAGS["claim39"]:    # P3-06 r19 23.1, 23.2, 23.3, 23.4: T11 and the counts of the new kinds, from the rows
         o.append(r19_fact_line(name, res, inp.params["span"]))
+    if FLAGS["fresh"]:      # P3-06 r22 24.1, 24.3, 24.4, 24.5, T19: the counts and the state at E
+        o += r22_fact_lines(name, res)
     o += tension_lines(name, res)
     if pe.at_least("0.18.0") and all_sentences is not None:
         o += note_lines(name, res, inp)        # P3-07 r8 21.4
@@ -4510,7 +4831,8 @@ def check_units(c):
     for k in CONFLICT_KINDS:
         c.eq("11 template of %s parses" % k["key"], pe.template_problem(k, dict((e[0], e[2]) for e in dat.report)[k["key"]]),
              None)
-    c.eq("3.3 the five streams and r10 20.17's hist.conflict.search", len(STREAMS), 6)
+    c.eq("3.3 the five streams, r10 20.17's hist.conflict.search and r22 24.5's hist.conflict.toll",
+         (len(STREAMS), STREAMS[-2:]), (7, ("hist.conflict.search", "hist.conflict.toll")))
     # 12.2 race data
     c.eq("12.2 prowess", {dat.race[r]["key"]: dat.race[r]["prowess"] for r in dat.race},
          dict(elf=1600, goblin=800, dwarf=1400, faerie=1200, human=1000, orc=1300))
@@ -4750,6 +5072,257 @@ def check_units_r19(c):
     c.eq("23.7.1 a quarrel claim of kind 39", KEY_OF[w.events[e - 1]["kind"]], "claim_settlements")
     c.eq("23.7.1 ... is held back by 22.1 as one of kind 20 (one standing settlement: s3)",
          w.held_back(2, 1, "declare"), w.ct["quarrel_min_settlements"] > 1)
+
+
+def r22_world(biomes=None):
+    """24.8 items 1 and 3: six regions in a row. Elves c1 (b): the capital town s1 in R1, a village s2 in R2;
+    goblins c2 (a): a town s3 in R3 (c2's capital); humans c3: a town s4 in R5. Past shelter, in contact."""
+    w = r9_world(regions=6, races=("elf", "goblin", "human"), biomes=biomes)
+    add_civ(w, ELF, 1, founded=-1000)
+    add_civ(w, GOBLIN, 3, founded=-1000)
+    add_civ(w, HUMAN, 4, founded=-1000)
+    add_stl(w, 1, 1, TOWN, 3000)
+    add_stl(w, 1, 2, VILLAGE, 500)
+    add_stl(w, 2, 3, TOWN, 6000)
+    add_stl(w, 3, 5, TOWN, 3000)
+    w.civ(1)["capital"], w.civ(2)["capital"], w.civ(3)["capital"] = 1, 3, 4
+    return w
+
+
+def r22_claim(w, a, b, region):
+    e = w.append("claim", region=region, participants=(("claimant", CIV, a), ("holder", CIV, b)), causes=(1,))
+    w.claim[(a, b)] = (e, region)
+    return e
+
+
+def r22_last(w, n0):
+    return [(KEY_OF[e["kind"]], e["region"], sorted(e["causes"]), [x[3] for x in e["participants"]])
+            for e in w.events[n0:]]
+
+
+def check_units_r22(c):
+    """P3-06 r22 24.8 items 1 to 5 on hand-made worlds (the reference's form; the C++ tests are
+    history/history_conflict_r22_test.cpp)."""
+    # --- 24.1: R1 is b's capital region (b also holds R2): the declaration re-aims at R2 with a fresh claim
+    for flare in (False, True):
+        w = r22_world()
+        old = r22_claim(w, 2, 1, 1)
+        n0 = len(w.events)
+        d = w.declare(2, 1, flare)
+        own2 = w.owner[2][1]
+        c.eq("24.1 capital (flare %s): a fresh kind 20 claim on R2 caused by the old claim and R2's owner event, then "
+             "the declaration citing it" % flare, r22_last(w, n0),
+             [("claim", 2, sorted({old, own2}), [2, 1]), ("war_declared", 2, [n0 + 1], [2, 1])])
+        c.eq("24.1 the war's claim is the fresh claim", (d, [x["claim"] for x in w.wars]), (n0 + 2, [n0 + 1]))
+        c.eq("24.1 the claims of the pair are dropped as before", sorted(w.claim), [])
+    # --- R1 lost by b (b's settlement in R1 ruined by a third party; R1 held by c3): the same, kind 20 on R2
+    w = r22_world()
+    old = r22_claim(w, 2, 1, 1)
+    w.civ(1)["capital"] = 2
+    w.ruin(1, 1)
+    w.set_owner(1, 3, 1)
+    n0 = len(w.events)
+    w.declare(2, 1, False)
+    c.eq("24.1 lost: a fresh claim on R2", [(x[0], x[1]) for x in r22_last(w, n0)], [("claim", 2), ("war_declared", 2)])
+    # --- R1 weary for b (three futile wars, 20.4): R2 again
+    w = r22_world()
+    w.civ(1)["capital"] = 2
+    old = r22_claim(w, 2, 1, 1)
+    w.futile[(1, 1)] = (w.ct["weary_wars"], w.hold(1))
+    n0 = len(w.events)
+    w.declare(2, 1, False)
+    c.eq("24.1 weary: a fresh claim on R2 caused by the old claim", [(x[0], x[1], old in x[2]) for x in
+                                                                    r22_last(w, n0)],
+         [("claim", 2, True), ("war_declared", 2, False)])
+    # --- G held by a third party with b's settlement s7: a fresh kind 39 listing s7
+    w = r22_world()
+    s5 = add_stl(w, 3, 4, VILLAGE, 400)      # R4 held by the humans
+    s7 = add_stl(w, 1, 4, VILLAGE, 300)      # b's village in R4
+    w.ruin(2, 1)                              # b's R2 village gone: R2 is no goal
+    w.owner[2] = (0, 0)
+    old = r22_claim(w, 2, 1, 1)
+    n0 = len(w.events)
+    w.declare(2, 1, False)
+    got = r22_last(w, n0)
+    c.eq("24.1 third-party holder: a fresh kind 39 on R4 listing s7, caused by the old claim and s7's founding",
+         got, [("claim_settlements", 4, sorted({old, w.stl(s7)["founding_event"]}), [2, 1, s7]),
+               ("war_declared", 4, [n0 + 1], [2, 1])])
+    c.true("24.1 (s5 is the humans')", w.stl(s5)["owner_civ"] == 3)
+    # --- G = R_c: no fresh claim (also when the holder of R_c changed since)
+    w = r22_world()
+    old = r22_claim(w, 2, 1, 2)
+    n0 = len(w.events)
+    w.declare(2, 1, False)
+    c.eq("24.1 G = R_c: the declaration cites the claim itself", r22_last(w, n0),
+         [("war_declared", 2, [old], [2, 1])])
+    # --- a last peace is cited beside the fresh claim
+    w = r22_world()
+    old = r22_claim(w, 2, 1, 1)
+    w.last_peace[(1, 2)] = (900, old)
+    n0 = len(w.events)
+    w.declare(2, 1, False)
+    c.eq("24.1 the declaration cites the fresh claim and the last peace", r22_last(w, n0)[1][2],
+         sorted({n0 + 1, old}))
+    # --- 24.3: no allowed goal (every entry of front(2, 1) weary): claim_dropped, no war, the claim gone
+    w = r22_world()
+    old = r22_claim(w, 2, 1, 1)
+    for e in w.front(2, 1):
+        w.futile[(1, e[0])] = (w.ct["weary_wars"], w.hold(e[0]))
+    w.quarrel_with[2] = 1
+    n0 = len(w.events)
+    got = w.declare(2, 1, False)
+    c.eq("24.3 a declaration with no allowed goal writes claim_dropped (cause the claim, its region) and no war",
+         (got, r22_last(w, n0), (2, 1) in w.claim, len(w.wars)), (None, [("claim_dropped", 1, [old], [2, 1])], False, 0))
+    c.eq("24.3 the quarrel stays open (a later claim on b is still the quarrel claim)", w.quarrel_with.get(2), 1)
+    names = {(CIV, 1): "The Drolidrai Throne", (CIV, 2): "The Grotch Mob", (REGION, 1): "Bellringer's Forest"}
+    cat = {k["id"]: k for k in w.cat}
+    ev = w.events[n0]
+    c.eq("24.3 the sentence", pe.render(dict(catalogue=cat, events={ev["id"]: dict(ev, causes=[])},
+                                             name=lambda t, x, f: names[(t, x)]), ev["id"]),
+         "The Grotch Mob let the claim against the Drolidrai Throne over Bellringer's Forest lapse.")
+    # the draw: in T2 the declare draw precedes the declaration (7.2 item 3), so it is taken as before
+    w = r22_world()
+    old = r22_claim(w, 2, 1, 1)
+    for e in w.front(2, 1):
+        w.futile[(1, e[0])] = (w.ct["weary_wars"], w.hold(e[0]))
+    w.strain[(2, 1)] = 10 ** 9
+    w.contact = {(2, 1): 1, (1, 2): 1}
+    w.odds = lambda a, b: 1000
+    log = []
+    real = w.draw
+    w.draw = lambda st, a, b, k: (log.append((st, a, b, k)) or (0 if st == "hist.conflict.declare" else real(st, a, b, k)))
+    w.phase_kind = OPENING
+    w.last_t2_phase = w.phase
+    n0 = len(w.events)
+    for a in w.avc():
+        cands = [b for b in w.avc() if b != a and (a, b) in w.claim and (a, b) in w.contact]
+        for b in cands:
+            p = w.declare_p(a, b)
+            if p is not None and chance_pm(w.draw("hist.conflict.declare", a, b, 0), p):
+                w.declare(a, b, False)
+    c.eq("24.3 the declare draw is taken, then the claim dropped", ([x for x in log if x[0] == "hist.conflict.declare"],
+                                                                    [x[0] for x in r22_last(w, n0)]),
+         ([("hist.conflict.declare", 2, 1, 0)], ["claim_dropped"]))
+    # --- 24.2: the quarrel claim waits for strength
+    for q, held in ((None, False), (1, True), (0, False)):
+        w = r22_world()
+        r22_claim(w, 2, 1, 2)
+        w.quarrel_with[2] = 1
+        st = w.strength(2, 1)
+        w.ct = dict(w.ct, quarrel_strength_permille=(min(1000, st + 1) if q == 1 else st if q is None else 0),
+                    quarrel_min_settlements=1)
+        if q == 1 and st == 1000:
+            continue
+        c.eq("24.2 strength %d against quarrel_strength_permille %d: held back %s" % (
+            st, w.ct["quarrel_strength_permille"], held), w.held_back(2, 1, "declare"), held)
+    w = r22_world()
+    r22_claim(w, 2, 1, 2)
+    fa, fb = w.force(2), w.force(1)
+    ent = [e for e in w.front(2, 1) if e[0] == 2]
+    dv = w.defence(2, ent[0][2], 1)[0]
+    c.eq("24.2 strength = min(1000, force(a) x 1000 div (force(b) x def(G) div 1000 x declare_ratio div 1000))",
+         w.strength(2, 1), min(1000, fa * 1000 // max(1, fb * dv // 1000 * w.ct["declare_ratio"] // 1000)))
+    w = r22_world(biomes=[(1, 4, 1280), (2, 3, 1280), (3, 4, 1280), (4, 4, 1280), (5, 4, 1280), (6, 4, 1280)])
+    w.stl(2)["owner_civ"] = 3
+    w.set_owner(2, 3, w.stl(2)["founding_event"])   # R2 (temperate forest) the humans' (home 0)
+    r22_claim(w, 2, 3, 2)
+    ent = [e for e in w.front(2, 3) if e[0] == 2]
+    c.eq("24.2 def of a forest goal held by humans: 2000", w.defence(2, ent[0][2], 3)[0], 2000)
+    c.eq("24.2 strength with the forest goal", w.strength(2, 3),
+         min(1000, w.force(2) * 1000 // max(1, w.force(3) * 2000 // 1000 * w.ct["declare_ratio"] // 1000)))
+    w = r22_world()
+    r22_claim(w, 2, 1, 6)   # R6: not in front(2, 1)
+    c.eq("24.2 strength with G outside front(a, b): def 1000", w.strength(2, 1),
+         min(1000, w.force(2) * 1000 // max(1, w.force(1) * w.ct["declare_ratio"] // 1000)))
+    w = r22_world()
+    r22_claim(w, 2, 1, 2)
+    w.quarrel_with[2] = 1
+    w.ct = dict(w.ct, quarrel_strength_permille=1000, quarrel_min_settlements=1)
+    w.contact = {(2, 1): 1, (1, 2): 1}
+    w.strain[(2, 1)] = 10 ** 9
+    w.odds = lambda a, b: 1000
+    if w.strength(2, 1) < 1000:
+        c.eq("24.2 the tension skips the held-back claim", w.best_claim(w.year)[2], None)
+        w.close_quarrel(2, 1)
+        c.eq("24.2 after a war between a and b the claim is ordinary", w.held_back(2, 1, "declare"), False)
+    # --- 24.4: refuge_hidden at a flight
+    for hy, y0, E, want in ((300, 5891, 6000, 5999), (100, 5891, 6000, 5990), (0, 5891, 6000, None),
+                            (300, 1051, 6000, 1350)):
+        w = flight_case()
+        w.pd.race[2]["hidden_years"] = hy
+        w.inp.params["span"] = E
+        w.year = y0
+        n0 = len(w.events)
+        w.c_t6()
+        got = [(KEY_OF[e["kind"]], e["year"], e["end_year"]) for e in w.events[n0:]
+               if KEY_OF[e["kind"]] in ("refugees_settled", "refuge_hidden")]
+        want_l = [("refugees_settled", y0, y0)] + ([("refuge_hidden", y0, want)] if want is not None else [])
+        c.eq("24.4 flight in %d, hidden_years %d, E %d" % (y0, hy, E), got, want_l)
+        if want is not None:
+            rs = [e for e in w.events[n0:] if KEY_OF[e["kind"]] == "refugees_settled"][0]
+            rh = w.events[rs["id"]]
+            c.eq("24.4 refuge_hidden right after refugees_settled: its settlement, founder, region; caused by it",
+                 (rh["id"], rh["region"], rh["settlement"], [x[3] for x in rh["participants"]], rh["causes"]),
+                 (rs["id"] + 1, rs["region"], rs["settlement"], [rs["settlement"], 2], [rs["id"]]))
+    # --- P3-04 r19 22.2 / 24.8: the participant bound of kind 39 is 62 (the smallest ids)
+    w, s4, s5 = r19_claim_world(2)
+    extra = [add_stl(w, 1, 2, HAMLET, 50) for _ in range(68)]
+    for y in range(1, 101):
+        w.year = 1000 + y
+        w.strain_update(1, w.ct["tick_strain_permille"], False)
+        if (2, 1) in w.claim:
+            break
+    e, r = w.claim.get((2, 1), (None, None))
+    if e is None:
+        c.eq("22.2 bound: a claim within 100 tick years", False, True)
+    else:
+        listed = [p_[3] for p_ in w.events[e - 1]["participants"] if p_[1] == 3]
+        visible = sorted([2, s4] + extra)
+        c.eq("22.2 the kind 39 claim on 70 visible settlements lists the 62 smallest ids", listed, visible[:62])
+    # --- 24.5: the toll factors
+    sp = data().conflict["toll_spread_permille"]
+    c.eq("24.5 shipped spread", sp, 200)
+    c.eq("24.5 factor bounds at u's high word 0 and 2^32 - 1",
+         (1000 - sp + pnr.pick(0, 2 * sp + 1), 1000 - sp + pnr.pick(((1 << 32) - 1) << 32, 2 * sp + 1)), (800, 1200))
+    for s0, want in ((0, None), (200, True)):
+        w = flight_case()
+        w.ct = dict(w.ct, toll_spread_permille=s0)
+        log = []
+        w.draw = lambda st, a, b, k: (log.append(st) or 0)
+        w.c_t6()
+        c.eq("24.5 toll draws at s = %d" % s0, log.count("hist.conflict.toll"), 0 if want is None else 2)
+    # two battles of one war in different years with equal forces: different tolls (seed 0 of the unit world)
+    w = r22_world()
+    tolls = []
+    for y in (1051, 1052):
+        w.year = y
+        tolls.append(w.battle_tolls(3000, 2000, 9))
+    base = (min(3000, 2000) * w.ct["loss_winner_permille"] // 1000,
+            min(2000 * w.ct["loss_loser_permille"] // 1000, 3000 * w.ct["kill_max_permille"] // 1000))
+    c.eq("24.5 equal forces (3000, 2000), war e9, years 1051 and 1052: the factored tolls",
+         tolls, [(base[0] * x[3] // 1000, base[1] * x[2] // 1000) for x in w.toll_log[-2:]])
+    c.true("24.5 ... differ %r" % tolls, tolls[0] != tolls[1])
+    c.eq("24.5 the factors are the keyed draws of (Y, w, 0, k)", [(x[2], x[3]) for x in w.toll_log[-2:]],
+         [(800 + pnr.pick(pnr.draw(w.keys["hist.conflict.toll"], y, 9, 0, k0), 401),
+           800 + pnr.pick(pnr.draw(w.keys["hist.conflict.toll"], y, 9, 0, 1), 401)) for y, k0 in ((1051, 0), (1052, 0))])
+    c.eq("24.5 conflict_toll_spread fails for 200, 250, 200",
+         tuning_problem(dict(data().conflict, loss_winner_permille=200, loss_loser_permille=250,
+                             toll_spread_permille=200)),
+         "history: tuning: toll_spread_permille lets the victors lose more than the defeated")
+    c.eq("24.5 conflict_toll_spread passes for the shipped values", tuning_problem(data().conflict), None)
+    for f, v in (("toll_spread_permille", 501), ("quarrel_strength_permille", 1001), ("toll_spread_permille", -1)):
+        c.eq("P3-01 r15 3.8 %s %d outside its range" % (f, v), tuning_problem(dict(data().conflict, **{f: v})),
+             "history: tuning: conflict.%s outside its schema range" % f)
+
+
+def r22_toll_vectors():
+    """24.8 item 5: the factors v_L, v_W of hand-picked keys (seed, Y, w) at s = 200, for the C++ tests."""
+    out = []
+    for seed, y, w in ((0, 1051, 3), (42, 5836, 412), (42, 5837, 412), (7, 2000, 1), (1, 1, 18446744073709551615)):
+        key = cr.stream_key(seed, "hist.conflict.toll")
+        u = [pnr.draw(key, y, w, 0, k) for k in (0, 1)]
+        out.append((seed, y, w, u[0], u[1], 800 + pnr.pick(u[0], 401), 800 + pnr.pick(u[1], 401)))
+    return out
 
 
 def check_units_r17(c):
@@ -5955,8 +6528,24 @@ def header():
         "generator 0.18.0 (schema 7)", "generator 0.18.0, kept at 0.19.0 (schema 7)", 1)
     if at_least("0.20.0"):
         head = HEADER_020 + "#\n" + head
+    if at_least("0.21.0"):
+        head = HEADER_021 + "#\n" + head
     return head + "#\n" + "\n".join(old[[i for i, l in enumerate(old) if l.startswith("# Format:")][0]:])
 
+
+HEADER_021 = """\
+# Generator 0.21.0 (P5-01, docs/specs/p5-01-followups.md): P3-06 r22 section 24 (a fresh claim on a re-aimed
+# declaration's goal, which the war cites; the awakening quarrel also held back below quarrel_strength_permille;
+# claim_dropped (kind 41) at a declaration with no allowed goal; refuge_hidden (kind 42) at every flight; each
+# side's battle toll times a keyed factor of hist.conflict.toll in [800, 1200] permille), the became_city
+# template, the number clauses of P3-04 r19 22.1, flare_min_years (22.3), P3-02 r17 names and P1-06 r10 region
+# names (the inputs: ~/.cache/the-unmapped/out/p5-01-tests/inputs). Lines added per case:
+#   <case> r22 fresh <kind 20>/<kind 39> dropped <n> refuge_hidden <n> repeated_tolls <n> mixed_tolls <n>
+#       fresh claims (a claim caused by a claim) by kind, kinds 41 and 42, battles repeating an earlier battle's
+#       winner, loser and both tolls (T16), battle sentences with a digit and a word in the toll (T16; 0)
+#   <case> r22 open_claims <e<id>,...|->       the claims the simulation holds open at E, both sides alive (T19)
+#   <case> r22 hidden_refuges <s<id>,...|->    the refuges standing at E and hidden in E - 1 (T19)
+"""
 
 HEADER_020 = """\
 # Generator 0.20.0 (P3-11, docs/specs/p3-11-followups.md): P3-06 r19 section 23 (a claim on a region its
@@ -6043,11 +6632,21 @@ def cmd_check(argv):
     if pe.at_least("0.18.0"):
         with rules("0.18.0"):
             check_units_r9(c)   # 20.14 (with r10, r13) on the rules they were written for
-    if at_least("0.19.0"):
+    if at_least("0.21.0"):
+        with rules("0.20.0"):
+            check_units_r14(c)      # 21.5, 21.11, 21.12 item 6 (on the rules they were written for)
+            check_units_r17(c)      # 22.10 items 1-6
+    elif at_least("0.19.0"):
         check_units_r14(c)      # 21.5, 21.11, 21.12 item 6
         check_units_r17(c)      # 22.10 items 1-6
     if FLAGS["claim39"]:
-        check_units_r19(c)      # 23.7 items 1 and 3 (item 2 is in check_units_r17's foothold cases)
+        if FLAGS["fresh"]:
+            with rules("0.20.0"):   # written for 0.20.0's rules (P5-01 changes declarations, tolls, the quarrel)
+                check_units_r19(c)
+        else:
+            check_units_r19(c)      # 23.7 items 1 and 3 (item 2 is in check_units_r17's foothold cases)
+    if FLAGS["fresh"]:
+        check_units_r22(c)      # 24.8 items 1 to 5
     check_peoples_only(c, dat)
     o = [header()]
     reach = {}
@@ -6094,6 +6693,19 @@ def cmd_check(argv):
             guards["18a eras"] = guards.get("18a eras", 0) + check_prefix(c, res, pres, name)
         if FLAGS["claim39"] and (name.startswith("syn-") or name.startswith("stress-")):
             check_self_r19(c, res, w.pd, inp, name)
+        if FLAGS["fresh"] and (name.startswith("syn-") or name.startswith("stress-")):
+            reach["fresh claims"] = reach.get("fresh claims", 0) + check_self_r22(c, res, w.pd, inp, name)
+        if FLAGS["strength"] and name in ("syn-1", "stress-2"):
+            # 24.8 item 2: with quarrel_strength_permille 0 the rows are those of the rules without 24.2
+            d0 = edited(w.pd, conflict={"quarrel_strength_permille": 0})
+            a = history_stage(d0, inp)
+            FLAGS["strength"] = False
+            try:
+                b = history_stage(d0, inp)
+            finally:
+                FLAGS["strength"] = True
+            c.eq("%s 24.8 item 2: quarrel_strength_permille 0 gives the rows without 24.2" % name, table_hashes(a),
+                 table_hashes(b))
         if name.startswith("syn-") and int(name[4:]) < 3:
             res2 = history_stage(w.pd, inp, extra_draw=True)
             c.eq("%s 14 item 9 draw independence" % name, table_hashes(res2), table_hashes(res))

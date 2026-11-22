@@ -91,19 +91,26 @@ import p3_data_reference as pdr  # noqa: E402
 # P1-06 r6/r7 (P3-10, generator 0.19.0; the default): the list edits of 15.1-15.3 (data, served through
 # p3_data_reference's copied-kind logic), V7 (15.4) and one keeper per land noun (15.7). "0.18.0" (also
 # 0.17.0: r3/r4) keeps the keeper per base name and no V7, with the 0.18.0 lists. use_version(v).
-VERSION = "0.19.0"
+# P1-06 r10 (P5-01, generator 0.21.0; the default): only the lists change (16.1: 34 grim words from common to
+# trait_barren), served through p3_data_reference; the rule is r7's. "0.20.0" serves the 0.19.0 lists (the
+# placename files did not change at 0.20.0) with r7's rule.
+VERSION = "0.21.0"
 
 
 def use_version(v):
     global VERSION
-    if v not in ("0.17.0", "0.18.0", "0.19.0"):
+    if v not in ("0.17.0", "0.18.0", "0.19.0", "0.20.0", "0.21.0"):
         raise ValueError(v)
     VERSION = v
     pdr.use_version(v)
 
 
 def r7():
-    return VERSION == "0.19.0"
+    return VERSION in ("0.19.0", "0.20.0", "0.21.0")
+
+
+def r10():
+    return VERSION == "0.21.0"
 
 FatalError = cr.FatalError
 ONE = 1 << 32
@@ -2670,11 +2677,12 @@ def check_rg11_r7(c):
     c.eq("15.6 V7: the first drawn region takes The Flooded Thicket", (nm[0], how[0]), ("The Flooded Thicket", "0"))
     c.eq("15.6 V7: attempt 0 The Weald of Floods is invalid (stem flood); the next valid attempt names it",
          (nm[1], how[1]), ("The Weald of Crows", str(want_t)))
+    saved_v = VERSION
     use_version("0.18.0")
     try:
         nm18, how18 = rg11_r3(rows + big, bl + blk, set(), 0, 64, mp, tt)
     finally:
-        use_version("0.19.0")
+        use_version(saved_v)
     c.eq("15.6 V7 off at 0.18.0: attempt 0 stands", (nm18[1], how18[1]), ("The Weald of Floods", "0"))
     # keepers add nothing to S: a keeper of land B's noun, then a region of B whose attempt 0 is accepted
     nm, how = rg11_r3([_row(rid, 10), _row(rid + 1, 99)], [("North Weald", B), ("South Weald", B)], set(), 0, 64,
@@ -2718,6 +2726,35 @@ def check_rg11_r7(c):
         c.ok("check 4a passes on the 0.19.0 lists", True)
     except FatalError as e:
         c.ok("check 4a passes on the 0.19.0 lists: %s" % e, False)
+
+
+def check_rg11_r10(c):
+    """P1-06 r10 16.1 on the served lists, and the grim class's definition unchanged (15.2)."""
+    pn = placename_data()
+    co, ba = pn["common"], pn["trait"]["barren"]
+    kept = {"prefixes": ["Ghost", "Wraith"], "adjectives": ["Accursed", "Cursed"], "objects": ["Ghosts", "Shades"]}
+    moved = {"prefixes": "Bale Charnel Dread Grief Lich Pall Sorrow Wight".split(),
+             "adjectives": ("Bloodless Doleful Drear Fallen Forsaken Godless Grim Joyless Moaning Orphaned Shunned "
+                            "Stricken Weeping Wretched").split(),
+             "places": "Bane Grief Shame".split(), "possessors": "Gravedigger Mourner Widower".split(),
+             "objects": ["Bones", "Grief", "Widows", "the Damned", "the Forsaken", "the Slain"]}
+    for f in ("prefixes", "adjectives", "places", "possessors", "objects"):
+        c.eq("16.1 common.%s keeps only the spirit and curse words of the grim class" % f,
+             [w for w in co[f] if w in pdr.GRIM_019[f]], kept.get(f, []))
+        c.eq("16.1 the moved words are in trait_barren.%s" % f, [w for w in moved[f] if w not in ba[f]], [])
+        c.eq("16.1 trait_barren.%s byte-sorted without repeats" % f, ba[f], sorted(set(ba[f]), key=lambda w: w.encode()))
+    c.ok("16.1 carr keeps Weeping, steppe keeps Bones",
+         "Weeping" in pn["defs"]["carr"]["adjectives"] and "Bones" in pn["defs"]["steppe"]["objects"])
+    for nmx, want in (("The Sorrowing Waste", True), ("The Weeping Wood", True), ("Ghostholt", True),
+                      ("The Black Fen", False)):
+        c.eq("15.2 grim(%s) unchanged by r10" % nmx, grim_name(nmx), want)
+    c.eq("4.1 loader checks pass on the 0.21.0 lists", placename_problem(pn["defs"], set(br.shipped_definitions())),
+         None)
+    try:
+        check_4a(pn, shipped_defs(), SHIPPED_POOLS)
+        c.ok("check 4a passes on the 0.21.0 lists", True)
+    except FatalError as e:
+        c.ok("check 4a passes on the 0.21.0 lists: %s" % e, False)
 
 
 def check_v7_world(c, label, r):
@@ -2970,6 +3007,7 @@ def check_lake_only(c):
                            row["elev_mean_dm"], row["elev_max_dm"], row["habitability_mean"], row["habitability_p90"],
                            row["fresh_water_mean"], row["ore_rich_cells"]), (2, 1, 1, 2, 0, 0, 0, 0, 0, 0, 0, 0))
     c.eq("lake-only names", [x["name"] for x in r["rows"]],
+         ["West Downs", "The Shrouded Isle", "East Isle", "Wolfmere"] if r10() else   # 0.21.0 lists (P1-06 r10)
          ["West Downs", "The Shivering Isle", "East Isle", "Wolfmere"] if r7() else   # 0.19.0 lists (P1-06 r6)
          ["West Downs", "The Sable Isle", "East Isle", "Woemere"])
     check_invariant6(c, "lake-only fixture", r)  # r3
@@ -3249,12 +3287,15 @@ def check_all(quick):
     check_rg11(c)
     if r7():
         # r3's draw examples, sizes and 14.4 table are statements about the 0.18.0 lists and rule
+        saved_v = VERSION
         use_version("0.18.0")
         try:
             check_rg11_r3(c, quick)
         finally:
-            use_version("0.19.0")
+            use_version(saved_v)
         check_rg11_r7(c)
+        if r10():
+            check_rg11_r10(c)
     else:
         check_rg11_r3(c, quick)
     check_rg12(c)
@@ -3360,14 +3401,26 @@ def rename_db(src, dst):
     the r3 names (nothing else changes)."""
     import shutil
     rows, nm, how, _, bases, _ = world_names(src)
-    if r7() and any(strip_numeral(r["name"]) != b for r, b in zip(rows, bases)):
+    prev20 = None
+    if r10() and any(strip_numeral(r["name"]) != b for r, b in zip(rows, bases)):
+        # P5-01: an input of the 0.19.0/0.20.0 history tests stores the r7 names on the 0.19.0 lists
+        saved_v = VERSION
+        use_version("0.20.0")
+        try:
+            _, prev20, _, _, _, _ = world_names(src)
+        finally:
+            use_version(saved_v)
+    if prev20 is not None and all(r["name"] == n for r, n in zip(rows, prev20)):
+        pass
+    elif r7() and any(strip_numeral(r["name"]) != b for r, b in zip(rows, bases)):
         # P3-10: an input of the 0.17.0/0.18.0 history tests stores the r3 names; check them against the r3
         # rule on the 0.18.0 lists, then rename to the r7 names.
+        saved_v = VERSION
         use_version("0.18.0")
         try:
             _, nm18, _, _, _, _ = world_names(src)
         finally:
-            use_version("0.19.0")
+            use_version(saved_v)
         bad = [(r["id"], r["name"], n) for r, n in zip(rows, nm18) if r["name"] != n]
         if bad:
             fatal("%s: stored names are neither r2 nor r3 names: %r" % (src, bad[:5]))
@@ -3452,6 +3505,8 @@ def r7_golden_guard(old_path, new_text):
             if item in ("names", "name_attempts", "table_region"):
                 if item == "table_region" and va != vb:
                     moved.append(case)
+                    if r10() and "cover" in b["items"] and "numbered=0" in b["items"]["cover"].split():
+                        out.append("%s: table_region moved although no region name is drawn (P1-06 16.3)" % case)
                 continue
             if va != vb:
                 out.append("%s: %s differs" % (case, item))

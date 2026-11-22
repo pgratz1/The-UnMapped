@@ -346,6 +346,8 @@ CONFLICT_CHECKS_019 = CONFLICT_CHECKS_018 + (("conflict_quarrel_strain", "quarre
 
 def conflict_ranges():
     """The history.conflict field ranges of the served data version."""
+    if at_least("0.21.0"):
+        return CONFLICT_RANGES_021
     if at_least("0.19.0"):
         return CONFLICT_RANGES_019
     return CONFLICT_RANGES_018 if DATA_VERSION == "0.18.0" else CONFLICT_RANGES_016
@@ -364,6 +366,11 @@ def conflict_check_messages(t):
         out.append(CONFLICT_CHECKS_019[3][1])
     if "quarrel_strain" in t and not (t["quarrel_strain"] <= t["strain_max"]):
         out.append(CONFLICT_CHECKS_019[4][1])
+    if "toll_spread_permille" in t:   # P3-06 r22 24.5 (P5-01)
+        s = t["toll_spread_permille"]
+        if not (t["loss_winner_permille"] * (1000 + s) <= min(t["loss_loser_permille"], t["kill_max_permille"])
+                * (1000 - s)):
+            out.append("toll_spread_permille lets the victors lose more than the defeated")
     return out
 
 # P3-01 3.
@@ -1225,7 +1232,7 @@ def engine_check_messages(t):
         out.append(ENGINE_CHECKS_019[0][1])
     if "quiet_min_years" in t and not (t["quiet_min_years"] <= 2 * t["quiet_step_years"]):
         out.append(ENGINE_CHECKS_019[1][1])
-    return out
+    return out + engine_flare_messages(t)   # P3-04 r19 22.3: engine_flare_min after engine_quiet_min
 
 
 HISTORY_FILES_019 = dict(CHRONOLOGY_FILE, **CONFLICT_FILE_019, **ENGINE_FILE_019, **PEOPLES_FILE_019,
@@ -1435,6 +1442,16 @@ def copied_files_019(path, directory, files):
     """The files of a copied kind directory for the served version, given what the disk holds (P3-10)."""
     if directory not in ("placenames", "name_filters"):
         return files
+    pre21 = placenames_pre_021 if directory == "placenames" else name_filters_pre_021
+    if not pre21(files):   # P5-01: the disk holds 0.21.0 files
+        if at_least("0.21.0"):
+            return files
+        if os.path.normpath(path).startswith(os.path.normpath(REPO)):
+            return copied_files_019(path, directory, git_dir_files(P5_01_BASE_COMMIT, path))
+        raise DataError("%s: 0.21.0 files, cannot serve %s" % (path, DATA_VERSION))
+    if at_least("0.21.0"):   # 0.20.0 files on disk, 0.21.0 served: the spec's edits
+        PRE_015_USED.add(path)
+        return placenames_021(files) if directory == "placenames" else name_filters_019(files, NAME_FILTER_EDITS_021)
     pre = placenames_pre_019 if directory == "placenames" else name_filters_pre_019
     if directory == "name_filters" and at_least("0.19.0") and not pre(files) and not name_filters_r16(files):
         # P3-11: the disk holds 0.19.0 or 0.20.0 files
@@ -1576,11 +1593,152 @@ def pre_020(path, kind):
     return any("awakening_population" not in t for t in texts.values())
 
 
+# ---------------------------------------------------------------------------
+# The 0.21.0 listings (P5-01, docs/specs/p5-01-followups.md), derived from the
+# 0.20.0 ones by the edits the specs state:
+#   races     unchanged.
+#   cultures  P3-02 r17 15.2: dwarven forbidden gains "didin", "ririn" (appended, in that order).
+#   report    P3-05 r18 24: the template of became_city; P3-06 r22 24.6 / P3-04 r19 22.2: the entries
+#             claim_dropped (15) and refuge_hidden (10) appended after settlements_ceded, in kind order.
+#   conflict  P3-01 r15 3.8 / P3-06 r22 24.2, 24.5: quarrel_strength_permille 1000 and toll_spread_permille
+#             200 after quarrel_min_settlements; check conflict_toll_spread after conflict_quarrel_strain_max.
+#   engine    P3-01 r15 3.8 / P3-04 r19 22.3: flare_min_years 10 after quiet_min_years; check engine_flare_min
+#             after engine_quiet_min.
+#   name_filter  P3-02 r17 15.1: slurs.anywhere +fag -fagg; slurs.at_start -fag; famous.whole +shiva +hindi;
+#             crude.whole +fannie.
+#   placename P1-06 r10 16.1: 34 grim words move from common to trait_barren.
+# ---------------------------------------------------------------------------
+
+GRIM_KEPT_021 = {"prefixes": ["Ghost", "Wraith"], "adjectives": ["Accursed", "Cursed"], "places": [],
+                 "possessors": [], "objects": ["Ghosts", "Shades"]}
+GRIM_MOVED_021 = {   # P1-06 r10 16.1, as listed
+    "prefixes": "Bale Charnel Dread Grief Lich Pall Sorrow Wight".split(),
+    "adjectives": ("Bloodless Doleful Drear Fallen Forsaken Godless Grim Joyless Moaning Orphaned Shunned Stricken "
+                   "Weeping Wretched").split(),
+    "places": "Bane Grief Shame".split(),
+    "possessors": "Gravedigger Mourner Widower".split(),
+    "objects": ["Bones", "Grief", "Widows", "the Damned", "the Forsaken", "the Slain"],
+}
+assert sum(len(v) for v in GRIM_MOVED_021.values()) == 34
+assert all(sorted(GRIM_KEPT_021[f] + GRIM_MOVED_021[f]) == sorted(GRIM_KEPT_019[f]) for f in GRIM_KEPT_019)
+NAME_FILTER_EDITS_021 = {   # P3-02 r17 15.1: (file, list) -> (added, removed)
+    ("slurs", "anywhere"): (["fag"], ["fagg"]),
+    ("slurs", "at_start"): ([], ["fag"]),
+    ("famous", "whole"): (["shiva", "hindi"], []),
+    ("crude", "whole"): (["fannie"], []),
+}
+DWARVEN_FORBIDDEN_021 = (
+    'forbidden = ["mmm", "rr", "dd", "kk", "rdt", "rkd", "rdd", "mmb", "kdr", "kthr", "dkh", "ndb", "rnk"]',
+    'forbidden = ["mmm", "rr", "dd", "kk", "rdt", "rkd", "rdd", "mmb", "kdr", "kthr", "dkh", "ndb", "rnk", "didin", '
+    '"ririn"]')
+BECAME_CITY_021 = ("{settlement} grew into a city of {population}.", "{settlement} in {@region} grew into a city.")
+KIND41_ENTRY = '  { kind = "claim_dropped", salience = 15, template = "{claimant} let the claim against {holder} over ' \
+               '{@region} lapse." },\n'
+KIND42_ENTRY = '  { kind = "refuge_hidden", salience = 10, template = "{@settlement} lay hidden from {@year} to ' \
+               '{@end_year}." },\n'
+
+CULTURE_FILES_021 = dict(CULTURE_FILES_020, **{"dwarven.toml": _edit(CULTURE_FILES_020["dwarven.toml"],
+                                                                      *DWARVEN_FORBIDDEN_021)})
+_re = _edit(REPORT_FILE_020["report.toml"], 'template = "%s" }' % BECAME_CITY_021[0],
+            'template = "%s" }' % BECAME_CITY_021[1])
+_last = [l for l in _re.splitlines(True) if '"settlements_ceded"' in l][0]
+REPORT_FILE_021 = {"report.toml": _edit(_re, _last, _last + KIND41_ENTRY + KIND42_ENTRY)}
+CONFLICT_NEW_021 = (("quarrel_strength_permille", 0, 1000), ("toll_spread_permille", 0, 500))
+_i = [n for n, _, _ in CONFLICT_RANGES_019].index("quarrel_min_settlements") + 1
+CONFLICT_RANGES_021 = CONFLICT_RANGES_019[:_i] + CONFLICT_NEW_021 + CONFLICT_RANGES_019[_i:]
+CONFLICT_021 = tuple((n, CONFLICT_RECORDS.get(n, INT)) for n, _, _ in CONFLICT_RANGES_021)
+assert len(CONFLICT_021) == 61 and CONFLICT_021[_i][0] == "quarrel_strength_permille" and \
+    CONFLICT_021[_i + 2][0] == "capital_sacked_salience"
+CONFLICT_FILE_021 = {"conflict.toml": _edit(CONFLICT_FILE_019["conflict.toml"], "quarrel_min_settlements = 2\n",
+                                            "quarrel_min_settlements = 2\nquarrel_strength_permille = 1000\n"
+                                            "toll_spread_permille = 200\n")}
+CONFLICT_CHECKS_021 = CONFLICT_CHECKS_019 + (("conflict_toll_spread",
+                                              "toll_spread_permille lets the victors lose more than the defeated"),)
+_i = [n for n, _ in ENGINE_019].index("quiet_min_years") + 1
+ENGINE_021 = ENGINE_019[:_i] + (("flare_min_years", INT),) + ENGINE_019[_i:]
+assert ENGINE_021[_i + 1][0] == "simulated_min_permille"
+ENGINE_FILE_021 = {"engine.toml": _edit(ENGINE_FILE_019["engine.toml"], "quiet_min_years = 50\n",
+                                        "quiet_min_years = 50\nflare_min_years = 10\n")}
+ENGINE_RANGES_021 = (("flare_min_years", 1, 1000),)
+HISTORY_FILES_021 = dict(HISTORY_FILES_019, **CONFLICT_FILE_021, **ENGINE_FILE_021, **REPORT_FILE_021)
+SPEC_FILES_021 = {"race": RACE_FILES_020, "culture": CULTURE_FILES_021, "history": HISTORY_FILES_021}
+KINDS_021 = dict(KINDS_020)
+KINDS_021["history"] = ("history", dict(KINDS_020["history"][1], conflict=CONFLICT_021, engine=ENGINE_021))
+# The commit whose game/data holds the 0.20.0 files (the P5-01 spec base): read from git when the disk holds
+# 0.21.0 files and an earlier version is served.
+P5_01_BASE_COMMIT = "f29deec"
+
+
+def engine_flare_messages(t):
+    """P3-04 r19 22.3's named check engine_flare_min (levels in the order sparse, normal, dense)."""
+    out = []
+    if "flare_min_years" in t:
+        for lv in ("sparse", "normal", "dense"):
+            if not (t["flare_min_years"] <= t[lv]["flare_years"]):
+                out.append("%s: flare_min_years must not be above flare_years" % lv)
+    return out
+
+
+def placenames_021(files):
+    """The 0.21.0 placenames/ files from the 0.20.0 ones (P1-06 r10 16.1)."""
+    files = dict(files)
+    for name, text in list(files.items()):
+        d = tomllib.loads(text).get("placename", {})
+        for did, lists in (("common", None), ("trait_barren", None)):
+            if did not in d:
+                continue
+            for f, words in GRIM_MOVED_021.items():
+                cur = tomllib.loads(text)["placename"][did][f]
+                if did == "common":
+                    assert all(w in cur for w in words), (f, words)
+                    new = [w for w in cur if w not in words]
+                else:
+                    new = _byte_sorted(set(cur) | set(words))
+                text = _set_list(text, did, f, new)
+        files[name] = text
+    return sorted(files.items(), key=lambda kv: kv[0].encode())
+
+
+def placenames_pre_021(files):
+    """True when a placenames/ directory's files are older than 0.21.0 (`Sorrow` still a common prefix)."""
+    for name, text in files:
+        d = tomllib.loads(text).get("placename", {})
+        if "common" in d:
+            return "Sorrow" in d["common"]["prefixes"]
+    return False
+
+
+def name_filters_pre_021(files):
+    """True when a name_filters/ directory's files are older than 0.21.0 (`fagg` still a slurs.anywhere entry)."""
+    for name, text in files:
+        d = tomllib.loads(text).get("name_filter", {})
+        if "slurs" in d:
+            return "fagg" in d["slurs"]["anywhere"]
+    return False
+
+
+def pre_021(path, kind):
+    """A culture or history directory older than 0.21.0 (P5-01): no `didin` in dwarven.toml; no
+    `flare_min_years` in engine.toml, no `toll_spread_permille` in conflict.toml or no claim_dropped entry."""
+    texts = {}
+    for n in os.listdir(path):
+        if n.endswith(".toml"):
+            with open(os.path.join(path, n), encoding="utf-8") as f:
+                texts[n] = f.read()
+    if kind == "history":
+        return ("flare_min_years" not in texts.get("engine.toml", "")
+                or "toll_spread_permille" not in texts.get("conflict.toml", "")
+                or "claim_dropped" not in texts.get("report.toml", ""))
+    if kind == "culture":
+        return '"didin"' not in texts.get("dwarven.toml", "")
+    return False
+
+
 # The data version this module serves: "0.18.0" (default, P3-09), "0.17.0"
 # (P3-08) or "0.16.0" (use_version), so that the references can still
 # reproduce the older worlds and goldens.
 DATA_VERSION = None
-VERSIONS = ("0.16.0", "0.17.0", "0.18.0", "0.19.0", "0.20.0")
+VERSIONS = ("0.16.0", "0.17.0", "0.18.0", "0.19.0", "0.20.0", "0.21.0")
 
 
 def at_least(v):
@@ -1590,7 +1748,9 @@ def at_least(v):
 
 def use_version(v):
     global DATA_VERSION, KINDS, SPEC_FILES
-    if v == "0.20.0":
+    if v == "0.21.0":
+        KINDS, SPEC_FILES = KINDS_021, SPEC_FILES_021
+    elif v == "0.20.0":
         KINDS, SPEC_FILES = KINDS_020, SPEC_FILES_020
     elif v == "0.19.0":
         KINDS, SPEC_FILES = KINDS_019, SPEC_FILES_019
@@ -1605,7 +1765,7 @@ def use_version(v):
     DATA_VERSION = v
 
 
-use_version("0.20.0")
+use_version("0.21.0")
 
 # ---------------------------------------------------------------------------
 # Loading and validation (types only: what the encoding needs)
@@ -1702,13 +1862,17 @@ def disk_version(path, kind):
         return "0.19.0-r16"   # the first P3-10 round's files: matches no served version
     if pre_020(path, kind):
         return "0.19.0"
-    return "0.20.0"
+    if pre_021(path, kind):
+        return "0.20.0"
+    return "0.21.0"
 
 
 def same_version(kind, a, b):
     """Whether two data versions have the same files of a kind (cultures did not change at 0.18.0)."""
     if kind == "culture":   # cultures did not change at 0.18.0 and 0.19.0 (0.20.0: the faerie lists)
         a, b = ("0.17.0" if x in ("0.18.0", "0.19.0") else x for x in (a, b))
+    if kind == "race":   # races did not change at 0.21.0
+        a, b = ("0.20.0" if x == "0.21.0" else x for x in (a, b))
     return a == b
 
 
@@ -2016,7 +2180,8 @@ def check_spec_invariants(c):
     later = (["settlement_abandoned_to"] if at_least("0.17.0") else []) + \
         (["refugees_settled", "tribute", "war_won", "search_abandoned", "refuge_held"] if at_least("0.18.0") else []) + \
         (["plague_outbreak", "quiet_stretch"] if at_least("0.19.0") else []) + \
-        (["claim_settlements", "settlements_ceded"] if at_least("0.20.0") else [])
+        (["claim_settlements", "settlements_ceded"] if at_least("0.20.0") else []) + \
+        (["claim_dropped", "refuge_hidden"] if at_least("0.21.0") else [])
     c.eq("report lists kinds 1-%d in id order (P3-05 11, P3-06 11%s)"
          % (30 + len(later), (", P3-05 r6 11" if at_least("0.17.0") else "") +
             (", P3-06 r9 20.9" if at_least("0.18.0") else "")),
@@ -2029,6 +2194,8 @@ def check_spec_invariants(c):
         check_spec_019(c, races)
     if at_least("0.20.0"):
         check_spec_020(c, races, cultures)
+    if at_least("0.21.0"):
+        check_spec_021(c, races, cultures)
     c.eq("densities (P3-05 12.2)", {k: v["density_permille"] for k, v in races.items()},
          dict(elf=300, goblin=900, dwarf=700, faerie=250, human=1000, orc=800))
     c.eq("prowess_permille (P3-06 12.2)", {k: v["prowess_permille"] for k, v in races.items()},
@@ -2142,7 +2309,7 @@ def check_spec_019(c, races):
     c.eq("the three race fields follow home_defense_permille in this order (3.5, 3.6)",
          [list(v)[list(v).index("home_defense_permille") + 1:list(v).index("home_defense_permille") + 4]
           for v in races.values()], [["odds_min_permille", "awakening_quarrel", "hidden_years"]] * 6)
-    co = parsed_spec("history")["conflict"]
+    co = {k: v for k, v in parsed_spec("history")["conflict"].items() if k not in ("quarrel_strength_permille", "toll_spread_permille")}   # 0.21.0: check_spec_021
     c.ok("history.conflict has no odds_min (3.5)", "odds_min" not in co)
     c.ok("history.conflict has no hidden_years (3.6)", "hidden_years" not in co)
     i = list(co).index("search_years")
@@ -2170,7 +2337,7 @@ def check_spec_019(c, races):
                                                    "quarrel_min_settlements")},
          {k: v for k, v in tomllib.loads(CONFLICT_FILE_018["conflict.toml"])["history"]["conflict"].items()
           if k not in ("odds_min", "hidden_years")})
-    en = parsed_spec("history")["engine"]
+    en = {k: v for k, v in parsed_spec("history")["engine"].items() if k != "flare_min_years"}   # check_spec_021
     c.eq("history.engine: quiet_min_years 50 after quiet_events_max (P3-04 r15 4.1)",
          list(en.items())[1:3], [("quiet_events_max", 3), ("quiet_min_years", 50)])
     c.eq("history.engine passes its named checks", engine_check_messages(en), [])
@@ -2202,8 +2369,9 @@ def check_spec_019(c, races):
     c.eq("every other report entry as at 0.18.0 (saliences unchanged)",
          [e for e in parsed_spec("history")["report"]["events"]
           if e["kind"] not in TEMPLATES_019 and e["kind"] not in ("plague_outbreak", "quiet_stretch",
-                                                                   "claim_settlements", "settlements_ceded")],
-         [e for k, e in old.items() if k not in TEMPLATES_019])
+                                                                   "claim_settlements", "settlements_ceded",
+                                                                   "claim_dropped", "refuge_hidden", "became_city")],
+         [e for k, e in old.items() if k not in TEMPLATES_019 and k != "became_city"])
     # P3-04 r13 4.2: report_event.template is string(512) from 0.19.0 (256 before); the cause-list templates are
     # why (this reference checks types only; the bound is the loader's, tested in data_history_kinds_test.cpp)
     lens = {k: len(e["template"].encode()) for k, e in ev.items()}
@@ -2236,12 +2404,17 @@ def check_spec_020(c, races, cultures):
     oldc = {}
     for _, text in CULTURE_FILES_017.items():
         oldc.update(tomllib.loads(text)["culture"])
+    if at_least("0.21.0"):   # check_spec_021 has the dwarven forbidden list
+        cultures = dict(cultures, dwarven=dict(cultures["dwarven"], naming=dict(
+            cultures["dwarven"]["naming"], forbidden=oldc["dwarven"]["naming"]["forbidden"])))
     c.eq("every other culture and faerie field as at 0.19.0",
          {k: dict(v, naming={f: x for f, x in v["naming"].items() if k != "faerie" or f not in (
              "onsets", "nuclei", "codas", "forbidden")}) for k, v in cultures.items()},
          {k: dict(v, naming={f: x for f, x in v["naming"].items() if k != "faerie" or f not in (
              "onsets", "nuclei", "codas", "forbidden")}) for k, v in oldc.items()})
-    ev = parsed_spec("history")["report"]["events"]
+    ev = [e for e in parsed_spec("history")["report"]["events"] if e["kind"] not in ("claim_dropped", "refuge_hidden")]
+    if at_least("0.21.0"):   # check_spec_021 has became_city's template
+        ev = [dict(e, template=BECAME_CITY_021[0]) if e["kind"] == "became_city" else e for e in ev]
     c.eq("kinds 39, 40 entries after quiet_stretch (P3-06 r19 23.6, P3-04 r17 21.2)",
          [(e["kind"], e["salience"], e["template"]) for e in ev[-3:]],
          [("quiet_stretch", 20, ev[-3]["template"]),
@@ -2249,6 +2422,75 @@ def check_spec_020(c, races, cultures):
           ("settlements_ceded", 55, "{from} gave up {settlement:all} in {@region} to {to}.")])
     c.eq("every other report entry as at 0.19.0", ev[:-2],
          tomllib.loads(REPORT_FILE_019["report.toml"])["history"]["report"]["events"])
+
+
+def check_spec_021(c, races, cultures):
+    """The 0.21.0 listings say what P3-01 r15 3.8, P3-02 r17 15.2, P3-05 r18 24 and P3-06 r22 24.6 state."""
+    co = parsed_spec("history")["conflict"]
+    i = list(co).index("quarrel_min_settlements")
+    c.eq("history.conflict: quarrel_strength_permille 1000, toll_spread_permille 200 after quarrel_min_settlements "
+         "(P3-01 r15 3.8)", [(n, co[n]) for n in list(co)[i + 1:i + 4]],
+         [("quarrel_strength_permille", 1000), ("toll_spread_permille", 200), ("capital_sacked_salience", 90)])
+    c.eq("history.conflict has 61 fields", len(co), 61)
+    c.eq("conflict_toll_spread passes for the shipped values (80 x 1200 <= 250 x 800)", conflict_check_messages(co), [])
+    c.eq("conflict_toll_spread fails for loss_winner 200, loss_loser 250, spread 200 (P3-01 r15 3.8)",
+         conflict_check_messages(dict(co, loss_winner_permille=200, loss_loser_permille=250, toll_spread_permille=200)),
+         ["toll_spread_permille lets the victors lose more than the defeated"])
+    c.eq("conflict_toll_spread reads min(loss_loser, kill_max): kill_max 100 fails at spread 200",
+         conflict_check_messages(dict(co, kill_max_permille=100)),
+         ["toll_spread_permille lets the victors lose more than the defeated"])
+    c.eq("conflict_toll_spread passes at spread 0 with loss_winner = loss_loser",
+         conflict_check_messages(dict(co, loss_winner_permille=250, toll_spread_permille=0)), [])
+    old = tomllib.loads(CONFLICT_FILE_019["conflict.toml"])["history"]["conflict"]
+    c.eq("history.conflict equals 0.20.0's but for the two fields",
+         {k: v for k, v in co.items() if k not in ("quarrel_strength_permille", "toll_spread_permille")}, old)
+    en = parsed_spec("history")["engine"]
+    c.eq("history.engine: flare_min_years 10 after quiet_min_years (P3-04 r19 22.3)",
+         list(en.items())[2:4], [("quiet_min_years", 50), ("flare_min_years", 10)])
+    c.eq("history.engine passes engine_flare_min", engine_check_messages(en), [])
+    c.eq("engine_flare_min fails for 31 against sparse 30 (P3-01 r15 3.8)",
+         engine_check_messages(dict(en, flare_min_years=31)), ["sparse: flare_min_years must not be above flare_years"])
+    c.eq("engine_flare_min names every failing level in order",
+         engine_check_messages(dict(en, flare_min_years=80)),
+         ["%s: flare_min_years must not be above flare_years" % lv for lv in ("sparse", "normal", "dense")])
+    c.eq("engine_flare_min passes at 30 (= sparse flare_years)", engine_check_messages(dict(en, flare_min_years=30)),
+         [])
+    c.eq("history.engine equals 0.20.0's but for flare_min_years",
+         {k: v for k, v in en.items() if k != "flare_min_years"},
+         tomllib.loads(ENGINE_FILE_019["engine.toml"])["history"]["engine"])
+    for n, lo, hi in ENGINE_RANGES_021:
+        c.ok("history.engine.%s inside int(%d, %d)" % (n, lo, hi), lo <= en[n] <= hi)
+    dw = cultures["dwarven"]["naming"]["forbidden"]
+    c.eq("dwarven forbidden gains didin, ririn appended (P3-02 r17 15.2)", dw[-2:], ["didin", "ririn"])
+    c.eq("dwarven forbidden has 15 entries", len(dw), 15)
+    evl = parsed_spec("history")["report"]["events"]
+    ev = {e["kind"]: e for e in evl}
+    c.eq("became_city (P3-05 r18 24)", (ev["became_city"]["salience"], ev["became_city"]["template"]),
+         (45, "{settlement} in {@region} grew into a city."))
+    c.eq("kinds 41, 42 entries after settlements_ceded (P3-06 r22 24.6, P3-04 r19 22.2)",
+         [(e["kind"], e["salience"], e["template"]) for e in evl[-3:]],
+         [("settlements_ceded", 55, ev["settlements_ceded"]["template"]),
+          ("claim_dropped", 15, "{claimant} let the claim against {holder} over {@region} lapse."),
+          ("refuge_hidden", 10, "{@settlement} lay hidden from {@year} to {@end_year}.")])
+    oldr = tomllib.loads(REPORT_FILE_020["report.toml"])["history"]["report"]["events"]
+    c.eq("every other report entry as at 0.20.0",
+         [e for e in evl[:-2] if e["kind"] != "became_city"], [e for e in oldr if e["kind"] != "became_city"])
+    c.eq("races as at 0.20.0", races, {k: v for _, t in RACE_FILES_020.items() for k, v in tomllib.loads(t)["race"].items()})
+
+
+def check_placenames_021(c, pn):
+    """P1-06 r10 16.1 and 16.3 in the served placename lists."""
+    co, ba = pn["common"], pn["trait_barren"]
+    grim_common = {f: [w for w in co[f] if w in GRIM_019[f]] for f in GRIM_019}
+    c.eq("16.1 common holds no grim word but the six", grim_common, GRIM_KEPT_021)
+    for f, words in GRIM_MOVED_021.items():
+        c.eq("16.1 the moved words are absent from common.%s" % f, [w for w in words if w in co[f]], [])
+        c.eq("16.1 the moved words are in trait_barren.%s" % f, [w for w in words if w not in ba[f]], [])
+        c.ok("16.1 trait_barren.%s sorted without repeats" % f, ba[f] == sorted(set(ba[f]), key=lambda w: w.encode()))
+    c.ok("16.1 carr.adjectives keeps Weeping", "Weeping" in pn["carr"]["adjectives"])
+    c.ok("16.1 steppe.objects keeps Bones", "Bones" in pn["steppe"]["objects"])
+    for w, f in (("Black", "prefixes"), ("Ashen", "adjectives"), ("Gloom", "prefixes"), ("Murk", "prefixes")):
+        c.ok("16.1 %s stays in common.%s" % (w, f), w in co[f])
 
 
 def check_spec_017(c, races, cultures):
@@ -2365,7 +2607,10 @@ def check_copied_kinds(c):
                  read_dir_files(path, directory), shipped)
     content = load_root("game/data", ["name_filter"])["name_filter"]
     c.eq("name_filter ids (P3-02 r5 11.2)", [d for d, _ in content], ["crude", "famous", "slurs", "words"])
-    if at_least("0.20.0"):   # P3-02 r15 14.3: slurs 33 / 18 / 5, crude 71 / 12 / 14, words 5 / 1 / 391
+    if at_least("0.21.0"):   # P3-02 r17 15.1: slurs 33 / 17 / 5, crude 71 / 12 / 15, famous 0 / 0 / 103 (15.1 says 105)
+        sizes = dict(slurs=(33, 17, 5), crude=(71, 12, 15), words=(5, 1, 391), famous=(0, 0, 103))
+        effs = [109, 30, 514]
+    elif at_least("0.20.0"):   # P3-02 r15 14.3: slurs 33 / 18 / 5, crude 71 / 12 / 14, words 5 / 1 / 391
         sizes = dict(slurs=(33, 18, 5), crude=(71, 12, 14), words=(5, 1, 391), famous=(0, 0, 101))
         effs = [109, 31, 511]
     elif at_least("0.19.0"):   # P3-02 r10 12.1, r13 13.1: crude 72 / 12 / 14, slurs 33 / 18 / 6, words 5 / 1 / 387
@@ -2413,7 +2658,8 @@ def check_placenames_019(c):
     for w in ("Hallow", "Hermit", "Bellringer"):
         c.ok("15.1 %s stays" % w, w in co["prefixes"] + co["possessors"])
     for f in GRIM_019:
-        c.eq("15.2 grim words kept in common.%s" % f, [w for w in co[f] if w in GRIM_019[f]], GRIM_KEPT_019[f])
+        c.eq("15.2 grim words kept in common.%s" % f, [w for w in co[f] if w in GRIM_019[f]],
+             GRIM_KEPT_021[f] if at_least("0.21.0") else GRIM_KEPT_019[f])
         moved = [w for w in GRIM_019[f] if w not in GRIM_KEPT_019[f]]
         c.ok("15.2 moved grim words of %s are in trait_barren" % f, all(w in ba[f] for w in moved))
     for f in PLACENAME_LISTS:
@@ -2427,7 +2673,10 @@ def check_placenames_019(c):
     c.ok("15.3 trait_high.places with Cleft", "Cleft" in hi["places"])
     c.ok("15.3 trait_pass.places holds Gap", "Gap" in pn["trait_pass"]["places"])
     c.eq("15.2 trait_barren.places (Dole not repeated)", ba["places"],
-         sorted(set(["Dole", "Hunger", "Want", "Dole", "Grave", "Lament", "Ruin", "Sorrow"]), key=lambda w: w.encode()))
+         sorted(set(["Dole", "Hunger", "Want", "Dole", "Grave", "Lament", "Ruin", "Sorrow"]
+                    + (GRIM_MOVED_021["places"] if at_least("0.21.0") else [])), key=lambda w: w.encode()))
+    if at_least("0.21.0"):
+        check_placenames_021(c, pn)
 
 
 def check_disk(c):
@@ -2497,9 +2746,10 @@ def cmd_check():
     # The three roots differ only where the geo-small elevation tuning does
     # (P1-00 6.4); the new kinds are identical in all three.
     fresh = golden_text(from_spec=present < len(ROOTS) * len(NEW_KINDS))
-    if os.path.exists(GOLDEN) and not at_least("0.20.0"):   # the file of an older version is its base commit's
+    if os.path.exists(GOLDEN) and not at_least("0.21.0"):   # the file of an older version is its base commit's
         import subprocess
-        base = P3_11_BASE_COMMIT if DATA_VERSION == "0.19.0" else P3_10_BASE_COMMIT
+        base = P5_01_BASE_COMMIT if DATA_VERSION == "0.20.0" else \
+            P3_11_BASE_COMMIT if DATA_VERSION == "0.19.0" else P3_10_BASE_COMMIT
         committed = subprocess.run(["git", "-C", REPO, "show", base + ":worldgen/tests/golden/p3-01-data.txt"],
                                    check=True, capture_output=True, text=True).stdout
         c.eq("golden file of %s (git %s) is current" % (DATA_VERSION, base), committed, fresh)

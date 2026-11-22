@@ -24,6 +24,7 @@
 #include <optional>
 #include <set>
 #include <string>
+#include <tuple>
 #include <utility>
 #include <vector>
 
@@ -45,6 +46,8 @@ enum CKind : std::int64_t {
 inline constexpr std::int64_t k_claim_settlements = 39, k_settlements_ceded = 40;
 inline bool is_claim(std::int64_t k) { return k == k_claim || k == k_claim_settlements; }
 inline bool is_cede(std::int64_t k) { return k == k_region_ceded || k == k_settlements_ceded; }
+// P3-04 r19 22.2 / P3-06 r22 24.3, 24.4 (P5-01, generator 0.21.0): kinds 41 and 42; and the peace-like endings.
+inline constexpr std::int64_t k_claim_dropped = 41, k_refuge_hidden = 42;
 
 // --- Golden file ------------------------------------------------------------------------------------
 
@@ -69,6 +72,9 @@ struct CCase {
     // P3-11 (P3-06 r19 23.1-23.4): "t11 <years|-> first_orc_war <years|-> claims39 <a>/<third>/<none> cessions40 <n>
     // goal_differs <n>"
     std::string r19;
+    // P5-01 (P3-06 r22 24.1-24.5, P3-07 r19 25.9): "fresh <20>/<39> dropped <n> refuge_hidden <n> repeated_tolls <n>
+    // mixed_tolls <n>", "open_claims <e..|->" and "hidden_refuges <s..|->" (the reference's state at E)
+    std::string r22, open_claims, hidden_refuges;
 };
 
 inline const std::vector<CCase>& conflict_golden() {
@@ -128,6 +134,14 @@ inline const std::vector<CCase>& conflict_golden() {
                 c.r17 = rest.substr(4);  // P3-10 second round (P3-06 r17 22.5): the reference's replay facts
             } else if (w[1] == "r19") {
                 c.r19 = rest.substr(4);  // P3-11 (P3-06 r19 23.1-23.4): T11 and the counts of kinds 39 and 40
+            } else if (w[1] == "r22") {  // P5-01 (P3-06 r22): the counts and the reference's state at E
+                if (w.size() > 2 && w[2] == "open_claims") {
+                    c.open_claims = rest.substr(4 + 12);
+                } else if (w.size() > 2 && w[2] == "hidden_refuges") {
+                    c.hidden_refuges = rest.substr(4 + 15);
+                } else {
+                    c.r22 = rest.substr(4);
+                }
             } else if (w[1].size() > 1 && w[1][0] == 'q') {
                 c.tension[std::stoll(w[1].substr(1))] = {std::stoll(w[2]), std::stoll(w[3].substr(1))};
             } else if (w[1].size() > 1 && w[1][0] == 'e') {
@@ -1510,6 +1524,207 @@ inline std::string r19_line(const Tables& t, std::int64_t span) {
            std::to_string(differs);
 }
 
+// --- P3-06 r22 24.7 (P5-01, generator 0.21.0) from the rows ------------------------------------------
+
+// Invariants (18) to (21) from the rows, as the reference's r22_violations (and (21) whenever conflict_toll_spread
+// holds, which the shipped and every golden tuning do). hidden_years: race id -> the race's hidden_years.
+inline std::vector<std::string> invariants_22(const Tables& t, const std::map<std::int64_t, std::int64_t>& hidden_years,
+                                              std::int64_t span) {
+    const Index x(t);
+    std::vector<std::string> out;
+    std::map<std::int64_t, std::int64_t> civ_race, phase_kind;
+    for (const Row& c : t.civilization) civ_race[at(c, 0)] = at(c, 2);
+    for (const Row& p : t.phase) phase_kind[at(p, 0)] = at(p, 2);
+    auto causes = [&](std::int64_t e) {
+        const auto it = x.causes.find(e);
+        return it == x.causes.end() ? std::vector<std::int64_t>{} : it->second;
+    };
+    auto e_ = [&](std::int64_t id) { return std::to_string(id); };
+    for (const Row& e : t.event) {
+        const std::int64_t id = at(e, 0), k = at(e, 3);
+        if (k == k_war_declared) {  // (18)
+            std::vector<std::int64_t> cl;
+            for (const std::int64_t c : causes(id)) {
+                if (is_claim(x.kind(c))) cl.push_back(c);
+            }
+            if (cl.size() != 1U) {
+                out.push_back("(18) e" + e_(id) + ": " + std::to_string(cl.size()) + " claim causes");
+                continue;
+            }
+            const std::int64_t c0 = cl[0];
+            if (at(*x.ev.at(c0), 5) != at(e, 5) || x.role1(c0, 1) != x.role1(id, 1) || x.role1(c0, 2) != x.role1(id, 2)) {
+                out.push_back("(18) e" + e_(id) + ": its claim e" + e_(c0) + " differs in region, claimant or holder");
+            }
+        }
+        if (is_claim(k)) {  // (18): a fresh claim is followed by the war_declared that cites it
+            bool fresh = false;
+            for (const std::int64_t c : causes(id)) fresh = fresh || is_claim(x.kind(c));
+            if (fresh) {
+                const auto nx = x.ev.find(id + 1);
+                bool ok = nx != x.ev.end() && at(*nx->second, 3) == k_war_declared && at(*nx->second, 1) == at(e, 1);
+                if (ok) {
+                    const std::vector<std::int64_t> nc = causes(id + 1);
+                    ok = std::find(nc.begin(), nc.end(), id) != nc.end();
+                }
+                if (!ok) out.push_back("(18) fresh claim e" + e_(id) + " is not followed by the declaration citing it");
+            }
+        }
+        if (k == k_claim_dropped) {  // (19)
+            const std::vector<std::int64_t> cs = causes(id);
+            if (cs.size() != 1U || !is_claim(x.kind(cs[0]))) {
+                out.push_back("(19) e" + e_(id) + ": not caused by one claim");
+                continue;
+            }
+            const std::int64_t c0 = cs[0];
+            if (at(*x.ev.at(c0), 5) != at(e, 5) || x.role1(c0, 1) != x.role1(id, 1) || x.role1(c0, 2) != x.role1(id, 2)) {
+                out.push_back("(19) e" + e_(id) + ": its claim e" + e_(c0) + " differs in region, claimant or holder");
+            }
+            if (phase_kind[at(e, 4)] == 2) out.push_back("(19) e" + e_(id) + ": dated in a quiet step");
+            for (const std::int64_t kid : x.kids(c0)) {
+                if (kid == id) continue;
+                if (x.kind(kid) == k_war_declared || is_claim(x.kind(kid))) {
+                    out.push_back("(19) e" + e_(id) + ": its claim is cited by e" + e_(kid));
+                }
+                if (kid > id) out.push_back("(19) e" + e_(id) + ": its claim is cited afterwards by e" + e_(kid));
+            }
+        }
+        if (k == k_refugees_settled) {  // (20)
+            const std::int64_t y = x.role1(id, 2);
+            const auto hy = hidden_years.find(civ_race[y]);
+            const auto nx = x.ev.find(id + 1);
+            const bool next42 = nx != x.ev.end() && at(*nx->second, 3) == k_refuge_hidden;
+            if (hy != hidden_years.end() && hy->second >= 1) {
+                bool ok = next42;
+                if (ok) {
+                    const Row& r = *nx->second;
+                    ok = causes(id + 1) == std::vector<std::int64_t>{id} && x.role1(id + 1, 1) == x.role1(id, 1) &&
+                         x.role1(id + 1, 2) == y && at(r, 5) == at(e, 5) && at(r, 6) == at(e, 6) && at(r, 1) == at(e, 1) &&
+                         at(r, 2) == std::min(at(e, 1) + hy->second, span) - 1;
+                }
+                if (!ok) out.push_back("(20) e" + e_(id) + ": not followed by its refuge_hidden");
+            } else if (next42) {
+                out.push_back("(20) e" + e_(id) + ": a refuge_hidden for a race with hidden_years 0");
+            }
+        }
+        if (k == k_refuge_hidden) {
+            const auto pv = x.ev.find(id - 1);
+            if (pv == x.ev.end() || at(*pv->second, 3) != k_refugees_settled || causes(id) != std::vector<std::int64_t>{id - 1}) {
+                out.push_back("(20) e" + e_(id) + ": follows no refugees_settled");
+            }
+            if (!(at(e, 1) <= at(e, 2) && at(e, 2) <= span - 1)) out.push_back("(20) e" + e_(id) + ": its span");
+        }
+        if (k == k_battle || k == k_battle_at_pass) {  // (21)
+            const auto& v = x.values.at(id);
+            if (v.at(1) > v.at(2)) out.push_back("(21) e" + e_(id) + ": winner_dead above loser_dead");
+        }
+    }
+    return out;
+}
+
+// The claims open at E by the rows (P3-07 24.7's tests with r19 25.9's (iv), as the reference's
+// open_claims_from_rows): the last claim of each ordered pair, closed by a war_declared of the pair (either
+// direction), a peace, truce, war_won or search_abandoned of the pair, or a claim_dropped citing it; both sides
+// alive at E. "e<id>,..." or "-".
+inline std::string open_claims_line(const Tables& t) {
+    const Index x(t);
+    std::set<std::int64_t> alive;
+    for (const Row& c : t.civilization) {
+        if (is_null(c[8])) alive.insert(at(c, 0));
+    }
+    std::map<std::pair<std::int64_t, std::int64_t>, std::int64_t> last;
+    for (const Row& e : t.event) {
+        const std::int64_t id = at(e, 0), k = at(e, 3);
+        const std::int64_t a = x.role1(id, 1), b = x.role1(id, 2);
+        if (is_claim(k)) {
+            last[std::make_pair(a, b)] = id;
+        } else if (k == k_war_declared) {
+            last.erase(std::make_pair(a, b));
+            last.erase(std::make_pair(b, a));
+        } else if (k == k_claim_dropped) {
+            const auto it = last.find(std::make_pair(a, b));
+            const auto it_c = x.causes.find(id);
+            if (it != last.end() && it_c != x.causes.end() &&
+                std::find(it_c->second.begin(), it_c->second.end(), it->second) != it_c->second.end()) {
+                last.erase(it);
+            }
+        } else if (k == k_peace || k == k_truce || k == k_war_won || k == k_search_abandoned) {
+            std::set<std::int64_t> sides;
+            for (const auto& [seq, ids] : x.roles.at(id)) {
+                for (const std::int64_t c : ids) sides.insert(c);
+            }
+            if (sides.size() == 2U) {
+                const std::int64_t p = *sides.begin(), q = *sides.rbegin();
+                last.erase(std::make_pair(p, q));
+                last.erase(std::make_pair(q, p));
+            }
+        }
+    }
+    std::vector<std::int64_t> open;
+    for (const auto& [pr, e] : last) {
+        if (alive.count(pr.first) != 0U && alive.count(pr.second) != 0U) open.push_back(e);
+    }
+    std::sort(open.begin(), open.end());
+    std::string out;
+    for (const std::int64_t e : open) out += (out.empty() ? "e" : ",e") + std::to_string(e);
+    return out.empty() ? "-" : out;
+}
+
+// The refuges standing at E whose refuge_hidden ends at E - 1 (P3-07 r19 25.9 item 1's `; hidden`). "s<id>,..." or "-".
+inline std::string hidden_refuges_line(const Tables& t, std::int64_t span) {
+    const Index x(t);
+    std::vector<std::int64_t> out;
+    for (const Row& e : t.event) {
+        if (at(e, 3) != k_refuge_hidden || at(e, 2) != span - 1) continue;
+        const std::int64_t s = at(e, 6);
+        const auto it = x.st.find(s);
+        if (it != x.st.end() && (at(*it->second, 10) == 1 || at(*it->second, 10) == 2)) out.push_back(s);
+    }
+    std::sort(out.begin(), out.end());
+    std::string r;
+    for (const std::int64_t s : out) r += (r.empty() ? "s" : ",s") + std::to_string(s);
+    return r.empty() ? "-" : r;
+}
+
+// The counts of the reference's r22 line without its last item (mixed_tolls reads rendered sentences; the golden
+// sentences are compared on their own): "fresh <20>/<39> dropped <n> refuge_hidden <n> repeated_tolls <n>".
+inline std::string r22_counts(const Tables& t) {
+    const Index x(t);
+    std::int64_t f20 = 0, f39 = 0, dropped = 0, hidden = 0, repeats = 0;
+    std::set<std::tuple<std::int64_t, std::int64_t, std::int64_t, std::int64_t>> seen;
+    for (const Row& e : t.event) {
+        const std::int64_t id = at(e, 0), k = at(e, 3);
+        if (is_claim(k)) {
+            bool fresh = false;
+            const auto it = x.causes.find(id);
+            if (it != x.causes.end()) {
+                for (const std::int64_t c : it->second) fresh = fresh || is_claim(x.kind(c));
+            }
+            if (fresh) (k == k_claim ? f20 : f39) += 1;
+        }
+        dropped += k == k_claim_dropped ? 1 : 0;
+        hidden += k == k_refuge_hidden ? 1 : 0;
+        if (k == k_battle || k == k_battle_at_pass) {
+            const auto& v = x.values.at(id);
+            const auto key = std::make_tuple(x.role1(id, 1), x.role1(id, 2), v.at(1), v.at(2));
+            repeats += seen.count(key) != 0U ? 1 : 0;
+            seen.insert(key);
+        }
+    }
+    return "fresh " + std::to_string(f20) + "/" + std::to_string(f39) + " dropped " + std::to_string(dropped) +
+           " refuge_hidden " + std::to_string(hidden) + " repeated_tolls " + std::to_string(repeats);
+}
+
+inline void check_r22(const Tables& t, const wd::ContentSet& c, const CCase& g) {
+    CHECK(invariants_22(t, race_hidden_years(c), g.span) == std::vector<std::string>{});
+    CHECK_MESSAGE(!g.r22.empty(), "the golden case has no r22 line (P5-01)");
+    if (g.r22.empty()) return;
+    const std::string counts = g.r22.substr(0, g.r22.find(" mixed_tolls "));
+    CHECK(r22_counts(t) == counts);
+    CHECK(g.r22.substr(g.r22.find(" mixed_tolls ") + 13) == "0");   // T16's second count (P3-04 r19 22.1)
+    CHECK(open_claims_line(t) == g.open_claims);         // (19), T19: the rows close what the state closes
+    CHECK(hidden_refuges_line(t, g.span) == g.hidden_refuges);
+}
+
 inline void check_r17(const Tables& t, const wd::ContentSet& c, const CCase& g) {
     const R17 r = invariants_r17(t, c);
     CHECK(r.problems == std::vector<std::string>{});
@@ -1518,6 +1733,7 @@ inline void check_r17(const Tables& t, const wd::ContentSet& c, const CCase& g) 
     // P3-11: the r19 facts (T11, kinds 39 and 40, war goals) equal the reference's
     CHECK_MESSAGE(!g.r19.empty(), "the golden case has no r19 line (P3-11)");
     if (!g.r19.empty()) CHECK(r19_line(t, g.span) == g.r19);
+    check_r22(t, c, g);   // P5-01 (P3-06 r22 24.7, T16, T19)
 }
 
 }  // namespace conflict_test

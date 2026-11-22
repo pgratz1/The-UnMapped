@@ -138,7 +138,7 @@ designed-1 flood 77b925b5168323d71b25c6097a8fbe1eebd0cd8796f4102bcd46fe238bfd2ab
 designed-1 cost 571451f911b58b7ed487854ae96ca38e9eaed28e69d0c812a64742c7b021fdde
 designed-1 merged 5,4
 designed-1 region 158bc5bd6252b36b171d6ee5263677bd708ebca9260ee80326766b7c4c2c2fa9
-designed-1 table_region 59890d06226e9841a9fe45e70b7ddd63500a1dd5d12a28e3653a78746dfeddbc
+designed-1 table_region 91451ad38d80eb85720dc3e249df6f3b82103805c4a877f262b53e8e8b7049f6
 designed-1 table_region_biome eb36d7d07f022080d191d54064e7956f7956916261c5f88a26540077c999b19c
 designed-1 table_region_border 8c8f9b3d3c5a91478ac2b4f0ac31c656f411dd6a16a867432fe96966437e95ae
 designed-1 landmasses 1
@@ -151,7 +151,7 @@ designed-1 region_borders_river 0
 designed-1 region_borders_pass 0
 designed-1 regions_isolated 0
 designed-1 regions_upland 1
-designed-1 names 1:Rusthorn Plains|2:North Steppe|3:Southwest Fen|4:Southeast Fells
+designed-1 names 1:Sablehorn Plains|2:North Steppe|3:Southwest Fen|4:Southeast Fells
 designed-1 name_attempts 1:0|2:K|3:K|4:K
 # designed fixture 2, test tuning
 case designed-2 designed-2 designed 40 2 seed_tile_m=256,seed_spacing_m=200,region_min_area_m2=16384 world
@@ -179,7 +179,7 @@ designed-2 flood 20cee9d922e8ff5c85e3eb24ae70f4c72bce9b514e0ffeb98267a6149610883
 designed-2 cost b2cdc6a67a882b2eef13c1c360babf9d4da506210c7ed51a258b021cd0425779
 designed-2 merged 6,5
 designed-2 region 4a5f5cb662712e0f9c771d90bd99dac0772e1f1ff3ffbc12abc1e36ccd182351
-designed-2 table_region eff71c876f27101e07476f04f9f2c10a9a36dac5aef2c6a0bf0031c21d3f5787
+designed-2 table_region 248cf450c60617b627e312ff51caccefdbc220d2996fead9f03f6917f506e326
 designed-2 table_region_biome 6459b917b092c30281b7a99b17a6cba0fc79296dc31b2a1ca70fe52b0657b725
 designed-2 table_region_border 95aade9c8dd00dc4b207c69348bc0504f824fd78bffe6890a5269c9259964de8
 designed-2 landmasses 1
@@ -192,8 +192,8 @@ designed-2 region_borders_river 1
 designed-2 region_borders_pass 0
 designed-2 regions_isolated 0
 designed-2 regions_upland 0
-designed-2 names 1:Northwest Steppe|2:Lichreach|3:East Peaks|4:Southwest Fen|5:South Wood
-designed-2 name_attempts 1:K|2:0|3:K|4:K|5:K
+designed-2 names 1:Northwest Steppe|2:The Thirsting Sweep|3:East Peaks|4:Southwest Fen|5:South Wood
+designed-2 name_attempts 1:K|2:1|3:K|4:K|5:K
 # designed fixture 3, test tuning
 case designed-3 designed-3 designed 40 3 seed_tile_m=256,seed_spacing_m=200,region_min_area_m2=16384 world
 designed-3 elevation 7aad83254a3dc884be705312eff2c69494367218082f4b16c0512250e4d0570c
@@ -220,7 +220,7 @@ designed-3 flood 11a2bc28034aa86d7c1b3b5f095a31bef69001a679190d13d66f3c40f1cf051
 designed-3 cost df1ceef091b363c77e761b4190008cd2dd31999e650e1dddc8d9f28b4e2d071c
 designed-3 merged 5,5
 designed-3 region 0f31b8139c0d8f17ee1fa7ef30c9f6ad21d83be46bdd0312e5ab79cd21e8efd4
-designed-3 table_region f3f383fbe002240e9eb10c5c4f0451dac5e3ce8ade4ea00daf187d7aa139700c
+designed-3 table_region 3c1dad058dc5d90dd47a3e3542869db4c53b2267a797ca105a0c093ec5e60518
 designed-3 table_region_biome 14e947856ea3548d1623056cd0a411b754a8eb955f42327ebfd4e85b8bad92ba
 designed-3 table_region_border ec35c27e6818fe828105b1ede92222408054f25b6e7fbbcb00a803e350725ff0
 designed-3 landmasses 1
@@ -233,7 +233,7 @@ designed-3 region_borders_river 0
 designed-3 region_borders_pass 0
 designed-3 regions_isolated 0
 designed-3 regions_upland 2
-designed-3 names 1:Hailsweep|2:Central Steppe|3:Northeast Peaks|4:West Fen|5:South Fells
+designed-3 names 1:Hallowsweep|2:Central Steppe|3:Northeast Peaks|4:West Fen|5:South Fells
 designed-3 name_attempts 1:0|2:K|3:K|4:K|5:K
 # shipped tuning on a 640 m fixture
 case designed-0-shipped designed-0 designed 40 0 - world
@@ -302,7 +302,7 @@ designed-1-passes flood 77b925b5168323d71b25c6097a8fbe1eebd0cd8796f4102bcd46fe23
 designed-1-passes cost 571451f911b58b7ed487854ae96ca38e9eaed28e69d0c812a64742c7b021fdde
 designed-1-passes merged 5,4
 designed-1-passes region 158bc5bd6252b36b171d6ee5263677bd708ebca9260ee80326766b7c4c2c2fa9
-designed-1-passes table_region 59890d06226e9841a9fe45e70b7ddd63500a1dd5d12a28e3653a78746dfeddbc
+designed-1-passes table_region 91451ad38d80eb85720dc3e249df6f3b82103805c4a877f262b53e8e8b7049f6
 designed-1-passes table_region_biome eb36d7d07f022080d191d54064e7956f7956916261c5f88a26540077c999b19c
 designed-1-passes table_region_border 7669377c1b22bf53659d31ee881f0be5f4a6dea17235236d255ae27622209b8e
 designed-1-passes landmasses 1
@@ -315,7 +315,7 @@ designed-1-passes region_borders_river 0
 designed-1-passes region_borders_pass 1
 designed-1-passes regions_isolated 0
 designed-1-passes regions_upland 1
-designed-1-passes names 1:Rusthorn Plains|2:North Steppe|3:Southwest Fen|4:Southeast Fells
+designed-1-passes names 1:Sablehorn Plains|2:North Steppe|3:Southwest Fen|4:Southeast Fells
 designed-1-passes name_attempts 1:0|2:K|3:K|4:K
 # synthetic passes, no merging
 case designed-2-passes designed-2 designed 40 2 seed_tile_m=256,seed_spacing_m=200,region_min_area_m2=16384,region_min_area_m2=0 X
@@ -343,7 +343,7 @@ designed-2-passes flood 20cee9d922e8ff5c85e3eb24ae70f4c72bce9b514e0ffeb98267a614
 designed-2-passes cost b2cdc6a67a882b2eef13c1c360babf9d4da506210c7ed51a258b021cd0425779
 designed-2-passes merged 6,6
 designed-2-passes region 254c5ea48166baccbb91a4f6a6f986f4250dca1bd6bd9ed98d8bbb21a1699214
-designed-2-passes table_region 1e38c1456859f4d78a68ff641cf91f86d2648d44c8579a29ce73c23f9bacf0af
+designed-2-passes table_region aa0794120b28793592aafeb8e6c501d977f4fcc526247e363ead446bcd6cc48c
 designed-2-passes table_region_biome 036325b11fab40df8f04aec666f3ebe5240f7676a83efc8f42975d2b0ec8cf67
 designed-2-passes table_region_border ae5d92b4b10804f000d8a82e1e195271b626c557082fb7bfa8529f0ffba268a8
 designed-2-passes landmasses 1
@@ -356,8 +356,8 @@ designed-2-passes region_borders_river 1
 designed-2-passes region_borders_pass 4
 designed-2-passes regions_isolated 0
 designed-2-passes regions_upland 1
-designed-2-passes names 1:Northwest Steppe|2:Lichreach|3:The Horns of Mists|4:East Peaks|5:Southwest Fen|6:South Wood
-designed-2-passes name_attempts 1:K|2:0|3:0|4:K|5:K|6:K
+designed-2-passes names 1:Northwest Steppe|2:The Thirsting Sweep|3:The Horns of Lanterns|4:East Peaks|5:Southwest Fen|6:South Wood
+designed-2-passes name_attempts 1:K|2:1|3:0|4:K|5:K|6:K
 # every river cell a border river: bank rule, corner rule, river pairs
 case designed-1-allriver designed-1 designed 40 1 seed_tile_m=256,seed_spacing_m=200,region_min_area_m2=16384,river_border_class=1,river_cost_m=500 world
 designed-1-allriver elevation 5a9264cb69e28b2d21c2a51c42897e2e5641c1ac5883ab7c8a69292399c1e459
@@ -384,7 +384,7 @@ designed-1-allriver flood 4b32f7d92980f57466cbff498c7de427e3a4efec5bc0b2ade4cc3e
 designed-1-allriver cost afe6542c07e4333e6dc944527f65e6ca467844b97671f44184c81f46faa9476a
 designed-1-allriver merged 7,7
 designed-1-allriver region cfc4eb728432e331accf507fca169e1ddbb0092ec22f72a573d7b09baffa78ef
-designed-1-allriver table_region 35141b539324f7345ed0e3f6263ec8c61e40e89476cc6d24845b96e587d74fa0
+designed-1-allriver table_region d1bca9ae6f5a39f83855cfb34991d6718cb7a3fcad1d6653ca23189f70811b74
 designed-1-allriver table_region_biome 66abe2cdd0661c47bbd3e88456f64bde5a3ddf18853ffb1f90541e519f8cb1b2
 designed-1-allriver table_region_border 75ff1361b95ab1f55b6f82cbf2c3957a022df7deffa84b9dd4179648d06207a1
 designed-1-allriver landmasses 1
@@ -397,7 +397,7 @@ designed-1-allriver region_borders_river 6
 designed-1-allriver region_borders_pass 0
 designed-1-allriver regions_isolated 0
 designed-1-allriver regions_upland 2
-designed-1-allriver names 1:Rusthorn Plains|2:North Steppe|3:Northeast Heath|4:Sorrowbog|5:Southeast Peaks|6:Southwest Fen|7:South Wood
+designed-1-allriver names 1:Sablehorn Plains|2:North Steppe|3:Northeast Heath|4:Sourbog|5:Southeast Peaks|6:Southwest Fen|7:South Wood
 designed-1-allriver name_attempts 1:0|2:K|3:K|4:0|5:K|6:K|7:K
 # every river cell a border river, shipped river cost
 case designed-0-allriver designed-0 designed 40 0 seed_tile_m=256,seed_spacing_m=200,region_min_area_m2=16384,river_border_class=1 world
@@ -466,7 +466,7 @@ designed-2-noriver flood 256c54ffad0dc08fa8eb45b8392bae663f0acaee194e695a93ceeec
 designed-2-noriver cost 8af2829413fe0123bbee54a69914332616bd639a8e45cfdf76412f5b47c10088
 designed-2-noriver merged 5,5
 designed-2-noriver region 6199db2a4fdbbd4819461e06be3704dfee294e6155666c6e3fc07ee444f2d3fe
-designed-2-noriver table_region e6195e27abd543415b30c112b4f68880fc7744b7f2a2cd855f9528bdf9b8a6e6
+designed-2-noriver table_region 1dbb28131ed9b57fb102ee9e12e29a2a28423a1b46f97f1d9e88a347d513048d
 designed-2-noriver table_region_biome d1f73e70ef79d20694ee04e38485f91dd9fb6d06dad4d056cc26cdb2fdeb59e0
 designed-2-noriver table_region_border 06f9a75082ca466f4c0ec6fffc3004f13dc1ff1e52dac63a84ce0bec76b5d797
 designed-2-noriver landmasses 1
@@ -479,8 +479,8 @@ designed-2-noriver region_borders_river 0
 designed-2-noriver region_borders_pass 0
 designed-2-noriver regions_isolated 0
 designed-2-noriver regions_upland 0
-designed-2-noriver names 1:Griefgate Plains|2:North Steppe|3:East Peaks|4:Southwest Fen|5:South Wood
-designed-2-noriver name_attempts 1:0|2:K|3:K|4:K|5:K
+designed-2-noriver names 1:Thirstsweep|2:North Steppe|3:East Peaks|4:Southwest Fen|5:South Wood
+designed-2-noriver name_attempts 1:1|2:K|3:K|4:K|5:K
 # no merging
 case designed-3-nomerge designed-3 designed 40 3 seed_tile_m=256,seed_spacing_m=200,region_min_area_m2=16384,region_min_area_m2=0 world
 designed-3-nomerge elevation 7aad83254a3dc884be705312eff2c69494367218082f4b16c0512250e4d0570c
@@ -507,7 +507,7 @@ designed-3-nomerge flood 11a2bc28034aa86d7c1b3b5f095a31bef69001a679190d13d66f3c4
 designed-3-nomerge cost df1ceef091b363c77e761b4190008cd2dd31999e650e1dddc8d9f28b4e2d071c
 designed-3-nomerge merged 5,5
 designed-3-nomerge region 0f31b8139c0d8f17ee1fa7ef30c9f6ad21d83be46bdd0312e5ab79cd21e8efd4
-designed-3-nomerge table_region f3f383fbe002240e9eb10c5c4f0451dac5e3ce8ade4ea00daf187d7aa139700c
+designed-3-nomerge table_region 3c1dad058dc5d90dd47a3e3542869db4c53b2267a797ca105a0c093ec5e60518
 designed-3-nomerge table_region_biome 14e947856ea3548d1623056cd0a411b754a8eb955f42327ebfd4e85b8bad92ba
 designed-3-nomerge table_region_border ec35c27e6818fe828105b1ede92222408054f25b6e7fbbcb00a803e350725ff0
 designed-3-nomerge landmasses 1
@@ -520,7 +520,7 @@ designed-3-nomerge region_borders_river 0
 designed-3-nomerge region_borders_pass 0
 designed-3-nomerge regions_isolated 0
 designed-3-nomerge regions_upland 2
-designed-3-nomerge names 1:Hailsweep|2:Central Steppe|3:Northeast Peaks|4:West Fen|5:South Fells
+designed-3-nomerge names 1:Hallowsweep|2:Central Steppe|3:Northeast Peaks|4:West Fen|5:South Fells
 designed-3-nomerge name_attempts 1:0|2:K|3:K|4:K|5:K
 # min 1172 cells: merges down to the largest regions
 case designed-0-bigmerge designed-0 designed 40 0 seed_tile_m=256,seed_spacing_m=200,region_min_area_m2=16384,region_min_area_m2=300000 world
@@ -589,7 +589,7 @@ designed-1-flat flood facdd8ff9dc5f656da40588f4c7c49f9e6f9fc74bb0b4e2d8d9d56eccc
 designed-1-flat cost 0274a92d6b261a6c04668a0140ba5e910fb5bec3bc9f5f8a5c9054ded58a0d48
 designed-1-flat merged 5,5
 designed-1-flat region 41d79c8a7683da9df52f64518c43ce7cc5a6246f315b275a8cc0d6b76e8668ef
-designed-1-flat table_region a282f578579efeaa342423c37697ffdf456787b035a66b85a813695cf1249ed2
+designed-1-flat table_region 6fb5aea0bdf03d1ac06e45fccb9f01f80418e9cd5f44fc2b315ae66d58449120
 designed-1-flat table_region_biome ce231692489e26ffcf1492ddfb63d46c49502936a30cd3ced77398e844b883c9
 designed-1-flat table_region_border 7e970975ae56a9f004c134a61ae896f891e041708e43aa7f28c86f31d06cdade
 designed-1-flat landmasses 1
@@ -602,7 +602,7 @@ designed-1-flat region_borders_river 0
 designed-1-flat region_borders_pass 0
 designed-1-flat regions_isolated 0
 designed-1-flat regions_upland 2
-designed-1-flat names 1:Rusthorn Plains|2:The Heights of Ruin|3:North Steppe|4:Southeast Fells|5:Southwest Fen
+designed-1-flat names 1:Sablehorn Plains|2:The Heights of Ruin|3:North Steppe|4:Southeast Fells|5:Southwest Fen
 designed-1-flat name_attempts 1:0|2:0|3:K|4:K|5:K
 # largest noise at the shortest wavelength, steepest hand weight
 case designed-2-rough designed-2 designed 40 2 seed_tile_m=256,seed_spacing_m=200,region_min_area_m2=16384,cost_noise_amp=0.9,cost_noise=64/1/1,hand_ref_m=1 world
@@ -630,7 +630,7 @@ designed-2-rough flood be6845ae9ceef3179b1a379656bbbfcc70f7eee652dcc93f77274fd7f
 designed-2-rough cost 3026d06a397bb224296caae880e7f379259928c40befe3d97fdc7af1f4a0e581
 designed-2-rough merged 6,5
 designed-2-rough region 3da5e78502efc50a0ac87233a4d0d48b4791beb39ff906e3d8219d3d18082340
-designed-2-rough table_region 297d315fd1441e6d47312149a82403f216c71d12082b50ea83f0840c3749c2c1
+designed-2-rough table_region b15206ff306db312c39f6b859c83b32504374c6391b061148adf660f1c434c46
 designed-2-rough table_region_biome 357e59c81514b934159b2e1cab673bba08143f9a0ef9a8b90396d351412dbebe
 designed-2-rough table_region_border bd3cf1d2875d8212a9474d73964443bad18a19a11c99da98df92d80bb89a9d01
 designed-2-rough landmasses 1
@@ -643,8 +643,8 @@ designed-2-rough region_borders_river 1
 designed-2-rough region_borders_pass 0
 designed-2-rough regions_isolated 0
 designed-2-rough regions_upland 0
-designed-2-rough names 1:Northwest Steppe|2:Lichreach|3:East Peaks|4:Southwest Fen|5:South Wood
-designed-2-rough name_attempts 1:K|2:0|3:K|4:K|5:K
+designed-2-rough names 1:Northwest Steppe|2:The Thirsting Sweep|3:East Peaks|4:Southwest Fen|5:South Wood
+designed-2-rough name_attempts 1:K|2:1|3:K|4:K|5:K
 # lake factor 10
 case designed-3-lake designed-3 designed 40 3 seed_tile_m=256,seed_spacing_m=200,region_min_area_m2=16384,lake_cost_factor=10 world
 designed-3-lake elevation 7aad83254a3dc884be705312eff2c69494367218082f4b16c0512250e4d0570c
@@ -671,7 +671,7 @@ designed-3-lake flood 513de9ad460ee6735b92001051b9a95cef847ac5c95baa3e1fc900654e
 designed-3-lake cost b016894611aecb526ea5c0c8ebc589fc90903940564f695086c0495be33c8f0a
 designed-3-lake merged 5,5
 designed-3-lake region 8d9843d20b624513ad59a53bb6503d5f4747e8cb395a2149b42a30268ffed118
-designed-3-lake table_region fb1c7f6bf5c84b5795e772c106e2c1a95a8f16c54def878e0e8b932a59498d19
+designed-3-lake table_region b3a5257db8b2e75f2a4ce145a5e09bd01774d4b57f62f1be380ad066c9526742
 designed-3-lake table_region_biome 4ae9ea2f1ba899e3c0cd002c8dc1d2a2bc5669a6ab118e02ffd6dac5c16c4cca
 designed-3-lake table_region_border c88d35830abbd31291f8515450e94e244b1fc21c3e0353e66351f02dead4967a
 designed-3-lake landmasses 1
@@ -684,7 +684,7 @@ designed-3-lake region_borders_river 0
 designed-3-lake region_borders_pass 0
 designed-3-lake regions_isolated 0
 designed-3-lake regions_upland 3
-designed-3-lake names 1:Northwest Steppe|2:The Ruined Teeth|3:Central Peaks|4:West Fen|5:South Fells
+designed-3-lake names 1:Northwest Steppe|2:The Shunned Teeth|3:Central Peaks|4:West Fen|5:South Fells
 designed-3-lake name_attempts 1:K|2:0|3:K|4:K|5:K
 # lake factor 1, river cost 0
 case designed-0-lake1 designed-0 designed 40 0 seed_tile_m=256,seed_spacing_m=200,region_min_area_m2=16384,lake_cost_factor=1,river_cost_m=0 world
@@ -794,7 +794,7 @@ designed-3-ore flood 11a2bc28034aa86d7c1b3b5f095a31bef69001a679190d13d66f3c40f1c
 designed-3-ore cost df1ceef091b363c77e761b4190008cd2dd31999e650e1dddc8d9f28b4e2d071c
 designed-3-ore merged 5,5
 designed-3-ore region 0f31b8139c0d8f17ee1fa7ef30c9f6ad21d83be46bdd0312e5ab79cd21e8efd4
-designed-3-ore table_region f3f383fbe002240e9eb10c5c4f0451dac5e3ce8ade4ea00daf187d7aa139700c
+designed-3-ore table_region 3c1dad058dc5d90dd47a3e3542869db4c53b2267a797ca105a0c093ec5e60518
 designed-3-ore table_region_biome 14e947856ea3548d1623056cd0a411b754a8eb955f42327ebfd4e85b8bad92ba
 designed-3-ore table_region_border ec35c27e6818fe828105b1ede92222408054f25b6e7fbbcb00a803e350725ff0
 designed-3-ore landmasses 1
@@ -807,7 +807,7 @@ designed-3-ore region_borders_river 0
 designed-3-ore region_borders_pass 0
 designed-3-ore regions_isolated 0
 designed-3-ore regions_upland 2
-designed-3-ore names 1:Hailsweep|2:Central Steppe|3:Northeast Peaks|4:West Fen|5:South Fells
+designed-3-ore names 1:Hallowsweep|2:Central Steppe|3:Northeast Peaks|4:West Fen|5:South Fells
 designed-3-ore name_attempts 1:0|2:K|3:K|4:K|5:K
 # other words, central radius half the map
 case designed-2-names designed-2 designed 40 2 seed_tile_m=256,seed_spacing_m=200,region_min_area_m2=16384,name_central_frac=0.5,names=Mid/Nor/Norost/Ost/Sudost/Sud/Sudwest/West/Norwest/Holm/Hoch world
@@ -835,7 +835,7 @@ designed-2-names flood 20cee9d922e8ff5c85e3eb24ae70f4c72bce9b514e0ffeb98267a6149
 designed-2-names cost b2cdc6a67a882b2eef13c1c360babf9d4da506210c7ed51a258b021cd0425779
 designed-2-names merged 6,5
 designed-2-names region 4a5f5cb662712e0f9c771d90bd99dac0772e1f1ff3ffbc12abc1e36ccd182351
-designed-2-names table_region c3603cf870521a6f61791f6efca7ddd58d36c21f1aa19c7cf311d45438f45afe
+designed-2-names table_region f0628184d58ba83d079cbb858e8f7e9bf6e8f56420aef7efbe6582c0aa841016
 designed-2-names table_region_biome 6459b917b092c30281b7a99b17a6cba0fc79296dc31b2a1ca70fe52b0657b725
 designed-2-names table_region_border 95aade9c8dd00dc4b207c69348bc0504f824fd78bffe6890a5269c9259964de8
 designed-2-names landmasses 1
@@ -848,8 +848,8 @@ designed-2-names region_borders_river 1
 designed-2-names region_borders_pass 0
 designed-2-names regions_isolated 0
 designed-2-names regions_upland 0
-designed-2-names names 1:Norwest Steppe|2:Lichreach|3:Mid Peaks|4:Sudwest Fen|5:Mid Wood
-designed-2-names name_attempts 1:K|2:0|3:K|4:K|5:K
+designed-2-names names 1:Norwest Steppe|2:The Thirsting Sweep|3:Mid Peaks|4:Sudwest Fen|5:Mid Wood
+designed-2-names name_attempts 1:K|2:1|3:K|4:K|5:K
 # no central sector
 case designed-3-central0 designed-3 designed 40 3 seed_tile_m=256,seed_spacing_m=200,region_min_area_m2=16384,name_central_frac=0 world
 designed-3-central0 elevation 7aad83254a3dc884be705312eff2c69494367218082f4b16c0512250e4d0570c
@@ -876,7 +876,7 @@ designed-3-central0 flood 11a2bc28034aa86d7c1b3b5f095a31bef69001a679190d13d66f3c
 designed-3-central0 cost df1ceef091b363c77e761b4190008cd2dd31999e650e1dddc8d9f28b4e2d071c
 designed-3-central0 merged 5,5
 designed-3-central0 region 0f31b8139c0d8f17ee1fa7ef30c9f6ad21d83be46bdd0312e5ab79cd21e8efd4
-designed-3-central0 table_region aa776433f33aff4e1ac41e301b8457f313f739b9d17475c034f9e72b21b1e15f
+designed-3-central0 table_region 6001128156d919ded77f5ab7b0224ccc121d579148f9b6d6f5f46a2c2b0f492d
 designed-3-central0 table_region_biome 14e947856ea3548d1623056cd0a411b754a8eb955f42327ebfd4e85b8bad92ba
 designed-3-central0 table_region_border ec35c27e6818fe828105b1ede92222408054f25b6e7fbbcb00a803e350725ff0
 designed-3-central0 landmasses 1
@@ -889,7 +889,7 @@ designed-3-central0 region_borders_river 0
 designed-3-central0 region_borders_pass 0
 designed-3-central0 regions_isolated 0
 designed-3-central0 regions_upland 2
-designed-3-central0 names 1:Hailsweep|2:North Steppe|3:Northeast Peaks|4:West Fen|5:South Fells
+designed-3-central0 names 1:Hallowsweep|2:North Steppe|3:Northeast Peaks|4:West Fen|5:South Fells
 designed-3-central0 name_attempts 1:0|2:K|3:K|4:K|5:K
 # r2: upland_own_noun empty: every upland region is Fells
 case designed-1-ownnone designed-1 designed 40 1 seed_tile_m=256,seed_spacing_m=200,region_min_area_m2=16384,upland_own_noun=none world
@@ -917,7 +917,7 @@ designed-1-ownnone flood 77b925b5168323d71b25c6097a8fbe1eebd0cd8796f4102bcd46fe2
 designed-1-ownnone cost 571451f911b58b7ed487854ae96ca38e9eaed28e69d0c812a64742c7b021fdde
 designed-1-ownnone merged 5,4
 designed-1-ownnone region 158bc5bd6252b36b171d6ee5263677bd708ebca9260ee80326766b7c4c2c2fa9
-designed-1-ownnone table_region 59890d06226e9841a9fe45e70b7ddd63500a1dd5d12a28e3653a78746dfeddbc
+designed-1-ownnone table_region 91451ad38d80eb85720dc3e249df6f3b82103805c4a877f262b53e8e8b7049f6
 designed-1-ownnone table_region_biome eb36d7d07f022080d191d54064e7956f7956916261c5f88a26540077c999b19c
 designed-1-ownnone table_region_border 8c8f9b3d3c5a91478ac2b4f0ac31c656f411dd6a16a867432fe96966437e95ae
 designed-1-ownnone landmasses 1
@@ -930,7 +930,7 @@ designed-1-ownnone region_borders_river 0
 designed-1-ownnone region_borders_pass 0
 designed-1-ownnone regions_isolated 0
 designed-1-ownnone regions_upland 1
-designed-1-ownnone names 1:Rusthorn Plains|2:North Steppe|3:Southwest Fen|4:Southeast Fells
+designed-1-ownnone names 1:Sablehorn Plains|2:North Steppe|3:Southwest Fen|4:Southeast Fells
 designed-1-ownnone name_attempts 1:0|2:K|3:K|4:K
 # r2: forest and grassland keep their noun in upland regions
 case designed-3-ownall designed-3 designed 40 3 seed_tile_m=256,seed_spacing_m=200,region_min_area_m2=16384,upland_own_noun=temperate_forest/grassland/alpine/heath world
@@ -958,7 +958,7 @@ designed-3-ownall flood 11a2bc28034aa86d7c1b3b5f095a31bef69001a679190d13d66f3c40
 designed-3-ownall cost df1ceef091b363c77e761b4190008cd2dd31999e650e1dddc8d9f28b4e2d071c
 designed-3-ownall merged 5,5
 designed-3-ownall region 0f31b8139c0d8f17ee1fa7ef30c9f6ad21d83be46bdd0312e5ab79cd21e8efd4
-designed-3-ownall table_region b52c9e29eb1269d2f814f8a48abbec517fe47729ef1bbffbc37c63a136a34544
+designed-3-ownall table_region 65ceb6a45ed1157021b07eff5772100d1fcf0308ea29a252154dcc8586050ef7
 designed-3-ownall table_region_biome 14e947856ea3548d1623056cd0a411b754a8eb955f42327ebfd4e85b8bad92ba
 designed-3-ownall table_region_border ec35c27e6818fe828105b1ede92222408054f25b6e7fbbcb00a803e350725ff0
 designed-3-ownall landmasses 1
@@ -971,7 +971,7 @@ designed-3-ownall region_borders_river 0
 designed-3-ownall region_borders_pass 0
 designed-3-ownall regions_isolated 0
 designed-3-ownall regions_upland 2
-designed-3-ownall names 1:Hailsweep|2:Central Steppe|3:Northeast Peaks|4:West Fen|5:South Wood
+designed-3-ownall names 1:Hallowsweep|2:Central Steppe|3:Northeast Peaks|4:West Fen|5:South Wood
 designed-3-ownall name_attempts 1:0|2:K|3:K|4:K|5:K
 # r2: small regions and cheap lakes: Fells regions
 case designed-0-lakemerge designed-0 designed 40 0 seed_tile_m=256,seed_spacing_m=200,region_min_area_m2=16384,region_min_area_m2=0,seed_spacing_m=160,seed_tile_m=256,lake_cost_factor=1 world
@@ -999,7 +999,7 @@ designed-0-lakemerge flood b501fb09bc485d253b9a392177391bb16865ddf8739012bb1c4d2
 designed-0-lakemerge cost 654241426c690467fcd76d9a93cabba47bd58131bacef53d396d692f9675505e
 designed-0-lakemerge merged 7,7
 designed-0-lakemerge region ed7d002fba6ce9327325a26d34e5db1ca8b95fe4d06b892bdc0b0ce0245b17a6
-designed-0-lakemerge table_region 657bd49df296ab1b0f010655e90ae7a1a4cf06a761408a27735989014f8cd645
+designed-0-lakemerge table_region acf55a5d8941cce5385e3c032e9aaf20a20a05d21e6169242316fdad1c90c422
 designed-0-lakemerge table_region_biome c32b027832422e8b6f3154f532df706e099279f13070b9b0748dc0ea9745f79d
 designed-0-lakemerge table_region_border 96a3e605f9dc5dbf345cf573e277d53f65b553dfc3e62ddc5a0222be9690e1a6
 designed-0-lakemerge landmasses 1
@@ -1012,7 +1012,7 @@ designed-0-lakemerge region_borders_river 0
 designed-0-lakemerge region_borders_pass 0
 designed-0-lakemerge regions_isolated 0
 designed-0-lakemerge regions_upland 3
-designed-0-lakemerge names 1:Northwest Steppe|2:North Fells|3:South Wood|4:West Fen|5:Lorncrag|6:Gravedigger's Quag|7:The Elder Fells
+designed-0-lakemerge names 1:Northwest Steppe|2:North Fells|3:South Wood|4:West Fen|5:Lorncrag|6:Goatherd's Quag|7:The Elder Fells
 designed-0-lakemerge name_attempts 1:K|2:K|3:K|4:K|5:0|6:0|7:0
 # one tile covers the map (40 cells): one candidate
 case designed-0-tile designed-0 designed 40 0 seed_tile_m=640,seed_spacing_m=320,region_min_area_m2=16384 world
@@ -1081,7 +1081,7 @@ designed-1-spacing flood 3a2901ea80812bb4dea888effc3747327acc5b696382dea95aae902
 designed-1-spacing cost 8fa7ed186924ae487809b0471612b791262fe42ff28d719dbff408d983d36c0e
 designed-1-spacing merged 7,7
 designed-1-spacing region 4b1fe40396e72538e4c820963edb0ec40dbab004d13a072fa6680382de86c479
-designed-1-spacing table_region ba9375f5e05e7ef20bf9a99ea85002ab13021cad1babf041c393d5f56c694000
+designed-1-spacing table_region 25ee2d86bd139329a4be8b2b49bf06341eae00a24a701e989728ec3ea9933202
 designed-1-spacing table_region_biome 554fd8fb2ef92b093210569625dbd36f74872d41116a5266d6ba906ba903fa21
 designed-1-spacing table_region_border 119693e2f3e93485eb1c4a0389cab44e042622df6a18a63c080f48419c22e47c
 designed-1-spacing landmasses 1
@@ -1094,7 +1094,7 @@ designed-1-spacing region_borders_river 0
 designed-1-spacing region_borders_pass 0
 designed-1-spacing regions_isolated 0
 designed-1-spacing regions_upland 2
-designed-1-spacing names 1:Rusthorn Plains|2:North Steppe|3:Northeast Peaks|4:West Fen|5:Tinker's Bend|6:South Wood|7:Southeast Moor
+designed-1-spacing names 1:Sablehorn Plains|2:North Steppe|3:Northeast Peaks|4:West Fen|5:Thief's Bend|6:South Wood|7:Southeast Moor
 designed-1-spacing name_attempts 1:0|2:K|3:K|4:K|5:0|6:K|7:K
 # terrace fixture 0
 case terrace-0 terrace-0 terrace 40 0 seed_tile_m=256,seed_spacing_m=200,region_min_area_m2=16384 world
@@ -1163,7 +1163,7 @@ terrace-1 flood d66e4c2fafbe7aba6eb51c58da7db6c32382423984cc54b1d7ad23f5be49947a
 terrace-1 cost daa266a326b63308504616a49027586e56387a2e6fa9583b23a98407b7e9aecf
 terrace-1 merged 5,5
 terrace-1 region e75876cfefb29ceb456c8e2579c57895d258c1f911745c4638405ed71fc723b5
-terrace-1 table_region 49c26efc8efbc18ae8bee111727915224597a2a03c03dc54c35d50f8c8a6d453
+terrace-1 table_region 27ace70f65993aa8cfc93c33223401c8ffd5598762bccfee74447303251443f9
 terrace-1 table_region_biome 5286aa0838a1b77a4e7a5aa5dcc3161982dafd09de98977b326f9c2296a87b8c
 terrace-1 table_region_border 166772102fc635a8c8c3c327c907753de048ab3f3d841c7541c0cbbfeeefdd6d
 terrace-1 landmasses 1
@@ -1176,7 +1176,7 @@ terrace-1 region_borders_river 0
 terrace-1 region_borders_pass 0
 terrace-1 regions_isolated 0
 terrace-1 regions_upland 0
-terrace-1 names 1:Rusthorn Bog|2:The Sweep of Kestrels|3:Northeast Steppe|4:Southwest Fen|5:Southeast Wood
+terrace-1 names 1:Sablehorn Bog|2:The Sweep of Kestrels|3:Northeast Steppe|4:Southwest Fen|5:Southeast Wood
 terrace-1 name_attempts 1:0|2:0|3:K|4:K|5:K
 # small shipped world
 case shipped-48-s3 shipped-48-s3 shipped 48 3 - world
@@ -1286,7 +1286,7 @@ shipped-64-s0-t flood 1d192c891bd400c0befcd4a3802de1cc84dbaaf3a64a238d7a12aa0e53
 shipped-64-s0-t cost 221a4eea97e61b5b0c8a4b6a89f57832088fb4102313a67d38d90b108fcfa21a
 shipped-64-s0-t merged 4,3
 shipped-64-s0-t region 5ead69f59f21d41363d8acc5c94b8d344a478ecf294d4eac82eaae88277f7750
-shipped-64-s0-t table_region 7e2d6a8e5b1be6b2d4e65aaa856b0d2ca3b2340c7fc45209366dfac04e459439
+shipped-64-s0-t table_region 27eab5ec307ebea180fb2e5d1eaa7bfa6ba690d79b225855bb084a5c4d286a80
 shipped-64-s0-t table_region_biome b6f913ded830c24b9c12fb6b8f94ac5746387c07df7cbcfe2a942b69587e4439
 shipped-64-s0-t table_region_border dcade832df6a6725a84d299b36970158e1cfdbb865a6d9bee5f953cf9a179d8f
 shipped-64-s0-t landmasses 1
@@ -1299,7 +1299,7 @@ shipped-64-s0-t region_borders_river 0
 shipped-64-s0-t region_borders_pass 0
 shipped-64-s0-t regions_isolated 0
 shipped-64-s0-t regions_upland 3
-shipped-64-s0-t names 1:Steward's Hearth|2:Traitor's Want|3:West Fells
+shipped-64-s0-t names 1:Steward's Hollow|2:Traitor's Want|3:West Fells
 shipped-64-s0-t name_attempts 1:0|2:0|3:K
 # P1-06 10.4
 case shipped-128-s0 shipped-128-s0 shipped 128 0 - world
@@ -1532,7 +1532,7 @@ small-128-s2 flood 85c01299a48a04680194c9e455aeb95721e5a399c483610ffd14feb0ff53d
 small-128-s2 cost 80c309e091fe66b4000f98f2c900f3a456713ba9b655bde5e64fc7ecff021c54
 small-128-s2 merged 2,2
 small-128-s2 region 32c566d9cb9f60565b2cf5ebcfc8baf97631374eca892307a8b4480b0927651b
-small-128-s2 table_region fc1ad7b6690597aeaefbfeed37448820956436d8cdb6b6259dab0f161070b5a8
+small-128-s2 table_region fe4117bb6ebbe83811eec20013cb2c321eacf72d85912306158f12d8a4a80b18
 small-128-s2 table_region_biome 4a0eeeed84286d8b46b903f427cc3fb0a5e660b76e12ca8f1919a09dd77998ff
 small-128-s2 table_region_border 2c956b542b10cf4a2b70df7c603d104e611326023f52d13a1a85f44e6635e735
 small-128-s2 landmasses 1
@@ -1545,7 +1545,7 @@ small-128-s2 region_borders_river 0
 small-128-s2 region_borders_pass 0
 small-128-s2 regions_isolated 0
 small-128-s2 regions_upland 2
-small-128-s2 names 1:North Fells|2:Wightstrand
+small-128-s2 names 1:North Fells|2:Wendstrand
 small-128-s2 name_attempts 1:K|2:0
 # test tuning of 10.2 (tile 256, spacing 400, 256 cells)
 case shipped-128-s0-t shipped-128-s0 shipped 128 0 seed_tile_m=256,seed_spacing_m=400,region_min_area_m2=65536 world
@@ -1573,7 +1573,7 @@ shipped-128-s0-t flood 4aa2b4482f27ab1818ddc89830bbc307115f895a25713f3366fa149ad
 shipped-128-s0-t cost 0895b03ad35738cf9932a59729e31e6a8eaceffcc36fb5099341862e677ed94a
 shipped-128-s0-t merged 9,7
 shipped-128-s0-t region 200e22f1d33f5859435ecd7556c07a60a524c3014e44a0fd200542ff21ff5c63
-shipped-128-s0-t table_region 39249070883a87e84986bd6085e0930ba05b90c5e826e13cbd60101466fc5051
+shipped-128-s0-t table_region 2754bacf92ca650336b2b949b72b227d5fc2e78dfca307d3b6cbea8f4e79313e
 shipped-128-s0-t table_region_biome 4a6425ba1e741dfb3aa9eb29de2ba82fa420e8dafa7ef0a5653812d90d738148
 shipped-128-s0-t table_region_border 5e2c0d6310325bc3d9846389570eaa0b82e47b08e35775115e8cc9a6ea1b89be
 shipped-128-s0-t landmasses 1
@@ -1586,7 +1586,7 @@ shipped-128-s0-t region_borders_river 0
 shipped-128-s0-t region_borders_pass 0
 shipped-128-s0-t regions_isolated 0
 shipped-128-s0-t regions_upland 7
-shipped-128-s0-t names 1:The Edges of Gibbets|2:Spinner's Fells|3:West Fells|4:The Crags of the Mist|5:Thief's Edges|6:The Lamenting Fells|7:The Friendless Scars
+shipped-128-s0-t names 1:The Edges of Gibbets|2:Spinner's Fells|3:West Fells|4:The Crags of the Mist|5:Thane's Edges|6:The Moaning Fells|7:The Ghostly Scars
 shipped-128-s0-t name_attempts 1:0|2:0|3:K|4:0|5:0|6:0|7:0
 # test tuning of 10.2
 case shipped-128-s42-t shipped-128-s42 shipped 128 42 seed_tile_m=256,seed_spacing_m=400,region_min_area_m2=65536 world
@@ -1614,7 +1614,7 @@ shipped-128-s42-t flood 7c1f297ce2de9885b100de35f4f7835e532f4257b539ba52cdbe9e45
 shipped-128-s42-t cost 222ad03c04d0a9d4f56eaa82d10b66043535c3378068c99828e23afef6d99f3a
 shipped-128-s42-t merged 9,9
 shipped-128-s42-t region 8c736deb75f8f73b1d7755487c9ec8d6c13d401ba147568c0157b8438e338ece
-shipped-128-s42-t table_region 882b9a64b146ed97e02bafb5f1adc87f9b39286e7aea1d9e69ab759e0e3e8f19
+shipped-128-s42-t table_region d7e17ec6a4ee17bdf352c333c03109fcf85e6af27acfe7687e2929c9a03d960c
 shipped-128-s42-t table_region_biome f670805bca0422b9cdcb493fb32323f33ef3fa86da0645113056615754ff3377
 shipped-128-s42-t table_region_border fd6cd72d4f0a2f9e5f35453c34ca2889e96aaee657d8fa25db0b04bc986bb77c
 shipped-128-s42-t landmasses 1
@@ -1627,7 +1627,7 @@ shipped-128-s42-t region_borders_river 0
 shipped-128-s42-t region_borders_pass 0
 shipped-128-s42-t regions_isolated 0
 shipped-128-s42-t regions_upland 7
-shipped-128-s42-t names 1:The Forest of Echoes|2:Kitescar|3:East Wood|4:Starvefell|5:West Fells|6:Beggar's Stair|7:The Steep Brows|8:Wrenbrow|9:Eaglebrow
+shipped-128-s42-t names 1:The Forest of Crows|2:Kitescar|3:East Wood|4:Starvefell|5:West Fells|6:Gravedigger's Step|7:The Steep Brows|8:Wrenbrow|9:Eaglebrow
 shipped-128-s42-t name_attempts 1:0|2:0|3:K|4:0|5:K|6:0|7:0|8:0|9:0
 # test tuning of 10.2, natural passes
 case small-128-s2-t small-128-s2 small 128 2 seed_tile_m=256,seed_spacing_m=400,region_min_area_m2=65536 world
@@ -1655,7 +1655,7 @@ small-128-s2-t flood 975d0df5df5346460c4532c9b831322f15e59fdd893d9f4f4e03e3a6cdf
 small-128-s2-t cost 7915672b5bcbe8c4705f71a61e5588b4b6af5934b95d7818b6760c4d6821bea7
 small-128-s2-t merged 10,8
 small-128-s2-t region f7913efcec59684181a0de44b8795edd95e083d18f504257d332ee21045ade20
-small-128-s2-t table_region 41f52b4b6577de4e60959d08ff4ef79bd8e0e8587d701b996654dbfec8b99fc9
+small-128-s2-t table_region ce6ed511c5fa10d6f47eb91bbd733a4c1b1036b355885beb0459b849a185822d
 small-128-s2-t table_region_biome 5117d6bcd111a506e47ef9b0046b293cbc282e31118ce939e7c61497229180b0
 small-128-s2-t table_region_border ffb4dcc6dfa2cb07f79ddb81a01ed4d8d28ac0d4e8caea9a2414a712f1a00341
 small-128-s2-t landmasses 1
@@ -1668,7 +1668,7 @@ small-128-s2-t region_borders_river 0
 small-128-s2-t region_borders_pass 1
 small-128-s2-t regions_isolated 0
 small-128-s2-t regions_upland 8
-small-128-s2-t names 1:North Fells|2:Wightfell|3:Lourknott|4:Reekbrow|5:The Sunless Heights|6:South Moor|7:Queen's Brows|8:Orphan's Brows
+small-128-s2-t names 1:North Fells|2:Wendfell|3:Lynxknott|4:Rimebrow|5:The Swart Heights|6:South Moor|7:Queen's Brows|8:Orphan's Brows
 small-128-s2-t name_attempts 1:K|2:0|3:0|4:0|5:0|6:K|7:0|8:1
 # P1-06 10.4; the report example of 9
 case shipped-512-s0 shipped-512-s0 shipped 512 0 - world
@@ -1696,7 +1696,7 @@ shipped-512-s0 flood 6a2bfa612f74b51f3928d838882aebc2c2c9e2ec1f5894b3fac0a657dd6
 shipped-512-s0 cost d4bf886a12faad854116c690975886bf3d260583968881965e309e7cce51e246
 shipped-512-s0 merged 16,14
 shipped-512-s0 region 83b0b9bece8cb0ae48eedec3f8f483cf9d6968b844ce9defdc22648573d9871b
-shipped-512-s0 table_region 17dc7e6341db4b9b27aa22fe5671fcaad6b3dcfbf708282ea8168ef69e8cd7ad
+shipped-512-s0 table_region 47d013bdd0fd43e9c1483011f072887ad8d83835d495c55e22c05647eb433e98
 shipped-512-s0 table_region_biome 81149aa9dfd5a9e2d807504185026a78c81c8004e42432a37ea2a1d361c022b8
 shipped-512-s0 table_region_border f062a0ad58d21136747254fdb1d3d572a8a1b700a3f284f82ec3025e61dcc086
 shipped-512-s0 landmasses 4
@@ -1709,7 +1709,7 @@ shipped-512-s0 region_borders_river 0
 shipped-512-s0 region_borders_pass 0
 shipped-512-s0 regions_isolated 3
 shipped-512-s0 regions_upland 6
-shipped-512-s0 names 1:The Wild Hurst|2:North Isle|3:Bierstack|4:Coalholt|5:Brinehurst|6:North Fells|7:Warden's Wood|8:East Steppe|9:West Wood|10:Central Heath|11:The Steep Heights|12:The Brambled Shaw|13:South Downs|14:The Sunken Rock
+shipped-512-s0 names 1:The Wild Hurst|2:North Isle|3:Bierstack|4:Coldholt|5:Brinehurst|6:North Fells|7:Wanderer's Wood|8:East Steppe|9:West Wood|10:Central Heath|11:The Steep Heights|12:The Brambled Shaw|13:South Downs|14:The Sunken Rock
 shipped-512-s0 name_attempts 1:0|2:K|3:0|4:0|5:0|6:K|7:0|8:K|9:K|10:K|11:0|12:0|13:K|14:0
 # P1-06 10.4 (natural passes)
 case shipped-512-s42 shipped-512-s42 shipped 512 42 - world
@@ -1737,7 +1737,7 @@ shipped-512-s42 flood 717cb0574c11b4cb6f6cbc37c0dd0bc2024be88d34b66c232d8fb9e1f6
 shipped-512-s42 cost 321608506667ba5f5684f202936a2840247dd2794b2f8ad459ad3767bcffa88a
 shipped-512-s42 merged 16,15
 shipped-512-s42 region 76097f94023bcb7305dc19c72b87f9693d948eb53627092cb367412f13beb75d
-shipped-512-s42 table_region 539cb4cc7473048fa68b7824f5c25785781ba2b091671aa534d583578eb5db49
+shipped-512-s42 table_region ef34e36f0cc06dee0d1127580067a832ff50aa9445f0e7990c37c30a0f459279
 shipped-512-s42 table_region_biome 60ab4dfd335ec0f90f080497273fdf11974ba6000a40a4b74cfb238c9b740f8b
 shipped-512-s42 table_region_border a3c59099beaa906e18b28877d41115f73a591b63eef7f13ee449130cbd064696
 shipped-512-s42 landmasses 2
@@ -1750,8 +1750,8 @@ shipped-512-s42 region_borders_river 1
 shipped-512-s42 region_borders_pass 1
 shipped-512-s42 regions_isolated 1
 shipped-512-s42 regions_upland 2
-shipped-512-s42 names 1:Blackstrand Wolds|2:Northwest Fells|3:The Brake of Antlers|4:The Plain of Silence|5:The Swart Barrows|6:Sorreldown|7:Seredale Tangle|8:West Wood|9:Central Downs|10:Coldbarrow|11:Gull's Pit|12:Boughcombe Wood|13:The Hollow Hurst|14:Leper's Debt|15:Southeast Isle
-shipped-512-s42 name_attempts 1:0|2:K|3:0|4:0|5:0|6:0|7:0|8:K|9:K|10:1|11:0|12:0|13:0|14:0|15:K
+shipped-512-s42 names 1:Blackstrand Wolds|2:Northwest Fells|3:The Brake of Antlers|4:The Plain of Shades|5:The Tainted Barrows|6:Sorreldown|7:Seredale Tangle|8:West Wood|9:Central Downs|10:Coldlow|11:Gull's Portion|12:Boughcombe Wood|13:The Hungry Hurst|14:Leper's Debt|15:Southeast Isle
+shipped-512-s42 name_attempts 1:0|2:K|3:0|4:0|5:0|6:0|7:0|8:K|9:K|10:0|11:0|12:0|13:0|14:0|15:K
 # P1-06 10.4 (seed of the phrase "The Unmapped"; natural passes)
 case shipped-512-phrase shipped-512-phrase shipped 512 15629206466951235176 - world
 shipped-512-phrase elevation d763561a5def9384d83ed33ef6039c1b47652b9ca0c1d5092ba09a47cec7a34c
@@ -1778,7 +1778,7 @@ shipped-512-phrase flood c072c4f620fbb14b6a0bed8df16724643e841071d6789240efcb066
 shipped-512-phrase cost 751acce61d9ed4de70016c979d9559ff3b5d1a1aafa5311ce7f5e4830aa43bc0
 shipped-512-phrase merged 13,13
 shipped-512-phrase region 6763ec743f340e6e19b59b8784765b3bddd8e7ff0609e6c2737fa41f02e01964
-shipped-512-phrase table_region 5be7a4ad5bc8551a445f8112bc7b6970e9ac6cfebb671f7bfd1cd7b4c55a4eeb
+shipped-512-phrase table_region ac734460e6951dd2904219dc0c943d2adc83d5fa7d4e292b2d12b4a34dbfdf0c
 shipped-512-phrase table_region_biome 52246b1d11282ee73f38f9c83c20f96568359f07776df2f5f2b3461a8051eb5c
 shipped-512-phrase table_region_border 8d6606293c0e79bfb29a2364eff42e891898e5f0f8ba338c2fc8a106a6338a24
 shipped-512-phrase landmasses 1
@@ -1791,7 +1791,7 @@ shipped-512-phrase region_borders_river 0
 shipped-512-phrase region_borders_pass 1
 shipped-512-phrase regions_isolated 0
 shipped-512-phrase regions_upland 3
-shipped-512-phrase names 1:Owlpike Sward|2:Hawkthorn Wolds|3:Spraydown|4:North Peaks|5:The Barrows of Sheaves|6:East Wood|7:Sootsike Sward|8:The Grim Crags|9:Tinderside Thicket|10:South Downs|11:Tarden|12:The Wolds of Scythes|13:Southeast Fells
+shipped-512-phrase names 1:Owlpike Sward|2:Hawkthorn Wolds|3:Spraydown|4:North Peaks|5:The Barrows of Sheaves|6:East Wood|7:Sootsike Sward|8:The Harrowed Crags|9:Tinderside Thicket|10:South Downs|11:Tarden|12:The Wolds of Scythes|13:Southeast Fells
 shipped-512-phrase name_attempts 1:0|2:0|3:0|4:K|5:0|6:K|7:0|8:0|9:0|10:K|11:0|12:0|13:K
 # P1-06 10.4
 case shipped-1024-s1 shipped-1024-s1 shipped 1024 1 - world
@@ -1819,7 +1819,7 @@ shipped-1024-s1 flood 989286ad82663bad5c80cce7972b44a8997cef69ca5fc7016b177d0906
 shipped-1024-s1 cost 432ce80b7b23a275d1873ad96cc39a71513cd8e9d2e43ae97064297f866558b1
 shipped-1024-s1 merged 60,55
 shipped-1024-s1 region 5d12610cbd17e62c04ac21720b181cd7675b69c8f10c58636f04bb3b67c227e7
-shipped-1024-s1 table_region 203db9d853af513f6c0b79e4ec7307f41d163eaa6bb50c727a1ca3cd024c6cbb
+shipped-1024-s1 table_region 4bc128ab7bd74cbf9b6f153bda790088c237f815577d7fbda5aff09509d28733
 shipped-1024-s1 table_region_biome ec72b5bf9ebd0db4e5e05074bf9f9010c7204cdd1c4b9ca4b024ebb806da5f86
 shipped-1024-s1 table_region_border 2c3d57c6cde0a31dc90a2cd963a399d70e4662af17d0e165b6bae5406226ded3
 shipped-1024-s1 landmasses 3
@@ -1832,5 +1832,5 @@ shipped-1024-s1 region_borders_river 17
 shipped-1024-s1 region_borders_pass 0
 shipped-1024-s1 regions_isolated 2
 shipped-1024-s1 regions_upland 6
-shipped-1024-s1 names 1:North Isle|2:Badgerwood|3:The Weald of Floods|4:The Wood of Smoke|5:Cinderhurst|6:Larchstrand|7:The Fettered Hurst|8:Lourwood|9:Ferrybrake|10:The Grove of the Moon|11:Bellgrove|12:The Woods of Ashes|13:Ryefurrow Vale|14:Collier's Weald|15:The Torn Hurst|16:Briarpike Tangle|17:Dimedge Woods|18:The Bleak Forest|19:The Lone Hurst|20:Dawmark Downs|21:Sorrelskerry|22:Tinker's Plain|23:Balegate Woods|24:Stagden|25:Boarfall Woods|26:West Peaks|27:The Bleached Leas|28:Fernhurst|29:Teaselgill Sward|30:Hobridge Grove|31:The Benighted Forest|32:Mourner's Shaw|33:Charnelhorn Wood|34:Central Downs|35:The Moonless Wilds|36:Thane's Pikes|37:Sheafstrand|38:Ruefell|39:The Leas of Chains|40:Bride's Tangle|41:The Grove of Boars|42:South Wood|43:Southwest Steppe|44:The Plains of Ravens|45:The Darkling Plain|46:The Ancient Tangle|47:Witch's Barrow|48:Keenholt|49:South Fells|50:Knight's Sward|51:The Wintry Leas|52:The Brambled Weald|53:Harewold|54:The Rises of Scythes|55:The Sullen Tangle
-shipped-1024-s1 name_attempts 1:K|2:0|3:0|4:1|5:0|6:0|7:0|8:0|9:0|10:0|11:0|12:0|13:0|14:1|15:0|16:0|17:1|18:0|19:0|20:1|21:0|22:0|23:0|24:0|25:0|26:K|27:1|28:0|29:1|30:0|31:0|32:2|33:0|34:K|35:1|36:0|37:0|38:0|39:1|40:0|41:0|42:K|43:K|44:0|45:2|46:0|47:0|48:0|49:K|50:1|51:0|52:0|53:0|54:1|55:0
+shipped-1024-s1 names 1:North Isle|2:Badgerwood|3:The Weald of Floods|4:The Wood of Silence|5:Coalhurst|6:Larchstrand|7:The Fettered Hurst|8:Lynxwood|9:Ferrybrake|10:The Grove of the Moon|11:Bellgrove|12:The Woods of Ashes|13:Ryefurrow Vale|14:Collier's Weald|15:The Torn Hurst|16:Briarpike Tangle|17:Douredge Woods|18:The Black Forest|19:The Long Hurst|20:Reekdown|21:Sorrelskerry|22:Thief's Plain|23:Beargate Woods|24:Starkden|25:Boarfall Woods|26:West Peaks|27:The Bleached Leas|28:Fernhurst|29:Teaselgill Sward|30:Hollowridge Grove|31:The Benighted Forest|32:Outlaw's Shaw|33:Chillhorn Wood|34:Central Downs|35:The Mute Wilds|36:Tanner's Pikes|37:Sheafstrand|38:Rustfell|39:The Leas of Chains|40:Bride's Tangle|41:The Grove of Boars|42:South Wood|43:Southwest Steppe|44:The Plains of Queens|45:The Darkening Plain|46:The Ancient Tangle|47:Witch's Barrow|48:Keenholt|49:South Fells|50:Knight's Sward|51:The Wintry Leas|52:The Brambled Weald|53:Harewold|54:Dimdown|55:The Sundered Tangle
+shipped-1024-s1 name_attempts 1:K|2:0|3:0|4:1|5:0|6:0|7:0|8:0|9:0|10:0|11:0|12:0|13:0|14:1|15:0|16:0|17:1|18:0|19:0|20:0|21:0|22:0|23:0|24:0|25:0|26:K|27:1|28:0|29:1|30:0|31:0|32:2|33:0|34:K|35:1|36:0|37:0|38:0|39:1|40:0|41:0|42:K|43:K|44:0|45:2|46:0|47:0|48:0|49:K|50:1|51:0|52:0|53:0|54:0|55:0

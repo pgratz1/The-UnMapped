@@ -1312,6 +1312,72 @@ every r16 reference golden and `check-world` on the 1024 default worlds of seeds
 worlds was 120, 149, 149, 140, 52, 121, 164, 153, 119, 188, 175, 112, 92, 151, 164 (median 149), which is what led
 to r17.
 
+## Generator 0.21.0 (P5-01: P1-06 r10 16, P3-01 r15 3.8, P3-02 r17 15, P3-04 r19 22, P3-05 r18 24, P3-06 r22 24, P3-07 r19 25)
+
+Written from `docs/specs/p5-01-followups.md` and the stage-spec sections it names, without the engineer's
+branch. Every reference serves 0.21.0 by default; `--version 0.20.0` serves the 0.20.0 rules and data (the
+copied kinds `placenames/` and `name_filters/` read from git at f29deec, `P5_01_BASE_COMMIT`; the race, culture
+and history listings of 0.20.0 stand in for the disk's 0.21.0 files) and reproduces the committed 0.20.0 goldens
+byte for byte (checked for `p1-06-regions.txt`, `p3-01-data.txt`, `p3-02-names.txt` (but for one header comment
+line the committed file predates), `p3-03-chronology.txt`, `p3-04-engine.txt`, `p3-05-peoples.txt`,
+`p3-06-conflict.txt`). The data edits of the spec are applied in this branch's `game/data` and both fixture roots
+exactly as the spec states them (P1-06 16.1, P3-02 15.1 and 15.2, P3-05 24, P3-06 24.6, P3-01 3.8); the
+engineer's files must hold the same values (the content hash reads values, not layout).
+
+The history inputs of 0.21.0 carry P1-06 r10's region names: the P3-11 inputs renamed with
+`p1_regions_reference.py rename-db SRC DST` (it now accepts an input that stores r7's names on the 0.19.0
+lists), in `~/.cache/the-unmapped/out/p5-01-tests/inputs/` (with `READY`).
+
+```
+I=~/.cache/the-unmapped/out/p5-01-tests/inputs
+export UNMAPPED_ELEVATION_CACHE=~/.cache/the-unmapped/out/p1-06-tests/elev-cache
+python3 -B worldgen/tests/reference/p3_data_reference.py golden
+python3 -B worldgen/tests/reference/p1_regions_reference.py golden --large --db-dir ~/.cache/the-unmapped/out/p1-06-tests/db
+python3 -B worldgen/tests/reference/p3_names_reference.py golden
+python3 -B worldgen/tests/reference/p3_chronology_reference.py golden
+python3 -B worldgen/tests/reference/p3_engine_reference.py golden --inputs $I
+python3 -B worldgen/tests/reference/p3_peoples_reference.py golden --inputs $I
+python3 -B worldgen/tests/reference/p3_conflict_reference.py golden --inputs $I
+```
+
+- `p3_data_reference.py`: `SPEC_FILES_021`, `KINDS_021` (history.conflict 61 fields, history.engine with
+  `flare_min_years`), `CONFLICT_CHECKS_021` and `conflict_check_messages`'s `conflict_toll_spread`,
+  `engine_check_messages` with `engine_flare_min` (per level, sparse, normal, dense), `GRIM_MOVED_021`,
+  `NAME_FILTER_EDITS_021`, `DWARVEN_FORBIDDEN_021`, `placenames_021`, `check_spec_021`, `check_placenames_021`.
+  Filter sizes slurs 33/17/5, crude 71/12/15, famous 0/0/103 (P3-02 15.1 writes 105; 101 + shiva + hindi is
+  103), effective 109/30/514.
+- `p1_regions_reference.py`: `VERSION` 0.21.0 (`r10()`); the lists only; `check_rg11_r10`; the r7 golden guard
+  also refuses a `table_region` that moves in a case without drawn names (16.3). 28 cases move.
+- `p3_names_reference.py`: `CULTURES_R17` (dwarven forbidden + didin, ririn); golden lines `dattempt`,
+  `dresult`, `dresult15`, `dvalid`; `check_r17`; `scan` at 0.21.0 prints the per-culture rejections by each new
+  entry (`scan --r15` the P3-11 scan).
+- `p3_engine_reference.py`: `COMPILED_021` (kinds 41, 42), `RENDER_R19` (`template_pieces`,
+  `clause_of_placeholders`, `clause_digits`: 22.1's clauses), `FLARE_R19` (lengths' `M`, SC6 skips a flare-up
+  shorter than M; `Engine.flares_skipped`), the entry check `engine_flare_min`, `TEMPLATE_CASES_R19`,
+  `check_render_r19`, `check_flare_r19` (22.4 items 1 to 3). The `ForcedTension` cases whose flare-ups were
+  shorter than the scaled minimum lose them: `sched-0-2000-normal-goblin,dwarf,human-ft1`,
+  `sched-1-6000-normal-all-ft1`, `sched-42-12000-normal-all-ft1`, `sched-18446744073709551615-2000-normal-all-ft1`,
+  `sched-18446744073709551615-12000-normal-all-ft1` (22.4 item 5).
+- `p3_peoples_reference.py`: catalogue of 42 kinds, the became_city template; no rule changes.
+- `p3_conflict_reference.py`: flags `fresh` (24.1, `World.fresh_claim`), `strength` (24.2, `World.strength` in
+  `held_back`), `dropped` (24.3), `hidden42` (24.4), `toll` (24.5, `World.battle_tolls`, stream
+  `hist.conflict.toll`); `MAX_PARTICIPANTS` 62 (P3-04 r19 22.2; no world reaches it, the 0.20.0 goldens are
+  unchanged); invariants (18) to (21) (`r22_violations`, `check_invariants_r22`), the open claims at E from the
+  state and from the rows (`open_claims_at_end`, `open_claims_from_rows`), `hidden_refuges_at_end`, the self-check
+  of 24.8 item 1 (`check_self_r22`, on every synthetic and stress case), the hand-made units of 24.8
+  (`check_units_r22`), the golden lines `<case> r22 fresh <20>/<39> dropped <n> refuge_hidden <n> repeated_tolls
+  <n> mixed_tolls <n>`, `<case> r22 open_claims <e..|->`, `<case> r22 hidden_refuges <s..|->`. The units of r14,
+  r17 and r19 run on the 0.20.0 rules (`rules("0.20.0")`). Readings in `gaps` (`r22 ...`).
+- `p3_report_reference.py`: format v2 (P3-07 r19 25.1 to 25.10) by default, v1 with `--version 0.20.0` (reproduces
+  the committed 0.20.0 `p3-07-report.txt`); fixture H11 (`h11-v2.toml`, the cases of 25.13; "H9 v2" in the spec,
+  H9 being r17's); `check_fixture_facts_v2`. The world cases of the golden are 0.21.0 worlds built by the
+  references, since no 0.21.0 C++ exists yet:
+  `p3_report_reference.py build-inputs ~/.cache/the-unmapped/out/p3-07-tests/inputs
+  ~/.cache/the-unmapped/out/p5-01-tests/report-inputs` (P1-06 r10 names, the chronology and history tables of
+  the references, meta generator_version 0.21.0 and game/data's content hash), then `golden`. The history of
+  `geo-seed-42-512` so built equals `p3-06-conflict.txt`'s table hashes. At integration the C++ worlds of
+  `world-hashes.sh` must give the same reports.
+
 ## P3-07 history report
 
 `p3_report_reference.py` reproduces `worldgen-cli report --history` at both levels from a world file

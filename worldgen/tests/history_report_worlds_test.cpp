@@ -123,8 +123,9 @@ void check_case(const WorldCase& c) {
     }
     const std::string f = hrtest::report_of(r, hrtest::HistoryLevel::full);
     CHECK(hrtest::sha_hex(f) == g.report.at("full"));
-    // the [stats] lines, readable when a hash differs
-    const auto got = hrtest::stats_list(s);
+    // the [stats] lines, readable when a hash differs (r19 25.7 item 4: the golden's stats lines are full's block;
+    // the summary prints only SUMMARY_STATS)
+    const auto got = hrtest::stats_list(f);
     CHECK(got.size() == g.stats.size());
     for (std::size_t i = 0; i < std::min(got.size(), g.stats.size()); ++i) {
         CAPTURE(g.stats[i].first);
@@ -172,7 +173,8 @@ TEST_CASE("P3-07 r17 24.11 item 2: no orphans with four civilizations per race; 
         for (const std::int64_t x : shown) decl += wars.kind(x) == d->id ? 1 : 0;
         const auto st = hrtest::stats_of(s);
         MESSAGE(name << ": T " << st.at("summary_threshold") << ", shown " << shown.size() << ", declarations " << decl
-                     << ", orphans " << wars.orphans(shown));
+                     << ", orphans " << wars.orphans(shown) << ", summary lines " << hrtest::lines_of(s).size());
+        CHECK(hrtest::lines_of(s).size() <= 1100U);   // P5-01 T18 (civs4: at most 1,100 summary lines)
     }
 }
 

@@ -226,6 +226,9 @@ inline Naming shipped_naming(std::string_view id) {
     Naming n = shipped_naming_r4(id);
     if (id == "dwarven") {
         n.god_patterns = {"ONCONC", "ONCONC", "ONCON"};
+        // r17 (P3-02 15.2, P5-01, generator 0.21.0): didin and ririn appended to forbidden
+        n.forbidden = {"mmm", "rr", "dd", "kk", "rdt", "rkd", "rdd", "mmb", "kdr", "kthr", "dkh", "ndb", "rnk", "didin",
+                       "ririn"};
     } else if (id == "elven") {
         n.god_patterns = {"ONONC", "ONONC", "ONCON", "ONONON", "NCONC"};
         n.civilization_forms = {"The Court of {root}", "The Realm of {root}", "The House of {root}"};

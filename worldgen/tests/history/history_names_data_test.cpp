@@ -347,7 +347,9 @@ TEST_CASE("P3-02 11.7 item 1: the shipped name_filters/ loads: four definitions,
     // words: 389 / 5 / 1 and crude 70 anywhere from P3-02 r10 12.1 (0.19.0; 393 whole from r8 11.11, 647 at 0.17.0);
     // P3-02 r13 13.1 (P3-10 second round): crude 72 / 12 / 14, slurs 33 / 18 / 6, words 5 / 1 / 387
     // P3-02 r15 14.3 (P3-11, generator 0.20.0): slurs 33 / 18 / 5, crude 71 / 12 / 14, words 5 / 1 / 391
-    const std::vector<std::array<std::size_t, 3>> sizes = {{71, 12, 14}, {0, 0, 101}, {33, 18, 5}, {5, 1, 391}};
+    // P3-02 r17 15.1 (P5-01, generator 0.21.0): slurs 33 / 17 / 5, crude 71 / 12 / 15, famous 0 / 0 / 103 (15.1
+    // writes 105; 101 + shiva + hindi is 103)
+    const std::vector<std::array<std::size_t, 3>> sizes = {{71, 12, 15}, {0, 0, 103}, {33, 17, 5}, {5, 1, 391}};
     for (std::size_t i = 0; i < 4; ++i) {
         CAPTURE(ids[i]);
         const wd::Record& rec = kind->definitions[i].record;
@@ -567,6 +569,62 @@ TEST_CASE("P3-02 r15 14.3, 14.4: the edited lists (tard, retard, bastard, ova, v
     CHECK_FALSE(bad.ok());
     CHECK(errors_of(bad).find("error: check 'name_filter_not_redundant' failed for 'name_filter.slurs': 'slurs' whole '" +
                               frag + "' is already rejected by anywhere '" + frag + "' of 'slurs'") != std::string::npos);
+}
+
+TEST_CASE("P3-02 r17 15.1, 15.4: fag anywhere (fagg gone), shiva and hindi in famous, fannie in crude; "
+          "name_filter_not_redundant passes, and fails on a copy keeping fag in slurs.at_start") {
+    const wd::LoadResult<wd::ContentSet> ok = wd::load_content(wd::builtin_kinds(), data_root());
+    INFO(errors_of(ok));
+    CHECK(ok.ok());
+    const names_api::Filter& f = names_test::shipped_filter();
+    auto has = [](const std::vector<std::string>& v, const std::string& w) {
+        return std::find(v.begin(), v.end(), w) != v.end();
+    };
+    const std::string frag = std::string("f") + "ag";
+    CHECK(has(f.anywhere, frag));
+    CHECK_FALSE(has(f.at_start, frag));
+    CHECK_FALSE(has(f.anywhere, frag + "g"));   // fagg removed (the redundancy check compares no two anywhere entries)
+    for (const std::string& w : std::vector<std::string>{"shiva", "hindi", std::string("f") + "annie"}) {
+        CAPTURE(w);
+        CHECK(has(f.whole, w));
+    }
+    wd::MemoryDataRoot root = shipped_in_memory();
+    bool done = false;
+    for (wd::MemoryDirectory& d : root.directories) {
+        if (d.name != "name_filters") continue;
+        for (wd::MemoryEntry& e : d.entries) {
+            if (e.name != "slurs.toml") continue;
+            const std::size_t at = e.bytes.find("at_start = [");
+            REQUIRE(at != std::string::npos);
+            e.bytes.replace(at, 12, "at_start = [\"" + frag + "\", ");
+            done = true;
+        }
+    }
+    REQUIRE(done);
+    const wd::LoadResult<wd::ContentSet> bad = wd::load_content_from_memory(wd::builtin_kinds(), root);
+    CHECK_FALSE(bad.ok());
+    CHECK(errors_of(bad).find("error: check 'name_filter_not_redundant' failed for 'name_filter.slurs': 'slurs' at_start '" +
+                              frag + "' is already rejected by anywhere '" + frag + "' of 'slurs'") != std::string::npos);
+}
+
+TEST_CASE("P3-02 r17 15.2: the shipped dwarven naming's forbidden list gains didin and ririn and passes section 3") {
+    const wd::LoadResult<wd::ContentSet> r = wd::load_content(wd::builtin_kinds(), data_root());
+    INFO(errors_of(r));
+    REQUIRE(r.ok());
+    const Naming n = shipped_naming("dwarven");
+    CHECK(n.forbidden == std::vector<std::string>{"mmm", "rr", "dd", "kk", "rdt", "rkd", "rdd", "mmb", "kdr", "kthr",
+                                                  "dkh", "ndb", "rnk", "didin", "ririn"});
+    // the library reads the same list from the shipped culture (culture_naming_from)
+    bool seen = false;
+    for (const wd::KindContent& k : r.value->kinds) {
+        if (k.kind != "culture") continue;
+        for (const wd::Definition& d : k.definitions) {
+            if (d.id != "dwarven") continue;
+            seen = true;
+            CHECK(names_api::naming_from_record(d.record.get_record("naming")).forbidden == n.forbidden);
+        }
+    }
+    CHECK(seen);
 }
 
 TEST_CASE("P3-02 r15 14.1: the shipped faerie naming has 14.1's lists and passes the checks of section 3") {

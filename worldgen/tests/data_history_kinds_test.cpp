@@ -268,16 +268,19 @@ TEST_CASE("P3-01 3-5: the production registry holds race, culture and history be
     CHECK(history.schema_for("engine") != nullptr);
     CHECK(history.schema_for("peoples") != nullptr);  // P3-05 12.1
     REQUIRE(history.schema_for("conflict") != nullptr);  // P3-06 12.1, generator 0.16.0 (P3-01 r7)
-    REQUIRE(history.schema_for("conflict")->checks().size() == 5U);  // r9 conflict_enmity_hops; r15, r17 quarrel
+    REQUIRE(history.schema_for("conflict")->checks().size() == 6U);  // r9 conflict_enmity_hops; r15, r17 quarrel; r22 toll
     CHECK(history.schema_for("conflict")->checks()[0].name == "conflict_declare");
     CHECK(history.schema_for("conflict")->checks()[1].name == "conflict_strain_max");
     CHECK(history.schema_for("conflict")->checks()[2].name == "conflict_enmity_hops");
     CHECK(history.schema_for("conflict")->checks()[3].name == "conflict_quarrel_strain");  // P3-06 r15 21.12
     CHECK(history.schema_for("conflict")->checks()[4].name == "conflict_quarrel_strain_max");  // P3-06 r17 22.7
-    REQUIRE(history.schema_for("engine")->checks().size() == 3U);  // P3-04 4.1 with r15's engine_quiet_min
+    CHECK(history.schema_for("conflict")->checks()[5].name == "conflict_toll_spread");  // P3-06 r22 24.5, P3-01 r15 3.8
+    // P3-04 4.1 with r15's engine_quiet_min and r19's engine_flare_min (after engine_quiet_min, P3-04 r19 22.3)
+    REQUIRE(history.schema_for("engine")->checks().size() == 4U);
     CHECK(history.schema_for("engine")->checks()[0].name == "engine_simulated_bounds");
     CHECK(history.schema_for("engine")->checks()[1].name == "engine_quiet_min");
-    CHECK(history.schema_for("engine")->checks()[2].name == "engine_phase_budget");
+    CHECK(history.schema_for("engine")->checks()[2].name == "engine_flare_min");
+    CHECK(history.schema_for("engine")->checks()[3].name == "engine_phase_budget");
 
     const wd::Kind& race = kinds[5];
     CHECK(race.directory == "races");
@@ -1069,6 +1072,89 @@ TEST_CASE("P3-04 r15 4.1: quiet_min_years int(0, 400) after quiet_events_max, re
     CHECK(contains(e.message, "check 'engine_quiet_min' failed for 'history.engine': quiet_min_years must not be above 2 x "
                               "quiet_step_years"));
     CHECK(load(shipped_edited(path, "quiet_step_years = 25", "quiet_step_years = 26")).ok());  // 50 <= 52
+}
+
+TEST_CASE("P3-01 r15 3.8, P3-06 r22 24.2, 24.5: quarrel_strength_permille int(0, 1000) and toll_spread_permille int(0, 500) after quarrel_min_settlements, required") {
+    const std::string path = "history/conflict.toml";
+    REQUIRE(contains(history_data::CONFLICT_TOML,
+                     "quarrel_min_settlements = 2\nquarrel_strength_permille = 1000\ntoll_spread_permille = 200\n"
+                     "capital_sacked_salience"));
+    for (const char* ok : {"quarrel_strength_permille = 0", "quarrel_strength_permille = 1000"}) {
+        CAPTURE(std::string_view(ok));
+        CHECK(load(shipped_edited(path, "quarrel_strength_permille = 1000", ok)).ok());
+    }
+    for (const char* bad : {"quarrel_strength_permille = -1", "quarrel_strength_permille = 1001"}) {
+        CAPTURE(std::string_view(bad));
+        const wd::LoadError e = only_error(load(shipped_edited(path, "quarrel_strength_permille = 1000", bad)));
+        CHECK(e.path == path);
+        CHECK(contains(e.message, "'history.conflict.quarrel_strength_permille'"));
+    }
+    CHECK(load(shipped_edited(path, "toll_spread_permille = 200", "toll_spread_permille = 0")).ok());
+    for (const char* bad : {"toll_spread_permille = -1", "toll_spread_permille = 501"}) {
+        CAPTURE(std::string_view(bad));
+        const wd::LoadError e = only_error(load(shipped_edited(path, "toll_spread_permille = 200", bad)));
+        CHECK(contains(e.message, "'history.conflict.toll_spread_permille'"));
+    }
+    const wd::LoadError m1 = only_error(load(shipped_edited(path, "quarrel_strength_permille = 1000\n", "")));
+    CHECK(m1.message == "missing required field 'history.conflict.quarrel_strength_permille'");
+    const wd::LoadError m2 = only_error(load(shipped_edited(path, "toll_spread_permille = 200\n", "")));
+    CHECK(m2.message == "missing required field 'history.conflict.toll_spread_permille'");
+}
+
+TEST_CASE("P3-01 r15 3.8, P3-06 r22 24.5: conflict_toll_spread keeps the victors' toll below the defeated's") {
+    const std::string path = "history/conflict.toml";
+    // shipped: 80 x 1200 = 96,000 <= min(250, 500) x 800 = 200,000
+    CHECK(load(history_data::shipped_files()).ok());
+    // loss_winner 200, loss_loser 250, spread 200: 240,000 > 200,000
+    Files f = history_data::shipped_files();
+    std::string t(history_data::CONFLICT_TOML);
+    const std::size_t at = t.find("loss_winner_permille = 80");
+    REQUIRE(at != std::string::npos);
+    t.replace(at, std::string_view("loss_winner_permille = 80").size(), "loss_winner_permille = 200");
+    f[path] = t;
+    const wd::LoadError e = only_error(load(f));
+    CHECK(e.path == path);
+    CHECK(contains(e.message, "check 'conflict_toll_spread' failed for 'history.conflict': toll_spread_permille lets "
+                              "the victors lose more than the defeated"));
+    // the same with spread 0 passes (200 x 1000 <= 250 x 1000)
+    const std::size_t at2 = t.find("toll_spread_permille = 200");
+    t.replace(at2, std::string_view("toll_spread_permille = 200").size(), "toll_spread_permille = 0");
+    f[path] = t;
+    CHECK(load(f).ok());
+    // the bound reads min(loss_loser, kill_max): kill_max 100 with the shipped spread fails (96,000 > 80,000)
+    CHECK(contains(only_error(load(shipped_edited(path, "kill_max_permille = 500", "kill_max_permille = 100"))).message,
+                   "check 'conflict_toll_spread' failed"));
+}
+
+TEST_CASE("P3-01 r15 3.8, P3-04 r19 22.3: flare_min_years int(1, 1000) after quiet_min_years, required; engine_flare_min") {
+    const std::string path = "history/engine.toml";
+    REQUIRE(contains(history_data::ENGINE_TOML, "quiet_min_years = 50\nflare_min_years = 10\nsimulated_min_permille"));
+    CHECK(load(shipped_edited(path, "flare_min_years = 10", "flare_min_years = 1")).ok());
+    CHECK(load(shipped_edited(path, "flare_min_years = 10", "flare_min_years = 30")).ok());  // = sparse flare_years
+    for (const char* bad : {"flare_min_years = 0", "flare_min_years = 1001"}) {
+        CAPTURE(std::string_view(bad));
+        const wd::LoadError e = only_error(load(shipped_edited(path, "flare_min_years = 10", bad)));
+        CHECK(contains(e.message, "'history.engine.flare_min_years'"));
+    }
+    const wd::LoadError miss = only_error(load(shipped_edited(path, "flare_min_years = 10\n", "")));
+    CHECK(miss.message == "missing required field 'history.engine.flare_min_years'");
+    const wd::LoadError e = only_error(load(shipped_edited(path, "flare_min_years = 10", "flare_min_years = 31")));
+    CHECK(contains(e.message, "check 'engine_flare_min' failed for 'history.engine': sparse: flare_min_years must not "
+                              "be above flare_years"));
+}
+
+TEST_CASE("P3-02 r17 15.2, P3-05 r18 24, P3-06 r22 24.6: the dwarven forbidden list, became_city, kinds 41 and 42") {
+    REQUIRE(contains(history_data::DWARVEN_NAMING, "\"ndb\", \"rnk\", \"didin\", \"ririn\"]"));
+    REQUIRE(contains(history_data::REPORT_TOML,
+                     "{ kind = \"became_city\", salience = 45, template = \"{settlement} in {@region} grew into a city.\" }"));
+    REQUIRE(contains(history_data::REPORT_TOML,
+                     "template = \"{from} gave up {settlement:all} in {@region} to {to}.\" },\n"
+                     "  { kind = \"claim_dropped\", salience = 15, template = \"{claimant} let the claim against {holder} "
+                     "over {@region} lapse.\" },\n"
+                     "  { kind = \"refuge_hidden\", salience = 10, template = \"{@settlement} lay hidden from {@year} to "
+                     "{@end_year}.\" },\n]"));
+    // the listings load (and 8.1 test 1 compares them with game/data and both fixture roots)
+    CHECK(load(history_data::shipped_files()).ok());
 }
 
 TEST_CASE("P3-01 5.1: history.chronology bounds, required fields and chronology_age_name_form") {

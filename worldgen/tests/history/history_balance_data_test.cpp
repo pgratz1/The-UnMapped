@@ -67,7 +67,9 @@ TEST_CASE("P3-06 r9 20.9, r10 20.19, r14 21.7, 21.9: the new history.conflict fi
         // r15 21.12 item 2 (P3-10 r1)
         {"quarrel_strain", 600},
         // r17 22.1 item 4 (P3-10 second round)
-        {"quarrel_min_settlements", 2}};
+        {"quarrel_min_settlements", 2},
+        // P3-06 r22 24.2, 24.5 (P5-01, 0.21.0)
+        {"quarrel_strength_permille", 1000}, {"toll_spread_permille", 200}};
     for (const wd::ContentSet* c : {&shipped_content()}) {
         const wd::Record& r = history_record(*c, "conflict");
         const std::int64_t at = index_of(r, "last_refuge");
@@ -142,9 +144,9 @@ TEST_CASE("P3-05 r8 21 item 5: regions_per_extra_civ 90 and civs_extra_max 2 fol
 TEST_CASE("P3-06 r9 20.9: kinds 32 refugees_settled and 33 tribute after kind 31; claim salience 35") {
     using ET = eng::EntityType;
     const eng::EventCatalogue& compiled = eng::compiled();
-    REQUIRE(compiled.kinds.size() == 40U);  // P3-04 r17 21.2 (0.20.0): kinds 39, 40
+    REQUIRE(compiled.kinds.size() == 42U);  // P3-04 r19 22.2 (0.21.0): kinds 41, 42; r17 21.2 (0.20.0): kinds 39, 40
     const eng::EventCatalogue cat = eng::catalogue_of(engine_test::shipped());
-    REQUIRE(cat.kinds.size() == 40U);  // P3-04 r17 21.2 (0.20.0): kinds 39, 40
+    REQUIRE(cat.kinds.size() == 42U);  // P3-04 r19 22.2 (0.21.0): kinds 41, 42; r17 21.2 (0.20.0): kinds 39, 40
     for (const eng::EventCatalogue* c : {&compiled, &cat}) {
         const eng::KindDef& k32 = c->kinds[31];
         CHECK(k32.id == 32);
@@ -212,16 +214,18 @@ TEST_CASE("P3-06 r9 20.9, r10 20.21 item 9: history.report lists kinds 1-40 in k
 
 TEST_CASE("P3-06 r9 20.10, r10 20.17 item 5: one new stream, hist.conflict.search, after hist.conflict.sack (53)") {
     const auto names = worldgen::streams::all_stream_names;
-    CHECK(names.size() == 53U);
-    std::size_t conflict = 0, sack = 0, search = 0;
+    CHECK(names.size() == 54U);   // P3-06 r22 24.5 (0.21.0): hist.conflict.toll after hist.conflict.search
+    std::size_t conflict = 0, sack = 0, search = 0, toll = 0;
     for (std::size_t i = 0; i < names.size(); ++i) {
         const std::string_view n(names[i]);
         conflict += n.rfind("hist.conflict.", 0) == 0 ? 1U : 0U;
         if (n == "hist.conflict.sack") sack = i;
         if (n == "hist.conflict.search") search = i;
+        if (n == "hist.conflict.toll") toll = i;
     }
-    CHECK(conflict == 6U);
+    CHECK(conflict == 7U);
     CHECK(search == sack + 1);
+    CHECK(toll == search + 1);
 }
 
 TEST_CASE("P3-06 r10 20.15, 20.17, 20.22: kinds 34 war_won, 35 search_abandoned, 36 refuge_held") {
@@ -246,9 +250,9 @@ TEST_CASE("P3-06 r10 20.15, 20.17, 20.22: kinds 34 war_won, 35 search_abandoned,
          "held on."},
     };
     const eng::EventCatalogue& compiled = eng::compiled();
-    REQUIRE(compiled.kinds.size() == 40U);  // P3-04 r17 21.2 (0.20.0): kinds 39, 40
+    REQUIRE(compiled.kinds.size() == 42U);  // P3-04 r19 22.2 (0.21.0): kinds 41, 42; r17 21.2 (0.20.0): kinds 39, 40
     const eng::EventCatalogue cat = eng::catalogue_of(engine_test::shipped());
-    REQUIRE(cat.kinds.size() == 40U);  // P3-04 r17 21.2 (0.20.0): kinds 39, 40
+    REQUIRE(cat.kinds.size() == 42U);  // P3-04 r19 22.2 (0.21.0): kinds 41, 42; r17 21.2 (0.20.0): kinds 39, 40
     for (const K& w : want) {
         CAPTURE(std::string_view(w.key));
         for (const eng::EventCatalogue* c : {&compiled, &cat}) {

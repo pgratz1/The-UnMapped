@@ -208,7 +208,7 @@ TEST_CASE("P3-04 r17 21.3 item 2: no shipped template puts a value at byte 0 or 
 
 TEST_CASE("P3-04 r17 21.2: kinds 39 claim_settlements and 40 settlements_ceded in the compiled catalogue") {
     const eng::EventCatalogue& c = eng::compiled();
-    REQUIRE(c.kinds.size() == 40U);
+    REQUIRE(c.kinds.size() >= 40U);  // 42 from 0.21.0 (P3-04 r19 22.2: kinds 41, 42 appended)
     const eng::KindDef& k39 = c.kinds[38];
     CHECK(k39.id == 39);
     CHECK(k39.key == "claim_settlements");

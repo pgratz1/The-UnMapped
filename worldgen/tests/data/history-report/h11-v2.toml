@@ -1,0 +1,936 @@
+# P3-07 r19 25.13 items 2 to 9: H11 v2 (calamity cap, ruins in words, faded apart, adversaries with and without
+# war, an ended realm in short, flare-ups with and without a war at T = 100, a war's end year, colonies and kind
+# changes before calamities, fresh claims of kinds 20 and 39 and their notes, refuges hidden and found, a
+# dropped claim). Written by the test writer; format: README.md in this directory.
+
+[meta]
+seed = 1111
+seed_phrase = ""
+map_size = 512
+history_span = 3000
+history_detail = "normal"
+races = "human,orc"
+civs_per_race = "auto"
+event_intensity = "normal"
+monster_pressure = "normal"
+divine_activity = "normal"
+divine_script = ""
+
+[tables]
+biome = [[1, "grassland", "Grassland", 8421376, 0]]
+region = [
+    [1, "Arn Vale", 1, 2000, 0, 1500],
+    [2, "Bel Downs", 1, 2000, 0, 1500],
+    [3, "Bel Moor", 1, 2000, 0, 1500],
+    [4, "Cor Wold", 1, 2000, 0, 1500],
+    [5, "Fen Hollow", 1, 2000, 0, 1500],
+    [6, "The Holt of Yews", 1, 2000, 0, 1500],
+    [7, "Esk Heath", 1, 2000, 0, 1500],
+    [8, "Grok Fell", 1, 2000, 0, 1500],
+    [9, "Dun Sike", 1, 2000, 0, 1500],
+]
+race = [
+    [1, "human", "Human", "Humans", "Human", 1, 80, 25, 1, 1, 0, 1],
+    [2, "orc", "Orc", "Orcs", "Orcish", 2, 60, 20, 2, 1, 1500, 2],
+]
+culture = [
+    [1, "human", "Human", 1],
+    [2, "orcish", "Orcish", 2],
+]
+god = [
+    [1, "Wealstuld", 1],
+    [2, "Kruu", 2],
+]
+age = [
+    [1, 1, 0, 1499, "The Age of Humans"],
+    [2, 2, 1500, 2999, "The Age of Orcs"],
+]
+phase = [
+    [1, 1, 1, 0, 149, 1],
+    [2, 1, 2, 150, 1499, 0],
+    [3, 2, 1, 1500, 1649, 34],
+    [4, 2, 3, 1650, 1699, 31],
+    [5, 2, 3, 1700, 1749, 37],
+    [6, 2, 2, 1750, 2899, 0],
+    [7, 2, 4, 2900, 2999, 0],
+]
+civilization = [
+    [1, "Arn", 1, 1, 1, 1, 0, 2, -1, 0],
+    [2, "Bel", 1, 1, 2, 2, 0, 4, -1, 0],
+    [3, "Cor", 1, 1, 4, 4, 0, 6, -1, 0],
+    [4, "Dun", 1, 1, 6, 5, 0, 8, -1, 0],
+    [5, "Esk", 1, 1, 7, 11, 0, 10, 1200, 30],
+    [6, "Fen", 1, 1, 5, 7, 0, 12, -1, 0],
+    [7, "Grok", 2, 2, 8, 12, 1500, 35, -1, 0],
+]
+settlement = [
+    [1, "Arnton", 10, 10, 1, 1, 0, 3, 1, 3, 1, 3000, -1, 0],
+    [2, "Belford", 20, 20, 2, 2, 0, 5, 2, 3, 1, 2500, -1, 0],
+    [3, "Belmoor", 30, 30, 3, 2, 200, 17, 0, 2, 3, 0, 1800, 47],
+    [4, "Corwick", 40, 40, 4, 3, 0, 7, 3, 3, 1, 2600, -1, 0],
+    [5, "Dunholm", 50, 50, 6, 4, 0, 9, 4, 3, 1, 1800, -1, 0],
+    [6, "Eskby", 60, 60, 7, 5, 0, 11, 0, 2, 3, 0, 1190, 29],
+    [7, "Fenmouth", 70, 70, 5, 6, 0, 13, 6, 3, 1, 2400, -1, 0],
+    [8, "Corbridge", 80, 80, 5, 3, 1450, 33, 3, 2, 1, 400, -1, 0],
+    [9, "Dunlea", 90, 90, 6, 4, 300, 18, 0, 3, 3, 0, 1820, 49],
+    [10, "Dunsike", 100, 100, 9, 4, 310, 19, 0, 1, 3, 0, 1810, 48],
+    [11, "Eskmere", 110, 110, 7, 5, 600, 28, 0, 1, 4, 0, -1, 0],
+    [12, "Grokpit", 120, 120, 8, 7, 1500, 36, 7, 2, 1, 1200, -1, 0],
+    [13, "Fenholt", 130, 130, 5, 6, 0, 14, 6, 1, 1, 100, -1, 0],
+    [14, "Fenwold", 140, 140, 5, 6, 1760, 46, 0, 1, 3, 0, 1830, 50],
+    [15, "Grokmire", 150, 150, 8, 7, 1840, 51, 0, 1, 3, 0, 1850, 52],
+    [16, "Hidden Hole", 160, 160, 9, 7, 1850, 53, 7, 1, 1, 150, -1, 0],
+    [17, "Found Hole", 170, 170, 3, 7, 1860, 55, 7, 1, 1, 150, -1, 0],
+    [18, "Plain Hole", 180, 180, 8, 7, 1870, 57, 7, 1, 1, 100, -1, 0],
+]
+settlement_census = [
+    [1, 0, 1, 3, 1, 3000],
+    [2, 0, 2, 3, 1, 2500],
+    [3, 200, 2, 2, 1, 100],
+    [3, 1800, 0, 2, 3, 0],
+    [4, 0, 3, 3, 1, 2600],
+    [5, 0, 4, 3, 1, 1800],
+    [6, 0, 5, 2, 1, 100],
+    [6, 1190, 0, 2, 3, 0],
+    [7, 0, 6, 3, 1, 2400],
+    [8, 1450, 3, 2, 1, 400],
+    [9, 300, 4, 3, 1, 100],
+    [9, 1820, 0, 3, 3, 0],
+    [10, 310, 4, 1, 1, 100],
+    [10, 1810, 0, 1, 3, 0],
+    [11, 600, 5, 1, 1, 100],
+    [11, 1200, 0, 1, 4, 0],
+    [12, 1500, 7, 2, 1, 1200],
+    [13, 0, 6, 1, 1, 100],
+    [14, 1760, 6, 1, 1, 100],
+    [14, 1830, 0, 1, 3, 0],
+    [15, 1840, 7, 1, 1, 100],
+    [15, 1850, 0, 1, 3, 0],
+    [16, 1850, 7, 1, 1, 150],
+    [17, 1860, 7, 1, 1, 150],
+    [18, 1870, 7, 1, 1, 100],
+]
+region_control = [
+    [1, 0, -1, 1, 3],
+    [2, 0, -1, 2, 5],
+    [3, 200, 1800, 2, 17],
+    [3, 1860, -1, 7, 55],
+    [4, 0, -1, 3, 7],
+    [5, 0, -1, 6, 13],
+    [6, 0, -1, 4, 9],
+    [7, 0, 1200, 5, 11],
+    [8, 1500, -1, 7, 36],
+    [9, 310, 1810, 4, 19],
+    [9, 1850, -1, 7, 53],
+]
+relation = [
+    [3, 1, 3, 2, "war", 1650, 1656, 40, 41],
+    [3, 1, 3, 2, "peace", 1656, -1, 41, 0],
+    [3, 1, 3, 3, "war", 1660, -1, 43, 0],
+    [3, 1, 3, 4, "enmity", 0, -1, 8, 0],
+    [3, 1, 3, 5, "enmity", 0, 1200, 10, 30],
+    [3, 1, 3, 6, "enmity", 0, -1, 12, 0],
+]
+
+[[kind]]
+key = "awakening"
+caused = 0
+region_use = 1
+settlement_use = 0
+salience = 100
+template = "{creator} awakened the {race:plural} in {@region}."
+roles = [["race", 1, 1, 1], ["creator", 2, 1, 1]]
+
+[[kind]]
+key = "civ_founded"
+caused = 1
+region_use = 1
+settlement_use = 0
+salience = 80
+template = "The {race:plural} founded {civilization} in {@region}."
+roles = [["civilization", 3, 1, 1], ["race", 1, 1, 1]]
+
+[[kind]]
+key = "settlement_founded"
+caused = 0
+region_use = 1
+settlement_use = 1
+salience = 40
+template = "{founder} founded {settlement} in {@region}."
+roles = [["settlement", 4, 1, 1], ["founder", 3, 1, 1]]
+values = ["population"]
+
+[[kind]]
+key = "colony_founded"
+caused = 0
+region_use = 1
+settlement_use = 1
+salience = 15
+template = "{founder} sent settlers from {origin} to found {settlement} in {@region}."
+roles = [["settlement", 4, 1, 1], ["founder", 3, 1, 1], ["origin", 4, 1, 1]]
+values = ["population"]
+
+[[kind]]
+key = "became_village"
+caused = 1
+region_use = 1
+settlement_use = 1
+salience = 10
+template = "{settlement} grew into a village of {population}."
+roles = [["settlement", 4, 1, 1], ["civilization", 3, 1, 1]]
+values = ["population"]
+
+[[kind]]
+key = "became_town"
+caused = 1
+region_use = 1
+settlement_use = 1
+salience = 18
+template = "{settlement} grew into a town of {population}."
+roles = [["settlement", 4, 1, 1], ["civilization", 3, 1, 1]]
+values = ["population"]
+
+[[kind]]
+key = "famine"
+caused = 0
+region_use = 1
+settlement_use = 1
+salience = 25
+template = "Famine struck {settlement}; {dead} died."
+roles = [["settlement", 4, 1, 1], ["civilization", 3, 1, 1]]
+values = ["dead", "population"]
+
+[[kind]]
+key = "plague"
+caused = 0
+region_use = 1
+settlement_use = 1
+salience = 45
+template = "Plague broke out in {settlement}; {dead} died."
+roles = [["settlement", 4, 1, 1], ["civilization", 3, 1, 1]]
+values = ["dead", "population"]
+
+[[kind]]
+key = "plague_outbreak"
+caused = 0
+region_use = 1
+settlement_use = 1
+salience = 45
+template = "Plague broke out in {settlement}{reached?| and spread to one other settlement| and spread to # other settlements}; {total} died{reached?| in all| in all}."
+roles = [["settlement", 4, 1, 1], ["civilization", 3, 1, 1]]
+values = ["dead", "population", "total", "reached"]
+
+[[kind]]
+key = "succession_crisis"
+caused = 0
+region_use = 1
+settlement_use = 1
+salience = 40
+template = "A succession crisis at {@settlement} shook {civilization}."
+roles = [["civilization", 3, 1, 1]]
+
+[[kind]]
+key = "settlement_abandoned"
+caused = 1
+region_use = 1
+settlement_use = 1
+salience = 55
+template = "{@causes:famine=famine,plague=plague,plague_outbreak=plague,plague_spread=plague,succession_crisis=strife,battle=war,battle_at_pass=war,tribute=tribute|Weakened by |, }{settlement} was abandoned; {survivors?no one survived|its one survivor was scattered|its # survivors were scattered}."
+roles = [["settlement", 4, 1, 1], ["civilization", 3, 1, 1]]
+values = ["survivors"]
+
+[[kind]]
+key = "civ_ended"
+caused = 1
+region_use = 1
+settlement_use = 1
+salience = 85
+template = "{civilization} came to an end."
+roles = [["civilization", 3, 1, 1]]
+
+[[kind]]
+key = "quiet_stretch"
+caused = 0
+region_use = 0
+settlement_use = 0
+salience = 20
+template = "For {years} {years?year|years}, from {@year} to {@end_year}, the land was quiet{realms?|; one realm held it|, and # realms kept the peace}."
+roles = [["realm", 3, 1, 0]]
+values = ["years", "realms"]
+
+[[kind]]
+key = "claim"
+caused = 1
+region_use = 1
+settlement_use = 0
+salience = 35
+template = "{claimant} laid claim to {@region}, held by {holder}."
+roles = [["claimant", 3, 1, 1], ["holder", 3, 1, 1]]
+
+[[kind]]
+key = "claim_settlements"
+caused = 1
+region_use = 1
+settlement_use = 0
+salience = 35
+template = "{claimant} laid claim to {settlement:all} of {holder} in {@region}."
+roles = [["claimant", 3, 1, 1], ["holder", 3, 1, 1], ["settlement", 4, 1, 0]]
+
+[[kind]]
+key = "war_declared"
+caused = 1
+region_use = 1
+settlement_use = 0
+salience = 70
+template = "{attacker} declared war on {defender} over {@region}."
+roles = [["attacker", 3, 1, 1], ["defender", 3, 1, 1]]
+
+[[kind]]
+key = "peace"
+caused = 1
+region_use = 0
+settlement_use = 0
+salience = 60
+template = "{loser} sued {winner} for peace after {years} {years?year|years} of war."
+roles = [["winner", 3, 1, 1], ["loser", 3, 1, 1]]
+values = ["years"]
+
+[[kind]]
+key = "flare_up"
+caused = 1
+region_use = 0
+settlement_use = 0
+salience = 50
+template = "In {@year} tensions flared into {years} {years?year|years} of upheaval."
+roles = []
+values = ["years"]
+
+[[kind]]
+key = "sacked"
+caused = 1
+region_use = 1
+settlement_use = 1
+salience = 75
+template = "{@settlement} of {defender} was sacked; {dead} died and {survivors} fled."
+roles = [["attacker", 3, 1, 1], ["defender", 3, 1, 1]]
+values = ["dead", "survivors"]
+
+[[kind]]
+key = "settlement_abandoned_to"
+caused = 1
+region_use = 1
+settlement_use = 1
+salience = 55
+template = "{@causes:famine=famine,plague=plague,plague_outbreak=plague,plague_spread=plague,succession_crisis=strife,battle=war,battle_at_pass=war,tribute=tribute|Weakened by |, }{settlement} was abandoned; {settled} {settled?survivor|survivors} went to {destination}{lost?|, and one was lost|, and # were lost}."
+roles = [["settlement", 4, 1, 1], ["civilization", 3, 1, 1], ["destination", 4, 1, 1]]
+values = ["settled", "lost"]
+
+[[kind]]
+key = "refugees_settled"
+caused = 1
+region_use = 1
+settlement_use = 1
+salience = 65
+template = "The survivors of {origin} fled into hiding and founded {@settlement} in {@region}."
+roles = [["settlement", 4, 1, 1], ["founder", 3, 1, 1], ["origin", 4, 1, 1]]
+values = ["population"]
+
+[[kind]]
+key = "claim_dropped"
+caused = 1
+region_use = 1
+settlement_use = 0
+salience = 15
+template = "{claimant} let the claim against {holder} over {@region} lapse."
+roles = [["claimant", 3, 1, 1], ["holder", 3, 1, 1]]
+
+[[kind]]
+key = "refuge_hidden"
+caused = 1
+region_use = 1
+settlement_use = 1
+salience = 10
+template = "{@settlement} lay hidden from {@year} to {@end_year}."
+roles = [["settlement", 4, 1, 1], ["founder", 3, 1, 1]]
+
+[[kind]]
+key = "swallowed"
+caused = 0
+region_use = 1
+settlement_use = 1
+salience = 50
+template = "The marsh swallowed {@settlement}."
+roles = [["settlement", 4, 1, 1]]
+
+[[kind]]
+key = "chant"
+caused = 0
+region_use = 0
+settlement_use = 0
+salience = 100
+template = "A chant rose."
+roles = []
+
+[[event]]
+id = 1
+year = 0
+kind = "awakening"
+phase = 1
+region = 1
+parts = [["race", 1], ["creator", 1]]
+
+[[event]]
+id = 2
+year = 0
+kind = "civ_founded"
+phase = 1
+region = 1
+parts = [["civilization", 1], ["race", 1]]
+causes = [1]
+
+[[event]]
+id = 3
+year = 0
+kind = "settlement_founded"
+phase = 1
+region = 1
+settlement = 1
+parts = [["settlement", 1], ["founder", 1]]
+values = [1000]
+
+[[event]]
+id = 4
+year = 0
+kind = "civ_founded"
+phase = 1
+region = 2
+parts = [["civilization", 2], ["race", 1]]
+causes = [1]
+
+[[event]]
+id = 5
+year = 0
+kind = "settlement_founded"
+phase = 1
+region = 2
+settlement = 2
+parts = [["settlement", 2], ["founder", 2]]
+values = [1000]
+
+[[event]]
+id = 6
+year = 0
+kind = "civ_founded"
+phase = 1
+region = 4
+parts = [["civilization", 3], ["race", 1]]
+causes = [1]
+
+[[event]]
+id = 7
+year = 0
+kind = "settlement_founded"
+phase = 1
+region = 4
+settlement = 4
+parts = [["settlement", 4], ["founder", 3]]
+values = [1000]
+
+[[event]]
+id = 8
+year = 0
+kind = "civ_founded"
+phase = 1
+region = 6
+parts = [["civilization", 4], ["race", 1]]
+causes = [1]
+
+[[event]]
+id = 9
+year = 0
+kind = "settlement_founded"
+phase = 1
+region = 6
+settlement = 5
+parts = [["settlement", 5], ["founder", 4]]
+values = [1000]
+
+[[event]]
+id = 10
+year = 0
+kind = "civ_founded"
+phase = 1
+region = 7
+parts = [["civilization", 5], ["race", 1]]
+causes = [1]
+
+[[event]]
+id = 11
+year = 0
+kind = "settlement_founded"
+phase = 1
+region = 7
+settlement = 6
+parts = [["settlement", 6], ["founder", 5]]
+values = [1000]
+
+[[event]]
+id = 12
+year = 0
+kind = "civ_founded"
+phase = 1
+region = 5
+parts = [["civilization", 6], ["race", 1]]
+causes = [1]
+
+[[event]]
+id = 13
+year = 0
+kind = "settlement_founded"
+phase = 1
+region = 5
+settlement = 7
+parts = [["settlement", 7], ["founder", 6]]
+values = [1000]
+
+[[event]]
+id = 14
+year = 0
+kind = "settlement_founded"
+phase = 1
+region = 5
+settlement = 13
+parts = [["settlement", 13], ["founder", 6]]
+values = [100]
+
+[[event]]
+id = 15
+year = 100
+kind = "famine"
+phase = 1
+region = 1
+settlement = 1
+parts = [["settlement", 1], ["civilization", 1]]
+values = [30]
+
+[[event]]
+id = 16
+year = 150
+end = 1499
+kind = "quiet_stretch"
+phase = 2
+parts = [["realm", 1], ["realm", 2], ["realm", 3], ["realm", 4], ["realm", 5], ["realm", 6]]
+values = [1350, 6]
+
+[[event]]
+id = 17
+year = 200
+kind = "settlement_founded"
+phase = 2
+region = 3
+settlement = 3
+parts = [["settlement", 3], ["founder", 2]]
+values = [500]
+
+[[event]]
+id = 18
+year = 300
+kind = "colony_founded"
+phase = 2
+region = 6
+settlement = 9
+parts = [["settlement", 9], ["founder", 4], ["origin", 5]]
+values = [144]
+
+[[event]]
+id = 19
+year = 310
+kind = "colony_founded"
+phase = 2
+region = 9
+settlement = 10
+parts = [["settlement", 10], ["founder", 4], ["origin", 5]]
+values = [144]
+
+[[event]]
+id = 20
+year = 320
+kind = "became_village"
+phase = 2
+region = 6
+settlement = 5
+parts = [["settlement", 5], ["civilization", 4]]
+values = [1500]
+
+[[event]]
+id = 21
+year = 400
+kind = "became_town"
+phase = 2
+region = 6
+settlement = 5
+parts = [["settlement", 5], ["civilization", 4]]
+values = [2000]
+
+[[event]]
+id = 22
+year = 410
+kind = "became_town"
+phase = 2
+region = 6
+settlement = 9
+parts = [["settlement", 9], ["civilization", 4]]
+values = [2000]
+
+[[event]]
+id = 23
+year = 500
+kind = "famine"
+phase = 2
+region = 6
+settlement = 5
+parts = [["settlement", 5], ["civilization", 4]]
+values = [20]
+
+[[event]]
+id = 24
+year = 510
+kind = "famine"
+phase = 2
+region = 6
+settlement = 9
+parts = [["settlement", 9], ["civilization", 4]]
+values = [25]
+
+[[event]]
+id = 25
+year = 520
+kind = "succession_crisis"
+phase = 2
+region = 6
+settlement = 5
+parts = [["civilization", 4]]
+
+[[event]]
+id = 26
+year = 530
+kind = "plague"
+phase = 2
+region = 6
+settlement = 5
+parts = [["settlement", 5], ["civilization", 4]]
+values = [300]
+
+[[event]]
+id = 27
+year = 540
+kind = "plague_outbreak"
+phase = 2
+region = 6
+settlement = 9
+parts = [["settlement", 9], ["civilization", 4]]
+values = [200, 1800, 200, 0]
+
+[[event]]
+id = 28
+year = 600
+kind = "settlement_founded"
+phase = 2
+region = 7
+settlement = 11
+parts = [["settlement", 11], ["founder", 5]]
+values = [300]
+
+[[event]]
+id = 29
+year = 1190
+kind = "settlement_abandoned"
+phase = 2
+region = 7
+settlement = 6
+parts = [["settlement", 6], ["civilization", 5]]
+values = [0]
+
+[[event]]
+id = 30
+year = 1200
+kind = "civ_ended"
+phase = 2
+region = 7
+settlement = 11
+parts = [["civilization", 5]]
+causes = [29]
+
+[[event]]
+id = 31
+year = 1300
+kind = "claim"
+phase = 2
+region = 3
+parts = [["claimant", 1], ["holder", 2]]
+causes = [17]
+
+[[event]]
+id = 32
+year = 1400
+kind = "claim"
+phase = 2
+region = 4
+parts = [["claimant", 1], ["holder", 3]]
+causes = [7]
+
+[[event]]
+id = 33
+year = 1450
+kind = "settlement_founded"
+phase = 2
+region = 5
+settlement = 8
+parts = [["settlement", 8], ["founder", 3]]
+values = [400]
+
+[[event]]
+id = 34
+year = 1500
+kind = "awakening"
+phase = 3
+region = 8
+parts = [["race", 2], ["creator", 2]]
+
+[[event]]
+id = 35
+year = 1500
+kind = "civ_founded"
+phase = 3
+region = 8
+parts = [["civilization", 7], ["race", 2]]
+causes = [34]
+
+[[event]]
+id = 36
+year = 1500
+kind = "settlement_founded"
+phase = 3
+region = 8
+settlement = 12
+parts = [["settlement", 12], ["founder", 7]]
+values = [1200]
+
+[[event]]
+id = 37
+year = 1600
+kind = "claim"
+phase = 3
+region = 6
+parts = [["claimant", 6], ["holder", 4]]
+causes = [9]
+
+[[event]]
+id = 38
+year = 1650
+kind = "flare_up"
+phase = 4
+values = [50]
+causes = [31]
+
+[[event]]
+id = 39
+year = 1650
+kind = "claim"
+phase = 4
+region = 2
+parts = [["claimant", 1], ["holder", 2]]
+causes = [5, 31]
+
+[[event]]
+id = 40
+year = 1650
+kind = "war_declared"
+phase = 4
+region = 2
+parts = [["attacker", 1], ["defender", 2]]
+causes = [39]
+
+[[event]]
+id = 41
+year = 1656
+kind = "peace"
+phase = 4
+parts = [["winner", 1], ["loser", 2]]
+values = [6]
+causes = [40]
+
+[[event]]
+id = 42
+year = 1660
+kind = "claim_settlements"
+phase = 4
+region = 5
+parts = [["claimant", 1], ["holder", 3], ["settlement", 8]]
+causes = [32, 33]
+
+[[event]]
+id = 43
+year = 1660
+kind = "war_declared"
+phase = 4
+region = 5
+parts = [["attacker", 1], ["defender", 3]]
+causes = [42]
+
+[[event]]
+id = 44
+year = 1700
+kind = "flare_up"
+phase = 5
+values = [50]
+causes = [37]
+
+[[event]]
+id = 45
+year = 1720
+kind = "claim_dropped"
+phase = 5
+region = 6
+parts = [["claimant", 6], ["holder", 4]]
+causes = [37]
+
+[[event]]
+id = 46
+year = 1760
+kind = "settlement_founded"
+phase = 6
+region = 5
+settlement = 14
+parts = [["settlement", 14], ["founder", 6]]
+values = [100]
+
+[[event]]
+id = 47
+year = 1800
+kind = "sacked"
+phase = 6
+region = 3
+settlement = 3
+parts = [["attacker", 1], ["defender", 2]]
+values = [100, 400]
+
+[[event]]
+id = 48
+year = 1810
+kind = "sacked"
+phase = 6
+region = 9
+settlement = 10
+parts = [["defender", 4]]
+values = [50, 94]
+
+[[event]]
+id = 49
+year = 1820
+kind = "settlement_abandoned"
+phase = 6
+region = 6
+settlement = 9
+parts = [["settlement", 9], ["civilization", 4]]
+values = [0]
+
+[[event]]
+id = 50
+year = 1830
+kind = "settlement_abandoned_to"
+phase = 6
+region = 5
+settlement = 14
+parts = [["settlement", 14], ["civilization", 6], ["destination", 7]]
+values = [12, 3]
+
+[[event]]
+id = 51
+year = 1840
+kind = "settlement_founded"
+phase = 6
+region = 8
+settlement = 15
+parts = [["settlement", 15], ["founder", 7]]
+values = [300]
+
+[[event]]
+id = 52
+year = 1850
+kind = "swallowed"
+phase = 6
+region = 8
+settlement = 15
+parts = [["settlement", 15]]
+
+[[event]]
+id = 53
+year = 1850
+kind = "refugees_settled"
+phase = 6
+region = 9
+settlement = 16
+parts = [["settlement", 16], ["founder", 7], ["origin", 15]]
+values = [150]
+causes = [52]
+
+[[event]]
+id = 54
+year = 1850
+end = 2999
+kind = "refuge_hidden"
+phase = 6
+region = 9
+settlement = 16
+parts = [["settlement", 16], ["founder", 7]]
+causes = [53]
+
+[[event]]
+id = 55
+year = 1860
+kind = "refugees_settled"
+phase = 6
+region = 3
+settlement = 17
+parts = [["settlement", 17], ["founder", 7], ["origin", 3]]
+values = [150]
+causes = [47]
+
+[[event]]
+id = 56
+year = 1860
+end = 1990
+kind = "refuge_hidden"
+phase = 6
+region = 3
+settlement = 17
+parts = [["settlement", 17], ["founder", 7]]
+causes = [55]
+
+[[event]]
+id = 57
+year = 1870
+kind = "refugees_settled"
+phase = 6
+region = 8
+settlement = 18
+parts = [["settlement", 18], ["founder", 7], ["origin", 14]]
+values = [100]
+causes = [50]
+
+[[event]]
+id = 58
+year = 2000
+kind = "claim"
+phase = 6
+region = 1
+parts = [["claimant", 3], ["holder", 1]]
+causes = [3]
+
+[[bulk]]
+kind = "chant"
+count = 300
+year = 2000
+phase = 6
+salience = 100

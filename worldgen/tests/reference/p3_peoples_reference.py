@@ -86,7 +86,7 @@ FatalError = cr.FatalError
 REPO = pe.REPO
 GOLDEN = os.path.join(REPO, "worldgen", "tests", "golden", "p3-05-peoples.txt")
 DEFAULT_INPUTS = pe.DEFAULT_INPUTS
-GENERATOR_VERSION = "0.20.0"  # P3-11: P3-05 r16 23 (P3-10: P3-05 r12 22 (P3-09: r8 21; P3-08: r6 rules, kind 31, P3-04 r10 quiet eras)
+GENERATOR_VERSION = "0.21.0"  # P5-01: P3-05 r18 24 (data), kinds 41, 42 (P3-11: P3-05 r16 23 (P3-10: P3-05 r12 22 (P3-09: r8 21; P3-08: r6 rules, kind 31, P3-04 r10 quiet eras)
 ONE = 1 << 32
 
 # ---------------------------------------------------------------------------
@@ -122,7 +122,7 @@ FLAGS = dict(
 FLAGS_018 = ("auto_size", "refuge_floor")
 FLAGS_019 = ("outbreak37", "memory", "sites19", "lie_low", "cores")
 FLAGS_020 = ("awaken_pop",)
-VERSIONS = ("0.16.0", "0.17.0", "0.18.0", "0.19.0", "0.20.0")
+VERSIONS = ("0.16.0", "0.17.0", "0.18.0", "0.19.0", "0.20.0", "0.21.0")   # 0.21.0 (P5-01): no peoples rule
 
 
 def flags_for(v):
@@ -151,7 +151,7 @@ def legacy(on=True):
     """Every r6 / r10 / r8 flag off (the 0.16.0 rules), with the 0.16.0 data (p3_data_reference) and names
     (p3_names_reference r4) and the engine reference's 0.16.0 renderer, or everything 0.18.0. Call it
     before the first data() (the data are cached)."""
-    use_version("0.16.0" if on else "0.20.0")
+    use_version("0.16.0" if on else "0.21.0")
 
 RACE, GOD, CIV, SETTLEMENT, REGION = pe.RACE, pe.GOD, pe.CIV, pe.SETTLEMENT, pe.REGION
 OPENING, QUIET, FLARE, FINAL = pe.OPENING, pe.QUIET, pe.FLARE, pe.FINAL
@@ -297,7 +297,7 @@ KIND31 = pe.kind_def(31, "settlement_abandoned_to", 1, 1, 1,
                       ("destination", SETTLEMENT, 1, 1)), ("settled", "lost"))
 # p3_engine_reference.py carries the catalogue (kinds 1-30 at 0.16.0; 31 from 0.17.0 once its own
 # transcription has it); this file's transcription of section 11 must equal its kinds 6-19 and 31.
-assert list(pe.COMPILED[5:19]) == list(PEOPLES_KINDS) and len(pe.COMPILED) in (30, 31, 36, 38, 40)
+assert list(pe.COMPILED[5:19]) == list(PEOPLES_KINDS) and len(pe.COMPILED) in (30, 31, 36, 38, 40, 42)
 assert len(pe.COMPILED) == 30 or pe.COMPILED[30] == KIND31, "engine reference kind 31 differs from P3-05 r6 11"
 assert getattr(pe, "KIND_31", KIND31) == KIND31, "engine reference KIND_31 differs from P3-05 r6 11"
 COMPILED_016 = tuple(pe.COMPILED[:30])
@@ -313,12 +313,15 @@ assert pe.KIND_37["values"] == ["dead", "population", "total", "reached"], "kind
 # catalogue_kinds(): the engine reference's catalogue of the served version (30, 31, 36 or 38 kinds).
 # P3-04 r17 21.2 (generator 0.20.0): kinds 39 claim_settlements and 40 settlements_ceded (P3-06 r19 23.2, 23.3).
 COMPILED_020 = COMPILED_019 + (pe.KIND_39, pe.KIND_40)
-COMPILED = COMPILED_020
+# P3-04 r19 22.2 (generator 0.21.0): kinds 41 claim_dropped and 42 refuge_hidden (P3-06 r22 24.3, 24.4).
+COMPILED_021 = COMPILED_020 + (pe.KIND_41, pe.KIND_42)
+COMPILED = COMPILED_021
 KIND_ID = {k["key"]: k["id"] for k in COMPILED}
 
 
 def catalogue_kinds():
-    return {30: COMPILED_016, 31: COMPILED_017, 36: COMPILED_018, 38: COMPILED_019, 40: COMPILED_020}[len(pe.COMPILED)]
+    return {30: COMPILED_016, 31: COMPILED_017, 36: COMPILED_018, 38: COMPILED_019, 40: COMPILED_020,
+            42: COMPILED_021}[len(pe.COMPILED)]
 # Quiet-step kinds (14 item 8): 6-10, 16-19 (and P3-04's quiet_era; from 0.19.0 its quiet_stretch, 38).
 QUIET_KINDS = {6, 7, 8, 9, 10, 16, 17, 18, 19, 31, 38}   # 31: r6, an abandonment of 9.2 in Q1
 
@@ -2526,6 +2529,14 @@ HEADER_019 = """\
 #       settlements (founder's race dwarf) by their first census kind: fortress, or any ladder kind
 """
 
+HEADER_021 = """\
+# Generator 0.21.0 (P5-01; P3-05 r18 24, P3-04 r19 22, P3-02 r17 15, P1-06 r10 16): became_city's template
+# names the region and drops the figure ({settlement} in {@region} grew into a city.); the numbers of one
+# clause of a template all words or all digits; no flare-up shorter than the scaled flare_min_years; the
+# dwarven forbidden didin and ririn and the r17 filter entries in names; P1-06 r10 region names (the inputs);
+# the catalogue of 42 kinds.
+"""
+
 HEADER_020 = """\
 # Generator 0.20.0 (P3-11; P3-05 r16 23, P3-04 r17 21, P3-02 r15 14): the first settlement of a civilization
 # placed at an awakening starts at max(founding_population, min(awakening_population, C(H, r))) (orc 1200,
@@ -2596,6 +2607,8 @@ def golden_text(inputs):
         o.append(HEADER_019.rstrip("\n"))
     if FLAGS["awaken_pop"]:
         o.append(HEADER_020.rstrip("\n"))
+    if pe.ENGINE_VERSION == "0.21.0":
+        o.append(HEADER_021.rstrip("\n"))
     for name, seed, size, span, races, detail in WORLD_CASES:
         res = world_case(name, seed, size, span, races, detail, inputs, dat)
         o.append("world %s %d %d %d %s %s" % (name, seed, size, span, races, detail))
@@ -3869,6 +3882,8 @@ def cmd_check(argv):
     want = [(k, sal, SPEC_REPORT_016.get(k, t) if not FLAGS["dest"] else t) for k, sal, t in SPEC_REPORT]
     if FLAGS["outbreak37"]:   # r12 22.3, 22.4: the templates of kinds 10, 15, 16, 17 (data reference's listing)
         want = [(k, sal, pdr.TEMPLATES_019[k][1] if k in pdr.TEMPLATES_019 else t) for k, sal, t in want]
+    if pe.at_least("0.21.0"):   # P3-05 r18 24: became_city names the region, without the figure
+        want = [(k, sal, pdr.BECAME_CITY_021[1] if k == "became_city" else t) for k, sal, t in want]
     c.eq("report entries 6-19 = section 11", [e for e in dat.report[5:19]], want)
     if FLAGS["dest"]:
         e31 = SPEC_REPORT_31 if not FLAGS["outbreak37"] else \
