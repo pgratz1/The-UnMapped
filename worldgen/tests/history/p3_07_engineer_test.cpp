@@ -5,6 +5,7 @@
 #include <doctest/doctest.h>
 
 #include <cstdint>
+#include <cstdio>
 #include <filesystem>
 #include <map>
 #include <string>
@@ -122,13 +123,41 @@ TEST_CASE("P3-07 engineer: the text conventions and the invariants of 13 on seed
             }
         }
         CHECK(lines[0] == "# worldgen history v1");
-        CHECK(headings == std::vector<std::string>{"[settings]", "[ages]", "[phases]", "[civilizations]",
-                                                   "[chronicle]", "[present]", "[stats]"});
+        // r17 24.4: the chronicle before the civilizations, [phases] at full only.
+        if (text == &full) {
+            CHECK(headings == std::vector<std::string>{"[settings]", "[ages]", "[phases]", "[chronicle]",
+                                                       "[civilizations]", "[present]", "[stats]"});
+        } else {
+            CHECK(headings == std::vector<std::string>{"[settings]", "[ages]", "[chronicle]", "[civilizations]",
+                                                       "[present]", "[stats]"});
+        }
     }
     const std::vector<std::string> s = lines_of(summary);
     const std::vector<std::string> f = lines_of(full);
-    for (const std::string_view b : {"[settings]", "[ages]", "[phases]", "[civilizations]", "[stats]"}) {
+    for (const std::string_view b : {"[settings]", "[ages]", "[stats]"}) {
         CHECK(block(s, b) == block(f, b));
+    }
+    // 24.10 item 5: the wars line's outcomes add up; item 6: one quiet
+    // stretch milestone with its note per realm that lived through one.
+    for (const std::string& l : block(s, "[civilizations]")) {
+        if (l.rfind("  wars: ", 0) == 0) {
+            long long a = 0, f2 = 0, w = 0, lo = 0, d = 0, o = 0;
+            REQUIRE(std::sscanf(l.c_str(), "  wars: %lld declared, %lld defended; won %lld, lost %lld, drawn %lld, open %lld",
+                                &a, &f2, &w, &lo, &d, &o) == 6);
+            CHECK(w + lo + d + o == a + f2);
+        }
+    }
+    {
+        std::int64_t blocks = 0, stretch_milestones = 0;
+        for (const std::string& l : block(s, "[civilizations]")) {
+            blocks += (l.rfind("c", 0) == 0) ? 1 : 0;
+            if (l.find(" quiet_stretch: ") != std::string::npos) {
+                ++stretch_milestones;
+                CHECK(l.find("new generation") != std::string::npos);
+            }
+        }
+        CHECK(stretch_milestones > 0);
+        CHECK(stretch_milestones <= blocks);
     }
     const std::map<std::string, std::string> stats = keyed(block(s, "[stats]"));
     // Invariant 6: every key of the world report's [history] with its value.
@@ -191,6 +220,10 @@ TEST_CASE("P3-07 engineer: a few corrupt tables of 5.3") {
     const Case cases[] = {
         {"UPDATE settlement SET population = -1 WHERE id = 2",
          "corrupt table 'settlement': row 2: population -1 is negative"},
+        {"UPDATE settlement SET population = -5 WHERE id = (SELECT MIN(id) FROM settlement WHERE status IN (1, 2))",
+         nullptr},
+        {"UPDATE settlement SET population = 2147483648 WHERE id = (SELECT MIN(id) FROM settlement WHERE status IN (1, 2))",
+         nullptr},
         {"DELETE FROM settlement_census WHERE settlement = 3",
          "corrupt table 'settlement_census': settlement 3: no rows"},
         {"UPDATE civilization SET home_region = 999 WHERE id = 1",
@@ -202,7 +235,17 @@ TEST_CASE("P3-07 engineer: a few corrupt tables of 5.3") {
         REQUIRE(wdb::testing::execute_on_file(path, c.sql).ok());
         const wdb::Error e = error_of(path);
         CHECK(e.code == wdb::ErrorCode::corrupt_layer);
-        CHECK(e.message == c.message);
+        if (c.message != nullptr) {
+            CHECK(e.message == c.message);
+        } else {
+            // A standing settlement: 5.3's wording, not the world report's
+            // "outside 0 to 2147483647".
+            const bool negative = std::string(c.sql).find("= -5") != std::string::npos;
+            CHECK(e.message.rfind("corrupt table 'settlement': row ", 0) == 0);
+            CHECK(e.message.find(negative ? ": population -5 is negative" : ": population 2147483648 above 2147483647") !=
+                  std::string::npos);
+            CHECK(e.message.find("outside") == std::string::npos);
+        }
     }
     {
         const std::string path = copy_of(world_42(), "p3-07-corrupt-phase.db");
