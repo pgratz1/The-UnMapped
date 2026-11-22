@@ -1086,3 +1086,32 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
 - Decision: "they look great for this stage, ready to move to the next phase." P3 is approved. P4 Viewer v1 and P5 History depth start, in parallel.
 - Carried into P5 (first stage, since it alters world bytes): the items of `docs/specs/p3-11-followups.md` section 12 (a fresh claim at a declaration, the quarrel war gated on strength, fewer grim region names, the `became_city` wording, name-filter additions, a stored hidden-refuge flag and a recorded claim drop). Carried with it, without world changes: the world critic's notes on the history report (`docs/reviews/p3-07-history-report-world-critic-r17.md` B1 to B6) and the audit's advisory A3.
 - Status: accepted; design doc section 13's status line to be updated (P3 complete and approved on 2026-11-22)
+
+### History depth: the P5 overview's readings
+
+- Date: 2026-11-22
+- Raised by: spec writer (P5-00, `docs/specs/p5-00-history-depth-overview.md`)
+- Design doc section: 5 (history: everything "waiting for phase P5"), 6 (world database), 9 (magic), 12 (sub-peoples, renamed regions, mountain peoples), 13 (the P5 and P6 rows), 14 (the divine script)
+- Problem: the P5 row of design 13 lists ten items and an exit check, without an order or a split, and the design is silent or unclear on several points the stages share:
+  1. Sites: design 13 puts sites in P6 ("derived from history"), but design 5 stores passes as sites and design 6 has `monster.lair_site_id` and `spellbook.site_id`, so history refers to sites before P6 makes them.
+  2. Spellbooks: design 6 `spellbook` is "where copies can be found" (a present placement), design 13 puts spellbook placement in P6, design 5 has casters write them in history.
+  3. `race_relation` and `beast_population` are "at the end year" in design 6, while the viewer's timeline (P4) needs state by year.
+  4. A civilization is "a society of one race, or a mix" (design 5); P3's civilization has one race.
+  5. Paul's deep dangers can "wipe a hold or a whole realm out"; design 5 says no race dies out.
+  6. Design 13's P6 row lists "world-creation settings wired to the command line"; P3-01 has wired all of them already, the divine script excepted.
+  7. Design 14 places the divine script after the prototype; P3 refuses `--divine-script` "until P5".
+- Proposal (the overview's readings):
+  1. Twelve stage specs in a fixed dependency order: P5-01 the carried-over follow-ups (P3-11 section 12 and the report notes B1 to B6 and A3), then beasts and monsters; race relations, mixed settlements and migrations; wealth, trade and alliances with mines and forges; roads and improved passes; figures; mountain depths; pantheon and interventions; casters and spells; factions; artifacts; regions renamed by history. One new subsystem per stage; merges serial, implementation in parallel where dependencies allow.
+  2. History creates a `site` table in P5 (first with P5-02) for the places it acts on (lairs, mines, towers, marked shrines, lost holds); P6 adds derived sites and dungeon records. P5 records books written; the `spellbook` placement table is P6's.
+  3. Tables by year beside the end-year tables of design 6, as `settlement_census`.
+  4. A civilization keeps a principal race; the racial mix is per settlement (`settlement_race`).
+  5. A deep horror may end a realm; if it held its race's last settlements, the survivors flee as with any last refuge.
+  6. P5-01 records a refuge still hidden at the present and a dropped claim as appended event kinds, so it needs no schema change.
+  7. Event kind ids and schema versions are assigned in merge order; specs name kinds by key.
+  8. The history report moves to format v2 with P5-01; within v2, a stage may append a block for its entity kind before `[stats]` and lines at the end of a civilization block.
+  9. `--monster-pressure` takes effect with P5-02, `--divine-activity` with P5-08; `--divine-script` stays refused through P5. Nothing of the settings is left for P6 but the script.
+  10. Event rules stay code with TOML numbers.
+  11. Budget: each stage adds at most 5 s at 1024; the whole default `generate` stays under 60 s at the end of P5 (about 9 s at generator 0.20.0).
+  12. Exit check: "takes part" means a participant of at least one event; each race, camp and monster kind has a hard and a sweep target (P5-00 8.3); a bloc of allies and vassals is held to the runaway bound.
+- Interim choice: as proposed; the stage specs follow them. Four questions change the split or order and are put to Paul (P5-00 11): sites in P5, gods late with all five intervention kinds, renamed regions early, no sub-peoples in P5 (hill dwarves an optional stage after P5-07, dark elves after underground geography).
+- Status: open
