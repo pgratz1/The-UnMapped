@@ -1301,3 +1301,10 @@ Readings taken (also in the hand-back report):
 - 5.2's `kind_cap` of a non-fortress settlement is the top of the race's ladder (orcs: town, 7,999), so an orc
   village of 1,200 has pressure max(1,200,000 div C_s, 150), not 800 as 23.1 and 23.2 compute with a cap of 1,499;
   the reference implements 23.2's population rule as written and leaves 9.3 unchanged.
+
+Integration with `p3/11-impl` (e7b9988; branch `p3/11-int`): no golden moved. The C++ matches every reference
+golden (`p3-01` to `p3-06`, the slow case `hist-conflict-73-1024`), and `check-world` on the 1024 default worlds of
+seeds 0 to 13 and 73 written by the C++ finds every chronology and history table equal and no invariant failure.
+T11 on those 15 worlds (from the rows, `r19_facts`): 120, 149, 149, 140, 52, 121, 164, 153, 119, 188, 175, 112, 92,
+151, 164 (median 149), which is consistent with the kind-cap reading above. No kind 40 event in them; kind 39
+claims in 8 of 15.
