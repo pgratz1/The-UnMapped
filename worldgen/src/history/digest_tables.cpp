@@ -628,6 +628,22 @@ HistoryTables read_and_check(const db::WorldReader& world) {
 
 }  // namespace
 
+// The two reads of the file (read_history_tables, then HistoryView::load)
+// are separate snapshots. Everything the digest and the report index in one
+// by a value of the other is checked here, so that a file changed between
+// the reads is a corrupt-table error and never an out-of-range index.
+std::optional<std::string> history_reads_disagree(const HistoryView& view, const HistoryTables& t) {
+    if (static_cast<std::int64_t>(view.events().size()) != t.event_rows) {
+        return std::string("corrupt table 'event': the file changed while it was read");
+    }
+    for (const HistoryView::Event& e : view.events()) {
+        if (e.row.phase < 1 || static_cast<std::size_t>(e.row.phase) > t.phases.size()) {
+            return std::string("corrupt table 'event': the file changed while it was read");
+        }
+    }
+    return std::nullopt;
+}
+
 db::Result<HistoryTables> read_history_tables(const db::WorldReader& world) {
     try {
         return read_and_check(world);
