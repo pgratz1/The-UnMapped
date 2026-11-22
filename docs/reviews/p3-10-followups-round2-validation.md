@@ -476,3 +476,86 @@ Under `~/.cache/the-unmapped/out/p3-10-validation2/`:
 | `purity/`, `timing/`, `readme/`, `readme-report.txt` | purity, timing, the README phrase world |
 
 The scripts are in the same folder: `check10.py`, `stats10.py`, `agg2.py`, `rounds.py`, `orcs.py`, `risk221.py`, `q221.py`, `variants.py`, `sweep-job.sh`, `run-sweep.sh`, `recheck.sh`, `purity.sh`, `timing.sh`, `critic/make.sh`, `probe/probe-job.sh`.
+
+## Addendum: after the D1 fix
+
+**Input.** `origin/p3/10-int3` at `d4d44c0` was merged into `p3/10-validation2`; the merge was a fast-forward. It adds three things to this branch:
+- the engineer's fix: `end_decision` in `conflict_war.cpp`, which takes 21.6's items in their order and writes `peace` when the loser is exhausted;
+- the test writer's order tests (`history_conflict_order_test.cpp`);
+- the golden case `hist-conflict-73-1024` (a slow C++ comparison).
+
+The reference only gains that case; its rules are unchanged. Evidence is in `V/logs3/`, `V/sweep3/`, `V/merged/` and `V/purity3/`.
+
+### Final verdict: pass
+
+D1 is fixed. Every gate passes, every merge target holds with the corrected figures, and the recorded hashes are unchanged.
+
+### Gates
+
+| Gate | Result |
+| --- | --- |
+| Build, `linux-gcc-release` and `linux-clang-release` | warning-free |
+| `ctest` | 34 of 34 on both, with the recorded hash files unchanged |
+| `world-hashes.sh local`, the two presets | 15 of 15 identical |
+| `expect` | 15 of 15 on both |
+| The 375 sweep worlds regenerated with the fixed binary (`V/sweep3/`, file hashes in `sweep3/compare.txt`) | **374 byte-identical. Exactly one changed: 1024 default seed 73**, as the probe predicted. The fixed seed 73 is byte-identical to the probe's |
+| Reference `check-world` and `check10.py` on the changed world | seed 73: reference **7359 checks, 0 failures**; `check10.py` passes |
+| Reference and `check10.py` on 30 unchanged worlds (two per set, fixed random sample, `sweep3/check-jobs.txt`) | all pass, with output identical to the first sweep's (apart from the file path) |
+| Reference over the sweep, in effect | **375 of 375** |
+| Purity, seed 73 | `--threads` 1, 2 and 6 byte-identical (`36730324…`) |
+
+The asan and debug presets, the slow entries and the extension were not repeated here; the lead's CI run covers them.
+
+### Seed 73 after the fix
+
+War e875 now ends at e914 (5063) with "The House of Fiegla sued the Snonugg Mob for peace after 29 years of war.", followed by a tribute (e915, 282 carried off). That is the reference's aim ending. The rest of the world's history follows from it:
+
+| Seed 73 | Before the fix | After |
+| --- | --- | --- |
+| events | 1529 | 1418 |
+| wars | 72 | 63 |
+| battles | 276 | 242 |
+| hollow wars | 14 | 11 |
+| civilizations ended | 3 | 2 |
+
+### Corrected figures (1024 defaults; only seed 73 moves)
+
+These are measured with the merged view `V/merged/`: the first sweep with seed 73 replaced. Its outputs are `merged/stats10.txt` and `merged/agg2.txt`, plus `rounds-r17fix.txt`.
+
+**Unchanged.** Every merge target in section 4 keeps its value:
+- T2, T3, T4, T6, T7, T5 (98 / 50), T9 (7), T10 (0);
+- quick aim wins (0), quiet stretches under 50 years (0), the name rules (0);
+- foothold cessions (2), wars over a held region (14, the same outcomes);
+- T8 (71 of 100), `search_abandoned` (median 3, maximum 11), quiet lines (729).
+
+**Changed:**
+- **T1:** 227 (509 / 2237), formerly 227 (512 / 2246). Still met.
+- **Standing settlements in a region another civilization holds:** 135 in 61 worlds, formerly 132 in 60.
+- **Goblins' share of declarations:** 774‰, formerly 773‰.
+- **Maxima per world:** events 1450 (formerly 1529, which was seed 73), wars 63 (72), battles 242 (276), sacked 32 (44), claims 106 (116).
+- **Typical ranges (5.1):** three bounds move:
+  - truces 1 – 15 (formerly 1 – 16);
+  - largest race share of people 303 – 802 (303 – 790);
+  - faerie standing 3 – 13 (2 – 13).
+
+  Every other row and every median is unchanged.
+- **Sites:** faerie settlements within 300 m of the sea 104 of 836 (12.4%); dwarven settlements below 30 m 3 of 766.
+- **Race sums:** standing settlements elf 1019, goblin 4434, dwarf 890, faerie 624, human 1257, orc 706. The shares of people and settlements change by less than 1‰.
+
+### Critic folder and README world
+
+- **Critic folder.** The seed-73 files were regenerated with the fixed binary (`critic/seed73-1024.*`), and `INDEX.txt` is updated. Every other critic world is byte-identical to its sweep world, so none of them changes.
+- **README phrase world.** It is regenerated and **unchanged**: `f6f6fd25d5b7514207b275c312a6b2e52b5a820fa3b67be81cfedca2531f3ebc`, and `readme-report.txt` is byte-identical to the one before the fix.
+
+### Recorded hashes
+
+`p0-worlds.txt`, `p1-worlds.txt` and `p3-worlds.txt` are unchanged by the fix. They are confirmed by `ctest` and `expect` on both release presets and by the two-preset `local` comparison.
+
+### Open for the lead
+
+Findings 2 to 6 of section 10 stand:
+- T8 at 71%;
+- the 22.4 and 22.5 figures;
+- the typical ranges, now with the three corrected bounds above;
+- turbulent T5;
+- the names.
