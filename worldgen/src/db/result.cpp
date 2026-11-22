@@ -22,6 +22,7 @@ const char* error_code_name(ErrorCode code) noexcept {
         case ErrorCode::table_not_found: return "table_not_found";
         case ErrorCode::no_primary_key: return "no_primary_key";
         case ErrorCode::real_value: return "real_value";
+        case ErrorCode::history_missing: return "history_missing";
     }
     return "unknown";
 }

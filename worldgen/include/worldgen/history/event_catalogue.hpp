@@ -171,18 +171,30 @@ public:
     // race.plural and race.adjective, or nullptr.
     [[nodiscard]] const std::string* race_plural(std::int64_t id) const noexcept;
     [[nodiscard]] const std::string* race_adjective(std::int64_t id) const noexcept;
+    // race.generation_years, or 0 when the race does not exist (P3-07 r12
+    // 22.2: the generations note).
+    [[nodiscard]] std::int64_t race_generation_years(std::int64_t id) const noexcept;
+    // civilization.race and civilization.founded_year, or std::nullopt when
+    // the civilization does not exist.
+    struct CivilizationInfo {
+        std::int64_t race = 0;
+        std::int64_t founded_year = 0;
+    };
+    [[nodiscard]] std::optional<CivilizationInfo> civilization_info(std::int64_t id) const noexcept;
 
 private:
     struct RaceNames {
         std::string name;
         std::string plural;
         std::string adjective;
+        std::int64_t generation_years = 0;
     };
     EventCatalogue catalogue_;
     std::vector<Event> events_;
     std::vector<std::pair<std::int64_t, RaceNames>> races_;  // ascending id
     std::vector<std::pair<std::int64_t, std::string>> gods_;
     std::vector<std::pair<std::int64_t, std::string>> civilizations_;
+    std::vector<std::pair<std::int64_t, CivilizationInfo>> civilization_info_;  // ascending id
     std::vector<std::pair<std::int64_t, std::string>> settlements_;
     std::vector<std::pair<std::int64_t, std::string>> regions_;
 };

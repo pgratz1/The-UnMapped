@@ -1443,13 +1443,13 @@ def report_lines(res, end_year, races=None):
     o.append("census_rows = %d" % len(res["settlement_census"]))
     o.append("relations = %d" % len(res["relation"]))
     if races is not None:
-        civ_race = {c[0]: c[2] for c in res["civilization"]}
+        civ_race = {c[0]: c[2] for c in res["civilization"]}  # .get: a standing settlement may have no owner (0)
         standing = [x for x in res["settlement"] if x[10] in (1, 2)]
         o.append("population = %d" % sum(x[11] for x in standing))
         for rid, key in ((r[0], r[1]) for r in races):
-            o.append("population_%s = %d" % (key, sum(x[11] for x in standing if civ_race[x[8]] == rid)))
+            o.append("population_%s = %d" % (key, sum(x[11] for x in standing if civ_race.get(x[8]) == rid)))
         for rid, key in ((r[0], r[1]) for r in races):
-            o.append("settlements_standing_%s = %d" % (key, sum(1 for x in standing if civ_race[x[8]] == rid)))
+            o.append("settlements_standing_%s = %d" % (key, sum(1 for x in standing if civ_race.get(x[8]) == rid)))
         for rid, key in ((r[0], r[1]) for r in races):
             o.append("regions_held_%s = %d" % (key, sum(1 for x in res["region_control"]
                                                           if x[2] is None and civ_race[x[3]] == rid)))

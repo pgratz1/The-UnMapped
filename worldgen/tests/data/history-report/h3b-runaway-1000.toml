@@ -1,0 +1,133 @@
+# P3-07 14.3 H3b runaway (H3 with a run of exactly 1,000 years). Format: README.md in this directory.
+
+[meta]
+seed = 313
+seed_phrase = ""
+map_size = 512
+history_span = 3000
+history_detail = "normal"
+races = "human"
+civs_per_race = "auto"
+event_intensity = "normal"
+monster_pressure = "normal"
+divine_activity = "normal"
+divine_script = ""
+
+[tables]
+biome = [[1, "grassland", "Grassland", 8421376, 0]]
+# [id, name, biome, cells, lake_cells, walk_cells]; rg11 has exactly 1172 dry cells (not an islet),
+# rg12 1171 and rg13 1000 (islets): N = 11
+region = [
+    [1, "Plain 1", 1, 2000, 0, 1800],
+    [2, "Plain 2", 1, 2000, 0, 1800],
+    [3, "Plain 3", 1, 2000, 0, 1800],
+    [4, "Plain 4", 1, 2000, 0, 1800],
+    [5, "Plain 5", 1, 2000, 0, 1800],
+    [6, "Plain 6", 1, 2000, 0, 1800],
+    [7, "Plain 7", 1, 2000, 0, 1800],
+    [8, "Plain 8", 1, 2000, 0, 1800],
+    [9, "Plain 9", 1, 2000, 0, 1800],
+    [10, "Plain 10", 1, 2000, 0, 1800],
+    [11, "Edge Meadow", 1, 1172, 0, 1000],
+    [12, "Reed Islet", 1, 1500, 329, 1000],
+    [13, "Gull Rock", 1, 1000, 0, 900]
+]
+race = [[1, "human", "Human", "Humans", "Human", 1, 80, 25, 1, 1, 0, 1]]
+culture = [[1, "human", "Human", 1]]
+god = [[1, "Wealstuld", 1]]
+age = [[1, 1, 0, 2999, "The Age of Humans"]]
+phase = [
+    [1, 1, 1, 0, 149, 1],
+    [2, 1, 2, 150, 2899, 0],
+    [3, 1, 4, 2900, 2999, 0]
+]
+civilization = [
+    [1, "Alird", 1, 1, 1, 0, 0, 2, -1, 0],
+    [2, "The Iron Crown", 1, 1, 10, 0, 0, 3, -1, 0]
+]
+# c1 holds rg1-rg9 (9 of 11: 818 per mille) from 0 to 999 and the islets throughout; c2 holds
+# rg1-rg10 (909) from 1001 to 1500, then rg1-rg6 (545)
+region_control = [
+    [1, 0, 1000, 1, 2],
+    [1, 1001, -1, 2, 4],
+    [2, 0, 1000, 1, 2],
+    [2, 1001, -1, 2, 4],
+    [3, 0, 1000, 1, 2],
+    [3, 1001, -1, 2, 4],
+    [4, 0, 1000, 1, 2],
+    [4, 1001, -1, 2, 4],
+    [5, 0, 1000, 1, 2],
+    [5, 1001, -1, 2, 4],
+    [6, 0, 1000, 1, 2],
+    [6, 1001, -1, 2, 4],
+    [7, 0, 1000, 1, 2],
+    [7, 1001, 1501, 2, 4],
+    [8, 0, 1000, 1, 2],
+    [8, 1001, 1501, 2, 4],
+    [9, 0, 1000, 1, 2],
+    [9, 1001, 1501, 2, 4],
+    [10, 1001, 1501, 2, 4],
+    [12, 0, -1, 1, 2],
+    [13, 0, -1, 1, 2]
+]
+
+[[kind]]
+key = "awakening"
+caused = 0
+region_use = 1
+settlement_use = 0
+salience = 100
+template = "{creator} awakened the {race:plural} in {@region}."
+roles = [["race", 1, 1, 1], ["creator", 2, 1, 1]]
+
+[[kind]]
+key = "civ_founded"
+caused = 1
+region_use = 1
+settlement_use = 0
+salience = 80
+template = "The {race:plural} founded {civilization} in {@region}."
+roles = [["civilization", 3, 1, 1], ["race", 1, 1, 1]]
+
+[[kind]]
+key = "seized"
+caused = 0
+region_use = 1
+settlement_use = 0
+salience = 30
+template = "{taker} took hold of {@region}."
+roles = [["taker", 3, 1, 1]]
+
+[[event]]
+id = 1
+year = 0
+kind = "awakening"
+phase = 1
+region = 1
+parts = [["race", 1], ["creator", 1]]
+
+[[event]]
+id = 2
+year = 0
+kind = "civ_founded"
+phase = 1
+region = 1
+parts = [["civilization", 1], ["race", 1]]
+causes = [1]
+
+[[event]]
+id = 3
+year = 0
+kind = "civ_founded"
+phase = 1
+region = 10
+parts = [["civilization", 2], ["race", 1]]
+causes = [1]
+
+[[event]]
+id = 4
+year = 1001
+kind = "seized"
+phase = 2
+region = 1
+parts = [["taker", 2]]

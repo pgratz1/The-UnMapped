@@ -1,0 +1,623 @@
+# P3-07 14.3 H1 war and ruin. Format: README.md in this directory.
+
+[meta]
+seed = 101
+seed_phrase = ""
+map_size = 512
+history_span = 3000
+history_detail = "normal"
+races = "elf,goblin"
+civs_per_race = "auto"
+event_intensity = "normal"
+monster_pressure = "normal"
+divine_activity = "normal"
+divine_script = ""
+
+[tables]
+biome = [
+    [1, "grassland", "Grassland", 8421376, 0],
+    [2, "mountain", "Mountain", 8421504, 0],
+    [3, "temperate_forest", "Temperate Forest", 32768, 0],
+]
+# [id, name, biome, cells, lake_cells, walk_cells]
+region = [
+    [1, "Elder Vale", 1, 2000, 0, 1800],
+    [2, "Stone Teeth", 2, 2000, 0, 300],
+    [3, "Gréy \\ Moor", 1, 2000, 100, 1500],
+    [4, "The Ashen Fields", 3, 2000, 0, 1000],
+    [5, "Low Marsh", 1, 1500, 200, 1000],
+    [6, "Islet Rock", 2, 1000, 0, 200],
+]
+race = [
+    [1, "elf", "Elf", "Elves", "Elven", 0, 600, 500, 1, 1, 0, 1],
+    [2, "goblin", "Goblin", "Goblins", "Goblin", 2, 50, 25, 2, 1, 1500, 2],
+    [3, "dwarf", "Dwarf", "Dwarves", "Dwarven", 1, 300, 60, 3, 0, -1, 3],
+]
+culture = [
+    [1, "elven", "Elven", 1],
+    [2, "goblin", "Goblin", 2],
+    [3, "dwarven", "Dwarven", 3],
+]
+god = [
+    [1, "Fielie", 0],
+    [2, "Krok", 2],
+    [3, "Bronhak", 1],
+]
+age = [
+    [1, 1, 0, 1499, "The Age of Elves"],
+    [2, 2, 1500, 2999, "The Age of Goblins"],
+]
+# [id, age, kind, start_year, end_year, trigger_event]
+phase = [
+    [1, 1, 1, 0, 149, 1],
+    [2, 1, 2, 150, 1499, 0],
+    [3, 2, 1, 1500, 1649, 7],
+    [4, 2, 2, 1650, 1999, 0],
+    [5, 2, 3, 2000, 2049, 21],
+    [6, 2, 2, 2050, 2499, 0],
+    [7, 2, 3, 2500, 2500, 34],
+    [8, 2, 2, 2501, 2899, 0],
+    [9, 2, 4, 2900, 2999, 0],
+]
+# [id, name, race, culture, home_region, capital, founded_year, founding_event, ended_year, ending_event]
+civilization = [
+    [1, "Finen", 1, 1, 1, 1, 0, 2, -1, 0],
+    [2, "The Skib Horde", 2, 2, 3, 0, 1500, 8, 2010, 30],
+    [3, "Gutrot Clans", 2, 2, 4, 4, 1500, 10, -1, 0],
+]
+# [id, name, x, y, region, founder_civ, founded_year, founding_event, owner_civ, kind, status, population,
+#  ruined_year, ruin_event]
+settlement = [
+    [1, "Voeledell", 100, 120, 1, 1, 0, 3, 1, 4, 1, 1500, -1, 0],
+    [2, "Aelith", 210, 40, 2, 1, 200, 5, 1, 5, 2, 300, -1, 0],
+    [3, "Skrisligg Pit", 300, 310, 3, 2, 1500, 9, 0, 1, 3, 0, 2010, 29],
+    [4, "Ghashpit", 400, 90, 4, 3, 1500, 11, 3, 3, 1, 1000, -1, 0],
+    [5, "Old Ford", 150, 450, 5, 1, 300, 6, 0, 2, 4, 0, -1, 0],
+    [6, "Mossgate", 160, 470, 5, 3, 1600, 13, 0, 2, 2, 50, -1, 0],
+    [7, "Redwall", 320, 330, 3, 2, 1510, 12, 1, 1, 2, 120, -1, 0],
+]
+# [settlement, year, owner_civ, kind, status, population]
+settlement_census = [
+    [1, 0, 1, 1, 1, 200], [1, 149, 1, 2, 1, 600], [1, 1499, 1, 3, 1, 1000], [1, 2049, 1, 4, 1, 1500],
+    [2, 200, 1, 1, 1, 100], [2, 1499, 1, 5, 1, 400], [2, 2049, 1, 5, 2, 300],
+    [3, 1500, 2, 1, 1, 200], [3, 1649, 2, 1, 1, 300], [3, 2010, 0, 1, 3, 0],
+    [4, 1500, 3, 1, 1, 200], [4, 1649, 3, 2, 1, 400], [4, 1999, 3, 3, 1, 800], [4, 2499, 3, 3, 1, 1000],
+    [5, 300, 1, 1, 1, 100], [5, 1499, 1, 2, 1, 200], [5, 1700, 0, 2, 3, 0], [5, 2049, 0, 2, 4, 0],
+    [6, 1600, 3, 1, 1, 100], [6, 1999, 3, 2, 1, 200], [6, 2499, 0, 2, 2, 50],
+    [7, 1510, 2, 1, 1, 100], [7, 1649, 2, 1, 1, 150], [7, 2005, 1, 1, 2, 120],
+]
+# [region, from_year, to_year, civ, event]
+region_control = [
+    [1, 0, -1, 1, 2],
+    [2, 200, -1, 1, 5],
+    [3, 1500, 2005, 2, 8],
+    [3, 2005, -1, 1, 27],
+    [4, 1500, -1, 3, 10],
+    [5, 300, 1700, 1, 6],
+    [6, 2600, 2601, 3, 35],
+]
+# [a_type, a_id, b_type, b_id, kind, since, until, since_event, until_event]
+relation = [
+    [3, 1, 3, 2, "war", 2001, 2010, 22, 30],
+    [3, 1, 3, 3, "enmity", 1600, -1, 14, 0],
+    [3, 1, 3, 3, "peace", 2030, -1, 31, 0],
+    [3, 1, 3, 3, "war", 2003, 2030, 24, 31],
+    [3, 1, 6, 4, "pact", 100, -1, 4, 0],
+]
+
+# Event kinds, id = position. Real kinds keep the shipped structure (P3-04 8.2) at the fixture's own ids;
+# omen, tally, oath, silence and landing are test kinds the build does not compile.
+[[kind]]
+key = "awakening"
+caused = 0
+region_use = 1
+settlement_use = 0
+salience = 100
+template = "{creator} awakened the {race:plural} in {@region}."
+roles = [["race", 1, 1, 1], ["creator", 2, 1, 1]]
+
+[[kind]]
+key = "civ_founded"
+caused = 1
+region_use = 1
+settlement_use = 0
+salience = 80
+template = "The {race:plural} founded {civilization} in {@region}."
+roles = [["civilization", 3, 1, 1], ["race", 1, 1, 1]]
+
+[[kind]]
+key = "settlement_founded"
+caused = 0
+region_use = 1
+settlement_use = 1
+salience = 40
+template = "{founder} founded {settlement} in {@region}."
+roles = [["settlement", 4, 1, 1], ["founder", 3, 1, 1]]
+values = ["population"]
+
+[[kind]]
+key = "flare_up"
+caused = 1
+region_use = 0
+settlement_use = 0
+salience = 50
+template = "In {@year} tensions flared into {years} {years?year|years} of upheaval."
+values = ["years"]
+
+[[kind]]
+key = "claim"
+caused = 0
+region_use = 1
+settlement_use = 0
+salience = 35
+template = "{claimant} laid claim to {@region}, held by {holder}."
+roles = [["claimant", 3, 1, 1], ["holder", 3, 1, 1]]
+
+[[kind]]
+key = "war_declared"
+caused = 1
+region_use = 1
+settlement_use = 0
+salience = 70
+template = "{attacker} declared war on {defender} over {@region}."
+roles = [["attacker", 3, 1, 1], ["defender", 3, 1, 1]]
+
+[[kind]]
+key = "battle"
+caused = 1
+region_use = 1
+settlement_use = 0
+salience = 30
+template = "{winner} defeated {loser} in {@region}; {loser_dead?none|one|#} of the defeated{winner_dead? fell, and none of the victors| and one of the victors fell| and # of the victors fell}."
+roles = [["winner", 3, 1, 1], ["loser", 3, 1, 1]]
+values = ["winner_dead", "loser_dead"]
+
+[[kind]]
+key = "siege"
+caused = 1
+region_use = 1
+settlement_use = 1
+salience = 25
+template = "{attacker} besieged {@settlement} of {defender}; it {fell?fell|held}."
+roles = [["attacker", 3, 1, 1], ["defender", 3, 1, 1]]
+values = ["fell"]
+
+[[kind]]
+key = "settlement_captured"
+caused = 1
+region_use = 1
+settlement_use = 1
+salience = 60
+template = "{attacker} took {@settlement} from {defender}; {dead} died{fled?| and one fled| and # fled}."
+roles = [["attacker", 3, 1, 1], ["defender", 3, 1, 1]]
+values = ["dead", "fled"]
+
+[[kind]]
+key = "sacked"
+caused = 1
+region_use = 1
+settlement_use = 1
+salience = 75
+template = "{attacker} sacked {@settlement} of {defender}; {dead} died and {survivors} fled."
+roles = [["attacker", 3, 1, 1], ["defender", 3, 1, 1]]
+values = ["dead", "survivors"]
+
+[[kind]]
+key = "civ_conquered"
+caused = 1
+region_use = 1
+settlement_use = 0
+salience = 90
+template = "{civilization} fell to {conqueror}."
+roles = [["civilization", 3, 1, 1], ["conqueror", 3, 1, 1]]
+
+[[kind]]
+key = "truce"
+caused = 1
+region_use = 0
+settlement_use = 0
+salience = 50
+template = "{parties:all} made peace after {years} {years?year|years} of war, neither the victor."
+roles = [["parties", 3, 2, 2]]
+values = ["years"]
+
+[[kind]]
+key = "settlement_abandoned"
+caused = 0
+region_use = 1
+settlement_use = 1
+salience = 55
+template = "{settlement} was abandoned; {survivors?no one survived|its one survivor was scattered|its # survivors were scattered}."
+roles = [["settlement", 4, 1, 1], ["civilization", 3, 1, 1]]
+values = ["survivors"]
+
+[[kind]]
+key = "ruin_faded"
+caused = 0
+region_use = 1
+settlement_use = 1
+salience = 10
+template = "The ruins of {settlement} faded from memory."
+roles = [["settlement", 4, 1, 1]]
+
+[[kind]]
+key = "quiet_stretch"
+caused = 0
+region_use = 0
+settlement_use = 0
+salience = 20
+template = "For {years} {years?year|years}, from {@year} to {@end_year}, the land was quiet{realms?|; one realm held it|, and # realms kept the peace}."
+roles = [["realm", 3, 1, 0]]
+values = ["years", "realms"]
+
+[[kind]]
+key = "omen"
+caused = 0
+region_use = 0
+settlement_use = 0
+salience = 30
+template = "A comet crossed the sky \\ twice."
+
+[[kind]]
+key = "tally"
+caused = 0
+region_use = 0
+settlement_use = 0
+salience = 10
+template = "{keeper} counted {delta} in the ledger."
+roles = [["keeper", 3, 1, 1]]
+values = ["delta"]
+
+[[kind]]
+key = "oath"
+caused = 0
+region_use = 1
+settlement_use = 0
+salience = 60
+template = "{civilization} swore an oath "
+roles = [["civilization", 3, 1, 1]]
+
+[[kind]]
+key = "silence"
+caused = 0
+region_use = 0
+settlement_use = 0
+salience = 60
+template = "{flag?|}"
+roles = [["civilization", 3, 1, 1]]
+values = ["flag"]
+
+[[kind]]
+key = "landing"
+caused = 0
+region_use = 1
+settlement_use = 0
+salience = 30
+template = "{civilization} landed on {@region}."
+roles = [["civilization", 3, 1, 1]]
+
+# Events, id = position.
+[[event]]
+id = 1
+year = 0
+kind = "awakening"
+phase = 1
+region = 1
+parts = [["race", 1], ["creator", 1]]
+
+[[event]]
+id = 2
+year = 0
+kind = "civ_founded"
+phase = 1
+region = 1
+parts = [["civilization", 1], ["race", 1]]
+causes = [1]
+
+[[event]]
+id = 3
+year = 0
+kind = "settlement_founded"
+phase = 1
+region = 1
+settlement = 1
+parts = [["settlement", 1], ["founder", 1]]
+values = [200]
+causes = [2]
+
+[[event]]
+id = 4
+year = 100
+kind = "omen"
+phase = 1
+
+[[event]]
+id = 5
+year = 200
+kind = "settlement_founded"
+phase = 2
+region = 2
+settlement = 2
+parts = [["settlement", 2], ["founder", 1]]
+values = [100]
+
+[[event]]
+id = 6
+year = 300
+kind = "settlement_founded"
+phase = 2
+region = 5
+settlement = 5
+parts = [["settlement", 5], ["founder", 1]]
+values = [100]
+
+[[event]]
+id = 7
+year = 1500
+kind = "awakening"
+phase = 3
+region = 3
+parts = [["race", 2], ["creator", 2]]
+
+[[event]]
+id = 8
+year = 1500
+kind = "civ_founded"
+phase = 3
+region = 3
+parts = [["civilization", 2], ["race", 2]]
+causes = [7]
+
+[[event]]
+id = 9
+year = 1500
+kind = "settlement_founded"
+phase = 3
+region = 3
+settlement = 3
+parts = [["settlement", 3], ["founder", 2]]
+values = [200]
+causes = [8]
+
+[[event]]
+id = 10
+year = 1500
+kind = "civ_founded"
+phase = 3
+region = 4
+parts = [["civilization", 3], ["race", 2]]
+causes = [7]
+
+[[event]]
+id = 11
+year = 1500
+kind = "settlement_founded"
+phase = 3
+region = 4
+settlement = 4
+parts = [["settlement", 4], ["founder", 3]]
+values = [200]
+causes = [10]
+
+[[event]]
+id = 12
+year = 1510
+kind = "settlement_founded"
+phase = 3
+region = 3
+settlement = 7
+parts = [["settlement", 7], ["founder", 2]]
+values = [100]
+
+[[event]]
+id = 13
+year = 1600
+kind = "settlement_founded"
+phase = 3
+region = 5
+settlement = 6
+parts = [["settlement", 6], ["founder", 3]]
+values = [100]
+
+[[event]]
+id = 14
+year = 1600
+kind = "claim"
+phase = 3
+region = 5
+parts = [["claimant", 3], ["holder", 1]]
+
+[[event]]
+id = 15
+year = 1650
+end = 1949
+kind = "quiet_stretch"
+phase = 4
+salience = 95
+parts = [["realm", 1], ["realm", 3]]
+values = [300, 2]
+
+[[event]]
+id = 16
+year = 1700
+kind = "settlement_abandoned"
+phase = 4
+region = 5
+settlement = 5
+parts = [["settlement", 5], ["civilization", 1]]
+values = [0]
+
+[[event]]
+id = 17
+year = 1800
+kind = "tally"
+phase = 4
+parts = [["keeper", 3]]
+values = [-45]
+
+[[event]]
+id = 18
+year = 1900
+kind = "oath"
+phase = 4
+region = 4
+salience = 99
+parts = [["civilization", 3]]
+
+[[event]]
+id = 19
+year = 1950
+kind = "silence"
+phase = 4
+salience = 98
+parts = [["civilization", 3]]
+values = [1]
+
+[[event]]
+id = 20
+year = 1999
+kind = "claim"
+phase = 4
+region = 3
+parts = [["claimant", 1], ["holder", 2]]
+
+[[event]]
+id = 21
+year = 2000
+kind = "flare_up"
+phase = 5
+values = [50]
+causes = [20]
+
+[[event]]
+id = 22
+year = 2001
+kind = "war_declared"
+phase = 5
+region = 3
+parts = [["attacker", 1], ["defender", 2]]
+causes = [20, 21]
+
+[[event]]
+id = 23
+year = 2002
+kind = "claim"
+phase = 5
+region = 4
+parts = [["claimant", 1], ["holder", 3]]
+
+[[event]]
+id = 24
+year = 2003
+kind = "war_declared"
+phase = 5
+region = 4
+parts = [["attacker", 1], ["defender", 3]]
+causes = [23]
+
+[[event]]
+id = 25
+year = 2004
+kind = "battle"
+phase = 5
+region = 3
+parts = [["winner", 1], ["loser", 2]]
+values = [12, 1]
+causes = [22]
+
+[[event]]
+id = 26
+year = 2005
+kind = "siege"
+phase = 5
+region = 3
+settlement = 7
+parts = [["attacker", 1], ["defender", 2]]
+values = [1]
+causes = [25]
+
+[[event]]
+id = 27
+year = 2005
+kind = "settlement_captured"
+phase = 5
+region = 3
+settlement = 7
+parts = [["attacker", 1], ["defender", 2]]
+values = [3, 0]
+causes = [26]
+
+[[event]]
+id = 28
+year = 2010
+kind = "siege"
+phase = 5
+region = 3
+settlement = 3
+parts = [["attacker", 1], ["defender", 2]]
+values = [1]
+causes = [25]
+
+[[event]]
+id = 29
+year = 2010
+kind = "sacked"
+phase = 5
+region = 3
+settlement = 3
+parts = [["attacker", 1], ["defender", 2]]
+values = [150, 50]
+causes = [28]
+
+[[event]]
+id = 30
+year = 2010
+kind = "civ_conquered"
+phase = 5
+region = 3
+parts = [["civilization", 2], ["conqueror", 1]]
+causes = [29]
+
+[[event]]
+id = 31
+year = 2030
+kind = "truce"
+phase = 5
+parts = [["parties", 1], ["parties", 3]]
+values = [27]
+causes = [24]
+
+[[event]]
+id = 32
+year = 2049
+kind = "ruin_faded"
+phase = 5
+region = 5
+settlement = 5
+parts = [["settlement", 5]]
+
+[[event]]
+id = 33
+year = 2050
+end = 2499
+kind = "quiet_stretch"
+phase = 6
+salience = 94
+parts = [["realm", 1], ["realm", 3]]
+values = [450, 2]
+
+[[event]]
+id = 34
+year = 2500
+kind = "flare_up"
+phase = 7
+values = [1]
+causes = [32]
+
+[[event]]
+id = 35
+year = 2600
+kind = "landing"
+phase = 8
+region = 6
+parts = [["civilization", 3]]

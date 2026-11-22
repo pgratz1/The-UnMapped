@@ -75,6 +75,7 @@ add_library(worldgen STATIC
     # chronology stage with its report section.
     src/history/data_checks.cpp
     src/history/digest.cpp
+    src/history/digest_tables.cpp
     src/history/params.cpp
     src/stages/chronology.cpp
     src/inspect/chronology.cpp
@@ -91,6 +92,7 @@ add_library(worldgen STATIC
     src/history/stubs.cpp
     src/stages/history.cpp
     src/inspect/history.cpp
+    src/inspect/history_report.cpp
 )
 add_library(worldgen::worldgen ALIAS worldgen)
 target_include_directories(worldgen

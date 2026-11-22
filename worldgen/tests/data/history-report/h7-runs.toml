@@ -1,0 +1,313 @@
+# P3-07 21.8 item 5 with 22.5b: wars_same_goal_unchanged_max. Format: README.md in this directory.
+# rg1: Dunmark (c2) leaves it in 350 and takes it again in 360: no change of holder, one run of two wars.
+# rg2: Varrow (c3) holds it 350-379 and 450-479, between the wars over it: runs of one. Key 2.
+
+[meta]
+seed = 707
+seed_phrase = ""
+map_size = 512
+history_span = 2000
+history_detail = "normal"
+races = "human"
+civs_per_race = "auto"
+event_intensity = "normal"
+monster_pressure = "normal"
+divine_activity = "normal"
+divine_script = ""
+
+[tables]
+biome = [[1, "grassland", "Grassland", 8421376, 0]]
+region = [
+    [1, "North Fell", 1, 2000, 0, 1500],
+    [2, "South Fell", 1, 2000, 0, 1500],
+]
+race = [[1, "human", "Human", "Humans", "Human", 1, 80, 25, 1, 1, 0, 1]]
+culture = [[1, "human", "Human", 1]]
+god = [[1, "Wealstuld", 1]]
+age = [[1, 1, 0, 1999, "The Age of Humans"]]
+phase = [
+    [1, 1, 1, 0, 149, 1],
+    [2, 1, 2, 150, 1899, 0],
+    [3, 1, 4, 1900, 1999, 0],
+]
+civilization = [
+    [1, "Alird", 1, 1, 1, 0, 0, 2, -1, 0],
+    [2, "Dunmark", 1, 1, 2, 0, 0, 3, -1, 0],
+    [3, "Varrow", 1, 1, 2, 0, 0, 4, -1, 0],
+]
+region_control = [
+    [1, 0, 350, 2, 3],
+    [1, 360, -1, 2, 12],
+    [2, 0, 350, 2, 3],
+    [2, 350, 380, 3, 11],
+    [2, 380, 450, 2, 13],
+    [2, 450, 480, 3, 20],
+    [2, 480, -1, 2, 21],
+]
+relation = [
+    [3, 1, 3, 2, "war", 300, 310, 6, 9],
+    [3, 1, 3, 2, "war", 305, 315, 8, 10],
+    [3, 1, 3, 2, "war", 400, 410, 15, 18],
+    [3, 1, 3, 2, "war", 405, 415, 17, 19],
+    [3, 1, 3, 2, "war", 505, 515, 23, 24],
+]
+
+[[kind]]
+key = "awakening"
+caused = 0
+region_use = 1
+settlement_use = 0
+salience = 100
+template = "{creator} awakened the {race:plural} in {@region}."
+roles = [["race", 1, 1, 1], ["creator", 2, 1, 1]]
+
+[[kind]]
+key = "civ_founded"
+caused = 1
+region_use = 1
+settlement_use = 0
+salience = 80
+template = "The {race:plural} founded {civilization} in {@region}."
+roles = [["civilization", 3, 1, 1], ["race", 1, 1, 1]]
+
+[[kind]]
+key = "claim"
+caused = 0
+region_use = 1
+settlement_use = 0
+salience = 35
+template = "{claimant} laid claim to {@region}, held by {holder}."
+roles = [["claimant", 3, 1, 1], ["holder", 3, 1, 1]]
+
+[[kind]]
+key = "war_declared"
+caused = 1
+region_use = 1
+settlement_use = 0
+salience = 70
+template = "{attacker} declared war on {defender} over {@region}."
+roles = [["attacker", 3, 1, 1], ["defender", 3, 1, 1]]
+
+[[kind]]
+key = "peace"
+caused = 1
+region_use = 0
+settlement_use = 0
+salience = 60
+template = "{loser} sued {winner} for peace after {years} {years?year|years} of war."
+roles = [["winner", 3, 1, 1], ["loser", 3, 1, 1]]
+values = ["years"]
+
+[[kind]]
+key = "seized"
+caused = 0
+region_use = 1
+settlement_use = 0
+salience = 30
+template = "{taker} took hold of {@region}."
+roles = [["taker", 3, 1, 1]]
+
+[[event]]
+id = 1
+year = 0
+kind = "awakening"
+phase = 1
+region = 1
+parts = [["race", 1], ["creator", 1]]
+
+[[event]]
+id = 2
+year = 0
+kind = "civ_founded"
+phase = 1
+region = 1
+parts = [["civilization", 1], ["race", 1]]
+causes = [1]
+
+[[event]]
+id = 3
+year = 0
+kind = "civ_founded"
+phase = 1
+region = 2
+parts = [["civilization", 2], ["race", 1]]
+causes = [1]
+
+[[event]]
+id = 4
+year = 0
+kind = "civ_founded"
+phase = 1
+region = 2
+parts = [["civilization", 3], ["race", 1]]
+causes = [1]
+
+[[event]]
+id = 5
+year = 300
+kind = "claim"
+phase = 2
+region = 1
+parts = [["claimant", 1], ["holder", 2]]
+
+[[event]]
+id = 6
+year = 300
+kind = "war_declared"
+phase = 2
+region = 1
+parts = [["attacker", 1], ["defender", 2]]
+causes = [5]
+
+[[event]]
+id = 7
+year = 305
+kind = "claim"
+phase = 2
+region = 2
+parts = [["claimant", 1], ["holder", 2]]
+
+[[event]]
+id = 8
+year = 305
+kind = "war_declared"
+phase = 2
+region = 2
+parts = [["attacker", 1], ["defender", 2]]
+causes = [7]
+
+[[event]]
+id = 9
+year = 310
+kind = "peace"
+phase = 2
+parts = [["winner", 2], ["loser", 1]]
+values = [10]
+causes = [6]
+
+[[event]]
+id = 10
+year = 315
+kind = "peace"
+phase = 2
+parts = [["winner", 2], ["loser", 1]]
+values = [10]
+causes = [8]
+
+[[event]]
+id = 11
+year = 350
+kind = "seized"
+phase = 2
+region = 2
+parts = [["taker", 3]]
+
+[[event]]
+id = 12
+year = 360
+kind = "seized"
+phase = 2
+region = 1
+parts = [["taker", 2]]
+
+[[event]]
+id = 13
+year = 380
+kind = "seized"
+phase = 2
+region = 2
+parts = [["taker", 2]]
+
+[[event]]
+id = 14
+year = 400
+kind = "claim"
+phase = 2
+region = 1
+parts = [["claimant", 1], ["holder", 2]]
+
+[[event]]
+id = 15
+year = 400
+kind = "war_declared"
+phase = 2
+region = 1
+parts = [["attacker", 1], ["defender", 2]]
+causes = [14]
+
+[[event]]
+id = 16
+year = 405
+kind = "claim"
+phase = 2
+region = 2
+parts = [["claimant", 1], ["holder", 2]]
+
+[[event]]
+id = 17
+year = 405
+kind = "war_declared"
+phase = 2
+region = 2
+parts = [["attacker", 1], ["defender", 2]]
+causes = [16]
+
+[[event]]
+id = 18
+year = 410
+kind = "peace"
+phase = 2
+parts = [["winner", 2], ["loser", 1]]
+values = [10]
+causes = [15]
+
+[[event]]
+id = 19
+year = 415
+kind = "peace"
+phase = 2
+parts = [["winner", 2], ["loser", 1]]
+values = [10]
+causes = [17]
+
+[[event]]
+id = 20
+year = 450
+kind = "seized"
+phase = 2
+region = 2
+parts = [["taker", 3]]
+
+[[event]]
+id = 21
+year = 480
+kind = "seized"
+phase = 2
+region = 2
+parts = [["taker", 2]]
+
+[[event]]
+id = 22
+year = 505
+kind = "claim"
+phase = 2
+region = 2
+parts = [["claimant", 1], ["holder", 2]]
+
+[[event]]
+id = 23
+year = 505
+kind = "war_declared"
+phase = 2
+region = 2
+parts = [["attacker", 1], ["defender", 2]]
+causes = [22]
+
+[[event]]
+id = 24
+year = 515
+kind = "peace"
+phase = 2
+parts = [["winner", 2], ["loser", 1]]
+values = [10]
+causes = [23]
