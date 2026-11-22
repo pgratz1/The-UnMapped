@@ -1,9 +1,10 @@
 #!/bin/sh
 # Cross-compiler world hash check (spec P0-04 section 9 with amendment 16 (d);
-# P1-00 section 14, X5; P3-03 section 13).
+# P1-00 section 14, X5; P3-03 section 13; P3-07 amendment 18.6).
 #
 # Generates the golden cases with one preset's worldgen-cli, saves each
-# world's `hash --detail` and `report` text, checks them against the golden
+# world's `hash --detail` and `report` text (and, for a world with history,
+# its history report at both levels), checks them against the golden
 # file, and compares the saved text of several presets. Used by continuous
 # integration (.github/workflows/ci.yml) and by developers locally:
 #
@@ -18,6 +19,11 @@
 #             <preset>-<case>.db           the world file
 #             <preset>-<case>.txt          worldgen-cli hash --db <file> --detail
 #             <preset>-<case>.report.txt   worldgen-cli report --db <file>
+#           and, for every case of HISTORY_CASES (P3-07 18.6):
+#             <preset>-<case>.history.summary.txt
+#                 worldgen-cli report --db <file> --history --level summary
+#             <preset>-<case>.history.full.txt
+#                 worldgen-cli report --db <file> --history --level full
 #           A .txt file exists only if its command succeeded.
 # expect    runs hash --expect for every case against its golden file: the
 #           P0 cases against worldgen/tests/golden/p0-worlds.txt (--golden),
@@ -25,8 +31,10 @@
 #           (--golden-geo), the history cases against
 #           worldgen/tests/golden/p3-worlds.txt (--golden-hist). A golden
 #           file that does not exist is reported and its cases are skipped.
-# compare   fails if any preset's .txt or .report.txt for any case differs
-#           from the others, or is missing, and prints a diff.
+# compare   fails if any preset's .txt, .report.txt or (for a case with
+#           history) .history.summary.txt or .history.full.txt for any case
+#           differs from the others, byte for byte, or is missing, and prints
+#           a diff -u of at most DIFF_LINES lines.
 # local     generate for each preset (each must already be built), then
 #           compare them.
 # cases     prints the case names.
@@ -53,6 +61,27 @@ P0_CASES='empty-phrase empty-seed-0 empty-seed-0-512 empty-seed-1 empty-seed-42 
 GEO_CASES='geo-phrase-512 geo-seed-0-512 geo-seed-1-1024 geo-seed-42-512'
 HIST_CASES='hist-dense-1024 hist-races-elf-orc-1024 hist-span-2000-512'
 CASES="$P0_CASES $GEO_CASES $HIST_CASES"
+
+# The cases whose world has a history (P3-07 18.6: every case except empty-*
+# and pattern-*; the geography cases run every implemented stage). Only these
+# get history reports; for the others report --history exits 3 (no history),
+# which generate never runs and compare never expects.
+HISTORY_CASES="$GEO_CASES $HIST_CASES"
+
+# The kinds of saved text compared per case (file suffixes).
+TEXT_KINDS='txt report.txt'
+HISTORY_KINDS='history.summary.txt history.full.txt'
+
+# Longest diff -u that compare prints for one differing file; the rest is
+# counted, not printed (a full history report is tens of thousands of lines).
+DIFF_LINES=200
+
+has_history() {
+    case " $HISTORY_CASES " in
+        *" $1 "*) return 0 ;;
+        *) return 1 ;;
+    esac
+}
 
 # Run "worldgen-cli generate" for case $1 writing world file $2. Every case
 # reads the shipped data of this checkout (--data, so that UNMAPPED_DATA_DIR
@@ -85,7 +114,7 @@ run_generate() {
 me=world-hashes
 
 usage() {
-    sed -n '10,15p' "$0" | sed 's/^# *//' >&2
+    sed -n '11,16p' "$0" | sed 's/^# *//' >&2
     exit 2
 }
 
@@ -236,7 +265,10 @@ generate() {
     failed=0
     for c in $CASES; do
         base=$out_dir/$preset-$c
-        rm -f "$base.db" "$base.txt" "$base.report.txt" "$base.txt.partial" "$base.report.txt.partial"
+        for kind in $TEXT_KINDS $HISTORY_KINDS; do
+            rm -f "$base.$kind" "$base.$kind.partial"
+        done
+        rm -f "$base.db"
         if ! run_generate "$c" "$base.db" >/dev/null; then
             echo "$me: FAIL $preset $c: generate failed" >&2
             failed=1
@@ -249,6 +281,14 @@ generate() {
         if ! capture "$base.report.txt" "$cli" report --db "$base.db"; then
             echo "$me: FAIL $preset $c: report failed" >&2
             failed=1
+        fi
+        if has_history "$c"; then
+            for level in summary full; do
+                if ! capture "$base.history.$level.txt" "$cli" report --db "$base.db" --history --level "$level"; then
+                    echo "$me: FAIL $preset $c: report --history --level $level failed" >&2
+                    failed=1
+                fi
+            done
         fi
         [ -f "$base.txt" ] && echo "$preset $c $(sed -n '1s/^file //p' "$base.txt")"
     done
@@ -320,6 +360,17 @@ expect() {
     return "$failed"
 }
 
+# diff -u of files $1 and $2, at most DIFF_LINES lines, then a count of the
+# lines left out. Files are compared as bytes (cmp); a file with CR line ends
+# shows up here as a difference, never normalised.
+bounded_diff() {
+    total=$(diff -u "$1" "$2" | wc -l | tr -d ' ')
+    diff -u "$1" "$2" | head -n "$DIFF_LINES"
+    if [ "$total" -gt "$DIFF_LINES" ]; then
+        echo "  ... diff truncated: $total lines, first $DIFF_LINES shown"
+    fi
+}
+
 compare() {
     failed=0
     differing=
@@ -336,7 +387,12 @@ compare() {
         fi
     done
     for c in $CASES; do
-        for kind in txt report.txt; do
+        kinds=$TEXT_KINDS
+        has_history "$c" && kinds="$kinds $HISTORY_KINDS"
+        # "same" is printed once per case, after every kind agreed.
+        case_ok=yes
+        same_line=
+        for kind in $kinds; do
             # Group the presets by identical content. Each group is named
             # by its first preset (its leader); pairs holds "preset=leader".
             leaders=
@@ -364,11 +420,13 @@ compare() {
             if [ -n "$missing" ]; then
                 echo "$me: FAIL $c ($kind): missing for:$missing" >&2
                 failed=1
+                case_ok=no
             fi
             # shellcheck disable=SC2086
             group_count=$(echo $leaders | wc -w | tr -d ' ')
             if [ "$group_count" -gt 1 ]; then
                 failed=1
+                case_ok=no
                 case " $differing " in *" $c "*) ;; *) differing="$differing $c" ;; esac
                 echo "$me: FAIL $c ($kind): $group_count different outputs" >&2
                 for l in $leaders; do
@@ -385,15 +443,18 @@ compare() {
                         continue
                     fi
                     echo "  diff -u $first-$c.$kind $l-$c.$kind" >&2
-                    diff -u "$out_dir/$first-$c.$kind" "$out_dir/$l-$c.$kind" >&2
+                    bounded_diff "$out_dir/$first-$c.$kind" "$out_dir/$l-$c.$kind" >&2
                 done
             elif [ "$group_count" -eq 1 ] && [ -z "$missing" ] && [ "$kind" = txt ]; then
                 # shellcheck disable=SC2086
                 set -- $leaders
-                echo "$me: same $c $(sed -n '1s/^file //p' "$out_dir/$1-$c.txt") ($(echo $pairs | wc -w | tr -d ' ') of $(echo $all_presets | wc -w | tr -d ' ') presets present)"
+                same_line="$me: same $c $(sed -n '1s/^file //p' "$out_dir/$1-$c.txt") ($(echo $pairs | wc -w | tr -d ' ') of $(echo $all_presets | wc -w | tr -d ' ') presets present; $(echo $kinds | wc -w | tr -d ' ') files compared)"
                 set -- $all_presets
             fi
         done
+        if [ "$case_ok" = yes ] && [ -n "$same_line" ]; then
+            echo "$same_line"
+        fi
     done
     if [ "$failed" -eq 0 ]; then
         echo "$me: OK: all $(echo $CASES | wc -w | tr -d ' ') cases identical across $# presets:$all_presets"
