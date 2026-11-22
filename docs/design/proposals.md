@@ -1002,7 +1002,7 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
 - Design doc section: 5 (races and cultures: names)
 - Problem: faerie names are built from soft consonants and bright vowels. At their best they read as light and fey (Lyfae Hollow, The Faeli Court, Atwia Glade); at their worst as baby talk (Wifleeflee Glade, Weebaema Glade, Eepou Glade, The Twiwhiwou Ring). The name filter removes crude names, not these. The alternatives were to leave the syllables alone, or to make them strange in a way that drifts toward the elven names.
 - Decision: the middle option, which Paul accepted ("Agree the middle option is good"): keep the faerie character, and drop the sounds that cause the baby talk: no `p` and `b` onsets, fewer `ee` and `ou` nuclei, and no syllable repeated twice in a row. A change to the faerie culture's naming data (`game/data/cultures/faerie.toml`) and, for the repeated syllable, a naming rule if the data cannot express it.
-- Interim choice: not part of P3-10 (generator 0.19.0), which is in validation. It goes into the next change that alters world bytes, with a spec.
+- Interim choice: not part of P3-10 (generator 0.19.0), which is in validation. It goes into the next change that alters world bytes, with a spec. It is specified in P3-11 (generator 0.20.0; spec P3-02 section 14), which also removes the coda `p` (names ending in "-p"), since it sounds like the onsets ruled out. Paul, 2026-11-21: "Dropping the -p ending is fine".
 - Status: accepted
 
 ### History: the P3-10 orc and aim rulings (lead, awaiting Paul)
