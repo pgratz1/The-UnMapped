@@ -777,7 +777,7 @@ class World(pp.World):
 
     def name_cores(self):
         """P3-02 r10 12.2: the history stage's set K of name cores (kept by the peoples world), from 0.19.0."""
-        if GENERATOR_VERSION != "0.19.0":
+        if not at_least("0.19.0"):
             return None
         return getattr(self, "cores", None)
 
