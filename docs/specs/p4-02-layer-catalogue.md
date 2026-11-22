@@ -1,6 +1,6 @@
 # P4-02 Layer catalogue and region names in the library
 
-Status: **draft, 2026-11-22**, for approval by the lead. Phase P4 Viewer v1, stage 2 of the overview `docs/specs/p4-00-viewer-v1-overview.md` (3.1 "P4-02", rules V1 to V10, 6.1, 7, 9). Design doc sections 6 (world database), 10 (tech stack, `worldgen` public API, world viewer) and 12 (open question "Layer catalogue in the library", answered by P4-00 6.1 and approved by the lead with that overview). Proposals read: "Viewer: layer units and region names come from a copy of the catalogue" (2026-11-18), "Viewer v1: the library answers the year, the viewer draws it" (2026-11-22). Depends on P1-00 section 4 (the layer catalogue), P1-00 10.2, P1-03 9, P1-04 9, P1-05 9 and P1-06 9 (palettes and composites), P1-06 3.2 (table `region`), P0-04 amendment 18 (e) (composite `regions`) and P2 (`gdext/README.md`).
+Status: **draft, 2026-11-22**, for approval by the lead (r2, 2026-11-22: corrections after integration, revision note r2). Phase P4 Viewer v1, stage 2 of the overview `docs/specs/p4-00-viewer-v1-overview.md` (3.1 "P4-02", rules V1 to V10, 6.1, 7, 9). Design doc sections 6 (world database), 10 (tech stack, `worldgen` public API, world viewer) and 12 (open question "Layer catalogue in the library", answered by P4-00 6.1 and approved by the lead with that overview). Proposals read: "Viewer: layer units and region names come from a copy of the catalogue" (2026-11-18), "Viewer v1: the library answers the year, the viewer draws it" (2026-11-22). Depends on P1-00 section 4 (the layer catalogue), P1-00 10.2, P1-03 9, P1-04 9, P1-05 9 and P1-06 9 (palettes and composites), P1-06 3.2 (table `region`), P0-04 amendment 18 (e) (composite `regions`) and P2 (`gdext/README.md`).
 
 **Generator stays 0.20.0, schema 7.** No world byte, no golden world hash, no `report` line, no `hash` line and no `render` pixel changes. No `GENERATOR_VERSION` bump.
 
@@ -64,7 +64,7 @@ LayerGroup layer_group(std::string_view name) noexcept;       // Other when unkn
 std::string_view layer_unit(std::string_view name) noexcept;  // empty when unknown
 ```
 
-The table, in this order (layer ids 1 to 19 of P1-00 3). `unit` strings are the viewer's today, byte for byte (they are its legend titles, so they must not change); `°` is written `°` in the source.
+The table, in this order (layer ids 1 to 19 of P1-00 3). `unit` strings are the viewer's today, byte for byte (they are its legend titles, so they must not change). The degree sign is written in the source as the escape `\u00B0`; its bytes are C2 B0 on every compiler. In the special column each entry is a value and its `label`, the label being the text after the value; the rows marked "—" have no special values.
 
 | name | group | type | min | max | scale | display_unit | unit | special | palette |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -96,7 +96,7 @@ std::string format_layer_value(std::string_view name, std::int64_t v);
 
 `cell_value`: the cell as int64; false outside the grid, for an index past the value vector, and for a u64 value above INT64_MAX (the caller shows the raw decimal instead). Moved from the viewer unchanged.
 
-`format_layer_value`, exactly the viewer's current strings. Notation: `T(v)` = v / 10 with one decimal, sign first, from the magnitude (`-5` → `-0.5`, `0` → `0.0`, INT64_MIN exact); `H(u)` = u / 100 with two decimals; `A(n)` = `H((256 n + 5000) / 10000)` (km², round half up); decimals by `db::format_i64` / `db::format_u64`; `|v|` the magnitude as u64.
+`format_layer_value`, exactly the viewer's current strings. Notation: `T(v)` = v / 10 with one decimal, sign first, from the magnitude (`-5` → `-0.5`, `0` → `0.0`, INT64_MIN exact); `H(u)` = u / 100 with two decimals; `A(n)` = `H((256 n + 5000) / 10000)` (km², round half up), exact for any non-negative int64 and computed without overflow (for example 4294967296 → `4294967296 cells, 1099511.63 km2 upstream`, INT64_MAX → `9223372036854775807 cells, 2361183241434822.61 km2 upstream`); decimals by `db::format_i64` / `db::format_u64`; `|v|` the magnitude as u64.
 
 | layer | v | text |
 | --- | --- | --- |
@@ -140,15 +140,17 @@ Rows and order are exactly those of the viewer's `layer_catalogue.cpp` at `origi
 | direction | d = 0..8: `<d> <direction text of d>` (as `flow_dir` of 4.3), `direction_colour(d)` |
 | log2 | v in 0, 1, 16, 256, 4096, 65536, 1048576: `<v>`, or for `flow_accum` and v > 0 `<v> cells (A(v) km2)`; `log2_colour(v)` |
 | ids | `0: none` (`ids_colour(0)`); `each id its own colour` with the strip `ids_colour(1..5)` |
-| signed | with (P, M) = `signed_scale(grid)`, v in −M, −M/2 (C++ truncation), −1, 0, P/2, P, skipping any outside [−M, P]: `format_layer_value(name, v)`, `signed_colour(v)` |
+| signed | with (P, M) = `signed_scale(grid)`, v in −M, −M/2 (C++ truncation), −1, 0, P/2, P: `format_layer_value(name, v)`, `signed_colour(v)`; always six rows, repeats included (a small M or P repeats rows, as the viewer does); −M and −M/2 are formed without int64 overflow, so M = 2^63 gives INT64_MIN; no rows for an invalid or unsigned grid |
 | biome | every record of `biomes` in the given order: `name` (or `key` when `name` is empty), `colour & 0xFFFFFF` |
-| gray | none for an invalid grid; else min row `<min text> (min)` gray 0, an unlabelled strip gray 0, 128, 255, max row `<max text> (max)` gray `gray_level(r, r)`; min and max texts by `format_layer_value(name, ·)` (u64 above INT64_MAX as the plain decimal) |
+| gray | no rows for an invalid grid; else min row `<min text> (min)` gray 0, an unlabelled strip gray 0, 128, 255, max row `<max text> (max)` gray `gray_level(r, r)`; min and max texts by `format_layer_value(name, ·)` (u64 above INT64_MAX as the plain decimal) |
 
 | composite | `composite_description` | legend rows |
 | --- | --- | --- |
 | `map` | `relief shaded by slope` | the hypsometric land rows; then the water rows W |
 | `biomes` | `biome colours shaded by slope` | biome rows of records with `water` = 0; then W |
 | `regions` | `biome colours shaded by slope, region borders` | `region border` (0x000000); biome rows with `water` = 0; then W |
+
+`composite_description` is empty for a value outside the enumeration.
 
 W = `ocean, 0 to 3000 m deep` with the strip of `HYPSOMETRIC_OCEAN_STOPS` colours; `lake` (64, 128, 204); `river, class 1 to 6+` with the strip `composite_river_colour(1..6)`.
 
@@ -168,7 +170,7 @@ In `ALL_COMPOSITES` order: none without a layer `elevation`; `map` with it; `bio
 std::string_view region_name(std::span<const RegionRecord> records, std::int64_t id) noexcept;
 ```
 
-The name of the record with that id, or empty when there is none (id 0, unknown id, empty span). Records in ascending id, as `read_region_rows` returns them (primary-key order); binary search. Unordered records give an unspecified record or empty, never undefined behaviour.
+The name of the record with that id, or empty when there is none (unknown id, empty span). Id 0 always gives empty, even if a record has id 0. Records in ascending id, as `read_region_rows` returns them (primary-key order); binary search. Unordered records give an unspecified record or empty, never undefined behaviour.
 
 History keeps its own reading of names (`db::read_region_rows`, `HistoryView`); nothing there changes.
 
@@ -178,7 +180,7 @@ A world from a newer generator is normally refused for its schema version (P4-00
 
 - `find_layer_spec` returns null; `layer_group` gives `Other`; `layer_unit` empty; `registered_palette` gray; `format_layer_value` the plain decimal; `layer_legend` the rows of the palette it is given (for gray: min and max as plain decimals).
 - A known name whose stored type differs from the catalogue type gets the entry's group, unit and display form; `auto_palette` already falls back to gray when the registered palette does not suit the grid, and the legend follows the palette actually used.
-- No function in this header throws for any name, any int64 value or any valid grid (`signed_scale` is only called for the `signed` palette, which `auto_palette` gives only to a signed grid; `layer_legend` with `signed` on an unsigned or invalid grid returns no rows instead of raising; the viewer's copy would have raised there, a case its auto palette never reaches). The viewer shows such a layer under Other with its raw value, as today.
+- No function in this header throws for any name, any int64 value or any valid grid (`signed_scale` is only called for the `signed` palette, which `auto_palette` gives only to a signed grid; `layer_legend` with `signed` on an invalid or unsigned grid, and with `gray` on an invalid grid, returns no rows instead of raising; the viewer's copy would have raised there, a case its auto palette never reaches). The viewer shows such a layer under Other with its raw value, as today.
 
 ## 6. Changes in the extension (behaviour-preserving swap)
 
@@ -200,27 +202,27 @@ Nothing else in `gdext/` or `game/` changes. No SQL is added to the extension.
 3. `registered_palette(n)` equals the mapping documented in render.hpp before this change, for every catalogue name and for unknown names.
 4. Every function of the header is total over its inputs as stated in 5: no throw, no undefined behaviour.
 5. Every text is a pure function of its arguments: integer arithmetic only, no locale, no floating point, no unordered container; bytes are the same on every platform and compiler.
-6. `region_name(records, r.id) == r.name` for every record read from a world; empty for 0 and for an id above the largest.
+6. `region_name(records, r.id) == r.name` for every record read from a world; empty for 0 (even if a record has id 0) and for an id above the largest.
 7. `available_composites` equals the viewer's current rule for every combination of the three layers and the flag (8 cases with `elevation`, plus without).
 
 ## 8. Determinism notes
 
 The catalogue does not reach a world file. It reaches output text in two ways: `registered_palette` (the `--palette auto` choice of `render`, whose pixels are a cross-platform contract) and, in later stages, text a `report` or CLI listing may print (P4-00 3.1 leaves this to P4-02; see question 1: none in this stage). So it is held to the inspection code's rules: the determinism lint scope covers it (`worldgen/src/inspect/`), decimals come from `db::format_i64` / `format_u64` (not `std::to_string`, `printf` or streams, which bring locale and width questions), the table is a fixed array in a defined order, and lookups are linear or binary searches over that array, never a hash map.
 
-**For the determinism auditor:** (a) `registered_palette` gives the same result as before for every name (a changed palette changes `render` pixels and the headless check's images); (b) every formatting path is integer only, including the negative and INT64_MIN cases of `T(v)` and the 256 n overflow bound of `A(n)` (n ≤ u32 max for `flow_accum`; for u64 inputs of `log2` legends the values are the fixed list); (c) `°` is a `°` escape, so the bytes do not depend on the source encoding (MSVC also builds with `/utf-8`); (d) the `RegionRecord` change does not alter `report`'s `[geography]` region keys or `hash` lines; (e) no new SQL, no new lint suppression.
+**For the determinism auditor:** (a) `registered_palette` gives the same result as before for every name (a changed palette changes `render` pixels and the headless check's images); (b) every formatting path is integer only, including the negative and INT64_MIN cases of `T(v)` and `A(n)`, exact for any non-negative int64 and computed without overflow (no 256 n product that can wrap; for u64 inputs of `log2` legends the values are the fixed list); (c) the degree sign is written as the escape `\u00B0`, so its bytes are C2 B0 on every compiler whatever the source encoding (MSVC also builds with `/utf-8`); (d) the `RegionRecord` change does not alter `report`'s `[geography]` region keys or `hash` lines; (e) no new SQL, no new lint suppression.
 
 ## 9. Tests required
 
-Library, `worldgen-tests` (new file `worldgen/tests/inspect_layer_catalogue_test.cpp`, in `-other` unless the test writer gives it a group; the world-backed cases join the shard whose support header caches the world they use, recorded in the `unmapped_add_doctest_shards()` call):
+Library, `worldgen-tests` (new file `worldgen/tests/inspect_layer_catalogue_test.cpp`, in its own CTest entry `worldgen-tests-layer-catalogue`; the world-backed cases join the shard whose support header caches the world they use, recorded in the `unmapped_add_doctest_shards()` call):
 
 1. The table: 19 entries in order, unique names, each field of 4.2's table; `description` non-empty, at most 160 bytes, ASCII plus `°`.
 2. `registered_palette` and `find_layer_spec(...)->palette` for every name, compared with a literal copy of the mapping (not with each other); unknown names (`""`, `"Elevation"`, `"water_level"`) give gray, Other, empty unit, null.
-3. `format_layer_value`: a literal table of at least two cases per row of 4.3, including every special value, negatives (`elevation -5` → `-0.5 m (sea)`, `temperature -15` → `-1.5 °C`), 0, the type limits, INT64_MIN and INT64_MAX for an unknown layer, `flow_accum 1` → `1 cells, 0.00 km2 upstream`, `flow_accum 4096` → `4096 cells, 1.05 km2 upstream`.
+3. `format_layer_value`: a literal table of at least two cases per row of 4.3, including every special value, negatives (`elevation -5` → `-0.5 m (sea)`, `temperature -15` → `-1.5 °C`), 0, the type limits, INT64_MIN and INT64_MAX for an unknown layer, `flow_accum 1` → `1 cells, 0.00 km2 upstream`, `flow_accum 4096` → `4096 cells, 1.05 km2 upstream`, `flow_accum 4294967296` → `4294967296 cells, 1099511.63 km2 upstream`, `flow_accum` INT64_MAX → `9223372036854775807 cells, 2361183241434822.61 km2 upstream`.
 4. `cell_value`: inside, outside, each element type, a u64 above INT64_MAX.
-5. `layer_legend`: for each palette, labels and colours against literal expected lists written from section 4.4; gray on signed, unsigned and constant grids and an invalid grid; signed with M or P small enough that a row is skipped; `signed` on an unsigned grid returns no rows; biome with a record without name.
+5. `layer_legend`: for each palette, labels and colours against literal expected lists written from section 4.4; gray on signed, unsigned and constant grids and an invalid grid; signed with small M or P, repeated rows kept; signed with M = 2^63 (first row INT64_MIN); `signed` on an unsigned grid returns no rows; biome with a record without name.
 6. `composite_legend` and `composite_description` for the three composites with a two-record fixture biome table (one water, one land).
 7. `available_composites`: all cases of invariant 7.
-8. `read_region_rows`: name and biome filled; every existing problem message unchanged; `region_name` for present, absent, 0 and empty-span cases.
+8. `read_region_rows`: name and biome filled; every existing problem message unchanged; `region_name` for present, absent, 0 (also with a record of id 0) and empty-span cases.
 9. Against generated worlds (invariant 2): the shipped 512 world of seed 42 and a `--until hydrology` world (or the cached worlds of the existing support headers at those stages); and the test-pattern world, whose layers all give null (Other).
 
 The test writer writes the expected strings and colours from this spec, independently of the implementation; the viewer's `layer_catalogue.cpp` at `fdd7b2f` is the behaviour being preserved and may be used to check the spec, not as the oracle.
@@ -237,6 +239,20 @@ No golden file is added or changed.
 2. **Catalogue as code, not TOML** (section 3). Recommendation and interim: code. Proposals entry in appendix A.
 3. **`RegionRecord` gains `biome` as well as `name`** (4.6), so that the extension's region entries need no raw read. Reading taken where P4-00 named only `name`; no design question.
 4. **Descriptions are not shown yet.** The viewer's tooltip and legend title keep using `unit`; P4-03 or later may show `description` in the layer tooltip. Interim: not shown, so that this stage changes nothing visible.
+
+## Revision note r2 (2026-11-22, corrections after integration)
+
+Approved by the lead after the integration of implementation and tests, which already agree with every item; the stage still preserves the viewer's present behaviour. No world byte changes.
+
+1. 4.4 `signed`: no row is skipped; the six values always give six rows, repeats included. −M and −M/2 are formed without overflow (M = 2^63 gives INT64_MIN).
+2. 9 test 5: "small M or P, repeated rows kept" replaces the skipped-row case.
+3. 4.2 special column: the label is the text after the value; "—" means no special values.
+4. 4.2 and 8 (c): the degree sign is the escape `\u00B0` in the source, bytes C2 B0 on every compiler.
+5. 4.3 and 8 (b): `A(n)` is exact for any non-negative int64 and computed without overflow, not only up to u32 max; two worked examples (also in test 3).
+6. 4.4: `composite_description` is empty for a value outside the enumeration.
+7. 4.6 and invariant 6: `region_name` gives empty for id 0 even if a record has id 0; the ordering rule is unchanged.
+8. 4.4 and 5: `layer_legend` returns no rows for `signed` on an invalid or unsigned grid and for `gray` on an invalid grid.
+9. 9: the test file runs in the CTest entry `worldgen-tests-layer-catalogue`.
 
 ## Appendix A. Proposals entry (added with this spec)
 
