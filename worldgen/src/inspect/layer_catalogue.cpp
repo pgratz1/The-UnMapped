@@ -71,9 +71,9 @@ constexpr std::array<LayerSpec, 19> CATALOGUE = {{
      "Chamfer distance to the sea coast in metres, positive on land and lakes, negative at sea; saturates at "
      "32767.",
      {}, Palette::signed_distance},
-    {"temperature", LayerGroup::climate, db::ElementType::i16, -600, 500, false, 10, "°C",
+    {"temperature", LayerGroup::climate, db::ElementType::i16, -600, 500, false, 10, "\xC2\xB0" "C",
      "annual mean, tenths of a degree Celsius",
-     "Annual mean temperature at the water or land surface, in tenths of a degree Celsius (°C).",
+     "Annual mean temperature at the water or land surface, in tenths of a degree Celsius (\xC2\xB0" "C).",
      {}, Palette::temperature},
     {"rainfall", LayerGroup::climate, db::ElementType::u16, 0, 10000, false, 1, "mm/yr",
      "annual precipitation, millimetres",
@@ -391,7 +391,7 @@ std::string format_layer_value(std::string_view name, std::int64_t v) {
         return db::format_i64(v) + " m from the sea";
     }
     if (name == "temperature") {
-        return tenths(v) + " °C";
+        return tenths(v) + " \xC2\xB0" "C";
     }
     if (name == "rainfall") {
         return db::format_i64(v) + " mm/yr";
@@ -419,7 +419,7 @@ std::vector<LegendEntry> layer_legend(std::string_view name, Palette palette, co
             add_stops(out, HYPSOMETRIC_OCEAN_STOPS, [](std::int64_t t) { return "sea, " + tenths(t) + " m deep"; });
             break;
         case Palette::temperature:
-            add_stops(out, TEMPERATURE_STOPS, [](std::int64_t t) { return tenths(t) + " °C"; });
+            add_stops(out, TEMPERATURE_STOPS, [](std::int64_t t) { return tenths(t) + " \xC2\xB0" "C"; });
             break;
         case Palette::rainfall:
             add_stops(out, RAINFALL_STOPS, [](std::int64_t t) { return db::format_i64(t) + " mm/yr"; });

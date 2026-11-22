@@ -68,7 +68,7 @@ struct LayerSpec {
     std::int64_t max = 0;
     bool max_is_cell_count = false;               // true: the real maximum is width * height (flow_accum)
     std::int64_t scale = 1;                       // decimal divisor to display units: 1 or 10
-    std::string_view display_unit;                // "m", "°C", "mm/yr", "/ 255", or ""
+    std::string_view display_unit;                // "m", "C" with the degree sign (bytes C2 B0), "mm/yr", "/ 255", or ""
     std::string_view unit;                        // unit and meaning in a few words (the viewer's legend title)
     std::string_view description;                 // one sentence, from P1-00 4
     std::span<const SpecialValue> special;        // ascending value
@@ -95,7 +95,7 @@ struct LayerSpec {
 [[nodiscard]] bool cell_value(const db::LayerGrid& grid, std::uint32_t x, std::uint32_t y,
                               std::int64_t& value) noexcept;
 
-// The value v of a layer in display units ("123.4 m", "-1.5 °C", "lake",
+// The value v of a layer in display units ("123.4 m", "-1.5 C" with the degree sign (bytes C2 B0), "lake",
 // "142 / 255"); the plain decimal for a layer the catalogue does not know.
 // Biome and region names are not added (they need the world's tables).
 [[nodiscard]] std::string format_layer_value(std::string_view name, std::int64_t v);
