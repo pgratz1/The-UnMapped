@@ -70,6 +70,7 @@ EngineTuning engine_tuning_from(const data::ContentSet& content) {
     t.quiet_step_years = r.get_int("quiet_step_years");
     t.quiet_events_max = r.get_int("quiet_events_max");
     t.quiet_min_years = r.get_int("quiet_min_years");  // r15 20.1 item 1a
+    t.flare_min_years = r.get_int("flare_min_years");  // r19 22.3
     t.simulated_min_permille = r.get_int("simulated_min_permille");
     t.simulated_max_permille = r.get_int("simulated_max_permille");
     t.islet_max_dry_cells = r.get_int("islet_max_dry_cells");
@@ -83,6 +84,7 @@ void check_engine_tuning(const EngineTuning& t) {
     field_in(in(t.quiet_step_years, 1, 200), "quiet_step_years");
     field_in(in(t.quiet_events_max, 1, 100), "quiet_events_max");
     field_in(in(t.quiet_min_years, 0, 400), "quiet_min_years");
+    field_in(in(t.flare_min_years, 1, 1000), "flare_min_years");
     field_in(in(t.simulated_min_permille, 100, 500), "simulated_min_permille");
     field_in(in(t.simulated_max_permille, 100, 500), "simulated_max_permille");
     field_in(in(t.islet_max_dry_cells, 0, 1000000), "islet_max_dry_cells");
@@ -101,6 +103,11 @@ void check_engine_tuning(const EngineTuning& t) {
     }
     if (t.quiet_min_years > 2 * t.quiet_step_years) {  // r15 engine_quiet_min
         fail("history: tuning: quiet_min_years must not be above 2 x quiet_step_years");
+    }
+    for (const auto& [name, l] : levels) {  // r19 engine_flare_min
+        if (t.flare_min_years > l->flare_years) {
+            fail("history: tuning: " + std::string(name) + ": flare_min_years must not be above flare_years");
+        }
     }
     for (const auto& [name, l] : levels) {
         if (6 * l->active_years + l->final_years > 6 * t.simulated_max_permille - 30) {
@@ -124,6 +131,7 @@ ScheduleLengths schedule_lengths(std::int64_t span, const EngineTuning& tuning, 
     ScheduleLengths l;
     l.active = scale_years(d.active_years, span);
     l.flare = scale_years(d.flare_years, span);
+    l.flare_min = scale_years(tuning.flare_min_years, span);  // r19 22.3: at least 1
     l.final_years = scale_years(d.final_years, span);
     l.quiet_step = tuning.quiet_step_years;
     l.cap_years = (tuning.simulated_max_permille * span) / 1000;
@@ -265,7 +273,8 @@ private:
                 if (!ends_interval && t.value >= l.flare_threshold) {
                     f = std::min({l.flare, q_e - s, l.cap_years - base_.scheduled - flare_total_});  // E3, E8
                 }
-                const bool flare = f >= 1;
+                // r19 22.3: no flare-up shorter than m; the row goes on.
+                const bool flare = f >= std::max<std::int64_t>(1, l.flare_min);
                 const bool ends_row = ends_interval || flare;
                 hooks_.quiet_step_end(ends_row, ends_row ? 0 : std::min(l.quiet_step, q_e - s));
                 if (ends_interval) {
@@ -296,6 +305,10 @@ private:
             if (r.start_year != next || r.end_year < r.start_year) {
                 fail("history: schedule: phase rows do not tile [0, " + int_text(base_.span) + ") at phase " +
                      int_text(r.id));
+            }
+            if (r.kind == static_cast<std::int64_t>(PhaseKind::flare) &&
+                r.end_year - r.start_year + 1 < base_.lengths.flare_min) {  // r19 22.3
+                fail("history: schedule: flare-up phase " + int_text(r.id) + " shorter than flare_min_years");
             }
             next = r.end_year + 1;
         }

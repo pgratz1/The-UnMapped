@@ -115,13 +115,23 @@ std::string war_note(const HistoryView& view, const HistoryView::Event& e, const
     if (c == nullptr) {
         return {};
     }
-    const bool same_year = c->row.year >= e.row.year;
+    // P3-07 r19 25.8: the note dates the grievance, root(c): c's cause of a
+    // claim kind with the smallest id (c is then a fresh claim), else c.
+    const HistoryView::Event* root = c;
+    for (const std::int64_t id : c->causes) {
+        const HistoryView::Event* k = view.event(id);
+        if (k != nullptr && claims.holds(*k) && (root == c || k->row.id < root->row.id)) {
+            root = k;
+        }
+    }
+    const std::int64_t y_c = root->row.year;
+    const bool same_year = y_c >= e.row.year;
     std::string out;
     if (is_kind(*c, claims.settlements)) {
         // P3-07 r15 23 item 4a: a claim of kind 39 names its towns, whether
         // or not its region is the war's.
         out = same_year ? "The claim, made the same year, was to "
-                        : "The claim, since " + int_text(c->row.year) + ", was to ";
+                        : "The claim, since " + int_text(y_c) + ", was to ";
         if (!append_settlements(out, view, *c, *claims.settlements)) {
             return {};
         }
@@ -131,11 +141,11 @@ std::string war_note(const HistoryView& view, const HistoryView::Event& e, const
         }
         out += ".";
     } else if (c->row.region == e.row.region) {
-        out = same_year ? "Claimed the same year." : "Claimed since " + int_text(c->row.year) + ".";
+        out = same_year ? "Claimed the same year." : "Claimed since " + int_text(y_c) + ".";
     } else {
         // P3-07 r14 23 item 3 (P3-06 r19 23.4): the war's goal is not the
         // claim's region.
-        out = same_year ? "The claim, made the same year, was to " : "The claim, since " + int_text(c->row.year) + ", was to ";
+        out = same_year ? "The claim, made the same year, was to " : "The claim, since " + int_text(y_c) + ", was to ";
         if (!append_entity(out, view, EntityType::region, c->row.region)) {
             return {};
         }
@@ -323,6 +333,11 @@ struct Kinds {
     Id civ_ended = 0, search_abandoned = 0, battle = 0, battle_at_pass = 0, siege = 0, colony_founded = 0;
     Id civ_seceded = 0, refuge_held = 0;
     Id claim = 0, claim_settlements = 0, quiet_stretch = 0, plague_spread = 0, civ_founded = 0;
+    // P3-07 r19 25: kinds 41 and 42, the flare-up, the calamity kinds of
+    // 25.2 and 25.7 item 3, and the ruin kinds of 25.3.
+    Id claim_dropped = 0, refuge_hidden = 0, flare_up = 0;
+    Id famine = 0, plague = 0, plague_outbreak = 0, succession_crisis = 0, settlement_dwindled = 0;
+    Id settlement_abandoned = 0, settlement_abandoned_to = 0;
 
     explicit Kinds(const EventCatalogue& c) {
         const auto id = [&c](std::string_view key) -> Id {
@@ -354,6 +369,24 @@ struct Kinds {
         quiet_stretch = id("quiet_stretch");
         plague_spread = id("plague_spread");
         civ_founded = id("civ_founded");
+        claim_dropped = id("claim_dropped");
+        refuge_hidden = id("refuge_hidden");
+        flare_up = id("flare_up");
+        famine = id("famine");
+        plague = id("plague");
+        plague_outbreak = id("plague_outbreak");
+        succession_crisis = id("succession_crisis");
+        settlement_dwindled = id("settlement_dwindled");
+        settlement_abandoned = id("settlement_abandoned");
+        settlement_abandoned_to = id("settlement_abandoned_to");
+    }
+    // 25.2: the calamity kinds of the summary's cap.
+    [[nodiscard]] bool calamity(Id k) const noexcept {
+        return k == famine || k == plague || k == plague_outbreak || k == succession_crisis;
+    }
+    // 25.7 item 3: cal(e) of the milestone fill.
+    [[nodiscard]] bool death_toll(Id k) const noexcept {
+        return calamity(k) || k == plague_spread || k == settlement_dwindled;
     }
     // P3-07 r17 24.1: the chain kinds W and the war-event kinds E_w.
     [[nodiscard]] bool battle_kind(Id k) const noexcept { return k == battle || k == battle_at_pass; }
@@ -548,13 +581,17 @@ private:
             CivilizationDigest& c = d_.civilizations[k];
             c.id = t_.civilizations[k].id;
             c.events = static_cast<std::int64_t>(civ_events_[k].size());
-            milestones(c, civ_events_[k]);
+            c.milestones = milestones(c, civ_events_[k], MILESTONES);
+            if (t_.civilizations[k].ended_year) {
+                c.milestones_ended = milestones(c, civ_events_[k], MILESTONES_ENDED);  // r19 25.5
+            }
         }
         for (const db::SettlementRow& s : t_.settlements) {
             if (is_civ(s.founder_civ)) {
                 CivilizationDigest& c = d_.civilizations[civ_index(s.founder_civ)];
                 ++c.settlements_founded;
-                c.settlements_ruined += (s.status == 3 || s.status == 4) ? 1 : 0;
+                c.settlements_ruined += s.status == 3 ? 1 : 0;  // r19 25.3 item 3
+                c.settlements_faded += s.status == 4 ? 1 : 0;
             }
             if (standing(s.status) && is_civ(s.owner_civ)) {
                 CivilizationDigest& c = d_.civilizations[civ_index(s.owner_civ)];
@@ -603,8 +640,10 @@ private:
     }
 
     // 24.5 (replaces 7.3): founding, ending, the longest quiet stretch, then
-    // the fill by (own, salience, id) with at most MILESTONE_KIND_MAX per kind.
-    void milestones(CivilizationDigest& c, const std::vector<Id>& ids) const {
+    // the fill by (own, cal, salience, id) (r19 25.7 item 3) with at most
+    // MILESTONE_KIND_MAX per kind, until `limit` are chosen.
+    [[nodiscard]] std::vector<Id> milestones(const CivilizationDigest& c, const std::vector<Id>& ids,
+                                             std::size_t limit) const {
         const db::CivilizationRow& row = t_.civilizations[civ_index(c.id)];
         std::vector<Id> chosen;
         const auto take = [&chosen](Id e) {
@@ -636,19 +675,22 @@ private:
             }
         }
         std::vector<std::uint8_t> is_own(rest.size(), 0);
+        std::vector<std::uint8_t> cal(rest.size(), 0);
         std::vector<std::size_t> order(rest.size());
         for (std::size_t i = 0; i < rest.size(); ++i) {
             order[i] = i;
             is_own[i] = own(c.id, events_[static_cast<std::size_t>(rest[i] - 1)]) ? 1 : 0;
+            cal[i] = kinds_.death_toll(kind(rest[i])) ? 1 : 0;
         }
         std::stable_sort(order.begin(), order.end(), [&](std::size_t x, std::size_t y) {
             if (is_own[x] != is_own[y]) return is_own[x] > is_own[y];
+            if (cal[x] != cal[y]) return cal[x] < cal[y];
             if (salience(rest[x]) != salience(rest[y])) return salience(rest[x]) > salience(rest[y]);
             return rest[x] < rest[y];
         });
         std::vector<std::int64_t> per_kind(view_.catalogue().kinds.size() + 1, 0);
         for (const std::size_t i : order) {
-            if (chosen.size() >= MILESTONES) {
+            if (chosen.size() >= limit) {
                 break;
             }
             std::int64_t& n = per_kind[static_cast<std::size_t>(kind(rest[i]))];
@@ -658,7 +700,7 @@ private:
             }
         }
         std::stable_sort(chosen.begin(), chosen.end());
-        c.milestones = std::move(chosen);
+        return chosen;
     }
 
     // The participant of `role` (by key) of event `id`, or 0.
@@ -710,7 +752,7 @@ private:
                 continue;
             }
             (is_a ? c.wars_declared : c.wars_defended) += 1;
-            const std::int64_t last = r.until ? std::max(r.since, *r.until - 1) : e_ - 1;
+            const std::int64_t last = r.until ? *r.until : e_ - 1;  // r19 25.7 item 1
             if (adv.wars == 0) {
                 adv.first = r.since;
                 adv.last = last;
@@ -735,9 +777,13 @@ private:
             c.adversaries.push_back(adv);
         }
         std::stable_sort(c.adversaries.begin(), c.adversaries.end(),
-                         [&first_since](const CivilizationDigest::Adversary& x, const CivilizationDigest::Adversary& y) {
-                             const std::int64_t fx = first_since.at(Key{x.type, x.id});
-                             const std::int64_t fy = first_since.at(Key{y.type, y.id});
+                         [&first_since, this](const CivilizationDigest::Adversary& x,
+                                              const CivilizationDigest::Adversary& y) {
+                             // r19 25.10: find, a missing key read as since = E.
+                             const auto ix = first_since.find(Key{x.type, x.id});
+                             const auto iy = first_since.find(Key{y.type, y.id});
+                             const std::int64_t fx = ix != first_since.end() ? ix->second : e_;
+                             const std::int64_t fy = iy != first_since.end() ? iy->second : e_;
                              if (fx != fy) return fx < fy;
                              if (x.type != y.type) return x.type < y.type;
                              return x.id < y.id;
@@ -769,6 +815,25 @@ private:
                 last_claim[{role_entity(e, "claimant"), role_entity(e, "holder")}] = e.row.id;  // ascending
             }
         }
+        // r19 25.9: the claims a claim_dropped names as a cause, and each
+        // settlement's refuge_hidden end year (the smallest id first).
+        std::vector<std::uint8_t> dropped(events_.size() + 1, 0);
+        d_.refuge_hidden_end.assign(t_.settlements.size(), -1);
+        for (const HistoryView::Event& e : events_) {
+            if (e.row.kind == kinds_.claim_dropped) {
+                for (const Id c : e.causes) {
+                    if (c >= 1 && static_cast<std::size_t>(c) <= events_.size()) {
+                        dropped[static_cast<std::size_t>(c)] = 1;
+                    }
+                }
+            } else if (e.row.kind == kinds_.refuge_hidden && e.row.settlement >= 1 &&
+                       static_cast<std::size_t>(e.row.settlement) <= t_.settlements.size()) {
+                std::int64_t& end = d_.refuge_hidden_end[static_cast<std::size_t>(e.row.settlement - 1)];
+                if (end < 0) {
+                    end = e.row.end_year;
+                }
+            }
+        }
         const auto alive = [this](Id c) { return is_civ(c) && !t_.civilizations[civ_index(c)].ended_year; };
         for (const HistoryView::Event& e : events_) {
             if (!kinds_.is_claim(e.row.kind)) {
@@ -787,7 +852,13 @@ private:
             if (w != declared.end() && w->second >= e.row.year) {
                 continue;
             }
-            if (last_claim.at({a, b}) != e.row.id) {
+            // r19 25.10: find; a missing key reads as not the pair's last claim.
+            const auto lc = last_claim.find({a, b});
+            if (lc == last_claim.end() || lc->second != e.row.id) {
+                continue;
+            }
+            // r19 25.9 item 2, test (iv): no claim_dropped has the claim as a cause.
+            if (dropped[static_cast<std::size_t>(e.row.id)] != 0) {
                 continue;
             }
             d_.standing_claims.push_back(e.row.id);
@@ -1021,6 +1092,27 @@ private:
         std::stable_sort(ranked.begin(), ranked.end(), [this](Id a, Id b) {
             return salience(a) != salience(b) ? salience(a) > salience(b) : a < b;
         });
+        // r19 25.2: per phase only the first SUMMARY_CALAMITY_PER_PHASE
+        // candidates of the calamity kinds (together), in rank order, stay
+        // candidates. The phase ids were checked (reads_disagree).
+        {
+            std::vector<std::size_t> per_phase(t_.phases.size() + 1, 0);
+            std::vector<Id> kept;
+            kept.reserve(ranked.size());
+            for (const Id e : ranked) {
+                const HistoryView::Event& ev = events_[static_cast<std::size_t>(e - 1)];
+                if (kinds_.calamity(ev.row.kind) && ev.row.phase >= 1 &&
+                    static_cast<std::size_t>(ev.row.phase) <= t_.phases.size()) {
+                    std::size_t& count = per_phase[static_cast<std::size_t>(ev.row.phase)];
+                    if (count >= SUMMARY_CALAMITY_PER_PHASE) {
+                        continue;
+                    }
+                    ++count;
+                }
+                kept.push_back(e);
+            }
+            ranked = std::move(kept);
+        }
         std::vector<std::size_t> event_age(n + 1, NONE);
         for (const HistoryView::Event& e : events_) {
             event_age[static_cast<std::size_t>(e.row.id)] = age_of(e.row.year);
@@ -1039,8 +1131,19 @@ private:
                 }
             }
         };
+        // r19 25.6: F also holds every flare_up whose phase has a war_declared.
+        std::vector<std::uint8_t> phase_war(t_.phases.size() + 1, 0);
         for (const HistoryView::Event& e : events_) {
-            if (e.row.kind == kinds_.quiet_stretch) {
+            if (e.row.kind == kinds_.war_declared && e.row.phase >= 1 &&
+                static_cast<std::size_t>(e.row.phase) <= t_.phases.size()) {
+                phase_war[static_cast<std::size_t>(e.row.phase)] = 1;
+            }
+        }
+        for (const HistoryView::Event& e : events_) {
+            const bool war_flare = e.row.kind == kinds_.flare_up && e.row.phase >= 1 &&
+                                   static_cast<std::size_t>(e.row.phase) <= t_.phases.size() &&
+                                   phase_war[static_cast<std::size_t>(e.row.phase)] != 0;
+            if (e.row.kind == kinds_.quiet_stretch || war_flare) {
                 add(e.row.id);
             }
         }

@@ -35,6 +35,9 @@ struct EngineTuning {
     // r15 20.1 item 1a: no quiet_stretch for a shorter stretch; 0 (a
     // hand-made tuning) leaves the rule off.
     std::int64_t quiet_min_years = 0;         // int(0, 400)
+    // r19 22.3: no flare-up shorter than this (scaled as the detail lengths
+    // are); 1 (a hand-made tuning) leaves SC6 as before.
+    std::int64_t flare_min_years = 1;         // int(1, 1000)
     std::int64_t simulated_min_permille = 0;  // int(100, 500)
     std::int64_t simulated_max_permille = 0;  // int(100, 500)
     std::int64_t islet_max_dry_cells = 0;     // int(0, 1000000)
@@ -66,6 +69,7 @@ void check_engine_tuning(const EngineTuning& tuning);
 struct ScheduleLengths {
     std::int64_t active = 0;       // A
     std::int64_t flare = 0;        // F
+    std::int64_t flare_min = 1;    // m = max(1, scaled flare_min_years) (r19 22.3)
     std::int64_t final_years = 0;  // L
     std::int64_t quiet_step = 0;   // Q (not scaled)
     std::int64_t floor_years = 0;  // min(ceil(simulated_min_permille E / 1000), cap_years)

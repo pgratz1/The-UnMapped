@@ -1,5 +1,5 @@
-// The history report, format "# worldgen history v1" (spec P3-07 section 6
-// with amendments 21 to 23).
+// The history report, format "# worldgen history v2" (spec P3-07 section 6
+// with amendments 21 to 25).
 
 #include "worldgen/inspect/history_report.hpp"
 
@@ -93,7 +93,7 @@ public:
         : v_(view), t_(t), d_(d), level_(level) {}
 
     std::string build() {
-        line(std::string(HISTORY_REPORT_HEADER_V1));
+        line(std::string(HISTORY_REPORT_HEADER_V2));  // r19 25.1
         line(std::string("level = ") + (level_ == HistoryLevel::full ? "full" : "summary"));
         // r17 24.4: the chronicle before the civilization blocks; [phases]
         // at full only.
@@ -271,12 +271,17 @@ private:
     }
 
     void civilization(const db::CivilizationRow& c, const history::CivilizationDigest& d) {
+        // r19 25.5: an ended realm's block at summary leaves out home, the
+        // peak lines and events, with at most MILESTONES_ENDED milestones.
+        const bool short_block = level_ == HistoryLevel::summary && c.ended_year.has_value();
         line("c" + num(c.id) + " " + escape_history_text(c.name));
         const db::RaceRow* r = race(c.race);
         line("  race: " + escape_history_text(r->name) + " (ra" + num(r->id) + ")");
         const history::RegionInfo* home = region_row(c.home_region);
-        line("  home: " + region(c.home_region) + ", " + biome_key(home->biome) +
-             (upland(*home) ? ", upland" : ""));
+        if (!short_block) {
+            line("  home: " + region(c.home_region) + ", " + biome_key(home->biome) +
+                 (upland(*home) ? ", upland" : ""));
+        }
         const db::AgeRow* age = age_of(c.founded_year);
         line("  founded: " + num(c.founded_year) + " in " + escape_history_text(age->name) + " (a" + num(age->id) +
              "), e" + num(c.founding_event));
@@ -285,14 +290,17 @@ private:
         }
         const std::string capital = c.ended_year ? "  last capital: " : "  capital: ";
         line(capital + (c.capital != 0 ? settlement(c.capital) : std::string("none")));
-        line(d.peak_regions.count > 0 ? "  peak regions: " + num(d.peak_regions.count) + ", " +
-                                            span_of(d.peak_regions.from_year, d.peak_regions.to_year)
-                                      : std::string("  peak regions: 0"));
-        line(d.peak_population.population > 0
-                 ? "  peak population: " + num(d.peak_population.population) + " in " + num(d.peak_population.year)
-                 : std::string("  peak population: 0"));
+        if (!short_block) {
+            line(d.peak_regions.count > 0 ? "  peak regions: " + num(d.peak_regions.count) + ", " +
+                                                span_of(d.peak_regions.from_year, d.peak_regions.to_year)
+                                          : std::string("  peak regions: 0"));
+            line(d.peak_population.population > 0 ? "  peak population: " + num(d.peak_population.population) +
+                                                        " in " + num(d.peak_population.year)
+                                                  : std::string("  peak population: 0"));
+        }
         line("  settlements: " + num(d.settlements_founded) + " founded, " + num(d.settlements_held) +
-             " held at the end, " + num(d.settlements_ruined) + " ruined");
+             " held at the end, " + num(d.settlements_ruined) + " ruined, " + num(d.settlements_faded) +
+             " faded");  // r19 25.3 item 3
         line("  wars: " + num(d.wars_declared) + " declared, " + num(d.wars_defended) + " defended; won " +
              num(d.wars_won) + ", lost " + num(d.wars_lost) + ", drawn " + num(d.wars_drawn) + ", open " +
              num(d.wars_open));
@@ -301,7 +309,9 @@ private:
         } else {
             adversaries(d);
         }
-        line("  events: " + num(d.events));
+        if (!short_block) {
+            line("  events: " + num(d.events));
+        }
         if (!c.ended_year) {
             line("  fate: alive in " + num(t_.end_year) + ": " + pl(d.regions_held, "region") + ", " +
                  pl(d.settlements_held, "settlement") + ", population " + num(d.population));
@@ -310,29 +320,35 @@ private:
                  sentence(c.ending_event));
         }
         line("  milestones:");
-        for (const Id m : d.milestones) {
+        for (const Id m : short_block ? d.milestones_ended : d.milestones) {
             const HistoryView::Event& e = event(m);
             line("    " + event_span(e.row) + " e" + num(m) + " " + escape_history_text(kind_of(e).key) + ": " +
                  sentence(m) + note(m, c.id));
         }
     }
 
-    // r17 24.5: one line per adversary, summary only.
+    // r17 24.5: one line per adversary, summary only; r19 25.4: a line for
+    // each adversary with a war row, then one count line for the others.
     void adversaries(const history::CivilizationDigest& d) {
         if (d.adversaries.empty()) {
             line("  adversaries: none");
             return;
         }
         line("  adversaries: " + num(static_cast<std::int64_t>(d.adversaries.size())));
+        std::int64_t without = 0;
+        std::int64_t enmity = 0;
         for (const history::CivilizationDigest::Adversary& a : d.adversaries) {
-            std::string l = "    " + ref(a.type, a.id) + ": ";
-            if (a.wars > 0) {
-                l += pl(a.wars, "war") + ", won " + num(a.won) + ", lost " + num(a.lost) + ", drawn " + num(a.drawn) +
-                     ", open " + num(a.open) + ", " + span_of(a.first, a.last);
-            } else {
-                l += "no war";
+            if (a.wars == 0) {
+                ++without;
+                enmity += a.state == "enmity" ? 1 : 0;
+                continue;
             }
-            line(l + "; now " + a.state);
+            line("    " + ref(a.type, a.id) + ": " + pl(a.wars, "war") + ", won " + num(a.won) + ", lost " +
+                 num(a.lost) + ", drawn " + num(a.drawn) + ", open " + num(a.open) + ", " + span_of(a.first, a.last) +
+                 "; now " + a.state);
+        }
+        if (without > 0) {
+            line("    without war: " + num(without) + " (enmity " + num(enmity) + ", none " + num(without - enmity) + ")");
         }
     }
 
@@ -554,15 +570,26 @@ private:
             std::string l = "  s" + num(s->id) + " " + escape_history_text(s->name) + " in " + region(s->region) + ":";
             if (s->ruined_year) {  // set while ruined (5.3: with ruin_event)
                 const HistoryView::Event& e = event(s->ruin_event);
-                l += " ruined " + num(*s->ruined_year) + ", e" + num(s->ruin_event) + " " +
-                     escape_history_text(kind_of(e).key);
-                if (const Id by = role_of(e, "attacker"); by != 0) {
-                    l += ", by " + civ(by);
-                }
-                l += ";";
+                l += " ruined " + num(*s->ruined_year) + ", e" + num(s->ruin_event) + " " + ruin_how(e) + ";";
             }
             line(l + " last held by " + last_held_by(s->id));
         }
+    }
+
+    // r19 25.3 item 1: how a settlement was ruined, by its ruin event's kind.
+    [[nodiscard]] std::string ruin_how(const HistoryView::Event& e) const {
+        const std::string& key = kind_of(e).key;
+        if (key == "sacked") {
+            const Id by = role_of(e, "attacker");
+            return by != 0 ? "sacked by " + civ(by) : std::string("sacked");
+        }
+        if (key == "settlement_abandoned") {
+            return "abandoned";
+        }
+        if (key == "settlement_abandoned_to") {
+            return "abandoned, survivors to " + settlement(role_of(e, "destination"));
+        }
+        return escape_history_text(key);
     }
 
     void refuges() {
@@ -579,8 +606,18 @@ private:
             line("  s" + num(s->id) + " " + escape_history_text(s->name) + " in " + region(s->region) + ": " +
                  (s->owner_civ != 0 ? civ(s->owner_civ) : std::string("no owner")) + ", population " +
                  num(s->population) + ", founded " + num(s->founded_year) + " by flight from " + settlement(origin) +
-                 ", e" + num(s->founding_event));
+                 ", e" + num(s->founding_event) + refuge_state(s->id));
         }
+    }
+
+    // r19 25.9 item 1: "; hidden" or "; found <year>" from the refuge's
+    // refuge_hidden, nothing without one.
+    [[nodiscard]] std::string refuge_state(Id settlement_id) const {
+        const std::int64_t end = d_.refuge_hidden_end[static_cast<std::size_t>(settlement_id - 1)];
+        if (end < 0) {
+            return {};
+        }
+        return end >= t_.end_year - 1 ? std::string("; hidden") : "; found " + num(end + 1);
     }
 
     void open_wars() {
@@ -624,9 +661,15 @@ private:
 
     // --- [stats] (6.9) ------------------------------------------------------
 
+    // r19 25.7 item 4: at summary only the keys of SUMMARY_STATS.
     void stats() {
         line("[stats]");
         for (const auto& [key, value] : d_.stats) {
+            if (level_ == HistoryLevel::summary &&
+                std::find(history::SUMMARY_STATS.begin(), history::SUMMARY_STATS.end(), key) ==
+                    history::SUMMARY_STATS.end()) {
+                continue;
+            }
             line(escape_history_text(key) + " = " + num(value));
         }
     }

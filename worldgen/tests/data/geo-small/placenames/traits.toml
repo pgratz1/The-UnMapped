@@ -120,25 +120,35 @@ forms = []
 nouns = []
 suffixes = []
 prefixes = [
-  "Bane", "Bier", "Dearth", "Dirge", "Dole", "Drear", "Famine", "Gallow",
-  "Gibbet", "Grave", "Grim", "Hunger", "Knell", "Lorn", "Mourn", "Pyre",
-  "Shroud", "Starve", "Tomb", "Want", "Weep", "Wither", "Woe",
+  "Bale", "Bane", "Bier", "Charnel", "Dearth", "Dirge", "Dole", "Dread",
+  "Drear", "Famine", "Gallow", "Gibbet", "Grave", "Grief", "Grim", "Hunger",
+  "Knell", "Lich", "Lorn", "Mourn", "Pall", "Pyre", "Shroud", "Sorrow",
+  "Starve", "Tomb", "Want", "Weep", "Wight", "Wither", "Woe",
 ]
 adjectives = [
-  "Baleful", "Bare", "Barren", "Bereft", "Cheerless", "Crumbling", "Desolate",
-  "Dismal", "Dolorous", "Dread", "Dreary", "Dying", "Forgotten", "Forlorn",
-  "Friendless", "Ghostly", "Grieving", "Grievous", "Grisly", "Haunted",
-  "Hungry", "Lamenting", "Lost", "Mouldering", "Mourning", "Pitiless",
-  "Ruined", "Sorrowing", "Spectral", "Starved", "Unhallowed", "Wailing",
-  "Widowed", "Woeful",
+  "Baleful", "Bare", "Barren", "Bereft", "Bloodless", "Cheerless", "Crumbling",
+  "Desolate", "Dismal", "Doleful", "Dolorous", "Dread", "Drear", "Dreary",
+  "Dying", "Fallen", "Forgotten", "Forlorn", "Forsaken", "Friendless",
+  "Ghostly", "Godless", "Grieving", "Grievous", "Grim", "Grisly", "Haunted",
+  "Hungry", "Joyless", "Lamenting", "Lost", "Moaning", "Mouldering",
+  "Mourning", "Orphaned", "Pitiless", "Ruined", "Shunned", "Sorrowing",
+  "Spectral", "Starved", "Stricken", "Unhallowed", "Wailing", "Weeping",
+  "Widowed", "Woeful", "Wretched",
 ]
 features = []
-possessors = ["Beggar", "Hangman", "Headsman", "Orphan", "Pauper", "Widow"]
-places = ["Dole", "Grave", "Hunger", "Lament", "Ruin", "Sorrow", "Want"]
+possessors = [
+  "Beggar", "Gravedigger", "Hangman", "Headsman", "Mourner", "Orphan",
+  "Pauper", "Widow", "Widower",
+]
+places = [
+  "Bane", "Dole", "Grave", "Grief", "Hunger", "Lament", "Ruin", "Shame",
+  "Sorrow", "Want",
+]
 objects = [
-  "Curses", "Famine", "Gallows", "Gibbets", "Graves", "Hunger", "Mourners",
-  "Ruin", "Sorrows", "Tombs", "Wights", "Wraiths", "the Fallen",
-  "the Forgotten", "the Hanged", "the Lost", "the Starved", "the Unburied",
+  "Bones", "Curses", "Famine", "Gallows", "Gibbets", "Graves", "Grief",
+  "Hunger", "Mourners", "Ruin", "Sorrows", "Tombs", "Widows", "Wights",
+  "Wraiths", "the Damned", "the Fallen", "the Forgotten", "the Forsaken",
+  "the Hanged", "the Lost", "the Slain", "the Starved", "the Unburied",
   "the Weeping",
 ]
 forbidden = []

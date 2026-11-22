@@ -40,8 +40,11 @@ namespace worldgen {
 // placeholder, thousands separators, site weights, name cores, region
 // keepers per land noun, five conflict rules); 0.19.0 until the P3-11
 // follow-ups (orc awakening_population, kinds 39 and 40, faerie syllables,
-// no repeated syllable, tard, small numbers as words); now 0.20.0.
-inline constexpr std::string_view GENERATOR_VERSION = "0.20.0";
+// no repeated syllable, tard, small numbers as words); 0.20.0 until the
+// P5-01 follow-ups (fresh claims, the quarrel's strength test, kinds 41 and
+// 42, battle toll factors, flare_min_years, fewer grim region names, name
+// filter entries, one number form per clause); now 0.21.0.
+inline constexpr std::string_view GENERATOR_VERSION = "0.21.0";
 
 // Returns GENERATOR_VERSION (P0-02 5.5). A world is only guaranteed
 // reproducible under the same generator version (design doc section 4).

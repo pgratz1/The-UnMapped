@@ -11,14 +11,14 @@
 
 [name_filter.slurs]
 anywhere = [
-  "chink", "coolie", "darkie", "darky", "fagg", "golliw", "gringo", "honkie",
+  "chink", "coolie", "darkie", "darky", "fag", "golliw", "gringo", "honkie",
   "hymie", "igger", "injun", "jigab", "jigg", "kaffir", "kafir", "kike",
   "kyke", "lesbo", "negr", "nig", "nyg", "pickan", "pikey", "polack",
   "raghead", "redskin", "shemale", "spast", "spick", "squaw",
   "tard", "trann", "wetback",
 ]
 at_start = [
-  "boong", "coon", "crip", "dago", "dyke", "fag", "gook", "gyp", "heeb",
+  "boong", "coon", "crip", "dago", "dyke", "gook", "gyp", "heeb",
   "homo", "kraut", "mong", "neeg", "paki", "spaz", "spic", "wog",
   "wop",
 ]

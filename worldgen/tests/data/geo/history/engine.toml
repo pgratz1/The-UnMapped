@@ -2,6 +2,7 @@
 quiet_step_years = 25
 quiet_events_max = 3
 quiet_min_years = 50
+flare_min_years = 10
 simulated_min_permille = 100
 simulated_max_permille = 450
 islet_max_dry_cells = 1172

@@ -104,10 +104,12 @@ using namespace conflict_detail;
 
 namespace {
 
-// The five streams of 3.3 and r10's search (20.17 item 5), in registration order.
-constexpr std::array<std::string_view, 6> STREAM_NAMES = {
+// The five streams of 3.3, r10's search (20.17 item 5) and r22's toll
+// (24.5), in registration order.
+constexpr std::array<std::string_view, 7> STREAM_NAMES = {
     streams::hist_conflict_declare, streams::hist_conflict_battle, streams::hist_conflict_battle_win,
     streams::hist_conflict_siege,   streams::hist_conflict_sack,   streams::hist_conflict_search,
+    streams::hist_conflict_toll,
 };
 
 constexpr std::array<Step, 3> STEPS = {Step::t2, Step::t6, Step::q4};
@@ -224,6 +226,8 @@ ConflictTuning conflict_tuning_from(const data::ContentSet& content) {
     t.search_repeat_salience = r.get_int("search_repeat_salience");
     t.quarrel_strain = r.get_int("quarrel_strain");  // r15 21.12 item 2
     t.quarrel_min_settlements = r.get_int("quarrel_min_settlements");  // r17 22.1
+    t.quarrel_strength_permille = r.get_int("quarrel_strength_permille");  // r22 24.2
+    t.toll_spread_permille = r.get_int("toll_spread_permille");  // r22 24.5
     t.capital_sacked_salience = r.get_int("capital_sacked_salience");
     t.capital_captured_salience = r.get_int("capital_captured_salience");
     return t;
@@ -301,6 +305,8 @@ void check_conflict_tuning(const ConflictTuning& t) {
     field_in(in(t.search_repeat_salience, 0, 100), "search_repeat_salience");
     field_in(in(t.quarrel_strain, 0, 5000), "quarrel_strain");
     field_in(in(t.quarrel_min_settlements, 0, 1000), "quarrel_min_settlements");
+    field_in(in(t.quarrel_strength_permille, 0, 1000), "quarrel_strength_permille");
+    field_in(in(t.toll_spread_permille, 0, 500), "toll_spread_permille");
     field_in(in(t.capital_sacked_salience, 0, 100), "capital_sacked_salience");
     field_in(in(t.capital_captured_salience, 0, 100), "capital_captured_salience");
     if (t.claim_strain > t.declare_min) {
@@ -317,6 +323,10 @@ void check_conflict_tuning(const ConflictTuning& t) {
     }
     if (t.quarrel_strain > t.strain_max) {  // r17 22.7
         fail("history: tuning: quarrel_strain must not be above strain_max");
+    }
+    if (t.loss_winner_permille * (1000 + t.toll_spread_permille) >
+        std::min(t.loss_loser_permille, t.kill_max_permille) * (1000 - t.toll_spread_permille)) {  // r22 24.5
+        fail("history: tuning: toll_spread_permille lets the victors lose more than the defeated");
     }
 }
 
@@ -872,7 +882,18 @@ bool ConflictSubsystem::quarrel_held_back(const StepContext& ctx, std::int64_t a
         return false;
     }
     const auto n = static_cast<std::int64_t>(visible_settlements(ctx, a, 0).size());
-    return n < tuning_.quarrel_min_settlements;
+    if (n < tuning_.quarrel_min_settlements) {
+        return true;
+    }
+    // r22 24.2: and while a is not strong enough against b (0: the test off).
+    return tuning_.quarrel_strength_permille > 0 && strength_of(ctx, a, b) < tuning_.quarrel_strength_permille;
+}
+
+std::int64_t ConflictSubsystem::strength_of(const StepContext& ctx, std::int64_t a, std::int64_t b) const {
+    const std::int64_t fb = claim_defence_force(ctx, a, b);
+    const std::int64_t need = floor_div(checked_mul(fb, tuning_.declare_ratio), 1000);
+    return std::min<std::int64_t>(1000,
+                                  floor_div(checked_mul(force(ctx, a), 1000), std::max<std::int64_t>(1, need)));
 }
 
 std::vector<std::int64_t> ConflictSubsystem::wronged(std::int64_t a, std::int64_t b) const {
@@ -948,15 +969,60 @@ std::pair<std::int64_t, std::int64_t> ConflictSubsystem::defence_at(const StepCo
 
 // 20.6 item 3: the odds of a's declaration against b on its claim.
 std::int64_t ConflictSubsystem::odds_of(const StepContext& ctx, std::int64_t a, std::int64_t b) const {
-    const std::int64_t goal = claims_.at(Pair{a, b}).region;
+    const std::int64_t fb = claim_defence_force(ctx, a, b);
+    return declare_odds(tuning_, force(ctx, a), fb, effective_aggression(a, b, race_of_civ(ctx, a).aggression));
+}
+
+std::int64_t ConflictSubsystem::claim_defence_force(const StepContext& ctx, std::int64_t a, std::int64_t b) const {
+    const auto it = claims_.find(Pair{a, b});
+    if (it == claims_.end()) {
+        fail("history: conflict: civilization " + int_text(a) + " has no claim on " + int_text(b));
+    }
+    const std::int64_t goal = it->second.region;
     std::int64_t def = 1000;
     for (const FrontEntry& e : live_front(ctx, a, b)) {
         if (e.region == goal) {
             def = defence_at(ctx, b, e).first;
         }
     }
-    const std::int64_t fb = floor_div(checked_mul(force(ctx, b), def), 1000);
-    return declare_odds(tuning_, force(ctx, a), fb, effective_aggression(a, b, race_of_civ(ctx, a).aggression));
+    return floor_div(checked_mul(force(ctx, b), def), 1000);
+}
+
+EventSpec ConflictSubsystem::claim_event(const StepContext& ctx, std::int64_t a, std::int64_t b, std::int64_t region,
+                                         std::span<const std::int64_t> extra_causes) const {
+    std::int64_t cause = 0;
+    // r19 23.2: a claim on a region b does not hold names b's visible
+    // settlements there (kind 39 claim_settlements), ascending id.
+    std::vector<std::int64_t> seen;
+    const bool holds = ctx.state().region(region).owner == b;
+    if (holds) {
+        cause = ctx.state().region(region).owner_event;
+    } else {
+        seen = seen_settlements(ctx, b, region);  // r10 20.21 item 3
+        std::int64_t best = 0;
+        for (const std::int64_t id : seen) {
+            if (best == 0 || ctx.state().settlement(id).population > ctx.state().settlement(best).population) {
+                best = id;
+            }
+        }
+        cause = best != 0 ? ctx.state().settlement(best).founding_event : 0;
+        if (seen.empty()) {
+            fail("history: conflict: a claim of civilization " + int_text(a) + " on region " + int_text(region) +
+                 " names no settlement of civilization " + int_text(b));
+        }
+    }
+    EventSpec e = point_event(ctx, holds ? "claim" : "claim_settlements", region, 0);
+    e.participants = {civ_role("claimant", a), civ_role("holder", b)};
+    for (std::size_t i = 0; i < seen.size() && i + 2 < MAX_PARTICIPANTS; ++i) {
+        e.participants.push_back(Participant{"settlement", EntityType::settlement, seen[i]});
+    }
+    e.causes.assign(extra_causes.begin(), extra_causes.end());
+    if (cause != 0) {
+        e.causes.push_back(cause);
+    }
+    std::stable_sort(e.causes.begin(), e.causes.end());
+    e.causes.erase(std::unique(e.causes.begin(), e.causes.end()), e.causes.end());
+    return e;
 }
 
 void ConflictSubsystem::add_grudge(std::int64_t a, std::int64_t b, std::int64_t amount) {
@@ -1221,36 +1287,7 @@ void ConflictSubsystem::update_strain(StepContext& ctx, std::int64_t years, std:
             }
         }
         const std::int64_t region = pick_entry.region;
-        std::int64_t cause = 0;
-        // r19 23.2: a claim on a region b does not hold names b's visible
-        // settlements there (kind 39 claim_settlements), ascending id.
-        std::vector<std::int64_t> seen;
-        const bool holds = ctx.state().region(region).owner == b;
-        if (holds) {
-            cause = ctx.state().region(region).owner_event;
-        } else {
-            seen = seen_settlements(ctx, b, region);  // r10 20.21 item 3
-            std::int64_t best = 0;
-            for (const std::int64_t id : seen) {
-                if (best == 0 || ctx.state().settlement(id).population > ctx.state().settlement(best).population) {
-                    best = id;
-                }
-            }
-            cause = best != 0 ? ctx.state().settlement(best).founding_event : 0;
-            if (seen.empty()) {
-                fail("history: conflict: a claim of civilization " + int_text(a) + " on region " + int_text(region) +
-                     " names no settlement of civilization " + int_text(b));
-            }
-        }
-        EventSpec e = point_event(ctx, holds ? "claim" : "claim_settlements", region, 0);
-        e.participants = {civ_role("claimant", a), civ_role("holder", b)};
-        for (std::size_t i = 0; i < seen.size() && i + 2 < MAX_PARTICIPANTS; ++i) {
-            e.participants.push_back(Participant{"settlement", EntityType::settlement, seen[i]});
-        }
-        if (cause != 0) {
-            e.causes = {cause};
-        }
-        claims_[key] = Claim{ctx.append(e), region};
+        claims_[key] = Claim{ctx.append(claim_event(ctx, a, b, region, {})), region};
     }
 }
 
@@ -1360,14 +1397,28 @@ void ConflictSubsystem::declare(StepContext& ctx, std::int64_t a, std::int64_t b
                                            [goal](const FrontEntry& e) { return e.region == goal; });
     if (!claim_allowed || (state.region(goal).owner != b && visible_settlements(ctx, b, goal).empty())) {
         if (allowed.empty()) {
+            // r22 24.3: the dropped claim is recorded (kind 41), caused by it.
+            EventSpec d = point_event(ctx, "claim_dropped", claim_of.region, 0);
+            d.participants = {civ_role("claimant", a), civ_role("holder", b)};
+            d.causes = {claim_of.event};
+            (void)ctx.append(d);
             claims_.erase(Pair{a, b});
             return;
         }
         goal = best_target(ctx, race_of_civ(ctx, a).id, allowed).region;
     }
+    // r22 24.1: a war over another region than its claim's cites a fresh
+    // claim on its goal, caused by the old claim and by why G is b's.
+    Claim cited = claim_of;
+    if (goal != claim_of.region) {
+        const std::int64_t old_claim[] = {claim_of.event};
+        const EventSpec fresh = claim_event(ctx, a, b, goal, old_claim);
+        cited = Claim{ctx.append(fresh), goal};
+        claims_[Pair{a, b}] = cited;
+    }
     EventSpec e = point_event(ctx, "war_declared", goal, 0);
     e.participants = {civ_role("attacker", a), civ_role("defender", b)};
-    e.causes = {claim_of.event};
+    e.causes = {cited.event};
     if (const auto lp = last_peace_.find(ordered(a, b)); lp != last_peace_.end()) {
         e.causes.push_back(lp->second.event);
         std::stable_sort(e.causes.begin(), e.causes.end());
