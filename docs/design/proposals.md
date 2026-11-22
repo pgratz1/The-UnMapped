@@ -1106,3 +1106,13 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
 - Proposal: the movie is the last P4 stage (P4-06): play, pause, speed, skipping quiet years, and the year's sentences beside the map, on top of the scrubber, territory and markers. No video encoder is built: Godot's Movie Maker mode (`--write-movie`, AVI with MJPEG or a PNG sequence, fixed frame rate) records the viewer, and P4-06 adds command-line options to play a span and quit so that one command records a movie into the build root. If Movie Maker proves unusable, the fallback is a PNG frame dump, not an encoder.
 - Interim choice: as proposed.
 - Status: open (P4-00 open question 2)
+
+### The layer catalogue is code, not TOML data
+
+- Date: 2026-11-22
+- Raised by: spec-writer (P4-02, `docs/specs/p4-02-layer-catalogue.md` section 3)
+- Design doc section: 10 (tech stack, "Data in TOML"; `worldgen` public API), 12 (open question "Layer catalogue in the library")
+- Problem: hard rule 4 puts hand-edited content (races, beasts, cultures, biomes, event rules) in TOML. P4-02 moves the layer catalogue of spec P1-00 section 4 (each layer's type, range, unit, display form and legend) into `worldgen`'s public interface. It could be a TOML data kind or code.
+- Proposal: code, a fixed table in `worldgen/inspect/layer_catalogue.hpp`. The catalogue is not tunable content: it describes what the stages' code writes, and changing a fixed layer's type, units or meaning is already a schema change (P1-00 4 rule 3), so a TOML copy could only disagree with the code. The palettes and ramps it uses are code already, and readers (the viewer, later the create-world screen and the in-game map) then need no data root to label a layer. Labels that do depend on data (biome and region names and colours) keep coming from the world's own tables.
+- Interim choice: as proposed, in P4-02.
+- Status: open
