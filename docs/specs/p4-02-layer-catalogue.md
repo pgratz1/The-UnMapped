@@ -64,7 +64,7 @@ LayerGroup layer_group(std::string_view name) noexcept;       // Other when unkn
 std::string_view layer_unit(std::string_view name) noexcept;  // empty when unknown
 ```
 
-The table, in this order (layer ids 1 to 19 of P1-00 3). `unit` strings are the viewer's today, byte for byte (they are its legend titles, so they must not change). The degree sign is written in the source as the escape `\u00B0`; its bytes are C2 B0 on every compiler. In the special column each entry is a value and its `label`, the label being the text after the value; the rows marked "—" have no special values.
+The table, in this order (layer ids 1 to 19 of P1-00 3). `unit` strings are the viewer's today, byte for byte (they are its legend titles, so they must not change). The degree sign is the bytes C2 B0 in the output on every compiler; the source writes them as the hex escapes `\xC2\xB0`, so that the result does not depend on a compiler's source or execution character set. In the special column each entry is a value and its `label`, the label being the text after the value; the rows marked "—" have no special values.
 
 | name | group | type | min | max | scale | display_unit | unit | special | palette |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -209,7 +209,7 @@ Nothing else in `gdext/` or `game/` changes. No SQL is added to the extension.
 
 The catalogue does not reach a world file. It reaches output text in two ways: `registered_palette` (the `--palette auto` choice of `render`, whose pixels are a cross-platform contract) and, in later stages, text a `report` or CLI listing may print (P4-00 3.1 leaves this to P4-02; see question 1: none in this stage). So it is held to the inspection code's rules: the determinism lint scope covers it (`worldgen/src/inspect/`), decimals come from `db::format_i64` / `format_u64` (not `std::to_string`, `printf` or streams, which bring locale and width questions), the table is a fixed array in a defined order, and lookups are linear or binary searches over that array, never a hash map.
 
-**For the determinism auditor:** (a) `registered_palette` gives the same result as before for every name (a changed palette changes `render` pixels and the headless check's images); (b) every formatting path is integer only, including the negative and INT64_MIN cases of `T(v)` and `A(n)`, exact for any non-negative int64 and computed without overflow (no 256 n product that can wrap; for u64 inputs of `log2` legends the values are the fixed list); (c) the degree sign is written as the escape `\u00B0`, so its bytes are C2 B0 on every compiler whatever the source encoding (MSVC also builds with `/utf-8`); (d) the `RegionRecord` change does not alter `report`'s `[geography]` region keys or `hash` lines; (e) no new SQL, no new lint suppression.
+**For the determinism auditor:** (a) `registered_palette` gives the same result as before for every name (a changed palette changes `render` pixels and the headless check's images); (b) every formatting path is integer only, including the negative and INT64_MIN cases of `T(v)` and `A(n)`, exact for any non-negative int64 and computed without overflow (no 256 n product that can wrap; for u64 inputs of `log2` legends the values are the fixed list); (c) the degree sign is the bytes C2 B0 in the output on every compiler, written in the source as the hex escapes `\xC2\xB0`, so the result does not depend on a compiler's source or execution character set; (d) the `RegionRecord` change does not alter `report`'s `[geography]` region keys or `hash` lines; (e) no new SQL, no new lint suppression.
 
 ## 9. Tests required
 
@@ -247,7 +247,7 @@ Approved by the lead after the integration of implementation and tests, which al
 1. 4.4 `signed`: no row is skipped; the six values always give six rows, repeats included. −M and −M/2 are formed without overflow (M = 2^63 gives INT64_MIN).
 2. 9 test 5: "small M or P, repeated rows kept" replaces the skipped-row case.
 3. 4.2 special column: the label is the text after the value; "—" means no special values.
-4. 4.2 and 8 (c): the degree sign is the escape `\u00B0` in the source, bytes C2 B0 on every compiler.
+4. 4.2 and 8 (c): the degree sign is the bytes C2 B0 in the output on every compiler, written in the source as the hex escapes `\xC2\xB0` (independent of the source and execution character sets; the code moves to that form).
 5. 4.3 and 8 (b): `A(n)` is exact for any non-negative int64 and computed without overflow, not only up to u32 max; two worked examples (also in test 3).
 6. 4.4: `composite_description` is empty for a value outside the enumeration.
 7. 4.6 and invariant 6: `region_name` gives empty for id 0 even if a record has id 0; the ordering rule is unchanged.
