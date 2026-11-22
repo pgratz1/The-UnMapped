@@ -889,7 +889,7 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
   1. History renames regions: a region's defining event (a great sack, a long war, a founding, a plague) can give it its present-day name, with the old name kept in the record.
   2. Mountain peoples get history of their own: delvings, lost holds and mines as events, not only wars.
 - Interim choice: neither is specified. Both suit P5 History depth (the first also needs the record of renamed places that sites and quests in P6 would use). The grim share of drawn region names can be lowered in data before then.
-- Status: open; both listed as open questions in design.md section 12 (2026-11-21)
+- Status: accepted by Paul on 2026-11-22 for P5 History depth (see "Paul's decision of 2026-11-22: regions renamed by history, and a history for the mountain peoples"); both listed as open questions in design.md section 12 (2026-11-21)
 
 ### Region names: the plain compass name, a second look
 
@@ -1019,7 +1019,7 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
   - R1, targets at 1024 defaults (100 worlds): orcs with one standing settlement at the present in at most 10 worlds; orcs doing nothing after 5750 in at most 2; orc wins at least orc losses; the same reported for `calm` and `turbulent`.
   - R2: a war is won by aim only when the goal has changed hands to the attacker during the war. Holding it at the declaration does not count: the defender's last settlement there must be gone. A realm may still claim a region it holds where another people keeps a town. If it wins that war by the score, the other people's settlements there pass to it with the peace. Wars won by aim with no battle in one year: at most 3 in 100 default worlds.
 - Interim choice: the rulings are specified and go into P3-10 before its merge (generator stays 0.19.0). Paul's decisions of 2026-11-20 stand in their intent: orcs still awaken with a quarrel and declare at shorter odds, and an attacker still wins by aim only by holding its goal. The rulings add a condition to each.
-- Status: open (awaiting Paul's confirmation); listed as an open question in design.md section 12 (2026-11-21)
+- Status: confirmed by Paul on 2026-11-22 (see "Paul's decisions of 2026-11-22"); listed as an open question in design.md section 12 (2026-11-21)
 
 ### History and names: P3-11 orc arrival, wording and names (scope)
 
@@ -1035,7 +1035,7 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
   - Values one to nine are written as words in sentences.
   - One open question, non-blocking: a war fought over another region than the claim it cites (because that region became weary, was lost, or became the defender's capital) is kept as specified, and the report names the claim's region; the alternatives are a fresh claim at the declaration, or no war.
 - Interim choice: as proposed; the design document is not affected (the orcs' "coming opens the most recent age of conflict" is served, not changed; Paul's decisions on the orc age's length and on orcs at peace among goblins stand).
-- Status: open (scope record; the question in `docs/specs/p3-11-followups.md` section 10 item 1 awaits Paul, with a recommendation)
+- Status: scope record; the question of section 10 item 1 was decided by Paul on 2026-11-22: a fresh claim, option (b) (see "Paul's decisions of 2026-11-22")
 
 ### History: the P3-11 orc targets, the lead's ruling (awaiting Paul)
 
@@ -1047,4 +1047,33 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
 - Left for a later balance pass, with the next change that alters world bytes: the first orc war is mostly declared with exactly two settlements and is then lost more often than won (29 lost, 19 won), so the quarrel war should be gated on strength (critic's F1); `shiva` joins the famous-name list; `fag` inside a word; the dwarven codas `din` and `rin` that hide stutters such as Clan Didin.
 - Questions for Paul (from the critic): (1) orcs now sometimes declare war on goblins (12 declarations in 9 worlds): is evil turning on evil welcome? (2) should faerie near-repeats such as Feefi and Flaefla also go (6.6% of faerie names)? (3) is an orc age that is a gamble between collapse and conquest the intended spread?
 - Interim choice: as ruled.
-- Status: open (awaiting Paul's confirmation)
+- Status: confirmed by Paul on 2026-11-22; the three questions answered (see "Paul's decisions of 2026-11-22")
+
+### Paul's decisions of 2026-11-22: the orc rulings confirmed, and four questions answered
+
+- Date: 2026-11-22
+- Raised by: Paul, in the session, answering the lead's summary of what awaited confirmation
+- Design doc section: 5 (history: the orc age, wars and how they end; races and cultures: names)
+- Decisions:
+  1. The lead's P3-10 rulings R1 and R2 ("History: the P3-10 orc and aim rulings") are confirmed.
+  2. The lead's ruling on the P3-11 orc targets ("History: the P3-11 orc targets, the lead's ruling") is confirmed, with the restated limits.
+  3. Orcs declaring war on goblins: welcome. "It makes sense that evil would attack evil sometimes." No change.
+  4. Faerie near-repeats such as Feefi, Flaefla and Gliglia: fine as they are. No change.
+  5. The orc age as a gamble between collapse and conquest: fine. No change.
+  6. A war fought over another region than the claim it cites: a fresh claim is written on the new goal at the declaration (option (b) of `docs/specs/p3-11-followups.md` section 10 item 1), so every war cites a claim on its own region. This replaces the shipped reading (a), the note "(The claim, since ..., was to ...)".
+- Interim choice: decision 6 adds an event per such war and so changes world bytes. It is scheduled with the next change that alters world bytes, together with the items of `docs/specs/p3-11-followups.md` section 12; until then generator 0.20.0 keeps reading (a) and the history report's note.
+- Status: accepted; decision 6 to be specified and implemented with the next balance change
+
+### Paul's decision of 2026-11-22: regions renamed by history, and a history for the mountain peoples
+
+- Date: 2026-11-22
+- Raised by: Paul, in the session, on the two ideas of "History: two ideas from the world critic's review of P3-08"
+- Design doc section: 4 (regions), 5 (history: the peoples, trade, monsters), 12 (open questions)
+- Decisions:
+  1. **History renames regions**: accepted. A region's defining event (a great sack, a long war, a founding, a plague) can give it its present-day name, with the old name kept in the record.
+  2. **Mountain peoples get history of their own**: accepted, with Paul's direction for the dwarves:
+     - They are great forgers. They make wealth and weapons, and trade them to the other kingdoms. This joins the trade and wealth already placed in P5 (Paul, 2026-11-20: "P5 is where the alliances and trade and wealth should go"), and the artifacts made in response to conflicts.
+     - The mines hold great dangers. Delving deep can wake something that wipes a hold or a whole realm out, leaving a lost hold as a ruin and a site. (Paul's example is the Balrog of The Lord of the Rings; the game needs its own deep horrors, from the monster data of design section 5.)
+  3. The share of grim region names is lowered in data before P5, with the next change that alters world bytes.
+- Interim choice: 1 and 2 go to P5 History depth, to be specified there (events for delvings, forging, trade in arms, a woken danger and lost holds; a record of renamed places for the sites and quests of P6). 3 joins the items of `docs/specs/p3-11-followups.md` section 12.
+- Status: accepted; design doc sections 5 and 12 to be updated

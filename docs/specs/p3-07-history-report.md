@@ -1,8 +1,8 @@
 # P3-07 History report
 
-Status: **approved by the lead 2026-11-19** (r12, 2026-11-20: section 22 for P3-10, generator 0.19.0; r14, 2026-11-21: section 23 for P3-11, generator 0.20.0) (the six questions of section 19 go to Paul; the interim choices stand). Written by the spec writer 2026-11-19; the amendments of 18.1–18.5 applied the same day on `p3/07-spec`. Phase P3 History core, spec 7 (P3-00 3.1): the text history report, `worldgen-cli report --db PATH --history`. It reads a world file only and changes no world byte, so it needs **no generator version bump and no schema change**. Design doc sections 5 (history: the log is the primary product), 6 (the database stores facts and names; text is rendered from records and templates), 13 (P3 delivers "a text history report"; milestone 1: "the event log reads as coherent history") and 14 (the enrichment pass narrates from the log: this report is its deterministic, template-only counterpart and is not a chronicle in the sense of 14; it is a tool for the world critic, the validation sweeps and Paul). Depends on P0-02 (reader, errors as values), P0-04 (`report`: options, `--out`, `--force`, exit codes, text conventions, the "Later" note), P3-00 (binding: 11, 6.2–6.4, 12.2, 12.3, 13), P3-03 (tables `race`, `god`, `age`; `[chronology]` and its checks, 9.1), P3-04 (binding: schema 7 tables and codes of 9; the catalogue, `render_event` and `HistoryView` of 8, used and not redefined; the world report's `[history]` and its checks, 11.1; the queries of 10). Read on `origin/p3/04-spec` at 4a00615 (the newest text of every spec; the code there is P3-03's). Proposals read: up to "History: active phases scale with the history span; the detail level sets the simulated share". Revision r1 (P3-05's appended `[stats]` keys) 2026-11-19.
+Status: **approved by the lead 2026-11-19** (r12, 2026-11-20: section 22 for P3-10, generator 0.19.0; r14, 2026-11-21: section 23 for P3-11, generator 0.20.0; r16, 2026-11-22: text after the implementation and audit; r17, 2026-11-22: section 24, readability after the world critic's review) (the six questions of section 19 go to Paul; the interim choices stand). Written by the spec writer 2026-11-19; the amendments of 18.1–18.5 applied the same day on `p3/07-spec`. Phase P3 History core, spec 7 (P3-00 3.1): the text history report, `worldgen-cli report --db PATH --history`. It reads a world file only and changes no world byte, so it needs **no generator version bump and no schema change**. Design doc sections 5 (history: the log is the primary product), 6 (the database stores facts and names; text is rendered from records and templates), 13 (P3 delivers "a text history report"; milestone 1: "the event log reads as coherent history") and 14 (the enrichment pass narrates from the log: this report is its deterministic, template-only counterpart and is not a chronicle in the sense of 14; it is a tool for the world critic, the validation sweeps and Paul). Depends on P0-02 (reader, errors as values), P0-04 (`report`: options, `--out`, `--force`, exit codes, text conventions, the "Later" note), P3-00 (binding: 11, 6.2–6.4, 12.2, 12.3, 13), P3-03 (tables `race`, `god`, `age`; `[chronology]` and its checks, 9.1), P3-04 (binding: schema 7 tables and codes of 9; the catalogue, `render_event` and `HistoryView` of 8, used and not redefined; the world report's `[history]` and its checks, 11.1; the queries of 10). Read on `origin/p3/04-spec` at 4a00615 (the newest text of every spec; the code there is P3-03's). Proposals read: up to "History: active phases scale with the history span; the detail level sets the simulated share". Revision r1 (P3-05's appended `[stats]` keys) 2026-11-19.
 
-The sample report (section 16) and the illustrative excerpt (17) were produced by the spec writer's exact-integer prototype `~/.cache/the-unmapped/out/p3-07-spec/history_report.py`, run on worlds built by `build_world.py` (the P3-04 prototype's stub world for seed 42, 1024, written as SQLite tables) and `illus.py` (a hand-made world). The prototype is scratch; the test writer's reference is written from this spec.
+The sample report that section 16 held until r15 and the illustrative excerpt (17) were produced by the spec writer's exact-integer prototype `~/.cache/the-unmapped/out/p3-07-spec/history_report.py`, run on worlds built by `build_world.py` (the P3-04 prototype's stub world for seed 42, 1024, written as SQLite tables) and `illus.py` (a hand-made world). The prototype is scratch; the test writer's reference is written from this spec. (r16: section 16 now holds an excerpt of a 0.20.0 report of the implementation.)
 
 ## 1. Purpose
 
@@ -65,7 +65,7 @@ worldgen-cli report --db PATH [--history [--level summary|full]] [--out PATH] [-
 | `--level summary\|full` | `summary` | `summary`: the chronicle prints the events chosen by salience (7.4) and `[present]` prints totals; `full`: every event, and one line per region and per settlement in `[present]` |
 | `--db`, `--out`, `--force`, `--verbose` | as P0-04 7 | unchanged: stdout by default; `--out` writes the file atomically (P0-04 4.4) and prints nothing on stdout; `--force` replaces an existing `--out` file and is accepted without `--out` (no effect) |
 
-**Usage errors** (exit 2, P0-04 4.1 form, with the hint line `worldgen-cli: run 'worldgen-cli report --help' for usage`): `--level needs --history` (a `--level` without `--history`; checked after tokenizing, before any file is opened); `invalid --level '<text>'; expected summary or full`. `--history` is a flag (no value). `report --help` lists both options:
+**Usage errors** (exit 2, P0-04 4.1 form, with the hint line `worldgen-cli: run 'worldgen-cli report --help' for usage`): `--level needs --history` (a `--level` without `--history`; checked after tokenizing, before any file is opened); `invalid --level '<text>'; expected summary or full`. `--history` is a flag (no value). (r16, as implemented in `tools/worldgen-cli/cli.cpp`, all exit 2 with the hint line: `option '--level' needs a value` when `--level` is last; `--history foo` gives `unexpected argument 'foo' (report takes no positional arguments)`; `--history=x` and `--level=x` give `unknown option '--history=x' (write the value as the next argument: --name value)`; a repeated option gives `option '--level' given more than once`. These are P0-04's generic tokenizer messages.) `report --help` lists both options:
 
 ```
 usage: worldgen-cli report --db PATH [--history [--level summary|full]] [--out PATH] [--force] [--verbose]
@@ -142,6 +142,7 @@ The structs list the fields the report needs; the engineer may add members. `dig
 2. **The world report's checks**, through the same library functions the world report uses, with their messages unchanged: P3-03 9.1 (tables `race`, `age`), then P3-04 11.1 (tables `phase`, `event`, `event_cause`; from P3-04 r6 the phase rows' `end_year` is bounded by `history_end_year` − 1 before any arithmetic, `corrupt table 'phase': row <id>: end_year <e> above <E - 1>`, so the `[stats]` sums over phases, which share 11.1's definitions, cannot overflow). Not restated here.
 3. **This spec's checks** (5.3), in `read_history_tables`.
 4. **`HistoryView::load`** (P3-04 8.5 with amendment 18.1): participants against the catalogue's roles and entity types, values, referenced ids of the log, templates. Its messages are passed through unchanged. Not restated here.
+4a. (r16) **The two reads agree**: `read_history_tables` and `HistoryView::load` are separate reads of the file; the report checks that they saw the same events (5.3's table of checks as implemented, last rows) before indexing one by the other.
 5. Compute (`digest_history`) and format (section 6): cannot fail except by running out of memory (`ErrorCode::out_of_memory`, exit 1, as the world report).
 
 Every corrupt-data error is `db::ErrorCode::corrupt_layer` (the code the world report already uses for corrupt tables: P1-06, P3-03, P3-04), message `corrupt table '<table>': <detail>`; exit 3 in the CLI. `HistoryView::load` must return its error as a value, never as a `FatalError` (amendment 18.1): a corrupt file is an input error, not a bug, and the viewer binds the reader without exception translation (P0-02 9).
@@ -159,9 +160,28 @@ Run after items 1 and 2, so `race`, `age`, `phase`, `event` and `event_cause` ar
 | `settlement` | `id not consecutive`; `region <r> is not a region`; `founder_civ <c> is not a civilization`; `founded_year <y> outside 0 to <E - 1>`; `founding_event <e> is not an event`; `owner_civ <c> is not a civilization` (when ≠ 0); `kind <k>` (not 1–5); `status <s>` (not 1–4); `population <p> is negative`; `ruined_year and ruin_event disagree` (NULL exactly when 0); `ruined_year <y> outside <founded_year> to <E - 1>`; `ruin_event <e> is not an event` |
 | `settlement_census` | `settlement <s> is not a settlement`; `first row in <y>, expected <f>` (the settlement's first row is not at its `founded_year`); `year <y> beyond <E - 1>`; `owner_civ <c> is not a civilization` (when ≠ 0); `kind <k>`; `status <s>`; `population <p> is negative`; then, after a settlement's last row: `corrupt table 'settlement_census': settlement <s>: the last row differs from the settlement's end state` (owner, kind, status or population ≠ the `settlement` row: P3-04 invariant 5) and `corrupt table 'settlement_census': settlement <s>: no rows` (a settlement with no census row) |
 | `region_control` | `region <r> is not a region`; `civ <c> is not a civilization`; `from_year <y> outside 0 to <E - 1>`; `to_year <t> outside <from_year + 1> to <E - 1>` (when not NULL); `overlaps the previous interval` (the region's previous row has `to_year` NULL or above this `from_year`); `event <e> is not an event` |
-| `relation` | `a_type <t>`, `b_type <t>` (not 1–9); `a <prefix><id> does not exist`, `b <prefix><id> does not exist` (types 1–5 only; prefixes of 6.1); `since <y> outside 0 to <E - 1>`; `until and until_event disagree` (NULL exactly when 0); `until <u> outside <since + 1> to <E - 1>`; `since_event <e> is not an event`; `until_event <e> is not an event` (when ≠ 0) |
+| `relation` | `a_type <t>`, `b_type <t>` (not 1–9); `a <prefix><id> does not exist`, `b <prefix><id> does not exist` (types 1–5 only; prefixes of 6.1); `since <y> outside 0 to <E - 1>`; `until and until_event disagree` (NULL exactly when 0); `until <u> outside <since> to <E - 1>` (r16: `until` = `since` is valid, a relation opened and closed within one year, P3-04 6.7 r9, printed `<since>-<since>` by 6.6 r6; r15 and earlier said `<since + 1>`, which contradicted 6.6); `since_event <e> is not an event`; `until_event <e> is not an event` (when ≠ 0) |
 
 These are the conditions without which a computation of section 7 would be undefined or two blocks of the report would contradict each other; they are not a full validation of the log (P3-04's invariants are tested on the generator). An "is not an event" check is `1 ≤ id ≤` the number of `event` rows (P3-04 11.1 has made the ids consecutive).
+
+**Checks as implemented, beyond the table** (r16; `worldgen/src/history/digest_tables.cpp`, `worldgen/src/inspect/history_report.cpp`). Every one is `db::ErrorCode::corrupt_layer` (exit 3) unless stated, with the message `corrupt table '<t>': …` as above:
+
+| Where | Condition | Message |
+| --- | --- | --- |
+| row shapes | the tables `region` (28 columns), `biome` (5) and `god` (3) are read by this spec's reader and get P3-03 9.1's shape messages; the other tables come through the world report's reader with its messages | `corrupt table '<t>': row <key>: has <k> columns, expected <n>`, `… column <c> is not an integer`, `… column <c> is not text` |
+| `settlement`, after `population <p> is negative` | population above 2^31 − 1 (7.6's bound, now enforced) | `corrupt table 'settlement': row <id>: population <p> above 2147483647` |
+| `settlement_census`, after `population <p> is negative` | the same | `corrupt table 'settlement_census': row (<settlement>, <year>): population <p> above 2147483647` |
+| `god`, after `relation` | `camp` not 0, 1 or 2 | `corrupt table 'god': row <id>: camp <c>` |
+| `race`, after `god` | `creator_god` is not a `god` row | `corrupt table 'race': row <id>: creator_god <g> is not a god` |
+| after `HistoryView::load` (5.2 item 4a, new) | the two reads disagree: the number of `event` rows seen by `read_history_tables` differs from `HistoryView::load`'s, or an event's `phase` is not a phase row of the first read (the file changed between the two reads; audit A2) | `corrupt table 'event': the file changed while it was read` |
+| out of memory | in `read_history_tables` or while building | `db::ErrorCode::out_of_memory` (exit 1): `out of memory while reading the history tables`, `out of memory while building the history report` |
+
+The order of the 5.3 checks is the table's: `region`, `phase`, `event`, `civilization`, `settlement`, `settlement_census`, `region_control`, `relation`, then `god` and `race`. (r17, as implemented at `origin/p3/07-impl` 544fbcf) Three notes on order and wording:
+- **A standing settlement's population is checked first.** A bad population of a **standing** settlement (status 1 or 2) is found by P3-04 11.1's check, which runs in 5.2 item 2, before every check of 5.3. So it is reported before any problem in 5.3's table order. Its message in the history report is still 5.3's, `corrupt table 'settlement': row <id>: population <p> is negative` or `… above 2147483647`, translated from 11.1's wording by `history_stats_message` (`worldgen/src/history/digest_tables.cpp`). A settlement that is not standing is checked in 5.3's order.
+- **An event whose `year` lies in no phase** is refused with `phase <p>, expected 0`, even when its stored phase is 0. It cannot arise in a world that passes P3-04 11.1.
+- **A phase whose `start_year` lies in no age** is refused with `age <a>, expected 0`. It cannot arise once P3-03 9.1 has passed.
+
+**No overflow for any admitted value** (r16; the audit's S1 and A1, no new check). The `, upland` flag of 6.6 is computed as `walk_cells` < ⌈`cells` / 4⌉, which equals 4 × `walk_cells` < `cells` with no product, so it cannot overflow for any `cells` ≥ 1 and 0 ≤ `walk_cells` ≤ `cells` that 5.3 admits. Every per-mille value of sections 7 and 9 is floor(1000 × n / d) with the product formed in 128 bits (`mul_u64_wide`, `divmod_u128_u64`), 0 when n ≤ 0 or d ≤ 0, and saturated at 2^63 − 1 if the quotient exceeded it, so no admitted value overflows it. The population sums stay below 2^63 because each population is at most 2^31 − 1 (above): only more than 2^32 settlement rows could exceed it, far beyond 7.6's 1,000,000.
 
 ## 6. Format `# worldgen history v1`
 
@@ -199,7 +219,7 @@ level = <summary|full>
 ...
 ```
 
-The seven blocks of P3-00 11, always all seven, always in this order, each opened by its heading line. A block with nothing to list still has its heading and the lines that are always printed (6.3–6.9).
+(r17: the order and `[phases]` at `full` only are 24.4's.) The seven blocks of P3-00 11, always all seven, always in this order, each opened by its heading line. A block with nothing to list still has its heading and the lines that are always printed (6.3–6.9).
 
 ### 6.3 `[settings]`
 
@@ -261,7 +281,7 @@ c<id> <name>
   fate: alive in <E>: <pl(regions, region)>, <pl(h, settlement)>, population <p>
   fate: ended in <ended_year>, e<ending_event>: <sentence of ending_event>
   milestones:
-    <span> e<id> <kind key>: <sentence>             (one per milestone, 7.3)
+    <span> e<id> <kind key>: <sentence>[ (<note>)]  (one per milestone, 7.3)
 ```
 
 - `home`: the region `home_region`, its `biome` column's `biome.key`, and `, upland` when 4 × `walk_cells` < `cells` (the upland rule of P3-00 7, so the critic can check "dwarves settle uplands, faeries wild places" from the report alone).
@@ -272,7 +292,7 @@ c<id> <name>
 - `relations`: R = the `relation` rows with (`a_type` = 3 and `a_id` = c) or (`b_type` = 3 and `b_id` = c). The count line lists each kind present in R once, in ascending byte order of the kind, with its count, separated by `, `. Then one line per row of R, ordered by (`since`, `a_type`, `a_id`, `b_type`, `b_id`, `kind`) ascending: a closed row `    <kind>: <a ref>, <b ref>, <since>-<until - 1>, e<since_event> to e<until_event>` (when `until` = `since`, a relation that began and ended within one year, P3-04 6.7 r9, the span prints `<since>-<since>`, not `<since>-<since - 1>`; r6), an open row (`until` NULL) `    <kind>: <a ref>, <b ref>, since <since>, e<since_event>`. Both entities are printed in stored order (a, then b), whichever is c, so a symmetric relation reads the same in both civilizations' blocks; `until - 1` is the last year of the relation (P3-04 10: in force for `since` ≤ Y < `until`).
 - `events`: the number of events with at least one participant of type 3 and id c.
 - `fate`: `alive in` when `ended_year` is NULL: regions = rows of `region_control` with `civ` = c and `to_year` NULL; h as above; p = Σ `population` of the standing settlements with `owner_civ` = c. Otherwise `ended in`, with the sentence of the ending event.
-- `milestones:` is always printed; its lines (7.3) are the short form of a chronicle line: span, id, kind key and sentence, without salience, references or causes.
+- `milestones:` is always printed; its lines (7.3) are the short form of a chronicle line: span, id, kind key and sentence, without salience, references or causes. (r16, as implemented) A milestone line carries the note of `history_note(view, e, c)`, c the block's civilization, in 21.4's form: `    <span> e<id> <kind key>: <sentence> (<note>)` when the note is not empty. So a declaration and a flare-up keep their notes of 21.4 and 23 (they do not depend on c), and a `quiet_stretch` gets 22.2's generations note when c is one of its participants. The chronicle passes 0 and prints no generations note.
 
 ### 6.7 `[chronicle]`
 
@@ -338,6 +358,9 @@ The census records populations at foundings, at changes of owner, kind or status
 
 ### 7.3 Milestones
 
+(r17: replaced by 24.5's milestones.)
+
+
 E_c = the events with at least one participant of type 3 and id c. The milestones are the first min(6, |E_c|) of E_c ordered by (`salience` descending, `id` ascending), printed in ascending id. Six (`MILESTONES`, section 8) is enough for founding, peak events, wars and fate at a glance; the chronicle has the rest.
 
 ### 7.4 The summary threshold
@@ -363,7 +386,8 @@ Counts and sums are `int64`: at most 4,096 civilizations, 1,000,000 settlements,
 | --- | --- | --- |
 | `SUMMARY_MIN_SALIENCE` | 20 | 7.4 |
 | `SUMMARY_BUDGET` | 250 | 7.4 |
-| `MILESTONES` | 6 | 7.3 |
+| `MILESTONES` | 6 (r17: **8**, 24.9) | 7.3, 24.5 |
+| `MILESTONE_KIND_MAX` | 2 (r17) | 24.5 |
 | `ISLET_MAX_DRY_CELLS` | 1172 | 7.5 |
 | share levels | 500, 600, 700, 800, 900 | 7.5, 9 |
 
@@ -430,7 +454,7 @@ Integers only. "Standing" = status 1 or 2. Every key of the world report's `[his
 | `civilizations_conquered` | civilizations whose `ending_event` is of kind `civ_conquered` |
 | `settlements_sacked` | settlements whose `ruin_event` is of kind `sacked` |
 | `settlements_captured` | distinct `event.settlement` of events of kind `settlement_captured` |
-| `regions_conquered` | `region_control` rows whose `event` is of kind `settlement_captured` or `region_ceded` |
+| `regions_conquered` | `region_control` rows whose `event` is of kind `settlement_captured` (26), `region_ceded` (29) or `settlements_ceded` (40) (r16: kinds 29 and 40 are counted together as cessions, 23 item 1; a foothold cession opens no `region_control` row, P3-06 22.5, so kind 40 adds nothing in a generated world and the rule only keeps the two cession kinds together) |
 | `races_alive` | `race` rows with at least one civilization with `ended_year` NULL |
 | `wars_attacker_<race key>` | one line per `race` row in id order: `war` rows whose `a_id` is a civilization of that race |
 
@@ -479,6 +503,9 @@ Lint impact: none expected. `worldgen/src/history/` and `worldgen/src/inspect/` 
 
 ## 13. Invariants
 
+(r17: items 2, 3 and 5 are restated in 24.10.)
+
+
 For every world with history and both levels:
 
 1. The text satisfies 6.1: ASCII and LF only, ends with LF, no empty line, no trailing space, the header and the seven blocks in order.
@@ -524,298 +551,97 @@ Small worlds described in fixture files under `worldgen/tests/data/history-repor
 
 ### 14.4 Golden values
 
-`worldgen/tests/golden/p3-07-report.txt`, written by the reference, LF, sorted by case then level: one line `<case> <level> <sha256 of the report text>` for
+`worldgen/tests/golden/p3-07-report.txt`, written by `python3 -B worldgen/tests/reference/p3_report_reference.py golden`, LF, never edited by hand (r16: the order as the reference writes it). Six header lines starting `# ` (the generator version, the provenance, the three line forms, the order). Then the cases in ascending byte order of their names: the world cases of `world-hashes.sh` with history (`geo-phrase-512`, `geo-seed-0-512`, `geo-seed-1-1024`, `geo-seed-42-512`, `hist-dense-1024`, `hist-races-elf-orc-1024`, `hist-span-2000-512`, generated with the checkout's `game/data`), the hand-made fixtures (`h1-war-and-ruin`, `h2-minimal`, `h3-runaway`, `h3b-runaway-1000`, `h3c-share-ties`, `h4-budget`, `h5-saturated`, `h6-notes`, `h7-runs`) and `sample-42-1024` (`generate --seed 42 --map-size 1024`, default settings). Per case, in this order:
 
-- the world cases of `world-hashes.sh` that have history: `geo-seed-0-512`, `geo-seed-42-512`, `geo-phrase-512`, `geo-seed-1-1024`, `hist-span-2000-512`, `hist-races-elf-orc-1024`, `hist-dense-1024` (generated with the checkout's `game/data`, as the script does), at `summary` and `full`;
-- the fixtures H1–H5 at `summary` and `full`;
-- `sample-42-1024`: `generate --seed 42 --map-size 1024` with default settings, at `summary`, whose text must equal section 16 byte for byte (the test writer checks the reference's text against the section when recording; the C++ test compares the hash). The 1024 cases run in a `*-slow` suite.
+1. `<case> full <sha256>` and then `<case> summary <sha256>`, the SHA-256 of `report --history --level <level>` (`sample-42-1024`: the `summary` line only);
+2. for a world case (not the sample): `<case> stats <key> <value>`, one per `[stats]` line in block order;
+3. for a fixture: `<case> table <name> <hex>`, the table lines of `hash --detail` of the reference's copy of the fixture.
 
-Plus, for each world case, the `[stats]` lines as `<case> stats <key> <value>`, so that a difference is readable without regenerating. The world cases' lines are re-recorded by running the reference whenever a merge changes those worlds (P3-05, P3-06, a data change), like the other world goldens; never to make a C++ test pass.
+The sample's line is the reference's report of the 0.20.0 world; section 16 is an excerpt for reading and is not compared. The 1024 cases run in a `*-slow` suite. The world cases' lines are re-recorded by running the reference whenever a merge changes those worlds, like the other world goldens; never to make a C++ test pass.
 
 ### 14.5 Property and cross-platform tests
 
 14. Over the P3-04 sweep worlds (1024 seeds 0–49, 512 seeds 0–19, and the span and subset variants of P3-00 12.2) and the fixtures: invariants 1–8; the reference's text equals the C++ text for every world (the validation specialist runs the reference over the sweep).
 15. A synthetic large world (30,000 events of a test kind with salience spread over 0–100, 2,000 settlements, 20,000 census rows, 500 `region_control` rows, 200 relations) for the timing of section 11 (tagged suite) and invariant 2.
-16. Cross-compiler: `world-hashes.sh` saves the `full` history report of every case with history and `compare` includes it (amendment 18.6).
+16. Cross-compiler: `world-hashes.sh` saves the history report of every case with history at both levels and `compare` includes both (amendment 18.6, r16).
 
 ## 15. Viewer impact
 
 **None.** The viewer neither runs nor parses the report; `gdext-headless-check` reads the world report only. P4's browser may call `digest_history` (5.1) for a civilization's peaks and fate, and must call `render_event` for sentences (P3-00 6.3), so that the viewer and the report never disagree.
 
-## 16. Sample: seed 42, 1024, default settings, level `summary`
+## 16. Sample excerpt: seed 0, 1024, default settings, level `summary`, generator 0.20.0
 
-`worldgen-cli generate --seed 42 --map-size 1024` with generator 0.14.0 (P3-04's stub world, its section 17), then `worldgen-cli report --db <file> --history`. From the spec writer's prototype; the reference must reproduce it byte for byte (14.4). 269 lines; at `full` the text differs only in `level = full`, `threshold = 0` and the fifty `  rg<id> ...` and six `  s<id> ...` lines of `[present]`.
+(r17: illustrative; rendered by r16's rules, see 24.12.)
+
+
+(r16) Until r15 this section held a full report of generator 0.14.0's stub world, which every later change had made illustrative (21.6, 22.5). It is replaced by an excerpt of a current report: `worldgen-cli generate --seed 0 --map-size 1024` at generator 0.20.0, then `worldgen-cli report --db <file> --history` (the engineer's sample, `~/.cache/the-unmapped/out/p3-07-impl/samples/`, byte-identical on `linux-gcc-release` and `linux-clang-debug`; 595 lines). Lines are copied unchanged; a line `...` marks omitted lines and is not part of the format. The excerpt is for reading and is not compared by any test: the golden value of a whole report is `sample-42-1024`'s line in `worldgen/tests/golden/p3-07-report.txt` (14.4), and the reference's text of it is the record.
 
 ```
 # worldgen history v1
 level = summary
 [settings]
-seed = 42
-seed_phrase =
-map_size = 1024
-history_span = 6000
-history_detail = normal
-races = elf,goblin,dwarf,faerie,human,orc
-civs_per_race = auto
-event_intensity = normal
-monster_pressure = normal
-divine_activity = normal
-divine_script =
-generator_version = 0.14.0
+seed = 0
+...
+generator_version = 0.20.0
 [ages]
-a1 The Age of Elves: 0-2073, 2074 years; Elves (ra1) made by Fielie (g1, good); 1 civilization founded
-a2 The Age of Goblins: 2074-3241, 1168 years; Goblins (ra2) made by Krok (g2, evil); 1 civilization founded
-a3 The Age of Dwarves: 3242-4242, 1001 years; Dwarves (ra3) made by Bronhak (g3, neutral); 1 civilization founded
-a4 The Age of Faeries: 4243-4968, 726 years; Faeries (ra4) made by Syfiash (g4, good); 1 civilization founded
-a5 The Age of Humans: 4969-5595, 627 years; Humans (ra5) made by Wealstuld (g5, neutral); 1 civilization founded
-a6 The Age of Orcs: 5596-5999, 404 years; Orcs (ra6) made by Kruu (g6, evil); 1 civilization founded
+a1 The Age of Elves: 0-2067, 2068 years; Elves (ra1) made by Saene (g1, good); 1 civilization founded
+a2 The Age of Goblins: 2068-3264, 1197 years; Goblins (ra2) made by Kruskux (g2, evil); 1 civilization founded
+a3 The Age of Dwarves: 3265-4177, 913 years; Dwarves (ra3) made by Nurnthaimm (g3, neutral); 2 civilizations founded
+a4 The Age of Faeries: 4178-5002, 825 years; Faeries (ra4) made by Whaia (g4, good); 1 civilization founded
+a5 The Age of Humans: 5003-5533, 531 years; Humans (ra5) made by Steldhil (g5, neutral); 2 civilizations founded
+a6 The Age of Orcs: 5534-5999, 466 years; Orcs (ra6) made by Uruld'kruum (g6, evil); 1 civilization founded
 [phases]
 p1 a1 opening 0-149, 150 years; trigger e1; 3 events
-p2 a1 quiet 150-2073, 1924 years; 1 event
-p3 a2 opening 2074-2223, 150 years; trigger e5; 3 events
-p4 a2 quiet 2224-3241, 1018 years; 2 events
-p5 a3 opening 3242-3391, 150 years; trigger e10; 3 events
-p6 a3 quiet 3392-4242, 851 years; 3 events
-p7 a4 opening 4243-4392, 150 years; trigger e16; 3 events
-p8 a4 quiet 4393-4968, 576 years; 4 events
-p9 a5 opening 4969-5118, 150 years; trigger e23; 3 events
-p10 a5 quiet 5119-5595, 477 years; 5 events
-p11 a6 opening 5596-5745, 150 years; trigger e31; 3 events
-p12 a6 final 5746-5999, 254 years; 0 events
+...
+p17 a6 final 5700-5999, 300 years; 90 events
 [civilizations]
-c1 Finen
+c1 The House of Nife
   race: Elf (ra1)
-  home: Northeast Downs IV (rg12), grassland
+  home: Dourlaw Hurst (rg3), temperate_forest
   founded: 0 in The Age of Elves (a1), e2
-  capital: Voeledell (s1)
-  peak regions: 1, 0-5999
-  peak population: 200 in 0
-  settlements: 1 founded, 1 held at the end, 0 ruined
-  relations: none
-  events: 7
-  fate: alive in 6000: 1 region, 1 settlement, population 200
+  capital: Iensath (s1)
+  peak regions: 6, 5563-5999
+  peak population: 31549 in 5040
+  settlements: 13 founded, 22 held at the end, 2 ruined
+  relations: 14 (enmity 2, peace 6, war 6)
+...
+  fate: alive in 6000: 6 regions, 22 settlements, population 22908
   milestones:
-    0 e2 civ_founded: The Elves founded Finen in Northeast Downs IV.
-    0 e3 settlement_founded: Finen founded Voeledell in Northeast Downs IV.
-    150-2073 e4 quiet_era: Finen passed 1924 quiet years (12 generations), from 150 to 2073.
-    2224-3241 e8 quiet_era: Finen passed 1018 quiet years (7 generations), from 2224 to 3241.
-    3392-4242 e13 quiet_era: Finen passed 851 quiet years (6 generations), from 3392 to 4242.
-    4393-4968 e19 quiet_era: Finen passed 576 quiet years (4 generations), from 4393 to 4968.
-c2 The Skib Horde
-  race: Goblin (ra2)
-  home: Northeast Downs II (rg10), grassland
-  founded: 2074 in The Age of Goblins (a2), e6
-  capital: Skrisligg Pit (s2)
-  peak regions: 1, 2074-5999
-  peak population: 200 in 2074
-  settlements: 1 founded, 1 held at the end, 0 ruined
-  relations: none
-  events: 6
-  fate: alive in 6000: 1 region, 1 settlement, population 200
-  milestones:
-    2074 e6 civ_founded: The Goblins founded The Skib Horde in Northeast Downs II.
-    2074 e7 settlement_founded: The Skib Horde founded Skrisligg Pit in Northeast Downs II.
-    2224-3241 e9 quiet_era: The Skib Horde passed 1018 quiet years (67 generations), from 2224 to 3241.
-    3392-4242 e14 quiet_era: The Skib Horde passed 851 quiet years (57 generations), from 3392 to 4242.
-    4393-4968 e20 quiet_era: The Skib Horde passed 576 quiet years (39 generations), from 4393 to 4968.
-    5119-5595 e27 quiet_era: The Skib Horde passed 477 quiet years (31 generations), from 5119 to 5595.
-c3 The Kaindnimm Throne
-  race: Dwarf (ra3)
-  home: Northeast Wood (rg14), temperate_forest
-  founded: 3242 in The Age of Dwarves (a3), e11
-  capital: Daidmin (s3)
-  peak regions: 1, 3242-5999
-  peak population: 200 in 3242
-  settlements: 1 founded, 1 held at the end, 0 ruined
-  relations: none
-  events: 5
-  fate: alive in 6000: 1 region, 1 settlement, population 200
-  milestones:
-    3242 e11 civ_founded: The Dwarves founded The Kaindnimm Throne in Northeast Wood.
-    3242 e12 settlement_founded: The Kaindnimm Throne founded Daidmin in Northeast Wood.
-    3392-4242 e15 quiet_era: The Kaindnimm Throne passed 851 quiet years (12 generations), from 3392 to 4242.
-    4393-4968 e21 quiet_era: The Kaindnimm Throne passed 576 quiet years (8 generations), from 4393 to 4968.
-    5119-5595 e28 quiet_era: The Kaindnimm Throne passed 477 quiet years (7 generations), from 5119 to 5595.
-c4 The Circle of Fysoli
-  race: Faerie (ra4)
-  home: West Downs (rg30), grassland
-  founded: 4243 in The Age of Faeries (a4), e17
-  capital: Lowhou (s4)
-  peak regions: 1, 4243-5999
-  peak population: 200 in 4243
-  settlements: 1 founded, 1 held at the end, 0 ruined
-  relations: none
-  events: 4
-  fate: alive in 6000: 1 region, 1 settlement, population 200
-  milestones:
-    4243 e17 civ_founded: The Faeries founded The Circle of Fysoli in West Downs.
-    4243 e18 settlement_founded: The Circle of Fysoli founded Lowhou in West Downs.
-    4393-4968 e22 quiet_era: The Circle of Fysoli passed 576 quiet years (6 generations), from 4393 to 4968.
-    5119-5595 e29 quiet_era: The Circle of Fysoli passed 477 quiet years (5 generations), from 5119 to 5595.
-c5 The Kingdom of Alird
-  race: Human (ra5)
-  home: Northeast Downs V (rg18), grassland
-  founded: 4969 in The Age of Humans (a5), e24
-  capital: Aledsealdbury (s5)
-  peak regions: 1, 4969-5999
-  peak population: 200 in 4969
-  settlements: 1 founded, 1 held at the end, 0 ruined
-  relations: none
-  events: 3
-  fate: alive in 6000: 1 region, 1 settlement, population 200
-  milestones:
-    4969 e24 civ_founded: The Humans founded The Kingdom of Alird in Northeast Downs V.
-    4969 e25 settlement_founded: The Kingdom of Alird founded Aledsealdbury in Northeast Downs V.
-    5119-5595 e30 quiet_era: The Kingdom of Alird passed 477 quiet years (19 generations), from 5119 to 5595.
-c6 The Warband of Baaldkrok
-  race: Orc (ra6)
-  home: Northwest Downs II (rg4), grassland
-  founded: 5596 in The Age of Orcs (a6), e32
-  capital: Uld'kag (s6)
-  peak regions: 1, 5596-5999
-  peak population: 200 in 5596
-  settlements: 1 founded, 1 held at the end, 0 ruined
-  relations: none
-  events: 2
-  fate: alive in 6000: 1 region, 1 settlement, population 200
-  milestones:
-    5596 e32 civ_founded: The Orcs founded The Warband of Baaldkrok in Northwest Downs II.
-    5596 e33 settlement_founded: The Warband of Baaldkrok founded Uld'kag in Northwest Downs II.
+    0 e2 civ_founded: The Elves founded the House of Nife in Dourlaw Hurst.
+    4069 e130 sacked: The House of Nife sacked Mielae of the Baskeeb Mob; 474 died and 1,107 fled.
+    5020 e205 sacked: The House of Nife sacked Asvathdell of the Baskeeb Mob; 198 died and 464 fled.
+    5027 e209 sacked: The House of Nife sacked Nub Pit of the Baskeeb Mob; 316 died and 739 fled.
+    5040 e220 sacked: The House of Nife sacked Zot-Sleeg Pit of the Baskeeb Mob; 441 died and 1,031 fled.
+...
 [chronicle]
-threshold = 20
-events = 33
-shown = 33
-== a1 The Age of Elves: 0-2073
+threshold = 26
+events = 438
+shown = 166
+== a1 The Age of Elves: 0-2067
 -- p1 opening: 0-149
-0 e1 awakening/100: Fielie awakened the Elves in Northeast Downs IV. {@rg12 race=ra1 creator=g1}
-0 e2 civ_founded/80: The Elves founded Finen in Northeast Downs IV. {@rg12 civilization=c1 race=ra1} [causes e1]
-0 e3 settlement_founded/40: Finen founded Voeledell in Northeast Downs IV. {@rg12 @s1 settlement=s1 founder=c1 population=200} [causes e2]
--- p2 quiet: 150-2073
-150-2073 e4 quiet_era/20: Finen passed 1924 quiet years (12 generations), from 150 to 2073. {@rg12 civilization=c1 years=1924 generations=12}
-== a2 The Age of Goblins: 2074-3241
--- p3 opening: 2074-2223
-2074 e5 awakening/100: Krok awakened the Goblins in Northeast Downs II. {@rg10 race=ra2 creator=g2}
-2074 e6 civ_founded/80: The Goblins founded The Skib Horde in Northeast Downs II. {@rg10 civilization=c2 race=ra2} [causes e5]
-2074 e7 settlement_founded/40: The Skib Horde founded Skrisligg Pit in Northeast Downs II. {@rg10 @s2 settlement=s2 founder=c2 population=200} [causes e6]
--- p4 quiet: 2224-3241
-2224-3241 e8 quiet_era/20: Finen passed 1018 quiet years (7 generations), from 2224 to 3241. {@rg12 civilization=c1 years=1018 generations=7}
-2224-3241 e9 quiet_era/20: The Skib Horde passed 1018 quiet years (67 generations), from 2224 to 3241. {@rg10 civilization=c2 years=1018 generations=67}
-== a3 The Age of Dwarves: 3242-4242
--- p5 opening: 3242-3391
-3242 e10 awakening/100: Bronhak awakened the Dwarves in Northeast Wood. {@rg14 race=ra3 creator=g3}
-3242 e11 civ_founded/80: The Dwarves founded The Kaindnimm Throne in Northeast Wood. {@rg14 civilization=c3 race=ra3} [causes e10]
-3242 e12 settlement_founded/40: The Kaindnimm Throne founded Daidmin in Northeast Wood. {@rg14 @s3 settlement=s3 founder=c3 population=200} [causes e11]
--- p6 quiet: 3392-4242
-3392-4242 e13 quiet_era/20: Finen passed 851 quiet years (6 generations), from 3392 to 4242. {@rg12 civilization=c1 years=851 generations=6}
-3392-4242 e14 quiet_era/20: The Skib Horde passed 851 quiet years (57 generations), from 3392 to 4242. {@rg10 civilization=c2 years=851 generations=57}
-3392-4242 e15 quiet_era/20: The Kaindnimm Throne passed 851 quiet years (12 generations), from 3392 to 4242. {@rg14 civilization=c3 years=851 generations=12}
-== a4 The Age of Faeries: 4243-4968
--- p7 opening: 4243-4392
-4243 e16 awakening/100: Syfiash awakened the Faeries in West Downs. {@rg30 race=ra4 creator=g4}
-4243 e17 civ_founded/80: The Faeries founded The Circle of Fysoli in West Downs. {@rg30 civilization=c4 race=ra4} [causes e16]
-4243 e18 settlement_founded/40: The Circle of Fysoli founded Lowhou in West Downs. {@rg30 @s4 settlement=s4 founder=c4 population=200} [causes e17]
--- p8 quiet: 4393-4968
-4393-4968 e19 quiet_era/20: Finen passed 576 quiet years (4 generations), from 4393 to 4968. {@rg12 civilization=c1 years=576 generations=4}
-4393-4968 e20 quiet_era/20: The Skib Horde passed 576 quiet years (39 generations), from 4393 to 4968. {@rg10 civilization=c2 years=576 generations=39}
-4393-4968 e21 quiet_era/20: The Kaindnimm Throne passed 576 quiet years (8 generations), from 4393 to 4968. {@rg14 civilization=c3 years=576 generations=8}
-4393-4968 e22 quiet_era/20: The Circle of Fysoli passed 576 quiet years (6 generations), from 4393 to 4968. {@rg30 civilization=c4 years=576 generations=6}
-== a5 The Age of Humans: 4969-5595
--- p9 opening: 4969-5118
-4969 e23 awakening/100: Wealstuld awakened the Humans in Northeast Downs V. {@rg18 race=ra5 creator=g5}
-4969 e24 civ_founded/80: The Humans founded The Kingdom of Alird in Northeast Downs V. {@rg18 civilization=c5 race=ra5} [causes e23]
-4969 e25 settlement_founded/40: The Kingdom of Alird founded Aledsealdbury in Northeast Downs V. {@rg18 @s5 settlement=s5 founder=c5 population=200} [causes e24]
--- p10 quiet: 5119-5595
-5119-5595 e26 quiet_era/20: Finen passed 477 quiet years (3 generations), from 5119 to 5595. {@rg12 civilization=c1 years=477 generations=3}
-5119-5595 e27 quiet_era/20: The Skib Horde passed 477 quiet years (31 generations), from 5119 to 5595. {@rg10 civilization=c2 years=477 generations=31}
-5119-5595 e28 quiet_era/20: The Kaindnimm Throne passed 477 quiet years (7 generations), from 5119 to 5595. {@rg14 civilization=c3 years=477 generations=7}
-5119-5595 e29 quiet_era/20: The Circle of Fysoli passed 477 quiet years (5 generations), from 5119 to 5595. {@rg30 civilization=c4 years=477 generations=5}
-5119-5595 e30 quiet_era/20: The Kingdom of Alird passed 477 quiet years (19 generations), from 5119 to 5595. {@rg18 civilization=c5 years=477 generations=19}
-== a6 The Age of Orcs: 5596-5999
--- p11 opening: 5596-5745
-5596 e31 awakening/100: Kruu awakened the Orcs in Northwest Downs II. {@rg4 race=ra6 creator=g6}
-5596 e32 civ_founded/80: The Orcs founded The Warband of Baaldkrok in Northwest Downs II. {@rg4 civilization=c6 race=ra6} [causes e31]
-5596 e33 settlement_founded/40: The Warband of Baaldkrok founded Uld'kag in Northwest Downs II. {@rg4 @s6 settlement=s6 founder=c6 population=200} [causes e32]
--- p12 final: 5746-5999
+0 e1 awakening/100: Saene awakened the Elves in Dourlaw Hurst. {@rg3 race=ra1 creator=g1}
+0 e2 civ_founded/80: The Elves founded the House of Nife in Dourlaw Hurst. {@rg3 civilization=c1 race=ra1} [causes e1]
+0 e3 settlement_founded/40: The House of Nife founded Iensath in Dourlaw Hurst. {@rg3 @s1 settlement=s1 founder=c1 population=300} [causes e2]
+-- p2 quiet: 150-2067
+150-2067 e4 quiet_stretch/20: For 1,918 years, from 150 to 2067, the land was quiet; one realm held it. {realm=c1 years=1918 realms=1}
+...
+2893 e50 flare_up/50: In 2893 tensions flared into 50 years of upheaval. (The claim of the Baskeeb Mob to the Holt of Yews, held by the House of Nife, came to a head.) {years=50} [causes e25]
+2893 e51 war_declared/70: The Baskeeb Mob declared war on the House of Nife over the Holt of Yews. (Claimed since 2180.) {@rg11 attacker=c2 defender=c1} [causes e25]
+...
+2897 e58 peace/60: The House of Nife sued the Baskeeb Mob for peace after four years of war. {winner=c2 loser=c1 years=4} [causes e57]
+...
 [present]
 year: 6000
-civilizations alive: 6 of 6
-c1 Finen: 1 region, 1 settlement, population 200
-c2 The Skib Horde: 1 region, 1 settlement, population 200
-c3 The Kaindnimm Throne: 1 region, 1 settlement, population 200
-c4 The Circle of Fysoli: 1 region, 1 settlement, population 200
-c5 The Kingdom of Alird: 1 region, 1 settlement, population 200
-c6 The Warband of Baaldkrok: 1 region, 1 settlement, population 200
-regions: 50; held 6, free 44
-settlements: 6; thriving 6, declining 0, ruined 0, faded 0
-settlement kinds: hamlet 6, village 0, town 0, city 0, fortress 0
-largest settlement: Voeledell (s1), population 200
+civilizations alive: 8 of 8
+...
+c8 The Krurz Horde: 1 region, 4 settlements, population 3530
+regions: 56; held 23, free 33
+settlements: 78; thriving 59, declining 7, ruined 11, faded 1
+settlement kinds: hamlet 4, village 30, town 27, city 5, fortress 12
+largest settlement: Ashealford (s57), population 21382
 [stats]
 end_year = 6000
-ages = 6
-phases = 12
-phases_opening = 6
-phases_quiet = 5
-phases_flare = 0
-phases_final = 1
-simulated_years = 1154
-simulated_permille = 192
-quiet_years = 4846
-flare_years = 0
-events = 33
-events_awakening = 6
-events_civ_founded = 6
-events_settlement_founded = 6
-events_quiet_era = 15
-events_flare_up = 0
-events_caused = 12
-cause_links = 12
-events_per_1000_simulated_years = 28
-summary_threshold = 20
-summary_events = 33
-civilizations = 6
-civilizations_alive = 6
-civilizations_ended = 0
-civilizations_elf = 1
-civilizations_goblin = 1
-civilizations_dwarf = 1
-civilizations_faerie = 1
-civilizations_human = 1
-civilizations_orc = 1
-civ_lifetime_max = 6000
-civ_regions_peak_max = 1
-civ_population_peak_max = 200
-settlements = 6
-settlements_standing = 6
-settlements_thriving = 6
-settlements_declining = 0
-settlements_ruined = 0
-settlements_faded = 0
-settlements_hamlet = 6
-settlements_village = 0
-settlements_town = 0
-settlements_city = 0
-settlements_fortress = 0
-settlements_unowned = 0
-population = 1200
-population_settlement_max = 200
-census_rows = 6
-regions = 50
-regions_nonislet = 50
-regions_held = 6
-region_control_rows = 6
-regions_ever_held = 6
-share_max_permille = 20
-share_max_civ = 1
-share_max_year = 0
-share_over_500_years = 0
-share_over_600_years = 0
-share_over_700_years = 0
-share_over_800_years = 0
-share_over_900_years = 0
-relations = 0
-relations_open = 0
-wars = 0
-wars_open = 0
+...
 ```
 
 ## 17. Illustrative excerpt: a war, a sacking and a ruin (P3-06)
@@ -931,7 +757,7 @@ Section 5, table row `report`: "P3-04 (the event salience and templates); P3-07 
 
 ### 18.6 `tools/ci/world-hashes.sh` (build engineer)
 
-For every case whose world has history (every case except `empty-*` and `pattern-*`), also save `<preset>-<case>.history.txt` = `report --db <file> --history --level full`, and make `compare` compare these files too (same failure rule and `diff -u` output). CLAUDE.md's description of the script follows (lead).
+For every case whose world has history (every case except `empty-*` and `pattern-*`), also save the history report at **both levels**: `<preset>-<case>.history.summary.txt` = `report --db <file> --history --level summary` and `<preset>-<case>.history.full.txt` = `report --db <file> --history --level full`. `compare` compares both files of every such case byte for byte across the presets, with the same failure rule (a difference or a missing file fails) and a `diff -u` of at most `DIFF_LINES` lines; a report that fails to generate fails `generate` (r16, as built on `p3/07-ci`; r15 and earlier named one file at `full`). CLAUDE.md's description of the script follows (lead).
 
 ### 18.7 P3-05 and P3-06
 
@@ -975,6 +801,9 @@ The summary of 7.4 shows every event at or above one salience threshold. On the 
 
 ### 21.2 Units (new; used by 21.3)
 
+(r17: amended by 24.2: the war frame and the cause of a consequence.)
+
+
 The **unit** U(e) of an event e is e together with its **companions**, found from the stored log only:
 
 | Kind of e | Companions |
@@ -987,6 +816,9 @@ The **unit** U(e) of an event e is e together with its **companions**, found fro
 Companions are not followed further (a companion's own companions are not added, except as listed: the war's ending brings its cession or tribute). Kinds absent from a world's catalogue simply never occur. The kind keys are those of P3-06 11 and P3-06 20 (amendment r9 there: kinds 32 `refugees_settled` and 33 `tribute`, after P3-08's kind 31); the report finds them by key in the stored catalogue, never by id.
 
 ### 21.3 The summary set and its threshold (replaces 7.4; 6.7's "an event is shown when its `salience` ≥ T"; 13 item 2)
+
+(r17: items 1 to 4 replaced by 24.3, item 7 by 24.10 item 1.)
+
 
 1. **Candidates**: the events with `salience` ≥ `SUMMARY_MIN_SALIENCE` (20), ranked by (`salience` descending, `id` ascending).
 2. **Age floor.** For each age k in ascending id (its years `start_year`–`end_year` of `age`): walk the candidates whose `year` lies in age k in rank order; for each one not yet in the floor set, add its whole unit; stop when the floor set holds at least `SUMMARY_AGE_FLOOR` = 20 events whose `year` lies in age k, or when the age's candidates are exhausted. A unit may carry companions of later years into the floor (a war declared at the end of an age ends in the next); they count toward the age of their own year. The floor set is the union over the ages.
@@ -1020,7 +852,7 @@ Examples (seed 42, 1024, the 0.16.0 log and its numbered region names; from 0.17
 2949 e94 war_declared/70: The Grork Horde declared war on Finen over Southwest Wood. (Claimed since 2574. The second war between them.) {@rg35 attacker=c3 defender=c1} [causes e44, e75]
 ```
 
-**API** (5.1): `std::string history_note(const HistoryView&, std::int64_t event_id)` in `worldgen/history/digest.hpp` returns the note without its parentheses, or an empty string; the report and P4's browser call it, nobody re-implements it (as `render_event`, P3-00 6.3). It does not fail on a loaded view.
+**API** (5.1; r16 as implemented): `[[nodiscard]] std::string history_note(const HistoryView& view, std::int64_t event_id, std::int64_t civilization = 0);` in `worldgen/history/digest.hpp` returns the note without its parentheses, or an empty string (also for an id not in the log); `civilization` is 22.2's argument, used only for the generations note of a `quiet_stretch` (0, the chronicle's value: no such note); the report and P4's browser call it, nobody re-implements it (as `render_event`, P3-00 6.3). It does not fail on a loaded view.
 
 ### 21.5 New `[stats]` keys (appended after `wars_attacker_<race key>`, 10.3 rule 1)
 
@@ -1100,6 +932,283 @@ Normative for the change P3-11 (`docs/specs/p3-11-followups.md`). P3-07 is not i
    Example: `Clan Kuushbam declared war on the Kingdom of Geadalack over Snowscar. (The claim, since 5779, was to Ghaldgruz Camp in Snowscar.)`. The sentence itself stays `render_event`'s: kind 21's structure is shipped and its region is the goal, so only the note can say it. Like items 3 and 4 this is `history_note`'s text (`digest.cpp`). No world byte changes. It was not part of P3-11's merge: P3-07's implementer, or the next change that edits `digest.cpp`, applies it.
 5. **Tests** (amends 14): `[stats]` lines for kinds 39 and 40 in id order; a declaration caused by a kind 39 claim with one and with two settlements, on a region its claimant holds and on one a third realm holds (item 4a); a war ended by a `peace` that causes a `settlements_ceded` is not hollow and the cession is a companion of the peace and of the declaration; a declaration whose claim region differs from its own, in the same year and in an earlier one, with and without an earlier war between the pair; a flare-up caused by a kind 39 claim with one and with three settlements, one of them named `The …`.
 
+## 24. Readability (amendment r17, after the world critic's review; generator stays 0.20.0)
+
+**What this section is.** Normative for the report from r17. It answers the world critic's review of the implementation, `docs/reviews/p3-07-history-report-world-critic.md` on `origin/p3/07-critic` (pass with notes, findings A1 to A10), within the lead's rulings of 2026-11-22. Where this section and sections 4–23 differ, this section rules.
+
+**What changes.** Only the report's selection, order and text change. No world byte changes: generator 0.20.0, schema 7, every template and salience as stored. `--level full` still prints every event.
+
+**Format version.** P3-07 has not been merged, so no report of format `v1` has been released. r17 therefore redefines `v1` before its first release, and the header stays `# worldgen history v1`. 10.3's "needs v2" applies from the merge on.
+
+### 24.1 Kinds and helper definitions (used below; integers only, every order total)
+
+Kinds are found by key in the stored catalogue (21.2). Names used below:
+
+| Name | Members | Meaning |
+| --- | --- | --- |
+| **W** | `war_declared`, `battle`, `battle_at_pass`, `siege`, `sacked`, `settlement_captured`, `refuge_held`, `peace`, `war_won`, `truce` | the chain kinds |
+| **E_w** | `battle`, `battle_at_pass`, `siege`, `sacked`, `settlement_captured`, `refuge_held`, `peace`, `war_won`, `truce`, `search_abandoned`, `region_ceded`, `settlements_ceded`, `tribute`, `capital_moved`, `refugees_settled`, `civ_conquered` | the war-event kinds |
+
+A kind absent from a world's catalogue never occurs.
+
+**The war of an event, war(e)**, defined for every event in ascending id (each case uses only smaller ids, so one pass in id order computes it):
+1. if e is a `war_declared`: war(e) = e;
+2. else, if e is of a kind in E_w and has a cause of a kind in W: war(e) = war(c), with c the **smallest-id** such cause;
+3. else, if e is of a kind in E_w and is the `until_event` of one or more `relation` rows of kind `war`: the `since_event` of the row with the smallest `since_event`;
+4. else war(e) = none.
+
+Cases 2 and 3 follow the cause rules of P3-06 11 (battle ← declaration, siege ← battle, sack and capture ← siege, consequences ← sack or capture, ending ← the war's last event, cost ← the ending). An abandonment or a dwindling that cites a battle in its cause clause (P3-05 22.2) is not in E_w and has no war.
+
+**The war frame of a declaration d**, Frame(d), is these events, in no particular order:
+- d itself;
+- its **last battle**: the `battle` or `battle_at_pass` x with the largest id such that war(x) = d, if there is one;
+- its **ending** u: the `until_event` of the `war` row with `since_event` = d, when that row is closed;
+- every event of kind `region_ceded`, `settlements_ceded` or `tribute` that has u among its causes.
+
+Frame(d) is **empty** when d is excluded by 22.5a: its ending is a `search_abandoned` with salience below `SUMMARY_MIN_SALIENCE`.
+
+**A claim** is an event of kind `claim` or `claim_settlements`, with claimant a (role `claimant`), holder b (role `holder`) and year y. It is **pursued** when it is a cause of at least one `war_declared`.
+
+**Own roles**, used by the milestones in 24.5: `founder`, `attacker`, `winner`, `conqueror`, `to`, `payee`, `claimant`, `searcher`. A civilization's participation in an event is **own** when it has one of these roles in it.
+
+### 24.2 Units (replaces 21.2's table; A1, A8)
+
+The unit U(e) of an event e is the union of four parts:
+1. e itself;
+2. 21.2's companions as amended by 21.8 and 23 item 2. A `war_declared` brings its ending and the ending's cost; a `peace`, `war_won` or `truce` brings its `region_ceded`, `settlements_ceded` or `tribute`; a `sacked` or `settlement_captured` brings its `capital_moved`, `refugees_settled` and `civ_conquered`;
+3. **(r17, A1) the war frame**: if war(e) = d is not none, Frame(d). For a `war_declared` this is its whole row of companions; for every other war event it brings the war's declaration, its last battle, its ending and the ending's cost;
+4. **(r17) the cause of a consequence**: for a `capital_moved`, `refugees_settled` or `civ_conquered`, its smallest-id cause of kind `sacked` or `settlement_captured`, if it has one.
+
+Companions are not followed further; for instance, the sack added by part 4 does not bring its own `capital_moved` lines. 22.5a's rule stands: a declaration excluded there is no candidate and no companion.
+
+**Consequence.** A shown war event is never without its declaration, and a shown declaration is never without its ending (when closed) and its last battle (when it has one). The shown consequences of a sack or capture are never without it. This holds at every threshold, with any number of civilizations per race: 24.10 item 1 makes it an invariant.
+
+**Unit size.** A unit has at most 8 events: e, three consequences of a sack, and a frame of four. (The largest frame is a declaration, its last battle, its ending and one cost: P3-06 20.3 and 22.5 give an ending at most one cost event.)
+
+### 24.3 The summary set (replaces 21.3 items 1 to 4; A2, A3, A7, A8)
+
+1. **Candidates**: the events with `salience` ≥ `SUMMARY_MIN_SALIENCE` (20), **except**:
+   - every claim (kinds `claim`, `claim_settlements`; A2);
+   - every `battle` and `battle_at_pass` (A8); the last battle of a war enters through its war's frame;
+   - every `plague_spread` (A7); the `plague_outbreak` sentence states the reach and the total;
+   - every `quiet_stretch` (item 2);
+   - 22.5a's excluded declarations.
+
+   They are ranked by (`salience` descending, `id` ascending).
+2. **Quiet stretches (A3).** F = every event of kind `quiet_stretch`, whatever its salience. F is in the summary set always, outside the threshold.
+3. **Age floor (A7).** The floor set starts as F. For each age k in ascending id:
+   - walk the candidates whose `year` lies in age k, in the order of the key (involves(k, e) descending, `salience` descending, `id` ascending). involves(k, e) = 1 when e has a participant of entity type 3 whose civilization's `race` is `age.race` of k, or a participant of entity type 1 equal to it; else 0;
+   - for each candidate not yet in the floor set, add its whole unit;
+   - stop when the floor set holds at least `SUMMARY_AGE_FLOOR` (20) events whose `year` lies in age k (F's events count toward their own ages), or when the age's candidates are exhausted.
+4. **Threshold.** C(t) = the union of U(e) over the candidates with `salience` ≥ t. T = the smallest t in [20, 100] with |floor ∪ C(t)| ≤ `SUMMARY_BUDGET` (250). If there is none, T = 100. The summary set is floor ∪ C(T); it contains F.
+5. **Bound.** The floor set holds at most |F| + (ages) × (19 + 8) events: each walk stops after the unit that reaches 20, and a unit has at most 8 events. A world has fewer than about 15 quiet stretches (P3-04 20.1), so with the design's six ages the floor stays below 250.
+6. `[chronicle]`'s `threshold`, `shown` and hidden-count lines, and `[stats]`'s `summary_threshold` and `summary_events`, are defined on this set as in 21.3 items 5 and 6.
+7. **Claims at summary.** No claim is printed in the summary chronicle.
+   - A pursued claim is read through the note of the declaration that cites it (21.4 item 1, 23 item 3, 23 item 4a: its year, and its region or settlements when they differ from the war's).
+   - A flare-up's claim is read through the flare-up's note (21.4 item 2, 23 item 4).
+   - An unpursued claim that still stands at E is listed in `[present]` (24.7).
+   - Every claim is still printed in the `full` chronicle.
+
+### 24.4 Block order, `[phases]` and the phase headings (amends 6.2, 6.5, 6.7; A9)
+
+At both levels the blocks are, in this order:
+
+```
+# worldgen history v1
+level = <summary|full>
+[settings]
+[ages]
+[phases]          full only
+[chronicle]
+[civilizations]
+[present]
+[stats]
+```
+
+The chronicle comes before the civilization blocks, so a reader meets the history before the realms (A9).
+
+`[phases]` is printed at `full` only, as 6.5 gives it. At `summary` its content is in the chronicle's phase headings, which become, **at both levels**:
+
+```
+-- p<id> <kind>: <start_year>-<end_year>, <pl(end_year − start_year + 1, year)>[; trigger e<trigger_event>]; <pl(m, event)>
+```
+
+with the trigger part only when `trigger_event` ≠ 0 and m the phase's events, as in 6.5. The `(n more events not shown)` line is unchanged.
+
+### 24.5 Civilization blocks (amends 6.6 and 7.3; A4, A5)
+
+The block's lines, in this order, at both levels unless marked:
+
+```
+c<id> <name>
+  race: …                                             (6.6)
+  home: …                                             (6.6)
+  founded: …                                          (6.6)
+  seceded from: <civilization ref>, e<founding_event>   only when founding_event is a civ_seceded
+  capital: <settlement ref> | capital: none           alive (6.6)
+  last capital: <settlement ref> | last capital: none ended (ended_year not NULL)
+  peak regions: …                                     (6.6)
+  peak population: …                                  (6.6)
+  settlements: …                                      (6.6)
+  wars: <a> declared, <f> defended; won <w>, lost <l>, drawn <d>, open <o>
+  relations: none | relations: <n> (<kind> <count>, ...)   full only (6.6), followed by its rows
+    <relation line>                                        full only (6.6)
+  adversaries: none | adversaries: <n>                     summary only
+    <adversary line>                                       summary only
+  events: <n>                                         (6.6)
+  fate: …                                             (6.6)
+  milestones:
+    <span> e<id> <kind key>: <sentence>[ (<note>)]    (24.5 below; r16's form)
+```
+
+- **`seceded from`**: the participant with role `from` of the `civ_seceded` that is the civilization's `founding_event`.
+- **The wars line.** Count the `relation` rows of kind `war` in which the civilization is `a` (type 3, `a_id` = c: **declared**, the attacker) or `b` (type 3, `b_id` = c: **defended**). For each such row with `until_event` u:
+  - **open**: the row is open (`until` NULL);
+  - **won**: u is a `peace` or `war_won` with c as `winner`, or a `civ_conquered` with c as `conqueror`;
+  - **lost**: u is a `peace` or `war_won` with c as `loser`, or a `civ_conquered` with c as `civilization`;
+  - **drawn**: every other closed row. This covers a `truce`, a `search_abandoned`, and an end by a third party or by a side's own end: no victor between the two.
+
+  Then w + l + d + o = a + f.
+- **Adversaries** (summary only; it replaces the relation rows, which `full` keeps). Let R be 6.6's rows of the civilization. An **adversary** is each distinct other end (entity type, id) of a row of R. The adversaries are ordered by (the smallest `since` among their rows, entity type, id), ascending. `adversaries: none` is printed when R is empty, else `adversaries: <n>`, followed by one line per adversary o:
+  - with k ≥ 1 rows of kind `war`: `    <o ref>: <pl(k, war)>, won <w>, lost <l>, drawn <d>, open <o'>, <first>-<last>; now <state>`. The counts are the wars line's, over o's war rows only. first is the smallest `since` of those rows. last is the largest of, over those rows, E − 1 for an open row and max(`since`, `until` − 1) for a closed one;
+  - with no war row: `    <o ref>: no war; now <state>`;
+  - `<state>` reads the rows of R with o that are open at E: `at war` if one is of kind `war`, else `at peace` if one is of kind `peace`, else `enmity` if one is of kind `enmity`, else `none`.
+
+  `<o ref>` is a reference as 6.1 gives it (types 6–9 without a name). A pair's rows appear in both civilizations' blocks, but each block has one line per adversary in place of every row.
+- **Milestones (A5; replaces 7.3).** E_c is 7.3's events of c. The milestones are at most `MILESTONES` (**8**) events of E_c, printed in ascending id, chosen in this order:
+  1. c's `founding_event`;
+  2. c's `ending_event`, when c has ended;
+  3. **the longest quiet stretch of c**: the `quiet_stretch` of E_c with the largest `years` value, then the smallest id (none if c is in none). It carries 22.2's generations note on its milestone line, so **the note is reachable**: every civilization that lived through a quiet stretch as one of its participants prints one;
+  4. **fill**: walk the remaining events of E_c, leaving out every other `quiet_stretch`, in the order of the key (own(c, e) descending, `salience` descending, `id` ascending), where own(c, e) = 1 when c has an own role in e (24.1), else 0. Take each event whose kind key has not yet supplied `MILESTONE_KIND_MAX` (**2**) fill events. Stop when 8 events are chosen or E_c is exhausted.
+
+  Items 1 to 3 do not count toward a kind's limit.
+
+  So a realm's list leads with what it did (its foundings, its victories, its gains, its sacks of others) before what was done to it, and no kind fills more than two slots by itself. In the critic's seed 0 the House of Nife lists its sacks of Baskeeb towns, while the Baskeeb Mob lists its won wars and the cession of the Holt of Yews (e59) first.
+
+### 24.6 `[ages]` (amends 6.4; A6)
+
+The end of the age line becomes
+
+```
+; <pl(n, civilization)> founded: <w> at the awakening, <s> by secession
+```
+
+where n is 6.4's k (the civilizations with `founded_year` in the age), w is those of n whose `founding_event` is a `civ_founded`, and s = n − w (a `civ_seceded`). An example: "a6 The Age of Orcs: 5638-5999, 362 years; Orcs (ra6) made by Uul'duk (g6, evil); 4 civilizations founded: 1 at the awakening, 3 by secession".
+
+### 24.7 `[present]` (amends 6.8; A2, A9, A10)
+
+After `largest settlement:` four lists follow, at both levels, each with its count line always printed. In every list, references are printed as 6.1 gives them.
+
+```
+ruins: <n>
+  s<id> <name> in <region ref>: ruined <ruined_year>, e<ruin_event> <kind key>[, by <attacker ref>]; last held by <civilization ref | no one>
+refuges: <n>
+  s<id> <name> in <region ref>: <owner ref>, population <p>, founded <founded_year> by flight from <origin ref>, e<founding_event>
+open wars: <n>
+  e<since_event> <a ref> against <b ref> over <region ref>, since <since>
+standing claims: <n>
+  e<id> <year> <claimant ref> on <holder ref>: <region ref>[, for <settlement ref>, <settlement ref>, ...]
+```
+
+- **Ruins.** The settlements with status 3 (ruined; faded ones are out), in ascending id.
+  - `by` is the first participant (by participant `seq`) of the `ruin_event` with role `attacker`, when there is one.
+  - **Last held by** is the `owner_civ` of the settlement's `settlement_census` row of largest `year` with status 1 or 2; `no one` when there is none.
+- **Refuges.** The standing settlements whose `founding_event` is a `refugees_settled`, in ascending id. `origin` is that event's participant with role `origin`. **Whether a refuge is still hidden at E cannot be read from the world.** It depends on the race's `hidden_years` (data, not stored), and the faeries' concealment (P3-06 20.17) is not stored either, so the list names every refuge with its founding year, not "hidden refuges" (see the change notes at the end).
+- **Open wars.** The `relation` rows of kind `war` with `until` NULL, ordered by (`since`, `a_type`, `a_id`, `b_type`, `b_id`). The region is the `event.region` of `since_event`, the war's goal.
+- **Standing claims (A2).** The claims c that are **not pursued** and that the log does not show closed. With claimant a, holder b and year y:
+  - (i) a and b both have `ended_year` NULL;
+  - (ii) no `war_declared` with {`attacker`, `defender`} = {a, b} has `year` ≥ y;
+  - (iii) no later claim (larger id) has claimant a and holder b.
+
+  They are listed in ascending id. The `for` part lists, for a `claim_settlements`, its `settlement` participants in participant order.
+  - **Limit**: P3-06 20.2 item 2 and 20.23 drop a claim silently at a declaration when no allowed goal is left. The world records no event for that, so such a claim is listed as standing. This is the one way the list differs from the simulation's state (see the change notes at the end).
+- **The settlement line at full (A10).** 6.8's settlement line of a ruined or faded settlement ends `…, ruined <ruined_year>, e<ruin_event>, last held by <civilization ref | no one>`, with the same "last held by" as the ruins list.
+
+### 24.8 What is recorded and left (A7, A8, A10, A9 form)
+
+- **A7** is answered by 24.3 item 3's preference for the age's own race and by leaving `plague_spread` out of the candidates.
+- **A8** is answered by leaving battles out of the candidates and putting each war's last battle in its frame.
+- **A10, "grew into a city of 8,0xx"**: not fixed. The number is part of the stored template of kind `became_city` (data, in every world), and the report prints sentences as `render_event` gives them (13 item 4). Changing the template changes world bytes, so it goes with the next change that alters world bytes (a candidate for `docs/specs/p3-11-followups.md` section 12's list, by the lead).
+- **A9, a plain reading form** without ids, refs and causes: not in r17 (the lead's ruling). It is put to Paul (question 1 of the review). Ids and refs stay on every chronicle line.
+- **A9, `[stats]`**: unchanged, at both levels.
+
+### 24.9 Constants (amends 8)
+
+`MILESTONES` = **8** (was 6). New: `MILESTONE_KIND_MAX` = 2 (24.5). `SUMMARY_MIN_SALIENCE`, `SUMMARY_BUDGET`, `SUMMARY_AGE_FLOOR`, `ISLET_MAX_DRY_CELLS` and the share levels are unchanged.
+
+### 24.10 Invariants (restates 13 and 21.3 item 7)
+
+For every world with history:
+
+1. **(replaces 13 item 2 and 21.3 item 7)** At `full`, the chronicle has one line per event, in id order, and `shown` = `events`. At `summary`, the event lines are exactly 24.3's summary set, `shown` = `summary_events`, and `shown` ≤ 250 unless T = 100. Further, in the summary:
+   - every shown event of a kind in E_w whose war(e) = d is not excluded by 22.5a has d shown, together with d's ending when closed and d's last battle when it has one: **the number of shown war events whose declaration is not shown (the orphans) is 0**;
+   - every shown `war_declared` with a closed row has its ending shown;
+   - every shown `sacked` or `settlement_captured` has its `capital_moved`, `refugees_settled` and `civ_conquered` shown;
+   - every shown `capital_moved`, `refugees_settled` or `civ_conquered` caused by a sack or capture has that cause shown;
+   - every `quiet_stretch` is shown;
+   - no claim, no `plague_spread`, and no `battle` or `battle_at_pass` other than a war's last battle is shown;
+   - each age with at least 20 candidates shows at least 20 events of its years.
+2. **(replaces 13 item 3)** The sum over phases of shown lines and hidden counts equals `events`. Each phase heading's count, and at `full` each phase's count in `[phases]`, equals its shown and hidden events.
+3. **(replaces 13 item 5)** `[stats]`, `[settings]` and `[ages]` are identical at both levels. `[phases]` is printed at `full` only. `[civilizations]` differs only in the relation lines (full) against the adversary lines (summary). `[present]` differs only in 6.8's full-only region and settlement lines. The chronicle differs as item 1 says. The level line and the order of blocks are 24.4's.
+4. 13 items 1, 4, 6, 7 and 8 stand; item 1's "seven blocks in order" reads "the blocks of 24.4 in order".
+5. Wars line: w + l + d + o = a + f for every civilization. Per adversary, the counts sum to k. The sum of k over a civilization's adversaries equals a + f.
+6. Every civilization that is a participant of at least one `quiet_stretch` prints exactly one `quiet_stretch` milestone, with a generations note.
+7. Every claim that is not pursued, whose two sides are alive at E and which 24.7's tests (ii) and (iii) do not close, appears in `standing claims`, and no other claim does.
+
+### 24.11 Tests required (adds to 14)
+
+For the test writer and the reference (`p3_report_reference.py`), from this section alone:
+
+1. **The war frame.** On H1 and a new fixture **H8 frames**, with a war of three battles, a siege, a sack with `capital_moved` and `refugees_settled`, a peace and a tribute, and a second war ended by `civ_conquered`:
+   - war(e) for every event;
+   - the last battle;
+   - a sack shown above the threshold brings the declaration, the last battle, the ending and the tribute, but not the other two battles;
+   - a `refugees_settled` shown alone brings its sack and that sack's war frame;
+   - a `capital_moved` caused by an abandonment brings nothing;
+   - a declaration whose war ended in a repeated search (22.5a) is not brought in.
+2. **civs4 orphans = 0.**
+   - The reference and the C++ count the orphans of invariant 24.10 item 1 at `summary`. The count must be 0 on `civs4` seeds 0, 3, 7 and 12 at 1024 (the critic's worlds: 34, 56, 61 and 35 at r16) and on every world of the validation sweep.
+   - On the same four worlds, report T, `shown` and the number of shown declarations, so the lead can judge the length.
+   - The 1024 cases are a `*-slow` suite.
+3. **Claims.**
+   - No claim in a summary chronicle.
+   - A fixture with:
+     - a pursued claim (in the note, not in the chronicle);
+     - an unpursued claim, open at E (in `standing claims`);
+     - one closed by a later war between the pair, in either direction;
+     - one replaced by a later claim of the same pair;
+     - one with a side ended;
+     - a kind 39 claim with two settlements (the `for` part).
+4. **Quiet stretches.** Every `quiet_stretch` is shown at summary in H4 (where T is high) and in a world with T = 100 (H5).
+5. **Floor order.** An age whose candidates of salience 25 are split between the age's race and another race: the floor takes the age's race first.
+6. **Battles and spreads.** No battle other than last battles, and no `plague_spread`, at summary. Both are present at full.
+7. **Blocks.**
+   - 24.4's block order at both levels; `[phases]` absent at summary; the new phase heading with and without a trigger.
+   - `seceded from` on a seceded civilization; `last capital` on an ended one.
+   - The wars line, with one war of each outcome (won by peace, won by `war_won`, won by conquest, lost, truce, search, third-party end, open).
+   - Adversary lines: two adversaries with the same first year (ordered by type, then id); an enmity-only adversary (`no war`); each state word.
+8. **Milestones.**
+   - The seed 0 pair (c1, c2) has different lists.
+   - Ties of the fill key.
+   - The kind limit: three sacks of the same salience give two.
+   - A realm with no quiet stretch.
+   - The longest stretch's generations note, for n = 0, 1 and more.
+   - A realm with fewer than 8 events.
+9. **`[ages]`**: an age with one awakening and three secessions prints `4 civilizations founded: 1 at the awakening, 3 by secession`.
+10. **`[present]`'s lists**:
+    - a ruin by sack (with `by`) and a ruin by abandonment (without it);
+    - a settlement captured twice before its sack (last held by its last owner);
+    - a refuge;
+    - two open wars in their order;
+    - each standing-claim case of item 3.
+11. **Invariants**: 24.10 items 1 to 7 on every fixture and every world case.
+12. **Golden**: `p3-07-report.txt` is re-recorded by the reference (every report changes); H8 is added to the fixtures. 14.4's line order is unchanged.
+
+### 24.12 Section 16 and 18.6
+
+- **Section 16**: the excerpt is r16's output (generator 0.20.0) and is illustrative from r17. The blocks now come in 24.4's order, the phase headings carry the length, trigger and count, `[phases]` is absent at summary, the claims and battles leave the summary chronicle, the civilization blocks gain the lines of 24.5, and `[present]` gains 24.7's lists. The golden line of `sample-42-1024` is the record, as before.
+- **18.6**: unchanged. The file names are `<preset>-<case>.history.summary.txt` and `<preset>-<case>.history.full.txt`.
+
 ## Appendix A. Proposals
 
 No proposals entry is needed: the report realizes design 13's "text history report" within design 6's rule (text from records and templates) and does not change the design. Its relation to design 14's chronicles (a deterministic template report for checking the history, not prose for players) is stated in section 1.
@@ -1163,3 +1272,34 @@ New section 23 (`docs/specs/p3-11-followups.md`): kinds 39 `claim_settlements` a
 ## Revision note r15 (2026-11-22, the P3-11 world critic's F5)
 
 23 item 4a: after a claim of kind 39 the declaration's note names the towns claimed (`The claim, since <y>, was to <S> in <R>.`), so that a war line read without its claim is not taken for a war over land; tests in item 5. A requirement on the report's notes; no world byte changes; not part of P3-11's merge.
+
+## Revision note r16 (2026-11-22, text after the implementation and the audit)
+
+Text only; the text follows what was ruled and built (`origin/p3/07-impl` 63972a3, tests `origin/p3/07-int`, CI `origin/p3/07-ci`, audit `docs/reviews/p3-07-history-report-audit.md`). No behaviour changes.
+- 5.3: the relation check is `until` within `since` to E − 1 (the lead's ruling: 6.6 r6 stands, a row with `until` = `since` is valid).
+- 5.3: the checks the implementation makes beyond the table, with their messages: row shapes of `region`, `biome`, `god`; populations above 2^31 − 1; `god.camp`; `race.creator_god`; the consistency of the two reads (5.2 item 4a, audit A2); out of memory. The order of the checks.
+- 5.3: the upland flag and every per mille are free of overflow for every admitted value (audit S1, A1), with no new check.
+- 4: the generic usage errors for `--history` and `--level` values (exit 2).
+- 6.6: the milestone line form with its note.
+- 21.4: `history_note`'s signature with the optional civilization argument.
+- 9: `regions_conquered` counts kinds 26, 29 and 40.
+- 14.4: the golden file's lines in the order the reference writes them, with the fixtures H1 to H7 and their table lines; section 16 is not compared.
+- 14.5 item 16 and 18.6: CI saves and compares the report at both levels.
+- 16: a current excerpt (seed 0, 1024, 0.20.0) in place of the 0.14.0 report.
+
+## Revision note r17 (2026-11-22, readability after the world critic's review)
+
+New section 24 (the world critic's A1 to A10 on `origin/p3/07-critic`; the lead's rulings of 2026-11-22). No world byte changes; generator 0.20.0; format `v1` is redefined before its first release.
+- 24.1: the war of an event and a war's frame.
+- 24.2: a war event brings its war's declaration, last battle, ending and cost, and a consequence brings its sack (A1); no orphans at any threshold.
+- 24.3: claims, battles and plague spreads are not candidates at summary (A2, A8, A7); every quiet stretch is shown (A3); the age floor prefers the age's own race (A7).
+- 24.4: the chronicle before the civilization blocks, `[phases]` at full only, phase headings with length, trigger and count (A9).
+- 24.5: `seceded from`, `last capital`, a wars line, adversary lines at summary in place of relation rows (A4); milestones chosen per realm, own deeds first, at most two of a kind, the longest quiet stretch with its generations note (A5); `MILESTONES` 8.
+- 24.6: `[ages]` separates awakenings and secessions (A6).
+- 24.7: `[present]` lists ruins with their last owner, refuges, open wars and standing claims (A2, A9, A10).
+- 24.8: what is left: the "grew into a city" number (template data), the plain reading form (to Paul).
+- 24.10: invariants restated, with orphans = 0.
+- 24.11: tests, among them the civs4 orphan count.
+- 5.3: the three order and wording notes of the implementation (a standing settlement's population checked in 5.2 item 2; `expected 0` for an event or phase outside every phase or age).
+
+Pointers in 6.2, 7.3, 8, 13, 16, 21.2 and 21.3. No earlier section is renumbered.
