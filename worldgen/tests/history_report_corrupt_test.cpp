@@ -27,13 +27,14 @@ struct Corruption {
 };
 
 // The result of build_history_report on a copy of H1 changed by `sql`.
-worldgen::db::Result<std::string> report_after(const std::string& sql, std::string* path_out = nullptr) {
+worldgen::db::Result<std::string> report_after(const std::string& sql, std::string* path_out = nullptr,
+                                               hrtest::HistoryLevel level = hrtest::HistoryLevel::summary) {
     const std::string path = hrtest::fixture_copy("h1-war-and-ruin", "corrupt");
     const worldgen::db::Status s = worldgen::db::testing::execute_on_file(path, sql);
     REQUIRE_MESSAGE(s.ok(), "execute_on_file: " << (s.ok() ? "" : s.error().message));
     if (path_out != nullptr) *path_out = path;
     const worldgen::db::WorldReader r = hrtest::open_world(path);
-    return worldgen::inspect::build_history_report(r, hrtest::HistoryLevel::summary);
+    return worldgen::inspect::build_history_report(r, level);
 }
 
 void check_cases(const std::vector<Corruption>& cases) {
@@ -254,8 +255,9 @@ TEST_CASE("P3-07 5.3: relation") {
 }
 
 TEST_CASE("P3-07 6.6 r6 (the lead's ruling): a relation with until = since is valid and prints <since>-<since>") {
-    const auto rep = report_after(
-        "INSERT INTO relation VALUES (3, 3, 3, 1, 'enmity', 2020, 2020, 24, 31)");
+    // the relation rows are printed at full (r17 24.5)
+    const auto rep = report_after("INSERT INTO relation VALUES (3, 3, 3, 1, 'enmity', 2020, 2020, 24, 31)", nullptr,
+                                  hrtest::HistoryLevel::full);
     REQUIRE(rep.ok());
     const std::vector<std::string> c3 = hrtest::civ_block(rep.value(), 3);
     CHECK(hrtest::contains_line(c3, "  relations: 4 (enmity 2, peace 1, war 1)"));
