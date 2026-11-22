@@ -654,13 +654,23 @@ void ConflictSubsystem::abandon_search(StepContext& ctx, std::size_t i, std::int
 void ConflictSubsystem::cede(StepContext& ctx, std::int64_t region, std::int64_t loser, std::int64_t winner,
                              std::int64_t cause, bool move_region) {
     State& state = ctx.state();
-    EventSpec c = point_event(ctx, "region_ceded", region, 0);
+    // 8.3 item 1: the id list before any change, each re-fetched by id.
+    const std::vector<std::int64_t> ids = standing_settlements_in(state, loser, region);
+    // r19 23.3: the foothold cession (the region stays) is kind 40
+    // settlements_ceded, naming every settlement that passes, ascending id.
+    EventSpec c = point_event(ctx, move_region ? "region_ceded" : "settlements_ceded", region, 0);
     c.participants = {civ_role("from", loser), civ_role("to", winner)};
+    if (!move_region) {
+        if (ids.empty()) {
+            fail("history: conflict: a foothold cession of region " + int_text(region) + " passes no settlement");
+        }
+        for (std::size_t k = 0; k < ids.size() && k + 2 < MAX_PARTICIPANTS; ++k) {
+            c.participants.push_back(Participant{"settlement", EntityType::settlement, ids[k]});
+        }
+    }
     c.causes = {cause};
     const std::int64_t cev = ctx.append(c);
     const std::int64_t room = checked_mul(2, peoples_.view().capacity(region, race_of_civ(ctx, winner).id));
-    // 8.3 item 1: the id list before any change, each re-fetched by id.
-    const std::vector<std::int64_t> ids = standing_settlements_in(state, loser, region);
     for (const std::int64_t id : ids) {
         const std::int64_t p = state.settlement(id).population;
         const std::int64_t excess = std::max<std::int64_t>(0, p - room);

@@ -242,12 +242,12 @@ fattempt 42 elven civilization 2 27 0 0 1 -
 fattempt 42 elven civilization 2 27 1 0 0 -
 fattempt 42 elven settlement 2 8 0 0 1 -
 fattempt 42 elven settlement 2 8 1 1 0 Ciennfae
-fattempt 42 faerie god 3 8 0 0 1 -
-fattempt 42 faerie god 3 8 1 1 0 Timiass
-fattempt 42 faerie civilization 3 15 0 0 1 -
-fattempt 42 faerie civilization 3 15 1 1 0 The Circle of Tyshia
-fattempt 42 faerie settlement 3 45 0 0 1 -
-fattempt 42 faerie settlement 3 45 1 1 0 Biatwian
+fattempt 42 faerie god 3 5 0 0 1 -
+fattempt 42 faerie god 3 5 1 1 0 Fliewi
+fattempt 42 faerie civilization 3 40 0 0 1 -
+fattempt 42 faerie civilization 3 40 1 0 1 -
+fattempt 42 faerie settlement 3 14 0 0 1 -
+fattempt 42 faerie settlement 3 14 1 1 0 Molo Hollow
 fattempt 42 goblin god 4 13 0 0 1 -
 fattempt 42 goblin god 4 13 1 0 0 -
 fattempt 42 goblin civilization 4 28 0 0 1 -
@@ -272,7 +272,7 @@ rootword Ny{root}_Pit ash nyash
 rootword {root} ug'kaal ug'kaal
 rootword The_{root}_Throne gnink-snunk gnink-snunk
 rootword The_Realm_of_{root} arthos arthos
-filter stard 0
+filter stard 1
 filter iensath 0
 filter grork 0
 filter arthos 0
@@ -343,7 +343,7 @@ result empty elven settlement 2 1 0 Iensath
 scenario collide 0 1
 preload collide Iensath
 result collide elven settlement 2 1 1 Focoth
-scenario full 0 61
+scenario full 0 60
 preload full Aellsa
 preload full Aesor
 preload full Allci
@@ -351,7 +351,6 @@ preload full Caenaesedell
 preload full Caglon
 preload full Cethladell
 preload full Cethonndell
-preload full Coco
 preload full Coglidell
 preload full Corvo
 preload full Eithaglidell
@@ -406,7 +405,7 @@ preload full Tholmadell
 preload full Vasgladell
 preload full Viglocie
 result full elven settlement 2 1 F Iensath II
-scenario full_and_ii 0 62
+scenario full_and_ii 0 61
 preload full_and_ii Aellsa
 preload full_and_ii Aesor
 preload full_and_ii Allci
@@ -414,7 +413,6 @@ preload full_and_ii Caenaesedell
 preload full_and_ii Caglon
 preload full_and_ii Cethladell
 preload full_and_ii Cethonndell
-preload full_and_ii Coco
 preload full_and_ii Coglidell
 preload full_and_ii Corvo
 preload full_and_ii Eithaglidell
@@ -704,7 +702,7 @@ fatal never settlement 0 1 1 names: culture 'never' produced no valid settlement
 0 elven god 17 0 Foco
 0 elven god 18 0 Glaron
 0 elven god 19 0 Rieral
-0 elven god 20 0 Naenaend
+0 elven god 20 1 Fisva
 0 elven god 21 0 Raeran
 0 elven god 22 0 Notharie
 0 elven god 23 0 Cievas
@@ -830,160 +828,160 @@ fatal never settlement 0 1 1 names: culture 'never' produced no valid settlement
 0 elven settlement 43 0 Thillvo
 0 elven settlement 44 4 Sindnodell
 0 elven settlement 45 0 Ondthaes
-0 elven settlement 46 0 Cocothdell
+0 elven settlement 46 1 Glillo
 0 elven settlement 47 0 Sethaelldell
 0 elven settlement 48 0 Ithienne
 0 elven settlement 49 0 Caenoledell
 0 elven settlement 50 0 Allrall
 0 faerie god 1 0 Fiwhall
-0 faerie god 2 0 Fiabo
-0 faerie god 3 0 Biensho
+0 faerie god 2 0 Fiaglo
+0 faerie god 3 0 Gliallsho
 0 faerie god 4 1 Whaia
-0 faerie god 5 0 Pouwou
-0 faerie god 6 0 Twishtwia
+0 faerie god 5 0 Vouwou
+0 faerie god 6 0 Twintwia
 0 faerie god 7 0 Mamie
-0 faerie god 8 0 Ollwee
-0 faerie god 9 0 Fouthia
-0 faerie god 10 0 Twiewha
+0 faerie god 8 0 Owee
+0 faerie god 9 0 Foshia
+0 faerie god 10 0 Twiawha
 0 faerie god 11 0 Shiati
 0 faerie god 12 0 Sallma
-0 faerie god 13 0 Floushlie
+0 faerie god 13 0 Flonlie
 0 faerie god 14 0 Siliawee
 0 faerie god 15 0 Flaskwou
 0 faerie god 16 0 Siemie
-0 faerie god 17 0 Eeliapie
-0 faerie god 18 0 Topiath
-0 faerie god 19 0 Poutwiatou
+0 faerie god 17 0 Ieliavie
+0 faerie god 18 0 Toviash
+0 faerie god 19 0 Vaetwiatae
 0 faerie god 20 0 Fifia
-0 faerie god 21 0 Biatwy
+0 faerie god 21 0 Gliatwy
 0 faerie god 22 0 Fliafly
-0 faerie god 23 0 Shobeeth
-0 faerie god 24 0 Fysouflo
-0 faerie god 25 0 Pieflotwou
+0 faerie god 23 0 Shogleeth
+0 faerie god 24 0 Fysaeflo
+0 faerie god 25 0 Vieflotwae
 0 faerie god 26 0 Amia
-0 faerie god 27 0 Leebia
-0 faerie god 28 0 Moufliap
-0 faerie god 29 0 Fleeshwhae
+0 faerie god 27 0 Leeglia
+0 faerie god 28 0 Mofliath
+0 faerie god 29 0 Flinwhy
 0 faerie god 30 0 Whaefiesia
 0 faerie god 31 0 Lietwae
-0 faerie god 32 1 Shieflap
-0 faerie god 33 0 Sheemiebae
-0 faerie god 34 0 Whiepwo
-0 faerie god 35 1 Pilo
-0 faerie god 36 0 Woutwiamou
+0 faerie god 32 1 Shieflask
+0 faerie god 33 1 Whoskgly
+0 faerie god 34 0 Whieskwo
+0 faerie god 35 0 Ovee
+0 faerie god 36 0 Woutwiamae
 0 faerie god 37 0 Fitie
 0 faerie god 38 0 Twoullmia
 0 faerie god 39 0 Flywie
-0 faerie god 40 0 Fiefou
-0 faerie god 41 0 Piaba
-0 faerie god 42 0 Wysie
-0 faerie god 43 0 Filltwa
-0 faerie god 44 0 Fybyth
+0 faerie god 40 0 Fiefae
+0 faerie god 41 0 Viagla
+0 faerie god 42 0 Wysia
+0 faerie god 43 0 Fitwa
+0 faerie god 44 0 Fyglysh
 0 faerie god 45 0 Afliela
-0 faerie god 46 0 Biaflia
+0 faerie god 46 0 Gliaflia
 0 faerie god 47 0 Olia
 0 faerie god 48 0 Womae
-0 faerie god 49 0 Boma
+0 faerie god 49 0 Gloma
 0 faerie god 50 0 Foi
-0 faerie civilization 1 0 The Lyp Ring
+0 faerie civilization 1 0 The Lysk Ring
 0 faerie civilization 2 0 The Watiafia Court
-0 faerie civilization 3 0 The Bouss Ring
+0 faerie civilization 3 0 The Gloss Ring
 0 faerie civilization 4 0 The Wosk Ring
-0 faerie civilization 5 0 The Twiwhiwou Ring
-0 faerie civilization 6 0 The Whieshoun Ring
+0 faerie civilization 5 0 The Twiwhiwae Ring
+0 faerie civilization 6 0 The Whiashaell Ring
 0 faerie civilization 7 0 The Circle of Shiell
 0 faerie civilization 8 0 The Wimaie Court
-0 faerie civilization 9 0 The Circle of Oubae
-0 faerie civilization 10 0 The Pyp Ring
-0 faerie civilization 11 0 The Fiabapie Court
-0 faerie civilization 12 1 The Twiawhy Ring
-0 faerie civilization 13 0 The Circle of Fleess
-0 faerie civilization 14 0 The Aebi Court
-0 faerie civilization 15 0 The Circle of Saellto
+0 faerie civilization 9 0 The Circle of Ouglae
+0 faerie civilization 10 0 The Vyth Ring
+0 faerie civilization 11 1 The Circle of Lialo
+0 faerie civilization 12 0 The Circle of Gliashysh
+0 faerie civilization 13 0 The Circle of Fliss
+0 faerie civilization 14 0 The Aegli Court
+0 faerie civilization 15 0 The Circle of Syllto
 0 faerie civilization 16 0 The Oflitia Court
-0 faerie civilization 17 0 The Circle of Flytwouth
+0 faerie civilization 17 0 The Circle of Flytwaeth
 0 faerie civilization 18 0 The Circle of Sian
 0 faerie civilization 19 0 The Circle of Liwosh
 0 faerie civilization 20 0 The Shosi Ring
-0 faerie civilization 21 0 The Wish Court
-0 faerie civilization 22 0 The Circle of Saebiep
-0 faerie civilization 23 0 The Circle of Fithwie
-0 faerie civilization 24 0 The Foubeess Court
-0 faerie civilization 25 0 The Twiesie Ring
-0 faerie civilization 26 0 The Weebou Court
-0 faerie civilization 27 0 The Louskbia Court
-0 faerie civilization 28 0 The Aepisk Court
-0 faerie civilization 29 0 The Lobifli Ring
+0 faerie civilization 21 2 The Soull Ring
+0 faerie civilization 22 0 The Circle of Syglieth
+0 faerie civilization 23 0 The Circle of Fithwia
+0 faerie civilization 24 0 The Fougliss Court
+0 faerie civilization 25 0 The Twiesia Ring
+0 faerie civilization 26 0 The Weeglou Court
+0 faerie civilization 27 0 The Loskglia Court
+0 faerie civilization 28 0 The Aevisk Court
+0 faerie civilization 29 0 The Loglifli Ring
 0 faerie civilization 30 0 The Taewi Court
-0 faerie civilization 31 0 The Biafla Ring
-0 faerie civilization 32 0 The Bouie Ring
-0 faerie civilization 33 0 The Laepshou Ring
+0 faerie civilization 31 0 The Gliafla Ring
+0 faerie civilization 32 0 The Glaeia Ring
+0 faerie civilization 33 0 The Laethshae Ring
 0 faerie civilization 34 0 The Whien Ring
-0 faerie civilization 35 0 The Circle of Tweetwa
-0 faerie civilization 36 0 The Circle of Twiafiask
-0 faerie civilization 37 0 The Woumae Court
+0 faerie civilization 35 0 The Circle of Twietwa
+0 faerie civilization 36 0 The Circle of Twafiask
+0 faerie civilization 37 0 The Woumy Court
 0 faerie civilization 38 0 The Circle of Woflie
-0 faerie civilization 39 0 The Twaweesk Court
+0 faerie civilization 39 0 The Twawiess Court
 0 faerie civilization 40 0 The Shisy Court
 0 faerie civilization 41 0 The Circle of Sowhee
-0 faerie civilization 42 0 The Circle of Flywhifee
-0 faerie civilization 43 0 The Seensou Ring
-0 faerie civilization 44 0 The Shishtwy Ring
-0 faerie civilization 45 0 The Shifop Ring
+0 faerie civilization 42 0 The Circle of Flywhifi
+0 faerie civilization 43 0 The Siensou Ring
+0 faerie civilization 44 0 The Shintwy Ring
+0 faerie civilization 45 0 The Shifosk Ring
 0 faerie civilization 46 0 The Flosk Court
-0 faerie civilization 47 0 The Circle of Teetwa
+0 faerie civilization 47 1 The Safleesh Court
 0 faerie civilization 48 0 The Foun Ring
-0 faerie civilization 49 0 The Lissbae Ring
-0 faerie civilization 50 0 The Circle of Poutweeshy
-0 faerie settlement 1 0 Liapa
+0 faerie civilization 49 0 The Lissgly Ring
+0 faerie civilization 50 0 The Circle of Vaetweeshy
+0 faerie settlement 1 0 Liava
 0 faerie settlement 2 1 Wiatwiesk Glade
 0 faerie settlement 3 0 Twamae Glade
-0 faerie settlement 4 1 Ybeeie Hollow
-0 faerie settlement 5 0 Biafloss Glade
-0 faerie settlement 6 0 Pieshaep Hollow
+0 faerie settlement 4 0 Lith
+0 faerie settlement 5 0 Gliafloss Glade
+0 faerie settlement 6 0 Viashaeth Hollow
 0 faerie settlement 7 0 Teelan
 0 faerie settlement 8 0 Meeie Hollow
-0 faerie settlement 9 0 Sywysh Hollow
+0 faerie settlement 9 0 Sywyn Hollow
 0 faerie settlement 10 0 Iatysk
-0 faerie settlement 11 0 Wiepysk
-0 faerie settlement 12 0 Miemo Hollow
-0 faerie settlement 13 0 Mapoufee
-0 faerie settlement 14 0 Feetop Hollow
-0 faerie settlement 15 0 Showhie Hollow
-0 faerie settlement 16 0 Mawhiap Hollow
-0 faerie settlement 17 0 Athfli Hollow
+0 faerie settlement 11 0 Wievysk
+0 faerie settlement 12 0 Miamo Hollow
+0 faerie settlement 13 0 Mavofie
+0 faerie settlement 14 0 Fitoth Hollow
+0 faerie settlement 15 0 Showhia Hollow
+0 faerie settlement 16 0 Mawhiath Hollow
+0 faerie settlement 17 0 Ashfli Hollow
 0 faerie settlement 18 0 Whywo
-0 faerie settlement 19 0 Fliaposk Hollow
+0 faerie settlement 19 0 Fliavosk Hollow
 0 faerie settlement 20 0 Whosy Hollow
-0 faerie settlement 21 0 Poushi
+0 faerie settlement 21 0 Voshi
 0 faerie settlement 22 0 Fiflo
 0 faerie settlement 23 0 Teetiss
-0 faerie settlement 24 0 Willwo
-0 faerie settlement 25 0 Baen
-0 faerie settlement 26 0 Flouy Glade
-0 faerie settlement 27 0 Paelie
-0 faerie settlement 28 1 Twaess Hollow
-0 faerie settlement 29 0 Whaeie
+0 faerie settlement 24 0 Wiwo
+0 faerie settlement 25 0 Glaen
+0 faerie settlement 26 0 Flaey Glade
+0 faerie settlement 27 0 Vaelie
+0 faerie settlement 28 0 Visswhie
+0 faerie settlement 29 0 Whaeia
 0 faerie settlement 30 1 Sie
 0 faerie settlement 31 0 Fiss Glade
 0 faerie settlement 32 0 Flyfleeth Hollow
-0 faerie settlement 33 0 Whoutwa
+0 faerie settlement 33 0 Whotwa
 0 faerie settlement 34 0 Lyma
-0 faerie settlement 35 0 Boflia
-0 faerie settlement 36 0 Boll
-0 faerie settlement 37 0 Twiepa
-0 faerie settlement 38 0 Loshwo
-0 faerie settlement 39 0 Shieisae
-0 faerie settlement 40 0 Piaba Glade
-0 faerie settlement 41 0 Whieiath Glade
+0 faerie settlement 35 0 Gloflia
+0 faerie settlement 36 0 Glo
+0 faerie settlement 37 0 Twieva
+0 faerie settlement 38 0 Lonwo
+0 faerie settlement 39 0 Shiaisae
+0 faerie settlement 40 0 Viagla Glade
+0 faerie settlement 41 0 Whiaiash Glade
 0 faerie settlement 42 0 Shota Glade
-0 faerie settlement 43 0 Baesstwie Glade
+0 faerie settlement 43 0 Glaesstwia Glade
 0 faerie settlement 44 0 Whaewhia Glade
 0 faerie settlement 45 0 Wiaee
 0 faerie settlement 46 0 Wieflyll Hollow
-0 faerie settlement 47 0 Lyfoshou Hollow
-0 faerie settlement 48 0 Bouleewia
-0 faerie settlement 49 0 Whatytwie
+0 faerie settlement 47 0 Lyfoshae Hollow
+0 faerie settlement 48 0 Glaeleewia
+0 faerie settlement 49 0 Whatytwia
 0 faerie settlement 50 0 Taeliell
 0 goblin god 1 0 Zab-Skreeb
 0 goblin god 2 0 Kruskux
@@ -1018,7 +1016,7 @@ fatal never settlement 0 1 1 names: culture 'never' produced no valid settlement
 0 goblin god 31 2 Sligzob
 0 goblin god 32 0 Zax-Bork
 0 goblin god 33 0 Slazkrub
-0 goblin god 34 0 Zizigg
+0 goblin god 34 2 Skabdriz
 0 goblin god 35 0 Zibbirk
 0 goblin god 36 0 Sleetbatch
 0 goblin god 37 0 Beeg-Skrub
@@ -1313,7 +1311,7 @@ fatal never settlement 0 1 1 names: culture 'never' produced no valid settlement
 0 orcish god 26 0 Bakshuugh
 0 orcish god 27 0 Uruuzshogh
 0 orcish god 28 2 Shaash'bark
-0 orcish god 29 0 Uruu'uruukh
+0 orcish god 29 1 Uuld'shul
 0 orcish god 30 0 Aakh'shuul
 0 orcish god 31 0 Baalghosh
 0 orcish god 32 0 Ghuzgruugh
@@ -1327,7 +1325,7 @@ fatal never settlement 0 1 1 names: culture 'never' produced no valid settlement
 0 orcish god 40 0 Ghaark'mol
 0 orcish god 41 0 Ogh'dam
 0 orcish god 42 0 Kuuldmoz
-0 orcish god 43 0 Zaa'zaak
+0 orcish god 43 1 Ghakdald
 0 orcish god 44 0 Daaz'kuugh
 0 orcish god 45 0 Ugom'muugh
 0 orcish god 46 0 Orz'bokh
@@ -1435,7 +1433,7 @@ fatal never settlement 0 1 1 names: culture 'never' produced no valid settlement
 0 orcish settlement 48 0 Ghark
 0 orcish settlement 49 0 Urald Camp
 0 orcish settlement 50 0 Azol'uguuz
-sha256 0 bbf27d67ab1c49823980438225c1d58e6b48b078fc3f5584d12b31ccd6b5dda8
+sha256 0 e5afd078dc975503e78791156fda4cf191c0a1deebf6dabd342adc36730425a4
 42 dwarven god 1 0 Khorkhound
 42 dwarven god 2 1 Grirtoum
 42 dwarven god 3 1 Bronhak
@@ -1629,7 +1627,7 @@ sha256 0 bbf27d67ab1c49823980438225c1d58e6b48b078fc3f5584d12b31ccd6b5dda8
 42 elven god 41 0 Elifosa
 42 elven god 42 1 Ninnitha
 42 elven god 43 0 Femaend
-42 elven god 44 0 Gloglosa
+42 elven god 44 2 Thamisa
 42 elven god 45 1 Elaesath
 42 elven god 46 0 Vaennli
 42 elven god 47 0 Fecind
@@ -1674,7 +1672,7 @@ sha256 0 bbf27d67ab1c49823980438225c1d58e6b48b078fc3f5584d12b31ccd6b5dda8
 42 elven civilization 36 0 The Realm of Connfae
 42 elven civilization 37 0 The House of Elendthi
 42 elven civilization 38 0 The House of Saesie
-42 elven civilization 39 0 The Realm of Saesaell
+42 elven civilization 39 2 The House of Mieni
 42 elven civilization 40 0 The Court of Vilae
 42 elven civilization 41 0 The House of Faenethe
 42 elven civilization 42 0 The House of Itheoll
@@ -1682,7 +1680,7 @@ sha256 0 bbf27d67ab1c49823980438225c1d58e6b48b078fc3f5584d12b31ccd6b5dda8
 42 elven civilization 44 0 The Court of Ciennme
 42 elven civilization 45 0 The Realm of Veithae
 42 elven civilization 46 0 The House of Thaema
-42 elven civilization 47 0 The House of Maesiesie
+42 elven civilization 47 1 The Realm of Indgloth
 42 elven civilization 48 0 The Realm of Glaesivie
 42 elven civilization 49 1 The House of Fienglae
 42 elven civilization 50 0 The Realm of Ofogla
@@ -1736,156 +1734,156 @@ sha256 0 bbf27d67ab1c49823980438225c1d58e6b48b078fc3f5584d12b31ccd6b5dda8
 42 elven settlement 48 0 Ithimaesdell
 42 elven settlement 49 0 Esranddell
 42 elven settlement 50 0 Cathfe
-42 faerie god 1 0 Soutwae
-42 faerie god 2 0 Shieshia
-42 faerie god 3 0 Tyfien
+42 faerie god 1 0 Saetwy
+42 faerie god 2 1 Miatae
+42 faerie god 3 0 Tyfiell
 42 faerie god 4 0 Syfiash
-42 faerie god 5 0 Bonbie
-42 faerie god 6 0 Sytouss
-42 faerie god 7 0 Sysy
-42 faerie god 8 1 Timiass
-42 faerie god 9 1 Eeshflo
+42 faerie god 5 1 Fliewi
+42 faerie god 6 0 Sytaess
+42 faerie god 7 1 Twaemaesie
+42 faerie god 8 2 Faflaell
+42 faerie god 9 0 Viefato
 42 faerie god 10 0 Ouwi
 42 faerie god 11 0 Saeiss
-42 faerie god 12 0 Bobo
-42 faerie god 13 0 Flieskshie
-42 faerie god 14 0 Bietaefee
+42 faerie god 12 1 Liefly
+42 faerie god 13 0 Flieskshia
+42 faerie god 14 0 Glietaefi
 42 faerie god 15 0 Whosklae
 42 faerie god 16 0 Wimyll
-42 faerie god 17 0 Twaeskshae
-42 faerie god 18 0 Flaetweess
+42 faerie god 17 1 Lifla
+42 faerie god 18 0 Flaetwiess
 42 faerie god 19 0 Tiefia
-42 faerie god 20 0 Whoufee
+42 faerie god 20 0 Whaefee
 42 faerie god 21 0 Twysho
-42 faerie god 22 0 Tweentwou
-42 faerie god 23 0 Othti
+42 faerie god 22 0 Tweelltwou
+42 faerie god 23 0 Oshti
 42 faerie god 24 0 Faewo
-42 faerie god 25 0 Wheemeesa
-42 faerie god 26 0 Shibowhou
-42 faerie god 27 0 Shiataesh
-42 faerie god 28 0 Whillby
-42 faerie god 29 0 Powhybia
+42 faerie god 25 0 Wheemiesa
+42 faerie god 26 0 Shiglowhae
+42 faerie god 27 0 Shiatyn
+42 faerie god 28 0 Whillgly
+42 faerie god 29 0 Vowhyglia
 42 faerie god 30 0 Flouflia
 42 faerie god 31 0 Flieshask
 42 faerie god 32 0 Shasi
-42 faerie god 33 0 Whiwae
+42 faerie god 33 0 Whiwy
 42 faerie god 34 0 Siea
-42 faerie god 35 0 Wiathsi
-42 faerie god 36 0 Showie
+42 faerie god 35 0 Wiashsi
+42 faerie god 36 0 Showia
 42 faerie god 37 0 Shisha
-42 faerie god 38 0 Bitee
+42 faerie god 38 0 Glitie
 42 faerie god 39 0 Ielae
-42 faerie god 40 0 Biskti
+42 faerie god 40 0 Gliskti
 42 faerie god 41 0 Twoumy
 42 faerie god 42 0 Feeou
-42 faerie god 43 1 Ishae
-42 faerie god 44 0 Tyflass
-42 faerie god 45 0 Whawhiewie
-42 faerie god 46 0 Powheess
+42 faerie god 43 1 Ishy
+42 faerie god 44 1 Shiewyth
+42 faerie god 45 0 Whawhiawie
+42 faerie god 46 0 Vowheess
 42 faerie god 47 0 Famou
-42 faerie god 48 0 Flapbo
-42 faerie god 49 0 Whiwhiall
+42 faerie god 48 0 Flathglo
+42 faerie god 49 0 Whiwhia
 42 faerie god 50 0 Safie
 42 faerie civilization 1 0 The Circle of Leesh
-42 faerie civilization 2 0 The Moutaep Court
-42 faerie civilization 3 0 The Lyousk Ring
+42 faerie civilization 2 0 The Maetaesk Court
+42 faerie civilization 3 0 The Laousk Ring
 42 faerie civilization 4 0 The Circle of Fysoli
-42 faerie civilization 5 0 The Beepo Ring
-42 faerie civilization 6 1 The Teeshti Court
+42 faerie civilization 5 0 The Gleevo Ring
+42 faerie civilization 6 0 The Flouo Ring
 42 faerie civilization 7 0 The Circle of Seeskflie
 42 faerie civilization 8 0 The Shaesia Ring
-42 faerie civilization 9 0 The Wouwha Ring
+42 faerie civilization 9 0 The Wowha Ring
 42 faerie civilization 10 0 The Twielie Ring
-42 faerie civilization 11 0 The Circle of Sheep
+42 faerie civilization 11 0 The Circle of Sheeth
 42 faerie civilization 12 0 The Whaliwhee Court
 42 faerie civilization 13 0 The Taflie Court
 42 faerie civilization 14 0 The Wiesiwia Ring
-42 faerie civilization 15 1 The Circle of Tyshia
+42 faerie civilization 15 0 The Veeglae Ring
 42 faerie civilization 16 0 The Sheesi Court
-42 faerie civilization 17 1 The Piemolie Court
-42 faerie civilization 18 0 The Faeli Court
+42 faerie civilization 17 0 The Glagliavee Court
+42 faerie civilization 18 0 The Fyli Court
 42 faerie civilization 19 0 The Shask Ring
-42 faerie civilization 20 0 The Aewhousk Ring
-42 faerie civilization 21 0 The Circle of Tweemia
-42 faerie civilization 22 0 The Showhae Ring
-42 faerie civilization 23 0 The Circle of Pienmo
-42 faerie civilization 24 1 The Outhso Court
+42 faerie civilization 20 0 The Aewhosk Ring
+42 faerie civilization 21 0 The Circle of Twiemia
+42 faerie civilization 22 0 The Showhy Ring
+42 faerie civilization 23 0 The Circle of Vianmo
+42 faerie civilization 24 0 The Ith Ring
 42 faerie civilization 25 0 The Mieshy Ring
 42 faerie civilization 26 1 The Flosk Court
-42 faerie civilization 27 0 The Circle of Sybeess
-42 faerie civilization 28 0 The Iaby Court
+42 faerie civilization 27 0 The Circle of Sygliss
+42 faerie civilization 28 0 The Iagly Court
 42 faerie civilization 29 0 The Circle of Shiawhee
-42 faerie civilization 30 0 The Baefliefly Court
+42 faerie civilization 30 2 The Circle of Flytwoth
 42 faerie civilization 31 0 The Circle of Sieiasae
-42 faerie civilization 32 0 The Fleep Ring
-42 faerie civilization 33 0 The Circle of Whaewhie
+42 faerie civilization 32 0 The Flith Ring
+42 faerie civilization 33 0 The Circle of Whywhie
 42 faerie civilization 34 0 The Whilafie Court
-42 faerie civilization 35 0 The Fipae Ring
-42 faerie civilization 36 0 The Lypill Court
-42 faerie civilization 37 0 The Waptwia Court
-42 faerie civilization 38 0 The Moflou Ring
-42 faerie civilization 39 0 The Meeloso Ring
-42 faerie civilization 40 3 The Sien Court
-42 faerie civilization 41 0 The Circle of Lielae
+42 faerie civilization 35 0 The Fivae Ring
+42 faerie civilization 36 0 The Lyvi Court
+42 faerie civilization 37 0 The Wathtwia Court
+42 faerie civilization 38 0 The Moflae Ring
+42 faerie civilization 39 0 The Mieloso Ring
+42 faerie civilization 40 3 The Siell Court
+42 faerie civilization 41 0 The Circle of Lialae
 42 faerie civilization 42 0 The Oshie Ring
-42 faerie civilization 43 0 The Sosouy Ring
+42 faerie civilization 43 0 The Sosaey Ring
 42 faerie civilization 44 0 The Circle of Maetwo
 42 faerie civilization 45 0 The Meenfo Court
-42 faerie civilization 46 1 The Miawhae Court
-42 faerie civilization 47 0 The Saep Court
-42 faerie civilization 48 0 The Circle of Sheetwou
+42 faerie civilization 46 0 The Circle of Flaviesh
+42 faerie civilization 47 0 The Sysk Court
+42 faerie civilization 48 2 The Twiesaesh Court
 42 faerie civilization 49 0 The Shoshtae Court
 42 faerie civilization 50 0 The Falae Ring
-42 faerie settlement 1 0 Iawowo Glade
-42 faerie settlement 2 0 Flisspie
-42 faerie settlement 3 0 Tiasstou Hollow
-42 faerie settlement 4 0 Lowhou
-42 faerie settlement 5 0 Mounfie
+42 faerie settlement 1 1 Mowilie Glade
+42 faerie settlement 2 0 Flissvie
+42 faerie settlement 3 1 Glova Glade
+42 faerie settlement 4 0 Lowhae
+42 faerie settlement 5 0 Mounfia
 42 faerie settlement 6 0 Liflowhia Hollow
-42 faerie settlement 7 0 Tibask
-42 faerie settlement 8 0 Miptwae
-42 faerie settlement 9 0 Shibou
-42 faerie settlement 10 0 Faeoll
-42 faerie settlement 11 0 Flyntia Hollow
+42 faerie settlement 7 0 Tiglask
+42 faerie settlement 8 0 Mithtwae
+42 faerie settlement 9 0 Shiglou
+42 faerie settlement 10 0 Faeo
+42 faerie settlement 11 0 Flylltia Hollow
 42 faerie settlement 12 0 Whiamae
-42 faerie settlement 13 0 Bouotwee Glade
-42 faerie settlement 14 0 Fabyfie Glade
-42 faerie settlement 15 0 Sieshlae Hollow
-42 faerie settlement 16 0 Fliafabou
+42 faerie settlement 13 0 Glouotwie Glade
+42 faerie settlement 14 1 Molo Hollow
+42 faerie settlement 15 0 Sienly Hollow
+42 faerie settlement 16 0 Fliafaglae
 42 faerie settlement 17 0 Twish
 42 faerie settlement 18 0 Whatwin
 42 faerie settlement 19 0 Flylie Hollow
-42 faerie settlement 20 0 Sheess Glade
+42 faerie settlement 20 0 Shiess Glade
 42 faerie settlement 21 0 Soss
-42 faerie settlement 22 0 Mouflin Glade
-42 faerie settlement 23 0 Paepou
-42 faerie settlement 24 0 Fiasiath Glade
+42 faerie settlement 22 0 Mouflill Glade
+42 faerie settlement 23 0 Vaevou
+42 faerie settlement 24 0 Fiasiash Glade
 42 faerie settlement 25 0 Mie
-42 faerie settlement 26 0 Fiebou
+42 faerie settlement 26 0 Fieglou
 42 faerie settlement 27 0 Flaess
-42 faerie settlement 28 0 Ieteetou Hollow
-42 faerie settlement 29 0 Wip
+42 faerie settlement 28 0 Ietietou Hollow
+42 faerie settlement 29 1 Saesswy
 42 faerie settlement 30 0 Flowie
 42 faerie settlement 31 0 Whaely
-42 faerie settlement 32 0 Beeliemee
+42 faerie settlement 32 0 Gleeliemee
 42 faerie settlement 33 0 Fleefli
 42 faerie settlement 34 0 Whietwia
-42 faerie settlement 35 0 Fouflo Hollow
-42 faerie settlement 36 0 Baetiawou Hollow
-42 faerie settlement 37 0 Fieyshia
-42 faerie settlement 38 0 Taemash Glade
+42 faerie settlement 35 0 Faeflo Hollow
+42 faerie settlement 36 0 Glaetiawae Hollow
+42 faerie settlement 37 0 Fieysha
+42 faerie settlement 38 0 Taeman Glade
 42 faerie settlement 39 0 Wiasa Hollow
 42 faerie settlement 40 0 Matia Glade
 42 faerie settlement 41 0 Wolan
 42 faerie settlement 42 0 Shawae
-42 faerie settlement 43 0 Tyfie Glade
-42 faerie settlement 44 0 Eepae
-42 faerie settlement 45 1 Biatwian
+42 faerie settlement 43 0 Tyfia Glade
+42 faerie settlement 44 0 Ievae
+42 faerie settlement 45 0 Lith
 42 faerie settlement 46 0 Saen
 42 faerie settlement 47 0 Shath
-42 faerie settlement 48 0 Fieshpia
+42 faerie settlement 48 0 Fienvia
 42 faerie settlement 49 0 Yfie Hollow
-42 faerie settlement 50 1 Baepie Glade
+42 faerie settlement 50 0 Whoth
 42 goblin god 1 0 Skork-Snagg
 42 goblin god 2 0 Krokzit
 42 goblin god 3 0 Dreeslix
@@ -2093,7 +2091,7 @@ sha256 0 bbf27d67ab1c49823980438225c1d58e6b48b078fc3f5584d12b31ccd6b5dda8
 42 human civilization 5 0 The Kingdom of Alird
 42 human civilization 6 0 The Brurweck League
 42 human civilization 7 2 The Duchy of Stin
-42 human civilization 8 0 The Kingdom of Stard
+42 human civilization 8 1 The Duchy of Brel
 42 human civilization 9 0 The Duchy of Dant
 42 human civilization 10 1 The Duchy of Ashin
 42 human civilization 11 0 The Cerwel League
@@ -2118,7 +2116,7 @@ sha256 0 bbf27d67ab1c49823980438225c1d58e6b48b078fc3f5584d12b31ccd6b5dda8
 42 human civilization 30 2 The Remmed League
 42 human civilization 31 0 The Alant League
 42 human civilization 32 1 The Kingdom of Budsor
-42 human civilization 33 0 The Duchy of Brel
+42 human civilization 33 1 The Ashim League
 42 human civilization 34 0 The Kingdom of Santaluck
 42 human civilization 35 0 The Duchy of Edunt
 42 human civilization 36 0 The Duchy of Tead
@@ -2336,9 +2334,9 @@ sha256 0 bbf27d67ab1c49823980438225c1d58e6b48b078fc3f5584d12b31ccd6b5dda8
 42 orcish settlement 48 0 Aal'uraaz Fort
 42 orcish settlement 49 0 Orz'grom Camp
 42 orcish settlement 50 0 Thuurkbash
-sha256 42 f85c99a8e4514d2683d42acbd1af3441ccde736b1aad62f1e110dbf128bf5b9d
-r4sha256 0 7b81d85d11630b64f27f7eb16dc9f0815b764a0fc8ee60d506f68686a04942b9
-r4sha256 42 8403dc92b716ecfb7c22bb9589d3e487aecaf08a43ffc81a89a370f0f4f80f4c
+sha256 42 5631ba252de20516c9febbf26a69a3a32f17718f0cdbb62d56f46b6908be9aef
+r4sha256 0 24337e74b7094c71ae4e8362fc7f3d8e2bb65e7828694d990a27cae5827e2df1
+r4sha256 42 5a61d67ecfcaef51fd27e3ac7e42277cfc8ddaffaa65baa842e96539f76f685f
 # r10 (P3-02 12, generator 0.19.0):
 #   corename <root> <core>            12.2's core (letters without ' and -)
 #   corenear <core> <K comma-joined|-> <0|1>   12.2's near (equal or one letter apart)
@@ -2534,7 +2532,7 @@ core 0 elven god 16 1 Glithra
 core 0 elven god 17 0 Foco
 core 0 elven god 18 0 Glaron
 core 0 elven god 19 0 Rieral
-core 0 elven god 20 0 Naenaend
+core 0 elven god 20 1 Fisva
 core 0 elven god 21 0 Raeran
 core 0 elven god 22 0 Notharie
 core 0 elven god 23 0 Cievas
@@ -2660,160 +2658,160 @@ core 0 elven settlement 42 0 Fieglenie
 core 0 elven settlement 43 0 Thillvo
 core 0 elven settlement 44 4 Sindnodell
 core 0 elven settlement 45 0 Ondthaes
-core 0 elven settlement 46 0 Cocothdell
+core 0 elven settlement 46 1 Glillo
 core 0 elven settlement 47 0 Sethaelldell
 core 0 elven settlement 48 0 Ithienne
 core 0 elven settlement 49 0 Caenoledell
 core 0 elven settlement 50 0 Allrall
 core 0 faerie god 1 0 Fiwhall
-core 0 faerie god 2 0 Fiabo
-core 0 faerie god 3 0 Biensho
+core 0 faerie god 2 0 Fiaglo
+core 0 faerie god 3 0 Gliallsho
 core 0 faerie god 4 1 Whaia
-core 0 faerie god 5 0 Pouwou
-core 0 faerie god 6 0 Twishtwia
+core 0 faerie god 5 0 Vouwou
+core 0 faerie god 6 0 Twintwia
 core 0 faerie god 7 0 Mamie
-core 0 faerie god 8 0 Ollwee
-core 0 faerie god 9 0 Fouthia
-core 0 faerie god 10 0 Twiewha
+core 0 faerie god 8 0 Owee
+core 0 faerie god 9 0 Foshia
+core 0 faerie god 10 0 Twiawha
 core 0 faerie god 11 0 Shiati
 core 0 faerie god 12 0 Sallma
-core 0 faerie god 13 0 Floushlie
+core 0 faerie god 13 0 Flonlie
 core 0 faerie god 14 0 Siliawee
 core 0 faerie god 15 0 Flaskwou
 core 0 faerie god 16 0 Siemie
-core 0 faerie god 17 0 Eeliapie
-core 0 faerie god 18 0 Topiath
-core 0 faerie god 19 0 Poutwiatou
+core 0 faerie god 17 0 Ieliavie
+core 0 faerie god 18 0 Toviash
+core 0 faerie god 19 0 Vaetwiatae
 core 0 faerie god 20 0 Fifia
-core 0 faerie god 21 0 Biatwy
+core 0 faerie god 21 0 Gliatwy
 core 0 faerie god 22 0 Fliafly
-core 0 faerie god 23 0 Shobeeth
-core 0 faerie god 24 0 Fysouflo
-core 0 faerie god 25 0 Pieflotwou
+core 0 faerie god 23 0 Shogleeth
+core 0 faerie god 24 0 Fysaeflo
+core 0 faerie god 25 0 Vieflotwae
 core 0 faerie god 26 0 Amia
-core 0 faerie god 27 0 Leebia
-core 0 faerie god 28 0 Moufliap
-core 0 faerie god 29 0 Fleeshwhae
+core 0 faerie god 27 0 Leeglia
+core 0 faerie god 28 0 Mofliath
+core 0 faerie god 29 0 Flinwhy
 core 0 faerie god 30 0 Whaefiesia
 core 0 faerie god 31 0 Lietwae
-core 0 faerie god 32 1 Shieflap
-core 0 faerie god 33 0 Sheemiebae
-core 0 faerie god 34 0 Whiepwo
-core 0 faerie god 35 1 Pilo
-core 0 faerie god 36 0 Woutwiamou
+core 0 faerie god 32 1 Shieflask
+core 0 faerie god 33 1 Whoskgly
+core 0 faerie god 34 0 Whieskwo
+core 0 faerie god 35 0 Ovee
+core 0 faerie god 36 0 Woutwiamae
 core 0 faerie god 37 0 Fitie
 core 0 faerie god 38 0 Twoullmia
 core 0 faerie god 39 0 Flywie
-core 0 faerie god 40 0 Fiefou
-core 0 faerie god 41 0 Piaba
-core 0 faerie god 42 0 Wysie
-core 0 faerie god 43 0 Filltwa
-core 0 faerie god 44 0 Fybyth
+core 0 faerie god 40 0 Fiefae
+core 0 faerie god 41 0 Viagla
+core 0 faerie god 42 0 Wysia
+core 0 faerie god 43 0 Fitwa
+core 0 faerie god 44 0 Fyglysh
 core 0 faerie god 45 0 Afliela
-core 0 faerie god 46 0 Biaflia
+core 0 faerie god 46 0 Gliaflia
 core 0 faerie god 47 0 Olia
 core 0 faerie god 48 0 Womae
-core 0 faerie god 49 0 Boma
+core 0 faerie god 49 0 Gloma
 core 0 faerie god 50 0 Foi
-core 0 faerie civilization 1 0 The Lyp Ring
+core 0 faerie civilization 1 0 The Lysk Ring
 core 0 faerie civilization 2 0 The Watiafia Court
-core 0 faerie civilization 3 0 The Bouss Ring
+core 0 faerie civilization 3 0 The Gloss Ring
 core 0 faerie civilization 4 0 The Wosk Ring
-core 0 faerie civilization 5 0 The Twiwhiwou Ring
-core 0 faerie civilization 6 0 The Whieshoun Ring
+core 0 faerie civilization 5 0 The Twiwhiwae Ring
+core 0 faerie civilization 6 0 The Whiashaell Ring
 core 0 faerie civilization 7 0 The Circle of Shiell
 core 0 faerie civilization 8 0 The Wimaie Court
-core 0 faerie civilization 9 0 The Circle of Oubae
-core 0 faerie civilization 10 1 The Maen Court
-core 0 faerie civilization 11 0 The Fiabapie Court
-core 0 faerie civilization 12 1 The Twiawhy Ring
-core 0 faerie civilization 13 0 The Circle of Fleess
-core 0 faerie civilization 14 0 The Aebi Court
-core 0 faerie civilization 15 0 The Circle of Saellto
+core 0 faerie civilization 9 0 The Circle of Ouglae
+core 0 faerie civilization 10 0 The Vyth Ring
+core 0 faerie civilization 11 1 The Circle of Lialo
+core 0 faerie civilization 12 0 The Circle of Gliashysh
+core 0 faerie civilization 13 0 The Circle of Fliss
+core 0 faerie civilization 14 0 The Aegli Court
+core 0 faerie civilization 15 0 The Circle of Syllto
 core 0 faerie civilization 16 0 The Oflitia Court
-core 0 faerie civilization 17 0 The Circle of Flytwouth
+core 0 faerie civilization 17 0 The Circle of Flytwaeth
 core 0 faerie civilization 18 0 The Circle of Sian
 core 0 faerie civilization 19 0 The Circle of Liwosh
 core 0 faerie civilization 20 0 The Shosi Ring
-core 0 faerie civilization 21 0 The Wish Court
-core 0 faerie civilization 22 0 The Circle of Saebiep
-core 0 faerie civilization 23 0 The Circle of Fithwie
-core 0 faerie civilization 24 0 The Foubeess Court
-core 0 faerie civilization 25 0 The Twiesie Ring
-core 0 faerie civilization 26 0 The Weebou Court
-core 0 faerie civilization 27 0 The Louskbia Court
-core 0 faerie civilization 28 0 The Aepisk Court
-core 0 faerie civilization 29 0 The Lobifli Ring
+core 0 faerie civilization 21 2 The Soull Ring
+core 0 faerie civilization 22 0 The Circle of Syglieth
+core 0 faerie civilization 23 0 The Circle of Fithwia
+core 0 faerie civilization 24 0 The Fougliss Court
+core 0 faerie civilization 25 0 The Twiesia Ring
+core 0 faerie civilization 26 0 The Weeglou Court
+core 0 faerie civilization 27 0 The Loskglia Court
+core 0 faerie civilization 28 0 The Aevisk Court
+core 0 faerie civilization 29 0 The Loglifli Ring
 core 0 faerie civilization 30 0 The Taewi Court
-core 0 faerie civilization 31 0 The Biafla Ring
-core 0 faerie civilization 32 0 The Bouie Ring
-core 0 faerie civilization 33 0 The Laepshou Ring
+core 0 faerie civilization 31 0 The Gliafla Ring
+core 0 faerie civilization 32 0 The Glaeia Ring
+core 0 faerie civilization 33 0 The Laethshae Ring
 core 0 faerie civilization 34 0 The Whien Ring
-core 0 faerie civilization 35 0 The Circle of Tweetwa
-core 0 faerie civilization 36 0 The Circle of Twiafiask
-core 0 faerie civilization 37 0 The Woumae Court
+core 0 faerie civilization 35 0 The Circle of Twietwa
+core 0 faerie civilization 36 0 The Circle of Twafiask
+core 0 faerie civilization 37 0 The Woumy Court
 core 0 faerie civilization 38 0 The Circle of Woflie
-core 0 faerie civilization 39 0 The Twaweesk Court
+core 0 faerie civilization 39 0 The Twawiess Court
 core 0 faerie civilization 40 0 The Shisy Court
 core 0 faerie civilization 41 0 The Circle of Sowhee
-core 0 faerie civilization 42 0 The Circle of Flywhifee
-core 0 faerie civilization 43 0 The Seensou Ring
-core 0 faerie civilization 44 0 The Shishtwy Ring
-core 0 faerie civilization 45 0 The Shifop Ring
+core 0 faerie civilization 42 0 The Circle of Flywhifi
+core 0 faerie civilization 43 0 The Siensou Ring
+core 0 faerie civilization 44 0 The Shintwy Ring
+core 0 faerie civilization 45 0 The Shifosk Ring
 core 0 faerie civilization 46 0 The Flosk Court
 core 0 faerie civilization 47 1 The Safleesh Court
 core 0 faerie civilization 48 0 The Foun Ring
-core 0 faerie civilization 49 0 The Lissbae Ring
-core 0 faerie civilization 50 0 The Circle of Poutweeshy
-core 0 faerie settlement 1 0 Liapa
+core 0 faerie civilization 49 0 The Lissgly Ring
+core 0 faerie civilization 50 0 The Circle of Vaetweeshy
+core 0 faerie settlement 1 0 Liava
 core 0 faerie settlement 2 1 Wiatwiesk Glade
 core 0 faerie settlement 3 0 Twamae Glade
-core 0 faerie settlement 4 1 Ybeeie Hollow
-core 0 faerie settlement 5 0 Biafloss Glade
-core 0 faerie settlement 6 0 Pieshaep Hollow
+core 0 faerie settlement 4 0 Lith
+core 0 faerie settlement 5 0 Gliafloss Glade
+core 0 faerie settlement 6 0 Viashaeth Hollow
 core 0 faerie settlement 7 0 Teelan
 core 0 faerie settlement 8 0 Meeie Hollow
-core 0 faerie settlement 9 0 Sywysh Hollow
+core 0 faerie settlement 9 0 Sywyn Hollow
 core 0 faerie settlement 10 0 Iatysk
-core 0 faerie settlement 11 0 Wiepysk
-core 0 faerie settlement 12 0 Miemo Hollow
-core 0 faerie settlement 13 0 Mapoufee
-core 0 faerie settlement 14 0 Feetop Hollow
-core 0 faerie settlement 15 0 Showhie Hollow
-core 0 faerie settlement 16 0 Mawhiap Hollow
-core 0 faerie settlement 17 0 Athfli Hollow
+core 0 faerie settlement 11 0 Wievysk
+core 0 faerie settlement 12 0 Miamo Hollow
+core 0 faerie settlement 13 0 Mavofie
+core 0 faerie settlement 14 0 Fitoth Hollow
+core 0 faerie settlement 15 0 Showhia Hollow
+core 0 faerie settlement 16 0 Mawhiath Hollow
+core 0 faerie settlement 17 0 Ashfli Hollow
 core 0 faerie settlement 18 0 Whywo
-core 0 faerie settlement 19 0 Fliaposk Hollow
+core 0 faerie settlement 19 0 Fliavosk Hollow
 core 0 faerie settlement 20 0 Whosy Hollow
-core 0 faerie settlement 21 0 Poushi
+core 0 faerie settlement 21 0 Voshi
 core 0 faerie settlement 22 0 Fiflo
 core 0 faerie settlement 23 0 Teetiss
-core 0 faerie settlement 24 0 Willwo
-core 0 faerie settlement 25 2 Weewhee
-core 0 faerie settlement 26 0 Flouy Glade
-core 0 faerie settlement 27 0 Paelie
-core 0 faerie settlement 28 1 Twaess Hollow
-core 0 faerie settlement 29 0 Whaeie
+core 0 faerie settlement 24 0 Wiwo
+core 0 faerie settlement 25 0 Glaen
+core 0 faerie settlement 26 0 Flaey Glade
+core 0 faerie settlement 27 0 Vaelie
+core 0 faerie settlement 28 0 Visswhie
+core 0 faerie settlement 29 0 Whaeia
 core 0 faerie settlement 30 1 Sie
-core 0 faerie settlement 31 0 Fiss Glade
+core 0 faerie settlement 31 1 Vigli
 core 0 faerie settlement 32 0 Flyfleeth Hollow
-core 0 faerie settlement 33 0 Whoutwa
+core 0 faerie settlement 33 0 Whotwa
 core 0 faerie settlement 34 0 Lyma
-core 0 faerie settlement 35 0 Boflia
-core 0 faerie settlement 36 0 Boll
-core 0 faerie settlement 37 0 Twiepa
-core 0 faerie settlement 38 0 Loshwo
-core 0 faerie settlement 39 0 Shieisae
-core 0 faerie settlement 40 0 Piaba Glade
-core 0 faerie settlement 41 0 Whieiath Glade
+core 0 faerie settlement 35 0 Gloflia
+core 0 faerie settlement 36 0 Glo
+core 0 faerie settlement 37 0 Twieva
+core 0 faerie settlement 38 0 Lonwo
+core 0 faerie settlement 39 0 Shiaisae
+core 0 faerie settlement 40 0 Viagla Glade
+core 0 faerie settlement 41 0 Whiaiash Glade
 core 0 faerie settlement 42 0 Shota Glade
-core 0 faerie settlement 43 0 Baesstwie Glade
+core 0 faerie settlement 43 0 Glaesstwia Glade
 core 0 faerie settlement 44 0 Whaewhia Glade
 core 0 faerie settlement 45 0 Wiaee
 core 0 faerie settlement 46 0 Wieflyll Hollow
-core 0 faerie settlement 47 0 Lyfoshou Hollow
-core 0 faerie settlement 48 0 Bouleewia
-core 0 faerie settlement 49 0 Whatytwie
+core 0 faerie settlement 47 0 Lyfoshae Hollow
+core 0 faerie settlement 48 0 Glaeleewia
+core 0 faerie settlement 49 0 Whatytwia
 core 0 faerie settlement 50 0 Taeliell
 core 0 goblin god 1 0 Zab-Skreeb
 core 0 goblin god 2 0 Kruskux
@@ -2848,7 +2846,7 @@ core 0 goblin god 30 2 Gnatch-Kig
 core 0 goblin god 31 2 Sligzob
 core 0 goblin god 32 0 Zax-Bork
 core 0 goblin god 33 0 Slazkrub
-core 0 goblin god 34 0 Zizigg
+core 0 goblin god 34 2 Skabdriz
 core 0 goblin god 35 0 Zibbirk
 core 0 goblin god 36 0 Sleetbatch
 core 0 goblin god 37 0 Beeg-Skrub
@@ -3143,7 +3141,7 @@ core 0 orcish god 25 0 Zuulkro
 core 0 orcish god 26 0 Bakshuugh
 core 0 orcish god 27 0 Uruuzshogh
 core 0 orcish god 28 2 Shaash'bark
-core 0 orcish god 29 0 Uruu'uruukh
+core 0 orcish god 29 1 Uuld'shul
 core 0 orcish god 30 0 Aakh'shuul
 core 0 orcish god 31 0 Baalghosh
 core 0 orcish god 32 0 Ghuzgruugh
@@ -3157,7 +3155,7 @@ core 0 orcish god 39 0 Aag'krark
 core 0 orcish god 40 0 Ghaark'mol
 core 0 orcish god 41 0 Ogh'dam
 core 0 orcish god 42 0 Kuuldmoz
-core 0 orcish god 43 0 Zaa'zaak
+core 0 orcish god 43 1 Ghakdald
 core 0 orcish god 44 0 Daaz'kuugh
 core 0 orcish god 45 0 Ugom'muugh
 core 0 orcish god 46 0 Orz'bokh
@@ -3265,7 +3263,7 @@ core 0 orcish settlement 47 1 Uukh'kruuld Fort
 core 0 orcish settlement 48 0 Ghark
 core 0 orcish settlement 49 2 Dogkrogh Fort
 core 0 orcish settlement 50 0 Azol'uguuz
-coresha256 0 f2bd5ffb021c24a09bf0a07d805b4373342c9f510634ec66b8371c5bd47e62b7
+coresha256 0 f8095c5df45c3ce92ce8f72960e946f9e911a4516d143e645c9d395b7e544054
 core 42 dwarven god 1 0 Khorkhound
 core 42 dwarven god 2 1 Grirtoum
 core 42 dwarven god 3 1 Bronhak
@@ -3390,7 +3388,7 @@ core 42 dwarven settlement 21 1 Durkta Deep
 core 42 dwarven settlement 22 0 Kurdgor
 core 42 dwarven settlement 23 0 Kirndrimm Hold
 core 42 dwarven settlement 24 0 Murkhaird Deep
-core 42 dwarven settlement 25 4 Hurntard Hold
+core 42 dwarven settlement 25 5 Morni Hold
 core 42 dwarven settlement 26 0 Naimthairk
 core 42 dwarven settlement 27 1 Grairnmod Hold
 core 42 dwarven settlement 28 0 Thoum
@@ -3459,7 +3457,7 @@ core 42 elven god 40 0 Elaelthae
 core 42 elven god 41 0 Elifosa
 core 42 elven god 42 1 Ninnitha
 core 42 elven god 43 0 Femaend
-core 42 elven god 44 0 Gloglosa
+core 42 elven god 44 2 Thamisa
 core 42 elven god 45 1 Elaesath
 core 42 elven god 46 0 Vaennli
 core 42 elven god 47 0 Fecind
@@ -3504,7 +3502,7 @@ core 42 elven civilization 35 0 The Realm of Levae
 core 42 elven civilization 36 0 The Realm of Connfae
 core 42 elven civilization 37 0 The House of Elendthi
 core 42 elven civilization 38 0 The House of Saesie
-core 42 elven civilization 39 0 The Realm of Saesaell
+core 42 elven civilization 39 2 The House of Mieni
 core 42 elven civilization 40 0 The Court of Vilae
 core 42 elven civilization 41 0 The House of Faenethe
 core 42 elven civilization 42 0 The House of Itheoll
@@ -3512,7 +3510,7 @@ core 42 elven civilization 43 1 The Realm of Iesnoth
 core 42 elven civilization 44 0 The Court of Ciennme
 core 42 elven civilization 45 0 The Realm of Veithae
 core 42 elven civilization 46 0 The House of Thaema
-core 42 elven civilization 47 0 The House of Maesiesie
+core 42 elven civilization 47 1 The Realm of Indgloth
 core 42 elven civilization 48 0 The Realm of Glaesivie
 core 42 elven civilization 49 1 The House of Fienglae
 core 42 elven civilization 50 0 The Realm of Ofogla
@@ -3543,7 +3541,7 @@ core 42 elven settlement 24 0 Masri
 core 42 elven settlement 25 0 Ciferdell
 core 42 elven settlement 26 0 Gloralldell
 core 42 elven settlement 27 0 Foroeli
-core 42 elven settlement 28 1 Sisirdell
+core 42 elven settlement 28 2 Thenthie
 core 42 elven settlement 29 2 Iennmie
 core 42 elven settlement 30 0 Roithano
 core 42 elven settlement 31 0 Raemael
@@ -3566,156 +3564,156 @@ core 42 elven settlement 47 0 Nienann
 core 42 elven settlement 48 0 Ithimaesdell
 core 42 elven settlement 49 0 Esranddell
 core 42 elven settlement 50 0 Cathfe
-core 42 faerie god 1 0 Soutwae
-core 42 faerie god 2 0 Shieshia
-core 42 faerie god 3 0 Tyfien
+core 42 faerie god 1 0 Saetwy
+core 42 faerie god 2 1 Miatae
+core 42 faerie god 3 0 Tyfiell
 core 42 faerie god 4 0 Syfiash
-core 42 faerie god 5 0 Bonbie
-core 42 faerie god 6 0 Sytouss
-core 42 faerie god 7 0 Sysy
-core 42 faerie god 8 1 Timiass
-core 42 faerie god 9 1 Eeshflo
+core 42 faerie god 5 1 Fliewi
+core 42 faerie god 6 0 Sytaess
+core 42 faerie god 7 1 Twaemaesie
+core 42 faerie god 8 2 Faflaell
+core 42 faerie god 9 0 Viefato
 core 42 faerie god 10 0 Ouwi
 core 42 faerie god 11 0 Saeiss
-core 42 faerie god 12 0 Bobo
-core 42 faerie god 13 0 Flieskshie
-core 42 faerie god 14 0 Bietaefee
+core 42 faerie god 12 1 Liefly
+core 42 faerie god 13 0 Flieskshia
+core 42 faerie god 14 0 Glietaefi
 core 42 faerie god 15 0 Whosklae
 core 42 faerie god 16 0 Wimyll
-core 42 faerie god 17 0 Twaeskshae
-core 42 faerie god 18 0 Flaetweess
+core 42 faerie god 17 1 Lifla
+core 42 faerie god 18 0 Flaetwiess
 core 42 faerie god 19 0 Tiefia
-core 42 faerie god 20 0 Whoufee
+core 42 faerie god 20 0 Whaefee
 core 42 faerie god 21 0 Twysho
-core 42 faerie god 22 0 Tweentwou
-core 42 faerie god 23 0 Othti
+core 42 faerie god 22 0 Tweelltwou
+core 42 faerie god 23 0 Oshti
 core 42 faerie god 24 0 Faewo
-core 42 faerie god 25 0 Wheemeesa
-core 42 faerie god 26 0 Shibowhou
-core 42 faerie god 27 0 Shiataesh
-core 42 faerie god 28 0 Whillby
-core 42 faerie god 29 0 Powhybia
+core 42 faerie god 25 0 Wheemiesa
+core 42 faerie god 26 0 Shiglowhae
+core 42 faerie god 27 0 Shiatyn
+core 42 faerie god 28 0 Whillgly
+core 42 faerie god 29 0 Vowhyglia
 core 42 faerie god 30 0 Flouflia
 core 42 faerie god 31 0 Flieshask
 core 42 faerie god 32 0 Shasi
-core 42 faerie god 33 0 Whiwae
+core 42 faerie god 33 0 Whiwy
 core 42 faerie god 34 0 Siea
-core 42 faerie god 35 0 Wiathsi
-core 42 faerie god 36 0 Showie
+core 42 faerie god 35 0 Wiashsi
+core 42 faerie god 36 0 Showia
 core 42 faerie god 37 0 Shisha
-core 42 faerie god 38 0 Bitee
+core 42 faerie god 38 0 Glitie
 core 42 faerie god 39 0 Ielae
-core 42 faerie god 40 0 Biskti
+core 42 faerie god 40 0 Gliskti
 core 42 faerie god 41 0 Twoumy
 core 42 faerie god 42 0 Feeou
-core 42 faerie god 43 1 Ishae
-core 42 faerie god 44 0 Tyflass
-core 42 faerie god 45 0 Whawhiewie
-core 42 faerie god 46 0 Powheess
+core 42 faerie god 43 1 Ishy
+core 42 faerie god 44 1 Shiewyth
+core 42 faerie god 45 0 Whawhiawie
+core 42 faerie god 46 0 Vowheess
 core 42 faerie god 47 0 Famou
-core 42 faerie god 48 0 Flapbo
-core 42 faerie god 49 0 Whiwhiall
+core 42 faerie god 48 0 Flathglo
+core 42 faerie god 49 0 Whiwhia
 core 42 faerie god 50 0 Safie
 core 42 faerie civilization 1 0 The Circle of Leesh
-core 42 faerie civilization 2 0 The Moutaep Court
-core 42 faerie civilization 3 0 The Lyousk Ring
+core 42 faerie civilization 2 0 The Maetaesk Court
+core 42 faerie civilization 3 0 The Laousk Ring
 core 42 faerie civilization 4 0 The Circle of Fysoli
-core 42 faerie civilization 5 0 The Beepo Ring
-core 42 faerie civilization 6 1 The Teeshti Court
+core 42 faerie civilization 5 0 The Gleevo Ring
+core 42 faerie civilization 6 0 The Flouo Ring
 core 42 faerie civilization 7 0 The Circle of Seeskflie
 core 42 faerie civilization 8 0 The Shaesia Ring
-core 42 faerie civilization 9 0 The Wouwha Ring
+core 42 faerie civilization 9 0 The Wowha Ring
 core 42 faerie civilization 10 0 The Twielie Ring
-core 42 faerie civilization 11 0 The Circle of Sheep
+core 42 faerie civilization 11 0 The Circle of Sheeth
 core 42 faerie civilization 12 0 The Whaliwhee Court
 core 42 faerie civilization 13 0 The Taflie Court
 core 42 faerie civilization 14 0 The Wiesiwia Ring
-core 42 faerie civilization 15 1 The Circle of Tyshia
+core 42 faerie civilization 15 0 The Veeglae Ring
 core 42 faerie civilization 16 0 The Sheesi Court
-core 42 faerie civilization 17 1 The Piemolie Court
-core 42 faerie civilization 18 0 The Faeli Court
+core 42 faerie civilization 17 0 The Glagliavee Court
+core 42 faerie civilization 18 0 The Fyli Court
 core 42 faerie civilization 19 0 The Shask Ring
-core 42 faerie civilization 20 0 The Aewhousk Ring
-core 42 faerie civilization 21 0 The Circle of Tweemia
-core 42 faerie civilization 22 0 The Showhae Ring
-core 42 faerie civilization 23 0 The Circle of Pienmo
-core 42 faerie civilization 24 1 The Outhso Court
+core 42 faerie civilization 20 0 The Aewhosk Ring
+core 42 faerie civilization 21 0 The Circle of Twiemia
+core 42 faerie civilization 22 0 The Showhy Ring
+core 42 faerie civilization 23 0 The Circle of Vianmo
+core 42 faerie civilization 24 0 The Ith Ring
 core 42 faerie civilization 25 0 The Mieshy Ring
 core 42 faerie civilization 26 1 The Flosk Court
-core 42 faerie civilization 27 0 The Circle of Sybeess
-core 42 faerie civilization 28 0 The Iaby Court
+core 42 faerie civilization 27 0 The Circle of Sygliss
+core 42 faerie civilization 28 0 The Iagly Court
 core 42 faerie civilization 29 0 The Circle of Shiawhee
-core 42 faerie civilization 30 0 The Baefliefly Court
+core 42 faerie civilization 30 2 The Circle of Flytwoth
 core 42 faerie civilization 31 0 The Circle of Sieiasae
-core 42 faerie civilization 32 0 The Fleep Ring
-core 42 faerie civilization 33 0 The Circle of Whaewhie
+core 42 faerie civilization 32 0 The Flith Ring
+core 42 faerie civilization 33 0 The Circle of Whywhie
 core 42 faerie civilization 34 0 The Whilafie Court
-core 42 faerie civilization 35 0 The Fipae Ring
-core 42 faerie civilization 36 0 The Lypill Court
-core 42 faerie civilization 37 0 The Waptwia Court
-core 42 faerie civilization 38 0 The Moflou Ring
-core 42 faerie civilization 39 0 The Meeloso Ring
-core 42 faerie civilization 40 3 The Sien Court
-core 42 faerie civilization 41 0 The Circle of Lielae
+core 42 faerie civilization 35 0 The Fivae Ring
+core 42 faerie civilization 36 0 The Lyvi Court
+core 42 faerie civilization 37 0 The Wathtwia Court
+core 42 faerie civilization 38 0 The Moflae Ring
+core 42 faerie civilization 39 0 The Mieloso Ring
+core 42 faerie civilization 40 3 The Siell Court
+core 42 faerie civilization 41 0 The Circle of Lialae
 core 42 faerie civilization 42 0 The Oshie Ring
-core 42 faerie civilization 43 0 The Sosouy Ring
+core 42 faerie civilization 43 0 The Sosaey Ring
 core 42 faerie civilization 44 0 The Circle of Maetwo
 core 42 faerie civilization 45 0 The Meenfo Court
-core 42 faerie civilization 46 1 The Miawhae Court
-core 42 faerie civilization 47 0 The Saep Court
-core 42 faerie civilization 48 0 The Circle of Sheetwou
+core 42 faerie civilization 46 0 The Circle of Flaviesh
+core 42 faerie civilization 47 0 The Sysk Court
+core 42 faerie civilization 48 2 The Twiesaesh Court
 core 42 faerie civilization 49 0 The Shoshtae Court
 core 42 faerie civilization 50 0 The Falae Ring
-core 42 faerie settlement 1 0 Iawowo Glade
-core 42 faerie settlement 2 0 Flisspie
-core 42 faerie settlement 3 0 Tiasstou Hollow
-core 42 faerie settlement 4 0 Lowhou
-core 42 faerie settlement 5 0 Mounfie
+core 42 faerie settlement 1 1 Mowilie Glade
+core 42 faerie settlement 2 0 Flissvie
+core 42 faerie settlement 3 1 Glova Glade
+core 42 faerie settlement 4 0 Lowhae
+core 42 faerie settlement 5 0 Mounfia
 core 42 faerie settlement 6 0 Liflowhia Hollow
-core 42 faerie settlement 7 0 Tibask
-core 42 faerie settlement 8 0 Miptwae
-core 42 faerie settlement 9 0 Shibou
-core 42 faerie settlement 10 0 Faeoll
-core 42 faerie settlement 11 0 Flyntia Hollow
+core 42 faerie settlement 7 0 Tiglask
+core 42 faerie settlement 8 0 Mithtwae
+core 42 faerie settlement 9 0 Shiglou
+core 42 faerie settlement 10 0 Faeo
+core 42 faerie settlement 11 0 Flylltia Hollow
 core 42 faerie settlement 12 0 Whiamae
-core 42 faerie settlement 13 0 Bouotwee Glade
-core 42 faerie settlement 14 0 Fabyfie Glade
-core 42 faerie settlement 15 0 Sieshlae Hollow
-core 42 faerie settlement 16 0 Fliafabou
+core 42 faerie settlement 13 0 Glouotwie Glade
+core 42 faerie settlement 14 1 Molo Hollow
+core 42 faerie settlement 15 0 Sienly Hollow
+core 42 faerie settlement 16 0 Fliafaglae
 core 42 faerie settlement 17 0 Twish
 core 42 faerie settlement 18 0 Whatwin
 core 42 faerie settlement 19 0 Flylie Hollow
-core 42 faerie settlement 20 1 Fiesha Hollow
+core 42 faerie settlement 20 0 Shiess Glade
 core 42 faerie settlement 21 0 Soss
-core 42 faerie settlement 22 0 Mouflin Glade
-core 42 faerie settlement 23 0 Paepou
-core 42 faerie settlement 24 0 Fiasiath Glade
+core 42 faerie settlement 22 0 Mouflill Glade
+core 42 faerie settlement 23 0 Vaevou
+core 42 faerie settlement 24 0 Fiasiash Glade
 core 42 faerie settlement 25 0 Mie
-core 42 faerie settlement 26 0 Fiebou
+core 42 faerie settlement 26 0 Fieglou
 core 42 faerie settlement 27 0 Flaess
-core 42 faerie settlement 28 0 Ieteetou Hollow
-core 42 faerie settlement 29 0 Wip
+core 42 faerie settlement 28 0 Ietietou Hollow
+core 42 faerie settlement 29 1 Saesswy
 core 42 faerie settlement 30 0 Flowie
 core 42 faerie settlement 31 0 Whaely
-core 42 faerie settlement 32 0 Beeliemee
+core 42 faerie settlement 32 0 Gleeliemee
 core 42 faerie settlement 33 0 Fleefli
 core 42 faerie settlement 34 0 Whietwia
-core 42 faerie settlement 35 0 Fouflo Hollow
-core 42 faerie settlement 36 0 Baetiawou Hollow
-core 42 faerie settlement 37 0 Fieyshia
-core 42 faerie settlement 38 0 Taemash Glade
+core 42 faerie settlement 35 0 Faeflo Hollow
+core 42 faerie settlement 36 0 Glaetiawae Hollow
+core 42 faerie settlement 37 0 Fieysha
+core 42 faerie settlement 38 0 Taeman Glade
 core 42 faerie settlement 39 0 Wiasa Hollow
 core 42 faerie settlement 40 0 Matia Glade
 core 42 faerie settlement 41 0 Wolan
 core 42 faerie settlement 42 0 Shawae
-core 42 faerie settlement 43 0 Tyfie Glade
-core 42 faerie settlement 44 0 Eepae
-core 42 faerie settlement 45 1 Biatwian
-core 42 faerie settlement 46 1 Biemiwi
+core 42 faerie settlement 43 0 Tyfia Glade
+core 42 faerie settlement 44 1 Fovimy Glade
+core 42 faerie settlement 45 1 Gliatwian
+core 42 faerie settlement 46 0 Saen
 core 42 faerie settlement 47 0 Shath
-core 42 faerie settlement 48 0 Fieshpia
-core 42 faerie settlement 49 1 Pousho Hollow
-core 42 faerie settlement 50 1 Baepie Glade
+core 42 faerie settlement 48 0 Fienvia
+core 42 faerie settlement 49 0 Yfie Hollow
+core 42 faerie settlement 50 0 Whoth
 core 42 goblin god 1 0 Skork-Snagg
 core 42 goblin god 2 0 Krokzit
 core 42 goblin god 3 0 Dreeslix
@@ -3923,7 +3921,7 @@ core 42 human civilization 4 0 The Duchy of Ashes
 core 42 human civilization 5 0 The Kingdom of Alird
 core 42 human civilization 6 0 The Brurweck League
 core 42 human civilization 7 2 The Duchy of Stin
-core 42 human civilization 8 0 The Kingdom of Stard
+core 42 human civilization 8 1 The Duchy of Brel
 core 42 human civilization 9 0 The Duchy of Dant
 core 42 human civilization 10 1 The Duchy of Ashin
 core 42 human civilization 11 0 The Cerwel League
@@ -3948,12 +3946,12 @@ core 42 human civilization 29 2 The Calalock League
 core 42 human civilization 30 2 The Remmed League
 core 42 human civilization 31 2 The Kingdom of Measmon
 core 42 human civilization 32 1 The Kingdom of Budsor
-core 42 human civilization 33 0 The Duchy of Brel
+core 42 human civilization 33 2 The Edock League
 core 42 human civilization 34 0 The Kingdom of Santaluck
 core 42 human civilization 35 0 The Duchy of Edunt
 core 42 human civilization 36 0 The Duchy of Tead
 core 42 human civilization 37 2 The Duchy of Ashold
-core 42 human civilization 38 1 The Kingdom of Alur
+core 42 human civilization 38 0 The Duchy of Steard
 core 42 human civilization 39 1 The Duchy of Tunbunt
 core 42 human civilization 40 0 The Duchy of Binashir
 core 42 human civilization 41 1 The Duchy of Rurd
@@ -3985,13 +3983,13 @@ core 42 human settlement 16 0 Decktenham
 core 42 human settlement 17 3 Edeackstead
 core 42 human settlement 18 0 Seaddinbury
 core 42 human settlement 19 1 Tentsirdwick
-core 42 human settlement 20 1 Stealdford
+core 42 human settlement 20 2 Ashealstead
 core 42 human settlement 21 3 Rildalamwick
 core 42 human settlement 22 0 Tarbonstead
 core 42 human settlement 23 2 Edumton
 core 42 human settlement 24 1 Brantstead
 core 42 human settlement 25 0 Budalint
-core 42 human settlement 26 1 Stulstulwick
+core 42 human settlement 26 3 Gardford
 core 42 human settlement 27 0 Birgil
 core 42 human settlement 28 0 Edadtent
 core 42 human settlement 29 5 Stockham
@@ -4166,7 +4164,7 @@ core 42 orcish settlement 47 0 Ark'muuz
 core 42 orcish settlement 48 0 Aal'uraaz Fort
 core 42 orcish settlement 49 0 Orz'grom Camp
 core 42 orcish settlement 50 0 Thuurkbash
-coresha256 42 94452abbbc8de142ba54dca976cf0c66b076a77845a013f719ac2cdeb5efdc3b
+coresha256 42 6734ae858a0b46e79b81c72a4a821e7b9170ce2ad388fb8db70a1f3bdbd1a472
 # r13 (P3-02 13, generator 0.19.0 second round):
 #   triple <0|1> <name>   13.2's test on a rendered name (case-insensitive, three equal letters a-z
 #       at consecutive positions); the name is the rest of the line
@@ -4512,3 +4510,641 @@ tattempt trip_hollow settlement 42 1 3 5 0 1 Floullly Hollow
 tattempt trip_hollow settlement 42 1 3 6 1 0 Billa Hollow
 tattempt trip_hollow settlement 42 1 3 7 0 1 Floullly Hollow
 tresult trip_hollow settlement 42 1 3 1 Billa Hollow
+# r15 (P3-02 14, generator 0.20.0):
+#   rrow <i> <pattern> <onsets> <nuclei> <codas> <pieces> <e> <t> <valid 0|1> <root>  14.2's table and
+#       14.4's OONC row: a test culture whose lists are the comma lists (. is the empty string), the
+#       row's pattern only, letters 1-32, no forbidden entry, forms {root}; settlement, seed 0, c 1;
+#       (e, t) the first attempt drawing exactly the row's pieces; valid = not repeated
+#   rattempt <i> <e> <t> <valid 0|1> <repeated 0|1> <pieces> <name>  every attempt t 0-15 of e 1-3
+#       of row i's culture (settlement, seed 0, c 1); the name of a repeated attempt is the drawn one
+#   rresult rep <kind> <seed> 1 <e> <attempt|F> <name> [<registry comma-joined>]  make_name of culture
+#       rep (b / a / . / ON,ONON / 2-4) after the entity's attempt 0 drew Baba
+#   sattempt <seed> <culture> <kind> <c> <e> <t> <valid 0|1> <repeated 0|1> <name>  shipped
+#       cultures: the first attempt at seed 42 rejected by 14.2 alone (entities from 1) and the next
+#   sample15 <culture> <settlements|civilizations|gods> <names joined by '; '>  5.1's protocol at
+#       0.20.0 for the faerie culture (the critic's sample)
+rrow 1 ONONON w,fl i,ee . w,i,fl,ee,fl,ee 1 34 0 wifleeflee
+rrow 2 ONONC l i n l,i,l,i,n 1 0 0 lilin
+rrow 3 ONON f i . f,i,f,i 1 0 0 fifi
+rrow 4 ONON f ee . f,ee,f,ee 1 0 0 feefee
+rrow 5 ONON n o . n,o,n,o 1 0 0 nono
+rrow 6 ONCONC d a ck d,a,ck,d,a,ck 1 0 0 dackdack
+rrow 7 ONC-ONC kr a k kr,a,k,kr,a,k 1 0 0 krak-krak
+rrow 8 ONCONC gr a n,k gr,a,n,gr,a,k 1 0 1 grangrak
+rrow 9 ONON f ee,i . f,ee,f,i 1 4 1 feefi
+rrow 10 ONONON tw,wh,w i,ou . tw,i,wh,i,w,ou 4 18 1 twiwhiwou
+rrow 11 ONCON l,. i,ia ll l,i,ll,.,ia 1 4 1 lillia
+rrow 12 OONC .,l i n .,l,i,n 1 3 1 lin
+rattempt 1 1 0 1 0 fl,ee,w,i,w,ee Fleewiwee
+rattempt 1 1 1 0 1 w,i,w,i,w,ee Wiwiwee
+rattempt 1 1 2 0 1 fl,i,w,i,w,i Fliwiwi
+rattempt 1 1 3 1 0 w,ee,fl,ee,w,i Weefleewi
+rattempt 1 1 4 1 0 w,i,w,ee,fl,ee Wiweeflee
+rattempt 1 1 5 0 1 fl,i,fl,i,w,ee Flifliwee
+rattempt 1 1 6 0 1 fl,ee,fl,ee,w,i Fleefleewi
+rattempt 1 1 7 1 0 w,ee,fl,ee,w,ee Weefleewee
+rattempt 1 1 8 1 0 fl,ee,w,i,fl,i Fleewifli
+rattempt 1 1 9 1 0 w,ee,w,i,fl,ee Weewiflee
+rattempt 1 1 10 1 0 w,i,fl,ee,fl,i Wifleefli
+rattempt 1 1 11 1 0 fl,i,w,ee,w,i Fliweewi
+rattempt 1 1 12 1 0 w,i,w,ee,fl,i Wiweefli
+rattempt 1 1 13 1 0 w,ee,fl,i,fl,ee Weefliflee
+rattempt 1 1 14 0 1 fl,ee,fl,ee,w,i Fleefleewi
+rattempt 1 1 15 0 1 fl,i,w,ee,w,ee Fliweewee
+rattempt 1 2 0 0 1 fl,ee,fl,ee,fl,ee Fleefleeflee
+rattempt 1 2 1 1 0 w,ee,w,i,fl,ee Weewiflee
+rattempt 1 2 2 1 0 w,i,fl,ee,w,i Wifleewi
+rattempt 1 2 3 0 1 fl,i,fl,i,w,i Flifliwi
+rattempt 1 2 4 0 1 fl,i,fl,i,w,i Flifliwi
+rattempt 1 2 5 1 0 w,ee,fl,ee,w,ee Weefleewee
+rattempt 1 2 6 1 0 fl,ee,w,i,w,ee Fleewiwee
+rattempt 1 2 7 0 1 fl,ee,fl,ee,fl,i Fleefleefli
+rattempt 1 2 8 1 0 w,ee,fl,i,w,i Weefliwi
+rattempt 1 2 9 0 1 w,ee,w,ee,fl,i Weeweefli
+rattempt 1 2 10 1 0 w,i,w,ee,fl,ee Wiweeflee
+rattempt 1 2 11 1 0 w,i,w,ee,w,i Wiweewi
+rattempt 1 2 12 1 0 fl,ee,w,i,fl,i Fleewifli
+rattempt 1 2 13 1 0 fl,i,fl,ee,w,i Flifleewi
+rattempt 1 2 14 1 0 w,i,fl,ee,fl,i Wifleefli
+rattempt 1 2 15 1 0 w,i,fl,i,fl,ee Wifliflee
+rattempt 1 3 0 0 1 fl,ee,fl,ee,w,ee Fleefleewee
+rattempt 1 3 1 1 0 fl,i,w,ee,fl,ee Fliweeflee
+rattempt 1 3 2 0 1 fl,ee,w,i,w,i Fleewiwi
+rattempt 1 3 3 1 0 w,i,w,ee,w,i Wiweewi
+rattempt 1 3 4 0 1 w,i,w,i,w,i Wiwiwi
+rattempt 1 3 5 1 0 fl,ee,fl,i,fl,ee Fleefliflee
+rattempt 1 3 6 0 1 w,i,fl,ee,fl,ee Wifleeflee
+rattempt 1 3 7 1 0 fl,i,fl,ee,fl,i Flifleefli
+rattempt 1 3 8 0 1 fl,i,fl,i,w,ee Flifliwee
+rattempt 1 3 9 0 1 w,ee,w,ee,fl,i Weeweefli
+rattempt 1 3 10 0 1 fl,ee,fl,ee,w,ee Fleefleewee
+rattempt 1 3 11 0 1 fl,i,fl,i,w,i Flifliwi
+rattempt 1 3 12 0 1 w,i,w,ee,w,ee Wiweewee
+rattempt 1 3 13 1 0 fl,ee,fl,i,w,ee Fleefliwee
+rattempt 1 3 14 0 1 fl,i,fl,i,fl,ee Flifliflee
+rattempt 1 3 15 1 0 w,i,w,ee,w,i Wiweewi
+rattempt 2 1 0 0 1 l,i,l,i,n Lilin
+rattempt 2 1 1 0 1 l,i,l,i,n Lilin
+rattempt 2 1 2 0 1 l,i,l,i,n Lilin
+rattempt 2 1 3 0 1 l,i,l,i,n Lilin
+rattempt 2 1 4 0 1 l,i,l,i,n Lilin
+rattempt 2 1 5 0 1 l,i,l,i,n Lilin
+rattempt 2 1 6 0 1 l,i,l,i,n Lilin
+rattempt 2 1 7 0 1 l,i,l,i,n Lilin
+rattempt 2 1 8 0 1 l,i,l,i,n Lilin
+rattempt 2 1 9 0 1 l,i,l,i,n Lilin
+rattempt 2 1 10 0 1 l,i,l,i,n Lilin
+rattempt 2 1 11 0 1 l,i,l,i,n Lilin
+rattempt 2 1 12 0 1 l,i,l,i,n Lilin
+rattempt 2 1 13 0 1 l,i,l,i,n Lilin
+rattempt 2 1 14 0 1 l,i,l,i,n Lilin
+rattempt 2 1 15 0 1 l,i,l,i,n Lilin
+rattempt 2 2 0 0 1 l,i,l,i,n Lilin
+rattempt 2 2 1 0 1 l,i,l,i,n Lilin
+rattempt 2 2 2 0 1 l,i,l,i,n Lilin
+rattempt 2 2 3 0 1 l,i,l,i,n Lilin
+rattempt 2 2 4 0 1 l,i,l,i,n Lilin
+rattempt 2 2 5 0 1 l,i,l,i,n Lilin
+rattempt 2 2 6 0 1 l,i,l,i,n Lilin
+rattempt 2 2 7 0 1 l,i,l,i,n Lilin
+rattempt 2 2 8 0 1 l,i,l,i,n Lilin
+rattempt 2 2 9 0 1 l,i,l,i,n Lilin
+rattempt 2 2 10 0 1 l,i,l,i,n Lilin
+rattempt 2 2 11 0 1 l,i,l,i,n Lilin
+rattempt 2 2 12 0 1 l,i,l,i,n Lilin
+rattempt 2 2 13 0 1 l,i,l,i,n Lilin
+rattempt 2 2 14 0 1 l,i,l,i,n Lilin
+rattempt 2 2 15 0 1 l,i,l,i,n Lilin
+rattempt 2 3 0 0 1 l,i,l,i,n Lilin
+rattempt 2 3 1 0 1 l,i,l,i,n Lilin
+rattempt 2 3 2 0 1 l,i,l,i,n Lilin
+rattempt 2 3 3 0 1 l,i,l,i,n Lilin
+rattempt 2 3 4 0 1 l,i,l,i,n Lilin
+rattempt 2 3 5 0 1 l,i,l,i,n Lilin
+rattempt 2 3 6 0 1 l,i,l,i,n Lilin
+rattempt 2 3 7 0 1 l,i,l,i,n Lilin
+rattempt 2 3 8 0 1 l,i,l,i,n Lilin
+rattempt 2 3 9 0 1 l,i,l,i,n Lilin
+rattempt 2 3 10 0 1 l,i,l,i,n Lilin
+rattempt 2 3 11 0 1 l,i,l,i,n Lilin
+rattempt 2 3 12 0 1 l,i,l,i,n Lilin
+rattempt 2 3 13 0 1 l,i,l,i,n Lilin
+rattempt 2 3 14 0 1 l,i,l,i,n Lilin
+rattempt 2 3 15 0 1 l,i,l,i,n Lilin
+rattempt 3 1 0 0 1 f,i,f,i Fifi
+rattempt 3 1 1 0 1 f,i,f,i Fifi
+rattempt 3 1 2 0 1 f,i,f,i Fifi
+rattempt 3 1 3 0 1 f,i,f,i Fifi
+rattempt 3 1 4 0 1 f,i,f,i Fifi
+rattempt 3 1 5 0 1 f,i,f,i Fifi
+rattempt 3 1 6 0 1 f,i,f,i Fifi
+rattempt 3 1 7 0 1 f,i,f,i Fifi
+rattempt 3 1 8 0 1 f,i,f,i Fifi
+rattempt 3 1 9 0 1 f,i,f,i Fifi
+rattempt 3 1 10 0 1 f,i,f,i Fifi
+rattempt 3 1 11 0 1 f,i,f,i Fifi
+rattempt 3 1 12 0 1 f,i,f,i Fifi
+rattempt 3 1 13 0 1 f,i,f,i Fifi
+rattempt 3 1 14 0 1 f,i,f,i Fifi
+rattempt 3 1 15 0 1 f,i,f,i Fifi
+rattempt 3 2 0 0 1 f,i,f,i Fifi
+rattempt 3 2 1 0 1 f,i,f,i Fifi
+rattempt 3 2 2 0 1 f,i,f,i Fifi
+rattempt 3 2 3 0 1 f,i,f,i Fifi
+rattempt 3 2 4 0 1 f,i,f,i Fifi
+rattempt 3 2 5 0 1 f,i,f,i Fifi
+rattempt 3 2 6 0 1 f,i,f,i Fifi
+rattempt 3 2 7 0 1 f,i,f,i Fifi
+rattempt 3 2 8 0 1 f,i,f,i Fifi
+rattempt 3 2 9 0 1 f,i,f,i Fifi
+rattempt 3 2 10 0 1 f,i,f,i Fifi
+rattempt 3 2 11 0 1 f,i,f,i Fifi
+rattempt 3 2 12 0 1 f,i,f,i Fifi
+rattempt 3 2 13 0 1 f,i,f,i Fifi
+rattempt 3 2 14 0 1 f,i,f,i Fifi
+rattempt 3 2 15 0 1 f,i,f,i Fifi
+rattempt 3 3 0 0 1 f,i,f,i Fifi
+rattempt 3 3 1 0 1 f,i,f,i Fifi
+rattempt 3 3 2 0 1 f,i,f,i Fifi
+rattempt 3 3 3 0 1 f,i,f,i Fifi
+rattempt 3 3 4 0 1 f,i,f,i Fifi
+rattempt 3 3 5 0 1 f,i,f,i Fifi
+rattempt 3 3 6 0 1 f,i,f,i Fifi
+rattempt 3 3 7 0 1 f,i,f,i Fifi
+rattempt 3 3 8 0 1 f,i,f,i Fifi
+rattempt 3 3 9 0 1 f,i,f,i Fifi
+rattempt 3 3 10 0 1 f,i,f,i Fifi
+rattempt 3 3 11 0 1 f,i,f,i Fifi
+rattempt 3 3 12 0 1 f,i,f,i Fifi
+rattempt 3 3 13 0 1 f,i,f,i Fifi
+rattempt 3 3 14 0 1 f,i,f,i Fifi
+rattempt 3 3 15 0 1 f,i,f,i Fifi
+rattempt 4 1 0 0 1 f,ee,f,ee Feefee
+rattempt 4 1 1 0 1 f,ee,f,ee Feefee
+rattempt 4 1 2 0 1 f,ee,f,ee Feefee
+rattempt 4 1 3 0 1 f,ee,f,ee Feefee
+rattempt 4 1 4 0 1 f,ee,f,ee Feefee
+rattempt 4 1 5 0 1 f,ee,f,ee Feefee
+rattempt 4 1 6 0 1 f,ee,f,ee Feefee
+rattempt 4 1 7 0 1 f,ee,f,ee Feefee
+rattempt 4 1 8 0 1 f,ee,f,ee Feefee
+rattempt 4 1 9 0 1 f,ee,f,ee Feefee
+rattempt 4 1 10 0 1 f,ee,f,ee Feefee
+rattempt 4 1 11 0 1 f,ee,f,ee Feefee
+rattempt 4 1 12 0 1 f,ee,f,ee Feefee
+rattempt 4 1 13 0 1 f,ee,f,ee Feefee
+rattempt 4 1 14 0 1 f,ee,f,ee Feefee
+rattempt 4 1 15 0 1 f,ee,f,ee Feefee
+rattempt 4 2 0 0 1 f,ee,f,ee Feefee
+rattempt 4 2 1 0 1 f,ee,f,ee Feefee
+rattempt 4 2 2 0 1 f,ee,f,ee Feefee
+rattempt 4 2 3 0 1 f,ee,f,ee Feefee
+rattempt 4 2 4 0 1 f,ee,f,ee Feefee
+rattempt 4 2 5 0 1 f,ee,f,ee Feefee
+rattempt 4 2 6 0 1 f,ee,f,ee Feefee
+rattempt 4 2 7 0 1 f,ee,f,ee Feefee
+rattempt 4 2 8 0 1 f,ee,f,ee Feefee
+rattempt 4 2 9 0 1 f,ee,f,ee Feefee
+rattempt 4 2 10 0 1 f,ee,f,ee Feefee
+rattempt 4 2 11 0 1 f,ee,f,ee Feefee
+rattempt 4 2 12 0 1 f,ee,f,ee Feefee
+rattempt 4 2 13 0 1 f,ee,f,ee Feefee
+rattempt 4 2 14 0 1 f,ee,f,ee Feefee
+rattempt 4 2 15 0 1 f,ee,f,ee Feefee
+rattempt 4 3 0 0 1 f,ee,f,ee Feefee
+rattempt 4 3 1 0 1 f,ee,f,ee Feefee
+rattempt 4 3 2 0 1 f,ee,f,ee Feefee
+rattempt 4 3 3 0 1 f,ee,f,ee Feefee
+rattempt 4 3 4 0 1 f,ee,f,ee Feefee
+rattempt 4 3 5 0 1 f,ee,f,ee Feefee
+rattempt 4 3 6 0 1 f,ee,f,ee Feefee
+rattempt 4 3 7 0 1 f,ee,f,ee Feefee
+rattempt 4 3 8 0 1 f,ee,f,ee Feefee
+rattempt 4 3 9 0 1 f,ee,f,ee Feefee
+rattempt 4 3 10 0 1 f,ee,f,ee Feefee
+rattempt 4 3 11 0 1 f,ee,f,ee Feefee
+rattempt 4 3 12 0 1 f,ee,f,ee Feefee
+rattempt 4 3 13 0 1 f,ee,f,ee Feefee
+rattempt 4 3 14 0 1 f,ee,f,ee Feefee
+rattempt 4 3 15 0 1 f,ee,f,ee Feefee
+rattempt 5 1 0 0 1 n,o,n,o Nono
+rattempt 5 1 1 0 1 n,o,n,o Nono
+rattempt 5 1 2 0 1 n,o,n,o Nono
+rattempt 5 1 3 0 1 n,o,n,o Nono
+rattempt 5 1 4 0 1 n,o,n,o Nono
+rattempt 5 1 5 0 1 n,o,n,o Nono
+rattempt 5 1 6 0 1 n,o,n,o Nono
+rattempt 5 1 7 0 1 n,o,n,o Nono
+rattempt 5 1 8 0 1 n,o,n,o Nono
+rattempt 5 1 9 0 1 n,o,n,o Nono
+rattempt 5 1 10 0 1 n,o,n,o Nono
+rattempt 5 1 11 0 1 n,o,n,o Nono
+rattempt 5 1 12 0 1 n,o,n,o Nono
+rattempt 5 1 13 0 1 n,o,n,o Nono
+rattempt 5 1 14 0 1 n,o,n,o Nono
+rattempt 5 1 15 0 1 n,o,n,o Nono
+rattempt 5 2 0 0 1 n,o,n,o Nono
+rattempt 5 2 1 0 1 n,o,n,o Nono
+rattempt 5 2 2 0 1 n,o,n,o Nono
+rattempt 5 2 3 0 1 n,o,n,o Nono
+rattempt 5 2 4 0 1 n,o,n,o Nono
+rattempt 5 2 5 0 1 n,o,n,o Nono
+rattempt 5 2 6 0 1 n,o,n,o Nono
+rattempt 5 2 7 0 1 n,o,n,o Nono
+rattempt 5 2 8 0 1 n,o,n,o Nono
+rattempt 5 2 9 0 1 n,o,n,o Nono
+rattempt 5 2 10 0 1 n,o,n,o Nono
+rattempt 5 2 11 0 1 n,o,n,o Nono
+rattempt 5 2 12 0 1 n,o,n,o Nono
+rattempt 5 2 13 0 1 n,o,n,o Nono
+rattempt 5 2 14 0 1 n,o,n,o Nono
+rattempt 5 2 15 0 1 n,o,n,o Nono
+rattempt 5 3 0 0 1 n,o,n,o Nono
+rattempt 5 3 1 0 1 n,o,n,o Nono
+rattempt 5 3 2 0 1 n,o,n,o Nono
+rattempt 5 3 3 0 1 n,o,n,o Nono
+rattempt 5 3 4 0 1 n,o,n,o Nono
+rattempt 5 3 5 0 1 n,o,n,o Nono
+rattempt 5 3 6 0 1 n,o,n,o Nono
+rattempt 5 3 7 0 1 n,o,n,o Nono
+rattempt 5 3 8 0 1 n,o,n,o Nono
+rattempt 5 3 9 0 1 n,o,n,o Nono
+rattempt 5 3 10 0 1 n,o,n,o Nono
+rattempt 5 3 11 0 1 n,o,n,o Nono
+rattempt 5 3 12 0 1 n,o,n,o Nono
+rattempt 5 3 13 0 1 n,o,n,o Nono
+rattempt 5 3 14 0 1 n,o,n,o Nono
+rattempt 5 3 15 0 1 n,o,n,o Nono
+rattempt 6 1 0 0 1 d,a,ck,d,a,ck Dackdack
+rattempt 6 1 1 0 1 d,a,ck,d,a,ck Dackdack
+rattempt 6 1 2 0 1 d,a,ck,d,a,ck Dackdack
+rattempt 6 1 3 0 1 d,a,ck,d,a,ck Dackdack
+rattempt 6 1 4 0 1 d,a,ck,d,a,ck Dackdack
+rattempt 6 1 5 0 1 d,a,ck,d,a,ck Dackdack
+rattempt 6 1 6 0 1 d,a,ck,d,a,ck Dackdack
+rattempt 6 1 7 0 1 d,a,ck,d,a,ck Dackdack
+rattempt 6 1 8 0 1 d,a,ck,d,a,ck Dackdack
+rattempt 6 1 9 0 1 d,a,ck,d,a,ck Dackdack
+rattempt 6 1 10 0 1 d,a,ck,d,a,ck Dackdack
+rattempt 6 1 11 0 1 d,a,ck,d,a,ck Dackdack
+rattempt 6 1 12 0 1 d,a,ck,d,a,ck Dackdack
+rattempt 6 1 13 0 1 d,a,ck,d,a,ck Dackdack
+rattempt 6 1 14 0 1 d,a,ck,d,a,ck Dackdack
+rattempt 6 1 15 0 1 d,a,ck,d,a,ck Dackdack
+rattempt 6 2 0 0 1 d,a,ck,d,a,ck Dackdack
+rattempt 6 2 1 0 1 d,a,ck,d,a,ck Dackdack
+rattempt 6 2 2 0 1 d,a,ck,d,a,ck Dackdack
+rattempt 6 2 3 0 1 d,a,ck,d,a,ck Dackdack
+rattempt 6 2 4 0 1 d,a,ck,d,a,ck Dackdack
+rattempt 6 2 5 0 1 d,a,ck,d,a,ck Dackdack
+rattempt 6 2 6 0 1 d,a,ck,d,a,ck Dackdack
+rattempt 6 2 7 0 1 d,a,ck,d,a,ck Dackdack
+rattempt 6 2 8 0 1 d,a,ck,d,a,ck Dackdack
+rattempt 6 2 9 0 1 d,a,ck,d,a,ck Dackdack
+rattempt 6 2 10 0 1 d,a,ck,d,a,ck Dackdack
+rattempt 6 2 11 0 1 d,a,ck,d,a,ck Dackdack
+rattempt 6 2 12 0 1 d,a,ck,d,a,ck Dackdack
+rattempt 6 2 13 0 1 d,a,ck,d,a,ck Dackdack
+rattempt 6 2 14 0 1 d,a,ck,d,a,ck Dackdack
+rattempt 6 2 15 0 1 d,a,ck,d,a,ck Dackdack
+rattempt 6 3 0 0 1 d,a,ck,d,a,ck Dackdack
+rattempt 6 3 1 0 1 d,a,ck,d,a,ck Dackdack
+rattempt 6 3 2 0 1 d,a,ck,d,a,ck Dackdack
+rattempt 6 3 3 0 1 d,a,ck,d,a,ck Dackdack
+rattempt 6 3 4 0 1 d,a,ck,d,a,ck Dackdack
+rattempt 6 3 5 0 1 d,a,ck,d,a,ck Dackdack
+rattempt 6 3 6 0 1 d,a,ck,d,a,ck Dackdack
+rattempt 6 3 7 0 1 d,a,ck,d,a,ck Dackdack
+rattempt 6 3 8 0 1 d,a,ck,d,a,ck Dackdack
+rattempt 6 3 9 0 1 d,a,ck,d,a,ck Dackdack
+rattempt 6 3 10 0 1 d,a,ck,d,a,ck Dackdack
+rattempt 6 3 11 0 1 d,a,ck,d,a,ck Dackdack
+rattempt 6 3 12 0 1 d,a,ck,d,a,ck Dackdack
+rattempt 6 3 13 0 1 d,a,ck,d,a,ck Dackdack
+rattempt 6 3 14 0 1 d,a,ck,d,a,ck Dackdack
+rattempt 6 3 15 0 1 d,a,ck,d,a,ck Dackdack
+rattempt 7 1 0 0 1 kr,a,k,kr,a,k Krak-Krak
+rattempt 7 1 1 0 1 kr,a,k,kr,a,k Krak-Krak
+rattempt 7 1 2 0 1 kr,a,k,kr,a,k Krak-Krak
+rattempt 7 1 3 0 1 kr,a,k,kr,a,k Krak-Krak
+rattempt 7 1 4 0 1 kr,a,k,kr,a,k Krak-Krak
+rattempt 7 1 5 0 1 kr,a,k,kr,a,k Krak-Krak
+rattempt 7 1 6 0 1 kr,a,k,kr,a,k Krak-Krak
+rattempt 7 1 7 0 1 kr,a,k,kr,a,k Krak-Krak
+rattempt 7 1 8 0 1 kr,a,k,kr,a,k Krak-Krak
+rattempt 7 1 9 0 1 kr,a,k,kr,a,k Krak-Krak
+rattempt 7 1 10 0 1 kr,a,k,kr,a,k Krak-Krak
+rattempt 7 1 11 0 1 kr,a,k,kr,a,k Krak-Krak
+rattempt 7 1 12 0 1 kr,a,k,kr,a,k Krak-Krak
+rattempt 7 1 13 0 1 kr,a,k,kr,a,k Krak-Krak
+rattempt 7 1 14 0 1 kr,a,k,kr,a,k Krak-Krak
+rattempt 7 1 15 0 1 kr,a,k,kr,a,k Krak-Krak
+rattempt 7 2 0 0 1 kr,a,k,kr,a,k Krak-Krak
+rattempt 7 2 1 0 1 kr,a,k,kr,a,k Krak-Krak
+rattempt 7 2 2 0 1 kr,a,k,kr,a,k Krak-Krak
+rattempt 7 2 3 0 1 kr,a,k,kr,a,k Krak-Krak
+rattempt 7 2 4 0 1 kr,a,k,kr,a,k Krak-Krak
+rattempt 7 2 5 0 1 kr,a,k,kr,a,k Krak-Krak
+rattempt 7 2 6 0 1 kr,a,k,kr,a,k Krak-Krak
+rattempt 7 2 7 0 1 kr,a,k,kr,a,k Krak-Krak
+rattempt 7 2 8 0 1 kr,a,k,kr,a,k Krak-Krak
+rattempt 7 2 9 0 1 kr,a,k,kr,a,k Krak-Krak
+rattempt 7 2 10 0 1 kr,a,k,kr,a,k Krak-Krak
+rattempt 7 2 11 0 1 kr,a,k,kr,a,k Krak-Krak
+rattempt 7 2 12 0 1 kr,a,k,kr,a,k Krak-Krak
+rattempt 7 2 13 0 1 kr,a,k,kr,a,k Krak-Krak
+rattempt 7 2 14 0 1 kr,a,k,kr,a,k Krak-Krak
+rattempt 7 2 15 0 1 kr,a,k,kr,a,k Krak-Krak
+rattempt 7 3 0 0 1 kr,a,k,kr,a,k Krak-Krak
+rattempt 7 3 1 0 1 kr,a,k,kr,a,k Krak-Krak
+rattempt 7 3 2 0 1 kr,a,k,kr,a,k Krak-Krak
+rattempt 7 3 3 0 1 kr,a,k,kr,a,k Krak-Krak
+rattempt 7 3 4 0 1 kr,a,k,kr,a,k Krak-Krak
+rattempt 7 3 5 0 1 kr,a,k,kr,a,k Krak-Krak
+rattempt 7 3 6 0 1 kr,a,k,kr,a,k Krak-Krak
+rattempt 7 3 7 0 1 kr,a,k,kr,a,k Krak-Krak
+rattempt 7 3 8 0 1 kr,a,k,kr,a,k Krak-Krak
+rattempt 7 3 9 0 1 kr,a,k,kr,a,k Krak-Krak
+rattempt 7 3 10 0 1 kr,a,k,kr,a,k Krak-Krak
+rattempt 7 3 11 0 1 kr,a,k,kr,a,k Krak-Krak
+rattempt 7 3 12 0 1 kr,a,k,kr,a,k Krak-Krak
+rattempt 7 3 13 0 1 kr,a,k,kr,a,k Krak-Krak
+rattempt 7 3 14 0 1 kr,a,k,kr,a,k Krak-Krak
+rattempt 7 3 15 0 1 kr,a,k,kr,a,k Krak-Krak
+rattempt 8 1 0 1 0 gr,a,n,gr,a,k Grangrak
+rattempt 8 1 1 1 0 gr,a,n,gr,a,k Grangrak
+rattempt 8 1 2 0 1 gr,a,n,gr,a,n Grangran
+rattempt 8 1 3 1 0 gr,a,k,gr,a,n Grakgran
+rattempt 8 1 4 1 0 gr,a,n,gr,a,k Grangrak
+rattempt 8 1 5 0 1 gr,a,k,gr,a,k Grakgrak
+rattempt 8 1 6 1 0 gr,a,k,gr,a,n Grakgran
+rattempt 8 1 7 0 1 gr,a,k,gr,a,k Grakgrak
+rattempt 8 1 8 0 1 gr,a,n,gr,a,n Grangran
+rattempt 8 1 9 1 0 gr,a,n,gr,a,k Grangrak
+rattempt 8 1 10 1 0 gr,a,k,gr,a,n Grakgran
+rattempt 8 1 11 0 1 gr,a,n,gr,a,n Grangran
+rattempt 8 1 12 0 1 gr,a,n,gr,a,n Grangran
+rattempt 8 1 13 0 1 gr,a,k,gr,a,k Grakgrak
+rattempt 8 1 14 1 0 gr,a,k,gr,a,n Grakgran
+rattempt 8 1 15 1 0 gr,a,n,gr,a,k Grangrak
+rattempt 8 2 0 0 1 gr,a,k,gr,a,k Grakgrak
+rattempt 8 2 1 1 0 gr,a,n,gr,a,k Grangrak
+rattempt 8 2 2 1 0 gr,a,k,gr,a,n Grakgran
+rattempt 8 2 3 1 0 gr,a,k,gr,a,n Grakgran
+rattempt 8 2 4 1 0 gr,a,k,gr,a,n Grakgran
+rattempt 8 2 5 0 1 gr,a,k,gr,a,k Grakgrak
+rattempt 8 2 6 1 0 gr,a,n,gr,a,k Grangrak
+rattempt 8 2 7 1 0 gr,a,k,gr,a,n Grakgran
+rattempt 8 2 8 1 0 gr,a,k,gr,a,n Grakgran
+rattempt 8 2 9 0 1 gr,a,n,gr,a,n Grangran
+rattempt 8 2 10 1 0 gr,a,n,gr,a,k Grangrak
+rattempt 8 2 11 0 1 gr,a,n,gr,a,n Grangran
+rattempt 8 2 12 0 1 gr,a,n,gr,a,n Grangran
+rattempt 8 2 13 1 0 gr,a,k,gr,a,n Grakgran
+rattempt 8 2 14 1 0 gr,a,k,gr,a,n Grakgran
+rattempt 8 2 15 0 1 gr,a,k,gr,a,k Grakgrak
+rattempt 8 3 0 0 1 gr,a,k,gr,a,k Grakgrak
+rattempt 8 3 1 1 0 gr,a,n,gr,a,k Grangrak
+rattempt 8 3 2 0 1 gr,a,n,gr,a,n Grangran
+rattempt 8 3 3 0 1 gr,a,n,gr,a,n Grangran
+rattempt 8 3 4 0 1 gr,a,n,gr,a,n Grangran
+rattempt 8 3 5 0 1 gr,a,k,gr,a,k Grakgrak
+rattempt 8 3 6 0 1 gr,a,k,gr,a,k Grakgrak
+rattempt 8 3 7 1 0 gr,a,k,gr,a,n Grakgran
+rattempt 8 3 8 0 1 gr,a,k,gr,a,k Grakgrak
+rattempt 8 3 9 0 1 gr,a,n,gr,a,n Grangran
+rattempt 8 3 10 0 1 gr,a,k,gr,a,k Grakgrak
+rattempt 8 3 11 1 0 gr,a,k,gr,a,n Grakgran
+rattempt 8 3 12 1 0 gr,a,n,gr,a,k Grangrak
+rattempt 8 3 13 0 1 gr,a,k,gr,a,k Grakgrak
+rattempt 8 3 14 0 1 gr,a,k,gr,a,k Grakgrak
+rattempt 8 3 15 0 1 gr,a,n,gr,a,n Grangran
+rattempt 9 1 0 1 0 f,i,f,ee Fifee
+rattempt 9 1 1 0 1 f,ee,f,ee Feefee
+rattempt 9 1 2 0 1 f,ee,f,ee Feefee
+rattempt 9 1 3 0 1 f,i,f,i Fifi
+rattempt 9 1 4 1 0 f,ee,f,i Feefi
+rattempt 9 1 5 0 1 f,ee,f,ee Feefee
+rattempt 9 1 6 0 1 f,i,f,i Fifi
+rattempt 9 1 7 0 1 f,i,f,i Fifi
+rattempt 9 1 8 1 0 f,i,f,ee Fifee
+rattempt 9 1 9 1 0 f,i,f,ee Fifee
+rattempt 9 1 10 1 0 f,ee,f,i Feefi
+rattempt 9 1 11 1 0 f,ee,f,i Feefi
+rattempt 9 1 12 1 0 f,ee,f,i Feefi
+rattempt 9 1 13 1 0 f,i,f,ee Fifee
+rattempt 9 1 14 0 1 f,i,f,i Fifi
+rattempt 9 1 15 1 0 f,ee,f,i Feefi
+rattempt 9 2 0 0 1 f,i,f,i Fifi
+rattempt 9 2 1 1 0 f,i,f,ee Fifee
+rattempt 9 2 2 1 0 f,ee,f,i Feefi
+rattempt 9 2 3 0 1 f,ee,f,ee Feefee
+rattempt 9 2 4 0 1 f,ee,f,ee Feefee
+rattempt 9 2 5 0 1 f,i,f,i Fifi
+rattempt 9 2 6 1 0 f,i,f,ee Fifee
+rattempt 9 2 7 0 1 f,i,f,i Fifi
+rattempt 9 2 8 1 0 f,i,f,ee Fifee
+rattempt 9 2 9 0 1 f,i,f,i Fifi
+rattempt 9 2 10 1 0 f,ee,f,i Feefi
+rattempt 9 2 11 1 0 f,ee,f,i Feefi
+rattempt 9 2 12 1 0 f,i,f,ee Fifee
+rattempt 9 2 13 1 0 f,ee,f,i Feefi
+rattempt 9 2 14 1 0 f,ee,f,i Feefi
+rattempt 9 2 15 0 1 f,ee,f,ee Feefee
+rattempt 9 3 0 0 1 f,i,f,i Fifi
+rattempt 9 3 1 1 0 f,ee,f,i Feefi
+rattempt 9 3 2 1 0 f,i,f,ee Fifee
+rattempt 9 3 3 1 0 f,ee,f,i Feefi
+rattempt 9 3 4 0 1 f,ee,f,ee Feefee
+rattempt 9 3 5 1 0 f,i,f,ee Fifee
+rattempt 9 3 6 1 0 f,ee,f,i Feefi
+rattempt 9 3 7 1 0 f,ee,f,i Feefi
+rattempt 9 3 8 0 1 f,ee,f,ee Feefee
+rattempt 9 3 9 0 1 f,i,f,i Fifi
+rattempt 9 3 10 0 1 f,i,f,i Fifi
+rattempt 9 3 11 0 1 f,ee,f,ee Feefee
+rattempt 9 3 12 1 0 f,ee,f,i Feefi
+rattempt 9 3 13 1 0 f,i,f,ee Fifee
+rattempt 9 3 14 0 1 f,ee,f,ee Feefee
+rattempt 9 3 15 1 0 f,ee,f,i Feefi
+rattempt 10 1 0 1 0 w,ou,tw,i,tw,ou Woutwitwou
+rattempt 10 1 1 1 0 wh,i,tw,i,tw,ou Whitwitwou
+rattempt 10 1 2 1 0 w,i,tw,i,wh,i Witwiwhi
+rattempt 10 1 3 1 0 tw,ou,w,ou,wh,i Twouwouwhi
+rattempt 10 1 4 1 0 tw,i,tw,ou,w,ou Twitwouwou
+rattempt 10 1 5 0 1 w,i,w,i,wh,ou Wiwiwhou
+rattempt 10 1 6 1 0 wh,ou,w,ou,tw,i Whouwoutwi
+rattempt 10 1 7 1 0 tw,ou,w,ou,tw,ou Twouwoutwou
+rattempt 10 1 8 0 1 wh,ou,wh,i,wh,i Whouwhiwhi
+rattempt 10 1 9 1 0 tw,ou,wh,i,w,ou Twouwhiwou
+rattempt 10 1 10 1 0 wh,i,w,ou,wh,i Whiwouwhi
+rattempt 10 1 11 1 0 w,i,tw,ou,tw,i Witwoutwi
+rattempt 10 1 12 1 0 tw,i,wh,ou,w,i Twiwhouwi
+rattempt 10 1 13 1 0 tw,ou,wh,i,wh,ou Twouwhiwhou
+rattempt 10 1 14 0 1 w,ou,w,ou,wh,i Wouwouwhi
+rattempt 10 1 15 1 0 w,i,tw,ou,wh,ou Witwouwhou
+rattempt 10 2 0 0 1 wh,ou,w,ou,w,ou Whouwouwou
+rattempt 10 2 1 1 0 tw,ou,tw,i,w,ou Twoutwiwou
+rattempt 10 2 2 1 0 tw,i,w,ou,wh,i Twiwouwhi
+rattempt 10 2 3 0 1 w,i,w,i,tw,i Wiwitwi
+rattempt 10 2 4 0 1 w,i,w,i,tw,i Wiwitwi
+rattempt 10 2 5 1 0 tw,ou,w,ou,tw,ou Twouwoutwou
+rattempt 10 2 6 1 0 w,ou,wh,i,wh,ou Wouwhiwhou
+rattempt 10 2 7 0 1 w,ou,w,ou,w,i Wouwouwi
+rattempt 10 2 8 1 0 tw,ou,wh,i,tw,i Twouwhitwi
+rattempt 10 2 9 1 0 tw,ou,wh,ou,wh,i Twouwhouwhi
+rattempt 10 2 10 0 1 wh,i,wh,ou,wh,ou Whiwhouwhou
+rattempt 10 2 11 1 0 wh,i,tw,ou,wh,i Whitwouwhi
+rattempt 10 2 12 0 1 w,ou,wh,i,wh,i Wouwhiwhi
+rattempt 10 2 13 1 0 wh,i,w,ou,tw,i Whiwoutwi
+rattempt 10 2 14 1 0 tw,i,wh,ou,wh,i Twiwhouwhi
+rattempt 10 2 15 1 0 wh,i,w,i,w,ou Whiwiwou
+rattempt 10 3 0 0 1 w,ou,w,ou,tw,ou Wouwoutwou
+rattempt 10 3 1 1 0 w,i,tw,ou,w,ou Witwouwou
+rattempt 10 3 2 1 0 w,ou,tw,i,wh,i Woutwiwhi
+rattempt 10 3 3 1 0 tw,i,wh,ou,tw,i Twiwhoutwi
+rattempt 10 3 4 0 1 wh,i,wh,i,wh,i Whiwhiwhi
+rattempt 10 3 5 1 0 wh,ou,w,i,w,ou Whouwiwou
+rattempt 10 3 6 1 0 wh,i,wh,ou,w,ou Whiwhouwou
+rattempt 10 3 7 1 0 wh,i,w,ou,wh,i Whiwouwhi
+rattempt 10 3 8 0 1 w,i,w,i,wh,ou Wiwiwhou
+rattempt 10 3 9 0 1 wh,ou,wh,ou,w,i Whouwhouwi
+rattempt 10 3 10 0 1 w,ou,w,ou,tw,ou Wouwoutwou
+rattempt 10 3 11 0 1 w,i,w,i,tw,i Wiwitwi
+rattempt 10 3 12 1 0 tw,i,tw,ou,wh,ou Twitwouwhou
+rattempt 10 3 13 1 0 w,ou,w,i,wh,ou Wouwiwhou
+rattempt 10 3 14 1 0 w,i,wh,i,wh,ou Wiwhiwhou
+rattempt 10 3 15 1 0 tw,i,tw,ou,wh,i Twitwouwhi
+rattempt 11 1 0 0 0 .,ia,ll,l,i Iallli
+rattempt 11 1 1 0 0 l,i,ll,l,i Lillli
+rattempt 11 1 2 0 0 .,i,ll,l,i Illli
+rattempt 11 1 3 1 0 l,ia,ll,.,i Lialli
+rattempt 11 1 4 1 0 l,i,ll,.,ia Lillia
+rattempt 11 1 5 0 0 .,i,ll,l,i Illli
+rattempt 11 1 6 1 0 .,ia,ll,.,i Ialli
+rattempt 11 1 7 1 0 l,ia,ll,.,i Lialli
+rattempt 11 1 8 0 0 .,ia,ll,l,ia Ialllia
+rattempt 11 1 9 0 0 l,ia,ll,l,ia Lialllia
+rattempt 11 1 10 1 0 l,i,ll,.,ia Lillia
+rattempt 11 1 11 1 0 .,i,ll,.,i Illi
+rattempt 11 1 12 1 0 l,i,ll,.,ia Lillia
+rattempt 11 1 13 0 0 l,ia,ll,l,ia Lialllia
+rattempt 11 1 14 1 0 .,ia,ll,.,i Ialli
+rattempt 11 1 15 1 0 .,i,ll,.,i Illi
+rattempt 11 2 0 1 0 .,ia,ll,.,ia Iallia
+rattempt 11 2 1 0 0 l,ia,ll,l,ia Lialllia
+rattempt 11 2 2 1 0 l,i,ll,.,i Lilli
+rattempt 11 2 3 0 0 .,i,ll,l,i Illli
+rattempt 11 2 4 0 0 .,i,ll,l,i Illli
+rattempt 11 2 5 1 0 l,ia,ll,.,i Lialli
+rattempt 11 2 6 0 0 .,ia,ll,l,i Iallli
+rattempt 11 2 7 1 0 .,ia,ll,.,ia Iallia
+rattempt 11 2 8 0 0 l,ia,ll,l,i Liallli
+rattempt 11 2 9 1 0 l,ia,ll,.,ia Liallia
+rattempt 11 2 10 1 0 l,i,ll,.,ia Lillia
+rattempt 11 2 11 1 0 l,i,ll,.,i Lilli
+rattempt 11 2 12 0 0 .,ia,ll,l,ia Ialllia
+rattempt 11 2 13 1 0 .,i,ll,.,i Illi
+rattempt 11 2 14 1 0 l,i,ll,.,ia Lillia
+rattempt 11 2 15 0 0 l,i,ll,l,ia Lilllia
+rattempt 11 3 0 1 0 .,ia,ll,.,i Ialli
+rattempt 11 3 1 1 0 .,i,ll,.,ia Illia
+rattempt 11 3 2 0 0 .,ia,ll,l,i Iallli
+rattempt 11 3 3 1 0 l,i,ll,.,i Lilli
+rattempt 11 3 4 0 0 l,i,ll,l,i Lillli
+rattempt 11 3 5 0 0 .,ia,ll,l,ia Ialllia
+rattempt 11 3 6 1 0 l,i,ll,.,ia Lillia
+rattempt 11 3 7 1 0 .,i,ll,.,ia Illia
+rattempt 11 3 8 0 0 .,i,ll,l,i Illli
+rattempt 11 3 9 1 0 l,ia,ll,.,ia Liallia
+rattempt 11 3 10 1 0 .,ia,ll,.,i Ialli
+rattempt 11 3 11 0 0 .,i,ll,l,i Illli
+rattempt 11 3 12 1 0 l,i,ll,.,i Lilli
+rattempt 11 3 13 0 0 .,ia,ll,l,i Iallli
+rattempt 11 3 14 0 0 .,i,ll,l,ia Illlia
+rattempt 11 3 15 1 0 l,i,ll,.,i Lilli
+rattempt 12 1 0 1 0 l,l,i,n Llin
+rattempt 12 1 1 1 0 .,.,i,n In
+rattempt 12 1 2 1 0 l,.,i,n Lin
+rattempt 12 1 3 1 0 .,l,i,n Lin
+rattempt 12 1 4 1 0 .,.,i,n In
+rattempt 12 1 5 1 0 l,.,i,n Lin
+rattempt 12 1 6 1 0 l,l,i,n Llin
+rattempt 12 1 7 1 0 .,l,i,n Lin
+rattempt 12 1 8 1 0 l,l,i,n Llin
+rattempt 12 1 9 1 0 .,l,i,n Lin
+rattempt 12 1 10 1 0 .,.,i,n In
+rattempt 12 1 11 1 0 l,.,i,n Lin
+rattempt 12 1 12 1 0 .,.,i,n In
+rattempt 12 1 13 1 0 .,l,i,n Lin
+rattempt 12 1 14 1 0 l,l,i,n Llin
+rattempt 12 1 15 1 0 l,.,i,n Lin
+rattempt 12 2 0 1 0 l,l,i,n Llin
+rattempt 12 2 1 1 0 .,l,i,n Lin
+rattempt 12 2 2 1 0 .,.,i,n In
+rattempt 12 2 3 1 0 l,.,i,n Lin
+rattempt 12 2 4 1 0 l,.,i,n Lin
+rattempt 12 2 5 1 0 .,l,i,n Lin
+rattempt 12 2 6 1 0 l,l,i,n Llin
+rattempt 12 2 7 1 0 l,l,i,n Llin
+rattempt 12 2 8 1 0 .,l,i,n Lin
+rattempt 12 2 9 1 0 .,l,i,n Lin
+rattempt 12 2 10 1 0 .,.,i,n In
+rattempt 12 2 11 1 0 .,.,i,n In
+rattempt 12 2 12 1 0 l,l,i,n Llin
+rattempt 12 2 13 1 0 l,.,i,n Lin
+rattempt 12 2 14 1 0 .,.,i,n In
+rattempt 12 2 15 1 0 .,.,i,n In
+rattempt 12 3 0 1 0 l,l,i,n Llin
+rattempt 12 3 1 1 0 l,.,i,n Lin
+rattempt 12 3 2 1 0 l,l,i,n Llin
+rattempt 12 3 3 1 0 .,.,i,n In
+rattempt 12 3 4 1 0 .,.,i,n In
+rattempt 12 3 5 1 0 l,l,i,n Llin
+rattempt 12 3 6 1 0 .,.,i,n In
+rattempt 12 3 7 1 0 l,.,i,n Lin
+rattempt 12 3 8 1 0 l,.,i,n Lin
+rattempt 12 3 9 1 0 .,l,i,n Lin
+rattempt 12 3 10 1 0 l,l,i,n Llin
+rattempt 12 3 11 1 0 l,.,i,n Lin
+rattempt 12 3 12 1 0 .,.,i,n In
+rattempt 12 3 13 1 0 l,l,i,n Llin
+rattempt 12 3 14 1 0 l,.,i,n Lin
+rattempt 12 3 15 1 0 .,.,i,n In
+rresult rep god 0 1 1 1 Ba
+rresult rep civilization 0 1 1 3 Ba
+rresult rep settlement 0 1 1 1 Ba
+rresult rep settlement 0 1 1 F Ba II Ba
+sattempt 42 dwarven god 1 1960 0 0 1 Kourkour
+sattempt 42 dwarven god 1 1960 1 1 0 Droliban
+sattempt 42 elven god 2 44 0 0 1 Gloglosa
+sattempt 42 elven god 2 44 1 0 0 Thieithii
+sattempt 42 elven civilization 2 39 0 0 1 The Realm of Saesaell
+sattempt 42 elven civilization 2 39 1 0 0 The House of Ano
+sattempt 42 elven settlement 2 370 0 0 1 Rierie
+sattempt 42 elven settlement 2 370 1 1 0 Figlaeth
+sattempt 42 faerie god 3 2 0 0 1 Shiashia
+sattempt 42 faerie god 3 2 1 1 0 Miatae
+sattempt 42 faerie civilization 3 416 0 0 1 The Glieglie Court
+sattempt 42 faerie civilization 3 416 1 1 0 The Sou Court
+sattempt 42 faerie settlement 3 1 0 0 1 Iawowo Glade
+sattempt 42 faerie settlement 3 1 1 1 0 Mowilie Glade
+sattempt 42 goblin god 4 93 0 0 1 Bobozz
+sattempt 42 goblin god 4 93 1 1 0 Grigg-Grogg
+sattempt 42 goblin civilization 4 191 0 0 1 The Dridrig Horde
+sattempt 42 goblin civilization 4 191 1 0 0 The Not-Slonk Horde
+sattempt 42 goblin settlement 4 60 0 0 1 Sloslonk Hole
+sattempt 42 goblin settlement 4 60 1 1 0 Snokeet Pit
+sattempt 42 human god 5 875 0 0 1 Brodbrod
+sattempt 42 human god 5 875 1 1 0 Stemstul
+sattempt 42 human settlement 5 56 0 0 1 Wumwumbury
+sattempt 42 human settlement 5 56 1 0 0 Wusford
+sattempt 42 orcish god 6 308 0 0 1 Mo'mokh
+sattempt 42 orcish god 6 308 1 1 0 Uush'kruk
+sattempt 42 orcish civilization 6 121 0 0 1 Clan Za'zal
+sattempt 42 orcish civilization 6 121 1 1 0 The Warband of Kuurk
+sattempt 42 orcish settlement 6 442 0 0 1 Tha'tha
+sattempt 42 orcish settlement 6 442 1 1 0 Kraash'ugal
+sample15 faerie settlements Liava; Wiatwiesk Glade; Twamae Glade; Lith; Gliafloss Glade; Viashaeth Hollow; Teelan; Meeie Hollow; Sywyn Hollow; Iatysk; Wievysk; Miamo Hollow; Mavofie; Fitoth Hollow; Showhia Hollow; Mawhiath Hollow; Ashfli Hollow; Whywo; Fliavosk Hollow; Whosy Hollow
+sample15 faerie civilizations The Lysk Ring; The Watiafia Court; The Gloss Ring; The Wosk Ring; The Twiwhiwae Ring
+sample15 faerie gods Fiwhall; Fiaglo; Gliallsho

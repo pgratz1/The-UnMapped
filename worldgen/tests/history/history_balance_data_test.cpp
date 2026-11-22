@@ -117,7 +117,10 @@ TEST_CASE("P3-06 r9 20.12, P3-01 r9 3.2: muster_permille, conceal_min, home_defe
         // P3-01 r13 3.6 (P3-10 second round): hidden_years follows awakening_quarrel (orc 100, others 300)
         CHECK(d.record.name_at(static_cast<std::size_t>(at) + 6) == "hidden_years");
         CHECK(d.record.get_int("hidden_years") == (d.id == "orc" ? 100 : 300));
-        CHECK(d.record.name_at(static_cast<std::size_t>(at) + 7) == "settlement_kinds");
+        // P3-01 r14 3.7 (P3-11): awakening_population follows hidden_years (orc 1200, others 0)
+        CHECK(d.record.name_at(static_cast<std::size_t>(at) + 7) == "awakening_population");
+        CHECK(d.record.get_int("awakening_population") == (d.id == "orc" ? 1200 : 0));
+        CHECK(d.record.name_at(static_cast<std::size_t>(at) + 8) == "settlement_kinds");
         CHECK(d.record.get_int("muster_permille") == want[i].muster);
         CHECK(d.record.get_int("conceal_min") == want[i].conceal);
         CHECK(d.record.get_int("home_defense_permille") == want[i].home);
@@ -139,9 +142,9 @@ TEST_CASE("P3-05 r8 21 item 5: regions_per_extra_civ 90 and civs_extra_max 2 fol
 TEST_CASE("P3-06 r9 20.9: kinds 32 refugees_settled and 33 tribute after kind 31; claim salience 35") {
     using ET = eng::EntityType;
     const eng::EventCatalogue& compiled = eng::compiled();
-    REQUIRE(compiled.kinds.size() == 38U);
+    REQUIRE(compiled.kinds.size() == 40U);  // P3-04 r17 21.2 (0.20.0): kinds 39, 40
     const eng::EventCatalogue cat = eng::catalogue_of(engine_test::shipped());
-    REQUIRE(cat.kinds.size() == 38U);
+    REQUIRE(cat.kinds.size() == 40U);  // P3-04 r17 21.2 (0.20.0): kinds 39, 40
     for (const eng::EventCatalogue* c : {&compiled, &cat}) {
         const eng::KindDef& k32 = c->kinds[31];
         CHECK(k32.id == 32);
@@ -197,10 +200,10 @@ TEST_CASE("P3-06 r9 20.9: kinds 32 refugees_settled and 33 tribute after kind 31
     CHECK(cat.kinds[16].salience == 50);   // capital_moved
 }
 
-TEST_CASE("P3-06 r9 20.9, r10 20.21 item 9: history.report lists kinds 1-38 in kind id order (P3-04 r12 20.4: 37, 38)") {
+TEST_CASE("P3-06 r9 20.9, r10 20.21 item 9: history.report lists kinds 1-40 in kind id order (P3-04 r12 20.4: 37, 38; r17 21.2: 39, 40)") {
     const wd::Record& r = history_record(shipped_content(), "report");
     const auto& events = r.get_array("events");
-    REQUIRE(events.size() == 38U);
+    REQUIRE(events.size() == 40U);  // P3-06 r19 23.6 (0.20.0): kinds 39, 40 after quiet_stretch
     const eng::EventCatalogue& compiled = eng::compiled();
     for (std::size_t i = 0; i < events.size(); ++i) {
         CHECK(events[i].as_record().get_string("kind") == compiled.kinds[i].key);
@@ -243,9 +246,9 @@ TEST_CASE("P3-06 r10 20.15, 20.17, 20.22: kinds 34 war_won, 35 search_abandoned,
          "held on."},
     };
     const eng::EventCatalogue& compiled = eng::compiled();
-    REQUIRE(compiled.kinds.size() == 38U);
+    REQUIRE(compiled.kinds.size() == 40U);  // P3-04 r17 21.2 (0.20.0): kinds 39, 40
     const eng::EventCatalogue cat = eng::catalogue_of(engine_test::shipped());
-    REQUIRE(cat.kinds.size() == 38U);
+    REQUIRE(cat.kinds.size() == 40U);  // P3-04 r17 21.2 (0.20.0): kinds 39, 40
     for (const K& w : want) {
         CAPTURE(std::string_view(w.key));
         for (const eng::EventCatalogue* c : {&compiled, &cat}) {

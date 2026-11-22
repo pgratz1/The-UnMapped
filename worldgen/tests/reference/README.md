@@ -1249,3 +1249,65 @@ the reference's checks instrumented, finds no check where the order of 21.6's it
 synthetic and stress runs at `exhaustion_permille` 20 to 600: an attacker usually gains its goal by its own capture
 in the same T6, so the score is for it and both orders agree. The hand-made order cases are
 `history/history_conflict_order_test.cpp`.
+
+## Generator 0.20.0 (P3-11: P3-01 r14 3.7, P3-02 r15 14, P3-04 r17 21, P3-05 r16 23, P3-06 r19 23, P3-07 r14 23)
+
+Written from `docs/specs/p3-11-followups.md` and the stage-spec sections it names, without the engineer's
+branch. Every reference serves 0.20.0 by default; `--version 0.19.0` serves the 0.19.0 rules and data and
+reproduces the 0.19.0 goldens of dfa4e66 byte for byte (checked for `p3-01-data.txt`, `p3-02-names.txt`,
+`p3-03-chronology.txt`, `p3-04-engine.txt`, `p3-05-peoples.txt` and `p3-06-conflict.txt`, the last with
+`hist-conflict-73-1024`). The inputs are those of P3-10 (region names do not change), gathered with the slow case's
+input in `~/.cache/the-unmapped/out/p3-11-tests/inputs/`.
+
+```
+I=~/.cache/the-unmapped/out/p3-11-tests/inputs
+python3 -B worldgen/tests/reference/p3_data_reference.py check
+python3 -B worldgen/tests/reference/p3_names_reference.py check
+python3 -B worldgen/tests/reference/p3_names_reference.py scan          # the 59,400-name rates of 14.2 and 14.3
+python3 -B worldgen/tests/reference/p3_chronology_reference.py check
+python3 -B worldgen/tests/reference/p3_engine_reference.py check --inputs $I
+python3 -B worldgen/tests/reference/p3_peoples_reference.py check --inputs $I
+python3 -B worldgen/tests/reference/p3_conflict_reference.py check --inputs $I
+```
+
+- `p3_data_reference.py`: `SPEC_FILES_020` (race `awakening_population` after `hidden_years`, orc 1200, others 0;
+  the faerie lists of P3-02 14.1; the entries of kinds 39 and 40 after `quiet_stretch`), `NAME_FILTER_EDITS_020`
+  (14.3), `pre_020` and `name_filters_pre_020` (the disk's version), `P3_11_BASE_COMMIT` dfa4e66 (the 0.19.0
+  `name_filters/` read from git when 0.19.0 is served over 0.20.0 files), `check_spec_020`, the filter sizes
+  33/18/5, 71/12/14, 5/1/391 (effective 109/31/511).
+- `p3_names_reference.py`: `CULTURES_R15` (the faerie lists), `REPEAT_RULE`, `syllables` and `repeated` (14.2:
+  boundaries at the first symbol, before O, before N not after O, at separators; s_i and b_i; repeated when s_i is
+  not empty and s_i = s_{i+1} or b_{i+1}); the attempt's `flags` gain `repeated`, `drawn`, `r4valid`, `word`. Golden
+  lines `rrow` (14.2's nine rows and 14.4's OONC, each in a test culture made of the row's strings, with the first
+  (e, t) that draws exactly them), `rattempt`, `rresult` (culture `rep`: Ba valid, Baba repeated; the fallback),
+  `sattempt` (shipped cultures, seed 42) and `sample15` (5.1's protocol at 0.20.0 for the faeries,
+  `SAMPLES_R15`). `check_r15`; the 11.6 tables at 0.20.0 allow only the faerie row and names whose 0.19.0 attempt
+  0.20.0 rejects to change (`old_name_rejected`); 11.7 item 7's 0.16.0 hashes are checked with the rule off
+  (`REPEAT_OFF`), since the library applies 14.2 to every culture and the `r4sha256` golden lines move.
+- `p3_engine_reference.py`: `COMPILED_020` (kinds 39, 40), `RENDER_R17` (`fmt_value`: 1 to 9 as words in `{value}`
+  and the three-word form's `#`), `TEMPLATE_CASES_R17`, `check_render_r17`; r10's grammar checks run without r17.
+- `p3_peoples_reference.py`: flag `awaken_pop` (`World.awakening_population`; P3-05 r17 23.2 item 2: the ordered set
+  `first_colony_pending`, filled at an awakening of a race with the field above 0, read in 9.3 item 1 for the
+  capital, cleared at the civilization's first `colony_founded` and in `end_civ`; `colony_log` records each colony's
+  source pressure and whether the founder was pending), `check_units_r16` (r17 23.4 items 1 to 3, 6, 8, 10: the
+  formula with C set by hand; a village of 1,200 at share 4,700 has pressure 255, is ready only while pending, its
+  colony of 144 clears the mark, and the next T2 takes no found draw; lying low skips first; every race at 0 equals
+  the 0.19.0 rule on the synthetic worlds; invariant 3 at every awakening with 100,000; every colony ready by
+  pressure or the first of a pending civilization).
+- `p3_conflict_reference.py`: flags `claim39` (23.2) and `foot40` (23.3); `CLAIMS` and `CEDES` read kinds 20/39 and
+  29/40 alike in every invariant, statistic, war line (`-foothold`) and note; `history_note` gains P3-07 r14 23
+  items 3 and 4; `replay_r17` checks 23.7 item 3 and 23.2's holder; `check_self_r19` (23.7 item 5) on every
+  synthetic and stress world; `check_units_r19` (23.7 item 1 on W1); one golden line per case
+  `<case> r19 t11 ... first_orc_war ... claims39 a/t/n cessions40 n goal_differs n`.
+
+Readings taken (also in the hand-back report):
+- 23.2's settlement list is the holder's standing visible settlements **not hidden** (`svis_seen`, the set that puts
+  R in presence(b)), as 23.7 item 1's test and decision 4 say; the rule text says only "visible".
+- 5.2's `kind_cap` of a non-fortress settlement is the top of the race's ladder (orcs: town, 7,999), so an orc
+  village of 1,200 has pressure max(1,200,000 div C_s, 150), not 800 as P3-05 r16 23.1 and 23.2 computed with a cap
+  of 1,499. P3-05 r17 (spec commit e361880) corrects it with the pending mark above; the goldens follow r17.
+
+First integration with `p3/11-impl` at e7b9988 (r16, before the correction; branch `p3/11-int`): the C++ matched
+every r16 reference golden and `check-world` on the 1024 default worlds of seeds 0 to 13 and 73; T11 on those 15
+worlds was 120, 149, 149, 140, 52, 121, 164, 153, 119, 188, 175, 112, 92, 151, 164 (median 149), which is what led
+to r17.

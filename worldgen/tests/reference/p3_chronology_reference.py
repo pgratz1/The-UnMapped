@@ -69,7 +69,7 @@ GOLDEN = os.path.join(REPO, "worldgen", "tests", "golden", "p3-03-chronology.txt
 DEFAULT_INPUTS = os.path.join(os.path.expanduser("~"), ".cache", "the-unmapped", "out", "p3-10-tests", "inputs")
 # P3-10 (generator 0.19.0, the default): the inputs carry P1-06 r7's region names; --version 0.18.0 (or
 # 0.17.0) reads the P3-08 inputs (r3 names).
-INPUTS_BY_VERSION = {"0.19.0": DEFAULT_INPUTS,
+INPUTS_BY_VERSION = {"0.20.0": DEFAULT_INPUTS, "0.19.0": DEFAULT_INPUTS,   # P3-11: region names unchanged
                      "0.18.0": os.path.join(os.path.expanduser("~"), ".cache", "the-unmapped", "out", "p3-08-tests",
                                             "inputs")}
 
@@ -1076,7 +1076,16 @@ def check_r3(c):
     for seed, row in pnr.GODS_R5.items():
         res = stage_with_regions(data, params(), seed, [])
         got = [g[1] for g in res["god"]]
-        if pdr.at_least("0.19.0"):
+        if pdr.at_least("0.20.0"):
+            # P3-02 r15 14: the faerie god changes with 14.1's lists; another god only where 0.20.0 rejects its
+            # 0.19.0 attempt (14.2, 14.3)
+            old = row.split(", ")
+            for i, (g, o) in enumerate(zip(got, old)):
+                cid = pnr.GOD_RACE_CULTURES[i]
+                if g != o and cid != "faerie":
+                    c.eq("r3 gods seed %d %s: %s redrawn because 0.20.0 rejects it" % (seed, cid, o),
+                         pnr.old_name_rejected(pnr.CULTURES[cid], "god", seed, pnr.CULTURE_NUMBER[cid], i + 1, o), True)
+        elif pdr.at_least("0.19.0"):
             # P3-02 r10 12.1: only the gods the new filter entries reject (Grammam, Gordman) are redrawn
             old = row.split(", ")
             c.eq("r3 gods seed %d (P3-02 11.6, r10 12.1)" % seed, [g for g, o in zip(got, old) if g != o],
@@ -1120,12 +1129,13 @@ def cmd_check():
     check_r3(c)
     check_properties(c)
     if os.path.exists(GOLDEN) and os.path.exists(INPUTS_READY):
-        if pdr.at_least("0.19.0"):
+        if pdr.at_least("0.20.0"):
             with open(GOLDEN, "rb") as f:
                 committed = f.read().decode()
-        else:   # P3-10: the file of the served version, as of the P3-10 base commit
+        else:   # P3-10, P3-11: the file of the served version, as of its base commit
             import subprocess
-            committed = subprocess.run(["git", "-C", REPO, "show", pdr.P3_10_BASE_COMMIT +
+            committed = subprocess.run(["git", "-C", REPO, "show", (pdr.P3_11_BASE_COMMIT if pdr.DATA_VERSION == "0.19.0"
+                                                                     else pdr.P3_10_BASE_COMMIT) +
                                         ":worldgen/tests/golden/p3-03-chronology.txt"], check=True,
                                        capture_output=True, text=True).stdout
         c.eq("golden file current", committed, golden_text(DEFAULT_INPUTS))
@@ -1215,7 +1225,7 @@ def main(argv):
         pnr.use_version(v)
         _SHIPPED = None
         DEFAULT_INPUTS = INPUTS_BY_VERSION.get(v, INPUTS_BY_VERSION["0.18.0"])
-        INPUTS_READY = os.path.join(DEFAULT_INPUTS, "READY") if v == "0.19.0" else DEFAULT_INPUTS
+        INPUTS_READY = os.path.join(DEFAULT_INPUTS, "READY") if v in ("0.19.0", "0.20.0") else DEFAULT_INPUTS
     cmd = argv[0]
     if cmd == "check":
         return cmd_check()

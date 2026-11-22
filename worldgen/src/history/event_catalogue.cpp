@@ -43,6 +43,17 @@ std::string grouped_text(std::int64_t v) {
     return out;
 }
 
+// P3-04 r17 21.1: a value in a sentence; one to nine as lower-case
+// words, every other value as grouped_text.
+std::string sentence_value_text(std::int64_t v) {
+    static constexpr std::string_view WORDS[] = {"one", "two", "three", "four", "five",
+                                                 "six", "seven", "eight", "nine"};
+    if (v >= 1 && v <= 9) {
+        return std::string(WORDS[static_cast<std::size_t>(v - 1)]);
+    }
+    return grouped_text(v);
+}
+
 std::string size_text(std::size_t v) {
     return db::format_u64(static_cast<std::uint64_t>(v));
 }
@@ -163,6 +174,19 @@ EventCatalogue build_compiled() {
         KindDef{37, "plague_outbreak", false, 1, 1, settlement_and_civ(), {"dead", "population", "total", "reached"}, 0, {}});
     c.kinds.push_back(KindDef{38, "quiet_stretch", false, 0, 0, {role(1, "realm", EntityType::civilization, 1, 0)},
                               {"years", "realms"}, 0, {}});
+    // P3-04 r17 21.2 (P3-11, generator 0.20.0): kind 39, a claim on the
+    // settlements of a holder that does not hold the region (P3-06 23.2);
+    // kind 40, the foothold cession of P3-06 22.5 item 3.2 (23.3).
+    c.kinds.push_back(KindDef{39, "claim_settlements", true, 1, 0,
+                              {role(1, "claimant", EntityType::civilization, 1, 1),
+                               role(2, "holder", EntityType::civilization, 1, 1),
+                               role(3, "settlement", EntityType::settlement, 1, 0)},
+                              {}, 0, {}});
+    c.kinds.push_back(KindDef{40, "settlements_ceded", true, 1, 0,
+                              {role(1, "from", EntityType::civilization, 1, 1),
+                               role(2, "to", EntityType::civilization, 1, 1),
+                               role(3, "settlement", EntityType::settlement, 1, 0)},
+                              {}, 0, {}});
     return c;
 }
 
@@ -964,7 +988,7 @@ std::string render_event(const HistoryView& view, std::int64_t event_id) {
                 }
                 break;
             }
-            case TokenType::value: out += grouped_text(value_of(t.text)); break;
+            case TokenType::value: out += sentence_value_text(value_of(t.text)); break;
             case TokenType::choice: {
                 const std::int64_t v = value_of(t.text);
                 if (!t.three) {
@@ -975,7 +999,7 @@ std::string render_event(const HistoryView& view, std::int64_t event_id) {
                 const std::string& word = v == 0 ? t.word_zero : v == 1 ? t.word_one : t.word_other;
                 for (const char c : word) {
                     if (c == '#') {
-                        out += grouped_text(v);
+                        out += sentence_value_text(v);  // r17 21.1
                     } else {
                         out += c;
                     }

@@ -271,6 +271,7 @@ PeoplesRace peoples_race(const db::RaceRow& row, std::span<const db::RaceBiomeRo
     r.growth_permille = d.get_int("growth_permille");
     r.expansion = d.get_int("expansion");
     r.density_permille = d.get_int("density_permille");
+    r.awakening_population = d.get_int("awakening_population");  // r16 23.2 (generator 0.20.0)
     const data::Record& cw = d.get_record("cell_weights");  // P3-01 r8
     r.cell_ore = cw.get_int("ore");
     r.cell_height = cw.get_int("height");

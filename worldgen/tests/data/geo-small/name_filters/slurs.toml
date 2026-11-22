@@ -14,8 +14,8 @@ anywhere = [
   "chink", "coolie", "darkie", "darky", "fagg", "golliw", "gringo", "honkie",
   "hymie", "igger", "injun", "jigab", "jigg", "kaffir", "kafir", "kike",
   "kyke", "lesbo", "negr", "nig", "nyg", "pickan", "pikey", "polack",
-  "raghead", "redskin", "retard", "shemale", "spast", "spick", "squaw",
-  "trann", "wetback",
+  "raghead", "redskin", "shemale", "spast", "spick", "squaw",
+  "tard", "trann", "wetback",
 ]
 at_start = [
   "boong", "coon", "crip", "dago", "dyke", "fag", "gook", "gyp", "heeb",
@@ -23,5 +23,5 @@ at_start = [
   "wop",
 ]
 whole = [
-  "abo", "gimp", "jap", "spas", "tard", "yid",
+  "abo", "gimp", "jap", "spas", "yid",
 ]

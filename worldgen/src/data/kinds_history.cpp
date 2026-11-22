@@ -746,6 +746,7 @@ Schema race_schema() {
         Field::required("odds_min_permille", Type::integer(0, 1000)),
         Field::required("awakening_quarrel", Type::integer(0, 1)),
         Field::required("hidden_years", Type::integer(0, 10000)),  // P3-01 r13 3.6 (P3-06 r17 22.2)
+        Field::required("awakening_population", Type::integer(0, 100000)),  // P3-01 r14 3.7 (P3-05 r16 23)
         Field::required("settlement_kinds",
                         Type::array(Type::enumeration({"hamlet", "village", "town", "city", "fortress"}), 1, 5)),
         Field::required("culture", Type::reference(std::string(CULTURE_KIND))),

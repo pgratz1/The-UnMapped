@@ -1020,3 +1020,31 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
   - R2: a war is won by aim only when the goal has changed hands to the attacker during the war. Holding it at the declaration does not count: the defender's last settlement there must be gone. A realm may still claim a region it holds where another people keeps a town. If it wins that war by the score, the other people's settlements there pass to it with the peace. Wars won by aim with no battle in one year: at most 3 in 100 default worlds.
 - Interim choice: the rulings are specified and go into P3-10 before its merge (generator stays 0.19.0). Paul's decisions of 2026-11-20 stand in their intent: orcs still awaken with a quarrel and declare at shorter odds, and an attacker still wins by aim only by holding its goal. The rulings add a condition to each.
 - Status: open (awaiting Paul's confirmation); listed as an open question in design.md section 12 (2026-11-21)
+
+### History and names: P3-11 orc arrival, wording and names (scope)
+
+- Date: 2026-11-21
+- Raised by: spec writer (P3-11, `docs/specs/p3-11-followups.md`), from the world critic's notes N1 to N4 of the P3-10 second round, the second-round validation and Paul's decision of 2026-11-21 on faerie names
+- Design doc section: 5 (the orc age; races and cultures: names), 6 (text rendered from records)
+- Problem: after P3-10 (generator 0.19.0) the orcs sit still for a median 232 years after their awakening (88 of 100 default worlds have 200 silent years or more). Claims and foothold cessions name a region where only towns are at stake ("ceded the Graven Thicket" when one town passed). Faerie names keep their baby-talk sounds. `tard` and faerie names ending in `-ass` pass the filter. Small counts are written as digits beside words ("one other settlement", "2 other settlements").
+- Proposal: one change, generator 0.20.0, schema 7 unchanged.
+  - Orcs arrive in numbers: a race field `awakening_population` (orc 1,200) starts the first orc settlement larger, and its first colony is not held back by pressure (corrected the same day: the population alone did not make it ready, since an orc village's kind cap is 7,999), with the target that the median first orc colony, declaration, sack or capture comes within 100 years of the awakening.
+  - Two appended event kinds name the settlements of a claim on a region the holder does not hold and of a foothold cession.
+  - The faerie syllables follow Paul's decision (no `p` or `b` onsets, fewer `ee` and `ou`), and no name repeats a syllable twice in a row, in every culture.
+  - `tard` is filtered anywhere in a word.
+  - Values one to nine are written as words in sentences.
+  - One open question, non-blocking: a war fought over another region than the claim it cites (because that region became weary, was lost, or became the defender's capital) is kept as specified, and the report names the claim's region; the alternatives are a fresh claim at the declaration, or no war.
+- Interim choice: as proposed; the design document is not affected (the orcs' "coming opens the most recent age of conflict" is served, not changed; Paul's decisions on the orc age's length and on orcs at peace among goblins stand).
+- Status: open (scope record; the question in `docs/specs/p3-11-followups.md` section 10 item 1 awaits Paul, with a recommendation)
+
+### History: the P3-11 orc targets, the lead's ruling (awaiting Paul)
+
+- Date: 2026-11-22
+- Raised by: lead, from the P3-11 validation (`docs/reviews/p3-11-followups-validation.md`) and the world critic's review (`docs/reviews/p3-11-followups-world-critic.md`)
+- Design doc section: 5 (history: the orc age)
+- Problem: at generator 0.20.0 the orcs act a median 9 years after their awakening (232 at 0.19.0), declare almost twice as many wars and win 168 against 95 lost. Two limits the lead set in the P3-10 rulings are each missed by one world over 100 default worlds: 11 worlds end with exactly one standing orc settlement (limit 10), and in 3 worlds the orcs do nothing after year 5750 (limit 2). Validation found no defect.
+- Ruling: both misses are accepted and P3-11 merges. The limits were set to catch broken or frozen orc realms. The critic read all fourteen worlds: the eleven are a rise and fall by the orcs' own wars or a conquest by others in the last decades, each leaving ruins and a remnant; the three silent worlds are realms of four to six settlements at peace, which Paul accepted on 2026-11-21. For later measurements the two limits are restated as the critic suggests: one standing orc settlement with no war won and nothing sacked (6 worlds at 0.20.0), and silent after 5750 with at most two standing settlements (0 worlds).
+- Left for a later balance pass, with the next change that alters world bytes: the first orc war is mostly declared with exactly two settlements and is then lost more often than won (29 lost, 19 won), so the quarrel war should be gated on strength (critic's F1); `shiva` joins the famous-name list; `fag` inside a word; the dwarven codas `din` and `rin` that hide stutters such as Clan Didin.
+- Questions for Paul (from the critic): (1) orcs now sometimes declare war on goblins (12 declarations in 9 worlds): is evil turning on evil welcome? (2) should faerie near-repeats such as Feefi and Flaefla also go (6.6% of faerie names)? (3) is an orc age that is a gamble between collapse and conquest the intended spread?
+- Interim choice: as ruled.
+- Status: open (awaiting Paul's confirmation)

@@ -14,6 +14,7 @@
 #include <array>
 #include <cstddef>
 #include <map>
+#include <set>
 #include <cstdint>
 #include <optional>
 #include <span>
@@ -95,6 +96,9 @@ struct PeoplesRace {
     std::int64_t cell_ore = 0, cell_height = 0;  // r6: cell_weights (P3-01 r8)
     // r12 22.5 (P3-01 r11 3.4): the neutral values 0, 1000 and 1000.
     std::int64_t cell_inland = 0, cell_port = 1000, cell_habitability = 1000;
+    // r16 23.2 (P3-01 r14 3.7): the awakening settlement's population; 0
+    // (a hand-made race: the rule off) means founding_population.
+    std::int64_t awakening_population = 0;
     std::array<std::uint8_t, 6> builds{};      // index: SettlementKind code (1 to 5); 1 if built
     std::vector<db::RaceBiomeRow> biomes;      // its race_biome rows, ascending biome
 
@@ -325,6 +329,9 @@ public:
     // P3-06 21.10 item 2: civ has a record, year < until, and its refuge is
     // standing and owned by civ.
     [[nodiscard]] bool lying_low(const State& state, std::int64_t civ, std::int64_t year) const;
+    // r17 23.2 item 2: civ is in first_colony_pending (a test seam; a
+    // conquered civilization leaves the set at the next T2 or Q4).
+    [[nodiscard]] bool first_colony_pending(std::int64_t civ) const { return first_colony_pending_.count(civ) != 0; }
     // 8.5 items 2 to 5 with `event` as the ruin event (r1); not item 6. The
     // settlement must be standing and owned. FatalError "history: peoples:
     // ruin: settlement <s> is not standing".
@@ -433,6 +440,9 @@ private:
     // 8.4: the kind of a new settlement (r6: the fortress cell rule).
     [[nodiscard]] SettlementKind founding_kind(std::int64_t race, std::int64_t region, const SiteCell& site,
                                                std::int64_t population) const;
+    // r16 23.2: the population of an awakening settlement in a home of
+    // capacity C(H, r) = `capacity`.
+    [[nodiscard]] std::int64_t awakening_population(const PeoplesRace& race, std::int64_t capacity) const;
     [[nodiscard]] std::optional<std::int64_t> outward_target(const StepContext& context, std::int64_t civ,
                                                              bool require_free, std::vector<std::int64_t>* all) const;
     [[nodiscard]] std::string next_name(const StepContext& context, std::int64_t race, NameKind kind,
@@ -464,6 +474,11 @@ private:
         std::int64_t until = 0;       // the year its hidden years end
     };
     std::map<std::int64_t, LowRecord> low_until_;  // r15 22.7a: civilization -> its latest flight
+    // r17 23.2 item 2: the civilizations placed at an awakening of a race
+    // with awakening_population > 0 that have founded no colony yet and have
+    // not ended; while a member, a civilization's capital is ready in 9.3
+    // item 1 whatever its pressure.
+    std::set<std::int64_t> first_colony_pending_;
     PeoplesView view_;
 };
 

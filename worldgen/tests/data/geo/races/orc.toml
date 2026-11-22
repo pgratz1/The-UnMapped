@@ -33,5 +33,6 @@ home_defense_permille = 0
 odds_min_permille = 500
 awakening_quarrel = 1
 hidden_years = 100
+awakening_population = 1200
 settlement_kinds = ["hamlet", "village", "town", "fortress"]
 culture = "orcish"

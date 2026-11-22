@@ -175,7 +175,9 @@ TEST_CASE("P3-02 4.6, 9.1 test 3: collision gives Focoth (attempt 1); 61 names t
             const names_api::Attempt a = names_api::attempt(elven, Kind::settlement, 0, 2, 1, t);
             if (a.valid) valid.insert(a.name);
         }
-        CHECK(valid.size() == 61);
+        // 4.6 counts 61 distinct valid names; from 0.20.0 (P3-02 r15 14.2) one of them comes from an attempt whose
+        // syllables repeat, so 60 remain (the reference's check "4.6 distinct valid names")
+        CHECK(valid.size() == 60);
         Registry r = copy_of(valid);
         CHECK(names_api::make_name(elven, "elven", Kind::settlement, 0, 2, 1, r) == "Iensath II");
         CHECK(r.contains("Iensath II"));
@@ -550,11 +552,13 @@ TEST_CASE("P3-02 11.6 (r5): the sample table under r5 (seed 0, one registry per 
                    "Leithiedell", "Orith", "Voglael", "Mievife", "Iefann", "Cellve", "Fimo", "Londcae", "Rienel",
                    "Nathol", "Siendnie", "The House of Nife", "The Court of Nothind", "The House of Aesoth", "The House of Riefifie",
                    "The Court of Thiesaell", "Saene", "Fiendse", "Ithonnfa"}},
-        {"faerie", {"Liapa", "Wiatwiesk Glade", "Twamae Glade", "Ybeeie Hollow", "Biafloss Glade", "Pieshaep Hollow", "Teelan",
-                    "Meeie Hollow", "Sywysh Hollow", "Iatysk", "Wiepysk", "Miemo Hollow", "Mapoufee", "Feetop Hollow",
-                    "Showhie Hollow", "Mawhiap Hollow", "Athfli Hollow", "Whywo", "Fliaposk Hollow", "Whosy Hollow",
-                    "The Lyp Ring", "The Watiafia Court", "The Bouss Ring", "The Wosk Ring", "The Twiwhiwou Ring",
-                    "Fiwhall", "Fiabo", "Biensho"}},
+        // r15 (P3-02 14.1, 14.4, generator 0.20.0): the faerie row of 5.1's protocol with 14.1's lists (the
+        // reference's SAMPLES_R15; 11.6's row is the record of the 0.17.0 to 0.19.0 lists)
+        {"faerie", {"Liava", "Wiatwiesk Glade", "Twamae Glade", "Lith", "Gliafloss Glade", "Viashaeth Hollow", "Teelan",
+                    "Meeie Hollow", "Sywyn Hollow", "Iatysk", "Wievysk", "Miamo Hollow", "Mavofie", "Fitoth Hollow",
+                    "Showhia Hollow", "Mawhiath Hollow", "Ashfli Hollow", "Whywo", "Fliavosk Hollow", "Whosy Hollow",
+                    "The Lysk Ring", "The Watiafia Court", "The Gloss Ring", "The Wosk Ring", "The Twiwhiwae Ring",
+                    "Fiwhall", "Fiaglo", "Gliallsho"}},
         {"goblin", {"Krot Pit", "Slograb Pit", "Gnink-Snunk", "Zux", "Grunkgnuzz Pit", "Grizz-Skeeb", "Slank-Skrox",
                     "Drobskeet", "Bozz Pit", "Sluggatch Hole", "Bux-Kreeb", "Sniz", "Slak", "Zug-Gok", "Gunitch",
                     "Skrizuz", "Droggkazz Hole", "Slobeerk", "Snok", "Kruskreezz Hole", "The Gnazz Horde",
@@ -736,13 +740,15 @@ TEST_CASE("P3-02 11.3, 11.7 item 10: the critics' examples are rejected as root 
         std::string("ugh") + "'kaal", std::string("cu") + "m" + "brin",
         // P3-02 r13 13.1: the fragment of 11.3's example now matches anywhere, so its "not filtered" example
         // (Ascumbrin) is filtered from 0.19.0 r13 on (11.3's sentence is outdated by 13.1)
-        std::string("ascu") + "m" + "brin"};
+        std::string("ascu") + "m" + "brin",
+        // P3-02 r15 14.3 (0.20.0): tard is an anywhere entry, so 11.3's passing example Stard is filtered
+        std::string("s") + "tard"};
     for (std::size_t i = 0; i < rejected.size(); ++i) {
         CAPTURE(i);  // the index, not the word
         CHECK(names_api::name_filtered(f, rejected[i]));
         CHECK(names_test::ref_filtered(f, rejected[i]));
     }
-    for (const std::string& w : std::vector<std::string>{"stard", "iensath", "grork"}) {
+    for (const std::string& w : std::vector<std::string>{"iensath", "grork"}) {
         CAPTURE(w);
         CHECK_FALSE(names_api::name_filtered(f, w));
         CHECK_FALSE(names_test::ref_filtered(f, w));
@@ -906,11 +912,11 @@ TEST_CASE("P3-02 11.2, 11.5: the library's effective filter equals the union of 
     // The test reads game/data/name_filters/ with toml++; the library builds its filter from the
     // loaded content set (name_filter_from). Compared as sets (only membership matters, 11.2).
     const names_api::Filter& mine = names_test::shipped_filter();
-    // P3-02 r13 13.1 (0.19.0 second round): 110 / 31 / 508 (r10 12.1: 108 / 36 / 510; 101 / 35 / 514 at 0.18.0;
-    // 768 whole at 0.17.0)
-    CHECK(std::set<std::string>(mine.anywhere.begin(), mine.anywhere.end()).size() == 110);
+    // P3-02 r15 14.3 (0.20.0): 109 / 31 / 511 (r13 13.1: 110 / 31 / 508; r10 12.1: 108 / 36 / 510; 101 / 35 / 514
+    // at 0.18.0; 768 whole at 0.17.0)
+    CHECK(std::set<std::string>(mine.anywhere.begin(), mine.anywhere.end()).size() == 109);
     CHECK(std::set<std::string>(mine.at_start.begin(), mine.at_start.end()).size() == 31);
-    CHECK(std::set<std::string>(mine.whole.begin(), mine.whole.end()).size() == 508);
+    CHECK(std::set<std::string>(mine.whole.begin(), mine.whole.end()).size() == 511);
 }
 
 }  // TEST_SUITE

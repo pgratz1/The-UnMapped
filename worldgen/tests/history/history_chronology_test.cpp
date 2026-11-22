@@ -122,7 +122,7 @@ TEST_CASE("P3-03 7.1, 14.1 item 1: seed 0 and seed 1, span 6000") {
         const Rows r = chrono_api::stage(shipped(), Params{}, 1, {});
         CHECK(years_of_rows(r) == std::vector<std::int64_t>{0, 2071, 3341, 4178, 4934, 5580});
         CHECK(god_names(r) ==
-              std::vector<std::string>{"Laesiel", "Gragg-Gnurk", "Khummhor", "Synmia", "Steckwint", "Kaag'azak"});
+              std::vector<std::string>{"Laesiel", "Gragg-Gnurk", "Khummhor", "Syllmia", "Steckwint", "Kaag'azak"});
     }
 }
 
@@ -154,9 +154,9 @@ TEST_CASE("P3-03 7.1, 14.1 item 1: seed 3, --races elf,orc (hist-races-elf-orc-1
     CHECK(s[1].d == 22);
     const Rows r = chrono_api::stage(shipped(), params_with(6000, {"elf", "orc"}), 3, {});
     CHECK(ages_text(r.ages) == "1:1:0:5601:The Age of Elves|2:6:5602:5999:The Age of Orcs");
-    CHECK(god_names(r) == std::vector<std::string>{"Vaennela", "Sluskat", "Nonthom", "Pyia", "Bulwan", "A'ghaz"});
-    CHECK(replay_gods(r, 3, {}, shipped()) == "1:Vaennela:0|2:Sluskat:1|3:Nonthom:1|4:Pyia:0|5:Bulwan:0|6:A'ghaz:0");
-    CHECK(chrono_api::god_choices(shipped(), params_with(6000, {"elf", "orc"}), 3, {}) == "1:Vaennela:0|2:Sluskat:1|3:Nonthom:1|4:Pyia:0|5:Bulwan:0|6:A'ghaz:0");
+    CHECK(god_names(r) == std::vector<std::string>{"Vaennela", "Sluskat", "Nonthom", "Vyia", "Bulwan", "A'ghaz"});
+    CHECK(replay_gods(r, 3, {}, shipped()) == "1:Vaennela:0|2:Sluskat:1|3:Nonthom:1|4:Vyia:0|5:Bulwan:0|6:A'ghaz:0");
+    CHECK(chrono_api::god_choices(shipped(), params_with(6000, {"elf", "orc"}), 3, {}) == "1:Vaennela:0|2:Sluskat:1|3:Nonthom:1|4:Vyia:0|5:Bulwan:0|6:A'ghaz:0");
     REQUIRE(r.races.size() == 6U);
     for (std::size_t i = 1; i <= 4; ++i) {
         CAPTURE(i);
@@ -178,7 +178,7 @@ TEST_CASE("P3-03 7.1, 14.1 item 1: seed 42 goblin,dwarf,human; seed 2^64-1 span 
     {
         const Rows r = chrono_api::stage(shipped(), params_with(12000, {"orc"}), M64, {});
         CHECK(ages_text(r.ages) == "1:6:0:11999:The Age of Orcs");
-        CHECK(god_names(r) == std::vector<std::string>{"Ciefa", "Slogob", "Narinnadin", "Oupoubia", "Hardcald", "Kruurz'gruu"});
+        CHECK(god_names(r) == std::vector<std::string>{"Ciefa", "Slogob", "Narinnadin", "Ouvoglia", "Hardcald", "Kruurz'gruu"});
     }
 }
 

@@ -40,6 +40,11 @@ enum CKind : std::int64_t {
     k_claim = 20, k_war_declared, k_battle, k_battle_at_pass, k_siege, k_sacked, k_settlement_captured, k_peace,
     k_truce, k_region_ceded, k_civ_conquered
 };
+// P3-04 r17 21.2 / P3-06 r19 23.2, 23.3 (generator 0.20.0): kinds 39 and 40. Wherever a rule, invariant or
+// statistic reads a claim, kinds 20 and 39 are read alike; a cession of (13), (17) and the companions is 29 or 40.
+inline constexpr std::int64_t k_claim_settlements = 39, k_settlements_ceded = 40;
+inline bool is_claim(std::int64_t k) { return k == k_claim || k == k_claim_settlements; }
+inline bool is_cede(std::int64_t k) { return k == k_region_ceded || k == k_settlements_ceded; }
 
 // --- Golden file ------------------------------------------------------------------------------------
 
@@ -61,6 +66,9 @@ struct CCase {
     std::string summary;  // "threshold <T> shown <n> ages <n1,...>"
     // P3-10 second round (P3-06 r17 22.5): "quick_aim_wins <n> foothold_cessions <m> held_goal_wars <a>/<b>/<c>/<d>"
     std::string r17;
+    // P3-11 (P3-06 r19 23.1-23.4): "t11 <years|-> first_orc_war <years|-> claims39 <a>/<third>/<none> cessions40 <n>
+    // goal_differs <n>"
+    std::string r19;
 };
 
 inline const std::vector<CCase>& conflict_golden() {
@@ -118,6 +126,8 @@ inline const std::vector<CCase>& conflict_golden() {
                 c.summary = rest.substr(8);
             } else if (w[1] == "r17") {
                 c.r17 = rest.substr(4);  // P3-10 second round (P3-06 r17 22.5): the reference's replay facts
+            } else if (w[1] == "r19") {
+                c.r19 = rest.substr(4);  // P3-11 (P3-06 r19 23.1-23.4): T11 and the counts of kinds 39 and 40
             } else if (w[1].size() > 1 && w[1][0] == 'q') {
                 c.tension[std::stoll(w[1].substr(1))] = {std::stoll(w[2]), std::stoll(w[3].substr(1))};
             } else if (w[1].size() > 1 && w[1][0] == 'e') {
@@ -333,7 +343,7 @@ inline std::vector<std::string> stats_lines_21(const Tables& t, const eng::Histo
                 continue;
             }
             changed = changed || x.kind(u) == k_civ_conquered;
-            for (const std::int64_t k : x.kids(u)) changed = changed || x.kind(k) == k_region_ceded || x.kind(k) == k_tribute;
+            for (const std::int64_t k : x.kids(u)) changed = changed || is_cede(x.kind(k)) || x.kind(k) == k_tribute;
         }
         hollow += changed ? 0 : 1;
     }
@@ -480,7 +490,7 @@ inline std::vector<std::string> war_lines_from_rows(const Tables& t) {
         const std::int64_t w = at(e, 0);
         std::int64_t claim = 0;
         for (const std::int64_t c : x.causes.at(w)) {
-            if (x.kind(c) == k_claim) claim = c;
+            if (is_claim(x.kind(c))) claim = c;
         }
         std::int64_t battles = 0, sacked = 0, taken = 0;
         for (const std::int64_t b : x.kids(w)) {
@@ -503,6 +513,7 @@ inline std::vector<std::string> war_lines_from_rows(const Tables& t) {
                 outcome = "won-c" + std::to_string(x.role1(u, 1));
                 for (const std::int64_t k : x.kids(u)) {
                     if (x.kind(k) == k_region_ceded) outcome += "-ceded";
+                    if (x.kind(k) == k_settlements_ceded) outcome += "-foothold";  // P3-06 r19 23.3
                 }
                 for (const std::int64_t k : x.kids(u)) {
                     if (x.kind(k) == k_tribute) outcome += "-tribute";  // r9 20.3 (0.18.0)
@@ -591,7 +602,7 @@ inline void check_invariants_06(const Tables& t, const eng::HistoryInputs& in, s
             CHECK(war_row.count(id) == 1U);  // N5: a war always leaves a war row
             bool claimed = false;
             for (const std::int64_t c : x.causes.at(id)) {
-                claimed = claimed || (x.kind(c) == k_claim && x.role1(c, 1) == x.role1(id, 1) &&
+                claimed = claimed || (is_claim(x.kind(c)) && x.role1(c, 1) == x.role1(id, 1) &&
                                       x.role1(c, 2) == x.role1(id, 2) && x.year(c) <= at(e, 1));
             }
             CHECK(claimed);
@@ -600,7 +611,7 @@ inline void check_invariants_06(const Tables& t, const eng::HistoryInputs& in, s
             k == k_refuge_held || k == k_search_abandoned) {
             CHECK_FALSE(quiet);
         }
-        if ((k == k_peace || k == k_truce || k == k_region_ceded || k == k_tribute || k == k_war_won) && quiet) {
+        if ((k == k_peace || k == k_truce || is_cede(k) || k == k_tribute || k == k_war_won) && quiet) {
             CHECK((at(e, 1) - at(*x.ph.at(at(e, 4)), 3)) % quiet_step_years == 0);
         }
         if (k == k_battle || k == k_battle_at_pass) {
@@ -610,7 +621,7 @@ inline void check_invariants_06(const Tables& t, const eng::HistoryInputs& in, s
             REQUIRE(x.causes.at(id).size() == 1U);
             CHECK(x.kind(x.causes.at(id)[0]) == k_war_declared);
         }
-        if (k == k_claim) {  // 8.3 item 4 (N2): a colony of the same step is no claim cause, unless it is
+        if (is_claim(k)) {  // 8.3 item 4 (N2): a colony of the same step is no claim cause, unless it is
                              // the claimed region's owner_event (its ownership is live state)
             for (const std::int64_t c : x.causes.at(id)) {
                 if (x.kind(c) != k_colony_founded || x.year(c) != at(e, 1)) continue;
@@ -686,7 +697,7 @@ inline void check_invariants_06(const Tables& t, const eng::HistoryInputs& in, s
     check_invariants_r6(t, 40, nullptr);
     // 8 every flare-up's trigger is a claim
     for (const Row& p : t.phase) {
-        if (at(p, 2) == 3) CHECK(x.kind(at(p, 5)) == k_claim);
+        if (at(p, 2) == 3) CHECK(is_claim(x.kind(at(p, 5))));
     }
     // 8.3 item 4 (N2, r7): "a cession in a quiet step never transfers a colony founded earlier in the same step"
     // no longer holds: P3-06 r13 20.27 passes every settlement of the loser standing in the ceded region, a
@@ -765,7 +776,7 @@ inline std::vector<std::int64_t> weary_violations(const Tables& t, std::int64_t 
         return false;
     };
     for (const Row& e : t.event) {
-        if (at(e, 3) != k_claim && at(e, 3) != k_war_declared) continue;
+        if (!is_claim(at(e, 3)) && at(e, 3) != k_war_declared) continue;
         const std::int64_t b = x.role1(at(e, 0), 2), g = at(e, 5);
         std::vector<End> done;
         for (const End& d : ends[{b, g}]) {
@@ -834,16 +845,20 @@ inline std::vector<std::string> cession_violations(const Tables& t) {
         } else if (k == k_sacked || k == k_settlement_abandoned || k == k_settlement_abandoned_to) {
             owner[at(e, 6)] = 0;
             standing[at(e, 6)] = false;
-        } else if (k == k_region_ceded) {
+        } else if (is_cede(k)) {
             const std::int64_t g = at(e, 5), L = x.role1(eid, 1), W = x.role1(eid, 2);
             std::vector<std::int64_t> mine;
             for (const auto& [s, o] : owner) {
                 if (o == L && standing[s] && at(*x.st.at(s), 4) == g) mine.push_back(s);
             }
             bool held_row = false;
+            // P3-06 r19 23.3: (13) for the foothold cession (kind 40): L stands in G and W holds it
+            const std::int64_t holder_civ = k == k_settlements_ceded ? W : L;
             for (const Row& rc : t.region_control) {
-                held_row = held_row || (at(rc, 0) == g && at(rc, 3) == L && at(rc, 1) <= y && (is_null(rc[2]) || at(rc, 2) >= y));
+                held_row = held_row || (at(rc, 0) == g && at(rc, 3) == holder_civ && at(rc, 1) <= y &&
+                                        (is_null(rc[2]) || at(rc, 2) >= y));
             }
+            if (k == k_settlements_ceded) held_row = held_row && !mine.empty();
             if (!held_row && mine.empty()) {
                 out.push_back("e" + std::to_string(eid) + ": c" + std::to_string(L) + " ceded rg" + std::to_string(g) +
                               ", which it did not hold");
@@ -927,7 +942,7 @@ inline void check_invariants_09(const Tables& t, const eng::HistoryInputs& in, c
                 bool against = false;
                 if (ok == k_battle || ok == k_battle_at_pass) {
                     against = x.role1(at(o, 0), 1) == founder || x.role1(at(o, 0), 2) == founder;
-                } else if (ok == k_claim || ok == k_war_declared) {
+                } else if (is_claim(ok) || ok == k_war_declared) {
                     against = x.role1(at(o, 0), 2) == founder;
                 }
                 if (!against) continue;
@@ -951,7 +966,7 @@ inline void check_invariants_09(const Tables& t, const eng::HistoryInputs& in, c
         if (k == k_peace || k == k_truce || k == k_war_won || k == k_search_abandoned) {
             const bool won = k == k_peace || k == k_war_won;
             std::int64_t costs = 0;
-            for (const std::int64_t kid : x.kids(id)) costs += (x.kind(kid) == k_region_ceded || x.kind(kid) == k_tribute) ? 1 : 0;
+            for (const std::int64_t kid : x.kids(id)) costs += (is_cede(x.kind(kid)) || x.kind(kid) == k_tribute) ? 1 : 0;
             // one cession or one tribute per won war; a truce or a war given up (r10 20.17) costs nothing
             CHECK(costs <= (won ? 1 : 0));
             if (won && costs == 0) {
@@ -1076,7 +1091,7 @@ inline void check_invariants_10(const Tables& t, const wd::ContentSet& content) 
 inline std::int64_t check_peoples_prefix(const Tables& t, const Tables& pt) {
     std::int64_t first = 0;
     for (const Row& e : t.event) {
-        if (at(e, 3) == k_claim) {
+        if (is_claim(at(e, 3))) {
             first = at(e, 0);
             break;
         }
@@ -1170,7 +1185,7 @@ inline std::vector<std::string> invariants_19(const Tables& t, const wd::Content
             if (it == war_of_end.end()) continue;
             const std::int64_t d = it->second, a = x.role1(d, 1), b = x.role1(d, 2), g = at(*x.ev.at(d), 5);
             bool cost = false;
-            for (const std::int64_t kid : x.kids(id)) cost = cost || x.kind(kid) == k_region_ceded || x.kind(kid) == k_tribute;
+            for (const std::int64_t kid : x.kids(id)) cost = cost || is_cede(x.kind(kid)) || x.kind(kid) == k_tribute;
             if (cost && x.role1(id, 1) == a && !holds(g, a, y) && !holds(g, b, y) && !stands(g, b, y) &&
                 last_battle_winner(x, d) != a) {
                 out.push_back("(14) e" + std::to_string(id) + ": a cost after a lost goal's ending whose winner c" +
@@ -1197,7 +1212,7 @@ inline std::vector<std::string> invariants_19(const Tables& t, const wd::Content
                 const std::int64_t hid = x.role1(id, 2), r = at(e, 5);
                 const std::vector<std::int64_t> ch = holder_change_years(t, r);
                 for (const Row& z : t.event) {
-                    if (at(z, 0) <= id || at(z, 5) != r || (at(z, 3) != k_claim && at(z, 3) != k_war_declared)) continue;
+                    if (at(z, 0) <= id || at(z, 5) != r || (!is_claim(at(z, 3)) && at(z, 3) != k_war_declared)) continue;
                     if (at(z, 1) >= y + weary_years || x.role1(at(z, 0), 2) != hid) continue;
                     bool changed = false;
                     for (const std::int64_t c : ch) changed = changed || (y <= c && c <= at(z, 1));
@@ -1301,7 +1316,25 @@ inline R17 invariants_r17(const Tables& t, const wd::ContentSet& content) {
             out.problems.push_back("(15) e" + std::to_string(id) + ": colony_founded by c" +
                                    std::to_string(x.role1(id, 2)) + " while it lies low");
         }
-        if ((k == k_claim || k == k_war_declared) && lies_low(x.role1(id, 1), y)) {
+        if (k == k_claim_settlements) {
+            // P3-06 r19 23.7 item 3: every settlement participant stands in the event's region and is the holder's;
+            // ascending id; the holder does not hold the region (23.2)
+            const std::int64_t b = x.role1(id, 2);
+            std::vector<std::int64_t> listed;
+            for (const Row& p : t.event_participant) {
+                if (at(p, 0) == id && at(p, 2) == 3) listed.push_back(at(p, 4));
+            }
+            bool ok = !listed.empty() && std::is_sorted(listed.begin(), listed.end());
+            for (const std::int64_t s : listed) {
+                ok = ok && standing[s] && owner[s] == b && at(*x.st.at(s), 4) == at(e, 5);
+            }
+            if (!ok) out.problems.push_back("(23.7.3) e" + std::to_string(id) + ": claim_settlements lists settlements "
+                                            "that are not c" + std::to_string(b) + "'s in its region");
+            if (holder(at(e, 5), y, id) == b) {
+                out.problems.push_back("(23.2) e" + std::to_string(id) + ": claim_settlements on a region its holder holds");
+            }
+        }
+        if ((is_claim(k) || k == k_war_declared) && lies_low(x.role1(id, 1), y)) {
             out.problems.push_back("(15) e" + std::to_string(id) + ": claim or war_declared by c" +
                                    std::to_string(x.role1(id, 1)) + " while it lies low");
         }
@@ -1363,16 +1396,32 @@ inline R17 invariants_r17(const Tables& t, const wd::ContentSet& content) {
             capital[x.role1(id, 1)] = at(e, 6);
         } else if (k == k_refugees_settled) {
             flights[x.role1(id, 2)] = Flight{at(e, 6), y};
-        } else if (k == k_region_ceded) {
+        } else if (is_cede(k)) {
             const std::int64_t g = at(e, 5), L = x.role1(id, 1), W = x.role1(id, 2);
-            if (rc_events.count(id) == 0) ++out.foothold_cessions;
+            if (k == k_settlements_ceded || rc_events.count(id) == 0) ++out.foothold_cessions;
+            if (k == k_settlements_ceded) {
+                // P3-06 r19 23.3, 23.7 item 3: the passing settlements, ascending, no region_control row
+                std::vector<std::int64_t> listed;
+                for (const Row& p : t.event_participant) {
+                    if (at(p, 0) == id && at(p, 2) == 3) listed.push_back(at(p, 4));
+                }
+                std::vector<std::int64_t> passing = mine_in(L, g);
+                if (passing.size() > 64U) passing.resize(64U);
+                if (listed != passing) {
+                    out.problems.push_back("(23.3) e" + std::to_string(id) + ": settlements_ceded does not list the "
+                                           "standing settlements of c" + std::to_string(L) + " in its region");
+                }
+                if (rc_events.count(id) != 0) {
+                    out.problems.push_back("(23.3) e" + std::to_string(id) + ": settlements_ceded opened a region_control row");
+                }
+            }
             for (const std::int64_t s : mine_in(L, g)) owner[s] = W;
         }
         // (17) once the ending's cost events (caused by it) are applied
         for (auto it = pending17.begin(); it != pending17.end();) {
             std::int64_t last = it->first;
             for (const std::int64_t c : x.kids(it->first)) {
-                if (x.kind(c) == k_region_ceded || x.kind(c) == k_tribute) last = std::max(last, c);
+                if (is_cede(x.kind(c)) || x.kind(c) == k_tribute) last = std::max(last, c);
             }
             if (last > id) {
                 ++it;
@@ -1410,11 +1459,65 @@ inline R17 invariants_r17(const Tables& t, const wd::ContentSet& content) {
 
 // P3-06 r17 22.10 item 7 on one world or case: invariants (8), (15), (17) restated hold, and the replay's facts
 // equal the reference's r17 line of the golden case (when the file has one).
+// P3-06 r19 23.1-23.4 from the rows, as the reference's r19_facts: T11 (years from the orcs' awakening to the first
+// orc colony_founded as founder, war_declared, sacked or settlement_captured as attacker; E - awakening year + 1
+// without one; "-" without orcs), the first orc war_declared, kind 39 claims by the region's holder at the claim
+// (the claimant, a third civilization, no one), kind 40 events, declarations whose region differs from their claim's.
+inline std::string r19_line(const Tables& t, std::int64_t span) {
+    const Index x(t);
+    const std::int64_t ORC = 6;  // race id = order (P3-03)
+    std::map<std::int64_t, std::int64_t> civ_race;
+    for (const Row& c : t.civilization) civ_race[at(c, 0)] = at(c, 2);
+    std::int64_t ya = -1, act = -1, war = -1;
+    for (const Row& e : t.event) {
+        const std::int64_t id = at(e, 0), k = at(e, 3), y = at(e, 1);
+        if (k == 1 && ya < 0 && x.role1(id, 1) == ORC) ya = y;
+        const bool orc_act = (k == k_colony_founded && civ_race[x.role1(id, 2)] == ORC) ||
+                             ((k == k_war_declared || k == k_sacked || k == k_settlement_captured) &&
+                              civ_race[x.role1(id, 1)] == ORC);
+        if (orc_act && act < 0) act = y;
+        if (k == k_war_declared && civ_race[x.role1(id, 1)] == ORC && war < 0) war = y;
+    }
+    auto holder = [&](std::int64_t g, std::int64_t y, std::int64_t before) {
+        const Row* best = nullptr;
+        for (const Row& rc : t.region_control) {
+            if (at(rc, 0) != g || at(rc, 1) > y || (!is_null(rc[2]) && at(rc, 2) < y)) continue;
+            if (at(rc, 1) == y && at(rc, 4) > before) continue;
+            if (best == nullptr || at(rc, 1) > at(*best, 1) || (at(rc, 1) == at(*best, 1) && at(rc, 4) > at(*best, 4))) best = &rc;
+        }
+        return best == nullptr ? std::int64_t{0} : at(*best, 3);
+    };
+    std::int64_t c_a = 0, c_third = 0, c_none = 0, ceded = 0, differs = 0;
+    for (const Row& e : t.event) {
+        const std::int64_t id = at(e, 0), k = at(e, 3);
+        if (k == k_claim_settlements) {
+            const std::int64_t h = holder(at(e, 5), at(e, 1), id);
+            (h == x.role1(id, 1) ? c_a : h == 0 ? c_none : c_third) += 1;
+        } else if (k == k_settlements_ceded) {
+            ++ceded;
+        } else if (k == k_war_declared) {
+            std::int64_t cl = 0;
+            for (const std::int64_t c : x.causes.at(id)) {
+                if (is_claim(x.kind(c)) && (cl == 0 || c < cl)) cl = c;
+            }
+            if (cl != 0 && at(*x.ev.at(cl), 5) != at(e, 5)) ++differs;
+        }
+    }
+    const std::string t11 = ya < 0 ? "-" : std::to_string(act >= 0 ? act - ya : span - ya + 1);
+    const std::string fw = (ya < 0 || war < 0) ? "-" : std::to_string(war - ya);
+    return "t11 " + t11 + " first_orc_war " + fw + " claims39 " + std::to_string(c_a) + "/" + std::to_string(c_third) +
+           "/" + std::to_string(c_none) + " cessions40 " + std::to_string(ceded) + " goal_differs " +
+           std::to_string(differs);
+}
+
 inline void check_r17(const Tables& t, const wd::ContentSet& c, const CCase& g) {
     const R17 r = invariants_r17(t, c);
     CHECK(r.problems == std::vector<std::string>{});
     CHECK_MESSAGE(!g.r17.empty(), "the golden case has no r17 line (P3-10 second round)");
     if (!g.r17.empty()) CHECK(r.line() == g.r17);
+    // P3-11: the r19 facts (T11, kinds 39 and 40, war goals) equal the reference's
+    CHECK_MESSAGE(!g.r19.empty(), "the golden case has no r19 line (P3-11)");
+    if (!g.r19.empty()) CHECK(r19_line(t, g.span) == g.r19);
 }
 
 }  // namespace conflict_test

@@ -742,9 +742,9 @@ private:
 inline eng::EventCatalogue test_catalogue() {
     eng::EventCatalogue cat = eng::catalogue_of(shipped());
     // Every shipped kind (ids 1 to 38 at 0.19.0: the engine writes kind 38 quiet_stretch itself, P3-04 r12
-    // 20.1, and kind ids are 1, 2, ... without a gap), then the test kind (39). Until 0.18.0 these tests kept
+    // 20.1, and kind ids are 1, 2, ... without a gap), then the test kind (41 from 0.20.0, 39 at 0.19.0). Until 0.18.0 these tests kept
     // only the P3-04 kinds 1 to 5 and the test kind was 6.
-    REQUIRE(cat.kinds.size() == 38U);
+    REQUIRE(cat.kinds.size() == 40U);  // P3-04 r17 21.2 (0.20.0): kinds 39, 40
     eng::KindDef k;
     k.id = static_cast<std::int64_t>(cat.kinds.size()) + 1;
     k.key = "test_change";
