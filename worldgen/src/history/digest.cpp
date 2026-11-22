@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <array>
 #include <cstddef>
+#include <limits>
 #include <map>
 #include <optional>
 #include <span>
@@ -13,6 +14,7 @@
 #include <string_view>
 #include <vector>
 
+#include "worldgen/core/wide.hpp"
 #include "worldgen/db/schema.hpp"
 
 namespace worldgen::history {
@@ -778,7 +780,20 @@ private:
 
     void put(std::string key, std::int64_t value) { d_.stats.emplace_back(std::move(key), value); }
 
-    static std::int64_t permille(std::int64_t n, std::int64_t d) { return d > 0 ? 1000 * n / d : 0; }
+    // floor(1000 n / d) for n >= 0, d > 0, through the exact 128-bit product
+    // (core/wide.hpp), so that no count read from a file can overflow it;
+    // 0 when d <= 0. A quotient above INT64_MAX (n far above d, which no
+    // statistic here has) saturates.
+    static std::int64_t permille(std::int64_t n, std::int64_t d) {
+        if (d <= 0 || n <= 0) {
+            return 0;
+        }
+        const U128DivMod q = divmod_u128_u64(mul_u64_wide(static_cast<std::uint64_t>(n), 1000U),
+                                             static_cast<std::uint64_t>(d));
+        constexpr auto MAX = static_cast<std::uint64_t>(std::numeric_limits<std::int64_t>::max());
+        return (q.quotient.hi != 0 || q.quotient.lo > MAX) ? std::numeric_limits<std::int64_t>::max()
+                                                           : static_cast<std::int64_t>(q.quotient.lo);
+    }
 
     void stats() {
         frame_stats();
