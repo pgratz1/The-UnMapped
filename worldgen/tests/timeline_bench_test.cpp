@@ -3,7 +3,7 @@
 //     worldgen-tests -ts=timeline-bench --no-skip
 //
 // On the 1024 world of seed 42 (sample-42-1024, generated into the per-process scratch directory): the time
-// of load_history, of year_state for every year 0 to E (both overloads), of TerritoryBase::build and of
+// of load_history, of year_state for every year 0 to E (both overloads) and its worst single call, of TerritoryBase::build and of
 // render_territory for a new fill, printed against the budgets of P4-00 8 (a year answer 2 ms, a territory
 // image 40 ms at 1024). Wall-clock time is used here only: printed by a skipped test, never stored and
 // never a pass condition (hard rule 1; timing is the validation note's business).
@@ -54,6 +54,21 @@ TEST_CASE("P4-01 13.5 item 9: load_history, year_state and render_territory at 1
         sink += st.relations.size();
     }
     const double all_reusing = ms_since(t0);
+    // the worst single call, each year timed on its own (three passes, the worst of all)
+    double worst = 0;
+    std::int64_t worst_year = 0;
+    for (int pass = 0; pass < 3; ++pass) {
+        for (std::int64_t y = 0; y <= E; ++y) {
+            const Clock::time_point c0 = Clock::now();
+            h.timeline.year_state(y, st);
+            const double ms = ms_since(c0);
+            sink += st.events.size();
+            if (ms > worst) {
+                worst = ms;
+                worst_year = y;
+            }
+        }
+    }
 
     const WorldLayers layers = read_layers(r);
     t0 = Clock::now();
@@ -79,6 +94,8 @@ TEST_CASE("P4-01 13.5 item 9: load_history, year_state and render_territory at 1
               << per_year << " ms per year; budget 2 ms)\n"
               << "timeline-bench: year_state reusing its buffers: " << all_reusing << " ms (" << per_year_reusing
               << " ms per year)\n"
+              << "timeline-bench: worst single year_state call (3 passes): " << worst << " ms at year " << worst_year
+              << " (budget 2 ms)\n"
               << "timeline-bench: TerritoryBase::build " << base_ms << " ms (once per open)\n"
               << "timeline-bench: render_territory, worst of 5 years: " << render_max << " ms (budget 40 ms)\n"
               << "timeline-bench: (checksum " << sink << ")\n";
