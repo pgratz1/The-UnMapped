@@ -69,14 +69,21 @@ std::size_t count_of(const std::vector<std::string>& v, const char* prefix) {
 // c1 goblins (s1 in R1) attack c2 elves (capital s2 in R4) over R5, which c1 holds (s3, from 1100); c2 keeps the
 // footholds s4 and s5 in R5. War e10 (1200), battle e11 won by c1 (1205), war_won e13 by c1 in 1210, and the
 // foothold cession e14 of kind 40 listing `listed` (from c2, to c1), caused by e13; every listed settlement passes.
+// The war cites c1's kind 39 claim e6 (1150) on s4 and s5.
 Tables foothold_log(const std::vector<std::int64_t>& listed, bool region_row = false) {
     Tables t;
     t.civilization = {civ_row(1, 2, 1), civ_row(2, 1, 2)};
     t.event = {ev(1, 0, k_settlement_founded, 1, 1), ev(2, 0, k_settlement_founded, 4, 2),
                ev(3, 1000, k_settlement_founded, 5, 4), ev(4, 1001, k_settlement_founded, 5, 5),
                ev(5, 1100, k_settlement_founded, 5, 3)};
+    // the casus belli: c1's kind 39 claim on c2's s4 and s5 in R5, which c1 holds (P3-06 r19 23.2)
+    t.event.push_back(ev(6, 1150, k_claim_settlements, 5));
+    t.event_participant = {part(6, 1, 1, CIV, 1), part(6, 2, 2, CIV, 2), part(6, 3, 3, SET, 4), part(6, 4, 3, SET, 5)};
+    t.event_cause.push_back(cause(6, 3));
     t.event.push_back(ev(10, 1200, k_war_declared, 5));
-    t.event_participant = {part(10, 1, 1, CIV, 1), part(10, 2, 2, CIV, 2)};
+    t.event_participant.push_back(part(10, 1, 1, CIV, 1));
+    t.event_participant.push_back(part(10, 2, 2, CIV, 2));
+    t.event_cause.push_back(cause(10, 6));
     t.event.push_back(ev(11, 1205, k_battle, 5));
     t.event_participant.push_back(part(11, 1, 1, CIV, 1));
     t.event_participant.push_back(part(11, 2, 2, CIV, 2));
@@ -165,7 +172,7 @@ TEST_CASE("P3-06 r19 23.1-23.4: the r19 line from hand-made rows (claims by hold
     CHECK(r19_line(claim_log({4, 5}, 1), 6000) == "t11 - first_orc_war - claims39 1/0/0 cessions40 0 goal_differs 0");
     CHECK(r19_line(claim_log({4, 5}, 3), 6000) == "t11 - first_orc_war - claims39 0/1/0 cessions40 0 goal_differs 0");
     CHECK(r19_line(claim_log({4, 5}, 0), 6000) == "t11 - first_orc_war - claims39 0/0/1 cessions40 0 goal_differs 0");
-    CHECK(r19_line(foothold_log({4, 5}), 6000) == "t11 - first_orc_war - claims39 0/0/0 cessions40 1 goal_differs 0");
+    CHECK(r19_line(foothold_log({4, 5}), 6000) == "t11 - first_orc_war - claims39 1/0/0 cessions40 1 goal_differs 0");
 }
 
 }  // TEST_SUITE

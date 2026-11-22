@@ -59,7 +59,7 @@ Geo steppe_regions(std::int64_t n) {
         r.walk_cells = 4000;
         rs.push_back(r);
     }
-    Geo g = hand_made(32 * n, rs);
+    Geo g = hand_made(128, rs);  // n <= 4 regions of 32 x 128 cells; the rest of the map is in no region
     for (std::int64_t i = 1; i < n; ++i) g.borders.push_back(db::RegionBorderRow{i, i + 1, 2048, 0, 0, 0, 10, 0, 0, 0, 0});
     for (std::int64_t i = 1; i <= n; ++i) g.region_biomes.push_back({i, 10, 4096});
     return g;
@@ -78,7 +78,7 @@ struct Run {
 Run run(const wd::ContentSet& c, const std::vector<std::string>& races, std::int64_t regions = 1) {
     const Geo g = steppe_regions(regions);
     Settings s;
-    s.span = 400;
+    s.span = 2000;
     s.races = races;
     s.civs = 1;
     const eng::HistoryInputs in = inputs_of(g, 0, s, c);

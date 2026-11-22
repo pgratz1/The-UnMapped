@@ -117,7 +117,10 @@ TEST_CASE("P3-06 r9 20.12, P3-01 r9 3.2: muster_permille, conceal_min, home_defe
         // P3-01 r13 3.6 (P3-10 second round): hidden_years follows awakening_quarrel (orc 100, others 300)
         CHECK(d.record.name_at(static_cast<std::size_t>(at) + 6) == "hidden_years");
         CHECK(d.record.get_int("hidden_years") == (d.id == "orc" ? 100 : 300));
-        CHECK(d.record.name_at(static_cast<std::size_t>(at) + 7) == "settlement_kinds");
+        // P3-01 r14 3.7 (P3-11): awakening_population follows hidden_years (orc 1200, others 0)
+        CHECK(d.record.name_at(static_cast<std::size_t>(at) + 7) == "awakening_population");
+        CHECK(d.record.get_int("awakening_population") == (d.id == "orc" ? 1200 : 0));
+        CHECK(d.record.name_at(static_cast<std::size_t>(at) + 8) == "settlement_kinds");
         CHECK(d.record.get_int("muster_permille") == want[i].muster);
         CHECK(d.record.get_int("conceal_min") == want[i].conceal);
         CHECK(d.record.get_int("home_defense_permille") == want[i].home);

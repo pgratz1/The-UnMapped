@@ -275,8 +275,9 @@ TEST_CASE("P3-04 8.5 r1: render_event of hand-made events of a kind this build d
     const std::string tail = " saw an omen over " + region1 + " in 5999-5999: ";
     const std::string a = races.at(0).at(2).bytes, b = races.at(1).at(2).bytes, c = races.at(2).at(2).bytes;
     CHECK(eng::render(r, n + 1) == "[]" + tail + "0 stars {!}");
-    CHECK(eng::render(r, n + 2) == "[" + a + "]" + tail + "1 star {!}");
-    CHECK(eng::render(r, n + 3) == "[" + a + " and " + b + "]" + tail + "2 stars {!}");
+    // P3-04 r17 21.1 (0.20.0): one to nine as words
+    CHECK(eng::render(r, n + 2) == "[" + a + "]" + tail + "one star {!}");
+    CHECK(eng::render(r, n + 3) == "[" + a + " and " + b + "]" + tail + "two stars {!}");
     CHECK(eng::render(r, n + 4) == "[" + a + ", " + b + " and " + c + "]" + tail + "-5 stars {!}");
     // The stored catalogue, not the compiled one: kind <kid> is read back.
     const eng::EventCatalogue cat = eng::catalogue_of_world(r);

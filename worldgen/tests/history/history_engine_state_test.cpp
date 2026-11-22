@@ -221,8 +221,8 @@ TEST_CASE("P3-04 r12 20.1, 16.1 item 7: a charged event does not break a quiet s
                      {8, 1, 1, 1, 2}, {8, 2, 2, 2, 2}, {9, 1, 1, 3, 2}, {9, 2, 2, 1, 2}, {10, 1, 1, 4, 2},
                      {10, 2, 2, 3, 2}, {11, 1, 1, 3, 1}, {11, 2, 1, 3, 2}, {13, 1, 1, 3, 1}, {13, 2, 1, 3, 2}})));
     // The test kind is written to the catalogue tables (9.3: every kind of the config's catalogue).
-    REQUIRE(t.event_kind.size() == 39U);
-    CHECK(t.event_kind[38][1].bytes == "test_change");
+    REQUIRE(t.event_kind.size() == 41U);  // 40 kinds from 0.20.0 (P3-04 r17 21.2), then the test kind
+    CHECK(t.event_kind[40][1].bytes == "test_change");
 }
 
 TEST_CASE("P3-04 r12 20.1, 16.1 item 7: an event charged in every second quiet step leaves one stretch per quiet row") {
@@ -248,7 +248,7 @@ TEST_CASE("P3-04 r12 20.1, 16.1 item 7: an event charged in every second quiet s
     }
     CHECK(vals == std::vector<std::int64_t>{1800, 1});
     // The charged events are separate events dated inside the stretch (36 of the 72 quiet steps).
-    CHECK(rows_where_kind(t, 39).size() == 36U);
+    CHECK(rows_where_kind(t, 41).size() == 36U);  // the test kind, 41 from 0.20.0
 }
 
 TEST_CASE("P3-04 r12 20.1, 20.6 item 1: a civilization ended in a quiet step stays a participant of its row's stretch") {

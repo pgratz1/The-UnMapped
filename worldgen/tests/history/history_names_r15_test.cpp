@@ -202,7 +202,7 @@ TEST_CASE("P3-02 r15 14.2: the library rejects exactly the repeated rows (golden
     }
 }
 
-TEST_CASE("P3-02 r15 14.2: every attempt of the row cultures, valid exactly when not repeated (golden rattempt)") {
+TEST_CASE("P3-02 r15 14.2: every attempt of the row cultures; a repeated attempt is never valid (golden rattempt)") {
     const std::vector<std::string>& rows = golden_lines("rrow");
     const std::vector<std::string>& lines = golden_lines("rattempt");
     REQUIRE(lines.size() == rows.size() * 48U);  // e 1-3, t 0-15 per row
@@ -217,14 +217,15 @@ TEST_CASE("P3-02 r15 14.2: every attempt of the row cultures, valid exactly when
         CHECK(mine == row(r[2], undot(w[6])));
         const bool valid = w[4] == "1", rep = w[5] == "1";
         CHECK(own_repeated(mine) == rep);
-        CHECK(valid == !rep);  // the row cultures pass every other rule of 4.2, the filter and 13.2
+        if (rep) CHECK_FALSE(valid);  // a repeated attempt is invalid (some others are filtered or triple, 13.2)
         const names_api::Attempt a =
             names_api::attempt(n, Kind::settlement, 0, 1, dec_u(w[2]), dec_u(w[3]), names_test::shipped_filter());
         CHECK(a.valid == valid);
         if (valid) CHECK(a.name == w[7]);
         seen.insert({valid, rep});
     }
-    CHECK(seen.size() == 2U);
+    CHECK(seen.count({true, false}) == 1U);
+    CHECK(seen.count({false, true}) == 1U);
 }
 
 TEST_CASE("P3-02 r15 14.4: a repeated attempt is skipped for attempt t + 1 and is never the fallback's first name") {
