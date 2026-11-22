@@ -1028,7 +1028,7 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
 - Design doc section: 5 (the orc age; races and cultures: names), 6 (text rendered from records)
 - Problem: after P3-10 (generator 0.19.0) the orcs sit still for a median 232 years after their awakening (88 of 100 default worlds have 200 silent years or more). Claims and foothold cessions name a region where only towns are at stake ("ceded the Graven Thicket" when one town passed). Faerie names keep their baby-talk sounds. `tard` and faerie names ending in `-ass` pass the filter. Small counts are written as digits beside words ("one other settlement", "2 other settlements").
 - Proposal: one change, generator 0.20.0, schema 7 unchanged.
-  - Orcs arrive in numbers: a race field `awakening_population` (orc 1,200) lets the first orc settlement send settlers at once, with the target that the median first orc colony, declaration, sack or capture comes within 100 years of the awakening.
+  - Orcs arrive in numbers: a race field `awakening_population` (orc 1,200) starts the first orc settlement larger, and its first colony is not held back by pressure (corrected the same day: the population alone did not make it ready, since an orc village's kind cap is 7,999), with the target that the median first orc colony, declaration, sack or capture comes within 100 years of the awakening.
   - Two appended event kinds name the settlements of a claim on a region the holder does not hold and of a foothold cession.
   - The faerie syllables follow Paul's decision (no `p` or `b` onsets, fewer `ee` and `ou`), and no name repeats a syllable twice in a row, in every culture.
   - `tard` is filtered anywhere in a word.
