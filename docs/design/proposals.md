@@ -397,7 +397,7 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
 - Proposal: weights fertility 70, forage 15, timber 10, ore 5; an alluvial fertility bonus of 0.15; a milder flood penalty (factor 0.75 on ground within 0.5 m of the water level); ore exposure that favours lower, less steep ground. The design doc could give the weights as tuning data ("farmland weighs most") instead of fixed numbers.
 - Interim choice: as proposed, in spec P1-05 revision r2 and generator 0.10.0 (merged). All of it is tuning data in `game/data/worldgen/resources.toml`.
 - Known limits, accepted for now: the banks of large rivers score slightly below their hinterland (wet biomes have low fertility); lowland regions differ little from each other (a fix needs code, for example low-frequency soil variation); coasts score below inland, so ports must come from forage and river mouths in the history phase; rich ore is often on crags nobody can walk to, so history should site mines by "ore near a walk area"; the smallest maps are tight and need homeland fallbacks.
-- Status: open
+- Status: open. Merged into design.md, 2026-11-21.
 
 ### Paul's decisions of 2026-11-18: heath stripe, fen patches and habitability limits stay as they are
 
@@ -407,7 +407,7 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
 - Problem: two world-critic follow-ups were open. Biomes: heath shows as a stripe along mountain flanks on some worlds, and fens are blocky patches on the largest maps (`docs/reviews/p1-04b-biome-variety-critic.md`). Resources: the limits listed in the entry above (river banks below their hinterland, little contrast between lowlands, habitability falling to zero along the sharp line where mountain flanks begin).
 - Proposal: none needed in the design doc.
 - Interim choice: Paul decided to leave the heath stripe and the fens as they are, and to accept the habitability limits for now. Soil variation between lowlands is to be reconsidered only if the regions stage or the history phase needs more contrast. The explored alternatives (a height-above-valley term for heath, with or without noise) stay on branch `p1/04c-heath-fen-explore` and are not merged.
-- Status: decided
+- Status: decided. Merged into design.md, 2026-11-21.
 
 ### Schema version 5: regions, region borders and biome counts per region
 
@@ -417,7 +417,7 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
 - Problem: the design plans schema version 5 with tables `region` and `region_border`, without their columns. Beast placement and race preferences need the biome mix of a region, not only its dominant biome, and history needs to know where ore can be reached.
 - Proposal: schema version 5, with the regions stage, adds `region` (id, name, dominant biome, bounds as four integer columns, seed cell, landmass, cell counts of lake, river, coast and walkable ground, largest river class, main walk area, mean and highest elevation, the means of the six resource scores, the 90th percentile of habitability, and counts of rich ore and of rich ore within 300 m of walkable ground), `region_border` (one row per pair of neighbouring regions: border length, the height and cell of the lowest crossing, walkable and large-river pair counts, largest river class, and the smallest id and number of natural passes crossing it) and `region_biome` (cells of each biome in each region; new, not in the design's table list).
 - Interim choice: as proposed, specified in P1-06 and `docs/specs/schema.md`; generator 0.11.0.
-- Status: open
+- Status: open. Merged into design.md, 2026-11-21.
 
 ### Regions: how borders, large rivers, uplands and counts are settled
 
@@ -427,7 +427,7 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
 - Problem: the design says regions are "bordered on ridges and large rivers" and "roughly 12, 45 and 180 per map", but not how borders are found, what a large river is, or what happens to mountain land. A prototype on generator 0.10.0 worlds showed that a climbing cost puts borders along contour lines, not ridges.
 - Proposal: (1) borders come from a travel cost that is cheap along valleys and dear over ridges (cost weighted by height above the nearest stream); (2) a large river drains more than about 4 km², and its two banks belong to different regions where both have a settlement site; (3) add "Mountain massifs wider than about a kilometre form upland regions of their own; narrower ranges are divided along their crest between the regions on either side"; (4) counts: with 2 km² regions the measured counts are 13, 49 and 200, since land is about 40% of the map. Either say "about 2 km² each, roughly 13, 50 and 200 per map", or keep 12, 45 and 180 and accept regions of about 2.3 km². Paul's choice. (5) Placeholder names have the form "Northwest Wood II" (sector, biome noun, numeral), built from data; islands of any size are regions.
 - Interim choice: as proposed, with 2 km² regions (seed spacing 1200 m, a tuning value), specified in P1-06. Paul decided on 2026-11-18 to keep 2 km² regions and to restate the counts in the design doc as roughly 13, 50 and 200 per map. Revision r2 of the spec, after the world critic's review (`docs/reviews/p1-06-regions-critic.md`), added two rules before the merge: a natural pass is attached to at most one region border, the one its path crosses nearest the col, so that a pass is never counted on two borders; and two more name nouns, "Mere" for a region that is at least half lake and "Fells" for an upland region whose dominant biome is not alpine, heath or highland moor. Merged as generator 0.11.0 on 2026-11-19.
-- Status: open (decided by Paul; design doc section 4 to be updated)
+- Status: open (decided by Paul; design doc section 4 to be updated). Merged into design.md, 2026-11-21.
 
 ### Viewer: layer units and region names come from a copy of the catalogue
 
@@ -437,7 +437,7 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
 - Problem: the viewer now shows each cell's value in display units (metres, degrees Celsius, millimetres a year, score out of 255) and the names of its biome and region. worldgen's public API names the palette of a layer but not its unit or meaning, so the viewer restates the layer catalogue of spec P1-00 section 4 (`gdext/src/viewer/layer_catalogue.cpp`); a unit change in the catalogue would not reach the viewer unless someone edits that copy. Likewise worldgen's `RegionRecord` (what `report` reads of table `region`) leaves out the name, so the viewer takes it from column 1 of the raw row after worldgen's `read_region_rows` has checked the rows. Smaller friction from the same work: in godot-cpp 10, `const godot::String + "literal"` is an ambiguous overload in some contexts and every such literal needs wrapping in `godot::String(...)`; and a legend is a hand-built `ItemList` with generated swatch textures, since Godot has no colour-legend control.
 - Proposal: worldgen gains a public, read-only layer catalogue (name, unit, decimal scale, special values) beside `registered_palette`, and the region record carries `name`. The create-world screen and the in-game map will need the same information, so it belongs with the data rather than in each screen.
 - Interim choice: the viewer keeps its copy of the units of P1-00 4 and reads the name column itself; a layer it does not know is shown under "Other" with its raw value.
-- Status: open
+- Status: open; listed as an open question in design.md section 12 (2026-11-21)
 
 ### Paul's decision of 2026-11-19: P1 Geography approved; the critic's recommendations accepted
 
@@ -447,7 +447,7 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
 - Problem: phase P1 ends with Paul's review. The world critic's review of the finished geography (`docs/reviews/p1-06-regions-critic.md`) closes with recommendations for the history phase.
 - Proposal: none; a record. Paul read the review, accepted its recommendations and approved P1. For P3 this means: the default map size, 1024, is the reference size for tuning and judging history, since 512 worlds have room for few peoples and suit a short history, not all six races; history locates a pass by its col (`pass.col_x`, `col_y`) and the `region` layer; a border counts as a river border by the share of its length that follows the river, not by any river pair; islets below about 0.3 km² are ignored as homes; homelands in wild uplands are chosen by region and biome, since little of that ground is walkable; ports come from history (forage and river mouths), since coasts score below the interior; lowland borders are political lines.
 - Interim choice: the P3 specs follow these points.
-- Status: decided
+- Status: decided. Merged into design.md, 2026-11-21.
 
 ### History: quiet intervals advance in steps so that flare-ups can interrupt them
 
@@ -457,7 +457,7 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
 - Problem: a quiet interval "advances the world in one jump", yet it "can be interrupted" when a tension measure crosses a threshold. A single jump cannot be interrupted part-way, and the design does not say how often tension is checked.
 - Proposal: a quiet interval is a sequence of quiet steps (25 years by default, tuning); after each step the tension measure is evaluated and, above the threshold, a flare-up (a short active phase) starts the next year. Consecutive quiet steps without change are written as one summary event spanning them.
 - Interim choice: as proposed, in `docs/specs/p3-00-history-overview.md` 4.1 and 4.4.
-- Status: open (interim choice accepted by Paul, 2026-11-19; design doc to be updated)
+- Status: open (interim choice accepted by Paul, 2026-11-19; design doc to be updated). Merged into design.md, 2026-11-21.
 
 ### History: the calendar starts at the first elven awakening
 
@@ -467,7 +467,7 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
 - Problem: the design gives years relative to the span ("year 0", "around year 2,100") but does not fix year 0 or the present, nor whether there are months.
 - Proposal: years are integers; year 0 is the first elven awakening; the present is year E, the history span (6,000 by default), stored as `meta.history_end_year`; events within a year are ordered by event id. Eras shown to players are derived at runtime.
 - Interim choice: as proposed (P3-00 2.1).
-- Status: open (interim choice accepted by Paul, 2026-11-19; design doc to be updated)
+- Status: open (interim choice accepted by Paul, 2026-11-19; design doc to be updated). Merged into design.md, 2026-11-21.
 
 ### History: P3 creates only the creator gods
 
@@ -477,7 +477,7 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
 - Problem: each awakening is "an event with a god, a year and a place", but the pantheon and god interventions are phase P5.
 - Proposal: P3 writes one named creator god per race (with its camp) into table `god`, so that awakening events name their creator; the rest of the pantheon, domains and interventions come with P5, which adds columns with a schema bump. P3 defines the seam for interventions and for the divine script (design 14): an intervention source consulted once per tick, empty in P3; `meta.param.divine_script` records the script's hash or nothing.
 - Interim choice: as proposed (P3-00 9.2).
-- Status: open (interim choice accepted by Paul, 2026-11-19; design doc to be updated)
+- Status: open (interim choice accepted by Paul, 2026-11-19; design doc to be updated). Merged into design.md, 2026-11-21.
 
 ### History: territory is held by whole regions
 
@@ -487,7 +487,7 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
 - Problem: the design does not say at what grain territory is held, and P4's timeline must show it at any year cheaply.
 - Proposal: a region is held by at most one civilization at a time; table `region_control` stores ownership intervals (region, from year, to year, civilization, causing event), and `settlement_census` the settlement states by year, so a viewer answers any year without replaying the log.
 - Interim choice: as proposed (P3-00 6.4).
-- Status: open (interim choice accepted by Paul, 2026-11-19; design doc to be updated)
+- Status: open (interim choice accepted by Paul, 2026-11-19; design doc to be updated). Merged into design.md, 2026-11-21.
 
 ### History: the event log stores facts, not summaries
 
@@ -497,7 +497,7 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
 - Problem: the design's `event` table has a `summary` column, while its rules say that text shown to players is generated at runtime from records and templates. Sites do not exist before P6.
 - Proposal: `event` holds kind, year and end year, phase, region, settlement and a salience score; participants with roles, integer values and causes are in `event_participant`, `event_value` and `event_cause`. Sentences are rendered from a catalogue of event kinds with templates (data), in the history report, the viewer and the game. `site_id` is added with the sites in P6. The catalogue of kinds, roles and value keys is part of the schema contract, as the layer catalogue is.
 - Interim choice: as proposed (P3-00 6.2, 6.3).
-- Status: open (interim choice accepted by Paul, 2026-11-19; design doc to be updated)
+- Status: open (interim choice accepted by Paul, 2026-11-19; design doc to be updated). Merged into design.md, 2026-11-21.
 
 ### History: event rules are code with TOML tuning in P3; roads and improved passes wait for P5
 
@@ -507,7 +507,7 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
 - Problem: the design lists event rules among the TOML data and puts road building and pass improvement in the tick loop, while the P3 row of section 13 lists civilizations, settlements, wars and ruin only.
 - Proposal: in P3 the rules are code from the stage specs, with every number in TOML tuning (kind `history`) and the report templates in data; whether conditions and effects should become data is decided in P5, once it is clear which rules need to vary. Roads and improved passes come with P5 (table `road`); P3 treats passes as fixed crossings.
 - Interim choice: as proposed (P3-00 8.4, 15).
-- Status: open (interim choice accepted by Paul, 2026-11-19; design doc to be updated)
+- Status: open (interim choice accepted by Paul, 2026-11-19; design doc to be updated). Merged into design.md, 2026-11-21.
 
 ### History: schema versions 6 and 7
 
@@ -517,7 +517,7 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
 - Problem: the design's table list is the target for all phases; P3 needs a subset, some tables the list does not have, and the `meta` keys for the world-creation settings.
 - Proposal: schema 6 (chronology): `race`, `race_biome` (new: preferred biomes as rows), `culture`, `god` (creator gods), `age`, and the world-creation settings as required `meta` keys (including those P5 will use, so they need no later bump). Schema 7 (history engine): the event catalogue as tables `event_kind`, `event_kind_role` and `event_kind_value` (new; the world carries the kinds, roles, value keys and report templates it was generated with, so readers need no copy of the catalogue, and worldgen exposes the catalogue and the sentence renderer as library functions), `phase`, `event` (whose `kind` refers to `event_kind`), `event_participant`, `event_cause`, `event_value` (new), `civilization`, `settlement`, `settlement_census` (new), `region_control` (new), `relation` (with an end year). The later P3 stages add rows and catalogue entries, not columns.
 - Interim choice: as proposed (P3-00 6.1); exact DDL in the P3-03 and P3-04 specs.
-- Status: open (interim choice accepted by Paul, 2026-11-19; design doc to be updated)
+- Status: open (interim choice accepted by Paul, 2026-11-19; design doc to be updated). Merged into design.md, 2026-11-21.
 
 ### Paul's decisions of 2026-11-19: the P3 interim choices are accepted; names are ASCII and unique
 
@@ -527,7 +527,7 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
 - Problem: the P3 overview (`docs/specs/p3-00-history-overview.md` section 15) and the first stage specs put fourteen questions to Paul, each with an interim choice.
 - Proposal: none; a record. Paul accepted every interim choice: (1) quiet intervals advance in 25-year steps with tension checked after each; (2) year 0 is the first elven awakening and the present is the span; (3) P3 creates one named creator god per race, the rest of the pantheon is P5; (4) territory is held by whole regions; (5) events store facts and are rendered from templates, with no `summary` column, and `site_id` waits for P6; (6) event rules are code with their numbers in TOML in P3, data-driven rules are decided in P5; (7) roads and improved passes wait for P5; (8) 512 worlds run all races with fewer civilizations and are not judged for quality; (9) one culture per race in P3; (10) the history report is `report --history`; (11) the P5 world-creation settings are stored in `meta` from schema 6 and `--divine-script` is refused until P5; (12) the six cultures' first naming data stands as a starting point (a data edit later); (13) names are ASCII only (letters, space, apostrophe, hyphen); (14) names are unique across the whole world and across kinds.
 - Interim choice: the P3 specs already follow these.
-- Status: decided
+- Status: decided. Merged into design.md, 2026-11-21.
 
 ### History: with a subset of races the first one present opens history; every race keeps its creator god
 
@@ -537,7 +537,7 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
 - Problem: the design dates each awakening as a share of the span, with the elves at year 0, and allows any subset of races, but does not say when history starts if the elves are left out, or whether the god of a race that is left out exists.
 - Proposal: the first present race awakens at year 0; every later present race keeps its own share of the span and its own small shift from the seed, so its date does not depend on which other races were chosen. Ages are numbered over the present races only. Every race has its creator god in the world, present or not, so a god keeps its name whichever races are chosen; a god whose race is absent created nothing in that world.
 - Interim choice: as proposed (`docs/specs/p3-03-chronology.md` C3, 5.2, questions 1 and 2).
-- Status: accepted by Paul, 2026-11-19 (interim choice stands); design doc to be updated
+- Status: accepted by Paul, 2026-11-19 (interim choice stands); design doc to be updated. Merged into design.md, 2026-11-21.
 
 ### History: active phases scale with the history span; the detail level sets the simulated share
 
@@ -547,7 +547,7 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
 - Problem: the design gives the simulated years for the default span only. Fixed phase lengths cannot keep the share of simulated years sensible across the span range: 1,200 years would be 60% of a 2,000-year history and 10% of a 12,000-year one. The design also does not say how the last race's opening phase and the final phase meet when the last age is short.
 - Proposal: phase lengths are tuned in years at the 6,000-year default and scaled in proportion to the span, so the detail level fixes the share (sparse about 12%, normal about 19-20%, that is 1,110-1,200 of 6,000 before flare-ups, dense about 28%). The final phase is at most its length and starts where the last opening phase ends, so with the shipped numbers the orcs' age is usually active from their awakening to the present. A floor (10%) and a cap (45%, flare-ups included) are guaranteed by the scheduler. Each flare-up is marked by a `flare_up` event.
 - Interim choice: as proposed (`docs/specs/p3-04-simulation-engine.md` sections 4.1 and 5, questions 1 to 3 and 6).
-- Status: accepted by Paul, 2026-11-19 (interim choice stands); design doc to be updated
+- Status: accepted by Paul, 2026-11-19 (interim choice stands); design doc to be updated. Merged into design.md, 2026-11-21.
 
 ### History: peoples expand within reach of their capital and spread by secession
 
@@ -557,7 +557,7 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
 - Problem: the design does not say how far a civilization expands. Without a limit, in a peaceful history the first two races fill every region they like long before the later races awaken: in the first prototype the elves and goblins held 46 of 50 regions of a 1024 world and the humans awoke on a bare peak.
 - Proposal: a civilization founds settlements only in free regions within a few hops of its capital region (elves, dwarves and faeries 1, goblins and orcs 2, humans 3, from the race's `expansion`), and only in land it rates at least 70% as well as its home. A succession crisis in a large realm may split it, and the new civilization expands from its own capital; that is how a people spreads beyond its reach. At the present about 31 of 49 regions are held at 1024, leaving free land for later races and for conflict.
 - Interim choice: as proposed (`docs/specs/p3-05-peoples.md` 9.3, 10.3, questions 2 and 5).
-- Status: accepted by Paul, 2026-11-19 (interim choice stands); design doc to be updated
+- Status: accepted by Paul, 2026-11-19 (interim choice stands); design doc to be updated. Merged into design.md, 2026-11-21.
 
 ### History: a population density per race
 
@@ -567,7 +567,7 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
 - Problem: the race data has no field that says how many of a people a region supports; lifespans and growth rates describe time, not numbers.
 - Proposal: a new race field `density_permille` (elves 300, goblins 900, dwarves 700, faeries 250, humans 1000, orcs 800) scales the capacity of every region for that race. A data change, not a schema change.
 - Interim choice: as proposed (`docs/specs/p3-05-peoples.md` 5.1, 12.2, question 1).
-- Status: accepted by Paul, 2026-11-19 (deriving density from age appeals to him but would be hard to tune; the explicit field stays); design doc to be updated
+- Status: accepted by Paul, 2026-11-19 (deriving density from age appeals to him but would be hard to tune; the explicit field stays); design doc to be updated. Merged into design.md, 2026-11-21.
 
 ### History: random pressures act only in active phases; migration waits for conflict
 
@@ -577,7 +577,7 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
 - Problem: the design lists plague, famine and succession crises as tick-loop pressures and migrations among the consequences, but does not say whether quiet intervals have pressures or what a migration is before there are wars.
 - Proposal: famine, plague and succession crises act only in yearly ticks (active phases and flare-ups); quiet steps write growth, foundings and the fading of ruins only, which is the design's peace. Colonists and the survivors of an abandoned settlement move; migrations of whole peoples (refugees) come with conflict (P3-06) or P5.
 - Interim choice: as proposed (`docs/specs/p3-05-peoples.md` 10.5, questions 4 and 6).
-- Status: accepted by Paul, 2026-11-19 (interim choice stands); design doc to be updated
+- Status: accepted by Paul, 2026-11-19 (interim choice stands); design doc to be updated. Merged into design.md, 2026-11-21.
 
 ### History: wars are limited, fought for a claimed region, and end with the active phase
 
@@ -587,7 +587,7 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
 - Problem: the design lists wars, sieges and sackings but does not say what a war is fought for, how it ends, or what happens to a war when an active phase gives way to a quiet interval, in which nothing is fought.
 - Proposal: neighbours build strain from their creators' camps, old grudges, land hunger and fear of a giant; strain becomes a claim on one border region, the claim is the casus belli of a war, and the war is fought for that region: it ends when the attacker has it, when a side is exhausted, after 40 years at most, or at the first quiet step after its active phase, by battles won and settlements taken. Wars are declared only in yearly ticks; in quiet intervals strain keeps building and the highest strain is the tension that starts a flare-up, whose war follows without a draw. Relation kinds `enmity` (good against evil, from the younger people's founding), `war` (attacker first) and `peace`; alliances and vassalage wait for figures and factions in P5.
 - Interim choice: as proposed (`docs/specs/p3-06-expansion-conflict.md` 4, 5, 7, questions 1, 2, 5).
-- Status: accepted by Paul, 2026-11-19 (interim choice stands); design doc to be updated
+- Status: accepted by Paul, 2026-11-19 (interim choice stands); design doc to be updated. Merged into design.md, 2026-11-21.
 
 ### History: no race is wiped out; newly awakened peoples are sheltered
 
@@ -597,7 +597,7 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
 - Problem: with conquest, the late and small peoples (orcs, faeries, humans) were conquered to extinction in most prototype worlds; the design gives every race a role in play but does not say whether a race may vanish from history.
 - Proposal: the last settlement of a race's last civilization never falls to a siege, and a civilization is not attacked in its first 150 years (it may attack). Civilizations still end by conquest; races do not.
 - Interim choice: as proposed (`docs/specs/p3-06-expansion-conflict.md` 7.2, 7.3, question 4).
-- Status: accepted by Paul, 2026-11-19 (interim choice stands); design doc to be updated
+- Status: accepted by Paul, 2026-11-19 (interim choice stands); design doc to be updated. Merged into design.md, 2026-11-21.
 
 ### History: a fighting strength per race; goblins less aggressive than orcs
 
@@ -607,7 +607,7 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
 - Problem: the race data has readiness for war (`aggression`) but nothing for how well a people fights; without it the few elves fall to the numerous goblins, and with the shipped aggression the goblins, numerous and split into several hordes, start four wars in five while the orcs, the design's warlike race, start one in seven.
 - Proposal: a new race field `prowess_permille` (elves 1600, dwarves 1400, orcs 1300, faeries 1200, humans 1000, goblins 800) scales armies and garrisons; goblin `aggression` 700 → 600; aggression enters the strain rate squared. A data change, not a schema change.
 - Interim choice: as proposed (`docs/specs/p3-06-expansion-conflict.md` 5.2, 6.1, 12.2, questions 3 and 6).
-- Status: accepted by Paul, 2026-11-19 (interim choice stands); design doc to be updated
+- Status: accepted by Paul, 2026-11-19 (interim choice stands); design doc to be updated. Merged into design.md, 2026-11-21.
 
 ### Paul's decisions of 2026-11-19 on the peoples questions: density stays a field; faeries live in forest, wet or not
 
@@ -619,7 +619,7 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
   1. Question 1 (population density per race): the interim choice stands, a race field `density_permille`. Paul likes the idea of deriving density from a race's age but expects it to be hard to tune.
   2. Question 7 (faeries): faeries definitely live in forested land, and the forest does not have to be wet. The shipped weights at 0.15.0 favour wet land (`fen` 800, `wet_woodland` 800, `marsh` 600, `temperate_forest` 100), so this is a data change: forest biomes become the faeries' first preference whether wet or dry. It changes where faeries awaken and settle, so it changes world bytes and comes with a generator version bump.
 - Interim choice: the 0.15.0 weights ship as validated; the faerie weights are re-tuned as a separate data change (spec amendment to P3-05 12.2 with a measured sweep) after P3-06 is integrated, before Paul's review of P3.
-- Status: question 1 accepted; question 7 decided, data change pending. Paul confirmed the timing on 2026-11-19: the faerie change ships after P3-06, as its own data change. 2026-11-20: specified to ship with the P3-08 follow-up change (`docs/specs/p3-08-followups.md` item 4, P3-05 r6 12.3, generator 0.17.0)
+- Status: question 1 accepted; question 7 decided, data change pending. Paul confirmed the timing on 2026-11-19: the faerie change ships after P3-06, as its own data change. 2026-11-20: specified to ship with the P3-08 follow-up change (`docs/specs/p3-08-followups.md` item 4, P3-05 r6 12.3, generator 0.17.0). Merged into design.md, 2026-11-21.
 
 ### Races: sub-peoples with their own lands (dark elves underground, hill dwarves above ground)
 
@@ -629,7 +629,7 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
 - Problem: each race has one culture and one set of land preferences. Paul suggests that some elves could be dark elves living underground, and some dwarves hill dwarves living above ground in hillier country. The design doc has no notion of a branch of a race with different lands.
 - Proposal: allow a race several cultures, each with its own biome and site preferences, settlement kinds and name syllables; a civilization takes one culture at its founding (a second civilization of a race, or one born by secession, may take another). Hill dwarves fit the present geography (upland and hill regions above ground). Dark elves need somewhere underground: geography has no caves or underground layer, so either a first approximation (mountain and pass regions, settlements flagged as underground) or a later geography addition. Both touch the data kinds `race` and `culture` (schema of the data files, and table `culture`), so they need a spec.
 - Interim choice: none taken; P3 continues with one culture per race. Suggested home: P5 History depth, or an earlier small stage if Paul wants hill dwarves sooner.
-- Status: open (for the design conversation)
+- Status: open for the design conversation; listed as an open question in design.md section 12 (2026-11-21)
 
 ### Paul's decision of 2026-11-19: the remaining peoples questions go with their recommendations
 
@@ -645,7 +645,7 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
   6. Migration of whole peoples deferred; refugee migration with conflict or P5. Accepted.
   8. A plague that empties a settlement does not spread to its neighbours. Accepted.
 - Interim choice: none needed; the spec as implemented at 0.15.0 stands. Only question 7 (faeries in forest) leads to a change.
-- Status: accepted; design doc sections 5 and 6 to be updated
+- Status: accepted; design doc sections 5 and 6 to be updated. Merged into design.md, 2026-11-21.
 
 ### History: magical artifacts are made in response to conflicts
 
@@ -655,7 +655,7 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
 - Problem: the design has no account of where magical artifacts come from. Paul wants them made in response to conflicts, so that each has a history within those conflicts and with the people who made it.
 - Proposal: an artifact is an entity of history with its own table (maker civilization and settlement, the event that occasioned it, kind, name, and a chain of holders and places). It is created by an event whose cause is a conflict event (a war declared, a siege endured, a capital sacked, a long enmity), and it then moves through later events: carried to battle, captured in a sack, lost when a settlement is ruined, hidden, recovered. Where it lies at the present is a site and a quest hook for derivation. The conflict events it needs exist from P3-06 (wars, battles, sieges, sackings, conquests); makers want the figures and casters of P5.
 - Interim choice: not in P3. Suggested home: P5 History depth, with figures and casters, built on P3-06's event log; a schema change (new tables and event kinds) with its own spec. If Paul wants a first version sooner, a small stage after P3-07 could make artifacts from wars alone, with civilizations as makers.
-- Status: open for the design conversation; timing decided by Paul on 2026-11-19: artifacts wait for P5
+- Status: open for the design conversation; timing decided by Paul on 2026-11-19: artifacts wait for P5. Merged into design.md, 2026-11-21.
 
 ### Paul's decision of 2026-11-19: region names get identity; no numbered names
 
@@ -665,7 +665,7 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
 - Problem: regions are named by a sector word and a noun, with a Roman numeral when the base name repeats (spec P1-06 RG11). Paul: "East Wood" is fine but "West Wood III" is pretty boring; the names should come from a large set chosen at random so that regions have more identity, and should not rely on numbering.
 - Decision: replace the numeral with names drawn from a large hand-written set held in data (TOML). A spec amendment to P1-06 RG11 defines the scheme and the word lists; it changes the `name` column of table `region`, so it changes world bytes and comes with a generator version bump. No schema change.
 - Interim choice: the amendment is written now; it is implemented after P3-06 is integrated (together with the faerie data change or just before it), before Paul's review of P3.
-- Status: decided; spec amendment written (P1-06 r3, branch `p1/06-region-names`); its questions answered below
+- Status: decided; spec amendment written (P1-06 r3, branch `p1/06-region-names`); its questions answered below. Merged into design.md, 2026-11-21.
 
 ### Paul's decision of 2026-11-19: the chronology questions go with their recommendations
 
@@ -681,7 +681,7 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
   5. The world-hash cases `hist-span-2000-512` and `hist-races-elf-orc-1024` came with chronology, `hist-dense-1024` with the engine.
   6. The world report gained `[chronology]` without a format bump (report v2).
 - Interim choice: none needed; all six are as implemented at generator 0.13.0.
-- Status: accepted; design doc section 5 to be updated for points 1 and 2
+- Status: accepted; design doc section 5 to be updated for points 1 and 2. Merged into design.md, 2026-11-21.
 
 ### Paul's decision of 2026-11-19: the simulation engine questions go with their recommendations
 
@@ -697,7 +697,7 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
   5. Resume is a library seam, not a `generate --resume` option, until P5's history mode needs a command.
   6. A `flare_up` event marks each flare-up.
 - Interim choice: none needed; all six are as implemented at generator 0.14.0.
-- Status: accepted; design doc section 5 to be updated for points 1 to 3 and 6
+- Status: accepted; design doc section 5 to be updated for points 1 to 3 and 6. Merged into design.md, 2026-11-21.
 
 ### Paul's decision of 2026-11-19: the expansion and conflict questions go with their recommendations
 
@@ -717,7 +717,7 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
   9. Humans on land left open or ruined is weak in P3 and accepted; refugee migration in P5 is the stronger reading.
   10. "A world already at war when the dwarves arrive" holds in about 30 of 50 worlds and is accepted; no rule is added to force it.
 - Interim choice: none needed; all ten are as specified and implemented for generator 0.16.0 (in integration).
-- Status: accepted; design doc sections 5 and 13 to be updated
+- Status: accepted; design doc sections 5 and 13 to be updated. Merged into design.md, 2026-11-21.
 
 ### Paul's decision of 2026-11-19: the history report questions go with their recommendations
 
@@ -733,7 +733,7 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
   5. The report uses the islet threshold 1172 as a constant; if that tuning value ever changes, an islet flag is stored in the world with that change.
   6. The report goes to standard output by default.
 - Interim choice: none needed; all six are as specified; P3-07 is not yet implemented.
-- Status: accepted
+- Status: accepted. Merged into design.md, 2026-11-21.
 
 ### Paul's decisions of 2026-11-19 on the region name questions
 
@@ -748,7 +748,7 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
   4. The word lists are data Paul may edit (`game/data/placenames/`); no decision needed.
   5. Trait steering stays as shipped.
 - Interim choice: none needed. Point 2 is a change to the sentence renderer (spec P3-04 8.4), specified and implemented together with the region names.
-- Status: accepted; implementation scheduled after P3-06; 2026-11-20: specified for the P3-08 follow-up change (`docs/specs/p3-08-followups.md` items 1 and 2: P1-06 r4, P3-04 r10 8.5, P3-07 r7)
+- Status: accepted; implementation scheduled after P3-06; 2026-11-20: specified for the P3-08 follow-up change (`docs/specs/p3-08-followups.md` items 1 and 2: P1-06 r4, P3-04 r10 8.5, P3-07 r7). Merged into design.md, 2026-11-21.
 
 ### Region names: who keeps the plain name, and "The" inside history sentences
 
@@ -758,7 +758,7 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
 - Problem: with names drawn from hand-written lists (Paul's decision above), two choices are left. (1) Which regions keep the plain sector-and-noun name ("East Wood"): one per base name, or none. (2) Many drawn names begin with "The" ("The Scarred Downs"), stored capitalised as civilization names already are ("The Warrens of Bonk-Gitch"), so sentences read "Fielie awakened the Elves in The Scarred Downs."
 - Proposal: (1) the largest region of each base name keeps it, every other region draws a name (45% plain at 1024, 16% at 2048). (2) Names are stored with the capital; the sentence renderer of the history report lower-cases a leading "The " of any entity name inside a sentence, for regions and civilizations alike.
 - Interim choice: (1) as proposed (`docs/specs/p1-06-regions.md` r3, RG11 4); (2) stored names as proposed, sentences unchanged until the report spec takes the rule up (P1-06 r3 14.5 question 2).
-- Status: accepted by Paul 2026-11-19 (both points as proposed): see "Paul's decisions of 2026-11-19 on the region name questions"; point 2 is specified in `docs/specs/p1-06-regions.md` r3 14.6
+- Status: accepted by Paul 2026-11-19 (both points as proposed): see "Paul's decisions of 2026-11-19 on the region name questions"; point 2 is specified in `docs/specs/p1-06-regions.md` r3 14.6. Merged into design.md, 2026-11-21.
 
 ### Names: generated names are filtered; gods have their own style; every realm name has a realm form
 
@@ -768,7 +768,7 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
 - Problem: names are built from per-culture syllables with no check on what the result spells. In eight reviewed worlds the generator made a goblin settlement whose first syllables form a racial slur (and two near misses), human towns starting with a crude word for a body part, and gods with ordinary English names ("Bald", "Buzz", "Gord"). Gods use the same short shapes as villages ("Krok", "Sten"), and 7 of 14 elven realms had bare one-word names, so a realm reads like a town ("Finen founded Voeledell").
 - Proposal: three rules, specified in `docs/specs/p3-02-names.md` r5 section 11. (1) **Names are filtered**: a drawn name is redrawn when the word that holds its root contains a listed fragment (anywhere, or at a word start), or is exactly a listed word; the lists are shared data for every culture (`game/data/name_filters/`: slurs, crude words, ordinary English words the syllables can produce, famous real and fictional names). (2) **Gods have their own style**: each culture names its gods from its own list of root shapes, shipped as the culture's shapes of two or more syllables, so no god is a one-syllable word. (3) **Every realm name has a realm form**: no culture names a civilization with a bare root (a loader check); the elven bare form becomes "The House of {root}".
 - Interim choice: as proposed; ships in the follow-up change after P3-06 together with the region names and the faerie weights, with that change's generator version bump. No schema change. The region namer keeps its own word checks (P1-06 V4, V5), since the history lists' fragments reject ordinary English words such as "night" and "tithe".
-- Status: open; spec amendment written (P3-02 r5, branch `p3/02-names-filter`), questions in P3-02 11.10; 2026-11-20: ships with the P3-08 follow-up change (P3-02 r6: every word of the rendered name covered, the redraw stated; generator 0.17.0); the questions stay open
+- Status: open; spec amendment written (P3-02 r5, branch `p3/02-names-filter`), questions in P3-02 11.10; 2026-11-20: ships with the P3-08 follow-up change (P3-02 r6: every word of the rendered name covered, the redraw stated; generator 0.17.0); the questions stay open. Merged into design.md, 2026-11-21.
 
 ### History: dwarves settle high ground; abandonment names where the survivors went; one quiet era per quiet stretch
 
@@ -778,7 +778,7 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
 - Problem: (1) every race settles the lowest farmland of its region, so dwarves build lowland forest cities; (2) an abandoned settlement's survivors and the blow that began its decline are not recorded, so the log reads as a people walking away after a small blow; (3) a quiet era closes at every event of its civilization, so the log fills with 25-year eras and "(0 generations)"; (4) victors of a lopsided battle lose more than the defeated; (5) a capture sentence ends "and 0 fled"; (6) small plagues and crises without outcome crowd the summary; (7) a people's last village can be abandoned by a coin toss.
 - Proposal: specified in `docs/specs/p3-08-followups.md` (generator 0.17.0, no schema change): a per-race cell term in the site choice (dwarves: ore and height) and dwarven holds off the walkable ground are fortresses (P3-05 r6 6.2, 8.4); a new event kind `settlement_abandoned_to` naming the destination, and the decline's first blow as a second cause (P3-05 r6 8.5); one quiet era per civilization and quiet stretch (P3-04 r10 6.6); victors' losses from the smaller force (P3-06 r7 7.3); a three-word template form that drops a clause whose number is 0 (P3-04 r10 8.4); saliences by toll and outcome (P3-05 r6 10.2, 10.3); no chance abandonment of a last settlement (P3-05 r6 8.5). Plus the volume change of P3-08 6.4.
 - Interim choice: as proposed, for the P3-08 implementation; the questions to Paul are in `docs/specs/p3-08-followups.md` 10.
-- Status: open
+- Status: open. Merged into design.md, 2026-11-21.
 
 ### History: four rule changes proposed by the world critic's review of conflict
 
@@ -796,7 +796,7 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
   3. A won war always costs the loser: land, tribute, or a longer truce for a pair that keeps fighting over the same goal.
   4. Runaway is also measured per race, in the spec's sweep statistics and the validation sweep.
 - Interim choice: P3-06 merges as specified. Points 1 to 4 are being specified as their own change, P3-09 "conflict balance" (generator 0.18.0, branch `p3/09-spec`), at the spec writer's most reasonable reading, after the already decided names and peoples follow-ups (P3-08, generator 0.17.0). The P3-09 spec will list the decisions for Paul to confirm before it is implemented.
-- Status: accepted by Paul on 2026-11-20 (see "Paul's decision of 2026-11-20: the P3-09 conflict balance questions")
+- Status: accepted by Paul on 2026-11-20 (see "Paul's decision of 2026-11-20: the P3-09 conflict balance questions"). Merged into design.md, 2026-11-21.
 
 ### Paul's decisions of 2026-11-20 on the name filter questions
 
@@ -813,7 +813,7 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
   6. Orcish two-letter apostrophe parts ("Am'gash") stay.
   7. The filter lists are plain text in the repository.
 - Interim choice: points 2 to 7 are as shipped with P3-08 (generator 0.17.0). Point 1 differs from what P3-08 ships (the full list of 647 words): the short list is a data change to `game/data/name_filters/words.toml` that changes worlds, and ships with the next change after P3-08.
-- Status: accepted; point 1 scheduled after P3-08; 2026-11-20: point 1 specified (`docs/specs/p3-02-names.md` r8, section 11.11, branch `p3/10-word-list`): `words.toml` holds 393 of the 647 words (with `mold` restored by the lead's interim choice) (crude, comic or modern-sounding words, and function words, inflected forms and plain slips), 254 are released; a data change only (no code, no schema change), shipping with P3-09 (0.18.0) or alone as 0.17.1
+- Status: accepted; point 1 scheduled after P3-08; 2026-11-20: point 1 specified (`docs/specs/p3-02-names.md` r8, section 11.11, branch `p3/10-word-list`): `words.toml` holds 393 of the 647 words (with `mold` restored by the lead's interim choice) (crude, comic or modern-sounding words, and function words, inflected forms and plain slips), 254 are released; a data change only (no code, no schema change), shipping with P3-09 (0.18.0) or alone as 0.17.1. Merged into design.md, 2026-11-21.
 
 ### Paul's decision of 2026-11-20: the P3-08 tuning questions go with their recommendations
 
@@ -828,7 +828,7 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
   4. Famine and plague-spread rates are halved.
   5. The sentence templates gain the three-word form (a wording chosen by a value).
 - Interim choice: none needed; all five are as implemented in P3-08 (generator 0.17.0), which is in validation. The validation sweep and the world critic's review check whether the darker battles or the dwarven fortresses overshoot.
-- Status: accepted
+- Status: accepted. Merged into design.md, 2026-11-21.
 
 ### Paul's decision of 2026-11-20: the P3-09 conflict balance questions go with the lead's recommendations
 
@@ -849,7 +849,7 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
   10. No conflict rule for map size; the automatic setting founds more civilizations per race on a larger map.
   11. The history report's summary: a per-age floor of 20, a shown declaration always with its ending, claims at salience 35, the notes; within the 250-line budget and minimum salience 20. The fill step is added only if the P3-07 implementer's measurements confirm it.
 - Interim choice: none needed. The spec's figures were measured on a prototype at 0.16.0 and are re-measured after implementation on top of P3-08.
-- Status: accepted; implementation follows P3-08
+- Status: accepted; implementation follows P3-08. Merged into design.md, 2026-11-21.
 
 ### History: conflict balance beyond the four rule changes (P3-09)
 
@@ -859,7 +859,7 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
 - Problem: besides the four design-level changes of the lead's entry (flight of the last refuge, revenge, a cost for every lost war, runaway measured per race), the review's findings need rules the design does not state: faeries are besieged dozens of times in open view; orcs, the most warlike people, lose three wars in four in their own age; the same defender is attacked over the same wood up to 17 times; the goblin–elf feud is missing in a fifth of worlds; a 2048 world is nearly at peace; the summary drops whole ages and war endings.
 - Proposal: specified in `docs/specs/p3-09-conflict-balance.md` (generator 0.18.0, no schema change; normative text in P3-06 20, P3-05 21, P3-01 3.2, P3-07 21): faerie settlements in their forest are concealed from armies, elves and faeries defend their own land more strongly (race fields `conceal_min`, `home_defense_permille`); orcs muster four times the standard levy (race field `muster_permille`), battles are fought with the levies near the battlefield, a people declares only wars whose odds, weighed by the terrain, reach a minimum, and peoples more warlike than goblins keep shorter truces; a defender that has withstood three wars over one region is not attacked over it again until it changes hands; good and evil armies cross three borders to reach each other; a larger map founds more realms per race; the history report's summary shows at least 20 events per age and every shown war with its ending.
 - Interim choice: as proposed, for the P3-09 implementation; the questions to Paul were `docs/specs/p3-09-conflict-balance.md` 8 (items 5–11).
-- Status: accepted by Paul on 2026-11-20 (see "Paul's decision of 2026-11-20: the P3-09 conflict balance questions go with the lead's recommendations")
+- Status: accepted by Paul on 2026-11-20 (see "Paul's decision of 2026-11-20: the P3-09 conflict balance questions go with the lead's recommendations"). Merged into design.md, 2026-11-21.
 
 ### Paul's notes of 2026-11-20 from reading a generated history (seed 42, generator 0.17.0)
 
@@ -875,7 +875,7 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
   2. The dead of the defeated are bounded by what the victors' force can kill. Faeries avoid battle: an army entering their forest often finds no one (no battle, no siege), instead of being beaten by a stronger defence.
   3. Alliances and trade as a relation between civilizations: aligned peoples in contact form partnerships that add to both sides' growth and strength, and an ally may join a partner's war or battle.
 - Interim choice: points 1 and 2 are added to the P3-09 "conflict balance" change (generator 0.18.0), which is being implemented, as an amendment to its spec; with P3-09's rule that a lost war always costs the loser, point 1 would otherwise make a victorious defender cede land. Point 3 is a new system (new relation kinds, a notion of wealth, allied armies) and is proposed for P5 History depth, with the artifacts made in response to conflicts; it is not specified in P3 unless Paul wants it earlier.
-- Status: 1 and 2 accepted for P3-09 (Paul's notes are the decision; the rule details are the spec writer's and are measured); 3 decided by Paul on 2026-11-20: "P5 is where the alliances and trade and wealth should go." It joins "race relations and mixed settlements" in P5 History depth, with the artifacts made in response to conflicts.
+- Status: 1 and 2 accepted for P3-09 (Paul's notes are the decision; the rule details are the spec writer's and are measured); 3 decided by Paul on 2026-11-20: "P5 is where the alliances and trade and wealth should go." It joins "race relations and mixed settlements" in P5 History depth, with the artifacts made in response to conflicts. Merged into design.md, 2026-11-21.
 
 ### History: two ideas from the world critic's review of P3-08
 
@@ -889,7 +889,7 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
   1. History renames regions: a region's defining event (a great sack, a long war, a founding, a plague) can give it its present-day name, with the old name kept in the record.
   2. Mountain peoples get history of their own: delvings, lost holds and mines as events, not only wars.
 - Interim choice: neither is specified. Both suit P5 History depth (the first also needs the record of renamed places that sites and quests in P6 would use). The grim share of drawn region names can be lowered in data before then.
-- Status: open
+- Status: open; both listed as open questions in design.md section 12 (2026-11-21)
 
 ### Region names: the plain compass name, a second look
 
@@ -899,7 +899,7 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
 - Problem: Paul decided on 2026-11-19 that the largest region of each base name keeps the plain sector-and-noun name ("East Wood"). The largest region is often the most fought over, so the busiest regions carry the plainest names (seed 42 at 1024 keeps seven compass Woods, three of them side by side where the main feud is fought), and small maps stay mostly plain: 83% of regions at 512, 42% at 1024, 15% at 2048 (the P3-08 validation sweep's region rows).
 - Proposal: keep one plain name per kind of land: the largest region of each land noun keeps its compass name (one "… Wood", one "… Downs" per world), every other region draws a name. Measured on the same rows: 33% plain at 512, 12% at 1024, 4% at 2048. Alternatives measured: plain names only for a base name that occurs once (68%, 18%, 4%); the middle-sized region of each base name keeps it instead of the largest (shares unchanged).
 - Interim choice: unchanged until Paul answered; `docs/specs/p1-06-regions.md` r6 15.5 had the measurements.
-- Status: accepted by Paul 2026-11-20 (see "Paul's decision of 2026-11-20: the P3-10 questions go with their recommendations"); normative in `docs/specs/p1-06-regions.md` r7 15.5
+- Status: accepted by Paul 2026-11-20 (see "Paul's decision of 2026-11-20: the P3-10 questions go with their recommendations"); normative in `docs/specs/p1-06-regions.md` r7 15.5. Merged into design.md, 2026-11-21.
 
 ### History: one quiet line for the world
 
@@ -909,7 +909,7 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
 - Problem: since P3-08 each civilization writes one `quiet_era` per quiet stretch, but every civilization writes its own line for the same stretch with the same years. In 40 default worlds at generator 0.18.0 every quiet row's eras share their years: 1,640 lines in 325 rows; with four civilizations per race a row holds up to 12 identical lines (0.17.0).
 - Proposal: one world-level event per quiet stretch (`quiet_stretch`, P3-04 r12 20.1), with every living realm as a participant and their number as a value ("For 425 years, from 3392 to 3816, the land was quiet, and 5 realms kept the peace."). The per-realm count of ruling generations is derivable from the stored rows and is printed by the history report in each realm's milestones. Alternative: keep per-realm eras and hide those shorter than about 100 years in the report (25% of the lines at 0.18.0).
 - Interim choice: the world-level line, in the P3-10 change (generator 0.19.0; `docs/specs/p3-10-followups.md` question 2).
-- Status: accepted by Paul 2026-11-20 (see "Paul's decision of 2026-11-20: the P3-10 questions go with their recommendations")
+- Status: accepted by Paul 2026-11-20 (see "Paul's decision of 2026-11-20: the P3-10 questions go with their recommendations"). Merged into design.md, 2026-11-21.
 
 ### Paul's decision of 2026-11-20: the P3-10 questions go with their recommendations
 
@@ -925,7 +925,7 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
   5. **Two comic names stay** unfiltered ("Mammga", "The Twiwhiwou Ring"): each comes from an ordinary syllable of its culture.
   The lead also accepts the spec's technical question (a template placeholder for the cause clause of abandonment and dwindling sentences).
 - Interim choice: none needed. P3-10 (generator 0.19.0) is implemented after P3-09.
-- Status: accepted
+- Status: accepted. Merged into design.md, 2026-11-21.
 
 ### History: six questions from the world critic's review of P3-09 (conflict balance)
 
@@ -947,7 +947,7 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
   5. Take 1 to 4 first and measure again; if goblins still lead nine wars in ten in a quarter of worlds, raise human aggression.
   6. A hidden refuge lies low: no colonies and no declarations for its hidden years.
 - Interim choice: P3-09 merges as validated. These six go into the next change after Paul's answer (with P3-10, generator 0.19.0, or a change of their own).
-- Status: accepted for 1 to 4 and 6; 5 answered (no change). See the decision entry below.
+- Status: accepted for 1 to 4 and 6; 5 answered (no change). See the decision entry below. Merged into design.md, 2026-11-21.
 
 ### Paul's decision of 2026-11-20 on the six questions from the P3-09 review
 
@@ -963,7 +963,7 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
   5. Goblins starting most wars is accepted. Human aggression is not raised.
   6. A hidden refuge lies low: no colonies and no declarations for its hidden years.
 - Interim choice: none needed. The five rule changes are added to the P3-10 change (generator 0.19.0), which follows the P3-09 merge.
-- Status: accepted
+- Status: accepted. Merged into design.md, 2026-11-21.
 
 ### Paul's decision of 2026-11-20: orcs awaken with a quarrel
 
@@ -973,7 +973,7 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
 - Problem: the per-race odds accepted for orcs (decision above, item 4) cannot reach worlds where orcs never raise a claim: in 5 of the 9 worlds (of 40) where orcs declare no war, they have no quarrel with anyone, so about 80% of worlds would have an orc war against a target of 90%.
 - Decision: Paul's words: "having the orcs start with a quarrel with a neighbor is reasonable". Orcs begin their history with a quarrel with a neighbour, in addition to the shorter odds. The rule is specified in the P3-10 change (generator 0.19.0), not held back until the target is measured.
 - Interim choice: none needed.
-- Status: accepted
+- Status: accepted. Merged into design.md, 2026-11-21.
 
 ### Viewer: a history movie on the 2D map
 
@@ -983,7 +983,7 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
 - Problem: Paul's words: "it would be nice to be able to visualize the rise and falls of civilizations using the godot 2d map, as a movie. Doesn't have to be soon, but something to put on the list". The viewer shows geography only; nothing shows how the realms grow, fight and fall over the years.
 - Proposal: a time control on the 2D map of the viewer: a year slider with play, pause and speed, which colours each region by the civilization that holds it in that year and marks the standing settlements, with battles, sackings and falls shown as they happen and the year's sentences beside the map. The data is already in the world file: `region_control` stores ownership intervals and `settlement_census` the settlement states by year, so any year is answered without replaying the log. Saving the playback as a video file is a second step, after the playback works on screen. Candidate for P4 Viewer v1.
 - Interim choice: none needed; not scheduled. To be placed when P4 is planned, after Paul's review of P3.
-- Status: open
+- Status: open; listed in design.md as a candidate for phase P4 and as an open question in section 12 (2026-11-21)
 
 ### Paul's decision of 2026-11-21: orcs at peace among goblins is accepted
 
@@ -993,7 +993,7 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
 - Problem: with the awakening quarrel and the shorter odds, about 80% of default worlds have an orc war, against the 90% first aimed at. The rest are mostly worlds where only goblins, the orcs' own camp, are within reach.
 - Decision: Paul's words: "Orcs surrounded by goblins and not fighting is fine on 20%of worlds, better than reopening and lots of changes". The share of worlds with an orc declaration is a reported statistic, not a merge condition. Orcs do not fight their own camp and do not seek distant enemies. Asked whether a longer orc age (about 1000 more years) should be tried, Paul decided on the same day: "leave it as is for now". After the second round of P3-10 the share is 71 of 100 default worlds, because an orc realm with one settlement holds back its quarrel; Paul on 2026-11-21: "71% is fine".
 - Interim choice: none needed.
-- Status: accepted
+- Status: accepted. Merged into design.md, 2026-11-21.
 
 ### Paul's decision of 2026-11-21: faerie names keep their character, without the baby-talk sounds
 
@@ -1003,7 +1003,7 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
 - Problem: faerie names are built from soft consonants and bright vowels. At their best they read as light and fey (Lyfae Hollow, The Faeli Court, Atwia Glade); at their worst as baby talk (Wifleeflee Glade, Weebaema Glade, Eepou Glade, The Twiwhiwou Ring). The name filter removes crude names, not these. The alternatives were to leave the syllables alone, or to make them strange in a way that drifts toward the elven names.
 - Decision: the middle option, which Paul accepted ("Agree the middle option is good"): keep the faerie character, and drop the sounds that cause the baby talk: no `p` and `b` onsets, fewer `ee` and `ou` nuclei, and no syllable repeated twice in a row. A change to the faerie culture's naming data (`game/data/cultures/faerie.toml`) and, for the repeated syllable, a naming rule if the data cannot express it.
 - Interim choice: not part of P3-10 (generator 0.19.0), which is in validation. It goes into the next change that alters world bytes, with a spec. It is specified in P3-11 (generator 0.20.0; spec P3-02 section 14), which also removes the coda `p` (names ending in "-p"), since it sounds like the onsets ruled out. Paul, 2026-11-21: "Dropping the -p ending is fine".
-- Status: accepted
+- Status: accepted. Merged into design.md, 2026-11-21.
 
 ### History: the P3-10 orc and aim rulings (lead, awaiting Paul)
 
@@ -1019,4 +1019,4 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
   - R1, targets at 1024 defaults (100 worlds): orcs with one standing settlement at the present in at most 10 worlds; orcs doing nothing after 5750 in at most 2; orc wins at least orc losses; the same reported for `calm` and `turbulent`.
   - R2: a war is won by aim only when the goal has changed hands to the attacker during the war. Holding it at the declaration does not count: the defender's last settlement there must be gone. A realm may still claim a region it holds where another people keeps a town. If it wins that war by the score, the other people's settlements there pass to it with the peace. Wars won by aim with no battle in one year: at most 3 in 100 default worlds.
 - Interim choice: the rulings are specified and go into P3-10 before its merge (generator stays 0.19.0). Paul's decisions of 2026-11-20 stand in their intent: orcs still awaken with a quarrel and declare at shorter odds, and an attacker still wins by aim only by holding its goal. The rulings add a condition to each.
-- Status: open (awaiting Paul's confirmation)
+- Status: open (awaiting Paul's confirmation); listed as an open question in design.md section 12 (2026-11-21)

@@ -127,14 +127,19 @@ These choices came out of building and reviewing the geography stages. The exact
 
 - **Five scores per cell:** fertility, forage, timber, ore and fresh water. Forage is wild food (game, fowl, fish, reeds), set per biome with a bonus near the sea, a lake or a large river. It gives marsh, fen, wet woodland and coasts their value.
 - **Scores are absolute,** from 0 to 255, and are not rescaled per world. A harsh world reads as harsh, and worlds differ in how generous they are.
-- **Habitability** is a weighted mean of fertility (55), forage (20), timber (15) and ore (10), multiplied by a fresh-water factor between 0.25 and 1, and reduced by slope, flooding and very small walkable pockets. History reweights it by race.
+- **Habitability** weighs farmland most. It is a weighted mean of fertility (70), forage (15), timber (10) and ore (5) in the shipped tuning, multiplied by a fresh-water factor between 0.25 and 1, and reduced by slope, flooding and very small walkable pockets. River plains get a fertility bonus. The weights are tuning data. History reweights it by race.
 
 *Regions*
 
-- **Size and borders.** Regions are about 2 km² each, roughly 12, 45 and 180 per map at the three sizes, bordered on ridges and large rivers.
-- **Names.** Regions carry placeholder names such as "East Wood II" until history gives them cultural names.
+- **Size and borders.** Regions are about 2 km² each, roughly 13, 50 and 200 per map at the three sizes, bordered on ridges and large rivers.
+- **Names.** Regions have names with identity. A plain compass name such as "East Wood" is kept by one region per kind of land in each world, the largest. Every other region draws its name from large hand-written lists held in data, and no name is numbered.
 - **Land only.** There are no sea regions, and lakes belong to land regions.
 - **Borders are recorded.** For each pair of neighbouring regions the world stores border length, lowest crossing, and whether it is walkable or a river. History uses this to find where a pass, road or bridge is worth building.
+
+* **How borders are found.** Borders come from a travel cost that is cheap along valleys and dear over ridges. A large river is one draining more than about 4 km², and its two banks belong to different regions where both have a settlement site.
+* **Uplands and islands.** Mountain massifs wider than about a kilometre form upland regions of their own; narrower ranges are divided along their crest. Islands are regions, and islets below about 0.3 km² are ignored as homes.
+* **What each region records.** Its biome mix, resource means, walkable ground, river and coast, and how much rich ore lies near walkable ground, so history can site mines where they can be reached.
+* **Known limits, accepted.** Coasts score below the interior, so ports come from history. Lowland regions differ little from each other, and lowland borders are political lines. Heath shows as a stripe on some mountain flanks.
 
 Determinism rules for every stage:
 
@@ -177,7 +182,7 @@ The default history spans 6,000 years, of which roughly 1,200 are simulated in d
 
 - **Ages.** History is divided into six ages, one per race. Each age opens when the gods bring a new race into the world.
 - **Active phases.** Each age begins with an active phase of yearly ticks: the new race settles, meets its neighbours, and the first wars and alliances form. A final active phase runs up to the present day.
-- **Quiet intervals.** Between active phases, a coarse step advances the world in one jump. Populations drift toward what the land supports, ruling lines turn over as a count of generations, ruins decay, and long-lived figures and monsters simply persist.
+- **Quiet intervals.** Between active phases, the world advances in coarse steps of 25 years, and tension is checked after each. Populations drift toward what the land supports, ruling lines turn over as a count of generations, ruins decay, and long-lived figures and monsters simply persist.
 - **Flare-ups.** A quiet interval can be interrupted. If a tension measure crosses a threshold (two expanding borders meet, a monster wakes, a god acts), a short active phase is inserted.
 - **Records.** Quiet intervals write only a few summary events, such as "four centuries of peace under the same dynasty". Active phases write the detailed log.
 - **Determinism.** The schedule of phases is derived from the seed and the world state, so the same seed gives the same history.
@@ -260,7 +265,90 @@ Interaction rules the simulation needs:
 
 **Mountains, passes and roads in history.** Ranges are real barriers at the start of history. Passes are stored as sites, and they are places to fortify, tax and fight over. Civilizations improve passes and build roads across steep ground as they grow, which opens land that was unreachable. Region borders tell the simulation where a crossing is cheap and where it needs a road or a bridge.
 
-**Food and homelands.** Forage is a second food source beside farming, so peoples of wild places can live where farmland is poor. Each race's preferred land is expressed over the nine natural biomes: fens and wet woodland suit faeries, uplands and ranges suit dwarves, and so on, set in the race data files.
+**Food and homelands.** Forage is a second food source beside farming, so peoples of wild places can live where farmland is poor. Each race's preferred land is expressed over the nine natural biomes: forest of any kind suits faeries, high and ore-rich ground suits dwarves, and so on, set in the race data files.
+
+**What phase P3 has settled about history**
+
+These rules came out of building the history core and reading its output. Exact rules and numbers are in `docs/specs/p3-00` to `p3-10`, and the numbers are tuning data.
+
+*Calendar and phases*
+
+- **Years.** Years are integers. Year 0 is the awakening of the first race present, normally the elves, and the present is the history span. With a subset of races, each later race keeps its own share of the span.
+- **Phase lengths scale with the span.** The detail setting fixes the share of years simulated in yearly ticks: about 12% for sparse, 19 to 20% for normal, and 28% for dense, with a floor of 10% and a cap of 45%.
+- **The last age is mostly active.** The orcs' opening phase usually runs into the final phase, which makes theirs the most recent age of conflict.
+- **Flare-ups.** After each quiet step, the highest strain between neighbours is the tension. Above the threshold a flare-up starts the next year, and it always brings its war.
+- **Quiet stretches.** Famine, plague and succession crises act only in yearly ticks. Quiet steps bring growth, foundings and the fading of ruins. Each quiet stretch is recorded as one line for the whole world.
+
+*Gods*
+
+- **Creator gods.** Each race has one named creator god. Every race's god exists in every world, with the same name, even when that race is left out.
+- **The rest of the pantheon,** its domains and its interventions come with phase P5. The simulation already has the place where interventions and the divine script of section 14 plug in.
+
+*Land and expansion*
+
+- **Territory.** A region is held by at most one civilization at a time, and the world stores ownership by year.
+- **Reach.** A people founds settlements only in free regions within a few borders of its capital: one for elves, dwarves and faeries, two for goblins and orcs, three for humans. It settles only land at least 70% as good as its home.
+- **Secession.** A succession crisis in a large realm may split it, and the new realm expands from its own capital. This is how a people spreads beyond its reach.
+- **Room for later races.** At the default size about 31 of 49 regions are held at the present, which leaves free land for late arrivals and for conflict. A larger map founds more realms per race.
+- **Where peoples settle.** Faeries live in forest, wet or dry, inland and away from the coast. Dwarves take the high, ore-rich part of their regions, and most dwarven foundings are fortresses.
+
+*The character of each race, as data*
+
+- **Numbers.** A density per race sets how many of a people a region supports: humans and goblins are many, elves and faeries few.
+- **Fighting strength.** A prowess per race scales armies and garrisons, highest for elves and lowest for goblins. Orcs muster four times the standard levy.
+- **Defence and concealment.** Elves and faeries defend their own land more strongly. Faerie settlements in their forest are hidden from armies.
+- **Readiness for war.** Aggression per race drives how fast quarrels grow. Goblins starting most wars is accepted.
+
+*War*
+
+- **What a war is.** Neighbours build strain from their creators' camps, old grudges, land hunger and fear of a giant. Strain becomes a claim on one border region, and the war is fought for that region.
+- **How a war ends.** When the attacker holds the region, when a side is exhausted, after 40 years at most, or at the first quiet step after its active phase. A side that has just won a battle does not sue for peace.
+- **Winning.** An attacker wins by its aim only if it holds the goal itself. Otherwise the war is decided by battles, counted by scale as well as number, and may end in a truce.
+- **Losing costs something.** The loser gives up the goal, or else its best outlying region within the winner's reach, or else a tribute of its people.
+- **Revenge.** A people that lost a settlement or region keeps a claim against the taker and will fight for it whatever its usual temper, so elves retake ruins and dwarves avenge their holds.
+- **Limits.** A people declares only wars whose odds, weighed by terrain, reach a minimum. A defender that has withstood three wars over one region is left alone there until it changes hands. Armies cross two borders, or three against the opposing camp.
+- **Battles.** Levies near the battlefield fight. A victor never loses more than the defeated, and the dead of the defeated are bounded by what the victors could kill.
+- **Shelter.** A new civilization is not attacked in its first 150 years, though it may attack.
+- **Relations.** Enmity, war and peace exist now. Alliances, vassalage, trade and wealth come with phase P5.
+
+*No race dies out*
+
+- **Flight.** When a race's last settlement falls, its survivors flee and found a hidden settlement up to three borders away, out of every army's sight for 300 years. While hidden it founds no colonies and declares no wars.
+- **Last resort.** Only when there is nowhere to flee does the last settlement hold.
+
+*Faeries and orcs*
+
+- **Faeries avoid battle.** An army entering their forest often finds no one. One failed search makes that wood weary for every claimant for a time. Faeries never strike back.
+- **Orcs awaken with a quarrel** with a neighbour, and declare war at shorter odds than other races. They do not fight their own camp or seek distant enemies, so in roughly three worlds in ten, orcs surrounded by goblins stay at peace. That is accepted.
+
+*Balance*
+
+- **Runaway is measured** per civilization and per race, as reported statistics with typical ranges. No rule forces an outcome.
+- **Reference size.** The default map, 1024 cells, is the reference for tuning and judging history. The smallest maps run all races with fewer civilizations and are not judged for quality.
+
+*Events and their text*
+
+- **Events store facts.** An event has a kind, years, a region, a settlement and a salience score, with participants, values and causes in their own tables. There is no stored summary sentence.
+- **Sentences are rendered** from templates, in the history report, the viewer and the game. The catalogue of event kinds, roles and templates is part of the schema contract, and each world carries the catalogue it was generated with.
+- **Readable history.** An abandonment names where the survivors went and the blow that began the decline. Numbers of 1,000 and more are written with separators, and a leading "The" in a name is lower-cased inside a sentence.
+- **The history report** is `report --history`. Its summary shows at most 250 events, none below a minimum salience, at least 20 per age, and every shown war with its ending.
+
+*Names*
+
+- **Rules.** Names use ASCII letters, spaces, apostrophes and hyphens, and are unique across the whole world and across kinds.
+- **Filter.** A drawn name is redrawn when it spells a slur, a crude word, or a comic or modern-sounding word. Ordinary words that suit the setting stay, as in "Thorn Deep" or "Moss Hollow".
+- **Gods and realms.** Gods are named from each culture's longer name shapes, so no god has a one-syllable name. Every realm name has a realm form, such as "The House of" a name for elves.
+- **Faerie names** keep their light character without the sounds that read as baby talk.
+- **Cultures.** Each race has one culture for now.
+
+*Waiting for phase P5*
+
+- Roads and improved passes; phase P3 treats passes as fixed crossings.
+- The wider pantheon and god interventions.
+- Alliances, trade and wealth: aligned peoples in contact form partnerships that strengthen both, and an ally may join a partner's war.
+- Magical artifacts, made in response to conflicts. Each has a maker, an occasion and a chain of holders and places, and where it lies in the present is a site and a quest hook.
+- Migrations of whole peoples as refugees, figures and factions, and mixed settlements.
+- Whether event rules move from code into data. In phase P3 the rules are code with every number in TOML.
 
 **Tick loop (active phases)**
 
@@ -338,9 +426,13 @@ Schema versions so far:
 | 2 | 0.6.0 | `pass`: one row per mountain pass, with its range, kind, col cell, saddle and col heights, and crossing path |
 | 3 | 0.8.0 | `biome`: the biome definitions the world was generated with; `climate`: one row holding the prevailing wind |
 | 4 | 0.9.0 | `climate` gains the per-world temperature offset; `biome` has twelve rows |
-| 5 (planned) | With the regions stage | `region`, with bounds as four integer columns, and `region_border` |
+| 5 | 0.11.0 | `region`, with bounds as four integer columns, and `region_border` |
+| 6 | 0.13.0 | Chronology: race, race\_biome, culture, god and age tables, and the world-creation settings stored in meta |
+| 7 | 0.14.0 | History engine: the event catalogue tables, phase, event with its participants, causes and values, civilization, settlement, settlement census by year, region control by year, and relation |
 
 The layer catalogue (each layer's name, type, units and meaning) is part of the contract and is kept in `docs/specs/schema.md`. Adding a layer needs no schema version bump; changing a catalogued layer does.
+
+Version 5 also adds `region_biome`, the cells of each biome in each region. From version 7 the `event` table holds facts only, with no summary column; `site_id` joins it with the sites in phase P6. Later history stages add rows and catalogue entries, and the event catalogue is part of the contract in the same way the layer catalogue is.
 
 ## 7. Runtime world realization
 
@@ -729,10 +821,16 @@ Decided so far:
 * **Climate:** a cool northern land, one prevailing wind per world, and a per-world temperature shift.
 * **Biomes:** nine natural biomes plus blighted waste.
 * **Resources:** five absolute scores including forage, with habitability treating fresh water as a necessity.
-* **Regions:** about 2 km² each, land only, with placeholder names until history renames them.
+* **Regions:** about 2 km² each, land only, named from hand-written lists with one plain compass name per kind of land.
 * **Engine:** Godot 4.7.2 with godot-cpp 10.0.0; C++ only is confirmed after the viewer work.
 
 - **Narrative enrichment:** an optional pass at world creation writes quest lines and lore to a separate file, using Claude, a local model, or neither. A divine script is a later experiment. Details are in section 14.
+
+* **Geography approved:** phase P1 was approved on November 19, 2026, with the default map as the reference size for history.
+* **History core:** limited wars fought for a claimed region, a cost for every lost war, revenge claims, flight in place of extinction, hidden faeries, and orcs that awaken with a quarrel. Details are in section 5.
+* **Events:** stored as facts and rendered from templates the world carries.
+* **Names:** ASCII, unique, filtered for crude and modern-sounding words, with ordinary fitting words kept.
+* **Phase P5 additions:** alliances, trade and wealth; artifacts made in response to conflicts; roads and improved passes.
 
 Still open:
 
@@ -775,9 +873,16 @@ Still open:
 - [ ] **Local fallback scope.** How much should the local pass attempt: full quest lines, or chronicles and rumours only? Decide from output quality. (Milestone 11)
 - [ ] **Bundled lore.** Should the project ship ready-made lore files for a few recommended seeds, so players without any model still see enriched worlds? (Milestone 11)
 
+* [ ] **Sub-peoples.** Should a race have several cultures with their own lands, such as hill dwarves above ground and dark elves underground? Hill dwarves fit the present geography; dark elves need somewhere underground, which geography does not yet have. (Phase P5, or earlier for hill dwarves)
+* [ ] **History renames regions.** Should a region's defining event (a great sack, a long war, a founding) give it its present-day name, with the old name kept on record? (Phase P5)
+* [ ] **Mountain peoples' own history.** Upland dwarves see few events unless someone brings a war to them. Should delvings, lost holds and mines be events of their own? (Phase P5)
+* [ ] **Layer catalogue in the library.** The viewer keeps its own copy of each layer's units and meaning. Should `worldgen` expose the catalogue, and region names, through its public interface? (Phase P4)
+* [ ] **History movie.** Playback of history on the 2D map is on the list for the viewer. Where does it fall in phase P4, and is saving it as a video wanted? (Phase P4)
+* [ ] **Two war rulings awaiting confirmation.** The lead proposes that a realm with one settlement holds back its awakening quarrel, that a fled orc refuge hides for 100 years where others hide for 300, and that a war is won by aim only when the goal changes hands during the war. (Phase P3, before P3-10 merges)
+
 ## 13. World generator prototype: phases and agent roles
 
-The first block of work delivers milestones 0 and 1 plus the Godot viewer, in seven phases. Each phase ends with a check that can be run, and with a review by Paul in the viewer or the exported images. Status on November 18, 2026: P0 and P2 are complete. In P1, elevation, hydrology, climate and biomes are merged, and resources and regions remain.
+The first block of work delivers milestones 0 and 1 plus the Godot viewer, in seven phases. Each phase ends with a check that can be run, and with a review by Paul in the viewer or the exported images. Status on November 21, 2026: P0, P1 and P2 are complete, and Paul approved P1 on November 19. P3 is in progress as a series of stages and follow-up changes, at generator 0.19.0.
 
 ### Phases
 
@@ -787,8 +892,8 @@ The first block of work delivers milestones 0 and 1 plus the Godot viewer, in se
 | P1 Geography | Elevation, erosion, hydrology, climate, biomes, resources and regions, each writing its layer; image export per layer | P0 | Milestone 0 criteria: plausible maps, identical file hash on every platform, golden-seed tests per stage |
 | P2 Godot bring-up and viewer v0 | Godot version pinned; C++ extension building on Linux and Windows; `world.db` reader bound into Godot; 2D map with switchable layers | P0; runs alongside P1 | The viewer opens a world file from P1 and shows every layer |
 | P3 History core | TOML definitions for the six races and their cultures; ages and the awakening schedule; active phases, quiet intervals and flare-ups; civilizations, settlements, wars, ruin; the event log with causes; text history report | P1 | Default world generates in under 2 minutes; races appear in the fixed order at the scheduled times; golden-seed tests pass |
-| P4 Viewer v1 | Timeline scrubber, territory overlay by year, settlement and site markers, browser for civilizations and events with cause links | P2, P3 | Paul can follow one civilization from awakening to the present without leaving the viewer |
-| P5 History depth | God interventions; beast populations; named monsters; figures and factions; race relations and mixed settlements; casters, invented spells and spellbooks | P3 | Across a sweep of seeds, every race, god camp and monster kind takes part, and no world is empty or runaway |
+| P4 Viewer v1 | Timeline scrubber, territory overlay by year, settlement and site markers, browser for civilizations and events with cause links; a candidate addition is playing history as a movie on the 2D map, with regions coloured by their holder year by year | P2, P3 | Paul can follow one civilization from awakening to the present without leaving the viewer |
+| P5 History depth | God interventions; beast populations; named monsters; figures and factions; race relations and mixed settlements; casters, invented spells and spellbooks; roads and improved passes; alliances, trade and wealth; artifacts made in response to conflicts; refugee migrations | P3 | Across a sweep of seeds, every race, god camp and monster kind takes part, and no world is empty or runaway |
 | P6 Derivation and polish | Sites, dungeon records, quest hooks and spellbook placement derived from history; world-creation settings wired to the command line; 3D heightmap preview in the viewer | P4, P5 | Milestone 1 criteria complete; every quest hook points at real entities; history reads as coherent in the viewer |
 
 P1 and P2 run in parallel once P0 is done, as do P4 and P5 once P3 is done. P0 deserves care: every later phase inherits its determinism rules, and retrofitting them is expensive.
