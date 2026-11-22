@@ -45,6 +45,7 @@ add_library(worldgen STATIC
     src/generate.cpp
     src/stages/test_pattern.cpp
     src/inspect/hashes.cpp
+    src/inspect/layer_catalogue.cpp
     src/inspect/render.cpp
     src/inspect/report.cpp
     # P1 foundation (P1-00): parallel blocks (P0-01 4.2 as amended), the

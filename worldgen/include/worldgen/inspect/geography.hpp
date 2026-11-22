@@ -489,9 +489,12 @@ struct ResourceCells {
 
 // --- Regions (P1-06 9) -------------------------------------------------------------
 
-// What report reads of a row of table `region` (P1-06 3.2).
+// What report and the viewer read of a row of table `region` (P1-06 3.2;
+// name and biome added by P4-02 4.6, report reads neither).
 struct RegionRecord {
     std::int64_t id = 0;
+    std::string name;        // column 2
+    std::int64_t biome = 0;  // column 3
     std::int64_t cells = 0;
     std::int64_t walk_cells = 0;
 };
