@@ -107,6 +107,50 @@ constexpr std::string_view ROOT_SLOT = "{root}";
     return false;
 }
 
+// r15 14.2: one syllable's text with (s) and without (b) its codas.
+struct Syllable {
+    std::string s;
+    std::string b;
+};
+
+// The syllables of 14.2 from a pattern and the strings drawn for its O, N
+// and C symbols (in order).
+[[nodiscard]] std::vector<Syllable> syllables(std::string_view pattern, const std::vector<std::string>& drawn) {
+    std::vector<Syllable> out;
+    std::size_t k = 0;
+    bool open = false;  // a syllable is open (none before the first symbol)
+    char prev = '\0';
+    for (const char sym : pattern) {
+        if (is_separator(sym)) {
+            open = false;  // a boundary; the separator belongs to no syllable
+            prev = sym;
+            continue;
+        }
+        if (sym != 'O' && sym != 'N' && sym != 'C') {
+            fatal("names: a name pattern holds a symbol other than O, N, C, ' and -");
+        }
+        const bool boundary = !open || sym == 'O' || (sym == 'N' && prev != 'O');
+        if (boundary) {
+            out.emplace_back();
+            open = true;
+        }
+        if (k >= drawn.size()) {
+            fatal("names: fewer drawn strings than pattern symbols");
+        }
+        const std::string& text = drawn[k];
+        ++k;
+        out.back().s += text;
+        if (sym != 'C') {
+            out.back().b += text;
+        }
+        prev = sym;
+    }
+    if (k != drawn.size()) {
+        fatal("names: more drawn strings than pattern symbols");
+    }
+    return out;
+}
+
 // The form with its one {root} replaced. Fatal unless the form holds
 // exactly one {root}.
 [[nodiscard]] std::string fill_form(std::string_view form, std::string_view cap_root) {
@@ -184,19 +228,23 @@ constexpr std::string_view ROOT_SLOT = "{root}";
     // r5 (11.4): gods take their shape from god_patterns.
     const std::string& pattern = pick_from(kind == NameKind::god ? naming.god_patterns : naming.patterns, u(1));
     NameAttempt out;
+    std::vector<std::string> drawn;  // r15 14.2: the strings of O, N and C, in order
     std::uint64_t j = 2;
     for (const char s : pattern) {
         switch (s) {
             case 'O':
-                out.root += pick_from(naming.onsets, u(j));
+                drawn.push_back(pick_from(naming.onsets, u(j)));
+                out.root += drawn.back();
                 ++j;
                 break;
             case 'N':
-                out.root += pick_from(naming.nuclei, u(j));
+                drawn.push_back(pick_from(naming.nuclei, u(j)));
+                out.root += drawn.back();
                 ++j;
                 break;
             case 'C':
-                out.root += pick_from(naming.codas, u(j));
+                drawn.push_back(pick_from(naming.codas, u(j)));
+                out.root += drawn.back();
                 ++j;
                 break;
             case '\'':
@@ -218,6 +266,11 @@ constexpr std::string_view ROOT_SLOT = "{root}";
     if (out.valid && triple_letter(out.name)) {
         out.valid = false;
     }
+    // r15 14.2: no syllable said twice in a row (no draw added).
+    if (out.valid && repeated_syllable(pattern, drawn)) {
+        out.valid = false;
+        out.repeated = true;
+    }
     return out;
 }
 
@@ -227,6 +280,17 @@ const NameFilter& empty_filter() {
 }
 
 }  // namespace
+
+bool repeated_syllable(std::string_view pattern, const std::vector<std::string>& drawn) {
+    const std::vector<Syllable> syl = syllables(pattern, drawn);
+    for (std::size_t i = 0; i + 1 < syl.size(); ++i) {
+        const std::string& si = syl[i].s;
+        if (!si.empty() && (si == syl[i + 1].s || si == syl[i + 1].b)) {
+            return true;
+        }
+    }
+    return false;
+}
 
 CultureNaming culture_naming_from(const data::Record& naming) {
     CultureNaming out;

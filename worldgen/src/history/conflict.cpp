@@ -1222,19 +1222,31 @@ void ConflictSubsystem::update_strain(StepContext& ctx, std::int64_t years, std:
         }
         const std::int64_t region = pick_entry.region;
         std::int64_t cause = 0;
-        if (ctx.state().region(region).owner == b) {
+        // r19 23.2: a claim on a region b does not hold names b's visible
+        // settlements there (kind 39 claim_settlements), ascending id.
+        std::vector<std::int64_t> seen;
+        const bool holds = ctx.state().region(region).owner == b;
+        if (holds) {
             cause = ctx.state().region(region).owner_event;
         } else {
+            seen = seen_settlements(ctx, b, region);  // r10 20.21 item 3
             std::int64_t best = 0;
-            for (const std::int64_t id : seen_settlements(ctx, b, region)) {  // r10 20.21 item 3
+            for (const std::int64_t id : seen) {
                 if (best == 0 || ctx.state().settlement(id).population > ctx.state().settlement(best).population) {
                     best = id;
                 }
             }
             cause = best != 0 ? ctx.state().settlement(best).founding_event : 0;
+            if (seen.empty()) {
+                fail("history: conflict: a claim of civilization " + int_text(a) + " on region " + int_text(region) +
+                     " names no settlement of civilization " + int_text(b));
+            }
         }
-        EventSpec e = point_event(ctx, "claim", region, 0);
+        EventSpec e = point_event(ctx, holds ? "claim" : "claim_settlements", region, 0);
         e.participants = {civ_role("claimant", a), civ_role("holder", b)};
+        for (std::size_t i = 0; i < seen.size() && i + 2 < MAX_PARTICIPANTS; ++i) {
+            e.participants.push_back(Participant{"settlement", EntityType::settlement, seen[i]});
+        }
         if (cause != 0) {
             e.causes = {cause};
         }

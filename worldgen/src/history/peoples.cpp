@@ -349,6 +349,16 @@ std::vector<std::int64_t> PeoplesSubsystem::homes(const StepContext& ctx, std::i
     return out;
 }
 
+// r16 23.2 (amends 7.3 item 3): P0 = founding_population when the race's
+// awakening_population is 0, else max(founding_population,
+// min(awakening_population, C(H, r))).
+std::int64_t PeoplesSubsystem::awakening_population(const PeoplesRace& race, std::int64_t capacity) const {
+    if (race.awakening_population == 0) {
+        return tuning_.founding_population;
+    }
+    return std::max(tuning_.founding_population, std::min(race.awakening_population, capacity));
+}
+
 void PeoplesSubsystem::awaken(StepContext& ctx, std::int64_t race, std::int64_t awakening_event) {
     const std::vector<std::int64_t> list = homes(ctx, race);
     const PeoplesGeo& g = geo();
@@ -378,14 +388,15 @@ void PeoplesSubsystem::awaken(StepContext& ctx, std::int64_t race, std::int64_t 
         // 3. The settlement.
         const std::int64_t s = settlement_count(state) + 1;
         std::string settlement_name = next_name(ctx, race, NameKind::settlement, s);
-        const SettlementKind kind = founding_kind(race, home, *site, tuning_.founding_population);
+        const std::int64_t p0 = awakening_population(r, g.capacity(home, race));
+        const SettlementKind kind = founding_kind(race, home, *site, p0);
         EventSpec settled = point_event(ctx, "settlement_founded", home, s);
         settled.participants = {Participant{"settlement", EntityType::settlement, s},
                                 Participant{"founder", EntityType::civilization, c}};
-        settled.values = {tuning_.founding_population};
+        settled.values = {p0};
         settled.causes = {civ_event};
         const std::int64_t settlement_event = ctx.append(settled);
-        if (state.found_settlement(site->x, site->y, home, c, kind, tuning_.founding_population,
+        if (state.found_settlement(site->x, site->y, home, c, kind, p0,
                                    std::move(settlement_name), settlement_event) != s) {
             fail("history: peoples: the settlement id is not the expected one");
         }

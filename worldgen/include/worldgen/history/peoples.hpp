@@ -95,6 +95,9 @@ struct PeoplesRace {
     std::int64_t cell_ore = 0, cell_height = 0;  // r6: cell_weights (P3-01 r8)
     // r12 22.5 (P3-01 r11 3.4): the neutral values 0, 1000 and 1000.
     std::int64_t cell_inland = 0, cell_port = 1000, cell_habitability = 1000;
+    // r16 23.2 (P3-01 r14 3.7): the awakening settlement's population; 0
+    // (a hand-made race: the rule off) means founding_population.
+    std::int64_t awakening_population = 0;
     std::array<std::uint8_t, 6> builds{};      // index: SettlementKind code (1 to 5); 1 if built
     std::vector<db::RaceBiomeRow> biomes;      // its race_biome rows, ascending biome
 
@@ -433,6 +436,9 @@ private:
     // 8.4: the kind of a new settlement (r6: the fortress cell rule).
     [[nodiscard]] SettlementKind founding_kind(std::int64_t race, std::int64_t region, const SiteCell& site,
                                                std::int64_t population) const;
+    // r16 23.2: the population of an awakening settlement in a home of
+    // capacity C(H, r) = `capacity`.
+    [[nodiscard]] std::int64_t awakening_population(const PeoplesRace& race, std::int64_t capacity) const;
     [[nodiscard]] std::optional<std::int64_t> outward_target(const StepContext& context, std::int64_t civ,
                                                              bool require_free, std::vector<std::int64_t>* all) const;
     [[nodiscard]] std::string next_name(const StepContext& context, std::int64_t race, NameKind kind,
