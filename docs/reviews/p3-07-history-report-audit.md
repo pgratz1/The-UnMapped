@@ -191,3 +191,79 @@ Re-audit on 2026-11-22 of `git diff 81bbf17 63972a3 -- worldgen tools`, merged i
   - The 36 damaged copies give the same messages and exit codes as before, except `overflow_walk`, which no longer overflows.
   - I did not trigger A2 itself, as that would need a concurrent writer. Its coverage is judged by reading the code.
 - **Still to come.** The announced one-line wording fix for the negative-population message is not part of this check and does not affect the verdict.
+
+## 7. r17 changes
+
+Audit on 2026-11-22 of `git diff 544fbcf origin/p3/07-impl -- worldgen/src worldgen/include tools/worldgen-cli`: `worldgen/include/worldgen/history/digest.hpp`, `worldgen/src/history/digest.cpp` and `worldgen/src/inspect/history_report.cpp`, against spec P3-07 section 24 (r17). These sources are identical in `origin/p3/07-final` (`debdd8c`), and the line numbers below are from that commit. The generator stays 0.20.0, and no world byte changes.
+
+**Verdict: pass.** I found no blocking or should-fix issue, and there is one advisory finding (A3). Every valid world I tried gives byte-identical text at both levels under GCC release and under Clang with ASan and UBSan. On 34 damaged copies aimed at the new code, each run ends either in an error returned as a value (exit 3) or in a clean exit 0, with no sanitizer report.
+
+### 7.1 Findings
+
+**Blocking:** none. **Should-fix:** none.
+
+**A3. Two `std::map::at` calls depend on how the code is built, not on a check** (`worldgen/src/history/digest.cpp:790`, `last_claim.at({a, b})`, and `:739-740`, `first_since.at(...)` in the adversary sort; advisory).
+- In each case, the key was inserted earlier in the same function from the same values. `last_claim` gets every claim's (claimant, holder) in the first loop over `events_` (`:769`), and `first_since` gets every adversary key in the loop that also builds `adversaries` (`:699-702`). Both calls can therefore never throw, whatever the file holds.
+- A later edit that splits a loop or changes a filter could break that link. The failure would then be `std::out_of_range` and not a `db::Result` error, which goes against "errors as values".
+- **Suggested fix:** use `find` and treat a missing key as "not the last claim" or "since = E". Or keep the code as it is with a comment that names the link. Neither changes the output.
+
+### 7.2 What was checked
+
+- **Ordering.** Every new sort has a total key or a stable sort over input in a defined order:
+  - **Milestone fill** (`digest.cpp:644`): (own, salience, id). The ids within one civilization are unique.
+  - **Adversaries** (`:737`): (first since, type, id) over the keys of a `std::map`, which are unique.
+  - **Floor walk per age** (`:1057`): a stable partition on `involves`, which is a valid strict weak order with two equivalence classes, over a list already in rank order. This gives the key (involves descending, salience descending, id ascending) of 24.3 item 3.
+  - **Open wars** (`history_report.cpp:593`): (since, a_type, a_id, b_type, b_id). Rows that tie on all five keep the `relation` primary-key order in which `read_history_tables` reads them (`digest_tables.cpp:2`).
+  - **Other new lists:** ruins, refuges and standing claims are in id order. "Last held by" takes the last standing census row in (settlement, year) primary-key order (`digest.cpp:752`). In the longest quiet stretch, a tie goes to the smallest id (strict `>` over ascending ids, `:624-628`).
+  - **Containers:** the new code uses only `std::map` (`:691-693`, `:757-758`). There is no unordered container, no ordering by pointer, and no `std::sort` (the `const SettlementRow*` vectors in `ruins` and `refuges` only hold rows in table order).
+- **Index ranges**, for every value the checks admit:
+  - **war(e)** (`digest.cpp:466-501`) reads `war_of_[c]` for a cause c. The catalogue load requires 1 ≤ cause < event (`event_catalogue.cpp:836`), so the value read is always already computed, and is in range.
+  - **Case 3 of war(e)** and the frame use `since_event` and `until_event`. 5.3 checks both as events (`digest_tables.cpp:500-504`), and `until_war` is only written for `1 ≤ until_event ≤ n`. A `since_event` that points to an event that is not a declaration gives wrong text, but no bad index (`war_since_first` below).
+  - **Roles, kinds and values:** `own` indexes `roles[p.role - 1]`, which the load checks. `per_kind` has catalogue size + 1 slots for consecutive kind ids. `value_of` bounds `seq` by `values.size()`. A key missing from the catalogue maps to −1 and never matches.
+  - **`outcome`** is only called for a closed row, so `until_event` ≠ 0 there. `last_held_by` takes census settlements and `owner_civ`, both checked (`digest_tables.cpp:404`, `416`). `involves` and `alive` go through `is_civ`.
+  - **The report's new lookups:** `event(c.founding_event)`, `event(s->founding_event)`, `event(s->ruin_event)` and `event(r->since_event)` are checked events, and `d_.last_held_by[s.id - 1]` is in range because settlement ids are consecutive. `civ`, `settlement` and `region` of any id, including 0 or a missing role, print the bare tag through `ref` (N10).
+- **Overflow.**
+  - The new arithmetic consists of counters bounded by row counts, `*r.until - 1` and `e_ - 1`. 5.3 keeps `since ≤ until ≤ E − 1` and `since ≥ 0`, so neither can overflow (`digest.cpp:713`).
+  - `founded - awakening` (`history_report.cpp:222`) is at most the number of civilizations.
+  - The quiet-stretch `years` value is only compared. I tested it at INT64_MIN and INT64_MAX.
+- **Floating point, locale, `long`, formatting.** None was added. All new text goes through `num`, `pl`, `span_of`, `ref` and `escape_history_text`, as before. There is no stream, `printf` or `to_string`.
+- **Errors as values.** The new code adds no error path. The damaged inputs that reach it are rejected first by `read_history_tables` and `HistoryView::load` with a `db::Result` error, or produce text. A3 is the only throw that could be reached, and only after a future edit.
+- **Cross-platform coverage of the text.** Section 5's first open item is now covered. `tools/ci/world-hashes.sh` on this branch saves `<preset>-<case>.history.summary.txt` and `.history.full.txt` for every geography and history case (18.6), and `compare` checks them across all seven presets, MSVC included. I did not build MSVC myself.
+
+### 7.3 Lint
+
+`python3 -B tools/lint/determinism_lint.py --self-test` passed (18 snippet files, 0 failures). The scan found 0 findings in 167 C++ files and 13 CMake files. I added no rule:
+- The new code contains no textual pattern a rule could catch.
+- A3 is a property of the data flow, not of the text. A rule against `std::map::at` would flag safe uses throughout the library.
+
+### 7.4 Experiments
+
+I built `worldgen-cli` from `debdd8c` with `linux-gcc-release` and `linux-clang-asan` (ASan and UBSan, `halt_on_error=1`). The outputs are under `~/.cache/the-unmapped/out/p3-07-audit-r17/`, and nothing was written to the source tree.
+
+**Valid worlds.** Each world was run at both levels, GCC against Clang ASan. All texts are byte-identical, and there is no sanitizer output:
+
+| World | Lines (summary, full) | Summary T, shown |
+| --- | --- | --- |
+| engineer samples: seeds 0 to 9 and phrase `the unmapped`, 1024, default | 22 reports, 23,104 lines in all (GCC) | |
+| seed 0, 1024, `--civs-per-race 4` | 1341, 3397 | 71, 243 |
+| seed 5, 1024, `--civs-per-race 4 --event-intensity turbulent` | 1827, 6048 | 81, 239 |
+| seed 17, 512, `--event-intensity calm --races elf,orc` | 303, 402 | 20, 39 |
+
+- **Byte checks.** No report contains a CR, a byte outside 0x0A and 0x20 to 0x7E, an empty line or a trailing space.
+- **Levels.** `[stats]` is identical at the two levels for every world.
+- **Shape.** The samples include worlds that exercise `seceded from`: phrase, seed 1 and seed 5.
+
+**Damaged copies.** I made 17 kinds of damage aimed at the r17 code, each applied to a copy of both `seed-0-1024.db` and `seed-1-1024.db` (34 copies). Each copy was run at both levels under ASan and UBSan. None gave a sanitizer report.
+
+| Result | Damage |
+| --- | --- |
+| exit 3, message from the load checks | `secede_nofrom` (role `from` removed), `secede_from_bogus` (`from` = INT64_MAX), `claim_no_sides`, `claim_bogus_sides` (claimant INT64_MIN, holder INT64_MAX), `refuge_noorigin`, `ruin_no_attacker`, `all_quiet` (battles relabelled `quiet_stretch`), `participant_role_extreme` |
+| exit 0, text only | `quiet_years_min` and `quiet_years_max` (`years` = INT64_MIN or INT64_MAX), `war_since_first` (every war row's `since_event` = 1), `war_until_last` and `war_until_self` (endings moved), `open_wars_all` (every war open), `relation_self` (a = b), `relation_other_types` (b = type 9, id INT64_MIN), `census_no_owner` (every owner 0: "last held by no one") |
+
+On seed 0, which has no secession, the two secession cases have no effect and exit 0. They are rejected on seed 1.
+
+### 7.5 Not checked
+
+- **MSVC.** I did not build it; CI's history-report comparison covers it (7.2).
+- **Test suites.** I did not run the doctest suites, the golden `p3-07-report.txt`, or the 24.11 orphan counts. Those belong to the test writer and the validation specialist.
+- **Spec conformance.** I read the code against 24.1 to 24.7 only to the extent that ordering and index ranges depend on it. Whether the text is correct is outside this audit.
