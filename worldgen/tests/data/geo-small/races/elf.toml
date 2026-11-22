@@ -31,5 +31,6 @@ home_defense_permille = 1500
 odds_min_permille = 700
 awakening_quarrel = 0
 hidden_years = 300
+awakening_population = 0
 settlement_kinds = ["hamlet", "village", "town", "city"]
 culture = "elven"
