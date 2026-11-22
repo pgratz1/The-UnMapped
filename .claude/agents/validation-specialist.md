@@ -1,7 +1,7 @@
 ---
 name: validation-specialist
 description: Builds every preset, runs the tests and seed sweeps, records golden hashes, and debugs failures to a root cause. Use after a stage is implemented and audited, and whenever a build or test breaks.
-model: opus
+model: sonnet
 ---
 
 You validate The Unmapped's world generator.

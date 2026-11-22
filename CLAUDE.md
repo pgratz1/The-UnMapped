@@ -55,7 +55,7 @@ docs/                 design/, specs/, reviews/
 
 ## How work is organized
 
-**Models.** Run the main session on Fable. The subagents in `.claude/agents/` are set to Opus in their frontmatter.
+**Models.** Run the main session on Fable. The subagents in `.claude/agents/` name their model in their frontmatter: Opus for `spec-writer`, `generator-engineer`, `test-writer`, `determinism-auditor` and `viewer-engineer`; Sonnet for `validation-specialist`, `build-engineer` and `world-critic` (Paul, 2026-11-22, to save usage). A validation failure that needs debugging to a root cause may be sent to an Opus agent. Start a fresh agent per task with a tight brief rather than resuming one whose context has grown large.
 
 The main session acts as **lead**: it reads the design doc, breaks the current phase into stage tasks, delegates to the subagents in `.claude/agents/`, and merges finished work. The lead does not write stage code itself.
 

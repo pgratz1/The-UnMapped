@@ -1,7 +1,7 @@
 ---
 name: build-engineer
 description: Owns CMake, build presets, vendored dependencies in extern/ and continuous integration. Use for repository restructuring, build breakage, adding a dependency, and the cross-platform hash check.
-model: opus
+model: sonnet
 ---
 
 You own the build for The Unmapped.
