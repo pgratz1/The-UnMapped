@@ -1,6 +1,6 @@
 # P3-01 History data and settings
 
-Status: **approved by the lead 2026-11-19; revised 2026-11-19 (text only, after implementation); amended 2026-11-19 for P3-03 (r2); amended again 2026-11-19 after the P3-03 implementation (r3: check D0); r11 (2026-11-20, P3-10, generator 0.19.0): three cell weights, 3.4; odds minimum per race, 3.5; r13 (2026-11-21, P3-10 second round): hidden years per race, 3.6; r14 (2026-11-21, P3-11, generator 0.20.0): awakening population per race and the faerie naming data, 3.7**: see the revision notes at the end. Phase P3 History core, spec 1 (P3-00 3.1). Design doc sections 3 (data in TOML), 5 (the six races, their order, camps and timing; "Food and homelands"; world-creation settings), 6 (`meta` holds the settings). Depends on P0-03 (with amendments 15 to 17), P0-04, P1-00 6 and P3-00. Written together with P3-02, which defines the culture naming record that this spec's `culture` kind carries. Amended 2026-11-19 for P3-05 (r6: `density_permille`, field meanings) and for P3-06 (r7: `prowess_permille`, goblin aggression, id `conflict`, all from generator 0.16.0).
+Status: **approved by the lead 2026-11-19; revised 2026-11-19 (text only, after implementation); amended 2026-11-19 for P3-03 (r2); amended again 2026-11-19 after the P3-03 implementation (r3: check D0); r11 (2026-11-20, P3-10, generator 0.19.0): three cell weights, 3.4; odds minimum per race, 3.5; r13 (2026-11-21, P3-10 second round): hidden years per race, 3.6; r14 (2026-11-21, P3-11, generator 0.20.0): awakening population per race and the faerie naming data, 3.7; r15 (2026-11-22, P5-01, generator 0.21.0): two conflict fields and one engine field, 3.8**: see the revision notes at the end. Phase P3 History core, spec 1 (P3-00 3.1). Design doc sections 3 (data in TOML), 5 (the six races, their order, camps and timing; "Food and homelands"; world-creation settings), 6 (`meta` holds the settings). Depends on P0-03 (with amendments 15 to 17), P0-04, P1-00 6 and P3-00. Written together with P3-02, which defines the culture naming record that this spec's `culture` kind carries. Amended 2026-11-19 for P3-05 (r6: `density_permille`, field meanings) and for P3-06 (r7: `prowess_permille`, goblin aggression, id `conflict`, all from generator 0.16.0).
 
 ## 1. Purpose
 
@@ -334,6 +334,18 @@ New race field **`awakening_population`** int(0, 100000), required, after `hidde
 
 The faerie culture's `naming` block changes its `onsets`, `nuclei`, `codas` and `forbidden` lists as P3-02 r15 14.1 gives them, and the `name_filter` lists change as P3-02 14.3 gives them, in `game/data/` and both fixture roots. No field of kind `culture` or `name_filter` changes; section 4's faerie block is read from P3-02 section 14 from 0.20.0.
 
+### 3.8 Two conflict fields and one engine field (P5-01; r15; P3-06 r22 24.2, 24.5, P3-04 r19 22.3)
+
+`history.conflict` gains, appended after `quarrel_min_settlements`, in this order (both required):
+- **`quarrel_strength_permille`** int(0, 1000), shipped **1000**: the least strength (P3-06 24.2: the odds of 20.6 item 3 without the aggression discount) at which an awakening quarrel claim is pursued; 0 turns the test off;
+- **`toll_spread_permille`** int(0, 500), shipped **200**: the spread of the keyed factor on each side's battle toll (P3-06 24.5); 0 turns it off;
+
+and the named check **`conflict_toll_spread`** after `conflict_quarrel_strain_max`: `loss_winner_permille` × (1000 + `toll_spread_permille`) ≤ min(`loss_loser_permille`, `kill_max_permille`) × (1000 − `toll_spread_permille`), message `toll_spread_permille lets the victors lose more than the defeated`.
+
+`history.engine` gains **`flare_min_years`** int(1, 1000), required, appended after `quiet_min_years`, shipped **10** (a length at the reference span, scaled as the detail records' lengths are), and the named check **`engine_flare_min`** after `engine_quiet_min`: for each level in the order sparse, normal, dense, `flare_min_years` ≤ `flare_years`, message `<level>: flare_min_years must not be above flare_years` (P3-04 22.3).
+
+The fixture conflict and engine files change alike. Loader tests (8.1) cover each field's range and absence, `conflict_toll_spread` (fails for `loss_winner_permille` 200, `loss_loser_permille` 250, spread 200; passes for the shipped values) and `engine_flare_min` (fails for 31 against `sparse` 30). From generator 0.21.0.
+
 ## 4. Kind `culture`
 
 Directory `cultures/`, **required**. Fields, all required, in this order:
@@ -573,3 +585,7 @@ New 3.6: race field `hidden_years` (orc 100, others 300) replacing `history.conf
 ## Revision note r14 (2026-11-21, P3-11; generator 0.20.0)
 
 New 3.7: race field `awakening_population` (orc 1200, others 0) after `hidden_years` (P3-05 r16 23); the faerie naming lists and the `name_filter` lists change as P3-02 r15 14.1 and 14.3 give them (data only, no field change). Every change takes effect at generator 0.20.0.
+
+## Revision note r15 (2026-11-22, P5-01; generator 0.21.0)
+
+New 3.8: `history.conflict` gains `quarrel_strength_permille` (1000) and `toll_spread_permille` (200) with the check `conflict_toll_spread`; `history.engine` gains `flare_min_years` (10) with the check `engine_flare_min` (P3-06 r22 24.2, 24.5; P3-04 r19 22.3). The `placename`, `name_filter`, dwarven `culture` and `history.report` data change as P1-06 r10 16, P3-02 r17 15, P3-05 r18 24 and P3-06 r22 24.6 give them (data only, no field change). Every change takes effect at generator 0.21.0.

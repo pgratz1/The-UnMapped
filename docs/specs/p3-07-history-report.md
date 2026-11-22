@@ -1,6 +1,6 @@
 # P3-07 History report
 
-Status: **approved by the lead 2026-11-19** (r12, 2026-11-20: section 22 for P3-10, generator 0.19.0; r14, 2026-11-21: section 23 for P3-11, generator 0.20.0; r16, 2026-11-22: text after the implementation and audit; r17, 2026-11-22: section 24, readability after the world critic's review; r18, 2026-11-22: section 24's text after the implementation and the reference) (the six questions of section 19 go to Paul; the interim choices stand). Written by the spec writer 2026-11-19; the amendments of 18.1–18.5 applied the same day on `p3/07-spec`. Phase P3 History core, spec 7 (P3-00 3.1): the text history report, `worldgen-cli report --db PATH --history`. It reads a world file only and changes no world byte, so it needs **no generator version bump and no schema change**. Design doc sections 5 (history: the log is the primary product), 6 (the database stores facts and names; text is rendered from records and templates), 13 (P3 delivers "a text history report"; milestone 1: "the event log reads as coherent history") and 14 (the enrichment pass narrates from the log: this report is its deterministic, template-only counterpart and is not a chronicle in the sense of 14; it is a tool for the world critic, the validation sweeps and Paul). Depends on P0-02 (reader, errors as values), P0-04 (`report`: options, `--out`, `--force`, exit codes, text conventions, the "Later" note), P3-00 (binding: 11, 6.2–6.4, 12.2, 12.3, 13), P3-03 (tables `race`, `god`, `age`; `[chronology]` and its checks, 9.1), P3-04 (binding: schema 7 tables and codes of 9; the catalogue, `render_event` and `HistoryView` of 8, used and not redefined; the world report's `[history]` and its checks, 11.1; the queries of 10). Read on `origin/p3/04-spec` at 4a00615 (the newest text of every spec; the code there is P3-03's). Proposals read: up to "History: active phases scale with the history span; the detail level sets the simulated share". Revision r1 (P3-05's appended `[stats]` keys) 2026-11-19.
+Status: **approved by the lead 2026-11-19** (r12, 2026-11-20: section 22 for P3-10, generator 0.19.0; r14, 2026-11-21: section 23 for P3-11, generator 0.20.0; r16, 2026-11-22: text after the implementation and audit; r17, 2026-11-22: section 24, readability after the world critic's review; r18, 2026-11-22: section 24's text after the implementation and the reference; r19, 2026-11-22: section 25, format v2, for P5-01, generator 0.21.0) (the six questions of section 19 go to Paul; the interim choices stand). Written by the spec writer 2026-11-19; the amendments of 18.1–18.5 applied the same day on `p3/07-spec`. Phase P3 History core, spec 7 (P3-00 3.1): the text history report, `worldgen-cli report --db PATH --history`. It reads a world file only and changes no world byte, so it needs **no generator version bump and no schema change**. Design doc sections 5 (history: the log is the primary product), 6 (the database stores facts and names; text is rendered from records and templates), 13 (P3 delivers "a text history report"; milestone 1: "the event log reads as coherent history") and 14 (the enrichment pass narrates from the log: this report is its deterministic, template-only counterpart and is not a chronicle in the sense of 14; it is a tool for the world critic, the validation sweeps and Paul). Depends on P0-02 (reader, errors as values), P0-04 (`report`: options, `--out`, `--force`, exit codes, text conventions, the "Later" note), P3-00 (binding: 11, 6.2–6.4, 12.2, 12.3, 13), P3-03 (tables `race`, `god`, `age`; `[chronology]` and its checks, 9.1), P3-04 (binding: schema 7 tables and codes of 9; the catalogue, `render_event` and `HistoryView` of 8, used and not redefined; the world report's `[history]` and its checks, 11.1; the queries of 10). Read on `origin/p3/04-spec` at 4a00615 (the newest text of every spec; the code there is P3-03's). Proposals read: up to "History: active phases scale with the history span; the detail level sets the simulated share". Revision r1 (P3-05's appended `[stats]` keys) 2026-11-19.
 
 The sample report that section 16 held until r15 and the illustrative excerpt (17) were produced by the spec writer's exact-integer prototype `~/.cache/the-unmapped/out/p3-07-spec/history_report.py`, run on worlds built by `build_world.py` (the P3-04 prototype's stub world for seed 42, 1024, written as SQLite tables) and `illus.py` (a hand-made world). The prototype is scratch; the test writer's reference is written from this spec. (r16: section 16 now holds an excerpt of a 0.20.0 report of the implementation.)
 
@@ -1214,6 +1214,144 @@ For the test writer and the reference (`p3_report_reference.py`), from this sect
 - **Section 16**: the excerpt is r16's output (generator 0.20.0) and is illustrative from r17. The blocks now come in 24.4's order, the phase headings carry the length, trigger and count, `[phases]` is absent at summary, the claims and battles leave the summary chronicle, the civilization blocks gain the lines of 24.5, and `[present]` gains 24.7's lists. The golden line of `sample-42-1024` is the record, as before.
 - **18.6**: unchanged. The file names are `<preset>-<case>.history.summary.txt` and `<preset>-<case>.history.full.txt`.
 
+## 25. Format v2 (amendment r19, P5-01, generator 0.21.0)
+
+**What this section is.** Normative for the report from generator 0.21.0 (`docs/specs/p5-01-followups.md`, items 1, 7 and 10). It answers the world critic's second-round review, `docs/reviews/p3-07-history-report-world-critic-r17.md` (B1 to B6), the audit's advisory A3 (`docs/reviews/p3-07-history-report-audit.md` 7.1), and the report's part of P5-01's world changes (the fresh claim at a declaration, kinds 41 and 42). Where this section and sections 4–24 differ, this section rules. Paul's choice stands: ids and refs stay on every line.
+
+**What changes.** The report's selection, line types and text. The world bytes this section reads change with P5-01 (P3-06 r22 24), but nothing here writes a world.
+
+### 25.1 Format version and growth (amends 6.2, 10.3, 24.4)
+
+The header is **`# worldgen history v2`** at both levels (24.4's first line). v1 was released with P3-07's merge, and 25.3 to 25.7 add or change line types, so 10.3 requires v2. 10.3's rules hold for v2 with one addition, the growth rule of P5 (`docs/specs/p5-00-history-depth-overview.md` 7.2): **within v2** a later stage may (a) append a block named for its entity kind (`[monsters]`, `[figures]`, `[factions]`, `[artifacts]`, `[roads]`) after `[present]` and before `[stats]`, in merge order, and (b) append new line types at the end of a civilization block of `[civilizations]` (after `milestones:` and its lines) or at the end of `[present]`. Each such amendment states its lines' grammar here, as 10.3 rule 1 does for keys. Any other change needs v3. `report --help` prints `format '# worldgen history v2'`.
+
+The report reads every world of schema 7. A world of generator 0.20.0 or earlier gets the v2 report too; where a rule below reads kinds 41 and 42 (25.8, 25.9), such a world has none, and the stated fallback applies.
+
+### 25.2 Calamities at summary (B1; amends 24.3 item 1)
+
+**Why.** Seed 0 prints at T = 20: 104 of its 221 chronicle lines (47%) are plague, famine or succession crisis, and its last 300 years are about 55 such lines against two wars. Measured over the 100 default 1024 worlds at 0.20.0 (the spec writer's prototype of 24.3 on the stored worlds, `~/.cache/the-unmapped/out/p5-01-spec/b1proto.py`, which gives 24.3's set exactly): the calamity share of the summary set is 15% at the median and 53% at most.
+
+**Calamity kinds**: `famine`, `plague`, `plague_outbreak`, `succession_crisis` (`plague_spread` is already no candidate, 24.3).
+
+**Rule.** In 24.3 item 1, after the exclusions: for each phase p, rank the candidates of a calamity kind with `event.phase` = p by (`salience` descending, `id` ascending); only the first `SUMMARY_CALAMITY_PER_PHASE` (**2**, a new constant of section 8) of them stay candidates. The others are no candidates: neither the age floor nor the threshold takes them. They are no companions of anything (24.2). `full` prints every event, as before.
+
+**Measured** (same prototype; 100 default 1024 worlds, and 20 `civs4` worlds):
+
+| Rule | median T | median lines | calamity share median / max | declarations shown (default) | seed 0 |
+| --- | --- | --- | --- | --- | --- |
+| 24.3 (0.20.0) | 26 | 208 | 15% / 53% | 2,189 of 2,621 | 221 lines, 47% |
+| floor T at 30 (B1's first option) | 30 | 198 | 15% / 39% | 2,189 | 141, 26% |
+| candidates and T at 30 or more | 30 | 190 | 10% / 19% | 2,230 | 114, 13% |
+| **2 per phase (chosen)** | 20 | 208 | **8% / 22%** | 2,190 | **133, 12%** |
+| 1 per phase | 20 | 208 | 4% / 12% | 2,209 | 125, 6% |
+| 3 per phase | 20 | 209 | 10% / 29% | 2,190 | 141, 17% |
+
+The cap was chosen over a floor on T: a floor of 30 leaves seed 0 at 26% (the age floor still walks the calamities of 25 to 45), and raising the candidates' salience to 30 also removes every siege, refuge held and famine from the summary in small worlds, which a reader of a quiet world wants. With the cap the threshold falls back to 20 in most default worlds, so the lines freed go to colonies, foundings and sieges. In `civs4` (T of 71 to 76) nothing changes: no calamity reaches the threshold there.
+
+### 25.3 Ruins in words; faded ruins apart (B2, B3's second part; amends 24.7 and 6.6)
+
+1. **The ruins list** (24.7). The line becomes
+   ```
+     s<id> <name> in <region ref>: ruined <ruined_year>, e<ruin_event> <how>; last held by <civilization ref | no one>
+   ```
+   with `<how>` by the kind of the `ruin_event`:
+   - `sacked` → `sacked by <attacker ref>` (the first `attacker` participant), or `sacked` when there is none;
+   - `settlement_abandoned` → `abandoned`;
+   - `settlement_abandoned_to` → `abandoned, survivors to <destination ref>` (the `destination` participant);
+   - any other kind → its kind key, as in v1 (a later stage's ruin kinds read so until a v2 amendment names them).
+
+   Examples: `s12 Rofis in the Silent Weald (rg8): ruined 5999, e674 sacked by The Sneerk-Grik Mob (c4); last held by The Realm of Ienngleth (c1)`; `s43 Guk-Gnik Hole in Reaver's Plain (rg44): ruined 4277, e295 abandoned, survivors to Gnokk Pit (s40); last held by The Sneerk-Grik Mob (c4)` (the destination illustrative).
+2. **The settlement line at full** (24.7's last item) keeps `e<ruin_event>` and adds nothing: its kind is in the chronicle.
+3. **The civilization block's settlements line** (6.6) becomes `  settlements: <f> founded, <h> held at the end, <r> ruined, <d> faded`, with r = the settlements with `founder_civ` = c and status 3, and d = those with status 4 (v1 counted both in r). So a block's ruins match `[present]`'s list, which shows status 3 only.
+
+### 25.4 Adversaries with a war only (B3; amends 24.5)
+
+**Why.** "no war; now enmity" lines add no history: phrase c1 to c11, the Miaflie Court with six of them and nothing else; in `civs4` seed 3, 52 of 148 adversary lines.
+
+**Rule.** At summary the adversary count line stays `  adversaries: <n>` (every adversary, as 24.5 counts them; `adversaries: none` when there is none). It is followed by one line per adversary **with at least one war row**, in 24.5's order and form (with 25.7 item 1's span), and then, when m ≥ 1 adversaries have no war row, by one line
+
+```
+    without war: <m> (enmity <e>, none <q>)
+```
+
+with e the number of those m whose state (24.5) is `enmity` and q = m − e. The war adversaries and m add to n. `full` keeps its relation rows (6.6) unchanged.
+
+### 25.5 Ended realms in short (B4; amends 24.5)
+
+**Why.** With four civilizations per race the summary is 1,270 to 1,358 lines, about 730 of them blocks (26 to 28 realms). An ended realm's block repeats what its fate line and the chronicle say.
+
+**Rule.** At summary, the block of a civilization with `ended_year` not NULL prints, in 24.5's order: the heading, `race`, `founded`, `seceded from` (when it applies), `last capital`, `settlements` (25.3), `wars`, `adversaries` (25.4), `fate` and `milestones`, and **leaves out** `home`, `peak regions`, `peak population` and `events`. Its milestones are at most `MILESTONES_ENDED` (**4**, a new constant of section 8): 24.5's items 1 to 3 (founding, ending, longest quiet stretch), then the fill (with 25.7 item 3's key) until four are chosen. A block of an alive civilization is unchanged. `full` is unchanged.
+
+**Reading.** The critic and P5-00 3.1 name "the block of a realm that ended before its first war". No such realm is in the four `civs4` samples: the critic's example, the Lith Court (c15 of `civs4` seed 3), ended in its first war (e840, conquered), and every ended realm there has at least one war row. So the rule takes every ended realm, which is what shortens the blocks; a one-line block was not chosen, since an ended realm's wars line and adversaries are what a reader of a `civs4` world follows from block to block.
+
+**Effect** (counted on the r17 samples, `~/.cache/the-unmapped/out/p3-07-impl/samples-r17/`, at 0.20.0; the history changes with P5-01, so validation re-measures): `civs4` seeds 0, 3, 7 and 12 have 4 to 11 ended realms. With 25.4, 25.5 and 25.7 item 4 their summaries fall from 1,270–1,358 lines to an estimated 1,040–1,095; the default worlds' (the phrase world, seeds 0 to 9) from 644–806 to about 510–670. **Target** (P5-01 T18): at most 700 lines for every default 1024 world of the sweep and at most 1,100 for every `civs4` world.
+
+### 25.6 Every flare-up with a war (B5; amends 24.3 item 2)
+
+**Why.** In `civs4` seed 3 the Goblin age's first 200 years are three headings and "(31 more events not shown)": at T = 76 no `flare_up` line (salience 50) is shown, and 9 to 16 phases of a `civs4` world show nothing.
+
+**Rule.** F (24.3 item 2) is every `quiet_stretch` **and every `flare_up` whose phase has at least one `war_declared`** (`event.phase` equal to the flare-up's), whatever its salience. F is in the summary set always, counts toward its age's floor and is not a companion. A flare-up's note (21.4 item 2, 22.3, 23 item 4) names the claim that came to a head.
+
+**Measured** (0.20.0, the prototype with 25.2): in the 20 `civs4` worlds 236 of 243 flare-ups have a war in their phase and none is shown at r18; with this rule all 236 are, and the phases that show nothing fall from 202 to 134 of 715. In the 100 default worlds 390 of 393 flare-ups qualify and 304 are already shown; empty phases fall from 114 to 107 of 1,968.
+
+### 25.7 Wording and consistency (B6; A9's `[stats]`; amends 24.5, 9)
+
+1. **One end year per war.** In an adversary line (24.5) the span's last year is, over the pair's war rows, the largest of `E − 1` for an open row and **`until`** for a closed one (the year of the row's `until_event`, the year the chronicle gives for the war's end). v1 printed `until − 1` (the last year the relation was in force), so "the war ended after six years" in 5753 read as `5747-5752` in the block. `full`'s relation lines keep 6.6's interval `<since>-<until - 1>`: they print a relation's years in force, of every kind.
+2. **The claim behind a war**: 25.8.
+3. **Colonies before death tolls in milestones.** 24.5 item 4's fill key becomes (own(c, e) descending, cal(e) ascending, `salience` descending, `id` ascending), with cal(e) = 1 for an event of kind `famine`, `plague`, `plague_outbreak`, `plague_spread`, `succession_crisis` or `settlement_dwindled`, else 0. A realm with no war lists its colonies and kind changes before its famines ("Clan Durgarin: 5064 e229 famine: Famine struck Nidinnird; 214 died." gives way to its colonies, seed 0).
+4. **`[stats]` at summary** (A9: 146 lines at the end of every summary). At `summary` the block prints only the keys of `SUMMARY_STATS`, in section 9's order: `end_year`, `events`, `summary_threshold`, `summary_events`, `civilizations`, `civilizations_alive`, `civilizations_ended`, `settlements_standing`, `settlements_ruined`, `population`, `wars`, `wars_open`, `wars_hollow_permille`, `share_max_permille`, `races_alive` (15 keys, a constant of section 8). At `full` every key is printed as before. **Consumers** that read `[stats]` (the sweeps, the critic's tools, P3-06 15.6) read the `full` report from 0.21.0, or its `[stats]` block, which is the same as v1's but for keys appended since.
+
+### 25.8 The claim behind a war (item 1; amends 21.4 item 1, 23 items 3 and 4a)
+
+From 0.21.0 a war whose goal differs from its claim's region cites a **fresh claim** on its goal, written at the declaration and caused by the old claim (P3-06 r22 24.1). So c of 23 item 3 (the declaration's cause of kind `claim` or `claim_settlements` with the smallest id) is always a claim on the war's region G, and 23 item 3's form `The claim, since <y_c>, was to <R_c>.` no longer occurs in a 0.21.0 world (it stays for older worlds, where R_c ≠ G is possible).
+
+**The year of the note.** Let **root(c)** be c's cause of kind `claim` or `claim_settlements` with the smallest id, if c has one (c is then a fresh claim), else c itself. In 21.4 item 1, 23 item 3 and 23 item 4a, **y_c is the year of root(c)**: the note dates the grievance, not the declaration's re-aim. So a war re-aimed at its declaration in 5954 on a claim of 5930 reads `Claimed since 5930.`, not `Claimed the same year.` 23 item 4a's settlements S stay those of c (the fresh claim's, in G), and its region is c's (= G).
+
+A fresh claim is a claim like any other in the chronicle (`full`: its line, the same year as the declaration, before it) and is not a candidate at summary (24.3). It is pursued (24.1: a cause of a `war_declared`); root(c) is closed in 24.7 by test (ii), since the pair's war is declared after it.
+
+### 25.9 `[present]`'s refuges and standing claims made exact (item 7; amends 24.7)
+
+1. **Refuges.** A refuge line (24.7) ends, after `e<founding_event>`, with `; hidden` when the world has a `refuge_hidden` event (kind 42) with settlement s whose `end_year` = E − 1 (the refuge was still hidden in the last year), `; found <end_year + 1>` when it has one with `end_year` < E − 1, and nothing when it has none (a world before 0.21.0, or a race with `hidden_years` 0). 24.7's sentence "Whether a refuge is still hidden at E cannot be read from the world" is replaced by this rule. The faeries' concealment (P3-06 20.17) is not a refuge's state and is still not stored; a faerie refuge in deep forest may be concealed after it is found.
+2. **Standing claims.** 24.7's list gains a fourth test: (iv) no event of kind `claim_dropped` (kind 41) has c among its causes. 24.7's "Limit" bullet is removed: with kinds 41 and the fresh claim (25.8), the list is exactly the claims the simulation holds open at E (P5-01 T19). For a world before 0.21.0 the list is as in v1 (no kind 41 exists).
+3. Kinds 41 and 42 are below `SUMMARY_MIN_SALIENCE` and no companions (24.2): they appear in the `full` chronicle only, and in these two lists.
+
+### 25.10 `find` in place of `std::map::at` (audit A3; no output change)
+
+In `digest.cpp` the two lookups the audit names (`last_claim.at({a, b})` in the standing-claims pass, and `first_since.at(...)` in the adversary sort) use `find`. A missing key reads as "not the last claim of the pair" and as "since = E" respectively, so a later edit that breaks the link between the loops gives wrong text, not an exception, and every error stays a value. No output changes.
+
+### 25.11 Constants (amends 8 and 24.9)
+
+New: `SUMMARY_CALAMITY_PER_PHASE` = 2 (25.2), `MILESTONES_ENDED` = 4 (25.5), `SUMMARY_STATS` (the 15 keys of 25.7 item 4). The others are unchanged.
+
+### 25.12 Invariants (amends 24.10)
+
+1. 24.10 item 1 holds with 25.2's candidates and 25.6's F. Further: at most `SUMMARY_CALAMITY_PER_PHASE` events of a calamity kind are shown per phase, unless one is shown as a companion or a frame member (none is, with the shipped kinds); every `flare_up` whose phase has a `war_declared` is shown.
+2. 24.10 item 3 becomes: `[settings]` and `[ages]` are identical at both levels; `[stats]` at `summary` is the `SUMMARY_STATS` subset of `full`'s, with the same values, in the same order; `[civilizations]` differs in the relation lines (full) against the adversary lines (summary) and in 25.5's ended blocks; the rest as 24.10 item 3. Invariant 6 (every `[history]` key in `[stats]` with the same value) is read on `full`.
+3. 24.10 item 5: the war adversaries (25.4) and m add to n.
+4. 24.10 item 7 becomes: every claim not pursued, whose sides are alive at E, which 24.7's tests (ii) and (iii) and 25.9's test (iv) do not close, appears in `standing claims`, and no other claim does; in a world of 0.21.0 these are exactly the reference's open claims at E (P3-06 r22 24.3).
+5. In a world of 0.21.0, no declaration's note has the form `The claim, since …, was to <R>.` with R ≠ the war's region.
+
+### 25.13 Tests required (adds to 24.11)
+
+For the test writer and the reference (`p3_report_reference.py`), from this section alone:
+
+1. **Header**: `# worldgen history v2` at both levels; `report --help`'s text.
+2. **Calamity cap** (25.2): a fixture phase with five calamity candidates of saliences 45, 45, 40, 25, 25: the two 45s (smaller id first) stay, the others are neither in the floor nor above any threshold; a phase with one calamity keeps it; seed 0 at 1024 (0.21.0) has at most 2 calamity lines per phase.
+3. **Ruins** (25.3): one ruin of each `<how>`, a sack with no attacker participant, an unknown ruin kind printed by key; the settlements line with a faded and a ruined settlement.
+4. **Adversaries** (25.4): two war adversaries and three without war (two in enmity, one none): two lines and `without war: 3 (enmity 2, none 1)`; a realm with only no-war adversaries prints the count line and the `without war` line.
+5. **Ended blocks** (25.5): an ended realm's block at summary without `home`, the peak lines and `events`, with four milestones of which a quiet stretch; the same realm at full unchanged.
+6. **Flare-ups** (25.6): a flare-up whose phase has a war is shown at T = 100 (H5); one whose phase has none is not shown above its salience.
+7. **Wording** (25.7): a war ended in year Y prints `…-Y` in the adversary line and `…-(Y − 1)` in the full relation line; a no-war realm with a famine and a colony lists the colony first; `[stats]` at summary has exactly the 15 keys in order, with full's values.
+8. **The claim note** (25.8): a declaration citing a fresh claim (caused by a claim of an earlier year on another region) notes `Claimed since <the earlier year>.`; a fresh claim of kind 39 gives 23 item 4a's form with the fresh claim's settlements; a 0.20.0 fixture with R_c ≠ G keeps 23 item 3's form.
+9. **Refuges and claims** (25.9): refuges with a kind 42 ending at E − 1 (`; hidden`), ending earlier (`; found <y>`), and none (no suffix); a claim with a `claim_dropped` is not listed; on every world case of 0.21.0 the standing-claims list equals the conflict reference's open claims at E.
+10. **Invariants**: 25.12 on every fixture and world case.
+11. **Golden**: `p3-07-report.txt` re-recorded by the reference (every report changes: the header at least). The fixtures gain the cases above (a new fixture **H9 v2** may hold them all).
+
+### 25.14 Section 16, 18.6 and the CLI
+
+- Section 16's excerpt is v1 and illustrative from r19; the golden line of `sample-42-1024` is the record.
+- 18.6 is unchanged: `world-hashes.sh` saves both levels per case, and `compare` checks them across presets.
+- 4's help text: `print the history report (format '# worldgen history v2') instead of the world report`.
+
 ## Appendix A. Proposals
 
 No proposals entry is needed: the report realizes design 13's "text history report" within design 6's rule (text from records and templates) and does not change the design. Its relation to design 14's chronicles (a deterministic template report for checking the history, not prose for players) is stated in section 1.
@@ -1323,3 +1461,19 @@ Text only; no behaviour changes. The implementation (`worldgen/src/history/diges
 - 14.1 item 4: H4's T is 77 with the quiet stretch (R16).
 - 2, 14.4, 24.11 item 2: the CTest entries `worldgen-tests-history-report` and `worldgen-tests-slow-history-report`.
 - 24.8: the "grew into a city" number is listed in P3-11's section 12.
+
+## Revision note r19 (2026-11-22, format v2; P5-01, generator 0.21.0)
+
+New section 25 (`docs/specs/p5-01-followups.md` items 1, 7 and 10; the world critic's B1 to B6 of `docs/reviews/p3-07-history-report-world-critic-r17.md`; the audit's A3). The header becomes `# worldgen history v2`, with P5's growth rule (25.1).
+- 25.2: at most two calamity candidates per phase at summary (B1).
+- 25.3: a ruin's kind in words; faded settlements counted apart in the settlements line (B2, B3).
+- 25.4: adversary lines for realms with a war only, and one count line for the others (B3).
+- 25.5: an ended realm's block in short at summary, with at most four milestones (B4).
+- 25.6: every flare-up whose phase has a war is shown (B5).
+- 25.7: a war's end year in the adversary line is the chronicle's; colonies before calamities in milestones; `[stats]` at summary cut to 15 keys (B6, A9).
+- 25.8: the declaration's note dates the original claim behind a fresh claim (P3-06 r22 24.1).
+- 25.9: refuges marked hidden or found from kind 42; standing claims closed by kind 41, so the list is exact.
+- 25.10: `find` in place of `std::map::at` (A3).
+- 25.11 to 25.14: constants, invariants, tests, the excerpt and the help text.
+
+No earlier section is renumbered.

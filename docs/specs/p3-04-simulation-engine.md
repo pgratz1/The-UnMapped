@@ -1,6 +1,6 @@
 # P3-04 Simulation engine
 
-Status: **approved by the lead 2026-11-19; corrected after implementation (r3, the lead's rulings of 2026-11-19)** **r12 (2026-11-20, P3-10, generator 0.19.0): section 20, quiet stretches, `{@causes:…}`, thousands separators** **r15 (2026-11-21, P3-10 second round): no quiet line for a stretch shorter than `quiet_min_years` (20.1 item 1a)** **r17 (2026-11-21, P3-11, generator 0.20.0): section 21, numbers one to nine as words, kinds 39 and 40** (the six questions of section 19 go to Paul; the interim choices stand). Written by the spec writer 2026-11-19; amendments 18.2 and 18.3 applied the same day; revision r1 (P3-07's amendments) the same day. Phase P3 History core, spec 4 (P3-00 3.1), pipeline stage 8, `history`, as an engine with stub subsystems. Generator **0.14.0**; **schema version 7** (thirteen new tables, one new required `meta` key, section 9). Design doc sections 5 (deep time, ages, active phases, quiet intervals, flare-ups, records, determinism; creation; entities; tick loop), 6 (tables `phase`, `event`, `event_participant`, `event_cause`, `civilization`, `settlement`, `relation`; `meta` end year), 13 (P3 row and exit check; P4 timeline and territory by year; P5 interventions) and 14 (records a model can narrate and validate; the divine script as an intervention source). Depends on P0-01 to P0-04 with their amendments, P1-06 (region tables), P3-00 (binding; amended in 18.3), P3-01 (kind `history`), P3-02 (keyed draws, names), P3-03 (chronology tables, `HistoryParams`, the registry rule 8.2). Implementation read: `origin/p3/03-int` at 3ddc942 (generator 0.13.0, schema 6). Proposals read: up to "History: with a subset of races the first one present opens history; every race keeps its creator god". Also addresses the P3-03 determinism audit's advisories A1 (fatal guards for schedule invariants) and A2 (H8 must not rest on in-memory values): sections 3.2, 3.3 and 5.6. Revision r2 (P3-05's amendments) 2026-11-19. **Revision r10 (2026-11-20, for P3-08, generator 0.17.0; `docs/specs/p3-08-followups.md`)**: names inside a sentence lose a leading capital `The` (8.5, P1-06 r3 14.7), a three-word form of `{value?…}` (8.4, 8.5), one quiet era per civilization and quiet phase row (6.6), the `quiet_era` template (4.2), the engine microbenchmark (14.3); see the revision note.
+Status: **approved by the lead 2026-11-19; corrected after implementation (r3, the lead's rulings of 2026-11-19)** **r12 (2026-11-20, P3-10, generator 0.19.0): section 20, quiet stretches, `{@causes:…}`, thousands separators** **r15 (2026-11-21, P3-10 second round): no quiet line for a stretch shorter than `quiet_min_years` (20.1 item 1a)** **r17 (2026-11-21, P3-11, generator 0.20.0): section 21, numbers one to nine as words, kinds 39 and 40** **r19 (2026-11-22, P5-01, generator 0.21.0): section 22, one number form per clause, kinds 41 and 42, `flare_min_years`** (the six questions of section 19 go to Paul; the interim choices stand). Written by the spec writer 2026-11-19; amendments 18.2 and 18.3 applied the same day; revision r1 (P3-07's amendments) the same day. Phase P3 History core, spec 4 (P3-00 3.1), pipeline stage 8, `history`, as an engine with stub subsystems. Generator **0.14.0**; **schema version 7** (thirteen new tables, one new required `meta` key, section 9). Design doc sections 5 (deep time, ages, active phases, quiet intervals, flare-ups, records, determinism; creation; entities; tick loop), 6 (tables `phase`, `event`, `event_participant`, `event_cause`, `civilization`, `settlement`, `relation`; `meta` end year), 13 (P3 row and exit check; P4 timeline and territory by year; P5 interventions) and 14 (records a model can narrate and validate; the divine script as an intervention source). Depends on P0-01 to P0-04 with their amendments, P1-06 (region tables), P3-00 (binding; amended in 18.3), P3-01 (kind `history`), P3-02 (keyed draws, names), P3-03 (chronology tables, `HistoryParams`, the registry rule 8.2). Implementation read: `origin/p3/03-int` at 3ddc942 (generator 0.13.0, schema 6). Proposals read: up to "History: with a subset of races the first one present opens history; every race keeps its creator god". Also addresses the P3-03 determinism audit's advisories A1 (fatal guards for schedule invariants) and A2 (H8 must not rest on in-memory values): sections 3.2, 3.3 and 5.6. Revision r2 (P3-05's amendments) 2026-11-19. **Revision r10 (2026-11-20, for P3-08, generator 0.17.0; `docs/specs/p3-08-followups.md`)**: names inside a sentence lose a leading capital `The` (8.5, P1-06 r3 14.7), a three-word form of `{value?…}` (8.4, 8.5), one quiet era per civilization and quiet phase row (6.6), the `quiet_era` template (4.2), the engine microbenchmark (14.3); see the revision note.
 
 Numbers in this spec come from the spec writer's exact-integer prototype `~/.cache/the-unmapped/out/p3-04-spec/engine_proto.py` (on the P3-03 and P3-02 references; awakening years over seeds 0–999 and all 63 race subsets) and from the P1-06 validation worlds (`~/.cache/the-unmapped/out/p1-06-validation/`, whose geography is unchanged at 0.13.0). The empty-world size was measured with Python's SQLite 3.46.1 (9.6); the engineer confirms it with the vendored SQLite.
 
@@ -1096,6 +1096,68 @@ settlements_ceded   salience 55   {from} gave up {settlement:all} in {@region} t
 3. Kinds 39 and 40: the catalogue unit test (role and value keys distinct, 8.2); `template_problem` accepts both templates, accepts `{settlement}` (min count 1: the first participant), and refuses `{@settlement}` in both (`settlement_use` 0); rendering with one, two and three `settlement` participants gives `A`, `A and B`, `A, B and C`, each name under the names rule of 8.5 (r10).
 4. The P3-04 golden vectors (`p3-04-engine.txt`): stub sentence lines with a value from 1 to 9 change; nothing else of them.
 
+## 22. One number form per clause; two kinds; no flare-up of a few years (amendment r19, P5-01, generator 0.21.0)
+
+Normative for the change P5-01 (`docs/specs/p5-01-followups.md`, items 6, 7 and 9), from generator **0.21.0**, not before. **No schema change**: two kinds are appended (22.2), a rendering rule is refined (22.1) and one tuning field is added (22.3); no role or value key of an existing kind, no code list and no column changes (8.2's list).
+
+### 22.1 One number form per clause (amends 21.1)
+
+Why: 21.1 renders each value from one to nine as a word on its own, so a battle toll can mix the two forms: "24 of the defeated and seven of the victors fell" (the P3-11 world critic's F6: 230 of 9,066 battle sentences of the 100 default 1024 worlds at 0.20.0, every one with a side from 2 to 9 beside a side of 10 or more). The critic's rule: when either side of a toll is 10 or more, both are digits.
+
+**Clauses of a template.** Scan the stored template as 8.4 parses it. The template's **literal text** is the bytes outside placeholders (a `?`-word's text is inside its placeholder and is not literal text). The template is cut into **clauses** at every occurrence of the two bytes `; ` (0x3B 0x20) or `, ` (0x2C 0x20) in its literal text; a placeholder belongs to the clause in which it starts. A **number** of a clause is each value rendered by a `{value}` placeholder of the clause and each `#` of the chosen word of a three-word form `{value?w0|w1|w2}` of the clause (the two places 20.3 and 21.1 apply to). Years (`{@year}`, `{@end_year}`) are not numbers here and are never words.
+
+**Rule** (replaces 21.1's "a value v with 1 ≤ v ≤ 9 renders as the lower-case English word"): in `render_event`, the numbers of a clause render as words (21.1's `one` … `nine`) **only when every number of the clause is from 1 to 9**; otherwise every number of the clause renders in digits with 20.3's separators. A clause with one number renders exactly as 21.1 says. Words that a template writes itself (`one` in `{fled?| and one fled| and # fled}`, `none`) are copied as they are (21.1). The rendering needs the clause's values before its text, so the renderer reads every value of the clause first (two passes over the template, or one pass with a look-ahead to the clause's end: the result is defined by the rule, not by the method).
+
+| Template (shipped) | 0.20.0 | 0.21.0 |
+| --- | --- | --- |
+| `battle` (22), toll 24 and 7 | `…; 24 of the defeated and seven of the victors fell.` | `…; 24 of the defeated and 7 of the victors fell.` |
+| `battle` (22), toll 8 and 3 | `…; eight of the defeated and three of the victors fell.` | unchanged |
+| `battle` (22), toll 24 and 1 | `…; 24 of the defeated and one of the victors fell.` | unchanged (`one` is the template's word) |
+| `sacked` (25), 8 died, 19 fled | `…; eight died and 19 fled.` | `…; 8 died and 19 fled.` |
+| `plague_outbreak` (37), 2 reached, 1,084 died | `… and spread to two other settlements; 1,084 died in all.` | unchanged (`; ` is literal: two clauses) |
+| `quiet_stretch` (38), 683 years, 4 realms | `For 683 years, from …, the land was quiet, and four realms kept the peace.` | unchanged (the literal `, ` after `{years?year\|years}` separates the clauses) |
+| `settlement_abandoned_to` (31), 12 settled, 3 lost | `… 12 survivors went to X, and three were lost.` | `… 12 survivors went to X, and 3 were lost.` (`, and # were lost` is inside its `?`-word: one clause) |
+
+With the shipped templates only `battle`, `battle_at_pass`, `sacked`, `settlement_captured` and `settlement_abandoned_to` have a clause with two numbers. The rule changes no world byte (sentences are not stored), only stored golden sentences.
+
+### 22.2 Catalogue (appended to 8.2, 20.4 and 21.2)
+
+| id | key | caused | region | settlement | roles (seq: role, entity type, min–max) | values (seq: key) | written by |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 41 | `claim_dropped` | 1 | 1 | 0 | 1: `claimant`, civilization, 1–1; 2: `holder`, civilization, 1–1 | — | P3-06 (24.3) |
+| 42 | `refuge_hidden` | 1 | 1 | 1 | 1: `settlement`, settlement, 1–1; 2: `founder`, civilization, 1–1 | — | P3-06 (24.4) |
+
+Kind 41 records a claim dropped at a declaration that found no allowed goal (P3-06 20.2 item 2), until now silent; its cause is the claim. Kind 42 records the years a fled refuge stays hidden (P3-06 20.1 item 2, 22.2): its `year` is the flight's and its `end_year` the last hidden year within the history. Both ids are provisional until the lead fixes the merge order (P5-00 4.4); code emits them by key. `docs/specs/schema.md` 6 gains both rows (the engineer).
+
+Templates (data, `history.report`; P3-06 24.3, 24.4):
+
+```
+claim_dropped   salience 15   {claimant} let the claim against {holder} over {@region} lapse.
+refuge_hidden   salience 10   {@settlement} lay hidden from {@year} to {@end_year}.
+```
+
+Both are below `SUMMARY_MIN_SALIENCE` (P3-07: never in the summary chronicle) and are read by P3-07 r19 25's `[present]` lists.
+
+**The participant bound of kinds 39 and 40** (P3-11's known difference, 21.2): the test writer's reference lists at most **62** settlements, as the implementation does and 21.2 (r18) states. A test fix; no world reached either bound.
+
+### 22.3 No flare-up of a few years (amends SC6, 5.5; E3)
+
+Why: SC6 cuts a flare-up at the next awakening or the final phase (E3), so a flare-up can last one year: "In 5699 tensions flared into one year of upheaval." (default seed 88, e901; the P3-07 world critic's (b)). At 0.20.0, 11 of the 393 flare-ups of the 100 default 1024 worlds last less than 10 years (1 year 3, 2 years 3, then 4, 5, 5, 7, 9); `civs4` 4 of 243, `turbulent` 3 of 163, `calm` none.
+
+**Field.** `history.engine` gains **`flare_min_years`** int(1, 1000), appended after `quiet_min_years`, shipped **10**, taste; a length at the reference span, **scaled** to the world's span as the lengths of the detail records are (5.1). New named check after `engine_quiet_min`: **`engine_flare_min`**, condition: for each level in the order sparse, normal, dense, `flare_min_years` ≤ `flare_years`; message `<level>: flare_min_years must not be above flare_years`. The default of hand-made tuning (tests built in code) is 1, which leaves SC6 as before.
+
+**Rule.** In SC6, `if f ≥ 1:` becomes `if f ≥ m:` with m = max(1, the scaled `flare_min_years`). When f < m, no flare-up starts at s: the quiet row goes on with its next step, as when the tension is below the threshold, and the tension is asked again after that step (unless it ends the interval, E3). Nothing is written for the skipped flare-up. The quarrel behind it is still open; when the interval ends at an awakening or the final phase, that active phase follows at once and P3-06's declarations run there as in any tick.
+
+E3's row in 5.6 reads: "flare-up reaching the next awakening or S_f: cut there (SC6); none when the cut leaves fewer than `flare_min_years` (scaled) or when the step ends the interval". Invariant 1 of 16 (schedule) gains: every kind 3 row is at least m years long. The guard "a flare length outside [1, q_e − s]" is unchanged.
+
+### 22.4 Tests (amends 21.3)
+
+1. Number clauses: the seven rows of 22.1's table; a clause with one number of each range (0, 1, 9, 10, 1,000, −3) as 21.1; a clause with 2 and 10 renders `2` and `10`; with 2 and 0 renders `2` and `0`; with 2 and 3 `two` and `three`; `; ` and `, ` inside a `?`-word do not cut; `,` without a space and `;` at the template's end do not cut; a template whose two numbers are separated only by literal ` and ` is one clause.
+2. Kinds 41 and 42: the catalogue unit test (8.2); `template_problem` accepts both templates and refuses `{@settlement}` in kind 41 (`settlement_use` 0); rendering of each.
+3. `flare_min_years`: with `ForcedTension` and Q = 25, an interval whose last step leaves 5 years before the final phase: with m = 10 no flare-up and the row continues to the interval's end; with m = 1 a 5-year flare-up as before; a tension crossing with 40 years left gives a flare-up of min(F, 40); `flare_min_years` 31 at `sparse` (`flare_years` 30) fails `engine_flare_min`; at E = 2000 the scaled value is used (10 → 3). Invariant: every kind 3 row is at least m years long.
+4. The reference's participant bound for kinds 39 and 40: 62 (a hand-made claim on a region with 70 settlements of the holder lists the 62 smallest ids).
+5. The P3-04 golden vectors (`p3-04-engine.txt`): the `ForcedTension` cases whose flare-ups are shorter than 10 years lose them (to be listed by the test writer); stub sentence lines change where a clause had two numbers; nothing else.
+
 ## Appendix A. Proposals entry (added to `docs/design/proposals.md` with this spec)
 
 "History: active phases scale with the history span; the detail level sets the simulated share" (questions 1 to 3). Schema 7 itself is recorded in "History: schema versions 6 and 7"; its column details are this spec's 9.1.
@@ -1171,3 +1233,7 @@ New section 21 (`docs/specs/p3-11-followups.md` items 2 and 5): values from one 
 ## Revision note r18 (2026-11-22, text after the P3-11 validation)
 
 21.2: kinds 39 and 40 list at most 62 settlements, since an event has at most 64 participants and two are the civilizations. No rule change: the implementation does this.
+
+## Revision note r19 (2026-11-22, P5-01; generator 0.21.0)
+
+New section 22 (`docs/specs/p5-01-followups.md` items 6, 7 and 9): the numbers of one clause of a template render all as words or all as digits (22.1, refining 21.1); kinds 41 `claim_dropped` and 42 `refuge_hidden` appended, with their templates, for P3-06 r22 24.3 and 24.4, and the reference's participant bound of kinds 39 and 40 set to 62 (22.2); the `history.engine` field `flare_min_years` (10, scaled) and the check `engine_flare_min`: no flare-up shorter than it (22.3, amending SC6 and E3); tests (22.4). No schema change; no earlier section is renumbered.

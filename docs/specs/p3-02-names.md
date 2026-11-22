@@ -1,6 +1,6 @@
 # P3-02 Names
 
-Status: **approved by the lead 2026-11-19; revised 2026-11-19 (text only, after implementation); amended 2026-11-19 for P3-03 (r2); revised 2026-11-19 after the P3-03 implementation (r3: 7 registry container, 4.3 `roman` location, 8 P0-01 request applied); amendment r5 drafted 2026-11-20 by the spec writer (section 11: name filter, god patterns, realm forms); **r6 (2026-11-20): r5 ships with the P3-08 change, generator 0.17.0 (`docs/specs/p3-08-followups.md`), with the filter applied to every word of the rendered name and the redraw stated (11.3, 11.6)**; **r13 (2026-11-21, P3-10 second round, generator 0.19.0): crude fragments inside a word and no three equal letters (section 13)**; **r15 (2026-11-21, P3-11, generator 0.20.0): faerie syllables, no repeated syllable, `tard` (section 14)**; the seven questions of 11.10 are open with Paul, their interim choices stand; **r10 (2026-11-20, P3-10, generator 0.19.0): section 12, filter entries and near-identical names**: see the revision notes at the end. Phase P3 History core, spec 2 (P3-00 3.1). Design doc sections 5 ("the seed varies the dates, the places and the gods' names"; civilizations, settlements), 6 ("the database stores facts and names"), 14 (every reference a model writes must resolve to a real entity: names must be unique). Depends on P0-01 (hashing, streams), P0-03 (string grammars, named checks), P3-00 (4.6 keyed draws) and P3-01 (the `culture` kind carries this spec's record). It introduces the domain tag `TAG_HIST` and the keyed-draw helpers that every later history spec uses.
+Status: **approved by the lead 2026-11-19; revised 2026-11-19 (text only, after implementation); amended 2026-11-19 for P3-03 (r2); revised 2026-11-19 after the P3-03 implementation (r3: 7 registry container, 4.3 `roman` location, 8 P0-01 request applied); amendment r5 drafted 2026-11-20 by the spec writer (section 11: name filter, god patterns, realm forms); **r6 (2026-11-20): r5 ships with the P3-08 change, generator 0.17.0 (`docs/specs/p3-08-followups.md`), with the filter applied to every word of the rendered name and the redraw stated (11.3, 11.6)**; **r13 (2026-11-21, P3-10 second round, generator 0.19.0): crude fragments inside a word and no three equal letters (section 13)**; **r15 (2026-11-21, P3-11, generator 0.20.0): faerie syllables, no repeated syllable, `tard` (section 14)** **r17 (2026-11-22, P5-01, generator 0.21.0): `fag` inside a word, `shiva`, `hindi`, `fannie`, the dwarven stutters `didin` and `ririn` (section 15)**; the seven questions of 11.10 are open with Paul, their interim choices stand; **r10 (2026-11-20, P3-10, generator 0.19.0): section 12, filter entries and near-identical names**: see the revision notes at the end. Phase P3 History core, spec 2 (P3-00 3.1). Design doc sections 5 ("the seed varies the dates, the places and the gods' names"; civilizations, settlements), 6 ("the database stores facts and names"), 14 (every reference a model writes must resolve to a real entity: names must be unique). Depends on P0-01 (hashing, streams), P0-03 (string grammars, named checks), P3-00 (4.6 keyed draws) and P3-01 (the `culture` kind carries this spec's record). It introduces the domain tag `TAG_HIST` and the keyed-draw helpers that every later history spec uses.
 
 ## 1. Purpose
 
@@ -1017,6 +1017,50 @@ Sizes after the edit: `slurs` 33 anywhere, 18 at_start, 5 whole; `crude` 71, 12,
 - Golden: `p3-02-names.txt` re-recorded by the reference (every culture through 14.2, faeries through 14.1, human and dwarven through `tard`); `p3-03-chronology.txt` through the gods; the history goldens through names. Sections 5.1 and 11.6's sample tables stay the record of the data they were drawn with (r4, r5); the reference's transcriptions of them are unchanged, and the test writer adds the faerie sample of 5.1's protocol at 0.20.0 to the reference (a new `SAMPLES_R15` row) for the critic to judge.
 - Validation reports: per culture, attempts rejected by 14.2, by `forbidden` `ass`, by `tard` and by the four new words; fallbacks (must be 0); the faerie names of the default sweep with `ee`, `ou`, `p` or `b` (no `p` or `b` may start a faerie syllable; letters `p` and `b` cannot occur in a faerie name at all with 14.1's lists).
 
+## 15. Amendment r17: `fag` inside a word, `shiva`, two dwarven stutters (P5-01, generator 0.21.0)
+
+Normative for the change P5-01 (`docs/specs/p5-01-followups.md`, item 5), from generator **0.21.0**, not before. Sources: the P3-11 world critic's F3 and F4 (`docs/reviews/p3-11-followups-world-critic.md`) and the lead's ruling of 2026-11-22 (`docs/design/proposals.md`, "History: the P3-11 orc targets, the lead's ruling", left for the next change). Data only: no rule, no field, no schema change, no stream or draw.
+
+### 15.1 Filter entries (data; `game/data/name_filters/` and both fixture copies)
+
+| Edit | List | Why |
+| --- | --- | --- |
+| move `fag` from `at_start` to `anywhere`; remove `fagg` | `slurs` | The faerie `Shyfaglae` (default seed 87) reads as "Shy-fag-lae": the fragment stands as a stressed syllable inside the word, which `at_start` cannot see (as `tard` in 14.3). `fagg` (`anywhere`) contains `fag` and can no longer change a result. No shipped English word the cultures reach holds `fag` (a `f` onset, the nucleus `a` and a `g` onset or coda: faerie `f` + `a` + `gl`, human `f` + `a` + `g`) |
+| add `shiva` | `famous.whole` | The seat of the Circle of Glae in default seed 77 is `Shiva`, the name of a living religion's god, reached by the faerie `v` onset (14.1); `siva` is already listed |
+| add `hindi` | `famous.whole` | a language's name (dwarven, `civs4` seed 17) |
+| add `fannie` | `crude.whole` | British slang (elven, `civs4` seed 1, twice) |
+
+`name_filter_not_redundant` (11.2) passes on the edited lists: no `at_start` or `whole` entry contains `fag`, and `shiva`, `hindi` and `fannie` contain no `anywhere` entry and start with no `at_start` entry. Sizes after the edit: `slurs` 33 anywhere (`fag` in, `fagg` out), 17 at_start, 5 whole; `crude` 71, 12, 15; `famous` 0, 0, 105; `words` unchanged.
+
+### 15.2 Two dwarven stutters (data; `game/data/cultures/dwarven.toml` and both fixture copies)
+
+The dwarven codas `din` and `rin` spell an onset and a nucleus inside one coda, so 14.2's syllable test cannot see the stutter they make after a matching onset and the nucleus `i`: `d` + `i` + `din` gives `Didin`, and `br`, `dr`, `gr` or `thr` + `i` + `rin` gives `Bririn`, `Dririn`, `Gririnhard`. The dwarven `forbidden` list gains **`didin`** and **`ririn`** (appended, in that order):
+
+```toml
+forbidden = ["mmm", "rr", "dd", "kk", "rdt", "rkd", "rdd", "mmb", "kdr", "kthr", "dkh", "ndb", "rnk", "didin", "ririn"]
+```
+
+A root holding either is invalid (4.2), and the next attempt t + 1 is drawn with its own keys, as for every forbidden substring. The codas stay: `Thorin`-like and `Balin`-like names (`Gromrin`, `Kadin`, `Hodin`) are the dwarven sound; only the doubled `di-din` and `ri-rin` go. Near-repeats with another nucleus (`Dadin`, `Brarin`) stay, as Paul left the faerie near-repeats (`docs/design/proposals.md`, "Paul's decisions of 2026-11-22", decision 4).
+
+### 15.3 What this changes (counted by the spec writer in the 375 worlds of the P3-11 validation sweep, 41,137 names)
+
+| Entry | Stored names it rejects at 0.20.0 |
+| --- | --- |
+| `fag` anywhere | 1: `Shyfaglae` |
+| `shiva` | 1: `Shiva` |
+| `hindi`, `fannie` | 1: `Hindi`; 2: `Fannie` |
+| `didin` | 8 (7 distinct): `Clan Didin`, `Didin`, `Didin Deep`, `Didingrud`, `Didinmour Deep`, `Didinthrak Deep`, `Houmdidin` |
+| `ririn` | 19 (9 distinct): `Bririn`, `Bririntai`, `Dririn Deep`, `Griringou`, `Gririnhard`, `Gririnhard Deep`, `Gririnmo`, `Gromdririn`, `Grumbririn Hold` |
+
+A rejected name is replaced by the entity's next valid attempt (4.3); the new name can change later names only through the registry's uniqueness (7). No history rule reads a name.
+
+### 15.4 Tests and goldens
+
+- Unit tests: `Shyfaglae` and `Fagwick` are filtered, `Fagwick` also before r17 (the old `at_start`), `Shyfaglae` only from r17; `Shiva`, `The Hindi Court`, `Fannie Glade` are filtered; a dwarven root `didin` (`ONC`: `d` `i` `din`) and `gririnhard` (`ONCONC`: `gr` `i` `rin` `h` `a` `rd`) are invalid by `forbidden` and followed by attempt t + 1; `dadin` and `kadin` are valid; `name_filter_not_redundant` passes on the edited lists and fails on a copy that keeps `fag` in `at_start` beside the new `anywhere` entry; `fagg` is absent from the shipped file (the check compares `at_start` and `whole` entries with `anywhere` ones, not two `anywhere` entries, so a data test asserts it).
+- Data: `p3_data_reference.py` (content hashes of the three data roots) and the loader tests.
+- Golden: `p3-02-names.txt` re-recorded by the reference (dwarven names through 15.2; faerie, elven and dwarven names through 15.1); `p3-03-chronology.txt` through god names those entries reach; the history goldens through names.
+- Validation reports: per culture, attempts rejected by each new entry (the scan of 13.1's sample, `p3_names_reference.py scan`); in the sweep's stored names, none holding `fag`, `didin` or `ririn`, and none equal to `shiva`, `hindi` or `fannie` as a word; fallbacks 0.
+
 ## Revision note (2026-11-19, text only, after implementation)
 
 The implementation (`p3/02-names`) and the independent tests (`p3/02-names-tests`) agreed; this revision makes the text say what they do. No behaviour, golden value or world byte changes.
@@ -1091,3 +1135,7 @@ New section 14 (`docs/specs/p3-11-followups.md`): the faerie syllable lists afte
 ## Revision note r16 (2026-11-22, text after the P3-11 validation)
 
 14.2: the rejection rates of the repeated-syllable rule as measured at 0.20.0 replace r15's estimate (1 in 137 elven, 175 faerie, 220 goblin, 961 orcish, 1,902 dwarven, 2,968 human). No rule or data change.
+
+## Revision note r17 (2026-11-22, P5-01; generator 0.21.0)
+
+New section 15 (`docs/specs/p5-01-followups.md`, item 5): `fag` moves from `slurs.at_start` to `slurs.anywhere` and `fagg` is removed; `shiva` and `hindi` join `famous.whole`, `fannie` `crude.whole` (15.1); the dwarven `forbidden` list gains `didin` and `ririn` (15.2). Data only. No earlier section is renumbered.

@@ -1135,3 +1135,19 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
   12. Exit check: "takes part" means a participant of at least one event; each race, camp and monster kind has a hard and a sweep target (P5-00 8.3); a bloc of allies and vassals is held to the runaway bound.
 - Interim choice: as proposed; the stage specs follow them. Four questions change the split or order and are put to Paul (P5-00 11): sites in P5, gods late with all five intervention kinds, renamed regions early, no sub-peoples in P5 (hill dwarves an optional stage after P5-07, dark elves after underground geography).
 - Status: open
+
+### History and report: P5-01 carried-over follow-ups (scope)
+
+- Date: 2026-11-22
+- Raised by: spec writer (P5-01, `docs/specs/p5-01-followups.md`), from the items Paul's approval of P3 carried into P5 ("Paul's approval of phase P3 History core, 2026-11-22"; `docs/specs/p3-11-followups.md` section 12) and the world critic's notes on the history report (`docs/reviews/p3-07-history-report-world-critic-r17.md` B1 to B6)
+- Design doc section: 4 (region names), 5 (history: wars and claims, the orc age, refuges), 6 (text rendered from records), 13 (the text history report)
+- Problem: at generator 0.20.0 a war re-aimed at its declaration cites a claim on another region (280 in 100 default worlds); the orcs fight their first war with two settlements, a camp and a colony a few years old, and lose it more often than they win (27 won, 32 lost); 9% of drawn region names are grim; the history report cannot say which refuges are still hidden or which claims were dropped; battle tolls repeat to the man and mix digits and words; a flare-up can last one year; the report's summary floods some worlds with plagues and runs to 1,300 lines with four civilizations per race.
+- Proposal: one change, generator 0.21.0, schema 7 unchanged.
+  - A fresh claim on the war's goal, caused by the old claim, written at a re-aimed declaration (Paul's decision 6 of 2026-11-22).
+  - The awakening quarrel claim is held back until the realm's strength against its neighbour reaches a fair fight: the declaration odds without the aggression discount at 1000 (`history.conflict.quarrel_strength_permille`). Reading taken here: "gated on strength" is read with the measure the rules already compute at every declaration, applied to the quarrel claim only, so every later orc war keeps the short odds Paul decided on 2026-11-20.
+  - 34 of the 40 grim words left in the common region-name lists move to barren land; spirits and curses stay.
+  - Appended event kinds 41 `claim_dropped` and 42 `refuge_hidden` (a span over the refuge's hidden years) record what the world did not, as the P5 overview planned (events, not columns).
+  - Battle tolls get a keyed factor of 80% to 120%; no flare-up shorter than 10 years; the `became_city` sentence without its figure; five name-filter entries; one number form per clause.
+  - The history report becomes format v2, with P5's growth rule.
+- Interim choice: as proposed; the design document is not affected. Questions for the lead (P5-01 section 10): the delay the strength gate puts on the first orc war; the `civs4` summary length (about 1,100 lines, against "about 1,000" for default worlds); keeping the two optional rules (tolls, short flare-ups).
+- Status: open

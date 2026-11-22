@@ -1,6 +1,6 @@
 # P1-06 Regions
 
-Status: **second version, approved by the lead 2026-11-18; revision r2 (2026-11-18, implemented in 0.11.0); revision r3, spec writer, 2026-11-19; Paul answered its questions the same day; r4, 2026-11-20, ships r3 with P3-08 (generator 0.17.0; `docs/specs/p3-08-followups.md`): two forbidden substrings, the stream's place in the registry, section 14.8; r5, 2026-11-20, corrections after the implementation, 14.8 items 1, 3, 4; r6, 2026-11-20, P3-10 (generator 0.19.0): church words out, grim words fewer and on barren land, three small list edits, rule V7 (one use of a word stem per world), the plain-name question to Paul, section 15; r7, 2026-11-20: Paul's decision, one plain name per land noun, 15.7** (region names with identity and no numerals, Paul's decision of 2026-11-19 in `docs/design/proposals.md`: RG11, section 4.1 (new data kind `placename`), the stream `geo.regions.name`, invariant 6, tests; no schema change, a generator version bump; section 14 lists the revision; Paul answered its five questions the same day, 14.5, and the one that changes behaviour, a leading `The` lower-cased mid-sentence, is specified for P3-04 and P3-07 in 14.7 and Appendix B). r2 was written after the world critic's review of the implementation (`~/.cache/the-unmapped/out/p1-06-critic/critic-review.md` F1 and F2: a pass is attached to one border only, and two noun rules; layer and schema unchanged, generator still 0.11.0; section 13 lists the revision). The second version replaces the first draft of 2026-11-16 (never implemented), which was written before the biome variety revision (generator 0.9.0) and the resources stage (P1-05 r2, generator 0.10.0); section 0 lists every change. Generator **0.11.0**; **schema version 5** (three new tables, section 3). Calibrated on real 0.10.0 worlds (512 seeds 0–19, 1024 seeds 0–29 and 75, 133, 185 and the phrase "The Unmapped", 2048 seeds 0–5; the P1-05 validation worlds, byte-identical to `main` at `a18d21c`) with a prototype of this spec (section 11). Phase P1 Geography, stage 6 (`regions`), the last geography stage. Design doc section 4 (stage 6; "Regions": about 2 km² each, roughly 12, 45 and 180 per map, bordered on ridges and large rivers, placeholder names such as "East Wood II", land only with lakes in land regions, border length, lowest crossing and whether walkable or a river stored for each pair of neighbours), 5 (civilizations have a home region and claim regions; beast populations are counts per region; passes are places to fortify and fight over; region borders tell history where a crossing needs a road or a bridge; events carry a `region_id`), 6 (table `region` with `id`, `name`, `biome`, `bounds` and summary statistics; schema version 5 planned with `region` and `region_border`). Depends on P0-01 to P0-04, P1-00 (G1, G2, G6, G7, D1 to D10), P1-01 (table `pass`), P1-02 (H7), P1-04 (the `biome` layer and definitions) and P1-05 (the score layers and `walk_area`). Reviews that shaped it: `docs/reviews/p1-05-resources-critic.md` section 6, `docs/reviews/p1-05-resources-validation.md` 3.3.
+Status: **second version, approved by the lead 2026-11-18; revision r2 (2026-11-18, implemented in 0.11.0); revision r3, spec writer, 2026-11-19; Paul answered its questions the same day; r4, 2026-11-20, ships r3 with P3-08 (generator 0.17.0; `docs/specs/p3-08-followups.md`): two forbidden substrings, the stream's place in the registry, section 14.8; r5, 2026-11-20, corrections after the implementation, 14.8 items 1, 3, 4; r6, 2026-11-20, P3-10 (generator 0.19.0): church words out, grim words fewer and on barren land, three small list edits, rule V7 (one use of a word stem per world), the plain-name question to Paul, section 15; r7, 2026-11-20: Paul's decision, one plain name per land noun, 15.7; r10, 2026-11-22, P5-01 (generator 0.21.0): grim words of `common` moved to barren land but for six, section 16** (region names with identity and no numerals, Paul's decision of 2026-11-19 in `docs/design/proposals.md`: RG11, section 4.1 (new data kind `placename`), the stream `geo.regions.name`, invariant 6, tests; no schema change, a generator version bump; section 14 lists the revision; Paul answered its five questions the same day, 14.5, and the one that changes behaviour, a leading `The` lower-cased mid-sentence, is specified for P3-04 and P3-07 in 14.7 and Appendix B). r2 was written after the world critic's review of the implementation (`~/.cache/the-unmapped/out/p1-06-critic/critic-review.md` F1 and F2: a pass is attached to one border only, and two noun rules; layer and schema unchanged, generator still 0.11.0; section 13 lists the revision). The second version replaces the first draft of 2026-11-16 (never implemented), which was written before the biome variety revision (generator 0.9.0) and the resources stage (P1-05 r2, generator 0.10.0); section 0 lists every change. Generator **0.11.0**; **schema version 5** (three new tables, section 3). Calibrated on real 0.10.0 worlds (512 seeds 0–19, 1024 seeds 0–29 and 75, 133, 185 and the phrase "The Unmapped", 2048 seeds 0–5; the P1-05 validation worlds, byte-identical to `main` at `a18d21c`) with a prototype of this spec (section 11). Phase P1 Geography, stage 6 (`regions`), the last geography stage. Design doc section 4 (stage 6; "Regions": about 2 km² each, roughly 12, 45 and 180 per map, bordered on ridges and large rivers, placeholder names such as "East Wood II", land only with lakes in land regions, border length, lowest crossing and whether walkable or a river stored for each pair of neighbours), 5 (civilizations have a home region and claim regions; beast populations are counts per region; passes are places to fortify and fight over; region borders tell history where a crossing needs a road or a bridge; events carry a `region_id`), 6 (table `region` with `id`, `name`, `biome`, `bounds` and summary statistics; schema version 5 planned with `region` and `region_border`). Depends on P0-01 to P0-04, P1-00 (G1, G2, G6, G7, D1 to D10), P1-01 (table `pass`), P1-02 (H7), P1-04 (the `biome` layer and definitions) and P1-05 (the score layers and `walk_area`). Reviews that shaped it: `docs/reviews/p1-05-resources-critic.md` section 6, `docs/reviews/p1-05-resources-validation.md` 3.3.
 
 ## 0. Changes from the first draft
 
@@ -1057,6 +1057,55 @@ Method: the test writer's reference `worldgen/tests/reference/p1_regions_referen
 - Golden values: `p1-06-regions.txt` is re-recorded by the reference: the `region` table hash changes in every case in which a land noun occurs in two or more regions or a name is drawn: 33 of its 43 cases (every `designed-*` case but `designed-0-shipped`, `designed-0-bigmerge` and `designed-0-tile`; `terrace-0`, `terrace-1`; `shipped-512-s0`, `shipped-512-s42`, `shipped-512-phrase`, `shipped-1024-s1`, `shipped-64-s0-t`, `shipped-128-s0-t`, `shipped-128-s42-t`, `small-128-s2`, `small-128-s2-t`); the 10 cases whose plain names all have distinct nouns keep their names (`designed-0-shipped`, `designed-0-bigmerge`, `designed-0-tile`, `shipped-48-s3`, `shipped-64-s0`, `shipped-128-s0`, `shipped-128-s9`, `shipped-128-s42`, `small-128-s0`, `small-128-s1`; counted from the golden file's `names` lines), and, having no drawn name, keep their `region` hash. The layer, `region_border` and `region_biome` must not change. Every world hash changes with the data (`content_hash`) and the names.
 
 **Amendment record.** r6 (2026-11-20): section 15 for P3-10. r7 (2026-11-20): Paul's decision on the plain name, 15.5 closed and 15.7 (the keeper per land noun) normative. r8 (2026-11-21): 15.7's shares confirmed by the implementation. r9 (2026-11-21): 15.6's suffix example is `Thornholt` then `Elmholt` (`Ash` + `holt` fails V1); text only.
+
+## 16. Revision r10 (2026-11-22): fewer grim names outside barren land (P5-01, generator 0.21.0)
+
+Normative for the change P5-01 (`docs/specs/p5-01-followups.md`, item 3), from generator **0.21.0**, not before. Source: Paul's decision of 2026-11-22 (`docs/design/proposals.md`, "Paul's decision of 2026-11-22: regions renamed by history, and a history for the mountain peoples", item 3: "the share of grim region names is lowered in data"). Only `region.name` changes. No schema change, no new field, rule or kind: one edit of the shipped `placename` lists (data, `game/data/placenames/common.toml` and `traits.toml`, and both fixture copies).
+
+### 16.1 The edit
+
+15.2's grim class and its definition of a grim drawn name are unchanged. r6 kept 40 words of the class in `common` (15.2's "Kept in `common`" list). Of those, **only the six words that name a spirit or a curse stay in `common`**:
+
+- prefixes `Ghost`, `Wraith`;
+- adjectives `Accursed`, `Cursed`;
+- objects `Ghosts`, `Shades`.
+
+The other **34 are moved** to the same list of `trait_barren` (merged into its sorted list; a word it already holds is not repeated), so they are drawn only for regions with the trait `barren`:
+
+- prefixes `Bale`, `Charnel`, `Dread`, `Grief`, `Lich`, `Pall`, `Sorrow`, `Wight`;
+- adjectives `Bloodless`, `Doleful`, `Drear`, `Fallen`, `Forsaken`, `Godless`, `Grim`, `Joyless`, `Moaning`, `Orphaned`, `Shunned`, `Stricken`, `Weeping`, `Wretched`;
+- places `Bane`, `Grief`, `Shame`;
+- possessors `Gravedigger`, `Mourner`, `Widower`;
+- objects `Bones`, `Grief`, `Widows`, `the Damned`, `the Forsaken`, `the Slain`.
+
+After the edit `common` holds no word of the class but those six. The land lists are not edited: `carr.adjectives` keeps `Weeping` and `steppe.objects` keeps `Bones` (a weeping bog and the bones of the steppe belong to their land). Bleak, dark and cold words (`Black`, `Ashen`, `Gloom`, `Murk`) stay, as 15.2 says: they are the setting's colour.
+
+**Why these six.** Death, grief and mourning (`Grief`, `Sorrow`, `Widower`, `the Slain`) read as a lament, and they made the "grim" share the critic and Paul saw. Ghosts, wraiths and curses are the uncanny of dark high fantasy, and a few of them keep the map from reading as a parish register. On barren land every word of the class is still drawn: a waste can be "the Desolate Waste" or "the Sorrowing Waste".
+
+### 16.2 Measured (the spec writer's prototype on the stored region rows)
+
+Method: the test writer's reference `worldgen/tests/reference/p1_regions_reference.py` (RG11 with 15.4 and 15.7, which reproduces every stored name of the 0.20.0 worlds) with the edited lists, on the region and border rows of the P3-11 validation sweep (`~/.cache/the-unmapped/out/p3-11-validation/sweep/`: 100 default 1024 worlds, seeds 0 to 99; 30 at 512; 5 at 2048). Geography is unchanged since 0.11.0. The harness is `~/.cache/the-unmapped/out/p5-01-spec/grim5.py`; its unchanged-lists run gives the stored names exactly (390 grim names at 1024, as the P3-10 validation counted).
+
+| | 512 (30 worlds) | 1024 (100) | 2048 (5) |
+| --- | --- | --- | --- |
+| drawn names | 261 | 4,328 | 951 |
+| grim drawn names, 0.20.0 | 29 (111‰) | 390 (**90‰**) | 70 (73‰) |
+| grim drawn names, r10 | 9 (**34‰**) | 190 (**43‰**) | 33 (**34‰**) |
+| of them in barren regions (r10) | 6 | 108 | 15 |
+| attempts per drawn name, mean (max), r10 | 0.07 (1) | 0.15 (5) | 0.79 (12) |
+| fallbacks | 0 | 0 | 0 |
+
+Alternatives measured on the same rows (1024): keeping every third of the 40 words (r6's rule applied again, 15 words kept) gives 228 (52‰); moving all 40 gives 146 (33‰). Most remaining grim names are on barren land, or come from words that only start with a prefix of the class (`Pallid`, `Graven`, `Shrouded`, `Withered`, `the Pyre`: 15.2's definition counts them, and they stay).
+
+**Target** (validation, P5-01 T14): grim drawn names at most **50‰** at 1024 (100 worlds) and at 2048; 512 reported. Fallbacks 0.
+
+### 16.3 Tests and goldens
+
+- Data tests: the 34 words are absent from `common` and present in `trait_barren`'s lists in the shipped files and both fixture copies (10.5's byte-identical copies); every list stays sorted without repeats; the placename checks of 4.1 pass.
+- Golden values: `p1-06-regions.txt` is re-recorded by the reference. The `region` table hash changes in every case with a drawn name whose slot draws from a `common` or `trait_barren` list (the edited lists change indices); the cases whose regions are all keepers keep their `region` hash (15.6's ten). The layer, `region_border` and `region_biome` must not change. Every world hash changes with the data (`content_hash`) and the names.
+- The invariants of RG11 (6 as restated by 15.7, V1 to V7) are unchanged.
+
+**Amendment record.** r10 (2026-11-22): section 16 for P5-01.
 
 ## Appendix B. Patch text for the P3 specs (to be applied by the P3 spec writer)
 

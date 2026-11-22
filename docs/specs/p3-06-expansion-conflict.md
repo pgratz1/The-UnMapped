@@ -1,6 +1,6 @@
 # P3-06 Expansion and conflict
 
-Status: **approved by the lead 2026-11-19 as the basis for implementation; r14 (2026-11-20, P3-10, generator 0.19.0): section 21, P3-10 follow-ups; r17 (2026-11-21, P3-10 second round, generator 0.19.0): section 22, the orcs' quarrel and hidden years, aim over held land, lying low, small rules; r19, r20 (2026-11-21, P3-11, generator 0.20.0): section 23 (r20: the orcs' first colony freed from pressure, through P3-05 r17); r21 (2026-11-22): the measured results and the lead's ruling, 15.5 at 0.20.0, orc targets, claims and foothold cessions that name the settlements, war goals and their claims, figures; revision r7 (2026-11-20, for P3-08, generator 0.17.0; `docs/specs/p3-08-followups.md`): battle losses from the smaller force (7.3), the capture sentence without "and 0 fled" (11), casualties under extreme tuning (7.4, 8.4), a same-step colony in a ceded region (8.3), the peoples-only prefix of the log (16.2), the 100-seed figures (15.3, 15.5), same-year rows (8.3)** (the ten questions of section 19 go to Paul; the interim choices stand; the measured shortfalls of 15.2 and 19 items 7, 9, 10 go to the world critic after implementation). Written by the spec writer 2026-11-19; the amendments of section 18 applied the same day on `p3/06-spec`, after merging `origin/p3/04-spec-fixes` at 13b8062 (P3-04 r3, P3-07 r2); checked against P3-04 r3 (16.5, note at the end). Phase P3 History core, spec 6 (P3-00 3.1 row P3-06), a subsystem of pipeline stage 8, `history`, and its tension source. Generator **0.16.0**; **no schema change** (schema stays 7: P3-06 appends event kinds 20–30 to the catalogue and writes rows of `event`, `relation`, `region_control`, `settlement`, `civilization` and `settlement_census` through P3-04's `State`; no column). Design doc sections 5 (the races and their camps and characters; "goblins hostile to elves from the first year", dwarves "arrive into a world already at war", humans "spread quickly over land left open or ruined by older wars", orcs "their coming opens the most recent age of conflict"; deep time and flare-ups "two expanding borders meet"; alignment sets starting relations; race relations "old wars leave grudges"; mountains, passes and roads in history; the tick loop items 2 and 5), 6 (`relation`, `settlement`, `civilization`), 13 (P3 row: wars, ruin; P5 exit: "no world is empty or runaway") and 14 (records a model can narrate). Depends on P3-00 (binding), P3-01 (race fields `camp`, `expansion`, `aggression`; amended in 18.3: one new race field), P3-02 (keyed draws), P3-04 (engine, step seam, `TensionSource`, flare-ups SC5/SC6, event writer W1–W9, bookkeeping), **P3-05 (peoples: its `PeoplesView`, `note_reduction`, and one new hook, amendment 18.1, to be applied before P3-05 is implemented)** and P3-07 (report: section 9 statistics, section 20 requirements; amended in 18.4). Branch read: `origin/p3/05-spec` at 73b01a4 (newest text of P3-00 to P3-07). Proposals read: up to "History: random pressures act only in active phases; migration waits for conflict".
+Status: **approved by the lead 2026-11-19 as the basis for implementation; r14 (2026-11-20, P3-10, generator 0.19.0): section 21, P3-10 follow-ups; r17 (2026-11-21, P3-10 second round, generator 0.19.0): section 22, the orcs' quarrel and hidden years, aim over held land, lying low, small rules; r19, r20 (2026-11-21, P3-11, generator 0.20.0): section 23 (r20: the orcs' first colony freed from pressure, through P3-05 r17); r21 (2026-11-22): the measured results and the lead's ruling, 15.5 at 0.20.0, orc targets, claims and foothold cessions that name the settlements, war goals and their claims, figures; r22 (2026-11-22, P5-01, generator 0.21.0): section 24, a fresh claim at a re-aimed declaration, the awakening quarrel gated on strength, kinds 41 and 42, battle tolls that vary; revision r7 (2026-11-20, for P3-08, generator 0.17.0; `docs/specs/p3-08-followups.md`): battle losses from the smaller force (7.3), the capture sentence without "and 0 fled" (11), casualties under extreme tuning (7.4, 8.4), a same-step colony in a ceded region (8.3), the peoples-only prefix of the log (16.2), the 100-seed figures (15.3, 15.5), same-year rows (8.3)** (the ten questions of section 19 go to Paul; the interim choices stand; the measured shortfalls of 15.2 and 19 items 7, 9, 10 go to the world critic after implementation). Written by the spec writer 2026-11-19; the amendments of section 18 applied the same day on `p3/06-spec`, after merging `origin/p3/04-spec-fixes` at 13b8062 (P3-04 r3, P3-07 r2); checked against P3-04 r3 (16.5, note at the end). Phase P3 History core, spec 6 (P3-00 3.1 row P3-06), a subsystem of pipeline stage 8, `history`, and its tension source. Generator **0.16.0**; **no schema change** (schema stays 7: P3-06 appends event kinds 20–30 to the catalogue and writes rows of `event`, `relation`, `region_control`, `settlement`, `civilization` and `settlement_census` through P3-04's `State`; no column). Design doc sections 5 (the races and their camps and characters; "goblins hostile to elves from the first year", dwarves "arrive into a world already at war", humans "spread quickly over land left open or ruined by older wars", orcs "their coming opens the most recent age of conflict"; deep time and flare-ups "two expanding borders meet"; alignment sets starting relations; race relations "old wars leave grudges"; mountains, passes and roads in history; the tick loop items 2 and 5), 6 (`relation`, `settlement`, `civilization`), 13 (P3 row: wars, ruin; P5 exit: "no world is empty or runaway") and 14 (records a model can narrate). Depends on P3-00 (binding), P3-01 (race fields `camp`, `expansion`, `aggression`; amended in 18.3: one new race field), P3-02 (keyed draws), P3-04 (engine, step seam, `TensionSource`, flare-ups SC5/SC6, event writer W1–W9, bookkeeping), **P3-05 (peoples: its `PeoplesView`, `note_reduction`, and one new hook, amendment 18.1, to be applied before P3-05 is implemented)** and P3-07 (report: section 9 statistics, section 20 requirements; amended in 18.4). Branch read: `origin/p3/05-spec` at 73b01a4 (newest text of P3-00 to P3-07). Proposals read: up to "History: random pressures act only in active phases; migration waits for conflict".
 
 Numbers in this spec come from the spec writer's exact-integer prototype `~/.cache/the-unmapped/out/p3-06-spec/conflict.py`, built on the P3-05 prototype `peoples.py` (which it imports unchanged) with a dynamic scheduler that follows P3-04 SC1–SC6, run on the P1-06 validation worlds `~/.cache/the-unmapped/out/p1-06-validation/` (geography unchanged since 0.11.0). The prototype is evidence, not the reference (16).
 
@@ -1795,6 +1795,125 @@ Every world changes: the race field and the report entries change `content_hash`
 
 Sentences with a value from one to nine change their text (P3-04 r17 21.1), not their bytes. Worlds without orcs change through names and these two kinds only.
 
+## 24. P5-01: a fresh claim at a declaration, the quarrel gated on strength, two records, battle tolls (amendment r22, generator 0.21.0)
+
+Normative for the change P5-01 (`docs/specs/p5-01-followups.md`, items 1, 2, 7 and 8), from generator **0.21.0**, not before. Sources: Paul's decision 6 of 2026-11-22 (`docs/design/proposals.md`, "Paul's decisions of 2026-11-22"); the P3-11 world critic's F1 and F6 (`docs/reviews/p3-11-followups-world-critic.md`); the lead's ruling on the P3-11 orc targets; P3-07 24.7's two approximations; the P3-07 world critic's (b) (`docs/reviews/p3-07-history-report-world-critic.md`). Where this section and sections 4–23 differ, this section rules. **No schema change** (schema 7): two kinds are appended (P3-04 r19 22.2), no kind is edited; one stream is added (24.5).
+
+### 24.1 A fresh claim at a declaration (Paul's decision 6; replaces 23.4's reading (a))
+
+**Why.** 7.2 "Declaring" (with 20.2 item 2, 20.23 item 2, 21.7 item 1 and 22.5 item 4) re-chooses the goal G when the claim's region R_c is weary for the defender, lost by it, or its capital region (23.4). The war then cites a claim on another region: 280 declarations in the 100 default 1024 worlds at 0.20.0 (per world 0 / 2 / 9; lost 135, capital 104, weary 41; `docs/reviews/p3-11-followups-validation.md`). Paul chose option (b) of P3-11 10 item 1: every war cites a claim on its own region.
+
+**Rule** (amends 7.2 "Declaring"). Let c = `claim[(a, b)]` with region R_c, and G the goal chosen as today. If **G ≠ R_c**, then right before the `war_declared`, in the same step, a **fresh claim** c' is appended:
+
+1. its kind by 23.2's rule on G: kind 20 `claim` when G's owner (live) is b; otherwise kind 39 `claim_settlements`, listing as `settlement` every standing settlement of b in G that is visible in the step and not hidden, ascending, at most 62 (G is an allowed goal of `front(a, b)`, so b holds G or has at least one such settlement there: 5.1, 20.2);
+2. region G; participants a as `claimant`, b as `holder` (then the settlements);
+3. causes, ascending: **c**, and 5.3's cause for G (G's `owner_event` when b holds G, else the `founding_event` of b's most populous standing settlement in G, ties to the smaller id). The old claim is the grievance; the second cause is why G is b's, as for every claim;
+4. `claim[(a, b)]` = (c', G).
+
+The `war_declared` then cites **c'** (and the pair's `last_peace` event, if any), not c; c is reached through c'. Everything else of "Declaring" follows unchanged (relations, strains, the claims of both directions dropped, 22.1's quarrel closed, the war created with goal G). No draw is taken and no state other than `claim[(a, b)]` changes before the declaration. A flare-up war (7.2 item 2) follows the same "Declaring". When G = R_c nothing new is written, also when the holder of R_c has changed since c (c's sentence was true when written).
+
+**Effect.** One event more per re-aimed war (280 in 100 default worlds at 0.20.0), dated the year of the declaration and placed just before it; no other event, row or draw changes, so with every other P5-01 item held equal the reference with 24.1 switched off gives the same rows but for the fresh claims, the ids after them and the declarations' causes (a self-check of 24.8 item 1). P3-07's declaration note dates the grievance from c, the fresh claim's cause (P3-07 r19 25.8), and its form "(The claim, since …, was to …)" no longer occurs.
+
+**Rejected (c)** stays rejected (dropping the claim and the war when R_c is no longer a goal: fewer wars, every target to re-measure, for a wording problem).
+
+### 24.2 The awakening quarrel waits for strength (the critic's F1; amends 22.1 item 3)
+
+**Why** (the critic's F1). With the orcs' first colony freed from pressure (P3-05 23.2), 22.1's hold-back ("at least two standing settlements") is met a few years after the awakening, so the quarrel war is mostly declared by a camp of about 1,200 and a colony of about 144. At 0.20.0 (100 default 1024 worlds) the first orc war is declared with exactly two standing settlements in 63 worlds, and the first orc wars end **27 won, 32 lost**, 14 in a truce, 9 in a fruitless search, 1 open. The losses are mostly against humans (18 of 32) and elves (8). 21.9's odds minimum (orc 500) is no gate here: the odds discount the defender's weighted force by the attacker's aggression (m = max(1000 − 900, `odds_floor`) = 500), so a horde declares at full odds against a foe of twice its weighted force, and at its minimum against four times.
+
+**Strength.** For a claim of a on b with region G (`claim[(a, b)]`), in the step:
+
+```
+fb          = force(b) × def(G) div 1000          // 20.6 item 3: def by 6.3 for the entry of G in front(a, b); 1000 if G is not in it
+strength(a, b) = min(1000, force(a) × 1000 div max(1, fb × declare_ratio div 1000))
+```
+
+This is 20.6 item 3's odds with the aggression term m = 1000: the attacker's whole force (6.1 with 20.6 item 1's muster) against the defender's, weighted by the defence of the claimed region. With the shipped `declare_ratio` 1000, strength 1000 means force(a) ≥ fb: a fair fight by the declaration's own measure. It is a pure read of the step's state (as the odds), so `tension()` stays a pure read.
+
+**Rule** (amends 22.1 item 3). a's quarrel claim (22.1 item 2) is **held back** while n(a) < `quarrel_min_settlements` (as before) **or strength(a, b) < `quarrel_strength_permille`**. A held-back claim is treated as in 22.1 item 3, in the same three places and nowhere else: 7.2 item 3 (the candidate is chosen by the largest strain as before; if its claim is held back, a declares nothing in this step and no `declare` draw is taken), 5.4 (it reports nothing) and 7.2 item 2 (it is never the flare pair). The claim stays open, strain keeps building, b may declare on a, and from the first step in which both tests pass the claim is pursued by 7.2 like any other (21.9's odds then decide, and at strength 1000 the orcs' odds are 1000). After the first war between a and b (either side attacking) the quarrel is closed (22.1 item 1) and the test never applies again: every later claim of a, on b or anyone, is ordinary.
+
+**Field.** `history.conflict` gains **`quarrel_strength_permille`** int(0, 1000), appended after `quarrel_min_settlements`, shipped **1000** (taste); 0 turns the test off. The default of hand-made tuning (tests built in code) is 0, off. It is the data lever: at 700 the orcs start their quarrel against a foe of up to 1/0.7 of their force.
+
+**Measured** (the spec writer's prototype: `proto51.py`, the test writer's P3-06 reference at 0.20.0 with this test in its `held_back`, recomputing the history of the stored 0.20.0 worlds; the unchanged reference reproduces them byte for byte; the other P5-01 items are not in it). The figures:
+
+| 100 default 1024 worlds, seeds 0–99 | 0.20.0 (stored) | gate on the discounted odds (20.6's odds at 1000) | **this rule** (strength at 1000) |
+| --- | --- | --- | --- |
+| first orc war: won / lost / truce / search / open | 27 / 32 / 14 / 9 / 1 | 22 / 33 / 11 / 9 / 1 | **28 / 18** / 15 / 9 / 2 |
+| first wars declared with two standing settlements: won / lost | 19 / 29 | 14 / 22 | 13 / 7 |
+| T5: orc wins / losses | 168 / 95 | 138 / 100 | **153 / 65** |
+| T9 restated (23.1) | 7 | 4 | **6** |
+| T10 restated | 0 | 0 | **0** |
+| T11 median (years) | 9 | 9 | **9** |
+| first orc declaration: median years after the awakening; worlds with one (T8) | 59; 83 | 104.5; 76 | 181; 72 |
+| orc declarations in all | 388 | 343 | 308 |
+| orc standing settlements; people at E | 859; 1,961,612 | 827; 1,725,603 | 911; 2,068,262 |
+
+The discounted odds at 1000 delay the war (the orcs grow) but do not make it winnable: at m = 500 it still lets a horde attack a foe of twice its weighted force, and its first wars are lost more often than at 0.20.0. The undiscounted test turns 27 / 32 into 28 / 18 and every orc target holds; its cost is time: the first declaration comes a median 181 years after the awakening (59 at 0.20.0), and 11 fewer worlds see an orc declaration at all (P5-01 section 10, question 1).
+
+**Targets** (P5-01 T5, T9, T10, T11, T12): first orc wars won at least as often as lost (0.20.0: 27 / 32); T9 at most 7 and T10 0 by the restated definitions (23.1), not worse than at 0.20.0; T11's median below 100 years (0.20.0: 9). T8 is reported (Paul: "71% is fine", 2026-11-21).
+
+**Reading chosen, and its risk.** 21.12 item 3a is kept: while the quarrel claim has the largest strain and is held back, a declares nothing, also not on another claim. The gate can hold for long where the neighbour is far stronger (a human kingdom of the last age), and in that time the orcs found colonies (their first acts, T11), grow and may be attacked. If validation finds T10 or T8 fall too far through such waits, the next lever is data (`quarrel_strength_permille` 700); the rule change after it would be to let 7.2 item 3 take the next candidate when the largest is held back (a change for every race with a quarrel, 21.12 item 3a).
+
+**Tests** (adds to 22.10): an orc realm with three settlements, its quarrel claim on b open: with strength 999 no declaration and no `declare` draw, with 1000 the draw is taken; strength computed with def(G) of a forest goal (2000) and with G outside `front(a, b)` (1000); the tension skips the claim at 999; after a war between a and b, a claim of a on b with strength 500 is pursued (ordinary); with `quarrel_strength_permille` 0 byte-identical to r21; a race with `awakening_quarrel` 0 is unchanged.
+
+### 24.3 A dropped claim is recorded (amends 20.2 item 2 and 20.23 item 2; P3-07 24.7's "Limit")
+
+When "Declaring" finds no allowed goal (20.2 item 2), the claim c = `claim[(a, b)]` with region R_c is dropped as before, and first an event **`claim_dropped`** (kind 41, P3-04 r19 22.2) is appended: region R_c; participants a as `claimant`, b as `holder`; cause c. No war is declared; the draw was taken; nothing else changes. Template (data, salience 15): `{claimant} let the claim against {holder} over {@region} lapse.` This is the only place a claim is dropped without a war or a side's end (8.1 drops claims of an ended civilization, and 7.2 and 7.7 those of a pair whose war starts or ends; each of those is visible in the log), so with kind 41 the log tells, for every claim, whether it is still open at E (P3-07 r19 25.9). A claim on b raised again after a drop is a new claim (and, for 22.1, still the quarrel claim when the pair is the quarrel's).
+
+### 24.4 A refuge's hidden years are recorded (amends 20.1 item 2; P3-07 24.7's refuges)
+
+In the flight procedure (20.1 item 2), right after `refugees_settled` (kind 32) and the founding of the refuge h, when `hidden_years`(r_y) ≥ 1: append **`refuge_hidden`** (kind 42, P3-04 r19 22.2): region D, settlement h; participants h as `settlement`, y as `founder`; cause the `refugees_settled`; **`year` = Y (the flight's year) and `end_year` = min(`hidden_until[h]`, E) − 1**, the last year in which h is hidden within the history (20.1: h is hidden in year Y' while Y' < `hidden_until[h]`). Template (data, salience 10): `{@settlement} lay hidden from {@year} to {@end_year}.` (P3-04 W2 allows `end_year` up to E − 1 in a tick; the flight is in T6.)
+
+The span is the settlement's hiddenness as 20.1 defines it (`hidden_until` is set once and never cleared). A refuge ruined or passed to another civilization before its `end_year` was hidden until then all the same: P3-07 reads the event only for refuges standing at E. Lying low (22.3) is unchanged and still read from the flight. The faeries' concealment (20.17) is a different state and is not recorded.
+
+### 24.5 Battle tolls vary (the P3-07 critic's (b); amends 7.3 item 4 and 20.16)
+
+**Why.** Two battles between the same sides with the same local forces give the same toll to the man: "228 of the defeated and 73 of the victors fell" six times in default seed 88 (5836 to 5873). At 0.20.0, 361 of the 9,066 battles of the 100 default 1024 worlds repeat an earlier battle's sides and both tolls exactly, in 83 worlds.
+
+**Rule.** In 7.3 item 4 with 20.16, after the battle's winner is drawn:
+
+```
+s     = toll_spread_permille
+v_L   = 1000 − s + pick(draw(hist.conflict.toll, Y, w, 0, 0), 2 × s + 1)      // the loser's factor
+v_W   = 1000 − s + pick(draw(hist.conflict.toll, Y, w, 0, 1), 2 × s + 1)      // the winner's factor
+dead_L = min(F_L × loss_loser_permille div 1000, F_W × kill_max_permille div 1000) × v_L div 1000
+dead_W = min(F_W, F_L) × loss_winner_permille div 1000 × v_W div 1000
+```
+
+evaluated left to right in `int64`. With s = 0 no draw is taken and both factors are 1000 (the rule of r10). One battle per war per year (7.3 item 2), so the key (Y, w) is unique; the two draws are the stream's k = 0 and 1. Everything that reads the dead (casualties 7.4, the siege's A2, the war's dead, exhaustion, the battle's values) reads these values.
+
+**Field.** `history.conflict` gains **`toll_spread_permille`** int(0, 500), appended after 24.2's `quarrel_strength_permille` (which follows `quarrel_min_settlements`), shipped **200** (taste: a toll between 80% and 120% of the rule's). New named check after `conflict_quarrel_strain_max`: **`conflict_toll_spread`**, condition `loss_winner_permille` × (1000 + `toll_spread_permille`) ≤ min(`loss_loser_permille`, `kill_max_permille`) × (1000 − `toll_spread_permille`), message `toll_spread_permille lets the victors lose more than the defeated`. It keeps 20.16's bound: the victors never lose more than the defeated (shipped: 80 × 1200 = 96,000 ≤ 250 × 800 = 200,000). The default of hand-made tuning is 0 (off).
+
+**Stream** `hist.conflict.toll`, registered in `streams.hpp` after `hist.conflict.search` (registration changes no world byte). Key (Y, w, 0, k).
+
+**Effect.** The mean toll is unchanged (the factor's mean is 1000 up to the floor of the divisions); a war's dead, and with them its exhaustion and some endings, move from the first battle of every world. **Target** (P5-01 T16): at most 10 battles in the 100 default worlds repeat an earlier battle's sides and both tolls (0.20.0: 361); T1, T5 and the typical ranges of 15.5 as before.
+
+### 24.6 Data
+
+- `history.conflict` (`game/data/history/conflict.toml` and both fixture copies): `quarrel_strength_permille` 1000 (24.2) and `toll_spread_permille` 200 (24.5) appended after `quarrel_min_settlements`, in that order; the check `conflict_toll_spread` after `conflict_quarrel_strain_max`.
+- `history.report`: two entries appended after `settlements_ceded`, in kind order: `claim_dropped` (salience 15) and `refuge_hidden` (salience 10), with the templates of 24.3 and 24.4.
+- Race data unchanged. `content_hash` changes for every world.
+
+### 24.7 Invariants (adds to 20.13)
+
+- **(18)** Every `war_declared` has exactly one cause of kind `claim` or `claim_settlements`; that claim's region is the declaration's region, its `claimant` the `attacker` and its `holder` the `defender`. A claim with a cause of kind `claim` or `claim_settlements` (a fresh claim) is immediately followed (id + 1, same year) by the `war_declared` that cites it.
+- **(19)** Every `claim_dropped` is caused by one claim c, dated in a T2, with c's region, claimant and holder; c is cited by no `war_declared` and no fresh claim; no event cites c afterwards. At E, the claims open in the simulation's state are exactly those of P3-07 r19 25.9 item 2's list (the reference compares its state).
+- **(20)** Every `refugees_settled` of a race with `hidden_years` ≥ 1 is followed (id + 1) by one `refuge_hidden` with its settlement, founder and region, caused by it, with `year` its year and `end_year` = min(year + `hidden_years`(race), E) − 1; no other `refuge_hidden` exists.
+- **(21)** Every `battle` and `battle_at_pass` has `winner_dead` ≤ `loser_dead` whenever `conflict_toll_spread` holds (20.16 as before).
+- (15) and (16) read the fresh claim as a claim, as every rule does (23.2: kinds 20 and 39 alike); (16)'s "claims against its quarrel neighbour" is met by the first claim, fresh or not.
+
+### 24.8 Tests (adds to 23.7)
+
+1. 24.1: a claim on R1, R1 made weary for b before the declaration (three futile wars): the declaration on R2 is preceded by a fresh claim on R2 caused by the old claim and by R2's owner event, and cites the fresh claim only (and the last peace); the same with R1 lost by b (b's last settlement in R1 sacked by a third party) and with R1 b's new capital region; G held by a third party with b's settlement s7: a fresh kind 39 with s7; G = R_c: no fresh claim; a flare-up war re-aimed: a fresh claim before it. Reference self-check: with 24.1 switched off the rows are equal but for the fresh claims, the ids after them and the declarations' claim causes.
+2. 24.2: the gate's cases (24.2's own list).
+3. 24.3: a declaration with no allowed goal writes `claim_dropped` (cause the claim, the claim's region) and no war; the draw was taken (the next draw of `hist.conflict.declare` is unchanged); a claim raised again later is ordinary, and still the quarrel claim when the pair is the quarrel's.
+4. 24.4: a flight of an orc refuge in 5891 at E = 6000 writes `refuge_hidden` with `end_year` 5990 (hidden years 100); a goblin refuge in 5891 writes `end_year` 5999 (300 years, cut at E); a race with `hidden_years` 0 writes none; P3-07's refuge line reads `; found 5991` and `; hidden`.
+5. 24.5: with s = 200 and fixed forces, the factor for a few hand-picked keys (the reference's values), the bounds 800 and 1200 reached for u's high word 0 and 2^32 − 1; with s = 0 no `toll` draw (the next `battle` draw unchanged); two battles of one war in different years with equal forces give different tolls for the reference's seed; `conflict_toll_spread` fails for `loss_winner_permille` 200, `loss_loser_permille` 250, s 200, and passes for the shipped values.
+6. Property tests (16.2): invariants (18) to (21) on every property world; golden `p3-06-conflict.txt` re-recorded by the reference (every history line moves through 24.5's tolls, and every world with orcs through 24.2).
+
+### 24.9 Effect on output
+
+Every world changes: the `history.conflict` and `history.report` data change `content_hash`, the P0 empty worlds included. History bytes change from the first battle of every world (24.5), at every re-aimed declaration (24.1), at every claim dropped at a declaration (24.3), at every flight (24.4) and, in every world with orcs, where 24.2 holds a quarrel claim back. Together with P5-01's other items (names, region names, the `became_city` template, `flare_min_years`) no world keeps a history byte of 0.20.0.
+
 ## Appendix A. Proposals entries (added to `docs/design/proposals.md` with this spec)
 
 - "History: wars are limited, fought for a claimed region, and end with the active phase" (questions 1 and 2).
@@ -1901,3 +2020,7 @@ New section 23 (`docs/specs/p3-11-followups.md`). 23.1: the orc targets for P3-1
 ## Revision note r21 (2026-11-22, text after the P3-11 validation and the lead's ruling)
 
 Text only; no rule change. 23.1: the results measured at 0.20.0 beside the targets (T11 median 9, T9 11, T10 3, T5 168 / 95, T8 83, T1 224‰, quick aim wins 0), the lead's ruling of 2026-11-22 (both misses accepted; T9 and T10 restated for later measurements: one standing orc settlement with no war won and nothing sacked, 6 worlds; silent after E − 250 with at most two standing settlements, 0 worlds), and the 0.19.0 count of 200-year silences, 89 by T11's definition. 15.5: the typical ranges at 0.20.0 from the P3-11 validation's 5.1. 23.2: the settlements listed are the holder's standing settlements in the region that are visible and not hidden; 23.2 and 23.3 list at most 62 settlements (64 participants in all).
+
+## Revision note r22 (2026-11-22, P5-01; generator 0.21.0)
+
+New section 24 (`docs/specs/p5-01-followups.md` items 1, 2, 7 and 8): a fresh claim on a re-aimed war's goal, caused by the old claim, which the war cites (24.1; Paul's decision 6 of 2026-11-22, replacing 23.4's reading (a)); the awakening quarrel claim also held back while the realm's strength (the odds without the aggression discount) is below `quarrel_strength_permille` (24.2); kind 41 `claim_dropped` where 20.2 item 2 drops a claim (24.3) and kind 42 `refuge_hidden` at every flight (24.4); a keyed factor on each side's battle toll, `toll_spread_permille` and stream `hist.conflict.toll` (24.5); data, invariants (18) to (21), tests and effect (24.6 to 24.9). No schema change; no earlier section is renumbered.
