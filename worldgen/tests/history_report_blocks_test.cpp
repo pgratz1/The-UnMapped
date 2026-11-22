@@ -8,10 +8,6 @@
 // carry the note of history_note(view, event, c) (R1); the generations note needs c among the participants
 // (R2).
 
-#include "p3_07_switch.hpp"
-
-#if UNMAPPED_P3_07_REPORT
-
 #include <doctest/doctest.h>
 
 #include <cstdint>
@@ -113,7 +109,7 @@ TEST_CASE("P3-07 14.1 items 1 and 7: escaping of a region name and a template li
     CHECK(event_line(f, 35) == "2600 e35 landing/30: Gutrot Clans landed on Islet Rock. {@rg6 civilization=c3}");
 }
 
-TEST_CASE("P3-07 6.2, 6.3, 6.4, 6.5 and 14.1 item 2 on H1: header, [settings], [ages], [phases]") {
+TEST_CASE("P3-07 6.2, 6.3, 6.4, 6.5, r17 24.4 and 24.6 on H1: header, [settings], [ages], [phases] at full only") {
     const std::string s = summary("h1-war-and-ruin");
     const std::vector<std::string> lines = hrtest::lines_of(s);
     REQUIRE(lines.size() > 3U);
@@ -127,10 +123,17 @@ TEST_CASE("P3-07 6.2, 6.3, 6.4, 6.5 and 14.1 item 2 on H1: header, [settings], [
                                         "divine_activity = normal", "divine_script =", "generator_version = 0.20.0"});
     CHECK(block(s, "[ages]") ==
           std::vector<std::string>{
-              "a1 The Age of Elves: 0-1499, 1500 years; Elves (ra1) made by Fielie (g1, good); 1 civilization founded",
+              "a1 The Age of Elves: 0-1499, 1500 years; Elves (ra1) made by Fielie (g1, good); 1 civilization founded: "
+              "1 at the awakening, 0 by secession",
               "a2 The Age of Goblins: 1500-2999, 1500 years; Goblins (ra2) made by Krok (g2, evil); 2 civilizations "
-              "founded"});
-    CHECK(block(s, "[phases]") == std::vector<std::string>{
+              "founded: 2 at the awakening, 0 by secession"});
+    // 24.4: [phases] at full only; the chronicle before the civilization blocks
+    CHECK(s.find("\n[phases]\n") == std::string::npos);
+    CHECK(s.find("\n[chronicle]\n") < s.find("\n[civilizations]\n"));
+    const std::string f = full("h1-war-and-ruin");
+    CHECK(f.find("\n[ages]\n") < f.find("\n[phases]\n"));
+    CHECK(f.find("\n[phases]\n") < f.find("\n[chronicle]\n"));
+    CHECK(block(f, "[phases]") == std::vector<std::string>{
                                       "p1 a1 opening 0-149, 150 years; trigger e1; 4 events",
                                       "p2 a1 quiet 150-1499, 1350 years; 2 events",
                                       "p3 a2 opening 1500-1649, 150 years; trigger e7; 8 events",
@@ -146,6 +149,9 @@ TEST_CASE("P3-07 6.6, 7.1-7.3 on H1: the three civilization blocks") {
     const std::string s = summary("h1-war-and-ruin");
     // c1: two runs at the peak of 3 regions (the first printed); a tie of salience 70 broken by id (e22
     // before e24); quiet_stretch milestones with 0 and 1 generations (elves: 500 years a generation)
+    // c1 (24.5): wars line, adversaries at summary (same first year: no; f4 a reserved type), milestones: the
+    // founding, the longest quiet stretch (e33, 450 years, one generation), then own deeds by salience with at most
+    // two of a kind (two declarations of salience 70, then the settlement_founded of id 3 among three of 40)
     CHECK(civ_block(s, 1) ==
           std::vector<std::string>{
               "c1 Finen",
@@ -156,49 +162,63 @@ TEST_CASE("P3-07 6.6, 7.1-7.3 on H1: the three civilization blocks") {
               "  peak regions: 3, 300-1699",
               "  peak population: 1920 in 2049",
               "  settlements: 3 founded, 3 held at the end, 1 ruined",
-              "  relations: 5 (enmity 1, pact 1, peace 1, war 2)",
-              "    pact: Finen (c1), f4, since 100, e4",
-              "    enmity: Finen (c1), Gutrot Clans (c3), since 1600, e14",
-              "    war: Finen (c1), The Skib Horde (c2), 2001-2009, e22 to e30",
-              "    war: Finen (c1), Gutrot Clans (c3), 2003-2029, e24 to e31",
-              "    peace: Finen (c1), Gutrot Clans (c3), since 2030, e31",
+              "  wars: 2 declared, 0 defended; won 1, lost 0, drawn 1, open 0",
+              "  adversaries: 3",
+              "    f4: no war; now none",
+              "    Gutrot Clans (c3): 1 war, won 0, lost 0, drawn 1, open 0, 2003-2029; now at peace",
+              "    The Skib Horde (c2): 1 war, won 1, lost 0, drawn 0, open 0, 2001-2009; now none",
               "  events: 19",
               "  fate: alive in 3000: 3 regions, 3 settlements, population 1920",
               "  milestones:",
               "    0 e2 civ_founded: The Elves founded Finen in Elder Vale.",
-              "    1650-1949 e15 quiet_stretch: For 300 years, from 1650 to 1949, the land was quiet, and two realms "
-              "kept the peace. (Finen: no new generation of rulers.)",
+              "    0 e3 settlement_founded: Finen founded Voeledell in Elder Vale.",
               "    2001 e22 war_declared: Finen declared war on the Skib Horde over Gr\\xC3\\xA9y \\\\ Moor. (Claimed "
               "since 1999.)",
+              "    2003 e24 war_declared: Finen declared war on Gutrot Clans over the Ashen Fields. (Claimed since "
+              "2002.)",
+              "    2005 e27 settlement_captured: Finen took Redwall from the Skib Horde; three died.",
               "    2010 e29 sacked: Finen sacked Skrisligg Pit of the Skib Horde; 150 died and 50 fled.",
               "    2010 e30 civ_conquered: The Skib Horde fell to Finen.",
               "    2050-2499 e33 quiet_stretch: For 450 years, from 2050 to 2499, the land was quiet, and two realms "
               "kept the peace. (Finen: one new generation of rulers.)"});
-    // c2: ended (fate: ended with the sentence), capital none, peak population 450 in 1649
+    // the relation rows stay at full in place of the adversary lines
+    const std::vector<std::string> c1_full = civ_block(full("h1-war-and-ruin"), 1);
+    REQUIRE(c1_full.size() > 15U);
+    CHECK(std::vector<std::string>(c1_full.begin() + 9, c1_full.begin() + 15) ==
+          std::vector<std::string>{"  relations: 5 (enmity 1, pact 1, peace 1, war 2)",
+                                   "    pact: Finen (c1), f4, since 100, e4",
+                                   "    enmity: Finen (c1), Gutrot Clans (c3), since 1600, e14",
+                                   "    war: Finen (c1), The Skib Horde (c2), 2001-2009, e22 to e30",
+                                   "    war: Finen (c1), Gutrot Clans (c3), 2003-2029, e24 to e31",
+                                   "    peace: Finen (c1), Gutrot Clans (c3), since 2030, e31"});
+    // c2: ended (last capital, fate with the sentence), lost its one war, eight milestones (its ending first)
     CHECK(civ_block(s, 2) ==
           std::vector<std::string>{
               "c2 The Skib Horde",
               "  race: Goblin (ra2)",
               "  home: Gr\\xC3\\xA9y \\\\ Moor (rg3), grassland",
               "  founded: 1500 in The Age of Goblins (a2), e8",
-              "  capital: none",
+              "  last capital: none",
               "  peak regions: 1, 1500-2004",
               "  peak population: 450 in 1649",
               "  settlements: 2 founded, 0 held at the end, 1 ruined",
-              "  relations: 1 (war 1)",
-              "    war: Finen (c1), The Skib Horde (c2), 2001-2009, e22 to e30",
+              "  wars: 0 declared, 1 defended; won 0, lost 1, drawn 0, open 0",
+              "  adversaries: 1",
+              "    Finen (c1): 1 war, won 0, lost 1, drawn 0, open 0, 2001-2009; now none",
               "  events: 11",
               "  fate: ended in 2010, e30: The Skib Horde fell to Finen.",
               "  milestones:",
               "    1500 e8 civ_founded: The Goblins founded the Skib Horde in Gr\\xC3\\xA9y \\\\ Moor.",
               "    1500 e9 settlement_founded: The Skib Horde founded Skrisligg Pit in Gr\\xC3\\xA9y \\\\ Moor.",
+              "    1510 e12 settlement_founded: The Skib Horde founded Redwall in Gr\\xC3\\xA9y \\\\ Moor.",
+              "    1999 e20 claim: Finen laid claim to Gr\\xC3\\xA9y \\\\ Moor, held by the Skib Horde.",
               "    2001 e22 war_declared: Finen declared war on the Skib Horde over Gr\\xC3\\xA9y \\\\ Moor. (Claimed "
               "since 1999.)",
               "    2005 e27 settlement_captured: Finen took Redwall from the Skib Horde; three died.",
               "    2010 e29 sacked: Finen sacked Skrisligg Pit of the Skib Horde; 150 died and 50 fled.",
               "    2010 e30 civ_conquered: The Skib Horde fell to Finen."});
-    // c3: a one-year peak of regions (an islet held 2600-2600), a tie of peak population (1000 in 1999 and
-    // 2499: the earlier), 12 and 18 generations (goblins: 25 years), a standing settlement it lost
+    // c3: a one-year peak of regions, the earlier of two peak census years, its longest stretch (e33: 18
+    // generations of 25 years) and not the other (e15)
     CHECK(civ_block(s, 3) ==
           std::vector<std::string>{
               "c3 Gutrot Clans",
@@ -209,16 +229,16 @@ TEST_CASE("P3-07 6.6, 7.1-7.3 on H1: the three civilization blocks") {
               "  peak regions: 2, 2600-2600",
               "  peak population: 1000 in 1999",
               "  settlements: 2 founded, 1 held at the end, 0 ruined",
-              "  relations: 3 (enmity 1, peace 1, war 1)",
-              "    enmity: Finen (c1), Gutrot Clans (c3), since 1600, e14",
-              "    war: Finen (c1), Gutrot Clans (c3), 2003-2029, e24 to e31",
-              "    peace: Finen (c1), Gutrot Clans (c3), since 2030, e31",
+              "  wars: 0 declared, 1 defended; won 0, lost 0, drawn 1, open 0",
+              "  adversaries: 1",
+              "    Finen (c1): 1 war, won 0, lost 0, drawn 1, open 0, 2003-2029; now at peace",
               "  events: 13",
               "  fate: alive in 3000: 1 region, 1 settlement, population 1000",
               "  milestones:",
               "    1500 e10 civ_founded: The Goblins founded Gutrot Clans in the Ashen Fields.",
-              "    1650-1949 e15 quiet_stretch: For 300 years, from 1650 to 1949, the land was quiet, and two realms "
-              "kept the peace. (Gutrot Clans: 12 new generations of rulers.)",
+              "    1500 e11 settlement_founded: Gutrot Clans founded Ghashpit in the Ashen Fields.",
+              "    1600 e13 settlement_founded: Gutrot Clans founded Mossgate in Low Marsh.",
+              "    1600 e14 claim: Gutrot Clans laid claim to Low Marsh, held by Finen.",
               "    1900 e18 oath: Gutrot Clans swore an oath\\x20",
               "    1950 e19 silence:\\x20",
               "    2003 e24 war_declared: Finen declared war on Gutrot Clans over the Ashen Fields. (Claimed since "
@@ -236,9 +256,16 @@ TEST_CASE("P3-07 6.7, 21.4, 22.2 on H1: the chronicle, causes, :all, values, not
     const std::vector<std::string> cs = block(s, "[chronicle]");
     CHECK(std::vector<std::string>(cf.begin(), cf.begin() + 5) ==
           std::vector<std::string>{"threshold = 0", "events = 35", "shown = 35", "== a1 The Age of Elves: 0-1499",
-                                   "-- p1 opening: 0-149"});
+                                   "-- p1 opening: 0-149, 150 years; trigger e1; 4 events"});
     CHECK(std::vector<std::string>(cs.begin(), cs.begin() + 3) ==
-          std::vector<std::string>{"threshold = 20", "events = 35", "shown = 33"});
+          std::vector<std::string>{"threshold = 20", "events = 35", "shown = 30"});
+    // 24.3: claims (e14, e20, e23) are not in the summary chronicle; the declaration's note reads the claim
+    CHECK(event_line(s, 14).empty());
+    CHECK(event_line(s, 20).empty());
+    CHECK(event_line(s, 23).empty());
+    CHECK(event_line(s, 22) == event_line(f, 22));
+    // 24.2: the last battle of e22's war (its only battle, e25) is shown through the war's frame
+    CHECK(event_line(s, 25) == event_line(f, 25));
     CHECK(event_line(f, 3) == "0 e3 settlement_founded/40: Finen founded Voeledell in Elder Vale. {@rg1 @s1 "
                               "settlement=s1 founder=c1 population=200} [causes e2]");
     CHECK(event_line(f, 21) == "2000 e21 flare_up/50: In 2000 tensions flared into 50 years of upheaval. (The claim "
@@ -257,13 +284,16 @@ TEST_CASE("P3-07 6.7, 21.4, 22.2 on H1: the chronicle, causes, :all, values, not
     // a flare-up whose first cause is not a claim has no note; a one-year phase heading; plurals
     CHECK(event_line(f, 34) == "2500 e34 flare_up/50: In 2500 tensions flared into one year of upheaval. {years=1} "
                                "[causes e32]");
-    CHECK(contains_line(cf, "-- p7 flare_up: 2500-2500"));
+    CHECK(contains_line(cf, "-- p7 flare_up: 2500-2500, 1 year; trigger e34; 1 event"));
+    CHECK(contains_line(cs, "-- p7 flare_up: 2500-2500, 1 year; trigger e34; 1 event"));
     CHECK(contains_line(cf, "== a2 The Age of Goblins: 1500-2999"));
-    CHECK(contains_line(cf, "-- p9 final: 2900-2999"));
+    CHECK(contains_line(cf, "-- p9 final: 2900-2999, 100 years; 0 events"));
+    CHECK(contains_line(cs, "-- p2 quiet: 150-1499, 1350 years; 2 events"));
     // summary: the two events of salience 10 are left out, one per phase (pl "1 more event")
     CHECK(event_line(s, 17).empty());
     CHECK(event_line(s, 32).empty());
-    CHECK(starting(cs, "(") == std::vector<std::string>{"(1 more event not shown)", "(1 more event not shown)"});
+    CHECK(starting(cs, "(") == std::vector<std::string>{"(1 more event not shown)", "(2 more events not shown)",
+                                                       "(2 more events not shown)"});
     CHECK(starting(cf, "(").empty());
 }
 
@@ -276,7 +306,13 @@ TEST_CASE("P3-07 6.8 on H1: [present] at both levels") {
                                    "regions: 6; held 4, free 2",
                                    "settlements: 7; thriving 2, declining 3, ruined 1, faded 1",
                                    "settlement kinds: hamlet 2, village 2, town 1, city 1, fortress 1",
-                                   "largest settlement: Voeledell (s1), population 1500"});
+                                   "largest settlement: Voeledell (s1), population 1500",
+                                   "ruins: 1",
+                                   "  s3 Skrisligg Pit in Gr\\xC3\\xA9y \\\\ Moor (rg3): ruined 2010, e29 sacked, by Finen (c1); "
+                                   "last held by The Skib Horde (c2)",
+                                   "refuges: 0",
+                                   "open wars: 0",
+                                   "standing claims: 0"});
     CHECK(block(full("h1-war-and-ruin"), "[present]") ==
           std::vector<std::string>{
               "year: 3000",
@@ -296,17 +332,23 @@ TEST_CASE("P3-07 6.8 on H1: [present] at both levels") {
               "  s2 Aelith: fortress, declining, population 300, Finen (c1), at 210 40 in Stone Teeth (rg2), founded "
               "200 by Finen (c1)",
               "  s3 Skrisligg Pit: hamlet, ruined, population 0, no owner, at 300 310 in Gr\\xC3\\xA9y \\\\ Moor (rg3), "
-              "founded 1500 by The Skib Horde (c2), ruined 2010, e29",
+              "founded 1500 by The Skib Horde (c2), ruined 2010, e29, last held by The Skib Horde (c2)",
               "  s4 Ghashpit: town, thriving, population 1000, Gutrot Clans (c3), at 400 90 in The Ashen Fields (rg4), "
               "founded 1500 by Gutrot Clans (c3)",
               "  s5 Old Ford: village, faded, population 0, no owner, at 150 450 in Low Marsh (rg5), founded 300 by "
-              "Finen (c1)",
+              "Finen (c1), last held by Finen (c1)",
               "  s6 Mossgate: village, declining, population 50, no owner, at 160 470 in Low Marsh (rg5), founded 1600 "
               "by Gutrot Clans (c3)",
               "  s7 Redwall: hamlet, declining, population 120, Finen (c1), at 320 330 in Gr\\xC3\\xA9y \\\\ Moor (rg3), "
               "founded 1510 by The Skib Horde (c2)",
               "settlement kinds: hamlet 2, village 2, town 1, city 1, fortress 1",
-              "largest settlement: Voeledell (s1), population 1500"});
+              "largest settlement: Voeledell (s1), population 1500",
+              "ruins: 1",
+              "  s3 Skrisligg Pit in Gr\\xC3\\xA9y \\\\ Moor (rg3): ruined 2010, e29 sacked, by Finen (c1); last held by "
+              "The Skib Horde (c2)",
+              "refuges: 0",
+              "open wars: 0",
+              "standing claims: 0"});
 }
 
 TEST_CASE("P3-07 9 on H1: [stats] values worked out from the rows") {
@@ -316,7 +358,7 @@ TEST_CASE("P3-07 9 on H1: [stats] values worked out from the rows") {
         {"phases_flare", 2}, {"phases_final", 1}, {"simulated_years", 451}, {"simulated_permille", 150},
         {"quiet_years", 2549}, {"flare_years", 51}, {"events", 35}, {"events_omen", 1}, {"events_landing", 1},
         {"events_caused", 17}, {"cause_links", 18}, {"events_per_1000_simulated_years", 77},
-        {"summary_threshold", 20}, {"summary_events", 33}, {"civilizations", 3}, {"civilizations_alive", 2},
+        {"summary_threshold", 20}, {"summary_events", 30}, {"civilizations", 3}, {"civilizations_alive", 2},
         {"civilizations_ended", 1}, {"civilizations_elf", 1}, {"civilizations_goblin", 2}, {"civilizations_dwarf", 0},
         {"civ_lifetime_max", 3000}, {"civ_regions_peak_max", 3}, {"civ_population_peak_max", 1920},
         {"settlements", 7}, {"settlements_standing", 5}, {"settlements_thriving", 2}, {"settlements_declining", 3},
@@ -361,33 +403,39 @@ TEST_CASE("P3-07 6.6, 6.8, 14.1 item 3 on H2: the minimal world, every 'none' fo
                                  "c1 The Kingdom of Alird", "  race: Human (ra1)",
                                  "  home: Northeast Downs (rg1), grassland", "  founded: 0 in The Age of Humans (a1), e2",
                                  "  capital: none", "  peak regions: 0", "  peak population: 0",
-                                 "  settlements: 0 founded, 0 held at the end, 0 ruined", "  relations: none",
+                                 "  settlements: 0 founded, 0 held at the end, 0 ruined",
+                                 "  wars: 0 declared, 0 defended; won 0, lost 0, drawn 0, open 0", "  adversaries: none",
                                  "  events: 1", "  fate: alive in 2000: 0 regions, 0 settlements, population 0",
                                  "  milestones:",
                                  "    0 e2 civ_founded: The Humans founded the Kingdom of Alird in Northeast Downs."});
-    CHECK(block(s, "[phases]") == std::vector<std::string>{"p1 a1 opening 0-149, 150 years; trigger e1; 2 events",
+    CHECK(block(s, "[phases]").empty());
+    CHECK(contains_line(civ_block(full("h2-minimal"), 1), "  relations: none"));
+    CHECK(block(full("h2-minimal"), "[phases]") == std::vector<std::string>{"p1 a1 opening 0-149, 150 years; trigger e1; 2 events",
                                                            "p2 a1 final 150-1999, 1850 years; 0 events"});
     CHECK(block(s, "[chronicle]") ==
           std::vector<std::string>{
-              "threshold = 20", "events = 2", "shown = 2", "== a1 The Age of Humans: 0-1999", "-- p1 opening: 0-149",
+              "threshold = 20", "events = 2", "shown = 2", "== a1 The Age of Humans: 0-1999",
+              "-- p1 opening: 0-149, 150 years; trigger e1; 2 events",
               "0 e1 awakening/100: Wealstuld awakened the Humans in Northeast Downs. {@rg1 race=ra1 creator=g1}",
               "0 e2 civ_founded/80: The Humans founded the Kingdom of Alird in Northeast Downs. {@rg1 civilization=c1 "
               "race=ra1} [causes e1]",
-              "-- p2 final: 150-1999"});
+              "-- p2 final: 150-1999, 1850 years; 0 events"});
     CHECK(block(s, "[present]") == std::vector<std::string>{
                                        "year: 2000", "civilizations alive: 1 of 1",
                                        "c1 The Kingdom of Alird: 0 regions, 0 settlements, population 0",
                                        "regions: 2; held 0, free 2",
                                        "settlements: 0; thriving 0, declining 0, ruined 0, faded 0",
                                        "settlement kinds: hamlet 0, village 0, town 0, city 0, fortress 0",
-                                       "largest settlement: none"});
+                                       "largest settlement: none", "ruins: 0", "refuges: 0", "open wars: 0",
+                                       "standing claims: 0"});
     CHECK(block(full("h2-minimal"), "[present]") ==
           std::vector<std::string>{"year: 2000", "civilizations alive: 1 of 1",
                                    "c1 The Kingdom of Alird: 0 regions, 0 settlements, population 0",
                                    "regions: 2; held 0, free 2", "  rg1 Northeast Downs: free", "  rg2 Isle of Rest: free",
                                    "settlements: 0; thriving 0, declining 0, ruined 0, faded 0",
                                    "settlement kinds: hamlet 0, village 0, town 0, city 0, fortress 0",
-                                   "largest settlement: none"});
+                                   "largest settlement: none", "ruins: 0", "refuges: 0", "open wars: 0",
+                                   "standing claims: 0"});
     const auto st = hrtest::stats_of(s);
     CHECK(st.at("simulated_years") == 2000);
     CHECK(st.at("simulated_permille") == 1000);
@@ -425,43 +473,49 @@ TEST_CASE("P3-07 7.5 on H3, H3b, H3c: islets, runs of 1,001 and 1,000 years, a h
     CHECK(civ_block(summary("h3-runaway"), 2)[5] == "  peak regions: 10, 1001-1500");
 }
 
-TEST_CASE("P3-07 7.4, 21.3 on H4 and H5: the budget (T = 76) and saturation (T = 100)") {
-    // H4: 1,000 notes of salience (37 i) mod 101 plus H2's two events (100 and 80): n(76) = 248 + 2 = 250, n(75)
-    // = 260; the age floor (20 events of the one age) is inside C(76)
-    std::int64_t n76 = 2, n75 = 2;
+TEST_CASE("P3-07 7.4, 21.3, r17 24.3 on H4 and H5: the budget, saturation and the quiet stretch outside the threshold") {
+    // H4: 1,000 notes of salience (37 i) mod 101 (e4 ... e1003), H2's two events (100 and 80) and a quiet stretch
+    // (e3, salience 20). The notes alone have n(76) = 248 (14.1 item 4); r17's set always holds the quiet
+    // stretch, which is no candidate: |F u C(76)| = 1 + 250 = 251 > 250 and |F u C(77)| <= 250, so T = 77.
+    std::int64_t n76 = 2, n77 = 2;
     for (std::int64_t i = 1; i <= 1000; ++i) {
         n76 += (37 * i) % 101 >= 76 ? 1 : 0;
-        n75 += (37 * i) % 101 >= 75 ? 1 : 0;
+        n77 += (37 * i) % 101 >= 77 ? 1 : 0;
     }
     CHECK(n76 == 250);
-    CHECK(n75 == 260);
+    CHECK(n77 + 1 == 241);
     const std::string s4 = summary("h4-budget");
     const auto st4 = hrtest::stats_of(s4);
-    CHECK(st4.at("summary_threshold") == 76);
-    CHECK(st4.at("summary_events") == 250);
+    CHECK(st4.at("summary_threshold") == 77);
+    CHECK(st4.at("summary_events") == 241);
     const std::vector<std::string> c4 = block(s4, "[chronicle]");
     CHECK(std::vector<std::string>(c4.begin(), c4.begin() + 3) ==
-          std::vector<std::string>{"threshold = 76", "events = 1002", "shown = 250"});
-    CHECK(contains_line(c4, "(752 more events not shown)"));
-    CHECK(hrtest::stats_of(full("h4-budget")).at("summary_threshold") == 76);  // also at full (9)
+          std::vector<std::string>{"threshold = 77", "events = 1003", "shown = 241"});
+    CHECK(contains_line(c4, "(762 more events not shown)"));
+    CHECK(hrtest::stats_of(full("h4-budget")).at("summary_threshold") == 77);  // also at full (9)
     CHECK(block(full("h4-budget"), "[chronicle]")[0] == "threshold = 0");
     std::size_t lines4 = 0;
     for (const std::string& l : c4) lines4 += hrtest::is_event_line(l) ? 1U : 0U;
-    CHECK(lines4 == 250U);
+    CHECK(lines4 == 241U);
+    // 24.11 item 4: the quiet stretch is shown at summary, far below T
+    CHECK(event_line(s4, 3) == "50-99 e3 quiet_stretch/20: For 50 years, from 50 to 99, the land was quiet; one realm "
+                               "held it. {realm=c1 years=50 realms=1}");
     // a shown note: i = 3 has salience 111 mod 101 = 10 (hidden); i = 30 has 1110 mod 101 = 100 (shown)
-    CHECK(event_line(s4, 2 + 3).empty());
-    CHECK(event_line(s4, 2 + 30) == "100 e32 note/100: Note 30 was written down. {n=30}");
-    CHECK(event_line(full("h4-budget"), 2 + 3) == "100 e5 note/10: Note three was written down. {n=3}");
-    // H5: 300 heralds of salience 100 and the awakening: no t in [20, 100] keeps the set within 250
+    CHECK(event_line(s4, 3 + 3).empty());
+    CHECK(event_line(s4, 3 + 30) == "100 e33 note/100: Note 30 was written down. {n=30}");
+    CHECK(event_line(full("h4-budget"), 3 + 3) == "100 e6 note/10: Note three was written down. {n=3}");
+    // H5: 300 heralds of salience 100 and the awakening: no t in [20, 100] keeps the set within 250; the floor
+    // takes the age's own race first (24.3 item 3: the awakening and the founding) and the quiet stretch is in F
     const std::string s5 = summary("h5-saturated");
     const auto st5 = hrtest::stats_of(s5);
     CHECK(st5.at("summary_threshold") == 100);
-    CHECK(st5.at("summary_events") == 301);
+    CHECK(st5.at("summary_events") == 303);
     const std::vector<std::string> c5 = block(s5, "[chronicle]");
     CHECK(std::vector<std::string>(c5.begin(), c5.begin() + 3) ==
-          std::vector<std::string>{"threshold = 100", "events = 302", "shown = 301"});
-    CHECK(contains_line(c5, "(1 more event not shown)"));  // the civ_founded of salience 80
-    CHECK(event_line(s5, 2).empty());
+          std::vector<std::string>{"threshold = 100", "events = 303", "shown = 303"});
+    CHECK(starting(c5, "(").empty());
+    CHECK_FALSE(event_line(s5, 2).empty());
+    CHECK_FALSE(event_line(s5, 3).empty());
 }
 
 TEST_CASE("P3-07 21.4, 22.3, 23 items 3, 4, 4a on H6: the declaration and flare-up notes") {
@@ -516,7 +570,15 @@ TEST_CASE("P3-07 21.2, 21.3, 22.5a, 23 item 2 on H6: companions, searches, hollo
     const std::string s = summary("h6-notes");
     const auto st = hrtest::stats_of(s);
     CHECK(st.at("summary_threshold") == 20);
-    CHECK(st.at("summary_events") == 49);
+    CHECK(st.at("summary_events") == 39);
+    // r17 24.3: no claim at summary (ten claims, e16 ... e44); the flare-ups' and declarations' notes read them
+    for (const std::int64_t claim : {16, 20, 23, 27, 30, 33, 36, 38, 41, 44}) {
+        CAPTURE(claim);
+        CHECK(event_line(s, claim).empty());
+        CHECK_FALSE(event_line(full("h6-notes"), claim).empty());
+    }
+    // the open war's one battle is its last: shown through the war's frame (24.2)
+    CHECK_FALSE(event_line(s, 46).empty());
     // the first search (salience 40) and its declaration are shown; the second (15) and its declaration not
     CHECK_FALSE(event_line(s, 39).empty());
     CHECK_FALSE(event_line(s, 40).empty());
@@ -533,7 +595,7 @@ TEST_CASE("P3-07 21.2, 21.3, 22.5a, 23 item 2 on H6: companions, searches, hollo
     CHECK(event_line(s, 50) == "1512 e50 refugees_settled/15: The survivors of Kuush Pit fled into hiding and founded "
                                "Hidden Burrow in East Wood. {@rg4 @s9 settlement=s9 founder=c3 origin=s7 population=30} "
                                "[causes e48]");
-    CHECK(contains_line(block(s, "[chronicle]"), "(2 more events not shown)"));
+    CHECK(contains_line(block(s, "[chronicle]"), "(4 more events not shown)"));  // p8: two claims, e42, e43
     // 21.5, 21.8, 23 item 2: e24's war ceded settlements (not hollow); two wars unfound; the open war sacked
     CHECK(st.at("wars") == 8);
     CHECK(st.at("wars_open") == 1);
@@ -597,9 +659,10 @@ TEST_CASE("P3-07 5.1: digest_history on H1 (peaks, counts, milestones, relations
     CHECK(c1.events == 19);
     CHECK(c2.events == 11);
     CHECK(c3.events == 13);
-    CHECK(c1.milestones == std::vector<std::int64_t>{2, 15, 22, 29, 30, 33});
-    CHECK(c2.milestones == std::vector<std::int64_t>{8, 9, 22, 27, 29, 30});
-    CHECK(c3.milestones == std::vector<std::int64_t>{10, 15, 18, 19, 24, 33});
+    // r17 24.5 (MILESTONES 8)
+    CHECK(c1.milestones == std::vector<std::int64_t>{2, 3, 22, 24, 27, 29, 30, 33});
+    CHECK(c2.milestones == std::vector<std::int64_t>{8, 9, 12, 20, 22, 27, 29, 30});
+    CHECK(c3.milestones == std::vector<std::int64_t>{10, 11, 13, 14, 18, 19, 24, 33});
     CHECK(c1.relations.size() == 5U);
     CHECK(c2.relations.size() == 1U);
     CHECK(c3.relations.size() == 3U);
@@ -623,4 +686,3 @@ TEST_CASE("P3-07 5.1: digest_history on H1 (peaks, counts, milestones, relations
 
 }  // TEST_SUITE
 
-#endif  // UNMAPPED_P3_07_REPORT

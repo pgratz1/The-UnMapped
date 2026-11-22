@@ -12,9 +12,12 @@ The two copies must have the same table hashes (`hash --detail`'s `table` lines)
 | `h3-runaway.toml` | H3: islets (one at 1171 dry cells, one exactly at 1172 is not), a civilization above 800 per mille for 1,001 years, another above 900 for 500, a handover in one year |
 | `h3b-runaway-1000.toml` | H3 with the first run 1,000 years long |
 | `h3c-share-ties.toml` | `share_max_*` ties: the earlier year wins over the smaller id, then the smaller id |
-| `h4-budget.toml` | H4: H2 with 1,000 notes of salience (37 i) mod 101 in one year: T = 76 |
-| `h5-saturated.toml` | H5: H2 with 300 events of salience 100: T = 100, 301 lines |
+| `h4-budget.toml` | H4: H2 with 1,000 notes of salience (37 i) mod 101 in one year and a quiet stretch (r17 24.11 item 4): T = 77 |
+| `h5-saturated.toml` | H5: H2 with 300 events of salience 100 and a quiet stretch: T = 100, 303 lines |
 | `h6-notes.toml` | 21.4, 22.3, 22.5a, 23 items 2 to 4a: declaration notes (claims of kinds 20 and 39, the claim's region different from the war's, same year and earlier, ordinals), flare-up notes (kind 20 with a `The ...` claimant, kind 39 with one and three settlements), two searches abandoned (salience 40 and 15), a peace whose cession of settlements is shown as a companion, a sack with its moved capital and refugees as companions, an open war |
+| `h8-frames.toml` | r17 24.1, 24.2, 24.11 item 1: a war of three battles, a siege, a sack with its moved capital and refugees, a peace and a tribute; a war ended by a conquest; refugees alone a candidate in a third war; a war ended by a repeated search; a capital moved after an abandonment; ruins by sack and by abandonment; two refuges |
+| `h9-realms.toml` | r17 24.5 to 24.7, 24.11 items 3, 7 to 10: three secessions in one age, the wars line with every outcome, adversaries with every state, milestones (the kind limit, ties, the longest quiet stretch with 0 and 4 generations, a realm with fewer than eight events), every standing-claim case, a settlement captured twice before its sack, a refuge, two open wars |
+| `h10-floor.toml` | r17 24.3 item 3, 24.11 item 5: an age whose candidates of salience 25 are split between its race and another; 300 chants of salience 90 in the next age (T = 91) |
 | `h7-runs.toml` | `wars_same_goal_unchanged_max` (21.8 item 5 with 22.5b): a region emptied and resettled by its holder (one run of 2) and one taken by another civilization between wars (runs of 1): key 2 |
 
 ## Format

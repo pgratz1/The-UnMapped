@@ -399,6 +399,7 @@ target_sources(worldgen-tests PRIVATE
     history_report_blocks_test.cpp
     history_report_corrupt_test.cpp
     history_report_worlds_test.cpp
+    history_report_r17_test.cpp
 )
 target_compile_definitions(worldgen-tests PRIVATE
     UNMAPPED_P3_07_FIXTURE_DIR="${CMAKE_CURRENT_SOURCE_DIR}/data/history-report"

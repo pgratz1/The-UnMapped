@@ -9,8 +9,7 @@
 // Section 16's sample is the 0.14.0 text and illustrative since 21.6 and 22.5; the golden line of
 // sample-42-1024 is the reference's 0.20.0 report (the test writer's report, R7).
 //
-// Written from the spec only. Without the report (p3_07_switch.hpp) the cases only check that the golden
-// file has their lines.
+// Written from the spec only.
 
 #include <doctest/doctest.h>
 
@@ -20,6 +19,7 @@
 #include <tuple>
 #include <map>
 #include <optional>
+#include <set>
 #include <string>
 #include <vector>
 
@@ -46,6 +46,7 @@ struct WorldCase {
     std::int64_t span;
     std::vector<std::string> races;  // empty: the default six
     wd::HistoryDetail detail;
+    std::optional<std::int64_t> civs = std::nullopt;  // --civs-per-race; nullopt: auto
 };
 
 const std::vector<std::string> SIX = {"elf", "goblin", "dwarf", "faerie", "human", "orc"};
@@ -78,6 +79,7 @@ const dbtest::TempDir& world_dir() {
     p.history.span = c.span;
     p.history.races = c.races.empty() ? SIX : c.races;
     p.history.detail = c.detail;
+    p.history.civs_per_race = c.civs;
     p.threads = threads;
     const std::string path = world_dir().file(std::string(c.name) + "-t" + std::to_string(threads) + ".db");
     const worldgen::db::Status s = worldgen::generate_world(p, shipped(), path, worldgen::db::Overwrite::replace);
@@ -97,6 +99,11 @@ const std::vector<WorldCase> CASES_1024 = {
     {"hist-races-elf-orc-1024", 3, "", 1024, 6000, {"elf", "orc"}, NORMAL},
     {"hist-dense-1024", 11, "", 1024, 6000, {}, wd::HistoryDetail::dense},
     {"sample-42-1024", 42, "", 1024, 6000, {}, NORMAL},
+    {"seed-0-1024", 0, "", 1024, 6000, {}, NORMAL},
+    {"civs4-seed-0-1024", 0, "", 1024, 6000, {}, NORMAL, 4},
+    {"civs4-seed-3-1024", 3, "", 1024, 6000, {}, NORMAL, 4},
+    {"civs4-seed-7-1024", 7, "", 1024, 6000, {}, NORMAL, 4},
+    {"civs4-seed-12-1024", 12, "", 1024, 6000, {}, NORMAL, 4},
 };
 
 void check_case(const WorldCase& c) {
@@ -107,7 +114,6 @@ void check_case(const WorldCase& c) {
     CHECK(g.report.count("summary") == 1U);
     CHECK(g.report.count("full") == (sample ? 0U : 1U));
     CHECK(g.stats.empty() == sample);
-#if UNMAPPED_P3_07_REPORT
     const auto r = hrtest::open_world(world(c));
     const std::string s = hrtest::report_of(r, hrtest::HistoryLevel::summary);
     CHECK(hrtest::sha_hex(s) == g.report.at("summary"));
@@ -125,7 +131,6 @@ void check_case(const WorldCase& c) {
         CHECK(got[i] == g.stats[i]);
     }
     hrtest::check_invariants(r, s, f);
-#endif
 }
 
 }  // namespace
@@ -136,14 +141,12 @@ TEST_CASE("P3-07 14.4: the 512 world cases against the golden file, with the inv
     for (const WorldCase& c : CASES_512) check_case(c);
 }
 
-#if UNMAPPED_P3_07_REPORT
 TEST_CASE("P3-07 13 item 8: the report does not depend on the thread count the world was generated with") {
     const WorldCase& c = CASES_512[1];
     const std::string a = hrtest::report_of(world(c, 1), hrtest::HistoryLevel::full);
     const std::string b = hrtest::report_of(world(c, 4), hrtest::HistoryLevel::full);
     CHECK(a == b);
 }
-#endif
 
 }  // TEST_SUITE
 
@@ -153,9 +156,55 @@ TEST_CASE("P3-07 14.4: the 1024 world cases and sample-42-1024 against the golde
     for (const WorldCase& c : CASES_1024) check_case(c);
 }
 
+TEST_CASE("P3-07 r17 24.11 item 2: no orphans with four civilizations per race; T, shown and declarations reported") {
+    for (const WorldCase& c : CASES_1024) {
+        if (std::string(c.name).rfind("civs4-", 0) != 0) continue;
+        const std::string name = c.name;
+        CAPTURE(name);
+        const auto r = hrtest::open_world(world(c));
+        const std::string s = hrtest::report_of(r, hrtest::HistoryLevel::summary);
+        const hrtest::Wars wars(r);
+        const std::set<std::int64_t> shown = hrtest::shown_ids(s);
+        CHECK(wars.orphans(shown) == 0);
+        std::int64_t decl = 0;
+        const auto* d = wars.view().catalogue().find("war_declared");
+        REQUIRE(d != nullptr);
+        for (const std::int64_t x : shown) decl += wars.kind(x) == d->id ? 1 : 0;
+        const auto st = hrtest::stats_of(s);
+        MESSAGE(name << ": T " << st.at("summary_threshold") << ", shown " << shown.size() << ", declarations " << decl
+                     << ", orphans " << wars.orphans(shown));
+    }
+}
+
+TEST_CASE("P3-07 r17 24.11 item 8: the seed 0 pair (c1, c2) has different milestone lists") {
+    const auto r = hrtest::open_world(world(CASES_1024[4]));
+    const std::string s = hrtest::report_of(r, hrtest::HistoryLevel::summary);
+    auto milestones = [&](std::int64_t c) {
+        std::vector<std::string> out;
+        bool in = false;
+        for (const std::string& l : hrtest::civ_block(s, c)) {
+            if (l == "  milestones:") {
+                in = true;
+                continue;
+            }
+            if (in) out.push_back(l.substr(0, l.find(':')));  // span, id and kind
+        }
+        return out;
+    };
+    const auto a = milestones(1), b = milestones(2);
+    CHECK(a.size() == 8U);
+    CHECK(b.size() == 8U);
+    CHECK(a != b);
+    // the House of Nife leads with its own deeds: its sacks of Baskeeb towns; the Baskeeb Mob with its won wars
+    // and the cession of e59 (the spec's example)
+    CHECK(std::find(b.begin(), b.end(), "    2897 e59 region_ceded") != b.end());
+    std::int64_t sacks = 0;
+    for (const std::string& x : a) sacks += x.find(" sacked") != std::string::npos ? 1 : 0;
+    CHECK(sacks == 2);
+}
+
 }  // TEST_SUITE
 
-#if UNMAPPED_P3_07_REPORT
 namespace {
 
 // 14.5 item 15: a synthetic large world (30,000 events of a test kind with salience spread over 0-100, 200
@@ -288,4 +337,3 @@ TEST_CASE("P3-07 14.5 item 15, 11: a synthetic large world, timing (reported) an
 }
 
 }  // TEST_SUITE
-#endif  // UNMAPPED_P3_07_REPORT

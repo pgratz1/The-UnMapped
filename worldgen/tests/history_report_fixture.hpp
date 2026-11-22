@@ -57,7 +57,8 @@ using Row = std::vector<Cell>;
 inline const std::vector<std::string>& fixture_names() {
     static const std::vector<std::string> v = {"h1-war-and-ruin", "h2-minimal",   "h3-runaway",
                                                "h3b-runaway-1000", "h3c-share-ties", "h4-budget",
-                                               "h5-saturated",    "h6-notes",       "h7-runs"};
+                                               "h5-saturated",    "h6-notes",       "h7-runs",
+                                               "h8-frames",       "h9-realms",      "h10-floor"};
     return v;
 }
 

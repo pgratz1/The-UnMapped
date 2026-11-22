@@ -1,4 +1,4 @@
-# P3-07 14.3 H5 saturated: H2 with 300 events of salience 100. Format: README.md in this directory.
+# P3-07 14.3 H5 saturated: H2 with 300 events of salience 100, and a quiet stretch (r17 24.11 item 4). Format: README.md in this directory.
 
 [meta]
 seed = 505
@@ -71,6 +71,25 @@ region_use = 0
 settlement_use = 0
 salience = 100
 template = "A herald cried the news."
+
+[[kind]]
+key = "quiet_stretch"
+caused = 0
+region_use = 0
+settlement_use = 0
+salience = 20
+template = "For {years} {years?year|years}, from {@year} to {@end_year}, the land was quiet{realms?|; one realm held it|, and # realms kept the peace}."
+roles = [["realm", 3, 1, 0]]
+values = ["years", "realms"]
+
+[[event]]
+id = 3
+year = 50
+end = 99
+kind = "quiet_stretch"
+phase = 1
+parts = [["realm", 1]]
+values = [50, 1]
 
 [[bulk]]
 kind = "herald"

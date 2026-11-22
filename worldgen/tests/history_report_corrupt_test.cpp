@@ -8,10 +8,6 @@
 // cells" the word "cells" is literal (it is not a <placeholder> in 5.3). The relation check is `until`
 // within `since` to E - 1 (the lead's ruling on 5.3 against 6.6 r6: a row with until = since is valid).
 
-#include "p3_07_switch.hpp"
-
-#if UNMAPPED_P3_07_REPORT
-
 #include <doctest/doctest.h>
 
 #include <string>
@@ -157,6 +153,9 @@ TEST_CASE("P3-07 5.3: settlement") {
         {"UPDATE settlement SET status = 5 WHERE id = 4", "corrupt table 'settlement': row 4: status 5"},
         {"UPDATE settlement SET population = -5 WHERE id = 1",
          "corrupt table 'settlement': row 1: population -5 is negative"},
+        // r16 5.3: populations above 2^31 - 1 (a settlement that is not standing is checked in 5.3's order)
+        {"UPDATE settlement SET population = 2147483648 WHERE id = 3",
+         "corrupt table 'settlement': row 3: population 2147483648 above 2147483647"},
         {"UPDATE settlement SET ruin_event = 29 WHERE id = 1",
          "corrupt table 'settlement': row 1: ruined_year and ruin_event disagree"},
         {"UPDATE settlement SET ruined_year = 1400 WHERE id = 3",
@@ -182,6 +181,8 @@ TEST_CASE("P3-07 5.3: settlement_census") {
          "corrupt table 'settlement_census': row (1, 149): status 5"},
         {"UPDATE settlement_census SET population = -1 WHERE settlement = 1 AND year = 149",
          "corrupt table 'settlement_census': row (1, 149): population -1 is negative"},
+        {"UPDATE settlement_census SET population = 2147483648 WHERE settlement = 1 AND year = 149",
+         "corrupt table 'settlement_census': row (1, 149): population 2147483648 above 2147483647"},
         {"UPDATE settlement_census SET population = 1499 WHERE settlement = 1 AND year = 2049",
          "corrupt table 'settlement_census': settlement 1: the last row differs from the settlement's end state"},
         {"UPDATE settlement_census SET owner_civ = 3 WHERE settlement = 7 AND year = 2005",
@@ -296,4 +297,3 @@ TEST_CASE("P3-07 5.2 item 4, 14.1 item 6: HistoryView::load's failures are corru
 
 }  // TEST_SUITE
 
-#endif  // UNMAPPED_P3_07_REPORT

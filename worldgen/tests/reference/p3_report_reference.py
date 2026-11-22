@@ -10,11 +10,13 @@ Reused, each written independently from its own spec (the brief asks for reuse, 
   p3_engine_reference.py    render (P3-04 8.4, 8.5: render_event), view_from_rows, join_all,
                             report_lines (the world report's [history], invariant 6)
   p3_conflict_reference.py  history_note (P3-07 21.4 with 22.3 and 23 item 4: the flare-up note),
-                            ordinal, mid, unit and summary_set (21.2, 21.3 with 22.5a),
+                            ordinal, mid and unit (21.2's companions, part 2 of r17 24.2),
                             stats21_lines (the eight keys of 21.5 and 21.8), with its kind ids replaced
                             by the world's stored catalogue (the report finds kinds by key, 21.2)
   p3_chronology_reference.py  table_hash (P0-04 8)
-Written here: the format of section 6, the computations of section 7, the [stats] keys of section 9,
+Written here: the format of section 6 as amended by r17 section 24 (block order, phase headings, the
+civilization blocks, [ages], [present]'s lists), the war frames, units and summary set of r17 24.1 to 24.3,
+the milestones of r17 24.5, the computations of section 7, the [stats] keys of section 9,
 the declaration note of 23 items 3 and 4a, the generations note of 22.2, 5.2 item 1, and the
 hand-made fixture worlds of 14.3 (worldgen/tests/data/history-report/*.toml).
 
@@ -40,6 +42,9 @@ Usage (from the repository root; -B keeps __pycache__ out of the tree):
     python3 -B worldgen/tests/reference/p3_report_reference.py compare DB SUMMARY.txt FULL.txt
         Compares the C++ report texts of a world (worldgen-cli report --history [--level full]) with the
         reference's, byte for byte; prints the first differing line. Exit 1 on a difference.
+
+    python3 -B worldgen/tests/reference/p3_report_reference.py metrics DB...
+        r17 24.11 item 2: T, shown, shown declarations and orphans of each world's summary.
 
     python3 -B worldgen/tests/reference/p3_report_reference.py check [--inputs DIR]
         Self-checks: the fixtures' hand-checked facts, the invariants of 13 on every fixture and input
@@ -91,6 +96,23 @@ R6 7.2: a settlement's state at a census year is its own row with the largest ye
    settlements all fade keeps its earlier peak).
 R7 14.4 sample-42-1024: the golden line is the reference's report of the 0.20.0 world; section 16 is
    the 0.14.0 text and is illustrative since 21.6 and 22.5, so it is not compared.
+R9 r17 24.3: the age floor's walk keeps 21.3's form: the stop test is made before each candidate, so the unit
+   that reaches 20 is taken whole; F (every quiet_stretch) is in the floor from the start and counts toward its age.
+R10 r17 24.10 item 1 against 24.2: a sack or capture below SUMMARY_MIN_SALIENCE, shown only as part 4 of a
+   consequence's unit, does not bring its own consequences (24.2: "Companions are not followed further"), so
+   24.10's rule "every shown sacked or settlement_captured has its capital_moved, refugees_settled and
+   civ_conquered shown" is read for the sacks and captures that are candidates. H8's war C is the case.
+R11 r17 24.5 milestones: items 1 and 2 are taken even when the founding or ending event is not in E_c; the
+   ending is not repeated when it equals the founding; `years` is the value of the key `years`.
+R12 r17 24.5 adversaries: a row whose open kind is neither war, peace nor enmity (a pact) gives the state
+   `none`; `pl(k, war)` is `1 war`, `2 wars`.
+R13 r17 24.7: `last held by` is `no one` also when the census row found has owner_civ 0; a refuge whose owner
+   is 0 prints `no owner` (6.8's word); the `for` part joins the settlement references with `, `.
+R14 r17 24.7 (A10): the full settlement line of a faded settlement, whose ruined_year is NULL, gets
+   `, last held by ...` without the `ruined` part; a ruined one keeps `, ruined <y>, e<e>` before it.
+R15 r17 24.6: w counts the age's civilizations whose founding_event is a `civ_founded`; s = n - w.
+R16 r17 24.3: H4's T moves from 14.1 item 4's 76 to 77 since r17's set always holds H4's quiet stretch
+   (24.11 item 4 asks for one in H4); 14.1's figure is stated for the notes alone.
 R8 [present]'s region lines (full) name the holder of the open region_control row of each region; the
    free line when there is none.
 """
@@ -103,7 +125,8 @@ STATUS = {1: "thriving", 2: "declining", 3: "ruined", 4: "faded"}
 SUMMARY_MIN_SALIENCE = 20
 SUMMARY_BUDGET = 250
 SUMMARY_AGE_FLOOR = 20
-MILESTONES = 6
+MILESTONES = 8          # r17 24.9 (was 6)
+MILESTONE_KIND_MAX = 2  # r17 24.9
 ISLET_MAX_DRY_CELLS = 1172
 SHARE_LEVELS = (500, 600, 700, 800, 900)
 RACE, GOD, CIV, SETTLEMENT, REGION = 1, 2, 3, 4, 5
@@ -470,15 +493,210 @@ def is_islet(region):
     return region[RC["cells"]] - region[RC["lake_cells"]] < ISLET_MAX_DRY_CELLS
 
 
+W_KINDS = ("war_declared", "battle", "battle_at_pass", "siege", "sacked", "settlement_captured", "refuge_held",
+           "peace", "war_won", "truce")
+EW_KINDS = ("battle", "battle_at_pass", "siege", "sacked", "settlement_captured", "refuge_held", "peace", "war_won",
+            "truce", "search_abandoned", "region_ceded", "settlements_ceded", "tribute", "capital_moved",
+            "refugees_settled", "civ_conquered")
+OWN_ROLES = ("founder", "attacker", "winner", "conqueror", "to", "payee", "claimant", "searcher")
+
+
+def kset(w, keys):
+    return {w.K[k] for k in keys if not isinstance(w.K[k], tuple)}
+
+
+def role_seq(w, kind_id, role):
+    for r in w.roles.get(kind_id, []):
+        if r[2] == role:
+            return r[1]
+    return None
+
+
+def role_ids(w, eid, role):
+    """The entity ids of event eid's participants with that role key, in participant seq order."""
+    rs = role_seq(w, w.ev[eid][3], role)
+    return [p[4] for p in sorted(w.parts.get(eid, [])) if p[2] == rs] if rs is not None else []
+
+
+def war_of(w):
+    """24.1: war(e) for every event, in one pass in id order (None for none)."""
+    W, EW, decl = kset(w, W_KINDS), kset(w, EW_KINDS), w.K["war_declared"]
+    ended_by = {}
+    for r in w.t["relation"]:
+        if r[4] == "war" and r[6] is not None:
+            u = r[8]
+            ended_by[u] = min(ended_by.get(u, r[7]), r[7])
+    war = {}
+    for e in w.t["event"]:
+        eid, k = e[0], e[3]
+        if k == decl:
+            war[eid] = eid
+        elif k in EW and any(w.ev[c][3] in W for c in w.causes.get(eid, [])):
+            c = min(c for c in w.causes.get(eid, []) if w.ev[c][3] in W)
+            war[eid] = war.get(c)
+        elif k in EW and eid in ended_by:
+            war[eid] = ended_by[eid]
+        else:
+            war[eid] = None
+    return war
+
+
+class Frames:
+    """24.1 frames and 24.2 units over one world."""
+
+    def __init__(self, w):
+        self.w = w
+        self.war = war_of(w)
+        battles = kset(w, ("battle", "battle_at_pass"))
+        self.last_battle = {}
+        for e in w.t["event"]:
+            d = self.war[e[0]]
+            if e[3] in battles and d is not None:
+                self.last_battle[d] = max(self.last_battle.get(d, 0), e[0])
+        self.row = {r[7]: r for r in w.t["relation"] if r[4] == "war"}
+        kids = {}
+        for e, cs in w.causes.items():
+            for c in cs:
+                kids.setdefault(c, []).append(e)
+        self.kids = kids
+        cost = kset(w, ("region_ceded", "settlements_ceded", "tribute"))
+        search = w.K["search_abandoned"]
+        self.excluded = set()       # 22.5a
+        self.frame = {}
+        for d in (e[0] for e in w.t["event"] if e[3] == w.K["war_declared"]):
+            r = self.row.get(d)
+            u = r[8] if r is not None and r[6] is not None else None
+            if u is not None and w.ev[u][3] == search and w.ev[u][7] < SUMMARY_MIN_SALIENCE:
+                self.excluded.add(d)
+                self.frame[d] = set()
+                continue
+            f = {d}
+            if d in self.last_battle:
+                f.add(self.last_battle[d])
+            if u is not None:
+                f.add(u)
+                f |= {x for x in kids.get(u, []) if w.ev[x][3] in cost}
+            self.frame[d] = f
+        self.conseq = kset(w, ("capital_moved", "refugees_settled", "civ_conquered"))
+        self.falls = kset(w, ("sacked", "settlement_captured"))
+
+    def unit(self, eid):
+        w = self.w
+        out = set(pcr.unit(w.res, eid, w.idx))          # parts 1 and 2 (21.2, 21.8, 23 item 2)
+        d = self.war.get(eid)
+        if d is not None:
+            out |= self.frame.get(d, set())               # part 3
+        if w.ev[eid][3] in self.conseq:                   # part 4
+            cs = sorted(c for c in w.causes.get(eid, []) if w.ev[c][3] in self.falls)
+            if cs:
+                out.add(cs[0])
+        return out
+
+
+def summary24(w, fr):
+    """24.3: (T, the summary set)."""
+    ev = w.ev
+    excl_kinds = kset(w, ("claim", "claim_settlements", "battle", "battle_at_pass", "plague_spread", "quiet_stretch"))
+    quiet = w.K["quiet_stretch"]
+    cands = [e for e in w.t["event"] if e[7] >= SUMMARY_MIN_SALIENCE and e[3] not in excl_kinds and
+             e[0] not in fr.excluded]
+    units = {e[0]: fr.unit(e[0]) for e in cands}
+    F = {e[0] for e in w.t["event"] if e[3] == quiet}
+    civ_race = {c[0]: c[2] for c in w.t["civilization"]}
+
+    def involves(age, eid):
+        for p in w.parts.get(eid, []):
+            if p[3] == CIV and civ_race.get(p[4]) == age[1]:
+                return 1
+            if p[3] == RACE and p[4] == age[1]:
+                return 1
+        return 0
+
+    floor = set(F)
+    for a in w.t["age"]:
+        y0, y1 = a[2], a[3]
+        in_age = sorted((e for e in cands if y0 <= e[1] <= y1), key=lambda e: (-involves(a, e[0]), -e[7], e[0]))
+        for e in in_age:
+            if sum(1 for x in floor if y0 <= ev[x][1] <= y1) >= SUMMARY_AGE_FLOOR:
+                break
+            if e[0] in floor:
+                continue
+            floor |= units[e[0]]
+    T, shown = 100, None
+    for t in range(SUMMARY_MIN_SALIENCE, 101):
+        c_t = set()
+        for e in cands:
+            if e[7] >= t:
+                c_t |= units[e[0]]
+        if len(floor | c_t) <= SUMMARY_BUDGET:
+            T, shown = t, floor | c_t
+            break
+    if shown is None:
+        c_t = set()
+        for e in cands:
+            if e[7] >= 100:
+                c_t |= units[e[0]]
+        shown = floor | c_t
+    return T, shown
+
+
 def milestones(w, c):
-    ev = w.civ_events.get(c, [])
-    top = sorted(ev, key=lambda x: (-w.ev[x][7], x))[:MILESTONES]
-    return sorted(top)
+    """24.5: at most MILESTONES events of E_c, ascending id."""
+    ev_c = w.civ_events.get(c, [])
+    civ = w.civ[c]
+    chosen = [civ[7]]
+    if civ[8] is not None and civ[9] not in chosen:
+        chosen.append(civ[9])
+    quiet = w.K["quiet_stretch"]
+    qs = [x for x in ev_c if w.ev[x][3] == quiet]
+    if qs:
+        yseq = {v[2]: v[1] for v in w.values.get(quiet, [])}.get("years")
+        years = lambda x: [v[2] for v in w.vals.get(x, []) if v[1] == yseq][0]  # noqa: E731
+        q = sorted(qs, key=lambda x: (-years(x), x))[0]
+        if q not in chosen:
+            chosen.append(q)
+
+    def own(x):
+        own_seqs = {r[1] for r in w.roles.get(w.ev[x][3], []) if r[2] in OWN_ROLES}
+        return 1 if any(p[3] == CIV and p[4] == c and p[2] in own_seqs for p in w.parts.get(x, [])) else 0
+
+    rest = sorted((x for x in ev_c if x not in chosen and w.ev[x][3] != quiet),
+                  key=lambda x: (-own(x), -w.ev[x][7], x))
+    per_kind = {}
+    for x in rest:
+        if len(chosen) >= MILESTONES:
+            break
+        k = w.ev[x][3]
+        if per_kind.get(k, 0) >= MILESTONE_KIND_MAX:
+            continue
+        per_kind[k] = per_kind.get(k, 0) + 1
+        chosen.append(x)
+    return sorted(chosen)
+
+
+def war_outcome(w, r, c):
+    """24.5: 'won', 'lost', 'drawn' or 'open' of war row r for civilization c."""
+    if r[6] is None:
+        return "open"
+    u = r[8]
+    k = w.ev[u][3]
+    if k in kset(w, ("peace", "war_won")):
+        if c in role_ids(w, u, "winner"):
+            return "won"
+        if c in role_ids(w, u, "loser"):
+            return "lost"
+    elif k == w.K["civ_conquered"]:
+        if c in role_ids(w, u, "conqueror"):
+            return "won"
+        if c in role_ids(w, u, "civilization"):
+            return "lost"
+    return "drawn"
 
 
 class Digest:
     def __init__(self, w):
         self.w = w
+        w._bind()
         civs = [c[0] for c in w.t["civilization"]]
         held = held_series(w, civs)
         self.peak_regions = {c: peak_run(held[c]) for c in civs}
@@ -489,8 +707,8 @@ class Digest:
         self.ruined = {c: sum(1 for s in st if s[5] == c and s[10] in (3, 4)) for c in civs}
         self.population = {c: sum(s[11] for s in st if s[8] == c and standing(s[10])) for c in civs}
         self.regions_held = {c: sum(1 for r in w.t["region_control"] if r[3] == c and r[2] is None) for c in civs}
-        T, shown, _per_age = pcr.summary_set(w.res, w.inp)
-        self.T, self.shown = T, shown
+        self.frames = Frames(w)
+        self.T, self.shown = summary24(w, self.frames)
         # 7.5
         self.N = sum(1 for r in w.t["region"] if not is_islet(r))
         self.shares = {}
@@ -521,23 +739,23 @@ def report(w, level):
     for a in t["age"]:
         r = w.race[a[1]]
         g = w.god[r[11]]
-        k = sum(1 for c in t["civilization"] if a[2] <= c[6] <= a[3])
-        o.append("a%d %s: %d-%d, %s; %s (ra%d) made by %s (g%d, %s); %s founded" % (
-            a[0], a[4], a[2], a[3], pl(a[3] - a[2] + 1, "year"), r[3], r[0], g[1], g[0], CAMP_WORD[g[2]],
-            pl(k, "civilization")))
-    o.append("[phases]")
+        civs_a = [c for c in t["civilization"] if a[2] <= c[6] <= a[3]]
+        wk = sum(1 for c in civs_a if w.ev[c[7]][3] == w.K["civ_founded"])
+        o.append("a%d %s: %d-%d, %s; %s (ra%d) made by %s (g%d, %s); %s founded: %d at the awakening, %d by secession"
+                 % (a[0], a[4], a[2], a[3], pl(a[3] - a[2] + 1, "year"), r[3], r[0], g[1], g[0], CAMP_WORD[g[2]],
+                    pl(len(civs_a), "civilization"), wk, len(civs_a) - wk))
     per_phase = {}
     for e in t["event"]:
         per_phase[e[4]] = per_phase.get(e[4], 0) + 1
-    for p in t["phase"]:
+
+    def phase_text(p):
         trig = "; trigger e%d" % p[5] if p[5] else ""
-        o.append("p%d a%d %s %d-%d, %s%s; %s" % (p[0], p[1], PHASE_WORD[p[2]], p[3], p[4], pl(p[4] - p[3] + 1, "year"),
-                                                trig, pl(per_phase.get(p[0], 0), "event")))
-    o.append("[civilizations]")
-    if not t["civilization"]:
-        o.append("(none)")
-    for c in t["civilization"]:
-        o += civ_block(w, d, c)
+        return "%d-%d, %s%s; %s" % (p[3], p[4], pl(p[4] - p[3] + 1, "year"), trig, pl(per_phase.get(p[0], 0), "event"))
+
+    if level == "full":            # 24.4: [phases] at full only
+        o.append("[phases]")
+        for p in t["phase"]:
+            o.append("p%d a%d %s %s" % (p[0], p[1], PHASE_WORD[p[2]], phase_text(p)))
     o.append("[chronicle]")
     T = 0 if level == "full" else d.T
     shown = None if level == "full" else d.shown
@@ -552,7 +770,7 @@ def report(w, level):
         for p in t["phase"]:
             if p[1] != a[0]:
                 continue
-            o.append("-- p%d %s: %d-%d" % (p[0], PHASE_WORD[p[2]], p[3], p[4]))
+            o.append("-- p%d %s: %s" % (p[0], PHASE_WORD[p[2]], phase_text(p)))
             hidden = 0
             for e in events_of_phase.get(p[0], []):
                 if shown is not None and e[0] not in shown:
@@ -561,6 +779,11 @@ def report(w, level):
                 o.append(event_line(w, e))
             if hidden:
                 o.append("(%s not shown)" % pl(hidden, "more event"))
+    o.append("[civilizations]")
+    if not t["civilization"]:
+        o.append("(none)")
+    for c in t["civilization"]:
+        o += civ_block(w, d, c, level)
     o += present(w, d, level)
     o.append("[stats]")
     o += ["%s = %d" % kv for kv in stats(w, d)]
@@ -594,7 +817,7 @@ def age_of(w, year):
     raise ReportError(3, "no age contains year %d" % year)
 
 
-def civ_block(w, d, c):
+def civ_block(w, d, c, level):
     cid = c[0]
     o = ["c%d %s" % (cid, c[1])]
     r = w.race[c[2]]
@@ -604,7 +827,11 @@ def civ_block(w, d, c):
     o.append("  home: %s, %s%s" % (w.ref(REGION, c[4]), w.biome_key[reg[RC["biome"]]], up))
     a = age_of(w, c[6])
     o.append("  founded: %d in %s (a%d), e%d" % (c[6], a[4], a[0], c[7]))
-    o.append("  capital: %s" % (w.ref(SETTLEMENT, c[5]) if c[5] else "none"))
+    if w.ev[c[7]][3] == w.K["civ_seceded"]:                        # 24.5
+        frm = role_ids(w, c[7], "from")
+        o.append("  seceded from: %s, e%d" % (w.ref(CIV, frm[0]), c[7]))
+    cap = "capital" if c[8] is None else "last capital"
+    o.append("  %s: %s" % (cap, w.ref(SETTLEMENT, c[5]) if c[5] else "none"))
     m, y0, y1 = d.peak_regions[cid]
     o.append("  peak regions: %d, %d-%d" % (m, y0, y1) if m else "  peak regions: 0")
     pp = d.peak_pop.get(cid)
@@ -612,21 +839,32 @@ def civ_block(w, d, c):
     o.append("  settlements: %d founded, %d held at the end, %d ruined" % (d.founded[cid], d.held_settlements[cid],
                                                                          d.ruined[cid]))
     rel = [x for x in w.t["relation"] if (x[0] == CIV and x[1] == cid) or (x[2] == CIV and x[3] == cid)]
-    if not rel:
-        o.append("  relations: none")
+    wars = [x for x in rel if x[4] == "war"]
+    nd = sum(1 for x in wars if x[0] == CIV and x[1] == cid)
+    nf = sum(1 for x in wars if x[2] == CIV and x[3] == cid)
+    out = {"won": 0, "lost": 0, "drawn": 0, "open": 0}
+    for x in wars:
+        out[war_outcome(w, x, cid)] += 1
+    o.append("  wars: %d declared, %d defended; won %d, lost %d, drawn %d, open %d" % (
+        nd, nf, out["won"], out["lost"], out["drawn"], out["open"]))
+    if level == "full":
+        if not rel:
+            o.append("  relations: none")
+        else:
+            kinds = {}
+            for x in rel:
+                kinds[x[4]] = kinds.get(x[4], 0) + 1
+            o.append("  relations: %d (%s)" % (len(rel), ", ".join("%s %d" % (k, kinds[k]) for k in
+                                                                    sorted(kinds, key=lambda s: s.encode("latin-1")))))
+            for x in sorted(rel, key=lambda x: (x[5], x[0], x[1], x[2], x[3], x[4].encode("latin-1"))):
+                a_ref, b_ref = w.ref(x[0], x[1]), w.ref(x[2], x[3])
+                if x[6] is None:
+                    o.append("    %s: %s, %s, since %d, e%d" % (x[4], a_ref, b_ref, x[5], x[7]))
+                else:
+                    last = x[5] if x[6] == x[5] else x[6] - 1
+                    o.append("    %s: %s, %s, %d-%d, e%d to e%d" % (x[4], a_ref, b_ref, x[5], last, x[7], x[8]))
     else:
-        kinds = {}
-        for x in rel:
-            kinds[x[4]] = kinds.get(x[4], 0) + 1
-        o.append("  relations: %d (%s)" % (len(rel), ", ".join("%s %d" % (k, kinds[k]) for k in
-                                                                sorted(kinds, key=lambda s: s.encode("latin-1")))))
-        for x in sorted(rel, key=lambda x: (x[5], x[0], x[1], x[2], x[3], x[4].encode("latin-1"))):
-            a_ref, b_ref = w.ref(x[0], x[1]), w.ref(x[2], x[3])
-            if x[6] is None:
-                o.append("    %s: %s, %s, since %d, e%d" % (x[4], a_ref, b_ref, x[5], x[7]))
-            else:
-                last = x[5] if x[6] == x[5] else x[6] - 1
-                o.append("    %s: %s, %s, %d-%d, e%d to e%d" % (x[4], a_ref, b_ref, x[5], last, x[7], x[8]))
+        o += adversary_lines(w, cid, rel)
     o.append("  events: %d" % len(w.civ_events.get(cid, [])))
     if c[8] is None:
         o.append("  fate: alive in %d: %s, %s, population %d" % (w.E, pl(d.regions_held[cid], "region"),
@@ -639,6 +877,45 @@ def civ_block(w, d, c):
         e = w.ev[x]
         o.append("    %s e%d %s: %s" % (span(e), x, w.kind_key[e[3]], with_note(w.sentence(x), note(w, x, cid))))
     return o
+
+
+def adversary_lines(w, cid, rel):
+    """24.5, summary only."""
+    if not rel:
+        return ["  adversaries: none"]
+    by = {}
+    for x in rel:
+        other = (x[2], x[3]) if (x[0] == CIV and x[1] == cid) else (x[0], x[1])
+        by.setdefault(other, []).append(x)
+    order = sorted(by, key=lambda o_: (min(x[5] for x in by[o_]), o_[0], o_[1]))
+    out = ["  adversaries: %d" % len(order)]
+    for o_ in order:
+        rows = by[o_]
+        ref = w.ref(o_[0], o_[1])
+        open_kinds = {x[4] for x in rows if x[6] is None}
+        state = ("at war" if "war" in open_kinds else "at peace" if "peace" in open_kinds else
+                 "enmity" if "enmity" in open_kinds else "none")
+        wars = [x for x in rows if x[4] == "war"]
+        if not wars:
+            out.append("    %s: no war; now %s" % (ref, state))
+            continue
+        cnt = {"won": 0, "lost": 0, "drawn": 0, "open": 0}
+        for x in wars:
+            cnt[war_outcome(w, x, cid)] += 1
+        first = min(x[5] for x in wars)
+        last = max((w.E - 1) if x[6] is None else max(x[5], x[6] - 1) for x in wars)
+        out.append("    %s: %s, won %d, lost %d, drawn %d, open %d, %d-%d; now %s" % (
+            ref, pl(len(wars), "war"), cnt["won"], cnt["lost"], cnt["drawn"], cnt["open"], first, last, state))
+    return out
+
+
+def last_held_by(w, sid):
+    """24.7: the owner_civ of the settlement's census row of largest year with status 1 or 2; 'no one'."""
+    rows = [r for r in w.t["settlement_census"] if r[0] == sid and standing(r[4])]
+    if not rows:
+        return "no one"
+    owner = max(rows, key=lambda r: r[1])[2]
+    return w.ref(CIV, owner) if owner else "no one"
 
 
 def present(w, d, level):
@@ -671,6 +948,8 @@ def present(w, d, level):
                 w.ref(CIV, s[5]))
             if s[12] is not None:
                 line += ", ruined %d, e%d" % (s[12], s[13])
+            if s[10] in (3, 4):                                    # 24.7 (A10)
+                line += ", last held by %s" % last_held_by(w, s[0])
             o.append(line)
     kc = {k: sum(1 for s in st if s[9] == k) for k in range(1, 6)}
     o.append("settlement kinds: hamlet %d, village %d, town %d, city %d, fortress %d" % tuple(kc[k] for k in range(1, 6)))
@@ -680,7 +959,67 @@ def present(w, d, level):
             big = s
     o.append("largest settlement: %s, population %d" % (w.ref(SETTLEMENT, big[0]), big[11]) if big else
              "largest settlement: none")
+    o += present_lists(w)
     return o
+
+
+def present_lists(w):
+    """24.7: ruins, refuges, open wars, standing claims."""
+    t = w.t
+    o = []
+    ruins = [s for s in t["settlement"] if s[10] == 3]
+    o.append("ruins: %d" % len(ruins))
+    for s in ruins:
+        by = role_ids(w, s[13], "attacker")
+        o.append("  s%d %s in %s: ruined %d, e%d %s%s; last held by %s" % (
+            s[0], s[1], w.ref(REGION, s[4]), s[12], s[13], w.kind_key[w.ev[s[13]][3]],
+            ", by %s" % w.ref(CIV, by[0]) if by else "", last_held_by(w, s[0])))
+    refs = [s for s in t["settlement"] if standing(s[10]) and w.ev[s[7]][3] == w.K["refugees_settled"]]
+    o.append("refuges: %d" % len(refs))
+    for s in refs:
+        origin = role_ids(w, s[7], "origin")
+        o.append("  s%d %s in %s: %s, population %d, founded %d by flight from %s, e%d" % (
+            s[0], s[1], w.ref(REGION, s[4]), w.ref(CIV, s[8]) if s[8] else "no owner", s[11], s[6],
+            w.ref(SETTLEMENT, origin[0]), s[7]))
+    open_wars = sorted((r for r in t["relation"] if r[4] == "war" and r[6] is None),
+                       key=lambda r: (r[5], r[0], r[1], r[2], r[3]))
+    o.append("open wars: %d" % len(open_wars))
+    for r in open_wars:
+        o.append("  e%d %s against %s over %s, since %d" % (r[7], w.ref(r[0], r[1]), w.ref(r[2], r[3]),
+                                                             w.ref(REGION, w.ev[r[7]][5]), r[5]))
+    claims = standing_claims(w)
+    o.append("standing claims: %d" % len(claims))
+    for cid in claims:
+        e = w.ev[cid]
+        a, b = role_ids(w, cid, "claimant")[0], role_ids(w, cid, "holder")[0]
+        line = "  e%d %d %s on %s: %s" % (cid, e[1], w.ref(CIV, a), w.ref(CIV, b), w.ref(REGION, e[5]))
+        if e[3] == w.K["claim_settlements"]:
+            line += ", for " + ", ".join(w.ref(SETTLEMENT, x) for x in role_ids(w, cid, "settlement"))
+        o.append(line)
+    return o
+
+
+def standing_claims(w):
+    claim_k = kset(w, ("claim", "claim_settlements"))
+    decl = w.K["war_declared"]
+    pursued = {c for e in w.t["event"] if e[3] == decl for c in w.causes.get(e[0], [])}
+    decls = [(e[1], frozenset(role_ids(w, e[0], "attacker") + role_ids(w, e[0], "defender")))
+             for e in w.t["event"] if e[3] == decl]
+    claims = [e for e in w.t["event"] if e[3] in claim_k]
+    out = []
+    for e in claims:
+        if e[0] in pursued:
+            continue
+        a, b = role_ids(w, e[0], "claimant")[0], role_ids(w, e[0], "holder")[0]
+        if w.civ[a][8] is not None or w.civ[b][8] is not None:
+            continue
+        if any(y >= e[1] and pair == frozenset((a, b)) for y, pair in decls):
+            continue
+        if any(x[0] > e[0] and role_ids(w, x[0], "claimant") == [a] and role_ids(w, x[0], "holder") == [b]
+               for x in claims):
+            continue
+        out.append(e[0])
+    return out
 
 
 # ---------------------------------------------------------------------------
@@ -809,7 +1148,7 @@ def _res_owned(w):
 # ---------------------------------------------------------------------------
 
 FIXTURE_NAMES = ("h1-war-and-ruin", "h2-minimal", "h3-runaway", "h3b-runaway-1000", "h3c-share-ties", "h4-budget",
-                 "h5-saturated", "h6-notes", "h7-runs")
+                 "h5-saturated", "h6-notes", "h7-runs", "h8-frames", "h9-realms", "h10-floor")
 NULLABLE = {"race": 10, "civilization": 8, "settlement": 12, "region_control": 2, "relation": 6}
 PK_LEN = {"biome": 1, "region": 1, "race": 1, "culture": 1, "god": 1, "age": 1, "phase": 1, "civilization": 1,
           "settlement": 1, "settlement_census": 2, "region_control": 2, "relation": 6}
@@ -926,8 +1265,11 @@ def write_fixture(name, out):
 # Golden file (14.4)
 # ---------------------------------------------------------------------------
 
-WORLD_CASES = ("geo-phrase-512", "geo-seed-0-512", "geo-seed-1-1024", "geo-seed-42-512", "hist-dense-1024",
-               "hist-races-elf-orc-1024", "hist-span-2000-512", "sample-42-1024")
+WORLD_CASES = ("civs4-seed-0-1024", "civs4-seed-12-1024", "civs4-seed-3-1024", "civs4-seed-7-1024", "geo-phrase-512",
+               "geo-seed-0-512", "geo-seed-1-1024", "geo-seed-42-512", "hist-dense-1024", "hist-races-elf-orc-1024",
+               "hist-span-2000-512", "sample-42-1024", "seed-0-1024")
+# r17 24.11 item 2: civs4-seed-<s>-1024 = generate --seed <s> --civs-per-race 4 (1024); seed-0-1024 = generate
+# --seed 0 (the critic's seed 0 pair of item 8)
 SAMPLE_CASES = ("sample-42-1024",)   # summary only (14.4)
 
 
@@ -1002,61 +1344,145 @@ def block(text, head):
     return lines[i + 1:j]
 
 
+def orphans(w, fr, shown):
+    """24.10 item 1: the shown war events whose war's declaration (not excluded by 22.5a) is not shown, plus the
+    shown war events whose declaration is shown but whose ending or last battle is not."""
+    EW = kset(w, EW_KINDS)
+    n = 0
+    for x in shown:
+        if w.ev[x][3] not in EW:
+            continue
+        d = fr.war.get(x)
+        if d is None or d in fr.excluded:
+            continue
+        if d not in shown:
+            n += 1
+    return n
+
+
+def summary_violations(w, fr, shown):
+    """24.10 item 1's other rules; a list of failures."""
+    bad = []
+    K = w.K
+    for x in sorted(shown):
+        k = w.ev[x][3]
+        d = fr.war.get(x)
+        if k in kset(w, EW_KINDS) and d is not None and d not in fr.excluded:
+            r = fr.row.get(d)
+            if r is not None and r[6] is not None and r[8] not in shown:
+                bad.append("e%d: the ending of its war e%d is not shown" % (x, d))
+            if d in fr.last_battle and fr.last_battle[d] not in shown:
+                bad.append("e%d: the last battle of its war e%d is not shown" % (x, d))
+        if k == K["war_declared"]:
+            r = fr.row.get(x)
+            if r is not None and r[6] is not None and r[8] not in shown:
+                bad.append("e%d: ending not shown" % x)
+        if k in fr.falls and w.ev[x][7] >= SUMMARY_MIN_SALIENCE:
+            # READING R10: a sack or capture below the minimum salience is shown only as part 4 of a consequence's
+            # unit, and 24.2 says it does not bring its own consequences; the invariant applies to the others
+            for y in fr.kids.get(x, []):
+                if w.ev[y][3] in fr.conseq and y not in shown:
+                    bad.append("e%d: consequence e%d not shown" % (x, y))
+        if k in fr.conseq:
+            for y in w.causes.get(x, []):
+                if w.ev[y][3] in fr.falls and y not in shown:
+                    bad.append("e%d: its sack or capture e%d not shown" % (x, y))
+        if k in kset(w, ("claim", "claim_settlements", "plague_spread")):
+            bad.append("e%d: a claim or plague_spread is shown" % x)
+        if k in kset(w, ("battle", "battle_at_pass")) and fr.last_battle.get(d) != x:
+            bad.append("e%d: a battle that is not its war's last is shown" % x)
+    for e in w.t["event"]:
+        if e[3] == K["quiet_stretch"] and e[0] not in shown:
+            bad.append("e%d: quiet stretch not shown" % e[0])
+    return bad
+
+
 def check_invariants(c, name, w):
-    """Section 13 items 1, 2, 3, 5, 6, 7 on one world (item 4 holds by construction: sentences are
-    render's; item 8: the text depends on the file only)."""
+    """24.10 items 1 to 6 on one world (item 7 is the definition the reference prints; 13 item 4 holds by
+    construction: sentences are render's; item 8: the text depends on the file only)."""
     texts = {lv: report(w, lv) for lv in ("summary", "full")}
+    heads_want = {"summary": ["[settings]", "[ages]", "[chronicle]", "[civilizations]", "[present]", "[stats]"],
+                  "full": ["[settings]", "[ages]", "[phases]", "[chronicle]", "[civilizations]", "[present]",
+                           "[stats]"]}
     for lv, b in texts.items():
         ok = all(x == 0x0A or 0x20 <= x <= 0x7E for x in b) and b.endswith(b"\n")
         s = b.decode("ascii")
         lines = s[:-1].split("\n")
         ok = ok and all(line != "" and not line.endswith(" ") for line in lines)
-        heads = [line for line in lines if line.startswith("[") and line.endswith("]")]
-        c.eq("%s %s: 13.1 bytes and lines" % (name, lv), ok, True)
-        c.eq("%s %s: 13.1 blocks" % (name, lv), heads[:7], ["[settings]", "[ages]", "[phases]", "[civilizations]",
-                                                            "[chronicle]", "[present]", "[stats]"])
+        heads = [line for line in lines if line.startswith("[") and line.endswith("]") and " " not in line]
+        c.eq("%s %s: bytes and lines" % (name, lv), ok, True)
+        c.eq("%s %s: 24.4 blocks" % (name, lv), heads, heads_want[lv])
     s, f = (texts[lv].decode("ascii") for lv in ("summary", "full"))
     stat = dict(line.split(" = ") for line in block(s, "[stats]"))
-    c.eq("%s: 13.5 stats equal" % name, block(s, "[stats]"), block(f, "[stats]"))
-    for b in ("[settings]", "[ages]", "[phases]", "[civilizations]"):
-        c.eq("%s: 13.5 %s equal" % (name, b), block(s, b), block(f, b))
+    for b in ("[stats]", "[settings]", "[ages]"):
+        c.eq("%s: 24.10 item 3 %s equal" % (name, b), block(s, b), block(f, b))
+    strip = lambda ls, pre: [x for x in ls if not any(x.startswith(p) for p in pre)]  # noqa: E731
+    c.eq("%s: 24.10 item 3 [civilizations]" % name,
+         strip(block(s, "[civilizations]"), ("  adversaries:", "    ")),
+         strip(block(f, "[civilizations]"), ("  relations:", "    ")))
+    c.eq("%s: 24.10 item 3 [present]" % name, block(s, "[present]"),
+         [x for x in block(f, "[present]") if not (x.startswith("  rg") or
+                                                    (x.startswith("  s") and x[3:4].isdigit() and ", at " in x))])
     ev_lines_full = [line for line in block(f, "[chronicle]") if line[:1].isdigit()]
-    c.eq("%s: 13.2 full shows every event" % name, len(ev_lines_full), len(w.t["event"]))
+    c.eq("%s: full shows every event" % name, len(ev_lines_full), len(w.t["event"]))
     ev_lines = [line for line in block(s, "[chronicle]") if line[:1].isdigit()]
-    c.eq("%s: 13.2 shown" % name, len(ev_lines), int(stat["summary_events"]))
+    c.eq("%s: shown = summary_events" % name, len(ev_lines), int(stat["summary_events"]))
     hidden = sum(int(line[1:].split(" ")[0]) for line in block(s, "[chronicle]") if line.startswith("("))
-    c.eq("%s: 13.3 shown + hidden" % name, len(ev_lines) + hidden, len(w.t["event"]))
+    c.eq("%s: 24.10 item 2 shown + hidden" % name, len(ev_lines) + hidden, len(w.t["event"]))
     if int(stat["summary_threshold"]) < 100:
-        c.eq("%s: 13.2 budget" % name, len(ev_lines) <= SUMMARY_BUDGET, True)
-    # p3_engine_reference.report_lines assumes every standing settlement has an owner: give it the owned
-    # ones and skip the three keys that the unowned ones change
-    owned = _res_owned(w)["settlement"]
-    skip = () if len(owned) == len(w.t["settlement"]) else ("settlements", "settlements_standing", "population")
+        c.eq("%s: budget" % name, len(ev_lines) <= SUMMARY_BUDGET, True)
+    d = Digest(w)
+    shown = {int(line.split(" ")[1][1:]) for line in ev_lines}
+    c.eq("%s: the event lines are the summary set" % name, shown, d.shown)
+    c.eq("%s: 24.10 item 1 orphans" % name, orphans(w, d.frames, shown), 0)
+    c.eq("%s: 24.10 item 1 rules" % name, summary_violations(w, d.frames, shown), [])
     hist = pe.report_lines(dict(phase=w.t["phase"], event=w.t["event"], event_kind=w.t["event_kind"],
-                                civilization=w.t["civilization"], settlement=owned,
+                                civilization=w.t["civilization"], settlement=w.t["settlement"],
                                 region_control=w.t["region_control"], settlement_census=w.t["settlement_census"],
                                 relation=w.t["relation"]), w.E, w.t["race"])
     for line in hist[1:]:
         k, v = line.split(" = ")
-        if k in skip:
-            continue
         c.eq("%s: 13.6 [history] %s" % (name, k), stat.get(k), v)
     pres = block(s, "[present]")
     c.eq("%s: 13.7 alive" % name, pres[1].split(" ")[2], stat["civilizations_alive"])
     held = [line for line in pres if line.startswith("regions: ")][0]
     c.eq("%s: 13.7 held" % name, held.split("held ")[1].split(",")[0], stat["regions_held"])
-    fates = {}
-    cur = None
+    fates, cur, blocks_ = {}, None, {}
     for line in block(s, "[civilizations]"):
         if line.startswith("c") and line[1:2].isdigit():
             cur = line.split(" ")[0]
-        elif line.startswith("  fate: alive in "):
-            fates[cur] = line.split(": ", 2)[2]
+            blocks_[cur] = []
+        else:
+            blocks_[cur].append(line)
+            if line.startswith("  fate: alive in "):
+                fates[cur] = line.split(": ", 2)[2]
     for line in pres:
         if line.startswith("c") and line[1:2].isdigit():
             cid = line.split(" ")[0]
             c.eq("%s: 13.7 fate %s" % (name, cid), line.split(": ", 1)[1], fates.get(cid))
     c.eq("%s: 13.7 fates" % name, len(fates), int(stat["civilizations_alive"]))
+    # 24.10 items 5 and 6
+    qs_civs = {p[4] for e in w.t["event"] if e[3] == w.K["quiet_stretch"] for p in w.parts.get(e[0], [])
+               if p[3] == CIV}
+    for cid, ls in blocks_.items():
+        wl = [x for x in ls if x.startswith("  wars: ")][0]
+        nums = [int(t) for t in wl.replace(",", " ").replace(";", " ").split() if t.isdigit()]
+        c.eq("%s %s: 24.10 item 5 wars line" % (name, cid), nums[2] + nums[3] + nums[4] + nums[5], nums[0] + nums[1])
+        i0 = [i for i, x in enumerate(ls) if x.startswith("  adversaries:")][0]
+        i1 = [i for i, x in enumerate(ls) if x.startswith("  events: ")][0]
+        adv = [x for x in ls[i0 + 1:i1] if "no war; now" not in x]
+        k_sum = 0
+        for x in adv:
+            body = x.split("): ", 1)[1] if "): " in x else x.split(": ", 1)[1]
+            k = int(body.split(" ")[0])
+            parts = [int(t) for t in body.split(";")[0].replace(",", " ").split() if t.isdigit()]
+            c.eq("%s %s: adversary counts" % (name, cid), sum(parts[1:5]), k)
+            k_sum += k
+        c.eq("%s %s: 24.10 item 5 adversaries" % (name, cid), k_sum, nums[0] + nums[1])
+        qm = [x for x in ls if x.startswith("    ") and " quiet_stretch: " in x]
+        want = 1 if int(cid[1:]) in qs_civs else 0
+        c.eq("%s %s: 24.10 item 6 quiet milestone" % (name, cid), (len(qm), all("rulers.)" in x for x in qm)),
+             (want, True))
 
 
 def check_fixture_facts(c):
@@ -1066,10 +1492,10 @@ def check_fixture_facts(c):
     c.eq("H4 n(76), n(75)", (n(76), n(75)), (250, 260))
     c.eq("H4 notes alone n(76) = 248", sum(1 for i in range(1, 1001) if (37 * i) % 101 >= 76), 248)
     s = Digest(w)
-    c.eq("H4 T", s.T, 76)
+    c.eq("H4 T (the quiet stretch of r17 counts toward the set: 77, not 76)", s.T, 77)
     w = load_world(fixture_db("h5-saturated"))
     s = Digest(w)
-    c.eq("H5 T and shown", (s.T, len(s.shown)), (100, 301))
+    c.eq("H5 T and shown", (s.T, len(s.shown)), (100, 303))
     for name, want in (("h3-runaway", 1001), ("h3b-runaway-1000", 1000)):
         w = load_world(fixture_db(name))
         st = dict(stats(w, Digest(w)))
@@ -1139,6 +1565,17 @@ def cmd_compare(argv):
     return bad
 
 
+def cmd_metrics(argv):
+    """24.11 item 2: per world, the summary's T, shown, shown declarations and orphans."""
+    for path in argv:
+        w = load_world(path)
+        d = Digest(w)
+        decl = sum(1 for x in d.shown if w.ev[x][3] == w.K["war_declared"])
+        print("%s T %d shown %d declarations %d orphans %d" % (os.path.basename(path), d.T, len(d.shown), decl,
+                                                               orphans(w, d.frames, d.shown)))
+    return 0
+
+
 def main(argv):
     if not argv:
         print(__doc__)
@@ -1167,6 +1604,8 @@ def main(argv):
         return cmd_compare(rest)
     if cmd == "check":
         return cmd_check(rest)
+    if cmd == "metrics":
+        return cmd_metrics(rest)
     print(__doc__)
     return 2
 

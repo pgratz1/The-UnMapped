@@ -30,8 +30,6 @@ TEST_CASE("P3-07 14.3: each fixture's C++ copy has the reference's table hashes"
     }
 }
 
-#if UNMAPPED_P3_07_REPORT
-
 TEST_CASE("P3-07 14.4: the history report of each fixture has the golden hash at both levels") {
     for (const std::string& name : hrtest::fixture_names()) {
         CAPTURE(name);
@@ -61,6 +59,5 @@ TEST_CASE("P3-07 13 item 8 and 12: the report is a function of the file (a secon
     }
 }
 
-#endif  // UNMAPPED_P3_07_REPORT
 
 }  // TEST_SUITE
