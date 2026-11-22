@@ -1020,3 +1020,19 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
   - R2: a war is won by aim only when the goal has changed hands to the attacker during the war. Holding it at the declaration does not count: the defender's last settlement there must be gone. A realm may still claim a region it holds where another people keeps a town. If it wins that war by the score, the other people's settlements there pass to it with the peace. Wars won by aim with no battle in one year: at most 3 in 100 default worlds.
 - Interim choice: the rulings are specified and go into P3-10 before its merge (generator stays 0.19.0). Paul's decisions of 2026-11-20 stand in their intent: orcs still awaken with a quarrel and declare at shorter odds, and an attacker still wins by aim only by holding its goal. The rulings add a condition to each.
 - Status: open (awaiting Paul's confirmation)
+
+### History and names: P3-11 orc arrival, wording and names (scope)
+
+- Date: 2026-11-21
+- Raised by: spec writer (P3-11, `docs/specs/p3-11-followups.md`), from the world critic's notes N1 to N4 of the P3-10 second round, the second-round validation and Paul's decision of 2026-11-21 on faerie names
+- Design doc section: 5 (the orc age; races and cultures: names), 6 (text rendered from records)
+- Problem: after P3-10 (generator 0.19.0) the orcs sit still for a median 232 years after their awakening (88 of 100 default worlds have 200 silent years or more). Claims and foothold cessions name a region where only towns are at stake ("ceded the Graven Thicket" when one town passed). Faerie names keep their baby-talk sounds. `tard` and faerie names ending in `-ass` pass the filter. Small counts are written as digits beside words ("one other settlement", "2 other settlements").
+- Proposal: one change, generator 0.20.0, schema 7 unchanged.
+  - Orcs arrive in numbers: a race field `awakening_population` (orc 1,200) lets the first orc settlement send settlers at once, with the target that the median first orc colony, declaration, sack or capture comes within 100 years of the awakening.
+  - Two appended event kinds name the settlements of a claim on a region the holder does not hold and of a foothold cession.
+  - The faerie syllables follow Paul's decision (no `p` or `b` onsets, fewer `ee` and `ou`), and no name repeats a syllable twice in a row, in every culture.
+  - `tard` is filtered anywhere in a word.
+  - Values one to nine are written as words in sentences.
+  - One open question, non-blocking: a war fought over another region than the claim it cites (because that region became weary, was lost, or became the defender's capital) is kept as specified, and the report names the claim's region; the alternatives are a fresh claim at the declaration, or no war.
+- Interim choice: as proposed; the design document is not affected (the orcs' "coming opens the most recent age of conflict" is served, not changed; Paul's decisions on the orc age's length and on orcs at peace among goblins stand).
+- Status: open (scope record; the question in `docs/specs/p3-11-followups.md` section 10 item 1 awaits Paul, with a recommendation)

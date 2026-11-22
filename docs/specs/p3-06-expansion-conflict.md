@@ -1,6 +1,6 @@
 # P3-06 Expansion and conflict
 
-Status: **approved by the lead 2026-11-19 as the basis for implementation; r14 (2026-11-20, P3-10, generator 0.19.0): section 21, P3-10 follow-ups; r17 (2026-11-21, P3-10 second round, generator 0.19.0): section 22, the orcs' quarrel and hidden years, aim over held land, lying low, small rules; revision r7 (2026-11-20, for P3-08, generator 0.17.0; `docs/specs/p3-08-followups.md`): battle losses from the smaller force (7.3), the capture sentence without "and 0 fled" (11), casualties under extreme tuning (7.4, 8.4), a same-step colony in a ceded region (8.3), the peoples-only prefix of the log (16.2), the 100-seed figures (15.3, 15.5), same-year rows (8.3)** (the ten questions of section 19 go to Paul; the interim choices stand; the measured shortfalls of 15.2 and 19 items 7, 9, 10 go to the world critic after implementation). Written by the spec writer 2026-11-19; the amendments of section 18 applied the same day on `p3/06-spec`, after merging `origin/p3/04-spec-fixes` at 13b8062 (P3-04 r3, P3-07 r2); checked against P3-04 r3 (16.5, note at the end). Phase P3 History core, spec 6 (P3-00 3.1 row P3-06), a subsystem of pipeline stage 8, `history`, and its tension source. Generator **0.16.0**; **no schema change** (schema stays 7: P3-06 appends event kinds 20–30 to the catalogue and writes rows of `event`, `relation`, `region_control`, `settlement`, `civilization` and `settlement_census` through P3-04's `State`; no column). Design doc sections 5 (the races and their camps and characters; "goblins hostile to elves from the first year", dwarves "arrive into a world already at war", humans "spread quickly over land left open or ruined by older wars", orcs "their coming opens the most recent age of conflict"; deep time and flare-ups "two expanding borders meet"; alignment sets starting relations; race relations "old wars leave grudges"; mountains, passes and roads in history; the tick loop items 2 and 5), 6 (`relation`, `settlement`, `civilization`), 13 (P3 row: wars, ruin; P5 exit: "no world is empty or runaway") and 14 (records a model can narrate). Depends on P3-00 (binding), P3-01 (race fields `camp`, `expansion`, `aggression`; amended in 18.3: one new race field), P3-02 (keyed draws), P3-04 (engine, step seam, `TensionSource`, flare-ups SC5/SC6, event writer W1–W9, bookkeeping), **P3-05 (peoples: its `PeoplesView`, `note_reduction`, and one new hook, amendment 18.1, to be applied before P3-05 is implemented)** and P3-07 (report: section 9 statistics, section 20 requirements; amended in 18.4). Branch read: `origin/p3/05-spec` at 73b01a4 (newest text of P3-00 to P3-07). Proposals read: up to "History: random pressures act only in active phases; migration waits for conflict".
+Status: **approved by the lead 2026-11-19 as the basis for implementation; r14 (2026-11-20, P3-10, generator 0.19.0): section 21, P3-10 follow-ups; r17 (2026-11-21, P3-10 second round, generator 0.19.0): section 22, the orcs' quarrel and hidden years, aim over held land, lying low, small rules; r19 (2026-11-21, P3-11, generator 0.20.0): section 23, orc targets, claims and foothold cessions that name the settlements, war goals and their claims, figures; revision r7 (2026-11-20, for P3-08, generator 0.17.0; `docs/specs/p3-08-followups.md`): battle losses from the smaller force (7.3), the capture sentence without "and 0 fled" (11), casualties under extreme tuning (7.4, 8.4), a same-step colony in a ceded region (8.3), the peoples-only prefix of the log (16.2), the 100-seed figures (15.3, 15.5), same-year rows (8.3)** (the ten questions of section 19 go to Paul; the interim choices stand; the measured shortfalls of 15.2 and 19 items 7, 9, 10 go to the world critic after implementation). Written by the spec writer 2026-11-19; the amendments of section 18 applied the same day on `p3/06-spec`, after merging `origin/p3/04-spec-fixes` at 13b8062 (P3-04 r3, P3-07 r2); checked against P3-04 r3 (16.5, note at the end). Phase P3 History core, spec 6 (P3-00 3.1 row P3-06), a subsystem of pipeline stage 8, `history`, and its tension source. Generator **0.16.0**; **no schema change** (schema stays 7: P3-06 appends event kinds 20–30 to the catalogue and writes rows of `event`, `relation`, `region_control`, `settlement`, `civilization` and `settlement_census` through P3-04's `State`; no column). Design doc sections 5 (the races and their camps and characters; "goblins hostile to elves from the first year", dwarves "arrive into a world already at war", humans "spread quickly over land left open or ruined by older wars", orcs "their coming opens the most recent age of conflict"; deep time and flare-ups "two expanding borders meet"; alignment sets starting relations; race relations "old wars leave grudges"; mountains, passes and roads in history; the tick loop items 2 and 5), 6 (`relation`, `settlement`, `civilization`), 13 (P3 row: wars, ruin; P5 exit: "no world is empty or runaway") and 14 (records a model can narrate). Depends on P3-00 (binding), P3-01 (race fields `camp`, `expansion`, `aggression`; amended in 18.3: one new race field), P3-02 (keyed draws), P3-04 (engine, step seam, `TensionSource`, flare-ups SC5/SC6, event writer W1–W9, bookkeeping), **P3-05 (peoples: its `PeoplesView`, `note_reduction`, and one new hook, amendment 18.1, to be applied before P3-05 is implemented)** and P3-07 (report: section 9 statistics, section 20 requirements; amended in 18.4). Branch read: `origin/p3/05-spec` at 73b01a4 (newest text of P3-00 to P3-07). Proposals read: up to "History: random pressures act only in active phases; migration waits for conflict".
 
 Numbers in this spec come from the spec writer's exact-integer prototype `~/.cache/the-unmapped/out/p3-06-spec/conflict.py`, built on the P3-05 prototype `peoples.py` (which it imports unchanged) with a dynamic scheduler that follows P3-04 SC1–SC6, run on the P1-06 validation worlds `~/.cache/the-unmapped/out/p1-06-validation/` (geography unchanged since 0.11.0). The prototype is evidence, not the reference (16).
 
@@ -146,7 +146,7 @@ Quiet steps build strain at `quiet_strain_permille` (shipped 6) against ticks' `
 After the strain update of a step, for each ordered pair (a, b) in ascending (a, b) among the pairs in contact: if a has no open claim on b, they are not at war, they are past their truce, strain(a, b) ≥ `claim_strain` × 1000, and (in a quiet step) `quiet_events_left(a)` > 0, then a **claims** a region of b:
 
 - the region R of `front(a, b)` with the smallest key (0 if R ∈ `wanted_held(a)` and R is held by b, else 1; −(σ(R, r_a) − `cost_penalty` × cost); R): land a wants first, then the best land for a's race within reach;
-- append `claim` (region R; participants a as `claimant`, b as `holder`; cause: R's `owner_event` when b holds R, else the `founding_event` of b's most populous standing settlement in R, ties to the smaller id); `claim[(a, b)]` = (that event, R).
+- append `claim` (region R; participants a as `claimant`, b as `holder`; cause: R's `owner_event` when b holds R, else the `founding_event` of b's most populous standing settlement in R, ties to the smaller id); `claim[(a, b)]` = (that event, R). (r19: from 0.20.0, when b does not hold R the event is kind 39 `claim_settlements`, which also lists b's settlements in R, 23.2.)
 
 `wanted_held` and holdings are taken once at the start of the step's strain update (a snapshot), owners live. A claim stays open until a war between the pair starts or ends, or either side ends (8.1). Claims are the land claims of design 5's tick loop ("claim a region") for held land; a claim on free land is P3-05's founding (P3-05 9.3).
 
@@ -783,47 +783,47 @@ Claims, battles and sieges are counted by P3-07's `events_<key>` lines. Strain, 
 | capacity | P ≤ 2 × C(R, owner race) for every standing settlement after every step (this spec's tests) | holds in every world |
 | sizes | history tables under 5 MB at 1024 | at most 3,495 events (`turbulent`; 3,029 with four civilizations per race, 3,517 at span 12000): well under 1 MB |
 
-**Typical ranges from generator 0.19.0** (r17, 22.8; 1024, default settings; outside them is a finding, not a defect). The 5th to 95th percentile of the 100 worlds of the P3-10 validation at 0.19.0 r16 (`docs/reviews/p3-10-followups-validation.md` 5.8, 1024 seeds 0–99, release build), with the median. **To be re-measured after the P3-10 second round** (section 22 moves the orc and war figures); validation replaces them at the re-record. The 0.18.0 table (r13) is in the P3-09 validation, `docs/reviews/p3-09-conflict-balance-validation.md` 5.4.
+**Typical ranges from generator 0.19.0** (r19, 23.5; 1024, default settings; outside them is a finding, not a defect). The 5th to 95th percentile of the 100 worlds of the P3-10 second-round validation at 0.19.0 as merged (`docs/reviews/p3-10-followups-round2-validation.md` 5.1, with the three bounds its addendum corrects after the D1 fix: truces 1–15, largest race share 303–802, faerie standing settlements 3–13), with the median. **P3-11 (section 23) moves the orc and claim figures**; its validation reports them at 0.20.0 against this table. The 0.19.0 r16 table (r17) is in `docs/reviews/p3-10-followups-validation.md` 5.8, the 0.18.0 table (r13) in `docs/reviews/p3-09-conflict-balance-validation.md` 5.4.
 
 | Statistic | Typical range | Median |
 | --- | --- | --- |
-| events | 389 – 1,241 | 676.5 |
-| wars | 9 – 47 | 22.5 |
-| flare-ups | 1 – 7 | 4 |
-| claims | 17 – 82 | 37.5 |
-| battles | 30 – 193 | 79 |
-| battles involving faeries | 0 – 14 | 4 |
-| sacked | 5 – 22 | 10 |
-| taken (`settlement_captured`) | 1 – 20 | 6 |
-| cessions (`region_ceded`, 7.7 and 20.3) | 2 – 14 | 7 |
-| cessions of 20.3 | 1 – 10 | 4 |
+| events | 382 – 1,219 | 675.5 |
+| wars | 9 – 51 | 23 |
+| flare-ups | 1 – 8 | 4 |
+| claims (from 0.20.0 kinds 20 and 39 together, 23.2) | 17 – 85 | 38 |
+| battles | 30 – 191 | 76 |
+| battles involving faeries | 0 – 11 | 4 |
+| sacked | 5 – 26 | 12 |
+| taken (`settlement_captured`) | 1 – 21 | 6 |
+| cessions (`region_ceded`, 7.7 and 20.3, and the foothold cessions of 22.5; from 0.20.0 kinds 29 and 40 together, 23.3) | 2 – 15 | 8 |
+| cessions of 20.3 | 1 – 11 | 4.5 |
 | tributes | 1 – 13 | 5 |
-| flights (`refugees_settled`) | 0 – 3 | 0 |
-| endings: `peace` | 2 – 16 | 8 |
-| endings: `war_won` | 1 – 13 | 6 |
-| endings: `truce` | 1 – 14 | 6 |
-| endings: `search_abandoned` (`wars_unfound`) | 0 – 7 | 3 |
-| endings: conquest (`civ_conquered`) | 0 – 2 | 0 |
-| `wars_hollow_permille` | 58 – 401 | 230 |
+| flights (`refugees_settled`) | 0 – 2 | 0 |
+| endings: `peace` | 2 – 16 | 7 |
+| endings: `war_won` | 1 – 17 | 5 |
+| endings: `truce` | 1 – 15 | 6 |
+| endings: `search_abandoned` (`wars_unfound`) | 1 – 6 | 3 |
+| endings: conquest (`civ_conquered`) | 0 – 2 | 1 |
+| `wars_hollow_permille` | 43 – 375 | 220.5 |
 | `wars_same_goal_max` | 2 – 5 | 3 |
 | `wars_same_goal_unchanged_max` | 2 – 3 | 3 |
-| `race_population_share_max_permille` | 323 – 806 | 604.5 |
-| `race_regions_share_max_permille` | 296 – 774 | 455.5 |
-| largest civilization share of the non-islet land, max over the history (‰) | 125 – 361 | 205.5 |
+| `race_population_share_max_permille` | 303 – 802 | 564.5 |
+| `race_regions_share_max_permille` | 268 – 751 | 454 |
+| largest civilization share of the non-islet land, max over the history (‰) | 117 – 367 | 208 |
 | civilizations | 8 – 14 | 10 |
-| civilizations ended | 0 – 2 | 0 |
-| simulated years | 1,204 – 1,502 | 1,350 |
-| `simulated_permille` | 200 – 250 | 225 |
-| summary threshold | 26 – 36 | 31 |
+| civilizations ended | 0 – 2 | 1 |
+| simulated years | 1,200 – 1,540 | 1,337.5 |
+| `simulated_permille` | 200 – 256 | 222.5 |
+| summary threshold | 26 – 41 | 31 |
 | years from the goblins' awakening to the first war | 299 – 2,704 | 812.5 |
-| standing settlements: faerie | 3 – 13 | 5.5 |
-| standing settlements: elf | 2 – 29 | 8 |
-| standing settlements: orc | 1 – 14 | 5 |
-| standing settlements: human | 3 – 29 | 10 |
-| standing settlements: dwarf | 4 – 20 | 8 |
-| standing settlements: goblin | 7 – 92 | 42 |
+| standing settlements: faerie | 3 – 13 | 5 |
+| standing settlements: elf | 1 – 27 | 8 |
+| standing settlements: orc | 1 – 17 | 5 |
+| standing settlements: human | 3 – 28 | 11 |
+| standing settlements: dwarf | 4 – 18 | 8 |
+| standing settlements: goblin | 6 – 96 | 40.5 |
 
-Every race alive (a hard bound, T4). `wars_hollow_permille` is a per-world range here; T1 (P3-09 5) is the sweep's ratio, 229‰ at 0.18.0 and 234‰ at 0.19.0 r16. `wars_same_goal_unchanged_max` ≤ 3 is an invariant from r13 (20.28), not a range. The known observations of 20.29 (F1: 20.11's race-share range narrowly missed; F3: T1 above 250 outside the 1024 default set) are recorded there and are not defects. The paragraph below is r7's, for 0.16.0, kept as the record.
+Every race alive (a hard bound, T4). `wars_hollow_permille` is a per-world range here; T1 (P3-09 5) is the sweep's ratio, 229‰ at 0.18.0, 234‰ at 0.19.0 r16 and 227‰ (509 / 2,237) at 0.19.0 as merged. `wars_same_goal_unchanged_max` ≤ 3 is an invariant from r13 (20.28), not a range. The known observations of 20.29 (F1: 20.11's race-share range narrowly missed; F3: T1 above 250 outside the 1024 default set) are recorded there and are not defects. The paragraph below is r7's, for 0.16.0, kept as the record.
 
 **Typical ranges before 0.18.0** (1024, default settings; outside them is a finding, not a defect; r7: set to about the 5th to 95th percentile of the 100 worlds of the 0.16.0 validation, `docs/reviews/p3-06-expansion-conflict-validation.md` F3, measured by the P3-08 spec writer on its world files): wars 10–50 (p5 10, p95 50; before r7 10–40, which 20 of 100 worlds left); flare-ups 0–5 (p95 5); simulated years 1,120–1,450 (p5 1,162, p95 1,405); sacked 4–30 (p5 4, p95 30); civilizations ended 0–4; ruins mostly (≥ 70%) by sacking (p5 700‰; before r7 ≥ 80%); events 450–1,500 (p5 452, p95 1,451); summary threshold 26–46 (p95 46); every race alive; elves 3–40 standing settlements (p10 3; 7 of 100 worlds had 1, a finding for the critic, `docs/reviews/p3-06-conflict-world-critic.md` F5). The maxima of the 100 worlds: wars 75, sacked 45, events 1,795, flare-ups 7, simulated years 1,511, threshold 51.
 
@@ -1598,11 +1598,11 @@ Why 100: the orc age lasts about 450 to 470 years at defaults (critic F1). A ref
 
 Measured by validation at 1024 with default settings, seeds 0–99 (all 100 worlds have orcs), on the stored worlds; "orcs" means every civilization of race orc together.
 
-| Target | Definition | 0.18.0 | 0.19.0 r16 | Target |
-| --- | --- | --- | --- | --- |
-| **T5** (kept) | orc wins against orc losses over the sweep: `peace` and `war_won` with an orc civilization as `winner`, against those with one as `loser` | 114 / 68 | 95 / 77 | wins ≥ losses |
-| **T9** (new) | worlds in which the orcs have exactly one standing settlement at the present (E) | 7 | 21 | **at most 10** |
-| **T10** (new) | worlds in which no orc civilization **acts** in a year Y > E − 250 (5750 at the default span): no `claim` as `claimant`, `war_declared` as `attacker`, `colony_founded` as `founder`, `sacked` or `settlement_captured` as `attacker` (the critic's definition) | 0 | 9 | **at most 2** |
+| Target | Definition | 0.18.0 | 0.19.0 r16 | Target | 0.19.0 as merged (r19) |
+| --- | --- | --- | --- | --- | --- |
+| **T5** (kept) | orc wins against orc losses over the sweep: `peace` and `war_won` with an orc civilization as `winner`, against those with one as `loser` | 114 / 68 | 95 / 77 | wins ≥ losses | 98 / 50 |
+| **T9** (new) | worlds in which the orcs have exactly one standing settlement at the present (E) | 7 | 21 | **at most 10** | 7 |
+| **T10** (new) | worlds in which no orc civilization **acts** in a year Y > E − 250 (5750 at the default span): no `claim` as `claimant`, `war_declared` as `attacker`, `colony_founded` as `founder`, `sacked` or `settlement_captured` as `attacker` (the critic's definition) | 0 | 9 | **at most 2** (0 from 0.20.0, 23.1) | 0 |
 
 Also **reported**, with no target: T5 on the `calm` and `turbulent` sets (1024, seeds 0–19 each; 0.18.0 24 / 9 and 22 / 15, 0.19.0 r16 8 / 18 and 8 / 20), and T9 and T10 on those sets (0.19.0 r16: T9 8 and 10 of 20; T10 4 and 6 of 20); T8 (21.9) stays a reported statistic. Validation reports each target; **a missed target goes to the lead for a ruling before the merge**, and no tuning is changed on validation's own judgement. The levers, in the order the spec writer would try them: `quarrel_min_settlements` 3 (data); orc `hidden_years` 50 (data); holding back every declaration of a civilization whose quarrel is open, not only the quarrel claim (a rule change, 22.1's risk). *Not prototyped*: the rules of 22.1 and 22.2 were not run before this text; the figures above are the measured baselines only.
 
@@ -1610,7 +1610,7 @@ Also **reported**, with no target: T5 on the `calm` and `turbulent` sets (1024, 
 
 **The cause, from the rows** (1024 default seed 23, `critic/seed23-1024.db`). The Court of Onsae (c2) holds the Ancient Holt (region 45) from 2025 with four settlements. In 5555 the Kingdom of Durd (c9) takes Fiecaes (s80) from c2 (e587). 7.5 item 3 conquers a region only when the defender has no other standing settlement in it, so the region stays c2's and s80 is a Durd town in an Onsae region. In 5621 the Urarz Horde (c10) claims region 45 against c9 (e606, "held by the Kingdom of Durd"): region 45 is in `presence`(c9) through s80 (5.1), so it is in `front`(c10, c9) and an allowed goal (20.2). In 5640 c2 cedes region 45 to c10 in another war (e620). 20.27 passes every settlement **of the loser** in the ceded region, so c2's three settlements pass and s80, c9's, stays c9's: the `region_control` row of region 45 is c10's from 5640, and s80's `owner_civ` is c9 at the present. In 5668 c10 declares on c9 over region 45 (e639). The claim region is still an allowed goal, and c9 has a standing settlement in it, so 20.2 item 2 keeps it as the goal. At the war's first check (5669) 21.6 item 1 finds G's owner = the attacker and ends the war as won by aim (e640, `war_won`), with no battle. G cannot be ceded, since c9 does not hold it, so 20.3 takes tribute (e641, 3,369 carried off). Nothing about s80 changes, so the same claim, war and tribute recur (e699 in 5780–5781, e748 in 5887–5888). Seed 7 is the same chain. The Hold of Tokgru (c6) takes Grit Pit (s16) in Wardgrass (region 43) from the Skiz-Sleet Horde (c3) in 4966 (e362). c3 cedes Wardgrass to the Sneerk-Grik Mob (c4) in 4978 (e372), and s16 stays c6's. c4's wars over Wardgrass against c6 then end by aim after one year, with tribute (e438, e439) or with the cession of c6's best other region, Southwest Steppe (e657, e658), because Wardgrass itself is not c6's to cede.
 
-**Defect or gap: a gap, not a defect against the spec.** Every row follows the text as written. 7.5 item 3 allows a settlement in a region another civilization holds. 20.27 and invariant (13) pass every standing settlement **of L**, not every standing settlement in G, so a third party's settlement stays where it is. 5.1 and 20.2 allow a claim and a goal in a region the claimant holds, wherever the defender has a settlement. 21.6 item 1 tests G's owner only, so such a war is won at its first check. The absurd case is the product of the three, and no invariant forbids it. Measured at 0.19.0 r16 (100 default worlds; the holder at an event read from `region_control`): 184 standing settlements at the present stand in a region held by another civilization, in 69 worlds; 59 claims and 32 declarations named a region the claimant held; all 32 wars ended as attacker wins, 22 with no battle in one year (13 worlds; the critic's 22) and 10 with battles (5 of them after the attacker took or sacked the defender's settlement there).
+**Defect or gap: a gap, not a defect against the spec.** Every row follows the text as written. 7.5 item 3 allows a settlement in a region another civilization holds. 20.27 and invariant (13) pass every standing settlement **of L**, not every standing settlement in G, so a third party's settlement stays where it is. 5.1 and 20.2 allow a claim and a goal in a region the claimant holds, wherever the defender has a settlement. 21.6 item 1 tests G's owner only, so such a war is won at its first check. The absurd case is the product of the three, and no invariant forbids it. Measured at 0.19.0 r16 (100 default worlds; the holder at an event read from `region_control`): 151 standing settlements at the present stand in a region held by another civilization, in 64 worlds (r19, corrected after the second-round validation 4.1: r17 gave 184 in 69, which counts every standing settlement in a region not held by its owner, the 33 in regions held by no one included; 0.18.0: 150 in 67; 0.19.0 as merged: 135 in 61); 59 claims and 32 declarations named a region the claimant held; all 32 wars ended as attacker wins, 22 with no battle in one year (13 worlds; the critic's 22) and 10 with battles (5 of them after the attacker took or sacked the defender's settlement there).
 
 **Rule** (from 0.19.0 r17):
 
@@ -1618,7 +1618,7 @@ Also **reported**, with no target: T5 on the `calm` and `turbulent` sets (1024, 
 2. 21.6 items 2 and 3 are unchanged. When o = a and b still stands in G, item 3 applies: 7.7 items 1, 3 and 4 (exhaustion, no front, length, each by the score with 20.15's last-battle rule). The war is fought for b's settlements in G: G is in `front`(a, b) as a shared region, and 6.2 targets the goal whenever it can.
 3. **The foothold cession** (amends 7.7 "Cession" and 20.3). After a `peace` or `war_won` whose winner W is the attacker and whose loser L is the defender, with G the war's goal, the cost is chosen in this order:
    1. L holds G and G is not the region of L's capital: 7.7's cession of G, with 20.27, as before.
-   2. Otherwise, if W holds G, L has at least one standing settlement in G, and L's capital is not one of them: the **foothold cession**. Append `region_ceded` (region G; participants L `from`, W `to`; cause the ending), then pass every standing settlement of L in G by 20.27 item 1's procedure (ascending id; each one's excess over 2 × C(G, r_W) goes to L's nearest other standing settlement; `set_settlement_owner(s, W, region_ceded)`). `set_region_owner` is not called: W already holds G, and no `region_control` row is opened. `wronged`(L, W) gains G (20.5). 20.3 does not apply. In a quiet step the cost waits for both budgets, as any cession does (7.8, 20.3).
+   2. Otherwise, if W holds G, L has at least one standing settlement in G, and L's capital is not one of them: the **foothold cession**. Append `region_ceded` (region G; participants L `from`, W `to`; cause the ending; r19: from 0.20.0 kind 40 `settlements_ceded` with the passing settlements as participants, 23.3), then pass every standing settlement of L in G by 20.27 item 1's procedure (ascending id; each one's excess over 2 × C(G, r_W) goes to L's nearest other standing settlement; `set_settlement_owner(s, W, region_ceded)`). `set_region_owner` is not called: W already holds G, and no `region_control` row is opened. `wronged`(L, W) gains G (20.5). 20.3 does not apply. In a quiet step the cost waits for both budgets, as any cession does (7.8, 20.3).
    3. Otherwise, 20.3 (another region, else tribute), as before.
 
    A defender that wins (W the defender) pays nothing new: 20.3 as before. Kind 29's sentence reads "The Kingdom of Durd ceded the Ancient Holt to the Urarz Horde.": Durd gives up its hold there. Nothing in the kind's structure changes.
@@ -1634,7 +1634,7 @@ Also **reported**, with no target: T5 on the `calm` and `turbulent` sets (1024, 
 - **New (17)**: right after the cost of every `peace` or `war_won` won by the attacker W over L with goal G, that is, after the ending and the `region_ceded` or `tribute` it causes (if any), if W holds G then L has no standing settlement in G, unless L's capital stands in G. The reference replays settlement owners as for (13); a foothold cession is a `region_ceded` whose region's `region_control` does not change.
 - **(13)** holds for the foothold cession as for every cession.
 
-**Statistic and target.** A **quick aim win** is a `peace` or `war_won` with the attacker as winner, decided by item 1, whose war has no `battle` or `battle_at_pass` (the battles caused by its declaration) and whose `years` value is at most 1. Validation counts them from the reference's ending reasons; it is not a P3-07 report key. **Target: at most 3 in the 100 default 1024 worlds** (0.18.0: 2; 0.19.0 r16: 22). Item 1 still allows one when b's last settlement in G is lost to something other than a's arms in the war's first year (an abandonment, a third party's sack or capture), or when G passes to a by another war's cost. Also reported: foothold cessions per world, and wars over a region the attacker held at the declaration, by outcome.
+**Statistic and target.** A **quick aim win** is a `peace` or `war_won` with the attacker as winner, decided by item 1, whose war has no `battle` or `battle_at_pass` (the battles caused by its declaration) and whose `years` value is at most 1. Validation counts them from the reference's ending reasons; it is not a P3-07 report key. **Target: at most 3 in the 100 default 1024 worlds** (0.18.0: **0** by this definition, r19; r17 gave 2, which is the looser count of every attacker win with no battle in at most one year whatever the goal's holder, both of them over a goal held by no one or a third party; 0.19.0 r16: 22; 0.19.0 as merged: 0). Item 1 still allows one when b's last settlement in G is lost to something other than a's arms in the war's first year (an abandonment, a third party's sack or capture), or when G passes to a by another war's cost. Also reported: foothold cessions per world, and wars over a region the attacker held at the declaration, by outcome.
 
 ### 22.6 The bound of a search's weariness (validation F6; text only)
 
@@ -1646,7 +1646,7 @@ New named check of `history.conflict`, after `conflict_quarrel_strain`: **`confl
 
 ### 22.8 Typical ranges at 0.19.0 (amends 15.5; validation 5.8)
 
-15.5's typical-range table is replaced by the 5th–95th percentiles of the 100 default 1024 worlds of the P3-10 validation (generator 0.19.0 r16; `docs/reviews/p3-10-followups-validation.md` 5.8). **They are to be re-measured after this round** (22.1, 22.2, 22.5 move the orc and war figures), and validation replaces them with the r17 figures at the re-record.
+15.5's typical-range table is replaced by the 5th–95th percentiles of the 100 default 1024 worlds of the P3-10 validation (generator 0.19.0 r16; `docs/reviews/p3-10-followups-validation.md` 5.8). **They are to be re-measured after this round** (22.1, 22.2, 22.5 move the orc and war figures), and validation replaces them with the r17 figures at the re-record. (r19: replaced in 15.5 by the second-round validation's 5.1 with its addendum's three corrected bounds, 23.5.)
 
 ### 22.9 Data
 
@@ -1667,6 +1667,127 @@ New named check of `history.conflict`, after `conflict_quarrel_strain`: **`confl
 ### 22.11 Effect on output
 
 Every world changes (race and tuning data, so `content_hash`). History bytes change from the first point where a rule applies: a held-back quarrel claim, an orc flight (100 hidden years), a war over a region its attacker holds, a short quiet row (P3-04 r15 20.1), a name the new filter entries or the triple-letter rule reject (P3-02 r13 13). Worlds without orcs and without footholds change only through names and quiet rows.
+
+## 23. P3-11: orc arrival, claims and cessions that name the settlements, war goals, figures (amendment r19, generator 0.20.0)
+
+Normative for the change P3-11 (`docs/specs/p3-11-followups.md`), from generator **0.20.0**, not before. Sources: the world critic's notes N1, N2 and N4 of the P3-10 second round (`docs/reviews/p3-10-followups-round2-world-critic.md`) and the second-round validation's 4.1, 5.1 and addendum (`docs/reviews/p3-10-followups-round2-validation.md`). Where this section and sections 4–22 differ, this section rules. **No schema change** (schema 7): two kinds are appended (P3-04 r17 21.2), no kind is edited, and there is no new stream and no new draw.
+
+### 23.1 Orc targets (amends 22.4; the rule is P3-05 r16 23)
+
+The orcs' first acts come sooner through P3-05 23: the race field `awakening_population` (orc 1,200) lets the awakening settlement send settlers from its first tick. Nothing in this spec's rules changes for it: 22.1's hold-back (`quarrel_min_settlements` 2) stays, and the orcs' second settlement now comes within decades instead of a median 235 years. Paul's decisions stand and are not changed on purpose: orcs that live at peace among goblins (T8 stays a reported statistic; "71% is fine", `docs/design/proposals.md`, 2026-11-21) and the length of the orc age.
+
+Measured by validation at 1024 with default settings, seeds 0–99, on the stored worlds. "Orcs" means every civilization of race orc together.
+
+| Target | Definition | 0.19.0 as merged | Target at 0.20.0 |
+| --- | --- | --- | --- |
+| **T11** (new) | per world, the years from the orcs' `awakening` event to the first **orc act**: the earliest `colony_founded` with an orc civilization as `founder`, `war_declared` with one as `attacker`, or `sacked` or `settlement_captured` with one as `attacker`. A world with no orc act counts as E − (awakening year) + 1. The target is on the median over the 100 worlds | 232 (critic; 10th percentile 192) | **median below 100** |
+| **T9** (22.4) | worlds in which the orcs have exactly one standing settlement at the present (E) | 7 | at most 10 |
+| **T10** (22.4) | worlds in which no orc civilization acts (22.4's definition, with `claim`) in a year Y > E − 250 | 0 | **0** (the lead's constraint for P3-11; 22.4's bound was 2) |
+| **T5** (21.12) | orc wins against orc losses over the sweep (`peace` and `war_won`) | 98 / 50 | wins ≥ losses |
+| quick aim wins (22.5) | as 22.5 defines them | 0 | at most 3 |
+| **T1** (P3-09) | hollow wars ‰ over the sweep | 227 | at most 250 |
+
+The orc act of T11 leaves out claims on purpose. The awakening-quarrel claim (21.12) is raised in the orcs' first steps in nearly every world, so a measure that counted it would be met at 0.19.0 already, while the orcs then sat still for two centuries (the critic's N1).
+
+**Reported**, with no target:
+- T11's 10th and 90th percentiles;
+- the worlds with 200 or more years from the awakening to the first orc act (0.19.0: 88 of 100);
+- the median years from the awakening to the first orc `war_declared` (0.19.0: 244);
+- the first wars declared with at most one standing settlement, and their outcomes (`sweep/orcs.txt`'s lines);
+- the awakened orc civilizations whose capital is a fortress at the awakening, whose home is held by another civilization, or whose capital became a town before the first colony (P3-05 23.2's residual cases), each with its own T11 median;
+- T8 (21.9);
+- T5, T9, T10 and T11 on the `calm` and `turbulent` sets (1024, seeds 0–19 each).
+
+A missed target goes to the lead for a ruling before the merge, and validation changes no tuning on its own judgement (22.4). The levers, in the order the spec writer would try them:
+- **T11 missed**: orc `awakening_population` 1,125 (data: the longest window of P3-05 23.2), then the two-settlement horde of P3-05 23.3 (a rule change, back to the spec writer).
+- **T5 broken**: `quarrel_min_settlements` 3 (data: the quarrel waits for a third settlement), then orc `odds_min_permille` 600 (data).
+- **T9 or T10 missed**: to the lead with the per-world lines of `sweep/orcs.txt`.
+
+*Not prototyped*: the spec writer did not run the rule; 0.20.0's figures are validation's.
+
+### 23.2 A claim on settlements in a region the holder does not hold (amends 5.3 and 11)
+
+**Why** (the critic's N2). 5.3 lets a claim name a region R of `front(a, b)` that b does not hold: b has a standing visible settlement there (`presence(b)`, 5.1), while R is held by a itself (a foothold of b in a's land, 22.5), by a third civilization or by no one. Kind 20's sentence then says the wrong thing: "The Zatzeegg Mob laid claim to the Graven Thicket, held by the Bizz-Skuz Horde." (default seed 40, e168), where the Mob holds the Thicket and the Horde holds one town in it. The critic counts 46 such claims in 29 of the 100 default worlds where the claimant held R. Claims on a region held by a third party or by no one are *to be counted by validation*.
+
+**Rule.** In 5.3, once R is chosen (as before, by 5.3's key with 20.2 item 1):
+1. if R's owner at the claim (as 5.3 reads owners: live) is b, append `claim` (kind 20) as before;
+2. otherwise append **`claim_settlements`** (kind 39, P3-04 r17 21.2). Region R. Participants a as `claimant`, b as `holder`, then as `settlement` every standing visible settlement of b in R, in ascending id (at most 64 listed, the smallest ids; at least one, since R is in `presence(b)` and b does not hold it). Cause as 5.3: the `founding_event` of b's most populous standing settlement in R, ties to the smaller id.
+
+Everything else is as for a kind 20 claim. `claim[(a, b)]` = (that event, R). It is the casus belli of 7.2 and the cause of the `war_declared` (14 item 2). It is the trigger 5.4 reports, and P3-04 6.5's `flare_up` cause. It is the quarrel claim of 22.1 when the pair is the quarrel's, since 22.1 recognises the claim by the pair. **Wherever a rule, invariant, statistic or report reads a claim event, kinds 20 and 39 are read alike**: 7.2's causes, 8.3 item 4 and 20.13 item 15's claim-cause checks (r18), invariants (15) and (16), T10, 15.5's claims row, and P3-07's notes (P3-07 r14 23).
+
+**Template** (data, `history.report`, salience 35 as `claim`'s): `{claimant} laid claim to {settlement:all} of {holder} in {@region}.` Illustrative sentences (names from the critic's worlds; which settlements stood at each event was not checked by the spec writer):
+- one settlement: "The Zatzeegg Mob laid claim to Greerk-Zark Pit of the Bizz-Skuz Horde in the Graven Thicket.";
+- two: "The Snat Horde laid claim to Drutnot Hole and Nutskrank of the Stinrild League in King's Fold.";
+- three or more: "… laid claim to A, B and C of the Stinrild League in King's Fold."
+
+The `{role:all}` join (P3-04 8.5) gives `A`, `A and B` and `A, B and C`, so one template serves every count. "Of {holder}" follows the siege and sack sentences ("besieged X of Y"), so the holder is attached to the settlements and not to the region. A kind 20 claim keeps "held by", which is then always true. The `war_declared` sentence stays "over {@region}" (the critic: "the war line can stay").
+
+### 23.3 The foothold cession names what passed (amends 22.5 item 3.2 and 11)
+
+**Why** (N2). 22.5 item 3.2's foothold cession appends `region_ceded`, whose sentence "The Bizz-Skuz Horde ceded the Graven Thicket to the Zatzeegg Mob." (default seed 40, e198) tells the reader a region changed hands. In fact the winner already held it, and only the loser's settlements there passed. Validation counts 2 at defaults, 5 in `civs4`, 4 at 512, 1 at 2048 and 1 in `dense`.
+
+**Rule.** 22.5 item 3.2 appends **`settlements_ceded`** (kind 40, P3-04 r17 21.2) in place of `region_ceded`. Region G. Participants L as `from`, W as `to`, then as `settlement` every standing settlement of L in G that passes, visible or not, as 20.27 counts them, in ascending id (at most 64 listed). Cause: the ending. The transfer follows as 22.5 item 3.2 says (20.27 item 1's procedure; `set_settlement_owner(s, W, e)` with e this event; no `set_region_owner`, no `region_control` row). `wronged`(L, W) gains G. The quiet-step budget is a cession's (7.8, 20.3). Kind 29 `region_ceded` stays the event of every cession that passes the region (7.7, 20.3, 20.27). Invariants (13) and (17) read kind 40 as the cession of their text. 22.5's "a foothold cession is a `region_ceded` whose region's `region_control` does not change" becomes "a foothold cession is a `settlements_ceded`". The war lines of the golden (20.26) write `-foothold` for an ending followed by kind 40 (`-ceded` stays for kind 29).
+
+**Template** (data, salience 55 as `region_ceded`'s): `{from} gave up {settlement:all} in {@region} to {to}.` Illustrative sentences (as in 23.2):
+- one settlement: "The Bizz-Skuz Horde gave up Greerk-Zark Pit in the Graven Thicket to the Zatzeegg Mob.";
+- two: "The Stinrild League gave up Drutnot Hole and Nutskrank in King's Fold to the Snat Horde.";
+- three or more: "… gave up A, B and C in King's Fold to the Snat Horde."
+
+The region stays in the sentence so that the reader links the peace to the war "over King's Fold". The critic's "gave up its 2 towns" is not used: "its" does not agree with a realm named in the plural (P3-10 removed it from kinds 15 and 17), and the names say more than a count.
+
+**Effect.** 23.2 and 23.3 change only the kind and the participants of events written at the same point. No draw, no state and no other event changes. So with 23.1's data and P3-02 14's names held equal, the reference with 23.2 and 23.3 switched off gives the same event rows but for these kinds and participants (a reference self-check, 23.7 item 5).
+
+### 23.4 A war's goal and the claim it cites (the critic's N4; a reading, no rule change)
+
+**The rule as implemented** (7.2 "Declaring" with 20.2 item 2 (r9), 20.23 item 2 (r11), 21.7 item 1 (r14) and 22.5 item 4 (r17)). The declaration's candidate b is chosen by its claim c = `claim[(a, b)]` with region R_c. The goal is G = R_c if R_c is still an allowed goal against b and b holds R_c or has a standing visible settlement in it. An allowed goal (20.2) is in `front(a, b)`, not weary for b (20.4, 20.23, 21.7), and not the region of b's capital unless it is the only entry. Otherwise G is the allowed goal with the smallest 6.2 target key; if there is none, the claim is dropped and no war is declared. The `war_declared` has region G and cites c (and the pair's last `peace`). So G ≠ R_c in three cases, all arising between the claim and the declaration:
+- R_c became weary for b, through other wars over it or a failed search;
+- b lost R_c and its last settlement in it;
+- R_c became b's capital region (the capital moved there).
+
+The critic's cases are default seed 55, e624 (a war over East Wood citing a claim on Woodward's Shaw, e540) and turbulent seed 14, e873.
+
+**Decision: intended, not a defect.** Since P3-09 (r9, 20.2) the claim is the casus belli between the pair, not a fixed battlefield. Re-choosing the goal keeps a war from being declared over land that can no longer be fought for (a weary region), and keeps weariness and the capital rule from silently cancelling a grievance that is still live. Every row follows the text, and invariant (12) and T2 are stated on the goal G, not on R_c. What is missing is the reader's link, and that belongs to the report. P3-07 r14 23 item 3 adds it to the declaration's note: `The claim, since 5930, was to Woodward's Shaw.` Validation counts the declarations with G ≠ R_c per world, by the three cases (the reference knows which applied).
+
+**Rejected here**, and put to Paul as a non-blocking question in `docs/specs/p3-11-followups.md` section 10:
+- (b) writing a fresh claim on G at the declaration, so that the war cites a claim on its own goal. That adds one event per such war and states no new fact, and the new claim would have no cause of its own beyond the old claim.
+- (c) dropping the claim and declaring nothing when R_c is no longer a goal. That is a behaviour change, with fewer wars and every war target to re-measure (T1, T5, T9), for a wording problem.
+
+### 23.5 Figures corrected (text only; the second-round validation 4.1, 5.1 and addendum)
+
+1. 22.5: settlements standing at the present in a region held by **another civilization** at 0.19.0 r16 are **151 in 64 worlds**. r17's 184 in 69 counted every standing settlement in a region not held by its owner, the 33 in regions held by no one included. (0.18.0: 150 in 67; 0.19.0 as merged: 135 in 61.)
+2. 22.5: the quick-aim-win baseline at 0.18.0 is **0** by 22.5's own definition. r17's 2 is the looser count of every attacker win with no battle in at most one year whatever the goal's holder; both of those wars ended with the goal held by no one or by a third party.
+3. 22.4: the 0.19.0 figures as merged are added to its table (T5 98 / 50, T9 7, T10 0).
+4. 15.5: the typical ranges are the second-round validation's 5.1, with the addendum's three corrected bounds: truces 1–15, largest race share of people 303–802, faerie standing settlements 3–13 (22.8's "to be re-measured" is done). T1 at 0.19.0 as merged is 227‰ (509 / 2,237).
+
+### 23.6 Data
+
+- `history.report` (`game/data/history/report.toml` and both fixture copies): two entries appended after `quiet_stretch`, in kind order: `claim_settlements` (salience 35) and `settlements_ceded` (salience 55), with the templates of 23.2 and 23.3.
+- Race field `awakening_population` (P3-01 r14 3.7; P3-05 r16 23): orc 1,200, others 0.
+- `history.conflict`: unchanged.
+- `content_hash` changes for every world.
+
+### 23.7 Tests (adds to 22.10)
+
+1. 23.2 claims:
+   - a claims R, which b holds: kind 20 as before;
+   - a holds R, and b has visible settlements s5 and s9 and a hidden s12 there: kind 39 with participants a, b, s5, s9 (not s12), cause the founding of the more populous of s5 and s9, sentence "… laid claim to S5 and S9 of B in R.";
+   - R held by a third civilization, or by no one: kind 39;
+   - a war declared on a kind 39 claim cites it;
+   - the tension reports it and a flare-up's `flare_up` is caused by it;
+   - a quarrel claim of kind 39 is held back by 22.1 as one of kind 20.
+2. 23.3: in 22.10 item 4's foothold case, a win by the score writes one `settlements_ceded` (from L, to W, the passing settlements in ascending id, a hidden one included) and no `region_ceded`. No `region_control` row opens. Each passing settlement's owner change cites the kind 40 event. An ordinary cession still writes kind 29.
+3. Invariants: (13) and (17) with kind 40; (15), (16) and T10 with kind 39. Every `settlement` participant of kinds 39 and 40 lies in the event's region, and is owned at the event by the `holder` (39) or by the `from` side (40).
+4. Golden: `p3-06-conflict.txt` re-recorded by the reference (the war lines gain `-foothold`; every history line with orcs moves through P3-05 23).
+5. Reference self-check (23.3 "Effect"): on the property worlds, 23.2 and 23.3 switched off give the same event rows (ids, years, kinds other than 39 and 40 as 20 and 29, regions, causes, values) and participants other than the `settlement` ones.
+
+### 23.8 Effect on output
+
+Every world changes: the race field and the report entries change `content_hash`, the P0 empty worlds included. History bytes change:
+- in every world with orcs, from the orcs' awakening (P3-05 23);
+- in a claim of kind 39 or a foothold cession (an event's kind and participants only);
+- where a name changes (P3-02 r15 14: the faerie syllables, the repeated-syllable rule for every culture, `tard` and the new words).
+
+Sentences with a value from one to nine change their text (P3-04 r17 21.1), not their bytes. Worlds without orcs change through names and these two kinds only.
 
 ## Appendix A. Proposals entries (added to `docs/design/proposals.md` with this spec)
 
@@ -1762,3 +1883,7 @@ New section 22 (`docs/specs/p3-10-followups.md` section 12, items 18 to 26), aft
 ## Revision note r18 (2026-11-21, text after the P3-10 second-round integration)
 
 Text only; no rule, value, golden or code change. 8.3 item 4 and 20.13 item 15: a same-step colony is a valid claim cause, as the tests apply it, also when no `region_control` row carries its founding: the colony is in the claimed region, its founder is the holder, and the holder held that region in no row in force the year before (case `stress-7` e1153, where a T4 secession passed the region on). The check is wider than "the region had no owner the year before"; in the one case reached the region had no owner. 20.27 items 7 and 8: the same-step colony cession case is no longer in 2048 seed 3 or 1024 seed 36; the slow suite uses 1024 seed 5 `turbulent` (e933, e1102), and no default 1024 world with seeds 0 to 160 has one; 1024 default seed 42's e286 (5119, region 22) is a goal cession in a quiet phase with a standing loser settlement passing.
+
+## Revision note r19 (2026-11-21, P3-11; generator 0.20.0)
+
+New section 23 (`docs/specs/p3-11-followups.md`). 23.1: the orc targets for P3-11 (new T11, the median years from the orcs' awakening to their first colony, declaration, sack or capture, below 100; T10 at 0; T9, T5, quick aim wins and T1 kept), with the levers; the rule is P3-05 r16 23 (`awakening_population`). 23.2: a claim on a region the holder role does not hold is kind 39 `claim_settlements` and names the holder's settlements there; claims of kinds 20 and 39 are read alike. 23.3: the foothold cession of 22.5 is kind 40 `settlements_ceded` and names the settlements that pass. 23.4: a war whose goal differs from the claim it cites follows 20.2 item 2 and is intended; the report names the claim's region (P3-07 r14 23). 23.5 and in place: 22.5's figures (151 in 64; the quick-aim baseline 0 at 0.18.0), 22.4's table with the 0.19.0 figures as merged, 15.5's typical ranges from the second-round validation with the addendum's three bounds. 23.6 to 23.8: data, tests, effect. No earlier section is renumbered; no schema change.

@@ -1,6 +1,6 @@
 # P3-04 Simulation engine
 
-Status: **approved by the lead 2026-11-19; corrected after implementation (r3, the lead's rulings of 2026-11-19)** **r12 (2026-11-20, P3-10, generator 0.19.0): section 20, quiet stretches, `{@causes:…}`, thousands separators** **r15 (2026-11-21, P3-10 second round): no quiet line for a stretch shorter than `quiet_min_years` (20.1 item 1a)** (the six questions of section 19 go to Paul; the interim choices stand). Written by the spec writer 2026-11-19; amendments 18.2 and 18.3 applied the same day; revision r1 (P3-07's amendments) the same day. Phase P3 History core, spec 4 (P3-00 3.1), pipeline stage 8, `history`, as an engine with stub subsystems. Generator **0.14.0**; **schema version 7** (thirteen new tables, one new required `meta` key, section 9). Design doc sections 5 (deep time, ages, active phases, quiet intervals, flare-ups, records, determinism; creation; entities; tick loop), 6 (tables `phase`, `event`, `event_participant`, `event_cause`, `civilization`, `settlement`, `relation`; `meta` end year), 13 (P3 row and exit check; P4 timeline and territory by year; P5 interventions) and 14 (records a model can narrate and validate; the divine script as an intervention source). Depends on P0-01 to P0-04 with their amendments, P1-06 (region tables), P3-00 (binding; amended in 18.3), P3-01 (kind `history`), P3-02 (keyed draws, names), P3-03 (chronology tables, `HistoryParams`, the registry rule 8.2). Implementation read: `origin/p3/03-int` at 3ddc942 (generator 0.13.0, schema 6). Proposals read: up to "History: with a subset of races the first one present opens history; every race keeps its creator god". Also addresses the P3-03 determinism audit's advisories A1 (fatal guards for schedule invariants) and A2 (H8 must not rest on in-memory values): sections 3.2, 3.3 and 5.6. Revision r2 (P3-05's amendments) 2026-11-19. **Revision r10 (2026-11-20, for P3-08, generator 0.17.0; `docs/specs/p3-08-followups.md`)**: names inside a sentence lose a leading capital `The` (8.5, P1-06 r3 14.7), a three-word form of `{value?…}` (8.4, 8.5), one quiet era per civilization and quiet phase row (6.6), the `quiet_era` template (4.2), the engine microbenchmark (14.3); see the revision note.
+Status: **approved by the lead 2026-11-19; corrected after implementation (r3, the lead's rulings of 2026-11-19)** **r12 (2026-11-20, P3-10, generator 0.19.0): section 20, quiet stretches, `{@causes:…}`, thousands separators** **r15 (2026-11-21, P3-10 second round): no quiet line for a stretch shorter than `quiet_min_years` (20.1 item 1a)** **r17 (2026-11-21, P3-11, generator 0.20.0): section 21, numbers one to nine as words, kinds 39 and 40** (the six questions of section 19 go to Paul; the interim choices stand). Written by the spec writer 2026-11-19; amendments 18.2 and 18.3 applied the same day; revision r1 (P3-07's amendments) the same day. Phase P3 History core, spec 4 (P3-00 3.1), pipeline stage 8, `history`, as an engine with stub subsystems. Generator **0.14.0**; **schema version 7** (thirteen new tables, one new required `meta` key, section 9). Design doc sections 5 (deep time, ages, active phases, quiet intervals, flare-ups, records, determinism; creation; entities; tick loop), 6 (tables `phase`, `event`, `event_participant`, `event_cause`, `civilization`, `settlement`, `relation`; `meta` end year), 13 (P3 row and exit check; P4 timeline and territory by year; P5 interventions) and 14 (records a model can narrate and validate; the divine script as an intervention source). Depends on P0-01 to P0-04 with their amendments, P1-06 (region tables), P3-00 (binding; amended in 18.3), P3-01 (kind `history`), P3-02 (keyed draws, names), P3-03 (chronology tables, `HistoryParams`, the registry rule 8.2). Implementation read: `origin/p3/03-int` at 3ddc942 (generator 0.13.0, schema 6). Proposals read: up to "History: with a subset of races the first one present opens history; every race keeps its creator god". Also addresses the P3-03 determinism audit's advisories A1 (fatal guards for schedule invariants) and A2 (H8 must not rest on in-memory values): sections 3.2, 3.3 and 5.6. Revision r2 (P3-05's amendments) 2026-11-19. **Revision r10 (2026-11-20, for P3-08, generator 0.17.0; `docs/specs/p3-08-followups.md`)**: names inside a sentence lose a leading capital `The` (8.5, P1-06 r3 14.7), a three-word form of `{value?…}` (8.4, 8.5), one quiet era per civilization and quiet phase row (6.6), the `quiet_era` template (4.2), the engine microbenchmark (14.3); see the revision note.
 
 Numbers in this spec come from the spec writer's exact-integer prototype `~/.cache/the-unmapped/out/p3-04-spec/engine_proto.py` (on the P3-03 and P3-02 references; awakening years over seeds 0–999 and all 63 race subsets) and from the P1-06 validation worlds (`~/.cache/the-unmapped/out/p1-06-validation/`, whose geography is unchanged at 0.13.0). The empty-world size was measured with Python's SQLite 3.46.1 (9.6); the engineer confirms it with the vendored SQLite.
 
@@ -1052,6 +1052,50 @@ No schema change (8.2's list): two kinds are appended, two kinds stop being writ
 3. Separators: values 0, 999, 1000, 1155, 25000, 1000000, −1000, −999 in `{value}` and in `#` render `0`, `999`, `1,000`, `1,155`, `25,000`, `1,000,000`, `-1,000`, `-999`; `{@year}` 4393 renders `4393`.
 4. The P3-04 golden vectors (`p3-04-engine.txt`): the stub worlds' `e<n>` sentence lines change (quiet lines, separators); their `phase` rows' years and kinds, event years except the quiet lines and their kinds' ids, and their participants other than the quiet lines do not. (r14) The `phase` rows' `trigger_event` column does move: it holds event ids, and event ids renumber when one `quiet_stretch` replaces a row's `quiet_era` lines.
 
+## 21. Small numbers as words; two conflict kinds (amendment r17, P3-11, generator 0.20.0)
+
+Normative for the change P3-11 (`docs/specs/p3-11-followups.md`, items 2 and 5), from generator **0.20.0**, not before. **No schema change**: two kinds are appended (21.2) and a rendering rule changes (21.1); no role or value key of an existing kind, no code list and no column changes (8.2's list).
+
+### 21.1 Numbers one to nine as words (amends 8.5's `{value}`, the `#` of the three-word form, and 20.3)
+
+Why: sentences mix words and digits for the same small counts, as in "spread to one other settlement" (a three-word form) beside "spread to 2 other settlements", "4 realms kept the peace", "broke away from the Kingdom of Bocksul with 1 settlement" (the P3-10 world critic's F5, still open in round 2: "with 1 settlement" 40 times in 100 default worlds). The critic suggests words for 1 to 9 and digits from 10.
+
+Rule: in `render_event`, a value v with **1 ≤ v ≤ 9** renders as the lower-case English word `one`, `two`, `three`, `four`, `five`, `six`, `seven`, `eight`, `nine`. This applies wherever 20.3's separators apply: to `{value}` and to each `#` of a chosen three-word form. Every other value renders as 20.3 says: 0, negative values and 10 to 999 as digits, and |v| ≥ 1,000 with separators. It does not apply to `{@year}` or `{@end_year}` (a year stays `5`), to the choice made by `{value?w1|w2}` and `{value?w0|w1|w2}` (which depends on the value, not on its text), to `?`-words, which are copied as they are (`one` in `{fled?| and one fled| and # fled}` is the template's own word), or to anything outside `render_event` (P3-07's own numbers, `[stats]`, refs and notes keep digits). The word is never capitalized. No shipped template puts a value at a sentence start, and a test checks that (21.3 item 2).
+
+| Template (shipped) | 0.19.0 | 0.20.0 |
+| --- | --- | --- |
+| `civ_seceded` (17) | `The Berd League broke away from the Kingdom of Bocksul with 1 settlement.` | `… with one settlement.` |
+| `plague_outbreak` (37) | `Plague broke out in X and spread to 2 other settlements; 1,084 died in all.` | `… spread to two other settlements; 1,084 died in all.` |
+| `quiet_stretch` (38) | `…, the land was quiet, and 4 realms kept the peace.` | `…, and four realms kept the peace.` |
+| `peace`, `war_won`, `truce`, `search_abandoned` | `… after 3 years of war.` | `… after three years of war.` |
+| `battle` (22) | `…; 7 of the defeated and one of the victors fell.` | `…; seven of the defeated and one of the victors fell.` |
+| `famine` (13), `settlement_captured` (26) | `Famine struck X; 8 died.` | `Famine struck X; eight died.` |
+
+No template changes: the rule is in the renderer, so every template, old and new, reads it. Stored values do not change. The rule changes no world byte (sentences are not stored), only stored golden sentences holding a value from 1 to 9.
+
+### 21.2 Catalogue (appended to 8.2 and 20.4)
+
+| id | key | caused | region | settlement | roles (seq: role, entity type, min–max) | values (seq: key) | written by |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 39 | `claim_settlements` | 1 | 1 | 0 | 1: `claimant`, civilization, 1–1; 2: `holder`, civilization, 1–1; 3: `settlement`, settlement, 1–0 (unbounded) | — | P3-06 (23.2) |
+| 40 | `settlements_ceded` | 1 | 1 | 0 | 1: `from`, civilization, 1–1; 2: `to`, civilization, 1–1; 3: `settlement`, settlement, 1–0 (unbounded) | — | P3-06 (23.3) |
+
+Kind 39 is written in place of kind 20 `claim` for a claim on a region the holder role does not hold (P3-06 23.2); kind 40 in place of kind 29 `region_ceded` for the foothold cession of P3-06 22.5 item 3.2 (P3-06 23.3). Kinds 20 and 29 keep their structure and are still written for every other claim and cession. Adding the settlements as a role of kinds 20 or 29 would be a schema change (8.2), so each case gets its own kind. The `settlement` role lists at most `MAX_PARTICIPANTS` (64, 20.1) participants, the settlements with the smallest ids. No shipped world comes near it, since a region holds a few settlements (P3-05 6.3). `docs/specs/schema.md` 6 gains both rows (the engineer).
+
+Templates (data, `history.report`; P3-06 23.2, 23.3):
+
+```
+claim_settlements   salience 35   {claimant} laid claim to {settlement:all} of {holder} in {@region}.
+settlements_ceded   salience 55   {from} gave up {settlement:all} in {@region} to {to}.
+```
+
+### 21.3 Tests (amends 20.6)
+
+1. Numbers: values 0, 1, 2, 9, 10, 11, 999, 1000 and −3 in `{value}` and in `#` render `0`, `one`, `two`, `nine`, `10`, `11`, `999`, `1,000`, `-3`; `{@year}` 5 renders `5`; `{n?one|#}` with n = 1 renders `one` and with n = 4 `#` (the two-word form's `#` is an ordinary byte, 8.4); `{n?|one|#}` with n = 4 renders `four`; the six rows of 21.1's table.
+2. Every shipped template (`game/data/history/report.toml`): no `{value}` or three-word value body at byte 0 or directly after `. `.
+3. Kinds 39 and 40: the catalogue unit test (role and value keys distinct, 8.2); `template_problem` accepts both templates, accepts `{settlement}` (min count 1: the first participant), and refuses `{@settlement}` in both (`settlement_use` 0); rendering with one, two and three `settlement` participants gives `A`, `A and B`, `A, B and C`, each name under the names rule of 8.5 (r10).
+4. The P3-04 golden vectors (`p3-04-engine.txt`): stub sentence lines with a value from 1 to 9 change; nothing else of them.
+
 ## Appendix A. Proposals entry (added to `docs/design/proposals.md` with this spec)
 
 "History: active phases scale with the history span; the detail level sets the simulated share" (questions 1 to 3). Schema 7 itself is recorded in "History: schema versions 6 and 7"; its column details are this spec's 9.1.
@@ -1119,3 +1163,7 @@ New section 20, normative from generator 0.19.0 (`docs/specs/p3-10-followups.md`
 ## Revision note r16 (2026-11-21, text after the P3-10 second-round integration)
 
 20.6 item 00: the plain stub cases do not keep every quiet line; a quiet row shorter than `quiet_min_years` loses its line there too, as in `geo-seed-0-512` (5684 to 5699, 16 years). No rule or output change.
+
+## Revision note r17 (2026-11-21, P3-11; generator 0.20.0)
+
+New section 21 (`docs/specs/p3-11-followups.md` items 2 and 5): values from one to nine render as words in sentences (21.1, a rendering rule beside 20.3's separators; no template changes); kinds 39 `claim_settlements` and 40 `settlements_ceded` appended, with their templates, for P3-06 23.2 and 23.3 (21.2); tests (21.3). No schema change; no earlier section is renumbered.

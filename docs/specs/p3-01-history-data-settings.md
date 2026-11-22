@@ -1,6 +1,6 @@
 # P3-01 History data and settings
 
-Status: **approved by the lead 2026-11-19; revised 2026-11-19 (text only, after implementation); amended 2026-11-19 for P3-03 (r2); amended again 2026-11-19 after the P3-03 implementation (r3: check D0); r11 (2026-11-20, P3-10, generator 0.19.0): three cell weights, 3.4; odds minimum per race, 3.5; r13 (2026-11-21, P3-10 second round): hidden years per race, 3.6**: see the revision notes at the end. Phase P3 History core, spec 1 (P3-00 3.1). Design doc sections 3 (data in TOML), 5 (the six races, their order, camps and timing; "Food and homelands"; world-creation settings), 6 (`meta` holds the settings). Depends on P0-03 (with amendments 15 to 17), P0-04, P1-00 6 and P3-00. Written together with P3-02, which defines the culture naming record that this spec's `culture` kind carries. Amended 2026-11-19 for P3-05 (r6: `density_permille`, field meanings) and for P3-06 (r7: `prowess_permille`, goblin aggression, id `conflict`, all from generator 0.16.0).
+Status: **approved by the lead 2026-11-19; revised 2026-11-19 (text only, after implementation); amended 2026-11-19 for P3-03 (r2); amended again 2026-11-19 after the P3-03 implementation (r3: check D0); r11 (2026-11-20, P3-10, generator 0.19.0): three cell weights, 3.4; odds minimum per race, 3.5; r13 (2026-11-21, P3-10 second round): hidden years per race, 3.6; r14 (2026-11-21, P3-11, generator 0.20.0): awakening population per race and the faerie naming data, 3.7**: see the revision notes at the end. Phase P3 History core, spec 1 (P3-00 3.1). Design doc sections 3 (data in TOML), 5 (the six races, their order, camps and timing; "Food and homelands"; world-creation settings), 6 (`meta` holds the settings). Depends on P0-03 (with amendments 15 to 17), P0-04, P1-00 6 and P3-00. Written together with P3-02, which defines the culture naming record that this spec's `culture` kind carries. Amended 2026-11-19 for P3-05 (r6: `density_permille`, field meanings) and for P3-06 (r7: `prowess_permille`, goblin aggression, id `conflict`, all from generator 0.16.0).
 
 ## 1. Purpose
 
@@ -328,6 +328,12 @@ New race field **`odds_min_permille`** int(0, 1000), required, after `home_defen
 
 New race field **`hidden_years`** int(0, 10000), required, after `awakening_quarrel`: the years a fled refuge of the race stays hidden and its civilization lies low (P3-06 20.1 item 2, 22.2, 22.3). Shipped **orc 100**; elf, goblin, dwarf, faerie and human 300. It replaces the `history.conflict` field `hidden_years` (300), which is removed; the old key is refused as unknown. `history.conflict` gains **`quarrel_min_settlements`** int(0, 1000), shipped 2, appended after `quarrel_strain` (P3-06 22.1), and the named check **`conflict_quarrel_strain_max`** after `conflict_quarrel_strain`: `quarrel_strain` ≤ `strain_max`, message `quarrel_strain must not be above strain_max` (P3-06 22.7). The fixture race and conflict files change alike; loader tests (8.1) cover the new field's range and absence, the removed key, and the check (`strain_max` 500 with `quarrel_strain` 600 fails).
 
+### 3.7 Awakening population per race; faerie naming data (P3-11; r14; P3-05 r16 23, P3-02 r15 14)
+
+New race field **`awakening_population`** int(0, 100000), required, after `hidden_years`: the population of the first settlement of a civilization placed at an awakening, clamped to the home's capacity; 0 means `history.peoples.founding_population` (P3-05 23.2). Shipped **orc 1200**; elf, goblin, dwarf, faerie and human **0**. The fixture race files change alike. Loader tests (8.1) cover the range (−1 and 100001 refused) and the field's absence. From generator 0.20.0.
+
+The faerie culture's `naming` block changes its `onsets`, `nuclei`, `codas` and `forbidden` lists as P3-02 r15 14.1 gives them, and the `name_filter` lists change as P3-02 14.3 gives them, in `game/data/` and both fixture roots. No field of kind `culture` or `name_filter` changes; section 4's faerie block is read from P3-02 section 14 from 0.20.0.
+
 ## 4. Kind `culture`
 
 Directory `cultures/`, **required**. Fields, all required, in this order:
@@ -563,3 +569,7 @@ New section 3.4 (`docs/specs/p3-10-followups.md`, P3-05 22.5): record `race_cell
 ## Revision note r13 (2026-11-21, P3-10 second round; generator stays 0.19.0)
 
 New 3.6: race field `hidden_years` (orc 100, others 300) replacing `history.conflict.hidden_years`; `history.conflict` gains `quarrel_min_settlements` (2) and the check `conflict_quarrel_strain_max` (P3-06 r17 22.1, 22.2, 22.7). Every change takes effect at generator 0.19.0.
+
+## Revision note r14 (2026-11-21, P3-11; generator 0.20.0)
+
+New 3.7: race field `awakening_population` (orc 1200, others 0) after `hidden_years` (P3-05 r16 23); the faerie naming lists and the `name_filter` lists change as P3-02 r15 14.1 and 14.3 give them (data only, no field change). Every change takes effect at generator 0.20.0.
