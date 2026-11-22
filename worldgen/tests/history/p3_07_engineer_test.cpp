@@ -213,3 +213,42 @@ TEST_CASE("P3-07 engineer: a few corrupt tables of 5.3") {
         CHECK(e.message.find(": phase 1, expected ") != std::string::npos);
     }
 }
+
+TEST_CASE("P3-07 engineer: the upland flag on a damaged region row has no overflow (audit S1)") {
+    // cells = walk_cells = 2^62 passes every check of 5.3; 4 * walk_cells
+    // would overflow. The flag is false (walk_cells is not below cells / 4).
+    // cells = 2^62 + 1, walk_cells = 2^60: upland (4 * 2^60 < 2^62 + 1);
+    // cells = 2^63 - 1, walk_cells = 2^61 - 1: upland (2^63 - 4 < 2^63 - 1).
+    struct Case {
+        const char* sql;
+        bool upland;
+    };
+    const Case cases[] = {
+        {"UPDATE region SET cells = 4611686018427387904, walk_cells = 4611686018427387904, lake_cells = 0 "
+         "WHERE id = (SELECT home_region FROM civilization WHERE id = 1)",
+         false},
+        {"UPDATE region SET cells = 4611686018427387905, walk_cells = 1152921504606846976, lake_cells = 0 "
+         "WHERE id = (SELECT home_region FROM civilization WHERE id = 1)",
+         true},
+        {"UPDATE region SET cells = 9223372036854775807, walk_cells = 2305843009213693951, lake_cells = 0 "
+         "WHERE id = (SELECT home_region FROM civilization WHERE id = 1)",
+         true},
+    };
+    int k = 0;
+    for (const Case& c : cases) {
+        const std::string path = copy_of(world_42(), "p3-07-upland-" + std::to_string(k++) + ".db");
+        REQUIRE(wdb::testing::execute_on_file(path, c.sql).ok());
+        for (const wi::HistoryLevel level : {wi::HistoryLevel::summary, wi::HistoryLevel::full}) {
+            const std::vector<std::string> lines = lines_of(report_of(path, level));
+            std::string home;
+            for (std::size_t i = 0; i + 2 < lines.size(); ++i) {
+                if (lines[i].rfind("c1 ", 0) == 0 && lines[i + 1].rfind("  race: ", 0) == 0) {
+                    home = lines[i + 2];
+                    break;
+                }
+            }
+            REQUIRE(home.rfind("  home: ", 0) == 0);
+            CHECK((home.size() >= 8U && home.compare(home.size() - 8U, 8U, ", upland") == 0) == c.upland);
+        }
+    }
+}

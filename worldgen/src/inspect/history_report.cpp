@@ -8,6 +8,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <new>
+#include <optional>
 #include <span>
 #include <utility>
 #include <vector>
@@ -60,6 +61,29 @@ std::string_view word(const std::array<std::string_view, N>& words, std::int64_t
 
 bool standing(std::int64_t status) noexcept {
     return status == 1 || status == 2;
+}
+
+// The upland rule of P3-00 7, 4 * walk_cells < cells, without the product:
+// cells and walk_cells are only bounded below by 5.3 (0 <= walk_cells <=
+// cells, cells >= 1), so 4 * walk_cells could overflow on a damaged file.
+bool upland(const history::RegionInfo& r) noexcept {
+    return r.walk_cells < r.cells / 4 + (r.cells % 4 != 0 ? 1 : 0);
+}
+
+// The two reads of the file (read_history_tables, then HistoryView::load)
+// are separate snapshots. Everything the digest and the report index in one
+// by a value of the other is checked here, so that a file changed between
+// the reads is a corrupt-table error and never an out-of-range index.
+std::optional<std::string> reads_disagree(const HistoryView& view, const history::HistoryTables& t) {
+    if (static_cast<std::int64_t>(view.events().size()) != t.event_rows) {
+        return std::string("corrupt table 'event': the file changed while it was read");
+    }
+    for (const HistoryView::Event& e : view.events()) {
+        if (e.row.phase < 1 || static_cast<std::size_t>(e.row.phase) > t.phases.size()) {
+            return std::string("corrupt table 'event': the file changed while it was read");
+        }
+    }
+    return std::nullopt;
 }
 
 class Report {
@@ -233,7 +257,7 @@ private:
         line("  race: " + escape_history_text(r->name) + " (ra" + num(r->id) + ")");
         const history::RegionInfo* home = region_row(c.home_region);
         line("  home: " + region(c.home_region) + ", " + biome_key(home->biome) +
-             (4 * home->walk_cells < home->cells ? ", upland" : ""));
+             (upland(*home) ? ", upland" : ""));
         const db::AgeRow* age = age_of(c.founded_year);
         line("  founded: " + num(c.founded_year) + " in " + escape_history_text(age->name) + " (a" + num(age->id) +
              "), e" + num(c.founding_event));
@@ -500,6 +524,9 @@ db::Result<std::string> build_history_report(const db::WorldReader& world, Histo
         db::Result<HistoryView> view = HistoryView::load(world);
         if (!view.ok()) {
             return view.error();
+        }
+        if (const std::optional<std::string> why = reads_disagree(view.value(), tables.value())) {
+            return db::Error{db::ErrorCode::corrupt_layer, *why};
         }
         const history::HistoryDigest digest = history::digest_history(view.value(), tables.value());
         return Report(view.value(), tables.value(), digest, level).build();
