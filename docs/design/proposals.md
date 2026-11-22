@@ -889,7 +889,7 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
   1. History renames regions: a region's defining event (a great sack, a long war, a founding, a plague) can give it its present-day name, with the old name kept in the record.
   2. Mountain peoples get history of their own: delvings, lost holds and mines as events, not only wars.
 - Interim choice: neither is specified. Both suit P5 History depth (the first also needs the record of renamed places that sites and quests in P6 would use). The grim share of drawn region names can be lowered in data before then.
-- Status: open; both listed as open questions in design.md section 12 (2026-11-21)
+- Status: accepted by Paul on 2026-11-22 for P5 History depth (see "Paul's decision of 2026-11-22: regions renamed by history, and a history for the mountain peoples"); both listed as open questions in design.md section 12 (2026-11-21)
 
 ### Region names: the plain compass name, a second look
 
@@ -1063,3 +1063,17 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
   6. A war fought over another region than the claim it cites: a fresh claim is written on the new goal at the declaration (option (b) of `docs/specs/p3-11-followups.md` section 10 item 1), so every war cites a claim on its own region. This replaces the shipped reading (a), the note "(The claim, since ..., was to ...)".
 - Interim choice: decision 6 adds an event per such war and so changes world bytes. It is scheduled with the next change that alters world bytes, together with the items of `docs/specs/p3-11-followups.md` section 12; until then generator 0.20.0 keeps reading (a) and the history report's note.
 - Status: accepted; decision 6 to be specified and implemented with the next balance change
+
+### Paul's decision of 2026-11-22: regions renamed by history, and a history for the mountain peoples
+
+- Date: 2026-11-22
+- Raised by: Paul, in the session, on the two ideas of "History: two ideas from the world critic's review of P3-08"
+- Design doc section: 4 (regions), 5 (history: the peoples, trade, monsters), 12 (open questions)
+- Decisions:
+  1. **History renames regions**: accepted. A region's defining event (a great sack, a long war, a founding, a plague) can give it its present-day name, with the old name kept in the record.
+  2. **Mountain peoples get history of their own**: accepted, with Paul's direction for the dwarves:
+     - They are great forgers. They make wealth and weapons, and trade them to the other kingdoms. This joins the trade and wealth already placed in P5 (Paul, 2026-11-20: "P5 is where the alliances and trade and wealth should go"), and the artifacts made in response to conflicts.
+     - The mines hold great dangers. Delving deep can wake something that wipes a hold or a whole realm out, leaving a lost hold as a ruin and a site. (Paul's example is the Balrog of The Lord of the Rings; the game needs its own deep horrors, from the monster data of design section 5.)
+  3. The share of grim region names is lowered in data before P5, with the next change that alters world bytes.
+- Interim choice: 1 and 2 go to P5 History depth, to be specified there (events for delvings, forging, trade in arms, a woken danger and lost holds; a record of renamed places for the sites and quests of P6). 3 joins the items of `docs/specs/p3-11-followups.md` section 12.
+- Status: accepted; design doc sections 5 and 12 to be updated
