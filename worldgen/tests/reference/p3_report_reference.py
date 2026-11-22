@@ -191,8 +191,11 @@ def enc_value(v):
         return b"\x00"
     if isinstance(v, int):
         return b"\x01" + struct.pack("<q", v)
-    b = v.encode("latin-1") if isinstance(v, str) else bytes(v)
-    return b"\x03" + struct.pack("<Q", len(b)) + b
+    if isinstance(v, str):
+        b = v.encode("latin-1")
+        return b"\x03" + struct.pack("<Q", len(b)) + b
+    b = bytes(v)   # a BLOB (P0-04 8: tag 0x04); no P3-07 fixture has one, T1 of P4-01 does
+    return b"\x04" + struct.pack("<Q", len(b)) + b
 
 
 def table_hash(ncols, rows):
