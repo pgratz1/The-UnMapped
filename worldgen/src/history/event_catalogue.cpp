@@ -761,13 +761,14 @@ db::Result<HistoryView> HistoryView::load(const db::WorldReader& world) {
             }
         }
         for (const db::RaceRow& r : read(db::read_race_rows(world), db::RACE_TABLE)) {
-            v.races_.emplace_back(r.id, RaceNames{r.name, r.plural, r.adjective});
+            v.races_.emplace_back(r.id, RaceNames{r.name, r.plural, r.adjective, r.generation_years});
         }
         for (const db::GodRow& r : read(db::read_god_rows(world), db::GOD_TABLE)) {
             v.gods_.emplace_back(r.id, r.name);
         }
         for (const db::CivilizationRow& r : read(db::read_civilization_rows(world), db::CIVILIZATION_TABLE)) {
             v.civilizations_.emplace_back(r.id, r.name);
+            v.civilization_info_.emplace_back(r.id, CivilizationInfo{r.race, r.founded_year});
         }
         for (const db::SettlementRow& r : read(db::read_settlement_rows(world), db::SETTLEMENT_TABLE)) {
             v.settlements_.emplace_back(r.id, r.name);
@@ -908,6 +909,19 @@ const std::string* HistoryView::race_plural(std::int64_t id) const noexcept {
 const std::string* HistoryView::race_adjective(std::int64_t id) const noexcept {
     const RaceNames* r = find_by_id(races_, id);
     return r != nullptr ? &r->adjective : nullptr;
+}
+
+std::int64_t HistoryView::race_generation_years(std::int64_t id) const noexcept {
+    const RaceNames* r = find_by_id(races_, id);
+    return r != nullptr ? r->generation_years : 0;
+}
+
+std::optional<HistoryView::CivilizationInfo> HistoryView::civilization_info(std::int64_t id) const noexcept {
+    const CivilizationInfo* c = find_by_id(civilization_info_, id);
+    if (c == nullptr) {
+        return std::nullopt;
+    }
+    return *c;
 }
 
 // --- render_event (8.5) ------------------------------------------------------------------

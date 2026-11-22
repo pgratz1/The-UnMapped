@@ -39,6 +39,7 @@ Exit exit_for(ErrorCode code) noexcept {
         case ErrorCode::table_not_found:
         case ErrorCode::no_primary_key:
         case ErrorCode::real_value:
+        case ErrorCode::history_missing:
             return Exit::input;
     }
     return Exit::internal;

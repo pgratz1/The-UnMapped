@@ -49,6 +49,7 @@
 #include "worldgen/inspect/geography.hpp"
 #include "worldgen/inspect/hashes.hpp"
 #include "worldgen/inspect/render.hpp"
+#include "worldgen/inspect/history_report.hpp"
 #include "worldgen/inspect/report.hpp"
 #include "worldgen/stages/stage.hpp"
 #include "worldgen/version.hpp"
@@ -202,9 +203,11 @@ constexpr std::string_view RENDER_USAGE =
     "Prints the absolute path of the written image.\n";
 
 constexpr std::string_view REPORT_USAGE =
-    "usage: worldgen-cli report --db PATH [--out PATH] [--force] [--verbose]\n"
+    "usage: worldgen-cli report --db PATH [--history [--level summary|full]] [--out PATH] [--force] [--verbose]\n"
     "\n"
     "  --db PATH           world file\n"
+    "  --history           print the history report (format '# worldgen history v1') instead of the world report\n"
+    "  --level LEVEL       with --history: summary (default) or full\n"
     "  --out PATH          write the report to this file instead of stdout\n"
     "  --force             replace an existing output file\n"
     "  --verbose           print progress and timings to stderr\n";
@@ -994,20 +997,44 @@ const CommandSpec REPORT{
     REPORT_USAGE,
     {
         {"db", true},
+        {"history", false},
+        {"level", true},
         {"out", true},
         {"force", false},
     },
 };
 
+// --history and --level (P3-07 4): checked after tokenizing, before any
+// file is opened. std::nullopt: the world report.
+std::optional<inspect::HistoryLevel> parse_history_options(const Options& options) {
+    const std::string* level = options.value("level");
+    if (!options.flag("history")) {
+        if (level != nullptr) {
+            usage_error("--level needs --history");
+        }
+        return std::nullopt;
+    }
+    if (level == nullptr) {
+        return inspect::HistoryLevel::summary;
+    }
+    const std::optional<inspect::HistoryLevel> parsed = inspect::parse_history_level(*level);
+    if (!parsed) {
+        usage_error("invalid --level '" + *level + "'; expected summary or full");
+    }
+    return parsed;
+}
+
 Exit run_report(const Options& options) {
     const Progress progress(options.flag("verbose"));
+    const std::optional<inspect::HistoryLevel> history = parse_history_options(options);
     const std::string& db_path = required(options, "report", "db");
     const std::string* out = options.value("out");
     const bool force = options.flag("force");  // meaningful with --out only
 
     const db::WorldReader world = open_world(db_path, progress);
-    progress.note("building the report");
-    db::Result<std::string> report = inspect::build_report(world);
+    progress.note(history ? "building the history report" : "building the report");
+    db::Result<std::string> report = history ? inspect::build_history_report(world, *history)
+                                             : inspect::build_report(world);
     if (!report.ok()) {
         fail_with(report.error());
     }

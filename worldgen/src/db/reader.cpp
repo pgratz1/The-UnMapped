@@ -392,6 +392,11 @@ std::string WorldReader::content_hash() const {
     return meta(META_CONTENT_HASH).value_or(std::string());
 }
 
+const std::string& WorldReader::path() const noexcept {
+    static const std::string none;
+    return state_ != nullptr ? state_->path : none;
+}
+
 // --- layers -----------------------------------------------------------------
 
 Result<std::vector<LayerInfo>> WorldReader::layers() const {

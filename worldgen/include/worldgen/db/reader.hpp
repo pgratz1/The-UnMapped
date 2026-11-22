@@ -146,6 +146,8 @@ public:
     [[nodiscard]] std::uint32_t map_size() const noexcept;       // meta.param.map_size
     [[nodiscard]] std::vector<std::string> stages() const;       // meta.stages split at ','
     [[nodiscard]] std::string content_hash() const;              // meta.content_hash
+    // The path as given to open(), as the reader's messages print it.
+    [[nodiscard]] const std::string& path() const noexcept;
 
     // --- Layers (P0-02 9, "Layer list", "Layer read") -----------------------
 
