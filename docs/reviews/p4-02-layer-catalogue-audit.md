@@ -34,6 +34,12 @@ Lint: a rule `non-ascii-literal` (a raw byte of 0x80 or more inside a string or 
 
 `layer_catalogue.cpp:241`: for M = 1, the list −M, −M/2, −1, 0, P/2, P gives −1 twice and 0 two or three times, for example "0" again when P = 1. This is deterministic and follows the spec text (no de-duplication is stated). It is noted only in case the viewer should show each value once.
 
+## Follow-up (after `origin/p4/02-fix`, f542aae)
+
+- **A1 closed.** `origin/p4/02-fix` is merged into `p4/02-audit`. In the diff, the four literals at `worldgen/src/inspect/layer_catalogue.cpp:74, 76, 394, 422` are now `"\xC2\xB0" "C"`, split so that the `C` is not read as a hex digit. The two header comments (`layer_catalogue.hpp:71, 98`) are ASCII. No non-ASCII byte remains in `worldgen/src`, `worldgen/include` or `tools/worldgen-cli`. The output bytes are the same C2 B0 as before.
+- **New lint rule `non-ascii-literal`** (`tools/lint/determinism_lint.py`, `tools/lint/README.md`, self-test `tools/lint/selftest/bad_encoding.cpp`). It reports a non-ASCII character in any string or character literal (plain, joined, raw, prefixed) in the library and the CLI. Comments are not checked. It reports all four pre-fix lines of `origin/p4/02-impl`. On the merged tree, the self-test passes (19 snippet files) and the scan has 0 findings (169 C++ files, 13 CMake files), with no suppressions.
+- **A2 accepted.** The viewer repeats those rows today, and the stage preserves that behaviour.
+
 ## Verdict
 
-Pass with advisories (A1, A2). There are no blocking findings.
+Pass. A1 is closed and A2 is accepted. There are no blocking findings.
