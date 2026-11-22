@@ -1080,7 +1080,7 @@ No template changes: the rule is in the renderer, so every template, old and new
 | 39 | `claim_settlements` | 1 | 1 | 0 | 1: `claimant`, civilization, 1–1; 2: `holder`, civilization, 1–1; 3: `settlement`, settlement, 1–0 (unbounded) | — | P3-06 (23.2) |
 | 40 | `settlements_ceded` | 1 | 1 | 0 | 1: `from`, civilization, 1–1; 2: `to`, civilization, 1–1; 3: `settlement`, settlement, 1–0 (unbounded) | — | P3-06 (23.3) |
 
-Kind 39 is written in place of kind 20 `claim` for a claim on a region the holder role does not hold (P3-06 23.2); kind 40 in place of kind 29 `region_ceded` for the foothold cession of P3-06 22.5 item 3.2 (P3-06 23.3). Kinds 20 and 29 keep their structure and are still written for every other claim and cession. Adding the settlements as a role of kinds 20 or 29 would be a schema change (8.2), so each case gets its own kind. The `settlement` role lists at most `MAX_PARTICIPANTS` (64, 20.1) participants, the settlements with the smallest ids. No shipped world comes near it, since a region holds a few settlements (P3-05 6.3). `docs/specs/schema.md` 6 gains both rows (the engineer).
+Kind 39 is written in place of kind 20 `claim` for a claim on a region the holder role does not hold (P3-06 23.2); kind 40 in place of kind 29 `region_ceded` for the foothold cession of P3-06 22.5 item 3.2 (P3-06 23.3). Kinds 20 and 29 keep their structure and are still written for every other claim and cession. Adding the settlements as a role of kinds 20 or 29 would be a schema change (8.2), so each case gets its own kind. An event has at most `MAX_PARTICIPANTS` (64, 20.1) participants in all, so the `settlement` role lists at most **62** settlements after the two civilizations, those with the smallest ids (r18; r17 said 64 settlements). The implementation lists 62; the test writer's reference lists up to 64, a known difference that no world reaches (`docs/specs/p3-11-followups.md` 7). No shipped world comes near it, since a region holds a few settlements (P3-05 6.3). `docs/specs/schema.md` 6 gains both rows (the engineer).
 
 Templates (data, `history.report`; P3-06 23.2, 23.3):
 
@@ -1167,3 +1167,7 @@ New section 20, normative from generator 0.19.0 (`docs/specs/p3-10-followups.md`
 ## Revision note r17 (2026-11-21, P3-11; generator 0.20.0)
 
 New section 21 (`docs/specs/p3-11-followups.md` items 2 and 5): values from one to nine render as words in sentences (21.1, a rendering rule beside 20.3's separators; no template changes); kinds 39 `claim_settlements` and 40 `settlements_ceded` appended, with their templates, for P3-06 23.2 and 23.3 (21.2); tests (21.3). No schema change; no earlier section is renumbered.
+
+## Revision note r18 (2026-11-22, text after the P3-11 validation)
+
+21.2: kinds 39 and 40 list at most 62 settlements, since an event has at most 64 participants and two are the civilizations. No rule change: the implementation does this.
