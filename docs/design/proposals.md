@@ -1134,7 +1134,7 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
   11. Budget: each stage adds at most 5 s at 1024; the whole default `generate` stays under 60 s at the end of P5 (about 9 s at generator 0.20.0).
   12. Exit check: "takes part" means a participant of at least one event; each race, camp and monster kind has a hard and a sweep target (P5-00 8.3); a bloc of allies and vassals is held to the runaway bound.
 - Interim choice: as proposed; the stage specs follow them. Four questions change the split or order and are put to Paul (P5-00 11): sites in P5, gods late with all five intervention kinds, renamed regions early, no sub-peoples in P5 (hill dwarves an optional stage after P5-07, dark elves after underground geography).
-- Status: open
+- Status: accepted by Paul on 2026-11-22 (see "Paul's decision of 2026-11-22: the P5 overview's questions go with their recommendations")
 
 ### Paul's decision of 2026-11-22: the P4 overview's questions go with their recommendations
 
@@ -1149,3 +1149,14 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
   5. The walkthrough world of the exit check is seed 42 at 1024.
 - Status: accepted; design doc section 12's two P4 questions to be marked decided
 
+### Paul's decision of 2026-11-22: the P5 overview's questions go with their recommendations
+
+- Date: 2026-11-22
+- Raised by: Paul, in the session, after reading the open questions of `docs/specs/p5-00-history-depth-overview.md`
+- Design doc section: 5 (history), 6 (world database: sites), 12 (open questions: sub-peoples, history renames regions), 13 (P5, P6)
+- Decisions, each as recommended:
+  1. Sites: stage P5-02 creates the `site` table for the places history acts on (lairs, mines, towers, marked shrines, lost holds). P6 adds the sites derived from the event log and the dungeon records.
+  2. The gods come late, as stage P5-08, after monsters and figures, so that all five kinds of intervention arrive together.
+  3. Regions renamed by history come right after P5-01 (stage P5-12 in the overview's numbering); which events can rename a region is set in data, so later stages add their own.
+  4. Sub-peoples: none inside P5's stages; one culture per race. Hill dwarves may be a small optional stage after the mountain depths (P5-07); dark elves wait for underground geography.
+- Status: accepted; design doc sections 12 and 13 to be updated
