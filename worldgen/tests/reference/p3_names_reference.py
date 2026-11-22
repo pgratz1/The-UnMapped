@@ -322,6 +322,18 @@ def with_god_patterns(d, god_patterns):
 
 CULTURES_R5 = {cid: with_god_patterns(d, GOD_PATTERNS[cid]) for cid, d in CULTURES_R4.items()}
 CULTURES_R5["elven"]["civilization_forms"] = ["The Court of {root}", "The Realm of {root}", "The House of {root}"]
+# r15 (P3-02 14.1, P3-11, generator 0.20.0): the faerie onsets p -> v, b -> gl; ee and ou once among 16 nuclei
+# (the seven others twice); the coda p removed; ass forbidden. Transcribed from 14.1's listing; every other field
+# of the faerie naming and every other culture unchanged.
+FAERIE_R15 = {
+    "onsets": ["", "v", "f", "w", "l", "s", "t", "gl", "sh", "wh", "fl", "tw", "m"],
+    "nuclei": ["i", "i", "ee", "ie", "ie", "ia", "ia", "a", "a", "y", "y", "ae", "ae", "ou", "o", "o"],
+    "codas": ["", "", "ll", "n", "sh", "th", "sk", "ss"],
+    "forbidden": ["eee", "iee", "yy", "ouou", "shsh", "ass"],
+}
+CULTURES_R15 = {cid: dict(d) for cid, d in CULTURES_R5.items()}
+CULTURES_R15["faerie"] = dict(CULTURES_R5["faerie"], **{k: list(v) for k, v in FAERIE_R15.items()})
+assert list(CULTURES_R15["faerie"]) == list(CULTURES_R5["faerie"])   # the declaration order is kept
 CULTURE_ORDER = ("dwarven", "elven", "faerie", "goblin", "human", "orcish")  # canonical id order, c = 1..6
 CULTURE_NUMBER = {cid: i + 1 for i, cid in enumerate(CULTURE_ORDER)}
 
@@ -501,15 +513,17 @@ def use_version(v):
     pdr.use_version(v)
     FILTER_COMMIT = None if pdr.at_least("0.18.0") else pdr.NAME_FILTERS_017_COMMIT
     _SHIPPED_FILTER = None
-    global TRIPLE_RULE
+    global TRIPLE_RULE, REPEAT_RULE
     TRIPLE_RULE = pdr.at_least("0.19.0")
+    REPEAT_RULE = pdr.at_least("0.20.0")
     use_rules(RULES)
 
 
 def use_rules(r):
     global RULES, CULTURES, FILTER
     if r == "r5":
-        CULTURES, FILTER = CULTURES_R5, shipped_filter()
+        # r15 (0.20.0): the faerie lists of 14.1
+        CULTURES, FILTER = (CULTURES_R15 if pdr.at_least("0.20.0") else CULTURES_R5), shipped_filter()
     elif r == "r4":
         CULTURES, FILTER = CULTURES_R4, EMPTY_FILTER
     else:
@@ -575,17 +589,20 @@ def attempt(d, kind, seed, c, e, t, trace=None, filt=None, flags=None):
         trace.append((1, u1, len(pats), pi, "pattern", pattern))
     root = ""
     j = 2
+    drawn = []   # (symbol, string drawn) per pattern position, separators included (14.2)
     for s in pattern:
         if s in "ONC":
             arr = d[{"O": "onsets", "N": "nuclei", "C": "codas"}[s]]
             uj = u(j)
             i = pick(uj, len(arr))
             root += arr[i]
+            drawn.append((s, arr[i]))
             if trace is not None:
                 trace.append((j, uj, len(arr), i, s, arr[i]))
             j += 1
         else:
             root += s
+            drawn.append((s, s))
     valid = root_valid(d, root)
     name = form.replace("{root}", cap(root), 1)
     valid = valid and len(name) <= 48
@@ -595,7 +612,49 @@ def attempt(d, kind, seed, c, e, t, trace=None, filt=None, flags=None):
     trip = valid and not filtered and TRIPLE_RULE and triple(name)
     if flags is not None:
         flags["triple"] = trip
-    return valid and not filtered and not trip, name, root
+    rep = valid and not filtered and not trip and REPEAT_RULE and repeated(drawn)
+    if flags is not None:
+        flags["repeated"] = rep
+        flags["drawn"] = drawn
+        flags["r4valid"] = valid
+        flags["word"] = root_word(form, root)
+    return valid and not filtered and not trip and not rep, name, root
+
+
+# P3-02 r15 14.2 (P3-11, generator 0.20.0): no syllable repeated twice in a row, for every culture. REPEAT_RULE
+# follows the served data version (use_version).
+REPEAT_RULE = True
+
+
+def syllables(drawn):
+    """14.2: [(s_i, b_i)] of an attempt from its (symbol, string drawn) per pattern position. A boundary stands at
+    the first symbol, before every O, before every N not directly preceded by O, and at every separator (which
+    belongs to no syllable); b_i leaves out the strings drawn for C symbols."""
+    out, cur, prev = [], None, None
+    for sym, piece in drawn:
+        if sym in SEP:
+            if cur is not None:
+                out.append(tuple(cur))
+            cur, prev = None, sym
+            continue
+        if cur is not None and (sym == "O" or (sym == "N" and prev != "O")):
+            out.append(tuple(cur))
+            cur = None
+        if cur is None:
+            cur = ["", ""]
+        cur[0] += piece
+        if sym != "C":
+            cur[1] += piece
+        prev = sym
+    if cur is not None:
+        out.append(tuple(cur))
+    return out
+
+
+def repeated(drawn):
+    """14.2: some two consecutive syllables with s_i not empty and s_i = s_{i+1} or s_i = b_{i+1} (bytes)."""
+    sy = syllables(drawn)
+    return any(a[0] != "" and (a[0] == b[0] or a[0] == b[1]) for a, b in zip(sy, sy[1:]))
 
 
 # P3-02 r13 13.2 (P3-10 second round, generator 0.19.0): an attempt whose rendered name holds the same letter a-z
@@ -1031,6 +1090,8 @@ def golden_text():
     if RULES == "r5" and pdr.at_least("0.19.0"):
         o.extend(r10_golden_lines())
         o.extend(r13_golden_lines())
+    if RULES == "r5" and pdr.at_least("0.20.0"):
+        o.extend(r15_golden_lines())
     return "\n".join(o) + "\n"
 
 
@@ -1111,8 +1172,9 @@ def check_r13(ck):
         ck.eq("13.2 triple %r" % n, triple(n), True)
     for n in R13_NOT_TRIPLE:
         ck.eq("13.2 not triple %r" % n, triple(n), False)
-    ck.eq("13.1 sizes of the shipped filter (effective)", (len(sf.anywhere), len(sf.at_start), len(sf.whole)),
-          (110, 31, 508))
+    ck.eq("13.1 sizes of the shipped filter (effective; r15 14.3 from 0.20.0)",
+          (len(sf.anywhere), len(sf.at_start), len(sf.whole)),
+          (109, 31, 511) if pdr.at_least("0.20.0") else (110, 31, 508))
     filters = {d: t for d, t in pdr.load_root("game/data", ["name_filter"])["name_filter"]}
     ck.eq("13.1 name_filter_not_redundant passes on the edited lists", pdr.name_filter_messages(sorted(filters.items())),
           [])
@@ -1151,6 +1213,315 @@ def check_r13(ck):
                                                    if l.split(" ", 5)[4] == "F" else l.split(" ", 5)[5])], [])
         ck.eq("invariant 7 (13.3) seed %d, core lists" % seed,
               [l for l in core_list(seed) if l.split(" ", 5)[4] != "F" and triple(l.split(" ", 6)[6])], [])
+
+
+# ---------------------------------------------------------------------------
+# P3-02 r15 section 14 (P3-11, generator 0.20.0)
+# ---------------------------------------------------------------------------
+
+# 14.2's table and 14.4's OONC case: (pattern, strings drawn for its O, N, C symbols in order, repeated?), the
+# expected result transcribed from the spec.
+R15_ROWS = (
+    ("ONONON", ("w", "i", "fl", "ee", "fl", "ee"), True),     # wifleeflee
+    ("ONONC", ("l", "i", "l", "i", "n"), True),                # lilin
+    ("ONON", ("f", "i", "f", "i"), True),                      # fifi
+    ("ONON", ("f", "ee", "f", "ee"), True),                    # feefee
+    ("ONON", ("n", "o", "n", "o"), True),                      # nono
+    ("ONCONC", ("d", "a", "ck", "d", "a", "ck"), True),        # dackdack (human)
+    ("ONC-ONC", ("kr", "a", "k", "kr", "a", "k"), True),       # krak-krak (goblin)
+    ("ONCONC", ("gr", "a", "n", "gr", "a", "k"), False),       # grangrak (dwarven)
+    ("ONON", ("f", "ee", "f", "i"), False),                    # feefi
+    ("ONONON", ("tw", "i", "wh", "i", "w", "ou"), False),      # twiwhiwou
+    ("ONCON", ("l", "i", "ll", "", "ia"), False),              # lillia
+    ("OONC", ("", "l", "i", "n"), False),                      # 14.4: syllables "" and lin, s_1 empty
+)
+
+
+def row_drawn(pattern, pieces):
+    """(symbol, string) per pattern position of a row (separators copied)."""
+    out, it = [], iter(pieces)
+    for s in pattern:
+        out.append((s, next(it)) if s in "ONC" else (s, s))
+    return out
+
+
+def row_root(pattern, pieces):
+    return "".join(p for _, p in row_drawn(pattern, pieces))
+
+
+def row_culture(pattern, pieces):
+    """A test culture whose lists hold exactly the row's strings per symbol (first appearance order), the row's
+    pattern only, no forbidden entry, letters 1 to 32, every form {root}: every attempt passes the r4 rules, so
+    only 14.2 (and the shipped filter, checked) can reject one. Also built by the C++ test from the rrow line."""
+    lists = {"O": [], "N": [], "C": []}
+    for s, p in row_drawn(pattern, pieces):
+        if s in lists and p not in lists[s]:
+            lists[s].append(p)
+    return naming(lists["O"], lists["N"], lists["C"] or [""], [pattern], 1, 32, [], ["{root}"], ["{root}"],
+                  ["{root}"])
+
+
+def find_row_attempt(d, pattern, pieces, kind="settlement", seed=0, c=1):
+    """The smallest (e, t), e in 1..200, t in 0..63, whose attempt draws exactly the row's strings."""
+    want = row_drawn(pattern, pieces)
+    for e in range(1, 201):
+        for t in range(64):
+            fl = {}
+            attempt(d, kind, seed, c, e, t, flags=fl)
+            if fl["drawn"] == want:
+                return e, t
+    raise AssertionError("row %s %r not reached" % (pattern, pieces))
+
+
+def dot(xs):
+    """A comma-joined list with '.' for an empty string (golden lines)."""
+    return ",".join(x if x else "." for x in xs)
+
+
+# 14.4: the redraw and the fallback. Culture rep: "Ba" (ON) is valid, "Baba" (ONON) repeated.
+REP = naming(["b"], ["a"], [""], ["ON", "ONON"], 2, 4, [], ["{root}"], ["{root}"], ["{root}"])
+# 14.3's names (P3-02 11.7 item 10: the stems written as concatenations): root words filtered by tard, and not.
+R15_TARD = ("tard" + "ham", "tard" + "wuldwick", "hork" + "tard", "s" + "tard")
+R15_WORDS = ("via", "van", "von", "ova")
+# P3-02 r15 14.4 / 5.1's protocol at 0.20.0 (seed 0, one registry: settlements 1-20, civilizations 1-5, gods 1-3):
+# the faerie sample for the critic, recorded from this reference (SAMPLES_R15; not a spec transcription).
+SAMPLES_R15 = {
+    "faerie": ("Liava, Wiatwiesk Glade, Twamae Glade, Lith, Gliafloss Glade, Viashaeth Hollow, Teelan, Meeie Hollow, "
+               "Sywyn Hollow, Iatysk, Wievysk, Miamo Hollow, Mavofie, Fitoth Hollow, Showhia Hollow, "
+               "Mawhiath Hollow, Ashfli Hollow, Whywo, Fliavosk Hollow, Whosy Hollow",
+               "The Lysk Ring; The Watiafia Court; The Gloss Ring; The Wosk Ring; The Twiwhiwae Ring",
+               "Fiwhall, Fiaglo, Gliallsho"),
+}
+
+
+def r15_rep_entity(seed=0):
+    """The smallest entity of culture rep (settlement, c 1) whose attempt 0 is repeated (Baba) and whose first
+    valid attempt is later."""
+    for e in range(1, 500):
+        fl = {}
+        v, _, _ = attempt(REP, "settlement", seed, 1, e, 0, flags=fl)
+        if not v and fl["repeated"]:
+            return e
+    raise AssertionError("no rep entity")
+
+
+def r15_golden_lines():
+    o = ["# r15 (P3-02 14, generator 0.20.0):",
+         "#   rrow <i> <pattern> <onsets> <nuclei> <codas> <pieces> <e> <t> <valid 0|1> <root>  14.2's table and",
+         "#       14.4's OONC row: a test culture whose lists are the comma lists (. is the empty string), the",
+         "#       row's pattern only, letters 1-32, no forbidden entry, forms {root}; settlement, seed 0, c 1;",
+         "#       (e, t) the first attempt drawing exactly the row's pieces; valid = not repeated",
+         "#   rattempt <i> <e> <t> <valid 0|1> <repeated 0|1> <pieces> <name>  every attempt t 0-15 of e 1-3",
+         "#       of row i's culture (settlement, seed 0, c 1); the name of a repeated attempt is the drawn one",
+         "#   rresult rep <kind> <seed> 1 <e> <attempt|F> <name> [<registry comma-joined>]  make_name of culture",
+         "#       rep (b / a / . / ON,ONON / 2-4), the entity whose settlement attempt 0 drew Baba; the line with a",
+         "#       registry starts from {Ba}: the fallback numbers Ba, the first valid attempt",
+         "#   sattempt <seed> <culture> <kind> <c> <e> <t> <valid 0|1> <repeated 0|1> <name>  shipped",
+         "#       cultures: the first attempt at seed 42 rejected by 14.2 alone (entities from 1) and the next",
+         "#   sample15 <culture> <settlements|civilizations|gods> <names joined by '; '>  5.1's protocol at",
+         "#       0.20.0 for the faerie culture (the critic's sample)"]
+    for i, (pat, pieces, _) in enumerate(R15_ROWS, 1):
+        d = row_culture(pat, pieces)
+        e, t = find_row_attempt(d, pat, pieces)
+        fl = {}
+        v, n, root = attempt(d, "settlement", 0, 1, e, t, flags=fl)
+        o.append("rrow %d %s %s %s %s %s %d %d %d %s" % (i, pat, dot(d["onsets"]), dot(d["nuclei"]), dot(d["codas"]),
+                                                         dot(pieces), e, t, 1 if v else 0, root))
+    for i, (pat, pieces, _) in enumerate(R15_ROWS, 1):
+        d = row_culture(pat, pieces)
+        for e in (1, 2, 3):
+            for t in range(16):
+                fl = {}
+                v, n, _ = attempt(d, "settlement", 0, 1, e, t, flags=fl)
+                o.append("rattempt %d %d %d %d %d %s %s" % (i, e, t, 1 if v else 0, 1 if fl["repeated"] else 0,
+                                                            dot([p for s, p in fl["drawn"] if s in "ONC"]), n))
+    e = r15_rep_entity()
+    for kind in KINDS:
+        n, t = make_name(REP, "rep", kind, 0, 1, e, set())
+        o.append("rresult rep %s 0 1 %d %s %s" % (kind, e, t, n))
+    n, t = make_name(REP, "rep", "settlement", 0, 1, e, {"Ba"})
+    o.append("rresult rep settlement 0 1 %d %s %s Ba" % (e, t, n))
+    for cid in CULTURE_ORDER:
+        for kind in KINDS:
+            for e in range(1, 3000):
+                fl = {}
+                v, _, _ = attempt(CULTURES[cid], kind, 42, CULTURE_NUMBER[cid], e, 0, flags=fl)
+                if fl["repeated"]:
+                    for t in (0, 1):
+                        fl = {}
+                        v, n, _ = attempt(CULTURES[cid], kind, 42, CULTURE_NUMBER[cid], e, t, flags=fl)
+                        o.append("sattempt 42 %s %s %d %d %d %d %d %s" % (cid, kind, CULTURE_NUMBER[cid], e, t,
+                                                                         1 if v else 0, 1 if fl["repeated"] else 0, n))
+                    break
+    s, v, g = sample_names("faerie")
+    o.append("sample15 faerie settlements %s" % "; ".join(s))
+    o.append("sample15 faerie civilizations %s" % "; ".join(v))
+    o.append("sample15 faerie gods %s" % "; ".join(g))
+    return o
+
+
+def check_r15(ck):
+    """P3-02 r15 14.4."""
+    for i, (pat, pieces, want) in enumerate(R15_ROWS, 1):
+        ck.eq("14.2 row %d %s repeated" % (i, row_root(pat, pieces)), repeated(row_drawn(pat, pieces)), want)
+        d = row_culture(pat, pieces)
+        ck.eq("14.2 row %d culture valid data" % i, validate(d), [])
+        e, t = find_row_attempt(d, pat, pieces)
+        fl = {}
+        v, _, root = attempt(d, "settlement", 0, 1, e, t, flags=fl)
+        ck.eq("14.2 row %d attempt (filter passes, r4 rules pass)" % i, (v, fl["repeated"], fl["filtered"],
+                                                                         fl["triple"]), (not want, want, False, False))
+    ck.eq("14.2 syllables of OONC", syllables(row_drawn("OONC", ("", "l", "i", "n"))), [("", ""), ("lin", "li")])
+    ck.eq("14.2 syllables of NC'ONC", syllables(row_drawn("NC'ONC", ("u", "g", "kr", "a", "k"))),
+          [("ug", "u"), ("krak", "kra")])
+    ck.eq("14.2 syllables of ONCON (lillia)", syllables(row_drawn("ONCON", ("l", "i", "ll", "", "ia"))),
+          [("lill", "li"), ("ia", "ia")])
+    ck.eq("14.2 a run without N is a syllable (OONC)", len(syllables(row_drawn("OONC", ("b", "l", "i", "n")))), 2)
+    ck.eq("14.2 across a separator", repeated(row_drawn("NC'NC", ("u", "g", "u", "g"))), True)
+    ck.eq("14.2 the second is the first plus a coda (NNC: N not after O starts a syllable)",
+          repeated(row_drawn("NNC", ("a", "a", "n"))), True)
+    # the redraw and the fallback (culture rep)
+    e = r15_rep_entity()
+    fl = {}
+    attempt(REP, "settlement", 0, 1, e, 0, flags=fl)
+    ck.eq("14.4 rep attempt 0 draws baba", [p for s, p in fl["drawn"]], ["b", "a", "b", "a"])
+    n, t = make_name(REP, "rep", "settlement", 0, 1, e, set())
+    first = next(tt for tt in range(64) if attempt(REP, "settlement", 0, 1, e, tt)[0])
+    ck.eq("14.4 the next valid attempt is taken", (n, t), ("Ba", first))
+    ck.eq("14.4 ... after attempt 0", first > 0, True)
+    ck.eq("14.4 the fallback numbers Ba, never Baba", make_name(REP, "rep", "settlement", 0, 1, e, {"Ba"}), ("Ba II", "F"))
+    ck.eq("14.4 the fallback with every valid name and the old rule", REPEAT_OFF(lambda: make_name(
+        REP, "rep", "settlement", 0, 1, e, {"Ba"})), ("Baba", 0))
+    # 14.1 the faerie lists
+    fa = CULTURES["faerie"]
+    ck.eq("14.1 faerie lists validate", validate(fa), [])
+    ck.eq("14.1 faerie lists", {k: fa[k] for k in FAERIE_R15}, FAERIE_R15)
+    ck.eq("14.1 no p or b in the faerie lists", any(ch in "pb" for k in ("onsets", "nuclei", "codas") for x in fa[k]
+                                                   for ch in x), False)
+    ck.eq("14.1 nucleus shares (ee, ou 1/16; others 2/16)", sorted((fa["nuclei"].count(x), x) for x in set(fa["nuclei"])),
+          sorted([(1, "ee"), (1, "ou")] + [(2, x) for x in ("i", "ie", "ia", "a", "y", "ae", "o")]))
+    lyss = ass = None
+    for e in range(1, 3000):
+        for t in range(4):
+            fl = {}
+            v, n, root = attempt(fa, "settlement", 0, 3, e, t, flags=fl)
+            if root == "lyss" and lyss is None:
+                lyss = (e, t, v)
+            if "ass" in root and ass is None and root_valid(dict(fa, forbidden=fa["forbidden"][:-1]), root):
+                ass = (e, t, v, root_valid(fa, root))
+        if lyss and ass:
+            break
+    ck.eq("14.1 Lyss is a valid faerie root", lyss is not None and lyss[2], True)
+    ck.eq("14.1 a faerie root with a + ss is invalid (forbidden ass)", ass is not None and (ass[2], ass[3]), (False, False))
+    # 14.3 the filter
+    sf = shipped_filter()
+    for w in R15_TARD:
+        ck.eq("14.3 %s filtered" % w, name_filtered(sf, w), True)
+    ck.eq("14.3 The Horktard Throne's root word", root_word("The {root} Throne", "horktard"), "horktard")
+    for w in ("standard", "tarn", "dart", "stad", "tad"):
+        ck.eq("14.3 %s passes" % w, name_filtered(sf, w), False)
+    for w in R15_WORDS:
+        ck.eq("14.3 %s filtered (whole)" % w, name_filtered(sf, w), True)
+        ck.eq("14.3 %s inside a word passes" % w, name_filtered(sf, "x" + w + "x"), False)
+    ck.eq("14.3 sizes of the shipped filter (effective)", (len(sf.anywhere), len(sf.at_start), len(sf.whole)),
+          (109, 31, 511))
+    filters = {d: t for d, t in pdr.load_root("game/data", ["name_filter"])["name_filter"]}
+    ck.eq("14.3 list sizes", [(k, len(filters[k]["anywhere"]), len(filters[k]["at_start"]), len(filters[k]["whole"]))
+                              for k in ("slurs", "crude", "words")],
+          [("slurs", 33, 18, 5), ("crude", 71, 12, 14), ("words", 5, 1, 391)])
+    ck.eq("14.3 name_filter_not_redundant passes on the edited lists", pdr.name_filter_messages(sorted(filters.items())),
+          [])
+    bad = dict(filters, slurs=dict(filters["slurs"], whole=sorted(filters["slurs"]["whole"] + ["tard"])))
+    ck.eq("14.4 a copy that keeps slurs.whole tard fails name_filter_not_redundant",
+          [m.split(":")[0] for m in pdr.name_filter_messages(sorted(bad.items()))], ["name_filter_not_redundant"])
+    # invariant 8 by replay on the golden lists (9.3's and r10's core lists)
+    for seed in GOLDEN_SEEDS:
+        bad = []
+        for l in name_list(seed) + core_list(seed):
+            w = l.split(" ")
+            off = 1 if w[0] == "core" else 0
+            cid, kind, e, t = w[1 + off], w[2 + off], int(w[3 + off]), w[4 + off]
+            if t == "F":
+                tt = next(x for x in range(64) if attempt(CULTURES[cid], kind, seed, CULTURE_NUMBER[cid], e, x)[0])
+            else:
+                tt = int(t)
+            fl = {}
+            v, _, _ = attempt(CULTURES[cid], kind, seed, CULTURE_NUMBER[cid], e, tt, flags=fl)
+            if not v or repeated(fl["drawn"]):
+                bad.append(l)
+        ck.eq("invariant 8 (14.4) seed %d: no listed name from a repeated attempt" % seed, bad, [])
+    # some shipped name is redrawn by 14.2 in the golden lists (the rule is reached)
+    reached = 0
+    for seed in GOLDEN_SEEDS:
+        for cid in CULTURE_ORDER:
+            for kind in KINDS:
+                for e in range(1, GOLDEN_ENTITIES + 1):
+                    fl = {}
+                    attempt(CULTURES[cid], kind, seed, CULTURE_NUMBER[cid], e, 0, flags=fl)
+                    reached += fl["repeated"]
+    ck.eq("14.2 reached on the golden lists' attempts 0", reached > 0, True)
+
+
+def old_name_rejected(d, kind, seed, c, e, old):
+    """P3-02 r15: some attempt of (seed, c, e) renders `old` (lower-case root as drawn) and 0.20.0 rejects it."""
+    for t in range(64):
+        fl = {}
+        v, n, _ = attempt(d, kind, seed, c, e, t, flags=fl)
+        if n == old:
+            return not v
+    return False
+
+
+def REPEAT_OFF(fn):
+    """fn() with the 14.2 rule off (the 0.19.0 validity), for comparisons."""
+    global REPEAT_RULE
+    saved = REPEAT_RULE
+    REPEAT_RULE = False
+    try:
+        return fn()
+    finally:
+        REPEAT_RULE = saved
+
+
+def scan_r15(out):
+    """P3-11 3.1 / P3-02 14.2, 14.3: the 59,400-name sample of 13.1 (seeds 0, 1, 2; entities 1-1,500 of each
+    culture for civilizations and settlements, 1-300 for gods; one registry per seed and culture; make_name
+    without K), at 0.20.0. Per culture, the attempts made until each name, rejected by 14.2 (otherwise valid), by
+    the forbidden entry ass (and by nothing else of 4.2), by the filter entry tard alone and by the four words
+    alone; and the names whose accepted attempt differs from 0.19.0's rules (approximately: the names that change)."""
+    only_tard = NameFilter(["tard"], [], [])
+    only_words = NameFilter([], [], list(R15_WORDS))
+    tot = {}
+    for cid in CULTURE_ORDER:
+        d = CULTURES[cid]
+        c = CULTURE_NUMBER[cid]
+        r = {"names": 0, "attempts": 0, "repeated": 0, "ass": 0, "tard": 0, "words": 0, "fallbacks": 0}
+        for seed in (0, 1, 2):
+            reg = set()
+            for kind, n_e in (("god", 300), ("civilization", 1500), ("settlement", 1500)):
+                for e in range(1, n_e + 1):
+                    n, t = make_name(d, cid, kind, seed, c, e, reg)
+                    r["names"] += 1
+                    last = 63 if t == "F" else t
+                    if t == "F":
+                        r["fallbacks"] += 1
+                    for tt in range(last + 1):
+                        fl = {}
+                        attempt(d, kind, seed, c, e, tt, flags=fl)
+                        r["attempts"] += 1
+                        r["repeated"] += fl["repeated"]
+                        # forbidden ass alone: invalid with the list, valid without its ass entry
+                        root = "".join(p for _, p in fl["drawn"])
+                        if "ass" in d["forbidden"] and "ass" in root and not root_valid(d, root) and \
+                                root_valid(dict(d, forbidden=[x for x in d["forbidden"] if x != "ass"]), root):
+                            r["ass"] += 1
+                        if fl["r4valid"]:
+                            r["tard"] += name_filtered(only_tard, fl["word"])
+                            r["words"] += name_filtered(only_words, fl["word"])
+        tot[cid] = r
+        out.write("scan %s names %d attempts %d repeated %d ass %d tard %d words %d fallbacks %d\n" % (
+            cid, r["names"], r["attempts"], r["repeated"], r["ass"], r["tard"], r["words"], r["fallbacks"]))
+    return tot
 
 
 def core_list(seed):
@@ -1219,7 +1590,8 @@ def check_r10(ck):
     for w in R10_PASSING:
         ck.eq("12.1 %s passes" % w, name_filtered(sf, w), False)
     # r10's own sizes (108, 36, 510) are those before r13's edits (13.1), which check_r13 tests
-    ck.eq("12.1 effective sizes (after r13 13.1)", (len(sf.anywhere), len(sf.at_start), len(sf.whole)), (110, 31, 508))
+    ck.eq("12.1 effective sizes (after r13 13.1; r15 14.3)", (len(sf.anywhere), len(sf.at_start), len(sf.whole)),
+          (109, 31, 511) if pdr.at_least("0.20.0") else (110, 31, 508))
     n, t, K = core_fallback_case()
     ck.eq("12.3 fallback: the first valid name numbered", (t, n.endswith(" II")), ("F", True))
     ck.eq("12.3 fallback: first's core joins K", K, sorted({"ba", name_core(lower(n.split()[0]))}))
@@ -1381,6 +1753,8 @@ def compare_samples(out):
     for cid in CULTURE_ORDER:
         s, v, g = sample_names(cid)
         es, ev, eg = (SAMPLES_R5 if RULES == "r5" else SAMPLES)[cid]
+        if RULES == "r5" and pdr.at_least("0.20.0") and cid in SAMPLES_R15:   # P3-02 r15 14.4: the faerie row
+            es, ev, eg = SAMPLES_R15[cid]
         for label, got, exp in (("settlements", s, es.split(", ")), ("civilizations", v, ev.split("; ")),
                                 ("gods", g, eg.split(", "))):
             for i, (a, b) in enumerate(zip(got, exp)):
@@ -1437,7 +1811,20 @@ def check_all():
         vv, nn, _ = attempt(CULTURES["elven"], "settlement", 0, 2, 1, t)
         if vv:
             full.add(nn)
-    ck.eq("4.6 distinct valid names", len(full), 61)
+    # r15: 4.6 counts 61 under the rules before 14.2; from 0.20.0 the attempts 14.2 rejects drop out
+    full_old = set()
+    for t in range(64):
+        vv, nn, _ = REPEAT_OFF(lambda: attempt(CULTURES["elven"], "settlement", 0, 2, 1, t))
+        if vv:
+            full_old.add(nn)
+    ck.eq("4.6 distinct valid names (before 14.2)", len(full_old), 61)
+    rep_only = set()
+    for t in range(64):
+        fl = {}
+        attempt(CULTURES["elven"], "settlement", 0, 2, 1, t, flags=fl)
+        if fl["repeated"]:
+            rep_only.add(attempt(CULTURES["elven"], "settlement", 0, 2, 1, t)[1])
+    ck.eq("4.6 distinct valid names", len(full), 61 - len(rep_only - full) if REPEAT_RULE else 61)
     ck.eq("4.6 fallback", make_name(CULTURES["elven"], "elven", "settlement", 0, 2, 1, set(full)), ("Iensath II", "F"))
     sc = [x for x in scenarios() if x[0] == "seed42"][0]
     got = [(r[5], r[4]) for r in run_scenario(sc)]
@@ -1512,6 +1899,8 @@ def check_all():
     if RULES == "r5" and pdr.at_least("0.19.0"):
         check_r10(ck)
         check_r13(ck)
+    if RULES == "r5" and pdr.at_least("0.20.0"):
+        check_r15(ck)
     sys.stdout.write("%d checks, %d failures\n" % (ck.count, ck.failures))
     return 1 if ck.failures else 0
 
@@ -1523,7 +1912,8 @@ def check_r5(ck):
     f = FILTER
     # 11.3 examples with the shipped lists (the offensive ones as concatenations).
     for w, exp in (("cock" + "ford", True), ("bum" + "dou", True), ("but-skrotch", True), ("ugh'kaal", True),
-                   ("bag", True), ("stard", False), ("cum" + "brin", True),
+                   # r15 14.3: from 0.20.0 tard is an anywhere entry and Stard is filtered (11.3 as amended)
+                   ("bag", True), ("stard", pdr.at_least("0.20.0")), ("cum" + "brin", True),
                    # P3-02 r13 13.1 moves cum to crude.anywhere: 11.3's "while Ascumbrin is not" no longer holds
                    # (a reading: 13.1 rules over 11.3's example)
                    ("ascum" + "brin", pdr.at_least("0.19.0"))):
@@ -1576,7 +1966,18 @@ def check_r5(ck):
     for seed, row in GODS_R5.items():
         got = [make_name(CULTURES[cid], cid, "god", seed, CULTURE_NUMBER[cid], i + 1, set())[0]
                for i, cid in enumerate(GOD_RACE_CULTURES)]
-        if pdr.at_least("0.19.0"):
+        if pdr.at_least("0.20.0"):
+            # P3-02 r15 14: the faerie god changes with 14.1's lists; another god only where its 0.19.0 attempt is
+            # invalid at 0.20.0 (14.2's rule or 14.3's entries), and no god of the table is filtered or repeated
+            old = row.split(", ")
+            for i, (g, o) in enumerate(zip(got, old)):
+                cid = GOD_RACE_CULTURES[i]
+                if g != o and cid != "faerie":
+                    ck.eq("11.6 gods seed %d %s: %s redrawn because 0.20.0 rejects it" % (seed, cid, o),
+                          old_name_rejected(CULTURES[cid], "god", seed, CULTURE_NUMBER[cid], i + 1, o), True)
+            ck.eq("11.6 gods seed %d: none filtered" % seed, True,
+                  not any(name_filtered(shipped_filter(), lower(g)) for g in got))
+        elif pdr.at_least("0.19.0"):
             # P3-02 r10 12.1: the gods the new entries reach (Grammam, Gordman) are redrawn; every other god of
             # the 0.18.0 table stands, and no god of the table is filtered.
             old = row.split(", ")
@@ -1591,10 +1992,13 @@ def check_r5(ck):
         got = tuple(make_name(CULTURES["elven"], "elven", "civilization", seed, 2, e, set())[0] for e in (1, 2))
         ck.eq("11.6 realms seed %d" % seed, got, row)
     # 11.7 item 7: r4 reproduced with the empty filter and god_patterns = patterns.
-    saved = list_sha(name_list(0, r4_equivalent_cultures(), EMPTY_FILTER))
+    # (r15: with 14.2's rule off; from 0.20.0 the library applies it to every culture, so the r4sha256 golden
+    # lines no longer equal the 0.16.0 lists)
+    saved = REPEAT_OFF(lambda: list_sha(name_list(0, r4_equivalent_cultures(), EMPTY_FILTER)))
     ck.eq("11.7 item 7 r4 list seed 0 (0.16.0 sha256)", saved,
           "7b81d85d11630b64f27f7eb16dc9f0815b764a0fc8ee60d506f68686a04942b9")
-    ck.eq("11.7 item 7 r4 list seed 42 (0.16.0 sha256)", list_sha(name_list(42, r4_equivalent_cultures(), EMPTY_FILTER)),
+    ck.eq("11.7 item 7 r4 list seed 42 (0.16.0 sha256)",
+          REPEAT_OFF(lambda: list_sha(name_list(42, r4_equivalent_cultures(), EMPTY_FILTER))),
           "8403dc92b716ecfb7c22bb9589d3e487aecaf08a43ffc81a89a370f0f4f80f4c")
     # 11.7 item 8.
     sc = {x[0]: x for x in r5_scenarios()}
@@ -1694,6 +2098,9 @@ def main(argv):
         bad = compare_samples(sys.stdout)
         sys.stdout.write("%d differences from spec %s\n" % (bad, "11.6 (r5)" if RULES == "r5" else "5.1"))
         return 1 if bad else 0
+    if len(argv) >= 2 and argv[1] == "scan":   # P3-11 3.1: the rates of 14.2 and 14.3 on 13.1's sample
+        scan_r15(sys.stdout)
+        return 0
     if len(argv) >= 2 and argv[1] == "sweep":
         sweep(int(argv[2]) if len(argv) >= 3 else 2000)
         return 0

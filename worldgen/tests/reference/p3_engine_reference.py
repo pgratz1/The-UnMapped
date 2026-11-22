@@ -84,7 +84,7 @@ M64 = (1 << 64) - 1
 REPO = os.path.normpath(os.path.join(_HERE, "..", "..", ".."))
 GOLDEN = os.path.join(REPO, "worldgen", "tests", "golden", "p3-04-engine.txt")
 DEFAULT_INPUTS = os.path.join(os.path.expanduser("~"), ".cache", "the-unmapped", "out", "p3-08-tests", "inputs")
-GENERATOR_VERSION = "0.19.0"  # P3-10: kinds 37, 38, quiet stretches, {@causes:...}, separators (P3-09: 36 kinds)
+GENERATOR_VERSION = "0.20.0"  # P3-11: kinds 39, 40, number words (P3-10: kinds 37, 38, quiet stretches, {@causes:...}, separators (P3-09: 36 kinds)
 SCHEMA_VERSION = 7
 
 
@@ -291,6 +291,14 @@ KIND_37 = kind_def(37, "plague_outbreak", 0, 1, 1, (("settlement", SETTLEMENT, 1
                    ("dead", "population", "total", "reached"))
 KIND_38 = kind_def(38, "quiet_stretch", 0, 0, 0, (("realm", CIV, 1, 0),), ("years", "realms"))
 COMPILED_019 = COMPILED_018 + (KIND_37, KIND_38)
+# P3-04 r17 21.2 (generator 0.20.0, P3-11): kinds 39 claim_settlements and 40 settlements_ceded, caused, with a
+# region, no settlement column, roles (claimant | from, holder | to, civilization 1-1; settlement, settlement 1-0
+# unbounded), no value.
+KIND_39 = kind_def(39, "claim_settlements", 1, 1, 0, (("claimant", CIV, 1, 1), ("holder", CIV, 1, 1),
+                                                      ("settlement", SETTLEMENT, 1, 0)), ())
+KIND_40 = kind_def(40, "settlements_ceded", 1, 1, 0, (("from", CIV, 1, 1), ("to", CIV, 1, 1),
+                                                      ("settlement", SETTLEMENT, 1, 0)), ())
+COMPILED_020 = COMPILED_019 + (KIND_39, KIND_40)
 
 # P3-04 r10 (generator 0.17.0, P3-08), each switchable so that the 0.16.0
 # goldens can still be reproduced (use_version("0.16.0")):
@@ -315,10 +323,14 @@ MAX_PARTICIPANTS = 64   # P3-04 r13 20.1: the event writer's bound on a quiet_st
 #                   history.engine.quiet_min_years (default 0 for hand-made tuning without the key); the row is
 #                   then decided without a stretch (open_era[-1]); entry check engine_quiet_min.
 QUIET_R15 = True
+# P3-04 r17 (P3-11, generator 0.20.0):
+#   RENDER_R17      21.1 values 1 to 9 render as words in {value} and in the # of a chosen three-word form.
+RENDER_R17 = True
+NUMBER_WORDS = ("one", "two", "three", "four", "five", "six", "seven", "eight", "nine")
 ENGINE_VERSION = None
 
 
-VERSIONS = ("0.16.0", "0.17.0", "0.18.0", "0.19.0")
+VERSIONS = ("0.16.0", "0.17.0", "0.18.0", "0.19.0", "0.20.0")
 
 
 def at_least(v):
@@ -333,17 +345,20 @@ def use_version(v):
     of 30 kinds, r9 rendering and quiet eras, the 0.16.0 data and P3-02 r4
     names). Clears the cached data roots."""
     global COMPILED, RENDER_R10, QUIET_ERA_R10, RENDER_R12, QUIET_R12, QUIET_R15, GENERATOR_VERSION, ENGINE_VERSION
+    global RENDER_R17
     if v not in VERSIONS:
         raise ValueError(v)
     new = v != "0.16.0"
-    COMPILED = {"0.16.0": COMPILED_016, "0.17.0": COMPILED_017, "0.18.0": COMPILED_018, "0.19.0": COMPILED_019}[v]
+    COMPILED = {"0.16.0": COMPILED_016, "0.17.0": COMPILED_017, "0.18.0": COMPILED_018, "0.19.0": COMPILED_019,
+                "0.20.0": COMPILED_020}[v]
     RENDER_R10 = QUIET_ERA_R10 = new
-    RENDER_R12 = QUIET_R12 = QUIET_R15 = v == "0.19.0"
+    RENDER_R12 = QUIET_R12 = QUIET_R15 = v in ("0.19.0", "0.20.0")
+    RENDER_R17 = v == "0.20.0"
     GENERATOR_VERSION = v
     ENGINE_VERSION = v
     pdr.use_version(v)
     # P3-09 item 8: the word list of the version (0.18.0 on disk; before, P3-08's, from git)
-    pnr.FILTER_COMMIT = None if v in ("0.18.0", "0.19.0") else pdr.NAME_FILTERS_017_COMMIT
+    pnr.FILTER_COMMIT = None if v in ("0.18.0", "0.19.0", "0.20.0") else pdr.NAME_FILTERS_017_COMMIT
     if hasattr(pnr, "use_version"):   # P3-10: the names reference serves the filter of the version (F1)
         pnr.use_version(v)
     pnr._SHIPPED_FILTER = None
@@ -423,6 +438,8 @@ def causes_entries(body):
 def fmt_value(v):
     """P3-04 r12 20.3: a comma between groups of three digits from 1,000 (after the sign); as before
     without RENDER_R12."""
+    if RENDER_R17 and 1 <= v <= 9:   # r17 21.1: one to nine as lower-case words
+        return NUMBER_WORDS[v - 1]
     if not RENDER_R12 or abs(v) < 1000:
         return str(v)
     d = str(abs(v))
@@ -1736,15 +1753,35 @@ TEMPLATE_CASES_R12 = (
 )
 
 
+# r17 (P3-04 21.3 item 3, generator 0.20.0): the templates of kinds 39 and 40, {settlement} (min count 1: the
+# first participant) accepted, {@settlement} refused (settlement_use 0).
+TEMPLATE_CASES_R17 = (
+    ("claim_settlements", "{claimant} laid claim to {settlement:all} of {holder} in {@region}."),
+    ("settlements_ceded", "{from} gave up {settlement:all} in {@region} to {to}."),
+    ("claim_settlements", "{settlement} of {holder}."),
+    ("settlements_ceded", "{settlement} to {to}."),
+    ("claim_settlements", "{claimant} laid claim to {@settlement}."),
+    ("settlements_ceded", "{from} gave up {@settlement}."),
+)
+
+
 def template_cases():
     return (TEMPLATE_CASES + (TEMPLATE_CASES_R10 if at_least("0.17.0") else ())
-            + (TEMPLATE_CASES_R12 if at_least("0.19.0") else ()))
+            + (TEMPLATE_CASES_R12 if at_least("0.19.0") else ())
+            + (TEMPLATE_CASES_R17 if at_least("0.20.0") else ()))
 
 
 def template_kind(key):
     return TEST_KIND if key == "test_optional" else find_kind(COMPILED, key)
 
 
+HEADER_020 = """\
+# P3-04 engine golden vectors for generator 0.20.0 (schema 7; P3-11): the stub engine (run_engine
+# with the stub configuration) on the 0.20.0 catalogue of 40 kinds (P3-04 r17 21.2: kinds 39
+# claim_settlements and 40 settlements_ceded appended), values one to nine as words in rendered
+# sentences (21.1), P3-02 r15 names (faerie lists, no repeated syllable, tard) and otherwise as at
+# 0.19.0: one quiet_stretch per quiet phase row (20.1), separators (20.3), {@causes:...} (20.2),
+# P1-06 r7 region names (the input worlds' table region). Spec"""
 HEADER_019 = """\
 # P3-04 engine golden vectors for generator 0.19.0 (schema 7; P3-10): the stub engine (run_engine
 # with the stub configuration) on the 0.19.0 catalogue of 38 kinds (P3-04 r12 20.4: kinds 37
@@ -1845,7 +1882,9 @@ HEADER = """\
 def golden_text(inputs):
     dat = data()
     head = HEADER.rstrip("\n")
-    if ENGINE_VERSION == "0.19.0":
+    if ENGINE_VERSION == "0.20.0":
+        head = HEADER_020 + "\n" + "\n".join(head.splitlines()[2:])
+    elif ENGINE_VERSION == "0.19.0":
         head = HEADER_019 + "\n" + "\n".join(head.splitlines()[2:])
     elif ENGINE_VERSION == "0.18.0":
         head = HEADER_018 + "\n" + "\n".join(head.splitlines()[2:])
@@ -2188,8 +2227,26 @@ def check_example_r12(c, inputs):
     rl = report_lines(res, 6000)
     c.eq("r12 events_quiet_era 0", "events_quiet_era = 0" in rl, True)
     c.eq("r12 the two new lines follow events_refuge_held",
-         [l.split(" = ")[0] for l in rl if l.startswith("events_")][-3:],
+         (lambda ks: ks[ks.index("events_refuge_held"):ks.index("events_refuge_held") + 3])(
+             [l.split(" = ")[0] for l in rl if l.startswith("events_")]),
          ["events_refuge_held", "events_plague_outbreak", "events_quiet_stretch"])
+    if at_least("0.20.0"):   # P3-07 r14 23 item 1: kinds 39 and 40 after events_quiet_stretch, by kind id
+        c.eq("r17 the kind 39 and 40 lines follow events_quiet_stretch",
+             [l.split(" = ")[0] for l in rl if l.startswith("events_")][-3:],
+             ["events_quiet_stretch", "events_claim_settlements", "events_settlements_ceded"])
+
+
+class no_r17:
+    """The renderer without P3-04 r17 21.1 (the checks written for r10's grammar and the 0.16.0 examples)."""
+
+    def __enter__(self):
+        global RENDER_R17
+        self.saved, RENDER_R17 = RENDER_R17, False
+
+    def __exit__(self, *a):
+        global RENDER_R17
+        RENDER_R17 = self.saved
+        return False
 
 
 def check_render_r10(c):
@@ -2268,6 +2325,99 @@ def check_render_r10(c):
                                                                      (3, 1, CIV, 12)], {1: 1}, kind=tk),
          "Met: the A, the B and the C.")
     c.eq("r10 stored names unchanged", names[(CIV, 1)], "The Skib Horde")
+
+
+def check_render_r17(c):
+    """P3-04 r17 21.3 items 1 to 3 in the reference, on hand-made views and the shipped report data."""
+    names = {(SETTLEMENT, 1): "Drutnot Hole", (SETTLEMENT, 2): "Nutskrank", (SETTLEMENT, 3): "The Grey Fort",
+             (CIV, 1): "The Snat Horde", (CIV, 2): "The Stinrild League", (REGION, 7): "King's Fold",
+             (CIV, 3): "Clan Durgarin"}
+
+    def nm(t, x, form):
+        return names[(t, x)]
+
+    shipped = event_catalogue(spec_report())
+
+    def view(kind_key, templ, parts, values=None, year=5, end_year=5):
+        cat = {k["id"]: dict(k) for k in shipped}
+        kid = find_kind(shipped, kind_key)["id"]
+        if templ is not None:
+            cat[kid] = dict(cat[kid], templ=templ)
+        evs = {100: dict(year=year, end_year=end_year, kind=kid, region=7, settlement=1, participants=list(parts),
+                         values=values or {}, causes=[])}
+        return dict(catalogue=cat, events=evs, name=nm)
+
+    dw = ((1, 1, SETTLEMENT, 1), (2, 2, CIV, 1))   # settlement_dwindled: settlement, civilization; value population
+    for v, w in ((0, "0"), (1, "one"), (2, "two"), (9, "nine"), (10, "10"), (11, "11"), (999, "999"),
+                 (1000, "1,000"), (-3, "-3"), (3, "three"), (5, "five")):
+        c.eq("r17 {value} %d" % v, render(view("settlement_dwindled", "{population}", dw, {1: v}), 100), w)
+        c.eq("r17 # of a three-word form %d" % v,
+             render(view("settlement_dwindled", "{population?zero|single|#}", dw, {1: v}), 100),
+             "zero" if v == 0 else "single" if v == 1 else w)
+    c.eq("r17 {@year} 5", render(view("settlement_dwindled", "{@year}-{@end_year}", dw, {1: 1}), 100), "5-5")
+    c.eq("r17 two-word form n=1", render(view("settlement_dwindled", "{population?one|#}", dw, {1: 1}), 100), "one")
+    c.eq("r17 two-word form n=4: # is a byte", render(view("settlement_dwindled", "{population?one|#}", dw, {1: 4}),
+                                                       100), "#")
+    c.eq("r17 {n?|one|#} n=4", render(view("settlement_dwindled", "{population?|one|#}", dw, {1: 4}), 100), "four")
+    c.eq("r17 {n?|one|#} n=1: the template's word", render(view("settlement_dwindled", "{population?|one|#}", dw,
+                                                                 {1: 1}), 100), "one")
+    c.eq("r17 never capitalized", render(view("settlement_dwindled", "{population} died.", dw, {1: 7}), 100),
+         "seven died.")
+    # the six rows of 21.1's table, with the shipped templates
+    rows = (
+        ("civ_seceded", ((1, 1, CIV, 2), (2, 2, CIV, 1)), {1: 1}, "with one settlement."),
+        ("plague_outbreak", ((1, 1, SETTLEMENT, 1), (2, 2, CIV, 1)), {1: 30, 2: 100, 3: 1084, 4: 2},
+         "spread to two other settlements; 1,084 died in all."),
+        ("quiet_stretch", ((1, 1, CIV, 1), (2, 1, CIV, 2), (3, 1, CIV, 3), (4, 1, CIV, 3)), {1: 30, 2: 4},
+         ", and four realms kept the peace."),
+        ("peace", ((1, 1, CIV, 1), (2, 2, CIV, 2)), {1: 3}, "after three years of war."),
+        ("war_won", ((1, 1, CIV, 1), (2, 2, CIV, 2)), {1: 3}, "after three years of war."),
+        ("truce", ((1, 1, CIV, 1), (2, 2, CIV, 2)), {1: 3}, "after three years of war"),
+        ("battle", ((1, 1, CIV, 1), (2, 2, CIV, 2)), {"loser_dead": 7, "winner_dead": 1},
+         "; seven of the defeated and one of the victors fell."),
+        ("famine", ((1, 1, SETTLEMENT, 1), (2, 2, CIV, 1)), {1: 8}, "; eight died."),
+        ("settlement_captured", ((1, 1, SETTLEMENT, 1), (2, 2, CIV, 1), (3, 3, CIV, 2)), {1: 8}, "eight"),
+    )
+    for key, parts, vals, want in rows:
+        k = find_kind(shipped, key)
+        if any(isinstance(x, str) for x in vals):
+            vals = {k["values"].index(x) + 1: v for x, v in vals.items()}
+        if len(vals) != len(k["values"]):
+            vals = {i + 1: vals.get(i + 1, 2) for i in range(len(k["values"]))}
+        got = render(view(key, None, parts, vals), 100)
+        c.eq("r17 21.1 row %s holds %r: %s" % (key, want, got), want in got, True)
+    # 21.3 item 2: no shipped template puts {value} or a three-word value body at byte 0 or after ". "
+    bad = []
+    for k in shipped:
+        t = k["templ"]
+        vals = set(k["values"])
+        for at in [0] + [i + 2 for i in range(len(t) - 1) if t[i:i + 2] == ". "]:
+            if t[at:at + 1] == "{" and not t[at:at + 2] == "{{":
+                body = t[at + 1:t.index("}", at)]
+                v = body.split("?", 1)[0]
+                if v in vals and (("?" not in body) or body.count("|") == 2):
+                    bad.append((k["key"], at))
+    c.eq("r17 21.3 item 2: no shipped template starts a sentence with a value", bad, [])
+    # 21.3 item 3: kinds 39 and 40
+    for key in ("claim_settlements", "settlements_ceded"):
+        k = find_kind(shipped, key)
+        c.eq("r17 %s role and value keys distinct" % key, len(set([r["role"] for r in k["roles"]] + k["values"])),
+             len(k["roles"]) + len(k["values"]))
+        c.eq("r17 %s shipped template accepted" % key, template_problem(k, k["templ"]), None)
+        c.eq("r17 %s {settlement} accepted" % key, template_problem(k, "{settlement}."), None)
+        c.eq("r17 %s {@settlement} refused" % key, template_problem(k, "{@settlement}") is not None, True)
+    for n, want in ((1, "The Snat Horde laid claim to Drutnot Hole of the Stinrild League in King's Fold."),
+                    (2, "The Snat Horde laid claim to Drutnot Hole and Nutskrank of the Stinrild League in King's Fold."),
+                    (3, "The Snat Horde laid claim to Drutnot Hole, Nutskrank and the Grey Fort of the Stinrild League "
+                        "in King's Fold.")):
+        parts = [(1, 1, CIV, 1), (2, 2, CIV, 2)] + [(3 + i, 3, SETTLEMENT, i + 1) for i in range(n)]
+        c.eq("r17 kind 39 with %d settlements" % n, render(view("claim_settlements", None, parts), 100), want)
+    for n, want in ((1, "The Stinrild League gave up Drutnot Hole in King's Fold to the Snat Horde."),
+                    (2, "The Stinrild League gave up Drutnot Hole and Nutskrank in King's Fold to the Snat Horde."),
+                    (3, "The Stinrild League gave up Drutnot Hole, Nutskrank and the Grey Fort in King's Fold to the "
+                        "Snat Horde.")):
+        parts = [(1, 1, CIV, 2), (2, 2, CIV, 1)] + [(3 + i, 3, SETTLEMENT, i + 1) for i in range(n)]
+        c.eq("r17 kind 40 with %d settlements" % n, render(view("settlements_ceded", None, parts), 100), want)
 
 
 def check_render_r12(c):
@@ -2548,7 +2698,9 @@ def check_templates(c):
                                                  + (["settlement_abandoned_to"] if at_least("0.17.0") else [])
                                                  + (["refugees_settled", "tribute", "war_won", "search_abandoned",
                                                      "refuge_held"] if at_least("0.18.0") else [])
-                                                 + (["plague_outbreak", "quiet_stretch"] if at_least("0.19.0") else [])])
+                                                 + (["plague_outbreak", "quiet_stretch"] if at_least("0.19.0") else [])
+                                                 + (["claim_settlements", "settlements_ceded"]
+                                                    if at_least("0.20.0") else [])])
     # rendering on a hand-made view: :all with 0..3, ? with 0, 1, 2
     cat = {99: dict(TEST_KIND, region_use=1, templ="[{actor:all}] {people:plural}/{people:adjective}/{people} at {@region}: "
                                      "{count} {count?thing|things} {{ok}} {@year}-{@end_year}")}
@@ -2717,13 +2869,16 @@ def cmd_check(argv):
             use_version(saved)
         check_example_r12(c, inputs)
         check_render_r12(c)
+        if RENDER_R17:
+            check_render_r17(c)
         check_quiet_r12(c, inputs)
         if QUIET_R15:
             check_quiet_r15(c, inputs)
     else:
         check_example_r10(c, inputs)
-    check_templates(c)
-    check_render_r10(c)
+    with no_r17():   # r10's grammar cases and 8.5's examples were written with digits (r17 21.1 in check_render_r17)
+        check_templates(c)
+        check_render_r10(c)
     check_relation_bookkeeping(c)
     check_entry(c)
     check_stub_sets(c)
@@ -2886,7 +3041,7 @@ def cmd_check_world(argv):
     return 1 if c.failures else 0
 
 
-use_version("0.19.0")
+use_version("0.20.0")
 
 
 def main(argv):

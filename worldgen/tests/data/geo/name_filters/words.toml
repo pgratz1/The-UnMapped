@@ -46,7 +46,7 @@ whole = [
   "more", "mousy", "mouth", "move", "movie", "muck", "mug", "mum", "mush",
   "nab", "nag", "name", "nark", "nerd", "nib", "nice", "niece", "nine", "nit",
   "none", "nose", "not", "noun", "nova", "novae", "nut", "ogle", "ogles",
-  "old", "once", "ones", "oral", "other", "oval", "over", "pan", "pap",
+  "old", "once", "ones", "oral", "other", "ova", "oval", "over", "pan", "pap",
   "papa", "pasha", "pay", "pie", "pill", "pita", "poi", "poll", "polo", "pop",
   "posh", "poss", "pypy", "rant", "rare", "rave", "read", "real", "ream",
   "rear", "rent", "rick", "rife", "rile", "role", "safe", "sale", "same",
@@ -60,7 +60,8 @@ whole = [
   "teen", "than", "theme", "there", "these", "thieve", "thine",
   "third", "those", "thud", "thug", "tibia", "tick", "tie", "tipi", "told",
   "ton", "too", "top", "toss", "tour", "toy", "twee", "two", "typo",
-  "ugh", "vase", "visa", "viva", "wack", "want", "way", "wean", "wear", "wee",
+  "ugh", "van", "vase", "via", "visa", "viva", "von", "wack", "want", "way",
+  "wean", "wear", "wee",
   "weepy", "weld", "went", "whisk", "who", "whoa", "why", "will", "win",
   "with", "won", "wont", "woo", "word", "you", "zit",
 ]

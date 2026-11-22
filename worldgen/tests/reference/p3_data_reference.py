@@ -346,7 +346,7 @@ CONFLICT_CHECKS_019 = CONFLICT_CHECKS_018 + (("conflict_quarrel_strain", "quarre
 
 def conflict_ranges():
     """The history.conflict field ranges of the served data version."""
-    if DATA_VERSION == "0.19.0":
+    if at_least("0.19.0"):
         return CONFLICT_RANGES_019
     return CONFLICT_RANGES_018 if DATA_VERSION == "0.18.0" else CONFLICT_RANGES_016
 
@@ -1436,7 +1436,19 @@ def copied_files_019(path, directory, files):
     if directory not in ("placenames", "name_filters"):
         return files
     pre = placenames_pre_019 if directory == "placenames" else name_filters_pre_019
-    if DATA_VERSION == "0.19.0":
+    if directory == "name_filters" and at_least("0.19.0") and not pre(files) and not name_filters_r16(files):
+        # P3-11: the disk holds 0.19.0 or 0.20.0 files
+        if DATA_VERSION == "0.20.0" and name_filters_pre_020(files):
+            PRE_015_USED.add(path)
+            return name_filters_019(files, NAME_FILTER_EDITS_020)
+        if DATA_VERSION == "0.19.0" and not name_filters_pre_020(files):
+            if os.path.normpath(path).startswith(os.path.normpath(REPO)):
+                return git_dir_files(P3_11_BASE_COMMIT, path)
+            raise DataError("%s: 0.20.0 files, cannot serve %s" % (path, DATA_VERSION))
+        return files
+    if DATA_VERSION == "0.20.0" and directory == "name_filters":
+        raise DataError("%s: files older than 0.19.0, cannot serve %s" % (path, DATA_VERSION))
+    if at_least("0.19.0"):
         if pre(files):
             PRE_015_USED.add(path)
             return placenames_019(files) if directory == "placenames" else name_filters_019(files)
@@ -1471,11 +1483,104 @@ def write_root_019(dest):
             with open(os.path.join(p, name), "wb") as f:
                 f.write(text.encode("utf-8"))
 
+# ---------------------------------------------------------------------------
+# The 0.20.0 listings (P3-11, docs/specs/p3-11-followups.md), derived from the
+# 0.19.0 ones by the edits the specs state:
+#   races     P3-01 r14 3.7 / P3-05 r16 23.2: awakening_population
+#             int(0, 100000) after hidden_years, orc 1200, others 0.
+#   cultures  P3-02 r15 14.1: the faerie onsets, nuclei, codas and forbidden
+#             lists (every other line unchanged).
+#   report    P3-06 r19 23.6 / P3-04 r17 21.2: the entries claim_settlements
+#             (35) and settlements_ceded (55) appended after quiet_stretch,
+#             in kind order (the spec states the place this time).
+#   name_filter  P3-02 r15 14.3: slurs.anywhere +tard -retard; slurs.whole
+#             -tard; crude.anywhere -bastard; words.whole +ova +van +via +von.
+#   conflict, engine, peoples, chronology: unchanged.
+# ---------------------------------------------------------------------------
+
+AWAKENING_POPULATION_020 = {"elf": 0, "goblin": 0, "dwarf": 0, "faerie": 0, "human": 0, "orc": 1200}
+RACE_FIELDS_020 = RACE_FIELDS_019 + (("awakening_population", 0, 100000),)
+_i = [n for n, _ in RACE_019].index("hidden_years") + 1
+RACE_020 = RACE_019[:_i] + (("awakening_population", INT),) + RACE_019[_i:]
+assert RACE_020[_i + 1][0] == "settlement_kinds" and len(RACE_020) == len(RACE_019) + 1
+
+
+def _race_020(name, text):
+    rid = name[:-5]
+    line = [l for l in text.splitlines(True) if l.startswith("hidden_years = ")][0]
+    return _edit(text, line, line + "awakening_population = %d\n" % AWAKENING_POPULATION_020[rid])
+
+
+RACE_FILES_020 = {n: _race_020(n, t) for n, t in RACE_FILES_019.items()}
+
+FAERIE_LISTS_020 = (   # P3-02 r15 14.1, the four lines as listed
+    ('onsets = ["", "p", "f", "w", "l", "s", "t", "b", "sh", "wh", "fl", "tw", "m"]',
+     'onsets = ["", "v", "f", "w", "l", "s", "t", "gl", "sh", "wh", "fl", "tw", "m"]'),
+    ('nuclei = ["i", "ee", "ie", "ia", "a", "y", "ae", "ou", "o"]',
+     'nuclei = ["i", "i", "ee", "ie", "ie", "ia", "ia", "a", "a", "y", "y", "ae", "ae", "ou", "o", "o"]'),
+    ('codas = ["", "", "ll", "n", "sh", "th", "p", "sk", "ss"]',
+     'codas = ["", "", "ll", "n", "sh", "th", "sk", "ss"]'),
+    ('forbidden = ["eee", "iee", "yy", "ouou", "shsh"]',
+     'forbidden = ["eee", "iee", "yy", "ouou", "shsh", "ass"]'),
+)
+_fa = CULTURE_FILES_017["faerie.toml"]
+for _old, _new in FAERIE_LISTS_020:
+    _fa = _edit(_fa, _old, _new)
+CULTURE_FILES_020 = dict(CULTURE_FILES_017, **{"faerie.toml": _fa})
+
+KIND39_ENTRY = ('  { kind = "claim_settlements", salience = 35, template = "{claimant} laid claim to {settlement:all} of '
+                '{holder} in {@region}." },\n')
+KIND40_ENTRY = ('  { kind = "settlements_ceded", salience = 55, template = "{from} gave up {settlement:all} in {@region} '
+                'to {to}." },\n')
+_re = REPORT_FILE_019["report.toml"]
+_last = [l for l in _re.splitlines(True) if '"quiet_stretch"' in l][0]
+REPORT_FILE_020 = {"report.toml": _edit(_re, _last, _last + KIND39_ENTRY + KIND40_ENTRY)}
+HISTORY_FILES_020 = dict(HISTORY_FILES_019, **REPORT_FILE_020)
+SPEC_FILES_020 = {"race": RACE_FILES_020, "culture": CULTURE_FILES_020, "history": HISTORY_FILES_020}
+KINDS_020 = dict(KINDS_019)
+KINDS_020["race"] = ("races", RACE_020)
+
+# P3-02 r15 14.3: (file, list) -> (added, removed), applied to the 0.19.0 files.
+NAME_FILTER_EDITS_020 = {
+    ("slurs", "anywhere"): (["tard"], ["retard"]),
+    ("slurs", "whole"): ([], ["tard"]),
+    ("crude", "anywhere"): ([], ["bastard"]),
+    ("words", "whole"): (["ova", "van", "via", "von"], []),
+}
+# The commit whose game/data holds the 0.19.0 files (the P3-11 spec base, P3-10 merged): read from git when the
+# disk holds 0.20.0 files and 0.19.0 is served.
+P3_11_BASE_COMMIT = "dfa4e66"
+
+
+def name_filters_pre_020(files):
+    """True when a name_filters/ directory's files are older than 0.20.0 (`tard` still a slurs.whole entry)."""
+    for name, text in files:
+        d = tomllib.loads(text).get("name_filter", {})
+        if "slurs" in d:
+            return "tard" in d["slurs"]["whole"]
+    return False
+
+
+def pre_020(path, kind):
+    """A race, culture or history directory older than 0.20.0 (P3-11): a race file without
+    `awakening_population`, a faerie culture with the onset "p", or a report.toml without claim_settlements."""
+    texts = {}
+    for n in os.listdir(path):
+        if n.endswith(".toml"):
+            with open(os.path.join(path, n), encoding="utf-8") as f:
+                texts[n] = f.read()
+    if kind == "history":
+        return "claim_settlements" not in texts.get("report.toml", "")
+    if kind == "culture":
+        return any('"p", "f"' in t for t in texts.values())
+    return any("awakening_population" not in t for t in texts.values())
+
+
 # The data version this module serves: "0.18.0" (default, P3-09), "0.17.0"
 # (P3-08) or "0.16.0" (use_version), so that the references can still
 # reproduce the older worlds and goldens.
 DATA_VERSION = None
-VERSIONS = ("0.16.0", "0.17.0", "0.18.0", "0.19.0")
+VERSIONS = ("0.16.0", "0.17.0", "0.18.0", "0.19.0", "0.20.0")
 
 
 def at_least(v):
@@ -1485,7 +1590,9 @@ def at_least(v):
 
 def use_version(v):
     global DATA_VERSION, KINDS, SPEC_FILES
-    if v == "0.19.0":
+    if v == "0.20.0":
+        KINDS, SPEC_FILES = KINDS_020, SPEC_FILES_020
+    elif v == "0.19.0":
         KINDS, SPEC_FILES = KINDS_019, SPEC_FILES_019
     elif v == "0.18.0":
         KINDS, SPEC_FILES = KINDS_018, SPEC_FILES_018
@@ -1498,7 +1605,7 @@ def use_version(v):
     DATA_VERSION = v
 
 
-use_version("0.19.0")
+use_version("0.20.0")
 
 # ---------------------------------------------------------------------------
 # Loading and validation (types only: what the encoding needs)
@@ -1593,12 +1700,14 @@ def disk_version(path, kind):
         return "0.18.0"
     if kind != "culture" and pre_019_r17(path, kind):
         return "0.19.0-r16"   # the first P3-10 round's files: matches no served version
-    return "0.19.0"
+    if pre_020(path, kind):
+        return "0.19.0"
+    return "0.20.0"
 
 
 def same_version(kind, a, b):
     """Whether two data versions have the same files of a kind (cultures did not change at 0.18.0)."""
-    if kind == "culture":
+    if kind == "culture":   # cultures did not change at 0.18.0 and 0.19.0 (0.20.0: the faerie lists)
         a, b = ("0.17.0" if x in ("0.18.0", "0.19.0") else x for x in (a, b))
     return a == b
 
@@ -1906,7 +2015,8 @@ def check_spec_invariants(c):
                "settlement_captured", "peace", "truce", "region_ceded", "civ_conquered"]
     later = (["settlement_abandoned_to"] if at_least("0.17.0") else []) + \
         (["refugees_settled", "tribute", "war_won", "search_abandoned", "refuge_held"] if at_least("0.18.0") else []) + \
-        (["plague_outbreak", "quiet_stretch"] if at_least("0.19.0") else [])
+        (["plague_outbreak", "quiet_stretch"] if at_least("0.19.0") else []) + \
+        (["claim_settlements", "settlements_ceded"] if at_least("0.20.0") else [])
     c.eq("report lists kinds 1-%d in id order (P3-05 11, P3-06 11%s)"
          % (30 + len(later), (", P3-05 r6 11" if at_least("0.17.0") else "") +
             (", P3-06 r9 20.9" if at_least("0.18.0") else "")),
@@ -1917,6 +2027,8 @@ def check_spec_invariants(c):
         check_spec_018(c, races)
     if at_least("0.19.0"):
         check_spec_019(c, races)
+    if at_least("0.20.0"):
+        check_spec_020(c, races, cultures)
     c.eq("densities (P3-05 12.2)", {k: v["density_permille"] for k, v in races.items()},
          dict(elf=300, goblin=900, dwarf=700, faerie=250, human=1000, orc=800))
     c.eq("prowess_permille (P3-06 12.2)", {k: v["prowess_permille"] for k, v in races.items()},
@@ -2089,7 +2201,8 @@ def check_spec_019(c, races):
     old = {e["kind"]: e for e in tomllib.loads(REPORT_FILE_018["report.toml"])["history"]["report"]["events"]}
     c.eq("every other report entry as at 0.18.0 (saliences unchanged)",
          [e for e in parsed_spec("history")["report"]["events"]
-          if e["kind"] not in TEMPLATES_019 and e["kind"] not in ("plague_outbreak", "quiet_stretch")],
+          if e["kind"] not in TEMPLATES_019 and e["kind"] not in ("plague_outbreak", "quiet_stretch",
+                                                                   "claim_settlements", "settlements_ceded")],
          [e for k, e in old.items() if k not in TEMPLATES_019])
     # P3-04 r13 4.2: report_event.template is string(512) from 0.19.0 (256 before); the cause-list templates are
     # why (this reference checks types only; the bound is the loader's, tested in data_history_kinds_test.cpp)
@@ -2099,6 +2212,43 @@ def check_spec_019(c, races):
          sorted(k for k, n in lens.items() if n > 256), ["settlement_abandoned", "settlement_abandoned_to"])
     c.eq("saliences of the changed kinds unchanged", {k: ev[k]["salience"] for k in TEMPLATES_019},
          {k: old[k]["salience"] for k in TEMPLATES_019})
+
+
+def check_spec_020(c, races, cultures):
+    """The 0.20.0 listings say what P3-01 r14 3.7, P3-02 r15 14.1, P3-06 r19 23.6 and P3-04 r17 21.2 state."""
+    c.eq("awakening_population (P3-01 r14 3.7: orc 1200, others 0)",
+         {k: v["awakening_population"] for k, v in races.items()}, AWAKENING_POPULATION_020)
+    c.eq("awakening_population follows hidden_years", [list(v).index("awakening_population") - list(v).index(
+        "hidden_years") for v in races.values()], [1] * 6)
+    for k, v in races.items():
+        c.ok("race %s.awakening_population inside int(0, 100000)" % k, 0 <= v["awakening_population"] <= 100000)
+    old = {}
+    for _, text in RACE_FILES_019.items():
+        old.update(tomllib.loads(text)["race"])
+    c.eq("every other race field as at 0.19.0", {k: {f: x for f, x in v.items() if f != "awakening_population"}
+                                                for k, v in races.items()}, old)
+    fa = cultures["faerie"]["naming"]
+    c.eq("faerie lists (P3-02 r15 14.1)", {f: fa[f] for f in ("onsets", "nuclei", "codas", "forbidden")},
+         {f: tomllib.loads("x = " + new.split(" = ", 1)[1])["x"] for f, (_, new) in
+          zip(("onsets", "nuclei", "codas", "forbidden"), FAERIE_LISTS_020)})
+    c.eq("faerie list sizes (13 onsets, 16 nuclei, 8 codas, 6 forbidden)",
+         [len(fa[f]) for f in ("onsets", "nuclei", "codas", "forbidden")], [13, 16, 8, 6])
+    oldc = {}
+    for _, text in CULTURE_FILES_017.items():
+        oldc.update(tomllib.loads(text)["culture"])
+    c.eq("every other culture and faerie field as at 0.19.0",
+         {k: dict(v, naming={f: x for f, x in v["naming"].items() if k != "faerie" or f not in (
+             "onsets", "nuclei", "codas", "forbidden")}) for k, v in cultures.items()},
+         {k: dict(v, naming={f: x for f, x in v["naming"].items() if k != "faerie" or f not in (
+             "onsets", "nuclei", "codas", "forbidden")}) for k, v in oldc.items()})
+    ev = parsed_spec("history")["report"]["events"]
+    c.eq("kinds 39, 40 entries after quiet_stretch (P3-06 r19 23.6, P3-04 r17 21.2)",
+         [(e["kind"], e["salience"], e["template"]) for e in ev[-3:]],
+         [("quiet_stretch", 20, ev[-3]["template"]),
+          ("claim_settlements", 35, "{claimant} laid claim to {settlement:all} of {holder} in {@region}."),
+          ("settlements_ceded", 55, "{from} gave up {settlement:all} in {@region} to {to}.")])
+    c.eq("every other report entry as at 0.19.0", ev[:-2],
+         tomllib.loads(REPORT_FILE_019["report.toml"])["history"]["report"]["events"])
 
 
 def check_spec_017(c, races, cultures):
@@ -2215,7 +2365,10 @@ def check_copied_kinds(c):
                  read_dir_files(path, directory), shipped)
     content = load_root("game/data", ["name_filter"])["name_filter"]
     c.eq("name_filter ids (P3-02 r5 11.2)", [d for d, _ in content], ["crude", "famous", "slurs", "words"])
-    if at_least("0.19.0"):   # P3-02 r10 12.1, r13 13.1: crude 72 / 12 / 14, slurs 33 / 18 / 6, words 5 / 1 / 387
+    if at_least("0.20.0"):   # P3-02 r15 14.3: slurs 33 / 18 / 5, crude 71 / 12 / 14, words 5 / 1 / 391
+        sizes = dict(slurs=(33, 18, 5), crude=(71, 12, 14), words=(5, 1, 391), famous=(0, 0, 101))
+        effs = [109, 31, 511]
+    elif at_least("0.19.0"):   # P3-02 r10 12.1, r13 13.1: crude 72 / 12 / 14, slurs 33 / 18 / 6, words 5 / 1 / 387
         sizes = dict(slurs=(33, 18, 6), crude=(72, 12, 14), words=(5, 1, 387), famous=(0, 0, 101))
         effs = [110, 31, 508]
     else:
@@ -2344,11 +2497,12 @@ def cmd_check():
     # The three roots differ only where the geo-small elevation tuning does
     # (P1-00 6.4); the new kinds are identical in all three.
     fresh = golden_text(from_spec=present < len(ROOTS) * len(NEW_KINDS))
-    if os.path.exists(GOLDEN) and not at_least("0.19.0"):   # P3-10: the file of 0.18.0 is the base commit's
+    if os.path.exists(GOLDEN) and not at_least("0.20.0"):   # the file of an older version is its base commit's
         import subprocess
-        committed = subprocess.run(["git", "-C", REPO, "show", P3_10_BASE_COMMIT + ":worldgen/tests/golden/p3-01-data.txt"],
+        base = P3_11_BASE_COMMIT if DATA_VERSION == "0.19.0" else P3_10_BASE_COMMIT
+        committed = subprocess.run(["git", "-C", REPO, "show", base + ":worldgen/tests/golden/p3-01-data.txt"],
                                    check=True, capture_output=True, text=True).stdout
-        c.eq("golden file of %s (git %s) is current" % (DATA_VERSION, P3_10_BASE_COMMIT), committed, fresh)
+        c.eq("golden file of %s (git %s) is current" % (DATA_VERSION, base), committed, fresh)
     elif os.path.exists(GOLDEN):
         with open(GOLDEN, "rb") as f:
             c.eq("committed golden file is current", f.read().decode(), fresh)
