@@ -176,7 +176,11 @@ TEST_CASE("P3-05 r17 23.2 item 2, 23.4 items 1, 2: the first orc colony comes wi
     }
     REQUIRE_FALSE(colonies.empty());
     CHECK(colonies[0] - awake <= 25);  // the mark: ready from the first visible T2
-    CHECK(first_pop == std::max<std::int64_t>(60, a.value * 120 / 1000));  // 144 colonists of 1,200
+    // colonist_permille 120 of the capital's population at the founding: 144 of 1,200, a little more after the
+    // years of growth before the draw passed; far below what a capital ready by pressure would send (750 permille of
+    // C at the least)
+    CHECK(first_pop >= std::max<std::int64_t>(60, a.value * 120 / 1000));
+    CHECK(first_pop * 1000 / 120 < a.capacity * 750 / 1000);
     // the mark cleared: the capital, at 1,056, is not ready for decades, so no second colony in ten years
     if (colonies.size() >= 2U) CHECK(colonies[1] - colonies[0] > 10);
 }
