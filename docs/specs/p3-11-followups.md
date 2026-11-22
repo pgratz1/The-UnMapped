@@ -1,6 +1,6 @@
 # P3-11 Orc arrival, wording and name follow-ups
 
-Status: **merged as ruled (r2, 2026-11-22)**: validated, audited and reviewed by the world critic on `p3/11-final` (95858f2); T9 (11 worlds) and T10 (3 worlds) missed by the targets as written and **accepted by the lead's ruling of 2026-11-22**, with both restated for later measurements (`docs/design/proposals.md`, "History: the P3-11 orc targets, the lead's ruling (awaiting Paul)"; P3-06 r21 23.1). r1 (2026-11-21): item 1 corrected after the implementation missed T11 (section 9 item 1). r2 (2026-11-22): text after validation (sections 4, 7, 9, 10, 12). Draft written by the spec writer on `p3/11-spec`, cut from `origin/main` at dfa4e66 (generator 0.19.0, P3-10 merged). Phase P3 History core, a change spec after P3-10 (generator 0.19.0) and before P3-07 (the history report, specified, not implemented). Generator **0.20.0**.
+Status: **merged as ruled (r2, 2026-11-22)**: validated, audited and reviewed by the world critic on `p3/11-final` (95858f2); T9 (11 worlds) and T10 (3 worlds) missed by the targets as written and **accepted by the lead's ruling of 2026-11-22**, with both restated for later measurements (`docs/design/proposals.md`, "History: the P3-11 orc targets, the lead's ruling (awaiting Paul)"; P3-06 r21 23.1). r1 (2026-11-21): item 1 corrected after the implementation missed T11 (section 9 item 1). r2 (2026-11-22): text after validation (sections 4, 7, 9, 10, 12). r3 (2026-11-22): Paul's decisions on questions 1 and 3 (sections 10, 12). Draft written by the spec writer on `p3/11-spec`, cut from `origin/main` at dfa4e66 (generator 0.19.0, P3-10 merged). Phase P3 History core, a change spec after P3-10 (generator 0.19.0) and before P3-07 (the history report, specified, not implemented). Generator **0.20.0**.
 
 **No schema change**: schema stays 7. The change:
 - appends two event kinds (39, 40);
@@ -241,7 +241,7 @@ Every decision below shipped as written in 0.20.0 (r1 for item 1). Measured at 0
 
 ## 10. Open questions (r2: merged as ruled)
 
-Question 1 shipped with its recommendation (a), and question 3 with the coda `p` removed; both stay open for Paul's confirmation. Question 2 is closed: T11 was met (median 9), and its one residual world (seed 88) has no free target at all, so the outward rule suggested below would not have helped it. The critic's three questions for Paul are in the lead's ruling in `docs/design/proposals.md`.
+(r3) **Paul decided both on 2026-11-22** (`docs/design/proposals.md`, "Paul's decisions of 2026-11-22: the orc rulings confirmed, and four questions answered", decision 6). Question 3: the coda `p` stays removed. Question 1: **option (b)**, a fresh claim on the new goal at the declaration, so that every war cites a claim on its own region. This replaces reading (a) and the report's note "(The claim, since …, was to …)". It changes world bytes, so it is to be specified and implemented with the next change that alters world bytes (section 12); until then 0.20.0 keeps (a). Question 2 is closed: T11 was met (median 9), and its one residual world (seed 88) has no free target at all, so the outward rule suggested below would not have helped it. The critic's three questions for Paul are in the lead's ruling in `docs/design/proposals.md`.
 
 
 1. **A war's goal and the claim it cites** (non-blocking; P3-06 23.4). A war is declared on a claim but fought over another region when, by the declaration, the claimed region is weary, lost by the defender or the defender's capital region.
@@ -269,3 +269,5 @@ Listed here, not specified. Sources: the P3-11 world critic's review and the lea
 - **The dwarven codas `din` and `rin`**, which hide stutters the repeated-syllable rule cannot see (Clan Didin, Bririn).
 - **Mixed numerals and words in battle tolls**: "24 of the defeated and seven of the victors fell".
 - **The reference's participant bound for kinds 39 and 40**: 64 against the implementation's 62 (section 7).
+- **A fresh claim at the declaration** (Paul's decision of 2026-11-22, question 1 of section 10, option (b)): a war whose goal differs from its claim's region cites a new claim on its goal, written at the declaration.
+- **Fewer grim region names** in data (Paul's decision of 2026-11-22 on renamed regions, item 3).
