@@ -247,10 +247,10 @@ NoteWorld note_world(const std::string& file, const std::vector<NEv>& evs) {
 
 TEST_SUITE("history") {
 
-TEST_CASE("P3-07 r14 23 items 3, 5: the declaration's note names the claim's region when it differs") {
+TEST_CASE("P3-07 r14 23 items 3, 5 and r15 item 4a: the declaration's note names the claim's region when it differs") {
     using P = std::tuple<std::int64_t, std::int64_t, std::int64_t>;
     const std::int64_t CV = 3, ST = 4;
-    // 0: a kind 39 claim on Woodward's Shaw (5990); 1: a declaration over East Wood citing it (5995);
+    // 0: a kind 39 claim on Woodward's Shaw (5990); 1: a declaration over East Wood citing it (5995): item 4a's form;
     // 2: a claim (kind 20) on Woodward's Shaw in 5996 and 3: a declaration over East Wood the same year citing it;
     // 4: a declaration over Woodward's Shaw citing claim 2 (same region): the old note; the pair's third war
     const std::vector<NEv> evs = {
@@ -281,8 +281,12 @@ TEST_CASE("P3-07 r14 23 items 3, 5: the declaration's note names the claim's reg
         const std::int64_t n = nth(id);
         return n >= 2 ? " The " + worldgen::history::history_ordinal(n) + " war between them." : std::string();
     };
+    // P3-07 r15 23 item 4a: after a kind 39 claim the note names its settlements in the claim's region
+    const std::string* town = view.value().name(worldgen::history::EntityType::settlement, 2);
+    REQUIRE(town != nullptr);
+    const std::string town_mid = town->rfind("The ", 0) == 0 ? "the " + town->substr(4) : *town;
     CHECK(worldgen::history::history_note(view.value(), w.ids[1]) ==
-          "The claim, since 5990, was to Woodward's Shaw." + tail(w.ids[1]));
+          "The claim, since 5990, was to " + town_mid + " in Woodward's Shaw." + tail(w.ids[1]));
     CHECK(worldgen::history::history_note(view.value(), w.ids[3]) ==
           "The claim, made the same year, was to Woodward's Shaw." + tail(w.ids[3]));
     CHECK(worldgen::history::history_note(view.value(), w.ids[4]) == "Claimed since 5996." + tail(w.ids[4]));

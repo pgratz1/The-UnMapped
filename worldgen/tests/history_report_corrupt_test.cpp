@@ -5,8 +5,8 @@
 // tests.
 //
 // Written from the spec only. Readings: in "lake_cells outside 0 to cells" and "walk_cells outside 0 to
-// cells" the word "cells" is literal (it is not a <placeholder> in 5.3); a relation row with until = since
-// is not used here (5.3 refuses it, 6.6 r6 prints it: the test writer's report, R5).
+// cells" the word "cells" is literal (it is not a <placeholder> in 5.3). The relation check is `until`
+// within `since` to E - 1 (the lead's ruling on 5.3 against 6.6 r6: a row with until = since is valid).
 
 #include "p3_07_switch.hpp"
 
@@ -239,9 +239,9 @@ TEST_CASE("P3-07 5.3: relation") {
         {"UPDATE relation SET until_event = 5 WHERE kind = 'pact'",
          "corrupt table 'relation': row (3, 1, 6, 4, pact, 100): until and until_event disagree"},
         {"UPDATE relation SET until = 2000 WHERE kind = 'war' AND since = 2001",
-         "corrupt table 'relation': row (3, 1, 3, 2, war, 2001): until 2000 outside 2002 to 2999"},
+         "corrupt table 'relation': row (3, 1, 3, 2, war, 2001): until 2000 outside 2001 to 2999"},
         {"UPDATE relation SET until = 3000 WHERE kind = 'war' AND since = 2001",
-         "corrupt table 'relation': row (3, 1, 3, 2, war, 2001): until 3000 outside 2002 to 2999"},
+         "corrupt table 'relation': row (3, 1, 3, 2, war, 2001): until 3000 outside 2001 to 2999"},
         {"UPDATE relation SET since_event = 0 WHERE kind = 'pact'",
          "corrupt table 'relation': row (3, 1, 6, 4, pact, 100): since_event 0 is not an event"},
         {"UPDATE relation SET until_event = 99 WHERE kind = 'war' AND since = 2001",
@@ -250,6 +250,17 @@ TEST_CASE("P3-07 5.3: relation") {
         {"UPDATE relation SET kind = 'pa\\ct', a_type = 10 WHERE kind = 'pact'",
          "corrupt table 'relation': row (10, 1, 6, 4, pa\\\\ct, 100): a_type 10"},
     });
+}
+
+TEST_CASE("P3-07 6.6 r6 (the lead's ruling): a relation with until = since is valid and prints <since>-<since>") {
+    const auto rep = report_after(
+        "INSERT INTO relation VALUES (3, 3, 3, 1, 'enmity', 2020, 2020, 24, 31)");
+    REQUIRE(rep.ok());
+    const std::vector<std::string> c3 = hrtest::civ_block(rep.value(), 3);
+    CHECK(hrtest::contains_line(c3, "  relations: 4 (enmity 2, peace 1, war 1)"));
+    CHECK(hrtest::contains_line(c3, "    enmity: Gutrot Clans (c3), Finen (c1), 2020-2020, e24 to e31"));
+    CHECK(hrtest::contains_line(hrtest::civ_block(rep.value(), 1),
+                                "    enmity: Gutrot Clans (c3), Finen (c1), 2020-2020, e24 to e31"));
 }
 
 TEST_CASE("P3-07 5.2 item 4, 14.1 item 6: HistoryView::load's failures are corrupt_layer errors, never fatal") {

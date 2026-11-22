@@ -83,9 +83,9 @@ R3 23.1 counts cessions as kinds 29 and 40 together, so regions_conquered (9) co
 R4 6.1 "no trailing space" is applied to every line after escaping; escaping is applied to the whole
    line, which is the same as escaping each piece of world text since the report's own text holds no
    backslash and no byte outside 0x20-0x7E.
-R5 5.3 relation: `until <u> outside <since + 1> to <E - 1>` contradicts 6.6 r6 (a row with until =
-   since is printed `<since>-<since>`); the reference prints such a row as r6 says and does not
-   implement the 5.3 checks (the C++ tests check their messages).
+R5 5.3 relation against 6.6 r6 (the lead's ruling): a row with until = since is valid and printed
+   `<since>-<since>`; the 5.3 check is until within since to E - 1. The reference does not implement the
+   5.3 checks (the C++ tests check their messages).
 R6 7.2: a settlement's state at a census year is its own row with the largest year <= Y; the
    population of a civilization is compared with its peak only at census years (so a civilization whose
    settlements all fade keeps its earlier peak).

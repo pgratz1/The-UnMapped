@@ -2240,7 +2240,8 @@ def stats21_lines(res, inp):
     standing = [x for x in res["settlement"] if x[10] in (1, 2)]
     pop = sum(x[11] for x in standing)
     held = [x for x in res["region_control"] if x[2] is None]
-    pshare = max([sum(x[11] for x in standing if civ_race[x[8]] == r[0]) * 1000 // pop for r in inp.races]
+    # .get: a standing settlement may have no owner (0), which belongs to no race
+    pshare = max([sum(x[11] for x in standing if civ_race.get(x[8]) == r[0]) * 1000 // pop for r in inp.races]
                  or [0]) if pop else 0
     rshare = max([sum(1 for x in held if civ_race[x[3]] == r[0]) * 1000 // len(held) for r in inp.races]
                  or [0]) if held else 0
@@ -2284,7 +2285,15 @@ def history_note(res, inp, eid, view=None, idx=None):
             return ""
         yc = ev[cl[0]][1]
         note = "Claimed since %d." % yc if yc < e[1] else "Claimed the same year."
-        if FLAGS["claim39"] and ev[cl[0]][5] != e[5]:
+        if FLAGS["claim39"] and kind[cl[0]] == K["claim_settlements"]:
+            # P3-07 r15 23 item 4a: after a kind 39 claim the towns claimed, in participant order, and the
+            # claim's region, whether or not it is the declaration's
+            view = view or pe.view_from_rows(res, [(r["id"], r["name"]) for r in inp.regions], inp.races, inp.gods)
+            ss = [mid(view["name"](SETTLEMENT, p_[4], "name")) for p_ in sorted(parts[cl[0]]) if p_[2] == 3]
+            where = "%s in %s" % (pe.join_all(ss), mid(view["name"](REGION, ev[cl[0]][5], "name")))
+            note = ("The claim, since %d, was to %s." % (yc, where) if yc < e[1] else
+                    "The claim, made the same year, was to %s." % where)
+        elif FLAGS["claim39"] and ev[cl[0]][5] != e[5]:
             # P3-07 r14 23 item 3: the claim's region when it differs from the declaration's
             view = view or pe.view_from_rows(res, [(r["id"], r["name"]) for r in inp.regions], inp.races, inp.gods)
             rc = mid(view["name"](REGION, ev[cl[0]][5], "name"))

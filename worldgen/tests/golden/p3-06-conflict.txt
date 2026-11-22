@@ -970,7 +970,7 @@ geo-seed-42-512 note e404 Claimed since 4943. The second war between them.
 geo-seed-42-512 note e408 Claimed since 4868. The second war between them.
 geo-seed-42-512 note e412 Claimed since 4668. The sixth war between them.
 geo-seed-42-512 note e431 The claim, since 3245, was to the Brake of Antlers. The third war between them.
-geo-seed-42-512 note e482 Claimed since 5369.
+geo-seed-42-512 note e482 The claim, since 5369, was to Druk in Central Downs.
 geo-seed-42-512 note e500 Claimed since 5695.
 geo-seed-42-512 note e501 The claim, since 5117, was to the Plain of Silence.
 geo-seed-42-512 note e540 Claimed since 5781. The second war between them.
@@ -5490,7 +5490,7 @@ hist-conflict-turbulent-512 note e210 The claim, since 3567, was to the Brake of
 hist-conflict-turbulent-512 note e219 The claim, since 3316, was to Northwest Fells.
 hist-conflict-turbulent-512 note e237 The claim of the Grork Horde to Seredale Tangle, held by the Realm of Ithieglie, came to a head.
 hist-conflict-turbulent-512 note e238 Claimed since 4017. The fifth war between them.
-hist-conflict-turbulent-512 note e256 Claimed since 4229. The second war between them.
+hist-conflict-turbulent-512 note e256 The claim, since 4229, was to Fivelie in the Brake of Antlers. The second war between them.
 hist-conflict-turbulent-512 note e270 Claimed since 4313. The second war between them.
 hist-conflict-turbulent-512 note e296 The claim of the Grork Horde to Leper's Debt, held by the Gleevo Ring, came to a head.
 hist-conflict-turbulent-512 note e297 Claimed since 4261.
@@ -6628,7 +6628,7 @@ hist-conflict-civs4-512 note e307 Claimed since 3316.
 hist-conflict-civs4-512 note e318 The claim, since 3617, was to Coldbarrow. The third war between them.
 hist-conflict-civs4-512 note e329 Claimed since 3390.
 hist-conflict-civs4-512 note e357 Claimed since 4217. The fourth war between them.
-hist-conflict-civs4-512 note e377 Claimed since 3864.
+hist-conflict-civs4-512 note e377 The claim, since 3864, was to Raenme in the Brake of Antlers.
 hist-conflict-civs4-512 note e378 Claimed since 4266. The second war between them.
 hist-conflict-civs4-512 note e399 Claimed since 4322. The second war between them.
 hist-conflict-civs4-512 note e421 The claim of the Grork Horde to Blackstrand Wolds, held by the Shaesia Ring, came to a head.
@@ -6641,7 +6641,7 @@ hist-conflict-civs4-512 note e540 Claimed since 5029.
 hist-conflict-civs4-512 note e578 The claim of the Grork Horde to the Plain of Silence, held by the Duchy of Ashin, came to a head.
 hist-conflict-civs4-512 note e579 Claimed since 5043.
 hist-conflict-civs4-512 note e591 Claimed since 5219.
-hist-conflict-civs4-512 note e640 The claim, since 5625, was to the Brake of Antlers. The fourth war between them.
+hist-conflict-civs4-512 note e640 The claim, since 5625, was to Raenme in the Brake of Antlers. The fourth war between them.
 hist-conflict-civs4-512 note e679 Claimed since 5809. The second war between them.
 hist-conflict-civs4-512 note e691 Claimed since 5821. The second war between them.
 hist-conflict-civs4-512 note e737 Claimed since 5915.
@@ -8741,7 +8741,7 @@ hist-conflict-73-1024 note e823 Claimed since 4799. The second war between them.
 hist-conflict-73-1024 note e846 The claim of the Droz Horde to the Mossgrown Wood, held by the Lotaeglie Ring, came to a head.
 hist-conflict-73-1024 note e847 Claimed since 4921. The second war between them.
 hist-conflict-73-1024 note e850 Claimed since 4871. The second war between them.
-hist-conflict-73-1024 note e871 Claimed since 4835. The third war between them.
+hist-conflict-73-1024 note e871 The claim, since 4835, was to Skut-Niz in the Cruel Wolds. The third war between them.
 hist-conflict-73-1024 note e875 Claimed since 4946. The fifth war between them.
 hist-conflict-73-1024 note e916 Claimed since 5042. The second war between them.
 hist-conflict-73-1024 note e949 Claimed since 5049. The fourth war between them.
@@ -8762,7 +8762,7 @@ hist-conflict-73-1024 note e1221 Claimed since 5606.
 hist-conflict-73-1024 note e1243 Claimed since 5706.
 hist-conflict-73-1024 note e1316 Claimed since 5800. The second war between them.
 hist-conflict-73-1024 note e1346 Claimed since 5851. The fourth war between them.
-hist-conflict-73-1024 note e1347 Claimed since 5869. The second war between them.
+hist-conflict-73-1024 note e1347 The claim, since 5869, was to Skeeb Pit in the Wandering Rises. The second war between them.
 hist-conflict-73-1024 note e1371 Claimed since 5900. The fifth war between them.
 hist-conflict-73-1024 note e1426 Claimed since 5905.
 hist-conflict-73-1024 note e1427 Claimed since 5932. The second war between them.
@@ -10206,15 +10206,15 @@ syn-1 note e18 Claimed since 2106.
 syn-1 note e29 The claim of the Gub Horde to Synthetic 1, held by the House of Glaefaenn, came to a head.
 syn-1 note e30 Claimed since 2621. The second war between them.
 syn-1 note e45 Claimed since 3346. The third war between them.
-syn-1 note e63 Claimed since 3489.
+syn-1 note e63 The claim, since 3489, was to Haim in Synthetic 1.
 syn-1 note e75 The claim of the Gub Horde to Wisk Glade of the Flon Ring in Synthetic 1 came to a head.
-syn-1 note e76 Claimed since 4252.
-syn-1 note e89 Claimed since 4853. The second war between them.
-syn-1 note e103 Claimed since 5028. The second war between them.
-syn-1 note e114 Claimed since 5082.
-syn-1 note e127 Claimed since 5559. The third war between them.
-syn-1 note e139 Claimed since 5642. The third war between them.
-syn-1 note e151 Claimed since 5912. The second war between them.
+syn-1 note e76 The claim, since 4252, was to Wisk Glade in Synthetic 1.
+syn-1 note e89 The claim, since 4853, was to Haim in Synthetic 1. The second war between them.
+syn-1 note e103 The claim, since 5028, was to Wisk Glade in Synthetic 1. The second war between them.
+syn-1 note e114 The claim, since 5082, was to Brerdham in Synthetic 1.
+syn-1 note e127 The claim, since 5559, was to Wisk Glade in Synthetic 1. The third war between them.
+syn-1 note e139 The claim, since 5642, was to Haim in Synthetic 1. The third war between them.
+syn-1 note e151 The claim, since 5912, was to Brerdham in Synthetic 1. The second war between them.
 syn-1 summary threshold 20 shown 148 ages 4,28,18,27,22,49
 syn-1 e1 Laesiel awakened the Elves in Synthetic 1.
 syn-1 e2 The Elves founded the House of Glaefaenn in Synthetic 1.
@@ -12325,12 +12325,12 @@ syn-8 note e66 Claimed since 1124.
 syn-8 note e70 Claimed since 1237. The second war between them.
 syn-8 note e91 The claim of the Zux Mob to Twaefeess of the Twossvie Ring in Synthetic 3 came to a head.
 syn-8 note e92 The claim of the Zux Mob to Twaefeess of the Twossvie Ring in Synthetic 3 came to a head.
-syn-8 note e93 Claimed since 1425.
-syn-8 note e94 Claimed since 1482.
-syn-8 note e121 Claimed since 1699.
-syn-8 note e128 Claimed since 1850.
+syn-8 note e93 The claim, since 1425, was to Twaefeess in Synthetic 3.
+syn-8 note e94 The claim, since 1482, was to Twaefeess in Synthetic 3.
+syn-8 note e121 The claim, since 1699, was to Stulrod in Synthetic 1.
+syn-8 note e128 The claim, since 1850, was to Twaefeess in Synthetic 3.
 syn-8 note e152 Claimed since 1887. The second war between them.
-syn-8 note e163 Claimed since 1948.
+syn-8 note e163 The claim, since 1948, was to Stulrod in Synthetic 1.
 syn-8 summary threshold 20 shown 147 ages 4,29,10,33,11,60
 syn-8 e1 Saelome awakened the Elves in Synthetic 3.
 syn-8 e2 The Elves founded the Realm of Gliethil in Synthetic 3.
@@ -12820,12 +12820,12 @@ syn-9 q5537 0 e0
 syn-9 q5562 0 e0
 syn-9 note e27 Claimed since 2151.
 syn-9 note e40 The claim of the Dreek-Drox Mob to Fanvia of the Wigliesk Ring in Synthetic 17 came to a head.
-syn-9 note e41 Claimed since 4216.
+syn-9 note e41 The claim, since 4216, was to Fanvia in Synthetic 17.
 syn-9 note e44 Claimed since 4667. The second war between them.
 syn-9 note e53 Claimed since 5035. The third war between them.
 syn-9 note e65 The claim of the Dreek-Drox Mob to Fanvia of the Wigliesk Ring in Synthetic 17 came to a head.
-syn-9 note e66 Claimed since 5237. The second war between them.
-syn-9 note e88 Claimed since 5965. The third war between them.
+syn-9 note e66 The claim, since 5237, was to Fanvia in Synthetic 17. The second war between them.
+syn-9 note e88 The claim, since 5965, was to Fanvia in Synthetic 17. The third war between them.
 syn-9 summary threshold 20 shown 83 ages 4,7,6,27,19,20
 syn-9 e1 Lisael awakened the Elves in Synthetic 17.
 syn-9 e2 The Elves founded the House of Motheme in Synthetic 17.

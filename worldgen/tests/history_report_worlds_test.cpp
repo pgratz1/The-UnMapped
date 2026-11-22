@@ -14,7 +14,10 @@
 
 #include <doctest/doctest.h>
 
+#include <algorithm>
+#include <chrono>
 #include <cstdint>
+#include <tuple>
 #include <map>
 #include <optional>
 #include <string>
@@ -151,3 +154,138 @@ TEST_CASE("P3-07 14.4: the 1024 world cases and sample-42-1024 against the golde
 }
 
 }  // TEST_SUITE
+
+#if UNMAPPED_P3_07_REPORT
+namespace {
+
+// 14.5 item 15: a synthetic large world (30,000 events of a test kind with salience spread over 0-100, 200
+// declarations with their claims and war rows, 2,000 settlements, 20,000 census rows, 500 region_control
+// rows, 200 relations), E = 6000.
+hrtest::Fixture large_fixture() {
+    namespace db = worldgen::db;
+    hrtest::Fixture fx;
+    fx.name = "large";
+    fx.seed = 15;
+    fx.map_size = 1024;
+    fx.span = 6000;
+    fx.races = {"human"};
+    fx.biomes = {{1, "grassland", "Grassland", 0, 0}};
+    for (std::int64_t r = 1; r <= 100; ++r) {
+        db::RegionRow row;
+        row.id = r;
+        row.name = "Region " + std::to_string(r);
+        row.biome = 1;
+        row.cells = 2000;
+        row.walk_cells = 1500;
+        fx.regions.push_back(row);
+    }
+    fx.race_rows = {{1, "human", "Human", "Humans", "Human", 1, 80, 25, 1, 1, 0, 1}};
+    fx.cultures = {{1, "human", "Human", 1}};
+    fx.gods = {{1, "Wealstuld", 1}};
+    fx.ages = {{1, 1, 0, 5999, "The Age of Humans"}};
+    fx.phases = {{1, 1, 1, 0, 149, 1}, {2, 1, 2, 150, 5899, 0}, {3, 1, 4, 5900, 5999, 0}};
+    fx.kinds = {{1, "awakening", 0, 1, 0, 100, "{creator} awakened the {race:plural} in {@region}."},
+                {2, "civ_founded", 1, 1, 0, 80, "The {race:plural} founded {civilization} in {@region}."},
+                {3, "claim", 0, 1, 0, 35, "{claimant} laid claim to {@region}, held by {holder}."},
+                {4, "war_declared", 1, 1, 0, 70, "{attacker} declared war on {defender} over {@region}."},
+                {5, "tick", 0, 0, 0, 50, "{civilization} counted {n}."}};
+    fx.roles = {{1, 1, "race", 1, 1, 1},     {1, 2, "creator", 2, 1, 1},  {2, 1, "civilization", 3, 1, 1},
+                {2, 2, "race", 1, 1, 1},     {3, 1, "claimant", 3, 1, 1}, {3, 2, "holder", 3, 1, 1},
+                {4, 1, "attacker", 3, 1, 1}, {4, 2, "defender", 3, 1, 1}, {5, 1, "civilization", 3, 1, 1}};
+    fx.values = {{5, 1, "n"}};
+    std::int64_t id = 0;
+    auto ev = [&](std::int64_t year, std::int64_t kind, std::int64_t phase, std::int64_t region, std::int64_t sal) {
+        fx.events.push_back({++id, year, year, kind, phase, region, 0, sal});
+        return id;
+    };
+    ev(0, 1, 1, 1, 100);
+    fx.participants.push_back({1, 1, 1, 1, 1});
+    fx.participants.push_back({1, 2, 2, 2, 1});
+    for (std::int64_t c = 1; c <= 20; ++c) {
+        const std::int64_t e = ev(0, 2, 1, c, 80);
+        fx.participants.push_back({e, 1, 1, 3, c});
+        fx.participants.push_back({e, 2, 2, 1, 1});
+        fx.causes.push_back({e, 1});
+        fx.civilizations.push_back({c, "Realm " + std::to_string(c), 1, 1, c, 0, 0, e, std::nullopt, 0});
+    }
+    std::int64_t wars = 0;
+    for (std::int64_t k = 0; k < 30000; ++k) {
+        const std::int64_t year = 150 + k * 5750 / 30000;
+        if (k % 150 == 75 && wars < 200) {
+            const std::int64_t a = wars % 20 + 1, b = (wars + 7) % 20 + 1, g = wars % 100 + 1;
+            const std::int64_t cl = ev(year, 3, 2, g, 35);
+            fx.participants.push_back({cl, 1, 1, 3, a});
+            fx.participants.push_back({cl, 2, 2, 3, b});
+            const std::int64_t d = ev(year, 4, 2, g, 70);
+            fx.participants.push_back({d, 1, 1, 3, a});
+            fx.participants.push_back({d, 2, 2, 3, b});
+            fx.causes.push_back({d, cl});
+            db::RelationRow rel;
+            rel.a_type = 3;
+            rel.a_id = a;
+            rel.b_type = 3;
+            rel.b_id = b;
+            rel.kind = "war";
+            rel.since = year;
+            rel.since_event = d;
+            fx.relations.push_back(rel);
+            ++wars;
+        }
+        const std::int64_t e = ev(year, 5, 2, 0, (k * 37) % 101);
+        fx.participants.push_back({e, 1, 1, 3, k % 20 + 1});
+        fx.event_values.push_back({e, 1, k});
+    }
+    for (std::int64_t s = 1; s <= 2000; ++s) {
+        const std::int64_t owner = s % 20 + 1;
+        for (std::int64_t j = 0; j < 10; ++j) {
+            fx.census.push_back({s, j * 600, owner, 1, 1, 100 + (s * 7 + j * 13) % 500});
+        }
+        const auto& last = fx.census.back();
+        fx.settlements.push_back({s, "Town " + std::to_string(s), s, s, s % 100 + 1, owner, 0, owner + 1, owner, 1, 1,
+                                  last.population, std::nullopt, 0});
+    }
+    for (std::int64_t r = 1; r <= 100; ++r) {
+        for (std::int64_t j = 0; j < 5; ++j) {
+            fx.region_control.push_back({r, j * 1000, j < 4 ? std::optional<std::int64_t>((j + 1) * 1000) : std::nullopt,
+                                         (r + j) % 20 + 1, 1 + (r + j) % 20 + 1});
+        }
+    }
+    auto by = [](auto key) { return [key](const auto& x, const auto& y) { return key(x) < key(y); }; };
+    std::sort(fx.relations.begin(), fx.relations.end(), by([](const db::RelationRow& r) {
+                  return std::make_tuple(r.a_type, r.a_id, r.b_type, r.b_id, r.kind, r.since);
+              }));
+    std::sort(fx.participants.begin(), fx.participants.end(), by([](const db::EventParticipantRow& r) {
+                  return std::make_pair(r.event, r.seq);
+              }));
+    std::sort(fx.causes.begin(), fx.causes.end(),
+              by([](const db::EventCauseRow& r) { return std::make_pair(r.event, r.cause); }));
+    return fx;
+}
+
+}  // namespace
+
+TEST_SUITE("history-report-slow" * doctest::skip()) {
+
+TEST_CASE("P3-07 14.5 item 15, 11: a synthetic large world, timing (reported) and invariants 2 and 3") {
+    const hrtest::Fixture fx = large_fixture();
+    REQUIRE(fx.events.size() == 30000U + 21U + 400U);
+    REQUIRE(fx.census.size() == 20000U);
+    REQUIRE(fx.region_control.size() == 500U);
+    REQUIRE(fx.relations.size() == 200U);
+    const std::string path = world_dir().file("large.db");
+    hrtest::write_fixture_world(fx, path);
+    const auto r = hrtest::open_world(path);
+    for (const auto level : {hrtest::HistoryLevel::summary, hrtest::HistoryLevel::full}) {
+        const auto t0 = std::chrono::steady_clock::now();
+        const std::string text = hrtest::report_of(r, level);
+        const auto ms =
+            std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - t0).count();
+        const std::string label = level == hrtest::HistoryLevel::full ? "full" : "summary";
+        MESSAGE("report --history --level " << label << ": " << ms << " ms, " << text.size() << " bytes");
+    }
+    hrtest::check_invariants(r, hrtest::report_of(r, hrtest::HistoryLevel::summary),
+                             hrtest::report_of(r, hrtest::HistoryLevel::full));
+}
+
+}  // TEST_SUITE
+#endif  // UNMAPPED_P3_07_REPORT
