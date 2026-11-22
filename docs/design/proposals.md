@@ -1077,3 +1077,12 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
   3. The share of grim region names is lowered in data before P5, with the next change that alters world bytes.
 - Interim choice: 1 and 2 go to P5 History depth, to be specified there (events for delvings, forging, trade in arms, a woken danger and lost holds; a record of renamed places for the sites and quests of P6). 3 joins the items of `docs/specs/p3-11-followups.md` section 12.
 - Status: accepted; design doc sections 5 and 12 to be updated
+
+### Paul's approval of phase P3 History core, 2026-11-22
+
+- Date: 2026-11-22
+- Raised by: Paul, in the session, after reading the history reports of the phrase world and seeds 5 and 7 (generator 0.20.0)
+- Design doc section: 13 (phases; the human checkpoint)
+- Decision: "they look great for this stage, ready to move to the next phase." P3 is approved. P4 Viewer v1 and P5 History depth start, in parallel.
+- Carried into P5 (first stage, since it alters world bytes): the items of `docs/specs/p3-11-followups.md` section 12 (a fresh claim at a declaration, the quarrel war gated on strength, fewer grim region names, the `became_city` wording, name-filter additions, a stored hidden-refuge flag and a recorded claim drop). Carried with it, without world changes: the world critic's notes on the history report (`docs/reviews/p3-07-history-report-world-critic-r17.md` B1 to B6) and the audit's advisory A3.
+- Status: accepted; design doc section 13's status line to be updated (P3 complete and approved on 2026-11-22)
