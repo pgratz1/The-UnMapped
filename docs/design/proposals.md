@@ -1135,3 +1135,17 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
   12. Exit check: "takes part" means a participant of at least one event; each race, camp and monster kind has a hard and a sweep target (P5-00 8.3); a bloc of allies and vassals is held to the runaway bound.
 - Interim choice: as proposed; the stage specs follow them. Four questions change the split or order and are put to Paul (P5-00 11): sites in P5, gods late with all five intervention kinds, renamed regions early, no sub-peoples in P5 (hill dwarves an optional stage after P5-07, dark elves after underground geography).
 - Status: open
+
+### Paul's decision of 2026-11-22: the P4 overview's questions go with their recommendations
+
+- Date: 2026-11-22
+- Raised by: Paul, in the session, after reading section 11 of `docs/specs/p4-00-viewer-v1-overview.md`
+- Design doc section: 10 (viewer), 12 (open questions "Layer catalogue in the library" and "History movie"), 13 (P4)
+- Decisions, each as recommended:
+  1. `worldgen` exposes the layer catalogue and region names through its public interface (stage P4-02); event text stays in `worldgen`.
+  2. The history movie is the last stage (P4-06), as playback of the year bar. No video encoder of the project's own: Godot's Movie Maker records it.
+  3. The viewer opens at the present day (year E).
+  4. Civilization colours: one hue family per race, a shade per civilization.
+  5. The walkthrough world of the exit check is seed 42 at 1024.
+- Status: accepted; design doc section 12's two P4 questions to be marked decided
+
