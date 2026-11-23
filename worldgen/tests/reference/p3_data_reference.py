@@ -1909,11 +1909,417 @@ def check_spec_022(c, races, cultures):
          {k: v for k, v in old.items() if k != "human"})
 
 
+
+# The 0.23.0 listings (P5-02, docs/specs/p5-02-beasts-monsters.md 4.1 to 4.5, 9.3, 10.2, 21.2), derived from the
+# 0.22.0 ones by the edits the spec states: the new required kinds beast (beasts/) and monster (monsters/), the
+# fixed id history.monsters (monsters.toml), culture_naming.site_forms after settlement_forms, peoples' ghost_*
+# after crisis_small_salience, the renaming forms of 21.2 and rule 7, the report entries of kinds 44 to 55 after
+# region_renamed and kind 43's cause words. The shipped rates are interim (P5-02 17 step 9): after the engineer's
+# calibration, BEASTS_023, MONSTERS_023 and MONSTERS_TUNING_023 are the one place to edit, then `golden`.
+HABITAT = REC(fields("biome:S weight:I"))
+BEAST = (("name", STR), ("plural", STR), ("habitat", ARR(HABITAT))) + fields(
+    "density:I growth_permille:I menace:I food:I")
+BEAST_RANGES = (("density", 0, 100000), ("growth_permille", 1, 1000), ("menace", 0, 1000), ("food", 0, 1000))
+MONSTER = (("name", STR), ("noun", STR), ("grouped", BOOL), ("wake", STR), ("biomes", ARR(HABITAT)),
+           ("wake_rate", INT), ("naming_culture", STR), ("name_forms", ARR(STR)), ("lair_forms", ARR(STR))) + fields(
+    "might:I range_hops:I raid_permille:I toll_min_permille:I toll_max_permille:I kill_max:I") + (
+    ("overruns", ARR(STR)),) + fields("overrun_permille:I active_years:I rewake_ppm:I lifespan_years:I max_alive:I") + (
+    ("flare", BOOL),) + fields("hoard_permille:I")
+MONSTER_RANGES = (("wake_rate", 0, 10000000), ("might", 1, 10000000), ("range_hops", 0, 4), ("raid_permille", 0, 1000),
+                  ("toll_min_permille", 0, 1000), ("toll_max_permille", 0, 1000), ("kill_max", 0, 10000000),
+                  ("overrun_permille", 0, 1000), ("active_years", 1, 100000), ("rewake_ppm", 0, 1000000),
+                  ("lifespan_years", 0, 100000), ("max_alive", 0, 64), ("hoard_permille", 0, 1000))
+PRESSURE = REC(fields("low:I normal:I high:I"))
+MONSTERS_RANGES_023 = (
+    ("living_permille", 0, 1000), ("undead_min_dead", 1, 10 ** 9), ("undead_window_years", 1, 100000),
+    ("hunt_hops", 0, 8), ("hunt_levy_permille", 0, 1000), ("hunt_permille", 0, 1000), ("hunt_memory_years", 1, 100000),
+    ("slay_max_permille", 0, 1000), ("drive_permille", 0, 1000), ("drive_years", 0, 100000),
+    ("displace_per_kpeople", 0, 1000), ("displace_max_permille", 0, 1000), ("beast_decline_permille", 1, 1000),
+    ("people_floor", 1, 100000), ("drag_k", 0, 10000), ("drag_max_permille", 0, 500), ("feed_k", 0, 10000),
+    ("feed_max_permille", 0, 500), ("bold_on_permille", 1, 1000000), ("bold_off_permille", 0, 1000000),
+    ("bold_permille", 0, 1000), ("bold_toll_permille", 0, 1000), ("outpost_permille", 0, 1000), ("outpost_max", 0, 16),
+    ("outpost_quiet_years", 1, 100000))
+MONSTERS_023 = (("pressure", PRESSURE),) + tuple((n, INT) for n, _, _ in MONSTERS_RANGES_023)
+# 4.3, the "Shipped" column.
+MONSTERS_TUNING_023 = dict(
+    pressure=dict(low=500, normal=1000, high=1600), living_permille=100, undead_min_dead=4000, undead_window_years=100,
+    hunt_hops=2, hunt_levy_permille=50, hunt_permille=150, hunt_memory_years=30, slay_max_permille=900,
+    drive_permille=300, drive_years=100, displace_per_kpeople=100, displace_max_permille=900,
+    beast_decline_permille=200, people_floor=100, drag_k=100, drag_max_permille=200, feed_k=2, feed_max_permille=100,
+    bold_on_permille=1500, bold_off_permille=800, bold_permille=100, bold_toll_permille=10, outpost_permille=30,
+    outpost_max=2, outpost_quiet_years=200)
+# 4.1's table: id, name, plural, habitat (in the table's order), density, growth, menace, food.
+BEASTS_023 = (
+    ("bear", "Bear", "bears", (("temperate_forest", 900), ("wet_woodland", 700), ("highland_moor", 400), ("alpine", 500),
+                               ("heath", 200)), 5, 60, 30, 30),
+    ("boar", "Boar", "boar", (("temperate_forest", 800), ("wet_woodland", 900), ("grassland", 300), ("heath", 300),
+                              ("marsh", 400), ("fen", 300)), 40, 250, 3, 100),
+    ("deer", "Deer", "deer", (("temperate_forest", 900), ("wet_woodland", 600), ("grassland", 800), ("heath", 600),
+                              ("steppe", 500), ("highland_moor", 500), ("alpine", 200), ("marsh", 200), ("fen", 200)),
+     100, 250, 0, 60),
+    ("giant_spider", "Giant spider", "giant spiders", (("wet_woodland", 800), ("temperate_forest", 400), ("marsh", 600),
+                                                       ("fen", 500), ("blighted_waste", 900)), 10, 200, 40, 0),
+    ("wolf", "Wolf", "wolves", (("temperate_forest", 700), ("wet_woodland", 500), ("grassland", 400), ("heath", 600),
+                                ("steppe", 700), ("highland_moor", 800), ("alpine", 400), ("marsh", 100), ("fen", 100),
+                                ("blighted_waste", 200)), 20, 150, 10, 0),
+)
+# 4.2's two tables joined: id, name, noun, grouped, wake, biomes, wake_rate, culture, name_forms, lair_forms, might,
+# range, raid, toll min, toll max, kill_max, overruns, overrun, active, rewake, lifespan, max_alive, flare, hoard.
+MONSTERS_KINDS_023 = (
+    ("dragon", "Dragon", "a dragon of the old world", False, "wild",
+     (("alpine", 800), ("highland_moor", 400), ("blighted_waste", 600)), 6, "elven",
+     ("{root} the Black", "{root} the Pale", "{root}"), ("The Lair of {root}", "{root}'s Deep"),
+     6000, 2, 30, 50, 200, 600, ("hamlet", "village", "town"), 150, 40, 2000, 0, 1, True, 40),
+    ("giant", "Giant", "a giant of the mountains", False, "wild", (("alpine", 900), ("highland_moor", 500)), 14,
+     "dwarven", ("{root} Stonehand", "{root}"), ("{root}'s Seat", "The Hall of {root}"),
+     1200, 1, 40, 30, 100, 150, ("hamlet", "village"), 60, 150, 3000, 2500, 2, True, 8),
+    ("ogre", "Ogre", "an ogre", False, "wild", (("grassland", 400), ("heath", 600), ("steppe", 700), ("highland_moor", 300)),
+     10, "orcish", ("{root} the Glutton", "{root}"), ("{root}'s Larder", "The Pit of {root}"),
+     200, 1, 100, 20, 60, 40, ("hamlet",), 80, 80, 8000, 300, 3, False, 3),
+    ("troll", "Troll", "a troll of the hills", False, "wild",
+     (("highland_moor", 800), ("alpine", 600), ("temperate_forest", 400), ("heath", 300)), 17, "goblin",
+     ("Old {root}", "{root}"), ("{root}'s Hollow", "The Den of {root}"),
+     300, 1, 80, 20, 80, 60, ("hamlet", "village"), 100, 120, 5000, 800, 3, False, 5),
+    ("undead", "Undead", "a host of the restless dead", True, "dead", (), 9000, "human",
+     ("The Host of {root}", "The Restless of {root}"), ("The Barrows of {root}", "{root}'s Howe"),
+     1500, 1, 60, 30, 120, 200, ("hamlet", "village"), 120, 200, 3000, 1000, 2, False, 5),
+    ("wyvern", "Wyvern", "a brood of wyverns", True, "wild", (("alpine", 700), ("heath", 500), ("highland_moor", 600)), 17,
+     "goblin", ("The {root} Brood", "The Brood of {root}"), ("The Eyrie of {root}", "{root}'s Crag"),
+     600, 2, 80, 20, 80, 50, ("hamlet",), 50, 60, 10000, 300, 2, False, 2),
+)
+SITE_FORMS_023 = {   # 4.4
+    "dwarven": ["{root} Watch", "The Tower of {root}"], "elven": ["{root} Watch", "The Spire of {root}"],
+    "faerie": ["{root} Watch", "The Thorn of {root}"], "goblin": ["{root} Lookout", "{root} Stockade"],
+    "human": ["{root} Watch", "{root} Tower"], "orcish": ["{root} Stockade", "The Watch of {root}"]}
+GHOST_023 = (("ghost_permille", 0, 1000, 200), ("ghost_max_population", 0, 1000000, 300))   # 4.5
+# 10.2: kinds 44 to 55 with salience and template.
+REPORT_ENTRIES_023 = (
+    ("monster_appeared", 45, "{monster}, {monster:kind}, made its lair in {@region}."),
+    ("undead_rose", 50, "{@causes:battle=the slaughter,battle_at_pass=the slaughter,sacked=the sack|After |, }the dead "
+                        "of {@region} rose as {monster}."),
+    ("monster_woke", 25, "{monster} woke again in {@region}."),
+    ("monster_slept", 10, "{monster} sank into sleep in {lair}."),
+    ("monster_raid", 15, "{monster} fell upon {settlement}; {dead?no one died|one died|# died}."),
+    ("settlement_overrun", 50, "{monster} drove the people from {settlement} and made it its lair; "
+                               "{survivors?no one escaped|one escaped|# escaped}."),
+    ("monster_slain", 55, "{slayer} hunted down and slew {monster}, {monster:kind}, in {@region}."),
+    ("monster_driven_off", 30, "{civilization} drove {monster} back to its lair in {@region}."),
+    ("monster_died", 30, "{monster}, {monster:kind}, died of great age in {@region}."),
+    ("beasts_bold", 15, "In {@region} the {@beast} grew bold, and travellers from {settlement} went in fear; "
+                        "{dead?none|one|#} died on the roads."),
+    ("outpost_built", 12, "{civilization} raised {site} in {@region} against {enemy}."),
+    ("outpost_abandoned", 10, "{civilization} abandoned {site}{reason?, the frontier having fallen quiet|, the land "
+                              "being lost|, its realm having fallen}."),
+)
+KIND43_CAUSES_023 = ("became_city=the rise of a city|", "became_city=the rise of a realm's seat,"
+                                                        "settlement_overrun=the ravage|")
+# 21.2 and 9.3: the forms of rules 2 to 5 and rule 7.
+RENAMING_FORMS_023 = {
+    "capital_sack": ["{stem}'s Fall", "The Ashes of {name}", "The Ruin of {name}", "The Fallen {noun}"],
+    "great_sack": ["{stem}'s Pyre", "The Ashes of {name}", "The Burnt {noun}", "The Cinder {noun}"],
+    "slaughter": ["The Red {noun}", "The Bloody {noun}", "The Rout of {name}", "The {noun} of the Slain",
+                  "The Weeping {noun}", "The Grim {noun}"],
+    "plague": ["The Emptied {noun}", "The Fever {noun}", "The Silent {noun}", "{stem}'s Grave", "The Pale {noun}",
+               "The Hollow {noun}"]}
+RENAME_RULE_7 = ("ravage", ["settlement_overrun"], [], 1, 1, 0, False, 600, 75, "monster", "civilization",
+                 ["The Haunt of {name}", "{name}'s Shadow", "The Forsaken {noun}", "The Hollow of {name}"])
+RENAMING_RULES_023 = tuple(r[:11] + (RENAMING_FORMS_023.get(r[0], r[11]),) for r in RENAMING_RULES_022) + (RENAME_RULE_7,)
+
+
+def _toml_value(v):
+    if isinstance(v, bool):
+        return "true" if v else "false"
+    if isinstance(v, int):
+        return "%d" % v
+    if isinstance(v, str):
+        return '"%s"' % v
+    if isinstance(v, dict):
+        return "{ " + ", ".join("%s = %s" % (k, _toml_value(x)) for k, x in v.items()) + " }"
+    return "[" + ", ".join(_toml_value(x) for x in v) + "]"
+
+
+def _habitat_text(name, rows):
+    if not rows:
+        return "%s = []\n" % name
+    return "%s = [\n" % name + "".join('  { biome = "%s", weight = %d },\n' % r for r in rows) + "]\n"
+
+
+def beast_file_023(row):
+    i, n, p, h, d, g, m, f = row
+    return ("# Beast %s (spec P5-02 4.1). Generator 0.23.0; values interim until the calibration sweep (P5-02 17).\n"
+            "[beast.%s]\nname = \"%s\"\nplural = \"%s\"\n%sdensity = %d\ngrowth_permille = %d\nmenace = %d\nfood = %d\n"
+            % (i, i, n, p, _habitat_text("habitat", h), d, g, m, f))
+
+
+MONSTER_FIELD_NAMES = [n for n, _ in MONSTER]
+
+
+def monster_dict_023(row):
+    d = dict(zip(["id"] + MONSTER_FIELD_NAMES, row))
+    d["biomes"] = [dict(biome=b, weight=w) for b, w in d["biomes"]]
+    for k in ("name_forms", "lair_forms", "overruns"):
+        d[k] = list(d[k])
+    return d
+
+
+def monster_file_023(row):
+    d = monster_dict_023(row)
+    out = ["# Monster kind %s (spec P5-02 4.2). Generator 0.23.0; rates interim until the calibration sweep "
+           "(P5-02 17).\n[monster.%s]\n" % (d["id"], d["id"])]
+    for n in MONSTER_FIELD_NAMES:
+        if n == "biomes":
+            out.append(_habitat_text("biomes", [(b["biome"], b["weight"]) for b in d["biomes"]]))
+        else:
+            out.append("%s = %s\n" % (n, _toml_value(d[n])))
+    return "".join(out)
+
+
+def monsters_file_023():
+    return ("# Beasts and monsters (spec P5-02 4.3; P3-01, next revision). Generator 0.23.0; rates interim until the\n"
+            "# calibration sweep (P5-02 17).\n[history.monsters]\n" +
+            "".join("%s = %s\n" % (k, _toml_value(v)) for k, v in MONSTERS_TUNING_023.items()))
+
+
+def _renaming_file_023():
+    out = ["# Regions renamed by history (spec P5-12 section 4; P3-01 r16 5.4). Generator 0.22.0; forms of P5-02 "
+           "21.2\n# and rule 7 (P5-02 9.3), generator 0.23.0.\n", "[history.renaming]\n"]
+    out += ["%s = %d\n" % kv for kv in RENAMING_HEAD_022.items()]
+    for r in renaming_rule_dicts(RENAMING_RULES_023):
+        out.append("\n[[history.renaming.rules]]\n")
+        out += ["%s = %s\n" % (n, _toml_value(v)) for n, v in r.items()]
+    return "".join(out)
+
+
+def _culture_023(cid, text):
+    lines = text.split("\n")
+    i = [k for k, l in enumerate(lines) if l.startswith("settlement_forms")]
+    assert len(i) == 1
+    lines.insert(i[0] + 1, "site_forms = %s" % _toml_value(SITE_FORMS_023[cid]))
+    return "\n".join(lines)
+
+
+CULTURE_FILES_023 = {n: _culture_023(n[:-5], t) for n, t in CULTURE_FILES_022.items()}
+_pe = HISTORY_FILES_022["peoples.toml"]
+assert _pe.endswith("crisis_small_salience = 25\n")
+_re = _edit(REPORT_FILE_022["report.toml"], *KIND43_CAUSES_023)
+assert _re.endswith("]\n")
+_re = _re[:-2] + "".join('  { kind = "%s", salience = %d, template = "%s" },\n' % e for e in REPORT_ENTRIES_023) + "]\n"
+HISTORY_FILES_023 = dict(HISTORY_FILES_022, **{
+    "peoples.toml": _pe + "".join("%s = %d\n" % (n, v) for n, _, _, v in GHOST_023),
+    "report.toml": _re, "renaming.toml": _renaming_file_023(), "monsters.toml": monsters_file_023()})
+BEAST_FILES_023 = {r[0] + ".toml": beast_file_023(r) for r in BEASTS_023}
+MONSTER_FILES_023 = {r[0] + ".toml": monster_file_023(r) for r in MONSTERS_KINDS_023}
+SPEC_FILES_023 = {"race": RACE_FILES_020, "culture": CULTURE_FILES_023, "history": HISTORY_FILES_023,
+                  "beast": BEAST_FILES_023, "monster": MONSTER_FILES_023}
+CULTURE_NAMING_023 = REC(CULTURE_NAMING_017[1] + (("site_forms", ARR(STR)),))
+PEOPLES_RANGES_023 = PEOPLES_RANGES_019 + tuple((n, lo, hi) for n, lo, hi, _ in GHOST_023)
+PEOPLES_023 = tuple((n, PEOPLES_RECORDS.get(n, INT)) for n, _, _ in PEOPLES_RANGES_023)
+KINDS_023 = dict(KINDS_022)
+KINDS_023["culture"] = ("cultures", (("race", STR), ("name", STR), ("naming", CULTURE_NAMING_023)))
+KINDS_023["history"] = ("history", dict(KINDS_022["history"][1], peoples=PEOPLES_023, monsters=MONSTERS_023))
+KINDS_023["beast"] = ("beasts", BEAST)
+KINDS_023["monster"] = ("monsters", MONSTER)
+# The commit whose game/data holds the 0.22.0 files (the P5-02 base, p5/02-base at 73fc624).
+P5_02_BASE_COMMIT = "73fc624"
+BIOME_KEYS_023 = ("alpine", "blighted_waste", "fen", "grassland", "heath", "highland_moor", "lake", "marsh", "ocean",
+                  "steppe", "temperate_forest", "wet_woodland")
+
+
+def display_name_ok(s):
+    """Grammar display_name (4.1): ASCII letters and space, starting with an upper-case letter; at most 32 bytes."""
+    return 0 < len(s) <= 32 and "A" <= s[0] <= "Z" and all(ch == " " or ch.isascii() and ch.isalpha() for ch in s)
+
+
+def beast_plural_ok(s):
+    """Grammar beast_plural (4.1): lower-case ASCII letters and single spaces, starting and ending with a letter."""
+    return (0 < len(s) <= 32 and all(ch == " " or "a" <= ch <= "z" for ch in s) and s[0] != " " and s[-1] != " "
+            and "  " not in s)
+
+
+def monster_noun_ok(s):
+    """Grammar monster_noun (4.2): lower-case ASCII letters, space and ', starting with `a ` or `an `; 48 bytes."""
+    return (len(s) <= 48 and all(ch in " '" or "a" <= ch <= "z" for ch in s)
+            and (s.startswith("a ") or s.startswith("an ")))
+
+
+def name_form_ok(s):
+    """Grammar name_form (P3-02 3): ASCII letters, space, ' and -, exactly one {root}; no leading or trailing space,
+    no two spaces in a row; at most 48 bytes."""
+    if len(s.encode()) > 48 or s.count("{root}") != 1:
+        return False
+    rest = s.replace("{root}", "")
+    return all(ch in " '-" or ch.isascii() and ch.isalpha() for ch in rest) and not (
+        s.startswith(" ") or s.endswith(" ") or "  " in s)
+
+
+def beast_check_messages(b, biomes=BIOME_KEYS_023):
+    """beast_habitat_biomes (4.1): every message, in order (the loader reports the first)."""
+    out = []
+    seen = []
+    for i, h in enumerate(b["habitat"]):
+        if h["biome"] not in biomes:
+            out.append("habitat[%d].biome '%s' is not a biome" % (i, h["biome"]))
+        elif h["biome"] in seen:
+            out.append("habitat[%d].biome '%s' is listed twice" % (i, h["biome"]))
+        seen.append(h["biome"])
+    return out
+
+
+def monster_check_messages(m, biomes=BIOME_KEYS_023, cultures=tuple(SITE_FORMS_023)):
+    """4.2's named checks in order: monster_biomes, monster_wild_habitat, monster_culture, monster_toll_ordered,
+    monster_overruns_unique, monster_bare_form_last. Messages not given by the spec are this reference's reading
+    (READINGS D1): the culture, toll and overruns checks."""
+    out = []
+    seen = []
+    for i, h in enumerate(m["biomes"]):
+        if h["biome"] not in biomes:
+            out.append("biomes[%d].biome '%s' is not a biome" % (i, h["biome"]))
+        elif h["biome"] in seen:
+            out.append("biomes[%d].biome '%s' is listed twice" % (i, h["biome"]))
+        seen.append(h["biome"])
+    if m["wake"] == "wild" and not any(h["weight"] > 0 for h in m["biomes"]):
+        out.append("a wild monster needs a biome with a weight above 0")
+    if m["naming_culture"] not in cultures:
+        out.append("naming_culture '%s' is not a culture" % m["naming_culture"])
+    if m["toll_min_permille"] > m["toll_max_permille"]:
+        out.append("toll_min_permille must not be above toll_max_permille")
+    for i, k in enumerate(m["overruns"]):
+        if k in m["overruns"][:i]:
+            out.append("overruns[%d]: '%s' is already listed" % (i, k))
+    for i, f in enumerate(m["name_forms"]):
+        if f == "{root}" and i != len(m["name_forms"]) - 1:
+            out.append("name_forms[%d] '{root}' must be the last form" % i)
+    return out
+
+
+def monsters_check_messages(t):
+    """monsters_bold_ordered (4.3); the message is this reference's reading (READINGS D1)."""
+    if t["bold_off_permille"] > t["bold_on_permille"]:
+        return ["bold_off_permille must not be above bold_on_permille"]
+    return []
+
+
+def rename_form_ok_023(s):
+    """P5-02 21.2: grammar rename_form gains the slot {stem}, at most once, not together with {name}."""
+    if s.count("{stem}") > 1 or ("{stem}" in s and "{name}" in s):
+        return False
+    return rename_form_ok(s.replace("{stem}", "{name}"))
+
+
+def pre_023(path, kind):
+    """A culture or history directory older than 0.23.0 (P5-02): no site_forms in a culture file; no monsters.toml,
+    no ghost_permille in peoples.toml, no monster_appeared entry or no ravage rule."""
+    names = [n for n in os.listdir(path) if n.endswith(".toml")]
+    texts = {}
+    for n in names:
+        with open(os.path.join(path, n), encoding="utf-8") as f:
+            texts[n] = f.read()
+    if kind == "history":
+        return ("monsters.toml" not in names or "ghost_permille" not in texts.get("peoples.toml", "")
+                or "monster_appeared" not in texts.get("report.toml", "")
+                or '"ravage"' not in texts.get("renaming.toml", ""))
+    if kind == "culture":
+        return any("site_forms" not in t for t in texts.values())
+    return False
+
+
+def check_spec_023(c, races, cultures):
+    """The 0.23.0 listings say what P5-02 4.1 to 4.5, 9.3, 10.2 and 21.2 state."""
+    h = parsed_spec("history")
+    mo = h["monsters"]
+    check_record(MONSTERS_023, mo, "history.monsters")
+    c.eq("history.monsters fields in order (4.3)", list(mo), [n for n, _ in MONSTERS_023])
+    c.eq("history.monsters shipped values (4.3)", mo, MONSTERS_TUNING_023)
+    for n, lo, hi in MONSTERS_RANGES_023:
+        c.ok("history.monsters.%s inside int(%d, %d)" % (n, lo, hi), lo <= mo[n] <= hi)
+    c.ok("pressure factors inside int(0, 10000)", all(0 <= v <= 10000 for v in mo["pressure"].values()))
+    c.eq("history.monsters passes monsters_bold_ordered", monsters_check_messages(mo), [])
+    c.eq("monsters_bold_ordered at off = on + 1", monsters_check_messages(dict(mo, bold_off_permille=1501)),
+         ["bold_off_permille must not be above bold_on_permille"])
+    c.eq("monsters_bold_ordered passes at off = on", monsters_check_messages(dict(mo, bold_off_permille=1500)), [])
+    be = parsed_spec("beast")
+    c.eq("beast ids in canonical order (4.1: bear 1 ... wolf 5)", sorted(be, key=lambda k: k.encode()),
+         ["bear", "boar", "deer", "giant_spider", "wolf"])
+    for bid, b in be.items():
+        check_record(BEAST, b, "beast." + bid)
+        c.eq("beast.%s fields in order" % bid, list(b), [n for n, _ in BEAST])
+        c.ok("beast.%s name by display_name" % bid, display_name_ok(b["name"]))
+        c.ok("beast.%s plural by beast_plural" % bid, beast_plural_ok(b["plural"]))
+        c.ok("beast.%s habitat 1 to 16 rows, weights 0 to 1000" % bid,
+             1 <= len(b["habitat"]) <= 16 and all(0 <= x["weight"] <= 1000 for x in b["habitat"]))
+        for n, lo, hi in BEAST_RANGES:
+            c.ok("beast.%s.%s inside int(%d, %d)" % (bid, n, lo, hi), lo <= b[n] <= hi)
+        c.eq("beast.%s passes beast_habitat_biomes" % bid, beast_check_messages(b), [])
+    bad = dict(be["wolf"], habitat=be["wolf"]["habitat"] + [dict(biome="heath", weight=1), dict(biome="moon", weight=1)])
+    c.eq("beast_habitat_biomes messages", beast_check_messages(bad),
+         ["habitat[10].biome 'heath' is listed twice", "habitat[11].biome 'moon' is not a biome"])
+    mk = parsed_spec("monster")
+    c.eq("monster ids in canonical order (4.2: dragon 1 ... wyvern 6)", sorted(mk, key=lambda k: k.encode()),
+         ["dragon", "giant", "ogre", "troll", "undead", "wyvern"])
+    for mid, m in mk.items():
+        check_record(MONSTER, m, "monster." + mid)
+        c.eq("monster.%s fields in order" % mid, list(m), MONSTER_FIELD_NAMES)
+        c.ok("monster.%s name by display_name" % mid, display_name_ok(m["name"]))
+        c.ok("monster.%s noun by monster_noun" % mid, monster_noun_ok(m["noun"]))
+        c.ok("monster.%s wake an enum value" % mid, m["wake"] in ("wild", "dead"))
+        c.ok("monster.%s forms by name_form, 1 to 8" % mid,
+             all(name_form_ok(f) for f in m["name_forms"] + m["lair_forms"])
+             and 1 <= len(m["name_forms"]) <= 8 and 1 <= len(m["lair_forms"]) <= 8)
+        c.ok("monster.%s overruns enum values, at most 3" % mid,
+             len(m["overruns"]) <= 3 and all(k in ("hamlet", "village", "town") for k in m["overruns"]))
+        for n, lo, hi in MONSTER_RANGES:
+            c.ok("monster.%s.%s inside int(%d, %d)" % (mid, n, lo, hi), lo <= m[n] <= hi)
+        c.eq("monster.%s passes its named checks" % mid, monster_check_messages(m), [])
+    c.eq("two flare kinds, one dead kind", ([k for k, m in mk.items() if m["flare"]],
+                                            [k for k, m in mk.items() if m["wake"] == "dead"]),
+         (["dragon", "giant"], ["undead"]))
+    d = mk["troll"]
+    for edit, want in (
+            (dict(biomes=d["biomes"] + [dict(biome="alpine", weight=1)]), ["biomes[4].biome 'alpine' is listed twice"]),
+            (dict(biomes=[dict(biome="sky", weight=5)]),
+             ["biomes[0].biome 'sky' is not a biome"]),
+            (dict(biomes=[dict(biome="heath", weight=0)]), ["a wild monster needs a biome with a weight above 0"]),
+            (dict(naming_culture="trollish"), ["naming_culture 'trollish' is not a culture"]),
+            (dict(toll_min_permille=81), ["toll_min_permille must not be above toll_max_permille"]),
+            (dict(overruns=["hamlet", "hamlet"]), ["overruns[1]: 'hamlet' is already listed"]),
+            (dict(name_forms=["{root}", "Old {root}"]), ["name_forms[0] '{root}' must be the last form"])):
+        c.eq("troll with %s" % sorted(edit), monster_check_messages(dict(d, **edit)), want)
+    c.eq("a dead kind needs no habitat", monster_check_messages(mk["undead"]), [])
+    for cid, cu in cultures.items():
+        nm = cu["naming"]
+        c.eq("culture.%s site_forms after settlement_forms (4.4)" % cid, list(nm)[-2:], ["settlement_forms", "site_forms"])
+        c.eq("culture.%s site_forms" % cid, nm["site_forms"], SITE_FORMS_023[cid])
+        c.ok("culture.%s site_forms by name_form" % cid, all(name_form_ok(f) for f in nm["site_forms"]))
+    old = {k: v for _, t in CULTURE_FILES_022.items() for k, v in tomllib.loads(t)["culture"].items()}
+    c.eq("every culture as at 0.22.0 but for site_forms",
+         {k: dict(v, naming={a: b for a, b in v["naming"].items() if a != "site_forms"}) for k, v in cultures.items()}, old)
+    pe = h["peoples"]
+    c.eq("peoples ghost_* appended after crisis_small_salience (4.5)", list(pe.items())[-3:],
+         [("crisis_small_salience", 25), ("ghost_permille", 200), ("ghost_max_population", 300)])
+    rn = h["renaming"]
+    c.eq("seven rules in rule order", [r["key"] for r in rn["rules"]],
+         ["conquest", "capital_sack", "great_sack", "slaughter", "plague", "heartland", "ravage"])
+    c.eq("renaming passes its four named checks (0.23.0)", renaming_check_messages(rn), [])
+    for i, r in enumerate(rn["rules"]):
+        c.ok("rules[%d] forms by rename_form with {stem} (21.2)" % i, all(rename_form_ok_023(f) for f in r["forms"]))
+    c.eq("rule 7 ravage (9.3)", [rn["rules"][6][n] for n, _ in RENAME_RULE], list(RENAME_RULE_7))
+    for f, ok in (("{stem}'s Fall", True), ("{stem} {name}", False), ("{stem}{stem}", False), ("The {stem}", True)):
+        c.eq("rename_form 0.23.0 %r" % f, rename_form_ok_023(f), ok)
+    evl = h["report"]["events"]
+    c.eq("kinds 44-55 entries after region_renamed (10.2)", [(e["kind"], e["salience"], e["template"]) for e in evl[-12:]],
+         [tuple(e) for e in REPORT_ENTRIES_023])
+    c.eq("report lists 55 kinds", len(evl), 55)
+    c.ok("kind 43 cause words: a realm's seat, the ravage (21.2)",
+         "became_city=the rise of a realm's seat,settlement_overrun=the ravage|After |, }" in evl[42]["template"])
+    c.eq("races as at 0.22.0", races, {k: v for _, t in RACE_FILES_020.items() for k, v in tomllib.loads(t)["race"].items()})
+    for k in ("chronology", "conflict", "engine"):
+        c.eq("history.%s as at 0.22.0" % k, h[k], tomllib.loads(HISTORY_FILES_022[k + ".toml"])["history"][k])
+
 # The data version this module serves: "0.18.0" (default, P3-09), "0.17.0"
 # (P3-08) or "0.16.0" (use_version), so that the references can still
 # reproduce the older worlds and goldens.
 DATA_VERSION = None
-VERSIONS = ("0.16.0", "0.17.0", "0.18.0", "0.19.0", "0.20.0", "0.21.0", "0.22.0")
+VERSIONS = ("0.16.0", "0.17.0", "0.18.0", "0.19.0", "0.20.0", "0.21.0", "0.22.0", "0.23.0")
 
 
 def at_least(v):
@@ -1922,8 +2328,11 @@ def at_least(v):
 
 
 def use_version(v):
-    global DATA_VERSION, KINDS, SPEC_FILES
-    if v == "0.22.0":
+    global DATA_VERSION, KINDS, SPEC_FILES, NEW_KINDS
+    NEW_KINDS = ("beast", "culture", "history", "monster", "race") if v == "0.23.0" else ("culture", "history", "race")
+    if v == "0.23.0":
+        KINDS, SPEC_FILES = KINDS_023, SPEC_FILES_023
+    elif v == "0.22.0":
         KINDS, SPEC_FILES = KINDS_022, SPEC_FILES_022
     elif v == "0.21.0":
         KINDS, SPEC_FILES = KINDS_021, SPEC_FILES_021
@@ -1942,7 +2351,7 @@ def use_version(v):
     DATA_VERSION = v
 
 
-use_version("0.22.0")
+use_version("0.23.0")
 
 # ---------------------------------------------------------------------------
 # Loading and validation (types only: what the encoding needs)
@@ -2027,6 +2436,8 @@ def read_dir_files(path, directory):
 
 def disk_version(path, kind):
     """The data version of a race, culture or history directory on disk."""
+    if kind in ("beast", "monster"):   # new at 0.23.0 (P5-02 4.1, 4.2)
+        return "0.23.0"
     if kind in ("race", "history") and pre_015(path, kind):
         return "0.15.0"
     if pre_017(path, kind):
@@ -2043,15 +2454,17 @@ def disk_version(path, kind):
         return "0.20.0"
     if kind != "race" and pre_022(path, kind):
         return "0.21.0"
-    return "0.22.0"
+    if kind != "race" and pre_023(path, kind):
+        return "0.22.0"
+    return "0.23.0"
 
 
 def same_version(kind, a, b):
     """Whether two data versions have the same files of a kind (cultures did not change at 0.18.0)."""
     if kind == "culture":   # cultures did not change at 0.18.0 and 0.19.0 (0.20.0: the faerie lists)
         a, b = ("0.17.0" if x in ("0.18.0", "0.19.0") else x for x in (a, b))
-    if kind == "race":   # races did not change at 0.21.0 and 0.22.0
-        a, b = ("0.20.0" if x in ("0.21.0", "0.22.0") else x for x in (a, b))
+    if kind == "race":   # races did not change at 0.21.0, 0.22.0 and 0.23.0
+        a, b = ("0.20.0" if x in ("0.21.0", "0.22.0", "0.23.0") else x for x in (a, b))
     return a == b
 
 
@@ -2326,6 +2739,21 @@ def fx_raw(v):
 
 
 def check_spec_invariants(c):
+    """At 0.23.0: every check of the 0.22.0 listings on them, then check_spec_023 on the 0.23.0 listings."""
+    if at_least("0.23.0"):
+        use_version("0.22.0")
+        try:
+            check_spec_invariants_022(c)
+        finally:
+            use_version("0.23.0")
+        check_spec_023(c, parsed_spec("race"), parsed_spec("culture"))
+        c.eq("history ids (0.23.0)", sorted(parsed_spec("history")),
+             ["chronology", "conflict", "engine", "monsters", "peoples", "renaming", "report"])
+        return None
+    return check_spec_invariants_022(c)
+
+
+def check_spec_invariants_022(c):
     """At 0.22.0: every check of the 0.21.0 listings on them (the 0.22.0 listings are derived from them by
     P5-12's edits), then check_spec_022 on the 0.22.0 listings."""
     if not at_least("0.22.0"):
@@ -2942,9 +3370,9 @@ def cmd_check():
     # The three roots differ only where the geo-small elevation tuning does
     # (P1-00 6.4); the new kinds are identical in all three.
     fresh = golden_text(from_spec=present < len(ROOTS) * len(NEW_KINDS))
-    if os.path.exists(GOLDEN) and not at_least("0.22.0"):   # the file of an older version is its base commit's
+    if os.path.exists(GOLDEN) and not at_least("0.23.0"):   # the file of an older version is its base commit's
         import subprocess
-        base = P5_12_BASE_COMMIT if DATA_VERSION == "0.21.0" else P5_01_BASE_COMMIT if DATA_VERSION == "0.20.0" else \
+        base = P5_02_BASE_COMMIT if DATA_VERSION == "0.22.0" else P5_12_BASE_COMMIT if DATA_VERSION == "0.21.0" else P5_01_BASE_COMMIT if DATA_VERSION == "0.20.0" else \
             P3_11_BASE_COMMIT if DATA_VERSION == "0.19.0" else P3_10_BASE_COMMIT
         committed = subprocess.run(["git", "-C", REPO, "show", base + ":worldgen/tests/golden/p3-01-data.txt"],
                                    check=True, capture_output=True, text=True).stdout

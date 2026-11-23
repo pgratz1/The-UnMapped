@@ -1,0 +1,15 @@
+# Beast bear (spec P5-02 4.1). Generator 0.23.0; values interim until the calibration sweep (P5-02 17).
+[beast.bear]
+name = "Bear"
+plural = "bears"
+habitat = [
+  { biome = "temperate_forest", weight = 900 },
+  { biome = "wet_woodland", weight = 700 },
+  { biome = "highland_moor", weight = 400 },
+  { biome = "alpine", weight = 500 },
+  { biome = "heath", weight = 200 },
+]
+density = 5
+growth_permille = 60
+menace = 30
+food = 30

@@ -1,0 +1,16 @@
+# Beast boar (spec P5-02 4.1). Generator 0.23.0; values interim until the calibration sweep (P5-02 17).
+[beast.boar]
+name = "Boar"
+plural = "boar"
+habitat = [
+  { biome = "temperate_forest", weight = 800 },
+  { biome = "wet_woodland", weight = 900 },
+  { biome = "grassland", weight = 300 },
+  { biome = "heath", weight = 300 },
+  { biome = "marsh", weight = 400 },
+  { biome = "fen", weight = 300 },
+]
+density = 40
+growth_permille = 250
+menace = 3
+food = 100

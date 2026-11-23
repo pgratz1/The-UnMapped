@@ -1,0 +1,28 @@
+# Monster kind giant (spec P5-02 4.2). Generator 0.23.0; rates interim until the calibration sweep (P5-02 17).
+[monster.giant]
+name = "Giant"
+noun = "a giant of the mountains"
+grouped = false
+wake = "wild"
+biomes = [
+  { biome = "alpine", weight = 900 },
+  { biome = "highland_moor", weight = 500 },
+]
+wake_rate = 14
+naming_culture = "dwarven"
+name_forms = ["{root} Stonehand", "{root}"]
+lair_forms = ["{root}'s Seat", "The Hall of {root}"]
+might = 1200
+range_hops = 1
+raid_permille = 40
+toll_min_permille = 30
+toll_max_permille = 100
+kill_max = 150
+overruns = ["hamlet", "village"]
+overrun_permille = 60
+active_years = 150
+rewake_ppm = 3000
+lifespan_years = 2500
+max_alive = 2
+flare = true
+hoard_permille = 8

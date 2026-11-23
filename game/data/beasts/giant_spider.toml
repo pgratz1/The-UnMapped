@@ -1,0 +1,15 @@
+# Beast giant_spider (spec P5-02 4.1). Generator 0.23.0; values interim until the calibration sweep (P5-02 17).
+[beast.giant_spider]
+name = "Giant spider"
+plural = "giant spiders"
+habitat = [
+  { biome = "wet_woodland", weight = 800 },
+  { biome = "temperate_forest", weight = 400 },
+  { biome = "marsh", weight = 600 },
+  { biome = "fen", weight = 500 },
+  { biome = "blighted_waste", weight = 900 },
+]
+density = 10
+growth_permille = 200
+menace = 40
+food = 0
