@@ -100,6 +100,29 @@ std::optional<std::string> timeline_reads_disagree(const HistoryView& view, cons
     return std::nullopt;
 }
 
+// P4-03 9.4 (audit A3): within each region's run of control rows (the runs
+// are contiguous, checked before), each row with a to_year ends after it
+// starts, and for consecutive rows p, r of one region p is closed and
+// p.to_year <= r.from_year. Rows are visited in order, a row's own end
+// before its pairing with the row after it.
+void check_control_runs(const std::vector<db::RegionControlRow>& rows) {
+    for (std::size_t i = 0; i < rows.size(); ++i) {
+        const db::RegionControlRow& r = rows[i];
+        if (r.to_year && *r.to_year <= r.from_year) {
+            timeline_fatal("region_control row (" + num(r.region) + ", " + num(r.from_year) + ") ends at " +
+                           num(*r.to_year) + ", not after it starts");
+        }
+        if (i == 0U) {
+            continue;
+        }
+        const db::RegionControlRow& p = rows[i - 1U];
+        if (p.region == r.region && (!p.to_year || *p.to_year > r.from_year)) {
+            timeline_fatal("region_control rows of region " + num(r.region) + " overlap at year " +
+                           num(r.from_year));
+        }
+    }
+}
+
 }  // namespace
 
 // --- Build (6.1) -------------------------------------------------------------
@@ -131,6 +154,7 @@ Timeline Timeline::build(const HistoryView& view, const HistoryTables& tables) {
             timeline_fatal("region_control row of region " + num(t.control_[row].region) + " out of order");
         }
     }
+    check_control_runs(t.control_);
     for (const db::RegionControlRow& r : t.control_) {
         t.change_years_.push_back(r.from_year);
         if (r.to_year) {

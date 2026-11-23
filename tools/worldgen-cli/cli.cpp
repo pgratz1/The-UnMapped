@@ -1012,7 +1012,8 @@ Exit run_render(const Options& options) {
             const std::vector<inspect::Rgb> civ_colours = inspect::civilization_colours(loaded->tables);
             const std::vector<std::optional<inspect::Rgb>> fill =
                 inspect::territory_fill(loaded->timeline, civ_colours, year);
-            rgb = inspect::render_territory(base, fill, scale);
+            const std::vector<std::int64_t> holders = inspect::territory_holders(loaded->timeline, year);
+            rgb = inspect::render_territory(base, fill, holders, scale);
         } else if (region) {
             const std::vector<inspect::BiomeColour> colours = read_biome_colours(world, progress);
             rgb = inspect::render_composite_regions(grid, water ? &*water : nullptr, river ? &*river : nullptr,

@@ -1,7 +1,7 @@
 #pragma once
 
 // Civilization colours and the year-dependent image `territory` (spec P4-01
-// 5.3, 5.5, 5.6). Integer arithmetic only; the RGB buffer is part of the
+// 5.3, 5.5, 5.6, amended by P4-03 7, 8 and 9.2). Integer arithmetic only; the RGB buffer is part of the
 // cross-platform contract, as every composite's (P0-04 10).
 
 #include <cstddef>
@@ -21,20 +21,27 @@ namespace worldgen::inspect {
 // The domain tag of a colour from a race key, "UNM:COLR" (P0-01 7.2 form).
 inline constexpr std::uint64_t TAG_COLOUR = 0x524C4F433A4D4E55ULL;
 
-// The base colour of a race key (5.5), compared as bytes: elf (52, 150, 70),
-// goblin (190, 160, 50), dwarf (160, 82, 45), faerie (150, 90, 200), human
-// (50, 105, 200), orc (200, 40, 35); any other key: h = hash_words(TAG_COLOUR,
+// The base colour of a race key, compared as bytes: entry 0 of the table of
+// P4-03 7.2 for the six shipped keys elf (40, 190, 70), goblin (230, 195,
+// 20), dwarf (220, 105, 25), faerie (175, 70, 225), human (0, 190, 195) and
+// orc (205, 30, 30); any other key (P4-01 5.5): h = hash_words(TAG_COLOUR,
 // encode_bytes(key)), channel j (0 R, 1 G, 2 B) = 48 + floor(((h >> 8j) &
 // 0xFF) 160 / 255).
 [[nodiscard]] Rgb race_base_colour(std::string_view race_key);
 
-// The shade of a base colour for ordinal k (5.5): s = k mod 4; s 0 base, 1
-// light c + floor((255 - c) 8 / 16), 2 dark floor(c 10 / 16), 3 deep
-// floor(c 7 / 16). FatalError when ordinal is negative.
+// The shade of a base colour for ordinal k (P4-01 5.5; used for race keys
+// without a row of P4-03 7.2): s = k mod 4; s 0 base, 1 light c +
+// floor((255 - c) 8 / 16), 2 dark floor(c 10 / 16), 3 deep floor(c 7 / 16).
+// FatalError when ordinal is negative.
 [[nodiscard]] Rgb civilization_shade(Rgb base, std::int64_t ordinal);
 
-// The colour of each civilization, index id - 1: civilization_shade of its
-// race's base colour with ordinal k = the number of civilizations of the same
+// The colour of the civilization with ordinal k (>= 0) of race `race_key`:
+// entry k mod 4 of P4-03 7.2 for the six shipped keys, else
+// civilization_shade(race_base_colour(key), k). FatalError if k < 0.
+[[nodiscard]] Rgb race_civilization_colour(std::string_view race_key, std::int64_t ordinal);
+
+// The colour of each civilization, index id - 1: race_civilization_colour of
+// its race's key with ordinal k = the number of civilizations of the same
 // race and a smaller id. FatalError "civilization_colours: civilization <c>:
 // race <r> is not a race" when the race row is missing (checked data never).
 [[nodiscard]] std::vector<Rgb> civilization_colours(const history::HistoryTables& tables);
@@ -48,9 +55,17 @@ inline constexpr std::uint64_t TAG_COLOUR = 0x524C4F433A4D4E55ULL;
 [[nodiscard]] std::vector<std::optional<Rgb>> territory_fill(const history::Timeline& timeline,
                                                              std::span<const Rgb> colours, std::int64_t year);
 
-// The year-independent part of the territory image (5.6), built once: per
-// cell at scale 1 the pixel B of the composite regions, the hillshade factor
-// and the region value when the cell is fillable (else 0).
+// The holders at a year, indexed by region id with the size and id rules of
+// territory_fill: entry the civilization holding the region at `year`, 0 when
+// free; [0] = 0 (P4-03 9.2). FatalError for a year outside 0..E with the
+// timeline's text.
+[[nodiscard]] std::vector<std::int64_t> territory_holders(const history::Timeline& timeline, std::int64_t year);
+
+// The year-independent part of the territory image (P4-01 5.6, P4-03 8.2),
+// built once: per cell at scale 1 the pixel B of the composite regions, its
+// kind, and for a fillable cell or an inner border candidate the hillshade
+// factor, the region value and (candidate only) the neighbour values that
+// make it a border cell.
 class TerritoryBase {
 public:
     // FatalError when composite_regions_problem(...) reports a problem.
@@ -61,10 +76,18 @@ public:
     [[nodiscard]] std::uint32_t width() const noexcept { return width_; }
     [[nodiscard]] std::uint32_t height() const noexcept { return height_; }
 
+    // Cell kinds.
+    static constexpr std::uint8_t KIND_PLAIN = 0;         // drawn as B only
+    static constexpr std::uint8_t KIND_FILLABLE = 1;      // filled when its region is held
+    static constexpr std::uint8_t KIND_INNER_BORDER = 2;  // inner border candidate (P4-03 8.2)
+
     struct Cell {
-        Rgb base;                 // B(x, y)
-        std::uint16_t factor = 0;  // hillshade factor (160..352) when fillable, else 0
-        std::uint16_t region = 0;  // the region value when fillable, else 0
+        Rgb base;                  // B(x, y)
+        std::uint8_t kind = 0;     // KIND_*
+        std::uint16_t factor = 0;  // hillshade factor (160..352) when kind is 1 or 2, else 0
+        std::uint16_t region = 0;  // v when kind is 1 or 2, else 0
+        std::uint16_t east = 0;    // kind 2: the E neighbour's value when it makes the cell a border, else 0
+        std::uint16_t south = 0;   // kind 2: the S neighbour's value when it makes the cell a border, else 0
     };
     [[nodiscard]] std::span<const Cell> cells() const noexcept { return cells_; }
 
@@ -79,14 +102,19 @@ private:
 // overflows std::size_t.
 [[nodiscard]] std::size_t territory_rgb_size(const TerritoryBase& base, std::uint32_t scale);
 
-// The territory image (5.6), laid out as render_rgb: per cell, on a fillable
-// cell whose region v < fill.size() has fill[v] = C, shade_colour(C, factor);
+// The territory image (P4-01 5.6 with P4-03 8.2), laid out as render_rgb.
+// holders[v] is the holder of region v, 0 when free or v >= holders.size();
+// holders may be empty (then no inner border is drawn). Per cell: on a
+// fillable cell whose region v < fill.size() has fill[v] = C,
+// shade_colour(C, factor); on an inner border candidate whose region v and
+// every other region w of it have the same holder c != 0 and fill[v] = C,
+// shade_colour(dim(C), factor) with dim the channels times 12 / 16, floored;
 // otherwise B. FatalError: scale outside 1..16, size overflow, out.size() !=
 // territory_rgb_size(base, scale).
 [[nodiscard]] std::vector<std::uint8_t> render_territory(const TerritoryBase& base,
                                                          std::span<const std::optional<Rgb>> fill,
-                                                         std::uint32_t scale);
-void render_territory(const TerritoryBase& base, std::span<const std::optional<Rgb>> fill, std::uint32_t scale,
-                      std::span<std::uint8_t> out);
+                                                         std::span<const std::int64_t> holders, std::uint32_t scale);
+void render_territory(const TerritoryBase& base, std::span<const std::optional<Rgb>> fill,
+                      std::span<const std::int64_t> holders, std::uint32_t scale, std::span<std::uint8_t> out);
 
 }  // namespace worldgen::inspect

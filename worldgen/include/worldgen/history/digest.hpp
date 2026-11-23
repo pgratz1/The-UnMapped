@@ -193,4 +193,8 @@ struct HistoryDigest {
 // "21st", "22nd", "23rd", "101st", "111th".
 [[nodiscard]] std::string history_ordinal(std::int64_t n);
 
+// The word of a phase kind (P3-07 report, P4-03 9.5): 1 "opening", 2 "quiet",
+// 3 "flare_up", 4 "final"; anything else empty.
+[[nodiscard]] std::string_view phase_kind_word(std::int64_t kind) noexcept;
+
 }  // namespace worldgen::history
