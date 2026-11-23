@@ -654,7 +654,7 @@ TEST_CASE("P1-04 2, 10.1 test 9: each precondition violation is fatal with the p
 // --- Schema 4 (section 3, P1-03 3, P1-00 9.2, P0-02 amendment 16) ------------------------------
 
 TEST_CASE("P1-04 3, 10.1 test 9: SCHEMA_VERSION 4; DDL of meta, layer, pass, biome (schema 3), climate (schema 4)") {
-    CHECK(worldgen::db::SCHEMA_VERSION == 7);  // P3-03 5.1
+    CHECK(worldgen::db::SCHEMA_VERSION == 8);  // P3-03 5.1
     REQUIRE(worldgen::db::DDL_STATEMENTS.size() == 26U);
     CHECK(worldgen::db::DDL_STATEMENTS[0].substr(0, 18) == "CREATE TABLE meta ");
     CHECK(worldgen::db::DDL_STATEMENTS[1].substr(0, 19) == "CREATE TABLE layer ");
@@ -675,11 +675,11 @@ TEST_CASE("P1-04 3, P1-00 9.2: an empty world (--until none) has tables biome an
     const dbtest::SqliteFile db(dir.file("e.db"));
     REQUIRE(db.ok());
     CHECK(db.rows("PRAGMA user_version") == std::vector<std::vector<std::string>>{{"7"}});
-    CHECK(db.rows("SELECT value FROM meta WHERE key = 'schema_version'") == std::vector<std::vector<std::string>>{{"7"}});
+    CHECK(db.rows("SELECT value FROM meta WHERE key = 'schema_version'") == std::vector<std::vector<std::string>>{{"8"}});
     {
         auto r = worldgen::db::WorldReader::open(dir.file("e.db"));
         REQUIRE(r.ok());
-        CHECK(r.value().schema_version() == 7);
+        CHECK(r.value().schema_version() == 8);
     }
     // The sqlite_schema rows in creation order (rowid): the five tables with
     // their DDL, and the automatic indexes of layer.name and biome.key.
@@ -711,7 +711,7 @@ TEST_CASE("P1-04 3, P1-00 9.2: an empty world (--until none) has tables biome an
     CHECK(db.rows("SELECT count(*) FROM biome") == std::vector<std::vector<std::string>>{{"0"}});
     CHECK(db.rows("SELECT count(*) FROM climate") == std::vector<std::vector<std::string>>{{"0"}});
     // P1-04 12, P0-02 amendment 15: 8 pages, root pages: sqlite_schema, meta, layer, sqlite_autoindex_layer_1, pass, biome, sqlite_autoindex_biome_1, climate.
-    CHECK(dbtest::read_file(dir.file("e.db")).size() == 139264U);  // 34 pages since schema 7 (P3-04 9.6)
+    CHECK(dbtest::read_file(dir.file("e.db")).size() == 143360U);  // 34 pages since schema 7 (P3-04 9.6)
 }
 
 TEST_CASE("P1-04 3: a test-pattern world has tables biome and climate, empty") {

@@ -1388,6 +1388,63 @@ Integration (P5-01 phase 2, against the engineer's branch):
   attacker role had min 1; both are corrupt worlds for the C++ view (P3-04 9.3). The fixture now gives both values
   and the sack kind an optional attacker; `expand_fixture` refuses a wrong value count.
 
+## Generator 0.22.0 (P5-12: regions renamed by history; P1-06 r11 17, P3-01 r16 5.4, P3-02 r19 16, P3-04 r21 23, P3-07 r21 26, P4-01 r3 16)
+
+Written from `docs/specs/p5-12-renamed-regions.md` r0 and the sections it amends, without the engineer's branch.
+Every reference serves 0.22.0 by default; `--version 0.21.0` serves the 0.21.0 rules and data and reproduces the
+committed 0.21.0 goldens byte for byte (checked for `p1-06-regions.txt`, `p3-01-data.txt`, `p3-02-names.txt`,
+`p3-03-chronology.txt`, `p3-04-engine.txt`, `p3-05-peoples.txt`, `p3-06-conflict.txt`, `p3-07-report.txt`; the
+0.21.0 inputs and goldens of an older version are read from git at 0b78b31, `P5_12_BASE_COMMIT`). The data edits
+(`game/data/history/renaming.toml` and both fixture copies, the kind 43 entry of `history/report.toml`, human
+`forbidden` + `ass`) are applied exactly as the spec states; the engineer's files must hold the same values.
+
+Inputs: the P5-01 inputs renamed with `p1_regions_reference.py rename-db SRC DST` (V8: only `geo-phrase-512`
+moves, region 11 `Tarden` -> `Lichenknoll Forest`) in `~/.cache/the-unmapped/out/p5-12-tests/inputs/` (with
+`READY`); the report inputs rebuilt with `p3_report_reference.py build-inputs ~/.cache/the-unmapped/out/p3-07-tests/inputs
+~/.cache/the-unmapped/out/p5-12-tests/report-inputs` (adds table `region_name`, schema 8, when the source lacks it).
+
+```
+I=~/.cache/the-unmapped/out/p5-12-tests/inputs
+export UNMAPPED_ELEVATION_CACHE=~/.cache/the-unmapped/out/p1-06-tests/elev-cache
+python3 -B worldgen/tests/reference/p3_data_reference.py golden
+python3 -B worldgen/tests/reference/p1_regions_reference.py golden --large --db-dir ~/.cache/the-unmapped/out/p1-06-tests/db
+python3 -B worldgen/tests/reference/p3_names_reference.py golden
+python3 -B worldgen/tests/reference/p3_chronology_reference.py golden -   # (redirect to the golden file)
+python3 -B worldgen/tests/reference/p3_engine_reference.py golden --inputs $I
+python3 -B worldgen/tests/reference/p3_peoples_reference.py golden --inputs $I
+python3 -B worldgen/tests/reference/p3_conflict_reference.py golden --inputs $I    # about 9 minutes
+python3 -B worldgen/tests/reference/p5_12_renaming_reference.py golden             # about 10 minutes
+python3 -B worldgen/tests/reference/p3_report_reference.py golden
+```
+
+- `p3_data_reference.py`: `KINDS_022` (history gains `renaming`: `RENAMING_022`, `RENAME_RULE`), the listing
+  `RENAMING_RULES_022` transcribed from 4.1, `HISTORY_FILES_022`, `CULTURE_FILES_022`, `KIND43_ENTRY`,
+  `rename_form_ok` (grammar `rename_form`), `renaming_check_messages` (the four named checks), `check_spec_022`;
+  at 0.22.0 every check of the 0.21.0 listings runs on them first (`check_spec_invariants_upto_021`).
+- `p1_regions_reference.py`: `VERSION` 0.22.0 (`r11()`); `v8_spans(parts, filt)` (17.1) after V7 in the drawn
+  attempts and in the fallback; `check_rg11_r11` (17.3's units); `V8_REJECTED`. On the 100 default 1024 worlds
+  of the 0.21.0 sweep exactly four names change (seeds 15, 59, 84, 91; P1-06 17.2's four). In the golden file
+  `shipped-512-phrase` moves (`Tarden`), against 17.3's "expected none".
+- `p3_names_reference.py`: `CULTURES_R19`, `DOUBLE_RULE`, `fused_tails`, `first_syllable`, `doubled_item`
+  (16.1 items 1 to 3), `check_r19`, golden lines `tails`, `fs`, `doubled`, `hreject`, `hresult` (seeds 0 and 42,
+  human settlements 1 to 400). The 11.6 sample's human settlement 2 `Alantton` is redrawn (`Serd`).
+- `p3_engine_reference.py`: `COMPILED_022` (kind 43), `RENDER_R21` (N(r, e) through the view's `region_at`,
+  `{@region_former}`, `region_at_event_fn`, `region_at_year`), schema 8 (`COLUMNS_022`, `TABLES_022`,
+  `REGION_NAME_DDL`), `[history]` `region_names` after `relations`, `TEMPLATE_CASES_R21`, `check_render_r21`.
+- `p3_peoples_reference.py`: `COMPILED_022`; no rule; the peoples-only configuration installs no renaming.
+- `p3_conflict_reference.py`: flag `rename` (0.22.0): `World.renaming` (the subsystem of
+  `p5_12_renaming_reference.py`) runs after conflict in T6 and Q4; `res["region_name"]`; inputs read `landmass`
+  and `biome` of table `region`; `unit` gains the renaming companions (P3-07 r21 26.5); a note names a region as
+  in its event's sentence (`_rname`, reading); golden line `<case> r21 renamings ...`.
+- `p5_12_renaming_reference.py` (new): `Renaming` (section 6), `land_nouns` (RG11 3 from rows), `realm_root`
+  (5.3), `build_name`, `name_problem` (5.2), `stage_check_message` (P3-01 r16 5.4), `rows_violations`
+  (invariants 1 to 5), fixtures `rename-small` (stress data, every `min_magnitude` 1, `chance_permille` 1000,
+  caps opened) and `off` (`region_max` 0), `check` (units of 13 on a stub world) and `check-world DB...`.
+  Readings: `readings`.
+- `p3_report_reference.py`: format v3 (`V3`): header, `hidden refuges: <h> of <n> founded by flight` (26.3, the
+  `refuge_hidden` of smallest id), `renamed regions:` (26.2), present names outside sentences (26.4), the four
+  `[stats]` keys and `SUMMARY_STATS_022` (26.5); fixture DDL from `schema.md` at the current version.
+
 ## P3-07 history report
 
 `p3_report_reference.py` reproduces `worldgen-cli report --history` at both levels from a world file

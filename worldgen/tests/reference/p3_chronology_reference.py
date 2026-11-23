@@ -66,12 +66,14 @@ ONE = 1 << 32
 M64 = (1 << 64) - 1
 REPO = os.path.normpath(os.path.join(_HERE, "..", "..", ".."))
 GOLDEN = os.path.join(REPO, "worldgen", "tests", "golden", "p3-03-chronology.txt")
-DEFAULT_INPUTS = os.path.join(os.path.expanduser("~"), ".cache", "the-unmapped", "out", "p5-01-tests", "inputs")
+DEFAULT_INPUTS = os.path.join(os.path.expanduser("~"), ".cache", "the-unmapped", "out", "p5-12-tests", "inputs")
+# P5-12 (generator 0.22.0, the default): P1-06 r11's region names (V8; the P5-01 inputs renamed by rename-db).
+_P5_01_INPUTS = os.path.join(os.path.expanduser("~"), ".cache", "the-unmapped", "out", "p5-01-tests", "inputs")
 # P5-01 (generator 0.21.0, the default): the inputs carry P1-06 r10's region names (the P3-11 inputs renamed by
 # p1_regions_reference.py rename-db); P3-10 (0.19.0, 0.20.0): r7's names; --version 0.18.0 (or 0.17.0) reads the
 # P3-08 inputs (r3 names).
 _P3_10_INPUTS = os.path.join(os.path.expanduser("~"), ".cache", "the-unmapped", "out", "p3-10-tests", "inputs")
-INPUTS_BY_VERSION = {"0.21.0": DEFAULT_INPUTS,
+INPUTS_BY_VERSION = {"0.22.0": DEFAULT_INPUTS, "0.21.0": _P5_01_INPUTS,
                      "0.20.0": _P3_10_INPUTS, "0.19.0": _P3_10_INPUTS,   # P3-11: region names unchanged
                      "0.18.0": os.path.join(os.path.expanduser("~"), ".cache", "the-unmapped", "out", "p3-08-tests",
                                             "inputs")}
@@ -572,9 +574,14 @@ def p1_06_region_hash(case):
     """The table_region hash of a P1-06 golden case for the served version: from 0.19.0 the committed file
     (P1-06 r7 names); before, the file as of the P3-10 base commit (r3 names, the inputs of those versions)."""
     path = os.path.join(REPO, "worldgen", "tests", "golden", "p1-06-regions.txt")
-    if pdr.at_least("0.21.0"):
+    if pdr.at_least("0.22.0"):
         with open(path) as f:
             text = f.read()
+    elif pdr.at_least("0.21.0"):   # P5-12 (P1-06 r11) moved the committed file: r10's, as of the P5-12 base
+        import subprocess
+        text = subprocess.run(["git", "-C", REPO, "show", pdr.P5_12_BASE_COMMIT +
+                               ":worldgen/tests/golden/p1-06-regions.txt"], check=True, capture_output=True,
+                              text=True).stdout
     elif pdr.at_least("0.19.0"):   # P5-01 (P1-06 r10) moved the committed file: r7's, as of the P5-01 base
         import subprocess
         text = subprocess.run(["git", "-C", REPO, "show", pdr.P5_01_BASE_COMMIT +
@@ -1234,7 +1241,7 @@ def main(argv):
         pnr.use_version(v)
         _SHIPPED = None
         DEFAULT_INPUTS = INPUTS_BY_VERSION.get(v, INPUTS_BY_VERSION["0.18.0"])
-        INPUTS_READY = os.path.join(DEFAULT_INPUTS, "READY") if v in ("0.19.0", "0.20.0", "0.21.0") else DEFAULT_INPUTS
+        INPUTS_READY = os.path.join(DEFAULT_INPUTS, "READY") if v in ("0.19.0", "0.20.0", "0.21.0", "0.22.0") else DEFAULT_INPUTS
     cmd = argv[0]
     if cmd == "check":
         return cmd_check()

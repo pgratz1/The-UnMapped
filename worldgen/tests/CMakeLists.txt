@@ -391,6 +391,22 @@ target_sources(worldgen-tests PRIVATE
 target_compile_definitions(worldgen-tests PRIVATE
     UNMAPPED_P3_06_GOLDEN_PATH="${CMAKE_CURRENT_SOURCE_DIR}/golden/p3-06-conflict.txt"
 )
+# Regions renamed by history (spec P5-12, generator 0.22.0, schema 8): the data of history.renaming, the
+# golden worlds and fixtures of golden/p5-12-renaming.txt (reference/p5_12_renaming_reference.py), the readers
+# of table region_name (Timeline, HistoryView, report v3). Slow cases in the suite "renaming-slow". With them
+# P3-02 r19 (history/history_names_r19_test.cpp, shard history) and P1-06 r11 (stages_regions_v8_test.cpp,
+# shard regions).
+target_sources(worldgen-tests PRIVATE
+    history/history_renaming_data_test.cpp
+    history/history_renaming_golden_test.cpp
+    history/history_renaming_readers_test.cpp
+    history/history_renaming_unit_test.cpp
+    history/history_names_r19_test.cpp
+    stages_regions_v8_test.cpp
+)
+target_compile_definitions(worldgen-tests PRIVATE
+    UNMAPPED_P5_12_GOLDEN_PATH="${CMAKE_CURRENT_SOURCE_DIR}/golden/p5-12-renaming.txt"
+)
 # Conflict balance (spec P3-09, generator 0.18.0; P3-06 r9 20, P3-05 r8 21,
 # P3-01 r9 3.2, P3-07 r8 21): the 0.18.0 data and kinds 32 and 33, the [stats]
 # keys of P3-07 r8 21.5 and the weariness check on hand-made logs, the seams
@@ -470,6 +486,7 @@ unmapped_add_doctest_shards(worldgen-tests
     SHARD history-report 20 "*history_report_*"
     SHARD layer-catalogue 8 "*inspect_layer_catalogue_worlds_test.cpp"
     SHARD timeline 40 "*timeline_*"
+    SHARD renaming 30 "*history_renaming_*"
     REST other 13
     # The *-slow suites (label slow; ctest --preset <p>-slow). Costs: seconds
     # per file group under linux-gcc-release, measured 2026-11-21 at 0.18.0
@@ -485,5 +502,6 @@ unmapped_add_doctest_shards(worldgen-tests
     SLOW slow-biomes-resources-regions 550 "*-slow" "*stages_biomes_*,*stages_resources_*,*stages_regions_*"
     SLOW slow-history-report 120 "*-slow" "*history_report_*"
     SLOW slow-timeline 400 "*-slow" "*timeline_*"
+    SLOW slow-renaming 600 "*-slow" "*history_renaming_*"
     SLOW_REST slow-other 10 "*-slow"
 )

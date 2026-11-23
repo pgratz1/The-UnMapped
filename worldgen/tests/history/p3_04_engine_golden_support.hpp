@@ -64,7 +64,7 @@ inline void check_world_case(const GoldenWorld& g) {
         REQUIRE(detail.count(t) == 1U);
         CHECK(detail.at(t) == hex);
     }
-    CHECK(g.tables.size() == 13U);
+    CHECK(g.tables.size() == 14U);  // P3-04 r21 23.4: region_name (schema 8)
     const Tables t = tables_of_world(r);
     CHECK(table_hashes(t) == g.tables);  // the test's own P0-04 8 hash of the stored rows agrees
     CHECK(phases_text(t, true) == g.phases);

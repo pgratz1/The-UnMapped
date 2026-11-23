@@ -88,7 +88,7 @@ FatalError = cr.FatalError
 REPO = pe.REPO
 GOLDEN = os.path.join(REPO, "worldgen", "tests", "golden", "p3-06-conflict.txt")
 DEFAULT_INPUTS = os.path.join(os.path.expanduser("~"), ".cache", "the-unmapped", "out", "p3-06-tests", "inputs")
-GENERATOR_VERSION = "0.21.0"
+GENERATOR_VERSION = "0.22.0"
 
 # P3-06 r7 (generator 0.17.0) and r9 section 20 (generator 0.18.0, P3-09): each rule change behind a
 # flag, as pp.FLAGS for P3-05; use_version(v) sets the flags of generator v in both files (and the data,
@@ -141,6 +141,8 @@ FLAGS = dict(
     dropped=True,       # 24.3: a claim dropped at a declaration with no allowed goal is recorded (kind 41)
     hidden42=True,      # 24.4: a refuge's hidden years are recorded at the flight (kind 42)
     toll=True,          # 24.5: each side's battle toll times a keyed factor (toll_spread_permille, hist.conflict.toll)
+    # P5-12 (generator 0.22.0)
+    rename=True,        # P5-12 6: the renaming subsystem after conflict in T6 and Q4 (p5_12_renaming_reference.py)
     # 22.3's one definition of lying low is lie_low's (pp.World.lying_low); no flag of its own
 )
 FLAGS_017 = ("loss",)
@@ -148,18 +150,21 @@ FLAGS_019 = ("reduce_loss", "aim_hold", "search_weary", "search_battle", "search
              "lie_low", "quarrel", "note_019", "quarrel_hold", "race_hidden", "aim_foot")
 FLAGS_020 = ("claim39", "foot40")
 FLAGS_021 = ("fresh", "strength", "dropped", "hidden42", "toll")
-VERSIONS = ("0.16.0", "0.17.0", "0.18.0", "0.19.0", "0.20.0", "0.21.0")
+FLAGS_022 = ("rename",)
+VERSIONS = ("0.16.0", "0.17.0", "0.18.0", "0.19.0", "0.20.0", "0.21.0", "0.22.0")
 
 
 def flag_on(v, k):
     """Whether rule flag k is on at generator v."""
+    if k in FLAGS_022:
+        return v == "0.22.0"
     if k in FLAGS_021:
-        return v == "0.21.0"
+        return v in ("0.21.0", "0.22.0")
     if k in FLAGS_020:
-        return v in ("0.20.0", "0.21.0")
+        return v in ("0.20.0", "0.21.0", "0.22.0")
     if k in FLAGS_019:
-        return v in ("0.19.0", "0.20.0", "0.21.0")
-    return v in ("0.18.0", "0.19.0", "0.20.0", "0.21.0") or (v == "0.17.0" and k in FLAGS_017)
+        return v in ("0.19.0", "0.20.0", "0.21.0", "0.22.0")
+    return v in ("0.18.0", "0.19.0", "0.20.0", "0.21.0", "0.22.0") or (v == "0.17.0" and k in FLAGS_017)
 
 
 def at_least(v):
@@ -170,7 +175,7 @@ def peoples_flags(v):
     """P3-05's flags of generator v (p3_peoples_reference.flags_for from 0.19.0; the 0.18.0 rule before it)."""
     if hasattr(pp, "flags_for"):
         return pp.flags_for(v)
-    return {k: v != "0.16.0" and (v in ("0.18.0", "0.19.0", "0.20.0", "0.21.0") or k not in pp.FLAGS_018)
+    return {k: v != "0.16.0" and (v in ("0.18.0", "0.19.0", "0.20.0", "0.21.0", "0.22.0") or k not in pp.FLAGS_018)
             for k in pp.FLAGS}
 
 
@@ -183,11 +188,13 @@ def use_version(v):
     for k in FLAGS:
         FLAGS[k] = flag_on(v, k)
     GENERATOR_VERSION = v
+    global TABLES, COLUMNS
+    TABLES, COLUMNS = pe.TABLES, pe.COLUMNS
     _DATA.clear()
 
 
 def legacy(on=True):
-    use_version("0.16.0" if on else "0.21.0")
+    use_version("0.16.0" if on else "0.22.0")
 
 
 class rules:
@@ -498,6 +505,7 @@ class Data(pp.Data):
         content = pdr.load_root(root, kinds=("history", "race"))
         hist = dict(content["history"])
         self.conflict = hist.get("conflict")
+        self.renaming = hist.get("renaming")   # P5-12 4 (0.22.0); an older root has none
         for key, t in content["race"]:
             rid = self.chron.race_by_id[key]["order"]
             self.race[rid]["aggression"] = t["aggression"]
@@ -526,6 +534,7 @@ def edited(dat, conflict=None, peoples=None, races=None, engine=None):
     d = pp.edited(dat, peoples=peoples, races=races, engine=engine)
     d.conflict = copy.deepcopy(dat.conflict)
     d.conflict.update(conflict or {})
+    d.renaming = copy.deepcopy(getattr(dat, "renaming", None))
     return d
 
 
@@ -703,6 +712,11 @@ class World(pp.World):
         # r22 logs for the checks (not state)
         self.fresh_log = []         # (year, a, b, old claim, fresh claim, G) of every fresh claim (24.1)
         self.toll_log = []          # (year, war, v_L, v_W, dead_L, dead_W) of every battle (24.5)
+        # P5-12: the renaming subsystem, installed after conflict (p5_12_renaming_reference.Renaming)
+        self.renaming = None
+        if conflict and FLAGS["rename"]:
+            import p5_12_renaming_reference as p512
+            self.renaming = p512.Renaming(self, dat, inp)
 
     # --- engine phase kind
     def tick(self, eng_run, year, phase_end):
@@ -718,6 +732,8 @@ class World(pp.World):
         self.begin()                         # T6
         if self.conflict_on:
             self.c_t6()
+        if self.renaming is not None:
+            self.renaming.run(quiet=False)   # T6: renaming (same step, after conflict)
         self.begin()                         # T7
         self.bookkeeping(year, phase_end)
         self.check_state()
@@ -735,6 +751,8 @@ class World(pp.World):
         self.foundings(quiet=True)          # Q4: peoples
         if self.conflict_on:
             self.c_q4()                     # Q4: conflict (same step)
+        if self.renaming is not None:
+            self.renaming.run(quiet=True)   # Q4: renaming (same step, after conflict)
 
     def quiet_b(self, eng_run, start, length, phase_end, row_start):
         last = start + length - 1
@@ -2172,6 +2190,8 @@ def history_stage(dat, inp, extra_draw=False, conflict=True):
         region_control=sorted(tuple(r) for r in w.region_control),
         relation=w.relation_table(),
     )
+    if FLAGS["rename"]:   # schema 8 (P3-04 r21 23.4): rows sorted by (region, from_year)
+        res["region_name"] = sorted(w.renaming.rows) if w.renaming is not None else []
     res["_world"] = w
     res["_engine"] = en
     res["_catalogue"] = cat
@@ -2372,6 +2392,14 @@ def mid(name):
     return "the " + name[4:] if name.startswith("The ") else name
 
 
+def _rname(view, rid, eid):
+    """P5-12 (READING): a region named in a note is named as in the noted event's sentence (the name in force
+    at event eid, P3-04 r21 23.1); the stored name before 0.22.0."""
+    if FLAGS["rename"] and "region_at" in view:
+        return view["region_at"](rid, eid)
+    return view["name"](REGION, rid, "name")
+
+
 def history_note(res, inp, eid, view=None, idx=None):
     """P3-07 r8 21.4: the note of event eid without its parentheses, or ""."""
     kind, ev, causes, _kids, parts = idx or _index(res)
@@ -2391,13 +2419,13 @@ def history_note(res, inp, eid, view=None, idx=None):
             # claim's region, whether or not it is the declaration's
             view = view or pe.view_from_rows(res, [(r["id"], r["name"]) for r in inp.regions], inp.races, inp.gods)
             ss = [mid(view["name"](SETTLEMENT, p_[4], "name")) for p_ in sorted(parts[cl[0]]) if p_[2] == 3]
-            where = "%s in %s" % (pe.join_all(ss), mid(view["name"](REGION, ev[cl[0]][5], "name")))
+            where = "%s in %s" % (pe.join_all(ss), mid(_rname(view, ev[cl[0]][5], eid)))
             note = ("The claim, since %d, was to %s." % (yc, where) if yc < e[1] else
                     "The claim, made the same year, was to %s." % where)
         elif FLAGS["claim39"] and ev[cl[0]][5] != e[5]:
             # P3-07 r14 23 item 3: the claim's region when it differs from the declaration's
             view = view or pe.view_from_rows(res, [(r["id"], r["name"]) for r in inp.regions], inp.races, inp.gods)
-            rc = mid(view["name"](REGION, ev[cl[0]][5], "name"))
+            rc = mid(_rname(view, ev[cl[0]][5], eid))
             note = ("The claim, since %d, was to %s." % (yc, rc) if yc < e[1] else
                     "The claim, made the same year, was to %s." % rc)
         pair = sorted(p_[4] for p_ in parts[eid] if p_[3] == CIV)
@@ -2418,13 +2446,13 @@ def history_note(res, inp, eid, view=None, idx=None):
             ss = [mid(view["name"](SETTLEMENT, p_[4], "name")) for p_ in sorted(parts[c]) if p_[2] == 3]
             return "The claim of %s to %s of %s in %s came to a head." % (
                 mid(view["name"](CIV, a, "name")), pe.join_all(ss), mid(view["name"](CIV, b, "name")),
-                mid(view["name"](REGION, ev[c][5], "name")))
+                mid(_rname(view, ev[c][5], eid)))
         if FLAGS["note_019"]:   # P3-07 r12 22.3: no "its"; every name mid-sentence
             return "The claim of %s to %s, held by %s, came to a head." % (
-                mid(view["name"](CIV, a, "name")), mid(view["name"](REGION, ev[c][5], "name")),
+                mid(view["name"](CIV, a, "name")), mid(_rname(view, ev[c][5], eid)),
                 mid(view["name"](CIV, b, "name")))
         return "%s pressed its claim to %s against %s." % (view["name"](CIV, a, "name"),
-                                                          mid(view["name"](REGION, ev[c][5], "name")),
+                                                          mid(_rname(view, ev[c][5], eid)),
                                                           mid(view["name"](CIV, b, "name")))
     return ""
 
@@ -2460,6 +2488,10 @@ def unit(res, eid, idx=None):
     elif k in (K["sacked"], K["settlement_captured"]):
         out |= {x for x in kids.get(eid, []) if kind[x] in (K["capital_moved"], K["refugees_settled"],
                                                              K["civ_conquered"])}
+    if FLAGS["rename"]:   # P3-07 r21 26.5 item 1: a renaming with its cause, both ways
+        out |= {x for x in kids.get(eid, []) if kind[x] == K["region_renamed"]}
+        if k == K["region_renamed"]:
+            out |= set(_causes.get(eid, []))
     return out
 
 
@@ -2661,6 +2693,8 @@ def world_counts(res):
 def inputs_for(dat, conn, p, seed, size):
     inp, chron = pp.inputs_for(dat, conn, p, seed, size)
     inp.biome_keys = {r[0]: r[1] for r in conn.execute("SELECT id, key FROM biome ORDER BY id")}
+    # P5-12 3: the land noun reads the stored region rows' landmass and dominant biome
+    inp.region_land = {r[0]: (r[1], r[2]) for r in conn.execute("SELECT id, landmass, biome FROM region ORDER BY id")}
     return inp, chron
 
 
@@ -4071,6 +4105,12 @@ def case_lines(name, res, all_sentences):
         o.append(r19_fact_line(name, res, inp.params["span"]))
     if FLAGS["fresh"]:      # P3-06 r22 24.1, 24.3, 24.4, 24.5, T19: the counts and the state at E
         o += r22_fact_lines(name, res)
+    if FLAGS["rename"]:     # P5-12: the region_name rows with the rule and cause of each
+        rn = res["_world"].renaming
+        rows = res.get("region_name", [])
+        log = {(x[1], x[0]): x for x in (rn.log if rn is not None else [])}
+        o.append("%s r21 renamings %d %s" % (name, len(rows), ",".join(
+            "%d:%d:%s:e%d" % (r[0], r[1], log[(r[0], r[1])][2], log[(r[0], r[1])][3]) for r in rows) or "-"))
     o += tension_lines(name, res)
     if pe.at_least("0.18.0") and all_sentences is not None:
         o += note_lines(name, res, inp)        # P3-07 r8 21.4
@@ -6534,8 +6574,18 @@ def header():
         head = HEADER_020 + "#\n" + head
     if at_least("0.21.0"):
         head = HEADER_021 + "#\n" + head
+    if at_least("0.22.0"):
+        head = HEADER_022 + "#\n" + head
     return head + "#\n" + "\n".join(old[[i for i, l in enumerate(old) if l.startswith("# Format:")][0]:])
 
+
+HEADER_022 = """\
+# Generator 0.22.0 (P5-12, docs/specs/p5-12-renamed-regions.md): the renaming subsystem after conflict in T6 and
+# Q4 (p5_12_renaming_reference.py; kind 43 region_renamed, table region_name, schema 8), sentences that name a
+# region as at the event and {@region_former} (P3-04 r21 23.1), P3-02 r19 names and P1-06 r11 region names (the
+# inputs: ~/.cache/the-unmapped/out/p5-12-tests/inputs). Every table line gains `table region_name`. New line:
+#   <case> r21 renamings <n> <region>:<from_year>:<rule key>:e<cause>,...|-   the rows of region_name in key order
+"""
 
 HEADER_021 = """\
 # Generator 0.21.0 (P5-01, docs/specs/p5-01-followups.md): P3-06 r22 section 24 (a fresh claim on a re-aimed

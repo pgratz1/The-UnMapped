@@ -42,4 +42,5 @@ events = [
   { kind = "settlements_ceded", salience = 55, template = "{from} gave up {settlement:all} in {@region} to {to}." },
   { kind = "claim_dropped", salience = 15, template = "{claimant} let the claim against {holder} over {@region} lapse." },
   { kind = "refuge_hidden", salience = 10, template = "{@settlement} lay hidden from {@year} to {@end_year}." },
+  { kind = "region_renamed", salience = 60, template = "{@causes:civ_conquered=the fall of a realm,sacked=the sack,battle=the slaughter,battle_at_pass=the slaughter,plague_outbreak=the plague,became_city=the rise of a city|After |, }{@region_former} became known as {@region}." },
 ]

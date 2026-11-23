@@ -61,7 +61,7 @@ TEST_CASE("P3-04 3.2, 16.3 item 21: each refusal of history_inputs_from_world") 
               "history', expected the stages up to chronology");
         // a geography-only world: history-slow (one more world to generate)
     }
-    // The schema refusal ("history: resume: schema version <v>, this build reads 7") cannot be reached:
+    // The schema refusal ("history: resume: schema version <v>, this build reads 8") cannot be reached:
     // WorldReader::open already refuses another version (history_engine_schema_test.cpp).
 }
 

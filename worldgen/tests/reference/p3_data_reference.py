@@ -1734,11 +1734,186 @@ def pre_021(path, kind):
     return False
 
 
+# The 0.22.0 listings (P5-12, docs/specs/p5-12-renamed-regions.md 4 and 4.1, P3-01 r16 5.4, P3-02 r19 16.2,
+# P3-04 r21 23.2), derived from the 0.21.0 ones by the edits the specs state: the new fixed id
+# history.renaming (renaming.toml), the report entry of kind 43 after refuge_hidden, human forbidden + ass.
+RENAME_RULE = REC(fields("key:S"))[1] + (("kinds", ARR(STR)), ("values", ARR(STR))) + fields(
+    "min_magnitude:I window_years:I min_salience:I capital:B chance_permille:I weight:I name_role:S namer_role:S") + \
+    (("forms", ARR(STR)),)
+RENAMING_022 = fields("region_max:I region_gap_years:I world_max_permille:I century_max_permille:I "
+                      "century_years:I") + (("rules", ARR(REC(RENAME_RULE))),)
+RENAMING_RANGES_022 = (("region_max", 0, 16), ("region_gap_years", 1, 100000), ("world_max_permille", 0, 1000),
+                       ("century_max_permille", 0, 1000), ("century_years", 1, 100000))
+RENAMING_HEAD_022 = dict(region_max=2, region_gap_years=300, world_max_permille=150, century_max_permille=50,
+                         century_years=100)
+# P5-12 4.1, transcribed column by column: key, kinds, values, min, window, min salience, capital, chance,
+# weight, name_role, namer_role, forms.
+RENAMING_RULES_022 = (
+    ("conquest", ["civ_conquered"], [], 1, 1, 0, False, 1000, 100, "civilization", "conqueror",
+     ["{name}'s Grave", "The Grave of {name}", "The End of {name}", "{name}'s Barrow"]),
+    ("capital_sack", ["sacked"], [], 1, 1, 90, False, 700, 90, "settlement", "attacker",
+     ["{name}'s Fall", "The Ashes of {name}", "The Ruin of {name}", "{name} Waste"]),
+    ("great_sack", ["sacked"], ["dead"], 1500, 1, 0, False, 500, 80, "settlement", "attacker",
+     ["{name}'s Pyre", "The Ashes of {name}", "{name} Waste", "The Burnt {noun}"]),
+    ("slaughter", ["battle", "battle_at_pass"], ["winner_dead", "loser_dead"], 5000, 100, 0, False, 600, 70,
+     "loser", "winner", ["The Red {noun}", "The Bloody {noun}", "{name}'s Bane", "The {noun} of the Slain"]),
+    ("plague", ["plague_outbreak"], ["total"], 3000, 1, 0, False, 400, 60, "settlement", "civilization",
+     ["The Emptied {noun}", "The Fever {noun}", "The Silent {noun}", "{name}'s Grave"]),
+    ("heartland", ["became_city"], [], 1, 1, 0, True, 300, 50, "civilization", "civilization",
+     ["{name}land", "The Heart of {name}", "The {name} Reach", "{name}'s Hearth"]),
+)
+
+
+def _toml_str_list(xs):
+    return "[" + ", ".join('"%s"' % x for x in xs) + "]"
+
+
+def renaming_rule_dicts(rows=RENAMING_RULES_022):
+    names = [n for n, _ in RENAME_RULE]
+    return [dict(zip(names, r)) for r in rows]
+
+
+def _renaming_file_022():
+    out = ["[history.renaming]\n"] + ["%s = %d\n" % kv for kv in RENAMING_HEAD_022.items()]
+    for r in renaming_rule_dicts():
+        out.append("\n[[history.renaming.rules]]\n")
+        for n, v in r.items():
+            if isinstance(v, bool):
+                out.append("%s = %s\n" % (n, "true" if v else "false"))
+            elif isinstance(v, int):
+                out.append("%s = %d\n" % (n, v))
+            elif isinstance(v, list):
+                out.append("%s = %s\n" % (n, _toml_str_list(v)))
+            else:
+                out.append('%s = "%s"\n' % (n, v))
+    return "".join(out)
+
+
+KIND43_ENTRY = ('  { kind = "region_renamed", salience = 60, template = "{@causes:civ_conquered=the fall of a realm,'
+                'sacked=the sack,battle=the slaughter,battle_at_pass=the slaughter,plague_outbreak=the plague,'
+                'became_city=the rise of a city|After |, }{@region_former} became known as {@region}." },\n')
+HUMAN_FORBIDDEN_022 = ('forbidden = ["eae", "aea", "ckc", "ldl", "ntd", "rdd", "ckb", "ckm"]',
+                       'forbidden = ["eae", "aea", "ckc", "ldl", "ntd", "rdd", "ckb", "ckm", "ass"]')
+CULTURE_FILES_022 = dict(CULTURE_FILES_021, **{"human.toml": _edit(CULTURE_FILES_021["human.toml"],
+                                                                    *HUMAN_FORBIDDEN_022)})
+_last = [l for l in REPORT_FILE_021["report.toml"].splitlines(True) if '"refuge_hidden"' in l][0]
+REPORT_FILE_022 = {"report.toml": _edit(REPORT_FILE_021["report.toml"], _last, _last + KIND43_ENTRY)}
+HISTORY_FILES_022 = dict(HISTORY_FILES_021, **REPORT_FILE_022, **{"renaming.toml": _renaming_file_022()})
+SPEC_FILES_022 = {"race": RACE_FILES_020, "culture": CULTURE_FILES_022, "history": HISTORY_FILES_022}
+KINDS_022 = dict(KINDS_021)
+KINDS_022["history"] = ("history", dict(KINDS_021["history"][1], renaming=RENAMING_022))
+# The commit whose game/data holds the 0.21.0 files (the P5-12 spec base, 0b78b31).
+P5_12_BASE_COMMIT = "0b78b31"
+RENAME_FORM_LETTERS = set("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ '")
+
+
+def rename_form_ok(s):
+    """Grammar rename_form (P5-12 4): letters, space, ', slots {name} and {noun} at most once each, a letter
+    outside the slots, no leading, trailing or double space, no other brace; at most 48 bytes."""
+    if len(s.encode()) > 48 or s.count("{name}") > 1 or s.count("{noun}") > 1:
+        return False
+    rest = s.replace("{name}", "").replace("{noun}", "")
+    if any(ch not in RENAME_FORM_LETTERS for ch in rest):
+        return False
+    if not any(ch.isalpha() for ch in rest):
+        return False
+    return not (s.startswith(" ") or s.endswith(" ") or "  " in s)
+
+
+def renaming_check_messages(t):
+    """P3-01 r16 5.4's four named checks, in order; the messages of every failure (the loader reports the
+    first)."""
+    out = []
+    rules = t["rules"]
+    for check, field in (("renaming_rule_keys", "key"), ("renaming_rule_weights", "weight")):
+        for j, r in enumerate(rules):
+            for i in range(j):
+                if rules[i][field] == r[field]:
+                    out.append(("rules[%d] key '%s' repeats rules[%d]" if field == "key" else
+                                "rules[%d] weight %d repeats rules[%d]") % (j, r[field], i))
+                    break
+    for i, r in enumerate(rules):
+        for field in ("kinds", "values", "forms"):
+            xs = r[field]
+            for j, v in enumerate(xs):
+                if v in xs[:j]:
+                    out.append("rules[%d].%s[%d] '%s' repeats %s[%d]" % (i, field, j, v, field, xs.index(v)))
+    for i, r in enumerate(rules):
+        for j, f in enumerate(r["forms"]):
+            if "{name}" in f and r["name_role"] == "":
+                out.append("rules[%d].forms[%d] uses {name} but name_role is empty" % (i, j))
+    return out
+
+
+def pre_022(path, kind):
+    """A culture or history directory older than 0.22.0 (P5-12): no renaming.toml or no region_renamed entry;
+    human forbidden without `ass`."""
+    names = os.listdir(path)
+    if kind == "history":
+        if "renaming.toml" not in names:
+            return True
+        with open(os.path.join(path, "report.toml"), encoding="utf-8") as f:
+            return "region_renamed" not in f.read()
+    if kind == "culture":
+        with open(os.path.join(path, "human.toml"), encoding="utf-8") as f:
+            return '"ckm", "ass"]' not in f.read()
+    return False
+
+
+def check_spec_022(c, races, cultures):
+    """The 0.22.0 listings say what P5-12 4 and 4.1, P3-01 r16 5.4, P3-02 r19 16.2 and P3-04 r21 23.2 state."""
+    h = parsed_spec("history")
+    rn = h["renaming"]
+    check_record(RENAMING_022, rn, "history.renaming")
+    c.eq("history.renaming fields in order (P5-12 4)", list(rn), [n for n, _ in RENAMING_022])
+    for n, lo, hi in RENAMING_RANGES_022:
+        c.ok("history.renaming.%s inside int(%d, %d)" % (n, lo, hi), lo <= rn[n] <= hi)
+    c.eq("history.renaming head values", {k: rn[k] for k in RENAMING_HEAD_022}, RENAMING_HEAD_022)
+    c.eq("six rules in rule order", [r["key"] for r in rn["rules"]],
+         ["conquest", "capital_sack", "great_sack", "slaughter", "plague", "heartland"])
+    c.eq("rule fields in order (P5-12 4)", [list(r) for r in rn["rules"]], [[n for n, _ in RENAME_RULE]] * 6)
+    c.eq("renaming passes its four named checks", renaming_check_messages(rn), [])
+    for i, r in enumerate(rn["rules"]):
+        c.ok("rules[%d] ranges" % i, 1 <= r["min_magnitude"] <= 10 ** 9 and 1 <= r["window_years"] <= 100000
+             and 0 <= r["min_salience"] <= 100 and 0 <= r["chance_permille"] <= 1000 and 1 <= r["weight"] <= 1000
+             and 1 <= len(r["kinds"]) <= 8 and len(r["values"]) <= 4 and 1 <= len(r["forms"]) <= 16)
+        c.ok("rules[%d] forms by grammar rename_form" % i, all(rename_form_ok(f) for f in r["forms"]))
+    bad = dict(rn, rules=[dict(r) for r in rn["rules"]])
+    bad["rules"][3]["key"] = "conquest"
+    bad["rules"][4]["weight"] = 90
+    bad["rules"][2]["forms"] = bad["rules"][2]["forms"] + ["{name}'s Pyre"]
+    bad["rules"][5]["name_role"] = ""
+    c.eq("renaming checks' messages in check order", renaming_check_messages(bad),
+         ["rules[3] key 'conquest' repeats rules[0]", "rules[4] weight 90 repeats rules[1]",
+          "rules[2].forms[4] '{name}'s Pyre' repeats forms[0]",
+          "rules[5].forms[0] uses {name} but name_role is empty",
+          "rules[5].forms[1] uses {name} but name_role is empty",
+          "rules[5].forms[2] uses {name} but name_role is empty",
+          "rules[5].forms[3] uses {name} but name_role is empty"])
+    for f, ok in (("{name}land", True), ("The Burnt {noun}", True), ("{name}{noun}", False), ("{name} ", False),
+                  ("The  {noun}", False), ("{name}'s {name}", False), ("The {other}", False), ("A-B {noun}", False),
+                  ("The Ashes of {name}", True), ("x" * 49, False), ("x" * 48, True)):
+        c.eq("rename_form %r" % f, rename_form_ok(f), ok)
+    evl = h["report"]["events"]
+    c.eq("kind 43 entry last, after refuge_hidden (P3-04 r21 23.2, P5-12 7.1)",
+         [(e["kind"], e["salience"]) for e in evl[-2:]], [("refuge_hidden", 10), ("region_renamed", 60)])
+    c.eq("kind 43 template", evl[-1]["template"],
+         "{@causes:civ_conquered=the fall of a realm,sacked=the sack,battle=the slaughter,battle_at_pass=the "
+         "slaughter,plague_outbreak=the plague,became_city=the rise of a city|After |, }{@region_former} became "
+         "known as {@region}.")
+    hu = cultures["human"]["naming"]["forbidden"]
+    c.eq("human forbidden gains ass, appended (P3-02 r19 16.2)", hu,
+         ["eae", "aea", "ckc", "ldl", "ntd", "rdd", "ckb", "ckm", "ass"])
+    old = {k: v for _, t in CULTURE_FILES_021.items() for k, v in tomllib.loads(t)["culture"].items()}
+    c.eq("every other culture as at 0.21.0", {k: v for k, v in cultures.items() if k != "human"},
+         {k: v for k, v in old.items() if k != "human"})
+
+
 # The data version this module serves: "0.18.0" (default, P3-09), "0.17.0"
 # (P3-08) or "0.16.0" (use_version), so that the references can still
 # reproduce the older worlds and goldens.
 DATA_VERSION = None
-VERSIONS = ("0.16.0", "0.17.0", "0.18.0", "0.19.0", "0.20.0", "0.21.0")
+VERSIONS = ("0.16.0", "0.17.0", "0.18.0", "0.19.0", "0.20.0", "0.21.0", "0.22.0")
 
 
 def at_least(v):
@@ -1748,7 +1923,9 @@ def at_least(v):
 
 def use_version(v):
     global DATA_VERSION, KINDS, SPEC_FILES
-    if v == "0.21.0":
+    if v == "0.22.0":
+        KINDS, SPEC_FILES = KINDS_022, SPEC_FILES_022
+    elif v == "0.21.0":
         KINDS, SPEC_FILES = KINDS_021, SPEC_FILES_021
     elif v == "0.20.0":
         KINDS, SPEC_FILES = KINDS_020, SPEC_FILES_020
@@ -1765,7 +1942,7 @@ def use_version(v):
     DATA_VERSION = v
 
 
-use_version("0.21.0")
+use_version("0.22.0")
 
 # ---------------------------------------------------------------------------
 # Loading and validation (types only: what the encoding needs)
@@ -1864,15 +2041,17 @@ def disk_version(path, kind):
         return "0.19.0"
     if pre_021(path, kind):
         return "0.20.0"
-    return "0.21.0"
+    if kind != "race" and pre_022(path, kind):
+        return "0.21.0"
+    return "0.22.0"
 
 
 def same_version(kind, a, b):
     """Whether two data versions have the same files of a kind (cultures did not change at 0.18.0)."""
     if kind == "culture":   # cultures did not change at 0.18.0 and 0.19.0 (0.20.0: the faerie lists)
         a, b = ("0.17.0" if x in ("0.18.0", "0.19.0") else x for x in (a, b))
-    if kind == "race":   # races did not change at 0.21.0
-        a, b = ("0.20.0" if x == "0.21.0" else x for x in (a, b))
+    if kind == "race":   # races did not change at 0.21.0 and 0.22.0
+        a, b = ("0.20.0" if x in ("0.21.0", "0.22.0") else x for x in (a, b))
     return a == b
 
 
@@ -2147,6 +2326,23 @@ def fx_raw(v):
 
 
 def check_spec_invariants(c):
+    """At 0.22.0: every check of the 0.21.0 listings on them (the 0.22.0 listings are derived from them by
+    P5-12's edits), then check_spec_022 on the 0.22.0 listings."""
+    if not at_least("0.22.0"):
+        return check_spec_invariants_upto_021(c)
+    use_version("0.21.0")
+    try:
+        check_spec_invariants_upto_021(c)
+    finally:
+        use_version("0.22.0")
+    check_spec_022(c, parsed_spec("race"), parsed_spec("culture"))
+    h = parsed_spec("history")
+    c.eq("history ids (0.22.0)", sorted(h), ["chronology", "conflict", "engine", "peoples", "renaming", "report"])
+    for k in ("chronology", "conflict", "engine", "peoples"):
+        c.eq("history.%s as at 0.21.0" % k, h[k], tomllib.loads(HISTORY_FILES_021[k + ".toml"])["history"][k])
+
+
+def check_spec_invariants_upto_021(c):
     """P3-01 3: the shipped data passes every named and kind-level check and
     the three cross-kind conditions (the spec states none can fail)."""
     races = parsed_spec("race")
@@ -2463,7 +2659,7 @@ def check_spec_021(c, races, cultures):
     dw = cultures["dwarven"]["naming"]["forbidden"]
     c.eq("dwarven forbidden gains didin, ririn appended (P3-02 r17 15.2)", dw[-2:], ["didin", "ririn"])
     c.eq("dwarven forbidden has 15 entries", len(dw), 15)
-    evl = parsed_spec("history")["report"]["events"]
+    evl = [e for e in parsed_spec("history")["report"]["events"] if e["kind"] != "region_renamed"]   # 0.22.0: 022
     ev = {e["kind"]: e for e in evl}
     c.eq("became_city (P3-05 r18 24)", (ev["became_city"]["salience"], ev["became_city"]["template"]),
          (45, "{settlement} in {@region} grew into a city."))
@@ -2746,9 +2942,9 @@ def cmd_check():
     # The three roots differ only where the geo-small elevation tuning does
     # (P1-00 6.4); the new kinds are identical in all three.
     fresh = golden_text(from_spec=present < len(ROOTS) * len(NEW_KINDS))
-    if os.path.exists(GOLDEN) and not at_least("0.21.0"):   # the file of an older version is its base commit's
+    if os.path.exists(GOLDEN) and not at_least("0.22.0"):   # the file of an older version is its base commit's
         import subprocess
-        base = P5_01_BASE_COMMIT if DATA_VERSION == "0.20.0" else \
+        base = P5_12_BASE_COMMIT if DATA_VERSION == "0.21.0" else P5_01_BASE_COMMIT if DATA_VERSION == "0.20.0" else \
             P3_11_BASE_COMMIT if DATA_VERSION == "0.19.0" else P3_10_BASE_COMMIT
         committed = subprocess.run(["git", "-C", REPO, "show", base + ":worldgen/tests/golden/p3-01-data.txt"],
                                    check=True, capture_output=True, text=True).stdout

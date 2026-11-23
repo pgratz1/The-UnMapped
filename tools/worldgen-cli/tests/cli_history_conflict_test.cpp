@@ -119,7 +119,7 @@ TEST_CASE("cli P3-06 16.3, 16.2 item 18: the golden world geo-seed-42-512, --unt
     Sandbox sb;
     const fs::path a = generate_case(sb, "geo-seed-42-512", {"--seed", "42", "--map-size", "512"});
     CHECK(meta_of(a, "generator_version") == "0.21.0");  // P5-01
-    CHECK(meta_of(a, "schema_version") == "7");
+    CHECK(meta_of(a, "schema_version") == "8");
     check_golden_db(sb, "geo-seed-42-512", a);
     const fs::path b = generate_case(sb, "threads", {"--seed", "42", "--map-size", "512", "--threads", "5"});
     CHECK(read_bytes(a) == read_bytes(b));

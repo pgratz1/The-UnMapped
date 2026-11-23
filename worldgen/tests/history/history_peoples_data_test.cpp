@@ -333,5 +333,5 @@ TEST_CASE("P3-06 12.2, 16.1 item 13 / P3-01 r7: prowess_permille and goblin aggr
     for (const wd::Definition& d : hist->definitions) {
         ids.push_back(d.id);
     }
-    CHECK(ids == std::vector<std::string>{"chronology", "conflict", "engine", "peoples", "report"});
+    CHECK(ids == std::vector<std::string>{"chronology", "conflict", "engine", "peoples", "renaming", "report"});
 }

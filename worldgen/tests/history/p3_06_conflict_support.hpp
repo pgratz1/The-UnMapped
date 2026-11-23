@@ -75,6 +75,8 @@ struct CCase {
     // P5-01 (P3-06 r22 24.1-24.5, P3-07 r19 25.9): "fresh <20>/<39> dropped <n> refuge_hidden <n> repeated_tolls <n>
     // mixed_tolls <n>", "open_claims <e..|->" and "hidden_refuges <s..|->" (the reference's state at E)
     std::string r22, open_claims, hidden_refuges;
+    // P5-12 (generator 0.22.0): "renamings <n> <region>:<from_year>:<rule>:e<cause>,...|-", the reference's rows
+    std::string r21;
 };
 
 inline const std::vector<CCase>& conflict_golden() {
@@ -134,6 +136,8 @@ inline const std::vector<CCase>& conflict_golden() {
                 c.r17 = rest.substr(4);  // P3-10 second round (P3-06 r17 22.5): the reference's replay facts
             } else if (w[1] == "r19") {
                 c.r19 = rest.substr(4);  // P3-11 (P3-06 r19 23.1-23.4): T11 and the counts of kinds 39 and 40
+            } else if (w[1] == "r21") {  // P5-12: the region_name rows with the rule and cause of each
+                c.r21 = rest.substr(4);
             } else if (w[1] == "r22") {  // P5-01 (P3-06 r22): the counts and the reference's state at E
                 if (w.size() > 2 && w[2] == "open_claims") {
                     c.open_claims = rest.substr(4 + 12);

@@ -341,6 +341,10 @@ DWARVEN_FORBIDDEN_R17 = ["mmm", "rr", "dd", "kk", "rdt", "rkd", "rdd", "mmb", "k
 CULTURES_R17 = {cid: dict(d) for cid, d in CULTURES_R15.items()}
 CULTURES_R17["dwarven"] = dict(CULTURES_R15["dwarven"], forbidden=list(DWARVEN_FORBIDDEN_R17))
 assert CULTURES_R15["dwarven"]["forbidden"] == DWARVEN_FORBIDDEN_R17[:-2]
+# r19 (P3-02 16.2, P5-12, generator 0.22.0): the human forbidden list gains ass (appended).
+CULTURES_R19 = {cid: dict(d) for cid, d in CULTURES_R17.items()}
+CULTURES_R19["human"] = dict(CULTURES_R17["human"], forbidden=list(CULTURES_R17["human"]["forbidden"]) + ["ass"])
+assert CULTURES_R19["human"]["forbidden"] == ["eae", "aea", "ckc", "ldl", "ntd", "rdd", "ckb", "ckm", "ass"]
 CULTURE_ORDER = ("dwarven", "elven", "faerie", "goblin", "human", "orcish")  # canonical id order, c = 1..6
 CULTURE_NUMBER = {cid: i + 1 for i, cid in enumerate(CULTURE_ORDER)}
 
@@ -523,6 +527,8 @@ def use_version(v):
     global TRIPLE_RULE, REPEAT_RULE
     TRIPLE_RULE = pdr.at_least("0.19.0")
     REPEAT_RULE = pdr.at_least("0.20.0")
+    global DOUBLE_RULE
+    DOUBLE_RULE = pdr.at_least("0.22.0")
     use_rules(RULES)
 
 
@@ -530,7 +536,7 @@ def use_rules(r):
     global RULES, CULTURES, FILTER
     if r == "r5":
         # r15 (0.20.0): the faerie lists of 14.1
-        CULTURES, FILTER = (CULTURES_R17 if pdr.at_least("0.21.0") else CULTURES_R15 if pdr.at_least("0.20.0")
+        CULTURES, FILTER = (CULTURES_R19 if pdr.at_least("0.22.0") else CULTURES_R17 if pdr.at_least("0.21.0") else CULTURES_R15 if pdr.at_least("0.20.0")
                             else CULTURES_R5), shipped_filter()
     elif r == "r4":
         CULTURES, FILTER = CULTURES_R4, EMPTY_FILTER
@@ -621,12 +627,74 @@ def attempt(d, kind, seed, c, e, t, trace=None, filt=None, flags=None):
     if flags is not None:
         flags["triple"] = trip
     rep = valid and not filtered and not trip and REPEAT_RULE and repeated(drawn)
+    dbl = valid and not filtered and not trip and not rep and DOUBLE_RULE and doubled(d, kind, form, root)
     if flags is not None:
         flags["repeated"] = rep
+        flags["doubled"] = dbl
         flags["drawn"] = drawn
         flags["r4valid"] = valid
         flags["word"] = root_word(form, root)
-    return valid and not filtered and not trip and not rep, name, root
+    return valid and not filtered and not trip and not rep and not dbl, name, root
+
+
+# P3-02 r19 16.1 (P5-12, generator 0.22.0): no doubled place suffix. DOUBLE_RULE follows the served data version.
+DOUBLE_RULE = True
+VOWELS = set("aeiouy")
+
+
+def squeeze(s):
+    return lower(s).replace("'", "").replace("-", "")
+
+
+def fused_tail(form):
+    """B' of 11.3 for 16.1: the letters fused after {root} up to the form's first space, lower-cased, ' and -
+    removed ("" when none)."""
+    b = form.split("{root}", 1)[1]
+    return squeeze(b[:b.find(" ")] if " " in b else b)
+
+
+def fused_tails(d, kind):
+    """T_K of 16.1: the non-empty fused tails of the kind's forms, without repeats, in form order."""
+    out = []
+    for f in d[kind + "_forms"]:
+        x = fused_tail(f)
+        if x and x not in out:
+            out.append(x)
+    return out
+
+
+def first_syllable(x):
+    """fs(x) of 16.1: the shortest prefix holding x's first run of vowels and every consonant after it up to the
+    next vowel; all of x when no vowel follows (or x has no vowel)."""
+    i = 0
+    while i < len(x) and x[i] not in VOWELS:
+        i += 1
+    if i == len(x):
+        return x
+    while i < len(x) and x[i] in VOWELS:
+        i += 1
+    while i < len(x) and x[i] not in VOWELS:
+        i += 1
+    return x[:i]
+
+
+def doubled_item(d, kind, form, root):
+    """The item of 16.1 (1, 2 or 3) that makes the attempt invalid, or 0."""
+    x = fused_tail(form)
+    if not x:
+        return 0
+    r = squeeze(root)
+    if r.endswith(x) or r.endswith(first_syllable(x)):
+        return 1
+    if any(y != x and r.endswith(y) for y in fused_tails(d, kind)):
+        return 2
+    if r and r[-1] == x[0]:
+        return 3
+    return 0
+
+
+def doubled(d, kind, form, root):
+    return doubled_item(d, kind, form, root) != 0
 
 
 # P3-02 r15 14.2 (P3-11, generator 0.20.0): no syllable repeated twice in a row, for every culture. REPEAT_RULE
@@ -1102,6 +1170,8 @@ def golden_text():
         o.extend(r15_golden_lines())
         if pdr.at_least("0.21.0"):
             o.extend(r17_golden_lines())
+        if pdr.at_least("0.22.0"):
+            o.extend(r19_golden_lines())
     return "\n".join(o) + "\n"
 
 
@@ -1484,14 +1554,14 @@ def old_name_rejected(d, kind, seed, c, e, old):
 
 
 def REPEAT_OFF(fn):
-    """fn() with the 14.2 rule off (the 0.19.0 validity), for comparisons."""
-    global REPEAT_RULE
-    saved = REPEAT_RULE
-    REPEAT_RULE = False
+    """fn() with the 14.2 rule off (the 0.19.0 validity), for comparisons; also 16.1's (r19, a later rule)."""
+    global REPEAT_RULE, DOUBLE_RULE
+    saved = REPEAT_RULE, DOUBLE_RULE
+    REPEAT_RULE = DOUBLE_RULE = False
     try:
         return fn()
     finally:
-        REPEAT_RULE = saved
+        REPEAT_RULE, DOUBLE_RULE = saved
 
 
 # --- P3-02 r17 section 15 (P5-01, generator 0.21.0) ---------------------------------------------------------
@@ -1547,6 +1617,120 @@ def r17_golden_lines():
     for root in R17_VALID + R17_ROOTS:
         o.append("dvalid dwarven %s %d" % (root, 1 if root_valid(CULTURES["dwarven"], root) else 0))
     return o
+
+
+# P3-02 r19 16 (P5-12, generator 0.22.0): the fused-suffix rule and human forbidden ass.
+R19_CASES = (   # (root, form, item of 16.1) of 16.4's unit tests; 0 valid
+    ("sudstead", "{root}stead", 1), ("galwick", "{root}wick", 1), ("ston", "{root}ton", 1),
+    ("dabur", "{root}bury", 1), ("canasham", "{root}ford", 2), ("deas", "{root}stead", 3),
+    ("bant", "{root}ton", 3), ("canasham", "{root}", 0), ("sud", "{root}stead", 0), ("gal", "{root}wick", 0),
+    ("bea", "{root}ford", 0), ("stead", "{root}ham", 2), ("deantton", "{root}wick", 2))
+R19_FS = (("bury", "bur"), ("stead", "stead"), ("ford", "ford"), ("ton", "ton"), ("dell", "dell"),
+          ("wick", "wick"), ("ham", "ham"))
+# A fixture culture with {root}ford and {root} Ford: the rule applies to the first only (16.4).
+FORDS = naming(["bea", "dabur", "caford"], ["a"], [""], ["O"], 1, 32, [], ["{root}"], ["{root}"],
+               ["{root}ford", "{root} Ford"])
+R19_HUMAN_ENTITIES = 400
+
+
+def with_rule(flag, fn):
+    global DOUBLE_RULE
+    saved = DOUBLE_RULE
+    DOUBLE_RULE = flag
+    try:
+        return fn()
+    finally:
+        DOUBLE_RULE = saved
+
+
+def r19_human_scan(seed, entities=R19_HUMAN_ENTITIES):
+    """[(e, t, root, item or 'ass', name)] of the human settlement attempts t < the first valid one at r19 that
+    16.1 or 16.2 rejects, e = 1..entities (c = human)."""
+    d = CULTURES["human"]
+    c = CULTURE_NUMBER["human"]
+    out = []
+    for e in range(1, entities + 1):
+        for t in range(64):
+            fl = {}
+            v, n, r = attempt(d, "settlement", seed, c, e, t, flags=fl)
+            if v:
+                break
+            if fl["doubled"]:
+                form = n[len(cap(r)):] if n.startswith(cap(r)) else ""
+                out.append((e, t, r, doubled_item(d, "settlement", "{root}" + form, r), n))
+            elif fl["r4valid"] is False and "ass" in r and root_valid(CULTURES_R17["human"], r):
+                out.append((e, t, r, "ass", n))
+    return out
+
+
+def r19_golden_lines():
+    o = ["# r19 (P3-02 16, generator 0.22.0):",
+         "#   tails <culture> settlement <T_K, comma-separated or ->",
+         "#   fs <tail> <first syllable>",
+         "#   doubled <root> <form> <item of 16.1, 0 valid>",
+         "#   hreject <seed> human settlement <c> <e> <t> <root> <item 1|2|3|ass> <name>  every attempt before the",
+         "#       first valid one that 16.1 or 16.2 rejects, e = 1..%d" % R19_HUMAN_ENTITIES,
+         "#   hresult <seed> human settlement <c> <e> <attempt|F> <name> <attempt at r17|F> <name at r17>  make_name"
+         " with an empty registry for each e of an hreject line"]
+    for cid in CULTURE_ORDER:
+        o.append("tails %s settlement %s" % (cid, ",".join(fused_tails(CULTURES[cid], "settlement")) or "-"))
+    for x, _ in R19_FS:
+        o.append("fs %s %s" % (x, first_syllable(x)))
+    for root, form, _ in R19_CASES:
+        o.append("doubled %s %s %d" % (root, form, doubled_item(CULTURES["human"], "settlement", form, root)))
+    c = CULTURE_NUMBER["human"]
+    for seed in GOLDEN_SEEDS:
+        rows = r19_human_scan(seed)
+        for e, t, r, it, n in rows:
+            o.append("hreject %d human settlement %d %d %d %s %s %s" % (seed, c, e, t, r, it, n))
+        for e in sorted(set(r[0] for r in rows)):
+            n, at = make_name(CULTURES["human"], "human", "settlement", seed, c, e, set())
+            n17, at17 = with_rule(False, lambda: make_name(CULTURES_R17["human"], "human", "settlement", seed, c, e,
+                                                           set()))
+            o.append("hresult %d human settlement %d %d %s %s %s %s" % (seed, c, e, at, n, at17, n17))
+    return o
+
+
+def check_r19(ck):
+    """P3-02 r19 16.4's unit tests and invariant 10 on the golden seeds' human names."""
+    hu = CULTURES["human"]
+    ck.eq("16.2 human forbidden", hu["forbidden"][-1], "ass")
+    ck.eq("16.2 human culture valid data", validate(hu), [])
+    ck.eq("16.1 human tails", fused_tails(hu, "settlement"), ["ford", "ton", "bury", "wick", "ham", "stead"])
+    ck.eq("16.1 elven tails", fused_tails(CULTURES["elven"], "settlement"), ["dell"])
+    for cid in ("dwarven", "faerie", "goblin", "orcish"):
+        ck.eq("16.1 %s has no tail" % cid, fused_tails(CULTURES[cid], "settlement"), [])
+    for cid in CULTURE_ORDER:
+        for k in ("god", "civilization"):
+            ck.eq("16.1 %s %s has no tail" % (cid, k), fused_tails(CULTURES[cid], k), [])
+    for x, f in R19_FS:
+        ck.eq("16.1 fs(%s)" % x, first_syllable(x), f)
+    for root, form, item in R19_CASES:
+        ck.eq("16.1 %s + %s" % (root, form), doubled_item(hu, "settlement", form, root), item)
+    ck.eq("16.1 elven root ending nd + dell", doubled_item(CULTURES["elven"], "settlement", "{root}dell", "lend"), 3)
+    ck.eq("16.1 elven root lin + dell valid", doubled_item(CULTURES["elven"], "settlement", "{root}dell", "lin"), 0)
+    ck.eq("16.1 ' and - removed from the root", doubled_item(hu, "settlement", "{root}ton", "s-t'on"), 1)
+    ck.eq("16.1 fixture {root} Ford (B' empty) not affected",
+          doubled_item(FORDS, "settlement", "{root} Ford", "caford"), 0)
+    ck.eq("16.1 fixture {root}ford: caford doubled", doubled_item(FORDS, "settlement", "{root}ford", "caford"), 1)
+    ck.eq("16.1 fixture tails", fused_tails(FORDS, "settlement"), ["ford"])
+    ck.eq("16.2 beasstont invalid (forbidden ass)", root_valid(hu, "beasstont"), False)
+    ck.eq("16.2 beasstont valid at r17", root_valid(CULTURES_R17["human"], "beasstont"), True)
+    # an attempt rejected by 16.1 is followed by t + 1 (4.3), on the golden seeds' human settlements
+    c = CULTURE_NUMBER["human"]
+    for seed in GOLDEN_SEEDS:
+        rows = r19_human_scan(seed)
+        ck.ok("16.1 rejections found on seed %d" % seed, any(r[3] in (1, 2, 3) for r in rows))
+        for e in sorted(set(r[0] for r in rows))[:20]:
+            n, at = make_name(hu, "human", "settlement", seed, c, e, set())
+            last = max(r[1] for r in rows if r[0] == e)
+            ck.ok("4.3 seed %d e %d: the name comes after the rejected attempts" % (seed, e), at == "F" or at > last)
+    # invariant 10 (the part a stored name can show: a bare-form name may end in a tail, 16.1): no ass
+    for seed in GOLDEN_SEEDS:
+        for ln in name_list(seed):
+            parts = ln.split(" ", 5)
+            if parts[1] == "human" and parts[2] == "settlement":
+                ck.ok("invariant 10: no ass in %s" % parts[5], "ass" not in squeeze(parts[5]))
 
 
 def check_r17(ck):
@@ -1912,6 +2096,9 @@ def compare_samples(out):
                         ("didin" in lower(b) or "ririn" in lower(b)):
                     out.write("r17 %s %s %d: %r redrawn as %r (P3-02 15.2)\n" % (cid, label, i + 1, b, a))
                     continue
+                if a != b and RULES == "r5" and pdr.at_least("0.22.0") and cid == "human" and label == "settlements":
+                    out.write("r19 %s %s %d: %r redrawn as %r (P3-02 16)\n" % (cid, label, i + 1, b, a))
+                    continue
                 if a != b:
                     bad += 1
                     out.write("DIFF %s %s %d: reference %r, spec %s %r\n" % (cid, label, i + 1, a,
@@ -2060,6 +2247,8 @@ def check_all():
         check_r15(ck)
     if RULES == "r5" and pdr.at_least("0.21.0"):
         check_r17(ck)
+    if RULES == "r5" and pdr.at_least("0.22.0"):
+        check_r19(ck)
     sys.stdout.write("%d checks, %d failures\n" % (ck.count, ck.failures))
     return 1 if ck.failures else 0
 

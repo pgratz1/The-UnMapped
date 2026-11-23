@@ -57,7 +57,7 @@ TEST_CASE("P3-06 r9 20.14 item 8: hist-conflict-flight equals the reference; fli
     const Tables t = tables_of_world(r);
     CHECK(eng::history_stage(shipped(), in) == t);  // P3-04 Y2: resumed equals complete
     const std::map<std::string, std::string> detail = chrono_test::detail_tables(r);
-    REQUIRE(g.tables.size() == 13U);
+    REQUIRE(g.tables.size() == 14U);  // P3-04 r21 23.4: region_name (schema 8)
     for (const auto& [name, hex] : g.tables) {
         CAPTURE(name);
         CHECK(detail.at(name) == hex);

@@ -366,7 +366,7 @@ TEST_CASE("cli 12.2: empty world contents (P0-02 8)") {
     // schema version 5 the root pages of the three region tables (P0-02
     // amendment 17); schema version 6 the roots of the five chronology tables
     // and two key indexes, 18 pages (P3-03 5.1).
-    CHECK(fs::file_size(out) == 139264U);
+    CHECK(fs::file_size(out) == 143360U);
 }
 
 TEST_CASE("cli 12.2: test pattern") {

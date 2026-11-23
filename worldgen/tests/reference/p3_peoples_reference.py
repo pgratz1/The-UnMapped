@@ -86,7 +86,7 @@ FatalError = cr.FatalError
 REPO = pe.REPO
 GOLDEN = os.path.join(REPO, "worldgen", "tests", "golden", "p3-05-peoples.txt")
 DEFAULT_INPUTS = pe.DEFAULT_INPUTS
-GENERATOR_VERSION = "0.21.0"  # P5-01: P3-05 r18 24 (data), kinds 41, 42 (P3-11: P3-05 r16 23 (P3-10: P3-05 r12 22 (P3-09: r8 21; P3-08: r6 rules, kind 31, P3-04 r10 quiet eras)
+GENERATOR_VERSION = "0.22.0"  # P5-12: P3-02 r19 names, kind 43 in the catalogue; no peoples rule (P5-01: P3-05 r18 24 (data), kinds 41, 42 (P3-11: P3-05 r16 23 (P3-10: P3-05 r12 22 (P3-09: r8 21; P3-08: r6 rules, kind 31, P3-04 r10 quiet eras)
 ONE = 1 << 32
 
 # ---------------------------------------------------------------------------
@@ -122,7 +122,7 @@ FLAGS = dict(
 FLAGS_018 = ("auto_size", "refuge_floor")
 FLAGS_019 = ("outbreak37", "memory", "sites19", "lie_low", "cores")
 FLAGS_020 = ("awaken_pop",)
-VERSIONS = ("0.16.0", "0.17.0", "0.18.0", "0.19.0", "0.20.0", "0.21.0")   # 0.21.0 (P5-01): no peoples rule
+VERSIONS = ("0.16.0", "0.17.0", "0.18.0", "0.19.0", "0.20.0", "0.21.0", "0.22.0")   # 0.21.0, 0.22.0: no peoples rule
 
 
 def flags_for(v):
@@ -144,6 +144,8 @@ def use_version(v):
     else:
         pdr.use_version(v)
         pnr.use_rules("r4" if v == "0.16.0" else "r5")
+    global TABLES, COLUMNS
+    TABLES, COLUMNS = pe.TABLES, pe.COLUMNS
     _DATA.clear()
 
 
@@ -151,7 +153,7 @@ def legacy(on=True):
     """Every r6 / r10 / r8 flag off (the 0.16.0 rules), with the 0.16.0 data (p3_data_reference) and names
     (p3_names_reference r4) and the engine reference's 0.16.0 renderer, or everything 0.18.0. Call it
     before the first data() (the data are cached)."""
-    use_version("0.16.0" if on else "0.21.0")
+    use_version("0.16.0" if on else "0.22.0")
 
 RACE, GOD, CIV, SETTLEMENT, REGION = pe.RACE, pe.GOD, pe.CIV, pe.SETTLEMENT, pe.REGION
 OPENING, QUIET, FLARE, FINAL = pe.OPENING, pe.QUIET, pe.FLARE, pe.FINAL
@@ -297,7 +299,7 @@ KIND31 = pe.kind_def(31, "settlement_abandoned_to", 1, 1, 1,
                       ("destination", SETTLEMENT, 1, 1)), ("settled", "lost"))
 # p3_engine_reference.py carries the catalogue (kinds 1-30 at 0.16.0; 31 from 0.17.0 once its own
 # transcription has it); this file's transcription of section 11 must equal its kinds 6-19 and 31.
-assert list(pe.COMPILED[5:19]) == list(PEOPLES_KINDS) and len(pe.COMPILED) in (30, 31, 36, 38, 40, 42)
+assert list(pe.COMPILED[5:19]) == list(PEOPLES_KINDS) and len(pe.COMPILED) in (30, 31, 36, 38, 40, 42, 43)
 assert len(pe.COMPILED) == 30 or pe.COMPILED[30] == KIND31, "engine reference kind 31 differs from P3-05 r6 11"
 assert getattr(pe, "KIND_31", KIND31) == KIND31, "engine reference KIND_31 differs from P3-05 r6 11"
 COMPILED_016 = tuple(pe.COMPILED[:30])
@@ -315,13 +317,15 @@ assert pe.KIND_37["values"] == ["dead", "population", "total", "reached"], "kind
 COMPILED_020 = COMPILED_019 + (pe.KIND_39, pe.KIND_40)
 # P3-04 r19 22.2 (generator 0.21.0): kinds 41 claim_dropped and 42 refuge_hidden (P3-06 r22 24.3, 24.4).
 COMPILED_021 = COMPILED_020 + (pe.KIND_41, pe.KIND_42)
-COMPILED = COMPILED_021
+# P3-04 r21 23.2 (generator 0.22.0): kind 43 region_renamed (P5-12 7.1).
+COMPILED_022 = COMPILED_021 + (pe.KIND_43,)
+COMPILED = COMPILED_022
 KIND_ID = {k["key"]: k["id"] for k in COMPILED}
 
 
 def catalogue_kinds():
     return {30: COMPILED_016, 31: COMPILED_017, 36: COMPILED_018, 38: COMPILED_019, 40: COMPILED_020,
-            42: COMPILED_021}[len(pe.COMPILED)]
+            42: COMPILED_021, 43: COMPILED_022}[len(pe.COMPILED)]
 # Quiet-step kinds (14 item 8): 6-10, 16-19 (and P3-04's quiet_era; from 0.19.0 its quiet_stretch, 38).
 QUIET_KINDS = {6, 7, 8, 9, 10, 16, 17, 18, 19, 31, 38}   # 31: r6, an abandonment of 9.2 in Q1
 
@@ -2600,6 +2604,15 @@ HEADER = """\
 """
 
 
+HEADER_022 = """\
+# Generator 0.22.0 (P5-12, docs/specs/p5-12-renamed-regions.md): no peoples rule changes; the catalogue gains
+# kind 43 region_renamed (P3-04 r21 23.2), table region_name (schema 8; always empty here: the renaming
+# subsystem is installed after conflict, so the peoples-only configuration has none), P3-02 r19 names (no
+# doubled place suffix, human forbidden ass), P1-06 r11 region names (V8; the inputs:
+# ~/.cache/the-unmapped/out/p5-12-tests/inputs) and the history.renaming tuning in the data roots.
+"""
+
+
 def golden_text(inputs):
     dat = data()
     o = [HEADER.rstrip("\n")]
@@ -2607,8 +2620,10 @@ def golden_text(inputs):
         o.append(HEADER_019.rstrip("\n"))
     if FLAGS["awaken_pop"]:
         o.append(HEADER_020.rstrip("\n"))
-    if pe.ENGINE_VERSION == "0.21.0":
+    if pe.at_least("0.21.0"):
         o.append(HEADER_021.rstrip("\n"))
+    if pe.at_least("0.22.0"):
+        o.append(HEADER_022.rstrip("\n"))
     for name, seed, size, span, races, detail in WORLD_CASES:
         res = world_case(name, seed, size, span, races, detail, inputs, dat)
         o.append("world %s %d %d %d %s %s" % (name, seed, size, span, races, detail))

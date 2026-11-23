@@ -74,7 +74,7 @@ inline constexpr std::int64_t ONE_RAW = std::int64_t{1} << 32;
 // and running VACUUM INTO with the vendored 3.54.1 amalgamation (page size
 // 4096, the defines of extern/CMakeLists.txt); the engineer's confirmation
 // on the real writer is still due. Every test reads the figure from here.
-inline constexpr std::int64_t EMPTY_WORLD_PAGES = 34;  // 18 at schema 6; 34 from schema 7 (P3-04 9.6)
+inline constexpr std::int64_t EMPTY_WORLD_PAGES = 35;  // 18 at schema 6; 34 from schema 7 (P3-04 9.6)
 inline constexpr std::int64_t EMPTY_WORLD_BYTES = EMPTY_WORLD_PAGES * 4096;
 
 inline const std::vector<std::string>& six() {

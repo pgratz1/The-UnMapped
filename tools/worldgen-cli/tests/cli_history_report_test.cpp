@@ -102,7 +102,7 @@ TEST_CASE("cli P3-07 14.2 items 9 and 13: report --history on a default world, -
     // the world report is unchanged by the new options' existence
     const ProcessResult w = sb.cli({"report", "--db", u8(db)});
     CHECK(w.exit_code == EXIT_OK);
-    CHECK_FALSE(starts_with(w.out, "# worldgen history v2"));
+    CHECK_FALSE(starts_with(w.out, "# worldgen history v3"));
     // environment independence (P0-04 12.2)
     RunOptions env;
     env.env = {{"TZ", std::string("Pacific/Kiritimati")}, {"LANG", std::string("de_DE.UTF-8")},

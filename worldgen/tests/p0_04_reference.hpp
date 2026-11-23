@@ -256,7 +256,7 @@ inline MetaRows meta_rows(std::uint64_t seed, std::string_view phrase = {}, std:
         {"param.map_size", std::string(map_size)},
         {"param.monster_pressure", "normal"},
         {"param.races", "elf,goblin,dwarf,faerie,human,orc"},
-        {"schema_version", "7"},
+        {"schema_version", "8"},
         {"seed", std::to_string(seed)},
         {"seed_phrase", std::string(phrase)},
         {"stages", std::string(stages)},
@@ -487,7 +487,7 @@ inline constexpr std::string_view REPORT_SEED_0 =
     "param.map_size = 1024\n"
     "param.monster_pressure = normal\n"
     "param.races = elf,goblin,dwarf,faerie,human,orc\n"
-    "schema_version = 7\n"
+    "schema_version = 8\n"
     "seed = 0\n"
     "seed_phrase =\n"
     "stages =\n"

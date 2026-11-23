@@ -60,6 +60,9 @@ const std::vector<std::string>& new_ddl() {
         "CREATE TABLE relation (a_type INTEGER NOT NULL, a_id INTEGER NOT NULL, b_type INTEGER NOT NULL, b_id "
         "INTEGER NOT NULL, kind TEXT NOT NULL, since INTEGER NOT NULL, until INTEGER, since_event INTEGER NOT NULL, "
         "until_event INTEGER NOT NULL, PRIMARY KEY (a_type, a_id, b_type, b_id, kind, since)) STRICT, WITHOUT ROWID",
+        // P3-04 r21 23.4 (P5-12, schema 8): appended after relation, byte for byte
+        "CREATE TABLE region_name (region INTEGER NOT NULL, from_year INTEGER NOT NULL, name TEXT NOT NULL, culture "
+        "INTEGER NOT NULL, event INTEGER NOT NULL, PRIMARY KEY (region, from_year)) STRICT, WITHOUT ROWID",
     };
     return v;
 }
@@ -108,11 +111,13 @@ std::map<std::string, std::vector<Row>> sample_rows() {
 
 TEST_SUITE("history") {
 
-TEST_CASE("P3-04 9.1, 16.1 item 12: schema version 7 and the thirteen statements, fourteenth to twenty-sixth") {
-    CHECK(eng::schema_version() == 7);
+TEST_CASE("P3-04 9.1, r21 23.4: schema version 8 and the fourteen history statements, fourteenth to "
+          "twenty-seventh (region_name last)") {
+    CHECK(eng::schema_version() == 8);
     const std::vector<std::string> ddl = eng::ddl_statements();
-    REQUIRE(ddl.size() == 26U);
-    for (std::size_t i = 0; i < 13; ++i) {
+    REQUIRE(ddl.size() == 27U);
+    REQUIRE(new_ddl().size() == 14U);
+    for (std::size_t i = 0; i < 14; ++i) {
         CAPTURE(i);
         CHECK(ddl[13 + i] == new_ddl()[i]);
     }
@@ -121,17 +126,18 @@ TEST_CASE("P3-04 9.1, 16.1 item 12: schema version 7 and the thirteen statements
     const std::string path = generated(dir, "none.db", "none");
     const dbtest::SqliteFile db(path);
     const auto sql = db.rows("SELECT name, sql FROM sqlite_schema WHERE type = 'table' ORDER BY rowid");
-    REQUIRE(sql.size() == 26U);
-    for (std::size_t i = 0; i < 13; ++i) {
+    REQUIRE(sql.size() == 27U);
+    for (std::size_t i = 0; i < 14; ++i) {
         CHECK(sql[13 + i] == std::vector<std::string>{ddl_tables()[i], new_ddl()[i]});
     }
     CHECK(db.rows("SELECT name FROM sqlite_schema WHERE type = 'index' AND tbl_name = 'event_kind'") ==
           std::vector<std::vector<std::string>>{{"sqlite_autoindex_event_kind_1"}});
     CHECK(db.rows("SELECT count(*) FROM sqlite_schema WHERE type = 'index' AND tbl_name IN ('phase', 'event', "
                   "'event_participant', 'event_cause', 'event_value', 'civilization', 'settlement', "
-                  "'settlement_census', 'region_control', 'relation', 'event_kind_role', 'event_kind_value')") ==
+                  "'settlement_census', 'region_control', 'relation', 'event_kind_role', 'event_kind_value', "
+                  "'region_name')") ==
           std::vector<std::vector<std::string>>{{"0"}});
-    CHECK(db.rows("PRAGMA user_version") == std::vector<std::vector<std::string>>{{"7"}});
+    CHECK(db.rows("PRAGMA user_version") == std::vector<std::vector<std::string>>{{"8"}});
 }
 
 TEST_CASE("P3-04 9.4, 16.1 item 12: 17 required meta keys, history_end_year fourth") {
@@ -154,7 +160,7 @@ TEST_CASE("P3-04 9.6, 16.5: the empty world's size (34 pages, unconfirmed; EMPTY
     CHECK(static_cast<std::int64_t>(dbtest::be32(bytes, 28)) == EMPTY_WORLD_PAGES);  // header page count
 }
 
-TEST_CASE("P3-04 9.5, 16.1 item 12: a version 6 file is refused: world schema version 6, this build reads 7") {
+TEST_CASE("P3-04 9.5, 16.1 item 12: a version 6 file is refused: world schema version 6, this build reads 8") {
     dbtest::TempDir dir("engine-v6");
     int k = 0;
     for (const char* sql : {"PRAGMA user_version = 6", "UPDATE meta SET value = '6' WHERE key = 'schema_version'"}) {
@@ -164,7 +170,7 @@ TEST_CASE("P3-04 9.5, 16.1 item 12: a version 6 file is refused: world schema ve
         const auto r = db::WorldReader::open(path);
         REQUIRE_FALSE(r.ok());
         CHECK(r.code() == db::ErrorCode::unsupported_schema_version);
-        CHECK(r.error().message == "world schema version 6, this build reads 7");
+        CHECK(r.error().message == "world schema version 6, this build reads 8");
     }
 }
 

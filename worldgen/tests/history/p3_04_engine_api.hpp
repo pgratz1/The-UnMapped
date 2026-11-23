@@ -124,10 +124,10 @@ inline Cell T(std::string_view s) {
 inline Cell N() { return Cell{}; }
 inline Cell O(const std::optional<std::int64_t>& v) { return v.has_value() ? I(*v) : N(); }
 
-// The thirteen tables of 9.1, rows in write order (primary-key order, 9.3).
+// The fourteen tables of 9.1 and r21 23.4 (region_name, schema 8), rows in write order (primary-key order, 9.3).
 struct Tables {
     std::vector<Row> event_kind, event_kind_role, event_kind_value, phase, event, event_participant, event_cause,
-        event_value, civilization, settlement, settlement_census, region_control, relation;
+        event_value, civilization, settlement, settlement_census, region_control, relation, region_name;
 
     // By table name (the names of 9.1).
     [[nodiscard]] const std::vector<Row>& of(std::string_view t) const {
@@ -144,6 +144,7 @@ struct Tables {
         if (t == "settlement_census") return settlement_census;
         if (t == "region_control") return region_control;
         if (t == "relation") return relation;
+        if (t == "region_name") return region_name;
         throw worldgen::FatalError("eng::Tables::of: unknown table");
     }
     [[nodiscard]] std::vector<Row>& of(std::string_view t) {
@@ -200,6 +201,11 @@ inline Tables tables_of(const worldgen::stages::HistoryResult& r) {
     for (const auto& x : r.relations) {
         t.relation.push_back({I(x.a_type), I(x.a_id), I(x.b_type), I(x.b_id), T(x.kind), I(x.since), O(x.until),
                               I(x.since_event), I(x.until_event)});
+    }
+    // P3-04 r21 23.4 (P5-12): HistoryResult::region_names, sorted by (region, from_year). GUESS: the row type is
+    // db::RegionNameRow with the column names of the table.
+    for (const auto& x : r.region_names) {
+        t.region_name.push_back({I(x.region), I(x.from_year), T(x.name), I(x.culture), I(x.event)});
     }
     return t;
 }
@@ -379,6 +385,8 @@ inline void write_row(db::StageWriter& w, std::string_view table, const Row& c) 
         w.write_region_control(db::RegionControlRow{i(0), i(1), o(2), i(3), i(4)});
     } else if (table == "relation") {
         w.write_relation(db::RelationRow{i(0), i(1), i(2), i(3), s(4), i(5), o(6), i(7), i(8)});
+    } else if (table == "region_name") {   // P3-04 r21 23.4. GUESS: write_region_name and db::RegionNameRow
+        w.write_region_name(db::RegionNameRow{i(0), i(1), s(2), i(3), i(4)});
     } else {
         throw worldgen::FatalError("eng::write_row: unknown table");
     }

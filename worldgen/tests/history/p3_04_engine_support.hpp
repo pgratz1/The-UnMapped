@@ -52,7 +52,7 @@ using eng::Tables;
 // bytes) is the spec writer's measurement with Python's SQLite 3.46.1 and
 // is UNCONFIRMED with the vendored SQLite; the engineer records the
 // confirmed figure in 16.5, and this is the one constant to change.
-inline constexpr std::int64_t EMPTY_WORLD_PAGES = 34;
+inline constexpr std::int64_t EMPTY_WORLD_PAGES = 35;
 inline constexpr std::int64_t EMPTY_WORLD_BYTES = EMPTY_WORLD_PAGES * 4096;
 
 // The thirteen tables of 9.1 in DDL order, and in hash --detail order.
@@ -60,7 +60,7 @@ inline const std::vector<std::string>& ddl_tables() {
     static const std::vector<std::string> v = {
         "event_kind", "event_kind_role", "event_kind_value", "phase",      "event",
         "event_participant", "event_cause", "event_value", "civilization", "settlement",
-        "settlement_census", "region_control", "relation"};
+        "settlement_census", "region_control", "relation", "region_name"};   // region_name: schema 8 (r21 23.4)
     return v;
 }
 inline const std::vector<std::string>& hash_tables() {
@@ -76,7 +76,7 @@ inline std::size_t columns_of(std::string_view t) {
         {"event_kind", 7},   {"event_kind_role", 6}, {"event_kind_value", 3}, {"phase", 6},
         {"event", 8},        {"event_participant", 5}, {"event_cause", 2},    {"event_value", 3},
         {"civilization", 10}, {"settlement", 14},    {"settlement_census", 6}, {"region_control", 5},
-        {"relation", 9}};
+        {"relation", 9},     {"region_name", 5}};
     return m.find(t)->second;
 }
 
@@ -752,7 +752,7 @@ inline eng::EventCatalogue test_catalogue() {
     // Every shipped kind (ids 1 to 38 at 0.19.0: the engine writes kind 38 quiet_stretch itself, P3-04 r12
     // 20.1, and kind ids are 1, 2, ... without a gap), then the test kind (41 from 0.20.0, 39 at 0.19.0). Until 0.18.0 these tests kept
     // only the P3-04 kinds 1 to 5 and the test kind was 6.
-    REQUIRE(cat.kinds.size() == 42U);  // P3-04 r19 22.2 (0.21.0): kinds 41, 42; r17 21.2 (0.20.0): kinds 39, 40
+    REQUIRE(cat.kinds.size() == 43U);  // P3-04 r21 23.2 (0.22.0): kind 43; P3-04 r19 22.2 (0.21.0): kinds 41, 42; r17 21.2 (0.20.0): kinds 39, 40
     eng::KindDef k;
     k.id = static_cast<std::int64_t>(cat.kinds.size()) + 1;
     k.key = "test_change";

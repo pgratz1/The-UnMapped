@@ -369,7 +369,7 @@ patterns = ["ONC", "ONC", "ONCONC", "ONC"]
 god_patterns = ["ONCONC"]
 min_letters = 4
 max_letters = 9
-forbidden = ["eae", "aea", "ckc", "ldl", "ntd", "rdd", "ckb", "ckm"]
+forbidden = ["eae", "aea", "ckc", "ldl", "ntd", "rdd", "ckb", "ckm", "ass"]
 god_forms = ["{root}"]
 civilization_forms = ["The Kingdom of {root}", "The {root} League", "The Duchy of {root}"]
 settlement_forms = ["{root}", "{root}ford", "{root}ton", "{root}bury", "{root}wick", "{root}ham", "{root}stead"]
@@ -456,7 +456,102 @@ events = [
   { kind = "settlements_ceded", salience = 55, template = "{from} gave up {settlement:all} in {@region} to {to}." },
   { kind = "claim_dropped", salience = 15, template = "{claimant} let the claim against {holder} over {@region} lapse." },
   { kind = "refuge_hidden", salience = 10, template = "{@settlement} lay hidden from {@year} to {@end_year}." },
+  { kind = "region_renamed", salience = 60, template = "{@causes:civ_conquered=the fall of a realm,sacked=the sack,battle=the slaughter,battle_at_pass=the slaughter,plague_outbreak=the plague,became_city=the rise of a city|After |, }{@region_former} became known as {@region}." },
 ]
+)";
+
+// --- history.renaming (P5-12 4 and 4.1, P3-01 r16 5.4; generator 0.22.0) ---
+
+inline constexpr std::string_view RENAMING_TOML = R"([history.renaming]
+region_max = 2
+region_gap_years = 300
+world_max_permille = 150
+century_max_permille = 50
+century_years = 100
+
+[[history.renaming.rules]]
+key = "conquest"
+kinds = ["civ_conquered"]
+values = []
+min_magnitude = 1
+window_years = 1
+min_salience = 0
+capital = false
+chance_permille = 1000
+weight = 100
+name_role = "civilization"
+namer_role = "conqueror"
+forms = ["{name}'s Grave", "The Grave of {name}", "The End of {name}", "{name}'s Barrow"]
+
+[[history.renaming.rules]]
+key = "capital_sack"
+kinds = ["sacked"]
+values = []
+min_magnitude = 1
+window_years = 1
+min_salience = 90
+capital = false
+chance_permille = 700
+weight = 90
+name_role = "settlement"
+namer_role = "attacker"
+forms = ["{name}'s Fall", "The Ashes of {name}", "The Ruin of {name}", "{name} Waste"]
+
+[[history.renaming.rules]]
+key = "great_sack"
+kinds = ["sacked"]
+values = ["dead"]
+min_magnitude = 1500
+window_years = 1
+min_salience = 0
+capital = false
+chance_permille = 500
+weight = 80
+name_role = "settlement"
+namer_role = "attacker"
+forms = ["{name}'s Pyre", "The Ashes of {name}", "{name} Waste", "The Burnt {noun}"]
+
+[[history.renaming.rules]]
+key = "slaughter"
+kinds = ["battle", "battle_at_pass"]
+values = ["winner_dead", "loser_dead"]
+min_magnitude = 5000
+window_years = 100
+min_salience = 0
+capital = false
+chance_permille = 600
+weight = 70
+name_role = "loser"
+namer_role = "winner"
+forms = ["The Red {noun}", "The Bloody {noun}", "{name}'s Bane", "The {noun} of the Slain"]
+
+[[history.renaming.rules]]
+key = "plague"
+kinds = ["plague_outbreak"]
+values = ["total"]
+min_magnitude = 3000
+window_years = 1
+min_salience = 0
+capital = false
+chance_permille = 400
+weight = 60
+name_role = "settlement"
+namer_role = "civilization"
+forms = ["The Emptied {noun}", "The Fever {noun}", "The Silent {noun}", "{name}'s Grave"]
+
+[[history.renaming.rules]]
+key = "heartland"
+kinds = ["became_city"]
+values = []
+min_magnitude = 1
+window_years = 1
+min_salience = 0
+capital = true
+chance_permille = 300
+weight = 50
+name_role = "civilization"
+namer_role = "civilization"
+forms = ["{name}land", "The Heart of {name}", "The {name} Reach", "{name}'s Hearth"]
 )";
 
 // --- history.conflict (P3-06 12.1, the listing; generator 0.16.0; r9 20.9 from 0.18.0) ---
@@ -646,6 +741,7 @@ inline Files shipped_files() {
     f["history/conflict.toml"] = std::string(CONFLICT_TOML);
     f["history/engine.toml"] = std::string(ENGINE_TOML);
     f["history/peoples.toml"] = std::string(PEOPLES_TOML);
+    f["history/renaming.toml"] = std::string(RENAMING_TOML);
     f["history/report.toml"] = std::string(REPORT_TOML);
     return f;
 }

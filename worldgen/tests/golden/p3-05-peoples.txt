@@ -65,6 +65,11 @@
 # clause of a template all words or all digits; no flare-up shorter than the scaled flare_min_years; the
 # dwarven forbidden didin and ririn and the r17 filter entries in names; P1-06 r10 region names (the inputs);
 # the catalogue of 42 kinds.
+# Generator 0.22.0 (P5-12, docs/specs/p5-12-renamed-regions.md): no peoples rule changes; the catalogue gains
+# kind 43 region_renamed (P3-04 r21 23.2), table region_name (schema 8; always empty here: the renaming
+# subsystem is installed after conflict, so the peoples-only configuration has none), P3-02 r19 names (no
+# doubled place suffix, human forbidden ass), P1-06 r11 region names (V8; the inputs:
+# ~/.cache/the-unmapped/out/p5-12-tests/inputs) and the history.renaming tuning in the data roots.
 world geo-seed-0-512 0 512 6000 all normal
 geo-seed-0-512 input_region 47d013bdd0fd43e9c1483011f072887ad8d83835d495c55e22c05647eb433e98
 geo-seed-0-512 score rg1 ra1 917 2938
@@ -160,13 +165,14 @@ geo-seed-0-512 homes ra6 y5534 n1 9
 geo-seed-0-512 table civilization 6756ca8ff505c2dd0e404aedfd022f17f58f16c65660d4fbfaae8732f4d45f25
 geo-seed-0-512 table event b81ed41230f1936c780e075b295be1724f5fc03297a29f9409a2b7455ac0a401
 geo-seed-0-512 table event_cause e33cf5b78bd95cc250497aaee637a1ce461a6c7cde6668bb16b0e94064eb72b5
-geo-seed-0-512 table event_kind 615787666985921fd60336a60fe2bd50b1e2ca030f8fc210cb00bd7533c3e28f
-geo-seed-0-512 table event_kind_role 6704cb83034f0eb6468c7852cf57d78f140acbd41e09bd267e3d34c4a46e1d12
+geo-seed-0-512 table event_kind b6bed38c843c9c2f00aa9d8f7b061a2c960fc1205679fc5356827e1b626d37d4
+geo-seed-0-512 table event_kind_role eba38df29d59afc2e335f798ba3f5ce666173d5f777741d94f2add5346080411
 geo-seed-0-512 table event_kind_value ea3bdaba66965ca348093390b78ac4b2e92807052c93c9bb59822b0c53c0771e
 geo-seed-0-512 table event_participant 2400f34e57431540b13f4ad314244b1ac2cd950acab8d2080f3145ec9fefa016
 geo-seed-0-512 table event_value 2e34b82c81b794449943d304301052f2c1217321a70b43d85a8f6afa7b635a47
 geo-seed-0-512 table phase 8e015edf672a7416a831c10fa1efd6f56501618b3a174f7a18c7ae2746946442
 geo-seed-0-512 table region_control f640c7e6c542cf5718869891a876bcac34dce60c18652ff0fe7f657dd56f448e
+geo-seed-0-512 table region_name f13ee6ed54ea2aae9fc49a9faeb5da6e8ddef0e12ed5d30d35a624ae813e0485
 geo-seed-0-512 table relation cbbd5f990c53684d7ae650b40fcb5656e02261b53da5f6a7d8c819c92f2828f8
 geo-seed-0-512 table settlement 37cdfb2d00d6a06f3d5052fa4efe266e9c12dcda580b4e4bbd9b46daef0a0997
 geo-seed-0-512 table settlement_census a02ead4e690106a226a7be73b85fe1920b9e0ae7c06a7431253a6ccbdf86ba3a
@@ -220,6 +226,7 @@ geo-seed-0-512 report events_claim_settlements = 0
 geo-seed-0-512 report events_settlements_ceded = 0
 geo-seed-0-512 report events_claim_dropped = 0
 geo-seed-0-512 report events_refuge_hidden = 0
+geo-seed-0-512 report events_region_renamed = 0
 geo-seed-0-512 report civilizations = 6
 geo-seed-0-512 report civilizations_alive = 6
 geo-seed-0-512 report settlements = 35
@@ -227,6 +234,7 @@ geo-seed-0-512 report settlements_standing = 35
 geo-seed-0-512 report regions_held = 9
 geo-seed-0-512 report census_rows = 235
 geo-seed-0-512 report relations = 0
+geo-seed-0-512 report region_names = 0
 geo-seed-0-512 report population = 50936
 geo-seed-0-512 report population_elf = 4134
 geo-seed-0-512 report population_goblin = 5792
@@ -461,15 +469,16 @@ geo-seed-42-512 homes ra6 y5596 n1 6
 geo-seed-42-512 table civilization efd8256147be17c8e0148b5670ab7b336a7d91bb37575c88f8a4934866048135
 geo-seed-42-512 table event f7ba6e66ab39f8847a06d5ba7eed018e73dc4f754d09ffedba381d687b6e2731
 geo-seed-42-512 table event_cause 6565d26bc0f742d3a2db30a69bc5a05286e5c33cafcf6ac9ec1efd9fb69d6114
-geo-seed-42-512 table event_kind 615787666985921fd60336a60fe2bd50b1e2ca030f8fc210cb00bd7533c3e28f
-geo-seed-42-512 table event_kind_role 6704cb83034f0eb6468c7852cf57d78f140acbd41e09bd267e3d34c4a46e1d12
+geo-seed-42-512 table event_kind b6bed38c843c9c2f00aa9d8f7b061a2c960fc1205679fc5356827e1b626d37d4
+geo-seed-42-512 table event_kind_role eba38df29d59afc2e335f798ba3f5ce666173d5f777741d94f2add5346080411
 geo-seed-42-512 table event_kind_value ea3bdaba66965ca348093390b78ac4b2e92807052c93c9bb59822b0c53c0771e
 geo-seed-42-512 table event_participant 834e1be43db49798249cf71848f27f7cf4ffeda658d67614d2335047d87cfddf
 geo-seed-42-512 table event_value a3dbf96bb7f731f060bace08d5901097cf7cbbcc71a2593933dd6fe7d01976ed
 geo-seed-42-512 table phase 6a6ea0ff8869d6d1c59078a87ff5f96576131b1309f3e6016d85b11d3d4e9ffe
 geo-seed-42-512 table region_control 995462d1b0f471ae3ecb8f34292505548765644b73e95043cbe034cfd5c1d22f
+geo-seed-42-512 table region_name f13ee6ed54ea2aae9fc49a9faeb5da6e8ddef0e12ed5d30d35a624ae813e0485
 geo-seed-42-512 table relation cbbd5f990c53684d7ae650b40fcb5656e02261b53da5f6a7d8c819c92f2828f8
-geo-seed-42-512 table settlement f8549dbf153f577342f19bc9259ee802ae90317083fc50a1c4fab7de44b3260c
+geo-seed-42-512 table settlement 49e106225e22cee22868fac02413619e297eb7fcc8f2b8dad4ee92a352a77567
 geo-seed-42-512 table settlement_census 7e505c62fe1f8efe27876e81a14fbd2f6b66ae813b64a28365b74dae2e0b73b1
 geo-seed-42-512 report end_year = 6000
 geo-seed-42-512 report phases_opening = 6
@@ -521,6 +530,7 @@ geo-seed-42-512 report events_claim_settlements = 0
 geo-seed-42-512 report events_settlements_ceded = 0
 geo-seed-42-512 report events_claim_dropped = 0
 geo-seed-42-512 report events_refuge_hidden = 0
+geo-seed-42-512 report events_region_renamed = 0
 geo-seed-42-512 report civilizations = 8
 geo-seed-42-512 report civilizations_alive = 8
 geo-seed-42-512 report settlements = 55
@@ -528,6 +538,7 @@ geo-seed-42-512 report settlements_standing = 54
 geo-seed-42-512 report regions_held = 14
 geo-seed-42-512 report census_rows = 481
 geo-seed-42-512 report relations = 0
+geo-seed-42-512 report region_names = 0
 geo-seed-42-512 report population = 80520
 geo-seed-42-512 report population_elf = 6354
 geo-seed-42-512 report population_goblin = 38218
@@ -567,9 +578,9 @@ geo-seed-42-512 e14 Raenme grew into a village of 271.
 geo-seed-42-512 e15 Glalivedell grew into a village of 257.
 geo-seed-42-512 e16 The House of Finen sent settlers from Voeledell to found Ciennfae in Gull's Portion.
 geo-seed-42-512 e17 Minno grew into a village of 260.
-geo-seed-42-512 e18 The House of Finen sent settlers from Iennmo to found Glathenddell in Gull's Portion.
+geo-seed-42-512 e18 The House of Finen sent settlers from Iennmo to found Canla in Gull's Portion.
 geo-seed-42-512 e19 The House of Finen sent settlers from Iennmo to found Rannve in Boughcombe Wood.
-geo-seed-42-512 e20 Glathenddell grew into a village of 266.
+geo-seed-42-512 e20 Canla grew into a village of 266.
 geo-seed-42-512 e21 Rannve grew into a village of 260.
 geo-seed-42-512 e22 The Realm of Ithieglie sent settlers from Raenme to found Fivelie in the Brake of Antlers.
 geo-seed-42-512 e23 Fivelie grew into a village of 252.
@@ -686,7 +697,7 @@ geo-seed-42-512 e133 Famine struck Beedrux Pit; 200 died.
 geo-seed-42-512 e134 Matia Glade grew into a village of 250.
 geo-seed-42-512 e135 Plague broke out in Ciennfae and spread to three other settlements; 344 died in all.
 geo-seed-42-512 e136 The plague spread to Voeledell; 108 died.
-geo-seed-42-512 e137 The plague spread to Glathenddell; 68 died.
+geo-seed-42-512 e137 The plague spread to Canla; 68 died.
 geo-seed-42-512 e138 The plague spread to Masri; 36 died.
 geo-seed-42-512 e139 For 477 years, from 5119 to 5595, the land was quiet, and seven realms kept the peace.
 geo-seed-42-512 e140 The Warrens of Gutch-Sluz sent settlers from Skrunk Pit to found Sneeggnox Hole in Coldlow.
@@ -775,7 +786,7 @@ geo-seed-42-512 e222 Weakened by plague, Gruz-Keegg dwindled to 1,190 souls.
 geo-seed-42-512 e223 A succession crisis at Thoum shook the Hold of Dulimin.
 geo-seed-42-512 e224 Famine struck Krux; 160 died.
 world geo-phrase-512 15629206466951235176 512 6000 all normal
-geo-phrase-512 input_region ac734460e6951dd2904219dc0c943d2adc83d5fa7d4e292b2d12b4a34dbfdf0c
+geo-phrase-512 input_region e85c837f305c94a12d6e8b1bf17ab12089fedb368ce3ae70bcf608697ef7a938
 geo-phrase-512 score rg1 ra1 -253 400
 geo-phrase-512 score rg1 ra2 405 2089
 geo-phrase-512 score rg1 ra3 1277 6795
@@ -863,15 +874,16 @@ geo-phrase-512 homes ra6 y5638 n1 1
 geo-phrase-512 table civilization 530caac8800cf923d371540a80be7f2077c1d7342862f4ae862d903cffbb00c4
 geo-phrase-512 table event 67e970918d0cdd4dd8e8aec7f764c6f8fd92ce7bcd29853dccb23185cf926ece
 geo-phrase-512 table event_cause 26dc2dba3ea1d2401644a95f1beada4e75ff8a9b77455d312a7c728bd36fcc92
-geo-phrase-512 table event_kind 615787666985921fd60336a60fe2bd50b1e2ca030f8fc210cb00bd7533c3e28f
-geo-phrase-512 table event_kind_role 6704cb83034f0eb6468c7852cf57d78f140acbd41e09bd267e3d34c4a46e1d12
+geo-phrase-512 table event_kind b6bed38c843c9c2f00aa9d8f7b061a2c960fc1205679fc5356827e1b626d37d4
+geo-phrase-512 table event_kind_role eba38df29d59afc2e335f798ba3f5ce666173d5f777741d94f2add5346080411
 geo-phrase-512 table event_kind_value ea3bdaba66965ca348093390b78ac4b2e92807052c93c9bb59822b0c53c0771e
 geo-phrase-512 table event_participant 7034de1174053acdad590b42a30a3b9361117c52f658e639f530c938fa93900e
 geo-phrase-512 table event_value ee48100d8e0a3e2286c92f9d05af328c5dd723c2cfbc9070757d3845749f0a38
 geo-phrase-512 table phase 82b6794bc0741b9a720a5effa09ce6aac151fac853595ac82d17e67f4d6e5021
 geo-phrase-512 table region_control 2f8296a3df295b5d35a463503e0f8c93e163863f62f7cddb26e2229da4213aae
+geo-phrase-512 table region_name f13ee6ed54ea2aae9fc49a9faeb5da6e8ddef0e12ed5d30d35a624ae813e0485
 geo-phrase-512 table relation cbbd5f990c53684d7ae650b40fcb5656e02261b53da5f6a7d8c819c92f2828f8
-geo-phrase-512 table settlement 9864453486be42c394caf68cd82e7f04d2aa502bc6f0715de62798efb0aa9d88
+geo-phrase-512 table settlement 76fed3903fd18c453d1fd98188e437f42112569b89ac8219c7f9faa45eac3339
 geo-phrase-512 table settlement_census 022f85279af3a51478fe6f712eaca5d0088605b449cdcb61c7ae8edad497a5fb
 geo-phrase-512 report end_year = 6000
 geo-phrase-512 report phases_opening = 6
@@ -923,6 +935,7 @@ geo-phrase-512 report events_claim_settlements = 0
 geo-phrase-512 report events_settlements_ceded = 0
 geo-phrase-512 report events_claim_dropped = 0
 geo-phrase-512 report events_refuge_hidden = 0
+geo-phrase-512 report events_region_renamed = 0
 geo-phrase-512 report civilizations = 7
 geo-phrase-512 report civilizations_alive = 7
 geo-phrase-512 report settlements = 39
@@ -930,6 +943,7 @@ geo-phrase-512 report settlements_standing = 39
 geo-phrase-512 report regions_held = 12
 geo-phrase-512 report census_rows = 336
 geo-phrase-512 report relations = 0
+geo-phrase-512 report region_names = 0
 geo-phrase-512 report population = 80239
 geo-phrase-512 report population_elf = 2622
 geo-phrase-512 report population_goblin = 31349
@@ -1042,12 +1056,12 @@ geo-phrase-512 e87 Weckstead in the Wolds of Scythes grew into a city.
 geo-phrase-512 e88 The Liemouvie Ring sent settlers from Fielouwho Hollow to found Aetwee Hollow in East Wood.
 geo-phrase-512 e89 The Meald League sent settlers from Weckstead to found Alarham in the Wolds of Scythes.
 geo-phrase-512 e90 Alarham grew into a town of 1,832.
-geo-phrase-512 e91 The Meald League sent settlers from Weckstead to found Stesstead in the Wolds of Scythes.
-geo-phrase-512 e92 Stesstead grew into a town of 1,634.
+geo-phrase-512 e91 The Meald League sent settlers from Weckstead to found Curdbury in the Wolds of Scythes.
+geo-phrase-512 e92 Curdbury grew into a town of 1,634.
 geo-phrase-512 e93 The Meald League sent settlers from Weckstead to found Mealdtearham in the Wolds of Scythes.
 geo-phrase-512 e94 Mealdtearham grew into a town of 1,640.
 geo-phrase-512 e95 The Liemouvie Ring sent settlers from Fielouwho Hollow to found Aflaesh in East Wood.
-geo-phrase-512 e96 The Liemouvie Ring sent settlers from Fielouwho Hollow to found Twify in Tarden.
+geo-phrase-512 e96 The Liemouvie Ring sent settlers from Fielouwho Hollow to found Twify in Lichenknoll Forest.
 geo-phrase-512 e97 Aetwee Hollow grew into a village of 260.
 geo-phrase-512 e98 Uul'duk awakened the Orcs in Owlpike Sward.
 geo-phrase-512 e99 The Orcs founded the Urom Horde in Owlpike Sward.
@@ -1447,13 +1461,14 @@ geo-seed-1-1024 homes ra6 y5580 n1 27
 geo-seed-1-1024 table civilization 4678389578daaccfeb50a439597ca86e1a33e4f83147c527dde5d08bdf05d374
 geo-seed-1-1024 table event 5b8c13968a262a4e458a674b4819de6e43867307336ef75408c021e9c78e1b97
 geo-seed-1-1024 table event_cause 68e0f1eb44711d299309a9b25e95c9a5d83399ded96893e70e750272de1c110b
-geo-seed-1-1024 table event_kind 615787666985921fd60336a60fe2bd50b1e2ca030f8fc210cb00bd7533c3e28f
-geo-seed-1-1024 table event_kind_role 6704cb83034f0eb6468c7852cf57d78f140acbd41e09bd267e3d34c4a46e1d12
+geo-seed-1-1024 table event_kind b6bed38c843c9c2f00aa9d8f7b061a2c960fc1205679fc5356827e1b626d37d4
+geo-seed-1-1024 table event_kind_role eba38df29d59afc2e335f798ba3f5ce666173d5f777741d94f2add5346080411
 geo-seed-1-1024 table event_kind_value ea3bdaba66965ca348093390b78ac4b2e92807052c93c9bb59822b0c53c0771e
 geo-seed-1-1024 table event_participant b6b293b2899d3ef6292ccf7e0126a55df9b5819546dc378fc0f9c25dd8d92ae8
 geo-seed-1-1024 table event_value ca2d67ea0c2594dea2488268ba77793615b9dd6979e18c3a0028a8937fd545b3
 geo-seed-1-1024 table phase ee54614c921f8f5cc660359eb48b68e2ecce3a512eb1c66e99d802c82e981395
 geo-seed-1-1024 table region_control e0cff1de24ccf4a52f2350c5d20734ac072770838bb528869a20eda3acbbc457
+geo-seed-1-1024 table region_name f13ee6ed54ea2aae9fc49a9faeb5da6e8ddef0e12ed5d30d35a624ae813e0485
 geo-seed-1-1024 table relation cbbd5f990c53684d7ae650b40fcb5656e02261b53da5f6a7d8c819c92f2828f8
 geo-seed-1-1024 table settlement fb6ebaf3ce2d2c901c63c54c2d6bf54d7fd0444a939c285ab8877dae89a742d1
 geo-seed-1-1024 table settlement_census 007bf38f2179a42abbc615a5a3f7ae1dffa2ade38805426bd75bf600bebf13eb
@@ -1507,6 +1522,7 @@ geo-seed-1-1024 report events_claim_settlements = 0
 geo-seed-1-1024 report events_settlements_ceded = 0
 geo-seed-1-1024 report events_claim_dropped = 0
 geo-seed-1-1024 report events_refuge_hidden = 0
+geo-seed-1-1024 report events_region_renamed = 0
 geo-seed-1-1024 report civilizations = 11
 geo-seed-1-1024 report civilizations_alive = 11
 geo-seed-1-1024 report settlements = 97
@@ -1514,6 +1530,7 @@ geo-seed-1-1024 report settlements_standing = 97
 geo-seed-1-1024 report regions_held = 32
 geo-seed-1-1024 report census_rows = 937
 geo-seed-1-1024 report relations = 0
+geo-seed-1-1024 report region_names = 0
 geo-seed-1-1024 report population = 180569
 geo-seed-1-1024 report population_elf = 28357
 geo-seed-1-1024 report population_goblin = 66712
@@ -1975,15 +1992,16 @@ hist-span-2000-512 homes ra6 y1879 n1 12
 hist-span-2000-512 table civilization 61c8a6ada99288e49943183fce71a264365927b2789fb728da6a968768413431
 hist-span-2000-512 table event 8ac78fadc5787ca26ba3c3ed48ae6f1d6a7ffdb3b32b104868c62b47ff3e0550
 hist-span-2000-512 table event_cause 7fabfaae996b6b8572dbb584ced954b946ab580a20748d26e859109b7d74bd22
-hist-span-2000-512 table event_kind 615787666985921fd60336a60fe2bd50b1e2ca030f8fc210cb00bd7533c3e28f
-hist-span-2000-512 table event_kind_role 6704cb83034f0eb6468c7852cf57d78f140acbd41e09bd267e3d34c4a46e1d12
+hist-span-2000-512 table event_kind b6bed38c843c9c2f00aa9d8f7b061a2c960fc1205679fc5356827e1b626d37d4
+hist-span-2000-512 table event_kind_role eba38df29d59afc2e335f798ba3f5ce666173d5f777741d94f2add5346080411
 hist-span-2000-512 table event_kind_value ea3bdaba66965ca348093390b78ac4b2e92807052c93c9bb59822b0c53c0771e
 hist-span-2000-512 table event_participant c2fe6b3d2c41fb277b834940554abe2f15eddccffafce3c7be13656c744df3b0
 hist-span-2000-512 table event_value f334247a9d65734b28534d8371baf1e1c0c671753a51ad5985d8bae1f03a2cfd
 hist-span-2000-512 table phase 21bc3b445248646aa61b6f61ff954c2e5767df62ade652891fb17b5371708fdb
 hist-span-2000-512 table region_control 98306efe2cb218330dbd45a615b24a5c752070f7717fd98198c2cd2adf1a7c10
+hist-span-2000-512 table region_name f13ee6ed54ea2aae9fc49a9faeb5da6e8ddef0e12ed5d30d35a624ae813e0485
 hist-span-2000-512 table relation cbbd5f990c53684d7ae650b40fcb5656e02261b53da5f6a7d8c819c92f2828f8
-hist-span-2000-512 table settlement 5d2ee189a65aa6a5fed07db4bcc7ce530ef18e6174716a7db00ee9036c220f38
+hist-span-2000-512 table settlement bd974c4d7e2c424937071cd599006e11c37c94f4fb3cb32808f5241cc3d9d6a1
 hist-span-2000-512 table settlement_census a4853d6bb0450ff6ea67be8d43a7724207e5f887b3f5d49fedb1c63f31d43de4
 hist-span-2000-512 report end_year = 2000
 hist-span-2000-512 report phases_opening = 6
@@ -2035,6 +2053,7 @@ hist-span-2000-512 report events_claim_settlements = 0
 hist-span-2000-512 report events_settlements_ceded = 0
 hist-span-2000-512 report events_claim_dropped = 0
 hist-span-2000-512 report events_refuge_hidden = 0
+hist-span-2000-512 report events_region_renamed = 0
 hist-span-2000-512 report civilizations = 7
 hist-span-2000-512 report civilizations_alive = 7
 hist-span-2000-512 report settlements = 37
@@ -2042,6 +2061,7 @@ hist-span-2000-512 report settlements_standing = 37
 hist-span-2000-512 report regions_held = 11
 hist-span-2000-512 report census_rows = 226
 hist-span-2000-512 report relations = 0
+hist-span-2000-512 report region_names = 0
 hist-span-2000-512 report population = 54665
 hist-span-2000-512 report population_elf = 9810
 hist-span-2000-512 report population_goblin = 27414
@@ -2068,13 +2088,13 @@ hist-span-2000-512 e1 Onveth awakened the Elves in Elderslack Hurst.
 hist-span-2000-512 e2 The Elves founded the Realm of Ienngleth in Elderslack Hurst.
 hist-span-2000-512 e3 The Realm of Ienngleth founded Anen in Elderslack Hurst.
 hist-span-2000-512 e4 The Elves founded the Realm of Rasglae in Squire's Tangle.
-hist-span-2000-512 e5 The Realm of Rasglae founded Fielaenddell in Squire's Tangle.
+hist-span-2000-512 e5 The Realm of Rasglae founded Thisienn in Squire's Tangle.
 hist-span-2000-512 e6 For 638 years, from 50 to 687, the land was quiet, and two realms kept the peace.
 hist-span-2000-512 e7 Anen grew into a town of 1,522.
 hist-span-2000-512 e8 Buzork awakened the Goblins in the Tolling Plain.
 hist-span-2000-512 e9 The Goblins founded the Skiz-Sleet Horde in the Tolling Plain.
 hist-span-2000-512 e10 The Skiz-Sleet Horde founded Kuk in the Tolling Plain.
-hist-span-2000-512 e11 Fielaenddell grew into a town of 1,501.
+hist-span-2000-512 e11 Thisienn grew into a town of 1,501.
 hist-span-2000-512 e12 For 376 years, from 738 to 1113, the land was quiet, and three realms kept the peace.
 hist-span-2000-512 e13 Kuk grew into a town of 1,601.
 hist-span-2000-512 e14 The Skiz-Sleet Horde sent settlers from Kuk to found Sneegg Hole in Southeast Downs.
@@ -2097,11 +2117,11 @@ hist-span-2000-512 e30 Famine struck Slax Hole; 170 died.
 hist-span-2000-512 e31 The Skiz-Sleet Horde sent settlers from Sneegg Hole to found Sleeg in Southeast Downs.
 hist-span-2000-512 e32 For 245 years, from 1164 to 1408, the land was quiet, and four realms kept the peace.
 hist-span-2000-512 e33 The Skiz-Sleet Horde sent settlers from Sneegg Hole to found Krark in Southeast Downs.
-hist-span-2000-512 e34 The Realm of Rasglae sent settlers from Fielaenddell to found Naolldell in Squire's Tangle.
+hist-span-2000-512 e34 The Realm of Rasglae sent settlers from Thisienn to found Naolldell in Squire's Tangle.
 hist-span-2000-512 e35 The Skiz-Sleet Horde sent settlers from Sneegg Hole to found Skrizz in Southeast Downs.
 hist-span-2000-512 e36 Skrizz grew into a village of 352.
-hist-span-2000-512 e37 The Realm of Rasglae sent settlers from Fielaenddell to found Oniesdell in Squire's Tangle.
-hist-span-2000-512 e38 The Realm of Rasglae sent settlers from Fielaenddell to found Ithonondell in Squire's Tangle.
+hist-span-2000-512 e37 The Realm of Rasglae sent settlers from Thisienn to found Oniesdell in Squire's Tangle.
+hist-span-2000-512 e38 The Realm of Rasglae sent settlers from Thisienn to found Ithonondell in Squire's Tangle.
 hist-span-2000-512 e39 The Skiz-Sleet Horde sent settlers from Sneerk to found Sluk-Gozz in Central Wood.
 hist-span-2000-512 e40 The Realm of Ienngleth sent settlers from Anen to found Gliemidell in the Holt of Rooks.
 hist-span-2000-512 e41 The Skiz-Sleet Horde sent settlers from Sneerk to found Slonk-Skruk in Central Wood.
@@ -2133,7 +2153,7 @@ hist-span-2000-512 e66 Clan Dradintuk sent settlers from Harinhimm to found Mail
 hist-span-2000-512 e67 Maarkzaagh awakened the Orcs in the Wrecked Sward.
 hist-span-2000-512 e68 The Orcs founded Clan Thaash in the Wrecked Sward.
 hist-span-2000-512 e69 Clan Thaash founded Thaalmork in the Wrecked Sward.
-hist-span-2000-512 e70 Famine struck Fielaenddell; 315 died.
+hist-span-2000-512 e70 Famine struck Thisienn; 315 died.
 hist-span-2000-512 e71 Famine struck Gnibslot; 244 died.
 hist-span-2000-512 e72 Thaalmork grew into a town of 1,513.
 hist-span-2000-512 e73 Clan Thaash sent settlers from Thaalmork to found Dok Camp in the Wrecked Sward.
@@ -2146,7 +2166,7 @@ hist-span-2000-512 e79 Dok Camp grew into a village of 250.
 hist-span-2000-512 e80 Famine struck Ithonondell; 83 died.
 hist-span-2000-512 e81 Plague broke out in Glieshvie; 34 died.
 hist-span-2000-512 e82 Famine struck Sleeg; 82 died.
-hist-span-2000-512 e83 The Wearhuld League sent settlers from Ashuntwick to found Weantton in Knight's Downs.
+hist-span-2000-512 e83 The Wearhuld League sent settlers from Ashuntwick to found Stantstead in Knight's Downs.
 hist-span-2000-512 e84 Famine struck Snitneegg; 113 died.
 hist-span-2000-512 e85 The Wearhuld League sent settlers from Ashuntwick to found Wurdgun in Knight's Downs.
 hist-span-2000-512 e86 The Wearhuld League sent settlers from Ashuntwick to found Edeas in Knight's Downs.
@@ -2472,13 +2492,14 @@ hist-races-elf-orc-1024 homes ra6 y5602 n1 41
 hist-races-elf-orc-1024 table civilization 35e9b2bdcf7f334ee7a29d97dd3cb271ce809d84adf6ab6a6234f1017e78c393
 hist-races-elf-orc-1024 table event 6a21ec842737a5a24ee0f05f5124cb6a423a0fa1990d9fdb519fec16eb6db538
 hist-races-elf-orc-1024 table event_cause 16d2c43293f829cef5896a39cf0f8a8040e803e9132b7faa5cb1f3df63508052
-hist-races-elf-orc-1024 table event_kind 615787666985921fd60336a60fe2bd50b1e2ca030f8fc210cb00bd7533c3e28f
-hist-races-elf-orc-1024 table event_kind_role 6704cb83034f0eb6468c7852cf57d78f140acbd41e09bd267e3d34c4a46e1d12
+hist-races-elf-orc-1024 table event_kind b6bed38c843c9c2f00aa9d8f7b061a2c960fc1205679fc5356827e1b626d37d4
+hist-races-elf-orc-1024 table event_kind_role eba38df29d59afc2e335f798ba3f5ce666173d5f777741d94f2add5346080411
 hist-races-elf-orc-1024 table event_kind_value ea3bdaba66965ca348093390b78ac4b2e92807052c93c9bb59822b0c53c0771e
 hist-races-elf-orc-1024 table event_participant f084565aaeee787e0d199aaed2ab5e7aac2fb45077b6ed01862daed3d1508f03
 hist-races-elf-orc-1024 table event_value c480a5a75ce5d8e38380bab1c4c860e296f8822918d85ab178b1a7694233b341
 hist-races-elf-orc-1024 table phase 5f0e85311c7df0166dec1c07f282da7f1b6fc005f07ca8dc246fc5336e1eb666
 hist-races-elf-orc-1024 table region_control fce13d3a45c90796035cd3611b74c4c7ed5a9de41c0934e7688bea2dec0835cb
+hist-races-elf-orc-1024 table region_name f13ee6ed54ea2aae9fc49a9faeb5da6e8ddef0e12ed5d30d35a624ae813e0485
 hist-races-elf-orc-1024 table relation cbbd5f990c53684d7ae650b40fcb5656e02261b53da5f6a7d8c819c92f2828f8
 hist-races-elf-orc-1024 table settlement 8e4cfe354bdc04fe6e0612228c3432214befb9bc91791d39e4df7cbe2c3f5718
 hist-races-elf-orc-1024 table settlement_census fdc6e9c64ab53ca5f36299cf12e6a8f9e2a1bcf25d1a5af3fa94078c21164bf7
@@ -2532,6 +2553,7 @@ hist-races-elf-orc-1024 report events_claim_settlements = 0
 hist-races-elf-orc-1024 report events_settlements_ceded = 0
 hist-races-elf-orc-1024 report events_claim_dropped = 0
 hist-races-elf-orc-1024 report events_refuge_hidden = 0
+hist-races-elf-orc-1024 report events_region_renamed = 0
 hist-races-elf-orc-1024 report civilizations = 3
 hist-races-elf-orc-1024 report civilizations_alive = 3
 hist-races-elf-orc-1024 report settlements = 49
@@ -2539,6 +2561,7 @@ hist-races-elf-orc-1024 report settlements_standing = 49
 hist-races-elf-orc-1024 report regions_held = 19
 hist-races-elf-orc-1024 report census_rows = 281
 hist-races-elf-orc-1024 report relations = 0
+hist-races-elf-orc-1024 report region_names = 0
 hist-races-elf-orc-1024 report population = 94750
 hist-races-elf-orc-1024 report population_elf = 39391
 hist-races-elf-orc-1024 report population_goblin = 0
@@ -3038,15 +3061,16 @@ hist-dense-1024 homes ra6 y5618 n1 14
 hist-dense-1024 table civilization 064791eef5caef6b41f4f5fd3cef6199a6b403bf2cdbcf1630241a83683190c8
 hist-dense-1024 table event 36c5f8176790b6f834a550862d53f4e9466de5658abe0f0e256da16a808a465c
 hist-dense-1024 table event_cause dff7beabbfbae79276e4c86852fa64b2f361956cbc0b898651550f67db207de4
-hist-dense-1024 table event_kind 615787666985921fd60336a60fe2bd50b1e2ca030f8fc210cb00bd7533c3e28f
-hist-dense-1024 table event_kind_role 6704cb83034f0eb6468c7852cf57d78f140acbd41e09bd267e3d34c4a46e1d12
+hist-dense-1024 table event_kind b6bed38c843c9c2f00aa9d8f7b061a2c960fc1205679fc5356827e1b626d37d4
+hist-dense-1024 table event_kind_role eba38df29d59afc2e335f798ba3f5ce666173d5f777741d94f2add5346080411
 hist-dense-1024 table event_kind_value ea3bdaba66965ca348093390b78ac4b2e92807052c93c9bb59822b0c53c0771e
 hist-dense-1024 table event_participant c5caa73de6189dc5ce6bbec19146ab29aa7ecd431a40b7f20165223ababdfcb8
 hist-dense-1024 table event_value 76f5e51b40d8a27cf23e5052a92aa211996ee1737f6ad98326403bee74dafb6e
 hist-dense-1024 table phase ea8adff371f8c2d916bde55bed8659941ee6ba9e47762260101225bbe7cc59a6
 hist-dense-1024 table region_control 640db89db42b2d9c9348131134179a37d26ca766e02c77856994e6c64cd1da7f
+hist-dense-1024 table region_name f13ee6ed54ea2aae9fc49a9faeb5da6e8ddef0e12ed5d30d35a624ae813e0485
 hist-dense-1024 table relation cbbd5f990c53684d7ae650b40fcb5656e02261b53da5f6a7d8c819c92f2828f8
-hist-dense-1024 table settlement 788d0f7513c9c26af0ac79b3d3aa03f47d2a622926d602e2ad59b654af65d645
+hist-dense-1024 table settlement d8a320e7751714be324bea173cf7007979da8c474e572ba1bbdb50d899b8e1ac
 hist-dense-1024 table settlement_census 86cd0db549997dcc7c73fd4b9fc3267a242cfe080b723c21e146d0532dafee11
 hist-dense-1024 report end_year = 6000
 hist-dense-1024 report phases_opening = 6
@@ -3098,6 +3122,7 @@ hist-dense-1024 report events_claim_settlements = 0
 hist-dense-1024 report events_settlements_ceded = 0
 hist-dense-1024 report events_claim_dropped = 0
 hist-dense-1024 report events_refuge_hidden = 0
+hist-dense-1024 report events_region_renamed = 0
 hist-dense-1024 report civilizations = 10
 hist-dense-1024 report civilizations_alive = 10
 hist-dense-1024 report settlements = 92
@@ -3105,6 +3130,7 @@ hist-dense-1024 report settlements_standing = 92
 hist-dense-1024 report regions_held = 36
 hist-dense-1024 report census_rows = 932
 hist-dense-1024 report relations = 0
+hist-dense-1024 report region_names = 0
 hist-dense-1024 report population = 277487
 hist-dense-1024 report population_elf = 15960
 hist-dense-1024 report population_goblin = 92287
@@ -3415,7 +3441,7 @@ hist-dense-1024 e285 The plague spread to Shaevi; 122 died.
 hist-dense-1024 e286 The plague spread to Vowia; 33 died.
 hist-dense-1024 e287 Famine struck Lovee; 72 died.
 hist-dense-1024 e288 Plague broke out in Kazz Pit; 190 died.
-hist-dense-1024 e289 The Kingdom of Wurdrom sent settlers from Cald to found Stonford in the Fading Leas.
+hist-dense-1024 e289 The Kingdom of Wurdrom sent settlers from Cald to found Celhoston in the Fading Leas.
 hist-dense-1024 e290 The Kingdom of Wurdrom sent settlers from Hadweadwick to found Dont in the Fettered Wood.
 hist-dense-1024 e291 Plague broke out in Mairin Deep; 195 died.
 hist-dense-1024 e292 Edinton grew into a town of 1,509.
@@ -3442,7 +3468,7 @@ hist-dense-1024 e370 A succession crisis at Slabgnob shook the Zubgeeg Horde.
 hist-dense-1024 e371 Famine struck Grun; 93 died.
 hist-dense-1024 e372 Edinton in the Hurst of Yews grew into a city.
 hist-dense-1024 e373 Plague broke out in Aludford; 3,549 died.
-hist-dense-1024 e374 Stonford in the Fading Leas grew into a city.
+hist-dense-1024 e374 Celhoston in the Fading Leas grew into a city.
 hist-dense-1024 e375 A succession crisis at Thord Deep shook the Hold of Hurktuli.
 hist-dense-1024 e376 Famine struck Zork Pit; 146 died.
 hist-dense-1024 e377 Plague broke out in Elinienn; 116 died.
@@ -3473,7 +3499,7 @@ hist-dense-1024 e401 Plague broke out in Skreezark; 1,438 died.
 hist-dense-1024 e402 Plague broke out in Krizeex Pit; 1,950 died.
 hist-dense-1024 e403 Famine struck Mairin Deep; 251 died.
 hist-dense-1024 e404 Plague broke out in Dont and spread to one other settlement; 2,966 died in all.
-hist-dense-1024 e405 The plague spread to Stonford; 1,932 died.
+hist-dense-1024 e405 The plague spread to Celhoston; 1,932 died.
 hist-dense-1024 e406 Plague broke out in Sliz; 470 died.
 hist-dense-1024 e407 Famine struck Gok-Katch Pit; 96 died.
 hist-dense-1024 e408 Plague broke out in Faess Glade; 425 died.
@@ -3788,15 +3814,16 @@ hist-peoples-42-1024 homes ra6 y5596 n1 8
 hist-peoples-42-1024 table civilization 842895c1aba10d792427f9aeda5495a7589e9c00bb452105843e5088b0513c0b
 hist-peoples-42-1024 table event 08455806e1c6c589197556944582f9f4d5b720a4bb51bebda5a9ca5e7b6f2af5
 hist-peoples-42-1024 table event_cause 655af6e4b1f71b8c9f4d87328e21cedc2cc5eb77242444da8665a38d06ecf4b1
-hist-peoples-42-1024 table event_kind 615787666985921fd60336a60fe2bd50b1e2ca030f8fc210cb00bd7533c3e28f
-hist-peoples-42-1024 table event_kind_role 6704cb83034f0eb6468c7852cf57d78f140acbd41e09bd267e3d34c4a46e1d12
+hist-peoples-42-1024 table event_kind b6bed38c843c9c2f00aa9d8f7b061a2c960fc1205679fc5356827e1b626d37d4
+hist-peoples-42-1024 table event_kind_role eba38df29d59afc2e335f798ba3f5ce666173d5f777741d94f2add5346080411
 hist-peoples-42-1024 table event_kind_value ea3bdaba66965ca348093390b78ac4b2e92807052c93c9bb59822b0c53c0771e
 hist-peoples-42-1024 table event_participant 19557e372284a1989691a9f184c9ae94a3e5ad98dfea8f8d74347bc4b91c96bc
 hist-peoples-42-1024 table event_value 32b24527fbc90c6de36698fbada52a0698b52f7a0611e89147f51294de882ed6
 hist-peoples-42-1024 table phase 48744b4f764dd7f019739d5157c0b2ae730863034d7e8c5d218c6d14190d7747
 hist-peoples-42-1024 table region_control bf858a5b4c43cada7e8d02b5f3d9bb95cc94fc41093d5b97bab5cafc66908dae
+hist-peoples-42-1024 table region_name f13ee6ed54ea2aae9fc49a9faeb5da6e8ddef0e12ed5d30d35a624ae813e0485
 hist-peoples-42-1024 table relation cbbd5f990c53684d7ae650b40fcb5656e02261b53da5f6a7d8c819c92f2828f8
-hist-peoples-42-1024 table settlement 59d4f2d1529de1c088ef5ec69df73726b7ab4081f58eb938348dba5ff7c04b70
+hist-peoples-42-1024 table settlement 5cf6b40e9c8b5dd6b27a79c124bcc5cbe0172701c269b88e6109fc77f7409761
 hist-peoples-42-1024 table settlement_census fd0c60baefa6411f5e760c1ce64ceb8572aad3d8348acc86c111ca30ab4e134b
 hist-peoples-42-1024 report end_year = 6000
 hist-peoples-42-1024 report phases_opening = 6
@@ -3848,6 +3875,7 @@ hist-peoples-42-1024 report events_claim_settlements = 0
 hist-peoples-42-1024 report events_settlements_ceded = 0
 hist-peoples-42-1024 report events_claim_dropped = 0
 hist-peoples-42-1024 report events_refuge_hidden = 0
+hist-peoples-42-1024 report events_region_renamed = 0
 hist-peoples-42-1024 report civilizations = 12
 hist-peoples-42-1024 report civilizations_alive = 12
 hist-peoples-42-1024 report settlements = 94
@@ -3855,6 +3883,7 @@ hist-peoples-42-1024 report settlements_standing = 94
 hist-peoples-42-1024 report regions_held = 31
 hist-peoples-42-1024 report census_rows = 851
 hist-peoples-42-1024 report relations = 0
+hist-peoples-42-1024 report region_names = 0
 hist-peoples-42-1024 report population = 252393
 hist-peoples-42-1024 report population_elf = 14077
 hist-peoples-42-1024 report population_goblin = 72940
@@ -3893,10 +3922,10 @@ hist-peoples-42-1024 e13 Glalivedell grew into a village of 256.
 hist-peoples-42-1024 e14 The House of Finen sent settlers from Voeledell to found Minno in Sprayridge Thicket.
 hist-peoples-42-1024 e15 The House of Finen sent settlers from Voeledell to found Iennmo in Sprayridge Thicket.
 hist-peoples-42-1024 e16 The House of Finen sent settlers from Minno to found Ciennfae in Sprayridge Thicket.
-hist-peoples-42-1024 e17 The House of Finen sent settlers from Minno to found Glathenddell in the Wood of Stags.
+hist-peoples-42-1024 e17 The House of Finen sent settlers from Minno to found Canla in the Wood of Stags.
 hist-peoples-42-1024 e18 The House of Finen sent settlers from Minno to found Rannve in Lichenbank Shaw.
 hist-peoples-42-1024 e19 Ciennfae grew into a village of 265.
-hist-peoples-42-1024 e20 Glathenddell grew into a village of 260.
+hist-peoples-42-1024 e20 Canla grew into a village of 260.
 hist-peoples-42-1024 e21 Rannve grew into a village of 265.
 hist-peoples-42-1024 e22 Krokzit awakened the Goblins in Crookhorn Steppes.
 hist-peoples-42-1024 e23 The Goblins founded the Grork Horde in Crookhorn Steppes.
@@ -3914,7 +3943,7 @@ hist-peoples-42-1024 e34 Beedruzz grew into a town of 2,020.
 hist-peoples-42-1024 e35 The Grork Horde sent settlers from Zugnob Hole to found Niskreerk in Crookhorn Steppes.
 hist-peoples-42-1024 e36 Zork-Skrink Hole grew into a town of 1,683.
 hist-peoples-42-1024 e37 The Grork Horde sent settlers from Snozz-Skink to found Snugg in the Mossgrown Grove.
-hist-peoples-42-1024 e38 Glathenddell grew into a town of 1,559.
+hist-peoples-42-1024 e38 Canla grew into a town of 1,559.
 hist-peoples-42-1024 e39 The Grork Horde sent settlers from Snozz-Skink to found Gruz-Keegg in Swineherd's Oath.
 hist-peoples-42-1024 e40 Niskreerk grew into a town of 1,768.
 hist-peoples-42-1024 e41 The Grork Horde sent settlers from Snozz-Skink to found Groz in Larklow.
@@ -3980,7 +4009,7 @@ hist-peoples-42-1024 e100 The plague spread to Minno; 40 died.
 hist-peoples-42-1024 e101 For 851 years, from 3392 to 4242, the land was quiet, and five realms kept the peace.
 hist-peoples-42-1024 e102 Grirnbra grew into a town of 1,604.
 hist-peoples-42-1024 e103 Grirnbra in Boarhurst grew into a city.
-hist-peoples-42-1024 e104 The House of Finen sent settlers from Glathenddell to found Allaenndell in the Wood of Stags.
+hist-peoples-42-1024 e104 The House of Finen sent settlers from Canla to found Allaenndell in the Wood of Stags.
 hist-peoples-42-1024 e105 The Narinthri Throne sent settlers from Kholikhu to found Haidbram Hold in the Heights of Wyrms.
 hist-peoples-42-1024 e106 The Narinthri Throne sent settlers from Kholikhu to found Drand in the Heights of Wyrms.
 hist-peoples-42-1024 e107 Syfiash awakened the Faeries in Floodhurst.
@@ -3988,7 +4017,7 @@ hist-peoples-42-1024 e108 The Faeries founded the Flouo Ring in Floodhurst.
 hist-peoples-42-1024 e109 The Flouo Ring founded Matia Glade in Floodhurst.
 hist-peoples-42-1024 e110 The House of Finen sent settlers from Rannve to found Elalcie in Lichenbank Shaw.
 hist-peoples-42-1024 e111 The House of Finen sent settlers from Rannve to found Lienond in Lichenbank Shaw.
-hist-peoples-42-1024 e112 Plague broke out in Glathenddell; 869 died.
+hist-peoples-42-1024 e112 Plague broke out in Canla; 869 died.
 hist-peoples-42-1024 e113 Plague broke out in Gnark-Guk and spread to two other settlements; 823 died in all.
 hist-peoples-42-1024 e114 The plague spread to Niskreerk; 227 died.
 hist-peoples-42-1024 e115 The plague spread to Groz; 99 died.
@@ -4032,7 +4061,7 @@ hist-peoples-42-1024 e152 The Humans founded the Duchy of Dant in Warlord's Rise
 hist-peoples-42-1024 e153 The Duchy of Dant founded Bildheldham in Warlord's Rises.
 hist-peoples-42-1024 e154 Plague broke out in Zork-Skrink Hole; 246 died.
 hist-peoples-42-1024 e155 Famine struck Snozz-Skink; 131 died.
-hist-peoples-42-1024 e156 The House of Finen sent settlers from Glathenddell to found Ithithe in the Wood of Stags.
+hist-peoples-42-1024 e156 The House of Finen sent settlers from Canla to found Ithithe in the Wood of Stags.
 hist-peoples-42-1024 e157 Famine struck Saelo; 25 died.
 hist-peoples-42-1024 e158 Famine struck Gruz-Keegg; 277 died.
 hist-peoples-42-1024 e159 Plague broke out in Elalcie and spread to one other settlement; 356 died in all.
@@ -4042,7 +4071,7 @@ hist-peoples-42-1024 e162 Weakened by plague, Gruz-Keegg dwindled to 1,046 souls
 hist-peoples-42-1024 e163 Plague broke out in Keeskeegg Hole and spread to two other settlements; 872 died in all.
 hist-peoples-42-1024 e164 The plague spread to Snugg; 214 died.
 hist-peoples-42-1024 e165 The plague spread to Druk; 247 died.
-hist-peoples-42-1024 e166 The House of Finen sent settlers from Glathenddell to found Ensaerdell in the Wood of Stags.
+hist-peoples-42-1024 e166 The House of Finen sent settlers from Canla to found Ensaerdell in the Wood of Stags.
 hist-peoples-42-1024 e167 Famine struck Nok Hole; 336 died.
 hist-peoples-42-1024 e168 Plague broke out in Gnark-Guk; 413 died.
 hist-peoples-42-1024 e169 Famine struck Ciennfae; 111 died.
@@ -4062,7 +4091,7 @@ hist-peoples-42-1024 e182 Famine struck Beedrux Pit; 346 died.
 hist-peoples-42-1024 e183 Famine struck Didtarn Deep; 146 died.
 hist-peoples-42-1024 e184 Plague broke out in Ciennfae and spread to two other settlements; 504 died in all.
 hist-peoples-42-1024 e185 The plague spread to Voeledell; 131 died.
-hist-peoples-42-1024 e186 The plague spread to Glathenddell; 216 died.
+hist-peoples-42-1024 e186 The plague spread to Canla; 216 died.
 hist-peoples-42-1024 e187 For 477 years, from 5119 to 5595, the land was quiet, and 10 realms kept the peace.
 hist-peoples-42-1024 e188 Gruz-Keegg grew into a town of 1,508.
 hist-peoples-42-1024 e189 The Zak-Neez Mob sent settlers from Nank Pit to found Drizz in Otterford Rises.
@@ -4118,7 +4147,7 @@ hist-peoples-42-1024 e238 Weckdeackham grew into a town of 1,790.
 hist-peoples-42-1024 e239 The Duchy of Brel sent settlers from Stuckham to found Alorwick in Bellringer's Plain.
 hist-peoples-42-1024 e240 Weakened by emigration, Stuckham dwindled to 4,873 souls.
 hist-peoples-42-1024 e241 Hudrorstead in Witchgate Barrows grew into a city.
-hist-peoples-42-1024 e242 The Duchy of Brel sent settlers from Stuckham to found Seasstead in Bellringer's Plain.
+hist-peoples-42-1024 e242 The Duchy of Brel sent settlers from Stuckham to found Staswick in Bellringer's Plain.
 hist-peoples-42-1024 e243 Ogh'krak awakened the Orcs in Miller's Rises.
 hist-peoples-42-1024 e244 The Orcs founded the Ghuughzuz Horde in Miller's Rises.
 hist-peoples-42-1024 e245 The Ghuughzuz Horde founded Aa'azuugh Fort in Miller's Rises.
@@ -4159,7 +4188,7 @@ hist-peoples-42-1024 e279 Plague broke out in Skrunk Pit and spread to three oth
 hist-peoples-42-1024 e280 The plague spread to Snozz-Skink; 110 died.
 hist-peoples-42-1024 e281 The plague spread to Drirk Pit; 306 died.
 hist-peoples-42-1024 e282 The plague spread to Skizz-Grork Hole; 59 died.
-hist-peoples-42-1024 e283 Seasstead grew into a town of 1,505.
+hist-peoples-42-1024 e283 Staswick grew into a town of 1,505.
 hist-peoples-42-1024 e284 Plague broke out in Grak-Kutch; 199 died.
 hist-peoples-42-1024 e285 Famine struck Solwilham; 319 died.
 hist-peoples-42-1024 e286 Plague broke out in Bildheldham; 1,422 died.
@@ -4388,13 +4417,14 @@ syn-0 homes ra6 y1844 n1 25
 syn-0 table civilization 06770ade07fe312621f23a1c38f776ae3e6e04a5bfaa942c44201cbbf1c55107
 syn-0 table event 6c3d16e6ec4c9b3bf4e832712c89b15618d5d158e8b335747179183cb5be91e2
 syn-0 table event_cause d3407349e390d8610a116713d46b73a6111a45f0c19931d17c1b731586cd0bec
-syn-0 table event_kind 615787666985921fd60336a60fe2bd50b1e2ca030f8fc210cb00bd7533c3e28f
-syn-0 table event_kind_role 6704cb83034f0eb6468c7852cf57d78f140acbd41e09bd267e3d34c4a46e1d12
+syn-0 table event_kind b6bed38c843c9c2f00aa9d8f7b061a2c960fc1205679fc5356827e1b626d37d4
+syn-0 table event_kind_role eba38df29d59afc2e335f798ba3f5ce666173d5f777741d94f2add5346080411
 syn-0 table event_kind_value ea3bdaba66965ca348093390b78ac4b2e92807052c93c9bb59822b0c53c0771e
 syn-0 table event_participant cf58adca1e525985ea333d89ec2d144a017b33b941ff7ca00b21fe31484cf559
 syn-0 table event_value 3c6ae60ceef1de6e53fe4b48daa371c4ac97fc985eb3e7c8a2e360bdf9dc6eda
 syn-0 table phase 5266432c9b45ae903d168d16da655a96ef309ff47725e399d5ac1fc7e6db4f09
 syn-0 table region_control b462890f6c15fd6190deb12f9348edd873325229ced3df2a75db322eab75ee97
+syn-0 table region_name f13ee6ed54ea2aae9fc49a9faeb5da6e8ddef0e12ed5d30d35a624ae813e0485
 syn-0 table relation cbbd5f990c53684d7ae650b40fcb5656e02261b53da5f6a7d8c819c92f2828f8
 syn-0 table settlement 1c6ae65fc8c8c12474be98e2a02610d39a0700c31c00b41a89f9b9f0285fd53c
 syn-0 table settlement_census 3abc3921e24e058276bb507680161a63f0fa0dcdee5632c1021733c68ab4b729
@@ -4448,6 +4478,7 @@ syn-0 report events_claim_settlements = 0
 syn-0 report events_settlements_ceded = 0
 syn-0 report events_claim_dropped = 0
 syn-0 report events_refuge_hidden = 0
+syn-0 report events_region_renamed = 0
 syn-0 report civilizations = 6
 syn-0 report civilizations_alive = 6
 syn-0 report settlements = 15
@@ -4455,6 +4486,7 @@ syn-0 report settlements_standing = 15
 syn-0 report regions_held = 8
 syn-0 report census_rows = 75
 syn-0 report relations = 0
+syn-0 report region_names = 0
 syn-0 report population = 9634
 syn-0 report population_elf = 422
 syn-0 report population_goblin = 2755
@@ -4536,13 +4568,14 @@ syn-1 homes ra1 y0 n1 1
 syn-1 table civilization 4446eb5ac0b26614d404d5e31b920d0f6873638f361eda3c44eaacbf30ff172c
 syn-1 table event 3f1ca9ff4d1748b520637155b5e860ce57f9f2cacf5ed26d7e8d13dc84020029
 syn-1 table event_cause ed79cd863bb68d57c722efe5869aa5301f7ec367e614f300d084dded58718653
-syn-1 table event_kind 615787666985921fd60336a60fe2bd50b1e2ca030f8fc210cb00bd7533c3e28f
-syn-1 table event_kind_role 6704cb83034f0eb6468c7852cf57d78f140acbd41e09bd267e3d34c4a46e1d12
+syn-1 table event_kind b6bed38c843c9c2f00aa9d8f7b061a2c960fc1205679fc5356827e1b626d37d4
+syn-1 table event_kind_role eba38df29d59afc2e335f798ba3f5ce666173d5f777741d94f2add5346080411
 syn-1 table event_kind_value ea3bdaba66965ca348093390b78ac4b2e92807052c93c9bb59822b0c53c0771e
 syn-1 table event_participant 7b1d9f87b7853dd6b517a343b158658acb36a4d5813bc5b4d7f9bb7a443e80a2
 syn-1 table event_value 7627542ff40ea8d794c9495625d2097bfd33c6fe75f946e885dadf0f0c9fa2ed
 syn-1 table phase 90795a24abc4f0fb42bfe3503793797ff687a273caac3d6f96049fe9b4acbc18
 syn-1 table region_control ec0b831092b3d7ae22bba3fdbc5946d45d26360726ab4aa7fc36594b63794052
+syn-1 table region_name f13ee6ed54ea2aae9fc49a9faeb5da6e8ddef0e12ed5d30d35a624ae813e0485
 syn-1 table relation cbbd5f990c53684d7ae650b40fcb5656e02261b53da5f6a7d8c819c92f2828f8
 syn-1 table settlement 55624bafdc20f0ce5706ae015874aeae7ba03b5a5504e9c45cccff0ab4262e79
 syn-1 table settlement_census 34f1ae24629786e224784e3b1d09ebaf62edc9f2c660bff225c4ec2c986409ec
@@ -4596,6 +4629,7 @@ syn-1 report events_claim_settlements = 0
 syn-1 report events_settlements_ceded = 0
 syn-1 report events_claim_dropped = 0
 syn-1 report events_refuge_hidden = 0
+syn-1 report events_region_renamed = 0
 syn-1 report civilizations = 1
 syn-1 report civilizations_alive = 1
 syn-1 report settlements = 4
@@ -4603,6 +4637,7 @@ syn-1 report settlements_standing = 4
 syn-1 report regions_held = 1
 syn-1 report census_rows = 21
 syn-1 report relations = 0
+syn-1 report region_names = 0
 syn-1 report population = 8887
 syn-1 report population_elf = 8887
 syn-1 report population_goblin = 0
@@ -4696,13 +4731,14 @@ syn-2 homes ra4 y1390 n1 6
 syn-2 table civilization 46e6b57125e617ba1f8d7801446d294b44f0ccec7acf3985b611acaa243c43da
 syn-2 table event ec8b1f001595267635c0dfbc3f2ce17eaa72d6c7affc029b022bbfb95db20cf7
 syn-2 table event_cause 68d2e0e0ad96c771f760ec023981cc4b7ef5385530f9ca0b29e063fb37286511
-syn-2 table event_kind 615787666985921fd60336a60fe2bd50b1e2ca030f8fc210cb00bd7533c3e28f
-syn-2 table event_kind_role 6704cb83034f0eb6468c7852cf57d78f140acbd41e09bd267e3d34c4a46e1d12
+syn-2 table event_kind b6bed38c843c9c2f00aa9d8f7b061a2c960fc1205679fc5356827e1b626d37d4
+syn-2 table event_kind_role eba38df29d59afc2e335f798ba3f5ce666173d5f777741d94f2add5346080411
 syn-2 table event_kind_value ea3bdaba66965ca348093390b78ac4b2e92807052c93c9bb59822b0c53c0771e
 syn-2 table event_participant b8cfeaa8bf2b31b9244a92ac3608185310ac336f629c02061af71ffc4886d63b
 syn-2 table event_value f3b7c56f15b81714e6cc4d1edb31d0029ffe1d6f493767cfcef05e2376bf7f81
 syn-2 table phase 9445d660875a92c29b2944d82ad1e363bd575b179222c2a403ce6167c35c681b
 syn-2 table region_control f83f5cbc0ca9cd52533672ca7a5ddae94ff7e9a8ace33c9ae05dfb64be557162
+syn-2 table region_name f13ee6ed54ea2aae9fc49a9faeb5da6e8ddef0e12ed5d30d35a624ae813e0485
 syn-2 table relation cbbd5f990c53684d7ae650b40fcb5656e02261b53da5f6a7d8c819c92f2828f8
 syn-2 table settlement c6477f6268bc362c2fa2e20af85d43ad62f7b75ba3e93150cb6d2355286f23f2
 syn-2 table settlement_census 1092469dfc0de2d171c869501e043b0463d69af2f31169281bee941b9e8bc236
@@ -4756,6 +4792,7 @@ syn-2 report events_claim_settlements = 0
 syn-2 report events_settlements_ceded = 0
 syn-2 report events_claim_dropped = 0
 syn-2 report events_refuge_hidden = 0
+syn-2 report events_region_renamed = 0
 syn-2 report civilizations = 2
 syn-2 report civilizations_alive = 2
 syn-2 report settlements = 5
@@ -4763,6 +4800,7 @@ syn-2 report settlements_standing = 5
 syn-2 report regions_held = 2
 syn-2 report census_rows = 15
 syn-2 report relations = 0
+syn-2 report region_names = 0
 syn-2 report population = 7086
 syn-2 report population_elf = 0
 syn-2 report population_goblin = 0
@@ -4953,13 +4991,14 @@ syn-3 homes ra6 y5602 n1 12
 syn-3 table civilization f578f9200f461cc08f6109a5be3bab526aca520344fa8a622538b20091eb5e32
 syn-3 table event 7d04c212f7e8c856a8122a576bb0f65d7124afc3ae70564cbabef048cde7f1a9
 syn-3 table event_cause ffa019d51d4a44122ee5c0b57af4f194a16389c69c88e822f989014305377650
-syn-3 table event_kind 615787666985921fd60336a60fe2bd50b1e2ca030f8fc210cb00bd7533c3e28f
-syn-3 table event_kind_role 6704cb83034f0eb6468c7852cf57d78f140acbd41e09bd267e3d34c4a46e1d12
+syn-3 table event_kind b6bed38c843c9c2f00aa9d8f7b061a2c960fc1205679fc5356827e1b626d37d4
+syn-3 table event_kind_role eba38df29d59afc2e335f798ba3f5ce666173d5f777741d94f2add5346080411
 syn-3 table event_kind_value ea3bdaba66965ca348093390b78ac4b2e92807052c93c9bb59822b0c53c0771e
 syn-3 table event_participant 1ad5ee163b3c582313bd6997bd8ace6fe8f7c012551f026857a0e8291af6331e
 syn-3 table event_value 74c1c42db56a897c8569cc4500909aa62f0a34294efce667f8dc30be7eb64fa8
 syn-3 table phase ecea4853ea873d3a1868b9116f70cbcb91f4a7f853fdd0836bb85edbfcff585a
 syn-3 table region_control c08619fd197d7c5a39c2816125f25316400284721b28930540f53a713cdff9b5
+syn-3 table region_name f13ee6ed54ea2aae9fc49a9faeb5da6e8ddef0e12ed5d30d35a624ae813e0485
 syn-3 table relation cbbd5f990c53684d7ae650b40fcb5656e02261b53da5f6a7d8c819c92f2828f8
 syn-3 table settlement fe74a3e2eeab11ca1df56f4c8802dce39dc0849a9d12bbc7939cb0afe8313af3
 syn-3 table settlement_census 6f55bb442b0b7bb2c04bd464972566c3c82ae4f5876bd5ea7b7378694d7207cf
@@ -5013,6 +5052,7 @@ syn-3 report events_claim_settlements = 0
 syn-3 report events_settlements_ceded = 0
 syn-3 report events_claim_dropped = 0
 syn-3 report events_refuge_hidden = 0
+syn-3 report events_region_renamed = 0
 syn-3 report civilizations = 3
 syn-3 report civilizations_alive = 3
 syn-3 report settlements = 9
@@ -5020,6 +5060,7 @@ syn-3 report settlements_standing = 9
 syn-3 report regions_held = 4
 syn-3 report census_rows = 54
 syn-3 report relations = 0
+syn-3 report region_names = 0
 syn-3 report population = 7826
 syn-3 report population_elf = 0
 syn-3 report population_goblin = 1788
@@ -5382,13 +5423,14 @@ syn-4 homes ra6 y1880 n4 44
 syn-4 table civilization 9ead1bed197d94db38a678b85b2c0b4a6c5cc7e2a559928dfd6c1140d7c524c0
 syn-4 table event 6e21f9a292f865ef2a1a1e9876c214ed1708670ad91de258a58d2a17663a32e1
 syn-4 table event_cause 9787464610dabab6bb131ce800c16aa556283fba90c5e08c20614de791c480ef
-syn-4 table event_kind 615787666985921fd60336a60fe2bd50b1e2ca030f8fc210cb00bd7533c3e28f
-syn-4 table event_kind_role 6704cb83034f0eb6468c7852cf57d78f140acbd41e09bd267e3d34c4a46e1d12
+syn-4 table event_kind b6bed38c843c9c2f00aa9d8f7b061a2c960fc1205679fc5356827e1b626d37d4
+syn-4 table event_kind_role eba38df29d59afc2e335f798ba3f5ce666173d5f777741d94f2add5346080411
 syn-4 table event_kind_value ea3bdaba66965ca348093390b78ac4b2e92807052c93c9bb59822b0c53c0771e
 syn-4 table event_participant ffb67ea56dec75e969f1f49feb14c4a214e26d95475edd342b8a84a4fe86d715
 syn-4 table event_value abe2bfced6a415459fb17a420ca0514364469d5de4973bc5560a69c14e85387d
 syn-4 table phase 6a4e7c4f7ed9c2ac22c9d5a22c9176e80db19a83eb2a166c00c6e0e4fcfa6fb7
 syn-4 table region_control e59f6b4711fa38f982939c25cc6e4507b3d4458b5bdaf1c5231f07d59cb3877d
+syn-4 table region_name f13ee6ed54ea2aae9fc49a9faeb5da6e8ddef0e12ed5d30d35a624ae813e0485
 syn-4 table relation cbbd5f990c53684d7ae650b40fcb5656e02261b53da5f6a7d8c819c92f2828f8
 syn-4 table settlement a2edbaf08d69ed0025511fd02f1cdd40dfebfc7a73fb27825fec5117938b0f54
 syn-4 table settlement_census 6fa1f9736d9f90c046bb13ff1de060a8d68f9c3da82933b6c12a51dfce462139
@@ -5442,6 +5484,7 @@ syn-4 report events_claim_settlements = 0
 syn-4 report events_settlements_ceded = 0
 syn-4 report events_claim_dropped = 0
 syn-4 report events_refuge_hidden = 0
+syn-4 report events_region_renamed = 0
 syn-4 report civilizations = 6
 syn-4 report civilizations_alive = 6
 syn-4 report settlements = 8
@@ -5449,6 +5492,7 @@ syn-4 report settlements_standing = 7
 syn-4 report regions_held = 3
 syn-4 report census_rows = 40
 syn-4 report relations = 0
+syn-4 report region_names = 0
 syn-4 report population = 1795
 syn-4 report population_elf = 285
 syn-4 report population_goblin = 144
@@ -5614,13 +5658,14 @@ syn-5 homes ra1 y0 n4 6
 syn-5 table civilization 16a88ae8d82d2d228ca13f163b39992ef653cb8c626861478e0be64f0865b3c5
 syn-5 table event 13f4b21507f95204410f1e76a0071761e4f5b04ba8ae6d23cdf48aee894a8e44
 syn-5 table event_cause 30ce76f41019e620fbad00d06d3a13d4d6b915938fbf249f141bc7ce4656f5b4
-syn-5 table event_kind 615787666985921fd60336a60fe2bd50b1e2ca030f8fc210cb00bd7533c3e28f
-syn-5 table event_kind_role 6704cb83034f0eb6468c7852cf57d78f140acbd41e09bd267e3d34c4a46e1d12
+syn-5 table event_kind b6bed38c843c9c2f00aa9d8f7b061a2c960fc1205679fc5356827e1b626d37d4
+syn-5 table event_kind_role eba38df29d59afc2e335f798ba3f5ce666173d5f777741d94f2add5346080411
 syn-5 table event_kind_value ea3bdaba66965ca348093390b78ac4b2e92807052c93c9bb59822b0c53c0771e
 syn-5 table event_participant 40f9317fe60d8acb789c3669bd62ff096a8b099bf8ce111eb18a67ac0af61921
 syn-5 table event_value cfa6e70a00e713bb5112254b25368c82b46809cca72e73c43d7e97ec0bb41651
 syn-5 table phase 90795a24abc4f0fb42bfe3503793797ff687a273caac3d6f96049fe9b4acbc18
 syn-5 table region_control 97fcfd3b3ae2ce21918235f6f0b4c64ca05ce4d171798a29845ff1df5f36bff3
+syn-5 table region_name f13ee6ed54ea2aae9fc49a9faeb5da6e8ddef0e12ed5d30d35a624ae813e0485
 syn-5 table relation cbbd5f990c53684d7ae650b40fcb5656e02261b53da5f6a7d8c819c92f2828f8
 syn-5 table settlement 80a6a365e911eaea7c3187cb4d634058c1ae12c253584a1167ca559b27b0669f
 syn-5 table settlement_census 229af6a84119bad16cb5e6fc3bc048f93289b4ded066de492d6229bff7b50168
@@ -5674,6 +5719,7 @@ syn-5 report events_claim_settlements = 0
 syn-5 report events_settlements_ceded = 0
 syn-5 report events_claim_dropped = 0
 syn-5 report events_refuge_hidden = 0
+syn-5 report events_region_renamed = 0
 syn-5 report civilizations = 1
 syn-5 report civilizations_alive = 1
 syn-5 report settlements = 4
@@ -5681,6 +5727,7 @@ syn-5 report settlements_standing = 4
 syn-5 report regions_held = 2
 syn-5 report census_rows = 13
 syn-5 report relations = 0
+syn-5 report region_names = 0
 syn-5 report population = 1284
 syn-5 report population_elf = 1284
 syn-5 report population_goblin = 0
@@ -5862,13 +5909,14 @@ syn-6 homes ra4 y1407 n1 14
 syn-6 table civilization b44387a6eca1e21e3243d14dab7a151dbcaff53a5fdd7f2dff41ec1685ac8400
 syn-6 table event 22a382d407b446bd133da59ed1171d757fd7540999a24fd52dbd71d5ebcb9efb
 syn-6 table event_cause 5f9c88af44f8d31f2a0cea12f1b20fffa69582fc0ec786cd89ae723bfac73a44
-syn-6 table event_kind 615787666985921fd60336a60fe2bd50b1e2ca030f8fc210cb00bd7533c3e28f
-syn-6 table event_kind_role 6704cb83034f0eb6468c7852cf57d78f140acbd41e09bd267e3d34c4a46e1d12
+syn-6 table event_kind b6bed38c843c9c2f00aa9d8f7b061a2c960fc1205679fc5356827e1b626d37d4
+syn-6 table event_kind_role eba38df29d59afc2e335f798ba3f5ce666173d5f777741d94f2add5346080411
 syn-6 table event_kind_value ea3bdaba66965ca348093390b78ac4b2e92807052c93c9bb59822b0c53c0771e
 syn-6 table event_participant 296c79d43da59b0ee5ab646533a866a34c73dcf67c3baa2941568cacb0a366c9
 syn-6 table event_value b92ec2a2ac117fe8b94d1fb511a323939be8f16696d0601641e0d3a1968a6a04
 syn-6 table phase 1a9a6e1adec457bffd7ed1ae2d32255794a1237b82d8fe55533a1f2483f18637
 syn-6 table region_control 7593d5b53deced8da70c6e7b03a2da67dd9c99ad931a45dfde94e80a796472a9
+syn-6 table region_name f13ee6ed54ea2aae9fc49a9faeb5da6e8ddef0e12ed5d30d35a624ae813e0485
 syn-6 table relation cbbd5f990c53684d7ae650b40fcb5656e02261b53da5f6a7d8c819c92f2828f8
 syn-6 table settlement f6167adabf823aa2933b120cf8ac7230f532c0eb447f756ff566ba2b10d13878
 syn-6 table settlement_census bff319178f1b4c3897f7d4f7625c9ffd67520e93511c6ec2a2bef5fe2e7e9444
@@ -5922,6 +5970,7 @@ syn-6 report events_claim_settlements = 0
 syn-6 report events_settlements_ceded = 0
 syn-6 report events_claim_dropped = 0
 syn-6 report events_refuge_hidden = 0
+syn-6 report events_region_renamed = 0
 syn-6 report civilizations = 3
 syn-6 report civilizations_alive = 3
 syn-6 report settlements = 6
@@ -5929,6 +5978,7 @@ syn-6 report settlements_standing = 6
 syn-6 report regions_held = 3
 syn-6 report census_rows = 29
 syn-6 report relations = 0
+syn-6 report region_names = 0
 syn-6 report population = 3299
 syn-6 report population_elf = 0
 syn-6 report population_goblin = 0
@@ -6073,13 +6123,14 @@ syn-7 homes ra6 y5637 n1 15
 syn-7 table civilization d84867e9075ada16f39281e5d8c8385dcf9f4954f1c13f0c3a4345c46906503c
 syn-7 table event cd0a812fc02601833d4c8de9d710ebc9082d9b0ede36cf28ffdf636b7b88bc6a
 syn-7 table event_cause 66502faad155e978277b5843b61483f382155e06f09ea6a7178a6abd9b26532c
-syn-7 table event_kind 615787666985921fd60336a60fe2bd50b1e2ca030f8fc210cb00bd7533c3e28f
-syn-7 table event_kind_role 6704cb83034f0eb6468c7852cf57d78f140acbd41e09bd267e3d34c4a46e1d12
+syn-7 table event_kind b6bed38c843c9c2f00aa9d8f7b061a2c960fc1205679fc5356827e1b626d37d4
+syn-7 table event_kind_role eba38df29d59afc2e335f798ba3f5ce666173d5f777741d94f2add5346080411
 syn-7 table event_kind_value ea3bdaba66965ca348093390b78ac4b2e92807052c93c9bb59822b0c53c0771e
 syn-7 table event_participant 3daab0b6524cb7c88a1e9d7983c8bd643ae9fe9853841d048e12f2e50da81409
 syn-7 table event_value 791d77aeaafccdc3195e2ba69f8916dea61f83172b22ab68d02219069b08c9fa
 syn-7 table phase 24b116cae1e320b0f3569fb14f7926647d354dd56428d1de441d7562c92db4e3
 syn-7 table region_control 390c5686c1ca70d28ca13496bb047bdf40ec966a90aa42b9414772bdabba444a
+syn-7 table region_name f13ee6ed54ea2aae9fc49a9faeb5da6e8ddef0e12ed5d30d35a624ae813e0485
 syn-7 table relation cbbd5f990c53684d7ae650b40fcb5656e02261b53da5f6a7d8c819c92f2828f8
 syn-7 table settlement 129c22ddbf5b59042b7dd47a3db2069c7385129f3190f8c1671b0e995cd8de4a
 syn-7 table settlement_census ba99caef221f9139604be1d7db5c892cdfaca06904df8fa397d46fcf470695ef
@@ -6133,6 +6184,7 @@ syn-7 report events_claim_settlements = 0
 syn-7 report events_settlements_ceded = 0
 syn-7 report events_claim_dropped = 0
 syn-7 report events_refuge_hidden = 0
+syn-7 report events_region_renamed = 0
 syn-7 report civilizations = 4
 syn-7 report civilizations_alive = 4
 syn-7 report settlements = 19
@@ -6140,6 +6192,7 @@ syn-7 report settlements_standing = 19
 syn-7 report regions_held = 9
 syn-7 report census_rows = 174
 syn-7 report relations = 0
+syn-7 report region_names = 0
 syn-7 report population = 20581
 syn-7 report population_elf = 0
 syn-7 report population_goblin = 9075
@@ -6296,15 +6349,16 @@ syn-8 homes ra6 y1842 n1 3
 syn-8 table civilization 4913d83d3ce3d553e76f3cec7b07f267a9d99a5ffa87841c0efff3a9df59e1f7
 syn-8 table event afeae5f8826fd0d9c953922cf5e02af664d3048dd1d07fdad41529188f61b3ce
 syn-8 table event_cause 68e17aee1336408edcd6bae4e2739987d9a5e2935c833614bb13d464f799c6fa
-syn-8 table event_kind 615787666985921fd60336a60fe2bd50b1e2ca030f8fc210cb00bd7533c3e28f
-syn-8 table event_kind_role 6704cb83034f0eb6468c7852cf57d78f140acbd41e09bd267e3d34c4a46e1d12
+syn-8 table event_kind b6bed38c843c9c2f00aa9d8f7b061a2c960fc1205679fc5356827e1b626d37d4
+syn-8 table event_kind_role eba38df29d59afc2e335f798ba3f5ce666173d5f777741d94f2add5346080411
 syn-8 table event_kind_value ea3bdaba66965ca348093390b78ac4b2e92807052c93c9bb59822b0c53c0771e
 syn-8 table event_participant b9941ee8780f3e314e5daa4782431f32ea403b5855a706e84cc4260299022f27
 syn-8 table event_value 6427edbdf1d242c9e8253f16b87f46bfe90481a0ab918d1c6863740450882a4b
 syn-8 table phase 85f2f9ed4e921c56ff68d0687dd8602ade4d61d693b26f33c13fdf1f396a4536
 syn-8 table region_control 303dab7d389a1ff5b9ad868c6471b9ff0a16d3fc9135b648e1f2c41f6d93b6ab
+syn-8 table region_name f13ee6ed54ea2aae9fc49a9faeb5da6e8ddef0e12ed5d30d35a624ae813e0485
 syn-8 table relation cbbd5f990c53684d7ae650b40fcb5656e02261b53da5f6a7d8c819c92f2828f8
-syn-8 table settlement 46cda6f8551b48a5434306832749f1e50abf6b5bf53110b15c2e626f872f05f5
+syn-8 table settlement 393a3ca2bd1ef3407afb09f4aa29c8a1e901bd670fc61cd549b4cfa1be381168
 syn-8 table settlement_census f683673675ca1d1383226c1b283621ab8ea5a9c510053d0892b8c4d8db2d0749
 syn-8 report end_year = 2000
 syn-8 report phases_opening = 6
@@ -6356,6 +6410,7 @@ syn-8 report events_claim_settlements = 0
 syn-8 report events_settlements_ceded = 0
 syn-8 report events_claim_dropped = 0
 syn-8 report events_refuge_hidden = 0
+syn-8 report events_region_renamed = 0
 syn-8 report civilizations = 6
 syn-8 report civilizations_alive = 6
 syn-8 report settlements = 20
@@ -6363,6 +6418,7 @@ syn-8 report settlements_standing = 20
 syn-8 report regions_held = 6
 syn-8 report census_rows = 199
 syn-8 report relations = 0
+syn-8 report region_names = 0
 syn-8 report population = 20914
 syn-8 report population_elf = 1420
 syn-8 report population_goblin = 9720
@@ -6437,7 +6493,7 @@ syn-8 e49 Plague broke out in Fierelodell and spread to one other settlement; 19
 syn-8 e50 The plague spread to Macaemi; 31 died.
 syn-8 e51 Plague broke out in Fietwash; 146 died.
 syn-8 e52 For 130 years, from 1712 to 1841, the land was quiet, and five realms kept the peace.
-syn-8 e53 The Kingdom of Meas sent settlers from Staston to found Stonford in Synthetic 6.
+syn-8 e53 The Kingdom of Meas sent settlers from Staston to found Wedceckham in Synthetic 6.
 syn-8 e54 Uush'muum awakened the Orcs in Synthetic 3.
 syn-8 e55 The Orcs founded the Warband of Durzkaz in Synthetic 3.
 syn-8 e56 The Warband of Durzkaz founded Shakugol Fort in Synthetic 3.
@@ -6712,13 +6768,14 @@ syn-9 homes ra1 y0 n1 17
 syn-9 table civilization 7bc68118557e4402e4b7dc9f18b873382cddedcdc377a3b4b2f981b3c27318b7
 syn-9 table event f428940112bdc3b6fe5f74c2bd73427ff223510720dc16b77a07f37efa751c23
 syn-9 table event_cause 90bb939533bf9ed46996d6f2190346c6ca7ef8dfc09caf11b381af6b7130c07f
-syn-9 table event_kind 615787666985921fd60336a60fe2bd50b1e2ca030f8fc210cb00bd7533c3e28f
-syn-9 table event_kind_role 6704cb83034f0eb6468c7852cf57d78f140acbd41e09bd267e3d34c4a46e1d12
+syn-9 table event_kind b6bed38c843c9c2f00aa9d8f7b061a2c960fc1205679fc5356827e1b626d37d4
+syn-9 table event_kind_role eba38df29d59afc2e335f798ba3f5ce666173d5f777741d94f2add5346080411
 syn-9 table event_kind_value ea3bdaba66965ca348093390b78ac4b2e92807052c93c9bb59822b0c53c0771e
 syn-9 table event_participant 3b922b3dfef251793066db2420c4cd653ada5aeedcad7dad280141348544daf9
 syn-9 table event_value 032e239e9bed96e03c2eb5fe5e350008ab848a78322e5bd0027c81356c5dffa1
 syn-9 table phase 90795a24abc4f0fb42bfe3503793797ff687a273caac3d6f96049fe9b4acbc18
 syn-9 table region_control 044e6fdafd64bd5178911b4ca4de11450edb8c860512019bfab9adee9b67bb2d
+syn-9 table region_name f13ee6ed54ea2aae9fc49a9faeb5da6e8ddef0e12ed5d30d35a624ae813e0485
 syn-9 table relation cbbd5f990c53684d7ae650b40fcb5656e02261b53da5f6a7d8c819c92f2828f8
 syn-9 table settlement aaed82db82578299758694067769c7c340131c0d8d8d6eda438233dda11d9c9b
 syn-9 table settlement_census 61251e9c476f73edc737172d0a6d4a613f2d154b97b78ca9b6d6502a25a97e28
@@ -6772,6 +6829,7 @@ syn-9 report events_claim_settlements = 0
 syn-9 report events_settlements_ceded = 0
 syn-9 report events_claim_dropped = 0
 syn-9 report events_refuge_hidden = 0
+syn-9 report events_region_renamed = 0
 syn-9 report civilizations = 1
 syn-9 report civilizations_alive = 1
 syn-9 report settlements = 2
@@ -6779,6 +6837,7 @@ syn-9 report settlements_standing = 2
 syn-9 report regions_held = 1
 syn-9 report census_rows = 10
 syn-9 report relations = 0
+syn-9 report region_names = 0
 syn-9 report population = 624
 syn-9 report population_elf = 624
 syn-9 report population_goblin = 0
@@ -6838,13 +6897,14 @@ syn-10 homes ra4 y1397 n4 4
 syn-10 table civilization 1fd9da290aa4556a7afa16114c0d9be43201478a05092c5e7fec2971ce889d9d
 syn-10 table event 064b9d1fd69fe905d87f68a627021e1b46e1883495a764a2897260ddd08a3c1c
 syn-10 table event_cause d4079b47731bbfb8ea415e686ba41753bb2a7bc96ecfb10db2dbf985f38be50e
-syn-10 table event_kind 615787666985921fd60336a60fe2bd50b1e2ca030f8fc210cb00bd7533c3e28f
-syn-10 table event_kind_role 6704cb83034f0eb6468c7852cf57d78f140acbd41e09bd267e3d34c4a46e1d12
+syn-10 table event_kind b6bed38c843c9c2f00aa9d8f7b061a2c960fc1205679fc5356827e1b626d37d4
+syn-10 table event_kind_role eba38df29d59afc2e335f798ba3f5ce666173d5f777741d94f2add5346080411
 syn-10 table event_kind_value ea3bdaba66965ca348093390b78ac4b2e92807052c93c9bb59822b0c53c0771e
 syn-10 table event_participant 6d05e2690683cf5cb1d4818ac7ad63706211ad392cd68b48fb36a31463a0a3d1
 syn-10 table event_value d2e3bda451a55a812a0420538f77d793bc88a938a2c7f2c6d4b967bae0b35b9f
 syn-10 table phase 97110c3629b87e37a6a8f53763ff57928fe3967533aa650674f553b847ed1cdb
 syn-10 table region_control e5cfef132d45400d2dfabbfe6012c868bb66a0ea9319ab26eeb8e08b79cc923d
+syn-10 table region_name f13ee6ed54ea2aae9fc49a9faeb5da6e8ddef0e12ed5d30d35a624ae813e0485
 syn-10 table relation cbbd5f990c53684d7ae650b40fcb5656e02261b53da5f6a7d8c819c92f2828f8
 syn-10 table settlement b4ee121553f1f7d3bdf59ee1fcaebc6371d7407e90359fdcfd6dd407f6976150
 syn-10 table settlement_census 130b71cebfa96d4ce05fbf140a3887245fc710d73f65edb10d73e8ef03e5983f
@@ -6898,6 +6958,7 @@ syn-10 report events_claim_settlements = 0
 syn-10 report events_settlements_ceded = 0
 syn-10 report events_claim_dropped = 0
 syn-10 report events_refuge_hidden = 0
+syn-10 report events_region_renamed = 0
 syn-10 report civilizations = 2
 syn-10 report civilizations_alive = 2
 syn-10 report settlements = 7
@@ -6905,6 +6966,7 @@ syn-10 report settlements_standing = 7
 syn-10 report regions_held = 3
 syn-10 report census_rows = 34
 syn-10 report relations = 0
+syn-10 report region_names = 0
 syn-10 report population = 23828
 syn-10 report population_elf = 0
 syn-10 report population_goblin = 0
@@ -7006,15 +7068,16 @@ syn-11 homes ra6 y5618 n4 9
 syn-11 table civilization 7d0dd4251dd32e777d3950155810102134940d0410b068d6be2dfc87011e1935
 syn-11 table event 5a1f3b0066aefc7e853033fdffd97be793d46a118537779ed6c03d8a71467645
 syn-11 table event_cause 88a91ec449586304fcff3426ff8ecd2a3d684d715207263dd98be5a1abfdb51b
-syn-11 table event_kind 615787666985921fd60336a60fe2bd50b1e2ca030f8fc210cb00bd7533c3e28f
-syn-11 table event_kind_role 6704cb83034f0eb6468c7852cf57d78f140acbd41e09bd267e3d34c4a46e1d12
+syn-11 table event_kind b6bed38c843c9c2f00aa9d8f7b061a2c960fc1205679fc5356827e1b626d37d4
+syn-11 table event_kind_role eba38df29d59afc2e335f798ba3f5ce666173d5f777741d94f2add5346080411
 syn-11 table event_kind_value ea3bdaba66965ca348093390b78ac4b2e92807052c93c9bb59822b0c53c0771e
 syn-11 table event_participant 9f328ef58eecbaabd3ac0af00276649e7c8711a14fff7ef87e8931daf5ebbd80
 syn-11 table event_value 63b3c2799aec6003d1db7894d47ef96bac24578711b2381c023711016a9f9a52
 syn-11 table phase 2851bc7a35f15a251b1286bf3ed6904d50eb336ce26dff8ba196eed657551cfb
 syn-11 table region_control 65315d0c9dd5aea6c9964086f1aba4a5a3b8a69be583ad1a9f2f334eecc7aa94
+syn-11 table region_name f13ee6ed54ea2aae9fc49a9faeb5da6e8ddef0e12ed5d30d35a624ae813e0485
 syn-11 table relation cbbd5f990c53684d7ae650b40fcb5656e02261b53da5f6a7d8c819c92f2828f8
-syn-11 table settlement 65e92278d35f2e8bde0e99c0d88e164cbaa7f1b72fc3974ab83af06186a80d05
+syn-11 table settlement 63ef35ed368d57436f978d9f12b943b9570946c5ed6939b82676ac245ca2b747
 syn-11 table settlement_census 191669b32cd0c9836184ea843e8e02300cb7c66bd4819d4d4423bb4378440c26
 syn-11 report end_year = 6000
 syn-11 report phases_opening = 3
@@ -7066,6 +7129,7 @@ syn-11 report events_claim_settlements = 0
 syn-11 report events_settlements_ceded = 0
 syn-11 report events_claim_dropped = 0
 syn-11 report events_refuge_hidden = 0
+syn-11 report events_region_renamed = 0
 syn-11 report civilizations = 4
 syn-11 report civilizations_alive = 4
 syn-11 report settlements = 24
@@ -7073,6 +7137,7 @@ syn-11 report settlements_standing = 24
 syn-11 report regions_held = 7
 syn-11 report census_rows = 162
 syn-11 report relations = 0
+syn-11 report region_names = 0
 syn-11 report population = 13300
 syn-11 report population_elf = 0
 syn-11 report population_goblin = 12373
@@ -7137,7 +7202,7 @@ syn-11 e39 The Humans founded the Duchy of Alur in Synthetic 4.
 syn-11 e40 The Duchy of Alur founded Asheantstead in Synthetic 4.
 syn-11 e41 A succession crisis at Asheantstead shook the Duchy of Alur.
 syn-11 e42 Plague broke out in Dreeb; 97 died.
-syn-11 e43 The Duchy of Alur sent settlers from Asheantstead to found Santton in Synthetic 4.
+syn-11 e43 The Duchy of Alur sent settlers from Asheantstead to found Ashedton in Synthetic 4.
 syn-11 e44 The Duchy of Alur sent settlers from Asheantstead to found Doldwick in Synthetic 4.
 syn-11 e45 Plague broke out in Asheantstead; 33 died.
 syn-11 e46 Famine struck Gnib; 52 died.
@@ -7218,13 +7283,14 @@ syn-12 homes ra6 y1852 n1 5
 syn-12 table civilization c62b726250db4e3ca231c558c791639341715689a63114dda25a9a47fdcba294
 syn-12 table event 349e9e57280b2d055bcce92cd27e0ab7c849471fb4f9e866de231556911baf04
 syn-12 table event_cause 2827b2a4a551c0dc35f888b3063d31bbca1c1618da62a0b96b4fcd421c0e4c2f
-syn-12 table event_kind 615787666985921fd60336a60fe2bd50b1e2ca030f8fc210cb00bd7533c3e28f
-syn-12 table event_kind_role 6704cb83034f0eb6468c7852cf57d78f140acbd41e09bd267e3d34c4a46e1d12
+syn-12 table event_kind b6bed38c843c9c2f00aa9d8f7b061a2c960fc1205679fc5356827e1b626d37d4
+syn-12 table event_kind_role eba38df29d59afc2e335f798ba3f5ce666173d5f777741d94f2add5346080411
 syn-12 table event_kind_value ea3bdaba66965ca348093390b78ac4b2e92807052c93c9bb59822b0c53c0771e
 syn-12 table event_participant 2e50b2a27ff94f6b450fdb4c454321ce766467889939db3a631c69ee2361846a
 syn-12 table event_value 0551cfe238cd99efa94161ff8f7c9249664d460843a78122274dda7961d2e6af
 syn-12 table phase 3167287bff68b9463b3e43877c6fa9162bd817ac598a7bd90b724c1f533ec5d6
 syn-12 table region_control 560ede236d0e9146e4a0e48b91308f6ac739dc755cebc08102edeb98d5ba44cc
+syn-12 table region_name f13ee6ed54ea2aae9fc49a9faeb5da6e8ddef0e12ed5d30d35a624ae813e0485
 syn-12 table relation cbbd5f990c53684d7ae650b40fcb5656e02261b53da5f6a7d8c819c92f2828f8
 syn-12 table settlement 210e72973470219e4763635e229850e687b7505394ac8620aaf555d28b065edf
 syn-12 table settlement_census 31631cf4b674dc48a896ae8db11d2e35683f808f05e01b13d48915d29b30e36b
@@ -7278,6 +7344,7 @@ syn-12 report events_claim_settlements = 0
 syn-12 report events_settlements_ceded = 0
 syn-12 report events_claim_dropped = 0
 syn-12 report events_refuge_hidden = 0
+syn-12 report events_region_renamed = 0
 syn-12 report civilizations = 6
 syn-12 report civilizations_alive = 6
 syn-12 report settlements = 20
@@ -7285,6 +7352,7 @@ syn-12 report settlements_standing = 20
 syn-12 report regions_held = 5
 syn-12 report census_rows = 108
 syn-12 report relations = 0
+syn-12 report region_names = 0
 syn-12 report population = 26823
 syn-12 report population_elf = 3290
 syn-12 report population_goblin = 14367
@@ -7481,13 +7549,14 @@ syn-13 homes ra1 y0 n1 1
 syn-13 table civilization 857ba71ab0f5a7a2ec1b4226fc93cb6f746f03614d6d4cd86b8af5e3c32f279c
 syn-13 table event 0bef0c67e85d64d05e93c8519c1a5ea8c69a5177cee83276d140cb5dc76c0cea
 syn-13 table event_cause 90bb939533bf9ed46996d6f2190346c6ca7ef8dfc09caf11b381af6b7130c07f
-syn-13 table event_kind 615787666985921fd60336a60fe2bd50b1e2ca030f8fc210cb00bd7533c3e28f
-syn-13 table event_kind_role 6704cb83034f0eb6468c7852cf57d78f140acbd41e09bd267e3d34c4a46e1d12
+syn-13 table event_kind b6bed38c843c9c2f00aa9d8f7b061a2c960fc1205679fc5356827e1b626d37d4
+syn-13 table event_kind_role eba38df29d59afc2e335f798ba3f5ce666173d5f777741d94f2add5346080411
 syn-13 table event_kind_value ea3bdaba66965ca348093390b78ac4b2e92807052c93c9bb59822b0c53c0771e
 syn-13 table event_participant 939b379e5ea5fcf3a06c1ec770b209ce8c5a48c07a157e5e79c1d28d7c7bd782
 syn-13 table event_value 0684bf15051db7e59fc752bf54f1fb1aa4625a810e79bcf937afedb85ea094be
 syn-13 table phase 90795a24abc4f0fb42bfe3503793797ff687a273caac3d6f96049fe9b4acbc18
 syn-13 table region_control ec0b831092b3d7ae22bba3fdbc5946d45d26360726ab4aa7fc36594b63794052
+syn-13 table region_name f13ee6ed54ea2aae9fc49a9faeb5da6e8ddef0e12ed5d30d35a624ae813e0485
 syn-13 table relation cbbd5f990c53684d7ae650b40fcb5656e02261b53da5f6a7d8c819c92f2828f8
 syn-13 table settlement 60b3b390ae4c43e2439a9b1f7e69c8140118307715e338093068cd4f6d6a80b8
 syn-13 table settlement_census cc7e3647e2982d9f938151ee2dd26d89906a6bb149f2c63e80fecf01144b8a47
@@ -7541,6 +7610,7 @@ syn-13 report events_claim_settlements = 0
 syn-13 report events_settlements_ceded = 0
 syn-13 report events_claim_dropped = 0
 syn-13 report events_refuge_hidden = 0
+syn-13 report events_region_renamed = 0
 syn-13 report civilizations = 1
 syn-13 report civilizations_alive = 1
 syn-13 report settlements = 3
@@ -7548,6 +7618,7 @@ syn-13 report settlements_standing = 3
 syn-13 report regions_held = 1
 syn-13 report census_rows = 18
 syn-13 report relations = 0
+syn-13 report region_names = 0
 syn-13 report population = 786
 syn-13 report population_elf = 786
 syn-13 report population_goblin = 0
@@ -7682,13 +7753,14 @@ syn-14 homes ra4 y1409 n1 11
 syn-14 table civilization dae09b9ccc1167682c7006b0abeeb02afb02f8ba4fabcf5f2a5d7f2f345ca8b9
 syn-14 table event 0b9dce3215baebccac41de3390f45aef84ea69d314182a02e5732287b60efb90
 syn-14 table event_cause 7d00ac2f87d575dcb9e2c345351dedee82bae69d939931742e55b1d2a2d1167b
-syn-14 table event_kind 615787666985921fd60336a60fe2bd50b1e2ca030f8fc210cb00bd7533c3e28f
-syn-14 table event_kind_role 6704cb83034f0eb6468c7852cf57d78f140acbd41e09bd267e3d34c4a46e1d12
+syn-14 table event_kind b6bed38c843c9c2f00aa9d8f7b061a2c960fc1205679fc5356827e1b626d37d4
+syn-14 table event_kind_role eba38df29d59afc2e335f798ba3f5ce666173d5f777741d94f2add5346080411
 syn-14 table event_kind_value ea3bdaba66965ca348093390b78ac4b2e92807052c93c9bb59822b0c53c0771e
 syn-14 table event_participant b07bcd4f0faf39711c3f65b35ed7cbb9e2a03f87749225593d68d4d7b96bba55
 syn-14 table event_value 9b01c9c26648144c598cee4c7e19079efde728ad68160772ca11d3be98a4aec7
 syn-14 table phase 8db0c970afd1cb9b3361610078440e85f6c11359b7dd19570d743bb841ae8431
 syn-14 table region_control 14eb75418079e76b84f82cc44efdb9c309261cb64bc700cd24eeb6533a3a5a1a
+syn-14 table region_name f13ee6ed54ea2aae9fc49a9faeb5da6e8ddef0e12ed5d30d35a624ae813e0485
 syn-14 table relation cbbd5f990c53684d7ae650b40fcb5656e02261b53da5f6a7d8c819c92f2828f8
 syn-14 table settlement d909eddbacfa2485b1b1e41b85aeb5e36eef86ae2555818bb915f3a2101f23c0
 syn-14 table settlement_census f60d3fed8f5adb0a64e87fd9d3b850205638cc4f5ed982633f50574103ea07a7
@@ -7742,6 +7814,7 @@ syn-14 report events_claim_settlements = 0
 syn-14 report events_settlements_ceded = 0
 syn-14 report events_claim_dropped = 0
 syn-14 report events_refuge_hidden = 0
+syn-14 report events_region_renamed = 0
 syn-14 report civilizations = 2
 syn-14 report civilizations_alive = 2
 syn-14 report settlements = 5
@@ -7749,6 +7822,7 @@ syn-14 report settlements_standing = 5
 syn-14 report regions_held = 3
 syn-14 report census_rows = 18
 syn-14 report relations = 0
+syn-14 report region_names = 0
 syn-14 report population = 6175
 syn-14 report population_elf = 0
 syn-14 report population_goblin = 0
@@ -7983,13 +8057,14 @@ syn-15 homes ra6 y5520 n1 28
 syn-15 table civilization 94b74d2275cba4053049150d68d98f1a8164e3672c921334ed8be6f5b0644b11
 syn-15 table event ce30d556cf570403f4bf3a001c970f43e250842342ef347f5012acd4214ee1b4
 syn-15 table event_cause 2075f075b6be15153fa2eaffb25a3397269c9e6ebecc7118ce15afa1f26257e0
-syn-15 table event_kind 615787666985921fd60336a60fe2bd50b1e2ca030f8fc210cb00bd7533c3e28f
-syn-15 table event_kind_role 6704cb83034f0eb6468c7852cf57d78f140acbd41e09bd267e3d34c4a46e1d12
+syn-15 table event_kind b6bed38c843c9c2f00aa9d8f7b061a2c960fc1205679fc5356827e1b626d37d4
+syn-15 table event_kind_role eba38df29d59afc2e335f798ba3f5ce666173d5f777741d94f2add5346080411
 syn-15 table event_kind_value ea3bdaba66965ca348093390b78ac4b2e92807052c93c9bb59822b0c53c0771e
 syn-15 table event_participant 1647d3e0503ce2fcdb358b26a85687e6633ecdeca4f1e63a9b293b37c1cfdc5f
 syn-15 table event_value 64fd65f03ffceddd1906c13621dc2132e5a03f5d73ba49c232d3df75605e1bf3
 syn-15 table phase 65ffd8b4efa67e79b31e066e9888b8e957cc68b21b6ef3398c2cd9a71386c486
 syn-15 table region_control 9abdb15c7093763a4045cb352cac03e160b774401591b755d7584bbfbeded9fa
+syn-15 table region_name f13ee6ed54ea2aae9fc49a9faeb5da6e8ddef0e12ed5d30d35a624ae813e0485
 syn-15 table relation cbbd5f990c53684d7ae650b40fcb5656e02261b53da5f6a7d8c819c92f2828f8
 syn-15 table settlement 739cd510ff578911d9b42961af156a04f7b4d819d2c063ffdd337017c01043cd
 syn-15 table settlement_census dbf243ea9b688b36d12906507c07faeb5e159f4f361dafdbfb8fcae403cb2ff7
@@ -8043,6 +8118,7 @@ syn-15 report events_claim_settlements = 0
 syn-15 report events_settlements_ceded = 0
 syn-15 report events_claim_dropped = 0
 syn-15 report events_refuge_hidden = 0
+syn-15 report events_region_renamed = 0
 syn-15 report civilizations = 3
 syn-15 report civilizations_alive = 3
 syn-15 report settlements = 6
@@ -8050,6 +8126,7 @@ syn-15 report settlements_standing = 6
 syn-15 report regions_held = 3
 syn-15 report census_rows = 70
 syn-15 report relations = 0
+syn-15 report region_names = 0
 syn-15 report population = 1553
 syn-15 report population_elf = 0
 syn-15 report population_goblin = 753
@@ -8270,13 +8347,14 @@ stress-0 homes ra6 y1844 n1 25
 stress-0 table civilization 8b16c2118962b06a3dd02655fd9eb2afeca5af646a4d6790af6bdea62409ecbe
 stress-0 table event bc90e0bed3557e62b23e4fc00b720fa33cd3e1002ad3a53edc23591b732a1495
 stress-0 table event_cause 9ffc0a43c967d8a12c0eb22d825fa729e6ca24c0603f5e410dbac843fa7399d3
-stress-0 table event_kind 615787666985921fd60336a60fe2bd50b1e2ca030f8fc210cb00bd7533c3e28f
-stress-0 table event_kind_role 6704cb83034f0eb6468c7852cf57d78f140acbd41e09bd267e3d34c4a46e1d12
+stress-0 table event_kind b6bed38c843c9c2f00aa9d8f7b061a2c960fc1205679fc5356827e1b626d37d4
+stress-0 table event_kind_role eba38df29d59afc2e335f798ba3f5ce666173d5f777741d94f2add5346080411
 stress-0 table event_kind_value ea3bdaba66965ca348093390b78ac4b2e92807052c93c9bb59822b0c53c0771e
 stress-0 table event_participant edfac5ef8f9d534e8e4673628c06fbdae0865ae3a9703490e38d33154f74f34b
 stress-0 table event_value aea2ca4a9bec09ba3f5ee7635dcfcce42c0086c9c77cd43b9d37bbdc54575f92
 stress-0 table phase 52a628dba295c03b485724c4c7d0e3443297e0662ee04a0851a1a1162491a7c2
 stress-0 table region_control 130139eac89abe2fa07c0c930c1732a91cf090e2e3fdcaf75ac4f96400b21f54
+stress-0 table region_name f13ee6ed54ea2aae9fc49a9faeb5da6e8ddef0e12ed5d30d35a624ae813e0485
 stress-0 table relation cbbd5f990c53684d7ae650b40fcb5656e02261b53da5f6a7d8c819c92f2828f8
 stress-0 table settlement 941fcab649cc7a69e9fca01dcf8af8c94c6298286e6b194ddc1e88f5eaddca93
 stress-0 table settlement_census 346233f3c5dcda3e5c6c15767b0b7e12196802dbefdf9a43846576aaca26e361
@@ -8330,6 +8408,7 @@ stress-0 report events_claim_settlements = 0
 stress-0 report events_settlements_ceded = 0
 stress-0 report events_claim_dropped = 0
 stress-0 report events_refuge_hidden = 0
+stress-0 report events_region_renamed = 0
 stress-0 report civilizations = 7
 stress-0 report civilizations_alive = 7
 stress-0 report settlements = 19
@@ -8337,6 +8416,7 @@ stress-0 report settlements_standing = 7
 stress-0 report regions_held = 7
 stress-0 report census_rows = 234
 stress-0 report relations = 0
+stress-0 report region_names = 0
 stress-0 report population = 3004
 stress-0 report population_elf = 86
 stress-0 report population_goblin = 1148
@@ -8681,13 +8761,14 @@ stress-1 homes ra1 y0 n1 1
 stress-1 table civilization 81509aa6ef0cfd9d4ed7a4df9f5d60699666e0ab2f493d986328379124db44e7
 stress-1 table event 73e62ebbde75915ac3f691efd1ef50539311a28054e553ecb751cd952cc565b1
 stress-1 table event_cause f623afcfcd4e4160dc1467dd0fa68cd2a0946f0047a5fd69f66110b7a8f15921
-stress-1 table event_kind 615787666985921fd60336a60fe2bd50b1e2ca030f8fc210cb00bd7533c3e28f
-stress-1 table event_kind_role 6704cb83034f0eb6468c7852cf57d78f140acbd41e09bd267e3d34c4a46e1d12
+stress-1 table event_kind b6bed38c843c9c2f00aa9d8f7b061a2c960fc1205679fc5356827e1b626d37d4
+stress-1 table event_kind_role eba38df29d59afc2e335f798ba3f5ce666173d5f777741d94f2add5346080411
 stress-1 table event_kind_value ea3bdaba66965ca348093390b78ac4b2e92807052c93c9bb59822b0c53c0771e
 stress-1 table event_participant 09e8ab988ce88eb6b59af3c2b52d597a9c26e74f51f9636a4ae00155c4a6c136
 stress-1 table event_value 332b762d12de348d721c8496d294a5d40272796987c246bf7ae829d742abd7a8
 stress-1 table phase 90795a24abc4f0fb42bfe3503793797ff687a273caac3d6f96049fe9b4acbc18
 stress-1 table region_control ec0b831092b3d7ae22bba3fdbc5946d45d26360726ab4aa7fc36594b63794052
+stress-1 table region_name f13ee6ed54ea2aae9fc49a9faeb5da6e8ddef0e12ed5d30d35a624ae813e0485
 stress-1 table relation cbbd5f990c53684d7ae650b40fcb5656e02261b53da5f6a7d8c819c92f2828f8
 stress-1 table settlement 197d7e7c8e91840b44525bc05956271c4ec97641675f6e365d3bc1b9c212b7d4
 stress-1 table settlement_census e2d8f2e34dc1a466822a2fd36698f3a5b855048c9dfd3fb620fd223de840d8d8
@@ -8741,6 +8822,7 @@ stress-1 report events_claim_settlements = 0
 stress-1 report events_settlements_ceded = 0
 stress-1 report events_claim_dropped = 0
 stress-1 report events_refuge_hidden = 0
+stress-1 report events_region_renamed = 0
 stress-1 report civilizations = 1
 stress-1 report civilizations_alive = 1
 stress-1 report settlements = 7
@@ -8748,6 +8830,7 @@ stress-1 report settlements_standing = 1
 stress-1 report regions_held = 1
 stress-1 report census_rows = 59
 stress-1 report relations = 0
+stress-1 report region_names = 0
 stress-1 report population = 204
 stress-1 report population_elf = 204
 stress-1 report population_goblin = 0
@@ -8921,13 +9004,14 @@ stress-2 homes ra4 y1390 n1 6
 stress-2 table civilization 58eea9ade6d4c2846ba36512c1fad6c671afeef60fe53aba3cf850a40b61131f
 stress-2 table event c8df1db986816af291d8f438510b17cad5ebc3ad2e5aca58a7957ef2c0b0354e
 stress-2 table event_cause 26ce286bf66523072a853d310e8baadc948882108a8a28c691b94fc3ce1e4844
-stress-2 table event_kind 615787666985921fd60336a60fe2bd50b1e2ca030f8fc210cb00bd7533c3e28f
-stress-2 table event_kind_role 6704cb83034f0eb6468c7852cf57d78f140acbd41e09bd267e3d34c4a46e1d12
+stress-2 table event_kind b6bed38c843c9c2f00aa9d8f7b061a2c960fc1205679fc5356827e1b626d37d4
+stress-2 table event_kind_role eba38df29d59afc2e335f798ba3f5ce666173d5f777741d94f2add5346080411
 stress-2 table event_kind_value ea3bdaba66965ca348093390b78ac4b2e92807052c93c9bb59822b0c53c0771e
 stress-2 table event_participant 4b414bf464337d0606d560ec6dfd0b46588c887c1c41a4b0a773deb0d2709e91
 stress-2 table event_value 2793df0e1eb340631e3dd4ee9ea829874fc6a0a5a25d0eb7d3497820a9120463
 stress-2 table phase 768dd613dd1cdfde9b02faa66c6d2b12bac27b813eb398d3308456429de875ab
 stress-2 table region_control ee1cb3a8c3d878c5aeb4c72f04742bd9c4a2ddb119af4143b27849683c414c38
+stress-2 table region_name f13ee6ed54ea2aae9fc49a9faeb5da6e8ddef0e12ed5d30d35a624ae813e0485
 stress-2 table relation cbbd5f990c53684d7ae650b40fcb5656e02261b53da5f6a7d8c819c92f2828f8
 stress-2 table settlement 6ddfcc6f858780936ee5c5813c115447ebed1fec17afd98254dacb169e3d8229
 stress-2 table settlement_census 224ef01059f091f1fb323086a6bf1935d3c4558dfb8c90b361dd4675c242dc3d
@@ -8981,6 +9065,7 @@ stress-2 report events_claim_settlements = 0
 stress-2 report events_settlements_ceded = 0
 stress-2 report events_claim_dropped = 0
 stress-2 report events_refuge_hidden = 0
+stress-2 report events_region_renamed = 0
 stress-2 report civilizations = 2
 stress-2 report civilizations_alive = 2
 stress-2 report settlements = 7
@@ -8988,6 +9073,7 @@ stress-2 report settlements_standing = 4
 stress-2 report regions_held = 2
 stress-2 report census_rows = 62
 stress-2 report relations = 0
+stress-2 report region_names = 0
 stress-2 report population = 2187
 stress-2 report population_elf = 0
 stress-2 report population_goblin = 0
@@ -9251,13 +9337,14 @@ stress-3 homes ra6 y5602 n1 12
 stress-3 table civilization 006a1f78dab22a4c575dd130fb859931e504893f3a7019a18ed0de5f644460c7
 stress-3 table event a5f594c4be63e9385af93eaef5574aebdc8ff50e29ee24e7b75449277299703a
 stress-3 table event_cause b20419e9fbc0cea70c427b8763b333b4d7c1b181f13da6ceb1650e23baa05086
-stress-3 table event_kind 615787666985921fd60336a60fe2bd50b1e2ca030f8fc210cb00bd7533c3e28f
-stress-3 table event_kind_role 6704cb83034f0eb6468c7852cf57d78f140acbd41e09bd267e3d34c4a46e1d12
+stress-3 table event_kind b6bed38c843c9c2f00aa9d8f7b061a2c960fc1205679fc5356827e1b626d37d4
+stress-3 table event_kind_role eba38df29d59afc2e335f798ba3f5ce666173d5f777741d94f2add5346080411
 stress-3 table event_kind_value ea3bdaba66965ca348093390b78ac4b2e92807052c93c9bb59822b0c53c0771e
 stress-3 table event_participant 8c73f88afdc09aadede4621a12ac88d96f4b848faf572bbcbfb0c1da2f300c0f
 stress-3 table event_value caa01003ad1f0896c7b216f0841a85190963511afda9c81c2f530eae9bb4a310
 stress-3 table phase ecf241318a4fd1f6956f873a79dc461210877c69581de0264fc252d0f9165440
 stress-3 table region_control 7fede9095bab4f9019a27702bc0609a36021d36ec544bd9fc08dc0d4ee4f4548
+stress-3 table region_name f13ee6ed54ea2aae9fc49a9faeb5da6e8ddef0e12ed5d30d35a624ae813e0485
 stress-3 table relation cbbd5f990c53684d7ae650b40fcb5656e02261b53da5f6a7d8c819c92f2828f8
 stress-3 table settlement 6b930ee66627957815cde161a79c497f6cf445a7c8b9e615edb9401a5b054216
 stress-3 table settlement_census 811406fb0b10aa9436db1d6076387d3f60cffb65c2a1877e661cd153a0dc1e56
@@ -9311,6 +9398,7 @@ stress-3 report events_claim_settlements = 0
 stress-3 report events_settlements_ceded = 0
 stress-3 report events_claim_dropped = 0
 stress-3 report events_refuge_hidden = 0
+stress-3 report events_region_renamed = 0
 stress-3 report civilizations = 3
 stress-3 report civilizations_alive = 3
 stress-3 report settlements = 11
@@ -9318,6 +9406,7 @@ stress-3 report settlements_standing = 3
 stress-3 report regions_held = 3
 stress-3 report census_rows = 204
 stress-3 report relations = 0
+stress-3 report region_names = 0
 stress-3 report population = 2522
 stress-3 report population_elf = 0
 stress-3 report population_goblin = 587
@@ -9834,13 +9923,14 @@ stress-4 homes ra6 y1880 n4 44
 stress-4 table civilization 7b763415d070b845a415453828adb10133330a00c8ee1e1c1795fb54a1ad182a
 stress-4 table event 9ca01e1548ee0fc8c3c845c387e277be1278190e4aa88f253a46bfaf51881aad
 stress-4 table event_cause 9155b208f20d97c2c3d9f4def0857adb4bd2175f88a9ed54d896dce7790550f7
-stress-4 table event_kind 615787666985921fd60336a60fe2bd50b1e2ca030f8fc210cb00bd7533c3e28f
-stress-4 table event_kind_role 6704cb83034f0eb6468c7852cf57d78f140acbd41e09bd267e3d34c4a46e1d12
+stress-4 table event_kind b6bed38c843c9c2f00aa9d8f7b061a2c960fc1205679fc5356827e1b626d37d4
+stress-4 table event_kind_role eba38df29d59afc2e335f798ba3f5ce666173d5f777741d94f2add5346080411
 stress-4 table event_kind_value ea3bdaba66965ca348093390b78ac4b2e92807052c93c9bb59822b0c53c0771e
 stress-4 table event_participant 27eface5af36a1c2234c6773d5ccb75ae5ef92f0867e31c918ba1735b7c7c742
 stress-4 table event_value c053a5cd5483421017af494071cc048eabaca665cd6b5755588b1cd9181fe75c
 stress-4 table phase 4d0b5aad1d3e0bb8ec02b7043d656c0496319846c330c06889a95ea8b24bf44b
 stress-4 table region_control 88784827d9de3181465cf7259e30f43cfc0aba301779bc6c59b52fb774b40f8e
+stress-4 table region_name f13ee6ed54ea2aae9fc49a9faeb5da6e8ddef0e12ed5d30d35a624ae813e0485
 stress-4 table relation cbbd5f990c53684d7ae650b40fcb5656e02261b53da5f6a7d8c819c92f2828f8
 stress-4 table settlement ff8fabee670e6e4445414ae7563dec5316f5984f7e5f0c35b57fe114214518b3
 stress-4 table settlement_census 05221a45d83a490c2d6f7c592791e9a1e3a3f29046e5a13d87057cd72347d752
@@ -9894,6 +9984,7 @@ stress-4 report events_claim_settlements = 0
 stress-4 report events_settlements_ceded = 0
 stress-4 report events_claim_dropped = 0
 stress-4 report events_refuge_hidden = 0
+stress-4 report events_region_renamed = 0
 stress-4 report civilizations = 6
 stress-4 report civilizations_alive = 6
 stress-4 report settlements = 9
@@ -9901,6 +9992,7 @@ stress-4 report settlements_standing = 6
 stress-4 report regions_held = 3
 stress-4 report census_rows = 147
 stress-4 report relations = 0
+stress-4 report region_names = 0
 stress-4 report population = 1246
 stress-4 report population_elf = 149
 stress-4 report population_goblin = 111
@@ -10152,13 +10244,14 @@ stress-5 homes ra1 y0 n4 6
 stress-5 table civilization 388f181467083e75fd8c46971e18620b0be155ab5ba7bda4f400bf03ebed9a7f
 stress-5 table event c3358fc3d70cf8315f7c905cd855c8ab5981f0424f9b46acedcd54afed9311a2
 stress-5 table event_cause c8385ab95b70ea1cf5b751efb852b8598c07703426789d522fbe5c870e7ae018
-stress-5 table event_kind 615787666985921fd60336a60fe2bd50b1e2ca030f8fc210cb00bd7533c3e28f
-stress-5 table event_kind_role 6704cb83034f0eb6468c7852cf57d78f140acbd41e09bd267e3d34c4a46e1d12
+stress-5 table event_kind b6bed38c843c9c2f00aa9d8f7b061a2c960fc1205679fc5356827e1b626d37d4
+stress-5 table event_kind_role eba38df29d59afc2e335f798ba3f5ce666173d5f777741d94f2add5346080411
 stress-5 table event_kind_value ea3bdaba66965ca348093390b78ac4b2e92807052c93c9bb59822b0c53c0771e
 stress-5 table event_participant 6efdc71d12582c561975b4feeec4902395fd83911daacb50fc06eba041d078dc
 stress-5 table event_value 7286285d2e8afba5c7a5b7ae6c96ff96d665afcbfbf2b56b8cfdd9b559941570
 stress-5 table phase 90795a24abc4f0fb42bfe3503793797ff687a273caac3d6f96049fe9b4acbc18
 stress-5 table region_control 260f33e2eb152acdeaa736a2b1e8f0538d725bb2b5c55efedfc7cc365c27f570
+stress-5 table region_name f13ee6ed54ea2aae9fc49a9faeb5da6e8ddef0e12ed5d30d35a624ae813e0485
 stress-5 table relation cbbd5f990c53684d7ae650b40fcb5656e02261b53da5f6a7d8c819c92f2828f8
 stress-5 table settlement 982848ae848ca7f99466b6dae20d4ea3acddbb2e069a6d80f3b29ed78f28d467
 stress-5 table settlement_census ff4fa2a43d71e8eaac663b7a652a3a0a30be3123a4135a70db89d976e6bf4023
@@ -10212,6 +10305,7 @@ stress-5 report events_claim_settlements = 0
 stress-5 report events_settlements_ceded = 0
 stress-5 report events_claim_dropped = 0
 stress-5 report events_refuge_hidden = 0
+stress-5 report events_region_renamed = 0
 stress-5 report civilizations = 1
 stress-5 report civilizations_alive = 1
 stress-5 report settlements = 5
@@ -10219,6 +10313,7 @@ stress-5 report settlements_standing = 1
 stress-5 report regions_held = 1
 stress-5 report census_rows = 48
 stress-5 report relations = 0
+stress-5 report region_names = 0
 stress-5 report population = 302
 stress-5 report population_elf = 302
 stress-5 report population_goblin = 0
@@ -10436,13 +10531,14 @@ stress-6 homes ra4 y1407 n1 14
 stress-6 table civilization 866a05c79ebf15f65e126cffffe2bcbae0f2005127e8e736c8fed57e557d27d3
 stress-6 table event 601e620ba70986fed8b49e2e442c60d9ff19a93f2742106bb0e4cbb1b3402690
 stress-6 table event_cause 803fb0e921d2f1edd77553afce86b17eb79a7d84eb9e6b3c3ce000b6ff977923
-stress-6 table event_kind 615787666985921fd60336a60fe2bd50b1e2ca030f8fc210cb00bd7533c3e28f
-stress-6 table event_kind_role 6704cb83034f0eb6468c7852cf57d78f140acbd41e09bd267e3d34c4a46e1d12
+stress-6 table event_kind b6bed38c843c9c2f00aa9d8f7b061a2c960fc1205679fc5356827e1b626d37d4
+stress-6 table event_kind_role eba38df29d59afc2e335f798ba3f5ce666173d5f777741d94f2add5346080411
 stress-6 table event_kind_value ea3bdaba66965ca348093390b78ac4b2e92807052c93c9bb59822b0c53c0771e
 stress-6 table event_participant a500bb35f3c6c45bc344f0bfdd498353c2923af978c4d82daedfab9616f8e716
 stress-6 table event_value 55f5178f555817efbebea94b2ef3330363c2094d55dd0444ae7aa68ca6906eb8
 stress-6 table phase b2f018f8421e48ecd42bd0a0037b4332d2de9f9383e978c22e4d6248d10ee651
 stress-6 table region_control d686f6504e4d52c6fe6c8caa61c825ec447d0781ff96f80e6ba615384b26a498
+stress-6 table region_name f13ee6ed54ea2aae9fc49a9faeb5da6e8ddef0e12ed5d30d35a624ae813e0485
 stress-6 table relation cbbd5f990c53684d7ae650b40fcb5656e02261b53da5f6a7d8c819c92f2828f8
 stress-6 table settlement 8662eec5c4f6774289a00c7d30a58085137d9700407594af7609e1f0ab218353
 stress-6 table settlement_census e559e5169e0d7f6666d8c595cf47442d6406c39c78731162d4f6077d158bbaa7
@@ -10496,6 +10592,7 @@ stress-6 report events_claim_settlements = 0
 stress-6 report events_settlements_ceded = 0
 stress-6 report events_claim_dropped = 0
 stress-6 report events_refuge_hidden = 0
+stress-6 report events_region_renamed = 0
 stress-6 report civilizations = 3
 stress-6 report civilizations_alive = 3
 stress-6 report settlements = 7
@@ -10503,6 +10600,7 @@ stress-6 report settlements_standing = 3
 stress-6 report regions_held = 3
 stress-6 report census_rows = 68
 stress-6 report relations = 0
+stress-6 report region_names = 0
 stress-6 report population = 367
 stress-6 report population_elf = 0
 stress-6 report population_goblin = 0
@@ -10763,13 +10861,14 @@ stress-7 homes ra6 y5637 n1 15
 stress-7 table civilization ae92191d6d307ba904336a95aaaa56d3b23f2e2a71f223c8ee865da43ef7c14e
 stress-7 table event a76e2fc28e33d5235b10db335e8bb5f1f79e6861fe7da3297ad726e580daa53c
 stress-7 table event_cause 40e7434818a3021957f8fb81e46a8e6f987b3d2097f6d20b22020117835984cc
-stress-7 table event_kind 615787666985921fd60336a60fe2bd50b1e2ca030f8fc210cb00bd7533c3e28f
-stress-7 table event_kind_role 6704cb83034f0eb6468c7852cf57d78f140acbd41e09bd267e3d34c4a46e1d12
+stress-7 table event_kind b6bed38c843c9c2f00aa9d8f7b061a2c960fc1205679fc5356827e1b626d37d4
+stress-7 table event_kind_role eba38df29d59afc2e335f798ba3f5ce666173d5f777741d94f2add5346080411
 stress-7 table event_kind_value ea3bdaba66965ca348093390b78ac4b2e92807052c93c9bb59822b0c53c0771e
 stress-7 table event_participant 87623f18bd9f7bd6d510fbbe57908b6e0d21c6d34b5d5bb90b5257324eadd41b
 stress-7 table event_value c73669b1d3d9cc9e63bafac00a2cc26c1996944887cc945e8af9e0be69f0d594
 stress-7 table phase 1b5b7fdfa81502c29547de61f08be2c226abfbe667b6b5a3d16d9b6584951041
 stress-7 table region_control 82c7385526603a497df421211910994f8b9b265dc3ac9a6ce6481cda88c22e26
+stress-7 table region_name f13ee6ed54ea2aae9fc49a9faeb5da6e8ddef0e12ed5d30d35a624ae813e0485
 stress-7 table relation cbbd5f990c53684d7ae650b40fcb5656e02261b53da5f6a7d8c819c92f2828f8
 stress-7 table settlement 82894331ee83e883de5d3256c893a0b7023f756089193946adcb15ca63a4e877
 stress-7 table settlement_census 0f61731433ae576af71006bcb27f4bbf32d9e362a155cd0a0376302f3a7d1570
@@ -10823,6 +10922,7 @@ stress-7 report events_claim_settlements = 0
 stress-7 report events_settlements_ceded = 0
 stress-7 report events_claim_dropped = 0
 stress-7 report events_refuge_hidden = 0
+stress-7 report events_region_renamed = 0
 stress-7 report civilizations = 7
 stress-7 report civilizations_alive = 3
 stress-7 report settlements = 25
@@ -10830,6 +10930,7 @@ stress-7 report settlements_standing = 3
 stress-7 report regions_held = 3
 stress-7 report census_rows = 288
 stress-7 report relations = 0
+stress-7 report region_names = 0
 stress-7 report population = 171
 stress-7 report population_elf = 0
 stress-7 report population_goblin = 102
@@ -11820,13 +11921,14 @@ stress-12 homes ra6 y1852 n1 5
 stress-12 table civilization e23d810718b13987b7b0b4482fe7e82ba0f3d79f2fdb0e911514cf1c71933b15
 stress-12 table event 370b3fdaaf6d7192aa76930db35c6867db4d718dea6f7ed1505f5c2a237ecaa6
 stress-12 table event_cause 9850f701393c118f6c28a233067f87bd5c377af961fec17c98f2a30383db7f71
-stress-12 table event_kind 615787666985921fd60336a60fe2bd50b1e2ca030f8fc210cb00bd7533c3e28f
-stress-12 table event_kind_role 6704cb83034f0eb6468c7852cf57d78f140acbd41e09bd267e3d34c4a46e1d12
+stress-12 table event_kind b6bed38c843c9c2f00aa9d8f7b061a2c960fc1205679fc5356827e1b626d37d4
+stress-12 table event_kind_role eba38df29d59afc2e335f798ba3f5ce666173d5f777741d94f2add5346080411
 stress-12 table event_kind_value ea3bdaba66965ca348093390b78ac4b2e92807052c93c9bb59822b0c53c0771e
 stress-12 table event_participant 89ccf6049bdbb2d4a2bc5255c17fc71b8302655c9850c150127fe030b2d892b5
 stress-12 table event_value 969b5d7131797f40f917976a4836a463a032bb322727316bbb99e44f94296df8
 stress-12 table phase 0565625c51239f2734a49fb70c7a2c1d0ecbfa0a8f0ebc06c25f0a0082c4426c
 stress-12 table region_control aef194f314012a258e9cc0c30bfe78b8a53207456043f2df49063eb604362015
+stress-12 table region_name f13ee6ed54ea2aae9fc49a9faeb5da6e8ddef0e12ed5d30d35a624ae813e0485
 stress-12 table relation cbbd5f990c53684d7ae650b40fcb5656e02261b53da5f6a7d8c819c92f2828f8
 stress-12 table settlement cff6b176901abe667e0a6fda4185446cb18f1c5d57ab0e78cb1efdf749027c67
 stress-12 table settlement_census 03697d524880041eb9b7ed87c377720e2939fca45eb95acac5487857cb9d426d
@@ -11880,6 +11982,7 @@ stress-12 report events_claim_settlements = 0
 stress-12 report events_settlements_ceded = 0
 stress-12 report events_claim_dropped = 0
 stress-12 report events_refuge_hidden = 0
+stress-12 report events_region_renamed = 0
 stress-12 report civilizations = 7
 stress-12 report civilizations_alive = 7
 stress-12 report settlements = 17
@@ -11887,6 +11990,7 @@ stress-12 report settlements_standing = 8
 stress-12 report regions_held = 5
 stress-12 report census_rows = 264
 stress-12 report relations = 0
+stress-12 report region_names = 0
 stress-12 report population = 13503
 stress-12 report population_elf = 1019
 stress-12 report population_goblin = 9171
@@ -12229,13 +12333,14 @@ stress-14 homes ra4 y1409 n1 11
 stress-14 table civilization f4d657cba5ad0231df1afc5208aebcfc0ca5b151d299f06090e46810eefdf605
 stress-14 table event 8f2b239da61ec68977cec50fb233fdafcf1ccb59f27f6a9399711e75df46a7dc
 stress-14 table event_cause 2b6b42fd070057836676d92629f951e75ccfc5a6579bf1f11eb51832eb683b7e
-stress-14 table event_kind 615787666985921fd60336a60fe2bd50b1e2ca030f8fc210cb00bd7533c3e28f
-stress-14 table event_kind_role 6704cb83034f0eb6468c7852cf57d78f140acbd41e09bd267e3d34c4a46e1d12
+stress-14 table event_kind b6bed38c843c9c2f00aa9d8f7b061a2c960fc1205679fc5356827e1b626d37d4
+stress-14 table event_kind_role eba38df29d59afc2e335f798ba3f5ce666173d5f777741d94f2add5346080411
 stress-14 table event_kind_value ea3bdaba66965ca348093390b78ac4b2e92807052c93c9bb59822b0c53c0771e
 stress-14 table event_participant c4293049b15ee87cc7493c1248407642e54a0abaf7a7f25335dc518217de00ed
 stress-14 table event_value 06a00e7742997346e01d2713cd58b1ebbc2d3021ca02e0a3ad07a8b001391d1f
 stress-14 table phase 0ef460512ef04791caf94dce29d615082b6488ee373bfe6ac93b44ec857467ed
 stress-14 table region_control 39e451be855fdf359456f82d49b16a5e54357577deb4d36316336887dd1bd420
+stress-14 table region_name f13ee6ed54ea2aae9fc49a9faeb5da6e8ddef0e12ed5d30d35a624ae813e0485
 stress-14 table relation cbbd5f990c53684d7ae650b40fcb5656e02261b53da5f6a7d8c819c92f2828f8
 stress-14 table settlement 8ea1d5e8163f46ef59ca096068c46e4fdc611e0252c60dd37a633b75977e41a4
 stress-14 table settlement_census 624a4687aa5bff286ec18aaba5aa51c6f29e3d8bfb788a0f325b31a1681c0b1c
@@ -12289,6 +12394,7 @@ stress-14 report events_claim_settlements = 0
 stress-14 report events_settlements_ceded = 0
 stress-14 report events_claim_dropped = 0
 stress-14 report events_refuge_hidden = 0
+stress-14 report events_region_renamed = 0
 stress-14 report civilizations = 3
 stress-14 report civilizations_alive = 3
 stress-14 report settlements = 6
@@ -12296,6 +12402,7 @@ stress-14 report settlements_standing = 4
 stress-14 report regions_held = 3
 stress-14 report census_rows = 62
 stress-14 report relations = 0
+stress-14 report region_names = 0
 stress-14 report population = 2952
 stress-14 report population_elf = 0
 stress-14 report population_goblin = 0

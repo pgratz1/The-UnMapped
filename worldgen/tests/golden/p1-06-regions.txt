@@ -1778,7 +1778,7 @@ shipped-512-phrase flood c072c4f620fbb14b6a0bed8df16724643e841071d6789240efcb066
 shipped-512-phrase cost 751acce61d9ed4de70016c979d9559ff3b5d1a1aafa5311ce7f5e4830aa43bc0
 shipped-512-phrase merged 13,13
 shipped-512-phrase region 6763ec743f340e6e19b59b8784765b3bddd8e7ff0609e6c2737fa41f02e01964
-shipped-512-phrase table_region ac734460e6951dd2904219dc0c943d2adc83d5fa7d4e292b2d12b4a34dbfdf0c
+shipped-512-phrase table_region e85c837f305c94a12d6e8b1bf17ab12089fedb368ce3ae70bcf608697ef7a938
 shipped-512-phrase table_region_biome 52246b1d11282ee73f38f9c83c20f96568359f07776df2f5f2b3461a8051eb5c
 shipped-512-phrase table_region_border 8d6606293c0e79bfb29a2364eff42e891898e5f0f8ba338c2fc8a106a6338a24
 shipped-512-phrase landmasses 1
@@ -1791,8 +1791,8 @@ shipped-512-phrase region_borders_river 0
 shipped-512-phrase region_borders_pass 1
 shipped-512-phrase regions_isolated 0
 shipped-512-phrase regions_upland 3
-shipped-512-phrase names 1:Owlpike Sward|2:Hawkthorn Wolds|3:Spraydown|4:North Peaks|5:The Barrows of Sheaves|6:East Wood|7:Sootsike Sward|8:The Harrowed Crags|9:Tinderside Thicket|10:South Downs|11:Tarden|12:The Wolds of Scythes|13:Southeast Fells
-shipped-512-phrase name_attempts 1:0|2:0|3:0|4:K|5:0|6:K|7:0|8:0|9:0|10:K|11:0|12:0|13:K
+shipped-512-phrase names 1:Owlpike Sward|2:Hawkthorn Wolds|3:Spraydown|4:North Peaks|5:The Barrows of Sheaves|6:East Wood|7:Sootsike Sward|8:The Harrowed Crags|9:Tinderside Thicket|10:South Downs|11:Lichenknoll Forest|12:The Wolds of Scythes|13:Southeast Fells
+shipped-512-phrase name_attempts 1:0|2:0|3:0|4:K|5:0|6:K|7:0|8:0|9:0|10:K|11:1|12:0|13:K
 # P1-06 10.4
 case shipped-1024-s1 shipped-1024-s1 shipped 1024 1 - world
 shipped-1024-s1 elevation 2e3b7dee44d149f739bbf6040f0345ee310c51f2f5e27940c57f1759ef16eec4

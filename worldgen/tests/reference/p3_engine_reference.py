@@ -84,8 +84,8 @@ M64 = (1 << 64) - 1
 REPO = os.path.normpath(os.path.join(_HERE, "..", "..", ".."))
 GOLDEN = os.path.join(REPO, "worldgen", "tests", "golden", "p3-04-engine.txt")
 DEFAULT_INPUTS = os.path.join(os.path.expanduser("~"), ".cache", "the-unmapped", "out", "p3-08-tests", "inputs")
-GENERATOR_VERSION = "0.21.0"  # P5-01: kinds 41, 42, number clauses, flare_min_years (P3-11: kinds 39, 40, number words (P3-10: kinds 37, 38, quiet stretches, {@causes:...}, separators (P3-09: 36 kinds)
-SCHEMA_VERSION = 7
+GENERATOR_VERSION = "0.22.0"  # P5-12: kind 43, {@region_former}, names at the event, schema 8 (P5-01: kinds 41, 42, number clauses, flare_min_years (P3-11: kinds 39, 40, number words (P3-10: kinds 37, 38, quiet stretches, {@causes:...}, separators (P3-09: 36 kinds)
+SCHEMA_VERSION = 8   # P3-04 r21 23.4 (P5-12, generator 0.22.0); 7 before
 
 
 def fatal(msg):
@@ -307,6 +307,10 @@ COMPILED_020 = COMPILED_019 + (KIND_39, KIND_40)
 KIND_41 = kind_def(41, "claim_dropped", 1, 1, 0, (("claimant", CIV, 1, 1), ("holder", CIV, 1, 1)), ())
 KIND_42 = kind_def(42, "refuge_hidden", 1, 1, 1, (("settlement", SETTLEMENT, 1, 1), ("founder", CIV, 1, 1)), ())
 COMPILED_021 = COMPILED_020 + (KIND_41, KIND_42)
+# P3-04 r21 23.2 (generator 0.22.0, P5-12): kind 43 region_renamed (caused, region, optional settlement; role 1
+# namer civilization 0-1; no value).
+KIND_43 = kind_def(43, "region_renamed", 1, 1, 2, (("namer", CIV, 0, 1),), ())
+COMPILED_022 = COMPILED_021 + (KIND_43,)
 
 # P3-04 r10 (generator 0.17.0, P3-08), each switchable so that the 0.16.0
 # goldens can still be reproduced (use_version("0.16.0")):
@@ -340,11 +344,15 @@ RENDER_R17 = True
 #   FLARE_R19       22.3 no flare-up shorter than m = max(1, the scaled flare_min_years) (default 1).
 RENDER_R19 = True
 FLARE_R19 = True
+# P3-04 r21 (P5-12, generator 0.22.0):
+#   RENDER_R21      23.1 a region in a sentence is named as at the event (N(r, e)); {@region_former} renders
+#                   N(r, e - 1); the view's region_at(r, e) gives N; schema 8 (table region_name).
+RENDER_R21 = True
 NUMBER_WORDS = ("one", "two", "three", "four", "five", "six", "seven", "eight", "nine")
 ENGINE_VERSION = None
 
 
-VERSIONS = ("0.16.0", "0.17.0", "0.18.0", "0.19.0", "0.20.0", "0.21.0")
+VERSIONS = ("0.16.0", "0.17.0", "0.18.0", "0.19.0", "0.20.0", "0.21.0", "0.22.0")
 
 
 def at_least(v):
@@ -359,21 +367,26 @@ def use_version(v):
     of 30 kinds, r9 rendering and quiet eras, the 0.16.0 data and P3-02 r4
     names). Clears the cached data roots."""
     global COMPILED, RENDER_R10, QUIET_ERA_R10, RENDER_R12, QUIET_R12, QUIET_R15, GENERATOR_VERSION, ENGINE_VERSION
-    global RENDER_R17, RENDER_R19, FLARE_R19
+    global RENDER_R17, RENDER_R19, FLARE_R19, RENDER_R21, SCHEMA_VERSION
     if v not in VERSIONS:
         raise ValueError(v)
     new = v != "0.16.0"
     COMPILED = {"0.16.0": COMPILED_016, "0.17.0": COMPILED_017, "0.18.0": COMPILED_018, "0.19.0": COMPILED_019,
-                "0.20.0": COMPILED_020, "0.21.0": COMPILED_021}[v]
+                "0.20.0": COMPILED_020, "0.21.0": COMPILED_021, "0.22.0": COMPILED_022}[v]
     RENDER_R10 = QUIET_ERA_R10 = new
-    RENDER_R12 = QUIET_R12 = QUIET_R15 = v in ("0.19.0", "0.20.0", "0.21.0")
-    RENDER_R17 = v in ("0.20.0", "0.21.0")
-    RENDER_R19 = FLARE_R19 = v == "0.21.0"
+    RENDER_R12 = QUIET_R12 = QUIET_R15 = v in ("0.19.0", "0.20.0", "0.21.0", "0.22.0")
+    RENDER_R17 = v in ("0.20.0", "0.21.0", "0.22.0")
+    RENDER_R19 = FLARE_R19 = v in ("0.21.0", "0.22.0")
+    RENDER_R21 = v == "0.22.0"
+    global TABLES, COLUMNS
+    TABLES = TABLES_022 if RENDER_R21 else TABLES_021
+    COLUMNS = COLUMNS_022 if RENDER_R21 else COLUMNS_021
+    SCHEMA_VERSION = 8 if v == "0.22.0" else 7
     GENERATOR_VERSION = v
     ENGINE_VERSION = v
     pdr.use_version(v)
     # P3-09 item 8: the word list of the version (0.18.0 on disk; before, P3-08's, from git)
-    pnr.FILTER_COMMIT = None if v in ("0.18.0", "0.19.0", "0.20.0", "0.21.0") else pdr.NAME_FILTERS_017_COMMIT
+    pnr.FILTER_COMMIT = None if v in ("0.18.0", "0.19.0", "0.20.0", "0.21.0", "0.22.0") else pdr.NAME_FILTERS_017_COMMIT
     if hasattr(pnr, "use_version"):   # P3-10: the names reference serves the filter of the version (F1)
         pnr.use_version(v)
     pnr._SHIPPED_FILTER = None
@@ -540,6 +553,9 @@ def placeholder_problem(kind, body, at):
             return None if causes_entries(body) is not None else unknown
         if body == "@region":
             return None if kind["region_use"] == 1 else "{@region} needs a kind with a region at byte %d" % at
+        if RENDER_R21 and body == "@region_former":   # r21 23.1
+            return (None if kind["region_use"] == 1
+                    else "{@region_former} needs a kind with a region at byte %d" % at)
         if body == "@settlement":
             return (None if kind["settlement_use"] == 1
                     else "{@settlement} needs a kind with a settlement at byte %d" % at)
@@ -672,6 +688,12 @@ def render(view, eid):
     else:
         digits_of, clause_seq = {}, None
 
+    def region_name(rid, at_event):
+        # r21 23.1: N(r, e), the name in force at event e (the view's region_at), else the stored name
+        if RENDER_R21 and "region_at" in view:
+            return view["region_at"](rid, at_event)
+        return view["name"](REGION, rid, "name")
+
     def put_name(nm):
         # 8.5 r10: a leading "The " of a name appended mid-sentence becomes "the ".
         if RENDER_R10 and nm.startswith("The "):
@@ -706,7 +728,9 @@ def render(view, eid):
         elif body == "@end_year":
             out.append(str(ev["end_year"]))
         elif body == "@region":
-            put_name(view["name"](REGION, ev["region"], "name"))
+            put_name(region_name(ev["region"], eid))
+        elif RENDER_R21 and body == "@region_former":
+            put_name(region_name(ev["region"], eid - 1))
         elif body == "@settlement":
             put_name(view["name"](SETTLEMENT, ev["settlement"], "name"))
         elif RENDER_R12 and body.startswith("@causes:"):
@@ -746,10 +770,10 @@ def render(view, eid):
                 for k, (t, x) in enumerate(ps):
                     if k > 0:
                         out.append(" and " if k == len(ps) - 1 else ", ")
-                    put_name(view["name"](t, x, "name"))
+                    put_name(region_name(x, eid) if t == REGION else view["name"](t, x, "name"))
             elif form == "name":
                 t, x = ps[0]
-                put_name(view["name"](t, x, form))
+                put_name(region_name(x, eid) if t == REGION else view["name"](t, x, form))
             else:
                 t, x = ps[0]
                 out.append(view["name"](t, x, form))
@@ -1464,15 +1488,21 @@ def check_relation_bookkeeping(c):
 # Tables: hashes (P0-04 8), the [history] report (11.1), rendering views
 # ---------------------------------------------------------------------------
 
-COLUMNS = {
+COLUMNS_021 = COLUMNS = {
     "event_kind": 7, "event_kind_role": 6, "event_kind_value": 3, "phase": 6, "event": 8, "event_participant": 5,
     "event_cause": 2, "event_value": 3, "civilization": 10, "settlement": 14, "settlement_census": 6,
     "region_control": 5, "relation": 9,
 }
+COLUMNS_022 = dict(COLUMNS, region_name=5)   # P3-04 r21 23.4: table region_name (schema 8)
 DDL_ORDER = ("event_kind", "event_kind_role", "event_kind_value", "phase", "event", "event_participant",
              "event_cause", "event_value", "civilization", "settlement", "settlement_census", "region_control",
              "relation")
-TABLES = tuple(sorted(COLUMNS, key=lambda t: t.encode()))  # hash --detail order
+TABLES_021 = tuple(sorted(COLUMNS, key=lambda t: t.encode()))  # hash --detail order
+TABLES_022 = tuple(sorted(COLUMNS_022, key=lambda t: t.encode()))
+TABLES = TABLES_021   # use_version sets it
+REGION_NAME_DDL = ("CREATE TABLE region_name (region INTEGER NOT NULL, from_year INTEGER NOT NULL, name TEXT NOT NULL, "
+                   "culture INTEGER NOT NULL, event INTEGER NOT NULL, PRIMARY KEY (region, from_year)) STRICT, "
+                   "WITHOUT ROWID")
 
 DDL = (
     "CREATE TABLE event_kind (id INTEGER PRIMARY KEY, key TEXT NOT NULL UNIQUE, caused INTEGER NOT NULL, region_use "
@@ -1512,7 +1542,8 @@ DDL = (
 
 
 def table_hashes(res):
-    return {t: pchr.table_hash(COLUMNS[t], res[t]) for t in TABLES}
+    cols = COLUMNS
+    return {t: pchr.table_hash(cols[t], res.get(t, []) if t == "region_name" else res[t]) for t in TABLES}
 
 
 def report_lines(res, end_year, races=None):
@@ -1537,6 +1568,8 @@ def report_lines(res, end_year, races=None):
     o.append("regions_held = %d" % sum(1 for r in res["region_control"] if r[2] is None))
     o.append("census_rows = %d" % len(res["settlement_census"]))
     o.append("relations = %d" % len(res["relation"]))
+    if RENDER_R21:   # P3-04 r21 23.4: region_names after relations
+        o.append("region_names = %d" % len(res.get("region_name", [])))
     if races is not None:
         civ_race = {c[0]: c[2] for c in res["civilization"]}  # .get: a standing settlement may have no owner (0)
         standing = [x for x in res["settlement"] if x[10] in (1, 2)]
@@ -1583,7 +1616,35 @@ def view_from_rows(res, regions, races, gods):
             return race_forms[x][form]
         return names[t][x]
 
-    return dict(catalogue=cat, events=evs, name=name)
+    view = dict(catalogue=cat, events=evs, name=name)
+    if RENDER_R21:
+        view["region_at"] = region_at_event_fn(names[REGION], res.get("region_name", []))
+    return view
+
+
+def region_at_event_fn(geo, rows):
+    """P3-04 r21 23.1: N(r, e) = the name of r's region_name row with the largest event <= e, else region.name.
+    rows: (region, from_year, name, culture, event)."""
+    by = {}
+    for r in sorted(rows, key=lambda r: (r[0], r[1])):
+        by.setdefault(r[0], []).append((r[4], r[2]))
+
+    def at(rid, e):
+        nm = geo[rid]
+        for ev, n in by.get(rid, ()):
+            if ev <= e:
+                nm = n
+        return nm
+    return at
+
+
+def region_at_year(geo, rows, rid, y):
+    """P3-04 r21 23.1 / P4-01 r3 16: the name of r's row with the largest from_year <= y, else region.name."""
+    nm = geo[rid]
+    for r in sorted(rows, key=lambda r: (r[0], r[1])):
+        if r[0] == rid and r[1] <= y:
+            nm = r[2]
+    return nm
 
 
 def sentences(res, inp):
@@ -1871,17 +1932,41 @@ TEMPLATE_CASES_R19 = (
 )
 
 
+# r21 (P3-04 23.5 items 2 and 3, generator 0.22.0): kind 43's template; {@region_former} refused where
+# region_use is 0 (tribute) or 2 (the test kind), accepted where it is 1.
+KIND43_TEMPLATE = ("{@causes:civ_conquered=the fall of a realm,sacked=the sack,battle=the slaughter,battle_at_pass="
+                   "the slaughter,plague_outbreak=the plague,became_city=the rise of a city|After |, }"
+                   "{@region_former} became known as {@region}.")
+TEMPLATE_CASES_R21 = (
+    ("region_renamed", KIND43_TEMPLATE),
+    ("region_renamed", "{@region_former} and {namer:all}."),
+    ("region_renamed", "{namer} named {@region}."),
+    ("tribute", "{payer} paid {@region_former}."),
+    ("test_optional", "{people} of {@region_former}."),
+    ("claim", "{claimant} claimed {@region_former}, now {@region}."),
+    ("region_renamed", "{@region_formerly} was renamed."),
+)
+
+
 def template_cases():
     return (TEMPLATE_CASES + (TEMPLATE_CASES_R10 if at_least("0.17.0") else ())
             + (TEMPLATE_CASES_R12 if at_least("0.19.0") else ())
             + (TEMPLATE_CASES_R17 if at_least("0.20.0") else ())
-            + (TEMPLATE_CASES_R19 if at_least("0.21.0") else ()))
+            + (TEMPLATE_CASES_R19 if at_least("0.21.0") else ())
+            + (TEMPLATE_CASES_R21 if at_least("0.22.0") else ()))
 
 
 def template_kind(key):
     return TEST_KIND if key == "test_optional" else find_kind(COMPILED, key)
 
 
+HEADER_022 = """\
+# P3-04 engine golden vectors for generator 0.22.0 (schema 8; P5-12): the stub engine (run_engine
+# with the stub configuration, which installs no renaming subsystem) on the 0.22.0 catalogue of 43
+# kinds (P3-04 r21 23.2: kind 43 region_renamed appended; {@region_former}, a region in a sentence
+# named as at the event, 23.1), table region_name (23.4; empty in every stub world), [history] key
+# region_names after relations, P3-02 r19 names, P1-06 r11 region names (the input worlds' table
+# region), and otherwise as at 0.21.0. Spec"""
 HEADER_021 = """\
 # P3-04 engine golden vectors for generator 0.21.0 (schema 7; P5-01): the stub engine (run_engine
 # with the stub configuration) on the 0.21.0 catalogue of 42 kinds (P3-04 r19 22.2: kinds 41
@@ -1996,7 +2081,9 @@ HEADER = """\
 def golden_text(inputs):
     dat = data()
     head = HEADER.rstrip("\n")
-    if ENGINE_VERSION == "0.21.0":
+    if ENGINE_VERSION == "0.22.0":
+        head = HEADER_022 + "\n" + "\n".join(head.splitlines()[2:])
+    elif ENGINE_VERSION == "0.21.0":
         head = HEADER_021 + "\n" + "\n".join(head.splitlines()[2:])
     elif ENGINE_VERSION == "0.20.0":
         head = HEADER_020 + "\n" + "\n".join(head.splitlines()[2:])
@@ -2352,7 +2439,8 @@ def check_example_r12(c, inputs):
         i = ks.index("events_quiet_stretch")
         c.eq("r17 the kind 39 and 40 lines follow events_quiet_stretch (r19: then 41, 42)", ks[i:],
              ["events_quiet_stretch", "events_claim_settlements", "events_settlements_ceded"]
-             + (["events_claim_dropped", "events_refuge_hidden"] if at_least("0.21.0") else []))
+             + (["events_claim_dropped", "events_refuge_hidden"] if at_least("0.21.0") else [])
+             + (["events_region_renamed"] if at_least("0.22.0") else []))
 
 
 class no_r19:
@@ -2500,6 +2588,72 @@ R19_PARTS = {
 }
 
 
+def r21_view(rows, events, geo=None):
+    """A hand-made view over the shipped report data with region_name rows (region, from_year, name, culture,
+    event) and events {id: (year, kind key, region, participants, causes)}."""
+    shipped = event_catalogue(spec_report())
+    cat = {k["id"]: dict(k) for k in shipped}
+    geo = geo or {7: "The Holt of Yews", 8: "South Heath"}
+    names = {(CIV, 1): "The Kingdom of Cear", (CIV, 2): "The Krurz Horde", (SETTLEMENT, 1): "Edadbury"}
+    evs = {}
+    for eid, (year, key, region, parts, causes) in events.items():
+        k = find_kind(shipped, key)
+        vals = {i + 1: 5 for i in range(len(k["values"]))}
+        evs[eid] = dict(year=year, end_year=year, kind=k["id"], region=region, settlement=1, participants=list(parts),
+                        values=vals, causes=list(causes))
+    view = dict(catalogue=cat, events=evs, name=lambda t, x, form: geo[x] if t == REGION else names[(t, x)])
+    view["region_at"] = region_at_event_fn(geo, rows)
+    return view
+
+
+def check_render_r21(c):
+    """P3-04 r21 23.5 items 1 to 3 (N(r, e), {@region_former}, kind 43's template and causes)."""
+    claim = ((1, 1, CIV, 1), (2, 2, CIV, 2))
+    rows = [(7, 500, "Edadbury's Fall", 6, 40), (7, 900, "The Grave of Cear", 6, 90)]
+    evs = {12: (300, "claim", 7, claim, ()), 39: (500, "claim", 7, claim, ()), 38: (500, "sacked", 7, claim, ()),
+           40: (500, "region_renamed", 7, ((1, 1, CIV, 2),), (38,)), 41: (500, "claim", 7, claim, ()),
+           89: (900, "civ_conquered", 7, ((1, 1, CIV, 1), (2, 2, CIV, 2)), ()),
+           90: (900, "region_renamed", 7, ((1, 1, CIV, 2),), (89,)), 91: (950, "claim", 7, claim, ()),
+           95: (960, "claim", 8, claim, ())}
+    v = r21_view(rows, evs)
+    tail = " laid claim to %s, held by the Krurz Horde."
+    c.eq("23.5 item 1 event 12 old name", render(v, 12), "The Kingdom of Cear" + tail % "the Holt of Yews")
+    c.eq("23.5 item 1 event 39 (the renaming's year, before it) old name", render(v, 39),
+         "The Kingdom of Cear" + tail % "the Holt of Yews")
+    c.eq("23.5 item 1 event 41 new name", render(v, 41), "The Kingdom of Cear" + tail % "Edadbury's Fall")
+    c.eq("23.5 item 1 event 91 after the second renaming", render(v, 91),
+         "The Kingdom of Cear" + tail % "the Grave of Cear")
+    c.eq("23.5 item 1 another region keeps its name", render(v, 95), "The Kingdom of Cear" + tail % "South Heath")
+    c.eq("23.5 item 2/3 the renaming: former and new, cause word", render(v, 40),
+         "After the sack, the Holt of Yews became known as Edadbury's Fall.")
+    c.eq("23.5 item 2/3 the second renaming", render(v, 90),
+         "After the fall of a realm, Edadbury's Fall became known as the Grave of Cear.")
+    # every cause word, and a cause kind not in the list (sentence start, capital The)
+    for key, word in (("civ_conquered", "the fall of a realm"), ("sacked", "the sack"), ("battle", "the slaughter"),
+                      ("battle_at_pass", "the slaughter"), ("plague_outbreak", "the plague"),
+                      ("became_city", "the rise of a city")):
+        evs2 = {1: (10, key, 7, claim if key != "plague_outbreak" and key != "became_city" else
+                    ((1, 1, SETTLEMENT, 1), (2, 2, CIV, 1)), ()),
+                2: (10, "region_renamed", 7, (), (1,))}
+        v2 = r21_view([(7, 10, "The Red Holt", 0, 2)], evs2)
+        c.eq("23.5 item 3 cause %s" % key, render(v2, 2), "After %s, the Holt of Yews became known as the Red Holt."
+             % word)
+    evs3 = {1: (10, "claim", 7, claim, ()), 2: (10, "region_renamed", 7, (), (1,))}
+    c.eq("23.5 item 3 a cause kind not in the list: the sentence starts with The",
+         render(r21_view([(7, 10, "The Red Holt", 0, 2)], evs3), 2), "The Holt of Yews became known as the Red Holt.")
+    # {@region_former} on a later event equals {@region}
+    shipped = event_catalogue(spec_report())
+    k = find_kind(shipped, "claim")
+    v4 = r21_view(rows, evs)
+    v4["catalogue"][k["id"]] = dict(v4["catalogue"][k["id"]], templ="{@region_former} / {@region}")
+    c.eq("23.1 {@region_former} on a later event is the current name", render(v4, 41),
+         "Edadbury's Fall / Edadbury's Fall")
+    c.eq("23.1 {@region_former} at event 1 is region.name", region_at_event_fn({7: "X"}, rows)(7, 0), "X")
+    c.eq("P4-01 r3 16 name at year 499, 500, 899, 900", [region_at_year({7: "G"}, rows, 7, y) for y in
+                                                          (499, 500, 899, 900)],
+         ["G", "Edadbury's Fall", "Edadbury's Fall", "The Grave of Cear"])
+
+
 def check_render_r19(c):
     """P3-04 r19 22.4 items 1 and 2 in the reference, on hand-made views and the shipped report data."""
     view, shipped = r19_view_maker()
@@ -2565,7 +2719,7 @@ def check_render_r19(c):
          "{@settlement} needs a kind with a settlement at byte 0")
     c.eq("r19 kind 41, 42 rows", [(k["id"], k["key"], k["caused"], k["region_use"], k["settlement_use"],
                                    [(r["seq"], r["role"], r["type"], r["min"], r["max"]) for r in k["roles"]],
-                                   list(k["values"])) for k in COMPILED[-2:]],
+                                   list(k["values"])) for k in COMPILED[40:42]],
          [(41, "claim_dropped", 1, 1, 0, [(1, "claimant", CIV, 1, 1), (2, "holder", CIV, 1, 1)], []),
           (42, "refuge_hidden", 1, 1, 1, [(1, "settlement", SETTLEMENT, 1, 1), (2, "founder", CIV, 1, 1)], [])])
     bc = render(view("became_city", None, ((1, 1, SETTLEMENT, 3),), {"population": 8017}), 100)
@@ -3033,7 +3187,8 @@ def check_templates(c):
                                                  + (["claim_settlements", "settlements_ceded"]
                                                     if at_least("0.20.0") else [])
                                                  + (["claim_dropped", "refuge_hidden"]
-                                                    if at_least("0.21.0") else [])])
+                                                    if at_least("0.21.0") else [])
+                                                 + (["region_renamed"] if at_least("0.22.0") else [])])
     # rendering on a hand-made view: :all with 0..3, ? with 0, 1, 2
     cat = {99: dict(TEST_KIND, region_use=1, templ="[{actor:all}] {people:plural}/{people:adjective}/{people} at {@region}: "
                                      "{count} {count?thing|things} {{ok}} {@year}-{@end_year}")}
@@ -3208,6 +3363,8 @@ def cmd_check(argv):
                     check_render_r17(c)
                 check_render_r19(c)
                 check_flare_r19(c, inputs)
+                if RENDER_R21:
+                    check_render_r21(c)
             else:
                 check_render_r17(c)
         check_quiet_r12(c, inputs)
@@ -3380,7 +3537,7 @@ def cmd_check_world(argv):
     return 1 if c.failures else 0
 
 
-use_version("0.21.0")
+use_version("0.22.0")
 
 
 def main(argv):

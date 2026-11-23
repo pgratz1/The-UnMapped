@@ -87,10 +87,13 @@ SCHEMA_MD = os.path.join(REPO, "docs", "specs", "schema.md")
 DEFAULT_INPUTS = os.path.join(os.path.expanduser("~"), ".cache", "the-unmapped", "out", "p5-01-tests", "report-inputs")
 INPUTS_020 = os.path.join(os.path.expanduser("~"), ".cache", "the-unmapped", "out", "p3-07-tests", "inputs")
 DEFAULT_INPUTS_021 = DEFAULT_INPUTS
-GENERATOR_VERSION = "0.21.0"
+DEFAULT_INPUTS_022 = os.path.join(os.path.expanduser("~"), ".cache", "the-unmapped", "out", "p5-12-tests",
+                                  "report-inputs")
+GENERATOR_VERSION = "0.22.0"
 # P3-07 r19 section 25 (P5-01, generator 0.21.0; the default): format v2. use_version("0.20.0") serves v1 (sections
 # 4-24) with the 0.20.0 references, which reproduces the 0.20.0 golden file byte for byte.
 V2 = True
+V3 = True   # P3-07 r21 26 (format v3, generator 0.22.0); V3 implies V2's rules
 
 READINGS = """
 R1 6.6 milestones: a milestone line carries the note of history_note(view, event, c) in the form of 21.4,
@@ -173,6 +176,8 @@ MILESTONES_ENDED = 4             # r19 25.11 (25.5)
 SUMMARY_STATS = ("end_year", "events", "summary_threshold", "summary_events", "civilizations", "civilizations_alive",
                  "civilizations_ended", "settlements_standing", "settlements_ruined", "population", "wars", "wars_open",
                  "wars_hollow_permille", "share_max_permille", "races_alive")   # r19 25.7 item 4 (printed in 9's order)
+SUMMARY_STATS_021 = SUMMARY_STATS
+SUMMARY_STATS_022 = SUMMARY_STATS + ("regions_renamed", "refuges_hidden")   # r21 26.5 item 2: 17 keys
 CALAMITY_KINDS = ("famine", "plague", "plague_outbreak", "succession_crisis")            # 25.2
 MILESTONE_CAL_KINDS = ("famine", "plague", "plague_outbreak", "plague_spread", "succession_crisis",
                        "settlement_dwindled")                                             # 25.7 item 3
@@ -185,17 +190,19 @@ assert (pcr.SUMMARY_MIN_SALIENCE, pcr.SUMMARY_AGE_FLOOR, pcr.SUMMARY_BUDGET) == 
 
 def use_version(v):
     """v2 at "0.21.0" (default), v1 at "0.20.0"; the conflict, peoples, engine, names and data references follow."""
-    global GENERATOR_VERSION, V2, DEFAULT_INPUTS
-    if v not in ("0.20.0", "0.21.0"):
+    global GENERATOR_VERSION, V2, V3, DEFAULT_INPUTS, SUMMARY_STATS
+    if v not in ("0.20.0", "0.21.0", "0.22.0"):
         raise ValueError(v)
     pcr.use_version(v)
     GENERATOR_VERSION = v
-    V2 = v == "0.21.0"
-    DEFAULT_INPUTS = DEFAULT_INPUTS_021 if V2 else INPUTS_020
+    V2 = v in ("0.21.0", "0.22.0")
+    V3 = v == "0.22.0"
+    DEFAULT_INPUTS = DEFAULT_INPUTS_022 if V3 else DEFAULT_INPUTS_021 if V2 else INPUTS_020
+    SUMMARY_STATS = SUMMARY_STATS_022 if V3 else SUMMARY_STATS_021
     assert pe.GENERATOR_VERSION == GENERATOR_VERSION and pcr.FLAGS["note_019"] and pcr.FLAGS["claim39"]
 
 
-use_version("0.21.0")
+use_version("0.22.0")
 
 # Tables in the order the report reads them; every one read in primary-key order.
 TABLES_READ = ("region", "biome", "race", "god", "age", "event_kind", "event_kind_role", "event_kind_value", "phase",
@@ -243,7 +250,7 @@ def load_world(path):
     conn = connect(path)
     try:
         meta = dict(conn.execute("SELECT key, value FROM meta").fetchall())
-        t = {name: pk_rows(conn, name)[1] for name in TABLES_READ}
+        t = {name: pk_rows(conn, name)[1] for name in TABLES_READ + (("region_name",) if V3 else ())}
     finally:
         conn.close()
     return World(meta, t)
@@ -352,6 +359,12 @@ class World:
                         relation=t["relation"], region_control=t["region_control"],
                         civilization=t["civilization"], settlement=t["settlement"],
                         settlement_census=t["settlement_census"], phase=t["phase"])
+        # r21 26.4: per region its region_name rows (primary-key order); the present name is the name at E
+        self.renames = {}
+        if V3:
+            self.res["region_name"] = t["region_name"]
+            for r in t["region_name"]:
+                self.renames.setdefault(r[0], []).append(r)
         self.inp = Inputs(self)
         self.view = pe.view_from_rows(self.res, [(r[0], r[1]) for r in t["region"]], t["race"], t["god"])
         self._bind()
@@ -396,8 +409,17 @@ class World:
         if typ == SETTLEMENT:
             return self.settlement[i][1]
         if typ == REGION:
-            return self.region[i][1]
+            return self.present_name(i) if i in self.region else None
         return None
+
+    def present_name(self, rid):
+        """r21 26.4: the region's name at year E (its last region_name row with from_year <= E), else
+        region.name."""
+        nm = self.region[rid][1]
+        for r in self.renames.get(rid, ()):
+            if r[1] <= self.E:
+                nm = r[2]
+        return nm
 
     def ref(self, typ, i):
         n = self.name(typ, i)
@@ -821,7 +843,8 @@ class Digest:
 def report(w, level):
     d = Digest(w)
     t = w.t
-    o = ["# worldgen history v2" if V2 else "# worldgen history v1", "level = %s" % level]
+    o = ["# worldgen history v3" if V3 else "# worldgen history v2" if V2 else "# worldgen history v1",
+         "level = %s" % level]
     m = w.meta
     o.append("[settings]")
     for key, mk in (("seed", "seed"), ("seed_phrase", "seed_phrase"), ("map_size", "param.map_size"),
@@ -1047,10 +1070,11 @@ def present(w, d, level):
     if level == "full":
         for r in t["region"]:
             x = open_rows.get(r[0])
+            nm = w.present_name(r[0]) if V3 else r[1]   # r21 26.4
             if x is None:
-                o.append("  rg%d %s: free" % (r[0], r[1]))
+                o.append("  rg%d %s: free" % (r[0], nm))
             else:
-                o.append("  rg%d %s: %s since %d" % (r[0], r[1], w.ref(CIV, x[3]), x[1]))
+                o.append("  rg%d %s: %s since %d" % (r[0], nm, w.ref(CIV, x[3]), x[1]))
     st = t["settlement"]
     cnt = {k: sum(1 for s in st if s[10] == k) for k in (1, 2, 3, 4)}
     o.append("settlements: %d; thriving %d, declining %d, ruined %d, faded %d" % (len(st), cnt[1], cnt[2], cnt[3],
@@ -1094,7 +1118,11 @@ def present_lists(w):
             s[0], s[1], w.ref(REGION, s[4]), s[12], s[13], w.kind_key[w.ev[s[13]][3]],
             ", by %s" % w.ref(CIV, by[0]) if by else "", last_held_by(w, s[0])))
     refs = [s for s in t["settlement"] if standing(s[10]) and w.ev[s[7]][3] == w.K["refugees_settled"]]
-    o.append("refuges: %d" % len(refs))
+    if V3:   # r21 26.3: only the refuges hidden at E are listed
+        o += hidden_refuge_lines(w, refs)
+        refs = []
+    else:
+        o.append("refuges: %d" % len(refs))
     hidden_end = {}
     if V2:   # 25.9 item 1: the refuge_hidden of each refuge (kind 42; none in a world before 0.21.0)
         for e in t["event"]:
@@ -1123,6 +1151,47 @@ def present_lists(w):
         if e[3] == w.K["claim_settlements"]:
             line += ", for " + ", ".join(w.ref(SETTLEMENT, x) for x in role_ids(w, cid, "settlement"))
         o.append(line)
+    if V3:   # r21 26.2
+        o += renamed_region_lines(w)
+    return o
+
+
+def refuge_hidden_end(w):
+    """r21 26.3: settlement -> end_year of its refuge_hidden event with the smallest id."""
+    out = {}
+    for e in w.t["event"]:
+        if e[3] == w.K["refuge_hidden"] and e[6] not in out:
+            out[e[6]] = e[2]
+    return out
+
+
+def hidden_refuges(w):
+    refs = [s for s in w.t["settlement"] if standing(s[10]) and w.ev[s[7]][3] == w.K["refugees_settled"]]
+    end = refuge_hidden_end(w)
+    return refs, [s for s in refs if s[0] in end and end[s[0]] >= w.E - 1]
+
+
+def hidden_refuge_lines(w, refs):
+    _all, hid = hidden_refuges(w)
+    o = ["hidden refuges: %d of %d founded by flight" % (len(hid), len(refs))]
+    for s in hid:
+        origin = role_ids(w, s[7], "origin")
+        o.append("  s%d %s in %s: %s, population %d, founded %d by flight from %s, e%d" % (
+            s[0], s[1], w.ref(REGION, s[4]), w.ref(CIV, s[8]) if s[8] else "no owner", s[11], s[6],
+            w.ref(SETTLEMENT, origin[0]), s[7]))
+    return o
+
+
+def renamed_region_lines(w):
+    rows = w.t["region_name"]
+    o = ["renamed regions: %d" % len(rows)]
+    for r in rows:
+        prev = [x for x in w.renames.get(r[0], ()) if x[1] < r[1]]
+        former = prev[-1][2] if prev else w.region[r[0]][1]
+        cs = sorted(w.causes.get(r[4], []))
+        cause = cs[0] if cs else 0
+        o.append("  rg%d: %s since %d, e%d after e%d %s; formerly %s" % (
+            r[0], r[2], r[1], r[4], cause, w.kind_key[w.ev[cause][3]] if cause else "-", former))
     return o
 
 
@@ -1275,6 +1344,10 @@ def stats(w, d):
               if held_open and held_race else 0))
     for k in ("wars_unfound", "refuges_held_no_destination"):
         o.append((k, int(got[k])))
+    if V3:   # r21 26.5 item 2
+        refs, hid = hidden_refuges(w)
+        o += [("region_names", len(t["region_name"])), ("regions_renamed", len({r[0] for r in t["region_name"]})),
+              ("refuges", len(refs)), ("refuges_hidden", len(hid))]
     return o
 
 
@@ -1384,7 +1457,7 @@ def expand_fixture(fx):
             "param.divine_script": m["divine_script"], "param.event_intensity": m["event_intensity"],
             "param.history_detail": m["history_detail"], "param.history_span": str(m["history_span"]),
             "param.map_size": str(m["map_size"]), "param.monster_pressure": m["monster_pressure"],
-            "param.races": m["races"], "schema_version": "7", "seed": str(m["seed"]),
+            "param.races": m["races"], "schema_version": "8" if V3 else "7", "seed": str(m["seed"]),
             "seed_phrase": m["seed_phrase"], "stages": "biomes,regions,chronology,history"}
     return meta, rows
 
@@ -1392,8 +1465,12 @@ def expand_fixture(fx):
 def ddl_statements():
     with open(SCHEMA_MD, encoding="utf-8") as f:
         text = f.read()
-    block = text.split("## 1. DDL at version 7", 1)[1].split("```", 2)[1]
-    return [s for s in block.splitlines() if s.startswith("CREATE TABLE")]
+    import re
+    block = re.split(r"## 1\. DDL at version \d+", text, 1)[1].split("```", 2)[1]
+    out = [s for s in block.splitlines() if s.startswith("CREATE TABLE")]
+    if not V3:   # schema 7 before 0.22.0: no region_name (P3-04 r21 23.4)
+        out = [s for s in out if not s.startswith("CREATE TABLE region_name ")]
+    return out
 
 
 def write_fixture(name, out):
@@ -1848,6 +1925,10 @@ def build_input(src, dst):
     res = pcr.history_stage(dat, inp)
     c = sqlite3.connect(tmp)
     try:
+        if V3 and not c.execute("SELECT 1 FROM sqlite_master WHERE name = 'region_name'").fetchone():
+            c.execute(pe.REGION_NAME_DDL)   # schema 8 (P3-04 r21 23.4) on a schema 7 source
+            c.execute("UPDATE meta SET value = '8' WHERE key = 'schema_version'")
+            c.execute("PRAGMA user_version = 8")
         for t in pchr.TABLES:
             c.execute('DELETE FROM "%s"' % t)
             n = pchr.COLUMNS[t]

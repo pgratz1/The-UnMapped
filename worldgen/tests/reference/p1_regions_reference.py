@@ -94,23 +94,92 @@ import p3_data_reference as pdr  # noqa: E402
 # P1-06 r10 (P5-01, generator 0.21.0; the default): only the lists change (16.1: 34 grim words from common to
 # trait_barren), served through p3_data_reference; the rule is r7's. "0.20.0" serves the 0.19.0 lists (the
 # placename files did not change at 0.20.0) with r7's rule.
-VERSION = "0.21.0"
+# P1-06 r11 (P5-12, generator 0.22.0; the default): V8, no filter entry across a join of a name's parts (17.1),
+# in the drawn attempts (after V7) and the fallback; the lists are 0.21.0's.
+VERSION = "0.22.0"
 
 
 def use_version(v):
     global VERSION
-    if v not in ("0.17.0", "0.18.0", "0.19.0", "0.20.0", "0.21.0"):
+    if v not in ("0.17.0", "0.18.0", "0.19.0", "0.20.0", "0.21.0", "0.22.0"):
         raise ValueError(v)
     VERSION = v
     pdr.use_version(v)
 
 
 def r7():
-    return VERSION in ("0.19.0", "0.20.0", "0.21.0")
+    return VERSION in ("0.19.0", "0.20.0", "0.21.0", "0.22.0")
 
 
 def r10():
-    return VERSION == "0.21.0"
+    return VERSION in ("0.21.0", "0.22.0")
+
+
+def r11():
+    return VERSION == "0.22.0"
+
+
+_V8_FILTER = None
+
+
+def v8_filter():
+    """The effective filter lists of P3-02 11.2 (through p3_names_reference, which reads game/data's
+    name_filters/ with p3_data_reference's served version)."""
+    global _V8_FILTER
+    if _V8_FILTER is None:
+        import p3_names_reference as pnr
+        _V8_FILTER = pnr.shipped_filter()
+    return _V8_FILTER
+
+
+def v8_spans(parts, filt=None):
+    """P1-06 r11 17.1: the (entry, kind, word) that span a join of the parts (strings, in order), [] when V8
+    passes. Joins are the byte offsets between consecutive parts (an empty part adds no new offset)."""
+    if filt is None:
+        filt = v8_filter()
+    joins = set()
+    off = 0
+    for p in parts[:-1]:
+        off += len(p)
+        joins.add(off)
+    name = "".join(parts)
+    out = []
+
+    def spans(first, last):
+        return any(first < j <= last for j in joins)
+
+    pos = 0
+    for word in name.split(" "):
+        letters = [(ch.lower(), pos + i) for i, ch in enumerate(word) if ch.isalpha()]
+        s = "".join(ch for ch, _ in letters)
+        for e in filt.anywhere:
+            k = s.find(e)
+            while k >= 0:
+                if spans(letters[k][1], letters[k + len(e) - 1][1]):
+                    out.append((e, "anywhere", word))
+                    break
+                k = s.find(e, k + 1)
+        i = 0
+        while i < len(word):   # parts of the word: maximal runs of letters between ', - and the word's ends
+            if not word[i].isalpha():
+                i += 1
+                continue
+            j = i
+            while j < len(word) and word[j].isalpha():
+                j += 1
+            part = word[i:j].lower()
+            for e in filt.at_start:
+                if part.startswith(e) and spans(pos + i, pos + i + len(e) - 1):
+                    out.append((e, "at_start", word))
+            if part in filt.whole and spans(pos + i, pos + j - 1):
+                out.append((part, "whole", word))
+            i = j
+        pos += len(word) + 1
+    return out
+
+
+def v8_ok(parts, filt=None):
+    return not r11() or not v8_spans(parts, filt)
 
 FatalError = cr.FatalError
 ONE = 1 << 32
@@ -1238,7 +1307,7 @@ def pools_for(slot_list, land, common, trait_defs, pw):
     return P, w
 
 
-def name_attempt(key, rid, t, land, common, trait_defs, pw, trace=None, slots=None):
+def name_attempt(key, rid, t, land, common, trait_defs, pw, trace=None, slots=None, parts_out=None):
     """One attempt t of RG11 6 and 7: (valid, name, rule). trace: a list to
     receive (k, u, choice) records; slots: a list to receive (slot, value)
     per slot in form order (V7)."""
@@ -1269,7 +1338,10 @@ def name_attempt(key, rid, t, land, common, trait_defs, pw, trace=None, slots=No
     if slots is not None:
         slots.extend(zip([s for kd, s in toks if kd == "slot"], values))
     parts = iter(values)
-    name = "".join(v if kd == "lit" else next(parts) for kd, v in toks)
+    pl = [v if kd == "lit" else next(parts) for kd, v in toks]
+    if parts_out is not None:
+        parts_out.extend(pl)
+    name = "".join(pl)
     return ok, name, rule
 
 
@@ -1280,7 +1352,7 @@ def name_fallback(land, common, used):
     for p in common["prefixes"] + land["prefixes"]:
         for s in land["suffixes"] + common["suffixes"]:
             n = p + s
-            if name_valid(FALLBACK_TOKS, [p, s], common)[0] and n not in used:
+            if name_valid(FALLBACK_TOKS, [p, s], common)[0] and v8_ok([p, s]) and n not in used:
                 return n
     return None
 
@@ -1317,6 +1389,9 @@ def keepers(rows, bl):
     return best
 
 
+V8_REJECTED = []   # (region, attempt, name) of every attempt V8 rejected (r11), for reports
+
+
 def rg11_r3(rows, bl, passed, seed, n, pn, t):
     """RG11 4 and 8: keepers, then the draws in id order. bl: (base, land)
     per row. Returns (names, how) with how 'K', 'F' or the attempt number.
@@ -1341,9 +1416,13 @@ def rg11_r3(rows, bl, passed, seed, n, pn, t):
         got = None
         for att in range(64):
             sl = []
-            ok, nm, _ = name_attempt(key, row["id"], att, land, common, tdefs, pw, slots=sl)
+            pts = []
+            ok, nm, _ = name_attempt(key, row["id"], att, land, common, tdefs, pw, slots=sl, parts_out=pts)
             if ok and r7() and any(x in stems for x in v7_stems(sl)):
                 ok = False   # V7
+            if ok and not v8_ok(pts):
+                ok = False   # V8 (r11)
+                V8_REJECTED.append((row["id"], att, nm))
             if ok and nm not in used:
                 got = (nm, str(att))
                 if r7():
@@ -2757,6 +2836,40 @@ def check_rg11_r10(c):
         c.ok("check 4a passes on the 0.21.0 lists: %s" % e, False)
 
 
+def check_rg11_r11(c):
+    """P1-06 r11 17.3's unit tests of V8 (the offensive entries spelled as concatenations)."""
+    import p3_names_reference as pnr
+    sf = v8_filter()
+    c.ok("17.1 Tar + den invalid (an entry across the join)", bool(v8_spans(["Tar", "den"], sf)))
+    c.ok("17.1 Tarden as one part valid", not v8_spans(["Tarden"], sf))
+    c.ok("17.1 Pine + grove invalid", bool(v8_spans(["Pine", "grove"], sf)))
+    c.ok("17.1 Wane + grass invalid", bool(v8_spans(["Wane", "grass"], sf)))
+    c.ok("17.1 Night + wood valid (the entry inside one value)", not v8_spans(["Night", "wood"], sf))
+    c.ok("17.1 Knight's Rest valid (entry inside a literal-free value)", not v8_spans(["Knight's", " ", "Rest"], sf))
+    c.ok("17.1 Sickle + mark valid", not v8_spans(["Sickle", "mark"], sf))
+    c.ok("17.1 Slag + wold valid", not v8_spans(["Slag", "wold"], sf))
+    c.ok("17.1 South Downs valid (whole entry inside one part)", not v8_spans(["South", " ", "Downs"], sf))
+    fx = pnr.NameFilter(at_start=["tar" + "de"])
+    c.ok("17.1 at_start tarde across Tar + deholt invalid", bool(v8_spans(["Tar", "deholt"], fx)))
+    c.ok("17.1 at_start inside the first value valid (Tarde + holt)", not v8_spans(["Tarde", "holt"], fx))
+    c.ok("17.1 at_start only at a part start (Mtar + deholt valid)", not v8_spans(["Mtar", "deholt"], fx))
+    fx = pnr.NameFilter(at_start=["sl" + "ag"])
+    c.ok("17.1 at_start inside the first value valid (Slag + wold)", not v8_spans(["Slag", "wold"], fx))
+    fx = pnr.NameFilter(whole=["tar" + "den"])
+    c.ok("17.1 whole entry equal to a two-part word invalid", bool(v8_spans(["Tar", "den"], fx)))
+    c.ok("17.1 whole entry equal to a one-part word valid", not v8_spans(["Tarden"], fx))
+    c.ok("17.1 whole entry: the part between ' and the word end (O'tar + den)",
+         bool(v8_spans(["O'tar", "den"], fx)))
+    fx = pnr.NameFilter(anywhere=["ab"])
+    c.ok("17.1 anywhere across a space is not a word (A + b c)", not v8_spans(["Xa", " ", "bx"], fx))
+    c.ok("17.1 anywhere with ' removed spans the join (Xa' + bx)", bool(v8_spans(["Xa'", "bx"], fx)))
+    c.ok("17.1 anywhere after ' inside a value (Xa'b + x)", not v8_spans(["Xa'b", "x"], fx))
+    # the fallback skips a compound across a join
+    common = dict(prefixes=["Tar", "Oak"], suffixes=["den"], forbidden=[], excluded=[])
+    land = dict(prefixes=[], suffixes=[])
+    c.eq("17.1 fallback skips Tar + den", name_fallback(land, common, set()), "Oakden")
+
+
 def check_v7_world(c, label, r):
     """15.4 on a computed world: no stem of a drawn attempt's non-noun, non-suffix slot values repeats."""
     if not r7() or "name_how" not in r["stats"]:
@@ -3296,6 +3409,8 @@ def check_all(quick):
         check_rg11_r7(c)
         if r10():
             check_rg11_r10(c)
+        if r11():
+            check_rg11_r11(c)
     else:
         check_rg11_r3(c, quick)
     check_rg12(c)
@@ -3401,8 +3516,17 @@ def rename_db(src, dst):
     the r3 names (nothing else changes)."""
     import shutil
     rows, nm, how, _, bases, _ = world_names(src)
-    prev20 = None
-    if r10() and any(strip_numeral(r["name"]) != b for r, b in zip(rows, bases)):
+    prev20 = prev21 = None
+    if r11():   # P5-12: an input of the 0.21.0 history tests stores the r10 names (no V8)
+        saved_v = VERSION
+        use_version("0.21.0")
+        try:
+            _, prev21, _, _, _, _ = world_names(src)
+        finally:
+            use_version(saved_v)
+    if prev21 is not None and all(r["name"] == n for r, n in zip(rows, prev21)):
+        prev20 = prev21
+    elif r10() and any(strip_numeral(r["name"]) != b for r, b in zip(rows, bases)):
         # P5-01: an input of the 0.19.0/0.20.0 history tests stores the r7 names on the 0.19.0 lists
         saved_v = VERSION
         use_version("0.20.0")

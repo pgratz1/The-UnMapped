@@ -255,9 +255,9 @@ TEST_CASE("P3-06 11 (r7), 16.1 item 11: the compiled kinds 20-30 equal section 1
     const eng::EventCatalogue& compiled = eng::compiled();
     // P3-05 r6 appends kind 31 after kinds 20-30 (0.17.0); P3-06 r9 and r10 kinds 32-36 (0.18.0); P3-04 r12 20.4
     // kinds 37 and 38 (0.19.0)
-    REQUIRE(compiled.kinds.size() == 42U);  // P3-04 r19 22.2 (0.21.0): kinds 41, 42; r17 21.2 (0.20.0): kinds 39, 40
+    REQUIRE(compiled.kinds.size() == 43U);  // P3-04 r21 23.2 (0.22.0): kind 43; r19 22.2 (0.21.0): kinds 41, 42; r17 21.2 (0.20.0): kinds 39, 40
     const eng::EventCatalogue cat = eng::catalogue_of(engine_test::shipped());
-    REQUIRE(cat.kinds.size() == 42U);  // P3-04 r19 22.2 (0.21.0): kinds 41, 42; r17 21.2 (0.20.0): kinds 39, 40
+    REQUIRE(cat.kinds.size() == 43U);  // P3-04 r21 23.2 (0.22.0): kind 43; r19 22.2 (0.21.0): kinds 41, 42; r17 21.2 (0.20.0): kinds 39, 40
     for (std::size_t i = 0; i < want.size(); ++i) {
         const K& w = want[i];
         CAPTURE(std::string_view(w.key));
@@ -292,7 +292,7 @@ TEST_CASE("P3-06 11 (r7), 16.1 item 11: the compiled kinds 20-30 equal section 1
 TEST_CASE("P3-06 3.3, 18.2, r10 20.17: the hist.conflict streams follow hist.peoples.split, 53 names in all") {
     const auto names = worldgen::streams::all_stream_names;
     // 51 at 0.16.0; P1-06 r4 adds geo.regions.name (52); r10 20.17 hist.conflict.search after hist.conflict.sack
-    REQUIRE(names.size() == 54U);   // P3-06 r22 24.5 (0.21.0): hist.conflict.toll after hist.conflict.search
+    REQUIRE(names.size() == 56U);   // P5-12 3 (0.22.0): hist.renaming.chance, hist.renaming.name after hist.conflict.toll; P3-06 r22 24.5 (0.21.0): hist.conflict.toll after hist.conflict.search
     std::size_t at = names.size();
     for (std::size_t i = 0; i < names.size(); ++i) {
         if (names[i] == "hist.peoples.split") at = i;
@@ -305,6 +305,10 @@ TEST_CASE("P3-06 3.3, 18.2, r10 20.17: the hist.conflict streams follow hist.peo
     CHECK(names[at + 6] == "hist.conflict.search");
     REQUIRE(at + 7 < names.size());
     CHECK(names[at + 7] == "hist.conflict.toll");
+    // P5-12 3 (generator 0.22.0): the renaming streams after hist.conflict.toll, in this order
+    REQUIRE(at + 9 < names.size());
+    CHECK(names[at + 8] == "hist.renaming.chance");
+    CHECK(names[at + 9] == "hist.renaming.name");
 }
 
 }  // TEST_SUITE

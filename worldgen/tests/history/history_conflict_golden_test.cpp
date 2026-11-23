@@ -85,7 +85,7 @@ void check_world_case(const CCase& g) {
     const Tables t = tables_of_world(r);
     CHECK(resumed == t);
     const std::map<std::string, std::string> detail = chrono_test::detail_tables(r);
-    CHECK(g.tables.size() == 13U);
+    CHECK(g.tables.size() == 14U);  // P3-04 r21 23.4: region_name (schema 8)
     for (const auto& [name, hex] : g.tables) {
         CAPTURE(name);
         CHECK(detail.at(name) == hex);

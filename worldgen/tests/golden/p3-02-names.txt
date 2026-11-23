@@ -494,7 +494,7 @@ preload regions Central Downs
 preload regions East Wood
 preload regions East Wood II
 result regions human settlement 5 1 1 Deanham
-result regions human settlement 5 2 0 Alantton
+result regions human settlement 5 2 1 Serd
 result regions human settlement 5 3 1 Cickham
 scenario filtered 0 18
 preload filtered Bo
@@ -520,7 +520,7 @@ scenario redraw_alone 0 0
 result redraw_alone filt settlement 1 17 2 Ka
 scenario redraw_after 0 0
 result redraw_after human settlement 5 1 1 Deanham
-result redraw_after human settlement 5 2 0 Alantton
+result redraw_after human settlement 5 2 1 Serd
 result redraw_after human settlement 5 3 1 Cickham
 result redraw_after human settlement 5 4 1 Gackwick
 result redraw_after human settlement 5 5 0 Brir
@@ -1234,7 +1234,7 @@ fatal never settlement 0 1 1 names: culture 'never' produced no valid settlement
 0 human civilization 49 1 The Duchy of Steldel
 0 human civilization 50 0 The Rald League
 0 human settlement 1 1 Deanham
-0 human settlement 2 0 Alantton
+0 human settlement 2 1 Serd
 0 human settlement 3 1 Cickham
 0 human settlement 4 1 Gackwick
 0 human settlement 5 0 Brir
@@ -1433,7 +1433,7 @@ fatal never settlement 0 1 1 names: culture 'never' produced no valid settlement
 0 orcish settlement 48 0 Ghark
 0 orcish settlement 49 0 Urald Camp
 0 orcish settlement 50 0 Azol'uguuz
-sha256 0 43d781b7b1247e0a4ae13ed7ffae2b81dc0957164fe14d6ac785171e9a569c12
+sha256 0 5d1d3c9198d7d0097578905ed49b4482cd331667243b5f73b1478f0c3c1ded57
 42 dwarven god 1 0 Khorkhound
 42 dwarven god 2 1 Grirtoum
 42 dwarven god 3 1 Bronhak
@@ -1692,7 +1692,7 @@ sha256 0 43d781b7b1247e0a4ae13ed7ffae2b81dc0957164fe14d6ac785171e9a569c12
 42 elven settlement 6 0 Minno
 42 elven settlement 7 0 Iennmo
 42 elven settlement 8 1 Ciennfae
-42 elven settlement 9 0 Glathenddell
+42 elven settlement 9 2 Canla
 42 elven settlement 10 0 Rannve
 42 elven settlement 11 0 Fivelie
 42 elven settlement 12 0 Coand
@@ -1732,7 +1732,7 @@ sha256 0 43d781b7b1247e0a4ae13ed7ffae2b81dc0957164fe14d6ac785171e9a569c12
 42 elven settlement 46 1 Iemiel
 42 elven settlement 47 0 Nienann
 42 elven settlement 48 0 Ithimaesdell
-42 elven settlement 49 0 Esranddell
+42 elven settlement 49 1 Sileli
 42 elven settlement 50 0 Cathfe
 42 faerie god 1 0 Saetwy
 42 faerie god 2 1 Miatae
@@ -2163,7 +2163,7 @@ sha256 0 43d781b7b1247e0a4ae13ed7ffae2b81dc0957164fe14d6ac785171e9a569c12
 42 human settlement 27 0 Birgil
 42 human settlement 28 0 Edadtent
 42 human settlement 29 0 Steasford
-42 human settlement 30 1 Alantton
+42 human settlement 30 2 Alelbrentstead
 42 human settlement 31 0 Sardstead
 42 human settlement 32 0 Readbury
 42 human settlement 33 0 Bromham
@@ -2334,9 +2334,9 @@ sha256 0 43d781b7b1247e0a4ae13ed7ffae2b81dc0957164fe14d6ac785171e9a569c12
 42 orcish settlement 48 0 Aal'uraaz Fort
 42 orcish settlement 49 0 Orz'grom Camp
 42 orcish settlement 50 0 Thuurkbash
-sha256 42 724f863575e57e163fd73cf4f41d5c4f2f967f6ce3abc2361949c5e1143c587e
-r4sha256 0 24337e74b7094c71ae4e8362fc7f3d8e2bb65e7828694d990a27cae5827e2df1
-r4sha256 42 5a61d67ecfcaef51fd27e3ac7e42277cfc8ddaffaa65baa842e96539f76f685f
+sha256 42 1319bb8d2aafb2dd902315b065780ce62a0bbe0ca173f7c61bbf6cd098d4a9d6
+r4sha256 0 6abb4dc4bf74f2b32f0ecf1a916f46390fc6a4cae6950537c4272ea846630041
+r4sha256 42 3fd9b70ed304b0ffc8094022680a848a08ffb00226765bf52e0358991b48d337
 # r10 (P3-02 12, generator 0.19.0):
 #   corename <root> <core>            12.2's core (letters without ' and -)
 #   corenear <core> <K comma-joined|-> <0|1>   12.2's near (equal or one letter apart)
@@ -3064,14 +3064,14 @@ core 0 human civilization 48 0 The Kingdom of Tearalur
 core 0 human civilization 49 1 The Duchy of Steldel
 core 0 human civilization 50 0 The Rald League
 core 0 human settlement 1 3 Hickwuntstead
-core 0 human settlement 2 0 Alantton
+core 0 human settlement 2 3 Meardbury
 core 0 human settlement 3 2 Edeantford
 core 0 human settlement 4 4 Hockford
 core 0 human settlement 5 3 Rirduntstead
 core 0 human settlement 6 1 Asheackwick
 core 0 human settlement 7 1 Gurdton
 core 0 human settlement 8 4 Muldedeamham
-core 0 human settlement 9 7 Burdanford
+core 0 human settlement 9 1 Alant
 core 0 human settlement 10 2 Alilbury
 core 0 human settlement 11 2 Silstudstead
 core 0 human settlement 12 3 Gidreambury
@@ -3083,7 +3083,7 @@ core 0 human settlement 17 1 Tontstead
 core 0 human settlement 18 0 Ceanbir
 core 0 human settlement 19 1 Duntstead
 core 0 human settlement 20 3 Brickbury
-core 0 human settlement 21 1 Geard
+core 0 human settlement 21 3 Dilgildstead
 core 0 human settlement 22 0 Hinbeasbury
 core 0 human settlement 23 1 Wurdedam
 core 0 human settlement 24 1 Ashedgord
@@ -3263,7 +3263,7 @@ core 0 orcish settlement 47 1 Uukh'kruuld Fort
 core 0 orcish settlement 48 0 Ghark
 core 0 orcish settlement 49 2 Dogkrogh Fort
 core 0 orcish settlement 50 0 Azol'uguuz
-coresha256 0 aa6d5b4c2681c1a28bcb06019874630c89b800f5d1347cdadd4d7357ab06f855
+coresha256 0 e506710ecdaa8d949a32cc4f4db31b57f76229572c54542711b1396612bf44ba
 core 42 dwarven god 1 0 Khorkhound
 core 42 dwarven god 2 1 Grirtoum
 core 42 dwarven god 3 1 Bronhak
@@ -3562,7 +3562,7 @@ core 42 elven settlement 45 0 Aendithieth
 core 42 elven settlement 46 1 Iemiel
 core 42 elven settlement 47 0 Nienann
 core 42 elven settlement 48 0 Ithimaesdell
-core 42 elven settlement 49 0 Esranddell
+core 42 elven settlement 49 1 Sileli
 core 42 elven settlement 50 0 Cathfe
 core 42 faerie god 1 0 Saetwy
 core 42 faerie god 2 1 Miatae
@@ -3994,7 +3994,7 @@ core 42 human settlement 27 0 Birgil
 core 42 human settlement 28 0 Edadtent
 core 42 human settlement 29 5 Stockham
 core 42 human settlement 30 2 Alelbrentstead
-core 42 human settlement 31 4 Balcintton
+core 42 human settlement 31 5 Rockford
 core 42 human settlement 32 2 Mealdton
 core 42 human settlement 33 1 Heanhodwick
 core 42 human settlement 34 2 Radmulstead
@@ -4164,7 +4164,7 @@ core 42 orcish settlement 47 0 Ark'muuz
 core 42 orcish settlement 48 0 Aal'uraaz Fort
 core 42 orcish settlement 49 0 Orz'grom Camp
 core 42 orcish settlement 50 0 Thuurkbash
-coresha256 42 98321695e5c33899ccc5794089cae42bff5988cfc5e1091b9bab197b2453735d
+coresha256 42 2158bca7dfa6108230a3512a17c98675f8a3675a4d695f8a09e413d859b519a1
 # r13 (P3-02 13, generator 0.19.0 second round):
 #   triple <0|1> <name>   13.2's test on a rendered name (case-insensitive, three equal letters a-z
 #       at consecutive positions); the name is the rest of the line
@@ -5178,3 +5178,95 @@ dvalid dwarven dadin 1
 dvalid dwarven kadin 1
 dvalid dwarven didin 0
 dvalid dwarven gririnhard 0
+# r19 (P3-02 16, generator 0.22.0):
+#   tails <culture> settlement <T_K, comma-separated or ->
+#   fs <tail> <first syllable>
+#   doubled <root> <form> <item of 16.1, 0 valid>
+#   hreject <seed> human settlement <c> <e> <t> <root> <item 1|2|3|ass> <name>  every attempt before the
+#       first valid one that 16.1 or 16.2 rejects, e = 1..400
+#   hresult <seed> human settlement <c> <e> <attempt|F> <name> <attempt at r17|F> <name at r17>  make_name with an empty registry for each e of an hreject line
+tails dwarven settlement -
+tails elven settlement dell
+tails faerie settlement -
+tails goblin settlement -
+tails human settlement ford,ton,bury,wick,ham,stead
+tails orcish settlement -
+fs bury bur
+fs stead stead
+fs ford ford
+fs ton ton
+fs dell dell
+fs wick wick
+fs ham ham
+doubled sudstead {root}stead 1
+doubled galwick {root}wick 1
+doubled ston {root}ton 1
+doubled dabur {root}bury 1
+doubled canasham {root}ford 2
+doubled deas {root}stead 3
+doubled bant {root}ton 3
+doubled canasham {root} 0
+doubled sud {root}stead 0
+doubled gal {root}wick 0
+doubled bea {root}ford 0
+doubled stead {root}ham 2
+doubled deantton {root}wick 2
+hreject 0 human settlement 5 2 0 alant 3 Alantton
+hreject 0 human settlement 5 107 0 steant 3 Steantton
+hreject 0 human settlement 5 114 0 wenris 3 Wenrisstead
+hreject 0 human settlement 5 134 0 geas 3 Geasstead
+hreject 0 human settlement 5 196 1 alont 3 Alontton
+hreject 0 human settlement 5 217 0 hunt 3 Huntton
+hreject 0 human settlement 5 249 0 casstir ass Casstirwick
+hreject 0 human settlement 5 269 1 edassan ass Edassan
+hreject 0 human settlement 5 271 0 beas 3 Beasstead
+hreject 0 human settlement 5 297 1 heas 3 Heasstead
+hreject 0 human settlement 5 322 0 tont 3 Tontton
+hreject 0 human settlement 5 341 0 bris 3 Brisstead
+hreject 0 human settlement 5 342 1 edeant 3 Edeantton
+hreject 0 human settlement 5 352 0 alont 3 Alontton
+hreject 0 human settlement 5 373 0 miswis 3 Miswisstead
+hreject 0 human settlement 5 383 0 hesbint 3 Hesbintton
+hresult 0 human settlement 5 2 1 Serd 0 Alantton
+hresult 0 human settlement 5 107 2 Sealbury 0 Steantton
+hresult 0 human settlement 5 114 1 Alanwick 0 Wenrisstead
+hresult 0 human settlement 5 134 1 Studashis 0 Geasstead
+hresult 0 human settlement 5 196 3 Branwick 1 Alontton
+hresult 0 human settlement 5 217 1 Cidsteckbury 0 Huntton
+hresult 0 human settlement 5 249 2 Meckton 0 Casstirwick
+hresult 0 human settlement 5 269 4 Bilgon 1 Edassan
+hresult 0 human settlement 5 271 1 Stedstead 0 Beasstead
+hresult 0 human settlement 5 297 2 Brackford 1 Heasstead
+hresult 0 human settlement 5 322 1 Mearwick 0 Tontton
+hresult 0 human settlement 5 341 1 Alendumbury 0 Brisstead
+hresult 0 human settlement 5 342 2 Tealdmackton 1 Edeantton
+hresult 0 human settlement 5 352 1 Saldhumwick 0 Alontton
+hresult 0 human settlement 5 373 2 Brilton 0 Miswisstead
+hresult 0 human settlement 5 383 2 Brintwick 0 Hesbintton
+hreject 42 human settlement 5 30 1 alant 3 Alantton
+hreject 42 human settlement 5 73 1 bres 3 Bresstead
+hreject 42 human settlement 5 77 0 seas 3 Seasstead
+hreject 42 human settlement 5 127 0 ston 2 Stonford
+hreject 42 human settlement 5 128 0 wunt 3 Wuntton
+hreject 42 human settlement 5 140 0 stantteas 3 Stantteasstead
+hreject 42 human settlement 5 177 0 reamsteas 3 Reamsteasstead
+hreject 42 human settlement 5 177 1 mint 3 Mintton
+hreject 42 human settlement 5 215 0 breant 3 Breantton
+hreject 42 human settlement 5 245 2 wescas 3 Wescasstead
+hreject 42 human settlement 5 254 0 gudsteant 3 Gudsteantton
+hreject 42 human settlement 5 356 0 edint 3 Edintton
+hreject 42 human settlement 5 379 0 edamhent 3 Edamhentton
+hreject 42 human settlement 5 399 1 dardedint 3 Dardedintton
+hresult 42 human settlement 5 30 2 Alelbrentstead 1 Alantton
+hresult 42 human settlement 5 73 2 Bronbrealbury 1 Bresstead
+hresult 42 human settlement 5 77 2 Staswick 0 Seasstead
+hresult 42 human settlement 5 127 1 Mungur 0 Stonford
+hresult 42 human settlement 5 128 1 Edearstead 0 Wuntton
+hresult 42 human settlement 5 140 2 Henwantham 0 Stantteasstead
+hresult 42 human settlement 5 177 2 Asheldham 0 Reamsteasstead
+hresult 42 human settlement 5 215 1 Girdwick 0 Breantton
+hresult 42 human settlement 5 245 4 Aleamford 2 Wescasstead
+hresult 42 human settlement 5 254 1 Ashild 0 Gudsteantton
+hresult 42 human settlement 5 356 1 Ciswilbury 0 Edintton
+hresult 42 human settlement 5 379 1 Brackton 0 Edamhentton
+hresult 42 human settlement 5 399 2 Wearcentham 1 Dardedintton

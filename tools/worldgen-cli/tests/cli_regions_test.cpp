@@ -290,7 +290,7 @@ TEST_CASE("cli P1-06 9: report: the eight region keys close [geography], with th
     CHECK(contains(r.out, "\npass = 0\nphase = "));
     CHECK(contains(r.out, "\nrace = 6\nrace_biome = 48\nregion = 14\nregion_biome = "));
     CHECK(contains(r.out, "\nregion_border = 18\n"));
-    CHECK(contains(r.out, "\nschema_version = 7\n"));
+    CHECK(contains(r.out, "\nschema_version = 8\n"));
 }
 
 TEST_CASE("cli P1-06 10.3: --until resources leaves the three tables empty and no region keys") {
@@ -302,7 +302,7 @@ TEST_CASE("cli P1-06 10.3: --until resources leaves the three tables empty and n
     // --until none: every table empty, 34 pages (139264 bytes) since schema 7 (P3-04 9.6).
     const fs::path e = w.sb.file("none.db");
     generate(w.sb, w.data, {"--until", "none"}, e);
-    CHECK(read_bytes(e).size() == 139264U);
+    CHECK(read_bytes(e).size() == 143360U);
     const ProcessResult re = w.sb.cli({"report", "--db", u8(e)});
     REQUIRE(re.exit_code == EXIT_OK);
     CHECK(contains(re.out, "\n[tables]\nage = 0\nbiome = 0\ncivilization = 0\nclimate = 0\nculture = 0\nevent = 0\nevent_cause = 0\nevent_kind = 0\nevent_kind_role = 0\nevent_kind_value = 0\nevent_participant = 0\nevent_value = 0\ngod = 0\nlayer = 0\nmeta = 17\npass = 0\nphase = 0\nrace = 0\nrace_biome = 0\nregion = 0\n"
@@ -457,7 +457,7 @@ TEST_CASE("cli P0-02 amendment 17, 10.1 test 6: a version 4 world is refused by 
         CAPTURE(args[0]);
         const ProcessResult r = w.sb.cli(args);
         CHECK(r.exit_code == EXIT_INPUT);
-        CHECK(contains(r.err, "world schema version 4, this build reads 7"));
+        CHECK(contains(r.err, "world schema version 4, this build reads 8"));
         CHECK(r.out.empty());
     }
     // Plain `hash` hashes the bytes without opening the world (P0-04 8).

@@ -209,7 +209,7 @@ void check_shipped_values(const wd::ContentSet& c) {
     }
     const wd::KindContent* history = c.find_kind("history");
     REQUIRE(history != nullptr);
-    REQUIRE(history->definitions.size() == 5U);  // chronology, conflict (P3-06 12.1), engine, peoples (P3-05 12.1), report (P3-04 4)
+    REQUIRE(history->definitions.size() == 6U);  // chronology, conflict (P3-06 12.1), engine, peoples (P3-05 12.1), renaming (P5-12 4), report (P3-04 4)
     const wd::Definition& chrono = history->definitions[0];
     CHECK(chrono.id == "chronology");
     REQUIRE(chrono.record.size() == 3U);
