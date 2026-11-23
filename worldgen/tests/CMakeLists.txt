@@ -426,9 +426,14 @@ target_compile_definitions(worldgen-tests PRIVATE
 # worlds (seeds 0 to 19) and the golden dumps of 13.4 (reference
 # reference/p4_timeline_reference.py). The 1024 cases are in the skipped
 # suite "timeline-slow"; the bench is the skipped suite "timeline-bench".
+# P4-03 (docs/specs/p4-03-history-view.md 11.1): the colour table of 7.2 and
+# the distance rule of 7.3, territory_holders, the inner borders of 8.2, the
+# control-run check of Timeline::build (9.4) and phase_kind_word, in
+# timeline_borders_test.cpp; the other files carry P4-03's colours and calls.
 target_sources(worldgen-tests PRIVATE
     timeline_unit_test.cpp
     timeline_territory_test.cpp
+    timeline_borders_test.cpp
     timeline_golden_test.cpp
     timeline_property_test.cpp
     timeline_bench_test.cpp

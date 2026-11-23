@@ -4,6 +4,11 @@
 // causes and a participant repeated across roles, the FatalError texts of 5.1, and load_history's errors
 // (5.2) against the history report's.
 //
+// P4-03 (docs/specs/p4-03-history-view.md 7) replaces 5.5's colours for the six shipped race keys: item 1
+// below now checks 5.5's shade rule on P4-01's base colours given explicitly (the rule that still serves
+// every key without a row of P4-03 7.2), and item 2 the colours of P4-03 7.2. The table of 7.2 itself, the
+// distance rule and the P4-03 library items are in timeline_borders_test.cpp.
+//
 // The T1 table hashes against the reference's copy (13.3) and the golden dumps are in
 // timeline_golden_test.cpp. Written from the spec only; the expected values below were worked out by hand
 // from worldgen/tests/data/timeline/t1-edges.toml and are also checked by
@@ -74,7 +79,7 @@ void check_state(const wh::SettlementState& s, std::int64_t id, bool exists, std
 
 TEST_SUITE("timeline") {
 
-TEST_CASE("P4-01 13.2 item 1: race_base_colour and civilization_shade, the table of 5.5") {
+TEST_CASE("P4-01 13.2 item 1 (P4-03 7.2): civilization_shade on P4-01's base colours; keys without a row") {
     CHECK(wi::TAG_COLOUR == 0x524C4F433A4D4E55ULL);
     struct Row {
         const char* key;
@@ -90,8 +95,9 @@ TEST_CASE("P4-01 13.2 item 1: race_base_colour and civilization_shade, the table
     };
     for (const Row& r : rows) {
         CAPTURE(std::string(r.key));
-        const Rgb base = wi::race_base_colour(r.key);
-        CHECK(base == r.s[0]);
+        // P4-03 7.2: the six shipped keys no longer take these bases; the shade rule is unchanged
+        const Rgb base = r.s[0];
+        CHECK_FALSE(wi::race_base_colour(r.key) == base);
         for (std::int64_t k = 0; k < 4; ++k) {
             CAPTURE(k);
             CHECK(wi::civilization_shade(base, k) == r.s[k]);
@@ -115,8 +121,8 @@ TEST_CASE("P4-01 13.2 item 1: race_base_colour and civilization_shade, the table
     CHECK(wi::race_base_colour("troll") ==
           Rgb{channel(0x90674847EA21F9EAULL, 0), channel(0x90674847EA21F9EAULL, 1), channel(0x90674847EA21F9EAULL, 2)});
     // byte-exact comparison: no case folding, no trimming
-    CHECK_FALSE(wi::race_base_colour("Elf") == Rgb{52, 150, 70});
-    CHECK_FALSE(wi::race_base_colour("elf ") == Rgb{52, 150, 70});
+    CHECK_FALSE(wi::race_base_colour("Elf") == Rgb{40, 190, 70});
+    CHECK_FALSE(wi::race_base_colour("elf ") == Rgb{40, 190, 70});
     // the unknown examples have four distinct shades too (invariant 8)
     for (const char* key : {"troll", ""}) {
         const Rgb b = wi::race_base_colour(key);
@@ -135,13 +141,13 @@ TEST_CASE("P4-01 13.2 item 1: race_base_colour and civilization_shade, the table
 TEST_CASE("P4-01 13.2 item 2: civilization_colours counts ordinals per race, not per id") {
     const wh::HistoryTables& tb = t1().h.tables;
     REQUIRE(tb.civilizations.size() == 4U);
-    // c1 elf, c2 dwarf, c3 elf, c4 dwarf
+    // c1 elf, c2 dwarf, c3 elf, c4 dwarf; P4-03 7.2 (11.1 item 3)
     const std::vector<Rgb> c = wi::civilization_colours(tb);
     REQUIRE(c.size() == 4U);
-    CHECK(c[0] == Rgb{52, 150, 70});    // elf, ordinal 0
-    CHECK(c[1] == Rgb{160, 82, 45});    // dwarf, ordinal 0
-    CHECK(c[2] == Rgb{153, 202, 162});  // elf, ordinal 1
-    CHECK(c[3] == Rgb{207, 168, 150});  // dwarf, ordinal 1
+    CHECK(c[0] == Rgb{40, 190, 70});    // elf, ordinal 0
+    CHECK(c[1] == Rgb{220, 105, 25});   // dwarf, ordinal 0
+    CHECK(c[2] == Rgb{150, 230, 150});  // elf, ordinal 1
+    CHECK(c[3] == Rgb{245, 165, 105});  // dwarf, ordinal 1
     // a function of the tables only: the same on every call
     CHECK(wi::civilization_colours(tb) == c);
     // nothing depends on race ids: the same keys under swapped ids give the same colours

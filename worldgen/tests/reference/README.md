@@ -1429,3 +1429,52 @@ cases in `--inputs DIR` (default `~/.cache/the-unmapped/out/p4-01-tests/inputs`:
 0.20.0); it takes about four minutes. `check` runs the worked colour table, 5.6's example, T1's
 hand-checked facts and pixels, the invariants of section 8 on the fixtures and, unless `--quick`, on the
 input worlds with the golden file's currency. The readings it chose are listed in its `READINGS` string.
+
+### P4-03 colours, holders and inner borders (generator 0.21.0)
+
+Written from `docs/specs/p4-03-history-view.md` (sections 7, 8, 9.2, 9.4, 9.6, 11.1) without the engineer's
+branch. The default rules are P4-03's: the table of 7.2 (`TABLE_P403`) and `race_civilization_colour` (keys
+outside the table keep 5.5's hash base and `civilization_shade`), `territory_holders`, `TerritoryBase`'s
+kind, east and south values and rule 8.2 in `Base.pixel` (`dim` = floor(c 12 / 16)), the distance rule of
+7.3 (`distance`, `background_set`, `distance_table`; checked only, never used for output) and the texts of
+9.4 (`control_run_error`). `--rules p4-01` gives P4-01's colours and image (holders ignored) and serves the
+0.20.0 P3-07 fixtures (`p3_report_reference.use_version("0.20.0")`).
+
+```
+python3 -B worldgen/tests/reference/p4_timeline_reference.py check            # P4-03 rules, 0.21.0 inputs
+python3 -B worldgen/tests/reference/p4_timeline_reference.py golden
+python3 -B worldgen/tests/reference/p4_timeline_reference.py distances        # the "min" columns of 7.2
+python3 -B worldgen/tests/reference/p4_timeline_reference.py --rules p4-01 golden -   # = the P4-01 file
+```
+
+`check` adds: the table of 7.2 for k = 0 ... 7, the hash rule for `troll`, the empty key, `Elf` and `elf `;
+rules C1 to C3 over the 24 entries against B (the ocean ramp for t = 0 ... 30000, the lake colour, the six
+river colours, the twelve biome colours of `game/data/biomes/`, confirmed equal to every input world's table
+`biome`), the "min" columns of 7.2, the worst pair (goblin 1 / steppe, 88), the closest pair across races
+(dwarf 1 / orc 1, 90) and the four distances 7.1 quotes for P4-01's colours (20, 26, 7, 44); 8.2's 4 x 2
+example; the 8 x 6 layout of `timeline_borders_test.cpp` (`check_inner_borders`); the A3 cases of 11.1 item 7
+on T1's rows; and that rule 8.2 dims at least one cell of the 512 world cases at E (it does: the four
+512 world cases dim 1 299 cells in all at 0.21.0). The readings are `READINGS` A3a, A3b and P1 to P5.
+
+Inputs at 0.21.0: `~/.cache/the-unmapped/out/p4-03-tests/inputs` (the new default), the eight world cases
+generated as P4-01 did, by `worldgen-cli generate --data game/data` with the arguments of
+`tools/ci/world-hashes.sh` (sample-42-1024: `--seed 42`), here with the 0.21.0 CLI of the P5-01 integration
+branch (`~/.cache/the-unmapped/build/p5-01-int/linux-gcc-release/`), used for nothing but these inputs. All
+26 tables of each (`hash --detail`'s table lines, layers, meta and every history table included) equal those
+of the reference-built worlds of `~/.cache/the-unmapped/out/p5-01-tests/report-inputs/` (P5-01 above).
+
+Re-recording of `worldgen/tests/golden/p4-01-timeline.txt` (P4-03 9.6), in three steps:
+
+1. P4-01's rules on the 0.20.0 inputs (`--rules p4-01 golden`, inputs `p4-01-tests/inputs`): byte for byte
+   the committed P4-01 file.
+2. P4-03's rules on the same 0.20.0 inputs, the P3-07 fixtures still at 0.20.0: against the committed file
+   exactly the 21 `static` lines (every case: all 21 have civilizations of shipped races, so their `colour`
+   lines change) and the 24 `territory` lines move, and the header (two lines for one). No `year`, `years` or
+   `table` line moves.
+3. P4-03's rules on the 0.21.0 inputs (the committed file): against step 2, the world cases' `year`, `years`
+   and `static` lines move (their histories are 0.21.0's: geo-phrase-512 20 year lines, geo-seed-0-512 14,
+   geo-seed-1-1024 50, geo-seed-42-512 32, hist-dense-1024 64, hist-races-elf-orc-1024 10,
+   hist-span-2000-512 16, sample-42-1024 49), and the territory line at E of every world case but
+   hist-races-elf-orc-1024 (the holders at the first change year and at E / 2 are those of 0.20.0); and the
+   `table meta` line of each of the 13 fixtures (meta `generator_version` 0.21.0). No fixture's `static`,
+   `year` or `years` line moves between steps 2 and 3.

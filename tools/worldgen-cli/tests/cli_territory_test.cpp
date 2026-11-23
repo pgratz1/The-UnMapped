@@ -81,7 +81,8 @@ std::vector<std::uint8_t> library_territory(const fs::path& path, std::int64_t y
         wi::TerritoryBase::build(*elevation, water ? &*water : nullptr, river ? &*river : nullptr,
                                  flow_dir ? &*flow_dir : nullptr, *biome, *region, table);
     const auto fill = wi::territory_fill(h.value().timeline, wi::civilization_colours(h.value().tables), y);
-    return wi::render_territory(base, fill, k);
+    // P4-03 9.2: the CLI draws with the holders of the year
+    return wi::render_territory(base, fill, wi::territory_holders(h.value().timeline, y), k);
 }
 
 pngtest::Image png_of(const fs::path& p) {
