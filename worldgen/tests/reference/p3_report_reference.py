@@ -1682,10 +1682,14 @@ def ddl_statements():
     out = [s for s in block.splitlines() if s.startswith("CREATE TABLE")]
     if not V3:   # schema 7 before 0.22.0: no region_name (P3-04 r21 23.4)
         out = [s for s in out if not s.startswith("CREATE TABLE region_name ")]
-    if V4:   # schema 9 (P5-02 11.1), from the spec's text while schema.md (the engineer's) still holds 8
+    if V4:   # schema 9 (P5-02 11.1), from the spec's text whether schema.md holds 8 or 9
         out = [pe.SETTLEMENT_DDL_023 if s.startswith("CREATE TABLE settlement (") else s for s in out]
         have = {s.split(" ")[2] for s in out}
         out += [s for s in pe.DDL_023_NEW if s.split(" ")[2] not in have]
+    else:    # schema 8 or older once schema.md holds 9 (P5-02): no ending, none of the five tables
+        new = {s.split(" ")[2] for s in pe.DDL_023_NEW}
+        out = [s.replace(", ending INTEGER NOT NULL) STRICT", ") STRICT") if s.startswith("CREATE TABLE settlement (")
+               else s for s in out if s.split(" ")[2] not in new]
     return out
 
 

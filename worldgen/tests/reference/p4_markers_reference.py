@@ -63,8 +63,22 @@ REPO = os.path.normpath(os.path.join(_HERE, "..", "..", ".."))
 GOLDEN = os.path.join(REPO, "worldgen", "tests", "golden", "p4-04-markers.txt")
 T2_DIR = os.path.join(REPO, "worldgen", "tests", "data", "markers")
 T2_NAME = "t2-markers"
-INPUTS = os.path.join(os.path.expanduser("~"), ".cache", "the-unmapped", "out", "p4-04-tests", "inputs")
-GENERATOR_VERSION = "0.22.0"
+# Generator 0.23.0 (P5-02, schema 9) by default: the world cases are the report inputs of the P5-02 integration
+# (r1 histories); `--version 0.22.0` serves the committed 0.22.0 file (inputs of P4-04, timeline rules p4-03a).
+INPUTS_022 = os.path.join(os.path.expanduser("~"), ".cache", "the-unmapped", "out", "p4-04-tests", "inputs")
+INPUTS = os.path.join(os.path.expanduser("~"), ".cache", "the-unmapped", "out", "p5-02-int", "report-inputs")
+GENERATOR_VERSION = "0.23.0"
+
+
+def use_version(v):
+    """0.22.0: the P4-04 golden as recorded (schema 8 fixtures, timeline rules p4-03a); 0.23.0 the default."""
+    global GENERATOR_VERSION, INPUTS
+    if v == "0.22.0":
+        GENERATOR_VERSION, INPUTS = "0.22.0", INPUTS_022
+        tl.RULES = "p4-03a"
+        prr.use_version("0.22.0")
+    elif v != "0.23.0":
+        raise SystemExit("--version: 0.22.0 or 0.23.0")
 WORLD_CASES = tl.WORLD_CASES
 
 READINGS = """
@@ -912,6 +926,10 @@ def main(argv):
     if not argv:
         print(__doc__)
         return 2
+    if "--version" in argv:
+        i = argv.index("--version")
+        use_version(argv[i + 1])
+        argv = argv[:i] + argv[i + 2:]
     cmd, rest = argv[0], argv[1:]
     if cmd == "dump":
         if "--glyphs" in rest:
