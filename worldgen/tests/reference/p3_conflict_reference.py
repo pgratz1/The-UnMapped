@@ -2922,7 +2922,8 @@ def check_peoples_invariants(c, res, inp, w, label):
                    all(KEY_OF[kind[x]] in want_cause[key] for x in cs) and (cs or key == "settlement_dwindled"))
         if e[3] >= 6 and ph[e[4]][2] == QUIET:
             # P5-12 6: the renaming subsystem runs in Q4 as well, charged to its namer (W9)
-            quiet_ok = e[3] in QUIET_KINDS or (FLAGS["rename"] and key == "region_renamed")
+            quiet_ok = e[3] in QUIET_KINDS or (FLAGS["rename"] and key == "region_renamed") or (
+                FLAGS["monsters"] and key in ("monster_appeared", "monster_died", "outpost_abandoned"))   # P5-02 6.1 Q4
             c.true("%s inv 8/14.2 e%d %s not in a quiet step" % (label, e[0], key), quiet_ok)
     pp.check_r6_invariants(c, res, inp, w, label + " P3-05")
 
@@ -6554,6 +6555,11 @@ def check_prefix(c, res, pres, label):
     smaller. A world with no claim equals the peoples-only world in every history table but the three
     catalogue tables and relation (READING: conflict's housekeeping opens enmity rows without a claim).
     Returns the number of excepted eras."""
+    if FLAGS["monsters"]:
+        # P5-02 7.1: from 0.23.0 the shipped configuration also runs the monsters subsystem, whose beasts change
+        # growth from year 0 (G) and whose raids change populations: the peoples-only prefix no longer holds
+        # (I0, p5_02_monsters_reference.py, is the identity that replaces it)
+        return 0
     claims = [e[0] for e in res["event"] if e[3] in CLAIMS]
     if not claims:
         for t in TABLES:
