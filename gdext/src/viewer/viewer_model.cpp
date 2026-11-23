@@ -1,14 +1,21 @@
 #include "viewer/viewer_model.hpp"
 
+#include <algorithm>
+#include <exception>
+#include <new>
+#include <span>
 #include <string>
 #include <string_view>
 
 #include <godot_cpp/core/class_db.hpp>
 #include <godot_cpp/core/object.hpp>
 #include <godot_cpp/core/property_info.hpp>
+#include <godot_cpp/classes/time.hpp>
+#include <godot_cpp/variant/utility_functions.hpp>
 #include <godot_cpp/variant/char_string.hpp>
 #include <godot_cpp/variant/packed_int32_array.hpp>
 
+#include "worldgen/history/digest.hpp"
 #include "worldgen/inspect/layer_catalogue.hpp"
 
 namespace unmapped {
@@ -39,6 +46,10 @@ godot::Array legend_array(const std::vector<worldgen::inspect::LegendEntry>& ent
     return out;
 }
 
+int64_t now_usec() {
+    return static_cast<int64_t>(godot::Time::get_singleton()->get_ticks_usec());
+}
+
 }  // namespace
 
 ViewerModel::ViewerModel() {
@@ -51,6 +62,8 @@ void ViewerModel::reset_views() {
     images_.clear();
     legend_.clear();
     selected_ = -1;
+    history_.reset();
+    timings_ = {};
 }
 
 bool ViewerModel::open_world(const godot::String& path) {
@@ -68,7 +81,19 @@ bool ViewerModel::open_world(const godot::String& path) {
     }
     error_code_ = godot::String();
     error_message_ = godot::String();
-    composites_ = world_->composites();
+    // The history, read once (P4-03 3.1); the territory view first among
+    // the composites when it loaded and the composite regions is available.
+    if (const worldgen::db::WorldReader* reader = world_->reader()) {
+        history_.load(*reader);
+    }
+    const std::vector<worldgen::inspect::Composite> available = world_->composites();
+    if (history_.loaded() &&
+        std::find(available.begin(), available.end(), worldgen::inspect::Composite::regions) != available.end()) {
+        composites_.push_back(std::nullopt);
+    }
+    for (const auto composite : available) {
+        composites_.emplace_back(composite);
+    }
     layers_.resize(static_cast<std::size_t>(get_layer_count()));
     images_.resize(static_cast<std::size_t>(get_view_count()));
     emit_signal("world_opened", path);
@@ -133,12 +158,12 @@ godot::Dictionary ViewerModel::get_view_info(int64_t index) const {
         info["palette"] = layer.is_valid() ? layer->get_palette() : godot::String();
         return info;
     }
-    const auto composite = composites_[static_cast<std::size_t>(index - get_layer_count())];
+    const auto composite = composite_of(index);
     godot::Dictionary info;
     info["kind"] = "composite";
     info["group"] = to_godot(worldgen::inspect::layer_group_title(worldgen::inspect::LayerGroup::composites));
     info["unit"] = "";
-    info["name"] = to_godot(worldgen::inspect::composite_name(composite));
+    info["name"] = composite ? to_godot(worldgen::inspect::composite_name(*composite)) : godot::String("territory");
     const godot::Dictionary elevation = world_->get_layer_info(world_->find_layer("elevation"));
     info["width"] = elevation.get("width", 0);
     info["height"] = elevation.get("height", 0);
@@ -184,8 +209,11 @@ bool ViewerModel::build_image(int64_t view_index) {
         return true;
     }
 
+    if (!composite_of(view_index)) {
+        return build_territory_image(view_index);
+    }
     // A composite: decode the layers it is built from (kept for reuse).
-    const auto composite = composites_[static_cast<std::size_t>(view_index - get_layer_count())];
+    const auto composite = *composite_of(view_index);
     const godot::String name = to_godot(worldgen::inspect::composite_name(composite));
     CompositeLayers parts;
     bool failed = false;
@@ -232,6 +260,9 @@ bool ViewerModel::select_view(int64_t index) {
         emit_signal("view_failed", index, error_code_, error_message_);
         return false;
     }
+    if (index == get_territory_view()) {
+        redraw_territory();  // P4-03 5.3: drawn at the current Y if the holders differ
+    }
     error_code_ = godot::String();
     error_message_ = godot::String();
     selected_ = index;
@@ -239,9 +270,10 @@ bool ViewerModel::select_view(int64_t index) {
         const godot::Ref<WorldLayer> layer = get_layer(index);
         legend_ = legend_array(worldgen::inspect::layer_legend(layer->layer().name, layer->palette(),
                                                                layer->layer().grid, world_->biome_records()));
+    } else if (const auto composite = composite_of(index)) {
+        legend_ = legend_array(worldgen::inspect::composite_legend(*composite, world_->biome_records()));
     } else {
-        legend_ = legend_array(worldgen::inspect::composite_legend(
-            composites_[static_cast<std::size_t>(index - get_layer_count())], world_->biome_records()));
+        legend_ = legend_array(history_.legend(world_->biome_records()));
     }
     emit_signal("view_selected", index);
     return true;
@@ -299,15 +331,9 @@ godot::String ViewerModel::describe_cell(int64_t x, int64_t y) {
     const godot::String saved_message = error_message_;
 
     const bool is_layer = selected_ < get_layer_count();
-    std::string view_name;
-    std::string value_layer;  // the layer whose value is shown
-    if (is_layer) {
-        view_name = get_layer(selected_)->layer().name;
-        value_layer = view_name;
-    } else {
-        view_name = worldgen::inspect::composite_name(composites_[static_cast<std::size_t>(selected_ - get_layer_count())]);
-        value_layer = "elevation";
-    }
+    // The layer whose value is shown: the view's own, or for a composite
+    // the elevation.
+    const std::string value_layer = is_layer ? get_layer(selected_)->layer().name : std::string("elevation");
     const worldgen::db::LayerGrid* value_grid = layer_grid(value_layer);
     if (value_grid == nullptr || cx >= value_grid->width || cy >= value_grid->height) {
         error_code_ = saved_code;
@@ -337,6 +363,7 @@ godot::String ViewerModel::describe_cell(int64_t x, int64_t y) {
         } else {
             const std::string name = to_utf8(world_->get_region_name(region));
             text += "   |   region " + std::to_string(region) + (name.empty() ? std::string() : " " + name);
+            text += history_.holding_text(region);  // P4-03 6.1; empty without history
         }
     }
     error_code_ = saved_code;
@@ -355,8 +382,11 @@ godot::String ViewerModel::get_legend_title() const {
     const godot::Dictionary info = get_view_info(selected_);
     const godot::String name = info["name"];
     if (info["kind"] == godot::Variant("composite")) {
-        const auto composite = composites_[static_cast<std::size_t>(selected_ - get_layer_count())];
-        return name + godot::String(": ") + to_godot(worldgen::inspect::composite_description(composite));
+        if (const auto composite = composite_of(selected_)) {
+            return name + godot::String(": ") + to_godot(worldgen::inspect::composite_description(*composite));
+        }
+        return name + godot::String(": holders in year ") + godot::String::num_int64(history_.year()) +
+               godot::String("; free land as in regions");
     }
     const godot::String unit = info.get("unit", "");
     // The unit when the catalogue gives one; otherwise the palette.
@@ -366,6 +396,303 @@ godot::String ViewerModel::get_legend_title() const {
 
 godot::Ref<WorldFile> ViewerModel::get_world() const {
     return world_;
+}
+
+std::optional<worldgen::inspect::Composite> ViewerModel::composite_of(int64_t view_index) const {
+    const int64_t i = view_index - get_layer_count();
+    if (i < 0 || static_cast<std::size_t>(i) >= composites_.size()) {
+        return std::nullopt;
+    }
+    return composites_[static_cast<std::size_t>(i)];
+}
+
+int64_t ViewerModel::get_territory_view() const {
+    return !composites_.empty() && !composites_.front() ? get_layer_count() : -1;
+}
+
+bool ViewerModel::build_territory_image(int64_t view_index) {
+    const int64_t start = now_usec();
+    bool failed = false;
+    const auto grid = [&](std::string_view layer_name) -> const worldgen::db::LayerGrid* {
+        const int64_t index = world_->find_layer(layer_name);
+        if (index < 0 || failed) {
+            return nullptr;
+        }
+        if (!decode_layer(index)) {
+            failed = true;
+            return nullptr;
+        }
+        return &layers_[static_cast<std::size_t>(index)]->layer().grid;
+    };
+    TerritoryLayers parts;
+    parts.elevation = grid("elevation");
+    parts.biome = grid("biome");
+    parts.region = grid("region");
+    parts.water = grid("water");
+    parts.river = grid("river");
+    parts.flow_dir = grid("flow_dir");
+    if (failed) {
+        return false;  // error_* set by decode_layer
+    }
+    godot::Ref<godot::Image> image;
+    try {
+        if (const auto problem = history_.build_base(parts, world_->biome_colours())) {
+            error_code_ = "not_displayable";
+            error_message_ = "Composite territory cannot be shown: " + to_godot(*problem);
+            return false;
+        }
+        history_.forget_drawn();
+        image = make_rgb_image(history_.base_width(), history_.base_height(), "Composite territory",
+                               [this](std::span<std::uint8_t> out) { history_.draw(out); });
+    } catch (const std::bad_alloc&) {
+        error_code_ = "out_of_memory";
+        error_message_ = "Out of memory while building the territory image";
+        return false;
+    } catch (const std::exception& e) {
+        error_code_ = "not_displayable";
+        error_message_ = godot::String("Composite territory cannot be shown: ") + e.what();
+        return false;
+    }
+    if (image.is_null()) {
+        error_code_ = "not_displayable";
+        error_message_ = "Composite territory cannot be shown";
+        return false;
+    }
+    images_[static_cast<std::size_t>(view_index)] = image;
+    timings_.first_image_usec = now_usec() - start;
+    return true;
+}
+
+void ViewerModel::redraw_territory() {
+    const int64_t view = get_territory_view();
+    if (view < 0 || !history_.has_base() || !history_.needs_draw()) {
+        return;
+    }
+    const godot::Ref<godot::Image> image = images_[static_cast<std::size_t>(view)];
+    if (image.is_null()) {
+        return;  // drawn on its next selection
+    }
+    const std::uint32_t width = history_.base_width();
+    const std::uint32_t height = history_.base_height();
+    if (image->get_format() != godot::Image::FORMAT_RGB8 || image->has_mipmaps() ||
+        image->get_width() != static_cast<int32_t>(width) || image->get_height() != static_cast<int32_t>(height)) {
+        godot::UtilityFunctions::push_error("ViewerModel: the territory image does not match its base");
+        return;
+    }
+    const int64_t start = now_usec();
+    const auto bytes = static_cast<std::size_t>(width) * height * 3U;
+    try {
+        history_.draw(std::span<std::uint8_t>(image->ptrw(), bytes));
+    } catch (const std::exception& e) {
+        godot::UtilityFunctions::push_error(godot::String("ViewerModel: cannot redraw the territory image: ") +
+                                            e.what());
+        return;
+    }
+    const int64_t took = now_usec() - start;
+    ++timings_.redraws;
+    timings_.slowest_redraw_usec = std::max(timings_.slowest_redraw_usec, took);
+    emit_signal("view_image_changed", view);
+}
+
+godot::String ViewerModel::get_history_status() const {
+    switch (history_.status()) {
+        case HistoryStatus::loaded:
+            return "loaded";
+        case HistoryStatus::failed:
+            return "failed";
+        case HistoryStatus::none:
+            break;
+    }
+    return "none";
+}
+
+bool ViewerModel::has_history() const {
+    return history_.loaded();
+}
+
+godot::String ViewerModel::get_history_error_code() const {
+    return history_.status() == HistoryStatus::failed ? to_godot(history_.error_code()) : godot::String();
+}
+
+godot::String ViewerModel::get_history_error_message() const {
+    return history_.status() == HistoryStatus::failed ? to_godot(history_.error_message()) : godot::String();
+}
+
+int64_t ViewerModel::get_end_year() const {
+    return history_.end_year();
+}
+
+int64_t ViewerModel::get_year() const {
+    return history_.year();
+}
+
+bool ViewerModel::set_year(int64_t year) {
+    if (!history_.valid_year(year)) {
+        return false;
+    }
+    if (year == history_.year()) {
+        return true;
+    }
+    try {
+        history_.set_year(year);
+        redraw_territory();
+        if (selected_ >= 0 && selected_ == get_territory_view()) {
+            legend_ = legend_array(history_.legend(world_->biome_records()));
+        }
+    } catch (const std::exception& e) {
+        godot::UtilityFunctions::push_error(godot::String("ViewerModel.set_year: ") + e.what());
+        return false;
+    }
+    emit_signal("year_changed", year);
+    return true;
+}
+
+bool ViewerModel::step_year(int64_t delta) {
+    if (!history_.loaded()) {
+        return false;
+    }
+    const int64_t y = history_.year();
+    const int64_t end = history_.end_year();
+    int64_t target = y;
+    if (delta > 0) {
+        target = delta > end - y ? end : y + delta;
+    } else if (delta < 0) {
+        target = delta < -y ? 0 : y + delta;
+    }
+    return set_year(target);
+}
+
+bool ViewerModel::step_event(int64_t direction) {
+    std::optional<int64_t> target;
+    try {
+        if (direction == -1) {
+            target = history_.previous_event_year();
+        } else if (direction == 1) {
+            target = history_.next_event_year();
+        }
+    } catch (const std::exception& e) {
+        godot::UtilityFunctions::push_error(godot::String("ViewerModel.step_event: ") + e.what());
+        return false;
+    }
+    return target ? set_year(*target) : false;
+}
+
+bool ViewerModel::step_holder_change(int64_t direction) {
+    std::optional<int64_t> target;
+    if (direction == -1) {
+        target = history_.previous_change_year();
+    } else if (direction == 1) {
+        target = history_.next_change_year();
+    }
+    return target ? set_year(*target) : false;
+}
+
+bool ViewerModel::has_previous_event() const {
+    try {
+        return history_.previous_event_year().has_value();
+    } catch (const std::exception&) {
+        return false;
+    }
+}
+
+bool ViewerModel::has_next_event() const {
+    try {
+        return history_.next_event_year().has_value();
+    } catch (const std::exception&) {
+        return false;
+    }
+}
+
+bool ViewerModel::has_previous_change() const {
+    return history_.previous_change_year().has_value();
+}
+
+bool ViewerModel::has_next_change() const {
+    return history_.next_change_year().has_value();
+}
+
+godot::Dictionary ViewerModel::get_year_info() const {
+    godot::Dictionary info;
+    if (!history_.loaded()) {
+        return info;
+    }
+    const auto& state = history_.state();
+    const int64_t y = history_.year();
+    const int64_t end = history_.end_year();
+    info["year"] = y;
+    info["end_year"] = end;
+    info["present"] = y == end;
+    info["age"] = state.age;
+    const worldgen::db::AgeRow* age = history_.age(state.age);
+    info["age_name"] = age != nullptr ? to_godot(age->name) : godot::String();
+    info["phase"] = state.phase;
+    const worldgen::db::PhaseRow* phase = history_.phase(state.phase);
+    info["phase_kind"] = phase != nullptr ? to_godot(worldgen::history::phase_kind_word(phase->kind)) : godot::String();
+    info["phase_start"] = phase != nullptr ? phase->start_year : int64_t{-1};
+    info["phase_end"] = phase != nullptr ? phase->end_year : int64_t{-1};
+    info["realms"] = static_cast<int64_t>(state.civilizations.size());
+    info["regions_held"] = history_.regions_held();
+    info["settlements"] = history_.settlements_standing();
+    info["wars"] = history_.wars();
+    info["events"] = static_cast<int64_t>(state.events.size());
+    info["events_starting"] = static_cast<int64_t>(state.events_starting.size());
+    return info;
+}
+
+godot::Array ViewerModel::get_year_marks() const {
+    godot::Array out;
+    for (const YearMark& mark : history_.year_marks()) {
+        godot::Dictionary row;
+        row["year"] = mark.year;
+        row["kind"] = to_godot(mark.kind);
+        row["label"] = to_godot(mark.label);
+        out.push_back(row);
+    }
+    return out;
+}
+
+godot::Dictionary ViewerModel::get_region_holding(int64_t region) const {
+    godot::Dictionary out;
+    const auto holding = history_.holding(region);
+    if (!holding) {
+        return out;
+    }
+    out["region"] = holding->region;
+    out["civilization"] = holding->civ;
+    const worldgen::db::CivilizationRow* civ = holding->civ != 0 ? history_.civilization(holding->civ) : nullptr;
+    out["name"] = civ != nullptr ? to_godot(civ->name) : godot::String();
+    out["since"] = holding->since;
+    out["event"] = holding->event;
+    return out;
+}
+
+godot::Dictionary ViewerModel::get_civilization_info(int64_t civilization) const {
+    godot::Dictionary out;
+    const worldgen::db::CivilizationRow* civ = history_.civilization(civilization);
+    if (civ == nullptr) {
+        return out;
+    }
+    const worldgen::db::RaceRow* race = history_.race(civ->race);
+    out["id"] = civ->id;
+    out["name"] = to_godot(civ->name);
+    out["race"] = civ->race;
+    out["race_key"] = race != nullptr ? to_godot(race->key) : godot::String();
+    out["race_name"] = race != nullptr ? to_godot(race->name) : godot::String();
+    out["race_plural"] = race != nullptr ? to_godot(race->plural) : godot::String();
+    out["colour"] = history_.colour_of(civ->id);
+    out["founded_year"] = civ->founded_year;
+    out["ended_year"] = civ->ended_year ? *civ->ended_year : int64_t{-1};
+    return out;
+}
+
+godot::PackedInt64Array ViewerModel::get_civilizations_alive() const {
+    godot::PackedInt64Array out;
+    if (history_.loaded()) {
+        for (const int64_t id : history_.state().civilizations) {
+            out.push_back(id);
+        }
+    }
+    return out;
 }
 
 void ViewerModel::_bind_methods() {
@@ -395,6 +722,26 @@ void ViewerModel::_bind_methods() {
     ClassDB::bind_method(D_METHOD("get_legend"), &ViewerModel::get_legend);
     ClassDB::bind_method(D_METHOD("get_legend_title"), &ViewerModel::get_legend_title);
     ClassDB::bind_method(D_METHOD("get_world"), &ViewerModel::get_world);
+    ClassDB::bind_method(D_METHOD("get_history_status"), &ViewerModel::get_history_status);
+    ClassDB::bind_method(D_METHOD("has_history"), &ViewerModel::has_history);
+    ClassDB::bind_method(D_METHOD("get_history_error_code"), &ViewerModel::get_history_error_code);
+    ClassDB::bind_method(D_METHOD("get_history_error_message"), &ViewerModel::get_history_error_message);
+    ClassDB::bind_method(D_METHOD("get_end_year"), &ViewerModel::get_end_year);
+    ClassDB::bind_method(D_METHOD("get_year"), &ViewerModel::get_year);
+    ClassDB::bind_method(D_METHOD("set_year", "year"), &ViewerModel::set_year);
+    ClassDB::bind_method(D_METHOD("step_year", "delta"), &ViewerModel::step_year);
+    ClassDB::bind_method(D_METHOD("step_event", "direction"), &ViewerModel::step_event);
+    ClassDB::bind_method(D_METHOD("step_holder_change", "direction"), &ViewerModel::step_holder_change);
+    ClassDB::bind_method(D_METHOD("has_previous_event"), &ViewerModel::has_previous_event);
+    ClassDB::bind_method(D_METHOD("has_next_event"), &ViewerModel::has_next_event);
+    ClassDB::bind_method(D_METHOD("has_previous_change"), &ViewerModel::has_previous_change);
+    ClassDB::bind_method(D_METHOD("has_next_change"), &ViewerModel::has_next_change);
+    ClassDB::bind_method(D_METHOD("get_year_info"), &ViewerModel::get_year_info);
+    ClassDB::bind_method(D_METHOD("get_year_marks"), &ViewerModel::get_year_marks);
+    ClassDB::bind_method(D_METHOD("get_region_holding", "region"), &ViewerModel::get_region_holding);
+    ClassDB::bind_method(D_METHOD("get_civilization_info", "civilization"), &ViewerModel::get_civilization_info);
+    ClassDB::bind_method(D_METHOD("get_civilizations_alive"), &ViewerModel::get_civilizations_alive);
+    ClassDB::bind_method(D_METHOD("get_territory_view"), &ViewerModel::get_territory_view);
 
     ADD_SIGNAL(MethodInfo("world_opened", PropertyInfo(Variant::STRING, "path")));
     ADD_SIGNAL(MethodInfo("world_open_failed", PropertyInfo(Variant::STRING, "path"),
@@ -403,6 +750,8 @@ void ViewerModel::_bind_methods() {
     ADD_SIGNAL(MethodInfo("view_selected", PropertyInfo(Variant::INT, "index")));
     ADD_SIGNAL(MethodInfo("view_failed", PropertyInfo(Variant::INT, "index"), PropertyInfo(Variant::STRING, "code"),
                           PropertyInfo(Variant::STRING, "message")));
+    ADD_SIGNAL(MethodInfo("year_changed", PropertyInfo(Variant::INT, "year")));
+    ADD_SIGNAL(MethodInfo("view_image_changed", PropertyInfo(Variant::INT, "index")));
 }
 
 }  // namespace unmapped

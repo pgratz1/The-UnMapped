@@ -1204,3 +1204,12 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
 - Proposal: (1) "Restate the report length target": summary length, default worlds median at most 700 and maximum at most 800 lines; four civilizations per race median at most 1,100 and maximum at most 1,400. (2) `history.conflict.quarrel_strength_permille` stays 1000; no lower value is measured.
 - Interim choice: P5-01 r1 section 8 and P3-07 r20 25.5 state T18 so; P5-01 questions 1 and 2 are closed. The design document is not affected.
 - Status: accepted
+
+### Viewer v1, P4-03: the year readout at the present, and keys in a C++-only screen
+
+- Date: 2026-11-23
+- Raised by: viewer engineer, implementing the viewer part of P4-03
+- Design doc section: 10 (world viewer)
+- Problem: (1) P4-03 4.4 leaves the age out of `%YearLabel` "when age is 0", and its check H2 takes the age from the report's `[ages]` line covering Y, which covers no line at E. But P4-01 section 4 puts the present in the last age, and the timeline gives that age at E, so the viewer reads "Year 6000 of 6000 (the present)   |   The Age of Orcs   |   no phase" while H2 as written expects no age part. (2) Writing the screen in C++ only, Godot's GUI focus navigation consumes the arrow keys (`ui_left`, `ui_right`) whenever a focusable Control has keyboard focus, before `_unhandled_key_input` sees them, so the year keys of P4-03 4.3 work only while no focusable control holds focus. A GDScript screen would hit the same; nothing in godot-cpp is missing. (3) Minor C++ friction: `godot::String + "literal"` is ambiguous in some expressions (a conditional operator with a `const String&`), so literals have to be wrapped in `godot::String(...)`; `Image::ptrw()` (godot-cpp low-level API) lets the territory image be redrawn in place without a copy.
+- Interim choice: (1) the viewer follows the timeline (the age of the present is the last age) and the check takes the last `[ages]` line at E; P4-03 4.4 and H2 should say so. (2) The year buttons, the slider and the map view have `focus_mode` none in `viewer.tscn`; the layer list and the meta tree keep their focus behaviour, and while one has focus the arrows act on it. A later screen may read the year keys in `_input`, skipping them while a text field or dialog has focus, if the focus behaviour proves annoying in the walkthrough.
+- Status: open

@@ -70,7 +70,7 @@ clip_contents = true
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
-focus_mode = 2
+focus_mode = 0
 
 [node name="LegendPanel" type="VBoxContainer" parent="Split/MapArea/MapRow"]
 custom_minimum_size = Vector2(250, 0)
@@ -90,6 +90,103 @@ layout_mode = 2
 size_flags_vertical = 3
 focus_mode = 0
 fixed_icon_size = Vector2i(40, 14)
+
+[node name="YearBar" type="VBoxContainer" parent="Split/MapArea"]
+layout_mode = 2
+
+[node name="YearRow" type="HBoxContainer" parent="Split/MapArea/YearBar"]
+layout_mode = 2
+
+[node name="YearBack25" type="Button" parent="Split/MapArea/YearBar/YearRow"]
+unique_name_in_owner = true
+layout_mode = 2
+focus_mode = 0
+tooltip_text = "Back 25 years (Shift+Left)"
+text = "-25"
+
+[node name="YearBack1" type="Button" parent="Split/MapArea/YearBar/YearRow"]
+unique_name_in_owner = true
+layout_mode = 2
+focus_mode = 0
+tooltip_text = "Back one year (Left)"
+text = "-1"
+
+[node name="YearPrevEvent" type="Button" parent="Split/MapArea/YearBar/YearRow"]
+unique_name_in_owner = true
+layout_mode = 2
+focus_mode = 0
+tooltip_text = "Previous year in which an event starts (Page Up)"
+text = "< event"
+
+[node name="YearPrevChange" type="Button" parent="Split/MapArea/YearBar/YearRow"]
+unique_name_in_owner = true
+layout_mode = 2
+focus_mode = 0
+tooltip_text = "Previous year in which a region changes hands ([)"
+text = "< change"
+
+[node name="YearTrack" type="VBoxContainer" parent="Split/MapArea/YearBar/YearRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+
+[node name="YearSlider" type="HSlider" parent="Split/MapArea/YearBar/YearRow/YearTrack"]
+unique_name_in_owner = true
+layout_mode = 2
+focus_mode = 0
+step = 1.0
+rounded = true
+
+[node name="YearMarks" type="YearMarks" parent="Split/MapArea/YearBar/YearRow/YearTrack"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 10)
+layout_mode = 2
+
+[node name="YearNextChange" type="Button" parent="Split/MapArea/YearBar/YearRow"]
+unique_name_in_owner = true
+layout_mode = 2
+focus_mode = 0
+tooltip_text = "Next year in which a region changes hands (])"
+text = "change >"
+
+[node name="YearNextEvent" type="Button" parent="Split/MapArea/YearBar/YearRow"]
+unique_name_in_owner = true
+layout_mode = 2
+focus_mode = 0
+tooltip_text = "Next year in which an event starts (Page Down)"
+text = "event >"
+
+[node name="YearForward1" type="Button" parent="Split/MapArea/YearBar/YearRow"]
+unique_name_in_owner = true
+layout_mode = 2
+focus_mode = 0
+tooltip_text = "Forward one year (Right)"
+text = "+1"
+
+[node name="YearForward25" type="Button" parent="Split/MapArea/YearBar/YearRow"]
+unique_name_in_owner = true
+layout_mode = 2
+focus_mode = 0
+tooltip_text = "Forward 25 years (Shift+Right)"
+text = "+25"
+
+[node name="YearField" type="SpinBox" parent="Split/MapArea/YearBar/YearRow"]
+unique_name_in_owner = true
+layout_mode = 2
+tooltip_text = "Year: type one and press Enter (Home: year 0, End: the present)"
+rounded = true
+
+[node name="YearLabel" type="Label" parent="Split/MapArea/YearBar"]
+unique_name_in_owner = true
+layout_mode = 2
+text = " "
+text_overrun_behavior = 3
+
+[node name="YearCounts" type="Label" parent="Split/MapArea/YearBar"]
+unique_name_in_owner = true
+layout_mode = 2
+text = " "
+text_overrun_behavior = 3
 
 [node name="CellLabel" type="Label" parent="Split/MapArea"]
 unique_name_in_owner = true
