@@ -1,6 +1,6 @@
 # P3-02 Names
 
-Status: **approved by the lead 2026-11-19; revised 2026-11-19 (text only, after implementation); amended 2026-11-19 for P3-03 (r2); revised 2026-11-19 after the P3-03 implementation (r3: 7 registry container, 4.3 `roman` location, 8 P0-01 request applied); amendment r5 drafted 2026-11-20 by the spec writer (section 11: name filter, god patterns, realm forms); **r6 (2026-11-20): r5 ships with the P3-08 change, generator 0.17.0 (`docs/specs/p3-08-followups.md`), with the filter applied to every word of the rendered name and the redraw stated (11.3, 11.6)**; **r13 (2026-11-21, P3-10 second round, generator 0.19.0): crude fragments inside a word and no three equal letters (section 13)**; **r15 (2026-11-21, P3-11, generator 0.20.0): faerie syllables, no repeated syllable, `tard` (section 14)** **r17 (2026-11-22, P5-01, generator 0.21.0): `fag` inside a word, `shiva`, `hindi`, `fannie`, the dwarven stutters `didin` and `ririn` (section 15)**; **r18 (2026-11-22): text after the P5-01 integration**; the seven questions of 11.10 are open with Paul, their interim choices stand; **r10 (2026-11-20, P3-10, generator 0.19.0): section 12, filter entries and near-identical names**: see the revision notes at the end. Phase P3 History core, spec 2 (P3-00 3.1). Design doc sections 5 ("the seed varies the dates, the places and the gods' names"; civilizations, settlements), 6 ("the database stores facts and names"), 14 (every reference a model writes must resolve to a real entity: names must be unique). Depends on P0-01 (hashing, streams), P0-03 (string grammars, named checks), P3-00 (4.6 keyed draws) and P3-01 (the `culture` kind carries this spec's record). It introduces the domain tag `TAG_HIST` and the keyed-draw helpers that every later history spec uses.
+Status: **approved by the lead 2026-11-19; revised 2026-11-19 (text only, after implementation); amended 2026-11-19 for P3-03 (r2); revised 2026-11-19 after the P3-03 implementation (r3: 7 registry container, 4.3 `roman` location, 8 P0-01 request applied); amendment r5 drafted 2026-11-20 by the spec writer (section 11: name filter, god patterns, realm forms); **r6 (2026-11-20): r5 ships with the P3-08 change, generator 0.17.0 (`docs/specs/p3-08-followups.md`), with the filter applied to every word of the rendered name and the redraw stated (11.3, 11.6)**; **r13 (2026-11-21, P3-10 second round, generator 0.19.0): crude fragments inside a word and no three equal letters (section 13)**; **r15 (2026-11-21, P3-11, generator 0.20.0): faerie syllables, no repeated syllable, `tard` (section 14)** **r17 (2026-11-22, P5-01, generator 0.21.0): `fag` inside a word, `shiva`, `hindi`, `fannie`, the dwarven stutters `didin` and `ririn` (section 15)**; **r18 (2026-11-22): text after the P5-01 integration**; **r19 (2026-11-22, P5-12, generator 0.22.0): no doubled place suffix, human `forbidden` `ass` (section 16)**; the seven questions of 11.10 are open with Paul, their interim choices stand; **r10 (2026-11-20, P3-10, generator 0.19.0): section 12, filter entries and near-identical names**: see the revision notes at the end. Phase P3 History core, spec 2 (P3-00 3.1). Design doc sections 5 ("the seed varies the dates, the places and the gods' names"; civilizations, settlements), 6 ("the database stores facts and names"), 14 (every reference a model writes must resolve to a real entity: names must be unique). Depends on P0-01 (hashing, streams), P0-03 (string grammars, named checks), P3-00 (4.6 keyed draws) and P3-01 (the `culture` kind carries this spec's record). It introduces the domain tag `TAG_HIST` and the keyed-draw helpers that every later history spec uses.
 
 ## 1. Purpose
 
@@ -1065,6 +1065,47 @@ A rejected name is replaced by the entity's next valid attempt (4.3); the new na
 - Golden: `p3-02-names.txt` re-recorded by the reference (dwarven names through 15.2; faerie, elven and dwarven names through 15.1); `p3-03-chronology.txt` through god names those entries reach; the history goldens through names.
 - Validation reports: per culture, attempts rejected by each new entry (the scan of 13.1's sample, `p3_names_reference.py scan`); in the sweep's stored names, none holding `fag`, `didin` or `ririn`, and none equal to `shiva`, `hindi` or `fannie` as a word; fallbacks 0.
 
+## 16. Amendment r19: no doubled place suffix (P5-12, generator 0.22.0)
+
+Normative for P5-12 (`docs/specs/p5-12-renamed-regions.md`, item 4), from generator **0.22.0**, not before. Source: the P5-01 world critic's F1 (`docs/reviews/p5-01-followups-world-critic.md`), carried into P5-12 by Paul's decision of 2026-11-22. One validity rule (every culture) and one data edit (human); no schema change, no new stream or draw.
+
+### 16.1 The fused-suffix rule (amends 4.2's validity)
+
+For kind K and culture data D, **the fused tails** T_K are, for every form of D.`<K>_forms`, its B' of 11.3 (the letters fused after `{root}`, up to the form's first space) lower-cased with `'` and `-` removed, when not empty. Shipped: human settlements {`ford`, `ton`, `bury`, `wick`, `ham`, `stead`}, elven settlements {`dell`}; every other kind and culture has none. The **first syllable** fs(x) of a tail x is its shortest prefix that holds its first run of vowels (`a e i o u y`) and every consonant after that run up to the next vowel, or all of x when no vowel follows (fs(`bury`) = `bur`; fs(`stead`) = `stead`; fs(`ford`) = `ford`).
+
+An attempt whose form has a non-empty fused tail x, with root R (lower case, `'` and `-` removed), is **invalid** when:
+1. R ends with x or with fs(x) (`Sud|stead`+`stead`, `Gal|wick`+`wick`, `Ston`+`ton`, a root ending `bur` + `bury`); or
+2. R ends with another tail y of T_K (`Canasham`+`ford`, `Stead`+`ham`, `Deantton`+`wick`); or
+3. the last letter of R is the first letter of x (`Deas`+`stead`, `Bant`+`ton`, an elven root ending `d` + `dell`).
+
+Item 3 is the critic's "`ss` before a suffix starting with `s`" in general: with the shipped data it rejects `s` + `stead` and `nt` + `ton` (`Wentton`, `Bantton`), the only two pairs the human codas and tails can make, and `nd` + `dell` for the elves. 4.2's validity becomes `valid = (r4 validity) and not filtered(W) and not triple(n) and not repeated and not doubled`. A doubled attempt is an invalid attempt for every purpose of 4.3, as a filtered one is (11.3): it is skipped, it is never the fallback's first name, and attempt t + 1 is drawn with its own keys (stream `hist.names.<K>`). Bare forms (`{root}`) and forms with a space after `{root}` are not affected (`Canasham` stays a valid bare settlement name).
+
+### 16.2 Human `forbidden` (data; `game/data/cultures/human.toml` and both fixture copies)
+
+The human `forbidden` list gains **`ass`** (appended), as the faerie list did (14.1): `Beasstont`, `Edasser`, `Reassint` read as the word inside the root. Item 3 of 16.1 already catches the join (`Deas`+`stead`).
+
+```toml
+forbidden = ["eae", "aea", "ckc", "ldl", "ntd", "rdd", "ckb", "ckm", "ass"]
+```
+
+### 16.3 What this changes (counted by the spec writer on the stored 0.21.0 names; `~/.cache/the-unmapped/out/p5-12-spec/f1.py`)
+
+| Rule | Human settlement names it rejects (100 default 1024 worlds, 1,211 names) |
+| --- | --- |
+| 16.1 item 1 | 3: `Sudsteadstead`, `Galwickwick`, `Stonton` |
+| 16.1 item 2 | 4: `Canashamford`, `Steadham`, `Ashambury`, `Deanttonwick` |
+| 16.1 item 3 | 30: `Deasstead`, `Edasstead`, `Alasstead`, `Teasstead`, `Weasstead`, `Brurtasstead`, `Selddesstead`, `Stesstead`, `Ashisstead`, `Bontbreasstead` …; `Bantton`, `Wentton`, `Gintton`, `Stentton` … (21 with `ntt`) |
+| 16.2 | 3: `Beasstontstead`, `Edasserford`, `Reassintford` |
+
+40 names in 30 worlds (3.3%); in the 20 `civs4` worlds 14 of 279 in 11 worlds. No elven `…ddell` name occurs in the sweep. A rejected name is replaced by the entity's next valid attempt; later names change only through the registry and the core set (12.2). No history rule reads a name.
+
+### 16.4 Invariants, tests and goldens
+
+- Invariant 6 gains: **9. No generated name comes from a doubled attempt** (16.1), checked by replaying attempts (the reference), and **10. No human settlement name, its fused tail removed, ends with a tail or a tail's first syllable or with the tail's first letter, and none holds `ass`** (scanned on stored names; P5-12 N1).
+- Unit tests: roots `sudstead` + `stead`, `galwick` + `wick`, `ston` + `ton`, `dabur` + `bury`, `canasham` + `ford`, `deas` + `stead`, `bant` + `ton` invalid and followed by attempt t + 1; `canasham` with the bare form valid; `sud` + `stead`, `gal` + `wick`, `bea` + `ford` valid; an elven root ending `nd` + `dell` invalid; a fixture culture with forms `{root}ford` and `{root} Ford` (B' empty for the second) applies the rule to the first only; fs of `bury`, `stead`, `ford`, `ton`, `dell`; the human `forbidden` `ass` rejects `beasstont`.
+- Golden: `p3-02-names.txt` re-recorded by the reference (human names; elven where a root ends `d`); `p3-03-chronology.txt` where a human god root holds `ass`; every history golden through names.
+- Validation reports: per culture, attempts rejected by 16.1 (each item) and 16.2; P5-12 N1: 0 such names in every sweep; fallbacks 0.
+
 ## Revision note (2026-11-19, text only, after implementation)
 
 The implementation (`p3/02-names`) and the independent tests (`p3/02-names-tests`) agreed; this revision makes the text say what they do. No behaviour, golden value or world byte changes.
@@ -1147,3 +1188,7 @@ New section 15 (`docs/specs/p5-01-followups.md`, item 5): `fag` moves from `slur
 ## Revision note r18 (2026-11-22, text after the P5-01 integration)
 
 Text only; no rule or data change. 15.1: the `famous` list holds 103 `whole` entries after the edit (101 and `shiva`, `hindi`), not 105. 5.1 and 11.6's sample tables: the dwarven civilization 2, "The Hold of Didin", is "The Khandthra Throne" from 0.21.0, since 15.2 forbids `didin`; both tables give the 0.21.0 name, with a note.
+
+## Revision note r19 (2026-11-22, P5-12; generator 0.22.0)
+
+New section 16 (`docs/specs/p5-12-renamed-regions.md` item 4; the P5-01 world critic's F1): an attempt whose fused tail doubles a tail of its kind, or joins the tail's first letter, is invalid (16.1); the human `forbidden` list gains `ass` (16.2). Invariants 9 and 10. From generator 0.22.0.

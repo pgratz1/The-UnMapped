@@ -1,6 +1,6 @@
 # P4-02 Layer catalogue and region names in the library
 
-Status: **draft, 2026-11-22**, for approval by the lead (r2, 2026-11-22: corrections after integration, revision note r2). Phase P4 Viewer v1, stage 2 of the overview `docs/specs/p4-00-viewer-v1-overview.md` (3.1 "P4-02", rules V1 to V10, 6.1, 7, 9). Design doc sections 6 (world database), 10 (tech stack, `worldgen` public API, world viewer) and 12 (open question "Layer catalogue in the library", answered by P4-00 6.1 and approved by the lead with that overview). Proposals read: "Viewer: layer units and region names come from a copy of the catalogue" (2026-11-18), "Viewer v1: the library answers the year, the viewer draws it" (2026-11-22). Depends on P1-00 section 4 (the layer catalogue), P1-00 10.2, P1-03 9, P1-04 9, P1-05 9 and P1-06 9 (palettes and composites), P1-06 3.2 (table `region`), P0-04 amendment 18 (e) (composite `regions`) and P2 (`gdext/README.md`).
+Status: **draft, 2026-11-22**, for approval by the lead (r2, 2026-11-22: corrections after integration, revision note r2; r3, 2026-11-22: a note for P5-12's renamed regions, revision note r3). Phase P4 Viewer v1, stage 2 of the overview `docs/specs/p4-00-viewer-v1-overview.md` (3.1 "P4-02", rules V1 to V10, 6.1, 7, 9). Design doc sections 6 (world database), 10 (tech stack, `worldgen` public API, world viewer) and 12 (open question "Layer catalogue in the library", answered by P4-00 6.1 and approved by the lead with that overview). Proposals read: "Viewer: layer units and region names come from a copy of the catalogue" (2026-11-18), "Viewer v1: the library answers the year, the viewer draws it" (2026-11-22). Depends on P1-00 section 4 (the layer catalogue), P1-00 10.2, P1-03 9, P1-04 9, P1-05 9 and P1-06 9 (palettes and composites), P1-06 3.2 (table `region`), P0-04 amendment 18 (e) (composite `regions`) and P2 (`gdext/README.md`).
 
 **Generator stays 0.20.0, schema 7.** No world byte, no golden world hash, no `report` line, no `hash` line and no `render` pixel changes. No `GENERATOR_VERSION` bump.
 
@@ -253,6 +253,10 @@ Approved by the lead after the integration of implementation and tests, which al
 7. 4.6 and invariant 6: `region_name` gives empty for id 0 even if a record has id 0; the ordering rule is unchanged.
 8. 4.4 and 5: `layer_legend` returns no rows for `signed` on an invalid or unsigned grid and for `gray` on an invalid grid.
 9. 9: the test file runs in the CTest entry `worldgen-tests-layer-catalogue`.
+
+## Revision note r3 (2026-11-22, P5-12)
+
+No change of behaviour. From generator 0.22.0 history may rename a region (`docs/specs/p5-12-renamed-regions.md`; table `region_name`). `region_name()` of 4.6 keeps its meaning: the geographic name, column `region.name`, which history never rewrites. The name in force at a year is `Timeline::region_name(region, year)` (`docs/specs/p4-01-timeline.md` r3 16); the viewer's hover text moves to it in the viewer engineer's branch after P5-12 merges.
 
 ## Appendix A. Proposals entry (added with this spec)
 

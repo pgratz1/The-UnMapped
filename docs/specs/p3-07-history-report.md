@@ -1,6 +1,6 @@
 # P3-07 History report
 
-Status: **approved by the lead 2026-11-19** (r12, 2026-11-20: section 22 for P3-10, generator 0.19.0; r14, 2026-11-21: section 23 for P3-11, generator 0.20.0; r16, 2026-11-22: text after the implementation and audit; r17, 2026-11-22: section 24, readability after the world critic's review; r18, 2026-11-22: section 24's text after the implementation and the reference; r19, 2026-11-22: section 25, format v2, for P5-01, generator 0.21.0; r20, 2026-11-22: section 25's text after the P5-01 integration) (the six questions of section 19 go to Paul; the interim choices stand). Written by the spec writer 2026-11-19; the amendments of 18.1–18.5 applied the same day on `p3/07-spec`. Phase P3 History core, spec 7 (P3-00 3.1): the text history report, `worldgen-cli report --db PATH --history`. It reads a world file only and changes no world byte, so it needs **no generator version bump and no schema change**. Design doc sections 5 (history: the log is the primary product), 6 (the database stores facts and names; text is rendered from records and templates), 13 (P3 delivers "a text history report"; milestone 1: "the event log reads as coherent history") and 14 (the enrichment pass narrates from the log: this report is its deterministic, template-only counterpart and is not a chronicle in the sense of 14; it is a tool for the world critic, the validation sweeps and Paul). Depends on P0-02 (reader, errors as values), P0-04 (`report`: options, `--out`, `--force`, exit codes, text conventions, the "Later" note), P3-00 (binding: 11, 6.2–6.4, 12.2, 12.3, 13), P3-03 (tables `race`, `god`, `age`; `[chronology]` and its checks, 9.1), P3-04 (binding: schema 7 tables and codes of 9; the catalogue, `render_event` and `HistoryView` of 8, used and not redefined; the world report's `[history]` and its checks, 11.1; the queries of 10). Read on `origin/p3/04-spec` at 4a00615 (the newest text of every spec; the code there is P3-03's). Proposals read: up to "History: active phases scale with the history span; the detail level sets the simulated share". Revision r1 (P3-05's appended `[stats]` keys) 2026-11-19.
+Status: **approved by the lead 2026-11-19** (r12, 2026-11-20: section 22 for P3-10, generator 0.19.0; r14, 2026-11-21: section 23 for P3-11, generator 0.20.0; r16, 2026-11-22: text after the implementation and audit; r17, 2026-11-22: section 24, readability after the world critic's review; r18, 2026-11-22: section 24's text after the implementation and the reference; r19, 2026-11-22: section 25, format v2, for P5-01, generator 0.21.0; r20, 2026-11-22: section 25's text after the P5-01 integration; r21, 2026-11-22: section 26, format v3, renamed regions and hidden refuges, for P5-12, generator 0.22.0) (the six questions of section 19 go to Paul; the interim choices stand). Written by the spec writer 2026-11-19; the amendments of 18.1–18.5 applied the same day on `p3/07-spec`. Phase P3 History core, spec 7 (P3-00 3.1): the text history report, `worldgen-cli report --db PATH --history`. It reads a world file only and changes no world byte, so it needs **no generator version bump and no schema change**. Design doc sections 5 (history: the log is the primary product), 6 (the database stores facts and names; text is rendered from records and templates), 13 (P3 delivers "a text history report"; milestone 1: "the event log reads as coherent history") and 14 (the enrichment pass narrates from the log: this report is its deterministic, template-only counterpart and is not a chronicle in the sense of 14; it is a tool for the world critic, the validation sweeps and Paul). Depends on P0-02 (reader, errors as values), P0-04 (`report`: options, `--out`, `--force`, exit codes, text conventions, the "Later" note), P3-00 (binding: 11, 6.2–6.4, 12.2, 12.3, 13), P3-03 (tables `race`, `god`, `age`; `[chronology]` and its checks, 9.1), P3-04 (binding: schema 7 tables and codes of 9; the catalogue, `render_event` and `HistoryView` of 8, used and not redefined; the world report's `[history]` and its checks, 11.1; the queries of 10). Read on `origin/p3/04-spec` at 4a00615 (the newest text of every spec; the code there is P3-03's). Proposals read: up to "History: active phases scale with the history span; the detail level sets the simulated share". Revision r1 (P3-05's appended `[stats]` keys) 2026-11-19.
 
 The sample report that section 16 held until r15 and the illustrative excerpt (17) were produced by the spec writer's exact-integer prototype `~/.cache/the-unmapped/out/p3-07-spec/history_report.py`, run on worlds built by `build_world.py` (the P3-04 prototype's stub world for seed 42, 1024, written as SQLite tables) and `illus.py` (a hand-made world). The prototype is scratch; the test writer's reference is written from this spec. (r16: section 16 now holds an excerpt of a 0.20.0 report of the implementation.)
 
@@ -1352,6 +1352,63 @@ For the test writer and the reference (`p3_report_reference.py`), from this sect
 - 18.6 is unchanged: `world-hashes.sh` saves both levels per case, and `compare` checks them across presets.
 - 4's help text: `print the history report (format '# worldgen history v2') instead of the world report`.
 
+## 26. Format v3: renamed regions, hidden refuges (amendment r21, P5-12, generator 0.22.0)
+
+Normative for the report from generator 0.22.0 (`docs/specs/p5-12-renamed-regions.md`, items 6 to 8). Where this section and sections 4–25 differ, this section rules. The report reads worlds of schema 8 only (the library accepts exactly the current version), so every world it reads has kinds 41 to 43 in its catalogue (they may have no events) and table `region_name`; 25's fallbacks for worlds before 0.21.0 no longer arise.
+
+### 26.1 Format version (amends 25.1)
+
+The header is **`# worldgen history v3`** at both levels: 26.3 renames a line type and 26.4 changes what references print, which 25.1's growth rule does not cover. 25.1's growth rule holds for v3 unchanged ("within v3" for "within v2"). `report --help` prints `format '# worldgen history v3'`; 25.14's help line likewise.
+
+### 26.2 Renamed regions in `[present]` (appended after `standing claims`, both levels)
+
+```
+renamed regions: <n>
+  rg<id>: <name> since <from_year>, e<event> after e<cause> <cause kind key>; formerly <previous name>
+```
+
+n = the `region_name` rows; one line per row in primary-key order (region, `from_year`). `<cause>` is the renaming event's cause (it has one, P5-12 8 item 5) and its kind key; `<previous name>` is the name in force before the row: the region's previous row's `name`, or `region.name`. Names escaped (6.1). Example: `  rg12: Edadbury's Fall since 5803, e1204 after e1201 sacked; formerly The Holt of Yews`.
+
+### 26.3 Hidden refuges (F3; amends 24.7 and 25.9 item 1)
+
+24.7's `refuges:` list becomes:
+
+```
+hidden refuges: <h> of <n> founded by flight
+  s<id> <name> in <region ref>: <owner ref>, population <p>, founded <founded_year> by flight from <origin ref>, e<founding_event>
+```
+
+n = the standing settlements whose `founding_event` is a `refugees_settled` (24.7's set); h = those of them whose `refuge_hidden` event (kind 42, settlement s, the smallest id) has `end_year` ≥ E − 1; only the h are listed, in ascending id, and 25.9's `; hidden` / `; found <y>` suffix is dropped (every listed refuge is hidden). A refuge found before E is still told: its `refugees_settled` line in the chronicle (salience 65, a summary candidate and a companion of the sack, 24.2), its `refuge_hidden` line at full ("… lay hidden from 3811 to 4110."), its settlement line at full in `[present]`, and its realm's milestones when it ranks there (`founder` is an own role, 24.1). Source: the P5-01 world critic's F3 (30 of the 40 refuges listed in the default sweep had been found, one a capital of 5,410 found 1,900 years before E).
+
+### 26.4 Region references by the present name (amends 6.1 "Ids" and "Sentences")
+
+A region reference outside a sentence, `<name> (rg<id>)`, and the region name of a `[present]` region line (6.8 `rg<id> <name>: …`) print the region's **present name**: its name at year E (`HistoryView::region_name_at_year(r, E)`, P3-04 r21 23.1), which is `region.name` unless the region was renamed. Sentences print the name at the event (`render_event`), so a chronicle line of 3200 and the `home:` line of the same realm can name one region differently; the id ties them, and 26.2 lists every name a region bore.
+
+### 26.5 Summary units and `[stats]` (amends 24.2 and section 9)
+
+1. **Units** (24.2): part 2 gains, for every event e, each `region_renamed` that has e as its cause; part 4 gains, for a `region_renamed`, its cause. So a shown renaming is never without its deed, and a shown deed brings its renaming. A unit now has at most 10 events (24.2's 8 plus the renaming and its cause), and 24.3 item 5's bound reads 19 + 10.
+2. **Keys** appended at the end of section 9's list (10.3 rule 1), in this order: `region_names` (rows of `region_name`; also a `[history]` key of the world report, P3-04 r21 23.4), `regions_renamed` (regions with at least one row), `refuges` (n of 26.3), `refuges_hidden` (h of 26.3). `SUMMARY_STATS` (25.7 item 4) gains `regions_renamed` and `refuges_hidden`, so the summary block has 17 keys, in `full`'s order.
+
+### 26.6 Reading `region_name` (amends 5.3)
+
+`read_history_tables` reads `region_name` in primary-key order and checks, after the `relation` checks, the first failing row in key order, reasons in this order (`corrupt table 'region_name': row (<region>, <from_year>): <reason>`): `unknown region <r>`; `from_year <y> outside 0 to <E - 1>`; `name is not a name` (empty, longer than 64 bytes, or a byte other than ASCII letters, space, `'` and `-`); `unknown culture <c>` (c ≠ 0 and no `culture` row); `event <e> is not a region_renamed of this region and year` (no such event, another kind, `event.region` ≠ r or `event.year` ≠ y). Then, over the events of kind `region_renamed` in ascending id: `corrupt table 'event': row <e>: region_renamed without a region_name row` when no row has `event` = e. Errors are values (code `corrupt_layer`, exit 3), as every check of 5.3.
+
+### 26.7 One helper for settlement-indexed lookups (audit A1; no output change)
+
+`history_report.cpp` reads the digest's per-settlement vectors (`last_held_by`, `refuge_hidden_end`) through one helper, `settlement_row(std::span<const T>, Id) -> const T*`, which returns null when the id is below 1 or above the span's size. A null result prints the documented fallbacks: `no one` for "last held by", and "not hidden" for a refuge (not listed in 26.3). Valid worlds never reach them (ids are dense from 1, 5.3), so no output changes; a later digest built from a filtered list gives defined text, not undefined behaviour (`docs/reviews/p5-01-followups-audit.md` A1).
+
+### 26.8 Tests required (adds to 25.13)
+
+1. Header v3 at both levels; `report --help`.
+2. Renamed regions: a fixture with one region renamed twice and one renamed once: three lines, the twice-renamed region's first `formerly` its geographic name and its second `formerly` its first new name; n = 0 prints `renamed regions: 0`.
+3. Hidden refuges: refuges with kind 42 ending at E − 1 (listed), earlier (counted in n, not listed), none (counted, not listed); the count line's both numbers.
+4. References: a renamed region's `home:` and `[present]` lines print the present name while a chronicle sentence before the renaming prints the old one.
+5. Units: a sack with its renaming at a threshold above the renaming's salience: both shown when the sack is; the renaming shown brings the sack.
+6. `[stats]`: the four new keys at full; 17 summary keys in order.
+7. Reader: each message of 26.6 on a corrupt fixture.
+8. A1: `settlement_row` with ids 0, 1, size, size + 1.
+9. Golden: `p3-07-report.txt` re-recorded by the reference (every report: the header at least); fixture **H12** (`h12-v3.toml`) holds 2 to 5; invariants 25.12 hold with 26.5's unit size.
+
 ## Appendix A. Proposals
 
 No proposals entry is needed: the report realizes design 13's "text history report" within design 6's rule (text from records and templates) and does not change the design. Its relation to design 14's chronicles (a deterministic template report for checking the history, not prose for players) is stated in section 1.
@@ -1481,3 +1538,7 @@ No earlier section is renumbered.
 ## Revision note r20 (2026-11-22, section 25's text after the P5-01 integration)
 
 Text only; the implementation, the reference and the goldens on `p5/01-int` already follow every point. 25.2: the calamity cap ranks the four calamity kinds together per phase (salience descending, then id). 25.3 and 25.13 item 3: another ruin kind prints its key alone, with no `, by`; a sack with no attacker participant occurs only where the kind's attacker role has min 0 (under the shipped catalogue, 1–1, such a world is corrupt). 25.5: ended blocks show at most 4 milestones; T18 restated by Paul's decision of 2026-11-22 (default median ≤ 700, maximum ≤ 800; `civs4` median ≤ 1,100, maximum ≤ 1,400) with the 0.21.0 measurements. 25.7 item 4: `[stats]` at summary in full's key order (the list corrected); `settlements_ruined` counts status 3 only. 25.9: the refuge suffix from the `refuge_hidden` of the settlement with the smallest id, `; hidden` when `end_year` ≥ E − 1; an open claim is closed by a declaration in either direction, a `peace`, `truce`, `war_won` or `search_abandoned` of the pair, a `claim_dropped` citing it, or a side's end (T19). 25.13: the note's year is root(c)'s; the new fixture is H11 (`h11-v2.toml`).
+
+## Revision note r21 (2026-11-22, format v3; P5-12, generator 0.22.0)
+
+New section 26 (`docs/specs/p5-12-renamed-regions.md` items 6 to 8): header v3; `[present]` lists renamed regions with their former names (26.2) and only the refuges still hidden at E (26.3, the P5-01 critic's F3); region references outside sentences print the present name (26.4); a renaming and its cause are companions, four `[stats]` keys (26.5); `read_history_tables` checks `region_name` (26.6); one bounds-checked helper for the settlement-indexed lookups (26.7, audit A1).

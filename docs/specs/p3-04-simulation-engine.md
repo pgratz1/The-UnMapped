@@ -1,6 +1,6 @@
 # P3-04 Simulation engine
 
-Status: **approved by the lead 2026-11-19; corrected after implementation (r3, the lead's rulings of 2026-11-19)** **r12 (2026-11-20, P3-10, generator 0.19.0): section 20, quiet stretches, `{@causes:…}`, thousands separators** **r15 (2026-11-21, P3-10 second round): no quiet line for a stretch shorter than `quiet_min_years` (20.1 item 1a)** **r17 (2026-11-21, P3-11, generator 0.20.0): section 21, numbers one to nine as words, kinds 39 and 40** **r19 (2026-11-22, P5-01, generator 0.21.0): section 22, one number form per clause, kinds 41 and 42, `flare_min_years`** **r20 (2026-11-22): section 22's text after the P5-01 integration** (the six questions of section 19 go to Paul; the interim choices stand). Written by the spec writer 2026-11-19; amendments 18.2 and 18.3 applied the same day; revision r1 (P3-07's amendments) the same day. Phase P3 History core, spec 4 (P3-00 3.1), pipeline stage 8, `history`, as an engine with stub subsystems. Generator **0.14.0**; **schema version 7** (thirteen new tables, one new required `meta` key, section 9). Design doc sections 5 (deep time, ages, active phases, quiet intervals, flare-ups, records, determinism; creation; entities; tick loop), 6 (tables `phase`, `event`, `event_participant`, `event_cause`, `civilization`, `settlement`, `relation`; `meta` end year), 13 (P3 row and exit check; P4 timeline and territory by year; P5 interventions) and 14 (records a model can narrate and validate; the divine script as an intervention source). Depends on P0-01 to P0-04 with their amendments, P1-06 (region tables), P3-00 (binding; amended in 18.3), P3-01 (kind `history`), P3-02 (keyed draws, names), P3-03 (chronology tables, `HistoryParams`, the registry rule 8.2). Implementation read: `origin/p3/03-int` at 3ddc942 (generator 0.13.0, schema 6). Proposals read: up to "History: with a subset of races the first one present opens history; every race keeps its creator god". Also addresses the P3-03 determinism audit's advisories A1 (fatal guards for schedule invariants) and A2 (H8 must not rest on in-memory values): sections 3.2, 3.3 and 5.6. Revision r2 (P3-05's amendments) 2026-11-19. **Revision r10 (2026-11-20, for P3-08, generator 0.17.0; `docs/specs/p3-08-followups.md`)**: names inside a sentence lose a leading capital `The` (8.5, P1-06 r3 14.7), a three-word form of `{value?…}` (8.4, 8.5), one quiet era per civilization and quiet phase row (6.6), the `quiet_era` template (4.2), the engine microbenchmark (14.3); see the revision note.
+Status: **approved by the lead 2026-11-19; corrected after implementation (r3, the lead's rulings of 2026-11-19)** **r12 (2026-11-20, P3-10, generator 0.19.0): section 20, quiet stretches, `{@causes:…}`, thousands separators** **r15 (2026-11-21, P3-10 second round): no quiet line for a stretch shorter than `quiet_min_years` (20.1 item 1a)** **r17 (2026-11-21, P3-11, generator 0.20.0): section 21, numbers one to nine as words, kinds 39 and 40** **r19 (2026-11-22, P5-01, generator 0.21.0): section 22, one number form per clause, kinds 41 and 42, `flare_min_years`** **r20 (2026-11-22): section 22's text after the P5-01 integration** **r21 (2026-11-22, P5-12, generator 0.22.0, schema 8): section 23, region names by year, kind 43, reads of the log, table `region_name`** (the six questions of section 19 go to Paul; the interim choices stand). Written by the spec writer 2026-11-19; amendments 18.2 and 18.3 applied the same day; revision r1 (P3-07's amendments) the same day. Phase P3 History core, spec 4 (P3-00 3.1), pipeline stage 8, `history`, as an engine with stub subsystems. Generator **0.14.0**; **schema version 7** (thirteen new tables, one new required `meta` key, section 9). Design doc sections 5 (deep time, ages, active phases, quiet intervals, flare-ups, records, determinism; creation; entities; tick loop), 6 (tables `phase`, `event`, `event_participant`, `event_cause`, `civilization`, `settlement`, `relation`; `meta` end year), 13 (P3 row and exit check; P4 timeline and territory by year; P5 interventions) and 14 (records a model can narrate and validate; the divine script as an intervention source). Depends on P0-01 to P0-04 with their amendments, P1-06 (region tables), P3-00 (binding; amended in 18.3), P3-01 (kind `history`), P3-02 (keyed draws, names), P3-03 (chronology tables, `HistoryParams`, the registry rule 8.2). Implementation read: `origin/p3/03-int` at 3ddc942 (generator 0.13.0, schema 6). Proposals read: up to "History: with a subset of races the first one present opens history; every race keeps its creator god". Also addresses the P3-03 determinism audit's advisories A1 (fatal guards for schedule invariants) and A2 (H8 must not rest on in-memory values): sections 3.2, 3.3 and 5.6. Revision r2 (P3-05's amendments) 2026-11-19. **Revision r10 (2026-11-20, for P3-08, generator 0.17.0; `docs/specs/p3-08-followups.md`)**: names inside a sentence lose a leading capital `The` (8.5, P1-06 r3 14.7), a three-word form of `{value?…}` (8.4, 8.5), one quiet era per civilization and quiet phase row (6.6), the `quiet_era` template (4.2), the engine microbenchmark (14.3); see the revision note.
 
 Numbers in this spec come from the spec writer's exact-integer prototype `~/.cache/the-unmapped/out/p3-04-spec/engine_proto.py` (on the P3-03 and P3-02 references; awakening years over seeds 0–999 and all 63 race subsets) and from the P1-06 validation worlds (`~/.cache/the-unmapped/out/p1-06-validation/`, whose geography is unchanged at 0.13.0). The empty-world size was measured with Python's SQLite 3.46.1 (9.6); the engineer confirms it with the vendored SQLite.
 
@@ -1158,6 +1158,59 @@ E3's row in 5.6 reads: "flare-up reaching the next awakening or S_f: cut there (
 4. The reference's participant bound for kinds 39 and 40: 62 (a hand-made claim on a region with 70 settlements of the holder lists the 62 smallest ids).
 5. The P3-04 golden vectors (`p3-04-engine.txt`): the `ForcedTension` cases whose flare-ups are shorter than 10 years lose them (to be listed by the test writer); stub sentence lines change where a clause had two numbers; nothing else.
 
+## 23. Region names by year; kind 43; reads of the log; schema 8 (amendment r21, P5-12, generator 0.22.0)
+
+Normative for P5-12 (`docs/specs/p5-12-renamed-regions.md`, items 2 and 3), from generator **0.22.0**. P5-12's renaming subsystem gives regions new names in history (table `region_name`); this section says how rendering, the catalogue, the step seam and the schema carry them.
+
+### 23.1 The name of a region at an event (amends 8.3, 8.4, 8.5)
+
+**8.3** becomes, for regions: the display name of region r **in event e** is N(r, e) = the `name` of the `region_name` row of r with the largest `event` ≤ e, or `region.name` when r has no such row. (Rows of one region are in ascending `from_year` and `event` alike, P5-12 7.2.) So an event before a renaming, in its year or earlier, keeps the old name; the renaming event itself and every later one use the new name. Every substitution that renders a region's name uses it: `{@region}`, and `{role}`, `{role:name}`, `{role:all}` for a role of entity type 5. Other entity types are unchanged.
+
+**New placeholder** (added to 8.4's `body`): `"@region_former"`. It renders N(r, e − 1) for the event's region r: the name in force just before e (for e = 1, `region.name`). For every event but a renaming it equals `{@region}`. `template_problem` reports `{@region_former} needs a kind with a region at byte <n>` when the kind's `region_use` ≠ 1 (the form of `{@region}`'s message). The names-inside-a-sentence rule (8.5, r10) applies to it as to `{@region}`.
+
+**`HistoryView::load`** reads `region_name` (rows in primary-key order) and keeps, per region, its rows; it validates them with P3-07 r21 26.6's checks (an error value, code `corrupt_layer`). The view's display name of a region without an event (its accessor by type and id) stays `region.name`; the view gains `region_name_at_event(r, e)` (N above) and `region_name_at_year(r, Y)` (the row with the largest `from_year` ≤ Y, else `region.name`), which P3-07 and P4-01 use.
+
+### 23.2 Catalogue (appended to 8.2, 20.4, 21.2 and 22.2)
+
+| id | key | caused | region | settlement | roles (seq: role, entity type, min–max) | values (seq: key) | written by |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 43 | `region_renamed` | 1 | 1 | 2 | 1: `namer`, civilization, 0–1 | — | P5-12 (6) |
+
+Template and salience (data, `history.report`; P5-12 7.1): salience 60, `{@causes:civ_conquered=the fall of a realm,sacked=the sack,battle=the slaughter,battle_at_pass=the slaughter,plague_outbreak=the plague,became_city=the rise of a city|After |, }{@region_former} became known as {@region}.` The id is provisional until the lead fixes the merge order (P5-00 4.4); code emits the kind by key. `docs/specs/schema.md` 6 gains the row (the engineer).
+
+### 23.3 Reads of the log for subsystems (amends 6.4)
+
+`StepContext` gains, beside `event_kind`, `event_participant` and `event_year` (r8, P3-05 r12), pure reads of the events appended so far:
+
+```cpp
+std::int64_t last_event_id() const;                                  // 0 when none
+std::int64_t event_region(std::int64_t event) const;                 // event.region (0 none)
+std::int64_t event_settlement(std::int64_t event) const;             // event.settlement (0 none)
+std::int64_t event_salience(std::int64_t event) const;
+std::int64_t event_value(std::int64_t event, std::string_view key) const;
+```
+
+Each is fatal `history: state: event <e> does not exist` for an id outside [1, `last_event_id()`]; `event_value` is fatal `history: state: event <e> has no value '<key>'` when the key is not a value key of the event's kind. None changes state; a subsystem reading the log keeps its own cursor (P5-12 6).
+
+### 23.4 Schema 8 (amends 9; hard rule 7)
+
+One statement is appended to the DDL, after `relation`'s, byte for byte:
+
+```
+CREATE TABLE region_name (region INTEGER NOT NULL, from_year INTEGER NOT NULL, name TEXT NOT NULL, culture INTEGER NOT NULL, event INTEGER NOT NULL, PRIMARY KEY (region, from_year)) STRICT, WITHOUT ROWID
+```
+
+`SCHEMA_VERSION`, `user_version` and `meta.schema_version` become **8**; a reader of version 8 refuses version 7 worlds (`world schema version 7, this build reads 8`). Columns: P5-12 7.2. The `history` stage writes the rows in primary-key order with the other history tables (9.3), from `HistoryResult::region_names` (new member, filled from the renaming subsystem's rows, sorted by (region, from_year)); every world has the table, empty without history. No automatic index (the primary key of a `WITHOUT ROWID` table is the table), so the empty world grows by one page, from 34 to **35 pages, 143360 bytes** (to be confirmed by the engineer as 9.6 was). `report` (11.1): `[tables]` lists `region_name = <rows>` in name order; `[history]` gains **`region_names`** (the rows) after `relations`, also a key of the history report's `[stats]` (P3-07 r21 26.5). `hash --detail` (11.2): a `table region_name` line in name order. The viewer reads worlds through the library and takes schema 8 with it (P5-00 4.3).
+
+### 23.5 Tests (amends 22.4)
+
+1. N(r, e): a region renamed by event 40 in year 500: events 39 (year 500) and 12 render the old name, events 40 and 41 the new; a second renaming at event 90; a region role (fixture kind with a role of entity type 5) renders N too.
+2. `{@region_former}`: on the renaming, the old name; on a later event, the current name; `The …` names mid-sentence lower-cased; `template_problem` refuses it in a kind with `region_use` 0 or 2.
+3. Kind 43 in the catalogue unit test; its template renders with each cause word, and with a cause kind not in the list (sentence start, capital `The`).
+4. `StepContext`'s five reads: values, zero region and settlement, the fatal messages.
+5. Schema 8: the DDL statement; version 7 refused; the empty world's pages; `[tables]`, `[history]` and `hash --detail` lines.
+6. Golden: `p3-04-engine.txt`'s catalogue rows (kind 43); stub worlds otherwise unchanged (the stubs install no renaming subsystem).
+
 ## Appendix A. Proposals entry (added to `docs/design/proposals.md` with this spec)
 
 "History: active phases scale with the history span; the detail level sets the simulated share" (questions 1 to 3). Schema 7 itself is recorded in "History: schema versions 6 and 7"; its column details are this spec's 9.1.
@@ -1241,3 +1294,7 @@ New section 22 (`docs/specs/p5-01-followups.md` items 6, 7 and 9): the numbers o
 ## Revision note r20 (2026-11-22, text after the P5-01 integration)
 
 Text only; the implementation and tests on `p5/01-int` (generator 0.21.0) already follow every point. 22.1: `{{` and `}}` are literal text; a clause is cut at `; ` or `, ` in the literal text between placeholders; a three-word form counts as a number only when its chosen word holds `#`. 22.3: m = max(1, scale_years(`flare_min_years`, E)); a flare-up cut by the cap budget to fewer than m years is also skipped; the hand-made default 1 (`EngineTuning`, tuning built in code) leaves SC6 as before only for spans below 9000 (scaled, it is 2 from 9000); the data field is required, so a record without it is refused content.
+
+## Revision note r21 (2026-11-22, P5-12; generator 0.22.0, schema 8)
+
+New section 23 (`docs/specs/p5-12-renamed-regions.md` items 2 and 3): a region is named in a sentence by the name in force at the event (8.3, 8.5), the placeholder `{@region_former}` (8.4), kind 43 `region_renamed` (8.2), five `StepContext` reads of the log (6.4), and schema 8 with table `region_name` (9). From generator 0.22.0.

@@ -1204,3 +1204,28 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
 - Proposal: (1) "Restate the report length target": summary length, default worlds median at most 700 and maximum at most 800 lines; four civilizations per race median at most 1,100 and maximum at most 1,400. (2) `history.conflict.quarrel_strength_permille` stays 1000; no lower value is measured.
 - Interim choice: P5-01 r1 section 8 and P3-07 r20 25.5 state T18 so; P5-01 questions 1 and 2 are closed. The design document is not affected.
 - Status: accepted
+
+### History: regions renamed by history, P5-12 (readings and scope)
+
+- Date: 2026-11-22
+- Raised by: spec writer (P5-12, `docs/specs/p5-12-renamed-regions.md`), from Paul's decision of 2026-11-22 ("regions renamed by history", decision 1), his decision on the P5 overview's question 3, and "the P5-01 critic's three notes go to P5-12"
+- Design doc section: 4 (region names), 5 (history), 6 (world database), 12 (open question "history renames regions"), 13 (the text history report)
+- Problem: the design says a region's defining event can give it its present-day name, with the old name kept, but not which events define a region, how often, how the name is built, which name each reader shows, or how sentences name a region that was renamed later. The P5-01 review also left three name and report notes for this stage.
+- Proposal (P5-12's readings):
+  1. A subsystem after conflict (steps T6 and Q4) reads the log; **rules in data** (`history.renaming`: kinds, value keys summed over a window, a least salience, a capital condition, a keyed chance, a weight, the forms) decide which events can rename, so later stages add their own kinds as data. Shipped: the fall of a realm, the sack of a capital, a great sack (1,500 dead), a slaughter in the region's battles (5,000 dead within a century), a great plague (3,000 dead), a realm's seat becoming a city.
+  2. **Rarity**: at most two renamings per region, 300 years apart, the second for a weightier deed; at most 15% of a world's regions; at most one per century per 20 regions. Measured on the 0.21.0 sweep: a median of 4 of 49 regions at 1024.
+  3. **Names** from English forms with the deed's people or place (`Edadbury's Fall`, `The Grave of Cear`, `The Red Wood`, `The Heart of Nife`), unique in the world, through the placename checks and the name filter at the joins; the namer's culture is recorded.
+  4. **`region.name` stays geographic**; the new names are rows of a new table `region_name`. Sentences name a region as at the event (an old event keeps the old name); references outside sentences in the history report use the present name; the layer catalogue's `region_name()` keeps the geographic name; the timeline answers the name at a year, and the viewer's hover text follows the shown year.
+  5. F1: a settlement root may not end in a fused place suffix of its kind (or its first syllable), nor in the suffix's first letter; the human syllables forbid `ass`. F2: the name filter applies to region names at the joins of their parts only. F3: the report's `[present]` lists only the refuges still hidden at E. The history report becomes format v3.
+- Interim choice: as proposed. Questions for Paul (P5-12 17): the share of renamed regions; the wider F1 rule and V8's false positives (`Pinegrove`); English forms only, with the culture recorded for later per-culture lists.
+- Status: open
+
+### Schema 8: table `region_name` (P5-12)
+
+- Date: 2026-11-22
+- Raised by: spec writer (P5-12 7.2; P3-04 r21 23.4), hard rule 7
+- Design doc section: 6 (world database), 12 (open question "history renames regions")
+- Problem: renamed regions need a record of every name a region bore, with its year, its culture and the event that gave it (P5-00 6.1 planned it), and history must not rewrite geography's `region.name` (P3-00 7).
+- Proposal: schema 7 → 8 with generator 0.22.0: `CREATE TABLE region_name (region INTEGER NOT NULL, from_year INTEGER NOT NULL, name TEXT NOT NULL, culture INTEGER NOT NULL, event INTEGER NOT NULL, PRIMARY KEY (region, from_year)) STRICT, WITHOUT ROWID`, executed after `relation`, written by the history stage; readers refuse version 7; the empty world grows by one page. Appended event kind 43 `region_renamed` (not a schema change by itself). `docs/specs/schema.md` updated. The schema number is the next free one at merge (P5-00 4.3); P5-12 merges straight after P5-01, so it is expected to be 8.
+- Interim choice: as proposed.
+- Status: open

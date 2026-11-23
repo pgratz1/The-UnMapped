@@ -1,6 +1,6 @@
 # P3-01 History data and settings
 
-Status: **approved by the lead 2026-11-19; revised 2026-11-19 (text only, after implementation); amended 2026-11-19 for P3-03 (r2); amended again 2026-11-19 after the P3-03 implementation (r3: check D0); r11 (2026-11-20, P3-10, generator 0.19.0): three cell weights, 3.4; odds minimum per race, 3.5; r13 (2026-11-21, P3-10 second round): hidden years per race, 3.6; r14 (2026-11-21, P3-11, generator 0.20.0): awakening population per race and the faerie naming data, 3.7; r15 (2026-11-22, P5-01, generator 0.21.0): two conflict fields and one engine field, 3.8**: see the revision notes at the end. Phase P3 History core, spec 1 (P3-00 3.1). Design doc sections 3 (data in TOML), 5 (the six races, their order, camps and timing; "Food and homelands"; world-creation settings), 6 (`meta` holds the settings). Depends on P0-03 (with amendments 15 to 17), P0-04, P1-00 6 and P3-00. Written together with P3-02, which defines the culture naming record that this spec's `culture` kind carries. Amended 2026-11-19 for P3-05 (r6: `density_permille`, field meanings) and for P3-06 (r7: `prowess_permille`, goblin aggression, id `conflict`, all from generator 0.16.0).
+Status: **approved by the lead 2026-11-19; revised 2026-11-19 (text only, after implementation); amended 2026-11-19 for P3-03 (r2); amended again 2026-11-19 after the P3-03 implementation (r3: check D0); r11 (2026-11-20, P3-10, generator 0.19.0): three cell weights, 3.4; odds minimum per race, 3.5; r13 (2026-11-21, P3-10 second round): hidden years per race, 3.6; r14 (2026-11-21, P3-11, generator 0.20.0): awakening population per race and the faerie naming data, 3.7; r15 (2026-11-22, P5-01, generator 0.21.0): two conflict fields and one engine field, 3.8; r16 (2026-11-22, P5-12, generator 0.22.0): tuning id `renaming`, 5.4**: see the revision notes at the end. Phase P3 History core, spec 1 (P3-00 3.1). Design doc sections 3 (data in TOML), 5 (the six races, their order, camps and timing; "Food and homelands"; world-creation settings), 6 (`meta` holds the settings). Depends on P0-03 (with amendments 15 to 17), P0-04, P1-00 6 and P3-00. Written together with P3-02, which defines the culture naming record that this spec's `culture` kind carries. Amended 2026-11-19 for P3-05 (r6: `density_permille`, field meanings) and for P3-06 (r7: `prowess_permille`, goblin aggression, id `conflict`, all from generator 0.16.0).
 
 ## 1. Purpose
 
@@ -382,6 +382,7 @@ Directory `history/`, **required**, a **fixed-id kind** (P0-03 amendment 15), on
 | `peoples` | P3-05 | added by P3-05 (12.1 there, r6) |
 | `conflict` | P3-06 | added by P3-06 at generator 0.16.0 (12.1 there, r7); a 0.15.0 root has no `conflict.toml` |
 | `report` | P3-04 (the event salience and templates) | added by P3-04 (5.3, r4); P3-07 adds no field (P3-07 8; r5) |
+| `renaming` | P5-12 (regions renamed by history) | added by P5-12 at generator 0.22.0 (5.4, r16); a 0.21.0 root has no `renaming.toml` |
 
 **A not-yet-registered id** is handled exactly as for `worldgen`: the id set of the kind is what the build registers; a definition with any other id is an error at its header, `unknown id 'engine' for kind 'history'; expected one of 'chronology'` (P0-03 amendment 15's message as implemented: the registered ids in ascending order, each in single quotes, separated by `, `), and every registered id must be defined (`missing definition 'history.<id>'`, against the directory). So each data root carries exactly the files of the ids registered by its build: a spec that adds an id adds its file to `game/data/history/` and to the two fixture roots in the same merge. A file for a future id must not be committed early.
 
@@ -412,6 +413,21 @@ Defined by P3-04 4.1: the quiet step, the per-step event limit, the floor and ca
 ### 5.3 `history.report` (r4, P3-04)
 
 Defined by P3-04 4.2: field `events`, one record per event kind (`kind`, `salience`, `template`), with the named check `report_events` against the compiled event catalogue. Shipped in `game/data/history/report.toml` and the two fixture roots. P3-07 adds no field: its selection constants are part of the report format, since the report reads the world only (P3-07 3.2, 8; r5).
+
+### 5.4 `history.renaming` (r16, P5-12, generator 0.22.0)
+
+Defined by `docs/specs/p5-12-renamed-regions.md` section 4: the fields `region_max` int(0, 16), `region_gap_years` int(1, 100000), `world_max_permille` int(0, 1000), `century_max_permille` int(0, 1000), `century_years` int(1, 100000) and `rules`, an array (0 to 64) of record `rename_rule` with the fields `key`, `kinds`, `values`, `min_magnitude`, `window_years`, `min_salience`, `capital`, `chance_permille`, `weight`, `name_role`, `namer_role`, `forms`, all required, in those orders (the canonical encoding). Shipped in `game/data/history/renaming.toml` and the two fixture roots, with the six rules of P5-12 4.1.
+
+Named checks (per definition, in this order; `… failed for 'history.renaming': <message>`):
+
+| Check | Condition | Message |
+| --- | --- | --- |
+| `renaming_rule_keys` | rule `key`s distinct | `rules[<j>] key '<k>' repeats rules[<i>]` |
+| `renaming_rule_weights` | rule `weight`s distinct | `rules[<j>] weight <w> repeats rules[<i>]` |
+| `renaming_rule_lists` | no string twice within one rule's `kinds`, `values` or `forms` | `rules[<i>].<field>[<j>] '<v>' repeats <field>[<k>]` |
+| `renaming_forms_slots` | a form holds `{name}` only when `name_role` is not `""` | `rules[<i>].forms[<j>] uses {name} but name_role is empty` |
+
+The checks against the event catalogue need the compiled catalogue, so the history stage makes them (P5-12 4, stage check **`renaming_rules`**, before the engine runs, rules in order, first failure fatal `history: renaming rule '<key>': <problem>`): `kind '<k>' is not in the catalogue`; `kind '<k>' has no region`; `value '<v>' is not a value of kind '<k>'`; `name_role '<r>' is not a civilization or settlement role of kind '<k>'` (`settlement` needs `settlement_use` ≠ 0); `namer_role '<r>' is not a civilization role of kind '<k>'`; `capital needs a kind with a settlement and a civilization role ('<k>')`.
 
 ## 6. World-creation settings
 
@@ -589,3 +605,7 @@ New 3.7: race field `awakening_population` (orc 1200, others 0) after `hidden_ye
 ## Revision note r15 (2026-11-22, P5-01; generator 0.21.0)
 
 New 3.8: `history.conflict` gains `quarrel_strength_permille` (1000) and `toll_spread_permille` (200) with the check `conflict_toll_spread`; `history.engine` gains `flare_min_years` (10) with the check `engine_flare_min` (P3-06 r22 24.2, 24.5; P3-04 r19 22.3). The `placename`, `name_filter`, dwarven `culture` and `history.report` data change as P1-06 r10 16, P3-02 r17 15, P3-05 r18 24 and P3-06 r22 24.6 give them (data only, no field change). Every change takes effect at generator 0.21.0.
+
+## Revision note r16 (2026-11-22, P5-12; generator 0.22.0)
+
+New 5.4 and a row of 5's table: the fixed id `renaming` of kind `history` (`docs/specs/p5-12-renamed-regions.md` 4), with four named checks and the stage check `renaming_rules`. The human `forbidden` list gains `ass` (P3-02 r19 16.2; data only). From generator 0.22.0.

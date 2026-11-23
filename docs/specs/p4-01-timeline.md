@@ -1,6 +1,6 @@
 # P4-01 Timeline in the library
 
-Status: **revision 2, 2026-11-22** (corrections after integration, section 15; revision 1 approved by the lead). Phase P4 Viewer v1, spec 1 (P4-00 3.1). Written from P4-00 (3.1, V3, V5, V6, 6.3, 7, 8, 9), P3-04 (6.6, 6.7, 9, 10, 12), P3-07 (5, 6.1, 12, 14), P0-04 (4, 6, amendments 14, 16, 18 (e), 21), P1-00 10.2, P1-04 9 and the code on `main` at fdd7b2f (`worldgen/include/worldgen/history/digest.hpp`, `event_catalogue.hpp`, `worldgen/include/worldgen/inspect/render.hpp`, `worldgen/src/inspect/history_report.cpp`, `tools/worldgen-cli/cli.cpp`). Numbers quoted for seed 42 are from the P4-00 worlds at generator 0.20.0 (`~/.cache/the-unmapped/out/p4-00-spec/`).
+Status: **revision 2, 2026-11-22** (corrections after integration, section 15; revision 1 approved by the lead); **revision 3, 2026-11-22: region names by year for P5-12, generator 0.22.0, section 16**. Phase P4 Viewer v1, spec 1 (P4-00 3.1). Written from P4-00 (3.1, V3, V5, V6, 6.3, 7, 8, 9), P3-04 (6.6, 6.7, 9, 10, 12), P3-07 (5, 6.1, 12, 14), P0-04 (4, 6, amendments 14, 16, 18 (e), 21), P1-00 10.2, P1-04 9 and the code on `main` at fdd7b2f (`worldgen/include/worldgen/history/digest.hpp`, `event_catalogue.hpp`, `worldgen/include/worldgen/inspect/render.hpp`, `worldgen/src/inspect/history_report.cpp`, `tools/worldgen-cli/cli.cpp`). Numbers quoted for seed 42 are from the P4-00 worlds at generator 0.20.0 (`~/.cache/the-unmapped/out/p4-00-spec/`).
 
 **No world byte changes.** Generator stays **0.20.0**, schema stays **7**, no stream, no stage, no data, no `meta` key. One new golden file (13.4) and a P0-04 amendment (23, applied with this spec).
 
@@ -458,3 +458,13 @@ The 1024 cases run in the `*-slow` suite (`worldgen-tests-slow-timeline`). Re-re
 11. Golden world cases: the seven `geo-*` and `hist-*` cases plus `sample-42-1024` (13.4).
 12. The disagreement test calls `history_reads_disagree` directly (13.2 item 6).
 13. Timings measured at integration (6.2).
+
+## 16. Amendment r3: region names by year (P5-12, generator 0.22.0)
+
+Normative from generator 0.22.0 (`docs/specs/p5-12-renamed-regions.md` 7.3; table `region_name`, schema 8, P3-04 r21 23.4). History renames regions; `region.name` stays the geographic name.
+
+1. **Definition** (added to section 4): the **name** of region r at year Y is the `name` of r's `region_name` row with the largest `from_year` ≤ Y, or `region.name` when there is none. Half-open as every state at Y (the state at the end of Y): a region renamed in Y bears its new name at Y.
+2. **API** (added to 5.1): `[[nodiscard]] std::string_view Timeline::region_name(std::int64_t region, std::int64_t year) const;` with the fatal texts of 5.1 for an unknown region or a year outside 0..E. `load_history` (5.2) takes the rows from `read_history_tables` (P3-07 r21 26.6), so its checks and errors are those; the index keeps per region its rows (offsets into one vector in primary-key order, as `region_control`'s), and the answer is a binary search on `from_year`, O(log k_r).
+3. **Invariant** (added to 8): `region_name(r, E)` is the report's present name of r (P3-07 r21 26.4); `region_name(r, Y)` changes only at the `from_year` of r's rows.
+4. **Dumps** (13.1): the static dump S gains, after the `region` lines, one line `name <region> <from_year> <name>` per `region_name` row in primary-key order; the year dump is unchanged. `p4-01-timeline.txt` is re-recorded by the test writer's reference (every world case changes with 0.22.0 anyway).
+5. **Viewer** (for the viewer engineer, after this merge): the hover text and the region list name a region by `region_name(r, Y)` at the year the viewer shows (E when it opens, P4-00 decision 3), and may add the geographic name (`region.name`, from P4-02's `region_name()`) when the two differ. Until that change the viewer shows `region.name`; `gdext-headless-check` compares layers and composites only, so it is unaffected.
