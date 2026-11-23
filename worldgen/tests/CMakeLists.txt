@@ -449,10 +449,14 @@ target_compile_definitions(worldgen-tests PRIVATE
 # the distance rule of 7.3, territory_holders, the inner borders of 8.2, the
 # control-run check of Timeline::build (9.4) and phase_kind_word, in
 # timeline_borders_test.cpp; the other files carry P4-03's colours and calls.
+# P4-03a (docs/specs/p4-03a-territory-colour-followups.md, P4-03 r4): the
+# changed entries, luma and the 10/16 dim, half-strength free borders and the
+# timeline form of render_territory, in timeline_colours_p403a_test.cpp.
 target_sources(worldgen-tests PRIVATE
     timeline_unit_test.cpp
     timeline_territory_test.cpp
     timeline_borders_test.cpp
+    timeline_colours_p403a_test.cpp
     timeline_golden_test.cpp
     timeline_property_test.cpp
     timeline_bench_test.cpp

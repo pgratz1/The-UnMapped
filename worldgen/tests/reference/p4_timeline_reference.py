@@ -14,6 +14,14 @@ of 7.3 (checked, never used for output) and the texts of Timeline::build's contr
 are the default rules; `--rules p4-01` gives P4-01's colours and image (holders ignored) and, with the
 0.20.0 inputs, reproduces the golden file as P4-01 committed it.
 
+P4-03a (docs/specs/p4-03a-territory-colour-followups.md r1, with P4-03 r4 7.2, 7.5, 8.2, 9.2), the default
+rule set `p4-03a`, also without the implementation: the r4 table of 7.2 (TABLE_P403A: goblin 3 (140, 155,
+30); goblin 1, elf 1 and human 1 darkened), the integer luma L = floor((77 R + 150 G + 29 B) / 256), the
+inner-border dim by 10/16 when L > 175 and 12/16 otherwise, and half(U) (each channel of the cell's pixel
+in the biomes composite times 8/16, floored) on a border candidate whose sides are all free when the holder
+vector is not empty. `--rules p5-12` keeps P4-03 r3's rules on the same 0.22.0 inputs and reproduces the
+golden file as P5-12 recorded it.
+
 Reused, each written independently from its own spec (nothing of P4-01 is in them):
   p3_report_reference.py  connect and pk_rows (read-only world access, rows in primary-key order),
                           detail_tables (hash --detail's table lines, P0-04 8), expand_fixture,
@@ -42,7 +50,7 @@ Usage (from the repository root; -B keeps __pycache__ out of the tree):
 
     python3 -B worldgen/tests/reference/p4_timeline_reference.py golden [PATH|-] [--inputs DIR] [--rules R]
         Writes worldgen/tests/golden/p4-01-timeline.txt ("-": stdout). World cases are read from DIR
-        (default ~/.cache/the-unmapped/out/p5-12-int/inputs, the 0.22.0 worlds; with --rules p4-03
+        (default ~/.cache/the-unmapped/out/p5-12-int/inputs, the 0.22.0 worlds, also for --rules p5-12; with --rules p4-03
         ~/.cache/the-unmapped/out/p4-03-tests/inputs, the 0.21.0 ones, no `name` lines; with --rules p4-01
         ~/.cache/the-unmapped/out/p4-01-tests/inputs, the 0.20.0 ones), one <case>.db per case, generated
         by worldgen-cli with the checkout's game/data as tools/ci/world-hashes.sh does (sample-42-1024:
@@ -84,18 +92,25 @@ INPUTS_P4_03 = os.path.join(os.path.expanduser("~"), ".cache", "the-unmapped", "
 INPUTS_P5_12 = os.path.join(os.path.expanduser("~"), ".cache", "the-unmapped", "out", "p5-12-int", "inputs")
 SHIPPED_BIOMES = os.path.join(REPO, "game", "data", "biomes")
 
-# The rule set: "p5-12" (default: P4-03's colours and image with P4-01 r3 16's region names, generator
-# 0.22.0), "p4-03" (generator 0.21.0, no name lines) or "p4-01" (P4-01's colours and image, generator 0.20.0).
-RULES = "p5-12"
+# The rule set: "p4-03a" (default: P4-03 r4's colours and image, that is the P4-03a follow-ups, with P4-01 r3
+# 16's region names, generator 0.22.0), "p5-12" (P4-03 r3's colours and image, the same 0.22.0 inputs), "p4-03"
+# (generator 0.21.0, no name lines) or "p4-01" (P4-01's colours and image, generator 0.20.0).
+RULES = "p4-03a"
+RULE_SETS = ("p4-01", "p4-03", "p5-12", "p4-03a")
 
 
 def p403():
-    return RULES in ("p4-03", "p5-12")
+    return RULES in ("p4-03", "p5-12", "p4-03a")
+
+
+def p403a():
+    """P4-03a (P4-03 r4): the r4 table of 7.2, the luma dim of 8.2 and half strength on free-free borders."""
+    return RULES == "p4-03a"
 
 
 def r3():
     """P4-01 r3 16 (P5-12): the static dump's `name` lines and the region_name rows."""
-    return RULES == "p5-12"
+    return RULES in ("p5-12", "p4-03a")
 
 
 def default_inputs():
@@ -145,6 +160,15 @@ P4  7.3 item 4: the biome rows of B are the twelve `colour` values of game/data/
     confirms that every input world's table biome holds exactly these colours.
 P5  9.6: the golden file keeps P4-01's case list and years; the `territory` lines are the image with the
     holders of territory_holders at that year (the CLI's call, 9.2).
+P4-03a readings:
+Q1  8.2 rule 3: "both sides free" is holders[v] = 0 and holders[w] = 0 for every w of O (one or two values);
+    regions past the end of the holder vector are free. The rule applies only with a non-empty vector.
+Q2  9.2: half(U) uses U before the border pass (shaded, then halved); on a kind-2 cell U is the biomes
+    composite's pixel (such a cell is not drawn by steps 3 or 4 and has e >= 0).
+Q3  P4-03a 5 (a): "the two header comment lines naming the P4-03 rules gain 'and P4-03a'": line 1 ends
+    "with the colours of P4-03 and P4-03a", line 2 "(P4-03 9.6 and P4-03a)."
+Q4  P4-03a 7 item 5 "the golden years of the 512 world cases": the years of the territory lines (scales 1
+    and 3), and the years of the year lines at scale 1 (timeline_colours_p403a_test.cpp).
 """
 
 def fixture_names_p3():
@@ -185,11 +209,41 @@ TABLE_P403 = {
 TABLE_P403_MINS = {b"elf": (109, 126), b"goblin": (88, 100), b"dwarf": (93, 78), b"faerie": (127, 97),
                    b"human": (98, 94), b"orc": (165, 93)}
 
+# P4-03 r4 7.2 (P4-03a items 1 and 2): goblin 3 olive (140, 155, 30); goblin 1, elf 1 and human 1 darkened.
+TABLE_P403A = {
+    b"elf": ((40, 190, 70), (130, 215, 130), (0, 140, 40), (130, 205, 40)),
+    b"goblin": ((230, 195, 20), (235, 215, 90), (170, 125, 0), (140, 155, 30)),
+    b"dwarf": ((220, 105, 25), (245, 165, 105), (150, 65, 15), (195, 80, 55)),
+    b"faerie": ((175, 70, 225), (215, 160, 250), (115, 35, 165), (200, 110, 200)),
+    b"human": ((0, 190, 195), (100, 215, 215), (0, 120, 130), (50, 215, 175)),
+    b"orc": ((205, 30, 30), (240, 120, 110), (135, 15, 20), (230, 50, 80)),
+}
+TABLE_P403A_MINS = {b"elf": (109, 126), b"goblin": (89, 89), b"dwarf": (93, 78), b"faerie": (127, 97),
+                    b"human": (96, 94), b"orc": (165, 93)}
+# P4-03 r4 7.5: L of every entry, as the spec's table states it.
+LUMA_P403A = {b"elf": (131, 179, 86, 163), b"goblin": (185, 206, 124, 136), b"dwarf": (130, 182, 84, 111),
+              b"faerie": (119, 186, 73, 147), b"human": (133, 180, 85, 160), b"orc": (82, 154, 51, 107)}
+LUMA_BOUND = 175   # 8.2: n = 10 when L > 175
+
+
+def table():
+    """The colour table of 7.2 of the rule set (r4 under p4-03a, r3 otherwise)."""
+    return TABLE_P403A if p403a() else TABLE_P403
+
+
+def table_mins():
+    return TABLE_P403A_MINS if p403a() else TABLE_P403_MINS
+
+
+def luma(c):
+    """P4-03 r4 7.5: floor((77 R + 150 G + 29 B) / 256)."""
+    return (77 * c[0] + 150 * c[1] + 29 * c[2]) // 256
+
 
 def race_base_colour(key):
     """key: bytes."""
-    if p403() and key in TABLE_P403:
-        return TABLE_P403[key][0]
+    if p403() and key in table():
+        return table()[key][0]
     if not p403() and key in BASE:
         return BASE[key]
     h = colour_hash(key)
@@ -200,8 +254,8 @@ def race_civilization_colour(key, ordinal):
     """P4-03 7.4 (under --rules p4-01: P4-01 5.5's shade of the base). ValueError for ordinal < 0."""
     if ordinal < 0:
         raise ValueError("race_civilization_colour: ordinal %d" % ordinal)
-    if p403() and key in TABLE_P403:
-        return TABLE_P403[key][ordinal % 4]
+    if p403() and key in table():
+        return table()[key][ordinal % 4]
     return civilization_shade(race_base_colour(key), ordinal)
 
 
@@ -545,6 +599,7 @@ class Base:
                     c = table.get(biome[i])
                     rgb = MAGENTA if c is None else ((c >> 16) & 0xFF, (c >> 8) & 0xFF, c & 0xFF)
                     px[i] = shade(rgb, f)
+        unbordered = list(px)   # step 2: the biomes composite's pixel (U of 8.2 rule 3 on land cells)
         drawn = [False] * n   # drawn by step 3 or 4
         if water is not None:
             for i in range(n):
@@ -607,6 +662,9 @@ class Base:
         self.region = [region[i] if cand[i] else 0 for i in range(n)]
         self.east = [east[i] if self.kind[i] == 2 else 0 for i in range(n)]
         self.south = [south[i] if self.kind[i] == 2 else 0 for i in range(n)]
+        # P4-03 r4 9.2: half(U) on kind-2 cells, (0, 0, 0) elsewhere
+        self.half = [tuple((ch * 8) // 16 for ch in unbordered[i]) if self.kind[i] == 2 else BLACK
+                     for i in range(n)]
 
     def pixel(self, i, fill, holders):
         """The colour of cell i at scale 1 (P4-01 5.6; with P4-03 8.2 unless --rules p4-01)."""
@@ -623,6 +681,8 @@ class Base:
             others = [o for o in (self.east[i], self.south[i]) if o]
             if c != 0 and all(hold(o) == c for o in others) and r < len(fill) and fill[r] is not None:
                 return shade(dim(fill[r]), self.factor[i])
+            if p403a() and c == 0 and all(hold(o) == 0 for o in others):
+                return self.half[i]   # r4 rule 3: both sides free
         return self.B[i]
 
     def render(self, fill, holders=(), scale=1):
@@ -643,8 +703,9 @@ class Base:
 
 
 def dim(c):
-    """P4-03 8.2: each channel floor(c 12 / 16)."""
-    return tuple((v * 12) // 16 for v in c)
+    """P4-03 8.2: each channel floor(c n / 16), n = 12 (r3); r4 (p4-03a): n = 10 when L(c) > 175."""
+    n = 10 if p403a() and luma(c) > LUMA_BOUND else 12
+    return tuple((v * n) // 16 for v in c)
 
 
 def index_size(h):
@@ -739,11 +800,11 @@ def distance_table(biome_rows=None):
     """Per (key, entry): (nearest of B in units, its label, nearest of the race, nearest of other races)."""
     bg = background_set(biome_rows)
     rows = []
-    for key, entries in TABLE_P403.items():
+    for key, entries in table().items():
         for k, c in enumerate(entries):
             dB, lab = min((distance(c, b), l) for l, b in bg)
             dW = min(distance(c, o) for j, o in enumerate(entries) if j != k)
-            dA = min(distance(c, o) for k2, es in TABLE_P403.items() if k2 != key for o in es)
+            dA = min(distance(c, o) for k2, es in table().items() if k2 != key for o in es)
             rows.append((key, k, c, dB, lab, dW, dA))
     return rows
 
@@ -855,9 +916,14 @@ def golden_text(inputs):
             raise SystemExit("missing input world %s" % path)
         lines += case_lines(name, path, is_fixture)
     if p403():
-        first = ["# P4-01 timeline golden values (docs/specs/p4-01-timeline.md 13.4), generator %s, with the colours"
-                 % generator_version(),
-                 "# and territory image of docs/specs/p4-03-history-view.md 7 and 8 (P4-03 9.6)."]
+        if p403a():   # P4-03a 5 (a): the two lines naming the P4-03 rules gain "and P4-03a"
+            first = ["# P4-01 timeline golden values (docs/specs/p4-01-timeline.md 13.4), generator %s, with the colours"
+                     " of P4-03 and P4-03a" % generator_version(),
+                     "# and territory image of docs/specs/p4-03-history-view.md 7 and 8 (P4-03 9.6 and P4-03a)."]
+        else:
+            first = ["# P4-01 timeline golden values (docs/specs/p4-01-timeline.md 13.4), generator %s, with the colours"
+                     % generator_version(),
+                     "# and territory image of docs/specs/p4-03-history-view.md 7 and 8 (P4-03 9.6)."]
         if r3():
             first.append("# Region names by year (P4-01 r3 16): S gains a line `name <region> <from_year> <name>` per "
                          "region_name row.")
@@ -927,7 +993,7 @@ def check_example_56(c):
 
 def check_colours_p403(c):
     """P4-03 11.1 item 1: the table of 7.2, k = 0 ... 7, race_base_colour entry 0, keys outside the table."""
-    for key, entries in TABLE_P403.items():
+    for key, entries in table().items():
         c.eq("7.2 %s" % key, [race_civilization_colour(key, k) for k in range(8)], list(entries) * 2)
         c.eq("7.2 %s base" % key, race_base_colour(key), entries[0])
         c.eq("7.2 %s distinct" % key, len(set(entries)), 4)
@@ -937,7 +1003,14 @@ def check_colours_p403(c):
         c.eq("7.2 %r shades" % key, [race_civilization_colour(key, k) for k in range(8)],
              [civilization_shade(race_base_colour(key), k) for k in range(8)])
     c.eq("7.2 troll ordinal 1", race_civilization_colour(b"troll", 1), (224, 229, 161))
-    c.eq("7.2 Elf is not elf", race_base_colour(b"Elf") == TABLE_P403[b"elf"][0], False)
+    c.eq("7.2 Elf is not elf", race_base_colour(b"Elf") == table()[b"elf"][0], False)
+    if p403a():   # the four entries P4-03a changes, written out
+        c.eq("P4-03a goblin 3", race_civilization_colour(b"goblin", 3), (140, 155, 30))
+        c.eq("P4-03a goblin 1", race_civilization_colour(b"goblin", 1), (235, 215, 90))
+        c.eq("P4-03a elf 1", race_civilization_colour(b"elf", 1), (130, 215, 130))
+        c.eq("P4-03a human 1", race_civilization_colour(b"human", 1), (100, 215, 215))
+        changed = sorted((k.decode(), i) for k in TABLE_P403 for i in range(4) if TABLE_P403[k][i] != TABLE_P403A[k][i])
+        c.eq("P4-03a exactly four entries change", changed, [("elf", 1), ("goblin", 1), ("goblin", 3), ("human", 1)])
     try:
         race_civilization_colour(b"elf", -1)
         c.eq("7.4 ordinal -1 refused", False, True)
@@ -952,16 +1025,39 @@ def check_distances(c, biome_rows=None):
         c.eq("C1 %s %d against %s (%d)" % (key.decode(), k, lab, distance_units(dB)), dB >= C1_MIN, True)
         c.eq("C2 %s %d within race (%d)" % (key.decode(), k, distance_units(dW)), dW >= C2_MIN, True)
         c.eq("C3 %s %d across races (%d)" % (key.decode(), k, distance_units(dA)), dA >= C3_MIN, True)
-    for key, (mb, mw) in TABLE_P403_MINS.items():
+    for key, (mb, mw) in table_mins().items():
         mine = [r for r in rows if r[0] == key]
         c.eq("7.2 %s min to B" % key.decode(), min(distance_units(r[3]) for r in mine), mb)
         c.eq("7.2 %s min within race" % key.decode(), min(distance_units(r[5]) for r in mine), mw)
     worst = min(rows, key=lambda r: r[3])
     c.eq("7.3 worst against B", (worst[0], worst[1], worst[4], distance_units(worst[3])),
-         (b"goblin", 1, "biome steppe", 88))
-    across = min((distance(a, b), k1, i, k2, j) for k1, e1 in TABLE_P403.items() for i, a in enumerate(e1)
-                 for k2, e2 in TABLE_P403.items() if k2 > k1 for j, b in enumerate(e2))
+         (b"goblin", 1, "biome steppe", 89 if p403a() else 88))
+    worst_in = min(rows, key=lambda r: r[5])
+    c.eq("7.2 closest pair of one race", (worst_in[0], distance_units(worst_in[5])), (b"dwarf", 78))
+    across = min((distance(a, b), k1, i, k2, j) for k1, e1 in table().items() for i, a in enumerate(e1)
+                 for k2, e2 in table().items() if k2 > k1 for j, b in enumerate(e2))
     c.eq("7.2 closest pair across races", (distance_units(across[0]),) + across[1:], (90, b"dwarf", 1, b"orc", 1))
+    if p403a():
+        # P4-03a 2.2: the four changed entries' nearest colours, in units
+        by = {(r[0], r[1]): r for r in rows}
+        for key, k, (nb, nw, na) in ((b"goblin", 3, (99, 89, 102)), (b"goblin", 1, (89, 109, 103)),
+                                     (b"elf", 1, (114, 143, 142)), (b"human", 1, (96, 100, 143))):
+            r = by[(key, k)]
+            c.eq("P4-03a 2.2 %s %d" % (key.decode(), k),
+                 (distance_units(r[3]), distance_units(r[5]), distance_units(r[6])), (nb, nw, na))
+        c.eq("P4-03a 2.2 goblin 3 nearest in B", by[(b"goblin", 3)][4], "biome grassland")
+        c.eq("P4-03a 2.2 goblin 1 nearest in B", by[(b"goblin", 1)][4], "biome steppe")
+        c.eq("P4-03a 2.2 elf 1 nearest in B", by[(b"elf", 1)][4], "biome grassland")
+        c.eq("P4-03a 2.2 human 1 nearest in B", by[(b"human", 1)][4], "ocean depth 0")
+        # the effects on the rest of the table that 2.2 names
+        c.eq("P4-03a 2.2 goblin 0 within race", distance_units(by[(b"goblin", 0)][5]), 109)
+        c.eq("P4-03a 2.2 goblin 2 within race", distance_units(by[(b"goblin", 2)][5]), 89)
+        c.eq("P4-03a 2.2 elf 3 across", distance_units(by[(b"elf", 3)][6]), 102)
+        c.eq("P4-03a 2.2 elf 0 across", distance_units(by[(b"elf", 0)][6]), 180)
+        c.eq("P4-03a 2.2 C3 minimum", distance_units(min(r[6] for r in rows)), 90)
+        # r0's (150, 150, 30) for goblin 3: 101 to grassland, 115 to elf 3, 75 to goblin 2 (2.2, last paragraph)
+        r0 = (150, 150, 30)
+        c.eq("P4-03a r0 goblin 3 to goblin 2", distance_units(distance(r0, TABLE_P403A[b"goblin"][2])), 75)
     # the measurements of 7.1 on the interim table, with the same D
     c.eq("7.1 human base - river 2", distance_units(distance((50, 105, 200), river_colour(2))), 20)
     c.eq("7.1 elf dark - temperate forest", distance_units(distance((32, 93, 43), (46, 96, 52))), 26)
@@ -973,18 +1069,34 @@ def check_distances(c, biome_rows=None):
 
 
 def check_example_82(c):
-    """P4-03 8.2's 4 x 2 example."""
+    """P4-03 8.2's 4 x 2 example (r4 under p4-03a: elf 1 (130, 215, 130), and the free and goblin cases)."""
     b = Base(4, 2, [10] * 8, [1] * 8, [1, 2, 3, 3, 1, 2, 3, 3], [(1, 0x808000)])
     e0, e1 = race_civilization_colour(b"elf", 0), race_civilization_colour(b"elf", 1)
     fill = [None, e0, e0, e1]
     img = b.render(fill, [0, 1, 1, 2])
     px = [tuple(img[3 * i:3 * i + 3]) for i in range(8)]
+    E1 = (130, 215, 130) if p403a() else (150, 230, 150)
     c.eq("8.2 example dim", dim(e0), (30, 142, 52))
-    c.eq("8.2 example pixels", px, [(30, 142, 52), (0, 0, 0), (150, 230, 150), (150, 230, 150)] * 2)
+    c.eq("8.2 example pixels", px, [(30, 142, 52), (0, 0, 0), E1, E1] * 2)
     c.eq("8.2 example kinds", b.kind, [2, 2, 1, 1] * 2)
     c.eq("8.2 example east", b.east, [2, 3, 0, 0] * 2)
     c.eq("8.2 example without holders", [tuple(b.render(fill)[3 * i:3 * i + 3]) for i in range(4)],
-         [(0, 0, 0), (0, 0, 0), (150, 230, 150), (150, 230, 150)])
+         [(0, 0, 0), (0, 0, 0), E1, E1])
+    if p403a():
+        # region 3 free, 1 and 2 held as before: cells (1, .) black (one side held)
+        img = b.render([None, e0, e0, None], [0, 1, 1, 0])
+        c.eq("8.2 r4 example region 3 free", [tuple(img[3 * i:3 * i + 3]) for i in (1, 5)], [(0, 0, 0)] * 2)
+        # every region free, biome steppe: cells (0, .) and (1, .) half((224, 210, 150)) = (112, 105, 75)
+        s = Base(4, 2, [10] * 8, [1] * 8, [1, 2, 3, 3, 1, 2, 3, 3], [(1, 0xE0D296)])
+        img = s.render([None] * 4, [0] * 4)
+        c.eq("8.2 r4 example all free", [tuple(img[3 * i:3 * i + 3]) for i in range(8)],
+             [(112, 105, 75), (112, 105, 75), (224, 210, 150), (224, 210, 150)] * 2)
+        c.eq("8.2 r4 example all free, no holders", [tuple(s.render([None] * 4)[3 * i:3 * i + 3]) for i in range(2)],
+             [(0, 0, 0)] * 2)
+        # an inner border of a goblin civilization of ordinal 1 (L 206): (146, 134, 56), n = 10
+        g1 = race_civilization_colour(b"goblin", 1)
+        c.eq("8.2 r4 goblin 1 L", luma(g1), 206)
+        c.eq("8.2 r4 goblin 1 dim", dim(g1), (146, 134, 56))
 
 
 # P4-03 11.1 item 5: hand-made layers of 8 x 6 cells (the same as timeline_borders_test.cpp). Elevation 10
@@ -1016,10 +1128,11 @@ def check_inner_borders(c):
         i = 3 * (y * w + x)
         return tuple(im[i:i + 3])
     K, G, d = (0, 0, 0), (128, 128, 0), dim(E)
+    H = (64, 64, 0) if p403a() else K   # r4: regions 5 | 6, both free: half((128, 128, 0))
     c.eq("borders dim elf", d, (30, 142, 52))
-    want = [[E, d, E, K, D, K, K, G],
-            [K, d, d, K, K, K, K, G],
-            [d, d, K, K, K, K, K, G],
+    want = [[E, d, E, K, D, K, H, G],
+            [K, d, d, K, K, K, H, G],
+            [d, d, K, K, K, K, H, G],
             [K, K, D, D, D, D, G, G],
             [E, K, D, D, D, D, G, G],
             [E, K, D, D, D, D, G, G]]
@@ -1037,7 +1150,12 @@ def check_inner_borders(c):
     # no holders: P4-01's image; all free: the regions composite
     reg = bytes(sum((list(p) for p in b.B), []))
     c.eq("borders no holders, no fill", b.render([], []), reg)
-    c.eq("borders all free", b.render([None] * 8, [0] * 8), reg)
+    if p403a():   # every kind-2 cell half((128, 128, 0)); the lake cell (kind 0) black
+        want_free = bytes(sum((list((64, 64, 0) if b.kind[i] == 2 else b.B[i]) for i in range(48)), []))
+        c.eq("borders all free", b.render([None] * 8, [0] * 8), want_free)
+        c.eq("borders half", [b.half[i] for i in (6, 8, 9)], [(64, 64, 0), (0, 0, 0), (64, 64, 0)])
+    else:
+        c.eq("borders all free", b.render([None] * 8, [0] * 8), reg)
     p401 = b.render(fill, [])
     for i in range(48):
         if b.kind[i] == 2:
@@ -1052,6 +1170,101 @@ def check_inner_borders(c):
             for dy in (0, 1):
                 for dx in (0, 1):
                     c.eq("borders scale 2 (%d, %d)" % (x, y), px(2 * x + dx, 2 * y + dy, img2, 16), want[y][x])
+
+
+def check_luma(c):
+    """P4-03 r4 7.5 and 8.2 (P4-03a 2.1, 3): L of every entry, the split at 175, the r3 pale entries."""
+    c.eq("7.5 L table", {k: tuple(luma(x) for x in es) for k, es in TABLE_P403A.items()}, LUMA_P403A)
+    hi = sorted((k.decode(), i) for k, es in TABLE_P403A.items() for i, x in enumerate(es) if luma(x) > LUMA_BOUND)
+    c.eq("8.2 n = 10 set", hi, [("dwarf", 1), ("elf", 1), ("faerie", 1), ("goblin", 0), ("goblin", 1), ("human", 1)])
+    lo = [luma(x) for es in TABLE_P403A.values() for x in es if luma(x) <= LUMA_BOUND]
+    c.eq("8.2 n = 12 largest and smallest", (len(lo), max(lo), min(lo)), (18, 163, 51))
+    pale = sorted((k.decode(), i, luma(x)) for k, es in TABLE_P403.items() for i, x in enumerate(es) if luma(x) > 190)
+    c.eq("2.1 pale entries of r3", pale, [("elf", 1, 196), ("goblin", 1, 225), ("human", 1, 201)])
+    c.eq("2.1 r3 entries 1", [luma(TABLE_P403[k][1]) for k in (b"faerie", b"dwarf", b"orc")], [186, 182, 154])
+    c.eq("2.1 r3 no entry 0, 2, 3 above 185",
+         max(luma(x) for es in TABLE_P403.values() for i, x in enumerate(es) if i != 1) <= 185, True)
+    # keys without a row follow the same test: troll 0 (194, 204, 68) L 185, n = 10; troll 2 (121, 127, 42) L 115
+    t0, t2 = race_civilization_colour(b"troll", 0), race_civilization_colour(b"troll", 2)
+    c.eq("8.2 troll L", (luma(t0), luma(t2)), (185, 115))
+    c.eq("8.2 troll dims", (dim(t0), dim(t2)), ((121, 127, 42), (90, 95, 31)))
+
+
+# P4-03a 7 item 4: the free-border fixture of timeline_colours_p403a_test.cpp, 8 x 6 cells. Elevation 10 but
+# 30 at (2, 0) (factor 266 at (1, 0)); biome 1 (0xFA6325) in region 1, biome 2 (steppe 0xE0D296) elsewhere;
+# a lake at (1, 1), a river cell (water 1, class 1, no flow_dir) at (6, 5). Holders: 3, 4 by civilization 1,
+# 6, 7 by civilization 2, the rest free.
+FREE_REGION = [1, 1, 2, 2, 3, 3, 4, 4,
+               1, 1, 2, 2, 3, 3, 4, 4,
+               1, 1, 2, 2, 3, 3, 4, 4,
+               5, 6, 6, 6, 7, 7, 8, 8,
+               5, 5, 6, 6, 7, 7, 8, 9,
+               5, 5, 6, 6, 7, 7, 8, 9]
+FREE_HOLDERS = [0, 0, 0, 1, 1, 0, 2, 2, 0, 0]
+
+
+def free_layout():
+    elev = [10] * 48
+    elev[2] = 30
+    biome = [1 if FREE_REGION[i] == 1 else 2 for i in range(48)]
+    water = [0] * 48
+    water[9] = 2
+    water[46] = 1
+    river = [0] * 48
+    river[46] = 1
+    return Base(8, 6, elev, biome, FREE_REGION, [(1, 0xFA6325), (2, 0xE0D296)], water, river)
+
+
+def check_free_borders(c):
+    b = free_layout()
+    g1, o0 = race_civilization_colour(b"goblin", 1), race_civilization_colour(b"orc", 0)
+    fill = [None, None, None, g1, g1, None, o0, o0, None, None]
+    img = b.render(fill, FREE_HOLDERS)
+
+    def px(x, y, im=img, w=8):
+        i = 3 * (y * w + x)
+        return tuple(im[i:i + 3])
+    K = (0, 0, 0)
+    c.eq("free factor (1, 0)", b.factor[1], 266)
+    named = {(1, 0): (127, 51, 19),      # 1 | 2 free, U = shade((250, 99, 37), 266) = (255, 103, 38)
+             (0, 2): (125, 49, 18),      # 1 | 5 free (S), factor 256
+             (6, 4): (112, 105, 75),     # 8 | 9 free, steppe
+             (7, 3): (112, 105, 75),     # 8 | 9 free (S)
+             (1, 1): K,                  # lake on the 1 | 2 free border
+             (6, 5): K,                  # river cell on the 8 | 9 free border
+             (1, 2): K,                  # E 2 free, S 6 held
+             (3, 0): K,                  # 2 free | 3 held
+             (0, 3): K,                  # 5 free | 6 held
+             (5, 3): K,                  # 7 held | 8 free
+             (4, 2): K,                  # 3 | 7, two realms
+             (5, 2): K,                  # E 4 of the realm, S 7 of another
+             (5, 0): (146, 134, 56),     # 3 | 4 goblin 1, L 206: n = 10
+             (5, 1): (146, 134, 56),
+             (3, 3): (153, 22, 22),      # 6 | 7 orc 0, L 82: n = 12
+             (3, 4): (153, 22, 22),
+             (3, 5): (153, 22, 22)}
+    for (x, y), rgb in named.items():
+        c.eq("free (%d, %d)" % (x, y), px(x, y), rgb)
+    c.eq("free half only where both sides free",
+         sorted(i for i in range(48) if b.kind[i] == 2 and px(i % 8, i // 8) == b.half[i] and b.half[i] != K),
+         [1, 16, 31, 38])
+    c.eq("free kinds", b.kind, [1, 2, 1, 2, 1, 2, 1, 1,
+                                1, 0, 1, 2, 1, 2, 1, 1,
+                                2, 2, 2, 2, 2, 2, 2, 2,
+                                2, 2, 1, 2, 1, 2, 1, 2,
+                                1, 2, 1, 2, 1, 2, 2, 1,
+                                1, 2, 1, 2, 1, 2, 0, 1])
+    # all zero holders: every kind-2 cell half; empty holders: every border black
+    z = b.render([None] * 10, [0] * 10)
+    c.eq("free all zero", z, bytes(sum((list(b.half[i] if b.kind[i] == 2 else b.B[i]) for i in range(48)), [])))
+    c.eq("free empty holders, empty fill = regions", b.render([], []), bytes(sum((list(p) for p in b.B), [])))
+    # a hashed key: troll 0 (L 185) n = 10, troll 2 (L 115) n = 12
+    t0, t2 = race_civilization_colour(b"troll", 0), race_civilization_colour(b"troll", 2)
+    imt = b.render([None, None, None, t0, t0, None, t2, t2, None, None], FREE_HOLDERS)
+    c.eq("free troll", (px(5, 0, imt), px(3, 3, imt)), ((121, 127, 42), (90, 95, 31)))
+    img2 = b.render(fill, FREE_HOLDERS, scale=2)
+    c.eq("free scale 2", all(px(2 * x + dx, 2 * y + dy, img2, 16) == px(x, y) for y in range(6) for x in range(8)
+                             for dy in (0, 1) for dx in (0, 1)), True)
 
 
 def check_control_runs(c):
@@ -1140,7 +1353,9 @@ def check_t1(c):
          [[3, 21], [5, 13, 15], [8, 22, 23], [14], [10, 25], [26]])
     c.eq("T1 effects", [h.effects(e) for e in (1, 6, 11, 16, 17, 19, 21, 28)],
          [[2, 4], [7, 9], [16, 17], [17], [21, 22], [20, 21], [], []])
-    if p403():   # P4-03 7.2: c1 elf 0, c2 dwarf 0, c3 elf 1, c4 dwarf 1
+    if p403a():   # P4-03 r4 7.2: c1 elf 0, c2 dwarf 0, c3 elf 1, c4 dwarf 1
+        c.eq("T1 colours", h.colours(), [(40, 190, 70), (220, 105, 25), (130, 215, 130), (245, 165, 105)])
+    elif p403():   # P4-03 7.2: c1 elf 0, c2 dwarf 0, c3 elf 1, c4 dwarf 1
         c.eq("T1 colours", h.colours(), [(40, 190, 70), (220, 105, 25), (150, 230, 150), (245, 165, 105)])
     else:
         c.eq("T1 colours", h.colours(), [(52, 150, 70), (160, 82, 45), (153, 202, 162), (207, 168, 150)])
@@ -1162,8 +1377,8 @@ def check_t1_territory(c, h):
     colours = h.colours()
     img = territory_image(h, base, colours, 1500)
     if p403():   # c1 (40, 190, 70), c2 (220, 105, 25), c3 (150, 230, 150), c4 (245, 165, 105)
-        held = {"c1": (40, 190, 70), "c3": (150, 230, 150), "c4 251": (240, 162, 103), "c4": (245, 165, 105),
-                "c2 251": (216, 103, 25)}
+        held = {"c1": (40, 190, 70), "c3": (130, 215, 130) if p403a() else (150, 230, 150),
+                "c4 251": (240, 162, 103), "c4": (245, 165, 105), "c2 251": (216, 103, 25)}
     else:
         held = {"c1": (52, 150, 70), "c3": (153, 202, 162), "c4 251": (203, 165, 147), "c4": (207, 168, 150),
                 "c2 251": (157, 80, 44)}
@@ -1188,6 +1403,11 @@ def check_t1_territory(c, h):
             (6, 3): (96, 160, 64),       # r6, never held: B (biome 1, factor 256)
             (3, 3): (255, 0, 255),       # region value 5 with no region row, biome 9 without a row: B
             }
+    if p403a():
+        # r4: regions 5 (no row, free) | 6 (never held) at (4, 4) and (4, 5): half of biome 9 (no row: magenta)
+        want[(4, 4)] = (127, 0, 127)
+        want[(4, 5)] = (127, 0, 127)
+        want[(5, 3)] = (0, 0, 0)   # region 3 (held) | 6 (free)
     for (x, y), rgb in want.items():
         c.eq("T1 territory 1500 (%d, %d)" % (x, y), px(x, y), rgb)
     c.eq("T1 factors", (base.factor[4 * w + 0], base.factor[1 * w + 5], base.factor[5 * w + 0]), (251, 251, 256))
@@ -1196,9 +1416,27 @@ def check_t1_territory(c, h):
         p = tuple(img[3 * i:3 * i + 3])
         if base.v[i] and territory_fill(h, colours, 1500)[base.v[i]] is not None:
             c.eq("T1 filled %d" % i, p, shade(territory_fill(h, colours, 1500)[base.v[i]], base.factor[i]))
+        elif p403a() and i in (4 * w + 4, 5 * w + 4):
+            c.eq("T1 half %d" % i, p, (127, 0, 127))
         else:
             c.eq("T1 unfilled %d" % i, p, base.B[i])
     # at 1250 region 2 is free: its fillable cells show B
+    if p403a():
+        # r4 at 2000 (r4 free since 1800): 4 | 5 free at (2, 4), (2, 5): half of marsh (64, 108, 96); (2, 3)
+        # is river-painted (widening of (1, 3)), kind 0: black
+        img2000 = territory_image(h, base, colours, 2000)
+        c.eq("T1 2000 half", [px(x, y, img2000) for x, y in ((2, 4), (2, 5), (2, 3), (4, 4), (4, 5))],
+             [(32, 54, 48), (32, 54, 48), (0, 0, 0), (127, 0, 127), (127, 0, 127)])
+        # at 299 only r1 is held: 2 | 3 at (3, 0 ... 2) half of grassland (48, 80, 32); 3 | 6 at (5, 3)
+        # half of mountain (64, 64, 64); 5 | 3 at (4, 3) half of magenta
+        img299 = territory_image(h, base, colours, 299)
+        c.eq("T1 299 half", [px(x, y, img299) for x, y in ((3, 0), (3, 1), (3, 2), (2, 2), (4, 2), (5, 3), (4, 3),
+                                                          (1, 0))],
+             [(48, 80, 32)] * 4 + [(64, 64, 64), (64, 64, 64), (127, 0, 127), (0, 0, 0)])
+        c.eq("T1 299 half cells", sorted(i for i in range(w * hh) if base.kind[i] == 2 and img299[3 * i:3 * i + 3] !=
+                                         bytes(base.B[i])),
+             sorted(y * w + x for x, y in ((3, 0), (3, 1), (3, 2), (2, 2), (4, 2), (5, 3), (4, 3), (4, 4), (4, 5),
+                                           (2, 4), (2, 5))))
     img1250 = base.render(territory_fill(h, colours, 1250))
     c.eq("T1 territory 1250 (2, 1)", px(2, 1, img1250), base.B[1 * w + 2])
     c.eq("T1 territory 1250 (2, 1) is the shaded biome", base.B[1 * w + 2], (96, 160, 64))
@@ -1263,6 +1501,9 @@ def cmd_check(argv):
         check_distances(c)
         check_example_82(c)
         check_inner_borders(c)
+        if p403a():
+            check_luma(c)
+            check_free_borders(c)
         check_control_runs(c)
     else:
         check_colours(c)
@@ -1344,8 +1585,8 @@ def main(argv):
     if "--rules" in argv:
         i = argv.index("--rules")
         RULES = argv[i + 1]
-        if RULES not in ("p4-01", "p4-03", "p5-12"):
-            raise SystemExit("--rules: p4-01, p4-03 or p5-12")
+        if RULES not in RULE_SETS:
+            raise SystemExit("--rules: " + ", ".join(RULE_SETS))
         argv = argv[:i] + argv[i + 2:]
         if RULES == "p4-01":
             prr.use_version("0.20.0")   # the P3-07 fixtures' meta as P4-01 recorded them
