@@ -199,6 +199,40 @@ EventCatalogue build_compiled() {
     // history, caused by its defining event.
     c.kinds.push_back(KindDef{43, "region_renamed", true, 1, 2, {role(1, "namer", EntityType::civilization, 0, 1)},
                               {}, 0, {}});
+    // P5-02 10.1 (generator 0.23.0): kinds 44 to 55, beasts, monsters and
+    // sites.
+    const auto monster_role = [] { return role(1, "monster", EntityType::monster, 1, 1); };
+    c.kinds.push_back(KindDef{44, "monster_appeared", false, 1, 0,
+                              {monster_role(), role(2, "lair", EntityType::site, 1, 1)}, {}, 0, {}});
+    c.kinds.push_back(KindDef{45, "undead_rose", true, 1, 2,
+                              {monster_role(), role(2, "lair", EntityType::site, 1, 1)}, {}, 0, {}});
+    c.kinds.push_back(KindDef{46, "monster_woke", true, 1, 0, {monster_role()}, {}, 0, {}});
+    c.kinds.push_back(KindDef{47, "monster_slept", true, 1, 0,
+                              {monster_role(), role(2, "lair", EntityType::site, 1, 1)}, {}, 0, {}});
+    c.kinds.push_back(KindDef{48, "monster_raid", true, 1, 1,
+                              {monster_role(), role(2, "civilization", EntityType::civilization, 1, 1)},
+                              {"dead", "plunder"}, 0, {}});
+    c.kinds.push_back(KindDef{49, "settlement_overrun", true, 1, 1,
+                              {monster_role(), role(2, "civilization", EntityType::civilization, 1, 1),
+                               role(3, "lair", EntityType::site, 1, 1)},
+                              {"survivors"}, 0, {}});
+    c.kinds.push_back(KindDef{50, "monster_slain", true, 1, 0,
+                              {monster_role(), role(2, "slayer", EntityType::civilization, 1, 1)}, {"hunters"}, 0, {}});
+    c.kinds.push_back(KindDef{51, "monster_driven_off", true, 1, 0,
+                              {monster_role(), role(2, "civilization", EntityType::civilization, 1, 1)}, {}, 0, {}});
+    c.kinds.push_back(KindDef{52, "monster_died", true, 1, 0, {monster_role()}, {}, 0, {}});
+    c.kinds.push_back(KindDef{53, "beasts_bold", false, 1, 1,
+                              {role(1, "settlement", EntityType::settlement, 1, 1),
+                               role(2, "civilization", EntityType::civilization, 1, 1)},
+                              {"beast", "dead"}, 0, {}});
+    c.kinds.push_back(KindDef{54, "outpost_built", true, 1, 0,
+                              {role(1, "civilization", EntityType::civilization, 1, 1),
+                               role(2, "enemy", EntityType::civilization, 1, 1), role(3, "site", EntityType::site, 1, 1)},
+                              {}, 0, {}});
+    c.kinds.push_back(KindDef{55, "outpost_abandoned", false, 1, 0,
+                              {role(1, "civilization", EntityType::civilization, 1, 1),
+                               role(2, "site", EntityType::site, 1, 1)},
+                              {"reason"}, 0, {}});
     return c;
 }
 
@@ -255,9 +289,10 @@ enum class TokenType : std::uint8_t {
     settlement,
     causes,
     region_former,  // r21 23.1
+    beast,          // P5-02 10.3: {@beast}
 };
 
-enum class Form : std::uint8_t { name, plural, adjective, all };
+enum class Form : std::uint8_t { name, plural, adjective, all, kind };  // kind: P5-02 10.3
 
 struct Token {
     TokenType type = TokenType::literal;
@@ -367,6 +402,11 @@ std::optional<std::string> classify(const KindDef& kind, std::string_view body, 
                 return "{@settlement} needs a kind with a settlement" + where;
             }
             out.type = TokenType::settlement;
+        } else if (body == "@beast") {  // P5-02 10.3
+            if (kind.value_seq("beast") == 0) {
+                return "{@beast} needs a kind with a value 'beast'" + where;
+            }
+            out.type = TokenType::beast;
         } else {
             return unknown;
         }
@@ -434,12 +474,17 @@ std::optional<std::string> classify(const KindDef& kind, std::string_view body, 
             out.form = Form::adjective;
         } else if (*form == "all") {
             out.form = Form::all;
+        } else if (*form == "kind") {  // P5-02 10.3
+            out.form = Form::kind;
         } else {
             return unknown;
         }
     }
     if ((out.form == Form::plural || out.form == Form::adjective) && r->type != EntityType::race) {
         return "form '" + std::string(*form) + "' needs a race role" + where;
+    }
+    if (out.form == Form::kind && r->type != EntityType::monster) {
+        return "form 'kind' needs a monster role" + where;
     }
     if (r->min_count == 0 && out.form != Form::all) {
         return "role '" + r->role + "' may have no participant" + where;
@@ -804,6 +849,43 @@ db::Result<HistoryView> HistoryView::load(const db::WorldReader& world) {
         for (const db::RegionRow& r : read(db::read_region_rows(world), db::REGION_TABLE)) {
             v.regions_.emplace_back(r.id, r.name);
         }
+        // P5-02 10.3 (schema 9): the names of monsters and sites, the nouns
+        // of the monster kinds, the plurals of the beasts. Rows in primary-key
+        // order (ids are checked by monster_tables_problem below).
+        v.beast_rows_ = read(db::read_beast_rows(world), db::BEAST_TABLE);
+        v.monster_kind_rows_ = read(db::read_monster_kind_rows(world), db::MONSTER_KIND_TABLE);
+        v.monster_rows_ = read(db::read_monster_rows(world), db::MONSTER_TABLE);
+        v.site_rows_ = read(db::read_site_rows(world), db::SITE_TABLE);
+        for (const db::BeastRow& r : v.beast_rows_) {
+            v.beast_plurals_.emplace_back(r.id, r.plural);
+        }
+        for (const db::MonsterKindRow& r : v.monster_kind_rows_) {
+            v.monster_kind_nouns_.emplace_back(r.id, r.noun);
+        }
+        for (const db::MonsterRow& r : v.monster_rows_) {
+            v.monsters_.emplace_back(r.id, MonsterNames{r.name, r.kind});
+        }
+        for (const db::SiteRow& r : v.site_rows_) {
+            v.sites_.emplace_back(r.id, r.name);
+        }
+        const auto ascending = [](const auto& list) {
+            for (std::size_t i = 1; i < list.size(); ++i) {
+                if (list[i].first <= list[i - 1].first) {
+                    return false;
+                }
+            }
+            return true;
+        };
+        if (!ascending(v.beast_plurals_) || !ascending(v.monster_kind_nouns_) || !ascending(v.monsters_) ||
+            !ascending(v.sites_)) {
+            // A file whose ids do not ascend is refused by the 11.4 checks;
+            // the lookups above need sorted ids, so they are cleared here and
+            // the checks report the row (P5-02 11.4).
+            v.beast_plurals_.clear();
+            v.monster_kind_nouns_.clear();
+            v.monsters_.clear();
+            v.sites_.clear();
+        }
         std::vector<std::int64_t> culture_ids;
         for (const db::CultureRow& r : read(db::read_culture_rows(world), db::CULTURE_TABLE)) {
             culture_ids.push_back(r.id);
@@ -848,7 +930,9 @@ db::Result<HistoryView> HistoryView::load(const db::WorldReader& world) {
             if (!type || *type != kind.roles[static_cast<std::size_t>(r.role - 1)].type) {
                 view_fail(at + "entity type " + int_text(r.entity_type) + " is not the role's");
             }
-            if (v.name(*type, r.entity_id) == nullptr) {
+            // P5-02 11.4: a monster or site participant is checked with the
+            // tables of schema 9 below.
+            if (*type != EntityType::monster && *type != EntityType::site && v.name(*type, r.entity_id) == nullptr) {
                 view_fail(at + std::string(entity_type_key(*type)) + " " + int_text(r.entity_id) + " does not exist");
             }
             e.participants.push_back(r);
@@ -960,12 +1044,27 @@ const std::string* HistoryView::name(EntityType type, std::int64_t id) const noe
         case EntityType::civilization: return find_by_id(civilizations_, id);
         case EntityType::settlement: return find_by_id(settlements_, id);
         case EntityType::region: return find_by_id(regions_, id);
+        case EntityType::monster: {  // P5-02 10.3
+            const MonsterNames* m = find_by_id(monsters_, id);
+            return m != nullptr ? &m->name : nullptr;
+        }
+        case EntityType::site: return find_by_id(sites_, id);
         case EntityType::figure:
-        case EntityType::faction:
-        case EntityType::monster:
-        case EntityType::site: return nullptr;
+        case EntityType::faction: return nullptr;
     }
     return nullptr;
+}
+
+const std::string* HistoryView::monster_noun(std::int64_t monster) const noexcept {
+    const MonsterNames* m = find_by_id(monsters_, monster);
+    if (m == nullptr) {
+        return nullptr;
+    }
+    return find_by_id(monster_kind_nouns_, m->kind);
+}
+
+const std::string* HistoryView::beast_plural(std::int64_t beast) const noexcept {
+    return find_by_id(beast_plurals_, beast);
 }
 
 const std::string* HistoryView::race_plural(std::int64_t id) const noexcept {
@@ -1130,6 +1229,8 @@ std::string render_event(const HistoryView& view, std::int64_t event_id) {
         const std::string* s = nullptr;
         if (form == Form::plural) {
             s = view.race_plural(p.entity_id);
+        } else if (form == Form::kind) {
+            s = view.monster_noun(p.entity_id);  // P5-02 10.3
         } else if (form == Form::adjective) {
             s = view.race_adjective(p.entity_id);
         } else {
@@ -1254,6 +1355,15 @@ std::string render_event(const HistoryView& view, std::int64_t event_id) {
                     fail(at + "no settlement " + int_text(e->row.settlement));
                 }
                 append_name(*s);
+                break;
+            }
+            case TokenType::beast: {  // P5-02 10.3: copied as stored
+                const std::int64_t b = value_of("beast");
+                const std::string* s = view.beast_plural(b);
+                if (s == nullptr) {
+                    fail(at + "no beast " + int_text(b));
+                }
+                out += *s;
                 break;
             }
             case TokenType::causes: {

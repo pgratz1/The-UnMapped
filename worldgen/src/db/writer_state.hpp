@@ -33,6 +33,12 @@ struct HistoryKeys {
     std::tuple<std::int64_t, std::int64_t, std::int64_t, std::int64_t, std::string, std::int64_t> relation{
         0, 0, 0, 0, std::string(), 0};
     Pair region_name{0, 0};  // schema 8
+    // schema 9 (P5-02)
+    std::int64_t beast = 0;
+    std::int64_t monster_kind = 0;
+    std::tuple<std::int64_t, std::int64_t, std::int64_t> beast_population{0, 0, 0};
+    std::int64_t monster = 0;
+    std::int64_t site = 0;
 };
 
 struct WriterState {

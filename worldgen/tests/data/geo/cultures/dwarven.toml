@@ -14,3 +14,4 @@ forbidden = ["mmm", "rr", "dd", "kk", "rdt", "rkd", "rdd", "mmb", "kdr", "kthr",
 god_forms = ["{root}"]
 civilization_forms = ["The Hold of {root}", "Clan {root}", "The {root} Throne"]
 settlement_forms = ["{root}", "{root} Deep", "{root} Hold", "{root}"]
+site_forms = ["{root} Watch", "The Tower of {root}"]

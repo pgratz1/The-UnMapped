@@ -49,12 +49,14 @@ enum Stream : std::size_t {
     ABANDON,
     CRISIS,
     SPLIT,
+    GHOST,  // P5-02 3
 };
-constexpr std::array<std::string_view, 12> STREAM_NAMES = {
+constexpr std::array<std::string_view, 13> STREAM_NAMES = {
     streams::hist_peoples_home,         streams::hist_peoples_civs,        streams::hist_peoples_found,
     streams::hist_peoples_outward,      streams::hist_peoples_famine,      streams::hist_peoples_famine_toll,
     streams::hist_peoples_plague,       streams::hist_peoples_plague_toll, streams::hist_peoples_plague_spread,
     streams::hist_peoples_abandon,      streams::hist_peoples_crisis,      streams::hist_peoples_split,
+    streams::hist_peoples_ghost,
 };
 
 constexpr std::array<Step, 6> STEPS = {Step::t1, Step::t2, Step::t4, Step::q1, Step::q3, Step::q4};
@@ -476,7 +478,8 @@ void PeoplesSubsystem::grow_years(StepContext& ctx, std::int64_t years, bool rec
             const PeoplesRace& r = geo().race(race_of_civ(state, s.owner_civ));
             const std::int64_t p = s.population;
             const std::int64_t next = grow_population(p, share[static_cast<std::size_t>(id - 1)], r.growth_permille,
-                                                      cap_of(state, s), tuning_.decline_permille);
+                                                      cap_of(state, s), tuning_.decline_permille,
+                                                      wild_growth(s.region));  // P5-02 7.1
             if (next != p) {
                 state.set_population(id, next);
             }
@@ -731,7 +734,32 @@ PeoplesSubsystem::StrikeResult PeoplesSubsystem::strike_result(const StepContext
     r.abandoned = !settlement_last_refuge(now, settlement) && (r.after < tuning_.abandon_min ||
                   (was_declining && r.after < tuning_.abandon_frail_max && other_standing(now, settlement) &&
                    chance_pm(ctx.draw(key(ABANDON), word(settlement), 0, 0), tuning_.abandon_permille.of(s.kind))));
+    // P5-02 8.2: the ghost rule, after 8.5 (a)'s test.
+    if (!r.abandoned) {
+        r.abandoned = ghost_abandoned(ctx, now, settlement, r.after);
+    }
     return r;
+}
+
+bool PeoplesSubsystem::ghost_abandoned(const StepContext& ctx, const SettlementsNow& now, std::int64_t settlement,
+                                       std::int64_t after) const {
+    const Settlement& s = now.state.settlement(settlement);
+    if (s.kind != SettlementKind::hamlet && s.kind != SettlementKind::village) {
+        return false;
+    }
+    if (after >= tuning_.ghost_max_population || now.state.civ(s.owner_civ).capital == settlement ||
+        !other_standing(now, settlement)) {
+        return false;
+    }
+    return chance_pm(ctx.draw(key(GHOST), word(settlement), 0, 0), tuning_.ghost_permille);
+}
+
+std::int64_t PeoplesSubsystem::wild_growth(std::int64_t region) const {
+    return wild_ != nullptr ? wild_->growth_permille(region) : 1000;
+}
+
+bool PeoplesSubsystem::shunned(std::int64_t region) const {
+    return wild_ != nullptr && wild_->shunned(region);
 }
 
 void PeoplesSubsystem::abandon(StepContext& ctx, std::int64_t settlement, std::int64_t cause) {
@@ -814,6 +842,9 @@ std::optional<std::int64_t> PeoplesSubsystem::outward_target(const StepContext& 
                 g.capacity(r1, race) < tuning_.expand_min_capacity) {
                 continue;
             }
+            if (require_free && shunned(r1)) {
+                continue;  // P5-02 7.2: no outward founding into a shunned region
+            }
             std::int64_t& k = cost[static_cast<std::size_t>(r1)];
             k = std::min(k, nb.cost);
         }
@@ -891,7 +922,7 @@ void PeoplesSubsystem::foundings(StepContext& ctx) {
         const std::int64_t source_region = state.settlement(source).region;
         // 3. Targets.
         std::optional<std::pair<std::int64_t, SiteCell>> inside;
-        if (state.region(source_region).owner == c) {
+        if (state.region(source_region).owner == c && !shunned(source_region)) {  // P5-02 7.2
             std::int64_t in_region = 0;
             for (std::int64_t id = 1; id <= ns; ++id) {
                 const Settlement& t = state.settlement(id);

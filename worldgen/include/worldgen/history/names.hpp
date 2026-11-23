@@ -35,6 +35,10 @@ struct CultureNaming {
     std::vector<std::string> god_forms;  // each holds exactly one {root}
     std::vector<std::string> civilization_forms;
     std::vector<std::string> settlement_forms;
+    std::vector<std::string> site_forms;     // P5-02 4.4 (generator 0.23.0)
+    // P5-02 9.1: a monster kind's name_forms; empty in a culture's naming
+    // (the monsters subsystem fills a copy of the naming culture's record).
+    std::vector<std::string> monster_forms;
 };
 
 // Reads the naming record of a culture (the value of its `naming` field,
@@ -47,9 +51,11 @@ enum class NameKind : std::uint8_t {
     god,
     civilization,
     settlement,
+    monster,  // P5-02 9.1
+    site,
 };
 
-// "god", "civilization" or "settlement".
+// "god", "civilization", "settlement", "monster" or "site".
 [[nodiscard]] std::string_view name_kind_text(NameKind kind) noexcept;
 
 // The stream name of a kind: hist.names.<kind> (P3-02 4.5).

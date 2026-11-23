@@ -377,6 +377,9 @@ CultureNaming culture_naming_from(const data::Record& naming) {
     out.god_forms = string_list(naming, "god_forms");
     out.civilization_forms = string_list(naming, "civilization_forms");
     out.settlement_forms = string_list(naming, "settlement_forms");
+    if (naming.find("site_forms") != nullptr) {  // P5-02 4.4: required by the loader; absent in hand-made records
+        out.site_forms = string_list(naming, "site_forms");
+    }
     return out;
 }
 
@@ -388,6 +391,10 @@ std::string_view name_kind_text(NameKind kind) noexcept {
             return "civilization";
         case NameKind::settlement:
             return "settlement";
+        case NameKind::monster:
+            return "monster";
+        case NameKind::site:
+            return "site";
     }
     return "settlement";  // unreachable for a valid enumerator
 }
@@ -400,6 +407,10 @@ std::string_view name_stream(NameKind kind) noexcept {
             return streams::hist_names_civilization;
         case NameKind::settlement:
             return streams::hist_names_settlement;
+        case NameKind::monster:
+            return streams::hist_names_monster;
+        case NameKind::site:
+            return streams::hist_names_site;
     }
     return streams::hist_names_settlement;  // unreachable for a valid enumerator
 }
@@ -412,6 +423,10 @@ const std::vector<std::string>& name_forms(const CultureNaming& naming, NameKind
             return naming.civilization_forms;
         case NameKind::settlement:
             return naming.settlement_forms;
+        case NameKind::monster:
+            return naming.monster_forms;
+        case NameKind::site:
+            return naming.site_forms;
     }
     return naming.settlement_forms;  // unreachable for a valid enumerator
 }

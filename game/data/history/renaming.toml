@@ -1,4 +1,4 @@
-# Regions renamed by history (spec P5-12 section 4; P3-01 r16 5.4). Generator 0.22.0.
+# Regions renamed by history (spec P5-12 section 4; P3-01 r16 5.4). Generator 0.22.0; P5-02 21.2 and rule 7, generator 0.23.0.
 [history.renaming]
 region_max = 2
 region_gap_years = 300
@@ -32,7 +32,7 @@ chance_permille = 700
 weight = 90
 name_role = "settlement"
 namer_role = "attacker"
-forms = ["{name}'s Fall", "The Ashes of {name}", "The Ruin of {name}", "{name} Waste"]
+forms = ["{stem}'s Fall", "The Ashes of {name}", "The Ruin of {name}", "The Fallen {noun}"]
 
 [[history.renaming.rules]]
 key = "great_sack"
@@ -46,7 +46,7 @@ chance_permille = 500
 weight = 80
 name_role = "settlement"
 namer_role = "attacker"
-forms = ["{name}'s Pyre", "The Ashes of {name}", "{name} Waste", "The Burnt {noun}"]
+forms = ["{stem}'s Pyre", "The Ashes of {name}", "The Burnt {noun}", "The Cinder {noun}"]
 
 [[history.renaming.rules]]
 key = "slaughter"
@@ -60,7 +60,7 @@ chance_permille = 600
 weight = 70
 name_role = "loser"
 namer_role = "winner"
-forms = ["The Red {noun}", "The Bloody {noun}", "{name}'s Bane", "The {noun} of the Slain"]
+forms = ["The Red {noun}", "The Bloody {noun}", "The Rout of {name}", "The {noun} of the Slain", "The Weeping {noun}", "The Grim {noun}"]
 
 [[history.renaming.rules]]
 key = "plague"
@@ -74,7 +74,7 @@ chance_permille = 400
 weight = 60
 name_role = "settlement"
 namer_role = "civilization"
-forms = ["The Emptied {noun}", "The Fever {noun}", "The Silent {noun}", "{name}'s Grave"]
+forms = ["The Emptied {noun}", "The Fever {noun}", "The Silent {noun}", "{stem}'s Grave", "The Pale {noun}", "The Hollow {noun}"]
 
 [[history.renaming.rules]]
 key = "heartland"
@@ -89,3 +89,17 @@ weight = 50
 name_role = "civilization"
 namer_role = "civilization"
 forms = ["{name}land", "The Heart of {name}", "The {name} Reach", "{name}'s Hearth"]
+
+[[history.renaming.rules]]
+key = "ravage"
+kinds = ["settlement_overrun"]
+values = []
+min_magnitude = 1
+window_years = 1
+min_salience = 0
+capital = false
+chance_permille = 600
+weight = 75
+name_role = "monster"
+namer_role = "civilization"
+forms = ["The Haunt of {name}", "{name}'s Shadow", "The Forsaken {noun}", "The Hollow of {name}"]

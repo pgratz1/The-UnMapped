@@ -1330,7 +1330,12 @@ TensionReport ConflictSubsystem::tension(const StepContext& ctx) {
 void ConflictSubsystem::declarations(StepContext& ctx) {
     const State& state = ctx.state();
     std::optional<Pair> flare;
-    if (ctx.phase_kind() == PhaseKind::flare && ctx.phase_id() != last_t2_phase_) {
+    // P5-02 7.4: the forced declaration only in a flare-up whose trigger is
+    // a claim (a flare-up of strain); a monster's flare-up forces none.
+    const std::int64_t trigger = ctx.phase_trigger_event();
+    const bool strain_flare =
+        trigger != 0 && (ctx.event_kind(trigger) == "claim" || ctx.event_kind(trigger) == "claim_settlements");
+    if (ctx.phase_kind() == PhaseKind::flare && ctx.phase_id() != last_t2_phase_ && strain_flare) {
         if (const std::optional<std::pair<TensionReport, Pair>> best = best_claim(ctx)) {
             flare = best->second;
         }

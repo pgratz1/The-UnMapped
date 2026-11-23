@@ -1,0 +1,25 @@
+# Monster kind (spec P5-02 4.2). Generator 0.23.0.
+[monster.troll]
+name = "Troll"
+noun = "a troll of the hills"
+grouped = false
+wake = "wild"
+biomes = [{ biome = "highland_moor", weight = 800 }, { biome = "alpine", weight = 600 }, { biome = "temperate_forest", weight = 400 }, { biome = "heath", weight = 300 }]
+wake_rate = 17
+naming_culture = "goblin"
+name_forms = ["Old {root}", "{root}"]
+lair_forms = ["{root}'s Hollow", "The Den of {root}"]
+might = 300
+range_hops = 1
+raid_permille = 80
+toll_min_permille = 20
+toll_max_permille = 80
+kill_max = 60
+overruns = ["hamlet", "village"]
+overrun_permille = 100
+active_years = 120
+rewake_ppm = 5000
+lifespan_years = 800
+max_alive = 3
+flare = false
+hoard_permille = 5

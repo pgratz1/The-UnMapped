@@ -75,6 +75,9 @@ struct PeoplesTuning {
     std::int64_t ruin_fade_years = 1;
     std::int64_t colony_new_region_salience = 0, plague_small_salience = 0;
     std::int64_t plague_major_dead = 0, crisis_small_salience = 0;  // r6 (generator 0.17.0)
+    // P5-02 4.5, 8.2 (generator 0.23.0): the ghost rule; 0 (a hand-made
+    // tuning) turns it off.
+    std::int64_t ghost_permille = 0, ghost_max_population = 0;
 };
 
 // The loaded definition (validated by the loader). FatalError "history:
@@ -164,8 +167,19 @@ struct PeoplesRegion {
 // ladder kind the race builds.
 [[nodiscard]] std::int64_t kind_cap(const PeoplesRace& race, SettlementKind kind, const PeoplesTuning& tuning);
 // The yearly growth rule of 9.1 for one settlement: P toward its share.
+// P5-02 7.1: `wild` is G, the region's growth factor per mille; with G =
+// 1000 the result is 9.1's exactly.
 [[nodiscard]] std::int64_t grow_population(std::int64_t population, std::int64_t share, std::int64_t growth_permille,
-                                           std::int64_t cap, std::int64_t decline_permille);
+                                           std::int64_t cap, std::int64_t decline_permille, std::int64_t wild = 1000);
+
+// P5-02 7.1, 7.2: what peoples reads of the wild (MonstersSubsystem). With
+// no view set, growth is 1000 and nothing is shunned.
+class WildView {
+public:
+    virtual ~WildView() = default;
+    [[nodiscard]] virtual std::int64_t growth_permille(std::int64_t region) const = 0;
+    [[nodiscard]] virtual bool shunned(std::int64_t region) const = 0;
+};
 
 // --- Geography (sections 4 to 6) ------------------------------------------------------------
 
@@ -320,6 +334,8 @@ public:
     void run(StepContext& context) override;
 
     [[nodiscard]] const PeoplesView& view() const noexcept { return view_; }
+    // P5-02 7.1: the wild view, set once by the stage (nullptr: none).
+    void set_wild(const WildView* wild) noexcept { wild_ = wild; }
     // P3-06 after casualties: the cause of a later abandonment.
     void note_reduction(std::int64_t settlement, std::int64_t event);
     // r15 22.7a (P3-06 r17 22.3): the latest flight of civ, to the refuge
@@ -359,6 +375,8 @@ public:
     // adds each renamed region's name (not a core, P3-02 12.2).
     [[nodiscard]] const NameRegistry& name_registry() const noexcept { return registry_; }
     void add_name(std::string name) { registry_.add(std::move(name)); }
+    // P5-02 9.1: the registry the monster and site names are drawn against.
+    [[nodiscard]] NameRegistry& mutable_name_registry() noexcept { return registry_; }
     // The world's name filter (P3-02 11.2), after the first step.
     [[nodiscard]] const NameFilter& name_filter() const noexcept { return filter_; }
 
@@ -429,8 +447,14 @@ private:
         std::int64_t after = 0;
         bool abandoned = false;
     };
+    // P5-02 8.2: the ghost rule applies to every strike (famine, plague
+    // outbreak and spread are the only strikes).
     [[nodiscard]] StrikeResult strike_result(const StepContext& context, const SettlementsNow& now,
                                              std::int64_t settlement, std::int64_t toll) const;
+    [[nodiscard]] bool ghost_abandoned(const StepContext& context, const SettlementsNow& now, std::int64_t settlement,
+                                       std::int64_t after) const;
+    [[nodiscard]] std::int64_t wild_growth(std::int64_t region) const;
+    [[nodiscard]] bool shunned(std::int64_t region) const;
     // 10.2: the toll of a spread from origin to target, nullopt if its draw fails.
     [[nodiscard]] std::optional<std::int64_t> spread_toll(const StepContext& context, std::int64_t origin,
                                                           std::int64_t target) const;
@@ -462,7 +486,8 @@ private:
     NameRegistry registry_;
     NameCores cores_;  // P3-02 r10 12.2: the cores of the civilization and settlement names drawn
     NameFilter filter_;  // P3-02 r5: the world's name filter
-    std::array<std::uint64_t, 12> keys_{};
+    std::array<std::uint64_t, 13> keys_{};  // P5-02: + hist.peoples.ghost
+    const WildView* wild_ = nullptr;        // P5-02 7.1
     std::int64_t intensity_ = 1000;
     bool prepared_ = false;
     std::int64_t homes_serial_ = -1;          // the step serial the cached homes were computed in; -1 none

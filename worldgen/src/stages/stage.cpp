@@ -227,6 +227,26 @@ void StageContext::write_region_name(const db::RegionNameRow& row) {
     state_->stage.write_region_name(row);
 }
 
+void StageContext::write_beast(const db::BeastRow& row) {
+    state_->stage.write_beast(row);
+}
+
+void StageContext::write_monster_kind(const db::MonsterKindRow& row) {
+    state_->stage.write_monster_kind(row);
+}
+
+void StageContext::write_beast_population(const db::BeastPopulationRow& row) {
+    state_->stage.write_beast_population(row);
+}
+
+void StageContext::write_monster(const db::MonsterRow& row) {
+    state_->stage.write_monster(row);
+}
+
+void StageContext::write_site(const db::SiteRow& row) {
+    state_->stage.write_site(row);
+}
+
 // --- Pipeline ------------------------------------------------------------------------
 
 namespace detail {

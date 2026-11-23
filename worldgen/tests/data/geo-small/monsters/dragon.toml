@@ -1,0 +1,25 @@
+# Monster kind (spec P5-02 4.2). Generator 0.23.0.
+[monster.dragon]
+name = "Dragon"
+noun = "a dragon of the old world"
+grouped = false
+wake = "wild"
+biomes = [{ biome = "alpine", weight = 800 }, { biome = "highland_moor", weight = 400 }, { biome = "blighted_waste", weight = 600 }]
+wake_rate = 6
+naming_culture = "elven"
+name_forms = ["{root} the Black", "{root} the Pale", "{root}"]
+lair_forms = ["The Lair of {root}", "{root}'s Deep"]
+might = 6000
+range_hops = 2
+raid_permille = 30
+toll_min_permille = 50
+toll_max_permille = 200
+kill_max = 600
+overruns = ["hamlet", "village", "town"]
+overrun_permille = 150
+active_years = 40
+rewake_ppm = 2000
+lifespan_years = 0
+max_alive = 1
+flare = true
+hoard_permille = 40

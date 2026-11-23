@@ -343,6 +343,7 @@ struct SettlementRow {
     std::int64_t population = 0;
     std::optional<std::int64_t> ruined_year;
     std::int64_t ruin_event = 0;
+    std::int64_t ending = 0;  // schema 9 (P5-02 8.3): 0 standing, 1 sacked ... 5 left
 
     friend bool operator==(const SettlementRow&, const SettlementRow&) = default;
 };
@@ -379,6 +380,74 @@ struct RegionNameRow {
     std::int64_t event = 0;
 
     friend bool operator==(const RegionNameRow&, const RegionNameRow&) = default;
+};
+
+// Rows of the tables of P5-02 11.2 (schema 9).
+struct BeastRow {
+    std::int64_t id = 0;
+    std::string key;
+    std::string name;
+    std::string plural;
+    std::int64_t menace = 0;
+    std::int64_t food = 0;
+
+    friend bool operator==(const BeastRow&, const BeastRow&) = default;
+};
+
+struct MonsterKindRow {
+    std::int64_t id = 0;
+    std::string key;
+    std::string name;
+    std::string noun;
+    std::int64_t grouped = 0;  // 0 or 1
+    std::int64_t wake = 0;     // 1 wild, 2 dead
+    std::int64_t might = 0;
+
+    friend bool operator==(const MonsterKindRow&, const MonsterKindRow&) = default;
+};
+
+struct BeastPopulationRow {
+    std::int64_t region = 0;
+    std::int64_t beast = 0;
+    std::int64_t year = 0;
+    std::int64_t count = 0;
+
+    friend bool operator==(const BeastPopulationRow&, const BeastPopulationRow&) = default;
+};
+
+struct MonsterRow {
+    std::int64_t id = 0;
+    std::string name;
+    std::int64_t kind = 0;
+    std::int64_t lair_site = 0;
+    std::int64_t born = 0;
+    std::int64_t born_event = 0;
+    std::optional<std::int64_t> died;
+    std::int64_t death_event = 0;
+    std::int64_t slain_by = 0;
+    std::int64_t status = 0;  // 1 awake, 2 asleep, 3 slain, 4 died
+    std::int64_t hoard = 0;
+
+    friend bool operator==(const MonsterRow&, const MonsterRow&) = default;
+};
+
+struct SiteRow {
+    std::int64_t id = 0;
+    std::string name;
+    std::int64_t kind = 0;  // 1 lair, 2 outpost
+    std::int64_t region = 0;
+    std::int64_t x = 0;
+    std::int64_t y = 0;
+    std::int64_t settlement = 0;
+    std::int64_t founder_civ = 0;
+    std::int64_t monster = 0;
+    std::int64_t origin_year = 0;
+    std::int64_t origin_event = 0;
+    std::optional<std::int64_t> ended_year;
+    std::int64_t ending_event = 0;
+    std::int64_t ending = 0;  // 0 open, 1 to 6 (P5-02 11.2)
+
+    friend bool operator==(const SiteRow&, const SiteRow&) = default;
 };
 
 // One row of table `relation` (P3-04 6.7): until NULL and until_event 0
@@ -487,6 +556,13 @@ public:
     void write_relation(const RelationRow& row);
     // Table region_name (schema 8): rows in ascending (region, from_year).
     void write_region_name(const RegionNameRow& row);
+    // The tables of P5-02 (schema 9): rows in ascending primary key (id;
+    // id; (region, beast, year); id; id).
+    void write_beast(const BeastRow& row);
+    void write_monster_kind(const MonsterKindRow& row);
+    void write_beast_population(const BeastPopulationRow& row);
+    void write_monster(const MonsterRow& row);
+    void write_site(const SiteRow& row);
 
     // COMMIT, and append the stage name to meta.stages (P0-02 5.5, 6 step 3).
     // FatalError if already committed or SQLite fails.

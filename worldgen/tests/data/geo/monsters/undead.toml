@@ -1,0 +1,25 @@
+# Monster kind (spec P5-02 4.2). Generator 0.23.0.
+[monster.undead]
+name = "Undead"
+noun = "a host of the restless dead"
+grouped = true
+wake = "dead"
+biomes = []
+wake_rate = 9000
+naming_culture = "human"
+name_forms = ["The Host of {root}", "The Restless of {root}"]
+lair_forms = ["The Barrows of {root}", "{root}'s Howe"]
+might = 1500
+range_hops = 1
+raid_permille = 60
+toll_min_permille = 30
+toll_max_permille = 120
+kill_max = 200
+overruns = ["hamlet", "village"]
+overrun_permille = 120
+active_years = 200
+rewake_ppm = 3000
+lifespan_years = 1000
+max_alive = 2
+flare = false
+hoard_permille = 5

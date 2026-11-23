@@ -40,7 +40,7 @@ struct HistorySectionResult {
 // db::HISTORY_TABLES), each in primary-key order as visited.
 struct HistoryTables {
     // Schema 8 (P3-04 r21 23.4): index 13 is table region_name.
-    std::array<std::vector<std::vector<db::ColumnValue>>, 14> rows;
+    std::array<std::vector<std::vector<db::ColumnValue>>, 19> rows;  // schema 9: + beast, monster_kind, beast_population, monster, site
     // The rows of table race (P3-03), id order: the per-race keys of P3-05
     // 15.4.
     std::vector<std::vector<db::ColumnValue>> races;
@@ -69,6 +69,8 @@ struct HistoryStats {
     std::int64_t census_rows = 0;
     std::int64_t relations = 0;
     std::int64_t region_names = 0;  // P3-04 r21 23.4 (schema 8), after relations
+    // P5-02 11.3 (schema 9), after region_names.
+    std::int64_t beasts = 0, monster_kinds = 0, beast_populations = 0, monsters = 0, sites = 0;
     // P3-05 15.4, after relations: the population of the standing
     // settlements, then per race row in id order (present or not) its
     // population, its standing settlements and its held regions (open

@@ -420,8 +420,36 @@ inline constexpr std::string_view HISTORY_CHRONOLOGY_ID = "chronology";
 inline constexpr std::string_view HISTORY_CONFLICT_ID = "conflict";  // P3-06 12.1
 inline constexpr std::string_view HISTORY_ENGINE_ID = "engine";
 inline constexpr std::string_view HISTORY_PEOPLES_ID = "peoples";  // P3-05 12.1
+inline constexpr std::string_view HISTORY_MONSTERS_ID = "monsters";  // P5-02 4.3 (generator 0.23.0)
 inline constexpr std::string_view HISTORY_RENAMING_ID = "renaming";  // P5-12 4 (generator 0.22.0)
 inline constexpr std::string_view HISTORY_REPORT_ID = "report";
+
+// P5-02 4.1, 4.2 (generator 0.23.0): kinds beast (beasts/) and monster
+// (monsters/), both required, open ids.
+inline constexpr std::string_view BEAST_KIND = "beast";
+inline constexpr std::string_view BEAST_DIRECTORY = "beasts";
+inline constexpr std::string_view MONSTER_KIND = "monster";
+inline constexpr std::string_view MONSTER_DIRECTORY = "monsters";
+
+// The schema of a beast definition (P5-02 4.1): name string(32,
+// display_name), plural string(32, beast_plural), habitat array(record
+// {biome string(32), weight int(0, 1000)}, 1, 16), density int(0, 100000),
+// growth_permille int(1, 1000), menace int(0, 1000), food int(0, 1000), all
+// required, in this order. Named check beast_habitat_biomes (its repeats;
+// the reference to a biome definition is checked by
+// history::check_history_data).
+[[nodiscard]] Schema beast_schema();
+
+// The schema of a monster definition (P5-02 4.2), the fields of that table
+// in its order, all required. Named checks, in this order: monster_biomes
+// (repeats; the references as for beasts), monster_wild_habitat,
+// monster_toll_ordered, monster_overruns_unique, monster_bare_form_last
+// (monster_culture is checked by history::check_history_data).
+[[nodiscard]] Schema monster_schema();
+
+// The schema of definition history.monsters (P5-02 4.3). Named check
+// monsters_bold_ordered.
+[[nodiscard]] Schema history_monsters_schema();
 
 // The schema of a race definition (P3-01 3): order int(1, 6); name, plural,
 // adjective string(32, word); camp enum(good, neutral, evil);

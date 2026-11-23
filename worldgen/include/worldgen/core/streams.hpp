@@ -116,8 +116,25 @@ inline constexpr std::string_view hist_conflict_toll = "hist.conflict.toll";
 // P5-12 3 (generator 0.22.0): the renaming subsystem's chance and name draws.
 inline constexpr std::string_view hist_renaming_chance = "hist.renaming.chance";
 inline constexpr std::string_view hist_renaming_name = "hist.renaming.name";
+// P5-02 3 (generator 0.23.0): beasts, monsters, sites, the ghost rule and
+// the names of monsters and sites.
+inline constexpr std::string_view hist_beasts_bold = "hist.beasts.bold";
+inline constexpr std::string_view hist_monsters_wake = "hist.monsters.wake";
+inline constexpr std::string_view hist_monsters_rise = "hist.monsters.rise";
+inline constexpr std::string_view hist_monsters_sleep = "hist.monsters.sleep";
+inline constexpr std::string_view hist_monsters_rewake = "hist.monsters.rewake";
+inline constexpr std::string_view hist_monsters_raid = "hist.monsters.raid";
+inline constexpr std::string_view hist_monsters_raid_toll = "hist.monsters.raid_toll";
+inline constexpr std::string_view hist_monsters_overrun = "hist.monsters.overrun";
+inline constexpr std::string_view hist_monsters_hunt = "hist.monsters.hunt";
+inline constexpr std::string_view hist_monsters_hunt_outcome = "hist.monsters.hunt_outcome";
+inline constexpr std::string_view hist_monsters_lair_name = "hist.monsters.lair_name";
+inline constexpr std::string_view hist_sites_outpost = "hist.sites.outpost";
+inline constexpr std::string_view hist_peoples_ghost = "hist.peoples.ghost";
+inline constexpr std::string_view hist_names_monster = "hist.names.monster";
+inline constexpr std::string_view hist_names_site = "hist.names.site";
 // Every registered name, in registration order.
-inline constexpr std::array<std::string_view, 56> all_stream_names = {
+inline constexpr std::array<std::string_view, 71> all_stream_names = {
     test_hash,
     test_noise,
     test_wide,
@@ -174,6 +191,21 @@ inline constexpr std::array<std::string_view, 56> all_stream_names = {
     hist_conflict_toll,
     hist_renaming_chance,
     hist_renaming_name,
+    hist_beasts_bold,
+    hist_monsters_wake,
+    hist_monsters_rise,
+    hist_monsters_sleep,
+    hist_monsters_rewake,
+    hist_monsters_raid,
+    hist_monsters_raid_toll,
+    hist_monsters_overrun,
+    hist_monsters_hunt,
+    hist_monsters_hunt_outcome,
+    hist_monsters_lair_name,
+    hist_sites_outpost,
+    hist_peoples_ghost,
+    hist_names_monster,
+    hist_names_site,
 };
 
 }  // namespace worldgen::streams

@@ -4,6 +4,7 @@
 #include "worldgen/history/renaming.hpp"
 
 #include <algorithm>
+#include <array>
 #include <string>
 #include <utility>
 
@@ -25,6 +26,7 @@ constexpr std::array<Step, 2> STEPS = {Step::t6, Step::q4};
 
 constexpr std::string_view NAME_SLOT = "{name}";
 constexpr std::string_view NOUN_SLOT = "{noun}";
+constexpr std::string_view STEM_SLOT = "{stem}";  // P5-02 21.2
 constexpr std::string_view ROOT_SLOT = "{root}";
 constexpr std::string_view SETTLEMENT_ROLE = "settlement";
 constexpr std::string_view RENAMED_KIND = "region_renamed";
@@ -90,10 +92,13 @@ std::string kind_problem(const RenameRule& rule, std::string_view key, const Eve
         if (rule.name_role == SETTLEMENT_ROLE) {
             ok = kind->settlement_use != 0;
         } else if (const RoleDef* r = kind->find_role(rule.name_role)) {
-            ok = r->type == EntityType::civilization || r->type == EntityType::settlement;
+            // P5-02 9.3: a monster role names the monster's root.
+            ok = r->type == EntityType::civilization || r->type == EntityType::settlement ||
+                 r->type == EntityType::monster;
         }
         if (!ok) {
-            return "name_role '" + rule.name_role + "' is not a civilization or settlement role of kind '" + k + "'";
+            return "name_role '" + rule.name_role + "' is not a civilization, settlement or monster role of kind '" +
+                   k + "'";
         }
     }
     if (!rule.namer_role.empty()) {
@@ -180,11 +185,12 @@ std::string realm_root(std::string_view name, const std::vector<std::string>& ci
     return std::string(name);
 }
 
-RenamedName fill_rename_form(std::string_view form, std::string_view name_value, std::string_view noun_value) {
+RenamedName fill_slots(std::string_view form, std::span<const SlotValue> slots) {
     RenamedName out;
     std::size_t i = 0;
     bool literal_open = false;  // a literal run is being appended
     bool first_part = true;
+    bool after_s_slot = false;  // the last part was a slot value ending in s or S (P5-02 21.2)
     // A join at every start of a part but the first.
     const auto start_part = [&out, &first_part]() {
         if (!first_part) {
@@ -193,22 +199,65 @@ RenamedName fill_rename_form(std::string_view form, std::string_view name_value,
         first_part = false;
     };
     while (i < form.size()) {
-        if (form.substr(i, NAME_SLOT.size()) == NAME_SLOT || form.substr(i, NOUN_SLOT.size()) == NOUN_SLOT) {
-            const bool is_name = form.substr(i, NAME_SLOT.size()) == NAME_SLOT;
+        const SlotValue* slot = nullptr;
+        for (const SlotValue& v : slots) {
+            if (form.substr(i, v.slot.size()) == v.slot) {
+                slot = &v;
+                break;
+            }
+        }
+        if (slot != nullptr) {
             start_part();
-            out.name += is_name ? name_value : noun_value;
-            i += is_name ? NAME_SLOT.size() : NOUN_SLOT.size();
+            out.name += slot->value;
+            i += slot->slot.size();
             literal_open = false;
+            after_s_slot = !slot->value.empty() && (slot->value.back() == 's' || slot->value.back() == 'S');
             continue;
         }
         if (!literal_open) {
             start_part();
             literal_open = true;
+            // P5-02 21.2, the possessive: after a value ending in s, a
+            // literal run starting with 's keeps the ' alone.
+            if (after_s_slot && form.substr(i, 2) == "'s") {
+                out.name += '\'';
+                i += 2;
+                after_s_slot = false;
+                continue;
+            }
         }
+        after_s_slot = false;
         out.name += form[i];
         ++i;
     }
     return out;
+}
+
+RenamedName fill_rename_form(std::string_view form, std::string_view name_value, std::string_view noun_value) {
+    return fill_rename_form(form, name_value, noun_value, name_value);
+}
+
+RenamedName fill_rename_form(std::string_view form, std::string_view name_value, std::string_view noun_value,
+                             std::string_view stem_value) {
+    const std::array<SlotValue, 3> slots = {SlotValue{NAME_SLOT, name_value}, SlotValue{NOUN_SLOT, noun_value},
+                                            SlotValue{STEM_SLOT, stem_value}};
+    return fill_slots(form, slots);
+}
+
+std::string settlement_stem(std::string_view name, const std::vector<std::string>& settlement_forms) {
+    for (const std::string& form : settlement_forms) {
+        if (!starts_with(form, ROOT_SLOT)) {
+            continue;
+        }
+        const std::string_view b = std::string_view(form).substr(ROOT_SLOT.size());
+        if (b.empty() || b.front() != ' ') {
+            continue;  // fused suffixes are never stripped
+        }
+        if (name.size() > b.size() && ends_with(name, b)) {
+            return std::string(name.substr(0, name.size() - b.size()));
+        }
+    }
+    return std::string(name);
 }
 
 std::int64_t renaming_cap(std::int64_t regions, std::int64_t permille) noexcept {
@@ -255,6 +304,7 @@ void RenamingSubsystem::prepare(const StepContext& ctx) {
             fail("history: renaming: culture '" + c.key + "' is not in the content");
         }
         culture_forms_.emplace_back(c.id, string_list(d->record.get_record("naming"), "civilization_forms"));
+        settlement_forms_.emplace_back(c.id, string_list(d->record.get_record("naming"), "settlement_forms"));
     }
     windows_.assign(tuning_.rules.size(),
                     std::vector<std::vector<WindowEntry>>(static_cast<std::size_t>(region_count_)));
@@ -264,6 +314,16 @@ void RenamingSubsystem::prepare(const StepContext& ctx) {
 
 const std::vector<std::string>& RenamingSubsystem::civilization_forms(std::int64_t culture) const {
     for (const auto& [id, forms] : culture_forms_) {
+        if (id == culture) {
+            return forms;
+        }
+    }
+    static const std::vector<std::string> none;
+    return none;
+}
+
+const std::vector<std::string>& RenamingSubsystem::settlement_forms(std::int64_t culture) const {
+    for (const auto& [id, forms] : settlement_forms_) {
         if (id == culture) {
             return forms;
         }
@@ -344,9 +404,17 @@ void RenamingSubsystem::read_event(const StepContext& ctx, std::int64_t event,
 std::optional<std::string> RenamingSubsystem::build_name(const StepContext& ctx, const RenameRule& rule,
                                                          std::int64_t event, std::int64_t region) const {
     std::optional<std::string> name_value;
+    std::optional<std::string> stem_value;  // P5-02 21.2: {stem}
+    const auto of_settlement = [&](std::int64_t s) {
+        const Settlement& t = ctx.state().settlement(s);
+        name_value = t.name;
+        const std::int64_t founder = t.founder_civ;
+        stem_value = founder != 0 ? settlement_stem(t.name, settlement_forms(ctx.state().civ(founder).culture))
+                                  : t.name;
+    };
     if (rule.name_role == SETTLEMENT_ROLE) {
         if (const std::int64_t s = ctx.event_settlement(event); s != 0) {
-            name_value = ctx.state().settlement(s).name;
+            of_settlement(s);
         }
     } else if (!rule.name_role.empty()) {
         const KindDef* kind = catalogue_.find(ctx.event_kind(event));
@@ -356,8 +424,13 @@ std::optional<std::string> RenamingSubsystem::build_name(const StepContext& ctx,
             const Civilization& c = ctx.state().civ(id);
             name_value = realm_root(c.name, civilization_forms(c.culture));
         } else if (id != 0 && role->type == EntityType::settlement) {
-            name_value = ctx.state().settlement(id).name;
+            of_settlement(id);
+        } else if (id != 0 && role->type == EntityType::monster && monsters_ != nullptr) {
+            name_value = monsters_->monster_root(id);  // P5-02 9.3
         }
+    }
+    if (name_value && !stem_value) {
+        stem_value = name_value;  // {stem} = {name} for any other role
     }
     const std::string& noun = nouns_[static_cast<std::size_t>(region - 1)];
     const std::vector<std::string>& forms = rule.forms;
@@ -366,14 +439,16 @@ std::optional<std::string> RenamingSubsystem::build_name(const StepContext& ctx,
     const NameRegistry& registry = peoples_.name_registry();
     for (std::uint64_t j = 0; j < n; ++j) {
         const std::string& f = forms[static_cast<std::size_t>((start + j) % n)];
-        const bool needs_name = f.find(NAME_SLOT) != std::string::npos;
+        const bool needs_name = f.find(NAME_SLOT) != std::string::npos || f.find(STEM_SLOT) != std::string::npos;
         if (needs_name && !name_value) {
             continue;  // no {name} for this event: the form cannot be filled
         }
         if (noun.empty() && f.find(NOUN_SLOT) != std::string::npos) {
             continue;  // a hand-made region without a land noun
         }
-        RenamedName filled = fill_rename_form(f, needs_name ? std::string_view(*name_value) : std::string_view(), noun);
+        RenamedName filled =
+            fill_rename_form(f, needs_name ? std::string_view(*name_value) : std::string_view(), noun,
+                             needs_name ? std::string_view(*stem_value) : std::string_view());
         if (stages::renamed_region_name_valid(filled.name, filled.joins, placenames_) &&
             !registry.contains(filled.name)) {
             return std::move(filled.name);
