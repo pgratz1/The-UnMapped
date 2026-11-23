@@ -102,7 +102,7 @@ void check_world_case(const GCase& g) {
     const Tables t = tables_of_world(r);
     CHECK(resumed == t);  // Y2 with peoples installed (16.2 item 20; the peoples-only stage since 0.16.0)
     const std::map<std::string, std::string> detail = chrono_test::detail_tables(r);
-    CHECK(g.tables.size() == 14U);  // P3-04 r21 23.4: region_name (schema 8)
+    CHECK(g.tables.size() == 19U);  // P5-02 11.1 (schema 9): five more; P3-04 r21 23.4: region_name (schema 8)
     for (const auto& [name, hex] : g.tables) {
         CAPTURE(name);
         CHECK(detail.at(name) == hex);

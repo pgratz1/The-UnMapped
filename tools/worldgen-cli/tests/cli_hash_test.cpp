@@ -109,7 +109,7 @@ TEST_CASE("cli 12.5: --detail of a test-pattern world") {
     const ProcessResult r = sb.cli({"hash", "--db", u8(world), "--detail"});
     REQUIRE(r.exit_code == EXIT_OK);
     const std::vector<std::string> lines = lines_of(r.out);
-    REQUIRE(lines.size() == 32);  // 27 tables since schema 8 (P5-12 7.2)
+    REQUIRE(lines.size() == 37);  // 32 tables since schema 9 (P5-02 11.1)
     const auto ramp = p004::ramp_cells();
     const auto hash = p004::hash_cells(42);
     const auto noise = p004::noise_cells(42);
@@ -145,7 +145,7 @@ TEST_CASE("cli 12.5: layer hash is codec-independent") {
     const ProcessResult r = sb.cli({"hash", "--db", u8(world), "--detail"});
     REQUIRE(r.exit_code == EXIT_OK);
     const std::vector<std::string> lines = lines_of(r.out);
-    REQUIRE(lines.size() == 31);  // twenty-seven tables since schema 8 (P5-12 7.2)
+    REQUIRE(lines.size() == 36);  // thirty-two tables since schema 9 (P5-02 11.1)
     const std::string expected = to_hex(p004::layer_hash_i16(7, 5, cells));
     CHECK(lines[17] == "table pass " + to_hex(p004::empty_pass_table_hash()));
     CHECK(lines[29] == "layer test.raw " + expected);

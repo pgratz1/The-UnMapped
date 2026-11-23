@@ -94,7 +94,7 @@ TEST_CASE("cli 12.4: test-pattern world") {
     const ProcessResult r = sb.cli({"report", "--db", u8(world)});
     REQUIRE(r.exit_code == EXIT_OK);
     const std::vector<std::string> lines = lines_of(r.out);
-    REQUIRE(lines.size() == 51);  // 17 meta rows and 27 tables since schema 8 (P5-12 7.2)
+    REQUIRE(lines.size() == 56);  // 17 meta rows and 32 tables since schema 9 (P5-02 11.1)
     CHECK(r.out.back() == '\n');
     CHECK(lines[0] == "# worldgen report v2");
     CHECK(lines[1] == "[meta]");

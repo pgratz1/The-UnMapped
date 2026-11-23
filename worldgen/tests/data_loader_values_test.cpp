@@ -818,7 +818,7 @@ TEST_CASE("loader registry: ascending name order; production registry has unique
     // and, from P1-04, `biome` (P1-00 6.6); P3-01 adds `culture`, `history`
     // and `race` (P3-01 3 to 5).
     const auto builtin = wd::builtin_kinds();
-    CHECK(builtin.kinds().size() == 7U);  // P3-08: name_filter, placename
+    CHECK(builtin.kinds().size() == 9U);  // P3-08: name_filter, placename; P5-02: beast, monster
     const auto& kinds = builtin.kinds();
     for (std::size_t i = 0; i < kinds.size(); ++i) {
         CHECK(wd::is_valid_name(kinds[i].name));

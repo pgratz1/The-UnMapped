@@ -602,7 +602,7 @@ undead_min_dead = 4000
 undead_window_years = 100
 hunt_hops = 2
 hunt_levy_permille = 50
-hunt_permille = 150
+hunt_permille = 20
 hunt_memory_years = 30
 slay_max_permille = 900
 drive_permille = 300
@@ -611,8 +611,8 @@ displace_per_kpeople = 100
 displace_max_permille = 900
 beast_decline_permille = 200
 people_floor = 100
-drag_k = 100
-drag_max_permille = 200
+drag_k = 40
+drag_max_permille = 100
 feed_k = 2
 feed_max_permille = 100
 bold_on_permille = 1500
@@ -622,6 +622,11 @@ bold_toll_permille = 10
 outpost_permille = 30
 outpost_max = 2
 outpost_quiet_years = 200
+prey_weight = { hamlet = 1000, village = 600, town = 150, city = 40, fortress = 20 }
+prey_capital_permille = 250
+prey_hop_permille = 500
+prey_might_ref = 1500
+prey_might_max_permille = 4000
 )";
 
 inline constexpr std::string_view BEAST_BEAR_TOML = R"([beast.bear]
@@ -719,18 +724,18 @@ biomes = [
   { biome = "highland_moor", weight = 400 },
   { biome = "blighted_waste", weight = 600 },
 ]
-wake_rate = 6
+wake_rate = 60
 naming_culture = "elven"
 name_forms = ["{root} the Black", "{root} the Pale", "{root}"]
 lair_forms = ["The Lair of {root}", "{root}'s Deep"]
 might = 6000
 range_hops = 2
-raid_permille = 30
+raid_permille = 60
 toll_min_permille = 50
 toll_max_permille = 200
 kill_max = 600
 overruns = ["hamlet", "village", "town"]
-overrun_permille = 150
+overrun_permille = 600
 active_years = 40
 rewake_ppm = 2000
 lifespan_years = 0
@@ -747,18 +752,18 @@ biomes = [
   { biome = "alpine", weight = 900 },
   { biome = "highland_moor", weight = 500 },
 ]
-wake_rate = 14
+wake_rate = 25
 naming_culture = "dwarven"
 name_forms = ["{root} Stonehand", "{root}"]
 lair_forms = ["{root}'s Seat", "The Hall of {root}"]
 might = 1200
 range_hops = 1
-raid_permille = 40
+raid_permille = 100
 toll_min_permille = 30
 toll_max_permille = 100
 kill_max = 150
 overruns = ["hamlet", "village"]
-overrun_permille = 60
+overrun_permille = 900
 active_years = 150
 rewake_ppm = 3000
 lifespan_years = 2500
@@ -777,21 +782,21 @@ biomes = [
   { biome = "steppe", weight = 700 },
   { biome = "highland_moor", weight = 300 },
 ]
-wake_rate = 10
+wake_rate = 40
 naming_culture = "orcish"
 name_forms = ["{root} the Glutton", "{root}"]
 lair_forms = ["{root}'s Larder", "The Pit of {root}"]
 might = 200
 range_hops = 1
-raid_permille = 100
+raid_permille = 150
 toll_min_permille = 20
 toll_max_permille = 60
 kill_max = 40
 overruns = ["hamlet"]
-overrun_permille = 80
+overrun_permille = 900
 active_years = 80
 rewake_ppm = 8000
-lifespan_years = 300
+lifespan_years = 1000
 max_alive = 3
 flare = false
 hoard_permille = 3
@@ -807,21 +812,21 @@ biomes = [
   { biome = "temperate_forest", weight = 400 },
   { biome = "heath", weight = 300 },
 ]
-wake_rate = 17
+wake_rate = 50
 naming_culture = "goblin"
 name_forms = ["Old {root}", "{root}"]
 lair_forms = ["{root}'s Hollow", "The Den of {root}"]
 might = 300
 range_hops = 1
-raid_permille = 80
+raid_permille = 150
 toll_min_permille = 20
 toll_max_permille = 80
 kill_max = 60
 overruns = ["hamlet", "village"]
-overrun_permille = 100
+overrun_permille = 900
 active_years = 120
 rewake_ppm = 5000
-lifespan_years = 800
+lifespan_years = 2000
 max_alive = 3
 flare = false
 hoard_permille = 5
@@ -832,18 +837,18 @@ noun = "a host of the restless dead"
 grouped = true
 wake = "dead"
 biomes = []
-wake_rate = 9000
+wake_rate = 15000
 naming_culture = "human"
 name_forms = ["The Host of {root}", "The Restless of {root}"]
 lair_forms = ["The Barrows of {root}", "{root}'s Howe"]
 might = 1500
 range_hops = 1
-raid_permille = 60
+raid_permille = 80
 toll_min_permille = 30
 toll_max_permille = 120
 kill_max = 200
 overruns = ["hamlet", "village"]
-overrun_permille = 120
+overrun_permille = 900
 active_years = 200
 rewake_ppm = 3000
 lifespan_years = 1000
@@ -861,21 +866,21 @@ biomes = [
   { biome = "heath", weight = 500 },
   { biome = "highland_moor", weight = 600 },
 ]
-wake_rate = 17
+wake_rate = 50
 naming_culture = "goblin"
 name_forms = ["The {root} Brood", "The Brood of {root}"]
 lair_forms = ["The Eyrie of {root}", "{root}'s Crag"]
 might = 600
 range_hops = 2
-raid_permille = 80
+raid_permille = 120
 toll_min_permille = 20
 toll_max_permille = 80
 kill_max = 50
 overruns = ["hamlet"]
-overrun_permille = 50
+overrun_permille = 900
 active_years = 60
 rewake_ppm = 10000
-lifespan_years = 300
+lifespan_years = 1000
 max_alive = 2
 flare = false
 hoard_permille = 2
@@ -1043,7 +1048,7 @@ plague_small_salience = 25
 plague_major_dead = 1000
 crisis_small_salience = 25
 ghost_permille = 200
-ghost_max_population = 300
+ghost_max_population = 600
 )";
 
 // --- Culture files (P3-01 4) ------------------------------------------------------

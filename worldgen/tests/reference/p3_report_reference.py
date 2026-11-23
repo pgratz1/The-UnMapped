@@ -875,6 +875,12 @@ class Digest:
         self.regions_held = {c: sum(1 for r in w.t["region_control"] if r[3] == c and r[2] is None) for c in civs}
         self.frames = Frames(w)
         self.T, self.shown = summary24(w, self.frames)
+        # 7.5
+        self.N = sum(1 for r in w.t["region"] if not is_islet(r))
+        self.shares = {}
+        if self.N > 0:
+            h = held_series(w, civs, only_nonislet=True)
+            self.shares = {c: [1000 * x // self.N for x in h[c]] for c in civs}
         self.budget = SUMMARY_BUDGET
         if V4:   # 12.9: O counted on the summary's own lines outside [chronicle], then the set chosen with B
             pre, post = outside_lines(w, self, "summary")
@@ -883,12 +889,6 @@ class Digest:
                                          lines_max=LINES_MAX_SEAM[0])
             if self.budget != SUMMARY_BUDGET:
                 self.T, self.shown = summary24(w, self.frames, budget=self.budget)
-        # 7.5
-        self.N = sum(1 for r in w.t["region"] if not is_islet(r))
-        self.shares = {}
-        if self.N > 0:
-            h = held_series(w, civs, only_nonislet=True)
-            self.shares = {c: [1000 * x // self.N for x in h[c]] for c in civs}
 
 
 # ---------------------------------------------------------------------------

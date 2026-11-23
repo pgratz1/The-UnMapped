@@ -24,9 +24,11 @@
 
 namespace history_fixture {
 
-// The directories of the history kinds and (P3-08) of the name kinds
-// placename and name_filter, in this order.
-inline constexpr std::string_view DIRECTORIES[] = {"cultures", "history", "name_filters", "placenames", "races"};
+// The directories of the history kinds, (P3-08) of the name kinds
+// placename and name_filter and (P5-02 4.1, 4.2) of the required kinds beast
+// and monster, in this order.
+inline constexpr std::string_view DIRECTORIES[] = {"beasts",       "cultures",   "history", "monsters",
+                                                   "name_filters", "placenames", "races"};
 
 inline std::filesystem::path fixture_root() {
     return std::filesystem::path(UNMAPPED_HISTORY_FIXTURE_DIR);

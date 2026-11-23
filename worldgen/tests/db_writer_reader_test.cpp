@@ -136,7 +136,7 @@ void check_header(const std::string& path) {
     CHECK(dbtest::be32(b, 52) == 0);  // largest root page (auto-vacuum)
     CHECK(dbtest::be32(b, 56) == 1);  // text encoding UTF-8
     CHECK(dbtest::be32(b, 60) == static_cast<std::uint32_t>(worldgen::db::SCHEMA_VERSION));  // user version
-    CHECK(dbtest::be32(b, 60) == 8);  // schema 8 (P5-12 7.2)
+    CHECK(dbtest::be32(b, 60) == 9);  // schema 9 (P5-02 11.1)
     CHECK(dbtest::be32(b, 64) == 0);           // incremental vacuum
     CHECK(dbtest::be32(b, 68) == 0x554E4D50U);  // application id "UNMP"
     CHECK(b[68] == 'U');

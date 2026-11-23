@@ -96,7 +96,7 @@ TEST_CASE("P3-02 4.5, 8: the three hist.names streams are registered and keyed a
     CHECK(all[at + 3] == "hist.names.civilization");
     CHECK(all[at + 4] == "hist.names.settlement");
     const auto& lines = golden_lines("stream");
-    REQUIRE(lines.size() == 9);
+    REQUIRE(lines.size() == 15);   // P5-02 9.1: hist.names.monster and hist.names.site (0.23.0)
     for (const std::string& line : lines) {
         const auto t = split(line, 4);
         CAPTURE(line);

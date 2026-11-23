@@ -96,7 +96,7 @@ std::string check_golden_db(const Sandbox& sb, const std::string& name, const fs
             rep += value + "\n";
         }
     }
-    CHECK(tables == 14U);  // the thirteen history tables of P3-04 9.1 and region_name (P5-12 7.2)
+    CHECK(tables == 19U);  // the thirteen history tables of P3-04 9.1, region_name (P5-12 7.2) and the five of P5-02 11.1
     const std::string report = run_ok(sb, {"report", "--db", u8(db)});
     CHECK(section(report, "[history]") == rep);
     const std::size_t c = report.find("[chronology]\n");

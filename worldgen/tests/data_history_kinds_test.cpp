@@ -209,7 +209,7 @@ void check_shipped_values(const wd::ContentSet& c) {
     }
     const wd::KindContent* history = c.find_kind("history");
     REQUIRE(history != nullptr);
-    REQUIRE(history->definitions.size() == 6U);  // chronology, conflict (P3-06 12.1), engine, peoples (P3-05 12.1), renaming (P5-12 4), report (P3-04 4)
+    REQUIRE(history->definitions.size() == 7U);  // chronology, conflict (P3-06 12.1), engine, monsters (P5-02 4.3), peoples (P3-05 12.1), renaming (P5-12 4), report (P3-04 4)
     const wd::Definition& chrono = history->definitions[0];
     CHECK(chrono.id == "chronology");
     REQUIRE(chrono.record.size() == 3U);
@@ -228,41 +228,51 @@ void check_shipped_values(const wd::ContentSet& c) {
 TEST_CASE("P3-01 3-5: the production registry holds race, culture and history beside biome and worldgen") {
     const wd::KindRegistry r = wd::builtin_kinds();
     const auto& kinds = r.kinds();
-    REQUIRE(kinds.size() == 7U);
+    REQUIRE(kinds.size() == 9U);
     // Ascending name (P0-03 7.1): the encoding order of P3-01 7; from
     // generator 0.17.0 name_filter (P3-02 r5 11.2) and placename (P1-06 r3
-    // 4.1) between history and race (P3-01 r8 (4)).
-    CHECK(kinds[0].name == "biome");
-    CHECK(kinds[1].name == "culture");
-    CHECK(kinds[2].name == "history");
-    CHECK(kinds[3].name == "name_filter");
-    CHECK(kinds[4].name == "placename");
-    CHECK(kinds[5].name == "race");
-    CHECK(kinds[6].name == "worldgen");
-    CHECK(kinds[3].directory == "name_filters");
-    CHECK(kinds[3].required);
-    CHECK_FALSE(kinds[3].has_fixed_ids());
-    CHECK(kinds[4].directory == "placenames");
+    // 4.1) between history and race (P3-01 r8 (4)); from 0.23.0 beast (first)
+    // and monster (after history), P5-02 4.1 and 4.2.
+    CHECK(kinds[0].name == "beast");
+    CHECK(kinds[1].name == "biome");
+    CHECK(kinds[2].name == "culture");
+    CHECK(kinds[3].name == "history");
+    CHECK(kinds[4].name == "monster");
+    CHECK(kinds[5].name == "name_filter");
+    CHECK(kinds[6].name == "placename");
+    CHECK(kinds[7].name == "race");
+    CHECK(kinds[8].name == "worldgen");
+    CHECK(kinds[0].directory == "beasts");
+    CHECK(kinds[0].required);
+    CHECK_FALSE(kinds[0].has_fixed_ids());
+    CHECK(kinds[4].directory == "monsters");
     CHECK(kinds[4].required);
     CHECK_FALSE(kinds[4].has_fixed_ids());
+    CHECK(kinds[5].directory == "name_filters");
+    CHECK(kinds[5].required);
+    CHECK_FALSE(kinds[5].has_fixed_ids());
+    CHECK(kinds[6].directory == "placenames");
+    CHECK(kinds[6].required);
+    CHECK_FALSE(kinds[6].has_fixed_ids());
 
-    const wd::Kind& culture = kinds[1];
+    const wd::Kind& culture = kinds[2];
     CHECK(culture.directory == "cultures");
     CHECK(culture.required);
     CHECK_FALSE(culture.has_fixed_ids());
 
-    const wd::Kind& history = kinds[2];
+    const wd::Kind& history = kinds[3];
     CHECK(history.directory == "history");
     CHECK(history.required);
     REQUIRE(history.has_fixed_ids());
-    REQUIRE(history.id_schemas.size() == 6U);  // P3-01 5: chronology; engine and report from P3-04; peoples P3-05; conflict P3-06;
-                                               // renaming P5-12 (r16 5.4)
+    REQUIRE(history.id_schemas.size() == 7U);  // P3-01 5: chronology; engine and report from P3-04; peoples P3-05; conflict P3-06;
+                                               // renaming P5-12 (r16 5.4); monsters P5-02 4.3
     CHECK(history.id_schemas[0].id == "chronology");
     CHECK(history.id_schemas[1].id == "conflict");
     CHECK(history.id_schemas[2].id == "engine");
-    CHECK(history.id_schemas[3].id == "peoples");
-    CHECK(history.id_schemas[4].id == "renaming");
-    CHECK(history.id_schemas[5].id == "report");
+    CHECK(history.id_schemas[3].id == "monsters");
+    CHECK(history.id_schemas[4].id == "peoples");
+    CHECK(history.id_schemas[5].id == "renaming");
+    CHECK(history.id_schemas[6].id == "report");
     const wd::Schema* chrono = history.schema_for("chronology");
     REQUIRE(chrono != nullptr);
     REQUIRE(chrono->checks().size() == 1U);
@@ -284,7 +294,7 @@ TEST_CASE("P3-01 3-5: the production registry holds race, culture and history be
     CHECK(history.schema_for("engine")->checks()[2].name == "engine_flare_min");
     CHECK(history.schema_for("engine")->checks()[3].name == "engine_phase_budget");
 
-    const wd::Kind& race = kinds[5];
+    const wd::Kind& race = kinds[7];
     CHECK(race.directory == "races");
     CHECK(race.required);
     CHECK_FALSE(race.has_fixed_ids());
@@ -342,7 +352,8 @@ TEST_CASE("P3-01 8.1 test 1: game/data and the two fixture roots hold the listin
         // P3-01 2: "identical copies under worldgen/tests/data/geo/ and
         // worldgen/tests/data/geo-small/": byte for byte, file by file.
         // P3-08 (0.17.0): name_filters/ and placenames/ too (P3-02 r5 11.2, P1-06 r3 4.1).
-        for (const char* d : {"races", "cultures", "history", "name_filters", "placenames"}) {
+        // P5-02 4.1, 4.2 (0.23.0): beasts/ and monsters/ too.
+        for (const char* d : {"races", "cultures", "history", "name_filters", "placenames", "beasts", "monsters"}) {
             const wd::MemoryDirectory shipped = directory_from_disk(source_root() / "game" / "data", d);
             const wd::MemoryDirectory copy = directory_from_disk(source_root() / base, d);
             REQUIRE(copy.entries.size() == shipped.entries.size());
@@ -366,13 +377,19 @@ TEST_CASE("P3-01 8.1 test 1: game/data and the two fixture roots hold the listin
                           "placenames/downs.toml", "placenames/fells.toml", "placenames/fen.toml", "placenames/heath.toml",
                           "placenames/isle.toml", "placenames/marsh.toml", "placenames/mere.toml", "placenames/moor.toml",
                           "placenames/peaks.toml", "placenames/steppe.toml", "placenames/traits.toml",
-                          "placenames/waste.toml", "placenames/wood.toml"}) {
+                          "placenames/waste.toml", "placenames/wood.toml",
+                          // P5-02 4.1 to 4.3 (0.23.0)
+                          "history/monsters.toml", "history/renaming.toml", "beasts/bear.toml", "beasts/boar.toml",
+                          "beasts/deer.toml", "beasts/giant_spider.toml", "beasts/wolf.toml", "monsters/dragon.toml",
+                          "monsters/giant.toml", "monsters/ogre.toml", "monsters/troll.toml", "monsters/undead.toml",
+                          "monsters/wyvern.toml"}) {
         CAPTURE(std::string_view(f));
         CHECK(std::filesystem::is_regular_file(data / f));
     }
     // P3-01 5: "a file for a future id must not be committed early".
-    CHECK(directory_from_disk(data, "history").entries.size() == 6U);  // conflict.toml from 0.16.0 (P3-06 12.1),
-                                                                         // renaming.toml from 0.22.0 (P5-12 4)
+    CHECK(directory_from_disk(data, "history").entries.size() == 7U);  // conflict.toml from 0.16.0 (P3-06 12.1),
+                                                                         // renaming.toml from 0.22.0 (P5-12 4),
+                                                                         // monsters.toml from 0.23.0 (P5-02 4.3)
 }
 
 TEST_CASE("P3-01 3.1: the races in race order are elves, goblins, dwarves, faeries, humans, orcs (design 5)") {
@@ -678,16 +695,17 @@ TEST_CASE("P3-01 3, 4 and P0-03 amendment 17: name, plural, adjective and the cu
 
 TEST_CASE("P3-01 5: a history file for an unregistered id is an error at its header") {
     Files f = history_data::shipped_files();
-    // P3-06 12.1 (P3-01 r7): conflict is registered from 0.16.0; a future id (monsters) is not.
-    f["history/monsters.toml"] = "[history.monsters]\nstep_years = 1\n";
+    // P3-06 12.1 (P3-01 r7): conflict is registered from 0.16.0; P5-02 4.3 registers monsters (0.23.0); a future
+    // id (deities) is not.
+    f["history/deities.toml"] = "[history.deities]\nstep_years = 1\n";
     const wd::LoadError e = only_error(load(f));
-    CHECK(e.path == "history/monsters.toml");
+    CHECK(e.path == "history/deities.toml");
     CHECK(e.line == 1U);
     CHECK(e.column == 1U);
     // P3-01 5 (revised): the registered ids, each in single quotes.
     CHECK(e.message ==
-          "unknown id 'monsters' for kind 'history'; expected one of 'chronology', 'conflict', 'engine', 'peoples', "
-          "'renaming', 'report'");
+          "unknown id 'deities' for kind 'history'; expected one of 'chronology', 'conflict', 'engine', 'monsters', "
+          "'peoples', 'renaming', 'report'");
 }
 
 TEST_CASE("P3-01 5: history/ without chronology.toml is a missing definition against the directory") {
