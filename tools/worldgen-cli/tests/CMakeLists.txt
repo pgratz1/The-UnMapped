@@ -156,6 +156,9 @@ target_compile_definitions(worldgen-cli-tests PRIVATE
 # worlds without layers or history, the help text, and the PNG's pixels
 # against the library's render_territory.
 target_sources(worldgen-cli-tests PRIVATE cli_territory_test.cpp)
+# render --markers and --faded (P4-04 7 and 10.5; P0-04 amendment 24), with
+# the PNG's pixels against the library's draw_markers.
+target_sources(worldgen-cli-tests PRIVATE cli_markers_test.cpp)
 
 unmapped_add_doctest_shards(worldgen-cli-tests
     TIMEOUT 3600
@@ -168,7 +171,7 @@ unmapped_add_doctest_shards(worldgen-cli-tests
     SHARD chronology 20 "*cli_chronology_test.cpp"
     SHARD engine 15 "*cli_history_test.cpp"
     SHARD conflict 27 "*cli_history_conflict_test.cpp"
-    SHARD territory 12 "*cli_territory_test.cpp"
+    SHARD territory 20 "*cli_territory_test.cpp,*cli_markers_test.cpp"
     REST other 10
     # The *-slow suites (label slow), as for worldgen-tests; costs measured
     # 2026-11-21 at 0.18.0.
