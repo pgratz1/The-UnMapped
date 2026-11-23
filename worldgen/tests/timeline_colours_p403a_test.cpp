@@ -390,8 +390,8 @@ TEST_CASE("P4-03a 7 item 4: free-land borders at half strength on hand-made laye
                                         {1, 2, 1, 2, 1, 2, 2, 1},  //
                                         {1, 2, 1, 2, 1, 2, 0, 1}};
     // Cell::half: half(U) on kind-2 cells, black elsewhere. U is steppe (224, 210, 150) at factor 256 on
-    // every kind-2 cell but (1, 0) (biome 1 at factor 266), (0, 2) (biome 1 at 256) and (3, 0) (steppe at
-    // factor 246: U = (215, 202, 144), half (107, 101, 72))
+    // every kind-2 cell but (1, 0) (biome 1 at factor 266), (0, 2) and (1, 2) (biome 1 at 256) and (3, 0)
+    // (steppe at factor 246: U = (215, 202, 144), half (107, 101, 72))
     for (std::uint32_t y = 0; y < FH; ++y) {
         for (std::uint32_t x = 0; x < FW; ++x) {
             CAPTURE(x);
@@ -402,7 +402,7 @@ TEST_CASE("P4-03a 7 item 4: free-land borders at half strength on hand-made laye
             if (c.kind == 2) {
                 want_half = Rgb{112, 105, 75};
                 if (x == 1 && y == 0) want_half = Rgb{127, 51, 19};
-                if (x == 0 && y == 2) want_half = Rgb{125, 49, 18};
+                if ((x == 0 || x == 1) && y == 2) want_half = Rgb{125, 49, 18};
                 if (x == 3 && y == 0) want_half = Rgb{107, 101, 72};
             }
             CHECK(c.half == want_half);
@@ -474,7 +474,8 @@ TEST_CASE("P4-03a 7 item 4: free-land borders at half strength on hand-made laye
         wi::render_territory(base, fill, FREE_HOLDERS, k, out);
         CHECK(out == img);
         // all-zero holders (every region free): the same free-free cells half, and every other kind-2 cell
-        // too; the lake and river cells stay black; with an empty fill the rest is the regions composite
+        // too; the lake and river cells stay black; the rest is the regions composite but the kind-1 cells
+        // of a region with a fill entry (fill is not tied to holders in the two-vector form)
         const std::vector<std::optional<Rgb>> none(10);
         const std::vector<std::int64_t> zeros(10, 0);
         const std::vector<std::uint8_t> regk = L.regions(k);
@@ -485,7 +486,9 @@ TEST_CASE("P4-03a 7 item 4: free-land borders at half strength on hand-made laye
                     CAPTURE(x);
                     CAPTURE(y);
                     const wi::TerritoryBase::Cell& c = base.cells()[std::size_t{y} * FW + x];
-                    const Rgb want = c.kind == 2 ? c.half : pixel(regk, k * FW, k * x, k * y);
+                    const std::uint16_t v = free_regions()[std::size_t{y} * FW + x];
+                    Rgb want = c.kind == 2 ? c.half : pixel(regk, k * FW, k * x, k * y);
+                    if (c.kind == 1 && (*f)[v].has_value()) want = wi::shade_colour(*(*f)[v], c.factor);
                     CHECK(pixel(z, k * FW, k * x, k * y) == want);
                     CHECK(pixel(z, k * FW, k * x + k - 1, k * y + k - 1) == want);
                 }
