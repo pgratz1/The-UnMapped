@@ -10,6 +10,7 @@
 #include "viewer/layer_map_view.hpp"
 #include "viewer/viewer_model.hpp"
 #include "viewer/viewer_screen.hpp"
+#include "viewer/year_marks.hpp"
 #include "world_file.hpp"
 #include "world_layer.hpp"
 
@@ -25,6 +26,7 @@ void initialize_unmapped(godot::ModuleInitializationLevel level) {
     // World viewer: model, then the flat view.
     GDREGISTER_CLASS(unmapped::ViewerModel);
     GDREGISTER_CLASS(unmapped::LayerMapView);
+    GDREGISTER_CLASS(unmapped::YearMarks);
     GDREGISTER_CLASS(unmapped::ViewerScreen);
 }
 

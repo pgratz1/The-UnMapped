@@ -99,6 +99,11 @@ public:
     [[nodiscard]] godot::PackedStringArray get_composite_names() const;
 
     // --- C++ only --------------------------------------------------------------
+    // The reader of the open file, null when closed (for worldgen's readers
+    // of whole tables, such as load_history; no SQL in the extension).
+    [[nodiscard]] const worldgen::db::WorldReader* reader() const noexcept {
+        return reader_ ? &*reader_ : nullptr;
+    }
     [[nodiscard]] const std::vector<worldgen::db::LayerInfo>& layer_infos() const noexcept { return layers_; }
     [[nodiscard]] const std::vector<worldgen::inspect::BiomeColour>& biome_colours() const noexcept {
         return biome_colours_;
