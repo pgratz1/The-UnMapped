@@ -159,6 +159,13 @@ FLAGS_023 = ("monsters", "flare_claim")
 VERSIONS = ("0.16.0", "0.17.0", "0.18.0", "0.19.0", "0.20.0", "0.21.0", "0.22.0", "0.23.0")
 
 
+
+
+def overrun_kinds():
+    """P5-02 6.4.3 (with the monsters, 0.23.0): settlement_overrun ruins its settlement, as a sack or an
+    abandonment does, for the invariants and replays that read the ruin kinds."""
+    return (K["settlement_overrun"],) if FLAGS["monsters"] else ()
+
 def flag_on(v, k):
     """Whether rule flag k is on at generator v."""
     i = VERSIONS.index(v)
@@ -2877,24 +2884,28 @@ def check_peoples_invariants(c, res, inp, w, label):
         if s[10] == RUINED:
             c.true("%s P3-05 inv 7 s%d ruin event" % (label, s[0]), kind[s[13]] in (K["settlement_abandoned"],
                                                                                    K["settlement_abandoned_to"],
-                                                                                   K["sacked"]))
+                                                                                   K["sacked"]) + overrun_kinds())
         if s[10] == FADED:
             fades = [e for e in res["event"] if e[3] == K["ruin_faded"] and e[6] == s[0]]
             ok = len(fades) == 1 and len(causes.get(fades[0][0], [])) == 1
             if ok:
                 ruin = ev[causes[fades[0][0]][0]]
-                ok = (ruin[3] in (K["settlement_abandoned"], K["settlement_abandoned_to"], K["sacked"]) and ruin[6] == s[0] and
+                ok = (ruin[3] in (K["settlement_abandoned"], K["settlement_abandoned_to"], K["sacked"]) + overrun_kinds()
+                      and ruin[6] == s[0] and
                       fades[0][1] >= ruin[1] + t["ruin_fade_years"] and s[12] is None and s[13] == 0)
             c.true("%s P3-05 inv 7 s%d faded" % (label, s[0]), ok)
     # r9 20.3: a tribute's people are taken through 7.4's casualties (note_reduction), a reduction like a battle
     red = ("famine", "plague", "plague_spread", "succession_crisis", "battle", "battle_at_pass", "tribute")
+    if FLAGS["monsters"]:   # P5-02 6.4.1, 6.2.3: a raid and the beasts' boldness are reductions (note_reduction)
+        red += ("monster_raid", "beasts_bold")
     want_cause = {
         "plague_spread": ("plague",), "civ_seceded": ("succession_crisis",),
         "settlement_abandoned": red + ("settlement_founded", "colony_founded"),
         "settlement_abandoned_to": red + ("settlement_founded", "colony_founded"),
         "capital_moved": ("settlement_abandoned", "settlement_abandoned_to", "sacked", "settlement_captured"),
         "civ_ended": ("settlement_abandoned", "settlement_abandoned_to"),
-        "ruin_faded": ("settlement_abandoned", "settlement_abandoned_to", "sacked"),
+        "ruin_faded": ("settlement_abandoned", "settlement_abandoned_to", "sacked") + (
+            ("settlement_overrun",) if FLAGS["monsters"] else ()),   # P5-02 6.4.3: an overrun is a ruin
         "settlement_dwindled": red,
     }
     if at_least("0.19.0"):
@@ -3214,7 +3225,7 @@ def cession_violations(res):
         seceded_regions.setdefault(rc[4], []).append(rc[0])
     owner, standing = {}, {}
     out = []
-    ruin_kinds = (K["sacked"], K["settlement_abandoned"], K["settlement_abandoned_to"])
+    ruin_kinds = (K["sacked"], K["settlement_abandoned"], K["settlement_abandoned_to"]) + overrun_kinds()
     for e in sorted(res["event"]):
         eid, y, k = e[0], e[1], e[3]
         if eid in founded:
@@ -3393,7 +3404,7 @@ def replay_r17(res, dat=None):
     owner, standing, capital = {}, {}, {}
     flights = {}            # civ -> (refugees_settled event, h, year)
     problems, facts = [], dict(quick_aim_wins=0, foothold_cessions=0, held_goal_wars={})
-    ruin_kinds = (K["sacked"], K["settlement_abandoned"], K["settlement_abandoned_to"])
+    ruin_kinds = (K["sacked"], K["settlement_abandoned"], K["settlement_abandoned_to"]) + overrun_kinds()
 
     def mine_in(L, g):
         return [s_ for s_ in sorted(owner) if owner[s_] == L and standing[s_] and sts[s_][4] == g]
