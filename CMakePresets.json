@@ -59,7 +59,11 @@
       "name": "linux-clang-asan",
       "displayName": "Linux Clang Debug with AddressSanitizer and UndefinedBehaviorSanitizer",
       "inherits": ["linux-base", "clang", "debug"],
-      "cacheVariables": { "UNMAPPED_SANITIZE": "address,undefined" }
+      "cacheVariables": {
+        "UNMAPPED_SANITIZE": "address,undefined",
+        "CMAKE_C_FLAGS_DEBUG": "-O1 -g",
+        "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g"
+      }
     },
     { "name": "windows-msvc-debug", "displayName": "Windows MSVC Debug", "inherits": ["windows-base", "debug"] },
     { "name": "windows-msvc-release", "displayName": "Windows MSVC Release", "inherits": ["windows-base", "release"] }
