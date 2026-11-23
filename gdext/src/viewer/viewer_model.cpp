@@ -1,6 +1,7 @@
 #include "viewer/viewer_model.hpp"
 
 #include <algorithm>
+#include <chrono>
 #include <exception>
 #include <new>
 #include <span>
@@ -55,6 +56,12 @@ godot::Array legend_array(const std::vector<worldgen::inspect::LegendEntry>& ent
 
 int64_t now_usec() {
     return static_cast<int64_t>(godot::Time::get_singleton()->get_ticks_usec());
+}
+
+int64_t now_nsec() {
+    return static_cast<int64_t>(
+        std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::steady_clock::now().time_since_epoch())
+            .count());
 }
 
 }  // namespace
@@ -493,7 +500,7 @@ void ViewerModel::redraw_territory() {
         godot::UtilityFunctions::push_error("ViewerModel: the territory image does not match its base");
         return;
     }
-    const int64_t start = now_usec();
+    const int64_t start = now_nsec();
     const auto bytes = static_cast<std::size_t>(width) * height * 3U;
     try {
         history_.draw(std::span<std::uint8_t>(image->ptrw(), bytes));
@@ -502,10 +509,12 @@ void ViewerModel::redraw_territory() {
                                             e.what());
         return;
     }
-    const int64_t took = now_usec() - start;
+    const int64_t drawn = now_nsec();
+    year_steps_.draw = drawn - start;
     ++timings_.redraws;
-    timings_.slowest_redraw_usec = std::max(timings_.slowest_redraw_usec, took);
+    timings_.slowest_redraw_usec = std::max(timings_.slowest_redraw_usec, year_steps_.draw / 1000);
     emit_signal("view_image_changed", view);
+    year_steps_.image_signal = now_nsec() - drawn;
 }
 
 godot::String ViewerModel::get_history_status() const {
@@ -547,18 +556,27 @@ bool ViewerModel::set_year(int64_t year) {
     if (year == history_.year()) {
         return true;
     }
+    year_steps_ = {};
+    const int64_t start = now_nsec();
     try {
         history_.set_year(year);
+        year_steps_.state = now_nsec() - start;
         redraw_territory();
         update_markers();  // P4-04 8.1: after the image, before the legend
         if (selected_ >= 0 && selected_ == get_territory_view()) {
+            const int64_t legend_start = now_nsec();
             legend_ = legend_array(history_.legend(world_->biome_records()), &HistoryState::legend_tooltip);
+            year_steps_.legend = now_nsec() - legend_start;
         }
     } catch (const std::exception& e) {
         godot::UtilityFunctions::push_error(godot::String("ViewerModel.set_year: ") + e.what());
         return false;
     }
+    const int64_t signal_start = now_nsec();
     emit_signal("year_changed", year);
+    const int64_t end = now_nsec();
+    year_steps_.year_signal = end - signal_start;
+    year_steps_.total = end - start;
     return true;
 }
 
@@ -832,10 +850,15 @@ void ViewerModel::update_markers() {
     ++marker_timings_.steps;
     marker_timings_.total_nsec += took;
     marker_timings_.slowest_nsec = std::max(marker_timings_.slowest_nsec, took);
+    year_steps_.markers = took;
     if (changed) {
+        const int64_t order_start = now_nsec();
         rebuild_marker_order();
+        const int64_t ordered = now_nsec();
+        year_steps_.markers += ordered - order_start;
         ++marker_timings_.changes;
         emit_signal("markers_changed");
+        year_steps_.markers_signal = now_nsec() - ordered;
     }
 }
 
@@ -996,9 +1019,8 @@ godot::String ViewerModel::describe_marker(int64_t index) const {
         } else {
             text += std::string(ref.type == MarkerType::faded ? ", faded ruin of a " : ", ruin of a ") + kind +
                     ", ruined in " + std::to_string(s.ruined_year);
-            if (s.ruin_event != 0) {
-                text += ": " + sentence(s.ruin_event);
-            }
+            // P4-05 12.1 F6: a ruin with no ruin event says so.
+            text += ": " + (s.ruin_event != 0 ? sentence(s.ruin_event) : std::string("cause not recorded"));
         }
     }
     return to_godot(text);
@@ -1038,7 +1060,7 @@ godot::Array ViewerModel::get_marker_legend() const {
         row("siege", "ring", rgb_of(event_symbol_colour(EventSymbol::siege)));
         row("battle", "ring", rgb_of(event_symbol_colour(EventSymbol::battle)));
         row("plague", "ring", rgb_of(event_symbol_colour(EventSymbol::plague)));
-        row("other event", "ring", rgb_of(event_symbol_colour(EventSymbol::plain)));
+        row("any other event", "ring", rgb_of(event_symbol_colour(EventSymbol::plain)));
     }
     if (options.passes) {
         row("pass", "pass", -1);

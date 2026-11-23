@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <array>
 #include <cmath>
+#include <cstring>
 
 #include <godot_cpp/classes/input_event_mouse_button.hpp>
 #include <godot_cpp/classes/input_event_mouse_motion.hpp>
@@ -21,11 +22,13 @@ namespace {
 constexpr double MIN_ZOOM = 1.0 / 64.0;
 constexpr double MAX_ZOOM = 64.0;
 constexpr double WHEEL_FACTOR = 1.25;
-// P4-04 8.4: glyph cell size steps and the zoom below which small markers
-// are left out.
-constexpr double GLYPH_STEP_2 = 4.0;
+// P4-04 8.4 as changed by P4-05 12.1 F1: glyph cell size steps and the zoom
+// below which small markers are left out.
+constexpr double GLYPH_STEP_2 = 0.5;
 constexpr double GLYPH_STEP_3 = 10.0;
 constexpr double SMALL_HIDDEN_BELOW = 0.5;
+// P4-05 12.3: the image is drawn as tiles of TILE x TILE cells.
+constexpr int32_t TILE = 128;
 
 }  // namespace
 
@@ -35,18 +38,91 @@ void LayerMapView::set_image(const godot::Ref<godot::Image>& image) {
         return;
     }
     const godot::Vector2i size = image->get_size();
-    const bool new_size = size != image_size_ || texture_.is_null();
+    const bool new_size = size != image_size_ || tiles_.empty();
     image_ = image;
-    if (texture_.is_valid() && !new_size) {
-        texture_->update(image);
-    } else {
-        texture_ = godot::ImageTexture::create_from_image(image);
-    }
     image_size_ = size;
+    upload_tiles(!new_size);
     if (new_size) {
         fit_to_view();
     }
     queue_redraw();
+}
+
+void LayerMapView::upload_tiles(bool changed_only) {
+    // P4-05 12.3: the image is shown as tiles of TILE x TILE cells, each its
+    // own RGBA8 texture. Given the same size again (an image redrawn in
+    // place), only the tiles whose bytes differ from those shown are
+    // uploaded: a year change touches a few regions, while a whole-image
+    // upload (4 MiB at 1024, converted from RGB8 by the engine) cost about
+    // 3 ms each time and stalled for 170 ms once the renderer's staging
+    // space ran out between frames.
+    godot::Ref<godot::Image> source = image_;
+    if (source->get_format() != godot::Image::FORMAT_RGB8 || source->has_mipmaps()) {
+        source = image_->duplicate();
+        source->clear_mipmaps();
+        source->convert(godot::Image::FORMAT_RGB8);
+        changed_only = false;
+    }
+    const auto width = static_cast<std::size_t>(image_size_.x);
+    const auto height = static_cast<std::size_t>(image_size_.y);
+    const uint8_t* bytes = source->ptr();
+    if (!changed_only || shown_.size() != width * height * 3U) {
+        tiles_.clear();
+        shown_.assign(bytes, bytes + width * height * 3U);
+        for (int32_t ty = 0; ty < image_size_.y; ty += TILE) {
+            for (int32_t tx = 0; tx < image_size_.x; tx += TILE) {
+                Tile tile;
+                tile.rect = godot::Rect2i(tx, ty, std::min(TILE, image_size_.x - tx), std::min(TILE, image_size_.y - ty));
+                tile.texture = godot::ImageTexture::create_from_image(tile_image(tile.rect));
+                tiles_.push_back(std::move(tile));
+            }
+        }
+        tiles_uploaded_ += static_cast<int64_t>(tiles_.size());
+        return;
+    }
+    const auto row_at = [width](int32_t x, int32_t y) {
+        return (static_cast<std::size_t>(y) * width + static_cast<std::size_t>(x)) * 3U;
+    };
+    for (Tile& tile : tiles_) {
+        const auto row_bytes = static_cast<std::size_t>(tile.rect.size.x) * 3U;
+        const int32_t y_end = tile.rect.position.y + tile.rect.size.y;
+        bool differs = false;
+        for (int32_t y = tile.rect.position.y; y < y_end && !differs; ++y) {
+            const std::size_t at = row_at(tile.rect.position.x, y);
+            differs = std::memcmp(bytes + at, shown_.data() + at, row_bytes) != 0;
+        }
+        if (!differs) {
+            continue;
+        }
+        for (int32_t y = tile.rect.position.y; y < y_end; ++y) {
+            const std::size_t at = row_at(tile.rect.position.x, y);
+            std::memcpy(shown_.data() + at, bytes + at, row_bytes);
+        }
+        tile.texture->update(tile_image(tile.rect));
+        ++tiles_uploaded_;
+    }
+}
+
+godot::Ref<godot::Image> LayerMapView::tile_image(const godot::Rect2i& rect) const {
+    // The RGBA8 pixels of a tile, from the bytes shown (RGB8).
+    const auto width = static_cast<std::size_t>(image_size_.x);
+    godot::PackedByteArray data;
+    data.resize(static_cast<int64_t>(rect.size.x) * rect.size.y * 4);
+    uint8_t* out = data.ptrw();
+    for (int32_t y = 0; y < rect.size.y; ++y) {
+        const uint8_t* in = shown_.data() + (static_cast<std::size_t>(rect.position.y + y) * width +
+                                             static_cast<std::size_t>(rect.position.x)) *
+                                                3U;
+        for (int32_t x = 0; x < rect.size.x; ++x) {
+            out[0] = in[0];
+            out[1] = in[1];
+            out[2] = in[2];
+            out[3] = 255;
+            out += 4;
+            in += 3;
+        }
+    }
+    return godot::Image::create_from_data(rect.size.x, rect.size.y, false, godot::Image::FORMAT_RGBA8, data);
 }
 
 godot::Ref<godot::Image> LayerMapView::get_image() const {
@@ -55,7 +131,8 @@ godot::Ref<godot::Image> LayerMapView::get_image() const {
 
 void LayerMapView::clear_image() {
     image_.unref();
-    texture_.unref();
+    tiles_.clear();
+    shown_.clear();
     image_size_ = godot::Vector2i();
     hovered_ = godot::Vector2i(-1, -1);
     queue_redraw();
@@ -82,7 +159,7 @@ void LayerMapView::apply_fit() {
 }
 
 godot::Rect2 LayerMapView::get_shown_rect() const {
-    if (texture_.is_null()) {
+    if (tiles_.empty()) {
         return {};
     }
     return {offset_, godot::Vector2(image_size_) * static_cast<float>(zoom_)};
@@ -121,7 +198,7 @@ godot::Vector2 LayerMapView::cell_centre_position(int64_t x, int64_t y) const {
 }
 
 godot::Vector2i LayerMapView::cell_at(godot::Vector2 position) const {
-    if (texture_.is_null()) {
+    if (tiles_.empty()) {
         return {-1, -1};
     }
     const godot::Vector2 local = (position - offset_) / static_cast<float>(zoom_);
@@ -153,10 +230,16 @@ void LayerMapView::update_marker_hover() {
 }
 
 void LayerMapView::_draw() {
-    if (texture_.is_null()) {
+    if (tiles_.empty()) {
         return;
     }
-    draw_texture_rect(texture_, get_shown_rect(), false);
+    const auto z = static_cast<float>(zoom_);
+    for (const Tile& tile : tiles_) {
+        // Tile edges at offset + cell * zoom, so neighbours meet exactly.
+        const godot::Vector2 from = offset_ + godot::Vector2(tile.rect.position) * z;
+        const godot::Vector2 to = offset_ + godot::Vector2(tile.rect.position + tile.rect.size) * z;
+        draw_texture_rect(tile.texture, godot::Rect2(from, to - from), false);
+    }
     if (markers_.empty()) {
         return;
     }
@@ -214,6 +297,9 @@ void LayerMapView::set_markers(const godot::Array& markers, const godot::Diction
         marker.glyph.assign(glyph.get_data(), static_cast<std::size_t>(glyph.length()));
         marker.fill = entry.get("fill", int64_t{-1});
         marker.small = entry.get("small", false);
+        // P4-05 12.1 F6: small entries and passes are hit one glyph cell
+        // beyond their glyph too.
+        marker.margin = marker.small || marker.glyph == "pass";
         const auto it = glyphs_.find(marker.glyph);
         marker.cells = it != glyphs_.end() ? &it->second : nullptr;
         markers_.push_back(std::move(marker));
@@ -230,12 +316,16 @@ void LayerMapView::clear_markers() {
     update_marker_hover();
 }
 
+int32_t LayerMapView::glyph_cell_size_at(double zoom) noexcept {
+    return zoom < GLYPH_STEP_2 ? 1 : zoom < GLYPH_STEP_3 ? 2 : 3;
+}
+
 int32_t LayerMapView::glyph_cell_size() const {
-    return zoom_ < GLYPH_STEP_2 ? 1 : zoom_ < GLYPH_STEP_3 ? 2 : 3;
+    return glyph_cell_size_at(zoom_);
 }
 
 bool LayerMapView::marker_drawn(const Marker& marker) const {
-    return texture_.is_valid() && marker.cells != nullptr && !(marker.small && zoom_ < SMALL_HIDDEN_BELOW);
+    return !tiles_.empty() && marker.cells != nullptr && !(marker.small && zoom_ < SMALL_HIDDEN_BELOW);
 }
 
 godot::Vector2i LayerMapView::marker_centre(const Marker& marker) const {
@@ -297,7 +387,7 @@ godot::Vector2i LayerMapView::get_marker_screen_position(int64_t index) const {
 }
 
 int64_t LayerMapView::marker_at(godot::Vector2 position) const {
-    if (markers_.empty() || texture_.is_null()) {
+    if (markers_.empty() || tiles_.empty()) {
         return -1;
     }
     const int32_t g = glyph_cell_size();
@@ -317,12 +407,22 @@ int64_t LayerMapView::marker_at(godot::Vector2 position) const {
         const int64_t dx = cell_of(px - c.x + half);
         const int64_t dy = cell_of(py - c.y + half);
         const int64_t r = marker.cells->radius;
-        if (dx < -r || dx > r || dy < -r || dy > r) {
+        const int64_t reach = marker.margin ? 1 : 0;  // F6: Chebyshev margin in glyph cells
+        if (dx < -r - reach || dx > r + reach || dy < -r - reach || dy > r + reach) {
             continue;
         }
         const auto side = static_cast<std::size_t>(2 * r + 1);
-        const uint8_t cls = marker.cells->cells[static_cast<std::size_t>(dy + r) * side + static_cast<std::size_t>(dx + r)];
-        if (cls != 0) {
+        const auto cell_set = [&](int64_t cx, int64_t cy) {
+            return cx >= -r && cx <= r && cy >= -r && cy <= r &&
+                   marker.cells->cells[static_cast<std::size_t>(cy + r) * side + static_cast<std::size_t>(cx + r)] != 0;
+        };
+        bool hit = cell_set(dx, dy);
+        for (int64_t ny = dy - reach; ny <= dy + reach && !hit; ++ny) {
+            for (int64_t nx = dx - reach; nx <= dx + reach && !hit; ++nx) {
+                hit = cell_set(nx, ny);
+            }
+        }
+        if (hit) {
             return static_cast<int64_t>(i);
         }
     }

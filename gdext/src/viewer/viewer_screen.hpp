@@ -57,6 +57,8 @@
 //   --expect-passes <n>        with --check: the world report's passes
 
 #include <cstdint>
+#include <map>
+#include <utility>
 #include <vector>
 
 #include <godot_cpp/classes/button.hpp>
@@ -65,6 +67,7 @@
 #include <godot_cpp/classes/control.hpp>
 #include <godot_cpp/classes/file_dialog.hpp>
 #include <godot_cpp/classes/h_slider.hpp>
+#include <godot_cpp/classes/image_texture.hpp>
 #include <godot_cpp/classes/input_event.hpp>
 #include <godot_cpp/classes/item_list.hpp>
 #include <godot_cpp/classes/label.hpp>
@@ -168,10 +171,11 @@ private:
 
     void show_status(const godot::String& text, bool is_error);
     void show_legend();
-    void update_year_bar();
+    void update_year_bar(bool marks = true);
     void apply_start_year(const godot::String& text);
     void run_check_deferred();
     void run_bench();
+    void bench_frame_step();
     void finish_bench();
     void take_screenshot();
 
@@ -207,6 +211,8 @@ private:
     int64_t hovered_marker_ = -1;
     godot::Dictionary marker_glyphs_;  // glyph name -> {radius, cells}, filled on first use
     godot::Array marker_legend_rows_;  // the key list's rows as last shown
+    godot::Array legend_rows_;         // the legend's rows as last shown
+    std::map<std::vector<int32_t>, godot::Ref<godot::ImageTexture>> legend_icons_;  // by colour list
     bool wired_ = false;
     bool updating_year_bar_ = false;  // value_changed from our own updates is ignored
     int64_t hover_x_ = -1;            // the cell last hovered, (-1, -1) for none
@@ -235,6 +241,26 @@ private:
     godot::String screenshot_path_;
     godot::String bench_world_;
     bool bench_ = false;
+    // --bench (spec P4-05 12.3): the screen's steps of the last year change,
+    // nanoseconds: (c) view_image_changed (texture update), (d) the
+    // markers_changed handler, (f) the legend rebuild, (g) the year bar,
+    // (h) the other year_changed work (the hover text).
+    struct YearSteps {
+        int64_t image = 0;
+        int64_t markers = 0;
+        int64_t legend = 0;
+        int64_t year_bar = 0;
+        int64_t hover = 0;
+    };
+    YearSteps year_steps_;
+    // The windowed pass: one year change per frame, timed from set_year to
+    // the next frame_post_draw.
+    std::vector<int64_t> bench_frame_years_;
+    std::size_t bench_frame_next_ = 0;
+    int64_t bench_frame_start_ = -1;
+    int64_t bench_frame_year_ = -1;
+    int64_t bench_frame_idle_ = 0;  // frames drawn without a year change, timed too
+    std::vector<std::pair<int64_t, int64_t>> bench_frame_times_;  // (year, nsec); year -1: idle frame
 };
 
 }  // namespace unmapped

@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <array>
 #include <cmath>
+#include <cstdlib>
 #include <cstdint>
 #include <optional>
 #include <span>
@@ -26,6 +27,7 @@
 #include <godot_cpp/classes/item_list.hpp>
 #include <godot_cpp/classes/label.hpp>
 #include <godot_cpp/classes/spin_box.hpp>
+#include <godot_cpp/classes/texture2d.hpp>
 #include <godot_cpp/classes/time.hpp>
 #include <godot_cpp/classes/tree_item.hpp>
 #include <godot_cpp/classes/viewport.hpp>
@@ -830,7 +832,7 @@ std::vector<std::string> expected_marker_legend(bool faded, bool events, bool pa
         rows.emplace_back("faded ruin");
     }
     if (events) {
-        for (const char* label : {"sack or capture", "siege", "battle", "plague", "other event"}) {
+        for (const char* label : {"sack or capture", "siege", "battle", "plague", "any other event"}) {
             rows.emplace_back(label);
         }
     }
@@ -1038,6 +1040,45 @@ void check_markers_at_open(Checker& check, ViewerScreen& screen) {
     check.expect(labels == expected_marker_legend(false, true, true) &&
                      screen.marker_legend()->get_item_count() == static_cast<int64_t>(labels.size()),
                  "M1 the key list has the " + num(static_cast<int64_t>(labels.size())) + " rows of 8.6 without 'faded ruin'");
+    // P4-05 12.1 F7: each key icon shows its glyph at g = 2, the rings at
+    // g = 1: the drawn extent is that of the glyph's non-zero cells times g.
+    const godot::Array legend = model->get_marker_legend();
+    godot::String wrong;
+    for (int64_t i = 0; i < legend.size() && i < screen.marker_legend()->get_item_count(); ++i) {
+        const godot::String glyph_name = godot::Dictionary(legend[i])["glyph"];
+        const godot::Dictionary glyph = model->get_marker_glyph(glyph_name);
+        const int64_t r = glyph.get("radius", int64_t{-1});
+        const godot::PackedByteArray cells = glyph.get("cells", godot::PackedByteArray());
+        const int64_t side = 2 * r + 1;
+        int64_t lo_x = side;
+        int64_t hi_x = -1;
+        int64_t lo_y = side;
+        int64_t hi_y = -1;
+        for (int64_t y = 0; y < side && cells.size() == side * side; ++y) {
+            for (int64_t x = 0; x < side; ++x) {
+                const uint8_t c = cells[y * side + x];
+                if (c >= 1 && c <= 3) {
+                    lo_x = std::min(lo_x, x);
+                    hi_x = std::max(hi_x, x);
+                    lo_y = std::min(lo_y, y);
+                    hi_y = std::max(hi_y, y);
+                }
+            }
+        }
+        const int64_t g = glyph_name == "ring" ? 1 : 2;
+        const godot::Vector2i want(static_cast<int32_t>((hi_x - lo_x + 1) * g),
+                                   static_cast<int32_t>((hi_y - lo_y + 1) * g));
+        const godot::Ref<godot::Texture2D> icon = screen.marker_legend()->get_item_icon(static_cast<int32_t>(i));
+        const godot::Ref<godot::Image> image = icon.is_valid() ? icon->get_image() : godot::Ref<godot::Image>();
+        const godot::Vector2i got = image.is_valid() ? image->get_used_rect().size : godot::Vector2i(-1, -1);
+        if (got != want) {
+            wrong += " " + godot::Dictionary(legend[i])["label"].stringify() + " " + godot::Variant(got).stringify() +
+                     " (want " + godot::Variant(want).stringify() + ")";
+        }
+    }
+    check.expect(wrong.is_empty() && legend.size() == screen.marker_legend()->get_item_count(),
+                 "M1 the key icons are drawn at glyph cell 2, the rings at 1 (P4-05 F7)" +
+                     (wrong.is_empty() ? godot::String() : ":" + wrong));
 }
 
 void check_markers(Checker& check, ViewerScreen& screen, const ViewerCheckOptions& options,
@@ -1352,8 +1393,8 @@ void check_markers(Checker& check, ViewerScreen& screen, const ViewerCheckOption
             }
             const ReportSettlement& r = *it->second;
             if (r.status == "ruined") {
-                return r.name + ", ruin of a " + r.kind + ", ruined in " + std::to_string(r.ruined) +
-                       (r.ruin_event != 0 ? ": " + sentence(r.ruin_event) : std::string());
+                return r.name + ", ruin of a " + r.kind + ", ruined in " + std::to_string(r.ruined) + ": " +
+                       (r.ruin_event != 0 ? sentence(r.ruin_event) : std::string("cause not recorded"));
             }
             const bool is_capital = m->capital;
             return r.name + ", " + r.kind + (is_capital ? " (capital)" : "") + " of " + civ_name(r.owner) + ", " +
@@ -1425,6 +1466,119 @@ void check_markers(Checker& check, ViewerScreen& screen, const ViewerCheckOption
                          label == model->describe_cell(cell.x, cell.y),
                      "M7 the mouse away from every marker shows the cell again: " + label);
         screen.hover_cell(-1, -1);
+    }
+
+    // P4-05 12.1 F1 and F6: the glyph cell steps, the hit margin of small
+    // entries and passes, and the text of a ruin without a ruin event.
+    {
+        LayerMapView* view = screen.map_view();
+        const bool steps = LayerMapView::glyph_cell_size_at(0.25) == 1 && LayerMapView::glyph_cell_size_at(0.49) == 1 &&
+                           LayerMapView::glyph_cell_size_at(0.5) == 2 && LayerMapView::glyph_cell_size_at(4.0) == 2 &&
+                           LayerMapView::glyph_cell_size_at(9.99) == 2 && LayerMapView::glyph_cell_size_at(10.0) == 3;
+        const double zoom = view->get_zoom();
+        check.expect(steps && (zoom < 0.5 || zoom >= 10.0 || view->glyph_cell_size() == 2),
+                     "F1 glyph cell 1 below zoom 0.5, 2 from 0.5 to 10, 3 above; at the fitted zoom " +
+                         godot::String::num(zoom, 3) + " it is " + num(view->glyph_cell_size()));
+        model->set_year(end);
+        const godot::Array markers = model->get_markers();
+        const int64_t g = view->glyph_cell_size();
+        const int64_t half = g / 2;
+        const auto radius_of = [&](int64_t i) -> int64_t {
+            const godot::Dictionary glyph = model->get_marker_glyph(godot::Dictionary(markers[i])["glyph"]);
+            return glyph.get("radius", int64_t{0});
+        };
+        // An entry far from every other drawn one, so that only it can be hit
+        // near it.
+        const auto isolated = [&](int64_t i) {
+            const godot::Vector2i c = view->get_marker_screen_position(i);
+            if (c.x < 0) {
+                return false;
+            }
+            for (int64_t j = 0; j < markers.size(); ++j) {
+                const godot::Vector2i d = view->get_marker_screen_position(j);
+                if (j == i || d.x < 0) {
+                    continue;
+                }
+                const int64_t reach = (radius_of(i) + radius_of(j) + 3) * g;
+                if (std::max(std::abs(d.x - c.x), std::abs(d.y - c.y)) <= reach) {
+                    return false;
+                }
+            }
+            return true;
+        };
+        // The screen position of glyph cell (dx, 0) of entry i.
+        const auto at_cell = [&](int64_t i, int64_t dx) {
+            const godot::Vector2i c = view->get_marker_screen_position(i);
+            return godot::Vector2(static_cast<float>(c.x + dx * g - half) + 0.5F, static_cast<float>(c.y) + 0.5F);
+        };
+        // The cells of the column at the glyph's right edge, rows -1..1.
+        const auto edge_set = [&](int64_t i) {
+            const godot::Dictionary glyph = model->get_marker_glyph(godot::Dictionary(markers[i])["glyph"]);
+            const int64_t r = glyph.get("radius", int64_t{0});
+            const godot::PackedByteArray cells = glyph.get("cells", godot::PackedByteArray());
+            const int64_t side = 2 * r + 1;
+            bool any = false;
+            for (int64_t dy = -1; dy <= 1; ++dy) {
+                const int64_t row = r + dy;
+                any = any || (row >= 0 && row < side && cells.size() == side * side && cells[row * side + side - 1] != 0);
+            }
+            return any;
+        };
+        int64_t small = -1;
+        int64_t large = -1;
+        int64_t pass = -1;
+        for (int64_t i = 0; i < markers.size(); ++i) {
+            const godot::Dictionary m = markers[i];
+            const bool is_pass = godot::String(m["glyph"]) == "pass";
+            if (!isolated(i) || !edge_set(i)) {
+                continue;
+            }
+            if (is_pass && pass < 0) {
+                pass = i;
+            } else if (bool(m["small"]) && small < 0) {
+                small = i;
+            } else if (!is_pass && !bool(m["small"]) && large < 0) {
+                large = i;
+            }
+        }
+        for (const auto& [what, i] : std::array<std::pair<const char*, int64_t>, 2>{{{"small", small}, {"pass", pass}}}) {
+            if (i < 0) {
+                check.expect(std::string(what) == "pass", godot::String("F6 no isolated ") + what + " entry at E");
+                continue;
+            }
+            const int64_t r = radius_of(i);
+            const bool near = view->marker_at(at_cell(i, r + 1)) == i;
+            const bool far = view->marker_at(at_cell(i, r + 2)) != i;
+            check.expect(near && far, godot::String("F6 the ") + what + " entry " + num(i) +
+                                          " is hit one glyph cell beyond its glyph and not two (" +
+                                          (near ? "near hit" : "near missed") + ", " + (far ? "far missed" : "far hit") +
+                                          ")");
+        }
+        if (large >= 0) {
+            check.expect(view->marker_at(at_cell(large, radius_of(large) + 1)) != large,
+                         "F6 a large entry (" + godot::String(godot::Dictionary(markers[large])["glyph"]) +
+                             ") has no hit margin");
+        } else {
+            check.expect(false, "F6 no isolated large entry at E");
+        }
+        int64_t unrecorded = 0;
+        godot::String wrong;
+        for (int64_t i = 0; i < markers.size(); ++i) {
+            const godot::Dictionary m = markers[i];
+            const godot::String type = m["type"];
+            if (type != "ruin" && type != "faded") {
+                continue;
+            }
+            const auto* s = model_settlement(*model.ptr(), m["id"]);
+            const bool none = s != nullptr && s->ruin_event == 0;
+            unrecorded += none ? 1 : 0;
+            const godot::String text = model->describe_marker(i);
+            if (s == nullptr || text.ends_with(": cause not recorded") != none) {
+                wrong += " " + text;
+            }
+        }
+        check.expect(wrong.is_empty(), "F6 every ruin at E without a ruin event (" + num(unrecorded) +
+                                           ") reads ': cause not recorded', and no other" + wrong);
     }
 
     // M8: toggles.

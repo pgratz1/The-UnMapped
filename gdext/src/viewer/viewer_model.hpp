@@ -205,6 +205,20 @@ public:
         int64_t changes = 0;  // markers_changed emitted
     };
     [[nodiscard]] const MarkerTimings& marker_timings() const noexcept { return marker_timings_; }
+    // The steps of the last set_year that changed the year (spec P4-05
+    // 12.3), nanoseconds; a step that did not run is 0. The *_signal fields
+    // are the time spent in the connected handlers of that signal.
+    struct YearChangeSteps {
+        int64_t state = 0;           // (a) year_state and the holders
+        int64_t draw = 0;            // (b) render_territory into the image
+        int64_t image_signal = 0;    // (c) view_image_changed handlers
+        int64_t markers = 0;         // (d) markers_at, compare and draw order
+        int64_t markers_signal = 0;  // (d) markers_changed handlers
+        int64_t legend = 0;          // (e) HistoryState::legend and legend_array
+        int64_t year_signal = 0;     // (f, g, h) year_changed handlers
+        int64_t total = 0;           // the whole set_year
+    };
+    [[nodiscard]] const YearChangeSteps& last_year_change() const noexcept { return year_steps_; }
 
 protected:
     static void _bind_methods();
@@ -240,6 +254,7 @@ private:
     HistoryState history_;
     TerritoryTimings timings_;
     MarkerTimings marker_timings_;
+    YearChangeSteps year_steps_;
     std::vector<MarkerRef> marker_order_;  // the current set in draw order
     godot::Array markers_array_;           // get_markers(), rebuilt on change
     std::map<std::string, worldgen::inspect::Glyph> glyphs_;  // by glyph name

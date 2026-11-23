@@ -1307,3 +1307,23 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
 - Not decided by Paul (the lead's interim): in P4-04 the spec writer's five open questions take their recommended choices until Paul answers them.
 
 - Status: decided
+
+### Viewer v1, P4-05: the report prints its civilization blocks from the lines the browser shows
+
+- Date: 2026-11-23
+- Raised by: spec writer (P4-05, `docs/specs/p4-05-browser.md`)
+- Design doc section: 10 (world viewer: "a browser for civilizations, figures and events with their causes"), 13 (P4 row and exit check)
+- Problem: the browser must show a civilization's block "as the history report shows it", with links, and must not parse report text (P4-00 V3). The report builds those lines in private code, so a second copy in the viewer, or in a browser module, would drift from the report.
+- Proposal: `worldgen` builds each block as structured lines (literal, text, entity reference, event reference, sentence), and the report prints its `[civilizations]` blocks from them (report bytes unchanged). Sentences get a linked form (`render_event_linked`), with `render_event` as its text. A browser index answers the civilization list, filtered event lists, event details, search by name and the place of an event. Event kind groups are a library table by key. Monsters, sites and figures become further lists of the same form when P5 provides them.
+- Interim choice: as proposed, in P4-05 (open questions 1 to 6 there). No world byte changes; no generator or schema version bump. The P4-04 world critic's F3 and F5 re-record `p4-04-markers.txt`.
+- Status: open
+
+### Godot: a large image that changes in place must be drawn as tiles (found in P4-05)
+
+- Date: 2026-11-23
+- Raised by: lead, from the viewer engineer's measurement (P4-05 prelude)
+- Design doc section: 10 (world viewer), and any in-game map
+- Problem: Godot 4.7 has no partial update of an `ImageTexture`: `update()` uploads the whole image, and an RGB8 image is converted to RGBA8 on the way. The viewer's 1024 by 1024 territory picture was one texture, uploaded whole on every year change; with a real renderer the slowest change took 170 ms against the 50 ms budget (headless: 6 ms, so only a run with a renderer shows it).
+- Proposal: any large picture that changes in place (the viewer's map, later the in-game map with its fog and markers) is drawn as tiles, each its own RGBA8 texture, and only tiles whose pixels changed are uploaded. Speed checks of such a picture run with a renderer, not headless.
+- Interim choice: the viewer does this (`LayerMapView`, 128 by 128 cell tiles; the slowest year change is 21 ms, 34 ms to the next drawn frame, under a virtual display). Nothing in the design document changes; this is a note for the game's map.
+- Status: open
