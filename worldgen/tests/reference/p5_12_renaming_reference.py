@@ -124,30 +124,50 @@ def realm_root(name, civilization_forms):
     return name
 
 
-def form_parts(form, name_value, noun_value):
-    """The parts of 5.2 item 4 (R8): literal runs and slot values in form order."""
-    parts = []
+# P5-02 21.2 (generator 0.23.0): the slot {stem} and the possessive rule. R23 follows the conflict reference's served
+# rules (pcr.FLAGS["monsters"]); with R23 off the 0.22.0 rules hold exactly.
+def r23():
+    return pcr.FLAGS.get("monsters", False)
+
+
+def form_pieces(form, name_value, noun_value, stem_value=None):
+    """[(kind, text)]: ("lit", run) and ("slot", value) in form order; P5-02 21.2's possessive rule applied (a slot
+    value ending in s or S followed by a literal starting with 's: that s dropped)."""
+    out = []
     i = 0
     lit = ""
+    slots = (("{name}", name_value), ("{noun}", noun_value)) + ((("{stem}", stem_value),) if r23() else ())
     while i < len(form):
-        if form.startswith("{name}", i):
-            if lit:
-                parts.append(lit)
-                lit = ""
-            parts.append(name_value)
-            i += 6
-        elif form.startswith("{noun}", i):
-            if lit:
-                parts.append(lit)
-                lit = ""
-            parts.append(noun_value)
-            i += 6
+        for tok, val in slots:
+            if form.startswith(tok, i):
+                if lit:
+                    out.append(("lit", lit))
+                    lit = ""
+                out.append(("slot", val if val is not None else ""))
+                i += len(tok)
+                break
         else:
             lit += form[i]
             i += 1
     if lit:
-        parts.append(lit)
-    return parts
+        out.append(("lit", lit))
+    if r23():
+        for j in range(1, len(out)):
+            if out[j][0] == "lit" and out[j - 1][0] == "slot" and out[j - 1][1][-1:] in ("s", "S") and \
+                    out[j][1].startswith("'s"):
+                out[j] = ("lit", "'" + out[j][1][2:])
+    return out
+
+
+def fill(form, name_value, noun_value, stem_value=None):
+    """The form's text (21.2's possessive rule included at 0.23.0)."""
+    return "".join(x for _k, x in form_pieces(form, name_value, noun_value, stem_value))
+
+
+def form_parts(form, name_value, noun_value, stem_value=None):
+    """The parts of 5.2 item 4 (R8): literal runs and slot values in form order (P5-02 21.2: after the possessive
+    rule)."""
+    return [x for k, x in form_pieces(form, name_value, noun_value, stem_value) if k == "slot" or x]
 
 
 _COMMON = None
@@ -182,14 +202,14 @@ def name_problem(n, parts, common=None, filt=None):
     return None
 
 
-def build_name(forms, start, name_value, noun_value, registry, common=None, filt=None, trace=None):
+def build_name(forms, start, name_value, noun_value, registry, common=None, filt=None, trace=None, stem_value=None):
     """5.1: (name, form index) of the first valid form from start, cycling; (None, None) when none."""
     n = len(forms)
     for j in range(n):
         fi = (start + j) % n
         f = forms[fi]
-        nm = f.replace("{name}", name_value if name_value is not None else "").replace("{noun}", noun_value)
-        parts = form_parts(f, name_value or "", noun_value)
+        nm = fill(f, name_value, noun_value, stem_value)
+        parts = form_parts(f, name_value or "", noun_value, stem_value)
         prob = name_problem(nm, parts, common, filt)
         if prob is None and nm in registry:
             prob = "registry"
@@ -341,15 +361,39 @@ class Renaming:
         t, x = p
         if t == SETTLEMENT:
             return w.stl(x)["name"]
+        if t == pe.MONSTER:   # P5-02 9.3: {name} is the monster's root, read through the monsters subsystem
+            return w.monsters.monster_root_of(x)
         c = w.civ(x)
         forms = w.dat.naming[self.culture_key[c["culture"]]]["civilization_forms"]
         return realm_root(c["name"], forms)
 
+    def stem_value(self, rule, ev):
+        """P5-02 21.2 {stem}: for a settlement name_role, the name without the first separate-word suffix B (a form
+        {root}B of the founder's culture's settlement_forms, list order, B starting with a space, the name ending
+        with B and longer than |B|); for any other name_role {name}'s value."""
+        w = self.w
+        nr = rule["name_role"]
+        nv = self.name_value(rule, ev)
+        if nr == "settlement":
+            st = w.stl(ev["settlement"])
+        else:
+            p = self.first_of_role(ev, nr)
+            if p is None or p[0] != SETTLEMENT:
+                return nv
+            st = w.stl(p[1])
+        cul = self.culture_key[w.civ(st["founder_civ"])["culture"]]
+        for f in w.dat.naming[cul]["settlement_forms"]:
+            a, b = f.split("{root}", 1)
+            if a == "" and b.startswith(" ") and nv.endswith(b) and len(nv) > len(b):
+                return nv[:len(nv) - len(b)]
+        return nv
+
     def name_for(self, r, rule, e, trace=None):
         ev = self.ev(e)
         start = pnr.pick(self.w.draw("hist.renaming.name", e, r, 0), len(rule["forms"]))
+        stem = self.stem_value(rule, ev) if r23() and any("{stem}" in f for f in rule["forms"]) else None
         nm, fi = build_name(rule["forms"], start, self.name_value(rule, ev), self.nouns[r], self.w.registry,
-                            trace=trace)
+                            trace=trace, stem_value=stem)
         return nm, fi, self.namer(rule, ev), start
 
     def write(self, r, Y, rule, e, nm, fi, namer):
@@ -400,7 +444,9 @@ def stage_check_message(rules, catalogue):
                 if k["settlement_use"] == 0:
                     return bad("name_role 'settlement' is not a civilization or settlement role of kind '%s'" % kk)
             elif nr != "":
-                rs = [r for r in k["roles"] if r["role"] == nr and r["type"] in (CIV, SETTLEMENT)]
+                # P5-02 9.3: from 0.23.0 a monster role too (the message is unchanged: READINGS of p5_02 R1)
+                types = (CIV, SETTLEMENT, pe.MONSTER) if r23() else (CIV, SETTLEMENT)
+                rs = [r for r in k["roles"] if r["role"] == nr and r["type"] in types]
                 if not rs:
                     return bad("name_role '%s' is not a civilization or settlement role of kind '%s'" % (nr, kk))
             if rule["namer_role"] != "":
@@ -534,8 +580,13 @@ def rename_lines(name, res):
 
 def rename_small_data(dat=None):
     """13 fixture rename-small: the stress data of p3_conflict_reference (wars, sacks and conquests on a small
-    synthetic map) with every rule's min_magnitude 1 and chance_permille 1000."""
-    d = pcr.stress_data(dat or pcr.data())
+    synthetic map) with every rule's min_magnitude 1 and chance_permille 1000. From 0.23.0 (P5-02) on the
+    monsters-small edits too (p5_02_monsters_reference.monsters_small_data), so that rule 7 ravage can rename."""
+    if r23():
+        import p5_02_monsters_reference as p502
+        d = p502.monsters_small_data(dat or pcr.data())
+    else:
+        d = pcr.stress_data(dat or pcr.data())
     d.renaming = __import__("copy").deepcopy((dat or pcr.data()).renaming)
     for rule in d.renaming["rules"]:
         rule["min_magnitude"] = 1
@@ -625,8 +676,9 @@ def check_res(c, label, res, dat):
     rn = w.renaming
     for (y, r, key, e, nm, fi, namer), row in zip(sorted(rn.log, key=lambda x: (x[1], x[0])), res["region_name"]):
         rule = [x for x in rn.rules if x["key"] == key][0]
+        stem = rn.stem_value(rule, rn.ev(e)) if r23() and "{stem}" in rule["forms"][fi] else None
         c.ok("%s 5.2 %s valid" % (label, nm), name_problem(nm, form_parts(rule["forms"][fi], rn.name_value(
-            rule, rn.ev(e)) or "", rn.nouns[r])) is None)
+            rule, rn.ev(e)) or "", rn.nouns[r], stem)) is None)
     # 5 (qualifies, from the rows): the cause's year and the window
     c.ok("%s every renaming in its cause's step" % label,
          all(row[1] >= w.events[x[3] - 1]["year"] for x, row in zip(sorted(rn.log, key=lambda x: (x[1], x[0])),
@@ -671,7 +723,10 @@ def check_units(c):
     nm, fi = build_name(forms, 0, "Thalo", "Downs", set())
     c.eq("5.2 V8 Thalo + land rejected (lol across the join), next form", (nm, fi), ("The Heart of Thalo", 1))
     nm, fi = build_name(["{name}'s Fall", "The Ruin of {name}"], 0, "Ufas", "Downs", set())
-    c.eq("5.2 V8 Ufas + 's Fall rejected (' removed: fass across the join)", (nm, fi), ("The Ruin of Ufas", 1))
+    if r23():   # P5-02 21.2: the possessive rule drops the s, so no fass across the join
+        c.eq("5.2 V8 Ufas + 's Fall: Ufas' Fall at 0.23.0 (21.2's possessive)", (nm, fi), ("Ufas' Fall", 0))
+    else:
+        c.eq("5.2 V8 Ufas + 's Fall rejected (' removed: fass across the join)", (nm, fi), ("The Ruin of Ufas", 1))
     tr = []
     build_name(forms, 0, "Thalo", "Downs", set(), trace=tr)
     c.eq("5.2 V8 the rejection reason", tr[0][2], "V8")
@@ -736,8 +791,9 @@ class StubWorld:
         self.events = []
         self.civs = [dict(id=1, name="The Kingdom of Cear", culture=5, capital=1),
                      dict(id=2, name="The Krurz Horde", culture=6, capital=3)]
-        self.settlements = [dict(id=1, name="Edadbury", region=1), dict(id=2, name="Gol", region=2),
-                            dict(id=3, name="Krurzpit", region=3)]
+        self.settlements = [dict(id=1, name="Edadbury", region=1, founder_civ=1),
+                            dict(id=2, name="Gol", region=2, founder_civ=2),
+                            dict(id=3, name="Krurzpit", region=3, founder_civ=2)]
         self.registry = set()
         self.year = 0
         self.keys = {}
@@ -1028,8 +1084,15 @@ def cmd_check(argv):
     on = fixture_case(0, dat)
     c.eq("13 region_max 0: no row", off["region_name"], [])
     c.eq("13 region_max 0: no kind 43", [e for e in off["event"] if e[3] == 43], [])
-    with pcr.rules("0.21.0"):
-        before = fixture_case(0, dat)
+    if r23():   # P5-02: the world without the renaming subsystem is the 0.23.0 rules with rename off
+        pcr.FLAGS["rename"] = False
+        try:
+            before = fixture_case(0, dat)
+        finally:
+            pcr.FLAGS["rename"] = True
+    else:
+        with pcr.rules("0.21.0"):
+            before = fixture_case(0, dat)
     for t in ("event", "event_participant", "event_cause", "event_value", "civilization", "settlement",
               "settlement_census", "region_control", "relation", "phase"):
         c.eq("13 region_max 0: table %s equals the world without the subsystem" % t, off[t], before[t])
@@ -1049,7 +1112,12 @@ def main(argv):
     if not argv:
         print(__doc__)
         return 2
-    pcr.use_version("0.22.0")
+    version = "0.23.0"   # P5-02: rule 7 ravage, {stem}, the possessive rule; --version 0.22.0 keeps P5-12's file
+    if "--version" in argv:
+        i = argv.index("--version")
+        version = argv[i + 1]
+        argv = argv[:i] + argv[i + 2:]
+    pcr.use_version(version)
     inputs = argv[argv.index("--inputs") + 1] if "--inputs" in argv else DEFAULT_INPUTS
     if argv[0] == "check":
         return cmd_check(argv[1:])

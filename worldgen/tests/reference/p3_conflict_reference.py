@@ -88,7 +88,7 @@ FatalError = cr.FatalError
 REPO = pe.REPO
 GOLDEN = os.path.join(REPO, "worldgen", "tests", "golden", "p3-06-conflict.txt")
 DEFAULT_INPUTS = os.path.join(os.path.expanduser("~"), ".cache", "the-unmapped", "out", "p3-06-tests", "inputs")
-GENERATOR_VERSION = "0.22.0"
+GENERATOR_VERSION = "0.23.0"
 
 # P3-06 r7 (generator 0.17.0) and r9 section 20 (generator 0.18.0, P3-09): each rule change behind a
 # flag, as pp.FLAGS for P3-05; use_version(v) sets the flags of generator v in both files (and the data,
@@ -143,6 +143,10 @@ FLAGS = dict(
     toll=True,          # 24.5: each side's battle toll times a keyed factor (toll_spread_permille, hist.conflict.toll)
     # P5-12 (generator 0.22.0)
     rename=True,        # P5-12 6: the renaming subsystem after conflict in T6 and Q4 (p5_12_renaming_reference.py)
+    # P5-02 (generator 0.23.0)
+    monsters=True,      # P5-02 5, 6: the monsters subsystem after renaming (p5_02_monsters_reference.py), the second
+                        # tension source, the WildView of 7.1 set on peoples, settlement.ending, schema 9
+    flare_claim=True,   # P5-02 7.4: a flare-up's forced declaration only when its trigger is a claim (20 or 39)
     # 22.3's one definition of lying low is lie_low's (pp.World.lying_low); no flag of its own
 )
 FLAGS_017 = ("loss",)
@@ -151,20 +155,24 @@ FLAGS_019 = ("reduce_loss", "aim_hold", "search_weary", "search_battle", "search
 FLAGS_020 = ("claim39", "foot40")
 FLAGS_021 = ("fresh", "strength", "dropped", "hidden42", "toll")
 FLAGS_022 = ("rename",)
-VERSIONS = ("0.16.0", "0.17.0", "0.18.0", "0.19.0", "0.20.0", "0.21.0", "0.22.0")
+FLAGS_023 = ("monsters", "flare_claim")
+VERSIONS = ("0.16.0", "0.17.0", "0.18.0", "0.19.0", "0.20.0", "0.21.0", "0.22.0", "0.23.0")
 
 
 def flag_on(v, k):
     """Whether rule flag k is on at generator v."""
+    i = VERSIONS.index(v)
+    if k in FLAGS_023:
+        return i >= 7
     if k in FLAGS_022:
-        return v == "0.22.0"
+        return i >= 6
     if k in FLAGS_021:
-        return v in ("0.21.0", "0.22.0")
+        return i >= 5
     if k in FLAGS_020:
-        return v in ("0.20.0", "0.21.0", "0.22.0")
+        return i >= 4
     if k in FLAGS_019:
-        return v in ("0.19.0", "0.20.0", "0.21.0", "0.22.0")
-    return v in ("0.18.0", "0.19.0", "0.20.0", "0.21.0", "0.22.0") or (v == "0.17.0" and k in FLAGS_017)
+        return i >= 3
+    return i >= 2 or (v == "0.17.0" and k in FLAGS_017)
 
 
 def at_least(v):
@@ -175,7 +183,7 @@ def peoples_flags(v):
     """P3-05's flags of generator v (p3_peoples_reference.flags_for from 0.19.0; the 0.18.0 rule before it)."""
     if hasattr(pp, "flags_for"):
         return pp.flags_for(v)
-    return {k: v != "0.16.0" and (v in ("0.18.0", "0.19.0", "0.20.0", "0.21.0", "0.22.0") or k not in pp.FLAGS_018)
+    return {k: v != "0.16.0" and (v in ("0.18.0", "0.19.0", "0.20.0", "0.21.0", "0.22.0", "0.23.0") or k not in pp.FLAGS_018)
             for k in pp.FLAGS}
 
 
@@ -194,7 +202,7 @@ def use_version(v):
 
 
 def legacy(on=True):
-    use_version("0.16.0" if on else "0.22.0")
+    use_version("0.16.0" if on else "0.23.0")
 
 
 class rules:
@@ -717,23 +725,38 @@ class World(pp.World):
         if conflict and FLAGS["rename"]:
             import p5_12_renaming_reference as p512
             self.renaming = p512.Renaming(self, dat, inp)
+        # P5-02: the monsters subsystem, installed after renaming (p5_02_monsters_reference.Monsters), and its
+        # WildView set on peoples (7.1)
+        self.monsters = None
+        self.phase_trigger = 0
+        if conflict and FLAGS["monsters"]:
+            import p5_02_monsters_reference as p502
+            self.monsters = p502.Monsters(self, dat.base, inp)
+            self.set_wild(p502.WildView(self.monsters))
 
     # --- engine phase kind
     def tick(self, eng_run, year, phase_end):
         self.year, self.years, self.phase = year, 1, eng_run.phase_id
         self.phase_kind = eng_run.phase_kind
+        self.phase_trigger = eng_run.phases[-1][5] if eng_run.phases else 0   # P5-02 7.4 phase_trigger_event()
         self.t1()
+        if self.monsters is not None:
+            self.monsters.t1()               # T1: monsters (same step, after peoples)
         self.foundings(quiet=False)          # T2: peoples
         if self.conflict_on:
             self.c_t2()                      # T2: conflict (same step)
         self.begin()                         # T3
         self.t4()                            # T4
+        if self.monsters is not None:
+            self.monsters.t4()               # T4: monsters (same step, after peoples)
         self.begin()                         # T5
         self.begin()                         # T6
         if self.conflict_on:
             self.c_t6()
         if self.renaming is not None:
             self.renaming.run(quiet=False)   # T6: renaming (same step, after conflict)
+        if self.monsters is not None:
+            self.monsters.t6()               # T6: monsters (same step, after renaming)
         self.begin()                         # T7
         self.bookkeeping(year, phase_end)
         self.check_state()
@@ -746,6 +769,8 @@ class World(pp.World):
         self.quiet_used = {}
         self.charged = set()
         self.q1()
+        if self.monsters is not None:
+            self.monsters.q1()  # Q1: monsters (same step, after peoples)
         self.begin()          # Q2
         self.q3()
         self.foundings(quiet=True)          # Q4: peoples
@@ -753,6 +778,8 @@ class World(pp.World):
             self.c_q4()                     # Q4: conflict (same step)
         if self.renaming is not None:
             self.renaming.run(quiet=True)   # Q4: renaming (same step, after conflict)
+        if self.monsters is not None:
+            self.monsters.q4()              # Q4: monsters (same step, after renaming)
 
     def quiet_b(self, eng_run, start, length, phase_end, row_start):
         last = start + length - 1
@@ -1300,6 +1327,16 @@ class World(pp.World):
                 best = (v, self.claim[(a, b)][0], (a, b))
         return best
 
+    def tension_all(self, start, length):
+        """P3-04 6.5 with P5-02 6.5: the sources in config order {conflict, monsters}; the largest value, the
+        trigger of the first source reporting it (READINGS T1 of p5_02_monsters_reference)."""
+        v, e = self.tension(start, length)
+        if self.monsters is not None:
+            v2, e2 = self.monsters.tension(start, length)
+            if v2 > v:
+                return v2, e2
+        return v, e
+
     def tension(self, start, length):
         """The TensionSource (5.4), asked in Q5; read-only."""
         before = (dict(self.strain), dict(self.claim), dict(self.contact), len(self.events))
@@ -1384,6 +1421,10 @@ class World(pp.World):
         self.strain_update(1, t["tick_strain_permille"], False)
         self.note_contact()
         first_flare = self.phase != self.last_t2_phase and self.phase_kind == FLARE
+        if first_flare and FLAGS["flare_claim"] and self.phase_trigger and \
+                self.events[self.phase_trigger - 1]["key"] not in ("claim", "claim_settlements"):
+            # P5-02 7.4: a flare-up not started by a claim (a monster's) brings no forced declaration
+            first_flare = False
         flare_pair = self.best_claim(self.year)[2] if first_flare else None
         if first_flare:
             self.flare_values[self.year] = self.best_claim(self.year)
@@ -2167,8 +2208,10 @@ def history_stage(dat, inp, extra_draw=False, conflict=True):
     w = World(dat, inp, cat, extra_draw, conflict)
     starts = [a[2] for a in inp.ages]
     en = Engine(starts, [a[3] for a in inp.ages], inp.params["span"], dat.engine, inp.params["detail"],
-                w.tension if conflict else None, Hooks(w))
+                w.tension_all if conflict else None, Hooks(w))
     en.run()
+    if w.monsters is not None:
+        w.monsters.finish(inp.params["span"])   # P5-02 6.2.2: the rows at E - 1
     res = dict(
         event_kind=[(k["id"], k["key"], k["caused"], k["region_use"], k["settlement_use"], k["salience"], k["templ"])
                     for k in cat],
@@ -2192,6 +2235,13 @@ def history_stage(dat, inp, extra_draw=False, conflict=True):
     )
     if FLAGS["rename"]:   # schema 8 (P3-04 r21 23.4): rows sorted by (region, from_year)
         res["region_name"] = sorted(w.renaming.rows) if w.renaming is not None else []
+    if pe.RENDER_R23:   # schema 9 (P5-02 11): the five tables and settlement.ending
+        res["beast"], res["monster_kind"] = pe.beast_rows(dat.base), pe.monster_kind_rows(dat.base)
+        if w.monsters is not None:
+            res["beast_population"] = w.monsters.beast_population_rows()
+            res["monster"] = w.monsters.monster_rows()
+            res["site"] = w.monsters.site_rows()
+        pe.with_ending(res)
     res["_world"] = w
     res["_engine"] = en
     res["_catalogue"] = cat
@@ -3061,6 +3111,13 @@ def check_invariants(c, res, inp, w, label, last_refuge=True, threshold=None):
     log = {s: (v, e) for (s, v, e, _p) in w.tension_log}
     for r in res["phase"]:
         if r[2] != FLARE:
+            continue
+        if FLAGS["monsters"] and r[5] and w.events[r[5] - 1]["key"] == "monster_appeared":
+            # P5-02 6.5: the second tension source; its trigger is a flare kind's appearance in a quiet step
+            mlog = {s: (v, e) for (s, v, e) in w.monsters.tension_log}
+            prev = [s for s in mlog if s < r[3]]
+            c.true("%s inv 8 (P5-02 6.5) flare-up %d: the monsters' tension, above conflict's" % (label, r[0]),
+                   bool(prev) and mlog[max(prev)] == (thr, r[5]) and log[max(prev)][0] < thr)
             continue
         c.true("%s inv 8 flare-up %d trigger is a claim" % (label, r[0]), kind.get(r[5]) in CLAIMS)
         prev = [s for s in log if s < r[3]]
@@ -6578,8 +6635,19 @@ def header():
         head = HEADER_021 + "#\n" + head
     if at_least("0.22.0"):
         head = HEADER_022 + "#\n" + head
+    if at_least("0.23.0"):
+        head = HEADER_023 + "#\n" + head
     return head + "#\n" + "\n".join(old[[i for i, l in enumerate(old) if l.startswith("# Format:")][0]:])
 
+
+HEADER_023 = """\
+# Generator 0.23.0 (P5-02, docs/specs/p5-02-beasts-monsters.md r0): the monsters subsystem after renaming in T1, T4,
+# T6, Q1 and Q4 and as the second tension source (p5_02_monsters_reference.py; kinds 44 to 55, the tables beast,
+# monster_kind, beast_population, monster and site, settlement.ending, schema 9), peoples' growth through the
+# WildView, shunned regions and the ghost rule (8.2), a flare-up's forced declaration only for a claim's trigger
+# (7.4), the renaming forms of 21.2 and rule 7 ravage, P3-02 names with the kinds monster and site (inputs:
+# ~/.cache/the-unmapped/out/p5-02-tests/inputs, the P5-12 geography). Every table line gains the five tables.
+"""
 
 HEADER_022 = """\
 # Generator 0.22.0 (P5-12, docs/specs/p5-12-renamed-regions.md): the renaming subsystem after conflict in T6 and
@@ -6877,7 +6945,7 @@ def cmd_check_world(argv):
     c = Checker()
     # Schema 8 (table region_name) from generator 0.22.0 (P5-12), schema 7 before; a schema 7 world is read with
     # --version 0.21.0 or older (its tables lack region_name, which the 0.22.0 rules write).
-    want_schema = "8" if FLAGS["rename"] else "7"
+    want_schema = "9" if FLAGS["monsters"] else "8" if FLAGS["rename"] else "7"   # P5-02 11.1: schema 9
     if meta.get("schema_version") != want_schema:
         print("%s: schema version %s, check-world at %s reads %s (schema 7: --version 0.21.0 or older)" %
               (path, meta.get("schema_version"), GENERATOR_VERSION, want_schema))
