@@ -406,6 +406,68 @@ def _held_reference(code: str, m: re.Match) -> bool:
     return False
 
 
+# Subsystem-owned entity vectors (added by the P5-02 beasts and monsters
+# audit). MonstersSubsystem keeps its monsters and sites in the members
+# monsters_ and sites_ and hands out Monster& / Site& through monster(id)
+# and site(id); an append to the vector may reallocate it, exactly like a
+# founding for State's vectors. Type name -> the member it points into.
+_MEMBER_VECTORS = {"Monster": "monsters_", "Site": "sites_"}
+_MEMBER_ACCESSORS = {"monster": "monsters_", "site": "sites_"}
+_MEMBER_GROW = r"\s*(?:\.|->)\s*(?:push_back|emplace_back|emplace|insert|resize|assign|clear|erase|reserve)\s*\("
+_member_proxy_cache: dict = {}
+
+
+def _member_growers(code: str, member: str) -> frozenset:
+    """Names of the functions of this file whose body grows `member`
+    (directly or through another such function of the file)."""
+    key = (member, code)
+    hit = _member_proxy_cache.get(key)
+    if hit is not None:
+        return hit
+    grow = re.compile(r"\b" + re.escape(member) + _MEMBER_GROW)
+    calls = {}
+    growers = set()
+    for name, start, end in _function_bodies(code):
+        body = code[start:end]
+        calls.setdefault(name, set()).update(c for c in _CALL_NAME.findall(body) if c != name)
+        if grow.search(body):
+            growers.add(name)
+    changed = True
+    while changed:
+        changed = False
+        for name, called in calls.items():
+            if name not in growers and called & growers:
+                growers.add(name)
+                changed = True
+    result = frozenset(growers)
+    _member_proxy_cache[key] = result
+    return result
+
+
+def _member_held_reference(code: str, m: re.Match) -> bool:
+    """For history-member-held-reference: True if the Monster& / Site&
+    (or auto& from monster( / site() declared by this match is used after a
+    later call that grows the vector it points into, in the same block."""
+    name = m.group("ref") or m.group("auto")
+    member = _MEMBER_VECTORS.get(m.group("type") or "") or _MEMBER_ACCESSORS.get(m.group("acc") or "")
+    if not name or not member:
+        return False
+    names = sorted(_member_growers(code, member))
+    alt = r"\b" + re.escape(member) + _MEMBER_GROW
+    if names:
+        alt += r"|\b(?:" + "|".join(map(re.escape, names)) + r")\s*\("
+    grow = re.compile(alt)
+    end = _block_end(code, m.end())
+    use = re.compile(r"\b" + re.escape(name) + r"\b")
+    for g in grow.finditer(code, m.end(), end):
+        close = _matching_paren(code, g.end() - 1)
+        if close < 0 or close >= end:
+            continue
+        if use.search(code, close + 1, end):
+            return True
+    return False
+
+
 _STMT_START_CHARS = (";", "{", "}", ")", ":")
 _VOID_CAST_TAIL = re.compile(r"static_cast\s*<\s*void\s*>\s*\(\s*$")
 
@@ -801,6 +863,26 @@ RULES: tuple = (
             r"|\bauto\b\s*[&*]?\s*(?P<auto>\w+)\s*=\s*(?:\w+\s*(?:\(\s*\))?\s*(?:\.|->)\s*)+"
             r"(?:civ|settlement|civs|settlements)\s*\([^()]*\)\s*;"),
         filter=_held_reference,
+        areas=frozenset({LIB}),
+        only_dirs=HISTORY_DIRS,
+        where="library: " + ", ".join(HISTORY_DIRS) + " (prefixes)",
+    ),
+    # Added by the P5-02 beasts and monsters audit: the same failure for the
+    # vectors a subsystem owns (MonstersSubsystem::monsters_ and sites_).
+    Rule(
+        "history-member-held-reference",
+        "a local Monster& / Site& / Monster* / Site*, or an auto& / auto* whose initializer is a call of "
+        "monster( or site( (nothing after it), that is used after a later call that grows the vector it "
+        "points into (monsters_ or sites_ .push_back(, .emplace_back(, .insert(, .resize(, ..., or a function "
+        "of the same file that does so) in the same block",
+        "a reference or pointer into a subsystem's monster or site vector is used after the vector grows: the "
+        "append may reallocate it, and whether it does depends on the standard library's growth factor, so the "
+        "use reads freed memory on one platform and not on another; re-fetch by id after the append, or copy "
+        "the fields you need before it (P3-04 6.9, P5-02 6.7)",
+        _rx(r"\b(?P<type>Monster|Site)\s*[&*]\s*(?P<ref>\w+)\s*="
+            r"|\bauto\b\s*[&*]\s*(?P<auto>\w+)\s*=\s*(?:\w+\s*(?:\(\s*\))?\s*(?:\.|->)\s*)*"
+            r"(?P<acc>monster|site)\s*\([^()]*\)\s*;"),
+        filter=_member_held_reference,
         areas=frozenset({LIB}),
         only_dirs=HISTORY_DIRS,
         where="library: " + ", ".join(HISTORY_DIRS) + " (prefixes)",
