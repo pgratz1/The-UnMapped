@@ -1992,15 +1992,16 @@ SITE_FORMS_023 = {   # 4.4
     "faerie": ["{root} Watch", "The Thorn of {root}"], "goblin": ["{root} Lookout", "{root} Stockade"],
     "human": ["{root} Watch", "{root} Tower"], "orcish": ["{root} Stockade", "The Watch of {root}"]}
 GHOST_023 = (("ghost_permille", 0, 1000, 200), ("ghost_max_population", 0, 1000000, 300))   # 4.5
-# 10.2: kinds 44 to 55 with salience and template.
+# 10.2: kinds 44 to 55 with salience and template. Kinds 48 and 49 read {@settlement} where 10.2 has {settlement}:
+# neither kind has a role `settlement` (10.1), so 10.2's text fails template_problem (spec defect, READINGS D2).
 REPORT_ENTRIES_023 = (
     ("monster_appeared", 45, "{monster}, {monster:kind}, made its lair in {@region}."),
     ("undead_rose", 50, "{@causes:battle=the slaughter,battle_at_pass=the slaughter,sacked=the sack|After |, }the dead "
                         "of {@region} rose as {monster}."),
     ("monster_woke", 25, "{monster} woke again in {@region}."),
     ("monster_slept", 10, "{monster} sank into sleep in {lair}."),
-    ("monster_raid", 15, "{monster} fell upon {settlement}; {dead?no one died|one died|# died}."),
-    ("settlement_overrun", 50, "{monster} drove the people from {settlement} and made it its lair; "
+    ("monster_raid", 15, "{monster} fell upon {@settlement}; {dead?no one died|one died|# died}."),
+    ("settlement_overrun", 50, "{monster} drove the people from {@settlement} and made it its lair; "
                                "{survivors?no one escaped|one escaped|# escaped}."),
     ("monster_slain", 55, "{slayer} hunted down and slew {monster}, {monster:kind}, in {@region}."),
     ("monster_driven_off", 30, "{civilization} drove {monster} back to its lair in {@region}."),

@@ -84,8 +84,8 @@ M64 = (1 << 64) - 1
 REPO = os.path.normpath(os.path.join(_HERE, "..", "..", ".."))
 GOLDEN = os.path.join(REPO, "worldgen", "tests", "golden", "p3-04-engine.txt")
 DEFAULT_INPUTS = os.path.join(os.path.expanduser("~"), ".cache", "the-unmapped", "out", "p3-08-tests", "inputs")
-GENERATOR_VERSION = "0.22.0"  # P5-12: kind 43, {@region_former}, names at the event, schema 8 (P5-01: kinds 41, 42, number clauses, flare_min_years (P3-11: kinds 39, 40, number words (P3-10: kinds 37, 38, quiet stretches, {@causes:...}, separators (P3-09: 36 kinds)
-SCHEMA_VERSION = 8   # P3-04 r21 23.4 (P5-12, generator 0.22.0); 7 before
+GENERATOR_VERSION = "0.23.0"  # P5-02: kinds 44-55, form kind, {@beast}, names of types 8 and 9, schema 9 (P5-12: kind 43, {@region_former}, names at the event, schema 8 (P5-01: kinds 41, 42, number clauses, flare_min_years (P3-11: kinds 39, 40, number words (P3-10: kinds 37, 38, quiet stretches, {@causes:...}, separators (P3-09: 36 kinds)
+SCHEMA_VERSION = 9   # P5-02 11.1 (generator 0.23.0); 8 at 0.22.0 (P3-04 r21 23.4); 7 before
 
 
 def fatal(msg):
@@ -178,6 +178,13 @@ class Data:
         self.engine = hist["engine"]
         self.report = [(e["kind"], e["salience"], e["template"]) for e in hist["report"]["events"]]
         self.naming = {cid: c["naming"] for cid, c in self.chron.cultures.items()}
+        # P5-02 4.1, 4.2 (0.23.0): the beast and monster definitions in canonical id order (ids 1, 2, ...)
+        self.beasts, self.monsters = [], []
+        if pdr.at_least("0.23.0"):
+            more = pdr.load_root(root, kinds=("beast", "monster"))
+            self.beasts, self.monsters = list(more["beast"]), list(more["monster"])
+            self.monsters_tuning = hist["monsters"]
+            self.peoples_ghost = {k: hist["peoples"][k] for k in ("ghost_permille", "ghost_max_population")}
 
 
 _DATA = {}
@@ -213,6 +220,7 @@ def spec_report():
 # ---------------------------------------------------------------------------
 
 RACE, GOD, CIV, SETTLEMENT, REGION = 1, 2, 3, 4, 5      # 6.1 EntityType / 9.2 codes
+MONSTER, SITE = 8, 9      # P5-02 11.2: entity type codes 8 monster and 9 site come into use
 OPENING, QUIET, FLARE, FINAL = 1, 2, 3, 4                # 6.1 PhaseKind
 SETTLEMENT_KIND_CODE = {"hamlet": 1, "village": 2, "town": 3, "city": 4, "fortress": 5}
 THRIVING = 1
@@ -311,6 +319,26 @@ COMPILED_021 = COMPILED_020 + (KIND_41, KIND_42)
 # namer civilization 0-1; no value).
 KIND_43 = kind_def(43, "region_renamed", 1, 1, 2, (("namer", CIV, 0, 1),), ())
 COMPILED_022 = COMPILED_021 + (KIND_43,)
+# P5-02 10.1 (generator 0.23.0): kinds 44 to 55, appended in the table's order.
+KINDS_023 = (
+    kind_def(44, "monster_appeared", 0, 1, 0, (("monster", MONSTER, 1, 1), ("lair", SITE, 1, 1)), ()),
+    kind_def(45, "undead_rose", 1, 1, 2, (("monster", MONSTER, 1, 1), ("lair", SITE, 1, 1)), ()),
+    kind_def(46, "monster_woke", 1, 1, 0, (("monster", MONSTER, 1, 1),), ()),
+    kind_def(47, "monster_slept", 1, 1, 0, (("monster", MONSTER, 1, 1), ("lair", SITE, 1, 1)), ()),
+    kind_def(48, "monster_raid", 1, 1, 1, (("monster", MONSTER, 1, 1), ("civilization", CIV, 1, 1)),
+             ("dead", "plunder")),
+    kind_def(49, "settlement_overrun", 1, 1, 1, (("monster", MONSTER, 1, 1), ("civilization", CIV, 1, 1),
+                                                 ("lair", SITE, 1, 1)), ("survivors",)),
+    kind_def(50, "monster_slain", 1, 1, 0, (("monster", MONSTER, 1, 1), ("slayer", CIV, 1, 1)), ("hunters",)),
+    kind_def(51, "monster_driven_off", 1, 1, 0, (("monster", MONSTER, 1, 1), ("civilization", CIV, 1, 1)), ()),
+    kind_def(52, "monster_died", 1, 1, 0, (("monster", MONSTER, 1, 1),), ()),
+    kind_def(53, "beasts_bold", 0, 1, 1, (("settlement", SETTLEMENT, 1, 1), ("civilization", CIV, 1, 1)),
+             ("beast", "dead")),
+    kind_def(54, "outpost_built", 1, 1, 0, (("civilization", CIV, 1, 1), ("enemy", CIV, 1, 1), ("site", SITE, 1, 1)),
+             ()),
+    kind_def(55, "outpost_abandoned", 0, 1, 0, (("civilization", CIV, 1, 1), ("site", SITE, 1, 1)), ("reason",)),
+)
+COMPILED_023 = COMPILED_022 + KINDS_023
 
 # P3-04 r10 (generator 0.17.0, P3-08), each switchable so that the 0.16.0
 # goldens can still be reproduced (use_version("0.16.0")):
@@ -348,11 +376,16 @@ FLARE_R19 = True
 #   RENDER_R21      23.1 a region in a sentence is named as at the event (N(r, e)); {@region_former} renders
 #                   N(r, e - 1); the view's region_at(r, e) gives N; schema 8 (table region_name).
 RENDER_R21 = True
+# P5-02 10.3 (generator 0.23.0):
+#   RENDER_R23      the display names of entity types 8 (monster.name) and 9 (site.name), the form `kind` of a
+#                   monster role (monster_kind.noun), the placeholder {@beast} (beast.plural of the value beast);
+#                   schema 9 (11.1).
+RENDER_R23 = True
 NUMBER_WORDS = ("one", "two", "three", "four", "five", "six", "seven", "eight", "nine")
 ENGINE_VERSION = None
 
 
-VERSIONS = ("0.16.0", "0.17.0", "0.18.0", "0.19.0", "0.20.0", "0.21.0", "0.22.0")
+VERSIONS = ("0.16.0", "0.17.0", "0.18.0", "0.19.0", "0.20.0", "0.21.0", "0.22.0", "0.23.0")
 
 
 def at_least(v):
@@ -367,26 +400,27 @@ def use_version(v):
     of 30 kinds, r9 rendering and quiet eras, the 0.16.0 data and P3-02 r4
     names). Clears the cached data roots."""
     global COMPILED, RENDER_R10, QUIET_ERA_R10, RENDER_R12, QUIET_R12, QUIET_R15, GENERATOR_VERSION, ENGINE_VERSION
-    global RENDER_R17, RENDER_R19, FLARE_R19, RENDER_R21, SCHEMA_VERSION
+    global RENDER_R17, RENDER_R19, FLARE_R19, RENDER_R21, RENDER_R23, SCHEMA_VERSION
     if v not in VERSIONS:
         raise ValueError(v)
     new = v != "0.16.0"
     COMPILED = {"0.16.0": COMPILED_016, "0.17.0": COMPILED_017, "0.18.0": COMPILED_018, "0.19.0": COMPILED_019,
-                "0.20.0": COMPILED_020, "0.21.0": COMPILED_021, "0.22.0": COMPILED_022}[v]
+                "0.20.0": COMPILED_020, "0.21.0": COMPILED_021, "0.22.0": COMPILED_022, "0.23.0": COMPILED_023}[v]
     RENDER_R10 = QUIET_ERA_R10 = new
-    RENDER_R12 = QUIET_R12 = QUIET_R15 = v in ("0.19.0", "0.20.0", "0.21.0", "0.22.0")
-    RENDER_R17 = v in ("0.20.0", "0.21.0", "0.22.0")
-    RENDER_R19 = FLARE_R19 = v in ("0.21.0", "0.22.0")
-    RENDER_R21 = v == "0.22.0"
+    RENDER_R12 = QUIET_R12 = QUIET_R15 = v in ("0.19.0", "0.20.0", "0.21.0", "0.22.0", "0.23.0")
+    RENDER_R17 = v in ("0.20.0", "0.21.0", "0.22.0", "0.23.0")
+    RENDER_R19 = FLARE_R19 = v in ("0.21.0", "0.22.0", "0.23.0")
+    RENDER_R21 = v in ("0.22.0", "0.23.0")
+    RENDER_R23 = v == "0.23.0"
     global TABLES, COLUMNS
-    TABLES = TABLES_022 if RENDER_R21 else TABLES_021
-    COLUMNS = COLUMNS_022 if RENDER_R21 else COLUMNS_021
-    SCHEMA_VERSION = 8 if v == "0.22.0" else 7
+    TABLES = TABLES_023 if RENDER_R23 else TABLES_022 if RENDER_R21 else TABLES_021
+    COLUMNS = COLUMNS_023 if RENDER_R23 else COLUMNS_022 if RENDER_R21 else COLUMNS_021
+    SCHEMA_VERSION = 9 if v == "0.23.0" else 8 if v == "0.22.0" else 7
     GENERATOR_VERSION = v
     ENGINE_VERSION = v
     pdr.use_version(v)
     # P3-09 item 8: the word list of the version (0.18.0 on disk; before, P3-08's, from git)
-    pnr.FILTER_COMMIT = None if v in ("0.18.0", "0.19.0", "0.20.0", "0.21.0", "0.22.0") else pdr.NAME_FILTERS_017_COMMIT
+    pnr.FILTER_COMMIT = None if v in ("0.18.0", "0.19.0", "0.20.0", "0.21.0", "0.22.0", "0.23.0") else pdr.NAME_FILTERS_017_COMMIT
     if hasattr(pnr, "use_version"):   # P3-10: the names reference serves the filter of the version (F1)
         pnr.use_version(v)
     pnr._SHIPPED_FILTER = None
@@ -426,7 +460,7 @@ def find_kind(cat, key):
 # 8.4 the template grammar: template_problem
 # ---------------------------------------------------------------------------
 
-FORMS = ("name", "plural", "adjective", "all")
+FORMS = ("name", "plural", "adjective", "all", "kind")   # kind: P5-02 10.3 (0.23.0)
 
 
 def _is_word(w):
@@ -559,6 +593,8 @@ def placeholder_problem(kind, body, at):
         if body == "@settlement":
             return (None if kind["settlement_use"] == 1
                     else "{@settlement} needs a kind with a settlement at byte %d" % at)
+        if RENDER_R23 and body == "@beast":   # P5-02 10.3
+            return None if "beast" in values else "{@beast} needs a kind with a value 'beast' at byte %d" % at
         return unknown
     if "?" in body:
         v, rest = body.split("?", 1)
@@ -572,11 +608,13 @@ def placeholder_problem(kind, body, at):
         return unknown
     if ":" in body:
         role, form = body.split(":", 1)
-        if role not in roles or form not in FORMS:
+        if role not in roles or form not in FORMS or (form == "kind" and not RENDER_R23):
             return unknown
         r = roles[role]
         if form in ("plural", "adjective") and r["type"] != RACE:
             return "form '%s' needs a race role at byte %d" % (form, at)
+        if form == "kind" and r["type"] != MONSTER:   # P5-02 10.3, where the race-role form check is
+            return "form 'kind' needs a monster role at byte %d" % at
         if form != "all" and r["min"] == 0:
             return "role '%s' may have no participant at byte %d" % (role, at)
         return None
@@ -733,6 +771,8 @@ def render(view, eid):
             put_name(region_name(ev["region"], eid - 1))
         elif body == "@settlement":
             put_name(view["name"](SETTLEMENT, ev["settlement"], "name"))
+        elif RENDER_R23 and body == "@beast":   # P5-02 10.3: beast.plural, as stored (no name rule)
+            out.append(view["beast_plural"](ev["values"][val_seq["beast"]]))
         elif RENDER_R12 and body.startswith("@causes:"):
             # r12 20.2: L = the entries' cwords of the causes' kind keys in ascending cause id, first
             # occurrence kept; nothing when L is empty; else word1, L joined as {role:all}, word2.
@@ -1444,6 +1484,9 @@ def history_stage(dat, inp, tension=None, stage_entry=True, eng=None, report=Non
         region_control=sorted(tuple(r) for r in w.region_control),
         relation=w.relation_table(),
     )
+    if RENDER_R23:   # P5-02 11.2: the stub configuration installs no monsters; beast and monster_kind are written
+        res["beast"], res["monster_kind"] = beast_rows(dat), monster_kind_rows(dat)
+    with_ending(res)
     res["_world"] = w
     res["_engine"] = en
     res["_catalogue"] = cat
@@ -1499,6 +1542,10 @@ DDL_ORDER = ("event_kind", "event_kind_role", "event_kind_value", "phase", "even
              "relation")
 TABLES_021 = tuple(sorted(COLUMNS, key=lambda t: t.encode()))  # hash --detail order
 TABLES_022 = tuple(sorted(COLUMNS_022, key=lambda t: t.encode()))
+# P5-02 11.1 (schema 9): settlement gains `ending`; five tables after region_name.
+COLUMNS_023 = dict(COLUMNS_022, settlement=15, beast=6, monster_kind=7, beast_population=4, monster=11, site=14)
+TABLES_023 = tuple(sorted(COLUMNS_023, key=lambda t: t.encode()))
+NEW_TABLES_023 = ("beast", "monster_kind", "beast_population", "monster", "site")   # DDL order
 TABLES = TABLES_021   # use_version sets it
 REGION_NAME_DDL = ("CREATE TABLE region_name (region INTEGER NOT NULL, from_year INTEGER NOT NULL, name TEXT NOT NULL, "
                    "culture INTEGER NOT NULL, event INTEGER NOT NULL, PRIMARY KEY (region, from_year)) STRICT, "
@@ -1541,9 +1588,98 @@ DDL = (
 )
 
 
+SETTLEMENT_DDL_023 = (
+    "CREATE TABLE settlement (id INTEGER PRIMARY KEY, name TEXT NOT NULL, x INTEGER NOT NULL, y INTEGER NOT NULL, "
+    "region INTEGER NOT NULL, founder_civ INTEGER NOT NULL, founded_year INTEGER NOT NULL, founding_event INTEGER "
+    "NOT NULL, owner_civ INTEGER NOT NULL, kind INTEGER NOT NULL, status INTEGER NOT NULL, population INTEGER NOT "
+    "NULL, ruined_year INTEGER, ruin_event INTEGER NOT NULL, ending INTEGER NOT NULL) STRICT")
+DDL_023_NEW = (
+    "CREATE TABLE beast (id INTEGER PRIMARY KEY, key TEXT NOT NULL UNIQUE, name TEXT NOT NULL, plural TEXT NOT NULL, "
+    "menace INTEGER NOT NULL, food INTEGER NOT NULL) STRICT",
+    "CREATE TABLE monster_kind (id INTEGER PRIMARY KEY, key TEXT NOT NULL UNIQUE, name TEXT NOT NULL, noun TEXT NOT "
+    "NULL, grouped INTEGER NOT NULL, wake INTEGER NOT NULL, might INTEGER NOT NULL) STRICT",
+    "CREATE TABLE beast_population (region INTEGER NOT NULL, beast INTEGER NOT NULL, year INTEGER NOT NULL, count "
+    "INTEGER NOT NULL, PRIMARY KEY (region, beast, year)) STRICT, WITHOUT ROWID",
+    "CREATE TABLE monster (id INTEGER PRIMARY KEY, name TEXT NOT NULL, kind INTEGER NOT NULL, lair_site INTEGER NOT "
+    "NULL, born INTEGER NOT NULL, born_event INTEGER NOT NULL, died INTEGER, death_event INTEGER NOT NULL, slain_by "
+    "INTEGER NOT NULL, status INTEGER NOT NULL, hoard INTEGER NOT NULL) STRICT",
+    "CREATE TABLE site (id INTEGER PRIMARY KEY, name TEXT NOT NULL, kind INTEGER NOT NULL, region INTEGER NOT NULL, "
+    "x INTEGER NOT NULL, y INTEGER NOT NULL, settlement INTEGER NOT NULL, founder_civ INTEGER NOT NULL, monster "
+    "INTEGER NOT NULL, origin_year INTEGER NOT NULL, origin_event INTEGER NOT NULL, ended_year INTEGER, "
+    "ending_event INTEGER NOT NULL, ending INTEGER NOT NULL) STRICT",
+)
+
+
+def ddl_023():
+    """The history DDL at schema 9 (11.1): P3-04 9's thirteen statements with settlement's new last column, then
+    region_name's (P3-04 r21 23.4), then the five new statements in this order."""
+    return tuple(SETTLEMENT_DDL_023 if d.startswith("CREATE TABLE settlement (") else d for d in DDL) + \
+        (REGION_NAME_DDL,) + DDL_023_NEW
+
+
+# P5-02 8.3: settlement.ending from the stored log.
+ENDING_WORDS = {0: "-", 1: "sacked", 2: "overrun", 3: "plague", 4: "famine", 5: "left"}
+PLAGUE_KEYS = ("plague", "plague_spread", "plague_outbreak")
+
+
+def settlement_ending(status, ruin_event, kind_key_of, causes_of):
+    """8.3: 0 standing; 1 sacked; 2 overrun; 3 plague, 4 famine (an abandonment with such a cause); 5 every other
+    case. kind_key_of(e) is the key of e's kind, causes_of(e) e's causes."""
+    if status in (1, 2):
+        return 0
+    k = kind_key_of(ruin_event)
+    if k == "sacked":
+        return 1
+    if k == "settlement_overrun":
+        return 2
+    if k in ("settlement_abandoned", "settlement_abandoned_to"):
+        keys = [kind_key_of(c) for c in causes_of(ruin_event)]
+        if any(x in PLAGUE_KEYS for x in keys):
+            return 3
+        if "famine" in keys:
+            return 4
+    return 5
+
+
+def endings_from_rows(res):
+    """{settlement id: ending} by 8.3 from res's event, event_kind and event_cause rows."""
+    key = {k[0]: k[1] for k in res["event_kind"]}
+    kind = {e[0]: e[3] for e in res["event"]}
+    causes = {}
+    for e, c in res["event_cause"]:
+        causes.setdefault(e, []).append(c)
+    return {s[0]: settlement_ending(s[10], s[13], lambda e: key[kind[e]], lambda e: causes.get(e, []))
+            for s in res["settlement"]}
+
+
+def with_ending(res):
+    """At 0.23.0, res's settlement rows with the column `ending` (8.3), derived from the log, and the rows of the
+    tables beast and monster_kind (11.2: one per definition, written by the history stage) when res has none."""
+    if not RENDER_R23:
+        return res
+    if res["settlement"] and len(res["settlement"][0]) == 14:
+        en = endings_from_rows(res)
+        res["settlement"] = [tuple(s) + (en[s[0]],) for s in res["settlement"]]
+    for t in NEW_TABLES_023:
+        res.setdefault(t, [])
+    return res
+
+
+def beast_rows(dat):
+    """11.2: (id, key, name, plural, menace, food), ids in canonical definition order."""
+    return [(i + 1, k, d["name"], d["plural"], d["menace"], d["food"]) for i, (k, d) in enumerate(dat.beasts)]
+
+
+def monster_kind_rows(dat):
+    """11.2: (id, key, name, noun, grouped, wake (1 wild, 2 dead), might)."""
+    return [(i + 1, k, d["name"], d["noun"], 1 if d["grouped"] else 0, 1 if d["wake"] == "wild" else 2, d["might"])
+            for i, (k, d) in enumerate(dat.monsters)]
+
+
 def table_hashes(res):
     cols = COLUMNS
-    return {t: pchr.table_hash(cols[t], res.get(t, []) if t == "region_name" else res[t]) for t in TABLES}
+    return {t: pchr.table_hash(cols[t], res.get(t, []) if t in ("region_name",) + NEW_TABLES_023 else res[t])
+            for t in TABLES}
 
 
 def report_lines(res, end_year, races=None):
@@ -1570,6 +1706,10 @@ def report_lines(res, end_year, races=None):
     o.append("relations = %d" % len(res["relation"]))
     if RENDER_R21:   # P3-04 r21 23.4: region_names after relations
         o.append("region_names = %d" % len(res.get("region_name", [])))
+    if RENDER_R23:   # P5-02 11.3: directly after region_names
+        for t, key in (("beast", "beasts"), ("monster_kind", "monster_kinds"), ("beast_population", "beast_populations"),
+                       ("monster", "monsters"), ("site", "sites")):
+            o.append("%s = %d" % (key, len(res.get(t, []))))
     if races is not None:
         civ_race = {c[0]: c[2] for c in res["civilization"]}  # .get: a standing settlement may have no owner (0)
         standing = [x for x in res["settlement"] if x[10] in (1, 2)]
@@ -1616,7 +1756,22 @@ def view_from_rows(res, regions, races, gods):
             return race_forms[x][form]
         return names[t][x]
 
+    if RENDER_R23:   # P5-02 10.3: display names of types 8 and 9, the form kind, {@beast}
+        names[MONSTER] = {m[0]: m[1] for m in res.get("monster", [])}
+        names[SITE] = {x[0]: x[1] for x in res.get("site", [])}
+        noun = {k[0]: k[3] for k in res.get("monster_kind", [])}
+        mkind = {m[0]: m[2] for m in res.get("monster", [])}
+        plural = {b[0]: b[3] for b in res.get("beast", [])}
+
+        def name(t, x, form):   # noqa: F811
+            if t == RACE:
+                return race_forms[x][form]
+            if form == "kind":
+                return noun[mkind[x]]
+            return names[t][x]
     view = dict(catalogue=cat, events=evs, name=name)
+    if RENDER_R23:
+        view["beast_plural"] = lambda b: plural[b]
     if RENDER_R21:
         view["region_at"] = region_at_event_fn(names[REGION], res.get("region_name", []))
     return view
@@ -1948,18 +2103,42 @@ TEMPLATE_CASES_R21 = (
 )
 
 
+# P5-02 10.3: the form kind, {@beast} and their template_problem messages, the 0.23.0 templates.
+TEMPLATE_CASES_R23 = tuple((k, t) for k, _, t in pdr.REPORT_ENTRIES_023) + (
+    ("monster_raid", "{monster:kind} raided {settlement}."),
+    ("monster_raid", "{civilization:kind} raided."),
+    ("battle", "{winner:kind} won."),
+    ("beasts_bold", "The {@beast} of {@region}."),
+    ("monster_raid", "The {@beast} came."),
+    ("awakening", "{@beast} {race:plural}."),
+    ("monster_slain", "{monster:plural} fell."),
+    ("monster_slain", "{monster:all} and {slayer:kind}."),
+    ("outpost_built", "{site:kind}."),
+    ("beasts_bold", "{beast} and {dead}."),
+    ("monster_appeared", "{@beasts}."),
+)
+
+
 def template_cases():
     return (TEMPLATE_CASES + (TEMPLATE_CASES_R10 if at_least("0.17.0") else ())
             + (TEMPLATE_CASES_R12 if at_least("0.19.0") else ())
             + (TEMPLATE_CASES_R17 if at_least("0.20.0") else ())
             + (TEMPLATE_CASES_R19 if at_least("0.21.0") else ())
-            + (TEMPLATE_CASES_R21 if at_least("0.22.0") else ()))
+            + (TEMPLATE_CASES_R21 if at_least("0.22.0") else ())
+            + (TEMPLATE_CASES_R23 if at_least("0.23.0") else ()))
 
 
 def template_kind(key):
     return TEST_KIND if key == "test_optional" else find_kind(COMPILED, key)
 
 
+HEADER_023 = """\
+# P3-04 engine golden vectors for generator 0.23.0 (schema 9; P5-02): the stub engine (run_engine
+# with the stub configuration, which installs neither renaming nor monsters) on the 0.23.0 catalogue
+# of 55 kinds (P5-02 10.1: kinds 44 to 55 appended; the form kind, {@beast}, names of entity types
+# 8 and 9, 10.3), settlement.ending (8.3), the tables beast and monster_kind (one row per definition)
+# and beast_population, monster, site (empty in every stub world), the [history] keys of 11.3, P3-02
+# names with site_forms, and otherwise as at 0.22.0. Spec"""
 HEADER_022 = """\
 # P3-04 engine golden vectors for generator 0.22.0 (schema 8; P5-12): the stub engine (run_engine
 # with the stub configuration, which installs no renaming subsystem) on the 0.22.0 catalogue of 43
@@ -2081,7 +2260,9 @@ HEADER = """\
 def golden_text(inputs):
     dat = data()
     head = HEADER.rstrip("\n")
-    if ENGINE_VERSION == "0.22.0":
+    if ENGINE_VERSION == "0.23.0":
+        head = HEADER_023 + "\n" + "\n".join(head.splitlines()[2:])
+    elif ENGINE_VERSION == "0.22.0":
         head = HEADER_022 + "\n" + "\n".join(head.splitlines()[2:])
     elif ENGINE_VERSION == "0.21.0":
         head = HEADER_021 + "\n" + "\n".join(head.splitlines()[2:])
@@ -2440,7 +2621,8 @@ def check_example_r12(c, inputs):
         c.eq("r17 the kind 39 and 40 lines follow events_quiet_stretch (r19: then 41, 42)", ks[i:],
              ["events_quiet_stretch", "events_claim_settlements", "events_settlements_ceded"]
              + (["events_claim_dropped", "events_refuge_hidden"] if at_least("0.21.0") else [])
-             + (["events_region_renamed"] if at_least("0.22.0") else []))
+             + (["events_region_renamed"] if at_least("0.22.0") else [])
+             + (["events_" + k["key"] for k in KINDS_023] if at_least("0.23.0") else []))
 
 
 class no_r19:
@@ -2631,7 +2813,7 @@ def check_render_r21(c):
     # every cause word, and a cause kind not in the list (sentence start, capital The)
     for key, word in (("civ_conquered", "the fall of a realm"), ("sacked", "the sack"), ("battle", "the slaughter"),
                       ("battle_at_pass", "the slaughter"), ("plague_outbreak", "the plague"),
-                      ("became_city", "the rise of a city")):
+                      ("became_city", "the rise of a realm's seat" if at_least("0.23.0") else "the rise of a city")):
         evs2 = {1: (10, key, 7, claim if key != "plague_outbreak" and key != "became_city" else
                     ((1, 1, SETTLEMENT, 1), (2, 2, CIV, 1)), ()),
                 2: (10, "region_renamed", 7, (), (1,))}
@@ -3188,7 +3370,8 @@ def check_templates(c):
                                                     if at_least("0.20.0") else [])
                                                  + (["claim_dropped", "refuge_hidden"]
                                                     if at_least("0.21.0") else [])
-                                                 + (["region_renamed"] if at_least("0.22.0") else [])])
+                                                 + (["region_renamed"] if at_least("0.22.0") else [])
+                                                 + ([k["key"] for k in KINDS_023] if at_least("0.23.0") else [])])
     # rendering on a hand-made view: :all with 0..3, ? with 0, 1, 2
     cat = {99: dict(TEST_KIND, region_use=1, templ="[{actor:all}] {people:plural}/{people:adjective}/{people} at {@region}: "
                                      "{count} {count?thing|things} {{ok}} {@year}-{@end_year}")}
@@ -3537,7 +3720,7 @@ def cmd_check_world(argv):
     return 1 if c.failures else 0
 
 
-use_version("0.22.0")
+use_version("0.23.0")
 
 
 def main(argv):
