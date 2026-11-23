@@ -1259,3 +1259,13 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
 - Decision (Paul, 2026-11-23): "2 per thousand sounds pretty low, should be fine." T16 is at most 2 repeated battles per thousand battles of the default sweep; validation measured 13 of 8,935 (1.45 per thousand) at 0.22.0, so the target is met. The P5-02 spec states it so.
 
 - Status: decided
+
+### Viewer v1, P4-05: the report prints its civilization blocks from the lines the browser shows
+
+- Date: 2026-11-23
+- Raised by: spec writer (P4-05, `docs/specs/p4-05-browser.md`)
+- Design doc section: 10 (world viewer: "a browser for civilizations, figures and events with their causes"), 13 (P4 row and exit check)
+- Problem: the browser must show a civilization's block "as the history report shows it", with links, and must not parse report text (P4-00 V3). The report builds those lines in private code, so a second copy in the viewer, or in a browser module, would drift from the report.
+- Proposal: `worldgen` builds each block as structured lines (literal, text, entity reference, event reference, sentence), and the report prints its `[civilizations]` blocks from them (report bytes unchanged). Sentences get a linked form (`render_event_linked`), with `render_event` as its text. A browser index answers the civilization list, filtered event lists, event details, search by name and the place of an event. Event kind groups are a library table by key. Monsters, sites and figures become further lists of the same form when P5 provides them.
+- Interim choice: as proposed, in P4-05 (open questions 1 to 6 there). No world byte changes; no generator or schema version bump. The P4-04 world critic's F3 and F5 re-record `p4-04-markers.txt`.
+- Status: open
