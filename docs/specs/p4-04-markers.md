@@ -67,7 +67,7 @@ Measured on the four worlds above, at every year: every civilization alive at Y 
 - **ruined year** R(s) = the `year` of the first census row of s with status 3; none if it has none.
 - **ruin event** = `settlement.ruin_event` when non-zero; otherwise the smallest cause of the event of kind key `ruin_faded` whose `settlement` is s (P3-05: a faded ruin is caused by its ruin event); otherwise 0.
 
-A `ruin` or `faded` entry carries R(s) and the ruin event (both 0 for a standing entry). Measured: for every ruined settlement R(s) = `ruined_year`, and for every faded one the year of the derived event is R(s) (invariant 5).
+A `ruin` or `faded` entry carries R(s) and the ruin event (a standing entry: −1 and 0). Measured: for every ruined settlement R(s) = `ruined_year`, and for every faded one the year of the derived event is R(s) (invariant 5).
 
 ### 3.4 Event places
 
@@ -112,7 +112,7 @@ struct SettlementMarker {
     std::int64_t settlement = 0, x = 0, y = 0;
     std::int64_t kind = 0, status = 0, owner = 0, population = 0, since = 0, founded = 0;
     bool capital = false;                          // standing only (3.2)
-    std::int64_t ruined_year = 0, ruin_event = 0;  // ruin and faded only (3.3), else 0
+    std::int64_t ruined_year = -1, ruin_event = 0; // ruin and faded only (3.3); standing: -1 and 0
     friend bool operator==(const SettlementMarker&, const SettlementMarker&) = default;
 };
 struct PlaceMarker {
@@ -159,7 +159,7 @@ public:
 
     // 3.2 and 3.3 directly (FatalError "markers: no civilization <c>" / "no settlement <s>", or a bad year).
     [[nodiscard]] std::int64_t capital(const history::LoadedHistory& history, std::int64_t civ, std::int64_t year) const;  // 0: none
-    [[nodiscard]] std::int64_t ruined_year(std::int64_t settlement) const;   // 0: never ruined
+    [[nodiscard]] std::int64_t ruined_year(std::int64_t settlement) const;   // -1: never ruined
     [[nodiscard]] std::int64_t ruin_event(std::int64_t settlement) const;    // 0: none
     [[nodiscard]] std::span<const db::PassRow> passes() const noexcept;      // ascending id
 };
