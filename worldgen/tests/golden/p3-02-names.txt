@@ -50,9 +50,15 @@ stream 42 hist.names.civilization 0xc9f41ccf09e7feeb
 stream 0 hist.names.god 0xc68a0fde090d3eb1
 stream 1 hist.names.god 0x071e516a6210e8d5
 stream 42 hist.names.god 0xd8391ab6f3db9483
+stream 0 hist.names.monster 0xc983ba0afc04a0a4
+stream 1 hist.names.monster 0xd11fe07997b5a2b6
+stream 42 hist.names.monster 0x60a9dd3a947b52ed
 stream 0 hist.names.settlement 0x969c418ddf3c5edc
 stream 1 hist.names.settlement 0xbd305f064eba5e67
 stream 42 hist.names.settlement 0x3a37bdf1cb643acd
+stream 0 hist.names.site 0xdc11f5c37a8eb70d
+stream 1 hist.names.site 0xc1d2be09bb5c70cc
+stream 42 hist.names.site 0x161576ed59fd411e
 draw 0x969c418ddf3c5edc 0x0000000000000000 0x0000000000000002 0x0000000000000001 0x0000000000000000 0xab9a949fa699954c
 draw 0x969c418ddf3c5edc 0x0000000000000000 0x0000000000000002 0x0000000000000001 0x0000000000000001 0xf77e9ed830c1a5e0
 draw 0x969c418ddf3c5edc 0x0000000000000000 0x0000000000000002 0x0000000000000001 0x0000000000000006 0x7347ea42eaed2bb2
@@ -5270,3 +5276,818 @@ hresult 42 human settlement 5 254 1 Ashild 0 Gudsteantton
 hresult 42 human settlement 5 356 1 Ciswilbury 0 Edintton
 hresult 42 human settlement 5 379 1 Brackton 0 Edamhentton
 hresult 42 human settlement 5 399 2 Wearcentham 1 Dardedintton
+# r23 (P5-02 9.1, generator 0.23.0): kinds monster and site; streams hist.names.monster and hist.names.site
+#   mattempt <seed> <monster kind> <c> <e> <t> <valid 0|1> <root|-> <name|->   attempts t = 0..3, e = 1, 2
+#   mformtext <monster kind> <name_forms|lair_forms> <i> <ok|message>   form_text_problem on the kind's forms
+#   mname <seed> <monster kind> <e> <attempt|F> <name>   for seeds 0 and 42, one registry per seed starting
+#       empty, kinds in canonical id order, 30 entities each, ids 1, 2, ... across the kinds
+#   sname <seed> <culture> <e> <attempt|F> <name>   then, in the same registry, outposts of every culture in
+#       canonical id order, 30 entities each, ids 1, 2, ... across the cultures
+#   msha256 <seed> <hex>  of the seed's mname and sname lines joined by LF (no trailing LF)
+mattempt 0 dragon 2 1 0 1 thaecand Thaecand the Pale
+mattempt 0 dragon 2 1 1 1 ennthi Ennthi
+mattempt 0 dragon 2 1 2 0 - -
+mattempt 0 dragon 2 1 3 1 eloo Eloo
+mattempt 0 dragon 2 2 0 1 firlae Firlae
+mattempt 0 dragon 2 2 1 1 seill Seill the Black
+mattempt 0 dragon 2 2 2 0 - -
+mattempt 0 dragon 2 2 3 1 caethaeitho Caethaeitho the Black
+mattempt 0 giant 1 1 0 1 gurngrain Gurngrain Stonehand
+mattempt 0 giant 1 1 1 1 daimbidin Daimbidin
+mattempt 0 giant 1 1 2 1 narn Narn
+mattempt 0 giant 1 1 3 1 tair Tair Stonehand
+mattempt 0 giant 1 2 0 1 mourn Mourn Stonehand
+mattempt 0 giant 1 2 1 1 brourk Brourk
+mattempt 0 giant 1 2 2 1 burinbru Burinbru
+mattempt 0 giant 1 2 3 1 thraimmka Thraimmka Stonehand
+mattempt 0 ogre 6 1 0 1 uuz'ugold Uuz'ugold
+mattempt 0 ogre 6 1 1 1 dolza Dolza the Glutton
+mattempt 0 ogre 6 1 2 1 gruz Gruz
+mattempt 0 ogre 6 1 3 1 uraal Uraal the Glutton
+mattempt 0 ogre 6 2 0 1 uruuzazug Uruuzazug
+mattempt 0 ogre 6 2 1 1 tho'azaald Tho'azaald the Glutton
+mattempt 0 ogre 6 2 2 1 aarz'ghuuld Aarz'ghuuld
+mattempt 0 ogre 6 2 3 0 - -
+mattempt 0 troll 4 1 0 1 nog-nak Old Nog-Nak
+mattempt 0 troll 4 1 1 1 druskeerk Old Druskeerk
+mattempt 0 troll 4 1 2 1 drox Drox
+mattempt 0 troll 4 1 3 1 zeegrix Old Zeegrix
+mattempt 0 troll 4 2 0 1 zirk Old Zirk
+mattempt 0 troll 4 2 1 1 kiz-skrit Kiz-Skrit
+mattempt 0 troll 4 2 2 1 skrarksluk Old Skrarksluk
+mattempt 0 troll 4 2 3 1 grork Old Grork
+mattempt 0 undead 5 1 0 0 - -
+mattempt 0 undead 5 1 1 1 geld The Host of Geld
+mattempt 0 undead 5 1 2 0 - -
+mattempt 0 undead 5 1 3 1 wemrard The Host of Wemrard
+mattempt 0 undead 5 2 0 0 - -
+mattempt 0 undead 5 2 1 1 ashuck The Restless of Ashuck
+mattempt 0 undead 5 2 2 0 - -
+mattempt 0 undead 5 2 3 0 - -
+mattempt 0 wyvern 4 1 0 1 nog-nak The Nog-Nak Brood
+mattempt 0 wyvern 4 1 1 1 druskeerk The Druskeerk Brood
+mattempt 0 wyvern 4 1 2 1 drox The Brood of Drox
+mattempt 0 wyvern 4 1 3 1 zeegrix The Zeegrix Brood
+mattempt 0 wyvern 4 2 0 1 zirk The Zirk Brood
+mattempt 0 wyvern 4 2 1 1 kiz-skrit The Brood of Kiz-Skrit
+mattempt 0 wyvern 4 2 2 1 skrarksluk The Skrarksluk Brood
+mattempt 0 wyvern 4 2 3 1 grork The Grork Brood
+formtext dwarven site 0 ok
+formtext dwarven site 1 ok
+formtext elven site 0 ok
+formtext elven site 1 ok
+formtext faerie site 0 ok
+formtext faerie site 1 ok
+formtext goblin site 0 ok
+formtext goblin site 1 ok
+formtext human site 0 ok
+formtext human site 1 ok
+formtext orcish site 0 ok
+formtext orcish site 1 ok
+mformtext dragon name_forms 0 ok
+mformtext dragon name_forms 1 ok
+mformtext dragon name_forms 2 ok
+mformtext dragon lair_forms 0 ok
+mformtext dragon lair_forms 1 ok
+mformtext giant name_forms 0 ok
+mformtext giant name_forms 1 ok
+mformtext giant lair_forms 0 ok
+mformtext giant lair_forms 1 ok
+mformtext ogre name_forms 0 ok
+mformtext ogre name_forms 1 ok
+mformtext ogre lair_forms 0 ok
+mformtext ogre lair_forms 1 ok
+mformtext troll name_forms 0 ok
+mformtext troll name_forms 1 ok
+mformtext troll lair_forms 0 ok
+mformtext troll lair_forms 1 ok
+mformtext undead name_forms 0 ok
+mformtext undead name_forms 1 ok
+mformtext undead lair_forms 0 ok
+mformtext undead lair_forms 1 ok
+mformtext wyvern name_forms 0 ok
+mformtext wyvern name_forms 1 ok
+mformtext wyvern lair_forms 0 ok
+mformtext wyvern lair_forms 1 ok
+mname 0 dragon 1 0 Thaecand the Pale
+mname 0 dragon 2 0 Firlae
+mname 0 dragon 3 0 Elallitho the Black
+mname 0 dragon 4 0 Iendelonn the Black
+mname 0 dragon 5 0 Vifaegli the Pale
+mname 0 dragon 6 0 Caelen the Black
+mname 0 dragon 7 0 Vaenoithae the Pale
+mname 0 dragon 8 0 Sielae the Black
+mname 0 dragon 9 1 Faethre the Pale
+mname 0 dragon 10 0 Rieraend
+mname 0 dragon 11 0 Elfies the Pale
+mname 0 dragon 12 0 Nomo
+mname 0 dragon 13 0 Fimas the Black
+mname 0 dragon 14 0 Siegles
+mname 0 dragon 15 0 Niertho
+mname 0 dragon 16 0 Glarel
+mname 0 dragon 17 0 Misvi the Black
+mname 0 dragon 18 1 Thaglann the Black
+mname 0 dragon 19 0 Micend the Black
+mname 0 dragon 20 1 Vaesavo the Black
+mname 0 dragon 21 0 Ithira the Pale
+mname 0 dragon 22 1 Civae
+mname 0 dragon 23 0 Eithiel
+mname 0 dragon 24 0 Alvar
+mname 0 dragon 25 0 Gloell
+mname 0 dragon 26 0 Aernind the Black
+mname 0 dragon 27 1 Aelci the Black
+mname 0 dragon 28 0 Mafa
+mname 0 dragon 29 0 Arvan the Pale
+mname 0 dragon 30 0 Aelas the Pale
+mname 0 giant 31 0 Thourk
+mname 0 giant 32 1 Douligra
+mname 0 giant 33 0 Nailibra Stonehand
+mname 0 giant 34 0 Kodinni Stonehand
+mname 0 giant 35 0 Bairindi
+mname 0 giant 36 1 Nudinthou
+mname 0 giant 37 0 Thak Stonehand
+mname 0 giant 38 1 Kharkgraim Stonehand
+mname 0 giant 39 1 Gidkok
+mname 0 giant 40 0 Drunti Stonehand
+mname 0 giant 41 0 Kird
+mname 0 giant 42 0 Broumdili Stonehand
+mname 0 giant 43 0 Khountairn Stonehand
+mname 0 giant 44 1 Thod
+mname 0 giant 45 0 Naindgrour
+mname 0 giant 46 0 Broulibou
+mname 0 giant 47 0 Tammkhali
+mname 0 giant 48 0 Koud
+mname 0 giant 49 0 Graidba
+mname 0 giant 50 1 Birinhou
+mname 0 giant 51 1 Drakhou Stonehand
+mname 0 giant 52 1 Thairktou
+mname 0 giant 53 0 Kolikhili
+mname 0 giant 54 0 Grim Stonehand
+mname 0 giant 55 0 Doummtur Stonehand
+mname 0 giant 56 0 Gurkhirn Stonehand
+mname 0 giant 57 0 Kurnthruli Stonehand
+mname 0 giant 58 0 Bairdho
+mname 0 giant 59 0 Boumgou
+mname 0 giant 60 1 Thrundaili Stonehand
+mname 0 ogre 61 0 Thoz
+mname 0 ogre 62 0 Gruuk'maaz the Glutton
+mname 0 ogre 63 0 Aarz'shuuz the Glutton
+mname 0 ogre 64 0 Urokh
+mname 0 ogre 65 0 Zash
+mname 0 ogre 66 0 Makhmarz the Glutton
+mname 0 ogre 67 0 Thaag
+mname 0 ogre 68 0 Ugul the Glutton
+mname 0 ogre 69 0 Ug'grol
+mname 0 ogre 70 0 Shaagh'ghuz
+mname 0 ogre 71 1 Uralghash the Glutton
+mname 0 ogre 72 0 Grouraash
+mname 0 ogre 73 1 Ugaash'gral the Glutton
+mname 0 ogre 74 0 Kraarzkrol
+mname 0 ogre 75 0 Krugugurk
+mname 0 ogre 76 0 Gharz'maagh the Glutton
+mname 0 ogre 77 0 Zugghald the Glutton
+mname 0 ogre 78 0 Azaash the Glutton
+mname 0 ogre 79 0 Krogkold
+mname 0 ogre 80 0 Uu'ba the Glutton
+mname 0 ogre 81 0 Buug'kol the Glutton
+mname 0 ogre 82 0 Ash'grag the Glutton
+mname 0 ogre 83 0 Ghukgraash
+mname 0 ogre 84 0 Bul
+mname 0 ogre 85 0 Ugog
+mname 0 ogre 86 0 Ol'kok
+mname 0 ogre 87 0 Baagh
+mname 0 ogre 88 0 Buz
+mname 0 ogre 89 1 Muuk
+mname 0 ogre 90 0 Thuugmaark the Glutton
+mname 0 troll 91 0 Old Skazz
+mname 0 troll 92 0 Grark
+mname 0 troll 93 0 Bok-Grark
+mname 0 troll 94 0 Old Kreez
+mname 0 troll 95 0 Old Sneeskragg
+mname 0 troll 96 0 Zib
+mname 0 troll 97 0 Skiggkeezz
+mname 0 troll 98 0 Buggbob
+mname 0 troll 99 0 Skrog-Gnark
+mname 0 troll 100 1 Zug
+mname 0 troll 101 0 Krot
+mname 0 troll 102 0 Dritch
+mname 0 troll 103 0 Old Kag
+mname 0 troll 104 0 Krikunk
+mname 0 troll 105 0 Skignag
+mname 0 troll 106 0 Old Beebag
+mname 0 troll 107 0 Beeb
+mname 0 troll 108 0 Old Gnadritch
+mname 0 troll 109 0 Skrut
+mname 0 troll 110 0 Old Slizzbot
+mname 0 troll 111 0 Old Gnank
+mname 0 troll 112 0 Old Kiz
+mname 0 troll 113 0 Gneesneegg
+mname 0 troll 114 0 Skrozeeg
+mname 0 troll 115 0 Old Buz
+mname 0 troll 116 0 Old Drozkeezz
+mname 0 troll 117 0 Old Kab
+mname 0 troll 118 0 Old Skutzax
+mname 0 troll 119 1 Kreeg-Grogg
+mname 0 troll 120 0 Old Krodrurk
+mname 0 undead 121 1 The Host of Mird
+mname 0 undead 122 0 The Restless of Ceamgid
+mname 0 undead 123 0 The Host of Ceard
+mname 0 undead 124 1 The Host of Edodmur
+mname 0 undead 125 1 The Host of Cird
+mname 0 undead 126 0 The Restless of Brurdbrul
+mname 0 undead 127 0 The Host of Ashant
+mname 0 undead 128 1 The Restless of Alil
+mname 0 undead 129 1 The Restless of Alorbol
+mname 0 undead 130 2 The Restless of Edan
+mname 0 undead 131 1 The Host of Geansas
+mname 0 undead 132 1 The Restless of Stol
+mname 0 undead 133 3 The Host of Tuld
+mname 0 undead 134 0 The Restless of Hosgas
+mname 0 undead 135 1 The Restless of Tild
+mname 0 undead 136 0 The Host of Heackwed
+mname 0 undead 137 0 The Host of Aleck
+mname 0 undead 138 0 The Restless of Menbrard
+mname 0 undead 139 0 The Restless of Tant
+mname 0 undead 140 0 The Host of Alean
+mname 0 undead 141 1 The Restless of Hinalear
+mname 0 undead 142 0 The Restless of Stermeard
+mname 0 undead 143 1 The Restless of Dold
+mname 0 undead 144 1 The Restless of Demmam
+mname 0 undead 145 0 The Restless of Brum
+mname 0 undead 146 0 The Host of Dant
+mname 0 undead 147 0 The Restless of Cick
+mname 0 undead 148 0 The Host of Guck
+mname 0 undead 149 0 The Host of Edeck
+mname 0 undead 150 0 The Restless of Asholbam
+mname 0 wyvern 151 0 The Brood of Sleeg
+mname 0 wyvern 152 0 The Krit-Skag Brood
+mname 0 wyvern 153 0 The Brood of Skat
+mname 0 wyvern 154 0 The Nurk Brood
+mname 0 wyvern 155 0 The Skreerk Brood
+mname 0 wyvern 156 1 The Brood of Notch-Draz
+mname 0 wyvern 157 0 The Brood of Nub
+mname 0 wyvern 158 0 The Brood of Dreenk
+mname 0 wyvern 159 2 The Brood of Drokskruz
+mname 0 wyvern 160 3 The Brood of Gib-Gagg
+mname 0 wyvern 161 0 The Brood of Krag-Gik
+mname 0 wyvern 162 0 The Brood of Gneegg
+mname 0 wyvern 163 2 The Brood of Snubdreeg
+mname 0 wyvern 164 0 The Brood of Skrog
+mname 0 wyvern 165 1 The Skeeb Brood
+mname 0 wyvern 166 1 The Brood of Nutch
+mname 0 wyvern 167 0 The Brood of Skagnux
+mname 0 wyvern 168 1 The Brood of Drigg
+mname 0 wyvern 169 0 The Snoneegg Brood
+mname 0 wyvern 170 0 The Brood of Gonkzeerk
+mname 0 wyvern 171 0 The Brood of Naslink
+mname 0 wyvern 172 1 The Dreeg Brood
+mname 0 wyvern 173 0 The Brood of Skragg
+mname 0 wyvern 174 0 The Brood of Nunk
+mname 0 wyvern 175 0 The Brood of Sleeb-Kux
+mname 0 wyvern 176 0 The Koxnark Brood
+mname 0 wyvern 177 0 The Zabnit Brood
+mname 0 wyvern 178 0 The Brood of Skrozz
+mname 0 wyvern 179 1 The Nuskeerk Brood
+mname 0 wyvern 180 0 The Skritch Brood
+sname 0 dwarven 1 0 Taind Watch
+sname 0 dwarven 2 1 Grouli Watch
+sname 0 dwarven 3 0 The Tower of Nourngaind
+sname 0 dwarven 4 0 Thrantud Watch
+sname 0 dwarven 5 0 Karndro Watch
+sname 0 dwarven 6 0 The Tower of Daidinhun
+sname 0 dwarven 7 1 Thim Watch
+sname 0 dwarven 8 1 The Tower of Thakbraim
+sname 0 dwarven 9 3 The Tower of Thouknun
+sname 0 dwarven 10 0 Grummkhair Watch
+sname 0 dwarven 11 1 The Tower of Drairkthim
+sname 0 dwarven 12 0 Khur Watch
+sname 0 dwarven 13 0 Khirnmili Watch
+sname 0 dwarven 14 0 Bourdgoud Watch
+sname 0 dwarven 15 0 The Tower of Draindnirn
+sname 0 dwarven 16 0 Hulibum Watch
+sname 0 dwarven 17 0 Grudgraind Watch
+sname 0 dwarven 18 1 The Tower of Thrumtha
+sname 0 dwarven 19 0 Bommto Watch
+sname 0 dwarven 20 0 Dimmgrodin Watch
+sname 0 dwarven 21 0 The Tower of Kilibrund
+sname 0 dwarven 22 0 The Tower of Gouk
+sname 0 dwarven 23 1 The Tower of Touligrind
+sname 0 dwarven 24 1 Throun Watch
+sname 0 dwarven 25 0 The Tower of Drirkmarin
+sname 0 dwarven 26 0 The Tower of Mirindou
+sname 0 dwarven 27 0 Bradintoum Watch
+sname 0 dwarven 28 0 The Tower of Khaid
+sname 0 dwarven 29 0 The Tower of Torngaik
+sname 0 dwarven 30 1 Nalibin Watch
+sname 0 elven 31 0 The Spire of Iendithae
+sname 0 elven 32 0 The Spire of Aellvaend
+sname 0 elven 33 0 Enitho Watch
+sname 0 elven 34 0 Elenienn Watch
+sname 0 elven 35 0 Vethaer Watch
+sname 0 elven 36 0 Ithovari Watch
+sname 0 elven 37 0 Calie Watch
+sname 0 elven 38 0 Sanaenn Watch
+sname 0 elven 39 0 Thaelora Watch
+sname 0 elven 40 0 The Spire of Oreliell
+sname 0 elven 41 0 The Spire of Thoand
+sname 0 elven 42 0 The Spire of Miendtha
+sname 0 elven 43 0 Aennsie Watch
+sname 0 elven 44 0 Rimielo Watch
+sname 0 elven 45 0 The Spire of Ciefen
+sname 0 elven 46 0 The Spire of Cothenn
+sname 0 elven 47 0 Mosthi Watch
+sname 0 elven 48 0 The Spire of Saesnae
+sname 0 elven 49 0 The Spire of Glesiend
+sname 0 elven 50 0 The Spire of Faeciend
+sname 0 elven 51 0 The Spire of Elaelemie
+sname 0 elven 52 0 The Spire of Avies
+sname 0 elven 53 0 The Spire of Efienn
+sname 0 elven 54 0 The Spire of Aendlael
+sname 0 elven 55 0 The Spire of Ithiegla
+sname 0 elven 56 0 The Spire of Iermann
+sname 0 elven 57 0 Glaecae Watch
+sname 0 elven 58 0 Fasvie Watch
+sname 0 elven 59 2 The Spire of Anlann
+sname 0 elven 60 2 Cicievie Watch
+sname 0 faerie 61 0 Tousoll Watch
+sname 0 faerie 62 0 Viskwie Watch
+sname 0 faerie 63 0 The Thorn of Lyva
+sname 0 faerie 64 0 Tiss Watch
+sname 0 faerie 65 0 The Thorn of Myskwho
+sname 0 faerie 66 0 The Thorn of Sosi
+sname 0 faerie 67 0 Sowha Watch
+sname 0 faerie 68 0 Syti Watch
+sname 0 faerie 69 0 The Thorn of Twoufie
+sname 0 faerie 70 0 Ieflouth Watch
+sname 0 faerie 71 0 Flafy Watch
+sname 0 faerie 72 2 Shoee Watch
+sname 0 faerie 73 0 Twoshae Watch
+sname 0 faerie 74 0 Mafae Watch
+sname 0 faerie 75 0 The Thorn of Saetigla
+sname 0 faerie 76 0 The Thorn of Famy
+sname 0 faerie 77 0 The Thorn of Iesh
+sname 0 faerie 78 0 The Thorn of Fiawha
+sname 0 faerie 79 0 Latwaesk Watch
+sname 0 faerie 80 0 Twytaess Watch
+sname 0 faerie 81 0 The Thorn of Wien
+sname 0 faerie 82 0 Gli Watch
+sname 0 faerie 83 1 The Thorn of Twameeflou
+sname 0 faerie 84 0 Flill Watch
+sname 0 faerie 85 0 The Thorn of Faeglae
+sname 0 faerie 86 0 The Thorn of Lofliesho
+sname 0 faerie 87 0 The Thorn of Fyfli
+sname 0 faerie 88 0 Ietyth Watch
+sname 0 faerie 89 1 The Thorn of Whaell
+sname 0 faerie 90 0 Taeshy Watch
+sname 0 goblin 91 0 Skruzdraz Stockade
+sname 0 goblin 92 0 Bognak Lookout
+sname 0 goblin 93 1 Skrag Lookout
+sname 0 goblin 94 0 Gatch Lookout
+sname 0 goblin 95 0 Gneezz Stockade
+sname 0 goblin 96 0 Neenk Lookout
+sname 0 goblin 97 0 Gub-Kik Stockade
+sname 0 goblin 98 0 Kuzoz Lookout
+sname 0 goblin 99 0 Skax Stockade
+sname 0 goblin 100 0 Skeenk Lookout
+sname 0 goblin 101 0 Noslark Stockade
+sname 0 goblin 102 0 Notch Lookout
+sname 0 goblin 103 0 Grotch Stockade
+sname 0 goblin 104 0 Geezz Lookout
+sname 0 goblin 105 1 Skrozz Stockade
+sname 0 goblin 106 0 Krazz Stockade
+sname 0 goblin 107 0 Kug-Dratch Stockade
+sname 0 goblin 108 0 Grunk Stockade
+sname 0 goblin 109 0 Gnob Stockade
+sname 0 goblin 110 0 Gneek Lookout
+sname 0 goblin 111 0 Keebkreenk Lookout
+sname 0 goblin 112 0 Kridrazz Stockade
+sname 0 goblin 113 0 Keeggnirk Stockade
+sname 0 goblin 114 0 Skrat Stockade
+sname 0 goblin 115 0 Nogkrazz Lookout
+sname 0 goblin 116 0 Skruz-Snogg Lookout
+sname 0 goblin 117 0 Drob Lookout
+sname 0 goblin 118 0 Slub Lookout
+sname 0 goblin 119 0 Grubak Stockade
+sname 0 goblin 120 1 Zusnuk Stockade
+sname 0 human 121 0 Bimgim Watch
+sname 0 human 122 0 Edeam Tower
+sname 0 human 123 0 Tuld Watch
+sname 0 human 124 1 Beld Tower
+sname 0 human 125 0 Gintmald Watch
+sname 0 human 126 0 Ceackwent Watch
+sname 0 human 127 1 Musdul Watch
+sname 0 human 128 1 Ashoswod Tower
+sname 0 human 129 1 Rusback Tower
+sname 0 human 130 0 Stel Watch
+sname 0 human 131 0 Gick Tower
+sname 0 human 132 0 Asheack Tower
+sname 0 human 133 0 Seard Watch
+sname 0 human 134 0 Edint Watch
+sname 0 human 135 1 Ashim Watch
+sname 0 human 136 1 Deas Watch
+sname 0 human 137 0 Brontad Tower
+sname 0 human 138 1 Alunt Tower
+sname 0 human 139 0 Ashild Tower
+sname 0 human 140 0 Sead Watch
+sname 0 human 141 1 Rentseant Tower
+sname 0 human 142 0 Ashordun Tower
+sname 0 human 143 2 Bruld Watch
+sname 0 human 144 2 Teack Watch
+sname 0 human 145 3 Wodment Watch
+sname 0 human 146 0 Dack Tower
+sname 0 human 147 1 Ales Tower
+sname 0 human 148 1 Asheanhen Watch
+sname 0 human 149 0 Bread Watch
+sname 0 human 150 2 Alick Tower
+sname 0 orcish 151 0 Osh'krukh Stockade
+sname 0 orcish 152 0 Arz'maaz Stockade
+sname 0 orcish 153 0 The Watch of Grugh
+sname 0 orcish 154 0 Uugh'dom Stockade
+sname 0 orcish 155 0 The Watch of Shorzururz
+sname 0 orcish 156 0 The Watch of Buuz
+sname 0 orcish 157 0 The Watch of Ururk
+sname 0 orcish 158 1 Ghuuz Stockade
+sname 0 orcish 159 0 The Watch of Krok
+sname 0 orcish 160 0 The Watch of Gruuzbaaz
+sname 0 orcish 161 0 The Watch of Ghuurkkokh
+sname 0 orcish 162 0 The Watch of Ugag
+sname 0 orcish 163 0 Graaghkaal Stockade
+sname 0 orcish 164 0 Kuush'gharz Stockade
+sname 0 orcish 165 0 Ghok'azuug Stockade
+sname 0 orcish 166 0 Ogh'muuk Stockade
+sname 0 orcish 167 0 Thal Stockade
+sname 0 orcish 168 0 Zuukh Stockade
+sname 0 orcish 169 0 Urorz Stockade
+sname 0 orcish 170 0 Azuuld Stockade
+sname 0 orcish 171 0 Ark'krul Stockade
+sname 0 orcish 172 0 Shak Stockade
+sname 0 orcish 173 0 Dush Stockade
+sname 0 orcish 174 0 The Watch of Morz
+sname 0 orcish 175 0 Ghom Stockade
+sname 0 orcish 176 0 The Watch of Thak'kruush
+sname 0 orcish 177 0 The Watch of Azashazak
+sname 0 orcish 178 0 The Watch of Ugoz
+sname 0 orcish 179 0 The Watch of Thaaz
+sname 0 orcish 180 0 The Watch of Koldzo
+msha256 0 9d7ccf43c06225817191bd3945c9505888241ca58a19b644afddbfb4fbe65046
+mname 42 dragon 1 0 Vifae
+mname 42 dragon 2 0 Olith the Pale
+mname 42 dragon 3 1 Ligla
+mname 42 dragon 4 0 Glenncae the Pale
+mname 42 dragon 5 1 Elaethce the Black
+mname 42 dragon 6 0 Felal
+mname 42 dragon 7 0 Nafaene the Pale
+mname 42 dragon 8 0 Mosas the Black
+mname 42 dragon 9 0 Caienn the Pale
+mname 42 dragon 10 0 Afonn the Pale
+mname 42 dragon 11 0 Ilveth
+mname 42 dragon 12 0 Vina
+mname 42 dragon 13 0 Esies the Black
+mname 42 dragon 14 0 Andmae the Pale
+mname 42 dragon 15 0 Ollrill the Black
+mname 42 dragon 16 0 Glietheth the Black
+mname 42 dragon 17 0 Riro the Black
+mname 42 dragon 18 0 Rothise
+mname 42 dragon 19 0 Gliemaco the Pale
+mname 42 dragon 20 0 Ithirnie the Pale
+mname 42 dragon 21 0 Viecael the Pale
+mname 42 dragon 22 0 Glocoe the Pale
+mname 42 dragon 23 0 Eliethinn the Pale
+mname 42 dragon 24 0 Lathrie the Black
+mname 42 dragon 25 0 Fiesaere
+mname 42 dragon 26 0 Iglath the Black
+mname 42 dragon 27 0 Vieglie the Black
+mname 42 dragon 28 0 Eleithaell the Pale
+mname 42 dragon 29 0 Vothind
+mname 42 dragon 30 0 Laecind the Black
+mname 42 giant 31 0 Dromdou Stonehand
+mname 42 giant 32 0 Drumm Stonehand
+mname 42 giant 33 0 Marinthru Stonehand
+mname 42 giant 34 0 Barindor Stonehand
+mname 42 giant 35 0 Brourkho
+mname 42 giant 36 1 Khairk Stonehand
+mname 42 giant 37 0 Haimmdrou
+mname 42 giant 38 0 Hurd
+mname 42 giant 39 0 Bouli
+mname 42 giant 40 0 Toummgrom Stonehand
+mname 42 giant 41 0 Garn Stonehand
+mname 42 giant 42 0 Kommhid Stonehand
+mname 42 giant 43 0 Doummairn
+mname 42 giant 44 0 Thraindtir Stonehand
+mname 42 giant 45 2 Burinbai
+mname 42 giant 46 0 Gurngrad Stonehand
+mname 42 giant 47 0 Grork Stonehand
+mname 42 giant 48 0 Hairtali Stonehand
+mname 42 giant 49 1 Namthouli Stonehand
+mname 42 giant 50 0 Grorintoli Stonehand
+mname 42 giant 51 0 Mairin Stonehand
+mname 42 giant 52 1 Thimkard
+mname 42 giant 53 0 Grurkgird
+mname 42 giant 54 0 Thurndraik
+mname 42 giant 55 1 Thrali
+mname 42 giant 56 0 Grindgu Stonehand
+mname 42 giant 57 0 Khid
+mname 42 giant 58 1 Brairka Stonehand
+mname 42 giant 59 1 Bidinbrair
+mname 42 giant 60 0 Throukbili Stonehand
+mname 42 ogre 61 0 Shaak
+mname 42 ogre 62 0 Azaalkrom the Glutton
+mname 42 ogre 63 0 Mork
+mname 42 ogre 64 0 Buul'azuuk the Glutton
+mname 42 ogre 65 0 Azul the Glutton
+mname 42 ogre 66 0 Baark the Glutton
+mname 42 ogre 67 0 Thuug'durz the Glutton
+mname 42 ogre 68 0 Ag'grokh
+mname 42 ogre 69 0 Thuuk'shogh the Glutton
+mname 42 ogre 70 0 Uruz
+mname 42 ogre 71 0 Zugh the Glutton
+mname 42 ogre 72 0 Zaz'buukh the Glutton
+mname 42 ogre 73 0 Uld'ghaak
+mname 42 ogre 74 0 Buz the Glutton
+mname 42 ogre 75 0 Kruukh'dogh the Glutton
+mname 42 ogre 76 0 Gruugh'dagh
+mname 42 ogre 77 0 Dal'azom
+mname 42 ogre 78 1 Thuu
+mname 42 ogre 79 2 Azaz the Glutton
+mname 42 ogre 80 0 Um'azoz the Glutton
+mname 42 ogre 81 0 Kraldkrosh
+mname 42 ogre 82 0 Uruurz the Glutton
+mname 42 ogre 83 0 Ghuuld the Glutton
+mname 42 ogre 84 0 Zosh the Glutton
+mname 42 ogre 85 0 Ugaagh
+mname 42 ogre 86 0 Maal
+mname 42 ogre 87 1 Graaz'daagh the Glutton
+mname 42 ogre 88 0 Zuuz
+mname 42 ogre 89 0 Thuk the Glutton
+mname 42 ogre 90 0 Grukhaza the Glutton
+mname 42 troll 91 0 Snuzz
+mname 42 troll 92 3 Old Skeegg-Draz
+mname 42 troll 93 0 Old Gnaz
+mname 42 troll 94 0 Bux-Dratch
+mname 42 troll 95 0 Old Greetch
+mname 42 troll 96 1 Old Naxnork
+mname 42 troll 97 0 Skrirk
+mname 42 troll 98 0 Sloskratch
+mname 42 troll 99 0 Bugrark
+mname 42 troll 100 0 Grux-Drut
+mname 42 troll 101 1 Skrikslonk
+mname 42 troll 102 0 Sloslik
+mname 42 troll 103 0 Old Bagg-Gnunk
+mname 42 troll 104 0 Old Beegnink
+mname 42 troll 105 0 Zak
+mname 42 troll 106 0 Old Drazzslab
+mname 42 troll 107 0 Old Nagg-Gagg
+mname 42 troll 108 0 Gnonazz
+mname 42 troll 109 1 Old Zeezat
+mname 42 troll 110 0 Old Skrogg
+mname 42 troll 111 0 Old Griz
+mname 42 troll 112 0 Gnub
+mname 42 troll 113 1 Kreeg-Neek
+mname 42 troll 114 0 Druslank
+mname 42 troll 115 0 Old Neezz
+mname 42 troll 116 1 Old Kruk
+mname 42 troll 117 0 Kodruzz
+mname 42 troll 118 0 Drok
+mname 42 troll 119 0 Old Skreekrox
+mname 42 troll 120 0 Old Snuk
+mname 42 undead 121 0 The Host of Alil
+mname 42 undead 122 0 The Host of Alor
+mname 42 undead 123 1 The Restless of Brildbar
+mname 42 undead 124 0 The Host of Seasren
+mname 42 undead 125 2 The Host of Ceardedin
+mname 42 undead 126 0 The Restless of Sosedant
+mname 42 undead 127 0 The Restless of Ashant
+mname 42 undead 128 0 The Host of Ashont
+mname 42 undead 129 0 The Host of Womsock
+mname 42 undead 130 2 The Restless of Rerd
+mname 42 undead 131 0 The Host of Meas
+mname 42 undead 132 0 The Restless of Aleant
+mname 42 undead 133 1 The Host of Dant
+mname 42 undead 134 0 The Host of Duld
+mname 42 undead 135 0 The Host of Alentwent
+mname 42 undead 136 1 The Restless of Stur
+mname 42 undead 137 0 The Host of Ceant
+mname 42 undead 138 0 The Host of Aleard
+mname 42 undead 139 0 The Restless of Alint
+mname 42 undead 140 1 The Restless of Walher
+mname 42 undead 141 0 The Host of Gont
+mname 42 undead 142 0 The Restless of Alick
+mname 42 undead 143 0 The Host of Weald
+mname 42 undead 144 0 The Host of Steas
+mname 42 undead 145 0 The Host of Brirdges
+mname 42 undead 146 0 The Restless of Gick
+mname 42 undead 147 1 The Restless of Reant
+mname 42 undead 148 1 The Host of Ruld
+mname 42 undead 149 0 The Restless of Geld
+mname 42 undead 150 0 The Host of Brel
+mname 42 wyvern 151 0 The Kreezz Brood
+mname 42 wyvern 152 0 The Botchkab Brood
+mname 42 wyvern 153 0 The Nokizz Brood
+mname 42 wyvern 154 0 The Brood of Snak
+mname 42 wyvern 155 0 The Kreex-Skizz Brood
+mname 42 wyvern 156 0 The Gruzzbatch Brood
+mname 42 wyvern 157 0 The Brood of Zab-Graz
+mname 42 wyvern 158 0 The Zix Brood
+mname 42 wyvern 159 0 The Brood of Neek
+mname 42 wyvern 160 0 The Brood of Skruzz
+mname 42 wyvern 161 0 The Sneegg Brood
+mname 42 wyvern 162 0 The Bax Brood
+mname 42 wyvern 163 0 The Nagug Brood
+mname 42 wyvern 164 0 The Brood of Sleegg
+mname 42 wyvern 165 1 The Brood of Kigg
+mname 42 wyvern 166 0 The Keerk Brood
+mname 42 wyvern 167 0 The Skreegg Brood
+mname 42 wyvern 168 0 The Brood of Gatch-Nazz
+mname 42 wyvern 169 0 The Brood of Krax
+mname 42 wyvern 170 1 The Brood of Nizz
+mname 42 wyvern 171 2 The Brood of Guk-Sleeb
+mname 42 wyvern 172 0 The Skog Brood
+mname 42 wyvern 173 0 The Brood of Dreekskoz
+mname 42 wyvern 174 2 The Krix-Krig Brood
+mname 42 wyvern 175 0 The Skok Brood
+mname 42 wyvern 176 0 The Slark Brood
+mname 42 wyvern 177 0 The Brood of Gobuz
+mname 42 wyvern 178 0 The Nagskreek Brood
+mname 42 wyvern 179 0 The Brood of Skotch-Grax
+mname 42 wyvern 180 0 The Gragiz Brood
+sname 42 dwarven 1 0 The Tower of Thraligran
+sname 42 dwarven 2 0 Bainkhund Watch
+sname 42 dwarven 3 0 The Tower of Grark
+sname 42 dwarven 4 0 Bairdmou Watch
+sname 42 dwarven 5 0 Thrird Watch
+sname 42 dwarven 6 0 The Tower of Nidbimm
+sname 42 dwarven 7 1 Khurinko Watch
+sname 42 dwarven 8 0 The Tower of Gramgro
+sname 42 dwarven 9 0 Broringarn Watch
+sname 42 dwarven 10 1 The Tower of Grurn
+sname 42 dwarven 11 0 The Tower of Khuringor
+sname 42 dwarven 12 0 Drondroli Watch
+sname 42 dwarven 13 0 The Tower of Khudinkhud
+sname 42 dwarven 14 0 The Tower of Khaindnair
+sname 42 dwarven 15 0 Noudingum Watch
+sname 42 dwarven 16 0 The Tower of Thalidro
+sname 42 dwarven 17 0 The Tower of Morkhond
+sname 42 dwarven 18 1 Thomkuli Watch
+sname 42 dwarven 19 0 The Tower of Hamthairin
+sname 42 dwarven 20 0 Koumho Watch
+sname 42 dwarven 21 0 The Tower of Khind
+sname 42 dwarven 22 0 Madin Watch
+sname 42 dwarven 23 0 Bralita Watch
+sname 42 dwarven 24 1 The Tower of Drairin
+sname 42 dwarven 25 0 The Tower of Tikbraimm
+sname 42 dwarven 26 1 Bunmim Watch
+sname 42 dwarven 27 0 Drimkorn Watch
+sname 42 dwarven 28 0 Nairbraim Watch
+sname 42 dwarven 29 2 The Tower of Nurintork
+sname 42 dwarven 30 0 Grourhain Watch
+sname 42 elven 31 0 The Spire of Ithaerma
+sname 42 elven 32 0 Othcaer Watch
+sname 42 elven 33 0 Riglaeie Watch
+sname 42 elven 34 1 The Spire of Volaenn
+sname 42 elven 35 0 Sathir Watch
+sname 42 elven 36 0 The Spire of Thones
+sname 42 elven 37 0 Aenncaenn Watch
+sname 42 elven 38 0 The Spire of Rierel
+sname 42 elven 39 0 Ficicie Watch
+sname 42 elven 40 0 The Spire of Endthaen
+sname 42 elven 41 0 Mames Watch
+sname 42 elven 42 0 Rievoth Watch
+sname 42 elven 43 0 Theri Watch
+sname 42 elven 44 0 Liglaenn Watch
+sname 42 elven 45 0 Ithalthae Watch
+sname 42 elven 46 0 Alran Watch
+sname 42 elven 47 0 The Spire of Elinecie
+sname 42 elven 48 0 Riesaend Watch
+sname 42 elven 49 0 The Spire of Irieglae
+sname 42 elven 50 2 The Spire of Sasomi
+sname 42 elven 51 1 The Spire of Riloe
+sname 42 elven 52 0 Relva Watch
+sname 42 elven 53 1 The Spire of Meciel
+sname 42 elven 54 0 Seriena Watch
+sname 42 elven 55 0 The Spire of Ithiemand
+sname 42 elven 56 0 The Spire of Naecielae
+sname 42 elven 57 0 Cenal Watch
+sname 42 elven 58 0 Mova Watch
+sname 42 elven 59 0 Cirir Watch
+sname 42 elven 60 0 Naemen Watch
+sname 42 faerie 61 0 The Thorn of Sygly
+sname 42 faerie 62 0 The Thorn of Eefoll
+sname 42 faerie 63 0 The Thorn of Vathfli
+sname 42 faerie 64 0 Somo Watch
+sname 42 faerie 65 0 Twiesaesk Watch
+sname 42 faerie 66 0 The Thorn of Glaesh
+sname 42 faerie 67 0 The Thorn of Otwouglae
+sname 42 faerie 68 0 Twiashae Watch
+sname 42 faerie 69 1 Vissmo Watch
+sname 42 faerie 70 1 The Thorn of Siafeeli
+sname 42 faerie 71 1 The Thorn of Ysswi
+sname 42 faerie 72 0 The Thorn of Vaen
+sname 42 faerie 73 0 The Thorn of Flymi
+sname 42 faerie 74 0 The Thorn of Osy
+sname 42 faerie 75 0 Sawhi Watch
+sname 42 faerie 76 0 Meetee Watch
+sname 42 faerie 77 0 The Thorn of Liewhi
+sname 42 faerie 78 0 The Thorn of Twimeesh
+sname 42 faerie 79 0 The Thorn of Fieskvou
+sname 42 faerie 80 0 The Thorn of Valiask
+sname 42 faerie 81 0 The Thorn of Gloutwa
+sname 42 faerie 82 0 Teenvou Watch
+sname 42 faerie 83 0 Sheewho Watch
+sname 42 faerie 84 0 The Thorn of Flashwi
+sname 42 faerie 85 0 The Thorn of Wieiashi
+sname 42 faerie 86 0 Woshvae Watch
+sname 42 faerie 87 0 Floushiefi Watch
+sname 42 faerie 88 0 The Thorn of Whaesae
+sname 42 faerie 89 0 Fieoush Watch
+sname 42 faerie 90 0 Twavo Watch
+sname 42 goblin 91 0 Slugrut Stockade
+sname 42 goblin 92 1 Skudreek Lookout
+sname 42 goblin 93 0 Skuzz Lookout
+sname 42 goblin 94 0 Slink-Kreet Lookout
+sname 42 goblin 95 0 Skrok Lookout
+sname 42 goblin 96 0 Gruksneet Stockade
+sname 42 goblin 97 0 Skrugg Stockade
+sname 42 goblin 98 0 Gnunkgnink Stockade
+sname 42 goblin 99 0 Slatch Lookout
+sname 42 goblin 100 0 Dritdrab Stockade
+sname 42 goblin 101 0 Gudrix Stockade
+sname 42 goblin 102 0 Keegg Stockade
+sname 42 goblin 103 1 Snox Stockade
+sname 42 goblin 104 0 Skruzz Stockade
+sname 42 goblin 105 0 Skragg Lookout
+sname 42 goblin 106 0 Nutch Lookout
+sname 42 goblin 107 0 Gnukeerk Stockade
+sname 42 goblin 108 0 Druskogg Stockade
+sname 42 goblin 109 0 Kreegdreex Lookout
+sname 42 goblin 110 0 Drogg Stockade
+sname 42 goblin 111 0 Skizskrux Stockade
+sname 42 goblin 112 0 Zorkgeex Stockade
+sname 42 goblin 113 0 Slinax Stockade
+sname 42 goblin 114 0 Bosleenk Lookout
+sname 42 goblin 115 0 Drib-Sligg Stockade
+sname 42 goblin 116 1 Drozzkrat Stockade
+sname 42 goblin 117 0 Nukiz Lookout
+sname 42 goblin 118 0 Gigsnoz Lookout
+sname 42 goblin 119 1 Zog Lookout
+sname 42 goblin 120 0 Skeerkzizz Lookout
+sname 42 human 121 0 Ashidmes Watch
+sname 42 human 122 1 Sunt Watch
+sname 42 human 123 1 Susbres Tower
+sname 42 human 124 1 Cild Tower
+sname 42 human 125 0 Momalam Watch
+sname 42 human 126 0 Ashom Watch
+sname 42 human 127 1 Deld Watch
+sname 42 human 128 0 Berdrin Watch
+sname 42 human 129 0 Alirdgent Watch
+sname 42 human 130 1 Gick Tower
+sname 42 human 131 1 Reck Watch
+sname 42 human 132 0 Hunaleald Watch
+sname 42 human 133 0 Ment Tower
+sname 42 human 134 0 Stid Tower
+sname 42 human 135 1 Ashuck Watch
+sname 42 human 136 1 Wolmor Watch
+sname 42 human 137 0 Brack Watch
+sname 42 human 138 0 Seck Watch
+sname 42 human 139 0 Warbrint Tower
+sname 42 human 140 0 Teal Tower
+sname 42 human 141 1 Deack Tower
+sname 42 human 142 0 Cold Tower
+sname 42 human 143 1 Edeald Tower
+sname 42 human 144 0 Edil Tower
+sname 42 human 145 0 Bral Watch
+sname 42 human 146 1 Alel Tower
+sname 42 human 147 0 Heant Watch
+sname 42 human 148 0 Asheant Watch
+sname 42 human 149 2 Alis Tower
+sname 42 human 150 0 Weas Watch
+sname 42 orcish 151 0 Kurz'gruugh Stockade
+sname 42 orcish 152 0 Thakh'muu Stockade
+sname 42 orcish 153 0 Shurz'muz Stockade
+sname 42 orcish 154 0 Ghukrol Stockade
+sname 42 orcish 155 1 Baaz'kaakh Stockade
+sname 42 orcish 156 0 Kuul Stockade
+sname 42 orcish 157 0 The Watch of Kol
+sname 42 orcish 158 0 The Watch of Ag'shoz
+sname 42 orcish 159 1 The Watch of Azuul
+sname 42 orcish 160 0 The Watch of Duuz'bog
+sname 42 orcish 161 0 The Watch of Kosh
+sname 42 orcish 162 0 Azaal'uraz Stockade
+sname 42 orcish 163 0 Duld Stockade
+sname 42 orcish 164 0 The Watch of Krugurug
+sname 42 orcish 165 0 Zaal'graam Stockade
+sname 42 orcish 166 0 Thuul'ugokh Stockade
+sname 42 orcish 167 0 Maak'da Stockade
+sname 42 orcish 168 0 Azoz Stockade
+sname 42 orcish 169 0 The Watch of Baz'azuurk
+sname 42 orcish 170 1 Krush'kosh Stockade
+sname 42 orcish 171 0 Thaaz Stockade
+sname 42 orcish 172 0 The Watch of Ugash
+sname 42 orcish 173 0 The Watch of Azo
+sname 42 orcish 174 0 Shuuzol Stockade
+sname 42 orcish 175 0 Gruuld Stockade
+sname 42 orcish 176 0 The Watch of Krushaash
+sname 42 orcish 177 0 The Watch of Azaamghaz
+sname 42 orcish 178 0 The Watch of Uraz
+sname 42 orcish 179 0 The Watch of Ald'shorz
+sname 42 orcish 180 0 The Watch of Kraakh'urog
+msha256 42 4fadb06d3ec244311bd5eb3f989c2947dfb127877cd5e750cf7da71dd1f256a6

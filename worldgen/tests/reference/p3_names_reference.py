@@ -93,6 +93,15 @@ STREAMS = {
     "civilization": "hist.names.civilization",
     "settlement": "hist.names.settlement",
 }
+# P5-02 9.1 (generator 0.23.0): kinds monster and site after settlement, with their streams. A monster's forms are
+# its kind's name_forms (not a culture field): with_forms(D, "monster", F) gives the naming data the attempt reads.
+STREAMS_023 = dict(STREAMS, monster="hist.names.monster", site="hist.names.site")
+KINDS_023 = ("god", "civilization", "settlement", "monster", "site")
+
+
+def with_forms(d, kind, forms):
+    """D with D.<kind>_forms = forms (the monster kind's name_forms, P5-02 9.1)."""
+    return dict(d, **{kind + "_forms": list(forms)})
 KINDS = ("god", "civilization", "settlement")  # 4.5 table order = enum order of 9
 
 
@@ -345,6 +354,8 @@ assert CULTURES_R15["dwarven"]["forbidden"] == DWARVEN_FORBIDDEN_R17[:-2]
 CULTURES_R19 = {cid: dict(d) for cid, d in CULTURES_R17.items()}
 CULTURES_R19["human"] = dict(CULTURES_R17["human"], forbidden=list(CULTURES_R17["human"]["forbidden"]) + ["ass"])
 assert CULTURES_R19["human"]["forbidden"] == ["eae", "aea", "ckc", "ldl", "ntd", "rdd", "ckb", "ckm", "ass"]
+# P5-02 4.4 (generator 0.23.0): culture_naming gains site_forms after settlement_forms.
+CULTURES_R23 = {cid: dict(d, site_forms=list(pdr.SITE_FORMS_023[cid])) for cid, d in CULTURES_R19.items()}
 CULTURE_ORDER = ("dwarven", "elven", "faerie", "goblin", "human", "orcish")  # canonical id order, c = 1..6
 CULTURE_NUMBER = {cid: i + 1 for i, cid in enumerate(CULTURE_ORDER)}
 
@@ -536,7 +547,7 @@ def use_rules(r):
     global RULES, CULTURES, FILTER
     if r == "r5":
         # r15 (0.20.0): the faerie lists of 14.1
-        CULTURES, FILTER = (CULTURES_R19 if pdr.at_least("0.22.0") else CULTURES_R17 if pdr.at_least("0.21.0") else CULTURES_R15 if pdr.at_least("0.20.0")
+        CULTURES, FILTER = (CULTURES_R23 if pdr.at_least("0.23.0") else CULTURES_R19 if pdr.at_least("0.22.0") else CULTURES_R17 if pdr.at_least("0.21.0") else CULTURES_R15 if pdr.at_least("0.20.0")
                             else CULTURES_R5), shipped_filter()
     elif r == "r4":
         CULTURES, FILTER = CULTURES_R4, EMPTY_FILTER
@@ -582,7 +593,7 @@ def attempt(d, kind, seed, c, e, t, trace=None, filt=None, flags=None):
     (r4 data) draws god shapes from patterns."""
     if filt is None:
         filt = FILTER
-    s_key = cr.stream_key(seed, STREAMS[kind])
+    s_key = cr.stream_key(seed, STREAMS_023[kind])
     forms = d[kind + "_forms"]
 
     def u(j):
@@ -1071,7 +1082,7 @@ def golden_text():
     o.append("# its empty-registry, collision and fallback cases are scenarios empty, collide and full;")
     o.append("# its seed-42 vectors are scenario seed42.")
     o.append("tag TAG_HIST %s" % hx(TAG_HIST))
-    for name in sorted(set(STREAMS.values())):
+    for name in sorted(set((STREAMS_023 if pdr.at_least("0.23.0") else STREAMS).values())):
         for seed in (0, 1, 42):
             o.append("stream %d %s %s" % (seed, name, hx(cr.stream_key(seed, name))))
     for seed, name, w0, a, b, k in DRAW_TUPLES:
@@ -1172,6 +1183,8 @@ def golden_text():
             o.extend(r17_golden_lines())
         if pdr.at_least("0.22.0"):
             o.extend(r19_golden_lines())
+        if pdr.at_least("0.23.0"):
+            o.extend(r23_golden_lines())
     return "\n".join(o) + "\n"
 
 
@@ -1689,6 +1702,104 @@ def r19_golden_lines():
                                                            set()))
             o.append("hresult %d human settlement %d %d %s %s %s %s" % (seed, c, e, at, n, at17, n17))
     return o
+
+
+# ---------------------------------------------------------------------------
+# P5-02 9.1 (generator 0.23.0): monster and site names
+# ---------------------------------------------------------------------------
+
+R23_ENTITIES = 30
+
+
+def monster_kinds_023():
+    """[(kind id, culture id, name_forms)] in canonical id order (P5-02 4.2)."""
+    return [(r[0], r[7], list(r[8])) for r in pdr.MONSTERS_KINDS_023]
+
+
+def monster_name(kind_id, seed, m, registry, cultures=None):
+    """P5-02 9.1: the name of monster m of kind kind_id (D and c of the kind's naming_culture, F its name_forms),
+    through P3-02 4.3 with the world's one registry; no core set (READINGS of p5_02_monsters_reference N2)."""
+    cultures = cultures or CULTURES
+    k = [x for x in monster_kinds_023() if x[0] == kind_id][0]
+    d = with_forms(cultures[k[1]], "monster", k[2])
+    return make_name(d, k[1], "monster", seed, CULTURE_NUMBER[k[1]], m, registry)
+
+
+def site_name(culture_id, seed, s, registry, cultures=None):
+    """P5-02 9.1: an outpost's name (D and c of the founder's culture, F = D.site_forms)."""
+    cultures = cultures or CULTURES
+    return make_name(cultures[culture_id], culture_id, "site", seed, CULTURE_NUMBER[culture_id], s, registry)
+
+
+def r23_golden_lines():
+    o = ["# r23 (P5-02 9.1, generator 0.23.0): kinds monster and site; streams hist.names.monster and hist.names.site",
+         "#   mattempt <seed> <monster kind> <c> <e> <t> <valid 0|1> <root|-> <name|->   attempts t = 0..3, e = 1, 2",
+         "#   mformtext <monster kind> <name_forms|lair_forms> <i> <ok|message>   form_text_problem on the kind's forms",
+         "#   mname <seed> <monster kind> <e> <attempt|F> <name>   for seeds 0 and 42, one registry per seed starting",
+         "#       empty, kinds in canonical id order, %d entities each, ids 1, 2, ... across the kinds" % R23_ENTITIES,
+         "#   sname <seed> <culture> <e> <attempt|F> <name>   then, in the same registry, outposts of every culture in",
+         "#       canonical id order, %d entities each, ids 1, 2, ... across the cultures" % R23_ENTITIES,
+         "#   msha256 <seed> <hex>  of the seed's mname and sname lines joined by LF (no trailing LF)"]
+    for kid, cid, forms in monster_kinds_023():
+        d = with_forms(CULTURES[cid], "monster", forms)
+        for e in (1, 2):
+            for t in range(4):
+                v, n, root = attempt(d, "monster", 0, CULTURE_NUMBER[cid], e, t)
+                o.append("mattempt 0 %s %d %d %d %d %s %s" % (kid, CULTURE_NUMBER[cid], e, t, 1 if v else 0,
+                                                             root if v else "-", n if v else "-"))
+    for cid in CULTURE_ORDER:
+        for i, form in enumerate(CULTURES[cid]["site_forms"]):
+            o.append("formtext %s site %d %s" % (cid, i, form_text_problem(FILTER, cid, "site", i, form) or "ok"))
+    for row in pdr.MONSTERS_KINDS_023:
+        for field, forms in (("name_forms", row[8]), ("lair_forms", row[9])):
+            for i, f in enumerate(forms):
+                o.append("mformtext %s %s %d %s" % (row[0], field, i,
+                                                    form_text_problem(FILTER, row[7], "monster", i, f) or "ok"))
+    for seed in GOLDEN_SEEDS:
+        reg = set()
+        lines = []
+        for j, (kid, _, _) in enumerate(monster_kinds_023()):
+            for e in range(j * R23_ENTITIES + 1, (j + 1) * R23_ENTITIES + 1):
+                n, t = monster_name(kid, seed, e, reg)
+                lines.append("mname %d %s %d %s %s" % (seed, kid, e, t, n))
+        for j, cid in enumerate(CULTURE_ORDER):
+            for e in range(j * R23_ENTITIES + 1, (j + 1) * R23_ENTITIES + 1):
+                n, t = site_name(cid, seed, e, reg)
+                lines.append("sname %d %s %d %s %s" % (seed, cid, e, t, n))
+        o.extend(lines)
+        o.append("msha256 %d %s" % (seed, list_sha(lines)))
+    return o
+
+
+def check_r23(ck):
+    """P5-02 9.1 on the shipped data: every monster and outpost name is a valid attempt's name or the fallback,
+    unique in the registry; the site forms of every culture are culture forms; name lists stable across calls."""
+    if not pdr.at_least("0.23.0"):
+        return
+    for cid in CULTURE_ORDER:
+        ck.eq("site_forms of %s (P5-02 4.4)" % cid, CULTURES[cid]["site_forms"], pdr.SITE_FORMS_023[cid])
+        ck.eq("site_forms of %s pass the grammars" % cid, validate(CULTURES[cid]), [])
+    for seed in GOLDEN_SEEDS:
+        reg = set()
+        names = []
+        for kid, cid, forms in monster_kinds_023():
+            for e in range(1, 11):
+                n, t = monster_name(kid, seed, e, reg)
+                names.append(n)
+                ck.ok("monster %s %d not a fallback" % (kid, e), t != "F")
+                ck.ok("monster %s %d by one of its forms" % (kid, e),
+                      any(n.startswith(f.split("{root}")[0]) and n.endswith(f.split("{root}")[1]) for f in forms))
+        for cid in CULTURE_ORDER:
+            for e in range(1, 11):
+                n, t = site_name(cid, seed, e, reg)
+                names.append(n)
+                ck.ok("site %s %d by a site form" % (cid, e), any(
+                    n.startswith(f.split("{root}")[0]) and n.endswith(f.split("{root}")[1])
+                    for f in CULTURES[cid]["site_forms"]))
+        ck.eq("monster and site names unique (one registry)", len(set(names)), len(names))
+    # the streams are their own: the same entity id of another kind draws another name
+    ck.ok("hist.names.monster differs from hist.names.settlement",
+          cr.stream_key(0, "hist.names.monster") != cr.stream_key(0, "hist.names.settlement"))
 
 
 def check_r19(ck):
@@ -2249,6 +2360,8 @@ def check_all():
         check_r17(ck)
     if RULES == "r5" and pdr.at_least("0.22.0"):
         check_r19(ck)
+    if RULES == "r5" and pdr.at_least("0.23.0"):
+        check_r23(ck)
     sys.stdout.write("%d checks, %d failures\n" % (ck.count, ck.failures))
     return 1 if ck.failures else 0
 
