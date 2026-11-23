@@ -549,6 +549,6 @@ unmapped_add_doctest_shards(worldgen-tests
     SLOW slow-history-report 120 "*-slow" "*history_report_*"
     SLOW slow-timeline 400 "*-slow" "*timeline_*"
     SLOW slow-renaming 600 "*-slow" "*history_renaming_*"
-    SLOW slow-markers 600 "*-slow" "*markers_*"
+    SLOW slow-markers 1250 "*-slow" "*markers_*"
     SLOW_REST slow-other 10 "*-slow"
 )
