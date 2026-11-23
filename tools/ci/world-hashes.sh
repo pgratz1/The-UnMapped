@@ -25,9 +25,10 @@
 #             <preset>-<case>.history.full.txt
 #                 worldgen-cli report --db <file> --history --level full
 #             <preset>-<case>.territory.txt
-#                 P4-01 13.6: two lines "<year> <sha256 of the PNG>" for
-#                 worldgen-cli render --composite territory at year 0 and at
-#                 the history's end year E (the default year), in that order.
+#                 P4-01 13.6: lines "<year> <sha256 of the PNG>" for
+#                 worldgen-cli render --composite territory at year 0,
+#                 floor(E/2) and the history's end year E (the default year),
+#                 ascending, a year that coincides with the one before once.
 #                 The PNGs are written to a scratch directory and removed.
 #           A .txt file exists only if its command succeeded.
 # expect    runs hash --expect for every case against its golden file: the
@@ -258,7 +259,7 @@ file_sha256() {
     fi
 }
 
-# Renders the territory image of world $2 at year 0 and at the default year E
+# Renders the territory image of world $2 at year 0, floor(E/2) and the default year E
 # into scratch directory $3 and writes "<year> <sha256>" lines to file $1.
 # E is read from the "year E" line that render --verbose prints on stderr.
 territory_hashes() {
@@ -267,14 +268,24 @@ territory_hashes() {
     t_dir=$3
     mkdir -p "$t_dir" || return 1
     rm -f "$t_dir"/*.png "$t_target.partial"
-    "$cli" render --db "$t_db" --composite territory --year 0 --out "$t_dir/y0.png" >/dev/null || return 1
     t_end=$("$cli" render --db "$t_db" --composite territory --verbose --out "$t_dir/ye.png" 2>&1 >/dev/null |
         sed -n 's/^.*year \([0-9][0-9]*\)\r*$/\1/p' | tail -n 1)
     [ -n "$t_end" ] && [ -f "$t_dir/ye.png" ] || return 1
-    {
-        echo "0 $(file_sha256 "$t_dir/y0.png")"
-        echo "$t_end $(file_sha256 "$t_dir/ye.png")"
-    } >"$t_target.partial" || return 1
+    t_mid=$((t_end / 2))
+    : >"$t_target.partial" || return 1
+    for t_year in 0 $t_mid $t_end; do
+        # ascending; a year that coincides with the previous one is written once
+        [ "$t_year" = "${t_prev:-}" ] && continue
+        t_prev=$t_year
+        if [ "$t_year" = "$t_end" ]; then
+            t_png=$t_dir/ye.png
+        else
+            t_png=$t_dir/y$t_year.png
+            "$cli" render --db "$t_db" --composite territory --year "$t_year" --out "$t_png" >/dev/null || return 1
+        fi
+        echo "$t_year $(file_sha256 "$t_png")" >>"$t_target.partial" || return 1
+    done
+    t_prev=
     mv -f "$t_target.partial" "$t_target"
     rm -f "$t_dir"/*.png
 }
