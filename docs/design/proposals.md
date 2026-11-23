@@ -1229,3 +1229,13 @@ Status values: `open`, `accepted`, `declined`, `superseded`.
 - Proposal: schema 7 → 8 with generator 0.22.0: `CREATE TABLE region_name (region INTEGER NOT NULL, from_year INTEGER NOT NULL, name TEXT NOT NULL, culture INTEGER NOT NULL, event INTEGER NOT NULL, PRIMARY KEY (region, from_year)) STRICT, WITHOUT ROWID`, executed after `relation`, written by the history stage; readers refuse version 7; the empty world grows by one page. Appended event kind 43 `region_renamed` (not a schema change by itself). `docs/specs/schema.md` updated. The schema number is the next free one at merge (P5-00 4.3); P5-12 merges straight after P5-01, so it is expected to be 8.
 - Interim choice: as proposed.
 - Status: open
+
+### History: P5-01's T16 restated as a rate (P5-12)
+
+- Date: 2026-11-23
+- Raised by: lead, from the engineer's sweep of P5-12 at generator 0.22.0 (`docs/specs/p5-12-renamed-regions.md` r2 section 11, "T16 at 0.22.0"; `docs/specs/p5-01-followups.md` section 8, T16)
+- Design doc section: 5 (history: wars and battles), 13 (P5 validation targets)
+- Problem: P5-01's target T16 bounds the battles that repeat an earlier battle's sides and both tolls exactly at **at most 10** over the 100 default 1024 worlds (measured 9 at 0.21.0). P5-12 changes no battle rule, but its renamings shift the event ids that conflict keys its draws by, and the engineer measured **13 of 8,935 battles** at 0.22.0. A fixed count grows with the number of battles a sweep holds, so it measures the sweep as much as the rule.
+- Proposal: restate T16 as a rate: **at most 2 repeated battles per thousand battles** of the sweep (13 of 8,935 is 1.5‰; 0.21.0's 9 was about 1‰). The second half of T16 (no battle sentence with a digit toll and a word toll in one clause: 0) is unchanged.
+- Interim choice: none; the bound of 10 is not changed by the spec, and validation reports T16 as missed at 0.22.0 until Paul decides.
+- Status: open
