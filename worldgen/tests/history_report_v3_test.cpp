@@ -263,4 +263,44 @@ TEST_CASE("P3-07 r21 26.7, 26.8 item 8: settlement_row with ids 0, 1, size and s
     CHECK(worldgen::inspect::settlement_row(std::span<const std::int64_t>(), 1) == nullptr);
 }
 
+// P3-07 r22 26.4 (P5-12 validation finding A; the lead's ruling): a history note names a region as it was at the
+// noted event, like the sentence. A copy of H12 gains, after its notes, the claim e1020 (1700, c1 on region 3
+// "Bel Downs", held by c2), the declaration e1021 (1750, over region 1, caused by e1020, with its war row) and the
+// renaming e1022 (1800) of region 3 to "The Grey Downs" with no cause (r22 26.2: no `after` part). The note of
+// e1021 names the claim's region by its name at e1021, "Bel Downs", not by its present name; references outside
+// sentences print the present name. The two SHA-256 values are the reference's text of this world
+// (p3_report_reference.py: `fixture h12-v3`, the same SQL, `report --level summary|full`), never the C++ output.
+TEST_CASE("P3-07 r22 26.4, 26.2: a claim note names a region renamed after the declaration as at the declaration") {
+    const std::string path = hrtest::fixture_copy("h12-v3", "claim-note-v3");
+    const worldgen::db::Status s = worldgen::db::testing::execute_on_file(
+        path,
+        "INSERT INTO event VALUES (1020, 1700, 1700, 10, 2, 3, 0, 35);"
+        "INSERT INTO event_participant VALUES (1020, 1, 1, 3, 1), (1020, 2, 2, 3, 2);"
+        "INSERT INTO event VALUES (1021, 1750, 1750, 4, 2, 1, 0, 70);"
+        "INSERT INTO event_participant VALUES (1021, 1, 1, 3, 1), (1021, 2, 2, 3, 2);"
+        "INSERT INTO event_cause VALUES (1021, 1020);"
+        "INSERT INTO relation VALUES (3, 1, 3, 2, 'war', 1750, NULL, 1021, 0);"
+        "INSERT INTO event VALUES (1022, 1800, 1800, 9, 2, 3, 0, 60);"
+        "INSERT INTO region_name VALUES (3, 1800, 'The Grey Downs', 1, 1022);");
+    REQUIRE_MESSAGE(s.ok(), "execute_on_file: " << (s.ok() ? "" : s.error().message));
+    const std::string note = "(The claim, since 1700, was to Bel Downs. The second war between them.)";
+    const std::string full = hrtest::report_of(path, HistoryLevel::full);
+    const std::string summary = hrtest::report_of(path, HistoryLevel::summary);
+    CHECK(chronicle_line(full, 1021) ==
+          "1750 e1021 war_declared/70: The Kingdom of Arn declared war on the Kingdom of Bel over Arn Vale. " + note +
+              " {@rg1 attacker=c1 defender=c2} [causes e1020]");
+    CHECK(chronicle_line(full, 1020).find("laid claim to Bel Downs, held by") != std::string::npos);
+    CHECK(chronicle_line(full, 1022).find("Bel Downs became known as the Grey Downs.") != std::string::npos);
+    CHECK(summary.find(note) != std::string::npos);
+    for (const std::string* t : {&full, &summary}) {
+        CHECK(t->find("was to the Grey Downs") == std::string::npos);
+        CHECK(t->find("was to The Grey Downs") == std::string::npos);
+        const std::vector<std::string> present = block(*t, "[present]");
+        CHECK(contains_line(present, "  rg3: The Grey Downs since 1800, e1022; formerly Bel Downs"));
+    }
+    CHECK(contains_line(block(full, "[present]"), "  rg3 The Grey Downs: The Kingdom of Bel (c2) since 801"));
+    CHECK(hrtest::sha_hex(summary) == "9bcb5bb3ce21ab3f79c2c4eda9fda350092087aab45998d6100d5588cb7baea6");
+    CHECK(hrtest::sha_hex(full) == "91d23b8bcfb3e3940d89115613881398be54e712c427125972133f2ae0c6ee33");
+}
+
 }  // TEST_SUITE

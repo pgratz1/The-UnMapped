@@ -1459,6 +1459,14 @@ python3 -B worldgen/tests/reference/p3_report_reference.py golden
 - `p3_conflict_reference.py` `check`: invariant 8/14.2 admits `region_renamed` in a quiet step (P5-12 6: Q4);
   `hist-conflict-flight`'s "flights and found refuges" is printed, not checked, at 0.22.0 (seed 1 at 512 has no
   flight once the renamings shift the event ids; P5-12 6 "Effect on the rest of history").
+- After validation (P5-12 validation report, findings A and B; the test-side fixes of branch `p5/12-fix`):
+  `p3_report_reference.py` names a region in a history note as at the noted event (`note_region`, P3-07 r22
+  26.4; reading R27): the claim note of a declaration printed the present name, which 17 of the 185 validation
+  worlds showed; it now agrees with the C++ on all 17. A renaming with no cause prints its renamed-regions line
+  without the `after` part (r22 26.2). `p3-07-report.txt` is reproduced byte for byte (no golden case has either).
+  `p3_conflict_reference.py check-world` reads schema 8 at 0.22.0 and schema 7 with `--version 0.21.0` or older.
+  The test's own RG11 (`p1_06_regions_names.hpp`) gains V8 (P1-06 r11 17.1) from the data root's `name_filters`,
+  in the drawn attempts and the fallback.
 - The C++ synthetic geographies (`p3_05_peoples_support.hpp` `inputs_of`) carry `landmass` 1 and the dominant
   dry biome of `region_biome` in their region rows, as `land_nouns` reads them without `region_land` (the lead's
   ruling 3); no peoples or conflict rule reads those columns.

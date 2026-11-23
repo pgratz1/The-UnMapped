@@ -157,6 +157,11 @@ R25 r19 25.13 item 11 names the new fixture "H9 v2"; H9 is r17's h9-realms, so t
    (h11-v2.toml). Its sacked template names only the defender, so that a sack without an attacker renders.
 R26 r19 25.1: the v2 report is computed for every world, also one of 0.20.0 (no kind 41 or 42: no refuge suffix, the
    v1 standing claims); the version switch of this reference (--version 0.20.0) serves v1 for the 0.20.0 golden.
+R27 r22 26.4 (P5-12 validation, finding A): a history note (21.4, 22.3, 23 items 3 and 4, 25.8) names a region by
+   N(r, e) with e the event whose line the note follows (note_region), as the C++ does; before this the claim note of
+   a declaration printed the claim region's present name. history_report_v3_test.cpp pins it on a copy of H12.
+   Also r22 26.2: a renaming with no cause prints its renamed-regions line without `after e<cause> <key>` (this
+   reference printed `after e0 -`).
 R8 [present]'s region lines (full) name the holder of the open region_control row of each region; the
    free line when there is none.
 """
@@ -468,6 +473,14 @@ def standing(status):
 # Notes (21.4, 22.2, 23)
 # ---------------------------------------------------------------------------
 
+def note_region(w, rid, eid):
+    """P3-07 r22 26.4: a history note names a region as it was at the noted event eid (N(r, e) of P3-04 r21 23.1,
+    like the sentence of eid's line), not by its present name; region.name before 0.22.0."""
+    if V3 and "region_at" in w.view:
+        return w.view["region_at"](rid, eid)
+    return w.name(REGION, rid)
+
+
 def note(w, eid, civ=0):
     """history_note(view, eid[, civ]) without its parentheses, or ""."""
     e = w.ev[eid]
@@ -486,11 +499,11 @@ def note(w, eid, civ=0):
             # 23 item 4a: the towns of the claim, in participant order, and the claim's region
             role = [r[1] for r in w.roles[c[3]] if r[2] == "settlement"][0]
             ss = [pcr.mid(w.name(SETTLEMENT, p[4])) for p in sorted(w.parts.get(c[0], [])) if p[2] == role]
-            where = "%s in %s" % (pe.join_all(ss), pcr.mid(w.name(REGION, c[5])))
+            where = "%s in %s" % (pe.join_all(ss), pcr.mid(note_region(w, c[5], eid)))
             text = ("The claim, since %d, was to %s." % (yc, where) if yc < e[1] else
                     "The claim, made the same year, was to %s." % where)
         elif c[5] != e[5]:
-            rc = pcr.mid(w.name(REGION, c[5]))      # 23 item 3
+            rc = pcr.mid(note_region(w, c[5], eid))      # 23 item 3
             text = ("The claim, since %d, was to %s." % (yc, rc) if yc < e[1] else
                     "The claim, made the same year, was to %s." % rc)
         else:
@@ -1189,9 +1202,9 @@ def renamed_region_lines(w):
         prev = [x for x in w.renames.get(r[0], ()) if x[1] < r[1]]
         former = prev[-1][2] if prev else w.region[r[0]][1]
         cs = sorted(w.causes.get(r[4], []))
-        cause = cs[0] if cs else 0
-        o.append("  rg%d: %s since %d, e%d after e%d %s; formerly %s" % (
-            r[0], r[2], r[1], r[4], cause, w.kind_key[w.ev[cause][3]] if cause else "-", former))
+        # r22 26.2: the first cause; a renaming with no cause (a hand-made world only) has no `after` part
+        after = " after e%d %s" % (cs[0], w.kind_key[w.ev[cs[0]][3]]) if cs else ""
+        o.append("  rg%d: %s since %d, e%d%s; formerly %s" % (r[0], r[2], r[1], r[4], after, former))
     return o
 
 

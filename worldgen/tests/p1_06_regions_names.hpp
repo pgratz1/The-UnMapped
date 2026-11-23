@@ -1,8 +1,10 @@
 #pragma once
 
 // The test's own RG11 r3 (spec P1-06 r3 and r4, generator 0.17.0: region
-// names drawn from the lists of the data kind `placename`, no numerals),
-// written from the spec text alone, independently of the stage. Used by the
+// names drawn from the lists of the data kind `placename`, no numerals; from
+// generator 0.22.0 also V8 of r11 17.1, the name filter of P3-02 11.2 across
+// the joins of a name's parts), written from the spec text alone,
+// independently of the stage. Used by the
 // test's own stage (own_regions in p1_06_regions_support.hpp), by the unit
 // tests of 10.5 (against values written in the tests) and by the property
 // tests of invariant 6.
@@ -72,8 +74,15 @@ struct PlaceDef {
     std::vector<std::string> forbidden, excluded;
 };
 
+// P3-02 11.2: the effective lists of the data kind `name_filter` (unions over all definitions), read by V8
+// (P1-06 r11 17.1). Empty lists reject nothing.
+struct Filter {
+    std::vector<std::string> anywhere, at_start, whole;
+};
+
 struct PlaceData {
     std::vector<PlaceDef> defs;  // ascending id
+    Filter filter;               // the data root's name_filters (empty when the root has none)
     [[nodiscard]] const PlaceDef& common() const {
         for (const PlaceDef& d : defs) {
             if (d.role == "common") {
@@ -192,6 +201,35 @@ inline PlaceData read_dir(const std::filesystem::path& dir) {
         add_definitions(data, file_text(f));
     }
     std::sort(data.defs.begin(), data.defs.end(), [](const PlaceDef& a, const PlaceDef& b) { return a.id < b.id; });
+    // The name filter of the same data root (directory name_filters beside placenames), P3-02 11.2.
+    const std::filesystem::path fdir = dir.parent_path() / "name_filters";
+    if (std::filesystem::is_directory(fdir)) {
+        std::vector<std::filesystem::path> ffiles;
+        for (const auto& e : std::filesystem::directory_iterator(fdir)) {
+            if (e.path().extension() == ".toml") {
+                ffiles.push_back(e.path());
+            }
+        }
+        std::sort(ffiles.begin(), ffiles.end());
+        for (const auto& f : ffiles) {
+            const toml::table doc = toml::parse(file_text(f));
+            const toml::table* kind = doc["name_filter"].as_table();
+            REQUIRE(kind != nullptr);
+            for (const auto& [key, node] : *kind) {
+                const toml::table* t = node.as_table();
+                REQUIRE(t != nullptr);
+                for (const std::string& x : strings_of(*t, "anywhere")) {
+                    data.filter.anywhere.push_back(x);
+                }
+                for (const std::string& x : strings_of(*t, "at_start")) {
+                    data.filter.at_start.push_back(x);
+                }
+                for (const std::string& x : strings_of(*t, "whole")) {
+                    data.filter.whole.push_back(x);
+                }
+            }
+        }
+    }
     return data;
 }
 
@@ -289,9 +327,73 @@ inline std::string fill(const std::vector<Token>& toks, const std::vector<std::s
 
 inline bool vowel(char c) { return c == 'a' || c == 'e' || c == 'i' || c == 'o' || c == 'u'; }
 
-// RG11 7: "" when valid, else the first rule that fails ("V1" ... "V6").
+// P1-06 r11 17.1, V8: true when a filter entry spans a join of the name. `name` is the concatenation of its
+// parts; `joins` the byte offsets between consecutive parts. Per word w (split at spaces): S_w is w's letters
+// lower-cased with ' and - removed, each letter keeping its byte offset in the name; an `anywhere` entry in S_w
+// whose first and last letters lie on both sides of a join (first < j <= last); a part of w (a maximal run between
+// ' and - and the word's ends) starting with an `at_start` entry whose letters span a join; a part equal to a
+// `whole` entry that spans a join. Entries wholly inside one part are not tested.
+inline bool v8_spans(const std::string& name, const std::vector<std::size_t>& joins, const Filter& f) {
+    auto spans = [&](std::size_t first, std::size_t last) {
+        return std::any_of(joins.begin(), joins.end(), [&](std::size_t j) { return first < j && j <= last; });
+    };
+    auto low = [](char c) { return (c >= 'A' && c <= 'Z') ? static_cast<char>(c - 'A' + 'a') : c; };
+    std::size_t ws = 0;
+    while (ws <= name.size()) {
+        std::size_t we = name.find(' ', ws);
+        if (we == std::string::npos) {
+            we = name.size();
+        }
+        // S_w with offsets.
+        std::string sw;
+        std::vector<std::size_t> off;
+        for (std::size_t i = ws; i < we; ++i) {
+            if (name[i] != '\'' && name[i] != '-') {
+                sw += low(name[i]);
+                off.push_back(i);
+            }
+        }
+        for (const std::string& e : f.anywhere) {
+            for (std::size_t i = sw.find(e); i != std::string::npos; i = sw.find(e, i + 1)) {
+                if (spans(off[i], off[i + e.size() - 1])) {
+                    return true;
+                }
+            }
+        }
+        // Parts of w.
+        std::size_t ps = ws;
+        while (ps <= we) {
+            std::size_t pe = ps;
+            while (pe < we && name[pe] != '\'' && name[pe] != '-') {
+                ++pe;
+            }
+            if (pe > ps) {
+                std::string p;
+                for (std::size_t i = ps; i < pe; ++i) {
+                    p += low(name[i]);
+                }
+                for (const std::string& e : f.at_start) {
+                    if (p.compare(0, e.size(), e) == 0 && e.size() <= p.size() && spans(ps, ps + e.size() - 1)) {
+                        return true;
+                    }
+                }
+                for (const std::string& e : f.whole) {
+                    if (p == e && spans(ps, pe - 1)) {
+                        return true;
+                    }
+                }
+            }
+            ps = pe + 1;
+        }
+        ws = we + 1;
+    }
+    return false;
+}
+
+// RG11 7: "" when valid, else the first rule that fails ("V1" ... "V6", then "V8" when `filter` is given; V7
+// depends on the names drawn before and is applied by name_regions).
 inline std::string invalid_rule(const std::vector<Token>& toks, const std::vector<std::string>& values,
-                                const PlaceDef& common) {
+                                const PlaceDef& common, const Filter* filter = nullptr) {
     std::size_t k = 0;
     std::vector<std::pair<bool, std::string>> parts;
     for (const Token& t : toks) {
@@ -346,6 +448,19 @@ inline std::string invalid_rule(const std::vector<Token>& toks, const std::vecto
     }
     if (name.size() > 48) {
         return "V6";
+    }
+    if (filter != nullptr) {
+        std::vector<std::size_t> joins;
+        std::size_t at = 0;
+        for (std::size_t i = 0; i < parts.size(); ++i) {
+            at += parts[i].second.size();
+            if (i + 1 < parts.size()) {
+                joins.push_back(at);
+            }
+        }
+        if (v8_spans(name, joins, *filter)) {
+            return "V8";
+        }
     }
     return "";
 }
@@ -419,7 +534,8 @@ struct Attempt {
 };
 
 inline Attempt attempt(std::uint64_t key, std::int64_t region, std::int64_t t, const PlaceDef& land,
-                       const PlaceDef& common, const std::vector<const PlaceDef*>& traits, const NameTuning& tu) {
+                       const PlaceDef& common, const std::vector<const PlaceDef*>& traits, const NameTuning& tu,
+                       const Filter* filter = nullptr) {
     Attempt a;
     auto u = [&](std::int64_t k) { return worldgen::hash_at3(key, region, t, k); };
     std::vector<std::int64_t> fw;
@@ -451,12 +567,12 @@ inline Attempt attempt(std::uint64_t key, std::int64_t region, std::int64_t t, c
         k += 2;
     }
     a.name = fill(*toks, values);
-    a.rule = invalid_rule(*toks, values, common);
+    a.rule = invalid_rule(*toks, values, common, filter);
     return a;
 }
 
 inline std::optional<std::string> fallback(const PlaceDef& land, const PlaceDef& common,
-                                           const std::set<std::string>& used) {
+                                           const std::set<std::string>& used, const Filter* filter = nullptr) {
     const std::vector<Token> toks = {Token{true, "prefix"}, Token{true, "suffix"}};
     std::vector<std::string> P = common.lists[2];
     P.insert(P.end(), land.lists[2].begin(), land.lists[2].end());
@@ -465,7 +581,7 @@ inline std::optional<std::string> fallback(const PlaceDef& land, const PlaceDef&
     for (const std::string& p : P) {
         for (const std::string& s : S) {
             const std::string n = p + s;
-            if (invalid_rule(toks, {p, s}, common).empty() && used.count(n) == 0U) {
+            if (invalid_rule(toks, {p, s}, common, filter).empty() && used.count(n) == 0U) {
                 return n;
             }
         }
@@ -551,7 +667,8 @@ inline std::string land_noun(const std::string& base) {
     return sp == std::string::npos ? base : base.substr(sp + 1);
 }
 
-// RG11 4 and 8 as from generator 0.19.0 (P1-06 r7 15.7: one keeper per land noun; r6 15.4: V7). Throws (FAIL)
+// RG11 4 and 8 as from generator 0.19.0 (P1-06 r7 15.7: one keeper per land noun; r6 15.4: V7), with V8 from
+// 0.22.0 (r11 17.1: data.filter, in the drawn attempts and the fallback). Throws (FAIL)
 // where the stage is fatal; returns nullopt on "no free name".
 inline std::optional<Named> name_regions(const std::vector<NamedRegion>& regions, std::uint64_t seed, std::uint64_t n,
                                          const PlaceData& data, const NameTuning& t) {
@@ -582,7 +699,7 @@ inline std::optional<Named> name_regions(const std::vector<NamedRegion>& regions
         const auto td = trait_defs(data, traits_of(r.traits, t));
         std::optional<std::pair<std::string, std::string>> got;
         for (std::int64_t at = 0; at < 64 && !got; ++at) {
-            const Attempt a = attempt(key, r.id, at, *r.land, common, td, t);
+            const Attempt a = attempt(key, r.id, at, *r.land, common, td, t, &data.filter);
             const auto st = v7_stems(a);
             const bool v7 = std::none_of(st.begin(), st.end(), [&](const std::string& x) { return stems.count(x) != 0U; });
             if (a.valid() && v7 && used.count(a.name) == 0U) {
@@ -591,7 +708,7 @@ inline std::optional<Named> name_regions(const std::vector<NamedRegion>& regions
             }
         }
         if (!got) {
-            const auto f = fallback(*r.land, common, used);
+            const auto f = fallback(*r.land, common, used, &data.filter);
             if (!f) {
                 return std::nullopt;
             }
@@ -605,9 +722,10 @@ inline std::optional<Named> name_regions(const std::vector<NamedRegion>& regions
 }
 
 // Invariant 6 (r3) for one drawn name: one of the land's forms filled with
-// words of the region's pools of non-zero weight, valid by V1 to V6.
+// words of the region's pools of non-zero weight, valid by V1 to V6 (and V8 when `filter` is given).
 inline bool parses_as_land_name(const std::string& name, const PlaceDef& land, const PlaceDef& common,
-                                const std::vector<const PlaceDef*>& traits, const NameTuning& t) {
+                                const std::vector<const PlaceDef*>& traits, const NameTuning& t,
+                                const Filter* filter = nullptr) {
     for (const Form& f : land.forms) {
         const auto toks = parse_form(f.form);
         if (!toks) {
@@ -631,7 +749,7 @@ inline bool parses_as_land_name(const std::string& name, const PlaceDef& land, c
         std::function<bool(std::size_t, std::size_t, std::size_t)> go = [&](std::size_t ti, std::size_t pos,
                                                                            std::size_t si) -> bool {
             if (ti == toks->size()) {
-                return pos == name.size() && invalid_rule(*toks, vals, common).empty();
+                return pos == name.size() && invalid_rule(*toks, vals, common, filter).empty();
             }
             const Token& tok = (*toks)[ti];
             if (!tok.slot) {

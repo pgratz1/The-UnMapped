@@ -272,7 +272,7 @@ void check_invariants(const std::string& label, const CaseInputs& ci, const Over
                 fail("a drawn name equals a keeper's name: " + row.name);
             }
             const auto td = region_names::trait_defs(pd, region_names::traits_of(own.trait_rows[k], nt));
-            if (!region_names::parses_as_land_name(row.name, *own.lands[k], pd.common(), td, nt)) {
+            if (!region_names::parses_as_land_name(row.name, *own.lands[k], pd.common(), td, nt, &pd.filter)) {
                 fail("not a valid name of its land: " + row.name);
             }
         }

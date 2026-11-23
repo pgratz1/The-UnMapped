@@ -6875,8 +6875,12 @@ def cmd_check_world(argv):
     conn = pchr.open_world(path)
     meta = dict(conn.execute("SELECT key, value FROM meta").fetchall())
     c = Checker()
-    if meta.get("schema_version") != "7":
-        print("%s: schema version %s, check-world reads 7" % (path, meta.get("schema_version")))
+    # Schema 8 (table region_name) from generator 0.22.0 (P5-12), schema 7 before; a schema 7 world is read with
+    # --version 0.21.0 or older (its tables lack region_name, which the 0.22.0 rules write).
+    want_schema = "8" if FLAGS["rename"] else "7"
+    if meta.get("schema_version") != want_schema:
+        print("%s: schema version %s, check-world at %s reads %s (schema 7: --version 0.21.0 or older)" %
+              (path, meta.get("schema_version"), GENERATOR_VERSION, want_schema))
         return 1
     c.eq("generator_version", meta.get("generator_version"), GENERATOR_VERSION)
     stages = meta["stages"].split(",") if meta["stages"] else []
