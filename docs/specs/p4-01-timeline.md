@@ -2,6 +2,8 @@
 
 Status: **revision 2, 2026-11-22** (corrections after integration, section 15; revision 1 approved by the lead). Phase P4 Viewer v1, spec 1 (P4-00 3.1). Written from P4-00 (3.1, V3, V5, V6, 6.3, 7, 8, 9), P3-04 (6.6, 6.7, 9, 10, 12), P3-07 (5, 6.1, 12, 14), P0-04 (4, 6, amendments 14, 16, 18 (e), 21), P1-00 10.2, P1-04 9 and the code on `main` at fdd7b2f (`worldgen/include/worldgen/history/digest.hpp`, `event_catalogue.hpp`, `worldgen/include/worldgen/inspect/render.hpp`, `worldgen/src/inspect/history_report.cpp`, `tools/worldgen-cli/cli.cpp`). Numbers quoted for seed 42 are from the P4-00 worlds at generator 0.20.0 (`~/.cache/the-unmapped/out/p4-00-spec/`).
 
+**Amended by P4-03** (`docs/specs/p4-03-history-view.md`): section 5.5 for the six shipped race keys and the image of 5.6 at region borders are replaced by P4-03 sections 7 and 8; `render_territory` takes the holders (P4-03 9.2); `Timeline::build` checks the control runs itself (P4-03 9.4).
+
 **No world byte changes.** Generator stays **0.20.0**, schema stays **7**, no stream, no stage, no data, no `meta` key. One new golden file (13.4) and a P0-04 amendment (23, applied with this spec).
 
 ## 1. Purpose
